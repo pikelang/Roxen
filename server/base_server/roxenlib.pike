@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.164 2000/03/20 01:09:31 mast Exp $
+// $Id: roxenlib.pike,v 1.165 2000/03/20 02:05:52 nilsson Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -1576,11 +1576,6 @@ string tagtime(int t, mapping m, RequestID id, function language)
   }
 #endif
   return res;
-}
-
-string read_file(RequestID id, string file)
-{
-  return id->conf->try_get_file(fix_relative(file, id), id);
 }
 
 int time_dequantifier(mapping m)
