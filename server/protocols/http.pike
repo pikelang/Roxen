@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.67 1998/03/25 06:09:48 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.68 1998/03/26 01:03:24 neotron Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -588,7 +588,7 @@ void end(string|void s, int|void keepit)
 
 #ifdef KEEP_ALIVE
   if(keepit &&
-     (!(file->raw || file->len<=0))
+     (!(file->raw || file->len <= 0))
      && (misc->connection || (prot == "HTTP/1.1"))
      && my_fd)
   {
@@ -687,7 +687,7 @@ array add_id(array from)
   foreach(from[1], array q)
   catch {
     int id;
-    if(sscanf(Stdio.read_bytes(q[0]), "%*s$Id: http.pike,v 1.67 1998/03/25 06:09:48 per Exp $", id) == 4)
+    if(sscanf(Stdio.read_bytes(q[0]), "%*s$Id: http.pike,v 1.68 1998/03/26 01:03:24 neotron Exp $", id) == 4)
       q[0] += "  ("+id+")";
   };
   return from;
@@ -937,13 +937,15 @@ void handle_request( )
 
   if(head_string) send(head_string);
 
-  if(method != "HEAD")
+  if(method != "HEAD" && file->error != 304)
+    // No data for these two...
   {
     if(file->data && strlen(file->data))
       send(file->data, file->len);
     if(file->file)  
       send(file->file, file->len);
-  }
+  } else
+    file->len = 1; // Keep those alive, please...
   if (pipe) {
     pipe->set_done_callback( do_log );
     pipe->output(my_fd);
