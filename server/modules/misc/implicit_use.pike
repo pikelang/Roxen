@@ -4,7 +4,7 @@
 #include <config.h>
 inherit "module";
 
-constant cvs_version = "$Id: implicit_use.pike,v 1.2 2000/11/18 04:24:47 nilsson Exp $";
+constant cvs_version = "$Id: implicit_use.pike,v 1.3 2001/01/04 07:20:25 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST;
 constant module_name = "Implicit <use> Module";
@@ -46,9 +46,6 @@ mapping first_try(RequestID id) {
 
   RXML.PXml parser = conf->rxml_tag_set ( RXML.t_html(RXML.PXml), id);
   parser->recover_errors = 1;
-#ifdef OLD_RXML_COMPAT
-  if (conf->old_rxml_compat) parser->context->compatible_scope = 1;
-#endif
   id->misc->_parser = parser;
 
   if (mixed err = catch( parser->write_end (uses) )) {
