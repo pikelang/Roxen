@@ -6,7 +6,7 @@ inherit "roxenlib";
 inherit Regexp : regexp;
 
 constant cvs_version = 
-"$Id: mailtags.pike,v 1.15 1998/09/20 15:14:08 per Exp $";
+"$Id: mailtags.pike,v 1.16 1998/09/21 15:44:56 js Exp $";
 
 constant thread_safe = 1;
 
@@ -683,9 +683,9 @@ string tag_new_outgoing_mail( string t, mapping args, object id )
     if(!m->flags()->am_edited)
       return m->id;
   }
-  UID->get_drafts()->create_mail_from_data( "Subject: No subject\r\n"
-					    "To: Nobody\r\n\r\n"
-					    "From: You\r\n\r\n" )->id;
+  return UID->get_drafts()->create_mail_from_data( "Subject: No subject\r\n"
+						   "To: Nobody\r\n\r\n"
+						   "From: You\r\n\r\n" )->id;
 }
 
 //

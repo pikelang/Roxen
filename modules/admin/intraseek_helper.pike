@@ -1,12 +1,12 @@
 /*
- * $Id: intraseek_helper.pike,v 1.4 1998/09/16 12:46:21 js Exp $
+ * $Id: intraseek_helper.pike,v 1.5 1998/09/21 15:44:57 js Exp $
  *
  * AutoSeek, Intraseek helper module
  *
- * Johan Schön 1998-07-08
+ * Johan Schön 1998-09-08
  */
 
-constant cvs_version = "$Id: intraseek_helper.pike,v 1.4 1998/09/16 12:46:21 js Exp $";
+constant cvs_version = "$Id: intraseek_helper.pike,v 1.5 1998/09/21 15:44:57 js Exp $";
 
 #include <module.h>
 #include <roxen.h>

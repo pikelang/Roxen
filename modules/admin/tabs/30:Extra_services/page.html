@@ -3,10 +3,6 @@
 	 return "";
       </pike>
 
-<comment> 
-
-</comment>
-
 <formoutput quote='¤'>
   <if variable=enable>
     <sqlquery query="replace into features values('¤customer:quote=mysql¤','¤enable:quote=mysql¤')">
@@ -66,8 +62,16 @@
   </sqloutput>
 
 <form method=get>
-
-
+   <input type=submit value='Register this site in search engines' name=register>
 </form>
+
+<if variable=register>
+  <sqloutput quote='@'
+    query="select distinct domain from dns where customer_id=¤customer:quote=mysql¤">
+    <autoreg-register-url url='http://www.@domain:quote=mysql@'>
+  </sqloutput>
+</if>
+
+
 
 </formoutput>

@@ -2,9 +2,9 @@ CVS modules needed by AutoSite
 ------------------------------
 AutoSite
 logview_sql
+intraseek
+navigation
 menumaker
-sitebuilder
-
 
 Database setup from scratch for Mysql
 -------------------------------------

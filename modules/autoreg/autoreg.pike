@@ -4,7 +4,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version="$Id: autoreg.pike,v 1.2 1998/08/26 00:21:23 js Exp $";
+constant cvs_version="$Id: autoreg.pike,v 1.3 1998/09/21 15:45:00 js Exp $";
 
 
 mapping engines =
@@ -52,7 +52,7 @@ array register_module()
 void connect_and_send_query(string host, string path)
 {
   object o=Stdio.File();
-//  werror(host+": "+path+"\n");
+  werror(host+": "+path+"\n");
   o->connect(host,80);
   o->write("GET "+path+" HTTP/1.0\r\n\r\n");
 //  Stdio.write_file("/home/js/AutoSite/"+host+".html",o->read());
@@ -70,7 +70,7 @@ string tag_register(string tag_name, mapping args, object id)
       http_encode_string(args->url);
     thread_create(connect_and_send_query,engines[engine]->host,engines[engine]->path+rest);
   }
-  return "<b>Registered: "+indices(engines)*", "+".</b>";
+  return "<b>Registered: "+sort(indices(engines))*", "+".</b>";
 }
   
 
