@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: global_variables.pike,v 1.93 2004/06/30 16:58:37 mast Exp $
+// $Id: global_variables.pike,v 1.94 2004/08/19 14:19:37 grubba Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -148,25 +148,25 @@ void set_up_ssl_variables( Protocol o )
 {
   function(DEFVAR) defvar = o->defvar;
 
-  defvar( "ssl_cert_file", ({ "demo_certificate.pem" }),
-	  LOCALE(86, "SSL certificate file"),
-	  TYPE_FILE_LIST,
-	  sprintf(LOCALE(87, "The SSL certificate file(s) to use. "
-			 "If a path is relative, it will first be searched "
-			 "for relative to %s, "
-			 "and if not found there relative to %s. ")+
-		  "\n", combine_path(getcwd(), "../local"), getcwd() ));
+  defvar( "ssl_cert_file",
+	  o->CertificateListVariable
+	  ( ({ "demo_certificate.pem" }), 0,
+	     LOCALE(86, "SSL certificate file"),
+	     LOCALE(87, "The SSL certificate file(s) to use. "
+		    "If a path is relative, it will first be "
+		    "searched for relative to %s, "
+		    "and if not found there relative to %s. ")));
 
-
-  defvar( "ssl_key_file", "", LOCALE(88, "SSL key file"),
-	  TYPE_STRING,
-	  sprintf(LOCALE(89, "The SSL key file to use. If the path is "
-			 "relative, it will first be searched for relative "
-			 "to %s, and if not found there relative to %s. "
-			 "You do not have to specify a key "
-			 "file, leave this field empty to use the certificate "
-			 "file only.")+
-		  "\n", combine_path(getcwd(), "../local"), getcwd() ));
+  defvar( "ssl_key_file",
+	  o->KeyFileVariable
+	  ( "", 0, LOCALE(88, "SSL key file"),
+	    LOCALE(89, "The SSL key file to use. If the path is "
+		   "relative, it will first be searched for "
+		   "relative to %s, and if not found there "
+		   "relative to %s. "
+		   "You do not have to specify a key "
+		   "file, leave this field empty to use the "
+		   "certificate file only.")));
 }
 
 
