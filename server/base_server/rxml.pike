@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.241 2000/09/07 20:36:27 nilsson Exp $
+// $Id: rxml.pike,v 1.242 2000/09/08 03:29:02 mast Exp $
 
 
 inherit "rxmlhelp";
@@ -1043,6 +1043,17 @@ class TagPINoParse {
   constant flags = RXML.FLAG_PROC_INSTR;
 }
 
+class TagPICData
+{
+  inherit RXML.Tag;
+  constant name = "cdata";
+  constant flags = RXML.FLAG_PROC_INSTR;
+  RXML.Type content_type = RXML.t_text;
+  class Frame
+  {
+    inherit RXML.Frame;
+  }
+}
 
 class TagEval {
   inherit RXML.Tag;
