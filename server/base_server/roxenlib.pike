@@ -1,6 +1,6 @@
 inherit "http";
 
-// static string _cvs_version = "$Id: roxenlib.pike,v 1.101 1999/05/25 23:29:38 neotron Exp $";
+// static string _cvs_version = "$Id: roxenlib.pike,v 1.102 1999/05/29 13:32:24 wing Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -1072,24 +1072,38 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 				lambda (mapping m1, mapping m2, array order)
 				{
 				  int tmp;
-				     
+
+				  function compare = lambda (string a,
+							     string b)
+						     {
+						       if (a < b)
+							 return -1;
+						       else if (a > b)
+							 return 1;
+						       else
+							 return 0;
+						     };
 				  foreach (order, string field)
-				  if (field[0] == '-')
-				    if (tmp = (m1[field[1..]]
-					       < m2[field[1..]]))
-				      return tmp;
+				  {
+				    if (field[0] == '-')
+				    {
+				      if (tmp = compare( m2[field[1..]],
+							 m1[field[1..]] ))
+					return tmp;
+				    }
+				    else if (field[0] == '+')
+				    {
+				      if (tmp = compare( m1[field[1..]],
+							 m2[field[1..]] ))
+					return tmp;
+				    }
 				    else
-				      ;
-				  else if (field[0] == '+')
-				    if (tmp = (m1[field[1..]]
-					       > m2[field[1..]]))
-				      return tmp;
-				    else
-				      ;
-				  else
-				    if (tmp = (m1[field]
-					       > m2[field]))
-				      return tmp;
+				    {
+				      if (tmp = compare( m1[field],
+							 m2[field] ))
+					return tmp;
+				    }
+				  }
 				  return 0;
 				}, order );
   }
