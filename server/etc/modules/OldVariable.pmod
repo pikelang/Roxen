@@ -1,5 +1,6 @@
 static mapping changed_values = set_weak_flag( ([]), 1 );
 static int unique_vid;
+static inherit "html";
 
 class Variable
 //. The basic variable type in Roxen. All other variable types should
@@ -142,11 +143,106 @@ class Variable
   }
 }
 
+
+
+
+// =====================================================================
+// Float
+// =====================================================================
+
+class Float
+//. Float variable, with optional range checks, and adjustable precision.
+{
+  inherit Variable;
+  constant type = "Int";
+  static float _max, _min;
+  static int _prec = 2, mm_set;
+
+  static string _format( float m )
+  {
+    if( !_prec )
+      return sprintf( "%d", (int)m );
+    return sprintf( "%1."+_prec+"f", m );
+  }
+
+  void set_range(float minimum, float maximum )
+    //. Set the range of the variable, if minimum and maximum are both
+    //. 0.0 (the default), the range check is removed.
+  {
+    if( minimum == maximum )
+      mm_set = 0;
+    else
+      mm_set = 1;
+    _max = maximum;
+    _min = minimum;
+  }
+
+  void set_precision( int prec )
+    //. Set the number of _decimals_ shown to the user.
+    //. If prec is 3, and the float is 1, 1.000 will be shown.
+    //. Default is 2.
+  {
+    _prec = ndigits;
+  }
+
+  array(string|float) verify_set( float new_value )
+  {
+    string warn;
+    if( mm_set )
+    {
+      if( new_value > _max )
+      {
+        warn = sprintf("Value is bigger than %s, adjusted", _format(_max) );
+        new_value = _max;
+      }
+      else if( new_value < _min )
+      {
+        warn = sprintf("Value is less than %s, adjusted", _format(_min) );
+        new_value = _min;
+      }
+    }
+    return ({ warn, new_value });
+  }
+  
+  string render_view( RequestID id )
+  {
+    return _format(query());
+  }
+  
+  string render_form( RequestID id )
+  {
+    int size = 15;
+    if( mm_set ) 
+      size = max( strlen(_format(_max)), strlen(_format(_min)) )+2;
+    return input(path(), _format(query()), size);
+  }
+}
+
+
+
+
+// =====================================================================
+// Int
+// =====================================================================
+
 class Int
+//. Integer variable, with optional range checks
 {
   inherit Variable;
   constant type = "Int";
   static int _max, _min, mm_set;
+
+  void set_range(int minimum, int maximum )
+    //. Set the range of the variable, if minimum and maximum are both
+    //. 0 (the default), the range check is removed.
+  {
+    if( minimum == maximum )
+      mm_set = 0;
+    else
+      mm_set = 1;
+    _max = maximum;
+    _min = minimum;
+  }
 
   array(string|int) verify_set( int new_value )
   {
@@ -166,20 +262,12 @@ class Int
     }
     return ({ warn, new_value });
   }
-  
-  void set_range(int mm, int mi )
-  {
-    if( _max == 0 && _min == 0 )
-      mm_set = 0;
-    else
-      mm_set = 1;
-    _max = mm;
-    _min = mi;
-  }
-
 
   string render_form( RequestID id )
   {
-    
+    int size = 10;
+    if( mm_set ) 
+      size = max( strlen((string)_max), strlen((string)_min) )+2;
+    return input(path(), (string)query(), size);    
   }
 }
