@@ -33,7 +33,14 @@ class ConfigIFCache
     else
     {
       dir = name;
-      db = master()->resolv("DBManager.get")( "local" );
+      db = master()->resolv("DBManager.cached_get")( "local" );
+
+      if( !db )
+      {
+	report_fatal("No local database!\n");
+	exit(1);
+      }
+      
       catch(db->query( "create table "+name+" ("
                        "  id varchar(80) not null primary key,"
                        "  data blob not null default ''"
