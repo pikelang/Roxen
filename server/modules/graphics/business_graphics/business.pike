@@ -10,7 +10,7 @@
  * reference cache shortly.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.76 1998/02/24 22:43:15 peter Exp $";
+constant cvs_version = "$Id: business.pike,v 1.77 1998/02/25 19:45:38 hedda Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -79,6 +79,7 @@ mixed *register_module()
        "                 is used if this is not defined.\n"
        "  <b>namesize</b>       Height of the name text in pixels.\n"
        "                 <b>Fontsize</b> is used if this is undefined.\n"
+       "  <b>grey</b>           Makes the default colors in greyscale.\m"
 
        "  <b>3D</b>             Render piecharts on top of a cylinder, takes"
        " the\n                 height in pixels of the cylinder as argument.\n"
