@@ -2,7 +2,7 @@
 
 // Gopher proxy module.
 
-constant cvs_version = "$Id: gopher.pike,v 1.27 2002/11/11 01:56:04 mani Exp $";
+constant cvs_version = "$Id: gopher.pike,v 1.28 2003/01/14 20:37:56 agehall Exp $";
 constant thread_safe = 1;
 
 #include <config.h>
@@ -52,7 +52,7 @@ string make_html_line(array(string) s)
 void my_pipe_done(array (object) a)
 {
 //if(a[1]) destruct(a[1]);
-  if(a[0]) ::my_pipe_done(a[0]);
+  if(a[0]) global::my_pipe_done(a[0]);
 }
 
 void write_to_client_and_cache(object client, string data, string key)
