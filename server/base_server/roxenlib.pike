@@ -1,6 +1,6 @@
 inherit "http";
 
-static string _cvs_version = "$Id: roxenlib.pike,v 1.22 1997/05/01 00:14:29 neotron Exp $";
+static string _cvs_version = "$Id: roxenlib.pike,v 1.23 1997/05/06 21:55:31 neotron Exp $";
 // This code has to work booth in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -95,6 +95,8 @@ static mapping build_env_vars(string f, object id, string path_info)
   if(id->misc->connection)
     if(search(id->misc->connection, "keep-alive") != -1)
       new["HTTP_CONNECTION"]="Keep-Alive";
+    else if(stringp(id->misc->connection))
+      new["HTTP_CONNECTION"]=id->misc->connection;
     else
       new["HTTP_CONNECTION"]=id->misc->connection *", ";
     
