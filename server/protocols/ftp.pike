@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 1.101 1999/06/25 20:59:03 neotron Exp $
+ * $Id: ftp.pike,v 1.102 1999/08/08 16:24:20 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -1657,7 +1657,7 @@ class FTPSession
 	send(550, ({ sprintf("%s: Error, can't open file.", fname) }));
 	return 0;
       }
-    } else if ((< "STOR", "MKD", "MOVE" >)[cmd]) {
+    } else if ((< "STOR", "APPE", "MKD", "MOVE" >)[cmd]) {
       mixed err;
       if ((err = catch(file = conf->get_file(session)))) {
 	report_error(sprintf("FTP: Error opening file \"%s\"\n"
@@ -1724,7 +1724,9 @@ class FTPSession
     switch(file->mode) {
     case "A":
       if (file->data) {
-	file->data = replace(replace(file->data, "\r\n", "\n"), "\n", "\r\n");
+	file->data = replace(file->data,
+			     ({ "\r\n", "\n",   "\r" }),
+			     ({ "\r\n", "\r\n", "\r\n" }));
       }
       if(objectp(file->file) && file->file->set_nonblocking)
       {
@@ -1887,13 +1889,78 @@ class FTPSession
     }
   }
 
+  static private constant IFS = (<" ", "\t">);
+  static private constant Quote = (< "\'", "\"", "\`", "\\" >);
+  static private constant Specials = IFS|Quote;
+
+  static private array(string) split_command_line(string cmdline)
+  {
+    // Check if we need to handle quoting at all...
+    int need_quoting;
+    foreach(indices(Quote), string c) {
+      if (need_quoting = (search(cmdline, c) >= 0)) {
+	break;
+      }
+    }
+    if (!need_quoting) {
+      // The easy case...
+      return ((replace(cmdline, "\t", " ")/" ") - ({ "" }));
+    }
+
+    array(string) res = ({});
+    string arg = 0;
+    int argstart = 0;
+    int i;
+    for(i=0; i < sizeof(cmdline); i++) {
+      string c;
+      if (Specials[c = cmdline[i..i]]) {
+	if (argstart < i) {
+	  arg = (arg || "") + cmdline[argstart..i-1];
+	}
+	switch(c) {
+	case "\"":
+	case "\'":
+	case "\`":
+	  // NOTE: We handle all of the above as \'.
+	  int j = search(cmdline, c, i+1);
+	  if (j == -1) {
+	    // No endquote!
+	    // Simulate one at EOL.
+	    j = sizeof(cmdline);
+	  }
+	  arg = (arg || "") + cmdline[i+1..j-1];
+	  i = j;
+	  break;
+	case "\\":
+	  i++;
+	  arg += cmdline[i..i];
+	  break;
+	case " ":
+	case "\t":
+	  // IFS
+	  if (arg) {
+	    res += ({ arg });
+	    arg = 0;
+	  }
+	  break;
+	}
+	argstart = i+1;
+      }
+    }
+    if (argstart < i) {
+      arg = (arg || "") + cmdline[argstart..];
+    }
+    if (arg) {
+      res += ({ arg });
+    }
+    return res;
+  }
+
   static private array(string) glob_expand_command_line(string cmdline)
   {
     DWRITE(sprintf("glob_expand_command_line(\"%s\")\n", cmdline));
 
-    // No quoting supported
-    array(string|array(string)) args = (replace(cmdline, "\t", " ")/" ") -
-      ({ "" });
+    array(string|array(string)) args = split_command_line(cmdline);
 
     int index;
 
@@ -1903,6 +1970,7 @@ class FTPSession
 
       array (int) st;
     
+      // FIXME: Does not check if "*" or "?" was quoted!
       if (replace(args[index], ({"*", "?"}), ({ "", "" })) != args[index]) {
 
         // Globs in the file-name.
