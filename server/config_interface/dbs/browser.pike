@@ -706,7 +706,7 @@ mapping|string parse( RequestID id )
     })});
   };
 
-  foreach( DBManager.db_tables( id->variables->db ), string tb )
+  foreach( DBManager.db_tables( id->variables->db )-({0}), string tb )
     add_table_info(tb,
 		   DBManager.db_table_information(id->variables->db, tb));
 
