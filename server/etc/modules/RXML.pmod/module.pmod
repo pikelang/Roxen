@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.211 2001/07/24 22:35:41 mast Exp $
+// $Id: module.pmod,v 1.212 2001/07/25 18:48:07 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -1617,6 +1617,13 @@ class Context
 
   void extend_scope (string scope_name, SCOPE_TYPE vars)
   //! Adds or extends the specified scope at the global level.
+  //!
+  //! @note
+  //! The contents of @[vars] is currently transferred over to the
+  //! existing scope object, if there is any. That's usually not an
+  //! issue if the scopes are mappings, but can be if @[vars] is an
+  //! @[RXML.Scope] object, or the existing scope is such an object
+  //! that doesn't handle assignments.
   {
     if (scopes[scope_name]) {
       SCOPE_TYPE oldvars;
@@ -2637,19 +2644,20 @@ class Frame
 
   // Services:
 
-  final mixed get_var (string var, void|string scope_name, void|Type want_type)
+  final mixed get_var (string|array(string|int) var, void|string scope_name,
+		       void|Type want_type)
   //! A wrapper for easy access to @[RXML.Context.get_var].
   {
     return RXML_CONTEXT->get_var (var, scope_name, want_type);
   }
 
-  final mixed set_var (string var, mixed val, void|string scope_name)
+  final mixed set_var (string|array(string|int) var, mixed val, void|string scope_name)
   //! A wrapper for easy access to @[RXML.Context.set_var].
   {
     return RXML_CONTEXT->set_var (var, val, scope_name);
   }
 
-  final void delete_var (string var, void|string scope_name)
+  final void delete_var (string|array(string|int) var, void|string scope_name)
   //! A wrapper for easy access to @[RXML.Context.delete_var].
   {
     RXML_CONTEXT->delete_var (var, scope_name);
@@ -3907,15 +3915,16 @@ class Frame
 
 //! Shortcuts to some common functions in the current context (see the
 //! corresponding functions in the @[Context] class for details).
-final mixed get_var (string var, void|string scope_name, void|Type want_type)
+final mixed get_var (string|array(string|int) var, void|string scope_name,
+		     void|Type want_type)
   {return RXML_CONTEXT->get_var (var, scope_name, want_type);}
 final mixed user_get_var (string var, void|string scope_name, void|Type want_type)
   {return RXML_CONTEXT->user_get_var (var, scope_name, want_type);}
-final mixed set_var (string var, mixed val, void|string scope_name)
+final mixed set_var (string|array(string|int) var, mixed val, void|string scope_name)
   {return RXML_CONTEXT->set_var (var, val, scope_name);}
 final mixed user_set_var (string var, mixed val, void|string scope_name)
   {return RXML_CONTEXT->user_set_var (var, val, scope_name);}
-final void delete_var (string var, void|string scope_name)
+final void delete_var (string|array(string|int) var, void|string scope_name)
   {RXML_CONTEXT->delete_var (var, scope_name);}
 final void user_delete_var (string var, void|string scope_name)
   {RXML_CONTEXT->user_delete_var (var, scope_name);}
@@ -5383,7 +5392,7 @@ static class TSame
 }
 
 TType t_type = TType();
-//! The type for the set of all RXML types as values.
+//! A type with the set of all RXML types as values.
 //!
 //! Supertype: @[RXML.t_any]
 
@@ -5424,6 +5433,48 @@ static class TType
   }
 
   string _sprintf() {return "RXML.t_type" + OBJ_COUNT;}
+}
+
+TParser t_parser = TParser();
+//! A type with the set of all RXML parser programs as values.
+//!
+//! Supertype: @[RXML.t_any]
+
+static class TParser
+{
+  inherit Type;
+  constant name = "parser";
+  constant sequential = 0;
+  Nil empty_value = nil;
+  Type supertype = t_any;
+  constant conversion_type = 0;
+  constant handle_literals = 1;
+
+  void type_check (mixed val, void|string msg, mixed... args)
+  {
+    if (!programp (val) || !val->is_RXML_Parser)
+      type_check_error (msg, args, "Expected a parser program, got %t.\n", val);
+  }
+
+  program/*(Parser)*/ encode (mixed val, void|Type from)
+  {
+    if (from)
+      switch (from->name) {
+	case TAny.name: type_check (val); // Fall through.
+	case local::name: return [program/*(Parser)*/] val;
+	default: return [program/*(Parser)*/] indirect_convert (val, from);
+      }
+    if (stringp (val)) {
+      program/*(Parser)*/ parser_prog = reg_parsers[val];
+      if (!parser_prog) parse_error ("There is no parser %s.\n", format_short (val));
+      return parser_prog;
+    }
+    mixed err = catch {return (program/*(Parser)*/) val;};
+    parse_error ("Cannot convert %s to parser: %s",
+		 format_short (val), describe_error (err));
+  }
+
+  string _sprintf() {return "RXML.t_parser" + OBJ_COUNT;}
 }
 
 // Basic types. Even though most of these have a `+ that fulfills
