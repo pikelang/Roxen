@@ -12,7 +12,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: business.pike,v 1.136 2000/11/09 23:15:59 kuntri Exp $";
+constant cvs_version = "$Id: business.pike,v 1.137 2000/12/05 00:45:59 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Business graphics";
@@ -700,7 +700,8 @@ string container_diagram(string tag, mapping m, string contents,
   string ext = "";
   if(query("ext")) ext="."+res->format;
 
-  m->src = query_internal_location() + image_cache->store( res,id )+ext;
+  m->src = query_absolute_internal_location(id) +
+    image_cache->store( res,id )+ext;
 
   if( mapping size = image_cache->metadata( m, id, 1 ) )
   {
