@@ -57,7 +57,7 @@ void draw(object(image) img, float h, array(float) coords)
 mapping(string:mixed) setinitcolors(mapping(string:mixed) diagram_data)
 {
   //diagram_data["datasize"]=0;
-  foreach(diagram_data["data"], string* fo)
+  foreach(diagram_data["data"], mixed* fo)
     if (sizeof(fo)>diagram_data["datasize"])
       diagram_data["datasize"]=sizeof(fo);
   
