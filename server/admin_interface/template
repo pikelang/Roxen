@@ -1,5 +1,5 @@
 <!-- -*- html -*- -->
-<!-- $Id: template,v 1.120 2002/11/19 06:55:00 mani Exp $ -->
+<!-- $Id: template,v 1.121 2004/04/04 20:03:52 mani Exp $ -->
 
 <define tag='cfg-variables'>
   <set variable='form.__redirect' value='1' />
@@ -126,6 +126,7 @@
   <expire-time now="1"/>
 </nooutput><html><head>
 <title>&roxen.version; Administration Interface<eval>&_.title:none;</eval></title>
+<if variable="usr.css = ?*"><link rel="stylesheet" href="&usr.css;" type="text/css" /></if>
 <link rel="shortcut icon" href="&usr.favicon;" />
 </head>
 <nooutput><gauge variable='var.time-parse-spent' resultonly='yes'>
