@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.287 2001/08/29 17:47:23 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.288 2001/08/29 23:08:34 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -3712,9 +3712,8 @@ class IfIs
   }
 
   int(0..1) do_check( string var, array arr, RequestID id) {
-    if(zero_type( var ) ) return 0;
     if(sizeof(arr)<2) return !!var;
-    if(!var) var = "0";
+    if(!var) var="";
 
     string is;
 
@@ -4042,7 +4041,7 @@ class TagIfConfig {
   constant plugin_name = "config";
   string source(RequestID id, string s) {
     if(id->config[s]) return "";
-    return ([])[0];
+    return 0;
   }
 }
 
@@ -4074,7 +4073,7 @@ class TagIfDefined {
   constant plugin_name = "defined";
   string source(RequestID id, string s) {
     mixed val;
-    if(zero_type(val=RXML_CONTEXT->misc[s])) return ([])[0];
+    if(zero_type(val=RXML_CONTEXT->misc[s])) return 0;
     if(stringp(val) || intp(val) || floatp(val)) return (string)val;
     return "";
   }
@@ -4130,7 +4129,7 @@ class TagIfPragma {
   constant plugin_name = "pragma";
   string source(RequestID id, string s) {
     if(id->pragma[s]) return "";
-    return ([])[0];
+    return 0;
   }
 }
 
@@ -4140,7 +4139,7 @@ class TagIfPrestate {
   constant cache = -1;
   string source(RequestID id, string s) {
     if(id->prestate[s]) return "";
-    return ([])[0];
+    return 0;
   }
 }
 
@@ -4157,7 +4156,7 @@ class TagIfSupports {
   constant plugin_name = "supports";
   string source(RequestID id, string s) {
     if(id->supports[s]) return "";
-    return ([])[0];
+    return 0;
   }
 }
 
@@ -4167,7 +4166,7 @@ class TagIfVariable {
   constant cache = 1;
   string source(RequestID id, string s) {
     mixed var=RXML.user_get_var(s);
-    if(!var) return var;
+    if(!var) return 0;
     if(arrayp(var)) return var;
     return RXML.t_text->encode (var);
   }
@@ -4185,10 +4184,7 @@ class TagIfSizeof {
   constant cache = -1;
   string source(RequestID id, string s) {
     mixed var=RXML.user_get_var(s);
-    if(!var) {
-      if(zero_type(RXML.user_get_var(s))) return ([])[0];
-      return "0";
-    }
+    if(!var) return 0;
     if(stringp(var) || arrayp(var) ||
        multisetp(var) || mappingp(var)) return (string)sizeof(var);
     if(objectp(var) && var->_sizeof) return (string)sizeof(var);
