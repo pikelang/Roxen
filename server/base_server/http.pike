@@ -1,17 +1,15 @@
 // HTTP convenience functions.
 // inherited by roxenlib, and thus by all files inheriting roxenlib.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: http.pike,v 1.39 2000/03/21 18:46:56 nilsson Exp $
+// $Id: http.pike,v 1.40 2000/04/13 19:02:21 per Exp $
 
 //#pragma strict_types
 
 #include <config.h>
 #include <variables.h>
 
-#if !efun(roxen)
 #define roxen roxenp()
 class RequestID {};
-#endif
 
 #ifdef HTTP_DEBUG
 # define HTTP_WERR(X) werror("HTTP: "+X+"\n");

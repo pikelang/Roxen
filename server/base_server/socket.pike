@@ -1,10 +1,8 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: socket.pike,v 1.19 2000/02/20 17:41:34 nilsson Exp $
+// $Id: socket.pike,v 1.20 2000/04/13 19:03:57 per Exp $
 
-#if !efun(roxen)
 #define roxen roxenp()
-#endif
 
 #if DEBUG_LEVEL > 19
 #ifndef SOCKET_DEBUG
