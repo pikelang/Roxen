@@ -1,5 +1,5 @@
 /*
- * $Id: clientlayer.pike,v 1.14 1998/09/12 20:44:21 per Exp $
+ * $Id: clientlayer.pike,v 1.15 1998/09/15 05:14:17 per Exp $
  *
  * A module for Roxen AutoMail, which provides functions for
  * clients.
@@ -10,11 +10,8 @@
 #include <module.h>
 inherit "module" : module;
 
-constant cvs_version="$Id: clientlayer.pike,v 1.14 1998/09/12 20:44:21 per Exp $";
+constant cvs_version="$Id: clientlayer.pike,v 1.15 1998/09/15 05:14:17 per Exp $";
 constant thread_safe=1;
-
-
-
 
 
 /* Roxen module functions ----------------------------------- */
@@ -270,23 +267,28 @@ class Mail
     return body_fd()->read();
   }
 
+  mapping _dh;
   mapping decoded_headers(int|void force)
   {
+    if(_dh && !force)
+      return _dh;
     mapping heads = copy_value(headers(force));
     foreach(indices(heads), string w)
       heads[w] = column(Array.map( heads[w]/" ", MIME.decode_word ),0)*" ";
-    return heads;
+    return _dh=heads;
   }
 
   mapping headers(int|void force)
   {
-    mapping h = get_mail_headers( message_id );
     if(!_headers || force)
+    {
+      mapping h = get_mail_headers( message_id );
       return _headers = parse_headers( h[ "headers" ] )[0] | h;
+    }
     return _headers;
   }
 
-  multiset flags(int|void force)
+  multiset(string) flags(int|void force)
   {
     if(!_flags || force)
       return _flags = get_mail_flags( id );
@@ -295,15 +297,28 @@ class Mail
 
   void set_flag(string name)
   {
-    modify();
-    _flags = 0;
-    set_mail_flag( id, name );
+    if(!flags()[name])
+    {
+      if(name == "read")
+	if(mailbox->_unread != -1)
+	  mailbox->_unread--;
+      modify();
+      _flags = 0;
+      set_mail_flag( id, name );
+    }
   }
 
   void clear_flag(string name)
   {
-    _flags = 0;
-    delete_mail_flag( id, name );
+    if(flags()[name])
+    {
+      if(name == "read")
+	if(mailbox->_unread != -1)
+	  mailbox->_unread++;
+      modify();
+      _flags = 0;
+      delete_mail_flag( id, name );
+    }
   }
 
   void create(string i, string m, object mb)
@@ -323,6 +338,13 @@ class Mailbox
 
   object user;
   string name;
+  int _unread = -1;
+  int num_unread()
+  {
+    if(_unread != -1)
+      return _unread;
+    return _unread = (sizeof(mail()->flags()->read-({1})));
+  }
 
   void remove_mail(Mail mail)
   {
@@ -412,22 +434,27 @@ class Mailbox
     string mid = create_message( row );
     
     // 3> Insert the message in this mailbox using the 'mail' table.
-    add_mailbox_to_mail( mid, id );
+    string lmid = add_mailbox_to_mail( mid, id );
     
     // 4> Zap the cache.
-    _mail = 0;
+    //     _mail = 0;
+    if(_unread != -1)
+      _unread++;
     modify();
 
-    // 5> Find this new message in the mail() array.
-    foreach(mail(), Mail m)
-      if((string)m->message_id == (string)mid)
-	return m;
+    if(!_mail) 
+    {
+      foreach(mail(), Mail m)
+	if((string)m->message_id == (string)mid)
+	  return m;
+      // Oups. This should not happend. :-)
+      error(sprintf("Failed to find newly created message %s for mbox %s!\n", 
+		    mid,(string)id));
+    }
 
-    // Oups. This should not happend. :-)
-    error(sprintf("Failed to find newly created message (%s) in "
-		  "array (%s) for mbox %s!\n", mid, 
-		  String.implode_nicely((array(string))mail()->message_id),
-		  (string)id));
+    Mail m;
+    _mail += ({ m =  Mail(lmid, mid, this_object()) });
+    return m;
   }
 
   Mail create_mail_from_fd( Stdio.File fd )
@@ -671,7 +698,7 @@ mapping(string:mixed) get_mail_headers(string message_id)
 
 int update_message_refcount(string message_id, int deltacount)
 {
-  array a=squery("select refcount from messages where id='%s'",message_id);
+  array a=squery("select refcount from messages where id='%s'", message_id);
   if(!a||!sizeof(a))
     return 0;
   int refcount=(int)a[0]->refcount + deltacount;
@@ -681,8 +708,9 @@ int update_message_refcount(string message_id, int deltacount)
     delete_body(a[0]->body_id);
   }
   else
-    squery("update messages set refcount='%d' where id=%s", 
-	   refcount,message_id);
+    squery("update messages set refcount='%d' where id=%s",
+	   refcount, message_id);
+  return 1;
 }
 
 int delete_mail(string mail_id)
@@ -740,19 +768,20 @@ int remove_mailbox_from_mail(string message_id, int mailbox_id)
 {
   squery("delete * from mail where mailbox_id='%d' and message_id='%s'",
 	 mailbox_id, message_id);
+  // we must also remove all flags.
   update_message_refcount( message_id, -1 );
 }
 
-int add_mailbox_to_mail(string message_id, int mailbox_id)
+string add_mailbox_to_mail(string message_id, int mailbox_id)
 {
 //   array a=query("select message_id from mail where id='"+mail_id+"'");
 //   if(!sizeof(a))
 //     return 0;
 //   string message_id=a[0]->message_id;
   squery("insert into mail values(NULL,'%d','%s')",mailbox_id,message_id);
-  if(!update_message_refcount(message_id,1))
-    return 0;
-  return 1;
+  string res = (string)get_sql()->master_sql->insert_id();
+  update_message_refcount(message_id,1);
+  return res;
 }
 
 void set_mail_flag(string mail_id, string flag)
