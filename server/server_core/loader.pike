@@ -4,7 +4,7 @@
 // ChiliMoon bootstrap program. Sets up the environment,
 // replces the master, adds custom functions and starts core.pike.
 
-// $Id: loader.pike,v 1.389 2004/06/16 01:53:39 _cvs_stephen Exp $
+// $Id: loader.pike,v 1.390 2004/06/17 02:50:43 _cvs_stephen Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ static string    var_dir = "../var/";
 
 #define werror roxen_werror
 
-constant cvs_version="$Id: loader.pike,v 1.389 2004/06/16 01:53:39 _cvs_stephen Exp $";
+constant cvs_version="$Id: loader.pike,v 1.390 2004/06/17 02:50:43 _cvs_stephen Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1305,22 +1305,45 @@ private Thread.Mutex mt = Thread.Mutex();
 class CSql {
   inherit Sql.Sql;
   string dbname;
+  private /*RequestID*/object id;
 
-  static void create(string dbn, object|string url) {
-    dbname=dbn;
+  static void create(string dbn, object|string url,
+   void|/*RequestID*/object idr) {
+    dbname=dbn; id=idr;
     ::create(url);
+#ifdef DB_DEBUG
+    werror("Opened new DB %O\n",dbname);
+#endif
   }
 
   static void destroy() {
-    Thread.MutexKey k=mt->lock();
-    if(sizeof(sql_free_list[dbname]+=({master_sql}))
-     >max_sql_connections_cached)
-      weed_sql_cache(dbname);
-    k=0;
+    if(id)
+#ifdef DB_DEBUG
+      werror("Saving DB to RequestID %O\n", dbname),
+#endif
+      id->misc->sqlsession=CSql(dbname, master_sql, id);
+    else {
+#ifdef DB_DEBUG
+      werror("Saving DB to pool %O %d\n",
+       dbname, sizeof(sql_free_list[dbname]));
+#endif
+      Thread.MutexKey k=mt->lock();
+      if(sizeof(sql_free_list[dbname]+=({master_sql}))
+       >max_sql_connections_cached)
+        weed_sql_cache(dbname);
+      k=0;
+    }
   }
 }
 
-Sql.Sql sq_cache_get(string dbname) {
+Sql.Sql sq_cache_get(string dbname, string url, void|/*RequestID*/object id) {
+  if(id) {
+    CSql oldsession=id->misc->sqlsession;
+    if(oldsession && oldsession->dbname==dbname) {
+      id->misc->sqlsession=0;
+      return oldsession;
+    }
+  }
   if(sql_free_list[dbname]) {
     array flist;
 #ifdef DB_DEBUG
@@ -1336,59 +1359,45 @@ Sql.Sql sq_cache_get(string dbname) {
       else
         m_delete(sql_free_list, dbname);
       k=0;
-      return CSql(dbname, res);
+      return CSql(dbname, res, id);
     }
     k=0;
   }
-  return UNDEFINED;
+  return CSql(dbname, url, id);
 }
 
 /* Not to be documented. This is a low-level function that should be
  * avoided by normal users. 
 */
-Sql.Sql connect_to_my_mysql( string|int ro, void|string db )
-{
-  string dbname = db+":"+(intp(ro)?(ro&&"ro")||"rw":ro);
-  Sql.Sql res;
-  if(!(res=sq_cache_get(dbname)))
-    res=CSql(dbname, low_connect_to_my_mysql(ro, db));
-  return res;
-}
-
-static mixed low_connect_to_my_mysql( string|int ro, void|string db )
-{
-  object res;
+Sql.Sql connect_to_my_mysql(string|int ro, void|string db) {
+  for(;;) {
 #ifdef DB_DEBUG
-  werror("Requested %O for %O DB\n", db, ro );
+    werror("Requested %O for %O DB\n", db, ro );
 #endif
-
-  if( !db )
-    db = "mysql";
-  
-  if( mixed err = catch
-  {
-    if( intp( ro ) )
-      ro = ro?"ro":"rw";
-    int t = gethrtime();
-    res = Sql.Sql( replace( my_mysql_path,({"%user%", "%db%" }),
-			    ({ ro, db })) );
+    if(!db)
+      db="mysql";
+    mixed err = catch {
+      if( intp( ro ) )
+        ro = ro?"ro":"rw";
 #ifdef DB_DEBUG
-    werror("Connect took %.2fms\n", (gethrtime()-t)/1000.0 );
+      int t = gethrtime();
 #endif
-    return res;
-  } )
-    if( db == "mysql" )
-      throw( err );
+      Sql.Sql ret = sq_cache_get(db+":"+(intp(ro)?(ro&&"ro")||"rw":ro),
+       replace(my_mysql_path, ({"%user%", "%db%"}), ({ro, db})));
+#ifdef DB_DEBUG
+      werror("Connect took %.2fms\n", (gethrtime()-t)/1000.0 );
+#endif
+      return ret;
+    };
+    if(db=="mysql")
+      throw(err);
 #ifdef DB_DEBUG
     else
-      werror ("Couldn't connect to MySQL as %s: %s", ro, describe_error (err));
+      werror("Couldn't connect to MySQL as %s: %s", ro, describe_error(err));
 #endif
-  if( db != "mysql" )
-    low_connect_to_my_mysql( 0, "mysql" )
-      ->query( "CREATE DATABASE "+ db );
-  return low_connect_to_my_mysql( ro, db );
+    connect_to_my_mysql(0, "mysql")->query("CREATE DATABASE "+db);
+  }
 }
-
 
 static mapping tailf_info = ([]);
 static void do_tailf( int loop, string file )

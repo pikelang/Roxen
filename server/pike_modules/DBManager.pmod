@@ -1,6 +1,6 @@
 // Symbolic DB handling.
 //
-// $Id: DBManager.pmod,v 1.71 2004/06/16 01:00:16 _cvs_stephen Exp $
+// $Id: DBManager.pmod,v 1.72 2004/06/17 02:50:43 _cvs_stephen Exp $
 
 //! Manages database aliases and permissions
 
@@ -206,8 +206,12 @@ private
     }
   }
 
+  Sql.Sql sql_cache_get(string url, RequestID id) {
+    return loader.sq_cache_get(replace(url,":",";")+":-", url, id);
+  }
+
   mapping(string:mapping(string:string)) sql_url_cache = ([]);
-  Sql.Sql low_get( string user, string db )
+  Sql.Sql low_get(string user, string db, RequestID id)
   {
     if( !user )
       return 0;
@@ -230,18 +234,10 @@ private
       // has, but they are hidden behind an overloaded index operator.
       // Thus, we have to fool the typechecker.
       return
-       [object(Sql.Sql)](object)ROWrapper(sql_cache_get(d->path));
-    return sql_cache_get(d->path);
+       [object(Sql.Sql)](object)ROWrapper(sql_cache_get(d->path, id));
+    return sql_cache_get(d->path, id);
   }
 };
-
-private Sql.Sql sql_cache_get(string url) {
-  Sql.Sql db;
-  string dbname=replace(url,":",";")+":-";
-  if(!(db=loader.sq_cache_get(dbname)))
-    db=loader.CSql(dbname, Sql.Sql(url));
-  return db;
-}
 
 void add_dblist_changed_callback( function(void:void) callback )
 //! Add a function to be called when the database list has been
@@ -563,12 +559,12 @@ string get_db_user( string name, Configuration c, int ro )
   return connection_user_cache[ key ] = ro?"ro":"rw";
 }
 
-Sql.Sql get( string name, void|Configuration c, int|void ro )
+Sql.Sql get(string name, void|Configuration c, void|int ro, void|RequestID id)
 //! Get the database @[name]. If the configuration @[c] is specified,
 //! only return the database if the configuration has at least read
 //! access.
 {
-  return low_get( get_db_user( name,c,ro ), name );
+  return low_get(get_db_user(name, c, ro), name, id);
 }
 
 void drop_db( string name )

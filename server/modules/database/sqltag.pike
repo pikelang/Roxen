@@ -1,7 +1,7 @@
 // This is a ChiliMoon module. Copyright © 1997-2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.107 2004/06/15 22:11:02 _cvs_stephen Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.108 2004/06/17 02:50:42 _cvs_stephen Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -104,6 +104,12 @@ inserting large datas. Oracle, for instance, limits the query to 4000 bytes.
  The actual SQL-statement.</p>
 </attr>
 
+<attr name='prefetch'><p>
+ Tells the emit tag to prefetch all rows from the database so that
+ any nested sqlqueries inside the emit will be ran in the same SQL-session
+ as the current query.</p>
+</attr>
+
 <attr name='bindings' value='\"name=variable,name=variable,...\"'><p>
 Specifies binding variables to use with this query. This is comma separated
 list of binding variable names and RXML variables to assign to those
@@ -130,11 +136,10 @@ array|object do_sql_query(mapping args, RequestID id,
 			  void|int(0..1) ret_con)
 {
   string host;
-  if (args->host)
-  {
-    host=args->host;
-    args->host="SECRET";
-  }
+  if(args->host)
+    host=args->host, args->host="SECRET";
+  else if(args->db)			  // NGSERVER: drop support for db= ?
+    host=args->db, args->db="SECRET";
 
   Sql.Sql con;
   array(mapping(string:mixed))|object result;
@@ -179,9 +184,8 @@ array|object do_sql_query(mapping args, RequestID id,
   }
   else
   {
-    error = catch(con = DBManager.get( host||args->db||
-				       default_db,
-				       my_configuration(), ro));
+    error = catch(con = DBManager.get( host||default_db,
+				       my_configuration(), ro, id));
     if( !con )
       RXML.run_error( "Couldn't connect to SQL server"+
 		      (error?": "+ describe_error (error) :"")+"\n" );
@@ -263,13 +267,14 @@ class TagSqlplugin {
   mapping(string:RXML.Type) opt_arg_types = ([
     "host":RXML.t_text(RXML.PEnt),
     "db":RXML.t_text(RXML.PEnt),
+    "prefetch":RXML.t_text(RXML.PEnt),
   ]);
 
   object get_dataset(mapping m, RequestID id) {
     // Haven't verified that the NOCACHE here is actually needed, but
     // in the worst case it's just unnecessary.
     NOCACHE();
-    return SqlEmitResponse(do_sql_query(m+([]), id, 1));
+    return SqlEmitResponse(do_sql_query(m+([]), id, !args->prefetch));
   }
 }
 
@@ -290,9 +295,10 @@ class TagSQLQuery {
     array do_return(RequestID id) {
       NOCACHE();
 
-      array res=do_sql_query(args, id, 0, 1);
+      array res;
 
       if(args["mysql-insert-id"]) {
+        res=do_sql_query(args, id, 0, 1);
 	object con = args->dbobj;
 	m_delete(args, "dbobj");
 	if(con && con->master_sql)
@@ -301,6 +307,8 @@ class TagSQLQuery {
 	else
 	  RXML.parse_error("No insert_id present.\n");
       }
+      else
+         res=do_sql_query(args, id, 0);
       id->misc->defines[" _ok"] = 1;
       return 0;
     }
