@@ -1,6 +1,6 @@
 // The Tab lists tag module.
 // Developed by Fredrik Noring <noring@infovav.se>, ask him for more info
-string cvs_version = "$Id: tablist.pike,v 1.4 1997/04/05 01:26:12 per Exp $";
+string cvs_version = "$Id: tablist.pike,v 1.5 1997/04/09 20:16:33 marcus Exp $";
 #include <module.h>
 
 inherit "module";
@@ -10,9 +10,9 @@ import Array;
 import Image;
 
 constant Image = image;
-constant Font = image;
+constant Font = font;
 
-#define DEFAULT_FONT "16/utopia_medium_r"
+#define DEFAULT_FONT "32/urw_itc_avant_garde-demi-r"
 #define DEFAULT_PATH "fonts/"
 
 #define DEBUG_TABLIST 0
@@ -150,9 +150,11 @@ object tab(string name, int select, int n, int last, string font,
 #endif
 
   fnt = Font();
-  if (!fnt->load(font))
+  if (!fnt->load(font)) {
      perror("Could not load font \"" + font + "\"\n");
-   txt = fnt->write(name)->scale(2.0);
+     fnt->load(DEFAULT_PATH DEFAULT_FONT);
+  }
+  txt = fnt->write(name);
 #if DEBUG_TABLIST
   perror((sprintf("Font image size: %d × %d\n",txt->xsize(),txt->ysize())));
 #endif
