@@ -34,6 +34,7 @@ constant relevant=(<"rxmltags","graphic_text","tablify","countdown","counter">);
 multiset enabled;
 void start (int when, Configuration conf)
 {
+  set("_priority",7);
   conf->parse_html_compat = 1;
   enabled=(<>);
   foreach(indices(conf->enabled_modules), string name)
@@ -178,14 +179,31 @@ string container_preparse( string tag_name, mapping args, string contents,
 			 parse_rxml( contents, id ) );
 }
 
-array tag_append(string tag, mapping m, RequestID id)
+array|string tag_append(string tag, mapping m, RequestID id)
 {
-  if(m->variable && m->define) {
-    // Set variable to the value of a define
-    id->variables[ m->variable ] += id->misc->defines[ m->define ]||"";
-    old_rxml_warning(id, "define attribute in append tag","only variables");
-    return ({""});
+  if(m->variable) {
+    if(m->define) {
+      // Set variable to the value of a define
+      id->variables[ m->variable ] += id->misc->defines[ m->define ]||"";
+      old_rxml_warning(id, "define attribute in append tag","only variables");
+      return ({""});
+    }
+    if (m->other) {
+      old_rxml_warning(id, "other attribute in append tag","only regular variables");
+      RXML.Context context=RXML.get_context();
+      mixed value=context->user_get_var(m->variable, m->scope);
+      // Append the value of a misc variable to an enityt variable.
+      if (!id->misc->variables || !id->misc->variables[ m->other ])
+	return rxml_error(tag, "Other variable doesn't exist.", id);
+      if (value)
+	value+=id->misc->variables[ m->other ];
+      else
+	value=id->misc->variables[ m->other ];
+      context->user_set_var(m->variable, value, m->scope);
+      return ({""});
+    }
   }
+
   return ({1});
 }
 
@@ -234,12 +252,31 @@ array(string) tag_referrer(string tag, mapping m, RequestID id)
     (m->alt || "") });
 }
 
-array tag_set(string tag, mapping m, RequestID id)
+string|array tag_set(string tag, mapping m, RequestID id)
 {
-  if(m->define && m->variable) {
-    // Set variable to the value of a define
-    id->variables[ m->variable ] = id->misc->defines[ m->define ];
-    old_rxml_warning(id, "define attribute in set tag","only variables");
+  if(m->variable) {
+    RXML.Context context=RXML.get_context();
+    if(m->define) {
+      // Set variable to the value of a define
+      context->user_set_var(m->variable, id->misc->defines[ m->define ], m->scope);
+      old_rxml_warning(id, "define attribute in set tag","only variables");
+      return ({""});
+    }
+    if (m->other) {
+      old_rxml_warning(id, "other attribute in set tag","only regular variables");
+      if (id->misc->variables && id->misc->variables[ m->other ]) {
+	// Set an entity variable to the value of a misc variable
+	context->user_set_var(m->variable, (string)id->misc->variables[m->other], m->scope);
+	return ({""});
+      }
+      return rxml_error(tag, "Other variable doesn't exist.", id);
+    }
+    if (m->eval) {
+      // Set an entity variable to the result of some evaluated RXML
+      context->user_set_var(m->variable, parse_rxml(m->eval, id), m->scope);
+      old_rxml_warning(id, "eval attribute in set tag","define variable");
+      return ({""});
+    }
   }
   return ({1});
 }
@@ -681,12 +718,18 @@ array(string) tag_version(string tag, mapping m, RequestID id) {
   return ({ roxen->version() });
 }
 
+//array(string) tag_line(string tag, mapping m, RequestID id) {
+//  return ({ (string)id->misc->line });
+//}
+
 
 // --------------- Register tags, containers and if-callers ---------------
 
 mapping query_tag_callers() {
   mapping active=(["list-tags":tag_list_tags,
-		   "version":tag_version]);
+		   "version":tag_version,
+		   //		   "line":tag_line
+  ]);
   if(enabled->countdown) active->countdown=tag_countdown;
   if(enabled->counter) active->counter=tag_counter;
   if(enabled->graphic_text) active["gtext-id"]=tag_gtext_id;
