@@ -144,7 +144,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
       //else
       label=diagram_data["labels"][0];
       if ((label!="")&&(label!=0))
-	labelimg=get_font("avant_garde", 32, 0, 0, "left",0,0)->
+	labelimg=get_font("avant_garde", diagram_data["labelsize"], 0, 0, "left",0,0)->
 	  write(label)
 #ifndef ROXEN
 ->scale(0,diagram_data["labelsize"])
@@ -749,7 +749,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
       else
 	label=diagram_data["labels"][1];
       if ((label!="")&&(label!=0))
-	labelimg=get_font("avant_garde", 32, 0, 0, "left",0,0)->
+	labelimg=get_font("avant_garde", diagram_data["labelsize"], 0, 0, "left",0,0)->
 	  write(label)
 #ifndef ROXEN
 ->scale(0,diagram_data["labelsize"])

@@ -31,16 +31,20 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
     piediagram=image(diagram_data["xsize"],diagram_data["ysize"],
 		@(diagram_data["bgcolor"]));
   else
-    piediagram=diagram_data["image"];
-
+   {
+     piediagram=diagram_data["image"];
+     diagram_data["xsize"]=diagram_data["image"]->xsize();
+     diagram_data["ysize"]=diagram_data["image"]->ysize();
+   }
+  
   diagram_data["image"]=piediagram;
-  setinitcolors( diagram_data);
+  setinitcolors(diagram_data);
 
   set_legend_size(diagram_data);
 
-  write("ysize:"+diagram_data["ysize"]+"\n");
+  //write("ysize:"+diagram_data["ysize"]+"\n");
   diagram_data["ysize"]-=diagram_data["legend_size"];
-  write("ysize:"+diagram_data["ysize"]+"\n");
+  //write("ysize:"+diagram_data["ysize"]+"\n");
   
   //Bestäm största och minsta datavärden.
   init(diagram_data);
@@ -115,7 +119,11 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
 	{
 	  //if (names[i]=="")
 	    //names[i]="Fel så inåt helvete";
-	  text[i]=notext->write((string)(names[i]))->scale(0,16);
+	  text[i]=notext->write((string)(names[i]))
+#ifndef ROXEN
+->scale(0,16)
+#endif
+;
 	  if (xmaxtext<(text[i]->xsize()))
 	    xmaxtext=text[i]->xsize();
 	  if (ymaxtext<(text[i]->ysize()))
@@ -342,10 +350,10 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
       if (tbild->ysize()>512)
 	tbild=tbild->paste(tbild->copy(0,0,imxsize, 511),0, 512);
       
-      write("tbild->xsize()"+tbild->xsize()+"\n");
-      write("tbild->ysize()"+tbild->ysize()+"\n");
-      write("below->xsize()"+below->xsize()+"\n");
-      write("below->ysize()"+below->ysize()+"\n");
+      //write("tbild->xsize()"+tbild->xsize()+"\n");
+      //write("tbild->ysize()"+tbild->ysize()+"\n");
+      //write("below->xsize()"+below->xsize()+"\n");
+      //write("below->ysize()"+below->ysize()+"\n");
 
 
       //piediagram=
@@ -429,11 +437,11 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
 #ifndef ROXEN
 int main(int argc, string *argv)
 {
-  write("\nRitar axlarna. Filen sparad som test.ppm\n");
+  //write("\nRitar axlarna. Filen sparad som test.ppm\n");
 
   mapping(string:mixed) diagram_data;
   diagram_data=(["type":"pie",
-		 "textcolor":({0,0,0}),
+		 "textcolor":({0,255,0}),
 		 "subtype":"box",
 		 "orient":"vert",
 		 "data": 
@@ -443,7 +451,7 @@ int main(int argc, string *argv)
 		    ({93.2, -103.3, 93.5, 103.7, 94.3, -91.2 }) */}),
 		 "fontsize":32,
 		 "axcolor":({0,0,0}),
-		 "bgcolor":({255,255,255}),
+		 "bgcolor":0, //({255,255,255}),
 		 "labelcolor":({0,0,0}),
 		 "datacolors":({({0,255,0}),({255,255,0}), ({0,255,255}), ({255,0,255}),({0,255,0}),({255,255,0})  }),
 		 "linewidth":2.2,
@@ -451,111 +459,20 @@ int main(int argc, string *argv)
 		 "ysize":300,
 		 "xnames":({"jan", "feb", "mar", "apr", "maj", "jun", "jul", "aug", "sep"
 		 }),
-		 "fontsize":16,
 		 "labels":({"xstor", "ystor", "xenhet", "yenhet"}),
-		 "legendfontsize":12,
+		 //"legendfontsize":12,
 		 "legend_texts":({"streck 1", "streck 2", "foo", "bar gazonk foobar illalutta!", "lila", "turkos" }),
 		 "labelsize":12,
 		 "xminvalue":0.1,
 		 "yminvalue":0,
 		 "3Ddepth":30,
 		 "drawtype": "3D",
-		 "tone":1
+		 "tone":0
 
   ]);
-  /*
-  diagram_data["data"]=({({ 
-     101.858620,
-    146.666672,
-    101.825584,
-    146.399109,
-    101.728462,
-    146.147629,
-    101.573090,
-    145.927322,
-    101.368790,
-    145.751419,
-    95.240158,
-    141.665649,
-    109.106468,
-    137.043549,
-    109.606232,
-    136.701111,
-    109.848892,
-    136.145996,
-    109.760834,
-    135.546616,
-    109.368790,
-    135.084732,
-    101.858620,
-    130.077972,
-    101.858719,
-    2.200001,
-    101.792381,
-    1.823779,
-    101.601372,
-    1.492934,
-    101.308723,
-    1.247373,
-    100.949730,
-    1.116712,
-    100.567711,
-    1.116711,
-    100.208717,
-    1.247372,
-    99.916069,
-    1.492933,
-    99.725060,
-    1.823777,
-    99.658722,
-    2.199999,
-    99.658623,
-    130.666672,
-    99.691658,
-    130.934219,
-    99.788780,
-    131.185715,
-    99.944160,
-    131.406036,
-    100.148453,
-    131.581924,
-    106.277084,
-    135.667679,
-    92.410774,
-    140.289780,
-    91.911018,
-    140.632217,
-    91.668350,
-    141.187317,
-    91.756401,
-    141.786713,
-    92.148453,
-    142.248581,
-    99.658623,
-    147.255371,
-    99.658623,
-    397.799988,
-    99.724960,
-    398.176208,
-    99.915970,
-    398.507050,
-    100.208618,
-    398.752625,
-    100.567612,
-    398.883270,
-    100.949631,
-    398.883270,
-    101.308624,
-    398.752625,
-    101.601273,
-    398.507050,
-    101.792282,
-    398.176208,
-    101.858620,
-    397.799988
 
-})});
-  */
+  diagram_data["image"]=image(2,2)->fromppm(read_file("girl.ppm"));
+
 
   object o=Stdio.File();
   o->open("test.ppm", "wtc");
