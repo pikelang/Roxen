@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.377 2000/09/19 14:25:36 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.378 2000/09/24 01:48:17 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -1584,9 +1584,9 @@ class StringFile
     return d;
   }
 
-  array|mixed stat()
+  array stat()
   {
-    if( _st ) return _st;
+    if( _st ) return (array)_st;
     return ({ 0, strlen(data), time(), time(), time(), 0, 0, 0 });
   }
 
