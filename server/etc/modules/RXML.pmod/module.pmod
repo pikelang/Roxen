@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.155 2001/05/17 02:55:22 mast Exp $
+// $Id: module.pmod,v 1.156 2001/05/17 08:38:06 wellhard Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -2352,8 +2352,8 @@ class Frame
 #else
 #  define THIS_TAG_TOP_DEBUG(msg, args...) 0
 #  define THIS_TAG_DEBUG(msg, args...) 0
-#  define THIS_TAG_DEBUG_ENTER_SCOPE(ctx, this, msg) 0
-#  define THIS_TAG_DEBUG_LEAVE_SCOPE(ctx, this, msg) 0
+#  define THIS_TAG_DEBUG_ENTER_SCOPE(ctx, this, msg, args...) 0
+#  define THIS_TAG_DEBUG_LEAVE_SCOPE(ctx, this, msg, args...) 0
 #endif
 
   mixed _exec_array (TagSetParser parser, array exec, int parent_scope)
