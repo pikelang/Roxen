@@ -5,7 +5,7 @@
 //
 // Henrik Grubbström 1997-01-12
 
-constant cvs_version="$Id: sqltag.pike,v 1.67 2000/11/27 06:17:09 per Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.68 2001/01/02 15:21:40 per Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -17,9 +17,6 @@ inherit "module";
 #define SLOCALE(X,Y)	_STR_LOCALE("mod_sqltag",X,Y)
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_sqltag",X,Y)
 // end locale stuff
-
-Configuration conf;
-
 
 // Module interface functions
 
@@ -106,12 +103,18 @@ constant tagdoc=([
 ]);
 #endif
 
+#ifdef OLD_RXML_COMPAT
+string compat_default_host;
+#endif
+string default_db;
+
 array|object do_sql_query(mapping args, RequestID id, void|int big_query)
 {
-  string host = query("hostname");
-  if (args->host) {
+  string host = compat_default_host;
+  if (args->host)
+  {
     host=args->host;
-    args->host="CENSORED";
+    args->host="SECRET";
   }
 
   if (!args->query)
@@ -122,22 +125,33 @@ array|object do_sql_query(mapping args, RequestID id, void|int big_query)
 
   Sql.sql con;
   array(mapping(string:mixed))|object result;
-  function sql_connect = id->conf->sql_connect;
   mixed error;
-
-  if(sql_connect)
+  
+#ifdef OLD_RXML_COMPAT
+  if( args->host || (!args->db && (query("db") == " none")) )
+  {
+    function sql_connect = id->conf->sql_connect;
     error = catch(con = sql_connect(host));
+
+    if (error)
+      RXML.run_error(LOCALE(3,"Couldn't connect to SQL server")+
+                     ": "+error[0]+"\n");
+
+    // Got a connection now. Any errors below this point ought to be
+    // syntax errors and should be reported with parse_error.
+  }
   else
-    error = catch(con = Sql.sql(lower_case(host)=="localhost"?"":host));
-
-  if (error)
-    RXML.run_error(LOCALE(3,"Couldn't connect to SQL server")+
-		   ": "+error[0]+"\n");
-
-  // Got a connection now. Any errors below this point ought to be
-  // syntax errors and should be reported with parse_error.
-
-  if (error = catch(result = (big_query?con->big_query(args->query):con->query(args->query)))) {
+#endif
+  {
+    error = catch(con = DBManager.get( args->db || default_db,
+                                       my_configuration() ));
+    if (error)
+      RXML.run_error(LOCALE(3,"Couldn't connect to SQL server")+
+                     ": "+error[0]+"\n");
+  }
+  if (error = catch(result = (big_query?con->big_query(args->query):
+                              con->query(args->query))))
+  {
     error = con->error();
     if (error) error = ": " + error;
     error = sprintf("Query failed%s\n", error||".");
@@ -303,35 +317,24 @@ class TagSQLTable {
 }
 
 
-// ------------------- Callback functions -------------------------
-
-Sql.sql sql_object(void|string host)
-{
-  if(!host) host = query("hostname");
-  Sql.sql con;
-  function sql_connect = conf->sql_connect;
-  mixed error;
-  /* Is this really a good idea? /mast
-  error = catch(con = sql_connect(host));
-  if(error)
-    return 0;
-  return con;
-  */
-  return sql_connect(host);
-}
-
-string query_provides()
-{
-  return "sql";
-}
-
-
 // ------------------------ Setting the defaults -------------------------
+
+class DatabaseVar
+{
+  inherit Variable.StringChoice;
+  array get_choice_list( )
+  {
+    return ({ " none" })
+           + sort(DBManager.list( my_configuration() ));
+  }
+}
 
 void create()
 {
-  defvar("hostname", "mysql://localhost/", LOCALE(4,"Default database"),
-	 TYPE_STRING | VAR_INITIAL,
+#ifdef OLD_RXML_COMPAT
+  defvar("hostname", "mysql://localhost/",
+         LOCALE(4,"Default database"),
+	 TYPE_STRING | VAR_INVISIBLE,
 	 LOCALE(5,"The default database that will be used if no <i>host</i> "
 	 "attribute is given to the tags. "
 	 "The value is a database URL in this format:\n"
@@ -345,6 +348,13 @@ void create()
 	 "possible to use an alias registered there. That's the "
 	 "recommended way, since this (usually sensitive) data is "
 	 "collected in one place then."));
+#endif
+  defvar( "db",
+          DatabaseVar( " none",({}),0,
+                       LOCALE(4,"Default database"),
+                       LOCALE(0,"If this is defined, it's the "
+                              "database this server will use as the "
+                              "default database") ) );
 }
 
 
@@ -352,32 +362,35 @@ void create()
 
 void start(int level, Configuration _conf)
 {
-  if (_conf)
-    conf = _conf;
+#ifdef OLD_RXML_COMPAT
+  compat_default_host = query("hostname");
+#endif
+  default_db          = query("db");
 }
 
 string status()
 {
-  if (!sizeof (QUERY (hostname))) return "";
-
-  if (mixed err = catch {
-    object o;
-    if (conf->sql_connect)
-      o = conf->sql_connect(QUERY(hostname));
-    else
-      o = Sql.sql(QUERY(hostname));
-
-    return(sprintf(LOCALE(6,"The default database is connected to %s "
-			  "server on %s.")+
-		   "<br />\n",
-		   Roxen.html_encode_string (o->server_info()),
-		   Roxen.html_encode_string (o->host_info())));
-  }) {
-    return
-      "<font color=\"red\">"+LOCALE(7,"The default database is not connected")+
-      ":</font><br />\n" +
-      replace( Roxen.html_encode_string( describe_error(err) ),
-	       "\n", "<br />\n") +
-      "<br />\n";
+  if( query("db") != " none" )
+  {
+    if(mixed err = catch {
+      object o = DBManager.get(query("db"),my_configuration());
+      if(!o)
+        error("The database specified as default database does not exist");
+      return sprintf(LOCALE(6,"The default database is connected to %s "
+                            "server on %s.")+
+                     "<br />\n",
+                     Roxen.html_encode_string (o->server_info()),
+                     Roxen.html_encode_string (o->host_info()));
+    })
+    {
+      return
+        "<font color=\"red\">"+
+        LOCALE(7,"The default database is not connected")+
+        ":</font><br />\n" +
+        replace( Roxen.html_encode_string( describe_backtrace(err) ),
+                 "\n", "<br />\n") +
+        "<br />\n";
+    }
   }
+  return "";
 }

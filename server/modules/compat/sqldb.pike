@@ -11,16 +11,13 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: sqldb.pike,v 1.12 2000/11/26 15:58:57 nilsson Exp $";
+constant cvs_version = "$Id: sqldb.pike,v 1.1 2001/01/02 15:21:40 per Exp $";
 constant module_type = MODULE_ZERO;
-LocaleString module_name_locale = LOCALE(1,"SQL databases");
+LocaleString module_name_locale = LOCALE(1,"DEPRECATED: SQL databases");
 LocaleString module_doc_locale  = 
 LOCALE(2,
-"SQL databases provides symbolic names to any number of database URLs. The\n"
-"symbolic names can later be used instead of the database URL. This makes\n"
-"it unnecessary to store full database URLs in RXML pages, which enhances\n"
-"security. It also becomes possible to change database without having to\n"
-"change any RXML pages.");
+"Use the DBs tab in the configuration interface instead. This module is"
+" only kept for compatibility with old configurations.");
 
 void create()
 {

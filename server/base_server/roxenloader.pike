@@ -23,7 +23,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.221 2001/01/01 09:40:44 nilsson Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.222 2001/01/02 15:21:38 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1617,7 +1617,7 @@ string query_configuration_dir()
   return configuration_dir;
 }
 
-Sql.sql connect_to_my_mysql( int ro, string db )
+Sql.sql connect_to_my_mysql( string|int ro, string db )
 {
   Thread.Local tl;
   if( !my_mysql_cache[ro] )
@@ -1630,7 +1630,9 @@ Sql.sql connect_to_my_mysql( int ro, string db )
   
   string mysql_socket = combine_path( getcwd(), query_configuration_dir()+
                                       "_mysql/socket");
-  if( ro )
+  if( stringp( ro ) )
+    tl->set(Sql.sql("mysql://"+ro+"@localhost:"+mysql_socket+"/mysql"));
+  else if( ro )
     tl->set(Sql.sql("mysql://ro@localhost:"+mysql_socket+"/mysql"));
   else
     tl->set(Sql.sql("mysql://rw@localhost:"+mysql_socket+"/mysql"));
@@ -1638,7 +1640,10 @@ Sql.sql connect_to_my_mysql( int ro, string db )
   if( catch( tl->get()->query( "USE "+db ) ) )
   {
     if( ro )
+    {
       connect_to_my_mysql( 0, db );
+      tl->get()->query( "use "+db );
+    }      
     else
     {
       tl->get()->query( "CREATE DATABASE "+db );
