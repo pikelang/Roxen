@@ -1,6 +1,6 @@
 // roxen.cpp: implementation of the CRoxen class.
 //
-// $Id: roxen.cpp,v 1.16 2002/10/07 08:43:18 tomas Exp $
+// $Id: roxen.cpp,v 1.17 2004/10/01 11:36:00 stewa Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -294,31 +294,40 @@ std::string CRoxen::FindJvm()
 
 void CRoxen::SetEnvFromIni()
 {
-  char inifile[2048];
+  char *inifile;
+  char inifile1[2048];
+  char inifile2[2048];
   char envNames[2048];
   char envValue[2048];
-  int len;
+  int len,i;
   char *p;
   
-  GetCurrentDirectory(sizeof(inifile), inifile);
-  strcat(inifile, "/../local/environment.ini");
+  GetCurrentDirectory(sizeof(inifile1), inifile1);
+  strcat(inifile1, "/../local/environment.ini");
+  GetCurrentDirectory(sizeof(inifile2), inifile2);
+  strcat(inifile2, "/../local/environment2.ini");
 
-  len = GetPrivateProfileString("Environment", NULL, "", envNames, sizeof(envNames), inifile);
-  if (len > 2 && len < sizeof(envNames))
-  {
-    p = envNames;
-    while (*p)
-    {
-      len = GetPrivateProfileString("Environment", p, "", envValue, sizeof(envValue), inifile);
-      if (len > 2 && len < sizeof(envValue))
+  inifile = inifile1;
+
+  for(i = 0 ; i < 2; i++) {
+    len = GetPrivateProfileString("Environment", NULL, "", envNames, sizeof(envNames), inifile);
+    if (len > 2 && len < sizeof(envNames))
       {
-        if (_Module.GetCmdLine().GetVerbose() > 1)
-          printf("setting %s=%s\n", p, envValue);
-
-        SetEnvironmentVariable(p, envValue);
+	p = envNames;
+	while (*p)
+	  {
+	    len = GetPrivateProfileString("Environment", p, "", envValue, sizeof(envValue), inifile);
+	    if (len > 2 && len < sizeof(envValue))
+	      {
+		if (_Module.GetCmdLine().GetVerbose() > 1)
+		  printf("setting %s=%s\n", p, envValue);
+		
+		SetEnvironmentVariable(p, envValue);
+	      }
+	    while(*p++);
+	  }
       }
-      while(*p++);
-    }
+    inifile = inifile2;
   }
 
 }
