@@ -11,7 +11,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: business.pike,v 1.140 2001/03/08 14:35:43 per Exp $";
+constant cvs_version = "$Id: business.pike,v 1.141 2001/08/29 18:37:59 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Business graphics";
@@ -755,6 +755,9 @@ mixed draw_callback(mapping args, object id)
     m_delete( args, "bgcolor" );
     args->image = Image.Image(args->xsize, args->ysize, @args->colorbg);
   }
+
+  if(args->font)
+    args->font = resolve_font(args->font);
 
   Image.Image img;
   
