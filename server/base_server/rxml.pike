@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.112 2000/02/09 20:18:41 nilsson Exp $
+ * $Id: rxml.pike,v 1.113 2000/02/09 21:39:09 nilsson Exp $
  *
  * The Roxen RXML Parser.
  *
@@ -1744,7 +1744,23 @@ class TagIfClientvar {
 mapping tagdocumentation() {
   Stdio.File file=Stdio.File();
   if(!file->open(__FILE__,"r")) return 0;
-  return compile_string("#define manual\n"+file->read())->tagdoc;
+  mapping doc=compile_string("#define manual\n"+file->read())->tagdoc;
+  file->close();
+  if(!file->open("etc/supports","r")) return doc;
+  parse_html(file->read(), ([]), (["flags":format_support,
+				   "vars":format_support]), doc);
+  return doc;
+}
+
+private int format_support(string t, mapping m, string c, mapping doc) {
+  string key=(["flags":"if#supports","vars":"if#clientvar"])[t];
+  c=html_encode_string(c)-"#! ";
+  c=(Array.map(c/"\n", lambda(string row) {
+			 if(sscanf(row, "%*s - %*s")!=2) return "";
+			 return "<li>"+row+"</li>";
+		       }) - ({""})) * "\n";
+  doc[key]+="<ul>\n"+c+"</ul>\n";
+  return 0;
 }
 
 #ifdef manual
@@ -1992,56 +2008,13 @@ constant tagdoc=([
  if caller.
 </desc>",
 
-//FIXME: The list should be extracted from the supports database.
+// The list of support flags is extracted from the supports database and
+// concatenated to this entry.
 "if#supports":#"<desc plugin>
  Does the browser support this feature? Supports is an IfIs if caller.
 </desc>
 
 The following features are supported:
-<ul>
-<li>activex - The browser handles active-X contents.</li>
-<li>align - The browser supports the align attribute in its tags.</li>
-<li>autogunzip - The browser can decode a gunzipped file on the fly.</li>
-<li>backgrounds - The browser supports backgrounds according to the HTML3 specifications.</li>
-<li>bigsmall - The browser supports the <tag>big</tag> and <tag>small</tag> tags.</li>
-<li>center - The browser supports the <tag>center</tag> tag.</li>
-<li>cookies - The browser can receive cookies.</li>
-<li>divisions - The browser supports <tag>div align=...</tag>.</li>
-<li>div - Same as divisions.</li>
-<li>epsinline - The browser can show encapsulated postscript files inline.</li>
-<li>font - The browser supports <tag>font size=num</tag>.</li>
-<li>fontcolor - The browser can change color of individual characters.</li>
-<li>fonttype - The browser can set the font.</li>
-<li>forms - The browser supports forms according to the HTML 2.0 and 3.0  specifications.</li>
-<li>frames - The browser supports frames.</li>
-<li>gifinline - The browser can show GIF images inlined.</li>
-<li>html - This is a HTML browser (as opposed to e.g. a WAP browser).</li>
-<li>imagealign - The browser supports align=left and align=right in images.</li>
-<li>images - The browser can display images.</li>
-<li>java - The browser supports Java applets.</li>
-<li>javascript - The browser supports Java Scripts.</li>
-<li>jpeginline - The browser can show JPEG images inlined.</li>
-<li>mailto - The browser supports mailto URLs.</li>
-<li>math - The <tag>math</tag> tag is correctly displayed by the browser.</li>
-<li>msie - This is a Microsoft Internet Explorer browser.</li>
-<li>netscape_javascript - The browser needs netscape styled javascript.</li>
-<li>phone - The client is a phone.</li>
-<li>pjpeginline - The browser can handle progressive JPEG images, .pjpeg, inline.</li>
-<li>pnginline - The browser can handle PNG images inlined.</li>
-<li>pull - The browser handles Client Pull.</li>
-<li>push - The browser handles Server Push.</li>
-<li>requests_are_utf8_encoded - The requests are UTF8 encoded.</li>
-<li>ssl - The browser handles secure sockets layer.</li>
-<li>stylesheets - The browser supports stylesheets.</li>
-<li>supsub - The browser handles <tag>sup</tag> and <tag>sub</tag> tags correctly.</li>
-<li>tables - The browser handles tables according to the HTML3.0 specification.</li>
-<li>tablecolor - It is possible to set the background color in the browser.</li>
-<li>tableimages - It is possible to set a backgroud image in a table in the browser.</li>
-<li>unknown - The browser is not known, hence the supports classes can not be trusted.</li>
-<li>vrml - The browser supports VRML.</li>
-<li>wbmp0 - The browser supports Wireless Bitmap Picture Format, type 0.</li>
-<li>wml1.0 - The browser supports Wireless Markup Language 1.0.</li>
-<li>wml1.1 - The browser supports Wireless Markup Language 1.1.</li>
 ",
 
 "if#time":#"<desc plugin>
@@ -2068,12 +2041,10 @@ The following features are supported:
  passagen, gcreep, googlebot, harvest, alexa, infoseek, intraseek,
  lycos, webinfo, roxen, altavista, scout, hotbot, url-minder,
  webcrawler, wget, xenu, yahoo, unknown. For more information search
- in the &lt;roxen-dir&gt;/server/etc/supports file.</p>
+ in the &lt;roxen-dir&gt;/server/etc/supports file.</desc>
 
- Width - The presentation area width in pixels.
- Height - The presentation area height in pixels.
-
-</desc>",
+ Available variables are:
+",
 
 "nooutput":#"<desc cont>
  The contents will not be sent through to the page. Side effects, for
