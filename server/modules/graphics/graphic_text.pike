@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.229 2000/04/29 20:26:58 kuntri Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.230 2000/08/25 00:31:45 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -836,7 +836,7 @@ string simpletag_gtext(string t, mapping arg, string c, RequestID id)
   string ext="";
   if(query("ext")) ext="."+(p->format || "gif");
 
-  string lp="%s", url="", ea="";
+  string lp="%s", url="", ea=" ";
 
   int input=0;
   if(arg->submit)
@@ -852,6 +852,16 @@ string simpletag_gtext(string t, mapping arg, string c, RequestID id)
     if(!p->fgcolor) p->fgcolor=id->misc->gtext_link||"#0000ff";
     m_delete(arg, "href");
   }
+
+  foreach( ({ "class", "onClick", "onclick", "onMouseover", "onmouseover",
+	      "onMouseout", "onmouseout" }), string name)
+    if(arg[name]) {
+      ea+=name+"=";
+      if(!has_value(arg[name], "\"")) ea+="\""+arg[name]+"\" ";
+      else if(!has_value(arg[name], "'")) ea+="'"+arg[name]+"' ";
+      else ea+="\""+replace(arg[name], "'", "&#39;")+"\" ";
+      m_delete(arg, name);
+    }
 
   if(!arg->noxml) { arg["/"]="/"; m_delete(arg, "noxml"); }
   if(!arg->border) arg->border=arg->border||"0";
@@ -918,7 +928,7 @@ string simpletag_gtext(string t, mapping arg, string c, RequestID id)
     string sn="i"+id->misc->gtext_mi++;
     if(!id->supports->js_image_object) {
       return (!input)?
-        ("<a "+ea+"href=\""+url+"\">"+make_tag("img",arg+(["name":sn]))+"</a>"):
+        ("<a"+ea+"href=\""+url+"\">"+make_tag("img",arg+(["name":sn]))+"</a>"):
         make_tag("input",arg+(["type":"image"]));
     }
 
@@ -939,7 +949,7 @@ string simpletag_gtext(string t, mapping arg, string c, RequestID id)
       " "+sn+"l = new Image("+arg->width+", "+arg->height+");"+sn+"l.src = \""+arg->src+"\";\n"
       " "+sn+"h = new Image("+arg->width+", "+arg->height+");"+sn+"h.src = \""+query_internal_location()+num2+ext+"\";\n"
       "</script>\n"+
-      "<a "+ea+"href=\""+url+"\" "+
+      "<a"+ea+"href=\""+url+"\" "+
       (input?"onClick='document.forms[0].submit();' ":"")
       +"onMouseover=\"i('"+sn+"',"+sn+"h,"+((strlen(magic) && magic != "magic")?
                                             "'"+replace(magic,"'","`")+"'":
