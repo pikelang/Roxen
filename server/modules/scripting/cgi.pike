@@ -39,7 +39,7 @@ the headers and the body). Please notify the author of the script of this\n\
 problem.\n"
 
 
-constant cvs_version = "$Id: cgi.pike,v 2.27 1999/08/12 21:20:53 marcus Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.28 1999/08/13 12:20:43 grubba Exp $";
 
 #ifdef CGI_DEBUG
 #define DWERROR(X)	report_debug(X)
@@ -1040,8 +1040,9 @@ void create(object conf)
 	 "If set, the variable REMOTE_PASSWORD will be set to the decoded "
 	 "password value.");
 
-  defvar( "cgi_tag", 1, "Provide the &lt;cgi&gt; and &lt;runcgi&gt; tags", TYPE_FLAG,
-           "If set, the &lt;cgi&gt; tag will be available" );
+  defvar("cgi_tag", 1, "Provide the &lt;cgi&gt; and &lt;runcgi&gt; tags",
+	 TYPE_FLAG,
+	 "If set, the &lt;cgi&gt; and &lt;runcgi&gt; tags will be available.");
 
   defvar("priority", "normal", "Limits: Priority", TYPE_STRING_LIST,
          "The priority, in somewhat general terms (for portability, this works on "
