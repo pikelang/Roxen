@@ -26,7 +26,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.300 2001/10/15 09:27:08 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.301 2001/11/07 15:37:57 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1244,6 +1244,11 @@ class MySQLResKey(static object real, static MySQLKey key)
     return real->fetch_row();
   }
 
+  static int(0..1) `!()
+  {
+    return !real;
+  }
+
   static mixed `[]( string what )
   {
     return `->( what );
@@ -1290,7 +1295,8 @@ class MySQLKey
   
   object big_query( string f, mixed ... args )
   {
-    return MySQLResKey(real->big_query( f, @args ), this_object());
+    object o = real->big_query( f, @args )
+    return o && MySQLResKey(o, this_object());
   }
   
 #ifdef DB_DEBUG
