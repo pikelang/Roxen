@@ -9,7 +9,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: cgi.pike,v 1.134 1999/11/29 21:35:45 neotron Exp $";
+constant cvs_version = "$Id: cgi.pike,v 1.135 2000/03/01 02:04:24 neotron Exp $";
 
 class Shuffle
 {
@@ -21,7 +21,8 @@ class Shuffle
     if(strlen(buffer))
     {
       int len = to->write(buffer);
-      if(len <= 0)
+      if(len < 0)
+	// if len == 0, the buffer is full and we still want to continue.
       {
 	to->set_write_callback(0);
 	(done && done());
