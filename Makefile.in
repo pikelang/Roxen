@@ -401,7 +401,7 @@ dist: $(SRCDIR)/ChangeLog.gz $(SRCDIR)/ChangeLog.rxml.gz
 	  fi ; \
 	fi; \
 	if test -d $$version/commercial_modules/. ; then \
-	  type="platform-$type"; \
+	  type="platform-$$type"; \
 	else :; fi; \
 	echo Type $$type.; \
 	echo Building full NDA distribution...; \
