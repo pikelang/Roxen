@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.134 1998/05/23 14:46:29 wing Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.135 1998/05/27 22:10:38 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -324,6 +324,8 @@ public string type_from_filename( string file, int|void to )
 // Return an array with all provider modules that provides "provides".
 array (object) get_providers(string provides)
 {
+  // FIXME: Is there any way to clear this cache?
+  // /grubba 1998-05-28
   if(!provider_module_cache[provides])
   { 
     int i;
@@ -368,22 +370,19 @@ void map_providers(string provides, string fun, mixed ... args)
 // return the first positive response.
 mixed call_provider(string provides, string fun, mixed ... args)
 {
-  array (object) prov = get_providers(provides);
-  array error;
-  mixed ret;
-  foreach(prov, object mod) {
-    if(!objectp(mod))
-      continue;
-    if(functionp(mod[fun]))
-      error = catch {
-	ret = mod[fun](@args);
-      };
-    else
-      error = ret = 0;
-    if(arrayp(error))
-      throw(error + ({ "Error in call_provider:"}));
-    if(ret)
-      return ret;
+  foreach(get_providers(providers), object mod) {
+    function f;
+    if(objectp(mod) && functionp(f = mod[fun])) {
+      mixed error;
+      if (arrayp(error = catch {
+	mixed ret;
+	if (ret = f(@args)) {
+	  return(ret);
+	}
+      })) {
+	throw(error + ({ "Error in call_provider:"}));
+      }
+    }
   }
 }
 
