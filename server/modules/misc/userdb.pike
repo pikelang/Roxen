@@ -3,9 +3,10 @@
 // User database. Reads the system password database and use it to
 // authentificate users.
 
-constant cvs_version = "$Id: userdb.pike,v 1.43 2000/07/03 05:35:41 nilsson Exp $";
+constant cvs_version = "$Id: userdb.pike,v 1.44 2000/07/17 19:18:39 jhs Exp $";
 
 inherit "module";
+#include <module.h>
 
 // Fairly weak check of password for portability.
 #define CRYPTWD_CHECK(cryptwd) \

@@ -7,10 +7,11 @@
 //  return "Hello world!\n";
 // </pike>
  
-constant cvs_version = "$Id: piketag.pike,v 2.6 2000/07/03 06:43:20 nilsson Exp $";
+constant cvs_version = "$Id: piketag.pike,v 2.7 2000/07/17 19:18:39 jhs Exp $";
 constant thread_safe=1;
 
 inherit "module";
+#include <module.h>
 
 constant module_type = MODULE_PARSER;
 constant module_name = "Pike tag";
