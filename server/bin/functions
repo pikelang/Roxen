@@ -7,14 +7,14 @@ rotate () {
 
 setup_environment() {
   # If environment file doesn't exist, try to create it.
-  if test ! -f $LOCALDIR/environment && test -f bin/buildenv.pike;  then
+  if test ! -f "$LOCALDIR"/environment && test -f bin/buildenv.pike;  then
     $pike bin/buildenv.pike
-    touch $LOCALDIR/environment
+    touch "$LOCALDIR"/environment
   fi
 
   # Set up environment
-  if test -f $LOCALDIR/environment; then
-    . $LOCALDIR/environment
+  if test -f "$LOCALDIR"/environment; then
+    . "$LOCALDIR"/environment
   fi
 
   # Make sure $CLASSPATH contains the servlet stuff
