@@ -1,4 +1,4 @@
-/* $Id: fonts.pike,v 1.35 1999/12/27 23:15:42 nilsson Exp $ */
+/* $Id: fonts.pike,v 1.36 2000/01/10 09:05:55 nilsson Exp $ */
 
 #include <module.h>
 
@@ -91,7 +91,7 @@ array available_font_versions(string name, int size)
 	    string f = lower_case(trimttfname(n->family));
 	    if(!ttf_font_names_cache[f])
 	      ttf_font_names_cache[f] = ([]);
-	    ttf_font_names_cache[f][ translate_ttf_style(n->style) ] 
+	    ttf_font_names_cache[f][ translate_ttf_style(n->style) ]
 	      = combine_path(dir+"/",fname);
 	    if(f == lower_case( name ))  ttffound++;
 	  }
@@ -165,13 +165,13 @@ string make_font_name(string name, int size, int bold, int italic)
     available = mkmultiset(available);
   else
     return name+"/nope";
-  if(available[bc+ic]) 
+  if(available[bc+ic])
     return name+"/"+bc+ic;
   if(bc=="l") bc="n";
-  if(available[bc+ic]) 
+  if(available[bc+ic])
     return name+"/"+bc+ic;
   if(bc=="B") bc="b";
-  if(available[bc+ic])     
+  if(available[bc+ic])
     return name+"/"+bc+ic;
   if(bc=="b") bc="n";
   if(available[bc+ic])
@@ -264,7 +264,7 @@ object get_font(string f, int size, int bold, int italic,
       {
 	object fo = Image.TTF( f = ttf_font_names_cache[ lower_case(f) ][(name/"/")[1]] );
 	fo = TTFWrapper( fo(), size, f );
-	cache_set("fonts", key, fo); 
+	cache_set("fonts", key, fo);
 	return fo;
       }
       object fo = Image.TTF( f = values(ttf_font_names_cache[ lower_case(f) ])[0]);
@@ -274,7 +274,7 @@ object get_font(string f, int size, int bold, int italic,
 	if( object fo = Image.TTF( f ) )
 	{
 	  fo = TTFWrapper( fo(), size, f );
-	  cache_set("fonts", key, fo); 
+	  cache_set("fonts", key, fo);
 	  return fo;
 	}
       };
@@ -297,7 +297,7 @@ object get_font(string f, int size, int bold, int italic,
 	report_error("Failed to load the default font.\n");
 	return 0;
       }
-      return get_font(roxen->QUERY(default_font), 
+      return get_font(roxen->QUERY(default_font),
 		      size,bold,italic,justification,xspace,yspace);
     }
     if(justification=="right") fnt->right();
@@ -318,7 +318,7 @@ object resolve_font(string f, string|void justification)
   int bold, italic;
   float xspace=0.0;
   string a,b;
-  if( !f ) 
+  if( !f )
     f = roxen->query("default_font");
   if(sscanf(f, "%sbold%s", a,b)==2)
   {
@@ -366,7 +366,7 @@ object resolve_font(string f, string|void justification)
   int size=32;
   sscanf(f, "%s %d", f, size);
   object fn;
-  fn = get_font((f/" ")[0], size, bold, italic, 
+  fn = get_font((f/" ")[0], size, bold, italic,
 	      justification||"left",xspace, 0.0);
   if(!fn)
     fn = get_font(roxen->query("default_font"),size,bold,italic,
