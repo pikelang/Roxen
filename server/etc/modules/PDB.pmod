@@ -1,7 +1,3 @@
-/*
- * $Id: PDB.pmod,v 1.2 1997/08/31 23:58:54 peter Exp $
- */
-
 class FileIO {
   object open(string f, string m)
   {
@@ -12,7 +8,6 @@ class FileIO {
   
   void write_file(string f, mixed d)
   {
-    if(!write) return;
     d = encode_value(d);
     catch {
       string q;
@@ -45,19 +40,15 @@ class Bucket
   array free_blocks = ({});
   string rf;
   int size,  last_block;
-  static int current_offset;
   void write_at(int offset, string to)
   {
-    if(current_offset != offset) file->seek(offset*size);
+    file->seek(offset*size);
     file->write(to);
-    file->seek((offset+1)*size);
-    offset+=current_offset=offset+1;
   }
   
   string read_at(int offset)
   {
-    if(current_offset != offset) file->seek(offset*size);
-    current_offset=offset+1;
+    file->seek(offset*size);
     return file->read(size);
   }
   
@@ -85,7 +76,6 @@ class Bucket
     {
       int b = free_blocks[0];
       free_blocks = free_blocks[1..];
-      save_free_blocks();
       return b;
     }
     last_block++;
@@ -163,7 +153,6 @@ class Table
     object bucket = get_bucket(scheme(strlen(ts)));
     delete(in);
     int of = bucket->allocate_entry();
-    werror( of+"\n" );
     bucket->set_entry(of, ts);
     index[in]=({ bucket->size, of });
     sync();
