@@ -1,6 +1,8 @@
 Changes since Roxen Challenger 1.2.24 Yellow
 -----------------------------------------------
 
+o Roxen now calls itself 1.3 when run with Pike 0.6.
+
 o The basic filesystem now clears the old entry in the stat-cache for
   files uploaded or deleted.
 
@@ -27,7 +29,22 @@ o More modules updated to work with Pike 0.6.
 o The IP-less module now causes authorization to be against the correct
   auth module, instead of against the master port servers auth module.
 
-o Fixed several bugs in both the FTP protocol modules.
+o Fixed several bugs in both of the FTP protocol modules.
+
+o Fixed obscure bug in the module loader.
+
+o Fixed several bugs in the CGI-wrapper.
+
+o Added testsuite for the CGI-wrapper.
+
+o Added kluge enabling socketpair() on Linux regardless of wether it
+  works or not.
+
+o Protocols.DNS is now more bug-compliant.
+
+o Pike 0.6 now has some poll(2) fallbacks.
+
+o The internal server error page has been improved.
 
 
 Changes since Roxen Challenger 1.2.21 Yellow
