@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.19 1997/08/13 10:31:09 grubba Exp $ */
+/* $Id: module.pike,v 1.20 1997/08/13 15:12:58 grubba Exp $ */
 
 #include <module.h>
 
@@ -318,6 +318,31 @@ string query_location()
  *
  */
 
+class IP_with_mask {
+  int net;
+  int mask;
+  static private int ip_to_int(string ip)
+  {
+    int res;
+    foreach(ip/".", string num) {
+      res = res*256 + (int)num;
+    }
+    return(res);
+  }
+  void create(string _ip, string _mask)
+  {
+    net = ip_to_int(_ip);
+    mask = ip_to_int(_mask);
+    if (net & ~mask) {
+      throw(({ sprintf("Bad netmask: %s for network %s\n", _ip, _mask),
+		 backtrace() }));
+    }
+  }
+  int `()(string ip)
+  {
+    return((ip_to_int(ip) & mask) == net);
+  }
+};
 
 array query_seclevels()
 {
@@ -337,18 +362,28 @@ array query_seclevels()
     string type, value;
     if(sscanf(sl, "%s=%s", type, value)==2)
     {
-      value = replace(value, ({ "?", ".", "*" }), ({ ".", "\\.", ".*" }));
       switch(lower_case(type))
       {
       case "allowip":
-	patterns += ({ ({ MOD_ALLOW, Regexp(value)->match, }) });
+	if (sizeof(value/",") == 1) {
+	  value = replace(value, ({ "?", ".", "*" }), ({ ".", "\\.", ".*" }));
+	  patterns += ({ ({ MOD_ALLOW, Regexp(value)->match, }) });
+	} else {
+	  patterns += ({ ({ MOD_ALLOW, IP_with_mask(@(value/",")) }) });
+	}
 	break;
 
       case "denyip":
-	patterns += ({ ({ MOD_DENY, Regexp(value)->match, }) });
+	if (sizeof(value/",") == 1) {
+	  value = replace(value, ({ "?", ".", "*" }), ({ ".", "\\.", ".*" }));
+	  patterns += ({ ({ MOD_DENY, Regexp(value)->match, }) });
+	} else {
+	  patterns += ({ ({ MOD_DENY, IP_with_mask(@(value/",")) }) });
+	}
 	break;
 
       case "allowuser":
+	value = replace(value, ({ "?", ".", "*" }), ({ ".", "\\.", ".*" }));
 	array(string) users = (value/"," - ({""}));
 	int i;
 	
