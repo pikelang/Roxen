@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.133 2000/02/16 11:05:13 per Exp $
+ * $Id: rxml.pike,v 1.134 2000/02/16 16:21:37 mast Exp $
  *
  * The Roxen RXML Parser. See also the RXML Pike module.
  *
@@ -9,8 +9,7 @@
 inherit "roxenlib";
 inherit "rxmlhelp";
 #include <request_trace.h>
-
-#define OLD_RXML_COMPAT
+#include <config.h>
 
 #define RXML_NAMESPACE "rxml"
 

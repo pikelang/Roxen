@@ -8,11 +8,11 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: PXml.pike,v 1.32 2000/02/15 14:57:19 mast Exp $
+//! $Id: PXml.pike,v 1.33 2000/02/16 16:21:42 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
-#define OLD_RXML_COMPAT
+#include <config.h>
 
 inherit Parser.HTML : low_parser;
 inherit RXML.TagSetParser : TagSetParser;

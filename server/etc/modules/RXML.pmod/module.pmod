@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.62 2000/02/15 15:55:35 nilsson Exp $
+//! $Id: module.pmod,v 1.63 2000/02/16 16:21:42 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -16,6 +16,7 @@
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
+#include <config.h>
 
 #ifdef OBJ_COUNT_DEBUG
 // This debug mode gives every object a unique number in the
@@ -28,9 +29,6 @@
 #  define PAREN_CNT(count) ""
 #  define COMMA_CNT(count) ""
 #endif
-
-#define OLD_RXML_COMPAT
-// Glä!
 
 class Tag
 //! Interface class for the static information about a tag.

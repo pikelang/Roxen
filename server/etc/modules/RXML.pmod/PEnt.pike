@@ -4,11 +4,11 @@
 //!
 //! Created 2000-01-28 by Martin Stjernholm.
 //!
-//! $Id: PEnt.pike,v 1.10 2000/02/15 14:57:35 mast Exp $
+//! $Id: PEnt.pike,v 1.11 2000/02/16 16:21:42 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
-#define OLD_RXML_COMPAT
+#include <config.h>
 
 inherit RXML.PXml;
 

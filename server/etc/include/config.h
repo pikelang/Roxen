@@ -1,5 +1,5 @@
 /* -*- Pike -*-
- * $Id: config.h,v 1.17 1999/11/06 08:20:06 per Exp $
+ * $Id: config.h,v 1.18 2000/02/16 16:21:40 mast Exp $
  *
  * User configurable things not accessible from the normal
  * configuration interface. Not much, but there are some things..  
@@ -51,6 +51,10 @@
 #define SET_EFFECTIVE 
 
 #define URL_MODULES
+
+/* Define this to keep support for old (pre-2.0) RXML.
+ */
+#define OLD_RXML_COMPAT
 
 /*---------------- End of configurable options. */
 #endif /* if _ROXEN_CONFIG_H_ */
