@@ -1,5 +1,5 @@
 /*
- * $Id: upgrade.pike,v 1.6 1997/08/19 19:48:27 grubba Exp $
+ * $Id: upgrade.pike,v 1.7 1997/08/20 08:17:09 per Exp $
  */
 
 inherit "roxenlib";
@@ -17,7 +17,20 @@ mapping extract_module_info(array from)
   sscanf(from[1], "%*s<b>Loaded from:</b> %s<", fname);
   sscanf(from[1], "%*s<b>CVS Version: </b>%s<", version);
   m->fname = fname;
-  if(version) sscanf(version, "%s ", version);
+  if(version)
+    sscanf(version, "%s ", version);
+  else
+  {
+    if(fname)
+    {
+      string mod = Stdio.read_bytes(fname);
+      if(mod)
+      {
+	sscanf(mod, "%*s$Id: %*s.pike,v %s ", version);
+	werror("Version: " + version + "\n");
+      }
+    }
+  }
   m->version = version;
   m->name = from[0];
   m->type = from[2];
@@ -80,7 +93,7 @@ string initial_form(object id)
 
 string upgrade_module(string m, object rpc)
 {
-  array rm = rpc->get_module(m);
+  array rm = rpc->get_module(m,roxen->real_version);
   string res="";
   object privs = ((program)"privs")("Upgrading modules", "root");
   if(!rm) return "Failed to fetch the module '"+m+"'.";
@@ -173,7 +186,7 @@ string new_form(object id, object rpc)
 
   find_modules(1);
 
-  mapping rm = rpc->all_modules();
+  mapping rm = rpc->all_modules(roxen->real_version);
   int num;
   foreach(sort(indices(rm)), string s)
     if(!modules[s])
@@ -276,7 +289,7 @@ int is_older(string v1, string v2)
 
 string upgrade_component(string m, object rpc)
 {
-  array rm = rpc->get_component(m);
+  array rm = rpc->get_component(m,roxen->real_version);
   string res="";
   object privs = ((program)"privs")("root","Upgrading components");
   if(!rm) return "Failed to fetch the component '"+m+"'.";
@@ -336,7 +349,7 @@ string handle_components(object id, object rpc)
     "<td>Component name</td><td>Filename</td>"
     "<td>Version</td><td>Currently installed version</td></tr>\n";
 
-  mapping rm = rpc->all_components();
+  mapping rm = rpc->all_components(roxen->real_version);
   int num;
   foreach(sort(indices(rm)), string s)
   {
@@ -400,7 +413,7 @@ string handle(object id)
     }
 
     find_modules((int)id->variables->how);
-    mapping mv = rpc->module_versions( modules );
+    mapping mv = rpc->module_versions( modules, roxen->real_version );
 
     foreach(sort(indices(modules)), string m)
     {

@@ -1,5 +1,5 @@
 /*
- * $Id: reloadconfiginterface.pike,v 1.2 1997/08/13 22:27:27 grubba Exp $
+ * $Id: reloadconfiginterface.pike,v 1.3 1997/08/20 08:17:08 per Exp $
  */
 
 inherit "roxenlib";
@@ -10,6 +10,7 @@ constant more=1;
 constant programs = ({
   "mainconfig",
   "builders",
+  "wizard",
   "savers",
   "draw_things",
   "describers",

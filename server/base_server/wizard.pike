@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.5 1997/08/20 08:14:32 per Exp $
+/* $Id: wizard.pike,v 1.6 1997/08/20 08:17:07 per Exp $
  *  name="Wizard generator";
  *  doc="This plugin generats all the nice wizards";
  */
@@ -142,9 +142,13 @@ string parse_wizard_page(string form, object id, string wiz_name)
 	 (max_page!=1?"Page "+(page+1)+"/"+(max_page+1):"")+"</td>\n"
 	  " \n<td align=right>"+
 	 (!id->variables->help?
-	  "<font size=-1><input type=image name=help src=/image/help.gif border=0 value=\"Help\"></font>":"")
+	  "<font size=-1><input type=image name=help src="+
+	  (id->conf?"/internal-roxen-help":"/image/help.gif")+
+	  " border=0 value=\"Help\"></font>":"")
 	 +"</td>\n"
-	 " </tr><tr bgcolor=blue><td colspan=3><img src=/image/unit.pike width=1 height=1></td></tr>\n"
+	 " </tr><tr bgcolor=blue><td colspan=3><img src="+
+	 (id->conf?"/internal-roxen-unit":"/image/unit.gif")+
+	 " width=1 height=1></td></tr>\n"
 	 "  </table><table cellpadding=6><tr><td>\n"
 	 "<!-- The output from the page function -->\n"
 	 +form+
