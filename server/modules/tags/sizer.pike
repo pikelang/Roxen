@@ -1,5 +1,6 @@
 constant thread_safe=1;
-constant cvs_version = "$Id: sizer.pike,v 1.12 2001/03/06 14:05:31 jhs Exp $";
+constant cvs_version = "$Id: sizer.pike,v 1.13 2001/03/06 14:15:57 jhs Exp $";
+#include <request_trace.h>
 #include <module.h>
 inherit "module";
 
@@ -9,7 +10,7 @@ inherit "module";
 // end locale stuff
 
 
-constant module_type = MODULE_TAG;
+constant module_type = MODULE_TAG | MODULE_FILTER;
 LocaleString module_name = _(1,"Page sizer");
 
 LocaleString module_doc  =
@@ -478,4 +479,22 @@ string simpletag_page_size( string name,
     " border='0' width='100%' bgcolor='white'>\n<tr><td>\n" + res +
     "</td></tr>\n</table>\n</td></tr></table>\n";
   return res ;
+}
+
+mapping filter(mapping result, RequestID id)
+{
+  if(!result				// nobody had anything to say
+  || !stringp(result->data)		// got a file object
+  || !(id->prestate->size)		// only bother when we're being hailed
+  || !glob("text/html*", result->type)
+  || id->misc->sizer_in_progress	// already sized file?
+     || id->misc->orig			// not for internal requests
+    )
+    return 0; // signal that we didn't rewrite the result for good measure
+
+  TRACE_ENTER("Calculating download times", 0);
+  result->data = simpletag_page_size("", ([]), "", id ) + result->data;
+  TRACE_LEAVE("");
+
+  return result;
 }
