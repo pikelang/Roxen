@@ -1,6 +1,6 @@
 import files;
 
-void perror(string format,mixed ... args);
+void roxen_perror(string format,mixed ... args);
 
 #if !efun(error)
 #define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
@@ -20,7 +20,7 @@ string popen(string s, void|mapping env, int|void uid, int|void gid)
     catch {
       if(p->query_fd() < 0)
       {
-	perror("File to dup2 to closed!\n");
+	roxen_perror("File to dup2 to closed!\n");
 	exit(99);
       }
       p->dup2(file("stdout"));
@@ -79,7 +79,7 @@ int low_spawne(string s,string *args, mapping|array env, object stdin,
   if(stringp(wd) && sizeof(wd))
     cd(wd);
   exece(s, args, env);
-  perror(sprintf("Spawne: Failed to exece %s\n", s));
+  roxen_perror(sprintf("Spawne: Failed to exece %s\n", s));
   exit(0);
 }
 
@@ -103,7 +103,7 @@ int spawne(string s,string *args, mapping|array env, object stdin,
 
 private static int perror_last_was_newline=1;
 
-void perror(string format,mixed ... args)
+void roxen_perror(string format,mixed ... args)
 {
    string s;
    int lwn;
@@ -120,6 +120,7 @@ void perror(string format,mixed ... args)
 void create()
 {
    add_constant("spawne",spawne);
-   add_constant("perror",perror);
+   add_constant("perror",roxen_perror);
+   add_constant("roxen_perror",roxen_perror);
    add_constant("popen",popen);
 }
