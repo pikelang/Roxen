@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.221 2001/08/14 16:59:13 mast Exp $
+// $Id: module.pmod,v 1.222 2001/08/14 17:05:42 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -21,13 +21,6 @@ class RequestID { };
 //!   The namespace handling will likely change to conform to XML
 //!   namespaces. The currently implemented system is inadequate then
 //!   and will probably be removed.
-//!  @item
-//!   The semantics for caching and reuse of Frame objects is
-//!   deliberatily documented vaguely (see the class doc for the
-//!   Frame class). The currently implemented behavior will change
-//!   when the cache system becomes reality. So never assume that
-//!   you'll always get fresh Frame instances every time a tag is
-//!   evaluated.
 //!  @item
 //!   The RXML parser module currently doesn't stream data according
 //!   to the interface for streaming tags (but the implementation
@@ -2389,8 +2382,9 @@ class Frame
 //! A tag instance. A new frame is normally created for every parsed
 //! tag in the source document. It might be reused both when the
 //! document is requested again and when the tag is reevaluated in a
-//! loop, but it's not certain in either case. Therefore, be careful
-//! about using variable initializers.
+//! loop, but it's not certain in either case (see also @[save] and
+//! @[restore]). Therefore, be careful about using variable
+//! initializers.
 {
   constant is_RXML_Frame = 1;
   constant is_RXML_encodable = 1;
