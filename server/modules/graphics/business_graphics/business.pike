@@ -10,7 +10,7 @@
  * reference cache shortly.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.79 1998/03/01 02:49:53 per Exp $";
+constant cvs_version = "$Id: business.pike,v 1.80 1998/03/02 16:06:16 hedda Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -86,6 +86,7 @@ mixed *register_module()
        /* " tone         Do nasty stuff to the background.\n"
 	  " Requires dark background to be visable.\n" */
        "  <b>eng</b>            If present, numbers are shown like 1.2M.\n"
+       "  <b>neng</b>           As above but 0.1-1.0 is written 0.xxx .\n"
        "  <b>tonedbox</b>       Creates a background shading between the\n"
        "                 colors assigned to each of the four corners.\n"
        "  <b>center</b>         (Only for <b>pie</b>) center=n centers the nth"
@@ -437,7 +438,7 @@ constant _diagram_args =
    "xnames", "xvalues", "ynames", "yvalues", "axcolor", "gridcolor",
    "gridwidth", "vertgrid", "labels", "labelsize", "legendfontsize",
    "legend_texts", "labelcolor", "axwidth", "linewidth", "center",
-   "rotate", "image", "bw", "eng", "xmin", "ymin" });
+   "rotate", "image", "bw", "eng", "neng", "xmin", "ymin" });
 constant diagram_args = mkmapping(_diagram_args,_diagram_args);
 
 constant _shuffle_args = 
@@ -557,6 +558,7 @@ string tag_diagram(string tag, mapping m, string contents,
 
   if(m->center) res->center = (int)m->center;
   if(m->eng) res->eng=1;
+  if(m->neng) res->neng=1;
 
   res->fontsize       = (int)m->fontsize || 16;
   res->legendfontsize = (int)m->legendfontsize || res->fontsize;

@@ -14,7 +14,7 @@ constant STORT = 1.0e40;
 
 inherit "create_graph.pike";
 
-constant cvs_version = "$Id: create_bars.pike,v 1.61 1998/02/24 15:02:18 hedda Exp $";
+constant cvs_version = "$Id: create_bars.pike,v 1.62 1998/03/02 16:06:22 hedda Exp $";
 
 /*
  * name = "BG: Create bars";
@@ -124,9 +124,15 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	diagram_data["values_for_ynames"]+=({start+=diagram_data["yspace"]});
     }
   
+  function fun;
+  if (diagram_data["eng"])
+    fun=diagram_eng;
+  else
+    fun=diagram_neng;
+
   //Generera texten om den inte finns
   if (!(diagram_data["ynames"]))
-    if (diagram_data["eng"])
+    if (diagram_data["eng"]||diagram_data["neng"])
       {
 	diagram_data["ynames"]=
 	  allocate(sizeof(diagram_data["values_for_ynames"]));
@@ -138,7 +144,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	    diagram_data["ynames"][i]="0";
 	  else	
 	    diagram_data["ynames"][i]=
-	      diagram_eng((float)(v[i]));
+	      fun((float)(v[i]));
       }
     else
       {

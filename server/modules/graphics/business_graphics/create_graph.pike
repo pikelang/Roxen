@@ -14,7 +14,7 @@ constant STORTLITET = 1.0e-30;
 constant STORT = 1.0e40;
 #define VOIDSYMBOL "\n"
 
-constant cvs_version = "$Id: create_graph.pike,v 1.96 1998/03/01 15:14:17 hedda Exp $";
+constant cvs_version = "$Id: create_graph.pike,v 1.97 1998/03/02 16:06:29 hedda Exp $";
 
 /*
  * name = "BG: Create graphs";
@@ -69,6 +69,32 @@ string diagram_eng(float a)
   if (p < -6.0) p = 0.0;
   if (p >= 7.0) p = 0.0;
   int i = (int) floor(p+0.000001);
+  string s;
+  sscanf(sprintf("%g%s", a*exp(-i*log(1000.0)), pfix[6+i]), "%*[ ]%s", s);
+  return foo+s;
+}
+
+//Key word neng:
+//This function writes a float like on an engineer-format
+//Exept for 0.1<a<1.0 
+string diagram_neng(float a)
+{
+  string foo="";
+  if (a<0.0)
+  {
+    foo="-";
+    a=-a;
+  }
+  array(string) pfix;
+  pfix = ({ "a", "f", "p", "n", "µ", "m", "",
+	    "k", "M", "G", "T", "P", "E" });
+  if (a == 0.0) return "0";
+  float p = log(a)/log(1000.0);
+  if (p < -6.0) p = 0.0;
+  if (p >= 7.0) p = 0.0;
+  int i = (int) floor(p+0.000001);
+  if ((a<1.0)&&(a>=0.0999999))
+    i=0;
   string s;
   sscanf(sprintf("%g%s", a*exp(-i*log(1000.0)), pfix[6+i]), "%*[ ]%s", s);
   return foo+s;
@@ -1031,24 +1057,33 @@ mapping(string:mixed) create_graph(mapping diagram_data)
   //Generate the texten if it doesn't exist
   if (!(diagram_data["ynames"]))
     if (diagram_data["eng"])
-    {
-      diagram_data["ynames"]=
-	allocate(sizeof(diagram_data["values_for_ynames"]));
-      
-      for(int i=0; i<sizeof(diagram_data["values_for_ynames"]); i++)
-	diagram_data["ynames"][i]=
-	  diagram_eng((float)(diagram_data["values_for_ynames"][i]));
-    } else {
-      diagram_data["ynames"]=
-	allocate(sizeof(diagram_data["values_for_ynames"]));
-      
-      for(int i=0; i<sizeof(diagram_data["values_for_ynames"]); i++)
-	diagram_data["ynames"][i]=
-	  no_end_zeros((string)(diagram_data["values_for_ynames"][i]));
-    }
+      {
+	diagram_data["ynames"]=
+	  allocate(sizeof(diagram_data["values_for_ynames"]));
+	
+	for(int i=0; i<sizeof(diagram_data["values_for_ynames"]); i++)
+	  diagram_data["ynames"][i]=
+	    diagram_eng((float)(diagram_data["values_for_ynames"][i]));
+      } 
+    else if (diagram_data["neng"])
+      {
+	diagram_data["ynames"]=
+	  allocate(sizeof(diagram_data["values_for_ynames"]));
+	
+	for(int i=0; i<sizeof(diagram_data["values_for_ynames"]); i++)
+	  diagram_data["ynames"][i]=
+	    diagram_neng((float)(diagram_data["values_for_ynames"][i]));
+      } else {
+	diagram_data["ynames"]=
+	  allocate(sizeof(diagram_data["values_for_ynames"]));
+	
+	for(int i=0; i<sizeof(diagram_data["values_for_ynames"]); i++)
+	  diagram_data["ynames"][i]=
+	    no_end_zeros((string)(diagram_data["values_for_ynames"][i]));
+      }
   
 
-
+    
   if (!(diagram_data["xnames"]))
     if (diagram_data["eng"])
     {
@@ -1058,6 +1093,15 @@ mapping(string:mixed) create_graph(mapping diagram_data)
       for(int i=0; i<sizeof(diagram_data["values_for_xnames"]); i++)
 	diagram_data["xnames"][i]=
 	  diagram_eng((float)(diagram_data["values_for_xnames"][i]));
+    }
+    else if (diagram_data["neng"])
+    {
+      diagram_data["xnames"]=
+	allocate(sizeof(diagram_data["values_for_xnames"]));
+      
+      for(int i=0; i<sizeof(diagram_data["values_for_xnames"]); i++)
+	diagram_data["xnames"][i]=
+	  diagram_neng((float)(diagram_data["values_for_xnames"][i]));
     }
     else
     {
