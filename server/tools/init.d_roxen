@@ -5,7 +5,7 @@
 
 # The server directory where the 'start' script is located.
 #
-roxenhome=/usr/local/roxen/server
+roxenhome=/usr/local/roxen
 
 # Set these to kill all processes owned by wwwuser on stop. Useful to
 # reap CGI scripts.
@@ -35,7 +35,7 @@ umask 022
 ### You should not _have_ to change anything below here...
 
 if test x$configdir = x; then
-  configdir=../configurations
+  configdir=configurations
 else
   flags="$flags --config-dir=$configdir"
 fi
