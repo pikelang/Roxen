@@ -1,6 +1,6 @@
 #if efun(seteuid)
 #include <module.h>
-string cvs_version = "$Id: privs.pike,v 1.18 1997/09/07 12:19:38 grubba Exp $";
+string cvs_version = "$Id: privs.pike,v 1.19 1997/09/07 12:38:13 grubba Exp $";
 
 int saved_uid;
 int saved_gid;
@@ -69,7 +69,7 @@ void create(string reason, int|string|void uid, int|void gid)
   saved_gid = getegid();
   seteuid(0);
 #if efun(cleargroups)
-  cleargroups();
+  catch { cleargroups(); };
 #endif /* cleargroups */
   catch { initgroups(u[0], u[3]); };
   gid = gid || getgid();
