@@ -87,33 +87,27 @@
     $webadmtablify$
   </tablify>
 </tmplblock>
-	
+
+<comment><--  Page head  --></comment>
 <html>
 <head><title>AutoWeb Admin</title></head>
-
 <body bgcolor='#ffffff' text='#000000' link='#000070'
       vlink='#000070' alink='#ff000'>
-
 <table cellpadding=0 cellspacing=0 border=0 width='100%'><tr>
-
   <td valign=bottom align=left>
     <a href=http://www.roxen.com/>
     <img width=102 height=40 border=0 alt="Roxen"
          src=/internal-roxen-roxen-icon-gray></a></td>
-
   <td>
     &nbsp;
   </td>
-
   <td width='100%' height=39>
     <table cellpadding=0 cellspacing=0 width='100%' border=0>
       <tr width='100%'>
         <td width=100% align=right valigh=center height=28>
-
           <b><font size=+1>
 	    <autosite-webadm-customername>
           </font></b>
-
         </td>
       </tr>
       <tr width='100%'>
@@ -125,15 +119,17 @@
       </tr>
     </table>
   </td>
-       
 </tr></table>
 
+<comment><--  Tablist  --></comment>	
 <br>
 <tmplinsert tag=tablist>
 <br><br>
 
+<comment><--  Tab specific stuff  --></comment>	
 <cset variable=else>t</cset>
 
+<comment><--  HTML Editor  --></comment>	
 <if variable="htmleditorp is t">
   <table cellspacing=1><tr><td bgcolor=#000000>
     <table border=0 cellspacing=1 cellpadding=10>
@@ -158,12 +154,14 @@
   <cset variable=else>nil</cset>
 </if>
 
+<comment><--  Menu Editor  --></comment>	
 <if variable="menueditorp is t">
   <tmplinsert tag=content>
   <tmplinsert tag=toolbar>
   <cset variable=else></cset>
 </if>
 
+<comment><--  Template Editor  --></comment>	
 <if variable="templateeditorp is t">
   <tmplinsert tag=content>
   <if variable=show_menu>
@@ -175,6 +173,7 @@
   <cset variable=else></cset>
 </if>
 
+<comment><--  Other tabs  --></comment>	
 <if variable="else is t">
   <tmplinsert tag=content>
 </if>
