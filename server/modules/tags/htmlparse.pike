@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-string cvs_version = "$Id: htmlparse.pike,v 1.28 1997/04/26 03:38:40 per Exp $";
+string cvs_version = "$Id: htmlparse.pike,v 1.29 1997/04/26 03:44:14 per Exp $";
 #pragma all_inline 
 
 #include <config.h>
@@ -1409,7 +1409,6 @@ string tag_aprestate(string tag, mapping m, string q, object got)
       prestate[s]=1;
   }
   m->href = add_pre_state(href, prestate);
-  if(target) m->target=target;
   return make_container("a",m,q);
 }
 

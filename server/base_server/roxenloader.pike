@@ -4,40 +4,31 @@ import spider;
 #define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
 
 // Set up the roxen enviornment. Including custom functions like spawne().
-string cvs_version="$Id: roxenloader.pike,v 1.19 1997/04/26 03:38:38 per Exp $";
+string cvs_version="$Id: roxenloader.pike,v 1.20 1997/04/26 03:44:12 per Exp $";
 
 #define perror roxen_perror
 
 private static int perror_last_was_newline=1;
 
-int last_time = 0;
 int pid = getpid();
 object stderr = files.file("stderr");
 
+
 void roxen_perror(string format,mixed ... args)
 {
-  string s, ts="";
-  int lwn;
-
-  s=((args==({}))?format:sprintf(format,@args));
-
-  if (s=="") return;
-
-  if ( (lwn = (s[-1]=="\n") ))
-    s=s[..strlen(s)-2];
-
-  if((time()-last_time ) > 60)
-  {
-    stderr->write("Roxen is alive!     PID: "+pid+"    Time: "+ (ctime(time())
-/" ")[-2]+"\n");
-    last_time = time();
-  }
-
-  stderr->write(s);
-
-  perror_last_was_newline=lwn;
+  string s;
+  if(sizeof(args)) format=sprintf(format,@args);
+  if (format=="") return;
+  stderr->write(format);
 }
 
+
+void report_status()
+{
+  call_out(report_status, 60);
+  stderr->write("[1mRoxen is alive!     PID: "+pid+"    Time: "+
+		(ctime(time())/" ")[-2]+"[0m\n");
+}
 
 mapping dbs = ([ ]);
 array adbs = ({});
@@ -405,8 +396,8 @@ void main(mixed ... args)
 {
   object mm;
   string path = make_path("base_server", "etc/include", ".");
+  report_status();
   perror("Roxen loader version "+cvs_version+"\n");
-
   master()->putenv("PIKE_INCLUDE_PATH", path);
   master()->pike_include_path = path/":";
   replace_master(mm=(((program)"etc/roxen_master.pike")()));
