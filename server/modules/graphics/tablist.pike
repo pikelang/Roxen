@@ -1,6 +1,5 @@
 // The Tab lists tag module.
-// Developed by Fredrik Noring <noring@infovav.se>, ask him for more info
-string cvs_version = "$Id: tablist.pike,v 1.10 1998/01/17 02:57:25 grubba Exp $";
+string cvs_version = "$Id: tablist.pike,v 1.11 1998/03/07 18:42:34 noring Exp $";
 #include <module.h>
 
 inherit "module";
@@ -189,19 +188,25 @@ array register_module()
   return ({
     MODULE_PARSER | MODULE_LOCATION,
       "Tab lists",
-      "This module makes graphical tablists.<p> It defines the tag "
-      "&lt;tablist&gt;.<p>"
-      "Arguments:\n<br>"
-      "font=string: Select font<br>\n"
-      "1= 2= 3= ...: Set the destination for one of the tags<br>\n"
-      "bg=#rrggbb: Set background color<br>\n"
-      "tc=#rrggbb: Set tab color<br>\n"
-      "fc=#rrggbb: Set font color<br>\n"
-      "scale=<float>: Scale the result<br>\n"
-      "names=foo;bar;gazonk: Set the text on the tabs, separated by ';'<br>\n"
-      "selected=<int>: Select which tab to select<br>\n"
-      ,
-      0, 1,
+      ("This module makes graphical tablists.<p>"
+       "<b>NOTE:</b> This module is not supported and is only here "
+       "for compatibility reasons. Please use ``<b>Config tab-list</b>'' "
+       "instead.<p>"
+#if 0
+       "<p> It defines the tag "
+       "&lt;tablist&gt;.<p>"
+       "Arguments:\n<br>"
+       "font=string: Select font<br>\n"
+       "1= 2= 3= ...: Set the destination for one of the tags<br>\n"
+       "bg=#rrggbb: Set background color<br>\n"
+       "tc=#rrggbb: Set tab color<br>\n"
+       "fc=#rrggbb: Set font color<br>\n"
+       "scale=<float>: Scale the result<br>\n"
+       "names=foo;bar;gazonk: Set the text on the tabs, separated by ';'<br>\n"
+       "selected=<int>: Select which tab to select<br>\n"
+#endif
+       ""),
+    0, 1,
       });
 }
 
