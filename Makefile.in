@@ -138,6 +138,34 @@ localinstall: all
 	cp pike/$(PIKEVERSION)/src/pike $(SRCDIR)/server/bin/
 	-@rm -f $(SRCDIR)/server/bin/roxen >/dev/null 2>&1
 	ln $(SRCDIR)/server/bin/pike $(SRCDIR)/server/bin/roxen
+	@for d in lib lib/pike; do \
+	  if [ -d "$(SRCDIR)/server/$$d/." ]; then : ; else \
+	    echo "$$d"; \
+	    mkdir "$(SRCDIR)/server/$$d" || exit 1; \
+	    chmod a+rx "$(SRCDIR)/server/$$d/."; \
+	    chmod u+w "$(SRCDIR)/server/$$d/."; \
+	  fi; \
+	done
+	@for d in `cd "pike/$(PIKEVERSION)/src/lib; find . -type d -print`; do \
+	  if [ -d "$(SRCDIR)/server/lib/pike/$$d/." ]; then : ; else \
+	    echo "lib/pike/$$d"; \
+	    mkdir "$(SRCDIR)/server/lib/pike/$$d" || exit 1; \
+	    chmod a+rx "$(SRCDIR)/server/lib/pike/$$d/."; \
+	    chmod u+w "$(SRCDIR)/server/lib/pike/$$d/."; \
+	  fi; \
+	done
+	@for f in `cd "pike/$(PIKEVERSION)/src/lib; find . -type f -print`; do \
+	  if cmp "$(SRCDIR)/server/lib/pike/$$f" "pike/$(PIKEVERSION)/src/lib/$$f" >/dev/null 2>&1 ; \
+	  then : ; else \
+	    echo "lib/pike/$$f"; \
+	    if [ -f "$(SRCDIR)/server/lib/pike/$$f" ]; then \
+	      mv -f "$(SRCDIR)/server/lib/pike/$$f" "$(SRCDIR)/server/lib/pike/$$f.old"; \
+	    else : ; fi; \
+	    cp "pike/$(PIKEVERSION)/src/lib/$$f" "$(SRCDIR)/server/lib/pike/$$f" || exit 1; \
+	    chmod a+r "$(SRCDIR)/server/lib/pike/$$f"; \
+	    chmod u+w "$(SRCDIR)/server/lib/pike/$$f"; \
+	  fi ; \
+	done
 	(cd extern; $(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" localinstall)
 
 spotless:  clean
