@@ -13,7 +13,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: PXml.pike,v 1.54 2001/04/18 04:51:40 mast Exp $
+//! $Id: PXml.pike,v 1.55 2001/05/18 23:04:28 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
@@ -249,13 +249,10 @@ static mixed value = RXML.nil;
   if (type->sequential)
     value += val;
   else {
-    if (value != RXML.nil) {
-      val = sprintf ("%O", val);
+    if (value != RXML.nil)
       RXML.parse_error (
 	"Cannot append another value %s to non-sequential type %s.\n",
-	sizeof (val) <= 30 ? val : sprintf ("%s/.../", val[..29]),
-	type->name);
-    }
+	.utils.format_short (val), type->name);
     value = val;
   }
 }
@@ -263,23 +260,29 @@ static mixed value = RXML.nil;
 /*static*/ final inline void handle_literal()
 {
   string literal = String.trim_all_whites (low_parser::read());
+  mixed v;
   if (sizeof (literal))
     if (type->sequential)
-      value += type->encode (literal);
+      value += v = type->encode (literal);
     else {
       if (value != RXML.nil)
 	RXML.parse_error (
 	  "Cannot append another value %s to non-sequential type %s.\n",
-	  sizeof (literal) <= 30 ?
-	  sprintf ("%O", literal) : sprintf ("%O/.../", literal[..29]),
-	  type->name);
-      value = type->encode (literal);
+	  .utils.format_short (literal), type->name);
+      value = v = type->encode (literal);
     }
+  if (p_code) p_code->add (v);
+}
+
+/*static*/ void p_code_literal()
+{
+  string literal = low_parser::read();
+  if (sizeof (literal)) p_code->add (literal);
 }
 
 mixed read()
 {
-  return type->free_text ? low_parser::read() : value;
+  return !p_code && type->free_text ? low_parser::read() : value;
 }
 
 /*static*/ string errmsgs;
@@ -300,7 +303,10 @@ void finish (void|string in)
 {
   low_parser::finish (in);
   if (type->handle_literals) handle_literal();
-  else if (errmsgs) low_parser::write_out (errmsgs), errmsgs = 0;
+  else {
+    if (errmsgs) low_parser::write_out (errmsgs), errmsgs = 0;
+    if (p_code) p_code_literal();
+  }
 }
 
 

@@ -7,7 +7,7 @@
 //!
 //! Created 2000-01-21 by Martin Stjernholm
 //!
-//! $Id: utils.pmod,v 1.20 2001/04/18 04:51:42 mast Exp $
+//! $Id: utils.pmod,v 1.21 2001/05/18 23:04:28 mast Exp $
 
 
 final string format_short (mixed val)
@@ -20,9 +20,9 @@ final string format_short (mixed val)
   else {
     val = sprintf ("%O", val);
     if (sizeof (val) <= 30)
-      return val;
+      return replace (val, "\n", " ");
     else
-      return val[..29] + "/.../";
+      return String.trim_whites (replace (val[..29], "\n", " ")) + "/.../";
   }
 }
 
@@ -76,6 +76,7 @@ final int(1..1)|string|array p_xml_comment_cb (object/*(RXML.PXml)*/ p, string s
 // FIXME: This is a kludge until quote tags are handled like other tags.
 {
   if (p->type->handle_literals) p->handle_literal();
+  else if (p->p_code) p->p_code_literal();
   string name = p->parse_tag_name (str);
   if (sizeof (name)) {
     name = p->tag_name() + name;
@@ -119,7 +120,9 @@ final int(1..1)|string|array p_xml_entity_cb (object/*(RXML.PXml)*/ p, string st
       if (entity[0] == ':') str = entity[1..];
       else if (has_value (entity, ".")) {
 	if (type->handle_literals) p->handle_literal();
+	else if (p->p_code) p->p_code_literal();
 	mixed value = p->handle_var (
+	  p,
 	  entity,
 	  // No quoting of splice args. FIXME: Add some sort of
 	  // safeguard against splicing in things like "nice><evil
@@ -145,12 +148,14 @@ final int(1..1)|string|array p_xml_compat_entity_cb (object/*(RMXL.PXml)*/ p, st
     if (entity[0] == ':') str = entity[1..];
     else if (has_value (entity, ".")) {
       if (type->handle_literals) p->handle_literal();
+      else if (p->p_code) p->p_code_literal();
       mixed value = p->handle_var (
+	p,
 	entity,
 	// No quoting of splice args. FIXME: Add some sort of
 	// safeguard against splicing in things like "nice><evil
 	// stuff='...'"?
-	p->html_context() == "splice_arg" ? RXML.t_string : p->type);
+	p->html_context() == "splice_arg" ? RXML.t_string : type);
       if (value != RXML.nil) {
 	if (type->free_text) return ({value});
 	p->add_value (value);
