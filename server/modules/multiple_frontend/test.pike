@@ -35,14 +35,20 @@ void da_server( Stdio.Port p )
     if( fno != 1 )
     {
       werror("Wanted protocol version 1, got %d\n", fno );
-      fd->write( Result( "error", "Bad protocol version!\n" )->encode() );
+      fd->write( "HTTP/1.0 200 OK\r\n"
+                 "Content-Type: text/x-roxen-rpc\r\n"
+                 "\r\n"+
+                 Result( "error", "Bad protocol version!\n" )->encode() );
       continue;
     }
 
     if( method != "ROXEN_FE_RPC" )
     {
       werror("Wanted method ROXEN_FE_RPC, got %s\n", method );
-      fd->write( Result( "error", "Bad method!\n" )->encode() );
+      fd->write( "HTTP/1.0 200 OK\r\n"
+                 "Content-Type: text/x-roxen-rpc\r\n"
+                 "\r\n"+
+                 Result( "error", "Bad method!\n" )->encode() );
       continue;
     }
 
@@ -58,7 +64,10 @@ void da_server( Stdio.Port p )
     }
     if( strlen( data ) < clen )
       data += fd->read( clen - strlen( data ) );
-    fd->write( handle_rpc_query_data( data ) );
+    fd->write( "HTTP/1.0 200 OK\r\n"
+               "Content-Type: text/x-roxen-rpc\r\n"
+               "\r\n"+
+               handle_rpc_query_data( data ) );
     fd->close( "rw" );
     destruct( fd );
   }
