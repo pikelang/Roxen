@@ -22,7 +22,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.254 2001/06/11 02:44:54 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.255 2001/06/12 11:50:23 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1005,7 +1005,10 @@ int main(int argc, array(string) argv)
 {
   // For Pike 7.3
   add_constant("__pragma_save_parent__",1); // FIXME: Change this later on
-
+#if __VERSION__ > 7.2
+  werror("No.\n");
+  exit(1);
+#endif
 
   // (. Note: Optimal implementation. .)
   array av = copy_value( argv );
