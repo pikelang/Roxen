@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.109 1998/09/30 17:38:17 grubba Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.110 1999/04/25 16:52:45 marcus Exp $";
 //inherit "roxenlib";
 
 inherit "config/draw_things";
@@ -1328,11 +1328,23 @@ mapping configuration_parse(object id)
     // lobotomized international version.
 
     int full_version=0;
+    int half_version=0;
     catch {
       if (sizeof(indices(master()->resolv("_Crypto")))) {
 	full_version = 1;
       }
     };
+    if(full_version)
+      catch {
+#ifndef WEAK_CRYPTO_40BIT
+	if(search(Stdio.read_bytes("protocols/ssl3.pike"),
+		  "WEAK_CRYPTO_40BIT")<0)
+#endif
+	{
+	  half_version = 1;
+	  full_version = 0;
+	}
+      };
 
     return http_string_answer(default_head("Roxen Challenger " +
 					   roxen->__roxen_version__ + "." +
@@ -1340,7 +1352,8 @@ mapping configuration_parse(object id)
 			      status_row(root)+
 			      display_tabular_header(root)+
 			      Stdio.read_bytes(full_version?"etc/config.html":
-					 "etc/config.int.html"), "text/html");
+					 (half_version?"etc/config.40bit.html":
+					  "etc/config.int.html")),"text/html");
   }
   
   if(sizeof(id->prestate))
