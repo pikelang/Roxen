@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.23 1998/02/28 20:59:57 grubba Exp $
+# $Id: Makefile,v 1.24 1998/03/01 01:56:31 mast Exp $
 #
 # Bootstrap Makefile
 #
@@ -51,7 +51,7 @@ all : configure
 configure : configure.in
 	@echo Rebuilding the configure-scripts...
 	@echo
-	@pike/src/0.6/run_autoconfig 2>&1 | grep -v warning
+	@pike/0.6/src/run_autoconfig 2>&1 | grep -v warning
 	@echo
 
 install : all
