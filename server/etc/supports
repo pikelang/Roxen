@@ -1,4 +1,4 @@
-## $Id: supports,v 1.71 2000/01/30 15:45:36 nilsson Exp $
+## $Id: supports,v 1.72 2000/02/09 21:37:24 nilsson Exp $
 # name="Supports database";
 # doc="The database used to determine what different user-agents (browsers) support.";
 #
@@ -41,9 +41,10 @@
 #!  clientname from the patterns, the 'name' _must_ be first in the
 #!  clientname for the patterns in the 'section' to be checked).
 #!
-#! Supports Classes
+#! Supports Flags
 #!
-#! activex - The browser handles active-X contents.
+# <flags>
+#! activex - The browser handles activeX contents.
 #! align - The browser supports the align attribute in its tags.
 #! autogunzip - The browser can decode a gunzipped file on the fly.
 #! backgrounds - The browser supports backgrounds according to the HTML3 specifications.
@@ -87,13 +88,16 @@
 #! wbmp0 - The browser supports Wireless Bitmap Picture Format, type 0.
 #! wml1.0 - The browser supports Wireless Markup Language 1.0.
 #! wml1.1 - The browser supports Wireless Markup Language 1.1.
+# </flags>
 #!
 #! Supports variables
 #!
+# <vars>
 #! height - The presentation area height in pixels.
 #! javascript - The version of supported javascript.
 #! robot - The name of the search engine.
 #! width - The presentation area width in pixels.
+# </vars>
 
 #define basic		images, forms, gifinline, mailto, html
 #define some_html3	divisions, div, supsub, bigsmall, align
