@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.91 1999/05/31 22:21:15 js Exp $
+ * $Id: roxenloader.pike,v 1.92 1999/06/21 19:18:12 mast Exp $
  *
  * Roxen bootstrap program.
  *
@@ -15,7 +15,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.91 1999/05/31 22:21:15 js Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.92 1999/06/21 19:18:12 mast Exp $";
 
 // Macro to throw errors
 #define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
@@ -140,7 +140,10 @@ int mkdirhier(string from, int|void mode)
 	catch (chmod (b+a, stat[0] & mode));
 #endif
     }
-    else mkdir(b+a);
+    else
+      // 0.6 defaults umask to 0770 for some reason. (This will still
+      // be modified with the process umask.)
+      mkdir(b+a, 0777);
     b+=a+"/";
   }
   if(!r)
