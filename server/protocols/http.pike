@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.355 2002/01/30 00:20:03 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.356 2002/02/04 13:28:53 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1597,8 +1597,9 @@ void send_result(mapping|void result)
     if(!file->raw)
     {
       heads = ([]);
+      if (!file->stat) file->stat = misc->stat;
       if(objectp(file->file)) {
-	if(!file->stat && !(file->stat=misc->stat))
+	if(!file->stat)
 	  file->stat = file->file->stat();
 	if (zero_type(misc->cacheable) && file->file->is_file) {
 	  // Assume a cacheablity on the order of the age of the file.
