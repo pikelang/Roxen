@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.82 1997/09/26 17:49:20 grubba Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.83 1997/09/26 18:09:31 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -812,13 +812,13 @@ mapping find_file(string f, object rid)
 {
   int id;
   sscanf(f,"%d/%s", id, f);
-  object g;
-  if (sizeof(indices(g=Gz))) {
-    catch(f = g->inflate()->inflate(MIME.decode_base64(f)));
-  } else if (sizeof(f)) {
+  if (sizeof(f)) {
+    object g;
     if (f[0] == '$') {	// Illegal in BASE64
       f = f[1..];
-    } else {
+    } else if (sizeof(indices(g=Gz))) {
+      catch(f = g->inflate()->inflate(MIME.decode_base64(f)));
+    } else if (sizeof(f)) {
       catch(f = MIME.decode_base64(f));
     }
   }
