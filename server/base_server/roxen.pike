@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.646 2001/03/11 18:51:30 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.647 2001/03/11 19:04:10 nilsson Exp $";
 
 // Used when running threaded to find out which thread is the backend thread.
 Thread.Thread backend_thread;
@@ -41,13 +41,13 @@ inherit "config_userdb";
 // --- Debug defines ---
 
 #ifdef SSL3_DEBUG
-# define SSL3_WERR(X) werror("SSL3: "+X+"\n")
+# define SSL3_WERR(X) report_debug("SSL3: "+X+"\n")
 #else
 # define SSL3_WERR(X)
 #endif
 
 #ifdef THREAD_DEBUG
-# define THREAD_WERR(X) werror("Thread: "+X+"\n")
+# define THREAD_WERR(X) report_debug("Thread: "+X+"\n")
 #else
 # define THREAD_WERR(X)
 #endif
@@ -138,9 +138,9 @@ static class Privs
   void create(string reason, int|string|void uid, int|string|void gid)
   {
 #ifdef PRIVS_DEBUG
-    werror(sprintf("Privs(%O, %O, %O)\n"
-		   "privs_level: %O\n",
-		   reason, uid, gid, privs_level));
+    report_debug(sprintf("Privs(%O, %O, %O)\n"
+			 "privs_level: %O\n",
+			 reason, uid, gid, privs_level));
 #endif /* PRIVS_DEBUG */
 
 #ifdef HAVE_EFFECTIVE_USER
@@ -263,9 +263,9 @@ static class Privs
   void destroy()
   {
 #ifdef PRIVS_DEBUG
-    werror(sprintf("Privs->destroy()\n"
-		   "privs_level: %O\n",
-		   privs_level));
+    report_debug(sprintf("Privs->destroy()\n"
+			 "privs_level: %O\n",
+			 privs_level));
 #endif /* PRIVS_DEBUG */
 
 #ifdef HAVE_EFFECTIVE_USER
@@ -307,15 +307,15 @@ static class Privs
 #ifdef PRIVS_DEBUG
     int uid = geteuid();
     if (uid != new_uid) {
-      werror("Privs: UID #%d differs from expected #%d\n"
-	     "%s\n",
-	     uid, new_uid, describe_backtrace(backtrace()));
+      report_debug("Privs: UID #%d differs from expected #%d\n"
+		   "%s\n",
+		   uid, new_uid, describe_backtrace(backtrace()));
     }
     int gid = getegid();
     if (gid != new_gid) {
-      werror("Privs: GID #%d differs from expected #%d\n"
-	     "%s\n",
-	     gid, new_gid, describe_backtrace(backtrace()));
+      report_debug("Privs: GID #%d differs from expected #%d\n"
+		   "%s\n",
+		   gid, new_gid, describe_backtrace(backtrace()));
     }
 #endif /* PRIVS_DEBUG */
 
@@ -403,12 +403,14 @@ private static void low_shutdown(int exit_code)
 
   if(++_recurse > 4)
   {
-    report_notice("Exiting roxen (spurious signals received).\n");
-    stop_all_configurations();
-    destruct(cache);
+    catch {
+      report_notice("Exiting roxen (spurious signals received).\n");
+      stop_all_configurations();
+      destruct(cache);
 #ifdef THREADS
-    stop_handler_threads();
+      stop_handler_threads();
 #endif /* THREADS */
+    };
     exit(-1);	// Restart.
   }
 
@@ -860,7 +862,7 @@ static void bg_process_queue()
       }
 
 #if 0
-      werror ("background run %O (%{%O, %})\n", task[0], task[1] / 1);
+      report_debug ("background run %O (%{%O, %})\n", task[0], task[1] / 1);
 #endif
       if (task[0])		// Ignore things that have become destructed.
 	task[0] (@task[1]);
@@ -1434,7 +1436,7 @@ mapping(string:Protocol) build_protocols_mapping()
 {
   mapping protocols = ([]);
   int st = gethrtime();
-  werror("Protocol handlers ... ");
+  report_notice("Protocol handlers ... ");
 #ifndef DEBUG
   class lazy_load( string prog, string name )
   {
@@ -1475,7 +1477,7 @@ mapping(string:Protocol) build_protocols_mapping()
 #if !constant(HTTPLoop.prog)
     if( s == "fhttp" ) continue;
 #endif
-    werror( s+" " );
+    report_notice( s+" " );
 
     catch
     {
@@ -1497,7 +1499,7 @@ mapping(string:Protocol) build_protocols_mapping()
 	continue;
     }
 #endif
-    werror( s+" " );
+    report_notice( s+" " );
     catch {
 #ifdef DEBUG
       protocols[ s ] = (program)("../local/protocols/prot_"+s+".pike");
@@ -1506,7 +1508,7 @@ mapping(string:Protocol) build_protocols_mapping()
 #endif
     };
   }
-  werror(" [%.1fms]\n", (gethrtime()-st)/1000.0 );
+  report_notice(" [%.1fms]\n", (gethrtime()-st)/1000.0 );
   return protocols;
 }
 
@@ -1881,7 +1883,6 @@ int increase_id()
   if(current_user_id_file->stat()[2] != current_user_id_file_last_mod)
     restore_current_user_id_number();
   current_user_id_number++;
-  //werror("New unique id: "+current_user_id_number+"\n");
   current_user_id_file->seek(0);
   current_user_id_file->write((string)current_user_id_number);
   current_user_id_file_last_mod = current_user_id_file->stat()[2];
@@ -3542,10 +3543,10 @@ void show_timers()
   sort( a, b );
   reverse(a);
   reverse(b);
-  werror("Timers:\n");
+  report_notice("Timers:\n");
   for( int i = 0; i<sizeof(b); i++ )
-    werror( "  %-30s : %10.1fms\n", b[i], a[i]/1000.0 );
-  werror("\n\n");
+    report_notice( "  %-30s : %10.1fms\n", b[i], a[i]/1000.0 );
+  report_notice("\n\n");
 }
 #endif
 
@@ -3906,36 +3907,36 @@ array security_checks = ({
 
 function(RequestID:mapping|int) compile_security_pattern( string pattern,
 							  RoxenModule m )
-//. Parse a security pattern and return a function that when called
-//. will do the checks required by the format.
-//.
-//. The syntax is:
-//. 
-//.  userdb userdatabase module
-//.  authmethod authentication module
-//.  realm realm name
-//.
-//.  Below, CMD is one of 'allow' and 'deny'
-//. 
-//.  CMD ip=ip/bits[,ip/bits]  [return]
-//.  CMD ip=ip:mask[,ip:mask]  [return]
-//.  CMD ip=pattern            [return]
-//. 
-//.  CMD user=name[,name,...]  [return]
-//.  CMD group=name[,name,...] [return]
-//. 
-//.  CMD dns=pattern           [return]
-//. 
-//.  CMD time=<start>-<stop>   [return]
-//.       times in HH:mm format
-//.
-//.  pattern is a glob pattern.
-//.
-//.  return means that reaching this command results in immediate
-//.  return, only useful for 'allow'.
-//. 
-//. 'deny' always implies a return, no futher testing is done if a
-//. 'deny' match.
+//! Parse a security pattern and return a function that when called
+//! will do the checks required by the format.
+//!
+//! The syntax is:
+//! 
+//!  userdb userdatabase module
+//!  authmethod authentication module
+//!  realm realm name
+//!
+//!  Below, CMD is one of 'allow' and 'deny'
+//! 
+//!  CMD ip=ip/bits[,ip/bits]  [return]
+//!  CMD ip=ip:mask[,ip:mask]  [return]
+//!  CMD ip=pattern            [return]
+//! 
+//!  CMD user=name[,name,...]  [return]
+//!  CMD group=name[,name,...] [return]
+//! 
+//!  CMD dns=pattern           [return]
+//! 
+//!  CMD time=<start>-<stop>   [return]
+//!       times in HH:mm format
+//!
+//!  pattern is a glob pattern.
+//!
+//!  return means that reaching this command results in immediate
+//!  return, only useful for 'allow'.
+//! 
+//! 'deny' always implies a return, no futher testing is done if a
+//! 'deny' match.
 {
   string code = "";
   array variables = ({ "  object userdb_module",
