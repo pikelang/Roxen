@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.14 1997/10/15 14:18:39 grubba Exp $
+# $Id: Makefile,v 1.15 1997/10/15 14:45:24 grubba Exp $
 #
 # Bootstrap Makefile
 #
@@ -126,14 +126,17 @@ verbose_verify:
 
 check : verify
 
-censor : censor_crypto censor_dbapi
+censor : censor_crypto censor_dbapi censor_tetris
 	@echo Censoring complete.
 
 censor_crypto :
 	@echo Censoring the Crypto implementation...
-	-@rm -rf pike/src/modules/_Crypto pike/lib/modules/Crypto* pike/lib/modules/SSL3.pmod server/protocols/ssl3.pike || true
+	-@rm -rf pike/src/modules/_Crypto pike/lib/modules/Crypto* pike/lib/modules/SSL3.pmod server/protocols/ssl3.pike pike/src/modules/Ssleay || true
 
 censor_dbapi :
 	@echo Censoring the DBAPI...
 	-@rm -rf pike/src/modules/Oracle pike/src/modules/Odbc || true
 
+censor_tetris :
+	@echo Censoring the Tetris...
+	-@rm -f server/protocols/tetris.pike || true
