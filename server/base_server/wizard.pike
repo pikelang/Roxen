@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2004, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.152 2004/06/30 16:58:42 mast Exp $
+// $Id: wizard.pike,v 1.153 2004/08/01 12:45:08 anders Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -416,7 +416,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
        "           name='" + m->name + "' onChange='PREFIX_colsel_type(this.value, 1);' />"
        "  </td>"
        "  <td>"
-       "    <table border='0' cellspacing='0' cellpadding='0' background='#ffffff'>"
+       "    <table border='0' cellspacing='0' cellpadding='0' bgcolor='#ffffff'>"
        "      <tr>"
        "      	<td style='background: " + current + "; border: 1px solid #888888' "
        "      	    id='PREFIX_preview'"
