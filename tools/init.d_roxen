@@ -33,8 +33,8 @@ umask 022
 
 ### You should not _have_ to change anything below here...
 
-test -n "$pidfile" && flags="$flags --pid-file=$pidfile"
-test -n "$configdir" && flags="$flags --config-dir=$configdir"
+test "x$pidfile" = "x" || flags="$flags --pid-file=$pidfile"
+test "x$configdir" = "x" || flags="$flags --config-dir=$configdir"
 
 case $1 in
         'start_msg')
