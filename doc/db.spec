@@ -1,10 +1,11 @@
-# $Id: db.spec,v 1.15 1998/08/14 14:37:46 wellhard Exp $
+# $Id: db.spec,v 1.16 1998/08/25 11:04:51 js Exp $
 
-drop table customers;
-drop table dns;
 drop table messages;
+drop table mail;
 drop table mailboxes;
 drop table users;
+drop table customers;
+drop table dns;
 drop table customers_preferences;
 drop table template_wizards;
 drop table template_vars;
@@ -14,6 +15,44 @@ drop table template_schemes_vars;
 drop table customers_schemes;
 drop table customers_schemes_vars;
 
+# AutoMail
+
+create table messages (
+             id	                     int auto_increment primary key,
+             sender		     varchar(255),
+             subject                 varchar(255),
+	     body_id		     varchar(32),
+	     refcount		     int,
+	     headers		     blob,
+	     incoming_date	     timestamp
+     );
+
+create table mail (
+             id	                     int auto_increment primary key,
+	     mailbox_id		     int,
+             message_id		     int
+     );
+
+     
+create table mailboxes (
+             id	                     int auto_increment primary key,	
+             user_id                 int,
+	     name		     varchar(64)
+     );
+ 
+create table users (
+             id		             int auto_increment primary key,
+             realname		     varchar(255),
+             username		     varchar(64),
+             customer_id	     int
+     );
+
+create table flags (
+             mail_id                 int,
+	     name                    varchar(16)
+     );
+
+# AutoAdmin         
 
 create table customers (
              id	                     int auto_increment primary key,
@@ -37,28 +76,6 @@ create table dns (
              rr_value		     varchar(255)
      );
 	    
-create table messages (
-             id	                     int auto_increment primary key,
-             sender		     varchar(255),
-             subject                 varchar(255),
-             contents		     blob
-     );
-
-create table mailboxes (
-             user_id                 int,
-             message_id		     int,
-             received		     timestamp,
-             sent		     timestamp,
-             sent_by		     int
-     );
- 
-create table users (
-             id		             int auto_increment primary key,
-             realname		     varchar(255),
-             username		     varchar(64),
-             aliasname		     varchar(64),
-             customer_id	     int
-     );
 
 create table customers_preferences (
 	     id                      int auto_increment primary key,
