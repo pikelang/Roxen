@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-string cvs_version = "$Id: mountserver.pike,v 1.2 1996/12/01 19:18:53 per Exp $";
+string cvs_version = "$Id: mountserver.pike,v 1.3 1997/10/02 21:36:15 grubba Exp $";
 // Mounts a virtual server on a location in the virtual filesystem of
 // another one (or, infact, the same one, but that is probably quite
 // useless).
@@ -202,8 +202,13 @@ string do_background(string t, mapping m)
 
 string fix_absolute(string from)
 {
-  return parse_html(from, ([ "a":do_href, "img":do_src, "form":do_action, 
-			   "input":do_src, "body":do_background  ]), ([ ]));
+  string data;
+  if ((data = parse_html(from, ([ "base":do_href ]), ([]))) == from) {
+    return parse_html(from, ([ "a":do_href, "img":do_src, "form":do_action, 
+			       "input":do_src, "body":do_background  ]), ([]));
+  } else {
+    return data;
+  }
 }
 
 mapping find_file(string f, object id)
