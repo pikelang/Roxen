@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.146 2000/02/21 18:55:12 mast Exp $
+// $Id: rxml.pike,v 1.147 2000/02/21 20:23:09 nilsson Exp $
 
 inherit "roxenlib";
 inherit "rxmlhelp";
@@ -916,10 +916,18 @@ class UserTag {
 class TagDefine {
   inherit RXML.Tag;
   constant name = "define";
-  RXML.Type content_type = RXML.t_xml;
 
   class Frame {
     inherit RXML.Frame;
+
+    array do_enter(RequestID id) {
+      if(args->preparse)
+	m_delete(args, "preparse");
+      else
+	content_type = RXML.t_xml;
+      return 0;
+    }
+
     array do_return(RequestID id) {
       result = "";
       string n;
