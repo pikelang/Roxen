@@ -1,5 +1,5 @@
 /*
- * $Id: clientlayer.pike,v 1.5 1998/08/30 04:24:30 per Exp $
+ * $Id: clientlayer.pike,v 1.6 1998/09/01 19:28:20 js Exp $
  *
  * A module for Roxen AutoMail, which provides functions for
  * clients.
@@ -10,7 +10,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version="$Id: clientlayer.pike,v 1.5 1998/08/30 04:24:30 per Exp $";
+constant cvs_version="$Id: clientlayer.pike,v 1.6 1998/09/01 19:28:20 js Exp $";
 constant thread_safe=1;
 
 mapping sql_objs=([]);
@@ -42,16 +42,35 @@ void create()
  	 "");
 }
 
-
-string load_body(string body_id)
+string hash_body_id(string body_id)
 {
-  // FIXME: hash body_id to subdirectories
-  return Stdio.read_bytes(query("maildir")+"/"+body_id);
+  body_id="0000"+body_id;
+  int p=sizeof(body_id)-5;
+  return body_id[p..p+1]+"/"+body_id[p+2..p+3];
+}
+
+object(Stdio.File) load_body_get_obj(string body_id)
+{
+  return Stdio.File(query("maildir")+"/"+body_id,"r");
+}
+
+string get_unique_body_id()
+{
+  // FIXME: possible race condition ahead ... I want a transaction DBM!
+  get_sql()->query("update message_body_id set last=last+1");
+  return get_sql()->query("select last from message_body_id where 1=1")[0]->last;
+}
+
+object(Stdio.File) get_fileobject(string body_id)
+{
+  string where=hash_body_id(body_id);
+  mkdirhier(query("maildir")+"/"+where);
+  return Stdio.File(query("maildir")+"/"+where+"/"+body_id,"wc");
 }
 
 void delete_body(string body_id)
 {
-  rm(query("maildir")+"/"+body_id);
+  rm(query("maildir")+"/"+hash_body_id(body_id)+"/"+body_id);
 }
 
 object get_sql()
