@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.61 1999/02/14 23:50:58 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.62 1999/02/18 17:41:07 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -85,6 +85,11 @@ class imap_mail
       }
     }
     return res;
+  }
+
+  void set_flags(multiset(string) new_flags)
+  {
+    /********************************************************* NOT IMPLEMENTED YET!!!!!!!!!!!!!!!!!!!!! */
   }
 
   array(string|object) update()
@@ -235,6 +240,47 @@ class imap_mail
   }
   
   // array collect(mixed ...args) { return args; }
+
+  array(string|object) store(multiset(string) new_flags, int mode, int silent, int uid_mode)
+  {
+    if (mode) {
+      // We care about what the flage were before.
+      multiset old_flags = flags;
+      flags = get_flags();
+
+      silent &= equal(flags, old_flags);
+    }
+    switch(mode) {
+    case -1:
+      flags -= new_flags;
+      break;
+    case 0:
+      flags = new_flags;
+      break;
+    case 1:
+      flags |= new_flags;
+      break;
+    }
+    set_flags(flags);
+
+    if (!silent) {
+      if (uid_mode) {
+	return({
+	  "FETCH", imap_list(({
+	    "FLAGS", imap_list(indices(flags)),
+	    "UID", imap_number(uid),
+	  }))
+	});
+      } else {
+	return({
+	  "FETCH", imap_list(({
+	    "FLAGS", imap_list(indices(flags)),
+	  }))
+	});
+      }
+    }
+    return 0;
+  }
   
   array fetch(array(mapping(string:mixed)) attrs)
   {
@@ -721,6 +767,19 @@ class imap_mailbox
 	}) )
       }) )
     });
+  }
+
+  array(array(string|object)) store(object|mapping(string:mixed) session, object message_set,
+				    array(string) flags, int mode, int silent, int uid_mode)
+  {
+    array(int) message_number = message_set->expand(sizeof(contents));
+
+    multiset(string) new_flags = (< @flags >);
+
+    return(Array.map(message_numbers,
+		     lambda(int i) {
+		       return contents[i-1]->store(session, new_flags, mode, silent, uid_mode);
+		     }) - ({ 0 }));
   }
 
   array(object) fetch_mail(object message_set)
