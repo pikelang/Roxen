@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.318 2001/10/04 11:58:58 sara Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.319 2001/10/04 13:03:19 sara Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -5947,7 +5947,7 @@ using the pre tag.
 
 <attr name='by'>
  <p>Print by whom the page was modified. Takes the same attributes as
- <xref href='user.tag' />. This attribute requires a userdatabase.
+ <xref href='user.tag' />. This attribute requires a user database.
  </p>
 
  <ex-box>This page was last modified by <modified by='1'
