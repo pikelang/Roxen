@@ -1,5 +1,5 @@
 /*
- * $Id: PDB.pmod,v 1.15 1997/10/16 12:16:27 per Exp $
+ * $Id: PDB.pmod,v 1.16 1997/12/14 21:40:44 grubba Exp $
  */
 
 #if constant(thread_create)
@@ -322,8 +322,8 @@ class Table
   {
     // remove table...
     LOCK();
-    foreach(values(index), string d)
-      get_bucket(d[0])->free_block(d[1]);
+    foreach(_indices(), string d)
+      delete(d);
     rm(dir+".INDEX");
     index=([]);
     dirty = 0;
