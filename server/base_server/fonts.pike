@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: fonts.pike,v 1.77 2001/08/29 18:41:53 nilsson Exp $
+// $Id: fonts.pike,v 1.78 2001/09/27 21:51:02 per Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -158,7 +158,7 @@ Font get_font(string f, int size, int bold, int italic,
 	      string justification, float|int xspace, float|int yspace)
 {
   Font fnt;
-  
+  f = lower_case( f );
   foreach( font_handlers, FontHandler fh )
     if( fh->has_font( f,size ) &&
 	(fnt = fh->open(f,size,bold,italic)))
@@ -277,6 +277,8 @@ string verify_font(string font, int size)
 {
   if(!font)
     return verify_font(roxen->query("default_font"), size||32);
+
+  font = lower_case( font );
 
   if(size) {
     foreach( font_handlers, FontHandler fh )
