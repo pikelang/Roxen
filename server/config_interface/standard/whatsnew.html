@@ -22,14 +22,13 @@
 
 <new-feature name='Pike tag module'>
 <ul>
-  <li> &lt;?pike ... ?&gt;  XML compliant processing instruction for pike-code.
-  <li> Pike tags can now inherit/include from the virtual filesystem in roxen
-  <li> //X text-here   parses the text as if it was RXML
-  <li> //O text-here   returns the text as if it was HTML
-  <li> scope.variable is handled like &amp;scope.variable; in RXML
+  <li> &lt;?pike ... ?&gt;  XML compliant processing instruction for pike-code. </li>
+  <li> //X text-here   parses the text as if it was RXML. </li>
+  <li> //O text-here   returns the text as if it was HTML. </li>
+  <li> scope.variable is handled like &amp;scope.variable; in RXML. </li>
   <li> #inherit will inherit a file from the roxen filesystem, and
-       #include will include one.
-  <li> The magic with parse() functions and whatnot is removed
+       #include will include one. </li>
+  <li> The magic with parse() functions and whatnot is removed. </li>
 </ul>
 Small example:
 
@@ -43,11 +42,11 @@ Small example:
    if( !first )
    {
      //X &amp;var.counter; bottles of beer on the wall
-     //X
+     //O
    }
    //X &amp;var.counter; bottles of beer on the wall
    //X &amp;var.counter; bottles of beer
-   //X take one down, pass it around
+   //O take one down, pass it around
  }
  //O one bottle of beer on the wall
  //O one bottle of beer
@@ -60,50 +59,51 @@ Small example:
 </new-feature>
 
 <new-feature name='Perl module'>
- A module for embedded perl<br />
- &lt;?perl ... ?&gt; and &lt;perl&gt;&lt;/perl&gt; in RXML pages<br />
- .pl pages for CGI-like interface that is much faster than CGI
+ A module for embedded perl.<br />
+ &lt;?perl ... ?&gt; and &lt;perl&gt;&lt;/perl&gt; in RXML pages.<br />
+ .pl pages for CGI-like interface that is much faster than CGI.
 </new-feature>
 
 <new-feature name='Processing instructions in the low-level RXML parser'>
-  &lt;?... ?&gt; tags can now be registered
+  &lt;?... ?&gt; tags can now be registered.
 </new-feature>
 
 <new-feature name='New locale system'>
  Completely new locale/translation system with XML-based language files
- (in server/translations)
+ (in server/translations).
 </new-feature>
 
 <new-feature name='New and changed tags'>
 <ul>
-<li> &lt;wash-html&gt;...&lt;/wash-html&gt;    do some common text-&gt;html tasks
-<li> &lt;?comment ..... ?&gt;
-<li> &lt;if sizeof=.../&gt;
-<li> &lt;sprintf [split=separator] format=...&gt;values,...&lt;/sprintf&gt;
-<li> &lt;sscanf variables=a,b,... format=...&gt;data&lt;/sscanf&gt;
-<li> &amp;_.scopename;  will be the name of the default scope, if scopename is not used as a variable in that scope
-<li> &lt;dice type='3D6+D4'&gt;
-<li> &lt;fsize&gt; now prints the size in a somwhat less user-unfriendly way
-<li> &lt;gbutton&gt; can now have images above or below the text (for toolbar style images)
-<li> &lt;cimg&gt; checks mtime on the source file (if any)
-<li> &lt;date strftime=format&gt;
+<li> &lt;wash-html&gt;...&lt;/wash-html&gt; do some common text-&gt;html tasks. </li>
+<li> &lt;?comment ..... ?&gt; </li>
+<li> &lt;if sizeof=.../&gt; </li>
+<li> &lt;sprintf [split=separator] format=...&gt;values,...&lt;/sprintf&gt; </li>
+<li> &lt;sscanf variables=a,b,... format=...&gt;data&lt;/sscanf&gt; </li>
+<li> &amp;_.scopename;  will be the name of the default scope, if scopename is not used as a variable in that scope. </li>
+<li> &lt;dice type='3D6+D4'&gt; </li>
+<li> &lt;fsize&gt; now prints the size in a somwhat less user-unfriendly way. </li>
+<li> &lt;gbutton&gt; can now have images above or below the text (for toolbar style images). </li>
+<li> &lt;cimg&gt; checks mtime on the source file (if any). </li>
+<li> &lt;date strftime=format&gt; </li>
+<li> &lt;vform&gt;, with which you can create self-verified forms. Uses the same widgets as the configuration variables. </li>
 </ul>
 </new-feature>
 
 <new-feature name='Servlets'>
 <ul>
-<li> File extension servlets added, as an example, for .jsp pages
-<li> Better classpath handling
+<li> File extension servlets added, as an example, for .jsp pages. </li>
+<li> Better classpath handling. </li>
 </ul>
 </new-feature>
 
 <new-feature name='The directory module'>
 <ul>
 <li>The Directory module now uses a template and normal RXML (using
-    emit sources directory and path) to generate the lists.
+    emit sources directory and path) to generate the lists. </li>
 
 <li> The directory and path emit sources can also be used to generate
-     other directory lists, such as image listings with thumbnails.
+     other directory lists, such as image listings with thumbnails. </li>
 </ul>
 </new-feature>
 
@@ -111,27 +111,28 @@ Small example:
 <ul>
 <li> <b>New sources</b>
 <ul>
-<li> fonts - A list of all fonts available
-<li> directory - directory listings
-<li> path - Separate a path on '/'
+<li> fonts - A list of all fonts available. </li>
+<li> directory - Directory listings. </li>
+<li> path - Separate a path on '/'. </li>
+<li> foreach - Traverse a list, e.g. the response from a multivalue select. </li>
 <li> cimg - Like the &lt;cimg&gt; tag, but entity based. 
-     Includes &lt;_.type;,  &lt;_.src;,  &lt;_.file-size;, &lt;_.xsize;,  &lt;_.ysize; and &lt;_.data;
-<li> ldap - LDAP search query
-</ul>
-<li> Emit can now sort the result
-<li> You can now select a sub-range of the result
-<li> remainderinfo=variablename (number of lines after current selected range)
+     Includes &amp;_.type;, &amp;_.src;, &amp;_.file-size;, &amp;_.xsize;, &amp;_.ysize; and &amp;_.data; </li>
+<li> ldap - LDAP search query. </li>
+</ul> </li>
+<li> Emit can now sort the result. </li>
+<li> You can now select a sub-range of the result. </li>
+<li> remainderinfo=variablename (number of lines after current selected range). </li>
 </ul>
 </new-feature>
 
 <new-feature name='HTTP protocol module'>
 <ul>
 <li> The module is greatly optimized. For a 100Kb file it went from
-     112 to 640 req/seconds.
+     112 to 640 req/seconds. </li>
 <li> There is now a memory cache that can be used to optimize the
      server. For a 10Kb file, the performance went from 240 to 1490
      req/second. The cache can be configured on the Settings page for
-     each Site.
+     each Site. </li>
 </ul>
 </new-feature>
 
