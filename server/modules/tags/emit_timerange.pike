@@ -4,7 +4,7 @@
 inherit "module";
 
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.14 2004/05/23 01:49:06 _cvs_stephen Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.15 2004/05/23 03:02:56 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -763,7 +763,8 @@ mapping scopify(Calendar.TimeRange time, string unit, string|void parent_scope)
 		   allocate(sizeof( layout ), value));
 }
 
-Calendar.Calendar get_date(string name, mapping args, Calendar calendar)
+Calendar.Calendar get_date(string name, mapping args,
+ Calendar.Calendar calendar)
 {
   if(name != "")
     name = name + "-";
