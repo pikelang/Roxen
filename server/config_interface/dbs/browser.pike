@@ -8,7 +8,7 @@ mapping actions = ([
   // name         title                      function   must be internal
   "move":   ({  _(401,"Copy or move database"),move_db,   0 }),
   "delete": ({  _(402,"Delete this database"), delete_db, 0 }),
-  "group": ({  _(402,"Change group for this database"), change_group, 0 }),
+  "group":  ({  _(0,"Change group for this database"), change_group, 0 }),
   "clear":  ({  _(403,"Delete all tables"),    clear_db,  0 }),
   "backup": ({  _(404,"Make a backup"),        backup_db, 1 }),
 ]);
