@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.865 2004/03/09 16:21:56 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.866 2004/03/10 16:56:42 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -4295,7 +4295,9 @@ void create_pid_file(string where)
 //   where = replace(where, ({ "$pid", "$uid" }),
 // 		  ({ (string)getpid(), (string)getuid() }));
 
+  object privs = Privs("Deleting old pid file.");
   r_rm(where);
+  privs = 0;
   if(catch(Stdio.write_file(where, sprintf("%d\n%d\n", getpid(), getppid()))))
     report_debug("I cannot create the pid file ("+where+").\n");
 #endif
@@ -4541,9 +4543,12 @@ int main(int argc, array tmp)
 
   enable_configurations();
 
+  string pid_file = Getopt.find_option(argv, "p", "pid-file");
+  if (pid_file && query("permanent_uid")) rm(pid_file);
+
   set_u_and_gid(); // Running with the right [e]uid:[e]gid from this point on.
 
-  create_pid_file(Getopt.find_option(argv, "p", "pid-file"));
+  create_pid_file(pid_file);
 
   // Done before the modules are dumped.
 
