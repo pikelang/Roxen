@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.71 1998/02/02 01:08:51 wing Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.72 1998/02/02 12:14:54 wing Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -705,7 +705,7 @@ string tag_set( string tag, mapping m, object id )
     return("<!-- set: variable not specified -->");
 }
 
-string tag_concat( string tag, mapping m, object id )
+string tag_append( string tag, mapping m, object id )
 {
   if (m->variable)
   {
@@ -723,7 +723,7 @@ string tag_concat( string tag, mapping m, object id )
 	else
 	  id->variables[ m->variable ] = id->variables[ m->from ];
       else
-	return "<!-- concat: from variable doesn't exist -->";
+	return "<!-- append: from variable doesn't exist -->";
     else if (m->other)
       // Set variable to the value of a misc variable
       if (id->misc->variables[ m->other ])
@@ -732,13 +732,13 @@ string tag_concat( string tag, mapping m, object id )
 	else
 	  id->variables[ m->variable ] = id->misc->variables[ m->other ];
       else
-	return "<!-- concat: other variable doesn't exist -->";
+	return "<!-- append: other variable doesn't exist -->";
     else
-      return "<!-- concat: nothing to concat from -->";
+      return "<!-- append: nothing to append from -->";
     return("");
   }
   else
-    return("<!-- concat: variable not specified -->");
+    return("<!-- append: variable not specified -->");
 }
 
 string tag_define(string tag,mapping m, string str, object got,object file,
@@ -1936,7 +1936,7 @@ mapping query_tag_callers()
 	    "imgs":tag_ximage,
 	    "version":tag_version,
 	    "set":tag_set,
-	    "concat":tag_concat,
+	    "append":tag_append,
 	    "unset":tag_set,
  	    "set_cookie":tag_add_cookie,
  	    "remove_cookie":tag_remove_cookie,
