@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.592 2000/12/30 05:19:32 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.593 2000/12/30 06:22:27 nilsson Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -86,7 +86,7 @@ void start_mysql()
   if( !file_stat( mysqldir+"/mysql/user.MYD" ) )
   {
     report_debug("Mysql data directory does not exist -- copying template\n");
-    mkdir( mysqldir+"/mysql" );
+    mkdirhier( mysqldir+"/mysql/" );
     object tar = Filesystem.Tar( "etc/mysql-template.tar" );
     foreach( tar->get_dir( "mysql" ), string f )
     {
