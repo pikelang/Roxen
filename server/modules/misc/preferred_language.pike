@@ -5,7 +5,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: preferred_language.pike,v 1.28 2004/10/11 19:06:01 mast Exp $";
+constant cvs_version = "$Id: preferred_language.pike,v 1.29 2004/11/10 14:25:22 jonasw Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST | MODULE_TAG;
 constant module_name = "Preferred Language Analyzer";
@@ -34,7 +34,7 @@ class LanguagePrefs
 #"List of sources used for building the list of preferred languages.
 Languages added from sources on top of the list will have a higher priority.<br />
 <b>Accept-Language header</b> will add languages from the browser settings.<br />
-<b>Presate</b> will add languages from prestates.<br />
+<b>Prestate</b> will add languages from prestates.<br />
 <b>Cookie</b> will add languages from a specified cookie.<br />
 <b>Variable</b> will add languages from a specified variable.<br />
 <b>Match host name</b> will add a specified list of langauges if the host name
