@@ -49,9 +49,8 @@
 </str>
 
 <str id="6">
-<new/>
 <o>Pike module list</o>
-<t></t>
+<t>Pike Modulliste</t>
 </str>
 
 <str id="7">
@@ -427,9 +426,8 @@ schmerz bis qual folgt jeder unexakten motivtypwahl.
 </str>
 
 <str id="74">
-<changed from="Loaded projects:"/>
 <o>Loaded project files:</o>
-<t>Geladene Projekte:</t>
+<t>Geladene Projektdateien:</t>
 </str>
 
 <str id="75">
@@ -764,11 +762,11 @@ Although most browsers will accept 8 bit ISO 8859-1 characters in these fields, 
 </str>
 
 <str id="42">
-<changed from="Indeed"/>
 <o>If you have more than one roxen version installed
 in the same location, you can use this action to
 change the currently running version.</o>
-<t>In der Tat</t>
+<t>Wenn mehr als eine Roxen-Version im gleichen Verzeichnis installiert
+ist, kann diese Auswahl die aktuell laufende Version wechseln.</t>
 </str>
 
 <str id="43">
@@ -833,13 +831,11 @@ change the currently running version.</o>
 </str>
 
 <str id="139">
-<new/>
 <o>one day</o>
-<t></t>
+<t>ein Tag</t>
 </str>
 
 <str id="140">
-<new/>
 <o>Unavailable features</o>
-<t></t>
+<t>Nicht verfügbare Features</t>
 </str>

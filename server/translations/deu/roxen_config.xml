@@ -501,15 +501,13 @@ aufgerufen wird. '$File' wird ersetzt durch den Dateinamen,
 </str>
 
 <str id="74">
-<changed from="Logging: Set unique user id cookies"/>
 <o>Logging: Set unique browser id cookies</o>
-<t>Protokollierung: Setze eindeutige User-ID-Cookies?</t>
+<t>Protokollierung: Setze eindeutige Browser-ID-Cookies</t>
 </str>
 
 <str id="75">
-<changed from="If set to Yes, all users of your server whose clients support cookies will get a unique 'user-id-cookie', this can then be used in the log and in scripts to track individual users."/>
 <o>If set to Yes, all clients that accepts cookies will get a unique 'user-id-cookie', which can then be used in the log and in scripts to track individual users.</o>
-<t>Bei Aktivierung wird allen Besuchern der Website ein eindeutiger sogenannter Benutzer-Cookie gesetzt, sofern deren Browser Cookies annimmt.  Der Cookie kann in Scripten oder in der Protokolldatei zur Verfolgung einzelner Benutzer verwendet werden.</t>
+<t>Bei Aktivierung wird allen Clients, die Cookies unterstützen, ein eindeutiger Cookie 'user-id-cookie' gesetzt. Der Cookie kann in Scripten oder in der Protokolldatei zur Verfolgung einzelner Benutzer verwendet werden.</t>
 </str>
 
 <str id="76">
@@ -518,9 +516,8 @@ aufgerufen wird. '$File' wird ersetzt durch den Dateinamen,
 </str>
 
 <str id="77">
-<changed from="If set to Yes, Roxen will attempt to set unique user ID cookies only upon receiving the first request (and again after some minutes). Thus, if the user doesn't allow the cookie to be set, she won't be bothered with multiple requests."/>
 <o>If set to Yes, Roxen will attempt to set unique browser ID cookies only upon receiving the first request (and again after some minutes). Thus, if the user doesn't allow the cookie to be set, she won't be bothered with multiple requests.</o>
-<t>Bei Aktivierung wird dem Anwender nur beim ersten Kontakt ein eindeutiger User-ID-Cookie geschickt. Sollte der Anwender in seiner Browser-Voreinstellung Cookies ablehnen, dann wird mit dieser Einstellung verhindert, dass der Anwender ständig auf die Cookies hingewiesen wird.</t>
+<t>Bei Aktivierung wird dem Client des Besuchers nur beim ersten Kontakt ein eindeutiger User-ID-Cookie geschickt. Sollte der Anwender in seiner Browser-Voreinstellung Cookies ablehnen, dann wird mit dieser Einstellung verhindert, dass der Anwender ständig auf die Cookies hingewiesen wird.</t>
 </str>
 
 <str id="86">
@@ -2920,7 +2917,6 @@ Roxen verwaltet.&lt;/p&gt;</t>
 </str>
 
 <str id="507">
-<new/>
 <o>Cannot list fields in %s databases</o>
-<t></t>
+<t>Felder in %s Datenbanken können nicht gelistet werden</t>
 </str>
