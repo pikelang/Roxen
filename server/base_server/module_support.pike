@@ -1,4 +1,4 @@
-// string cvs_version = "$Id: module_support.pike,v 1.28 1999/10/11 14:09:28 per Exp $";
+// string cvs_version = "$Id: module_support.pike,v 1.29 1999/10/18 20:29:58 marcus Exp $";
 #include <roxen.h>
 #include <module.h>
 #include <stat.h>
@@ -364,6 +364,13 @@ class Module
     foreach( dirlist, string file )
       catch 
       {
+        if( file_stat( dir+file )[ ST_SIZE ] == -2 &&
+	    file != "." && file != ".." )
+          if( rec_find_module( what, dir+file+"/" ) )
+            return 1;
+	  else
+	    continue;
+
         if( strlen( file ) < 3 )
           continue;
         if( file[-1] == '~' ) 
@@ -382,9 +389,6 @@ class Module
                 return 1;
           }
         }
-        if( file_stat( dir+file )[ ST_SIZE ] == -2 )
-          if( rec_find_module( what, dir+file+"/" ) )
-            return 1;
       };
   }
 
