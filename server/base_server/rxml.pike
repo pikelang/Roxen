@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.93 2000/02/02 20:39:57 per Exp $
+ * $Id: rxml.pike,v 1.94 2000/02/04 20:19:56 mast Exp $
  *
  * The Roxen RXML Parser.
  *
@@ -297,10 +297,17 @@ array|string call_overridden (array call_to, RXML.PHtml parser,
       result = cdef (parser, call_to[2] || args, call_to[3] || content);
   else				// Nothing is overridden.
     if (sizeof (call_to) == 3)
-      result = make_tag (call_to[1] || name, call_to[2] || args);
+      result = ({make_tag (call_to[1] || name, call_to[2] || args)});
     else if (sizeof (call_to) == 4)
-      result = make_container (call_to[1] || name, call_to[2] || args,
-			       call_to[3] || content);
+      result = ({make_container (call_to[1] || name, call_to[2] || args,
+				 call_to[3] || content)});
+    else
+      // No changes to args or content, but we can't return 0 because
+      // we might have parsed entities in the args mapping.
+      if (content)
+	result = ({make_container (name, args, content)});
+      else
+	result = ({make_tag (name, args)});
 
   m_delete (id->misc, "__tag_overrider_def");
   return result;
@@ -351,7 +358,7 @@ array|string call_tag(RXML.PHtml parser, mapping args, string|function rf)
   if (arrayp (result) && sizeof (result) && result[0] == 1)
     return call_overridden (result, parser, tag, args, 0, id);
 
-  return result;
+  return result || ({make_tag (tag, args)});
 }
 
 array(string)|string call_container(RXML.PHtml parser, mapping args,
@@ -408,7 +415,7 @@ array(string)|string call_container(RXML.PHtml parser, mapping args,
   if (arrayp (result) && sizeof (result) && result[0] == 1)
     return call_overridden (result, parser, tag, args, contents, id);
 
-  return result;
+  return result || ({make_container (tag, args, contents)});
 }
 
 string do_parse(string to_parse, RequestID id,
