@@ -133,7 +133,7 @@ mixed do_it( RequestID id )
                           "#", "!" );
 
   return http_redirect( site_url( id, id->variables->config )+
-                        "modules/"+last_module+"/", id );
+                        "modules/"+last_module+"/?initial=1&section=_all", id );
 }
 
 mixed parse( RequestID id )
