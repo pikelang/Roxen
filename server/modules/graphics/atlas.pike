@@ -6,7 +6,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: atlas.pike,v 1.14 2002/11/19 09:57:21 jonasw Exp $";
+constant cvs_version = "$Id: atlas.pike,v 1.15 2003/01/22 16:34:33 grubba Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_EXPERIMENTAL;
 constant module_name = "Graphics: Atlas";
@@ -193,7 +193,7 @@ class TagAtlas {
   }
 }
 
-Image generate_image(mapping state, RequestID id)
+Image.Image generate_image(mapping state, RequestID id)
 {
   if(!state)
     return 0;
@@ -214,7 +214,7 @@ Image generate_image(mapping state, RequestID id)
 
   Map.Earth m = Map.Earth( state->region );
 
-  Image img = m->image(state->width, state->height, opt);
+  Image.Image img = m->image(state->width, state->height, opt);
 
   return img;
 }
