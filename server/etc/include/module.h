@@ -1,4 +1,4 @@
-// $Id: module.h,v 1.22 1999/03/27 22:06:27 grubba Exp $
+// $Id: module.h,v 1.23 1999/05/08 00:52:37 per Exp $
 #ifndef ROXEN_MODULE_H
 #define ROXEN_MODULE_H
 
@@ -110,8 +110,3 @@ defvar((X)+"_slant", "plain", (Z)+": slant", TYPE_STRING_LIST, "", ({"italic","p
 #define CACHE(seconds) id->misc->cacheable=min(id->misc->cacheable,seconds)
 #define NOCACHE() id->misc->cacheable=0
 #endif
-
-
-
-
-
