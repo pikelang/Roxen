@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.3 2001/04/23 08:59:24 anders Exp $
+// $Id: DBManager.pmod,v 1.4 2001/06/11 02:43:38 per Exp $
 //! @module DBManager
 //! Manages database aliases and permissions
 
@@ -266,13 +266,25 @@ int is_internal( string name )
   return (int)d[0]["local"];
 }
 
-string db_url( string name )
-//! Returns the URL of the db, or 0 if the DB @[name] is an internal database
+string db_url( string name,
+	       int|void force )
+//! Returns the URL of the db, or 0 if the DB @[name] is an internal
+//! database and @[force] is not specified. If @[force] is specified,
+//! a URL is always returned.
 {
   array(mapping(string:mixed)) d =
            query("SELECT path,local FROM dbs WHERE name=%s", name );
   if( !sizeof( d ) ) return 0;
-  if( (int)d[0]["local"] ) return 0;
+  if( (int)d[0]["local"] )
+  {
+    if( force )
+      return replace( roxenloader->my_mysql_path,
+		      ([
+			"%user%":"rw",
+			"%db%":name
+		      ]) );
+    return 0;
+  }
   return d[0]->path;
 }
 
