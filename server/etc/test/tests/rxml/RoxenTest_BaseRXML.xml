@@ -1888,7 +1888,26 @@ cd</rxml>
   <result>10</result>
 </test>
 
-<comment>Quoting tests missing</comment>
+
+<!-- ............................................................ -->
+<comment>Entity quoting</comment>
+
+<!-- Note that these tests a very incomplete -->
+
+<test>
+<rxml><set variable="var.x">&amp;f;&lt;b&gt;</set>&var.x:none;</rxml>
+<result>&f;<b></result>
+</test>
+
+<test>
+<rxml><set variable="var.x">&lt;$</set>&var.x:wml;</rxml>
+<result>&lt;$$</result>
+</test>
+
+<test>
+<rxml><set variable="var.x">&lt;$%a#å</set>&var.x:wml-url;</rxml>
+<result>%3c%24%25a%23%e5</result>
+</test>
 
 
 <!-- ............................................................ -->
