@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.788 2002/04/19 12:05:59 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.789 2002/04/19 12:29:35 anders Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -1212,22 +1212,27 @@ class Protocol
                                  });
   }
 
-  void unref(string name)
-  //! Remove a ref for the URL 'name'
+  void unref(string _name)
+  //! Remove a ref for the URL '_name'
   {
 //     if(!urls[name]) // only unref once
 //       return;
 
-    m_delete(conf_data, urls[name]->conf);
-    m_delete(urls, name);
+    m_delete(conf_data, urls[_name]->conf);
+    m_delete(urls, _name);
     if (!path && sizeof (Array.uniq (values (urls)->path)) == 1)
       path = values (urls)[0]->path;
-    sorted_urls -= ({name});
+    sorted_urls -= ({_name});
     if( !--refs ) {
       if (port_obj) {
 	destruct(port_obj);
       }
       port_obj = 0;
+      m_delete(open_ports[name][ip], port);
+      if(!sizeof(open_ports[name][ip]))
+	m_delete(open_ports[name], ip);
+      if(!sizeof(open_ports[name]))
+	m_delete(open_ports, name);
       //destruct( ); // Close the port.
     }
   }
@@ -1767,12 +1772,6 @@ void unregister_url(string url, Configuration conf)
   if (urls[url] && (!conf || !urls[url]->conf || (urls[url]->conf == conf)) &&
       urls[url]->port)
   {
-    object port = urls[ url ]->port;
-    m_delete( open_ports[port->name][port->ip], port->port );
-    if (!sizeof(open_ports[port->name][port->ip]))
-      m_delete(open_ports[port->name], port->ip);
-    if (!sizeof(open_ports[port->name]))
-      m_delete(open_ports, port->name);
     urls[ url ]->port->unref(url);
     m_delete( urls, url );
     m_delete( urls, ourl );
