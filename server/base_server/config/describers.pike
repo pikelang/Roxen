@@ -1,4 +1,4 @@
-/* $Id: describers.pike,v 1.59 1998/11/22 17:08:02 per Exp $ */
+/* $Id: describers.pike,v 1.60 1999/08/06 05:45:10 jhs Exp $ */
 
 #include <module.h>
 #include <roxen.h>
@@ -105,7 +105,10 @@ string describe_times(array (int) times)
 
 string fix_err(string s)
 {
-  while(s[-1]=='\n' || s[-1]==' ' || s[-1]=='\t') s=s[..strlen(s)-2];
+  sscanf(reverse(s), "%*[ \t\n]%s", s);
+  s=reverse(s);
+  if(s=="")
+    return s;
   if(!(<'.','!','?'>)[s[-1]]) s+=".";
   return capitalize(s);
 }
