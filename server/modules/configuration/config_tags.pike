@@ -339,6 +339,8 @@ string get_var_form( string s, object var, object mod, object id,
       path = s;
     var->set_path( sprintf("%x", Gmp.mpz(path, 256 ) ) );
   }
+  if( !view_mode && !noset )
+    var->set_from_form( id );
 
   string pre = var->get_warnings();
 
@@ -417,7 +419,7 @@ array get_variable_maps( object mod, mapping m, object id, int fnset )
   while( id->misc->orig )
     id = id->misc->orig;
   array variables = map( indices(mod->variables),get_variable_map,mod,id,
-                         fnset || id->misc->set_from_vmap_done++);
+                         fnset );
   variables = filter( variables,
                       lambda( mapping q ) {
                         return q->form && strlen(q->sname);
@@ -447,7 +449,6 @@ array get_variable_maps( object mod, mapping m, object id, int fnset )
   if( !fnset )
     if( id->variables["save.x"] )
     {
-      werror("will save\n");
       remove_call_out( mod->save );
       call_out( mod->save, 5 );
     }
