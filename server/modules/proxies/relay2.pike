@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
 
 #include <module.h>
-constant cvs_version = "$Id: relay2.pike,v 1.31 2003/04/22 16:50:15 anders Exp $";
+constant cvs_version = "$Id: relay2.pike,v 1.32 2003/07/09 09:54:03 wellhard Exp $";
 
 inherit "module";
 constant module_type = MODULE_FIRST|MODULE_LAST;
@@ -342,7 +342,7 @@ class Relayer
     return url;
   }
 
-  Relay relay( object id )
+  int(0..1) relay( object id )
   {
     string file = id->not_query;
 
@@ -352,7 +352,8 @@ class Relayer
     if( r->match( file ) )
     {
       stats[ pattern ]++;
-      return Relay( id, do_replace( file ), options );
+      Relay( id, do_replace( file ), options );
+      return 1;
     }
   }
 
