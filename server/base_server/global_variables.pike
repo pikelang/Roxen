@@ -1,6 +1,10 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: global_variables.pike,v 1.24 2000/03/06 18:54:30 nilsson Exp $
+// $Id: global_variables.pike,v 1.25 2000/03/10 02:15:08 nilsson Exp $
+
+#pragma strict_types
+#define DEFVAR string,int|string,string|mapping,int,string|mapping(string:string),void|array(string),void|function:void
+#define BDEFVAR string,int|string,string|mapping,int,string|mapping(string:string),void|array(string),void|mapping(string:mapping(string:string)):void
 
 #include <module.h>
 #include <roxen.h>
@@ -15,7 +19,7 @@ inherit "module_support";
 
 private int cache_disabled_p() { return !QUERY(cache);         }
 private int syslog_disabled()  { return QUERY(LogA)!="syslog"; }
-private int ident_disabled_p() { return QUERY(default_ident); }
+private int ident_disabled_p() { return [int(0..1)]QUERY(default_ident); }
 
 
 // And why put these functions here, you might rightully ask.
@@ -27,7 +31,8 @@ private int ident_disabled_p() { return QUERY(default_ident); }
 
 void set_up_ftp_variables( object o )
 {
-  function defvar = o->defvar;
+  function(DEFVAR) defvar =
+    [function(DEFVAR)] o->defvar;
 
 
   defvar( "FTPWelcome",
@@ -62,8 +67,10 @@ void set_up_ftp_variables( object o )
 
 void set_up_http_variables( object o, int|void fhttp )
 {
-  function defvar = o->defvar;
-  function deflocaledoc = o->deflocaledoc;
+  function(DEFVAR) defvar =
+    [function(DEFVAR)] o->defvar;
+  function(string,string,string,string:void) deflocaledoc =
+    [function(string,string,string,string:void)] o->deflocaledoc;
 
   defvar("show_internals", 1, "Show internal errors", TYPE_FLAG,
 #"Show 'Internal server error' messages to the user.
@@ -104,7 +111,7 @@ zur Identifizierung einzelner Benutzer verwendet werden.");
  only upon receiving the first request (and again after some minutes). Thus, if
 the user doesn't allow the cookie to be set, she won't be bothered with
 multiple requests.",0,
-	  lambda() {return !QUERY(set_cookie);});
+	   lambda() {return !QUERY(set_cookie);});
 
     deflocaledoc( "svenska", "set_cookie_only_once",
                   "Loggning: Sätt bara kakan en gång per användare",
@@ -122,30 +129,33 @@ anzunehmen.");
 
 void set_up_fhttp_variables( object o )
 {
-  function defvar = o->defvar;
-  function deflocaledoc = o->deflocaledoc;
+  function(BDEFVAR) defvar =
+    [function(BDEFVAR)] o->defvar;
+  function(string,string,string,string:void) deflocaledoc =
+    [function(string,string,string,string:void)] o->deflocaledoc;
 
   defvar( "log", "None",
+	  [mapping(string:string)]
           (["standard":"Logging method",
             "svenska":"Loggmetod",
             "deutsch": "Logging-Methode", ]), TYPE_STRING_LIST,
           (["standard":
-            "None - No log<br>"
-            "CommonLog - A common log in a file<br>"
-            "Compat - Log though roxen's normal logging format.<br>"
+            "None - No log<br />"
+            "CommonLog - A common log in a file<br />"
+            "Compat - Log though roxen's normal logging format.<br />"
             "<p>Please note that compat limits roxen to less than 1k "
-            "requests/second.",
+            "requests/second.</p>",
             "svenska":
-            "Ingen - Logga inte alls<br>"
-            "Commonlog - Logga i en commonlogfil<br>"
+            "Ingen - Logga inte alls<br />"
+            "Commonlog - Logga i en commonlogfil<br />"
             "Kompatibelt - Logga som vanligt. Notera att det inte går "
             "speciellt fort att logga med den här metoden, det begränsar "
             "roxens hastighet till strax under 1000 requests/sekund på "
             "en normalsnabb dator år 1999.",
             "deutsch":
-            "Keine - Kein Logfile<br>"
-            "CommonLog - Logging nach dem CommonLog-Format<br>"
-            "Compat - Mit Roxen's normalem Format arbeiten.<br>"
+            "Keine - Kein Logfile<br />"
+            "CommonLog - Logging nach dem CommonLog-Format<br />"
+            "Compat - Mit Roxen's normalem Format arbeiten.<br />"
             "<p>Hinweis: Die Compat-Methode beschränkt Roxen auf "
             "1000 Zugriffe/Sekunde.",
           ]),
@@ -164,7 +174,7 @@ void set_up_fhttp_variables( object o )
              ]),
           ]) );
 
-  defvar( "log_file", "../logs/clog-"+o->ip+":"+o->port,
+  defvar( "log_file", "../logs/clog-"+[string]o->ip+":"+[string]o->port,
           ([ "standard":"Log file",
              "svenska":"Logfil",
              "deutsch":"Logdatei", ]), TYPE_FILE,
@@ -202,8 +212,10 @@ void set_up_fhttp_variables( object o )
 
 void set_up_ssl_variables( object o )
 {
-  function defvar = o->defvar;
-  function deflocaledoc = o->deflocaledoc;
+  function(DEFVAR) defvar =
+    [function(DEFVAR)] o->defvar;
+  function(string,string,string,string:void) deflocaledoc =
+    [function(string,string,string,string:void)] o->deflocaledoc;
 
   defvar( "ssl_cert_file", "demo_certificate.pem",
           ([
@@ -558,7 +570,7 @@ im Cache, bis sie ihr Alter verdoppelt haben.");
 	  "Setting this variable to No will display the \"Identify as\" node "
 	  "where you can state what Roxen should call itself when talking "
 	  "to clients, otherwise it will present it self as \""+ real_version
-	  +"\".<br>"
+	  +"\".<br />"
 	  "It is possible to disable this so that you can enter an "
 	  "identification-string that does not include the actual version of "
 	  "Roxen, as recommended by the HTTP/1.0 draft 03:<p><blockquote><i>"
@@ -676,7 +688,7 @@ durchsucht.");
 
   globvar("Supports", "#include <etc/supports>\n",
 	  "Client supports regexps", TYPE_TEXT_FIELD|VAR_MORE,
-	  "What do the different clients support?\n<br>"
+	  "What do the different clients support?\n<br />"
 	  "The default information is normally fetched from the file "+
 	  getcwd()+"etc/supports, and the format is:<pre>"
 	  "regular-expression"
@@ -769,21 +781,21 @@ aber Syslog ist ebenfalls möglich.",
                 "Wenn Syslog verwendet wird, welcher Typ soll benutzt werden?");
 
   globvar("LogWH", "Errors", "Logging: Log what to syslog", TYPE_STRING_LIST,
-	  "When syslog is used, how much should be sent to it?<br><hr>"
-	  "Fatal:    Only messages about fatal errors<br>"+
-	  "Errors:   Only error or fatal messages<br>"+
-	  "Warning:  Warning messages as well<br>"+
-	  "Debug:    Debug messager as well<br>"+
-	  "All:      Everything<br>",
+	  "When syslog is used, how much should be sent to it?<br /><hr />"
+	  "Fatal:    Only messages about fatal errors<br />"+
+	  "Errors:   Only error or fatal messages<br />"+
+	  "Warning:  Warning messages as well<br />"+
+	  "Debug:    Debug messager as well<br />"+
+	  "All:      Everything<br />",
 	  ({ "Fatal", "Errors",  "Warnings", "Debug", "All" }),
 	  syslog_disabled);
   deflocaledoc("svenska", "LogWH", "Loggning: Logga vad till systemloggen",
-	       "När systemlogen används, vad ska skickas till den?<br><hr>"
-          "Fatala:    Bara felmeddelenaden som är uppmärkta som fatala<br>"+
-	  "Fel:       Bara felmeddelanden och fatala fel<br>"+
-	  "Varningar: Samma som ovan, men även alla varningsmeddelanden<br>"+
-	  "Debug:     Samma som ovan, men även alla felmeddelanden<br>"+
-          "Allt:     Allt<br>",
+	       "När systemlogen används, vad ska skickas till den?<br /><hr />"
+          "Fatala:    Bara felmeddelenaden som är uppmärkta som fatala<br />"+
+	  "Fel:       Bara felmeddelanden och fatala fel<br />"+
+	  "Varningar: Samma som ovan, men även alla varningsmeddelanden<br />"+
+	  "Debug:     Samma som ovan, men även alla felmeddelanden<br />"+
+          "Allt:     Allt<br />",
 	       ([ "Fatal":"Fatala",
 		  "Errors":"Fel",
 		  "Warnings":"Varningar",
@@ -791,12 +803,12 @@ aber Syslog ist ebenfalls möglich.",
 		  "All":"Allt" ]));
   deflocaledoc("deutsch", "LogWH", "Logging: zu protokollierende Daten",
                "Wenn Syslog verwendet wird, welche Informationen sollen "
-               "festgehalten werden?<br><hr>"
-          "Fatal:    Nur Mitteilungen über fatale Fehler<br>"+
-          "Errors:   Nur Fehler und fatale Mitteilungen<br>"+
-          "Warning:  wie oben, jedoch auch Warnungen<br>"+
-          "Debug:    wie oben, jedoch auch Hinweise<br>"+
-          "All:      Alles<br>",
+               "festgehalten werden?<br /><hr />"
+          "Fatal:    Nur Mitteilungen über fatale Fehler<br />"+
+          "Errors:   Nur Fehler und fatale Mitteilungen<br />"+
+          "Warning:  wie oben, jedoch auch Warnungen<br />"+
+          "Debug:    wie oben, jedoch auch Hinweise<br />"+
+          "All:      Alles<br />",
                ([ "Fatal":"Fatal",
                   "Errors":"Errors",
                   "Warnings":"Warnings",
@@ -1047,7 +1059,7 @@ så här ofta. Tiden är angiven i dagar");
       if(variables[c])
       {
         if(catch{
-          mixed res = compile_string( "mixed f(){ return "+v+";}")()->f();
+          mixed res = ([function(void:mixed)]compile_string( "mixed f(){ return "+v+";}")()->f)();
           if(sprintf("%t", res) != sprintf("%t", variables[c][VAR_VALUE]) &&
              res != 0 && variables[c][VAR_VALUE] != 0)
             report_debug("Warning: Setting variable "+c+"\n"
@@ -1071,7 +1083,7 @@ så här ofta. Tiden är angiven i dagar");
 }
 
 
-static mapping __vars = ([ ]);
+static mapping(string:mixed) __vars = ([ ]);
 
 // These two should be documented somewhere. They are to be used to
 // set global, but non-persistent, variables in Roxen.
