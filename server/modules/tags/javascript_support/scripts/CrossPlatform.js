@@ -402,7 +402,7 @@ function getFirstNode(n1, n2)
 }
 
 //  Selects all text in the first text input field in the current page
-function selectFirstInputField()
+function selectFirstInputField(focus_only)
 {
   if (document.getElementsByTagName) {
     //  Locate all <input type="text"> elements and pick the first one
@@ -430,7 +430,8 @@ function selectFirstInputField()
     var first = getFirstNode(first_input, first_textarea);
     if (first) {
       first.focus();
-      first.select();
+      if (!focus_only)
+	first.select();
     }
   }
 }
