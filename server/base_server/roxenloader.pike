@@ -20,7 +20,7 @@ constant s = spider;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.210 2000/10/16 23:52:31 nilsson Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.211 2000/10/29 03:40:59 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -405,7 +405,7 @@ class Configuration
     mapping (string:array(RoxenModule)) file_extension_modules = ([ ]);
     mapping (RoxenModule:multiset(string)) provider_modules = ([ ]);
 
-    void stop()
+    array(RoxenModule) stop()
     {
       foreach(url_modules, RoxenModule m)
         CATCH("stopping url modules",m->stop && m->stop());
@@ -421,6 +421,8 @@ class Configuration
         CATCH("stopping first modules",m->stop && m->stop());
       foreach(indices(provider_modules), RoxenModule m)
         CATCH("stopping provider modules",m->stop && m->stop());
+      return url_modules + logger_modules + filter_modules + location_modules +
+	last_modules + first_modules + indices (provider_modules);
     }
   }
 
