@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: cache.pike,v 1.78 2002/02/12 17:24:12 jonasw Exp $
+// $Id: cache.pike,v 1.79 2003/03/04 13:41:51 grubba Exp $
 
 // #pragma strict_types
 
@@ -170,8 +170,19 @@ void cache_clean()
       }
       else {
 	if(!c[SIZE]) {
-	  c[SIZE]=(sizeof(encode_value(b)) + sizeof(encode_value(c[DATA])) +
-		   5*svalsize + 4)/100;
+	  // Perform a size calculation.
+	  c[SIZE] = sizeof(encode_value(b));
+	  if (catch{ c[SIZE] += sizeof(encode_value(c[DATA]))}) {
+	    // encode_value() failed,
+	    // probably because some object is in there...
+
+	    // FIXME: We probably ought to have a special case
+	    //        for PCode here.
+
+	    // We guess that it takes 1KB space.
+	    c[SIZE] += 1024;
+	  }
+	  c[SIZE] = (c[SIZE] + 5*svalsize + 4)/100;
 	  // (Entry size + cache overhead) / arbitrary factor
           MORE_CACHE_WERR("     Cache entry size percieved as " +
 			  ([int]c[SIZE]*100) + " bytes\n");
