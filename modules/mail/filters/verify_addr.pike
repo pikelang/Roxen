@@ -1,5 +1,5 @@
 /*
- * $Id: verify_addr.pike,v 1.1 1998/09/18 19:06:52 grubba Exp $
+ * $Id: verify_addr.pike,v 1.2 1998/09/19 14:17:24 grubba Exp $
  *
  * Support for RBL (Real-time Blackhole List).
  *
@@ -9,7 +9,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version="$Id: verify_addr.pike,v 1.1 1998/09/18 19:06:52 grubba Exp $";
+constant cvs_version="$Id: verify_addr.pike,v 1.2 1998/09/19 14:17:24 grubba Exp $";
 constant thread_safe=1;
 
 // #define RBL_DEBUG
@@ -55,6 +55,8 @@ string status()
  * Callback functions
  */
 
+// NOTE: The calling conventions make the two first arguments have
+// different order between got_a() and got_mx().
 static void got_a(string domain, array a, function cb, mixed ... args)
 {
   if (!a) {
