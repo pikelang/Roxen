@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.188 2000/08/04 15:54:32 mast Exp $
+// $Id: roxenlib.pike,v 1.189 2000/08/07 21:28:20 jhs Exp $
 
 //#pragma strict_types
 
@@ -649,10 +649,11 @@ string make_tag_attributes(mapping(string:string) in)
   string res=" ";
 #ifdef MODULE_DEBUG
   array(string) s=sort(indices(in));
-  foreach(s, string a) {
+  foreach(s, string a)
 #else
-  foreach(indices(in), string a) {
+  foreach(indices(in), string a)
 #endif
+  {
     if(a=="/" && in[a]=="/")
       sl=1;
     else
@@ -663,11 +664,15 @@ string make_tag_attributes(mapping(string:string) in)
 }
 
 string make_tag(string s, mapping(string:string) in)
+//! Returns an empty element tag `s', with the tag arguments dictated
+//! by the mapping `in'.
 {
   return "<"+s+make_tag_attributes(in)+">";
 }
 
 string make_container(string s, mapping(string:string) in, string contents)
+//! Returns a container tag `s' encasing the string `contents', with
+//! the tag arguments dictated by the mapping `in'.
 {
   if(in["/"]) m_delete(in, "/");
   return make_tag(s,in)+contents+"</"+s+">";
@@ -746,9 +751,9 @@ static int ipow(int what, int how)
   return (int)pow(what, how);
 }
 
-//  Splits path into ({ prefix, path }) array. Prefix is "" for paths on
-//  non-Windows systems or when no proper drive prefix is found.
 array(string) win_drive_prefix(string path)
+//! Splits path into ({ prefix, path }) array. Prefix is "" for paths on
+//! non-Windows systems or when no proper drive prefix is found.
 {
 #ifdef __NT__
   string prefix;
@@ -762,7 +767,8 @@ array(string) win_drive_prefix(string path)
 }
 
 string simplify_path(string file)
-  //! This one will remove .././ etc. in the path.
+//! This one will remove .././ etc. in the path. The returned value
+//! will be a canonic representation of the given path.
 {
   // Faster for most cases since "//", "./" or "../" rarely exists.
   if(!strlen(file) || (!has_value(file, "./") && (file[-1] != '.') &&
@@ -791,7 +797,7 @@ string simplify_path(string file)
 }
 
 string short_date(int timestamp)
-  //! Returns a short date string from a time-int
+//! Returns a short date string from a time-int
 {
   int date = time(1);
 
@@ -923,27 +929,27 @@ string program_directory()
 }
 
 string html_encode_string(string str)
-  //! Encodes str for use as a literal in html text.
+//! Encodes `str' for use as a literal in html text.
 {
   return replace(str, ({"&", "<", ">", "\"", "\'", "\000" }),
 		 ({"&amp;", "&lt;", "&gt;", "&#34;", "&#39;", "&#0;"}));
 }
 
 string html_decode_string(string str)
-  //! Decodes str, opposite to html_encode_string()
+//! Decodes `str', opposite to <ref>html_encode_string()</ref>
 {
   return replace(str, replace_entities, replace_values);
 }
 
 string html_encode_tag_value(string str)
-  //! Encodes str for use as a value in an html tag.
+//! Encodes `str' for use as a value in an html tag.
 {
   // '<' is not allowed in attribute values in XML 1.0.
   return "\"" + replace(str, ({"&", "\"", "<"}), ({"&amp;", "&quot;", "&lt;"})) + "\"";
 }
 
 string strftime(string fmt, int t)
-  //! Encodes the time t according to the format string fmt.
+//! Encodes the time `t' according to the format string `fmt'.
 {
   if(!sizeof(fmt)) return "";
   mapping lt = localtime(t);
@@ -1107,8 +1113,8 @@ string get_modname (RoxenModule module)
 }
 
 string get_modfullname (RoxenModule module)
-//! This determines the full module name in approximately the same way
-//! as the config UI.
+//! This determines the full module (human-readable) name in
+//! approximately the same way as the config UI.
 {
   if (module) {
     string|mapping(string:string) name = 0;
@@ -1123,7 +1129,7 @@ string get_modfullname (RoxenModule module)
 }
 
 string roxen_encode( string val, string encoding )
-  //! Quote content in a multitude of ways. Used primarily by do_output_tag
+//! Quote content in a multitude of ways. Used primarily by do_output_tag
 {
   switch (encoding) {
    case "none":
@@ -1208,8 +1214,8 @@ string roxen_encode( string val, string encoding )
 }
 
 static int compare( string a, string b )
-  //! This method needs lot of work... but so do the rest of the system too
-  //! RXML needs types
+// This method needs lot of work... but so do the rest of the system too
+// RXML needs types
 {
   if (!a)
     if (b)
@@ -1236,12 +1242,12 @@ static int compare( string a, string b )
 
 static string do_output_tag( mapping(string:string) args, array(mapping(string:string)) var_arr,
 			     string contents, RequestID id )
-  //! method for use by tags that replace variables in their content, like
-  //! formoutput, sqloutput and others.
-  //!
-  //! NOTE: This function is obsolete. This kind of functionality is now
-  //! provided intrinsicly by the new RXML parser framework, in a way
-  //! that avoids many of the problems that stems from this function.
+//! Method for use by tags that replace variables in their content,
+//! like formoutput, sqloutput and others.
+//!
+//! NOTE: This function is obsolete. This kind of functionality is now
+//! provided intrinsicly by the new RXML parser framework, in a way
+//! that avoids many of the problems that stems from this function.
 {
   string quote = args->quote || "#";
   mapping(string:string) other_vars = [mapping(string:string)]id->misc->variables;
@@ -1461,6 +1467,9 @@ static string do_output_tag( mapping(string:string) args, array(mapping(string:s
 }
 
 string fix_relative( string file, RequestID id )
+//! Turns a relative (or already absolute) virtual path into an
+//! absolute virtual path, that is, one rooted at the virtual server's
+//! root directory. The returned path is <ref>simplify_path()</ref>:ed.
 {
   string path = id->not_query;
   if( !search( file, "http:" ) )
