@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.4 2000/04/05 21:07:47 per Exp $
+ * $Id: debug_info.pike,v 1.5 2000/07/11 14:32:23 lange Exp $
  */
 inherit "roxenlib";
 #include <stat.h>
@@ -211,7 +211,7 @@ mixed page_0( object id )
       if((foo[f]-last_usage[f]) == 0)
 	col="'&usr.fgcolor;'  ";
       if((foo[f]-last_usage[f]) < 0)
-	col="'&usr.fade1;'    ";
+	col="'&usr.fade2;'    ";
 
       string bn = f[4..sizeof(f)-2]+"_bytes";
       foo->total_bytes += foo[ bn ];
@@ -229,7 +229,7 @@ mixed page_0( object id )
   mapping bar = roxen->query_var( "__num_clones" )||([]);
 
   object t = ADT.Table->table(table,
-                              ({ "<font color='&usr.fgcolor'  >Type", "Number",
+                              ({ "<font color='&usr.fgcolor;'  >Type", "Number",
                                  "Change", "KB", "Change</font>"}),
                               ({
                                 0,
@@ -314,7 +314,7 @@ mixed page_0( object id )
       string col = "'&usr.warncolor;'";
 
       if( bar[ s ] > allobj[s] )
-	col="'&usr.fade1;'    ";
+	col="'&usr.fade2;'    ";
       else if( bar[ s ] == allobj[s] )
 	col="'&usr.fgcolor;'  ";
 
