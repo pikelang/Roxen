@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.36 1997/08/31 04:12:46 peter Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.37 1997/09/12 06:14:36 per Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -425,10 +425,10 @@ mixed find_file(string f, object id)
       object privs;
       if (!getuid()) {
 	// We are running as root -- change!
-	privs = ((program)"privs")("CGI script", uid);
+	privs = Privs("CGI script", uid);
       } else {
 	// Try to change user anyway, but don't throw an error if we fail.
-	catch(privs = ((program)"privs")("CGI script", uid));
+	catch(privs = Privs("CGI script", uid));
       }
       setgid(getegid()||65534);
       setuid(geteuid()||65534);

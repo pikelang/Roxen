@@ -4,7 +4,7 @@
 // It will be located somewhere in the name-space of the server.
 // Also inherited by some of the other filesystems.
 
-string cvs_version= "$Id: filesystem.pike,v 1.21 1997/08/31 03:47:19 peter Exp $";
+string cvs_version= "$Id: filesystem.pike,v 1.22 1997/09/12 06:14:31 per Exp $";
 int thread_safe=1;
 
 
@@ -139,8 +139,7 @@ mixed stat_file( mixed f, mixed id )
   if (((int)id->misc->uid) && ((int)id->misc->gid) &&
       (QUERY(access_as_user))) {
     // NB: Root-access is prevented.
-    privs=((program)"privs")("Getting file", (int)id->misc->uid, 
-			     (int)id->misc->gid );
+    privs=Privs("Statting file", (int)id->misc->uid, (int)id->misc->gid );
   }
   if(!stat_cache)
     return file_stat(path + f); /* No security currently in this function */
@@ -177,8 +176,7 @@ array find_dir( string f, object id )
   if (((int)id->misc->uid) && ((int)id->misc->gid) &&
       (QUERY(access_as_user))) {
     // NB: Root-access is prevented.
-    privs=((program)"privs")("Getting file", (int)id->misc->uid, 
-			     (int)id->misc->gid );
+    privs=Privs("Getting dir", (int)id->misc->uid, (int)id->misc->gid );
   }
 
   if(!(dir = get_dir( path + f )))
@@ -314,8 +312,7 @@ mixed find_file( string f, object id )
       if (((int)id->misc->uid) && ((int)id->misc->gid) &&
 	  (QUERY(access_as_user))) {
 	// NB: Root-access is prevented.
-	privs=((program)"privs")("Getting file", (int)id->misc->uid, 
-			       (int)id->misc->gid );
+	privs=Privs("Getting file", (int)id->misc->uid, (int)id->misc->gid );
       }
 
       o = open( f, "r" );
@@ -356,8 +353,7 @@ mixed find_file( string f, object id )
 
     if (((int)id->misc->uid) && ((int)id->misc->gid)) {
       // NB: Root-access is prevented.
-      privs=((program)"privs")("Saving file", (int)id->misc->uid, 
-			       (int)id->misc->gid );
+      privs=Privs("Saving file", (int)id->misc->uid, (int)id->misc->gid );
     }
 
     if (QUERY(no_symlinks) && (contains_symlinks(path, oldf))) {
@@ -415,7 +411,7 @@ mixed find_file( string f, object id )
 
     if (((int)id->misc->uid) && ((int)id->misc->gid)) {
       // NB: Root-access is prevented.
-      privs=((program)"privs")("Deleting file", id->misc->uid, id->misc->gid );
+      privs=Privs("Deleting file", id->misc->uid, id->misc->gid );
     }
 
     if(!rm(f))

@@ -3,7 +3,7 @@
 // User database. Reads the system password database and use it to
 // authentificate users.
 
-constant cvs_version = "$Id: userdb.pike,v 1.15 1997/08/31 03:47:24 peter Exp $";
+constant cvs_version = "$Id: userdb.pike,v 1.16 1997/09/12 06:14:35 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -188,7 +188,7 @@ void read_data()
   
   users=([]);
   uid2user=([]);
-  object privs = ((program)"privs")("Reading password database");
+  object privs = Privs("Reading password database");
   switch(query("method"))
   {
   case "ypcat":

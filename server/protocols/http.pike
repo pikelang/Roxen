@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-constant cvs_version = "$Id: http.pike,v 1.42 1997/09/07 16:43:01 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.43 1997/09/12 06:14:41 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -767,12 +767,11 @@ void do_log(array id)
     int len;
     pipe = id[0];
     file = id[1];
-    
     if(len = pipe->bytes_sent()) file->len = len;
     if(conf)
     {
-      conf->log(file, this_object());
       if(file->len > 0) conf->sent+=file->len;
+      conf->log(file, this_object());
     }
   }
   my_fd=0;

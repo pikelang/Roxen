@@ -4,7 +4,7 @@ import Array;
 
 #ifndef IN_INSTALL
 inherit "newdecode";
-string cvs_version = "$Id: read_config.pike,v 1.13 1997/08/20 07:46:57 per Exp $";
+string cvs_version = "$Id: read_config.pike,v 1.14 1997/09/12 06:14:26 per Exp $";
 
 #else
 import spider;
@@ -60,7 +60,7 @@ void save_it(string cl)
   perror("CONFIG: Writing configuration file for cl "+cl+"\n");
 #endif
 
-  object privs = ((program)"privs")("Saving config file"); // Change to root user.
+  object privs = Privs("Saving config file"); // Change to root user.
 
   f = configuration_dir + replace(cl, " ", "_");
   mv(f, f+"~");
@@ -135,7 +135,7 @@ private static void read_it(string cl)
 
   object fd;
 
-  object privs = ((program)"privs")("Reading config file"); // Change to root user.
+  object privs = Privs("Reading config file"); // Change to root user.
 
   catch {
     fd = open(configuration_dir + replace(cl, " ", "_"), "r");
@@ -180,7 +180,7 @@ void remove_configuration( string name )
 {
   string f;
 
-  object privs = ((program)"privs")("Removing config file"); // Change to root user.
+  object privs = Privs("Removing config file"); // Change to root user.
 
   f = configuration_dir + replace(name, " ", "_");
   if(!file_stat( f ))   f = configuration_dir + name;

@@ -3,7 +3,8 @@
 mapping neighborhood = ([ ]);
 object udp_broad=spider.dumUDP();
 
-class TCPNeigh {
+class TCPNeigh
+{
   object me, master;
   static void read(mixed foo, string d)
   {

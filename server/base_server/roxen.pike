@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.129 1997/09/09 06:37:20 neotron Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.130 1997/09/12 06:14:28 per Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -173,7 +173,8 @@ function handle = unthreaded_handle;
 #ifdef THREADS
 #define THREAD_DEBUG
 #if 0
-class Queue {
+class Queue
+{
   mixed *buffer=({});
   
   int size() {  return sizeof(buffer);  }
@@ -538,7 +539,7 @@ void done_with_roxen_com()
   if(old != new) {
     perror("Got new supports data from www.roxen.com\n");
     perror("Replacing old file with new data.\n");
-    object privs=((program)"privs")("Replacing etc/supports");
+    object privs=Privs("Replacing etc/supports");
     mv("etc/supports", "etc/supports~");
     Stdio.write_file("etc/supports", new);
     old = Stdio.read_bytes( "etc/supports" );
@@ -901,7 +902,7 @@ void kill_me()
 {
   catch(Array.map(indices(portno)), destruct);
   
-  object privs = ((program)"privs")("Shutting down the server");
+  object privs = Privs("Shutting down the server");
   // Change to root user.
   
   stop_all_modules();
@@ -1780,7 +1781,7 @@ void initiate_configuration_port( int|void first )
 	
 	object privs;
 	if(port[0] < 1024)
-	  privs = ((program)"privs")("Opening listen port below 1024");
+	  privs = Privs("Opening listen port below 1024");
 	if(o=create_listen_socket(port[0],0,port[2],requestprogram,port)) {
 	  perror("Configuration port: "+port[1]+" port number "+
 		 port[0]+" interface " +port[2]+"\n");

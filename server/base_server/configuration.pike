@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.76 1997/09/09 06:37:21 neotron Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.77 1997/09/12 06:14:21 per Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -453,8 +453,6 @@ array filter_modules(object id)
 // beautiful, really. 
 void init_log_file()
 {
-  int possfd;	// FIXME: Is this used?
-
   remove_call_out(init_log_file);
 
   if(log_function)
@@ -465,40 +463,37 @@ void init_log_file()
   
   if(query("Log")) // Only try to open the log file if logging is enabled!!
   {
+    mapping m = localtime(time());
     string logfile = query("LogFile");
-
-    if(logfile == "stdout")
+    if(m->mday < 10) m->mday = "0"+m->mday;
+    if(m->mon < 10) m->mon = "0"+m->mon;
+    if(m->hour < 10) m->hour = "0"+m->hour;
+    logfile = replace(logfile,({"%d","%m","%y","%h" }),
+		      ({ (string)m->mday, (string)(m->mon+1),
+			 (string)(m->year+1900),(string)m->hour,}));
+    if(strlen(logfile))
     {
-      log_function=Stdio.stdout->write;
-      possfd=-1;
-    } else if(logfile == "stderr") {
-      log_function=Stdio.stderr->write;
-    } else {
-      if(strlen(logfile))
-      {
-	do {
-	  object privs = ((program)"privs")("Opening logfile \""+logfile+"\"");
-	  object lf=open( logfile, "wac");
-	  if(!lf) {
-	    mkdirhier(logfile);
-	    if(!(lf=open( logfile, "wac"))) {
-	      privs = 0;
-	      report_error("Failed to open logfile. ("+logfile+")\n" +
-			   "No logging will take place!\n");
-	      log_function=0;
-	      break;
-	    }
+      do {
+	object privs = Privs("Opening logfile \""+logfile+"\"");
+	object lf=open( logfile, "wac");
+	if(!lf) {
+	  mkdirhier(logfile);
+	  if(!(lf=open( logfile, "wac"))) {
+	    privs = 0;
+	    report_error("Failed to open logfile. ("+logfile+")\n" +
+			 "No logging will take place!\n");
+	    log_function=0;
+	    break;
 	  }
-	  privs=0;
-	  mark_fd(lf->query_fd(), "Roxen log file ("+logfile+")");
-	  log_function=lf->write;	
-	  // Function pointer, speeds everything up (a little..).
-	  possfd=lf->query_fd();
-	  lf=0;
-	} while(0);
-      } else
-	log_function=0;	
-    }
+	}
+	privs=0;
+	mark_fd(lf->query_fd(), "Roxen log file ("+logfile+")");
+	log_function=lf->write;	
+	// Function pointer, speeds everything up (a little..).
+	lf=0;
+      } while(0);
+    } else
+      log_function=0;	
     call_out(init_log_file, 60);
   } else
     log_function=0;	
@@ -1365,7 +1360,6 @@ mapping (object:array) open_ports = ([]);
 void start(int num)
 {
   array port;
-  int possfd;
   int err=0;
   object lf;
   mapping new=([]), o2;
@@ -1398,7 +1392,7 @@ void start(int num)
       }
       object privs;
       if(port[0] < 1024)
-	privs = ((program)"privs")("Opening listen port below 1024");
+	privs = Privs("Opening listen port below 1024");
       if(!(o=create_listen_socket(port[0], this, port[2],
 				  (program)("protocols/"+port[1]))))
       {
@@ -2472,8 +2466,15 @@ void create(string config)
 	 short_name(name)+"/Log", 
 
 	 "Logging: Log file", TYPE_FILE, "The log file. "
-	 "stdout for standard output, or stderr for standard error, or "+
-	 "a file name. May be relative to "+getcwd()+".",0, log_is_not_enabled);
+	 ""
+	 "A file name. May be relative to "+getcwd()+"."
+	 " Some substitutions will be done:"
+	 "<pre>"
+	 "%y    Year  (i.e. '1997')\n"
+	 "%m    Month (i.e. '08')\n"
+	 "%d    Date  (i.e. '10' for the tenth)\n"
+	 "%h    Hour  (i.e. '00')\n</pre>"
+	 ,0, log_is_not_enabled);
   
   defvar("NoLog", ({ }), 
 	 "Logging: No Logging for", TYPE_STRING_LIST|VAR_MORE,

@@ -3,7 +3,7 @@
 // This module log the accesses of each user in their home dirs, if
 // they create a file named 'AccessLog' in that directory, and allow
 // write access for roxen.
-constant cvs_version = "$Id: home_logger.pike,v 1.10 1997/08/31 04:12:44 peter Exp $";
+constant cvs_version = "$Id: home_logger.pike,v 1.11 1997/09/12 06:14:34 per Exp $";
 constant thread_safe=1;
 
 
@@ -271,7 +271,7 @@ object cache_head;
 #ifdef THREADS
 object mutex  = Thread.Mutex();
 #else
-# define mutex 0
+object mutex;
 #endif
 
 string start()

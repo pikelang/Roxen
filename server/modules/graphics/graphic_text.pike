@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.70 1997/09/11 21:15:17 js Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.71 1997/09/12 06:14:32 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -25,6 +25,7 @@ array register_module()
 	      "graphical one. Not all that useful, really.<br>\n"
 	      "<br>\n"
 	      "<b>Common arguments:</b>\n <pre>"
+	      " verbatim        Do not try to be typographically correct\n"
 	      " bg=color        Use this background, default taken from the\n"
 	      "                 &lt;body&gt; tag, if any\n"
 	      " fg=color        Use this foreground, default taken from the\n"
@@ -801,6 +802,7 @@ int args_restored = 0;
 void restore_cached_args()
 {
   args_restored = 1;
+  object privs = Privs("Reading gtext argument list");
   object o = open(".gtext_args_"+hash(mc->name), "r");
   if(o)
   {
@@ -824,7 +826,11 @@ void restore_cached_args()
 
 void save_cached_args()
 {
+  int on;
+  on = number;
   restore_cached_args();
+  object privs = Privs("Saving gtext argument list");
+  if(on > number) number=on;
   object o = open(".gtext_args_"+hash(mc->name), "wct");
   string data=encode_value(cached_args);
   catch {
@@ -1099,6 +1105,10 @@ string tag_graphicstext(string t, mapping arg, string contents,
   }
   
   array size = write_text(num,gt,1,id);
+  if(!size) {
+    return ("<font size=+1><b>Missing font or other similar error -- "
+	    "failed to render text</b></font>");
+  }
   if(magic)
   {
     string res = "";
@@ -1196,13 +1206,13 @@ string tag_fix_color(string tagname, mapping args, object id, object file,
     id->misc->colors = ({ ({ defines->fg, defines->bg, tagname }) });
   else
     id->misc->colors += ({ ({ defines->fg, defines->bg, tagname }) });
-//  perror("Push color "+tagname+"\n");
+#undef FIX
 #define FIX(X,Y) if(args->X){defines->Y=args->X;if(args->X[0]!='#'){args->X=ns_color(parse_color(args->X));changed = 1;}}
 
   FIX(bgcolor,bg);
   FIX(text,fg);
   FIX(color,fg);
-  if(changed)return ("<"+tagname+" "+make_args(args)+">");
+  if(changed) return ("<"+tagname+" "+make_args(args)+">");
   return 0;
 }
 
@@ -1217,8 +1227,6 @@ string pop_color(string tagname,mapping args,object id,object file,
     {
       defines->fg = c[-1][0];
       defines->bg = c[-1][1];
-//      perror("Pop color "+tagname+" ("+
-//	     (sizeof(id->misc->colors)-sizeof(c)+1)+")\n");
       break;
     }
     c = c[..sizeof(c)-2];
@@ -1229,8 +1237,8 @@ string pop_color(string tagname,mapping args,object id,object file,
 mapping query_tag_callers()
 {
   return ([ "gtext-id":tag_gtext_id, ]) | (query("speedy")?([]):
-   	    (["font":tag_fix_color,
-	      "body":tag_body,
+  (["font":tag_fix_color,
+    "body":tag_body,
     "table":tag_fix_color,
     "tr":tag_fix_color,
     "td":tag_fix_color,
@@ -1242,7 +1250,8 @@ mapping query_tag_callers()
     "/body":pop_color,
     "/table":pop_color,
     "/layer":pop_color,
-    "/ilayer":pop_color, ]));
+    "/ilayer":pop_color,
+   ]));
 }
 
 
@@ -1255,7 +1264,3 @@ mapping query_container_callers()
 	    "gh5":tag_graphicstext, "gh6":tag_graphicstext,
 	    "gtext":tag_graphicstext, ]);
 }
-
-
-
-

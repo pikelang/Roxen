@@ -1,4 +1,4 @@
-string cvs_version = "$Id: hosts.pike,v 1.12 1997/06/15 02:42:05 grubba Exp $";
+string cvs_version = "$Id: hosts.pike,v 1.13 1997/09/12 06:14:24 per Exp $";
 #include <roxen.h>
 #include <module.h> // For VAR_VALUE define.
 #if DEBUG_LEVEL > 7
@@ -132,10 +132,9 @@ string blocking_ip_to_host(string ip)
   array addr;
   if(!(int)ip) return ip;
   addr = gethostbyaddr( ip );
-  if(do_when_found[ip]) 
-    notify(do_when_found[ip], addr&&addr[0][random(sizeof(addr[0]))]);
+  if(do_when_found[ip])  notify(do_when_found[ip], addr && addr[0]);
   m_delete(do_when_found, ip);
-  return addr?addr[0]:ip;
+  return (addr ? addr[0] : ip);
 }
 
 string blocking_host_to_ip(string host)
@@ -143,10 +142,9 @@ string blocking_host_to_ip(string host)
   array addr;
   if((int)host) return host;
   addr = gethostbyname( host );
-  if(do_when_found[host]) 
-    notify(do_when_found[host], addr[0][random(sizeof(addr[0]))]);
+  if(do_when_found[host]) notify(do_when_found[host], addr&&addr[0]);
   m_delete(do_when_found, host);
-  return addr?addr[0][random(sizeof(addr[0]))]:host;
+  return addr?addr[0]:host;
 }
 
 string quick_ip_to_host(string ipnumber)

@@ -8,7 +8,7 @@
  * made by Peter Bortas <peter@infovav.se> Januari -97
  */
 
-constant cvs_version = "$Id: killframe.pike,v 1.9 1997/08/31 21:54:44 peter Exp $";
+constant cvs_version = "$Id: killframe.pike,v 1.10 1997/09/12 06:14:39 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -56,5 +56,3 @@ mapping query_tag_callers()
 {
   return ([ "killframe" : tag_killframe ]);
 }
-
-int threadsafe(){ return 1; }

@@ -1,4 +1,4 @@
-string cvs_version = "$Id: disk_cache.pike,v 1.27 1997/09/05 16:54:30 grubba Exp $";
+string cvs_version = "$Id: disk_cache.pike,v 1.28 1997/09/12 06:14:23 per Exp $";
 #include <stdio.h>
 #include <module.h>
 #include <simulate.h>
@@ -283,31 +283,33 @@ class Cache {
   {
     object lcs;
     cd = basename;
-
-#if 0    
-    // No support for nice yet.
-    object privs = ((program)"privs")("Starting the garbage collector");
-    spawn_pike(({ "bin/garbagecollector.pike" }), 0, command_stream->pipe());
-    return;
-#else
     lcs = command_stream->pipe();
     if(fork())
     {
-      /* Master */ 
-      destruct(lcs);
-      reinit(basename);
-      command_stream->set_id(basename);
-      command_stream->set_nonblocking(nil,really_send,do_create);
+      /* Master */
+      catch
+      {
+	destruct(lcs);
+	reinit(basename);
+	command_stream->set_id(basename);
+	command_stream->set_nonblocking(nil,really_send,do_create);
+      };
       return;
     }
     /* Child */
     lcs->dup2( files.file ("stdin") );
-    object privs = ((program)"privs")("Starting the garbage collector");
+    object privs = Privs("Starting the garbage collector");
     // start garbagecollector niced as possible to reduce I/O-Load
+
+#if !constant(nice)
     exec("/usr/bin/nice", "-19",
 	 "bin/pike", "-m", "lib/pike/master.pike", "-I", "etc/include",
          "-M", "etc/modules", "bin/garbagecollector.pike");
     perror("Failed to start niced garbage collector - retry without nice\n");
+#else
+    nice(10);
+    nice(9);
+#endif
     exec("bin/pike", "-m", "lib/pike/master.pike", "-I", "etc/include",
 	 "-M", "etc/modules", "bin/garbagecollector.pike");
     perror("Failed to start garbage collector (exec failed)!\n");

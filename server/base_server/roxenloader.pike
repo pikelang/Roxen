@@ -2,8 +2,10 @@ import files;
 import spider;
 #define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
 
+program Privs;
+
 // Set up the roxen environment. Including custom functions like spawne().
-constant cvs_version="$Id: roxenloader.pike,v 1.40 1997/09/07 16:15:42 noring Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.41 1997/09/12 06:14:30 per Exp $";
 
 #define perror roxen_perror
 
@@ -111,7 +113,7 @@ string popen(string s, void|mapping env, int|void uid, int|void gid)
       p->dup2(file("stdout"));
       if(uid || gid)
       {
-	object privs = ((program)"privs")("Executing script as non-www user");
+	object privs = Privs("Executing script as non-www user");
 	olduid = ({ uid, gid });
 	setgid(olduid[1]);
 	setuid(olduid[0]);
@@ -178,7 +180,7 @@ int spawne(string s,string *args, mapping|array env, object stdin,
 
   if(arrayp(uid) && sizeof(uid) == 2)
   {
-    privs = ((program)"privs")("Executing program as non-www user (outside roxen)");
+    privs = Privs("Executing program as non-www user (outside roxen)");
     setgid(uid[1]);
     setuid(uid[0]);
   } 
@@ -377,10 +379,29 @@ static private void initiate_cache()
   add_constant("capitalize", lambda(string s){return upper_case(s[0..0])+s[1..];});
 }
 
+class myprivs
+{
+  program privs;
+  object master;
+    
+  void create(object m)
+  {
+    master = m;
+  }
+
+  object `()(mixed ... args)
+  {
+    if(!privs) privs = master->Privs;
+    return privs(@args);
+  }
+}
 
 void load_roxen()
 {
+  add_constant("Privs", myprivs(this_object()));
   roxen = ((program)"roxen")();
+  Privs = ((program)"privs");
+  add_constant("Privs", Privs);
   perror("Roxen version "+roxen->cvs_version+"\n"
 	 "Roxen release "+roxen->real_version+"\n");
   nwrite = roxen->nwrite;

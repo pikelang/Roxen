@@ -8,7 +8,7 @@
 
 // This is an extension module.
 
-constant cvs_version = "$Id: pikescript.pike,v 1.14 1997/09/03 12:11:14 per Exp $";
+constant cvs_version = "$Id: pikescript.pike,v 1.15 1997/09/12 06:14:37 per Exp $";
 constant thread_safe=1;
 
 mapping scripts=([]);
@@ -127,9 +127,9 @@ array|mapping call_script(function fun, object got, object file)
 	uid = "nobody";
     }
     if(stringp(uid))
-      privs = ((program)"privs")("Starting pike-script", uid);
+      privs = Privs("Starting pike-script", uid);
     else if(uid)
-      privs = ((program)"privs")("Starting pike-script", @uid);
+      privs = Privs("Starting pike-script", @uid);
     setgid(getegid());
     setuid(geteuid());
     if (QUERY(scriptdir) && got->realfile)
@@ -137,8 +137,7 @@ array|mapping call_script(function fun, object got, object file)
 
   } else {
     if(got->misc->is_user && (us = file_stat(got->misc->is_user)))
-      privs = ((program)"privs")("Executing pikescript as non-www user",
-				 @us[5..6]);
+      privs = Privs("Executing pikescript as non-www user", @us[5..6]);
   }
 
   if(sizeof(got->variables))

@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.42 1997/09/08 20:19:51 grubba Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.43 1997/09/12 06:14:38 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -130,7 +130,7 @@ inline void open_names_file()
 {
   if(objectp(names_file)) return;
   remove_call_out(names_file_callout_id);
-  object privs = ((program)"privs")("Opening Access-log names file");
+  object privs = Privs("Opening Access-log names file");
   names_file=open(QUERY(Accesslog)+".names", "wrca");
   names_file_callout_id = call_out(destruct, 1, names_file);
 }
@@ -160,7 +160,7 @@ inline mixed open_db_file()
   if(!database)
   {
     if(db_file_callout_id) remove_call_out(db_file_callout_id);
-    object privs = ((program)"privs")("Opening Access-log database file");
+    object privs = Privs("Opening Access-log database file");
     database=open(QUERY(Accesslog)+".db", "wrc");
     if (!database) {
       throw(({ sprintf("Failed to open \"%s.db\". Out of fd's?\n",
@@ -190,7 +190,7 @@ void start()
   {
     olf = QUERY(Accesslog);
 
-    object privs = ((program)"privs")("Opening Access-log names file");
+    object privs = Privs("Opening Access-log names file");
     mkdirhier(query("Accesslog"));
 #if 0
     if(!QUERY(close_db))
@@ -759,7 +759,7 @@ string tag_compat_exec(string tag,mapping m,object got,object file,
       if(got->auth && got->auth[0])
 	user=got->auth[1];
       string addr=got->remoteaddr || "Internal";
-      ((program)"privs")("Executing stuff..", "nobody");
+      object privs = Privs("Executing stuff..", "nobody");
       return popen(m->cmd,
 		   getenv()
 		   | build_roxen_env_vars(got)
