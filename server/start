@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.135 2000/11/20 07:48:27 per Exp $
+# $Id: start,v 1.136 2000/11/20 08:12:16 per Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -17,21 +17,6 @@ dp() {
   if [ "x$SILENT_START" = "xy" ]
   then :; else
     echo "$pre" "$@" 2>&1
-  fi
-}
-
-unlimit_fds() {
-  nfds=32
-  mnfds=32
-  while [ $nfds -lt "999999999" ] ; do 
-     nfds=`expr $nfds \* 2`
-     if ulimit -n $nfds ; then 
-        mnfds="$nfds"
-     fi
-  done
-  dp "Maximum number of open FDs: $mnfds"
-  if [ "$mnfds" -lt 1024 ] ; then
-    dp "Warning: This is dangerously low"
   fi
 }
 
@@ -649,7 +634,18 @@ signal_exit() {
 
 start_roxen() {
   check_owner
-  unlimit_fds
+
+  nfds=2147483647
+  while [ $nfds -gt "`ulimit -n`" ] ; do 
+    nfds=`expr $nfds / 2`
+    if ulimit -n $nfds 2>/dev/null; then 
+      dp "Maximum number of open FDs: `ulimit -n`"
+      if [ "`ulimit -n`" -lt 1024 ] ; then
+        dp "Warning: This is dangerously low"
+      fi
+     fi
+  done
+
   if [ x$remove_dumped = x1 ] ; then
     remove_old_dot_o_files "user request"
   fi
