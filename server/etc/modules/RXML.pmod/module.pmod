@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.282 2002/04/17 12:57:03 mast Exp $
+// $Id: module.pmod,v 1.283 2002/04/22 14:39:21 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -3809,6 +3809,8 @@ class Frame
   process_tag:
     while (1) {			// Looping only when continuing in streaming mode.
       if (mixed err = catch {
+	mixed orig_args = args;
+
 	if (array state = ctx->unwind_state && ctx->unwind_state[this_object()]) {
 	  object ignored;
 	  [ignored, eval_state, in_args, in_content, iter,
@@ -3878,6 +3880,11 @@ class Frame
 	  result = piece = nil;
 	  eval_state = EVSTAT_BEGIN;
 	}
+
+	if (!mappingp (args) && !(flags & FLAG_PROC_INSTR))
+	  error ("args is not a mapping: %O (orig: %O, flags: %x)\n",
+		 args, orig_args, flags);
+	orig_args = 0;
 
 	if (!zero_type (this_object()->parent_frame))
 	  // Note: This could be done in _prepare, but then we'd have
