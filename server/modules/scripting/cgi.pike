@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.63 1998/01/21 16:07:01 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.64 1998/01/23 17:24:35 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -699,8 +699,8 @@ mixed find_file(string f, object id)
        (us[5] >= 10)) {
       // Scan for symlinks
       string fname = "";
+      array a,b;
       foreach(id->misc->is_user/"/", string part) {
-	array a,b;
 	fname += part + "/";
 	if ((!(a = file_stat(fname, 1))) ||
 	    ((< -3, -4 >)[a[1]])) {
