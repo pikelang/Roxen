@@ -1,6 +1,11 @@
-// The Diagrams tag module
+// The outlined box module
+//
+// Fredrik Noring et al
+//
+// Several modifications by Francesco Chemolli.
 
-constant cvs_version = "$Id: obox.pike,v 1.5 1997/10/27 12:02:37 grubba Exp $";
+
+constant cvs_version = "$Id: obox.pike,v 1.6 1997/11/09 18:38:53 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -11,30 +16,106 @@ inherit "roxenlib";
 #define DEBUG(s) perror("### %O\n",(s))
 #define FATAL(s) perror("### %O\n"+(s))
 
-#define ERROR(a) sprintf("<b>&lt;diagram&gt; error:</b> %s<br>\n", (a))
+#define ERROR(a) sprintf("<b>&lt;obox&gt; error:</b> %s<br>\n", (a))
 
 constant unit_gif = "/internal-roxen-unit";
+
+static string img_placeholder (mapping args)
+{
+  int width=((int)args->outlinewidth)||1;
+
+  return sprintf("<img src=\"%s\" alt=\"\" width=%d height=%d>",
+		 unit_gif, width, width);
+}
+
+static string handle_title(string name, mapping junk_args,
+			   string contents, mapping args)
+{
+  args->title=contents;
+  return "";
+}
+
+static string horiz_line(mapping args)
+{
+  return sprintf("<tr><td colspan=5 bgcolor=\"%s\">\n"
+		 "%s</td></tr>\n",
+		 args->outlinecolor,
+		 img_placeholder(args));
+}
+
+static string title(mapping args)
+{
+  if (!args->title)
+    return horiz_line(args);
+  string empty=img_placeholder(args);
+  switch (args->style) {
+  case "groupbox":
+    if (!args->left)
+      args->left="25";
+    if (args->width && !args->right)
+      args->right=args->width;
+    if (!args->right)
+      args->right="350";
+    return sprintf("<tr><td colspan=2>&nbsp;</td>\n"
+		   "<td rowspan=3%s>&nbsp;<b>"		/* bgcolor */
+		   "%s%s%s"                 /* titlecolor, title, titlecolor */
+		   "</b></td>\n"
+		   "<td colspan=2>&nbsp;</td></tr>\n"
+		   "<tr%s>"				/* bgcolor */
+		   "<td bgcolor=\"%s\" colspan=2>\n"	/* outlinecolor */
+		   "%s</td>\n"				/* empty */
+		   "<td bgcolor=\"%s\" colspan=2>\n"
+		   "%s</td></tr>\n"			/* empty */
+
+		   "<tr%s><td bgcolor=\"%s\">"      /* bgcolor, outlinecolor */
+		   "%s</td>\n"				/* empty */
+		   "<td%s>&nbsp;</td>"			/* left */
+		   "<td%s>&nbsp;</td>\n"		/* right */
+		   "<td bgcolor=\"%s\">"		/* outlinecolor */
+		   "%s</td></tr>\n"			/* empty */
+		   ,
+		   args->bgcolor ? " bgcolor=\""+args->bgcolor+"\"" : "",
+		   args->titlecolor ? "<FONT color=\""+args->titlecolor+"\">" : "",
+		   args->title,
+		   args->titlecolor ? "</FONT>" : "",
+		   args->bgcolor ? " bgcolor=\""+args->bgcolor+"\"" : "",
+		   args->outlinecolor,
+		   empty,
+		   args->outlinecolor,
+		   empty,
+		   args->bgcolor ? " bgcolor=\""+args->bgcolor+"\"" : "",
+		   args->outlinecolor,
+		   empty,
+		   " width="+args->left,
+		   " width="+args->right,
+		   args->outlinecolor,
+		   empty);
+  case "caption":
+    return sprintf("<TR bgcolor=%s>"
+		   "<TD>%s</TD>"
+		   "<TD%s>&nbsp;</TD>"
+		   "<TD>%s%s%s</TD>"
+		   "<TD%s>&nbsp;</TD>"
+		   "<TD>%s</TD></TR>",
+		   args->outlinecolor,
+		   empty,
+		   (args->left ? " width="+args->left : ""),
+		   args->titlecolor ? "<FONT color=\""+args->titlecolor+"\">" : "",
+		   args->title,
+		   args->titlecolor ? "</FONT>" : "",
+		   (args->right ? " width="+args->right : ""),
+		   empty);
+  }
+}
 
 string container_obox(string name, mapping args,
 		      string contents, object request_id)
 {
-  string s = "hmm..";
-  string title = (args->title?args->title:" ");
-
-  int left = (args->left?args->left:25);
-  int right = (args->right?args->right:350);
-  int spacing = (args->spacing?args->spacing:0);
-
-  string titlecolor =args->titlecolor;
-  string outlinecolor = args->outlinecolor||"#000000";
-  string bgcolor = args->bgcolor;
-  string textcolor = args->textcolor;
-  string align = args->align;
-  string width = args->width;
+  string s;
   
   if (args->help) {
-    right = 250;
-    title = "The Outlined Box container tag";
+    args->right = 250;
+    args->title = "The Outlined Box container tag";
     contents = "Usage:<p>"
                "&lt;<b>obox</b> <b>title</b>=\"Sample title\"&gt;"
                "<br>Anything, html, text, ...<br>"
@@ -42,66 +123,58 @@ string container_obox(string name, mapping args,
                "Options:<p>\n\n"
       "<b>left</b>: Length of line on the left side of the title<br>\n"
       "<b>right</b>: Length of line on the right side of to the title<br>\n"
+      "<i>Notice</i> that left and right arguments are constrained by the "
+      "width argument, if specified.<br>\n"
       "<b>spacing</b>: Width of the space inside the box<br>\n"
       "<b>titlecolor</b>: Color of the title of the box<br>\n"
       "<b>outlinecolor</b>: Color of the outline<br>\n"
+      "<b>outlinewidth</b>: Width (in pixels) of the outline<br>\n"
       "<b>bgcolor</b>: Color of the background and title label<br>\n"
       "<b>textcolor</b>: Color of the text inside the box<br>\n"
       "<b>align</b>: How to align the box (left|right)<br>\n"
-      "<b>width</b>: width of the generated box\n";
+      "<b>width</b>: width of the generated box<br>\n"
+      "<b>style=&lt;caption|groupbox&gt;</b>: "
+      "style of the generated box. "
+      "(<i>default: groupbox</i>)<br>\n"
+      "<p>\n\n"
+      "If the title is not specified in the argument list,<br>"
+      "you can put it inside the box text, in a &lt;TITLE&gt; "
+      "HTML container,<br>should it be needed for HTML clarity.<br>";
+  }
+
+  // Set the defaults...
+  args->outlinecolor = args->outlinecolor || "#000000";
+  args->style = args->style || "groupbox";
+  if (!args->title) {
+    contents=parse_html(contents,([]),(["title":handle_title,]),args);
   }
 
   switch (name) {
   case "obox":
-      s = "<table border=0 cellpadding=0 cellspacing=0" +
-	(align?" align="+align:"") + (width?" width="+width:"") + ">\n"
-	"<tr><td colspan=2>&nbsp;</td>\n"
-	"<td rowspan=3" +
-	(bgcolor?" bgcolor="+bgcolor:"") +
-	">&nbsp;<b>" + 
-	(titlecolor ? "<font color=\""+titlecolor+"\">":"") +
-	title +
-	(titlecolor ? "</font>":"") +
-	"</b> </td>\n"
-	"<td colspan=2>&nbsp;</td></tr>\n"
-      
-	"<tr" +
-	(bgcolor?" bgcolor="+bgcolor:"") +
-	"><td bgcolor=\"" + outlinecolor + "\" colspan=2 height=1>\n"
-	"<img alt='' src="+unit_gif+" height=1></td>\n"
-	"<td bgcolor=\"" + outlinecolor + "\" colspan=2 height=1>\n"
-	"<img alt='' src="+unit_gif+"></td></tr>\n"
-      
-	"<tr" +
-	(bgcolor?" bgcolor="+bgcolor:"") +
-	"><td bgcolor=\"" + outlinecolor + "\">"
-	"<img alt='' src="+unit_gif+"></td>\n"
-	"<td width="+(string)left+">&nbsp;</td>"
-	"<td width="+(string)right+">&nbsp;</td>\n"
-	"<td bgcolor=\"" + outlinecolor + "\">"
-	"<img alt='' src="+unit_gif+"></td></tr>\n"
+    s = "<table border=0 cellpadding=0 cellspacing=0" +
+      (args->align?" align="+args->align:"") +
+      (args->width?" width="+args->width:"") + ">\n" +
+      title(args) +
+      "<tr" +
+      (args->bgcolor?" bgcolor="+args->bgcolor:"") +
+      "><td bgcolor=\"" + args->outlinecolor + "\">" +
+      img_placeholder(args) + "</td>\n"
+      "<td colspan=3>\n"
+      "<table border=0 cellspacing=5 "+
+      (args->spacing?"width="+(string)args->spacing+" ":"")+">"
+      "<tr><td>\n";
 
-	"<tr" +
-	(bgcolor?" bgcolor="+bgcolor:"") +
-	"><td bgcolor=\"" + outlinecolor + "\">"
-	"<img alt='' src="+unit_gif+"></td>\n"
-	"<td colspan=3>\n"
-
-	"<table border=0 cellspacing=5 "+
-	(spacing?"width="+(string)spacing+" ":"")+"><tr><td>\n";
-
-      if (textcolor) {
-	s += "<font color=\""+textcolor+"\">" + contents + "</font>";
+      if (args->textcolor) {
+	s += "<font color=\""+args->textcolor+"\">" + contents + "</font>";
       } else {
 	s += contents;
       }
       
       s += "</td></tr></table>\n"
-	"</td><td bgcolor=\"" + outlinecolor + "\">"
-	"<img alt='' src="+unit_gif+"></td></tr>\n"
-	"<tr><td colspan=5 bgcolor=\"" + outlinecolor + "\">\n"
-	"<img alt='' src="+unit_gif+"></td></tr>\n"
-	"</table>\n";
+	"</td><td bgcolor=\"" + args->outlinecolor + "\">" +
+	img_placeholder(args) + "</td></tr>\n" +
+	horiz_line(args) + "</table>\n";
+
     break;
   }
   
