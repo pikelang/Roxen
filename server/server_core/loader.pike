@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: loader.pike,v 1.353 2002/10/26 00:08:50 nilsson Exp $
+// $Id: loader.pike,v 1.354 2002/10/27 20:18:38 nilsson Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: loader.pike,v 1.353 2002/10/26 00:08:50 nilsson Exp $";
+constant cvs_version="$Id: loader.pike,v 1.354 2002/10/27 20:18:38 nilsson Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -928,7 +928,7 @@ string parse_html_lines (string data, mapping tags, mapping containers,
 
 #endif
 
-static local mapping fd_marks = ([]);
+private mapping fd_marks = ([]);
 
 //! @appears mark_fd
 mixed mark_fd( int fd, string|void with )
@@ -1051,7 +1051,11 @@ Stdio.Stat file_stat( string filename, int|void slinks )
 }
 
 //! @appears open
-object|void open(string filename, string mode, int|void perm)
+//! Opens the file @[filename] in mode @[mode] and with permissions
+//! @[perm]. Permissions defaults to 0666 if none is provided.
+//! Path variables will be expanded in @[filename]. Only objects
+//! for regular files will be returned.
+object|int(0..0) open(string filename, string mode, int|void perm)
 {
 #ifdef FD_DEBUG
   mf o;
@@ -1068,16 +1072,15 @@ object|void open(string filename, string mode, int|void perm)
       // Retry...
       if(!(o->open(filename, mode, perm||0666))) {
 	destruct(o);
-	return;
+	return 0;
       }
     } else {
       destruct(o);
-      return;
+      return 0;
     }
   }
 
-  // FIXME: Might want to stat() here to check that we don't open
-  // devices...
+  if( !o->stat()->isreg ) return 0;
   return o;
 }
 
@@ -1151,7 +1154,9 @@ int main(int argc, array(string) argv)
 {
   // For Pike 7.3
   add_constant("__pragma_save_parent__",1); // FIXME: Change this later on
-  Protocols.HTTP; // FIXME: Workaround for bug 2637.
+
+  // FIXME: Bug in data/master.pike. Resolve this before we change master.
+  Protocols.HTTP;
 
   // (. Note: Optimal implementation. .)
   array av = copy_value( argv );
@@ -1245,7 +1250,7 @@ mapping sql_active_list = ([ ]);
 #ifdef DB_DEBUG
 static int sql_keynum;
 mapping(int:string) my_mysql_last_user = ([]);
-multiset all_sql_wrappers = set_weak_flag( (<>), 1 );
+multiset all_sql_wrappers = set_weak_flag( (<>), Pike.WEAK );
 #endif /* DB_DEBUG */
 
 
@@ -2006,6 +2011,12 @@ void do_main( int argc, array(string) argv )
     "To get zlib support, install zlib from "
     "ftp://ftp.freesoftware.com/pub/infozip/zlib/zlib.html "
     "and recompile Pike, after removing the file 'config.cache'." }) );
+#endif
+
+#if !constant( mktime )
+  feature_warn("FATAL", ({
+    "Your system does not support mktime. "
+    "Implement it and restart ChiliMoon." }) );
 #endif
 
 
