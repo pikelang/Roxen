@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.407 2004/05/20 23:54:21 _cvs_stephen Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.408 2004/05/21 00:04:58 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -86,16 +86,6 @@ string sexpr_eval(string what)
   return compile( "int|float foo=" + what + ";",
 		  compile_handler, -1, -1 )()->foo;
 }
-
-#if ROXEN_COMPAT <= 1.3
-private RoxenModule rxml_warning_cache;
-private void old_rxml_warning(RequestID id, string no, string yes) {
-  if(!rxml_warning_cache) rxml_warning_cache=id->conf->get_provider("oldRXMLwarning");
-  if(!rxml_warning_cache) return;
-  rxml_warning_cache->old_rxml_warning(id, no, yes);
-}
-#endif
-
 
 // ----------------- Entities ----------------------
 
@@ -991,10 +981,6 @@ class TagInsertFile {
     if( !result )
       RXML.run_error("No such file ("+Roxen.fix_relative( var, id )+").\n");
 
-#if ROXEN_COMPAT <= 1.3
-    if(id->conf->old_rxml_compat)
-      return Roxen.parse_rxml(result, id);
-#endif
     return result;
   }
 }
@@ -1249,23 +1235,14 @@ class TagScope {
       // FIXME: Should probably work like this, but it's anything but
       // simple to do that now, since variables is a class that simply
       // fakes the old variable structure using real_variables
-// #if ROXEN_COMPAT <= 1.3
-//       if(scope_name=="form") oldvar=id->variables;
-// #endif
       if(args->extend)
 	vars=copy_value(RXML_CONTEXT->get_scope (scope_name));
       else
 	vars=([]);
-// #if ROXEN_COMPAT <= 1.3
-//       if(oldvar) id->variables=vars;
-// #endif
       return 0;
     }
 
     array do_return(RequestID id) {
-// #if ROXEN_COMPAT <= 1.3
-//       if(oldvar) id->variables=oldvar;
-// #endif
       result=content;
       return 0;
     }
@@ -1389,7 +1366,6 @@ class TagCache {
       }
 
       RXML.Context ctx = RXML_CONTEXT;
-      int default_key = compat_level < 2.2;
 
       // Disable the protocol cache, under the assumption that our
       // cache key will depend on things it disregards. Could be
@@ -1429,7 +1405,6 @@ class TagCache {
 	    else
 	      keymap[var] = ctx->get_var (splitted[1..], splitted[0]);
 	  }
-	default_key = 0;
       }
 
       if (args->profile) {
@@ -1443,7 +1418,6 @@ class TagCache {
 	  }
 	else
       	  parse_error ("There are no cache profiles.\n");
-	default_key = 0;
       }
 
       if (args->propagate) {
@@ -1460,12 +1434,6 @@ class TagCache {
       }
 
       if(args->key) keymap[0] += ({args->key});
-
-      if (default_key) {
-	// Include the form variables and the page path by default.
-	keymap->form = id->real_variables + ([]);
-	keymap["page.path"] = id->not_query;
-      }
 
       if (subvariables) add_subvariables_to_keymap();
 
@@ -2142,25 +2110,50 @@ string simpletag_sort(string t, mapping m, string c, RequestID id)
   return pre + (m->reverse?reverse(lines):lines)*m->separator + post;
 }
 
-string simpletag_replace( string tag, mapping m, string cont, RequestID id)
+class TagReplace
 {
-  switch(m->type)
+  inherit RXML.Tag;
+  constant name = "replace";
+
+  class Frame
   {
-  case "word":
-  default:
-    if(!m->from) return cont;
-   return replace(cont,m->from,(m->to?m->to:""));
+    inherit RXML.Frame;
 
-  case "words":
-    if(!m->from) return cont;
-    string s=m->separator?m->separator:",";
-    array from=(array)(m->from/s);
-    array to=(array)(m->to/s);
+    array do_return (RequestID id)
+    {
+      if (content && result_type->decode_charrefs)
+	content = result_type->decode_charrefs (content);
 
-    int balance=sizeof(from)-sizeof(to);
-    if(balance>0) to+=allocate(balance,"");
+      if (!args->from || content==RXML.nil)
+	result = content;
 
-    return replace(cont,from,to);
+      else {
+	switch(args->type)
+	{
+	  case "word":
+	  default:
+	    result = replace(content,args->from,(args->to?args->to:""));
+	    break;
+
+	  case "words":
+	    string s=args->separator?args->separator:",";
+	    array from=(array)(args->from/s);
+	    array to=(array)(args->to/s);
+
+	    int balance=sizeof(from)-sizeof(to);
+	    if(balance>0) to+=allocate(balance,"");
+	    else if (balance < 0)
+	      parse_error ("There are more elements in the \"to\" list (%d) "
+			   "than in \"from\" (%d).", sizeof (to), sizeof (from));
+
+	    result = replace(content,from,to);
+	    break;
+	}
+
+	if (result_type->entity_syntax)
+	  result = replace (result, "\0", "&#0;");
+      }
+    }
   }
 }
 
@@ -2503,12 +2496,6 @@ class UserTagContents
 
       scope = args->scope;
       RXML.Frame upframe = get_upframe();
-
-      if (compat_level < 2.4 && !args["copy-of"] && !args["value-of"])
-	// Must reevaluate the contents each time it's inserted to be
-	// compatible in old <contents/> tags without copy-of or
-	// value-of arguments.
-	args->eval = "";
 
       // Note that args will be parsed again in the ExpansionFrame.
 
@@ -2890,32 +2877,6 @@ class UserTag {
 	if(content && args->trimwhites)
 	  content = String.trim_all_whites(content);
 
-	if (stringp (def[0])) {
-#if ROXEN_COMPAT <= 1.3
-	  if(id->conf->old_rxml_compat) {
-	    array replace_from, replace_to;
-	    if (flags & RXML.FLAG_EMPTY_ELEMENT) {
-	      replace_from = map(indices(vars),Roxen.make_entity)+
-		({"#args#"});
-	      replace_to = values(vars)+
-		({ Roxen.make_tag_attributes(vars)[1..] });
-	    }
-	    else {
-	      replace_from = map(indices(vars),Roxen.make_entity)+
-		({"#args#", "<contents>"});
-	      replace_to = values(vars)+
-		({ Roxen.make_tag_attributes(vars)[1..], content });
-	    }
-	    string c2;
-	    c2 = replace(def[0], replace_from, replace_to);
-	    if(c2!=def[0]) {
-	      vars=([]);
-	      return ({c2});
-	    }
-	  }
-#endif
-	}
-
 	content_text = content || "";
 	compile = ctx->make_p_code;
       }
@@ -2927,18 +2888,12 @@ class UserTag {
       id->misc->last_tag_args = vars;
       got_content_result = 0;
 
-      if (compat_level > 2.1) {
-	// Save the scope state so that we can switch back in
-	// <contents/>, thereby achieving static variable binding in
-	// the content. This is poking in the internals; there ought
-	// to be some sort of interface here.
-	saved_scopes = ctx->scopes + ([]);
-	saved_hidden = ctx->hidden + ([]);
-      }
-      else {
-	saved_scopes = ctx->scopes;
-	saved_hidden = ctx->hidden;
-      }
+      // Save the scope state so that we can switch back in
+      // <contents/>, thereby achieving static variable binding in
+      // the content. This is poking in the internals; there ought
+      // to be some sort of interface here.
+      saved_scopes = ctx->scopes + ([]);
+      saved_hidden = ctx->hidden + ([]);
 
       return def;
     }
@@ -2996,23 +2951,21 @@ class TagDefine {
 	do_iterate = 1;
 	if(args->preparse) {
 	  m_delete(args, "preparse");
-	  if (compat_level >= 2.4) {
-	    // Older rxml code might use the _ scope and don't expect
-	    // it to be overridden in this situation.
-	    if (args->tag || args->container) {
-	      vars = identity_vars;
-	      preparsed_contents_tags = ([]);
-	    }
-	    else
-	      // Even though there won't be any postparse fill-in of
-	      // &_.foo; etc we define a local scope for consistency.
-	      // This way we can provide special values in the future,
-	      // or perhaps fix postparse fill-in even for variables,
-	      // if plugins, etc.
-	      vars = ([]);
-	    additional_tags = user_tag_contents_tag_set;
-	    scope_name = args->scope;
+	  // Older rxml code might use the _ scope and don't expect
+	  // it to be overridden in this situation.
+	  if (args->tag || args->container) {
+	    vars = identity_vars;
+	    preparsed_contents_tags = ([]);
 	  }
+	  else
+	    // Even though there won't be any postparse fill-in of
+	    // &_.foo; etc we define a local scope for consistency.
+	    // This way we can provide special values in the future,
+	    // or perhaps fix postparse fill-in even for variables,
+	    // if plugins, etc.
+	    vars = ([]);
+	  additional_tags = user_tag_contents_tag_set;
+	  scope_name = args->scope;
 	}
 	else
 	  content_type = RXML.t_xml;
@@ -3072,9 +3025,6 @@ class TagDefine {
       }
 
       if (n=args->tag||args->container) {
-#if ROXEN_COMPAT <= 1.3
-	n = id->conf->old_rxml_compat?lower_case(n):n;
-#endif
 	int moreflags=0;
 	if(args->tag) {
 	  moreflags = RXML.FLAG_EMPTY_ELEMENT;
@@ -3085,32 +3035,17 @@ class TagDefine {
 	if (!def) {
 	  defaults=([]);
 
-#if ROXEN_COMPAT <= 1.3
-	  if(id->conf->old_rxml_compat)
-	    foreach( indices(args), string arg )
-	      if( arg[..7] == "default_" )
-	      {
-		defaults[arg[8..]] = args[arg];
-		old_rxml_warning(id, "define attribute "+arg,"attrib container");
-		m_delete( args, arg );
-	      }
-#endif
-
 	  if(!content) content = "";
 
 	  Parser.HTML p;
-	  if( compat_level > 2.1 ) {
-	    p = Parser.get_xml_parser();
-	    p->add_container ("attrib", ({add_default, defaults, id}));
-	    // Stop parsing for attrib tags when we reach something else
-	    // than whitespace and comments.
-	    p->_set_tag_callback (no_more_attrib);
-	    p->_set_data_callback (data_between_attribs);
-	    p->add_quote_tag ("?", no_more_attrib, "?");
-	    p->add_quote_tag ("![CDATA[", no_more_attrib, "]]");
-	  }
-	  else
-	    p = Parser.HTML()->add_container("attrib", ({add_default, defaults, id}));
+	  p = Parser.get_xml_parser();
+	  p->add_container ("attrib", ({add_default, defaults, id}));
+	  // Stop parsing for attrib tags when we reach something else
+	  // than whitespace and comments.
+	  p->_set_tag_callback (no_more_attrib);
+	  p->_set_data_callback (data_between_attribs);
+	  p->add_quote_tag ("?", no_more_attrib, "?");
+	  p->add_quote_tag ("![CDATA[", no_more_attrib, "]]");
 
 	  if (preparsed_contents_tags) {
 	    // Translate the &_internal_.4711; references to
@@ -3150,10 +3085,6 @@ class TagDefine {
 	  }
 #endif
 
-#if ROXEN_COMPAT <= 1.3
-	  if(id->conf->old_rxml_compat)
-	    content = replace( content, indices(args), values(args) );
-#endif
 	  def = ({content});
 	}
 
@@ -3493,31 +3424,14 @@ class TagCase {
 	    op = "capitalized";
 	    break;
 	  default:
-	    if (compat_level > 2.1)
-	      parse_error ("Invalid value %O to the case argument.\n", args->case);
+	    parse_error ("Invalid value %O to the case argument.\n", args->case);
 	}
-	if (compat_level > 2.1)
-	  parse_error ("Content of type %s doesn't handle being %s.\n",
+	parse_error ("Content of type %s doesn't handle being %s.\n",
 		       content_type->name, op);
       }
       else
-	if (compat_level > 2.1)
-	  parse_error ("Argument \"case\" is required.\n");
+	parse_error ("Argument \"case\" is required.\n");
 
-#if ROXEN_COMPAT <= 1.3
-      if(args->lower) {
-	content = lower_case(content);
-	old_rxml_warning(id, "attribute lower","case=lower");
-      }
-      if(args->upper) {
-	content = upper_case(content);
-	old_rxml_warning(id, "attribute upper","case=upper");
-      }
-      if(args->capitalize){
-	content = capitalize(content);
-	old_rxml_warning(id, "attribute capitalize","case=capitalize");
-      }
-#endif
       return ({ content });
     }
   }
@@ -4079,23 +3993,16 @@ class TagEmit {
 		  field->order = '+';
 		  break;
 		case '*':
-		  if (compat_level > 2.2) {
-		    if (field->compare) break field_flag_scan;
-		    field->compare = strict_compare;
-		    break;
-		  }
-		  // Fall through.
+		  if (field->compare) break field_flag_scan;
+		  field->compare = strict_compare;
+		  break;
 		default:
 		  break field_flag_scan;
 	      }
 	    field->name = raw_field[i..];
 
-	    if (!field->compare) {
-	      if (compat_level > 2.1)
-		field->compare = dwim_compare;
-	      else
-		field->compare = strict_compare;
-	    }
+	    if (!field->compare)
+	      field->compare = dwim_compare;
 	  }
 
 	  res = Array.sort_array(
@@ -4838,13 +4745,6 @@ class TagIfClient {
   }
 }
 
-#if ROXEN_COMPAT <= 1.3
-class TagIfName {
-  inherit TagIfClient;
-  constant plugin_name = "name";
-}
-#endif
-
 class TagIfDefined {
   inherit IfIs;
   constant plugin_name = "defined";
@@ -4871,13 +4771,6 @@ class TagIfIP {
     return id->remoteaddr;
   }
 }
-
-#if ROXEN_COMPAT <= 1.3
-class TagIfHost {
-  inherit TagIfIP;
-  constant plugin_name = "host";
-}
-#endif
 
 class TagIfLanguage {
   inherit IfMatch;
@@ -4961,12 +4854,7 @@ class TagIfSizeof {
   constant cache = -1;
   string source(RequestID id, string s) {
     mixed var;
-    if (compat_level == 2.2) {
-      // See note in TagIfVariable.source.
-      if (!(var=RXML.user_get_var(s))) return 0;
-    }
-    else
-      if (zero_type (var=RXML.user_get_var(s))) return 0;
+    if (zero_type (var=RXML.user_get_var(s))) return 0;
     if(stringp(var) || arrayp(var) ||
        multisetp(var) || mappingp(var)) return (string)sizeof(var);
     if(objectp(var) && var->_sizeof) return (string)sizeof(var);
@@ -5210,50 +5098,50 @@ class TagIWCache {
 
 #ifdef manual
 constant tagdoc=([
-"&roxen;":#"<desc type='scope'><p><short>
+"&chili;":#"<desc type='scope'><p><short>
  This scope contains information specific to this ChiliMoon server.</short>
  It is not possible to write any information to this scope.
 </p></desc>",
 
-"&roxen.domain;":#"<desc type='entity'><p>
+"&chili.domain;":#"<desc type='entity'><p>
  The domain name of this site. The information is taken from the
  client request, so a request to \"http://community.roxen.com/\" would
  give this entity the value \"community.roxen.com\", while a request
  for \"http://community/\" would give the entity value \"community\".
 </p></desc>",
 
-"&roxen.hits;":#"<desc type='entity'><p>
+"&chili.hits;":#"<desc type='entity'><p>
  The number of hits, i.e. requests the webserver has accumulated since
  it was last started.
 </p></desc>",
 
-"&roxen.hits-per-minute;":#"<desc type='entity'><p>
+"&chili.hits-per-minute;":#"<desc type='entity'><p>
  The average number of requests per minute since the webserver last
  started.
 </p></desc>",
 
-"&roxen.pike-version;":#"<desc type='entity'><p>
+"&chili.pike-version;":#"<desc type='entity'><p>
  The version of Pike the webserver is using, e.g. \"Pike v7.2 release 140\".
 </p></desc>",
 
-"&roxen.sent;":#"<desc type='entity'><p>
+"&chili.sent;":#"<desc type='entity'><p>
  The total amount of data the webserver has sent since it last started.
 </p></desc>",
 
-"&roxen.sent-kbit-per-second;":#"<desc type='entity'><p>
+"&chili.sent-kbit-per-second;":#"<desc type='entity'><p>
  The average amount of data the webserver has sent, in Kibibits.
 </p></desc>",
 
-"&roxen.sent-mb;":#"<desc type='entity'><p>
+"&chili.sent-mb;":#"<desc type='entity'><p>
  The total amount of data the webserver has sent, in Mebibits.
 </p></desc>",
 
-"&roxen.sent-per-minute;":#"<desc type='entity'><p>
+"&chili.sent-per-minute;":#"<desc type='entity'><p>
  The average number of bytes that the webserver sends during a
  minute. Based on the sent amount of data and uptime since last server start.
 </p></desc>",
 
-"&roxen.server;":#"<desc type='entity'><p>
+"&chili.server;":#"<desc type='entity'><p>
  The URL of the webserver. The information is taken from the client request,
  so a request to \"http://community.roxen.com/index.html\" would give this
  entity the value \"http://community.roxen.com/\", while a request for
@@ -5261,17 +5149,17 @@ constant tagdoc=([
  \"http://community/\".
 </p></desc>",
 
-"&roxen.ssl-strength;":#"<desc type='entity'><p>
+"&chili.ssl-strength;":#"<desc type='entity'><p>
  Contains the maximum number of bits encryption strength that the SSL is capable of.
  Note that this is the server side capability, not the client capability.
  Possible values are 0, 40, 128 or 168.
 </p></desc>",
 
-"&roxen.time;":#"<desc type='entity'><p>
+"&chili.time;":#"<desc type='entity'><p>
  The current posix time. An example output: \"244742740\".
 </p></desc>",
 
-"&roxen.unique-id;":#"<desc type='entity'><p>
+"&chili.unique-id;":#"<desc type='entity'><p>
  Returns a unique id that can be used for e.g. session
  identification. An example output: \"7fcda35e1f9c3f7092db331780db9392\".
  Note that a new id will be generated every time this entity is used,
@@ -5279,19 +5167,19 @@ constant tagdoc=([
  to use it more than once.
 </p></desc>",
 
-"&roxen.uptime;":#"<desc type='entity'><p>
+"&chili.uptime;":#"<desc type='entity'><p>
  The total uptime of the webserver since last start, in seconds.
 </p></desc>",
 
-"&roxen.uptime-days;":#"<desc type='entity'><p>
+"&chili.uptime-days;":#"<desc type='entity'><p>
  The total uptime of the webserver since last start, in days.
 </p></desc>",
 
-"&roxen.uptime-hours;":#"<desc type='entity'><p>
+"&chili.uptime-hours;":#"<desc type='entity'><p>
  The total uptime of the webserver since last start, in hours.
 </p></desc>",
 
-"&roxen.uptime-minutes;":#"<desc type='entity'><p>
+"&chili.uptime-minutes;":#"<desc type='entity'><p>
  The total uptime of the webserver since last start, in minutes.
 </p></desc>",
 
