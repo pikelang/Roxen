@@ -7,10 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-#define old_rxml_warning id->conf->api_functions()->old_rxml_warning[0]
-#define old_rxml_compat 1
-
-constant cvs_version="$Id: rxmltags.pike,v 1.20 1999/10/08 16:17:50 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.21 1999/10/09 17:23:19 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -48,6 +45,7 @@ string sexpr_eval(string what)
   return (string)compile_string( what )()->foo();
 }
 
+
 // ------------------- Tags ------------------------
 
 string tag_append( string tag, mapping m, object id )
@@ -79,15 +77,6 @@ string tag_append( string tag, mapping m, object id )
 	  id->variables[ m->variable ] = id->misc->variables[ m->other ];
       else
         return rxml_error(tag, "Other variable doesn't exist.", id);
-
-#if old_rxml_compat
-    // Not part of RXML 1.4
-    else if(m->define) {
-      // Set variable to the value of a define
-      id->variables[ m->variable ] += id->misc->defines[ m->define ]||"";
-      old_rxml_warning(id, "define attribute in append tag","only variables");
-    }
-#endif
   }
 
   return rxml_error(tag, "Nothing to append from.", id);
@@ -97,6 +86,7 @@ string tag_auth_required (string tagname, mapping args, object id)
 {
   mapping hdrs = http_auth_required (args->realm, args->message);
   if (hdrs->error) _error = hdrs->error;
+  //FIXME: add_http_header
   if (hdrs->extra_heads) _extra_heads += hdrs->extra_heads;
   if (hdrs->text) _rettext = hdrs->text;
   return "";
@@ -179,15 +169,6 @@ string tag_redirect(string tag, mapping m, object id)
   multiset(string) orig_prestate = id->prestate;
   multiset(string) prestate = (< @indices(orig_prestate) >);
 
-#if old_rxml_compat
-  foreach(indices(m), string s)
-    if(m[s]==s && sizeof(s))
-      switch (s[0]) {
-	case '+': prestate[s[1..]] = 1; break;
-	case '-': prestate[s[1..]] = 0; break;
-      }
-#endif
-
   if(m->add) {
     foreach((m->add-" ")/",", string s)
       prestate[s]=1;
@@ -206,22 +187,20 @@ string tag_redirect(string tag, mapping m, object id)
   if (r->error)
     _error = r->error;
   if (r->extra_heads)
-    _extra_heads += r->extra_heads;
+    foreach(indices(r->extra_heads), string tmp)
+      add_http_header(_extra_heads, tmp, r->extra_heads[tmp]);
+  //    _extra_heads += r->extra_heads;
   if (m->text)
     _rettext = m->text;
 
   return "";
 }
 
-/* It is spelled referer according to the http spec... */
-// It is however spelt referrer in the dictionary.
+// It is spelled referer according to the http spec,
+// but it is spelt referrer in the dictionary...
 string|array(string) tag_referrer(string tag, mapping m, object id)
 {
   NOCACHE();
-
-#if old_rxml_compat
-  if(tag=="refferrer") old_rxml_warning(id, "refferrer tag","referrer tag");
-#endif
 
   if(m->help)
     return ({ "Shows from which page the client linked to this one." });
@@ -270,15 +249,6 @@ string tag_set( string tag, mapping m, object id )
 	id->variables[ m->variable ] = (string)id->misc->variables[ m->other ];
       else
 	return rxml_error(tag, "Other variable doesn't exist.", id);
-
-#if old_rxml_compat
-    // Not part of RXML 1.4
-    else if(m->define) {
-      // Set variable to the value of a define
-      id->variables[ m->variable ] = id->misc->defines[ m->define ];
-      old_rxml_warning(id, "define attribute in set tag","only variables");
-    }
-#endif
     else if (m->eval)
       // Set variable to the result of some evaluated RXML
       id->variables[ m->variable ] = parse_rxml(m->eval, id);
@@ -371,9 +341,6 @@ string|array(string) tag_imgs(string tag, mapping m, object id)
 
 array(string) tag_roxen(string tagname, mapping m, object id)
 {
-#if old_rxml_compat
-  if(tagname=="pr") old_rxml_warning(id,"pr tag","roxen tag");
-#endif
   string size = m->size || "small";
   string color = m->color || "blue";
   m_delete(m, "color");
@@ -446,11 +413,6 @@ array(string) tag_configimage(string f, mapping m, object id)
   if (m->src) {
 
     // This should really be fixed the other way around; renaming the files to err1, err2 & err3
-#if old_rxml_compat
-    if(m->src=="err_1") old_rxml_warning(id, "err_1 argument in configimage tag","err1");
-    if(m->src=="err_2") old_rxml_warning(id, "err_2 argument in configimage tag","err2");
-    if(m->src=="err_3") old_rxml_warning(id, "err_3 argument in configimage tag","err3");
-#endif
     if(m->src=="err1") m->src="err_1";
     if(m->src=="err2") m->src="err_2";
     if(m->src=="err3") m->src="err_3";
@@ -469,13 +431,7 @@ array(string) tag_configimage(string f, mapping m, object id)
 
 string tag_date(string q, mapping m, object id)
 {
-#if old_rxml_compat
-  // unix_time is not part of RXML 1.4
-  int t=(int)m["unix-time"] || (int)m->unix_time || time(1);
-  if(m->unix_time) old_rxml_warning(id, "unix_time attribute in date tag","unix-time");
-#else
   int t=(int)m["unix-time"] || time(1);
-#endif
   if(m->day)    t += (int)m->day * 86400;
   if(m->hour)   t += (int)m->hour * 3600;
   if(m->minute) t += (int)m->minute * 60;
@@ -493,14 +449,6 @@ string tag_date(string q, mapping m, object id)
   return tagtime(t, m, id, language);
 }
 
-#if old_rxml_compat
-inline string do_replace(string s, mapping m, object id)
-{
-  return replace(s, indices(m), values(m));
-  old_rxml_warning(id, "replace (A=B) in in insert tag","the replace tag");
-}
-#endif
-
 string|array(string) tag_insert(string tag,mapping m,object id)
 {
   if(m->help)
@@ -508,46 +456,15 @@ string|array(string) tag_insert(string tag,mapping m,object id)
 
   string n;
 
-#if old_rxml_compat
-  // Not part of RXML 1.4
-  if(n=m->define || m->name) {
-    old_rxml_warning(id, "define or name attribute in insert tag","only variables");
-    m_delete(m, "define");
-    m_delete(m, "name");
-    if(id->misc->defines[n])
-      return ({ do_replace(id->misc->defines[n], m, id) });
-    return rxml_error(tag, "No such define ("+n+").", id);
-  }
-#endif
-
   if(n = m->variable)
   {
     if(!id->variables[n])
       return rxml_error(tag, "No such variable ("+n+").", id);
-#if old_rxml_compat
-    m_delete(m, "variable");
-    return m->quote=="none"?do_replace(id->variables[n], m-(["quote":""]), id):
-      ({ html_encode_string(do_replace(id->variables[n], m-(["quote":""]), id)) });
-#else
     return m->quote=="none"?id->variables[n]:({ html_encode_string(id->variables[n]) });
-#endif
   }
 
-  if(n = m->variables) {
-#if old_rxml_compat
-    if(m->variables!="variables")
-    {
-      old_rxml_warning(id, "insert attribute variables set to an value",
-		     "&lt;debug showid=\"id->variables\"&gt;" );
-      return ({ html_encode_string(Array.map(indices(id->variables),
-			lambda(string s, mapping m)
-			{ return sprintf("%s=%O\n", s, m[s]); },
-					   id->variables) * "\n")
-	    });
-    }
-#endif
+  if(n = m->variables)
     return ({ String.implode_nicely(indices(id->variables)) });
-  }
 
   if(n = m->other) {
     if(stringp(id->misc[n]) || intp(id->misc[n])) {
@@ -559,30 +476,14 @@ string|array(string) tag_insert(string tag,mapping m,object id)
   if(n = m->cookies)
   {
     NOCACHE();
-#if old_rxml_compat
-    if(n!="cookies")
-      return ({ html_encode_string(Array.map(indices(id->cookies),
-			  lambda(string s, mapping m)
-			  { return sprintf("%s=%O\n", s, m[s]); },
-					     id->cookies) * "\n")
-	      });
-#endif
     return ({ String.implode_nicely(indices(id->cookies)) });
   }
 
   if(n=m->cookie)
   {
     NOCACHE();
-#if old_rxml_compat
-    m_delete(m, "cookie");
-    if(id->cookies[n]) {
-      string cookie=do_replace(id->cookies[n], m, id);
-      return m->quote=="none"?cookie:({ html_encode_string(cookie) });
-    }
-#else
     if(id->cookies[n])
       return m->quote=="none"?id->cookies[n]:({ html_encode_string(id->cookies[n]) });
-#endif
     return rxml_error(tag, "No such cookie ("+n+").", id);
   }
 
@@ -593,20 +494,9 @@ string|array(string) tag_insert(string tag,mapping m,object id)
       id->pragma["no-cache"] = 1;
       n=API_read_file(id,m->file)||rxml_error("insert", "No such file ("+m->file+").", id);
       id->pragma["no-cache"] = nocache;
-#if old_rxml_compat
-      m_delete(m, "nocache");
-      m_delete(m, "file");
-      return do_replace(n, m, id);
-#else
       return n;
-#endif
     }
-#if old_rxml_compat
-    string|int n=API_read_file(id,m->file);
-    return n?do_replace(n, m-(["file":""]), id):rxml_error("insert", "No such file ("+m->file+").", id);
-#else
     return API_read_file(id,m->file)||rxml_error("insert", "No such file ("+m->file+").", id);
-#endif
   }
 
   if(m->href && query("insert_href")) {
@@ -658,7 +548,7 @@ string tag_set_cookie(string tag, mapping m, object id)
 
   if(t) cookies += "; expires="+http_date(t+time());
 
-  //obs! no check of the parameter's usability
+  //FIXME: Check the parameter's usability
   cookies += "; path=" +(m->path||"/");
 
   add_http_header(_extra_heads, "Set-Cookie", cookies);
@@ -701,13 +591,21 @@ string tag_for(string t, mapping args, string c, RequestID id)
 
   string res="";
   if(to<from) {
-    for(int i=from; i>=to; i+=step)
-      res += "<set variable="+v+" value="+i+">"+c;
+    if(v)
+      for(int i=from; i>=to; i+=step)
+        res += "<set variable="+v+" value="+i+">"+c;
+    else
+      for(int i=from; i>=to; i+=step)
+        res+=c;
     return res;
   }
   else if(to>from) {
-    for(int i=from; i<=to; i+=step)
-      res += "<set variable="+v+" value="+i+">"+c;
+    if(v)
+      for(int i=from; i<=to; i+=step)
+        res += "<set variable="+v+" value="+i+">"+c;
+    else
+      for(int i=from; i<=to; i+=step)
+        res+=c;
     return res;
   }
 
@@ -759,24 +657,6 @@ string tag_aprestate(string tag, mapping m, string q, object id)
 
   multiset prestate = (< @indices(id->prestate) >);
 
-#if old_rxml_compat
-  // Not part of RXML 1.4
-  int oldflag=0;
-  foreach(indices(m), s) {
-    if(m[s]==s) {
-      m_delete(m,s);
-      oldflag=1;
-
-      if(strlen(s) && s[0] == '-')
-        prestate[s[1..]]=0;
-      else
-        prestate[s]=1;
-     }
-  }
-  if(oldflag)
-    old_rxml_warning(id, "prestates as atomic attributs in apre tag","add and drop");
-#endif
-
   if(m->add) {
     foreach((m->add-" ")/",", s)
       prestate[s]=1;
@@ -808,29 +688,6 @@ string|array(string) tag_aconf(string tag, mapping m, string q, object id)
     href=fix_relative(href, id);
     m_delete(m, "href");
   }
-
-#if old_rxml_compat
-  // Not part of RXML 1.4
-  int oldflag=0;
-  foreach(indices(m), string opt) {
-    if(m[opt]==opt) {
-      if(strlen(opt)) {
-        oldflag=1;
-        switch(opt[0]) {
-        case '+':
-          m_delete(m, opt);
-          cookies[opt[1..]] = opt;
-          break;
-        case '-':
-          m_delete(m, opt);
-          cookies[opt] = opt;
-          break;
-        }
-      }
-    }
-  }
-  if(oldflag) old_rxml_warning(id, "config items as atomic attributes in aconf tag","add and drop");
-#endif
 
   if(m->add) {
     foreach((m->add-" ")/",", s)
@@ -886,15 +743,7 @@ string tag_autoformat(string tag, mapping m, string s, object id)
 {
   s-="\r";
 
-#if old_rxml_compat
-    // m->pre is not part of RXML 1.4
-    if(m->pre) {
-      old_rxml_warning(id, "pre attribute in autoformat tag","p attribute");
-      m+=(["p":1]);
-    }
-#endif
-
-    string p=(m["class"]?"<p class=\""+m["class"]+"\">":"<p>");
+  string p=(m["class"]?"<p class=\""+m["class"]+"\">":"<p>");
 
   if(!m->nobr) {
     s = replace(s, "\n", "<br>\n");
@@ -1159,10 +1008,6 @@ private mixed tag_select( string tag_name, mapping args, string contents,
 array(string) tag_default( string tag_name, mapping args, string contents, object id)
 {
   string separator = args->separator || "\000";
-#if old_rxml_compat
-  separator = args->multi_separator || "\000";
-#endif
-
 
   contents = parse_rxml( contents, id );
   if (args->value)
@@ -1207,9 +1052,6 @@ string tag_sort(string t, mapping m, string c, object id)
 
 mixed tag_recursive_output (string tagname, mapping args, string contents, object id)
 {
-#if old_rxml_compat
-  if(args->multisep) args->separator=args->multisep;
-#endif
   int limit;
   array(string) inside, outside;
   if (id->misc->recout_limit) {
@@ -1299,22 +1141,6 @@ string tag_replace(string tag,mapping m,string cont,object id) {
   }
 }
 
-#if old_rxml_compat
-// Not part of RXML 1.4
-
-string tag_source(string tag, mapping m, string s, object id)
-{
-  old_rxml_warning(id, "source tag","a template");
-  string sep;
-  sep=m["separator"]||"";
-  if(!m->nohr)
-    sep="<hr><h2>"+sep+"</h2><hr>";
-  return ("<pre>"+replace(s, ({"<",">","&"}),({"&lt;","&gt;","&amp;"}))
-    +"</pre>"+sep+s);
-}
-
-#endif
-
 
 // ----------------- Tag registration stuff --------------
 
@@ -1354,19 +1180,7 @@ mapping query_tag_callers()
 	    },
 	    "unset":tag_set,
 	    "user":tag_user,
-	    "vfs":tag_vfs,
-
-#if old_rxml_compat
-            // Not part of RXML 1.4
-            "echo":
-            lambda(string t, mapping m, object id) {   // Well, this isn't exactly 100% compatible...
-              old_rxml_warning(id, "echo tag","insert tag");
-              return make_tag("!--#echo",m);
-            },
-            "pr":tag_roxen,
-            "refferrer":tag_referrer,
-            "source":tag_source,
-#endif
+	    "vfs":tag_vfs
    ]);
 }
 
@@ -1412,15 +1226,8 @@ mapping query_container_callers()
 		     if(!id->misc->catcher_is_ready && c[-1]!="\n") c+="\n";
                      throw( ({ c, backtrace() }) ); 
            },
-	   "trimlines":tag_trimlines,
-#if old_rxml_compat
-           // Not part of RXML 1.4
-	   "cset":lambda(string t, mapping m, string c, object id) {
-		    old_rxml_warning(id, "cset tag","&lt;define variable&gt;");
-                    return tag_set("set",m+([ "value":html_decode_string(c) ]),
-		    id); },
-#endif
-	   ]);
+	   "trimlines":tag_trimlines
+   ]);
 }
 
 mapping query_if_callers()
