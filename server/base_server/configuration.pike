@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.142 1998/07/04 13:05:47 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.143 1998/07/04 13:06:29 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -987,7 +987,7 @@ void clear_memory_caches()
 {
   invalidate_cache();
   foreach(indices(otomod), object m) {
-    if (m->clear_memory_caches) {
+    if (m && m->clear_memory_caches) {
       mixed err = catch {
 	m->clear_memory_caches();
       };
