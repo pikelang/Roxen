@@ -221,7 +221,7 @@ string find_module_doc( string cn, string mn, object id )
   if(!m)
     return "";
 
-  roxen.Module mi = roxen.find_module( (mn/"!")[0] );
+  roxen.ModuleInfo mi = roxen.find_module( (mn/"!")[0] );
 
   string eventlog = get_eventlog( m,id );
   
