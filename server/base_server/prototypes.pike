@@ -1,7 +1,7 @@
 #include <stat.h>
 #include <config.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.9 2001/01/19 21:21:04 per Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.10 2001/01/29 05:48:18 per Exp $";
 
 class Variable
 {
@@ -832,6 +832,7 @@ class UserDB
 {
   inherit RoxenModule;
   constant module_type = MODULE_USERDB;
+  constant thread_safe=1;
 
   constant name = "db name";
 
