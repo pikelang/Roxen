@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.651 2001/03/16 00:07:34 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.652 2001/03/16 01:43:14 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread.
 Thread.Thread backend_thread;
@@ -2899,13 +2899,14 @@ class ArgCache
   {
     array b = values(args), a = sort(indices(args),b);
     string id = encode_id( low_store( a ), low_store( b ) );
-    cache[ id ] = args+([]);
+    if( !cache[ id ] )
+      cache[ id ] = args+([]);
     return id;
   }
 
   static int low_store( array a )
   {
-    string data = encode_value( a );
+    string data = encode_value_canonic( a );
     string hv = Crypto.md5()->update( data )->digest();
     if( mixed q = cache[ hv ] )
       return q;
