@@ -14,7 +14,7 @@ constant STORTLITET = 1.0e-30;
 constant STORT = 1.0e40;
 #define VOIDSYMBOL "\n"
 
-constant cvs_version = "$Id: create_graph.pike,v 1.93 1998/02/24 23:20:56 peter Exp $";
+constant cvs_version = "$Id: create_graph.pike,v 1.94 1998/02/25 16:34:49 hedda Exp $";
 
 /*
  * name = "BG: Create graphs";
@@ -583,6 +583,7 @@ string no_end_zeros(string f)
   {
     int j;
     /* FIXME  Vad i Hvte gör du här?! */
+    //Jag vet vad jag gör! Idi! :-)
     for(j=sizeof(f)-1; f[j]=='0'; j--)
     {}
     if (f[j]=='.')
@@ -972,6 +973,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
     float range=(diagram_data["ymaxvalue"]
 		 - diagram_data["yminvalue"]);
     // *FIXME* Kan inte range vara 0 här?
+    // Nej, det kollas i init()
     float space=pow(10.0, floor(log(range/3.0)/log(10.0)));
     if (range/space>5.0)
       if(range/(2.0*space)>5.0)
