@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Idonex AB.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.204 2000/02/16 14:20:28 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.205 2000/02/19 06:12:32 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -332,9 +332,7 @@ string fix_text(string c, mapping m, RequestID id) {
 
   if(m->nowhitespace)
   {
-    sscanf(c,"%*[ \n\r\t]%s",c);
-    sscanf(reverse(c),"%*[ \n\r\t]%s",c);
-    c=reverse(c);
+    c=String.trim_all_whites(c);
     m_delete(m, "nowhitespace");
   }
 
@@ -345,8 +343,12 @@ string fix_text(string c, mapping m, RequestID id) {
     m_delete(m, "preparse");
   }
 
-  c = c[..(((int)m->maxlen||QUERY(deflen))-1)];
-  m_delete(m, "maxlen");
+  c=html_decode_string(c);
+
+  if(m->maxlen) {
+    c = c[..(((int)m->maxlen||QUERY(deflen))-1)];
+    m_delete(m, "maxlen");
+  }
 
   return c;
 }
