@@ -61,7 +61,6 @@ urw_itc_avant_garde-demi-r binary
 /server/base_server/configuration.pike foreign_ident
 /server/base_server/dates.pike foreign_ident
 /server/base_server/disk_cache.pike foreign_ident
-/server/base_server/dummy_hosts.pike foreign_ident
 /server/base_server/fonts.pike foreign_ident
 /server/base_server/hosts.pike foreign_ident
 /server/base_server/html.pike foreign_ident
@@ -82,7 +81,6 @@ urw_itc_avant_garde-demi-r binary
 /server/base_server/roxenloader.pike foreign_ident
 /server/base_server/smartpipe.pike foreign_ident
 /server/base_server/socket.pike foreign_ident
-/server/base_server/spinnerlib.pike foreign_ident
 /server/base_server/struct/node.pike foreign_ident
 /server/base_server/wizard.pike foreign_ident
 /server/bin/garbagecollector.pike foreign_ident

@@ -1,5 +1,5 @@
 /* This is a Roxen module. Copyright © 1996 - 1998, Idonex AB, (c) Idonex AB 1998
- * $Id: directories2.pike,v 1.10 1998/09/17 14:31:54 grubba Exp $
+ * $Id: directories2.pike,v 1.11 1998/10/12 22:55:34 per Exp $
  *
  * Directory listings mark 2
  *
@@ -12,7 +12,7 @@
  * Make sure links work _inside_ unfolded dokuments.
  */
 
-constant cvs_version = "$Id: directories2.pike,v 1.10 1998/09/17 14:31:54 grubba Exp $";
+constant cvs_version = "$Id: directories2.pike,v 1.11 1998/10/12 22:55:34 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -114,7 +114,7 @@ string tag_insert_quoted(string tag_name, mapping args, object request_id,
 			 mapping defines)
 {
   if (args->file) {
-    string s = roxen->try_get_file(args->file, request_id);
+    string s = request_id->conf->try_get_file(args->file, request_id);
 
     if (s) {
       return(quote_plain_text(s));
@@ -137,7 +137,7 @@ mapping query_tag_callers()
 string find_readme(string d, object id)
 {
   foreach(({ "README.html", "README"}), string f) {
-    string readme = roxen->try_get_file(d+f, id);
+    string readme = id->conf->try_get_file(d+f, id);
 
     if (readme) {
       if (f[strlen(f)-5..] != ".html") {
@@ -162,7 +162,7 @@ string describe_directory(string d, object id)
   path -= ({ "." });
   d = "/"+path*"/" + "/";
 
-  dir = roxen->find_dir(d, id);
+  dir = id->conf->find_dir(d, id);
 
   if (dir && sizeof(dir)) {
     dir = sort(dir);
@@ -198,7 +198,7 @@ string describe_directory(string d, object id)
   result += "<fl folded>\n";
 
   foreach(sort(dir), string file) {
-    array stats = roxen->stat_file(d + file, id);
+    array stats = id->conf->stat_file(d + file, id);
     string type = "Unknown";
     string icon;
     int len = stats?stats[1]:0;
@@ -216,7 +216,7 @@ string describe_directory(string d, object id)
       
       break;
     default:
-      array tmp = roxen->type_from_filename(file,1);
+      array tmp = id->conf->type_from_filename(file,1);
       if (tmp) {
 	type = tmp[0];
       }
@@ -324,7 +324,7 @@ string|mapping parse_directory(object id)
     if(old_file[-1]=='.') old_file = old_file[..strlen(old_file)-2];
     foreach(query("indexfiles")-({""}), file) { // Make recursion impossible
       id->not_query = old_file+file;
-      if(got = roxen->get_file(id))
+      if(got = id->conf->get_file(id))
 	return got;
     }
     id->not_query = old_not_query;

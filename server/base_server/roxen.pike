@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.245 1998/10/11 06:09:10 peter Exp $
+ * $Id: roxen.pike,v 1.246 1998/10/12 22:54:16 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -8,7 +8,7 @@
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version = "$Id: roxen.pike,v 1.245 1998/10/11 06:09:10 peter Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.246 1998/10/12 22:54:16 per Exp $";
 
 
 // Some headerfiles
@@ -18,17 +18,9 @@ constant cvs_version = "$Id: roxen.pike,v 1.245 1998/10/11 06:09:10 peter Exp $"
 #include <module.h>
 #include <variables.h>
 
-// #ifdef __NT__
-// #define NO_DNS
-// #endif
-
 // Inherits
 inherit "read_config";
-#ifdef NO_DNS
-inherit "dummy_hosts";
-#else
 inherit "hosts";
-#endif
 inherit "module_support";
 inherit "socket";
 inherit "disk_cache";
@@ -41,21 +33,7 @@ constant pipe = (program)"smartpipe";
 constant pipe = Pipe.pipe;
 #endif
 
-/* Pike 0.5 does not have _exit. */
-#if !constant(_exit)
-void _exit(int n)
-{
-  kill(getpid(), 9);
-}
-#endif
-
-// This is the real Roxen version. It should be changed before each
-// release
-#if __VERSION__ < 0.6
-constant __roxen_version__ = "1.2";
-#else /* PIKE_VERSION >= 0.6 */
 constant __roxen_version__ = "1.3";
-#endif /* PIKE_VERSION */
 constant __roxen_build__ = "37";
 
 #ifdef __NT__
@@ -78,10 +56,9 @@ int new_id(){ return idcount++; }
 
 // pids of the start-script and ourselves.
 int startpid, roxenpid;
-object roxen=this_object(), current_configuration;
 
 // Locale support
-object locale = Locale.Roxen.standard;
+object locale = Locale.Roxen.svenska;
 #define LOCALE	locale->base_server
 
 
@@ -96,8 +73,6 @@ mapping allmodules, somemodules=([]);
 // from the configuration object in the future.
 mapping portno=([]);
 
-// constant decode = roxen->decode;
-
 // Function pointer and the root of the configuration interface
 // object.
 private function build_root;
@@ -107,7 +82,6 @@ private object root;
 // This mutex is used by privs.pike
 object euid_egid_lock = Thread.Mutex();
 
-void stop_handler_threads(); // forward declaration
 #endif /* THREADS */
 
 int privs_level;
@@ -235,7 +209,7 @@ mapping restart()
 { 
   low_shutdown(-1);
   return ([ "data": replace(Stdio.read_bytes("etc/restart.html"),
-			    ({"$docurl", "$PWD"}), ({roxen->docurl, getcwd()})),
+			    ({"$docurl", "$PWD"}), ({docurl, getcwd()})),
 		  "type":"text/html" ]);
 } 
 
@@ -243,7 +217,7 @@ mapping shutdown()
 {
   low_shutdown(0);
   return ([ "data":replace(Stdio.read_bytes("etc/shutdown.html"),
-			   ({"$docurl", "$PWD"}), ({roxen->docurl, getcwd()})),
+			   ({"$docurl", "$PWD"}), ({docurl, getcwd()})),
 	    "type":"text/html" ]);
 } 
 
@@ -959,132 +933,6 @@ public string full_status()
 }
 
 
-// These are now more or less outdated, the modules really _should_
-// pass the information about the current configuration to roxen,
-// to enable async operations. This information is in id->conf.
-//
-// In the future, most, if not all, of these functions will be moved
-// to the configuration object. The functions will still be here for
-// compatibility for a while, though.
-
-#ifndef NO_COMPAT
-
-public string *userlist(void|object id)
-{
-  object conf;
-
-  if(id) {
-    conf = current_configuration = id->conf;
-  } else {
-    // Hopefully this case never occurs.
-    conf = current_configuration;
-  }
-  if(conf && conf->auth_module)
-    return conf->auth_module->userlist();
-  return 0;
-}
-
-public string *user_from_uid(int u, void|object id)
-{
-  object conf;
-  if(id) {
-    conf = current_configuration = id->conf;
-  } else {
-    // Hopefully this case never occurs.
-    conf = current_configuration;
-  }
-  if(conf && conf->auth_module)
-    return conf->auth_module->user_from_uid(u);
-}
-
-public string last_modified_by(object file, object id)
-{
-  int *s;
-  int uid;
-  mixed *u;
-  
-  if(objectp(file)) s=file->stat();
-  if(!s || sizeof(s)<5) return LOCALE->anonymous_user();
-  uid=s[5];
-  u=user_from_uid(uid, id);
-  if(u) return u[0];
-  return LOCALE->anonymous_user();
-}
-
-#endif /* !NO_COMPAT */
-
-// FIXME 
-private object find_configuration_for(object bar)
-{
-  object maybe;
-  if(!bar) return configurations[0];
-  foreach(configurations, maybe)
-    if(maybe->otomod[bar]) return maybe;
-  return configurations[-1];
-}
-
-// FIXME  
-public array|string type_from_filename( string|void file, int|void to )
-{
-  mixed tmp;
-  object current_configuration;
-  string ext=extension(file);
-    
-  if(!current_configuration)
-    current_configuration = find_configuration_for(Simulate.previous_object());
-  if(!current_configuration->types_fun)
-    return to?({ "application/octet-stream", 0 }):"application/octet-stream";
-
-  while(file[-1] == '/') 
-    file = file[0..strlen(file)-2]; // Security patch? 
-  
-  if(tmp = current_configuration->types_fun(ext))
-  {
-    mixed tmp2,nx;
-    if(tmp[0] == "strip")
-    {
-      tmp2=file/".";
-      if(sizeof(tmp2) > 2)
-	nx=tmp2[-2];
-      if(nx && (tmp2=current_configuration->types_fun(nx)))
-	tmp[0] = tmp2[0];
-      else
-	if(tmp2=current_configuration->types_fun("default"))
-	  tmp[0] = tmp2[0];
-	else
-	  tmp[0]="application/octet-stream";
-    }
-    return to?tmp:tmp[0];
-  } else {
-    if(!(tmp=current_configuration->types_fun("default")))
-      tmp=({ "application/octet-stream", 0 });
-    return to?tmp:tmp[0]; // Per..
-  }
-  return 0;
-}
-
-#ifndef NO_COMPAT
-  
-#define COMPAT_ALIAS(X) mixed X(string file, object id){return id->conf->X(file,id);}
-
-COMPAT_ALIAS(find_dir);
-COMPAT_ALIAS(stat_file);
-COMPAT_ALIAS(access);
-COMPAT_ALIAS(real_file);
-COMPAT_ALIAS(is_file);
-COMPAT_ALIAS(userinfo);
-
-public mapping|int get_file(object id, int|void no_magic)
-{
-  return id->conf->get_file(id, no_magic);
-}
-
-public mixed try_get_file(string s, object id, int|void status, int|void nocache)
-{
-  return id->conf->try_get_file(s,id,status,nocache);
-}
-
-#endif /* !NO_COMPAT */
 
 int config_ports_changed = 0;
 
@@ -1188,7 +1036,6 @@ array(string) expand_dir(string d)
 
 array(string) last_dirs=0,last_dirs_expand;
 
-
 object load_from_dirs(array dirs, string f, object conf)
 {
   string dir;
@@ -1206,28 +1053,35 @@ object load_from_dirs(array dirs, string f, object conf)
 
   return 0;
 }
+
+
 static int abs_started;
-void restart_if_stuck (int force) {
+
+void restart_if_stuck (int force) 
+{
   remove_call_out(restart_if_stuck);
   if (!(QUERY(abs_engage) || force))
     return;
-  if(!abs_started) {
+  if(!abs_started) 
+  {
     abs_started = 1;
     roxen_perror("Anti-Block System Enabled.\n");
   }
   call_out (restart_if_stuck,10);
-  signal(signum("SIGALRM"),lambda( int n ) {
-			     roxen_perror(master()->describe_backtrace( ({
-			       sprintf("**** %s: ABS engaged! Trying to dump backlog: \n",
-				       ctime(time()) - "\n"),
-			       backtrace() }) ) );
-			     _exit(1); 	// It might now quit correctly otherwise, if it's
-			     //  locked up
-			   });
+  signal(signum("SIGALRM"),
+	 lambda( int n ) {
+	   roxen_perror(master()->describe_backtrace( ({
+	     sprintf("**** %s: ABS engaged! Trying to dump backlog: \n",
+		     ctime(time()) - "\n"),
+	     backtrace() }) ) );
+	   _exit(1); 	// It might now quit correctly otherwise, if it's
+	   //  locked up
+	 });
   alarm (60*QUERY(abs_timeout)+10);
 }
 
-void post_create () {
+void post_create () 
+{
   if (QUERY(abs_engage))
     call_out (restart_if_stuck,10);
   if (QUERY(suicide_engage))
@@ -1242,7 +1096,6 @@ void create()
     allmodules = decode_value(Stdio.read_bytes(".allmodules"));
   };
   add_constant("roxen", this_object());
-  add_constant("spinner", this_object());
   add_constant("load",    load);
   (object)"color.pike";
   (object)"fonts.pike";
@@ -1260,8 +1113,7 @@ string get_domain(int|void l)
 //  ConfigurationURL is set by the 'install' script.
   if(!(!l && sscanf(QUERY(ConfigurationURL), "http://%s:%*s", s)))
   {
-#if efun(gethostbyname)
-#if efun(gethostname)
+#if constant(gethostbyname) && constant(gethostname)
     f = gethostbyname(gethostname()); // First try..
     if(f)
       foreach(f, f) if (arrayp(f)) { 
@@ -1269,7 +1121,6 @@ string get_domain(int|void l)
 	  if(!s || strlen(s) < strlen(t))
 	    s=t;
       }
-#endif
 #endif
     if(!s)
     {
@@ -1304,7 +1155,7 @@ string get_domain(int|void l)
 private string get_my_url()
 {
   string s;
-#if efun(gethostname)
+#if constant(gethostname)
   s = (gethostname()/".")[0] + "." + query("Domain");
 #else
   s = "localhost";
@@ -1340,36 +1191,36 @@ int set_u_and_gid()
 	if(!g) g = (string)pw[3];
       } else
 	pw = getpwuid((int)u);
-#if efun(initgroups)
+#if constant(initgroups)
       catch {
 	if(pw)
 	  initgroups(pw[0], (int)g);
 	// Doesn't always work - David.
       };
 #endif
-#if efun(setuid)
+#if constant(setuid)
       if(QUERY(permanent_uid))
       {
-#if efun(setgid)
+#if constant(setgid)
 	setgid((int)g);
 #endif
 	setuid((int)u);
 	report_notice(LOCALE->setting_uid_gid_permanently((int)u, (int)g));
       } else {
 #endif
-#if efun(setegid) && defined(SET_EFFECTIVE)
+#if constant(setegid)
 	setegid((int)g);
 #else
 	setgid((int)g);
 #endif
-#if efun(seteuid) && defined(SET_EFFECTIVE)
+#if constant(seteuid)
 	seteuid((int)u);
 #else
 	setuid((int)u);
 #endif
 	report_notice(LOCALE->setting_uid_gid((int)u, (int)g));
 	return 1;
-#if efun(setuid)
+#if constant(setuid)
       }
 #endif
     }
@@ -1399,18 +1250,18 @@ void reload_all_configurations()
   object conf;
   array (object) new_confs = ({});
   mapping config_cache = ([]);
-  //  werror(sprintf("%O\n", roxen->config_stat_cache));
+  //  werror(sprintf("%O\n", config_stat_cache));
   int modified;
 
   report_notice(LOCALE->reloading_config_interface());
-  roxen->configs = ([]);
-  roxen->setvars(roxen->retrieve("Variables", 0));
-  roxen->initiate_configuration_port( 0 );
+  configs = ([]);
+  setvars(retrieve("Variables", 0));
+  initiate_configuration_port( 0 );
 
-  foreach(roxen->list_all_configurations(), string config)
+  foreach(list_all_configurations(), string config)
   {
     array err, st;
-    foreach(roxen->configurations, conf)
+    foreach(configurations, conf)
     {
       if(lower_case(conf->name) == lower_case(config))
       {
@@ -1418,9 +1269,9 @@ void reload_all_configurations()
       } else
 	conf = 0;
     }
-    if(!(st = roxen->config_is_modified(config))) {
+    if(!(st = config_is_modified(config))) {
       if(conf) {
-	config_cache[config] = roxen->config_stat_cache[config];
+	config_cache[config] = config_stat_cache[config];
 	new_confs += ({ conf });
       }
       continue;
@@ -1431,9 +1282,9 @@ void reload_all_configurations()
       // Closing ports...
       if (conf->server_ports) {
 	// Roxen 1.2.26 or later
-	Array.map(values(conf->server_ports), conf->do_dest);
+	Array.map(values(conf->server_ports), destruct);
       } else {
-	Array.map(indices(conf->open_ports), conf->do_dest);
+	Array.map(indices(conf->open_ports), destruct);
       }
       conf->stop();
       conf->invalidate_cache();
@@ -1442,7 +1293,7 @@ void reload_all_configurations()
     } else {
       if(err = catch
       {
-	conf = roxen->enable_configuration(config);
+	conf = enable_configuration(config);
       }) {
 	report_error(LOCALE->
 		     error_enabling_configuration(config,
@@ -1463,23 +1314,23 @@ void reload_all_configurations()
     new_confs += ({ conf });
   }
     
-  foreach(roxen->configurations - new_confs, conf)
+  foreach(configurations - new_confs, conf)
   {
     modified = 1;
     report_notice(LOCALE->disabling_configuration(conf->name));
     if (conf->server_ports) {
       // Roxen 1.2.26 or later
-      Array.map(values(conf->server_ports), conf->do_dest);
+      Array.map(values(conf->server_ports), destruct);
     } else {
-      Array.map(indices(conf->open_ports), conf->do_dest);
+      Array.map(indices(conf->open_ports), destruct);
     }
     conf->stop();
     destruct(conf);
   }
   if(modified) {
-    roxen->configurations = new_confs;
-    roxen->config_stat_cache = config_cache;
-    roxen->unload_configuration_interface();
+    configurations = new_confs;
+    config_stat_cache = config_cache;
+    unload_configuration_interface();
   }
 }
 
@@ -1487,7 +1338,6 @@ object enable_configuration(string name)
 {
   object cf = Configuration(name);
   configurations += ({ cf });
-  current_configuration = cf;
   report_notice(LOCALE->enabled_server(name));
   
   return cf;
@@ -1651,7 +1501,7 @@ private void define_global_variables( int argc, array (string) argv )
 	  "the cache will remove a few files. This check may work "
 	  "half-hearted if the diskcache is spread over several filesystems.",
 	  0,
-#if efun(filesystem_stat)
+#if constant(filesystem_stat)
 	  cache_disabled_p
 #else
 	  1
@@ -1904,37 +1754,6 @@ private void define_global_variables( int argc, array (string) argv )
 	  "clients, and new versions of old ones.");
 
   globvar("next_supports_update", time()+3600, "", TYPE_INT,"",0,1);
-  
-#ifdef ENABLE_NEIGHBOURHOOD
-  globvar("neighborhood", 0,
-	  "Neighborhood: Register with other Roxen servers on the local network"
-	  ,TYPE_FLAG|VAR_MORE,
-	  "If this option is set, Roxen will automatically broadcast it's "
-	  "existence to other Roxen servers on the local network.");
-
-  globvar("neigh_tcp_ips",  ({}), "Neighborhood: TCP hosts",
-  TYPE_STRING_LIST|VAR_MORE,
-  "This is the list of direct host<-->host links to establish. "
-  "The local host is always present (if the neighbourhood functionality "
-  "is at all enabled).");
-
-
-  globvar("neigh_ips",  ({lambda(){
-			    catch {
-			      mixed foo = gethostbyname(gethostname());
-			      string n = reverse(foo[1][0]);
-			      sscanf(n,"%*d.%s", n);
-			      n=reverse(n)+".";
-			      // Currently only defaults to C-nets..
-			      return n+"255";
-			    };
-			    return "0.0.0.0";
-			  }()}), "Neighborhood: Broadcast addresses", TYPE_STRING_LIST|VAR_MORE,
-			  "");
-
-  globvar("neigh_com", "", "Neighborhood: Server informational comment",
-	  TYPE_TEXT|VAR_MORE, "A short string describing this server.");
-#endif /* ENABLE_NEIGHBOURHOOD */  
 
   globvar("abs_engage", 0, "Anti-Block-System: Enable", TYPE_FLAG|VAR_MORE,
 	  "If set, it will enable the anti-block-system. "
@@ -1989,17 +1808,6 @@ private void define_global_variables( int argc, array (string) argv )
 }
 
 
-
-// To avoid stack error :-) This is really a bug in Pike, that is
-// probably fixed by now, but since I needed a catch() as well, I
-// never did come around to removing the hack.
-
-void do_dest(object|void o)
-{
-  catch {
-    destruct(o);
-  };
-}
 
 // return all available fonts. Taken from the font_dirs list.
 array font_cache;
@@ -2080,8 +1888,6 @@ void initiate_configuration_port( int|void first )
       o = 0;	// Be sure that there are no references left...
     }
   }
-
-  current_configuration = 0;	// Compatibility...
 
   // Now we can create the new ports.
   foreach(indices(new_ports), string key)
@@ -2200,11 +2006,11 @@ void scan_module_dir(string d)
 	    }
 	    // Set the module-filename, so that create in the
 	    // new object can get it.
-	    roxen->last_module_name = file;
+	    last_module_name = file;
 
 	    array err = catch(o =  p());
 
-	    roxen->last_module_name = 0;
+	    last_module_name = 0;
 
 	    if (err) {
 	      MD_PERROR((" load failed"));
@@ -2287,82 +2093,6 @@ void rescan_modules()
   report_notice(LOCALE->module_scan_done(sizeof(allmodules)));
 }
 
-// ================================================= 
-// Parse options to Roxen. This function is quite generic, see the
-// main() function for more info about how it is used.
-
-private string find_arg(array argv, array|string shortform, 
-			array|string|void longform, 
-			array|string|void envvars, 
-			string|void def)
-{
-  string value;
-  int i;
-
-  for(i=1; i<sizeof(argv); i++)
-  {
-    if(argv[i] && strlen(argv[i]) > 1)
-    {
-      if(argv[i][0] == '-')
-      {
-	if(argv[i][1] == '-')
-	{
-	  string tmp;
-	  int nf;
-	  if(!sscanf(argv[i], "%s=%s", tmp, value))
-	  {
-	    if(i < sizeof(argv)-1)
-	      value = argv[i+1];
-	    else
-	      value = argv[i];
-	    tmp = argv[i];
-	    nf=1;
-	  }
-	  if(arrayp(longform) && search(longform, tmp[2..]) != -1)
-	  {
-	    argv[i] = 0;
-	    if(i < sizeof(argv)-1)
-	      argv[i+nf] = 0;
-	    return value;
-	  } else if(longform && longform == tmp[2..]) {
-	    argv[i] = 0;
-	    if(i < sizeof(argv)-1)
-	      argv[i+nf] = 0;
-	    return value;
-	  }
-	} else {
-	  if((arrayp(shortform) && search(shortform, argv[i][1..1]) != -1) 
-	     || stringp(shortform) && shortform == argv[i][1..1])
-	  {
-	    if(strlen(argv[i]) == 2)
-	    {
-	      if(i < sizeof(argv)-1)
-		value =argv[i+1];
-	      argv[i] = argv[i+1] = 0;
-	      return value;
-	    } else {
-	      value=argv[i][2..];
-	      argv[i]=0;
-	      return value;
-	    }
-	  }
-	}
-      }
-    }
-  }
-
-  if(arrayp(envvars))
-    foreach(envvars, value)
-      if(getenv(value))
-	return getenv(value);
-  
-  if(stringp(envvars))
-    if(getenv(envvars))
-      return getenv(envvars);
-
-  return def;
-}
-
 // do the chroot() call. This is not currently recommended, since
 // roxen dynamically loads modules, all module files must be
 // available at the new location.
@@ -2401,10 +2131,7 @@ void create_pid_file(string where)
 #endif
 }
 
-// External multi-threaded data shuffler. This leaves roxen free to
-// serve new requests. The file descriptors of the open files and the
-// clients are sent to the program, then the shuffler just shuffles 
-// the data to the client.
+
 void shuffle(object from, object to,
 	      object|void to2, function(:void)|void callback)
 {
@@ -2430,7 +2157,6 @@ void shuffle(object from, object to,
 
 
 static private int _recurse;
-
 // FIXME: Ought to use the shutdown code.
 void exit_when_done()
 {
@@ -2461,7 +2187,7 @@ void exit_when_done()
     fd->connect( portno[o][2]!="Any"?portno[o][2]:"127.0.0.1", portno[o][0] );
     destruct(fd);
 #endif
-    do_dest(o);
+    destruct(o);
   }
   
   // Then wait for all sockets, but maximum 10 minutes.. 
@@ -2496,11 +2222,6 @@ void exit_it()
   exit(-1);	// Restart.
 }
 
-#ifdef ENABLE_NEIGHBOURHOOD
-object neighborhood;
-#endif /* ENABLE_NEIGHBOURHOOD */
-
-
 // And then we have the main function, this is the oldest function in
 // Roxen :) It has not changed all that much since Spider 2.0.
 int main(int|void argc, array (string)|void argv)
@@ -2514,14 +2235,12 @@ int main(int|void argc, array (string)|void argv)
 
   report_notice(LOCALE->starting_roxen());
   
-#ifdef FD_DEBUG  
   mark_fd(0, "Stdin");
   mark_fd(1, "Stdout");
   mark_fd(2, "Stderr");
-#endif
 
   configuration_dir =
-    find_arg(argv, "d",({"config-dir","configuration-directory" }),
+    Getopt.find_option(argv, "d",({"config-dir","configuration-directory" }),
 	     ({ "ROXEN_CONFIGDIR", "CONFIGURATIONS" }), "../configurations");
 
   if(configuration_dir[-1] != '/')
@@ -2530,10 +2249,10 @@ int main(int|void argc, array (string)|void argv)
 
   startpid = getppid();
   roxenpid = getpid();
-  create_pid_file(find_arg(argv, "p", "pid-file", "ROXEN_PID_FILE"));
+  create_pid_file(Getopt.find_option(argv, "p", "pid-file", "ROXEN_PID_FILE"));
 
   // Dangerous...
-  if(tmp = find_arg(argv, "r", "root")) fix_root(tmp);
+  if(tmp = Getopt.find_option(argv, "r", "root")) fix_root(tmp);
 
   argv -= ({ 0 });
   argc = sizeof(argv);
@@ -2541,9 +2260,6 @@ int main(int|void argc, array (string)|void argv)
   roxen_perror("Restart initiated at "+ctime(time())); 
 
   define_global_variables(argc, argv);
-#ifdef ENABLE_NEIGHBOURHOOD
-  neighborhood = (object)"neighborhood";
-#endif /* ENABLE_NEIGHBOURHOOD */
   
   create_pid_file(QUERY(pidfile));
 
@@ -2556,9 +2272,6 @@ int main(int|void argc, array (string)|void argv)
   
   initiate_configuration_port( 1 );
   enable_configurations();
-#if 0
-  restore_current_user_id_number();
-#endif
 // Rebuild the configuration interface tree if the interface was
 // loaded before the configurations was enabled (a configuration is a
 // virtual server, perhaps the name should be changed internally as

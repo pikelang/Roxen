@@ -2,7 +2,7 @@
  * A quite complex directory module. Generates macintosh like listings.
  */
 
-string cvs_version = "$Id: directories.pike,v 1.24 1998/10/11 06:32:49 peter Exp $";
+string cvs_version = "$Id: directories.pike,v 1.25 1998/10/12 22:55:33 per Exp $";
 int thread_safe=1;   /* Probably. Check _root */
 
 #include <module.h>
@@ -201,7 +201,7 @@ void create()
 
 function global_describer, head, foot;
 
-void start()
+void start(int n, object c)
 {
   global_describer = this_object()["describe_dir_node_" "mac"];
   head = this_object()["head_dir_"  "mac"];
@@ -248,7 +248,7 @@ string find_readme(object node, object id)
   foreach(({ "README.html", "README"}), f)
     if(n=node->descend(f,1))
     {
-      rm=roxen->try_get_file(n->path(), id);
+      rm=id->conf->try_get_file(n->path(), id);
       if(rm) if(f[-1] == 'l')
 	return "<hr noshade>"+rm;
       else
@@ -303,7 +303,7 @@ array|string describe_dir_node_mac(object node, object id)
       
      default:
       mixed tmp;
-      tmp = roxen->type_from_filename(filename, 1);
+      tmp = id->conf->type_from_filename(filename, 1);
       if(!tmp) tmp=({ "Unknown", 0 });
       type = tmp[0];
       icon = image_from_type(type);
@@ -342,14 +342,14 @@ object create_node(string f, object id, int nocache)
     my_node = my_node->descend(tmp);
   
   if(!strlen(f) || (f[-1] != '/')) f += "/";
-  dir = roxen->find_dir(f, id);
+  dir = id->conf->find_dir(f, id);
   
   if(sizeof(path))
     my_node->data = path[-1];
   else
     my_node->data = "";
   
-  my_node->stat = roxen->stat_file(f, id);
+  my_node->stat = id->conf->stat_file(f, id);
   my_node->finished=1;
   my_node->describer = global_describer;
   
@@ -359,7 +359,7 @@ object create_node(string f, object id, int nocache)
   {
     node = my_node->descend(file);
     node->data = file;
-    node->stat = roxen->stat_file(f + file, id);
+    node->stat = id->conf->stat_file(f + file, id);
     if(node->stat && node->stat[1] >= 0) node->finished=1;
     node->describer = global_describer;
   }

@@ -1,4 +1,4 @@
-// string cvs_version = "$Id: module_support.pike,v 1.17 1998/10/12 22:13:11 per Exp $";
+// string cvs_version = "$Id: module_support.pike,v 1.18 1998/10/12 22:54:14 per Exp $";
 #include <roxen.h>
 #include <module.h>
 
@@ -119,6 +119,7 @@ mixed set(string var, mixed val)
 /* ================================================= */
 /* ================================================= */
 
+#if 0
 #define SIMULATE(X)  mixed X( mixed ...a )				\
 {									\
   if(roxenp()->current_configuration)					\
@@ -132,3 +133,4 @@ SIMULATE(enable_module);
 SIMULATE(load_module);
 SIMULATE(find_module);
 SIMULATE(register_module_load_hook);
+#endif

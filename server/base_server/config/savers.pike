@@ -1,4 +1,4 @@
-/* $Id: savers.pike,v 1.6 1997/10/12 21:10:29 grubba Exp $ */
+/* $Id: savers.pike,v 1.7 1998/10/12 22:55:32 per Exp $ */
 #include <confignode.h>
 #include <module.h>
 
@@ -75,7 +75,6 @@ void save_module_master_copy(object o, object config)
   string s;
   object n;
 
-  roxen->current_configuration = config;
   roxen->store(s=o->data->sname+"#0", o->data->master->query(), 0, o->config());
   o->data->master->start(2, config);
   o->config()->invalidate_cache();

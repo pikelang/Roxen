@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.161 1998/10/12 22:13:07 per Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.162 1998/10/12 22:54:11 per Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -334,7 +334,6 @@ void stop()
 public string type_from_filename( string file, int|void to )
 {
   mixed tmp;
-  object current_configuration;
   string ext=extension(file);
     
   if(!types_fun)
@@ -2310,7 +2309,6 @@ object enable_module( string modname )
   string id;
   mapping module;
   mapping enabled_modules;
-  roxen->current_configuration = this_object();
   modname = replace(modname, ".lpc#","#");
   
   sscanf(modname, "%s#%s", modname, id );
@@ -3067,7 +3065,6 @@ int load_module(string module_file)
   int start_time = gethrtime();
 #endif
   // It is not thread-safe to use this.
-  roxen->current_configuration = this_object();
 #ifdef MODULE_DEBUG
   perror("\nLoading " + module_file + "... ");
 #endif
@@ -3368,7 +3365,6 @@ void enable_all_modules()
     if(err = catch( enable_module( tmp_string ) ))
       report_error(LOCALE->enable_module_failed(tmp_string, 
 						describe_backtrace(err)));
-  roxen->current_configuration = 0;
 #if efun(gethrtime)
   perror("\nAll modules for %s enabled in %4.3f seconds\n\n", query_name(),
 	 (gethrtime()-start_time)/1000000.0);
@@ -3377,7 +3373,6 @@ void enable_all_modules()
 
 void create(string config)
 {
-  roxen->current_configuration = this;
   name=config;
 
   perror("Creating virtual server '"+config+"'\n");
