@@ -102,11 +102,12 @@ string parse( RequestID id )
   if( id->variables->server )
   {
     werror("Change to "+id->variables->server+"\n" );
+    mv("../local/environment", "../local/environment~");
     Stdio.write_file( combine_path(roxen.configuration_dir,
 				   "server_version"),
 		      id->variables->server );
-    roxen.restart( 0.1, 100 );
-    return (string)_(47,"Changing roxen version");
+       roxen->shutdown(0.5);
+    return (string)_(47,"Shutting down and changing roxen version");
   }
 
   res += "<input type=hidden name='action' value='change_version.pike' />";
@@ -155,8 +156,7 @@ string parse( RequestID id )
   res += "<table><tr><td valign='top'>"
     "<img src='&usr.err-2;' alt='#' /></td>\n"
     "<td>"+
-    _(154,"Note that the server will be automatically restarted with "
-      "the new version.")+
+    _(154,"Note that you will have to start the new server manually because you may have to answer a few questions for the new environment file.")+
     "</td>\n"
     "</tr></table>\n";
   
