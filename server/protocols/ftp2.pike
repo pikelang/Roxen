@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.46 1998/05/21 17:52:28 grubba Exp $
+ * $Id: ftp2.pike,v 1.47 1998/05/23 23:48:49 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -199,10 +199,12 @@ class FileWrapper
   static private function read_cb;
   static private function close_cb;
   static private mixed id;
+  static private object ftpsession;
 
   static private void read_callback(mixed i, string s)
   {
     read_cb(id, convert(s));
+    ftpsession->touch_me();
   }
 
   static private void close_callback(mixed i)
@@ -211,6 +213,7 @@ class FileWrapper
     if (f) {
       BACKEND_CLOSE(f);
     }
+    ftpsession->touch_me();
   }
 
   void set_nonblocking(function r_cb, function w_cb, function c_cb)
@@ -238,20 +241,23 @@ class FileWrapper
 
   string read(int|void n)
   {
+    ftpsession->touch_me();
     return(convert(f->read(n)));
   }
 
   void close()
   {
+    ftpsession->touch_me();
     if (f) {
       f->set_blocking();
       BACKEND_CLOSE(f);
     }
   }
 
-  void create(object f_)
+  void create(object f_, object ftpsession_)
   {
     f = f_;
+    ftpsession = ftpsession_;
   }
 }
 
@@ -282,6 +288,16 @@ class FromAsciiWrapper
   }
 }
 
+class BinaryWrapper
+{
+  inherit FileWrapper;
+
+  static string convert(string s)
+  {
+    return(s);
+  }
+}
+
 // EBCDIC Wrappers here.
 
 
@@ -304,6 +320,7 @@ class PutFileWrapper
   int close(string|void how)
   {
     DWRITE("FTP: PUT: close()\n");
+    ftpsession->touch_me();
     if(how != "w" && !done) {
       ftpsession->send(response_code, ({ response }));
       done = 1;
@@ -324,6 +341,7 @@ class PutFileWrapper
   string read(mixed ... args)
   {
     DWRITE("FTP: PUT: read()\n");
+    ftpsession->touch_me();
     string r = from_fd->read(@args);
     if(stringp(r))
       recvd += sizeof(r);
@@ -333,6 +351,7 @@ class PutFileWrapper
   static mixed my_read_callback(mixed id, string data)
   {
     DWRITE(sprintf("FTP: PUT: my_read_callback(X, \"%s\")\n", data||""));
+    ftpsession->touch_me();
     if(stringp(data))
       recvd += sizeof(data);
     return other_read_callback(id, data);
@@ -341,6 +360,7 @@ class PutFileWrapper
   void set_read_callback(function read_callback)
   {
     DWRITE("FTP: PUT: set_read_callback()\n");
+    ftpsession->touch_me();
     if(read_callback) {
       other_read_callback = read_callback;
       from_fd->set_read_callback(my_read_callback);
@@ -366,6 +386,8 @@ class PutFileWrapper
   int write(string data)
   {
     DWRITE(sprintf("FTP: PUT: write(\"%s\")\n", data||""));
+
+    ftpsession->touch_me();
 
     int n, code;
     string msg;
@@ -504,6 +526,7 @@ class LSFile
 
   static string cwd;
   static array(string) argv;
+  static object ftpsession;
 
   static array(string) output_queue = ({});
   static int output_pos;
@@ -763,6 +786,8 @@ class LSFile
   {
     DWRITE(sprintf("FTP: LSFile->read(%d, %d)\n", n, not_all));
 
+    ftpsession->touch_me();
+
     while(sizeof(output_queue) <= output_pos) {
       // Clean anything pending in the queue.
       output_queue = ({});
@@ -788,7 +813,7 @@ class LSFile
   }
 
   void create(string cwd_, array(string) argv_, int flags_,
-	      object session_, string output_mode_)
+	      object session_, string output_mode_, object ftpsession_)
   {
     DWRITE(sprintf("FTP: LSFile(\"%s\", %O, %08x, X, \"%s\")\n",
 		   cwd_, argv_, flags_, output_mode_));
@@ -797,7 +822,8 @@ class LSFile
 
     cwd = cwd_;
     argv = argv_;
-    output_mode = output_mode;
+    output_mode = output_mode_;
+    ftpsession = ftpsession_;
     
     array(string) files = allocate(sizeof(argv));
     int n_files;
@@ -1215,12 +1241,21 @@ class FTPSession
     "L":"LOCAL",
   ]);
 
+  static private int time_touch = time();
+
   static private object(ADT.queue) to_send = ADT.queue();
 
   static private int end_marker = 0;
 
+  void touch_me()
+  {
+    time_touch = time();
+  }
+
   static private string write_cb()
   {
+    touch_me();
+
     if (to_send->is_empty()) {
 
       DWRITE(sprintf("FTP2: write_cb(): Empty send queue.\n"));
@@ -1372,6 +1407,8 @@ class FTPSession
 
   void pasv_accept_callback(mixed id)
   {
+    touch_me();
+
     if(pasv_port) {
       object fd = pasv_port->accept();
       if(fd) {
@@ -1398,6 +1435,8 @@ class FTPSession
   static private void ftp_async_accept(function(object,mixed ...:void) fun,
 				       mixed ... args)
   {
+    touch_me();
+
     if (sizeof(pasv_accepted)) {
       fun(pasv_accepted[0], @args);
       pasv_accepted = pasv_accepted[1..];
@@ -1617,6 +1656,8 @@ class FTPSession
   {
     DWRITE(sprintf("FTP: connected_to_send(X, %O)\n", file));
 
+    touch_me();
+
     object pipe=roxen->pipe();
 
     if(!file->len)
@@ -1651,7 +1692,7 @@ class FTPSession
 	// The list_stream object doesn't support nonblocking I/O,
 	// but converts to ASCII anyway, so we don't have to do
 	// anything about it.
-	file->file = ToAsciiWrapper(file->file);
+	file->file = ToAsciiWrapper(file->file, this_object());
       }
       break;
     case "E":
@@ -1662,6 +1703,9 @@ class FTPSession
     default:
       // "I" and "L"
       // Binary -- no conversion needed.
+      if (objectp(file->file) && file->file->set_nonblocking) {
+	file->file = BinaryWrapper(file->file, this_object());
+      }
       break;
     }
     pipe->set_done_callback(send_done_callback, ({ fd, session }) );
@@ -1681,6 +1725,8 @@ class FTPSession
   {
     DWRITE(sprintf("FTP: connected_to_receive(X, \"%s\")\n", args));
 
+    touch_me();
+
     if (fd) {
       send(150, ({ sprintf("Opening %s mode data connection for %s.",
 			   modes[mode], args) }));
@@ -1691,13 +1737,14 @@ class FTPSession
 
     switch(mode) {
     case "A":
-      fd = FromAsciiWrapper(fd);
+      fd = FromAsciiWrapper(fd, this_object());
       break;
     case "E":
       send(504, ({ "EBCDIC mode not supported." }));
       return;
     default:	// "I" and "L"
       // Binary, no need to do anything.
+      fd = BinaryWrapper(fd, this_object());
       break;
     }
 
@@ -2043,7 +2090,8 @@ class FTPSession
 	flags &= ~LS_FLAG_m;
       }
 
-      file->file = LSFile(cwd, argv[1..], flags, session, file->mode);
+      file->file = LSFile(cwd, argv[1..], flags, session,
+			  file->mode, this_object());
     }
 
     if (!file->full_path) {
@@ -2937,18 +2985,26 @@ class FTPSession
   static private void timeout()
   {
     if (fd) {
-      // Recomended by RFC 1123 4.1.3.2
-      send(421, ({ "Connection timed out." }));
-      send(0,0);
-      master_session->method = "QUIT";
-      master_session->not_query = user || "Anonymous";
-      master_session->conf->log(([ "error":408 ]), master_session);
+      int t = (time()- time_touch);
+      if (t > FTP2_TIMEOUT) {
+	// Recomended by RFC 1123 4.1.3.2
+	send(421, ({ "Connection timed out." }));
+	send(0,0);
+	master_session->method = "QUIT";
+	master_session->not_query = user || "Anonymous";
+	master_session->conf->log(([ "error":408 ]), master_session);
+      } else {
+	// Not time yet to sever the connection.
+	call_out(timeout, FTP2_TIMEOUT + 30 + t);
+      }
     }
   }
 
   static private void got_command(mixed ignored, string line)
   {
     DWRITE(sprintf("FTP2: got_command(X, \"%s\")\n", line));
+
+    touch_me();
 
     string cmd = line;
     string args;
@@ -2959,8 +3015,6 @@ class FTPSession
       // Some stupid ftp-proxies send this.
       return;	// Even less than a NOOP.
     }
-
-    remove_call_out(timeout);
 
     if ((i = search(line, " ")) != -1) {
       cmd = line[..i-1];
@@ -2988,7 +3042,6 @@ class FTPSession
 		"ACCT", "QUIT", "ABOR", "HELP" >)[cmd]) {
 	  send(530, ({ "You need to login first." }));
 
-	  call_out(timeout, FTP2_TIMEOUT);
 	  return;
 	}
       }
@@ -3009,7 +3062,8 @@ class FTPSession
     } else {
       send(502, ({ sprintf("Unknown command '%s'.", cmd) }));
     }
-    call_out(timeout, FTP2_TIMEOUT);
+
+    touch_me();
   }
 
   void con_closed()
