@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.323 1999/09/05 01:40:32 per Exp $
+ * $Id: roxen.pike,v 1.324 1999/09/05 02:20:33 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.323 1999/09/05 01:40:32 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.324 1999/09/05 02:20:33 per Exp $";
 
 object backend_thread;
 object argcache;
@@ -379,7 +379,7 @@ class container
 #endif
 
 // Locale support
-object(Locale.Roxen.standard) default_locale=Locale.Roxen.standard /* nihongo */;
+Locale.Roxen.standard default_locale=Locale.Roxen.standard;
 object fonts;
 #ifdef THREADS
 object locale = thread_local();
@@ -1829,6 +1829,9 @@ void create()
   add_constant( "Roxen.set_locale", set_locale );
   add_constant( "Roxen.locale", locale );
   add_constant( "Locale.Roxen", Locale.Roxen );
+  add_constant( "Locale.Roxen.standard", Locale.Roxen.standard );
+  add_constant( "Locale.Roxen.standard.register_module_doc", 
+                 Locale.Roxen.standard.register_module_doc );
   add_constant( "roxen.ImageCache", ImageCache );
   // compatibility
   add_constant( "hsv_to_rgb",  Colors.hsv_to_rgb  );
