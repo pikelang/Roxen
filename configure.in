@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.61 1998/12/07 22:48:56 grubba Exp $
+# $Id: configure.in,v 1.62 1999/01/15 08:14:58 neotron Exp $
 #
 
 prefix=$PWD
@@ -141,6 +141,9 @@ case "$with_pike" in
   ;;
   0.6)
     pike_version=0.6
+  ;;
+  0.7)
+    pike_version=0.7
   ;;
   dual|multi)
     with_pike=dual
