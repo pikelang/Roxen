@@ -1,6 +1,6 @@
 function renderLink(text, action, base, target)
 {
-  return "&nbsp;<a href='"+base+"?action="+action+"' "+
+  return "&nbsp;&nbsp;<a href='"+base+"?action="+action+"' "+
     (target != ""?" target='"+target+"' ":"")+
     "onMouseOver=\"setStatus('"+text+"');\" "+
     "onMouseOut=\"setStatus('');\""+
