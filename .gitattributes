@@ -24,4 +24,5 @@
 /modules/mail/clientlayer.pike foreign_ident
 /modules/mail/mailadmin.pike foreign_ident
 /modules/mail/mailtags.pike foreign_ident
+/modules/mail/testrcpt.pike foreign_ident
 /modules/protocols/smtp.pike foreign_ident
