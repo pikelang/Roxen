@@ -10,7 +10,7 @@ inherit "module";
 int inited;
 
 constant cvs_version =
-  "$Id: userdb_sql.pike,v 1.7 2001/11/21 15:49:34 grubba Exp $";
+  "$Id: userdb_sql.pike,v 1.8 2002/02/07 16:21:39 grubba Exp $";
 
 LocaleString module_name = _(1,"Authentication: SQL user database");
 LocaleString module_doc  = _(2,"This module implements a user database via "
@@ -48,7 +48,8 @@ class SqlUser
 	return (password == crypted_password());
 #if constant(Crypto.crypt_md5)
       case "md5 crypt":
-	return crypt_md5( password, crypted_password()) == crypted_password();
+	return Crypto.crypt_md5( password, crypted_password()) ==
+	 crypted_password();
 #endif
     }
   }
