@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version="$Id: vform.pike,v 1.12 2000/09/17 18:23:24 nilsson Exp $";
+constant cvs_version="$Id: vform.pike,v 1.13 2000/10/03 14:07:17 kuntri Exp $";
 constant thread_safe=1;
 
 constant module_type = MODULE_TAG;
@@ -393,7 +393,7 @@ widgets in this container as well.
   <vinput name='mail' type='email'>&_.warning;</vinput>
   <input type='hidden' name='user' value='&form.userid:' />
   <input type='submit' />
-</form>
+</vform>
 <then><redirect to='other_page.html' /></then>
 <else>No, this form is still not valid</else>
 </ex>
@@ -404,7 +404,7 @@ widgets in this container as well.
 		"<attr name=value value=string>The text on the button.</attr>",
 		"clear":"<desc tag>Resets all the widgets to their initial values.</desc>"
 		"<attr name=value value=string>The text in the button.</attr>",
-		"vselect":"<desc cont>Mail stewa@roxen.com for a description</desc>",
+
 		"verify-fail":"<desc tag>If put in a vform tag, the vform will always fail."
 		" This is useful e.g. if you put the verify-fail tag in an if tag.</desc>",
 		// It's a tagdoc bug that these, locally defined if-plugins does not show up
