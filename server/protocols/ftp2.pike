@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.58 1998/06/26 15:47:13 grubba Exp $
+ * $Id: ftp2.pike,v 1.59 1998/06/27 15:24:12 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -1589,11 +1589,11 @@ class FTPSession
       break;
     case 401:
     case 403:
-      send(532, ({ sprintf("'%s': %s: Access denied.",
+      send(530, ({ sprintf("'%s': %s: Access denied.",
 			   cmd, f) }));
       break;
     case 405:
-      send(532, ({ sprintf("'%s': %s: Method not allowed.",
+      send(530, ({ sprintf("'%s': %s: Method not allowed.",
 			   cmd, f) }));
       break;
     case 500:
@@ -1773,7 +1773,7 @@ class FTPSession
 	}
 	switch(session->file->error) {
 	case 401:
-	  send(532, ({ sprintf("%s: Need account for storing files.", args)}));
+	  send(530, ({ sprintf("%s: Need account for storing files.", args)}));
 	  break;
 	case 501:
 	  send(502, ({ sprintf("%s: Command not implemented.", args) }));
@@ -2225,7 +2225,7 @@ class FTPSession
 #endif /* 0 */
 	conf->log(([ "error":200 ]), master_session);
       } else {
-	send(532, ({ "Anonymous ftp disabled" }));
+	send(530, ({ "Anonymous ftp disabled" }));
 	conf->log(([ "error":403 ]), master_session);
       }
     } else {
@@ -2237,7 +2237,7 @@ class FTPSession
 	if (conf->misc->ftp_sessions[user]++ >=
 	    Query("ftp_user_session_limit")) {
 	  // Session limit exceeded.
-	  send(532, ({
+	  send(530, ({
 	    sprintf("Concurrent session limit (%d) exceeded for user \"%s\".",
 		    Query("ftp_user_session_limit"), user)
 	  }));
@@ -2314,7 +2314,7 @@ class FTPSession
 
     if (!Query("named_ftp") ||
 	!check_shell(master_session->misc->shell)) {
-      send(532, ({ "You are not allowed to use named-ftp.",
+      send(530, ({ "You are not allowed to use named-ftp.",
 		   "Try using anonymous, or check /etc/shells" }));
       conf->log(([ "error":402 ]), master_session);
       master_session->auth = 0;
