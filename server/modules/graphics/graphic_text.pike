@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.142 1998/08/14 12:20:02 neotron Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.143 1998/08/14 12:33:29 neotron Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -1106,8 +1106,11 @@ mapping find_cached_args(int num)
 {
   if(!args_restored) restore_cached_args();
   if(cached_args[num]) return cached_args[num];
+#if 0
+  This can be really slow. If the args are restored, we should be happy anyway. 
   restore_cached_args();
   if(cached_args[num]) return cached_args[num];
+#endif
   return 0;
 }
 
@@ -1122,8 +1125,13 @@ int find_or_insert(mapping find)
   array b = values(cached_args);
   int i;
   for(i=0; i<sizeof(a); i++) if(equal(f2, b[i]))  return a[i];
+#if 0
+  Again often a bad idea. Maybe should be a configurable option
+  (could be useful if you run several servers against the same cache fiel,
+   which you 2
   restore_cached_args();
   for(i=0; i<sizeof(a); i++) if(equal(f2, b[i])) return a[i];
+#endif
   cached_args[number]=f2; // Save the same that you try to restore, please.
   remove_call_out(save_cached_args);
   call_out(save_cached_args, 10);
