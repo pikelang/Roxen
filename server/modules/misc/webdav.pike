@@ -1,6 +1,6 @@
 // Protocol support for RFC 2518
 //
-// $Id: webdav.pike,v 1.13 2004/04/30 11:06:25 grubba Exp $
+// $Id: webdav.pike,v 1.14 2004/05/03 16:05:00 grubba Exp $
 //
 // 2003-09-17 Henrik Grubbström
 
@@ -9,7 +9,7 @@ inherit "module";
 #include <module.h>
 #include <request_trace.h>
 
-constant cvs_version = "$Id: webdav.pike,v 1.13 2004/04/30 11:06:25 grubba Exp $";
+constant cvs_version = "$Id: webdav.pike,v 1.14 2004/05/03 16:05:00 grubba Exp $";
 constant thread_safe = 1;
 constant module_name = "DAV: Protocol support";
 constant module_type = MODULE_FIRST;
@@ -114,6 +114,11 @@ class PatchPropertyRemoveCmd(string property_name)
   }
 }
 
+static constant Node = Parser.XML.Tree.Node;
+static constant RootNode = Parser.XML.Tree.RootNode;
+static constant HeaderNode = Parser.XML.Tree.HeaderNode;
+static constant ElementNode = Parser.XML.Tree.ElementNode;
+
 //! Handle WEBDAV requests.
 mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
 {
@@ -169,7 +174,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
     if (!xml_data) {
       // Refresh.
       int(-2..1)|DAVLock state =
-	id->conf->check_locks(id->not_query, depth != 0, id);
+	id->conf->check_locks(id->not_query, 0, id);
       if (intp(state)) {
 	if (state) {
 	  return Roxen.http_status(423, "Locked by other user");
@@ -180,12 +185,12 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
       id->conf->refresh_lock(lock = state, id);
     } else {
       // New lock.
-      Parser.XML.Tree.Node lock_info_node =
+      Node lock_info_node =
 	xml_data->get_first_element("DAV:lockinfo", 1);
       if (!lock_info_node) {
 	return Roxen.http_status(422, "Missing DAV:lockinfo.");
       }
-      Parser.XML.Tree.Node lock_scope_node =
+      Node lock_scope_node =
 	lock_info_node->get_first_element("DAV:lockscope", 1);
       if (!lock_scope_node) {
 	return Roxen.http_status(422, "Missing DAV:lockscope.");
@@ -203,7 +208,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
       if (!lockscope) {
 	return Roxen.http_status(422, "Unsupported DAV:lockscope.");
       }
-      Parser.XML.Tree.Node lock_type_node =
+      Node lock_type_node =
 	  lock_info_node->get_first_element("DAV:locktype", 1);
       if (!lock_type_node) {
 	return Roxen.http_status(422, "Missing DAV:locktype.");
@@ -213,17 +218,16 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
 	return Roxen.http_status(422, "Missing DAV:write.");
       }
       string locktype = "DAV:write";
-      Parser.XML.Tree.Node owner_node =
-	lock_info_node->get_first_element("DAV:owner", 1);
+      Node owner_node = lock_info_node->get_first_element("DAV:owner", 1);
 
       // Parameters OK, try to create a lock.
 
       mapping(string:mixed)|DAVLock new_lock =
 	id->conf->lock_file(id->not_query,
-			    "DAV:write",
-			    lockscope,
 			    depth != 0,
-			    owner_node,
+			    lockscope,
+			    "DAV:write",
+			    owner_node->render_xml(),
 			    id);
       if (mappingp(new_lock)) {
 	// Error
@@ -233,20 +237,15 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
       }
       lock = new_lock;
     }
-    Parser.XML.Tree.Node root =
-      Parser.XML.Tree.parse_input(
-	"<?xml version='1.0' encoding='utf-8'?>"
-	"<DAV:prop xmlns:DAV='DAV:' "
-	// MS namespace for data types; see comment in
-	// XMLPropStatNode.add_property. Note: The XML parser in the
-	// MS DAV client is broken and requires the break of the last
-	// word "datatypesdt" to be exactly at this point.
-	"xmlns:MS='urn:schemas-microsoft-com:datatypes'>"
-	"<DAV:lockdiscovery/>"
-	"</DAV:prop>");
-    Parser.XML.Tree.Node lock_discovery_node =
-      root->get_first_element("DAV:prop", 1)->
-      root->get_first_element("DAV:lockdiscovery", 1);
+    Node root = RootNode();
+    root->add_child(HeaderNode((["version":"1.0", "encoding":"utf-8"])));
+    Node prop_node =
+      ElementNode("DAV:prop",
+		  ([ "xmlns:DAV":"DAV:",
+		     "xmlns:MS":"urn:schemas-microsoft-com:datatypes" ]));
+    root->add_child(prop_node);
+    Node lock_discovery_node = ElementNode("DAV:lockdiscovery", ([]));
+    prop_node->add_child(lock_discovery_node);
     lock_discovery_node->add_child(lock->get_xml());
     string xml = root->render_xml();
     return ([
@@ -293,7 +292,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
       //     keepalive
       // @endint
       mapping(string:int(-1..1)) propertybehavior = ([]);
-      Parser.XML.Tree.Node prop_behav_node =
+      Node prop_behav_node =
 	xml_data->get_first_element("DAV:propertybehavior", 1);
       if (!prop_behav_node) {
 	return Roxen.http_status(400, "Missing DAV:propertybehavior.");
@@ -303,7 +302,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
        * or
        *   <DAV:omit>		(12.12.2)
        */
-      foreach(prop_behav_node->get_children(), Parser.XML.Tree.Node n) {
+      foreach(prop_behav_node->get_children(), Node n) {
 	switch(n->get_full_name()) {
 	case "DAV:omit":
 	  if (propertybehavior[0] > 0) {
@@ -312,7 +311,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
 	  propertybehavior[0] = -1;
 	  break;
 	case "DAV:keepalive":
-	  foreach(n->get_children(), Parser.XML.Tree.Node href) {
+	  foreach(n->get_children(), Node href) {
 	    if (href->get_full_name == "DAV:href") {
 	      propertybehavior[href->value_of_node()] = 1;
 	    } else if (href->mNodeType == Parser.XML.Tree.XML_TEXT) {
@@ -352,8 +351,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
     break;
   case "PROPFIND":	// Get meta data.
     if (xml_data) {
-      Parser.XML.Tree.Node propfind =
-	xml_data->get_first_element("DAV:propfind", 1);
+      Node propfind = xml_data->get_first_element("DAV:propfind", 1);
       if (!propfind) {
 	return Roxen.http_status(400, "Missing DAV:propfind.");
       }
@@ -364,7 +362,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
        * or
        *   <DAV:prop>{propertylist}*</DAV:prop>
        */
-      foreach(propfind->get_children(), Parser.XML.Tree.Node prop) {
+      foreach(propfind->get_children(), Node prop) {
 	switch(prop->get_full_name()) {
 	case "DAV:propname":
 	  if (recur_func)
@@ -440,8 +438,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
     }
     break;
   case "PROPPATCH":	// Set/delete meta data.
-    Parser.XML.Tree.Node propupdate =
-      xml_data->get_first_element("DAV:propertyupdate", 1);
+    Node propupdate = xml_data->get_first_element("DAV:propertyupdate", 1);
     if (!propupdate) {
       return Roxen.http_status(400, "Missing DAV:propertyupdate.");
     }
@@ -455,7 +452,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
      *   are received (i.e., from top to bottom).
      */
     array(PatchPropertyCommand) instructions = ({});
-    foreach(propupdate->get_children(), Parser.XML.Tree.Node cmd) {
+    foreach(propupdate->get_children(), Node cmd) {
       switch(cmd->get_full_name()) {
       case "DAV:set":
       case "DAV:remove":
