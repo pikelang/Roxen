@@ -1,6 +1,6 @@
 inherit "http";
 
-// static string _cvs_version = "$Id: roxenlib.pike,v 1.79 1998/07/31 02:02:34 mast Exp $";
+// static string _cvs_version = "$Id: roxenlib.pike,v 1.80 1998/08/02 12:42:10 mast Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -945,7 +945,7 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 {
   string quote = args->quote || "#";
   object my_id = copy_value( id );
-  string new_contents = "";
+  string new_contents = "", unparsed_contents = "";
 
   // multi_separator must default to \000 since one sometimes need to
   // pass multivalues through several output tags, and it's a bit
@@ -955,17 +955,17 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
   if (args->preprocess)
     contents = parse_rxml( contents, id );
 
-  string prefix = "";
   switch (args["debug-input"]) {
     case 0: break;
     case "log":
       report_debug ("tag input: " + contents + "\n");
       break;
     case "comment":
-      prefix = "<!--\n" + html_encode_string (contents) + "\n-->";
+      new_contents = "<!--\n" + html_encode_string (contents) + "\n-->";
       break;
     default:
-      prefix = "\n<br><b>[</b><pre>" + html_encode_string (contents) + "</pre><b>]</b>\n";
+      new_contents = "\n<br><b>[</b><pre>" +
+	html_encode_string (contents) + "</pre><b>]</b>\n";
   }
 
   foreach (var_arr, mapping vars)
@@ -1137,27 +1137,27 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 
 	  exploded[c] = val;
 	}
-      new_contents += exploded * "";
+
+      new_contents += args->preprocess ? exploded * "" :
+	parse_rxml (exploded * "", my_id);
+      if (args["debug-output"]) unparsed_contents += exploded * "";
     }
   }
 
   switch (args["debug-output"]) {
     case 0: break;
     case "log":
-      report_debug ("tag output: " + new_contents + "\n");
+      report_debug ("tag output: " + unparsed_contents + "\n");
       break;
     case "comment":
-      new_contents += "<!--\n" + html_encode_string (new_contents) + "\n-->";
+      new_contents += "<!--\n" + html_encode_string (unparsed_contents) + "\n-->";
       break;
     default:
-      new_contents = "\n<br><b>[</b><pre>" + html_encode_string (new_contents) +
+      new_contents = "\n<br><b>[</b><pre>" + html_encode_string (unparsed_contents) +
 	"</pre><b>]</b>\n";
   }
 
-  if (!args->preprocess)
-    return parse_rxml( prefix + new_contents, my_id );
-  else
-    return prefix + new_contents;
+  return new_contents;
 }
 
 string fix_relative(string file, object id)
