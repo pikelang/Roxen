@@ -1,4 +1,5 @@
-// This is a roxen module which provides file upload and write capabilities.
+// This is a ChiliMoon module which provides file upload and write
+// capabilities.
 // Copyright (c) 2001, Stephen R. van den Berg, The Netherlands.
 //                     <srb@cuci.nl>
 //
@@ -11,7 +12,7 @@
 #define _ok id->misc->defines[" _ok"]
 
 constant cvs_version =
- "$Id: writefile.pike,v 1.12 2001/12/03 13:03:17 anders Exp $";
+ "$Id: writefile.pike,v 1.13 2003/01/26 02:25:25 mani Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
