@@ -36,10 +36,9 @@ string get_content_type( string f, object id, object wa, mapping|void m )
 }
 
 
-string page_editmetadata( object id, mapping|void m)
+string page_editmetadata( object id, string f, mapping|void m)
 {
   object wa = id->misc->wa;
-  string f = id->variables->path;
 
   if(!m && f)
     m = wa->get_md(id, f);
@@ -76,7 +75,7 @@ string page_editmetadata( object id, mapping|void m)
     }),
   });
   
-  return "<b>File Metadata for "+id->variables->path+":</b><p>\n" + 
+  return "<b>File Metadata for "+f+":</b><p>\n" + 
     html_table(({ "Data", "Value", ({ "Description" }) }),
 	       Array.map(rows, describe_metadata_var));
 }

@@ -1,13 +1,13 @@
 inherit "wizard";
 
 constant name = "Create File";
-string error="";
-#define ERROR ("<font color=darkred>"+error+"</font><p>")
+
+#define ERROR (id->variables->error?"<font color=darkred>"+\
+	       id->variables->error+"</font><p>":"")
 
 string page_0( object id )
 {
-  //return sprintf("<pre>%O</pre>",id->variables);
-  return "<b>Select filename:</b>"
+  return ERROR+"<b>Select filename:</b>"
     "<var name=filename type=string "
     "size=40 default=\""+
     replace((id->variables->path||"/")+"/", "//", "/") + "\">";
@@ -15,8 +15,6 @@ string page_0( object id )
 
 int verify_0(object id)
 {
-  object f;
-  
   if (id->variables->filename=="" ||
       id->variables->filename[0]!='/')
   {
@@ -31,26 +29,32 @@ int verify_0(object id)
     id->variables->filename+="index.html";
     return 1;
   }
-  
-  if (file_stat(id->misc->wa->real_path(id, id->variables->filename)))
+
+  string path;
+  sscanf(reverse(id->variables->filename), "%*s/%s", path);
+  path = reverse(path);
+  array f_stat = file_stat(id->misc->wa->real_path(id, path));
+  if (!f_stat||(f_stat[2]==-2))
   {
-    error = "File " + id->variables->filename + " exists";
+    id->variables->error = "Directory " + path + "/ does not exist";
     return 1;
   }
-  error = "";
+  if (file_stat(id->misc->wa->real_path(id, id->variables->filename)))
+  {
+    id->variables->error = "File " + id->variables->filename + " exists";
+    return 1;
+  }
+  m_delete(id->variables, "error");
 }
 
 #include "edit_md.h"
 
 string page_1(object id)
 {
-  id->variables->path = id->variables->filename; // Fix to view filename in edit metadata 
   return ERROR
-    + page_editmetadata( id, 
-        ([ "content_type" :
-  	   id->misc->wa
-  	   ->get_content_type_from_extension( id->variables->filename )
-  	]) );
+    + page_editmetadata( id, id->variables->filename,
+			 id->misc->wa->
+			 get_md_from_html(id->variables->filename, ""));
 }
 
 mixed wizard_done( object id )
@@ -61,7 +65,7 @@ mixed wizard_done( object id )
   f = id->variables->filename;
   if (file_stat(wa->real_path(id, f)))
   {
-    error = "File exists.";
+    id->variables->error = "File exists.";
     return -1;
   }
 

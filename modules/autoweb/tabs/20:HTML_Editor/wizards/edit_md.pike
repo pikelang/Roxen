@@ -5,7 +5,7 @@ constant name = "Edit Metadata";
 
 string page_0( object id )
 {
-  return page_editmetadata( id );
+  return page_editmetadata( id, id->variables->path );
 }
 
 mixed wizard_done( object id )

@@ -32,23 +32,22 @@ string|mapping navigate(object id, string f, string base_url)
   // werror("Real file: %O\n", wa->real_path(id, f));
   
   string res="";
+
+  if(!file_stat(wa->real_path(id, f)))
+    return "Location "+f+" not found or permission denied.\n";
   
   if(f[-1]!='/') // it's a file
   {
     array br = ({ });
     int t;
     
-    if(!file_stat(wa->real_path(id, f)))
-      return "File '"+f+"' not found or permission denied.\n";
-
     mapping md = wa->get_md(id, f);
     br += ({ ({ "View",  f+" target=_autosite_show_real" }) });
     werror("%O\n", md);
     if(md->content_type=="text/html")
       br += ({ ({ "Edit File", (["filename":f ]) }) });
     br += ({ ({ "Edit Metadata", ([ "path":f ]) }),
-	     ({ "Download File", ([ "path": base_url+"dl"+f ]) }),
-	     ({ "Upload File", ([ "path":f ]) }),
+	     ({ "Download File", base_url+"dl"+f }),
 	     ({ "Remove File", ([ "path":f ]) }) });
     wanted_buttons=br;
 
@@ -79,7 +78,11 @@ string|mapping navigate(object id, string f, string base_url)
     res += "<b>"+f+"</b><br>";
     wanted_buttons =
     ({ ({ "Create File", ([ "path": f ]) }),
-       ({ "Upload File", ([ "path": f ]) }) });
+       ({ "Upload File", ([ "path": f ]) }),
+       ({ "New Directory", ([ "path": f ]) }),
+       ({ "Move Directory", ([ "path": f ]) }),
+       ({ "Remove Directory", ([ "path": f ]) })
+    });
     
     // Show the directory
     array files = ({ });
@@ -98,8 +101,9 @@ string|mapping navigate(object id, string f, string base_url)
 
     // Display directories.
     foreach(sort(dirs), string item) {
-      res += "<img src=\"internal-gopher-menu\">&nbsp;&nbsp;";
-      res += "<a href=\""+base_url+"go"+f+item+"/\">"+item+"/</a><br>\n";
+      string href = "<a href='"+base_url+"go"+f+item+"/'>";
+      res += href+"<img src='internal-gopher-menu' border=0></a>";
+      res += "&nbsp;&nbsp;"+href+item+"/</a><br>\n";
     }
     
     // Display files.
@@ -109,8 +113,9 @@ string|mapping navigate(object id, string f, string base_url)
       if(md)
 	img = wa->content_types[md->content_type||
 			       "autosite/unknown"]->img;
-      res += "<img src='"+img+"'>&nbsp;&nbsp;";
-      res += "<a href=\""+base_url+"go"+f+item+"\">"+item+"</a><br>\n";
+      string href = "<a href='"+base_url+"go"+f+item+"'>";
+      res += href+"<img src='"+img+"' border=0></a>";
+      res += "&nbsp;&nbsp;"+href+item+"</a><br>\n";
     }
   }
   

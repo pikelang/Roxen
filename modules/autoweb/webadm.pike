@@ -1,12 +1,12 @@
 /*
- * $Id: webadm.pike,v 1.8 1998/07/30 20:18:48 wellhard Exp $
+ * $Id: webadm.pike,v 1.9 1998/07/31 19:47:06 wellhard Exp $
  *
  * AutoWeb administration interface
  *
  * Johan Schön, Marcus Wellhardh 1998-07-23
  */
 
-constant cvs_version = "$Id: webadm.pike,v 1.8 1998/07/30 20:18:48 wellhard Exp $";
+constant cvs_version = "$Id: webadm.pike,v 1.9 1998/07/31 19:47:06 wellhard Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -241,9 +241,10 @@ string validate_admin(object id)
   string user = ((id->realauth||"*:*")/":")[0];
   string key = ((id->realauth||"*:*")/":")[1];
   catch {
-    if(user == query("admin_user"))
-      if(stringp(query("admin_pass")) && crypt(key, query("admin_pass"))) 
-	return "admin";
+    if((id->misc->customer_id) &&
+       (user == query("admin_user")) &&
+       (key == query("admin_pass")))
+      return "admin";
   };
   return 0;
 }
@@ -266,7 +267,7 @@ mixed find_file(string f, object id)
 
   // User validation
 #if 1
-  if(!validate_customer(id)&&!validate_admin(id))
+  if(!validate_admin(id)&&!validate_customer(id))
     return (["type":"text/html",
 	     "error":401,
 	     "extra_heads":
@@ -276,14 +277,25 @@ mixed find_file(string f, object id)
 	     "<h2 align=center>Access forbidden</h2>\n"
     ]);
 #endif
+
+  // State
+  if (id->variables->_reset)
+    id->misc->state = state = reset_state( id );
+  else			      
+    id->misc->state = state = state_for( id );   
+                 // no #($/!)!"#"#&! copy_value here.
+                 // ->state _has_ to be writable! /Wellhardh
+
+  // Template
   if(sscanf(f, "templates/%s", string template)>0) {
     template -= "../";
     return http_string_answer(Stdio.read_bytes(templatesdir + template));
   }
-  
+
   sscanf(f, "%s/%s", tab, sub);
   string res = "<template base=/"+(query("location")-"/")+">\n"+
 	       "<tmpl_body>";
+
   res += make_tablist(tablist, tabs[tab], id);
   if (!tabs[tab])
     content= "You've reached a non-existing tab '"
@@ -343,6 +355,7 @@ void create()
 
 string real_path(object id, string filename)
 {
+  filename = replace(filename, "../", "");
   return query("sites_location")+id->misc->customer_id+
     (sizeof(filename)?(filename[0]=='/'?filename:"/"+filename):"/");
 }
@@ -379,7 +392,7 @@ mapping read_md_file(object id, string f)
   string file_name = real_path(id, f+".md");
   string s = Stdio.read_bytes(file_name);
   if(!s) {
-    werror("File %s does not exist.", file_name);
+    werror("File %s does not exist.\n", file_name);
     return 0;
   }
   
@@ -408,18 +421,16 @@ mapping get_md(object id, string f)
 			   "template":"default.tmpl",
 			   "keywords":"",
 			   "description":""]);
-  string file_name = real_path(id, f);
-  if(!file_stat(file_name)) {
-    werror("File %s does not exist", file_name);
-    return 0;
+
+  string file_name = real_path(id, f+".md");
+  string s = Stdio.read_bytes(file_name);
+  if(!s) {
+    werror("File %s does not exist.\n", file_name);
+    return md_default;
   }
-  
-  mapping md = read_md_file(id, f);
-  if(!md)
-    md = md_default;
-  
-  werror("md_file: %O, md: \n%O\n", file_name, md);
-  return md;
+  mapping md = ([]);
+  parse_html(s, ([ ]), ([ "md":container_md ]), md);
+  return ([ "content_type": md_default->content_type ]) + md;
 }
 
 // Content type functions
@@ -506,4 +517,50 @@ string get_content_type_from_extension( string filename )
 	return i;
   }
   return "application/octet-stream";
+}
+
+string container_title(string tag, mapping args, string contents, mapping md)
+{
+  if(tag="title")
+    md["title"] = contents;
+}
+
+mapping get_md_from_html(string f, string html)
+{
+  mapping md = ([]);
+  md->content_type = get_content_type_from_extension(f);
+  if(md->content_type == "text/html")
+    parse_html(html, ([ ]), ([ "title":container_title ]), md);
+  return md;
+}
+
+// State
+
+mapping saved_state = ([ ]);
+
+mapping init_state( string u )
+{
+  return saved_state[u] = ([ ]);
+}
+
+mapping reset_state( object id )
+{
+  string u;
+  if(!(id->auth && id->auth[0])) u = id->remote_addr;
+  else u = id->auth[1];
+  
+  if (!saved_state[u])
+    return init_state( u );
+  return init_state( u );
+}
+
+mapping state_for(object id)
+{
+  string u;
+  if(!(id->auth && id->auth[0])) u = id->remote_addr;
+  else u = id->auth[1];
+
+  if(!saved_state[u])
+    return init_state( u );
+  return saved_state[u];
 }
