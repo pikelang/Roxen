@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.461 2004/08/11 13:13:22 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.462 2004/08/17 15:16:16 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -326,8 +326,13 @@ void start_sender( )
     MARK_FD("HTTP really handled, piping response");
 #ifdef FD_DEBUG
     call_out(timer, 30, predef::time(1)); // Update FD with time...
-#endif
+    pipe->set_done_callback(lambda (int fsent) {
+			      remove_call_out(timer);
+			      do_log(fsent);
+			    } );
+#else
     pipe->set_done_callback( do_log );
+#endif
     pipe->output( my_fd );
   } else {
     MARK_FD("HTTP really handled, pipe done");
@@ -1844,9 +1849,7 @@ void send_result(mapping|void result)
       // Some browsers, e.g. Netscape 4.7, don't trust a zero
       // content length when using keep-alive. So let's force a
       // close in that case.
-      // Opera 7.54/Solaris seems to have the same problem.
-      // (Observed with 304's).
-      if( file->error/100 >= 2 && file->len <= 0 )
+      if( file->error/100 == 2 && file->len <= 0 )
       {
 	heads->Connection = "close";
 	misc->connection = "close";
