@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.28 1997/10/03 23:39:44 grubba Exp $
+# $Id: configure.in,v 1.29 1997/10/05 05:51:02 grubba Exp $
 #
 
 prefix=$PWD
@@ -268,6 +268,11 @@ if test $cflags_is_set = no; then
   # sopt disabled since it takes too much time on interpret.c (>45min on an O²)
   # AC_SYS_OS_COMPILER_FLAG(IRIX,-sopt,sopt)
   AC_SYS_OS_COMPILER_FLAG(IRIX,-n32,n32)
+  if [ x$roxen_cv_option_n32 = xyes ]; then
+    LDFLAGS="$LDFLAGS -n32"
+  else
+    :
+  fi
   AC_SYS_OS_COMPILER_FLAG(IRIX,-g3,g3)
   AC_SYS_OS_COMPILER_FLAG(IRIX,-fullwarn,fullwarn)
   if test x$with_debug = xyes ; then
