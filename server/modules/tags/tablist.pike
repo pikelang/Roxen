@@ -1,12 +1,12 @@
 /*
- * $Id: tablist.pike,v 1.20 1999/11/04 10:35:05 jonasw Exp $
+ * $Id: tablist.pike,v 1.21 1999/11/11 07:39:54 mast Exp $
  *
  * Makes a tab list like the one in the config interface.
  *
- * $Author: jonasw $
+ * $Author: mast $
  */
 
-constant cvs_version="$Id: tablist.pike,v 1.20 1999/11/04 10:35:05 jonasw Exp $";
+constant cvs_version="$Id: tablist.pike,v 1.21 1999/11/11 07:39:54 mast Exp $";
 constant thread_safe=1;
 
 #define use_contents_cache 0
@@ -174,8 +174,8 @@ Image.image load_image(string f)
   return Image.PNM.decode(data);
 }
 
-object mask_image = load_image("tab_mask.ppm");
-object frame_image = load_image("tab_frame.ppm");
+object mask_image = load_image("tab_mask.png");
+object frame_image = load_image("tab_frame.png");
 object button_font = resolve_font("haru 32");
 
 
