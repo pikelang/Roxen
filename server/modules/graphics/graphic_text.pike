@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.220 2000/03/20 00:53:00 mast Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.221 2000/03/20 19:21:27 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -912,7 +912,8 @@ string simpletag_gtext(string t, mapping arg, string c, RequestID id)
       res += "function i(ri,hi,txt)\n"
         "{\n"
         "  document.images[ri].src = hi.src;\n"
-        "  setTimeout(\"top.window.status = '\"+txt+\"'\", 100);\n"
+        "  if( txt != 0 )\n"
+        "    setTimeout(\"top.window.status = '\"+txt+\"'\", 100);\n"
 	"}\n";
     }
     id->misc->gtext_magic_java="yes";
@@ -924,8 +925,10 @@ string simpletag_gtext(string t, mapping arg, string c, RequestID id)
       "</script>\n"+
       "<a "+ea+"href=\""+url+"\" "+
       (input?"onClick='document.forms[0].submit();' ":"")
-      +"onMouseover=\"i('"+sn+"',"+sn+"h,'"+(magic=="magic"?url:magic)+"'); return true;\" "
-      "onMouseout=\"top.window.status='';document.images['"+sn+"'].src = "+sn+"l.src;\">"
+      +"onMouseover=\"i('"+sn+"',"+sn+"h,"+((strlen(magic) && magic != "magic")?
+                                            "'"+replace(magic,"'","`")+"'":
+                                            "0")+"); return true;\" "
+      "onMouseout=\"document.images['"+sn+"'].src = "+sn+"l.src;\">"
       +make_tag("img",arg)+"</a>";
   }
 
