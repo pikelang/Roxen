@@ -27,7 +27,7 @@ and Roxen WebServer 4.0.
  - The etc directory is renamed to data. This affects the settings for
    the content type module and the supports system, both using files
    in that directory. Either all server configurations and the global
-   settings has to be updated or a symlink must be added.
+   settings have to be updated or a symlink must be added.
      ln -s server/data server/etc
 
  - The argument cache plugins are now loaded from the directories
@@ -45,12 +45,12 @@ and Roxen WebServer 4.0.
 
  - The Administration interface themes are now loaded from the
    directories server/admin_interface/themes and
-   local/admin_interface/themes. This affects users usig local themes.
+   local/admin_interface/themes. This affects users using local themes.
    This can be solved by moving or symlinking the old local themes to
    the new location.
      ln -s local/config_interface/themes local/admin_interface/themes
 
- - Several /internal-roxen images has been removed. They can be copied
+ - Several /internal-roxen images have been removed. They can be copied
    from a Roxen WebServer installation (server/roxen-images/) to the
    ChiliMoon image directory (server/data/images/) if they are needed.
    The images are:

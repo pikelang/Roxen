@@ -7,9 +7,9 @@ Major changes from Roxen 3.3:
  - Several major improvements has been made to the Icecast modules.
  - HTTP and HTTPS protocol modules are rewritten to use the direct
    memory access functionality in the Shuffler Pike module.
- - Optimized for Pike 7.3 which means better performance and better
+ - Optimized for Pike 7.7 which means better performance and better
    looking source code.
- - Removed localizations of Administration Interface. There where
+ - Removed localisations of Administration Interface.  There where
    several reasons that lead to this decision:
      - Keeping the localizations synchronized with the latest code
        changes is a big and never ending job, which only Kai Voigt has
@@ -24,14 +24,14 @@ Major changes from Roxen 3.3:
      - Localized code looks horrible and adds a lot of extra work to
        development. That's ok for paid development, but...
      - We will save memory and gain speed.
- - Removed support for licenses. While it would have been good to have
+ - Removed support for licenses.  While it would have been good to have
    a licensing system, to attract commercial entities in the future,
    there is really not much of a point in an open source product.
    Remember that the first pirated version of Roxen SiteBuilder appeard
    in warez archives just _after_ the license system was added.
- - No more documentation in the administration interface. We don't
+ - No more documentation in the administration interface.  We don't
    have any redistribution rights for Roxens manuals.
- - Lots of minor bugs has been fixed, and some has been introduced.
+ - Lots of minor bugs have been fixed, and some have been introduced.
  - Improved easter eggs.
 
  New modules:
