@@ -21,7 +21,7 @@ constant s = spider;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.216 2000/12/05 22:26:45 nilsson Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.217 2000/12/30 09:12:54 nilsson Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -587,6 +587,8 @@ class RequestID
   int do_not_disconnect;
   //! Typically 0, meaning the channel to the client will be disconnected upon
   //! finishing the request and the RequestID object destroyed with it.
+
+  mapping (string:mixed) real_variables;
 
   mapping (string:string) variables;
   //! Form variables submitted by the client browser, as found in the
