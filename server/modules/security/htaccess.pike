@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version="$Id: htaccess.pike,v 1.90 2001/11/27 15:14:26 grubba Exp $";
+constant cvs_version="$Id: htaccess.pike,v 1.91 2001/12/21 10:28:27 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -375,6 +375,17 @@ mapping parse_and_find_htaccess( RequestID id )
   array in_cache;
   if((in_cache = cache_lookup(cache_key, file)) && (mtime <= in_cache[0]))
     return in_cache[1];
+
+  if (!htaccess) {
+    // Failed to read htaccess file -- Use paranoia fallback.
+    htaccess =
+      "<limit get post head put>\n"
+      "  deny all\n"
+      "</limit>";
+    report_debug(sprintf("HTACCESS: Failed to read htaccess file: %O\n"
+			 "HTACCESS: Using paranoia fallback:\n"
+			 "%{    %s\n%}\n", file, htaccess/"\n"));
+  }
 
   if( !strlen(htaccess) )
     return 0;
