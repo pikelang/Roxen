@@ -28,8 +28,10 @@ inherit "html";
 //!         Every x y at z
 //!     @endint
 //!   @elem int(1..23) hour
+//!     Number of hours between restarts.
 //!
 //!   @elem int(1..9) everynth
+//!     Number of days or weeks to skip between restarts.
 //!
 //!   @elem int(0..7) day
 //!     @int
@@ -40,7 +42,8 @@ inherit "html";
 //!       @value 2..7
 //!         Rest of weekdays
 //!     @endint
-//!   @elem int(0..23) time
+//!   @elem int(0..23) time (z)
+//!     Time at which to restart.
 //! @endarray
 array transform_from_form( string what, void|mapping vl )
 {
@@ -108,6 +111,7 @@ int get_next( int last )
 //!  is set to every day at 5 o'clock, and this method is called at 5:42 it
 //!  will return the posix time representing 5:00, unless of course @[last]
 //!  was set to a posix time >= 5:00.
+//!  Returns @tt{-1@} if the schedule is disabled (@tt{"Never"@}).
 {
   array vals = query();
   if( !vals[0] )
