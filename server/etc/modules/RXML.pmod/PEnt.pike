@@ -4,7 +4,7 @@
 //!
 //! Created 2000-01-28 by Martin Stjernholm.
 //!
-//! $Id: PEnt.pike,v 1.8 2000/02/15 06:10:11 mast Exp $
+//! $Id: PEnt.pike,v 1.9 2000/02/15 07:54:12 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
@@ -22,8 +22,8 @@ static void init_entities()
 {
   if (type->quoting_scheme != "xml") {
     // Don't decode entities if we're outputting xml-like stuff.
-    clear_entities();
 #ifdef OLD_RXML_COMPAT
+    clear_entities();
     if (not_compat) {
 #endif
       array(RXML.TagSet) list = ({tag_set});
@@ -58,7 +58,8 @@ void reset (RXML.Context ctx, RXML.Type _type, RXML.TagSet _tag_set)
 #endif
 
 #ifdef OLD_RXML_COMPAT
-  int new_not_compat = !(ctx && ctx->id && ctx->id->conf->parse_html_compat);
+  if (!ctx) ctx = RXML.get_context();
+  int new_not_compat = !(ctx->id && ctx->id->conf->parse_html_compat);
   if (new_not_compat == not_compat) return;
   not_compat = new_not_compat;
   init_entities();
@@ -82,7 +83,8 @@ static void create (
 )
 {
 #ifdef OLD_RXML_COMPAT
-  not_compat = !(ctx && ctx->id && ctx->id->conf->parse_html_compat);
+  if (!ctx) ctx = RXML.get_context();
+  not_compat = !(ctx->id && ctx->id->conf->parse_html_compat);
 #endif
 
   _tag_set_parser_create (ctx, type, tag_set);

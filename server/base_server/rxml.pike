@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.129 2000/02/15 06:10:58 mast Exp $
+ * $Id: rxml.pike,v 1.130 2000/02/15 07:55:10 mast Exp $
  *
  * The Roxen RXML Parser. See also the RXML Pike module.
  *
@@ -11,7 +11,6 @@ inherit "rxmlhelp";
 #include <request_trace.h>
 
 #define OLD_RXML_COMPAT
-#define TAGMAP_COMPAT
 
 #define RXML_NAMESPACE "rxml"
 
@@ -236,6 +235,7 @@ RXML.TagSet rxml_tag_set = class
   }
 } (this_object());
 
+RXML.Type default_content_type = RXML.t_html (RXML.PXml);
 RXML.Type default_arg_type = RXML.t_text (RXML.PEnt);
 
 int parse_html_compat;
@@ -446,28 +446,26 @@ string do_parse(string to_parse, RequestID id,
   RXML.Context ctx;
 
   if (parent_parser && (ctx = parent_parser->context) && ctx->id == id)
-    parser = RXML.t_html (RXML.PXml)->get_parser (ctx, 0, parent_parser);
+    parser = default_content_type->get_parser (ctx, 0, parent_parser);
   else {
-    parser = rxml_tag_set (RXML.t_html (RXML.PXml), id);
 #ifdef OLD_RXML_COMPAT
-    parser->context->add_scope("_", id->variables);
+    // Got to temporarily set the default context to get the compat
+    // setting into the master parser object used for cloning.
+    // RXML.TagSet.`() is essentially duplicated here. Ghurckkl!
+    rxml_tag_set->call_prepare_funs (ctx = RXML.Context (rxml_tag_set, id));
+    RXML.Context orig_ctx = RXML.get_context();
+    RXML.set_context (ctx);
+    parser = ctx->new_parser (default_content_type);
+    RXML.set_context (orig_ctx);
+    ctx->add_scope("_", id->variables);
+#else
+    parser = rxml_tag_set (default_content_type, id);
 #endif
     parent_parser = 0;
   }
   id->misc->_parser = parser;
   parser->_source_file = file;
   parser->_defines = defines;
-
-#ifdef TAGMAP_COMPAT
-  if (id->misc->_tags) {
-    parser->tagmap_tags = id->misc->_tags;
-    parser->tagmap_containers = id->misc->_containers;
-  }
-  else {
-    id->misc->_tags = parser->tagmap_tags;
-    id->misc->_containers = parser->tagmap_containers;
-  }
-#endif
 
   if (mixed err = catch {
     if (parent_parser && ctx == RXML.get_context())
