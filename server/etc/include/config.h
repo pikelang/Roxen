@@ -1,9 +1,15 @@
 /* -*- Pike -*-
- * $Id: config.h,v 1.29 2001/10/12 14:47:39 anders Exp $
+ * $Id: config.h,v 1.30 2002/03/22 09:42:21 jonasw Exp $
  *
  * User configurable things not accessible from the normal
  * administration interface. Not much, but there are some things..  
  */
+
+
+//  FIXME: Until MySQL gets patched for a security hole we need this
+//  compatibility flag.
+#define UNSAFE_MYSQL 1
+
 
 #ifndef _ROXEN_CONFIG_H_
 #define _ROXEN_CONFIG_H_
