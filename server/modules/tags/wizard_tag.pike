@@ -3,7 +3,7 @@
  * made by Per Hedbor
  */
 
-constant cvs_version = "$Id: wizard_tag.pike,v 1.20 2000/02/02 20:42:30 per Exp $";
+constant cvs_version = "$Id: wizard_tag.pike,v 1.21 2000/02/04 16:39:55 wellhard Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -16,10 +16,21 @@ mixed *register_module()
           ({}),1,});
 }
 
+string internal_verify(string t, mapping args, string contents, int l, int ol,
+		       mapping m)
+{
+  m->verify = ({ contents, ol + l });
+  return "<__wizard_error__>";
+}
+
 string internal_page(string t, mapping args, string contents, int l, int ol,
 		     mapping f)
 {
-  f->pages +=({({contents,ol+l})});
+  mapping m = ([ "verify":({ }) ]);
+  
+  f->pages += ({ ({
+    parse_html_lines(contents, ([]), ([ "verify":internal_verify ]), l, m),
+    ol + l, m->verify }) });
 }
 
 string internal_done(string t, mapping args, string contents, int l, int ol,
@@ -87,6 +98,18 @@ string tag_wizard(string t, mapping args, string contents, object id,
     pike += sprintf("string page_"+p+"(object id) {" +
 		    "  return parse_rxml(%O,id);\n"
 		    "}\n", q[0]);
+    if(q[2] && sizeof(q[2])) {
+      array v = q[2];
+      pike += sprintf("# "+v[1]+" %O\n", id->not_query);
+      pike += sprintf("int verify_"+p+"(object id) {"
+		      "  string s = parse_rxml(%O,id);"
+		      "  if(id->misc->defines[\" _ok\"]) {\n"
+		      "    id->misc->__wizard_error__ = s;"
+		      "    return 1;"
+		      "  }"
+		      "}\n", v[0]);
+    }
+      
     p++;
   }
   object w;
@@ -110,8 +133,18 @@ string tag_wizard(string t, mapping args, string contents, object id,
   return res;
 }
 
+string tag_wizard_error(string t, mapping args, object id,
+			object file, mapping defines)
+{
+  if(id->misc->__wizard_error__)
+    return id->misc->__wizard_error__;
+  return "";
+}
 
-mapping query_tag_callers() { return ([]); }
+mapping query_tag_callers()
+{
+  return ([ "__wizard_error__" : tag_wizard_error ]);
+}
 
 mapping query_container_callers()
 {
