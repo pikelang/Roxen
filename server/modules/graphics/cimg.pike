@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.43 2001/08/10 23:41:28 mast Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.44 2001/08/15 17:43:55 per Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -151,13 +151,24 @@ array(Image.Layer) generate_image( mapping args, RequestID id )
   if( args["process-all-layers"] )
     opts->draw_all_layers = 1;
 
+  if( args["jpeg-shrink" ] )
+  {
+    opts->scale_denom = (int)args["jpeg-shrink" ];
+    opts->scale_num = 1;
+  }
+  
   if( args->data )
     layers = roxen.decode_layers( args->data, opts );
   else
     layers = roxen.load_layers( args->src, id, opts );
 
   if(!layers)
-    return 0;
+  {
+    if( args->data )
+      error("Failed to decode specified data\n");
+    else
+      error("Failed to load specified image [%O]\n", args->src);
+  }
   
   layers->set_misc_value( "visible",1 );
   foreach( layers, Image.Layer lay )
