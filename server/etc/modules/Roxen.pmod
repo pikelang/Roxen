@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.10 2000/03/09 03:09:01 mast Exp $
+ * $Id: Roxen.pmod,v 1.11 2000/03/19 16:38:05 nilsson Exp $
  *
  * Various helper functions.
  *
@@ -641,15 +641,15 @@ class ScopeRoxen {
     switch(var)
     {
      case "uptime":
-       return (time(1)-roxen->start_time);
+       return (time(1)-roxenp()->start_time);
      case "uptime-days":
-       return (time(1)-roxen->start_time)/3600/24;
+       return (time(1)-roxenp()->start_time)/3600/24;
      case "uptime-hours":
-       return (time(1)-roxen->start_time)/3600;
+       return (time(1)-roxenp()->start_time)/3600;
      case "uptime-minutes":
-       return (time(1)-roxen->start_time)/60;
+       return (time(1)-roxenp()->start_time)/60;
      case "hits-per-minute":
-       return c->id->conf->requests / ((time(1)-roxen->start_time)/60 + 1);
+       return c->id->conf->requests / ((time(1)-roxenp()->start_time)/60 + 1);
      case "hits":
        return c->id->conf->requests;
      case "sent-mb":
@@ -657,16 +657,16 @@ class ScopeRoxen {
      case "sent":
        return c->id->conf->sent;
      case "sent-per-minute":
-       return c->id->conf->sent / ((time(1)-roxen->start_time)/60 || 1);
+       return c->id->conf->sent / ((time(1)-roxenp()->start_time)/60 || 1);
      case "sent-kbit-per-second":
        return sprintf("%1.2f",((c->id->conf->sent*8)/1024.0/
-                               (time(1)-roxen->start_time || 1)));
+                               (time(1)-roxenp()->start_time || 1)));
      case "ssl-strength":
        return ssl_strength;
      case "pike-version":
        return pike_version;
      case "version":
-       return roxen.version();
+       return roxenp()->version();
      case "time":
        return time(1);
      case "server":
@@ -760,3 +760,75 @@ RXML.TagSet entities_tag_set = class
     }
   }
 } ("entities_tag_set");
+
+constant monthnum=(["Jan":0, "Feb":1, "Mar":2, "Apr":3, "May":4, "Jun":5,
+		    "Jul":6, "Aug":7, "Sep":8, "Oct":9, "Nov":10, "Dec":11,
+		    "jan":0, "feb":1, "mar":2, "apr":3, "may":4, "jun":5,
+		    "jul":6, "aug":7, "sep":8, "oct":9, "nov":10, "dec":11,]);
+
+#define MAX_SINCE_CACHE 16384
+static mapping(string:int) since_cache=([ ]);
+array(int) parse_since(string date)
+{
+  if(!date || sizeof(date)<14) return({0,-1});
+  int t=0, length = -1;
+  string dat;
+
+#if constant(mktime)
+  // Tue, 28 Apr 1998 13:31:29 GMT
+  sscanf(lower_case(date+"; length="), "%*s, %s; length=%d", dat, length);
+
+  if(!(t=since_cache[dat])) {
+    int day, year = -1, month, hour, minute, second;
+    string m;
+    if(sscanf(dat, "%d-%s-%d %d:%d:%d", day, m, year, hour, minute, second)>2)
+    {
+      month=monthnum[m];
+    } else if(dat[2]==',') { // I bet a buck that this never happens
+      sscanf(dat, "%*s, %d %s %d %d:%d:%d", day, m, year, hour, minute, second);
+      month=monthnum[m];
+    } else if(!(int)dat) {
+      sscanf(dat, "%*[^ ] %s %d %d:%d:%d %d", m, day, hour, minute, second, year);
+      month=monthnum[m];
+    } else {
+      sscanf(dat, "%d %s %d %d:%d:%d", day, m, year, hour, minute, second);
+      month=monthnum[m];
+    }
+
+    if(year >= 0) {
+      // Fudge year to be localtime et al compatible.
+      if (year < 60) {
+	// Assume year 0 - 59 is really year 2000 - 2059.
+	// Can't people stop using two digit years?
+	year += 100;
+      } else if (year >= 1900) {
+	year -= 1900;
+      }
+      catch {
+	t = mktime(second, minute, hour, day, month, year, -1, 0);
+      };
+    } else {
+      report_debug("Could not parse \""+date+"\" to a time int.");
+    }
+
+    if (sizeof(since_cache) > MAX_SINCE_CACHE)
+      since_cache = ([]);
+    since_cache[dat]=t;
+  }
+#endif /* constant(mktime) */
+  return ({ t, length });
+}
+
+// OBSOLETED by parse_since()
+int is_modified(string a, int t, void|int len)
+{
+  array vals=parse_since(a);
+  if(len && len!=vals[1]) return 0;
+  if(vals[0]<t) return 0;
+  return 1;
+}
+
+int httpdate_to_time(string date)
+{
+  return parse_since(date)[0]||-1;
+}
