@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997-2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.81 2001/08/05 20:13:58 nilsson Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.82 2001/08/06 14:33:20 mast Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -79,8 +79,8 @@ constant tagdoc=([
  and will have no effect if the servers compatibility level is above 2.1.</p>
 </attr>
 
-<attr name='mysql-insert-id' value='form-variable'><p>
- Set form-variable to the insert id used by Mysql for
+<attr name='mysql-insert-id' value='variable'><p>
+ Set the given variable to the insert id used by Mysql for
  auto-incrementing columns. Note: This is only available with Mysql.</p>
 </attr>",
 
