@@ -3,7 +3,7 @@
 program Privs;
 
 // Set up the roxen environment. Including custom functions like spawne().
-constant cvs_version="$Id: roxenloader.pike,v 1.61 1998/03/01 02:49:52 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.62 1998/03/20 03:35:27 per Exp $";
 
 #define perror roxen_perror
 
@@ -537,6 +537,22 @@ class empty_class {
 int getuid(){ return 17; }
 int getgid(){ return 42; }
 #endif
+#if !efun(gethrtime)
+int gethrtime()
+{
+  return (time()*1000);
+}
+#endif
+
+
+object really_load_roxen()
+{
+  int start_time = gethrtime();
+  werror("Loading roxen ... ");
+  object res = ((program)"roxen")();
+  werror("done in "+sprintf("%4.3fs\n", (gethrtime()-start_time)/1000000.0));
+  return res;
+}
 
 void load_roxen()
 {
@@ -560,7 +576,7 @@ void load_roxen()
 #ifndef __NT__
   else  // No need, we are not running as root.
     add_constant("Privs", (Privs=empty_class));
-  roxen = ((program)"roxen")();
+  roxen = really_load_roxen();
   if(!getuid())
   {
     add_constant("roxen_pid", getpid());
@@ -568,7 +584,7 @@ void load_roxen()
     add_constant("Privs", Privs);
   }
 #else
-  roxen = ((program)"roxen")();
+  roxen = really_load_roxen();
 #endif
   perror("Roxen version "+roxen->cvs_version+"\n"
 	 "Roxen release "+roxen->real_version+"\n"
@@ -616,6 +632,7 @@ string make_path(string ... from)
 
 int main(mixed ... args)
 {
+  int start_time = gethrtime();
   string path = make_path("base_server", "etc/include", ".");
   roxen_perror(version()+"\n");
   roxen_perror("Roxen loader version "+cvs_version+"\n");
@@ -653,6 +670,7 @@ int main(mixed ... args)
   load_roxen();
   int retval = roxen->main(@args);
   perror_status_reported = 0;
-  roxen_perror("-------------------------------------\n\n");
+  roxen_perror("\n-- Total boot time %4.3f seconds ---------------------------\n\n",
+	       (gethrtime()-start_time)/1000000.0);
   return(retval);
 }
