@@ -17,6 +17,7 @@
 *.rc eol=crlf
 bi binary
 bn binary
+map binary
 ni binary
 nn binary
 urw_itc_avant_garde-demi-r binary
@@ -178,6 +179,7 @@ urw_itc_avant_garde-demi-r binary
 /server/modules/filters/htaccess.pike foreign_ident
 /server/modules/filters/redirect.pike foreign_ident
 /server/modules/filters/relay.pike foreign_ident
+/server/modules/graphics/atlas/atlas.pike foreign_ident
 /server/modules/graphics/business_graphics/business.pike foreign_ident
 /server/modules/graphics/business_graphics/create_bars.pike foreign_ident
 /server/modules/graphics/business_graphics/create_graph.pike foreign_ident

@@ -1,0 +1,122 @@
+<h2>{atlas} ... {/atlas}</h2>
+
+The {atlas}-tag is used to draw various kinds of maps.
+
+<h3>Attributes</h3>
+<i>Note: All attributes are optional.</i>
+<blockquote><dl>
+
+<dt><b>bgcolor</b> = <i>color</i><dd>
+          The color of the sea.
+
+<dt><b>fgcolor</b> = <i>color</i><dd>
+          The color of the solid ground.
+
+<dt><b>width</b> = <i>width in pixels</i><dd>
+          The width of the image in pixels.
+
+<dt><b>height</b> = <i>height in pixels</i><dd>
+          The height of the image in pixels.
+
+<dt><b>region</b> = <i>region name</i><dd>
+          Zoom the map to a specified region.  Regions:
+          <atlas-list-regions>#name#, </atlas-list-regions>
+
+<dt><b>help</b><dd>
+          Gives this help.
+
+</dl></blockquote>
+
+
+
+<h2>{atlas-country}</h2>
+
+The {atlas-country}-tag is an internal tag used inside
+the {atlas}-tag.
+
+<h3>Attributes</h3>
+<blockquote><dl>
+
+<dt><b>name</b> = <i>name of the country</i><dd>
+          The name of the country.  The name is
+          case insensitive.  Example: <tt>Sweden</tt>
+
+<dt><b>domain</b> = <i>top domain name of the country</i><dd>
+          The domain name of the country.  Can be used instead
+          of the <b>name</b> attribute. The domain name is
+          case insensitive.  Example: <tt>se</tt>
+
+<dt><b>color</b> = <i>color</i><dd>
+          The color with which the country will be painted.
+
+</dl></blockquote>
+
+
+
+<h2>Example 1</h2>
+
+<blockquote>
+
+<pre>
+{atlas}
+  {atlas-country name=Sweden}
+  {atlas-country name=Greece}
+  {atlas-country name=Brazil}
+{/atlas}
+</pre>
+
+<atlas>
+  <atlas-country name=Sweden>
+  <atlas-country name=Greece>
+  <atlas-country name=Brazil>
+</atlas>
+
+</blockquote>
+
+
+
+<h2>Example 2</h2>
+
+<blockquote>
+
+<pre>
+{atlas width=300 fgcolor=forestgreen bgcolor=navyblue region="South East Asia"}
+  {atlas-country name=Japan color=yellow}
+{/atlas}
+</pre>
+
+<atlas width=300 fgcolor=forestgreen bgcolor=navyblue region="South East Asia">
+  <atlas-country name=Japan color=yellow>
+</atlas>
+
+</blockquote>
+
+
+
+<h2>{atlas-list-regions} ... {/atlas-list-regions}</h2>
+
+The {atlas-list-regions}-tag is an <i>output</i> tag that lists
+the geographical regions.
+
+<h3>Variables</h3>
+<blockquote><dl>
+
+<dt><b>#name#</b><dd>
+          The name of a region.
+
+</dl></blockquote>
+
+
+
+<h2>{atlas-list-countries} ... {/atlas-list-countries}</h2>
+
+The {atlas-list-countries}-tag is an <i>output</i> tag that lists
+the countries.
+
+<h3>Variables</h3>
+<blockquote><dl>
+
+<dt><b>#name#</b><dd>
+          The name of a country.
+
+</dl></blockquote>
