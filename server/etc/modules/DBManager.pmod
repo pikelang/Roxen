@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.9 2001/06/16 15:48:11 nilsson Exp $
+// $Id: DBManager.pmod,v 1.10 2001/06/20 23:45:32 per Exp $
 //! @module DBManager
 //! Manages database aliases and permissions
 #include <roxen.h>
@@ -30,7 +30,13 @@ private
   {
     changed_callbacks-=({0});
     sql_cache = ([]);
+#ifdef THREADS
+    sql_cache_size = 0;
+#endif
     connection_cache = ([]);
+#ifdef THREADS
+    connection_cache_size = 0;
+#endif
     foreach( changed_callbacks, function cb ) catch( cb() );
   }
 
@@ -129,24 +135,6 @@ private
       return `[](i);
     }
   }
-  
-
-  // Note: we cannot use Thread.Local here, since we want to reset
-  // this when the list of databases or the permissions is changed,
-  // and using Thread.Local would cause the old connections to leak.
-  //
-  // Bad luck. :-)
-  mapping(Thread.Thread:mapping(string:Sql.Sql)) sql_cache = ([]);
-  Sql.Sql sql_cache_get(string what)
-  {
-    mapping m = sql_cache[ this_thread() ] || ([]);
-    if(m[ what ] )
-      return m[ what ];
-    m[ what ] =  Sql.Sql( what );
-    sql_cache[ this_thread() ] = m;    
-    return m[ what ]; 
-  }
-
   Sql.Sql low_get( string user, string db )
   {
     array(mapping(string:mixed)) d =
@@ -166,7 +154,45 @@ private
       return [object(Sql.Sql)](object)ROWrapper( sql_cache_get( d[0]->path ) );
     return sql_cache_get( d[0]->path );
   }
+
+  mapping(Thread.Thread:mapping(string:Sql.Sql)) sql_cache = ([]);
 };
+
+
+  
+
+  // Note: we cannot use Thread.Local here, since we want to reset
+  // this when the list of databases or the permissions is changed,
+  // and using Thread.Local would cause the old connections to leak.
+  //
+  // Bad luck. :-)
+#ifdef THREADS
+static int sql_cache_size = 0;
+Sql.Sql sql_cache_get(string what)
+{
+  mapping m = sql_cache[ this_thread() ] || ([]);
+  if(m[ what ] )
+    return m[ what ];
+  if( sql_cache_size > 20 )
+  {
+    sql_cache = ([]);
+    m = ([]);
+  }
+  sql_cache_size++;
+  m[ what ] =  Sql.Sql( what );
+  sql_cache[ this_thread() ] = m;    
+  return m[ what ]; 
+}
+#else
+Sql.Sql sql_cache_get(string what)
+{
+  if(sql_cache[ what ] )
+    return sql_cache[ what ];
+  if( sizeof( sql_cache ) > 20 )
+    sql_cache = ([]);
+  return sql_cache[ what ] =  Sql.Sql( what );
+}
+#endif
 
 void add_dblist_changed_callback( function(void:void) callback )
 //! Add a function to be called when the database list has been
@@ -329,6 +355,7 @@ Sql.Sql get( string name, void|Configuration c, int|void ro )
 // Bad luck. :-)
 static mapping(Thread.Thread:mapping(string:Sql.Sql))
   connection_cache = ([]);
+static int connection_cache_size = 0;
 
 Sql.Sql cached_get( string name, void|Configuration c, void|int ro )
 //! Identical to get(), but the authentication verification and
@@ -343,6 +370,10 @@ Sql.Sql cached_get( string name, void|Configuration c, void|int ro )
 //! caching.
 {
   string key = name+"|"+(c&&c->name)+"|"+ro;
+
+  if( connection_cache_size > 20 )
+    connection_cache = 0;
+
   mapping cm = connection_cache[ this_thread() ] || ([]);
 
   Sql.Sql res;
@@ -355,6 +386,7 @@ Sql.Sql cached_get( string name, void|Configuration c, void|int ro )
   if( res )
   {
     cm[key]=res;
+    connection_cache_size++;
     connection_cache[ this_thread() ] = cm;
   }
   return res;
@@ -364,6 +396,8 @@ static mapping connection_cache  = ([]);
 Sql.Sql cached_get( string name, void|Configuration c, void|int ro )
 {
   string key = name+"|"+(c&&c->name)+"|"+ro;
+  if( sizeof( connection_cache ) > 10 )
+    connection_cache = ([]);
   return connection_cache[key] || (connection_cache[key]=get( name, c, ro ));
 }
 #endif
