@@ -1,4 +1,4 @@
-/* $Id: low_describers.pike,v 1.29 1999/05/14 00:28:00 neotron Exp $ */
+/* $Id: low_describers.pike,v 1.30 1999/05/14 02:42:33 neotron Exp $ */
 // These do _not_ use any nodes, instead, they are called from the node
 // describers (which are called from the nodes)
 object this = this_object();

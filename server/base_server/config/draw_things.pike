@@ -1,6 +1,6 @@
 #include <module.h>
 
-string cvs_verison = "$Id: draw_things.pike,v 1.40 1999/05/14 00:56:15 neotron Exp $";
+string cvs_verison = "$Id: draw_things.pike,v 1.41 1999/05/14 02:42:32 neotron Exp $";
 
 Image.image load_image(string f)
 {
@@ -74,7 +74,7 @@ Image.image draw_module_header(string name, int type, object font)
   knappar = knappar->autocrop();
 
   result->paste(knappar,result->xsize()-knappar->xsize(),0);
-  result->paste_alpha_color(font->write(name)/*->scale(0.5)*/, 255,255,0, 6,3);
+  result->paste_alpha_color((font->write(name)->scale(0.6)), 255,255,0, 6,3);
   knappar = 0;
   text=0;
   return result;

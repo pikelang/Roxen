@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.275 1999/05/14 00:27:59 neotron Exp $
+ * $Id: roxen.pike,v 1.276 1999/05/14 02:42:30 neotron Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.275 1999/05/14 00:27:59 neotron Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.276 1999/05/14 02:42:30 neotron Exp $";
 
 object backend_thread;
 object argcache;
@@ -2585,6 +2585,24 @@ Notera att du alltid bör ha <b>minst</b> en port öppen, så om du
  ta inte bort den gamla porten innan du har verifierat att den nya verkligen
  fungerar. Det är rätt svårt att konfigurera roxen utan dess
  konfigurationsinterface, även om det går.");
+
+  globvar("ModuleListType", "Original",
+	  "Configuration interface: Add module page look  ",
+	  TYPE_STRING_LIST,
+#"This variable defines how the add module page will look like. The original
+version has graphical headers and the description for each of the modules.
+If you know your way around Roxen, the compact mode might be better. Then
+You will get a select list which contains module names only.",
+	  ({ "Original", "Compact" }));
+
+  deflocaledoc("svenska", "ModuleListType",
+	       "Konfigurationsinterfacet: Utseendet av addera-modulsidan",
+#"Här kan du ställa in utseendet av sidan där du adderar nya moduler.
+Standardversionen har en lång sida med alla moduler med modulbeskrivningar.
+Den kompakta versionen innehåller bara en select-lista med alla moduler,
+utan hjälptexterna och går därför mycket snabbare att ladda.",
+	       ([ "Original": "Standard",
+		  "Compact" : "Kompakt" ]));
 
 
   globvar("ConfigurationURL", 
