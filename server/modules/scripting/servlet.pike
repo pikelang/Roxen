@@ -2,8 +2,10 @@
 
 inherit "module";
 
+#include <module.h>
+
 #if constant(Servlet.servlet)
-string cvs_version = "$Id: servlet.pike,v 2.9 2000/07/03 06:43:20 nilsson Exp $";
+string cvs_version = "$Id: servlet.pike,v 2.10 2000/07/25 14:24:55 marcus Exp $";
 int thread_safe=1;
 constant module_unique = 0;
 
@@ -43,8 +45,13 @@ void start(int x, Configuration conf)
   else if(x != 0)
     return;
 
+  if(query("classname")=="NONE") {
+    status_info = "No servlet class selected";
+    return;
+  }
+
   mixed exc = catch(servlet = Servlet.servlet(query("classname"),
-					      query("codebase")));
+					      query("codebase")-({""})));
   status_info="";
   if(exc)
   {
@@ -70,15 +77,47 @@ string query_name()
 		 query("location"));
 }
 
+class ClassPathList
+{
+  inherit Variable.FileList;
+
+  array verify_set( string|array(string) value )
+  {
+    if(stringp(value))
+      value = ({ value });
+    string warn = "";
+    foreach( value-({""}), string value ) {
+      array s = r_file_stat( value );
+      Stdio.File f = Stdio.File();
+      if( !s )
+        warn += value+" does not exist\n";
+      else if( s[ ST_SIZE ] == -2 )
+	;
+      else if( !(f->open( value, "r" )) )
+        warn += "Can't read "+value+"\n";
+      else {
+	if( f->read(2) != "PK" )
+	  warn += value+" is not a JAR file\n";
+	f->close();
+      }
+    }
+    if( strlen( warn ) )
+      return ({ warn, value });
+    return ::verify_set( value );
+  }
+}
+
 void create()
 {
   defvar("location", "/servlet/NONE", "Servlet location", TYPE_LOCATION,
 	 "This is where the servlet will be inserted in the "
 	 "namespace of your server.");
 
-  defvar("codebase", "servlets", "Code directory", TYPE_DIR,
-	 "This is the base directory for the servlet class files.");
-
+  defvar("codebase", ClassPathList( ({"servlets"}), 0, "Class path",
+				    "Any number of directories and/or JAR "
+				    "files from which to load the servlet "
+				    "and its support classes.") );
+  
   defvar("classname", "NONE", "Class name", TYPE_STRING,
 	 "The name of the servlet class to use.");
 

@@ -132,7 +132,7 @@ class servlet {
     d = servlet_destroy;
   }
 
-  void create(string|object name, string|object|void dir)
+  void create(string|object name, string|array(string)|object|void dir)
   {
     if(stringp(name)) {
       classname = name;
@@ -175,18 +175,23 @@ class loader {
     return servlet(name, this_object());
   }
 
-  void create(string codedir)
+  void create(string|array(string) codedirs)
   {
-    object f = file_class->alloc();
+    if(stringp(codedirs))
+      codedirs = ({ codedirs });
+    object urls = url_class->new_array(sizeof(codedirs));
     check_exception();
-    file_init->call_nonvirtual(f, codedir);
-    check_exception();
-    object url = file_tourl(f);
-    check_exception();
-    object urls = url_class->new_array(1);
-    check_exception();
-    urls[0] = url;
-    check_exception();
+    int i=0;
+    foreach(codedirs, string codedir) {
+      object f = file_class->alloc();
+      check_exception();
+      file_init->call_nonvirtual(f, codedir);
+      check_exception();
+      object url = file_tourl(f);
+      check_exception();
+      urls[i++] = url;
+      check_exception();
+    }
     cl = classloader2_class->alloc();
     check_exception();
     cl_init->call_nonvirtual(cl, urls);
