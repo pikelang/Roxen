@@ -18,7 +18,7 @@
 #define _rettext defines[" _rettext"]
 #define _ok     defines[" _ok"]
 
-constant cvs_version="$Id: htmlparse.pike,v 1.164 1999/04/13 00:17:47 mast Exp $";
+constant cvs_version="$Id: htmlparse.pike,v 1.165 1999/04/22 09:31:52 per Exp $";
 constant thread_safe=1;
 
 function call_user_tag, call_user_container;
@@ -138,12 +138,6 @@ void create(object c)
 	 TYPE_FLAG|VAR_MORE,
 	 "If set, the accessed database will be closed if it is not used for "
 	 "8 seconds");
-
-  defvar("compat_if", 0, "Compatibility with old &lt;if&gt;",
-	 TYPE_FLAG|VAR_MORE,
-	 "If set the &lt;if&gt;-tag will work in compatibility mode.\n"
-	 "This affects the behaviour when used together with the &lt;else&gt;-"
-	 "tag.\n");
 }
 
 static string olf; // Used to avoid reparsing of the accessed index file...
@@ -152,15 +146,7 @@ inline void open_names_file()
 {
   if(objectp(names_file)) return;
   remove_call_out(names_file_callout_id);
-// #ifndef THREADS
-//   object privs = Privs("Opening Access-log names file");
-// #endif
   names_file=open(QUERY(Accesslog)+".names", "wrca");
-// #if efun(chmod)
-//   mixed x;
-//   if(x = catch { chmod( QUERY(Accesslog)+".names", 0666 ); })
-//     report_warning(master()->describe_backtrace(x)+"\n");
-// #endif
   names_file_callout_id = call_out(destruct, 1, names_file);
 }
 
@@ -189,20 +175,12 @@ inline mixed open_db_file()
   if(!database)
   {
     if(db_file_callout_id) remove_call_out(db_file_callout_id);
-// #ifndef THREADS
-//     object privs = Privs("Opening Access-log database file");
-// #endif
     database=open(QUERY(Accesslog)+".db", "wrc");
     if (!database) {
       throw(({ sprintf("Failed to open \"%s.db\". "
 		       "Insufficient permissions or out of fd's?\n",
 		       QUERY(Accesslog)), backtrace() }));
     }
-// #if efun(chmod)
-//     mixed x;
-//     if(x = catch { chmod( QUERY(Accesslog)+".db", 0666 ); })
-//       report_warning(master()->describe_backtrace(x)+"\n");
-// #endif
     if (QUERY(close_db)) {
       db_file_callout_id = call_out(close_db_file, 9, database);
     }
@@ -228,18 +206,10 @@ void start(int q, object c)
   if(olf != QUERY(Accesslog))
   {
     olf = QUERY(Accesslog);
-// #ifndef THREADS
-//     object privs = Privs("Opening Access-log names file");
-// #endif
     mkdirhier(query("Accesslog"));
     if(names_file=open(olf+".names", "wrca"))
     {
       cnum=0;
-// #if efun(chmod)
-//       mixed x;
-//       if(x = catch { chmod( QUERY(Accesslog)+".names", 0666 ); })
-// 	report_warning(master()->describe_backtrace(x)+"\n");
-// #endif
       tmp=parse_accessed_database(names_file->read(0x7ffffff));
       fton=tmp[0];
       cnum=tmp[1];
@@ -350,11 +320,11 @@ array register_module()
   return ({ MODULE_FILE_EXTENSION|MODULE_PARSER, 
 	    "RXML parser", 
 	    ("This module adds a lot of RXML tags, it also handles the "
-	     "mapping from .html to the rxml parser, and the accessed "
-	     "database"), ({}), 1 });
+	     "mapping from .html to the rxml parser, and the "
+	     "database for the &lr;accessed&gt; tag"), ({}), 1 });
 }
 
-string *query_file_extensions() 
+array(string) query_file_extensions() 
 { 
   return query("toparse") + query("noparse"); 
 }
@@ -498,8 +468,12 @@ inline string do_replace(string s, mapping (string:string) m)
 }
 
 
-array permitted = ({ "1", "2", "3", "4", "5", "6", "7", "8", "9",
-		     "0", "-", "*", "+", "/", "%", "&", "|", "(", ")" });
+constant permitted = ({ "1", "2", "3", "4", "5", "6", "7", "8", "9",
+                        "x","a","b","c,","d","e","f", "n", "t", "\""
+                        "X","A","B","C,","D","E","F", "l", "o",
+                        "<",">", "=", "0", "-", "*", "+","/", "%", 
+                        "&", "|", "(", ")" });
+
 string sexpr_eval(string what)
 {
   array q = what/"";
@@ -511,9 +485,8 @@ array(string) tag_scope(string tag, mapping m, string contents, object id)
 {
   mapping old_variables = id->variables;
   id->variables = ([]);
-  if (m->extend) {
+  if (m->extend)
     id->variables += old_variables;
-  }
   contents = parse_rxml(contents, id);
   id->variables = old_variables;
   return ({ contents });
@@ -558,10 +531,10 @@ string tag_set( string tag, mapping m, object id )
       // Unset variable.
       m_delete( id->variables, m->variable );
     return("");
-  } else if (id->misc->defines) {
-    return("<!-- set (line "+id->misc->line+"): variable not specified -->");
   } else {
-    return("<!-- set: variable not specified -->");
+    if(id->misc->debug)
+      return("set on (line "+id->misc->line+"): variable not specified");
+    return("<!-- set (line "+id->misc->line+"): variable not specified -->");
   }
 }
 
@@ -616,15 +589,17 @@ string tag_echo(string tag,mapping m,object id,object file,
 			  mapping defines)
 {
   if(m->help) 
-    return ("This tag outputs the value of different configuration and request local "
-	    "variables. They are not really used by Roxen. This tag is included only "
-	    "to provide compatibility with \"normal\" WWW-servers");
+    return ("This tag outputs the value of different configuration and "
+            "request local variables. They are not really used by Roxen."
+            " This tag is included only to provide compatibility "
+            "with \"normal\" WWW-servers");
   if(!m->var)
   {
     if(sizeof(m) == 1)
       m->var = m[indices(m)[0]];
     else 
-      return "<!-- Que? -->";
+      return id->misc->debug?
+        "Que? You have to select which variable to echo":"";
   } else if(tag == "insert")
     return "";
   if(tag == "!--#echo" && id->misc->ssi_variables &&
@@ -808,9 +783,10 @@ string tag_compat_exec(string tag,mapping m,object id,object file,
     return "SSI support disabled";
 
   if(m->help) 
-    return ("See the Apache documentation. This tag is more or less equivalent"
-	    " to &lt;insert file=...&gt;, but you can run any command. Please "
-	    "note that this can present a severe security hole.");
+    return ("See the Apache documentation. This tag is more or less "
+            "equivalent to &lt;insert file=...&gt;, but you can run "
+            "any command. Please note that this can present a severe "
+            " security hole when allowed.");
 
   if(m->cgi)
   {
@@ -840,11 +816,16 @@ string tag_compat_exec(string tag,mapping m,object id,object file,
 		   | build_env_vars(id->not_query, id, 0),
 		   QUERY(execuid) || -2, QUERY(execgid) || -2);
     } else {
-      return "<b>Execute command support disabled."
-	"<!-- Check \"Main RXML Parser\"/\"SSI support\". --></b>";
+      return "<b>Execute command support disabled."+
+        (id->misc->debug?
+	"Check \"Main RXML Parser\"/\"SSI support\".":
+	"<!-- Check \"Main RXML Parser\"/\"SSI support\". -->"
+        )+"</b>";
     }
   }
-  return "<!-- exec what? -->";
+  return id->misc->debug?
+    "No arguments given to SSI-#exec":
+    "<!-- exec what? -->";
 }
 
 string tag_compat_config(string tag,mapping m,object id,object file,
@@ -877,7 +858,8 @@ string tag_compat_include(string tag,mapping m,object id,object file,
 			  mapping defines)
 {
   if(m->help) 
-    return ("This tag is more or less equivalent to the 'insert' RXML command.");
+    return ("This tag is more or less equivalent to the "
+            "'insert' RXML command.");
   if(!QUERY(ssi))
     return "SSI support disabled";
 
@@ -908,11 +890,13 @@ string tag_compat_include(string tag,mapping m,object id,object file,
     }
     return((fname1 && Stdio.read_bytes(fname1)) ||
 	   (fname2 && Stdio.read_bytes(fname2)) ||
-	   ("<!-- No such file: " +
+           (id->misc->debug?
+	   ("No such file: " +
 	    (fname1 || fname2 || m->file) +
-	    "! -->"));
+	    "!"):
+           ""));
   }
-  return "<!-- What? -->";
+  return "<!-- Hm? #include what, my dear? -->";
 }
 
 string tag_compat_echo(string tag,mapping m,object id,object file,
@@ -977,7 +961,7 @@ string tag_compat_fsize(string tag,mapping m,object id,object file,
     }
     return "Error: Cannot stat file";
   }
-  return "<!-- No file? -->";
+  return id->misc->debug?"No such file?":"";
 }
 
 
@@ -1024,7 +1008,7 @@ string tag_accessed(string tag,mapping m,object id,object file,
       database_set_created(m->file, time(1));
       return "Number of counts for "+m->file+" is now 0.<br>";
     } else {
-      // On a web hotell you don't want the guest to be able to reset
+      // On a web hotell you don't want the guests to be alowed to reset
       // eachothers counters.
       return "You do not have access to reset this counter.";
     }
@@ -1082,7 +1066,7 @@ string tag_accessed(string tag,mapping m,object id,object file,
       break;
 
     default:
-      return "<!-- Per what? -->";
+      return (id->misc->debug?"Access count per what?":"");
     }
   }
 
@@ -1126,7 +1110,7 @@ string tag_modified(string tag, mapping m, object id, object file,
   if(m->by && !m->file && !m->realfile)
   {
     if(!id->conf->auth_module)
-      return "<!-- modified by requires an user database! -->\n";
+      return id->misc->debug?"Modified by requires an user database!\n":"";
     m->name = id->conf->last_modified_by(file, id);
     CACHE(10);
     return tag_user(tag, m, id, file, defines);
@@ -1141,7 +1125,7 @@ string tag_modified(string tag, mapping m, object id, object file,
   if(m->by && m->realfile)
   {
     if(!id->conf->auth_module)
-      return "<!-- modified by requires an user database! -->\n";
+      return id->misc->debug?"Modified by requires an user database!\n":"";
 
     if(f = open(m->realfile, "r"))
     {
@@ -1200,7 +1184,7 @@ string tag_user(string tag, mapping m, object id, object file,mapping defines)
   string b, dom;
 
   if(!id->conf->auth_module)
-    return "<!-- user requires an user database! -->\n";
+    return id->misc->debug?"User requires an user database!\n":"";
 
   if (!(b=m->name)) {
     return(tag_modified("modified", m | ([ "by":"by" ]), id, file,defines));
@@ -1233,342 +1217,6 @@ string tag_user(string tag, mapping m, object id, object file,mapping defines)
   return ("<a href=\"/~"+b+"/\">"+u[4]+"</a>"+
 	  " <a href=\"mailto:" + b + "@" + dom + "\"> &lt;"+
 	  b + "@" + dom + "&gt;</a>");
-}
-
-int match_passwd(string try, string org)
-{
-  if(!strlen(org))   return 1;
-  if(crypt(try, org)) return 1;
-}
-
-string simple_parse_users_file(string file, string u)
-{
- foreach(file/"\n", string line)
- {
-   array(string) arr = line/":";
-   if (arr[0] == u) {
-     if (sizeof(arr) > 1) {
-       return(arr[1]);
-     }
-   }
- }
- return 0;
-}
-
-int match_user(array u, string user, string f, int wwwfile, object id)
-{
-  string s, pass;
-  if(!u)
-    return 0; // No auth sent
-  if(!wwwfile)
-    s=Stdio.read_bytes(f);
-  else
-    s=id->conf->try_get_file(f, id);
-  if(!s)
-    return 0;
-  if(u[1]!=user) return 0;
-  pass=simple_parse_users_file(s, u[1]);
-  if(!pass) return 0;
-  if(u[0] == 1 && pass)
-    return 1;
-  return match_passwd(u[2], pass);
-}
-
-multiset simple_parse_group_file(string file, string g)
-{
- multiset res = (<>);
-
- foreach(file/"\n", string line)
- {
-   array(string) arr = line/":";
-   if (arr[0] == g) {
-     if (sizeof(arr) > 1) {
-       res += (< @arr[-1]/"," >);
-     }
-   }
- }
- // roxen_perror(sprintf("Parse group:%O => %O\n", g, res));
-
- return res;
-}
-
-int group_member(array auth, string group, string groupfile, object id)
-{
-  if(!auth)
-    return 0; // No auth sent
-
-  string s;
-  catch {
-    s = Stdio.read_bytes(groupfile);
-  };
-
-  if (!s) {
-    if (groupfile[0..0] != "/") {
-      if (id->not_query[-1] != '/')
-	groupfile = combine_path(id->not_query, "../"+groupfile);
-      else
-	groupfile = id->not_query + groupfile;
-    }
-    s = id->conf->try_get_file(groupfile, id);
-  }
-
-  if (!s) {
-    return 0;
-  }
-
-  s = replace(s, ({ " ", "\t", "\r" }), ({ "", "", "" }));
-
-  multiset(string) members = simple_parse_group_file(s, group);
-
-  return members && members[replace(auth[1],
-				    ({ " ", "\t", "\r" }), ({ "", "", "" }))];
-}
-
-string tag_prestate(string tag, mapping m, string q, object id);
-string tag_client(string tag,mapping m, string s,object id,object file);
-string tag_deny(string a,  mapping b, string c, object d, object e, 
-		mapping f, object g);
-
-
-#define TEST(X)\
-do { if(X) if(m->or) {if (QUERY(compat_if)) return "<true>"+s; else return s+"<true>";} else ok=1; else if(!m->or) return "<false>"; } while(0)
-
-#define IS_TEST(X, Y) do                		\
-{							\
-  if(m->X)						\
-  {							\
-    string a, b;					\
-    if(sscanf(m->X, "%s is %s", a, b)==2)		\
-      TEST(_match(Y[a], b/","));			\
-    else						\
-      TEST(Y[m->X]);					\
-  }							\
-} while(0)
-
-
-string tag_allow(string a, mapping (string:string) m, 
-		 string s, object id, object file, 
-		 mapping defines, object client)
-{
-  int ok;
-
-  if(m->help)
-    return ("DEPRECATED: Kept for compatibility reasons.");
-  if(m->not)
-  {
-    m_delete(m, "not");
-    return tag_deny("", m, s, id, file, defines, client);
-  }
-
-  if(m->eval) TEST((int)parse_rxml(m->eval, id));
-
-  if(m->module)
-    TEST(id->conf && id->conf->modules[m->module]);
-  
-  if(m->exists) {
-    CACHE(10);
-    TEST(id->conf->try_get_file(fix_relative(m->exists,id),id,1));
-  }
-  
-  if(m->language)
-  {
-    NOCACHE();
-    if(!id->misc["accept-language"])
-    {
-      if(!m->or)
-	return "<false>";
-    } else {
-      TEST(_match(lower_case(id->misc["accept-language"]*" "),
-		  ("*"+(lower_case(m->language)/",")*"*,*"+"*")/","));
-    }
-  }
-  if(m->filename)
-    TEST(_match(id->not_query, m->filename/","));
-
-  IS_TEST(variable, id->variables);
-  if(m->cookie) NOCACHE();
-  IS_TEST(cookie, id->cookies);
-  IS_TEST(defined, defines);
-
-  if (m->successful) TEST (_ok);
-  if (m->failed) TEST (!_ok);
-
-  if (m->match) {
-    string a, b;
-    if(sscanf(m->match, "%s is %s", a, b)==2)
-      TEST(_match(a, b/","));
-  }
-
-  if(m->accept)
-  {
-    NOCACHE();
-    if(!id->misc->accept)
-    {
-      if(!m->or)
-	return "<false>";
-    } else {
-      TEST(glob("*"+m->accept+"*",id->misc->accept*" "));
-    }
-  }
-  if((m->referrer) || (m->referer))
-  {
-    NOCACHE();
-    if (!m->referrer) {
-      m->referrer = m->referer;		// Backward compat
-    }
-    if(id && arrayp(id->referer) && sizeof(id->referer))
-    {
-      if(m->referrer-"r" == "efee")
-      {
-	if(m->or) {
-	  if (QUERY(compat_if)) 
-	    return "<true>" + s;
-	  else
-	    return s + "<true>";
-	} else
-	  ok=1;
-      } else if (_match(id->referer*"", m->referrer/",")) {
-	if(m->or) {
-	  if (QUERY(compat_if))
-	    return "<true>" + s;
-	  else
-	    return s + "<true>";
-	} else
-	  ok=1;
-      } else if(!m->or) {
-	return "<false>";
-      }
-    } else if(!m->or) {
-      return "<false>";
-    }
-  }
-
-  if(m->date)
-  {
-    CACHE(60);
-
-    int tok, a, b;
-    mapping c;
-    c=localtime(time(1));
-    b=(int)sprintf("%02d%02d%02d", c->year, c->mon + 1, c->mday);
-    a=(int)m->date;
-    if(a > 999999) a -= 19000000;
-    else if(a < 901201) a += 10000000;
-    if(m->inclusive || !(m->before || m->after) && a==b)
-      tok=1;
-
-    if(m->before && a>b)
-      tok=1;
-    else if(m->after && a<b)
-      tok=1;
-
-    TEST(tok);
-  }
-
-
-  if(m->time)
-  {
-    CACHE(60);
-
-    int tok, a, b, d;
-    mapping c;
-    c=localtime(time(1));
-
-    b=(int)sprintf("%02d%02d", c->hour, c->min);
-    a=(int)m->time;
-
-    if(m->until) {
-      d = (int)m->until;
-      if (d > a && (b > a && b < d) )
-        tok = 1 ;
-      if (d < a && (b > a || b < d) )
-        tok = 1 ;
-      if (m->inclusive && ( b==a || b==d ) )
-        tok = 1 ;
-    }
-    else if(m->inclusive || !(m->before || m->after) && a==b)
-      tok=1;
-    if(m->before && a>b)
-      tok=1;
-    else if(m->after && a<b)
-      tok=1;
-
-    TEST(tok);
-  }
- 
-
-  if(m->supports || m->name)
-  {
-    NOCACHE();
-
-    string q;
-    q=tag_client("", m, s, id, file);
-    TEST(q != "" && q);
-  }
-
-  if(m->wants)  m->config = m->wants;
-  if(m->configured)  m->config = m->configured;
-
-  if(m->config)
-  {
-    NOCACHE();
-
-    string c;
-    foreach(m->config/",", c)
-      TEST(id->config[c]);
-  }
-
-  if(m->prestate)
-  {
-    string q;
-    q=tag_prestate("", mkmapping(m->prestate/",",m->prestate/","), s, id);
-    TEST(q != "" && q);
-  }
-
-  if(m->host)
-  {
-    NOCACHE();
-    TEST(_match(id->remoteaddr, m->host/","));
-  }
-
-  if(m->domain)
-  {
-    NOCACHE();
-    TEST(_match(roxen->quick_ip_to_host(id->remoteaddr), m->domain/","));
-  }
-  
-  if(m->user)
-  {
-    NOCACHE();
-
-    if(m->user == "any")
-      if(m->file && id->auth) {
-	// FIXME: wwwfile attribute doesn't work.
-	TEST(match_user(id->auth,id->auth[1],fix_relative(m->file,id),
-			!!m->wwwfile, id));
-      } else
-	TEST(id->auth && id->auth[0]);
-    else
-      if(m->file && id->auth) {
-	// FIXME: wwwfile attribute doesn't work.
-	TEST(match_user(id->auth,m->user,fix_relative(m->file,id),
-			!!m->wwwfile, id));
-      } else
-	TEST(id->auth && id->auth[0] && search(m->user/",", id->auth[1])
-	     != -1);
-  }
-
-  if (m->group) {
-    NOCACHE();
-
-    if (m->groupfile && sizeof(m->groupfile)) {
-      TEST(group_member(id->auth, m->group, m->groupfile, id));
-    } else {
-      return("<!-- groupfile not specified --><false>");
-    }
-  }
-
-  return ok?(QUERY(compat_if)?"<true>"+s:s+"<true>"):"<false>";
 }
 
 string tag_configurl(string f, mapping m)
@@ -1643,7 +1291,8 @@ string tag_aconfig(string tag, mapping m, string q, object id)
   {
     href=m->href;
     if (search(href, ":") == search(href, "//")-1)
-      return sprintf("<!-- Cannot add configs to absolute URLs -->\n"
+      return sprintf((id->misc->debug?"It is not possible to add "
+                      "configs to absolute URLs (yet, at least)\n":"")+
 		     "<a href=\"%s\">%s</a>", href, q);
     href=fix_relative(href, id);
     m_delete(m, "href");
@@ -1689,7 +1338,7 @@ string tag_add_cookie(string tag, mapping m, object id, object file,
   if(m->name)
     cookies = m->name+"="+http_encode_cookie(m->value||"");
   else
-    return "<!-- set_cookie requires a `name' -->";
+    return id->misc->debug?"set-cookie requires a `name'":"";
 
   if(m->persistent)
     t=(3600*(24*365*2));
@@ -1722,132 +1371,10 @@ string tag_remove_cookie(string tag, mapping m, object id, object file,
     cookies = m->name+"="+http_encode_cookie(m->value||"")+
       "; expires="+http_date(0)+"; path=/";
   else
-    return "<!-- remove_cookie requires a `name' -->";
+    return id->misc->debug?"remove-cookie requires a `name'":"";
 
   add_header(_extra_heads, "Set-Cookie", cookies);
   return "";
-}
-
-string tag_prestate(string tag, mapping m, string q, object id)
-{
-  if(m->help) return "DEPRECATED: This tag is here for compatibility reasons only";
-  int ok, not=!!m->not, or=!!m->or;
-  multiset pre=id->prestate;
-  string s;
-
-  foreach(indices(m), s)
-    if(pre[s])
-    {
-      if(not) 
-	if(!or)
-	  return "";
-	else
-	  ok=0;
-      else if(or)
-	return q;
-      else
-	ok=1;
-    } else {
-      if(not)
-	if(or)
-	  return q;
-	else
-	  ok=1;
-      else if(!or)
-	return "";
-    }
-  return ok?q:"";
-}
-
-array(string) tag_false(string tag, mapping m, object id, object file,
-			mapping defines, object client)
-{
-  _ok = 0;
-  return ({""});
-}
-
-array(string) tag_true(string tag, mapping m, object id, object file,
-		       mapping defines, object client)
-{
-  _ok = 1;
-  return ({""});
-}
-
-string tag_if(string tag, mapping m, string s, object id, object file,
-	      mapping defines, object client)
-{
-  string res, a, b;
-
-  if(sscanf(s, "%s<otherwise>%s", a, b) == 2)
-  {
-    // compat_if mode?
-    if (QUERY(compat_if)) {
-      res=tag_allow(tag, m, a, id, file, defines, client);
-      if (res == "<false>") {
-	return b;
-      }
-    } else {
-      res=tag_allow(tag, m, a, id, file, defines, client) +
-	"<else>" + b + "</else>";
-    }
-  } else {
-    res=tag_allow(tag, m, s, id, file, defines, client);
-  }
-  return res;
-}
-
-string tag_deny(string tag, mapping m, string s, object id, object file, 
-		mapping defines, object client)
-{
-  if(m->help) return ("DEPRECATED. This tag is only here for compatibility reasons");
-  if(m->not)
-  {
-    m->not = 0;
-    return tag_if(tag, m, s, id, file, defines, client);
-  }
-  if(tag_if(tag,m,s,id,file,defines,client) == "<false>") {
-    if (QUERY(compat_if)) {
-      return "<true>"+s;
-    } else {
-      return s+"<true>";
-    }
-  }
-  return "<false>";
-}
-
-
-string tag_else(string tag, mapping m, string s, object id, object file, 
-		mapping defines) 
-{ 
-  return _ok?"":s; 
-}
-
-string tag_elseif(string tag, mapping m, string s, object id, object file, 
-		  mapping defines, object client) 
-{ 
-  if(m->help) return ("alias for &lt;elseif&gt;");
-  return _ok?"":tag_if(tag, m, s, id, file, defines, client); 
-}
-
-string tag_client(string tag,mapping m, string s,object id,object file)
-{
-  int isok, invert;
-
-  NOCACHE();
-
-  if(m->help) return ("DEPRECATED, This is a compatibility tag");
-  if (m->not) invert=1; 
-
-  if (m->supports)
-    isok=!! id->supports[m->supports];
-
-  if (m->support)
-    isok=!!id->supports[m->support];
-
-  if (!(isok && m->or) && m->name)
-    isok=_match(id->client*" ",
-		Array.map(m->name/",", lambda(string s){return s+"*";}));
-  return (isok^invert)?s:""; 
 }
 
 string tag_return(string tag, mapping m, object id, object file,
@@ -1889,7 +1416,7 @@ string tag_header(string tag, mapping m, object id, object file,
   }
   
   if(!(m->value && m->name))
-    return "<!-- Header requires both a name and a value. -->";
+    return id->misc->debug?"Header requires both a name and a value.":"";
 
   add_header(_extra_heads, m->name, m->value);
   return "";
@@ -1899,7 +1426,7 @@ string tag_redirect(string tag, mapping m, object id, object file,
 		    mapping defines)
 {
   if (!m->to) {
-    return("<!-- Redirect requires attribute \"to\". -->");
+    return(id->misc->debug?"Redirect requires attribute \"to\".":"");
   }
 
   multiset(string) orig_prestate = id->prestate;
@@ -2095,8 +1622,6 @@ mapping query_tag_callers()
 	    "signature":tag_signature,
 	    "user":tag_user,
  	    "quote":tag_quote,
-	    "true":tag_true,	// Used internally
-	    "false":tag_false,	// by <if> and <else>
 	    "echo":tag_echo,           
 	    "!--#echo":tag_compat_echo,           /* These commands are */
 	    "!--#exec":tag_compat_exec,           /* NCSA/Apache Server */
@@ -2213,15 +1738,6 @@ string tag_random(string tag, mapping m, string s)
     return (q=s/q)[random(sizeof(q))];
 }
 
-string tag_right(string t, mapping m, string s, object id)
-{
-  if(m->help) 
-    return "DEPRECATED: compatibility alias for &lt;p align=right&gt;";
-  if(id->supports->alignright)
-    return "<p align=right>"+s+"</p>";
-  return "<table width=100%><tr><td align=right>"+s+"</td></tr></table>";
-}
-
 string tag_formoutput(string tag_name, mapping args, string contents,
 		      object id, mapping defines)
 {
@@ -2254,16 +1770,6 @@ string tag_gauge(string t, mapping args, string contents,
 	  sprintf("%3.6f", t/1000000.0)+
 	  " seconds</b></font><br>"+contents);
 } 
-
-// Changes the parsing order by first parsing it's contents and then
-// morphing itself into another tag that gets parsed. Makes it possible to
-// use, for example, tablify together with sqloutput.
-string tag_preparse( string tag_name, mapping args, string contents,
-		     object id )
-{
-  return make_container( args->tag, args - ([ "tag" : 1 ]),
-			 parse_rxml( contents, id ) );
-}
 
 // Removes empty lines
 mixed tag_trimlines( string tag_name, mapping args, string contents,
@@ -2380,17 +1886,6 @@ string tag_default( string tag_name, mapping args, string contents,
     return contents;
 }
 
-array(string) tag_noparse(string t, mapping m, string c)
-{
-  return ({ c });
-}
-
-string tag_nooutput(string t, mapping m, string c, object id)
-{
-  parse_rxml(c, id);
-  return "";
-}
-
 string tag_sort(string t, mapping m, string c, object id)
 {
   if(!m->separator)
@@ -2412,22 +1907,6 @@ string tag_sort(string t, mapping m, string c, object id)
   }
 
   return pre + sort(lines)*m->separator + post;
-}
-
-string tag_strlen(string t, mapping m, string c, object id)
-{
-  return (string)strlen(c);
-}
-
-string tag_case(string t, mapping m, string c, object id)
-{
-  if(m->lower)
-    c = lower_case(c);
-  if(m->upper)
-    c = upper_case(c);
-  if(m->capitalize)
-    c = capitalize(c);
-  return c;
 }
 
 string tag_recursive_output (string tagname, mapping args, string contents,
@@ -2471,167 +1950,19 @@ string tag_recursive_output (string tagname, mapping args, string contents,
   return res;
 }
 
-class Tracer
-{
-  inherit "roxenlib";
-  string resolv="<ol>";
-  int level;
-
-  mapping et = ([]);
-#if efun(gethrvtime)
-  mapping et2 = ([]);
-#endif
-
-  string module_name(function|object m)
-  {
-    if(!m)return "";
-    if(functionp(m)) m = function_object(m);
-    return (strlen(m->query("_name")) ? m->query("_name") :
-	    (m->query_name&&m->query_name()&&strlen(m->query_name()))?
-	    m->query_name():m->register_module()[1]);
-  }
-
-  void trace_enter_ol(string type, function|object module)
-  {
-    level++; 
-
-    string efont="", font="";
-    if(level>2) {efont="</font>";font="<font size=-1>";} 
-    resolv += (font+"<b><li></b> "+type+" "+module_name(module)+"<ol>"+efont);
-#if efun(gethrvtime)
-    et2[level] = gethrvtime();
-#endif
-#if efun(gethrtime)
-    et[level] = gethrtime();
-#endif
-  }
-
-  void trace_leave_ol(string desc)
-  {
-#if efun(gethrtime)
-    int delay = gethrtime()-et[level];
-#endif
-#if efun(gethrvtime)
-    int delay2 = gethrvtime()-et2[level];
-#endif
-    level--;
-    string efont="", font="";
-    if(level>1) {efont="</font>";font="<font size=-1>";} 
-    resolv += (font+"</ol>"+
-#if efun(gethrtime)
-	       "Time: "+sprintf("%.5f",delay/1000000.0)+
-#endif
-#if efun(gethrvtime)
-	       " (CPU = "+sprintf("%.2f)", delay2/1000000.0)+
-#endif /* efun(gethrvtime) */
-	       "<br>"+html_encode_string(desc)+efont)+"<p>";
-
-  }
-
-  string res()
-  {
-    while(level>0) trace_leave_ol("");
-    return resolv+"</ol>";
-  }
-
-}
-
-class SumTracer
-{
-  inherit Tracer;
-#if 0
-  mapping levels = ([]);
-  mapping sum = ([]);
-  void trace_enter_ol(string type, function|object module)
-  {
-    resolv="";
-    ::trace_enter_ol();
-    levels[level] = type+" "+module;
-  }
-
-  void trace_leave_ol(string mess)
-  {
-    string t = levels[level--];
-#if efun(gethrtime)
-    int delay = gethrtime()-et[type+" "+module_name(module)];
-#endif
-#if efun(gethrvtime)
-    int delay2 = +gethrvtime()-et2[t];
-#endif
-    t+=html_encode_string(mess);
-    if( sum[ t ] ) {
-      sum[ t ][ 0 ] += delay;
-#if efun(gethrvtime)
-      sum[ t ][ 1 ] += delay2;
-#endif
-    } else {
-      sum[ t ] = ({ delay, 
-#if efun(gethrvtime)
-		    delay2 
-#endif
-      });
-    }
-  }
-
-  string res()
-  {
-    foreach(indices());
-  }
-#endif
-}
-
-string tag_trace(string t, mapping args, string c , object id)
-{
-  NOCACHE();
-  object t;
-  if(args->summary)
-    t = SumTracer();
-  else
-    t = Tracer();
-  function a = id->misc->trace_enter;
-  function b = id->misc->trace_leave;
-  id->misc->trace_enter = t->trace_enter_ol;
-  id->misc->trace_leave = t->trace_leave_ol;
-  t->trace_enter_ol( "tag &lt;trace&gt;", tag_trace);
-  string r = parse_rxml(c, id);
-  id->misc->trace_enter = a;
-  id->misc->trace_leave = b;
-  return r + "<h1>Trace report</h1>"+t->res()+"</ol>";
-}
-
-string tag_for(string t, mapping args, string c, object id)
-{
-  string v = args->variable;
-  int from = (int)args->from;
-  int to = (int)args->to;
-  int step = (int)args->step||1;
-  
-  m_delete(args, "from");
-  m_delete(args, "to");
-  m_delete(args, "variable");
-  string res="";
-  for(int i=from; i<=to; i+=step)
-    res += "<set variable="+v+" value="+i+">"+c;
-  return res;
-}
-
 mapping query_container_callers()
 {
-  return (["comment":lambda(){ return ""; },
+  return ([
 	   "crypt":lambda(string t, mapping m, string c){
 		     if(m->compare)
 		       return (string)crypt(c,m->compare);
 		     else
 		       return crypt(c);
 		   },
-	   "for":tag_for,
-	   "trace":tag_trace,
 	   "cset":lambda(string t, mapping m, string c, object id)
-		  { return tag_set("set",m+([ "value":html_decode_string(c) ]),
+	  { return tag_set("set",m+([ "value":html_decode_string(c) ]),
 			    id); },
 	   "source":tag_source,
-	   "case":tag_case,
-	   "noparse":tag_noparse,
 	   "catch":lambda(string t, mapping m, string c, object id) {
 		     string r;
 		     array e = catch(r=parse_rxml(c, id));
@@ -2642,33 +1973,30 @@ mapping query_container_callers()
 		     if(c[-1] != "\n") c+="\n";
 		     throw( ({ c, backtrace() }) );
 		   },
-	   "nooutput":tag_nooutput,
 	   "sort":tag_sort,
 	   "doc":tag_source2,
 	   "autoformat":tag_autoformat,
 	   "random":tag_random,
 	   "scope":tag_scope,
-	   "right":tag_right,
-	   "client":tag_client,
-	   "if":tag_if,
-	   "elif":tag_elseif,
-	   "elseif":tag_elseif,
-	   "else":tag_else,
 	   "gauge":tag_gauge,
-	   "strlen":tag_strlen,
-	   "allow":tag_if,
-	   "prestate":tag_prestate,
 	   "apre":tag_aprestate,
 	   "aconf":tag_aconfig,
 	   "aconfig":tag_aconfig,
-	   "deny":tag_deny,
 	   "smallcaps":tag_smallcaps,
 	   "formoutput":tag_formoutput,
-	   "preparse" : tag_preparse,
 	   "trimlines" : tag_trimlines,
 	   "default" : tag_default,
 	   "recursive-output": tag_recursive_output,
 	   ]);
+}
+
+
+
+mapping query_if_callers()
+{
+  return ([
+    "expr":lambda( string q){ return (int)sexpr_eval(q); },
+  ]);
 }
 
 int api_query_num(object id, string f, int|void i)
@@ -2794,8 +2122,8 @@ string api_html_quote(object id, string what)
   return replace(what, ({ "<", ">", "&" }),({"&lt;", "&gt;", "&amp;" }));
 }
 
-constant replace_from = indices( iso88591 )+ ({"&lt;","&gt;", "&amp;","&#022;"});
-constant replace_to   = values( iso88591 )+ ({"<",">", "&","\""});
+constant replace_from=indices( iso88591 )+({"&lt;","&gt;","&amp;","&#022;"});
+constant replace_to =values( iso88591 )+ ({"<",">", "&","\""});
 
 string api_html_dequote(object id, string what)
 {
