@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.144 2002/09/10 16:35:46 mast Exp $
+// $Id: Roxen.pmod,v 1.145 2002/09/24 15:54:18 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -576,6 +576,7 @@ mapping http_redirect( string url, RequestID|void id, multiset|void prestates,
   if( String.width( url )>8 && !has_value( url, "?" ) )
     url += "?magic_roxen_automatic_charset_variable=едц";
 
+  url = http_encode_string (url);
   if (variables) {
     string concat_char = has_value (url, "?") ? "&" : "?";
     foreach (indices (variables), string var) {
@@ -594,10 +595,10 @@ mapping http_redirect( string url, RequestID|void id, multiset|void prestates,
     }
   }
 
-  HTTP_WERR("Redirect -> "+http_encode_string(url));
+  HTTP_WERR("Redirect -> "+url);
 
-  return http_low_answer( 302, "Redirect to "+html_encode_string(url))
-    + ([ "extra_heads":([ "Location":http_encode_string( url ) ]) ]);
+  return http_low_answer( 302, "Redirect to "+url)
+    + ([ "extra_heads":([ "Location":url ]) ]);
 }
 
 mapping http_stream(Stdio.File from)
