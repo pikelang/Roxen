@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.456 2004/04/19 17:13:14 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.457 2004/04/21 13:13:30 noring Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -591,6 +591,24 @@ class TagCopyScope {
       RXML.Context ctx = RXML_CONTEXT;
       foreach(ctx->list_var(args->from), string var)
 	ctx->set_var(var, ctx->get_var(var, args->from), args->to);
+    }
+  }
+}
+
+class TagCombinePath {
+  inherit RXML.Tag;
+  constant name = "combine-path";
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  mapping(string:RXML.Type) req_arg_types = ([
+    "base":RXML.t_text(RXML.PEnt),
+    "path":RXML.t_text(RXML.PEnt)
+  ]);
+  
+  class Frame {
+    inherit RXML.Frame;
+    
+    array do_return(RequestID id) {
+      return ({ combine_path_unix(args->base, args->path) });
     }
   }
 }
@@ -6877,6 +6895,20 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
  </attr>
 
  <p>All other attributes will be inherited by the generated img tag.</p>",
+
+//----------------------------------------------------------------------
+
+"combine-path":#"<desc type='tag'><p><short>
+ Combines paths.</short>
+</p></desc>
+
+<attr name='base' value='string' required='required'>
+ <p>The base path.</p>
+</attr>
+
+<attr name='path' value='number' required='required'>
+ <p>The path to be combined (appended) to the base path.</p>
+</attr>",
 
 //----------------------------------------------------------------------
 
