@@ -64,7 +64,7 @@ mapping(string:mixed) setinitcolors(mapping(string:mixed) diagram_data)
   if (diagram_data["type"]=="sumbars")
     for(int i; i<sizeof(diagram_data["data"]); i++)
       diagram_data["data"][i]=diagram_data["data"][i]+
-	allocate(diagram_data["datasize"]-sizeof(diagram_data["data"]));
+	allocate(diagram_data["datasize"]-sizeof(diagram_data["data"][i]));
 
 
   if ((diagram_data["type"]=="sumbars")||
