@@ -1,4 +1,4 @@
-# $Id: db.spec,v 1.18 1998/08/28 17:48:52 wellhard Exp $
+# $Id: db.spec,v 1.19 1998/09/04 14:01:29 wellhard Exp $
 
 drop table messages;
 drop table mail;
@@ -87,6 +87,7 @@ create table template_wizards (
 	     category		     varchar(8)  # tmpl/nav
      );
 
+# Tempate wizards pages
 create table template_wizards_pages (
              id                      int auto_increment primary key,
              name                    varchar(64),
@@ -95,6 +96,7 @@ create table template_wizards_pages (
              help		     blob
      );
 
+# Template variables
 create table template_vars (
 	     id                      int auto_increment primary key,
              name                    varchar(64),
@@ -104,6 +106,7 @@ create table template_vars (
 	     type		     varchar(8) # font/color/image/int
      );
 
+# Template variables options
 create table template_vars_opts (
              id		             int auto_increment primary key,
 	     variable_id	     int,
@@ -111,13 +114,14 @@ create table template_vars_opts (
              value		     blob
      );
 
-# Default schemes
+# Template schemes
 create table template_schemes (
              id                      int auto_increment primary key,
 	     name                    varchar(64),
 	     description             blob
      );
 
+# Template schemes variables
 create table template_schemes_vars (
              id                      int auto_increment primary key,
              scheme_id               int,
@@ -133,6 +137,7 @@ create table customers_schemes (
 	     description	     blob
      );
 
+# Customers schemes variables
 create table customers_schemes_vars (
              id                      int auto_increment primary key,
              scheme_id               int,
