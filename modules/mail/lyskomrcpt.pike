@@ -1,5 +1,5 @@
 /*
- * $Id: lyskomrcpt.pike,v 1.5 1999/03/23 16:05:07 peter Exp $
+ * $Id: lyskomrcpt.pike,v 1.6 2003/09/03 11:20:58 grubba Exp $
  *
  * A LysKOM module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RCPT_DEBUG
 
-constant cvs_version = "$Id: lyskomrcpt.pike,v 1.5 1999/03/23 16:05:07 peter Exp $";
+constant cvs_version = "$Id: lyskomrcpt.pike,v 1.6 2003/09/03 11:20:58 grubba Exp $";
 
 /*
  * Roxen glue
@@ -316,8 +316,6 @@ int put(string sender, string user, string domain,
   if(!conf_no) return 1;
   object conference=LysKOM.Abstract.Conferences(session)[conf_no];
 
-  object db=conf->get_provider("sql")->sql_object();
- 
   int id = session->create_text(sprintf("[%s] %s",
 					headers->from||"",
 					headers->subject||""),

@@ -10,7 +10,7 @@ import .AutoWeb;
 #define TRACE_ENTER(A,B) do{if(id->misc->trace_enter)id->misc->trace_enter((A),(B));}while(0)
 #define TRACE_LEAVE(A) do{if(id->misc->trace_leave)id->misc->trace_leave((A));}while(0)
 
-constant cvs_version="$Id: autositefs.pike,v 1.34 2000/05/16 20:00:58 stewa Exp $";
+constant cvs_version="$Id: autositefs.pike,v 1.35 2003/09/03 11:20:58 grubba Exp $";
 
 mapping host_to_id;
 multiset(int) hidden_sites;
@@ -318,8 +318,6 @@ mixed find_file(string f, object id)
     }
     puts++;
     
-    object privs;
-
 // #ifndef THREADS // Ouch. This is is _needed_. Well well...
     if (((int)id->misc->uid) && ((int)id->misc->gid) &&
       (QUERY(access_as_user))) {

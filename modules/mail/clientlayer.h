@@ -12,9 +12,9 @@ class Mail
   object user;
   string body();
   Stdio.File body_fd();
-  mapping decoded_headers(int force);
-  mapping headers(int force);
-  multiset flags(int force);
+  mapping decoded_headers(int|void force);
+  mapping headers(int|void force);
+  multiset flags(int|void force);
   void set_flag(string name);
   void clear_flag(string name);
   mixed set(string name, mixed to);
@@ -87,7 +87,7 @@ class ClientLayer
 #ifdef WANT_CLIENTINIT
   static local ClientLayer clientlayer;
 
-  int init_clientlayer( roxen.Configuration c )
+  int init_clientlayer( Configuration c )
   {
     array err;
     if( err = catch {

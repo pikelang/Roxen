@@ -1,5 +1,5 @@
 /*
- * $Id: rbl.pike,v 1.2 1999/10/10 19:28:41 grubba Exp $
+ * $Id: rbl.pike,v 1.3 2003/09/03 11:20:59 grubba Exp $
  *
  * Support for RBL (Real-time Blackhole List).
  *
@@ -9,7 +9,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version="$Id: rbl.pike,v 1.2 1999/10/10 19:28:41 grubba Exp $";
+constant cvs_version="$Id: rbl.pike,v 1.3 2003/09/03 11:20:59 grubba Exp $";
 constant thread_safe=1;
 
 // #define RBL_DEBUG
@@ -109,8 +109,7 @@ void async_classify_connection(object con, mapping con_info,
   if (server == "orbs.dorkslayers.com") {
     report_warning("RBL: orbs.dorkslayers.com is obsolete. "
 		   "Replaced by relays.orbs.org.\n");
-    // FIXME: How to mark as modified?
-    server = QUERY(server) = "relays.orbs.org";
+    set("server", server = "relays.orbs.org");
   }
 
   string nodename = reverse(con_info->remoteip/".")*"."+"."+QUERY(server);

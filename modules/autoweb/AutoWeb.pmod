@@ -31,7 +31,7 @@ class AutoFile {
     return 1;
   }
 
-  int|array stat()
+  int|array|Stdio.Stat stat()
   {
     return file_stat(real_path(filename));
   }
@@ -280,7 +280,6 @@ class MetaData {
 			     "keywords":"",
 			     "description":""]);
     
-    string s = "";
     array fs=AutoFile(id, f+".md")->stat();
     array a;
     if(fs && (a=cache_lookup("autoweb_md_stat",id->misc->customer_id+"\0"+f))
@@ -503,7 +502,7 @@ class AutoFilter {
 
   string filter_body(string contents, mapping md)
   {
-    if(!md->content_type=="text/html")
+    if(md->content_type!="text/html")
       return contents;
     
     if(md->template == "Yes") {

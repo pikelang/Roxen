@@ -1,5 +1,5 @@
 /*
- * $Id: clientlayer.pike,v 1.46 1999/09/15 22:22:37 grubba Exp $
+ * $Id: clientlayer.pike,v 1.47 2003/09/03 11:20:58 grubba Exp $
  *
  * A module for Roxen AutoMail, which provides functions for
  * clients.
@@ -10,7 +10,7 @@
 #include <module.h>
 inherit "module" : module;
 
-constant cvs_version="$Id: clientlayer.pike,v 1.46 1999/09/15 22:22:37 grubba Exp $";
+constant cvs_version="$Id: clientlayer.pike,v 1.47 2003/09/03 11:20:58 grubba Exp $";
 constant thread_safe=1;
 
 
@@ -186,7 +186,7 @@ Stdio.File new_body( string body_id )
   return Stdio.File(f, "rwct");
 }
 
-array stat_body(string body_id )
+array|Stdio.Stat stat_body(string body_id )
 {
   return file_stat(query("maildir")+"/"+hash_body_id(body_id)+"/"+body_id);
 }
@@ -735,7 +735,7 @@ class Mailbox
   Mail create_mail_from_fd( Stdio.File fd )
   {
     // Check quota.
-    array st = fd->stat();
+    array|Stdio.Stat st = fd->stat();
     if (st && (st[1] > 0) && !user->check_quota(st[1])) {
       // Out of quota.
       return 0;
@@ -1082,8 +1082,8 @@ int|string find_user( string username_at_host )
 		     " group by customer_id", domain);
     if(!sizeof(a)) return 0;
     customer_id=(int)a[0]->customer_id;
-    array a = squery("select id from users where username='%s' and"
-		     " customer_id='%d'", user,customer_id);
+    a = squery("select id from users where username='%s' and"
+	       " customer_id='%d'", user,customer_id);
     if(!sizeof(a)) return 0;
     if(sizeof(a)>1) error("Ambigious user list.\n");
     return (int)a[0]->id;

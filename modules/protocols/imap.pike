@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.145 1999/09/04 11:11:11 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.146 2003/09/03 11:20:59 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -297,7 +297,8 @@ class imap_mail
 	/* Invalid address */
 	return 0;
     }
-    int i = search(tokens, '@', 1);
+
+    i = search(tokens, '@', 1);
     if ( (i>0)
 	 && (i+1 < sizeof(tokens))
 	 && stringp(tokens[i-1])

@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 2.10 2000/02/04 15:56:57 grubba Exp $
+ * $Id: smtprelay.pike,v 2.11 2003/09/03 11:20:59 grubba Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
@@ -14,20 +14,20 @@ inherit "module";
 
 #pragma strict_types
 
-constant cvs_version = "$Id: smtprelay.pike,v 2.10 2000/02/04 15:56:57 grubba Exp $";
+constant cvs_version = "$Id: smtprelay.pike,v 2.11 2003/09/03 11:20:59 grubba Exp $";
 
 /*
  * Some globals
  */
 
 #ifdef THREADS
-static object queue_mutex = Thread.Mutex();
+static Thread.Mutex queue_mutex = Thread.Mutex();
 #endif /* THREADS */
 
-static object conf;
-static object sql;
+static Configuration conf;
+static Sql.sql sql;
 
-static object dns = Protocols.DNS.async_client();
+static Protocols.DNS.async_client dns = Protocols.DNS.async_client();
 
 /*
  * Roxen glue
@@ -88,7 +88,7 @@ string status()
   return("Connected OK.");
 }
 
-void start(int i, object c)
+void start(int i, Configuration c)
 {
   if (c) {
     conf = c;
@@ -218,7 +218,7 @@ static void async_connect_got_hostname(string host, int port,
 }
 
 int async_connect_not_self(string host, int port,
-			   function(int|object, mixed ...:void) callback,
+			   function(int|Stdio.File, mixed ...:void) callback,
 			   mixed ... args)
 {
 #ifdef SOCKET_DEBUG
@@ -592,7 +592,7 @@ class MailSender
 	extras += " BODY=8BITMIME";
       }
       if (esmtp_features["size"]) {
-	array a = mail->stat();
+	array|Stdio.Stat a = mail->stat();
 	if (a && (a[1] >= 0)) {
 	  // Add some margin for safety.
 	  extras += " SIZE="+(a[1]+128);
@@ -723,7 +723,7 @@ class MailSender
     esmtp_features = (<>);
 
     message->remote_mta = servers[server];
-    message->last_attempt_at = time();
+    message->last_attempt_at = (string)time();
 
     mail->seek(0);
 
@@ -768,17 +768,16 @@ class MailSender
 static void mail_sent(int res, mapping message)
 {
   // Fake request id for logging purposes.
-  mapping id = ([
-    "method":"SEND",
-    "prot":message->prot || "SMTP",
-    "remoteaddr":message->remote_mta || "0.0.0.0",
-    "time":time(),
-    "cookies":([]),
-    "not_query":sprintf("From:%s;To:%s@%s;%s",
-			message->sender,
-			message->user, message->domain,
-			message->mailid),
-  ]);
+  RequestID id = RequestID(0, 0, conf);
+  id->method = "SEND";
+  id->prot = message->prot || "SMTP";
+  id->remoteaddr = message->remote_mta || "0.0.0.0";
+  id->time = time();
+  id->cookies = ([]);
+  id->not_query = sprintf("From:%s;To:%s@%s;%s",
+			  message->sender,
+			  message->user, message->domain,
+			  message->mailid);
   if (res) {
     // res != SEND_FAIL
     switch(res) {
@@ -942,7 +941,7 @@ void bounce(mapping msg, string code, array(string) text, string last_command,
 
     // Create a bounce message.
 
-    object f = Stdio.File();
+    Stdio.File f = Stdio.File();
     string oldmessage = "";
     string oldheaders = "";
     int only_headers;
@@ -1099,7 +1098,7 @@ void bounce(mapping msg, string code, array(string) text, string last_command,
  */
 
 int relay(string from, string user, string domain,
-	  object mail, string csum, object|void smtp)
+	  Stdio.BlockFile mail, string csum, object|void smtp)
 {
 #ifdef RELAY_DEBUG
   report_debug(sprintf("SMTP: relay(%O, %O, %O, X, %O, X)\n",
@@ -1121,7 +1120,7 @@ int relay(string from, string user, string domain,
   // Calculate the checksum if it isn't calculated already.
 
   if (!csum) {
-    object sha = Crypto.sha();
+    Crypto.sha sha = Crypto.sha();
     string s;
     mail->seek(0);
     while ((s = mail->read(8192)) && (s != "")) {
@@ -1143,7 +1142,7 @@ int relay(string from, string user, string domain,
 #endif /* THREADS */
 
   if (!file_stat(fname)) {
-    object spoolfile = Stdio.File();
+    Stdio.File spoolfile = Stdio.File();
     if (!spoolfile->open(fname, "cwxa")) {
       report_error(sprintf("SMTPRelay: Failed to open spoolfile %O!\n",
 			   fname));

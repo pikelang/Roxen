@@ -6,7 +6,7 @@ inherit "roxenlib";
 inherit Regexp : regexp;
 
 constant cvs_version = 
-"$Id: mailtags.pike,v 1.28 2000/12/13 08:12:44 per Exp $";
+"$Id: mailtags.pike,v 1.29 2003/09/03 11:20:58 grubba Exp $";
 
 constant thread_safe = 1;
 
@@ -47,7 +47,7 @@ class SMTPRelay
 /* Globals ---------------------------------------------------------*/
 
 static MIME.Message mymesg = MIME.Message();
-static roxen.Configuration conf;
+static Configuration conf;
 static int debug, secure;
 static mapping (string:User) uid_cache = ([]);
 
@@ -110,7 +110,7 @@ string query_provides()
 }
 
 
-void start(int q, roxen.Configuration c)
+void start(int q, Configuration c)
 {
   if(!c)
   {
@@ -171,7 +171,7 @@ string fake_decode_qp(string in)
     sscanf(fusk, "?=%s", fusk);
     in += fusk;
   }
-  return replace(in,({" ","+"}),({"_","_"}));
+  return predef::replace(in,({" ","+"}),({"_","_"}));
 }
 
 object bevel1(object from)
@@ -252,7 +252,7 @@ static mixed internal_odd_tag_href(string t, mapping args,
   int pno;
   if(args->href && sscanf(args->href, "cid:part%d", pno))
   {
-    args->href = replace(url, "#part#", pp+"/"+(string)pno);
+    args->href = predef::replace(url, "#part#", pp+"/"+(string)pno);
     return ({ make_tag(t, args ) });
   }
 }
@@ -264,7 +264,7 @@ static mixed internal_odd_tag_src(string t, mapping args,
   int pno;
   if(args->src && sscanf(args->src, "cid:part%d", pno))
   {
-    args->src = replace(url, "#part#", pp+"/"+(string)pno);
+    args->src = predef::replace(url, "#part#", pp+"/"+(string)pno);
     return ({ make_tag(t, args ) });
   }
 }
@@ -277,7 +277,7 @@ class Tag
   string `()(string t, mapping m, string c)
   {
     if(tn == "pre")
-      c = replace(c-"\r", "\n\n", "\n");
+      c = predef::replace(c-"\r", "\n\n", "\n");
     return make_container( tn, m, html_encode_string(c) );
   }
 
@@ -299,9 +299,14 @@ static string highlight_enriched( string from, object id )
 		       "bold":Tag("b"),
 		     ]));
 
-  from = replace(from-"\r","\n>","<br>&gt;");
-  return replace(from, "\n\n", "\n<br>\n");
+  from = predef::replace(from-"\r","\n>","<br>&gt;");
+  return predef::replace(from, "\n\n", "\n<br>\n");
 }
+
+constant MONTHS=([
+  "jan":0, "feb":1, "mar":2, "apr":3, "may":4, "jun":5,
+  "jul":6, "aug":7, "sep":8, "oct":9, "nov":10, "dec":11,
+]);
 
 // Returns a time_t in UTC, given a year, month, date hour minute
 // second and timezone (as a string).
@@ -343,7 +348,7 @@ static int gettime( int year, string month, int date, int hour,
 
   mapping mt=([]);
   mt->year = year;
-  mt->mon = MONTHS[month];
+  mt->mon = MONTHS[lower_case(month)];
   mt->mday = date;
   mt->hour = hour;
   mt->min = minute;
@@ -469,7 +474,7 @@ static string highlight_emp( string from )
 //   while(sscanf(from, "%s /%[^*\n]/ %s", a, b, c) == 3)
 //     from = a+" <i>"+b+"</i> "+c;
   while(sscanf(from, "%s_%[^*\n]_%s", a, b, c) == 3)
-    from = a+"<u>"+replace(b, "_", " ")+"</u>"+c;
+    from = a+"<u>"+predef::replace(b, "_", " ")+"</u>"+c;
   return from;
 }
 
@@ -491,7 +496,7 @@ static string describe_body(string bdy, mapping m, int|void nofuss)
   foreach(bdy/"\n", string line)
   {
     int quote = 0;
-    string q = replace(line, ({" ","|"}), ({"",">"}));
+    string q = predef::replace(line, ({" ","|"}), ({"",">"}));
     if(!lq && sscanf(q, "%[>]", ql))
       quote = strlen(ql);
 
@@ -536,7 +541,7 @@ static mapping common_callers( string prefix )
   {
     if(!debug && search( s, "debug") != -1)
       continue;
-    tags[replace(s[strlen(prefix)..], "_", "-")] = this_object()[s];
+    tags[predef::replace(s[strlen(prefix)..], "_", "-")] = this_object()[s];
   }
 
   DEBUG(( "Tags for %s is %s\n",prefix,
@@ -702,7 +707,7 @@ static int filter_mail_list( Mail m, object id )
 static string trim_from( string from )
 {
   string q;
-  from = replace(from||"No sender", "\\\"", "''");
+  from = predef::replace(from||"No sender", "\\\"", "''");
   if(sscanf(from, "%*s\"%s\"%*s", q)==3) if(strlen(q)) return q;
   if(sscanf(from, "\"%s\"<%*s@%*s>", q)) if(strlen(q)) return q;
   if(sscanf(from, "%s<%*s@%*s>", q)) if(strlen(q)) return q;
@@ -1497,7 +1502,7 @@ string tag_process_move_actions( string tag, mapping args, object id )
   {
     string mbox;
     m_delete(id->variables, v);
-    m_delete(id->variables, replace(v, ".x", ".y"));
+    m_delete(id->variables, predef::replace(v, ".x", ".y"));
 
     sscanf(v, "copy_mail_to_%s.x", mbox);
 
@@ -1522,7 +1527,7 @@ string tag_process_move_actions( string tag, mapping args, object id )
   {
     string mbox;
     m_delete(id->variables, v);
-    m_delete(id->variables, replace(v, ".x", ".y"));
+    m_delete(id->variables, predef::replace(v, ".x", ".y"));
 
     sscanf(v, "move_mail_to_%s.x", mbox);
     DEBUG(("move "+id->variables->mail_id+" to "+mbox+"\n"));
@@ -1566,7 +1571,7 @@ string tag_process_user_buttons( string tag, mapping args, object id )
     int i;
     sscanf( v, "user_button_%d.x", i );
     m_delete(id->variables, v);
-    m_delete(id->variables, replace(v, ".x", ".y"));
+    m_delete(id->variables, predef::replace(v, ".x", ".y"));
 
     if(i > -1 && i < sizeof(b))
       foreach(indices( b[ i ][ 2 ] ), string q)
@@ -1761,7 +1766,6 @@ string tag_mail_scrollbar( string tag, mapping args, object id )
 // 
 array(string) tag_list_mail_quick( string tag, mapping args, object id )
 {
-  string res;
   Mailbox mbox;
 
   if(!UID) return ({});
@@ -1820,7 +1824,6 @@ array(string) tag_list_mail_quick( string tag, mapping args, object id )
   link = "<td><HIGHLIGHT>"+make_tag("a", q);
 
   string bg;
-  int q;
   array(Mail) mail = mbox->mail();
   string pre="";
   string post="";
@@ -1856,7 +1859,7 @@ array(string) tag_list_mail_quick( string tag, mapping args, object id )
   foreach(mail, Mail m)
   {
     toclear += m->id+",";
-    string f = replace(link,({"<HIGHLIGHT>","#id#"}),({
+    string f = predef::replace(link,({"<HIGHLIGHT>","#id#"}),({
       m->flags()->read?"":"<b>",m->id}));
     mapping h = m->decoded_headers();
     //    if(h->subject && h->from)
@@ -2081,7 +2084,7 @@ string tag_process_mail_actions( string tag, mapping args, object id )
     {
       //   	  werror("var: " + v + "\n");
       m_delete(id->variables, v);
-      m_delete(id->variables, replace(v, ".x", ".y"));
+      m_delete(id->variables, predef::replace(v, ".x", ".y"));
     }
   return "";
 }
@@ -2214,7 +2217,8 @@ string tag_mail_body_part( string tag, mapping args, object id )
     p=m;
     id->misc->moreheads = ([ "Content-type":p->type+"/"+p->subtype,
 			     "Content-disposition":"inline; "
-			     "filename=\""+replace(args->name,"\"","\\\"")+
+			     "filename=\""+
+			     predef::replace(args->name,"\"","\\\"")+
 			     "\""]);
     return p->getdata();
   }
@@ -2331,23 +2335,23 @@ string low_container_mail_body_parts( string tag, mapping args,
 	else if(msg->type == "message" && msg->subtype == "rfc822") 
 	{
 	  res += "<font size=-1>"+
-	    replace(text_part_format, "#data#",
-		    low_container_mail_body_parts(tag,args,
+	    predef::replace(text_part_format, "#data#",
+			    low_container_mail_body_parts(tag,args,
 					  MIME.Message(msg->getdata()),
-						  id,partpre+"/"+i))+
+							  id,partpre+"/"+i))+
 	    "</font>";
 	}
 	else if(msg->type == "text")
 	{
 	  if(msg->subtype == "html")
-	    res += replace( html_part_format, "#data#", msg->getdata() );
+	    res += predef::replace(html_part_format, "#data#", msg->getdata());
 	  else if(msg->subtype == "enriched")
-	    res += replace( html_part_format, 
-			    "#data#", 
-			    highlight_enriched(msg->getdata(),id) );
+	    res += predef::replace(html_part_format, 
+				   "#data#", 
+				   highlight_enriched(msg->getdata(),id));
 	  else
-	    res += replace( text_part_format, "#data#", 
-			    highlight_mail(msg->getdata(),id));
+	    res += predef::replace(text_part_format, "#data#", 
+				   highlight_mail(msg->getdata(),id));
 	} 
 	else 
 	{
@@ -2357,7 +2361,7 @@ string low_container_mail_body_parts( string tag, mapping args,
 	  else
 	    format = binary_part_format;
 
-	  mapping q = ([ "#url#":replace(binary_part_url,
+	  mapping q = ([ "#url#":predef::replace(binary_part_url,
 					 ({"#mail#", "#part#","#name#" }),
 					 ({ args->mail,partpre+"/"+(string)i, 
 		      http_encode_string(fake_decode_qp(msg->get_filename()
@@ -2369,7 +2373,7 @@ string low_container_mail_body_parts( string tag, mapping args,
 			 "#type#":html_encode_string(msg->type+"/"
 						     +msg->subtype),
 	  ]);
-	  res += replace( format, indices(q), values(q) );
+	  res += predef::replace( format, indices(q), values(q) );
 	}
 	i++;
       }
@@ -2405,10 +2409,12 @@ string low_container_mail_body_parts( string tag, mapping args,
 				     "img":internal_odd_tag_src,
 				     "object":internal_odd_tag_src,
 				     "embed":internal_odd_tag_src,
-	  ]), ([]), replace(binary_part_url, ({"#mail#","#name#"}), 
+			    ]), ([]),
+			    predef::replace(binary_part_url,
+					    ({"#mail#","#name#"}), 
 			    ({args->mail, args->mail+".gif"})),partpre);
 
-	  res += replace( html_part_format, "#data#", data );
+	  res += predef::replace( html_part_format, "#data#", data );
 	}
       }
     }
@@ -2418,14 +2424,14 @@ string low_container_mail_body_parts( string tag, mapping args,
     if(msg->type == "text")
     {
       if(msg->subtype == "html")
-	res += replace( html_part_format, "#data#", msg->getdata() );
+	res += predef::replace( html_part_format, "#data#", msg->getdata() );
       else if(msg->subtype == "enriched")
-	res += replace( html_part_format, 
-			"#data#", 
-			highlight_enriched(msg->getdata(),id) );
+	res += predef::replace( html_part_format, 
+				"#data#", 
+				highlight_enriched(msg->getdata(),id) );
       else
-	res += replace( text_part_format, "#data#", 
-			highlight_mail(msg->getdata(),id));
+	res += predef::replace( text_part_format, "#data#", 
+				highlight_mail(msg->getdata(),id));
     } 
     else 
     {
@@ -2435,13 +2441,13 @@ string low_container_mail_body_parts( string tag, mapping args,
       else
 	format = binary_part_format;
 	
-      mapping q = ([ "#url#":replace(binary_part_url,
+      mapping q = ([ "#url#":predef::replace(binary_part_url,
 				     ({"#mail#", "#part#", "#name#" }),
 				     ({ args->mail, "/0", "#name#" })),
 		     "#name#":html_encode_string(msg->get_filename())||"0.a",
 		     "#type#":html_encode_string(msg->type+"/"+msg->subtype),
       ]);
-      res += replace( format, indices(q), values(q) );
+      res += predef::replace( format, indices(q), values(q) );
     }
   }
   return res;
@@ -2513,7 +2519,7 @@ string container_get_mail( string tag, mapping args,
       args->mail = tag_mail_next("",([]),id);
       if(mid == "NOPE")
       {
-	m_delete(id->variables->mail_id);
+	m_delete(id->variables, "mail_id");
 	return "<p>No more mail<p>";
       }
       if(args->mail == om)

@@ -1,12 +1,12 @@
 /*
- * $Id: admin.pike,v 1.11 1999/09/20 22:54:00 js Exp $
+ * $Id: admin.pike,v 1.12 2003/09/03 11:20:52 grubba Exp $
  *
  * AutoAdmin, administration interface
  *
  * Johan Schön 1998-07-08
  */
 
-constant cvs_version = "$Id: admin.pike,v 1.11 1999/09/20 22:54:00 js Exp $";
+constant cvs_version = "$Id: admin.pike,v 1.12 2003/09/03 11:20:52 grubba Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -169,11 +169,11 @@ void start(int q, object conf)
 void create()
 {
   defvar("location", "/admin/", "Mountpoint", TYPE_LOCATION);
-  defvar("admin", roxen->query("ConfigurationUser"),
+  defvar("admin", "www"||roxen->query("ConfigurationUser"),
 	 "Admin user name", TYPE_STRING,
 	 "This user name grants full access to the configuration "
 	 "part of AutoSite Admin.");
-  defvar("adminpass", roxen->query("ConfigurationPassword"),
+  defvar("adminpass", crypt("www")||roxen->query("ConfigurationPassword"),
 	 "Admin password", TYPE_PASSWORD,
 	 "This password grants full access to the configuration "
 	 "part of AutoSite Admin.");

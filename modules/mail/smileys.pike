@@ -35,8 +35,8 @@ array replace_from, replace_to;
 
 static string fix_img_with_filename( string from, mapping m )
 {
-  mapping m = ([ "src":query_location()+"Face"+from,
-		 "alt":html_encode_string(search(m,from)),
+  m = ([ "src":query_location()+"Face"+from,
+	 "alt":html_encode_string(search(m,from)),
   ]);
   return make_tag( "img", m );
 }
