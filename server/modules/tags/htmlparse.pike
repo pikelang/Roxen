@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.149 1998/10/06 08:35:09 hubbe Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.150 1998/10/12 07:59:40 hubbe Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -839,6 +839,8 @@ string tagtime(int t,mapping m)
   string s;
   mixed eris;
   string res;
+
+  if (m->adjust) t+=(int)m->adjust;
 
   if (m->part)
   {
