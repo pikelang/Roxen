@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.94 2000/02/04 20:19:56 mast Exp $
+ * $Id: rxml.pike,v 1.95 2000/02/05 04:18:08 nilsson Exp $
  *
  * The Roxen RXML Parser.
  *
@@ -714,7 +714,7 @@ string tag_number(string t, mapping args, RequestID id)
                         args->type||"number")( (int)args->num );
 }
 
-array(string) list_packages()
+private array(string) list_packages()
 {
   return filter(((get_dir("../local/rxml_packages")||({}))
                  |(get_dir("../rxml_packages")||({}))),
@@ -725,7 +725,7 @@ array(string) list_packages()
 
 }
 
-string read_package( string p )
+private string read_package( string p )
 {
   string data;
   p = replace(p, ({"/", "\\"}), ({"",""}));
@@ -736,7 +736,7 @@ string read_package( string p )
   return data;
 }
 
-string use_file_doc( string f, string data, RequestID nid, Stdio.File id )
+private string use_file_doc( string f, string data, RequestID nid, Stdio.File id )
 {
   string res="";
   catch
@@ -1209,6 +1209,57 @@ string tag_cond( string t, mapping m, string c, RequestID id )
                             "default":lambda(mixed ... a){
     result->def = a[2]+"<false>"; }]),id,result);
   return result->res||result->def;
+}
+
+class TagEmit {
+  inherit RXML.Tag;
+  constant name = "emit";
+  constant flags = RXML.FLAG_CONTAINER | RXML.FLAG_SOCKET_TAG;
+  constant req_arg_types = (["source":RXML.t_text]);
+
+  class Frame {
+    inherit RXML.Frame;
+    string scope_name;
+    mapping vars=(["counter":0]);
+
+    object plugin;
+    array(mapping(string:mixed))|function res;
+
+    array do_enter(RequestID id) {
+      if(!(plugin=get_plugins()[args->source])) rxml_error("Source not present.");
+      scope_name=args->scope||args->source;
+      res=plugin->get_dataset(args, id);
+      if(arrayp(res)) {
+	if(args["do-once"] && sizeof(res)==0) res=({ ([]) });
+	do_iterate=array_iterate;
+	LAST_IF_TRUE = 1;
+	return 0;
+      }
+      if(functionp(res)) {
+	do_iterate=function_iterate;
+	LAST_IF_TRUE = 1;
+	return 0;
+      }
+      rxml_fatal("Wrong return type from emit source plugin.");
+    }
+
+    function do_iterate;
+
+    int function_iterate(RequestID id) {
+      vars=res(args, id);
+      return mappingp(vars);
+    }
+
+    int array_iterate(RequestID id) {
+      int counter=vars->counter;
+      if(counter>=sizeof(res)) return 0;
+      vars=res[counter++];
+      vars->counter=counter;
+      return 1;
+    }
+
+
+  }
 }
 
 mapping query_container_callers()
