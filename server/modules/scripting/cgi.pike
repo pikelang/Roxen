@@ -9,7 +9,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: cgi.pike,v 1.116 1999/04/22 09:06:32 per Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.1 1999/04/22 09:08:29 per Exp $";
 
 
 array register_module()
