@@ -1,5 +1,5 @@
 /*
- * $Id: sqltag.pike,v 1.15 1997/10/15 19:40:13 grubba Exp $
+ * $Id: sqltag.pike,v 1.16 1997/11/26 22:12:27 grubba Exp $
  *
  * A module for Roxen Challenger, which gives the tags
  * <SQLQUERY> and <SQLOUTPUT>.
@@ -7,7 +7,7 @@
  * Henrik Grubbström 1997-01-12
  */
 
-constant cvs_version="$Id: sqltag.pike,v 1.15 1997/10/15 19:40:13 grubba Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.16 1997/11/26 22:12:27 grubba Exp $";
 constant thread_safe=1;
 #include <module.h>
 
@@ -95,6 +95,7 @@ string sqloutput_tag(string tag_name, mapping args, string contents,
 #endif /* SQL_TAG_COMPAT */
     object(sql) con;
     array(mapping(string:mixed)) result;
+    function sql_connect = request_id->conf->sql_connect;
     mixed error;
 
     if (args->host) {
@@ -106,16 +107,23 @@ string sqloutput_tag(string tag_name, mapping args, string contents,
       database = args->database;
       user = "";
       password = "";
+      sql_connect = 0;
     }
     if (args->user) {
       user = args->user;
+      sql_connect = 0;
     }
     if (args->password) {
       password = args->password;
+      sql_connect = 0;
     }
-    host = (lower_case(host) == "localhost")?"":host;
-    
-    if (error = catch(con = sql(host, database, user, password))) {
+    if (sql_connect) {
+      error = catch(con = sql_connect(host));
+    } else {
+      host = (lower_case(host) == "localhost")?"":host;
+      error = catch(con = sql(host, database, user, password));
+    }
+    if (error) {
       contents = "<h1>Couldn't connect to SQL-server</h1><br>\n" +
 	((master()->describe_backtrace(error)/"\n")*"<br>\n");
     } else if (error = catch(result = con->query(args->query))) {
@@ -175,6 +183,7 @@ string sqlquery_tag(string tag_name, mapping args,
 #endif /* SQL_TAG_COMPAT */
     object(sql) con;
     mixed error;
+    function sql_connect = request_id->conf->sql_connect;
     array(mapping(string:mixed)) res;
 
     if (args->host) {
@@ -186,16 +195,23 @@ string sqlquery_tag(string tag_name, mapping args,
       database = args->database;
       user = "";
       password = "";
+      sql_connect = 0;
     }
     if (args->user) {
       user = args->user;
+      sql_connect = 0;
     }
     if (args->password) {
       password = args->password;
+      sql_connect = 0;
     }
-    host = (lower_case(host) == "localhost")?"":host;
-    
-    if (error = catch(con = sql(host, database, user, password))) {
+    if (sql_connect) {
+      error = catch(con = sql_connect(host));
+    } else {
+      host = (lower_case(host) == "localhost")?"":host;
+      error = catch(con = sql(host, database, user, password));
+    }
+    if (error) {
       return("<h1>Couldn't connect to SQL-server</h1><br>\n" +
 	     ((master()->describe_backtrace(error)/"\n")*"<br>\n"));
     } else if (error = catch(res = con->query(args->query))) {
@@ -230,6 +246,7 @@ string sqltable_tag(string tag_name, mapping args,
 #endif /* SQL_TAG_COMPAT */
     object(sql) con;
     mixed error;
+    function sql_connect = request_id->conf->sql_connect;
     object(sql_result) result;
     string res;
 
@@ -242,16 +259,23 @@ string sqltable_tag(string tag_name, mapping args,
       database = args->database;
       user = "";
       password = "";
+      sql_connect = 0;
     }
     if (args->user) {
       user = args->user;
+      sql_connect = 0;
     }
     if (args->password) {
       password = args->password;
+      sql_connect = 0;
     }
-    host = (lower_case(host) == "localhost")?"":host;
-    
-    if (error = catch(con = sql(host, database, user, password))) {
+    if (sql_connect) {
+      error = catch(con = sql_connect(host));
+    } else {
+      host = (lower_case(host) == "localhost")?"":host;
+      error = catch(con = sql(host, database, user, password));
+    }
+    if (error) {
       return("<h1>Couldn't connect to SQL-server</h1><br>\n" +
 	     ((master()->describe_backtrace(error)/"\n")*"<br>\n"));
     } else if (error = catch(result = con->big_query(args->query))) {
@@ -386,8 +410,13 @@ void create()
  * More interface functions
  */
 
-void start()
+object conf;
+
+void start(int level, object _conf)
 {
+  if (_conf) {
+    conf = _conf;
+  }
 }
 
 void stop()
@@ -397,11 +426,16 @@ void stop()
 string status()
 {
   if (catch {
-    object o = Sql.sql(QUERY(hostname)
+    object o;
+    if (conf->sql_connect) {
+      o = conf->sql_connect(QUERY(hostname));
+    } else {
+      o = Sql.sql(QUERY(hostname)
 #ifdef SQL_TAG_COMPAT
-		       , QUERY(database), QUERY(user), QUERY(password)
+		  , QUERY(database), QUERY(user), QUERY(password)
 #endif /* SQL_TAG_COMPAT */
-		       );
+		  );
+    }
     return(sprintf("Connected to %s-server on %s<br>\n",
 		   o->server_info(), o->host_info()));
   }) {
