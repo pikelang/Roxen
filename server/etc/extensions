@@ -1,4 +1,4 @@
-# $Id: extensions,v 1.45 2000/09/16 19:38:35 nilsson Exp $
+# $Id: extensions,v 1.46 2000/09/20 18:17:40 nilsson Exp $
 #
 # ---- Extension database ----
 # The database used by the content typ module to map from extension to mime-type
@@ -7,7 +7,8 @@
 # MIME-type listing 03-SEP-1999. Chemical/* is not included since they collide with
 # quite a few other mime types. They can be found in the file
 # more_extensions/chemical.
-
+#
+# Last synchronized with IANA media types list: 2000-09-20
 
 # -------------------- Audio ---------------------
 
@@ -26,6 +27,12 @@ snd	audio/basic
 # audio/vnd.cns.anp1
 # audio/vnd.cns.inf1
 # audio/L16
+# audio/vnd.everad.plj
+# audio/telephone-event
+# audio/tone
+sid	audio/prs.sid
+# vnd.nuera.ecelp4800
+# vnd.nuera.ecelp7470
 
 # Other
 
@@ -98,6 +105,9 @@ wbmp    image/vnd.wap.wbmp
 # image/prs.pti
 # image/vnd.cns.inf2
 # image/vnd.mix
+# image/vnd.fujixerox.edmics-rlc
+# image/vnd.fujixerox.edmics-mmr
+# image/vnd.fst
 
 # Pending registration
 
@@ -170,6 +180,8 @@ viv     video/vnd.vivo
 vivo    video/vnd.vivo
 # video/vnd.motorola.video
 # video/vnd.motorola.videop
+# video/vnd.fvt
+# video/pointer
 
 # Other
 
@@ -237,6 +249,13 @@ wml	text/vnd.wap.wml
 wmls	text/vnd.wap.wmlscript
 # text/vnd.motorola.reflex
 # text/vnd.fly
+# text/wap.sl
+# text/wap.si
+# text/t140
+# text/vnd.ms-mediapackage
+# text/vnd.IPTC.NewsML
+# text/vnd.IPTC.NITF
+# text/vnd.curl
 
 # Other
 
@@ -506,6 +525,35 @@ wbxml	application/vnd.wap.wbxml
 # application/vnd.dpgraph
 # application/http
 sdp	application/sdp
+# vnd.eudora.data
+# vnd.fujixerox.docuworks.binder
+# vnd.vectorworks
+# vnd.grafeq
+# vnd.bmi
+# vnd.ericsson.quickcall
+# vnd.hzn-3d-crossword
+# vnd.wap.slc
+# vnd.wap.sic
+# vnd.groove-injector
+# vnd.fujixerox.ddd
+# vnd.groove-account
+# vnd.groove-identity-message
+# vnd.groove-tool-message
+# vnd.groove-tool-template
+# vnd.groove-vcard
+# vnd.ctc-posml
+# vnd.canon-lips
+# vnd.canon-cpdl
+# vnd.trueapp
+# vnd.s3sms
+# iotp
+# vnd.mcd
+# vnd.httphone
+# vnd.informix-visionary
+# vnd.msign
+# vnd.ms-lrm
+# vnd.contact.cmsg
+# vnd.epson.esf
 
 # Other
 
@@ -685,10 +733,11 @@ wri	application/x-write
 xcf	application/x-gimp
 zpa	application/pcphoto
 
-#Dreamcast specific
+# Dreamcast specific
 lcd application/x-dreamcast-lcdimg
 vmi application/x-dreamcast-vms-info
 vms application/x-dreamcast-vms
+
 
 # -------------------- Model ---------------------
 
@@ -702,6 +751,10 @@ wrml    model/vrml
 # model/vnd.dwf
 # model/vnd.gtw
 # model/vnd.flatland.3dml
+# model/vnd.vtu
+# model/vnd.mts
+# model/vnd.gdl
+# model/vnd.gs-gdl
 
 
 # ------------------ Multipart -------------------
