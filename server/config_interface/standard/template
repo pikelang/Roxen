@@ -137,7 +137,7 @@
              <font color="&usr.fgcolor;">
               <configif-output quote="¤" source="locales">
                 <a href="¤path¤"
-                  ><img src="/internal-roxen-¤latin1-name¤¤-selected¤.gif"
+                  ><img src="/internal-roxen-flag-¤name¤¤-selected¤.gif"
                        alt="¤latin1-name¤" border="0" height="16"
                 /></a>
               </configif-output>
