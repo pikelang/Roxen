@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 1996 - 2001, Roxen IS.
 
 // User filesystem. Uses the userdatabase (and thus the system passwd
 // database) to find the home-dir of users, and then looks in a
@@ -18,9 +18,9 @@
 
 #include <module.h>
 
-inherit "filesystem" : filesystem;
+inherit "chili-module:filesystem" : filesystem;
 
-constant cvs_version="$Id: userfs.pike,v 1.70 2002/10/22 00:28:53 nilsson Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.71 2002/11/14 04:58:41 mani Exp $";
 constant module_type = MODULE_LOCATION;
 constant module_name = "File systems: User file system";
 constant module_doc  =
