@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.19 2000/01/15 19:35:07 mast Exp $
+//! $Id: module.pmod,v 1.20 2000/01/17 18:30:24 noring Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -23,7 +23,7 @@ class Tag
   //!string name;
   //! The name of the tag. Required and considered constant.
 
-  int flags;
+  //!int flags;
   //! Various bit flags that affect parsing; see the FLAG_* constants.
   //! RXML.Frame.flags is initialized from this.
 
