@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.136 2000/07/07 12:34:25 wellhard Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.137 2000/07/14 15:02:43 kuntri Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -1734,7 +1734,7 @@ documentation for that module.</desc>",
 </attr>
 
 <attr name=class value=string>
- This CSS class definition will apply to the a-element.
+This cascading style sheet (CSS) class definition will apply to the a-element.
 </attr>
  <p>All other attributes will be inherited by the generated a tag.</p>",
 
@@ -1749,6 +1749,12 @@ documentation for that module.</desc>",
 
 <attr name=value value=string>
  The value the variable should have appended.
+
+ <ex>
+ <define variable='var.ris'/>
+ <append variable='var.ris' value='Roxen Internet Software'/>
+ &var.ris;
+ </ex>
 </attr>
 
 </attr name=from value=string>
@@ -1779,7 +1785,7 @@ documentation for that module.</desc>",
 </attr>
 
 <attr name=class value=string>
- This CSS class definition will apply to the a-element.
+ This cascading style sheet (CSS) class definition will apply to the a-element.
 </attr>",
 
 "auth-required":#"<desc tag><short>
@@ -1821,7 +1827,7 @@ using the pre tag.
 </attr>
 
 <attr name=class value=string>
- This CSS definition will be applied on the p elements.
+ This cascading style sheet (CSS) definition will be applied on the p elements.
 </attr>",
 
 "cache":#"<desc cont><short>
@@ -1894,7 +1900,8 @@ using the pre tag.
 </attr>
 
 <attr name=class value=string>
- This CSS class definition will be applied to the image.
+ This cascading style sheet (CSS) class definition will be applied to
+ the image.
 </attr>
  All other attributes will be inherited by the generated img tag.",
 
@@ -2040,7 +2047,7 @@ Display the time from another timezone.
 <tr><td><i>part=minute</i></td><td>Display the numbers of minutes since the last full hour. <ex ><date part='minute' type='number'/></ex></td></tr>
 <tr><td><i>part=second</i></td><td>Display the numbers of seconds since the last full minute. <ex ><date part='second' type='string'/></ex></td></tr>
 <tr><td><i>part=yday</i></td><td>Display the number of days since the first of January. <ex ><date part='yday' type='ordered'/></ex></td></tr>
-<tr><td><i>part=beat</i></td><td>Display the number of beats since midnight Central European Time(CET). There is a total of 1000 beats per day. The beats system was designed by <a href://www.swatch.com>Swatch</a> as a means for a universal time, without time zones and day/night changes. <ex ><date part='beat' type='number'/></ex></td></tr>
+<tr><td><i>part=beat</i></td><td>Display the number of beats since midnight Central European Time(CET). There is a total of 1000 beats per day. The beats system was designed by <a href='http://www.swatch.com'>Swatch</a> as a means for a universal time, without time zones and day/night changes. <ex ><date part='beat' type='number'/></ex></td></tr>
 <tr><td><i>part=week</i></td><td>Display the number of the current week.<ex ><date part='week' type='number'/></ex></td></tr>
 <tr><td><i>part=seconds</i></td><td>Display the total number of seconds this year. <ex ><date part='seconds' type='number'/></ex></td></tr>
 </table>
@@ -2202,15 +2209,15 @@ Display the time from another timezone.
  {tr}
     {td} First cell {/td}
     {td} Second cell {/td}
- /tr}
+ {/tr}
 {/table}
 </doc>
 </ex>
 </attr>
 
 <attr name=class value=string>
- This CSS definition will be applied on the pre element.
-</attr>",
+  This cascading style sheet (CSS) definition will be applied on the pre element.
+  </attr>",
 
 "expire-time":#"<desc tag><short>
  Sets cache expire time for the document.</short>
@@ -2317,7 +2324,9 @@ Display the time from another timezone.
 <attr name=value value=string>
  The value of the header.
 </attr>
- See the Appendix for a list of HTTP headers.",
+
+ For more information about HTTP headers please steer your browser to chapter 14, 'Header field definitions' in <a href='http://community.roxen.com/developers/idocs/rfc/rfc2616.html'> RFC 2616</a> at Roxen Community.",
+
 
 "imgs":#"<desc tag><short>
  Generates a image tag with proper dimensions.</short>
@@ -2353,11 +2362,23 @@ Display the time from another timezone.
 </attr>
 
 <attr name=variables>
- Inserts a variable listing.
+ Inserts a variable listing. Presently, only the argument 'full' is available.
+
+ <ex>
+  <pre>
+   <insert variables='full' scope='roxen'/>
+  </pre>
+ </ex>
 </attr>
 
 <attr name=scopes>
  Inserts a listing of all present scopes.
+
+ <ex>
+  <pre>
+   <insert scopes=''/>
+  </pre>
+ </ex>
 </attr>
 
 <attr name=file value=string>
@@ -2412,14 +2433,17 @@ Display the time from another timezone.
  Print by whom the page was modified. Takes the same attributes as the
  <tag><ref type='tag'>user</ref></tag> tag. This attribute requires a
  userdatabase.
-<ex type='box'>This page was last modified by <modified by='' realname=''/>.</ex>
+
+ <ex type='box'>This page was last modified by <modified by=''
+ realname=''/>.</ex>
 </attr>
 
 <attr name=date>
  Print the modification date. Takes all the date attributes in the
  <tag><ref type='tag'>date</ref></tag> tag.
 
-<ex type='box'>This page was last modified <modified date='' case='lower' type='string'/>.</ex>
+ <ex type='box'>This page was last modified <modified date=''
+ case='lower' type='string'/>.</ex>
 </attr>
 
 <attr name=file value=path>
@@ -2575,7 +2599,7 @@ load.",
 </attr>
 
 <attr name=class value=string>
- This CSS definition will be applied on the img element.
+ This cascading style sheet (CSS) definition will be applied on the img element.
 </attr>
 
 <attr name=target value=string>
@@ -2600,6 +2624,9 @@ Sets a variable.</short>
 
 <attr name=variable value=string required>
  The name of the variable.
+<ex type='box'>
+<set variable='var.foo' value='bar'/>
+</ex>
 </attr>
 
 <attr name=value value=string>
@@ -2620,8 +2647,8 @@ Sets a variable.</short>
 
  If none of the above attributes are specified, the variable is unset.
  If debug is currently on, more specific debug information is provided
- if the operation failed. See also: <tag><ref type='tag'>append</ref></tag>
- and <tag><ref type='tag'>debug</ref></tag>",
+ if the operation failed. See also: <ref type='tag'>append</ref>
+ and <ref type='tag'>debug</ref>",
 
 "set-cookie":#"<desc tag><short>
  Sets a cookie that will be stored by the user's browser.</short> This
@@ -2732,18 +2759,21 @@ Sets a variable.</short>
 
 <attr name=space>
  Put a space between every character.
+<ex>
+<smallcaps space=''>Roxen WebServer</smallcaps>
+</ex>
 </attr>
 
 <attr name=class value=string>
- Apply this CSS style on all elements.
+ Apply this cascading style sheet (CSS) style on all elements.
 </attr>
 
 <attr name=smallclass value=string>
- Apply this CSS style on all small elements.
+ Apply this cascading style sheet (CSS) style on all small elements.
 </attr>
 
 <attr name=bigclass value=string>
- Apply this CSS style on all big elements.
+ Apply this cascading style sheet (CSS) style on all big elements.
 </attr>
 
 <attr name=size value=number>
@@ -2752,18 +2782,60 @@ Sets a variable.</short>
 
 <attr name=small value=number default=size-1>
  Size of the small tags. Only applies when size is specified.
+
+ <ex>
+  <smallcaps size='6' small='2'>Roxen WebServer</smallcaps>
+ </ex>
+ <ex>
+  <smallcaps>Roxen WebServer</smallcaps>
+ </ex>
 </attr>",
 
 "sort":#"<desc cont><short>
  Sorts the contents.</short>
+
+ <ex>
+  <sort>
+   1
+   Hello
+   3
+   World
+   Are
+   2
+   We
+   4
+   Communicating?
+  </sort>
+ </ex>
 </desc>
 
 <attr name=separator value=string>
- Defines what the strings to be sorted are separated with.
+ Defines what the strings to be sorted are separated with. The sorted
+ string will be separated by the string.
+
+ <ex>
+  <sort separator='#'>
+   1#Hello#3#World#Are#2#We#4#Communicating?
+  </sort>
+ </ex>
 </attr>
 
 <attr name=reverse>
  Reversed order sort.
+
+ <ex>
+  <sort reverse=''>
+   1
+   Hello
+   3
+   World
+   Are
+   2
+   We
+   4
+   Communicating?
+  </sort>
+ </ex>
 </attr>",
 
 "throw":#"<desc cont><short hide>
@@ -2775,6 +2847,21 @@ Sets a variable.</short>
 
 "trimlines":#"<desc cont><short>
  Removes all empty lines from the contents.</short>
+
+  <ex>
+  <trimlines>
+
+
+   Are
+
+
+   We
+
+   Communicating?
+
+
+  </trimlines>
+ </ex>
 </desc>",
 
 "unset":#"
@@ -2784,6 +2871,13 @@ Sets a variable.</short>
 
 <attr name=variable value=string required>
  The name of the variable.
+
+ <ex>
+  <set variable='var.jump' value='do it'/>
+  &var.jump;
+  <unset variable='var.jump'/>
+  &var.jump;
+ </ex>
 </attr>",
 
 "user":#"<desc tag><short>
@@ -2822,11 +2916,10 @@ Sets a variable.</short>
 <ex type='box'><user name='foo' realname=''/></ex>
 </attr>",
 
-"if#expr":#"<desc plugin>
- Evaluates expressions. The following characters may be used: \"1, 2,
- 3, 4, 5, 6, 7, 8, 9, x, a, b, c, d, e, f, i, n, t, \, X. A, B, C, D, E,
- F, l, o, &lt;, &gt;, =, 0, -, +, /, %, &, |, (, ) and .\".
-</desc>",
-
+"if#expr":#"<desc plugin><short>
+ Evaluates expressions.</short> It is not possible to use regexp's.
+ The following characters may be used: \"1, 2, 3, 4, 5, 6, 7, 8, 9, x,
+ a, b, c, d, e, f, i, n, t, \, X. A, B, C, D, E, F, l, o, &lt;, &gt;,
+ =, 0, -, +, *, /, %, &, |, (, ) and .\". </desc>",
     ]);
 #endif
