@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.21 1999/02/03 20:25:23 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.22 1999/02/03 22:23:41 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -694,18 +694,20 @@ class imap_mailbox
 	    @Array.map(message_numbers,
 		       lambda(int i, array attrs)
 		       {
-			 return Array.map(attrs,
-					  lambda(mixed attr, int i)
-					  {
-					    return contents[i-1]->
-					      fetch_attr(attr);
-					  },
-					  i);
+			 return ({
+			   "FETCH", imap_number(i),
+			   imap_list( Array.map(attrs,
+						lambda(mixed attr, int i)
+						{
+						  return contents[i-1]->
+						    fetch_attr(attr);
+						},
+						i))
+			 });
 		       },
 		       attrs));
 
 #ifdef IMAP_DEBUG
-    werror(describe_backtrace(({ "Backtrace:\n", backtrace() })));
     werror("=> res: %O\n", res);
 #endif /* IMAP_DEBUG */
       
