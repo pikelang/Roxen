@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.10 1996/12/02 14:36:47 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.11 1996/12/02 14:43:02 per Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -542,7 +542,7 @@ string new_module_form(object id, object node)
   
   foreach(mods, q)
   {
-    if(b = module_nomore(a, a[q][2], node->config()))
+    if(b = module_nomore(q, a[q][2], node->config()))
     {
       if(b->sname != q)
 	res += ({("<p>"+
