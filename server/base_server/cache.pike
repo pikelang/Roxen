@@ -1,4 +1,4 @@
-string cvs_version = "$Id: cache.pike,v 1.7 1996/12/10 04:40:32 per Exp $";
+string cvs_version = "$Id: cache.pike,v 1.8 1997/01/26 23:46:23 per Exp $";
 #include <config.h>
 
 inherit "roxenlib";
@@ -8,7 +8,7 @@ inherit "roxenlib";
 
 #define ENTRY_SIZE 2
 
-#define CACHE_TIME_OUT 300
+#define CACHE_TIME_OUT 3000
 
 #if DEBUG_LEVEL > 8
 #ifndef CACHE_DEBUG
@@ -46,26 +46,44 @@ string status()
   res = "<table border=0 cellspacing=0 cellpadding=2><tr bgcolor=darkblue>"
     "<th align=left>Class</th><th align=left>Entries</th><th align=left>(KB)</th><th align=left>Hits</td><th align=left>Misses</th><th align=left>Hitrate</th></tr>";
   array c, b;
+  mapping ca = ([]), cb=([]), ch=([]), ct=([]);
   b=indices(cache);
   c=map_array(values(cache), get_size);
+  for(int i=0; i<sizeof(b); i++)
+  {
+    int s = sizeof(cache[b[i]]);
+    int h = hits[b[i]];
+    int t = all[b[i]];
+    sscanf(b[i], "%s:", b[i]);
+    ca[b[i]]+=c[i]; cb[b[i]]+=s; ch[b[i]]+=h; ct[b[i]]+=t;
+  }
+  b=indices(ca);
+  c=values(ca);
   sort(c,b);
   int n, totale, totalm, totalh, mem, totalr;
+  i=0;
+  c=reverse(c);
   foreach(reverse(b), a)
   {
-    res += "<tr align=right bgcolor="+(n/3%2?"black":"#000033")+"><td align=left>"+a+"</td><td>"+sizeof(cache[a])+"</td><td>"
-      + ((mem=get_size(cache[a]))/1024) + "</td>";
-    res += "<td>"+hits[a]+"</td><td>"+(all[a]-hits[a])+"</td>";
-    if(all[a])
-      res += "<td>"+(hits[a]*100)/all[a]+"%</td>";
-    else
-      res += "<td>0%</td>";
-    res += "</tr>";
-    totale += sizeof(cache[a]);
-    totalm += mem;
-    totalh += hits[a];
-    totalr += all[a];
+    if(ct[a])
+    {
+      res += ("<tr align=right bgcolor="+(n/3%2?"black":"#000033")+
+	      "><td align=left>"+a+"</td><td>"+cb[a]+"</td><td>" +
+	      sprintf("%.1f", ((mem=c[i])/1024.0)) + "</td>");
+      res += "<td>"+ch[a]+"</td><td>"+(ct[a]-ch[a])+"</td>";
+      if(ct[a])
+	res += "<td>"+(ch[a]*100)/ct[a]+"%</td>";
+      else
+	res += "<td>0%</td>";
+      res += "</tr>";
+      totale += cb[a];
+      totalm += mem;
+      totalh += ch[a];
+      totalr += ct[a];
+    }
+    i++;
   }
-  res += "<tr align=right bgcolor=darkblue><td align=left>Total</td><td>"+totale+"</td><td>" + (totalm/1024) + "</td>";
+  res += "<tr align=right bgcolor=darkblue><td align=left>Total</td><td>"+totale+"</td><td>" + sprintf("%.1f", (totalm/1024.0)) + "</td>";
     res += "<td>"+totalh+"</td><td>"+(totalr-totalh)+"</td>";
     if(totalr)
       res += "<td>"+(totalh*100)/totalr+"%</td>";
