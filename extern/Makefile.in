@@ -31,10 +31,12 @@ none-localinstall:
 -localinstall:
 -install:
 
-fcgi: 
+fcgi: force
 	(cd fast_cgi; $(MAKE) "CFLAGSUP=$(CFLAGS)" "LDFLAGS=$(LDFLAGS)" "CC=$(CC)")
 	cp fast_cgi/cgi-fcgi/cgi-fcgi fcgi
 	@(strip fcgi || echo)
+
+force:
 
 roxen_hostname: roxen_hostname.o Makefile
 	$(CC) $(LDFLAGS) -o roxen_hostname roxen_hostname.o $(LIBS)
