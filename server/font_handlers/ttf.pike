@@ -3,7 +3,7 @@
 
 #if constant(has_Image_TTF)
 #include <config.h>
-constant cvs_version = "$Id: ttf.pike,v 1.2 2000/09/03 16:46:26 nilsson Exp $";
+constant cvs_version = "$Id: ttf.pike,v 1.3 2000/09/04 05:09:44 per Exp $";
 
 constant name = "TTF fonts";
 constant doc = "True Type font loader.";
@@ -51,7 +51,9 @@ static void build_font_names_cache( )
       {
         Stat a=file_stat(path);
         if(a && a[1]==-2) {
-          traverse_font_dir( path );
+          if( !file_stat( path+"/fontname" ) ) 
+            // no, we do not want to try this dir. :-)
+            traverse_font_dir( path );
           continue;
         }
         // Here is a good place to impose the artificial restraint that
@@ -139,11 +141,11 @@ class TTFWrapper
 
   array text_extents( string what )
   {
-    Image.Image o = real_write( what );
-    return ({ o->xsize()/2, o->ysize()/2 });
+    Image.Image o = write( what );
+    return ({ o->xsize(), o->ysize() });
   }
 
-  static void create(object r, int s, string fn)
+  void create(object r, int s, string fn)
   {
     string encoding;
     real = r;
@@ -162,7 +164,6 @@ class TTFWrapper
     real_write = (encoder? write_encoded : real->write);
   }
 }
-
 
 array available_fonts()
 {
@@ -198,14 +199,6 @@ array(string) has_font( string name, int size )
     return indices(ttf_font_names_cache[ name ]);
 }
 
-void create()
-{
-  roxen.getvar( "font_dirs" )
-      ->add_changed_callback( lambda(Variable.Variable v){
-                                ttf_font_names_cache=0;
-                              } );
-}
-
 Font open(string f, int size, int bold, int italic )
 {
   string tmp;
@@ -231,5 +224,16 @@ Font open(string f, int size, int bold, int italic )
       return TTFWrapper( fo(), size, f );
   }
   return 0;
+}
+
+
+
+
+void create()
+{
+  roxen.getvar( "font_dirs" )
+      ->add_changed_callback( lambda(Variable.Variable v){
+                                ttf_font_names_cache=0;
+                              } );
 }
 #endif
