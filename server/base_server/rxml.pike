@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.158 2000/03/04 22:28:15 mast Exp $
+// $Id: rxml.pike,v 1.159 2000/03/06 17:50:04 mast Exp $
 
 inherit "roxenlib";
 inherit "rxmlhelp";
@@ -291,7 +291,9 @@ RXML.TagSet rxml_tag_set = class
 RXML.Type default_content_type = RXML.t_html (RXML.PXml);
 RXML.Type default_arg_type = RXML.t_text (RXML.PEnt);
 
+#ifdef OLD_RXML_COMPAT
 int old_rxml_compat;
+#endif
 
 class BacktraceFrame
 // Only used to get old style tags in the RXML backtraces.
@@ -425,7 +427,10 @@ array|string call_tag(RXML.PXml parser, mapping args, string|function rf)
   };
   ctx->frame = orig_frame;
   ctx->frame_depth--;
-  if (err) throw (err);
+  if (err) {
+    ctx->handle_exception (err, parser);
+    return ({});
+  }
 
   TRACE_LEAVE("");
 
@@ -490,7 +495,10 @@ array(string)|string call_container(RXML.PXml parser, mapping args,
   };
   ctx->frame = orig_frame;
   ctx->frame_depth--;
-  if (err) throw (err);
+  if (err) {
+    ctx->handle_exception (err, parser);
+    return ({});
+  }
 
   TRACE_LEAVE("");
 

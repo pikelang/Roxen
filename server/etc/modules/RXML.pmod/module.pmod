@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.73 2000/03/04 19:08:32 mast Exp $
+//! $Id: module.pmod,v 1.74 2000/03/06 17:50:06 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -215,7 +215,10 @@ class Tag
       ustate[parser] = ({err});
       throw (err = parser);
     }
-    else throw_fatal (err);
+    else {
+      ctx->handle_exception (err, parser); // Will rethrow unknown errors.
+      return ({});
+    }
   }
 
   DECLARE_CNT (__count);
@@ -2164,8 +2167,6 @@ class Parser
 	if (!context->unwind_state) context->unwind_state = ([]);
 	context->unwind_state->top = err;
       }
-      else if (context)
-	context->handle_exception (err, this_object()); // Will rethrow unknown errors.
       else {
 	LEAVE_CONTEXT();
 	throw_fatal (err);
@@ -2203,8 +2204,6 @@ class Parser
 	if (!context->unwind_state) context->unwind_state = ([]);
 	context->unwind_state->top = err;
       }
-      else if (context)
-	context->handle_exception (err, this_object()); // Will rethrow unknown errors.
       else {
 	LEAVE_CONTEXT();
 	throw_fatal (err);
