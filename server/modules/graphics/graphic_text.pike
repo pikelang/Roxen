@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.113 1998/03/06 11:12:10 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.114 1998/03/07 20:01:03 noring Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -10,10 +10,22 @@ inherit "roxenlib";
 #define VAR_MORE	0
 #endif /* VAR_MORE */
 
+static private int loaded;
+
+static private string doc()
+{
+  return !loaded?"":replace(Stdio.read_bytes("modules/tags/doc/graphic_text")
+			    ||"", ({ "{", "}" }), ({ "&lt;", "&gt;" }));
+}
+
 array register_module()
 {
   return ({ MODULE_LOCATION | MODULE_PARSER,
 	      "Graphics text",
+	      ("Generates graphical texts.<p>"
+	       "See <tt>&lt;gtext help&gt;&lt;/gtext&gt;</tt> for "
+	       "more information.\n<p>"+doc()),
+#if 0
 	      "Defines a few new containers, which all render text to gifs "
 	      "using the image module in pike.\n<p>"
 	      "<b>&lt;gh1&gt;</b> to <b>&lt;gh6&gt;:</b> Headers<br>\n"
@@ -108,6 +120,7 @@ array register_module()
 	      " target=...\n"
 	      " onClick=...\n"
 	      "</pre>\n",
+#endif
 	      0,
 	      1,
 	      });
@@ -710,6 +723,8 @@ void clean_cache_dir()
 
 void start(int|void val, object|void conf)
 {
+  loaded = 1;
+
   if(conf)
   {
     mkdirhier( query( "cache_dir" )+".foo" );
@@ -1245,7 +1260,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
 //Allow <accessed> and others inside <gtext>.
   
   if(t=="gtext" && arg->help)
-    return register_module()[2];
+    return doc();
   else if(arg->help)
     return "This tag calls &lt;gtext&gt; with different default values.";
   if(arg->background) 

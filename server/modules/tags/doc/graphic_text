@@ -1,0 +1,151 @@
+<h3>Graphical text</h3>
+Defines a few new containers, which all render text to gifs using the image
+module in pike. 
+
+<h3>Graphical text containers</h3>
+<blockquote><dl>
+<dt><b>{gh1}</b> to <b>{gh6}</b><dd>
+   Headers
+<dt><b>{gh}</b><dd>
+   Header
+<dt><b>{gtext}</b><dd>
+   Graphical text
+<dt><b>{anfang}</b><dd>
+   Make the first character a graphical one. Not all that useful, really.
+</dl></blockquote>
+
+<h3>Graphical text options</h3>
+<blockquote><dl>
+<dt><b>verbatim</b><dd>
+          Do not try to be typographically correct.
+<dt><b>bg</b>=<tt>color</tt><dd>
+          Use this background, default taken from the
+          <tt>{body}</tt> tag, if any.
+<dt><b>fg</b>=<tt>color</tt><dd>
+          Use this foreground, default taken from the
+          <tt>{body}</tt> tag, if any.
+<dt><b>nfont</b>=<tt>fnt</tt><dd>
+          Use this font. The fonts can be found in the
+          directory specified in the configuration interface.
+          <p>
+          If no font is specified, the one from the
+          define 'nfont' is used, or if there is no
+          define, the default font will be used.
+<dt><b>bold</b><dd>
+          Try to find a bold version of the font.
+<dt><b>italic</b><dd>
+          Try to find an italic version of the font.
+<dt><b>black</b><dd>
+          Try to find a black (heavy) version of the font.
+<dt><b>light</b><dd>
+          Try to find a light version of the font.
+<dt><b>scale</b>=<tt>float</tt><dd>
+          Scale to this font, mostly useful in the <tt>{gtext}</tt>
+          tag, will not work at all in the <tt>{gh<i>[number]</i>}</tt>
+          tags.
+<dt><b>2</b>, <b>3</b>, <b>4</b>, <b>5</b>, <b>6</b><dd>
+          Short for <tt>scale</tt>=1.0/([number]*0.6).
+<dt><b>notrans</b><dd>
+          Do <i>not</i> make the background color transparent.
+<dt><b>split</b><dd>
+          Make each word into a separate gif image.
+<dt><b>split</b>=<tt>char</tt><dd>
+          Split the string also at CHAR.
+<dt><b>href</b>=<tt>url</tt><dd>
+          Link the image to the specified URL.
+          The <tt>link</tt> color of the document will be
+          used as the default foreground of the text.
+<dt><b>alt</b>=<tt>message</tt><dd>
+          Sets the <tt>alt</tt> attribute.
+          Use <tt>alt=""</tt> if no alternate message is wanted.
+<dt><b>quant</b>=<tt>cols</tt><dd>
+          Use this number of colors.
+<dt><b>magic</b>[=<tt>message</tt>]<dd>
+          Modifier to href, more flashy links.
+          Does not work with <tt>split</tt>.
+<dt><b>magicbg</b>=<tt>bg</tt><dd>
+          As background, but for the <tt>magic</tt> image
+<dt><b>magic_X</b><dd>
+          Same as X, where X is any other argument,
+          but for the <tt>magic</tt> image.
+<dt><b>fuzz</b>[=<tt>color</tt>]<dd>
+          Apply the 'glow' effect to the result.
+<dt><b>fs</b><dd>
+          Use floyd-steinberg dithering
+<dt><b>border</b>=<tt>int</tt>,<tt>col</tt><dd>
+          Draw an border (width is the first argument in the specified color
+<dt><b>spacing</b>=<tt>int</tt><dd>
+          Add this amount of spacing around the text
+<dt><b>xspacing</b>=<tt>int</tt><dd>
+          Like spacing, but only horizontal.
+<dt><b>yspacing</b>=<tt>int</tt><dd>
+          Like spacing, but only vertical
+<dt><b>size</b>=<tt>int</tt>,<tt>int</tt><dd>
+          Use this (absolute) size.
+<dt><b>xsize</b>=<tt>int</tt><dd>
+          Use this (absolute) size.
+<dt><b>ysize</b>=<tt>int</tt><dd>
+          Use this (absolute) size.
+<dt><b>bevel</b>=<tt>int</tt><dd>
+          Draw a bevel box (width is the argument)
+<dt><b>pressed</b><dd>
+          Invert the "direction" of the bevel box
+<dt><b>talign</b>=<tt>dir</tt><dd>
+          Justify the text to the left, right, or center
+<dt><b>textbox</b>=<tt>al</tt>,<tt>col</tt><dd>
+          Use <tt>al</tt> as opaque value to draw a box below
+          the text with the specified color.
+<dt><b>xpad</b>=<tt>X%</tt><dd>
+          Increase padding between characters with <tt>X%</tt>.
+<dt><b>xpad</b>=<tt>Y%</tt><dd>
+          Increase padding between lines with <tt>Y%</tt>.
+<dt><b>shadow</b>=<tt>int</tt>,<tt>dist</tt><dd>
+          Draw a drop-shadow (variable distance/intensity).
+<dt><b>bshadow</b>=<tt>dist</tt><dd>
+          Draw a blured drop-shadow (variable distance).
+<dt><b>scolor</b>=<tt>color</tt><dd>
+          Use this color as the shadow color.
+<dt><b>ghost</b>=<tt>dist</tt>,<tt>blur</tt>,<tt>col</tt><dd>
+          Do a ``ghost text''. Do <i>not</i> use together with
+          <tt>shadow</tt>. Magic coloring won't work with it.
+<dt><b>glow</b>=<tt>color</tt><dd>
+          Draw a ``glow'' outline around the text.
+<dt><b>opaque</b>=<tt>0-100%</tt><dd>
+          Draw with more or less opaque text (100% is default).
+<dt><b>rotate</b>=<tt>ang(deg.)</tt><dd>
+          Rotate the finished image.
+<dt><b>background</b>=<tt>file</tt><dd>
+          Use the specifed file as a background
+          Supported file-formats: gif and ppm, jpeg if
+          the jpeg library was available when roxen was compiled.
+<dt><b>texture</b>=<tt>file</tt><dd>
+          Use the specified file as text texture.
+<dt><b>tile</b><dd>
+          Tile the background and foreground images
+          if they are smaller than the actual image.
+<dt><b>mirrortile</b><dd>
+          Same as above, but mirror around x and y axis
+          for odd frames, creating seamless textures.
+<dt><b>turbulence</b>=<tt>frequency</tt>,<tt>color</tt>;<tt>freq</tt>,
+                      <tt>col</tt>;<tt>freq</tt>,<tt>col</tt><dd>
+          Apply a turbulence filter, and use this as the background.
+<dt><b>maxlen</b>=<tt>arg</tt><dd>
+          The maximum length of the rendered text will be
+          the specified argument. The default is 300, this
+          is used to safeguard against mistakes like
+          {gh1}{/gh}, which would otherwise parse the whole document.
+<dt><b>help</b><dd>
+          Display this text.
+<dt><b>scroll</b>=<tt>width</tt>,<tt>steps</tt>,<tt>delay</tt><dd>
+          Make a horrible scrolltext.
+<dt><b>fadein</b>=<tt>blur</tt>,<tt>steps</tt>,
+                  <tt>delay</tt>,<tt>initialdelay</tt><dd>
+          Make a (somewhat less) horrible fadein.
+
+</dl></blockquote>
+
+Arguments passed on the the <a> tag (if href is specified):
+<blockquote>
+          <b>target</b>=...<br>
+         <b>onClick</b>=...
+</blockquote>
