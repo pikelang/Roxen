@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.71 2004/03/02 10:44:35 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.72 2004/03/03 16:25:24 grubba Exp $";
 
 class Variable
 {
@@ -1304,16 +1304,18 @@ class RoxenModule
 					  RequestID id, mixed context);
   mapping(string:mixed) remove_property(string path, string prop_name,
 					RequestID id, mixed context);
-  void find_properties(string path, string mode, MultiStatus result,
-		       RequestID id, multiset(string)|void filt);
+  mapping(string:mixed) find_properties(string path, string mode,
+					MultiStatus result, RequestID id,
+					multiset(string)|void filt);
   void recurse_find_properties(string path, string mode, int depth,
-			       MultiStatus result,
-			       RequestID id, multiset(string)|void filt);
+			       MultiStatus result, RequestID id,
+			       multiset(string)|void filt);
   mixed patch_property_start(string path, RequestID id);
   void patch_property_unroll(string path, RequestID id, mixed context);
   void patch_property_commit(string path, RequestID id, mixed context);
-  void patch_properties(string path, array(PatchPropertyCommand) instructions,
-			MultiStatus result, RequestID id);
+  mapping(string:mixed) patch_properties(string path,
+					 array(PatchPropertyCommand) instructions,
+					 MultiStatus result, RequestID id);
 }
 
 class _roxen

@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.153 2004/03/01 20:21:05 mast Exp $
+// $Id: module.pike,v 1.154 2004/03/03 16:25:24 grubba Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -747,12 +747,13 @@ mapping(string:mixed) remove_property(string path, string prop_name,
 //!
 //! @note
 //!   id->not_query() does not necessarily contain the same value as @[path].
-void find_properties(string path, string mode, MultiStatus result,
-		     RequestID id, multiset(string)|void filt, void|Stat st)
+mapping(string:mixed) find_properties(string path, string mode,
+				      MultiStatus result, RequestID id,
+				      multiset(string)|void filt, void|Stat st)
 {
   if (!st) {
     st = stat_file(path, id);
-    if (!st) return;
+    if (!st) return 0;
   }
 
   switch(mode) {
@@ -760,7 +761,7 @@ void find_properties(string path, string mode, MultiStatus result,
     foreach(indices(query_all_properties(path, id, st)), string prop_name) {
       result->add_property(path, prop_name, "");
     }
-    return;
+    return 0;
   case "DAV:allprop":
     if (filt) {
       // Used in http://sapportals.com/xmlns/cm/webdavinclude case.
@@ -775,28 +776,38 @@ void find_properties(string path, string mode, MultiStatus result,
       result->add_property(path, prop_name,
 			   query_property(path, prop_name, id, st));
     }
-    return;
+    return 0;
   }
   // FIXME: Unsupported DAV operation.
-  return;
+  return 0;
 }
 
-void recurse_find_properties(string path, string mode, int depth,
-			     MultiStatus result,
-			     RequestID id, multiset(string)|void filt, void|Stat st)
+void recurse_find_properties(string path, string mode,
+			     int depth, MultiStatus result,
+			     RequestID id,
+			     multiset(string)|void filt,
+			     void|Stat st)
 {
   if (!st) {
     st = stat_file(path, id);
-    if (!st) return;
+    if (!st) {
+      return;
+    }
   }
 
-  find_properties(path, mode, result, id, filt, st);
+  mapping(string:mixed) ret =
+    find_properties(path, mode, result, id, filt, st);
+  if (ret) {
+    result->add_response(path, XMLStatusNode(ret->error));
+    return;
+  }
   if ((depth <= 0) || !st->isdir) return;
   depth--;
-  foreach(find_dir(path, id), string filename) {
+  foreach(find_dir(path, id) || ({}), string filename) {
     recurse_find_properties(combine_path(path, filename), mode, depth,
 			    result, id, filt);
   }
+  return;
 }
 
 // RFC 2518 8.2
@@ -808,11 +819,20 @@ void recurse_find_properties(string path, string mode, int depth,
 //! Signal start of patching of properties for @[path].
 //!
 //! @returns
-//!   Returns a context that will be passed to @[set_property()],
-//!   @[remove_property()], @[patch_property_commit()]
-//!   and @[patch_property_unroll()].
+//!   @mixed
+//!     @type zero
+//!       File not found. @[patch_property_unroll()] will
+//!	  not be called in this case.
+//!     @type mapping
+//!       Return code. No patching will be performed.
+//!     @type mixed
+//!       A context to be passed to @[set_property()],
+//!       @[remove_property()], @[patch_property_commit()]
+//!       and @[patch_property_unroll()].
+//!   @endmixed
 mixed patch_property_start(string path, RequestID id)
 {
+  return !!stat_file(path, id);
 }
 
 //! Patching of the properties for @[path] failed.
@@ -827,10 +847,15 @@ void patch_property_commit(string path, RequestID id, mixed context)
 {
 }
 
-void patch_properties(string path, array(PatchPropertyCommand) instructions,
-		      MultiStatus result, RequestID id)
+mapping(string:mixed) patch_properties(string path,
+				       array(PatchPropertyCommand) instructions,
+				       MultiStatus result, RequestID id)
 {
   mixed context = patch_property_start(path, id);
+
+  if (!context || mappingp(context)) {
+    return context;
+  }
 
   array(mapping(string:mixed)) results;
 
@@ -871,6 +896,7 @@ void patch_properties(string path, array(PatchPropertyCommand) instructions,
       patch_property_commit(path, id, context);
     }
   }
+  return 0;
 }
 
 //! Convenience variant of @[set_property] that sets a single
