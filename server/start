@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.167 2001/06/28 15:49:35 mast Exp $
+# $Id: start,v 1.168 2001/06/29 01:01:16 nilsson Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -127,10 +127,6 @@ ARGS=""
 
 setup_for_tests() {
     DEFINES="-DRUN_SELF_TEST $DEFINES"
-    # Kill roxen mysql if it's running...
-    if [ -f $VARDIR/test_config/_mysql/mysql_pid ] ; then
-      kill `cat $VARDIR/test_config/_mysql/mysql_pid`
-    fi
     rm -rf $VARDIR/test_config*
     cp -R etc/test/config $VARDIR/test_config
     cp etc/test/filesystem/test_rxml_package rxml_packages/test_rxml_package
