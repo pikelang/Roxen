@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.66 2001/09/10 16:40:03 grubba Exp $
+ * $Id: ftp.pike,v 2.67 2001/09/10 16:48:46 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -2543,6 +2543,9 @@ class FTPSession
 
     // FIXME: What about EPSV ALL mode? RFC 2428 doesn't say.
     // I guess that it shouldn't be reset.
+
+    // Compatibility...
+    m_delete(master_session->misc, "home");
 
     dataport_addr = 0;
     dataport_port = 0;
