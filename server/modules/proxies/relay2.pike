@@ -1,5 +1,7 @@
 // This is a roxen module. Copyright © 2000, Roxen IS.
 
+#include <module.h>
+
 inherit "module";
 constant module_type = MODULE_FIRST|MODULE_LAST;
 
@@ -49,9 +51,13 @@ class Relay
   string encode_headers( mapping q )
   {
     string res = "";
+    string content_length="";
     foreach( sort( indices( q ) ), string h )
-      res += (string)h+": "+(string)q[h]+"\r\n";
-    return res;
+      if(lower_case(h)=="content-length")
+	content_length = (string)h+": "+(string)q[h]+"\r\n";
+      else
+	res += (string)h+": "+(string)q[h]+"\r\n";
+    return res+content_length;
   }
 
   string buffer;
