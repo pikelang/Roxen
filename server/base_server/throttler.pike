@@ -9,7 +9,7 @@
  *
  */
 
-constant cvs_version="$Id: throttler.pike,v 1.5 2000/02/20 17:41:35 nilsson Exp $";
+constant cvs_version="$Id: throttler.pike,v 1.6 2001/01/28 04:52:52 per Exp $";
 
 #define DEFAULT_MINGRANT 1300
 #define DEFAULT_MAXGRANT 65000
@@ -62,7 +62,15 @@ private void fill_bucket() {
   THROTTLING_DEBUG("adding "+toadd+" tokens");
   last_fill=time(1);
   if (bucket>depth)
+  {
     bucket=depth;
+    if( min_grant >= depth )
+    {
+      THROTTLING_DEBUG("Adjusting min_grant to depth ("+depth+") was "+
+		       min_grant);
+      min_grant = depth;
+    }
+  }
   wake_up_some();
 }
 
