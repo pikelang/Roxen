@@ -17,7 +17,7 @@ constant module_type = MODULE_LOCATION;
 constant module_name = "Configuration Filesystem";
 constant module_doc = "This filesystem serves the administration interface";
 constant module_unique = 1;
-constant cvs_version = "$Id: config_filesystem.pike,v 1.60 2000/09/21 23:35:27 per Exp $";
+constant cvs_version = "$Id: config_filesystem.pike,v 1.61 2000/10/04 21:26:42 per Exp $";
 
 constant path = "config_interface/";
 object charset_decoder;
@@ -150,7 +150,8 @@ mixed find_file( string f, object id )
       return http_auth_required( "Roxen configuration" );
     if( (f == "") && !id->misc->pathinfo )
       return http_redirect(fix_relative( "/standard/", id ), id );
-
+    if( search(f, "/" ) == -1 )
+      return http_redirect(fix_relative( "/"+f+"/", id ), id );
     string encoding = config_setting( "charset" );
     if( encoding != "utf-8" )
       catch { charset_decoder=Locale.Charset.decoder( encoding ); };
@@ -192,7 +193,6 @@ mixed find_file( string f, object id )
 
   while( strlen( f ) && (f[0] == '/' ))
     f = f[1..];
-
   string locale, df, rest, type="";
   mixed retval;
 
