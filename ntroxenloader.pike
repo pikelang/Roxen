@@ -72,7 +72,10 @@ int main(int argc, array (string) argv)
     argc--;
   }
 
-  dir = get_regvalue("installation_directory");
+  dir = replace(combine_path(getcwd(),__FILE__), "/", "\\");
+  dir = dir[..sizeof(dir)-search(reverse(dir), "\\")-2];
+  if(sizeof(dir)<2 || dir[1]!=':' || !file_stat(dir+"\\server"))
+    dir = get_regvalue("installation_directory");
   if(!dir)
   {
     werror("Failed to get registry entry for installation directory.\n"
@@ -142,11 +145,11 @@ int main(int argc, array (string) argv)
  "   Pike share directory : "+rget("share_prefix")+"\n"
  "   Pike arch directory  : "+rget("lib_prefix")+"\n"
  "   Roxen base directory : "+dir+"\n"
- "   Roxen configurations : "+dir+"\\configurations\n"
+ "   Roxen configurations : "+dir+"configurations\n"
  "   Roxen status file    : "+log_dir+"\\status\n"
  "   Roxen shutdown file  : "+(key?log_dir+"\\"+key:"None")+"\n"
  "   Roxen log directory  : "+log_dir+"\n"
- "   Roxen arguments      : "+(sizeof(argv)>2?argv[1..]*" ":"None")+"\n"
+ "   Roxen arguments      : "+(sizeof(argv)>1?argv[1..]*" ":"None")+"\n"
 #if constant(_Crypto) && constant(Crypto)
  "   This version of roxen has crypto algorithms available\n"
 #endif
