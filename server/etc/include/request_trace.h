@@ -1,4 +1,4 @@
-#ifdef REQUEST_DEBUG
+#if 1
 # define TRACE_ENTER(A,B) do{ \
     if(([mapping(string:mixed)]id->misc)->trace_enter) \
       ([function(string,mixed ...:void)]([mapping(string:mixed)]id->misc)->trace_enter)((A),(B)); \

@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.5 2000/03/24 12:37:40 jhs Exp $
+ * $Id: resolv.pike,v 1.6 2000/03/24 21:21:48 per Exp $
  */
 
 inherit "wizard";
@@ -10,10 +10,14 @@ constant name= "Resolve path...";
 constant doc = ("Check which modules handles the path you enter in the form");
 
 string link(string to, string name)
-{ return sprintf("<a href=\"%s\">%s</a>", to, name); }
+{ 
+  return sprintf("<a href=\"%s\">%s</a>", to, name); 
+}
 
 string link_configuration(Configuration c)
-{ return link(@get_conf_url_to_virtual_server(c)); }
+{ 
+  return link(@get_conf_url_to_virtual_server(c,"standard")); 
+}
 
 string module_name(function|RoxenModule m)
 {
@@ -159,8 +163,11 @@ void resolv_handle_request(object c, object nid)
 	again=1;
 	break;
       }
+      nid->misc->trace_leave("");
     }
   } while(again);
+
+
   if(!c->get_file(nid))
   {
     foreach(c->last_modules(), funp)
@@ -230,25 +237,25 @@ string parse(object id)
     string f = nid->scan_for_query(nid->raw_url);
     string a;
 
-    nid->misc->trace_enter("Checking for cookie.\n", 0);
+//     nid->misc->trace_enter("Checking for cookie.\n", 0);
     if (sscanf(f, "/<%s>/%s", a, f)==2)
     {
       nid->config_in_url = 1;
       nid->mod_config = (a/",");
       f = "/"+f;
-      nid->misc->trace_leave(sprintf("Got cookie %O.\n", a));
+//       nid->misc->trace_leave(sprintf("Got cookie %O.\n", a));
     } else {
-      nid->misc->trace_leave("No cookie.\n");
+//       nid->misc->trace_leave("No cookie.\n");
     }
 
-    nid->misc->trace_enter("Checking for prestate.\n", 0);
+//     nid->misc->trace_enter("Checking for prestate.\n", 0);
     if ((sscanf(f, "/(%s)/%s", a, f)==2) && strlen(a))
     {
       nid->prestate = aggregate_multiset(@(a/","-({""})));
       f = "/"+f;
-      nid->misc->trace_leave(sprintf("Got prestate %O\n", a));
+//       nid->misc->trace_leave(sprintf("Got prestate %O\n", a));
     } else {
-      nid->misc->trace_leave("No prestate.\n");
+//       nid->misc->trace_leave("No prestate.\n");
     }
 
     nid->misc->trace_enter(sprintf("Simplifying path %O\n", f), 0);
@@ -259,16 +266,18 @@ string parse(object id)
     if (id->variables->user && id->variables->user!="")
     {
       array(string) y;
+      nid->misc->trace_enter(sprintf("Checking auth %O\n", 
+                                     id->variables->user), 0);
       nid->rawauth
-        =
-        "Basic "+MIME.encode_base64(id->variables->user+":"+
-                                    id->variables->password);
+        = "Basic "+MIME.encode_base64(id->variables->user+":"+
+                                      id->variables->password);
 
       nid->realauth=id->variables->user+":"+id->variables->password;
 
       nid->auth=({0,nid->realauth});
       if(c && c->auth_module)
         nid->auth = c->auth_module->auth( nid->auth, nid );
+      nid->misc->trace_leave(sprintf("Got auth %O\n", nid->auth));
     }
 
     resolv_handle_request(c, nid);

@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.288 2000/03/22 17:28:11 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.289 2000/03/24 21:21:48 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -1322,7 +1322,8 @@ mapping|int low_get_file(RequestID id, int|void no_magic)
 	LOCK(tmp[1]);
 	fid=tmp[1]( file[ strlen(loc) .. ] + id->extra_extension, id);
 	UNLOCK();
-	TRACE_LEAVE(LOCALE->find_file_returned(fid));
+        // LOCALE->find_file_returned(fid)
+	TRACE_LEAVE("");
 	if(fid)
 	{
 	  id->virtfile = loc;
