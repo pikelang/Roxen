@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.132 1999/08/15 21:29:56 neotron Exp $";
+constant cvs_version = "$Id: http.pike,v 1.133 2000/02/07 16:42:31 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -1206,7 +1206,7 @@ void send_result(mapping|void result)
 			   replace(parse_rxml(conf->query("ZNoSuchFile"),
 					      thiso),
 				   ({"$File", "$Me"}), 
-				   ({not_query,
+				   ({html_encode_string(not_query),
 				     conf->query("MyWorldLocation")})));
     }) {
       internal_error(err);
