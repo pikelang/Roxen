@@ -154,7 +154,7 @@ You can use the configuration interface in the server to get debug info.
 oo
 else
   echo "Server restart at `date`"
-  args="-DROXEN $DEBUG base_server/roxenloader--config-dir=$DIR --start-script-pid=$$"
+  args="-DROXEN $DEBUG base_server/roxenloader --config-dir=$DIR --start-script-pid=$$"
   echo Executing $ulpc $args $@
   $ulpc $args $@
 fi
