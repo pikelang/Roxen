@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.459 2004/06/30 16:59:34 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.460 2004/08/11 12:11:06 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -30,9 +30,14 @@ int footime, bartime;
 #endif
 
 #ifdef FD_DEBUG
+#ifdef REQUEST_DEBUG
+#define FD_WERR(X)	REQUEST_WERR(X)
+#else
+#define FD_WERR(X)	werror("%s\n", (X))
+#endif
 #define MARK_FD(X) do {							\
     int _fd = my_fd && my_fd->query_fd ? my_fd->query_fd() : -1;	\
-    REQUEST_WERR("FD " + (_fd == -1 ? sprintf ("%O", my_fd) : _fd) + ": " + (X)); \
+    FD_WERR("FD " + (_fd == -1 ? sprintf ("%O", my_fd) : _fd) + ": " + (X)); \
     mark_fd(_fd, (X)+" "+remoteaddr);					\
   } while (0)
 #else
@@ -61,11 +66,19 @@ int kept_alive;
 
 #ifdef DEBUG
 #define CHECK_FD_SAFE_USE do {						\
-    if (this_thread() != roxen->backend_thread &&			\
+    if (my_fd && this_thread() != roxen->backend_thread &&		\
 	(my_fd->query_read_callback() || my_fd->query_write_callback() || \
 	 my_fd->query_close_callback() ||				\
 	 !zero_type (find_call_out (do_timeout))))			\
-      error ("Got callbacks but not called from backend thread.\n");	\
+      error ("Got callbacks but not called from backend thread.\n"	\
+	     "rcb:%O\n"							\
+	     "wcb:%O\n"							\
+	     "ccb:%O\n"							\
+	     "timeout:%O\n",						\
+	     my_fd->query_read_callback(),				\
+	     my_fd->query_write_callback(),				\
+	     my_fd->query_close_callback(),				\
+	     find_call_out (do_timeout));				\
   } while (0)
 #else
 #define CHECK_FD_SAFE_USE do {} while (0)
@@ -842,6 +855,8 @@ private final int parse_got_2( )
       }
       break;
     }
+  } else {
+    leftovers = data;
   }
   TIMER_END(parse_got_2_more_data);
   if (!(< "HTTP/1.0", "HTTP/0.9" >)[prot]) {
@@ -2455,20 +2470,14 @@ static void create(object f, object c, object cc)
 void chain(object f, object c, string le)
 {
   my_fd = f;
+
+  CHECK_FD_SAFE_USE;
+
   port_obj = c;
   processed = 0;
   do_not_disconnect=-1;		// Block destruction until we return.
   MARK_FD("HTTP kept alive");
   time = predef::time();
-
-  if ( le && strlen( le ) )
-    got_data( 0,le );
-  else
-  {
-    // If no pipelined data is available, call out...
-    remove_call_out(do_timeout);
-    call_out(do_timeout, 90);
-  }
 
   if(!my_fd)
   {
@@ -2477,12 +2486,22 @@ void chain(object f, object c, string le)
       do_not_disconnect=0;
       disconnect();
     }
+    return;
   }
   else
   {
     if(do_not_disconnect == -1)
       do_not_disconnect = 0;
     f->set_nonblocking(!processed && got_data, f->query_write_callback(), close_cb);
+  }
+
+  if ( le && strlen( le ) )
+    got_data( 0,le );
+  else
+  {
+    // If no pipelined data is available, call out...
+    remove_call_out(do_timeout);
+    call_out(do_timeout, 90);
   }
 }
 
