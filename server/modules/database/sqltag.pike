@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997-2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.85 2001/10/01 14:14:06 anders Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.86 2001/10/05 12:53:06 sara Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -34,7 +34,7 @@ constant tagdoc=([
 </desc>
 
 <attr name='ascii'><p>
- Create an ASCII table rather than a HTML table. Useful for
+ Create an ASCII table rather than an HTML table. Useful for
  interacting with <xref href='../graphics/diagram.tag' /> and <xref
  href='../text/tablify.tag' />.</p>
 </attr>
