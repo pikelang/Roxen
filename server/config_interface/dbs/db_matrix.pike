@@ -48,7 +48,7 @@ string|mapping parse( RequestID id )
   
   mapping q = DBManager.get_permission_map( );
   if( !sizeof( q ) )
-    return "No defined datbases\n";
+    return "No defined databases\n";
   string res = "<br /><table border='0' cellpadding='4' cellspacing='0'>\n";
   int x, y;
   int i = 1;
