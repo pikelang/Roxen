@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.17 1999/08/01 22:40:03 nilsson Exp $
+ * $Id: rxml.pike,v 1.18 1999/08/06 03:14:17 per Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -228,8 +228,14 @@ string call_user_container(string tag, mapping args, string contents, int line,
   args = id->misc->defaults[tag]|args;
   if(args->preparse && 
      (args->preparse=="preparse" || (int)args->preparse))
+  {
+    if( id->misc->do_not_recurse_for_ever_please++ > 10000 )
+      error("Too deep Recursion.\n");
     contents = parse_rxml(contents, id);
+    id->misc->do_not_recurse_for_ever_please--;
+  }
   TRACE_ENTER("user defined container &lt;"+tag+"&gt", call_user_container);
+  id->misc->do_not_recurse_for_ever_please++;
   array replace_from = ({"#args#", "<contents>"})+
     Array.map(indices(args),
 	      lambda(string q){return "&"+q+";";});
