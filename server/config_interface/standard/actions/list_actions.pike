@@ -1,6 +1,5 @@
 #include <config_interface.h>
 inherit "roxenlib";
-#define LOCALE roxen->locale->get()->config_interface
 
 string parse( RequestID id )
 {

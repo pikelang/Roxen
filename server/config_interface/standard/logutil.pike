@@ -1,11 +1,7 @@
 #include <config.h>
 #include <roxen.h>
 
-#if constant(Locale.translate)
-#define CALL(X,P,Q,Y)	Locale.call(roxen.locale->get()->config_interface,X,Y,P,Q)
-#else
-#define CALL(X,P,Q,Y)	RoxenLocale.call(roxen.locale->get()->config_interface,X,Y,P,Q)
-#endif
+#define CALL(X,Y)	_LOCALE_FUN("config_interface",X,Y)
 #define LOCALE(X,Y)	_STR_LOCALE("config_interface",X,Y)
 
 int __lt;
@@ -33,11 +29,11 @@ string describe_interval(int i)
 {
   switch(i) {
   case 0..50:
-    return CALL("units", "second", i, _units);
+    return CALL("units", _units)("second", i);
   case 51..3560:
-    return CALL("units", "minute", ((i+20)/60), _units);
+    return CALL("units", _units)("minute", ((i+20)/60));
   default:
-    return CALL("units", "hour", ((i+300)/3600), _units);
+    return CALL("units", _units)("hour", ((i+300)/3600));
   }
 }
 

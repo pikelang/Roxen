@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.508 2000/07/15 01:05:42 lange Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.509 2000/07/15 02:27:41 lange Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -340,6 +340,7 @@ object fonts;
 //<locale-token project="config_interface">LOCALE</locale-token>
 
 #define LOCALE(X,Y)	_STR_LOCALE("config_interface",X,Y)
+#define CALL(X,Y)	_LOCALE_FUN("config_interface",X,Y)
 
 string default_locale;
 
@@ -1923,10 +1924,10 @@ public string full_status()
 
   tmp=(int)((foo[4]*600.0)/(uptime+1));
 
-  return(locale->get()->config_interface("full_status", real_version, 
-					 start_time, days, hrs, min, uptime%60,
-					 foo[1], foo[0] * 8192.0, foo[2], 
-					 foo[4], (float)tmp/(float)10, foo[3]));
+  return(CALL("full_status", "eng")(real_version, 
+				    start_time, days, hrs, min, uptime%60,
+				    foo[1], foo[0] * 8192.0, foo[2], 
+				    foo[4], (float)tmp/(float)10, foo[3]));
 }
 
 #ifndef __NT__
@@ -2893,9 +2894,8 @@ int set_u_and_gid()
 	}
 	setuid(uid);
 	if (getuid() != uid) report_error ("Failed to set uid.\n"), u = 0;
-	if (u) report_notice(locale->get()->
-			     config_interface("setting_uid_gid_permanently", 
-					      uid, gid, u, g));
+	if (u) report_notice(CALL("setting_uid_gid_permanently",  "eng")
+			     (uid, gid, u, g));
 #else
 	report_warning ("Setting uid not supported on this system.\n");
 	u = g = 0;
@@ -2914,9 +2914,7 @@ int set_u_and_gid()
 	}
 	seteuid(uid);
 	if (geteuid() != uid) report_error ("Failed to set effective uid.\n"), u = 0;
-	if (u) report_notice(locale->get()->
-			     config_interface("setting_uid_gid", 
-					      uid, gid, u, g));
+	if (u) report_notice(CALL("setting_uid_gid", "eng")(uid, gid, u, g));
 #else
 	report_warning ("Setting effective uid not supported on this system.\n");
 	u = g = 0;

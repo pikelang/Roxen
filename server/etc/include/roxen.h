@@ -1,4 +1,4 @@
-// $Id: roxen.h,v 1.13 2000/07/15 01:03:58 lange Exp $
+// $Id: roxen.h,v 1.14 2000/07/15 02:27:43 lange Exp $
 #ifndef _ROXEN_H_
 
 #define _ROXEN_H_
@@ -40,5 +40,22 @@
 #  define USE_DEFERRED_LOCALE static inline string GETLOCLANG() {return roxen.locale->get();}
 # endif
 #endif
+
+#ifndef _LOCALE_FUN
+# if constant(Locale.call)
+#  ifdef IN_ROXEN
+#    define _LOCALE_FUN(X,Y,Z)	Locale.call(X,locale->get(),Y,Z)
+#  else
+#    define _LOCALE_FUN(X,Y,Z)	Locale.call(X,roxen.locale->get(),Y,Z)
+#  endif
+# else
+#  ifdef IN_ROXEN
+#    define _LOCALE_FUN(X,Y,Z)	RoxenLocale.call(X,locale->get(),Y,Z)
+#  else
+#    define _LOCALE_FUN(X,Y,Z)	RoxenLocale.call(X,roxen.locale->get(),Y,Z)
+#  endif
+# endif
+#endif
+
 
 #endif  /* _ROXEN_H_ */

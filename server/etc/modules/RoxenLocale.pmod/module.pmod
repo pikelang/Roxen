@@ -92,8 +92,8 @@ class LocaleObject {
     return bindings[key];
   }
 
-  int is_function(string f) {
-    return functionp(functions[f]);
+  function is_function(string f) {
+    return functionp(functions[f]) ? functions[f] : 0;
   }
 
   mixed `() (string f, mixed ... args) {
@@ -255,15 +255,21 @@ string translate(string project, string lang, string id, string fallback)
   return fallback;
 }
 
-mixed call(LocaleObject locale_object, string f,
-	   function fb, mixed ... args)
+function call(string project, string lang, string name, 
+	   void|function|string fb)
+  //! Returns a localized function
+  //! If function not found, tries fallback function fb,
+  //! or fallback language fb instead
 {
-  if(locale_object) {
-    locale_object->timestamp=time(1);
-    if(locale_object->is_function(f))
-      return locale_object(f, @args);
+  LocaleObject locale_object = get_object(project, lang);
+  function f;
+  if(!locale_object || !(f=locale_object->is_function(name))) 
+    if(stringp(fb))
+      locale_object = get_object(project, fb);
+  if(locale_object && f) {
+    return f;
   }
-  return fb(@args);
+  return [function]fb;
 }
 
 static void clean_cache() {

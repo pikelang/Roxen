@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.322 2000/07/15 01:05:42 lange Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.323 2000/07/15 02:27:41 lange Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -26,6 +26,7 @@ mapping profile_map = ([]);
 #define LOCALE(X,Y)  _STR_LOCALE("config_interface",X,Y)
 USE_DEFERRED_LOCALE;
 #define DLOCALE(X,Y) _DEF_LOCALE("config_interface",X,Y)
+#define CALL(X,Y)    _LOCALE_FUN("config_interface",X,Y)
 
 #ifdef THROTTLING_DEBUG
 #undef THROTTLING_DEBUG
@@ -739,10 +740,8 @@ public string status()
     res += "<b>"+LOCALE("t", "FTP statistics") + ":</b><br />\n"
       "<ul><table>\n";
     foreach(sort(indices(extra_statistics->ftp->commands)), string cmd) {
-      res += roxen.locale->get()->
-	config_interface("ftp_stat_line",
-			 upper_case(cmd),
-			 extra_statistics->ftp->commands[cmd]);
+      res += CALL("ftp_stat_line", "eng")
+	(upper_case(cmd), extra_statistics->ftp->commands[cmd]);
     }
     res += "</table></ul>\n";
   }

@@ -16,6 +16,7 @@
 <file>../config_interface/standard/cv_startpage_tabs.pike</file>
 <file>../config_interface/standard/sites/index.html</file>
 <file>../config_interface/standard/sites/site_content.html</file>
+<file>../config_interface/standard/sites/drop_site.pike</file>
 <file>../config_interface/standard/sites/config_left_item.pike</file>
 
 
