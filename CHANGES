@@ -1,3 +1,4 @@
+
 Changes since Roxen Challenger 1.1 
 -----------------------------------------------
 
@@ -32,6 +33,8 @@ o Bugfix in module security. You now get the "403 Forbidden" return
   Found". Thanks to Kai Garlipp <garlipp@informatik.uni-rostock.de>
   for the patch.
 
+o Added container <formoutput> to simplify using forms.
+	
 Changes since Roxen 1.1 alpha 4
 -----------------------------------------------
 o There is a new tool to convert the access files from the old to the
