@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.310 2002/01/28 12:23:34 mast Exp $
+// $Id: roxenloader.pike,v 1.311 2002/02/05 12:31:09 grubba Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.310 2002/01/28 12:23:34 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.311 2002/02/05 12:31:09 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1599,22 +1599,9 @@ void low_start_mysql( string datadir,
   string pid_file = datadir + "/mysql_pid";
   string err_log  = datadir + "/error_log";
 
-  mapping env = getenv();
-  env->MYSQL_UNIX_PORT = datadir+"/socket";
-#ifndef __NT__
-  env->MYSQL_TCP_PORT  = "0";
-#endif
-
-  rm( datadir+"/my.cfg" );
-  catch(Stdio.write_file( datadir+"/my.cfg",
-			  "[mysqld]\n"
-			  "set-variable = max_allowed_packet=16M\n"
-			  "set-variable = net_buffer_length=8K\n"
-			));
-
+  // Default arguments.
   array(string) args = ({
 		  "--defaults-file="+datadir+"/my.cfg",
-                  "--skip-networking",
 #ifdef __NT__
                   // Use pipes with default name "MySQL" unless --socket is set
 		  "--socket="+replace(datadir, ":", "_") + "/pipe",
@@ -1626,6 +1613,31 @@ void low_start_mysql( string datadir,
 		  "--basedir="+basedir,
 		  "--datadir="+datadir,
   });
+
+  // Set up the environment variables, and
+  // enable mysql networking if necessary.
+  mapping env = getenv();
+  env->MYSQL_UNIX_PORT = datadir+"/socket";
+  if ((int)env->MYSQL_TCP_PORT) {
+    args += ({ "--port="+env->MYSQL_TCP_PORT });
+    if (!env->MYSQL_HOST) {
+      env->MYSQL_HOST = "127.0.0.1";
+    }
+  } else {
+    args += ({ "--skip-networking" });
+    env->MYSQL_HOST = "127.0.0.1";
+    env->MYSQL_TCP_PORT = "0";
+  }
+
+  // Create the configuration file.
+  rm( datadir+"/my.cfg" );
+  catch(Stdio.write_file( datadir+"/my.cfg",
+			  "[mysqld]\n"
+			  "set-variable = max_allowed_packet=16M\n"
+			  "set-variable = net_buffer_length=8K\n"
+			  "skip-name-resolve\n"
+			  "bind-address = "+env->MYSQL_HOST+"\n"
+			));
 
 #ifndef __NT__
   if( uid == "root" )
