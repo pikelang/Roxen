@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.127 2001/02/11 03:02:13 nilsson Exp $
+//! $Id: module.pmod,v 1.128 2001/02/11 12:16:42 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -802,16 +802,52 @@ class Value
 //! when referenced.
 {
   mixed rxml_var_eval (Context ctx, string var, string scope_name, void|Type type)
-  //! This is called to get the value of the variable. ctx, var and
-  //! scope_name are set to where this Value object was found. Note
-  //! that scope_name can be on the form scope.index1.index2... when
-  //! this object was encountered through subindexing.
+  //! This is called to get the value of the variable. @[ctx], @[var]
+  //! and @[scope_name] are set to where this @[Value] object was
+  //! found. Note that @[scope_name] can be on the form
+  //! @tt{scope.index1.index2...@} when this object was encountered
+  //! through subindexing. Either @[nil] or the undefined value may be
+  //! returned if the variable doesn't have a value.
   //!
-  //! If the type argument is given, it's the type the returned value
-  //! should have. If the value can't be converted to that type, an
-  //! RXML error should be thrown. If you don't want to do any special
-  //! handling of this, it's enough to call type->encode(value),
-  //! since the encode functions does just that.
+  //! If the @[type] argument is given, it's the type the returned
+  //! value should have. If the value can't be converted to that type,
+  //! an RXML error should be thrown. If you don't want to do any
+  //! special handling of this, it's enough to call
+  //! @tt{@[type]->encode(value)@}, since the encode functions does
+  //! just that.
+  //!
+  //! Some design discussion follows to justify the last paragraph;
+  //! there are no more interface rules below.
+  //!
+  //! It may seem like forcing a lot of overhead upon the
+  //! implementations having to call encode functions, but that's
+  //! really not the case. In the case when a type check and
+  //! conversion is wanted, i.e. when @[type] isn't zero, that work
+  //! have to be done somewhere anyway, so letting the producer of the
+  //! value do it instead of the caller both improves the chances for
+  //! doing optimizations and gives more power to the producer.
+  //!
+  //! By using knowledge about the actual value, the producer can in
+  //! many cases avoid the call to the encode function. A typical case
+  //! is when the value is known to be an arbitrary string (not zero),
+  //! which is preferably optimized like this:
+  //!
+  //! @example
+  //!   return type && type != RXML.TText ?
+  //!          type->encode (my_string) : my_string;
+  //! @endexample
+  //!
+  //! Also, by letting the producer know the type context of the value
+  //! and handle the type conversion, it's possible for the producer
+  //! to adapt the value according to the context it'll be used in,
+  //! e.g. to return a powerful object if no type conversion is
+  //! wanted, a simple text representation of it when the type is
+  //! @[RXML.TText], and a more nicely formatted representation when
+  //! it's @[RXML.THtml].
+  //!
+  //! @note The @[type] argument being @tt{void|Type@} means that the
+  //! caller is free to leave out that argument, not that the function
+  //! implementor is free to ignore it.
   {
     mixed val = rxml_const_eval (ctx, var, scope_name, type);
     ctx->set_var(var, val, scope_name);
@@ -819,30 +855,74 @@ class Value
   }
 
   mixed rxml_const_eval (Context ctx, string var, string scope_name, void|Type type);
-  //! If the variable value is the same throughout the life of the context,
-  //! this method should be used instead of rxml_var_eval.
+  //! If the variable value is the same throughout the life of the
+  //! context, this method should be used instead of @[rxml_var_eval].
 
   string _sprintf() {return "RXML.Value";}
 }
 
 class Scope
-//! Interface for objects that emulates a scope mapping.
+//! Interface for objects that emulate a scope mapping.
 //!
-//! Note that the scope_name argument to the functions can be on the
-//! form scope.index1.index2... when this object was encountered
-//! through subindexing.
+//! Note that the @tt{scope_name@} argument to the functions can be on
+//! the form @tt{scope.index1.index2...@} when this object was
+//! encountered through subindexing.
 {
-  mixed `[] (string var, void|Context ctx, void|string scope_name)
+  mixed `[] (string var, void|Context ctx,
+	     void|string scope_name, void|Type type)
+  //! Called to get the value of a variable in the scope. @[var] is
+  //! the name of it, @[ctx] and @[scope_name] are set to where this
+  //! @[Scope] object was found. Either @[nil] or the undefined value
+  //! may be returned if the variable doesn't exist in the scope.
+  //!
+  //! If the @[type] argument is given, it's the type the returned
+  //! value should have, unless it's an object which implements
+  //! @[Value.rxml_var_eval]. If the value can't be converted to that
+  //! type, an RXML error should be thrown. If you don't want to do
+  //! any special handling of this, it's enough to call
+  //! @tt{@[type]->encode(value)@}, since the encode functions does
+  //! just that. See @[Value.rxml_var_eval] for more discussion about
+  //! this.
+  //!
+  //! @note The @[type] argument being @tt{void|Type@} means that the
+  //! caller is free to leave out that argument, not that the function
+  //! implementor is free to ignore it.
     {parse_error ("Cannot query variable" + _in_the_scope (scope_name) + ".\n");}
 
   mixed `[]= (string var, mixed val, void|Context ctx, void|string scope_name)
+  //! Called to set the value of a variable in the scope. @[var] is
+  //! the name of it, @[ctx] and @[scope_name] are set to where this
+  //! @[Scope] object was found.
+  //!
+  //! An RXML error may be thrown if the value is not acceptable for
+  //! the variable. It's undefined what happens if a variable is set
+  //! to @[nil]; it should be avoided.
     {parse_error ("Cannot set variable" + _in_the_scope (scope_name) + ".\n");}
 
   array(string) _indices (void|Context ctx, void|string scope_name)
+  //! Called to get a list of all defined variables in the scope.
+  //! @[ctx] and @[scope_name] are set to where this @[Scope] object
+  //! was found.
+  //!
+  //! There's no guarantee that the returned variable names produce a
+  //! value (i.e. neither @[nil] nor the undefined value) when
+  //! indexed.
     {parse_error ("Cannot list variables" + _in_the_scope (scope_name) + ".\n");}
 
+  void _m_delete (string var, void|Context ctx, void|string scope_name)
+  //! Called to delete a variable in the scope. @[var] is the name of
+  //! it, @[ctx] and @[scope_name] are set to where this @[Scope]
+  //! object was found.
+  {
+    if (m_delete != local::m_delete)
+      m_delete (var, ctx, scope_name); // For compatibility with 2.1.
+    else
+      parse_error ("Cannot delete variable" + _in_the_scope (scope_name) + ".\n");
+  }
+
   void m_delete (string var, void|Context ctx, void|string scope_name)
-    {parse_error ("Cannot delete variable" + _in_the_scope (scope_name) + ".\n");}
+  // For compatibility with 2.1.
+    {_m_delete (var, ctx, scope_name);}
 
   private string _in_the_scope (string scope_name)
   {
@@ -1069,8 +1149,8 @@ class Context
 	}
 	else var = var[0];
 
-      if (objectp (vars) && vars->m_delete)
-	([object(Scope)] vars)->m_delete (var, this_object(), scope_name);
+      if (objectp (vars) && vars->_m_delete)
+	([object(Scope)] vars)->_m_delete (var, this_object(), scope_name);
       else if (mappingp (vars))
 	m_delete ([mapping(string:mixed)] vars, var);
       else if (multisetp (vars))
@@ -2985,9 +3065,9 @@ final mixed rxml_index (mixed val, string|int|array(string|int) index,
 //!    is called to produce its value.
 //! o  If a value which is about to be indexed is an object which has
 //!    a `[] function, it's called as a Scope object.
-//! o  Both the special value nil and a zero with zero_type 1 may be
-//!    used to signify no value at all, and both will be returned as a
-//!    zero with zero_type 1.
+//! o  Both the special value nil and the undefined value (a zero with
+//!    zero_type 1) may be used to signify no value at all, and both
+//!    will be returned as the undefined value.
 //!
 //! If the want_type argument is set, the result value is converted to
 //! that type with Type.encode(). If the value can't be converted, an
@@ -3001,26 +3081,12 @@ final mixed rxml_index (mixed val, string|int|array(string|int) index,
     error ("Invalid index specifier.\n");
 #endif
 
+  int scope_got_type = 0;
   array(string|int) idxpath;
-  if (arrayp (index)) idxpath = index[1..], index = index[0];
-  else idxpath = ({});
+  if (arrayp (index)) idxpath = index, index = index[0];
+  else idxpath = ({0});
 
-  if (objectp (val) ?
-      zero_type (val = ([object(Scope)] val)->`[] (index, ctx, scope_name)) :
-      zero_type (val = val[index]))
-    val = nil;
-
-  foreach (idxpath, string|int subindex) {
-    scope_name += "." + index;
-    index = subindex;
-
-    while (objectp (val) && ([object] val)->rxml_var_eval)
-      if (zero_type (val = ([object(Value)] val)->rxml_var_eval (
-		       ctx, index, scope_name, 0))) {
-	val = nil;
-	break;
-      }
-
+  for (int i = 1;; i++) {
     // stringp was not really a good idea.
     if( arrayp( val ) /*|| stringp( val )*/ )
       if (intp (index) && index)
@@ -3038,7 +3104,9 @@ final mixed rxml_index (mixed val, string|int|array(string|int) index,
       parse_error ("%s produced no value to index with %O.\n", scope_name, index);
     else if( objectp( val ) && val->`[] ) {
       if (zero_type (
-	    val = ([object(Scope)] val)->`[](index, ctx, scope_name)))
+	    val = ([object(Scope)] val)->`[](
+	      index, ctx, scope_name,
+	      i == sizeof (idxpath) && (scope_got_type = 1, want_type))))
 	val = nil;
     }
     else if( mappingp( val ) || objectp (val) ) {
@@ -3050,19 +3118,54 @@ final mixed rxml_index (mixed val, string|int|array(string|int) index,
     else if (!(<1, -1>)[index])
       parse_error ("%s is %O which cannot be indexed with %O.\n",
 		   scope_name, val, index);
+
+    if (i == sizeof (idxpath)) break;
+    scope_name += "." + index;
+    index = idxpath[i];
+
+#ifdef MODULE_DEBUG
+    mapping(object:int) called = ([]);
+#endif
+    while (objectp (val) && ([object] val)->rxml_var_eval) {
+#ifdef MODULE_DEBUG
+      // Detect infinite loops. This check is slightly too strong;
+      // it's theoretically possible that a couple of Value objects
+      // return each other a few rounds and then something different,
+      // but we'll live with that. Besides, that situation ought to be
+      // solved internally in them anyway.
+      if (called[val])
+	error ("Cyclic rxml_var_eval chain detected in %O.\n"
+	       "All called objects:%{ %O%}\n", val, indices (called));
+      called[val] = 1;
+#endif
+      if (zero_type (val = ([object(Value)] val)->rxml_var_eval (
+		       ctx, index, scope_name, 0))) {
+	val = nil;
+	break;
+      }
+    }
   }
 
   if (val == nil)
     return ([])[0];
   else if (!objectp (val) || !([object] val)->rxml_var_eval)
-    if (want_type)
+    if (want_type && !scope_got_type)
       return
 	// FIXME: Some system to find out the source type?
 	zero_type (val = want_type->encode (val)) || val == nil ? ([])[0] : val;
     else
       return val;
 
+#ifdef MODULE_DEBUG
+  mapping(object:int) called = ([]);
+#endif
   do {
+#ifdef MODULE_DEBUG
+    if (called[val])
+      error ("Cyclic rxml_var_eval chain detected in %O.\n"
+	     "All called objects:%{ %O%}\n", val, indices (called));
+    called[val] = 1;
+#endif
     if (zero_type (val = ([object(Value)] val)->rxml_var_eval (
 		     ctx, index, scope_name, want_type)) ||
 	val == nil)
