@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.308 2000/05/06 09:34:12 kinkie Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.309 2000/05/22 05:24:09 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -2128,7 +2128,7 @@ int|string try_get_file(string s, RequestID id,
     res="";
   m->data = 0;
 
-  if(m->file)
+  if( objectp(m->file) )
   {
     res += m->file->read();
     destruct(m->file);
