@@ -114,6 +114,11 @@ int main(int argc, array (string) argv)
 
   if(redirect)
   {
+    werror("Using configuration from "+dir+"configurations\\, "
+	   "storing the debug log in "+log_dir+"\\debug\\default.1\r\n"
+	   "You can use the configuration interface in the server to "
+	   "get debug info.\r\n");
+
     mkdir(log_dir+"\\debug");
   
     for(int i=10;i>0;i--)
