@@ -1,5 +1,5 @@
 /* Roxen WWW-server version 1.0.
-string cvs_version = "$Id: http.pike,v 1.4 1996/12/08 10:33:23 neotron Exp $";
+string cvs_version = "$Id: http.pike,v 1.5 1997/01/29 04:55:12 per Exp $";
  * http.pike: HTTP convenience functions.
  * inherited by roxenlib, and thus by all files inheriting roxenlib.
  */
@@ -93,7 +93,8 @@ string http_date(int t)
 
 string http_encode_string(string f)
 {
-  return replace(f, ({ "\000", " ", "%" }), ({"%00", "%20", "%25" }));
+  return replace(f, ({ "\000", " ", "%","\n","\r" }),
+		 ({"%00", "%20", "%25", "%0a", "%0d" }));
 }
 
 string http_encode_cookie(string f)
