@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.118 2000/04/29 19:51:39 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.119 2000/04/29 20:18:29 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -1622,28 +1622,28 @@ documentation for that module.</desc>",
 </attr>
 
 <attr name=years value=number>
- Add this number of years to the time this page was last loaded.
+ Add this number of years to the time this entry is valid.
 </attr>
 <attr name=months value=number>
- Add this number of months to the time this page was last loaded.
+ Add this number of months to the time this entry is valid.
 </attr>
 <attr name=weeks value=number>
- Add this number of weeks to the time this page was last loaded.
+ Add this number of weeks to the time this entry is valid.
 </attr>
 <attr name=days value=number>
- Add this number of days to the time this page was last loaded.
+ Add this number of days to the time this entry is valid.
 </attr>
 <attr name=hours value=number>
- Add this number of hours to the time this page was last loaded.
+ Add this number of hours to the time this entry is valid.
 </attr>
 <attr name=beats value=number>
- Add this number of beats to the time this page was last loaded.
+ Add this number of beats to the time this entry is valid.
 </attr>
 <attr name=minutes value=number>
- Add this number of minutes to the time this page was last loaded.
+ Add this number of minutes to the time this entry is valid.
 </attr>
 <attr name=seconds value=number>
- Add this number of seconds to the time this page was last loaded.
+ Add this number of seconds to the time this entry is valid.
 </attr>",
 
 "catch":#"<desc cont><short>
