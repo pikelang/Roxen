@@ -1,4 +1,4 @@
-//string cvs_version = "$Id: cache.pike,v 1.38 2000/02/14 23:50:06 nilsson Exp $";
+//string cvs_version = "$Id: cache.pike,v 1.39 2000/02/17 22:47:15 nilsson Exp $";
 
 #define LOCALE	roxenp()->locale->get()->config_interface
 #include <roxen.h>
@@ -37,8 +37,6 @@ int get_size(mixed x)
 #define SIZE 3
 
 #define ENTRY_SIZE 4
-
-#define CACHE_TIME_OUT 300
 
 #if DEBUG_LEVEL > 8
 # ifndef CACHE_DEBUG
@@ -194,7 +192,8 @@ void cache_clear(string in)
 void cache_clean()
 {
   remove_call_out(cache_clean);
-  call_out(cache_clean, CACHE_TIME_OUT);
+  int gc_time=roxenp()->query("mem_cache_gc");
+  call_out(cache_clean, gc_time);
   string a, b;
   array c;
   int t=time(1);
@@ -220,7 +219,7 @@ void cache_clean()
 	  // (Entry size + cache overhead) / arbitrary factor
           CACHE40_WERR("     Cache entry size percieved as "+(c[SIZE]*100)+" bytes\n");
 	}
-	if(c[TIMESTAMP]+1 < t && c[TIMESTAMP] + CACHE_TIME_OUT -
+	if(c[TIMESTAMP]+1 < t && c[TIMESTAMP] + gc_time -
 	   c[SIZE] < t)
 	  {
 	    CACHE40_WERR("     DELETED");
@@ -247,6 +246,6 @@ void create()
   cache=([ ]);
   add_constant( "cache", this_object() );
   add_constant( "Cache", this_object() );
-  call_out(cache_clean, CACHE_TIME_OUT);
+  call_out(cache_clean, 60);
   CACHE_WERR("Now online.");
 }
