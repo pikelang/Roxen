@@ -3,7 +3,7 @@
 //
 // A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.464 2001/08/22 12:22:53 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.465 2001/08/22 20:04:26 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3266,40 +3266,48 @@ static void create()
 	 "*: $host - - [$cern_date] \"$method $resource $protocol\" $response $length",
 	 DLOCALE(26, "Logging: Format"),
 	 TYPE_TEXT_FIELD|VAR_MORE,
-	 DLOCALE(27, "What format to use for logging. The syntax is:\n"
-	 "<pre>"
-	 "response-code or *: Log format for that response code\n\n"
-	 "Log format is normal characters, or one or more of the "
-	 "variables below:\n"
-	 "\n"
-	 "\\n \\t \\r       -- As in C, newline, tab and linefeed\n"
-	 "$char(int)     -- Insert the (1 byte) character specified by the integer.\n"
-	 "$wchar(int)    -- Insert the (2 byte) word specified by the integer.\n"
-	 "$int(int)      -- Insert the (4 byte) word specified by the integer.\n"
-	 "$^             -- Supress newline at the end of the logentry\n"
-	 "$host          -- The remote host name, or ip number.\n"
-	 "$vhost         -- The Host request-header sent by the client, or - if none\n"
-	 "$ip_number     -- The remote ip number.\n"
-	 "$bin-ip_number -- The remote host id as a binary integer number.\n"
-	 "\n"
-	 "$cern_date     -- Cern Common Log file format date.\n"
-	 "$bin-date      -- Time, but as an 32 bit integer in network byteorder\n"
-	 "\n"
-	 "$method        -- Request method\n"
-	 "$resource      -- Resource identifier\n"
-	 "$full_resource -- Full requested resource, including any query fields\n"
-	 "$protocol      -- The protocol used (normally HTTP/1.0)\n"
-	 "$response      -- The response code sent\n"
-	 "$bin-response  -- The response code sent as a binary short number\n"
-	 "$length        -- The length of the data section of the reply\n"
-	 "$bin-length    -- Same, but as an 32 bit integer in network byteorder\n"
-	 "$request-time  -- The time the request took (seconds)\n"
-	 "$referer       -- the header 'referer' from the request, or '-'.\n"
-	 "$user_agent    -- the header 'User-Agent' from the request, or '-'.\n\n"
-	 "$user          -- the name of the auth user used, if any\n"
-	 "$user_id       -- A unique user ID, if cookies are supported,\n"
-	 "                  by the client, otherwise '0'\n"
-	 "</pre>"), 0, lambda(){ return !query("Log");});
+	 DLOCALE(27, #"What format to use for logging. The syntax is:
+<pre>response-code or *: Log format for that response code
+
+Log format is normal characters, or one or more of the variables below:
+
+\\n \\t \\r       -- As in C, newline, tab and linefeed
+$char(int)     -- Insert the (1 byte) character specified by the integer.
+$wchar(int)    -- Insert the (2 byte) word specified by the integer.
+$int(int)      -- Insert the (4 byte) word specified by the integer.
+$^             -- Supress newline at the end of the logentry
+$host          -- The remote host name, or ip number.
+$vhost         -- The Host request-header sent by the client, or - if none
+$ip_number     -- The remote ip number.
+$bin-ip_number -- The remote host id as a binary integer number.
+
+$cern_date     -- Cern Common Log file format date.
+$bin-date      -- Time, but as an 32 bit integer in network byteorder
+
+$method        -- Request method
+$resource      -- Resource identifier
+$full_resource -- Full requested resource, including any query fields
+$protocol      -- The protocol used (normally HTTP/1.0)
+$response      -- The response code sent
+$bin-response  -- The response code sent as a binary short number
+$length        -- The length of the data section of the reply
+$bin-length    -- Same, but as an 32 bit integer in network byteorder
+$request-time  -- The time the request took (seconds)
+$referer       -- the header 'referer' from the request, or '-'.
+$user_agent    -- the header 'User-Agent' from the request, or '-'.\n
+$user          -- the name of the auth user used, if any
+$user_id       -- A unique user ID, if cookies are supported,
+                  by the client, otherwise '0'
+$cache-status  -- A comma separated list of words (containing no
+                  whitespace) that describes which cache(s) the page
+                  was delivered from:
+                  protcache -- The low-level cache in the HTTP
+                               protocol module.
+                  xsltcache -- The XSLT cache.
+		  pcoderam  -- RXML parse tree RAM cache.
+                  cachetag  -- No RXML &lt;cache&gt; tag misses.
+                  nocache   -- No hit in any known cache.
+</pre>"), 0, lambda(){ return !query("Log");});
 
   defvar("Log", 1, DLOCALE(28, "Logging: Enabled"), 
 	 TYPE_FLAG, DLOCALE(29, "Log requests"));

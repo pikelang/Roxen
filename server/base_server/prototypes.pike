@@ -4,7 +4,7 @@
 #include <stat.h>
 #include <config.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.30 2001/08/15 15:48:06 per Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.31 2001/08/22 20:04:26 mast Exp $";
 
 class Variable
 {
@@ -589,6 +589,13 @@ class RequestID
 
   string host;
   //! The client's hostname, if resolved.
+
+  multiset(string) cache_status = (<>);
+  //! Contains the caches that was hit when the request was served.
+  //! See the docstring for @tt{$cache-status@} in the @tt{LogFormat@}
+  //! global variable for known values, but note that the multiset
+  //! actually never contains the value "nocache"; it's only written
+  //! when the multiset is empty.
 
   object root_id;
   //! @decl RequestID root_id;

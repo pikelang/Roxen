@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.330 2001/08/21 09:25:02 jonasw Exp $";
+constant cvs_version = "$Id: http.pike,v 1.331 2001/08/22 20:04:31 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -100,6 +100,8 @@ string remoteaddr, host;
 
 array  (string) client;
 array  (string) referer;
+
+multiset(string) cache_status = (< >);
 
 mapping file;
 
@@ -2125,6 +2127,7 @@ void got_data(mixed fooid, string s)
 
 	  MY_TRACE_LEAVE ("Using entry from ram cache");
           conf->hsent += strlen(file->hs);
+	  cache_status["protcache"] = 1;
           if( strlen( d ) < 4000 )
           {
 	    TIMER_END(cache_lookup);
@@ -2150,7 +2153,7 @@ void got_data(mixed fooid, string s)
     }
   }
   TIMER_END(cache_lookup);
-#endif
+#endif	// RAM_CACHE
   TIMER_START(parse_request);
   things_to_do_when_not_sending_from_cache( );
   TIMER_END(parse_request);

@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.708 2001/08/22 19:23:07 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.709 2001/08/22 20:04:26 mast Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -4131,6 +4131,9 @@ constant formats =
   ({ "user",        "%s",    "extract_user( request_id->realauth )",0 }),
   ({ "request-time","%1.2f",  "time(request_id->time )",0 }),
   ({ "host",        "\4711",    0, 1 }), // unlikely to occur normally
+  ({ "cache-status","%s",   ("sizeof(request_id->cache_status||({}))?"
+			     "indices(request_id->cache_status)*\",\":"
+			     "\"nocache\""), 0 }),
 });
 
 void run_log_format( string fmt, function c, RequestID id, mapping file )
@@ -4190,6 +4193,7 @@ function compile_log_format( string fmt )
   void log( function callback, RequestID request_id, mapping file )
   {
      if(!callback) return;
+     mixed tmp;
      string data = sprintf( %O %{, %s%} );
 ", format, args );
  
