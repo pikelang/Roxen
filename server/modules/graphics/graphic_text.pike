@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.112 1998/03/01 02:42:14 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.113 1998/03/06 11:12:10 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -1216,6 +1216,7 @@ string tag_gtext_id(string t, mapping arg,
 		    object id, object foo, mapping defines)
 {
   int short=!!arg->short;
+  if(arg->help) return "Arguments are identical to the argumets to &lt;gtext&gt;. This tag returns a url-prefix that can be used to generate gtexts.";
   m_delete(arg, "short"); m_delete(arg, "maxlen");
   m_delete(arg,"magic");  m_delete(arg,"submit");
   extra_args(arg);        m_delete(arg,"split");
@@ -1242,9 +1243,11 @@ string tag_graphicstext(string t, mapping arg, string contents,
 			object id, object foo, mapping defines)
 {
 //Allow <accessed> and others inside <gtext>.
-  if(arg->help)
+  
+  if(t=="gtext" && arg->help)
     return register_module()[2];
-
+  else if(arg->help)
+    return "This tag calls &lt;gtext&gt; with different default values.";
   if(arg->background) 
     arg->background = fix_relative(arg->background,id);
   if(arg->texture) 
@@ -1492,10 +1495,11 @@ string make_args(mapping in)
   return a*" ";
 }
 
-array (string) tag_body(string t, mapping args, object id, object file,
-		mapping defines)
+string|array (string) tag_body(string t, mapping args, object id, object file,
+			       mapping defines)
 {
   int cols,changed;
+  if(args->help) return "This tag is parsed by &lt;gtext&gt; to get the document colors.";
   if(args->bgcolor||args->text||args->link||args->alink
      ||args->background||args->vlink)
     cols=1;
@@ -1520,11 +1524,12 @@ array (string) tag_body(string t, mapping args, object id, object file,
 }
 
 
-array (string) tag_fix_color(string tagname, mapping args, object id, object file,
-			     mapping defines)
+string|array(string) tag_fix_color(string tagname, mapping args, object id, 
+				   object file, mapping defines)
 {
   int changed;
 
+  if(args->help) return "This tag is parsed by &lt;gtext&gt; to get the document colors.";
   if(!id->misc->colors)
     id->misc->colors = ({ ({ defines->fg, defines->bg, tagname }) });
   else
@@ -1539,10 +1544,11 @@ array (string) tag_fix_color(string tagname, mapping args, object id, object fil
   return 0;
 }
 
-void pop_color(string tagname,mapping args,object id,object file,
+string|void pop_color(string tagname,mapping args,object id,object file,
 		 mapping defines)
 {
   array c = id->misc->colors;
+  if(args->help) return "This end-tag is parsed by &lt;gtext&gt; to get the document colors.";
   if(!c ||!sizeof(c)) return;
   int i;
   tagname = tagname[1..];
