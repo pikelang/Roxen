@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module_support.pike,v 1.57 2000/03/09 04:34:27 mast Exp $
+// $Id: module_support.pike,v 1.58 2000/03/09 12:00:48 mast Exp $
 
 #include <roxen.h>
 #include <module_constants.h>
@@ -57,6 +57,26 @@ class ConfigurableWrapper
     mode = mode_;
     f = f_;
   }
+}
+
+int query_configurable (array vardef, int mode)
+// A helper function to query the VAR_CONFIGURABLE field since that's
+// a bit messy.
+{
+  int|function it = vardef[VAR_CONFIGURABLE];
+  if (functionp (it))
+    return !it (mode & VAR_MORE,
+		mode & VAR_EXPERT,
+		mode & VAR_DEVELOPER,
+		mode & VAR_INITIAL);
+  else if (intp (it)) {
+    if ((it & VAR_MORE) && !(mode & VAR_MORE)) return 0;
+    if ((it & VAR_DEVELOPER) && !(mode & VAR_DEVELOPER)) return 0;
+    if ((it & VAR_EXPERT) && !(mode & VAR_EXPERT)) return 0;
+    if ((mode & VAR_INITIAL) && !(it & VAR_INITIAL)) return 0;
+    return 1;
+  }
+  return 0;
 }
 
 void change_configurable (array vardef, int mask, int val)
