@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
  
-constant cvs_version = "$Id: ip-less_hosts.pike,v 1.8 1998/02/04 16:10:46 per Exp $";
+constant cvs_version = "$Id: ip-less_hosts.pike,v 1.9 1998/03/02 14:43:57 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -26,6 +26,20 @@ object find_server_for(object id, string host)
 {
   host = lower_case(host);
   if(config_cache[host]) return id->conf=config_cache[host];
+#if constant(Array.diff_longest_sequence)
+  int best;
+  array a = host/"";
+  object c;
+  foreach(roxen->configurations, object s) {
+    int corr = sizeof(Array.diff_longest_sequence(a, lower_case(s->query("MyWorldLocation"))/""));
+    if (corr > best) {
+      best = corr;
+      c = s;
+    }
+  }
+  return id->conf = config_cache[host] = (c || id->conf);
+  
+#else /* !constant(Array.diff_longest_sequence) */
   array possible = ({});
   foreach(roxen->configurations, object s)
     if(search(lower_case(s->query("MyWorldLocation")), host)+1)
@@ -35,6 +49,7 @@ object find_server_for(object id, string host)
      Array.sort_array(possible,lambda(object s, string q) {
        return (strlen(s->query("MyWorldLocation"))-strlen(q));},host)[0]:
        ((sscanf(host, "%*[^.].%s", host)==2)?find_server_for(id,host):id->conf));
+#endif /* constant(Array.diff_longest_sequence) */
 }
 
 mapping first_try(object id)
