@@ -1,5 +1,5 @@
 /*
- * $Id: clientlayer.pike,v 1.2 1998/08/25 19:09:20 js Exp $
+ * $Id: clientlayer.pike,v 1.3 1998/08/25 19:29:22 js Exp $
  *
  * A module for Roxen AutoMail, which provides functions for
  * clients.
@@ -10,7 +10,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version="$Id: clientlayer.pike,v 1.2 1998/08/25 19:09:20 js Exp $";
+constant cvs_version="$Id: clientlayer.pike,v 1.3 1998/08/25 19:29:22 js Exp $";
 constant thread_safe=1;
 
 mapping sql_objs=([]);
@@ -45,7 +45,6 @@ void create()
 
 string load_body(string body_id)
 {
-  werror(">>>>>>: "+query("maildir")+"/"+body_id);
   // FIXME: hash body_id to subdirectories
   return Stdio.read_bytes(query("maildir")+"/"+body_id);
 }
@@ -92,7 +91,7 @@ array(int) list_mail(int mailbox_id)
   return mail;
 }
 
-mapping(string:mixed) retrieve_mail(int mail_id)
+mapping(string:mixed) get_mail(int mail_id)
 {
   array a=get_sql()->query("select message_id from mail where id='"+mail_id+"'");
   if(!sizeof(a))
@@ -105,7 +104,7 @@ mapping(string:mixed) retrieve_mail(int mail_id)
   return mail;
 }
 
-array(string) retrieve_mail_headers(int message_id)
+array(string) get_mail_headers(int message_id)
 {
   array a=get_sql()->query("select message_id from mail where id='"+message_id+"'");
   if(!sizeof(a))
@@ -114,6 +113,22 @@ array(string) retrieve_mail_headers(int message_id)
   if(!sizeof(a))
     return 0;
   return a[0];
+}
+
+int update_message_refcount(int message_id, int deltacount)
+{
+  array a=get_sql()->query("select refcount from messages where id='"+message_id+"'");
+  if(!a||!sizeof(a))
+    return 0;
+  int refcount=(int)a[0]->refcount;
+  if(refcount+deltacount == 0)
+  {
+    get_sql()->query("delete from messages where id='"+message_id+"'");
+    delete_body(a[0]->body_id);
+  }
+  else
+    get_sql()->query("update messages set refcount='"+refcount+"'");
+  
 }
 
 int delete_mail(int mail_id)
@@ -127,13 +142,8 @@ int delete_mail(int mail_id)
   werror("%O",a);
   if(!a||!sizeof(a))
     return 0;
-  if(a[0]->refcount=="1")
-  {
-    get_sql()->query("delete from messages where id='"+message_id+"'");
-    delete_body(a[0]->body_id);
-  }
-  else
-    get_sql()->query("update messages set refcount=refcount-1");
+  if(!update_message_refcount(message_id,-1))
+    return 0;
   return 1;
 }
 
@@ -154,7 +164,8 @@ string get_mailbox_name(int mailbox_id)
 int delete_mailbox(int mailbox_id)
 {
   get_sql()->query("delete from mailboxes where id='"+mailbox_id+"'");
-  get_sql()->query("delete from mail where mailbox_id='"+mailbox_id+"'");
+  foreach(list_mail(mailbox_id), int mail_id)
+    delete_mail(mail_id);
   return 1;
 }
 
@@ -171,7 +182,9 @@ int add_mailbox_to_mail(int mail_id, int mailbox_id)
     return 0;
   int message_id=a[0]->message_id;
   get_sql()->query("insert into mail values(NULL,'"+mailbox_id+"','"+message_id+"')");
-  return get_sql()->master_sql->insert_id();
+  if(!update_message_refcount(message_id,1))
+    return 0;
+  return 1;
 }
 
 void set_flag(int mail_id, string flag)
@@ -179,7 +192,7 @@ void set_flag(int mail_id, string flag)
   get_sql()->query("insert into flags values('"+mail_id+"','"+flag+"')");
 }
 
-void remove_flag(int mail_id, string flag)
+void delete_flag(int mail_id, string flag)
 {
   get_sql()->query("delete from flags where mail_id='"+mail_id+"' and name='"+flag+"'");
 }

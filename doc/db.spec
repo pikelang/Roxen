@@ -1,4 +1,4 @@
-# $Id: db.spec,v 1.16 1998/08/25 11:04:51 js Exp $
+# $Id: db.spec,v 1.17 1998/08/25 19:37:43 js Exp $
 
 drop table messages;
 drop table mail;
@@ -44,6 +44,7 @@ create table users (
              id		             int auto_increment primary key,
              realname		     varchar(255),
              username		     varchar(64),
+	     password		     varchar(13),
              customer_id	     int
      );
 
