@@ -1,4 +1,4 @@
-// string cvs_version = "$Id: module_support.pike,v 1.41 1999/11/24 17:32:40 per Exp $";
+// string cvs_version = "$Id: module_support.pike,v 1.42 1999/11/28 07:17:59 per Exp $";
 #include <roxen.h>
 #include <module.h>
 #include <stat.h>
@@ -161,11 +161,11 @@ program my_compile_file(string file)
       report_error("Failed to compile module %s:\n%s", file, q);
     throw( "" ); 
   }
-  if ( strlen(q) )
-  {
-    report_debug(sprintf("Warnings during compilation of module %O:\n"
-			 "%s", file, q));
-  }
+//   if ( strlen(q) )
+//   {
+//     report_debug(sprintf("Warnings during compilation of module %O:\n"
+// 			 "%s", file, q));
+//   }
   if( !file_stat( ofile ) ||
       file_stat(ofile)[ST_MTIME] < file_stat(file)[ST_MTIME] )
     if( catch ( master()->dump_program( file, p ) ) )
