@@ -1,7 +1,7 @@
 #include <roxen.h>
 inherit "http";
 
-// $Id: roxenlib.pike,v 1.102 1999/06/02 18:36:58 marcus Exp $
+// $Id: roxenlib.pike,v 1.103 1999/06/09 04:03:18 mast Exp $
 // This code has to work both in the roxen object, and in modules.
 #if !efun(roxen)
 #define roxen roxenp()
@@ -1434,7 +1434,9 @@ Stdio.File open_log_file( string logfile )
 
 string trim( string what )
 {
-  sscanf(what, "%*[ \t]%s", what); what = reverse(what);
-  sscanf(what, "%*[ \t]%s", what); what = reverse(what);
+  if (stringp (what)) {
+    sscanf(reverse(what), "%*[ \t]%s", what);
+    sscanf(reverse(what), "%*[ \t]%s", what);
+  }
   return what;
 }
