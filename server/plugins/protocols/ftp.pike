@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.86 2003/01/07 18:34:07 jhs Exp $
+ * $Id: ftp.pike,v 2.87 2003/01/23 16:21:02 mani Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -1554,7 +1554,7 @@ class FTPSession
   int local_port;
 
   // The listen port object
-  roxen.Protocol port_obj;
+  core.Protocol port_obj;
 
   /*
    * Misc
@@ -1957,7 +1957,7 @@ class FTPSession
 
     object throttler=session->throttler;
     object pipe;
-    pipe = roxen.get_shuffler( fd );
+    pipe = core.get_shuffler( fd );
     if( conf )
       conf->connection_add( this_object(), pipe );
 
@@ -3332,7 +3332,7 @@ class FTPSession
 
   void ftp_SYST(string args)
   {
-    send(215, ({ "UNIX Type: L8: Roxen Information Server"}));
+    send(215, ({ "UNIX Type: L8: ChiliMoon Internet Server"}));
   }
 
   void ftp_CLNT(string args)
@@ -3431,7 +3431,7 @@ class FTPSession
 		   "TYPE: %s, FORM: %s; STRUcture: %s; transfer MODE: %s\n"
 		   "End of status",
 		   replace(fd->query_address(1), " ", ":"),
-		   roxen.version(),
+		   core.version(),
 		   port_obj->sorted_urls * "\nListening on ",
 		   replace(fd->query_address(), " ", ":"),
 		   user?sprintf("as %s", user):"anonymously",
@@ -3708,16 +3708,16 @@ class FTPSession
 		       line, describe_backtrace(err));
 	}
 #else
-	roxen->handle(lambda(function f, string args, string line) {
-			mixed err;
-			if (err = catch {
-			  f(args);
-			}) {
-			  report_error("Internal server error in FTP2\n"
-				       "Handling command %O\n%s\n",
-				       line, describe_backtrace(err));
-			}
-		      }, this_object()["ftp_"+cmd], args, line);
+	core->handle(lambda(function f, string args, string line) {
+		       mixed err;
+		       if (err = catch {
+			 f(args);
+		       }) {
+			 report_error("Internal server error in FTP2\n"
+				      "Handling command %O\n%s\n",
+				      line, describe_backtrace(err));
+		       }
+		     }, this_object()["ftp_"+cmd], args, line);
 #endif
       } else {
 	send(502, ({ sprintf("'%s' is not currently supported.", cmd) }));
@@ -3797,8 +3797,8 @@ class FTPSession
     s = replace(s,
 		({ "$roxen_version", "$roxen_build", "$full_version",
 		   "$pike_version", "$ident", }),
-		({ roxen->__roxen_version__, roxen->__roxen_build__,
-		   roxen->real_version, version(), roxen->version() }));
+		({ core.__roxen_version__, core.__roxen_build__,
+		   core.real_version, version(), core.version() }));
 
     send(220, s/"\n", 1);
   }

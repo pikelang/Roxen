@@ -1,4 +1,4 @@
-// This is a roxen protocol module.
+// This is a ChiliMoon protocol module.
 // Copyright © 2001, Roxen IS.
 
 inherit Protocol;
@@ -17,6 +17,6 @@ mapping(string:int) ftp_sessions = ([]);
 
 void create( mixed ... args )
 {
-  roxen.set_up_ftp_variables( this_object() );
+  core.set_up_ftp_variables( this_object() );
   ::create( @args );
 }

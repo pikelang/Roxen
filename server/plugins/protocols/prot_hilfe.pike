@@ -24,9 +24,9 @@ class Connection
     inherit RequestID;
     string real_auth;
     string remoteaddr = "127.0.0.1";
-    static string _sprintf()
-    {
-      return sprintf("RequestID(conf=%O; not_query=%O)", conf, not_query );
+    static string _sprintf(int t) {
+      return t=='O' && sprintf("%O(conf=%O; not_query=%O)", this_program,
+			       conf, not_query );
     }
 
     static void create()
@@ -150,11 +150,10 @@ class Connection
     this_program set_url( string url )
     {
       Configuration c;
-      foreach( indices(roxen->urls), string u )
+      foreach(core->urls; string u; mixed q )
       {
-	mixed q = roxen->urls[u];
 	if( glob( u+"*", url ) )
-	  if( (c = q->port->find_configuration_for_url(url, this_object(), 1 )) )
+	  if( (c=q->port->find_configuration_for_url(url, this_object(), 1)) )
 	  {
 	    conf = c;
 	    break;
@@ -164,7 +163,7 @@ class Connection
       if(!c)
       {
 	// pass 2: Find a configuration with the 'default' flag set.
-	foreach( roxen->configurations, c )
+	foreach( core->configurations, c )
 	  if( c->query( "default_server" ) )
 	  {
 	    conf = c;
@@ -176,10 +175,9 @@ class Connection
       if(!c)
       {
 	// pass 3: No such luck. Let's allow default fallbacks.
-	foreach( indices(roxen->urls), string u )
+	foreach( core->urls; string u; mixed q )
 	{
-	  mixed q = roxen->urls[u];
-	  if( (c = q->port->find_configuration_for_url( url,this_object(), 1 )) )
+	  if( (c=q->port->find_configuration_for_url(url, this_object(), 1)) )
 	  {
 	    conf = c;
 	    break;
@@ -224,7 +222,7 @@ class Connection
 
       switch( words[1] ) {
       case "accesses":
-	foreach( roxen->configurations, Configuration c )
+	foreach( core->configurations, Configuration c )
 	  if( c->inited ) {
 	    c->pri[4]->first_modules += ({ InsinuateFirst() });
 	    c->invalidate_cache();
@@ -296,7 +294,7 @@ class Connection
     switch( state )
     {
       case USER:
-	if(!(user = roxen.find_admin_user( line-"\n" ) ) )
+	if(!(user = core.find_admin_user( line-"\n" ) ) )
 	{
 	  rl->readline->write("No such user: '"+(line-"\n")+"'\n");
 	} 
@@ -408,8 +406,8 @@ class Connection
 
 void create( mixed ... args )
 {
-  roxen.add_permission( "Hilfe", "Hilfe" );
-  roxen.set_up_hilfe_variables( this_object() );
+  core.add_permission( "Hilfe", "Hilfe" );
+  core.set_up_hilfe_variables( this_object() );
   requesthandler = Connection;
   ::create( @args );
 }

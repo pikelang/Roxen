@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.392 2003/01/14 22:53:37 zino Exp $";
+constant cvs_version = "$Id: http.pike,v 1.393 2003/01/23 16:21:02 mani Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -49,9 +49,9 @@ int footime, bartime;
 #endif
 
 constant decode          = MIME.decode_base64;
-constant find_supports_and_vars = roxen.find_supports_and_vars;
-constant version         = roxen.version;
-constant _query          = roxen.query;
+constant find_supports_and_vars = core.find_supports_and_vars;
+constant version         = core.version;
+constant _query          = core.query;
 
 private static array(string) cache;
 private static int wanted_data, have_data;
@@ -123,7 +123,6 @@ class AuthEmulator
   {
     return !realauth;
   }
-  string _sprintf() { return "AuthEmulator"; }
 }
 
 AuthEmulator auth;
@@ -308,7 +307,7 @@ private void setup_pipe()
     end();
     return;
   }
-  pipe = roxen.get_shuffler( my_fd );
+  pipe = core.get_shuffler( my_fd );
   if( conf )
     conf->connection_add( this_object(), pipe );
 }
@@ -386,7 +385,7 @@ private void really_set_config(array mod_config)
   void do_send_reply( string what, string url ) {
     url = url_base() + url[1..];
     my_fd->set_blocking();
-    my_fd->write( prot + " 302 Roxen config coming up\r\n"+
+    my_fd->write( prot + " 302 ChiliMoon config coming up\r\n"+
                   (what?what+"\r\n":"")+"Location: "+url+"\r\n"
                   "Connection: close\r\nDate: "+
                   Roxen.http_date(predef::time(1))+
@@ -419,7 +418,9 @@ class CacheKey {
 #if ID_CACHEKEY_DEBUG
   constant __num = ({ 0 });
   int _num;
-  string _sprintf() { return "CacheKey(#" + _num + ")"; }
+  string _sprintf(int t) {
+    return t=='O' && sprintf("%O(#%d)", this_program, _num);
+  }
   void create() { _num = ++__num[0]; }
   void destroy() { werror("CacheKey(#" + _num + "): --DESTROY--\n"
 			  "%s\n\n", "" || describe_backtrace(backtrace())); }
@@ -438,7 +439,6 @@ mapping(string:string) parse_cookies( string contents )
   if(!contents)
     return cookies;
 
-//       misc->cookies += ({contents});
   foreach(((contents/";") - ({""})), string c)
   {
     string name, value;
@@ -1004,9 +1004,9 @@ string format_backtrace(int eid)
 string generate_bugreport(string msg, array(string) rxml_bt, array(string) bt,
 			  string raw_bt_descr, string raw_url, string raw)
 {
-  return ("Roxen version: "+version()+
-	  (roxen.real_version != version()?
-	   " ("+roxen.real_version+")":"")+
+  return ("ChiliMoon version: "+version()+
+	  (core.real_version != version()?
+	   " ("+core.real_version+")":"")+
 	  "\nPike version: " + predef::version() +
 	  "\nRequested URL: "+raw_url+"\n"
 	  "\nError: " + raw_bt_descr +
@@ -1357,8 +1357,6 @@ class MultiRangeWrapper
       return file[what];
     }
   }
-
-  string _sprintf() { return "MultiRangeWrapper"; }
 }
 
 
@@ -1720,7 +1718,7 @@ void handle_request( )
       } else {
 	if(prestate->find_file)
         {
-	  if (!roxen.configuration_authenticate (this_object(), "View Settings"))
+	  if (!core.configuration_authenticate(this_object(), "View Settings"))
 	    file = Roxen.http_auth_required("admin");
 	  else
 	    file = ([
@@ -1748,7 +1746,7 @@ void handle_request( )
       if( objectp( file->try_again_later ) )
 	;
       else
-	call_out( roxen.handle, file->try_again_later, handle_request );
+	call_out( core.handle, file->try_again_later, handle_request );
       return;
     }
     else if( file->pipe )
@@ -2049,8 +2047,8 @@ void got_data(mixed fooid, string s)
     TIMER_END(parse_request);
 
 #ifdef THREADS
-    REQUEST_WERR("HTTP: Calling roxen.handle().");
-    roxen.handle(handle_request);
+    REQUEST_WERR("HTTP: Calling core.handle().");
+    core.handle(handle_request);
 #else
     handle_request();
 #endif
@@ -2183,8 +2181,9 @@ void chain( object f, object c, string le )
   }
 }
 
-string _sprintf( )
+string _sprintf(int t)
 {
+  if(t!='O') return 0;
   return "RequestID(" + (raw_url||"") + ")"
 #ifdef ID_OBJ_DEBUG
     + (__marker ? "[" + __marker->count + "]" : "")

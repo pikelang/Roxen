@@ -1,7 +1,7 @@
-// This is a roxen protocol module.
+// This is a ChiliMoon protocol module.
 // Copyright © 2001, Roxen IS.
 
-// $Id: prot_https.pike,v 2.7 2002/10/25 20:04:55 nilsson Exp $
+// $Id: prot_https.pike,v 2.8 2003/01/23 16:21:02 mani Exp $
 
 // --- Debug defines ---
 
@@ -178,7 +178,7 @@ void fix_cvars( Variable.Variable a )
 
 void create( mixed ... args )
 {
-  roxen.set_up_http_variables( this_object() );
+  core.set_up_http_variables( this_object() );
   if( variables[ "set_cookie" ] )
     variables[ "set_cookie" ]->set_changed_callback( fix_cvars );
   if( variables[ "set_cookie_only_once" ] )

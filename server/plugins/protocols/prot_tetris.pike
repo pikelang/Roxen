@@ -1,4 +1,4 @@
-// This is a roxen protocol module.
+// This is a ChiliMoon protocol module.
 // Copyright © 2001, Roxen IS.
 
 inherit Protocol;
