@@ -1,6 +1,6 @@
 // This module implements an ftp proxy
 
-string cvs_version = "$Id: ftpgateway.pike,v 1.29 1999/12/18 14:48:18 nilsson Exp $";
+string cvs_version = "$Id: ftpgateway.pike,v 1.30 1999/12/28 05:05:12 nilsson Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -10,6 +10,18 @@ import Stdio;
 # ifndef PROXY_DEBUG
 #  define PROXY_DEBUG
 # endif
+#endif
+
+#ifdef PROXY_DEBUG
+# define PROXY_WERR(X) werror("FTP PROXY: "+X+"\n")
+#else
+# define PROXY_WERR(X)
+#endif
+
+#ifdef DESTRUCT_CHECK
+# define DESTRUCT_WERR(X) if(i_am_destructed){werror("I AM DESTRUCTED: "+X+"\n\n\n");}
+#else
+# define DESTRUCT_WERR(X)
 #endif
 
 // If this is defined, the session log will be included in a HTML
@@ -28,7 +40,7 @@ Content-type: text/html\r\n\
 <hr>\
 <font size=-2><a href=http://www.roxen.com/>"+roxen->version()+"</a></font>"
 
-#define INFOSTRING "<font size=-2><a href=http://www.roxen.com/>"+roxen->version()+"</a> FTP Gateway $Revision: 1.29 $ / <i>law@idonex.se</i></font>"
+#define INFOSTRING "<font size=-2><a href=http://www.roxen.com/>"+roxen->version()+"</a> FTP Gateway $Revision: 1.30 $ / <i>law@idonex.se</i></font>"
 
 #define _ERROR_MESSAGE(XXXX) ("HTTP/1.0 500 FTP gateway error\r\nContent-type: text/html\r\n\r\n<title>Ftp gateway error</title>\n<h2>FTP Gateway failed:</h2><hr><font size=+1>"XXXX"</font><hr>"+INFOSTRING)
 
@@ -88,17 +100,17 @@ class Request {
   {
     if (objectp(dataport)) master->save_dataport(({portno,dataport}));
     if (objectp(server))
-      if (dontsaveserver) 
+      if (dontsaveserver)
       {
 	server->set_blocking();
-	destruct(server); 
+	destruct(server);
       }
       else
       {
 	master->save_connection((user||"")+"@"+host+":"+port,
 				server,server_info);
       }
-   
+
     dataport=0;
     server=0;
     if (objectp(datacon))
@@ -108,10 +120,10 @@ class Request {
     }
   }
 
-#ifdef FTP_GATEWAY_DEBUG
+#ifdef PROXY_DEBUG
   void set_what_now(string s)
   {
-    werror("FTP GATEWAY: #"+serial+" "+host+"/"+file+": "+s+"\n");
+    PROXY_WERR("#"+serial+" "+host+"/"+file+": "+s);
     what_now=s;
   }
 #else
@@ -136,7 +148,7 @@ class Request {
   void write_server(string s)
   {
 #ifdef DEBUG
-    write("write "+s+"\n");
+    werror("write "+s+"\n");
 #endif
     server->write(s+"\r\n");
 #ifdef SESSION_INFO
@@ -163,9 +175,9 @@ class Request {
     {
       array tmp;
       tmp=id->conf->type_from_filename(filename,1);
-      if (tmp&&tmp[0]) 
+      if (tmp&&tmp[0])
       {
-	type=tmp[0]; 
+	type=tmp[0];
 	if (tmp[1]) type+=" ("+tmp[1]+")";
       }
       else type="unknown";
@@ -176,9 +188,9 @@ class Request {
       array tmp;
       string type2;
       tmp=id->conf->type_from_filename(typename,1);
-      if (tmp&&tmp[0]) 
+      if (tmp&&tmp[0])
       {
-	type2=tmp[0]; 
+	type2=tmp[0];
 	if (tmp[1]) type2+=" ("+tmp[1]+")";
 	icon=image_from_type(type2);
       }
@@ -191,7 +203,7 @@ class Request {
 		       "</a>%12s %s %s\n<a href=\"%s\"><img src=%s></a>\n",
 		       href,icon,spacelen,filename,size?(string)size:"",date,
 		       desc?sprintf(" %-15s %s", type, desc): type,href,href);
-      else 
+      else
 	return sprintf("<a href=\"%s\">%-*s</a>%12s %s %s\n<a href=\"%s\">"
 		       "<img src=%s></a>\n",
 		       href,spacelen,filename,size?(string)size:"",date,
@@ -202,7 +214,7 @@ class Request {
 		     "%12s %s %s \n",
 		     href,icon,spacelen,filename,size?(string)size:"",
 		     date, desc?sprintf(" %-15s %s", type, desc): type);
-    else 
+    else
       return sprintf("<a href=\"%s\">%-*s</a>%12s %s %s\n",
 		     href,spacelen,filename,size?(string)size:"",
 		     date, desc?sprintf(" %-15s %s", type, desc): type);
@@ -220,7 +232,7 @@ class Request {
 
     foreach (dir-({""}),s)
     {
-      if (sscanf(s,"%s/%*[ ]%*[=-]  %s",filename, rest)==4 && 
+      if (sscanf(s,"%s/%*[ ]%*[=-]  %s",filename, rest)==4 &&
 	  sizeof(filename/" ")==1)
 	dirl+=({({filename+"/","*dir*",filename+"/",0,"directory",
 		    "internal-gopher-menu", rest})});
@@ -245,7 +257,7 @@ class Request {
       res+=directory_line(q[0], q[1], q[2], q[3],""/*date*/,
 			  maxlen, q[4], q[5], q[6]);
 
-   
+
     return "<pre>"+res+"</pre>";
   }
 
@@ -255,19 +267,19 @@ class Request {
     string *dir;
     string res,f,a;
     int date_position,i,maxlen;
-  
+
     dir=((buffer/"\r")*"")/"\n";
-  
+
     if (sizeof(dir)<1) return 0; /* nope */
     if (sscanf(dir[0],"total %*d")) {
       dir=dir[1..sizeof(dir)-1]; /* not first line */
     }
     res="";
-  
+
     if (sizeof(dir)<1) return 0; /* nope */
-  
+
     if (sscanf(dir[0],"%*[drwxahsSl-]%*[ ]")<2) return 0; /* nope */
-  
+
     if((sscanf(dir[0], "l%*s "+file+" -> %s", f) == 2) && (f != "."))
     {
       if(search(f, "../") == 0)
@@ -276,8 +288,8 @@ class Request {
       buffer="";
       return -1;
     }
-  
-  
+
+
     /* search for date */
     a=dir[0];
     for (i=strlen(a)-14; i>2; i--)
@@ -287,7 +299,7 @@ class Request {
 	  (a[i+10]==':'||a[i+12]==' ')) break;
     if (i<3) return 0; /* nope */
     date_position=i;
-  
+
     maxlen=12+date_position+14;
     foreach (dir-({""}),f)
     {
@@ -295,7 +307,7 @@ class Request {
       if (maxlen<strlen(f)) maxlen=strlen(f);
     }
     maxlen-=date_position+13;
-  
+
     foreach (dir-({""}),f)
     {
       string filename,date,link,type;
@@ -303,12 +315,12 @@ class Request {
       for (offset=0; (f[date_position+offset]!=' ')&&
 	     (strlen(f) > date_position+offset+14); offset++) ;
       date_position+=offset ; // If size has > 7 digits
-    
+
       if (!(f[date_position+0]==' '&&f[date_position+4]==' '&&
 	    f[date_position+7]==' '&&f[date_position+13]==' '&&
 	    (f[date_position-1]>='0'&&f[date_position-1]<='9')))
 	return 0; /* not this type of format */
-    
+
       filename=f[date_position+14..];
       date=f[date_position+1..date_position+12];
       for (i=1; i<20&&(f[date_position-i]>='0'&&f[date_position-i]<='9'); i++);
@@ -319,14 +331,14 @@ class Request {
 	res+=directory_line(filename+"/","*dir*",filename+"/",size,date,
 			    maxlen,"directory","internal-gopher-menu");
       }
-      else if (f[0]=='l') 
+      else if (f[0]=='l')
       {
 	sscanf(filename,"%s -> %s",filename,type);
 	res+=directory_line(filename+"@",type,type/*to*/,size,date,
 			    maxlen,"-> "+type);
-	links+=({type}); 
+	links+=({type});
       }
-      else 
+      else
 	res+=directory_line(filename,filename,filename,size,date,maxlen);
       date_position-=offset ; // Reset to previous position
     }
@@ -345,7 +357,7 @@ class Request {
     // 	 return 0; /* nope */
     while (sizeof(dir) && (dir[0]==""))
       dir=dir[1..sizeof(dir)-1];
-    if (sizeof(dir) && sscanf(dir[0],"total %*d")) 
+    if (sizeof(dir) && sscanf(dir[0],"total %*d"))
       dir=dir[1..sizeof(dir)-1]; /* not first line */
     if (sizeof(dir)&&dir[0][0..0]=="/") dir=dir[1..sizeof(dir)-1];
     res="";
@@ -353,13 +365,13 @@ class Request {
     if (sizeof(dir)<1) return 0; /* nope */
 
     if (sscanf(dir[0],"%*[drwxsSl-]%*[ ]")<2) return 0; /* nope */
-   
+
     if((f = dir[0]) == "")
       for(i=1; i < sizeof(dir); i++)
 	if(dir[i] != "")
-	{ 
-	  f=dir[i]; 
-	  break; 
+	{
+	  f=dir[i];
+	  break;
 	}
     for (i = strlen(f) - 14; i > 2; i--)
     {
@@ -372,7 +384,7 @@ class Request {
     }
     if (i<3) return 0; /* nope */
     date_position=i;
-   
+
     maxlen=12+date_position+14;
     foreach (dir-({""}),f)
     {
@@ -380,12 +392,12 @@ class Request {
       if (maxlen<strlen(f)) maxlen=strlen(f);
     }
     maxlen-=date_position+13;
-   
+
     foreach (dir-({""}),f)
     {
       string filename,date,link,type;
       int size;
-     
+
       for (i=strlen(f)-12; i>2; i--)
 	if (f[i+0]==' '&&f[i+4]==' '&&f[i+7]==' '&&f[i+13]==' '&&
 	    (f[i+6]>='0'&&f[i+6]<='9')&&
@@ -394,10 +406,10 @@ class Request {
       if (i<3) return 0; /* nope */
 
       date_position=i;
-     
+
       filename=f[date_position+14..];
       date=f[date_position+1..date_position+12];
-      for (i = 1; i < 20 && (f[date_position - i] >= '0' && 
+      for (i = 1; i < 20 && (f[date_position - i] >= '0' &&
 			     f[date_position-i] <= '9'); i++);
       size=(int)f[date_position-i..];
       if (f[0]=='d')
@@ -405,13 +417,13 @@ class Request {
 	type="directory";
 	res+=directory_line(filename+"/","*dir*",filename+"/",size,date,maxlen,"directory","internal-gopher-menu");
       }
-      else if (f[0]=='l') 
+      else if (f[0]=='l')
       {
 	sscanf(filename,"%s -> %s",filename,type);
 	res+=directory_line(filename+"@",type,type/*to*/,size,date,maxlen,"-> "+type,"internal-gopher-menu");
-	links+=({type}); 
+	links+=({type});
       }
-      else 
+      else
 	res+=directory_line(filename,filename,filename,size,date,maxlen);
     }
     return "<pre>"+res+"</pre>";
@@ -423,12 +435,12 @@ class Request {
     string *dir ;
     dir=((buffer/"\r")*"")/"\n";
     if (sizeof(dir)<1) return 0; /* nope */
- 
+
     while (dir[0]=="") dir=dir[1..sizeof(dir)-1];
     dir=dir[1..sizeof(dir)-1] ;
- 
+
     if (sizeof(dir)<1) return 0; /* nope */
- 
+
     buffer=dir*"\n" ;
     if (!(res=parse_unix_ls_directory()) &&
 	!(res=parse_unix_ls_directory_floating_date()) &&
@@ -456,7 +468,7 @@ class Request {
 	     !(res=parse_directory_without_first_line()))
     {
       /* unknown, return preformatted */
-      werror("FTP GATEWAY: unknown list format at "+
+      report_debug("FTP GATEWAY: unknown list format at "+
 		   (user?user+"@":"")+host+":"+port+"/"+file+"\n");
       res="(Unrecognized directory type)<br>\n<pre>"+buffer+"</pre>";
     }
@@ -504,7 +516,7 @@ class Request {
       open_connection();
       return;
     }
-    if (sizeof(links)==1&&file!="/"&&sizeof(res/"\n")==1) // only one redirect, send it... 
+    if (sizeof(links)==1&&file!="/"&&sizeof(res/"\n")==1) // only one redirect, send it...
     {
       res=links[0];
       while (res[0..2]=="../"||res=="..")
@@ -540,9 +552,7 @@ class Request {
 
   void transfer_completed() /* called from pipe */
   {
-#ifdef DESTRUCT_CHECK
-    if (i_am_destructed) werror("I AM DESTRUCTED: transfer_completed\n");
-#endif
+    DESTRUCT_WERR("transfer_completed");
     id->end();
     save_stuff();
     destruct();
@@ -580,10 +590,10 @@ class Request {
     pipe->write("HTTP/1.0 200 FTP transfer initiated\r\n");
 
     tmp=id->conf->type_from_filename(file,1);
-    if (arrayp(tmp)&&tmp[0]) 
+    if (arrayp(tmp)&&tmp[0])
     {
       pipe->write("Content-type: "+tmp[0]+"\r\n");
-      if (tmp[1]) 
+      if (tmp[1])
 	pipe->write("Content-encoding: "+tmp[1]+"\r\n");
     }
     else pipe->write("Content-type: text/plain\r\n");
@@ -599,7 +609,7 @@ class Request {
 
   void transfer_response(string r,string arg)
   {
-    if (r=="425") 
+    if (r=="425")
     {
       id->end(ERROR_MESSAGE("Transfer failed: Remote server failed to open connection:\n<pre>"+r+" "+arg+"</pre>"));
     }
@@ -627,9 +637,9 @@ class Request {
 	trystat=0;
       }
     }
-    else if (r=="451") /* Requested action aborted: local error in processing  */ 
+    else if (r=="451") /* Requested action aborted: local error in processing  */
       id->end(ERROR_MESSAGE("Transfer aborted; Remote server failed:\n<pre>"+r+" "+arg+"\n</pre>"));
-    else 
+    else
       id->end(ERROR_MESSAGE("Unhandled response, aborting:\n<pre>"+r+" "+arg+"\n</pre>(transfer_response)"));
   }
 
@@ -649,10 +659,7 @@ class Request {
 
   void active_transfer_accept(object port)
   {
-#ifdef DESTRUCT_CHECK
-    if (i_am_destructed)
-      werror("I AM DESTRUCTED: active_transfer_accept\n\n\n");
-#endif
+    DESTRUCT_WERR("active_transfer_accept");
     remove_call_out(data_connect_timeout);
     datacon=port->accept();
     if (!datacon) return; /* huh? out of fd's maybe. FTP server will complain. */
@@ -667,7 +674,7 @@ class Request {
     if (r=="150")
     {
       if (sscanf(arg,"%*s(%d bytes",bytes_size)<2) bytes_size=-1;
-      if (datacon) transfer(); 
+      if (datacon) transfer();
       /* else, wait for connect */
     }
     else if (r=="550") /* Not a plain file */  /* a dir maybe? */
@@ -685,12 +692,12 @@ class Request {
       {
 	set_what_now("not a plain file, try dir...\n");
 	if (!trystat) file+="/";
-	write_server("list "+file); 
+	write_server("list "+file);
 	getting_list=2; /* if list, redirect */
 	trystat=0;
       }
     }
-    else if (r=="425") 
+    else if (r=="425")
       id->end(ERROR_MESSAGE("Transfer failed: Remote server failed to open connection:\n<pre>"+r+" "+arg+"\n</pre>"));
     else if (r=="226") /* transfer complete */
       ; /* ignore... well get it soon */
@@ -705,7 +712,7 @@ class Request {
   void data_connect_timeout()
   {
     /* fnskpt */
-    if (objectp(id)) 
+    if (objectp(id))
       id->end(ERROR_MESSAGE("Connection timeout: <tt>"+host+"</tt>"));
     if (objectp(server))
     {
@@ -729,7 +736,7 @@ class Request {
       id->end(ERROR_MESSAGE("failed to listen on too many ports; this ought not to happen."));
       return;
     }
-    else 
+    else
     {
       portno=dataportid[0];
       dataport=dataportid[1];
@@ -744,10 +751,7 @@ class Request {
 
   void got_passive_connection(object d)
   {
-#ifdef DESTRUCT_CHECK
-    if (i_am_destructed)
-      werror("I AM DESTRUCTED: got_passive_connection\n");
-#endif
+    DESTRUCT_WERR("got_passive_connection");
     if (!d)
     {
       id->end(ERROR_MESSAGE("Failed to open PASSIVE connection"));
@@ -804,7 +808,7 @@ class Request {
       }
       return;
     }
-    else 
+    else
       id->end(ERROR_MESSAGE("Unhandled response, aborting:\n<pre>"+r+" "+arg+"\n</pre>(stat_result)"));
   }
 
@@ -841,7 +845,7 @@ class Request {
     }
     else if (r=="220") /* service ready */
       return; /* ignore */
-    else 
+    else
       id->end(ERROR_MESSAGE("Unhandled response, aborting:\n<pre>"+r+" "+arg+"\n</pre>(password_response)"));
   }
 
@@ -876,15 +880,15 @@ class Request {
   void login()
   {
     set_what_now("logging in");
-    if (!id) 
-    { 
+    if (!id)
+    {
       save_stuff();
       selfdestruct();
-      return; 
+      return;
     }
     if(user)
       write_server("user "+user);
-    else    
+    else
       write_server("user anonymous");
     read_state=passwd;
   }
@@ -893,18 +897,15 @@ class Request {
   {
     string *ss;
 
-#ifdef DESTRUCT_CHECK
-    if (i_am_destructed)
-      werror("I AM DESTRUCTED: read_server\n");
-#endif
+    DESTRUCT_WERR("read_server");
 
-    if (!objectp(id)) 
-    { 
+    if (!objectp(id))
+    {
       save_stuff();
       selfdestruct();
-      return; 
+      return;
     }
-   
+
     s=last_read+s;
     ss=s/"\n";
     last_read=ss[-1]; /* last element */
@@ -919,7 +920,7 @@ class Request {
       if (strlen(s)<4||s[3]!=' '||
 	  s[0]<'0'||s[0]>'9'||
  	  s[1]<'0'||s[1]>'9'||
- 	  s[2]<'0'||s[2]>'9') 
+ 	  s[2]<'0'||s[2]>'9')
       {
 	if (read_state==stat_result)
 	{
@@ -932,11 +933,11 @@ class Request {
       }
       else if (s[0]>'5') ; /* ignore */
       else if (s[0..2]=="200") ; /* command ok, ignore */
-      else if (s[0..2]=="530") /* Not logged in */ 
+      else if (s[0..2]=="530") /* Not logged in */
       {
 	server->set_blocking();
 	destruct(server); /* kill it */
-	if (usedoldconnection) 
+	if (usedoldconnection)
 	{
 	  set_what_now("connecting to server (old connection wierd)");
 	  async_connect(host,port,connected);
@@ -945,39 +946,36 @@ class Request {
 	else
 	  id->end(ERROR_MESSAGE("Failed to log in:\n<pre>"+buffer+s+"</pre>"));
       }
-      else if (s[0..2]=="120") /* Service ready in N minutes */ 
+      else if (s[0..2]=="120") /* Service ready in N minutes */
       {
 	id->end(ERROR_MESSAGE("Failed to log in; service not currently available:<pre>"+s+"\n</pre>\n"));
 	server->set_blocking();
 	destruct(server); /* kill it */
       }
-      else if (s[0..2]=="421") /* Service not available  */ 
+      else if (s[0..2]=="421") /* Service not available  */
       {
 	id->end(ERROR_MESSAGE("Failed to log in, service not available:\n<pre>"+s+"</pre>"));
 	server->set_blocking();
 	destruct(server); /* kill it */
       }
-      else 
+      else
       {
 	if (s[0..2]=="230"||s[0..2]=="220") server_info+=s+"\n";
 	(read_state)(s[0..2],s[4..]);
       }
-      if (!objectp(id)) 
-      { 
+      if (!objectp(id))
+      {
 	save_stuff();
 	selfdestruct();
-	return; 
+	return;
       }
     }
   }
 
   void server_close(mixed dummy_id)
   {
-#ifdef DESTRUCT_CHECK
-    if (i_am_destructed)
-      werror("I AM DESTRUCTED: server_close\n");
-#endif
-    if (id) 
+    DESTRUCT_WERR("server_close");
+    if (id)
       id->end(ERROR_MESSAGE("Connection closed by <tt>"+host+"</tt>"));
     if (objectp(server)) { server->set_blocking(); destruct(server); }
     server=0;
@@ -987,11 +985,8 @@ class Request {
 
   void connection_timeout(object con)
   {
-#ifdef DESTRUCT_CHECK
-    if (i_am_destructed)
-      werror("I AM DESTRUCTED: connected\n\n\n");
-#endif
-    if (objectp(id)) 
+    DESTRUCT_WERR("connected");
+    if (objectp(id))
     {
       async_connect(host,port,connected);
       call_out(connection_timeout,CONNECTION_TIMEOUT,0);
@@ -1003,12 +998,9 @@ class Request {
 
   void connected(object con)
   {
-#ifdef DESTRUCT_CHECK
-    if (i_am_destructed)
-      werror("I AM DESTRUCTED: connected\n\n\n");
-#endif
+    DESTRUCT_WERR("connected");
     remove_call_out(connection_timeout);
-    if (!objectp(id)) 
+    if (!objectp(id))
     {
       selfdestruct();
       return;
@@ -1018,7 +1010,7 @@ class Request {
       id->end(ERROR_MESSAGE("Connection refused by <tt>"+host+"</tt>"));
       selfdestruct();
     }
-    else 
+    else
     {
       if (server) { destruct(con); return; }  /* already had a connection */
       server=con;
@@ -1046,10 +1038,10 @@ class Request {
       sscanf(rfile,"(%s)%s",effect,rfile);
     else effect=0;
 
-    file="/"+rfile; 
+    file="/"+rfile;
     if (search(file,"*")!=-1||
 	search(file,"?")!=-1) trystat=1; else trystat=0;
-   
+
     port=rport;
     if ((m=master->ftp_connection((user||"")+"@"+host+":"+port)) && m[0])
     {
@@ -1060,7 +1052,7 @@ class Request {
       server->set_nonblocking(read_server,0/*write callback*/,server_close);
       open_connection();
       return;
-    } 
+    }
     set_what_now("connecting to server");
     async_connect(host,port,connected);
     call_out(connection_timeout,CONNECTION_TIMEOUT,0);
@@ -1098,15 +1090,13 @@ void start()
   if(strlen(pos)>2 && (pos[-1] == pos[-2]) && pos[-1] == '/')
     set("mountpoint", pos[0..strlen(pos)-2]); // Evil me..
 
-  if(logfile) 
+  if(logfile)
     destruct(logfile);
 
   if(!strlen(QUERY(logfile)))
     return;
 
-#ifdef PROXY_DEBUG
-  werror("FTP gateway online.\n");
-#endif
+  PROXY_WERR("FTP gateway online.");
 
   if(QUERY(logfile) == "stdout")
   {
@@ -1148,10 +1138,10 @@ void init_proxies()
 
     if(!strlen(foo) || foo[0] == '#')
       continue;
-    
+
     bar = replace(foo, "\t", " ")/" " -({ "" });
     if(sizeof(bar) < 3) continue;
-    if(err=catch(proxies += ({ ({ Regexp(bar[0])->match, 
+    if(err=catch(proxies += ({ ({ Regexp(bar[0])->match,
 				  ({ bar[1], (int)bar[2] }) }) })))
       report_error("Syntax error in regular expression in gateway: "
                    +bar[0]+"\n"+err[0]);
@@ -1181,11 +1171,11 @@ string check_variable(string name, mixed value)
 }
 
 void create(object c)
-{         
+{
   defvar("logfile", GLOBVAR(logdirprefix)+
 	 short_name(c?c->name:".")+"/ftp_proxy_log",
 	 "Logfile", TYPE_FILE,  "Empty the field for no log at all");
-  
+
   defvar("mountpoint", "ftp:/", "Location", TYPE_LOCATION|VAR_MORE,
 	 "By default, this is ftp:/. If you set anything else, all "
 	 "normal WWW-clients will fail. But, other might be useful"
@@ -1193,7 +1183,7 @@ void create(object c)
 	 " this: &lt;a href=\"/ftp/\"&lt;my.www.server&gt;/a&gt; will enable"
 	 " accesses to local WWW-servers through a firewall.<p>"
 	 "Please consider security, though.");
-  
+
   defvar("Proxies", "", "Remote gateway regular expressions",
 	 TYPE_TEXT_FIELD|VAR_MORE,
 	 "Here you can add redirects to remote gateways. If a file is "
@@ -1243,10 +1233,10 @@ void create(object c)
 
 mixed *register_module()
 {
-  return 
-    ({  MODULE_PROXY|MODULE_LOCATION, 
-	  "FTP gateway", 
-	  "FTP gateway, not currently caching", 
+  return
+    ({  MODULE_PROXY|MODULE_LOCATION,
+	  "FTP gateway",
+	  "FTP gateway, not currently caching",
 	  });
 }
 
@@ -1292,9 +1282,7 @@ void connected_to_server(object o, string file, object id, int is_remote)
     return;
   }
 
-#ifdef PROXY_DEBUG
-  werror("FTP PROXY: Connected.\n");
-#endif
+  PROXY_WERR("Connected.");
 
 //  new_request=Request();
   if(o->query_address())
@@ -1303,7 +1291,7 @@ void connected_to_server(object o, string file, object id, int is_remote)
     to_send=replace(id->raw, "\n", "\r\n");
     if(!to_send)
     {
-      id->do_not_disconnect = 0;  
+      id->do_not_disconnect = 0;
       id->disconnect();
 
       log(file, "- Clientabort "+hostname(id->remoteaddr));
@@ -1317,7 +1305,7 @@ void connected_to_server(object o, string file, object id, int is_remote)
     log(file, "- RemoteCache "+hostname(id->remoteaddr));
     //new_request->assign(o, file, id, 1);
   }
-  
+
   // if(objectp(new_request)) requests[new_request] = 1;
 }
 
@@ -1333,14 +1321,14 @@ mixed|mapping find_file( string f, object id )
   mixed tmp;
   array more;
   int port;
-  
+
   f=id->raw_url[strlen(QUERY(mountpoint)) .. ];
   while(sizeof(f) && f[0]=='/')
     f=f[1..];
 
   if(search(f, "/") == -1)
     return http_redirect(f+"/");
-      
+
   if(sscanf(f, "%[^/]/%s", host, file) < 2)
   {
     host = f;
@@ -1359,18 +1347,15 @@ mixed|mapping find_file( string f, object id )
   {
      port = 21;
   }
-     
-#ifdef PROXY_DEBUG
-  werror(sprintf("FTP PROXY: Request for %s\n"
-		 "  file:  %s\n"
-		 "  user:  %s\n"
-		 "  passw: %s\n"
-		 "  host:  %s\n"
-		 "  port:  %d\n", f, file,
-		 (user||"ANON"), (passw||"N/A"), host, port));
-#endif
-     
-   
+
+  PROXY_WERR(sprintf("Request for %s\n"
+		     "  file:  %s\n"
+		     "  user:  %s\n"
+		     "  passw: %s\n"
+		     "  host:  %s\n"
+		     "  port:  %d", f, file,
+		     (user||"ANON"), (passw||"N/A"), host, port));
+
   // if(sscanf(f, "%[^:/]:%d/%s", host, port, file) < 2)
   // {
   //   if(sscanf(f, "%[^/]/%s", host, file) < 2)
@@ -1391,12 +1376,12 @@ mixed|mapping find_file( string f, object id )
     return tmp;
 
   // sscanf(host, "%s@%s", user, host);
-  
+
   if(!file)
     file="/";
-  
+
   key = (user||"")+"@"+host+":"+port+"/"+file;
-  id->do_not_disconnect = 1;  
+  id->do_not_disconnect = 1;
 
   // Using a remote proxy?
   if(more = is_remote_proxy(host))
@@ -1405,7 +1390,7 @@ mixed|mapping find_file( string f, object id )
   requests[Request(id,this_object(),host,port,file, user, passw)]=1;
   log(key, "- New "+hostname(id->remoteaddr));
   return http_pipe_in_progress();
-}	  
+}	
 
 /************ optimization ************/
 
@@ -1456,15 +1441,15 @@ void remove_dataport(mixed m)
 void dataport_accept(object u)
 {
   if(!u){
-    werror("FTP GATEWAY: no arguments to dataport_accept()\n");
+    report_debug("FTP GATEWAY: no arguments to dataport_accept()\n");
     return;
   }
   if (request_port[u])
     (request_port[u])(u);
-  else 
+  else
   {
     object con;
-    werror("FTP GATEWAY: accept on forgotten port, "
+    report_debug("FTP GATEWAY: accept on forgotten port, "
 		 "cancelling connection\n");
     con=u->accept();
     if (con) { destruct(con); }
@@ -1484,9 +1469,7 @@ mixed create_dataport(function acceptfunc)
     else break;
   }
   if (dataport->query_id() != dataport){
-#ifdef PROXY_DEBUG
-    werror("FTP GATEWAY: id set to dataport\n");
-#endif /* PROXY_DEBUG */
+    PROXY_WERR("id set to dataport");
     dataport->set_id(dataport);
   }
 
@@ -1505,7 +1488,7 @@ mixed get_dataport(function acceptfunc)
    {
       if (!sizeof(oa=indices(dataports))) return create_dataport(acceptfunc); /* no dataports left */
       dataports[o=oa[0]]=0; /* delete */
-      if (objectp(o[1])) 
+      if (objectp(o[1]))
       {
 	 request_port[o[1]]=acceptfunc;
 	 return o[0..1];
