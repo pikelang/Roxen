@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.463 2004/08/18 17:04:25 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.464 2004/10/15 09:00:11 jonasw Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -819,9 +819,8 @@ private final int parse_got_2( )
 	data = String.trim_all_whites( data );
 	l = misc->len = strlen(data);
 
-	if(l < 200000)
-	  foreach(replace(data,"+"," ")/"&", v)
-	    if(sscanf(v, "%s=%s", a, b) == 2)
+	foreach(replace(data,"+"," ")/"&", v)
+	  if(sscanf(v, "%s=%s", a, b) == 2)
 	    {
 	      a = http_decode_string( a );
 	      b = http_decode_string( b );
