@@ -1,8 +1,12 @@
 #!/bin/sh
 #
-# $Id: start,v 1.119 2000/08/09 01:30:25 per Exp $
+# $Id: start,v 1.120 2000/08/09 02:34:34 per Exp $
 
 pre="`echo \" $$             \" | sed -e 's/\(.........\)\(.*\)/\1/g'` :"
+
+dp() {
+  echo "$pre" "$@" 2>&1
+}
 
 # Breaks on linux when using symlinks.
 dn="`dirname $0`"
@@ -10,9 +14,9 @@ case "$dn" in
  ""|".")
   ;;
  *)
-  echo "Changing current directory to '$dn' (now `pwd`)"
+  dp "Changing current directory to '$dn' (now `pwd`)"
   cd $dn
-  echo "Got `pwd`)"
+  dp "Got new directory as `pwd`"
   ;;
 esac
 
@@ -31,7 +35,7 @@ if test -d $LOCALDIR/.; then
 else :; fi
 
 if test -d $VARDIR/.; then :; else
-  echo "$pre Creating directory $VARDIR"
+  dp "Creating directory $VARDIR"
   mkdir $VARDIR || exit 1
 fi
 
@@ -60,17 +64,17 @@ if [ -x $LOCALDIR/bin/pike ] ; then pike=$LOCALDIR/bin/pike; fi
 if [ -x $LOCALDIR/bin/roxen ] ; then pike=$LOCALDIR/bin/roxen; fi
 if [ "x$PIKE" = "x" ]; then :; else
   if [ -x "$PIKE" ]; then pike="$PIKE";
-  else echo "$PIKE is not executable."; fi
+  else dp "$PIKE is not executable."; fi
 fi
 
 
 if [ x"$pike" = "x" ] ; then
-  echo "No pike binary found. Aborting."
+  dp "No pike binary found. Aborting."
   exit 1
 fi
 
 if [ ! -f "$pike" ] ; then
-  echo "No pike binary found. Aborting."
+  dp "No pike binary found. Aborting."
   exit 1
 fi
 
@@ -103,9 +107,9 @@ DEFINES="$DEFINES -DKEEP_ALIVE"
 # Most other OS's have thread bugs that cause them or Roxen to crash.
 if uname | grep 'SunOS' >/dev/null 2>&1; then
   if uname -r | grep '5\.[5-9]' >/dev/null 2>&1; then
-    if [ $verbose -gt 0 ] ; then
-      echo "$pre Solaris 2.5 or later detected. Defaulting to enabled threads."
-    fi
+#    if [ $verbose -gt 0 ] ; then
+#      dp "Solaris 2.5 or later detected. Using threads by default."
+#    fi
     DEFINES="$DEFINES -DENABLE_THREADS"
   fi
 fi
@@ -113,7 +117,7 @@ fi
 gdb=no
 
 remove_old_dot_o_files () {
-  echo "$pre Removing old .o files ($1)"
+  dp "Removing old .o files ($1)"
   find $pcdir -name '*.o' | xargs rm -f
 }
 
@@ -378,14 +382,30 @@ EOF
  done
 }
 
+if [ ! "X$ROXEN_ARGS" = "X" ]; then
+  parse_args $ROXEN_ARGS
+fi
+
 parse_args $@
+
+# The work has already been done above, but the debug printout is better
+# to have _after_ parse_args (consider --help and --version)
 
 if [ ! "X$ROXEN_ARGS" = "X" ]; then
   if [ $verbose -gt 0 ]; then
-    echo "$pre Using $ROXEN_ARGS from ROXEN_ARGS."
+    dp "Used $ROXEN_ARGS from ROXEN_ARGS."
   else :; fi
-  parse_args $ROXEN_ARGS
 fi
+
+
+if uname | grep 'SunOS' >/dev/null 2>&1; then
+  if uname -r | grep '5\.[5-9]' >/dev/null 2>&1; then
+    if [ $verbose -gt 0 ] ; then
+      dp "Solaris 2.5 or later was detected. Threads enabled by default."
+    fi
+  fi
+fi
+
 
 if [ ! "X$pass" = "X" ] ; then set -- $pass ;fi
 
@@ -471,7 +491,7 @@ fi
 # HPUX doesn't like group 60001(nobody)
 if uname | grep 'HP-UX' >/dev/null 2>&1; then
   if [ $verbose -gt 0 ]; then
-    echo "$pre WARNING: Applying kludge for HPUX. (see base_server/privs.pike)"
+    dp "WARNING: Applying kludge for HPUX. (see base_server/privs.pike)"
   else :; fi
   DEFINES="$DEFINES -DHPUX_KLUDGE"
 fi
@@ -520,14 +540,14 @@ start_roxen() {
   if [ "x$gdb" = "xno" ]; then
     if [ $verbose -gt 0 ]; then
       if [ $verbose -gt 1 -o -z "$once" ] ; then
-        echo "$pre" "Executing $pike $args $@"|sed -e "s!`pwd`!.!g"
+        dp "Executing $pike $args $@"|sed -e "s!`pwd`!.!g"
       else
-        echo "$pre" "Using '$pike'"|sed -e "s!`pwd`!.!g"
+        dp "Using '$pike'"|sed -e "s!`pwd`!.!g"
       fi
     fi
     $pike $args $@
   else
-    echo "$pre" Executing gdb $pike $args $@
+    dp "Executing gdb $pike $args $@"
     echo >.gdbinit handle SIGPIPE nostop noprint pass
     echo >>.gdbinit handle SIGUSR1 nostop noprint pass
     echo >>.gdbinit handle SIGUSR2 nostop noprint pass
@@ -553,7 +573,7 @@ fi
 
 if [ -z "$once" ] ; then
   if [ $verbose -gt 0 ]; then
-    echo "$pre" Starting the Roxen World Wide Web server.
+    dp "Starting the Roxen World Wide Web server."
   else :; fi
   ./mkdir -p $LOGDIR/debug/
 
@@ -575,13 +595,13 @@ oo
         # Avoid infinite loop if the debug directory is deleted.
         # Thanks to Emils Klotins <emils@dot.lv> for reporting it.
         if ./mkdir -p "$LOGDIR/debug/"; then :; else
-	  echo "Failed to create log directory $LOGDIR/debug/." 1>&2
+	  dp "Failed to create log directory $LOGDIR/debug/."
 	  exit 1
 	fi
       fi
 
-      echo "$pre" "Server restart at `date`"
-      echo "$pre" "Debug log in $LOGDIR/debug/$FILES.1"
+      dp "Server restart at `date`"
+      dp "Debug log in $LOGDIR/debug/$FILES.1"
       rotate $LOGDIR/debug/$FILES
       start_roxen $extra_args 2>>$LOGDIR/debug/$FILES.1 1>&2
 
@@ -589,19 +609,19 @@ oo
 
       if [ "$exitcode" -eq "0" ] ; then
         # Clean shutdown.
-        echo "$pre" "Roxen shutdown."
+        dp "Roxen shutdown."
         exit 0
       fi
       if [ "$exitcode" -lt "0" ] ; then
         # Signal death.
-        echo "$pre" "Roxen died of signal $exitcode. Restarting..."
+        dp "Roxen died of signal $exitcode. Restarting..."
       else
-        echo "$pre" Roxen down. Restarting.
+        dp "Roxen down. Restarting."
       fi
       done) & ) </dev/null >$LOGDIR/debug/start_$FILES.output 2>&1; then
     :;
   else
-    echo 'Failed to spawn subshell. -- Permission problem?' 1>&2
+    dp 'Failed to spawn subshell. -- Permission problem?'
     exit 1
   fi
 else
