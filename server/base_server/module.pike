@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.197 2004/05/12 12:06:44 mast Exp $
+// $Id: module.pike,v 1.198 2004/05/12 14:31:10 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -1007,15 +1007,9 @@ mapping(string:mixed) unlock_file (string path,
   return 0;
 }
 
-//! Check if we may perform a write access to @[path].
-//!
-//! The default implementation checks if the current locks match the
-//! if-header.
-//!
-//! Usually called from @[find_file()], @[delete_file()] or similar.
-//!
-//! @note
-//!   Does not support checking against etags yet.
+//! Checks that the conditions specified by the WebDAV @expr{"If"@}
+//! header are fulfilled on the given path (RFC 2518 9.4). This means
+//! that locks are checked as necessary using @[check_locks].
 //!
 //! @param path
 //!   Path below the filesystem location that the lock applies to.
@@ -1030,12 +1024,12 @@ mapping(string:mixed) unlock_file (string path,
 //!   should in the last case do the operation on this level if
 //!   possible and then handle each member in the directory
 //!   recursively with @[write_access] etc.
-mapping(string:mixed)|int(0..1) write_access(string relative_path,
-					     int(0..1) recursive,
-					     RequestID id)
+mapping(string:mixed)|int(0..1) check_if_header(string relative_path,
+						int(0..1) recursive,
+						RequestID id)
 {
-  SIMPLE_TRACE_ENTER(this, "write_access(%O, %O, X)",
-		     relative_path, recursive);
+  SIMPLE_TRACE_ENTER(this, "Checking \"If\" header for %O",
+		     relative_path);
 
   int/*LockFlag*/|DAVLock lock = check_locks(relative_path, recursive, id);
 
@@ -1138,6 +1132,21 @@ mapping(string:mixed)|int(0..1) write_access(string relative_path,
 
   TRACE_LEAVE("Failed.");
   return res || Roxen.http_status(Protocols.HTTP.HTTP_PRECOND_FAILED);
+}
+
+//! Used by some default implementations to check if we may perform a
+//! write access to @[path]. It should at least call
+//! @[check_if_header] to check DAV locks. It takes the same arguments
+//! and has the same return value as that function.
+//!
+//! A filesystem module should typically put all needed write access
+//! checks here and then use this from @[find_file()],
+//! @[delete_file()] etc.
+static mapping(string:mixed)|int(0..1) write_access(string relative_path,
+						    int(0..1) recursive,
+						    RequestID id)
+{
+  return check_if_header (relative_path, recursive, id);
 }
 
 mapping(string:mixed)|int(-1..0)|Stdio.File find_file(string path,
