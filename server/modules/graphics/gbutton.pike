@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.97 2002/09/05 12:28:17 jonasw Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.98 2003/06/30 16:49:14 jonasw Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -263,7 +263,20 @@ array(Image.Layer)|mapping draw_button(mapping args, string text, object id)
 
   if( args->border_image )
   {
-    array(Image.Layer)|mapping tmp = roxen.load_layers(args->border_image, id);
+    array(Image.Layer)|mapping tmp;
+
+#if constant(Sitebuilder)
+    //  Let SiteBuilder get a chance to decode its argument data
+    if (Sitebuilder.sb_start_use_imagecache) {
+      Sitebuilder.sb_start_use_imagecache(args, id);
+      tmp = roxen.load_layers(args->border_image, id);
+      Sitebuilder.sb_end_use_imagecache(args, id);
+    } else
+#endif
+    {
+      tmp = roxen.load_layers(args->border_image, id);
+    }
+    
     if (mappingp(tmp))
       if (tmp->error == 401)
 	return tmp;
@@ -790,8 +803,16 @@ class ButtonFrame {
 	"gamma":args["gamma"],
 	"crop":args["crop"],
       ]);
-    if( fi )
+    if( fi ) {
       new_args->stat = get_file_stat( fi, id );
+#if constant(Sitebuilder)
+      //  The file we called get_file_stat() on above may be a SiteBuilder
+      //  file. If so we need to extend the argument data with e.g.
+      //  current language fork.
+      if (Sitebuilder.sb_prepare_imagecache)
+	new_args = Sitebuilder.sb_prepare_imagecache(new_args, fi, id);
+#endif
+    }
 
     new_args->quant = args->quant || 128;
     foreach(glob("*-*", indices(args)), string n)
