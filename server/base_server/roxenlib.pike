@@ -1,6 +1,6 @@
 inherit "http";
 
-// static string _cvs_version = "$Id: roxenlib.pike,v 1.51 1998/02/16 00:40:23 mast Exp $";
+// static string _cvs_version = "$Id: roxenlib.pike,v 1.52 1998/02/24 22:28:19 per Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -655,7 +655,6 @@ static int ipow(int what, int how)
   return r;
 }
 
-
 /* This one will remove .././ etc. in the path. Might be useful :) */
 /* ================================================= */
 
@@ -848,12 +847,12 @@ object get_module (string modname)
   return 0;
 }
 
-string get_modname (object module)
 // Returns a string uniquely identifying the given module on the form
 // `<config name>/<module short name>#<copy>', where `<copy>' is 0 for
 // modules with copies. Note that this function uses structures that
 // aren't consistent at all times, most notably when called from
 // start() in a module.
+string get_modname (object module)
 {
   if (!module) return 0;
 
@@ -874,9 +873,9 @@ string get_modname (object module)
   return 0;
 }
 
-string get_modfullname (object module)
 // This determines the full module name in approximately the same way
 // as the config UI.
+string get_modfullname (object module)
 {
   if (module) {
     string name = 0;
