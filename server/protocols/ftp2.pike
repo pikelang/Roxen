@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.7 1998/04/28 16:08:00 grubba Exp $
+ * $Id: ftp2.pike,v 1.8 1998/04/28 16:18:30 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -96,6 +96,12 @@
 #define DWRITE(X)
 
 #endif /* FTP2_DEBUG */
+
+#if constant(thread_create)
+#define BACKEND_CLOSE(FD)	do { call_out(FD->close, 0); FD = 0; } while(0)
+#else /* !constant(thread_create) */
+#define BACKEND_CLOSE(FD)	do { FD->close(); FD = 0; } while(0)
+#endif /* constant(thread_create) */
 
 class RequestID
 {
@@ -200,8 +206,7 @@ class FileWrapper
   {
     close_cb(id);
     if (f) {
-      f->close();
-      f = 0;
+      BACKEND_CLOSE(f);
     }
   }
 
@@ -236,8 +241,7 @@ class FileWrapper
   void close()
   {
     f->set_blocking();
-    f->close();
-    f = 0;
+    BACKEND_CLOSE(f);
   }
 
   void create(object f_)
@@ -303,7 +307,12 @@ class PutFileWrapper
       session->file = 0;
       session->my_fd = 0;
     }
-    return (how? from_fd->close(how) : from_fd->close());
+    if (how) {
+      return from_fd->close(how);
+    } else {
+      BACKEND_CLOSE(from_fd);
+      return 0;
+    }
   }
 
   string read(mixed ... args)
@@ -863,8 +872,7 @@ class TelnetSession {
     if (!to_send) {
       // Support for delayed close.
       if (fd) {
-	fd->close();
-	fd = 0;
+	BACKEND_CLOSE(fd);
       }
     } else if (sizeof(to_send)) {
       int n = fd->write(to_send);
@@ -1349,9 +1357,7 @@ class FTPSession
       if (fd->set_blocking) {
 	fd->set_blocking();       // Force close() to flush any buffers.
       }
-      fd->close();
-      destruct(fd);
-      fd = 0;
+      BACKEND_CLOSE(fd);
     }
     curr_pipe = 0;
 
@@ -1565,8 +1571,7 @@ class FTPSession
     if (open_file(args, session, "STOR")) {
       if (!(session->file->pipe)) {
 	if (fd) {
-	  fd->close();
-	  fd = 0;
+	  BACKEND_CLOSE(fd);
 	}
 	switch(session->file->error) {
 	case 401:
@@ -1585,8 +1590,7 @@ class FTPSession
     } else {
       // Error message has already been sent.
       if (fd) {
-	fd->close();
-	fd = 0;
+	BACKEND_CLOSE(fd);
       }
     }
   }
