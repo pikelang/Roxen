@@ -1,8 +1,8 @@
 // -*- Pike -*-
-// $Id: variables.h,v 1.4 1998/03/02 18:28:08 grubba Exp $
+// $Id: variables.h,v 1.5 1998/08/20 07:38:44 per Exp $
 // Fallback-resources, don't change here.
 
-mapping errors=
+private static constant errors=
 ([
   200:"200 OK",
   201:"201 URI follows",
@@ -31,6 +31,5 @@ mapping errors=
   501:"501 Not Implemented",
   502:"502 Gateway Timeout",
   503:"503 Service unavailable",
-  
-  ]);
+]);
 
