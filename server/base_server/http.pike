@@ -1,7 +1,7 @@
 /*
  * http.pike: HTTP convenience functions.
  * inherited by roxenlib, and thus by all files inheriting roxenlib.
- * $Id: http.pike,v 1.33 1999/12/27 18:56:12 nilsson Exp $
+ * $Id: http.pike,v 1.34 1999/12/28 00:21:38 nilsson Exp $
  */
 
 #include <config.h>
@@ -12,6 +12,11 @@
 class RequestID {};
 #endif
 
+#ifdef HTTP_DEBUG
+# define HTTP_WERR(X) werror("HTTP: "+X+"\n");
+#else
+# define HTTP_WERR(X)
+#endif
 
 string http_res_to_string( mapping file, RequestID id )
 {
@@ -86,9 +91,7 @@ string http_res_to_string( mapping file, RequestID id )
 mapping http_low_answer( int errno, string data )
 {
   if(!data) data="";
-#ifdef HTTP_DEBUG
-  werror("HTTP: Return code "+errno+" ("+data+")\n");
-#endif
+  HTTP_WERR("Return code "+errno+" ("+data+")");
   return
     ([
       "error" : errno,
@@ -100,9 +103,7 @@ mapping http_low_answer( int errno, string data )
 
 mapping http_pipe_in_progress()
 {
-#ifdef HTTP_DEBUG
-  werror("HTTP: Pipe in progress\n");
-#endif
+  HTTP_WERR("Pipe in progress");
   return ([ "file":-1, "pipe":1, ]);
 }
 
@@ -118,9 +119,7 @@ mapping http_rxml_answer( string rxml, RequestID id,
                           void|string type )
 {
   rxml = id->conf->parse_rxml(rxml, id, file);
-#ifdef HTTP_DEBUG
-  werror("HTTP: RXML answer ("+(type||"text/html")+")\n");
-#endif
+  HTTP_WERR("RXML answer ("+(type||"text/html")+")");
   return (["data":rxml,
 	   "type":(type||"text/html"),
 	   "stat":id->misc->defines[" _stat"],
@@ -133,17 +132,13 @@ mapping http_rxml_answer( string rxml, RequestID id,
 
 mapping http_string_answer(string text, string|void type)
 {
-#ifdef HTTP_DEBUG
-  werror("HTTP: String answer ("+(type||"text/html")+")\n");
-#endif
+  HTTP_WERR("String answer ("+(type||"text/html")+")");
   return ([ "data":text, "type":(type||"text/html") ]);
 }
 
 mapping http_file_answer(Stdio.File text, string|void type, void|int len)
 {
-#ifdef HTTP_DEBUG
-  werror("HTTP: file answer ("+(type||"text/html")+")\n");
-#endif
+  HTTP_WERR("file answer ("+(type||"text/html")+")");
   return ([ "file":text, "type":(type||"text/html"), "len":len ]);
 }
 
@@ -186,7 +181,6 @@ string http_date(int t)
   return(sprintf("%s, %02d %s %04d %02d:%02d:%02d GMT",
 		 days[l->wday], l->mday, months[l->mon], 1900+l->year,
 		 l->hour, l->min, l->sec));
-
 }
 
 
@@ -243,12 +237,10 @@ mapping http_redirect( string url, RequestID|void id )
       if( id->misc->site_prefix_path )
         url = replace( id->misc->site_prefix_path + url, "//", "/" );
       url = add_pre_state(url, id->prestate);
-      if(id->misc->host) 
+      if(id->misc->host)
       {
 	array h;
-#ifdef HTTP_DEBUG
-	werror("REDIR: id->port_obj:%O\n", id->port_obj);
-#endif
+	HTTP_WERR(sprintf("(REDIR) id->port_obj:%O", id->port_obj));
 	string prot = id->port_obj->name + "://";
 	string p = ":" + id->port_obj->default_port;
 
@@ -262,9 +254,7 @@ mapping http_redirect( string url, RequestID|void id )
 	url = id->conf->query("MyWorldLocation") + url[1..];
     }
   }
-#ifdef HTTP_DEBUG
-  werror("HTTP: Redirect -> "+http_encode_string(url)+"\n");
-#endif
+  HTTP_WERR("Redirect -> "+http_encode_string(url));
   return http_low_answer( 302, "")
     + ([ "extra_heads":([ "Location":http_encode_string( url ) ]) ]);
 }
@@ -279,9 +269,7 @@ mapping http_auth_required(string realm, string|void message)
 {
   if(!message)
     message = "<h1>Authentication failed.\n</h1>";
-#ifdef HTTP_DEBUG
-  werror("HTTP: Auth required ("+realm+")\n");
-#endif
+  HTTP_WERR("Auth required ("+realm+")");
   return http_low_answer(401, message)
     + ([ "extra_heads":([ "WWW-Authenticate":"basic realm=\""+realm+"\"",]),]);
 }
@@ -289,9 +277,7 @@ mapping http_auth_required(string realm, string|void message)
 #ifdef API_COMPAT
 mapping http_auth_failed(string realm)
 {
-#ifdef HTTP_DEBUG
-  werror("HTTP: Auth failed ("+realm+")\n");
-#endif
+  HTTP_WERR("Auth failed ("+realm+")");
   return http_low_answer(401, "<h1>Authentication failed.\n</h1>")
     + ([ "extra_heads":([ "WWW-Authenticate":"basic realm=\""+realm+"\"",]),]);
 }
@@ -302,9 +288,7 @@ function http_auth_failed = http_auth_required;
 
 mapping http_proxy_auth_required(string realm, void|string message)
 {
-#ifdef HTTP_DEBUG
-  werror("HTTP: Proxy auth required ("+realm+")\n");
-#endif
+  HTTP_WERR("Proxy auth required ("+realm+")");
   if(!message)
     message = "<h1>Proxy authentication failed.\n</h1>";
   return http_low_answer(407, message)

@@ -1,10 +1,8 @@
-// import String;
-
 /* Language support for numbers and dates. Very simple,
  * really. Look at one of the existing language plugins (not really
  * modules, you see..)
  *
- * $Id: language.pike,v 1.19 1999/10/04 15:11:54 per Exp $
+ * $Id: language.pike,v 1.20 1999/12/28 00:24:01 nilsson Exp $
  * This file is included by roxen.pike. Not very nice to have a
  * cvs_version variable here.
  *
@@ -66,7 +64,7 @@ void initiate_languages()
 private string nil()
 {
 #ifdef LANGUAGE_DEBUG
-  perror(sprintf("Cannot find that one in %O.\n", languages));
+  werror("Cannot find that one in %O.\n", languages);
 #endif
   return "No such function in that language, or no such language.";
 }
@@ -78,7 +76,7 @@ string default_language = getenv("ROXEN_LANG")||"en";
 public function language(string what, string func)
 {
 #ifdef LANGUAGE_DEBUG
-  perror("Function: " + func + " in "+ what+"\n");
+  werror("Function: " + func + " in "+ what+"\n");
 #endif
   if(!languages[what])
     if(!languages[default_language])
