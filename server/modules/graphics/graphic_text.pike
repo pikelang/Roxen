@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.237 2000/09/12 23:33:15 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.238 2000/09/13 00:14:01 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -112,8 +112,8 @@ constant gtextargs=#"
 <attr name=chisel>
  Make the text look like it has been cut into the background.
  <ex type=vert>
-<gtext bold=\"\" ypad=\"-40%\" xpad=\"-20%\" chisel=\"\" talign=\"center\"
-opaque=\"70\" fgcolor=\"gold\" bevel=\"2\" background=\"/internal-roxen-test\"> Chisel
+<gtext font=\"lucida\" bold=\"\" chisel=\"\" talign=\"center\" tile=\"\"
+opaque=\"70\" fgcolor=\"gold\" bevel=\"2\" background=\"/internal-roxen-squares\"> Chisel
 opaque=70</gtext>
  </ex>
 </attr>
