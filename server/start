@@ -1,8 +1,10 @@
 #!/bin/sh
 #
-# $Id: start,v 1.56 1998/11/22 21:15:10 grubba Exp $
+# $Id: start,v 1.57 1998/11/28 13:40:57 per Exp $
 
 cd `dirname $0`
+roxendir="$PWD"
+
 VERSION=202; BETA=.b;
 
 # Can be set with '--config-dir=DIR'
@@ -75,16 +77,16 @@ DEFINES="$DEFINES -P`pwd`"
 if [ -d ../local/etc/. ]; then
   # Extra module-path
   if [ -d ../local/etc/modules/. ]; then
-    DEFINES="$DEFINES -M../local/etc/modules"
+    DEFINES="$DEFINES -M$roxendir/../local/etc/modules"
   fi
 
   # Extra include-path
   if [ -d ../local/etc/include ]; then
-    DEFINES="$DEFINES -I../local/etc/include"
+    DEFINES="$DEFINES -I$roxendir/../local/etc/include"
   fi
 
   # Extra program-path
-  DEFINES="$DEFINES -P../local/etc"
+  DEFINES="$DEFINES -P$roxendir/../local/etc"
 fi
 
 # Extra kludge for HPUX
@@ -95,8 +97,8 @@ if uname | grep 'HP-UX' >/dev/null 2>&1; then
 fi
 
 pike=pike
-if [ -x bin/pike ] ; then pike=bin/pike; fi
-if [ -x bin/roxen ] ; then  pike=bin/roxen; fi
+if [ -x bin/pike ] ; then pike=$roxendir/bin/pike; fi
+if [ -x bin/roxen ] ; then  pike=$roxendir/bin/roxen; fi
 if [ "x$PIKE" = "x" ]; then :; else
   if [ -x "$PIKE" ]; then pike="$PIKE"; fi
 fi
@@ -165,10 +167,12 @@ parse_args() {
   ;;
   '--program')
     program="$2"
+    once=1
     shift
   ;;
   '--cd')
     cd_to="$2"
+    once=1
     shift
   ;;
   '--version')
@@ -293,19 +297,6 @@ fi
 if [ ! "X$pass" = "X" ] ; then set -- $pass ;fi
 
 
-echo $$: Starting the Roxen Challenger World Wide Web server.
-
-./mkdir -p $LOGDIR/debug/
-
-if [ -z "$debug" ] ; then
-  DEBUG="-DMODULE_DEBUG";
-else
-  DEBUG="-DDEBUG -DMODULE_DEBUG"
-fi
-
-if [ "x$debug" = "x-1" ] ; then
-  DEBUG="";
-else :; fi
 
 #
 # Some useful functions
@@ -345,6 +336,19 @@ start_roxen() {
 #
 
 if [ -z "$once" ] ; then
+echo $$: Starting the Roxen Challenger World Wide Web server.
+./mkdir -p $LOGDIR/debug/
+
+if [ -z "$debug" ] ; then
+  DEBUG="-DMODULE_DEBUG";
+else
+  DEBUG="-DDEBUG -DMODULE_DEBUG"
+fi
+
+if [ "x$debug" = "x-1" ] ; then
+  DEBUG="";
+else :; fi
+
   cat << oo
 Using configuration from $DIR, storing the debug log in $LOGDIR/debug/$FILES.1
 You can use the configuration interface in the server to get debug info.
@@ -379,7 +383,7 @@ oo
     fi
   done) < /dev/null > $LOGDIR/debug/start_$FILES.output 2>&1 &
 else
-  echo $$: "Server restart at `date`"
+  echo $$: "Start at `date`"
   start_roxen $extra_args
 fi
     
