@@ -95,23 +95,24 @@ this_program add_container (string name, CONTAINER_TYPE cdef)
 
 static array entity_cb (Parser.HTML ignored, string str)
 {
-  if (sizeof (str)) {
-    if (str[0] == '#') {
+  string entity = tag_name();
+  if (sizeof (entity)) {
+    if (entity[0] == '#') {
       if (!type->free_text) return ({});
       string out;
-      if ((<"#x", "#X">)[str[..1]])
-	if (sscanf (str, "%*2s%x%*c", int c) == 2) out = (string) ({c});
+      if ((<"#x", "#X">)[entity[..1]])
+	if (sscanf (entity, "%*2s%x%*c", int c) == 2) out = (string) ({c});
       else
-	if (sscanf (str, "%*c%d%*c", int c) == 2) out = (string) ({c});
-      return out ? ({out}) : ({"&", str, ";"});
+	if (sscanf (entity, "%*c%d%*c", int c) == 2) out = (string) ({c});
+      return out ? ({out}) : ({str});
     }
-    array(string) split = str / ".";
+    array(string) split = entity / ".";
     if (sizeof (split) == 2) {
       mixed val = context->get_var (split[1], split[0]);
       return val == RXML.Void ? ({}) : ({val});
     }
   }
-  return type->free_text ? ({"&", str, ";"}) : ({});
+  return type->free_text ? ({str}) : ({});
 }
 
 /*static*/ void set_cbs()
