@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.122 1998/04/17 17:49:07 grubba Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.123 1998/04/19 02:58:29 peter Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -1228,6 +1228,8 @@ string extra_args(mapping in)
      case "hspace":
      case "vspace":
      case "onclick":
+     case "class":
+     case "id":
       s+=i+"='"+in[i]+"' ";
       m_delete(in, i);
       break;
