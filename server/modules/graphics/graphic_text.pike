@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.102 1998/02/19 05:21:04 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.103 1998/02/19 19:40:59 noring Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -262,11 +262,16 @@ object load_image(string f,object id)
     if(!(file=open(f,"r")) || (!(data=file->read())))
       return 0;
 //werror("Read "+strlen(data)+" bytes.\n");
-#if constant(Image.PNM)
+#if constant(Image.PNM.decode)
   catch { if(!img) img = Image.PNM.decode( data ); };
+#endif
+#if constant(Image.GIF.decode)
   catch { if(!img) img = Image.GIF.decode( data ); };
+#endif
+#if constant(Image.JPEG.decode)
   catch { if(!img) img = Image.JPEG.decode( data ); };
-#else
+#endif
+#if !constant(Image.PNM.decode)
   if (catch { if(!img->frompnm(data)) return 0;}) return 0;
 #endif
   if(!img) return 0;
