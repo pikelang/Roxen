@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.167 2000/09/03 16:51:03 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.168 2000/09/05 14:45:11 jhs Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -927,11 +927,12 @@ class TagReturn {
   class Frame {
     inherit RXML.Frame;
 
-    array do_return(RequestID id) {
-      int c=(int)args->code;
-      if(c) _error=c;
-      string p=args->text;
-      if(p) _rettext=Roxen.http_encode_string(p);
+    array do_return(RequestID id)
+    {
+      if(args->code)
+	_error = (int)args->code;
+      if(args->text)
+	_rettext = replace(args->text, "\n\r"/1, "%0A%0D"/3);
       return 0;
     }
   }
@@ -2674,7 +2675,13 @@ load.",
 </desc>
 
 <attr name=code>
- The return code to set.
+ The HTTP status code to return (an integer).
+</attr>
+
+<attr name=text>
+ The HTTP status message to set. If you don't provide one, a default
+ message is provided for known HTTP status codes, e g \"No such file
+ or directory.\" for code 404.
 </attr>",
 
 "roxen":#"<desc tag><short>

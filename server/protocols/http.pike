@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.270 2000/09/04 08:54:43 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.271 2000/09/05 14:45:10 jhs Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1803,8 +1803,13 @@ void send_result(mapping|void result)
             }
           }
         }
-        head_string = prot+" "+(file->rettext||errors[file->error])+"\r\n";
-        if( file->len > 0 )  heads["Content-Length"] = (string)file->len;
+	if(file->rettext || !errors[file->error])
+	  head_string = sprintf("%s %d %s\r\n", prot, file->error, file->rettext ||
+				(errors[file->error] ? errors[file->error][4..] : ""));
+	else
+	  head_string = sprintf("%s %s\r\n", prot, errors[file->error]);
+        if( file->len > 0 )
+	  heads["Content-Length"] = (string)file->len;
 
         // Some browsers, e.g. Netscape 4.7, doesn't trust a zero
         // content length when using keep-alive. So let's force a
