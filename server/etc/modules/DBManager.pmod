@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.10 2001/06/20 23:45:32 per Exp $
+// $Id: DBManager.pmod,v 1.11 2001/06/21 09:01:30 anders Exp $
 //! @module DBManager
 //! Manages database aliases and permissions
 #include <roxen.h>
@@ -372,7 +372,7 @@ Sql.Sql cached_get( string name, void|Configuration c, void|int ro )
   string key = name+"|"+(c&&c->name)+"|"+ro;
 
   if( connection_cache_size > 20 )
-    connection_cache = 0;
+    connection_cache = ([]);
 
   mapping cm = connection_cache[ this_thread() ] || ([]);
 
