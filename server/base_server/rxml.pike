@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.219 2000/08/11 14:21:00 nilsson Exp $
+// $Id: rxml.pike,v 1.220 2000/08/12 04:49:41 mast Exp $
 
 
 inherit "rxmlhelp";
@@ -1207,14 +1207,14 @@ class TagCond
 {
   inherit RXML.Tag;
   constant name = "cond";
-  RXML.Type content_type = RXML.t_none (RXML.PXml);
+  RXML.Type content_type = RXML.t_nil (RXML.PXml);
   array(RXML.Type) result_types = ({RXML.t_any});
 
   class TagCase
   {
     inherit RXML.Tag;
     constant name = "case";
-    array(RXML.Type) result_types = ({RXML.t_none});
+    array(RXML.Type) result_types = ({RXML.t_nil});
 
     class Frame
     {
@@ -1246,7 +1246,7 @@ class TagCond
   {
     inherit RXML.Tag;
     constant name = "default";
-    array(RXML.Type) result_types = ({RXML.t_none});
+    array(RXML.Type) result_types = ({RXML.t_nil});
 
     class Frame
     {
