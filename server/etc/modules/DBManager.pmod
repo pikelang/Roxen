@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.1 2001/01/29 09:03:50 per Exp $
+// $Id: DBManager.pmod,v 1.2 2001/01/31 00:56:23 per Exp $
 //! @module DBManager
 //! Manages database aliases and permissions
 
@@ -267,11 +267,12 @@ int is_internal( string name )
 }
 
 string db_url( string name )
-//! Return true if the DB @[name] is an internal database
+//! Returns the URL of the db, or 0 if the DB @[name] is an internal database
 {
   array(mapping(string:mixed)) d =
            query("SELECT path,local FROM dbs WHERE name=%s", name );
   if( !sizeof( d ) ) return 0;
+  if( (int)d[0]["local"] ) return 0;
   return d[0]->path;
 }
 
@@ -284,12 +285,17 @@ Sql.Sql get( string name, void|Configuration c, int|void ro )
   if( c )
   {
     res = query( "SELECT permission FROM db_permissions "
-                 "WHERE db=%s AND config=%s AND permission!='none'",
+                 "WHERE db=%s AND config=%s",
                  name,c->name);
     if( sizeof( res ) )
-      return low_get( short(c->name) +
-                      ((ro || res[0]->permission!="write")?"_ro":"_rw"),
-                      name );
+    {
+      if( res[0]->permission == "none" )
+	return 0;
+      else
+	return low_get( short(c->name) +
+			((ro || res[0]->permission!="write")?"_ro":"_rw"),
+			name );
+    }
     return 0;
   }
   return low_get( (ro?"ro":"rw"), name );
@@ -300,10 +306,12 @@ void drop_db( string name )
 //! tables will be deleted as well.
 {
   array q = query( "SELECT name,local FROM dbs WHERE name=%s", name );
+  if(!sizeof( q ) )
+    error( "The database "+name+" does not exist\n" );
   if( sizeof( q ) && (int)q[0]["local"] )
     query( "DROP DATABASE "+name );
   query( "DELETE FROM dbs WHERE name=%s", name );
-  query( "DELETE FROM permissions WHERE db=%s", name );
+  query( "DELETE FROM db_permissions WHERE db=%s", name );
   changed();
 }
 
@@ -357,13 +365,15 @@ int set_permission( string name, Configuration c, int level )
 
   query( "DELETE FROM db_permissions WHERE db=%s AND config=%s",
          name,c->name );
-  query( "INSERT INTO db_permissions VALUES (%s,%s,%s)",
-         name,c->name,(level?level==2?"write":"read":"none") );
+
+  query( "INSERT INTO db_permissions VALUES (%s,%s,%s)", name,c->name,
+	 (level?level==2?"write":"read":"none") );
   
   if( (int)d[0]["local"] )
   {
     set_user_permissions( c, name, level );
-  }    
+  }
+  return 1;
 }
 
 static void create()
