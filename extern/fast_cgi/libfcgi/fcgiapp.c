@@ -12,7 +12,7 @@
  */
 
 #ifndef lint
-static const char rcsid[] = "$Id: fcgiapp.c,v 1.5 1997/10/13 19:05:46 grubba Exp $";
+static const char rcsid[] = "$Id: fcgiapp.c,v 1.6 1997/11/12 15:39:44 grubba Exp $";
 #endif /* not lint */
 
 #include <fcgi_config.h>
@@ -1631,12 +1631,12 @@ static void FillBuffProc(FCGX_Stream *stream)
         /*
          * Fill header with bytes from the input buffer.
          */
-        count = min(sizeof(header) - headerLen,
+        count = min(((int)sizeof(header)) - headerLen,
 		    data->buffStop - stream->rdNext);
         memcpy(&header + headerLen, stream->rdNext, count);
         headerLen += count;
         stream->rdNext += count;
-        if(headerLen < sizeof(header)) {
+        if(headerLen < (int)sizeof(header)) {
             continue;
 	};
         headerLen = 0;
