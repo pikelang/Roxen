@@ -110,6 +110,12 @@
 
 <h1>Roxen Update System</h1>
 
+<if variable="update_list">
+  <update-update-list/>
+  <update-scan-local-packages/>
+  Launched a package list update request. <br>
+</if>
+
 This information was last synchronized with the main server &update.last_updated; ago.
 
 <cat-list name="idonex" title="Products" />
