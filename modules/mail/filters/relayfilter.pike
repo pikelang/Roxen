@@ -1,5 +1,5 @@
 /*
- * $Id: relayfilter.pike,v 1.4 1998/09/27 13:08:07 grubba Exp $
+ * $Id: relayfilter.pike,v 1.5 1999/08/26 15:20:10 grubba Exp $
  *
  * Support for RBL (Real-time Blackhole List).
  *
@@ -9,7 +9,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version="$Id: relayfilter.pike,v 1.4 1998/09/27 13:08:07 grubba Exp $";
+constant cvs_version="$Id: relayfilter.pike,v 1.5 1999/08/26 15:20:10 grubba Exp $";
 constant thread_safe=1;
 
 // #define RELAYFILTER_DEBUG
@@ -149,8 +149,8 @@ class Checker
 		   "Misses: %d (%d%%)\n",
 		   sizeof(cache),
 		   queries,
-		   hits, ((hits * 100)/queries),
-		   misses, ((misses * 100)/queries)));
+		   hits, queries && ((hits * 100)/queries),
+		   misses, queries && ((misses * 100)/queries)));
   }
 
   void create(string qv, object p)
