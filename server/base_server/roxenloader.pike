@@ -21,7 +21,7 @@ constant s = spider;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.215 2000/11/24 16:50:34 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.216 2000/12/05 22:26:45 nilsson Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -451,8 +451,6 @@ class Configuration
   int inited;
 
   // Protocol specific statistics.
-  mapping(string:mixed) extra_statistics = ([]);
-  mapping(string:mixed) misc = ([]);	// Even more statistics.
   int requests, sent, hsent, received;
 
   function(string:int) log_function;
