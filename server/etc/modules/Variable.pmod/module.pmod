@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.28 2000/11/02 11:41:05 per Exp $
+// $Id: module.pmod,v 1.29 2000/11/10 23:11:55 per Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -231,7 +231,8 @@ class Variable
       }
       throw( e2 );
     }
-    add_warning( err );
+    if( err )
+      add_warning( err );
     return low_set( to );
   }
 
@@ -325,6 +326,8 @@ class Variable
     //! Calls verify_set_from_form and verify_set
   {
     mixed val;
+    set_warning(0);
+
     if( sizeof( val = get_form_vars(id)) && val[""] && 
         (val = transform_from_form( val[""] )) != query() )
     {
@@ -333,9 +336,9 @@ class Variable
       if( q || sizeof( b ) != 2 )
       {
         if( q )
-          add_warning( q );
+          set_warning( q );
         else
-          add_warning( "Internal error: Illegal sized array "
+          set_warning( "Internal error: Illegal sized array "
                        "from verify_set_from_form\n" );
         return;
       }
@@ -655,7 +658,7 @@ class URL
   constant type = "URL";
   constant width = 50;
 
-  array verify_set_from_form( string new_value )
+  array verify_set( string new_value )
   {
     return verify_port( new_value, 1 );
   } 
@@ -890,7 +893,7 @@ class FontChoice
 class List
 //! Many of one type types
 {
-  inherit String;
+  inherit Variable;
   constant type="List";
   constant width = 40;
 
@@ -970,7 +973,23 @@ class List
           id->misc->defines[ " _error" ] = 302;
       }
     }
-    set( l ); // We are done. :-)
+
+    array b;
+    mixed q = catch( b = verify_set_from_form( l ) );
+    if( q || sizeof( b ) != 2 )
+    {
+      if( q )
+	set_warning( q );
+      else
+	set_warning( "Internal error: Illegal sized array "
+		     "from verify_set_from_form\n" );
+      return;
+    }
+    if( b ) 
+    {
+      set_warning( b[0] );
+      set( b[1] );
+    }
   }
 
   string render_form( RequestID id, void|mapping additional_args )
@@ -1093,7 +1112,7 @@ class URLList
   inherit List;
   constant type="URLList";
 
-  array verify_set_from_form( array(string) new_value )
+  array verify_set( array(string) new_value )
   {
     string warn  = "";
     array res = ({});
@@ -1117,6 +1136,9 @@ class PortList
   inherit List;
   constant type="PortList";
 
+  // Do not use verify_set here, since we do not want https to be
+  // automatically changed to http when starting a roxen temporarily
+  // without SSL.
   array verify_set_from_form( array(string) new_value )
   {
     string warn  = "";
@@ -1209,7 +1231,7 @@ static array(string) verify_port( string port, int nofhttp )
     warning += "Added / to the end of "+port+"\n";
     path += "/";
   }
-  if( nofhttp && protocol == "fhttp" )
+  if( nofhttp && (protocol == "fhttp") )
   {
     warning += "Changed " + protocol + " to http\n";
     protocol = "http";
@@ -1219,30 +1241,27 @@ static array(string) verify_port( string port, int nofhttp )
     warning += "Changed "+protocol+" to "+ lower_case( protocol )+"\n";  
     protocol = lower_case( protocol );
   }
+#if !constant(SSL.sslfile)
   if(!nofhttp) // it's a port, not a URL
   {
-#if constant(SSL.sslfile)
-    /* All is A-OK */
-#else
     if( (protocol == "https" || protocol == "ftps") )
       warning +=  "SSL support not available in this Pike version.\n"
               "Please use "+protocol[..strlen(protocol)-2]+" instead.\n";
-#endif
   }
+#endif
   int pno;
   if( sscanf( host, "%s:%d", host, pno ) == 2)
     if( roxenp()->protocols[ lower_case( protocol ) ] 
-        && (pno == roxenp()->protocols[ lower_case( protocol ) ]->default_port ))
-        warning += "Removed the "
-                "default port number ("+pno+") from "+port+"\n";
+        && (pno==roxenp()->protocols[lower_case(protocol)]->default_port ))
+        warning+=("Removed the default port number ("+pno+") from "+port+"\n");
     else
       host = host+":"+pno;
-
 
   port = protocol+"://"+host+path;
 
   if( !roxenp()->protocols[ protocol ] )
     warning += "Warning: The protocol "+protocol+" is unknown\n";
+
   return ({ (strlen(warning)?warning:0), port });
 }
 
