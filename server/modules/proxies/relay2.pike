@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 2000, Roxen IS.
-
 #include <module.h>
+constant cvs_verson = "5Id$";
 
 inherit "module";
 constant module_type = MODULE_FIRST|MODULE_LAST;
@@ -24,6 +24,7 @@ class Relay
   string request_data;
   string host;
   int port;
+  string file;
 
   Stdio.File fd;
 
@@ -71,14 +72,61 @@ class Relay
     destruct(fd);
     string headers, data;
     string type, charset, status;
+    int code;
     mapping h = ([]);
-    NOCACHE();
+
+
+    string rewrite( string what )
+    {
+      // in what: URL.
+      if(!strlen(what))
+	return what; // local, is OK.
+
+      if( what[0] == '/' ) // absolute, is not OK.
+      {
+	string base = id->not_query;
+	string f2 = (file/"?")[0];
+	if( strlen(f2) && search(id->not_query, f2 ) != -1)
+	  base = base[..search(id->not_query, f2 )-2];
+	return combine_path( base, what[1..] );
+      }
+      else if( search( what, url ) == 0 )
+      {
+	return replace( what, url, id->not_query );
+      }
+      return what;
+    };
+
+    string do_rewrite( string what )
+    {
+      Parser.HTML p = Parser.HTML();
+
+      function rewrite_what( string elem )
+      {
+	return lambda( string t, mapping a ) {
+		 if( a[elem] )
+		   a[elem] = rewrite( a[elem] );
+		 return ({Roxen.make_tag( p->tag_name(), a, 1 )});
+	       };
+      };
+       p->add_tag( "a", rewrite_what("href") );
+       p->add_tag( "img", rewrite_what("src") );
+       p->add_tag( "form", rewrite_what("action") );
+       return p->finish( what )->read();
+    };
+
+
+    
+    if( !options->cache ) NOCACHE();
+
     if( sscanf( buffer, "%s\r\n\r\n%s", headers, data ) != 2 )
       sscanf( buffer, "%s\n\n%s", headers, data );
 
+    sscanf( headers, "HTTP/%*[^ ] %d", code );
+
     if( headers )
     {
-      foreach( (headers-"\r")/"\n", string header )
+      foreach( ((headers-"\r")/"\n")[1..], string header )
       {
         if( sscanf( header, "%s:%s", string a, string b ) == 2 )
         {
@@ -102,8 +150,9 @@ class Relay
       destruct( );
       return;
     }
-    if( lower_case(type) == "text/html" ||
-        lower_case(type) == "text/plain" )
+    if( options->rxml &&
+	(lower_case(type) == "text/html" ||
+	 lower_case(type) == "text/plain" ))
     {
       if( charset )
       {
@@ -113,21 +162,33 @@ class Relay
           data = Locale.Charset.decoder(charset)->feed(data)->drain();
         };    
       }
+      if( options->rewrite )
+	do_rewrite( data );
+      id->misc->defines = ([]);
+      id->misc->defines[" _extra_heads"] = h;
+      id->misc->defines[" _error"] = code;
       id->send_result( Roxen.http_rxml_answer( query("pre-rxml")
                                                + data +
                                                query("post-rxml"), id ) );
-    } 
-    else 
-      id->send_result( Roxen.http_string_answer( data, type ) );
+    }
+    else if( options->rewrite &&
+	     (lower_case(type) == "text/html" ||
+	      lower_case(type) == "text/plain" ))
+    {
+      id->send_result(([ "data":do_rewrite(data),
+			 "type":type,
+			 "extra_heads":h,
+			 "error":code ]) );
+    }
+    else
+    {
+      id->send_result(([ "data":data,
+			 "type":type,
+			 "extra_heads":h,
+			 "error":code ]) );
+    }
     destruct();
     return;
-  }
-
-  void done_with_send( int ok )
-  {
-    id->end();
-    destruct( fd );
-    destruct( );
   }
 
   void connected( int how )
@@ -142,17 +203,19 @@ class Relay
       return;
     }
 
+    // Send headers to remote server. (non-blocking)
     Stdio.sendfile( ({ request_data }), 0, 0, 0, 0, fd );
-
-    if( !options->rxml )
+    if( options->stream )
     {
-      Stdio.sendfile( ({}), fd, 0, -1, ({}), id->my_fd, done_with_send );
-      return;
+      Stdio.sendfile( 0, fd, 0, 0, 0, id->my_fd );
+      destruct();
     }
-
-    buffer="";
-    fd->set_read_callback( got_some_more_data );
-    fd->set_close_callback( done_with_data );
+    else
+    {
+      buffer="";
+      fd->set_read_callback( got_some_more_data );
+      fd->set_close_callback( done_with_data );
+    }      
   }
 
   void create( RequestID _id,
@@ -163,7 +226,6 @@ class Relay
     url = _url;
     options = _options;
 
-    string file;
     if( sscanf(url,"%*[^:/]://%[^:/]:%d/%s",host,port,file) != 4 )
     {
       port=80;
@@ -245,24 +307,32 @@ void create( Configuration c )
     defvar( "patterns", "", "Relay patterns", TYPE_TEXT,
             "Syntax: \n"
             "<pre>\n"
-            "[LAST ]EXTENSION extension CALL url-prefix [rxml] [trimheaders] [raw] [utf8]\n"
-            "[LAST ]LOCATION location CALL url-prefix [rxml] [trimheaders] [raw] [utf8]\n"
-            "[LAST ]MATCH regexp CALL url [rxml] [trimheaders] [raw] [utf8]\n"
+            "[LAST ]EXTENSION extension CALL url-prefix [rxml] [trimheaders] [raw] [utf8] [cache] [stream]\n"
+            "[LAST ]LOCATION location CALL url-prefix [rxml] [trimheaders] [raw] [utf8] [cache] [stream]\n"
+            "[LAST ]MATCH regexp CALL url [rxml] [trimheaders] [raw] [utf8] [cache] [stream]\n"
             "</pre> \\1 to \\9 will be replaced with submatches from the regexp.<p>"
             "rxml, trimheaders etc. are flags. If rxml is specified, the "
             "result of the relay will be RXML-parsed, Trimheaders and raw are "
-            " mutually exclusive, if"
+            " mutually exclusive, if "
             "trimheaders is present, only the most essential headers are sent "
-            "(actually, no headers at all right now), "
+            "to the remote server (actually, no headers at all right now), "
             "if raw is specified, the request is sent to the remote server"
             " exactly as it arrived to roxen, not even the Host: header "
             "is changed.  If utf8 is specified the request is utf-8 encoded "
             "before it is sent to the remote server.<p>"
+	    " Cache and stream alter the sending of data to the client. "
+	    " If cache is specified, the data can end up in the roxen "
+	    " data-cache, if stream is specified, the data is streamed "
+	    "directly from the server to the client. This disables logging "
+	    "and the headers will be exactly those sent by the remote server, "
+	    "also, this only works for http clients. "
+	    "Less memory is used, however. </p><p>" 
             " For EXTENSION and LOCATION, the matching local filename is "
             "appended to the url-prefix specified, no replacing is done.<p>"
             "If last is specified, the match is only tried if roxen "
             "fails to find a file (a 404 error). If rewrite is specified, "
-            "redirects are rewritten.");
+            "redirects and file contents are rewritten, if possible, so that "
+	    "links and images point to the correct place.</p>");
     defvar("pre-rxml", "", 
            "Header-RXML", TYPE_TEXT,
            "Included before the page contents for redirectpatterns with "
