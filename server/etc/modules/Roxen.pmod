@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.84 2001/04/18 05:45:58 per Exp $
+// $Id: Roxen.pmod,v 1.85 2001/04/21 16:45:29 nilsson Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2781,11 +2781,6 @@ class ScopeModVar
 	}
       }
 
-      array _values()
-      {
-	return map( _indices(), `[] );
-      }
-
       array _indices()
       {
 	mapping m = mod->getvars();
@@ -2820,11 +2815,6 @@ class ScopeModVar
       }
     }
 
-    array _values()
-    {
-      return map( _indices(), `[] );
-    }
-
     array _indices()
     {
       return sort(indices( module ));
@@ -2855,11 +2845,6 @@ class ScopeModVar
     return Modules( RXML.get_context()->id->conf->modules[ what ], what );
   }
 
-  array _values(  )
-  {
-    return map( _indices(), `[] );
-  }
-
   array _indices()
   {
     return ({ "site" }) +
@@ -2867,22 +2852,26 @@ class ScopeModVar
   }
 }
 
-class FormScope( mapping variables )
+ScopeModVar scope_modvar = ScopeModVar();
+
+class FormScope
 {
   inherit RXML.Scope;
 
-  mixed `[]=( string index, mixed newval )
+  mixed `[]=( string index, mixed newval, void|RXML.Context ctx )
   {
+    if(!ctx) RXML.run_error("No current scope to set variable in.\n");
     if( arrayp( newval ) )
-      variables[ index ] = newval;
+      ctx->id->real_variables[ index ] = newval;
     else
-      variables[ index ] = ({ newval });
+      ctx->id->real_variables[ index ] = ({ newval });
     return newval;
   }
 
   mixed `[] (string what, void|RXML.Context ctx,
 	     void|string scope_name, void|RXML.Type type)
   {
+    mapping variables = ctx->id->real_variables;
     if( zero_type(variables[what]) ) return RXML.nil;
     mixed q = variables[ what ];
     if( arrayp(q) && sizeof( q ) == 1 )
@@ -2895,18 +2884,14 @@ class FormScope( mapping variables )
     else return q;
   }
 
-  array _values(  )
+  array _indices( void|RXML.Context ctx )
   {
-    return values( variables );
-  }
-
-  array _indices()
-  {
-    return indices( variables );
+    if(!ctx) return ({ });
+    return indices( ctx->id->real_variables );
   }
 }
 
-ScopeModVar scope_modvar = ScopeModVar();
+FormScope scope_form = FormScope();
 
 RXML.TagSet entities_tag_set = class
 // This tag set always has the lowest priority.
@@ -2919,7 +2904,7 @@ RXML.TagSet entities_tag_set = class
     c->add_scope("page",scope_page);
     c->add_scope("cookie", scope_cookie);
     c->add_scope("modvar", scope_modvar);
-    c->add_scope("form", FormScope( c->id->real_variables ) );
+    c->add_scope("form", scope_form );
     c->add_scope("client", c->id->client_var);
     c->add_scope("var", ([]) );
   }
