@@ -2,10 +2,10 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: plis.pike,v 1.2 2002/11/06 03:03:25 mani Exp $";
+constant cvs_version = "$Id: plis.pike,v 1.3 2002/11/11 01:05:51 mani Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
-constant module_name = "Tag: PLIS script module";
+constant module_name = "Tags: PLIS script module";
 constant module_doc  = "This module defines a new tag, "
   "&lt;lisp [context=foo]&gt;&lt;/lisp&gt;";
 
