@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.68 1997/10/28 13:54:51 grubba Exp $
+ * $Id: ftp.pike,v 1.69 1997/11/06 20:21:11 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -386,7 +386,11 @@ class ls_program {
 	  DWRITE(sprintf("list_stream->write_out(): Sending \"%s\"\n",
 			 block));
 	  read_callback(nb_id, block);
-	  sent += sizeof(block);
+	  if (this_object()) {
+	    sent += sizeof(block);
+	  } else {
+	    DWRITE(sprintf("list_stream->write:out(): DESTRUCTED!\n"));
+	  }
 	} else {
 	  DWRITE(sprintf("list_stream->write_out(): EOD\n"));
 	  // End of data marker
@@ -427,9 +431,12 @@ class ls_program {
     }
     void close()
     {
+      // _verify_internals();
       DWRITE("list_stream->close()\n");
       catch { id->ls_session = 0; };
-      destruct();
+      if (this_object()) {
+	destruct();
+      }
     }
     void set_blocking() {}
   };
