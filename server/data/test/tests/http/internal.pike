@@ -2,8 +2,7 @@ inherit "http_common";
 
 string md5( string what )
 {
-  return Gmp.mpz(Crypto.MD5()->update( what )->digest(),256)
-    ->digits(32);
+  return Gmp.mpz(Crypto.MD5.hash( what ),256)->digits(32);
 }
 
 void main(int argc, array argv)
