@@ -3,16 +3,16 @@
 // Support for the FastCGI interface, using an external fast-cgi
 // wrapper. This should be handled internally.
 
-string cvs_version = "$Id: fcgi.pike,v 1.17 1998/08/10 21:37:50 per Exp $";
+string cvs_version = "$Id: fcgi.pike,v 1.18 1999/04/18 06:04:33 peter Exp $";
 
 #include <module.h>
 inherit "modules/scripting/cgi";
 
 #define ipaddr(x,y) (((x)/" ")[y])
 
-void create()
+void create(object c)
 {
-  ::create();
+  ::create(c);
 
   set("mountpoint", "/fcgi-bin/");
 
@@ -77,21 +77,29 @@ mixed low_find_file(string f, object id, string path)
   object pipe1, pipe2;
   string path_info;
   NOCACHE();
+
+  if ((path != "") && (path[-1] == '/')) {
+    f = path + f;
+  } else {
+    f = path + "/" + f;
+  }
   
-  if(!id->misc->path_info)
-  {
-    array tmp2;
-    tmp2 = ::extract_path_info(f, path);
-    if(!tmp2) {
-      array st2;
-      if((st2=file_stat( path + f )) && (st2[1]==-2))
-	return -1; // It's a directory...
-      return 0;
-    }
-    path_info = tmp2[0];
-    f = tmp2[1];
-  } else
+  array st2;
+  if(!(st2=file_stat(f)))
+    return 0; // File not found.
+  if (st2[1]==-2)
+    return -1; // It's a directory...
+
+  // Fix PATH_INFO
+  if (id->misc->path_info) {
     path_info = id->misc->path_info;
+  } else if (f[-1] == '/') {
+    // Special case.
+    // Most UNIXen ignore the trailing /
+    // but we have to make path-info out of it.
+    path_info = "/";
+    f = f[..sizeof(f)-2];
+  }
 
 #ifdef CGI_DEBUG
   roxen_perror("FCGI: Starting '"+f+"'...\n");
@@ -121,7 +129,7 @@ mixed low_find_file(string f, object id, string path)
   spawne(getcwd()+"/bin/fcgi", ({"-connect", make_pipe_name(f), f,
 				 QUERY(numsimul)+"" }),
 	 my_build_env_vars(f, id, path_info),
-	 pipe1, pipe1, QUERY(err)?pipe1:Stdio.stderr, dirname(f),
+	 pipe1, pipe1, QUERY(stderr)=="browser"?pipe1:Stdio.stderr, dirname(f),
 	 uid);
 
   destruct(pipe1);
