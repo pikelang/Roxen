@@ -9,7 +9,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: cgi.pike,v 1.121 1999/05/04 23:03:28 neotron Exp $";
+constant cvs_version = "$Id: cgi.pike,v 1.122 1999/05/13 07:27:12 hubbe Exp $";
 
 class Shuffle
 {
@@ -22,11 +22,17 @@ class Shuffle
     {
       int len = to->write(buffer);
       if(len <= 0)
+      {
+	to->set_write_callback(0);
 	(done && done());
+	return;
+      }
+
       buffer = buffer[len..];
       if(!strlen(buffer))
       {
 	//    to->set_blocking();
+	to->set_write_callback(0);
 	done && done();
       }
     }
@@ -37,8 +43,13 @@ class Shuffle
     buffer = data;
     to = fd;
     done = cb;
-    to->set_nonblocking( 0, write_some_more, 0 );
-    write_some_more();
+    if(!strlen(data))
+    {
+      call_out(done,0);
+    }else{
+      to->set_nonblocking( 0, write_some_more, 0 );
+      write_some_more();
+    }
   }
 }
 
@@ -688,7 +699,7 @@ mapping handle_file_extension(object o, string e, object id)
 {
   if(!QUERY(ex))
     return 0;
-#ifdef UNIX
+#if UNIX
   if(o && !(o->stat()[0]&0111))
     if(QUERY(noexec))
       return 0;
@@ -712,7 +723,7 @@ int|object(Stdio.File)|mapping find_file( string f, object id )
 {
   array stat=stat_file(f,id);
   if(!stat) return 0;
-#ifdef UNIX
+#if UNIX
   if(!(stat[0]&0111))
   {
     if(QUERY(noexec))
