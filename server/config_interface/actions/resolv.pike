@@ -1,18 +1,12 @@
 /*
- * $Id: resolv.pike,v 1.23 2001/10/29 10:37:05 grubba Exp $
+ * $Id: resolv.pike,v 1.24 2002/06/12 23:47:05 nilsson Exp $
  */
 inherit "wizard";
 inherit "../logutil";
-#include <roxen.h>
-//<locale-token project="admin_tasks">LOCALE</locale-token>
-#define LOCALE(X,Y)	_STR_LOCALE("admin_tasks",X,Y)
 
 constant action = "debug_info";
-
-string name= LOCALE(27, "Resolve path...");
-string doc = LOCALE(28, 
-		    "Check which modules handles the path you enter in "
-		    "the form");
+constant name = "Resolve path...";
+constant doc  = "Check which modules handles the path you enter in the form";
 
 string link(string to, string name)
 {
@@ -205,11 +199,11 @@ string parse( RequestID id )
   res += "<input type='hidden' name='action' value='resolv.pike' />\n"
     "<font size='+2'>"+ name + "</font><br />\n"
     "<table cellpadding='0' cellspacing='10' border='0'>\n"
-    "<tr><td align='left'>" +LOCALE(29, "URL")+ ": </td><td align='left'>"
+    "<tr><td align='left'>URL: </td><td align='left'>"
     "<input name='path' value='&form.path;' size='60' /></td></tr>\n"
-    "<tr><td align='left'>" +LOCALE(206, "User")+ ": </td><td align='left'>"
+    "<tr><td align='left'>User: </td><td align='left'>"
     "<input name='user'  value='&form.user;' size='12' />"
-    "&nbsp;&nbsp;&nbsp;" +LOCALE(30,"Password")+ ": "
+    "&nbsp;&nbsp;&nbsp;Password: "
     "<input name='password' value='&form.password;' type='password' "
     "size='12' /></td></tr></table>\n"
     "<cf-ok/><cf-cancel href='?class=&form.class;'/>\n";
@@ -279,9 +273,8 @@ string parse( RequestID id )
     }
     
     if(!c) {
-      res += "<p><font color='red'>"+
-	LOCALE(31, "There is no configuration available that matches "
-	       "this URL.") + "</font></p>"; 
+      res += "<p><font color='red'>There is no configuration available that matches "
+	"this URL.</font></p>";
       return res;
     }
 
@@ -295,8 +288,8 @@ string parse( RequestID id )
     else
       nid->pragma = (<>);
 
-    resolv = LOCALE(32, "Resolving")+" " + 
-      link(op, id->variables->path) + " "+LOCALE(33, "in")+" " + 
+    resolv = "Resolving " +
+      link(op, id->variables->path) + " in " +
       link_configuration(c, id->misc->cf_locale) +  
       "<br /><hr noshade size='1' width='100%'/>";
 

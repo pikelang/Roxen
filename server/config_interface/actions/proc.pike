@@ -1,17 +1,12 @@
 /*
- * $Id: proc.pike,v 1.9 2001/11/12 17:51:55 mast Exp $
+ * $Id: proc.pike,v 1.10 2002/06/12 23:47:05 nilsson Exp $
  */
 
 inherit "wizard";
-#include <roxen.h>
-//<locale-token project="admin_tasks">LOCALE</locale-token>
-#define LOCALE(X,Y)	_STR_LOCALE("admin_tasks",X,Y)
 
 constant action="status";
-
-string name= LOCALE(63, "Extended process status");
-string doc = LOCALE(65, 
-		    "Shows detailed process status on Solaris 2.5 and later.");
+constant name = "Extended process status";
+constant doc  = "Shows detailed process status on Solaris 2.5 and later.";
 
 void create()
 {
@@ -74,9 +69,7 @@ string process_map2(string in)
   string kbytes,resident,shared,priv;
   if(sscanf(((in/"\n")[-2]/" "-({""}))[2..]*" ",
             "%[^ ] %[^ ] %[^ ] %[^ ]",kbytes,resident,shared,priv)==4)
-    return sprintf("%d kb; %d kb "+LOCALE(66,"shared")+
-		   ", %d kb "+LOCALE(76,"private")+
-		   ", %d kb "+LOCALE(77,"resident"),
+    return sprintf("%d kb; %d kb shared, %d kb private, %d kb resident",
 		   (int)kbytes,(int)shared,(int)priv,(int)resident);
   return "Failed to parse output from pmap.";
 }
@@ -114,17 +107,17 @@ string cred(object id)
 #if constant(getgrgid)
   for(int i = 0; i < sizeof(groups); i++)
     groups[i] = (getgrgid((int)groups[i]) || ({ (string)groups[i] }))[0];
-  return sprintf("e/r/suid: %s<br />e/r/sgid: %s<br />"+
-		 LOCALE(78,"groups:")+" %s\n",
+  return sprintf("e/r/suid: %s<br />e/r/sgid: %s<br />"
+		 "groups: %s\n",
 		 (getpwuid(uid) || ({ (string)uid }))[0],
 		 (getgrgid(gid) || ({ (string)gid }))[0],
-		 String.implode_nicely(groups, LOCALE(79, "and")));
+		 String.implode_nicely(groups));
 #else
-  return sprintf("e/r/suid: %s<br />e/r/sgid: %d<br />"+
-		 LOCALE(78,"groups:")+" %s\n",
+  return sprintf("e/r/suid: %s<br />e/r/sgid: %d<br />"
+		 "groups: %s\n",
 		 (getpwuid(uid) || ({ (string)uid }))[0],
 		 gid,
-		 String.implode_nicely(groups, LOCALE(79, "and")));
+		 String.implode_nicely(groups));
 #endif /* constant(getgrgid) */
 }
 
@@ -140,15 +133,15 @@ mixed parse(object id)
 			  (int)id->variables->pid||getpid())*"";
 
   return ("<font size='+1'>"+ 
-	  sprintf(LOCALE(80,"Process Tree for %d"),
+	  sprintf("Process Tree for %d",
 		  (int)id->variables->pid||getpid())+"</font><pre>\n"+
 	  tree+
 	  "</pre><font size='+1'>"+
-	  sprintf(LOCALE(81,"Misc status for %d"), 
+	  sprintf("Misc status for %d",
 		  (int)id->variables->pid||getpid())+
-	  "</font><pre>"+LOCALE(82,"Memory Usage:")+" "+map+"\n\n"+
-	  LOCALE(83,"Credentials:")+"<br />"+cred(id)+"\n"+
-	  LOCALE(84,"Current working directory:")+" "+
+	  "</font><pre>Memory Usage: "+map+"\n\n"
+	  "Credentials:<br />"+cred(id)+"\n"
+	  "Current working directory: "+
 	  ((proc("wdx",id->variables->pid)/":")[1..]*":")+
 //	  "Stack: "+(proc("stack",id->variables->pid)/":")[1..]*":"+
 	  "</pre><p><cf-ok/></p>");

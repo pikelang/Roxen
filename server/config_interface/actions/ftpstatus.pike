@@ -1,19 +1,14 @@
-/* $Id: ftpstatus.pike,v 1.3 2000/09/18 17:34:46 grubba Exp $ */
+/* $Id: ftpstatus.pike,v 1.4 2002/06/12 23:47:04 nilsson Exp $ */
 
 /* Disabled for now. (Was originally written for ftp mk I). */
 #if 0
 
 inherit "wizard";
-#include <roxen.h>
-//<locale-token project="admin_tasks">LOCALE</locale-token>
-#define LOCALE(X,Y)	_STR_LOCALE("admin_tasks",X,Y)
 
 constant action = "status";
-
-string name= LOCALE(49, "Current FTP sessions");
-string doc = LOCALE(50, 
-		    "List all active FTP sessions and what files they are "
-		    "currently transferring.");
+constant name = "Current FTP sessions";
+constant doc  = ("List all active FTP sessions and what files they are "
+		 "currently transferring.");
 
 static string describe_ftp(object ftp)
 {
@@ -26,7 +21,7 @@ static string describe_ftp(object ftp)
   if(ftp->session_auth)
     res += "<td>"+ftp->session_auth[1]+"</td>";
   else
-    res += "<td><i>" + LOCALE(51, "anonymous") + "</i></td>";
+    res += "<td><i>anonymous</i></td>";
 
   res += "<td>"+ftp->cwd+"</td>";
 
@@ -48,7 +43,7 @@ static string describe_ftp(object ftp)
       res += "</td>";
     }
   } else
-    res += "<td><i>" + LOCALE(52, "idle") + "</i></td>";
+    res += "<td><i>idle</i></td>";
 
   return res + "</tr>\n";
 }
@@ -66,16 +61,12 @@ string parse( RequestID id )
   }
 
   if(sizeof(ftps))
-    return "<table border='0'><tr align=left><th>" +
-      LOCALE(53, "From")+ "</th><th>" + 
-      LOCALE(206, "User")+ "</th><th>" +
-      LOCALE(54, "CWD")+ "</th><th>" +
-      LOCALE(55, "Action")+ "</th><th>" + 
-      LOCALE(18, "File")+ "</th><th>" +
-      LOCALE(56, "Transferred") + "</th></tr>\n"+
+    return "<table border='0'><tr align=left>"
+      "<th>From</th><th>User</th><th>CWD</th>"
+      "<th>Action</th><th>File</th><th>Transferred</th></tr>\n" +
       Array.map(indices(ftps), describe_ftp)*""+"</table>\n<cf-ok/>";
   else
-    return LOCALE(57, "There are currently no active FTP sessions.")+
+    return "There are currently no active FTP sessions."
       "<p><cf-ok/></p>";
 }
 

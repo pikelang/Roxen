@@ -1,5 +1,5 @@
 /*
- * $Id: locks.pike,v 1.8 2000/09/19 09:49:37 lange Exp $
+ * $Id: locks.pike,v 1.9 2002/06/12 23:47:05 nilsson Exp $
  */
 
 #include <config.h>
@@ -8,16 +8,9 @@
 inherit "wizard";
 inherit "../logutil";
 
-#include <roxen.h>
-//<locale-token project="admin_tasks">LOCALE</locale-token>
-#define LOCALE(X,Y)	_STR_LOCALE("admin_tasks",X,Y)
-
 constant action="debug_info";
-
-string name= LOCALE(280, "Module lock status");
-string doc = LOCALE(281, 
-		    "Shows various information about the module thread "
-		    "locks in Roxen.");
+constant name = "Module lock status";
+constant doc  = "Shows various information about the module thread locks in Roxen.";
 
 string describe_module(object q)
 {
@@ -36,7 +29,7 @@ string describe_module(object q)
 			 roxen->filename(q));
     }
   }
-  return LOCALE(12, "Unknown module")+"</td><td>"+roxen->filename(q)+"";
+  return "Unknown module</td><td>"+roxen->filename(q)+"";
 }
 
 string parse( RequestID id )
@@ -51,22 +44,22 @@ string parse( RequestID id )
     }
   }
   mapping res=([]);
-  string data=("<font size='+2'>"+
-	       LOCALE(13, "Module lock status : Accesses to all modules")+
-	       "</font><p>"+
-	       LOCALE(14, "Locked means that the access was done using a "
-		      "serializing lock since the module was not thread-safe, "
-		      "unlocked means that there was no need for a lock.")+
-	       "</p><p>"+
-	       LOCALE(15, "Locked accesses to a single module can inflict "
-		      "quite a severe performance degradation of the whole "
-		      "server, since a locked module will act as a bottleneck, "
-		      "blocking access for all other threads that want to "
-		      "access that module.")+
-	       "</p><p>"+
-	       LOCALE(16, "This is only a problem if a significant percentage "
-		      "of the accesses are passed through non-threadsafe "
-		      "modules.") +"</p>");
+  string data=("<font size='+2'>"
+	       "Module lock status : Accesses to all modules"
+	       "</font><p>"
+	       "Locked means that the access was done using a "
+	       "serializing lock since the module was not thread-safe, "
+	       "unlocked means that there was no need for a lock."
+	       "</p><p>"
+	       "Locked accesses to a single module can inflict "
+	       "quite a severe performance degradation of the whole "
+	       "server, since a locked module will act as a bottleneck, "
+	       "blocking access for all other threads that want to "
+	       "access that module."
+	       "</p><p>"
+	       "This is only a problem if a significant percentage "
+	       "of the accesses are passed through non-threadsafe "
+	       "modules.</p>");
   array mods = (indices(L)+indices(l));
   mods &= mods;
   foreach(mods, object q)
@@ -77,10 +70,8 @@ string parse( RequestID id )
   array rows = ({});
   foreach(sort(indices(res)), string q)
     rows += ({ ({q,(string)(res[q]||""),(string)(locks[q]||"") }) });
-  return data + 
-    html_table( ({ 
-      LOCALE(17, "Module"), LOCALE(18, "File"), LOCALE(19, "Locked"), 
-      LOCALE(20, "Unlocked") }), rows ) +
+  return data +
+    html_table( ({ "Module", "File", "Locked", "Unlocked" }), rows ) +
     "<p><cf-ok/></p>";
 }
 #endif /* THREADS */

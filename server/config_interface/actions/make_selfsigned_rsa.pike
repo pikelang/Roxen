@@ -1,22 +1,18 @@
 /*
- * $Id: make_selfsigned_rsa.pike,v 1.6 2001/12/14 15:37:54 grubba Exp $
+ * $Id: make_selfsigned_rsa.pike,v 1.7 2002/06/12 23:47:05 nilsson Exp $
  */
 
 #if constant(_Crypto) && constant(Crypto.rsa)
 
 inherit "ssl_common.pike";
 inherit "wizard";
-#include <roxen.h>
-//<locale-token project="admin_tasks"> LOCALE </locale-token>
-#define LOCALE(X,Y)	_STR_LOCALE("admin_tasks",X,Y)
 
 import Standards.PKCS;
 import Standards.ASN1.Types;
 
 constant action = "SSL";
-
-string name= LOCALE(132, "Generate an RSA key and a Self Signed Certificate...");
-string doc = doc_string_start + doc_string_end_b;
+constant name = "Generate an RSA key and a Self Signed Certificate...";
+constant doc  = doc_string_start + doc_string_end_b;
 
 
 /* In ssl_common.pike:
@@ -112,8 +108,7 @@ mixed page_3(object id, object mc)
   string cert = Tools.X509.make_selfsigned_rsa_certificate
     (rsa, 24 * 3600 * (int) id->variables->ttl, name);
 
-  string res=("<font size='+2'>"+LOCALE(133,"This is your Certificate.")+
-	      "</font>"
+  string res=("<font size='+2'>This is your Certificate.</font>"
 	      "<textarea name='certificate' cols='80' rows='12'>");
 
   res += Tools.PEM.simple_build_pem("CERTIFICATE", cert);
@@ -155,8 +150,7 @@ mixed verify_3(object id, object mc)
 
 mixed wizard_done(object id, object mc)
 {
-  return http_string_answer( sprintf("<p>"+LOCALE(131,"Wrote %d bytes to %s.")+
-				     "</p>\n<p><cf-ok/></p>\n",
+  return http_string_answer( sprintf("<p>Wrote %d bytes to %s.</p>\n<p><cf-ok/></p>\n",
 				     strlen(id->variables->certificate),
 				     combine_path(getcwd(),
 						  id->variables->cert_file)) );

@@ -1,33 +1,27 @@
 
-#include <roxen.h>
-//<locale-token project="admin_tasks">LOCALE</locale-token>
-#define LOCALE(X,Y)	_STR_LOCALE("admin_tasks",X,Y)
-
 constant action = "status";
-
-string name= LOCALE(59, "Cache status");
-string doc = LOCALE(60, 
-		    "Show information about the main memory cache in Roxen");
+constant name = "Cache status";
+constant doc  = "Show information about the main memory cache in Roxen";
 
 string parse( RequestID id )
 {
 
-  string res = "<b>"+LOCALE(61, "WebServer Memory Cache")+"</b><br />"
+  string res = "<b>WebServer Memory Cache</b><br />"
     "<table cellpadding=\"3\" cellspacing=\"0\" border=\"0\">"
     "<tr bgcolor=\"&usr.fade3;\">"
-    "<td>"+LOCALE(62, "Class")+"</td>"
-    "<td align=\"right\">"+LOCALE(295, "Entries")+"</td>"
-    "<td align=\"right\">"+LOCALE(64, "Size")+"</td>"
-    "<td align=\"right\">"+LOCALE(293, "Hits")+"</td>"
-    "<td align=\"right\">"+LOCALE(294, "Misses")+"</td>"
-    "<td align=\"right\">"+LOCALE(67, "Hit rate")+"</td></tr>";
+    "<td>Class</td>"
+    "<td align=\"right\">Entries</td>"
+    "<td align=\"right\">Size</td>"
+    "<td align=\"right\">Hits</td>"
+    "<td align=\"right\">Misses</td>"
+    "<td align=\"right\">Hit rate</td></tr>";
 
   mapping c=cache->status();
 
   mapping trans = ([
-    "supports":LOCALE(68,"supportdb"),
-    "fonts":LOCALE(69,"Fonts"),
-    "hosts":LOCALE(70,"DNS"),
+    "supports":"supportdb",
+    "fonts":"Fonts",
+    "hosts":"DNS",
   ]);
 
   foreach(indices(c), string n)
@@ -75,12 +69,12 @@ string parse( RequestID id )
   c = cache->ngc_status();
 
   if(sizeof(c)) {
-    res += "<br /><b>"+LOCALE(87, "Non-garbing Memory Cache")+"</b><br />"
+    res += "<br /><b>Non-garbing Memory Cache</b><br />"
       "<table cellpadding=\"3\" cellspacing=\"0\" border=\"0\">"
       "<tr bgcolor=\"&usr.fade3;\">"
-      "<td>"+LOCALE(62, "Class")+"</td>"
-      "<td align=\"right\">"+LOCALE(295, "Entries")+"</td>"
-      "<td align=\"right\">"+LOCALE(64, "Size")+"</td></tr>";
+      "<td>Class</td>"
+      "<td align=\"right\">Entries</td>"
+      "<td align=\"right\">Size</td></tr>";
 
     i = totale = totalm = 0;
     foreach(sort(indices(c)), string name) {
@@ -104,12 +98,12 @@ string parse( RequestID id )
   // ---
 
   mapping l=Locale.cache_status();
-  res += "<br /><b>"+LOCALE(71, "Locale Cache")+"</b><br />"
+  res += "<br /><b>Locale Cache</b><br />"
     "<table>"
-    "<tr><td>"+LOCALE(72, "Used languages:")+"</td><td>"+l->languages+"</td></tr>"
-    "<tr><td>"+LOCALE(73, "Registered projects:")+"</td><td>"+l->reg_proj+"</td></tr>"
-    "<tr><td>"+LOCALE(74, "Loaded project files:")+"</td><td>"+l->load_proj+"</td></tr>"
-    "<tr><td>"+LOCALE(75, "Current cache size:")+"</td><td>"+Roxen.sizetostring(l->bytes)+"</td></tr>"
+    "<tr><td>Used languages:</td><td>"+l->languages+"</td></tr>"
+    "<tr><td>Registered projects:</td><td>"+l->reg_proj+"</td></tr>"
+    "<tr><td>Loaded project files:</td><td>"+l->load_proj+"</td></tr>"
+    "<tr><td>Current cache size:</td><td>"+Roxen.sizetostring(l->bytes)+"</td></tr>"
     "</table><br />";
 
   return res +  "<p><cf-ok/></p>";

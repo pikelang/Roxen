@@ -1,18 +1,14 @@
-#include <roxen.h>
 #include <config_interface.h>
-
-//<locale-token project="admin_tasks"> LOCALE </locale-token>
-#define LOCALE(X,Y)  _STR_LOCALE("admin_tasks",X,Y)
 
 array pages =
 ({
-  ({ "status",       "Tasks",  0, LOCALE(228,"Status")            }),
-  ({ "maintenance",  "Tasks",  0, LOCALE(229,"Maintenance")       }),
+  ({ "status",       "Tasks",  0, "Status"            }),
+  ({ "maintenance",  "Tasks",  0, "Maintenance"       }),
 #if constant(_Crypto) && constant(Crypto.rsa)
-  ({ ({"SSL"}),       "Tasks", 0, LOCALE(230,"SSL")               }),
+  ({ ({"SSL"}),       "Tasks", 0, "SSL"               }),
 #endif
 /*({ "developer",     "Tasks", "devel_mode"  }),*/
-  ({ "debug_info",    "Tasks", 0, LOCALE(231,"Debug information") }),
+  ({ "debug_info",    "Tasks", 0, "Debug information" }),
 });
 
 string parse( RequestID id )

@@ -1,16 +1,11 @@
 /*
- * $Id: flush.pike,v 1.9 2000/11/14 05:11:08 per Exp $
+ * $Id: flush.pike,v 1.10 2002/06/12 23:47:04 nilsson Exp $
  */
 #include <config_interface.h>
-#include <roxen.h>
-//<locale-token project="admin_tasks"> LOCALE </locale-token>
-#define LOCALE(X,Y)  _STR_LOCALE("admin_tasks",X,Y)
 
 constant action = "maintenance";
-
-string name= LOCALE(8, "Flush caches");
-string doc = LOCALE(9, "Flush all memory caches.");
-
+constant name = "Flush caches";
+constant doc  = "Flush all memory caches.";
 
 mixed doit()
 {
@@ -48,6 +43,6 @@ mixed doit()
 mixed parse( RequestID id )
 {
   doit();
-  return LOCALE(232,"All memory caches have been flushed.") + 
-         "<p><cf-ok/></p>";
+  return "All memory caches have been flushed."
+    "<p><cf-ok/></p>";
 }

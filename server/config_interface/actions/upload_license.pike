@@ -1,16 +1,10 @@
 /*
- * $Id: upload_license.pike,v 1.3 2002/04/08 12:57:29 wellhard Exp $
+ * $Id: upload_license.pike,v 1.4 2002/06/12 23:47:05 nilsson Exp $
  */
 
-#include <roxen.h>
-//<locale-token project="admin_tasks"> LOCALE </locale-token>
-#define LOCALE(X,Y)  _STR_LOCALE("admin_tasks",X,Y)
-
 constant action = "maintenance";
-
-string name= LOCALE(0, "Upload license");
-string doc = LOCALE(0, "Upload a new roxen license file.");
-
+constant name = "Upload license";
+constant doc  = "Upload a new roxen license file.";
 
 mixed parse( RequestID id )
 {

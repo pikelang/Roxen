@@ -1,23 +1,17 @@
 /*
- * $Id: listfonts.pike,v 1.21 2002/04/18 16:02:20 anders Exp $
+ * $Id: listfonts.pike,v 1.22 2002/06/12 23:47:05 nilsson Exp $
  */
 
-#include <roxen.h>
-//<locale-token project="admin_tasks"> LOCALE </locale-token>
-#define LOCALE(X,Y)  _STR_LOCALE("admin_tasks",X,Y)
-
 constant action = "status";
-
-string name= LOCALE(10, "List fonts");
-string doc = LOCALE(11, "List all available fonts");
-
+constant name = "List fonts";
+constant doc  = "List all available fonts";
 
 string versions(string font)
 {
   array res=({ });
   array b = available_font_versions(font,32);
   if (!b || !sizeof(b)) 
-    return "<b>"+LOCALE("dH","Not available.")+"</b>"; 
+    return "<b>Not available.</b>";
   array a = map(b,describe_font_type);
   mapping m = mkmapping(b,a);
   foreach(sort(indices(m)), string t)
@@ -33,13 +27,13 @@ string list_font(string font)
   
   if( mapping m = info[ fn ] )
   {
-    string res = "<p><font size=+1><b>"+
+    string res = "<p><font size='+1'><b>"+
            (Roxen.html_encode_string(map(replace(font,"_"," ")/" ",
                                          capitalize)*" ")+
                   "</b></font> <font size='-1'>"+versions(font)+"</font><br />"
-                  "<table cellspacing=0 cellpadding=0");
+                  "<table cellspacing='0' cellpadding='0'");
     foreach( sort( indices( m ) - ({"name","versions"}) ), string i )
-      res += "<tr><td>&nbsp;&nbsp;&nbsp;<font size=-1>"+i+":&nbsp;</font></td><td><font size=-1>"+
+      res += "<tr><td>&nbsp;&nbsp;&nbsp;<font size='-1'>"+i+":&nbsp;</font></td><td><font size='-1'>"+
           Roxen.html_encode_string(m[i])+"</font></td></tr>\n";
     res += "</table>";
     return res;
@@ -55,7 +49,7 @@ string font_loaders( )
   foreach( roxen.fonts.font_handlers, FontHandler fl )
   {
     int nf =  sizeof( fl->available_fonts() );
-    res += "<b><dt><font size=+1>"+fl->name+" ("+nf
+    res += "<b><dt><font size='+1'>"+fl->name+" ("+nf
         +" font"+(nf==1?"":"s")+")</font></b></dt>"
         "<dd>"+fl->doc+"</dd><p />";
   }
@@ -68,15 +62,13 @@ string page_0(RequestID id)
   info = mkmapping( q->name, q );
   string res=("<input type='hidden' name='action' value='listfonts.pike'/>"
               "<input type='hidden' name='doit' value='indeed'/>\n"
-              "<font size='+1'><b>" +
-	      LOCALE(58,"Available font loaders") + "</b></font><p>"+
-              font_loaders()+"<font size='+1'><b>" +
-	      LOCALE("dI","All available fonts") + "</b></font><p>");
+              "<font size='+1'><b>Available font loaders</b></font><p>"+
+              font_loaders()+"<font size='+1'><b>All available fonts</b></font><p>");
   foreach(sort(roxen.fonts.available_fonts(1)), string font)
     res+=list_font(font);
-  res += ("</p><p>" + LOCALE(236,"Example text") +
-	  "<font size=-1><input name=text size=46 value='" +
-	  LOCALE(237,"Jackdaws love my big sphinx of quartz.") +
+  res += ("</p><p>Example text"
+	  "<font size='-1'><input name='text' size='46' value='"
+	  "Jackdaws love my big sphinx of quartz."
 	  "'></p><p><table width='70%'><tr><td align='left'>"
           "<cf-cancel href='?class=status'/></td><td align='right'>"
 	  "<cf-next/></td></tr></table></p>");

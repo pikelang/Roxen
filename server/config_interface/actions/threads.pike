@@ -1,15 +1,10 @@
 #include <config.h>
 #if constant(all_threads)
-#include <roxen.h>
-//<locale-token project="admin_tasks">LOCALE</locale-token>
-#define LOCALE(X,Y)	_STR_LOCALE("admin_tasks",X,Y)
 
 constant action="debug_info";
-
-string name= LOCALE(35, "Thread backtrace");
-string doc = LOCALE(36, 
-		    "Shows a backtrace (stack) for each and every "
-		    "thread in Roxen.");
+constant name = "Thread backtrace";
+constant doc  = ("Shows a backtrace (stack) for each and every "
+		 "thread in Roxen.");
 
 static string last_id, last_from;
 
@@ -22,7 +17,7 @@ string get_id(string from)
     string id;
     id = f->read(200);
     if(sscanf(id, "%*s$"+"Id: %*s,v %s ", id) == 3)
-      return last_id=" ("+LOCALE(37, "version")+" "+id+")";
+      return last_id=" (version "+id+")";
   };
   last_id = "";
   return "";
@@ -81,10 +76,10 @@ mixed parse( RequestID id )
   string res = "<p><cf-refresh/></p>\n";
   for (int i = 0; i < sizeof (threads); i++)
     res +=
-      "<h3>" + LOCALE(39,"Thread") + " " + thread_ids[i] +
+      "<h3>Thread " + thread_ids[i] +
 #ifdef THREADS
       (threads[i] == roxen->backend_thread ?
-       " (" + LOCALE(38,"backend thread")+ ")" : "") +
+       " (backend thread)" : "") +
 #endif
       "</h3>\n"
       "<ol> "+

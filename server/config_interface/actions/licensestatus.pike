@@ -1,17 +1,10 @@
 /*
- * $Id: licensestatus.pike,v 1.10 2002/04/22 17:10:30 wellhard Exp $
+ * $Id: licensestatus.pike,v 1.11 2002/06/12 23:47:04 nilsson Exp $
  */
 
-#include <roxen.h>
-//<locale-token project="admin_tasks"> LOCALE </locale-token>
-#define LOCALE(X,Y)  _STR_LOCALE("admin_tasks",X,Y)
-
 constant action = "status";
-
-string name= LOCALE(0, "License status");
-string doc = LOCALE(0, "Show information about the installed licenses and "
-		    "there usage.");
-
+constant name = "License status";
+constant doc  = "Show information about the installed licenses and there usage.";
 
 mixed parse( RequestID id )
 {

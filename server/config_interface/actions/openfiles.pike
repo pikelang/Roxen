@@ -1,5 +1,5 @@
 /*
- * $Id: openfiles.pike,v 1.9 2001/09/15 22:30:45 grubba Exp $
+ * $Id: openfiles.pike,v 1.10 2002/06/12 23:47:05 nilsson Exp $
  */
 inherit "wizard";
 
@@ -7,17 +7,10 @@ inherit "wizard";
 import spider;
 
 #include <stat.h>
-#include <roxen.h>
-//<locale-token project="admin_tasks">LOCALE</locale-token>
-#define LOCALE(X,Y)	_STR_LOCALE("admin_tasks",X,Y)
-
 
 constant action="debug_info";
-
-
-string name= LOCALE(21, "Open files");
-string doc = LOCALE(22, 
-		    "Show a list of all open files and network connections.");
+constant name = "Open files";
+constant doc  = "Show a list of all open files and network connections.";
 
 // Debug functions.  List _all_ open filedescriptors
 
@@ -36,7 +29,7 @@ string fix_port(string p)
 string parse( RequestID id )
 {
   return
-    ("<h1>" +LOCALE(23, "Active filedescriptors")+ "</h1>\n"+
+    ("<h1>Active filedescriptors</h1>\n"+
      sprintf("<pre><b>%-5s  %-9s  %-10s   %-10s</b>\n\n",
 	     "fd", "type", "mode", "details")+
 

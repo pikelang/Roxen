@@ -1,20 +1,16 @@
 /*
- * $Id: make_site_template.pike,v 1.6 2002/01/28 10:25:06 grubba Exp $
+ * $Id: make_site_template.pike,v 1.7 2002/06/12 23:47:05 nilsson Exp $
  *
  * Make a site-template from a virtual server configuration.
  *
  * Henrik Grubbström 2001-11-16
  */
 
-#include <roxen.h>
 #include <config_interface.h>
-//<locale-token project="admin_tasks"> LOCALE </locale-token>
-#define LOCALE(X,Y)	_STR_LOCALE("admin_tasks",X,Y)
 
 constant action = "maintenance";
-
-string name = LOCALE(144, "Create site template");
-string doc  = LOCALE(145, "Create a site template from a site configuration");
+constant name = "Create site template";
+constant doc  = "Create a site template from a site configuration";
 
 string indent(string s)
 {
@@ -55,13 +51,11 @@ string parse(RequestID id)
     //
     // Select a configuration.
     if (conf_name) {
-      res += sprintf("<p><font color='&usr.warncolor'>%s: %s</font></p>\n",
-		     LOCALE(146, "Coundn't find configuration"),
+      res += sprintf("<p><font color='&usr.warncolor'>Coundn't find configuration: %s</font></p>\n",
 		     conf_name);
     }
-    res += sprintf("<p>%s</p>\n"
+    res += sprintf("<p>Select configuration to base the template on.</p>\n"
 		   "<p>%{<submit-gbutton2 name='conf-%s'>%s</submit-gbutton2><br\>\n%}</p>\n",
-		   LOCALE(147, "Select configuration to base the template on."),
 		   map(roxen.configurations->name,
 		       lambda(string n) {
 			 return ({ Roxen.http_encode_string(n),
@@ -75,7 +69,7 @@ string parse(RequestID id)
       //
       // Select a filename.
       res += sprintf("<p>%s: %s</p>\n",
-		     LOCALE(148, "Selected configuration"),
+		     "Selected configuration",
 		     Roxen.html_encode_string(conf_name));
 
       res += sprintf("<p>Filename (.pike will be added):"
@@ -83,8 +77,7 @@ string parse(RequestID id)
 		     Roxen.http_encode_string(lower_case(replace(conf_name,
 								 " ", "_"))));
 
-      res += sprintf("<p><center><submit-gbutton>%s</submit-gbutton></center></p>\n",
-		     LOCALE(153, "Ok"));
+      res += "<p><center><submit-gbutton>Ok</submit-gbutton></center></p>\n";
     } else {
       // Page 3
       //
@@ -186,15 +179,13 @@ string parse(RequestID id)
       object st;
       if (!(st = file_stat("../local/" SITE_TEMPLATES))) {
 	if (!mkdir("../local/" SITE_TEMPLATES, 0755)) {
-	  res += sprintf("<p><font color='&usr.warncolor'>%s: %O</font></p>\n",
-			 LOCALE(149, "Coundn't create directory"),
+	  res += sprintf("<p><font color='&usr.warncolor'>Coundn't create directory: %O</font></p>\n",
 			 "../local/" SITE_TEMPLATES);
 	}
       }
       Stdio.File f = lopen(SITE_TEMPLATES + fname + ".pike", "cw", 0644);
       if (!f) {
-	res += sprintf("<p><font color='&usr.warncolor'>%s: %O</font></p>\n",
-		       LOCALE(150, "Failed to create template file"),
+	res += sprintf("<p><font color='&usr.warncolor'>Failed to create template file: %O</font></p>\n",
 		       "../local/" SITE_TEMPLATES +
 		       Roxen.html_encode_string(fname));
       } else {
@@ -202,15 +193,13 @@ string parse(RequestID id)
 	f->close();
 
 	if (n != sizeof(template)) {
-	  res += sprintf("<p><font color='&usr.warncolor'>%s: %O</font></p>\n",
-			 LOCALE(151, "Failed to write template file"),
+	  res += sprintf("<p><font color='&usr.warncolor'>Failed to write template file: %O</font></p>\n",
 			 "../local/" SITE_TEMPLATES +
 			 Roxen.html_encode_string(fname));
 	} else {
-	  res += sprintf("<p>%s</p>\n",
-			 LOCALE(152, "Site template created successfully."));
-	  res += sprintf("<p><center><submit-gbutton>%s</submit-gbutton></center></p>\n",
-			 LOCALE(153, "Ok"));
+	  res += "<p>Site template created successfully.</p>\n"
+	    "<p><center><submit-gbutton>Ok</submit-gbutton></center></p>\n";
+
 	  done = 1;
 	}
       }

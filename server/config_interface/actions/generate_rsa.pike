@@ -1,21 +1,17 @@
 /*
- * $Id: generate_rsa.pike,v 1.5 2000/09/09 03:11:55 lange Exp $
+ * $Id: generate_rsa.pike,v 1.6 2002/06/12 23:47:04 nilsson Exp $
  */
 
 #if constant(_Crypto) && constant(Crypto.rsa)
 
 inherit "ssl_common.pike";
 inherit "wizard";
-#include <roxen.h>
-//<locale-token project="admin_tasks">LOCALE</locale-token>
-#define LOCALE(X,Y)	_STR_LOCALE("admin_tasks",X,Y)
 
 constant action = "SSL";
-
-string name = LOCALE(118, "Generate a new RSA key pair...");
-string doc = doc_string_start + doc_string_end_a +
-	      LOCALE(119, "Note that it is possible to have more than one "
-		     "certificate for the same key.");
+constant name = "Generate a new RSA key pair...";
+constant  doc = (doc_string_start + doc_string_end_a +
+		 "Note that it is possible to have more than one "
+		 "certificate for the same key.");
 
 
 /* In ssl_common.pike:
@@ -27,8 +23,7 @@ string doc = doc_string_start + doc_string_end_a +
 
 mixed wizard_done(object id, object mc)
 {
-  return http_string_answer( sprintf( LOCALE(120,"Wrote %d-bit key in %s")+
-				      "<p><cf-ok/></p>",
+  return http_string_answer( sprintf( "Wrote %d-bit key in %s<p><cf-ok/></p>",
                                       (int)id->variables->key_size,
                                       combine_path(getcwd(),
                                                    id->variables->key_file)) );

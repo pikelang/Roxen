@@ -1,17 +1,12 @@
 /*
- * $Id: debug_info.pike,v 1.22 2002/05/21 14:47:29 mast Exp $
+ * $Id: debug_info.pike,v 1.23 2002/06/12 23:47:04 nilsson Exp $
  */
 #include <stat.h>
-#include <roxen.h>
-//<locale-token project="admin_tasks">LOCALE</locale-token>
-#define LOCALE(X,Y)	_DEF_LOCALE("admin_tasks",X,Y)
 
 constant action = "debug_info";
-
-LocaleString name= LOCALE(1,"Pike memory usage information");
-LocaleString doc = LOCALE(2,
-		    "Show some information about how pike is using the "
-		    "memory it has allocated. Mostly useful for developers.");
+constant name = "Pike memory usage information";
+constant doc  = ("Show some information about how pike is using the "
+		 "memory it has allocated. Mostly useful for developers.");
 
 int creation_date = time();
 
@@ -237,11 +232,11 @@ mixed page_0( object id )
    "</td>")
 
   res += "<p><table border='0' cellpadding='0'>\n<tr>\n" +
-    HCELL ("align='left' ", "&usr.fgcolor;", (string)LOCALE(3,"Type")) +
-    HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(4,"Number")) +
-    HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(5,"Change")) +
+    HCELL ("align='left' ", "&usr.fgcolor;", "Type") +
+    HCELL ("align='right'", "&usr.fgcolor;", "Number") +
+    HCELL ("align='right'", "&usr.fgcolor;", "Change") +
     HCELL ("align='right'", "&usr.fgcolor;", "Kb") +
-    HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(5,"Change")) +
+    HCELL ("align='right'", "&usr.fgcolor;", "Change") +
     "</tr>\n";
   foreach (table, array entry)
     res += "<tr>" +
@@ -330,10 +325,10 @@ mixed page_0( object id )
   roxen->set_var("__num_clones", bar);
 
   res += "<p><table border='0' cellpadding='0'>\n<tr>\n" +
-    HCELL ("align='left' ", "&usr.fgcolor;", (string)LOCALE(141,"Source")) +
-    HCELL ("align='left' ", "&usr.fgcolor;", (string)LOCALE(142,"Program")) +
-    HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(143,"Clones")) +
-    HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(5,"Change")) +
+    HCELL ("align='left' ", "&usr.fgcolor;", "Source") +
+    HCELL ("align='left' ", "&usr.fgcolor;", "Program") +
+    HCELL ("align='right'", "&usr.fgcolor;", "Clones") +
+    HCELL ("align='right'", "&usr.fgcolor;", "Change") +
     "</tr>\n";
   string trim_path( string what )
   {

@@ -1,17 +1,12 @@
 /*
- * $Id: debug_summary.pike,v 1.7 2002/06/11 17:07:42 nilsson Exp $
+ * $Id: debug_summary.pike,v 1.8 2002/06/12 23:47:04 nilsson Exp $
  */
 #include <stat.h>
-#include <roxen.h>
-//<locale-token project="admin_tasks">LOCALE</locale-token>
-#define LOCALE(X,Y)	_DEF_LOCALE("admin_tasks",X,Y)
 
 constant action = "debug_info";
-
-LocaleString name= LOCALE(0,"Debug Summary");
-LocaleString doc = LOCALE(0,
-		    "Shows a text file containing a configuration summary, suitable "
-		    "for support purposes.");
+constant name = "Debug Summary";
+constant doc  = ("Shows a text file containing a configuration summary, suitable "
+		 "for support purposes.");
 
 int creation_date = time();
 

@@ -1,13 +1,9 @@
 inherit "wizard";
-#include <roxen.h>
-//<locale-token project="admin_tasks"> LOCALE </locale-token>
-#define LOCALE(X,Y)  _STR_LOCALE("admin_tasks",X,Y)
 
 constant action = "debug_info";
-
-string name= LOCALE(6, "Pike module list");
-string doc = LOCALE(7,"Show information about which features and modules are "
-		    "available in the Pike this Roxen is using.");
+constant name = "Pike module list";
+constant doc  = ("Show information about which features and modules are "
+		 "available in the Pike this Roxen is using.");
 
 constant all_features = ({
   // only include modules that are sensible to use with Roxen
@@ -28,15 +24,13 @@ mixed parse(object id)
   array features = Tools.Install.features();
   array disabled = all_features - features;
 
-  res = "<font size='+1'>"+ LOCALE(238, "Features") +"</font><ul>\n"+
-    String.implode_nicely( sort(map(features,nice_name)-({0})),
-			   LOCALE(79,"and"))
+  res = "<font size='+1'>Features</font><ul>\n"+
+    String.implode_nicely( sort(map(features,nice_name)-({0})), "and" )
     + "</ul><br />\n";
 
   if (sizeof(disabled))
-    res += "<font size='+1'>"+LOCALE(140,"Unavailable features")+"</font><ul>\n"
-      + String.implode_nicely( sort(map(disabled,nice_name)-({0})),
-			       LOCALE(79,"and"))
+    res += "<font size='+1'>Unavailable features</font><ul>\n"
+      + String.implode_nicely( sort(map(disabled,nice_name)-({0})), "and" )
       + "</ul><br />\n";
 
   return res+ "<p><cf-ok/></p>";

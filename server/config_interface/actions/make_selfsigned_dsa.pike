@@ -1,14 +1,11 @@
 /*
- * $Id: make_selfsigned_dsa.pike,v 1.6 2001/12/14 15:37:54 grubba Exp $
+ * $Id: make_selfsigned_dsa.pike,v 1.7 2002/06/12 23:47:05 nilsson Exp $
  */
 
 #if constant(_Crypto) && constant(Crypto.dsa)
 
 inherit "ssl_common.pike";
 inherit "wizard";
-#include <roxen.h>
-//<locale-token project="admin_tasks"> LOCALE </locale-token>
-#define LOCALE(X,Y)	_STR_LOCALE("admin_tasks",X,Y)
 
 import Standards.PKCS;
 import Standards.ASN1.Types;
@@ -20,16 +17,15 @@ import Standards.ASN1.Types;
 #endif
 
 constant action = "SSL";
-
-string name= LOCALE(134,"Generate an DSA key and a Self Signed Certificate...");
-string doc = doc_string_start + doc_string_end_b;
+constant name = "Generate an DSA key and a Self Signed Certificate...";
+constant doc  = doc_string_start + doc_string_end_b;
 
 mixed page_0(object id, object mc)
 {
   return
     ssl_errors(id) +
     "<p><font size='+1'>" + key_size_question + "</font></p>\n"
-    "<b>" + LOCALE(94, "Key size") + "</b><br />"
+    "<b>Key size</b><br />"
     "<var name='key_size' type='select' default='1024' "
     "choices='512,576,640,704,768,832,896,960,1024'/><br />\n"
     "<blockquote><p>"+generic_key_size_string+"</p></blockquote>"
@@ -41,8 +37,7 @@ mixed verify_0(object id, object mc)
   int key_size = (int) id->variables->key_size;
   if ( (key_size < 512) || (key_size > 1024) || (key_size % 64))
   {
-    id->variables->_error =
-      LOCALE(135, "Invalid key size.");
+    id->variables->_error = "Invalid key size.";
     return 1;
   }
   object file;
@@ -175,8 +170,7 @@ mixed page_3(object id, object mc)
   string cert = Tools.X509.make_selfsigned_dsa_certificate
     (dsa, 24 * 3600 * (int) id->variables->ttl, name);
 
-  string res=("<font size='+2'>"+LOCALE(133,"This is your Certificate.")+
-	      "</font>"
+  string res=("<font size='+2'>This is your Certificate.</font>"
 	      "<textarea name='certificate' cols='80' rows='12'>");
 
   res += Tools.PEM.simple_build_pem("CERTIFICATE", cert);
@@ -218,8 +212,7 @@ mixed verify_3(object id, object mc)
 
 mixed wizard_done(object id, object mc)
 {
-  return http_string_answer( sprintf("<p>"+LOCALE(131,"Wrote %d bytes to %s.")+
-				     "</p>\n<p><cf-ok/></p>\n",
+  return http_string_answer( sprintf("<p>Wrote %d bytes to %s.</p>\n<p><cf-ok/></p>\n",
 				     strlen(id->variables->certificate),
 				     combine_path(getcwd(),
 						  id->variables->cert_file)) );
