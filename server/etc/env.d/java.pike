@@ -22,7 +22,8 @@ static string findjre()
 			  return Array.map(Array.map(({"jre*","jdk*","java*"}),
 						     glob,
 						     reverse(sort(get_dir(s)||
-								  "")))*({}),
+								  ({""}))))*
+					   ({}),
 					   lambda(string sb) {
 					     return s+"/"+sb;
 					   });
