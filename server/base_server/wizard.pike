@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.111 2000/02/02 19:13:36 jonasw Exp $
+/* $Id: wizard.pike,v 1.112 2000/02/13 14:36:33 grubba Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -110,7 +110,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
   {
    default: // String or password field or hidden value....
     if((m->type != "password") && (m->type != "hidden"))
-      m->type = "string";
+      m->type = "text";
     m_delete(m,"default");
     m->value = loc_encode(current||m->value||"", m, "none");
     if(!m->size)m->size="60,1";
@@ -121,7 +121,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
     string n = m->name, res="<table cellpadding=\"0\" cellspacing=\"0\" border=\"0\">";
     if(!id->variables[n]) id->variables[n]=current;
 
-    m->type = "string";
+    m->type = "text";
     if(!m->size)m->size="60,1";
     m_delete(m,"default");
     foreach((current||"")/"\0"-({""}), string v)
