@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.72 2000/03/03 11:02:07 nilsson Exp $
+//! $Id: module.pmod,v 1.73 2000/03/04 19:08:32 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -1049,7 +1049,7 @@ class Backtrace
   string current_var;
   array backtrace;
 
-  void create (string _type, string _msg, void|Context _context)
+  void create (void|string _type, void|string _msg, void|Context _context)
   {
     type = _type;
     msg = _msg;
@@ -1064,7 +1064,7 @@ class Backtrace
   string describe_rxml_backtrace (void|int no_msg)
   //! Returns a formatted RXML frame backtrace.
   {
-    string txt = no_msg ? "" : "RXML " + type + " error";
+    string txt = no_msg ? "" : "RXML" + (type ? " " + type : "") + " error";
     if (context) {
       if (!no_msg) txt += ": " + (msg || "(no error message)\n");
       txt += current_var ? " | &" + current_var + ";\n" : "";
@@ -1104,7 +1104,7 @@ class Backtrace
     }
   }
 
-  string _sprintf() {return "RXML.Backtrace(" + type + ")";}
+  string _sprintf() {return "RXML.Backtrace(" + (type || "") + ")";}
 }
 
 
@@ -2212,7 +2212,7 @@ class Parser
     LEAVE_CONTEXT();
   }
 
-  array handle_var (string varref)
+  array handle_var (string varref, Type surrounding_type)
   // Parses and evaluates a possible variable reference, with the
   // appropriate error handling.
   {
@@ -2224,7 +2224,7 @@ class Parser
 	context->current_var = varref;
 	mixed val;
 	if (zero_type (val = context->get_var ( // May throw.
-			 split[1], split[0], encoding ? t_text : type))) {
+			 split[1], split[0], encoding ? t_text : surrounding_type))) {
 	  context->current_var = 0;
 	  return ({});
 	}
@@ -2235,7 +2235,7 @@ class Parser
 	context->handle_exception (err, this_object()); // May throw.
 	return ({});
       }
-    return type->free_text ? 0 : ({});
+    return surrounding_type->free_text ? 0 : ({});
   }
 
   //! Interface.
