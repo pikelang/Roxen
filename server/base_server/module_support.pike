@@ -1,4 +1,4 @@
-// string cvs_version = "$Id: module_support.pike,v 1.38 1999/11/24 02:07:41 per Exp $";
+// string cvs_version = "$Id: module_support.pike,v 1.39 1999/11/24 02:18:32 per Exp $";
 #include <roxen.h>
 #include <module.h>
 #include <stat.h>
@@ -277,16 +277,7 @@ program my_compile_file(string file)
 
 function|program load( string what )
 {
-#if constant( load_module )
-  if( search( what, ".so" ) == strlen(what)-3 )
-  {
-    object mod = load_module( what );
-    if( !mod->instance )
-      report_error("The module "+what+" does not have a 'instance' method\n");
-    return mod->instance;
-  } else
-#endif    
-    return my_compile_file( what );
+  return my_compile_file( what );
 }
 
 //
