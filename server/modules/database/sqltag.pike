@@ -1,7 +1,7 @@
 // This is a ChiliMoon module. Copyright © 1997-2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.108 2004/06/17 02:50:42 _cvs_stephen Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.109 2004/06/17 12:03:14 _cvs_stephen Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -140,6 +140,8 @@ array|object do_sql_query(mapping args, RequestID id,
     host=args->host, args->host="SECRET";
   else if(args->db)			  // NGSERVER: drop support for db= ?
     host=args->db, args->db="SECRET";
+  else
+    host=default_db;
 
   Sql.Sql con;
   array(mapping(string:mixed))|object result;
@@ -158,7 +160,7 @@ array|object do_sql_query(mapping args, RequestID id,
     }
   }
 
-  if( args->module )
+  if( args->module )	   // NGSERVER: drop support for module= ?
   {
     RoxenModule module=id->conf->find_module(replace(args->module,"!","#"));
     if( !module )
@@ -184,8 +186,7 @@ array|object do_sql_query(mapping args, RequestID id,
   }
   else
   {
-    error = catch(con = DBManager.get( host||default_db,
-				       my_configuration(), ro, id));
+    error = catch(con = DBManager.get(host, my_configuration(), ro, id));
     if( !con )
       RXML.run_error( "Couldn't connect to SQL server"+
 		      (error?": "+ describe_error (error) :"")+"\n" );
