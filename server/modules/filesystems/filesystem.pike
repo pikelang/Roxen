@@ -7,12 +7,20 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version = "$Id: filesystem.pike,v 1.117 2002/06/13 19:43:15 nilsson Exp $";
+constant cvs_version = "$Id: filesystem.pike,v 1.118 2002/06/13 22:33:05 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
 #include <stat.h>
 #include <request_trace.h>
+#include <roxen.h>
+
+//<locale-token project="mod_filesystem">LOCALE</locale-token>
+#define LOCALE(X,Y)     _STR_LOCALE("mod_filesystem",X,Y)
+// end of the locale related stuff
+// NGSERVER: Make an API where a module can send back an error token which is
+// then substituted with the apropriate message for the protocol and locale.
+// This would enable us to theme other error pages than the now special case 404.
 
 #ifdef FILESYSTEM_DEBUG
 # define FILESYSTEM_WERR(X) werror("Filesystem: "+X+"\n")
@@ -389,12 +397,13 @@ void done_with_put( array(object|string) id_arr )
 
   if (putting[from] && (putting[from] != 0x7fffffff)) {
     // Truncated!
-    id->send_result(http_low_answer(400,
-				    "<h2>Bad Request - "
-				    "Expected more data.</h2>"));
-  } else {
-    id->send_result(http_low_answer(200, "<h2>Transfer Complete.</h2>"));
-  }
+    id->send_result(http_low_answer
+		    (400,
+		     "<h2>" + LOCALE(63, "Bad Request - Expected more data.") +
+		     "</h2>"));
+  } else
+    id->send_result(http_low_answer
+		    (200, "<h2>" + LOCALE(64, "Transfer Complete.") + "</h2>"));
 }
 
 void got_put_data( array (object|string) id_arr, string data )
@@ -416,8 +425,9 @@ void got_put_data( array (object|string) id_arr, string data )
     to->close();
     from->set_blocking();
     m_delete(putting, from);
-    id->send_result(http_low_answer(413, "<h2>Out of disk quota.</h2>",
-				    "413 Out of disk quota"));
+    id->send_result(http_low_answer
+		    (413, "<h2>" + LOCALE(65, "Out of disk quota.") + "</h2>",
+		     "413 " + LOCALE(65, "Out of disk quota.") ));
     return;
   }
 
@@ -427,7 +437,7 @@ void got_put_data( array (object|string) id_arr, string data )
     to->close();
     from->set_blocking();
     m_delete(putting, from);
-    id->send_result(http_low_answer(413, "<h2>Disk full.</h2>"));
+    id->send_result(http_low_answer(413, "<h2>" + LOCALE(66, "Disk full.") + "</h2>"));
     return;
   } else {
     if (id->misc->quota_obj &&
@@ -435,8 +445,9 @@ void got_put_data( array (object|string) id_arr, string data )
       to->close();
       from->set_blocking();
       m_delete(putting, from);
-      id->send_result(http_low_answer(413, "<h2>Out of disk quota.</h2>",
-				      "413 Out of disk quota"));
+      id->send_result(http_low_answer
+		      (413, "<h2>" + LOCALE(65, "Out of disk quota.") + "</h2>",
+		       "413 " + LOCALE(65, "Out of disk quota.") ));
       return;
     }
     if (putting[from] != 0x7fffffff) {
@@ -540,8 +551,8 @@ mixed find_file( string f, RequestID id )
 		   oldf, normalized_path, norm_f);
       TRACE_LEAVE("");
       TRACE_LEAVE("Permission denied.");
-      return http_low_answer(403, "<h2>File exists, but access forbidden "
-			     "by user</h2>");
+      return http_low_answer
+	(403, "<h2>" + LOCALE(67, "File exists, but access forbidden by user.") + "</h2>");
     }
 
     /* Adjust not_query */
@@ -618,8 +629,9 @@ mixed find_file( string f, RequestID id )
 
 	TRACE_LEAVE("");
 	TRACE_LEAVE("Permission denied.");
-	return http_low_answer(403, "<h2>File exists, but access forbidden "
-			       "by user</h2>");
+	return http_low_answer
+	  (403, "<h2>" + LOCALE(67, "File exists, but access forbidden by user.") +
+	   "</h2>");
       }
 
       id->realfile = norm_f;
@@ -657,8 +669,8 @@ mixed find_file( string f, RequestID id )
 
     if(query("check_auth") && (!id->conf->authenticate( id ) ) ) {
       TRACE_LEAVE("MKDIR: Permission denied");
-      return Roxen.http_auth_required("foo",
-				"<h1>Permission to 'MKDIR' denied</h1>");
+      return Roxen.http_auth_required
+	("foo", "<h1>" + LOCALE(68, "Permission to 'MKDIR' denied.") + "</h1>");
     }
     mkdirs++;
     object privs;
@@ -670,7 +682,7 @@ mixed find_file( string f, RequestID id )
       report_error("Creation of %s failed. Permission denied.\n",
 		   oldf);
       TRACE_LEAVE("MKDIR: Contains symlinks. Permission denied");
-      return http_low_answer(403, "<h2>Permission denied.</h2>");
+      return http_low_answer(403, "<h2>" + LOCALE(69, "Permission denied.") + "</h2>");
     }
 
     int code = mkdir(f);
@@ -682,7 +694,7 @@ mixed find_file( string f, RequestID id )
       chmod(f, 0777 & ~(id->misc->umask || 022));
       TRACE_LEAVE("MKDIR: Success");
       TRACE_LEAVE("Success");
-      return Roxen.http_string_answer("Ok");
+      return Roxen.http_string_answer(LOCALE(70, "Ok"));
     } else {
       TRACE_LEAVE("MKDIR: Failed");
       TRACE_LEAVE("Failure");
@@ -707,8 +719,8 @@ mixed find_file( string f, RequestID id )
 
     if(query("check_auth") &&  (!id->conf->authenticate( id ) ) ) {
       TRACE_LEAVE("PUT: Permission denied");
-      return Roxen.http_auth_required("foo",
-				"<h1>Permission to 'PUT' files denied</h1>");
+      return Roxen.http_auth_required
+	("foo", "<h1>" + LOCALE(71, "Permission to 'PUT' files denied.") + "</h1>");
     }
 
     puts++;
@@ -719,8 +731,8 @@ mixed find_file( string f, RequestID id )
       errors++;
       report_warning("Creation of %s failed. Out of quota.\n",f);
       TRACE_LEAVE("PUT: Out of quota.");
-      return http_low_answer(413, "<h2>Out of disk quota.</h2>",
-			     "413 Out of disk quota");
+      return http_low_answer(413, "<h2>" + LOCALE(65, "Out of disk quota.") + "</h2>",
+			     "413 " + LOCALE(65, "Out of disk quota.") );
     }
 
 
@@ -731,7 +743,7 @@ mixed find_file( string f, RequestID id )
       errors++;
       report_error("Creation of %s failed. Permission denied.\n",f);
       TRACE_LEAVE("PUT: Contains symlinks. Permission denied");
-      return http_low_answer(403, "<h2>Permission denied.</h2>");
+      return http_low_answer(403, "<h2>" + LOCALE(69, "Permission denied.") + "</h2>");
     }
 
     rm(f);
@@ -779,15 +791,15 @@ mixed find_file( string f, RequestID id )
 	if (!id->misc->quota_obj->allocate(f, bytes)) {
 	  TRACE_LEAVE("PUT: A string");
 	  TRACE_LEAVE("PUT: Out of quota");
-	  return http_low_answer(413, "<h2>Out of disk quota.</h2>",
-				 "413 Out of disk quota");
+	  return http_low_answer(413, "<h2>" + LOCALE(65, "Out of disk quota.") + "</h2>",
+				 "413 " + LOCALE(65, "Out of disk quota.") );
 	}
       }
     }
     if(!putting[id->my_fd]) {
       TRACE_LEAVE("PUT: Just a string");
       TRACE_LEAVE("Put: Success");
-      return Roxen.http_string_answer("Ok");
+      return Roxen.http_string_answer(LOCALE(70, "Ok"));
     }
 
     if(id->clientprot == "HTTP/1.1") {
@@ -819,8 +831,8 @@ mixed find_file( string f, RequestID id )
 
     if(query("check_auth") &&  (!id->conf->authenticate( id ) ) )  {
       TRACE_LEAVE("CHMOD: Permission denied");
-      return Roxen.http_auth_required("foo",
-				"<h1>Permission to 'CHMOD' files denied</h1>");
+      return Roxen.http_auth_required("foo", "<h1>" + LOCALE(73, "Permission to 'CHMOD' files denied.") +
+				      "</h1>");
     }
 
 
@@ -830,7 +842,7 @@ mixed find_file( string f, RequestID id )
       privs = 0;
       errors++;
       TRACE_LEAVE("CHMOD: Contains symlinks. Permission denied");
-      return http_low_answer(403, "<h2>Permission denied.</h2>");
+      return http_low_answer(403, "<h2>" + LOCALE(69, "Permission denied.") + "</h2>");
     }
 
     array err = catch(chmod(f, id->misc->mode & 0777));
@@ -853,7 +865,7 @@ mixed find_file( string f, RequestID id )
     }
     TRACE_LEAVE("CHMOD: Success");
     TRACE_LEAVE("Success");
-    return Roxen.http_string_answer("Ok");
+    return Roxen.http_string_answer(LOCALE(70, "Ok"));
 
    case "MV":
     // This little kluge is used by ftp2 to move files.
@@ -882,8 +894,8 @@ mixed find_file( string f, RequestID id )
 
     if(query("check_auth") && (!id->conf->authenticate( id ) ) )  {
       TRACE_LEAVE("MV: Permission denied");
-      return Roxen.http_auth_required("foo",
-				"<h1>Permission to 'MV' files denied</h1>");
+      return Roxen.http_auth_required("foo", "<h1>" + LOCALE(74, "Permission to 'MV' files denied.") +
+				      "</h1>");
     }
     string movefrom;
     if(!id->misc->move_from ||
@@ -909,7 +921,7 @@ mixed find_file( string f, RequestID id )
       privs = 0;
       errors++;
       TRACE_LEAVE("MV: Contains symlinks. Permission denied");
-      return http_low_answer(403, "<h2>Permission denied.</h2>");
+      return http_low_answer(403, "<h2>" + LOCALE(69, "Permission denied.") + "</h2>");
     }
 
     code = mv(movefrom, f);
@@ -934,7 +946,7 @@ mixed find_file( string f, RequestID id )
     }
     TRACE_LEAVE("MV: Success");
     TRACE_LEAVE("Success");
-    return Roxen.http_string_answer("Ok");
+    return Roxen.http_string_answer(LOCALE(70, "Ok"));
 
   case "MOVE":
     // This little kluge is used by NETSCAPE 4.5
@@ -956,8 +968,8 @@ mixed find_file( string f, RequestID id )
 
     if(query("check_auth") && (!id->conf->authenticate( id ) ) )  {
       TRACE_LEAVE("MOVE: Permission denied");
-      return Roxen.http_auth_required("foo",
-                                "<h1>Permission to 'MOVE' files denied</h1>");
+      return Roxen.http_auth_required("foo", "<h1>" + LOCALE(75, "Permission to 'MOVE' files denied.") +
+				      "</h1>");
     }
 
     if(!sizeof(id->misc["new-uri"] || "")) {
@@ -1008,7 +1020,7 @@ mixed find_file( string f, RequestID id )
       privs = 0;
       errors++;
       TRACE_LEAVE("MOVE: Contains symlinks. Permission denied");
-      return http_low_answer(403, "<h2>Permission denied.</h2>");
+      return http_low_answer(403, "<h2>" + LOCALE(69, "Permission denied.") + "</h2>");
     }
 
     code = mv(f, decode_path(moveto));
@@ -1033,7 +1045,7 @@ mixed find_file( string f, RequestID id )
     }
     TRACE_LEAVE("MOVE: Success");
     TRACE_LEAVE("Success");
-    return Roxen.http_string_answer("Ok");
+    return Roxen.http_string_answer(LOCALE(70, "Ok"));
 
 
   case "DELETE":
@@ -1052,14 +1064,14 @@ mixed find_file( string f, RequestID id )
 
     if(query("check_auth") && (!id->conf->authenticate( id ) ) )  {
       TRACE_LEAVE("DELETE: Permission denied");
-      return http_low_answer(403, "<h1>Permission to DELETE file denied</h1>");
+      return http_low_answer(403, "<h1>" + LOCALE(76, "Permission to DELETE file denied.") + "</h1>");
     }
 
     if (query("no_symlinks") && (contains_symlinks(path, oldf))) {
       errors++;
       report_error("Deletion of %s failed. Permission denied.\n",f);
       TRACE_LEAVE("DELETE: Contains symlinks");
-      return http_low_answer(403, "<h2>Permission denied.</h2>");
+      return http_low_answer(403, "<h2>" + LOCALE(69, "Permission denied.") + "</h2>");
     }
 
     report_notice("DELETING the file %s.\n",f);
@@ -1087,7 +1099,7 @@ mixed find_file( string f, RequestID id )
     }
 
     TRACE_LEAVE("DELETE: Success");
-    return http_low_answer(200,(f+" DELETED from the server"));
+    return http_low_answer(200, sprintf( LOCALE("%s DELETED from the server."), f));
 
   default:
     TRACE_LEAVE("Not supported");
