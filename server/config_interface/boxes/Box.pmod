@@ -111,12 +111,18 @@ class Fetcher
     RoxenModule px;
     if( px = id->conf->find_module("update#0") )
     {
-      if( strlen( px->query( "proxyserver" ) ) )
-      {
-	sscanf( q, "GET %s", q );
-	q = "GET http://"+h+":"+p+q;
-	h = px->query( "proxyserver" );
-	p = px->query( "proxyport" );
+      mixed err = catch {
+	  if( strlen( px->query( "proxyserver" ) ) )
+	  {
+	    sscanf( q, "GET %s", q );
+	    q = "GET http://"+h+":"+p+q;
+	    h = px->query( "proxyserver" );
+	    p = px->query( "proxyport" );
+	  }
+	};
+      if (err) {
+	report_error("Failed to determine proxy server:\n"
+		     "%s\n", describe_error(err));
       }
     }
     start();
