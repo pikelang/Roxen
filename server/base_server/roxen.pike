@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.74 1997/06/12 02:41:41 per Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.75 1997/06/12 20:46:27 grubba Exp $";
 #define IN_ROXEN
 #ifdef THREADS
 #include <fifo.h>
@@ -323,8 +323,8 @@ object create_listen_socket(mixed port_no, object conf,
 #ifdef SOCKET_DEBUG
 	perror("SOCKETS:    -> Failed.\n");
 #endif
-	report_error("Failed to open socket on "+port_no+":"+ether
-		     +" (already bound?)\nErrno is: "+ port->errno()+"\n");
+	report_error("Failed to open socket on "+ether+":"+port_no+
+		     " (already bound?)\nErrno is: "+ port->errno()+"\n");
 	return 0;
       } else if(ether) {
 	report_error("Failed to bind to specific IP address " + ether +
@@ -953,9 +953,11 @@ private program __p;
 private mapping my_loaded = ([]);
 program last_loaded() { return __p; }
 
+string last_module_name;
+
 string filename(object o)
 {
-  return my_loaded[object_program(o)];
+  return my_loaded[object_program(o)]||last_module_name;
 }
 
 object load(string s)   // Should perhaps be renamed to 'reload'. 
@@ -1768,7 +1770,13 @@ void scan_module_dir(string d)
 	      throw("Compilation failed.\n");
 	    }
 
+	    // Set the module-filename, so that create in the
+	    // new object can get it.
+	    roxen->last_module_name = file;
+
 	    array err = catch(o =  p());
+
+	    roxen->last_module_name = 0;
 
 	    if (err) {
 	      MD_PERROR((" load failed"));
