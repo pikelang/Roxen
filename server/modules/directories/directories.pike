@@ -10,7 +10,7 @@
 //  o More stuff in the emit variables
 //
 
-constant cvs_version = "$Id: directories.pike,v 1.62 2000/05/16 05:06:13 per Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.63 2000/05/16 05:21:36 per Exp $";
 constant thread_safe = 1;
 
 #include <stat.h>
@@ -92,51 +92,7 @@ void create()
 
 void start(int n, Configuration c)
 {
-  readme = query("Readme")-({""});
   indexfiles = query("indexfiles")-({""});
-
-set("template", 
-#"
-<html>
-  <head><title>Listing of $DIR$</title></head>
-  <body bgcolor='white' text='black' link='#ae3c00' vlink='#ae3c00'>
-     <roxen align='right' size='small' />
-    <h1>Directory listing of $DIR$</h1>
-    <table width='100%' cellspacing='0' cellpadding='2' border='0'>
-      <tr>
-        <td width='100%' height='1' colspan='5' bgcolor='#ce5c00'><img 
-          src='/internal-roxen-unit' width='100%' height='1' /></td>
-      </tr>
-      <tr bgcolor='#eeeeee'>
-        <th align=left>&nbsp;</th>
-        <th align=left><a href='?sort=name'>Filename</a></th>
-        <th align=right><a href='?sort=size'>Size</a></th>
-        <th align=right><a href='?sort=type'>Type</a></th>
-        <th align=right><a href='?sort=modified'>Last modified</a></th>
-      </tr>
-      <tr>
-        <td width='100%' height='1' colspan='5' bgcolor='#ce5c00'><img 
-          src='/internal-roxen-unit' width='100%' height='1' /></td>
-      </tr>
-      <emit source='directory' directory='$DIR$' sort-order='&form.sort;'>
-        <tr>
-          <td align=left><a href='&_.path;'><img src='&_.icon;' border='0' /></a></td>
-          <td align=left><a href='&_.path;'>&_.name;</a></td>
-          <td align=right>&_.size;</td>
-          <td align=right>&_.type;</td>
-          <td align=right>&_.mtime;</td>
-        </tr>
-      </emit>
-      <tr>
-        <td width='100%' height='4' colspan='5' bgcolor='#ce5c00'><img 
-          src='/internal-roxen-unit' width='100%' height='1' /></td>
-      </tr>
-    </table>
-
-  </body>
-</html>
-");
-
 }
 
 
@@ -163,8 +119,8 @@ local static array(mapping) get_directory_dataset( mapping args, RequestID id )
       "path":combine_path( d, file ),
       "atime-unix":st[ ST_ATIME ],
       "mtime-unix":st[ ST_MTIME ],
-      "iso-mtime":Roxen.strftime( "%Y-%m-%d", st[ST_MTIME] ),
-      "iso-atime":Roxen.strftime( "%Y-%m-%d", st[ST_ATIME] ),
+      "mtime-iso":Roxen.strftime( "%Y-%m-%d", st[ST_MTIME] ),
+      "atime-iso":Roxen.strftime( "%Y-%m-%d", st[ST_ATIME] ),
       "mode-int":st[ ST_MODE ],
       "size-int":st[ ST_SIZE ],
       "mode":(Roxen.decode_mode( st[ ST_MODE ] )/"<tt>")[-1]-"</tt>",
@@ -175,8 +131,8 @@ local static array(mapping) get_directory_dataset( mapping args, RequestID id )
       m["mtime"] = Roxen.strftime( args->timeformat, st[ ST_MTIME ] );
       m["atime"] = Roxen.strftime( args->timeformat, st[ ST_ATIME ] );
     }  else {
-      m->mtime = m["iso-mtime"];
-      m->atime = m["iso-atime"];
+      m->mtime = m["mtime-iso"];
+      m->atime = m["atime-iso"];
     }
 
     if( st[ ST_SIZE ] < 0 )
@@ -186,9 +142,8 @@ local static array(mapping) get_directory_dataset( mapping args, RequestID id )
       m["size"] = "";
       m->icon = "internal-gopher-menu";
     } else {
-      m->size = "0";
       m->type = id->conf->type_from_filename( file );
-      m["size"] = Roxen.sizetostring( st[ ST_SIZE ] );
+      m->size = Roxen.sizetostring( st[ ST_SIZE ] );
       m->icon = Roxen.image_from_type( m->type );
     }
 
