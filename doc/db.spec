@@ -1,15 +1,17 @@
-# $Id: db.spec,v 1.10 1998/07/23 18:52:19 wellhard Exp $
+# $Id: db.spec,v 1.11 1998/07/26 21:34:33 wellhard Exp $
 
 drop table customers;
 drop table dns;
 drop table messages;
 drop table mailboxes;
 drop table users;
-drop table templates;
-drop table template_vars;
 drop table customers_preferences;
 drop table template_wizards;
-drop table color_schemes;
+drop table template_vars;
+drop table template_vars_opts;
+drop table template_schemes;
+drop table template_schemes_vars;
+
 
 
 create table customers (
@@ -63,23 +65,6 @@ create table customers_preferences (
              value                   blob
      );
 
-create table templates (
-             id		             int auto_increment primary key,
-             name		     varchar(255),
-             filename		     varchar(255),
-	     category		     varchar(8)  # tmpl/nav
-     );
-    
-create table template_vars (
-	     id                      int auto_increment primary key,
-             name                    varchar(64),
-             title		     varchar(255),
-	     wizard_id               int,
-             help		     blob,
-	     type		     varchar(8), # font/color/image/int
-	     category		     varchar(8)  # tmpl/nav
-     );
-
 create table template_wizards (
              id                      int auto_increment primary key,
              name                    varchar(64),
@@ -88,8 +73,32 @@ create table template_wizards (
 	     category		     varchar(8)  # tmpl/nav
      );
 
-create table color_schemes (
-	     colorscheme_id	     int,
-	     name		     varchar(64),
-	     value		     varchar(255)
+create table template_vars (
+	     id                      int auto_increment primary key,
+             name                    varchar(64),
+             title		     varchar(255),
+	     wizard_id               int,
+             help		     blob,
+	     type		     varchar(8) # font/color/image/int
      );
+
+create table template_vars_opts (
+             id		             int auto_increment primary key,
+	     variable_id	     int,
+             name		     varchar(255),
+             value		     blob
+     );
+    
+create table template_schemes (
+             id                      int auto_increment primary key,
+	     name                    varchar(64),
+	     title		     varchar(255)     
+     );
+
+create table template_schemes_vars (
+             id                      int auto_increment primary key,
+             scheme_id               int,
+	     variable_id	     int,
+	     value		     blob
+     );
+
