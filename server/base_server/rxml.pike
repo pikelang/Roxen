@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.136 2000/02/17 18:09:54 nilsson Exp $
+ * $Id: rxml.pike,v 1.137 2000/02/18 19:53:58 nilsson Exp $
  *
  * The Roxen RXML Parser. See also the RXML Pike module.
  *
@@ -455,12 +455,16 @@ string do_parse(string to_parse, RequestID id,
     // Got to temporarily set the default context to get the compat
     // setting into the master parser object used for cloning.
     // RXML.TagSet.`() is essentially duplicated here. Ghurckkl!
-    rxml_tag_set->call_prepare_funs (ctx = RXML.Context (rxml_tag_set, id));
-    RXML.Context orig_ctx = RXML.get_context();
-    RXML.set_context (ctx);
-    parser = ctx->new_parser (default_content_type);
-    RXML.set_context (orig_ctx);
-    ctx->compatible_scope=1;
+    if(parse_html_compat) {
+      rxml_tag_set->call_prepare_funs (ctx = RXML.Context (rxml_tag_set, id));
+      RXML.Context orig_ctx = RXML.get_context();
+      RXML.set_context (ctx);
+      parser = ctx->new_parser (default_content_type);
+      RXML.set_context (orig_ctx);
+      ctx->compatible_scope=1;
+    }
+    else
+      parser = rxml_tag_set (default_content_type, id);
 #else
     parser = rxml_tag_set (default_content_type, id);
 #endif
@@ -766,7 +770,7 @@ class TagUse {
 
       array res;
       if(!id->misc->_ifs) id->misc->_ifs=([]);
-      string name=args->file||("pkg!"+args->package);
+      string name=args->file||("pkg<"+args->package);
       RXML.Context ctx=RXML.get_context();
 
       if(args->info || id->pragma["no-cache"] ||
@@ -834,13 +838,15 @@ class UserTag {
 	content=String.trim_all_whites(content);
 
 #ifdef OLD_RXML_COMPAT
-      array replace_from = map(indices(nargs),make_entity)+({"#args#", "<contents>"});
-      array replace_to = values(nargs)+({ make_tag_attributes(nargs), content||"" });
-      string c2;
-      c2 = replace(c, replace_from, replace_to);
-      if(c2!=c) {
-	vars=([]);
-	return ({ c2 });
+      if(parse_html_compat) {
+	array replace_from = map(indices(nargs),make_entity)+({"#args#", "<contents>"});
+	array replace_to = values(nargs)+({ make_tag_attributes(nargs), content||"" });
+	string c2;
+	c2 = replace(c, replace_from, replace_to);
+	if(c2!=c) {
+	  vars=([]);
+	  return ({ c2 });
+	}
       }
 #endif
 
@@ -881,14 +887,15 @@ class TagDefine {
 	mapping defaults=([]);
 
 #ifdef OLD_RXML_COMPAT
-	// This is not part of RXML 1.4
-	foreach( indices(args), string arg )
-	  if( arg[..7] == "default_" )
-	    {
-	      defaults[arg[8..]] = args[arg];
-	      old_rxml_warning(id, "define attribute "+arg,"attrib container");
-	      m_delete( args, arg );
-	    }
+	// This is not part of RXML 2.0
+	if(parse_html_compat)
+	  foreach( indices(args), string arg )
+	    if( arg[..7] == "default_" )
+	      {
+		defaults[arg[8..]] = args[arg];
+		old_rxml_warning(id, "define attribute "+arg,"attrib container");
+		m_delete( args, arg );
+	      }
 #endif
 	content=parse_html(content||"",([]),(["attrib":
 				  lambda(string tag, mapping m, string cont) {
@@ -900,7 +907,7 @@ class TagDefine {
 	if(args->trimwhites) content=String.trim_all_whites(content);
 
 #ifdef OLD_RXML_COMPAT
-	content = replace( content, indices(args), values(args) );
+	if(parse_html_compat) content = replace( content, indices(args), values(args) );
 #endif
 
 	RXML.get_context()->add_runtime_tag(UserTag(n, content, defaults, !container));
@@ -1033,27 +1040,47 @@ class Tracer
   }
 }
 
-array(string) tag_trace(string t, mapping args, string c , RequestID id)
-{
-  NOCACHE();
-  Tracer t;
-//   if(args->summary)
-//     t = SumTracer();
-//   else
-    t = Tracer();
-  function a = id->misc->trace_enter;
-  function b = id->misc->trace_leave;
-  id->misc->trace_enter = t->trace_enter_ol;
-  id->misc->trace_leave = t->trace_leave_ol;
-  t->trace_enter_ol( "tag &lt;trace&gt;", tag_trace);
-  string r = parse_rxml(c, id);
-  id->misc->trace_enter = a;
-  id->misc->trace_leave = b;
-  return ({r + "<h1>Trace report</h1>"+t->res()+"</ol>"});
+function trace;
+
+class TagTrace {
+  inherit RXML.Tag;
+  constant name = "trace";
+
+  class Frame {
+    inherit RXML.Frame;
+    function a,b;
+    Tracer t;
+
+    array do_enter(RequestID id) {
+      NOCACHE();
+      //   if(args->summary)
+      //     t = SumTracer();
+      //   else
+      t = Tracer();
+      a = id->misc->trace_enter;
+      b = id->misc->trace_leave;
+      id->misc->trace_enter = t->trace_enter_ol;
+      id->misc->trace_leave = t->trace_leave_ol;
+      t->trace_enter_ol( "tag &lt;trace&gt;", trace);
+      return 0;
+    }
+
+    array do_return(RequestID id) {
+      id->misc->trace_enter = a;
+      id->misc->trace_leave = b;
+      content += "\n<h1>Trace report</h1>"+t->res()+"</ol>";
+      return 0;
+    }
+  }
 }
 
-array tag_noparse(string t, mapping m, string c) {
-  return ({ c });
+class TagNoParse {
+  inherit RXML.Tag;
+  constant name = "noparse";
+  RXML.Type content_type = RXML.t_same;
+  class Frame {
+    inherit RXML.Frame;
+  }
 }
 
 class TagEval {
@@ -1099,30 +1126,36 @@ class TagStrLen {
   }
 }
 
-string tag_case(string t, mapping m, string c, RequestID id)
-{
-  if(m["case"])
-    switch(lower_case(m["case"])) {
-    case "lower": return lower_case(c);
-    case "upper": return upper_case(c);
-    case "capitalize": return capitalize(c);
-    }
+class TagCase {
+  inherit RXML.Tag;
+  constant name = "case";
+  class Frame {
+    inherit RXML.Frame;
+    array do_return(RequestID id) {
+      if(args->case)
+	switch(lower_case(args->case)) {
+	case "lower": return ({ lower_case(content) });
+	case "upper": return ({ upper_case(content) });
+	case "capitalize": return ({ capitalize(content) });
+	}
 
 #ifdef OLD_RXML_COMPAT
-  if(m->lower) {
-    c = lower_case(c);
-    old_rxml_warning(id, "attribute lower","case=lower");
-  }
-  if(m->upper) {
-    c = upper_case(c);
-    old_rxml_warning(id, "attribute upper","case=upper");
-  }
-  if(m->capitalize){
-    c = capitalize(c);
-    old_rxml_warning(id, "attribute capitalize","case=capitalize");
-  }
+      if(args->lower) {
+	content = lower_case(content);
+	old_rxml_warning(id, "attribute lower","case=lower");
+      }
+      if(args->upper) {
+	content = upper_case(content);
+	old_rxml_warning(id, "attribute upper","case=upper");
+      }
+      if(args->capitalize){
+	content = capitalize(content);
+	old_rxml_warning(id, "attribute capitalize","case=capitalize");
+      }
 #endif
-  return c;
+      return ({ content });
+    }
+  }
 }
 
 #define LAST_IF_TRUE id->misc->defines[" _ok"]
@@ -1212,22 +1245,46 @@ class TagThen {
   }
 }
 
-string|array tag_elseif( string t, mapping m, string c, RequestID id )
-{
-  if(!LAST_IF_TRUE) return ({1, "if", m, c});
-  return "";
+class TagElseif {
+  inherit RXML.Tag;
+  constant name = "elseif";
+
+  class Frame {
+    inherit FrameIf;
+    array do_enter(RequestID id) {
+      if(LAST_IF_TRUE) return 0;
+      return ::do_enter(id);
+    }
+
+    mapping(string:RXML.Tag) get_plugins() {
+      return RXML.get_context()->tag_set->get_plugins ("if");
+    }
+  }
 }
 
-string tag_true( string t, mapping m, RequestID id )
-{
-  LAST_IF_TRUE = 1;
-  return "";
+class TagTrue {
+  inherit RXML.Tag;
+  constant name = "true";
+  constant flags = RXML.FLAG_NONCONTAINER;
+
+  class Frame {
+    inherit RXML.Frame;
+    array do_enter(RequestID id) {
+      LAST_IF_TRUE = 1;
+    }
+  }
 }
 
-string tag_false( string t, mapping m, RequestID id )
-{
-  LAST_IF_TRUE = 0;
-  return "";
+class TagFalse {
+  inherit RXML.Tag;
+  constant name = "false";
+  constant flags = RXML.FLAG_NONCONTAINER;
+  class Frame {
+    inherit RXML.Frame;
+    array do_enter(RequestID id) {
+      LAST_IF_TRUE = 0;
+    }
+  }
 }
 
 class TagCond
@@ -1365,29 +1422,27 @@ class TagEmit {
       vars->counter=counter;
       return 1;
     }
-
-
   }
 }
 
-mapping query_container_callers()
-{
-  return ([
-    "comment":lambda(){ return ""; },
-    "noparse":tag_noparse,
-    "elseif":tag_elseif,
-    "elif":tag_elseif,
-    "case":tag_case,
-    "trace":tag_trace,
-  ]);
-}
-
-mapping query_tag_callers()
-{
-  return ([
-    "true":tag_true,
-    "false":tag_false,
-  ]);
+class TagComment {
+  inherit RXML.Tag;
+  constant name = "comment";
+  class Frame {
+    inherit RXML.Frame;
+    int do_iterate=-1;
+    array do_enter() {
+      if(args->preparse) {
+	do_iterate=1;
+	return 0;
+      }
+      else
+	return ({ "" });
+    }
+    array do_return() {
+      return ({ "" });
+    }
+  }
 }
 
 RXML.TagSet query_tag_set()
@@ -1905,12 +1960,6 @@ constant tagdoc=([
  attrib=name, and sets the default value of the attribute indicated
  with attrib=name to the contents of the attrib container. The
  attribute values can be accessed with enteties such as &amp;name;</p>",
-
-"elif":#"<desc cont>
- Shows its content if the truth-value is false and the criterions in
- its attributes are met. Uses the same syntax as <tag><ref
- type=cont>if</ref><tag>. Sets the truth-value in the same way as if.
-</desc>",
 
 "else":#"<desc cont>
  Show the contents if the previous <tag><ref type=tag>if</ref></tag>
