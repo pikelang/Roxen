@@ -877,7 +877,7 @@ class ReplaceAlpha
 //! Replace the alpha channel of the specified layer(s) (specified
 //! with 'layers' or 'layers-id', defaults to all layers) with either
 //! the alpha channel of a layer, or a group of layers (specified with
-//! 'from' or 'from-id'), or the color specified in 'clear'.
+//! 'from' or 'from-id'), or the color specified in 'color'.
 {
   inherit LazyImage;
   constant operation_name = "replace-alpha";
