@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.743 2001/09/27 13:03:52 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.744 2001/09/27 14:11:11 grubba Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -4538,7 +4538,6 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 
   string kmd5 = md5( pattern );
 
-#if 1
   array tmp =
     dbm_cached_get( "local" )
     ->query("SELECT full,enc FROM compiled_formats WHERE md5=%s", kmd5 );
@@ -4546,14 +4545,13 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
   if( sizeof(tmp) && (tmp[0]->full == pattern) )
   {
     mixed err = catch {
-      return decode_value( tmp[0]->enc, master()->MyCodec() )()->log;
+      return decode_value( tmp[0]->enc, master()->MyCodec() )()->f;
     };
 // #ifdef DEBUG
     report_error("Decoding of dumped log format failed:\n%s",
 		 describe_backtrace(err));
 // #endif
   }
-#endif /* 0 */  
 
 
 
