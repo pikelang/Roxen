@@ -1,5 +1,5 @@
 inherit "module";
-constant cvs_version="$Id: icecast.pike,v 1.5 2001/04/11 08:45:49 per Exp $";
+constant cvs_version="$Id: icecast.pike,v 1.6 2001/04/11 14:05:46 per Exp $";
 constant thread_safe=1;
 
 #define BSIZE 8192
@@ -33,21 +33,19 @@ class Playlist
 class MPEGStream( Playlist playlist )
 {  
   array(function) callbacks = ({});
-  int bitrate;
-
-  int stream_position; // 1000:th of a second.
-  int stream_start = time()*1000+(int)(time(time())*1000);
+  int bitrate; // bits/second
+  int stream_start=realtime(), stream_position; // µSeconds
   Stdio.File fd;
 
   string status()
   {
     return ""+playlist->status()+"<br />"+
-      sprintf( "Uptime: %.1fs   Bitrate: %dKbit/sec",
-	       stream_position/1000.0,
+      sprintf( "Stream position: %.1fs   Bitrate: %dKbit/sec",
+	       stream_position/1000000.0,
 	       bitrate/1000 );
   }
   
-  
+
   void add_callback( function callback )
   {
     callbacks += ({ callback });
@@ -67,10 +65,23 @@ class MPEGStream( Playlist playlist )
 	remove_callback( f );
       }
   }
+  
+  static int last_hrtime, base_time;
 
   int realtime()
   {
-    return (time()*1000+(int)(time(time())*1000)) - stream_start;
+    if(!last_hrtime)
+    {
+      last_hrtime = gethrtime();
+      base_time = 0;
+    }
+    else
+    {
+      int nt = gethrtime();
+      base_time += nt-last_hrtime;
+      last_hrtime = nt;
+    }
+    return base_time;
   }
 
   void destroy()
@@ -82,7 +93,7 @@ class MPEGStream( Playlist playlist )
   void feeder_thread( )
   {
     while( sizeof(callbacks) &&
-	   realtime() > stream_position )
+	   ((realtime()-stream_start) > stream_position) )
     {
       string frame = get_frame();
       while( !frame )
@@ -94,15 +105,15 @@ class MPEGStream( Playlist playlist )
 	bpos = 0;
 	frame = get_frame();
       }
-      // Actually, this is supposed to be quite constant.
-      stream_position += strlen(frame)*8000 / bitrate;
-      werror( "%d\n", strlen(frame)*8000 / bitrate );
+      // Actually, this is supposed to be quite constant, but not all
+      // frames are the same size.
+      stream_position += strlen(frame)*8000000 / bitrate;
       call_callbacks( frame );
     }
     if(!sizeof(callbacks))
     {
       stream_position = 0;
-      stream_start = (time()*1000+(int)(time(time())*1000));
+      stream_start = realtime();
     }
     call_out( feeder_thread, 0.02 );
   }
@@ -260,7 +271,9 @@ class MPEGStream( Playlist playlist )
 class Location( string location,
 		string initial,
 		MPEGStream stream,
-		int max_connections )
+		int max_connections,
+		string url,
+		string name )
 		
 {
   int accessed, denied;
@@ -309,10 +322,9 @@ class Location( string location,
       i = ("HTTP/1.0 200 OK\r\n"
 	   "Server: "+roxen.version()+"\r\n"
 	   "Content-type: audio/mpeg\r\n"
-	   "x-audiocast-name:"+(meta->name||meta->path)+"\r\n"
 	   "x-audiocast-gengre:"+(meta->gengre||"unknown")+"\r\n"
-	   "x-audiocast-url:"+("http://"+id->misc->host+
-			       query_location()+location)+"\r\n"+
+	   +((meta->url||url)?"x-audiocast-url:"+(meta->url||url)+"\r\n":"")+
+	   "x-audiocast-name:"+(meta->name||name||meta->path)+"\r\n"
 	   "x-audiocast-streamid:1\r\n"+metahd+
 	   "x-audiocast-public:1\r\n"
 	   "x-audiocast-bitrate:"+(stream->bitrate/1000)+"\r\n"
@@ -326,10 +338,9 @@ class Location( string location,
 	   "Content-type: audio/mpeg\r\n"
 	   "icy-notice1:This stream requires a shoutcast compatible player.\r\n"
 	   "icy-notice2:Roxen mod_mp3\r\n"+metahd+
-	   "icy-name:"+(meta->name||meta->path)+"\r\n"
+	   "icy-name:"+(meta->name||name||meta->path)+"\r\n"
 	   "icy-gengre:"+(meta->gengre||"unknown")+"\r\n"
-	   "icy-url:"+("http://"+id->misc->host+
-		       query_location()+location)+"\r\n"+
+	   +((meta->url||url)?"icy-url:"+(meta->url||url)+"\r\n":"")+
 	   "icy-pub:1\r\n"
 	   "icy-br:"+(stream->bitrate/1000)+"\r\n"
 	   "\r\n" );
@@ -440,13 +451,16 @@ class Connection
   static void callback( string frame )
   {
     buffer += ({ frame });
-    if( sizeof( buffer ) > 10 )
+    if( sizeof( buffer ) > 100 )
     {
       skipped++;
       buffer = buffer[1..];
     }
     if( sizeof( buffer ) == 1 )
-      send_more();
+    {
+      remove_call_out( send_more );
+      call_out( send_more, 0.01 );
+    }
   }
 
   int headers_done;
@@ -457,9 +471,7 @@ class Connection
     {
       headers_done = 1;
       if( !sizeof(buffer) )
-      {
 	return;
-      }
       current_block = buffer[0];
 
       if( do_meta )
@@ -524,30 +536,48 @@ class VarStreams
   inherit Variable.List;
   constant type="StreamList";
 
-  // location
+  // loc
   // playlist
   // jingle
   // maxconn
-
+  // URL
+  // name
   string render_row( string prefix, mixed val, int width )
   {
     string res = "<input type=hidden name='"+prefix+"' value='"+prefix+"' />";
-    array split = val/"\0";
-    res += (query_location()+"<input name='"+prefix+"loc' value='"+
-	    Roxen.http_encode_string(split[0])+"' size=20/>");
+
+    mapping m = decode_stream( val );
+    
+    res += "<table>";
+    
+
+    res += "<tr><td>Location "+query_location()+"</td><td>";
+    res += ("<input name='"+prefix+"loc' value='"+
+	    Roxen.html_encode_string(m->location||"")+"' size=20/>");
+    res += "</td><td>Source</td><td>";
     res += "<select name='"+prefix+"playlist'>";
     mapping pl;
     foreach( sort(indices(pl=playlists(0))), string p )
-      if( pl[ p ]->sname() == split[1] )
-	res += "<option value='"+pl[p]->sname()+"' selected='t'>"+p+"</option>";
+      if( pl[ p ]->sname() == m->playlist )
+	res +="<option value='"+pl[p]->sname()+"' selected='t'>"+p+"</option>";
       else
-	res += "<option value='"+pl[p]->sname()+"'>"+p+"</option>";
-    res += "</select><br />";
-    res += ("conn: <input name='"+prefix+"conn' value='"+
-	    ((int)split[3]||10)+"' size=5/>");
-    res += ("jingle: <input name='"+prefix+"jingle' value='"+
-	    Roxen.http_encode_string(split[2])+"' size=40/>");
-    return res;
+	res +="<option value='"+pl[p]->sname()+"'>"+p+"</option>";
+    res += "</select></td></tr><tr>";
+
+    res += ("<td>Max. conn</td><td><input name='"+prefix+"conn' value='"+
+	    (m->maxconn||10)+"' size=5/></td> ");
+
+    res += ("<td>Name</td><td> <input name='"+prefix+"name' value='"+
+	    Roxen.html_encode_string(m->name || "")+"' size=20/></td></tr>");
+
+    res += ("<tr><td>Jingle</td><td colspan=3>"
+	    "<input name='"+prefix+"jingle' value='"+
+	    Roxen.html_encode_string(m->jingle || "")+"' size=50/></td></tr>");
+
+    res += ("<td>URL</td><td colspan=3> <input name='"+prefix+"url' value='"+
+	    Roxen.html_encode_string(m->url || "")+"' size=50/></td>");
+
+    return res+"</tr></table>";
   }
 
   string transform_from_form( string v, mapping va )
@@ -555,25 +585,27 @@ class VarStreams
     if( v == "" ) return "\0\0\0\0";
     v = v[strlen(path())..];
     return va[v+"loc"]+"\0"+va[v+"playlist"]+"\0"+va[v+"jingle"]
-           +"\0"+va[v+"conn"];
+           +"\0"+va[v+"conn"]+"\0"+va[v+"url"]+"\0"+va[v+"name"];
   }
-  
+
+  mapping decode_stream( string s )
+  {
+    mapping m = ([]);
+    array a = s/"\0";
+    m->location = a[0];
+    if( sizeof( a ) > 1 ) m->playlist = a[1];
+    if( sizeof( a ) > 2 ) m->jingle =   a[2];
+    if( sizeof( a ) > 3 ) m->maxconn =  (int)a[3];
+    if( sizeof( a ) > 4 ) m->url = a[4];
+    if( sizeof( a ) > 5 ) m->name = a[5];
+    if( !strlen( m->jingle ) ) m_delete( m, "jingle" );
+    if( !strlen( m->url ) )    m_delete( m, "url" );
+    if( !strlen( m->name ) )   m_delete( m, "name" );
+    return m;
+  }  
   array(mapping) get_streams()
   {
-    array res = ({});
-    foreach( query(), string s )
-    {
-      mapping m = ([]);
-      array a = s/"\0";
-      m->location = a[0];
-      m->playlist = a[1];
-      m->jingle =   a[2];
-      m->maxconn =  (int)a[3];
-      if( !strlen( m->jingle ) )
-	m_delete( m, "jingle" );
-      res += ({ m });
-    }
-    return res;
+    return map( query(), decode_stream );
   }
 }
 
@@ -625,7 +657,9 @@ void st2()
 		   Stdio.read_file( strm->jingle ) :
 		   0 ),
 		  mps,
-		  (int)strm->maxconn );
+		  (int)strm->maxconn,
+		  strm->url,
+		  strm->name );
   }
 }
 
