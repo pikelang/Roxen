@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.104 2000/02/07 15:47:17 nilsson Exp $
+ * $Id: rxml.pike,v 1.105 2000/02/07 17:11:46 nilsson Exp $
  *
  * The Roxen RXML Parser.
  *
@@ -1387,12 +1387,13 @@ class IfIs
     var = lower_case( (var+"") );
     if(sizeof(arr)==1) return !!var;
     is=lower_case(arr[2..]*" ");
+    //FIXME: We must compare between the same _and_ right types.
     if(arr[1]=="==" || arr[1]=="=" || arr[1]=="is")
       return ((is==var)||glob(is,var)||
             sizeof(filter( is/",", glob, var )));
     if(arr[1]=="!=") return (is!=var);
-    if(arr[1]=="<") return ((int)var<(int)is);
-    if(arr[1]==">") return ((int)var>(int)is);
+    if(arr[1]=="<") return ((float)var<(float)is);
+    if(arr[1]==">") return ((float)var>(float)is);
     value=source(id, value);
     return !!value;
   }
