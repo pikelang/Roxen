@@ -8,7 +8,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: PXml.pike,v 1.43 2000/03/25 01:50:51 mast Exp $
+//! $Id: PXml.pike,v 1.44 2000/04/05 13:19:20 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
@@ -208,7 +208,7 @@ static void create (
 #ifdef OLD_RXML_COMPAT
   if (not_compat) {
 #endif
-    xml_tag_syntax (2);
+    xml_tag_syntax (3);
     _set_entity_callback (.utils.p_xml_entity_cb);
     set_quote_tag_cbs();
 #ifdef OLD_RXML_COMPAT
