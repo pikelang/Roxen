@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-constant cvs_version = "$Id: http.pike,v 1.47 1997/11/12 18:04:53 neotron Exp $";
+constant cvs_version = "$Id: http.pike,v 1.48 1997/12/11 01:22:13 neotron Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -802,7 +802,6 @@ void handle_request( )
   roxen->httpobjects[my_id] += " - handled";
 #endif
   remove_call_out(do_timeout);
-  remove_call_out(do_timeout);
 #endif
 
   if(conf)
@@ -1196,9 +1195,9 @@ void create(object f, object c)
     
 #ifndef SPEED_MAX
     // No need to wait more than 30 seconds to get more data.
-    call_out(do_timeout, 60);
-    call_out(do_timeout, 70);
-    // There seems to be a bug where call_outs go missing...
+    call_out(do_timeout, 30);
+    // There seems to be a bug where call_outs go missing... which is
+    // now fixed...
 #endif
   }
 }
