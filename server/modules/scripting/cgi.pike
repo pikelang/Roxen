@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: cgi.pike,v 2.58 2001/09/14 18:05:14 grubba Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.59 2003/04/22 15:28:53 anders Exp $";
 
 #if !defined(__NT__) && !defined(__AmigaOS__)
 # define UNIX 1
@@ -224,8 +224,15 @@ class Wrapper
       destroy();
     } else if( nelems > 0 ) {
       buffer = buffer[nelems..];
-      if(close_when_done && !strlen(buffer))
+      if(close_when_done && !strlen(buffer)) {
         destroy();
+	return;
+      }
+
+      // If the buffer just went below the low watermark, let it refill.
+      if (buffer_high && strlen(buffer) < buffer_low &&
+	  strlen(buffer)+nelems >= buffer_low )
+        fromfd->set_read_callback(read_callback);
     }
   }
 
@@ -253,6 +260,10 @@ class Wrapper
       write_callback();
     } else
       buffer += what;
+
+    // If we have filled our buffer, stop asking for more data.
+    if (buffer_high && strlen(buffer) > buffer_high)
+      fromfd->set_read_callback(0);
   }
 
   void destroy()
@@ -863,7 +874,7 @@ class CGIScript
 
 mapping(string:string) global_env = ([]);
 string searchpath, location;
-int handle_ext, noexec;
+int handle_ext, noexec, buffer_high, buffer_low;
 
 void start(int n, Configuration conf)
 {
@@ -876,6 +887,8 @@ void start(int n, Configuration conf)
 #endif
   module_dependencies(conf, ({ "pathinfo" }));
   location = query("location");
+  buffer_high = query("max_buffer") > 0 && query("max_buffer") * 1024;
+  buffer_low = buffer_high / 2;
   
   if(conf)
   {
@@ -1173,6 +1186,10 @@ void create(Configuration conf)
 					     "before killing scripts",
 	 "The maximum real time the script might run in minutes before it's "
 	 "killed. 0 means unlimited."));
+  defvar("max_buffer", 64, "Limits: Output buffer",
+	 TYPE_INT|VAR_MORE,
+	 "Maximum size of the output buffer in kilo bytes. "
+	 "0 means unlimited.");
 }
 
 int|string container_runcgi( string tag, mapping args, string cont, RequestID id )
