@@ -1,0 +1,53 @@
+<?XML version="1.0" encoding="UTF-8"?>
+
+<!--
+    If no 'title' is specified, the type is used.
+    If no 'mime' is specified, the type is the default type.
+    The type 'directory' is used for directories.
+
+    Specifying only the first part of the mime type sets the defaults
+    for all types that does not have a specific entry
+-->
+   
+
+<type 							icon='unknown'>
+
+<type mime='directory'       	title='Directory'  	icon='directory'/>
+
+<!-- Audio types -->
+
+<type mime='audio'     		title='Audio file'      icon='audio'/>
+
+
+<type mime='audio/x-mpeg'    	title='MPEG audio file' icon='audio-mpeg'/>
+<type mime='audio/x-mpegurl' 	title='MPEG playlist'   icon='audio-mpeg'/>
+
+<type mime='audio/x-aiff'    	   title='AIFF audio file'/>
+<type mime='audio/midi'      	   title='MIDI audio file' />
+<type mime='audio/x-mod'     	   title='mod file' />
+<type mime='audio/xpn-realaudio'   title='RealAudio file' />
+<type mime='audio/x-wav'     	   title='audio-wav' />
+
+<!-- Image files -->
+
+<type mime='image'      	title='Image file'   icon='image'/>
+
+<type mime='image/jpeg'      	title='JPEG (JFIF) image' icon='image-jpeg'/>
+<type mime='image/gif'       	title='GIF image' icon='image-gif'/>
+<type mime='image/png'       	title='PNG image' icon='image-png'/>
+
+<type mime='image/tiff'      	title='TIFF image'/>
+<type mime='image/x-wap.wbmp' 	title='Wap Bitmap (WBMP) image'/>
+<type mime='image/x-MS-bmp'  	title='Microsoft BMP image'/>
+<type mime='text/plain'         title='Text file' />
+<type mime='text/html'          title='HTML source file' />
+<type mime='text/sgml'          title='SGML source file' />
+<type mime='text/xml'           title='XML source file' />
+<type mime='text/css'           title='CSS style-sheet' />
+<type mime='text/vnd.wap.wml'   title='WAP WML file' />
+<type mime='text/vnd.wap.wmlscript' title='WAP WML script' />
+<type mime='text/x-c-code'      title='C source code' />
+<type mime='text/x-c++-code'    title='C++ source code' />
+<type mime='text/x-include-file'title='Include file' />
+<type mime='text/x-include-file' title='Include file' />
+
