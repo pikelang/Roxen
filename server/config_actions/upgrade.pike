@@ -1,5 +1,5 @@
 /*
- * $Id: upgrade.pike,v 1.5 1997/08/19 07:03:30 per Exp $
+ * $Id: upgrade.pike,v 1.6 1997/08/19 19:48:27 grubba Exp $
  */
 
 inherit "roxenlib";
@@ -82,7 +82,7 @@ string upgrade_module(string m, object rpc)
 {
   array rm = rpc->get_module(m);
   string res="";
-  object privs = ((program)"privs")("root","Upgrading modules");
+  object privs = ((program)"privs")("Upgrading modules", "root");
   if(!rm) return "Failed to fetch the module '"+m+"'.";
   if(!modules) find_modules(1);
   if(modules[m])
