@@ -1,3 +1,14 @@
+Changes since Roxen Challenger 1.3.107 Yellow
+-----------------------------------------------
+
+o Updated documentation from manual server. Including the built in
+  RXML help.
+
+o Fixed bug in gtext that genereated errornous buttons.
+
+o Lots of fixes for NT.
+
+
 Changes since Roxen Challenger 1.2.95 Yellow
 -----------------------------------------------
 
@@ -76,6 +87,7 @@ o Support for jpeg, gif and png as indata for gtext.
 o Added <fsize> tag.
 
 o Added printable PDF-versions of the manuals.
+
 
 
 Changes since Roxen Challenger 1.2.93 Yellow
