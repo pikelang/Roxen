@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: html_wash.pike,v 1.9 2000/09/12 18:47:05 wellhard Exp $";
+constant cvs_version = "$Id: html_wash.pike,v 1.10 2000/09/14 11:53:54 wellhard Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "HTML washer";
@@ -13,8 +13,7 @@ constant module_doc  =
 useful for turning user freetext input from a form into HTML
 intelligently; perhaps turning sections separated by more than one
 newline into &lt;p&gt;paragraphs&lt;/p&gt;, filtering out or
-explicitly allowing some HTML tags in the input, or (HTML) quoting or
-unquoting the data.</p>
+explicitly allowing some HTML tags in the input</p>
 
 <p>Usage example:</p>
 
@@ -25,6 +24,7 @@ unquoting the data.</p>
 
 &lt;wash-html link-dwim='yes'
  paragraphify='yes'&gt;&amp;form.input:none;&lt;/wash-html&gt;</pre>";
+
 constant module_unique = 1;
 
 class TagWashHtml
@@ -89,7 +89,7 @@ class TagWashHtml
       ({ "&lt;", "&gt;", "&amp;", "<",   ">" }));
   }
 
-  string link_dwim(string s)
+  string linkify(string s)
   {
     string fix_link(string l)
     {
@@ -115,7 +115,7 @@ class TagWashHtml
     return parser->finish(s)->read();
   }
 
-  string unlink_dwim(string s)
+  string unlinkify(string s)
   {
     string tag_a(string tag, mapping arg, string cont)
     {
@@ -137,8 +137,8 @@ class TagWashHtml
       if(args->unparagraphify)
 	result = unparagraphify(result);
 
-      if(args["unlink-dwim"])
-	result = unlink_dwim(result);
+      if(args["unlink-dwim"] || args["unlinkify"])
+	result = unlinkify(result);
 
       if(!args["keep-all"])
 	result = filter_body(result,
@@ -149,14 +149,8 @@ class TagWashHtml
       if(args->paragraphify)
 	result = paragraphify(result);
 
-      if(args["link-dwim"])
-	result = link_dwim(result);
-
-      if(args->quote)
-	result = Roxen.html_encode_string(result);
-
-      if(args->unquote)
-	result = Roxen.html_decode_string(result);
+      if(args["link-dwim"] || args["linkify"])
+	result = linkify(result);
 
       return 0;
     }
@@ -165,13 +159,13 @@ class TagWashHtml
   void create()
   {
     req_arg_types = ([ ]);
-    opt_arg_types = ([ "keep-tags":RXML.t_text(RXML.PXml),
+    opt_arg_types = ([ "keep-all":RXML.t_text(RXML.PXml),
+		       "keep-tags":RXML.t_text(RXML.PXml),
 		       "keep-containers":RXML.t_text(RXML.PXml),
-		       "quote":RXML.t_text(RXML.PXml),
-		       "unquote":RXML.t_text(RXML.PXml),
 		       "paragraphify":RXML.t_text(RXML.PXml),
                        "unparagraphify":RXML.t_text(RXML.PXml),
-		       "keep-all":RXML.t_text(RXML.PXml) ]);
+                       "linkify":RXML.t_text(RXML.PXml),
+                       "unlinkify":RXML.t_text(RXML.PXml) ]);
 
     link_regexp =
       Regexp("(((http)|(https)|(ftp))://([^ \t\n\r<]+)(\\.[^ \t\n\r<>\"]+)+)|"
@@ -190,44 +184,100 @@ constant tagdoc=([
 
 </desc>
 
-<attr name='keep-all' value=''>
- Keep all tags. Overrides the value of keep-tags and keep-containers.
+<attr name='keep-all'>
+ Leave all contained tags intact. Overrides the value of
+ keep-tags and keep-containers. Is usefull together with the
+ atributes <atr>unparagraphify</atr> and <atr>unlink</atr>.
+
+<ex type='vert'>
+<wash-html keep-all=''>
+  Some text, <i>italic</i>, <b>bold</b>, <i><b>bold italic</b></i>.
+
+  <hr>A litle image:<img src='/internal-roxen-next'>.
+</wash-html></ex>
+
 </attr>
 
-<attr name='keep-tags' value=''>
+<attr name='keep-tags' value='list'>
  Comma-separated array of empty element &lt;tags/&gt; not to filter out.
+ Quote all other empty element tags e.i. transform &lt;, &gt; and &amp; to
+ &amp;lt;, &amp;gt; and &amp;amp;.
+
+<ex type='vert'>
+<wash-html keep-tags='hr'>
+  Some text, <i>italic</i>, <b>bold</b>, <i><b>bold italic</b></i>.
+
+  <hr>A litle image:<img src='/internal-roxen-next'>.
+</wash-html></ex>
+
 </attr>
 
-<attr name='keep-containers' value=''>
+<attr name='keep-containers' value='list'>
  Comma-separated array of &lt;container&gt;...&lt/&gt; tags not to filter out.
+ Quote all other container tags e.i. transform &lt;, &gt; and &amp; to
+ &amp;lt;, &amp;gt; and &amp;amp;.
+
+<ex type='vert'>
+<wash-html keep-containers='b'>
+  Some text, <i>italic</i>, <b>bold</b>, <i><b>bold italic</b></i>.
+
+  <hr>A litle image:<img src='/internal-roxen-next'>.
+</wash-html></ex>
+
 </attr>
 
-<attr name='link-dwim' value=''>
+<attr name='linkify'>
  Makes text that looks like a link, e g http://www.roxen.com/, into a link.
+ Text that starts with \"http://\", \"https://\", \"ftp://\", \"www.\" or
+ \"http.\" will be converted to a clickable link with the text as the link
+ label.
+
+<ex type='vert'>
+<wash-html linkify='' keep-containers='a' keep-tags='br'>
+  <a href=\"http://docs.roxen.com\">Documentation at Roxen IS</a><br />
+  http://pike.roxen.com<br />
+  www.roxen.com
+</wash-html></ex>
+
 </attr>
 
-<attr name='quote' value=''>
- After applying all transformations, HTML-quote the data.
+<attr name='unlinkify'>
+ Undo a linkify-convertion. Only links that has the same label as address will
+ be converted to plain text.
+
+<ex type='vert'>
+<wash-html unlinkify='' keep-tags='br' keep-containers='a'>
+  <a href=\"http://www.roxen.com\">http://www.roxen.com</a><br />
+  <a href=\"http://www.roxen.com\">Roxen IS</a>
+</wash-html></ex>
+
 </attr>
 
-<attr name='unquote' value=''>
- After applying all other transformations, HTML-unquote the data.
-</attr>
-
-<attr name='paragraphify' value=''>
+<attr name='paragraphify'>
 
  If more than one newline exists between two text elements, this
  attribute automatically makes the next text element into a paragraph.
 
+<ex type='vert'>
+<wash-html paragraphify=''>
+A Paragraph
+
+An other paragraph.
+And some more text to the same paragraph.
+</wash-html></ex>
+
 </attr>
 
-<attr name='unparagraphify' value=''>
+<attr name='unparagraphify'>
  Turn paragraph breaks into double newlines instead.
-</attr>
 
-<attr name='keep-all' value=''>
- Don't just keep the tags given by keep-tags and keep-containers, but
- rather leave all contained tags intact.
+<ex type='vert'>
+<pre><wash-html unparagraphify=''>
+<p>A Paragraph<p>
+
+<p>An other paragraph.
+And some more text to the same paragraph.</p>
+</wash-html></pre></ex>
 </attr>",
 
     ]);
