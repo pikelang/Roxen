@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.463 2000/03/24 01:37:11 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.464 2000/03/24 17:34:26 per Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -769,9 +769,8 @@ class SSLProtocol
 
     void destroy()
     {
-      if (sslfile) {
+      if (sslfile)
 	sslfile->close();
-      }
     }
 
     void create(object q, object ctx)
@@ -783,9 +782,7 @@ class SSLProtocol
   object accept()
   {
     object q = ::accept();
-    if (q) {
-      return destruct_protected_sslfile(q, ctx);
-    }
+    if (q) return destruct_protected_sslfile(q, ctx);
     return 0;
   }
 
@@ -793,45 +790,46 @@ class SSLProtocol
   {
     ctx = SSL.context();
     set_up_ssl_variables( this_object() );
-    restore();
+    port = pn;
+    ip = i;
 
+    restore();
+    
     object privs = Privs("Reading cert file");
 
-    string f = Stdio.read_file(query_option("ssl_cert_file") ||
-			       "demo_certificate.pem");
-    string f2 = query_option("ssl_key_file") &&
-           strlen(query_option("ssl_key_file")) &&
-           Stdio.read_file(query_option("ssl_key_file"));
-    if (privs)
-      destruct(privs);
+    string f, f2;
 
-    if (!f) {
+    if( catch{ f = lopen(query_option("ssl_cert_file"), "r")->read(); } )
+    {
       report_error("SSL3: Reading cert-file failed!\n");
       destruct();
       return;
     }
-    object msg = Tools.PEM.pem_msg()->init(f);
 
-    object part = msg->parts["CERTIFICATE"]
-      ||msg->parts["X509 CERTIFICATE"];
+    if( strlen(query_option("ssl_key_file")) &&
+        catch{ f2 = lopen(query_option("ssl_key_file"),"r")->read(); } )
+    {
+      report_error("SSL3: Reading key-file failed!\n");
+      destruct();
+      return;
+    }
 
+    if (privs)
+      destruct(privs);
+
+    object msg = Tools.PEM.pem_msg()->init( f );
+    object part = msg->parts["CERTIFICATE"] || msg->parts["X509 CERTIFICATE"];
     string cert;
 
-    if (!part || !(cert = part->decoded_body())) {
+    if (!part || !(cert = part->decoded_body())) 
+    {
       report_error("ssl3: No certificate found.\n");
       destruct();
       return;
     }
 
-    if (query_option("ssl_key_file") && strlen(query_option("ssl_key_file") ))
-    {
-      if (!f2) {
-	report_error("SSL3: Reading key-file failed!\n");
-	destruct();
-	return;
-      }
-      msg = Tools.PEM.pem_msg()->init(f2);
-    }
+    if( f2 )
+      msg = Tools.PEM.pem_msg()->init( f2 );
 
     function r = Crypto.randomness.reasonably_random()->read;
 
@@ -841,14 +839,16 @@ class SSLProtocol
     {
       string key;
 
-      if (!(key = part->decoded_body())) {
+      if (!(key = part->decoded_body())) 
+      {
 	report_error("SSL3: Private rsa key not valid (PEM).\n");
 	destruct();
 	return;
       }
 
       object rsa = Standards.PKCS.RSA.parse_private_key(key);
-      if (!rsa) {
+      if (!rsa) 
+      {
 	report_error("SSL3: Private rsa key not valid (DER).\n");
 	destruct();
 	return;
@@ -868,12 +868,14 @@ class SSLProtocol
       ctx->rsa_mode();
 
       object tbs = Tools.X509.decode_certificate (cert);
-      if (!tbs) {
+      if (!tbs) 
+      {
 	report_error("ssl3: Certificate not valid (DER).\n");
 	destruct();
 	return;
       }
-      if (!tbs->public_key->rsa->public_key_equal (rsa)) {
+      if (!tbs->public_key->rsa->public_key_equal (rsa)) 
+      {
 	report_error("ssl3: Certificate and private key do not match.\n");
 	destruct();
 	return;
@@ -883,14 +885,16 @@ class SSLProtocol
     {
       string key;
 
-      if (!(key = part->decoded_body())) {
+      if (!(key = part->decoded_body())) 
+      {
 	report_error("ssl3: Private dsa key not valid (PEM).\n");
 	destruct();
 	return;
       }
 
       object dsa = Standards.PKCS.DSA.parse_private_key(key);
-      if (!dsa) {
+      if (!dsa) 
+      {
 	report_error("ssl3: Private dsa key not valid (DER).\n");
 	destruct();
 	return;
@@ -907,7 +911,8 @@ class SSLProtocol
 
       // FIXME: Add cert <-> private key check.
     }
-    else {
+    else 
+    {
       report_error("ssl3: No private key found.\n");
       destruct();
       return;
@@ -919,16 +924,15 @@ class SSLProtocol
 #if EXPORT
     ctx->export_mode();
 #endif
-
     ::create(pn, i);
   }
 #else /* !constant(SSL.sslfile) */
-  void create(int pn, string i) {
-    report_error("No SSL support\n");
+  void create(int pn, string i) 
+  {
+    report_error("No SSL support available\n");
     destruct();
   }
 #endif /* constant(SSL.sslfile) */
-
   string _sprintf( )
   {
     return "SSLProtocol("+name+"://"+ip+":"+port+")";
@@ -2817,11 +2821,11 @@ void enable_configurations()
   foreach(list_all_configurations(), string config)
   {
     int t = gethrtime();
-    report_debug("\nEnabling the configuration "+config+" ...\n");
+    report_debug("\nEnabling the configuration %s ...\n", config);
     if(err=catch( enable_configuration(config)->start() ))
       report_error("\nError while loading configuration "+config+":\n"+
                    describe_backtrace(err)+"\n");
-    report_debug("Enabled "+config+" in %.1fms\n", (gethrtime()-t)/1000.0 );
+    report_debug("Enabled %s in %.1fms\n", config, (gethrtime()-t)/1000.0 );
   }
 }
 
