@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.61 1997/10/07 18:56:15 grubba Exp $
+ * $Id: ftp.pike,v 1.62 1997/10/09 04:34:05 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -297,7 +297,7 @@ class ls_program {
   string list_files(array(array(mixed)) files, string dir, int flags)
   {
     int i;
-    if (!flags & LS_FLAG_U) {
+    if (!(flags & LS_FLAG_U)) {
       if (flags & LS_FLAG_t) {
 	array(int) times = allocate(sizeof(files));
 	for (i=0; i < sizeof(files); i++) {
