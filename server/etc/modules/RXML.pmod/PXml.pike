@@ -13,7 +13,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: PXml.pike,v 1.49 2000/08/12 04:49:25 mast Exp $
+//! $Id: PXml.pike,v 1.50 2000/08/15 01:20:05 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
@@ -203,7 +203,7 @@ static void create (
 #endif
   }
 
-  if (type->quoting_scheme != "xml"
+  if (type->encoding_type != "xml"
 #ifdef OLD_RXML_COMPAT
       && not_compat
 #endif

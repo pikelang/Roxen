@@ -7,7 +7,7 @@
 //!
 //! Created 2000-01-21 by Martin Stjernholm
 //!
-//! $Id: utils.pmod,v 1.12 2000/08/12 21:29:22 mast Exp $
+//! $Id: utils.pmod,v 1.13 2000/08/15 01:20:05 mast Exp $
 
 
 array return_zero (mixed... ignored) {return 0;}
@@ -75,7 +75,7 @@ int(1..1)|string|array p_xml_entity_cb (Parser.HTML p, string str)
 			    // in things like "nice><evil stuff='...'"?
 			    RXML.t_text :
 			    p->type);
-    if (p->type->quoting_scheme != "xml") {
+    if (p->type->encoding_type != "xml") {
       // Don't decode any normal entities if we're outputting xml-like stuff.
       if (!p->type->free_text) return ({});
       string out;

@@ -4,7 +4,7 @@
 //!
 //! Created 2000-01-28 by Martin Stjernholm.
 //!
-//! $Id: PEnt.pike,v 1.15 2000/07/05 23:08:59 mast Exp $
+//! $Id: PEnt.pike,v 1.16 2000/08/15 01:20:05 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
@@ -20,7 +20,7 @@ constant add_containers = 0;
 
 static void init_entities()
 {
-  if (type->quoting_scheme != "xml") {
+  if (type->encoding_type != "xml") {
     // Don't decode entities if we're outputting xml-like stuff.
 #ifdef OLD_RXML_COMPAT
     clear_entities();
