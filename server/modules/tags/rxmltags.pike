@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.234 2001/06/04 19:10:32 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.235 2001/06/08 16:56:03 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -33,23 +33,45 @@ string query_provides() {
   return "modified";
 }
 
-private constant permitted = "123456789.xabcdefint\"XABCDEFlo<>=0-*+/%&|()^"/1;
+private object compile_handler = class {
+    mapping(string:mixed) get_default_module() {
+      return ([ "this_program":0,
+
+		"`+":`+,
+		"`-":`-,
+		"`*":`*,
+		"`/":`/,
+		"`%":`%,
+
+		"`&":`&,
+		"`|":`|,
+		"`^":`^,
+
+		"`<":`<,
+		"`>":`>,
+		"`==":`==,
+		"`<=":`<=,
+		"`>=":`>=,
+
+		"INT":lambda(void|mixed x){ return (int)x; },
+		"FLOAT":lambda(void|mixed x){ return (float)x; },
+      ]);
+    }
+
+    mixed resolv(string id, void|string fn, void|string ch) {
+      throw( ({ sprintf("The symbol %O is forbidden.\n", id),
+		backtrace() }) );
+    }
+  }();
+
 
 string sexpr_eval(string what)
 {
-  array q = what/"";
-  // Make sure we hide any dangerous global symbols
-  // that only contain permitted characters.
-  // FIXME: This should probably be even more paranoid.
-  what =
-    "constant allocate = 0;"
-    "constant atexit = 0;"
-    "constant cd = 0;"
-    "constant clone = 0;"
-    "constant exece = 0;"
-    "constant exit = 0;"
-    "mixed foo_(){ return "+(q-(q-permitted))*""+";}";
-  return (string)compile_string( what )()->foo_();
+  what -= "lambda";
+  what -= "\"";
+  what -= ";";
+  return compile_string( "mixed foo=" + what + ";",
+			 0, compile_handler )()->foo;
 }
 
 #if ROXEN_COMPAT <= 1.3
@@ -5638,52 +5660,31 @@ load.</p>
 //----------------------------------------------------------------------
 
 "if#expr":#"<desc plugin='plugin'><p><short>
- This plugin evaluates expressions.</short> The arithmetic operators
- are \"+, - and /\". The last main operator is \"%\"(per cent). The
- allowed relationship operators are \"&lt;. &gt;, ==, &lt;= and
- &gt;=\".</p>
+ This plugin evaluates a string as a pike expressions.</short>
+ Available arithmetic operators are +, -, *, / and % (modulo).
+ Available relational operators are &lt;, &gt;, ==, &lt;= and
+ &gt;=. Available bitwise operators are &, | and ^, representing
+ AND, OR and XOR. Available logical operators are && and ||,
+ working as the pike AND and OR.</p>
 
- <p>All integers(characters 0 to 9) may be used together with
- \".\" to create floating point expressions.</p>
-
- <ex type='box'>
-   Hexadecimal expression: (0xff / 5) + 3
- </ex>
- <p>To be able to evaluate hexadecimal expressions the characters \"a
- to f and A to F\" may be used.</p>
-
- <ex type='box'>
-   Integer conversion: ((int) 3.14)
-   Floating point conversion: ((float) 100 / 7)
- </ex>
-
- <p>Conversion between int and float may be done through the operators
- \"(int)\" and \"(float)\". The operators \"&amp;\"(bitwise and),
- \"|\"((pipe)bitwise or), \"&amp;&amp;\"(logical and) and \"||\"((double
- pipe)logical or) may also be used in expressions. To set
- prioritizations within expressions the characters \"( and )\" are
- included. General prioritization rules are:</p>
-
- <list type='ol'>
- <item><p>(int), (float)</p></item>
- <item><p>*, /, %</p></item>
- <item><p>+, -</p></item>
- <item><p>&lt;, &gt;, &lt;=, &gt;=\</p></item>
- <item><p>==</p></item>
- <item><p>&amp;, |</p></item>
- <item><p>&amp;&amp;, ||</p></item>
- </list>
+ <p>Numbers can be represented as decimal integers when numbers
+ are written out as normal, e.g. \"42\". Numbers can also be written
+ as hexadecimal numbers when precedeed with \"0x\", as octal numbers
+ when precedeed with \"0\" and as binary number when precedeed with
+ \"0b\". Numbers can also be represented as floating point numbers,
+ e.g. \"1.45\" or \"1.6E5\". Numbers can be converted between floats
+ and integers by using the cast operators \"(float)\" and \"(int)\".</p>
 
  <ex type='box'>
-   Octal expression: 045
+   (int)3.14
  </ex>
- <ex type='box'>
-   Calculator expression: 3.14e10 / 3
- </ex>
- <p>Expressions containing octal numbers may be used. It is also
- possible to evaluate calculator expressions.</p>
 
- <p>Expr is an <i>Eval</i> plugin.</p>
+ <p>A common problem when dealing with variables from forms is that
+ a variable might be a number or be empty. To ensure that a value is
+ produced the special functions INT and FLOAT may be used. In the
+ expression \"INT(&form.num;)+1\" the INT-function will produce 0 if
+ the form variable is empty, hence preventing the incorrect expression
+ \"+1\" to be produced.</p>
 </desc>
 
 <attr name='expr' value='expression'>
