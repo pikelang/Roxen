@@ -1,6 +1,6 @@
 inherit "http";
 
-// static string _cvs_version = "$Id: roxenlib.pike,v 1.48 1998/02/11 07:10:18 mast Exp $";
+// static string _cvs_version = "$Id: roxenlib.pike,v 1.49 1998/02/14 21:53:14 wing Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -933,7 +933,10 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 	  options[0] = remove_leading_trailing_ws( options[0] );
 	  if (!vars[ options[0] ])
 	  {
-	    exploded[c] = "<!-- no variable " + options[0] + " -->";
+	    if (args->debug)
+	      exploded[c] = "<!-- no variable " + options[0] + " -->";
+	    else
+	      exploded[c] = "";
 	    continue;
 	  }
 	  if (sizeof( options ) > 1)

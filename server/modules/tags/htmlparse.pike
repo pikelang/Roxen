@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.77 1998/02/11 13:49:59 grubba Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.78 1998/02/14 21:53:06 wing Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -690,14 +690,18 @@ string tag_set( string tag, mapping m, object id )
       // Set variable to the value of another variable
       if (id->variables[ m->from ])
 	id->variables[ m->variable ] = id->variables[ m->from ];
-      else
+      else if (!m->debug)
 	return "<!-- set: from variable doesn't exist -->";
+      else
+	return "";
     else if (m->other)
       // Set variable to the value of a misc variable
       if (id->misc->variables && id->misc->variables[ m->other ])
 	id->variables[ m->variable ] = id->misc->variables[ m->other ];
-      else
+      else if (m->debug)
 	return "<!-- set: other variable doesn't exist -->";
+      else
+	return "";
     else
       // Unset variable.
       m_delete( id->variables, m->variable );
@@ -724,8 +728,10 @@ string tag_append( string tag, mapping m, object id )
 	  id->variables[ m->variable ] += id->variables[ m->from ];
 	else
 	  id->variables[ m->variable ] = id->variables[ m->from ];
-      else
+      else if (m->debug)
 	return "<!-- append: from variable doesn't exist -->";
+      else
+	return "";
     else if (m->other)
       // Set variable to the value of a misc variable
       if (id->misc->variables[ m->other ])
@@ -733,14 +739,20 @@ string tag_append( string tag, mapping m, object id )
 	  id->variables[ m->variable ] += id->misc->variables[ m->other ];
 	else
 	  id->variables[ m->variable ] = id->misc->variables[ m->other ];
-      else
+      else if (m->debug)
 	return "<!-- append: other variable doesn't exist -->";
-    else
+      else
+	return "";
+    else if (m->debug)
       return "<!-- append: nothing to append from -->";
+    else
+      return "";
     return("");
   }
-  else
+  else if (m->debug)
     return("<!-- append: variable not specified -->");
+  else
+    return "";
 }
 
 string tag_define(string tag,mapping m, string str, object got,object file,
