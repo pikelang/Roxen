@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.232 2000/07/21 23:22:21 js Exp $";
+constant cvs_version = "$Id: http.pike,v 1.233 2000/08/28 12:50:48 per Exp $";
 
 #define MAGIC_ERROR
 
@@ -1619,23 +1619,27 @@ void send_result(mapping|void result)
 	  misc->last_modified = fstat[3];
 	}
 
-	if(prot != "HTTP/0.9") {
-	  heads["Last-Modified"] = http_date(misc->last_modified);
+	if(prot != "HTTP/0.9") 
+        {
+          if( misc->cacheable )
+          {
+            heads["Last-Modified"] = http_date(misc->last_modified);
 
-	  if(since)
-	  {
-	    /* ({ time, len }) */
-	    array(int) since_info = Roxen.parse_since(since);
-	    if ((since_info[0] >= misc->last_modified) &&
-		(since_info[0] + misc->cacheable >= predef::time(1)) &&
-		((since_info[1] == -1) || (since_info[1] == file->len)))
-	    {
-	      file->error = 304;
-	      file->file = 0;
-	      file->data="";
-	      // 	    method="";
-	    }
-	  }
+            if( since )
+            {
+              /* ({ time, len }) */
+              array(int) since_info = Roxen.parse_since(since);
+              if ((since_info[0] >= misc->last_modified) &&
+                  (since_info[0] + misc->cacheable >= predef::time(1)) &&
+                  ((since_info[1] == -1) || (since_info[1] == file->len)))
+              {
+                file->error = 304;
+                file->file = 0;
+                file->data="";
+                // 	    method="";
+              }
+            }
+          }
 	}
       }
     }
@@ -1811,7 +1815,7 @@ void send_result(mapping|void result)
 void handle_request( )
 {
   REQUEST_WERR("HTTP: handle_request()");
-
+  misc->cacheable = 1;
 #ifdef MAGIC_ERROR
   if(prestate->old_error)
   {
