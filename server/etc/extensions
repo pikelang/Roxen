@@ -1,4 +1,4 @@
-# $Id: extensions,v 1.18 1997/10/16 12:17:46 grubba Exp $
+# $Id: extensions,v 1.19 1997/10/29 20:05:47 grubba Exp $
 # name="Extension database";
 # doc="The database used to map from extension to mime-type (example: *.gif to image/gif)";
 #
@@ -143,6 +143,7 @@ roff	application/x-troff
 rtf	application/rtf
 sh	application/x-sh
 shar	application/x-shar
+sit	application/x-stuffit
 so	application/octet-stream
 spl     application/futuresplash 
 spr     application/x-sprite 
