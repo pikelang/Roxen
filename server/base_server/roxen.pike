@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.207 1998/06/02 10:35:18 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.208 1998/06/04 11:54:14 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -2141,7 +2141,7 @@ void rescan_modules()
     Stdio.write_file(".allmodules", encode_value(allmodules));
   };
   report_notice("Done with module directory scan. Found "+
-		sizeof(allmodules)+" modules.");
+		sizeof(allmodules)+" modules.\n");
 }
 
 // ================================================= 
