@@ -1,0 +1,440 @@
+#! /usr/local/bin/perl
+
+# Perl helper script for Roxen Webserver. By Leif Stensson.
+#
+# $Id: perlhelper,v 1.1 2000/08/01 14:26:43 leif Exp $
+
+package Roxen::Internal;
+ 
+use strict;
+use vars '%Cache';
+ 
+sub packagename
+{ my($string) = @_;
+
+  $string =~ s/([^A-Za-z0-9\/])/sprintf("_%2x",unpack("C",$1))/eg;
+  $string =~ s|/(\d)|sprintf("/_%2x",unpack("C",$1))|eg;
+  $string =~ s|/|::|g;
+  $string = "::$string" if not $string =~ /^::/;
+
+  return "Roxen::SCRIPTCACHE" . $string;
+}
+ 
+sub runscript
+{ my ($filename) = @_;
+  my ($package)  = (packagename($filename));
+  my ($mtime)    = (-M $filename);
+
+  die "No such file: $filename" if not -f $filename;
+
+  $Roxen::Internal::script_name = $filename;
+
+  if(defined $Cache{$package}{mtime} && $Cache{$package}{mtime} <= $mtime) 
+  { $Roxen::Internal::script_was_cached = 1;
+  }
+  else
+  { $Roxen::Internal::script_was_cached = 0;
+    local *FH;
+    open FH, $filename or die "open '$filename' $!";
+    local($/) = undef;
+    my ($sub) = (<FH>);
+    close FH;
+ 
+    my ($eval) = (qq{package $package; sub handler { $sub; }});
+    {
+      my($filename,$mtime,$package,$sub);
+      eval $eval;
+    }
+    die $@ if $@;
+  }
+ 
+  eval {$package->handler;};
+  die $@ if $@;
+}
+
+#if (-x /home/leif/bin/pike7r90 )
+{
+  # Extra diagnostics.
+  #  print STDERR "Started subperl.\n";
+};
+
+package Roxen::TieStdio;
+
+sub TIEHANDLE
+{ my $obj = {};
+  bless \$obj, shift;
+}
+
+sub PRINT
+{ my $len;
+  shift;
+  $Roxen::Request::req_outbuf .= join('', @_);
+  $len = length($Roxen::Request::req_outbuf);
+  if ($len > 500)
+  { # Drain the output buffer a bit.
+    $len = 16384 if $len > 16384;
+    Roxen::_helper::Senditem('+',
+                       substr($Roxen::Request::req_outbuf, 0, $len));
+    $Roxen::Request::req_outbuf =
+       substr $Roxen::Request::req_outbuf, $len;
+  }
+}
+
+package Apache; # Some compatilibity with the Apache interface.
+
+sub request
+{ return $Roxen::Request::req_req;
+}
+sub unescape_url
+{ my ($s) = (shift);
+  $s =~ s/%([0-9a-fA-F][0-9a-fA-F])/chr(hex($1))/eg;
+  return $s;
+}
+sub unescape_url_info
+{ my ($s) = (shift);
+  $s =~ s/\+/ /g;
+  $s =~ s/%([0-9a-fA-F][0-9a-fA-F])/chr(hex($1))/eg;
+  return $s;
+}
+sub perl_hook
+{ return 0;
+}
+
+package Apache::Registry;
+
+sub __foo
+{ return 0;
+};
+
+package Roxen;
+
+sub request
+{ return $Roxen::Request::req_req;
+}
+sub unescape_url
+{ my ($s) = (shift);
+  $s =~ s/%([0-9a-fA-F][0-9a-fA-F])/chr(hex($1))/eg;
+  return $s;
+}
+sub unescape_url_info
+{ my ($s) = (shift);
+  $s =~ s/\+/ /g;
+  $s =~ s/%([0-9a-fA-F][0-9a-fA-F])/chr(hex($1))/eg;
+  return $s;
+}
+
+package Roxen::Request;
+
+sub new
+{ my $proto = shift;
+  my $class = ref($proto) || $proto;
+  my $self  = {};
+  bless $self, $class;
+  return $self;
+}
+
+sub get_remote_host { return $Roxen::Request::req_info{'remoteaddr'};}
+sub get_remote_logname { return undef;}
+sub protocol { return $Roxen::Request::req_info{'prot'};}
+sub method { return $Roxen::Request::req_info{'method'};}
+sub main { return undef;}
+sub prev { return undef;}
+sub next { return undef;}
+sub last { return $Roxen::Request::req_req;}
+sub is_main { return 1;}
+sub is_initial_request { return 0;}
+sub header_only { return 0;}
+sub uri { return $Roxen::Request::req_info{raw_url};}
+sub filename { return $Roxen::Request::req_info{realfile};}
+sub args
+{ # Should be context sensitive!
+  return $Roxen::Request::req_info{query};
+}
+sub connection { return $Roxen::Request::req_req;}
+sub auth_name
+{ # Realm
+  return "Default";
+}
+sub document_root
+{ # FIX LATER...
+  return "/"; 
+}
+sub send_http_header
+{ # FIX LATER
+  ;
+}
+sub get_basic_auth_pw
+{ if ($Roxen::Request::req_info{auth_type} eq "Basic")
+    { return 0, $Roxen::Request::req_info{auth_passwd};}
+  else
+    { return 0;}
+}
+sub note_basic_auth_failure
+{ # IMPROVE LATER.
+  $Roxen::Request::req_returncode = 401;
+}
+sub handler
+{ # NOT SUPPORTED.
+  die "$$ perlhandler: Arrgh! \$r->handler called!\n";
+}
+sub notes
+{ # NOT SUPPORTED.
+  die "$$ perlhandler: Arrgh! \$r->notes called!\n";
+}
+sub content_type
+{ $Roxen::Request::req_reply{'Content-Type'} = $_[0] if defined $_[0];
+  return $Roxen::Request::req_reply{'Content-Type'};
+}
+sub content_encoding
+{ $Roxen::Request::req_reply{'Content-Encoding'} = $_[0] if defined $_[0];
+  return $Roxen::Request::req_reply{'Content-Encoding'};
+}
+sub content_languages
+{ $Roxen::Request::req_reply{'Content-Languages'} = join(' ', @_)
+        if $#_ >= 0;
+  return split / /, $Roxen::Request::req_reply{'Content-Languages'};
+}
+sub status
+{ $Roxen::Request::req_returncode = 0+$_[0] if defined($_[0]);
+  return 0+$Roxen::Request::req_returncode;
+}
+sub status_line
+{ $Roxen::Request::req_returncode = $_[0] if defined($_[0]);
+  return $Roxen::Request::req_returncode;
+}
+sub print
+{ my ($self, $len) = (shift, 0);
+  $Roxen::Request::req_outbuf .= join('', @_);
+  $len = length($Roxen::Request::req_outbuf);
+  if ($len > 0)
+  { $len = 16384 if $len > 16384;
+    Roxen::_helper::Senditem('+',substr($Roxen::Request::req_outbuf, 0, $len));
+    $Roxen::Request::req_outbuf =
+      substr($Roxen::Request::req_outbuf, $len);
+  }
+}
+sub printf
+{ my ($self, $fmt) = (shift, shift);
+  $self->print(sprintf $fmt, @_);
+}
+sub send_fd
+{ my ($self, $fh, $buf) = (shift, shift);
+  while (read($fh, $buf, 8192) > 0) { $self->print($buf);}
+}
+sub log_reason
+{ my ($self, $msg, $file) = (shift, shift, shift);
+  print STDERR "Perl script: $msg\n";
+}
+sub log_error
+{ my ($self, $msg) = (shift, shift);
+  print STDERR "Perl script error: $msg\n";
+}
+sub warn
+{ my ($self, $msg) = (shift, shift);
+  print STDERR "Perl script warning: $msg\n";
+}
+sub exit
+{ shift;
+  if ($Roxen::Request::req_returncode != 200)
+  {
+    Roxen::_helper::Sendreply(sprintf("RETURNCODE=%d",
+                                      $Roxen::Request::req_returncode));
+  }
+  Roxen::_helper::Senddata($Roxen::Request::req_outbuf);
+  $Roxen::Request::req_outbuf = "";
+  CORE::exit(shift);
+}
+
+# Emulated connection object inside request object:
+
+ sub remote_host { return $Roxen::Request::req_info{'remoteaddr'};}
+ sub remote_ip { return $Roxen::Request::req_info{'remoteaddr'};}
+ sub local_addr { die "Perl: Arrgh! \$r->connection->local_addr\n";}
+ sub remote_addr { die "Perl: Arrgh! \$r->connection->remote_addr\n";}
+ sub user { return $Roxen::Request::req_info{'auth_user'};}
+   # Note: this one exists in both Request and Connection:
+ sub auth_type { return $Roxen::Request::req_info{'auth_type'};}
+
+
+package Roxen::_helper;
+
+use IO::Handle;
+
+my ($infd, $outfd) = (-1, -1);
+my ($cmdin ) = (new IO::Handle);
+my ($cmdout) = (new IO::Handle);
+
+for(; $ARGV[0] =~ /^-/; shift @ARGV)
+{ if ($ARGV[0] =~ /^--cmdsocket=(\d+)$/)
+   { $infd = $1; $outfd = $1;}
+  else
+   { die "Invalid option: $ARGV[0]\n";}
+}
+
+sub diag
+{
+# print STDERR join('', @_);
+}
+
+
+sub Getdata($)
+{ my ($bytes, $len, $tmp, @lens) = (shift);
+  $cmdin->sysread($tmp, $bytes) == $bytes or die "$$/Getdata: exiting.\n";
+  if ($bytes == 1)
+    { @lens = unpack "C", $tmp; $len = $lens[0];}
+  elsif ($bytes == 3)
+    { @lens = unpack "CCC", $tmp;
+      $len = $lens[0]*65536 + $lens[1]*256 + $lens[2];
+    }
+  else
+    { die "$$/Getdata/B: exiting.\n";}
+  $cmdin->sysread($tmp, $len) == $len or die "$$/Getdata/C: exiting.\n";
+  return $tmp;
+}
+
+sub Senditem($$)
+{ my ($key, $data) = (shift, shift);
+  $cmdout->syswrite($key .
+                    pack("CCC", 0, length($data)/256, length($data)&255), 4);
+  $cmdout->syswrite($data, length($data));
+}
+
+sub Senddata($)
+{ my ($data, $hdr) = (shift);
+  diag "(", length($data);
+  while (length($data) > 16384)
+  { diag "+";
+    Senditem "+", substr($data, 0, 16384);
+    $data = substr($data, 16384);
+  }
+  diag "*)";
+  Senditem "*", $data;
+}
+
+sub Senderror($)
+{ my ($data, $hdr) = (shift);
+  $hdr = pack("CCC", 0, length($data)/256, length($data) & 255);
+  $cmdout->syswrite("?$hdr", 4);
+  $cmdout->syswrite($data, length($data));
+  diag "[WR:4+", length($data), "]";
+}
+
+sub Sendreply($)
+{ my ($data, $hdr) = (shift);
+  $hdr = "=" . pack("CCC", 0, length($data)/256, length($data) & 255);
+  $cmdout->syswrite($hdr, 4);
+  $cmdout->syswrite($data, length($data));
+  diag "[WR:4+", length($data), "]";
+}
+
+sub _CatchAlarm
+{ #die "$$ perlhelper: exiting (timeout).\n";
+  CORE::exit(7);
+}
+
+sub _CatchExit
+{ 
+  if ($Roxen::Request::req_state == 5423522)
+  { # Magic number meaning we were evaluating something.
+    if ($Roxen::Request::req_returncode != 200)
+      { Sendreply(sprintf("RETURNCODE=%d", $Roxen::Request::req_returncode));}
+    Senddata($Roxen::Request::req_outbuf);
+  }
+  if (defined($_[0])) { CORE::exit($_[0]);}
+                 else { CORE::exit(17);}
+  die "$$ perlhelper: CORE::exit failed!\n";
+}
+
+*CORE::GLOBAL::exit = \&_CatchExit;
+
+$SIG{ALRM} = \&_CatchAlarm;
+
+tie(*STDOUT, 'Roxen::TieStdio');
+
+# Main loop.
+{ my ($cmd, $var, $len, $data) = ();
+  my ($starttime, $runcount) = (time, 0);
+
+  $cmdin->fdopen($infd, "r") or die "Unable to open command input.\n";
+  $cmdout->fdopen($outfd, "w") or die "Unable to open command output.\n";
+  $cmdout->autoflush(1);
+
+  $Roxen::Request::req_req = Roxen::Request->new();
+
+  while (1)
+  { $Roxen::Request::req_state = 0;
+    alarm 60; # One minute.
+    $cmdin->sysread($cmd, 1) == 1 or die "perhelper $$/MLR: exiting.\n";
+    diag "[$cmd]";
+    if ($cmd eq "E")
+    { $var = Getdata(1); $data = Getdata(3);
+      $ENV{$var} = $data;
+    }
+    elsif ($cmd eq "I")
+    { $var = Getdata(1); $data = Getdata(3);
+      $Roxen::Request::req_info{$var} = $data;
+    }
+    elsif ($cmd eq "F")
+    { $var = Getdata(1); $data = Getdata(3);
+      $Roxen::Request::req_vars{$var} = $data;
+    }
+    elsif ($cmd eq "H")
+    { $var = Getdata(1); $data = Getdata(3);
+      $Roxen::Request::req_headers{$var} = $data;
+    }
+    elsif ($cmd eq "L")
+    { $var = Getdata(1); $data = Getdata(3);
+      if ($var eq "libdir" and $Roxen::Request::req_config{$var} ne $data)
+        { push @INC, $data;}
+      if ($var eq "cd")
+        { chdir $data;}
+      $Roxen::Request::req_config{$var} = $data;
+    }
+    elsif ($cmd eq "R")
+    { %ENV = ();
+      %Roxen::Request::req_info = ();
+      %Roxen::Request::req_vars = ();
+      %Roxen::Request::req_headers = ();
+    }
+    elsif ($cmd eq "S" or $cmd eq "C")
+    { $Roxen::Request::req_outbuf = "";
+      $Roxen::Request::req_returncode = 200;
+      $data = Getdata(3);
+      alarm 150; # 2.5 minutes.
+      $Roxen::Request::req_state = 5423522; # Magic number.
+      if ($cmd eq "C")
+      { my ($cmdin, $cmdout, $cmd);
+        eval $data;
+      }
+      else
+      { diag "{S:$data}\n";
+        Roxen::Internal::runscript($data);
+      }
+      $Roxen::Request::req_state = 0;
+      alarm 60; # One minute.
+      if ($Roxen::Request::req_returncode != 200)
+        { Sendreply(sprintf "RETURNCODE=%d", $Roxen::Request::req_returncode);}
+      Senddata($Roxen::Request::req_outbuf);
+
+      last if $starttime+300 < time; # Timeout after 5 minutes.
+
+      $Roxen::Request::req_req = Roxen::Request->new();
+    }
+    elsif ($cmd eq "Q")
+    { $cmdin->sysread($cmd, 1) == 1 or die "perlhelper $$/MLQ: exiting.\n";
+      diag "{Q$cmd}";
+      if ($cmd eq "P")
+      { Sendreply("");
+      }
+      else
+      { die "perlhelper $$/MLQQ: exiting.\n";
+      }
+    }
+  }
+#  die "$$ perlhelper: exiting normally.\n";
+  CORE::exit(0);
+}
+
+
+
+

@@ -260,6 +260,7 @@ nn binary
 /server/more_modules/clock.pike foreign_ident
 /server/more_modules/cvsfs.pike foreign_ident
 /server/ntroxenloader.pike foreign_ident
+/server/perl/bin/perlhelper foreign_ident
 /server/protocols/ftp.pike foreign_ident
 /server/protocols/gopher.pike foreign_ident
 /server/protocols/http.pike foreign_ident
