@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module_support.pike,v 1.105 2001/11/05 12:44:14 grubba Exp $
+// $Id: module_support.pike,v 1.106 2002/02/08 17:11:21 grubba Exp $
 
 #define IN_ROXEN
 #include <roxen.h>
@@ -591,6 +591,11 @@ array(string) find_all_pike_module_directories()
   return all_pike_module_cache;
 }
 
+// List of modules that have been renamed
+static constant module_aliases = ([
+  "whitespace_sucker":"whitespace_remover",
+]);
+
 ModuleInfo find_module( string name, int|void noforce )
 {
   if( !modules )
@@ -604,8 +609,16 @@ ModuleInfo find_module( string name, int|void noforce )
 
   modules[ name ] = ModuleInfo( name,0 );
 
-  if( !modules[ name ]->check() )
+  if( !modules[ name ]->check() ) {
+    // Failed to load module.
     m_delete( modules, name );
+    // Check for alias.
+    if (module_aliases[name]) {
+      report_notice("The module %s has been renamed %s.\n",
+		    name, module_aliases[name]);
+      return modules[ name ] = find_module(module_aliases[name], noforce);
+    }
+  }
 
   if( !modules[ name ] && !noforce )
     return FakeModuleInfo( name );
