@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.16 1998/09/07 18:49:20 grubba Exp $
+ * $Id: smtp.pike,v 1.17 1998/09/07 19:05:19 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.16 1998/09/07 18:49:20 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.17 1998/09/07 19:05:19 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -386,15 +386,21 @@ class Server {
     string sender = "";
     multiset(string) recipients = (<>);
 
-    void smtp_RSET(string rset, string args)
+    static void do_RSET()
     {
       sender = "";
       recipients = (<>);
     }
 
+    void smtp_RSET(string rset, string args)
+    {
+      do_RSET();
+      send(250, "Reset ok.");
+    }
+
     void smtp_MAIL(string mail, string args)
     {
-      smtp_RSET(mail, args);
+      do_RSET();
 
       int i = search(args, ":");
       if (i >= 0) {
@@ -570,6 +576,7 @@ class Server {
       if (!spooler) {
 	send(550, "No spooler available");
 	report_error("SMTP: No spooler found!\n");
+	do_RSET();
 	return;
       }
 
@@ -589,6 +596,7 @@ class Server {
 	spooler[0]->delete_body(spooler[1]);
 	send(452);
 	report_error("SMTP: Spooler failed.\n");
+	do_RSET();
 	return;
       }
 
@@ -596,6 +604,7 @@ class Server {
       report_notice("SMTP: Mail spooled OK.\n");
 
       // Now it's time to actually deliver the message.
+      // NOTE: After this point error-messages must be sent by mail.
 
       // Expand.
       multiset expanded = do_expn(recipients);
@@ -605,7 +614,7 @@ class Server {
 	o->put(expanded, spooler[1]);
       }
 
-      smtp_RSET("RSET", "");
+      do_RSET();
     }
 
     void smtp_DATA(string data, string args)
