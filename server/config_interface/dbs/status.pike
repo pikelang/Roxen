@@ -48,6 +48,14 @@ string parse( RequestID id )
 #endif
       connections[name]++;
 
+#ifdef THREADS
+  foreach( indices( DBManager->sql_cache ), object t )
+    foreach( indices( DBManager->sql_cache[t] ), string name )
+#else
+    foreach( indices( DBManager->sql_cache ), string name )
+#endif
+      connections[replace(name,":",";")+":rw"]++;
+
   res += "<h2>Active connections</h2>";
   
   res +=
@@ -60,7 +68,8 @@ string parse( RequestID id )
   foreach( sort(indices( connections ) ), string c )
   {
     array(string) t = c/":";
-    res += "<tr><td>"+t[0]+"</td><td>"+t[1]+"</td><td align=right>"+
+    res += "<tr><td>"+Roxen.html_encode_string(replace(t[0],";",":"))+"</td><td>"+
+      Roxen.html_encode_string(t[1])+"</td><td align=right>"+
       connections[c]+"</td></tr>\n";
     total += connections[c];
   }
