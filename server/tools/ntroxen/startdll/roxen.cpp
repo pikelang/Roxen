@@ -1,6 +1,6 @@
 // roxen.cpp: implementation of the CRoxen class.
 //
-// $Id: roxen.cpp,v 1.2 2001/06/27 16:26:46 tomas Exp $
+// $Id: roxen.cpp,v 1.3 2001/07/30 16:10:22 tomas Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -265,6 +265,12 @@ int CRoxen::Start(int first_time)
   
   //pike loc
   std::string pikeloc = FindPike();
+
+  // Insert the pike location in the environment
+  if (!SetEnvironmentVariable (TEXT("PIKE"), pikeloc.c_str())) {
+    ErrorMsg (1, TEXT("Could not set the PIKE environment variable"));
+    return FALSE;
+  }
 
   if (first_time) {
     TCHAR *oldpath = _tgetenv (TEXT("CLASSPATH"));
