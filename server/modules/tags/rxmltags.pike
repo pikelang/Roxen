@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.284 2001/08/28 03:58:07 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.285 2001/08/29 17:08:08 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -3689,21 +3689,40 @@ class IfIs
   constant case_sensitive = 0;
   function source;
 
-  int eval( string value, RequestID id )
+  int(0..1) eval( string value, RequestID id )
   {
     if(cache != -1) CACHE(cache);
     array arr=value/" ";
-    string|int|float var=source(id, arr[0]);
+    string|array var=source(id, arr[0]);
+    if(!arrayp(var)) return do_check(var, arr, id);
+
+    int(0..1) recurse_check(array var, array arr, RequestID id) {
+      foreach(var, mixed val) {
+	if(arrayp(val)) {
+	  if(recurse_check(val, arr, id)) return 1;
+	  continue;
+	}
+	if(do_check(RXML.t_text->encode(val), arr, id))
+	  return 1;
+      }
+      return 0;
+    };
+
+    return recurse_check(var, arr, id);
+  }
+
+  int(0..1) do_check( string var, array arr, RequestID id) {
     if( !var && zero_type( var ) ) return 0;
     if(sizeof(arr)<2) return !!var;
+
     string is;
+
     if(case_sensitive) {
-      var = var+"";
       if(sizeof(arr)==1) return !!var;
       is=arr[2..]*" ";
     }
     else {
-      var = lower_case( (var+"") );
+      var = lower_case( var );
       if(sizeof(arr)==1) return !!var;
       is=lower_case(arr[2..]*" ");
     }
@@ -3724,8 +3743,7 @@ class IfIs
       if(arr[1]==">") return (var>is);
     }
 
-    value=source(id, value);
-    return !!value;
+    return !!source(id, arr*" ");
   }
 }
 
@@ -4021,8 +4039,9 @@ class TagIfAccept {
 class TagIfConfig {
   inherit IfIs;
   constant plugin_name = "config";
-  int source(RequestID id, string s) {
-    return id->config[s];
+  string source(RequestID id, string s) {
+    if(id->config[s]) return "";
+    return ([])[0];
   }
 }
 
@@ -4052,11 +4071,11 @@ class TagIfName {
 class TagIfDefined {
   inherit IfIs;
   constant plugin_name = "defined";
-  string|int|float source(RequestID id, string s) {
+  string source(RequestID id, string s) {
     mixed val;
-    if(!(val=RXML_CONTEXT->misc[s])) return 0;
-    if(stringp(val) || intp(val) || floatp(val)) return val;
-    return 1;
+    if(zero_type(val=RXML_CONTEXT->misc[s])) return ([])[0];
+    if(stringp(val) || intp(val) || floatp(val)) return (string)val;
+    return "";
   }
 }
 
@@ -4108,8 +4127,9 @@ class TagIfMaTcH {
 class TagIfPragma {
   inherit IfIs;
   constant plugin_name = "pragma";
-  int source(RequestID id, string s) {
-    return id->pragma[s];
+  string source(RequestID id, string s) {
+    if(id->pragma[s]) return "";
+    return ([])[0];
   }
 }
 
@@ -4117,8 +4137,9 @@ class TagIfPrestate {
   inherit IfIs;
   constant plugin_name = "prestate";
   constant cache = -1;
-  int source(RequestID id, string s) {
-    return id->prestate[s];
+  string source(RequestID id, string s) {
+    if(id->prestate[s]) return "";
+    return ([])[0];
   }
 }
 
@@ -4133,8 +4154,9 @@ class TagIfReferrer {
 class TagIfSupports {
   inherit IfIs;
   constant plugin_name = "supports";
-  int source(RequestID id, string s) {
-    return id->supports[s];
+  string source(RequestID id, string s) {
+    if(id->supports[s]) return "";
+    return ([])[0];
   }
 }
 
@@ -4145,6 +4167,7 @@ class TagIfVariable {
   string source(RequestID id, string s) {
     mixed var=RXML.user_get_var(s);
     if(!var) return var;
+    if(arrayp(var)) return var;
     return RXML.t_text->encode (var);
   }
 }
@@ -4159,16 +4182,20 @@ class TagIfSizeof {
   inherit IfIs;
   constant plugin_name = "sizeof";
   constant cache = -1;
-  int source(RequestID id, string s) {
+  string source(RequestID id, string s) {
     mixed var=RXML.user_get_var(s);
     if(!var) {
-      if(zero_type(RXML.user_get_var(s))) return 0;
-      return 1;
+      if(zero_type(RXML.user_get_var(s))) return ([])[0];
+      return "0";
     }
     if(stringp(var) || arrayp(var) ||
-       multisetp(var) || mappingp(var)) return sizeof(var);
-    if(objectp(var) && var->_sizeof) return sizeof(var);
-    return sizeof((string)var);
+       multisetp(var) || mappingp(var)) return (string)sizeof(var);
+    if(objectp(var) && var->_sizeof) return (string)sizeof(var);
+    return (string)sizeof((string)var);
+  }
+  int(0..1) do_check(string var, array arr, RequestID id) {
+    if(sizeof(arr)>2 && !var) var = "0";
+    return ::do_check(var, arr, id);
   }
 }
 
