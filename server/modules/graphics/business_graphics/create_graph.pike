@@ -723,6 +723,14 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 
   string where_is_ax;
 
+  //No uneven data
+
+  for(i=0; i<sizeof(diagram_data["data"]); i++)
+    if (sizeof(diagram_data["data"][i])%2)
+      diagram_data["data"][i]=diagram_data["data"][i][..sizeof(diagram_data["data"][i])-2];
+  
+  
+
   //Fixa defaultfärger!
   setinitcolors(diagram_data);
 
