@@ -1,5 +1,5 @@
 /*
- * $Id: request_profiling.pike,v 1.2 2004/05/19 13:23:30 grubba Exp $
+ * $Id: request_profiling.pike,v 1.3 2004/05/25 11:16:37 anders Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -55,7 +55,7 @@ mixed parse( RequestID id )
     "</b></font><br />\n";
   if (roxen->configurations[0]->profile_map) {
     ret +=
-      "All times are in microseconds.<br />\n"
+      LOCALE(0,"All times are in microseconds.") + "<br />\n"
       "<p />"
       "<input type='hidden' name='action' value='request_profiling.pike' />\n"
       "<p><submit-gbutton name='refresh'> "
@@ -67,9 +67,12 @@ mixed parse( RequestID id )
   } else {
     ret +=
       "<p />\n"
-      "<font color='&usr.warncolor;'>NOTE: This information is only "
-      "available if the "
-      "server has been stared with <tt>-DPROFILING</tt>.</font>";
+      "<font color='&usr.warncolor;'>" +
+      LOCALE(0,"NOTE: This information is only available if the "
+	     "server has been stared with <tt>-DPROFILING</tt>.") +
+      "</font>"
+      "<p />\n"
+      "<cf-ok-button href='?class=&form.class;'/>";
   }
   return ret;
 }
