@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 1.16 1998/09/16 17:29:37 grubba Exp $
+ * $Id: smtprelay.pike,v 1.17 1998/09/16 17:58:01 grubba Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RELAY_DEBUG
 
-constant cvs_version = "$Id: smtprelay.pike,v 1.16 1998/09/16 17:29:37 grubba Exp $";
+constant cvs_version = "$Id: smtprelay.pike,v 1.17 1998/09/16 17:58:01 grubba Exp $";
 
 /*
  * Some globals
@@ -160,6 +160,13 @@ class SocketNotSelf
 			     function callback, mixed ... args)
   {
     // *** BEGIN CODE THAT DIFFERS FROM socket.pike ***
+
+    if (!host) {
+      // DNS Failure
+
+      callback(-2, @args);
+      return;
+    }
 
     object p = Stdio.Port;
 
@@ -470,30 +477,38 @@ class MailSender
 
   static void got_connection(object c)
   {
-    if (!c) {
+    if (intp(c) {
+      switch(c) {
+      case 0:
 #ifdef RELAY_DEBUG
-      roxen_perror("Connection refused.\n");
+	roxen_perror("Connection refused.\n");
 #endif /* RELAY_DEBUG */
-      // Connection refused.
-      connect_and_send();
-      return;
-    } else if (c == -1) {
-      // Connected to ourselves.
-      if (servercount == 1) {
-	// FIXME: This won't work since bounce() won't be able
-	// to send to localhost.
-
-	// We're the primary MX!
-	result = -3;
-
+	// Connection refused.
+	break;
+      case -1:
+	// Connected to ourselves.
+	if (servercount == 1) {
+	  // We're the primary MX!
+	  result = -3;
+	  
+	  parent->bounce(message, "554", ({
+	    sprintf("MX list for %s points back to %s(%s)",
+		    message->domain, message->remote_mta, gethostname()),
+	    sprintf("<%s@%s>... Local configuration error",
+		    message->user, message->domain),
+	  }), "");
+	}
+	break;
+      case -2:
+	// DNS failure
 	parent->bounce(message, "554", ({
-	  sprintf("MX list for %s points back to %s",
-		  message->domain, gethostname()),
-	  sprintf("<%s@%s>... Local configuration error",
-		  message->user, message->domain),
-	}));
+	  sprintf("DNS lookup failed for SMTP server %s",
+		  message->remote_mta),
+	}), "");
+	break;
       }
       connect_and_send();
+      return;
     }
 
     con = c;
@@ -750,12 +765,13 @@ void bounce(mapping msg, string code, array(string) text, string last_command)
 
     string body = sprintf("Message to %s@%s from %s bounced (code %s):\r\n"
 			  "Mailid:%s\r\n"
-			  "Last command:%s\r\n"
+			  "%s"
 			  "Description:\r\n"
 			  "%s\r\n",
 			  msg->user, msg->domain, msg->sender, code,
 			  msg->mailid,
-			  last_command,
+			  sizeof(last_command)?
+			  ("Last command:"+last_command+"\r\n"):"",
 			  text*"\r\n");
 
     // Send a bounce
