@@ -1,8 +1,7 @@
 #include <module.h>
-inherit "module";
-inherit "roxenlib";
+inherit "modules/directories/directories";
 
-string cvsid = "$Id: language.pike,v 1.7 1997/08/15 17:50:25 peter Exp $";
+constant cvsid = "$Id: language.pike,v 1.8 1997/08/19 05:51:54 peter Exp $";
 
 array register_module()
 {
@@ -52,7 +51,7 @@ void create()
 	 "be used in case the chosen language is unavailable. To find a "
 	 "page with a suitable language the languages is tried as follows. "
 	 "<ol><li>The selected language, stored as a prestate"
-	 "<li>The user agent's accept-headers (ok it doesn't do this at the moment)"
+	 "<li>The user agent's accept-headers"
 	 "<li>The selected languages next-languages-codes if any"
 	 "<li>The default language"
 	 "<li>If there were no selected language, the default language's "
@@ -89,33 +88,11 @@ void create()
 	 "If set, the directory lists will include cute flags to indicate "
 	 "which language the entries exists in. Otherwise it will be shown "
 	 "with not-so-cure text. " );
-
-  defvar( "readme", 1, "Include readme files", TYPE_FLAG,
-	 "If set, include readme files in directory listings");
-
-
   defvar("directories", 1, "Directory parsing", TYPE_FLAG, 
 	 "If you set this flag to on, a directories will be "+
 	 "parsed to a file-list, if no index file is present. "+
 	 "If not, a 'No such file or directory' response will be generated.");
-
-  defvar("indexoverride", 1, "Directory indexfile override enabled", TYPE_FLAG,
-	 "If set, requests ending with /. will always return a listing of "+
-	 "the contents of the directory, even if there is an indexfile "+
-	 "present.");
-
-  defvar("no_tilde", 1, "Exclude backupfiles from directorylistings", 
-	 TYPE_FLAG,
-	 "If set, all files ending with '~' or '#' or '.bak' will "+
-	 "be excluded from directory listings, since they are considered "+
-	 "backups.");
-
 */  
-  defvar("indexfiles", ({ "index.html", "Main.html", "welcome.html" }), 
-	 "Directory index files", 
-	 TYPE_STRING_LIST,
-	 "If any of these files are present in a directory, they will be "+
-	 "returned instead of the actual directory.");
   defvar( "configp", 1, "Use config (uses prestate otherwise).",
           TYPE_FLAG,
           "If set the users chooen language will be stored using Roxens "
@@ -128,31 +105,14 @@ void create()
 
   defvar( "textonly", 0, "Text only", TYPE_FLAG,
 	  "If set the tags type argument will default to txt instead of img" );
+  ::create();
 }
 
 mapping parse_directory( object id )
 {
-  string file;
-  mixed result;
-  string not_query;
-
-  if (id->not_query[-1] == '.' && id->not_query[-2]=='/')
-    return http_redirect(id->not_query[..strlen(id->not_query)-2], id);
-
-  if (id->not_query[-1] != '/')
-    return http_redirect(id->not_query+"/", id);
-
-  not_query = id->not_query;
-  id->misc[ "index_file" ] = 1;
-  foreach (query( "indexfiles" ), file)
-  {
-    id->not_query = not_query + file;
-    result = roxen->get_file( id );
-    if (result)
-      return result;
-  }
-  return result;
+  return ::parse_directory( id );
 }
+
 
 // language part
 
@@ -166,8 +126,12 @@ int textonly;
 
 mixed fnord(mixed what) { return what; }
 
+
 void start()
 {
+  global_describer = this_object()["describe_dir_node_" "mac"];
+  head = this_object()["head_dir_"  "mac"];
+  foot = this_object()["foot_dir_"  "mac"];
   string tmp;
   array (string) tmpl;
 
@@ -190,6 +154,7 @@ void start()
   default_language = query( "default_language" );
   textonly = query( "textonly" );
   //  flag_dir = query( "flag_dir" );
+  ::start();
 }
 
 multiset (string) find_files( string url, object id )
@@ -219,9 +184,11 @@ mixed remap_url( object id, string url )
   multiset (string) lang_tmp, found_languages, found_languages_orig;
   array (string) accept_language;
 
-  if(id->misc->language)
+  if(id->misc->language || id->misc->in_language)
     return 0;
 
+  id->misc->in_language=1;
+  
   extension = reverse( (reverse( url ) / ".")[0] );
   if (language_list[ extension ])
   {
@@ -235,12 +202,16 @@ mixed remap_url( object id, string url )
     redirect_url = id->conf->query( "MyWorldLocation" ) +
       redirect_url[1..17000000];
     
+    id->misc->in_language=0;
     return http_redirect( redirect_url );
   }		    
   found_languages_orig = find_files( url, id );
   found_languages = copy_value( found_languages_orig );
   if (sizeof( found_languages_orig ) == 0)
+  {
+    id->misc->in_language=0;
     return 0;
+  }
   if (found_languages_orig[ "" ])
   {
     found_languages[ "" ] = 0;
@@ -254,19 +225,23 @@ mixed remap_url( object id, string url )
     ;
     else
       accept_language = ({ });
-  perror("1:%O", accept_language);  
-  /*  accept_language &= indices( language_list ); //remove later */
+
+#ifdef MODULE_DEBUG  
+  perror("Wish:%O", accept_language);
+#endif
   // This looks funny, but it's nessesary to keep the order of the languages.
   accept_language = accept_language -
     ( accept_language - indices(language_list) );
-  perror("2:%O\n", accept_language);
+#ifdef MODULE_DEBUG  
+  perror("Negotiated:%O\n", accept_language);
+#endif
 
   if (query( "configp" ))
     lang_tmp = language_list & id->config;
   else
     lang_tmp = language_list & id->prestate;
 
-#ifdef MODULE_DEBUG  
+#ifdef MODULE_DEBUG
   if( sizeof(accept_language) )
     perror("Header-choosen language: %O\n", accept_language[0]);
 #endif
@@ -278,6 +253,10 @@ mixed remap_url( object id, string url )
   else
     chosen_language = default_language;
 
+#ifdef MODULE_DEBUG
+  perror("Presented language: %O\n", chosen_language);
+#endif
+  
   if (found_languages[ chosen_language ])
     found_language = chosen_language;
   else if (sizeof( accept_language & indices( found_languages ) ))
@@ -318,6 +297,7 @@ mixed remap_url( object id, string url )
   // We don't change not_query incase it was a file without
   // extension that were found.
 
+  id->misc->in_language=0;
   return id;
 }
 
