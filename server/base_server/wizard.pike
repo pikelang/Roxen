@@ -1,9 +1,76 @@
-/* $Id: wizard.pike,v 1.80 1998/11/28 14:31:22 noring Exp $
+/* $Id: wizard.pike,v 1.81 1999/01/05 02:44:01 mast Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
+  
+/* wizard_automaton operation (old behavior if it isn't defined):
+
+   mapping(string:array) wizard_automaton = ([
+     "foo": ({dispatch, prev_page, next_page, page_name}),
+     ...
+   ]);
+
+   dispatch:	A string redirects the wizard to that page. 0 or the
+		name of this page continues with it.
+   prev_page:	A string is the page for the previous button. 0 if none.
+   next_page:	A string is the page for the next button. 0 makes an
+		ok button instead. -1 gives neither button.
+   page_name:	Optional page name. Defaults to "".
+
+   Any of these may be a function that returns the value:
+
+   lambda (object id, string page, mixed ... args);
+
+   id:		Request id.
+   page:	The entry in wizard_automaton.
+   args:	The extra args to wizard_menu() or wizard_for().
+
+   Other callbacks:
+
+   o  string|mapping page_foo (object id, mixed ... args);
+
+      The function that produces page "foo". May return 0 to cause a
+      redirect to the next page (or the previous one if the user
+      pressed previous to enter it). Goes to the done page if there
+      isn't any such page.
+
+   o  int verify_foo (object id, mixed ... args);
+
+      A verify function that's run when the user presses next or ok in
+      page "foo". Returns 0 if it's ok to leave the page, anything
+      else re-runs the page function to redisplay the page.
+
+   o  string|mapping wizard_done (object id, mixed ... args);
+
+      The function for the done page, from which it's not possible to
+      return to the other wizard pages. May return 0 to skip the page.
+      (Differences from old behavior: -1 is not a meaningful return
+      value and a string is run through parse_wizard_page().)
+
+   The dispatch function is always run before any other function for a
+   page. That makes it suitable to contain all page init stuff and
+   also state sanity checks, since it can bail to other pages on
+   errors etc. The intention is also that it should be shared between
+   several pages that has init code in common.
+
+   Special pages:
+
+   "start":	Start page.
+   "done":	Finish page. The page function is wizard_done(). Only
+		dispatch is used in the wizard_automaton entry.
+   "cancel":	Cancels the wizard. Has no wizard_automaton entry.
+
+   Bugs: There's no good way to share variables between the functions.
+   Can we say id->misc? :P */
 
 inherit "roxenlib";
+
+#ifdef DEBUG_WIZARD
+#define DEBUGMSG(msg) report_debug (msg)
+#else
+#define DEBUGMSG(msg) do {} while (0)
+#endif
+
 string wizard_tag_var(string n, mapping m, mixed a, mixed b)
 {
   object id;
@@ -377,11 +444,13 @@ int num_pages(string wiz_name)
 #define PREVIOUS Q((this_object()->previous_label?this_object()->previous_label:"<- Previous"))
 #define COMPLETED Q((this_object()->completed_label?this_object()->completed_label:"Completed"))
 
-string parse_wizard_page(string form, object id, string wiz_name)
+string parse_wizard_page(string form, object id, string wiz_name, void|string page_name)
 {
-  int max_page = num_pages(wiz_name)-1;
+  mapping(string:array) automaton = this_object()->wizard_automaton;
+  int max_page = !automaton && num_pages(wiz_name)-1;
   string res;
-  int page = ((int)id->variables->_page);
+  string page = id->variables->_page;
+  int pageno = (int)page;
   mapping foo = ([]);
   // Cannot easily be inlined below, believe me... Side-effects.
   form = parse_html(form,(id->misc->extra_wizard_tags||([]))+
@@ -403,7 +472,7 @@ string parse_wizard_page(string form, object id, string wiz_name)
 	 " </td>\n<td align=right>"+
 	 (wiz_name=="done"
 	  ?COMPLETED
-	  :(max_page?PAGE+(page+1)+"/"+(max_page+1):""))+
+	  :page_name || (max_page?PAGE+(pageno+1)+"/"+(max_page+1):""))+
 	 "</td>\n"
 	  " \n<td align=right>"+
 	 (foo->help && !id->variables->help?
@@ -420,18 +489,20 @@ string parse_wizard_page(string form, object id, string wiz_name)
 	 "\n<!-- End of the output from the page function -->\n"
 	 "\n</td></tr></table>\n"
 	 "      <table width=100%><tr><td width=33%>"+
-	 ((page>0 && wiz_name!="done")?
+	 (((automaton ? stringp (id->variables->_prev) : pageno>0) &&
+	   wiz_name!="done")?
 	  "        <input type=submit name=prev_page value=\""+PREVIOUS+"\">":"")+
 	 "</td><td width=33% align=center >"+
 	 (wiz_name!="done"
-	  ?((page==max_page
+	  ?(((automaton ? !id->variables->_next : pageno==max_page)
 	     ?"        <input type=submit name=ok value=\" "+OK+" \">"
 	     :"")+
 	    "         <input type=submit name=cancel value=\" "+CANCEL+" \">")
 	  :"         <input type=submit name=cancel value=\" "+OK+" \">")+
 	  "</td>"
 	 "</td><td width=33% align=right >"+
-	 ((page!=max_page && wiz_name!="done")?
+	 (((automaton ? stringp (id->variables->_next) : pageno!=max_page) &&
+	   wiz_name!="done")?
 	  "        <input type=submit name=next_page value=\""+NEXT+"\">":"")+
 	 "</td></tr></table>"
 	 "    </td><tr>\n"
@@ -463,31 +534,76 @@ mapping|string wizard_for(object id,string cancel,mixed ... args)
   foreach(indices(s), string q)
      v[q] = v[q]||s[q];
 
+  mapping(string:array) automaton = this_object()->wizard_automaton;
+  string oldpage, page_name;
+  if (automaton && (!v->_page || v->next_page || v->prev_page || v->ok)) {
+    if (!v->_page && automaton->start) v->_page = "start";
+    oldpage = v->_page;
+    if (v->_page) {
+      array page_state = automaton[v->_page];
+      if (!page_state) return "Internal error in wizard code: "
+			 "No entry " + v->_page + " in automaton.";
+      function|string redirect = page_state[0];
+      if (functionp (redirect)) {
+	DEBUGMSG (sprintf ("Wizard: Running dispatch function %O for page %s\n",
+			   redirect, v->_page));
+	redirect = redirect (id, v->_page, @args);
+      }
+      if (stringp (redirect) && redirect != v->_page) {
+	DEBUGMSG ("Wizard: Internal redirect to page " + redirect + "\n");
+	// Redirect takes precedence over the user choice.
+	m_delete (v, "next_page");
+	m_delete (v, "prev_page");
+	m_delete (v, "ok");
+	v->_page = redirect;
+      }
+    }
+  }
+
   if(v->next_page)
   {
-    function c;
-    if(!functionp(c=this_object()["verify_"+v->_page]) || (!c( id, @args )))
-	v->_page = PAGE(1);
+    function c=this_object()["verify_"+v->_page];
+    int fail = 0;
+    if (functionp (c)) {
+      fail = c (id, @args);
+      DEBUGMSG (sprintf ("Wizard: Verify function %O %s\n", c,
+			 fail ? "failed" : "succeeded"));
+    }
+    if (!fail) {
+      v->_page = automaton ? v->_next : PAGE(1);
+      DEBUGMSG ("Wizard: Going to next page\n");
+    }
   }
   else if(v->prev_page)
   {
-    v->_page = PAGE(-1);
+    v->_page = automaton ? v->_prev : PAGE(-1);
+    DEBUGMSG ("Wizard: Going to previous page\n");
     offset=-1;
   }
   else if(v->ok)
   {
-    function c;
-
-    if(!functionp(c=this_object()["verify_"+v->_page]) || (!c( id, @args )))
-    {
-      mixed res;
-      if(c=this_object()->wizard_done)
-	res = c(id,@args);
-      if(res != -1) 
-	return (res
-		|| http_redirect(s->cancel_url||cancel||id->not_query, 
-				 @(id->conf?({id}):({}))));
+    function c=this_object()["verify_"+v->_page];
+    int fail = 0;
+    if (functionp (c)) {
+      fail = c (id, @args);
+      DEBUGMSG (sprintf ("Wizard: Verify function %O %s\n", c,
+			 fail ? "failed" : "succeeded"));
     }
+    if(!fail)
+      if (automaton) v->_page = 0; // Handle done state in the automaton code below.
+      else
+      {
+	mixed res;
+	if(c=this_object()->wizard_done) {
+	  DEBUGMSG ("Wizard: \"Ok\" pressed; running wizard_done\n");
+	  res = c(id,@args);
+	}
+	if(res != -1)
+	  return (res
+		  || http_redirect(s->cancel_url||cancel||id->not_query, 
+				   @(id->conf?({id}):({}))));
+	DEBUGMSG ("Wizard: -1 from wizard_done; continuing\n");
+      }
   }
   else if(v["help.x"])
   {
@@ -513,24 +629,120 @@ mapping|string wizard_for(object id,string cancel,mixed ... args)
     } 
   }
 
-  for(; !data; v->_page=PAGE(offset))
-  {
-    function c, pg=this_object()[wiz_name+((int)v->_page)];
-    if(!pg && functionp(c=this_object()["wizard_done"])) {
-      mixed res = c(id,@args);
-      if(res != -1) 
-	return (res
-		|| http_redirect(cancel||id->not_query, 
-				 @(id->conf?({id}):({}))));
+  if (automaton) {
+    int i = 0;
+    function dispatcher;
+    while (1) {
+      if (++i == 4711) return "Internal error in wizard code: "
+			 "Probably infinite redirect loop in automaton.";
+
+      if (v->_page == "cancel") {
+	string to = s->cancel_url||cancel||id->not_query;
+	DEBUGMSG ("Wizard: Canceling with redirect to " + to + "\n");
+	return http_redirect(to, @(id->conf?({id}):({})));
+      }
+
+      if (!v->_page) v->_page = "done", oldpage = 0;
+      function|string redirect = 0;
+      array page_state = automaton[v->_page];
+      if (!page_state && v->_page != "done")
+	return "Internal error in wizard code: No entry " + v->_page + " in automaton.";
+
+      if (page_state && v->_page != oldpage) {
+	redirect = page_state[0];
+	if (functionp (redirect)) {
+	  if (dispatcher == redirect)
+	    // The previous page state had the same dispatcher as this
+	    // one; it's unnecessary to re-run it since it shouldn't
+	    // change its mind.
+	    dispatcher = redirect = 0;
+	  else {
+	    dispatcher = redirect;
+	    DEBUGMSG (sprintf ("Wizard: Running dispatch function %O for page %s\n",
+			       dispatcher, v->_page));
+	    redirect = dispatcher (id, v->_page, @args);
+	  }
+	}
+	else dispatcher = 0;
+      }
+      oldpage = 0;
+
+      if (redirect && redirect != v->_page) {
+	DEBUGMSG ("Wizard: Internal redirect to page " + redirect + "\n");
+	v->_page = redirect;
+      }
+      else if (v->_page == "done") {
+	function donefn = this_object()->wizard_done;
+	if (!functionp (donefn))
+	  return "Internal error in wizard code: No wizard_done function.";
+	DEBUGMSG ("Wizard: Running wizard_done\n");
+	data = donefn (id, @args);
+	if (!data) return http_redirect(cancel||id->not_query,
+					@(id->conf?({id}):({})));
+	wiz_name = "done";
+	break;
+      }
+      else {
+	function pagefn = this_object()[wiz_name + v->_page];
+	if (!functionp (pagefn)) return "Internal error in wizard code: "
+				   "No page function for " + v->_page + ".";
+	DEBUGMSG (sprintf ("Wizard: Running page function %O\n", pagefn));
+	data = pagefn (id, @args);
+	if (data) {
+	  id->variables->_prev = functionp (page_state[1]) ?
+	    page_state[1] (id, v->_page, @args) : page_state[1];
+	  id->variables->_next = functionp (page_state[2]) ?
+	    page_state[2] (id, v->_page, @args) : page_state[2];
+
+	  // So that dispatch functions may be used for prev/next too.
+	  if ((<"cancel", "done">)[id->variables->_prev]) id->variables->_prev = 0;
+	  if ((<"cancel", "done">)[id->variables->_next]) id->variables->_next = 0;
+
+	  page_name = sizeof (page_state) < 4 ? "" : functionp (page_state[3]) ?
+	    page_state[3] (id, v->_page, @args) : page_state[3];
+	  DEBUGMSG ("Wizard: prev_page " + id->variables->_prev + ", next_page " +
+		    id->variables->_next + ", page_name \"" + page_name + "\"\n");
+	  break;
+	}
+	else {
+	  int dir = offset > 0 ? 2 : 1;
+	  v->_page =
+	    functionp (page_state[dir]) ?
+	    page_state[dir] (id, v->_page, @args) : page_state[dir];
+	  DEBUGMSG ("Wizard: No data from page function; going to " +
+		    (stringp (v->_page) ? (offset > 0 ? "next" : "previous") +
+		     " page " + v->_page : "done page"));
+	  if (!stringp (v->_page)) v->_page = 0;
+	}
+      }
     }
-    if(!pg) return "Internal error in wizard code: Invalid page ("+v->_page+")!";
-    if(data = pg(id,@args)) break;
   }
+  else
+    for(; !data; v->_page=PAGE(offset))
+    {
+      function pg=this_object()[wiz_name+((int)v->_page)];
+      function c = !pg && this_object()["wizard_done"];
+      if(functionp(c)) {
+	DEBUGMSG ("Wizard: Running wizard_done\n");
+	mixed res = c(id,@args);
+	if(res != -1) 
+	  return (res
+		  || http_redirect(cancel||id->not_query, 
+				   @(id->conf?({id}):({}))));
+      }
+      if(!pg) return "Internal error in wizard code: Invalid page ("+v->_page+")!";
+      DEBUGMSG (sprintf ("Wizard: Running page function %O\n", pg));
+      if(data = pg(id,@args)) break;
+      DEBUGMSG ("Wizard: No data from page function; going to " +
+		(offset > 0 ? "next" : "previous") + " page\n");
+    }
+
   // If it's a mapping we can presume it is an http response, and return
   // it directly.
   if (mappingp(data))
     return data;
-  return parse_wizard_page(data,id,wiz_name);
+
+  return parse_wizard_page(data,id,wiz_name,page_name);
 }
 
 mapping wizards = ([]);
