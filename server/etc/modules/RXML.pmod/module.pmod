@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.220 2001/08/13 23:02:42 mast Exp $
+// $Id: module.pmod,v 1.221 2001/08/14 16:59:13 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -69,6 +69,7 @@ class RequestID { };
 // #define TYPE_OBJ_DEBUG
 // #define PARSER_OBJ_DEBUG
 // #define FRAME_DEPTH_DEBUG
+// #define RXML_RESCACHE_DEBUG
 
 
 #ifdef RXML_OBJ_DEBUG
@@ -99,10 +100,8 @@ class RequestID { };
 
 #ifdef RXML_VERBOSE
 #  define TAG_DEBUG_TEST(test) 1
-#elif defined (DEBUG)
-#  define TAG_DEBUG_TEST(test) (test)
 #else
-#  define TAG_DEBUG_TEST(test) 0
+#  define TAG_DEBUG_TEST(test) (test)
 #endif
 
 #ifdef DEBUG
@@ -6375,6 +6374,19 @@ static class PikeCompile
   string _sprintf() {return "RXML.PikeCompile" + OBJ_COUNT;}
 }
 
+#ifdef RXML_RESCACHE_DEBUG
+#  define RESCACHE_MSG(X...) do {					\
+  Context _ctx_ = RXML_CONTEXT;						\
+  Frame _frame_ = _ctx_ && _ctx_->frame;				\
+  if (TAG_DEBUG_TEST (!_frame_ || _frame_->flags & FLAG_DEBUG)) {	\
+    if (_frame_) report_debug ("%O: ", _frame_);			\
+    report_debug (X);							\
+  }									\
+} while (0)
+#else
+#  define RESCACHE_MSG(X...) do {} while (0)
+#endif
+
 class PCode
 //! Holds p-code and evaluates it. P-code is the intermediate form
 //! after parsing and before evaluation.
@@ -6494,6 +6506,7 @@ class PCode
       flags |= COLLECT_RESULTS;
       if (collect_results->misc->variable_changes) flags |= CTX_ALREADY_GOT_VC;
       collect_results->misc->variable_changes = ([]);
+      RESCACHE_MSG ("begin result cache\n");
     }
   }
 
@@ -6531,9 +6544,13 @@ class PCode
     if (length + 1 > sizeof (exec)) exec += allocate (sizeof (exec));
 
     if (flags & COLLECT_RESULTS) {
+      RESCACHE_MSG ("caching result value %s\n",
+		    utils->format_short (evaled_value));
       exec[length++] = evaled_value;
       mapping(string:mixed) var_chg = ctx->misc->variable_changes;
       if (sizeof (var_chg)) {
+	RESCACHE_MSG ("caching variable changes %s\n",
+		      utils->format_short (var_chg));
 	exec[length++] = VariableChange (var_chg);
 	ctx->misc->variable_changes = ([]);
       }
@@ -6555,27 +6572,33 @@ class PCode
   add_frame:
     {
     add_evaled_value:
-      if (flags & COLLECT_RESULTS && !(frame->flags & FLAG_DONT_CACHE_RESULT)) {
-	if (evaled_value == PCode) {
-	  // The PCode value is only used as an ugly magic cookie to
-	  // signify that the frame produced no result to add (i.e. it
-	  // threw an exception instead). In that case we must keep
-	  // the frame unevaluated.
-	  Frame f = frame;
-	  do
-	    f->flags |= FLAG_DONT_CACHE_RESULT;
-	  while ((f = f->up) && !(f->flags & FLAG_DONT_CACHE_RESULT));
-	  break add_evaled_value;
+      if (flags & COLLECT_RESULTS)
+	if (frame->flags & FLAG_DONT_CACHE_RESULT)
+	  RESCACHE_MSG ("frame %O not cached\n", frame);
+	else {
+	  if (evaled_value == PCode) {
+	    // The PCode value is only used as an ugly magic cookie to
+	    // signify that the frame produced no result to add (i.e. it
+	    // threw an exception instead). In that case we must keep
+	    // the frame unevaluated.
+	    Frame f = frame;
+	    do
+	      f->flags |= FLAG_DONT_CACHE_RESULT;
+	    while ((f = f->up) && !(f->flags & FLAG_DONT_CACHE_RESULT));
+	    RESCACHE_MSG ("frame %O not cached due to exception\n", frame);
+	    break add_evaled_value;
+	  }
+	  RESCACHE_MSG ("caching result of frame %O: %s\n",
+			frame, utils->format_short (evaled_value));
+	  if (length + 1 >= sizeof (exec)) exec += allocate (sizeof (exec));
+	  exec[length++] = evaled_value;
+	  mapping(string:mixed) var_chg = ctx->misc->variable_changes;
+	  if (sizeof (var_chg)) {
+	    exec[length++] = VariableChange (var_chg);
+	    ctx->misc->variable_changes = ([]);
+	  }
+	  break add_frame;
 	}
-	if (length + 1 >= sizeof (exec)) exec += allocate (sizeof (exec));
-	exec[length++] = evaled_value;
-	mapping(string:mixed) var_chg = ctx->misc->variable_changes;
-	if (sizeof (var_chg)) {
-	  exec[length++] = VariableChange (var_chg);
-	  ctx->misc->variable_changes = ([]);
-	}
-	break add_frame;
-      }
 
       if (length + 3 > sizeof (exec)) exec += allocate (sizeof (exec));
       exec[length] = frame->tag || frame; // To make new frames from.
@@ -6601,6 +6624,7 @@ class PCode
     if (flags & COLLECT_RESULTS) {
       if (!(flags & CTX_ALREADY_GOT_VC))
 	m_delete (RXML_CONTEXT->misc, "variable_changes");
+      RESCACHE_MSG ("end result cache\n");
 
       // Collapse sequences of constants. Could be done when not
       // collecting results too, but it's probably not worth the
@@ -7280,7 +7304,7 @@ Nil nil = Nil();
 static class Nil
 {
   mixed `+ (mixed... vals) {return sizeof (vals) ? predef::`+ (@vals) : this_object();}
-  mixed ``+ (mixed val) {return val;}
+  mixed ``+ (mixed... vals) {return sizeof (vals) ? predef::`+ (@vals) : this_object();}
   int `!() {return 1;}
   string _sprintf() {return "RXML.nil";}
   mixed cast(string type)
