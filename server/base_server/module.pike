@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.183 2004/05/07 19:44:58 mast Exp $
+// $Id: module.pike,v 1.184 2004/05/07 20:43:57 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -1015,9 +1015,10 @@ mapping(string:mixed) unlock_file (string path,
 //! @returns
 //!   Returns @expr{0@} (zero) on success, a status mapping on
 //!   failure, or @expr{1@} if @[recursive] is set and write access is
-//!   allowed on this level but not somewhere recursively. The caller
-//!   should in the last case check recursively with @[write_access]
-//!   for each member in the directory.
+//!   allowed on this level but maybe not somewhere below. The caller
+//!   should in the last case do the operation on this level if
+//!   possible and then handle each member in the directory
+//!   recursively with @[write_access] etc.
 mapping(string:mixed)|int(0..1) write_access(string path, int(0..1) recursive,
 					     RequestID id)
 {
@@ -1026,12 +1027,15 @@ mapping(string:mixed)|int(0..1) write_access(string path, int(0..1) recursive,
   int/*LockFlag*/|DAVLock lock = check_locks(path, recursive, id);
 
   int(0..1) got_sublocks;
-  if (intp(lock) && !(<LOCK_NONE, LOCK_OWN_BELOW>)[lock]) {
+  if (lock && intp(lock)) {
     if (lock & 1) {
       TRACE_LEAVE("Locked by other user.");
       return Roxen.http_status(Protocols.HTTP.DAV_LOCKED);
     }
-    else
+    else if (recursive)
+      // This is set for LOCK_OWN_BELOW too since it might be
+      // necessary to come back here and check the If header for
+      // those locks.
       got_sublocks = 1;
   }
 
@@ -1045,7 +1049,8 @@ mapping(string:mixed)|int(0..1) write_access(string path, int(0..1) recursive,
       TRACE_LEAVE("Locked, no if header.");
       return Roxen.http_status(Protocols.HTTP.DAV_LOCKED);
     }
-    TRACE_LEAVE("No lock and no if header.");
+    SIMPLE_TRACE_LEAVE("No lock and no if header - ok%s.",
+		       got_sublocks ? " (this level only)" : "");
     return got_sublocks;	// No condition and no lock -- Ok.
   }
 
@@ -1078,7 +1083,8 @@ mapping(string:mixed)|int(0..1) write_access(string path, int(0..1) recursive,
       }
     }
     TRACE_LEAVE("Found match.");
-    TRACE_LEAVE("Ok.");
+    SIMPLE_TRACE_LEAVE("Ok%s.",
+		       got_sublocks ? " (this level only)" : "");
     return got_sublocks;	// Found matching sub-condition.
   }
 
