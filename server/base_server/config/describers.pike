@@ -120,8 +120,8 @@ string describe_module_copy_variables(object node)
 }  
 
 
-#define DOTDOT(node) ("<a href=/(moredocs)"+node->path(1)+"><img border=0 src=/auto/button/lm/More%20Documentation><img border=0 alt="" hspacing=0 vspacing=0 src=/auto/button/rm/%20></a>")
-#define NODOTDOT(node) ("<a href=/(lessdocs)"+node->path(1)+"><img border=0 src=/auto/button/lm/Less%20Documentation><img border=0 alt="" hspacing=0 vspacing=0 src=/auto/button/rm/%20></a>")
+#define DOTDOT(node) ("<a href=/(moredocs)"+node->path(1)+"><img border=0 src=/auto/button/lm/More%20Documentation><img border=0 alt=\"\" hspacing=0 vspacing=0 src=/auto/button/rm/%20></a>")
+#define NODOTDOT(node) ("<a href=/(lessdocs)"+node->path(1)+"><img border=0 src=/auto/button/lm/Less%20Documentation><img border=0 alt=\"\" hspacing=0 vspacing=0 src=/auto/button/rm/%20></a>")
 
 string shorten(string in, object node)
 {
@@ -129,7 +129,7 @@ string shorten(string in, object node)
   if(strlen(in)<250) return in;
   if((search(in,"\n")<0) || (search(in,"\n")==strlen(in)-1)) return in;
   if(node->moredocs)
-    return in+"<br>"+NODOTDOT(node);
+    return in+"<p>"+NODOTDOT(node);
 //  for(int i=100;i<strlen(in);i++)
 //    if(in[i]=='>' || in[i]=='\n')
 //      break;
