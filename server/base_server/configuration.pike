@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.38 1997/07/11 06:00:01 per Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.39 1997/07/16 20:07:54 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -2117,53 +2117,54 @@ int load_module(string module_file)
 
   roxen->current_configuration = this_object();
 #ifdef MODULE_DEBUG
-  perror("Modules: Loading "+module_file+"... ");
+  perror("Modules: Loading " + module_file + "... ");
 #endif
 
-  if(prog=cache_lookup("modules", module_file))
-    obj=prog();
-  else
-  {
+  if(prog=cache_lookup("modules", module_file)) {
+    err = catch {
+      obj = prog();
+    };
+  } else {
     string dir;
 
    _master->set_inhibit_compile_errors("");
 
-    err = catch { obj = roxen->load_from_dirs(roxen->QUERY(ModuleDirs), module_file); };
+    err = catch {
+      obj = roxen->load_from_dirs(roxen->QUERY(ModuleDirs), module_file);
+    };
 
-    if( err && obj ) {
-      obj=0;
-    }
-
-    if (sizeof(_master->errors)) {
-      report_error(sprintf("While compiling module (\"%s\"):\n%s\n",
-			   module_file, _master->errors));
-    } else if (err) {
-      report_error("While enabling module ("+module_file+"):\n"+
-		   describe_backtrace(err)+"\n");
-    }
+    string errors = _master->errors;
 
     _master->set_inhibit_compile_errors(0);
+
+    if (sizeof(errors)) {
+      report_error(sprintf("While compiling module (\"%s\"):\n%s\n",
+			   module_file, errors));
+      return(0);
+    }
 
     prog = roxen->last_loaded();
   }
 
+  if (err) {
+    report_error("While enabling module (" + module_file + "):\n" +
+		 describe_backtrace(err) + "\n");
+    return(0);
+  }
 
   if(!obj)
   {
-    report_error( "Module load failed ("+module_file+") (not found).\n" );
+    report_error("Module load failed (" + module_file + ") (not found).\n");
     return 0;
   }
 
-  err = catch (module_data = obj->register_module());
-
-  if (err)
-  {
+  if (err = catch (module_data = obj->register_module())) {
 #ifdef MODULE_DEBUG
     perror("FAILED\n" + describe_backtrace( err ));
 #endif
-    report_error( "Module loaded, but register_module() failed (" 
+    report_error("Module loaded, but register_module() failed (" 
 		 + module_file + ").\n"  +
-		  describe_backtrace( err ));
+		 describe_backtrace( err ));
     return 0;
   }
 
@@ -2183,23 +2184,23 @@ int load_module(string module_file)
      case 4:
       if (module_data[3] && !arrayp( module_data[3] ))
 	err = "The fourth element of the array register_module returned "
-	  + "(extra_buttons) wasn't an array.\n" + err;
+	  "(extra_buttons) wasn't an array.\n" + err;
      case 3:
       if (!stringp( module_data[2] ))
 	err = "The third element of the array register_module returned "
-	  + "(documentation) wasn't a string.\n" + err;
+	  "(documentation) wasn't a string.\n" + err;
       if (!stringp( module_data[1] ))
 	err = "The second element of the array register_module returned "
-	  + "(name) wasn't a string.\n" + err;
+	  "(name) wasn't a string.\n" + err;
       if (!intp( module_data[0] ))
 	err = "The first element of the array register_module returned "
-	  + "(type) wasn't an integer.\n" + err;
+	  "(type) wasn't an integer.\n" + err;
       break;
 
      default:
-      err = ("The array register_module returned was too small/large. "
-	     + "It should have been three or four elements (type, name, "
-	     + "documentation and extra buttons (optional))\n");
+      err = "The array register_module returned was too small/large. "
+	"It should have been three or four elements (type, name, "
+	"documentation and extra buttons (optional))\n";
     }
   if (err != "")
   {
