@@ -5,7 +5,7 @@ constant box_initial = 1;
 constant box_position = -1;
 
 constant box_name = "Welcome message";
-constant box_doc  = "Roxen welcome message and news";
+constant box_doc  = "ChiliMoon welcome message and news";
 
 string parse( RequestID id )
 {
