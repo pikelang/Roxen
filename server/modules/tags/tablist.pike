@@ -1,12 +1,12 @@
 /*
- * $Id: tablist.pike,v 1.21 1999/11/11 07:39:54 mast Exp $
+ * $Id: tablist.pike,v 1.22 1999/11/11 09:24:07 mast Exp $
  *
  * Makes a tab list like the one in the config interface.
  *
  * $Author: mast $
  */
 
-constant cvs_version="$Id: tablist.pike,v 1.21 1999/11/11 07:39:54 mast Exp $";
+constant cvs_version="$Id: tablist.pike,v 1.22 1999/11/11 09:24:07 mast Exp $";
 constant thread_safe=1;
 
 #define use_contents_cache 0
@@ -171,7 +171,7 @@ Image.image load_image(string f)
     werror("Tablist: Failed to open file: %s\n", f);
     return 0;
   }
-  return Image.PNM.decode(data);
+  return Image.PNG.decode(data);
 }
 
 object mask_image = load_image("tab_mask.png");
