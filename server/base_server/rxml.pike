@@ -3,7 +3,7 @@
 //
 // The Roxen RXML Parser. See also the RXML Pike modules.
 //
-// $Id: rxml.pike,v 1.321 2001/11/27 17:32:41 mast Exp $
+// $Id: rxml.pike,v 1.322 2001/11/27 18:53:37 mast Exp $
 
 
 inherit "rxmlhelp";
@@ -70,6 +70,7 @@ RXML.TagSet rxml_tag_set = class
   void prepare_context (RXML.Context ctx)
   {
     RequestID id = ctx->id;
+    mapping misc = ctx->misc;
 
     PROF_ENTER( "rxml", "overhead" );
 
@@ -79,10 +80,8 @@ RXML.TagSet rxml_tag_set = class
     // permanently. The latter is to be compatible with top level code
     // that uses id->misc->defines after the rxml evaluation.
     if (mapping defines = id->misc->defines) {
-      mapping misc = ctx->misc;
       if (defines != misc) {
 	if (defines->rxml_misc) ctx->id_defines = defines;
-	misc->rxml_misc = 1;
 
 	// These settings ought to be in id->misc but are in this
 	// mapping for historical reasons.
@@ -92,32 +91,35 @@ RXML.TagSet rxml_tag_set = class
 	id->misc->defines = misc;
       }
     }
-    else id->misc->defines = ctx->misc;
+    else
+      id->misc->defines = misc;
+    misc->rxml_misc = 1;
 
 #if ROXEN_COMPAT <= 1.3
     if (old_rxml_compat) ctx->compatible_scope = 1;
 #endif
 
-    ctx->misc[" _ok"] = ctx->misc[" _prev_ok"] = 1;
-    ctx->misc[" _error"] = 200;
-    ctx->misc[" _extra_heads"] = ([ ]);
-    if(id->misc->stat) ctx->misc[" _stat"] = id->misc->stat;
+    misc[" _ok"] = misc[" _prev_ok"] = 1;
+    misc[" _error"] = 200;
+    misc[" _extra_heads"] = ([ ]);
+    if(id->misc->stat) misc[" _stat"] = id->misc->stat;
   }
 
   void eval_finish (RXML.Context ctx)
   {
     RequestID id = ctx->id;
+    mapping misc = ctx->misc;
 
-    if(sizeof(ctx->misc[" _extra_heads"]))
+    if(sizeof(misc[" _extra_heads"]))
       if (id->misc->moreheads)
-	id->misc->moreheads |= ctx->misc[" _extra_heads"];
+	id->misc->moreheads |= misc[" _extra_heads"];
       else
-	id->misc->moreheads = ctx->misc[" _extra_heads"];
+	id->misc->moreheads = misc[" _extra_heads"];
 
     if (mapping orig_defines = ctx->id_defines) {
       // Somehow it seems like these values are stored in the wrong place.. :P
-      if (int v = ctx->misc[" _error"]) orig_defines[" _error"] = v;
-      if (string v = ctx->misc[" _rettext"]) orig_defines[" _rettext"] = v;
+      if (int v = misc[" _error"]) orig_defines[" _error"] = v;
+      if (string v = misc[" _rettext"]) orig_defines[" _rettext"] = v;
       id->misc->defines = orig_defines;
     }
 
