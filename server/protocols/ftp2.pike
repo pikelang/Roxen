@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.26 1998/05/14 16:18:48 grubba Exp $
+ * $Id: ftp2.pike,v 1.27 1998/05/14 16:35:54 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -1141,8 +1141,11 @@ class FTPSession
     "XCWD":"[ <sp> directory-name ] (Change working directory)",
     "XCUP":"(Change to parent directory)",
 
-    // The following aren't in RFC 959
-    "MDTM":"<sp> file-name (Modification time)",
+    // The following are in
+    // "Extended Directory Listing, TVFS, and Restart Mechanism for FTP"
+    // draft 4.
+    "FEAT":"(Feature list)",
+    "MDTM":"<sp> path-name (Modification time)",
     "SIZE":"<sp> path-name (Size)",
 
     // These are in RFC 765 but not in RFC 959
@@ -1211,10 +1214,13 @@ class FTPSession
 
     string s;
     int i;
-    data[sizeof(data)-1] = sprintf("%03d %s\r\n", code, data[sizeof(data)-1]);
-    for (i = sizeof(data)-1; i--;) {
-      data[i] = sprintf("%03d-%s\r\n", code, data[i]);
+    if (sizeof(data) > 1) {
+      data[0] = sprintf("%03d-%s\r\n", code, data[i]);
+      for (i = sizeof(data)-1; --i; ) {
+	data[i] = " " + data[i];
+      }
     }
+    data[sizeof(data)-1] = sprintf("%03d %s\r\n", code, data[sizeof(data)-1]);
     s = data * "";
 
     if (sizeof(s) && !sizeof(to_send)) {
@@ -2521,6 +2527,20 @@ class FTPSession
   void ftp_SYST(string args)
   {
     send(215, ({ "UNIX Type: L8: Roxen Challenger Information Server"}));
+  }
+
+  void ftp_FEAT(string args)
+  {
+    array a = sort(Array.filter(indices(cmd_help),
+				lambda(string s) {
+				  return(this_object()["ftp_"+s]);
+				}));
+    a = Array.map(a, lambda(string s) {
+		       return(([ "REST":"REST STREAM" ])[s] || s);
+		     });
+
+    send(211, ({ "The following features are supported:" }) + a +
+	 ({ "END" }));
   }
 
   void ftp_MDTM(string args)
