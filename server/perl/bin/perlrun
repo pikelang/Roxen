@@ -1,0 +1,20 @@
+#! /bin/sh
+#
+# $Id: perlrun,v 1.1 2000/08/17 10:14:44 leif Exp $
+
+DIR="`dirname $0`"
+if [ ! -f "$DIR/perlhelper" ] ; then
+  DIR="`pwd`"
+fi
+if [ ! -f "$DIR/perlhelper" ] ; then
+  echo >&2 "$0 $$: unable to find 'perlhelper' script"
+  exit 1
+fi
+for X in /usr/local/bin /usr/bin /bin
+do
+  if [ -f $X/perl ] ; then
+     exec $X/perl "$DIR/perlhelper"
+  fi
+done
+echo >&2 "$0 $$: unable to local Perl interpreter"
+exit 1
