@@ -103,7 +103,11 @@ void init_codec( function query )
 void codec_vars(function defvar)
 {
   defvar("codec", "null", _(0,"Encoder"), TYPE_STRING_LIST,
-	 _(0,"The codec program to use to encode MPEG"),
+	 _(0,"The codec program to use to encode MPEG. Please note that "
+	  "winamp does not support variable bitrate, thus, if your mpeg "
+	   "files does not all have the correct bitrate, use the encoder "
+	   "and decoders to enforce a bitrate. This will cause slightly lower"
+	   "sound quality."),
 	 ({ "null", "bladeenc" }) );
   defvar("decoder", "null", _(0,"Decoder"), TYPE_STRING_LIST,
 	 _(0,"The decoder program to use to decode MPEG"),
