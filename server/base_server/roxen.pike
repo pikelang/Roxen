@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.399 2000/01/31 03:46:42 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.400 2000/02/01 23:09:48 jhs Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -1591,28 +1591,31 @@ int add_new_configuration(string name, string type)
 mapping(string:array(int)) error_log=([]);
 
 // Write a string to the configuration interface error log and to stderr.
-void nwrite(string s, int|void perr, int|void type,
+void nwrite(string s, int|void perr, int|void errtype,
             object|void mod, object|void conf)
 {
-  if (!error_log[type+","+s])
-    error_log[type+","+s] = ({ time() });
+  int log_time = time();
+  string reference = mod ? get_modname(mod) : conf && conf->name || "";
+  string log_index = sprintf("%d,%s,%s", errtype, reference, s);
+  if(!error_log[log_index])
+    error_log[log_index] = ({ log_time });
   else
-    error_log[type+","+s] += ({ time() });
+    error_log[log_index] += ({ log_time });
 
   if( mod )
   {
     if( !mod->error_log )
       mod->error_log = ([]);
-    mod->error_log[type+","+s] += ({time()});
+    mod->error_log[log_index] += ({ log_time });
   }
   if( conf )
   {
     if( !conf->error_log )
       conf->error_log = ([]);
-    conf->error_log[type+","+s] += ({time()});
+    conf->error_log[log_index] += ({ log_time });
   }
 
-  if(type >= 1)
+  if(errtype >= 1)
     report_debug( s );
 }
 

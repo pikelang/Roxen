@@ -126,7 +126,7 @@ string devel_buttons( object c, string mn, object id )
     else if( a == parse_rxml( "<cf-locale get=clear_log>",id ) )
     {
       mod->error_log = ([
-        "2,Event log cleared by "+id->misc->config_user->real_name+
+        "2,,Event log cleared by "+id->misc->config_user->real_name+
         " ("+id->misc->config_user->name+") from "+
         id->misc->config_settings->host:({ time() }),
       ]);
@@ -140,10 +140,9 @@ string devel_buttons( object c, string mn, object id )
          (sizeof( mod->error_log ) ?
          "<submit-gbutton preparse><cf-locale get=clear_log></submit-gbutton>":
           "");
-;
 }
 
-string get_eventlog( object o, RequestID id )
+string get_eventlog( roxen.ModuleInfo o, RequestID id, int|void no_links )
 {
   mapping log = o->error_log;
   if(!sizeof(log)) return "";
@@ -156,8 +155,9 @@ string get_eventlog( object o, RequestID id )
   });
   sort(r2,report);
   for(int i=0;i<sizeof(report);i++)
-     report[i] = describe_error(report[i], log[report[i]]);
-  return "<h2><cf-locale get=eventlog></h2>"+(report*"");
+     report[i] = describe_error(report[i], log[report[i]],
+				id->misc->cf_locale, no_links);
+  return "<h2><cf-locale get=eventlog></h2>" + (report*"");
 }
 
 string find_module_doc( string cn, string mn, object id )
@@ -180,7 +180,7 @@ string find_module_doc( string cn, string mn, object id )
 
   roxen.ModuleInfo mi = roxen.find_module( (mn/"!")[0] );
 
-  string eventlog = get_eventlog( m,id );
+  string eventlog = get_eventlog( m, id );
 
 
   return replace( "<br><b><font size=+2>"

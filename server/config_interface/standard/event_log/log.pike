@@ -15,6 +15,7 @@ string parse(object id)
   });
   sort(r2,report);
   for(int i=0;i<sizeof(report);i++) 
-     report[i] = describe_error(report[i], log[report[i]]);
+     report[i] = describe_error(report[i], log[report[i]],
+				id->misc->cf_locale, 2);
   return "</dl>"+(sizeof(report)?(report*""):LOCALE->empty)+"<dl>";
 }

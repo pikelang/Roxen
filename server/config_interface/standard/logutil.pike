@@ -67,18 +67,64 @@ string fix_err(string s)
 }
 
 int last_time;
-string describe_error(string err, array (int) times)
+string describe_error(string err, array (int) times,
+		      string lang, int|void no_links)
 {
   int code, nt;
-  array(string) codetext=({ LOCALE->notice, 
-			    LOCALE->warning, 
+  string links = "", reference, server;
+  array(string) codetext=({ LOCALE->notice,
+			    LOCALE->warning,
 			    LOCALE->error });
-  
+
   if(sizeof(times)==1 && times[0]/60==last_time) nt=1;
   last_time=times[0]/60;
-  sscanf(err, "%d,%s", code, err);
-  return ("<table><tr><td valign=top><img src=/internal-roxen-err_"+code+".gif \n"
-	  "alt="+codetext[code-1]+">"
-	  "</td><td>"+(nt?"":describe_times(times)+"<br>")+
-	  replace(fix_err(err),"\n","<br>\n")+"</table>");
+  sscanf(err, "%d,%[^,],%s", code, reference, err);
+  switch(no_links)
+  {
+    Configuration conf;
+    RoxenModule module;
+    case 2:
+      sscanf(reference, "%[^/]", server);
+      if(conf = roxen->find_configuration( server ))
+	links += sprintf("<a href=\"%s\">%s</a> : ",
+			 @get_conf_url_to_virtual_server( conf, lang ));
+    case 1: // find_configuration(configinterface)->query_name() == realname
+      if(module = get_module( reference ))
+	links += sprintf("<a href=\"%s\">%s</a> : ",
+			 @get_conf_url_to_module( module, lang ));
+  }
+
+  return "<table><tr><td valign=top><img src=/internal-roxen-err_"+code+".gif \n"
+	 "alt=" + codetext[code-1] + ">"
+	  "</td><td>" + links + (nt?"":describe_times(times)+"<br>") +
+	  replace(fix_err(err), "\n", "<br>\n") + "</table>";
+}
+
+
+// Returns ({ URL to module config page, human-readable (full) module name })
+array(string) get_conf_url_to_module(string|object(RoxenModule) m, string lang)
+{ // module is either a RoxenModule object or a string as returned by
+  // get_modname(some RoxenModule), eg "ConfigInterface/piketag#0"
+  RoxenModule module = stringp(m) ? get_module(m) : m;
+  Configuration conf = module->my_configuration();
+  string url_modname = replace(conf->otomod[module], "#", "!"),
+	url_confname = conf->name;
+
+  return ({ sprintf("/%s/sites/site.html/%s/modules/%s/",
+		    lang || "standard", url_confname, url_modname),
+	    get_modfullname(module) });
+}
+
+// Returns ({ URL to virtual server config page, virtual server name })
+array(string) get_conf_url_to_virtual_server(string|object(Configuration) conf,
+					     string lang)
+{ // conf is either a conf object or the configuration's real name, eg "ConfigInterface"
+  string url_confname;
+  if(stringp(conf))
+    conf = roxen->find_configuration(url_confname = conf);
+  else
+    url_confname = conf->name;
+
+  return ({ sprintf("/%s/sites/site.html/%s/", lang || "standard", url_confname),
+            conf->query_name() });
 }
