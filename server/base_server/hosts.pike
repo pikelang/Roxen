@@ -1,6 +1,22 @@
-// "$Id: hosts.pike,v 1.24 1998/03/28 01:25:01 neotron Exp $";
+// "$Id: hosts.pike,v 1.25 1999/07/16 06:22:54 neotron Exp $";
 #include <roxen.h>
 
+#ifdef NO_DNS
+// Don't do ANY DNS lookups.
+string blocking_ip_to_host(string ip) { return ip; }
+string blocking_host_to_ip(string host) { return host; }
+string quick_ip_to_host(string ip) { return ip; }
+string quick_host_to_ip(string host) { return host; }
+void ip_to_host(string|void ipnumber, function|void callback, mixed ... args)
+{
+  callback(ipnumber, @args);
+}
+
+void host_to_ip(string|void host, function|void callback, mixed ... args)
+{
+  callback(host, @args);
+}
+#else
 public mapping (string:array(mixed)) do_when_found=([]);
 object dns = Protocols.DNS.async_client();
 mapping lookup_funs=([IP_TO_HOST:dns->ip_to_host,HOST_TO_IP:dns->host_to_ip]);
@@ -92,4 +108,4 @@ void host_to_ip(string|void host, function|void callback, mixed ... args)
   LOOKUP(HOST_TO_IP,host,callback,args);
 }
  
-
+#endif

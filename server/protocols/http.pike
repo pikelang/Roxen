@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.143 1999/07/15 20:32:00 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.144 1999/07/16 06:22:54 neotron Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -286,15 +286,15 @@ private int really_set_config(array mod_config)
 private static mixed f, line;
 private static int hstart;
 
-private int parse_got(string raw)
+private int parse_got()
 {
   multiset (string) sup;
   array mod_config;
   string a, b, s="", linename, contents;
   int config_in_url;
 
-  DPERROR(sprintf("HTTP: parse_got(%O)", s));
-  if (!line) {    
+  DPERROR(sprintf("HTTP: parse_got(%O)", raw));
+  if (!method) {  // Haven't parsed the first line yet.  
     // We check for \n only if \r\n fails, since Netscape 4.5 sends
     // just a \n when doing a proxy-request. 
     // example line:
@@ -325,35 +325,39 @@ private int parse_got(string raw)
     {
     case 1:
       // PING...
-      if(method == "PING") {
-	my_fd->write("PONG\r\n"); 
-	return 2;
-      }
+      if(method == "PING") 
+	break;
       // only PING is valid here.
       return 1;
       
     case 2:
       // HTTP/0.9
       clientprot = prot = "HTTP/0.9";
-      method = "GET"; // 0.9 only supports get.
+      if(method != "PING")
+	method = "GET"; // 0.9 only supports get.
       s = data = ""; // no headers or extra data...
       break;
 
     case 4:
-      // Got extra spaces in the URI.
-      // All the extra stuff is now in the trailer.
-
-      // Get rid of the extra space from the sscanf above.
-      trailer = trailer[..sizeof(trailer) - 2];
-      f += " " + clientprot;
-
-      // Find the last space delimiter.
-      if (!(end = (search(reverse(trailer), " ") + 1))) {
-	// Just one space in the URI.
-	clientprot = trailer;
-      } else {
-	f += " " + trailer[..sizeof(trailer) - (end + 1)];
-	clientprot = trailer[sizeof(trailer) - end ..];
+      // Stupid sscanf! If trailer == "" it's a valid request. Really! Grrr.
+      if(strlen(trailer)) {
+	// Got extra spaces in the URI.
+	// All the extra stuff is now in the trailer.
+	
+	int end;
+	
+	// Get rid of the extra space from the sscanf above.
+	trailer = trailer[..sizeof(trailer) - 2];
+	f += " " + clientprot;
+	
+	// Find the last space delimiter.
+	if (!(end = (search(reverse(trailer), " ") + 1))) {
+	  // Just one space in the URI.
+	  clientprot = trailer;
+	} else {
+	  f += " " + trailer[..sizeof(trailer) - (end + 1)];
+	  clientprot = trailer[sizeof(trailer) - end ..];
+	}
       }
       /* FALL_THROUGH */
     case 3:
@@ -383,9 +387,13 @@ private int parse_got(string raw)
     // Check that the request is complete
     if (!sscanf(raw, "%s\r\n\r\n%s", s, data)) {
       // No, we need more data.
-      DPERROR("HTTP: parse_got(): Request is not complete.");
+      DPERROR("HTTP: parse_got(): Request is still not complete.");
       return 0;
     }
+  }
+  if(method == "PING") {
+    my_fd->write("PONG\r\n"); 
+    return 2;
   }
   
   raw_url    = f;
@@ -1527,11 +1535,15 @@ void got_data(mixed fooid, string s)
                          // within 30 seconds. Should be more than enough.
   time = _time(1); // Check is made towards this to make sure the object
   		  // is not killed prematurely.
+  if(!raw)
+    raw = s;
+  else 
+    raw += s;
   if(wanted_data)
   {
-    if(strlen(s)+have_data < wanted_data)
+    if(strlen(s) + have_data < wanted_data)
     {
-      cache += ({ s });
+      //      cache += ({ s });
       have_data += strlen(s);
 
       DPERROR("HTTP: We want more data.");
@@ -1540,20 +1552,21 @@ void got_data(mixed fooid, string s)
   }
   
   
+#if 0
   if(cache) 
   {
-    s = cache*""+s; 
+    raw = cache*""+s; 
     cache = 0;
   }
-
+#endif
   // If the request starts with newlines, it's a broken request. Really!
   //  sscanf(s, "%*[\n\r]%s", s);
-  if(strlen(s)) tmp = parse_got(s);
+  if(strlen(raw)) tmp = parse_got();
   switch(tmp)
   { 
    case 0:
-    if(this_object()) 
-      cache = ({ s });		// More on the way.
+    //    if(this_object()) 
+    //      cache = ({ s });		// More on the way.
     DPERROR("HTTP: Request needs more data.");
     return;
     
