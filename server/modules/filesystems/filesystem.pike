@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.112 2001/09/21 09:52:09 per Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.113 2001/09/27 17:53:43 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -150,17 +150,17 @@ void create()
 
   defvar("access_as_user_db",
 	 Variable.UserDBChoice( " all", VAR_MORE,
-				 LOCALE(0,"Authentication database to use"), 
-				 LOCALE(36,"The User database module to use "
+				 LOCALE(53,"Authentication database to use"), 
+				 LOCALE(54,"The User database module to use "
 					"when authenticating users for the "
 					"access file as the logged in user "
 					"feature."),
 				my_configuration()));
 
   defvar( "access_as_user_throw", 0,
-	  LOCALE(0,"Access files as the logged in user forces login"),
+	  LOCALE(55,"Access files as the logged in user forces login"),
 	  TYPE_FLAG|VAR_MORE,
-	  LOCALE(0,"If true, a user will have to be logged in to access files in "
+	  LOCALE(56,"If true, a user will have to be logged in to access files in "
 		 "this filesystem") );
 
   defvar("no_symlinks", 0, LOCALE(37,"Forbid access to symlinks"),

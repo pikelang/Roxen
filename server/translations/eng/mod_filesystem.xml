@@ -173,7 +173,7 @@
 </str>
 
 <str id="35">
-<o>Access file as the logged in user</o>
+<o>Access files as the logged in user</o>
 <t></t>
 </str>
 
@@ -272,5 +272,25 @@
 <o>Path verification of %O failed:
 %O is not a prefix of %O
 </o>
+<t></t>
+</str>
+
+<str id="53">
+<o>Authentication database to use</o>
+<t></t>
+</str>
+
+<str id="54">
+<o>The User database module to use when authenticating users for the access file as the logged in user feature.</o>
+<t></t>
+</str>
+
+<str id="55">
+<o>Access files as the logged in user forces login</o>
+<t></t>
+</str>
+
+<str id="56">
+<o>If true, a user will have to be logged in to access files in this filesystem</o>
 <t></t>
 </str>
