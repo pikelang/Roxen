@@ -1,4 +1,7 @@
-// $Id: module.h,v 1.54 2001/11/23 15:54:17 nilsson Exp $
+// -*- pike -*-
+//
+// $Id: module.h,v 1.55 2002/03/12 13:20:04 mast Exp $
+
 #ifndef ROXEN_MODULE_H
 #define ROXEN_MODULE_H
 /* #include "config.h" */
@@ -80,4 +83,21 @@
 #  define RXML_CONTEXT (_cur_rxml_context)
 #endif
 
+// Debug macros.
+
+#ifdef MODULE_DEBUG
+#  define DO_IF_MODULE_DEBUG(code...) code
+#else
+#  define DO_IF_MODULE_DEBUG(code...)
 #endif
+
+#ifdef RXML_VERBOSE
+#  define TAG_DEBUG_TEST(test) 1
+#elif defined (RXML_REQUEST_VERBOSE)
+#  define TAG_DEBUG_TEST(test)						\
+  ((test) || RXML_CONTEXT->id && RXML_CONTEXT->id->misc->rxml_verbose)
+#else
+#  define TAG_DEBUG_TEST(test) (test)
+#endif
+
+#endif	// !ROXEN_MODULE_H
