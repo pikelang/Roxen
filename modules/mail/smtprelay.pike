@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 1.26 1998/09/20 23:33:55 grubba Exp $
+ * $Id: smtprelay.pike,v 1.27 1998/09/21 16:25:35 grubba Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RELAY_DEBUG
 
-constant cvs_version = "$Id: smtprelay.pike,v 1.26 1998/09/20 23:33:55 grubba Exp $";
+constant cvs_version = "$Id: smtprelay.pike,v 1.27 1998/09/21 16:25:35 grubba Exp $";
 
 /*
  * Some globals
@@ -140,12 +140,12 @@ class SocketNotSelf
   {
     if (!args) {
 #ifdef SOCKET_DEBUG
-      perror("SOCKETS: async_connect: No arguments to connected\n");
+      roxen_perror("SOCKETS: async_connect: No arguments to connected\n");
 #endif /* SOCKET_DEBUG */
       return;
     }
 #ifdef SOCKET_DEBUG
-    perror("SOCKETS: async_connect ok.\n");
+    roxen_perror("SOCKETS: async_connect ok.\n");
 #endif
     args[2]->set_id(0);
     args[0](args[2], @args[1]);
@@ -154,7 +154,7 @@ class SocketNotSelf
   private void failed(array args)
   {
 #ifdef SOCKET_DEBUG
-    perror("SOCKETS: async_connect failed\n");
+    roxen_perror("SOCKETS: async_connect failed\n");
 #endif
     args[2]->set_id(0);
     destruct(args[2]);
@@ -189,12 +189,12 @@ class SocketNotSelf
     object f;
     f=Stdio.File();
 #ifdef SOCKET_DEBUG
-    perror("SOCKETS: async_connect "+oh+" == "+host+"\n");
+    roxen_perror("SOCKETS: async_connect "+oh+" == "+host+"\n");
 #endif
     if(!f->open_socket())
     {
 #ifdef SOCKET_DEBUG
-      perror("SOCKETS: socket() failed. Out of sockets?\n");
+      roxen_perror("SOCKETS: socket() failed. Out of sockets?\n");
 #endif
       callback(0, @args);
       destruct(f);
@@ -208,7 +208,8 @@ class SocketNotSelf
     if(catch(f->connect(host, port))) // Illegal format...
     {
 #ifdef SOCKET_DEBUG
-      perror("SOCKETS: Illegal internet address in connect in async comm.\n");
+      roxen_perror("SOCKETS: Illegal internet address in connect "
+		   "in async comm.\n");
 #endif
       callback(0, @args);
       destruct(f);
@@ -220,7 +221,7 @@ class SocketNotSelf
 		     mixed ... args)
   {
 #ifdef SOCKET_DEBUG
-    perror("SOCKETS: async_connect requested to "+host+":"+port+"\n");
+    roxen_perror("SOCKETS: async_connect requested to "+host+":"+port+"\n");
 #endif
     roxen->host_to_ip(host, got_host_name, host, port, callback, @args);
   }
@@ -255,7 +256,7 @@ class MailSender
   {
     int i = con->write(out_buf);
 #ifdef RELAY_DEBUG
-    roxen_perror("SMTP: Wrote %d bytes\n", i);
+    report_debug("SMTP: Wrote %d bytes\n", i);
 #endif /* RELAY_DEBUG */
     if (i < 0) {
       // Error
@@ -272,7 +273,7 @@ class MailSender
   static void send(string s)
   {
 #ifdef RELAY_DEBUG
-    roxen_perror("SMTP: send(%O)\n", s);
+    // roxen_perror("SMTP: send(%O)\n", s);
 #endif /* RELAY_DEBUG */
     out_buf += s;
 
@@ -284,6 +285,9 @@ class MailSender
   static string last_command = "";
   static void send_command(string s)
   {
+#ifdef RELAY_DEBUG
+    report_debug(sprintf("SMTP: send_command(%O)\n", s));
+#endif /* RELAY_DEBUG */
     last_command = s;
     send(s + "\r\n");
   }
@@ -380,8 +384,7 @@ class MailSender
   static void send_ok()
   {
 #ifdef RELAY_DEBUG
-    roxen_perror(sprintf("SMTP: Message %O sent ok!\n",
-			 message->mailid));
+    report_debug(sprintf("SMTP: Message %O sent ok!\n", message->mailid));
 #endif /* RELAY_DEBUG */
     result = 1;
     send_command("QUIT");
@@ -433,7 +436,7 @@ class MailSender
     function|string action = find_next(state_actions[state], code, "QUIT");
 
 #ifdef DEBUG
-    roxen_perror(sprintf("code %s: State %d => State %d:%O\n",
+    report_debug(sprintf("code %s: State %d => State %d:%O\n",
 			 code, state, next_state, action));
 #endif /* DEBUG */
 
@@ -456,7 +459,7 @@ class MailSender
   static void got_data(mixed id, string data)
   {
 #ifdef RELAY_DEBUG
-    roxen_perror(sprintf("SMTP: got_data(%O, %O)\n", id, data));
+    report_debug(sprintf("SMTP: got_data(%O, %O)\n", id, data));
 #endif /* RELAY_DEBUG */
     in_buf += data;
 
@@ -501,7 +504,8 @@ class MailSender
       switch(c) {
       case 0:
 #ifdef RELAY_DEBUG
-	roxen_perror("Connection refused.\n");
+	report_debug(sprintf("SMTP: Connection to %s refused.\n",
+			     message->remote_mta));
 #endif /* RELAY_DEBUG */
 	// Connection refused.
 	break;
@@ -560,13 +564,28 @@ class MailSender
       report_error(sprintf("SMTP: Failed to send message to domain %O\n",
 			   message->domain));
 
+      int t = ((int)message->times);
+      if (!(t % 4)) {
+	if (t < 24*7) { 
+	  parent->bounce(message, "554", ({
+	    sprintf("Message not delivered after %d attempts.", t),
+	    sprintf("Will continue to attempt to send %d more times.",
+		    24*7 - t),
+	  }), "");
+	} else {
+	  // Give up.
+	  send_done(-2, message);
+	  return;
+	}
+      }
+
       // Send failure message.
       send_done(0, message);
       return;
     }
 
 #ifdef RELAY_DEBUG
-    roxen_perror(sprintf("SMTP: Trying with the SMTP server at %s\n",
+    report_debug(sprintf("SMTP: Trying with the SMTP server at %s\n",
 			 servers[server]));
 #endif /* RELAY_DEBUG */
 
@@ -604,7 +623,7 @@ class MailSender
     }
 
 #ifdef RELAY_DEBUG
-    roxen_perror(sprintf("Sending %O to %s@%s from %s...\n",
+    report_debug(sprintf("Sending %O to %s@%s from %s...\n",
 			 message->mailid, message->user, message->domain,
 			 message->sender));
 #endif /* RELAY_DEBUG */
@@ -726,7 +745,7 @@ static void check_mail(int t)
 int send_message(string from, multiset(string) rcpt, string message)
 {
 #ifdef RELAY_DEBUG
-  roxen_perror(sprintf("SMTP: send_message(%O, %O, X)\n", from, rcpt));
+  report_debug(sprintf("SMTP: send_message(%O, %O, X)\n", from, rcpt));
 #endif /* RELAY_DEBUG */
 
   array a = indices(rcpt);
@@ -759,8 +778,10 @@ void bounce(mapping msg, string code, array(string) text, string last_command)
 {
   // FIXME: Generate a bounce.
 
-  roxen_perror(sprintf("SMTP: bounce(%O, %O, %O, %O)\n",
+#ifdef RELAY_DEBUG
+  report_debug(sprintf("SMTP: bounce(%O, %O, %O, %O)\n",
 		       msg, code, text, last_command));
+#endif /* RELAY_DEBUG */
 
   if (sizeof(msg->sender)) {
     // Send a bounce.
@@ -896,7 +917,7 @@ void bounce(mapping msg, string code, array(string) text, string last_command)
       }));
     send_message("<>", (< QUERY(postmaster) >), message);
   } else {
-    roxen_perror("SMTP: A bounce which bounced!\n");
+    report_warning("SMTP: A bounce which bounced!\n");
   }
 }
 
@@ -908,7 +929,7 @@ int relay(string from, string user, string domain,
 	  object mail, string csum, object|void smtp)
 {
 #ifdef RELAY_DEBUG
-  roxen_perror(sprintf("SMTP: relay(%O, %O, %O, X, %O, X)\n",
+  report_debug(sprintf("SMTP: relay(%O, %O, %O, X, %O, X)\n",
 		       from, user, domain, csum));
 #endif /* RELAY_DEBUG */
 
