@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: countdown.pike,v 1.35 2000/06/13 20:10:20 nilsson Exp $";
+constant cvs_version="$Id: countdown.pike,v 1.36 2000/08/09 14:45:39 kuntri Exp $";
 #include <module.h>
 inherit "module";
 
@@ -96,7 +96,7 @@ next=''&gt; says 6 on a friday as opposed to 0 without the next attribute.
 <ex type='vert'>It is <countdown day='monday' next=''/> to monday.</ex>
 
 </attr>
-<attr name=prec value=year|month|week|day|hour|minute|second>modifies the precision for 'boolean'- and 'combined'-arguments.</attr>
+<attr name=prec value=year|month|week|day|hour|minute|second>Modifies the precision for 'boolean'- and 'combined'-arguments.</attr>
 "]);
 #endif
 
