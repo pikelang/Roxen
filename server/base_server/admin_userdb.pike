@@ -27,7 +27,12 @@ class AdminIFCache
   {
     if( _settings )
     {
-      dir = query_configuration_dir() + "_admininterface/" + name + "/";
+      dir = query_configuration_dir();
+      if( file_stat(dir+"_configinterface") )
+	dir += "_configinterface/";
+      else
+	dir += "_admininterface/";
+      dir += name + "/";
       mkdirhier( dir );
     }
     else
@@ -308,7 +313,7 @@ class ConfigurationSettings
     string render_form( RequestID id, void|mapping additional_args )
     {
       multiset has = (multiset)query();
-      string res = ("<input type=hidden name='"+
+      string res = ("<input type='hidden' name='"+
                     path()+"' value='Go, Gadget, go!' />");
       foreach( possible(), string b )
         if( has[b] )
@@ -583,16 +588,17 @@ class AdminUser
       }
       m_delete( id->variables, rp );
     }
-    string set_src =  Roxen.parse_rxml( "<gbutton-url width=120 talign=center font=&usr.font; preparse> Save"
-					" </gbutton-url>", id );
+    string set_src =  Roxen.parse_rxml
+      ( "<gbutton-url width='120' talign='center' font='&usr.font;'> Save"
+	" </gbutton-url>", id );
     string form = error+
 #"
 <table>
 <tr valign=\"top\"><td><pre>
-   Real name:   <input name='PPPreal_name' value='"+real_name+#"'>
-    Password:   <input type='password' name='PPPpassword' value=''>
-       Again:   <input type='password' name='PPPpassword2' value=''>
-     Crypted:   <input name='PPPc_password' value='"+password+#"'>  
+   Real name:   <input name='PPPreal_name' value='"+real_name+#"' />
+    Password:   <input type='password' name='PPPpassword' value='' />
+       Again:   <input type='password' name='PPPpassword2' value='' />
+     Crypted:   <input name='PPPc_password' value='"+password+#"' />
                 <input type='image' border='0' alt=' Set ' value=' Set ' src='"+
        set_src+"' />"
       +"</pre></td>"
@@ -612,27 +618,27 @@ class AdminUser
       if( permissions[ perm ] )
       {
         string s = Roxen.parse_rxml( "<gbutton-url "+(dim?"dim":"")+
-				     "    icon_src=/img/selected.gif "
-				     "    font=&usr.font; "
-				     "    width=180>"+
+				     "    icon_src='/img/selected.gif' "
+				     "    font='&usr.font;' "
+				     "    width='180'>"+
 				     permission_translations[ perm ]+
 				     "</gbutton-url>", id );
 	if( noclick )
 	  form += sprintf("<img src='%s' />\n", s);
 	else
-	  form += sprintf( "<input border=0 type=image name='PPPremove_%s'"
-			   " src='%s'>\n", perm, s );
+	  form += sprintf( "<input border='0' type='image' name='PPPremove_%s'"
+			   " src='%s' />\n", perm, s );
       }
       else
       {
         string s = Roxen.parse_rxml( "<gbutton-url "+(dim?"dim":"")+
-				     "    icon_src=/img/unselected.gif "
-				     "    font=&usr.font; "
-				     "    width=180>"+
+				     "    icon_src='/img/unselected.gif' "
+				     "    font='&usr.font;' "
+				     "    width='180'>"+
                                      permission_translations[ perm ]+
 				     "</gbutton-url>", id );
-        form += sprintf( "<input border=0 type=image name='PPPadd_%s'"
-                         " src='%s'>\n", perm, s );
+        form += sprintf( "<input border='0' type='image' name='PPPadd_%s'"
+                         " src='%s' />\n", perm, s );
       }
     }
     return replace(form,"PPP",varpath)+
