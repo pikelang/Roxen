@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.35 1998/05/15 06:12:07 neotron Exp $
+ * $Id: ftp2.pike,v 1.36 1998/05/15 21:24:12 neotron Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -105,7 +105,7 @@
 
 class RequestID
 {
-  constant client = ({ "ftp" });
+  array client = ({ "ftp" });
   constant prot = "FTP";
   constant clientprot = "FTP";
 
@@ -174,7 +174,7 @@ class RequestID
     if (m_rid) {
       foreach(indices(m_rid), string var) {
 	if (!(< "create", "__INIT", "clone_me", "end",
-		"client", "clientprot", "prot" >)[var]) {
+		"clientprot", "prot" >)[var]) {
 	  o[var] = m_rid[var];
 	}
       }
@@ -1126,11 +1126,13 @@ class FTPSession
     // Informational commands
     "SYST":"(Get type of operating system)",
     "STAT":"<sp> path-name (Status for file)",
+    "CLNT":"<sp> Client name (specify client name)",
     "HELP":"[ <sp> <string> ] (Give help)",
+
     // Miscellaneous commands
     "SITE":"<sp> <string> (Site parameters)",	// Has separate help
     "NOOP":"(No operation)",
-
+    
     // These are in RFC 542
     "BYE":"(Logout)",
     "BYTE":"<sp> <bits> (Byte size)",
@@ -2647,6 +2649,16 @@ class FTPSession
   void ftp_SYST(string args)
   {
     send(215, ({ "UNIX Type: L8: Roxen Challenger Information Server"}));
+  }
+
+  void ftp_CLNT(string args)
+  {
+    if (!expect_argument("CLNT", args)) {
+      return;
+    }
+
+    send(200, ({ "Ok, gottcha!"}));
+    master_session->client = args/" " - ({ "" });
   }
 
   void ftp_FEAT(string args)
