@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 2000, Roxen IS.
-// $Id: basic_defvar.pike,v 1.15 2000/07/11 01:49:04 nilsson Exp $
+// $Id: basic_defvar.pike,v 1.16 2000/08/12 18:21:05 nilsson Exp $
 // (string:Variable.Variable) 
 mapping(string:Variable.Variable)  variables=([]);
 //! Please do not modify this list directly, instead use 
@@ -20,8 +20,8 @@ int deflocaledoc( string locale, string variable,
 //! This is a compatibility function, and as such is deprecated.
 //! But it will be supported for the forseeable function.
 {
-  werror("Warning: [%O:%O:%O] deflocaledoc is deprecated. Ignored.\n",
-         this_object(), locale, variable );
+  report_error("Warning: [%O:%O:%O] deflocaledoc is deprecated. Ignored.\n",
+	       this_object(), locale, variable );
 }
 
 
@@ -88,8 +88,8 @@ Variable.Variable defvar(string var, mixed value,
 
   if( mappingp( name ) )
   {
-    werror("Warning: [%O:%O] name/doc as mapping is deprecated. Ignored.\n",
-           this_object(), var );
+    report_error("Warning: [%O:%O] name/doc as mapping is deprecated. Ignored.\n",
+		 this_object(), var );
     ln = name;
     name = name->standard || name->english;
   }
@@ -97,8 +97,8 @@ Variable.Variable defvar(string var, mixed value,
   if( mappingp( doc_str ) )
   {
     if( !ln )
-      werror("Warning: [%O:%O] doc as mapping is deprecated. Ignored.\n",
-             this_object(), var );
+      report_error("Warning: [%O:%O] doc as mapping is deprecated. Ignored.\n",
+		   this_object(), var );
     doc_str = doc_str->standard || doc_str->english;
   }
 
