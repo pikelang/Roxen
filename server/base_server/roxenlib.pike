@@ -1,6 +1,6 @@
 inherit "http";
 
-string _cvs_version = "$Id: roxenlib.pike,v 1.7 1996/12/08 10:33:25 neotron Exp $";
+string _cvs_version = "$Id: roxenlib.pike,v 1.8 1997/01/14 15:08:01 per Exp $";
 // This code has to work booth in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -334,7 +334,8 @@ string strip_prestate(string from)
   return from;
 }
 
-string parse_rxml(string what, void|object|mapping id, void|object file)
+string parse_rxml(string what, void|object|mapping id, void|object file,
+		  void|mapping defines)
 {
   if(!id)
     id=([
@@ -352,8 +353,20 @@ string parse_rxml(string what, void|object|mapping id, void|object file)
   return parse_html(what, 
 		    (mapping)id->conf->parse_module->tag_callers,
 		    (mapping)id->conf->parse_module->container_callers,
-		    id, file||this_object(), ([]), id->my_fd);
+		    id, file||this_object(), defines||([]), id->my_fd);
 
+}
+
+string make_tag_atrributes(mapping in)
+{
+  array a=indices(in), b=values(in);
+  for(int i=0; i<sizeof(a); i++)
+    if(lower_case(b[i])!=a[i])
+      if(search(b,"\"")==-1)
+	a[i]+="=\""+b[i]+"\"";
+      else
+	a[i]+="='"+b[i]+"'";
+  return a*" ";
 }
 
 string dirname( string file )
