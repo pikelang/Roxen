@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.338 2001/10/02 12:20:31 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.339 2001/10/08 06:08:36 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -237,24 +237,33 @@ static array(string) join_charset( string old,
   }
 }
 
-static array(string) output_encode( string what, int|void allow_entities )
+static array(string) output_encode( string what, int|void allow_entities,
+				    string|void force_charset )
 {
-  string charset;
-  function encoder;
+  if( !force_charset )
+  {
+    string charset;
+    function encoder;
 
-  foreach( output_charset, string|function f )
-    [charset,encoder] = join_charset( charset, f, encoder, allow_entities );
-
-
-  if( !encoder )
-    if( String.width( what ) > 8 )
-    {
-      charset = "UTF-8";
-      encoder = string_to_utf8;
-    }
-  if( encoder )
-    what = encoder( what );
-  return ({ charset, what });
+    foreach( output_charset, string|function f )
+      [charset,encoder] = join_charset( charset, f, encoder, allow_entities );
+    
+    
+    if( !encoder )
+      if( String.width( what ) > 8 )
+      {
+	charset = "UTF-8";
+	encoder = string_to_utf8;
+      }
+    if( encoder )
+      what = encoder( what );
+    return ({ charset, what });
+  }
+  else
+    return ({
+      0,
+      Locale.Charset.encoder( (force_charset/"=")[-1] )->feed( what )->drain()
+    });
 }
 
 void decode_map( mapping what, function decoder )
@@ -1737,11 +1746,24 @@ void send_result(mapping|void result)
           heads->Connection = "close";
           misc->connection = "close";
         }
+	if( catch( head_string += Roxen.make_http_headers( heads ) ) )
+	{
+	  foreach( indices( heads ), string x )
+	    if( stringp( heads[x] ) )
+	      head_string += x+": "+heads[x]+"\r\n";
+	    else if( arrayp( heads[x] ) )
+	      foreach( heads[x], string xx )
+		head_string += x+": "+xx+"\r\n";
+	    else if( catch {
+	      head_string += x+": "+(string)heads[x];
+	    } )
+	      error("Illegal value in headers array! "
+		    "Expected string or array(string)\n");
+	  head_string += "\r\n";
+	}
 
-        head_string += Roxen.make_http_headers( heads );
-
-        if( strlen( charset ) )
-          head_string = output_encode( head_string, 0 )[1];
+        if( strlen( charset ) || String.width( head_string ) > 8 )
+          head_string = output_encode( head_string, 0, charset )[1];
         conf->hsent += strlen(head_string);
       }
     }
