@@ -1,5 +1,5 @@
 /*
- * $Id: proc.pike,v 1.4 1997/09/06 16:26:34 grubba Exp $
+ * $Id: proc.pike,v 1.5 1997/09/06 17:10:26 noring Exp $
  */
 
 inherit "wizard";
@@ -81,6 +81,20 @@ string format_proc_line(string in, int ipid)
   return "";
 }
 
+string cred(object id)
+{
+  string r = "", s;
+  int uid, gid;
+  if(sscanf(proc("cred",id->variables->pid), "%*d:\te/r/suid=%d  "
+	    "e/r/sgid=%d\n\tgroups:%s\n", uid, gid, s) != 4)
+    return "-<br>";
+  array groups = ((s||"")/" ") - ({ "" });
+  for(int i = 0; i < sizeof(groups); i++)
+    groups[i] = getgrgid((int)groups[i])[0];
+  return sprintf("e/r/suid: %s<br>e/r/sgid: %s<br>groups: %O\n",
+		 getpwuid(uid)[0], getgrgid(gid)[0],
+		 String.implode_nicely(groups));
+}
 
 mixed page_0(object id, object mc)
 {
@@ -96,9 +110,8 @@ mixed page_0(object id, object mc)
   return ("<font size=+1>Process Tree for "+(id->variables->pid||getpid())+"</font><pre>\n"+
 	  tree+
 	  "</pre><font size=+1>Misc status for "+(id->variables->pid||getpid())
-	  +"</font><pre>Memory Usage: "+map+"\n\nCredentials: "+
-	  ((proc("cred",id->variables->pid)/":")[1..]*":")+
-	  "\nCwd: "+
+	  +"</font><pre>Memory Usage: "+map+"\n\nCredentials:<br>"+cred(id)+
+	  "\nCurrent working directory: "+
 	  ((proc("wdx",id->variables->pid)/":")[1..]*":")+
 //	  "Stack: "+(proc("stack",id->variables->pid)/":")[1..]*":"+
 	  "</pre>");
