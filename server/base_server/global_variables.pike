@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: global_variables.pike,v 1.69 2001/05/16 01:15:58 nilsson Exp $
+// $Id: global_variables.pike,v 1.70 2001/06/01 08:15:45 jonasw Exp $
 
 /*
 #pragma strict_types
@@ -107,7 +107,7 @@ void set_up_http_variables( Protocol o, int|void fhttp )
 	   };
   };
 
-  defvar( "minimum_bitrate", 0, LOCALE(205, "Minumum allowed bitrate" ),
+  defvar( "minimum_bitrate", 0, LOCALE(205, "Minimum allowed bitrate" ),
 	  TYPE_INT,
 	  LOCALE(215, "The minimum allowed bitrate, in Kbits/second. If the  "
 		 "client is slower than this set bitrate, it will be "
