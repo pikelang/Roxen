@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.164 2001/09/03 17:57:01 nilsson Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.165 2001/09/03 18:21:00 per Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -495,9 +495,10 @@ array get_variable_maps( object mod,
                          RequestID id, 
                          int fnset )
 {
+  if( !mod )
+    return ({});
   while( id->misc->orig )
     id = id->misc->orig;
-
   array variables = map( indices(mod->query()),
                          get_variable_map,
                          mod,
