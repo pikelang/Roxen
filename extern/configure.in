@@ -8,6 +8,26 @@ AC_CHECK_LIB(socket, socket)
 AC_CHECK_LIB(nsl, main)
 AC_CHECK_LIB(resolv, gethostbyname)
 
+AC_MSG_CHECKING(existance of h_errno)
+AC_CACHE_VAL(pike_cv_h_errno, [
+  AC_TRY_LINK([
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+  ],[
+int main(int argc, char **argv)
+{
+  return(h_errno == TRY_AGAIN);
+}
+  ], [ pike_cv_h_errno=yes ], [ pike_cv_h_errno=no ])
+])
+if test x$pike_cv_h_errno = xyes; then
+  AC_DEFINE(HAVE_H_ERRNO)
+fi
+AC_MSG_RESULT($pike_cv_h_errno)
+
 AC_MSG_CHECKING(if signal handlers reset automatically)
 AC_CACHE_VAL(lpc_cv_sys_signal_oneshot,
 [
