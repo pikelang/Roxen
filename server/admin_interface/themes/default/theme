@@ -28,9 +28,9 @@
 <theme-set what=selected-indicator    to=sel2.gif themefile />
 
 <theme-set what=left-buttonbg     to='#363636'/>
-<theme-set what=left-buttonfg     to='#bf2727'/>
+<theme-set what=left-buttonfg     to='#909090'/>
 <theme-set what=left-selbuttonbg  to='#444444'/>
-<theme-set what=left-selbuttonfg  to='#bf2727'/>
+<theme-set what=left-selbuttonfg  to='#909090'/>
 
 <theme-set what=left-image to="chili.gif" themefile />
 <theme-set what=lefthtml to='<br /><br /><br /><br /><br /><br />' />
