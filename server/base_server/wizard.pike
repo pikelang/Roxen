@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.11 1997/08/20 08:51:17 per Exp $
+/* $Id: wizard.pike,v 1.12 1997/08/20 08:52:58 per Exp $
  *  name="Wizard generator";
  *  doc="This plugin generats all the nice wizards";
  */
@@ -209,7 +209,7 @@ mapping|string wizard_for(object id, string|void cancel, string|void wiz_name)
   {
     function pg=this_object()[wiz_name+((int)v->_page)];
     if(!pg) return "Error: Invalid page ("+v->_page+")!";
-    data = pg();
+    if(data = pg()) break;
   }
   return parse_wizard_page(data,id,wiz_name);
 }
