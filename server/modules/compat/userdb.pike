@@ -1,3 +1,5 @@
+// This is a roxen module. Copyright © 1997 - 2001, Roxen IS.
+
 inherit "module";
 
 constant module_name = "DEPRECATED: UserDB";

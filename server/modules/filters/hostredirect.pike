@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
+// This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 
 // This module redirects requests to different places, depending on the
 // hostname that was used to access the server. It can be used as a
@@ -7,7 +7,7 @@
 
 // responsible for the changes to the original version 1.3: Martin Baehr mbaehr@iaeste.or.at
 
-constant cvs_version = "$Id: hostredirect.pike,v 1.24 2000/11/02 11:15:24 per Exp $";
+constant cvs_version = "$Id: hostredirect.pike,v 1.25 2001/09/03 18:12:18 nilsson Exp $";
 constant thread_safe=1;
 
 inherit "module";

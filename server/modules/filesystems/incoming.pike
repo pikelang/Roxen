@@ -1,9 +1,9 @@
-// This is a roxen module. Copyright © 1997 - 2000, Roxen IS.
+// This is a roxen module. Copyright © 1997 - 2001, Roxen IS.
 
 #include <module.h>
 inherit "modules/filesystems/filesystem";
 
-constant cvs_version= "$Id: incoming.pike,v 1.16 2001/05/16 07:50:59 per Exp $";
+constant cvs_version= "$Id: incoming.pike,v 1.17 2001/09/03 18:10:23 nilsson Exp $";
 
 //<locale-token project="mod_incoming">_</locale-token>
 #define _(X,Y)	_DEF_LOCALE("mod_incoming",X,Y)

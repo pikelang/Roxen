@@ -1,3 +1,5 @@
+// This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
+
 #include <module.h>
 inherit "module";
 // All roxen modules must inherit module.pike
@@ -9,7 +11,7 @@ inherit "module";
 // end of the locale related stuff
 
 
-constant cvs_version = "$Id: auth.pike,v 1.6 2001/01/29 05:40:30 per Exp $";
+constant cvs_version = "$Id: auth.pike,v 1.7 2001/09/03 18:05:10 nilsson Exp $";
 constant module_type = MODULE_AUTH;
 LocaleString module_name = LOCALE(1,"RefDoc for MODULE_AUTH");
 LocaleString module_doc =

@@ -1,9 +1,9 @@
-// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
+// This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 
 // Index files only module, a directory module that will not try to
 // generate any directory listings, instead only using index files.
 
-constant cvs_version = "$Id: indexfiles.pike,v 1.19 2001/01/29 05:41:26 per Exp $";
+constant cvs_version = "$Id: indexfiles.pike,v 1.20 2001/09/03 18:00:18 nilsson Exp $";
 constant thread_safe = 1;
 
 inherit "module";

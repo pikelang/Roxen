@@ -1,10 +1,10 @@
-// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
+// This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 
 // The redirect module. Redirects requests from one filename to
 // another. This can be done using "internal" redirects (much like a
 // symbolic link in unix), or with normal HTTP redirects.
 
-constant cvs_version = "$Id: redirect.pike,v 1.30 2001/08/15 16:54:01 per Exp $";
+constant cvs_version = "$Id: redirect.pike,v 1.31 2001/09/03 18:12:19 nilsson Exp $";
 constant thread_safe = 1;
 
 inherit "module";

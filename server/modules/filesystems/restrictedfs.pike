@@ -1,5 +1,5 @@
 /*
- * This is a roxen module. Copyright © 1997 - 2000, Roxen IS.
+ * This is a roxen module. Copyright © 1997 - 2001, Roxen IS.
  * Implements a restricted filesystem.
  * This filesystem only allows accesses to files that are a prefix of
  * id->misc->home (ie the users home-directory).
@@ -10,7 +10,7 @@
 
 inherit "filesystem";
 
-constant cvs_version = "$Id: restrictedfs.pike,v 1.21 2001/08/30 11:40:56 grubba Exp $";
+constant cvs_version = "$Id: restrictedfs.pike,v 1.22 2001/09/03 18:10:23 nilsson Exp $";
 
 #include <module.h>
 #include <roxen.h>

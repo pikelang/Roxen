@@ -1,5 +1,7 @@
+// This is a roxen module. Copyright © 2001, Roxen IS.
+
 inherit "module";
-constant cvs_version="$Id: dir_playlist.pike,v 1.2 2001/04/10 05:13:58 per Exp $";
+constant cvs_version="$Id: dir_playlist.pike,v 1.3 2001/09/03 18:16:56 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>

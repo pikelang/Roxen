@@ -1,5 +1,7 @@
+// This is a roxen module. Copyright © 2001, Roxen IS.
+
 inherit "module";
-constant cvs_version="$Id: icecast.pike,v 1.8 2001/05/16 01:50:10 per Exp $";
+constant cvs_version="$Id: icecast.pike,v 1.9 2001/09/03 18:16:56 nilsson Exp $";
 constant thread_safe=1;
 
 #define BSIZE 8192

@@ -1,10 +1,10 @@
-// This is a roxen module. Copyright © 2000, Roxen IS.
+// This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
 //
 
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: supports_filter.pike,v 1.5 2000/11/19 04:56:55 nilsson Exp $";
+constant cvs_version = "$Id: supports_filter.pike,v 1.6 2001/09/03 18:12:20 nilsson Exp $";
 constant module_name = "Supports filter";
 constant module_type = MODULE_FILTER;
 constant thread_safe = 1;

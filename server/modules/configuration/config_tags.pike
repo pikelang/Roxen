@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
+// This is a roxen module. Copyright © 1999 - 2001, Roxen IS.
 //
 inherit "module";
 inherit "html";
@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.163 2001/09/03 14:12:06 nilsson Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.164 2001/09/03 17:57:01 nilsson Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 

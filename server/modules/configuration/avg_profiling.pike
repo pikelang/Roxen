@@ -1,3 +1,5 @@
+// This is a roxen module. Copyright © 2001, Roxen IS.
+
 inherit "module.pike";
 
 constant module_name = "Average Profiling";
