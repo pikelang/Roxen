@@ -1,7 +1,7 @@
 // Wizard generator
 // This file generats all the nice wizards
 // Copyright © 1997 - 2000, Roxen IS.
-// $Id: wizard.pike,v 1.133 2001/04/24 08:49:06 jonasw Exp $
+// $Id: wizard.pike,v 1.134 2001/04/24 09:05:03 jonasw Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -694,7 +694,8 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
 			 "Probably infinite redirect loop in automaton.";
 
       if (v->_page == "cancel") {
-	string to = s->cancel_url||cancel||id->not_query;
+	string to =
+	  (s->cancel_url && s->cancel_url[0]) || cancel || id->not_query;
 	DEBUGMSG ("Wizard: Canceling with redirect to " + to + "\n");
 	return http_redirect(to, @(id->conf?({id}):({})));
       }
@@ -1074,7 +1075,7 @@ string html_error(string notice, RequestID id)
 {
   return ("<table><tr><td valign=\"top\"><img \nalt=\"Error:\" src=\""+
         (id->conf?"/internal-roxen-":"/image/")
-        +"err_3.gif\" /></td><td valign=\"top\">"+notice+"</td></tr></table>");
+        +"err_3.gif\" />&nbsp;&nbsp;</td><td valign=\"top\">"+notice+"</td></tr></table>");
 }
 
 string html_border(string what, int|void width, int|void ww,
