@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.114 1998/03/07 20:01:03 noring Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.115 1998/03/10 22:19:23 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -730,7 +730,8 @@ void start(int|void val, object|void conf)
     mkdirhier( query( "cache_dir" )+".foo" );
 #ifndef __NT__
 #if efun(chmod)
-    chmod( query( "cache_dir" ), 0777 );
+    // FIXME: Should this error be propagated?
+    catch { chmod( query( "cache_dir" ), 0777 ); };
 #endif
 #endif
     remove_call_out(clean_cache_dir);
@@ -808,7 +809,8 @@ void store_cache_file(string a, string b, array data)
   object fd = open(FNAME(a,b), "wct");
 #ifndef __NT__
 #if efun(chmod)
-  chmod( FNAME(a,b), 0666 );
+  // FIXME: Should this error be propagated?
+  catch { chmod( FNAME(a,b), 0666 ); };
 #endif
 #endif
   if(!fd) return;
@@ -1126,7 +1128,8 @@ void save_cached_args()
   object o = open(ARGHASH, "wct");
 #ifndef __NT__
 #if efun(chmod)
-  chmod( ARGHASH, 0666 );
+  // FIXME: Should this error be propagated?
+  catch { chmod( ARGHASH, 0666 ); };
 #endif
 #endif
   string data=encode_value(cached_args);
