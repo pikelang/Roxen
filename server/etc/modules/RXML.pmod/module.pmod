@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.293 2002/10/03 11:49:35 mast Exp $
+// $Id: module.pmod,v 1.294 2002/10/07 13:35:40 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -3963,6 +3963,7 @@ class Frame
 	    if (!in_content || in_content == "") flags |= FLAG_MAY_CACHE_RESULT;
 	    content = nil;
 	  }
+
 	  else if (flags & FLAG_UNPARSED) {
 #ifdef DEBUG
 	    if (!(flags & FLAG_PROC_INSTR) && !mappingp (args))
@@ -3970,54 +3971,61 @@ class Frame
 	    if (content && !stringp (content))
 	      fatal_error ("content is not a string in unparsed frame: %O.\n", content);
 #endif
-	    if (ctx->make_p_code) {
-	      if (evaler->is_RXML_PCode) {
-		if (!(comp = evaler->p_code_comp)) {
-		  comp = evaler->p_code_comp = PikeCompile();
-		  THIS_TAG_TOP_DEBUG ("Evaluating and compiling unparsed"
-				      " (with new %O in %O)\n", comp, evaler);
-		}
-		else
-		  THIS_TAG_TOP_DEBUG ("Evaluating and compiling unparsed"
-				      " (with old %O in %O)\n", comp, evaler);
-	      }
-	      else {
-		if (!evaler->p_code) {
-#ifdef DEBUG
-		  fatal_error ("Frame is being compiled but evaler %O "
-			       "doesn't have a PCode object\n", evaler);
-#endif
-		  // Handle this gracefully if we're not using debug since this
-		  // situation can occur easily by mistake if a context is used
-		  // recursively.
-		  comp = PikeCompile();
-		  THIS_TAG_TOP_DEBUG ("Evaluating and compiling unparsed"
-				      " (with new temporary %O)\n", comp);
-		}
-		else
-		  if (!(comp = evaler->p_code->p_code_comp)) {
-		    comp = evaler->p_code->p_code_comp = PikeCompile();
+
+	  eval_only: {
+	    eval_and_compile:
+	      if (ctx->make_p_code) {
+		if (evaler->is_RXML_PCode) {
+		  if (!(comp = evaler->p_code_comp)) {
+		    comp = evaler->p_code_comp = PikeCompile();
 		    THIS_TAG_TOP_DEBUG ("Evaluating and compiling unparsed"
-					" (with new %O in %O in %O)\n",
-					comp, evaler->p_code, evaler);
+					DO_IF_DEBUG (" (with new %O in %O)\n",
+						     comp, evaler));
 		  }
 		  else
 		    THIS_TAG_TOP_DEBUG ("Evaluating and compiling unparsed"
-					" (with old %O in %O in %O)\n",
-					comp, evaler->p_code, evaler);
+					DO_IF_DEBUG (" (with old %O in %O)\n",
+						     comp, evaler));
+		}
+
+		else {
+		  if (!evaler->p_code) {
+		    // This can happen if a context with make_p_code
+		    // set is used in a nested parse without
+		    // compilation. Just clear it and continue
+		    // (orig_make_p_code will restore it afterwards.
+		    ctx->make_p_code = 0;
+		    break eval_and_compile;
+		  }
+
+		  else
+		    if (!(comp = evaler->p_code->p_code_comp)) {
+		      comp = evaler->p_code->p_code_comp = PikeCompile();
+		      THIS_TAG_TOP_DEBUG ("Evaluating and compiling unparsed"
+					  DO_IF_DEBUG (" (with new %O in %O in %O)\n",
+						       comp, evaler->p_code, evaler));
+		    }
+		    else
+		      THIS_TAG_TOP_DEBUG ("Evaluating and compiling unparsed"
+					  DO_IF_DEBUG (" (with old %O in %O in %O)\n",
+						       comp, evaler->p_code, evaler));
+		}
+
+		in_args = _prepare (ctx, type, args && args + ([]), comp);
+		PCODE_UPDATE_MSG ("%O: P-code update since args has been compiled.\n",
+				  this_object());
+		ctx->state_updated++;
+		break eval_only;
 	      }
-	      in_args = _prepare (ctx, type, args && args + ([]), comp);
-	      PCODE_UPDATE_MSG ("%O: P-code update since args has been compiled.\n",
-				this_object());
-	      ctx->state_updated++;
-	    }
-	    else {
+
 	      THIS_TAG_TOP_DEBUG ("Evaluating unparsed\n");
 	      _prepare (ctx, type, args && args + ([]), 0);
 	    }
+
 	    in_content = content;
 	    if (!in_content || in_content == "") flags |= FLAG_MAY_CACHE_RESULT;
 	  }
+
 	  else {
 	    THIS_TAG_TOP_DEBUG ("Evaluating with constant arguments and content\n");
 	    _prepare (ctx, type, 0, 0);
