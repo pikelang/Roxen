@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.874 2004/05/25 15:52:17 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.875 2004/06/11 15:34:35 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -2459,8 +2459,13 @@ class ImageCache
     array guides;
     mixed reply = draw_function( @copy_value(args), id );
 
-    if( !reply )
+    if( !reply ) {
+#ifdef ARG_CACHE_DEBUG
+      werror("%O(%{%O, %}%O) ==> 0\n",
+	     draw_function, args, id);
+#endif
       return;
+    }
     
     if( arrayp( args ) )
       args = args[0];
@@ -2949,7 +2954,14 @@ class ImageCache
     werror("draw %O done\n", name );
 #endif
     // Avoid throwing and error if the same image is rendered twice.
-    catch(store_data( name, data, meta ));
+    mixed err = catch(store_data( name, data, meta ));
+#ifdef ARG_CACHE_DEBUG
+    if (err) {
+      werror("store_data failed with:\n"
+	     "%s\n", describe_backtrace(err));
+    }
+#endif
+    return reply;
   }
 
   static void store_data( string id, string data, mapping meta )
@@ -3201,8 +3213,12 @@ class ImageCache
 	  report_debug("Error in draw: %s\n", describe_backtrace(err));
 	return 0;
       }
-      if( !(res = restore( na,id )) )
-	error("Draw callback did not generate any data\n");
+      if( !(res = restore( na,id )) ) {
+	error("Draw callback %O did not generate any data.\n"
+	      "na: %O\n"
+	      "id: %O\n",
+	      draw_function, na, id);
+      }
     }
     res->stat = ({ 0, 0, 0, 900000000, 0, 0, 0, 0, 0 });
 
