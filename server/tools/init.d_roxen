@@ -34,9 +34,9 @@ umask 022
 
 # Xauthority for CMS Instant
 #
-# If the forms and respons module in CMS Instant is enabled roxen has
+# If the Forms and Response module in CMS Instant is enabled Roxen has
 # to connect to the X server during start. Two examples are provided,
-# for linux/gdm and solaris/dtlogin.
+# for Linux/gdm and Solaris/dtlogin.
 #
 # export XAUTHORITY=/var/gdm/:0.Xauth
 # export XAUTHORITY=`/bin/ls -1t /var/dt/A:0-* | /bin/head -1`
