@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.178 1999/06/06 20:22:26 peter Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.179 1999/06/06 20:35:50 peter Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -2167,7 +2167,6 @@ void start(int num, void|object conf_id, array|void args)
 	    perror("Unknown variable: "+c+"\n");
     }
 
-  perror("Ports: %O\n", query("Ports"));
   foreach(query("Ports"), port) {
     if ((< "ssl", "ssleay" >)[port[1]]) {
       // Obsolete versions of the SSL protocol.
