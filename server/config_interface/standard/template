@@ -1,143 +1,145 @@
 <!-- -*- html -*- -->
-<define container=st-tabs>
-  <cset quote=none variable=form.__tabs><contents></cset>
+<define container="st-tabs">
+  <cset quote="none" variable="var.__tabs">&_.contents:none;</cset>
 </define>
 
-<define container=st-page>
-  <cset quote=none variable=form.__contents><contents></cset>
+<define container="st-page">
+  <cset quote="none" variable="var.__contents">&_.contents:none;</cset>
 </define>
 
 
-<define container=cv-leftside>
-  <cset quote=none variable=form.leftside><contents></cset>
+<define container="cv-leftside">
+  <cset quote="none" variable="var.leftside">&_.contents:none;</cset>
 </define>
 
-<define container=cv-split>
- <table ::=&usr.content-toptableargs:none;>
+<define container="cv-split">
+ <table ::="&usr.content-toptableargs:none;">
    <tr>
-     <td width=10><img src=/internal-roxen-unit width=10 height=1></td>
-     <td ::=&usr.left-tableargs:none;>
-       <img src=/internal-roxen-unit width=150 height=1><br>
-       &form.leftside:none;&form.leftimage:none;
+     <td width="10"><img src="/internal-roxen-unit" width="10" height="1" /></td>
+     <td ::="&usr.left-tableargs:none;">
+       <img src="/internal-roxen-unit" width="150" height="1" /><br />
+       &var.leftside:none;&var.leftimage:none;
      </td>
-     <td ::=&usr.content-tableargs:none;>
-       <contents>
+     <td ::="&usr.content-tableargs:none;">
+       &_.contents:none;
      </td>
    </tr>
   </table>
 </define>
 
-<define container=cv-startpage>
+<define container="cv-startpage">
   <cv-split>
     <subtablist>
-      <st-tabs><insert file="/standard/cv_startpage_tabs.pike" nocache></st-tabs>
-      <st-page><contents></st-page>
+      <st-tabs><insert file="/standard/cv_startpage_tabs.pike" nocache="1"></st-tabs>
+      <st-page>&_.contents:none;</st-page>
     </subtablist>
    </cv-split>
 </define>
 
-<define container=cv-obox>
-  <table cellpadding=1 cellspacing=0 border=0 width=202 align=center bgcolor=&usr.obox-border;>
+<define container="cv-obox">
+  <table cellpadding="1" cellspacing="0" border="0" width="202" align="center" bgcolor="&usr.obox-border;">
   <tr><td>
-  <table cellpadding=2 cellspacing=0 border=0 width=200 align=center>
-  <tr bgcolor=&usr.obox-titlebg;>
-    <td valign=top>
-      <font color=&usr.obox-titlefg; face=&usr.obox-titlefont;
-            size=+1><b>&title;</b></font>
+  <table cellpadding="2" cellspacing="0" border="0" width="200" align="center">
+  <tr bgcolor="&usr.obox-titlebg;">
+    <td valign="top">
+      <font color="&usr.obox-titlefg;" face="&usr.obox-titlefont;"
+            size="+1"><b>&_.title;</b></font>
     </td>
   </tr>
 
-  <tr><td bgcolor=&usr.obox-bodybg;><font color=&usr.obox-bodyfg; size=2>
-    <contents>
+  <tr><td bgcolor="&usr.obox-bodybg;"><font color="&usr.obox-bodyfg;" size="2">
+    &_.contents:none;
   </font></td></tr>
   </table>
   </td></tr></table>
 </define>
 
-<define container=subtablist>
+<define container="subtablist">
 <nooutput>
-  <contents>
-</nooutput><p><br><p>
-  <table width=100% border=0 cellpadding=0 cellspacing=0 >
+  &_.contents:none;
+</nooutput><p><br /></p>
+  <table width="100%" border="0" cellpadding="0" cellspacing="0">
     <tr>
-      <td ::=&usr.subtabs-tableargs:none;><tablist preparse ::=&usr.subtabs-args:none;>
-        <eval>&form.__tabs:none;</eval>
+      <td ::="&usr.subtabs-tableargs:none;"><tablist preparse="1" ::="&usr.subtabs-args:none;">
+        <eval>&var.__tabs:none;</eval>
       </tablist></td>
     </tr>
     <tr>
-      <td bgcolor="&usr.content-bg;">&form.__contents:none;</td>
+      <td bgcolor="&usr.content-bg;">&var.__contents:none;</td>
     </tr>
-    </table>
+  </table>
 </define>
 
-<define tag=topmenu default_base="" default_selected=home>
- <cset quote=none variable=form._top_content preparse><insert file=/standard/topmenu.pike nocache></cset>
+<define tag="topmenu">
+ <attrib name="base"></attrib><attrib name="selected">home</attrib>
+ <cset quote="none" variable="var._top_content" preparse="1"><insert file="/standard/topmenu.pike" nocache="1" /></cset>
 </define>
 
-<define container=submit-gbutton default_align=baseline>
-  <cset variable=form.url preparse><gbutton-url font='&usr.gbutton-font;' preparse><contents></gbutton-url></cset>
-   <input align=&align; type=image name='<contents>' value='<contents>'
-          src='&form.url;' border=0>
+<define container="submit-gbutton" default_align=baseline>
+<attrib name="align">baseline</attrib>
+  <cset variable="var.url" preparse="1"><gbutton-url font="&usr.gbutton-font;" preparse="1">&_.contents:none;</gbutton-url></cset>
+   <input align="&_.align;" type="image" name="&_.contents;" value="&_.contents;" src="&var.url;" border="0" />
 </define>
 
-<define tag=cf-ok>
+<define tag="cf-ok">
    <submit-gbutton> &locale.ok; </submit-gbutton>
 </define>
 
-<define tag=cf-cancel>
-   <gbutton preparse href='&href;'> &locale.cancel; </gbutton>
+<define tag="cf-cancel">
+   <gbutton preparse="1" href="&_.href;"> &locale.cancel; </gbutton>
 </define>
 
-<define tag=cf-next>
-   <submit-gbutton preparse href='&href;'> &locale.next; > </submit-gbutton>
+<define tag="cf-next">
+   <comment> FIXME: gbutton should handle HTML entities </comment>
+   <submit-gbutton preparse="1" href="&_.href;"> &locale.next; > </submit-gbutton>
 </define>
 
-<define container=content><cset quote=none preparse variable=form.content><contents></cset></define>
+<define container="content"><cset quote="none" preparse="1" variable="var.content">&_.contents:none;</cset></define>
 
-<define container=tmpl>
-<title>&roxen.version; &locale.administration_interface; &title;</title>
-<nooutput> <!-- We do not want any output from this. -->
-  <insert file=/standard/themes/&usr.theme;/theme nocache>
-  <define preparse variable=leftimage><img src=&usr.left-image;></define>
-  <define preparse name=tab-frame-image>&usr.tab-frame-image;</define>
-  <define preparse name=tab-font-size>&usr.tab-font-size;</define>
-  <define preparse name=gbutton-frame-image>&usr.gbutton-frame-image;</define>
-  <define name=font preparse>&usr.font;</define>
-  <expire-time now>
-  <contents>
+<define container="tmpl">
+<title>&roxen.version; &locale.administration_interface; &_.title;</title>
+<nooutput>
+  <insert file="/standard/themes/&usr.theme;/theme" nocache="1" />
+  <define preparse="1" variable="leftimage"><img src="&usr.left-image;" /></define>
+  <define preparse="1" name="tab-frame-image">&usr.tab-frame-image;</define>
+  <define preparse="1" name="tab-font-size">&usr.tab-font-size;</define>
+  <define preparse="1" name="gbutton-frame-image">&usr.gbutton-frame-image;</define>
+  <define name="font" preparse="1">&usr.font;</define>
+  <expire-time now="1">
+  &_.contents:none;
 </nooutput>
-  <body ::=&usr.body-args:none;>
-      <table width=100% cellpadding=0 cellspacing=0 border=0
-             ::=&usr.top-tableargs:none;>
+  <body ::="&usr.body-args:none;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0"
+             ::="&usr.top-tableargs:none;">
       <tr>
-      <td><a href=http://www.roxen.com/>&usr.logo-html:none;</a></td>
-      <td align=right valign=top>
-        <table><tr><td align=right>
-           <gtext preparse  font=&usr.font;
-                  fgcolor=&usr.top-fgcolor; scale=0.45
-                  hspace=3>&locale.language;:</gtext>
+      <td><a href="http://www.roxen.com/">&usr.logo-html:none;</a></td>
+      <td align="right" valign="top">
+        <table><tr><td align="right">
+           <gtext preparse="1"  font="&usr.font;"
+                  fgcolor="&usr.top-fgcolor;" scale="0.45"
+                  hspace="3">&locale.language;:</gtext>
            </td>
            <td>
-             <font color=&usr.fgcolor;>
-              <configif-output quote=¤ source=locales>
+             <font color="&usr.fgcolor;">
+              <configif-output quote="¤" source="locales">
                 <a href="¤path¤"
                   ><img src="/internal-roxen-¤latin1-name¤¤-selected¤.gif"
-                       alt="¤latin1-name¤" border=0 height=16
-                ></a>
+                       alt="¤latin1-name¤" border="0" height="16"
+                /></a>
               </configif-output>
              </font>
            </td>
          </tr>
          <tr>
-           <td align=right>
-             <font color=&usr.top-fgcolor;>
-              <gbutton preparse
-                 href='/standard/change_user.pike?uid=&form.config_user_uid;'
-                  align=right textcolor=&usr.top-fgcolor;
-                  width=70> &locale.user;: </gbutton>
+           <td align="right">
+             <font color="&usr.top-fgcolor;">
+              <gbutton preparse="1"
+                 href="/standard/change_user.pike?uid=&form.config_user_uid;"
+                  align="right" textcolor="&usr.top-fgcolor;"
+                  width="70"> &locale.user;: </gbutton>
             </td>
             <td>
-               <font color=&usr.top-fgcolor;>
+               <font color="&usr.top-fgcolor;">
                 &form.config_user_name; (&form.config_user_uid;)
                </font>
             </td>
@@ -146,20 +148,20 @@
      </td>
    </tr>
    <tr>
-     <td colspan=2 ::=&usr.toptabs-tableargs:none; width=100% valign=bottom><img src=/internal-roxen-unit width=50 height=1>&form._top_content:none;</td>
+     <td colspan="2" ::="&usr.toptabs-tableargs:none;" width="100%" valign="bottom"><img src="/internal-roxen-unit" width="50" height="1">&var._top_content:none;</td>
    </tr>
   </table>
 
-   <form method=POST action='&cf.current-url;'>
+   <form method="POST" action="&cf.current-url;">
      <roxen-automatic-charset-variable>
-     <insert variable=form.content quote=none>
+     &var.content:none;
    </form>
-    <div align=right>
-    <b><font size=-1>&roxen.version; / &roxen.pike-version;</font></b>
+    <div align="right">
+    <b><font size="-1">&roxen.version; / &roxen.pike-version;</font></b>
     </p>
  </body>
 </define>
 
-<define tag=cf-save>
-  <submit-gbutton align=right> &locale.save; </submit-gbutton>
+<define tag="cf-save">
+  <submit-gbutton align="right"> &locale.save; </submit-gbutton>
 </define>
