@@ -11,7 +11,7 @@ import Parser.XML.Tree;
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_webapp",X,Y)
 // end of the locale related stuff
 
-constant cvs_version = "$Id: webapp.pike,v 2.24 2002/07/05 14:44:23 wellhard Exp $";
+constant cvs_version = "$Id: webapp.pike,v 2.25 2002/07/10 15:11:03 wellhard Exp $";
 
 constant thread_safe=1;
 constant module_unique = 0;
@@ -1117,8 +1117,15 @@ mapping(string:string|mapping|Servlet.servlet) match_ext_servlet(string f, Reque
 //              f, e, e[1..], f[sizeof(f)-sizeof(e)+1..]));
       if (e[1..] == f[sizeof(f)-sizeof(e)+1..])
         {
-          WEBAPP_WERR("match on 'ext'!!");
-          return servlets[servletmaps["ext"][e]];
+          WEBAPP_WERR("match on 'ext' "+e+"!");
+	  mixed s = servlets[servletmaps["ext"][e]];
+	  // Kludge to be able to mount jsp pages on a mountpoint
+	  // other than / with gnujsp.
+	  if(s["servlet-class"] == "org.gjt.jsp.JspServlet") {
+	    WEBAPP_WERR("applying pathinfo kludge");
+	    id->misc->path_info = id->misc->servlet_path;
+	  }
+          return s;
         }
     }
 
@@ -1581,13 +1588,16 @@ class TagServlet
           fake_id->raw_url=uri;
           fake_id->not_query=uri;
 
+	  // Remove mountpoint from the faked uri.
+	  string f = has_prefix(uri, mountpoint)? uri[sizeof(mountpoint)..]: uri;
+
 	  // Remove fake_id->raw to prevent the java bridge to use the raw and incorrect url.
 	  fake_id->raw = 0;
 	  // Restore headers.
 	  fake_id->request_headers = copy_value(id->request_headers);
 
           mapping hdrs = m->call_servlet(this_object(), fake_id,
-                                         uri, args->name || "");
+                                         f, args->name || "");
 
           CACHE( fake_id->misc->cacheable );
           destruct (fake_id);
