@@ -1,0 +1,24 @@
+-*- html -*-
+<info>
+version="$Id: test_rxml_package,v 1.1 2000/12/30 10:09:21 nilsson Exp $";
+name="rxml_test";
+doc="RXML test package used by the RXML self test.";
+help=1;
+</info>
+
+<define container="bold"><b><contents/></b></define>
+<define container="italic"><i>&_.contents;</i></define>
+
+<define tag="bä"><attrib name="x">Mu</attrib>&_.x;!</define>
+<define tag="gazonx">bar</define>
+
+<define variable="var.a">AA</define>
+<set variable="var.b" value="BB"/>
+
+<define if="rxml_test">xyz</define>
+<define if="rxml_test2">abc</define>
+
+<undefine container="italic"/>
+<undefine variable="var.b"/>
+<undefine tag="gazonx"/>
+<undefine if="rxml_test2"/>

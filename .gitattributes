@@ -116,6 +116,7 @@ worldmap binary
 /server/etc/roxen_hilfe.pike foreign_ident
 /server/etc/roxen_master.pike foreign_ident
 /server/etc/supports foreign_ident
+/server/etc/test/filesystem/test_rxml_package foreign_ident
 /server/font_handlers/builtin.pike foreign_ident
 /server/font_handlers/imagedir.pike foreign_ident
 /server/font_handlers/old.pike foreign_ident
