@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.246 2000/09/19 14:58:29 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.247 2000/09/19 22:37:09 kuntri Exp $";
 
 #include <module.h>
 inherit "module";
@@ -374,7 +374,7 @@ of a very short text,<br />
 and here it ends.</ex>
 <noex>"+gtextargs+"</noex>",
 
-"gh":#"<desc cont><short> Creates a graphical header.</short> The header
+"gh":#"<desc cont><short>Creates a graphical header.</short> The header
  operates in the same manner as the <ref type='tag'><tag>gtext
  /</tag></ref> tag. <ref type='tag'><tag>gh /</tag></ref> is
  eqvivalent to the <tag>h1 /</tag> through <tag>h6 /</tag> tags used
@@ -402,7 +402,7 @@ and here it ends.</ex>
 "gh6":#"<desc cont></desc>
 <noex>"+gtextargs+"</noex>",
 
-"gtext":#"<desc cont>
+"gtext":#"<desc cont><short>Creates graphical texts.</short>
  Renders a GIF image of the contents.
 </desc>
 
