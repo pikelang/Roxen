@@ -482,9 +482,6 @@ mapping query_container_callers()
     "autoformat":tag_autoformat,
     "default":tag_default,
     "recursive-output":tag_recursive_output,
-    "source":tag_source,
-    "cset":lambda(string t, mapping m, string c, object id) {
-	   old_rxml_warning(id, "cset tag","&lt;define variable&gt;");
-           return make_container("define", m, html_decode_string(c)); }
+    "source":tag_source
   ]);
 }
