@@ -1,4 +1,4 @@
-<navigation maxwidth=130 imgbase=/img/ bg=$$bg_color$$ transparent=$$bg_color$$>  
+<navigation maxwidth=130 imgbase=/img/ bg=&bg_color; transparent=&bg_color;>  
 
   <textstyle $$nav_align$$ scale=$$nav_size$$
     font='$$nav_font$$ $$nav_font_style$$' xspacing=5 yspacing=5>
@@ -13,6 +13,6 @@
     alphainvert rot=180>
   <menumaker menu=top>
 
-  <boxstyle middle delimit height=4 bg=$$bg_color$$ alpha=255>
+  <boxstyle middle delimit height=4 bg=&bg_color; alpha=255>
 
 </navigation>

@@ -1,7 +1,8 @@
 <cset variable=shadow></cset>
 <if match='$$nav_shadow$$ is 1'><cset variable=shadow>shadow='60,1'</cset></if>
 <formoutput quote=¤>
-  <navigation maxwidth=160 preload imgbase=/img/ transparent=$$bg_color$$ bg=$$bg_color$$>
+  <navigation maxwidth=160 preload imgbase=/img/
+      transparent=&bg_color; bg=&bg_color;>
     <textstyle $$nav_align$$ scale=$$nav_size$$ xspacing=10 yspacing=5
                font='$$nav_font$$ $$nav_font_style$$'>
 
@@ -14,9 +15,11 @@
 
     <boxstyle middle text bg=$$nav_bg_color$$ fg=$$nav_text_color$$
       alpha="Klee/Horiz_Alpha.pnm" ¤shadow¤>
-    <boxstyle middle text selected bg=$$nav_bg_color_sel$$ fg=$$nav_text_color_sel$$
+    <boxstyle middle text selected bg=$$nav_bg_color_sel$$
+        fg=$$nav_text_color_sel$$
       alpha="Klee/Horiz_Alpha_sel.pnm" ¤shadow¤>
-    <boxstyle middle text mouseover bg=$$nav_bg_color_mouse$$ fg=$$nav_text_color_mouse$$
+    <boxstyle middle text mouseover bg=$$nav_bg_color_mouse$$
+        fg=$$nav_text_color_mouse$$
       alpha="Klee/Horiz_Alpha_sel.pnm" ¤shadow¤>
 
     <boxstyle right text center bg=$$nav_bg_color$$
@@ -26,9 +29,9 @@
     <boxstyle right text mouseover bg=$$nav_bg_color_mouse$$
       alpha="Klee/Left-end_Alpha_sel.pnm" rot=180>
 
-    <boxstyle left delimit bg=$$bg_color$$ alpha=255>
-    <boxstyle middle delimit height=4 bg=$$bg_color$$ alpha=255>
-    <boxstyle right delimit bg=$$bg_color$$ alpha=255>
+    <boxstyle left delimit bg=&bg_color; alpha=255>
+    <boxstyle middle delimit height=4 bg=&bg_color; alpha=255>
+    <boxstyle right delimit bg=&bg_color; alpha=255>
     <menumaker menu=top>
   </navigation>
 </formoutput>

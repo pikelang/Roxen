@@ -1,9 +1,9 @@
-<navigation maxwidth=150 preload transparent=$$bg_color$$
-  bg=$$bg_color$$>
+<navigation maxwidth=150 preload transparent=&bg_color;
+  bg=&bg_color;>
 
-  <include file=std_navigation_text.inc>
+  <include file=std_navigation_text.inc bg_color=&bg_color;>
 
-  <boxstyle middle delimit bg=$$bg_color$$ height=2 alpha=255>
+  <boxstyle middle delimit bg=&bg_color; height=2 alpha=255>
 
   <menumaker menu=top>
 

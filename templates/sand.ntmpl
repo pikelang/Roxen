@@ -1,8 +1,8 @@
 <include file=nav_shadow.inc>
 	
 <formoutput quote=¤> 
-  <navigation maxwidth=150 preload transparent=$$bg_color$$
-              bg=$$bg_color$$>
+  <navigation maxwidth=150 preload transparent=&bg_color;
+              bg=&bg_color;>
     <textstyle $$nav_align$$ scale=$$nav_size$$ xspacing=5 yspacing=1
                font='$$nav_font$$ $$nav_font_style$$'>
 
@@ -22,8 +22,8 @@
       fg=$$nav_text_color_mouse$$ alpha="/img/sand/line_alpha.pnm"
       ¤shadow_mouse¤>
 
-    <boxstyle left delimit bg=$$bg_color$$ height=5 alpha=0>
-    <boxstyle middle delimit bg=$$bg_color$$ height=5 alpha=0>
+    <boxstyle left delimit bg=&bg_color; height=5 alpha=0>
+    <boxstyle middle delimit bg=&bg_color; height=5 alpha=0>
 
     <menumaker menu=top>
   </navigation>
