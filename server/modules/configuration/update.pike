@@ -1,5 +1,5 @@
 /*
- * $Id: update.pike,v 1.27 2000/11/30 19:07:42 nilsson Exp $
+ * $Id: update.pike,v 1.28 2001/01/13 18:14:49 nilsson Exp $
  *
  * The Roxen Update Client
  * Copyright © 2000, Roxen IS.
@@ -69,7 +69,7 @@ void post_start()
   // Both errors listed above should be corrected by the administrator
   // of Roxen.
   //
-  init_error = catch { db=Yabu.db(roxen_path(QUERY(yabudir)),"wcSQ"); };
+  init_error = catch { db=Yabu.db(roxen_path(query("yabudir")),"wcSQ"); };
   
   if(init_error)
     throw(init_error);
@@ -77,8 +77,8 @@ void post_start()
   pkginfo=db["pkginfo"];
   misc=db["misc"];
   installed=db["installed"];
-  mkdirhier(roxen_path(QUERY(pkgdir)+"/foo"));
-  if(QUERY(do_external_updates))
+  mkdirhier(roxen_path(query("pkgdir")+"/foo"));
+  if(query("do_external_updates"))
     updater=UpdateInfoFiles();
   UPDATE_NOISES("db == %O", ({ db }));
 
@@ -351,7 +351,7 @@ mapping get_package_info(string dir, int package)
     return 0;
   string s=fd->read();
   fd->close();
-  Stat stat=file_stat(roxen_path(QUERY(pkgdir))+"/"+package+".tar");
+  Stat stat=file_stat(roxen_path(query("pkgdir"))+"/"+package+".tar");
   return parse_info_file(s) | ([ "size":stat[1] ]);    
 }
 
@@ -366,11 +366,11 @@ class TagUpdateScanLocalPackages {
 
     array do_return(RequestID id) {
       array(int) packages=sort((array(int))glob("*.tar",
-	r_get_dir(QUERY(pkgdir)+"/") ));
+	r_get_dir(query("pkgdir")+"/") ));
       foreach(packages, int package) {
 	mapping pkg=pkginfo[(string)package];
 	if(!pkg) {
-	  mapping tmp=get_package_info(roxen_path(QUERY(pkgdir))+"/",package);
+	  mapping tmp=get_package_info(roxen_path(query("pkgdir"))+"/",package);
 	  if(tmp && tmp->id) {
 	    pkginfo[tmp->id]=tmp;
 	    pkginfo->sync();
@@ -397,7 +397,7 @@ class TagUpdateDownloadedPackages {
 
     array do_enter(RequestID id) {
       array(int) packages=sort((array(int))glob("*.tar",
-						r_get_dir(QUERY(pkgdir)+"/")||
+						r_get_dir(query("pkgdir")+"/")||
 						({}) ));
       foreach(packages, int package) {
 	mapping pkg=pkginfo[(string)package];
@@ -515,7 +515,7 @@ class TagUpdateInstallPackage {
 
       mixed err;
       string res;
-      if(err=catch(res=unpack_tarfile(roxen_path(QUERY(pkgdir))+"/"+(int)args->package+".tar")))
+      if(err=catch(res=unpack_tarfile(roxen_path(query("pkgdir"))+"/"+(int)args->package+".tar")))
 	return ({ err+"<br /><br /><b>"+
 		  LOC_U(49, "Could not install package. Fix the problems above and try again.")
 		  +"</b>" });
@@ -567,7 +567,7 @@ class TagUpdatePackageContents {
     array do_enter(RequestID id) {
       if(!args->package)
 	return ({ LOC_U(51, "No package argument.") });
-      res=tarfile_contents(roxen_path(QUERY(pkgdir))+"/"+args->package+".tar");
+      res=tarfile_contents(roxen_path(query("pkgdir"))+"/"+args->package+".tar");
       return 0;
     }
 
@@ -588,7 +588,7 @@ class TagUpdateUpdateList {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
-      if(QUERY(do_external_updates))
+      if(query("do_external_updates"))
 	{
 	  if(!updater)
 	    updater=UpdateInfoFiles();
@@ -657,15 +657,15 @@ mapping get_headers()
   mapping m = ([ "host":"update.roxen.com:80",
 		 "user-agent": roxen->real_version ]);
 
-  if(sizeof(QUERY(userpassword)))
-    m->authorization="Basic "+MIME.encode_base64(QUERY(userpassword));
+  if(sizeof(query("userpassword")))
+    m->authorization="Basic "+MIME.encode_base64(query("userpassword"));
   return m;
 }
 
 
 int completely_downloaded(int num)
 {
-  Stat stat=r_file_stat(roxen_path(QUERY(pkgdir))+"/"+num+".tar");
+  Stat stat=r_file_stat(roxen_path(query("pkgdir"))+"/"+num+".tar");
   return (stat && (stat[1]==pkginfo[(string)num]->size));
 }
 
@@ -684,7 +684,7 @@ void start_package_download(int num)
 
 string proxyprefix()
 {
-  if(sizeof(QUERY(proxyserver)))
+  if(sizeof(query("proxyserver")))
     return "http://update.roxen.com";
   else
     return "";
@@ -692,15 +692,15 @@ string proxyprefix()
 
 string get_server()
 {
-  if(sizeof(QUERY(proxyserver)))
-    return QUERY(proxyserver);
+  if(sizeof(query("proxyserver")))
+    return query("proxyserver");
   return "update.roxen.com";
 }
 
 int get_port()
 {
-  if(sizeof(QUERY(proxyserver)))
-    return QUERY(proxyport);
+  if(sizeof(query("proxyserver")))
+    return query("proxyport");
   return 80;
 }
 
@@ -726,18 +726,18 @@ class GetPackage
     // FIXME: rewrite this to use a file object and stream to disk?
     Stdio.File f;
 
-    if(catch(f=Stdio.File(roxen_path(QUERY(pkgdir))+"/"+num+".tar","wc")))
+    if(catch(f=Stdio.File(roxen_path(query("pkgdir"))+"/"+num+".tar","wc")))
     {
       report_error("Update: Failed to open file for writing: "+
-		   roxen_path(QUERY(pkgdir))+num+".tar\n");
+		   roxen_path(query("pkgdir"))+num+".tar\n");
       catch(m_delete(package_downloads, num));
       return;
     }
     if(catch(f->write(data())))
     {
       report_error("Update: Failed to write package to file: "+
-		   roxen_path(QUERY(pkgdir))+num+".tar\n");
-      catch(r_rm(QUERY(pkgdir)+"/"+num+".tar"));
+		   roxen_path(query("pkgdir"))+num+".tar\n");
+      catch(r_rm(query("pkgdir")+"/"+num+".tar"));
       catch(m_delete(package_downloads, num));
       return;
     }

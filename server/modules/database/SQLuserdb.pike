@@ -13,7 +13,7 @@
  * or should have been shipped along with the module.
  */
 
-constant cvs_version="$Id: SQLuserdb.pike,v 1.23 2001/01/10 08:57:28 per Exp $";
+constant cvs_version="$Id: SQLuserdb.pike,v 1.24 2001/01/13 18:15:11 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -85,7 +85,7 @@ void create()
   defvar ("timer", 60, LOCALE(13,"Database close timeout"), TYPE_INT,
 	  LOCALE(14,"The inactivity time, in seconds, before the database "
 		 "connection is closed."),0,
-	  lambda(){return !QUERY(closedb);}
+	  lambda(){return !query("closedb");}
 	  );
 
   defvar ("defaultuid",
@@ -130,14 +130,14 @@ void create()
 //This leaves a degree of uncertainty on when the DB will be effectively
 //closed, but it's below the value of the module variable "timer" for sure.
 void close_db() {
-	if (!QUERY(closedb))
+	if (!query("closedb"))
 		return;
-	if( (time(1)-last_db_access) > QUERY(timer) ) {
+	if( (time(1)-last_db_access) > query("timer") ) {
 		db=0;
 		DEBUGLOG("closing the database");
 		return;
 	}
-	call_out(close_db,QUERY(timer));
+	call_out(close_db,query("timer"));
 }
 
 void open_db() {
@@ -147,7 +147,7 @@ void open_db() {
   if(objectp(db)) //already open
     return;
   err=catch{
-    db=Sql.Sql(QUERY(sqlserver));
+    db=Sql.Sql(query("sqlserver"));
   };
   if (err) {
     report_debug("SQLauth: Couldn't open authentication database!\n");
@@ -162,8 +162,8 @@ void open_db() {
     return;
   }
   DEBUGLOG("database successfully opened");
-  if(QUERY(closedb))
-    call_out(close_db,QUERY(timer));
+  if(query("closedb"))
+    call_out(close_db,query("timer"));
 }
 
 /*
@@ -175,8 +175,8 @@ array(string) userinfo (string u) {
 	mixed err,tmp;
 	DEBUGLOG ("userinfo ("+u+")");
 
-	if (QUERY(usecache))
-		dbinfo=cache_lookup("sqlauth"+QUERY(table),u);
+	if (query("usecache"))
+		dbinfo=cache_lookup("sqlauth"+query("table"),u);
 	if (dbinfo)
 		return dbinfo;
 
@@ -187,7 +187,7 @@ array(string) userinfo (string u) {
 		return 0;
 	}
 	sql_results=db->query("select username,passwd,uid,gid,homedir,shell "
-			"from "+QUERY(table)+" where username='"+u+"'");
+			"from "+query("table")+" where username='"+u+"'");
 	if (!sql_results||!sizeof(sql_results)) {
 		DEBUGLOG ("no entry in database, returning unknown")
 		return 0;
@@ -197,21 +197,21 @@ array(string) userinfo (string u) {
 	dbinfo= ({
 			u,
 			tmp->passwd,
-			tmp->uid||QUERY(defaultuid),
-			tmp->gid||QUERY(defaultgid),
-			QUERY(defaultgecos),
-			tmp->homedir||QUERY(defaulthome),
-			tmp->shell||QUERY(defaultshell)
+			tmp->uid||query("defaultuid"),
+			tmp->gid||query("defaultgid"),
+			query("defaultgecos"),
+			tmp->homedir||query("defaulthome"),
+			tmp->shell||query("defaultshell")
 			});
-	if (QUERY(usecache))
-		cache_set("sqlauth"+QUERY(table),u,dbinfo);
+	if (query("usecache"))
+		cache_set("sqlauth"+query("table"),u,dbinfo);
 	DEBUGLOG(sprintf("Result: %O",dbinfo)-"\n");
 	return dbinfo;
 	return 0;
 }
 
 array(string) userlist() {
-	if (QUERY(disable_userlist))
+	if (query("disable_userlist"))
 		return ({});
 	mixed err;
 	array data;
@@ -222,7 +222,7 @@ array(string) userlist() {
 		report_debug("SQLauth: returning empty user index!\n");
 		return ({});
 	}
-	data=db->query("select username from "+QUERY(table));
+	data=db->query("select username from "+query("table"));
 	return data->username;
 }
 
@@ -236,7 +236,7 @@ string user_from_uid (int u)
 		report_debug("SQLauth: returning no_such_user\n");
 		return 0;
 	}
-	data=db->query("select username from " + QUERY(table) +
+	data=db->query("select username from " + query("table") +
 		       " where uid='" + (int)u +"'");
 	if(sizeof(data)!=1) //either there's noone with that uid or there's many
 		return 0;
@@ -259,8 +259,8 @@ array|int auth (array(string) auth, object id)
 		return ({0, auth[1], -1});
 	}
 
-	if (QUERY(usecache))
-		dbinfo=cache_lookup("sqlauth"+QUERY(table),u);
+	if (query("usecache"))
+		dbinfo=cache_lookup("sqlauth"+query("table"),u);
 
 	if (!dbinfo) {
 		open_db();
@@ -279,7 +279,7 @@ array|int auth (array(string) auth, object id)
 		return ({0,u,p});
 	}
   
-  if (QUERY(crypted)) {
+  if (query("crypted")) {
     if (!crypt (p,dbinfo[1])) {
       DEBUGLOG ("password check ("+dbinfo[1]+","+p+") failed");
       return ({0,u,p});
@@ -317,7 +317,7 @@ string|void check_variable (string name, mixed newvalue)
 	switch (name) {
 		case "timer":
 			if (((int)newvalue)<=0) {
-				set("timer",QUERY(timer));
+				set("timer",query("timer"));
 				return "What? Have you lost your mind? How can I close the database"
 					" before using it?";
 			}

@@ -2,7 +2,7 @@
 // This module can be used to turn off logging for some files.
 
 
-constant cvs_version = "$Id: nologging.pike,v 1.12 2000/11/13 08:51:51 per Exp $";
+constant cvs_version = "$Id: nologging.pike,v 1.13 2001/01/13 18:17:01 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -60,13 +60,13 @@ function(string:int) no_log_match, log_match;
 void start()
 {
   // Compatibility with old settings
-  if(QUERY(log) && sizeof(QUERY(log)))
-    set("Log", QUERY(log)/"\n"-({""}));
-  if(QUERY(nlog) && sizeof(QUERY(nlog)))
-    set("nLog", QUERY(nlog)/"\n"-({""}));
+  if(query("log") && sizeof(query("log")))
+    set("Log", query("log")/"\n"-({""}));
+  if(query("nlog") && sizeof(query("nlog")))
+    set("nLog", query("nlog")/"\n"-({""}));
 
-  no_log_match = Regexp(make_regexp(QUERY(nLog)-({""})))->match;
-  log_match = Regexp(make_regexp(QUERY(Log)-({""})))->match;
+  no_log_match = Regexp(make_regexp(query("nLog")-({""})))->match;
+  log_match = Regexp(make_regexp(query("Log")-({""})))->match;
 }
 
 

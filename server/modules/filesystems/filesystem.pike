@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.93 2001/01/04 06:02:50 nilsson Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.94 2001/01/13 18:15:28 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -62,12 +62,12 @@ string status()
     (redirects?"<b>"+LOCALE(4,"Redirects")+"</b>: "+redirects+"<br>":"")+
     (accesses?"<b>"+LOCALE(5,"Normal files")+"</b>: "+accesses+"<br>"
      :LOCALE(6,"No file accesses)")+"<br>")+
-    (QUERY(put)&&puts?"<b>"+LOCALE(7,"PUTs")+"</b>: "+puts+"<br>":"")+
-    (QUERY(put)&&mkdirs?"<b>"+LOCALE(8,"MKDIRs")+"</b>: "+mkdirs+"<br>":"")+
-    (QUERY(put)&&QUERY(delete)&&moves?
+    (query("put")&&puts?"<b>"+LOCALE(7,"PUTs")+"</b>: "+puts+"<br>":"")+
+    (query("put")&&mkdirs?"<b>"+LOCALE(8,"MKDIRs")+"</b>: "+mkdirs+"<br>":"")+
+    (query("put")&&query("delete")&&moves?
      "<b>"+LOCALE(9,"Moved files")+"</b>: "+moves+"<br>":"")+
-    (QUERY(put)&&chmods?"<b>"+LOCALE(10,"CHMODs")+"</b>: "+chmods+"<br>":"")+
-    (QUERY(delete)&&deletes?"<b>"+LOCALE(11,"Deletes")+"</b>: "+deletes+"<br>":"")+
+    (query("put")&&chmods?"<b>"+LOCALE(10,"CHMODs")+"</b>: "+chmods+"<br>":"")+
+    (query("delete")&&deletes?"<b>"+LOCALE(11,"Deletes")+"</b>: "+deletes+"<br>":"")+
     (errors?"<b>"+LOCALE(12,"Permission denied")+"</b>: "+errors
      +" ("+LOCALE(13,"not counting .htaccess")+")<br>":"")+
     (dirlists?"<b>"+LOCALE(14,"Directories")+"</b>:"+dirlists+"<br>":"");
@@ -176,17 +176,17 @@ array(string) internal_files;
 
 void start()
 {
-  tilde = QUERY(tilde);
-  charset = QUERY(charset);
-  path_encoding = QUERY(path_encoding);
-  no_symlinks = QUERY(no_symlinks);
-  access_as_user = QUERY(access_as_user);
-  dotfiles = QUERY(.files);
-  path = QUERY(searchpath);
-  mountpoint = QUERY(mountpoint);
-  stat_cache = QUERY(stat_cache);
-  internal_files = QUERY(internal_files);
-  FILESYSTEM_WERR("Online at "+QUERY(mountpoint)+" (path="+path+")");
+  tilde = query("tilde");
+  charset = query("charset");
+  path_encoding = query("path_encoding");
+  no_symlinks = query("no_symlinks");
+  access_as_user = query("access_as_user");
+  dotfiles = query(".files");
+  path = query("searchpath");
+  mountpoint = query("mountpoint");
+  stat_cache = query("stat_cache");
+  internal_files = query("internal_files");
+  FILESYSTEM_WERR("Online at "+query("mountpoint")+" (path="+path+")");
   cache_expire("stat_cache");
 }
 
@@ -239,7 +239,7 @@ int dir_filter_function(string f, RequestID id)
 }
 
 array(string) list_lock_files() {
-  return QUERY(nobrowse);
+  return query("nobrowse");
 }
 
 array find_dir( string f, RequestID id )
@@ -261,7 +261,7 @@ array find_dir( string f, RequestID id )
   }
   privs = 0;
 
-  if(!QUERY(dir))
+  if(!query("dir"))
     // Access to this dir is allowed.
     if(! has_value(dir, ".www_browsable"))
     {
@@ -270,7 +270,7 @@ array find_dir( string f, RequestID id )
     }
 
   // Access to this dir is not allowed.
-  if( sizeof(dir & QUERY(nobrowse)) )
+  if( sizeof(dir & query("nobrowse")) )
   {
     errors++;
     return 0;
@@ -536,7 +536,7 @@ mixed find_file( string f, RequestID id )
     break;
 
   case "MKDIR":
-    if(!QUERY(put))
+    if(!query("put"))
     {
       id->misc->error_code = 405;
       TRACE_LEAVE("MKDIR disallowed (since PUT is disallowed)");
@@ -549,7 +549,7 @@ mixed find_file( string f, RequestID id )
       return 0;
     }
 
-    if(QUERY(check_auth) && (!id->auth || !id->auth[0])) {
+    if(query("check_auth") && (!id->auth || !id->auth[0])) {
       TRACE_LEAVE("MKDIR: Permission denied");
       return Roxen.http_auth_required("foo",
 				"<h1>Permission to 'MKDIR' denied</h1>");
@@ -563,7 +563,7 @@ mixed find_file( string f, RequestID id )
 		  (int)id->misc->uid, (int)id->misc->gid );
     }
 
-    if (QUERY(no_symlinks) && (contains_symlinks(path, oldf))) {
+    if (query("no_symlinks") && (contains_symlinks(path, oldf))) {
       privs = 0;
       errors++;
       report_error(LOCALE(46,"Creation of %s failed. Permission denied.\n"),f);
@@ -590,7 +590,7 @@ mixed find_file( string f, RequestID id )
     break;
 
   case "PUT":
-    if(!QUERY(put))
+    if(!query("put"))
     {
       id->misc->error_code = 405;
       TRACE_LEAVE("PUT disallowed");
@@ -603,7 +603,7 @@ mixed find_file( string f, RequestID id )
       return 0;
     }
 
-    if(QUERY(check_auth) && (!id->auth || !id->auth[0])) {
+    if(query("check_auth") && (!id->auth || !id->auth[0])) {
       TRACE_LEAVE("PUT: Permission denied");
       return Roxen.http_auth_required("foo",
 				"<h1>Permission to 'PUT' files denied</h1>");
@@ -627,7 +627,7 @@ mixed find_file( string f, RequestID id )
       privs=Privs("Saving file", (int)id->misc->uid, (int)id->misc->gid );
     }
 
-    if (QUERY(no_symlinks) && (contains_symlinks(path, oldf))) {
+    if (query("no_symlinks") && (contains_symlinks(path, oldf))) {
       privs = 0;
       errors++;
       report_error(LOCALE(46,"Creation of %s failed. Permission denied.\n"),f);
@@ -709,7 +709,7 @@ mixed find_file( string f, RequestID id )
     // Change permission of a file.
     // FIXME: !!
 
-    if(!QUERY(put))
+    if(!query("put"))
     {
       id->misc->error_code = 405;
       TRACE_LEAVE("CHMOD disallowed (since PUT is disallowed)");
@@ -722,7 +722,7 @@ mixed find_file( string f, RequestID id )
       return 0;
     }
 
-    if(QUERY(check_auth) && (!id->auth || !id->auth[0])) {
+    if(query("check_auth") && (!id->auth || !id->auth[0])) {
       TRACE_LEAVE("CHMOD: Permission denied");
       return Roxen.http_auth_required("foo",
 				"<h1>Permission to 'CHMOD' files denied</h1>");
@@ -734,7 +734,7 @@ mixed find_file( string f, RequestID id )
       privs=Privs("CHMODing file", (int)id->misc->uid, (int)id->misc->gid );
     }
 
-    if (QUERY(no_symlinks) && (contains_symlinks(path, oldf))) {
+    if (query("no_symlinks") && (contains_symlinks(path, oldf))) {
       privs = 0;
       errors++;
       TRACE_LEAVE("CHMOD: Contains symlinks. Permission denied");
@@ -768,13 +768,13 @@ mixed find_file( string f, RequestID id )
 
      // FIXME: Support for quota.
 
-    if(!QUERY(put))
+    if(!query("put"))
     {
       id->misc->error_code = 405;
       TRACE_LEAVE("MV disallowed (since PUT is disallowed)");
       return 0;
     }
-    if(!QUERY(delete) && size != -1)
+    if(!query("delete") && size != -1)
     {
       id->misc->error_code = 405;
       TRACE_LEAVE("MV disallowed (DELE disabled, can't overwrite file)");
@@ -788,7 +788,7 @@ mixed find_file( string f, RequestID id )
       return 0;
     }
 
-    if(QUERY(check_auth) && (!id->auth || !id->auth[0])) {
+    if(query("check_auth") && (!id->auth || !id->auth[0])) {
       TRACE_LEAVE("MV: Permission denied");
       return Roxen.http_auth_required("foo",
 				"<h1>Permission to 'MV' files denied</h1>");
@@ -814,7 +814,7 @@ mixed find_file( string f, RequestID id )
       privs=Privs("Moving file", (int)id->misc->uid, (int)id->misc->gid );
     }
 
-    if (QUERY(no_symlinks) &&
+    if (query("no_symlinks") &&
 	((contains_symlinks(path, oldf)) ||
 	 (contains_symlinks(path, id->misc->move_from)))) {
       privs = 0;
@@ -852,7 +852,7 @@ mixed find_file( string f, RequestID id )
 
     // FIXME: Support for quota.
 
-    if(!QUERY(put))
+    if(!query("put"))
     {
       id->misc->error_code = 405;
       TRACE_LEAVE("MOVE disallowed (since PUT is disallowed)");
@@ -865,7 +865,7 @@ mixed find_file( string f, RequestID id )
       return 0;
     }
 
-    if(QUERY(check_auth) && (!id->auth || !id->auth[0])) {
+    if(query("check_auth") && (!id->auth || !id->auth[0])) {
       TRACE_LEAVE("MOVE: Permission denied");
       return Roxen.http_auth_required("foo",
                                 "<h1>Permission to 'MOVE' files denied</h1>");
@@ -897,7 +897,7 @@ mixed find_file( string f, RequestID id )
 
     size = _file_size(moveto,id);
 
-    if(!QUERY(delete) && size != -1)
+    if(!query("delete") && size != -1)
     {
       id->misc->error_code = 405;
       TRACE_LEAVE("MOVE disallowed (DELE disabled, can't overwrite file)");
@@ -916,7 +916,7 @@ mixed find_file( string f, RequestID id )
       privs=Privs("Moving file", (int)id->misc->uid, (int)id->misc->gid );
     }
 
-    if (QUERY(no_symlinks) &&
+    if (query("no_symlinks") &&
         ((contains_symlinks(path, f)) ||
          (contains_symlinks(path, moveto)))) {
       privs = 0;
@@ -951,7 +951,7 @@ mixed find_file( string f, RequestID id )
 
 
   case "DELETE":
-    if(!QUERY(delete) || size==-1)
+    if(!query("delete") || size==-1)
     {
       id->misc->error_code = 405;
       TRACE_LEAVE("DELETE: Disabled");
@@ -964,12 +964,12 @@ mixed find_file( string f, RequestID id )
       return 0;
     }
 
-    if(QUERY(check_auth) && (!id->auth || !id->auth[0])) {
+    if(query("check_auth") && (!id->auth || !id->auth[0])) {
       TRACE_LEAVE("DELETE: Permission denied");
       return http_low_answer(403, "<h1>Permission to DELETE file denied</h1>");
     }
 
-    if (QUERY(no_symlinks) && (contains_symlinks(path, oldf))) {
+    if (query("no_symlinks") && (contains_symlinks(path, oldf))) {
       errors++;
       report_error(LOCALE(48,"Deletion of %s failed. Permission denied.\n"),f);
       TRACE_LEAVE("DELETE: Contains symlinks");

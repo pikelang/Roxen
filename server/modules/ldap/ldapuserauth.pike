@@ -58,7 +58,7 @@
 
 */
 
-constant cvs_version = "$Id: ldapuserauth.pike,v 1.21 2000/12/19 23:59:04 hop Exp $";
+constant cvs_version = "$Id: ldapuserauth.pike,v 1.22 2001/01/13 18:16:48 nilsson Exp $";
 constant thread_safe=0;
 
 #include <module.h>
@@ -90,17 +90,17 @@ mapping gids = ([ ]);
 
 int access_mode_is_user() {
 
-  return !(QUERY(CI_access_mode) == "user");
+  return !(query("CI_access_mode") == "user");
 }
 
 int access_mode_is_guest() {
 
-  return !(QUERY(CI_access_mode) == "guest");
+  return !(query("CI_access_mode") == "guest");
 }
 
 int access_mode_is_roaming() {
 
-  return !(QUERY(CI_access_mode) == "roaming");
+  return !(query("CI_access_mode") == "roaming");
 }
 
 int access_mode_is_user_or_roaming() {
@@ -255,28 +255,28 @@ void create()
         defvar ("CI_timer",60,"Directory connection close timer",
 		   TYPE_INT|VAR_MORE,
                    "The time after which the directory is closed",0,
-                   lambda(){return !QUERY(CI_close_dir) || access_mode_is_guest_or_roaming;});
+                   lambda(){return !query("CI_close_dir") || access_mode_is_guest_or_roaming;});
 
 }
 
 
 void close_dir() {
 
-    if (!QUERY(CI_close_dir))
+    if (!query("CI_close_dir"))
 	return;
-    if( (time(1)-last_dir_access) > QUERY(CI_timer) ) {
+    if( (time(1)-last_dir_access) > query("CI_timer") ) {
 	dir->unbind();
 	dir=0;
 	DEBUGLOG("closing the directory");
 	return;
     }
-    call_out(close_dir,QUERY(CI_timer));
+    call_out(close_dir,query("CI_timer"));
 }
 
 void open_dir(string u, string p) {
     mixed err;
     string binddn, bindpwd;
-    string serverurl = QUERY(CI_dir_server);
+    string serverurl = query("CI_dir_server");
     mapping ldapurl;
 
     last_dir_access=time(1);
@@ -308,7 +308,7 @@ void open_dir(string u, string p) {
 
     if(!access_mode_is_guest_or_roaming()) { // access type is "guest"/"roam."
         ldapurl = dir->parse_url(serverurl);
-	bindpwd = QUERY(CI_dir_pwd);
+	bindpwd = query("CI_dir_pwd");
     } else {                      // access type is "user"
         ldapurl = dir->parse_url(replace(serverurl, "%u%", u));
 	bindpwd = p;
@@ -322,8 +322,8 @@ void open_dir(string u, string p) {
 	return;
     }
     DEBUGLOG("directory successfully opened");
-    if(QUERY(CI_close_dir) && (QUERY(CI_access_mode) != "user"))
-	call_out(close_dir,QUERY(CI_timer));
+    if(query("CI_close_dir") && (query("CI_access_mode") != "user"))
+	call_out(close_dir,query("CI_timer"));
 }
 
 
@@ -383,7 +383,7 @@ array(string) userinfo (string u,mixed p) {
       return 0;
     }
 
-    if (QUERY(CI_use_cache))
+    if (query("CI_use_cache"))
 	dirinfo=cache_lookup("ldapauthentries",u);
 	if (dirinfo)
 	    return dirinfo;
@@ -395,9 +395,9 @@ array(string) userinfo (string u,mixed p) {
 	return 0;
     }
 
-    if(QUERY(CI_access_type) == "search") {
+    if(query("CI_access_type") == "search") {
 	string rpwd = "";
-	string flt = dir->parse_url(QUERY(CI_dir_server))->filter||"";
+	string flt = dir->parse_url(query("CI_dir_server"))->filter||"";
 
 	err = catch(results=dir->search(replace(flt, "%u%", u)));
 	if (err || !objectp(results) || !results->num_entries()) {
@@ -411,16 +411,16 @@ array(string) userinfo (string u,mixed p) {
 	tmp=results->fetch();
 	//DEBUGLOG(sprintf("userinfo: got %O",tmp));
 	if(!access_mode_is_guest()) {	// mode is 'guest'
-	    if(zero_type(tmp[QUERY(CI_default_attrname_upw)]))
-		werror("LDAPuserauth: WARNING: entry haven't '" + QUERY(CI_default_attrname_upw) + "' attribute !\n");
+	    if(zero_type(tmp[query("CI_default_attrname_upw")]))
+		werror("LDAPuserauth: WARNING: entry haven't '" + query("CI_default_attrname_upw") + "' attribute !\n");
 	    else
-		rpwd = tmp[QUERY(CI_default_attrname_upw)][0];
+		rpwd = tmp[query("CI_default_attrname_upw")][0];
 	}
 	if(!access_mode_is_user_or_roaming())	// mode is 'user'
 	    rpwd = stringp(p) ? p : "{x-hop}*";
 	if(!access_mode_is_roaming()) {	// mode is 'roaming'
 	  // OK, now we'll try to bind ...
-	  string binddn = get_attrval(tmp, QUERY(CI_owner_attr), "");
+	  string binddn = get_attrval(tmp, query("CI_owner_attr"), "");
 	  DEBUGLOG (sprintf("LDAPauth: indirect DN: [%s]\n", binddn));
 	  if(!sizeof(binddn)) {
 	    DEBUGLOG ("no value for indirect attribute, returning unknown");
@@ -447,7 +447,7 @@ array(string) userinfo (string u,mixed p) {
 	  }
 	  dir->set_scope(0);
 	  dir->set_basedn(binddn);
-	  //err = catch(results=dir->search(replace(QUERY(CI_search_templ), "%u%", u)));
+	  //err = catch(results=dir->search(replace(query("CI_search_templ"), "%u%", u)));
 	  err = catch(results=dir->search("objectclass=*")); // FIXME: modify
 							      // to conf. int!
 	  if (err || !objectp(results) || !results->num_entries()) {
@@ -463,18 +463,18 @@ array(string) userinfo (string u,mixed p) {
 	dirinfo= ({
 		u, 			//tmp->uid[0],
 		rpwd,
-		get_attrval(tmp, QUERY(CI_default_attrname_uid), QUERY(CI_default_uid)),
-		get_attrval(tmp, QUERY(CI_default_attrname_gid), QUERY(CI_default_gid)),
-		get_attrval(tmp, QUERY(CI_default_attrname_gecos), QUERY(CI_default_gecos)),
-		QUERY(CI_default_addname) ? QUERY(CI_default_home)+u : get_attrval(tmp, QUERY(CI_default_attrname_homedir), ""),
-		get_attrval(tmp, QUERY(CI_default_attrname_shell), QUERY(CI_default_shell)),
-		sizeof(QUERY(CI_required_attr)) && !access_mode_is_user() && !zero_type(tmp[QUERY(CI_required_attr)]) ? mkmapping(({QUERY(CI_required_attr)}),tmp[QUERY(CI_required_attr)]) : 0
+		get_attrval(tmp, query("CI_default_attrname_uid"), query("CI_default_uid")),
+		get_attrval(tmp, query("CI_default_attrname_gid"), query("CI_default_gid")),
+		get_attrval(tmp, query("CI_default_attrname_gecos"), query("CI_default_gecos")),
+		query("CI_default_addname") ? query("CI_default_home")+u : get_attrval(tmp, query("CI_default_attrname_homedir"), ""),
+		get_attrval(tmp, query("CI_default_attrname_shell"), query("CI_default_shell")),
+		sizeof(query("CI_required_attr")) && !access_mode_is_user() && !zero_type(tmp[query("CI_required_attr")]) ? mkmapping(({query("CI_required_attr")}),tmp[query("CI_required_attr")]) : 0
 	});
     } else {
 	// Compare method is unimplemented, yet
     }
     #if 0
-    if (QUERY(CI_use_cache))
+    if (query("CI_use_cache"))
 	cache_set("ldapauthentries",u,dirinfo);
     #endif
     if(!access_mode_is_user()) { // Should be 'closedir' method?
@@ -482,7 +482,7 @@ array(string) userinfo (string u,mixed p) {
       dir=0;
     }
     if(!access_mode_is_roaming()) { // We must rebind connection
-      //dir->bind(QUERY(CI_dir_username), QUERY(CI_dir_pwd));
+      //dir->bind(query("CI_dir_username"), query("CI_dir_pwd"));
       dir->bind(); //FIXME: quick hack
     }
 
@@ -503,7 +503,7 @@ array(string) userinfo (string u,mixed p) {
 
 array(string) userlist() {
 
-    //if (QUERY(disable_userlist))
+    //if (query("disable_userlist"))
     return ({});
 }
 
@@ -593,15 +593,15 @@ array|int auth (array(string) auth, object id)
 
     if(!access_mode_is_user()) {
 	// Check for the Atributes
-	if(sizeof(QUERY(CI_required_attr))) {
-	    attr=QUERY(CI_required_attr);
+	if(sizeof(query("CI_required_attr"))) {
+	    attr=query("CI_required_attr");
 	    if (mappingp(dirinfo[7]) && dirinfo[7][attr]) {
 		mixed d;
 		d=dirinfo[7][attr];
-		if(sizeof(QUERY(CI_required_value))) {
+		if(sizeof(query("CI_required_value"))) {
 		    mixed temp;
 		    int found=0;
-		    value=QUERY(CI_required_value);
+		    value=query("CI_required_value");
 		    foreach(d, mixed temp) {
 			if (search(temp,value)!=-1)
 			    found=1;
@@ -626,7 +626,7 @@ array|int auth (array(string) auth, object id)
     } // if access_mode_is_user
 
     // Its OK so save them
-    if (QUERY(CI_use_cache))
+    if (query("CI_use_cache"))
 	cache_set("ldapauthentries",u,dirinfo);
 
     id->misc->uid = dirinfo[2];

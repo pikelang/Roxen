@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.257 2001/01/03 13:49:50 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.258 2001/01/13 18:16:31 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -333,14 +333,12 @@ opaque=70</gtext>
 
 <attr name=xpad value=percentage|integer>
  Sets the padding between characters. The value can either be an relative change, in percent, or
- an absolute value. Not that different fonts reacts differently on these values and for some it
- will not have any effect at all. This depends on the type of the font and the fonts implementation.
+ an absolute value. Note that different fonts reacts differently on these values and for some it
+ will not have any effect at all. This depends on the type of the font and the font implementation.
 <ex type=vert>
-<gtext xpad=\"-30%\" scale=\"0.6\">&lt;gtext xpad=-30%&gt;</gtext><br />
-<gtext xpad=\"-10%\" scale=\"0.6\">&lt;gtext xpad=-10%&gt;</gtext><br />
-<gtext scale=\"0.6\">&lt;gtext&gt;</gtext><br />
-<gtext xpad=\"10%\" scale=\"0.6\">&lt;gtext xpad=10%&gt;</gtext><br />
-<gtext xpad=\"30%\" scale=\"0.6\">&lt;gtext xpad=30%&gt;</gtext><br />
+<gtext font=\"niquel\">&lt;gtext xpad=-30%&gt;</gtext><br />
+<gtext xpad=\"4\" font=\"niquel\">&lt;gtext xpad=-10%&gt;</gtext><br />
+<gtext xpad=\"50%\" font=\"niquel\">&lt;gtext&gt;</gtext><br />
 </ex>
 </attr>
 
@@ -682,8 +680,6 @@ mixed draw_callback(mapping args, string text, RequestID id)
 
 mapping find_internal(string f, RequestID id)
 {
-  catch
-  {
     if( strlen(f)>4 && query("ext") && f[-4]=='.') // Remove .ext
       f = f[..strlen(f)-5];
     if( strlen(f) && f[0]=='$' )
@@ -696,7 +692,6 @@ mapping find_internal(string f, RequestID id)
       }
     }
     return image_cache->http_file_answer( f, id );
-  };
   return 0;
 }
 
@@ -845,7 +840,7 @@ string fix_text(string c, mapping m, RequestID id) {
 	    Roxen.replace_values+({" ", " ", "\n", "\n", ""}));
 
   if(m->maxlen)
-    c = c[..(( (int)m_delete(m,"maxlen") || QUERY(deflen))-1)];
+    c = c[..(( (int)m_delete(m,"maxlen") || query("deflen"))-1)];
 
   return c;
 }

@@ -5,7 +5,7 @@
 
 // Mk II changes by Henrik P Johnson <hpj@globecom.net>.
 
-constant cvs_version = "$Id: secure_fs.pike,v 1.23 2000/05/19 14:46:59 mast Exp $";
+constant cvs_version = "$Id: secure_fs.pike,v 1.24 2001/01/13 18:15:41 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -81,7 +81,7 @@ void start()
 
 int dont_use_page()
 {
-  return(!QUERY(page));
+  return(!query("page"));
 }
 
 void create()

@@ -13,7 +13,7 @@ inherit "module";
 inherit "roxenlib";
 
 string cvs_version =
-       "$Id: perl.pike,v 2.13 2001/01/12 17:06:00 leif Exp $";
+       "$Id: perl.pike,v 2.14 2001/01/13 18:18:17 nilsson Exp $";
 
 constant module_type = MODULE_FILE_EXTENSION | MODULE_TAG;
 
@@ -123,8 +123,8 @@ string status()
 #endif
 
   s += "<b>Helper script</b>: ";
-  if (Stdio.File(QUERY(helper), "r"))
-       s += "found: " + QUERY(helper)+" <br />\n";
+  if (Stdio.File(query("helper"), "r"))
+       s += "found: " + query("helper")+" <br />\n";
   else
        s += "not found.<br />\n";
 
@@ -135,8 +135,8 @@ string status()
 }
 
 static object gethandler()
-{ return ExtScript.getscripthandler(QUERY(helper),
-                                    QUERY(parallel), handler_settings);
+{ return ExtScript.getscripthandler(query("helper"),
+                                    query("parallel"), handler_settings);
 }
 
 static void fix_settings()
@@ -145,7 +145,7 @@ static void fix_settings()
   mapping s = ([ ]);
 
 #if constant(getpwnam)
-  if (sscanf(QUERY(identity), "%s:%s", u, g) == 2)
+  if (sscanf(query("identity"), "%s:%s", u, g) == 2)
   {
     array ua = getpwnam(u), ga = getgrnam(g);
 
@@ -170,7 +170,7 @@ static void periodic()
 void start()
 {
   periodic();
-  script_output_mode = QUERY(scriptout);
+  script_output_mode = query("scriptout");
 }
 
 static void add_headers(string headers, object id)
@@ -230,7 +230,7 @@ mixed handle_file_extension(Stdio.File file, string ext, object id)
     if (bt)
     { ++script_errors;
       report_error("Perl script `" + id->realfile + "' failed.\n");
-      if (QUERY(showbacktrace))
+      if (query("showbacktrace"))
         return Roxen.http_string_answer("<h1>Script Error!</h1>\n<pre>" +
                        describe_backtrace(bt) + "\n</pre>");
       else
@@ -279,7 +279,7 @@ constant simpletag_perl_flags = 0;
 mixed simpletag_perl(string tag, mapping attr, string contents, object id,
                      RXML.Frame frame)
 {
-  if (!QUERY(tagenable))
+  if (!query("tagenable"))
        RXML.run_error("Perl tag not enabled in this server.");
 
   object h = gethandler();
@@ -301,7 +301,7 @@ mixed simpletag_perl(string tag, mapping attr, string contents, object id,
   else if (sizeof(result) > 1)
   { if (result[0] < 0 || !stringp(result[1]))
       return "SCRIPT ERROR: " + sprintf("%O", result[1]);
-    else if (QUERY(rxmltag))
+    else if (query("rxmltag"))
     {
       frame->result_type = frame->result_type(RXML.PXml);
       return Roxen.parse_rxml(result[1], id);
@@ -323,7 +323,7 @@ mixed simple_pi_tag_perl(string tag, mapping attr, string contents, object id,
 
 array(string) query_file_extensions()
 {
-  return (QUERY(extensions) - " ") / ",";
+  return (query("extensions") - " ") / ",";
 }
 
 TAGDOCUMENTATION;

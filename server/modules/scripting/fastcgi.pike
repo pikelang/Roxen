@@ -1,6 +1,6 @@
 inherit "cgi.pike": normalcgi;
 
-constant cvs_version = "$Id: fastcgi.pike,v 2.6 2000/04/28 22:39:00 per Exp $";
+constant cvs_version = "$Id: fastcgi.pike,v 2.7 2001/01/13 18:18:03 nilsson Exp $";
 
 #include <roxen.h>
 #include <module.h>
@@ -838,13 +838,13 @@ class FCGI
           }
         }
         options->setgroups = s->extra_gids;
-        if( !s->uid && QUERY(warn_root_cgi) )
+        if( !s->uid && query("warn_root_cgi") )
           report_warning( "FCGI: Running "+s->command+" as root (as per request)" );
       }
-      if(QUERY(nice))
+      if(query("nice"))
       {
         m_delete(options, "priority");
-        options->nice = QUERY(nice);
+        options->nice = query("nice");
       }
       if( s->limits )
         options->rlimit = s->limits;
@@ -945,7 +945,7 @@ class CGIScript
       werror( "***** Non-Blocking ******\n");
       Stdio.Stream fd = stdout;
       fd = CGIWrapper( fd, mid, kill_script )->get_fd();
-      if( QUERY(rxml) )
+      if( query("rxml") )
         fd = RXMLWrapper( fd, mid, kill_script )->get_fd();
       stdout = 0;
       call_out( check_pid, 0.1 );

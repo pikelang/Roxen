@@ -4,7 +4,7 @@
 // defaults and a new variable, to make it possible to use Frontpage
 // with Roxen when using virtual hosting.
 
-constant cvs_version = "$Id: fpscript.pike,v 1.10 2000/09/27 00:20:31 nilsson Exp $";
+constant cvs_version = "$Id: fpscript.pike,v 1.11 2001/01/13 18:21:05 nilsson Exp $";
 
 #include <module.h>
 inherit "modules/scripting/cgi.pike";
@@ -42,8 +42,8 @@ void create(Configuration c)
 }
 
 void start() {
-  if (QUERY(FrontPagePort))
-    global_env->SERVER_PORT = (string)QUERY(FrontPagePort);
+  if (query("FrontPagePort"))
+    global_env->SERVER_PORT = (string)query("FrontPagePort");
 }
 
 constant module_type = MODULE_LOCATION;

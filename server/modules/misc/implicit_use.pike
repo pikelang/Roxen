@@ -4,7 +4,7 @@
 #include <config.h>
 inherit "module";
 
-constant cvs_version = "$Id: implicit_use.pike,v 1.3 2001/01/04 07:20:25 nilsson Exp $";
+constant cvs_version = "$Id: implicit_use.pike,v 1.4 2001/01/13 18:17:18 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST;
 constant module_name = "Implicit <use> Module";
@@ -23,7 +23,7 @@ mapping(string:string) matches;
 
 void start(int num, Configuration c) {
   matches=([]);
-  string uses=QUERY(uses)-"\r";
+  string uses=query("uses")-"\r";
   foreach(uses/"\n", string pair) {
     replace(pair, "\t", " ");
     array res=pair/" " - ({""});

@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: wiretap.pike,v 1.21 2000/09/16 20:23:48 per Exp $";
+constant cvs_version="$Id: wiretap.pike,v 1.22 2001/01/13 18:16:31 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -64,7 +64,7 @@ static int init_wiretap_stack (mapping(string:string) args, RequestID id)
   } \
   else{ \
     id->misc->defines[X]=args->Y; \
-    if(QUERY(colormode)&&args->Y[0]!='#'){ \
+    if(query("colormode")&&args->Y[0]!='#'){ \
       args->Y=ns_color(parse_color(args->Y)); \
       changed=1; \
     } \
@@ -110,7 +110,7 @@ static int push_color (string tagname, mapping(string:string) args, RequestID id
 #undef FIX
 #define FIX(X,Y) if(args->X && args->X!=""){ \
   id->misc->defines->Y=args->X; \
-  if(QUERY(colormode) && args->X[0]!='#'){ \
+  if(query("colormode") && args->X[0]!='#'){ \
     args->X=ns_color(parse_color(args->X)); \
     changed = 1; \
   } \
@@ -172,7 +172,7 @@ class TagBody
       args = mkmapping (map (indices (args), lower_case), values (args));
 //       werror ("body " + name + " %O\n", args);
 //       werror ("raw_tag_text: %O\n", raw_tag_text);
-      if(init_wiretap_stack (args, id) && QUERY(colormode))
+      if(init_wiretap_stack (args, id) && query("colormode"))
 	return ({propagate_tag (args)});
       return ({propagate_tag()});
     }
@@ -195,7 +195,7 @@ class TagPushColor
     array do_return (RequestID id)
     {
       args = mkmapping (map (indices (args), lower_case), values (args));
-      if(push_color (name, args, id) && QUERY(colormode))
+      if(push_color (name, args, id) && query("colormode"))
 	return ({propagate_tag (args)});
       return ({propagate_tag()});
     }

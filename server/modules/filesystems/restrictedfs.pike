@@ -10,7 +10,7 @@
 
 inherit "filesystem";
 
-constant cvs_version = "$Id: restrictedfs.pike,v 1.16 2000/12/29 15:09:19 grubba Exp $";
+constant cvs_version = "$Id: restrictedfs.pike,v 1.17 2001/01/13 18:15:38 nilsson Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -60,7 +60,7 @@ mixed stat_file(string f, object id)
     TRACE_LEAVE("No home directory.");
     return(0);
   }
-  if (QUERY(remap_home)) {
+  if (query("remap_home")) {
     mixed res = ::stat_file(f = (fix_slashes (home) + f), id);
     TRACE_LEAVE(sprintf(" => %O => %O", f, res));
     return res;
@@ -87,7 +87,7 @@ array find_dir(string f, object id)
     // No home-directory
     return(0);
   }
-  if (QUERY(remap_home)) {
+  if (query("remap_home")) {
     return(::find_dir(fix_slashes (home) + f, id));
   } else {
     if (search("/" + f, home)) {
@@ -111,7 +111,7 @@ string real_file(string f, object id)
     TRACE_LEAVE("No home directory.");
     return(0);
   }
-  if (QUERY(remap_home)) {
+  if (query("remap_home")) {
     string res = ::real_file(f = (fix_slashes(home) + f), id);
     TRACE_LEAVE(sprintf("=> %O => %O", f, res));
     return res;
@@ -133,7 +133,7 @@ mixed find_file(string f, object id)
     // No home-directory
     return(0);
   }
-  if (QUERY(remap_home)) {
+  if (query("remap_home")) {
     return(::find_file(fix_slashes (home) + f, id));
   } else {
     if (!has_prefix("/" + f, home)) {

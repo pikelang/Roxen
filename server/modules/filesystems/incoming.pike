@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "modules/filesystems/filesystem";
 
-constant cvs_version= "$Id: incoming.pike,v 1.12 2000/05/03 08:52:48 mast Exp $";
+constant cvs_version= "$Id: incoming.pike,v 1.13 2001/01/13 18:15:34 nilsson Exp $";
 
 
 constant module_name = "Incoming filesystem";
@@ -107,12 +107,12 @@ void create()
   defvar("bitrot_header", 2376,
 	 "Scrambled downloads: Unscrambled header length",TYPE_INT,
 	 "Number of bytes to be sent without any bitrot at all.", 0,
-	 lambda(){ return !QUERY(bitrot); });
+	 lambda(){ return !query("bitrot"); });
 
   defvar("bitrot_percent", 3,
 	 "Scrambled downloads: Percent of bits to rot", TYPE_INT,
 	 "Selects the percentage of the file that will receive bitrot", 0,
-	 lambda(){ return !QUERY(bitrot); });
+	 lambda(){ return !query("bitrot"); });
 }
 
 static mixed not_allowed( object id )
@@ -141,7 +141,7 @@ static mixed lose_file( string f, object id )
   id->realfile = f;
   accesses++;
 
-  return decaying_file( o, QUERY(bitrot_header), 100/QUERY(bitrot_percent) );
+  return decaying_file( o, query("bitrot_header"), 100/query("bitrot_percent") );
 }
 
 mixed find_file( string f, object id )
@@ -150,7 +150,7 @@ mixed find_file( string f, object id )
   case "GET":
   case "HEAD":
   case "POST":
-    if(QUERY(bitrot) && QUERY(bitrot_percent)>0)
+    if(query("bitrot") && query("bitrot_percent")>0)
       return lose_file( f, id );
     else
       return not_allowed( id );

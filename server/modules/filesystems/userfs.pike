@@ -20,7 +20,7 @@
 
 inherit "filesystem" : filesystem;
 
-constant cvs_version="$Id: userfs.pike,v 1.61 2000/11/13 10:26:04 per Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.62 2001/01/13 18:15:41 nilsson Exp $";
 constant module_type = MODULE_LOCATION;
 constant module_name = "User file system";
 constant module_doc  = 
@@ -33,7 +33,7 @@ their own. So on one server the user Anne's files might be mounted on
 Anne a web site of her own at <tt>http://anne.domain.com/</tt>.\n";
 constant module_unique = 0;
 
-#define BAD_PASSWORD(us)	(QUERY(only_password) && \
+#define BAD_PASSWORD(us)	(query("only_password") && \
                                  ((us[1] == "") || (us[1][0] == '*')))
 
 int uid_was_zero()
@@ -43,12 +43,12 @@ int uid_was_zero()
 
 int hide_searchpath()
 {
-  return QUERY(homedir);
+  return query("homedir");
 }
 
 int hide_pdir()
 {
-  return !QUERY(homedir);
+  return !query("homedir");
 }
 
 void create()
@@ -130,7 +130,7 @@ void start()
   // We fix all file names to be absolute before passing them to
   // filesystem.pike
   path="";
-  banish_list = mkmultiset(QUERY(banish_list));
+  banish_list = mkmultiset(query("banish_list"));
   dude_ok = ([]);
   // This is needed to override the inherited filesystem module start().
 }
@@ -140,7 +140,7 @@ static array(string) find_user(string f, RequestID id)
   string of = f;
   string u;
 
-  if(QUERY(virtual_hosting)) {
+  if(query("virtual_hosting")) {
     NOCACHE();
     if(id->misc->host) {
       string host = (id->misc->host / ":")[0];
@@ -215,10 +215,10 @@ int|mapping|Stdio.File find_file(string f, RequestID id)
 
     string dir;
 
-    if(QUERY(homedir))
-      dir = us[ 5 ] + "/" + QUERY(pdir) + "/";
+    if(query("homedir"))
+      dir = us[ 5 ] + "/" + query("pdir") + "/";
     else
-      dir = QUERY(searchpath) + "/" + u + "/";
+      dir = query("searchpath") + "/" + u + "/";
 
     dir = replace(dir, "//", "/");
 
@@ -237,7 +237,7 @@ int|mapping|Stdio.File find_file(string f, RequestID id)
   
   f = dude_ok[u] + f;
 
-  if(QUERY(own))
+  if(query("own"))
   {
     if(!us)
     {
@@ -258,7 +258,7 @@ int|mapping|Stdio.File find_file(string f, RequestID id)
     }
   }
 
-  if(QUERY(useuserid))
+  if(query("useuserid"))
     id->misc->is_user = f;
 
   USERFS_WERR(sprintf("Forwarding request to inherited filesystem.", u));
@@ -290,11 +290,11 @@ string real_file(string f, RequestID id)
       if((!us) || BAD_PASSWORD(us) || banish_list[u])
 	return 0;
       if(us[5][-1] != '/')
-	f = us[ 5 ] + "/" + QUERY(pdir) + f;
+	f = us[ 5 ] + "/" + query("pdir") + f;
       else
-	f = us[ 5 ] + QUERY(pdir) + f;
+	f = us[ 5 ] + query("pdir") + f;
     } else
-      f = QUERY(searchpath) + u + "/" + f;
+      f = query("searchpath") + u + "/" + f;
 
     // Use the inherited stat_file
     fs = filesystem::stat_file( f,id );
@@ -314,11 +314,11 @@ mapping|array find_dir(string f, RequestID id)
   array a = find_user(f, id);
 
   if (!a) {
-    if (QUERY(user_listing)) {
+    if (query("user_listing")) {
       array l;
       l = id->conf->userlist(id);
 
-      if(l) return(l - QUERY(banish_list));
+      if(l) return(l - query("banish_list"));
     }
     return 0;
   }
@@ -335,19 +335,19 @@ mapping|array find_dir(string f, RequestID id)
       if((!us) || BAD_PASSWORD(us))
 	return 0;
       // FIXME: Use the banish multiset.
-      if(search(QUERY(banish_list), u) != -1)             return 0;
+      if(search(query("banish_list"), u) != -1)             return 0;
       if(us[5][-1] != '/')
-	f = us[ 5 ] + "/" + QUERY(pdir) + f;
+	f = us[ 5 ] + "/" + query("pdir") + f;
       else
-	f = us[ 5 ] + QUERY(pdir) + f;
+	f = us[ 5 ] + query("pdir") + f;
     }
     else
-      f = QUERY(searchpath) + u + "/" + f;
+      f = query("searchpath") + u + "/" + f;
     array dir = filesystem::find_dir(f, id);
     return dir;
   }
   array(string) users = id->conf->userlist(id);
-  return users && (users - QUERY(banish_list));
+  return users && (users - query("banish_list"));
 }
 
 array(int) stat_file(string f, RequestID id)
@@ -372,20 +372,20 @@ array(int) stat_file(string f, RequestID id)
       if((!us) || BAD_PASSWORD(us))
 	return 0;
       // FIXME: Use the banish multiset.
-      if(search(QUERY(banish_list), u) != -1) return 0;
+      if(search(query("banish_list"), u) != -1) return 0;
       if(us[5] == "") {
 	// No home directory.
 	return 0;
       }
       if(us[5][-1] != '/')
-	f = us[ 5 ] + "/" + QUERY(pdir) + f;
+	f = us[ 5 ] + "/" + query("pdir") + f;
       else
-	f = us[ 5 ] + QUERY(pdir) + f;
+	f = us[ 5 ] + query("pdir") + f;
     } else
-      f = QUERY(searchpath) + u + "/" + f;
+      f = query("searchpath") + u + "/" + f;
     st = filesystem::stat_file( f,id );
     if(!st) return 0;
-    if(QUERY(own) && (!us || ((int)us[2] != st[-2]))) return 0;
+    if(query("own") && (!us || ((int)us[2] != st[-2]))) return 0;
     return st;
   }
   return 0;
@@ -393,10 +393,10 @@ array(int) stat_file(string f, RequestID id)
 
 string query_name()
 {
-  return "Location: <i>" + QUERY(mountpoint) + "</i>, " +
-	 (QUERY(homedir)
-	  ? "Pubdir: <i>" + QUERY(pdir) +"</i>"
-	  : "mounted from: <i>" + QUERY(searchpath) + "</i>");
+  return "Location: <i>" + query("mountpoint") + "</i>, " +
+	 (query("homedir")
+	  ? "Pubdir: <i>" + query("pdir") +"</i>"
+	  : "mounted from: <i>" + query("searchpath") + "</i>");
 }
 
 string status()

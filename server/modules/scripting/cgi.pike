@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version = "$Id: cgi.pike,v 2.53 2001/01/11 14:07:05 grubba Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.54 2001/01/13 18:17:48 nilsson Exp $";
 
 #if !defined(__NT__) && !defined(__AmigaOS__)
 # define UNIX 1
@@ -129,7 +129,7 @@ array verify_access( RequestID id )
               error("CGI: Bad symlink or device encountered: \"%s\"\n", fname);
 	    }
 	    /* This point is only reached if a[1] == -3.
-	     * ie symlink encountered, and QUERY(allow_symlinks) == 1.
+	     * ie symlink encountered, and query("allow_symlinks") == 1.
 	     */
 
 	    // Stat what the symlink points to.
