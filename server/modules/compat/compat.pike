@@ -35,11 +35,16 @@ multiset enabled;
 void start (int when, Configuration conf)
 {
   set("_priority",7);
-  conf->parse_html_compat = 1;
+  if (!when) conf->parse_html_compat++;
   enabled=(<>);
   foreach(indices(conf->enabled_modules), string name)
     enabled+=(<name[0..sizeof(name)-3]>);
   enabled-=(enabled-relevant);
+}
+
+void stop()
+{
+  my_configuration()->parse_html_compat--;
 }
 
 string query_provides() {

@@ -19,7 +19,12 @@ constant thread_safe = 1;
 
 void start(int num, Configuration conf)
 {
-  conf->parse_html_compat=1;
+  if (!num) conf->parse_html_compat++;
+}
+
+void stop()
+{
+  my_configuration()->parse_html_compat--;
 }
 
 void create()
