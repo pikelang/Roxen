@@ -1,5 +1,5 @@
-/*
- * $Id: sqltag.pike,v 1.30 1998/09/29 16:18:50 js Exp $
+/* 
+ * $Id: sqltag.pike,v 1.31 1998/09/30 23:11:29 js Exp $
  *
  * A module for Roxen Challenger, which gives the tags
  * <SQLQUERY> and <SQLOUTPUT>.
@@ -7,7 +7,7 @@
  * Henrik Grubbström 1997-01-12
  */
 
-constant cvs_version="$Id: sqltag.pike,v 1.30 1998/09/29 16:18:50 js Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.31 1998/09/30 23:11:29 js Exp $";
 constant thread_safe=1;
 #include <module.h>
 
