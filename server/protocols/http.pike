@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.357 2002/02/06 17:04:51 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.358 2002/02/06 17:59:33 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -14,6 +14,8 @@ inherit "highlight_pike";
 #include <config.h>
 #define TIMER_PREFIX "http:"
 #include <timers.h>
+
+inherit RequestID;
 
 #ifdef PROFILE
 #define HRTIME() gethrtime()
@@ -54,10 +56,6 @@ constant _query          = roxen.query;
 private static array(string) cache;
 private static int wanted_data, have_data;
 
-Configuration conf;
-Protocol port_obj;
-RequestID root_id;
-
 #include <roxen.h>
 #include <module.h>
 #include <variables.h>
@@ -67,11 +65,6 @@ RequestID root_id;
   do {RequestID id = this_object(); TRACE_ENTER (A, B);} while (0)
 #define MY_TRACE_LEAVE(A) \
   do {RequestID id = this_object(); TRACE_LEAVE (A);} while (0)
-
-int time;
-
-string raw_url;
-int do_not_disconnect;
 
 mapping(string:mixed) real_variables = ([]);
 mapping(string:mixed)|FakedVariables variables = FakedVariables( real_variables );
@@ -93,31 +86,13 @@ mapping (string:string) client_var      = ([ ]);
 
 multiset (string) prestate  = (< >);
 multiset (string) config    = (< >);
-multiset (string) supports;
 multiset (string) pragma    = (< >);
-
-string remoteaddr, host;
-
-array  (string) client;
-array  (string) referer;
-
-multiset(string) cache_status = (< >);
 
 mapping file;
 
-object my_fd; /* The client. */
-
-string prot;
-string clientprot;
-string method;
-
-string realfile, virtfile;
 string rest_query="";
 string raw="";
-string query;
-string not_query;
 string extra_extension = ""; // special hack for the language module
-string data, leftovers;
 
 class AuthEmulator
 // Emulate the old (rather cumbersome) authentication API 
@@ -150,8 +125,6 @@ class AuthEmulator
 
 AuthEmulator auth;
 
-string rawauth, realauth; // Used by many modules, so let's keep this.
-string since;
 array(string) output_charset = ({});
 string input_charset;
 
@@ -1904,8 +1877,6 @@ void adjust_for_config_path( string p )
   raw_url = raw_url[ strlen(p).. ];
   misc->site_prefix_path = p;
 }
-
-static string cached_url_base;
 
 string url_base()
 // See the RequestID class for doc.
