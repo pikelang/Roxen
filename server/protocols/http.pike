@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.313 2001/05/09 11:54:32 jonasw Exp $";
+constant cvs_version = "$Id: http.pike,v 1.314 2001/05/11 15:49:31 jonasw Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -188,7 +188,7 @@ string charset_name( function|string what )
   }
 }
 
-function charset_function( function|string what )
+function charset_function( function|string what, int allow_entities )
 {
   switch( f )
   {
@@ -201,7 +201,18 @@ function charset_function( function|string what )
      return string_to_utf8;
    default:
      catch {
-     return Roxen._charset_decoder( Locale.Charset.encoder( (string)what,"" ) )->decode;
+       //  If current file is "text/html" or "text/xml" we'll use an entity
+       //  encoding fallback instead of empty string subsitution.
+       function fallback_func =
+	 allow_entities &&
+	 (file->type[0..8] == "text/html" || file->type[0..7] == "text/xml") &&
+	 lambda(string char) {
+	   return sprintf("&#x%x;", char[0]);
+	 };
+       return
+	 Roxen._charset_decoder( Locale.Charset.encoder( (string) what,
+							 "", fallback_func ) )
+	 ->decode;
      };
   }
   return lambda(string what){return what;};
@@ -209,12 +220,13 @@ function charset_function( function|string what )
 
 static array(string) join_charset( string old,
                                    function|string add,
-                                   function|void oldcodec)
+                                   function oldcodec,
+				   int allow_entities )
 {
   switch( old&&upper_case(old) )
   {
    case 0:
-     return ({ charset_name( add ), charset_function( add ) });
+     return ({ charset_name( add ), charset_function( add, allow_entities ) });
    case "ISO10646-1":
    case "UTF-8":
      return ({ old, oldcodec }); // Everything goes here. :-)
@@ -222,17 +234,17 @@ static array(string) join_charset( string old,
      return ({ old, oldcodec }); // Not really true, but how to know this?
    default:
      // Not true, but there is no easy way to add charsets yet...
-     return ({ charset_name( add ), charset_function( add ) });
+     return ({ charset_name( add ), charset_function( add, allow_entities ) });
   }
 }
 
-static array(string) output_encode( string what )
+static array(string) output_encode( string what, int|void allow_entities )
 {
   string charset;
   function encoder;
 
   foreach( output_charset, string|function f )
-    [charset,encoder] = join_charset( charset, f, encoder );
+    [charset,encoder] = join_charset( charset, f, encoder, allow_entities );
 
 
   if( !encoder )
@@ -1624,7 +1636,7 @@ void send_result(mapping|void result)
         {
           if (file["type"][0..4] == "text/") 
           {
-            [charset,file->data] = output_encode( file->data );
+            [charset,file->data] = output_encode( file->data, 1 );
             if( charset && (search(file["type"], "; charset=") == -1))
 	      charset = "; charset="+charset;
             else
@@ -1721,7 +1733,7 @@ void send_result(mapping|void result)
         head_string += Roxen.make_http_headers( heads );
 
         if( strlen( charset ) )
-          head_string = output_encode( head_string )[1];
+          head_string = output_encode( head_string, 0 )[1];
         conf->hsent += strlen(head_string);
       }
     }
