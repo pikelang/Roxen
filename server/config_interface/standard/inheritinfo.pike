@@ -1,5 +1,4 @@
 inherit "roxenlib";
-#include <stat.h>
 
 string get_id(string from)
 {
@@ -34,19 +33,33 @@ object find_module( string foo )
 string program_name_version( program what )
 {
   string file = roxen.filename( what );
-  string name = file;
+  string ofile = master()->make_ofilename( master()->program_name( what ) );
+  string name = file, warning="";
   string color = "black";
+  array(int) ofs, fs;
 
-
-  if( !file_stat( file ) )
+  if( !(fs = file_stat( file )) )
+  {
     color = "red";
-  else if( file_stat( file + ".o" ) )
+    warning="<blink>Source file gone!</blink>";
+  }
+  else if( (ofs = file_stat( ofile )) && ofs[ST_SIZE] )
   {
     color = "darkgreen";
-    if( file_stat( file + ".o" )[ ST_MTIME ] < file_stat( file  )[ ST_MTIME ] )
+    if( ofs[ ST_MTIME ] < fs[ ST_MTIME ] )
+    {
       color = "red";
+      warning = "(<i>percompiled file out of date</i>)";
+    }
+  } else
+    warning = "(<i>No precompiled file available</i>)";
+
+  if( fs[ ST_MTIME ] > master()->loaded_at( what ) )
+  {
+    color = "red";
+    warning += " (<i>Needs reloading</i>)";
   }
-  return "<font color="+color+">"+name+" "+get_id( file )+"</font>";
+  return "<font color="+color+">"+name+" "+get_id( file )+"</font> "+warning;
 }
 
 string program_info( program what )
