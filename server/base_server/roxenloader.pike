@@ -3,7 +3,7 @@
 program Privs;
 
 // Set up the roxen environment. Including custom functions like spawne().
-constant cvs_version="$Id: roxenloader.pike,v 1.66 1998/03/28 20:56:21 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.67 1998/04/29 16:12:15 noring Exp $";
 
 #define perror roxen_perror
 
@@ -429,12 +429,12 @@ int spawn_pike(array(string) args, void|string wd, object|void stdin,
   int pid;
   string cwd = getcwd();
   string pikebin = combine_path(cwd, "bin/pike");
-  string mast = new_master->_master_file_name ||
-    combine_path(cwd,"../pike/src/lib/master.pike");
+  string mast = combine_path(cwd, new_master->_master_file_name ||
+			     "../pike/src/lib/master.pike");
   array preargs = ({ });
 
   if (file_stat(mast))
-    preargs += ({ "-m", mast });
+    preargs += ({ "-m"+mast });
   foreach(new_master->pike_include_path, string s)
     preargs += ({ "-I"+s });
   foreach(new_master->pike_module_path, string s)
