@@ -1,6 +1,6 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.420 2001/03/08 14:35:38 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.421 2001/03/08 15:34:57 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2361,24 +2361,51 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
       
       me->defvar("_seclevels", "", DLOCALE(16, "Security: Patterns"), 
 		 TYPE_TEXT_FIELD,
-		 DLOCALE(17, "This is the 'security level=value' list.<br />"
-			 "Each security level can be any or more from this list:"
-			 "<hr noshade=\"noshade\" />"
-			 "allow ip=<i>IP</i>/<i>bits</i><br />"
-			 "allow ip=<i>IP</i>:<i>mask</i><br />"
-			 "allow ip=<i>pattern</i><br />"
-			 "allow user=<i>username</i>,...<br />"
-			 "deny ip=<i>IP</i>/<i>bits</i><br />"
-			 "deny ip=<i>IP</i>:<i>mask</i><br />"
-			 "deny ip=<i>pattern</i><br />"
-			 "<hr noshade=\"noshade\" />"
-			 "In patterns: * matches one or more characters, "
-			 "and ? matches one character."
-			 "<p>In username: 'any' stands for any valid account "
-			 "(from .htaccess"
-			 " or an auth module. The default (used when _no_ "
-			 "entries are present) is 'allow ip=*', allowing"
-			 " everyone to access the module.</p>"));
+		 DLOCALE(0,
+			 "The syntax is:\n"
+			 " \n<dl>"
+			 "  <dt><b>userdb</b> <i>userdatabase module</i></dt>\n"
+			 "  <dd> Select a non-default userdatabase module. The default is to "
+			 " search all modules. The userdatabase module config_userdb is always "
+			 " present, and contains the configuration users</dd>\n"
+			 "<dt><b>authmethod</b> <i>authentication module</i></dt>\n"
+			 "<dd>Select a non-default authentication method.</dd>"
+			 "<dt><b>realm</b> <i>realm name</i></dt>\n"
+			 "<dd>The realm is used when user authentication info is requested</dd>"
+			 "</dl>\n"
+			 "  Below, CMD is one of 'allow' and 'deny'\n"
+			 " <dl>\n"
+			 "  <dt>CMD <b>ip</b>=<i>ip/bits</i>  [return]<br />\n"
+			 "  CMD <b>ip</b>=<i>ip:mask</i>  [return] <br />\n"
+			 "  CMD <b>ip</b>=<i>pattern[,pattern,...]</i>  [return] <br /></dt>\n"
+			 "  <dd>Match the remote IP-address.</dd>\n"
+			 " \n"
+			 "  <dt>CMD <b>user</b>=<i>name[,name,...]</i>  [return]</dt>\n"
+			 "  <dd>Requires a authenticated user. If the user name 'any' is used, any "
+			 "valid user will be OK. Otherwise, one of the listed users are required.</dd>"
+			 "  <dt>CMD <b>group</b>=<i>name[,name,...]</i> [return]</dt>\n"
+			 "<dd>Requires a authenticated user with a group. If the group name "
+			 " 'any' is used, any valid group will be OK. Otherwise, one of the "
+			 "listed groups are required.</dd>\n"
+			 " \n"
+			 "<dt>CMD <b>dns</b>=<i>pattern[,pattern,...]</i>           [return]</dt>\n"
+			 "<dd>Require one of the specified DNS domain-names</dd>"
+			 " \n"
+			 "<dt>CMD <b>time</b>=<i>HH:mm-HH:mm</i>   [return]</dt>\n"
+			 "<dd>Only allow access to the module from the first time to the "
+			 " second each day. Both times should be specified in 24-hour "
+			 " HH:mm format.</dd>\n"
+			 "<dt>CMD <b>day</b>=<i>day[,day,...]</i> [return]</dt>\n"
+			 "<dd>Only allow access during certain days. Day is either a numerical "
+			 "    value (monday=1, sunday=7) or a string (monday, thuesday etc)</dd>"
+			 "</dl><p>\n"
+			 "  pattern is always a glob pattern (* = any characters, ? = any character).\n"
+			 "</p><p>\n"
+			 "  return means that reaching this command results in immediate\n"
+			 "  return, only useful for 'allow'.</p>\n"
+			 " \n"
+			 " <p>'deny' always implies a return, no futher testing is done if a\n"
+			 " 'deny' match.</p>\n"));
 
       if(!(module_type & MODULE_PROXY))
       {
