@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.475 2001/08/28 16:32:01 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.476 2001/08/30 04:09:17 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1017,10 +1017,18 @@ int|mapping check_security(function|RoxenModule a, RequestID id,
   }
 
   if(slevel && (seclevels[1] > slevel)) // "Trustlevel" to low.
+    // Regarding memory cache: This won't have any impact, since it's
+    // always the same, regardless of the client requesting the file.
     return 1;
 
   mixed err;
   if( function(RequestID:int|mapping) f = seclevels[0] )
+    // And here we don't have to take notice of the RAM-cache either,
+    // since the security patterns themselves does that.
+    //
+    // All patterns that varies depending on the client must use
+    // NOCACHE(), to force the request to be uncached.
+    //
     err=catch { return f( id ); };
   else
     return 0; // Ok if there are no patterns.

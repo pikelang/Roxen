@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.719 2001/08/29 13:54:05 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.720 2001/08/30 04:09:18 per Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -4309,7 +4309,8 @@ function compile_log_format( string fmt )
 // compilation information.
 //
 // ({ command_sscanf_string, number_of_arguments, actual_tests })*n
-//
+// 
+
 // In the tests array the following types has the following meaning:
 // function
 //   The function will be run during compilation. It gets the values
@@ -4327,6 +4328,15 @@ function compile_log_format( string fmt )
 // int
 //   Signals that a authentication request should be sent to the user
 //   upon failure.
+// 
+// 
+// NOTE: It's up to the security checks in this file to ensure that
+// nothing is overcached. All patterns that does checks using
+// information from the client (such as remote address, referer etc)
+// _has_ to use NOCACHE(). It's not nessesary, however, to do that for
+// checks that use the authentication module API, since it's up to the
+// user database and authentication modules to ensure that nothing is
+// overcached in that case.
 array security_checks = ({
   "ip=%s:%s",2,({
     lambda( string a, string b ){
@@ -4335,6 +4345,7 @@ array security_checks = ({
       net &= mask;
       return ({ net, sprintf("%c",mask)[0] });
     },
+    " NOCACHE();\n"
     "  if( (Roxen.ip_to_int( id->remoteaddr ) & %[1]d) == %[0]d ) ",
   }),
   "ip=%s/%d",2,({
@@ -4344,9 +4355,11 @@ array security_checks = ({
       net &= mask;
       return ({ net, sprintf("%c",mask)[0] });
     },
+    " NOCACHE();\n"
     "  if( (Roxen.ip_to_int( id->remoteaddr ) & %[1]d) == %[0]d ) ",
   }),
   "ip=%s",1,({
+    " NOCACHE();\n"
     "  if( sizeof(filter(%[0]O/\",\",lambda(string q){\n"
     "            return glob(q,id->remoteaddr);\n"
     "           })) )"
@@ -4355,6 +4368,9 @@ array security_checks = ({
     lambda( string x ) {
       return ({sprintf("(< %{%O, %}>)", x/"," )});
     },
+
+   // No need to NOCACHE () here, since it's up to the
+   // auth-modules to do that.
     "  if( (user || (user = authmethod->authenticate( id, userdb_module )))\n"
     "      && ((%[0]s->any) || (%[0]s[user->name()])) ) ",
     (<  "  User user" >),
@@ -4363,11 +4379,14 @@ array security_checks = ({
     lambda( string x ) {
       return ({sprintf("(< %{%O, %}>)", x/"," )});
     },
+   // No need to NOCACHE () here, since it's up to the
+   // auth-modules to do that.
     "  if( (user || (user = authmethod->authenticate( id, userdb_module )))\n"
     "      && ((%[0]s->any) || sizeof(mkmultiset(user->groups())&%[0]s)))",
     (<"  User user" >),
   }),
   "dns=%s",1,({
+    "NOCACHE();"
     "  if(!dns && \n"
     "     ((dns=roxen.quick_ip_to_host(id->remoteaddr))!=id->remoteaddr))\n"
     "    if( (id->misc->delayed+=0.1) < 1.0 )\n"
@@ -4378,12 +4397,16 @@ array security_checks = ({
   "time=%d:%d-%d:%d",4,({
     (< "  mapping l = localtime(time(1))" >),
     (< "  int th = l->hour, tm = l->min" >),
+    // No need to NOCACHE() here, does not depend on client.
     " if( ((th >= %[0]d) && (tm >= %[1]d)) &&\n"
     "     ((th <= %[2]d) && (tm <= %[3]d)) )",
   }),
   "referer=%s", 1, ({
-    (< "  string referer = sizeof(id->referer||({}))?"
-       "id->referer[0]:\"\"; " >),
+    (<
+      "  string referer = sizeof(id->referer||({}))?"
+      "id->referer[0]:\"\"; "
+    >),
+    "  NOCACHE();"
     "  if( sizeof(filter(%[0]O/\",\",lambda(string q){\n"
     "            return glob(q,referer);\n"
     "           })) )"
@@ -4400,13 +4423,18 @@ array security_checks = ({
       return ({sprintf("(< %{%O, %}>)", (array)res)});
     },
     (< "  mapping l = localtime(time(1))" >),
+    // No need to NOCACHE() here, does not depend on client.
     " if( %[0]s[l->wday] )"
   }),
   "accept_language=%s",1,({
+    "  NOCACHE(); "
     "  if( has_value(id->misc->pref_languages->get_languages(), %O))"
   }),
   "luck=%d%%",1,({
     lambda(int luck) { return ({ 100-luck }); },
+    // Not really any need to NOCACHE() here, since it does not depend
+    // on client. However, it's supposed to be totally random.
+    " NOCACHE();"
     " if( random(100)<%d )",
   }),
 });
@@ -4579,9 +4607,10 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
     }
   }
   if( !patterns )  return 0;
-  code = ("int|mapping f( RequestID id )\n"
+  code = ("#include <module.h>\n"
+	  "int|mapping f( RequestID id )\n"
 	  "{\n" +variables *";\n" + ";\n"
-	  "" +  code + "  return fail;\n}\n");
+	  "" +  code + "  return fail;\n}\n" );
 #if defined(SECURITY_PATTERN_DEBUG) || defined(HTACCESS_DEBUG)
    report_debug(sprintf("Compiling security pattern:\n"
 			"%{    %s\n%}\n"
