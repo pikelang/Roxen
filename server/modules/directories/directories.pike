@@ -10,7 +10,7 @@
 //  o More stuff in the emit variables
 //
 
-constant cvs_version = "$Id: directories.pike,v 1.68 2000/05/21 03:11:07 nilsson Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.69 2000/07/25 09:32:45 per Exp $";
 constant thread_safe = 1;
 
 #include <stat.h>
@@ -348,9 +348,14 @@ class TagPathplugin
     string fp = "";
     array res = ({});
     string p = id->not_query;
+    if( m->trim )
+      sscanf( p, "%s"+m->trim, p );
     if( p[-1] == '/' )
       p = p[..strlen(p)-2];
-    foreach( p / "/", string elem )
+    array q = p / "/";
+    if( m->skip )
+      q = q[(int)m->skip..];
+    foreach( q, string elem )
     {
       fp += "/" + elem;
       fp = replace( fp, "//", "/" );
