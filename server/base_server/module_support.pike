@@ -1,11 +1,9 @@
-// string cvs_version = "$Id: module_support.pike,v 1.22 1999/08/06 16:44:13 grubba Exp $";
+// string cvs_version = "$Id: module_support.pike,v 1.23 1999/08/30 09:34:09 per Exp $";
 #include <roxen.h>
 #include <module.h>
 
 /* Set later on to something better in roxen.pike::main() */
-//array (object) configurations;
-mapping (string:mixed *) variables=([]); 
-
+mapping (string:array) variables=([]); 
 
 string get_doc_for( string region, string variable )
 {
