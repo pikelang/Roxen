@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.124 2001/04/08 21:57:12 per Exp $
+//! $Id: module.pmod,v 1.125 2001/05/08 00:37:35 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -742,13 +742,13 @@ class TagSet
   {
     if (proc_instrs && proc_instrs[overrider_name] == overrider) {
       foreach (imported, TagSet tag_set)
-	if (object(Tag) overrider = tag_set->get_proc_instr (overrider_name))
+	if (object(Tag) overrider = tag_set->get_tag (overrider_name, 1))
 	  return overrider;
     }
     else {
       int found = 0;
       foreach (imported, TagSet tag_set)
-	if (object(Tag) subtag = tag_set->get_proc_instr (overrider_name))
+	if (object(Tag) subtag = tag_set->get_tag (overrider_name, 1))
 	  if (found) return subtag;
 	  else if (subtag == overrider)
 	    if ((subtag = tag_set->find_overridden_proc_instr (
@@ -1937,52 +1937,98 @@ class Frame
   //! the tag after parsing, otherwise the raw_tag_text variable is
   //! used, which must have a string value.
   {
-    Context ctx = get_context();
-    object(Tag) overridden = ctx->tag_set->get_overridden_tag (tag);
-    if (arrayp (overridden))
-      fatal_error ("Getting frames for low level tags are currently not implemented.\n");
-
-    if (overridden) {
-      Frame frame;
-      if (!args) {
 #ifdef MODULE_DEBUG
-	if (zero_type (this_object()->raw_tag_text))
-	  fatal_error ("The variable raw_tag_text must be defined.\n");
-	if (!stringp (this_object()->raw_tag_text))
-	  fatal_error ("raw_tag_text must have a string value.\n");
+#define CHECK_RAW_TEXT							\
+    if (zero_type (this_object()->raw_tag_text))			\
+      fatal_error ("The variable raw_tag_text must be defined.\n");	\
+    if (!stringp (this_object()->raw_tag_text))				\
+      fatal_error ("raw_tag_text must have a string value.\n");
+#else
+#define CHECK_RAW_TEXT
 #endif
+    // FIXME: This assumes an xml-like parser.
+
+    if (object(Tag) overridden = get_context()->tag_set->get_overridden_tag (tag)) {
+      Frame frame;
+      if (flags & FLAG_PROC_INSTR) {
+	if (!content) {
+	  CHECK_RAW_TEXT;
+	  if (mixed err = catch {
+	    Parser_HTML()->add_quote_tag (
+	      "?",
+	      lambda (object p, string c) {
+		sscanf (c, "%*[^ \t\n\r]%s", content);
+		throw (0);
+	      },
+	      "?")->finish (this_object()->raw_tag_text);
+	  }) throw (err);
+#ifdef DEBUG
+	  if (!stringp (content))
+	    fatal_error ("Failed to parse PI tag content for <?%s?> from %O.\n",
+			 tag->name, this_object()->raw_tag_text);
+#endif
+	}
+      }
+
+      else if (!args || !content && !(flags & FLAG_EMPTY_ELEMENT)) {
+	CHECK_RAW_TEXT;
 	if (mixed err = catch {
-	  Parser_HTML()->_set_tag_callback (lambda (object p) {
-					      args = p->tag_args();
-					      throw (0);
-					    })->finish (this_object()->raw_tag_text);
+	  Parser_HTML()->_set_tag_callback (
+	    lambda (object p, string s) {
+	      if (!args) args = p->tag_args();
+	      if (content || flags & FLAG_EMPTY_ELEMENT) throw (0);
+	      else {
+		p->_set_tag_callback (0);
+		p->add_container (p->tag_name(),
+				  lambda (object p, mapping a, string c) {
+				    content = c;
+				    throw (0);
+				  });
+		return 1;
+	      }
+	    })->finish (this_object()->raw_tag_text);
 	}) throw (err);
 #ifdef DEBUG
-	if (!mappingp (args)) fatal_error ("Failed to parse tag args from %O.\n",
-					   this_object()->raw_tag_text);
+	if (!mappingp (args))
+	  fatal_error ("Failed to parse tag args for <%s> from %O.\n",
+		       tag->name, this_object()->raw_tag_text);
+	if (!stringp (content))
+	  fatal_error ("Failed to parse tag content for <%s> from %O.\n",
+		       tag->name, this_object()->raw_tag_text);
 #endif
       }
+
       frame = overridden (args, content || "");
       frame->flags |= FLAG_UNPARSED;
       return frame;
     }
 
-    else
-      if (args) return result_type->format_tag (tag, args, content);
-      else {
-#ifdef MODULE_DEBUG
-	if (zero_type (this_object()->raw_tag_text))
-	  fatal_error ("The variable raw_tag_text must be defined.\n");
-	if (!stringp (this_object()->raw_tag_text))
-	  fatal_error ("raw_tag_text must have a string value.\n");
-#endif
-	if (flags & FLAG_PROC_INSTR)
-	  return this_object()->raw_tag_text;
+    else {
+      // Format a new tag, as like the original as possible. FIXME:
+      // When it's reformatted, the prefix (if any) won't stick, but
+      // it will when it isn't.
+
+      if (flags & FLAG_PROC_INSTR) {
+	if (content)
+	  return result_type->format_tag (tag, 0, content);
 	else {
+	  CHECK_RAW_TEXT;
+	  return this_object()->raw_tag_text;
+	}
+      }
+
+      else {
+	if (args && (content || flags & FLAG_EMPTY_ELEMENT))
+	  return result_type->format_tag (tag, args, content);
+	else {
+	  CHECK_RAW_TEXT;
+
+	  string s;
 #ifdef MODULE_DEBUG
 	  if (mixed err = catch {
 #endif
-	    return t_xml (PEnt)->eval (this_object()->raw_tag_text, ctx, empty_tag_set);
+	    s = t_xml (PEnt)->eval (this_object()->raw_tag_text,
+				    get_context(), empty_tag_set);
 #ifdef MODULE_DEBUG
 	  }) {
 	    if (objectp (err) && ([object] err)->thrown_at_unwind)
@@ -1990,8 +2036,37 @@ class Frame
 	    throw_fatal (err);
 	  }
 #endif
+	  if (!args && !content) return s;
+
+	  if (mixed err = catch {
+	    Parser_HTML()->_set_tag_callback (
+	      lambda (object p, string s) {
+		if (!args) args = p->tag_args();
+		if (content || flags & FLAG_EMPTY_ELEMENT) throw (0);
+		else {
+		  p->_set_tag_callback (0);
+		  p->add_container (p->tag_name(),
+				    lambda (object p, mapping a, string c) {
+				      content = c;
+				      throw (0);
+				    });
+		  return 1;
+		}
+	      })->finish (this_object()->raw_tag_text);
+	  }) throw (err);
+#ifdef DEBUG
+	  if (!mappingp (args))
+	    fatal_error ("Failed to parse tag args for <%s> from %O.\n",
+			 tag->name, this_object()->raw_tag_text);
+	  if (!stringp (content))
+	    fatal_error ("Failed to parse tag content for <%s> from %O.\n",
+			 tag->name, this_object()->raw_tag_text);
+#endif
+	  return result_type->format_tag (tag, args, content);
 	}
       }
+    }
+#undef CHECK_RAW_TEXT
   }
 
   // Internals.
