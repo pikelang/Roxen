@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.22 1998/09/12 12:27:52 grubba Exp $
+ * $Id: smtp.pike,v 1.23 1998/09/12 13:37:14 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.22 1998/09/12 12:27:52 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.23 1998/09/12 13:37:14 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -858,6 +858,24 @@ static class Smtp_Connection {
     handle_data = handle_DATA;
   }
 
+  static void do_timeout()
+  {
+    catch {
+      // Send a nice message.
+      send(421, "Timeout");
+    };
+    catch {
+      // Delayed disconnet.
+      disconnect();
+    };
+
+    touch_time();	// We want to send the timeout message...
+
+    // Force disconnection in timeout time
+    // if the other end doesn't read any data.
+    call_out(::do_timeout, timeout);
+  }
+
   static void classify_connection(object con_)
   {
     foreach(conf->get_providers("smtp_filter") ||({}), object o) {
@@ -879,7 +897,7 @@ static class Smtp_Connection {
       }
     }
     
-    ::create(con_);
+    ::create(con_, parent->query_timeout());
 
     send(220, ({ sprintf("%s ESMTP %s; %s",
 			 gethostname(), roxen->version(),
@@ -964,6 +982,11 @@ string query_spooldir()
   return(QUERY(spooldir));
 }
 
+int query_timeout()
+{
+  return(QUERY(timeout));
+}
+
 /*
  * Roxen module interface
  */
@@ -990,6 +1013,10 @@ void create()
 
   defvar("spooldir", "/var/spool/mqueue/", "Mail spool directory", TYPE_DIR,
 	 "Directory to temporary keep incoming mail.");
+
+  defvar("timeout", 10*60, "Timeout", TYPE_INT,
+	 "Idle time before connection is closed (seconds).<br>\n"
+	 "Zero or negative to disable timeouts.");
 }
 
 void start(int i, object c)
