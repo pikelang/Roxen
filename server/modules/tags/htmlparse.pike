@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.168 1999/04/13 00:20:08 mast Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.169 1999/05/08 06:20:23 neotron Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -2709,7 +2709,7 @@ string tag_pr(string tagname, mapping m)
   m->height = (string)w;
   if(!m->alt) m->alt="Powered by Roxen";
   if(!m->border) m->border="0";
-  return ("<a href=http://www.roxen.com/>"+make_tag("img", m)+"</a>");
+  return ("<a href=\"http://www.roxen.com/\">"+make_tag("img", m)+"</a>");
 }
 
 string tag_number(string t, mapping args)
