@@ -75,6 +75,7 @@ worldmap binary
 /server/base_server/wizard.pike foreign_ident
 /server/bin/buildenv.pike foreign_ident
 /server/bin/create_configif.pike foreign_ident
+/server/bin/create_testcert.pike foreign_ident
 /server/bin/fixquota.pike foreign_ident
 /server/bin/garbagecollector.pike foreign_ident
 /server/bin/lsquota.pike foreign_ident

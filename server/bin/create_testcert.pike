@@ -1,5 +1,7 @@
 #!bin/pike
 
+// $Id: create_testcert.pike,v 1.2 2002/06/05 17:15:06 nilsson Exp $
+
 import Standards.ASN1.Types;
 
 int main(int argc, array(string) argv)
@@ -16,13 +18,11 @@ int main(int argc, array(string) argv)
 
   int ttl = 1000;		// Time to live (days)
 
-  string attr;
-
   array name = ({ });
   if (attrs->countryName)
     name += ({ (["countryName":asn1_printable_string(attrs->countryName)]) });
   foreach( ({ "stateOrProvinceName", "localityName", "organizationName",
-	      "organizationUnitName", "commonName" }), attr)
+	      "organizationUnitName", "commonName" }), string attr)
   {
     if (attrs[attr])
       /* UTF8String is the recommended type. But it seems that
@@ -46,21 +46,20 @@ int main(int argc, array(string) argv)
   string key = Tools.PEM.simple_build_pem("RSA PRIVATE KEY",
                                           Standards.PKCS.RSA.private_key(rsa));
 
-  if(!file_stat("demo_certificate.pem"))
-  {
-    mixed err = 
-      catch( Stdio.write_file("demo_certificate.pem", pem_cert + key) );
+  if(file_stat("demo_certificate.pem"))
+    write("Overwriting existing demo SSL certificate.\n");
+
+  mixed err =
+    catch( Stdio.write_file("demo_certificate.pem", pem_cert + key) );
  
-    if( !err ) {
-      write("Demo SSL certificate successfully created.");
-    } else {
-      werror("Failed to write demo SSL certificate."
-             " Disc full or wrong permissions?\n");      
-      return 1;
-    }
-  }
+  if( !err )
+    write("Demo SSL certificate successfully created.\n");
   else
-    write("A demo SSL certificate is already present. Not regenerating.\n");
+  {
+    werror("Failed to write demo SSL certificate."
+	   " Disc full or wrong permissions?\n");
+    return 1;
+  }
 
   return 0;
 }
