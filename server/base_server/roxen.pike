@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.249 1998/10/16 20:56:29 grubba Exp $
+ * $Id: roxen.pike,v 1.250 1998/11/02 06:53:41 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -8,7 +8,7 @@
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.249 1998/10/16 20:56:29 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.250 1998/11/02 06:53:41 per Exp $";
 
 
 // Some headerfiles
@@ -59,6 +59,7 @@ int startpid, roxenpid;
 
 // Locale support
 object(Locale.Roxen.standard) default_locale = Locale.Roxen.svenska; // standard;
+object fonts;
 #ifdef THREADS
 object locale = thread_local();
 #else
@@ -1104,7 +1105,7 @@ void create()
   add_constant("roxen", this_object());
   add_constant("load",    load);
   (object)"color.pike";
-  (object)"fonts.pike";
+  fonts = (object)"fonts.pike";
   Configuration = (program)"configuration";
   call_out(post_create,1); //we just want to delay some things a little
 }
@@ -1819,25 +1820,9 @@ private void define_global_variables( int argc, array (string) argv )
 array font_cache;
 array available_fonts(int cache)
 {
-  array res = ({});
-  if(cache && font_cache) return font_cache;
-  foreach(QUERY(font_dirs), string dir)
-  {
-    dir+="32/";
-    array d;
-    if(array d = get_dir(dir))
-    {
-      foreach(d,string f)
-      {
-	if(f=="CVS") continue;
-	array a;
-	if((a=file_stat(dir+f)) && (a[1]==-2))
-	  res |= ({ replace(f,"_"," ") });
-      }
-    }
-  }
-  sort(res);
-  return font_cache = res;
+  if(cache && font_cache) 
+    return font_cache;
+  return font_cache = fonts->available_fonts();
 }
 
 
