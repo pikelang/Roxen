@@ -8,7 +8,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.50 1999/04/21 15:42:54 grubba Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.51 1999/04/21 16:48:05 grubba Exp $";
 constant thread_safe=1;
 
 
@@ -241,7 +241,7 @@ void done_with_put( array(object) id )
 //  perror("Done with put.\n");
   id[0]->close();
   id[1]->set_blocking();
-  if (putting[id[1]]) {
+  if (putting[id[1]] && (putting[id[1]] != 0x7fffffff)) {
     // Truncated!
     id[1]->write("400 Bad Request - Expected more data.\r\n"
 		 "Content-Length: 0\r\n\r\n");
@@ -273,7 +273,9 @@ void got_put_data( array (object) id, string data )
     destruct(id[0]);
     destruct(id[1]);
   } else {
-    putting[id[1]] -= bytes;
+    if (putting[id[1]] != 0x7fffffff) {
+      putting[id[1]] -= bytes;
+    }
     if(putting[id[1]] <= 0) {
       putting[id[1]] = 0;	// Paranoia
       done_with_put( id );
