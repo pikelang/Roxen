@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.174 1998/03/11 19:26:56 neotron Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.175 1998/03/20 03:34:42 per Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -70,7 +70,6 @@ constant decode = MIME.decode_base64;
 // object.
 private function build_root;
 private object root;
-
 
 #ifdef THREADS
 // This mutex is used by privs.pike
@@ -1009,6 +1008,11 @@ string filename(object o)
   return my_loaded[object_program(o)]||last_module_name;
 }
 
+program my_compile_file(string file)
+{
+  return compile_file( file );
+}
+
 // ([ filename:stat_array ])
 mapping(string:array) module_stat_cache = ([]);
 object load(string s, object conf)   // Should perhaps be renamed to 'reload'. 
@@ -1022,7 +1026,7 @@ object load(string s, object conf)   // Should perhaps be renamed to 'reload'.
   {
 //    perror("Yes, compile "+s+"?");
     if((cvs?(__p=master()->cvs_load_file( cvs+".pike" ))
-	:(__p=compile_file(s+".pike"))))
+	:(__p=my_compile_file(s+".pike"))))
     {
 //      perror("Yes.");
       my_loaded[__p]=s+".pike";
@@ -1033,7 +1037,7 @@ object load(string s, object conf)   // Should perhaps be renamed to 'reload'.
   }
   if(st=file_stat(s+".lpc"))
     if(cvs?(__p=master()->cvs_load_file( cvs+".lpc" )):
-       (__p=compile_file(s+".lpc")))
+       (__p=my_compile_file(s+".lpc")))
     {
       my_loaded[__p]=s+".lpc";
       module_stat_cache[s-dirname(s)]=st;
@@ -1949,7 +1953,7 @@ void scan_module_dir(string d)
 	    object o;
 	    program p;
 	     
-	    if (catch(p = compile_file(file)) || (!p)) {
+	    if (catch(p = my_compile_file(file)) || (!p)) {
 	      MD_PERROR((" compilation failed"));
 	      throw("Compilation failed.\n");
 	    }
