@@ -1,7 +1,13 @@
 /*
  * htpasswd.c: simple program for manipulating password file for NCSA httpd
  * Rob McCool
+ *
+ * Some modifications by Henrik Grubbström <grubba@idonex.se>.
  */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif /* HAVE_CONFIG_H */
 
 #include <sys/types.h>
 #include <stdio.h>
@@ -9,6 +15,10 @@
 #include <sys/signal.h>
 #include <stdlib.h>
 #include <time.h>
+
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif /* HAVE_UNISTD_H */
 
 #define LF 10
 #define CR 13
@@ -35,7 +45,8 @@ void getword(char *word, char *line, char stop) {
     if(line[x]) ++x;
     y=0;
 
-    while(line[y++] = line[x++]);
+    while((line[y++] = line[x++]))
+      ;
 }
 
 int getline(char *s, int n, FILE *f) {
@@ -67,10 +78,7 @@ void putline(FILE *f,char *l) {
 static unsigned char itoa64[] =         /* 0 ... 63 => ascii - 64 */
         "./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
-to64(s, v, n)
-  register char *s;
-  register long v;
-  register int n;
+void to64(register char *s, register long v, register int n)
 {
     while (--n >= 0) {
         *s++ = itoa64[v&0x3f];
@@ -100,19 +108,19 @@ void add_password(char *user, FILE *f) {
     fprintf(f,"%s:%s\n",user,cpw);
 }
 
-void usage() {
+void usage(void) {
     fprintf(stderr,"Usage: htpasswd [-c] passwordfile username\n");
     fprintf(stderr,"The -c flag creates a new file.\n");
     exit(1);
 }
 
-void interrupted() {
+void interrupted(void) {
     fprintf(stderr,"Interrupted.\n");
     if(tn) unlink(tn);
     exit(1);
 }
 
-main(int argc, char *argv[]) {
+int main(int argc, char *argv[]) {
     FILE *tfp,*f;
     char user[MAX_STRING_LEN];
     char line[MAX_STRING_LEN];
@@ -122,7 +130,7 @@ main(int argc, char *argv[]) {
     int found;
 
     tn = NULL;
-    signal(SIGINT,(void (*)())interrupted);
+    signal(SIGINT, interrupted);
     if(argc == 4) {
         if(strcmp(argv[1],"-c"))
             usage();
@@ -179,4 +187,5 @@ main(int argc, char *argv[]) {
     sprintf(command,"cp %s %s",tn,argv[1]);
     system(command);
     unlink(tn);
+    exit(0);
 }
