@@ -39,6 +39,26 @@ Image.Image outline(Image.Image on, Image.Image with,
   return on;
 }
 
+Image.Image do_tile(Image.Image source, int xsize, int ysize)
+{
+  Image.Image res = Image.Image(xsize, ysize);
+  for(int x=0; x<xsize; x+=source->xsize())
+    for(int y=0; y<ysize; y+=source->ysize())
+      res->paste(source, x, y);
+  return res;
+}
+
+Image.Image do_mirrortile(Image.Image source, int xsize, int ysize)
+{
+  Image.Image quad = Image.Image(source->xsize()*2,source->ysize()*2);
+  quad->paste(source,0,0);
+  quad->paste(source->mirrorx(),source->xsize(),0);
+  quad->paste(source->mirrory(),0,source->ysize());
+  quad->paste(source->mirrorx()->mirrory(),source->xsize(),
+	      source->ysize());
+  return do_tile(quad, xsize, ysize);
+}
+
 array white = ({ 255,255,255 });
 array lgrey = ({ 200,200,200 });
 array grey = ({ 128,128,128 });
@@ -225,37 +245,18 @@ array(Image.Image) make_text_image(
       foreground = t;
       if(args->tile)
       {
-	Image.Image b2 = Image.Image(xsize,ysize);
-	for(int x=0; x<xsize; x+=foreground->xsize())
-	  for(int y=0; y<ysize; y+=foreground->ysize())
-	    b2->paste(foreground, x, y);
-	foreground = b2;
+	foreground = do_tile(foreground, xsize, ysize);
       } else if(args->mirrortile) {
-	Image.Image b2 = Image.Image(xsize,ysize);
-	Image.Image b3 = Image.Image(foreground->xsize()*2,foreground->ysize()*2);
-	b3->paste(foreground,0,0);
-	b3->paste(foreground->mirrorx(),foreground->xsize(),0);
-	b3->paste(foreground->mirrory(),0,foreground->ysize());
-	b3->paste(foreground->mirrorx()->mirrory(),foreground->xsize(),
-		  foreground->ysize());
-	foreground = b3;
-	for(int x=0; x<xsize; x+=foreground->xsize())
-	{
-	  for(int y=0; y<ysize; y+=foreground->ysize())
-	    if(y%2)
-	      b2->paste(foreground->mirrory(), x, y);
-	    else
-	      b2->paste(foreground, x, y);
-	  foreground = foreground->mirrorx();
-	}
-	foreground = b2;
+	foreground = do_mirrortile(foreground, xsize, ysize);
       }
     } else
       werror("Failed to load image for "+args->texture+"\n");
   }
   int background_is_color;
+  mapping(string:string|Image.Image) bg_info;
   if(args->background &&
-     ((background = roxen.load_image(args->background, id)) ||
+     (((bg_info = roxen.low_load_image(args->background, id)) &&
+       (background = bg_info->img)) ||
       (sizeof(args->background)>1 &&
        (background=Image.Image(xsize,ysize,
                                @(parse_color(args->background[1..]))))
@@ -270,6 +271,10 @@ array(Image.Image) make_text_image(
       if((float)args->scale)
 	alpha=alpha->scale(1/(float)args->scale);
       background=Image.Image(xsize,ysize, @(parse_color(args->background[1..])));
+    } else if (bg_info) {
+      alpha = bg_info->alpha;
+      if((float)args->scale >= 0.1 && alpha)
+	alpha = alpha->scale(1.0/(float)args->scale);
     }
 
     if((float)args->scale >= 0.1 && !alpha)
@@ -277,30 +282,11 @@ array(Image.Image) make_text_image(
 
     if(args->tile)
     {
-      Image.Image b2 = Image.Image(xsize,ysize);
-      for(int x=0; x<xsize; x+=background->xsize())
-	for(int y=0; y<ysize; y+=background->ysize())
-	  b2->paste(background, x, y);
-      background = b2;
+      background = do_tile(background, xsize, ysize);
+      if (alpha) alpha = do_tile(alpha, xsize, ysize);
     } else if(args->mirrortile) {
-      Image.Image b2 = Image.Image(xsize,ysize);
-      Image.Image b3 = Image.Image(background->xsize()*2,background->ysize()*2);
-      b3->paste(background,0,0);
-      b3->paste(background->mirrorx(),background->xsize(),0);
-      b3->paste(background->mirrory(),0,background->ysize());
-      b3->paste(background->mirrorx()->mirrory(),background->xsize(),
-		background->ysize());
-      background = b3;
-      for(int x=0; x<xsize; x+=background->xsize())
-      {
-	for(int y=0; y<ysize; y+=background->ysize())
-	  if(y%2)
-	    b2->paste(background->mirrory(), x, y);
-	  else
-	    b2->paste(background, x, y);
-	background = background->mirrorx();
-      }
-      background = b2;
+      background = do_mirrortile(background, xsize, ysize);
+      if (alpha) alpha = do_mirrortile(alpha, xsize, ysize);
     }
     xsize = max(xsize,background->xsize());
     ysize = max(ysize,background->ysize());
