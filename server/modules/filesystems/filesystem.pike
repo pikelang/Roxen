@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.145 2004/05/14 21:21:22 mast Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.146 2004/05/15 10:44:08 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -399,12 +399,12 @@ string real_file( string f, RequestID id )
 mapping(string:mixed) lock_file(string path, DAVLock lock, RequestID id)
 {
   if (!query("put")) return 0;
-  if(query("check_auth") &&  (!id->conf->authenticate( id ) ) ) {
-    TRACE_LEAVE("PUT: Permission denied");
+  if (query("check_auth") && (!id->conf->authenticate( id )) ) {
+    TRACE_LEAVE("LOCK: Permission denied");
     return
       // FIXME: Sane realm.
       Roxen.http_auth_required("foo",
-			       "<h1>Permission to 'PUT' files denied</h1>");
+			       "<h1>Permission to 'LOCK' files denied</h1>");
   }
   register_lock(path, lock, id);
   return 0;
@@ -413,12 +413,12 @@ mapping(string:mixed) lock_file(string path, DAVLock lock, RequestID id)
 mapping(string:mixed) unlock_file(string path, DAVLock lock, RequestID|int(0..0) id)
 {
   if (!query("put")) return 0;
-  if(query("check_auth") && (!id || (!id->conf->authenticate( id ) )) ) {
-    TRACE_LEAVE("PUT: Permission denied");
+  if (id && query("check_auth") && (!id->conf->authenticate( id )) ) {
+    TRACE_LEAVE("UNLOCK: Permission denied");
     return
       // FIXME: Sane realm.
       Roxen.http_auth_required("foo",
-			       "<h1>Permission to 'PUT' files denied</h1>");
+			       "<h1>Permission to 'UNLOCK' files denied</h1>");
   }
   unregister_lock(path, lock, id);
   return 0;
