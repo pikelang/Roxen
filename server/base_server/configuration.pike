@@ -3,7 +3,7 @@
  * (C) 1996 - 2000 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.263 2000/02/16 16:04:59 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.264 2000/02/17 05:28:00 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -740,9 +740,9 @@ public array(string) user_from_uid(int u, RequestID|void id)
 
 public string last_modified_by(Stdio.File file, RequestID id)
 {
-  int *s;
+  array(int) s;
   int uid;
-  mixed *u;
+  array u;
 
   if(objectp(file)) s=file->stat();
   if(!s || sizeof(s)<5) return "A. Nonymous";
