@@ -291,7 +291,7 @@ class User
       }
       m_delete( id->variables, rp );
     }
-    string set_src =  parse_rxml( "<gbutton-url font=&usr.font; width=180 preparse> <cf-locale get=save> </gbutton-url>", id );
+    string set_src =  parse_rxml( "<gbutton-url font=&usr.font; width=180 preparse> &locale.save; </gbutton-url>", id );
     string form = error+
 #"
 <table>
