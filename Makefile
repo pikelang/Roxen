@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.52 1999/05/22 23:16:46 mast Exp $
+# $Id: Makefile,v 1.53 1999/05/22 23:42:43 mast Exp $
 #
 # Bootstrap Makefile
 #
@@ -229,21 +229,20 @@ censor_pro :
 
 censor_strong_crypto :
 	@echo "Censoring strong crypto..."
-	@for d in pike/*/lib/modules/SSL.pmod/.; do \
-	  for f in $$d/*; do \
-	    if test -f $$f; then \
-	      mv $$f $$f.orig; \
-	      sed -e '/^ *# *ifndef  *WEAK_CRYPTO_40BIT/,/^ *# *endif .*! *WEAK_CRYPTO_40BIT/d' \
-		  -e '/^ *# *ifdef  *WEAK_CRYPTO_40BIT/d' \
-		  -e '/^ *# *endif .*WEAK_CRYPTO_40BIT/d' \
-		  < $$f.orig > $$f; \
-	      if grep WEAK_CRYPTO_40BIT $$f >/dev/null; then \
-		echo "Failed to censor strong crypto; there are still references to WEAK_CRYPTO_40BIT in $$f."; \
-		exit 1; \
-	      else : ; fi; \
-	      rm -f $$f.orig; \
+	@for f in pike/*/lib/modules/SSL.pmod/*; do \
+	  if test -f $$f; then \
+	    echo "Censoring $$f"; \
+	    mv $$f $$f.orig; \
+	    sed -e '/^# *ifndef  *WEAK_CRYPTO_40BIT/,/^# *endif .*! *WEAK_CRYPTO_40BIT/d' \
+		-e '/^# *ifdef  *WEAK_CRYPTO_40BIT/d' \
+		-e '/^# *endif .*WEAK_CRYPTO_40BIT/d' \
+		< $$f.orig > $$f; \
+	    if grep WEAK_CRYPTO_40BIT $$f >/dev/null; then \
+	      echo "Failed to censor strong crypto; there are still references to WEAK_CRYPTO_40BIT in $$f."; \
+	      exit 1; \
 	    else : ; fi; \
-	  done; \
+	    rm -f $$f.orig; \
+	  else : ; fi; \
 	done
 
 dist: ChangeLog.gz ChangeLog.rxml.gz
