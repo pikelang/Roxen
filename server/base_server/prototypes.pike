@@ -1,7 +1,7 @@
 #include <stat.h>
 #include <config.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.14 2001/02/05 11:49:53 per Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.15 2001/02/07 19:41:45 per Exp $";
 
 class Variable
 {
@@ -376,6 +376,7 @@ class FakedVariables( mapping real_variables )
   }
 
   static mixed _m_delete( mixed what ) {
+//     werror(" _m_delete( %O )\n", what );
     return fix_value( m_delete( real_variables, what ) );
   }
 
