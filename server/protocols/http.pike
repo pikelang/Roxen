@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.258 2000/08/28 07:01:50 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.259 2000/08/28 07:05:27 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2041,8 +2041,8 @@ void got_data(mixed fooid, string s)
     
     string d = cv[ 0 ];
     file = cv[1];
-    Stat st;
 #ifndef RAM_CACHE_ASUME_STATIC_CONTENT
+    Stat st;
     if( !file->rf || !file->mtime || 
         ((st = file_stat( file->rf )) &&
          st[ST_MTIME] == file->mtime ) )
