@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.129 1999/03/28 23:21:54 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.130 1999/03/28 23:23:32 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -1269,6 +1269,7 @@ class backend
 	res += ({ "UIDNEXT",
 		  imap_number(m->next_uid),
 	});
+	break;
       case "uidvalidity":
 	res += ({ "UIDVALIDITY",
 		  imap_number(m->uid_validity),
