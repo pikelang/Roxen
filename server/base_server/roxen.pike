@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.471 2000/03/30 13:50:49 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.472 2000/03/30 23:13:09 nilsson Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -1890,7 +1890,7 @@ class ConfigIFCache
     if(!(f=open(  dir + replace( name, "/", "-" ), "wct" )))
     {
       mkdirhier( dir+"/foo" );
-      if(!f->open(  dir + replace( name, "/", "-" ), "wct" ))
+      if(!(f=open(  dir + replace( name, "/", "-" ), "wct" )))
       {
         report_error("Failed to create administration interface cache file ("+
                      dir + replace( name, "/", "-" )+") "+
