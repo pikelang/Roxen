@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.396 2000/01/30 21:50:28 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.397 2000/01/30 22:28:44 per Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -2477,6 +2477,12 @@ void create()
   foreach( glob("*.pmod",get_dir( "etc/modules/RXML.pmod/")), string q )
     dump( "etc/modules/RXML.pmod/"+ q );
 
+
+  add_constant( "RXML.Context", master()->resolv("RXML.Context") );
+  add_constant( "RXML.Tag", master()->resolv("RXML.Tag") );
+  add_constant( "RXML.Frame", master()->resolv("RXML.Frame") );
+  add_constant( "RXML.get_context", master()->resolv("RXML.get_context") );
+  add_constant( "RXML.t_text", master()->resolv("RXML.t_text") );
 
   call_out(post_create,1); //we just want to delay some things a little
 }
