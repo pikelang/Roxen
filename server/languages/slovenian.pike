@@ -6,7 +6,7 @@
    Please consult me before modifying slovenian.pike.
 */
 
-string cvs_version = "$Id: slovenian.pike,v 1.3 1997/08/19 06:38:19 per Exp $";
+string cvs_version = "$Id: slovenian.pike,v 1.4 1997/09/03 18:24:51 grubba Exp $";
 inline string month(int num)
 {
   return ({ "Januar", "Februar", "Marec", "April", "Maj",
@@ -24,7 +24,7 @@ string number(int num)
    case 1:  return "ena";
    case 2:  return "dva";
    case 3:  return "tri";
-   case 4:  return "stiri";
+   case 4:  return "¹tiri";
    case 5:  return "pet";
    case 6:  return "sest";
    case 7:  return "sedem";
@@ -42,9 +42,9 @@ string number(int num)
    case 101..199: return "sto "+number(num%100);
    case 200..299: return "dvesto "+number(num%100);
    case 300..999: return number(num/100)+"sto "+number(num%100);
-   case 1000: return "tisoc";
-   case 1001..1999: return "tisoc "+number(num%1000);
-   case 2000..999999: return number(num/1000)+" tisoc "+number(num%1000);
+   case 1000: return "tisoè";
+   case 1001..1999: return "tisoè "+number(num%1000);
+   case 2000..999999: return number(num/1000)+" tisoè "+number(num%1000);
    case 1000000..1999999:
      return "milijon "+number(num%1000000);
    case 2000000..2999999: 
@@ -59,7 +59,7 @@ string number(int num)
 }
 
 mapping(int:string) small_orders = ([ 1: "prvi", 2: "drugi", 3: "tretji",
-                                     4: "cetrti", 7: "sedmi", 8: "osmi" ]);
+                                     4: "èetrti", 7: "sedmi", 8: "osmi" ]);
 
 string ordered(int i)
 {
@@ -99,7 +99,7 @@ string date(int timestamp, mapping|void m)
       return "danes, "+ ctime(timestamp)[11..15];
   
     if(t1["yday"]+1 == t2["yday"] && t1["year"] == t2["year"])
-      return "vceraj, "+ ctime(timestamp)[11..15];
+      return "vèeraj, "+ ctime(timestamp)[11..15];
   
     if(t1["yday"]-1 == t2["yday"] && t1["year"] == t2["year"])
       return "danes, "+ ctime(timestamp)[11..15];
@@ -110,11 +110,11 @@ string date(int timestamp, mapping|void m)
   }
   if(m["full"])
     return ctime(timestamp)[11..15]+", "+
-           ordered(t1["mday"]) + " "
-           + month(t1["mon"]+1) + " " +(t1["year"]+1900) + ".";
+           (t1["mday"]) + ". "
+           + month(t1["mon"]+1) + " " +(t1["year"]+1900);
   if(m["date"])
-    return ordered(t1["mday"]) + " " + month(t1["mon"]+1)
-      + " " + (t1["year"]+1900) + ".";
+    return (t1["mday"]) + ". " + month(t1["mon"]+1)
+      + " " + (t1["year"]+1900);
   if(m["time"])
     return ctime(timestamp)[11..15];
 }
@@ -124,7 +124,7 @@ string date(int timestamp, mapping|void m)
 string day(int num)
 {
   return ({ "Nedelja","Ponedeljek","Torek","Sreda",
-	    "Cetrtek","Petek","Sobota" })[ num - 1 ];
+	    "Èetrtek","Petek","Sobota" })[ num - 1 ];
 }
 
 array aliases()
@@ -132,14 +132,3 @@ array aliases()
   return ({ "si", "svn", "slovenian" });
 }
 
-int main(int argc, array(string) argv)
-{
-  int i;
-
-  write("Testing ordered...\n");
-  for (i=0; i<1200000; i++) {
-    write(sprintf("\t%d:%s\n", i, ordered(i)));
-  }
-  write("done.\n");
-  exit(0);
-}
