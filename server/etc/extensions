@@ -1,4 +1,4 @@
-# $Id: extensions,v 1.15 1997/08/21 03:14:47 nisse Exp $
+# $Id: extensions,v 1.16 1997/08/21 03:20:07 nisse Exp $
 
 aif	audio/x-aiff
 aifc	audio/x-aiff
@@ -185,7 +185,7 @@ dxr	application/x-director
 nspc    application/x-ns-proxy-autoconfig
 pac     application/x-ns-proxy-autoconfig
 
-# Certificate Authority Certificate (recognizes at least by Netscape)
+# Certificate Authority Certificate (recognized at least by Netscape)
 ca_cert application/x-x509-ca-cert
 
 # This is supposed to be just 'gzip' and 'compress', but Netscape
