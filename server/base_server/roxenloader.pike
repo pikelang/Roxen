@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.328 2002/10/25 18:19:36 mast Exp $
+// $Id: roxenloader.pike,v 1.329 2002/10/28 17:23:58 jonasw Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.328 2002/10/25 18:19:36 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.329 2002/10/28 17:23:58 jonasw Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1176,7 +1176,7 @@ Roxen 2.4 should be run with Pike 7.2.
   if (dist_version = Stdio.read_bytes("VERSION.DIST"))
     dist_version = (replace(dist_version, "\r", "\n") / "\n")[0];
   else
-    dist_version = "unknown";
+    dist_version = roxen_version();
 
   roxen_is_cms = !!file_stat("modules/sitebuilder");
 
