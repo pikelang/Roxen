@@ -141,39 +141,6 @@
 </str>
 
 <str id="27">
-<changed from="What format to use for logging. The syntax is:
-&lt;pre&gt;response-code or *: Log format for that response code
-
-Log format is normal characters, or one or more of the variables below:
-
-\n \t \r       -- As in C, newline, tab and linefeed
-$char(int)     -- Insert the (1 byte) character specified by the integer.
-$wchar(int)    -- Insert the (2 byte) word specified by the integer.
-$int(int)      -- Insert the (4 byte) word specified by the integer.
-$^             -- Supress newline at the end of the logentry
-$host          -- The remote host name, or ip number.
-$ip_number     -- The remote ip number.
-$bin-ip_number -- The remote host id as a binary integer number.
-
-$cern_date     -- Cern Common Log file format date.
-$bin-date      -- Time, but as an 32 bit integer in network byteorder
-
-$method        -- Request method
-$resource      -- Resource identifier
-$full_resource -- Full requested resource, including any query fields
-$protocol      -- The protocol used (normally HTTP/1.0)
-$response      -- The response code sent
-$bin-response  -- The response code sent as a binary short number
-$length        -- The length of the data section of the reply
-$bin-length    -- Same, but as an 32 bit integer in network byteorder
-$request-time  -- The time the request took (seconds)
-$referer       -- the header 'referer' from the request, or '-'.
-$user_agent    -- the header 'User-Agent' from the request, or '-'.
-
-$user          -- the name of the auth user used, if any
-$user_id       -- A unique user ID, if cookies are supported,
-                  by the client, otherwise '0'
-&lt;/pre&gt;"/>
 <o>What format to use for logging. The syntax is:
 &lt;pre&gt;response-code or *: Log format for that response code
 
@@ -221,6 +188,7 @@ $wchar(int)    -- Fügt das 16Bit-Zeichen ein, das dem Integerwert entspricht.
 $int(int)      -- Fügt das 32Bit-Word ein, das dem Integerwert entspricht.
 $^             -- Unterdrückt das Newline-Zeichen am Ende des Eintrages.
 $host          -- Hostname oder IP-Adresse des Webbrowsers.
+$vhost         -- Der Host Request-Header vom Webbrowser, oder -
 $ip_number     -- IP-Adresse des Webbrowsers.
 $bin-ip_number -- IP-Adresse des Webbrowsers in 32Bit-Dezimaldarstellung.
 $cern_date     -- Uhrzeit und Datum im CERN-Format.
@@ -257,12 +225,6 @@ $user_id       -- Die eindeutige Benutzerkennung, sofern Cookies vom
 </str>
 
 <str id="31">
-<changed from="The log file. &lt;pre&gt;%y    Year  (e.g. '1997')
-%m    Month (e.g. '08')
-%d    Date  (e.g. '10' for the tenth)
-%h    Hour  (e.g. '00')
-%H    Hostname
-&lt;/pre&gt;"/>
 <o>The log file. &lt;pre&gt;%y    Year  (e.g. '1997')
 %m    Month (e.g. '08')
 %d    Date  (e.g. '10' for the tenth)
@@ -315,9 +277,8 @@ Standard-URLs und E-Mail-Adressen verwendet.</t>
 </str>
 
 <str id="39">
-<changed from="Bind to these URLs. You can use '*' and '?' to perform globbing (using any of these will default to binding to all IP-numbers on your machine).  The possible protocols are http, fhttp (a faster version of the normal HTTP protocol, but not 100% compatible with all modules), https, ftp, ftps, gopher and tetris."/>
 <o>Bind to these URLs. You can use '*' and '?' to perform globbing (using any of these will default to binding to all IP-numbers on your machine).  The possible protocols are http, fhttp (a faster version of the normal HTTP protocol, but not 100% compatible with all modules) https, ftp, ftps, gopher and tetris.</o>
-<t>Binde (horche) auf diese URLs. Hostnamen wie IP-Adressen sind zulässig. Die Meta-Zeichen '*' und '?' können als Joker verwendet werden, um auf alle verfügbaren IP-Adressen einer Maschine zu binden. Mögliche Protokolle sind http, fhttp (eine schenllere version des normalen HTTP protocols, die aber nicht mit allen Modulen 100% kompatibel ist), https, ftps, gopher und tetris.</t>
+<t>Binde (horche) auf diese URLs. Hostnamen wie IP-Adressen sind zulässig. Die Meta-Zeichen '*' und '?' können als Joker verwendet werden, um auf alle verfügbaren IP-Adressen einer Maschine zu binden. Mögliche Protokolle sind http, fhttp (eine schnellere Version des normalen HTTP, die aber nicht mit allen Modulen 100% kompatibel ist), https, ftps, gopher und tetris.</t>
 </str>
 
 <str id="40">
@@ -473,7 +434,6 @@ aufgerufen wird. '$File' wird ersetzt durch den Dateinamen,
 </str>
 
 <str id="69">
-<changed from="If yes, anonymous users are allowed to connect."/>
 <o>If yes, anonymous users is allowed to connect.</o>
 <t>Bei Aktivierung werden anonyme FTP-Verbindungen zugelassen.</t>
 </str>
@@ -806,18 +766,11 @@ durchsucht.</t>
 </str>
 
 <str id="135">
-<changed from="What do the different clients support?
-&lt;br /&gt;The default information is normally fetched from the file server/etc/supports in your Roxen directory."/>
 <o>What do the different clients support?
 &lt;br /&gt;The default information is normally fetched from the file server/etc/supports in your Roxen directory.</o>
 <t>Welche unterschiedlichen Möglichkeiten werden durch die verschiedenen
 Webbrowser unterstützt. Die Standard-Informationen werden aus der
-Datei server/etc/supports entnommen, das Format ist:&lt;pre&gt;
-Regulärer Ausdruck    Funktion, Funktion
-Regulärer Ausdruck    Funktion, Funktion
-...
-&lt;/pre&gt;Wenn '-' der Funktion vorangestellt wird, wird es von der Liste
-entfernt.</t>
+Datei server/etc/supports im Roxen-Verzeichnis entnommen.</t>
 </str>
 
 <str id="136">
@@ -904,16 +857,13 @@ Logs angehängt.</t>
 </str>
 
 <str id="151">
-<changed from="The number of simultaneous threads Roxen will use.
-&lt;p&gt;Please note that even if this is one, Roxen will still be able to serve multiple requests, using a select loop based system.
-&lt;i&gt;This is quite useful if you have more than one CPU in your machine, or if you have a lot of slow NFS accesses.&lt;/i&gt;&lt;/p&gt;"/>
 <o>The number of simultaneous threads Roxen will use.
 &lt;p&gt;Please note that even if this is one, Roxen will still be able to serve multiple requests, using a select loop based system.
 &lt;i&gt;This is quite useful if you have more than one CPU in your machine, or if you have a lot of slow NFS accesses.&lt;/i&gt;&lt;/p&gt;</o>
 <t>Die Anzahl an parallelen Threads, mit denen Roxen arbeiten wird.\n
 Hinweis: Auch wenn nur ein Thread eingestellt wird, können mehrere
 Zugriffe gleichzeitig bearbeitet werden.\n
-&lt;i&gt;Dies ist nützlich für Mehrprozessor-Systeme.&lt;/i&gt;</t>
+&lt;i&gt;Dies ist nützlich für Mehrprozessor-Systeme oder Systeme mit langsamen NFS-Zugriffen.&lt;/i&gt;</t>
 </str>
 
 <str id="154">
@@ -1764,16 +1714,8 @@ Wird zum Beispiel die Datei /foo/bar/nicht_vorhanden.html angefordert und in die
 </str>
 
 <str id="19">
-<changed from="The modules security level is used to determine if a  request should be handled by the module.
-&lt;p&gt;&lt;h2&gt;Security level vs Trust level&lt;/h2&gt; Each module has a configurable &lt;i&gt;security level&lt;/i&gt;. Each request has an assigned trust level. Higher &lt;i&gt;trust levels&lt;/i&gt; grants access to modules with higher &lt;i&gt;security levels&lt;/i&gt;.
-&lt;p&gt;&lt;h2&gt;Definitions&lt;/h2&gt;&lt;ul&gt; &lt;li&gt;A requests initial Trust level is infinitely high.&lt;/li&gt; &lt;li&gt; A request will only be handled by a module if its     &lt;i&gt;trust level&lt;/i&gt; is higher or equal to the     &lt;i&gt;security level&lt;/i&gt; of the module.&lt;/li&gt; &lt;li&gt; Each time the request is handled by a module the     &lt;i&gt;trust level&lt;/i&gt; of the module will be set to the      lower of its &lt;i&gt;trust level&lt;/i&gt; and the modules     &lt;i&gt;security level&lt;/i&gt;.&lt;/li&gt; &lt;/ul&gt;&lt;/p&gt;
-&lt;p&gt;&lt;h2&gt;Example&lt;/h2&gt; Modules:&lt;ul&gt; &lt;li&gt;  User filesystem, &lt;i&gt;security level&lt;/i&gt; 1&lt;/li&gt; &lt;li&gt;  Filesystem module, &lt;i&gt;security level&lt;/i&gt; 3&lt;/li&gt; &lt;li&gt;  CGI module, &lt;i&gt;security level&lt;/i&gt; 2&lt;/li&gt; &lt;/ul&gt;&lt;/p&gt;
-&lt;p&gt;A request handled by "User filesystem" is assigned a &lt;i&gt;trust level&lt;/i&gt; of one after the &lt;i&gt;security level&lt;/i&gt; of that module. That request can then not be handled by the "CGI module" since that module has a higher &lt;i&gt;security level&lt;/i&gt; than the requests trust level.&lt;/p&gt;
-&lt;p&gt;On the other hand, a request handled by the the "Filsystem module" could later be handled by the "CGI module".&lt;/p&gt;"/>
 <o>Select the Administration interface language.</o>
-<t>Die Sicherheitsebene des Moduls wird verwendet, wenn ein Request vom Modul behandelt werden soll.\n&lt;p&gt;&lt;h2&gt;Sicherheitsebene vs Vertrauensebene&lt;/h2&gt; Jedes Modul hat eine konfigurierbare &lt;i&gt;Sicherheitsebene&lt;/i&gt;.Jeder Request hat eine zugewiesene Vertrauensebene. Höhere &lt;i&gt;Vertrauensebeben&lt;/i&gt; erlauben Zugriff zu Modulen mir höherer &lt;i&gt;Sicherheitsebene&lt;/i&gt;.\n&lt;p&gt;&lt;h2&gt;Definitionen&lt;/h2&gt;&lt;ul&gt; &lt;li&gt;Die ursprüngliche Vertrauensebene eines Requests      ist unendlich hoch. &lt;li&gt; Ein Request wird nur von einem Modul behandelt, wenn      seine &lt;i&gt;Vertrauensebene&lt;/i&gt; mindestens so hoch ist,      wie die &lt;i&gt;Sicherheitsebene&lt;/i&gt; des Moduls. &lt;li&gt; Jedes Mal wenn ein Request von einem Modul       behandelt wird, wird die &lt;i&gt;Vertrauensebene&lt;/i&gt;      des Requests auf den jeweils niedrigeren Wert      von der &lt;i&gt;Vertrauensebene&lt;/i&gt; des Requests und der     &lt;i&gt;Sicherheitsebene&lt;/i&gt; des Moduls, gesetzt. &lt;/ul&gt;\n&lt;p&gt;&lt;h2&gt;Beispiel&lt;/h2&gt; Module:&lt;ul&gt; &lt;li&gt;  User filesystem, &lt;i&gt;Sicherheitsebene&lt;/i&gt; 1 &lt;li&gt;  Filesystem module, &lt;i&gt;Sicherheitsebene&lt;/i&gt; 3 &lt;li&gt;  CGI module, &lt;i&gt;Sicherheitsebene&lt;/i&gt; 2 &lt;/ul&gt;\n&lt;p&gt;Ein Request der vom \"User filesystem\" behandelt wird bekommt eine &lt;i&gt;Vertrauensebene&lt;/i&gt; die der &lt;i&gt;Sicherheitsebene&lt;/i&gt; des Moduls entspricht. Der Request kann dann nicht mehr vom \"CGI module\
-                   "behandelt werden, da dieses eine höhere &lt;i&gt;Sicherheitsebene&lt;/i&gt; hat als die Vertrauensebene des Requests.\n&lt;p&gt;Ein Request der vom \"Filsystem module\" behandelt wurde kann andererseits später vom \"CGI module\
-                   "behandelt werden.</t>
+<t>Wählen Sie die Sprache für das Administrations-Interface aus.</t>
 </str>
 
 <str id="152">
@@ -2119,7 +2061,6 @@ as the name of its log file directory.
 </str>
 
 <str id="245">
-<new/>
 <o>The syntax is:
  
 &lt;dl&gt;  &lt;dt&gt;&lt;b&gt;userdb&lt;/b&gt; &lt;i&gt;userdatabase module&lt;/i&gt;&lt;/dt&gt;
@@ -2152,47 +2093,69 @@ as the name of its log file directory.
  &lt;p&gt;'deny' always implies a return, no futher testing is done if a
  'deny' match.&lt;/p&gt;
 </o>
-<t></t>
+<t>Die Syntax ist:
+ 
+&lt;dl&gt;  &lt;dt&gt;&lt;b&gt;userdb&lt;/b&gt; &lt;i&gt;userdatabase module&lt;/i&gt;&lt;/dt&gt;
+  &lt;dd&gt; Wählt ein bestimmtes userdatabase-Modul aus. Das Standardverhalten ist, sämtliche Module zu durchsuchen.  Das userdatabase-Modul des Konfigurations-Interfaces ist immer präsent und enthält die Benutzer des Konfigurations-Interfaces&lt;/dd&gt;
+&lt;dt&gt;&lt;b&gt;authmethod&lt;/b&gt; &lt;i&gt;authentication module&lt;/i&gt;&lt;/dt&gt;
+&lt;dd&gt;Wählt eine bestimmte Authentikations-Methode.&lt;/dd&gt;&lt;dt&gt;&lt;b&gt;realm&lt;/b&gt; &lt;i&gt;realm name&lt;/i&gt;&lt;/dt&gt;
+&lt;dd&gt;Der Realm, der bei einer Benutzer-Authentikation verwendet wird&lt;/dd&gt;&lt;/dl&gt;
+  Im Folgenden ist CMD entweder 'allow' oder 'deny'
+ &lt;dl&gt;
+  &lt;dt&gt;CMD &lt;b&gt;ip&lt;/b&gt;=&lt;i&gt;ip/bits&lt;/i&gt;  [return]&lt;br /&gt;
+  CMD &lt;b&gt;ip&lt;/b&gt;=&lt;i&gt;ip:mask&lt;/i&gt;  [return] &lt;br /&gt;
+  CMD &lt;b&gt;ip&lt;/b&gt;=&lt;i&gt;pattern[,pattern,...]&lt;/i&gt;  [return] &lt;br /&gt;&lt;/dt&gt;
+  &lt;dd&gt;Überprüfung auf IP-Adresse des Webbrowsers.&lt;/dd&gt;
+ 
+  &lt;dt&gt;CMD &lt;b&gt;user&lt;/b&gt;=&lt;i&gt;name[,name,...]&lt;/i&gt;  [return]&lt;/dt&gt;
+  &lt;dd&gt;Ein Benutzer wird verlangt. Wird 'any' benutzt, ist jeder Benutzer berechtigt. Ansonsten ist einer der gelisteten Benutzernamen notwendig.&lt;/dd&gt;  &lt;dt&gt;CMD &lt;b&gt;group&lt;/b&gt;=&lt;i&gt;name[,name,...]&lt;/i&gt; [return]&lt;/dt&gt;
+&lt;dd&gt;Eine Benutzergruppe wird verlangt.  Wird 'any' benutzt, ist jede Gruppe berechtigt. Ansonsten ist eine der gelisteten Benutzergruppen notwendig.&lt;/dd&gt;
+ 
+&lt;dt&gt;CMD &lt;b&gt;dns&lt;/b&gt;=&lt;i&gt;pattern[,pattern,...]&lt;/i&gt;           [return]&lt;/dt&gt;
+&lt;dd&gt;Einer der angegebenen DNS Domainnamen ist erforderlich&lt;/dd&gt; 
+&lt;dt&gt;CMD &lt;b&gt;time&lt;/b&gt;=&lt;i&gt;HH:mm-HH:mm&lt;/i&gt;   [return]&lt;/dt&gt;
+&lt;dd&gt;Nur Zugriffe innerhalb des angegebenen Zeitintervalls sind zulässig. Beide Zeiten sollten im 24-Stunden Format HH:mm angegeben werden.&lt;/dd&gt;
+&lt;dt&gt;CMD &lt;b&gt;day&lt;/b&gt;=&lt;i&gt;day[,day,...]&lt;/i&gt; [return]&lt;/dt&gt;
+&lt;dd&gt;Nur Zugriffe an bestimmten Tagen sind zulässig. Der Tag wird als Zahl (Montag=1, Sonntag=7) angegeben.&lt;/dd&gt;&lt;/dl&gt;&lt;p&gt;
+  pattern ist immer ein Muster (* = jede Zeichenkette, ? = jedes einzelne Zeichen).
+&lt;/p&gt;&lt;p&gt;
+  return bedeutet, daß bei diesem Kommando sofort das Ergebnis zurückgegeben wird.  Dies ist nur sinnvoll bei 'allow'..&lt;/p&gt;
+ 
+ &lt;p&gt;'deny' bedeutet immer ein sofortige Rückgabe, kein weiteren Überprüfungen finden statt.&lt;/p&gt;
+</t>
 </str>
 
 <str id="246">
-<new/>
 <o>Compatibility level</o>
-<t></t>
+<t>Kompatibilitätsstufe</t>
 </str>
 
 <str id="257">
-<new/>
 <o>Passive port minimum</o>
-<t></t>
+<t>Passiver Port, Minimum</t>
 </str>
 
 <str id="320">
-<new/>
 <o>Minimum port number to use in the PASV/EPSV response.</o>
-<t></t>
+<t>Minimale Portnummer für PASV/EPSV Antworten</t>
 </str>
 
 <str id="321">
-<new/>
 <o>Passive port maximum</o>
-<t></t>
+<t>Passiver Port, Maximum</t>
 </str>
 
 <str id="322">
-<new/>
 <o>Maximum port number to use in the PASV/EPSV response.</o>
-<t></t>
+<t>Maximale Portnummer für PASV/EPSV Anworten</t>
 </str>
 
 <str id="323">
-<new/>
 <o>Shared with </o>
-<t></t>
+<t>Geteilt mit</t>
 </str>
 
 <str id="324">
-<new/>
 <o>Ports</o>
-<t></t>
+<t>Ports</t>
 </str>
