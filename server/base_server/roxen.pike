@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.676 2001/06/24 03:55:28 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.677 2001/06/26 09:41:40 per Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -1998,11 +1998,15 @@ class ImageCache
     mixed args = Array.map( Array.map( name/"$",
 				       argcache->lookup,
 				       id->client ), frommapp);
+
     mapping meta;
     string data;
     array guides;
     mixed reply = draw_function( @copy_value(args), id );
 
+    if( !reply )
+      return;
+    
     if( arrayp( args ) )
       args = args[0];
 
@@ -2489,20 +2493,20 @@ class ImageCache
     if(!stringp(data)) return;
     meta_cache_insert( id, meta );
     string meta_data = encode_value( meta );
-    QUERY( "INSERT INTO "+name+"_data VALUES (%s,%s,%s)",
+    QUERY( "INSERT INTO "+name+"_data (id,meta,data) VALUES (%s,%s,%s)",
                id,meta_data,data);
-    QUERY( "INSERT INTO "+name+" VALUES ('"+id+"', "+strlen(data)+
-	       ", UNIX_TIMESTAMP(), UNIX_TIMESTAMP())" );
+    QUERY( "REPLACE INTO "+name+" (id,size,mtime,atime) VALUES "
+	   "(%s,%d,UNIX_TIMESTAMP(), UNIX_TIMESTAMP())", id, strlen(data) );
   }
 
-  static mapping restore_meta( string id )
+  static mapping restore_meta( string id, RequestID rid )
   {
     if( meta_cache[ id ] )
       return meta_cache[ id ];
 
     array(mapping(string:string)) q = QUERY("SELECT meta FROM "+
-                                                name+"_data WHERE id='"+
-                                                id+"'");
+					    name+"_data WHERE id='"+
+					    id+"'");
     if(!sizeof(q))
       return 0;
 
@@ -2580,18 +2584,50 @@ class ImageCache
     return ({ imgs, size, aged });
   }
 
-  static mapping rst_cache = ([ ]);
-  static mapping restore( string id )
+  static mapping(string:mapping) rst_cache = ([ ]);
+  static mapping(string:string) uid_cache = ([ ]);
+  static mapping restore( string id, RequestID rid )
   {
+    array q;
+    string uid;
+
+    if( zero_type(uid = uid_cache[id]) )
+    {
+      q = QUERY( "SELECT uid  FROM "+name+" WHERE id=%s",id);
+      if( sizeof(q) )
+	uid = q[0]->uid;
+      else
+	uid = 0;
+      uid_cache[id] = uid;
+    }
+
+    if( uid )
+    {
+      User u;
+      if( !(u=rid->conf->authenticate(rid)) || (u->name() != uid ) )
+      {
+// 	werror("Did not get authentication. Expected "+uid+", got "+
+// 	       (u&&u->name())+"\n");
+// 	werror("Returning %O\n", rid->conf->authenticate_throw(rid, "User"));
+// 	werror("Headers: %O\n", rid->request_headers );
+	return rid->conf->authenticate_throw(rid, "User");
+      }
+    }
+
     if( rst_cache[ id ] )
       return rst_cache[ id ] + ([]);
 
-    array q = QUERY( "SELECT data FROM "+name+"_data WHERE id=%s",id);
+
+    q = QUERY( "SELECT data FROM "+name+"_data WHERE id=%s",id);
     if( sizeof(q) )
     {
       string f = q[0]->data;
-      // Caches. Thus, it's faster than doing decode_value each time here.
-      mapping m = restore_meta( id );
+
+      // restore_meta caches. Thus, it's faster calling it than doing
+      // decode_value each time here (the metadata can be extracted in
+      // the query above).
+
+      mapping m = restore_meta( id, rid );
       if( !m ) return 0;
 
       m = Roxen.http_string_answer( f, m->type||("image/gif") );
@@ -2616,16 +2652,19 @@ class ImageCache
     string na = store( args, id );
     mixed res;
 
-    if(!( res = restore( na )) )
+    if(!( res = restore( na,id )) )
     {
-      if(nodraw)
-        return 0;
+      if(nodraw) return 0;
       draw( na, id );
-      res = restore( na );
+      res = restore( na,id );
     }
-    if( res->file )
-      return res->file->read();
-    return res->data;
+
+    if( !res || (res->error/100 != 2) )
+      return 0;
+
+    if( res->data )
+      return res->data;
+    return res->file->read();
   }
 
   mapping http_file_answer( array|string|mapping data,
@@ -2637,16 +2676,16 @@ class ImageCache
   //!
   //! Like <ref>metadata</ref>, a non-zero `nodraw' parameter means an
   //! image not already in the cache will not be rendered on the fly,
-  //! but instead return zero (for request not handled).
+  //! but instead zero will be returned (this will be seen as a 'File
+  //! not found' error)
   {
     string na = store( data,id );
     mixed res;
-    if(!( res = restore( na )) )
+    if(! (res=restore( na,id )) )
     {
-      if(nodraw)
-        return 0;
+      if(nodraw) return 0;
       draw( na, id );
-      res = restore( na );
+      res = restore( na,id );
     }
     return res;
   }
@@ -2660,14 +2699,14 @@ class ImageCache
   //! it will not be rendered on the fly to get the correct data.
   {
     string na = store( data,id );
-    if(!restore_meta( na ))
+    if(!restore_meta( na,id ))
     {
       if(nodraw)
         return 0;
       draw( na, id );
-      return restore_meta( na );
+      return restore_meta( na,id );
     }
-    return restore_meta( na );
+    return restore_meta( na,id );
   }
 
   mapping tomapp( mixed what )
@@ -2682,29 +2721,40 @@ class ImageCache
   //! first argument(s). If the data is an array, the draw callback
   //! will be called like <pi>callback( @data, id )</pi>.
   {
-    string ci;
-    if( mappingp( data ) ) {
-      if (!data->format) {
+    string ci, user;
+
+    void update_args( mapping a )
+    {
+      if (!a->format)
 	//  Make implicit format choice explicit
 #if constant(Image.GIF) && constant(Image.GIF.encode)
-	data->format = "gif";
+	a->format = "gif";
 #else
-	data->format = "png";
+	a->format = "png";
 #endif
-      }
+      if( id->misc->authenticated_user )
+	// This entry is not actually used, it's only there to
+	// generate a unique key.
+	a["\0u"] = user = id->misc->authenticated_user->name();
+    };
+    
+    if( mappingp( data ) ) {
+      update_args( data );
       ci = argcache->store( data );
     } else if( arrayp( data ) ) {
-      if (!data[0]->format) {
-	//  Make implicit format choice explicit
-#if constant(Image.GIF) && constant(Image.GIF.encode)
-	data[0]->format = "gif";
-#else
-        data[0]->format = "png";
-#endif
-      }
+      if( !mappingp( data[0] ) )
+	error("Expected mapping as the first element of the argument array\n");
+      update_args( data[0] );
       ci = map( map( data, tomapp ), argcache->store )*"$";
     } else
       ci = data;
+
+    if( user && ! uid_cache[ ci ] )
+    {
+      uid_cache[ci] = user;
+      QUERY( "REPLACE INTO "+name+" (id,uid) VALUES (%s,%s)", ci, user);
+    }
+
     return ci;
   }
 
@@ -2716,18 +2766,23 @@ class ImageCache
 
   static void setup_tables()
   {
-    if(catch(QUERY("select id from "+name+" where id=''")))
+    if(catch(QUERY("select uid from "+name+" where id=''")))
     {
+      werror("Creating image-cache tables for '"+name+"'\n");
+      catch(QUERY("DROP TABLE "+name));
+      catch(QUERY("DROP TABLE "+name+"_data"));
+
       QUERY("CREATE TABLE "+name+" ("
-                "id CHAR(64) NOT NULL PRIMARY KEY, "
-                "size INT UNSIGNED NOT NULL DEFAULT 0, "
-                "ctime INT UNSIGNED NOT NULL DEFAULT 0, "
-                "atime INT UNSIGNED NOT NULL DEFAULT 0)");
+	    "id     CHAR(64) NOT NULL PRIMARY KEY, "
+	    "size   INT      UNSIGNED NOT NULL DEFAULT 0, "
+	    "uid    CHAR(32) NOT NULL DEFAULT '', "
+	    "ctime  INT      UNSIGNED NOT NULL DEFAULT 0, "
+	    "atime  INT      UNSIGNED NOT NULL DEFAULT 0)");
 
       QUERY("CREATE TABLE "+name+"_data ("
-                "id CHAR(64) NOT NULL PRIMARY KEY, "
-		"meta MEDIUMBLOB NOT NULL DEFAULT '',"
-                "data MEDIUMBLOB NOT NULL DEFAULT '')");
+	    "id CHAR(64) NOT NULL PRIMARY KEY, "
+	    "meta MEDIUMBLOB NOT NULL DEFAULT '',"
+	    "data MEDIUMBLOB NOT NULL DEFAULT '')");
     }
   }
 
@@ -2737,7 +2792,7 @@ class ImageCache
     meta_cache = ([]);
     function f = master()->resolv( "DBManager.cached_get" );
     get_db = lambda() { return f("local"); };
-    catch(setup_tables());
+    setup_tables();
   }
 
   void create( string id, function draw_func )
