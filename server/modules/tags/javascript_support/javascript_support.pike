@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.48 2001/11/26 15:47:40 anders Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.49 2002/03/22 17:09:01 anders Exp $";
 
 #include <module.h>
 inherit "module";
@@ -64,7 +64,9 @@ mapping find_internal(string f, RequestID id)
   }
   id->misc->cacheable = INITIAL_CACHEABLE;
   return
-    stringp(data) && Roxen.http_string_answer(data, "application/x-javascript" );
+    stringp(data) &&
+    (Roxen.http_string_answer(data, "application/x-javascript" ) +
+     ([ "stat" : ({0, 0, 0, 900000000, 0, 0, 0}) ]) );
 }
 
 // Provider function
