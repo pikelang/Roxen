@@ -5,7 +5,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: PXml.pike,v 1.27 2000/02/12 21:27:55 mast Exp $
+//! $Id: PXml.pike,v 1.28 2000/02/13 11:09:22 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
@@ -140,7 +140,7 @@ static void create (
   splice_arg ("::");
   _set_entity_callback (.utils.p_html_entity_cb);
   if (!type->free_text) {
-    _set_data_callback (.utils.return_empty_array);
+    _set_data_callback (.utils.free_text_error);
     _set_tag_callback (.utils.unknown_tag_error);
   }
   set_quote_tag_cbs();
@@ -152,7 +152,7 @@ mixed read()
   else {
     array seq = [array] low_parser::read();
     if (type->sequential) {
-      if (!sizeof (seq)) return RXML.Void;
+      if (!(seq && sizeof (seq))) return RXML.Void;
       else if (sizeof (seq) <= 10000) return `+(@seq);
       else {
 	mixed res = RXML.Void;
@@ -161,7 +161,7 @@ mixed read()
       }
     }
     else {
-      for (int i = sizeof (seq); --i >= 0;)
+      for (int i = seq && sizeof (seq); --i >= 0;)
 	if (seq[i] != RXML.Void) return seq[i];
       return RXML.Void;
     }
