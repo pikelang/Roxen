@@ -1,4 +1,4 @@
-string cvs_version = "$Id: cache.pike,v 1.3 1996/12/10 04:13:32 per Exp $";
+string cvs_version = "$Id: cache.pike,v 1.4 1996/12/10 04:24:48 per Exp $";
 #include <config.h>
 
 inherit "roxenlib";
@@ -44,7 +44,7 @@ string status()
 {
   string res, a;
   res = "<table border=0 cellspacing=0 cellpadding=2><tr bgcolor=darkblue>"
-    "<th align=left>Class</th><th align=left>Entries</th><th align=left>Memory used (KB)</th><th align=left>Hitrate</th></tr>";
+    "<th align=left>Class</th><th align=left>Entries</th><th align=left>(KB)</th><th align=left>Hits</td><th align=left>Misses</th><th align=left>Hitrate</th></tr>";
   array c, b;
   b=indices(cache);
   c=map_array(values(cache), get_size);
@@ -54,6 +54,7 @@ string status()
   {
     res += "<tr align=right bgcolor="+(n/3%2?"black":"#000033")+"><td align=left>"+a+"</td><td>"+sizeof(cache[a])+"</td><td>"
       + ((mem=get_size(cache[a]))/1024) + "</td>";
+    res += "<td>"+hits[a]+"</td><td>"+(all[a]-hits[a])+"</td>"
     if(all[a])
       res += "<td>"+(hits[a]*100)/all[a]+"%</td>";
     else
@@ -65,6 +66,7 @@ string status()
     totalr += all[a];
   }
   res += "<tr align=right bgcolor=darkblue><td align=left>Total</td><td>"+totale+"</td><td>" + (totalm/1024) + "</td>";
+    res += "<td>"+titalh+"</td><td>"+(totalr-totalh)+"</td>"
     if(totalr)
       res += "<td>"+(totalh*100)/totalr+"%</td>";
     else

@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.16 1996/12/10 04:19:52 per Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.17 1996/12/10 04:21:11 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -415,16 +415,16 @@ array(int)|string write_text(int _args, string text, int size,
       if(size) return data[1];
       return data[0];
     }
-
   //  Nothing found in the cache. Generate a new image.
 
-  data = cache_lookup("fonts:fonts",
-		      args->font+args->justift+":"+
-		      args->xpad+":"+args->ypad);
+
+
+  string key = args->font+args->justift+":"+args->xpad+":"+args->ypad;
+  data = cache_lookup("fonts", key);
   if(!data)
   { 
     data = load_font(args->font, lower_case(args->talign||"left"),(int)args->xpad,(int)args->ypad);
-    cache_set("fonts:fonts", args->font, data);
+    cache_set("fonts", key, data);
   }
 
   // Fonts and such are now initialized.
