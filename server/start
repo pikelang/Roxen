@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.144 2001/01/03 05:58:45 per Exp $
+# $Id: start,v 1.145 2001/01/19 18:31:25 per Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -593,8 +593,8 @@ start_roxen() {
 #
 PIKEVERSION="`$pike --version 2>&1|head -1`"
 LS="`ls -lL $pike 2>/dev/null`"
-LS="$LS `find -ls etc/modules 2>/dev/null`"
-LS="$LS `find -ls base_server 2>/dev/null`"
+LS="$LS `find etc/modules -ls 2>/dev/null`"
+LS="$LS `find base_server -ls 2>/dev/null`"
 
 VERSION_DATA="$PIKEVERSION   $DEFINES   $LS"
 
