@@ -107,6 +107,8 @@ class TagDirectoryplugin
             "src":m->path,
             "format":(args["thumbnail-format"]?args["thumbnail-format"]:"png"),
           ]);
+	  if( args["thumbnail-format"] == "jpeg" )
+	    cia["jpeg-quality"] = "40";
           m->thumbnail = 
                        Roxen.parse_rxml( RXML.t_xml->format_tag( "cimg-url",
                                                                  cia ), id );
