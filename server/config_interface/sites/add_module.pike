@@ -222,7 +222,7 @@ string format_locked_modules(array(ModuleInfo) locked_modules)
     "These modules are locked and can not be enabled because they are "
     "not part of the license key for this configuration.<br />\n"
     "<blockquote><font color='darkred'>"+
-    (locked_modules->get_name()*"<br />\n")+"</font></blockquote>";
+    (((array(string))locked_modules->get_name())*"<br />\n")+"</font></blockquote>";
 }
 
 array(string) get_module_list( function describe_module,
