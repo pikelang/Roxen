@@ -958,8 +958,7 @@ string tag_cf_locale( string t, mapping m, object id )
   mixed val;
   object q;
 
-  if( m->section )
-    q = LOW_LOCALE[ m->section ];
+  q = LOW_LOCALE[ m->section||"config_actions" ];
 
   if( !q || !(val = q[ m->get ] ) )
     if( !(val = LOCALE[ m->get ]) )
