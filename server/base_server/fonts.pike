@@ -1,4 +1,4 @@
-/* $Id: fonts.pike,v 1.38 2000/02/02 00:18:54 per Exp $ */
+/* $Id: fonts.pike,v 1.39 2000/02/02 06:08:32 per Exp $ */
 
 #include <module.h>
 
@@ -17,10 +17,7 @@ mapping ttf_font_names_cache = ([]);
 string trimttfname( string n )
 {
   n = lower_case(replace( n, "\t", " " ));
-  array q = (n/" ")-({""});
-  if( q[0] == "bitstream" )
-    return q[1];
-  return q[0];
+  return ((n/" ")*"")-"'";
 }
 
 string translate_ttf_style( string style )
