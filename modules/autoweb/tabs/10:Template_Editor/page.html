@@ -1,6 +1,3 @@
-
-<comment><templateeditorp>t</templateeditorp></comment>
-
 <pike>
   id->variables->show_wizard=!(id->variables->ok||id->variables->cancel);
   id->variables->show_menu=
@@ -55,6 +52,7 @@
 	                     template_scheme_id=$new_scheme$
 			     where id=$customer_id$">
 	  </formoutput>
+          <autosite-webadm-update-template>
 	</done></noparse></noparse>
       </wizard>
     </if>
@@ -102,6 +100,7 @@
 				'£value:quote=none£')">
             </sqloutput>
 	  </formoutput>
+          <autosite-webadm-update-template>
 	</done></noparse></noparse>
       </wizard>
     </if>
@@ -165,6 +164,7 @@
       	      </formoutput>
 	    </if>
       	  </formoutput>
+          <autosite-webadm-update-template>
 	</done></noparse></noparse>
       </wizard>
     </if>
@@ -295,6 +295,7 @@
 		}
 	      return r;
 	    </pike>
+            <autosite-webadm-update-template>
 	  </done></noparse></noparse>
 	</wizard>
       </sqloutput>
@@ -315,9 +316,6 @@
   </formoutput>
 
   <comment><toolbar><toolbarlayout>
-    <toolbarbuttonlayout name="Apply" href="./?apply=apply"
-                         help="Apply template to the web site">
-
     <toolbarbuttonlayout name="Load..." href="./?edit=load_scheme"
                          help="Load predefined template">
 			 
@@ -357,9 +355,6 @@
       <b>Active template:</b> £name:quote=mysql£<br>
     </sqloutput>
   </formoutput>
-  <if variable=apply>
-    <autosite-webadm-update-template>
-  </if>
 </if>
 
 
