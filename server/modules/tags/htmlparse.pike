@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.178 1999/05/24 01:14:09 js Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.179 1999/05/24 06:11:04 peter Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -926,6 +926,17 @@ inline string do_replace(string s, mapping (string:string) m)
   return replace(s, indices(m), values(m));
 }
 
+inline string do_safe_replace(string s, mapping (string:string) m,
+			      array(string) encodings)
+{
+  string quoted;
+  s=replace(s, indices(m), values(m));
+  foreach (encodings, string encoding)
+    if( quoted = roxen_encode( s, encoding ) )
+      return quoted;
+    else
+      return ("<b>Unknown encoding "+ encoding +" in &lt;insert&gt; </b>");
+}
 
 array permitted = ({ "1", "2", "3", "4", "5", "6", "7", "8", "9",
 		     "0", "-", "*", "+","/", "%", "&", "|", "(", ")" });
@@ -1331,6 +1342,14 @@ string tag_insert(string tag,mapping m,object id,object file,mapping defines)
   string n;
   mapping fake_id=([]);
 
+  array encodings=({ "html" });
+  
+  if(m->encode)
+  {
+    encodings=m->encode/",";
+    m_delete( m, "encode" );
+  }
+
   if (n=m->name || m->define) 
   {
     m_delete(m, "name");
@@ -1341,8 +1360,9 @@ string tag_insert(string tag,mapping m,object id,object file,mapping defines)
   if (n=m->variable) 
   {
     m_delete(m, "variable");
-    return do_replace(id->variables[n]||
-		      (id->misc->debug?"No such variable: "+n:""), m);
+    return do_safe_replace(id->variables[n]||
+			   (id->misc->debug?"No such variable: "+n:""),
+			   m, encodings);
   }
 
   if (n=m->variables) 
@@ -1368,8 +1388,9 @@ string tag_insert(string tag,mapping m,object id,object file,mapping defines)
   {
     NOCACHE();
     m_delete(m, "cookie");
-    return do_replace(id->cookies[n]||
-		      (id->misc->debug?"No such cookie: "+n:""), m);
+    return do_safe_replace(id->cookies[n]||
+			   (id->misc->debug?"No such cookie: "+n:""),
+			   m, encodings);
   }
 
   if (m->file) 
