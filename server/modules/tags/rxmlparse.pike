@@ -4,12 +4,18 @@
 // no RXML parsing will be done at all for .html files.
 //
 
-#define _stat id->misc->defines[" _stat"]
-#define _error id->misc->defines[" _error"]
-#define _extra_heads id->misc->defines[" _extra_heads"]
-#define _rettext id->misc->defines[" _rettext"]
+//This can be turned on when types in dumped files are working properly.
+//#pragma strict_types
 
-constant cvs_version="$Id: rxmlparse.pike,v 1.42 2000/02/29 12:41:37 nilsson Exp $";
+#define _misc ([mapping(string:mixed)]id->misc)
+#define _defines ([mapping(string:mixed)]_misc->defines)
+#define _stat _defines[" _stat"]
+#define _error _defines[" _error"]
+#define _extra_heads _defines[" _extra_heads"]
+#define _rettext _defines[" _rettext"]
+#define _ok _defines[" _ok"]
+
+constant cvs_version="$Id: rxmlparse.pike,v 1.43 2000/03/07 03:14:32 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -32,7 +38,7 @@ constant module_doc  = "This module handles rxml parsing of HTML pages. It is re
 
 string status()
 {
-  return (bytes/1024 + " Kb parsed.<br>");
+  return (bytes/1024 + " Kb parsed.<br />");
 }
 
 void create()
@@ -54,11 +60,18 @@ void create()
 	 "and the 'Require exec bit on files for parsing' flag is set, no "
 	 "parsing will occur.");
 
-  defvar("logerrors", 1, "Log RXML errors", TYPE_FLAG,
-	 "If set, all RXML errors will be logged in the debug log.");
+  defvar("logerrorsp", 0, "RXML Errors:Log RXML parse errors", TYPE_FLAG,
+	 "If set, all RXML parse errors will be logged in the debug log.");
 
-  defvar("quiet", 0, "Quiet RXML errors", TYPE_FLAG,
-	 "If set, RXML errors will not be shown unless debug has been turned "
+  defvar("logerrorsr", 1, "RXML Errors:Log RXML run errors", TYPE_FLAG,
+	 "If set, all RXML run errors will be logged in the debug log.");
+
+  defvar("quietp", 0, "RXML Errors:Quiet RXML parse errors", TYPE_FLAG,
+	 "If set, RXML parse errors will not be shown unless debug has been turned "
+	 "on with &lt;debug on&gt; or with the (debug) prestate.");
+
+  defvar("quietr", 1, "RXML Errors:Quiet RXML run errors", TYPE_FLAG,
+	 "If set, RXML run errors will not be shown unless debug has been turned "
 	 "on with &lt;debug on&gt; or with the (debug) prestate.");
 }
 
@@ -67,13 +80,13 @@ void start(int q, Configuration c)
 {
   file2type=c->type_from_filename;
   define_API_functions();
-  require_exec=QUERY(require_exec);
-  parse_exec=QUERY(parse_exec);
+  require_exec=[int]query("require_exec");
+  parse_exec=[int]query("parse_exec");
 }
 
 array(string) query_file_extensions()
 {
-  return query("toparse");
+  return [array(string)]query("toparse");
 }
 
 multiset query_provides() { return (< "RXMLRunError", "RXMLParseError" >); }
@@ -83,18 +96,18 @@ multiset query_provides() { return (< "RXMLRunError", "RXMLParseError" >); }
 
 int require_exec, parse_exec;
 int bytes;  // Holds the number of bytes parsed
-function file2type;
+function(string:string) file2type;
 
 mapping handle_file_extension(Stdio.File file, string e, RequestID id)
 {
-  if(!id->misc->defines)
-    id->misc->defines=([" _ok":1]);
+  if(!_misc->defines)
+    _misc->defines=([" _ok":1]);
 
   array stat;
   if(_stat)
-    stat=_stat;
+    stat=[array]_stat;
   else
-    stat=_stat=id->misc->stat || file->stat();
+    stat=_stat=[array]_misc->stat || file->stat();
 
   if(require_exec && !(stat[0] & 07111)) return 0;
   if(!parse_exec && (stat[0] & 07111)) return 0;
@@ -102,7 +115,7 @@ mapping handle_file_extension(Stdio.File file, string e, RequestID id)
   bytes += stat[1];
 
   string data = file->read();
-  switch( id->misc->input_charset )
+  switch( _misc->input_charset )
   {
    case 0:
    case "iso-8859-1":
@@ -114,13 +127,14 @@ mapping handle_file_extension(Stdio.File file, string e, RequestID id)
      data = unicode_to_string( data );
      break;
    default:
-     data = (Locale.Charset.decoder( id->misc->input_charset )
-             ->feed( data )->drain());
+     data = [string] (Locale.Charset.decoder( [string]_misc->input_charset )
+		      ->feed( data )
+		      ->drain());
      break;
   }
 
-
-  return http_rxml_answer(data,id,file,file2type(id->realfile||id->no_query||"index.html") );
+  return http_rxml_answer(data, id, file,
+			  file2type([string](id->realfile || id->no_query || "index.html")) );
 }
 
 
@@ -128,10 +142,10 @@ mapping handle_file_extension(Stdio.File file, string e, RequestID id)
 
 string rxml_run_error(RXML.Backtrace err, RXML.Type type, RequestID id) {
   if (type->subtype_of (RXML.t_html) || type->subtype_of (RXML.t_xml)) {
-    if(query("logerrors"))
+    if(query("logerrorsr"))
       report_notice ("Error in %s.\n%s", id->raw_url, describe_error (err));
-    id->misc->defines[" _ok"]=0;
-    if(query("quiet") && !id->misc->debug && !id->prestate->debug)
+    _ok=0;
+    if(query("quietr") && !_misc->debug && !([multiset(string)]id->prestate)->debug)
       return "";
     return "<br clear=\"all\" />\n<pre>" +
       html_encode_string (describe_error (err)) + "</pre>\n";
@@ -141,10 +155,9 @@ string rxml_run_error(RXML.Backtrace err, RXML.Type type, RequestID id) {
 
 string rxml_parse_error(RXML.Backtrace err, RXML.Type type, RequestID id) {
   if (type->subtype_of (RXML.t_html) || type->subtype_of (RXML.t_xml)) {
-    if(query("logerrors"))
+    if(query("logerrorsp"))
       report_notice ("Error in %s.\n%s", id->raw_url, describe_error (err));
-    id->misc->defines[" _ok"]=0;
-    if(query("quiet") && !id->misc->debug && !id->prestate->debug)
+    if(query("quietp") && !_misc->debug && !([multiset(string)]id->prestate)->debug)
       return "";
     return "<br clear=\"all\" />\n<pre>" +
       html_encode_string (describe_error (err)) + "</pre>\n";
@@ -172,39 +185,36 @@ string api_relative(RequestID id, string path)
   return fix_relative( path, id );
 }
 
-string api_set(RequestID id, string what, string to)
+string api_set(RequestID id, string what, string to, void|string scope)
 {
-  if (id->variables[ what ])
-    id->variables[ what ] += to;
-  else
-    id->variables[ what ] = to;
+  RXML.get_context()->user_set_var(what, to, scope);
   return ([])[0];
 }
 
 string api_define(RequestID id, string what, string to)
 {
-  id->misc->defines[what]=to;
+  _defines[what]=to;
   return ([])[0];
 }
 
 string api_query_define(RequestID id, string what)
 {
-  return id->misc->defines[what];
+  return (string)_defines[what];
 }
 
-string api_query_variable(RequestID id, string what)
+string api_query_variable(RequestID id, string what, void|string scope)
 {
-  return id->variables[what];
+  return (string)RXML.get_context()->user_get_var(what, scope);
 }
 
 string api_query_cookie(RequestID id, string f)
 {
-  return id->cookies[f];
+  return ([mapping(string:string)]id->cookies)[f];
 }
 
 void api_add_header(RequestID id, string h, string v)
 {
-  add_http_header(_extra_heads, h, v);
+  add_http_header([mapping(string:string)]_extra_heads, h, v);
 }
 
 int api_set_cookie(RequestID id, string c, string v, void|string p)
@@ -212,7 +222,7 @@ int api_set_cookie(RequestID id, string c, string v, void|string p)
   if(!c)
     return 0;
 
-  add_http_header(_extra_heads, "Set-Cookie",
+  add_http_header([mapping(string:string)]_extra_heads, "Set-Cookie",
     c+"="+http_encode_cookie(v||"")+
     "; expires="+http_date(time(1)+(3600*24*365*2))+
     "; path=" +(p||"/")
@@ -226,7 +236,7 @@ int api_remove_cookie(RequestID id, string c, string v)
   if(!c)
     return 0;
 
-  add_http_header(_extra_heads, "Set-Cookie",
+  add_http_header([mapping(string:string)]_extra_heads, "Set-Cookie",
     c+"="+http_encode_cookie(v||"")+"; expires=Thu, 01-Jan-70 00:00:01 GMT; path=/"
   );
 
@@ -235,24 +245,24 @@ int api_remove_cookie(RequestID id, string c, string v)
 
 int api_prestate(RequestID id, string p)
 {
-  return id->prestate[p];
+  return ([multiset(string)]id->prestate)[p];
 }
 
 int api_set_prestate(RequestID id, string p)
 {
-  return id->prestate[p]=1;
+  return ([multiset(string)]id->prestate)[p]=1;
 }
 
 int api_supports(RequestID id, string p)
 {
   NOCACHE();
-  return id->supports[p];
+  return ([multiset(string)]id->supports)[p];
 }
 
 int api_set_supports(RequestID id, string p)
 {
   NOCACHE();
-  return id->supports[p]=1;
+  return ([multiset(string)]id->supports)[p]=1;
 }
 
 int api_set_return_code(RequestID id, int c, void|string p)
@@ -265,7 +275,8 @@ int api_set_return_code(RequestID id, int c, void|string p)
 string api_get_referer(RequestID id)
 {
   NOCACHE();
-  if(id->referer && sizeof(id->referer)) return id->referer*"";
+  if([array(string)]id->referer && sizeof([array(string)]id->referer))
+    return [array(string)]id->referer*"";
   return "";
 }
 
@@ -301,7 +312,7 @@ void define_API_functions()
   add_api_function("parse_rxml", api_parse_rxml, ({ "string" }));
   add_api_function("tag_time", api_tagtime, ({ "int", 0,"string", "string" }));
   add_api_function("fix_relative", api_relative, ({ "string" }));
-  add_api_function("set_variable", api_set, ({ "string", "string" }));
+  add_api_function("set_variable", api_set, ({ "string", "string", 0, "string" }));
   add_api_function("define", api_define, ({ "string", "string" }));
 
   add_api_function("query_define", api_query_define, ({ "string", }));
@@ -327,5 +338,4 @@ void define_API_functions()
   add_api_function("query_referer", api_get_referer, ({}));
 
   add_api_function("roxen_version", lambda(){return roxen.version();}, ({}));
-  add_api_function("config_url", lambda(){return roxen->config_url();}, ({}));
 }
