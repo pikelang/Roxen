@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.222 2000/03/20 19:24:39 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.223 2000/03/21 15:23:19 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -744,9 +744,11 @@ mapping mk_gtext_arg(mapping arg, RequestID id)
   foreach(textarg, string tmp)
     foreach( glob( tmp, i ), string a )
     {
-      p[a]=arg[a]; // ,id
-      i-=({a});
-      m_delete(arg,a);
+      if(a[0..5]!="magic-") {
+	p[a]=arg[a]; // ,id
+	i-=({a});
+	m_delete(arg,a);
+      }
     }
 
   foreach(theme, string tmp)
@@ -881,10 +883,10 @@ string simpletag_gtext(string t, mapping arg, string c, RequestID id)
     if(p->bevel) p->pressed=1;
 
     m_delete(p, "fgcolor");
-    foreach(glob("magic-*", indices(p)), string q)
+    foreach(glob("magic-*", indices(arg)), string q)
     {
-      p[q[6..]]=p[q];
-      m_delete(p, q);
+      p[q[6..]]=arg[q];
+      m_delete(arg, q);
     }
 
     if(!p->fgcolor) p->fgcolor=id->misc->defines->theme_alink||
