@@ -20,7 +20,7 @@
 
 inherit "filesystem" : filesystem;
 
-constant cvs_version="$Id: userfs.pike,v 1.55 2000/04/06 01:49:41 wing Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.56 2000/04/12 23:05:49 neotron Exp $";
 constant module_type = MODULE_LOCATION;
 constant module_name = "User file system";
 constant module_doc  = 
@@ -230,7 +230,10 @@ int|mapping|Stdio.File find_file(string f, RequestID id)
     }
     dude_ok[u] = dir;	// Always '/' terminated.
   }
-
+  // For the benefit of the PHP4 module. Will set the DOCUMENT_ROOT
+  // environment variable to this instead of the path to /.
+  id->misc->user_document_root = dude_ok[u];
+  
   f = dude_ok[u] + f;
 
   if(QUERY(own))
