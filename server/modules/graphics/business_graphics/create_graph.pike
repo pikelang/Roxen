@@ -39,19 +39,31 @@ mapping(string:mixed) init(mapping(string:mixed) diagram_data)
     {
       int j=sizeof(d);
 
-      for(int i; i<j; i++)
-	{
-	  float k;
-	  if (xminvalue>(k=d[i]))
-	    xminvalue=k;
-	  if (xmaxvalue<(k=d[i]))
-	    xmaxvalue=k;
-	  
-	  if (yminvalue>(k=d[++i]))
-	    yminvalue=k;
-	  if (ymaxvalue<(k=d[i]))
-	    ymaxvalue=k;
-	}
+      if (diagram_data["type"]=="graph")
+	for(int i; i<j; i++)
+	  {
+	    float k;
+	    if (xminvalue>(k=d[i]))
+	      xminvalue=k;
+	    if (xmaxvalue<(k=d[i]))
+	      xmaxvalue=k;
+	    if (yminvalue>(k=d[++i]))
+	      yminvalue=k;
+	    if (ymaxvalue<(k=d[i]))
+	      ymaxvalue=k;
+	  }
+      else
+	if (diagram_data["type"]=="bars")
+	  for(int i; i<j; i++)
+	    {
+	      float k;
+	      if (yminvalue>(k=d[i]))
+		yminvalue=k;
+	      if (ymaxvalue<(k=d[i]))
+		ymaxvalue=k;
+	    }
+	else
+	  perror("Unknown graph type!");
     }
   xmaxvalue=max(xmaxvalue, xminvalue+LITET);
   ymaxvalue=max(ymaxvalue, yminvalue+LITET);
@@ -194,6 +206,8 @@ mapping set_legend_size(mapping diagram_data)
       object notext=get_font("avant_garde", 32, 0, 0, "left",0,0);
 
       int j=sizeof(texts);
+      if (!diagram_data["legendcolor"])
+	diagram_data["legendcolor"]=diagram_data["bgcolor"];
       for(int i=0; i<j; i++)
 	if (diagram_data["legend_texts"][i] && (sizeof(diagram_data["legend_texts"][i])))
 	  texts[i]=notext->write(diagram_data["legend_texts"][i])->
@@ -223,34 +237,56 @@ mapping set_legend_size(mapping diagram_data)
 	  {
 	    write("diagram_data[\"legendfontsize\"]"+diagram_data["legendfontsize"]+"\n");
 
-	    plupps[i]=image(diagram_data["legendfontsize"],diagram_data["legendfontsize"],
-			    @(diagram_data["legendcolor"]));
+	    plupps[i]=image(diagram_data["legendfontsize"],diagram_data["legendfontsize"]);
+	                //,@(diagram_data["legendcolor"]));
 	    //write("plupps[i]->xsize()-2"+(plupps[i]->xsize()-2)+"\n");
 	    
-	    if (diagram_data["linewidth"]*1.5<diagram_data["legendfontsize"])
+	    write("\n\n"+sprintf("%O",make_polygon_from_line(diagram_data["linewidth"], 
+							 ({
+							   (float)(diagram_data["linewidth"]/2+1),
+							   (float)(plupps[i]->ysize()-
+							   diagram_data["linewidth"]/2-2),
+							   (float)(plupps[i]->xsize()-
+								   diagram_data["linewidth"]/2-2),
+							   (float)(diagram_data["linewidth"]/2+1)
+							 }), 
+							 1, 1)[0])+"\n"); 
+	    write("\n\n"+sprintf("%O",  ({
+							   (float)(diagram_data["linewidth"]/2+1),
+							   (float)(plupps[i]->ysize()-
+							   diagram_data["linewidth"]/2-2),
+							   (float)(plupps[i]->xsize()-
+								   diagram_data["linewidth"]/2-2),
+							   (float)(diagram_data["linewidth"]/2+1)
+							 }))+"\n"); 
+	    plupps[i]->setcolor(255,255,255);
+	    if (diagram_data["linewidth"]*1.5<(float)diagram_data["legendfontsize"])
 	      plupps[i]->polygone(make_polygon_from_line(diagram_data["linewidth"], 
 							 ({
-							   diagram_data["linewidth"]/2+1,
-							   diagram_data["ysize"]-
-							   diagram_data["linewidth"]/2-2,
-							   diagram_data["xsize"]-
-							   diagram_data["linewidth"]/2-2,
-							   diagram_data["linewidth"]/2+1
+							   (float)(diagram_data["linewidth"]/2+1),
+							     (float)(plupps[i]->ysize()-
+								     diagram_data["linewidth"]/2-2),
+							     (float)(plupps[i]->xsize()-
+								     diagram_data["linewidth"]/2-2),
+							     (float)(diagram_data["linewidth"]/2+1)
 							 }), 
 							 1, 1)[0]);
 	      else
-		plupps[i]->polygone(1,
+		plupps[i]->box(1,
 				    1,
 				    plupps[i]->xsize()-2,
 				    plupps[i]->ysize()-2
-				    
+				      
 				    );
+
 	  }
+      else
+	perror("Graph type unknown!");
       //else FIXME
 
       //Ta reda på hur många kolumner vi kan ha:
       int b;
-      int columnnr=(diagram_data["image"]->xsize()-4)/(b=xmax+diagram_data["legendfontsize"]);
+      int columnnr=(diagram_data["image"]->xsize()-4)/(b=xmax+2*diagram_data["legendfontsize"]);
 
       diagram_data["legend_size"]=((j-1)/columnnr+1)*diagram_data["legendfontsize"];
       
@@ -258,13 +294,25 @@ mapping set_legend_size(mapping diagram_data)
 
       //placera ut bilder och text.
       for(int i; i<j; i++)
-	diagram_data["image"]->paste_alpha_color(plupps[i], 
-						 @(diagram_data["textcolor"]), 
-						 (i%columnnr)*b,
-						 (i/columnnr)*diagram_data["legendfontsize"]+
-						 diagram_data["image"]->ysize()-diagram_data["legend_size"]
-						 
-						 );
+	{
+	  diagram_data["image"]->paste_alpha_color(plupps[i], 
+						   @(diagram_data["datacolors"][i]), 
+						   (i%columnnr)*b,
+						   (i/columnnr)*diagram_data["legendfontsize"]+
+						   diagram_data["image"]->ysize()-diagram_data["legend_size"]
+						   
+						   );
+	  diagram_data["image"]->paste_alpha_color(texts[i], 
+						   @(diagram_data["textcolor"]), 
+						   (i%columnnr)*b+1+diagram_data["legendfontsize"],
+						   (i/columnnr)*diagram_data["legendfontsize"]+
+						   diagram_data["image"]->ysize()-diagram_data["legend_size"]
+						   
+						   );
+	  
+
+	  
+	}
     }
   else
     diagram_data["legend_size"]=0;
@@ -290,7 +338,10 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 
   diagram_data["image"]=graph;
   set_legend_size(diagram_data);
+
+  write("ysize:"+diagram_data["ysize"]+"\n");
   diagram_data["ysize"]-=diagram_data["legend_size"];
+  write("ysize:"+diagram_data["ysize"]+"\n");
   
   //Bestäm största och minsta datavärden.
   init(diagram_data);
@@ -631,7 +682,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 	polygone(make_polygon_from_line(diagram_data["linewidth"], 
 					({
 					  xpos_for_yaxis,
-					  diagram_data["xsize"]-diagram_data["linewidth"],
+					  diagram_data["ysize"]-diagram_data["linewidth"],
 					  
 					  xpos_for_yaxis,
 					  diagram_data["linewidth"]+
@@ -675,7 +726,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 	  write("\n\n"+sprintf("%O",make_polygon_from_line(diagram_data["linewidth"], 
 					    ({
 					      xpos_for_yaxis,
-					      diagram_data["xsize"]-diagram_data["linewidth"],
+					      diagram_data["ysize"]-diagram_data["linewidth"],
 
 					      xpos_for_yaxis,
 					      diagram_data["ysize"]-ypos_for_xaxis-
@@ -704,7 +755,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 	    polygone(make_polygon_from_line(diagram_data["linewidth"], 
 					    ({
 					      xpos_for_yaxis,
-					      diagram_data["xsize"]-diagram_data["linewidth"],
+					      diagram_data["ysize"]-diagram_data["linewidth"],
 
 					      xpos_for_yaxis,
 					      diagram_data["ysize"]-ypos_for_xaxis-
@@ -916,13 +967,13 @@ int main(int argc, string *argv)
 		 "fontsize":16,
 		 "labels":({"xstor", "ystor", "xenhet", "yenhet"}),
 		 "legendfontsize":12,
-		 "legend_texts":({"streck 1", "streck 2", "foo", "bar" }),
+		 "legend_texts":({"streck 1", "streck 2", "foo", "bar gazonk foobar illalutta!" }),
 		 "labelsize":0//,
 		 //"xminvalue":0.1,
 		 ,"yminvalue":0.1
 
   ]);
-
+  /*
   diagram_data["datapoints"]=({({ 
      101.858620,
     146.666672,
@@ -1014,7 +1065,7 @@ int main(int argc, string *argv)
     397.799988
 
 })});
-
+  */
 
   object o=Stdio.File();
   o->open("test.ppm", "wtc");

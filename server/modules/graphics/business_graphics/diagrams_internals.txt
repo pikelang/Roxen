@@ -1,23 +1,27 @@
 Diagram info:
 
 Huvud-funktioner:
-create_graph(mapping diagra_data);
-create_bars(mapping diagra_data);
-create_sumbars(mapping diagra_data);
-create_pie(mapping diagra_data);
+create_graph(mapping diagram_data);
+create_bars(mapping diagram_data);
+create_sumbars(mapping diagram_data);
+create_pie(mapping diagram_data);
 
 
 Graphs: 
 Graphs är punkter eller punkter med linjer mellan sig. Punkterna anges
 med x, y.
-Indata på formen x, y, y, y omvandlas.
+Indata på formen x, y, y, y omvandlas av inläsningsfunktionen.
+
+Bars:
+Barsdata består av en lista av listor med värden i. Värdena skrivs
+ut som staplar eller negativa staplar.
 
 Data lagras i ett data-mapping:
 diagram_data
 
-//behöver man följande två?
+
 string type;
-Är lika med "graph", "bars", "sumbars", "pie";
+//Är lika med "graph", "bars", "sumbars", "pie";
 
 string subtyp;
 //för "bars" kan den vara "line"(vågräta linjer), "bars", "dot", "linear", 
@@ -26,11 +30,13 @@ string subtyp;
 
 array(array(float)) datapoints; 
 //Innehåller för graph 
- // en array med x-data-array, y-data-array, x-data-array, ...
-
+ // en array med arrayer av typ x-data, y-data, x-data, ...
+//För Bars:
+ // x-data, x-data, ...
 
 array(string) labels;
 //Innehåller en array med ({xstorhet, ystorhet, xenhet, yenhet})
+// För bars kan används inte xenhet
 
 array(string) xnames;
 //Innehåller en array med olika namn som ska stå längs x-axeln 
@@ -72,6 +78,7 @@ array(string) legend_texts;
 array(froat) values_for_xnames;
 //Innehåller en array med nivåerna som ska förknippas med vissa xnames.
 //Om dessa inte anges kan de sättas ut jämt.
+//Bars sätter denna själv
 
 array(froat) values_for_ynames;
 //Innehåller en array med nivåerna som ska förknippas med vissa ynames.
@@ -84,7 +91,7 @@ float xmaxvalue, xminvalue, ymaxvalue, yminvalue;
 
 
 float xspace, float yspace, 
-//anger hur lång det ska var mellan utskrifterna av nuffror/xnames/ynames
+//anger hur lång det ska vara mellan utskrifterna av nuffror/xnames/ynames
 
 int xsize, ysize;
 //anger hur stor bild man ska generera.
@@ -114,7 +121,9 @@ int xsize, ysize;
 
 "datacolors":({({int r, int g, int b}), ... }) 
 //Färgen på linjerna/barsen/slicerna
-//För grapher måste de vara av samma antal som antalet uppsättningar data
+//För grapher och bars måste de vara av samma antal som antalet 
+//uppsättningar data
+
 
 "textcolor":({int r, int g, int b})
 // färgen på texten
@@ -124,8 +133,9 @@ int xsize, ysize;
 
 "orient":"hor" eller "vert"
 //Anger om skriften på x-axel ska skrivas horizontelt eller vertikalt.
+//hor är default.
 
-"linewidth":float bredd på ala linjer
+"linewidth":float bredd på alla linjer
 
 
 "image":object(image)
