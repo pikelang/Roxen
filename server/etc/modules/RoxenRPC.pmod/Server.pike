@@ -1,5 +1,5 @@
 /*
- * $Id: Server.pike,v 1.15 1998/02/13 21:58:25 mirar Exp $
+ * $Id: Server.pike,v 1.16 1998/04/09 13:32:00 grubba Exp $
  */
 
 #define error(X) throw(({X, backtrace()}))
@@ -221,7 +221,7 @@ array connections = ({});
 mapping identifiers = ([ 0:info() ]);
 mapping refs = ([0:1]);
  
-object port = files.port();
+object port = Stdio.Port();
 
 int c_ident;
 

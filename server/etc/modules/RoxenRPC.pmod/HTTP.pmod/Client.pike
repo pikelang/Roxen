@@ -1,5 +1,5 @@
 //
-// $Id: Client.pike,v 1.5 1998/03/11 19:42:33 neotron Exp $
+// $Id: Client.pike,v 1.6 1998/04/09 13:32:28 grubba Exp $
 //
 // Roxen HTTP RPC
 //
@@ -19,7 +19,7 @@ static private void disconnect()
 static private void establish()
 {
   int rpc_port;
-  object o = files.file();
+  object o = Stdio.File();
   signal(signum("SIGALRM"), lambda() { throw("timeout"); });
   alarm(5);
   o->connect(host, port);

@@ -1,5 +1,5 @@
 /*
- * $Id: Client.pike,v 1.12 1998/02/13 21:58:25 mirar Exp $
+ * $Id: Client.pike,v 1.13 1998/04/09 13:31:29 grubba Exp $
  */
 
 #define error(X) throw( ({ X, backtrace() }) )
@@ -64,7 +64,7 @@ class RemoteFunctionCall
 
 
 string myclass;
-object server = files.file();
+object server = Stdio.File();
 
 int nolock = 0;
 #if efun(thread_create)
