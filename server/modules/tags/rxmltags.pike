@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.126 2000/06/01 12:56:13 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.127 2000/06/01 20:06:20 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -1329,7 +1329,8 @@ private int|array internal_tag_select(string t, mapping m, string c, string name
 
   while(sizeof(tmp)>2) {
     stop=search(tmp[2],"<");
-    if(sscanf(lower_case(tmp[1]),"%*svalue=%s%*[ >]",nvalue)!=3) nvalue=tmp[2][..stop==-1?sizeof(tmp[2]):stop];
+    if(sscanf(tmp[1],"%*svalue=%s%*[ >]",nvalue)!=3 &&
+       sscanf(tmp[1],"%*sVALUE=%s%*[ >]",nvalue)!=3) nvalue=tmp[2][..stop==-1?sizeof(tmp[2]):stop];
     if(!sscanf(nvalue, "\"%s\"", nvalue)) sscanf(nvalue, "'%s'", nvalue);
     selected=Regexp(".*[Ss][Ee][Ll][Ee][Cc][Tt][Ee][Dd].*")->match(tmp[1]);
     ret+="<"+tmp[0]+tmp[1];
