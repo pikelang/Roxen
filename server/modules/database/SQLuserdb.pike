@@ -13,7 +13,7 @@
  * or should have been shipped along with the module.
  */
 
-constant cvs_version="$Id: SQLuserdb.pike,v 1.25 2001/01/29 05:40:31 per Exp $";
+constant cvs_version="$Id: SQLuserdb.pike,v 1.26 2001/09/06 14:34:30 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -187,7 +187,7 @@ array(string) userinfo (string u) {
 		return 0;
 	}
 	sql_results=db->query("select username,passwd,uid,gid,homedir,shell "
-			"from "+query("table")+" where username='"+u+"'");
+			      "from "+query("table")+" where username=%s", u);
 	if (!sql_results||!sizeof(sql_results)) {
 		DEBUGLOG ("no entry in database, returning unknown")
 		return 0;
@@ -237,7 +237,7 @@ string user_from_uid (int u)
 		return 0;
 	}
 	data=db->query("select username from " + query("table") +
-		       " where uid='" + (int)u +"'");
+		       " where uid=%s", (string)(int)u);
 	if(sizeof(data)!=1) //either there's noone with that uid or there's many
 		return 0;
 	return data[0]->username;
