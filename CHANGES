@@ -24,6 +24,7 @@ Major changes from Roxen 3.3:
      - Localized code looks horrible and adds a lot of extra work to
        development. That's ok for paid development, but...
      - We will save memory and gain speed.
+   Therfore also <emit known-langs /> has been removed.
  - Removed support for licenses.  While it would have been good to have
    a licensing system, to attract commercial entities in the future,
    there is really not much of a point in an open source product.

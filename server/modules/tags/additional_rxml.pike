@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.35 2004/06/07 10:59:27 _cvs_stephen Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.36 2004/08/18 12:04:38 _cvs_stenitzer Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -46,26 +46,6 @@ class TagDice {
 
       return 0;
     }
-  }
-}
-
-class TagEmitKnownLangs
-{
-  inherit RXML.Tag;
-  constant name = "emit", plugin_name = "known-langs";
-  array get_dataset(mapping m, RequestID id)
-  {
-    return map(get_core()->list_languages(),
-	       lambda(string id)
-	       {
-		 object language = get_core()->language_low(id);
-		 string eng_name = language->id()[1];
-		 if(eng_name == "standard")
-		   eng_name = "english";
-		 return ([ "id" : id,
-			 "name" : language->id()[2],
-		  "englishname" : eng_name ]);
-	       });
   }
 }
 
@@ -810,32 +790,6 @@ constant tagdoc=([
  before storing it into a database.</p>
 </attr>
 ",
-
-//----------------------------------------------------------------------
-
-"emit#known-langs":({ #"<desc type='plugin'><p><short>
- Outputs all languages partially supported by roxen for writing
- numbers, weekdays et c.</short>
- Outputs all languages partially supported by roxen for writing
- numbers, weekdays et c (for example for the number and date tags).
- </p>
-</desc>
-
- <ex><emit source='known-langs' sort='englishname'>
-  4711 in &_.englishname;: <number lang='&_.id;' num='4711'/><br />
-</emit></ex>",
-			([
-			  "&_.id;":#"<desc type='entity'>
- <p>Prints the three-character ISO 639-2 id of the language, for
- example \"eng\" for english and \"deu\" for german.</p>
-</desc>",
-			  "&_.name;":#"<desc type='entity'>
- <p>The name of the language in the language itself, for example
- \"français\" for french.</p>
-</desc>",
-			  "&_.englishname;":#"<desc type='entity'>
- <p>The name of the language in English.</p>
-</desc>",
 
 //----------------------------------------------------------------------
 
