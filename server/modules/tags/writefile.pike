@@ -10,7 +10,7 @@
 
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: writefile.pike,v 1.3 2001/07/20 12:13:17 jhs Exp $";
+constant cvs_version = "$Id: writefile.pike,v 1.4 2001/08/24 22:35:24 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -188,14 +188,15 @@ constant tagdoc=([
   written.  If this attribute is omitted, the container content is what
   will be written instead.  Given the example below, the parameter
   <var>from=wrapupafile</var> should be specified.</p>
-<ex><form method='post'
+
+<ex type='box'><form method='post'
    enctype=\"multipart/form-data\">
  <input type='file' name='wrapupafile' />
  <input type='submit' value=\"Upload file\" />
 </form>
 File uploaded:
   <insert scope='form'
-    variable=\"wrapupafile.filename\"/>
+    variable=\"wrapupafile..filename\"/>
 </ex>
 </attr>
 

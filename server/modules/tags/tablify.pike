@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: tablify.pike,v 1.68 2001/08/23 01:54:06 nilsson Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.69 2001/08/24 22:35:07 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -44,6 +44,7 @@ a	b
 aa	bb
 aaa	bbb	ops!
 </tablify>
+</ex>
 </desc>
 
 <attr name='rowseparator' value='string' default='newline'><p>
