@@ -5,7 +5,7 @@
 
 import Stdio;
 
-string cvs_version = "$Id: htaccess.pike,v 1.11 1997/05/26 01:13:04 grubba Exp $";
+string cvs_version = "$Id: htaccess.pike,v 1.12 1997/06/12 02:41:45 per Exp $";
 #include <module.h>
 #include <roxen.h>
 inherit "module";
@@ -595,7 +595,7 @@ array rec_find_htaccess_file(object id, string vpath)
       if(stringp(path))
       {
 	o = open(path, "r");
-	return ({ path, o });
+	if(o)  return ({ path, o });
       } else if(QUERY(cache_all))
 	return 0;
     }

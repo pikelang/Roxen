@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.73 1997/06/12 00:16:22 grubba Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.74 1997/06/12 02:41:41 per Exp $";
 #define IN_ROXEN
 #ifdef THREADS
 #include <fifo.h>
@@ -828,7 +828,7 @@ public varargs array|string type_from_filename( string file, int to )
   } else {
     if(!(tmp=current_configuration->types_fun("default")))
       tmp=({ "application/octet-stream", 0 });
-    // FIXME -- tmp above isn't used /grubba
+    return to?tmp:tmp[0]; // Per..
   }
   return 0;
 }

@@ -5,7 +5,7 @@
  *      on the page since Netscape caches charsets.
  */
 
-string cvs_version = "$Id: japanese.pike,v 1.5 1996/12/05 23:28:57 grubba Exp $";
+string cvs_version = "$Id: japanese.pike,v 1.6 1997/06/12 02:41:43 per Exp $";
 string month(int num);
 
 /* The following function is correct for -10**12 < n < 10**12 (I think...) */
@@ -14,7 +14,7 @@ string mknumber(int n)
 {
   array(string) digit;
   string r;
-  digit = ({ "", "0l", "Fs", ";0", ";M", "8^", "O;", "<7", "H,", "6e" });
+  digit = ({ "", "0l", "Fs", ";0", ";M", "8^", "O;", "<7", "H,", "6e" }); 
 
   if(!n) return "%<%m";
 

@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.44 1997/05/30 09:18:14 per Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.45 1997/06/12 02:41:46 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -83,9 +83,10 @@ array register_module()
 	      "                 background.\n"
 	      " maxlen=arg      The maximum length of the rendered text will be\n"
 	      "                 the specified argument. The default is 300, this\n"
-	      "                 is used to safeguard against mistakes like\n"	
-	      "&lt;gh1&gt;&lt;/gh&gt;, which would otherwise parse the whole\n"
-	      "document.\n"
+	      "                 is used to safeguard against mistakes like\n"
+	      "                 &lt;gh1&gt;&lt;/gh&gt;, which would otherwise\n"
+	      "                 parse the whole document.\n"
+	      " help            Display this text\n"
 	      "\n"
 	      "<b>Arguments passed on the the &lt;a&gt; tag (if href is specified):</b>\n "
 	      " target=...\n"

@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.42 1997/06/12 00:34:23 grubba Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.43 1997/06/12 02:41:40 per Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -536,7 +536,7 @@ string new_module_form(object id, object node)
       if(b->sname != q)
 	res += ({("<p>"+
 		  (roxen->QUERY(BS)?"<h2>"+a[q][0]+"</h2>":
-		  "<img alt=\""+a[q][0]+"\" src=/auto/module/" + a[q][2]+"/"+
+		  "<img alt=\""+a[q][0]+"\" src=/auto/module/" +a[q][2]+"/"+
 		   q+" height=24 width=500>")+ "<br><blockquote>" + a[q][1] +
 		  "<p><i>A module of the same type is already enabled (" +
 		  b->name + "). <a href=\"/(delete)" +
@@ -546,8 +546,8 @@ string new_module_form(object id, object node)
     } else {
       res += ({"<p><a href=/(newmodule)"+node->path(1)+"?"+q+"=1>"+
 		 (roxen->QUERY(BS)?"<h2>"+a[q][0]+"</h2>":
-		  "<img border=0 alt=\""+a[q][0]+"\" src=/auto/module/"+
-		  a[q][2]+"/"+q+" height=24 width=500>")+
+		  "<img border=0 alt=\""+a[q][0]+"\" src=/auto/module/"
+                  +a[q][2]+"/"+q+" height=24 width=500>")+
 		 "</a><blockquote><br>"+a[q][1]+"<p><br><p></blockquote>"});
     }
   }

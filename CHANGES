@@ -1,6 +1,27 @@
 Changes since Roxen Challenger 1.2 alpha 5
 -----------------------------------------------
 
+o Fixed the 'default' type in etc/extensions. It should be checked
+  now..
+
+o The images in the configuration interface is now cached on
+  disk. This seems to speed things up on slow machines, and the images
+  will work on HP's where gcc is used...
+
+o Fixed a bug in the .htaccess related to the removal of previously
+  loaded .htaccess files.
+
+o Fixed some documentation in the graphics text module
+
+o The hsv colorspace in color.pike has been fixed somewhat, 
+  to specify a color in the HSV colorspace, use @H,S,V.
+  H is a number between 0 and 360, S anv V are numbers between 0 and
+  100 (percent).
+
+o It is now possible to specify colors like 'light neon dark light green'.
+  The spaces are quite optional. Possible colormodifiers include
+  light, dark and neon.
+  
 o Added better checks during module-initialization.
 
 o Fixed permission bug in the ftp-module.
@@ -15,7 +36,8 @@ o Userdatabase module using YP (NIS) added.
 
 o POSIX_SOURCE is now defined during the configure tests.
 
-o "This is (probably) the reason: 0" is hopefully gone now.
+o The quite meaningless error message
+  "This is (probably) the reason: 0" is hopefully gone now.
 
 o Now uses correct permissions when updating the etc/supports file.
 
@@ -23,8 +45,9 @@ o #!NO in modules now seems to work.
 
 o Garbage-collector updated (thanks to Wilhelm Köhler).
 
-o THREADS-mode can now use multiple shuffle-threads /thanks to Wilhelm Köhler).
-
+o THREADS-mode can now use multiple shuffle-threads (thanks to Wilhelm Köhler).
+  To try THREADS (very alpha..) edit etc/include/config.h
+  
 o Some bugs in the proxies fixed.
 
 
