@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.41 1997/06/09 19:07:00 grubba Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.42 1997/06/12 00:34:23 grubba Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -536,7 +536,7 @@ string new_module_form(object id, object node)
       if(b->sname != q)
 	res += ({("<p>"+
 		  (roxen->QUERY(BS)?"<h2>"+a[q][0]+"</h2>":
-		  "<img alt=\""+a[q][0]+"\" src=/auto/module/" +
+		  "<img alt=\""+a[q][0]+"\" src=/auto/module/" + a[q][2]+"/"+
 		   q+" height=24 width=500>")+ "<br><blockquote>" + a[q][1] +
 		  "<p><i>A module of the same type is already enabled (" +
 		  b->name + "). <a href=\"/(delete)" +
@@ -547,7 +547,7 @@ string new_module_form(object id, object node)
       res += ({"<p><a href=/(newmodule)"+node->path(1)+"?"+q+"=1>"+
 		 (roxen->QUERY(BS)?"<h2>"+a[q][0]+"</h2>":
 		  "<img border=0 alt=\""+a[q][0]+"\" src=/auto/module/"+
-		  q+" height=24 width=500>")+
+		  a[q][2]+"/"+q+" height=24 width=500>")+
 		 "</a><blockquote><br>"+a[q][1]+"<p><br><p></blockquote>"});
     }
   }
@@ -907,39 +907,40 @@ mapping auto_image(string in, object id)
   switch(key)
   {
    case "module":
-    i = draw_module_header(roxen->allmodules[value][0],
-			   roxen->allmodules[value][2],
-			   module_font);
-    break;
+     sscanf(value, "%*d/%s", value);
+     i = draw_module_header(roxen->allmodules[value][0],
+			    roxen->allmodules[value][2],
+			    module_font);
+     break;
     
    case "button":
-    int lm,rm;
-    if(sscanf(value, "lm/%s", value)) lm=1;
-    if(sscanf(value, "rm/%s", value)) rm=1;
-    i=draw_config_button(value,button_font,lm,rm);
-    break;
+     int lm,rm;
+     if(sscanf(value, "lm/%s", value)) lm=1;
+     if(sscanf(value, "rm/%s", value)) rm=1;
+     i=draw_config_button(value,button_font,lm,rm);
+     break;
 
    case "fold":
    case "fold2":
-    i = draw_fold((int)reverse(key));
-    break;
+     i = draw_fold((int)reverse(key));
+     break;
     
    case "unfold":
    case "unfold2":
-    i = draw_unfold((int)reverse(key));
-    break;
+     i = draw_unfold((int)reverse(key));
+     break;
 
    case "back":
-    i = draw_back((int)reverse(key));
-    break;
+     i = draw_back((int)reverse(key));
+     break;
     
    case "selected":
-    i=draw_selected_button(value,button_font);
-    break;
+     i=draw_selected_button(value,button_font);
+     break;
 
    case "unselected":
-    i=draw_unselected_button(value,button_font);
-    break;
+     i=draw_unselected_button(value,button_font);
+     break;
   }
   if(i)
   {
