@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.65 1998/01/21 22:35:06 per Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.66 1998/01/24 00:39:09 mirar Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -504,7 +504,8 @@ void sort_lists()
     val = values(real_container_callers[c]);
     sort(ind);
     s = map(val, lambda(function f) {
-      return function_object(f)->query("_priority");
+      if (objectp(f)) return function_object(f)->query("_priority");
+      return 4;
     });
     sort(s,val);
     real_container_callers[c]=mkmapping(ind,val);
