@@ -15,8 +15,6 @@
      (where "Roxen-archive-name" is the name of the Roxen archive
       file.).
 
-  3. Type "cd Roxen_version/server" to change to the server directory.
-
   3. Type "cd <roxen_version>/server" to change to the server directory in
      the new directory.
 
