@@ -6,7 +6,7 @@
  * doc = "This is the proxy garbage collector";
  */
 
-string cvs_version = "$Id: garbagecollector.pike,v 1.11 1997/08/19 06:17:11 per Exp $";
+string cvs_version = "$Id: garbagecollector.pike,v 1.12 1998/04/21 19:08:35 grubba Exp $";
 
 //#define DEBUG
 
@@ -612,7 +612,7 @@ void init_log_file(string lf)
   if(gc_log)
     destruct(gc_log);
 
-  gc_log = files.file();
+  gc_log = Stdio.File();
   if(!gc_log->open(lf, "rwac")) {
     perror("init_log_file("+lf+"): open failed\n");
     destruct(gc_log);

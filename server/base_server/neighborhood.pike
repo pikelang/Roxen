@@ -1,4 +1,4 @@
-// $Id: neighborhood.pike,v 1.31 1998/03/02 18:26:34 grubba Exp $
+// $Id: neighborhood.pike,v 1.32 1998/04/21 19:06:36 grubba Exp $
 #define DELAY 20
 // #define NEIGH_DEBUG
 mapping neighborhood = ([ ]);
@@ -34,7 +34,7 @@ class TCPNeigh
   void create(object|string f, int port, object m)
   {
     if(objectp(f)) me=f;
-    else me = files.file();
+    else me = Stdio.File();
     if(port && f && strlen(f))
     {
 #ifdef NEIGH_DEBUG

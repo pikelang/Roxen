@@ -3,7 +3,7 @@
 // This module log the accesses of each user in their home dirs, if
 // they create a file named 'AccessLog' in that directory, and allow
 // write access for roxen.
-constant cvs_version = "$Id: home_logger.pike,v 1.16 1998/03/11 19:42:37 neotron Exp $";
+constant cvs_version = "$Id: home_logger.pike,v 1.17 1998/04/21 19:09:26 grubba Exp $";
 constant thread_safe=1;
 
 
@@ -164,7 +164,7 @@ string create()
 
 
 class CacheFile {
-  inherit files.file;
+  inherit Stdio.File;
   string file;
   int ready = 1, d, n;
   object next;
@@ -190,7 +190,7 @@ class CacheFile {
   int open(string s, string|void mode)
   {
     int st;
-    st = file::open(s, "wa");
+    st = File::open(s, "wa");
     file = s;
     ready = !st;
     // call_out(timeout, d);     Removed by davidk

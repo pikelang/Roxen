@@ -3,12 +3,10 @@
 // Support for the FastCGI interface, using an external fast-cgi
 // wrapper. This should be handled internally.
 
-string cvs_version = "$Id: fcgi.pike,v 1.14 1998/03/11 19:42:41 neotron Exp $";
+string cvs_version = "$Id: fcgi.pike,v 1.15 1998/04/21 19:09:52 grubba Exp $";
 
 #include <module.h>
 inherit "modules/scripting/cgi";
-
-import Stdio;
 
 #define ipaddr(x,y) (((x)/" ")[y])
 
@@ -96,7 +94,7 @@ mixed low_find_file(string f, object id, string path)
   roxen_perror("FCGI: Starting '"+f+"'...\n");
 #endif
     
-  pipe1=files.file();
+  pipe1=Stdio.File();
   pipe2=pipe1->pipe();
     
   array (int) uid;
@@ -120,7 +118,7 @@ mixed low_find_file(string f, object id, string path)
   spawne(getcwd()+"/bin/fcgi", ({"-connect", make_pipe_name(f), f,
 				 QUERY(numsimul)+"" }),
 	 my_build_env_vars(f, id, path_info),
-	 pipe1, pipe1, QUERY(err)?pipe1:stderr, dirname(f),
+	 pipe1, pipe1, QUERY(err)?pipe1:Stdio.stderr, dirname(f),
 	 uid);
 
   destruct(pipe1);
