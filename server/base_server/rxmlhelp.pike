@@ -246,6 +246,9 @@ static string format_doc(string|mapping doc, string name, void|object id)
            "short":lambda(Parser.HTML p, mapping m, string c) {
                      return m->hide?"":c; 
                    },
+	   "note":lambda(Parser.HTML p, mapping m, string c) {
+		    return c;
+		  },
          ]) )->
     add_quote_tag("!--","","--")->
     set_extra(name, id)->finish(doc)->read();
