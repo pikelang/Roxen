@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.13 2000/01/12 14:26:39 mast Exp $
+//! $Id: module.pmod,v 1.14 2000/01/12 15:38:43 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -146,6 +146,12 @@ class TagSet
   //! Other tag sets that will be used. The precedence is local tags
   //! first, then imported from left to right. It's not safe to
   //! destructively change entries in this array.
+
+  function(Context:void) prepare_context;
+  //! If set, this is a function that will be called before a new
+  //! Context object is taken into use. It'll typically prepare
+  //! predefined scopes and variables. The functions will be called in
+  //! order of precedence; highest last.
 
   int generation = 1;
   //! A number that is increased every time something changes in this
@@ -311,7 +317,11 @@ class TagSet
   //! and returns the parser object for it. id is put into the
   //! context.
   {
-    return Context (this_object(), id)->new_parser (top_level_type);
+    Context ctx = Context (this_object(), id);
+    if (!prepare_funs) prepare_funs = get_prepare_funs();
+    prepare_funs -= ({0});
+    prepare_funs (ctx);
+    return ctx->new_parser (top_level_type);
   }
 
   void changed()
@@ -319,6 +329,7 @@ class TagSet
   //! automatically most of the time, however.
   {
     generation++;
+    prepare_funs = 0;
     (notify_funcs -= ({0}))();
     set_weak_flag (notify_funcs, 1);
   }
@@ -347,6 +358,19 @@ class TagSet
 
   private array(function(:void)) notify_funcs = ({});
   // Weak (when nonempty).
+
+  private array(function(Context:void)) prepare_funs;
+
+  /*private*/ array(function(Context:void)) get_prepare_funs()
+  {
+    if (prepare_funs) return prepare_funs;
+    array(function(Context:void)) funs = ({});
+    for (int i = sizeof (imported) - 1; i >= 0; i--)
+      funs += imported[i]->get_prepare_funs();
+    if (prepare_context) funs += ({prepare_context});
+    // We don't cache in prepare_funs; do that only at the top level.
+    return funs;
+  }
 
   string _sprintf()
   {
