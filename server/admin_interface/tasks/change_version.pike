@@ -99,7 +99,7 @@ string parse( RequestID id )
   if( id->variables->server )
   {
     werror("Change to "+id->variables->server+"\n" );
-    mv("../local/environment", "../local/environment~");
+    mv("/etc/chilimoon/environment", "/etc/chilimoon/environment~");
     Stdio.write_file( combine_path(loader.query_configuration_dir(),
 				   "server_version"),
 		      id->variables->server );

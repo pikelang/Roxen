@@ -8,7 +8,7 @@ void run(object env)
   Stdio.File infd = Stdio.stdin, outfd = Stdio.stdout;
   Stdio.Terminfo.Termcap term = Stdio.Terminfo.getTerm();
   Tools.Install.Readline rl = Tools.Install.Readline();
-  string in = rl->edit(env->get("ROXEN_MYSQL_TCP_PORT") || "22299",
+  string in = rl->edit(env->get("ROXEN_MYSQL_TCP_PORT") || "",
 		       "MySQL port number: ");
   write("\n");
   sscanf(in, "%d", int port);

@@ -8,7 +8,7 @@
  *    and various other external stuff happy.
  */
  
-string cvs_version = "$Id: buildenv.pike,v 1.9 2002/11/04 18:53:42 mani Exp $";
+string cvs_version = "$Id: buildenv.pike,v 1.10 2004/07/21 22:24:01 _cvs_dirix Exp $";
 
 class Environment
 {
@@ -176,20 +176,20 @@ void main(int argc, array argv)
   write("   Setting up environment in %s.\n",
 	combine_path(getcwd(), "../local"));
 
-  if (Stdio.file_size("../local") != -2)
+  if (Stdio.file_size("/etc/chilimoon") != -2)
   { if (Stdio.file_size("bin") != -2 || Stdio.file_size("modules") != -2)
     { write("   "+argv[0]+": "
 	    "should be run in the ChiliMoon 'server' directory.\n");
       exit(1);
     }
-    if (!mkdir("../local", 0775))
+    if (!mkdir("/etc/chilimoon", 0775))
     {
-      write("   Failed to create ../local!\n");
+      write("   Failed to create /etc/chilimoon!\n");
       exit(1);
     }
   }
 
-  Environment envobj = Environment("../local/environment");
+  Environment envobj = Environment("/etc/chilimoon//environment");
 
   config_env(envobj);
   if (envobj->finalize())
