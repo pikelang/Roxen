@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.83 1998/03/20 20:20:32 grubba Exp $
+ * $Id: ftp.pike,v 1.84 1998/03/21 00:54:22 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -23,9 +23,35 @@
 
 /* TODO
  *
- * REST		Restart session (need to find RFC).
  * ABOR		Abort transfer in progress.
  */
+
+/*
+ * Relevant RFC's:
+ *
+ * RFC 959	FILE TRANSFER PROTOCOL (FTP)
+ * RFC 1123	Requirements for Internet Hosts -- Application and Support
+ *
+ * More or less obsolete RFC's:
+ *
+ * RFC 542	File Transfer Protocol for the ARPA Network
+ * RFC 561	Standardizing Network Mail Headers
+ * RFC 607	Comments on the File Transfer Protocol
+ * RFC 614	Response to RFC 607, "Comments on the File Transfer Protocol"
+ * RFC 640	Revised FTP Reply Codes
+ * RFC 691	One More Try on the FTP
+ * RFC 724	Proposed Official Standard for the
+ *              Format of ARPA Network Messages
+ * RFC 724	STANDARD FOR THE FORMAT OF
+ *              ARPA NETWORK TEXT MESSAGES(1)
+ * RFC 737	FTP Extension: XSEN
+ * RFC 743	FTP extension: XRSQ/XRCP
+ * RFC 751	SURVEY OF FTP MAIL AND MLFL
+ * RFC 754	Out-of-Net Host Addresses for Mail
+ * RFC 765	FILE TRANSFER PROTOCOL
+ * RFC 775	DIRECTORY ORIENTED FTP COMMANDS
+ */
+
 
 inherit "http"; /* For the variables and such.. (Per) */ 
 inherit "roxenlib";
@@ -759,6 +785,10 @@ void pasv_accept_callback(mixed id)
   if(pasv_port) {
     object fd = pasv_port->accept();
     if(fd) {
+      // On a multihomed server host, the default data transfer port
+      // (L-1) MUST be associated with the same local IP address as
+      // the corresponding control connection to port L.
+      // RFC 1123 4.1.2.12
       array(string) remote = (fd->query_address()||"? ?")/" ";
       mark_fd(fd->query_fd(),
 	      "ftp communication: -> "+remote[0]+":"+remote[1]);
@@ -1135,28 +1165,74 @@ int open_file(string arg, int|void noport)
 }
 
 mapping(string:string) cmd_help = ([
-  "user":"<sp> username",
-  "pass":"<sp> password",
-  "quit":"(terminate service)",
-  "noop":"",
-  "syst":"(get type of operating system)",
-  "pwd":"(return current directory)",
-  "cdup":"(change to parent directory)",
-  "cwd":"[ <sp> directory-name ]",
-  "type":"<sp> [ A | E | I | L ]",
-  "port":"<sp> b0, b1, b2, b3, b4",
-  "mdtm":"<sp> file-name",
-  "nlst":"[ <sp> path-name ]",
-  "list":"[ <sp> path-name ]",
-  "rein":"(reinitialize)",
-  "rest":"<sp> marker",
-  "retr":"<sp> file-name",
-  "stat":"<sp> path-name",
-  "size":"<sp> path-name",
-  "stor":"<sp> file-name",
-  "dele":"<sp> file-name",
-  "pasv":"(set server in passive mode)",
-  "help":"[ <sp> <string> ]"
+  // Commands in the order from RFC 959
+
+  "user":"<sp> username (Change user)",
+  "pass":"<sp> password (Change password)",
+  // "acct":"<sp> <account-information> (Account)",
+  "cwd":"[ <sp> directory-name ] (Change working directory)",
+  "cdup":"(Change to parent directory)",
+  // "smnt":"<sp> <pathname> (Structure mount)",
+  "quit":"(Terminate service)",
+  "rein":"(Reinitialize)",
+  "port":"<sp> b0, b1, b2, b3, b4 (Set port IP and number)",
+  "pasv":"(Set server in passive mode)",
+  "type":"<sp> [ A | E | I | L ] (Ascii, Ebcdic, Image, Local)",
+  // "stru":"<sp> <structure-code> (File structure)",
+  // "mode":"<sp> <mode-code> (Transfer mode)",
+  "retr":"<sp> file-name (Retreive file)",
+  "stor":"<sp> file-name (Store file)",
+  // "stou":"(Store file with unique name)",
+  // "appe":"<sp> <pathname> (Append file)",
+  // "allo":"<sp> <decimal-integer> [<sp> R <sp> <decimal-integer>]"
+  //        " (Allocate space for file)",
+  "rest":"<sp> marker (Set restart marker)",
+  // "rnfr":"<sp> <pathname> (Rename from)",
+  // "rnto":"<sp> <pathname> (Rename to)",
+  // "abor":"(Abort current transmission)",
+  "dele":"<sp> file-name (Delete file)",
+  // "rmd":"<sp> <pathname> (Remove directory)",
+  // "mkd":"<sp> <pathname> (Make directory)",
+  "pwd":"(Return current directory)",
+  "list":"[ <sp> path-name ] (List directory)",
+  "nlst":"[ <sp> path-name ] (List directory)",
+  // "site":"<sp> <string> (Site parameters)",	// Has separate help
+  "syst":"(Get type of operating system)",
+  "stat":"<sp> path-name (Status for file)",
+  "help":"[ <sp> <string> ] (Give help)",
+  "noop":"(No operation)",
+
+  // Old "Experimental commands"
+  // Required by RFC 1123 4.1.3.1
+  // "xmkd":"<sp> path-name (Make directory)",
+  // "xrmd":"<sp> path-name (Remove directory)",
+  "xpwd":"(Return current directory)",
+  "xcwd":"[ <sp> directory-name ] (Change working directory)",
+  "xcup":"(Change to parent directory)",
+
+  // The following aren't in RFC 959
+  "mdtm":"<sp> file-name (Modification time)",
+  "size":"<sp> path-name (Size)",
+
+  // These are in RFC 765 but not in RFC 959
+  // "mail":"[<sp> <recipient name>] (Mail to user)",
+  // "msnd":"[<sp> <recipient name>] (Mail send to terminal)",
+  // "msom":"[<sp> <recipient name>] (Mail send to terminal or mailbox)",
+  // "msam":"[<sp> <recipient name>] (Mail send to terminal and mailbox)",
+  // "mrsq":"(Mail recipient scheme question)",
+  // "mrcp":"(Mail recipient)",
+
+  // This one is referenced in a lot of old RFCs
+  // "mlfl":"(Mail file)",
+
+  // These are in RFC 737
+  // "xsen":"[<sp> <recipient name>] (Send to terminal)",
+  // "xsem":"[<sp> <recipient name>] (Send, mail if can't)",
+  // "xmas":"[<sp> <recipient name>] (Mail and send)",
+
+  // These are in RFC 743
+  // "xrsq":"[<SP> <scheme>] (Scheme selection)",
+  // "xrcp":"<SP> <recipient name> (Recipient specification)",
 ]);
 
 mapping(string:string) site_help = ([
@@ -1165,6 +1241,8 @@ mapping(string:string) site_help = ([
 
 void timeout()
 {
+  // Recomended by RFC 1123 4.1.3.2
+
   reply("421 Timeout (3600 seconds): closing connection.\n");
   end();
 }
@@ -1192,6 +1270,15 @@ void handle_data(string s, mixed key)
   supports = (< "ftp", "images", "tables", >);
   prot = "FTP";
   method = "GET";
+
+  // However, a server-FTP MUST be capable of
+  // accepting and refusing Telnet negotiations (i.e., sending
+  // DONT/WONT). RFC 1123 4.1.2.12
+
+  // FIXME: Not supported yet.
+
+  // A single read() can contain multiple or partial commands
+  // RFC 1123 4.1.2.10
   while (sscanf(s,"%s\r\n%s",cmdlin,s)==2)
   {
     string cmd,arg;
@@ -1312,11 +1399,14 @@ void handle_data(string s, mixed key)
       reply("215 UNIX Type: L8: Roxen Challenger Information Server\n");
       break;
     case "pwd":
+    case "xpwd":
       reply("257 \""+cwd+"\" is current directory.\n");
       break;
     case "cdup":
+    case "xcup":
       arg = "..";
-    case "cwd":  
+    case "cwd":
+    case "xcwd":
       string ncwd, f;
       array (int) st;
       array (string) dir;
@@ -1381,19 +1471,31 @@ void handle_data(string s, mixed key)
       break;
       
     case "type":
-     if(arg == "I")
-     {
-       mode="I";
-       reply("200 Using BINARY mode for transferring files\n");
-     }
-     else if(arg == "A")
-     {
-       mode="A";
-       reply("200 Using ASCII mode for transferring files\n");
-     } else {
-       reply("504 Only ASCII and BINARY modes supported\n");
-     }
-     break;
+      // I and L8 are required by RFC 1123 4.1.2.1
+
+      array(string) a = arg/" ";
+      switch(a[0]) {
+      case "E":
+	reply("504 EBCDIC mode not supported\n");
+	break;
+      case "L":
+	if ((sizeof(a) > 1) && (a[1] != "8")) {
+	  reply("504 Only 8bit LOCAL mode supported\n");
+	  break;
+	}
+      case "I":
+	mode="I";
+	reply("200 Using BINARY mode for transferring files\n");
+	break;
+      case "A":
+	mode="A";
+	reply("200 Using ASCII mode for transferring files\n");
+	break;
+      default:
+	reply("504 Only ASCII and BINARY modes supported\n");
+	break;
+      }
+      break;
 
     case "port": 
       int a,b,c,d,e,f;
@@ -1524,6 +1626,9 @@ void handle_data(string s, mixed key)
       break;
 
     case "stat":
+      // According to RFC 1123 4.1.3.3, this command can be sent during
+      // a file-transfer.
+
       // Count this as a request
       conf->requests++;
 
@@ -1641,6 +1746,8 @@ void handle_data(string s, mixed key)
       break;
 
     case "pasv":
+      // Required by RFC 1123 4.1.2.6
+
       if(pasv_port)
 	destruct(pasv_port);
       pasv_port = Stdio.Port(0, pasv_accept_callback);
@@ -1681,6 +1788,9 @@ void handle_data(string s, mixed key)
 
       // Extended commands
     case "site":
+      // Site specific commands are required to be part of the site command
+      // by RFC 1123 4.1.2.8
+
       array(string) arr;
 
       if (!arg || !strlen(arg) || !sizeof(arr = (arg/" ")-({""}))) {
