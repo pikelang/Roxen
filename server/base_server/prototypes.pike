@@ -6,7 +6,17 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.79 2004/03/23 14:33:47 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.80 2004/04/13 16:51:02 mast Exp $";
+
+#ifdef DAV_DEBUG
+#define DAV_WERROR(X...)	werror(X)
+#else /* !DAV_DEBUG */
+#define DAV_WERROR(X...)
+#endif /* DAV_DEBUG */
+
+// To avoid reference cycles. Set to the Roxen module object by
+// roxenloader.pike.
+object Roxen;
 
 class Variable
 {
@@ -704,9 +714,7 @@ class RequestID
     if (xml_data) return xml_data;
     // FIXME: Probably ought to check that the content-type for
     //        the request is text/xml.
-#ifdef DAV_DEBUG
-    werror("Parsing XML data: %O\n", data);
-#endif
+    DAV_WERROR("Parsing XML data: %O\n", data);
     return xml_data = Parser.XML.Tree.parse_input(data, 0, 0, 0, 1);
   }
 #endif /* Parser.XML.Tree.XMLNSParser */
@@ -878,7 +886,7 @@ class RequestID
 	  };
 	
 	_charset_decoder_func =
-	  _charset_decoder_func || master()->resolv("Roxen._charset_decoder");
+	  _charset_decoder_func || Roxen->_charset_decoder;
 	return
 	  _charset_decoder_func(Locale.Charset.encoder((string) what, "",
 						       fallback_func))
@@ -967,6 +975,97 @@ class RequestID
     return f;
   }
 
+  // The returned response header mapping is incomplete wrt the
+  // Content-Range header for range requests.
+  mapping(string:string) make_response_headers (mapping(string:mixed) file)
+  {
+    mapping(string:string) heads = ([]);
+
+    if( !zero_type(misc->cacheable) &&
+	(misc->cacheable != INITIAL_CACHEABLE) ) {
+      if (!misc->cacheable) {
+	// It expired a year ago.
+	heads["Expires"] = Roxen->http_date( predef::time(1)-31557600 );
+      } else
+	heads["Expires"] = Roxen->http_date( predef::time(1)+misc->cacheable );
+#if 0
+      if (misc->cacheable < INITIAL_CACHEABLE) {
+	// Data with expiry is assumed to have been generated at the
+	// same instant.
+	misc->last_modified = predef::time(1);
+      }
+#endif /* 0 */
+    }
+
+    if (misc->last_modified)
+      heads["Last-Modified"] = Roxen->http_date(misc->last_modified);
+
+    {
+      string charset="";
+      if( stringp(file->data) )
+      {
+	if (sizeof (output_charset) ||
+	    has_prefix (file->type, "text/") ||
+	    (String.width(file->data) > 8))
+	{
+	  int allow_entities =
+	    has_prefix(file->type, "text/xml") ||
+	    has_prefix(file->type, "text/html");
+	  [charset,file->data] = output_encode( file->data, allow_entities );
+	  if( charset && (search(file["type"], "; charset=") == -1))
+	    charset = "; charset="+charset;
+	  else
+	    charset = "";
+	}
+	file->len = strlen(file->data);
+      }
+      heads["Content-Type"] = file["type"]+charset;
+    }
+
+    heads["Accept-Ranges"] = "bytes";
+    heads["Server"] = replace(version(), " ", "·");
+    if( misc->connection )
+      heads["Connection"] = misc->connection;
+
+    if(file->encoding) heads["Content-Encoding"] = file->encoding;
+
+    heads->Date = Roxen->http_date(predef::time(1));
+    if(file->expires)
+      heads->Expires = Roxen->http_date(file->expires);
+
+    if(mappingp(file->extra_heads))
+      heads |= file->extra_heads;
+
+    if(mappingp(misc->moreheads))
+      heads |= misc->moreheads;
+
+    //if( file->len > 0 || (file->error != 200) )
+    heads["Content-Length"] = (string)file->len;
+
+#ifdef RAM_CACHE
+    if (!(misc->etag = heads->ETag) && file->len &&
+	(file->data || file->file) &&
+	(file->len < conf->datacache->max_file_size)) {
+      string data = "";
+      if (file->file) {
+	data = file->file->read(file->len);
+	if (file->data && (sizeof(data) < file->len)) {
+	  data += file->data[..file->len - (sizeof(data)+1)];
+	}
+	m_delete(file, file);
+      } else if (file->data) {
+	data = file->data[..file->len - 1];
+      }
+      file->data = data;
+      heads->ETag = misc->etag =
+	Crypto.string_to_hex(Crypto.md5()->update(data)->digest());
+      heads->Vary = "ETag";
+    }
+#endif /* RAM_CACHE */
+
+    return heads;
+  }
+
   void adjust_for_config_path( string p )
   {
     if( not_query )  not_query = not_query[ strlen(p).. ];
@@ -1041,12 +1140,6 @@ class RequestID
 }
 
 #if constant(Parser.XML.Tree.XMLNSParser)
-
-#ifdef DAV_DEBUG
-#define DAV_WERROR(X...)	werror(X)
-#else /* !DAV_DEBUG */
-#define DAV_WERROR(X...)
-#endif /* DAV_DEBUG */
 
 static constant Node = Parser.XML.Tree.Node;
 static constant TextNode = Parser.XML.Tree.TextNode;

@@ -3,9 +3,11 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.350 2003/12/12 16:58:57 jonasw Exp $
+// $Id: roxenloader.pike,v 1.351 2004/04/13 16:51:02 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
+
+mixed x = Calendar.Timezone; // #"!¤&"¤%/"&#¤!%#¤&#
 
 // #pragma strict_types
 
@@ -28,7 +30,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.350 2003/12/12 16:58:57 jonasw Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.351 2004/04/13 16:51:02 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -2336,6 +2338,8 @@ library should be enough.
   add_constant("UserDB",     prototypes->UserDB );
   add_constant("User",       prototypes->User );
   add_constant("Group",      prototypes->Group );
+
+  prototypes->Roxen = master()->resolv ("Roxen");
 
   object cache = initiate_cache();
   load_roxen();

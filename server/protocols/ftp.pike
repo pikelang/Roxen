@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.92 2004/03/03 16:26:34 mast Exp $
+ * $Id: ftp.pike,v 2.93 2004/04/13 16:51:05 mast Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -188,7 +188,8 @@ class RequestID2
       foreach(indices(m_rid), string var) {
 	if (!(< "create", "connection", "configuration",
                 "__INIT", "clone_me", "end", "ready_to_receive",
-		"send", "scan_for_query", "send_result", "misc",
+		"send", "scan_for_query", "make_response_headers",
+		"send_result", "misc",
 		"url_base", "set_response_header", "get_xml_data",
 		"add_response_header", "set_output_charset",
 		"charset_name", "charset_function", "join_charset", 

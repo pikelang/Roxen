@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.426 2004/04/13 16:02:37 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.427 2004/04/13 16:51:05 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1510,7 +1510,6 @@ void send_result(mapping|void result)
 
   array err;
   int tmp;
-  mapping heads;
   string head_string="";
   if (result)
     file = result;
@@ -1574,9 +1573,6 @@ void send_result(mapping|void result)
 
   if(!file->raw && (prot != "HTTP/0.9"))
   {
-    // Generate the headers.
-    heads = ([]);
-
       if (!file->stat) file->stat = misc->stat;
       if(objectp(file->file)) {
 	if(!file->stat)
@@ -1596,50 +1592,47 @@ void send_result(mapping|void result)
 	  misc->last_modified = fstat[ST_MTIME];
       }	
 
-      if( !zero_type(misc->cacheable) &&
-	  (misc->cacheable != INITIAL_CACHEABLE) ) {
-	if (!misc->cacheable) {
-	  // It expired a year ago.
-	  heads["Expires"] = Roxen.http_date( predef::time(1)-31557600 );
-	} else
-	  heads["Expires"] = Roxen.http_date( predef::time(1)+misc->cacheable );
-#if 0
-	if (misc->cacheable < INITIAL_CACHEABLE) {
-	  // Data with expiry is assumed to have been generated at the
-	  // same instant.
-	  misc->last_modified = predef::time(1);
-	}
-#endif /* 0 */
+      switch (file->error) {
+	case Protocols.HTTP.HTTP_NO_CONTENT:
+	  // We actually give some content cf comment below.
+	  file->len = 2;
+	  file->data = "\r\n";
+	  break;
+
+	case 200..Protocols.HTTP.HTTP_NO_CONTENT-1:
+	case Protocols.HTTP.HTTP_NO_CONTENT+1..299:
+	  // Some browsers, e.g. Netscape 4.7, don't trust a zero
+	  // content length when using keep-alive. So let's force a
+	  // close in that case.
+	  if( file->len <= 0 )
+	    misc->connection = "close";
+	  break;
+
+	case 0:
+	  file->error = Protocols.HTTP.HTTP_OK;
+	  break;
       }
 
-      if (misc->last_modified)
-	heads["Last-Modified"] = Roxen.http_date(misc->last_modified);
-
-//	    werror("lm:    %O\n"
-//		   "cacheable: %O\n",
-//		   misc->last_modified,
-//		   misc->cacheable);
-
-#ifdef RAM_CACHE
-      if (!(misc->etag = heads->ETag) && file->len &&
-	  (file->data || file->file) &&
-	  (file->len < conf->datacache->max_file_size)) {
-	string data = "";
-	if (file->file) {
-	  data = file->file->read(file->len);
-	  if (file->data && (sizeof(data) < file->len)) {
-	    data += file->data[..file->len - (sizeof(data)+1)];
-	  }
-	  m_delete(file, file);
-	} else if (file->data) {
-	  data = file->data[..file->len - 1];
+      string head_status = file->rettext;
+      if (head_status) {
+	if (!file->file && !file->data &&
+	    (!file->type || file->type == "text/html")) {
+	  // If we got no body then put the message there to make it
+	  // more visible.
+	  file->data = "<html><body>" +
+	    replace (Roxen.html_encode_string (head_status), "\n", "<br />\n") +
+	    "</body></html>";
+	  file->len = sizeof (file->data);
+	  file->type = "text/html";
 	}
-	file->data = data;
-	heads->ETag = misc->etag =
-	  Crypto.string_to_hex(Crypto.md5()->update(data)->digest());
-	heads->Vary = "ETag";
+	if (has_value (head_status, "\n"))
+	  // Fold lines nicely.
+	  head_status = map (head_status / "\n", String.trim_all_whites) * " ";
       }
-#endif /* RAM_CACHE */
+      else
+	head_status = errors[file->error] || "";
+
+      mapping(string:string) heads = make_response_headers (file);
 
       if (!file->error || file->error == 200) {
 	if (none_match && misc->etag &&
@@ -1684,47 +1677,6 @@ void send_result(mapping|void result)
 	  }
 	}
       }
-
-      {
-        string h, charset="";
-
-        if( stringp(file->data) )
-        {
-	  if (sizeof (output_charset) ||
-	      has_prefix (file->type, "text/") ||
-	      (String.width(file->data) > 8))
-          {
-	    int allow_entities =
-	      has_prefix(file->type, "text/xml") ||
-	      has_prefix(file->type, "text/html");
-            [charset,file->data] = output_encode( file->data, allow_entities );
-            if( charset && (search(file["type"], "; charset=") == -1))
-	      charset = "; charset="+charset;
-            else
-              charset = "";
-          }
-          file->len = strlen(file->data);
-        }
-        heads["Content-Type"] = file["type"]+charset;
-        heads["Accept-Ranges"] = "bytes";
-        heads["Server"] = replace(version(), " ", "·");
-        if( misc->connection )
-          heads["Connection"] = misc->connection;
-
-        if(file->encoding) heads["Content-Encoding"] = file->encoding;
-
-        if(!file->error)
-          file->error=200;
-
-        heads->Date = Roxen.http_date(predef::time(1));
-        if(file->expires)
-          heads->Expires = Roxen.http_date(file->expires);
-
-        if(mappingp(file->extra_heads))
-          heads |= file->extra_heads;
-
-        if(mappingp(misc->moreheads))
-          heads |= misc->moreheads;
 
         if(misc->range && file->len && objectp(file->file) && !file->data &&
            file->error == 200 && (method == "GET" || method == "HEAD"))
@@ -1774,42 +1726,8 @@ void send_result(mapping|void result)
           }
 	}
 
-	if ((head_string = file->rettext)) {
-	  if (!file->file && !file->data &&
-	      (!file->type || file->type == "text/html")) {
-	    // If we got no body then put the message there to make it
-	    // more visible.
-	    file->data = "<html><body>" +
-	      replace (Roxen.html_encode_string (head_string), "\n", "<br />\n") +
-	      "</body></html>";
-	    file->len = sizeof (file->data);
-	    file->type = "text/html";
-	  }
-	  if (has_value (head_string, "\n"))
-	    // Fold lines nicely.
-	    head_string = map (head_string / "\n", String.trim_all_whites) * " ";
-	}
-	else
-	  head_string = errors[file->error] || "";
-	head_string = sprintf("%s %d %s\r\n", prot, file->error, head_string);
+	head_string = sprintf("%s %d %s\r\n", prot, file->error, head_status);
 
-	if (file->error == 204) {
-	  // 204 No Content.
-	  // We actually give some content cf comment below.
-	  file->len = 2;
-	  file->data = "\r\n";
-	}
-//         if( file->len > 0 || (file->error != 200) )
-	heads["Content-Length"] = (string)file->len;
-
-        // Some browsers, e.g. Netscape 4.7, don't trust a zero
-        // content length when using keep-alive. So let's force a
-        // close in that case.
-        if( file->error/100 == 2 && file->len <= 0 )
-	{
-	  heads->Connection = "close";
-          misc->connection = "close";
-        }
 	if( mixed err = catch( head_string += Roxen.make_http_headers( heads ) ) )
 	{
 #ifdef DEBUG
@@ -1831,10 +1749,10 @@ void send_result(mapping|void result)
 	  head_string += "\r\n";
 	}
 
-        if( strlen( charset ) || String.width( head_string ) > 8 )
+	if (sscanf (heads["Content-Type"], "; charset=%s", string charset) ||
+	    String.width( head_string ) > 8 )
           head_string = output_encode( head_string, 0, charset )[1];
         conf->hsent += strlen(head_string);
-      }
     }
 #if 0
     REQUEST_WERR(sprintf("HTTP: Sending result for prot:%O, method:%O, file:%O",
