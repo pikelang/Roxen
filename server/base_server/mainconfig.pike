@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.103 1998/04/15 14:44:20 grubba Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.104 1998/04/24 08:40:14 per Exp $";
 //inherit "roxenlib";
 
 inherit "config/draw_things";
@@ -1316,6 +1316,9 @@ mapping configuration_parse(object id)
   if(!o) // Bad node, perhaps an old bookmark or something.
   {
     id->referer = ({ });
+    foreach(indices(selected_nodes), string n)
+      if(selected_nodes[n] == id->not_query)
+	selected_nodes[n] = "/"+n;
     return std_redirect(0, id);
   } else if(o == root) {
     // The URL is http://config-url/, not one of the top nodes, but
