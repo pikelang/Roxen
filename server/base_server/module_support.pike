@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module_support.pike,v 1.111 2002/06/05 10:50:48 anders Exp $
+// $Id: module_support.pike,v 1.112 2002/06/27 21:31:32 mast Exp $
 
 #define IN_ROXEN
 #include <roxen.h>
@@ -518,13 +518,13 @@ string extension( string from )
 }
 
 mapping(string:ModuleInfo) modules;
-array rec_find_all_modules( string dir )
+array(string) rec_find_all_modules( string dir )
 {
-  array modules = ({});
+  array(string) modules = ({});
   catch
   {
     Stdio.Stat s;
-    array dirlist = r_get_dir( dir ) - ({"CVS"});
+    array(string) dirlist = r_get_dir( dir ) - ({"CVS"});
 
     if( (search( dirlist, ".nomodules" ) != -1) ||
         (search( dirlist, ".no_modules" ) != -1) )
@@ -587,7 +587,7 @@ array(ModuleInfo) all_modules()
     module_cache = roxenp()->ConfigIFCache( "modules" ); 
   }
 
-  array possible = ({});
+  array(string) possible = ({});
 
   foreach( roxenp()->query( "ModuleDirs" ), string dir )
     possible |= rec_find_all_modules( dir );
