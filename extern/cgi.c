@@ -1,5 +1,5 @@
 /*
- * $Id: cgi.c,v 1.33 1998/06/05 13:15:30 grubba Exp $
+ * $Id: cgi.c,v 1.34 1998/06/08 14:44:06 grubba Exp $
  *
  * CGI-wrapper for Roxen.
  *
@@ -541,7 +541,10 @@ int main(int argc, char **argv)
     int re;
     char foo[2049], *bar;
     
-    re = read(script, foo, 2048);
+    do {
+      re = read(script, foo, 2048);
+    } while((re < 0) && (errno == EINTR));
+
     if(re <= 0)
     {
 #ifdef DEBUG
