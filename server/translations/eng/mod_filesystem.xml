@@ -4,10 +4,7 @@
 <language>eng</language>
 <file>../modules/filesystems/filesystem.pike</file>
 
-<str id="1">
-<o>File system</o>
-<t></t>
-</str>
+
 
 <str id="2">
 <o>This is the basic file system module that makes it possible to mount a directory structure in the virtual file system of your site.</o>
@@ -257,5 +254,10 @@
 
 <str id="50">
 <o>%s from %s</o>
+<t></t>
+</str>
+
+<str id="51">
+<o>File systems: Normal File system</o>
 <t></t>
 </str>

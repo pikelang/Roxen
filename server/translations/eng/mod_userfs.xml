@@ -5,7 +5,7 @@
 <file>../modules/filesystems/userfs.pike</file>
 
 <str id="1">
-<o>User file system</o>
+<o>File systems: User file system</o>
 <t></t>
 </str>
 
@@ -107,7 +107,7 @@ Anne a web site of her own at &lt;tt&gt;http://anne.domain.com/&lt;/tt&gt;.
 </str>
 
 <str id="20">
-<o>You need a user database module in this virtual server to resolve your users' homedirectories.</o>
+<o>You need at least one user database module in this virtual server to resolve your users' homedirectories.</o>
 <t></t>
 </str>
 

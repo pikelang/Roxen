@@ -441,7 +441,7 @@ string port_for( string url, int settings )
         </if>
         <emit source='port-urls' port='&_.port;'>
           <if not variable='_.url is &var.url;'>
-          "+LOCALE(0,"Shared with ")+
+          "+LOCALE(323,"Shared with ")+
 #"<a href='../&_.conf;/'>&_.confname;</a>
           </if>
         </emit>

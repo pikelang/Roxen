@@ -42,8 +42,8 @@
 <file>../etc/modules/Variable.pmod/Date.pike</file>
 <file>../etc/modules/Variable.pmod/Email.pike</file>
 <file>../etc/modules/Variable.pmod/Image.pike</file>
-<file>../etc/modules/Variable.pmod/module.pmod</file>
 <file>../etc/modules/Variable.pmod/Upload.pike</file>
+<file>../etc/modules/Variable.pmod/module.pmod</file>
 <file>../modules/configuration/config_filesystem.pike</file>
 <file>../modules/configuration/config_tags.pike</file>
 <file>../site_templates/common.pike</file>
@@ -2292,5 +2292,59 @@ utifrån detta namn.</t>
 <str id="324">
 <new/>
 <o>Ports</o>
+<t></t>
+</str>
+
+<str id="14">
+<new/>
+<o>Module list mode</o>
+<t></t>
+</str>
+
+<str id="15">
+<new/>
+<o>The module list mode. One of &lt;dl&gt;&lt;dt&gt;Folded&lt;/dt&gt;&lt;dd&gt;Modules in the same group are folded&lt;/dd&gt;&lt;dt&gt;UnFolded&lt;/dt&gt;&lt;dd&gt;Like the 'old' Roxen 2.1 list&lt;/dd&gt;&lt;dt&gt;JavaScript Popup&lt;/dt&gt;&lt;dd&gt;Like Folded, but when you move the mouse over a folded group, a menu with the folded modules will popup&lt;/dd&gt;&lt;/dl&gt;</o>
+<t></t>
+</str>
+
+<str id="17">
+<new/>
+<o>Folded with javascript popup</o>
+<t></t>
+</str>
+
+<str id="122">
+<new/>
+<o>Folded</o>
+<t></t>
+</str>
+
+<str id="123">
+<new/>
+<o>Unfolded (old stype)</o>
+<t></t>
+</str>
+
+<str id="219">
+<new/>
+<o>Authentication method</o>
+<t></t>
+</str>
+
+<str id="291">
+<new/>
+<o>The method to use to authenticate configuration interface users.</o>
+<t></t>
+</str>
+
+<str id="301">
+<new/>
+<o>HTTP Basic passwords</o>
+<t></t>
+</str>
+
+<str id="325">
+<new/>
+<o>HTTP Cookies</o>
 <t></t>
 </str>

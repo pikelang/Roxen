@@ -5,11 +5,11 @@
 <file>../modules/tags/sizer.pike</file>
 
 <str id="1">
-<o>Page sizer</o>
+<o>Tags: Page sizer</o>
 <t></t>
 </str>
 
 <str id="2">
-<o>This module provides the &lt;tt&gt;&amp;lt;page-size&amp;gt;&lt;/tt&gt; tag that calculates the size of a page, including inline images, and gives estimates of the time it will take to download the page.</o>
+<o>This module provides the &lt;tt&gt;&amp;lt;page-size&amp;gt;&lt;/tt&gt; tag that calculates the size of a page, including inline images, and gives estimates of the time it will take to download the page.&lt;p&gt;You can also use the &lt;i&gt;size&lt;/i&gt; prestate to trigger the sizing process&lt;/p&gt;</o>
 <t></t>
 </str>

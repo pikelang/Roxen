@@ -228,7 +228,6 @@ Kunde inte hitta någon modul "%s".
 <t>Misslyckades med att aktivera modulen %s, skippar den.</t>
 </str>
 
-
 <pike>
 
 string setting_uid_gid_permanently(int uid, int gid, string uname, string gname) {

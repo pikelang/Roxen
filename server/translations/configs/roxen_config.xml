@@ -7,49 +7,49 @@
 
 <!-- The rest of the files in this dir in the project 'admin_tasks' -->
 
-  <file>../base_server/config_userdb.pike</file>
-  <file>../base_server/configuration.pike</file>
-  <file>../base_server/global_variables.pike</file>
   <file>../base_server/module_support.pike</file>
+  <file>../base_server/configuration.pike</file>
   <file>../base_server/roxen.pike</file>
-  <file>../config_interface/cv_startpage_tabs.pike</file>
-  <file>../config_interface/logutil.pike</file>
-  <file>../config_interface/statusinfo.pike</file>
-  <file>../config_interface/template</file>
-  <file>../config_interface/topmenu.pike</file>
-  <file>../config_interface/user_delete.pike</file>
-  <file>../config_interface/user_form.pike</file>
-  <file>../config_interface/users.html</file>
+  <file>../base_server/global_variables.pike</file>
+  <file>../base_server/config_userdb.pike</file>
   <file>../config_interface/actions/index.html</file>
   <file>../config_interface/boxes/articles.pike</file>
-  <file>../config_interface/boxes/crunch.pike</file>
   <file>../config_interface/boxes/doclinks.pike</file>
-  <file>../config_interface/boxes/ris_news.pike</file>
   <file>../config_interface/boxes/server_status.pike</file>
-  <file>../config_interface/boxes/slashdot.pike</file>
   <file>../config_interface/boxes/welcome.pike</file>
+  <file>../config_interface/boxes/ris_news.pike</file>
+  <file>../config_interface/boxes/slashdot.pike</file>
+  <file>../config_interface/boxes/crunch.pike</file>
   <file>../config_interface/dbs/browser.pike</file>
   <file>../config_interface/dbs/db_matrix.pike</file>
   <file>../config_interface/dbs/subtabs.pike</file>
-  <file>../config_interface/event_log/clear_log.pike</file>
   <file>../config_interface/event_log/log.pike</file>
-  <file>../config_interface/sites/add_module.pike</file>
-  <file>../config_interface/sites/config_left_item.pike</file>
-  <file>../config_interface/sites/create_site.pike</file>
-  <file>../config_interface/sites/drop_module.pike</file>
+  <file>../config_interface/event_log/clear_log.pike</file>
+  <file>../config_interface/sites/site_header.pike</file>
   <file>../config_interface/sites/drop_site.html</file>
+  <file>../config_interface/sites/drop_module.pike</file>
   <file>../config_interface/sites/drop_site.pike</file>
   <file>../config_interface/sites/index.html</file>
-  <file>../config_interface/sites/log.pike</file>
   <file>../config_interface/sites/new_site.html</file>
+  <file>../config_interface/sites/log.pike</file>
+  <file>../config_interface/sites/create_site.pike</file>
+  <file>../config_interface/sites/add_module.pike</file>
   <file>../config_interface/sites/site_content.pike</file>
-  <file>../config_interface/sites/site_header.pike</file>
+  <file>../config_interface/sites/config_left_item.pike</file>
+  <file>../config_interface/logutil.pike</file>
+  <file>../config_interface/statusinfo.pike</file>
+  <file>../config_interface/topmenu.pike</file>
+  <file>../config_interface/user_delete.pike</file>
+  <file>../config_interface/user_form.pike</file>
+  <file>../config_interface/template</file>
+  <file>../config_interface/cv_startpage_tabs.pike</file>
+  <file>../config_interface/users.html</file>
   <file>../etc/modules/Variable.pmod/Date.pike</file>
   <file>../etc/modules/Variable.pmod/Email.pike</file>
-  <file>../etc/modules/Variable.pmod/module.pmod</file>
   <file>../etc/modules/Variable.pmod/Image.pike</file>
   <file>../etc/modules/Variable.pmod/Upload.pike</file>
-  <file>../modules/configuration/config_filesystem.pike</file>
+  <file>../etc/modules/Variable.pmod/module.pmod</file>
   <file>../modules/configuration/config_tags.pike</file>
+  <file>../modules/configuration/config_filesystem.pike</file>
   <file>../site_templates/common.pike</file>
 </project>

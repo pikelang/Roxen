@@ -18,7 +18,7 @@ LocaleString module_doc =
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.88 2001/05/16 13:20:41 per Exp $";
+  "$Id: config_filesystem.pike,v 1.89 2001/05/20 13:02:42 nilsson Exp $";
 
 constant path = "config_interface/";
 
@@ -543,13 +543,13 @@ void create()
           LOCALE(265,"Usually / is a good idea") );
 
   defvar( "auth_method", "auth_httpbasic",
-	  LOCALE(0,"Authentication method"),
+	  LOCALE(219,"Authentication method"),
 	  TYPE_STRING_LIST,
-	  LOCALE(0,"The method to use to authenticate configuration interface "
+	  LOCALE(291,"The method to use to authenticate configuration interface "
 		 "users." ),
 	  ([
-	    "auth_httpbasic":LOCALE(0,"HTTP Basic passwords" ),
-	    "auth_httpcookie":LOCALE(0,"HTTP Cookies" ),
+	    "auth_httpbasic":LOCALE(301,"HTTP Basic passwords" ),
+	    "auth_httpcookie":LOCALE(325,"HTTP Cookies" ),
 	  ]) );
 
   roxen.add_permission( "View Settings", LOCALE(192, "View Settings"));

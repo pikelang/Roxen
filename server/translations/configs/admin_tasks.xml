@@ -7,6 +7,7 @@
 
   <file>../base_server/roxen.pike</file>
   <file>../config_interface/actions/cachestatus.pike</file>
+  <file>../config_interface/actions/change_version.pike</file>
   <file>../config_interface/actions/debug_info.pike</file>
   <file>../config_interface/actions/feature_list.pike</file>
   <file>../config_interface/actions/flush.pike</file>
@@ -25,5 +26,4 @@
   <file>../config_interface/actions/ssl_common.pike</file>
   <file>../config_interface/actions/tablist.pike</file>
   <file>../config_interface/actions/threads.pike</file>
-  <file>../config_interface/actions/change_version.pike</file>
 </project>

@@ -2,10 +2,10 @@
 <locale version="1.0"/>
 <project>mod_secure_fs</project>
 <language>eng</language>
-<file>../modules/filesystems/secure_fs.pike</file>
+<file>../modules/compat/secure_fs.pike</file>
 
 <str id="1">
-<o>Secure file system</o>
+<o>File systems: Secure file system</o>
 <t></t>
 </str>
 

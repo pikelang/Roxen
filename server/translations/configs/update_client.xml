@@ -5,11 +5,11 @@
 <baselang>eng</baselang>
 <xmlpath>../translations/%L/update_client.xml</xmlpath>
 
-  <file>../config_interface/update.html</file>
   <file>../config_interface/update/category.txt</file>
   <file>../config_interface/update/details.txt</file>
   <file>../config_interface/update/index.txt</file>
   <file>../config_interface/update/install.txt</file>
   <file>../config_interface/update/uninstall.txt</file>
+  <file>../config_interface/update.html</file>
   <file>../modules/configuration/update.pike</file>
 </project>
