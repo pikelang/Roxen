@@ -1,6 +1,6 @@
 #include <module.h>
 
-string cvs_verison = "$Id: draw_things.pike,v 1.6 1996/12/03 02:04:07 per Exp $";
+string cvs_verison = "$Id: draw_things.pike,v 1.7 1996/12/03 02:24:05 per Exp $";
 
 object (Image) bevel(object (Image) in, int width)
 {
@@ -205,7 +205,7 @@ object draw_unfold(int c)
 object draw_fold(int c)
 {
   object f=Image(50,50,dR,dG,dB);
-  f->setcolor(c?255:0,255,c?0:255);
+  f->setcolor(c?255:0,200,c?0:255);
   for(int i=1; i<25; i++) f=f->line(25-i,i,25+i,i);
   f->setcolor(dR,dG,dB);
   return f->rotate(180)->scale(12,0);
@@ -214,7 +214,7 @@ object draw_fold(int c)
 object draw_back(int c)
 {
   object f=Image(50,50,dR,dG,dB);
-  f->setcolor(c?255:0,255,c?0:255);
+  f->setcolor(c?255:0,200,c?0:255);
   for(int i=1; i<25; i++) f=f->line(25-i,i,25+i,i);
   for(i=0; i<10; i++){
     f=f->line(25-i,24,25-i,50);
