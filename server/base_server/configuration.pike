@@ -1,6 +1,6 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.389 2000/11/02 11:33:59 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.390 2000/11/02 16:47:11 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2812,18 +2812,18 @@ static void create(string config)
 
   // for now only theese two. In the future there might be more variables.
   defvar( "data_cache_size", 2048, DLOCALE(274, "Cache:Cache size"),
-          TYPE_INT,
+          TYPE_INT| VAR_PUBLIC,
           DLOCALE(275, "The size of the data cache used to speed up requests "
                   "for commonly requested files, in KBytes"));
 
   defvar( "data_cache_file_max_size", 50, DLOCALE(276, "Cache:Max file size"),
-          TYPE_INT,
+          TYPE_INT | VAR_PUBLIC,
           DLOCALE(277, "The maximum size of a file that is to be considered for "
                   "the cache"));
 
 
   defvar("default_server", 0, DLOCALE(20, "Default site"),
-	 TYPE_FLAG,
+	 TYPE_FLAG| VAR_PUBLIC,
 	 DLOCALE(21, "If true, this site will be selected in preference of "
 	 "other sites when virtual hosting is used and no host "
 	 "header is supplied, or the supplied host header does not "
@@ -2835,7 +2835,7 @@ static void create(string config)
 		 "interface, it can be quite useful to use as a memory helper."));
 
   defvar("name", "", DLOCALE(24, "Site name"),
-	 TYPE_STRING|VAR_MORE,
+	 TYPE_STRING|VAR_MORE| VAR_PUBLIC,
 	 DLOCALE(25, "This is the name that will be used in the administration "
 	 "interface. If this is left empty, the actual name of the "
 	 "site will be used."));
@@ -2905,12 +2905,13 @@ static void create(string config)
 		 "the access counter log."), 
 	 0, lambda(){ return !query("Log");});
 
-  defvar("Domain", roxen.get_domain(), DLOCALE(34, "Domain"), TYPE_STRING,
+  defvar("Domain", roxen.get_domain(), DLOCALE(34, "Domain"),
+	 TYPE_STRING|VAR_PUBLIC,
 	 DLOCALE(35, "The domain name of the server. The domain name is used "
 	 "to generate default URLs, and to generate email addresses."));
 
   defvar("MyWorldLocation", "http://"+gethostname()+"/", 
-         DLOCALE(36, "Primary Server URL"), TYPE_URL,
+         DLOCALE(36, "Primary Server URL"), TYPE_URL|VAR_PUBLIC,
 	 DLOCALE(37, "This is the main server URL, where your start page is "
 		 "located. Please note that you also have to configure the "
 		 "'URLs' variable."));
@@ -3044,7 +3045,7 @@ page.
 	 DLOCALE(59, "What to return when there is no resource or file "
 		 "available at a certain location."));
 
-  definvisvar( "no_delayed_load", 0, TYPE_FLAG );
+  definvisvar( "no_delayed_load", 0, TYPE_FLAG|VAR_PUBLIC );
 
   setvars( retrieve("spider#0", this_object()) );
 
