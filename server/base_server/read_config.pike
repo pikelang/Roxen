@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: read_config.pike,v 1.48 2000/08/28 05:31:50 per Exp $
+// $Id: read_config.pike,v 1.49 2000/08/28 06:24:28 per Exp $
 
 #include <module.h>
 
@@ -12,6 +12,8 @@ import spider;
 #endif
 
 #include <module_constants.h>
+
+#define COPY( X ) ((X||([])) + ([]))
 
 mapping (string:array(int)) config_stat_cache = ([]);
 string configuration_dir; // Set by Roxen.
@@ -46,7 +48,7 @@ void save_it(string cl, mapping data)
 {
   if( call_outs[ cl ] )
     remove_call_out( call_outs[ cl ] );
-  call_outs[ cl ] = call_out( really_save_it, 0.5, cl, (data+([])) );
+  call_outs[ cl ] = call_out( really_save_it, 0.5, cl, COPY(data) );
 }
 
 void really_save_it( string cl, mapping data )
@@ -214,9 +216,7 @@ void store( string reg, mapping vars, int q, object current_configuration )
   else 
     data = read_it(cl);
 
-
-
-  mapping old_reg = (data[reg]||([])) + ([]);
+  mapping old_reg = data[ reg ];
 
   if(q)
     data[ reg ] = vars;
@@ -229,13 +229,13 @@ void store( string reg, mapping vars, int q, object current_configuration )
     if(!sizeof( m ))
       m_delete( data, reg );
     else 
-      data[reg] = m;
+      data[ reg ] = m;
   }
   if( equal( old_reg, data[reg] ) )
     return;
 
   last_read = cl;
-  last_data = data+([]);
+  last_data = COPY( data );
 
   save_it(cl, data);
 }
@@ -256,14 +256,14 @@ mapping(string:mixed) retrieve(string reg, object current_configuration)
 #endif
 
   if( cl == last_read )
-    return (last_data[ reg ]||([])) + ([]);
+    return COPY( last_data[ reg ] );
 
   mapping res = read_it( cl );
   if( res )
   {
     last_read = cl;
     last_data = res;
-    return (res[ reg ]||([]))+([]);
+    return COPY( res[ reg ] );
   }
   return ([]);
 }
