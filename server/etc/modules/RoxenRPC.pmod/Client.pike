@@ -1,5 +1,5 @@
 /*
- * $Id: Client.pike,v 1.14 1998/04/22 15:07:26 grubba Exp $
+ * $Id: Client.pike,v 1.15 1998/04/22 15:23:08 grubba Exp $
  */
 
 #define error(X) throw( ({ X, backtrace() }) )
@@ -70,12 +70,19 @@ int nolock = 0;
 #if efun(thread_create)
 object lock = Thread.Mutex();
 #else
-object lock = 0;
+class fake_mutex
+{
+  mixed lock()
+  {
+    return 0;
+  }
+};
+object lock = fake_mutex();
 #endif
 
 mixed `->(string id)
 {
-  return RemoteFunctionCall(id, myclass, server, lock && lock->lock, this_object())->call;
+  return RemoteFunctionCall(id, myclass, server, lock->lock, this_object())->call;
 }
 
 void create(string|object ip, int port, string cl,
