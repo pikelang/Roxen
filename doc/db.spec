@@ -1,4 +1,4 @@
-# $Id: db.spec,v 1.20 1998/09/08 21:31:10 js Exp $
+# $Id: db.spec,v 1.21 1998/09/09 23:37:56 js Exp $
 
 drop table messages;
 drop table mail;
@@ -53,14 +53,23 @@ create table flags (
 	     name                    varchar(16)
      );
 
-create table admin_variables (
+
+create table admin_status (
              user_id                 int,
-             status                  varchar(1),
-	     name		     varchar(64),
-	     value		     varchar(255)
+	     rcpt_name		     varchar(64),
+             status                  varchar(1)
+     );
+
+          
+create table admin_variables (
+             user_id                 int not null,
+	     rcpt_name		     varchar(64) not null,
+	     name		     varchar(64) not null,
+	     value		     varchar(255),
+	     PRIMARY KEY(user_id,rcpt_name,name)
      );
 	     
-
+	     
 // Domäner? Koppling till den andra databasen?
 
 # AutoAdmin         
