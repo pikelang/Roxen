@@ -2,7 +2,7 @@
 //
 // Originally by Leif Stensson <leif@roxen.com>, June/July 2000.
 //
-// $Id: ExtScript.pmod,v 1.2 2000/08/17 15:19:52 leif Exp $
+// $Id: ExtScript.pmod,v 1.3 2000/08/22 14:06:26 leif Exp $
 
 #define THREADS 1
 
@@ -157,6 +157,13 @@ class Handler
           if (stringp(id->auth[2])) putvar("I", "auth_passwd", id->auth[2]);
         }
       }
+
+      // Transfer explicit environment variables.
+      mapping ee = id->misc->explicit_script_env;
+      if (mappingp(ee))
+        foreach(indices(ee), mixed v)
+          if (stringp(v) && stringp(ee[v]) && strlen(ee[v]) < 2000)
+            putvar("E", v, ee[v]);
 
       // Transfer request headers
       array hd;
