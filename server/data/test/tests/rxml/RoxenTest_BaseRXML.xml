@@ -1372,12 +1372,12 @@ b</strlen></rxml>
 </test>
 
 <test>
-<rxml><if exists="/internal-roxen-roxen">yes</if></rxml>
+<rxml><if exists="/%01/chili-large-black">yes</if></rxml>
 <result>yes</result>
 </test>
 
 <test>
-<rxml><if exists="internal-roxen-unit">yes</if></rxml>
+<rxml><if exists="/%01/unit">yes</if></rxml>
 <result>yes</result>
 </test>
 
@@ -3012,7 +3012,7 @@ cd</rxml>
 
 <test>
 <rxml>&roxen.version;</rxml>
-<regexp>ChiliMoon/2\.5\.[0-9]+</regexp>
+<regexp>ChiliMoon/2002\.[0-9]+</regexp>
 </test>
 
 <test>
