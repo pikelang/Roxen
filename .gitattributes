@@ -34,3 +34,4 @@
 /modules/protocols/imap.pike foreign_ident
 /modules/protocols/pop3.pike foreign_ident
 /modules/protocols/smtp.pike foreign_ident
+/pike-modules/IMAP.pmod/imap_server.pike foreign_ident
