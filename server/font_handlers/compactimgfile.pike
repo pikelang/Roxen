@@ -171,8 +171,13 @@ void update_font_list()
       else if( glob( "*.cif", pd ) )
       {
         CIF t = open_tar( dir+pd );
-        if( Stdio.File f = t->open( "fontname", "r" ) )
-          font_list[font_name( f->read() )] = dir+pd;
+        if( Stdio.File f = t->open( "fontname", "r" ) ) {
+	  string name = f->read();
+	  if( Stdio.File f = t->open( "fontinfo", "r" ) )
+	    font_list[font_name( "<name>"+name+"</name>"+f->read() )] = dir+pd;
+	  else
+	    font_list[font_name( name )] = dir+pd;
+	}
         else
           destruct( t );
       }
