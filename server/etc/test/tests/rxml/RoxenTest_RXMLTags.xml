@@ -1129,6 +1129,14 @@ hej</result>
   <result>foobar</result>
 </test>
 
+<test>
+  <rxml ignore-errors="run"
+    ><cache shared variable="test.pass">a<run-error/>b</cache
+    ><cache shared variable="test.pass">a<run-error/>b</cache
+  ></rxml>
+  <result>abab</result>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Random tests</comment>
