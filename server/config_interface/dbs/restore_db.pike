@@ -8,7 +8,6 @@ mapping|string parse( RequestID id )
 {
   string res = "";
 
-
   array(mapping) backups = DBManager.backups(0);
   mapping(string:array(mapping)) bks = ([]);
   foreach( backups, mapping m )
@@ -126,5 +125,16 @@ mapping|string parse( RequestID id )
 	_(0,"Cancel")+" </gbutton></a></td>\n</table>\n";
     }
   }
-  return Roxen.http_string_answer(res);
+  if( !id->variables->db )
+    return Roxen.http_string_answer(res);
+  return
+    "<use file='/template'/><tmpl>"
+    "<topmenu base='../' selected='dbs'/>"
+    "<content><cv-split><subtablist width='100%'><st-tabs>"
+    "<insert file='subtabs.pike'/></st-tabs><st-page>"
+    "<input type=hidden name='sort' value='&form.sort:http;' />\n"
+    "<input type=hidden name='db' value='&form.db:http;' />\n"
+    +
+    res
+    +"</st-page></subtablist></cv-split></content></tmpl>";
 }
