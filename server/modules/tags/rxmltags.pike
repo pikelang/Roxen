@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.86 2000/03/01 21:41:17 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.87 2000/03/02 03:23:33 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -101,16 +101,27 @@ class EntityPageSelf {
   string rxml_const_eval(RXML.Context c) { return (c->id->not_query/"/")[-1]; }
 }
 
-mapping page_scope=(["realfile":EntityPageRealfile(),
-		     "virtroot":EntityPageVirtroot(),
-		     "virtfile":EntityPageVirtfile(),
-		     "query":EntityPageQuery(),
-		     "url":EntityPageURL(),
-		     "last-true":EntityPageLastTrue(),
-		     "language":EntityPageLanguage(),
-		     "scope":EntityPageScope(),
-		     "filesize":EntityPageFileSize(),
-		     "self":EntityPageSelf()]);
+class EntityPageSSLStrength {
+  inherit RXML.Value;
+  int rxml_const_eval(RXML.Context c) {
+    if (!c->id->my_fd->session) return 0;
+    return c->id->my_fd->session->cipher_spec->key_bits;
+  }
+}
+
+mapping(string:object) page_scope=([
+  "realfile":EntityPageRealfile(),
+  "virtroot":EntityPageVirtroot(),
+  "virtfile":EntityPageVirtfile(),
+  "query":EntityPageQuery(),
+  "url":EntityPageURL(),
+  "last-true":EntityPageLastTrue(),
+  "language":EntityPageLanguage(),
+  "scope":EntityPageScope(),
+  "filesize":EntityPageFileSize(),
+  "self":EntityPageSelf(),
+  "ssl-strength":EntityPageSSLStrength(),
+]);
 
 class EntityClientReferrer {
   inherit RXML.Value;
@@ -1484,6 +1495,7 @@ constant tagdoc=([
  The language must be given as metadata to be found.</desc>",
 "&page.scope;":"<desc ent></desc>",
 "&page.filesize;":"<desc ent>This file's size, in bytes.</desc>",
+"&page.ssl-strength;":"<desc ent>The strength in bits of the current SSL connection.</desc>",
 "&page.self;":"<desc ent>The name of this file.</desc>",
 
 "roxen_automatic_charset_variable":#"<desc tag>
