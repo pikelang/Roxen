@@ -1,6 +1,6 @@
 // Protocol support for RFC 2518
 //
-// $Id: webdav.pike,v 1.6 2004/03/03 16:26:15 grubba Exp $
+// $Id: webdav.pike,v 1.7 2004/03/03 18:19:14 grubba Exp $
 //
 // 2003-09-17 Henrik Grubbström
 
@@ -9,7 +9,7 @@ inherit "module";
 #include <module.h>
 #include <request_trace.h>
 
-constant cvs_version = "$Id: webdav.pike,v 1.6 2004/03/03 16:26:15 grubba Exp $";
+constant cvs_version = "$Id: webdav.pike,v 1.7 2004/03/03 18:19:14 grubba Exp $";
 constant thread_safe = 1;
 constant module_name = "DAV: Protocol support";
 constant module_type = MODULE_FIRST;
@@ -46,6 +46,7 @@ mapping|int(-1..0) first_try(RequestID id)
 	      ]),
     ]);
   case "COPY":
+  case "DELETE":
   case "PROPFIND":
   case "PROPPATCH":
     // These need to be special cased, since they are recursive.
@@ -102,7 +103,7 @@ mapping|int(-1..0) handle_webdav(RequestID id)
     TRACE_LEAVE("Malformed XML.");
     return Roxen.http_low_answer(400, "Malformed XML data.");
   }
-  if (!(<"COPY", "PROPFIND", "PROPPATCH">)[id->method]) {
+  if (!(<"COPY", "DELETE", "PROPFIND", "PROPPATCH">)[id->method]) {
     TRACE_LEAVE("Not implemented.");
     return Roxen.http_low_answer(501, "Not implemented.");
   }
@@ -115,13 +116,13 @@ mapping|int(-1..0) handle_webdav(RequestID id)
     depth = ([ "0":0, "1":1, "infinity":0x7fffffff, 0:0x7fffffff ])
       [id->request_headers->depth &&
        String.trim_whites(id->request_headers->depth)];
+    if (zero_type(depth)) {
+      TRACE_LEAVE(sprintf("Bad depth header: %O.",
+			  id->request_headers->depth));
+      return Roxen.http_low_answer(400, "Unsupported depth.");
+    }
   } else if (id->request_headers->depth) {
     // Depth header not supported in this case.
-  }
-  if (zero_type(depth)) {
-    TRACE_LEAVE(sprintf("Bad depth header: %O.",
-			id->request_headers->depth));
-    return Roxen.http_low_answer(400, "Unsupported depth.");
   }
 
   // Function to call for matching location modules.
@@ -135,6 +136,8 @@ mapping|int(-1..0) handle_webdav(RequestID id)
   function(string,string,int,RoxenModule,MultiStatus,RequestID,
 	   mixed ...:mapping(string:mixed)) recur_func;
   array(mixed) extras = ({});
+
+  mapping(string:mixed) empty_result;
 
   switch(id->method) {
   case "COPY":
@@ -220,6 +223,15 @@ mapping|int(-1..0) handle_webdav(RequestID id)
 						     behavior||([]),
 						     stat, id);
 		 };
+    break;
+  case "DELETE":
+    recur_func = lambda(string path, string dest, int d, RoxenModule module,
+			MultiStatus stat, RequestID id) {
+		   module->recurse_delete_files(path, stat, id);
+		   return 0;
+		 };
+    // The multi status will be empty if everything went well.
+    empty_result = http_result(204);
     break;
   case "PROPFIND":	// Get meta data.
     if (xml_data) {
@@ -436,6 +448,9 @@ mapping|int(-1..0) handle_webdav(RequestID id)
     TRACE_LEAVE("Done.");
   }
   TRACE_LEAVE("DAV request done.");
+  if (result->is_empty()) {
+    return empty_result || http_result(404);
+  }
   return result->http_answer();
 }
 
