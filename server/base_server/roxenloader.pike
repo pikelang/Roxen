@@ -23,7 +23,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.219 2000/12/30 10:43:45 nilsson Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.220 2000/12/30 11:34:07 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1217,12 +1217,6 @@ class restricted_cd
 #if !constant(getuid)
 int getuid(){ return 17; }
 int getgid(){ return 42; }
-#endif
-#if !efun(gethrtime)
-int gethrtime()
-{
-  return (time()*1000);
-}
 #endif
 
 // Load Roxen for real
