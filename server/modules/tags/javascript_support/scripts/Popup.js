@@ -76,7 +76,7 @@ function boundPopup(name)
   var p_l = getObjectLeft(name);    // this.left
   var p_t = getObjectTop(name);     // this.top
   var p_h = getObjectHeight(name);  // clip.height 
-  var p_w = getObjectWidth(name);   // clio.width
+  var p_w = getObjectWidth(name);   // clip.width
   var c_h = getClientHeight() - 16; // window.innerHeight
   var c_w = getClientWidth()  - 16; // window.innerWidth
   var s_l = getScrollLeft();        // window.pageXOffset
@@ -175,10 +175,14 @@ function PopupProperties(ox, oy)
   this.hide_2nd_click = false;
   this.LayerPosition = LayerPosition;
   
-  this.setHide2ndClick = function() { this.hide_2nd_click = true; };
-  this.setHideDelay = function(hide_delay) { this.hide_delay = hide_delay; };
-  this.setParentRightOffset = function(pox) { this.pox = pox; };
-  this.setParentBottomOffset = function(poy) { this.poy = poy; };
+  this.setHide2ndClick =
+    function() { this.hide_2nd_click = true; return this;};
+  this.setHideDelay =
+    function(hide_delay) { this.hide_delay = hide_delay; return this;};
+  this.setParentRightOffset =
+    function(pox) { this.pox = pox; return this;};
+  this.setParentBottomOffset =
+    function(poy) { this.poy = poy; return this;};
 
   // Modify the offsets
   if(isNav5) {
