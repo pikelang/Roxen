@@ -26,7 +26,7 @@
        else
          followup = id->variables->to;
   }
-  id->variables->followup_to = followup + ", " + reply;
+  id->variables->followup_to = reply+", "+followup;
   id->variables->reply_to = reply;
   return "";
 </pike>
@@ -46,10 +46,18 @@ Follow up to is '#followup_to#'
 </if>
 
 <if variable="followup is 1">
-   <set variable=to value='#followup_to:quote=stag#'>
+<pike>
+  id->variables->to = (id->variables->followup_to/",")[0];
+  id->variables->cc = (id->variables->followup_to/",")[1..]*",";
+  return "";
+</pike>
 </if>
 <else>
-   <set variable=to value='#reply_to:quote=stag#'>
+<pike>
+ id->variables->to = (id->variables->reply_to/",")[0];
+ id->variables->cc = (id->variables->reply_to/",")[1..]*",";
+ return "";
+</pike>
 </else>
 </formoutput>
 
@@ -94,7 +102,6 @@ Follow up to is '#followup_to#'
   return "";
 </pike>
 
-<unset variable=cc>
 <unset variable=bcc>
 <unset variable=content-type>
 <unset variable=content-disposition>
@@ -105,6 +112,7 @@ Follow up to is '#followup_to#'
    Mail id is '#mail_id#'
 Reply mail is '#reply_id#'
         To is '#to#'
+        CC is '#cc#'
    Subject is '#subject#'
 References is '#references#'
 
@@ -115,7 +123,6 @@ References is '#references#'
 
 
 <-compose-mail>
-
 <mail-set-flag name=reply>
 
 <redirect to='edit.html?mail_id=#mail_id#'>
