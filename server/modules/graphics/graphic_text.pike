@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.26 1997/02/13 13:01:09 per Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.27 1997/02/19 01:00:53 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -310,6 +310,14 @@ object (image) make_text_image(mapping args, object font, string text)
   {
     xsize+=((int)(args->shadow/",")[-1])+2;
     ysize+=((int)(args->shadow/",")[-1])+2;
+  }
+
+  if(args->move)
+  {
+    int dx,dy;
+    sscanf(args->move, "%d,%d", dx, dy);
+    xoffset += dx;
+    yoffset += dy;
   }
 
   if(args->xspacing)
