@@ -1,9 +1,9 @@
 /*
- * $Id: openports.pike,v 1.3 1997/08/13 23:13:00 neotron Exp $
+ * $Id: openports.pike,v 1.4 1997/08/15 14:56:38 grubba Exp $
  */
 
 inherit "roxenlib";
-constant name= "Show all open ports...";
+constant name = "Show all open ports...";
 
 constant doc = ("Show all open ports on any, or all, interfaces.");
 
@@ -16,7 +16,9 @@ mixed all_ports(object id)
   if(!(s=popen("lsof -i -P -n -b -F cLpPnf")) || !strlen(s))
   {
     s = popen("netstat -n -a");
-    if(!s || !strlen(s)) return "I cannot understand the output of netstat -a";
+    if(!s || !strlen(s)) {
+      return "I cannot understand the output of netstat -a\n";
+    }
     foreach(s/"\n", s)
     {
       string ip,tmp;
@@ -29,9 +31,13 @@ mixed all_ports(object id)
 	port=(int)reverse(tmp);
 	if(ip=="*") ip="ANY";
 	if(!ports_by_ip[ip])
-	  ports_by_ip[ip]=({({port,0,"Install <a href=ftp://vic.cc.purdue.edu/pub/tools/unix/lsof/lsof.tar.gz>'lsof'</a>","for this info"})});
+	  ports_by_ip[ip]=({({ port, 0, "Install <a href=\""
+			       "ftp://vic.cc.purdue.edu/pub/tools/unix/lsof/"
+			       "lsof.tar.gz\">'lsof'</a>","for this info"})});
 	else
-	  ports_by_ip[ip]+=({({port,0,"Install <a href=ftp://vic.cc.purdue.edu/pub/tools/unix/lsof/lsof.tar.gz>'lsof'</a>","for this info"})});
+	  ports_by_ip[ip]+=({({ port, 0, "Install <a href=\""
+				"ftp://vic.cc.purdue.edu/pub/tools/unix/lsof/"
+				"lsof.tar.gz\">'lsof'</a>","for this info"})});
       }
     }
   } else {
@@ -82,7 +88,9 @@ mixed all_ports(object id)
     else { su = gethostname(); ip="All interfaces"; }
     res += "<h2>"+ip+"</h2>";
 
-    res += "<table cellpadding=3 cellspacing=0 border=0><tr bgcolor=lightblue><td><b>Port number</b></td><td><b>Program</b></td><td><b>User</b></td><td><b>PID</b></td></tr>\n";
+    res += "<table cellpadding=3 cellspacing=0 border=0>\n"
+      "<tr bgcolor=lightblue><td><b>Port number</b></td>\n"
+      "<td><b>Program</b></td><td><b>User</b></td><td><b>PID</b></td></tr>\n";
     array a = ports_by_ip[oip];
     sort(column(a,0),a);
     int i;
@@ -91,18 +99,30 @@ mixed all_ports(object id)
       string bg=((i++/3)%2)?"white":"#e0e0ff";
 
       if(port[1]!=getpid())
-	res += sprintf("<tr bgcolor=\""+bg+"\"><td align=right>%d</td><td>%s</td><td>%s</td>"
-		       "<td>%d</td></tr>",
-		       port[0],port[2],port[3],port[1]);
+	res += sprintf("<tr bgcolor=\"%s\"><td align=right>%d</td>\n"
+		       "<td>%s</td><td>%s</td><td>%d</td></tr>\n",
+		       bg, port[0],port[2],port[3],port[1]);
       else
-	res += sprintf("<tr  bgcolor=\""+bg+"\"><td align=right><b>%d</b></td><td><b>%s</b></td>"
-		       "<td><b>%s</b></td><td><b>%d</b></td></tr>",
-		       port[0],port[2],port[3],port[1]);
+	res += sprintf("<tr bgcolor=\"%s\"><td align=right><b>%d</b></td>\n"
+		       "<td><b>%s</b></td><td><b>%s</b></td>\n"
+		       "<td><b>%d</b></td></tr>",
+		       bg, port[0],port[2],port[3],port[1]);
     }
     res+="</table>";
   }
   return res;
+}
 
+string cleanup_ip(string ip)
+{
+  if(ip == "0.0.0.0") {
+    ip = "any";
+  } else if (ip == "127.0.0.1") {
+    ip = "localhost";
+  } else {
+    ip = lower_case(ip);
+  }
+  return(ip);
 }
 
 mixed roxen_ports(object id)
@@ -118,14 +138,20 @@ mixed roxen_ports(object id)
     {
       // num, protocol, ip
       // Why is port 0 sometimes? *bogglefluff* / David
-      if(port && (!used[p[port][2]] || !used[p[port][2]][p[port][0]]))
-      {
-	if(!used[p[port][2]]) used[p[port][2]]=(<>);
-	used[p[port][2]][p[port][0]]=1;
-	if(!ports_by_ip[p[port][2]])
-	  ports_by_ip[p[port][2]]=({({p[port][0],p[port][1],c})});
-	else
-	  ports_by_ip[p[port][2]]+=({({p[port][0],p[port][1],c})});
+      if(port) {
+	string ip = cleanup_ip(p[port][2]);
+	if (!used[ip] || !used[ip][p[port][0]]) {
+	  if(!used[ip]) {
+	    used[ip] = (< p[port][0] >);
+	  } else {
+	    used[ip][p[port][0]] = 1;
+	  }
+	  if(!ports_by_ip[ip]) {
+	    ports_by_ip[ip]=({({p[port][0],p[port][1],c})});
+	  } else {
+	    ports_by_ip[ip]+=({({p[port][0],p[port][1],c})});
+	  }
+	}
       }
     }
   }
@@ -134,7 +160,9 @@ mixed roxen_ports(object id)
   {
     string port, ip;
     sscanf(o->query_address(1), "%s %s", ip, port);
-    if(ip=="0.0.0.0") ip="ANY";
+
+    ip = cleanup_ip(ip);
+
     if(!ports_by_ip[ip])
       ports_by_ip[ip]=({({(int)port,"http",0})});
     else
@@ -143,22 +171,18 @@ mixed roxen_ports(object id)
 
   res += "<table cellspacing=4>";
   foreach(Array.sort_array(indices(ports_by_ip), lambda(string a, string b) {
-    if(a == "ANY")
+    if(a == "any")
       return -1;
     return a > b;
   }), string ip)
   {
     string su;
     string oip = ip;
-    if(ip != "ANY") {
-      if(ip == "127.0.0.1") {
-	ip = "Localhost";
-	su = "127.0.0.1";
-      } else
-	ip = su = roxen->blocking_ip_to_host(ip);
-    } else {
+    if(ip == "any") {
       su = gethostname();
       ip="All interfaces (bound to ANY)";
+    } else {
+      ip = su = roxen->blocking_ip_to_host(ip);
     }
     res += ("<tr><th align=left colspan=4><br><font size=+1><b>"+ip+
 	    "</b></font><br></th></tr><tr bgcolor=lightblue>"
@@ -177,11 +201,14 @@ mixed roxen_ports(object id)
       
       url2 = (port[1][0]=='s'?"https":port[1]) + "://" + su + ":"+port[0]+"/";
 
-      res += sprintf("<tr><td align=right>%d</td><td>%s</td><td><a href=\"%s\">"
-		     "%s</a></td><td><a target=remote href=\"%s\">%s</a>"
-		     "</td></tr>",
+      res += sprintf("<tr><td align=right>%d</td><td>%s</td>\n"
+		     "<td><a href=\"%s\">%s</a></td>\n"
+		     "<td><a target=remote href=\"%s\">%s</a></td></tr>",
 		     port[0],port[1],
-		     port[2]?"/Configurations/"+http_encode_string(port[2]->name)+"?"+time():"/Globals/", port[2]?port[2]->name:"Configuration interface", url, url2);
+		     port[2]?"/Configurations/"+
+		     http_encode_string(port[2]->name)+"?"+time():"/Globals/",
+		     port[2]?port[2]->name:"Configuration interface",
+		     url, url2);
     }
   }
   res += "</table>";
@@ -190,19 +217,20 @@ mixed roxen_ports(object id)
 
 mixed first_form(object id)
 {
-  return ("<table bgcolor=black cellpadding=1><tr><td>"
-	  "<table cellpadding=10 cellspacing=0 border=0 bgcolor=#eeeeff>"
+  return ("<table bgcolor=black cellpadding=1><tr><td>\n"
+	  "<table cellpadding=10 cellspacing=0 border=0 bgcolor=#eeeeff>\n"
 	  "<tr><td align=center valign=center colspan=2>"
-	  "<h1>What information do you want?</h1>"
+	  "<h1>What information do you want?</h1>\n"
 	  "<form>\n"
-	  "<font size=+1>Please select one of the pages below</font><br>"
-	  "</tr><tr><td  colspan=2>"
-	  "<input type=hidden name=action value="+id->variables->action+">"
-	  "<input type=radio name=page checked value=roxen_ports> Show all ports allocated by Roxen<br>"
-	  "<input type=radio name=page value=all_ports> Show all ports<br>"
+	  "<font size=+1>Please select one of the pages below</font><br>\n"
+	  "</tr><tr><td colspan=2>"
+	  "<input type=hidden name=action value="+id->variables->action+">\n"
+	  "<input type=radio name=page checked value=roxen_ports> "
+	  "Show all ports allocated by Roxen<br>\n"
+	  "<input type=radio name=page value=all_ports> Show all ports<br>\n"
 	  "</tr><tr><td>"
 	  "<input type=submit name=ok value=\" Ok \"></form>"
-	  "</td><td align=right>"
+	  "</td>\n<td align=right>"
 	  "<form>"
 	  "<input type=submit name=cancel value=\" Cancel \"></form>"
 	  "</td></tr></table></table>");
