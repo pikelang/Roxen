@@ -167,7 +167,7 @@ string buttons( Configuration c, string mn, RequestID id )
 	     mod_name = Roxen.get_modname(mod),
 	      log_msg = sprintf("2,%s," +
 				LOCALE(290,"Module event log for '%s' "
-				"cleared by %s (%s) from %s"),
+				"cleared by %s (%s) from %s") + "\n",
 				mod_name, Roxen.get_modfullname(mod),
 				realname, name, host);
       foreach(indices(mod->error_log), string error)
@@ -546,7 +546,7 @@ string parse( RequestID id )
 	 conf->error_log = ([]);
 	 roxen->nwrite( 
 	   sprintf(LOCALE(311,"Site event log for '%s' "
-			  "cleared by %s (%s) from %s"),
+			  "cleared by %s (%s) from %s") + "\n",
 		   conf->query_name(),
 		   id->misc->config_user->real_name,
 		   id->misc->config_user->name,
