@@ -60,9 +60,11 @@
                textcolor='&usr.toptabs-dimtextcolor;'
                seltextcolor='&usr.toptabs-seltextcolor;'
                selcolor='&usr.toptabs-selcolor;'
-               quant=128
+               quant='128'
                &usr.toptab-extraargs;
-               width=80 align=center
+               width='80'
+	       align='center'
+	       title=''
 	   "/>
 
 
@@ -87,8 +89,9 @@
                seltextcolor='&usr.subtabs-seltextcolor;'
                selcolor='&usr.subtabs-selcolor;'
 	       &usr.subtabs-extraargs;
-	       width=60
-	       align=center
+	       width='60'
+	       align='center'
+	       title=''
 	   "/>
 
 <theme-set what=leftside-padwidth    to=160 />
