@@ -1,4 +1,4 @@
-// string cvs_version = "$Id: module_support.pike,v 1.23 1999/08/30 09:34:09 per Exp $";
+// string cvs_version = "$Id: module_support.pike,v 1.24 1999/09/02 18:32:57 per Exp $";
 #include <roxen.h>
 #include <module.h>
 
@@ -79,7 +79,7 @@ int globvar(string var, mixed value, string name, int type,
     variables[var][ VAR_CONFIGURABLE ] = !not_in_config;
   }
 
-  Locale.Roxen.standard
+  master()->resolv("Locale")["Roxen"]["standard"]
     ->register_module_doc( this_object(), var, name, doc_str );
 
   variables[var][ VAR_SHORTNAME ] = var;
@@ -88,10 +88,10 @@ int globvar(string var, mixed value, string name, int type,
 void deflocaledoc( string locale, string variable, 
 		   string name, string doc, mapping|void translate)
 {
-  if(!Locale.Roxen[locale])
+  if(!master()->resolv("Locale")["Roxen"][locale])
     report_debug("Invalid locale: "+locale+". Ignoring.\n");
   else
-    Locale.Roxen[locale]
+    master()->resolv("Locale")["Roxen"][locale]
       ->register_module_doc( this_object(), variable, name, doc, translate );
 }
 
