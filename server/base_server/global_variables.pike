@@ -115,7 +115,7 @@ några minuter");
 	       "återstående 900 bytes av filen med en Range-request så "
 	       "kommer Roxen logga det som alla 1000 bytes hade laddats hem. "
 	       "<p>Detta kan vara användbart om du vill se om en användare "
-	       "har lyckats ladda hem hela filen. I normalfallet vill du att "
+	       "har lyckats ladda hem hela filen. I normalfallet vill du "
 	       "ha denna flagga avslagen.");
 
   globvar("show_internals", 1, "Show internal errors", TYPE_FLAG,
