@@ -1,41 +1,41 @@
 <use-module>sqltag</use-module>
 
 <test>
-<rxml><sqlquery db="local" query="CREATE TABLE __test (id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+<rxml><sqlquery host="local" query="CREATE TABLE __test (id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 a VARCHAR(255))"/>&page.last-true;</rxml>
 <result>1</result>
 </test>
 
 <test>
-<rxml><sqlquery db="local" query="INSERT INTO __test (a) VALUES ('hej')"/>&page.last-true;</rxml>
+<rxml><sqlquery host="local" query="INSERT INTO __test (a) VALUES ('hej')"/>&page.last-true;</rxml>
 <result>1</result>
 </test>
 
 <test>
-<rxml><sqlquery db="local" mysql-insert-id="var.id"
+<rxml><sqlquery host="local" mysql-insert-id="var.id"
  query="INSERT INTO __test (a) VALUES ('hopp')"/>&page.last-true;:&var.id;</rxml>
 <result>1:2</result>
 </test>
 
 <test>
-<rxml><sqlquery db="local" query="INSERT INTO __test (a) VALUES (NULL)"/>&page.last-true;</rxml>
+<rxml><sqlquery host="local" query="INSERT INTO __test (a) VALUES (NULL)"/>&page.last-true;</rxml>
 <result>1</result>
 </test>
 
 <test>
-<rxml><emit source="sql" db="local" query="SELECT id FROM __test"
+<rxml><emit source="sql" host="local" query="SELECT id FROM __test"
  rowinfo="var.row">&_.id; &_.a; &var.row;:</emit>&var.row;</rxml>
 <result>1  3:2  3:3  3:3</result>
 </test>
 
 <test>
-<rxml><emit source="sql" db="local" query="SELECT id FROM __test"
+<rxml><emit source="sql" host="local" query="SELECT id FROM __test"
  maxrows="1" remainderinfo="var.rem">&_.id;</emit>:&var.rem;</rxml>
 <result>1:2</result>
 </test>
 
 <test>
-<rxml><sqltable db="local" query="SELECT * FROM __test"/></rxml>
+<rxml><sqltable host="local" query="SELECT * FROM __test"/></rxml>
 <result><table><tr><th>id</th><th>a</th></tr>
 <tr><td>1</td><td>hej</td></tr>
 <tr><td>2</td><td>hopp</td></tr>
@@ -44,7 +44,7 @@ a VARCHAR(255))"/>&page.last-true;</rxml>
 </test>
 
 <test>
-<rxml><sqltable db="local" query="SELECT * FROM __test" ascii="1" rowinfo="var.r"/>&var.r;</rxml>
+<rxml><sqltable host="local" query="SELECT * FROM __test" ascii="1" rowinfo="var.r"/>&var.r;</rxml>
 <result>1	hej
 2	hopp
 3	
@@ -52,7 +52,7 @@ a VARCHAR(255))"/>&page.last-true;</rxml>
 </test>
 
 <test>
-<rxml><sqltable db="local" query="SELECT * FROM __test" ascii="1" nullvalue="x"/></rxml>
+<rxml><sqltable host="local" query="SELECT * FROM __test" ascii="1" nullvalue="x"/></rxml>
 <result>1	hej
 2	hopp
 3	x
@@ -60,6 +60,6 @@ a VARCHAR(255))"/>&page.last-true;</rxml>
 </test>
 
 <test>
-<rxml><sqlquery db="local" query="DROP TABLE __test"/>&page.last-true;</rxml>
+<rxml><sqlquery host="local" query="DROP TABLE __test"/>&page.last-true;</rxml>
 <result>1</result>
 </test>
