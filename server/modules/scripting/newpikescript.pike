@@ -1,4 +1,4 @@
-constant cvs_version="$Id: newpikescript.pike,v 1.10 1999/02/15 23:26:51 per Exp $";
+constant cvs_version="$Id: newpikescript.pike,v 1.11 1999/09/27 20:08:08 grubba Exp $";
 constant thread_safe=1;
 
 #if !constant(Remote)
@@ -176,20 +176,27 @@ void start()
 #if efun(getpwnam)
 	  if(!(int)uid && (uid != "0"))
 	  {
-	    array t = getpwnam(uid);
+	    array t = getpwnam((string)uid);
 	    if(!t) report_error("Failed to find UID "+uid+"\n");
 	    else {
 	      if(!gid) gid = t[3];
 	      uid = t[2];
 	    }
+	  } else {
+	    uid = (int)uid;
 	  }
 #endif
 #if efun(getgrnam)
+	  // FIXME: Is this a good idea?
+	  // (gid is zero by default).
+	  // /grubba 1999-09-27
 	  if(!(int)gid && ((string)gid != "0"))
 	  {
-	    array t = getgrnam(uid);
+	    array t = getgrnam((string)gid);
 	    if(!t) report_error("Failed to find GID "+gid+"\n");
 	    else gid = t[2];
+	  } else {
+	    gid = (int)gid;
 	  }
 #endif
 	  uid_patterns += ({ patt, ({uid,gid}) });
