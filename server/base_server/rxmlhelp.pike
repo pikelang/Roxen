@@ -32,10 +32,10 @@ string mktable(array table) {
 string available_languages(object id) {
   string pl;
   if(id && id->misc->pref_languages && (pl=id->misc->pref_languages->get_language()))
-    if(!has_value(roxen->list_languages(),pl)) pl="en";
+    if(!has_value(roxen->list_languages(),pl)) pl="eng";
   else
-    pl="en";
-  mapping languages=roxen->language_low(pl)->list_languages();
+    pl="eng";
+  mapping languages=roxen->language_low(pl)->languages;
   return mktable( map(sort(indices(languages) & roxen->list_languages()),
 		      lambda(string code) { return ({ code, languages[code] }); } ));
 }
