@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.104 2004/06/09 00:17:42 _cvs_stephen Exp $
+ * $Id: ftp.pike,v 2.105 2004/07/08 23:32:55 _cvs_stephen Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -673,7 +673,7 @@ class LS_L(static RequestID master_session,
     if (!(flags & LS_FLAG_n)) {
       // Use symbolic names for uid and gid.
       if (!stringp(st->uid)) {
-	user = name_from_uid(st-uid);
+	user = name_from_uid(st->uid);
       }
 
       // FIXME: Convert st[6] to symbolic group name.
@@ -887,7 +887,7 @@ class LSFile
       session->method = "DIR";
 
       mixed err;
-      mapping(string:array) dir;
+      mapping(string:Stat|array) dir;
       err = catch {
 	dir = session->conf->find_dir_stat(long, session);
       };
@@ -1815,10 +1815,10 @@ class FTPSession
     send(226, ({ "Transfer complete." }));
   }
 
-  static private Stdio.Stat stat_file(string fname,
+  static private mixed stat_file(string fname,
 						object|void session)
   {
-    mapping file;
+    mixed file;
 
     session = RequestID2(session || master_session);
     session->method = "STAT";
@@ -1890,13 +1890,13 @@ class FTPSession
 
   static private int open_file(string fname, object session, string cmd)
   {
-    Stdio.Stat file = stat_file(fname, session);
+    mixed file = stat_file(fname, session);
 
     // The caller is assumed to have made a new session object for us
     // but not to set not_query in it..
     session->not_query = fname;
 
-    if (objectp(file) || arrayp(file)) {
+    if (objectp(file)) {
       Stdio.Stat st = file;
       file = 0;
       if (st && !st->isreg && !((<"RMD", "XRMD", "CHMOD">)[cmd])) {
@@ -2521,9 +2521,10 @@ class FTPSession
 		   lt->hour, lt->min, lt->sec);
   }
 
-  string make_MLSD_fact(string f, mapping(string:array) dir, object session)
+  string make_MLSD_fact(string f, mapping(string:Stat) dir,
+   object session)
   {
-    array st = dir[f];
+    Stdio.Stat st = dir[f];
 
     mapping(string:string) facts = ([]);
 
@@ -2551,7 +2552,8 @@ class FTPSession
 				     }, facts) * ";" + " " + f);
   }
 
-  void send_MLSD_response(mapping(string:array) dir, object session)
+  void send_MLSD_response(mapping(string:Stat) dir,
+   object session)
   {
     dir = dir || ([]);
 
@@ -2565,7 +2567,8 @@ class FTPSession
     connect_and_send(session->file, session);
   }
 
-  void send_MLST_response(mapping(string:array) dir, object session)
+  void send_MLST_response(mapping(string:Stat) dir,
+   object session)
   {
     dir = dir || ([]);
     send(250,({ "OK" }) + 
@@ -3484,9 +3487,9 @@ class FTPSession
       return;
     }
     args = fix_path(args);
-    Stdio.Stat st = stat_file(args);
+    mixed st = stat_file(args);
 
-    if (!arrayp(st) && !objectp(st)) {
+    if (!objectp(st)) {
       send_error("MDTM", args, st, master_session);
     } else {
       send(213, ({ make_MDTM(st->mtime) }));
@@ -3500,9 +3503,9 @@ class FTPSession
     }
     args = fix_path(args);
 
-    Stdio.Stat st = stat_file(args);
+    mixed st = stat_file(args);
 
-    if (!arrayp(st) && !objectp(st)) {
+    if (!objectp(st)) {
       send_error("SIZE", args, st, master_session);
       return;
     }
@@ -3554,9 +3557,9 @@ class FTPSession
       return;
     }
     string long = fix_path(args);
-    Stdio.Stat st = stat_file(long);
+    mixed st = stat_file(long);
 
-    if (!arrayp(st) && !objectp(st)) {
+    if (!objectp(st)) {
       send_error("STAT", long, st, master_session);
     } else {
       string s = LS_L(master_session)->ls_l(args, st);

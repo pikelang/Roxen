@@ -4,7 +4,7 @@
 inherit "module";
 // All roxen modules must inherit module.pike
 
-constant cvs_version = "$Id: location.pike,v 1.5 2001/09/03 18:05:11 nilsson Exp $";
+constant cvs_version = "$Id: location.pike,v 1.6 2004/07/08 23:32:54 _cvs_stephen Exp $";
 constant module_type = MODULE_LOCATION;
 constant module_name = "RefDoc for MODULE_LOCATION";
 constant module_doc = "This module does nothing, but its inlined "
@@ -126,7 +126,7 @@ array(int)|Stat stat_file( string path, RequestID id )
 	    0 /* gid */ });
 } // Of course, it's typically silly to return something like this.
 
-mapping(string:array(int)|Stat) find_dir_stat( string path, RequestID id );
+mapping(string:Stat) find_dir_stat( string path, RequestID id );
 //! Need not be implemented. The parameter `path' is the path to a
 //! directory, `id' is the request information object and the returned
 //! mapping contains all filenames in the directory mapped to Stat

@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 2001, Roxen IS.
-// $Id: prototypes.pike,v 1.77 2004/06/09 00:17:43 _cvs_stephen Exp $
+// $Id: prototypes.pike,v 1.78 2004/07/08 23:32:56 _cvs_stephen Exp $
 
 #include <stat.h>
 #include <config.h>
@@ -401,9 +401,9 @@ class Configuration
   mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic);
   mapping get_file(RequestID id, int|void no_magic, int|void internal_get);
   array(string) find_dir(string file, RequestID id, void|int(0..1) verbose);
-  array(int)|object(Stdio.Stat) stat_file(string file, RequestID id);
+  array(int)|Stat stat_file(string file, RequestID id);
   array open_file(string fname, string mode, RequestID id, void|int ig, void|int rc);
-  mapping(string:array(mixed)) find_dir_stat(string file, RequestID id);
+  mapping(string:Stat) find_dir_stat(string file, RequestID id);
   array access(string file, RequestID id);
   string real_file(string file, RequestID id);
   int|string try_get_file(string s, RequestID id,
@@ -2106,9 +2106,9 @@ class RoxenModule
   function(RequestID:int|mapping) query_seclevels();
   void set_status_for_path (string path, RequestID id, int status_code,
 			    string|void message, mixed... args);
-  array(int)|object(Stdio.Stat) stat_file(string f, RequestID id);
+  array(int)|Stat stat_file(string f, RequestID id);
   array(string) find_dir(string f, RequestID id);
-  mapping(string:array(mixed)) find_dir_stat(string f, RequestID id);
+  mapping(string:Stat) find_dir_stat(string f, RequestID id);
   string real_file(string f, RequestID id);
   void save();
   mapping api_functions();
