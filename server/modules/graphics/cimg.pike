@@ -7,7 +7,7 @@ inherit "roxenlib";
 constant thread_safe=1;
 
 roxen.ImageCache the_cache;
-constant cvs_version="$Id: cimg.pike,v 1.16 2000/05/18 12:17:23 kuntri Exp $";
+constant cvs_version="$Id: cimg.pike,v 1.17 2000/06/01 11:49:20 kuntri Exp $";
 constant tagdesc="Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
 "to convert images between different image formats.";
 
@@ -424,9 +424,9 @@ formats.</short> The <tag>cimg</tag> makes it is possible to convert, alter size
  Insert images from other sources, e.g. databases through entities or
  variables.
 <ex type='box'>
-<emit source='sql' query='select imagedata from images where id=37'>
-<cimg data='&sql.imagedata;'/>
-</emit>
+&lt;emit source='sql' query='select imagedata from images where id=37'&gt;
+&lt;cimg data='&sql.imagedata;'/&gt;
+&lt/emit&gt;
 </ex>
 </attr>"+imagecache,
 
@@ -446,9 +446,9 @@ tag is to insert image-URI's into various places, e.g. a submit-box.
  Insert images from other sources, e.g. databases through entities or
  variables.
 <ex type='box'>
-<emit source='sql' query='select imagedata from images where id=37'>
-<cimg-url data='&sql.imagedata;'/>
-</emit>
+&lt;emit source='sql' query='select imagedata from images where id=37'&gt;
+&lt;cimg data='&sql.imagedata;'/&gt;
+&lt/emit&gt;
 </ex>
 </attr>"+imagecache,
 		]);
