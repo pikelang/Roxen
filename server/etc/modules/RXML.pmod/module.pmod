@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.109 2000/09/14 21:55:53 mast Exp $
+//! $Id: module.pmod,v 1.110 2000/09/15 00:36:04 nilsson Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -936,7 +936,11 @@ class Context
 	  return val;
     }
     else if ((<0, "_">)[scope_name]) parse_error ("No current scope.\n");
-    else parse_error ("Unknown scope %O.\n", scope_name);
+#ifdef OLD_RXML_COMPAT
+    if(compatible_scope && scope_name && scope_name!="form")
+      return get_var(scope_name+"."+var, "form", want_type);
+#endif
+    parse_error ("Unknown scope %O.\n", scope_name);
   }
 
   mixed user_get_var (string var, void|string scope_name, void|Type want_type)
@@ -967,7 +971,11 @@ class Context
       else
 	return vars[var] = val;
     else if ((<0, "_">)[scope_name]) parse_error ("No current scope.\n");
-    else parse_error ("Unknown scope %O.\n", scope_name);
+#ifdef OLD_RXML_COMPAT
+    if(compatible_scope && scope_name && scope_name!="form")
+      return set_var(scope_name+"."+var, val, "form");
+#endif
+    parse_error ("Unknown scope %O.\n", scope_name);
   }
 
   mixed user_set_var (string var, mixed val, void|string scope_name)
