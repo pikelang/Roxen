@@ -88,8 +88,11 @@
        src='<gbutton-url font='&usr.font;' preparse><contents></gbutton-url>' border=0>
 </define>
 
-<define tag=cf-ok><submit-gbutton> <cf-locale get=ok> </define>
-<define tag=cf-cancel><submit-gbutton> <cf-locale get=cancel> </define>
+<define tag=cf-ok><submit-gbutton> <cf-locale get=ok> </submit-gbutton></define>
+
+<define tag=cf-cancel><gbutton preparse href='&href;'> <cf-locale get=cancel> </gbutton></define>
+
+<define tag=cf-next><submit-gbutton preparse href='&href;'> <cf-locale get=next> > </submit-gbutton></define>
 
 <define container=tmpl>
   <title>&roxen.version; <cf-locale get=administration_interface> &title;</title>
