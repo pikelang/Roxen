@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.259 2000/11/06 22:49:51 mast Exp $
+// $Id: rxml.pike,v 1.260 2000/11/09 14:45:06 jhs Exp $
 
 
 inherit "rxmlhelp";
@@ -2765,10 +2765,10 @@ scope created within the define tag.
 </p></desc>
 
 <attr name=supports'' value='feature' required required='required'>
- Choose what supports feature to test.
+ <p>Choose what supports feature to test.</p>
 </attr>
 
-The following features are supported:",
+<p>The following features are supported:</p> <supports-flags-list/>",
 
 "if#time":#"<desc plugin='plugin'><p><short>
  Is the time hhmm?</short> The attributes before, after and inclusive modifies
