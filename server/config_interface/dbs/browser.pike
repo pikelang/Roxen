@@ -282,10 +282,10 @@ mixed delete_db( string db, RequestID id )
 {
   string msg;
   if( DBManager.is_internal( db ) )
-    msg = (string)_(423, "Are you sure you want to delete the database %s "
+    msg = (string)_(361, "Are you sure you want to delete the database %s "
 		    "and the data?");
   else
-    msg = (string)_(423,"Are you sure you want to delete the database %s?"
+    msg = (string)_(362,"Are you sure you want to delete the database %s?"
 		    " No data will be deleted from the remote datbase.");
     
   VERIFY(msg);
