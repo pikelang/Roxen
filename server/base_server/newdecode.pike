@@ -7,7 +7,7 @@
 #endif
 #endif
 #ifndef IN_INSTALL
-// string cvs_version = "$Id: newdecode.pike,v 1.10 1999/03/13 20:54:36 marcus Exp $";
+// string cvs_version = "$Id: newdecode.pike,v 1.11 1999/03/13 21:12:36 marcus Exp $";
 #endif
 
 #include <roxen.h>
@@ -40,7 +40,7 @@ private string decode_float(string foo, mapping m, string s, mapping res)
 
 private string decode_string(string foo, mapping m, string s, mapping res)
 {
-  s = replace(s, ({ "%3e", "%3c" }), ({ ">", "<" }) );
+  s = replace(s, ({ "%3e", "%3c", "%25" }), ({ ">", "<", "%" }) );
   if(arrayp(res->res)) res->res += ({ s  });  else   res->res = s;
   return "";
 }
@@ -318,8 +318,8 @@ mapping decode_config_file(string s)
 private string encode_mixed(mixed from)
 {
   if(stringp(from))
-    return "<str>"+replace(from, ({ ">", "<" }), ({ "%3e", "%3c" })  )
-           + "</str>";
+    return "<str>"+replace(from, ({ ">", "<", "%" }),
+			   ({ "%3e", "%3c", "%25" })) + "</str>";
   else if(intp(from))
     return "<int>"+from+"</int>";
   else if(floatp(from))
