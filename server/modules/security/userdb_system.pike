@@ -1,8 +1,10 @@
 // This is a roxen module. Copyright © 2001, Roxen IS.
 
 constant cvs_version =
-  "$Id: userdb_system.pike,v 1.8 2001/10/04 13:47:38 wellhard Exp $";
+  "$Id: userdb_system.pike,v 1.9 2002/10/18 14:53:24 anders Exp $";
+#ifndef __NT__
 inherit UserDB;
+#endif
 inherit "module";
 
 constant name = "system";
