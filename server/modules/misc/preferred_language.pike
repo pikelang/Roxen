@@ -7,7 +7,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: preferred_language.pike,v 1.18 2000/11/07 10:10:27 kuntri Exp $";
+constant cvs_version = "$Id: preferred_language.pike,v 1.19 2000/11/08 13:11:51 stewa Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST | MODULE_TAG;
 constant module_name = "Preferred Language Analyzer";
@@ -59,7 +59,7 @@ RequestID first_try(RequestID id) {
   }
 
   ([object(PrefLang)]id->misc->pref_languages)->set_sorted(lang);
-  return id;
+  return 0;
 }
 
 class TagEmitLanguages {
