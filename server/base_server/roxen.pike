@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.215 1998/07/07 19:00:39 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.216 1998/07/07 19:01:26 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -1925,8 +1925,6 @@ void initiate_configuration_port( int|void first )
     return 0;
   
   config_ports_changed = 0;
-
-  // FIXME: Where does SSL3 hide its configuration?
 
   // First find out if we have any new ports.
   mapping(string:array(string)) new_ports = ([]);
