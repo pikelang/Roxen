@@ -1,5 +1,6 @@
 inherit "module";
 inherit "socket";
+#include <module.h>
 
 /*
  * This software is (C) 1998 Francesco Chemolli,
@@ -24,7 +25,7 @@ inherit "socket";
  * thing...
  */
 
-constant cvs_version="$Id: port_forwarder.pike,v 1.7 2000/07/03 06:15:27 nilsson Exp $";
+constant cvs_version="$Id: port_forwarder.pike,v 1.8 2000/07/21 10:07:22 hop Exp $";
 
 #if DEBUG > 22
 #define TCPFORWARDER_DEBUG

@@ -4,11 +4,12 @@
 // they create a file named 'AccessLog' in that directory, and allow
 // write access for roxen.
 
-constant cvs_version = "$Id: home_logger.pike,v 1.25 2000/07/03 06:47:16 nilsson Exp $";
+constant cvs_version = "$Id: home_logger.pike,v 1.26 2000/07/21 10:07:22 hop Exp $";
 constant thread_safe = 1;
 
 #include <config.h>
 inherit "module";
+#include <module.h>
 
 constant module_type = MODULE_LOGGER;
 constant module_name = "User logger";
