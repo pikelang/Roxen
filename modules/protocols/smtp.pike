@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.76 1999/08/31 12:47:14 grubba Exp $
+ * $Id: smtp.pike,v 1.77 1999/09/01 15:47:13 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.76 1999/08/31 12:47:14 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.77 1999/09/01 15:47:13 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -56,8 +56,8 @@ inherit "module";
  */
 
 // Valid flags from smtp_rcpt::put():
-constant SMTP_PUT_OK = 0x01
-constant SMTP_PUT_QUOTA = 0x02
+constant SMTP_PUT_OK = 0x01;
+constant SMTP_PUT_QUOTA = 0x02;
 
 static class Mail {
   string id;
