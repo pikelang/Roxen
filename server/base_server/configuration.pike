@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.309 2000/05/22 05:24:09 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.310 2000/05/26 22:22:10 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -3169,6 +3169,13 @@ void low_init()
 void create(string config)
 {
   name=config;
+
+  defvar("default_server", 0, "Default site",
+	 TYPE_FLAG,
+	 "If true, this site will be selected in preference of "
+	 "other sites when virtual hosting is used and no host "
+	 "header is supplied, or the supplied host header does not "
+	 "match the address of any of the other servers." );
 
   defvar("comment", "", "Virtual server comment",
 	 TYPE_TEXT_FIELD|VAR_MORE,
