@@ -4,7 +4,7 @@
 inherit "module";
 
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.13 2004/05/23 01:13:43 _cvs_stephen Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.14 2004/05/23 01:49:06 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -199,7 +199,7 @@ void create(Configuration conf)
 
   int inited_from_scratch = 0;
   if(!calendar)
-    inited_from_scratch = !!(calendar = Calendar.ISO_UTC);
+    inited_from_scratch = !!(calendar = Calendar.ISO);
 
   defvar("calendar", Variable.StringChoice("ISO", calendars-({"unknown"}), 0,
 	 "Default calendar type", "When no other calendar type is given, the "
@@ -461,7 +461,7 @@ class TimeRangeValue(Calendar.TimeRange time,	// the time object we represent
   }
 }
 
-Calendar.TimeRange get_calendar(string name)
+Calendar.Calendar get_calendar(string name)
 {
   if(!name)
     return calendar;
@@ -521,7 +521,7 @@ class TagEmitTimeZones
     if(!region)
       return map(sort(indices(zones)),
 		 lambda(string region) { return ([ "name":region ]); });
-    Calendar.TimeRange cal = get_calendar(m_delete(args, "calendar"));
+    Calendar.Calendar cal = get_calendar(m_delete(args, "calendar"));
     Calendar.TimeRange time, next_shift;
     if(!(time = get_date("", args, cal)))
       time = cal->Second();
@@ -548,7 +548,7 @@ class TagEmitTimeRange
   {
     // DEBUG("get_dataset(%O, %O)\b", args, id);
     string cal_type = args["calendar"];
-    Calendar.TimeRange cal = get_calendar(m_delete(args, "calendar"));
+    Calendar.Calendar cal = get_calendar(m_delete(args, "calendar"));
     Calendar.TimeRange from, to, range;
     string what, output_unit;
     int compare_num, unit_no;
@@ -573,7 +573,7 @@ class TagEmitTimeRange
           RXML.parse_error("Unknown day: %O\n",what);
         int weekday = from->week_day();
 
-        if(from->calendar() != Calendar.ISO){
+        if(from->calendar() != Calendar.Calendar){
           weekday_needed = search(gregorian_weekdays,what)+1;
 	}
         else
@@ -595,7 +595,7 @@ class TagEmitTimeRange
 	change_to = 0;
 	weekday_needed = 0;
 	int weekday = to->week_day();
-	if(to->calendar() != Calendar.ISO)
+	if(to->calendar() != Calendar.Calendar)
 	  weekday_needed = search(gregorian_weekdays,what)+1;
 	else
 	  weekday_needed = search(iso_weekdays,what)+1;
@@ -763,11 +763,11 @@ mapping scopify(Calendar.TimeRange time, string unit, string|void parent_scope)
 		   allocate(sizeof( layout ), value));
 }
 
-Calendar.TimeRange get_date(string name, mapping args, Calendar calendar)
+Calendar.Calendar get_date(string name, mapping args, Calendar calendar)
 {
   if(name != "")
     name = name + "-";
-  Calendar.TimeRange cal = calendar; // local copy
+  Calendar.Calendar cal = calendar; // local copy
   Calendar.TimeRange date; // carries the result
   string what; // temporary data
   if(what = m_delete(args, name + "timezone"))
