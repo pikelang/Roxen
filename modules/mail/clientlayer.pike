@@ -1,5 +1,5 @@
 /*
- * $Id: clientlayer.pike,v 1.11 1998/09/10 14:46:38 per Exp $
+ * $Id: clientlayer.pike,v 1.12 1998/09/11 07:03:32 js Exp $
  *
  * A module for Roxen AutoMail, which provides functions for
  * clients.
@@ -10,7 +10,7 @@
 #include <module.h>
 inherit "module" : module;
 
-constant cvs_version="$Id: clientlayer.pike,v 1.11 1998/09/10 14:46:38 per Exp $";
+constant cvs_version="$Id: clientlayer.pike,v 1.12 1998/09/11 07:03:32 js Exp $";
 constant thread_safe=1;
 
 
@@ -138,11 +138,11 @@ local function sql_quote = quote;
 local string hash_body_id(string body_id)
 {
   body_id="0000"+body_id;
-  int p=sizeof(body_id)-5;
+  int p=sizeof(body_id)-4;
   return body_id[p..p+1]+"/"+body_id[p+2..p+3];
 }
 
-local Stdio.File load_body_get_obj(string body_id)
+Stdio.File load_body_get_obj(string body_id)
 {
   Stdio.File o = Stdio.File();
   if(o->open( query("maildir")+"/"+body_id,"r" ))
@@ -150,7 +150,7 @@ local Stdio.File load_body_get_obj(string body_id)
   return 0;
 }
 
-local string get_unique_body_id()
+string get_unique_body_id()
 {
   string id;
   object key = lock->lock(); /* Do this transaction locked. */
@@ -160,21 +160,15 @@ local string get_unique_body_id()
   return id;
 }
 
-local Stdio.File get_fileobject(string body_id)
-{
-  string where=hash_body_id(body_id);
-  mkdirhier(query("maildir")+"/"+where);
-  return Stdio.File(query("maildir")+"/"+where+"/"+body_id,"wc");
-}
-
-local void delete_body(string body_id)
+void delete_body(string body_id)
 {
   rm(query("maildir")+"/"+hash_body_id(body_id)+"/"+body_id);
 }
 
-local Stdio.File new_body( string body_id )
+object(Stdio.File) new_body( string body_id )
 {
   string f = query("maildir")+"/"+hash_body_id(body_id)+"/"+body_id;
+  werror("Path: %s",f);
   mkdirhier(f);
   return Stdio.File(f, "rwct");
 }
@@ -516,18 +510,18 @@ class User
   }
 }
 
-User get_user( string username, string password )
+User get_user( string username_at_host, string password )
 {
   int id;
-  id = authenticate_user( username, password );
+  id = authenticate_user( username_at_host, password );
   if(!id) return 0;
   return get_any_obj( id, User );
 }
 
-User get_user_from_adress( string adress )
+User get_user_from_adress( string username_at_host )
 {
   int id;
-  id = find_user( adress );
+  id = find_user( username_at_host );
   if(!id) return 0;
   return get_any_obj( id, User );
 }
@@ -539,10 +533,50 @@ User get_user_from_adress( string adress )
 
 /* Low level client layer functions ---------------------------------- */
 
+
+string get_addr(string addr)
+{
+  array a = MIME.tokenize(addr);
+
+  int i;
+
+  if ((i = search(a, '<')) != -1) {
+    int j = search(a, '>', i);
+
+    if (j != -1) {
+      a = a[i+1..j-1];
+    } else {
+      // Mismatch, no '>'.
+      a = a[i+1..];
+    }
+  }
+
+  for(i = 0; i < sizeof(a); i++) {
+    if (intp(a[i])) {
+      if (a[i] == '@') {
+	a[i] = "@";
+      } else {
+	a[i] = "";
+      }
+    }
+  }
+  return(a*"");
+}
+
+multiset(string) list_domains()
+{
+  return aggregate_multiset(@squery("select distinct domain from dns")->domain);
+}
+
 int find_user( string username_at_host )
 {
-  array a = squery("select user_id from FIXME where adress='%'",
-		   username_at_host);
+  [string user, string domain]=get_addr(lower_case(username_at_host))/"@";
+  int customer_id;
+  array a = squery("select customer_id from dns where domain='%s'");
+  if(!sizeof(a)) return 0;
+  customer_id=(int)a[0]->customer_id;
+  array a = squery("select user_id from users where username='%s' and customer_id='%d'",
+		   user,customer_id);
   if(!sizeof(a)) return 0;
   if(sizeof(a)>1) error("Ambigious user list.\n");
   return (int)a[0]->user_id;

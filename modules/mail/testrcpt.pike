@@ -1,5 +1,5 @@
 /*
- * $Id: testrcpt.pike,v 1.5 1998/09/10 21:08:03 grubba Exp $
+ * $Id: testrcpt.pike,v 1.6 1998/09/11 07:03:34 js Exp $
  *
  * A skeleton test RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RCPT_DEBUG
 
-constant cvs_version = "$Id: testrcpt.pike,v 1.5 1998/09/10 21:08:03 grubba Exp $";
+constant cvs_version = "$Id: testrcpt.pike,v 1.6 1998/09/11 07:03:34 js Exp $";
 
 /*
  * Roxen glue
@@ -75,7 +75,7 @@ static mapping(string:multiset(string)|string) expn_tab = ([
   "grubba":(<"grubba@grubba.org">),
   "developers":(<"grubba", "zino", "js", "gurka">),
   "zino":"peter@bortas.org",
-  "js":"js@idonex.se",
+  "gazonk@foobar.se":"js@idonex.se",
 ]);
 
 static mapping(string:string) desc_tab = ([

@@ -1,12 +1,12 @@
 /*
- * $Id: admin.pike,v 1.7 1998/08/28 12:52:44 wellhard Exp $
+ * $Id: admin.pike,v 1.8 1998/09/11 07:03:29 js Exp $
  *
  * AutoAdmin, administration interface
  *
  * Johan Schön 1998-07-08
  */
 
-constant cvs_version = "$Id: admin.pike,v 1.7 1998/08/28 12:52:44 wellhard Exp $";
+constant cvs_version = "$Id: admin.pike,v 1.8 1998/09/11 07:03:29 js Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -84,7 +84,7 @@ mixed find_file(string f, object id)
 {
   string res = "";
   string customer="0",tab,sub;
-  mixed content="";
+  mixed content;
   mapping state;
 
   int t1,t2,t3;
@@ -101,43 +101,41 @@ mixed find_file(string f, object id)
 		   "<h2 align=center>Access forbidden</h2>"
     ]);
   
- sscanf(f, "%s/%s/%s", customer, tab, sub);
- id->variables->customer=customer;
- res =
-   "<title>AutoSite Administration Interface</title>"+BODY+status_row(tab,id)+
-   make_tablist(actionlist,actions[tab],customer,id)+
-   "<sqloutput query=\"select name from customers where id='"+
-   (int)customer+"'\"><b>Customer: #name#</b></sqloutput>";
-
- if(actions[tab])
-   content = actions[tab]->show(sub,id,f);
- else
-   if((int)customer)
-   {
-     if(!tab)
-       tab=tablist[0]->tab;
-     if(!sub)
-       sub="";
-     content = tabs[tab]->show(sub,id,f);
-     res+="<hr noshade size=2><p>"+make_tablist(tablist,tabs[tab],customer,id);
-   }
-//    else
-//      return http_redirect(query("location")+"/0/10:Choose_customer/",id);
-
- if(mappingp(content))
-       return content;
- res += "<p>" + content + "</body>";
- 
-  return http_string_answer(parse_rxml(res, id)) |
-  ([ "extra_heads":
-     (["Expires": http_date( 0 ), "Last-Modified": http_date( time(1) ) ])
-  ]);
+  sscanf(f, "%s/%s/%s", customer, tab, sub);
+  id->variables->customer=customer;
+  res =
+    "<title>AutoSite Administration Interface</title>"+BODY+status_row(tab,id)+
+    make_tablist(actionlist,actions[tab],customer,id)+
+    "<sqloutput query=\"select name from customers where id='"+
+    (int)customer+"'\"><b>Customer: #name#</b></sqloutput>";
+  
+  if(actions[tab])
+    content = actions[tab]->show(sub,id,f);
+  else
+    if((int)customer)
+    {
+      if(!tab)
+	tab=tablist[0]->tab;
+      if(!sub)
+	sub="";
+      content = tabs[tab]->show(sub,id,f);
+      res+="<hr noshade size=2><p>"+make_tablist(tablist,tabs[tab],customer,id);
+    }
+  
+  if(mappingp(content))
+    return content;
+  res += "<p>" + content + "</body>";
+  return http_string_answer(parse_rxml(res, id));
+//   |
+//   ([ "extra_heads":
+//      (["Expires": http_date( 0 ), "Last-Modified": http_date( time(1) ) ])
+//   ]);
 }
 
 array register_module()
 {
-   return ({ MODULE_LOCATION, "AutoSite Administration Interface",
-	     "",0,1 });
+  return ({ MODULE_LOCATION, "AutoSite Administration Interface",
+	    "",0,1 });
 }
 
 void start(int q, object conf)
