@@ -6,7 +6,7 @@
 // See fnord.pike for more information of what this tag does.
 
 // This variable is shown in the configinterface as the version of the module.
-string cvs_version = "$Id: newstyle_fnord.pike,v 1.1 2000/01/26 15:11:24 nilsson Exp $";
+string cvs_version = "$Id: newstyle_fnord.pike,v 1.2 2000/02/17 13:05:15 nilsson Exp $";
 
 // Tell Roxen that this module is threadsafe.
 int thread_safe=1;
@@ -23,9 +23,6 @@ class TagFnord {
 
   // This constant tells the parser that the tag should be called "fnord".
   constant name  = "fnord";
-
-  // This tag is only meaningful when used as a container.
-  constant flags = RXML.FLAG_CONTAINER;
 
   // Declare the type of the attribute, which happens to be optional.
   // Since we declare it to be text, we really don't need this line to
