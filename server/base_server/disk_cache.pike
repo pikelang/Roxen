@@ -1,4 +1,4 @@
-string cvs_version = "$Id: disk_cache.pike,v 1.32 1998/01/28 01:49:17 grubba Exp $";
+string cvs_version = "$Id: disk_cache.pike,v 1.33 1998/02/04 16:10:38 per Exp $";
 #include <stdio.h>
 #include <module.h>
 #include <simulate.h>
@@ -286,8 +286,6 @@ class Cache {
     lcs = command_stream->pipe();
 
 #if constant(Process.create_process)
-    object privs = Privs("Starting the garbage collector");
-
     // FIXME: Should use spawn_pike() here.
     object proc = Process.create_process(({
       "bin/pike", "-m", "lib/pike/master.pike", "-I", "etc/include",
@@ -295,9 +293,9 @@ class Cache {
       }), ([
 	"stdin":lcs,
 	"nice":19,
-	"toggle_uid":1
+	"uid":0,
+	"gid":0,
       ]));
-    privs = 0;
 
 #else /* !constant(Process.create_process) */
     if(!fork())

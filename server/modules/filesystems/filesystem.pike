@@ -4,7 +4,7 @@
 // It will be located somewhere in the name-space of the server.
 // Also inherited by some of the other filesystems.
 
-string cvs_version= "$Id: filesystem.pike,v 1.25 1998/01/04 07:25:54 peter Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.26 1998/02/04 16:10:42 per Exp $";
 int thread_safe=1;
 
 
@@ -17,10 +17,6 @@ int thread_safe=1;
 #  define FILESYSTEM_DEBUG
 # endif
 #endif
-
-#if !constant(Privs)
-constant Privs=((program)"privs");
-#endif /* !constant(Privs) */
 
 inherit "module";
 inherit "roxenlib";
@@ -123,6 +119,13 @@ int stat_cache;
 
 void start()
 {
+#ifdef THREADS
+  if(QUERY(access_as_user))
+    report_warning("It is not possible to use 'Access as user' when "
+		   "running with threads. Remove -DENABLE_THREADS from "
+		   "the start script if you really need this function\n");
+#endif
+     
   path = QUERY(searchpath);
   stat_cache = QUERY(stat_cache);
 #ifdef FILESYSTEM_DEBUG
@@ -144,12 +147,14 @@ mixed stat_file( mixed f, mixed id )
     return fs;
 
   object privs;
-
+#ifndef THREADS
   if (((int)id->misc->uid) && ((int)id->misc->gid) &&
       (QUERY(access_as_user))) {
     // NB: Root-access is prevented.
     privs=Privs("Statting file", (int)id->misc->uid, (int)id->misc->gid );
   }
+#endif
+
   fs = file_stat(path + f);  /* No security currently in this function */
   privs = 0;
   if(!stat_cache)
@@ -180,11 +185,13 @@ array find_dir( string f, object id )
 
   object privs;
 
+#ifndef THREADS
   if (((int)id->misc->uid) && ((int)id->misc->gid) &&
       (QUERY(access_as_user))) {
     // NB: Root-access is prevented.
     privs=Privs("Getting dir", (int)id->misc->uid, (int)id->misc->gid );
   }
+#endif
 
   if(!(dir = get_dir( path + f ))) {
     privs = 0;
@@ -318,11 +325,13 @@ mixed find_file( string f, object id )
 
       object privs;
 
+#ifndef THREADS
       if (((int)id->misc->uid) && ((int)id->misc->gid) &&
 	  (QUERY(access_as_user))) {
 	// NB: Root-access is prevented.
 	privs=Privs("Getting file", (int)id->misc->uid, (int)id->misc->gid );
       }
+#endif
 
       o = open( f, "r" );
 
@@ -360,10 +369,12 @@ mixed find_file( string f, object id )
     
     object privs;
 
+// #ifndef THREADS // Ouch. This is is _needed_. Well well...
     if (((int)id->misc->uid) && ((int)id->misc->gid)) {
       // NB: Root-access is prevented.
       privs=Privs("Saving file", (int)id->misc->uid, (int)id->misc->gid );
     }
+// #endif
 
     if (QUERY(no_symlinks) && (contains_symlinks(path, oldf))) {
       privs = 0;

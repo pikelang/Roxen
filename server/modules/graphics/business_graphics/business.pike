@@ -10,7 +10,7 @@
  * reference cache shortly.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.62 1998/01/12 22:14:01 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.63 1998/02/04 16:10:45 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -281,7 +281,7 @@ string itag_data(mapping tag, mapping m, string contents,
   if (sep!=" ")
     contents = contents - " ";
 
-  array lines = filter( contents/linesep, sizeof );
+  array lines = contents/linesep-({""});
   array foo = ({});
   array bar = ({});
   int maxsize=0;
@@ -294,14 +294,11 @@ string itag_data(mapping tag, mapping m, string contents,
 
   foreach( lines, string entries )
   {
-    foreach( filter( ({ entries/sep - ({""}) }), sizeof ), array item)
-    {
-      foreach( item, string gaz )
-	if (gaz==voidsep)
-	  foo+=({ VOIDSYMBOL });  //FIXME?
-	else
-	  foo += ({ (float)gaz });
-    }
+    foreach( entries/sep - ({""}), string gaz)
+      if (gaz==voidsep)
+	foo+=({ VOIDSYMBOL });  //FIXME?
+      else
+	foo += ({ (float)gaz });
     if (sizeof(foo)>maxsize)
       maxsize=sizeof(foo);
     bar += ({ foo });
@@ -330,7 +327,6 @@ string itag_data(mapping tag, mapping m, string contents,
       res->data=bar;
   else
     res->data=bar;
-
 
   return 0;
 }
@@ -385,29 +381,29 @@ string syntax( string error )
 string quote(string in)
 {
   string pack;
-  object g;
+//   object g;
   /*
   if( sizeof(indices(g=Gz)) ) {
     pack = MIME.encode_base64(g->deflate()->deflate(in), 1);
   } else {
   */
     pack = MIME.encode_base64(in, 1);
-    //  }
-  //  if(search(in,"/")!=-1) return pack;
-  string res="$";	// Illegal in BASE64
-  for(int i=0; i<strlen(in); i++)
-    switch(in[i])
-    {
-     case 'a'..'z':
-     case 'A'..'Z':
-     case '0'..'9':
-     case '.': case ',': case '!':
-      res += in[i..i];
-      break;
-     default:
-      res += sprintf("%%%02x", in[i]);
-    }
-  if( strlen(res) < strlen(pack) ) return res;
+//  }
+//  if(search(in,"/")!=-1) return pack;
+//  string res="$";	// Illegal in BASE64
+//   for(int i=0; i<strlen(in); i++)
+//     switch(in[i])
+//     {
+//      case 'a'..'z':
+//      case 'A'..'Z':
+//      case '0'..'9':
+//      case '.': case ',': case '!':
+//       res += in[i..i];
+//       break;
+//      default:
+//       res += sprintf("%%%02x", in[i]);
+//     }
+//   if( strlen(res) < strlen(pack) ) return res;
   return pack;
 }
 
@@ -451,21 +447,21 @@ string tag_diagram(string tag, mapping m, string contents,
     res->type = "pie";
 
   /* Barchart */
-  if(res->type[0..2] == "bar")
+  else if(res->type[0..2] == "bar")
   {
     res->type = "bars";
     res->subtype = "box";
   }   
 
   /* Linechart */
-  if(res->type[0..3] == "line")
+  else if(res->type[0..3] == "line")
   {
     res->type = "bars";
     res->subtype = "line";
   }   
 
   /* Normaliced sumbar */
-  if(res->type[0..3] == "norm")
+  else if(res->type[0..3] == "norm")
   {
     res->type = "sumbars";
     res->subtype = "norm";
@@ -498,10 +494,10 @@ string tag_diagram(string tag, mapping m, string contents,
   if(res->type == "graph")
     res->subtype="line";
   
-  if(res->type == "sumbars")
-    if(res->subtype!="norm"); //FIXME Va faan är detta???
+//   if(res->type == "sumbars")
+//     if(res->subtype!="norm"); //FIXME Va faan är detta???
 
-  parse_html(contents, ([]),
+  parse_html(contents, (["xaxis":itag_xaxis,"yaxis":itag_yaxis]),
 	     ([ "data":itag_data,
 		"xnames":itag_names,
 		"ynames":itag_names,
@@ -511,29 +507,19 @@ string tag_diagram(string tag, mapping m, string contents,
 		"legend":itag_legendtext ]),
 	     res, id );
 
-  parse_html(contents,
-	     ([ "xaxis":itag_xaxis,
-		"yaxis":itag_yaxis ]), 
-	     ([ ]), 
-	     res );
-
   if( sizeof(res->data) == 0 )
     return "<hr noshade><h3>No data for the diagram</h3><hr noshade>";
 
   res->bg = parse_color(m->bgcolor || defines->bg || "#e0e0e0");
   res->fg = parse_color(m->textcolor || defines->fg || "black");
 
-
-  //This code is obsolet. It's now placed in xnames
+  //This code is obsolete. It's now placed in xnames
   //But this can not be taken away... (Logview)
   if (!res->orientation)
     if (m->orient && m->orient[0..3] == "vert")
       res->orientation = "vert";
     else res->orientation="hor";
   
-
-
-
 
   if(m->center) res->center = (int)m->center;
 
@@ -609,6 +595,12 @@ string tag_diagram(string tag, mapping m, string contents,
   if(m->gridwidth) res->gridwidth = m->gridwidth;
   if(m->vertgrid) res->vertgrid = 1;
   if(m->horgrid) res->horgrid = 1;
+
+  if(m->xgridspace) res->xgridspace = (int)m->xgridspace;
+  if(m->ygridspace) res->ygridspace = (int)m->ygridspace;
+
+  m_delete( m, "xgridspace" );
+  m_delete( m, "ygridspace" );
 
   m_delete( m, "size" );
   m_delete( m, "type" );
@@ -714,6 +706,8 @@ mapping find_file(string f, object id)
 		 "subtype":   res->subtype,
 		 "drawtype":  res->dimensions,
 		 "3Ddepth":   res->dimensionsdepth,
+		 "yspace":     res->ygridspace,
+		 "xspace":     res->xgridspace,
 		 "xsize":     res->xsize,
 		 "ysize":     res->ysize,
 		 "textcolor": res->fg,
@@ -760,6 +754,8 @@ mapping find_file(string f, object id)
 		 "ymin":     res->ymin
   ]);
 
+  if(!res->ygridspace)  m_delete( diagram_data, "yspace" );
+  if(!res->xgridspace)  m_delete( diagram_data, "xspace" );
   if(!res->xstart)  m_delete( diagram_data, "xminvalue" );
   if(!res->xstop)   m_delete( diagram_data, "xmaxvalue" );
   if(!res->ystart)  m_delete( diagram_data, "yminvalue" );

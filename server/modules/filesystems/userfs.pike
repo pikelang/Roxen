@@ -8,12 +8,13 @@
 // / is quite useful for IPPs, enabling them to have URLs like
 // http://www.hostname.of.provider/customer/.
 
-string cvs_version = "$Id: userfs.pike,v 1.16 1997/08/31 03:47:21 peter Exp $";
  
 
 #include <module.h>
 
 inherit "filesystem";
+
+constant cvs_version="$Id: userfs.pike,v 1.17 1998/02/04 16:10:44 per Exp $";
 
 import Array;
 import Stdio;

@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.73 1998/02/03 22:51:07 per Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.74 1998/02/04 16:10:50 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -26,10 +26,6 @@ inherit "roxenlib";
 import String;
 import Array;
 import Stdio;
-
-#if !constant(Privs)
-constant Privs=((program)"privs");
-#endif /* !constant(Privs) */
 
 constant language = roxen->language;
 
@@ -140,8 +136,13 @@ inline void open_names_file()
 {
   if(objectp(names_file)) return;
   remove_call_out(names_file_callout_id);
+#ifndef THREADS
   object privs = Privs("Opening Access-log names file");
+#endif
   names_file=open(QUERY(Accesslog)+".names", "wrca");
+#if efun(chmod)
+  chmod( QUERY(Accesslog)+".names", 0666 );
+#endif
   names_file_callout_id = call_out(destruct, 1, names_file);
 }
 
@@ -171,12 +172,17 @@ inline mixed open_db_file()
   if(!database)
   {
     if(db_file_callout_id) remove_call_out(db_file_callout_id);
+#ifndef THREADS
     object privs = Privs("Opening Access-log database file");
+#endif
     database=open(QUERY(Accesslog)+".db", "wrc");
     if (!database) {
       throw(({ sprintf("Failed to open \"%s.db\". Out of fd's?\n",
 		       QUERY(Accesslog)), backtrace() }));
     }
+#if efun(chmod)
+    chmod( QUERY(Accesslog)+".db", 0666 );
+#endif
     if (QUERY(close_db)) {
       db_file_callout_id = call_out(close_db_file, 9, database);
     }
@@ -201,21 +207,16 @@ void start()
   if(olf != QUERY(Accesslog))
   {
     olf = QUERY(Accesslog);
-
+#ifndef THREADS
     object privs = Privs("Opening Access-log names file");
+#endif
     mkdirhier(query("Accesslog"));
-#if 0
-    if(!QUERY(close_db))
-      if(!(database=open(olf+".db", "wrc")))
-      {
-	perror("RXMLPARSE: Failed to open access database.\n");
-	return;
-      }
-#endif /* 0 */
-
     if(names_file=open(olf+".names", "wrca"))
     {
       cnum=0;
+#if efun(chmod)
+      chmod( QUERY(Accesslog)+".names", 0666 );
+#endif
       tmp=parse_accessed_database(names_file->read(0x7ffffff));
       fton=tmp[0];
       cnum=tmp[1];
@@ -848,11 +849,11 @@ string tag_compat_exec(string tag,mapping m,object got,object file,
       if(got->auth && got->auth[0])
 	user=got->auth[1];
       string addr=got->remoteaddr || "Internal";
-      object privs = Privs("Executing stuff..", "nobody");
       return popen(m->cmd,
 		   getenv()
 		   | build_roxen_env_vars(got)
-		   | build_env_vars(got->not_query, got, 0));
+		   | build_env_vars(got->not_query, got, 0),
+		   getpwnam("nobody")[2],getpwnam("nobody")[3]);
 
     }
     else

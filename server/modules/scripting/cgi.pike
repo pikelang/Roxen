@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.69 1998/01/27 12:18:29 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.70 1998/02/04 16:10:48 per Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -21,10 +21,6 @@ static array runuser;
 
 import String;
 import Stdio;
-
-#if !constant(Privs)
-constant Privs=((program)"privs");
-#endif /* !constant(Privs) */
 
 mapping my_build_env_vars(string f, object id, string|void path_info)
 {
@@ -182,6 +178,7 @@ void create()
   defvar("maxtime", 60, "Limits: Maximum CPU time", TYPE_INT_LIST|VAR_MORE,
 	 "The maximum CPU time the script might use in seconds. -2 is unlimited.",
 	 ({ -2, 10, 30, 60, 120, 240 }));
+
   defvar("kill_call_out", 0, "Limits: Time before killing scripts",
 	 TYPE_INT_LIST|VAR_EXPERT,
 	 "The maximum real time the script might run in minutes before it's "
@@ -428,24 +425,16 @@ class spawn_cgi
 			 "stdin":pipe3,
 			 "stdout":pipe1,
 			 "toggle_uid":1,
+			 "uid":uid || 65534,
     ]);
     if (dup_err) {
       options["stderr"] = pipe1;
     }
 
-    object privs;
-    if (!getuid()) {
-      // We are running as root -- change!
-      privs = Privs("CGI script", uid || 65534);
-    } else {
-      // Try to change user anyway, but don't throw an error if we fail.
-      catch(privs = Privs("CGI script", uid || 65534));
-    }
     object proc;
     mixed err = catch {
       proc = Process.create_process(args, options);
     };
-    privs = 0;
 
     /* We don't want to keep these. */
     pipe1->close();
@@ -563,7 +552,7 @@ class spawn_cgi
 	  roxen_perror("Killed CGI pid "+pid+"\n");
       }, kill_call_out * 60 , pid);
     }
-#endif /* constant(Process.create_process) */
+#endif /* !constant(Process.create_process) */
 
   }
   

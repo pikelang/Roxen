@@ -1,10 +1,21 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-constant cvs_version = "$Id: http.pike,v 1.51 1998/02/04 05:26:00 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.52 1998/02/04 16:10:52 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
 int first;
+#if efun(gethrtime)
+# define HRTIME() gethrtime()
+# define HRSEC(X) ((int)((X)*1000000))
+# define SECHR(X) ((X)/(float)1000000)
+#else
+# define HRTIME() (time())
+# define HRSEC(X) (X)
+# define SECHR(X) ((float)(X))
+#endif
+
+int req_time = HRTIME();
 
 constant decode=roxen->decode;
 constant find_supports=roxen->find_supports;
@@ -651,6 +662,18 @@ void no_more_keep_connection_alive(mapping foo)
 
 void end(string|void s)
 {
+#ifdef PROFILE
+  if(conf)
+  {
+    float elapsed = SECHR(HRTIME()-req_time);
+    array p;
+    if(!(p=conf->profile_map[not_query]))
+      p = conf->profile_map[not_query] = ({0,0.0,0.0});
+    conf->profile_map[not_query][0]++;
+    p[1] += elapsed;
+    if(elapsed > p[2]) p[2]=elapsed;
+  }
+#endif
 //   trace(9);
 #if _DEBUG_HTTP_OBJECTS
   if(my_fd) catch{mark_fd(my_fd->query_fd(), "");};
@@ -686,14 +709,27 @@ void end(string|void s)
 
 static void do_timeout(mapping foo)
 {
+  int elapsed = HRTIME()-req_time;
+  if(elapsed > HRSEC(30))
+  {
 #if _DEBUG_HTTP_OBJECTS
-  my_state = 10;
+    my_state = 10;
 #endif
   //  perror("Timeout. Closing down...\n");
 #if _DEBUG_HTTP_OBJECTS
-  roxen->httpobjects[my_id] += " - timed out";  
+    roxen->httpobjects[my_id] += " - timed out";  
 #endif
-  end((prot||"HTTP/1.0")+" 408 Timeout\r\n\r\n");
+    end("HTTP/1.0 408 Timeout\r\n"
+	"Content-type: text/plain\r\n"
+	"Server: Roxen Challenger\r\n"
+	"\r\n"
+	"Your connection timed out.\n"
+	"Please try again.\n");
+  } else {
+    // premature call_out...
+    werror("got premature call_out to do_timeout. Odd.\n");
+    call_out(do_timeout, 10);
+  }
 }
 
 

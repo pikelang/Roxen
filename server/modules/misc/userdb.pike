@@ -3,7 +3,7 @@
 // User database. Reads the system password database and use it to
 // authentificate users.
 
-constant cvs_version = "$Id: userdb.pike,v 1.22 1998/01/12 14:38:37 grubba Exp $";
+constant cvs_version = "$Id: userdb.pike,v 1.23 1998/02/04 16:10:47 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -14,11 +14,6 @@ import Array;
 
 mapping users, uid2user;
 array fstat;
-
-#if !constant(Privs)
-constant Privs=((program)"privs");
-#endif /* !constant(Privs) */
-
 void read_data();
 
 
@@ -195,7 +190,8 @@ void read_data()
   switch(query("method"))
   {
   case "ypcat":
-    object privs = Privs("Reading password database");
+    object privs;
+//  if(getuid() != geteuid()) privs = Privs("Reading password database");
     data=popen("ypcat "+query("args")+" passwd");
     if (objectp(privs)) {
       destruct(privs);
@@ -207,7 +203,7 @@ void read_data()
 #if efun(getpwent)
     // This could be a _lot_ faster.
     tmp2 = ({ });
-    object privs = Privs("Reading password database");
+    if(getuid() != geteuid()) privs = Privs("Reading password database");
     setpwent();
     while(tmp = getpwent())
       tmp2 += ({
@@ -223,7 +219,7 @@ void read_data()
 #endif
 
   case "file":
-    object privs = Privs("Reading password database");
+//     if(getuid() != geteuid()) privs = Privs("Reading password database");
     fstat = file_stat(query("file"));
     data = Stdio.read_bytes(query("file"));
     if (objectp(privs)) {
@@ -237,7 +233,7 @@ void read_data()
     string shadow;
     array pw, sh, a, b;
     mapping sh = ([]);
-    object privs = Privs("Reading password database");
+    if(getuid() != geteuid()) privs=Privs("Reading password database");
     fstat = file_stat(query("file"));
     data=    Stdio.read_bytes(query("file"));
     shadow = Stdio.read_bytes(query("shadowfile"));
@@ -262,7 +258,7 @@ void read_data()
     break;
 
   case "niscat":
-    object privs = Privs("Reading password database");
+    if(getuid() != geteuid()) privs=Privs("Reading password database");
     data=popen("niscat "+query("args")+" passwd.org_dir");
     if (objectp(privs)) {
       destruct(privs);

@@ -4,7 +4,7 @@ import Array;
 
 #ifndef IN_INSTALL
 inherit "newdecode";
-string cvs_version = "$Id: read_config.pike,v 1.17 1998/01/21 14:16:32 grubba Exp $";
+string cvs_version = "$Id: read_config.pike,v 1.18 1998/02/04 16:10:39 per Exp $";
 
 #else
 import spider;
@@ -174,12 +174,19 @@ void save_it(string cl)
   perror("CONFIG: Writing configuration file for cl "+cl+"\n");
 #endif
 
-  object privs = Privs("Saving config file"); // Change to root user.
 
   f = configuration_dir + replace(cl, " ", "_");
+#ifndef THREADS
+  object privs = Privs("Saving config file"); // Change to root user.
+#endif
   mv(f, f+"~");
   fd = open(f, "wc");
+#if efun(chmod)
+  if(geteuid() != getuid()) chmod(f,0660);
+#endif
+#ifndef THREADS
   privs=0;
+#endif
   if(!fd)
   {
     error("Creation of configuration file failed ("+f+") "
@@ -248,8 +255,9 @@ private static void read_it(string cl)
   if(configs[cl]) return;
 
   object fd;
-
+#ifndef THREADS
   object privs = Privs("Reading config file"); // Change to root user.
+#endif
 
   catch {
     fd = open(configuration_dir + replace(cl, " ", "_"), "r");
@@ -294,7 +302,9 @@ void remove_configuration( string name )
 {
   string f;
 
+#ifndef THREADS
   object privs = Privs("Removing config file"); // Change to root user.
+#endif
 
   f = configuration_dir + replace(name, " ", "_");
   if(!file_stat( f ))   f = configuration_dir + name;

@@ -8,7 +8,7 @@
 
 // This is an extension module.
 
-constant cvs_version = "$Id: pikescript.pike,v 1.19 1997/10/26 20:20:50 js Exp $";
+constant cvs_version = "$Id: pikescript.pike,v 1.20 1998/02/04 16:10:49 per Exp $";
 constant thread_safe=1;
 
 mapping scripts=([]);
@@ -21,18 +21,15 @@ inherit "roxenlib";
 constant Mutex=__builtin.mutex;
 #endif /* _static_modules */
 
-#if !constant(Privs)
-constant Privs=((program)"privs");
-#endif /* !constant(Privs) */
-
 mixed *register_module()
 {
   return ({ 
     MODULE_FILE_EXTENSION,
       "Pike script support", 
       "Support for user Pike-scripts, like CGI, but handled internally in the"
-      " server, and thus much faster, but blocking, and somewhat less secure.\n"
-      "NOTE: This module should not be enabled if you allow anonymous PUT\n"
+      " server, and thus much faster, but blocking, and less secure.\n"
+      "NOTE: This module should not be enabled if you allow anonymous PUT!<br>\n"
+    "NOTE: Enabling this module is the same thing as letting your users run programs with the same right as the server!"
     });
 }
 
@@ -140,16 +137,17 @@ array|mapping call_script(function fun, object got, object file)
       cd(dirname(got->realfile));
 
   } else {
+#ifndef THREADS
     if(got->misc->is_user && (us = file_stat(got->misc->is_user)))
       privs = Privs("Executing pikescript as non-www user", @us[5..6]);
+#else
+    if(!getuid())
+      report_debug("Not executing pike-script as owner, "
+		   "since we are using threads. UID is not thread "
+		   "local, sadly enough.\n");
+#endif
   }
 
-#ifdef OBSOLETE_SPIDER_COMPAT
-  if(sizeof(got->variables))
-    foreach(indices(got->variables), s)
-      got->variables[s] = replace(got->variables[s], "\000", " ");
-#endif /* OBSOLETE_SPIDER_COMPAT */
-  
 #ifdef THREADS
   object key;
   if(!QUERY(fork_exec)) {

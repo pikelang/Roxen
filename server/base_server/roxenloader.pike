@@ -4,7 +4,7 @@ import spider;
 program Privs;
 
 // Set up the roxen environment. Including custom functions like spawne().
-constant cvs_version="$Id: roxenloader.pike,v 1.54 1998/02/04 05:17:58 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.55 1998/02/04 16:10:41 per Exp $";
 
 #define perror roxen_perror
 
@@ -258,12 +258,9 @@ string popen(string s, void|mapping env, int|void uid, int|void gid)
 
   p2->set_close_on_exec(1);	// Paranoia.
 
-  object privs;
-  if (uid || gid) {
-    privs = Privs("Executing script as non-www user", uid, gid);
-  }
   mapping opts = ([
-    "toggle_uid":1,
+    "uid":uid,
+    "gid":gid,
     "env": env || getenv(),
     "stdout":p
   ]);
@@ -275,7 +272,6 @@ string popen(string s, void|mapping env, int|void uid, int|void gid)
   object proc;
   proc = Process.create_process(({ "/bin/sh", "-c", s }), opts);
 
-  privs = 0;
   if (proc) {
     p->close();
     destruct(p);
@@ -299,7 +295,6 @@ string popen(string s, void|mapping env, int|void uid, int|void gid)
       p->dup2(Stdio.File("stdout"));
       // p->close();
       // p2->close();
-      trace(255);
       _verify_internals();
       if(uid || gid)
       {
@@ -356,9 +351,9 @@ int spawne(string s,string *args, mapping|array env, object stdin,
   object privs;
 
 #if constant(Process.create_process)
-  if (arrayp(uid) && (sizeof(uid) == 2)) {
-    privs = Privs("Executing program as non-www user (outside roxen)", @uid);
-  }
+// if (arrayp(uid) && (sizeof(uid) == 2)) {
+//   privs = Privs("Executing program as non-www user (outside roxen)", @uid);
+// }
 
 #ifdef MODULE_DEBUG
   report_debug(sprintf("SPAWNE: Creating process( %O, %O)...\n",
@@ -368,20 +363,23 @@ int spawne(string s,string *args, mapping|array env, object stdin,
 			 "stdout":stdout,
 			 "stderr":stderr,
 			 "cwd":wd,
-			 "env":env
+			 "env":env,
 		       ])));
 #endif /* MODULE_DEBUG */
-
+  int u, g;
+  if(uid) { u = uid[0]; g = uid[1]; } else { u=geteuid(); g=getegid(); }
   object proc = Process.create_process(({ s }) + (args || ({})), ([
     "toggle_uid":1,
     "stdin":stdin,
     "stdout":stdout,
     "stderr":stderr,
     "cwd":wd,
-    "env":env
+    "env":env,
+    "uid":u,
+    "gid":g,
   ]));
 
-  privs = 0;
+//   privs = 0;
 
   if (proc) {
     return(proc->pid());
@@ -522,6 +520,7 @@ void load_roxen()
   roxen = ((program)"roxen")();
   if(!getuid())
   {
+    add_constant("roxen_pid", getpid());
     Privs = ((program)"privs");
     add_constant("Privs", Privs);
   }

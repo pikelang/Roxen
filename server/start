@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.24 1998/01/17 02:51:39 grubba Exp $
+# $Id: start,v 1.25 1998/02/04 16:10:34 per Exp $
 
 VERSION=201; BETA=.a;
 
@@ -70,7 +70,7 @@ rotate () {
 }
 
 start_roxen() {
- args="-DROXEN $DEBUG $DEFINES $pass base_server/roxenloader --config-dir=$DIR"
+ args="-DROXEN $DEBUG $DEFINES $pass base_server/roxenloader.pike --config-dir=$DIR"
  echo Executing $pike $args $@
  $pike $args $@
 }

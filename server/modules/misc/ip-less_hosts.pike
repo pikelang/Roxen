@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
  
-constant cvs_version = "$Id: ip-less_hosts.pike,v 1.7 1998/01/07 15:33:22 grubba Exp $";
+constant cvs_version = "$Id: ip-less_hosts.pike,v 1.8 1998/02/04 16:10:46 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -24,6 +24,7 @@ mapping config_cache = ([ ]);
 
 object find_server_for(object id, string host)
 {
+  host = lower_case(host);
   if(config_cache[host]) return id->conf=config_cache[host];
   array possible = ({});
   foreach(roxen->configurations, object s)

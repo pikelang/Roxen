@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.162 1998/02/04 05:23:56 per Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.163 1998/02/04 16:10:40 per Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -553,17 +553,26 @@ void done_with_roxen_com()
   if(old != new) {
     perror("Got new supports data from www.roxen.com\n");
     perror("Replacing old file with new data.\n");
+#ifndef THREADS
     object privs=Privs("Replacing etc/supports");
+#endif
     mv("etc/supports", "etc/supports~");
     Stdio.write_file("etc/supports", new);
     old = Stdio.read_bytes( "etc/supports" );
+#if efun(chmod)
+    if(geteuid() != getuid()) chmod("etc/supports",0660);
+#endif
     if(old != new)
     {
       perror("FAILED to update the supports file.\n");
       mv("etc/supports~", "etc/supports");
+#ifndef THREADS
       privs = 0;
+#endif
     } else {
+#ifndef THREADS
       privs = 0;
+#endif
       initiate_supports();
     }
   }
@@ -927,8 +936,10 @@ int startpid, roxenpid;
 // of code to support this is in the 'start' script.
 void kill_me()
 {
-  object privs = Privs("Shutting down the server");
-  // Change to root user.
+  // Change to root user if possible ( to kill the start script... )
+  seteuid(getuid());
+  setegid(getgid());
+  setuid(0);
   
   stop_all_modules();
   

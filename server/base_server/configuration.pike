@@ -1,6 +1,12 @@
-string cvs_version = "$Id: configuration.pike,v 1.91 1998/02/04 05:17:55 per Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.92 1998/02/04 16:10:37 per Exp $";
 #include <module.h>
 #include <roxen.h>
+
+
+#ifdef PROFILE
+mapping profile_map = ([]);
+#endif
+
 /* A configuration.. */
 
 
@@ -498,19 +504,22 @@ void init_log_file()
     if(strlen(logfile))
     {
       do {
+#ifndef THREADS
 	object privs = Privs("Opening logfile \""+logfile+"\"");
+#endif
 	object lf=open( logfile, "wac");
+#if efun(chmod)
+	if(geteuid() != getuid()) chmod(logfile,0666);
+#endif
 	if(!lf) {
 	  mkdirhier(logfile);
 	  if(!(lf=open( logfile, "wac"))) {
-	    privs = 0;
 	    report_error("Failed to open logfile. ("+logfile+")\n" +
 			 "No logging will take place!\n");
 	    log_function=0;
 	    break;
 	  }
 	}
-	privs=0;
 	mark_fd(lf->query_fd(), "Roxen log file ("+logfile+")");
 	log_function=lf->write;	
 	// Function pointer, speeds everything up (a little..).

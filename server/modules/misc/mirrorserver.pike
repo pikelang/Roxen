@@ -1,15 +1,11 @@
 #include <module.h>
 inherit "module";
 
-#if !constant(Privs)
-constant Privs=((program)"privs");
-#endif /* !constant(Privs) */
-
 #ifndef MIRRORSERVER_DEBUG
 #define MIRRORSERVER_DEBUG
 #endif /* MIRRORSERVER_DEBUG */
 
-constant cvs_version = "$Id: mirrorserver.pike,v 1.12 1998/01/21 18:56:39 grubba Exp $";
+constant cvs_version = "$Id: mirrorserver.pike,v 1.13 1998/02/04 16:10:46 per Exp $";
 
 class MirrorServer {
   import Stdio;
@@ -123,7 +119,7 @@ void start(int arg, object conf)
       array(string) a = lower_case(query("port"))/":";
       object privs;
       if (((int)a[1]) < 1024)
-	privs = Privs("Opening Mirror Server port \"" +
+	privs = Privs("Opening Mirror Server port below 1024 \"" +
 		      query("port") + "\"\n");
       server = RoxenRPC.Server(a[0]!="any"?a[0]:0,(int)a[1]);
       privs = 0;

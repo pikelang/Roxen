@@ -1,7 +1,7 @@
 /*
- * $Id: restrictedfs.pike,v 1.6 1997/08/31 03:47:20 peter Exp $
+ * $Id: restrictedfs.pike,v 1.7 1998/02/04 16:10:43 per Exp $
  *
- * $Author: peter $
+ * $Author: per $
  *
  * Implements a restricted filesystem.
  * This filesystem only allows accesses to files that are a prefix of
@@ -13,7 +13,7 @@
 
 inherit "filesystem";
 
-string cvs_version = "$Id: restrictedfs.pike,v 1.6 1997/08/31 03:47:20 peter Exp $";
+constant cvs_version = "$Id: restrictedfs.pike,v 1.7 1998/02/04 16:10:43 per Exp $";
 
 #include <module.h>
 #include <roxen.h>

@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.98 1998/02/02 09:40:43 jens Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.99 1998/02/04 16:10:44 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -11,10 +11,6 @@ import Image;
 # define Image image
 # define Font  font
 #endif
-
-#if !efun(Privs)
-constant Privs=((program)"privs");
-#endif /* !efun(Privs) */
 
 #ifndef VAR_MORE
 #define VAR_MORE	0
@@ -130,7 +126,7 @@ array (string) list_fonts()
 
 void create()
 {
-  defvar("cache_dir", ".gtext_cache", "Cache directory for gtext images",
+  defvar("cache_dir", "../gtext_cache", "Cache directory for gtext images",
 	 TYPE_DIR,
 	 "The gtext tag saves images when they are calculated in this "
 	 "directory. We currently do not clean this directory.");
@@ -618,6 +614,9 @@ void start(int|void val, object|void conf)
   if(conf)
   {
     mkdirhier( query( "cache_dir" )+".foo" );
+#if efun(chmod)
+    chmod( query( "cache_dir" ), 0777 );
+#endif
     mc = conf;
     base_key = "gtext:"+(conf?conf->name:roxen->current_configuration->name);
   }
@@ -676,11 +675,11 @@ constant replace_to   = values( iso88591 ) + ({ nbsp, "<", ">", "&", });
 
 #define simplify_text( from ) replace(from,replace_from,replace_to)
 
+#define FNAME(a,b) (query("cache_dir")+sprintf("%x",hash(reverse(a[6..])))+sprintf("%x",hash(b))+sprintf("%x",hash(reverse(b-" ")))+sprintf("%x",hash(b[12..])))
 
 array get_cache_file(string a, string b)
 {
-  object fd = open(query("cache_dir")+
-		   sprintf("%x",hash(reverse(a)))+sprintf("%x",hash(b)), "r");
+  object fd = open(FNAME(a,b), "r");
   if(!fd) return 0;
   array r = decode_value(fd->read());
   if(r[0]==a && r[1]==b) return r[2];
@@ -688,16 +687,17 @@ array get_cache_file(string a, string b)
 
 void store_cache_file(string a, string b, array data)
 {
-  object fd = open(query("cache_dir")+
-		   sprintf("%x",hash(reverse(a)))+sprintf("%x",hash(b)), "wct");
+  object fd = open(FNAME(a,b), "wct");
+#if efun(chmod)
+  chmod( FNAME(a,b), 0666 );
+#endif
   if(!fd) return;
   fd->write(encode_value(({a,b,data})));
   destruct(fd);
 }
 
 
-array(int)|string write_text(int _args, string text, int size,
-			     object id)
+array(int)|string write_text(int _args, string text, int size, object id)
 {
   string key = base_key+_args;
   array err;
@@ -951,13 +951,13 @@ string quote(string in)
   return url_cache[in]=option;
 }
 
+#define ARGHASH query("cache_dir")+"ARGS_"+hash(mc->name)
+
 int args_restored = 0;
 void restore_cached_args()
 {
   args_restored = 1;
-  object privs = Privs("Reading gtext argument list");
-  object o = open(".gtext_args_"+hash(mc->name), "r");
-  privs = 0;
+  object o = open(ARGHASH, "r");
   if(o)
   {
     string data = o->read();
@@ -984,9 +984,10 @@ void save_cached_args()
   on = number;
   restore_cached_args();
   if(on > number) number=on;
-  object privs = Privs("Saving gtext argument list");
-  object o = open(".gtext_args_"+hash(mc->name), "wct");
-  privs = 0;
+  object o = open(ARGHASH, "wct");
+#if efun(chmod)
+  chmod( ARGHASH, 0666 );
+#endif
   string data=encode_value(cached_args);
   catch {
     object q;

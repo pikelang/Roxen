@@ -1,5 +1,5 @@
 /*
- * $Id: generate_rsa.pike,v 1.4 1997/12/20 00:18:55 grubba Exp $
+ * $Id: generate_rsa.pike,v 1.5 1998/02/04 16:10:42 per Exp $
  */
 
 inherit "wizard";
@@ -80,7 +80,6 @@ mixed verify_0(object id, object mc)
 
   object file = Stdio.File();
   object privs = Privs("Storing private RSA key.");
-
   if (!file->open(id->variables->key_file, "wxc", 0600))
   {
     id->variables->_error =
@@ -92,7 +91,7 @@ mixed verify_0(object id, object mc)
   }
 
   privs = 0;
-  
+
   object rsa = Crypto.rsa();
   rsa->generate_key(key_size, Crypto.randomness.reasonably_random()->read);
 
