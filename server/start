@@ -1,11 +1,8 @@
 #!/bin/sh
 #
-# $Id: start,v 1.69 1999/08/05 22:51:16 bash-peter Exp $
+# $Id: start,v 1.70 1999/08/06 16:40:57 grubba Exp $
 
 cd `dirname $0`
-
-VERSION=4;
-BUILD=0
 
 # Can be set with '--config-dir=DIR'
 DIR=../configurations/
@@ -140,8 +137,15 @@ parse_args() {
     DEFINES="$DEFINES $1"
   ;;
   '--version')
-    echo Roxen Challenger 1.$VERSION.$BUILD
-    exit 0
+    if [ -f base_server/roxen.pike ]; then
+      VERSION="`sed <base_server/roxen.pike -e'/__roxen_version__/s/[^0-9]*\([0-9][0-9]*\.[0-9][0-9]*\)[^0-9]*/\1/p' -ed | head -1`"
+      BUILD="`sed <base_server/roxen.pike -e'/__roxen_build__/s/[^0-9]*\([0-9][0-9]*\)[^0-9]*/\1/p' -ed | head -1`"
+      echo "Roxen Challenger $VERSION.$BUILD"
+      exit 0
+    else
+      echo 'base_server/roxen.pike not found!'
+      exit 1
+    fi
   ;;
   '--help'|'-?')
   sed -e "s/\\.B/`tput 'bold' 2>/dev/null`/g" -e "s/B\\./`tput 'rmso' 2>/dev/null`/g" << EOF
