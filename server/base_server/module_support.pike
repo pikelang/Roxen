@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module_support.pike,v 1.56 2000/02/20 17:41:33 nilsson Exp $
+// $Id: module_support.pike,v 1.57 2000/03/09 04:34:27 mast Exp $
 
 #include <roxen.h>
 #include <module_constants.h>
@@ -33,6 +33,8 @@ int setvars( mapping (string:mixed) vars )
 
 class ConfigurableWrapper
 {
+  constant is_ConfigurableWrapper = 1;
+
   int mode;
   function f;
 
@@ -55,6 +57,23 @@ class ConfigurableWrapper
     mode = mode_;
     f = f_;
   }
+}
+
+void change_configurable (array vardef, int mask, int val)
+// A helper function to change the VAR_CONFIGURABLE field since that's
+// a bit messy.
+{
+  if (functionp (vardef[VAR_CONFIGURABLE])) {
+    object obj = function_object (vardef[VAR_CONFIGURABLE]);
+    if (obj->is_ConfigurableWrapper)
+      obj->mode = obj->mode & ~mask | val & mask;
+    else
+      vardef[VAR_CONFIGURABLE] =
+	ConfigurableWrapper (val & mask, vardef[VAR_CONFIGURABLE])->check;
+  }
+  else
+    vardef[VAR_CONFIGURABLE] =
+      vardef[VAR_CONFIGURABLE] & ~mask | val & mask;
 }
 
 function reg_s_loc;
