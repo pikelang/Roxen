@@ -12,7 +12,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.112 2000/09/11 10:49:33 lange Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.113 2000/09/12 21:15:29 per Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Administration interface RXML tags";
 
@@ -87,11 +87,13 @@ class Scope_usr
 
      case "toptabs-args":
        res = "frame-image="+QALIAS("toptabs-frame");
+       if( ALIAS("top-bgcolor") != "none" )
+         res += " pagebgcolor="+QALIAS("top-bgcolor");
        res += " bgcolor="+QALIAS("toptabs-bgcolor" );
        res += " font="+QALIAS("toptabs-font" );
        res += " dimcolor="+QALIAS("toptabs-dimcolor" );
-       res += " textcolor="+QALIAS("toptabs-textcolor" );
        res += " dimtextcolor="+QALIAS("toptabs-dimtextcolor" );
+       res += " textcolor="+QALIAS("toptabs-seltextcolor" );
        res += " selcolor="+QALIAS("toptabs-selcolor" );
        if( stringp( q = ALIAS("toptabs-extraargs" ) ) )
          res += " "+q;
@@ -107,6 +109,8 @@ class Scope_usr
            " selcolor="+QALIAS("subtabs-selcolor");
        if( stringp( q = ALIAS("subtabs-extraargs" ) ) )
          res += " "+q;
+       if( ALIAS("bgcolor") != "none" )
+         res += " pagebgcolor="+QALIAS("bgcolor");
        return res;
 
      case "body-args":
