@@ -1,9 +1,15 @@
-/*
- * $Id: threads.pike,v 1.2 1998/10/11 06:45:03 peter Exp $
- */
 #include <config.h>
-inherit "highlight_pike";
-inherit "roxenlib";
+#if !defined(THREADS) || !constant(all_threads)
+constant action_disabled = 1;
+#else /* THREADS */
+/*
+ * $Id: threads.pike,v 1.3 1998/12/14 11:31:19 peter Exp $
+ */
+inherit "wizard";
+
+constant name= "Status//Thread backtrace";
+constant doc = ("Shows a backtrace (stack) for each and every thread in roxen.");
+constant more = 1;
 
 static string last_id, last_from;
 string get_id(string from)
@@ -71,15 +77,6 @@ string format_backtrace(array bt, object id)
   }
   return res;
 }
-
-
-#if !defined(THREADS) || !constant(all_threads)
-constant action_disabled = 1;
-#else /* THREADS */
-inherit "wizard";
-constant name= "Status//Thread backtrace";
-constant doc = ("Shows a backtrace (stack) for each and every thread in roxen.");
-constant more = 1;
 
 
 constant ok_label = " Refresh ";
