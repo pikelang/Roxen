@@ -1,0 +1,119 @@
+<!-- -*-pike-*- -->
+
+<body bgcolor=black text=white>
+<pimage notrans>
+object draw()
+{
+  return Clock(30,0, Dial(), "#aa9999", 10);
+}
+</pimage>
+
+<pimage notrans>
+object draw()
+{
+  return Clock(30,0, Roxen()->scale(0.5), "#00ff00");
+}
+</pimage>
+
+<p>
+<br clear=left>
+<p>
+
+<pimage nocache>
+#20 "pimage.html"
+object roxen_image;
+int frame_no= 7;
+mapping vertical_wiggly_images = ([]);
+// The number of vertical wigglie frames (what to call them?).
+#define STEPS 20
+
+// A white and a black image. Pasted with an alpha value over the
+// image to generate shadow and highlight regions
+object highlight = image(1,40,255,255,255);
+object shadow = image(1,52,0,0,0);
+
+object frame()
+{
+  float offset, doffset, oldoffset;
+  int cache_index;
+  object  current;
+  frame_no++;
+
+  cache_index = frame_no % STEPS ;
+  int ys = roxen_image->ysize();
+  int xs = roxen_image->xsize();
+  
+  if(vertical_wiggly_images[ cache_index ])
+    current = vertical_wiggly_images[ cache_index ]->copy();
+  else
+  {
+    // Generate a new image for one wiggly direction, and add highlights.
+    // The magic numbers (15, 14 etc) have beed manualy adjusted.
+    //  There are no deep thoughts behinds them....
+    current = roxen_image->copy();
+    for(int i=15; i<xs-14; i++)
+    {
+      offset = (sin((frame_no/(float)STEPS+i*0.01) * 2*3.1415)*10);
+      doffset = offset - oldoffset;
+      oldoffset = offset;
+      current->paste(current->copy(i,0,i,ys), i, (int)offset);
+      if(doffset < 0.0)
+	current->paste_alpha(highlight,255+(int)(doffset*99),i,(int)offset+18);
+      else
+	current->paste_alpha(shadow,255-(int)(doffset*300), i,(int)offset+12);
+    }
+    vertical_wiggly_images[ cache_index ] = current->copy();
+  }
+
+  // Move the lines around in the X-direction.
+  for(int i=0; i<ys; i++)
+  {
+    int offset = (int)(sin(((float)frame_no*10+(float)i*40)/360.0)*6);
+    if(offset > 0)
+      current->paste(current->copy(0,i,xs-offset,i),offset,i);
+    else
+      current->paste(current->copy(-offset,i,xs+offset+1,i),0,i);
+  }
+
+  return current;//->scale(0.5);
+}
+
+object draw()
+{
+  // Generate a Roxen logotype image, scale it to 50%.
+  roxen_image = Roxen()->scale(0.5);
+  // Use white ink.
+  roxen_image->setcolor(@parse_color("white"));
+  // Add a white border around the roxen logotype
+  roxen_image = roxen_image->copy(-2,-2,roxen_image->xsize()+2,roxen_image->ysize()+2);
+  // Use black ink
+  roxen_image->setcolor(0,0,0);
+  // Generate some empty space around the image. The sizes are quite arbitary
+  roxen_image = roxen_image->copy(-15,-15,195,55)->image;
+  // Start an animation, the function 'frame' will be called with a delay of
+  // 0.0 seconds (you guessed it, this is _really_ a CPU hog...) when somewone
+  // is watching the image (not otherwise, though)
+  return Anim(frame, 0.0);
+}
+</pimage>
+
+<p>
+<table bgcolor=black border=0 cellspacing=0 cellpadding=1>
+<tr><td><pimage notrans>
+   float q=1.0;
+   int t()
+   {
+     if(q<=100.0) q+=0.1; else q=0.0;
+     return (int)(q);
+   }
+
+   object draw()
+   {
+     return Progress( t );
+   }
+</pimage></td></tr>
+</table>
+
+      
+</body>
+

@@ -1,3 +1,13 @@
+Changes since Roxen Challenger 1.2 alpha 12
+-----------------------------------------------
+
+o Added a new module. <pimage></pimage>. This tag has the same security 
+  impact that the <pike></pike> tag has, and should not be enabled for 
+  untrusted filesystems.
+
+  Examples of usage are in the (new) examples directory.
+
+
 Changes since Roxen Challenger 1.2 alpha 11
 -----------------------------------------------
 
