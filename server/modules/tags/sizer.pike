@@ -1,5 +1,5 @@
 constant thread_safe=1;
-constant cvs_version = "$Id: sizer.pike,v 1.8 2001/03/06 12:11:49 jhs Exp $";
+constant cvs_version = "$Id: sizer.pike,v 1.9 2001/03/06 12:20:27 jhs Exp $";
 #include <module.h>
 inherit "module";
 
@@ -299,7 +299,8 @@ string simpletag_page_size( string name,
   if( what->dltime )
   {
     int i = -1;
-    res += "<table><tr>";
+    res += "<b><font size='-1'>Estimated download time:</font></b> "
+	   "(bandwidth in kb/s)\n<table><tr>";
     foreach( (args->speeds?(array(float))(args->speeds/",")
 	      :({ 28.8, 56.0, 64.0, 256.0, 384.0,1024.0 })), float kbit )
     {
