@@ -36,14 +36,14 @@ string parse( RequestID id )
     total->received += conf->received;
     total->requests += conf->requests;
   }
-  contents += add_row( "Sent data", Roxen.sizetostring(total->sent) +
+  contents += add_row( "Sent data", String.int2size(total->sent) +
 		      sprintf(" (%.2f kbit/sec)",
 			      ((((float)total->sent)/(1024.0*1024.0)/dt) * 8192.0)) );
-  contents += add_row( "Sent headers", Roxen.sizetostring(total->hsent));
+  contents += add_row( "Sent headers", String.int2size(total->hsent));
   contents += add_row( "Requests", total->requests +
 		       sprintf(" (%.2f/min)",
 			       (((float)total->requests*60.0)/dt)) );
-  contents += add_row( "Received data", Roxen.sizetostring(total->received));
+  contents += add_row( "Received data", String.int2size(total->received));
 
   return ("<box type='"+box+"' title='"+box_name+"'><table cellpadding='0'>"+
 	  contents+"</table></box>");

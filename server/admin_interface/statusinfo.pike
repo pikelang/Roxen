@@ -10,19 +10,19 @@ string status(object|mapping conf)
 
   string res = "<table>"
     "<tr align='left'><th>Sent data:</th>"
-    "<td>"+ NBSP(Roxen.sizetostring(conf->sent)) +"</td>"
+    "<td>"+ NBSP(String.int2size(conf->sent)) +"</td>"
     "<td>"+ sprintf(" (%.2f",
 		    (((float)conf->sent)/(1024.0*1024.0)/dt) * 8192.0)+
     "&nbsp;kbit/sec) </td>"
     "</tr><tr align='left'><th>Sent headers:</th>"
-    "<td>"+ NBSP(Roxen.sizetostring(conf->hsent)) +"</td></tr>\n"
+    "<td>"+ NBSP(String.int2size(conf->hsent)) +"</td></tr>\n"
     "<tr align='left'><th>Requests:</th>"
     "<td align='right'>"+ conf->requests +"</td>"
     "<td align='right'>"+ sprintf(" (%.2f", 
 				  ((float)conf->requests*60.0)/dt)+
     "/min) </td>"
     "</tr><tr align='left'><th>Received data:</th>"
-    "<td>"+ NBSP(Roxen.sizetostring(conf->received)) +"</td></tr>\n";
+    "<td>"+ NBSP(String.int2size(conf->received)) +"</td></tr>\n";
 
   res += "</table>\n\n";
 

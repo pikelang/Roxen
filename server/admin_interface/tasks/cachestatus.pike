@@ -39,7 +39,7 @@ string parse( RequestID id )
     if(ent[3]==-1)
       res += "unknown";
     else
-      res += Roxen.sizetostring(ent[3]);
+      res += String.int2size(ent[3]);
     res += "</td><td>" + ent[1] + "</td><td>" + (ent[2]-ent[1]) + "</td>";
     if(ent[2])
       res += "<td>" + (ent[1]*100)/ent[2] + "%</td>";
@@ -53,7 +53,7 @@ string parse( RequestID id )
     i++;
   }
   res += "<tr align=\"right\" bgcolor=\"&usr.fade3;\"><td align=\"left\">&nbsp;</td><td>" +
-    totale + "</td><td>" + Roxen.sizetostring(totalm) + "</td>" +
+    totale + "</td><td>" + String.int2size(totalm) + "</td>" +
     "<td>" + totalh + "</td><td>" + (totalt-totalh) + "</td>";
   if(totalt)
     res += "<td>"+(totalh*100)/totalt+"%</td>";
@@ -84,7 +84,7 @@ string parse( RequestID id )
       if(ent[1]==-1)
 	res += "unknown";
       else
-	res += Roxen.sizetostring(ent[1]);
+	res += String.int2size(ent[1]);
       res += "</td></tr>";
       totale += ent[0];
       totalm += ent[1];
@@ -92,7 +92,7 @@ string parse( RequestID id )
     }
 
     res += "<tr align=\"right\" bgcolor=\"&usr.fade3;\"><td align=\"left\">&nbsp;</td><td>" +
-      totale + "</td><td>" + Roxen.sizetostring(totalm) + "</td></tr></table>";
+      totale + "</td><td>" + String.int2size(totalm) + "</td></tr></table>";
   }
 
   // ---
@@ -103,7 +103,7 @@ string parse( RequestID id )
     "<tr><td>Used languages:</td><td>"+l->languages+"</td></tr>"
     "<tr><td>Registered projects:</td><td>"+l->reg_proj+"</td></tr>"
     "<tr><td>Loaded project files:</td><td>"+l->load_proj+"</td></tr>"
-    "<tr><td>Current cache size:</td><td>"+Roxen.sizetostring(l->bytes)+"</td></tr>"
+    "<tr><td>Current cache size:</td><td>"+String.in2size(l->bytes)+"</td></tr>"
     "</table><br />";
 
   return res +  "<p><cf-ok/></p>";
