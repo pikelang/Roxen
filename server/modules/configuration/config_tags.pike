@@ -708,6 +708,11 @@ array get_variable_sections( object mod, mapping m, object id )
   return variables;
 }
 
+string container_cf_dirlist( string t, mapping m, string c, object id )
+{
+  
+}
+
 string container_configif_output(string t, mapping m, string c, object id)
 {
   array(mapping) variables;

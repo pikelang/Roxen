@@ -1,0 +1,32 @@
+<left-menu title="Sites">
+  <configif-output source=configurations>
+     <item title='#name:quote=dtag#' href=site.html/#sname#/>
+     </item>
+  </configif-output>
+</left-menu>
+
+<topmenu base="../" selected=sites>
+
+<content>
+<h1><cf-locale get=create_new_site></h1>
+<cf-locale get=site_pre_text>
+<p>
+
+<cf-dirlist dir=templates/>
+   <a href="templates/#file#"><cf-locale get=create_new> #loc_name#</a>
+</cf-dirlist>
+
+<table>
+<tr><td><b><cf-locale get=site_name>:</b></td> 
+    <td><input size=40 name=name></td></tr>
+<tr><td><b><cf-locale get=site_type>:</b></td>
+    <td><select name=site-type>
+         <configif-output source=site-types><option>#name#
+         </configif-output>
+        </select>
+    </td></tr></table>
+  <configif-output source=site-types>
+  <h2>#name#</h2>
+    #doc#
+  </configif-output>
+</content>
