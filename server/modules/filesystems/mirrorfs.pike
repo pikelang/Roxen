@@ -38,8 +38,11 @@ void create()
 object _rpc;
 object rpc(int|void force)
 {
-  array s = query("mserver")/":";
   if(force|| !_rpc || catch{_rpc->open();}) {
+    array s = query("mserver")/":";
+    if (sizeof(s) < 2) {
+      s = ({ s[0], "80" });
+    }
     if (catch {
       _rpc = Client(s[0],(int)s[1],"mirror");
     }) {

@@ -1,4 +1,4 @@
-/* $Id: describers.pike,v 1.44 1997/08/24 03:34:54 peter Exp $ */
+/* $Id: describers.pike,v 1.45 1997/08/25 16:48:40 grubba Exp $ */
 
 #include <module.h>
 int zonk=time();
@@ -259,7 +259,14 @@ string describe_module_copy_status(object node)
 {
   string q;
 
-  if(node->data) q=node->data();
+  if(node->data) {
+    mixed err;
+    if (err = catch {
+      q=node->data();
+    }) {
+      q = describe_backtrace(err);
+    }
+  }
 
   if(!q || !strlen(q)) return 0;
 
