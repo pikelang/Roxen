@@ -1,5 +1,5 @@
 <gtext scale='0.7' font="franklin gothic demi"
- fgcolor="&usr.fgcolor;">Welcome to &roxen.product-name;</gtext>
+ fgcolor="&usr.fgcolor;">Welcome to ChiliMoon</gtext>
 <p>
  If your fonts are way too large (or small, depending on personal
  preferences), please adjust the Unicode font size in your
