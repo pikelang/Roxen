@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.39 2001/09/06 09:46:56 per Exp $
+// $Id: DBManager.pmod,v 1.40 2001/09/06 09:57:21 per Exp $
 
 //! Manages database aliases and permissions
 
@@ -757,7 +757,7 @@ static void create()
 	"  pattern varchar(255) not null default '')");
 
   catch(query("INSERT INTO groups (name,lname,comment,pattern) VALUES "
-      " ('internal','Uncategoriezed','Databases without any group','')"));
+      " ('internal','Uncategorized','Databases without any group','')"));
 
   query("CREATE TABLE IF NOT EXISTS module_tables ("
 	"  conf varchar(80) not null, "
