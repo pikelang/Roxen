@@ -7,8 +7,6 @@ create_sumbars(mapping diagra_data);
 create_pie(mapping diagra_data);
 
 
-
-
 Graphs: 
 Graphs är punkter eller punkter med linjer mellan sig. Punkterna anges
 med x, y.
@@ -69,7 +67,8 @@ array(froat) values_for_ynames;
 
 float xmaxvalue, xminvalue, ymaxvalue, yminvalue;
 //anger inom vilka områden man ska förvänta sig data. Minvalue sätts
-//i normala fall till min(0, minsta_värde)
+//i normala fall till min(0, minsta_värde) och maxvalue till 
+//max(0, största_värde).
 
 
 float xspace, float yspace, 
