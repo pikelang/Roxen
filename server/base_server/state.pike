@@ -1,7 +1,7 @@
 // This is Roxen state mechanism.
 // Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: state.pike,v 1.15 2000/03/11 17:05:28 nilsson Exp $
+// $Id: state.pike,v 1.16 2000/08/21 11:34:30 jhs Exp $
 
 #define CHKSPACE "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz+/"
 
@@ -38,7 +38,7 @@ class Page_state {
 
   // Decode states from a URI safe string
   int uri_decode(string from) {
-    return decode(replace(from,({"-","!","*"}),({"+","/","="})));
+    return decode(replace(from,({"-","!","_"}),({"+","/","="})));
   }
 
   // Decode states from a string
@@ -132,7 +132,8 @@ class Page_state {
 
   // Encode present state into a URI safe string
   string uri_encode(void|mixed value, void|string|array key) {
-    return replace(encode(value,key),({"+","/","="}),({"-","!","*"}));
+    // The "_" here is better for NT filesystems for the manual dumps.
+    return replace(encode(value,key),({"+","/","="}),({"-","!","_"}));
   }
 
 }
