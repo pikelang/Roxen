@@ -28,9 +28,6 @@
   <insert name="Image" title="Edit navigation images"
           help="help" category="nav">
 
-  <insert name="Test" title="Test some wizard types"
-          help="help" category="nav">
-    
 </sql-insert>
 
 
@@ -155,51 +152,6 @@
 	  _wizard_name="Image" _wizard_category="nav">
 	  
 	  
-  <!--  Test variabler  -->
-  <insert name="password" title="password"
-          type="password" help=""
-	  _wizard_name="Test" _wizard_category="nav">
-  
-  <insert name="int" title="int"
-          type="int" help=""
-	  _wizard_name="Test" _wizard_category="nav">
-  
-  <insert name="float" title="float"
-          type="float" help=""
-	  _wizard_name="Test" _wizard_category="nav">
-  
-  <insert name="select" title="select"
-          type="select" help=""
-	  _wizard_name="Test" _wizard_category="nav">
-  
-  <insert name="list" title="list"
-          type="list" help=""
-	  _wizard_name="Test" _wizard_category="nav">
-  
-  <insert name="text" title="text"
-          type="text" help=""
-	  _wizard_name="Test" _wizard_category="nav">
-  
-  <insert name="radio" title="radio"
-          type="radio" help=""
-	  _wizard_name="Test" _wizard_category="nav">
-  
-  <insert name="checkbox" title="checkbox"
-          type="checkbox" help=""
-	  _wizard_name="Test" _wizard_category="nav">
-  
-  <insert name="color" title="color"
-          type="color" help=""
-	  _wizard_name="Test" _wizard_category="nav">
-  
-  <insert name="font" title="font"
-          type="font" help=""
-	  _wizard_name="Test" _wizard_category="nav">
-  
-  <insert name="toggle" title="toggle"
-          type="toggle" help=""
-	  _wizard_name="Test" _wizard_category="nav">
-  
 </sql-insert>
 
 
@@ -218,8 +170,9 @@
   <insert name="Nav 1" value="nav1.ntmpl" _variable_name="nav_name">
   <insert name="Nav 2" value="nav2.ntmpl" _variable_name="nav_name">
   <insert name="Nav 3" value="nav3.ntmpl" _variable_name="nav_name">
+  <insert name="Basic" value="basic.ntmpl" _variable_name="nav_name">
 
-  <!--  Navigation files  -->
+  <!--  Navigation images  -->
   <insert name="bg 1" value="nav1/bg1.pnm" _variable_name="nav_bg_img">
   <insert name="bg 2" value="nav1/bg2.pnm" _variable_name="nav_bg_img">
   <insert name="bg 3" value="nav1/bg3.pnm" _variable_name="nav_bg_img">
@@ -235,11 +188,11 @@
 
   <delete all>
 
-  <insert name="Clasic" title="" customer_id=0>
-  <insert name="Modern" title="" customer_id=0>
-  <insert name="Strict" title="" customer_id=0>
-  <insert name="Sunshine" title="" customer_id=0>
-  <insert name="Depresive" title="" customer_id=0>
+  <insert name="Clasic">
+  <insert name="Modern">
+  <insert name="Strict">
+  <insert name="Sunshine">
+  <insert name="Depresive">
   
 </sql-insert>
 
@@ -249,12 +202,36 @@
 	    query="select id from template_vars where
 	           name='#_variable_name#'">
 
-  <delete all>
+  <-delete all>
 
   <insert scheme_id=1 _variable_name="template_name" value="tmpl1.tmpl">
+  <insert scheme_id=1 _variable_name="bg_color" value="white">
+  <insert scheme_id=1 _variable_name="text_color" value="black">
+
+  <insert scheme_id=1 _variable_name="link_color" value="#000070">
+  <insert scheme_id=1 _variable_name="vlink_color" value="#000070">
+  <insert scheme_id=1 _variable_name="alink_color" value="#ff0000">
+
+  <insert scheme_id=1 _variable_name="h1_color" value="black">
+  <insert scheme_id=1 _variable_name="h1_font" value="helvetica">
+  <insert scheme_id=1 _variable_name="h1_size" value="1">
+  <insert scheme_id=1 _variable_name="h1_shadow" value="0">
+
+  <insert scheme_id=1 _variable_name="h2_color" value="black">
+  <insert scheme_id=1 _variable_name="h2_font" value="helvetica">
+  <insert scheme_id=1 _variable_name="h2_size" value="2">
+  <insert scheme_id=1 _variable_name="h2_shadow" value="0">
+
+  <insert scheme_id=1 _variable_name="h3_color" value="black">
+  <insert scheme_id=1 _variable_name="h3_font" value="helvetica">
+  <insert scheme_id=1 _variable_name="h3_size" value="3">
+  <insert scheme_id=1 _variable_name="h3_shadow" value="0">
+
   <insert scheme_id=1 _variable_name="nav_name" value="nav1.ntmpl">
-  <insert scheme_id=1 _variable_name="bg_color" value="black">
-  <insert scheme_id=1 _variable_name="text_color" value="white">
+  <insert scheme_id=1 _variable_name="nav_size" value="0.8">
+  <insert scheme_id=1 _variable_name="nav_font" value="helvetica">
+  <insert scheme_id=1 _variable_name="nav_bg_img" value="none">
+  
   <insert scheme_id=2 _variable_name="template_name" value="tmpl2.tmpl">
   <insert scheme_id=2 _variable_name="nav_name" value="nav1.ntmpl">
   <insert scheme_id=2 _variable_name="bg_color" value="pink">

@@ -1,7 +1,7 @@
 inherit "wizard";
 import AutoWeb;
 
-constant name = "Move Directory";
+constant name = "Move/Rename Dir";
 constant doc = "";
 
 string page_0( object id )

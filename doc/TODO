@@ -2,29 +2,20 @@ TODO list for AutoSite
 
 	
 WebAdmin
---------------------------------------------------------------------------------
-* Make start screen
-
-* Redirect when 'remove file', 'remove directory',
-  'move file' and 'move directory' are complete.
-
-* New wizards in HTML-Editor:
-  - Move file
-  - Add to menu
-
+--------
 * Nicer file browser.
-
-* Make tags in webadm-template for:
-  - tablify
-  - error
-
-* Make some kind of manual
+  - All buttons are always visible, but some are disabled (grey-ed out).
 
 * Template Editor
   - Make templates and nav-templates	
   - Fix variables
   - Fix variable help
-  - Save value, not name, in database when type='select'
 
-* New Menu editor tab.
+* LogView
+
+* IntraSeek
+
+* Make some kind of manual
+
+* Make start screen
 

@@ -22,12 +22,29 @@
 </else>
 </tmplblock>
 
-<tmplblock tag=toolbarbuttonlayout params=name,href,target singletag>
+<tmplblock tag=toolbarheadinglayout>
+  <tr><td><b>$toolbarheadinglayout$</b></td></tr>
+</tmplblock>
+
+<tmplblock tag=toolbarbuttonlayout params=name,href,target,shade singletag>
 <if variable="htmleditorp is t">
-  <tr><td><gtext xspacing=12 yspacing=3 notrans nfont=helvetica scale=0.35 bold
-       xsize=400 bevel=5 talign=center
-       fg=#ffffff bg=#113377 magic_fg=#000000 magic_bg=#88ccaa
-       magic='$name$' href='$href$' target=$target$>$name$</gtext></td></tr>
+  <if match="$shade$ is ">
+    <tr>
+      <td><gtext
+           xspacing=12 yspacing=3 notrans nfont=helvetica scale=0.35 bold
+           xsize=400 bevel=5 talign=center
+           fg=#ffffff bg=#113377 magic_fg=#000000 magic_bg=#88ccaa
+           magic='$name$' href='$href$' target=$target$>$name$</gtext></td>
+    </tr>
+  </if>
+  <else>
+    <tr>
+      <td><gtext
+           xspacing=12 yspacing=3 notrans nfont=helvetica scale=0.35 bold
+           xsize=400 bevel=5 talign=center
+           fg=#606060 bg=#a0a0a0>$name$</gtext></td>
+    </tr>
+  </else>
 </if>
 <else>
   <td>

@@ -11,35 +11,57 @@ class tab
   
   string err; // temporary
 
-  
-  
-  string buttonrow_gtext(array brow, object id)
-  {
-    string s="<toolbarlayout>";
-    foreach(brow, array a)
-    {
-      if(sizeof(a))
-	if(stringp(a[1])) {
-	  s += ("<toolbarbuttonlayout name='"+a[0]+
-		"' href="+(sizeof(a)>2?"'"+a[1]:a[1]));
+  string button(array button, object id) {
+    string s = "";
+    if(sizeof(button)) {
+      if(stringp(button[1])) {
+	s += ("<toolbarbuttonlayout name='"+button[0]+
+	      "' href="+(sizeof(button)>2?"'"+button[1]:button[1]));
 	
-	if(sizeof(a)>2) {
-	  a[2]=(["cancel_url":id->not_query])+a[2]||([]);
+	if(sizeof(button)>2) {
+	  button[2]=(["cancel_url":id->not_query])+button[2]||([]);
 	  s+="?";
-	  foreach(indices(a[2]), string input_hidden)
-	    s+=input_hidden+"="+a[2][input_hidden]+"&";
+	  foreach(indices(button[2]), string input_hidden)
+	    s+=input_hidden+"="+button[2][input_hidden]+"&";
 	  s=s[..sizeof(s)-2]+"'";
 	}
-      s+=">";
-      }	else
-	  s+="internal server error<br>"+
-	    "<tt>"+sprintf("%O",a)+"</tt><br>"
-	    __FILE__":"+__LINE__+"";
+	s+=">";
+      } else
+	s+="internal server error<br>"+
+	   "<tt>"+sprintf("%O",button)+"</tt><br>"
+	   __FILE__":"+__LINE__+"";
     }
+    return s;
+  }
+  
+  string buttonrow_toolbar(array brow, array all_buttons, object id)
+  {
+    string s="<toolbarlayout>";
+    if(all_buttons) {
+      foreach(all_buttons, mapping item) {
+	foreach(brow, array button) {
+	  if(item->button==button[0])
+	    item->args=button;
+	}
+      }
+      // werror("%O", all_buttons);
+      foreach(all_buttons, mapping item) {
+	if(item->header)
+	  s += "<toolbarheadinglayout>"+item->header+"</toolbarheadinglayout>";
+	if(item->button) {
+	  if(item->args)
+	    s += button(item->args, id);
+	  else s += "<toolbarbuttonlayout shade name='"+item->button+"'>";
+	}
+      }
+    } else
+      if(sizeof(brow))
+	s += button(brow[0], id);
     s += "</toolbarlayout>";
     return s;
   }
   
+#if 0  
   string buttonrow_submitbuttons(array brow, object id)
   {
     string s="";
@@ -71,40 +93,9 @@ class tab
     s+="</tr></table>";
     return s;
   }
+#endif
 
-  string buttonrow_toolbar(array brow, object id)
-  {
-    string s="";
-    s+="<table>\n";
-    foreach(brow, array a)
-      if(sizeof(a))
-	if (stringp(a[1]))
-	{
-	  s+="<tr><td><form method=get action="
-	     +(sizeof(a)>2?"'"+a[1]+"'":a[1])+
-             "><input type=submit name=\""+a[0]+"\" value=\""+a[0]+"\">";
-	  if(sizeof(a)>2)
-	  {
-	    a[2]=(["cancel_url":id->not_query])+a[2]||([]);
-	    foreach(indices(a[2]), string input_hidden)
-	      s+="<input type=hidden name=\""+input_hidden+
-                 "\" value=\""+a[2][input_hidden]+"\">";
-	  }
-	  s+="</form></td></tr>\n";
-	}
-	else
-	{
-	  s+="<tr><td>internal server error<br>"+
-	    "<tt>"+sprintf("%O",a)+"</tt><br>"
-	    __FILE__":"+__LINE__+"</td></tr>";
-	}
-      else
-	s+="<tr><td>&nbsp;</td></tr>";
-    s+="</table>";
-    return s;
-  }
-  
-  function buttonrow=buttonrow_gtext;
+  function buttonrow=buttonrow_toolbar;
   // function buttonrow=buttonrow_gtext;
   
   array fixbuttons(mapping wiz, array wanted)
@@ -152,6 +143,7 @@ class tab
     string res="";
     string|mapping|array tmp;
     array wanted_buttons;
+    mapping all_buttons;
     
     // recompile upon "reload"      
     if(!o)
@@ -170,6 +162,7 @@ class tab
       {
 	tmp = o->handle( sub, id );
 	wanted_buttons = o->get_buttons ? o->get_buttons( id ) : ({ });
+	all_buttons = o->get_all_buttons ? o->get_all_buttons( id ) : 0;
       };
       _master->set_inhibit_compile_errors(0);
       if (e)
@@ -199,7 +192,8 @@ class tab
 	//werror("%O",tmp);
 	if(arrayp(tmp))
 	  return "<toolbar>"+
-	    buttonrow(fixbuttons(tmp[0],wanted_buttons),id)+"</toolbar>"
+	    buttonrow(fixbuttons(tmp[0],wanted_buttons),all_buttons,id)+
+	    "</toolbar>"
 	    "<content>"+res+page+"</content>";
 
       };

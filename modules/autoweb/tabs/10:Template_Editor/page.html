@@ -30,7 +30,7 @@
 	  <cset preparse variable=options><pike>
 	    string query=
 	      "<sqloutput quote='£' query="
-	      "\"select * from template_schemes where "
+	      "\"select * from customers_schemes where "
 	      "customer_id='¤customer_id¤'\">"
 	      "£id£:£name£,</sqloutput>";
 	    return ((parse_rxml(query, id)/",")-({ "" }))*",";
@@ -68,8 +68,7 @@
 	  <cset preparse variable=options><pike>
 	    string query=
 	      "<sqloutput quote='£' query="
-	      "\"select * from template_schemes where "
-	      "customer_id=0\">"
+	      "\"select * from template_schemes\">"
 	      "£id£:£name£,</sqloutput>";
 	    return ((parse_rxml(query, id)/",")-({ "" }))*",";
 	  </pike></cset>
@@ -93,10 +92,10 @@
 	    <sqloutput quote='£'
 	       query="select * from template_schemes_vars
 	              where scheme_id=$load_scheme$">
-	      <sqlquery query="delete from template_schemes_vars where
+	      <sqlquery query="delete from customers_schemes_vars where
 	                       scheme_id='$current_scheme$'
 			       and variable_id=£variable_id£">
-              <sqlquery query="insert into  template_schemes_vars
+              <sqlquery query="insert into  customers_schemes_vars
 	                       (scheme_id,variable_id,value) values
 			       ('$current_scheme$','£variable_id£','£value£')">
             </sqloutput>
@@ -120,8 +119,7 @@
           <cset preparse variable=options><pike>
 	    string query=
 	      "<sqloutput quote='£' query="
-	      "\"select * from template_schemes where "
-	      "customer_id='0'\">"
+	      "\"select * from template_schemes\">"
 	      "£id£:£name:quote=mysql£,</sqloutput>";
 	    return ((parse_rxml(query, id)/",")-({ "" }))*",";
 	  </pike></cset>
@@ -135,7 +133,7 @@
 	<noparse><noparse><done>
 	  <formoutput quote=$>
 	    <cset preparse variable=scheme_exist><sqloutput quote='£'
-	      query="select * from template_schemes where
+	      query="select * from customers_schemes where
 	             customer_id='$customer_id$' and
 		     name='$scheme_name:quote=mysql$'">£id£</sqloutput></cset>
             <pike>
@@ -145,7 +143,7 @@
 	    </pike>
 	    <if variable=scheme_empty>
     	      <sqlquery mysql-insert-id=new_scheme
-	        query="insert into template_schemes 
+	        query="insert into customers_schemes 
 	               (customer_id,name) values 
 		       ('$customer_id$','$scheme_name:quote=mysql$')">
 
@@ -157,7 +155,7 @@
 	           query="select * from template_schemes_vars
 	                  where scheme_id=$load_scheme$">
                   <sqlquery
-		    query="insert into  template_schemes_vars
+		    query="insert into customers_schemes_vars
 	                   (scheme_id,variable_id,value) values
 		           ('¥new_scheme¥','£variable_id£',
 			    '£value:quote=mysql£')">
@@ -178,7 +176,7 @@
           <cset preparse variable=options><pike>
 	    string query=
 	      "<sqloutput quote='£' query="
-	      "\"select * from template_schemes where "
+	      "\"select * from customers_schemes where "
 	      "customer_id='¤customer_id¤' and "
 	      "not(id='¤current_scheme¤') "
 	      "order by name\">"
@@ -195,28 +193,13 @@
 	<noparse><noparse><done>
 	  <formoutput quote=$>
 	  <sqlquery
-	    query="delete from template_schemes where
+	    query="delete from customers_schemes where
 	           customer_id='$customer_id$' and
 		   id='$remove_scheme$'">
 	  <sqlquery
-	    query="delete from template_schemes_vars where
+	    query="delete from customers_schemes_vars where
 		   scheme_id='$remove_scheme$'">
       	  </formoutput>
-	</done></noparse></noparse>
-      </wizard>
-    </if>
-
-
-    <if variable="edit is apply_scheme">
-      <wizard preparse name="Apply template">
-	<page>
-	  <input type=hidden name=edit value='¤edit:quote=mysql¤'>
-	  <b>Apply teplate to web site? </b><p>
-	  Press ok to update the web site template
-	  with the active template.<br>
-	</page>
-	<noparse><noparse><done>
-	  <autosite-webadm-update-template>
 	</done></noparse></noparse>
       </wizard>
     </if>
@@ -335,7 +318,7 @@
   </dl></blockquote><br>
   <h3>Template Functions</h3>
   <formoutput quote='¤'>
-    <sqloutput quote='£' query="select * from template_schemes where
+    <sqloutput quote='£' query="select * from customers_schemes where
                                 id=¤current_scheme¤">
       <b>Active template:</b> £name:quote=mysql£<br>
     </sqloutput>

@@ -9,6 +9,26 @@ array get_buttons(object id)
   return wanted_buttons;
 }
 
+array get_all_buttons(object id)
+{
+  return ({ ([ "header":"File functions" ]),
+	    ([ "button":"View" ]),
+	    ([ "button":"Edit File" ]),
+	    ([ "button":"Edit Metadata" ]),
+	    ([ "button":"Add To Menu" ]),
+            ([ "button":"Create File" ]),
+            ([ "button":"Upload File" ]),
+	    ([ "button":"Download File" ]),
+	    ([ "button":"Move/Rename File" ]),
+	    ([ "button":"Remove File" ]),
+	    
+	    ([ "header":"Directory functions" ]),
+            ([ "button":"New Directory" ]),
+            ([ "button":"Move/Rename Dir" ]),
+            ([ "button":"Remove Directory" ])
+  });
+}
+
 void create (object webadm)
 {
 }
@@ -87,7 +107,7 @@ string|mapping navigate(object id, string f, string base_url)
     br += ({ ({ "Edit Metadata", ([ "path":http_encode_string(f) ]) }),
 	     ({ "Add To Menu", ([ "path":http_encode_string(f) ]) }),
 	     ({ "Download File", "'"+encode_url(base_url, "dl", f)+"'" }),
-	     ({ "Move File", ([ "path":http_encode_string(f) ]) }),
+	     ({ "Move/Rename File", ([ "path":http_encode_string(f) ]) }),
 	     ({ "Remove File", ([ "path":http_encode_string(f) ]) })
     });
     wanted_buttons=br;
@@ -107,7 +127,7 @@ string|mapping navigate(object id, string f, string base_url)
     ({ ({ "Create File", ([ "path": f ]) }),
        ({ "Upload File", ([ "path": f ]) }),
        ({ "New Directory", ([ "path": f ]) }),
-       ({ "Move Directory", ([ "path": f ]) }),
+       ({ "Move/Rename Dir", ([ "path": f ]) }),
        ({ "Remove Directory", ([ "path": f ]) })
     });
     

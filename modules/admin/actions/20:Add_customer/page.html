@@ -31,7 +31,7 @@
      <comment><--  New scheme  --></comment>		     
      <formoutput quote='$'>
        <sqlquery mysql-insert-id=new_scheme_id
-         query="insert into template_schemes (customer_id,name) values
+         query="insert into customers_schemes (customer_id,name) values
 	                                     ('$customer_id$','Default')">
      </formoutput>
      
@@ -43,7 +43,7 @@
        <sqloutput quote='£'
          query="select * from template_schemes_vars
 	        where scheme_id='$scheme_id$'">
-         <sqlquery query="insert into  template_schemes_vars
+         <sqlquery query="insert into customers_schemes_vars
 	                  (scheme_id,variable_id,value) values
 		          ('$new_scheme_id$','£variable_id£',
 			   '£value:quote=mysql£')">
