@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.28 2000/10/19 12:14:20 per Exp $
+// $Id: module.pmod,v 1.29 2000/11/02 11:41:03 per Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1198,10 +1198,10 @@ static array(string) verify_port( string port, int nofhttp )
   if(sscanf( port, "%[^:]://%[^/]%s", protocol, host, path ) != 3)
     return ({""+port+" does not conform to URL syntax\n", port });
   
-  if( path == "" )
+  if( path == "" || path[-1] != '/' )
   {
     warning += "Added / to the end of "+port+"\n";
-    path = "/";
+    path += "/";
   }
   if( nofhttp && protocol == "fhttp" )
   {
