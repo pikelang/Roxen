@@ -1,4 +1,4 @@
-# $Id: db.spec,v 1.4 1998/07/16 18:56:41 js Exp $
+# $Id: db.spec,v 1.5 1998/07/17 13:36:54 leif Exp $
 
 drop table customers;
 drop table dns;
@@ -29,6 +29,7 @@ create table dns (
 create table messages (
              id	                     int auto_increment primary key,
              sender		     varchar(255),
+             subject                 varchar(255),
              contents		     blob
      );
 
