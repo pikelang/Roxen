@@ -326,10 +326,10 @@ void main(int argc, string *argv)
   if(strlen(tmp))
     log_dir = tmp;
 
-  if(log_dir != "../logs" || log_dir != "../logs/")
+  if(log_dir != "../logs" && log_dir != "../logs/")
     logdir_changed = 1;
 
-  if(configuration_dir != "../configurations" || 
+  if(configuration_dir != "../configurations" && 
      configuration_dir != "../configurations/")
     configuration_dir_changed = 1;
 
@@ -344,6 +344,7 @@ void main(int argc, string *argv)
 		+" ":"")
 	      +(logdir_changed?"--log-dir="+log_dir+" ":"")
 	      +argv[1..1000] * " "));
+  
   if(configuration_dir_changed || logdir_changed)
     write("\nAs you use non-standard directories for the configuration \n"
 	  "and/or the logging, you must remember to start the server using\n"
