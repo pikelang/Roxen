@@ -1,7 +1,7 @@
 // Wizard generator
 // This file generats all the nice wizards
 // Copyright © 1997 - 2000, Roxen IS.
-// $Id: wizard.pike,v 1.131 2001/03/12 14:08:40 nilsson Exp $
+// $Id: wizard.pike,v 1.132 2001/04/12 17:32:14 nilsson Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -437,10 +437,13 @@ string compress_state(mapping state)
   return MIME.encode_base64( from );
 }
 
-string parse_wizard_help(string t, mapping m, string contents, RequestID id,
-			 mapping v)
+string parse_wizard_help(string|Parser t, mapping m, string contents,
+			 RequestID id, void|mapping v)
 {
-  v->help=1;
+  if(v)
+    v->help=1;
+  else
+    id->misc->wizard_help=1;
   if(!id->variables->help) return "";
   return contents;
 }
