@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.104 1999/03/06 15:55:10 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.105 1999/03/06 15:57:41 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -535,7 +535,7 @@ class imap_mail
 	if (sizeof(attr->section) != 1)
 	  throw("Invalid section");
 
-	if (!attr->parts || !sizeof(attr->parts))
+	if (!sizeof(attr->part))
 	  throw("MIME section requires numeric part specifier");
 
 	/* Filter headers */
