@@ -13,7 +13,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: PXml.pike,v 1.61 2001/07/20 06:35:00 mast Exp $
+//! $Id: PXml.pike,v 1.62 2001/08/13 16:00:00 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
@@ -488,7 +488,8 @@ local void remove_runtime_tag (string|RXML.Tag tag, void|int proc_instr)
 	add_tag (tag, def[0]), add_container (tag, def[1]);
       }
     if (tag_set->prefix && !no_prefix)
-      if (TagDef def = rt_replacements[tag = tag_set->prefix + ":" + tag]) {
+      if (TagDef def = rt_replacements &&
+	  rt_replacements[tag = tag_set->prefix + ":" + tag]) {
 	m_delete (rt_replacements, tag);
 	add_tag (tag, def[0]), add_container (tag, def[1]);
       }
