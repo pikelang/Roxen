@@ -8,7 +8,7 @@ inherit "module";
 
 // ---------------- Module registration stuff ----------------
 
-constant cvs_version = "$Id: roxen_network.pike,v 1.3 2000/12/08 08:52:22 nilsson Exp $";
+constant cvs_version = "$Id: roxen_network.pike,v 1.4 2000/12/10 23:59:17 nilsson Exp $";
 constant module_type = MODULE_ZERO;
 constant thread_safe = 1;
 constant module_name = "Roxen Network module";
@@ -72,6 +72,7 @@ void create(Configuration _conf) {
 }
 
 void start() {
+  Poster(build_package);
 }
 
 string internal_location() {
@@ -83,6 +84,41 @@ string internal_location() {
 mapping find_internal( string f, RequestID id) {
   return var->cache->http_file_answer( f, id );
 }
+
+class Poster
+{
+  Protocols.HTTP.Query query;
+  function mk_pkg;
+
+  void done( Protocols.HTTP.Query qu )
+  {
+    //    werror("Roxen Network: %s\n", query->data());
+  }
+  
+  void fail( Protocols.HTTP.Query qu )
+  {
+    report_warning( "Roxen Network: Failed to connect to community.roxen.com." );
+    call_out( start, 60 );
+  }
+
+  void start( )
+  {
+    remove_call_out( start );
+    call_out( start, 60*60*24 );
+    query = Protocols.HTTP.Query( )->set_callbacks( done, fail );
+    query->async_request( "community.roxen.com", 80,
+			  "POST /register/roxen_network.html HTTP/1.0",
+			  ([ "Host":"community.roxen.com:80" ]),
+			  "data=" + Roxen.http_encode_string(mk_pkg()) );
+  }
+  
+  void create( function _mk_pkg )
+  {
+    mk_pkg = _mk_pkg;
+    start();
+  }
+}
+
 
 string build_package() {
 
@@ -104,9 +140,9 @@ string build_package() {
   if(query("location"))
     pkg += "<location x=\""+query("location")[0]+"\" y=\""+query("location")[1]+"\"/>\n";
 
-  if(query("trans_mods")) {
+  if(query("trans_mods"))
     pkg += "<active_modules>" + ( sort(indices(conf->modules)) * ", " ) +
-      "</active_modules>";
+      "</active_modules>\n";
 
   array hosts=({ gethostname() }), dns;
   catch(dns=Protocols.DNS.client()->gethostbyname(hosts[0]));
