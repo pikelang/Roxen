@@ -5,70 +5,15 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.298 2001/04/23 15:52:51 nilsson Exp $
+// $Id: rxml.pike,v 1.299 2001/04/24 00:47:04 nilsson Exp $
 
 
 inherit "rxmlhelp";
-#include <request_trace.h>
 #include <config.h>
 
 #define _stat defines[" _stat"]
 #define _error defines[" _error"]
 #define _extra_heads defines[" _extra_heads"]
-#define _ok     defines[" _ok"]
-
-// ----------------------- Error handling -------------------------
-
-function _run_error;
-string handle_run_error (RXML.Backtrace err, RXML.Type type)
-// This is used to report thrown RXML run errors. See
-// RXML.run_error().
-{
-  RequestID id=RXML.get_context()->id;
-  if(id->conf->get_provider("RXMLRunError")) {
-    if(!_run_error)
-      _run_error=id->conf->get_provider("RXMLRunError")->rxml_run_error;
-    string res=_run_error(err, type, id);
-    if(res) return res;
-  }
-  else
-    _run_error=0;
-  NOCACHE();
-  id->misc->defines[" _ok"]=0;
-#ifdef MODULE_DEBUG
-  report_notice ("Error in %s.\n%s", id->not_query, describe_error (err));
-#endif
-  if (type->subtype_of (RXML.t_html) || type->subtype_of (RXML.t_xml))
-    return "<br clear=\"all\" />\n<pre>" +
-      Roxen.html_encode_string (describe_error (err)) + "</pre>\n";
-  return describe_error (err);
-}
-
-function _parse_error;
-string handle_parse_error (RXML.Backtrace err, RXML.Type type)
-// This is used to report thrown RXML parse errors. See
-// RXML.parse_error().
-{
-  RequestID id=RXML.get_context()->id;
-  if(id->conf->get_provider("RXMLParseError")) {
-    if(!_parse_error)
-      _parse_error=id->conf->get_provider("RXMLParseError")->rxml_parse_error;
-    string res=_parse_error(err, type, id);
-    if(res) return res;
-  }
-  else
-    _parse_error=0;
-  NOCACHE();
-  id->misc->defines[" _ok"]=0;
-#ifdef MODULE_DEBUG
-  report_notice ("Error in %s.\n%s", id->not_query, describe_error (err));
-#endif
-  if (type->subtype_of (RXML.t_html) || type->subtype_of (RXML.t_xml))
-    return "<br clear=\"all\" />\n<pre>" +
-      Roxen.html_encode_string (describe_error (err)) + "</pre>\n";
-  return describe_error (err);
-}
-
 
 
 // ------------------------- RXML Parser ------------------------------
