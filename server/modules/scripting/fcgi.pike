@@ -3,7 +3,7 @@
 // Support for the FastCGI interface, using an external fast-cgi
 // wrapper. This should be handled internally.
 
-string cvs_version = "$Id: fcgi.pike,v 1.11 1997/10/14 14:00:43 grubba Exp $";
+string cvs_version = "$Id: fcgi.pike,v 1.12 1998/01/21 18:53:51 grubba Exp $";
 
 #include <module.h>
 inherit "modules/scripting/cgi";
@@ -93,7 +93,7 @@ mixed find_file(string f, object id)
     path_info = id->misc->path_info;
 
 #ifdef CGI_DEBUG
-  perror("FCGI: Starting '"+f+"'...\n");
+  roxen_perror("FCGI: Starting '"+f+"'...\n");
 #endif
     
   pipe1=files.file();
@@ -113,8 +113,8 @@ mixed find_file(string f, object id)
   }
 
 #ifdef CGI_DEBUG
-  perror("Starting '"+cwd()+"/bin/fcgi -connect "+make_pipe_name(f)+" "+ f +
-	 " "+QUERY(numsimul)+"\n");
+  roxen_perror("Starting '"+getcwd()+"/bin/fcgi -connect "+make_pipe_name(f)+" "+ f +
+	       " "+QUERY(numsimul)+"\n");
 #endif
   
   spawne(getcwd()+"/bin/fcgi", ({"-connect", make_pipe_name(f), f,
