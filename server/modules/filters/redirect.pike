@@ -4,7 +4,7 @@
 // another. This can be done using "internal" redirects (much like a
 // symbolic link in unix), or with normal HTTP redirects.
 
-constant cvs_version = "$Id: redirect.pike,v 1.25 2000/04/28 17:32:03 mast Exp $";
+constant cvs_version = "$Id: redirect.pike,v 1.26 2000/05/03 08:55:12 mast Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -44,10 +44,12 @@ void create()
 	 "<p>You can use '(' and ')' in the regular expression to "
 	 "separate parts of the from-pattern when using regular expressions."
 	 " The parts can then be insterted into the 'to' string with "
-	 " $1, $2 etc.\n" " <p>More examples:<pre>"
-	 ".*/SE/liu/lysator/(.*)\.class    /java/classes/SE/liu/lysator/$1.class\n"
-	 "/(.*).en.html                   /(en)/$1.html\n"
-	 "(.*)/index.html                 %u/$1/\n</pre>"
+	 " $1, $2 etc.\n"
+
+	 "<p>More examples:<pre>"
+	 ".*/SE/liu/lysator/(.*)\\.class   /java/classes/SE/liu/lysator/$1.class\n"
+	 "/(.*)\\.en\\.html                 /(en)/$1.html\n"
+	 "(.*)/index\\.html                %u/$1/\n</pre>"
 	 ""
 	 "If the to file isn't an URL, the redirect will always be handled "
 	 "internally, so add %u to generate an actual redirect.<p>"
