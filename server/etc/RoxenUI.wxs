@@ -919,27 +919,6 @@ Click "Next" to start the installation.</Text>
           <Text>{\VSI_MS_Sans_Serif16.0_1_0}MsiHorizontalLine</Text>
         </Control>
       </Dialog>
-      <Dialog Id="SplashForm" Width="373" Height="287" Title="[ProductName]">
-        <Control Id="NextButton" Type="PushButton" X="300" Y="261" Width="66" Height="18" Default="yes">
-          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&amp;Next &gt;</Text>
-          <Publish Event="EndDialog" Value="Return"><![CDATA[SplashForm_NextArgs=""]]></Publish>
-          <Publish Event="NewDialog" Value="[SplashForm_NextArgs]"><![CDATA[SplashForm_NextArgs<>""]]></Publish>
-        </Control>
-        <Control Id="CancelButton" Type="PushButton" X="156" Y="261" Width="66" Height="18" Cancel="yes">
-          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Cancel</Text>
-          <Publish Event="SpawnDialog" Value="Cancel"><![CDATA[]]></Publish>
-        </Control>
-        <Control Id="PreviousButton" Type="PushButton" X="228" Y="261" Width="66" Height="18">
-          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&lt; &amp;Back</Text>
-          <Publish Event="NewDialog" Value="[SplashForm_PrevArgs]"><![CDATA[SplashForm_PrevArgs<>""]]></Publish>
-          <Condition Action="disable"><![CDATA[SplashForm_PrevArgs=""]]></Condition>
-          <Condition Action="enable"><![CDATA[SplashForm_PrevArgs<>""]]></Condition>
-        </Control>
-        <Control Id="Line1" Type="Line" X="0" Y="252" Width="375" Height="6">
-          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiHorizontalLine</Text>
-        </Control>
-        <Control Id="SplashBmp" Type="Bitmap" X="6" Y="6" Width="360" Height="240" Sunken="yes" Text="DefSplashBitmap" />
-      </Dialog>
       <Dialog Id="WelcomeForm" Width="373" Height="287" Title="[ProductName]">
         <Control Id="NextButton" Type="PushButton" X="300" Y="261" Width="66" Height="18" Default="yes">
           <Text>{\VSI_MS_Sans_Serif13.0_0_0}&amp;Next &gt;</Text>
@@ -1101,8 +1080,8 @@ Click "Next" to start the installation.</Text>
         <Custom Action="CustomTextA_SetProperty_EDIT3" After="CustomTextA_SetProperty_EDIT2" />
         <Custom Action="CustomTextA_SetProperty_EDIT4" After="CustomTextA_SetProperty_EDIT3" />
         <Custom Action="DIRCA_TARGETDIR" After="CustomTextA_SetProperty_EDIT4"><![CDATA[TARGETDIR=""]]></Custom>
-        <Show Dialog="SplashForm" After="IsolateComponents"><![CDATA[Installed="" AND NOT RESUME]]></Show>
-        <Custom Action="VSDCA_FolderForm_AllUsers" After="SplashForm"><![CDATA[Installed="" AND NOT RESUME AND ALLUSERS=1]]></Custom>
+        <Show Dialog="WelcomeForm" After="IsolateComponents"><![CDATA[Installed="" AND NOT RESUME]]></Show>
+        <Custom Action="VSDCA_FolderForm_AllUsers" After="WelcomeForm"><![CDATA[Installed="" AND NOT RESUME AND ALLUSERS=1]]></Custom>
         <Show Dialog="ResumeForm" After="VSDCA_FolderForm_AllUsers"><![CDATA[Installed="" AND RESUME]]></Show>
         <Show Dialog="MaintenanceForm" After="ResumeForm"><![CDATA[Installed<>""]]></Show>
         <Show Dialog="FolderForm" After="CostFinalize"><![CDATA[Installed="" AND NOT RESUME]]></Show>
@@ -1114,9 +1093,6 @@ Click "Next" to start the installation.</Text>
     <Property Id="AdminFolderForm_PrevArgs"><![CDATA[AdminWelcomeForm]]></Property>
     <Property Id="AdminFolderForm_NextArgs"><![CDATA[AdminConfirmInstallForm]]></Property>
     <Property Id="AdminConfirmInstallForm_PrevArgs"><![CDATA[AdminFolderForm]]></Property>
-
-    <Property Id="SplashForm_NextArgs"><![CDATA[WelcomeForm]]></Property>
-    <Property Id="WelcomeForm_PrevArgs"><![CDATA[SplashForm]]></Property>
 
     <Property Id="FolderForm_NextArgs"><![CDATA[Custom2Buttons]]></Property>
     <Property Id="Custom2Buttons_PrevArgs"><![CDATA[FolderForm]]></Property>
@@ -1163,7 +1139,6 @@ Click "Next" to start the installation.</Text>
       <Custom Action="StopServer" After="InstallRoxenService">REMOVE&lt;&gt;""</Custom>
       <Custom Action="StartServer" After="StopServer">REMOVE=""</Custom>
     </InstallExecuteSequence>
-    <Binary Id="DefSplashBitmap" src="Splash.bmp" />
     <Binary Id="DefBannerBitmap" src="Banner.bmp" />
     <Binary Id="UpFldrBtn" src="UpFldrBtn.icon" />
     <Binary Id="NewFldrBtn" src="NewFldrBtn.icon" />
