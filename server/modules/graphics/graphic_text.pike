@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.86 1997/10/03 21:46:39 js Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.87 1997/10/15 16:11:26 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -870,6 +870,7 @@ void restore_cached_args()
   args_restored = 1;
   object privs = Privs("Reading gtext argument list");
   object o = open(".gtext_args_"+hash(mc->name), "r");
+  privs = 0;
   if(o)
   {
     string data = o->read();
@@ -895,9 +896,10 @@ void save_cached_args()
   int on;
   on = number;
   restore_cached_args();
-  object privs = Privs("Saving gtext argument list");
   if(on > number) number=on;
+  object privs = Privs("Saving gtext argument list");
   object o = open(".gtext_args_"+hash(mc->name), "wct");
+  privs = 0;
   string data=encode_value(cached_args);
   catch {
     object q;
