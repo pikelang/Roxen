@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.216 2000/03/18 19:04:11 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.217 2000/03/18 19:11:01 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -701,7 +701,8 @@ constant textarg=({"afont",
 		   "xspacing",
 		   "ypad",
 		   "ysize",
-		   "yspacing"
+		   "yspacing",
+                   "border",
 
  /* generic argcache arguments */
 		   "crop",
@@ -726,22 +727,26 @@ mapping mk_gtext_arg(mapping arg, RequestID id)
   m_delete(arg,"width");
   m_delete(arg,"height");
 
-  foreach(filearg, string tmp)
-    if(arg[tmp]) {
-      p[tmp]=fix_relative(arg[tmp],id);
-      m_delete(arg,tmp);
-    }
+   foreach(filearg + textarg, string tmp)
+     if(arg[tmp]) 
+     {
+       p[tmp]=fix_relative(arg[tmp],id);
+       m_delete(arg,tmp);
+     }
 
-  if(arg->border && search(arg->border,",")) {
-    p->border=arg->border;
-    m_delete(arg,"border");
-  }
+//   if(arg->border && (search(arg->border,",")!=-1))
+//   {
+//     p->border=arg->border;
+//     m_delete(arg,"border");
+//   }
 
   array i = indices( arg );
   foreach(textarg, string tmp)
     foreach( glob( tmp, i ), string a )
     {
+      werror("found "+a+" "+arg[a]+"\n");
       p[a]=arg[a]; // ,id
+      i-=({a});
       m_delete(arg,a);
     }
 
