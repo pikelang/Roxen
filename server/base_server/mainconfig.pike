@@ -1,10 +1,13 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.82 1997/10/18 20:53:20 grubba Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.83 1997/11/07 06:04:33 mirar Exp $";
 //inherit "roxenlib";
+import Image;
+
 inherit "config/draw_things";
 
 import Array;
 import Stdio;
+
 string status_row(object node);
 string display_tabular_header(object node);
 object get_template(string t);
@@ -1047,6 +1050,7 @@ int nunfolded(object o)
 
 object module_font = get_font("base_server/config/font",0,0,0,"left",1.0,1.0);
 object button_font = get_font("base_server/config/button_font",0,0,0,"left",1.0,1.0);
+mapping(string:object) my_colortable = ([]);
 
 mapping auto_image(string in, object id)
 {
@@ -1101,18 +1105,25 @@ mapping auto_image(string in, object id)
      i=draw_unselected_button(value,button_font);
      break;
   }
-  if(i)
-  {
-    object o = open("roxen-images/"+img_key,"wct"); 
-    e=i->togif();
-    i=0;
-    if(o) { o->write(e); o=0; }
+
+  if (!i) return 0;
+
+  object ct;
+
+  if (!(ct=my_colortable[key]))
+     ct=my_colortable[key]=colortable(i,256,4,4,4);
+//		  colortable(4,4,8,
+//			     ({0,0,0}),({255,255,0}),16,
+//			     ({0,0,0}),({170,170,255}),48,
+//			     )
+  object o = open("roxen-images/"+img_key,"wct"); 
+  e=GIF.encode(i,ct);
+  i=0;
+  if(o) { o->write(e); o=0; }
 #ifdef DEBUG
-    else {perror("Cannot open file for "+in+"\n");}
+  else {perror("Cannot open file for "+in+"\n");}
 #endif
-    return http_string_answer(e,"image/gif");
-  }
-  return 0;
+  return http_string_answer(e,"image/gif");
 }
 
 

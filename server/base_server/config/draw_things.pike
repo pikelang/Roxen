@@ -2,7 +2,7 @@
 import Image;
 
 constant Image = image;
-string cvs_verison = "$Id: draw_things.pike,v 1.26 1997/08/14 15:57:39 grubba Exp $";
+string cvs_verison = "$Id: draw_things.pike,v 1.27 1997/11/07 06:04:35 mirar Exp $";
 
 
 object (Image) load_image(string f)
@@ -22,7 +22,7 @@ object (Image) load_image(string f)
   if(!(data=file->read(0x7fffffff)))
     return 0;
 
-  if(img->frompnm(data))
+  if(img=PNM.decode(data))
     return img->scale(0,48);
 //  werror("Failed to parse image file.\n");
   
