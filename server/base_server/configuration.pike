@@ -3,7 +3,7 @@
  * (C) 1996, 1999 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.238 1999/12/09 04:30:06 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.239 1999/12/09 06:12:49 mast Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -2215,9 +2215,9 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
 
 #ifdef MODULE_DEBUG
   if( id )
-    report_debug(" %-33s ... ", moduleinfo->get_name()+" copy "+(id+1));
+    report_debug(" %-33s ... \b", moduleinfo->get_name()+" copy "+(id+1));
   else
-    report_debug(" %-33s ... ", moduleinfo->get_name() );
+    report_debug(" %-33s ... \b", moduleinfo->get_name() );
 #endif
 
   module = modules[ module ];
@@ -2229,7 +2229,9 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
   {
     if(err = catch(me = moduleinfo->instance(this_object())))
     {
-      report_debug("ERROR\n");
+#ifdef MODULE_DEBUG
+      report_debug("\b ERROR\n");
+#endif
       report_error(LOCALE->
                    error_initializing_module_copy(moduleinfo->get_name(),
                                                   describe_backtrace(err)));
@@ -2489,7 +2491,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
   if((me->start) && (err = catch( me->start(0, this_object()) ) ) )
   {
 #ifdef MODULE_DEBUG
-    report_debug(" ERROR\n");
+    report_debug("\b ERROR\n");
 #endif
     report_error(LOCALE->
 		 error_initializing_module_copy(moduleinfo->get_name(),
@@ -2506,6 +2508,9 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
     
   if (err = catch(pr = me->query("_priority"))) 
   {
+#ifdef MODULE_DEBUG
+    report_debug("\b ERROR\n");
+#endif
     report_error(LOCALE->
 		 error_initializing_module_copy(moduleinfo->get_name(),
 						describe_backtrace(err)));
@@ -2535,10 +2540,14 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
 	  else
 	    pri[pr]->file_extension_modules[foo]=({me});
       }
-    })
+    }) {
+#ifdef MODULE_DEBUG
+      report_debug("\b ERROR\n");
+#endif
       report_error(LOCALE->
 		   error_initializing_module_copy(moduleinfo->get_name(),
 						  describe_backtrace(err)));
+    }
 
   if(module_type & MODULE_PROVIDER) 
     if (err = catch 
@@ -2551,10 +2560,14 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
       if (multisetp(provs)) {
 	pri[pr]->provider_modules [ me ] = provs;
       }
-    })
+    }) {
+#ifdef MODULE_DEBUG
+      report_debug("\b ERROR\n");
+#endif
       report_error(LOCALE->
 		   error_initializing_module_copy(moduleinfo->get_name(),
                                                   describe_backtrace(err)));
+    }
       
   if(module_type & MODULE_TYPES)
   {
@@ -2599,7 +2612,9 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
     store( "EnabledModules", enabled_modules, 1, this_object());
   }
   invalidate_cache();
-  report_debug(" OK   %5.1fms.\n", (gethrtime()-start_time)/1000.0);
+#ifdef MODULE_DEBUG
+  report_debug("\b OK   %5.1fms.\n", (gethrtime()-start_time)/1000.0);
+#endif
   return me;
 }
 
@@ -2774,7 +2789,7 @@ int add_modules( array(string) mods, int|void now )
     {
 #ifdef MODULE_DEBUG
       if( !wr++ )
-        report_debug("[ adding required modules\n");
+        report_debug("\b[ adding required modules\n");
 #endif
         forcibly_added[ mod+"#0" ] = 1;
         enable_module( mod+"#0" );

@@ -1,4 +1,4 @@
-// string cvs_version = "$Id: module_support.pike,v 1.43 1999/11/29 22:09:21 per Exp $";
+// string cvs_version = "$Id: module_support.pike,v 1.44 1999/12/09 06:12:49 mast Exp $";
 #include <roxen.h>
 #include <module.h>
 #include <stat.h>
@@ -171,12 +171,12 @@ program my_compile_file(string file)
     if( catch ( master()->dump_program( file, p ) ) )
     {
 #ifdef MODULE_DEBUG
-      werror(" [nodump] ");
+      report_debug("\b [nodump] \b");
 #endif
       Stdio.File( ofile, "wct" );
     } else {
 #ifdef MODULE_DEBUG
-      werror(" [dump] ");
+      report_debug("\b [dump] \b");
 #endif
     }
   return p;

@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.127 1999/12/08 02:30:27 mast Exp $
+ * $Id: roxenloader.pike,v 1.128 1999/12/09 06:12:49 mast Exp $
  *
  * Roxen bootstrap program.
  *
@@ -17,7 +17,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.127 1999/12/08 02:30:27 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.128 1999/12/09 06:12:49 mast Exp $";
 
 #define perror roxen_perror
 
@@ -131,44 +131,61 @@ void roxen_perror(string format, mixed ... args)
   if(sizeof(args)) 
     format=sprintf(format,@args);
 
+  // "Delayed newlines": End a message with \b and start the next one
+  // with \b to make them continue on the same line. If another
+  // message gets in between, it still get written on a new line.
+  int delayed_nl;
+  if (format == "\b") format = "";
+  else if (sizeof (format)) {
+    if (format[0] == '\b') {
+      if (last_was_nl == -1) last_was_nl = 0;
+      format = format[1..];
+    }
+    if (format[-1] == '\b') {
+      delayed_nl = 1;
+      format = format[..sizeof(format)-2];
+    }
+  }
+
   if (!last_was_nl && (format != "")) {
     // Continuation line.
     int i = search(format, "\n");
 
     if (i == -1) {
-      stderr->write(format);
+      stderr->write(possibly_encode(format));
       format = "";
+      if (delayed_nl) last_was_nl = -1;
     } else {
-      stderr->write(format[..i]);
+      stderr->write(possibly_encode(format[..i]));
       format = format[i+1..];
       last_was_nl = 1;
     }
   }
 
-  string s;
-
-  if (format=="" || !stringp(format)) 
-    return;
-
+  if (sizeof(format)) {
 #if efun(syslog)
-  if(use_syslog && (loggingfield&LOG_DEBUG))
-    foreach(format/"\n"-({""}), string message)
-      syslog(LOG_DEBUG, replace(message+"\n", "%", "%%"));
+    if(use_syslog && (loggingfield&LOG_DEBUG))
+      foreach(format/"\n"-({""}), string message)
+	syslog(LOG_DEBUG, replace(message+"\n", "%", "%%"));
 #endif
 
-  last_was_nl = format[-1] == '\n';
+    if (last_was_nl == -1) stderr->write("\n");
+    last_was_nl = format[-1] == '\n';
 
-  array(string) a = format/"\n";
-  int i;
+    array(string) a = format/"\n";
+    int i;
 
-  a = map( a, possibly_encode );
+    a = map( a, possibly_encode );
 
-  for(i=0; i < sizeof(a)-1; i++) {
-    stderr->write(short_time() + a[i] + "\n");
+    for(i=0; i < sizeof(a)-1; i++) {
+      stderr->write(short_time() + a[i] + "\n");
+    }
+    if (!last_was_nl) {
+      stderr->write(short_time() + a[-1]);
+    }
   }
-  if (!last_was_nl) {
-    stderr->write(short_time() + a[-1]);
-  }
+
+  if (delayed_nl) last_was_nl = -1;
 }
 
 // Make a directory hierachy
