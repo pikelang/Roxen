@@ -1,7 +1,7 @@
 #include <stat.h>
 #include <config.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.8 2001/01/19 18:58:21 per Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.9 2001/01/19 21:21:04 per Exp $";
 
 class Variable
 {
@@ -298,6 +298,9 @@ class Configuration
   array(AuthModule) auth_modules();
   array(UserDB) user_databases();
 
+  AuthModule find_auth_module( string name );
+  UserDB find_user_database( string name );
+  
   static string _sprintf( )
   {
     return "Configuration("+name+")";
@@ -719,6 +722,12 @@ class User( UserDB database )
   string crypted_password() { return "x"; }
   //! Used by compat_userinfo(). The default implementation returns "x"
 
+  array(Group) groups()
+  //! Return all groups this user is a member in. The default
+  //! implementation returns ({})
+  {
+    return ({});
+  }
 
   int set_name(string name)               {}
   int set_real_name(string rname)         {}
@@ -749,7 +758,7 @@ class User( UserDB database )
   mixed set_var( RoxenModule module, string index, mixed value )
   //! Set a specified variable in the user. If @[value] is a string,
   //! it's stored as is in the database, otherwise it's encoded using
-  //! encode_value before it's stored.
+  //! encode_value before it's stored. Returns the value.
   //!
   //! You can use 0 for the @[module] argument.
   //! 
@@ -823,6 +832,8 @@ class UserDB
 {
   inherit RoxenModule;
   constant module_type = MODULE_USERDB;
+
+  constant name = "db name";
 
   User find_user( string s );
   //! Find a user

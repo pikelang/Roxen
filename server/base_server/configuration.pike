@@ -1,6 +1,6 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.411 2001/01/19 18:34:44 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.412 2001/01/19 21:20:16 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -626,6 +626,19 @@ public array(string) user_from_uid(int u, RequestID|void id)
       return uid->compat_userinfo();
 }
 
+UserDB find_user_database( string name )
+{
+  foreach( user_databases(), UserDB m )
+    if( m->name == name )
+      return m;
+}
+
+AuthModule find_auth_module( string name )
+{
+  foreach( auth_modules(), AuthModule m )
+    if( m->name == name )
+      return m;
+}
 
 public User authenticate( RequestID id,
 			  UserDB|void database,
