@@ -8,7 +8,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.73 2000/03/16 18:44:38 nilsson Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.74 2000/03/21 17:12:26 mast Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -133,8 +133,8 @@ void create()
 
   defvar("no_symlinks", 0, "Forbid access to symlinks", TYPE_FLAG|VAR_MORE,
 	 "Forbid access to paths containing symbolic links.<br>\n"
-	 "NOTE: This can cause *alot* of lstat system-calls to be performed "
-	 "and can make the server much slower.");
+	 "Note: This can cause <em>a lot</em> of lstat system calls to be "
+	 "performed and can make the server much slower.");
 
   defvar("charset", "iso-8859-1", "File charset", TYPE_STRING,
 	 "The charset the files on disk have.");
@@ -147,7 +147,6 @@ void create()
 	 "only be accessed internally, e.g. with the RXML "
 	 "<tt>&lt;insert&gt;</tt> and <tt>&lt;use&gt;</tt> tags.");
 }
-
 
 string path;
 int stat_cache;
