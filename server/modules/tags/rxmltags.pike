@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.161 2000/08/23 03:17:48 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.162 2000/08/23 12:26:23 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -73,7 +73,6 @@ class EntityPageVirtfile {
 class EntityPageQuery {
   inherit RXML.Value;
   string rxml_const_eval(RXML.Context c) {
-    c->id->misc->cacheable=0;
     return c->id->query||"";
   }
 }
@@ -81,7 +80,6 @@ class EntityPageQuery {
 class EntityPageURL {
   inherit RXML.Value;
   string rxml_const_eval(RXML.Context c) {
-    c->id->misc->cacheable=0;
     return c->id->raw_url;
   }
 }
