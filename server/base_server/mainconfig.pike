@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.70 1997/08/14 15:59:50 grubba Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.71 1997/08/14 20:11:01 thomas Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -186,7 +186,7 @@ void create()
 string default_head(string h, string|void save)
 {
   return ("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0 Draft//EN\">"
-	  "<head><title>"+h+"</title></head>\n"+ BODY+"\n");
+	  "<head><title>"+h+"</title>\n<META HTTP-EQUIV=\"Expires\" CONTENT=\"0\">\n</head>\n"+ BODY+"\n");
 }
 
 object find_node(string l)
@@ -1187,7 +1187,7 @@ string status_row(object node)
 	   " cellspacing=0>\n"
 	   "<tr><td valign=middle align=left><a href=\"$docurl\">"
 	   "<img border=0 src=\"/image/roxen-small.gif\" alt=\"Roxen\"></a>"
-	   "</td>\n<td align=right valign=top>" + describe_node_path(node) +
+	   "</td>\n<td align=right valign=center>" + describe_node_path(node) +
 	   "</td>\n<td>&nbsp;</td></tr>\n</table><br>");
 }
 
