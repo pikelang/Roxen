@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version = "$Id: htaccess.pike,v 1.70 2001/03/15 23:31:25 per Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.71 2001/04/17 11:04:09 per Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -27,18 +27,6 @@ constant module_doc  = "Almost complete support for NCSA/Apache .htaccess files.
 
 void create()
 {
-  defvar("cache_all", 1, "Cache the failures",
-	 TYPE_FLAG,
-	 "If set, cache failures to find a .htaccess file as well as found "
-	 "ones. This will limit the number of stat(2) calls quite dramatically."
-	 " This should be set if you have a busy site! It does have at least "
-	 " one disadvantage: The user has to press reload to get the new "
-	 ".htaccess file parsed."
-#ifdef NSERIOUS
-	 " Since the poor user is quite used to reloading,"
-	 " that is not usually a problem. Just blame the client-side cache. "
-#endif
-    );
   defvar("file", ".htaccess", "Htaccess file name", TYPE_STRING|VAR_MORE);
   defvar("denyhtlist", ({".htaccess", ".htpasswd", ".htgroup"}),
 	 "Deny file list", TYPE_STRING_LIST,
@@ -52,7 +40,7 @@ void create()
  * SGML parser.
  */
 
-string parse_limit(string tag, mapping m, string s, mapping id, mapping access)
+string parse_limit(string tag, mapping m, string s, RequestID id, mapping access)
 {
   string line, tmp, ent, item;
   string|int data;
@@ -128,36 +116,39 @@ string parse_limit(string tag, mapping m, string s, mapping id, mapping access)
 }
 
 /* parse the .htaccess file */
-mapping|int parse_htaccess(Stdio.File f, RequestID id, string rht)
+mapping|int parse_and_find_htaccess(RequestID id)
 {
-  string htaccess, line;
+  string line;
   string cache_key;
-  array(int) s;
-  array|int in_cache;
   mapping access = ([ ]);
-  cache_key = "htaccess:" + id->conf->name + ":" + (id->misc->host||"*");
 
+  array cv = VFS.find_above_read( id->not_query, htfile, id, "htaccess", 1 );
+  if( !cv ) return 0;
 
-  s = (array(int))f->stat();
+  [string file,string htaccess,int mtime] = cv;
+    
+  cache_key = "htaccess:parsed:" + id->conf->name + ":" + (id->misc->host||"*");
 
-  if((in_cache = cache_lookup(cache_key, rht)) && (s[3] == in_cache[0]))
+  array in_cache;
+  if((in_cache = cache_lookup(cache_key, file)) && (mtime <= in_cache[0]))
     return in_cache[1];
 
-  htaccess = f->read(0x7fffffff);
-
-  if(!htaccess || !strlen(htaccess))
+  if( !strlen(htaccess) )
     return 0;
 
   htaccess = replace(htaccess, "\\\n", " ");
-
   access = ([]);
 
   htaccess = parse_html(htaccess - "\r",
 			([]), (["limit": parse_limit ]), id, access);
 
-  if ((!access["head"]) && access["get"]) {
-    access["head"] = access["get"];
+  if ((!access->head) && access->get) {
+    access->head = access->get;
   }
+
+  if( sizeof( access ) )
+    parse_limit( "limit", ([ "get":"get", "post":"post", "head":"head" ]),
+		 htaccess, id, access );
 
   foreach(htaccess / "\n"-({""}), line) {
     string cmd, rest;
@@ -199,7 +190,7 @@ mapping|int parse_htaccess(Stdio.File f, RequestID id, string rht)
     HT_WERR(sprintf("Result of .htaccess file parsing -> %O\n",
 		    access));
   }
-  cache_set(cache_key, rht, ({s[3], access}));
+  cache_set(cache_key, file, ({mtime, access}));
   return access;
 }
 
@@ -620,13 +611,12 @@ mapping|string|int htaccess(mapping access, RequestID id)
 			 groupfile, userfile, id)))
       {
 	HT_WERR("User access ok!");
-	id->auth = ({ 1, auth[0], 0 });
-
+// 	id->auth = ({ 1, auth[0], 0 });
 	TRACE_LEAVE("OK");
 	return 0;
       } else {
 	HT_WERR("User access denied, invalid user.");
-	id->auth = ({ 0, auth[0], auth[1] });
+// 	id->auth = ({ 0, auth[0], auth[1] });
 	TRACE_LEAVE("Invalid user");
 	return validate(aname);
       }
@@ -635,226 +625,11 @@ mapping|string|int htaccess(mapping access, RequestID id)
   TRACE_LEAVE("OK");
 }
 
-inline string dot_dot(string from)
-{
-  if(from=="/") return "";
-  return combine_path(from, "../");
-}
-
-string|int cache_path_of_htaccess(string path, RequestID id)
-{
-  string|int f;
-  string cache_key="htaccess_files:"+id->conf->name+":"+(id->misc->host||"*");
-  f = cache_lookup(cache_key, path);
-#ifdef HTACCESS_DEBUG
-  if(f==0) {
-    HT_WERR("Location of .htaccess file for "+path+" not cached.");
-  } else if(f==-1) {
-    HT_WERR("Non-existant .htaccess file cached: "+path);
-  } else if(f) {
-    HT_WERR("Existant .htaccess file cached: "+path);
-  }
-#endif
-  return f;
-}
-
-void cache_set_path_of_htaccess(string path, string|int htaccess_file, RequestID id)
-{
-  string cache_key = "htaccess_files:" + id->conf->name + ":" + 
-         (id->misc->host||"*");
-  HT_WERR("HTACCESS: Setting cached location for "
-          +path+" to "+htaccess_file);
-  cache_set(cache_key, path, htaccess_file);
-}
-
-// This function traverse the virtual filepath to see if there are any
-// .htaccess files hiding anywhere. When (and if) if finds one, it returns
-// the full path to it _and_ the actual open file (modified by Per)
-
-array rec_find_htaccess_file(RequestID id, string vpath)
-{
-/*  vpath is asumed to end in '/', it is the directory path. */
-  string path;
-  if(vpath == "") return 0;
-
-  if(!id->pragma["no-cache"])
-  {
-    if((path = cache_path_of_htaccess(vpath,id)) != 0)
-    {
-      Stdio.File o;
-      Stat st;
-
-      if (stringp(path) && (st = file_stat(path)) && (st[1] != -4))
-      {
-	o = open(path, "r");
-	if(o)  return ({ path, o });
-      } else {
-	if (st && (st[1] == -4)) {
-	  report_error(sprintf("HTACCESS: The htaccess-file in \"%s\" is a device!\n"
-			       "vpath: \"%s\"\n"
-			       "query: \"%s\"\n", path, vpath, id->query + ""));
-	}
-	if(query("cache_all"))
-	  return 0;
-      }
-    }
-  } /* Not found in cache... */
-
-  if(path = id->conf->real_file(vpath, id))
-  {
-    Stdio.File f;
-    Stat st;
-
-    if((st = file_stat(path + query("file"))) && (st[1] != -4) &&
-       (f = open(path + query("file"), "r")))
-    {
-#ifdef FD_DEBUG
-      mark_fd(f->query_fd(), ".htaccess file in "+path);
-#endif
-      cache_set_path_of_htaccess(vpath, path+ query("file"),id);
-      return ({ path + query("file"), f });
-    }
-    if (st && (st[1] == -4)) {
-      report_error(sprintf("HTACCESS: The htaccess-file in \"%s\" is a device!\n"
-			   "vpath: \"%s\"\n"
-			   "query: \"%s\"\n", path, vpath, id->query + ""));
-    }
-  }
-  array res;
-  if(res = rec_find_htaccess_file(id, dot_dot(vpath)))
-  {
-    cache_set_path_of_htaccess(vpath, res[0], id);
-    return res;
-  }
-  if(query("cache_all"))
-    cache_set_path_of_htaccess(vpath, -1, id);
-  return 0;
-}
-
-array new_find_htaccess_file(RequestID id, string vpath)
-{
-  HT_WERR(sprintf("new_find_htaccess_file(X, %O)\n", vpath));
-
-  if (vpath == "") return 0;
-
-  string|int path;
-
-  int use_cache;
-  if (use_cache = (!id->pragma["no-cache"])) {
-    if (path = cache_path_of_htaccess(vpath, id)) {
-      HT_WERR(sprintf("Cached: path = %O\n", path));
-
-      Stat st;
-
-      if (stringp(path) && (st = file_stat(path)) && (st[1] != -4)) {
-	Stdio.File f = open(path, "r");
-	if(f) {
-	  return ({ path, f });
-	}
-	// Invalid cache entry. Invalidate the cache path.
-	use_cache = 0;
-      } else {
-	if (st && (st[1] == -4)) {
-	  report_error(sprintf("HTACCESS: The htaccess-file in \"%s\" is a device!\n"
-			       "vpath: \"%s\"\n"
-			       "query: \"%s\"\n", path, vpath, id->query + ""));
-	  return 0;
-	}
-	if(query("cache_all"))
-	  return 0;
-      }
-    }
-  }
-  // Not found in cache...
-
-  array(string) segments = vpath/"/";
-  string subvpath = "";
-
-  path = -1;
-
-  foreach(segments, string segment) {
-    subvpath += segment + "/";
-
-    HT_WERR(sprintf("Trying vpath %O\n", subvpath));
-
-    string|int p;
-
-    if (use_cache && (p = cache_path_of_htaccess(subvpath, id))) {
-      HT_WERR(sprintf("Cached: path = %O\n", p));
-      if (stringp(p) || !stringp(path)) {
-	path = p;
-	continue;
-      }
-    }
-
-    if (!(p = id->conf->real_file(subvpath, id))) {
-      // No use checking any deeper.
-      // Is too / per
-      continue;
-    }
-    string fname = p + query("file");
-    Stat st;
-    if(st = file_stat(fname)) {
-      HT_WERR(sprintf("Found htaccess-file: %O\n", fname));
-      if (st[1] >= 0) {
-	path = fname;
-      } else {
-	report_error(sprintf("HTACCESS: The htaccess-file \"%s\" is not a regular file!\n"
-			     "vpath: \"%s\"\n"
-			     "query: \"%s\"\n", fname, vpath, id->query + ""));
-      }
-    }
-    if (stringp(path)) {
-      cache_set_path_of_htaccess(subvpath, path, id);
-    } else if (query("cache_all")) {
-      cache_set_path_of_htaccess(subvpath, -1, id);
-    }
-  }
-
-  if (stringp(path)) {
-    HT_WERR(sprintf("Result htaccess-file: %O\n", path));
-
-    Stat st;
-    if ((st = file_stat(path)) && (st[1] >= 0)) {
-      Stdio.File f = open(path, "r");
-      if (f)
-	return ({ path, f });
-      report_error(sprintf("HTACCESS: Unable to open \"%s\"!\n", path));
-    } else {
-      report_error(sprintf("HTACCESS: The htaccess-file \"%s\" is not a regular file!\n"
-			   "vpath: \"%s\"\n"
-			   "query: \"%s\"\n", path, vpath, id->query + ""));
-    }
-  }
-  HT_WERR("No htaccess-file.\n");
-  return 0;
-}
-
-array find_htaccess_file(RequestID id)
-{
-  string vpath;
-
-  vpath = id->not_query;
-
-  // Make sure the path does _not_ end with '/', since that would disable
-  // checking for /foo/.htaccess when /foo/ is accessed.   The only thing
-  // affected is directory listings, but that might be sensitive as well.
-  // This is only because of the call to dot_dot below :-)
-
-  if(vpath[-1] == '/') vpath += "gazonk";
-
-  return new_find_htaccess_file( id, dot_dot(vpath) );
-}
-
 mapping htaccess_no_file(RequestID id)
 {
-  int|array tmp;
   mapping access = ([]);
   string file;
-  if(!(tmp = find_htaccess_file(id)))
-    return 0;
-
-  access = parse_htaccess(tmp[1], id, tmp[0]);
+  access = parse_and_find_htaccess(id);
 
   if(access && (access->nofile || (access->nofile=access->errorfile)))
   {
@@ -876,19 +651,12 @@ mapping htaccess_no_file(RequestID id)
 
 mapping try_htaccess(RequestID id)
 {
-  int|array tmp;
   mapping access = ([]);
 
   TRACE_ENTER("htaccess->try_htaccess()", try_htaccess);
-
-  if(!(tmp = find_htaccess_file(id)))
-  {
-    HT_WERR("No htaccess file for "+id->not_query);
-    TRACE_LEAVE("No htaccess file.");
+  if( !( access = parse_and_find_htaccess( id )) )
     return 0;
-  }
   NOCACHE(); // Since there is a htaccess file we cannot cache at all.
-  access = parse_htaccess(tmp[1], id, tmp[0]);
 
   if(access)
   {
@@ -970,6 +738,9 @@ mapping try_htaccess(RequestID id)
 
 mapping last_resort(RequestID id)
 {
+  if( id->misc->internal_get ) // OK.
+    return 0;
+
   mapping access_violation;
 
   TRACE_ENTER("htaccess->last_resort()", last_resort);
@@ -984,6 +755,9 @@ mapping last_resort(RequestID id)
 
 mapping remap_url(RequestID id)
 {
+  if( id->misc->internal_get ) // OK.
+    return 0;
+
   mapping access_violation;
 
   TRACE_ENTER("htaccess->remap_url()", remap_url);
@@ -995,9 +769,9 @@ mapping remap_url(RequestID id)
       TRACE_LEAVE("Access violation");
       return access_violation;
     } else {
-
       string s = (id->not_query/"/")[-1];
-      if ((s != "") && (search(query("denyhtlist"), s) != -1)) {
+      if( denylist[ s ] )
+      {
 	report_debug("Denied access for "+s+"\n");
 	id->misc->error_code = 401;
 	TRACE_LEAVE("Access Denied");
@@ -1007,4 +781,12 @@ mapping remap_url(RequestID id)
     }
   }
   TRACE_LEAVE("OK");
+}
+
+multiset denylist;
+string   htfile;
+void start()
+{
+  denylist = mkmultiset( query( "denyhtlist" ) );
+  htfile = query("file");
 }
