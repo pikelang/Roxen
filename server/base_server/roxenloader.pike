@@ -16,7 +16,7 @@ private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.204 2000/10/10 18:46:30 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.205 2001/03/26 11:32:27 karman Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -109,7 +109,7 @@ string short_time()
        if( up > 3600 )
        {
          return sprintf( "%2dd%2dh%2dm : ",
-                       (int)up/216000,
+                       (int)up/86400,
                        (((int)up/3600)%24),
                        ((int)up/60)%60);
        }
