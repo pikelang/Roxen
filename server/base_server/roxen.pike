@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.299 1999/06/21 19:30:52 mast Exp $
+ * $Id: roxen.pike,v 1.300 1999/06/25 17:57:52 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.299 1999/06/21 19:30:52 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.300 1999/06/25 17:57:52 per Exp $";
 
 object backend_thread;
 object argcache;
@@ -570,7 +570,7 @@ private static void accept_callback( object port )
     {
       switch(port->errno())
       {
-      case 0:
+       case 0:
 #if constant(system.EAGAIN)
       case system.EAGAIN:
 #endif /* constant(system.EAGAIN) */
@@ -1679,7 +1679,6 @@ void reload_all_configurations()
   object conf;
   array (object) new_confs = ({});
   mapping config_cache = ([]);
-  //  werror(sprintf("%O\n", config_stat_cache));
   int modified;
 
   report_notice(LOCALE->reloading_config_interface());
@@ -1888,11 +1887,21 @@ class ImageCache
     return data_cache[i] = what;
   }
 
+  static mixed frommapp( mapping what )
+  {
+    if( what[""] ) return what[""];
+    return what;
+  }
 
   static void draw( string name, RequestID id )
   {
-    mapping args = argcache->lookup( name );
-    mixed reply = draw_function( copy_value(args), id );
+    mixed args;
+    args = Array.map( Array.map( name/"¤", argcache->lookup ), frommapp);
+
+    mixed reply = draw_function( @copy_value(args), id );
+
+    if( arrayp( args ) )
+      args = args[0];
 
     mapping meta;
     string data;
@@ -1904,6 +1913,7 @@ class ImageCache
       string dither = args->dither;
       Image.Colortable ct;
       object alpha;
+      int true_alpha; 
 
       if( args->fs  || dither == "fs" )
 	dither = "floyd_steinberg";
@@ -1923,8 +1933,12 @@ class ImageCache
       if( args->gamma )
         reply = reply->gamma( (float)args->gamma );
 
+      if( args["true-alpha"] )
+        true_alpha = 1;
+
       if( args["opaque-value"] )
       {
+        true_alpha = 1;
         int ov = (int)(((float)args["opaque-value"])*2.55);
         if( ov < 0 )
           ov = 0;
@@ -2005,9 +2019,9 @@ class ImageCache
       switch(format)
       {
        case "gif":
-         if( alpha )
+         if( alpha && true_alpha )
          {
-           object ct = Image.Colortable( ({ ({ 0,0,0 }), ({ 255,255,255 }) }) );
+           object ct=Image.Colortable( ({ ({ 0,0,0 }), ({ 255,255,255 }) }) );
            ct->floyd_steinberg();
            alpha = ct->map( alpha );
          }
@@ -2126,11 +2140,12 @@ class ImageCache
     return res->data;
   }
 
-  mapping http_file_answer( string|mapping data, RequestID id, int|void nodraw )
+  mapping http_file_answer( string|mapping data, 
+                            RequestID id, 
+                            int|void nodraw )
   {
     string na = store( data,id );
     mixed res;
-
     if(!( res = restore( na )) )
     {
       if(nodraw)
@@ -2154,11 +2169,20 @@ class ImageCache
     return restore_meta( na );
   }
 
-  string store( string|mapping data, RequestID id )
+  mapping tomapp( mixed what )
+  {
+    if( mappingp( what ))
+      return what;
+    return ([ "":what ]);
+  }
+
+  string store( array|string|mapping data, RequestID id )
   {
     string ci;
     if( mappingp( data ) )
       ci = argcache->store( data );
+    else if( arrayp( data ) )
+      ci = Array.map( Array.map( data, tomapp ), argcache->store )*"¤";
     else
       ci = data;
     return ci;
@@ -2316,9 +2340,7 @@ class ArgCache
     if( cache[ data ] )
       return cache[ data ][ CACHE_SKEY ];
 
-//     werror(" store -> ");
     string id = create_key( data );
-//     werror(id+"\n");
     cache[ data ] = ({ 0, 0 });
     cache[ data ][ CACHE_VALUE ] = copy_value( args );
     cache[ data ][ CACHE_SKEY ] = id;
@@ -2336,7 +2358,6 @@ class ArgCache
   mapping lookup( string id )
   {
     LOCK();
-//     werror(" lookup -> "+id+"\n");
     if(cache[id])
       return cache[cache[id]][CACHE_VALUE];
 
@@ -2410,15 +2431,12 @@ mapping low_decode_image(string data, void|array tocolor)
     i = Image.JPEG.decode( data );
     format = "JPEG";
   };
-
 #endif
 
 #if constant(Image.XCF) && constant(Image.XCF._decode)
   if(!i) catch
   {
-    mixed q = Image.XCF._decode( data, ([
-      "background":tocolor,
-      ]));
+    mixed q = Image.XCF._decode( data,(["background":tocolor,]) );
     tocolor=0;
     format = "XCF Gimp file";
     i = q->image;
@@ -3155,7 +3173,8 @@ anlending.");
   locks up. If you are running in a single threaded environment heavy 
   calculations will also halt the server. In multi-threaded mode bugs such as 
   eternal loops will not cause the server to reboot, since only one thread is
-   blocked. In general there is no harm in having this option enabled. ");
+  blocked. In general there is no harm in having this option enabled. ");
+
   deflocaledoc("svenska", "abs_engage",
 	       "AntiBlockSystem: Slå på AntiBlockSystemet",
 #"Ska antilåssystemet vara igång? Om det är det så kommer roxen automatiskt
@@ -3293,7 +3312,6 @@ så här ofta. Tiden är angiven i dagar");
 // Somewhat misnamed, since there can be more then one
 // configuration-interface port nowdays. But, anyway, this function
 // opens and listens to all configuration interface ports.
-
 void initiate_configuration_port( int|void first )
 {
   object o;
@@ -3834,7 +3852,7 @@ string check_variable(string name, mixed value)
        SET_LOCALE(default_locale);
        if(root)
        {
-// 	 destruct(root);
+//       destruct(root);
 // 	 configuration_interface()->root = configuration_interface()->Node();
 	 configuration_interface()->
 	   build_root(configuration_interface()->root);
