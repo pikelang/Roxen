@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.728 2001/09/05 14:28:00 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.729 2001/09/05 14:36:33 per Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -2870,7 +2870,7 @@ class ImageCache
       if( !(res = restore( na,id )) )
 	error("Draw callback did not generate any data\n");
     }
-    res->stat = ({ 0, 0, 900000000, 0, 0, 0, 0, 0 });
+    res->stat = ({ 0, 0, 0, 900000000, 0, 0, 0, 0, 0 });
     id->misc->cacheable = INITIAL_CACHEABLE;
     return res;
   }
