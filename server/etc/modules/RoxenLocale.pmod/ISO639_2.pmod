@@ -566,7 +566,7 @@ private mapping(string:string) conversion=([
   "sa":"san",
   "sc":"srd",
   "sd":"snd",
-  "se":"sme",
+  "se":"swe",
   "sg":"sag",
   "si":"sin",
   "sk":"slk",
