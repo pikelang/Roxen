@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.189 2004/05/10 11:43:07 grubba Exp $
+// $Id: module.pike,v 1.190 2004/05/10 13:41:20 grubba Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -409,7 +409,7 @@ PropertySet|mapping(string:mixed) query_properties(string path, RequestID id)
 //! @note
 //!   Returning a string is shorthand for returning an array
 //!   with a single text node.
-string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
+string|array(Parser.XML.Tree.SimpleNode)|mapping(string:mixed)
   query_property(string path, string prop_name, RequestID id)
 {
   mapping(string:mixed)|PropertySet properties = query_properties(path, id);
@@ -545,7 +545,7 @@ mapping(string:mixed) patch_properties(string path,
 //! @returns
 //!   Returns a mapping on any error, zero otherwise.
 mapping(string:mixed) set_property (string path, string prop_name,
-				    string|array(Parser.XML.Tree.Node) value,
+				    string|array(Parser.XML.Tree.SimpleNode) value,
 				    RequestID id)
 {
   mapping(string:mixed)|PropertySet properties = query_properties(path, id);
@@ -1169,40 +1169,105 @@ mapping make_collection(string path, RequestID id)
   return find_file(path, id);
 }
 
+//! State of the Overwrite header.
+static enum Overwrite {
+  NEVER_OVERWRITE = -1,	//! The Overwrite header is "F".
+  MAYBE_OVERWRITE = 0,	//! No Overwrite header.
+  DO_OVERWRITE = 1,	//! The Overwrite header is "T".
+};
+
+//! State of the DAV:PropertyBehavior for this source.
+static enum PropertyBehavior {
+  PROPERTY_OMIT = -1,	//! DAV:omit (Omit if it can't be copied).
+  PROPERTY_COPY = 0,	//! Copy if it can't be kept alive (default).
+  PROPERTY_ALIVE = 1,	//! DAV:keepalive (Live properties must be kept alive).
+}
+
+mapping copy_properties(string source, string destination,
+			PropertyBehavior behavior, RequestID id)
+{
+  SIMPLE_TRACE_ENTER(this, "copy_properties(%O, %O, %O, %O)",
+		     source, destination, behavior, id);
+  PropertySet source_properties = query_properties(source, id);
+  PropertySet destination_properties = query_properties(destination, id);
+
+  multiset(string) property_set = source_properties->query_all_properties();
+  mapping res;
+  foreach(property_set; string property_name;) {
+    SIMPLE_TRACE_ENTER(this, "Copying the property %O.", property_name);
+    string|array(Parser.XML.Tree.SimpleNode)|mapping(string:mixed) source_val =
+      source_properties->query_property(property_name);
+    if (mappingp(source_val)) {
+      TRACE_LEAVE("Reading of property failed. Skipped.");
+      continue;
+    }
+    string|array(Parser.XML.Tree.SimpleNode)|mapping(string:mixed) dest_val =
+      destination_properties->query_property(property_name);
+    if (dest_val == source_val) {
+      TRACE_LEAVE("Destination already has the correct value.");
+      continue;
+    }
+    mapping res =
+      destination_properties->set_property(property_name, source_val);
+    if (behavior == PROPERTY_OMIT) {
+      TRACE_LEAVE("Omit verify.");
+      continue;
+    }
+    if ((behavior == PROPERTY_ALIVE) && (res->error < 300)) {
+      // FIXME: Check that if the property was live in source,
+      //        it is still live in destination.
+      // This is likely already so, since we're in the same module.
+    }
+    if ((res->error < 300) ||
+	(res->error == Protocols.HTTP.HTTP_CONFLICT)) {
+      // Ok, or read-only property.
+      TRACE_LEAVE("Copy ok or read-only property.");
+      continue;
+    }
+    if (!res) {
+      // Copy failed, but attempt to copy the rest.
+      res = Roxen.http_status(Protocols.HTTP.HTTP_PRECOND_FAILED);
+    }
+    TRACE_LEAVE("Copy failed.");
+  }
+  TRACE_LEAVE(res?"Failed.":"Ok.");
+  return res;
+}
+
 mapping copy_collection(string source, string destination,
-			int(-1..1) behaviour,
+			PropertyBehavior behavior, Overwrite overwrite,
 			MultiStatus.Prefixed result, RequestID id)
 {
-  SIMPLE_TRACE_ENTER(this, "copy_collection(%O, %O, %O, %O, %O).",
-		     source, destination, behaviour, result, id);
+  SIMPLE_TRACE_ENTER(this, "copy_collection(%O, %O, %O, %O, %O, %O).",
+		     source, destination, behavior, overwrite, result, id);
   Stat st = stat_file(destination, id);
   if (st) {
     // Destination exists. Check the overwrite header.
-    if (id->request_headers->overwrite) {
-      if (lower_case(id->request_headers->overwrite) == "t") {
-	// RFC 2518 8.8.4
-	//   If a resource exists at the destination, and the Overwrite
-	//   header is "T" then prior to performing the copy the server
-	//   MUST perform a DELETE with "Depth: infinity" on the
-	//   destination resource.
-	TRACE_ENTER("Destination exists and overwrite is on.", this);
-	if (recurse_delete_files(destination, result, id)) {
-	  // Failed to delete something.
-	  TRACE_LEAVE("Deletion failed.");
-	  TRACE_LEAVE("Copy collection failed.");
-	  return Roxen.http_status(Protocols.HTTP.HTTP_PRECOND_FAILED);
-	}
-	TRACE_LEAVE("Deletion ok.");
-      } else {
-	TRACE_LEAVE("Destination already exists.");
+    switch(overwrite) {
+    case DO_OVERWRITE:
+      // RFC 2518 8.8.4
+      //   If a resource exists at the destination, and the Overwrite
+      //   header is "T" then prior to performing the copy the server
+      //   MUST perform a DELETE with "Depth: infinity" on the
+      //   destination resource.
+      TRACE_ENTER("Destination exists and overwrite is on.", this);
+      if (recurse_delete_files(destination, result, id)) {
+	// Failed to delete something.
+	TRACE_LEAVE("Deletion failed.");
+	TRACE_LEAVE("Copy collection failed.");
 	return Roxen.http_status(Protocols.HTTP.HTTP_PRECOND_FAILED);
       }
-    } else {
+      TRACE_LEAVE("Deletion ok.");
+      break;
+    case NEVER_OVERWRITE:
+      TRACE_LEAVE("Destination already exists.");
+      return Roxen.http_status(Protocols.HTTP.HTTP_PRECOND_FAILED);
+    case MAYBE_OVERWRITE:
       // No overwrite header.
       // Be nice, and fail only if we don't already have a collection.
       if (st->isdir) {
 	TRACE_LEAVE("Destination exists and is a directory.");
-	return 0;
+	return copy_properties(source, destination, behavior, id);
       }
       TRACE_LEAVE("Destination exists and is not a directory.");
       return Roxen.http_status(Protocols.HTTP.HTTP_PRECOND_FAILED);
@@ -1210,19 +1275,23 @@ mapping copy_collection(string source, string destination,
   }
   // Create the new collection.
   TRACE_LEAVE("Make a new collection.");
-  return make_collection(destination, id);
+  mapping res = make_collection(destination, id);
+  if (res && res->error >= 300) return res;
+  return copy_properties(source, destination, behavior, id) || res;
 }
 
-mapping copy_file(string path, string dest, int(-1..1) behavior, RequestID id)
+mapping copy_file(string path, string dest, PropertyBehavior behavior,
+		  Overwrite overwrite, RequestID id)
 {
-  SIMPLE_TRACE_ENTER(this, "copy_file(%O, %O, %O, %O)\n",
-		     path, dest, behavior, id);
+  SIMPLE_TRACE_ENTER(this, "copy_file(%O, %O, %O, %O, %O)\n",
+		     path, dest, behavior, overwrite, id);
   TRACE_LEAVE("Not implemented yet.");
   return Roxen.http_status (Protocols.HTTP.HTTP_NOT_IMPL);
 }
 
 mapping recurse_copy_files(string source, string destination, int depth,
-			   mapping(string:int(-1..1)) behavior,
+			   mapping(string:PropertyBehavior) behavior,
+			   Overwrite overwrite,
 			   MultiStatus.Prefixed result, RequestID id)
 {
   SIMPLE_TRACE_ENTER(this, "recurse_copy_files(%O, %O, %O, %O, %O, %O)\n",
@@ -1241,9 +1310,9 @@ mapping recurse_copy_files(string source, string destination, int depth,
   // FIXME: Check destination?
   if (st->isdir) {
     mapping res = copy_collection(source, destination,
-				  behavior[query_location()+destination] ||
+				  behavior[query_location()+source] ||
 				  behavior[0],
-				  result, id);
+				  overwrite, result, id);
     if (res && (res->error != 204) && (res->error != 201)) {
       if (res->error >= 300) {
 	// RFC 2518 8.8.3 and 8.8.8 (error minimization).
@@ -1261,7 +1330,7 @@ mapping recurse_copy_files(string source, string destination, int depth,
       mapping sub_res = recurse_copy_files(combine_path(source, filename),
 					   combine_path(destination, filename),
 					   depth,
-					   behavior, result, id);
+					   behavior, overwrite, result, id);
       if (sub_res && (sub_res->error != 204) && (sub_res->error != 201)) {
 	result->add_status(combine_path(destination, filename),
 			   sub_res->error, sub_res->rettext);
@@ -1271,9 +1340,9 @@ mapping recurse_copy_files(string source, string destination, int depth,
     return res;
   } else {
     return copy_file(source, destination,
-		     behavior[query_location()+destination] ||
+		     behavior[query_location()+source] ||
 		     behavior[0],
-		     id);
+		     overwrite, id);
   }
 }
 
