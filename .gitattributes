@@ -90,6 +90,7 @@ worldmap binary
 /server/config_interface/actions/flush.pike foreign_ident
 /server/config_interface/actions/ftpstatus.pike foreign_ident
 /server/config_interface/actions/generate_rsa.pike foreign_ident
+/server/config_interface/actions/licensestatus.pike foreign_ident
 /server/config_interface/actions/listfonts.pike foreign_ident
 /server/config_interface/actions/locks.pike foreign_ident
 /server/config_interface/actions/make_rsa_csr.pike foreign_ident
@@ -102,6 +103,7 @@ worldmap binary
 /server/config_interface/actions/resolv.pike foreign_ident
 /server/config_interface/actions/restart.pike foreign_ident
 /server/config_interface/actions/ssl_common.pike foreign_ident
+/server/config_interface/actions/upload_license.pike foreign_ident
 /server/config_interface/boxes/userfriendly.pike foreign_ident
 /server/config_interface/sites/site_content.pike foreign_ident
 /server/config_interface/template foreign_ident

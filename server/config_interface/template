@@ -1,5 +1,5 @@
 <!-- -*- html -*- -->
-<!-- $Id: template,v 1.105 2002/03/06 13:06:32 grubba Exp $ -->
+<!-- $Id: template,v 1.106 2002/03/06 16:21:23 wellhard Exp $ -->
 
 <define tag='cfg-variables'>
   <set variable='form.__redirect' value='1' />
@@ -162,8 +162,12 @@
   </table>
 
     <!-- enctype="multipart/form-data"  -->
+   
    <if not variable='_.noform'>
-     <form method="POST" action="&cf.current-url;">
+     <if variable="form.action == upload_license.pike">
+       <set variable="var.form_extra">enctype="multipart/form-data"</set>
+     </if>
+     <form method="POST" action="&cf.current-url;" ::="&var.form_extra;">
        <roxen-automatic-charset-variable/>
        &var.content:none;
      </form>
