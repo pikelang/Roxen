@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.194 2000/02/08 08:24:56 hubbe Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.195 2000/06/18 16:53:50 grubba Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -1892,9 +1892,9 @@ string tag_user(string tag, mapping m, object id, object file,mapping defines)
 
   b=m->name;
 
-  dom=id->conf->query("Domain");
-  if(dom[-1]=='.')
-    dom=dom[0..strlen(dom)-2];
+  dom = id->conf->query("Domain");
+  if(sizeof(dom) && (dom[-1]=='.'))
+    dom = dom[0..strlen(dom)-2];
   if(!b) return "";
   u=id->conf->userinfo(b, id);
   if(!u) return "";
