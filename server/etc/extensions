@@ -1,4 +1,4 @@
-# $Id: extensions,v 1.22 1997/11/12 16:56:41 grubba Exp $
+# $Id: extensions,v 1.23 1997/11/14 01:01:49 peter Exp $
 # name="Extension database";
 # doc="The database used to map from extension to mime-type (example: *.gif to image/gif)";
 #
@@ -103,8 +103,8 @@ cpio	application/x-cpio
 csh	application/x-csh
 dll	application/octet-stream
 dnt     application/donut
-# Too general
-# doc	application/msword
+# Too general, but also to common to not be defined.
+doc	application/msword
 donut   application/donut
 drv	application/octet-stream
 dvi	application/x-dvi
