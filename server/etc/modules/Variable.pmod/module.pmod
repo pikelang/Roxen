@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.71 2001/11/05 13:37:49 grubba Exp $
+// $Id: module.pmod,v 1.72 2001/11/12 21:32:05 mast Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -402,7 +402,8 @@ class Variable
     //!
     //! If verify_set() threw an exception, the exception is thrown.
   {
-    string err, e2;
+    string err;
+    mixed e2;
     if( e2 = catch( [err,to] = verify_set( to )) )
     {
       if( stringp( e2 ) )
