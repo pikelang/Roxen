@@ -1,5 +1,6 @@
 // This is Roxen state mechanism. Copyright © 1999, Idonex AB.
 //
+// $Id: state.pike,v 1.5 1999/08/11 13:11:24 grubba Exp $
 
 #define CHKSPACE "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 

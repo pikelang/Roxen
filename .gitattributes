@@ -77,6 +77,7 @@ urw_itc_avant_garde-demi-r binary
 /server/base_server/rxml.pike foreign_ident
 /server/base_server/smartpipe.pike foreign_ident
 /server/base_server/socket.pike foreign_ident
+/server/base_server/state.pike foreign_ident
 /server/base_server/struct/node.pike foreign_ident
 /server/base_server/wizard.pike foreign_ident
 /server/bin/fixquota.pike foreign_ident
