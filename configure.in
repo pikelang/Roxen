@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.74 1999/11/20 01:11:55 peter Exp $
+# $Id: configure.in,v 1.75 1999/11/29 16:01:00 grubba Exp $
 #
 
 prefix=$PWD
@@ -304,23 +304,41 @@ AC_MSG_RESULT($roxen_cv_sys_os)
 case "$roxen_cv_sys_os" in
   SCO*)
     case "$CFLAGS" in
-      *-belf*) ;;
-      *)
-	AC_SYS_COMPILER_FLAG(-belf,belf,CFLAGS)
+      *-belf*)
+        AC_SYS_COMPILER_FLAG(-belf,belf,CFLAGS,[],[
+	  case "$LDFLAGS" in
+	    *-belf*) ;;
+	    *)
+	      echo "Adding -belf option to ldflags."
+	      LDFLAGS="$LDFLAGS -belf"
+	    ;;
+	  esac
+	])
       ;;
-    esac
-    case "$LDFLAGS" in
-      *-belf*) ;;
       *)
-	AC_SYS_COMPILER_FLAG(-belf,belf,LDFLAGS)
+	AC_SYS_COMPILER_FLAG(-belf,belf,CFLAGS,[],[
+	  case "$LDFLAGS" in
+	    *-belf*) ;;
+	    *)
+	      echo "Adding -belf option to ldflags."
+	      LDFLAGS="$LDFLAGS -belf"
+	    ;;
+	  esac
+	])
       ;;
     esac
   ;;
   UnixWare*)
-    if test "$GCC" = "yes"; then :; else
-      # Try using the built-in alloca function
-      AC_SYS_COMPILER_FLAG(-Kalloca,Kalloca,CFLAGS)
-    fi
+    case "$CFLAGS" in
+      *-Kalloca*) ;;
+      *)
+        if test "$GCC" = "yes"; then :; else
+          # Try using the built-in alloca function
+          AC_SYS_COMPILER_FLAG(-Kalloca,Kalloca,CFLAGS)
+	  CXX="$CXX -DNO_CPLUSPLUS_ALLOCA"
+        fi
+      ;;
+    esac
   ;;
 esac
 
@@ -477,15 +495,23 @@ esac
   AC_SYS_CPU_COMPILER_FLAG(sun4u,-Xpipe=super,ultrasparc,OPTIMIZE)
 
   case "${CFLAGS-} $OPTIMIZE" in
-     *-O*) ;;
-     *+O*) ;;
-     *-fast*) ;;
-     *)
-      AC_SYS_COMPILER_FLAG(-O2,O2,OPTIMIZE)
-      if test "x$roxen_cv_option_O2" != "xyes"; then
-        AC_SYS_COMPILER_FLAG(-O,O,OPTIMIZE)
-      fi
-     ;;
+    *-O*) ;;
+    *+O*) ;;
+    *-fast*) ;;
+    *)
+      case "$roxen_cv_sys_os:$GCC" in
+        UnixWare*:no)
+	  # No optimization on UnixWare/cc
+	  OPTIMIZE=""
+	;;
+	*)
+	  AC_SYS_COMPILER_FLAG(-O2,O2,OPTIMIZE)
+	  if test "x$roxen_cv_option_O2" != "xyes"; then
+	    AC_SYS_COMPILER_FLAG(-O,O,OPTIMIZE)
+	  fi
+	;;
+      esac
+    ;;
   esac
  fi
 fi
@@ -534,6 +560,7 @@ if test -z "$CCSHARED" ; then
 	hp*|HP*) CCSHARED="+z"; ;;
 	FreeBSD*) CCSHARED="-fpic";;
 	SCO_SV*) CCSHARED="-KPIC -dy -Bdynamic";;
+	UnixWare*) CCSHARED="-KPIC -dy -Bdynamic";;
 	Solaris*) CCSHARED="-KPIC -Bdynamic";;
         Windows_NT*) CCSHARED="-shared" ;;
     esac
@@ -556,6 +583,7 @@ then
         GNU*) LINKFORSHARED="-rdynamic";;
 	next) LINKFORSHARED="-u libsys_s";;
 	SCO_SV*) LINKFORSHARED="-fpic -Wl,-Bexport";;
+	UnixWare*) LINKFORSHARED="-fpic -Wl,-Bexport";;
     esac
   else
     case $roxen_cv_sys_os in
@@ -565,16 +593,18 @@ then
         GNU*) LINKFORSHARED="-rdynamic";;
 	next) LINKFORSHARED="-u libsys_s";;
 	SCO_SV*) LINKFORSHARED="-Bdynamic -dy -Wl,-Bexport";;
+	UnixWare*) LINKFORSHARED="-Bdynamic -dy -Wl,-Bexport";;
     esac
   fi
 fi
 
 
-   OLD_CFLAGS="$CFLAGS"
-   CFLAGS="$CFLAGS $LINKFORSHARED"
-   AC_TRY_RUN([int main() { exit(0); }],
- roxen_cv_sys_linkforshared="$LINKFORSHARED", roxen_cv_sys_linkforshared='')
-   CFLAGS="$OLD_CFLAGS"
+  OLD_CFLAGS="$CFLAGS"
+  CFLAGS="$CFLAGS $LINKFORSHARED"
+  AC_TRY_RUN([int main() { exit(0); }],
+    roxen_cv_sys_linkforshared="$LINKFORSHARED",
+    roxen_cv_sys_linkforshared='')
+  CFLAGS="$OLD_CFLAGS"
 ])
 
 LINKFORSHARED="$roxen_cv_sys_linkforshared"
