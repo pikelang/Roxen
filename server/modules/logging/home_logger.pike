@@ -3,7 +3,7 @@
 // This module log the accesses of each user in their home dirs, if
 // they create a file named 'AccessLog' in that directory, and allow
 // write access for roxen.
-constant cvs_version = "$Id: home_logger.pike,v 1.19 1998/11/18 04:54:20 per Exp $";
+constant cvs_version = "$Id: home_logger.pike,v 1.20 1999/08/04 18:54:39 per Exp $";
 constant thread_safe=1;
 
 
@@ -165,8 +165,8 @@ string create()
 
 class CacheFile {
   inherit Stdio.File;
-  string file;
-  int ready = 1, d, n;
+  string file, set_file;
+  int ready = 1, d, n, waiting;
   object next;
   object master;
 #ifdef THREADS
@@ -175,26 +175,62 @@ class CacheFile {
 
   void move_this_to_tail();
 
+  void really_timeout()
+  {
+    if(waiting)
+    {
+      call_out( really_timeout, 1 );
+    } else {
+      close();
+      ready = 1;
+      move_this_to_tail();
+    }
+  }
+
   void timeout()
   {
-    close();
-    ready = 1;
-    move_this_to_tail();
+    really_timeout();
   }
 
   void wait()
   {
+    waiting++;
     remove_call_out(timeout);
+  }
+
+  string make_date()
+  {
+    mapping lc = localtime( time() );
+    return sprintf("%4d-%02d-%02d", lc->year+1900, lc->mon+1, lc->mday);
   }
   
   int open(string s, string|void mode)
   {
-    int st;
-    st = File::open(s, "wa");
+    int res;
+    mode = "wa";
+    set_file = s;
+    if( array a = file_stat( s ) )
+    {
+      if( a[ 1 ] < 0 )
+      {
+        s += "/" + make_date();
+        mode += "c";
+      }
+      call_out( really_timeout, 60 );
+    }
+    if( array a = file_stat( s-"Log" ) )
+    {
+      if( a[ 1 ] < 0 )
+      {
+        s = (s-"Log") + "/" + make_date();
+        mode += "c";
+      }
+      call_out( really_timeout, 60 );
+    }
+    res = File::open(s, mode);
     file = s;
-    ready = !st;
-    // call_out(timeout, d);     Removed by davidk
-    return st;
+    ready = !res;
+    return res;
   }
   
   string status()
@@ -258,6 +294,7 @@ class CacheFile {
       report_debug("home_logger: Trying to write to a closed file "+file+"\n");
     else
       ::write(s);
+    waiting--;
   }
 
   void create(int num, int delay, object m, object mu)
@@ -349,7 +386,7 @@ string status()
    start();
  if (!cache_head)
  {
-   werror("logger.lpc->status(): cache_head = 0\n");
+   report_debug("logger->status(): cache_head == 0\n");
    return "Error";
  }
   return "Logfile cache status:\n<pre>\n" + cache_head->status() + "</pre>";
@@ -365,7 +402,7 @@ object find_cache_file(string f)
   
   object c = cache_head;
   do {
-    if((c->file == f) && !c->ready)
+    if((c->set_file == f) && !c->ready)
       return c;
 
     if(c->ready)
