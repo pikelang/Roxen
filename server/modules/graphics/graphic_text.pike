@@ -1,12 +1,14 @@
-string cvs_version="$Id: graphic_text.pike,v 1.36 1997/02/27 04:38:20 per Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.37 1997/03/01 13:03:14 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
 
 #if efun(_static_modules)
+# define map_array Array.map
 import Image;
 #else
 # define image Image
+# define font  Font
 #endif
 
 array register_module()
@@ -148,11 +150,12 @@ object(font) load_font(string name, string justification, int xs, int ys)
     if(!fnt->load("fonts/"+QUERY(default_size) +"/"+ QUERY(default_font)))
       error("Failed to load the default font\n");
   }
-
-  if(justification=="right") fnt->right();
-  if(justification=="center") fnt->center();
-  fnt->set_x_spacing((100.0+(float)xs)/100.0);
-  fnt->set_y_spacing((100.0+(float)ys)/100.0);
+  catch {
+    if(justification=="right") fnt->right();
+    if(justification=="center") fnt->center();
+    if(xs)fnt->set_x_spacing((100.0+(float)xs)/100.0);
+    if(ys)fnt->set_y_spacing((100.0+(float)ys)/100.0);
+  };
   return fnt;
 }
 
@@ -167,7 +170,7 @@ array (array(int)) make_matrix(int size)
   array res;
   int i;
   int j;
-  res = Array.map(allocate(size), lambda(int s, int size){
+  res = map_array(allocate(size), lambda(int s, int size){
     return allocate(size); }, size);
 
   for(i=0; i<size; i++)
@@ -176,20 +179,14 @@ array (array(int)) make_matrix(int size)
   return matrixes[size] = res;
 }
 
-string fix_relative(string file, object got)
+string fix_relative(string file, object id)
 {
-  string other;
-  if(file != "" && file[0] == '/')
-    return file;
-  other=got->not_query;
-  if(file != "" && file[0] == '#')
-    file = got->not_query+  file;
-  else
-    file = dirname(got->not_query) + "/" +  file;
-  return simplify_path(replace(file, ({ "//", "..."}), ({"./..", "//"})));
+  if(file != "" && file[0] == '/') return file;
+  file = combine_path(dirname(id->not_query) + "/",  file);
+  return file;
 }
 
-object last_image;
+object last_image;      // Cache the last image for a while.
 string last_image_name;
 object (image) load_image(string f,object id)
 {
@@ -198,22 +195,16 @@ object (image) load_image(string f,object id)
   object file;
   object img = image();
 
-  if(file=open(f,"r"))
-  {
-    if(!(data=file->read(0x7fffffff)))
+  if(!(data=roxen->try_get_file(fix_relative(f, id),id)))
+    if(!(file=open(f,"r")) || (!(data=file->read(0x7fffffff))))
       return 0;
-  } else {
-    f = fix_relative(f, id);
-    if(!(data=roxen->try_get_file(f,id)))
-      return 0;
-  }
   
   if(!img->frompnm(data) && !img->fromgif(data)) return 0;
 
-//  last_image_name=f;
-//  last_image=img;
-//call_out(lambda(){last_image=last_image_name=0;}, 10);
-  return img/*->copy()*/;
+  last_image_name=f;
+  last_image=img;
+  call_out(lambda(){last_image=0;last_image_name=0;}, 0);
+  return img->copy();
 }
 
 object (image) blur(object (image) img, int amnt)
@@ -384,6 +375,7 @@ object (image) make_text_image(mapping args, object font, string text,object id)
     {
      case "center":
       xoffset = (xsize/2 - txsize/2);
+      yoffset = (ysize/2 - tysize/2);
       break;
      case "right":
       xoffset = (xsize - txsize);
@@ -720,8 +712,7 @@ string tag_gtext_id(string t, mapping arg,
   extra_args(arg);        m_delete(arg,"split");
   if(defines->fg && !arg->fg) arg->fg=defines->fg;
   if(defines->bg && !arg->bg) arg->bg=defines->bg;
-  if(defines->font && !arg->font) arg->font=defines->font||QUERY(default_font);
-  if(!arg->font) arg->font = QUERY(default_font);
+  if(!arg->font) arg->font=defines->font||QUERY(default_font);
 
   int num = find_or_insert( arg );
 
@@ -800,8 +791,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
 
   if(defines->fg && !arg->fg) arg->fg=defines->fg;
   if(defines->bg && !arg->bg) arg->bg=defines->bg;
-  if(defines->font && !arg->font) arg->font=defines->font||QUERY(default_font);
-  if(!arg->font) arg->font = QUERY(default_font);
+  if(!arg->font) arg->font=defines->font||QUERY(default_font);
 
   if(arg->split)
   {
@@ -815,6 +805,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
     {
       arg->scale = 1.0 / ((float)i*0.6);
       m_delete(arg, (string)i);
+      break;
     }
 
   // Support for <gh1> like things.
@@ -842,7 +833,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
     
     foreach(gt/" "-({""}), word)
     {
-      array size = write_text(num,word,1,0);
+      array size = write_text(num,word,1,id);
       res += ({ "<img _parsed=1 border=0 alt=\""+replace(word,"\"","'")
 		  +"\" src=\'"+pre+quote(word)+"\' width="+
 		  size[0]+" height="+size[1]+" "+ea+">\n"
@@ -866,7 +857,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
     break;
   }
 
-  array size = write_text(num,gt,1,0);
+  array size = write_text(num,gt,1,id);
 
   if(magic)
   {
@@ -884,7 +875,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
     if(arg->bevel) arg->pressed=1;
 
     int num2 = find_or_insert(arg);
-    array size = write_text(num2,gt,1,0);
+    array size = write_text(num2,gt,1,id);
 
     if(!defines->magic_java) res = magic_javascript_header(id);
     defines->magic_java="yes";
