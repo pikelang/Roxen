@@ -994,7 +994,8 @@ class URLList
     {
       string tmp1, tmp2;
       [tmp1,tmp2] = verify_port( vv, 1 );
-      warn += tmp1;
+      if( tmp1 )
+        warn += tmp1;
       res += ({ tmp2 });
     }
     if( !strlen( warn ) )
@@ -1017,7 +1018,8 @@ class PortList
     {
       string tmp1, tmp2;
       [tmp1,tmp2] = verify_port( vv, 0 );
-      warn += tmp1;
+      if( tmp1 )
+        warn += tmp1;
       res += ({ tmp2 });
     }
     if( !strlen( warn ) )
@@ -1073,6 +1075,8 @@ class Flag
 
 array(string) verify_port( string port, int nofhttp )
 {
+  if(!strlen(port))
+    return ({ 0, port });
   string warning="";
   if( (int)port )
   {
@@ -1082,10 +1086,10 @@ array(string) verify_port( string port, int nofhttp )
   string protocol, host, path;
 
   if(!strlen( port ) )
-    return ({ port, "Empty URL field" });
+    return ({ "Empty URL field", port });
 
   if(sscanf( port, "%[^:]://%[^/]%s", protocol, host, path ) != 3)
-    return ({port,""+port+" does not conform to URL syntax\n" });
+    return ({""+port+" does not conform to URL syntax\n", port });
   
   if( path == "" )
   {
@@ -1116,5 +1120,5 @@ array(string) verify_port( string port, int nofhttp )
 
   if( !roxenp()->protocols[ lower_case( protocol ) ] )
     warning += "Warning: The protocol "+lower_case(protocol)+" is unknown\n";
-  return ({ warning, port });
+  return ({ (strlen(warning)?warning:0), port });
 }
