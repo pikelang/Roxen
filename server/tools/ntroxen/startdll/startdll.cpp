@@ -1,6 +1,6 @@
 // startdll.cpp : Implementation of WinMain
 //
-// $Id: startdll.cpp,v 1.16 2002/11/05 02:26:08 mani Exp $
+// $Id: startdll.cpp,v 1.17 2004/05/29 15:28:02 _cvs_dirix Exp $
 //
 
 
@@ -698,7 +698,7 @@ extern "C" int __cdecl _tmain(int argc, _TCHAR **argv, _TCHAR **envp)
 
     if (cmdline.IsVersion())
     {
-      printf("Roxen startdll version %s.%s.%s\n", STR(NTSTART_MAJOR_VERSION),
+      printf("ChiliMoon startdll version %s.%s.%s\n", STR(NTSTART_MAJOR_VERSION),
         STR(NTSTART_MINOR_VERSION), STR(NTSTART_BUILD_VERSION) );
       CRoxen::PrintVersion();
       return S_OK;

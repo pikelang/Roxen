@@ -19,7 +19,7 @@ struct tSearch {
 };
 
 static char version[] = STR(NTSTART_MAJOR_VERSION) "." STR(NTSTART_MINOR_VERSION) "." STR(NTSTART_BUILD_VERSION);
-static char progname[] = "Roxen starter";
+static char progname[] = "ChiliMoon starter";
 static BOOL have_console;
 
 #if DEBUGLEVEL > 0
@@ -270,7 +270,7 @@ int main(int argc, char* argv[])
         int ret = StartRoxenService(szServiceName);
         if (!ret)
         {
-          ErrorMsg(TRUE, "Restart of the RoxenService FAILED!");
+          ErrorMsg(TRUE, "Restart of the ChiliMoonService FAILED!");
         }
         stop = TRUE;
       }

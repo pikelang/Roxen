@@ -1,6 +1,6 @@
 // roxen.cpp: implementation of the CRoxen class.
 //
-// $Id: roxen.cpp,v 1.21 2002/10/24 03:39:18 nilsson Exp $
+// $Id: roxen.cpp,v 1.22 2004/05/29 15:28:02 _cvs_dirix Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -175,12 +175,12 @@ std::string CRoxen::FindPike(BOOL setEnv)
       }
       if (!(fd = fopen ("pikelocation.txt", "r"))) {
         if (_chdir (server_location + sizeof (LOCATION_COOKIE) - sizeof (""))) {
-          ErrorMsg (1, TEXT("Could not change to the Roxen server directory %hs"),
+          ErrorMsg (1, TEXT("Could not change to the ChiliMoon server directory %hs"),
             server_location + sizeof (LOCATION_COOKIE) - sizeof (""));
           return "notfound";
         }
         if (!(fd = fopen ("pikelocation.txt", "r"))) {
-          ErrorMsg (1, TEXT("Roxen server directory not found - "
+          ErrorMsg (1, TEXT("ChiliMoon server directory not found - "
             "failed to open %s\\pikelocation.txt, "
             "%s\\..\\pikelocation.txt, and "
             "&hs\\pikelocation.txt"),
@@ -559,7 +559,7 @@ int CRoxen::Start(int first_time)
     &proc);
   if(!ret)
   {
-    ErrorMsg (1, TEXT("Error starting the main Roxen process"));
+    ErrorMsg (1, TEXT("Error starting the main ChiliMoon process"));
     CloseHandle(hFile);
     return FALSE;
   }
@@ -583,7 +583,7 @@ int CRoxen::Stop(BOOL write_stop_file)
 
     _snprintf (tmp, sizeof (tmp), "..\\logs\\%s.run", key);
     if (!(f=fopen(tmp,"wb"))) {
-      ErrorMsg (1, TEXT("Roxen will not get the stop signal - "
+      ErrorMsg (1, TEXT("ChiliMoon will not get the stop signal - "
 			 "failed to open stop file %s\\..\\logs\\%hs.run"), cwd, key);
       return FALSE;
     }

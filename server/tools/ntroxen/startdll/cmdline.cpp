@@ -1,6 +1,6 @@
 // cmdline.cpp: implementation of the CCmdLine class.
 //
-// $Id: cmdline.cpp,v 1.25 2002/10/24 03:39:18 nilsson Exp $
+// $Id: cmdline.cpp,v 1.26 2004/05/29 15:28:02 _cvs_dirix Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -457,7 +457,7 @@ void CCmdLine::PrintHelp()
     "      .B--without-debugB.:            Disable all debug. This is the default.",
     "",
     "      .B--module-debugB.:             Enable more internal debug checks to",
-    "                                  simplify debugging of Roxen modules.",
+    "                                  simplify debugging of Chilimoon	 modules.",
     "",
     "      .B--fd-debugB.:                 Enable FD debug.",
     "",
