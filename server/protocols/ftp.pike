@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.4 1999/05/20 14:22:08 per Exp $
+ * $Id: ftp.pike,v 2.5 1999/05/22 12:42:24 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -268,7 +268,7 @@ class ToAsciiWrapper
   static string convert(string s)
   {
     converted += sizeof(s);
-    return(replace(replace(s, "\r\n", "\n"), "\n", "\r\n"));
+    return(replace(s, ({ "\r\n", "\n", "\r" }), ({ "\r\n", "\r\n", "\r\n" })));
   }
 }
 
@@ -282,9 +282,14 @@ class FromAsciiWrapper
   {
     converted += sizeof(s);
 #ifdef __NT__
-    return(replace(replace(s, "\r\n", "\n"), "\n", "\r\n"));
+    // This replace shouldn't be needed, but we're paranoid.
+    return(replace(s, ({ "\r\n", "\n", "\r" }), ({ "\r\n", "\r\n", "\r\n" })));
 #else /* !__NT__ */
-    return(replace(s, "\r\n", "\n"));
+#ifdef __MACOS__
+    return(replace(s, ({ "\r\n", "\n", "\r" }), ({ "\r", "\r", "\r" })));
+#else /* !__MACOS__ */
+    return(replace(s, ({ "\r\n", "\n", "\r" }), ({ "\n", "\n", "\n" })));
+#endif /* __MACOS__ */
 #endif /* __NT__ */
   }
 }
