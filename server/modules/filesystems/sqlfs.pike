@@ -2,7 +2,7 @@
 
 inherit "module";
 
-constant cvs_version= "$Id: sqlfs.pike,v 1.12 2004/07/17 23:01:37 _cvs_stephen Exp $";
+constant cvs_version= "$Id: sqlfs.pike,v 1.13 2005/02/09 14:29:34 _cvs_dirix Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -102,7 +102,7 @@ static array low_stat_file( string f, RequestID id )
     return 0;
 
   if( f == "/" )
-    return dir_stat;
+    return ({dir_stat});
   if( has_value( f, "%" ) )
     return 0;
 #ifdef THREADS
