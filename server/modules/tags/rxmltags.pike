@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.69 2000/02/15 16:20:17 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.70 2000/02/16 15:14:52 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -1416,14 +1416,20 @@ string container_replace( string tag, mapping m, string cont, RequestID id)
   }
 }
 
-array(string) container_cset( string t, mapping m, string c, RequestID id )
-{
-  if( m->quote != "none" )
-    c = html_decode_string( c );
-  if( !m->variable )
-    return ({rxml_error(t, "Variable not specified.", id)});
-  RXML.get_context()->user_set_var(m->variable, c, m->scope);
-  return ({ "" });
+class TagCSet {
+  inherit RXML.Tag;
+  constant name = "cset";
+  class Frame {
+    inherit RXML.Frame;
+    array do_return(RequestID id) {
+      if( args->quote != "none" )
+	content = html_decode_string( content );
+      if( !args->variable ) parse_error("Variable not specified.");
+
+      RXML.get_context()->user_set_var(args->variable, content, args->scope);
+      return ({ "" });
+    }
+  }
 }
 
 
