@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.173 2004/05/16 21:44:10 mani Exp $
+// $Id: Roxen.pmod,v 1.174 2004/05/16 21:46:46 mani Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2219,8 +2219,26 @@ inherit _Roxen;
 
 #undef CACHE
 #undef NOCACHE
+#ifdef DEBUG_CACHEABLE
+#define CACHE(id,seconds) do {                                                \
+  int old_cacheable = ([mapping(string:mixed)]id->misc)->cacheable;           \
+  ([mapping(string:mixed)]id->misc)->cacheable =                              \
+    min(([mapping(string:mixed)]id->misc)->cacheable,seconds);                \
+  report_debug("%s:%d lowered cacheable to %d (was: %d, now: %d)\n",          \
+               __FILE__, __LINE__, seconds, old_cacheable,                    \
+               ([mapping(string:mixed)]id->misc)->cacheable);                 \
+} while(0)
+#define NOCACHE(id) do {                                                      \
+  int old_cacheable = ([mapping(string:mixed)]id->misc)->cacheable;           \
+  ([mapping(string:mixed)]id->misc)->cacheable = 0;                           \
+  report_debug("%s:%d set cacheable to 0 (was: %d)\n",                        \
+               __FILE__, __LINE__, old_cacheable,                             \
+               ([mapping(string:mixed)]id->misc)->cacheable);                 \
+} while(0)
+#else /* !DEBUG_CACHEABLE */
 #define CACHE(id,X) ([mapping(string:mixed)]id->misc)->cacheable=min(([mapping(string:mixed)]id->misc)->cacheable,X)
 #define NOCACHE(id) ([mapping(string:mixed)]id->misc)->cacheable=0
+#endif /* DEBUG_CACHEABLE */
 
 
 class QuotaDB
