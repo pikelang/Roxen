@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-string cvs_version = "$Id: ip-less_hosts.pike,v 1.3 1997/08/19 02:32:00 per Exp $";
+string cvs_version = "$Id: ip-less_hosts.pike,v 1.4 1997/08/27 12:27:56 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -31,7 +31,7 @@ object find_server_for(object id, string host)
   return id->conf=config_cache[host]=
     (sizeof(possible)?
      Array.sort_array(possible,lambda(object s, string q) {
-       return -(strlen(s->query("MyWorldLocation"))-strlen(q));},host)[0]:
+       return (strlen(s->query("MyWorldLocation"))-strlen(q));},host)[0]:
        ((sscanf(host, "%*[^.].%s", host)==2)?find_server_for(id,host):id->conf));
 }
 
