@@ -26,6 +26,7 @@
 <file>../config_interface/standard/topmenu.pike</file>
 <file>../config_interface/standard/user_delete.pike</file>
 <file>../config_interface/standard/user_form.pike</file>
+<file>../config_interface/standard/users.html</file>
 <file>../etc/modules/Variable.pmod/Date.pike</file>
 <file>../etc/modules/Variable.pmod/Email.pike</file>
 <file>../etc/modules/Variable.pmod/Image.pike</file>
@@ -1527,19 +1528,9 @@ ihåg vilka supportsflaggor som hör till vilken klient.</t>
 <t>normal</t>
 </str>
 
-<str id="281">
-<o>Show module name and documentation with images.</o>
-<t>Visa modulnamn och dokumentation med bilder.</t>
-</str>
-
 <str id="282">
 <o>fast</o>
 <t>snabb</t>
-</str>
-
-<str id="283">
-<o>Like normal, but no type images.</o>
-<t>Som normal, men utan typ-bilder.</t>
 </str>
 
 <str id="284">
@@ -1547,29 +1538,14 @@ ihåg vilka supportsflaggor som hör till vilken klient.</t>
 <t>snabbare</t>
 </str>
 
-<str id="285">
-<o>Like normal, but allows selecting multiple modules at once.</o>
-<t>Som normal, men tillåter val av flera moduler samtidigt.</t>
-</str>
-
 <str id="286">
 <o>compact</o>
 <t>kompakt</t>
 </str>
 
-<str id="287">
-<o>Only show the names of modules, and allow addition/deletion of multiple modules at once.</o>
-<t>Visar bara namnen på modulerna. Tillåter val av flera moduler samtidigt.</t>
-</str>
-
 <str id="288">
 <o>really compact</o>
 <t>väldigt kompakt</t>
-</str>
-
-<str id="289">
-<o>Like compact, but no module classes.</o>
-<t>Som kompakt, men utan modulkategorier.</t>
 </str>
 
 <str id="290">
@@ -1857,13 +1833,6 @@ As an example, if the file /foo/bar/not_there.html is wanted, and this list cont
 <t>utan namn</t>
 </str>
 
-<str id="327">
-<o>Internal error: Illegal sized array from verify_set_from_form
-</o>
-<t>Internal error: Illegal sized array from verify_set_from_form
-</t>
-</str>
-
 <str id="328">
 <o>Value is bigger than %s, adjusted</o>
 <t>Värdet är större än %s. Ändrat</t>
@@ -1937,11 +1906,6 @@ As an example, if the file /foo/bar/not_there.html is wanted, and this list cont
 <str id="342">
 <o>Warning: The protocol %s is not known by roxen</o>
 <t>Varning: Roxen känner inte till protokollet %s</t>
-</str>
-
-<str id="343">
-<o>Internal error: Illegal sized array from verify_set_from_form</o>
-<t>Internal error: Illegal sized array from verify_set_from_form</t>
 </str>
 
 <str id="344">
@@ -2027,4 +1991,41 @@ As an example, if the file /foo/bar/not_there.html is wanted, and this list cont
 <str id="152">
 <o>%O is not an integer</o>
 <t>%O är inte ett heltal</t>
+</str>
+
+<str id="153">
+<o>&lt;dl&gt;
+&lt;dt&gt;normal&lt;/dt&gt;&lt;dd&gt;Show module name and documentation with images.&lt;/dd&gt;
+&lt;dt&gt;fast&lt;/dt&gt;&lt;dd&gt;Like normal, but no type images.&lt;/dd&gt;
+&lt;dt&gt;faster&lt;/dt&gt;&lt;dd&gt;Like normal, but allows selecting multiple modules at once.&lt;/dd&gt;
+&lt;dt&gt;compact&lt;/dt&gt;&lt;dd&gt;Only show the names of modules, and allow addition/deletion of multiple modules at once.&lt;/dd&gt;
+&lt;dt&gt;really compact&lt;/dt&gt;&lt;dd&gt;Like compact, but no module classes.&lt;/dd&gt;
+&lt;/dl&gt;</o>
+<t>&lt;dl&gt;
+&lt;dt&gt;normal&lt;/dt&gt;&lt;dd&gt;Visa modulnamn och dokumentation med bilder.&lt;/dd&gt;
+&lt;dt&gt;snabb&lt;/dt&gt;&lt;dd&gt;Som normal, men utan typbilder.&lt;/dd&gt;
+&lt;dt&gt;snabbare&lt;/dt&gt;&lt;dd&gt;Som normal, men tillåter att man väljer flera moduler samtidigt.&lt;/dd&gt;
+&lt;dt&gt;kompakt&lt;/dt&gt;&lt;dd&gt;Visar bara namnet på modulerna. Tillåter att man lägger till flera moduler samtidigt.&lt;/dd&gt;
+&lt;dt&gt;väldigt kompakt&lt;/dt&gt;&lt;dd&gt;Som kompakt, men utan modulklasser.&lt;/dd&gt;
+&lt;/dl&gt;</t>
+</str>
+
+<str id="222">
+<o>Create new user</o>
+<t>Skapa ny användare</t>
+</str>
+
+<str id="223">
+<o>Delete old user</o>
+<t>Ta bort användare</t>
+</str>
+
+<str id="224">
+<o>Create User</o>
+<t>Skapa användare</t>
+</str>
+
+<str id="225">
+<o>User ID</o>
+<t>Användar-ID</t>
 </str>

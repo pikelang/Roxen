@@ -609,15 +609,13 @@ processen försvinner efter senast 15 minuter.</t>
 </str>
 
 <str id="87">
-<new/>
 <o>In order to use the SSL on your server, you first have to create a random RSA key pair. One part of the key is kept secret. </o>
-<t></t>
+<t>För att kunna använda SSL på din server måste du först tillverka ett slumpat RSA-nyckelpar. Den ena delen av nyckeln hålls hemlig. </t>
 </str>
 
 <str id="88">
-<new/>
 <o>The other part should be submitted to a certificate authority, such as Thawte or VeriSign. The certificate authority will return the signed certificate that need to run a secure server.</o>
-<t></t>
+<t>Den andra delen bör skickas till en "Certificate Authority", som t.ex. Thawte eller VeriSign. De kommer sedan att returnera ett signerat certifikat som du kan använda i din säkra webserver.</t>
 </str>
 
 <str id="89">
@@ -627,27 +625,23 @@ processen försvinner efter senast 15 minuter.</t>
 </str>
 
 <str id="90">
-<new/>
 <o>Keys smaller than %d bits are ridiculous.</o>
-<t></t>
+<t>Nycklar som är mindre än %d bitar är löjliga.</t>
 </str>
 
 <str id="91">
-<new/>
 <o>Keys larger than %d bits would take too long to generate.</o>
-<t></t>
+<t>Nycklar som är större än %d bitar tar för lång tid att generera.</t>
 </str>
 
 <str id="92">
-<new/>
 <o>How large key do you want to generate?</o>
-<t></t>
+<t>Hur lång nyckel vill du tillverka?</t>
 </str>
 
 <str id="93">
-<new/>
 <o>The desired key size. This is a security parameter; larger keys gives better security, but it also makes connecting to the server a little slower.</o>
-<t></t>
+<t>Den önskade nyckelstorleken. Detta är en säkerhetsparameter; störree nycklar ger bättre säkerhet, men gör också att det tar längre tid att kontakta webserver.</t>
 </str>
 
 <str id="94">
@@ -656,9 +650,8 @@ processen försvinner efter senast 15 minuter.</t>
 </str>
 
 <str id="95">
-<new/>
 <o>The largest RSA key that is publicly known to have been broken was 155 decimal digits, or 512 bits large. This effort required approximately 8000 MIPS-years.&lt;p&gt;A key 1024 bits large should be secure enough for most applications, but of course you can you use an even larger key if you so wish.</o>
-<t></t>
+<t>Den största kända RSA-nyckeln som har blivit knäckt bestod av 155 decimala siffror, d.v.s 512 bitar lång. Den bedriften krävde ungefär 8000 MIPS-år.&lt;p&gt;En 1024 bitar stor nyckel bör vara tillräckligt säker för de flesta tillämpningar, men du kan givetvis använda större nycklar än så om du så önskar.</t>
 </str>
 
 <str id="96">
@@ -672,82 +665,70 @@ processen försvinner efter senast 15 minuter.</t>
 </str>
 
 <str id="98">
-<new/>
 <o>A filename in the real filesystem, where the secret key should be stored. This is the filename you enter in the 'Key file'-field when you configure an SSL listen port.</o>
-<t></t>
+<t>En fil i det riktiga filsystemet där den hemliga nyckeln kommer att sparas. Det här är det filnamn som du skiverin i nyckelfilsfältet när du konfigurerar en SSL-port.</t>
 </str>
 
 <str id="99">
-<new/>
 <o>Your Distinguished Name?</o>
-<t></t>
+<t>Ditt unika namn?</t>
 </str>
 
 <str id="100">
-<new/>
 <o>Your X.501 Distinguished Name consists of a chain of attributes and values, where each link in the chain defines more precisely who you are. Which attributes are necessary or useful depends on what you will use the certificate for, and which Certificate Authority you use. This page lets you specify the most useful attributes. If you leave a field blank, that attribute will be omitted from your name.&lt;p&gt;
 Although most browsers will accept 8 bit ISO 8859-1 characters in these fields, it can't be counted on. To be on the safe side, use only US-ASCII.</o>
-<t></t>
+<t>Ditt unika X.501-namn består av en rad attribut och värden, där varje värde definierar mer exakt vem du är. Vilka värden som är nödvändiga eller användbara beror på vad certifikatet ska användas till och vilken "Certificate Authority" som du använder. Den här sidan låter dig definiera de mest användabara attributen. Om du lämnar ett fält tomt så kommer det attributet inte att tas med i ditt unika namn.&lt;p&gt;
+Trots att de flesta klienter accepterar 8-bitars ISO 8859-1 tecken i dessa fält så är det inte helt säkert att det fungerar. Använd bara vanlig ASCII för att vara på den säkra sidan.</t>
 </str>
 
 <str id="101">
-<new/>
 <o>Your country code</o>
-<t></t>
+<t>Din landskod</t>
 </str>
 
 <str id="102">
-<new/>
 <o>Your two-letter country code, for example GB (United Kingdom). This attribute is required.</o>
-<t></t>
+<t>Ditt två-bokstävers landskod, t.ex. SE (Sverige). Detta attribut måste vara med.</t>
 </str>
 
 <str id="103">
-<new/>
 <o>State/Province</o>
-<t></t>
+<t>Stat/Provins</t>
 </str>
 
 <str id="104">
-<new/>
 <o>The state where you are operating. VeriSign requires this attribute to be present for US and Canadian customers. Do not abbreviate.</o>
-<t></t>
+<t>Staten du opererar ifrån. VeriSign kräver detta attribut för amerikanska och kanadensiska kunder. Förkorta inte namnet.</t>
 </str>
 
 <str id="105">
-<new/>
 <o>City/Locality</o>
-<t></t>
+<t>Stad/område</t>
 </str>
 
 <str id="106">
-<new/>
 <o>The city or locality where you are registered. VeriSign requires that at least one of the locality and the state attributes are present. Do not abbreviate.</o>
-<t></t>
+<t>Den stad eller det område där du är registrerad. VeriSign kräver att minst ett av stad eller områdesattributen finns med. Förkorta inte namnet.</t>
 </str>
 
 <str id="107">
-<new/>
 <o>Organization/Company</o>
-<t></t>
+<t>Organisation/företag</t>
 </str>
 
 <str id="108">
-<new/>
 <o>The organization name under which you are registered with some national or regional authority.</o>
-<t></t>
+<t>Det officiellt registrerade organistationsnamnet.</t>
 </str>
 
 <str id="109">
-<new/>
 <o>Organizational unit</o>
-<t></t>
+<t>Organisatorisk enhet</t>
 </str>
 
 <str id="110">
-<new/>
 <o>This attribute is optional, and there are no specific requirements on the value of this attribute.</o>
-<t></t>
+<t>Det är attributet krävs inte, och det finns inga speciella krav på dess värde.</t>
 </str>
 
 <str id="111">
@@ -858,39 +839,33 @@ Although most browsers will accept 8 bit ISO 8859-1 characters in these fields, 
 </str>
 
 <str id="129">
-<new/>
 <o>This password could be used if you ever want to revoke your certificate. Of course, this depends on the policy of your Certificate Authority.</o>
-<t></t>
+<t>Det här lösenordet kan användas om du någonsin vill dra tillbaka ditt certifikat. Det beror givetvis på signeringtjänstens policy om du får göra det.</t>
 </str>
 
 <str id="130">
-<new/>
 <o>This is your Certificate Signing Request.</o>
-<t></t>
+<t>Det här är ditt certifikats signeringsförfrågan.</t>
 </str>
 
 <str id="131">
-<new/>
 <o>Wrote %d bytes to %s.</o>
-<t></t>
+<t>Skrev %d bytes till %s.</t>
 </str>
 
 <str id="132">
-<new/>
 <o>Generate an RSA key and a Self Signed Certificate...</o>
-<t></t>
+<t>Tillverka en RSA-nyckel och ett självsignerat certifikat...</t>
 </str>
 
 <str id="133">
-<new/>
 <o>This is your Certificate.</o>
-<t></t>
+<t>Det här är ditt cerifikat.</t>
 </str>
 
 <str id="134">
-<new/>
 <o>Generate an DSA key and a Self Signed Certificate...</o>
-<t></t>
+<t>Tillverka en DSA-nyckel och ett självsignerat certifikat...</t>
 </str>
 
 <str id="135">
