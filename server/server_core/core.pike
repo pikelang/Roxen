@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: core.pike,v 1.841 2002/11/16 10:34:40 agehall Exp $";
+constant cvs_version="$Id: core.pike,v 1.842 2002/11/17 05:51:27 mani Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -4103,19 +4103,14 @@ mapping low_load_image(string f, RequestID id)
 array(Image.Layer)|mapping load_layers(string f, RequestID id, mapping|void opt)
 {
   string data;
-  Stdio.File file;
   mapping res = ([]);
+  f = replace(f, "%01", "\1");
   if(id->misc->_load_image_called < 5)
   {
     // We were recursing very badly with the demo module here...
     id->misc->_load_image_called++;
     if(!(data=id->conf->try_get_file(f, id, 0, 0, 0, res)))
     {
-      //  This is a major security hole! It can load any (image) file
-      //  in the low-level file system using the server's user privileges.
-      //
-      //  file=Stdio.File();
-      //  if(!file->open(f,"r") || !(data=file->read()))
 // #ifdef THREADS
         catch
         {
