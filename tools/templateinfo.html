@@ -503,319 +503,314 @@
 </sql-insert>
 
 <sql-insert table="template_schemes_vars"
-            removevariables="_variable_name"
-            insertvariable="variable_id"
-	    query="select id from template_vars where
-	           name='#_variable_name#'"
-
             insertvariable2="value"
 	    removevariables2="_option_name,_dummy_name"
             query2="SELECT o.value
-	              FROM template_options as o,
-		           template_vars as v,
-		           template_option_groups as g
-	              WHERE v.name='#_dummy_name#'
-		        AND v.option_group_id=g.id
-		        AND o.option_group_id=g.id
-			AND o.name='#_option_name#'">
+	             FROM template_options as o,
+		          template_vars as v,
+		          template_option_groups as g
+	             WHERE v.name='#_dummy_name#'
+                       AND v.option_group_id=g.id
+	               AND o.option_group_id=g.id
+		       AND o.name='#_option_name#'">
 
   <delete all>
 
   <!--  Basic  -->
-  <insert scheme_id=1 _variable_name="template_name" value="basic.tmpl">
-  <insert scheme_id=1 _variable_name="bg_image" value="">
-  <insert scheme_id=1 _variable_name="bg_color" value="white">
-  <insert scheme_id=1 _variable_name="text_color" value="black">
-  <insert scheme_id=1 _variable_name="text_bg_color" value="white">
-  <insert scheme_id=1 _variable_name="text_bg_image" value="">
+  <insert scheme_id=1 variable_name="template_name" value="basic.tmpl">
+  <insert scheme_id=1 variable_name="bg_image" value="">
+  <insert scheme_id=1 variable_name="bg_color" value="white">
+  <insert scheme_id=1 variable_name="text_color" value="black">
+  <insert scheme_id=1 variable_name="text_bg_color" value="white">
+  <insert scheme_id=1 variable_name="text_bg_image" value="">
 
-  <insert scheme_id=1 _variable_name="link_color" value="#000070">
-  <insert scheme_id=1 _variable_name="vlink_color" value="#000070">
-  <insert scheme_id=1 _variable_name="alink_color" value="#ff0000">
+  <insert scheme_id=1 variable_name="link_color" value="#000070">
+  <insert scheme_id=1 variable_name="vlink_color" value="#000070">
+  <insert scheme_id=1 variable_name="alink_color" value="#ff0000">
 
-  <insert scheme_id=1 _variable_name="h1_color" value="black">
-  <insert scheme_id=1 _variable_name="h1_font" value="helvetica">
-  <insert scheme_id=1 _variable_name="h1_font_style" value="">
-  <insert scheme_id=1 _variable_name="h1_size" value="0.5">
-  <insert scheme_id=1 _variable_name="h1_shadow" value="0">
-  <insert scheme_id=1 _variable_name="h1_align" value="left">
-  <insert scheme_id=1 _variable_name="h1_dingbat" value="">
+  <insert scheme_id=1 variable_name="h1_color" value="black">
+  <insert scheme_id=1 variable_name="h1_font" value="helvetica">
+  <insert scheme_id=1 variable_name="h1_font_style" value="">
+  <insert scheme_id=1 variable_name="h1_size" value="0.5">
+  <insert scheme_id=1 variable_name="h1_shadow" value="0">
+  <insert scheme_id=1 variable_name="h1_align" value="left">
+  <insert scheme_id=1 variable_name="h1_dingbat" value="">
 
-  <insert scheme_id=1 _variable_name="h2_color" value="black">
-  <insert scheme_id=1 _variable_name="h2_font" value="helvetica">
-  <insert scheme_id=1 _variable_name="h2_font_style" value="">
-  <insert scheme_id=1 _variable_name="h2_size" value="0.4">
-  <insert scheme_id=1 _variable_name="h2_shadow" value="0">
-  <insert scheme_id=1 _variable_name="h2_dingbat" value="">
+  <insert scheme_id=1 variable_name="h2_color" value="black">
+  <insert scheme_id=1 variable_name="h2_font" value="helvetica">
+  <insert scheme_id=1 variable_name="h2_font_style" value="">
+  <insert scheme_id=1 variable_name="h2_size" value="0.4">
+  <insert scheme_id=1 variable_name="h2_shadow" value="0">
+  <insert scheme_id=1 variable_name="h2_dingbat" value="">
 
-  <insert scheme_id=1 _variable_name="title_color" value="black">
-  <insert scheme_id=1 _variable_name="title_font" value="officina sans">
-  <insert scheme_id=1 _variable_name="title_font_style" value="bold">
-  <insert scheme_id=1 _variable_name="title_size" value="0.6">
-  <insert scheme_id=1 _variable_name="title_align" value="left">
-  <insert scheme_id=1 _variable_name="title_shadow" value="0">
+  <insert scheme_id=1 variable_name="title_color" value="black">
+  <insert scheme_id=1 variable_name="title_font" value="officina sans">
+  <insert scheme_id=1 variable_name="title_font_style" value="bold">
+  <insert scheme_id=1 variable_name="title_size" value="0.6">
+  <insert scheme_id=1 variable_name="title_align" value="left">
+  <insert scheme_id=1 variable_name="title_shadow" value="0">
 
-  <insert scheme_id=1 _variable_name="corner_1_size" value="1">
-  <insert scheme_id=1 _variable_name="corner_2_size" value="1">
+  <insert scheme_id=1 variable_name="corner_1_size" value="1">
+  <insert scheme_id=1 variable_name="corner_2_size" value="1">
 
-  <insert scheme_id=1 _variable_name="page_head_image" value="none">
-  <insert scheme_id=1 _variable_name="page_head_image_align" value="left">
-  <insert scheme_id=1 _variable_name="page_head_bar_color" value="none">
+  <insert scheme_id=1 variable_name="page_head_image" value="none">
+  <insert scheme_id=1 variable_name="page_head_image_align" value="left">
+  <insert scheme_id=1 variable_name="page_head_bar_color" value="none">
 
-  <insert scheme_id=1 _variable_name="nav_text_color" value="black">
-  <insert scheme_id=1 _variable_name="nav_text_color_sel" value="navy">
-  <insert scheme_id=1 _variable_name="nav_text_color_mouse" value="navy">
+  <insert scheme_id=1 variable_name="nav_text_color" value="black">
+  <insert scheme_id=1 variable_name="nav_text_color_sel" value="navy">
+  <insert scheme_id=1 variable_name="nav_text_color_mouse" value="navy">
 
-  <insert scheme_id=1 _variable_name="nav_bg_color" value="white">
-  <insert scheme_id=1 _variable_name="nav_bg_color_sel" value="white">
-  <insert scheme_id=1 _variable_name="nav_bg_color_mouse" value="white">
+  <insert scheme_id=1 variable_name="nav_bg_color" value="white">
+  <insert scheme_id=1 variable_name="nav_bg_color_sel" value="white">
+  <insert scheme_id=1 variable_name="nav_bg_color_mouse" value="white">
 
-  <insert scheme_id=1 _variable_name="nav_name" value="basic.ntmpl">
+  <insert scheme_id=1 variable_name="nav_name" value="basic.ntmpl">
 
-  <insert scheme_id=1 _variable_name="nav_font" value="helvetica">
-  <insert scheme_id=1 _variable_name="nav_font_style" value="">
-  <insert scheme_id=1 _variable_name="nav_size" value="0.5">
-  <insert scheme_id=1 _variable_name="nav_align" value="left">
-  <insert scheme_id=1 _variable_name="nav_shadow" value="0">
+  <insert scheme_id=1 variable_name="nav_font" value="helvetica">
+  <insert scheme_id=1 variable_name="nav_font_style" value="">
+  <insert scheme_id=1 variable_name="nav_size" value="0.5">
+  <insert scheme_id=1 variable_name="nav_align" value="left">
+  <insert scheme_id=1 variable_name="nav_shadow" value="0">
 
 
   <!--  Night  -->
-  <insert scheme_id=2 _variable_name="template_name" value="night.tmpl">
-  <insert scheme_id=2 _variable_name="bg_image" value="">
-  <insert scheme_id=2 _variable_name="bg_color" value="black">
-  <insert scheme_id=2 _variable_name="text_color" value="white">
-  <insert scheme_id=2 _variable_name="text_bg_color" value="black">
-  <insert scheme_id=2 _variable_name="text_bg_image" value="">
+  <insert scheme_id=2 variable_name="template_name" value="night.tmpl">
+  <insert scheme_id=2 variable_name="bg_image" value="">
+  <insert scheme_id=2 variable_name="bg_color" value="black">
+  <insert scheme_id=2 variable_name="text_color" value="white">
+  <insert scheme_id=2 variable_name="text_bg_color" value="black">
+  <insert scheme_id=2 variable_name="text_bg_image" value="">
 
-  <insert scheme_id=2 _variable_name="link_color" value="#a0a0a0">
-  <insert scheme_id=2 _variable_name="vlink_color" value="#808080">
-  <insert scheme_id=2 _variable_name="alink_color" value="#000080">
+  <insert scheme_id=2 variable_name="link_color" value="#a0a0a0">
+  <insert scheme_id=2 variable_name="vlink_color" value="#808080">
+  <insert scheme_id=2 variable_name="alink_color" value="#000080">
 
-  <insert scheme_id=2 _variable_name="h1_color" value="white">
-  <insert scheme_id=2 _variable_name="h1_font" value="officina sans">
-  <insert scheme_id=2 _variable_name="h1_font_style" value="bold">
-  <insert scheme_id=2 _variable_name="h1_size" value="0.5">
-  <insert scheme_id=2 _variable_name="h1_shadow" value="0">
-  <insert scheme_id=2 _variable_name="h1_align" value="left">
-  <insert scheme_id=2 _variable_name="h1_dingbat" value="">
+  <insert scheme_id=2 variable_name="h1_color" value="white">
+  <insert scheme_id=2 variable_name="h1_font" value="officina sans">
+  <insert scheme_id=2 variable_name="h1_font_style" value="bold">
+  <insert scheme_id=2 variable_name="h1_size" value="0.5">
+  <insert scheme_id=2 variable_name="h1_shadow" value="0">
+  <insert scheme_id=2 variable_name="h1_align" value="left">
+  <insert scheme_id=2 variable_name="h1_dingbat" value="">
 
-  <insert scheme_id=2 _variable_name="h2_color" value="white">
-  <insert scheme_id=2 _variable_name="h2_font" value="officina sans">
-  <insert scheme_id=2 _variable_name="h2_font_style" value="bold">
-  <insert scheme_id=2 _variable_name="h2_size" value="0.4">
-  <insert scheme_id=2 _variable_name="h2_shadow" value="0">
-  <insert scheme_id=2 _variable_name="h2_align" value="left">
-  <insert scheme_id=2 _variable_name="h2_dingbat" value="">
+  <insert scheme_id=2 variable_name="h2_color" value="white">
+  <insert scheme_id=2 variable_name="h2_font" value="officina sans">
+  <insert scheme_id=2 variable_name="h2_font_style" value="bold">
+  <insert scheme_id=2 variable_name="h2_size" value="0.4">
+  <insert scheme_id=2 variable_name="h2_shadow" value="0">
+  <insert scheme_id=2 variable_name="h2_align" value="left">
+  <insert scheme_id=2 variable_name="h2_dingbat" value="">
 
-  <insert scheme_id=2 _variable_name="title_color" value="white">
-  <insert scheme_id=2 _variable_name="title_font" value="officina sans">
-  <insert scheme_id=2 _variable_name="title_font_style" value="bold">
-  <insert scheme_id=2 _variable_name="title_size" value="1">
-  <insert scheme_id=2 _variable_name="title_align" value="right">
-  <insert scheme_id=2 _variable_name="title_shadow" value="0">
+  <insert scheme_id=2 variable_name="title_color" value="white">
+  <insert scheme_id=2 variable_name="title_font" value="officina sans">
+  <insert scheme_id=2 variable_name="title_font_style" value="bold">
+  <insert scheme_id=2 variable_name="title_size" value="1">
+  <insert scheme_id=2 variable_name="title_align" value="right">
+  <insert scheme_id=2 variable_name="title_shadow" value="0">
 
-  <insert scheme_id=2 _variable_name="corner_1_size" value="1">
-  <insert scheme_id=2 _variable_name="corner_2_size" value="1">
+  <insert scheme_id=2 variable_name="corner_1_size" value="1">
+  <insert scheme_id=2 variable_name="corner_2_size" value="1">
 
-  <insert scheme_id=2 _variable_name="page_head_image" value="none">
-  <insert scheme_id=2 _variable_name="page_head_image_align" value="left">
-  <insert scheme_id=2 _variable_name="page_head_bar_color" value="#220070">
+  <insert scheme_id=2 variable_name="page_head_image" value="none">
+  <insert scheme_id=2 variable_name="page_head_image_align" value="left">
+  <insert scheme_id=2 variable_name="page_head_bar_color" value="#220070">
 
-  <insert scheme_id=2 _variable_name="nav_text_color" value="white">
-  <insert scheme_id=2 _variable_name="nav_text_color_sel" value="#4a537a">
-  <insert scheme_id=2 _variable_name="nav_text_color_mouse" value="#4a537a">
+  <insert scheme_id=2 variable_name="nav_text_color" value="white">
+  <insert scheme_id=2 variable_name="nav_text_color_sel" value="#4a537a">
+  <insert scheme_id=2 variable_name="nav_text_color_mouse" value="#4a537a">
 
-  <insert scheme_id=2 _variable_name="nav_bg_color" value="#220070">
-  <insert scheme_id=2 _variable_name="nav_bg_color_sel" value="#220070">
-  <insert scheme_id=2 _variable_name="nav_bg_color_mouse" value="#220070">
+  <insert scheme_id=2 variable_name="nav_bg_color" value="#220070">
+  <insert scheme_id=2 variable_name="nav_bg_color_sel" value="#220070">
+  <insert scheme_id=2 variable_name="nav_bg_color_mouse" value="#220070">
 
-  <insert scheme_id=2 _variable_name="nav_name" value="night.ntmpl">
+  <insert scheme_id=2 variable_name="nav_name" value="night.ntmpl">
 
-  <insert scheme_id=2 _variable_name="nav_font" value="officina sans">
-  <insert scheme_id=2 _variable_name="nav_font_style" value="bold">
-  <insert scheme_id=2 _variable_name="nav_size" value="0.4">
-  <insert scheme_id=2 _variable_name="nav_align" value="center">
-  <insert scheme_id=2 _variable_name="nav_shadow" value="0">
+  <insert scheme_id=2 variable_name="nav_font" value="officina sans">
+  <insert scheme_id=2 variable_name="nav_font_style" value="bold">
+  <insert scheme_id=2 variable_name="nav_size" value="0.4">
+  <insert scheme_id=2 variable_name="nav_align" value="center">
+  <insert scheme_id=2 variable_name="nav_shadow" value="0">
 
 
   <!--  Klee  -->
-  <insert scheme_id=3 _variable_name="template_name" value="Klee.tmpl">
-  <insert scheme_id=3 _variable_name="bg_image" value="">
-  <insert scheme_id=3 _variable_name="bg_color" value="white">
-  <insert scheme_id=3 _variable_name="text_color" value="black">
-  <insert scheme_id=3 _variable_name="text_bg_color" value="white">
-  <insert scheme_id=3 _variable_name="text_bg_image" value="">
+  <insert scheme_id=3 variable_name="template_name" value="Klee.tmpl">
+  <insert scheme_id=3 variable_name="bg_image" value="">
+  <insert scheme_id=3 variable_name="bg_color" value="white">
+  <insert scheme_id=3 variable_name="text_color" value="black">
+  <insert scheme_id=3 variable_name="text_bg_color" value="white">
+  <insert scheme_id=3 variable_name="text_bg_image" value="">
 
-  <insert scheme_id=3 _variable_name="link_color" value="#000070">
-  <insert scheme_id=3 _variable_name="vlink_color" value="#000070">
-  <insert scheme_id=3 _variable_name="alink_color" value="#ff0000">
+  <insert scheme_id=3 variable_name="link_color" value="#000070">
+  <insert scheme_id=3 variable_name="vlink_color" value="#000070">
+  <insert scheme_id=3 variable_name="alink_color" value="#ff0000">
 
-  <insert scheme_id=3 _variable_name="h1_color" value="black">
-  <insert scheme_id=3 _variable_name="h1_font" value="officina sans">
-  <insert scheme_id=3 _variable_name="h1_font_style" value="bold">
-  <insert scheme_id=3 _variable_name="h1_size" value="0.5">
-  <insert scheme_id=3 _variable_name="h1_shadow" value="0">
-  <insert scheme_id=3 _variable_name="h1_align" value="left">
-  <insert scheme_id=3 _variable_name="h1_dingbat" value="">
+  <insert scheme_id=3 variable_name="h1_color" value="black">
+  <insert scheme_id=3 variable_name="h1_font" value="officina sans">
+  <insert scheme_id=3 variable_name="h1_font_style" value="bold">
+  <insert scheme_id=3 variable_name="h1_size" value="0.5">
+  <insert scheme_id=3 variable_name="h1_shadow" value="0">
+  <insert scheme_id=3 variable_name="h1_align" value="left">
+  <insert scheme_id=3 variable_name="h1_dingbat" value="">
 
-  <insert scheme_id=3 _variable_name="h2_color" value="black">
-  <insert scheme_id=3 _variable_name="h2_font" value="officina sans">
-  <insert scheme_id=3 _variable_name="h2_font_style" value="bold">
-  <insert scheme_id=3 _variable_name="h2_size" value="0.4">
-  <insert scheme_id=3 _variable_name="h2_shadow" value="0">
-  <insert scheme_id=3 _variable_name="h2_align" value="left">
-  <insert scheme_id=3 _variable_name="h2_dingbat" value="">
+  <insert scheme_id=3 variable_name="h2_color" value="black">
+  <insert scheme_id=3 variable_name="h2_font" value="officina sans">
+  <insert scheme_id=3 variable_name="h2_font_style" value="bold">
+  <insert scheme_id=3 variable_name="h2_size" value="0.4">
+  <insert scheme_id=3 variable_name="h2_shadow" value="0">
+  <insert scheme_id=3 variable_name="h2_align" value="left">
+  <insert scheme_id=3 variable_name="h2_dingbat" value="">
 
-  <insert scheme_id=3 _variable_name="title_color" value="navy">
-  <insert scheme_id=3 _variable_name="title_font" value="officina sans">
-  <insert scheme_id=3 _variable_name="title_font_style" value="bold italic">
-  <insert scheme_id=3 _variable_name="title_size" value="0.5">
-  <insert scheme_id=3 _variable_name="title_align" value="right">
-  <insert scheme_id=3 _variable_name="title_shadow" value="0">
+  <insert scheme_id=3 variable_name="title_color" value="navy">
+  <insert scheme_id=3 variable_name="title_font" value="officina sans">
+  <insert scheme_id=3 variable_name="title_font_style" value="bold italic">
+  <insert scheme_id=3 variable_name="title_size" value="0.5">
+  <insert scheme_id=3 variable_name="title_align" value="right">
+  <insert scheme_id=3 variable_name="title_shadow" value="0">
 
-  <insert scheme_id=3 _variable_name="corner_1_size" value="1">
-  <insert scheme_id=3 _variable_name="corner_2_size" value="1">
+  <insert scheme_id=3 variable_name="corner_1_size" value="1">
+  <insert scheme_id=3 variable_name="corner_2_size" value="1">
 
-  <insert scheme_id=3 _variable_name="page_head_image"
+  <insert scheme_id=3 variable_name="page_head_image"
     _dummy_name="page_head_image" _option_name="Squares">
-  <insert scheme_id=3 _variable_name="page_head_image_align" value="right">
-  <insert scheme_id=3 _variable_name="page_head_bar_color" value="none">
+  <insert scheme_id=3 variable_name="page_head_image_align" value="right">
+  <insert scheme_id=3 variable_name="page_head_bar_color" value="none">
 
-  <insert scheme_id=3 _variable_name="nav_text_color" value="blue">
-  <insert scheme_id=3 _variable_name="nav_text_color_sel" value="blue">
-  <insert scheme_id=3 _variable_name="nav_text_color_mouse" value="blue">
+  <insert scheme_id=3 variable_name="nav_text_color" value="blue">
+  <insert scheme_id=3 variable_name="nav_text_color_sel" value="blue">
+  <insert scheme_id=3 variable_name="nav_text_color_mouse" value="blue">
 
-  <insert scheme_id=3 _variable_name="nav_bg_color" value="black">
-  <insert scheme_id=3 _variable_name="nav_bg_color_sel" value="black">
-  <insert scheme_id=3 _variable_name="nav_bg_color_mouse" value="black">
+  <insert scheme_id=3 variable_name="nav_bg_color" value="black">
+  <insert scheme_id=3 variable_name="nav_bg_color_sel" value="black">
+  <insert scheme_id=3 variable_name="nav_bg_color_mouse" value="black">
 
-  <insert scheme_id=3 _variable_name="nav_name" value="Klee.ntmpl">
+  <insert scheme_id=3 variable_name="nav_name" value="Klee.ntmpl">
 
-  <insert scheme_id=3 _variable_name="nav_font" value="officina sans">
-  <insert scheme_id=3 _variable_name="nav_font_style" value="">
-  <insert scheme_id=3 _variable_name="nav_size" value="0.4">
-  <insert scheme_id=3 _variable_name="nav_align" value="right">
-  <insert scheme_id=3 _variable_name="nav_shadow" value="0">
+  <insert scheme_id=3 variable_name="nav_font" value="officina sans">
+  <insert scheme_id=3 variable_name="nav_font_style" value="">
+  <insert scheme_id=3 variable_name="nav_size" value="0.4">
+  <insert scheme_id=3 variable_name="nav_align" value="right">
+  <insert scheme_id=3 variable_name="nav_shadow" value="0">
 
 
   <!--  Dawn  -->
-  <insert scheme_id=4 _variable_name="template_name" value="dawn.tmpl">
-  <insert scheme_id=4 _variable_name="bg_image" value="">
-  <insert scheme_id=4 _variable_name="bg_color" value="white">
-  <insert scheme_id=4 _variable_name="text_color" value="black">
-  <insert scheme_id=4 _variable_name="text_bg_image" value="">
-  <insert scheme_id=4 _variable_name="text_bg_color" value="white">
+  <insert scheme_id=4 variable_name="template_name" value="dawn.tmpl">
+  <insert scheme_id=4 variable_name="bg_image" value="">
+  <insert scheme_id=4 variable_name="bg_color" value="white">
+  <insert scheme_id=4 variable_name="text_color" value="black">
+  <insert scheme_id=4 variable_name="text_bg_image" value="">
+  <insert scheme_id=4 variable_name="text_bg_color" value="white">
 
-  <insert scheme_id=4 _variable_name="link_color" value="#000070">
-  <insert scheme_id=4 _variable_name="vlink_color" value="#000070">
-  <insert scheme_id=4 _variable_name="alink_color" value="#ff0000">
+  <insert scheme_id=4 variable_name="link_color" value="#000070">
+  <insert scheme_id=4 variable_name="vlink_color" value="#000070">
+  <insert scheme_id=4 variable_name="alink_color" value="#ff0000">
 
-  <insert scheme_id=4 _variable_name="h1_color" value="black">
-  <insert scheme_id=4 _variable_name="h1_font" value="officina sans">
-  <insert scheme_id=4 _variable_name="h1_font_style" value="bold">
-  <insert scheme_id=4 _variable_name="h1_size" value="0.5">
-  <insert scheme_id=4 _variable_name="h1_shadow" value="0">
-  <insert scheme_id=4 _variable_name="h1_align" value="center">
-  <insert scheme_id=4 _variable_name="h1_dingbat" value="">
+  <insert scheme_id=4 variable_name="h1_color" value="black">
+  <insert scheme_id=4 variable_name="h1_font" value="officina sans">
+  <insert scheme_id=4 variable_name="h1_font_style" value="bold">
+  <insert scheme_id=4 variable_name="h1_size" value="0.5">
+  <insert scheme_id=4 variable_name="h1_shadow" value="0">
+  <insert scheme_id=4 variable_name="h1_align" value="center">
+  <insert scheme_id=4 variable_name="h1_dingbat" value="">
 
-  <insert scheme_id=4 _variable_name="h2_color" value="black">
-  <insert scheme_id=4 _variable_name="h2_font" value="officina sans">
-  <insert scheme_id=4 _variable_name="h2_font_style" value="">
-  <insert scheme_id=4 _variable_name="h2_size" value="0.4">
-  <insert scheme_id=4 _variable_name="h2_shadow" value="0">
-  <insert scheme_id=4 _variable_name="h2_align" value="center">
-  <insert scheme_id=4 _variable_name="h2_dingbat" value="">
+  <insert scheme_id=4 variable_name="h2_color" value="black">
+  <insert scheme_id=4 variable_name="h2_font" value="officina sans">
+  <insert scheme_id=4 variable_name="h2_font_style" value="">
+  <insert scheme_id=4 variable_name="h2_size" value="0.4">
+  <insert scheme_id=4 variable_name="h2_shadow" value="0">
+  <insert scheme_id=4 variable_name="h2_align" value="center">
+  <insert scheme_id=4 variable_name="h2_dingbat" value="">
 
-  <insert scheme_id=4 _variable_name="title_color" value="blue">
-  <insert scheme_id=4 _variable_name="title_font" value="officina sans">
-  <insert scheme_id=4 _variable_name="title_font_style" value="bold">
-  <insert scheme_id=4 _variable_name="title_size" value="0.6">
-  <insert scheme_id=4 _variable_name="title_align" value="center">
-  <insert scheme_id=4 _variable_name="title_shadow" value="0">
+  <insert scheme_id=4 variable_name="title_color" value="blue">
+  <insert scheme_id=4 variable_name="title_font" value="officina sans">
+  <insert scheme_id=4 variable_name="title_font_style" value="bold">
+  <insert scheme_id=4 variable_name="title_size" value="0.6">
+  <insert scheme_id=4 variable_name="title_align" value="center">
+  <insert scheme_id=4 variable_name="title_shadow" value="0">
 
-  <insert scheme_id=4 _variable_name="corner_1_size" value="1">
-  <insert scheme_id=4 _variable_name="corner_2_size" value="1">
+  <insert scheme_id=4 variable_name="corner_1_size" value="1">
+  <insert scheme_id=4 variable_name="corner_2_size" value="1">
 
-  <insert scheme_id=4 _variable_name="page_head_image"
+  <insert scheme_id=4 variable_name="page_head_image"
     _dummy_name="page_head_image" _option_name="Blue clouds">
-  <insert scheme_id=4 _variable_name="page_head_image_align" value="center">
-  <insert scheme_id=4 _variable_name="page_head_bar_color" value="black">
+  <insert scheme_id=4 variable_name="page_head_image_align" value="center">
+  <insert scheme_id=4 variable_name="page_head_bar_color" value="black">
 
-  <insert scheme_id=4 _variable_name="nav_text_color" value="grey">
-  <insert scheme_id=4 _variable_name="nav_text_color_sel" value="grey">
-  <insert scheme_id=4 _variable_name="nav_text_color_mouse" value="grey">
+  <insert scheme_id=4 variable_name="nav_text_color" value="grey">
+  <insert scheme_id=4 variable_name="nav_text_color_sel" value="grey">
+  <insert scheme_id=4 variable_name="nav_text_color_mouse" value="grey">
 
-  <insert scheme_id=4 _variable_name="nav_bg_color" value="black">
-  <insert scheme_id=4 _variable_name="nav_bg_color_sel" value="darkblue">
-  <insert scheme_id=4 _variable_name="nav_bg_color_mouse" value="darkblue">
+  <insert scheme_id=4 variable_name="nav_bg_color" value="black">
+  <insert scheme_id=4 variable_name="nav_bg_color_sel" value="darkblue">
+  <insert scheme_id=4 variable_name="nav_bg_color_mouse" value="darkblue">
 
-  <insert scheme_id=4 _variable_name="nav_name" value="dawn.ntmpl">
+  <insert scheme_id=4 variable_name="nav_name" value="dawn.ntmpl">
 
-  <insert scheme_id=4 _variable_name="nav_font" value="officina sans">
-  <insert scheme_id=4 _variable_name="nav_font_style" value="bold">
-  <insert scheme_id=4 _variable_name="nav_size" value="0.4">
-  <insert scheme_id=4 _variable_name="nav_align" value="left">
-  <insert scheme_id=4 _variable_name="nav_shadow" value="0">
+  <insert scheme_id=4 variable_name="nav_font" value="officina sans">
+  <insert scheme_id=4 variable_name="nav_font_style" value="bold">
+  <insert scheme_id=4 variable_name="nav_size" value="0.4">
+  <insert scheme_id=4 variable_name="nav_align" value="left">
+  <insert scheme_id=4 variable_name="nav_shadow" value="0">
 
 
   <!--  Sand  -->
-  <insert scheme_id=5 _variable_name="template_name" value="sand.tmpl">
-  <insert scheme_id=5 _variable_name="bg_image" value="">
-  <insert scheme_id=5 _variable_name="bg_color" value="white">
-  <insert scheme_id=5 _variable_name="text_color" value="black">
-  <insert scheme_id=5 _variable_name="text_bg_image" value="">
-  <insert scheme_id=5 _variable_name="text_bg_color" value="white">
+  <insert scheme_id=5 variable_name="template_name" value="sand.tmpl">
+  <insert scheme_id=5 variable_name="bg_image" value="">
+  <insert scheme_id=5 variable_name="bg_color" value="white">
+  <insert scheme_id=5 variable_name="text_color" value="black">
+  <insert scheme_id=5 variable_name="text_bg_image" value="">
+  <insert scheme_id=5 variable_name="text_bg_color" value="white">
 
-  <insert scheme_id=5 _variable_name="link_color" value="#000070">
-  <insert scheme_id=5 _variable_name="vlink_color" value="#000070">
-  <insert scheme_id=5 _variable_name="alink_color" value="#ff0000">
+  <insert scheme_id=5 variable_name="link_color" value="#000070">
+  <insert scheme_id=5 variable_name="vlink_color" value="#000070">
+  <insert scheme_id=5 variable_name="alink_color" value="#ff0000">
 
-  <insert scheme_id=5 _variable_name="h1_color" value="#180c60">
-  <insert scheme_id=5 _variable_name="h1_font" value="officina sans">
-  <insert scheme_id=5 _variable_name="h1_font_style" value="bold">
-  <insert scheme_id=5 _variable_name="h1_size" value="0.5">
-  <insert scheme_id=5 _variable_name="h1_shadow" value="0">
-  <insert scheme_id=5 _variable_name="h1_align" value="left">
-  <insert scheme_id=5 _variable_name="h1_dingbat" value="">
+  <insert scheme_id=5 variable_name="h1_color" value="#180c60">
+  <insert scheme_id=5 variable_name="h1_font" value="officina sans">
+  <insert scheme_id=5 variable_name="h1_font_style" value="bold">
+  <insert scheme_id=5 variable_name="h1_size" value="0.5">
+  <insert scheme_id=5 variable_name="h1_shadow" value="0">
+  <insert scheme_id=5 variable_name="h1_align" value="left">
+  <insert scheme_id=5 variable_name="h1_dingbat" value="">
 
-  <insert scheme_id=5 _variable_name="h2_color" value="#180c60">
-  <insert scheme_id=5 _variable_name="h2_font" value="officina sans">
-  <insert scheme_id=5 _variable_name="h2_font_style" value="">
-  <insert scheme_id=5 _variable_name="h2_size" value="0.5">
-  <insert scheme_id=5 _variable_name="h2_shadow" value="0">
-  <insert scheme_id=5 _variable_name="h2_align" value="left">
-  <insert scheme_id=5 _variable_name="h2_dingbat" value="">
+  <insert scheme_id=5 variable_name="h2_color" value="#180c60">
+  <insert scheme_id=5 variable_name="h2_font" value="officina sans">
+  <insert scheme_id=5 variable_name="h2_font_style" value="">
+  <insert scheme_id=5 variable_name="h2_size" value="0.5">
+  <insert scheme_id=5 variable_name="h2_shadow" value="0">
+  <insert scheme_id=5 variable_name="h2_align" value="left">
+  <insert scheme_id=5 variable_name="h2_dingbat" value="">
 
-  <insert scheme_id=5 _variable_name="title_color" value="#180c60">
-  <insert scheme_id=5 _variable_name="title_font" value="officina sans">
-  <insert scheme_id=5 _variable_name="title_font_style" value="bold">
-  <insert scheme_id=5 _variable_name="title_size" value="0.5">
-  <insert scheme_id=5 _variable_name="title_align" value="left">
-  <insert scheme_id=5 _variable_name="title_shadow" value="0">
+  <insert scheme_id=5 variable_name="title_color" value="#180c60">
+  <insert scheme_id=5 variable_name="title_font" value="officina sans">
+  <insert scheme_id=5 variable_name="title_font_style" value="bold">
+  <insert scheme_id=5 variable_name="title_size" value="0.5">
+  <insert scheme_id=5 variable_name="title_align" value="left">
+  <insert scheme_id=5 variable_name="title_shadow" value="0">
 
-  <insert scheme_id=5 _variable_name="corner_1_size" value="1">
-  <insert scheme_id=5 _variable_name="corner_2_size" value="1">
+  <insert scheme_id=5 variable_name="corner_1_size" value="1">
+  <insert scheme_id=5 variable_name="corner_2_size" value="1">
 
-  <insert scheme_id=5 _variable_name="page_head_image"
+  <insert scheme_id=5 variable_name="page_head_image"
     _dummy_name="page_head_image" _option_name="Sand">
-  <insert scheme_id=5 _variable_name="page_head_image_align" value="right">
-  <insert scheme_id=5 _variable_name="page_head_bar_color" value="#a31805">
+  <insert scheme_id=5 variable_name="page_head_image_align" value="right">
+  <insert scheme_id=5 variable_name="page_head_bar_color" value="#a31805">
 
-  <insert scheme_id=5 _variable_name="nav_text_color" value="#180c60">
-  <insert scheme_id=5 _variable_name="nav_text_color_sel" value="#180c60">
-  <insert scheme_id=5 _variable_name="nav_text_color_mouse" value="#180c60">
+  <insert scheme_id=5 variable_name="nav_text_color" value="#180c60">
+  <insert scheme_id=5 variable_name="nav_text_color_sel" value="#180c60">
+  <insert scheme_id=5 variable_name="nav_text_color_mouse" value="#180c60">
 
-  <insert scheme_id=5 _variable_name="nav_bg_color" value="#a31805">
-  <insert scheme_id=5 _variable_name="nav_bg_color_sel" value="#a31805">
-  <insert scheme_id=5 _variable_name="nav_bg_color_mouse" value="#a31805">
+  <insert scheme_id=5 variable_name="nav_bg_color" value="#a31805">
+  <insert scheme_id=5 variable_name="nav_bg_color_sel" value="#a31805">
+  <insert scheme_id=5 variable_name="nav_bg_color_mouse" value="#a31805">
 
-  <insert scheme_id=5 _variable_name="nav_name" value="sand.ntmpl">
+  <insert scheme_id=5 variable_name="nav_name" value="sand.ntmpl">
 
-  <insert scheme_id=5 _variable_name="nav_font" value="officina sans">
-  <insert scheme_id=5 _variable_name="nav_font_style" value="bold">
-  <insert scheme_id=5 _variable_name="nav_size" value="0.4">
-  <insert scheme_id=5 _variable_name="nav_align" value="left">
-  <insert scheme_id=5 _variable_name="nav_shadow" value="0">
+  <insert scheme_id=5 variable_name="nav_font" value="officina sans">
+  <insert scheme_id=5 variable_name="nav_font_style" value="bold">
+  <insert scheme_id=5 variable_name="nav_size" value="0.4">
+  <insert scheme_id=5 variable_name="nav_align" value="left">
+  <insert scheme_id=5 variable_name="nav_shadow" value="0">
 
 
 </sql-insert>

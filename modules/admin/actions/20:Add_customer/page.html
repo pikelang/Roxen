@@ -42,8 +42,8 @@
          query="select * from template_schemes_vars
 	        where scheme_id='$scheme_id$'">
          <sqlquery query="insert into customers_schemes_vars
-	                  (scheme_id,variable_id,value) values
-		          ('$new_scheme_id$','£variable_id£',
+	                  (scheme_id,variable_name,value) values
+		          ('$new_scheme_id$','£variable_name£',
 			   '£value:quote=mysql£')">
 	</sqloutput>
        
