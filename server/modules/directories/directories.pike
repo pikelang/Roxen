@@ -10,7 +10,7 @@
 // the correct background and font colors.
 //
 // Make sure links work _inside_ unfolded documents.
-constant cvs_version = "$Id: directories.pike,v 1.57 2000/03/27 01:17:01 per Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.58 2000/05/14 15:56:01 per Exp $";
 
 constant thread_safe=1;
 
@@ -150,21 +150,22 @@ string spartan_directory(string d, RequestID id)
   array(string) path = d/"/" - ({ "","." });
   d = "/"+path*"/" + "/";
   array(string) dir = id->conf->find_dir(d, id)||({});
-  if (sizeof(dir)) dir = sort(dir);
+  if (sizeof(dir)) 
+    dir = Array.sort_array((dir, Array.dwim_sort_func);
 
   return sprintf("<html><head><title>Directory listing of %s</title></head>\n"
 		 "<body><h1>Directory listing of %s</h1>\n"
 		 "<pre>%s</pre></body></html>\n",
 		 d, d,
-		 Array.map(sort(dir),
-			   lambda(string f, string d)
-			   {
-			     array stats = id->conf->stat_file(d+f, id);
-			     if(stats && stats[1]<0)
-			       return "<a href=\""+f+"/.\">"+f+"/</a>";
-			     else
-			       return "<a href=\""+f+"\">"+f+"</a>";
-			   }, d)*"\n");
+		 map(dir,
+                     lambda(string f, string d)
+                     {
+                       array stats = id->conf->stat_file(d+f, id);
+                       if(stats && stats[1]<0)
+                         return "<a href=\""+f+"/.\">"+f+"/</a>";
+                       else
+                         return "<a href=\""+f+"\">"+f+"</a>";
+                     }, d)*"\n");
 }
 
 string describe_directory(string d, RequestID id)
@@ -173,7 +174,8 @@ string describe_directory(string d, RequestID id)
   d = "/"+path*"/" + "/";
   if(d=="//") d="/";
   array(string) dir = id->conf->find_dir(d, id)||({});
-  if (sizeof(dir)) dir = sort(dir);
+  if (sizeof(dir)) 
+    dir = Array.sort_array((dir, Array.dwim_sort_func);
 
   string result="";
   int toplevel=!id->misc->dir_no_head++;
@@ -197,7 +199,7 @@ string describe_directory(string d, RequestID id)
   if(id->misc->foldlist_exists) result += "<foldlist folded>\n";
 
   string out_form = output_format(dir);
-  foreach(sort(dir), string file) {
+  foreach(dir, string file) {
     string tmp=id->not_query;
     array stats = id->conf->stat_file(d + file, id);
     id->not_query=tmp;
