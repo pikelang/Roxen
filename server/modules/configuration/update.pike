@@ -1,5 +1,5 @@
 /*
- * $Id: update.pike,v 1.12 2000/04/05 23:43:18 per Exp $
+ * $Id: update.pike,v 1.13 2000/04/12 19:08:28 js Exp $
  *
  * The Roxen Update Client
  * Copyright © 2000, Roxen IS.
@@ -105,7 +105,7 @@ void create()
 	 TYPE_STRING,
 	 "Format: username@host:password. "
 	 "Will not use auth if left empty.");
-  defvar("do_external_updates",1,"Connect to community.roxen.com for updates",
+  defvar("do_external_updates",1,"Connect to update.roxen.com for updates",
 	 TYPE_FLAG,
          "Turn this off if you're inside a firewall and/or don't want to "
 	 "reveal anything to the outside world.");
@@ -534,7 +534,7 @@ array(int) decode_ranges(string s)
 
 mapping get_headers()
 {
-  mapping m = ([ "host":"community.roxen.com:80",
+  mapping m = ([ "host":"update.roxen.com:80",
 		 "user-agent": roxen->real_version ]);
 
   if(sizeof(QUERY(userpassword)))
@@ -566,7 +566,7 @@ void start_package_download(int num)
 string proxyprefix()
 {
   if(sizeof(QUERY(proxyserver)))
-    return "http://community.roxen.com";
+    return "http://update.roxen.com";
   else
     return "";
 }
@@ -575,7 +575,7 @@ string get_server()
 {
   if(sizeof(QUERY(proxyserver)))
     return QUERY(proxyserver);
-  return "community.roxen.com";
+  return "update.roxen.com";
 }
 
 int get_port()

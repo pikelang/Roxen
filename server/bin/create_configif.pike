@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.20 2000/04/09 13:04:24 grubba Exp $
+ * $Id: create_configif.pike,v 1.21 2000/04/12 19:09:20 js Exp $
  *
  * Create an initial administration interface server.
  */
@@ -147,7 +147,8 @@ int main(int argc, array argv)
     int use_update_system=0;
   
     write("Roxen 2.0 has a built-in update system. If enabled it will periodically\n");
-    write("contact update servers over the Internet. Do you want to enable this?\n");
+    write("contact update servers at Roxen Internet Software over the Internet.\n");
+    write("Do you want to enable this?\n");
 
     if(!(strlen( passwd2 = rl->read( "Ok? [y]: " ) ) && passwd2[0]=='n' ))
     {
