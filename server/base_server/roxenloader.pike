@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.351 2004/04/13 16:51:02 mast Exp $
+// $Id: roxenloader.pike,v 1.352 2004/04/26 16:08:44 grubba Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -30,7 +30,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.351 2004/04/13 16:51:02 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.352 2004/04/26 16:08:44 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1165,11 +1165,11 @@ int main(int argc, array(string) argv)
   add_constant("__pragma_save_parent__",1); // FIXME: Change this later on
   Protocols.HTTP; // FIXME: Workaround for bug 2637.
 
-#if __VERSION__ < 7.2
+#if __VERSION__ < 7.4
     report_debug(
 #"
 ------- FATAL -------------------------------------------------
-Roxen 3.4 should be run with Pike 7.2 or newer.
+Roxen 4.0 should be run with Pike 7.4 or newer.
 ---------------------------------------------------------------
 ");
 	exit(1);
@@ -1799,7 +1799,7 @@ void start_mysql()
                   version, (gethrtime()-st)/1000.0);
     if( (float)version < 3.23 )
       report_debug( "Warning: This is a very old MySQL. "
-                     "Please use 3.23.*\n");
+		    "Please use 3.23.* or later.\n");
 
     if( !do_tailf_threaded ) do_tailf(0, err_log );
     assure_that_base_tables_exists();
@@ -2003,7 +2003,7 @@ it impossible for roxen to have any internal security at all.
     report_debug(
 #"
 ------- WARNING -----------------------------------------------
-Roxen 2.4 or newer requires bignum support in Pike.
+Roxen requires bignum support in Pike since version 2.4.
 Please recompile Pike with gmp / bignum support to run Roxen.
 
 It might still be possible to start Roxen, but the 
@@ -2028,27 +2028,27 @@ some environment variables are ignored.
 ");
 #endif
 
-#if __VERSION__ < 7.2
+#if __VERSION__ < 7.4
   report_debug(
 #"
 
 
 ******************************************************
-Roxen 3.4 requires Pike 7.2 or newer.
+Roxen 4.0 requires Pike 7.4 or newer.
 Please install a newer version of Pike.
 ******************************************************
 
 
 ");
   _exit(0); /* 0 means stop start script looping */
-#endif /* __VERSION__ < 7.2 */
+#endif /* __VERSION__ < 7.4 */
 
 #if !constant (Mysql.mysql)
   report_debug (#"
 
 
 ******************************************************
-Roxen 2.4 or newer requires MySQL support in Pike.
+Roxen requires MySQL support in Pike since version 2.4.
 Your Pike has been compiled without support for MySQL.
 Please install MySQL client libraries and reconfigure
 and rebuild Pike from scratch.
@@ -2189,11 +2189,11 @@ and recompile pike, after removing the file 'config.cache'
   report_debug(
 #"
 ------- WARNING ----------------------------------------------
-The Image.TTF (freeetype) module is not available.
-True Type fonts and the default font  will not be available.
-To get TTF support, download a Freetype 1 package from
+Neither the Image.TTF nor the Image.FreeType module is available.
+True Type fonts and the default font will not be available.
+To get True Type support, download a Freetype package from
 
-http://freetype.sourceforge.net/download.html#freetype1
+http://freetype.sourceforge.net/download.html
 
 Install it, and then remove config.cache in pike and recompile.
 If this was a binary release of Roxen, there should be no need
