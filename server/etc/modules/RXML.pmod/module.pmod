@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.253 2001/10/08 09:54:24 mast Exp $
+// $Id: module.pmod,v 1.254 2001/10/29 14:58:27 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -6760,12 +6760,12 @@ class PCode
 
   void add (Context ctx, mixed entry, mixed evaled_value)
   {
-    if (length + 1 > sizeof (exec)) exec += allocate (sizeof (exec));
-
     if (flags & COLLECT_RESULTS) {
       PCODE_MSG ("adding result value %s\n", format_short (evaled_value));
-      exec[length++] = evaled_value;
       mapping var_chg = ctx->misc->variable_changes;
+      if (length + (sizeof (var_chg) ? 2 : 1) > sizeof (exec))
+	exec += allocate (sizeof (exec));
+      exec[length++] = evaled_value;
       if (sizeof (var_chg)) {
 	PCODE_MSG ("adding variable changes %s\n", format_short (var_chg));
 	exec[length++] = VariableChange (var_chg);
@@ -6774,6 +6774,7 @@ class PCode
     }
     else {
       PCODE_MSG ("adding entry %s\n", format_short (entry));
+      if (length + 1 > sizeof (exec)) exec += allocate (sizeof (exec));
       exec[length++] = entry;
     }
 
@@ -6809,7 +6810,8 @@ class PCode
 	  }
 	  PCODE_MSG ("adding result of frame %O: %s\n",
 		     frame, format_short (evaled_value));
-	  if (length + 1 >= sizeof (exec)) exec += allocate (sizeof (exec));
+	  if (length + (sizeof (var_chg) ? 2 : 1) >= sizeof (exec))
+	    exec += allocate (sizeof (exec));
 	  exec[length++] = evaled_value;
 	  if (sizeof (var_chg))
 	    exec[length++] = VariableChange (var_chg);
