@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.96 2004/05/04 12:35:13 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.97 2004/05/04 15:02:20 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -173,9 +173,13 @@ class DAVLock(string locktoken,
 	      string|Node locktype,
 	      void|string owner,
 	     )
-//! Container for information about outstanding DAV write locks. No
-//! field except @[owner] may change after the object has been created
-//! since filesystem modules might store this info persistently.
+//! Container for information about an outstanding DAV lock. No field
+//! except @[owner] may change after the object has been created since
+//! filesystem modules might store this info persistently.
+//!
+//! @note
+//! @[DAVLock] objects might be shared between filesystems but not
+//! between configurations.
 {
   //! @decl string locktoken;
   //!
@@ -1579,6 +1583,8 @@ class RoxenModule
 				      RequestID id);
   mapping(string:mixed) remove_property (string path, string prop_name,
 					 RequestID id);
+  string resource_id (string path, RequestID id);
+  mixed authenticated_user_id (RequestID id);
   multiset(DAVLock) find_locks(string path,
 			       int(0..1) recursive,
 			       int(0..1) exclude_shared,

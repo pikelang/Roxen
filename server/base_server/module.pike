@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.173 2004/05/04 14:38:57 grubba Exp $
+// $Id: module.pike,v 1.174 2004/05/04 15:02:20 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -558,30 +558,81 @@ mapping(string:mixed) remove_property (string path, string prop_name,
   return 0;
 }
 
-//! Mapping from canonical path to a mapping from username to the lock
-//! that apply to the path.
+string resource_id (string path, RequestID id)
+//! Return a string that within the filesystem uniquely identifies the
+//! resource on @[path] in the given request. This is commonly @[path]
+//! itself but can be extended with e.g. language, user or some form
+//! variable if the path is mapped to different files according to
+//! those fields.
 //!
-//! The @expr{0@} username is the anonymous user.
+//! The important criteria here is that every unique returned string
+//! corresponds to a resource that can be changed independently of
+//! every other. Thus e.g. dynamic pages that evaluate to different
+//! results depending on variables or cookies etc should _not_ be
+//! mapped to more than one string by this function. It also means
+//! that if files are stored in a filesystem which is case insensitive
+//! then this function should normalize case differences.
 //!
-//! Only used internally by the default lock implementation.
-static mapping(string:mapping(string:DAVLock)) file_locks = ([]);
+//! This function is used e.g by the default lock implementation to
+//! convert paths to resources that can be locked independently of
+//! each other. There's also a notion of recursive locks there, which
+//! means that a recursive lock on a certain resource identifier also
+//! locks every resource whose identifier it is a prefix of. Therefore
+//! it's typically necessary to ensure that every identifier ends with
+//! "/" so that a recursive lock on e.g. "doc/foo" doesn't lock
+//! "doc/foobar".
+//!
+//! @param path
+//! The requested path below the filesystem location. @[path] has been
+//! normalized with @[VFS.normalize_path].
+{
+  return has_suffix (path, "/") ? path : path + "/";
+}
 
-//! Mapping from canonical path prefix to a mapping from username to
-//! the lock that apply recursively to all files under that prefix.
+mixed authenticated_user_id (RequestID id)
+//! Return a value that uniquely identifies the user that the given
+//! request is authenticated as.
 //!
-//! The @expr{0@} username is the anonymous user.
+//! This function is e.g. used by the default lock implementation to
+//! tell different users holding locks apart.
 //!
-//! Only used internally by the default lock implementation.
-static mapping(string:mapping(string:DAVLock)) prefix_locks = ([]);
+//! @note
+//! The returned value is typically a string or integer, but if it
+//! isn't then it must be able to compare for equality with
+//! @[lfun::`==] and @[lfun::__hash].
+{
+  // Leave this to the standard auth system by default.
+  User uid = my_configuration()->authenticate (id);
+  return uid && uid->name();
+}
+
+// Mapping from resource id to a mapping from user id to the lock
+// that apply to the resource.
+//
+// Only used internally by the default lock implementation.
+static mapping(string:mapping(mixed:DAVLock)) file_locks = ([]);
+
+// Mapping from resource id to a mapping from user id to the lock
+// that apply recursively to the resource and all other resources
+// it's a prefix of.
+//
+// Only used internally by the default lock implementation.
+static mapping(string:mapping(mixed:DAVLock)) prefix_locks = ([]);
+
+#define LOOP_OVER_BOTH(PATH, LOCKS, CODE)				\
+  do {									\
+    foreach (file_locks; PATH; LOCKS) {CODE;}				\
+    foreach (prefix_locks; PATH; LOCKS) {CODE;}				\
+  } while (0)
 
 //! Find some or all locks that apply to @[path].
 //!
 //! @param path
-//!   Canonical path relative to the filesystem root. Always ends with
-//!   a @expr{"/"@}.
+//!   Path below the filesystem location. It's normalized with
+//!   @[VFS.normalize_path] and always ends with a @expr{"/"@}.
 //!
 //! @param recursive
-//!   If @expr{1@} also return locks under @[path].
+//!   If @expr{1@} also return locks anywhere below @[path].
 //!
 //! @param exclude_shared
 //!   If @expr{1@} do not return shared locks that are held by users
@@ -612,13 +663,14 @@ multiset(DAVLock) find_locks(string path,
   TRACE_ENTER(sprintf("find_locks(%O, %O, %O, X)",
 		      path, recursive, exclude_shared), this);
 
+  path = resource_id (path, id);
+
   multiset(DAVLock) locks = (<>);
-  function(mapping(string:DAVLock):void) add_locks;
+  function(mapping(mixed:DAVLock):void) add_locks;
 
   if (exclude_shared) {
-    User uid = id->conf->authenticate (id);
-    string auth_user = uid && uid->name();
-    add_locks = lambda (mapping(string:DAVLock) sub_locks) {
+    mixed auth_user = authenticated_user_id (id);
+    add_locks = lambda (mapping(mixed:DAVLock) sub_locks) {
 		  foreach (sub_locks; string user; DAVLock lock)
 		    if (user == auth_user ||
 			lock->lockscope == "DAV:exclusive")
@@ -626,7 +678,7 @@ multiset(DAVLock) find_locks(string path,
 		};
   }
   else
-    add_locks = lambda (mapping(string:DAVLock) sub_locks) {
+    add_locks = lambda (mapping(mixed:DAVLock) sub_locks) {
 		  locks |= mkmultiset (values (sub_locks));
 		};
 
@@ -635,7 +687,7 @@ multiset(DAVLock) find_locks(string path,
   }
 
   foreach(prefix_locks;
-	  string prefix; mapping(string:DAVLock) sub_locks) {
+	  string prefix; mapping(mixed:DAVLock) sub_locks) {
     if (has_prefix(path, prefix)) {
       add_locks (sub_locks);
       break;
@@ -643,12 +695,11 @@ multiset(DAVLock) find_locks(string path,
   }
 
   if (recursive) {
-    foreach(file_locks|prefix_locks;
-	    string prefix; mapping(string:DAVLock) sub_locks) {
-      if (has_prefix(prefix, path)) {
-	add_locks (sub_locks);
-      }
-    }
+    LOOP_OVER_BOTH (string prefix, mapping(mixed:DAVLock) sub_locks, {
+	if (has_prefix(prefix, path)) {
+	  add_locks (sub_locks);
+	}
+      });
   }
 
   add_locks = 0;
@@ -662,8 +713,8 @@ multiset(DAVLock) find_locks(string path,
 //! user the request is authenticated as.
 //!
 //! @param path
-//!   Canonical path relative to the filesystem root. Always ends with
-//!   a @expr{"/"@}.
+//!   Path below the filesystem location. It's normalized with
+//!   @[VFS.normalize_path] and always ends with a @expr{"/"@}.
 //!
 //! @param recursive
 //!   If @expr{1@} also check recursively under @[path] for locks.
@@ -709,8 +760,9 @@ DAVLock|int(0..3) check_locks(string path,
 
   TRACE_ENTER(sprintf("check_locks(%O, %d, X)", path, recursive), this);
 
-  User uid = id->conf->authenticate (id);
-  string auth_user = uid && uid->name();
+  path = resource_id (path, id);
+
+  mixed auth_user = authenticated_user_id (id);
 
   if (DAVLock lock =
       file_locks[path] && file_locks[path][auth_user] ||
@@ -720,7 +772,7 @@ DAVLock|int(0..3) check_locks(string path,
   }
   int(0..1) shared;
 
-  if (mapping(string:DAVLock) locks = file_locks[path]) {
+  if (mapping(mixed:DAVLock) locks = file_locks[path]) {
     foreach(locks;; DAVLock lock) {
       if (lock->lockscope == "DAV:exclusive") {
 	TRACE_LEAVE(sprintf("Found other user's exclusive lock %O.",
@@ -733,12 +785,12 @@ DAVLock|int(0..3) check_locks(string path,
   }
 
   foreach(prefix_locks;
-	  string prefix; mapping(string:DAVLock) locks) {
+	  string prefix; mapping(mixed:DAVLock) locks) {
     if (has_prefix(path, prefix)) {
       if (DAVLock lock = locks[auth_user]) return lock;
       if (!shared)
 	// If we've found a shared lock then we won't find an
-	// exclusive one higher up.
+	// exclusive one anywhere else.
 	foreach(locks;; DAVLock lock) {
 	  if (lock->lockscope == "DAV:exclusive") {
 	    TRACE_LEAVE(sprintf("Found other user's exclusive lock %O.",
@@ -760,23 +812,22 @@ DAVLock|int(0..3) check_locks(string path,
 
   // We want to know if there are any locks with @[path] as prefix
   // that apply to us.
-  foreach(file_locks|prefix_locks;
-	  string prefix; mapping(string:DAVLock) locks) {
-    if (has_prefix(prefix, path)) {
-      if (locks[auth_user])
-	locked_by_auth_user = 1;
-      else
-	foreach(locks;; DAVLock lock) {
-	  if (lock->lockscope == "DAV:exclusive") {
-	    TRACE_LEAVE(sprintf("Found other user's exclusive lock %O.",
-				lock->locktoken));
-	    return 3;
+  LOOP_OVER_BOTH (string prefix, mapping(mixed:DAVLock) locks, {
+      if (has_prefix(prefix, path)) {
+	if (locks[auth_user])
+	  locked_by_auth_user = 1;
+	else
+	  foreach(locks;; DAVLock lock) {
+	    if (lock->lockscope == "DAV:exclusive") {
+	      TRACE_LEAVE(sprintf("Found other user's exclusive lock %O.",
+				  lock->locktoken));
+	      return 3;
+	    }
+	    shared = 1;
+	    break;
 	  }
-	  shared = 1;
-	  break;
-	}
-    }
-  }
+      }
+    });
 
   TRACE_LEAVE(sprintf("Returning %O.", locked_by_auth_user ? 2 : shared));
   return locked_by_auth_user ? 2 : shared;
@@ -798,8 +849,9 @@ DAVLock|int(0..3) check_locks(string path,
 //! provided the directory it would be in exists.
 //!
 //! @param path
-//!   Canonical path that the lock applies to. It's relative to the
-//!   filesystem root and always ends with a @expr{"/"@}.
+//!   Path below the filesystem location that the lock applies to.
+//!   It's normalized with @[VFS.normalize_path] and always ends with
+//!   a @expr{"/"@}.
 //!
 //! @param lock
 //!   The lock to register.
@@ -810,10 +862,8 @@ DAVLock|int(0..3) check_locks(string path,
 //!
 //! @note
 //! The default implementation supports only @expr{"DAV:write"@}. It
-//! works under the assumption that every path maps to exactly one
-//! file or directory (when it exists), and that the authenticated
-//! user is uniquely identified by
-//! @code{id->conf->authenticate(id)->name()@}.
+//! uses @[resource_id] to map paths to unique resources and
+//! @[authenticated_user_id] to tell users apart.
 mapping(string:mixed) lock_file(string path,
 				DAVLock lock,
 				RequestID id)
@@ -821,19 +871,19 @@ mapping(string:mixed) lock_file(string path,
   ASSERT_IF_DEBUG (lock->locktype == "DAV:write");
   TRACE_ENTER(sprintf("lock_file(%O, lock(%O), X).", path, lock->locktoken),
 	      this);
-  User uid = id->conf->authenticate (id);
-  string user = uid && uid->name();
+  path = resource_id (path, id);
+  mixed auth_user = authenticated_user_id (id);
   if (lock->recursive) {
     if (prefix_locks[path]) {
-      prefix_locks[path][user] = lock;
+      prefix_locks[path][auth_user] = lock;
     } else {
-      prefix_locks[path] = ([ user:lock ]);
+      prefix_locks[path] = ([ auth_user:lock ]);
     }
   } else {
     if (file_locks[path]) {
-      file_locks[path][user] = lock;
+      file_locks[path][auth_user] = lock;
     } else {
-      file_locks[path] = ([ user:lock ]);
+      file_locks[path] = ([ auth_user:lock ]);
     }
   }
   TRACE_LEAVE("Ok.");
@@ -843,8 +893,9 @@ mapping(string:mixed) lock_file(string path,
 //! Remove @[lock] that currently is locking the resource at @[path].
 //!
 //! @param path
-//!   Canonical path that the lock applies to. It's relative to the
-//!   filesystem root and always ends with a @expr{"/"@}.
+//!   Path below the filesystem location that the lock applies to.
+//!   It's normalized with @[VFS.normalize_path] and always ends with
+//!   a @expr{"/"@}.
 //!
 //! @param lock
 //!   The lock to unregister. (It must not be changed or destructed.)
@@ -857,18 +908,19 @@ mapping(string:mixed) unlock_file (string path,
 {
   TRACE_ENTER(sprintf("unlock_file(%O, lock(%O), X).", path, lock->locktoken),
 	      this);
-  User uid = id->conf->authenticate (id);
-  string user = uid && uid->name();
+  mixed auth_user = authenticated_user_id (id);
+  path = resource_id (path, id);
   DAVLock removed_lock;
   if (lock->recursive) {
-    removed_lock = m_delete (prefix_locks[path], user);
+    removed_lock = m_delete (prefix_locks[path], auth_user);
     if (!sizeof (prefix_locks[path])) m_delete (prefix_locks, path);
   }
   else {
-    removed_lock = m_delete (file_locks[path], user);
+    removed_lock = m_delete (file_locks[path], auth_user);
     if (!sizeof (file_locks[path])) m_delete (file_locks, path);
   }
-  ASSERT_IF_DEBUG (lock /*%O*/ == removed_lock /*%O*/, lock, removed_lock);
+  ASSERT_IF_DEBUG (!removed_lock || lock /*%O*/ == removed_lock /*%O*/,
+		   lock, removed_lock);
   TRACE_LEAVE("Ok.");
   return 0;
 }
