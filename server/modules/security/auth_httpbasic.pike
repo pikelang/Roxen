@@ -1,5 +1,5 @@
 constant cvs_version =
-  "$Id: auth_httpbasic.pike,v 1.5 2001/03/08 14:35:45 per Exp $";
+  "$Id: auth_httpbasic.pike,v 1.6 2001/05/18 12:45:09 hop Exp $";
 inherit AuthModule;
 inherit "module";
 
@@ -68,7 +68,7 @@ User authenticate( RequestID id, UserDB db )
   
   if( !user )
     if( header = id->request_headers[ "authorization" ] )
-      [user,password] = parse_auth_header( header );
+      [user,password] = parse_auth_header( header ) || ({ 0,0 });
     else if( id->realauth )
       sscanf( id->realauth, "%[^:]:%s", user, password );
     else
