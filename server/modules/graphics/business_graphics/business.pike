@@ -7,7 +7,16 @@
  * in October -97
  */
 
-constant cvs_version = "$Id: business.pike,v 1.8 1997/10/14 06:27:21 peter Exp $";
+/* TODO:
+ *
+ * Idag:
+ * Skriv dok och skriv ut åt PetNo.
+ *
+ * Senare:
+ * Prevent less that 100x100 in size.
+ */
+
+constant cvs_version = "$Id: business.pike,v 1.9 1997/10/15 02:24:59 peter Exp $";
 constant thread_safe=0;
 
 #include <module.h>
@@ -16,13 +25,6 @@ inherit "module";
 inherit "roxenlib";
 import Array;
 import Image;
-
-program Bars  = (program)"create_bars";
-program Graph = (program)"create_graph";
-program Pie   = (program)"create_pie";
-object pie    = Pie();
-object bars   = Bars();
-object graph  = Graph();
 
 #define SEP "\t"
 
@@ -35,7 +37,19 @@ mixed *register_module()
        "<br>This module defines some tags,"
        "<pre>"
        "&lt;diagram&gt;: \n"
+       "Draws differet kinds of diagrams. "
+       "Defines the following attributes: \n"
+       " type=        { sumbars | normsumbars |linechart | barchart | piechart | graph }\n"
+       " background=  Takes the filename of a ppm image is input.\n"
+       " xsize=       width of diagram-image in pixels.\n"
+       " ysize=       height of diagram-image in pixels.\n"
+       " fontsize=    height if text in pixels.\n"
+       " legendfontsize= height if legend text in pixels. Uses fontsize if not defined\n"
+       " 3D=    Does a C00l 3D-effect on piecharts, takes the size in pixels of the 3Dtilt as argument.\n"
+       " tint    Do nasty stuff to the background.\n"
        "</pre>"
+       "BUGS:<br><li>background does not work well.<br>"
+       "<br><li>data input is not always what you might expect"
        ), ({}), 1,
     });
 }
@@ -56,6 +70,12 @@ string itag_xaxis(string tag, mapping m, mapping res)
   if(m->stop)  res->xstop = m->stop;
   else         res->xstop = "foobar";
 
+  if(m->quantity) res->xstor = m->quantity;
+  else            res->xstor = "";
+
+  if(m->unit) res->xunit = m->unit;
+  else        res->xunit = "";
+
   return "";
 }
 
@@ -68,6 +88,12 @@ string itag_yaxis(string tag, mapping m, mapping res)
 
   if(m->stop)  res->ystop = m->stop;
   else         res->ystop = "foobar";
+
+  if(m->quantity) res->ystor = m->quantity;
+  else            res->ystor = "";
+
+  if(m->unit) res->yunit = m->unit;
+  else        res->yunit = "";
 
   return "";
 }
@@ -121,7 +147,7 @@ string itag_data(mapping tag, mapping m, string contents,
 }
 
 string itag_colors(mapping tag, mapping m, string contents,
-		 mapping res)
+		   mapping res)
 {
   string sep=SEP;
   if(m->separator)
@@ -188,6 +214,16 @@ string tag_diagram(string tag, mapping m, string contents,
     res->type = "sumbars";
     res->subtype = "norm";
   }   
+
+  switch(res->type) {
+   case "sumbars":
+   case "bars":
+   case "pie":
+   case "graph":
+     break;
+   default:
+     return syntax("Wrong type of diagram.");
+  }
 
   if(m->subtype)
     res->subtype = (string)m->subtype;
@@ -300,7 +336,7 @@ object PPM(string fname, object id)
 {
   string q;
   //    roxen->try_get_file( dirname(id->not_query)+fname, id);
-  q = Stdio.read_file("girl.ppm");
+  q = Stdio.read_file((string)fname);
   //  q = Stdio.read_bytes(fname);
   //  if(!q) q = roxen->try_get_file( dirname(id->not_query)+fname, id);
   if(!q) perror("Unknown PPM image '"+fname+"'\n");
@@ -313,9 +349,15 @@ object PPM(string fname, object id)
   return image()->fromppm(q);
 }
 
-
 mapping find_file(string f, object id)
 {
+  program Bars  = (program)"create_bars";
+  program Graph = (program)"create_graph";
+  program Pie   = (program)"create_pie";
+  object pie    = Pie();
+  object bars   = Bars();
+  object graph  = Graph();
+
   if (f[sizeof(f)-4..] == ".gif")
     f = f[..sizeof(f)-5];
 
@@ -327,14 +369,16 @@ mapping find_file(string f, object id)
   */
 
   //strap
-  res->labels=      ({"xstor", "ystor", "xenhet", "yenhet"});
+  res->labels=      ({ res->xstor, res->ystor, res->xunit, res->yunit });
   res->xminvalue=   0.1;
   res->yminvalue=   0;
 
+  /*
   res->data = 	   ({ ({12.2, 10.3, 8.01, 9.0, 5.3, 4.0 }),
 		      ({91.2, 101.3, 91.5, 101.7,  141.0, 181.5}),
 		      ({191.2, 203.3, 241.5, 200.1, 194.3, 195.2 }),
 		      ({93.2, 113.3, 133.5, 143.7, 154.3, 141.2 }) });
+  */
 
   mapping(string:mixed) diagram_data;
 
