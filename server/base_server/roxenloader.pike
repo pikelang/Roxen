@@ -18,7 +18,7 @@ private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.205 2000/09/25 07:03:14 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.206 2000/09/25 07:55:58 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -241,6 +241,66 @@ mapping make_mapping(array(string) f)
   return foo;
 }
 
+class Variable
+{
+  constant is_variable = 1;
+  constant type = "Basic";
+
+  string get_warnings();
+  int get_flags();
+  void set_flags( int flags );
+  int check_visibility( RequestID id,
+                        int more_mode,
+                        int expert_mode,
+                        int devel_mode,
+                        int initial,
+                        int|void variable_in_cfif );
+  void set_invisibility_check_callback( function(RequestID,Variable:int) cb );
+  function(Variable:void) get_changed_callback( );
+  void set_changed_callback( function(Variable:void) cb );
+  void add_changed_callback( function(Variable:void) cb );
+  function(RequestID,Variable:int) get_invisibility_check_callback() ;
+  string doc(  );
+  string name(  );
+  string type_hint(  );
+  mixed default_value();
+  void set_warning( string to );
+  int set( mixed to );
+  int low_set( mixed to );  
+  mixed query();
+  int is_defaulted();
+  array(string|mixed) verify_set( mixed new_value );
+  mapping(string:string) get_form_vars( RequestID id );
+  mixed transform_from_form( string what );
+  void set_from_form( RequestID id );
+  string path();
+  void set_path( string to );
+  string render_form( RequestID id, void|mapping additional_args );
+  string render_view( RequestID id );
+}
+
+class BasicDefvar
+{
+  mapping(string:Variable)  variables=([]);
+  Variable getvar( string name );
+  int deflocaledoc( string locale, string variable,
+                    string name, string doc, mapping|void translate );
+  void set(string var, mixed value);
+  int killvar(string var);
+  void setvars( mapping (string:mixed) vars );
+  Variable defvar(string var, mixed value, 
+                  mapping|string|void|object name,
+                  int|void type, 
+                  mapping|string|void|object doc_str, 
+                  mixed|void misc,
+                  int|function|void not_in_config,
+                  mapping|void option_translations);
+  mixed query(string|void var, int|void ok);
+  void definvisvar(string name, mixed value, int type, array|void misc);
+}
+
+
+
 class StringFile( string data, mixed|void _st )
 {
   int offset;
@@ -278,6 +338,7 @@ class StringFile( string data, mixed|void _st )
     offset = to;
   }
 }
+
 class ModuleInfo
 {
   string sname;
@@ -321,6 +382,7 @@ class ModuleCopies
 
 class Configuration 
 {
+  inherit BasicDefvar;
   constant is_configuration = 1;
   mapping enabled_modules = ([]);
   mapping(string:array(int)) error_log=([]);
@@ -364,85 +426,17 @@ class Configuration
     }
   }
 
-  // Trivial cache (actually, it's more or less identical to the 200+
-  // lines of C in HTTPLoop. But it does not have to bother with the
-  // fact that more than one thread can be active in it at once. Also,
-  // it does not have to delay free until all current connections using
-  // the cache entry is done...)
   class DataCache
   {
-    mapping(string:array(string|mapping(string:mixed))) cache = ([]);
-
-    int current_size;
-    int max_size;
-    int max_file_size;
-
+    int current_size, max_size, max_file_size;
     int hits, misses;
-
-    void flush()
-    {
-      current_size = 0;
-      cache = ([]);
-    }
-
-    static void clear_some_cache()
-    {
-      array q = indices( cache );
-      if(!sizeof(q))
-      {
-        current_size=0;
-        return;
-      }
-      for( int i = 0; i<sizeof( q )/10; i++ )
-        expire_entry( q[random(sizeof(q))] );
-    }
-
-    void expire_entry( string url )
-    {
-      if( cache[ url ] )
-      {
-        current_size -= strlen(cache[url][0]);
-        m_delete( cache, url );
-      }
-    }
-
-    void set( string url, string data, mapping meta, int expire )
-    {
-      if( strlen( data ) > max_size ) return;
-      call_out( expire_entry, expire, url );
-      current_size += strlen( data );
-      cache[url] = ({ data, meta });
-      int n;
-      while( (current_size > max_size) && (n++<10))
-        clear_some_cache();
-    }
-  
-    array(string|mapping(string:mixed)) get( string url )
-    {
-      mixed res;
-      if( res = cache[ url ] )  
-        hits++;
-      else
-        misses++;
-      return res;
-    }
-
-    void init_from_variables( )
-    {
-      max_size = query( "data_cache_size" ) * 1024;
-      max_file_size = query( "data_cache_file_max_size" ) * 1024;
-      if( max_size < max_file_size )
-        max_size += max_file_size;
-      int n;
-      while( (current_size > max_size) && (n++<10))
-        clear_some_cache();
-    }
-
-    static void create()
-    {
-      init_from_variables();
-    }
+    void flush();
+    void expire_entry( string url );
+    void set( string url, string data, mapping meta, int expire );
+    array(string|mapping(string:mixed)) get( string url );
+    void init_from_variables( );
   };
+
   array(Priority) allocate_pris();
 
   object      throttler;
@@ -538,6 +532,7 @@ class Configuration
 
 class Protocol 
 {
+  inherit BasicDefvar;
   constant name = "unknown";
   constant supports_ipless = 0;
   constant requesthandlerfile = "";
@@ -739,6 +734,7 @@ class RequestID
 
 class RoxenModule
 {
+  inherit BasicDefvar;
   constant is_module = 1;
   constant module_type = 0;
   constant module_unique = 1;
@@ -749,22 +745,6 @@ class RoxenModule
   string file_name_and_stuff();
 
   void start(void|int num, void|object conf);
-
-  void defvar(string var, mixed value, string name,
-              int type, string|void doc_str, mixed|void misc,
-              int|function|void not_in_config);
-  void definvisvar(string name, int value, int type, array|void misc);
-
-  void deflocaledoc( string locale, string variable,
-                     string name, string doc,
-                     mapping|void translate );
-  int killvar(string var);
-  string check_variable( string s, mixed value );
-  mixed query(string|void var, int|void ok);
-
-  void set(string var, mixed value);
-  int setvars( mapping (string:mixed) vars );
-
 
   string query_internal_location();
   string query_location();

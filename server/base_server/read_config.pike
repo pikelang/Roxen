@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: read_config.pike,v 1.51 2000/09/19 15:04:31 per Exp $
+// $Id: read_config.pike,v 1.52 2000/09/25 07:55:57 per Exp $
 
 #include <module.h>
 
@@ -74,7 +74,7 @@ void really_save_it( string cl, mapping data )
     object config;
 #if constant( roxenp )
     config = roxenp();
-    foreach(config->configurations||({}), object c)
+    foreach(config->configurations||({}), Configuration c)
       if(c->name == cl)
       {
         config = c;

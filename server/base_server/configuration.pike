@@ -1,6 +1,6 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.380 2000/09/25 07:03:11 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.381 2000/09/25 07:55:57 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -38,6 +38,86 @@ USE_DEFERRED_LOCALE;
 /* A configuration.. */
 inherit Configuration;
 inherit "basic_defvar";
+
+// Trivial cache (actually, it's more or less identical to the 200+
+// lines of C in HTTPLoop. But it does not have to bother with the
+// fact that more than one thread can be active in it at once. Also,
+// it does not have to delay free until all current connections using
+// the cache entry is done...)
+class DataCache
+{
+  mapping(string:array(string|mapping(string:mixed))) cache = ([]);
+
+  int current_size;
+  int max_size;
+  int max_file_size;
+
+  int hits, misses;
+
+  void flush()
+  {
+    current_size = 0;
+    cache = ([]);
+  }
+
+  static void clear_some_cache()
+  {
+    array q = indices( cache );
+    if(!sizeof(q))
+    {
+      current_size=0;
+      return;
+    }
+    for( int i = 0; i<sizeof( q )/10; i++ )
+      expire_entry( q[random(sizeof(q))] );
+  }
+
+  void expire_entry( string url )
+  {
+    if( cache[ url ] )
+    {
+      current_size -= strlen(cache[url][0]);
+      m_delete( cache, url );
+    }
+  }
+
+  void set( string url, string data, mapping meta, int expire )
+  {
+    if( strlen( data ) > max_size ) return;
+    call_out( expire_entry, expire, url );
+    current_size += strlen( data );
+    cache[url] = ({ data, meta });
+    int n;
+    while( (current_size > max_size) && (n++<10))
+      clear_some_cache();
+  }
+  
+  array(string|mapping(string:mixed)) get( string url )
+  {
+    mixed res;
+    if( res = cache[ url ] )  
+      hits++;
+    else
+      misses++;
+    return res;
+  }
+
+  void init_from_variables( )
+  {
+    max_size = query( "data_cache_size" ) * 1024;
+    max_file_size = query( "data_cache_file_max_size" ) * 1024;
+    if( max_size < max_file_size )
+      max_size += max_file_size;
+    int n;
+    while( (current_size > max_size) && (n++<10))
+      clear_some_cache();
+  }
+
+  static void create()
+  {
+    init_from_variables();
+  }
+}
 
 #include "rxml.pike";
 constant    store = roxen.store;

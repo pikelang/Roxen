@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.561 2000/09/25 07:03:12 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.562 2000/09/25 07:55:57 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -334,12 +334,10 @@ static object PRIVS(string r, int|string|void u, int|string|void g)
 // an example)
 object fonts;
 
-// For prototype reasons.
+// Will replace Configuration after create() is run.
 program _configuration;	/*set in create*/
 
-// No way to write array(Configuration) here, since the program
-// is not loaded yet.
-array configurations = ({});
+array(Configuration) configurations = ({});
 
 // When true, roxen will shut down as soon as possible.
 local static int die_die_die;
@@ -744,7 +742,7 @@ class Protocol
     // No. We have to default to one of the other ports.
     // It might be that one of the servers is tagged as a default server.
     multiset choices = (< >);
-    foreach( configurations, object c )
+    foreach( configurations, Configuration c )
       if( c->query( "default_server" ) )
 	choices |= (< c >);
     
@@ -1637,7 +1635,7 @@ void sort_urls()
   sort( map( map( sorted_urls, strlen ), `-), sorted_urls );
 }
 
-int register_url( string url, object/*(Configuration)*/ conf )
+int register_url( string url, Configuration conf )
 {
   string ourl = url;
   url = lower_case( url );
@@ -1793,12 +1791,12 @@ int register_url( string url, object/*(Configuration)*/ conf )
 }
 
 
-object/*(Configuration)*/ find_configuration( string name )
+Configuration find_configuration( string name )
 //! Searches for a configuration with a name or fullname like the
 //! given string. See also get_configuration().
 {
   name = replace( lower_case( replace(name,"-"," ") )-" ", "/", "-" );
-  foreach( configurations, object/*(Configuration)*/ o )
+  foreach( configurations, Configuration o )
   {
     if( (lower_case( replace( replace(o->name, "-"," ") - " " ,
 			      "/", "-" ) ) == name) ||
@@ -3046,7 +3044,7 @@ void reload_all_configurations()
   }
 }
 
-private mapping(string:object/*(Configuration)*/) config_lookup = ([]);
+private mapping(string:Configuration) config_lookup = ([]);
 // Maps config name to config object.
 
 void fix_config_lookup()
@@ -3111,7 +3109,7 @@ void enable_configurations()
                    config+":\n", describe_backtrace(err)+"\n");
     report_debug("Enabled %s in %.1fms\n", config, (gethrtime()-t)/1000.0 );
   }
-  foreach( configurations, object c )
+  foreach( configurations, Configuration c )
   {
     if(sizeof( c->registered_urls ) )
       return;
@@ -3124,7 +3122,7 @@ int all_modules_loaded;
 void enable_configurations_modules()
 {
   if( all_modules_loaded++ ) return;
-  foreach(configurations, object config)
+  foreach(configurations, Configuration config)
     if(mixed err=catch( config->enable_all_modules() ))
       report_error(LOC_M(36, "Error while loading modules in "
 			 "configuration %s%s"),
@@ -3491,7 +3489,7 @@ int main(int argc, array tmp)
   if( Getopt.find_option( argv, 0, "no-delayed-load" ) )
     enable_configurations_modules();
   else
-    foreach( configurations, object c )
+    foreach( configurations, Configuration c )
       if( c->query( "no_delayed_load" ) )
         c->enable_all_modules();
 
