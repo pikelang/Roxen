@@ -15,7 +15,30 @@ LDFLAGS=@LDFLAGS@
 
 PIKEVERSION=@PIKEVERSION@
 
-all:	@MAKE_GMP@ @MAKE_GDBM@ @MAKE_ZLIB@ @MAKE_PLATFORM@ pike extern
+all:	make_vpath @MAKE_GMP@ @MAKE_GDBM@ @MAKE_ZLIB@ @MAKE_PLATFORM@ pike extern
+
+# NOTE: The _ is significant!
+make_vpath: make_vpath.in
+	@echo "Warning: $(MAKE) doesn't seem to understand VPATH"
+	@echo
+	@echo "Fixing..."
+	@echo
+	@echo "Directories..."
+	@for d in `cd $(SRCDIR);find @MAKE_GMP@ @MAKE_GDBM@ @MAKE_ZLIB@ @MAKE_PLATFORM@ pike extern -type d -print`; do\
+	  test -d $$d || mkdir $$d; \
+	done
+	@echo "Creating symlinks for all the files..."
+	for d in `cd $(SRCDIR);find @MAKE_GMP@ @MAKE_GDBM@ @MAKE_ZLIB@ @MAKE_PLATFORM@ pike extern -depth -type d -print` .; do \
+	  for f in `cd $(SRCDIR)/$$d; echo *`; do \
+	    if test "`ls -d $$d/$$f 2>/dev/null||:`" = ""; then \
+	      (cd $$d; ln -s $(SRCDIR)/$$f $$f); \
+	    else :; fi; \
+	  done; \
+	done
+	@echo "Done."
+	@echo
+	@echo "Applied VPATH workaround"
+	@echo
 
 pike: force
 	@(cd pike/$(PIKEVERSION)/src;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS) @LINKFORSHARED@")
