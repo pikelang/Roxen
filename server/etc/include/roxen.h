@@ -1,6 +1,6 @@
 // -*- pike -*-
 //
-// $Id: roxen.h,v 1.24 2003/03/05 13:50:42 mast Exp $
+// $Id: roxen.h,v 1.25 2003/03/05 16:24:21 mast Exp $
 
 #ifndef _ROXEN_H_
 
@@ -31,16 +31,6 @@ mixed get_locale();
 #ifndef _LOCALE_FUN
 #define _LOCALE_FUN(X, Y, Z)    Locale.call(X, __LOCALE(), Y, Z)
 #endif /* !_LOCALE_FUN */
-
-// Needed to get core dumps of seteuid()'ed processes on Linux.
-#if constant(System.dumpable)
-#define enable_coredumps(X)	System.dumpable(X)
-#elif constant(system.dumpable)
-// Pike 7.2.
-#define enable_coredumps(X)	system.dumpable(X)
-#else
-#define enable_coredumps(X)
-#endif
 
 // Debug macros.
 
