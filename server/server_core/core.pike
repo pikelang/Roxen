@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: core.pike,v 1.855 2004/04/03 16:19:32 mani Exp $";
+constant cvs_version="$Id: core.pike,v 1.856 2004/04/03 21:54:42 mani Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -1638,7 +1638,7 @@ class SSLProtocol
       if( f2 )
 	msg = Tools.PEM.pem_msg()->init( f2 );
 
-      function r = Crypto.randomness.reasonably_random()->read;
+      function r = Crypto.Random.random_string;
 
       SSL3_WERR(sprintf("key file contains: %O", indices(msg->parts)));
 
@@ -3385,7 +3385,7 @@ class ArgCache
   string encode_id( int a, int b, string|void server )
   {
     ensure_secret();
-    object crypto = Crypto.arcfour();
+    Crypto.CipherState crypto = Crypto.Arcfour();
     crypto->set_encrypt_key( server||secret );
     string res = crypto->crypt( a+"\327"+b );
     // Ensure that we do not have a leading NUL.
@@ -3422,7 +3422,7 @@ class ArgCache
   {
     if( catch(  a = Gmp.mpz( a, 36 )->digits( 256 ) ) )
       return 0; // Not very likely to work...
-    object crypto = Crypto.arcfour();
+    Crypto.CipherState crypto = Crypto.Arcfour();
     crypto->set_encrypt_key(key);
     string msg = crypto->crypt(a);
     // Fix the high-order bit altered by encode_id().
