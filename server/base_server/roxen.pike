@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.537 2000/08/28 12:09:12 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.538 2000/08/28 15:20:51 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -715,7 +715,9 @@ class Protocol
         c = mu->conf;
       if( mu->path )
       {
-        id->not_query = id->not_query[strlen(mu->path)..];
+        if( id->not_query )
+          id->not_query = id->not_query[strlen(mu->path)..];
+        id->raw_url = id->raw_url[strlen(mu->path)..];
         id->misc->site_prefix_path = mu->path;
       }
       return c;
@@ -731,7 +733,9 @@ class Protocol
       {
 	if( urls[in]->path )
         {
-	  id->not_query = id->not_query[strlen(urls[in]->path)..];
+          if( id->not_query )
+            id->not_query = id->not_query[strlen(mu->path)..];
+          id->raw_url = id->raw_url[strlen(mu->path)..];
           id->misc->site_prefix_path = urls[in]->path;
         }
         if(!(c=urls[ in ]->conf)->inited) c->enable_all_modules();
@@ -767,7 +771,9 @@ class Protocol
       foreach( values(urls), mapping c )
 	if( choices[ c->conf ] )
 	{
-	  id->not_query = id->not_query[strlen(c->path)..];
+          if( id->not_query )
+            id->not_query = id->not_query[strlen(mu->path)..];
+          id->raw_url = id->raw_url[strlen(mu->path)..];
 	  id->misc->site_prefix_path = c->path;
 	  if(c->conf->inited) 
 	    c->conf->enable_all_modules();
