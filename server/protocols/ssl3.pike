@@ -1,9 +1,7 @@
-/* $Id: ssl3.pike,v 1.53 1999/05/22 23:16:46 mast Exp $
+/* $Id: ssl3.pike,v 1.54 1999/05/24 06:23:24 mast Exp $
  *
  * Copyright © 1996-1998, Idonex AB
  */
-
-// #define SSL3_DEBUG
 
 inherit "protocols/http" : http;
 inherit "roxenlib";
@@ -15,12 +13,6 @@ mapping to_send;
 #include <module.h>
 
 // #define SSL3_DEBUG
-
-#ifdef SSL3_DEBUG
-#ifndef SSL3_CLOSE_DEBUG
-#define SSL3_CLOSE_DEBUG
-#endif /* !SSL3_CLOSE_DEBUG */
-#endif /* SSL3_DEBUG */
 
 mapping parse_args(string options)
 {
@@ -136,9 +128,9 @@ array|void real_port(array port, object cfg)
   {
     /* Too large for export */
     ctx->short_rsa = Crypto.rsa()->generate_key(512, r);
-    
+
     // ctx->long_rsa = Crypto.rsa()->generate_key(rsa->rsa_size(), r);
-  }  
+  }
   ctx->certificates = ({ cert });
   ctx->rsa = rsa;
   ctx->random = r;
@@ -147,6 +139,7 @@ array|void real_port(array port, object cfg)
 #define CHUNK 16384
 
 string to_send_buffer;
+int done;
 
 static void write_more();
 
@@ -212,6 +205,13 @@ string get_data()
   return s;
 }
 
+static void die()
+{
+  my_fd->set_blocking();
+  my_fd->close();
+  if (done++) destroy();
+}
+
 string cache;
 static void write_more()
 {
@@ -221,10 +221,7 @@ static void write_more()
   string s;
   if (!(s = (cache || get_data()))) {
 //    perror("SSL3:: Done.\n");
-    my_fd->set_blocking();
-    my_fd->close();
-    my_fd = 0;
-    destruct();
+    die();
     return;
   }
 
@@ -238,10 +235,7 @@ static void write_more()
 #ifdef DEBUG
       perror("SSL3:: Broken pipe.\n");
 #endif
-      my_fd->set_blocking();
-      my_fd->close();
-      my_fd = 0;
-      destruct();
+      die();
       return;
     }  
     if(pos < strlen(s))
@@ -295,10 +289,7 @@ static void write_more_file()
 
   if(!(s = (cache || get_data_file()))) {
 //    perror("SSL3:: Done.\n");
-    my_fd->set_blocking();
-    my_fd->close();
-    my_fd = 0;
-    destruct();
+    die();
     return;
   }    
 
@@ -312,10 +303,7 @@ static void write_more_file()
 #ifdef DEBUG
       perror("SSL3:: Broken pipe.\n");
 #endif
-      my_fd->set_blocking();
-      my_fd->close();
-      my_fd = 0;
-      destruct();
+      die();
       return;
     }  
     if(pos < strlen(s))
@@ -454,30 +442,9 @@ void send_result(mapping|void result)
       my_fd->set_nonblocking(0, write_more, end);
       to_send->file->set_nonblocking(got_data_to_send, 0, no_data_to_send);
     }
-  } else {
-#ifdef  SSL3_CLOSE_BUG_STILL_EXISTS
-    if (my_fd->is_closed_) {
-#ifdef SSL3_CLOSE_DEBUG
-      report_error(sprintf("SSL3: my_fd was closed from\n"
-			   "%s\n",
-			   describe_backtrace(my_fd->is_closed_)));
-#else
-      report_error("SSL3: my_fd has been closed early.\n");
-#endif /* SSL3_CLOSE_DEBUG */
-    } else {
-      my_fd->set_nonblocking(0, write_more, end);
-    }
-#else
+  } else
     my_fd->set_nonblocking(0, write_more, end);
-#endif
-  }
-
-#ifndef SSL3_CLOSE_BUG_STILL_EXISTS
-  if (my_fd->destructme == 2) {
-    destruct_my_fd();
-    destruct();
-  }
-#endif
+  if (done++) destroy();
 }
 
 class fallback_redirect_request {
@@ -634,15 +601,6 @@ class roxen_sslfile {
   object raw_file;
   object config;
 
-#ifdef SSL3_CLOSE_BUG_STILL_EXISTS
-  constant no_destruct=1; /* Kludge to avoid http.pike destructing us */
-
-  mixed is_closed_;  /* Used for checking if the conection has been closed. */
-
-  int leave_me_alone; /* If this is set, don't let
-		       * the ssl-code shut down the connection. */
-#endif
-
   int destructme; // 0: alive, 1: parent wants destruct, 2: self wants destruct.
 
   void die(int status)
@@ -650,26 +608,9 @@ class roxen_sslfile {
 #ifdef SSL3_DEBUG
     roxen_perror(sprintf("SSL3:roxen_sslfile::die(%d)\n", status));
 #endif /* SSL3_DEBUG */
-#ifdef SSL3_CLOSE_BUG_STILL_EXISTS
-    if (!leave_me_alone)
-#endif
-      ssl::die(status);
-
-    if (destructme == 1) destruct();
-    else destructme = 2;
+    ssl::die(status);
+    if ((destructme |= 2) == 3) destruct();
   }
-
-#ifdef SSL3_CLOSE_BUG_STILL_EXISTS
-  void close()
-  {
-    ssl::close();
-#ifdef SSL3_CLOSE_DEBUG
-    is_closed_ = backtrace();
-#else
-    is_closed_ = 1;
-#endif /* SS3_CLOSE_DEBUG */
-  }
-#endif
 
   void create(object f, object ctx, object id)
   {
@@ -680,26 +621,29 @@ class roxen_sslfile {
     config = id;
     ssl::create(f, ctx);
   }
+
+#ifdef SSL3_DEBUG
+  void destroy()
+  {
+    roxen_perror(sprintf("SSL3:roxen_sslfile::destroy()\n"));
+  }
+#endif /* SSL3_DEBUG */
 }
 
-#ifndef SSL3_CLOSE_BUG_STILL_EXISTS
-private object my_fd_for_destruct; // Used to keep my_fd around for destruct_my_fd().
-
-void destruct_my_fd()
-{
-  catch {
-    // When the request disappear there's noone else interested in
-    // my_fd, so it should destruct itself asap.
-    if (my_fd_for_destruct->destructme == 2) destruct (my_fd);
-    else my_fd_for_destruct->destructme = 1;
-  };
-}
+private object my_fd_for_destruct; // Used to keep my_fd around for destroy().
 
 void destroy()
 {
-  destruct_my_fd();
+#ifdef SSL3_DEBUG
+  roxen_perror(sprintf("SSL3:destroy()\n"));
+#endif /* SSL3_DEBUG */
+  catch {
+    // When the request disappear there's noone else interested in
+    // my_fd, so it should destruct itself asap.
+    if ((my_fd_for_destruct->destructme |= 1) == 3)
+      destruct (my_fd_for_destruct);
+  };
 }
-#endif
 
 void create(object f, object c)
 {
