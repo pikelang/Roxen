@@ -262,6 +262,7 @@ worldmap binary
 /server/modules/security/auth_httpbasic.pike foreign_ident
 /server/modules/security/auth_httpcookie.pike foreign_ident
 /server/modules/security/htaccess.pike foreign_ident
+/server/modules/security/userdb_sql.pike foreign_ident
 /server/modules/security/userdb_system.pike foreign_ident
 /server/modules/tags/accessed.pike foreign_ident
 /server/modules/tags/additional_rxml.pike foreign_ident
