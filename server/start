@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.130 2000/10/02 16:34:07 jonasw Exp $
+# $Id: start,v 1.131 2000/10/30 18:57:56 per Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -180,6 +180,10 @@ parse_args() {
   --pid-file=*)
    extra_args="$extra_args $1"
   ;;
+  '--with-security'|'--enable-security')
+    DEFINES="$DEFINES -DSECURITY"
+  ;;
+
   '--debug'|'--with-debug'|'--enable-debug')
     debug=1
   ;;
