@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.167 2003/12/08 14:02:54 noring Exp $
+// $Id: Roxen.pmod,v 1.168 2004/01/27 13:30:27 jonasw Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2196,6 +2196,19 @@ function get_client_charset_decoder( string едц, RequestID|void id )
   //! encoding of the string "едц&#x829f;".
   //! See the roxen-automatic-charset-variable tag.
 {
+  //  If the first character is "%" the whole request is most likely double
+  //  encoded. We'll undo the decoding by combining the charset decoder with
+  //  http_decode_string().
+  if (has_prefix(едц, "%") && !has_prefix(едц, "%%")) {
+    report_notice("Warning: Double HTTP encoding detected: %s\n", едц);
+    function decoder = get_client_charset_decoder(http_decode_string(едц), id);
+    if (decoder) {
+      return lambda(string s) { return decoder(http_decode_string(s)); };
+    } else {
+      return http_decode_string;
+    }
+  }
+  
   // Netscape seems to send "?" for characters that can't be represented
   // by the current character set while IE encodes those characters
   // as entities, while Opera uses "\201" or "?x829f;"...
@@ -2203,11 +2216,13 @@ function get_client_charset_decoder( string едц, RequestID|void id )
 			({ "&aring;", "&#229;", "&#xe5;",
 			   "&auml;", "&#228;", "&#xe4;",
 			   "&ouml;", "&#246;", "&#xf6;",
-			   "&#33439;","&#x829f;", "\201", "?x829f;" }),
+			   "&#33439;","&#x829f;", "\201", "?x829f;",
+			   "\x829f" }),
 			({ "?", "?", "?",
 			   "?", "?", "?",
 			   "?", "?", "?",
-			   "?", "?", "?", "?" }));
+			   "?", "?", "?", "?",
+			   "?" }));
 			
   switch( test ) {
   case "edv":
