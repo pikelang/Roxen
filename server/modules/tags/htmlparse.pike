@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.125 1998/07/21 20:02:25 noring Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.126 1998/07/21 20:57:04 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -388,11 +388,15 @@ string call_tag(string tag, mapping args, int line, int i,
   string|function rf = real_tag_callers[tag][i];
   defines->line = (string)line;
   if(args->help && Stdio.file_size("modules/tags/doc/"+tag) > 0)
-    return handle_help("modules/tags/doc/"+tag, tag, args);
-
+  {
+    TRACE_ENTER("tag &lt;"+tag+" help&gt", rf);
+    string h = handle_help("modules/tags/doc/"+tag, tag, args);
+    TRACE_LEAVE("");
+    return h;
+  }
   if(stringp(rf)) return rf;
 
-  TRACE_ENTER("tag (&lt;" + tag + "&gt; on line "+line+")", rf);
+  TRACE_ENTER("tag &lt;" + tag + "&gt;", rf);
 #ifdef MODULE_LEVEL_SECURITY
   if(id->conf->check_security(rf, id, id->misc->seclevel))
   {
@@ -413,8 +417,14 @@ string call_container(string tag, mapping args, string contents, int line,
   defines->line = (string)line;
   string|function rf = real_container_callers[tag][i];
   if(args->help && Stdio.file_size("modules/tags/doc/"+tag) > 0)
-    return handle_help("modules/tags/doc/"+tag, tag, args)+contents;
+  {
+    TRACE_ENTER("container &lt;"+tag+" help&gt", rf);
+    string h = handle_help("modules/tags/doc/"+tag, tag, args)+contents;
+    TRACE_LEAVE("");
+    return h;
+  }
   if(stringp(rf)) return rf;
+  TRACE_ENTER("container &lt;"+tag+"&gt", rf);
   if(args->preparse) contents = parse_rxml(contents, id);
   if(args->trimwhites) {
     sscanf(contents, "%*[ \t\n\r]%s", contents);
@@ -422,7 +432,6 @@ string call_container(string tag, mapping args, string contents, int line,
     sscanf(contents, "%*[ \t\n\r]%s", contents);
     contents = reverse(contents);
   }
-  TRACE_ENTER("container (&lt;"+tag+"&gt on line "+line+")", rf);
 #ifdef MODULE_LEVEL_SECURITY
   if(id->conf->check_security(rf, id, id->misc->seclevel))
   {
@@ -459,6 +468,7 @@ string call_user_tag(string tag, mapping args, int line, mixed foo, object id)
   id->misc->line = line;
   args = id->misc->defaults[tag]|args;
   if(!id->misc->up_args) id->misc->up_args = ([]);
+  TRACE_ENTER("user defined tag &lt;"+tag+"&gt;", call_user_tag);
   array replace_from = ({"#args#"})+
     Array.map(indices(args)+indices(id->misc->up_args),
 	      lambda(string q){return "&"+q+";";});
@@ -469,7 +479,9 @@ string call_user_tag(string tag, mapping args, int line, mixed foo, object id)
     id->misc->up_args["::"+a]=args[a];
     id->misc->up_args[tag+"::"+a]=args[a];
   }
-  return replace(id->misc->tags[ tag ], replace_from, replace_to);
+  string r = replace(id->misc->tags[ tag ], replace_from, replace_to);
+  TRACE_LEAVE("");
+  return r;
 }
 
 string call_user_container(string tag, mapping args, string contents, int line,
@@ -481,6 +493,7 @@ string call_user_container(string tag, mapping args, string contents, int line,
   if(args->preparse && 
      (args->preparse=="preparse" || (int)args->preparse))
     contents = parse_rxml(contents, id);
+  TRACE_ENTER("user defined container &lt;"+tag+"&gt", call_user_container);
   array replace_from = ({"#args#", "<contents>"})+
     Array.map(indices(args)+indices(id->misc->up_args),
 	      lambda(string q){return "&"+q+";";});
@@ -492,7 +505,9 @@ string call_user_container(string tag, mapping args, string contents, int line,
     id->misc->up_args["::"+a]=args[a];
     id->misc->up_args[tag+"::"+a]=args[a];
   }
-  return replace(id->misc->containers[ tag ], replace_from, replace_to);
+  string r = replace(id->misc->containers[ tag ], replace_from, replace_to);
+  TRACE_LEAVE("");
+  return r;
 }
 
 
@@ -2404,8 +2419,6 @@ mapping query_tag_callers()
 	    "referer":tag_referer,
 	    "referrer":tag_referer,
 	    "refferrer":tag_referer,
-	    "referererer":tag_referer,
-	    "refferrerr":tag_referer,
 	    "accept-language":tag_language,
 	    "insert":tag_insert,
 	    "return":tag_return,
@@ -2751,9 +2764,91 @@ string tag_case(string t, mapping m, string c, object id)
   return c;
 }
 
+class Tracer
+{
+  inherit "roxenlib";
+  string resolv="<ol>";
+  int level;
+
+  mapping et = ([]);
+#if efun(gethrvtime)
+  mapping et2 = ([]);
+#endif
+
+
+  string module_name(function|object m)
+  {
+    if(!m)return "";
+    if(functionp(m)) m = function_object(m);
+    return (strlen(m->query("_name")) ? m->query("_name") :
+	    (m->query_name&&m->query_name()&&strlen(m->query_name()))?
+	    m->query_name():m->register_module()[1]);
+  }
+
+  void trace_enter_ol(string type, function|object module)
+  {
+    level++; 
+
+    string efont="", font="";
+    if(level>2) {efont="</font>";font="<font size=-1>";} 
+    resolv += (font+"<b><li></b> "+type+" "+module_name(module)+"<ol>"+efont);
+#if efun(gethrvtime)
+    et2[level] = gethrvtime();
+#endif
+#if efun(gethrtime)
+    et[level] = gethrtime();
+#endif
+  }
+
+  void trace_leave_ol(string desc)
+  {
+#if efun(gethrtime)
+    int delay = gethrtime()-et[level];
+#endif
+#if efun(gethrvtime)
+    int delay2 = gethrvtime()-et2[level];
+#endif
+    level--;
+    string efont="", font="";
+    if(level>1) {efont="</font>";font="<font size=-1>";} 
+    resolv += (font+"</ol>"+
+#if efun(gethrtime)
+	       "Time: "+sprintf("%.5f",delay/1000000.0)+
+#endif
+#if efun(gethrvtime)
+	       " (CPU = "+sprintf("%.2f)", delay2/1000000.0)+
+#endif /* efun(gethrvtime) */
+	       "<br>"+html_encode_string(desc)+efont)+"<p>";
+
+  }
+
+  string res()
+  {
+    while(level>0) trace_leave_ol("");
+    return resolv+"</ol>";
+  }
+
+}
+
+string tag_trace(string t, mapping args, string c , object id)
+{
+  object t= Tracer();
+  function a = id->misc->trace_enter;
+  function b = id->misc->trace_leave;
+  id->misc->trace_enter = t->trace_enter_ol;
+  id->misc->trace_leave = t->trace_leave_ol;
+  t->trace_enter_ol( "tag &lt;trace&gt;", tag_trace);
+  string r = parse_rxml(c, id);
+  id->misc->trace_enter = a;
+  id->misc->trace_leave = b;
+  return r + "<h1>Trace report</h1>"+t->res()+"</ol>";
+}
+
+
 mapping query_container_callers()
 {
   return (["comment":lambda(){ return ""; },
+	   "trace":tag_trace,
 	   "cset":lambda(string t, mapping m, string c, object id)
 		  { return tag_set("set",m+([ "value":html_decode_string(c) ]),
 			    id); },
@@ -2767,6 +2862,7 @@ mapping query_container_callers()
 		     return r;
 		   },
 	   "throw":lambda(string t, mapping m, string c) {
+		     if(c[-1] != "\n") c+="\n";
 		     throw( ({ c, backtrace() }) );
 		   },
 	   "nooutput":tag_nooutput,
