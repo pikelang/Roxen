@@ -226,7 +226,7 @@ string buttons( Configuration c, string mn, RequestID id )
     foreach( indices(mod->query_action_buttons("standard")), string title )
       buttons += "<submit-gbutton>"+title+"</submit-gbutton>";
 
-  return buttons + "<a href='../../../../drop_module.pike?config="+path[0]+"&drop="+mn+
+  return buttons + "<a href='../../../drop_module.pike?config="+path[0]+"&drop="+mn+
     "'><gbutton preparse>"+LOCALE(252, "Drop Module")+"</gbutton></a>";
 }
 

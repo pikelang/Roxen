@@ -33,8 +33,7 @@ mapping|string parse( RequestID id )
   if( id->variables->drop )
   {
     c->disable_module( replace(id->variables->drop,"!","#") );
-    return Roxen.http_redirect( site_url( id, id->variables->config )+"modules/",
-                          id );
+    return Roxen.http_redirect( site_url( id, id->variables->config ),id );
   }
   string res ="";
   array mods = map( indices( c->otomod )-({0}),

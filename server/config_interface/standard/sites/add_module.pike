@@ -441,11 +441,12 @@ mixed do_it( RequestID id )
   if( strlen( last_module ) )
     if (got_initial)
       return Roxen.http_redirect( site_url( id, id->variables->config )+
-			    "modules/?initial=1&mod="+Array.uniq(initial_modules)*",", id );
+			    "?initial=1&mod="+Array.uniq(initial_modules)*",", 
+                                  id );
     else
       return Roxen.http_redirect( site_url( id, id->variables->config )+
-			    "modules/"+last_module+"/", id );
-  return Roxen.http_redirect( site_url( id, id->variables->config )+"modules/",id);
+                                  last_module+"/", id );
+  return Roxen.http_redirect( site_url( id, id->variables->config ),id);
 }
 
 mixed parse( RequestID id )
