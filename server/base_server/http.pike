@@ -1,7 +1,7 @@
 // HTTP convenience functions.
 // inherited by roxenlib, and thus by all files inheriting roxenlib.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: http.pike,v 1.50 2000/09/25 07:03:12 per Exp $
+// $Id: http.pike,v 1.51 2000/10/07 11:22:02 per Exp $
 
 //#pragma strict_types
 
@@ -123,10 +123,65 @@ mapping http_rxml_answer( string rxml, RequestID id,
 	   ]);
 }
 
+
 mapping http_try_again( float delay )
 //! Causes the request to be retried in delay seconds.
 {
   return ([ "try_again_later":delay ]);
+}
+
+class Delayer
+{
+  RequestID id;
+  int resumed;
+
+  void resume( )
+  {
+    if( resumed )
+      return;
+    remove_call_out( resume );
+    resumed = 1;
+    if( !id )
+      error("Cannot resume request -- connection close\n");
+    roxenp()->handle( id->handle_request );
+    id = 0; // free the reference.
+  }
+
+  void create( RequestID _id, float max_delay )
+  {
+    id = _id;
+    if( max_delay && max_delay > 0.0 )
+      call_out( resume, max_delay );
+  }
+}
+
+array(object|mapping) http_try_resume( RequestID id, float|void max_delay )
+//! Returns an object and a return mapping.
+//! Call 'retry' in the object to resume the request.
+//! Please note that this will cause your callback to be called again.
+//! An optional maximum delay time can be specified.
+//!
+//! Can be used like this:
+//!
+//! void first_try( RequestID id )
+//! {
+//!   if( !id->misc->has_logged_in )
+//!   {
+//!     [object key, mapping result] = Roxen.http_try_resume( id, 10.0 );
+//!     void do_the_work( )
+//!     {
+//!        id->misc->have_logged_in = "no";
+//!        if( connect_to_slow_id_host_and_get_login( id ) )
+//!          id->misc->have_logged_in = "yes";
+//!        key->resume();
+//!     };
+//!     thread_create( do_the_work, key );
+//!     return result;
+//!   }
+//! }
+{
+  Delayer delay = Delayer( id, max_delay );
+  return ({delay, ([ "try_again":delay ]) });
 }
 
 mapping http_string_answer(string text, string|void type)
