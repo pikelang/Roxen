@@ -16,7 +16,7 @@ void start( int num, Configuration conf )
   module_dependencies (conf, ({ "accessed", "graphic_text" }));
 }
 
-constant cvs_version = "$Id: counter.pike,v 1.36 2000/09/04 22:38:27 nilsson Exp $";
+constant cvs_version = "$Id: counter.pike,v 1.37 2000/09/05 16:30:10 nilsson Exp $";
 constant module_type = MODULE_PARSER;
 constant module_name = "Graphical Counter";
 constant thread_safe = 1;
@@ -44,6 +44,9 @@ mapping tagdocumentation() {
 	    "counter":"<desc tag>"+replace(module_doc, "gtext", "gtext-url")+args+"</desc>"
   ]);
 }
+
+
+// ---------------------------- The Tags --------------------------------
 
 constant g_args=({"alt","border","bgcolor","fgcolor","trans","rotate","font","style","scale","size"});
 constant a_args=({"add","addreal","case","cheat","database","factor","file","lang",
