@@ -29,7 +29,7 @@ static string findjre()
 
   dir =
     (Process.popen("java -verbose 2>&1 | sed -n -e 's/^[^/]*//' -e "
-		   "'s:/lib/rt\.jar.*$::' -e p -e q")||"")-"\n";  
+		   "'s:/lib/rt\\.jar.*$::' -e p -e q")||"")-"\n";  
   if(check_jre_dir(dir))
     return dir;
   foreach(`+(@Array.map(({"/usr/local", "/usr", "/usr/java"}),
