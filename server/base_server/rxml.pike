@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.205 2000/07/26 12:35:55 kuntri Exp $
+// $Id: rxml.pike,v 1.206 2000/07/26 13:38:05 kuntri Exp $
 
 
 inherit "rxmlhelp";
@@ -2134,7 +2134,7 @@ scope created within the define tag.
  plugin as a string or a list of strings.</p>
 
  <ex>
-  Your domain <if ip='130.236.*'> is  </if>
+  Your domain <if ip='130.236.*'> is </if>
   <else> isn't </else> liu.se.
  </ex>
 
@@ -2171,8 +2171,9 @@ scope created within the define tag.
 </desc>
 
 <attr name=not>
- Inverts the result (true->false, false->true).
+ Inverts the result (true-&gt;false, false-&gt;true).
 </attr>
+
 <attr name=or>
  If any criterion is met the result is true.
 </attr>
