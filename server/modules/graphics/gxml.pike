@@ -8,7 +8,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.25 2004/02/10 16:46:27 wellhard Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.26 2004/02/12 16:22:53 wellhard Exp $";
 constant module_type = MODULE_TAG;
 
 LocaleString module_name = _(1,"Graphics: GXML tag");
@@ -371,7 +371,12 @@ static class InternalTagSet
 
   static array(RXML.Tag) gxml_make_tags()
   {
-    mapping from = my_configuration()->rxml_tag_set->get_plugins("gxml");
+    Configuration conf = my_configuration();
+    if(!conf)
+      // Add moudule can instanciate a roxen module without a configuration.
+      return ({ });
+    
+    mapping from = conf->rxml_tag_set->get_plugins("gxml");
     return builtin_tags + map (indices (from),
 			       lambda (string tn) {
 				 return GXTag( tn, from[tn] );
