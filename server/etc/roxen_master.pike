@@ -45,23 +45,23 @@ array|string low_nameof(object|program|function fo)
 
 array|string nameof(mixed foo)
 {
-// werror(sprintf("Nameof %O...\m", foo));
+  // werror(sprintf("Nameof %O...\m", foo));
   return saved_names[foo] ||  (saved_names[foo] = low_nameof( foo ));
 }
 
 
 program programof(string foo)
 {
-  return saved_names[foo] || programs[foo] || cast_to_program(foo,0);
+  return saved_names[foo] || programs[foo] || (program) foo ;
 }
 
 object objectof(array foo)
 {
   object o;
   program p;
-
+  
   if(!arrayp(foo)) return 0;
-
+  
   if(saved_names[foo[0..1]*"\0"]) return saved_names[foo[0..1]*"\0"];
 
   if(!(p = programof(foo[0]))) {
