@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.87 1997/12/15 20:06:19 peter Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.88 1997/12/17 22:55:48 peter Exp $";
 //inherit "roxenlib";
 import Image;
 
@@ -770,8 +770,9 @@ string ot;
 object oT;
 object get_template(string t)
 {
+  t-=".pike";
   if(ot==t) return oT; ot=t;
-  return (oT = compile_file("server_templates/"+t)());
+  return (oT = compile_file("server_templates/"+t+".pike")());
 }
 
 int check_config_name(string name)
