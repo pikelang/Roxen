@@ -1,7 +1,7 @@
-// This is the Internet Server state mechanism.
+// This is the ChiliMoon state mechanism.
 // Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: StateHandler.pmod,v 1.10 2002/06/14 16:05:05 jhs Exp $
+// $Id: StateHandler.pmod,v 1.11 2002/11/10 02:58:02 mani Exp $
 
 #ifdef STATE_HANDLER_DEBUG
 # define STATE_WERR(X) werror("State: "+X+"\n")
