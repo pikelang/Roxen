@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.144 2002/06/24 23:04:04 nilsson Exp $
+// $Id: Roxen.pmod,v 1.145 2002/06/26 14:10:16 nilsson Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -1937,23 +1937,11 @@ string tagtime(int t, mapping(string:string) m, RequestID id,
 		     eris->hour, eris->min, eris->sec);
 
      case "discordian":
-#if efun(discdate)
-      array(string) not=discdate(t);
-      res=not[0];
-      if(m->year)
-	res += " in the YOLD of "+not[1];
-      if(m->holiday && not[2])
-	res += ". Celebrate "+not[2];
-      return res;
-#else
-      return "Discordian date support disabled";
-#endif
+       return Calendar.Discordian.Second("unix", t)->format_ext_time();
+
      case "stardate":
-#if efun(stardate)
-      return (string)stardate(t, (int)m->prec||1);
-#else
-      return "Stardate support disabled";
-#endif
+       return Calendar.Stardate.Tick("unix", t)->nice_print();
+
     }
   }
 
