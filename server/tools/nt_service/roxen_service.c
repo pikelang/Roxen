@@ -2,7 +2,7 @@
  *
  * Based on the service example code from Microsoft.
  *
- * $Id: roxen_service.c,v 1.7 2000/08/09 14:51:01 mast Exp $
+ * $Id: roxen_service.c,v 1.8 2000/09/08 01:07:38 marcus Exp $
  */
 
 #include <windows.h>
@@ -222,23 +222,6 @@ int start_roxen (int first_time)
   cwd[0] = 0;
   _tgetcwd (cwd, _MAX_PATH);
 
-  if (first_time) {
-#define CLASSPATH TEXT("java/classes/roxen_module.jar;java/classes/roxen_servlet.jar;java/classes/servlet.jar;java/classes")
-    TCHAR *old = _tgetenv (TEXT("CLASSPATH"));
-    TCHAR *new = 0;
-    if (old) {
-      new = malloc (sizeof (CLASSPATH) + sizeof (TCHAR) +
-		    _tcslen (old) * sizeof (TCHAR));
-      _stprintf (new, TEXT("%s;%s"), CLASSPATH, old);
-    }
-    if (!SetEnvironmentVariable (TEXT("CLASSPATH"), new ? new : CLASSPATH)) {
-      error_msg (1, TEXT("Could not set the CLASSPATH environment variable"));
-      if (new) free (new);
-      return 0;
-    }
-    if (new) free (new);
-  }
-
   if (!(fd = fopen ("pikelocation.txt", "r"))) {
     if (first_time) {
       if (_chdir ("..")) {
@@ -286,6 +269,37 @@ int start_roxen (int first_time)
   for (i = len - 1; i && isspace (pikeloc[i]); i--) {}
   len = i + 1;
   pikeloc[len] = 0;
+
+  if (first_time) {
+    TCHAR *old = _tgetenv (TEXT("CLASSPATH"));
+    TCHAR *new = 0;
+    TCHAR *tofree = 0;
+    WIN32_FIND_DATA dir;
+    HANDLE d;
+    if(old) {
+      tofree = new = malloc (14*sizeof (TCHAR) + _tcslen (old) * sizeof (TCHAR));
+      _stprintf (new, TEXT("java/classes;%s"), old);
+    } else
+      new = TEXT("java/classes");
+    old = new;
+    if((d = FindFirstFile(TEXT("java/classes/*.jar"), &dir)) != INVALID_HANDLE_VALUE) {
+      do {
+	new = malloc (_tcslen (dir.cFileName) * sizeof(TCHAR) + 15*sizeof (TCHAR) +
+		      _tcslen (old) * sizeof (TCHAR));
+	_stprintf (new, TEXT("java/classes/%s;%s"), dir.cFileName, old);
+	if(tofree)
+	  free(tofree);
+	old = tofree = new;
+      } while(FindNextFile(d, &dir));
+      FindClose(d);
+    }
+    if (!SetEnvironmentVariable (TEXT("CLASSPATH"), new)) {
+      error_msg (1, TEXT("Could not set the CLASSPATH environment variable"));
+      if (tofree) free (tofree);
+      return 0;
+    }
+    if (tofree) free (tofree);
+  }
 
   for(i = 0; i < sizeof (key) - 1; i++)
     key[i]=65+32+((unsigned char)rand())%24;
