@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.330 2001/12/04 11:01:11 anders Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.331 2001/12/04 16:05:19 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -5807,7 +5807,7 @@ using the pre tag.
 
 <attr name='quote' value='html|none'>
  <p>How the inserted data should be quoted. Default is \"html\", except for
- href and file where it's \"none\".</p>
+ the file plugin where it's \"none\".</p>
 </attr>",
 
 //----------------------------------------------------------------------
