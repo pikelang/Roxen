@@ -1,5 +1,5 @@
 /*
- * $Id: mk_wxs.pike,v 1.11 2004/11/23 09:10:28 grubba Exp $
+ * $Id: mk_wxs.pike,v 1.12 2004/11/23 14:55:24 grubba Exp $
  *
  * Make a Windows Installer XML Source file (wxs) suitable
  * for a Roxen installer.
@@ -39,7 +39,7 @@ int main(int argc, array(string) argv)
       if (stringp(opt[1])) {
 	version_str = opt[1];
       } else {
-	werror("$Id: mk_wxs.pike,v 1.11 2004/11/23 09:10:28 grubba Exp $\n");
+	werror("$Id: mk_wxs.pike,v 1.12 2004/11/23 14:55:24 grubba Exp $\n");
 	exit(0);
       }
       break;
@@ -118,6 +118,20 @@ int main(int argc, array(string) argv)
 				    "Id":"C_" + root->sub_dirs[server_dir]->id,
 				  ])))->
     add_child(line_feed);
+
+  // Start menu.
+  Directory start_menu =
+    root->low_add_path(({"Start Menu"}), "StartMenuFolder");
+
+  Directory sub_menu = start_menu->low_add_path(({"Programs", title}),
+						  "START_MENU");
+  sub_menu->low_add_shortcut("Roxen Administration", "START_MENU", 0,
+			     "[BROWSER]", 0,
+			     "[SERVER_PROTOCOL]://localhost:[SERVER_PORT]/");
+  feature_node->add_child(WixNode("ComponentRef", ([
+				    "Id":"C_" + sub_menu->id,
+				  ])))->
+    add_child(linefeed);
 
   // Generate the XML.
   Parser.XML.Tree.SimpleRootNode root_node = Parser.XML.Tree.SimpleRootNode()->
