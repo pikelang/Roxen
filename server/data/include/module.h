@@ -1,6 +1,6 @@
 // -*- pike -*-
 //
-// $Id: module.h,v 1.60 2003/03/11 22:31:12 mani Exp $
+// $Id: module.h,v 1.61 2004/05/16 01:09:33 mani Exp $
 
 #ifndef ROXEN_MODULE_H
 #define ROXEN_MODULE_H
@@ -17,9 +17,6 @@
 #define GLOBVAR(x) core->query(#x)
 #endif /* IN_ROXEN */
 
-#define CACHE(seconds) ([mapping(string:mixed)]id->misc)->cacheable=min(([mapping(string:mixed)]id->misc)->cacheable,seconds)
-#define NO_PROTO_CACHE() ([mapping(string:mixed)]id->misc)->no_proto_cache=1
-#define NOCACHE() ([mapping(string:mixed)]id->misc)->cacheable=0
 #define TAGDOCUMENTATION mapping tagdocumentation(){return [mapping]get_value_from_file(__FILE__,"tagdoc","#define manual\n");}
 
 #define CHILIMOON_VERSION 2004
