@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.554 2004/04/19 14:25:15 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.555 2004/04/19 16:44:57 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1737,38 +1737,67 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
   return fid;
 }
 
-mixed handle_request( RequestID id  )
+#define TRY_FIRST_MODULES(FILE, RECURSE_CALL) do {			\
+    TIMER_START(first_modules);						\
+    foreach(first_module_cache||first_modules(), function funp)		\
+    {									\
+      TRACE_ENTER ("First try module", funp);				\
+      if(FILE = funp( id )) {						\
+	TRACE_LEAVE ("Got response");					\
+	break;								\
+      }									\
+      TRACE_LEAVE ("No response");					\
+      if(id->conf != this_object()) {					\
+	TRACE_ENTER (sprintf ("Configuration changed to %O - "		\
+			      "redirecting", id->conf), 0);		\
+	TRACE_LEAVE ("");						\
+	TIMER_END (first_modules);					\
+	TIMER_END (handle_request);					\
+	return id->conf->RECURSE_CALL;					\
+      }									\
+    }									\
+    TIMER_END(first_modules);						\
+  } while (0)
+
+#define TRY_LAST_MODULES(FILE, RECURSE_CALL) do {			\
+    mixed ret;								\
+    TIMER_START(last_modules);						\
+    foreach(last_module_cache||last_modules(), function funp) {		\
+      TRACE_ENTER ("Last try module", funp);				\
+      if(ret = funp(id)) {						\
+	if (ret == 1) {							\
+	  TRACE_LEAVE ("Request rewritten - try again");		\
+	  TIMER_END(last_modules);					\
+	  TIMER_END(handle_request);					\
+	  return RECURSE_CALL;						\
+	}								\
+	TRACE_LEAVE ("Got response");					\
+	break;								\
+      }									\
+      TRACE_LEAVE ("No response");					\
+    }									\
+    FILE = ret;								\
+    TIMER_END(last_modules);						\
+  } while (0)
+
+mixed handle_request( RequestID id, void|int recurse_count)
 {
-  function funp;
   mixed file;
   REQUEST_WERR("handle_request()");
+
+  if (recurse_count > 50) {
+    TRACE_ENTER ("Looped " + recurse_count +
+		 " times in internal redirects - giving up", 0);
+    TRACE_LEAVE ("");
+    return 0;
+  }
+
   TIMER_START(handle_request);
-  TIMER_START(first_modules);
-  foreach(first_module_cache||first_modules(), funp)
-  {
-    if(file = funp( id ))
-      break;
-    if(id->conf != this_object()) {
-      REQUEST_WERR("handle_request(): Redirected (2)");
-      return id->conf->handle_request(id);
-    }
-  }
-  TIMER_END(first_modules);
+  TRY_FIRST_MODULES (file, handle_request (id, recurse_count + 1));
   if(!mappingp(file) && !mappingp(file = get_file(id)))
-  {
-    mixed ret;
-    TIMER_START(last_modules);
-    foreach(last_module_cache||last_modules(), funp) if(ret = funp(id)) break;
-    if (ret == 1) {
-      REQUEST_WERR("handle_request(): Recurse");
-      TIMER_END(last_modules);
-      TIMER_END(handle_request);
-      return handle_request(id);
-    }
-    file = ret;
-    TIMER_END(last_modules);
-  }
+    TRY_LAST_MODULES (file, handle_request(id, recurse_count + 1));
   TIMER_END(handle_request);
+
   REQUEST_WERR("handle_request(): Done");
   MERGE_TIMERS(roxen);
   return file;
@@ -2040,78 +2069,75 @@ mapping error_file( RequestID id )
 }
 
 // this is not as trivial as it sounds. Consider gtext. :-)
-array open_file(string fname, string mode, RequestID id, void|int internal_get)
+array open_file(string fname, string mode, RequestID id, void|int internal_get,
+		void|int recurse_count)
 {
-  if( id->conf && (id->conf != this_object()) )
-    return id->conf->open_file( fname, mode, id, internal_get );
-
-  Configuration oc = id->conf;
-  string oq = id->not_query;
-  function funp;
   mapping|int(0..1) file;
+  string oq = id->not_query;
 
-  id->not_query = fname;
+  if( id->conf && (id->conf != this_object()) )
+    return id->conf->open_file( fname, mode, id, internal_get, recurse_count );
 
-  foreach(first_modules(), funp)
-    if(file = funp( id ))
-      break;
-    else if(id->conf && (id->conf != oc))
-    {
-      return id->conf->open_file(fname, mode,id, internal_get);
-    }
-  fname = id->not_query;
-
-  if(search(mode, "R")!=-1) //  raw (as in not parsed..)
-  {
-    string f;
-    mode -= "R";
-    if(f = real_file(fname, id))
-    {
-      //      report_debug("opening "+fname+" in raw mode.\n");
-      return ({ open(f, mode), ([]) });
-    }
-//     return ({ 0, (["error":302]) });
+  if (recurse_count > 50) {
+    TRACE_ENTER ("Looped " + recurse_count +
+		 " times in internal redirects - giving up", 0);
+    TRACE_LEAVE ("");
   }
 
-  if(mode=="r")
-  {
+  else {
+    Configuration oc = id->conf;
+    id->not_query = fname;
+    TRY_FIRST_MODULES (file, open_file (fname, mode, id,
+					internal_get, recurse_count + 1));
+    fname = id->not_query;
+
+    if(search(mode, "R")!=-1) //  raw (as in not parsed..)
+    {
+      string f;
+      mode -= "R";
+      if(f = real_file(fname, id))
+      {
+	// report_debug("opening "+fname+" in raw mode.\n");
+	return ({ open(f, mode), ([]) });
+      }
+      // return ({ 0, (["error":302]) });
+    }
+
+    if(mode!="r") {
+      id->not_query = oq;
+      return ({ 0, (["error":501, "data":"Not implemented." ]) });
+    }
+
     if(!file)
     {
       file = get_file( id, 0, internal_get );
-      if(!file) {
-	foreach(last_modules(), funp) if(file = funp( id ))
-	  break;
-	if (file == 1) {
-	  // Recurse.
-	  return open_file(id->not_query, mode, id, internal_get);
-	}
-      }
+      if(!file)
+	TRY_LAST_MODULES (file, open_file (id->not_query, mode, id,
+					   internal_get, recurse_count + 1));
     }
+  }
 
-    if(!mappingp(file))
-    {
-      if(id->misc->error_code)
-	file = Roxen.http_low_answer(id->misc->error_code, "Failed" );
-      else if(id->method!="GET"&&id->method != "HEAD"&&id->method!="POST")
-	file = Roxen.http_low_answer(501, "Not implemented.");
-      else
-        file = error_file( id );
+  if(!mappingp(file))
+  {
+    if(id->misc->error_code)
+      file = Roxen.http_low_answer(id->misc->error_code, "Failed" );
+    else if(id->method!="GET"&&id->method != "HEAD"&&id->method!="POST")
+      file = Roxen.http_low_answer(501, "Not implemented.");
+    else
+      file = error_file( id );
 
-      id->not_query = oq;
-
-      return ({ 0, file });
-    }
-
-    if( file->data )
-    {
-      file->file = StringFile(file->data);
-      m_delete(file, "data");
-    }
     id->not_query = oq;
-    return ({ file->file, file });
+
+    return ({ 0, file });
+  }
+
+  if( file->data )
+  {
+    file->file = StringFile(file->data);
+    m_delete(file, "data");
   }
   id->not_query = oq;
-  return ({ 0, (["error":501, "data":"Not implemented." ]) });
+  return ({ file->file, file });
 }
 
 
@@ -2362,11 +2388,6 @@ static RequestID make_fake_id (string s, RequestID id)
 
   fake_id->raw_url=s;
   fake_id->not_query=s;
-
-  // FIXME: How much other info is there that really shouldn't be
-  // propagated? It actually looks fairly bogus to clone the current
-  // request. /mast
-  m_delete (fake_id->misc, "path_info");
 
   return fake_id;
 }
