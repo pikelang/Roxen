@@ -5,7 +5,7 @@
 #define _(X,Y)	_STR_LOCALE("roxen_config",X,Y)
 
 mapping images = ([]);
-int image_id;
+int image_id = time() ^ gethrtime();
 
 string is_image( string x )
 {
@@ -22,7 +22,7 @@ string store_image( string x )
   string id = (string)image_id++;
 
   images[ id ] = ([
-    "type":"image/"+is_image( x ),
+    "type":"image/"+(is_image( x )||"unknown"),
     "data":x,
     "len":strlen(x),
   ]);
@@ -192,12 +192,13 @@ mapping|string parse( RequestID id )
       string q = id->variables->query;
 
       string a, b, c;
-      multiset image_columns = (<>), right_columns = (<>);
-      while( sscanf( q, "%sIMAGE(%s)%s", a, b, c ) == 3 )
-      {
-	q = a+b+c;
-	image_columns[String.trim_all_whites(b)]=1;
-      }
+      multiset right_columns = (<>);
+//      multiset image_columns = (<>), 
+//       while( sscanf( q, "%sIMAGE(%s)%s", a, b, c ) == 3 )
+//       {
+// 	q = a+b+c;
+// 	image_columns[String.trim_all_whites(b)]=1;
+//       }
 
       object big_q = db->big_query( q );
 
@@ -218,8 +219,8 @@ mapping|string parse( RequestID id )
 	    res += "<td>";
 	}
 	res += "<b><font size=-1>"+field->name+"</font size=-1></b></td>\n";
-	if( image_columns[field->name] )
-	  image_columns[column] = 1;
+// 	if( image_columns[field->name] )
+// 	  image_columns[column] = 1;
 	column++;
       }
       res += "</tr>";
@@ -228,7 +229,7 @@ mapping|string parse( RequestID id )
       {
 	res += "<tr>";
 	for( int i = 0; i<sizeof(q); i++ )
-	  if( image_columns[i] || is_image( q[i] ) )
+	  if( /* image_columns[i] ||*/ is_image( q[i] ) )
 	    res +=
            "<td><img src='browser.pike?image="+store_image( q[i] )+"' /></td>";
 	  else if( right_columns[i] )
