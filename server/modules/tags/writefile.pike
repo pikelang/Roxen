@@ -10,7 +10,7 @@
 
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: writefile.pike,v 1.8 2001/10/08 12:32:57 anders Exp $";
+constant cvs_version = "$Id: writefile.pike,v 1.9 2001/10/30 21:29:17 srb%cuci.nl Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -34,6 +34,7 @@ constant module_doc  = "This module provides the writefile RXML tags.<br>"
  "later version.</p>";
 
 void create() {
+  set_module_creator("Stephen R. van den Berg <srb@cuci.nl>");
   defvar ("onlysubdirs", 1,
 	  "Within tree only", TYPE_FLAG,
           "Setting this will force all specified chroots and filenames to be "
@@ -187,7 +188,8 @@ constant tagdoc=([
 <p>Specifies the type=file form field variable which uploaded the
      file to be written. If this attribute is omitted, the container
      content is what will be written instead. Given the example
-     below, the parameter from=wrapupafile should be specified.</p>
+     below, the parameter <var>from=wrapupafile</var> should be
+     specified.</p>
 
 <ex-box><form method='post'
    enctype='multipart/form-data'>
