@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.52 1999/08/27 13:06:03 grubba Exp $
+# $Id: Makefile,v 1.53 1999/10/17 15:04:04 grubba Exp $
 #
 # Bootstrap Makefile
 #
@@ -7,7 +7,7 @@
 VPATH=.
 MAKE=make
 prefix=/usr/local
-OS=`uname -srm|sed -e 's/ /-/g'|tr '[A-Z]' '[a-z]'|tr '/' '_'`
+OS=`uname -s -r -m|tr '[A-Z]' '[a-z]'|tr '/ \012\015' '_---'`
 BUILDDIR=build/$(OS)
 
 # Used to avoid make compatibility problems
