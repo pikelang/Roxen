@@ -1,7 +1,11 @@
 #!/usr/local/bin/pike
 #!NO_MODULE
 
-/* $Id: sqladduser.pike,v 1.2 1998/03/02 18:27:31 grubba Exp $ */
+/* $Id: sqladduser.pike,v 1.3 1998/03/05 19:47:20 grubba Exp $
+ *
+ * name = "SQL Add user";
+ * doc = "Add a user to an SQL user-database.";
+ */
 
 /*
  * This program is (C) 1997 Francesco Chemolli <kinkie@comedia.it>
