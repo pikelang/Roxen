@@ -1,5 +1,5 @@
 /* Roxen FTP protocol. Written by Pontus Hagland
-string cvs_version = "$Id: ftp.pike,v 1.22 1997/05/28 15:02:46 grubba Exp $";
+string cvs_version = "$Id: ftp.pike,v 1.23 1997/06/09 17:44:00 grubba Exp $";
    (law@lysator.liu.se) and David Hedbor (neotron@infovav.se).
 
    Some of the features: 
@@ -296,7 +296,7 @@ void ftp_async_connect(function(object,mixed:void) fun, mixed arg)
   
   object(files.file) f = files.file();
 
-  object privs = (object)"privs";
+  object privs = ((program)"privs")("FTP: Opening the control-port.");
 
   if(!f->open_socket(controlport_port-1))
   {
