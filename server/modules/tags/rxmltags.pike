@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.488 2005/04/06 19:14:22 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.489 2005/04/06 23:06:30 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -5491,8 +5491,12 @@ class TagEmitValues {
 	  break;
 	}
       }
-      if(stringp(m->values))
-	m->values=m->values / (m->split || "\000");
+      if(stringp(m->values)) {
+	if (m->nosplit)
+	  m->values = ({m->values});
+	else
+	  m->values=m->values / (m->split || "\000");
+      }
     }
 
     if(mappingp(m->values))
@@ -9110,52 +9114,67 @@ the respective attributes below for further information.</p></desc>
 //----------------------------------------------------------------------
 
 "emit#values":({ #"<desc type='plugin'><p><short>
- Splits the string provided in the values attribute and outputs the
- parts in a loop.</short> The value in the values attribute may also
- be an array or mapping.
+ Iterates over the component values of a string or a compound
+ value.</short> If it's a string, it's splitted into pieces using a
+ separator string, and the plugin then iterates over the pieces. If
+ it's a compound value like an array then the plugin iterates over its
+ elements.
 </p></desc>
 
-<attr name='values' value='string, mapping or array'><p>
- An array, mapping or a string to be splitted into an array. This
- attribute is required unless the \"variable\" or \"from-scope\"
- attribute is used.</p>
+<attr name='values' value='mixed'><p>
+ The value to iterate over. This attribute is required unless the
+ \"variable\" or \"from-scope\" attribute is used.</p>
 </attr>
 
-<attr name='variable' value='name'><p>Name of a variable from which the
- values are taken.</p>
+<attr name='variable' value='name'><p>
+ Name of a variable from which the value are taken.</p>
 </attr>
 
 <attr name='split' value='string' default='NULL'><p>
- The string the values string is splitted with. Supplying an empty string
- results in the string being split between every single character.</p>
+ The string to split a string value with. Supplying an empty string
+ results in the string being split between every single character.
+ This has no effect if the value isn't a string.</p>
+</attr>
+
+<attr name='nosplit'><p>
+ If specified then the value isn't split, even when it is a string.
+ Instead the plugin only evaluates its contents once using the whole
+ string.</p>
+
+ <p>This is useful if a value might either be a single string or
+ multiple strings as an array, and you want to iterate over each full
+ string.</p>
 </attr>
 
 <attr name='advanced' value='lines|words|chars'><p>
- If the input is a string it can be splitted into separate lines, words
- or characters by using this attribute.</p>
+ If the value is a string it can be splitted into separate lines,
+ words or characters by using this attribute.</p>
 </attr>
 
 <attr name='case' value='upper|lower'><p>
- Changes the case of the value.</p>
+ Change the case of each returned value.</p>
 </attr>
 
 <attr name='trimwhites'><p>
- Trims away all leading and trailing white space charachters from the
- values.</p>
+ Trim away all leading and trailing white space charachters from each
+ returned value.</p>
 </attr>
 
 <attr name='from-scope' value='name'>
- <p>Create a mapping out of a scope and give it as input to the emit.</p>
+ <p>Iterate over a scope like a mapping. <ent>_.index</ent> gets the
+ name of each variable in it and <ent>_.value</ent> gets the
+ corresponding value.</p>
 </attr>
 ",
 
 ([
 "&_.value;":#"<desc type='entity'><p>
- The value of one part of the splitted string</p>
+ The value of one element or substring if a string is being split.</p>
 </desc>",
 
 "&_.index;":#"<desc type='entity'><p>
- The index of this mapping entry, if input was a mapping</p>
+ The index of one element. This is set if the value being iterated
+ over is a mapping/scope or a multiset.</p>
 </desc>"
 ])
 	      }),
