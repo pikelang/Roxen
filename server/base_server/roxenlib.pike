@@ -1,6 +1,6 @@
 inherit "http";
 
-// static string _cvs_version = "$Id: roxenlib.pike,v 1.60 1998/04/02 22:29:41 wing Exp $";
+// static string _cvs_version = "$Id: roxenlib.pike,v 1.61 1998/04/15 18:47:03 grubba Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -956,62 +956,59 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 	      exploded[c] = "";
 	    continue;
 	  }
-	  if (sizeof( options ) > 1)
-	  {
-	    array (string) foo = options[1] / "=";
+	  if (sizeof( options ) > 1) {
+	    foreach(options[1..], string option) {
+	      array (string) foo = option / "=";
 	    
-	    if (sizeof( foo ) > 1)
-	      switch (remove_leading_trailing_ws( foo[0] ))
-	      {
-	       case "quote":
-		switch (remove_leading_trailing_ws( foo[1] ))
-		{
-		 case "none":
-		  exploded[c] = do_output_tag_var( vars[ options[0] ],
-						   multi_separator );
+	      if (sizeof( foo ) > 1)
+		switch (remove_leading_trailing_ws( foo[0] )) {
+		case "quote":
 		  done = 1;
-		  break;
+		  switch (remove_leading_trailing_ws( foo[1] )) {
+		  default:
+		    done = 0;
+		    break;
+		  case "none":
+		    exploded[c] = do_output_tag_var( vars[ options[0] ],
+						     multi_separator );
+		    break;
+		  case "url":
+		    exploded[c]
+		      = replace( do_output_tag_var( vars[ options[0] ],
+						    multi_separator ),
+				 ({ "\"", "'", " ", "\t", "\n", "\r",
+				    "&", "?", "=", "%" }),
+				 ({ "%22", "%27", "%20", "%09", "%0A", "%0D",
+				    "%26", "%3F", "%3D", "%25" }) );
+		    break;
+		  case "mysql":
+		    exploded[c]
+		      = replace( do_output_tag_var( vars[ options[0] ],
+						    multi_separator ),
+				 ({ "\"", "'", "\\" }),
+				 ({ "\\\"'\"'\"", "\\'", "\\\\" }) );
+		    break;
 		  
-		 case "url":
-		  exploded[c]
-		    = replace( do_output_tag_var( vars[ options[0] ],
-						  multi_separator ),
-			       ({ "\"", "'", " ", "\t", "\n", "\r",
-				  "&", "?", "=", "%" }),
-			       ({ "%22", "%27", "%20", "%09", "%0A", "%0D",
-				  "%26", "%3F", "%3D", "%25" }) );
-		  done = 1;
-		  break;
-		  
-		 case "mysql":
-		  exploded[c]
-		    = replace( do_output_tag_var( vars[ options[0] ],
-						  multi_separator ),
-			       ({ "\"", "'", "\\" }),
-			       ({ "\\\"'\"'\"", "\\'", "\\\\" }) );
-		  done = 1;
-		  break;
-		  
-		 case "sql":
-		 case "oracle":
-		  exploded[c]
-		    = replace( do_output_tag_var( vars[ options[0] ],
-						  multi_separator ),
-			       ({ "'", "\"" }),
-			       ({ "''", "\"'\"'\"" }) );
-		  break;
+		  case "sql":
+		  case "oracle":
+		    exploded[c]
+		      = replace( do_output_tag_var( vars[ options[0] ],
+						    multi_separator ),
+				 ({ "'", "\"" }),
+				 ({ "''", "\"'\"'\"" }) );
+		    break;
 
-		 case "html":
-		  exploded[c]
-		    = replace( do_output_tag_var( vars[ options[0] ],
-						  multi_separator ),
-			       ({ "<", ">", "&", "\"", "\'" }),
-			       ({ "&lt;", "&gt;", "&amp;", "&#34;",
-				  "&#39;" }) );
-		  done = 1;
-		  break;
+		  case "html":
+		    exploded[c]
+		      = replace( do_output_tag_var( vars[ options[0] ],
+						    multi_separator ),
+				 ({ "<", ">", "&", "\"", "\'" }),
+				 ({ "&lt;", "&gt;", "&amp;", "&#34;",
+				    "&#39;" }) );
+		    break;
+		  }
 		}
-	      }
+	    }
 	  }
 	  if (!done)
 	    exploded[c] = replace( do_output_tag_var( vars[ options[0] ],
