@@ -160,34 +160,37 @@ class ServletRequest implements javax.servlet.http.HttpServletRequest
       return new Cookie[0];
     Vector cookiev = new Vector();
     while(cookieh.hasMoreElements()) {
-      HeaderTokenizer cookiet =
-	new HeaderTokenizer((String)cookieh.nextElement());
-      Cookie lastcookie = null;
-      int version=0;
-      while(cookiet.more()) {
-	String name = cookiet.getValue();
-	String val = "";
-	if(cookiet.lookingAt('=')) {
-	  cookiet.discard('=');
-	  val = cookiet.getValue();
+      String chdrtxt = (String)cookieh.nextElement();
+      try {
+	HeaderTokenizer cookiet =
+	  new HeaderTokenizer(chdrtxt);
+	Cookie lastcookie = null;
+	int version=0;
+	while(cookiet.more()) {
+	  String name = cookiet.getValue();
+	  String val = "";
+	  if(cookiet.lookingAt('=')) {
+	    cookiet.discard('=');
+	    val = cookiet.getValue();
+	  }
+	  if(cookiet.more())
+	    cookiet.discard(cookiet.lookingAt(',')? ',':';');
+	  if(name.startsWith("$")) {
+	    if(name.equals("$version"))
+	      version = Integer.parseInt(val);
+	    else
+	      if(lastcookie != null)
+		if(name.equals("$domain"))
+		  lastcookie.setDomain(val);
+		else if(name.equals("$path"))
+		  lastcookie.setPath(val);
+	  } else {
+	    cookiev.add(lastcookie = new Cookie(name, val));
+	    if(version != 0)
+	      lastcookie.setVersion(version);
+	  }
 	}
-	if(cookiet.more())
-	  cookiet.discard(cookiet.lookingAt(',')? ',':';');
-	if(name.startsWith("$")) {
-	  if(name.equals("$version"))
-	    version = Integer.parseInt(val);
-	  else
-	    if(lastcookie != null)
-	      if(name.equals("$domain"))
-		lastcookie.setDomain(val);
-	      else if(name.equals("$path"))
-		lastcookie.setPath(val);
-	} else {
-	  cookiev.add(lastcookie = new Cookie(name, val));
-	  if(version != 0)
-	    lastcookie.setVersion(version);
-	}
-      }
+      } catch(IllegalArgumentException e) { }
     }
     return (Cookie[])cookiev.toArray(new Cookie[cookiev.size()]);
   }
