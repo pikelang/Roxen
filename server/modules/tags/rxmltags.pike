@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.45 2000/01/23 07:52:45 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.46 2000/01/23 16:13:37 kuntri Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -42,54 +42,923 @@ string query_provides() {
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=(["roxen-automatic-charset-variable":"<desc tag></desc>",
-"append":"<desc tag></desc>",
-"auth-required":"<desc tag></desc>",
-"expire-time":"<desc tag></desc>",
-"header":"<desc tag></desc>",
-"redirect":"<desc tag></desc>",
-"unset":"<desc tag></desc>",
-"set":"<desc tag></desc>",
-"quote":"<desc tag></desc>",
-"inc":"<desc tag></desc>",
-"dec":"<desc tag></desc>",
-"imgs":"<desc tag></desc>",
-"roxen":"<desc tag></desc>",
-"debug":"<desc tag></desc>",
-"fsize":"<desc tag></desc>",
-"configimage":"<desc tag></desc>",
-"date":"<desc tag></desc>",
-"insert":"<desc tag></desc>",
-"configurl":"<desc tag></desc>",
-"return":"<desc tag></desc>",
-"set-cookie":"<desc tag></desc>",
-"remove-cookie":"<desc tag></desc>",
-"modified":"<desc tag></desc>",
-"user":"<desc tag></desc>",
-"set-max-cache":"<desc tag></desc>",
+"accept-language":#"<desc tag>
+ Returns the language code of the language the user prefers, as
+ specified by the first language in the accept-language header.
 
-"scope":"<desc cont></desc>",
-"catch":"<desc cont></desc>",
-"cache":"<desc cont></desc>",
-"crypt":"<desc cont></desc>",
-"for":"<desc cont></desc>",
-"foreach":"<desc cont></desc>",
-"apre":"<desc cont></desc>",
-"aconf":"<desc cont></desc>",
-"maketag":"<desc cont></desc>",
-"doc":"<desc cont></desc>",
-"autoformat":"<desc cont></desc>",
-"smallcaps":"<desc cont></desc>",
-"random":"<desc cont></desc>",
-"formoutput":"<desc cont></desc>",
-"gauge":"<desc cont></desc>",
-"trimlines":"<desc cont></desc>",
-"throw":"<desc cont></desc>",
-"default":"<desc cont></desc>",
-"sort":"<desc cont></desc>",
-"recursive-output":"<desc cont></desc>",
-"repeat":"<desc cont></desc>",
-"replace":"<desc cont></desc>",
-"cset":"<desc cont></desc>"
+ <p>If no accept-language is sent by the users browser None will be
+ returned.</p>
+</desc>
+
+<attr name=end value=character>
+
+</attr>
+
+<attr name=full>
+ Returns all languages the user has specified, as a comma separated list.
+</attr>
+
+<attr name=start value=character>
+
+</attr>",
+
+"aconf":#"<desc cont>
+ Creates a link that can modify the persistent states in the cookie
+ RoxenConfig.
+</desc>
+
+<attr name=href value=uri>
+ Indicates which page should be linked to, if any other than the
+ present one.
+</attr>
+
+<attr name=add value=string>
+ The 'cookie' or 'cookies' that should be added, in a comma seperated list.
+</attr>
+
+<attr name=drop value=string>
+ The 'cookie' or 'cookies' that should be droped, in a comma seperated list.
+</attr>
+
+<attr name=class value=string>
+ This CSS class definition will apply to the a-element.
+</attr>
+ <p>All other attributes will be inherited by the generated a tag.</p>",
+
+"append":#"<desc tag>
+ Appends a value to a variable. The variable attribute and one more is
+ required.
+</desc>
+
+<attr name=variable value=string>
+ The name of the variable.
+</attr>
+
+<attr name=value value=string>
+ The value the variable should have appended.
+</attr>
+
+</attr name=from value=string>
+ The name of another variable that the value should be copied from.
+</attr>
+
+<attr name=other value=string>
+ The name of a id->misc->variables that the value should be copied from.
+</attr>",
+
+"apre":#"<desc cont>
+ Creates a link that can modify prestates.
+</desc>
+
+<attr name=href value=uri>
+ Indicates which page should be linked to, if any other than the
+ present one.
+</attr>
+
+<attr name=add value=string>
+ The prestate or prestates that should be added, in a comma seperated list.
+</attr>
+
+<attr name=drop value=string>
+ The prestate or prestates that should be droped, in a comma seperated
+ list.
+</attr>
+
+<attr name=class value=string>
+ This CSS class definition will apply to the a-element.
+</attr>
+
+All other attributes will be inherited by the generated a tag",
+"auth-required":#"<desc tag>
+ Adds an HTTP auth required header and return code, that will force
+ the user to supply a login name and password. This tag is needed when
+ using access control in RXML in order for the user to be prompted to
+ login.
+</desc>
+
+<attr name=realm value=string>
+ Hmm??
+</attr>
+
+<attr name=message value=string>
+ Returns a message if a login failed. ******Korrekt???********
+</attr>",
+
+"autoformat":#"<desc cont>
+ Replaces newlines with <tag>br</tag>:s.
+</desc>
+
+<attr name=nobr>
+ Do not replace newlines with <tag>br</tag>:s.
+</attr>
+
+<attr name=p>
+ Replace double newlines with <tag>p</tag>:s.
+</attr>
+
+<attr name=class value=string>
+ This CSS definition will be applied on the p elements.
+</attr>",
+
+"cache":#"<desc cont>
+
+</desc>
+
+attr name=key value=string>
+
+</attr>",
+
+"catch":#"<desc cont></desc>",
+
+"clientname":#"<desc tag>
+ Returns the name of the client. No required attributes.
+</desc>
+
+<attr name=full>
+ View the full User Agent string.
+</attr>
+
+<attr name=quote value=html,none>
+ Quotes the clientname. Default is 'html'.
+</attr>",
+
+"configimage":#"<desc tag>
+ Returns one of the configuration images. The src attribute is required.
+</desc>
+
+<attr name=src value=string>
+ The name of the picture to show.
+</attr>
+
+<attr name=border value=number>
+ The image border when used as a link. Default is 0.
+</attr>
+
+<attr name=alt value=string>
+ The picture description. Default is the src string.
+</attr>
+
+<attr name=class value=string>
+ This CSS class definition will be applied to the image.
+</attr>
+ All other attributes will be inherited by the generated img tag.",
+
+"configurl":#"<desc tag>
+ Returns a URL to the configuration interface.
+</desc>",
+
+"cset":#"<desc cont></desc>",
+
+"crypt":#"<desc cont></desc>",
+
+"date":#"<desc tag>
+ Inserts the time and date. Does not require attributes.
+</desc>
+
+<attr name=unix-time value=number>
+ Display this time instead of the current.
+</attr>
+
+<attr name=years value=number>
+ Add this number of years to the result.
+</attr>
+
+<attr name=months value=number>
+ Add this number of months to the result.
+</attr>
+
+<attr name=weeks value=number>
+ Add this number of weeks to the result.
+</attr>
+
+<attr name=days value=number>
+ Add this number of days to the result.
+</attr>
+
+<attr name=hours value=number>
+ Add this number of hours to the result.
+</attr>
+
+<attr name=beats value=number>
+ Add this number of beats to the result.
+</attr>
+
+<attr name=minutes value=number>
+ Add this number of minutes to the result.
+</attr>
+
+<attr name=seconds value=number>
+ Add this number of seconds to the result.
+</attr>
+
+<attr name=adjust value=number>
+ Add this number of seconds to the result.
+</attr>
+
+<attr name=brief>
+ Show in brief format.
+</attr>
+
+<attr name=time>
+ Show only time.
+</attr>
+
+<attr name=date>
+ Show only date.
+</attr>
+
+<attr name=type value=string,ordered,iso,discordian,stardate,number>
+ Defines in which format the date should be displayed in.
+</attr>
+
+<attr name=part value=year,month,day,wday,date,mday,hour,minute,second,yday,beat,week,seconds>
+ Defines which part of the date should be displayed. Day and wday is
+ the same. Date and mday is the same. Yday is the day number of the
+ year. Seconds is unix time type. Only the types string, number and
+ ordered applies when the part attribute is used.
+</attr>
+
+<attr name=lang value=language_code>
+ Defines in what language the a string will be presented in.
+</attr>
+
+<attr name=case value=upper,lower,capitalized>
+ Changes the case of the output to upper, lower or capitalized.
+</attr>
+
+<attr name=prec value=number>
+ The number of decimals in the stardate.
+</attr>",
+
+"debug":#"<desc tag>
+ Helps debugging RXML-pages as well as modules. When debugging mode is
+ turned on, all error messages will be displayed in the HTML code.
+</desc>
+
+<attr name=on>
+ Turns debug mode on.
+</attr>
+
+<attr name=off>
+ Turns debug mode off.
+</attr>
+
+<attr name=toggle>
+ Toggles debug mode.
+</attr>
+
+<attr name=showid value=string>
+ Shows a part of the id object. E.g. showid='id->request_headers'.
+</attr>",
+
+"dec":#"<desc tag>
+ Subtracts 1 from a variable. Attribute variable is required.
+</desc>
+
+<attr name=variable value=string>
+ The variable to be decremented.
+</attr>",
+
+"default":#"<desc cont>
+
+ Makes it easier to give default values to '<tag>select</tag>' or
+ '<tag>checkbox</tag>' form elements.
+
+ <p>The <tag>default</tag> container tag is placed around the form element it
+ should give a default value.</p>
+
+ <p>This tag is particularly useful in combination with database tags.</p>
+</desc>
+
+<attr name=value value=string>
+ The value to set.
+</attr>
+
+<attr name=separator value=string>
+
+</attr>
+
+<attr name=name value=string>
+ Only affect form element with this name.
+</attr>
+
+<attr name=variable value=string>
+
+</attr>",
+
+"doc":#"<desc cont>
+ Eases documentation by replacing '{', '}' and '&' with '<', '>' and
+ '&'. No attributes required.
+</desc>
+
+<attr name=quote>
+ Instead of replacing '{' and '}', '<' and '>' is replaced with '&amp;lt;'
+ and '&amp;gt;'.
+</attr>
+
+<attr name=pre>
+ The result is encapsulated within a <tag>pre</tag> container.
+</attr>
+
+<attr name=class value=string>
+ This CSS definition will be applied on the pre element.
+</attr>",
+
+"expire-time":#"<desc tag>
+ Finns ingen tidigare doc.
+</desc>
+
+<attr name=now>
+
+</attr>
+
+<attr name=hours value=number>
+
+</attr>
+
+
+<attr name=beats value=number>
+
+</attr>
+
+<attr name=minutes value=number>
+
+</attr>
+
+<attr name=seconds value=number>
+
+</attr>
+
+<attr name=days value=number>
+
+</attr>
+
+<attr name=weeks value=number>
+
+</attr>
+
+<attr name=months value=number>
+
+</attr>
+
+<attr <name=years value=number>
+
+</attr>",
+
+"file":#"<desc tag>
+ Prints the path part of the URL used to get this page.
+</desc>
+
+<attr name=quote value=html,none>
+ How the filename is quoted. Default is 'html'.
+</attr>
+
+<attr name=raw>
+ Prints the full path part, including the query part with form
+ variables.
+</attr>",
+
+"for":#"<desc cont>
+ Makes it possible to create loops in RXML.
+</desc>
+
+<attr name=from value=number>
+ Initial value of the loop variable.
+</attr>
+
+<attr name=step value=number>
+ How much to increment the variable per loop iteration. By default one.
+</attr>
+
+<attr name=to value=number>
+ How much the loop variable should be incremented to.
+</attr>
+
+<attr name=variable value=name>
+ Name of the loop variable.
+</attr>",
+
+"foreach":#"<desc cont>
+
+</desc>
+
+<attr name=variable>
+
+</attr>
+
+<attr name=variables>
+
+</attr>
+
+<attr name=in>
+
+</attr>",
+
+"formoutput":#"<desc cont></desc>",
+
+"fsize":#"<desc tag>
+
+</desc>
+
+<attr name=file value=string>
+
+</attr>",
+
+"gauge":#"<desc cont>
+ Measures how much CPU time it takes to run its contents through the
+ RXML parser.
+</desc>
+
+<attr name=define value=string>
+
+</attr>
+
+<attr name=silent>
+
+</attr>
+
+<attr name=timeonly>
+
+</attr>
+
+<attr name=resultonly>
+
+</attr>",
+
+"header":#"<desc tag>sfdjhbskdg</desc>",
+
+"imgs":#"<desc tag>
+ Generates a image tag with proper dimensions. Attribute src is required.
+</desc>
+
+<attr name=src value=string>
+ The name of the file that should be shown.
+</attr>
+
+<attr name=alt value=string>
+ Description of the image. Default is the image file name.
+</attr>
+ All other attributes will be inherited by the generated img tag.",
+
+"inc":#"<desc tag>
+ Adds 1 to a variable. Attribute variable is required.
+</desc>
+
+<attr name=variable value=string>
+ The variable to be incremented.
+</attr>",
+
+"insert":#"<desc tag>
+ Inserts a file, variable or other object into a webpage.
+ One attribute is required.
+</desc>
+
+<attr name=variable value=string>
+ Inserts the value of that variable.
+</attr>
+
+<attr name=variables>
+ Inserts a variable listing.
+</attr>
+
+<attr name=cookies>
+ Inserts a cookie listing.
+</attr>
+
+<attr name=cookie value=string>
+ Inserts the value of that cookie.
+</attr>
+
+<attr name=file value=string>
+ Inserts the contents of that file.
+</attr>
+
+<attr name=href value=string>
+ Inserts the contents at that URL.
+</attr>
+
+<attr name=other value=string>
+ Inserts a misc variable (id->misc->variables).
+</attr>
+
+<attr name=quote value=html,none>
+ How the inserted data should be quoted. Default is 'html', except for
+ href and file where it's 'none'.
+</attr>",
+
+"maketag":#"<desc cont>
+ This tag creates tags. The contents of the container will be put into
+ the contents of the produced container. Requires the name attribute.
+</desc>
+
+<attr name=name value=string>
+ The name of the tag.
+</attr>
+
+<attr name=noxml>
+ Tags should not be terminated with a trailing slash.
+</attr>
+
+<attr name=type value=tag,container>
+ What kind of tag should be produced. Default is tag.
+</attr>
+ Inside the maketag container the container attrib is defined. It is
+ used to add attributes to the produced tag. It has the required
+ attribute attrib, which is the name of the attribute. The contents of
+ the attribute container will be the attribute value. E.g.
+
+ <p>&lt;maketag name=replace type=container&gt;
+ &lt;attrib name=from&gt;A&lt;/attrib&gt;
+ &lt;attrib name=to&gt;U&lt;/attrib&gt;
+ MAD
+ &lt;/maketag&gt;
+
+ will result in
+
+ &lt;replace from=A to=U&gt;MAD&lt;/replace&gt;
+ &lt;/pre&gt;</p>",
+
+"modified":#"<desc tag>
+ Prints when or by whom a page was last modified, by default the current page.
+</desc>
+
+<attr name=by>
+ Print by whom the page was modified. Takes the same attributes as the
+ <tag><ref type=tag>user</ref></tag> tag. This attribute requires a
+ userdatabase.
+</attr>
+
+<attr name=date>
+ Print the modification date. Takes all the date attributes in the
+ <tag><ref type=tag>date</ref></tag> tag.
+</attr>
+
+<attr name=file value=path>
+ Get information from this file rather than the current page.
+</attr>
+
+<attr name=realfile value=path>
+ Get information from this file in the computers filesystem rather
+ than Roxen Webserver's virtual filesystem.
+</attr>",
+
+"quote":"<desc tag></desc>",
+
+"random":#"<desc cont>
+ Randomly chooses a message from its contents.
+</desc>
+
+<attr name=separator value=string>
+ The separator used to separate the messages, by default newline.
+</attr>",
+
+"realfile":#"<desc tag>
+
+ Prints the path to the file containing the page in the computers file
+ system, rather than Roxen Webserver's virtual file system, or unknown if
+ it is impossible to determine.
+</desc>",
+
+"recursive-output":#"<desc cont>
+
+</desc>
+
+<attr name=limit value=number>
+
+</attr>
+
+<attr name=inside value=string>
+
+</attr>
+
+<attr name=outside value=string>
+
+</attr>
+
+<attr name=separator value=string>
+
+</attr>",
+
+"redirect":#"<desc tag>
+ Redirects the user to another page. Requires the to attribute.
+</desc>
+
+<attr name=to value=string>
+ Where the user should be sent to.
+</attr>
+
+<attr name=add value=string>
+ The prestate or prestates that should be added, in a comma seperated
+ list.
+</attr>
+
+<attr name=drop value=string>
+ The prestate or prestates that should be dropped, in a comma seperated
+ list.
+</attr>
+
+<attr name=text value=string>
+Tja, steker greker kanske?
+</attr>",
+
+"referer":#"<desc tag>
+ See documentation for the <tag>Referrer</tag> tag.
+</desc>",
+
+"referrer":#"<desc tag>
+ Inserts the URL the visitor came from.
+</desc>
+
+<attr name=alt>
+ Text to write if no referrer is given.
+</attr>
+
+<attr name=quote value=html,none>
+ How the referrer should be quoted. Default is 'html'.
+</attr>",
+
+"remove-cookie":#"<desc tag>
+ Removes a cookie.
+</desc>
+
+<attr name=name>
+ Name of the cookie to remove.
+</attr>
+
+<attr name=value>
+FOOO????
+</attr>
+
+Note that removing a cookie won't take effect until the next page
+load.",
+
+"repeat":#"<desc cont>
+ Repeats the contents until a <tag>leave</tag> tag has been found.
+ Requires no attributes.
+</desc>
+
+<attr name=maxloops>
+ The maximum number of loops. Default is 10000.
+</attr>",
+
+"replace":#"<desc cont>
+ Replaces strings in the contents with other strings. Requires the
+ from attribute.
+</desc>
+
+<attr name=from value=string>
+ String or list of strings that should be replaced.
+</attr>
+
+<attr name=to value=string>
+ String or list of strings with the replacement strings. Default is the
+ empty string.
+</attr>
+
+<attr name=separator value=string>
+ Defines what string should seperate the strings in the from and to
+ attributes. Default is ','.
+</attr>
+
+<attr name=type value=word,words>
+ Word means that a single string should be replaced. Words that from
+ and to are lists. Default is word.
+</attr>",
+
+"return":#"<desc tag>
+ Changes the HTTP return code for this page.
+
+ See the Appendix for a list of HTTP return codes.
+</desc>
+
+<attr name=code>
+ The return code to set.
+</attr>",
+
+"roxen":#"<desc tag>
+ Returns a nice Roxen logo.
+</desc>
+
+<attr name=size value=small,medium,large>
+ Defines the size of the image. Default is small.
+</attr>
+
+<attr name=color value=blue,green,purple,brown>
+ Defines the color of the image. Default is blue.
+</attr>
+
+<attr name=alt value=string>
+ The image description. Default is 'Powered by Roxen'.
+</attr>
+
+<attr name=border value=number>
+ The image border. Default is 0.
+</attr>
+
+<attr name=class value=string>
+ This CSS definition will be applied on the img element.
+</attr>
+ All other attributes will be inherited by the generated img tag.",
+
+"scope":#"<desc cont>
+ Creates a different variable scope. Variable changes inside the scope
+ container will not affect variables in the rest of the page.
+ Variables set outside the scope is not available inside the scope
+ unless the extend attribute is used. No attributes are required.
+</desc>
+
+<attr name=extend>
+ If set, all variables will be copied into the scope.
+</attr>
+
+<attr name=truth>
+ Make a scope for truth as well. The previous true/false state will be
+ inherited into the scope, but changes in the state will not affect
+ anything outside the scope.
+</attr>",
+
+"set":#"<desc tag>
+Sets a variable. The variable attribute is required.
+</desc>
+
+<attr name=variable value=string>
+ The name of the variable.
+</attr>
+
+<attr name=value value=string>
+ The value the variable should have.
+</attr>
+
+<attr name=expr value=string>
+ An expression whose evaluated value the variable should have.
+</attr>
+
+<attr name=from value=string>
+ The name of another variable that the value should be copied from.
+</attr>
+
+<attr name=other value=string>
+ The name of a id->misc->variables that the value should be copied from.
+</attr>
+
+<attr name=eval value=string>
+ An RXML expression whose evaluated value the variable should have.
+</attr>",
+
+"set-cookie":#"<desc tag>
+ Sets a cookie that will be stored by the user's browser. This is a
+ simple and effective way of storing data that is local to the user.
+ The cookie will be persistent, the next time the user visits the
+ site, she will bring the cookie with her.
+</desc>
+
+<attr name=name value=string>
+ The name of the cookie.
+</attr>
+
+<attr name=seconds>
+ Add this number of seconds to the time the cookie is kept.
+</attr>
+
+<attr name=minutes>
+ Add this number of minutes to the time the cookie is kept.
+</attr>
+
+<attr name=hours>
+ Add this number of hours to the time the cookie is kept.
+</attr>
+
+<attr name=days>
+ Add this number of days to the time the cookie is kept.
+</attr>
+
+<attr name=weeks>
+ Add this number of weeks to the time the cookie is kept.
+</attr>
+
+<attr name=months>
+ Add this number of months to the time the cookie is kept.
+</attr>
+
+<attr name=years>
+ Add this number of years to the time the cookie is kept.
+</attr>
+
+<attr name=persistent>
+ Keep the cookie for two years.
+</attr>
+
+<attr name=value value=string>
+ The value the cookie will be set to.
+</attr>
+
+<attr name=path value=string>
+ ?????????????
+</attr>
+ It is not possible to set the date beyond year 2038. By default the
+ cookie will be kept until the year 2038. Note that the change of a
+ cookie will not take effect until the next page load.",
+
+"set-max-cache":#"<desc tag>
+
+</desc>
+
+<attr name=time value=number>
+
+</attr>",
+
+"smallcaps":#"<desc cont>
+ This tag prints the contents in smallcaps. If the size attribute is
+ given, font tags will be used, otherwise big and small tags will be
+ used.
+</desc>
+
+<attr name=space>
+ Put a space between every character.
+</attr>
+
+<attr name=class value=string>
+ Apply this CSS style on all elements.
+</attr>
+
+<attr name=smallclass value=string>
+ Apply this CSS style on all small elements.
+</attr>
+
+<attr name=bigclass value=string>
+ Apply this CSS style on all big elements.
+</attr>
+
+<attr name=size value=number>
+ Use font tags, and this number as big size.
+</attr>
+
+<attr name=small value=number>
+ Size of the small tags. Only applies when size is specified. Default
+ is size-1.
+</attr>",
+
+"sort":#"<desc cont>
+ Sorts the contents. No attributes required.
+</desc>
+
+<attr name=separator value=string>
+ Defines what the strings to be sorted are separated with.
+</attr>
+
+<attr name=reverse>
+ Reversed order sort.
+</attr>",
+
+"throw":#"<desc cont></desc>",
+
+"trimlines":#"<desc cont>
+ This tag removes all empty lines from the contents.
+</desc>",
+
+"unset":#"
+<desc tag>
+ Unsets a variable, i.e. removes it. The variable attribute is required.
+</desc>
+
+<attr name=variable value=string>
+ The name of the variable.
+</attr>",
+
+"user":#"<desc tag>
+ Prints information about the specified user. By default, the full
+ name of the user and her e-mail address will be printed, with a
+ mailto link and link to the home page of that user.
+
+ The <tag>user</tag> tag requires an authentication module to work.
+</desc>
+
+<attr name=email>
+ Only print the e-mail address of the user, with no link.
+</attr>
+
+<attr name=link>
+ Include links. Only meaningful together with the realname or email attribute.
+</attr>
+
+<attr name=name>
+ The login name of the user.
+</attr>
+
+<attr name=nolink>
+ Don't include the links.
+</attr>
+
+<attr name=realname>
+ Only print the full name of the user, with no link.
+</attr>",
+
+"vfs":#"<desc tag>
+ Prints the mountpoint of the filesystem module that handles the page,
+ or unknown if it could not be determined. This is useful for creating
+ pages or applications that are to be placed anywhere on a site, but
+ for some reason have to use absolute paths.
+</desc>",
     ]);
 #endif
 
