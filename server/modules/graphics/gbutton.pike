@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.95 2002/06/18 16:17:13 nilsson Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.96 2002/10/23 23:36:30 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -479,7 +479,7 @@ array(Image.Layer)|mapping draw_button(mapping args, string text, object id)
 	break;
       case "right":
 	icn_x = req_width - right - i_width;
-	txt_x = left + (icn_x - i_spc - t_width) / 2;
+	txt_x = left + (icn_x - i_spc - t_width - left) / 2;
 	break;
       }
       break;
@@ -717,9 +717,13 @@ int get_file_stat( string f, RequestID id  )
       return (res > 0) && res;
   
   call_out( m_delete, 10, __stat_cache, f );
+  int was_internal = id->misc->internal_get;
+  id->misc->internal_get = 1;
   res = __stat_cache[ f ] = (id->conf->stat_file( f,id )
 			     || file_stat( f )
 			     || ({ 0,0,0,0 }))[ST_MTIME] || -1;
+  if (!was_internal)
+    m_delete(id->misc, "internal_get");
   return (res > 0) && res;
 }
 
