@@ -1,5 +1,5 @@
 /*
- * $Id: generate_rsa.pike,v 1.6 1998/04/20 04:36:10 nisse Exp $
+ * $Id: generate_rsa.pike,v 1.7 1998/04/22 14:34:54 grubba Exp $
  */
 
 inherit "wizard";
@@ -95,9 +95,15 @@ mixed verify_0(object id, object mc)
   object rsa = Crypto.rsa();
   rsa->generate_key(key_size, Crypto.randomness.reasonably_random()->read);
 
+#if constant(Tools)
   string key = Tools.PEM.simple_build_pem
     ("RSA PRIVATE KEY",
      Standards.PKCS.RSA.rsa_private_key(rsa));
+#else /* !constant(Tools) */
+  /* Backward compatibility */
+  string key = SSL.pem.build_pem("RSA PRIVATE KEY",
+				 Standards.PKCS.RSA.rsa_private_key(rsa));
+#endif /* constant(Tools) */
   WERROR(key);
   
   if (strlen(key) != file->write(key))
