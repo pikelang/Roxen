@@ -277,7 +277,9 @@ array(int) decode_id( string data )
 
 array(int) get_local_ids(int|void from_time)
 {
+#ifdef THREADS
   Thread.MutexKey key = cache->mutex->lock();
+#endif  
   array have = (array(int))
     cache->db->query( "SELECT id from "+cache->name+
 		      " WHERE atime >= %d", from_time )->id;
@@ -292,7 +294,9 @@ void create_remote_key(int id, string key,
 		       int index_id, string index_key,
 		       string server)
 {
+#ifdef THREADS
   Thread.MutexKey mutex_key = cache->mutex->lock();
+#endif
   
   // Create a record in the remote database.
   create_key(id, key, server);
