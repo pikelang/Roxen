@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.233 2000/08/28 12:50:48 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.234 2000/08/29 12:57:40 per Exp $";
 
 #define MAGIC_ERROR
 
@@ -1621,7 +1621,7 @@ void send_result(mapping|void result)
 
 	if(prot != "HTTP/0.9") 
         {
-          if( misc->cacheable )
+          if( misc->cacheable < 60000 )
           {
             heads["Last-Modified"] = http_date(misc->last_modified);
 
@@ -1815,7 +1815,7 @@ void send_result(mapping|void result)
 void handle_request( )
 {
   REQUEST_WERR("HTTP: handle_request()");
-  misc->cacheable = 1;
+  misc->cacheable = 60000;
 #ifdef MAGIC_ERROR
   if(prestate->old_error)
   {
