@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.293 2001/04/21 19:57:09 nilsson Exp $
+// $Id: rxml.pike,v 1.294 2001/04/21 20:21:14 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -2521,9 +2521,8 @@ Kibibits.
 </p></desc>",
 
 "&roxen.sent-per-minute;":#"<desc ent='ent'><p>
-
-
-
+ The number of bytes that the webserver sends during a
+ minute, on average.
 </p></desc>",
 
 "&roxen.server;":#"<desc ent='ent'><p>
@@ -2536,6 +2535,11 @@ Kibibits.
 
 "&roxen.time;":#"<desc ent='ent'><p>
  The current posix time.
+</p></desc>",
+
+"&roxen.unique-id;":#"<desc ent='ent'><p>
+ Returns a unique id that can be used for e.g. session
+ identification.
 </p></desc>",
 
 "&roxen.uptime;":#"<desc ent='ent'><p>
