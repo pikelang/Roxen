@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.172 1999/05/18 21:19:09 mast Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.173 1999/05/19 09:08:05 peter Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -138,6 +138,10 @@ int definvisvar(string var, mixed value, int type)
   return defvar(var, value, "", type, "", 0, 1);
 }
 
+string query_internal_location(object|void mod)
+{
+  return QUERY(InternalLoc)+(mod? replace(otomod[mod]||"", "#", "!")+"/":"");
+}
 
 string query_name()
 {
@@ -1261,6 +1265,23 @@ mapping|int low_get_file(object id, int|void no_magic)
 	return tmp;
       }
       TRACE_LEAVE("");
+    }
+
+    if(!search(file, QUERY(InternalLoc))) 
+    {
+      object module;
+      string name, rest;
+      function find_internal;
+      if(2==sscanf(file[strlen(QUERY(InternalLoc))..], "%s/%s", name, rest) &&
+	 (module = find_module(replace(name, "!", "#"))) &&
+	 (find_internal = module->find_internal))
+      {
+	LOCK(find_internal);
+	fid=find_internal( rest, id );
+	UNLOCK();
+	if(mappingp(fid))
+	  return fid;
+      }
     }
   }
 
@@ -2388,6 +2409,7 @@ object enable_module( string modname )
     }
   }
 
+  me->set_configuration(this_object());
 #ifdef MODULE_DEBUG
   //    perror("Initializing ");
 #endif
@@ -3463,6 +3485,13 @@ void create(string config)
 	 "File which contains a list of all valid shells\n"
 	 "(usually /etc/shells). Used for named ftp.\n"
 	 "Specify the empty string to disable shell database lookup.\n");
+
+  defvar("InternalLoc", "/_internal/", 
+	 "Internal module resource mountpoint", TYPE_LOCATION|VAR_MORE,
+         "Some modules may want to create links to internal resources.  "
+	 "This setting configures an internally handled location that can "
+	 "be used for such purposes.  Simply select a location that you are "
+	 "not likely to use for regular resources.");
 
   setvars(retrieve("spider#0", this));
 }
