@@ -1,9 +1,9 @@
-// This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 1996 - 2001, Roxen IS.
 
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version="$Id: htaccess.pike,v 1.97 2002/10/23 20:10:02 nilsson Exp $";
+constant cvs_version="$Id: htaccess.pike,v 1.98 2004/05/23 01:35:23 _cvs_stephen Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -263,7 +263,7 @@ mapping parse_and_find_htaccess( RequestID id )
     {
       line = (replace(line, "\t", " ") / " " - ({""})) * " ";
 
-      if(!strlen(line))
+      if(!strlen(line) || has_prefix(line, "#"))
 	continue;
 
       if(line[0] == ' ') /* There can be only one /Connor MacLeod */
@@ -272,9 +272,9 @@ mapping parse_and_find_htaccess( RequestID id )
       line = lower_case(line);
 
       if( line == "deny all" )
-	roxen_deny = "deny ip=*\n";
+	roxen_deny += "deny ip=*\n";
       else if( line == "allow all" )
-	roxen_allow = "allow ip=*\n";
+	roxen_allow += "allow ip=*\n";
       else if(sscanf(line, "realm %s", data)||
 	      sscanf(line, "authmethod %s", data)||
 	      sscanf(line, "userdb %s", data))
@@ -337,8 +337,16 @@ mapping parse_and_find_htaccess( RequestID id )
 
     roxen_deny += "allow ip=*\n";
 
-    if( any_ok )
-      roxen_allow = replace( roxen_allow, "\n", " return\n" );
+    if( any_ok ) {
+      array(string) rows = roxen_allow/"\n";
+      int i;
+      for (i=0; i < sizeof(rows); i++) {
+	if (has_prefix(rows[i], "allow ")) {
+	  rows[i] += " return";
+	}
+      }
+      roxen_allow = rows*"\n";
+    }
 
 #ifdef HTACCESS_DEBUG
     report_debug("limit:%{ %s%}\n", indices(m));
@@ -463,7 +471,9 @@ mapping try_htaccess(RequestID id)
     TRACE_LEAVE("No htaccess-file.");
     return 0;
   }
-  NOCACHE(); // Since there is a htaccess file we cannot cache at all.
+  NO_PROTO_CACHE();
+
+  // HT_WERR(sprintf("id->misc: %O", id->misc));
 
   switch(mixed ret = htaccess(access, id))
   {
@@ -482,7 +492,7 @@ mapping try_htaccess(RequestID id)
 				   "or domain-name. "
 				   "The server couldn't resolve your hostname."
 				   " <b>Your computer might lack a correct "
-				   "PTR DNS entry. In that "
+				   "DNS PTR entry. In that "
 				   "case, ask your system administrator to "
 				   "add one.</b>");
     default:
@@ -523,6 +533,8 @@ mapping remap_url(RequestID id)
 
   TRACE_ENTER("htaccess->remap_url()", remap_url);
 
+  // HT_WERR(sprintf("id->misc: %O", id->misc));
+
   if(strlen(id->not_query)&&id->not_query[0]=='/')
   {
     access_violation = try_htaccess( id );
@@ -542,6 +554,8 @@ mapping remap_url(RequestID id)
     }
   }
   TRACE_LEAVE("OK");
+
+  // HT_WERR(sprintf("id->misc: %O", id->misc));
 }
 
 multiset denylist;
@@ -587,7 +601,7 @@ class HtUser
 
   array(string) groups()
   {
-    return (array)pwent[7]+(({pwent[8]})-({0}));
+    return ((array)(pwent[7]||(<>)))+(({pwent[8]})-({0}));
   }
   
   static void create( UserDB p, array _pwent )
@@ -622,32 +636,36 @@ array(mapping) parse_groupfile( string f )
   int gid = 10000;
   foreach( f / "\n", string r )
   {
-    array q = r/":";
+    array(string) q = r/":";
+    string members;
+    string passwd = "";
+    int this_gid;
     switch( sizeof( q ) ) 
     {
-      case 2: // group:members
-	foreach( q[1]/",", string u )
-	{
-	  if( u2g[u] )
-	    u2g[u]+=(<q[0]>);
-	  else
-	    u2g[u]=(<q[0]>);
-	}
-	groups[q[0]]=({ q[0], "", gid++, (multiset)(q[1]/",") });
-	groups[gid-1] = groups[q[0]];
-	break;
-      case 4: // group:passwd:gid:
-	foreach( q[3]/",", string u )
-	{
-	  if( u2g[u] )
-	    u2g[u]+=(<q[0]>);
-	  else
-	    u2g[u]=(<q[0]>);
-	}
-	groups[q[0]]=({ q[0], q[1], (int)q[2], (multiset)(q[3]/",") });
-	groups[(int)q[2]] = groups[q[0]];
-	break;
+    default:
+      continue;
+    case 2: // group:members
+      this_gid = gid++;
+      members = q[1];
+      break;
+    case 4: // group:passwd:gid:members
+      passwd = q[1];
+      this_gid = (int)q[2];
+      members = q[3];
+      break;
     }
+    // NB: members can be separated by either space or comma.
+    multiset(string) user_set =
+      (multiset(string))(replace(members, ",", " ")/" " - ({""}));
+    foreach(indices(user_set), string u)
+    {
+      if( u2g[u] )
+	u2g[u]+=(<q[0]>);
+      else
+	u2g[u]=(<q[0]>);
+    }
+    groups[q[0]] = ({ q[0], passwd, this_gid, user_set });
+    groups[this_gid] = groups[q[0]];
   }
   return ({ groups, u2g });
 }
@@ -690,7 +708,7 @@ User find_user( string s, RequestID id )
     return HtUser(this_object(),users[s]);
 }
 
-User find_user_from_uid( int uid, RequestID id )
+User find_user_from_uid( int uid, RequestID|void id )
 {
   if( !id ) return 0;
   mapping uu =   id->misc->ht_authinfo||([]);
@@ -703,14 +721,14 @@ User find_user_from_uid( int uid, RequestID id )
     return HtUser( this_object(), users[uid] );
 }
 
-array(string) list_users( RequestID id )
+array(string) list_users( RequestID|void id )
 {
   if( !id ) return 0;
   mapping uu =   id->misc->ht_authinfo||([]);
   return filter(indices(parse_userfile( uu->userfile, 0, 0 )),stringp);
 }
 
-Group find_group( string group, RequestID id )
+Group find_group( string group, RequestID|void id )
 {
   if( !id ) return 0;
   mapping uu =   id->misc->ht_authinfo||([]);
@@ -720,7 +738,7 @@ Group find_group( string group, RequestID id )
     return HtGroup( this_object(), groups[group] );
 }
 
-Group find_group_from_gid( int gid, RequestID id  )
+Group find_group_from_gid( int gid, RequestID|void id  )
 {
   if( !id ) return 0;
   mapping uu =   id->misc->ht_authinfo||([]);
@@ -730,7 +748,7 @@ Group find_group_from_gid( int gid, RequestID id  )
     return HtGroup( this_object(), groups[gid] );
 }
 
-array(string) list_groups( RequestID id )
+array(string) list_groups( RequestID|void id )
 {
   if( !id ) return 0;
   mapping uu =   id->misc->ht_authinfo||([]);
