@@ -489,23 +489,23 @@ class ConfigurationSettings
     defvar( "addmodulemethod", "normal", 
 	    "Add/Delete module page type",
             TYPE_STRING_LIST, 
-	    "<dl>\n<dt>normal</dt><dd>"
+	    "<dl>\n<dt>Normal</dt><dd>"
 	    "Show module name and documentation with images."
-	    "</dd>\n<dt>fast</dt><dd>"
+	    "</dd>\n<dt>Fast</dt><dd>"
 	    "Like normal, but no type images."
-	    "</dd>\n<dt>faster</dt><dd>"
+	    "</dd>\n<dt>Faster</dt><dd>"
 	    "Like normal, but allows selecting multiple modules "
 	    "at once."
-	    "</dd>\n<dt>compact</dt><dd>"
+	    "</dd>\n<dt>Compact</dt><dd>"
 	    "Only show the names of modules, and allow "
 	    "addition/deletion of multiple modules at once."
-	    "</dd>\n<dt>really compact</dt><dd>"
+	    "</dd>\n<dt>Really Compact</dt><dd>"
 	    "Like compact, but no module classes.</dd>\n</dl>",
-	    ([ "normal":"normal", "fast":"fast",
-	       "faster":"faster", "compact":"compact",
-	       "really compact":"really compact"  ]) );
+	    ([ "normal":"Normal", "fast":"Fast",
+	       "faster":"Faster", "compact":"Compact",
+	       "really compact":"Really Compact"  ]) );
 
-    restore( );
+    restore();
   }
 }
 
@@ -594,15 +594,22 @@ class AdminUser
     string form = error+
 #"
 <table>
-<tr valign=\"top\"><td><pre>
-   Real name:   <input name='PPPreal_name' value='"+real_name+#"' />
-    Password:   <input type='password' name='PPPpassword' value='' />
-       Again:   <input type='password' name='PPPpassword2' value='' />
-     Crypted:   <input name='PPPc_password' value='"+password+#"' />
-                <input type='image' border='0' alt=' Set ' value=' Set ' src='"+
-       set_src+"' />"
-      +"</pre></td>"
-      "<td><img src=\"/%01/unit\" height=\"5\" /><br />\n\n";
+<tr valign='top'><td>
+  <table>
+    <tr><td align='right'>Real&nbsp;name:</td>
+        <td><input name='PPPreal_name' value='"+real_name+#"' /></td></tr>
+    <tr><td align='right'>Password:</td>
+        <td><input type='password' name='PPPpassword' value='' /></td></tr>
+    <tr><td align='right'>Again:</td>
+        <td><input type='password' name='PPPpassword2' value='' /></td></tr>
+    <tr><td align='right'>Crypted:</td>
+        <td><input name='PPPc_password' value='"+password+#"' /></td></tr>
+    <tr><td></td>
+        <td><input type='image' border='0' alt=' Set ' value=' Set ' src='"+
+          set_src + #"' /></td></tr>
+  </table>
+  </td>
+  <td><img src='/%01/unit' height='5' /><br />\n\n";
 
     int is_me = this == id->misc->config_user;
 
@@ -617,12 +624,15 @@ class AdminUser
 
       if( permissions[ perm ] )
       {
-        string s = Roxen.parse_rxml( "<gbutton-url "+(dim?"dim":"")+
-				     "    icon_src='/img/selected.gif' "
-				     "    font='&usr.font;' "
-				     "    width='180'>"+
-				     permission_translations[ perm ]+
-				     "</gbutton-url>", id );
+        string s = Roxen.parse_rxml
+	  ( "<gbutton-url "+
+	    (dim ? "state='disabled' "
+	     "frame-image='&usr.gbutton-disabled-frame-image;'" : "")+
+	    "    icon_src='/img/selected.gif' "
+	    "    font='&usr.font;' "
+	    "    width='180'>"+
+	    permission_translations[ perm ]+
+	    "</gbutton-url>", id );
 	if( noclick )
 	  form += sprintf("<img src='%s' />\n", s);
 	else
