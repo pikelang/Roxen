@@ -6,7 +6,7 @@
  * in October 1997
  */
 
-constant cvs_version = "$Id: business.pike,v 1.109 1998/11/02 07:37:01 peter Exp $";
+constant cvs_version = "$Id: business.pike,v 1.110 1998/11/04 20:58:00 peter Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -617,6 +617,8 @@ string tag_diagram(string tag, mapping m, string contents,
       res->namesize=(int)m->namesize;
     if (m->namecolor)
       res->namecolor=parse_color(m->namecolor);
+    else
+      res->namecolor=parse_color(defines->fg);
   }
 
   res->voidsep = m->voidseparator || m->voidsep;
@@ -717,9 +719,9 @@ string tag_diagram(string tag, mapping m, string contents,
   res->legendfontsize = (int)m->legendfontsize || res->fontsize;
   res->labelsize      = (int)m->labelsize || res->fontsize;
 
-  if(m->labelcolor) res->labelcolor = parse_color(m->labelcolor);
-  res->axcolor   = m->axcolor?parse_color(m->axcolor):({0,0,0});
-  res->gridcolor = m->gridcolor?parse_color(m->gridcolor):({0,0,0});
+  if(m->labelcolor) res->labelcolor=parse_color(m->labelcolor || defines->fg);
+  res->axcolor   = parse_color(m->axcolor || defines->fg);
+  res->gridcolor = parse_color(m->gridcolor || defines->fg);
   res->linewidth = m->linewidth || "2.2";
   res->axwidth   = m->axwidth || "2.2";
 
