@@ -18,7 +18,7 @@
 
 #define old_rxml_compat 1
 
-constant cvs_version="$Id: rxmlparse.pike,v 1.12 1999/08/07 16:35:15 nilsson Exp $";
+constant cvs_version="$Id: rxmlparse.pike,v 1.13 1999/08/11 01:01:56 nilsson Exp $";
 constant thread_safe=1;
 
 function call_user_tag, call_user_container;
@@ -435,6 +435,11 @@ string tag_insert(string tag,mapping m,object id)
     string s, f = fix_relative(m->file, id);
     id = id->clone_me();
 
+    if(m->nocache) id->pragma["no-cache"] = 1;
+    if(id->scan_for_query)
+      f = id->scan_for_query( f );
+    s = id->conf->try_get_file(f, id);
+
     if (!s) {
 
       // Might be a PATH_INFO type URL.
@@ -449,10 +454,8 @@ string tag_insert(string tag,mapping m,object id)
 	    sscanf(s, "%*s\n%s", s);
 	}
       }
-      if(!s && id->misc->debug==-1) 
-        return "";
-      else if (!s)
-	return rxml_error(tag, "No such file ("+f+").", id);
+      if(!s)
+        return rxml_error(tag, "No such file ("+f+").", id);
     }
 
     return s;
@@ -1423,8 +1426,11 @@ mixed tag_recursive_output (string tagname, mapping args, string contents, objec
 
 string tag_leave(string tag, mapping m, object id)
 {
-  id->misc->leave_repeat--;
-  return "";
+  if(id->misc->leave_repeat) {
+    id->misc->leave_repeat--;
+    throw(3141);
+  }
+  return rxml_error(tag, "Must be contained by &lt;repeat&gt;.", id);
 }
 
 string tag_repeat(string tag, mapping m, string c, object id)
@@ -1435,7 +1441,11 @@ string tag_repeat(string tag, mapping m, string c, object id)
   string ret="",iter;
   while(loop<maxloop && id->misc->leave_repeat!=exit) {
     loop++;
-    iter=parse_rxml(c,id);
+    mixed error=catch {
+      iter=parse_rxml(c,id);
+    };
+    if((intp(error) && error!=0 && error!=3141) || !intp(error))
+      throw(error);
     if(id->misc->leave_repeat!=exit)
       ret+=iter;
   }
@@ -1489,13 +1499,18 @@ mapping query_container_callers()
 	   "cache":tag_cache,
 	   "catch":lambda(string t, mapping m, string c, object id) {
 		     string r;
+		     if(!id->misc->catcher_is_ready)
+  		       id->misc+=(["catcher_is_ready":1]);
+		     else
+		       id->misc->catcher_is_ready++;
 		     array e = catch(r=parse_rxml(c, id));
+                     id->misc->catcher_is_ready--;
 		     if(e) return e[0];
 		     return ({r});
 		   },
 	   "crypt":lambda(string t, mapping m, string c){
 		     if(m->compare)
-		       return (string)crypt(c,m->compare);
+		       return crypt(c,m->compare)?"<true>":"<false>";
 		     else
 		       return crypt(c);
 		   },
@@ -1511,10 +1526,10 @@ mapping query_container_callers()
 	   "scope":tag_scope,
 	   "smallcaps":tag_smallcaps,
 	   "sort":tag_sort,
-	   "throw":lambda(string t, mapping m, string c) {
-		     if(c[-1] != "\n") c+="\n";
-		     throw( ({ c, backtrace() }) );
-		   },
+	   "throw":lambda(string t, mapping m, string c, object id) { 
+		     if(!id->misc->catcher_is_ready && c[-1]!="\n") c+="\n";
+                     throw( ({ c, backtrace() }) ); 
+           },
 	   "trimlines":tag_trimlines,
 #if old_rxml_compat
            // Not part of RXML 1.4
