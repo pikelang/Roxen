@@ -1,4 +1,4 @@
-// "$Id: hosts.pike,v 1.25 1999/07/16 06:22:54 neotron Exp $";
+// "$Id: hosts.pike,v 1.26 1999/11/27 07:53:21 per Exp $";
 #include <roxen.h>
 
 #ifdef NO_DNS
@@ -7,12 +7,12 @@ string blocking_ip_to_host(string ip) { return ip; }
 string blocking_host_to_ip(string host) { return host; }
 string quick_ip_to_host(string ip) { return ip; }
 string quick_host_to_ip(string host) { return host; }
-void ip_to_host(string|void ipnumber, function|void callback, mixed ... args)
+void ip_to_host(string ipnumber, function callback, mixed ... args)
 {
   callback(ipnumber, @args);
 }
 
-void host_to_ip(string|void host, function|void callback, mixed ... args)
+void host_to_ip(string host, function callback, mixed ... args)
 {
   callback(host, @args);
 }
@@ -81,7 +81,7 @@ string quick_host_to_ip(string h)
   return h;
 }
 
-void ip_to_host(string|void ipnumber, function|void callback, mixed ... args)
+void ip_to_host(string ipnumber, function callback, mixed ... args)
 {
 #ifdef NO_REVERSE_LOOKUP
   return callback(ipnumber, @args);
@@ -95,7 +95,7 @@ void ip_to_host(string|void ipnumber, function|void callback, mixed ... args)
   LOOKUP(IP_TO_HOST,ipnumber,callback,args);
 }
 
-void host_to_ip(string|void host, function|void callback, mixed ... args)
+void host_to_ip(string host, function callback, mixed ... args)
 {
   if(!stringp(host) || !strlen(host)) return callback(0, @args);
   if(host[-1] == '.') host=host[..strlen(host)-2];
