@@ -1,5 +1,5 @@
 /*
- * $Id: make_csr.pike,v 1.10 1999/03/02 17:58:59 nisse Exp $
+ * $Id: make_rsa_csr.pike,v 1.1 1999/03/09 15:17:42 nisse Exp $
  */
 
 inherit "wizard";
