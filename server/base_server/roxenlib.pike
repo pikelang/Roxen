@@ -1,14 +1,12 @@
-// $Id: roxenlib.pike,v 1.150 2000/02/12 17:49:11 nilsson Exp $
+// $Id: roxenlib.pike,v 1.151 2000/02/13 16:28:32 per Exp $
 
 #include <roxen.h>
 inherit "http";
 
-// This code has to work both in the roxen object, and in modules.
-#if !efun(roxen)
 #define roxen roxenp()
+// This code has to work both in the roxen object, and in modules.
 class RequestID {};
 class RoxenModule {};
-#endif
 
 #include <stat.h>
 
@@ -1090,34 +1088,34 @@ string roxen_encode( string val, string encoding )
    case "none":
    case "":
      return val;
-   
+
    case "http":
      // HTTP encoding.
      return http_encode_string (val);
-     
+
    case "cookie":
      // HTTP cookie encoding.
      return http_encode_cookie (val);
-     
+
    case "url":
      // HTTP encoding, including special characters in URL:s.
      return http_encode_url (val);
-       
+
    case "html":
      // For generic html text and in tag arguments. Does
      // not work in RXML tags (use dtag or stag instead).
      return html_encode_string (val);
-     
+
    case "dtag":
      // Quote quotes for a double quoted tag argument. Only
      // for internal use, i.e. in arguments to other RXML tags.
      return replace (val, "\"", "\"'\"'\"");
-     
+
    case "stag":
      // Quote quotes for a single quoted tag argument. Only
      // for internal use, i.e. in arguments to other RXML tags.
      return replace(val, "'", "'\"'\"'");
-       
+
    case "pike":
      // Pike string quoting (e.g. for use in a <pike> tag).
      return replace (val,
@@ -1131,38 +1129,38 @@ string roxen_encode( string val, string encoding )
 		    ({ "\b", "\014", "\n", "\r", "\t", "\\", "'", "\"" }),
 		    ({ "\\b", "\\f", "\\n", "\\r", "\\t", "\\\\",
 		       "\\'", "\\\"" }));
-       
+
    case "mysql":
      // MySQL quoting.
      return replace (val,
 		    ({ "\"", "'", "\\" }),
 		    ({ "\\\"" , "\\'", "\\\\" }) );
-       
+
    case "sql":
    case "oracle":
      // SQL/Oracle quoting.
      return replace (val, "'", "''");
-       
+
    case "mysql-dtag":
      // MySQL quoting followed by dtag quoting.
      return replace (val,
 		    ({ "\"", "'", "\\" }),
 		    ({ "\\\"'\"'\"", "\\'", "\\\\" }));
-       
+
    case "mysql-pike":
      // MySQL quoting followed by Pike string quoting.
      return replace (val,
 		    ({ "\"", "'", "\\", "\n" }),
 		    ({ "\\\\\\\"", "\\\\'",
 		       "\\\\\\\\", "\\n" }) );
-       
+
    case "sql-dtag":
    case "oracle-dtag":
      // SQL/Oracle quoting followed by dtag quoting.
      return replace (val,
 		    ({ "'", "\"" }),
 		    ({ "''", "\"'\"'\"" }) );
-       
+
    default:
      // Unknown encoding. Let the caller decide what to do with it.
      return 0;
@@ -1172,7 +1170,7 @@ string roxen_encode( string val, string encoding )
 // internal method for do_output_tag
 private string remove_leading_trailing_ws( string str )
 {
-  sscanf( str, "%*[\t\n\r ]%s", str ); str = reverse( str ); 
+  sscanf( str, "%*[\t\n\r ]%s", str ); str = reverse( str );
   sscanf( str, "%*[\t\n\r ]%s", str ); str = reverse( str );
   return str;
 }
@@ -1252,7 +1250,7 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 				  foreach (order, string field)
 				  {
 				    int tmp;
-				    
+
 				    if (field[0] == '-')
 				      tmp = compare( m2[field[1..]],
 						     m1[field[1..]] );

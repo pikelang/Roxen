@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.139 2000/02/10 09:18:11 per Exp $
+ * $Id: roxenloader.pike,v 1.140 2000/02/13 16:28:32 per Exp $
  *
  * Roxen bootstrap program.
  *
@@ -19,7 +19,7 @@ private static object new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.139 2000/02/10 09:18:11 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.140 2000/02/13 16:28:32 per Exp $";
 
 int pid = getpid();
 object stderr = Stdio.File("stderr");
@@ -482,8 +482,10 @@ static private void initiate_cache()
   object cache;
   cache=((program)"base_server/cache")();
 
-  add_constant( "Stdio.File", Stdio.File );
-
+  add_constant("Stdio.File", Stdio.File );
+  add_constant("Stdio.stderr", Stdio.stderr );
+  add_constant("Stdio.stdout", Stdio.stdout );
+  add_constant("Stdio.stdin", Stdio.stdin );
   add_constant("cache_set", cache->cache_set);
   add_constant("cache_lookup", cache->cache_lookup);
   add_constant("cache_remove", cache->cache_remove);

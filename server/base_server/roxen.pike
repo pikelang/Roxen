@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.423 2000/02/12 21:31:07 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.424 2000/02/13 16:28:32 per Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -2504,6 +2504,7 @@ void create()
    SET_LOCALE(default_locale);
   // Dump some programs (for speed)
 
+  dump( "base_server/roxenlib.pike" );
   dump( "base_server/basic_defvar.pike" );
   dump( "base_server/newdecode.pike" );
   dump( "base_server/read_config.pike" );
@@ -2517,7 +2518,6 @@ void create()
   dump( "base_server/hosts.pike");
   dump( "base_server/language.pike");
   dump( "base_server/configuration.pike" );
-  dump( "base_server/rxmlhelp.pike" );
 
 #ifndef __NT__
   if(!getuid())
@@ -2581,13 +2581,7 @@ void create()
   add_constant( "colors",      Colors             );
   add_constant( "roxen.fonts", (fonts = (object)"fonts.pike") );
 
-  Configuration = (program)"configuration";
-  add_constant( "Configuration", Configuration );
-
-  // This is currently needed to resolve the circular references in
-  // RXML.pmod correctly. :P
   master()->resolv ("RXML.refs");
-
   foreach( glob("*.pike",get_dir( "etc/modules/RXML.pmod/")), string q )
   {
     if( q != "PHtml.pike" )
@@ -2595,14 +2589,25 @@ void create()
   }
   foreach( glob("*.pmod",get_dir( "etc/modules/RXML.pmod/")), string q )
     dump( "etc/modules/RXML.pmod/"+ q );
-
-
   /* Used in all 'new style' tag modules */
   add_constant( "RXML.Context", master()->resolv("RXML.Context") );
   add_constant( "RXML.Tag", master()->resolv("RXML.Tag") );
+  add_constant( "RXML.TagSet", master()->resolv("RXML.Tag") );
   add_constant( "RXML.Frame", master()->resolv("RXML.Frame") );
   add_constant( "RXML.get_context", master()->resolv("RXML.get_context") );
   add_constant( "RXML.t_text", master()->resolv("RXML.t_text") );
+  add_constant( "RXML.t_same", master()->resolv("RXML.t_same") );
+  add_constant( "RXML.t_html", master()->resolv("RXML.t_html") );
+  add_constant( "RXML.t_xml", master()->resolv("RXML.t_xml") );
+
+
+  Configuration = (program)"configuration";
+  dump( "base_server/configuration.pike" );
+  dump( "base_server/rxmlhelp.pike" );
+  add_constant( "Configuration", Configuration );
+
+  // This is currently needed to resolve the circular references in
+  // RXML.pmod correctly. :P
 
   call_out(post_create,1); //we just want to delay some things a little
 }

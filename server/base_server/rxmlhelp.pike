@@ -1,4 +1,4 @@
-// RXML Help 
+// RXML Help
 // Copyright (c) 2000 Idonex AB
 // Martin Nilsson
 //
@@ -31,7 +31,7 @@ string available_languages(object id) {
   else
     pl="en";
   mapping languages=roxen->languages[pl]->languages;
-  return mktable( Array.map(indices(languages), lambda(string code) { return ({ code, languages[code] }); } ));
+  return mktable( map(indices(languages), lambda(string code) { return ({ code, languages[code] }); } ));
 }
 
 // --------------------- Help layout functions --------------------
