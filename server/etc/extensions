@@ -1,4 +1,4 @@
-# $Id: extensions,v 1.47 2000/11/20 02:21:24 nilsson Exp $
+# $Id: extensions,v 1.48 2000/11/22 22:30:30 nilsson Exp $
 #
 # ---- Extension database ----
 # The database used by the content typ module to map from extension to mime-type
@@ -36,7 +36,7 @@ sid	audio/prs.sid
 
 # Other
 
-abs	audio/x-mpeg
+abs	audio/mpeg
 aif	audio/x-aiff
 aifc	audio/x-aiff
 aiff	audio/x-aiff
@@ -50,11 +50,11 @@ m3u	audio/x-mpegurl
 mid	audio/midi
 midi	audio/midi
 mod	audio/x-mod
-mp2	audio/x-mpeg
-mp3	audio/x-mpeg
+mp2	audio/mpeg
+mp3	audio/mpeg
 mp3url	audio/x-mpegurl
-##mpa	audio/x-mpeg
-mpega	audio/x-mpeg
+##mpa	audio/mpeg
+mpega	audio/mpeg
 pls	audio/x-mpegurl
 psid	audio/x-psid
 ra	audio/x-pn-realaudio
