@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.42 1997/08/01 20:08:02 noring Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.43 1997/08/04 12:55:54 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -1242,7 +1242,7 @@ void start(int num)
       object o;
     
       if(rp = ((object)("protocols/"+port[1]))->real_port)
-	if(tmp = rp(port))
+	if(tmp = rp(port, this_object()))
 	  port = tmp;
       object privs;
       if(port[0] < 1024)

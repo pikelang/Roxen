@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.87 1997/07/22 03:41:17 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.88 1997/08/04 12:57:38 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -1679,7 +1679,7 @@ void initiate_configuration_port( int|void first )
 	continue;
       }
       if(rp = requestprogram()->real_port)
-	if(tmp = rp(port))
+	if(tmp = rp(port, 0))
 	  port = tmp;
 
       if(o=create_listen_socket(port[0],0,port[2],requestprogram,port))
