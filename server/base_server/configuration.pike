@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.271 2000/03/07 21:36:32 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.272 2000/03/07 22:42:02 grubba Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -1790,13 +1790,18 @@ public array open_file(string fname, string mode, RequestID id)
       else if(id->method!="GET"&&id->method != "HEAD"&&id->method!="POST")
 	file = http_low_answer(501, "Not implemented.");
       else {
+	file = http_low_answer(404,
+			       parse_rxml(
 #ifdef OLD_RXML_COMPAT
-	file=http_low_answer(404,replace(parse_rxml(query("ZNoSuchFile"),id),
-					 ({"$File", "$Me"}),
-					 ({fname,query("MyWorldLocation")})));
+					  replace(query("ZNoSuchFile"),
+						  ({ "$File", "$Me" }),
+						  ({ "&page.virtfile;",
+						     conf->query("MyWorldLocation")
+						  })),
 #else
-	file=http_low_answer(404,parse_rxml(query("ZNoSuchFile"),id));
+					  query("ZNoSuchFile"),
 #endif
+					  id));
       }
 
       id->not_query = oq;

@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.214 2000/03/07 21:36:49 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.215 2000/03/07 22:42:13 grubba Exp $";
 
 #define MAGIC_ERROR
 
@@ -58,10 +58,10 @@ mapping (string:mixed)  misc            =
 ([
 #ifdef REQUEST_DEBUG
   "trace_enter":lambda(mixed ...args) {
-		  werror(sprintf("TRACE_ENTER(%{%O,%})\n", args));
+		  REQUEST_WERR(sprintf("TRACE_ENTER(%{%O,%})", args));
 		},
   "trace_leave":lambda(mixed ...args) {
-		  werror(sprintf("TRACE_LEAVE(%{%O,%})\n", args));
+		  REQUEST_WERR(sprintf("TRACE_LEAVE(%{%O,%})", args));
 		}
 #endif // REQUEST_DEBUG
 ]);
@@ -1502,16 +1502,17 @@ void send_result(mapping|void result)
       file = http_low_answer(misc->error_code, errors[misc->error]);
     else if(err = catch {
       file=http_low_answer(404,
+			   parse_rxml(
 #ifdef OLD_RXML_COMPAT
-			   replace(parse_rxml(conf->query("ZNoSuchFile"),
-					      this_object()),
-				   ({"$File", "$Me"}),
-				   ({not_query,
-				     conf->query("MyWorldLocation")})));
+				      replace(conf->query("ZNoSuchFile"),
+					      ({"$File", "$Me"}),
+					      ({ "&page.virtfile;",
+						 conf->query("MyWorldLocation")
+					      })),
 #else
-			   parse_rxml(conf->query("ZNoSuchFile"),
-                                      this_object()));
+				      conf->query("ZNoSuchFile"),
 #endif
+                                      this_object()));
     }) {
       INTERNAL_ERROR(err);
     }
