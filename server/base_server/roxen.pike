@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.791 2002/04/23 16:20:51 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.792 2002/04/24 15:31:24 grubba Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -1223,6 +1223,10 @@ class Protocol
     if (!path && sizeof (Array.uniq (values (urls)->path)) == 1)
       path = values (urls)[0]->path;
     sorted_urls -= ({_name});
+#ifdef PORT_DEBUG
+    report_debug("Protocol(%s://%s:%d/)->unref(%O): refs:%d\n",
+		 name, ip, port, _name, refs);
+#endif /* PORT_DEBUG */
     if( !--refs ) {
       if (port_obj) {
 	destruct(port_obj);
@@ -4365,6 +4369,8 @@ void check_commit_suicide()
       ->get_next( query("last_suicide") );
     if (next >= 0 && next <= time(1)) {
       report_notice("Auto Restart triggered.\n");
+      set( "last_suicide", time(1) );
+      save( );
       restart();
     } else {
       call_out(check_commit_suicide, next - time(1));
@@ -4383,9 +4389,10 @@ void check_suicide( )
   if (query("suicide_engage")) {
     int next = getvar("suicide_schedule")
       ->get_next( query("last_suicide") );
-    if( next >= 0 && next <= time() )
+    if( !query("last_suicide") || (next >= 0 && next <= time()) )
     {
       set( "last_suicide", time() );
+      save( );
     }
   }
 }
