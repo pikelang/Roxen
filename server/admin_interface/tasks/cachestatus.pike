@@ -84,7 +84,8 @@ string parse( RequestID id )
     }
     res->add( "<tr align=\"right\" bgcolor=\"&usr.fade3;\">"
 	      "<td align=\"left\">&nbsp;</td><td>",
-	      (string)totale, "</td><td>", String.int2size(totalm), "</td>"
+	      (string)totale, "</td><td>",
+	      totalm==-1 ? "unknown" : String.int2size(totalm), "</td>"
 	      "<td>", (string)totalh, "</td><td>", (string)(totalt-totalh),
 	      "</td>" );
     if(totalt)
