@@ -1,5 +1,7 @@
-constant cvs_version="$Id: newpikescript.pike,v 1.14 2000/02/16 07:16:42 per Exp $";
+constant cvs_version="$Id: newpikescript.pike,v 1.15 2000/02/17 08:42:43 per Exp $";
 constant thread_safe=1;
+
+#include <module.h>
 
 #if !constant(Remote)
 #if constant(roxen)

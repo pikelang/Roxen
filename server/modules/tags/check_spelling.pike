@@ -3,7 +3,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: check_spelling.pike,v 1.5 1999/09/25 22:57:20 nilsson Exp $";
+constant cvs_version = "$Id: check_spelling.pike,v 1.6 2000/02/17 08:42:43 per Exp $";
 
 #define FILE "etc/errordata"
 
@@ -58,7 +58,7 @@ string api_do_spell(object id, string q, int warn)
   return do_spell("spell", (["warn":warn]), q);
 }
 
-// compat code..  
+// compat code..
 void add_api_function( string name, function f, void|array(string) types)
 {
   if(this_object()["_api_functions"])
@@ -73,7 +73,8 @@ void start(int arg)
   int e;
   if(arg) return;
 
-  string l,*r,wrong,right;
+  string l,wrong,right;
+  array(string) r;
   int e;
 
   l=Stdio.read_bytes(FILE);
@@ -107,7 +108,7 @@ string status()
 {
   int c;
   c=right+wrong+unknown+deduced_right+deduced_wrong+names+1;
-  
+
   return (sprintf("<pre>Checked words          :%7d\n"+
 		"Known correct words    :%7d\n"+
 		"Known incorrect words  :%7d\n"+
@@ -150,7 +151,7 @@ string spellit(string word,int warn)
   {
     right++;
     return 0;
-  }  
+  }
 
   if(warn<2)
   {
@@ -173,7 +174,7 @@ string spellit(string word,int warn)
 	{
 	  deduced_right++;
 	  return 0;
-	}  
+	}
       }
 
       /* -ies  & -ied-> -y */
@@ -189,7 +190,7 @@ string spellit(string word,int warn)
 	{
 	  deduced_right++;
 	  return 0;
-	}  
+	}
       }
 
       if(last=="ing")
@@ -204,11 +205,11 @@ string spellit(string word,int warn)
 	{
 	  deduced_right++;
 	  return 0;
-	}  
-  
+	}
+
 	/* -ing -> -e */
 	tmp+="e";
-  
+
 	if(t=w_to_r[tmp])
 	{
 	  deduced_wrong++;
@@ -218,14 +219,14 @@ string spellit(string word,int warn)
 	{
 	  deduced_right++;
 	  return 0;
-	}  
+	}
       }
 
       /* -ion -> -e */
       if(last=="ion")
       {
 	tmp=word[0..strlen(word)-4]+"e";
-  
+
 	if(t=w_to_r[tmp])
 	{
 	  deduced_wrong++;
@@ -235,7 +236,7 @@ string spellit(string word,int warn)
 	{
 	  deduced_right++;
 	  return 0;
-	}  
+	}
       }
 
     case 2:
@@ -245,7 +246,7 @@ string spellit(string word,int warn)
       if(last=="ed")
       {
 	tmp=word[0..strlen(word)-3];
-  
+
 	if(t=w_to_r[tmp])
 	{
 	  deduced_wrong++;
@@ -255,7 +256,7 @@ string spellit(string word,int warn)
 	{
 	  deduced_right++;
 	  return 0;
-	}  
+	}
 	tmp+="e";
 	if(t=w_to_r[tmp])
 	{
@@ -266,14 +267,14 @@ string spellit(string word,int warn)
 	{
 	  deduced_right++;
 	  return 0;
-	}  
+	}
       }
 
       /* -'s */
       if(last=="'s")
       {
 	tmp=word[0..strlen(word)-3];
-  
+
 	if(t=w_to_r[tmp])
 	{
 	  deduced_wrong++;
@@ -283,7 +284,7 @@ string spellit(string word,int warn)
 	{
 	  deduced_right++;
 	  return 0;
-	}  
+	}
       }
 
 
@@ -293,7 +294,7 @@ string spellit(string word,int warn)
       if(word[-1]=='s')
       {
 	tmp=word[0..strlen(word)-2];
-  
+
 	if(t=w_to_r[tmp])
 	{
 	  deduced_wrong++;
@@ -306,7 +307,7 @@ string spellit(string word,int warn)
 	}
 
       }
-  
+
     case 0:
     }
 #if 0
@@ -322,7 +323,7 @@ string spellit(string word,int warn)
   return 0;
 }
 
-string *unique(string *str)
+array(string) unique(array(string) str)
 {
   int e;
   mapping q;
@@ -332,13 +333,13 @@ string *unique(string *str)
   return indices(q);
 }
 
-string *magic(string text,int warn)
+array(string) magic(string text,int warn)
 {
-  string *words;
+  array(string) words;
   int e;
   text=lower_case(text);
-  text=replace(text,"-\n",""); 
-  text=replace(text,"<"," "); 
+  text=replace(text,"-\n","");
+  text=replace(text,"<"," ");
   text=replace(text,">"," ");
   text=replace(text,"."," ");
   text=replace(text,":"," ");

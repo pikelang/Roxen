@@ -4,7 +4,7 @@
 // mapping. Given the file 'foo.html', it will per default
 // set the contenttype to 'text/html'
 
-constant cvs_version = "$Id: contenttypes.pike,v 1.17 2000/02/10 06:44:08 nilsson Exp $";
+constant cvs_version = "$Id: contenttypes.pike,v 1.18 2000/02/17 08:42:43 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -20,8 +20,8 @@ void create()
 	 "# Feel free to add to this, but do it after the #include line if\n"
 	 "# you want to override any defaults\n"
 	 "\n"
-	 "#include <etc/extensions>\n\n", "Extensions", 
-	 TYPE_TEXT_FIELD, 
+	 "#include <etc/extensions>\n\n", "Extensions",
+	 TYPE_TEXT_FIELD,
 	 "This is file extension "
 	 "to content type mapping. The format is as follows:\n"
 	 "<pre>extension type encoding\ngif image/gif\n"
@@ -31,7 +31,7 @@ void create()
 	 ".isi.edu/in-notes/iana/assignments/media-types/media-types</a>");
 
   defvar("default", "application/octet-stream", "Default content type",
-	 TYPE_STRING, 
+	 TYPE_STRING,
 	 "This is the default content type which is used if a file lacks "
 	 "extension or if the extension is unknown.\n");
 }
@@ -48,7 +48,7 @@ string status()
 void parse_ext_string(string exts)
 {
   string line;
-  string *f;
+  array(string) f;
 
   foreach((exts-"\r")/"\n", line)
   {
@@ -59,7 +59,8 @@ void parse_ext_string(string exts)
       if(sscanf(line, "#include <%s>", file))
       {
 	string s;
-	if(s=Stdio.read_bytes(file)) parse_ext_string(s);
+	if(s=Stdio.read_bytes(file))
+          parse_ext_string(s);
       }
     } else {
       f = (replace(line, "\t", " ")/" "-({""}));

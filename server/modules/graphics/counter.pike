@@ -23,7 +23,7 @@
 // -----------------------------------------------------------------------
 //
 
-constant cvs_version = "$Id: counter.pike,v 1.29 2000/02/10 05:29:53 nilsson Exp $";
+constant cvs_version = "$Id: counter.pike,v 1.30 2000/02/17 08:42:43 per Exp $";
 
 constant copyright = ("<br>Copyright 1997-1999 "
 		    "<a href=http://savage.apostols.org/>Jordi Murgo</a> and "
@@ -245,7 +245,8 @@ mapping find_file_ppm( string f, RequestID id )
   string counter;
   Image.Image digit, img;
   float scale;
-  string buff, dir, *us;
+  string buff, dir;
+  array(string) us;
   array (string)strcounter;
   if(sscanf(f, "%s/%s/%s/%d/%d/%f/%d/%s/%s.%*s",
 	    user, bg, fg, trans, len, scale, rot, fontname, counter) != 10 )
@@ -333,7 +334,7 @@ mapping find_file_ppm( string f, RequestID id )
   }
 
   if(trans)
-    return http_string_answer(Image.GIF.encode_trans(img, ct, @parse_color(bg)), 
+    return http_string_answer(Image.GIF.encode_trans(img, ct, @parse_color(bg)),
 			      "image/gif");
   else
     return http_string_answer(Image.GIF.encode(img, ct),"image/gif");
@@ -344,7 +345,7 @@ mapping find_internal( string f, RequestID id )
   if(f[0..1] == "0/")
     return find_file_font( f, id );	// Umm, standard Font
   else
-    return find_file_ppm( f, id ); // Otherwise PPM/GIF 
+    return find_file_ppm( f, id ); // Otherwise PPM/GIF
 }
 
 constant cargs=({"bgcolor","fgcolor","trans","rotate","nfont","style","len","size"});

@@ -391,7 +391,8 @@ string|array container_apre(string tag, mapping m, string q, RequestID id)
   if(m->add || m->drop) return ({1});
   old_rxml_warning(id, "prestates as atomic attributs in apre tag","add and drop");
 
-  string href, s, *foo;
+  string href, s;
+  array(string) foo;
 
   if(!(href = m->href))
     href=strip_prestate(strip_config(id->raw_url));

@@ -1,4 +1,4 @@
-constant cvs_version="$Id: countdown.pike,v 1.26 2000/02/16 11:07:24 per Exp $";
+constant cvs_version="$Id: countdown.pike,v 1.27 2000/02/17 08:42:43 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -141,7 +141,7 @@ string show_number(int n, mapping m, RequestID id)
 string time_period(int t, int prec)
 {
   int i;
-  string *tmp=({});
+  array(string) tmp=({});
   if(!t)
     return "zero seconds";
 

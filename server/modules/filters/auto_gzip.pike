@@ -2,7 +2,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: auto_gzip.pike,v 1.8 2000/02/16 07:16:54 per Exp $";
+constant cvs_version = "$Id: auto_gzip.pike,v 1.9 2000/02/17 08:42:43 per Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST;
 constant module_name = "Automatic sending of compressed files";
@@ -22,7 +22,6 @@ constant module_doc  = "This module implements a suggestion by Francesco Chemoll
 
 mapping first_try(RequestID id)
 {
-  NOCACHE();
   if(id->supports->autogunzip &&
      (id->conf->real_file(id->not_query + ".gz", id)
       && id->conf->stat_file(id->not_query + ".gz", id)))

@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.71 2000/02/16 15:29:56 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.72 2000/02/17 08:42:44 per Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -744,7 +744,7 @@ string tag_modified(string tag, mapping m, RequestID id, Stdio.File file)
 
 string|array(string) tag_user(string tag, mapping m, RequestID id, Stdio.File file)
 {
-  string *u;
+  array(string) u;
   string b, dom;
 
   if(!id->conf->auth_module)
@@ -946,7 +946,8 @@ string container_foreach(string t, mapping args, string c, RequestID id)
 
 string container_apre(string tag, mapping m, string q, RequestID id)
 {
-  string href, s, *foo;
+  string href, s;
+  array(string) foo;
 
   if(!(href = m->href))
     href=strip_prestate(strip_config(id->raw_url));

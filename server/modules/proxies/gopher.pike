@@ -2,7 +2,7 @@
 
 // Gopher proxy module.
 
-constant cvs_version = "$Id: gopher.pike,v 1.20 2000/02/16 07:16:38 per Exp $";
+constant cvs_version = "$Id: gopher.pike,v 1.21 2000/02/17 08:42:43 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -45,7 +45,7 @@ void create()
 }
 
 
-string make_html_line(string *s)
+string make_html_line(array(string) s)
 {
   if(s)
     return sprintf("<a href=\"%s\"> <img hspace=5 border=0 "

@@ -1,10 +1,10 @@
-/* $Id: module.pike,v 1.80 2000/02/16 07:09:55 per Exp $ */
+/* $Id: module.pike,v 1.81 2000/02/17 08:42:42 per Exp $ */
 
 #include <module_constants.h>
 #include <module.h>
 #include <request_trace.h>
 
-mapping (string:mixed *) variables=([]);
+mapping (string:array) variables=([]);
 RoxenModule this = this_object();
 mapping(string:array(int)) error_log=([]);
 
