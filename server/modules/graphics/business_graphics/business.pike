@@ -10,7 +10,7 @@
  * reference cache shortly.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.59 1997/12/21 21:59:39 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.60 1998/01/12 12:17:10 hedda Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -155,8 +155,8 @@ void create()
 string itag_xaxis(string tag, mapping m, mapping res)
 {
   if(m->name)  res->xname = m->name;  
-  if(m->start) res->xstart = m->start;
-  if(m->stop)  res->xstop = m->stop;
+  if(m->start) res->xstart = (float)m->start;
+  if(m->stop)  res->xstop = (float)m->stop;
   if(m->quantity) res->xstor = m->quantity;
   if(m->unit) res->xunit = m->unit;
 
@@ -166,8 +166,8 @@ string itag_xaxis(string tag, mapping m, mapping res)
 string itag_yaxis(string tag, mapping m, mapping res)
 {
   if(m->name)  res->yname = m->name;
-  if(m->start) res->ystart = m->start;
-  if(m->stop)  res->ystop = m->stop;
+  if(m->start) res->ystart = (float)m->start;
+  if(m->stop)  res->ystop = (float)m->stop;
   if(m->quantity) res->ystor = m->quantity;
   if(m->unit) res->yunit = m->unit;
 
