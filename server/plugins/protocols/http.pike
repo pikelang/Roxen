@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.408 2004/06/04 22:39:22 _cvs_stephen Exp $";
+constant cvs_version = "$Id: http.pike,v 1.409 2004/06/04 22:57:06 _cvs_stephen Exp $";
 //#define REQUEST_DEBUG
 //#define CONNECTION_DEBUG
 #define MAGIC_ERROR
@@ -286,60 +286,6 @@ string scan_for_query( string f )
   return f;
 }
 
-#define OLD_RXML_CONFIG
-
-#ifdef OLD_RXML_CONFIG
-private void really_set_config(array mod_config)
-{
-  string url;
-
-  if(sscanf(replace(raw_url,({"%3c","%3e","%3C","%3E" }),
-                    ({"<",">","<",">"})),"/<%*s>/%s",url)!=2)
-    url = "/";
-  else
-    url = "/"+url;
-
-  multiset do_mod_config( multiset config )
-  {
-    if(!mod_config) return config;
-    foreach(mod_config, string m)
-      if(m[0]=='-')
-        config[m[1..]]=0;
-      else
-        config[m]=1;
-    return config;
-  };
-
-  void do_send_reply( string what, string url ) {
-    CHECK_FD_SAFE_USE;
-    url = url_base() + url[1..];
-    my_fd->set_blocking();
-    my_fd->write( prot + " 302 ChiliMoon config coming up\r\n"+
-                  (what?what+"\r\n":"")+"Location: "+url+"\r\n"
-                  "Connection: close\r\nDate: "+
-                  Roxen.http_date(predef::time(1))+
-                  "\r\nContent-Type: text/html\r\n"
-                  "Content-Length: 1\r\n\r\nx" );
-    my_fd->close();
-    my_fd = 0;
-    end();
-  };
-
-  if(supports->cookies)
-  {
-    do_send_reply("Set-Cookie: "+
-         Roxen.http_roxen_config_cookie(indices(do_mod_config(config))*","),
-                  url );
-    return;
-  }
-  if (sscanf(replace(url, ({ "%28", "%29" }), ({ "(", ")" })),
-             "/(%*s)/%s", url) == 2)
-    url = "/" + url;
-    
-  do_send_reply(0,Roxen.add_pre_state( url, do_mod_config( prestate ) ));
-}
-#endif
-
 private static mixed f, line;
 private static int hstart;
 
@@ -365,10 +311,6 @@ mapping(string:string) parse_cookies( string contents )
       value=http_decode_string(value);
       name=http_decode_string(name);
       cookies[ name ]=value;
-#ifdef OLD_RXML_CONFIG
-      if( (name == "RoxenConfig") && sizeof(value) )
-	config =  mkmultiset( value/"," );
-#endif
     }
   }
   return cookies;
@@ -376,10 +318,6 @@ mapping(string:string) parse_cookies( string contents )
 
 int things_to_do_when_not_sending_from_cache( )
 {
-#ifdef OLD_RXML_CONFIG
-  array mod_config;
-  int config_in_url;
-#endif
   array|string contents;
   misc->pref_languages=PrefLanguages();
 
@@ -418,27 +356,11 @@ int things_to_do_when_not_sending_from_cache( )
   if( has_value(f, "\0") )
      sscanf(f, "%s\0", f);
   
-  if( sizeof( f ) > 5 )
-  {
+  if(sizeof(f)>=4 && f[1]=='(') {
     string a;
-    switch( f[1] )
-    {
-#ifdef OLD_RXML_CONFIG
-      case '<':
-        if (sscanf(f, "/<%s>/%s", a, f)==2)
-        {
-          config_in_url = 1;
-          mod_config = (a/",");
-          f = "/"+f;
-        }
-#endif
-        // intentional fall-through
-     case '(':
-       if(sizeof(f) && sscanf(f, "/(%s)/%s", a, f)==2)
-       {
-         prestate = (multiset)( a/","-({""}) );
-         f = "/"+f;
-       }
+    if(sscanf(f, "/(%s)/%s", a, f)==2) {
+      prestate = (multiset)( a/","-({""}) );
+      f = "/"+f;
     }
   }
 
@@ -486,13 +408,6 @@ int things_to_do_when_not_sending_from_cache( )
     }
     raw = tmp2 * "\n";
   }
-#ifdef OLD_RXML_CONFIG
-  if(config_in_url) {
-    //REQUEST_WERR("HTTP: parse_got(): config_in_url");
-    really_set_config( mod_config );
-    return 1;
-  }
-#endif
   if(!supports->cookies)
     config = prestate;
   else
