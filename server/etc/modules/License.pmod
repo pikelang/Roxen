@@ -2,7 +2,7 @@
 //
 // Created 2002-02-18 by Marcus Wellhardh.
 //
-// $Id: License.pmod,v 1.1 2002/02/26 13:18:59 wellhard Exp $
+// $Id: License.pmod,v 1.2 2002/02/26 15:31:04 wellhard Exp $
 
 #if constant(roxen)
 #define INSIDE_ROXEN
@@ -64,7 +64,7 @@ class Key
   int write()
   {
     string license_name = combine_path(license_dir, filename);
-    string s = sprintf("Roxen License:\n %O\n-START-\n%s",
+    string s = sprintf("Roxen License:\n %O\n-START-\n%s\n-END-\n",
 		       content,
 		       MIME.encode_base64(encrypt(encode_value(content))));
     int bytes = Stdio.write_file(license_name, s);
@@ -80,7 +80,7 @@ class Key
     if(!s)
       error("Can't read license file %s.\n", license_name);
     int bytes = sizeof(s);
-    if(sscanf(s, "Roxen%*s\n-START-\n%s", s) < 2)
+    if(sscanf(s, "Roxen%*s\n-START-\n%s\n-END-\n", s) < 2)
       error("Malformed license file %s.\n", license_name);
     s = MIME.decode_base64(s);
     string msg = decrypt(s);
