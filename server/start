@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.58 1998/11/28 20:46:03 grubba Exp $
+# $Id: start,v 1.59 1998/11/28 21:08:14 grubba Exp $
 
 cd `dirname $0`
 
@@ -316,9 +316,9 @@ rotate () {
 
 start_roxen() {
   if [ x$DIR != xconfigurations ] ; then 
-    args="-DROXEN $DEBUG $DEFINES $pass $program --config-dir=$DIR"
+    args="-DROXEN $DEBUG $DEFINES $program --config-dir=$DIR $pass"
   else
-    args="-DROXEN $DEBUG $DEFINES $pass $program"
+    args="-DROXEN $DEBUG $DEFINES $program $pass"
   fi
   if [ x$cd_to != x ] ; then 
     cd $cd_to
