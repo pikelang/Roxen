@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.110 1999/04/25 16:52:45 marcus Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.111 1999/05/22 23:39:12 mast Exp $";
 //inherit "roxenlib";
 
 inherit "config/draw_things";
@@ -1336,11 +1336,7 @@ mapping configuration_parse(object id)
     };
     if(full_version)
       catch {
-#ifndef WEAK_CRYPTO_40BIT
-	if(search(Stdio.read_bytes("protocols/ssl3.pike"),
-		  "WEAK_CRYPTO_40BIT")<0)
-#endif
-	{
+	if(!SSL.constants()->CIPHER_des) {
 	  half_version = 1;
 	  full_version = 0;
 	}
