@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module_support.pike,v 1.103 2001/08/31 06:22:37 per Exp $
+// $Id: module_support.pike,v 1.104 2001/10/04 14:45:31 per Exp $
 
 #define IN_ROXEN
 #include <roxen.h>
@@ -548,7 +548,8 @@ array(ModuleInfo) all_modules()
 
   map( possible, find_module, 1 );
   array(ModuleInfo) tmp = values( modules ) - ({ 0 });
-  sort( tmp->get_name(), tmp );
+  tmp = filter( tmp, "get_name" );
+  sort( (array(string))(tmp->get_name()), tmp );
   report_debug("\bDone [%dms]\n", (gethrtime()-t)/1000 );
 
   return all_modules_cache = tmp;
