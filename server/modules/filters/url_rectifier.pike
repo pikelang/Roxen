@@ -1,7 +1,7 @@
 // This module implements an IE5/Macintosh fix; if no file is found, assume
 // the url is UTF-8 or Macintosh encoded.
 
-string cvs_version = "$Id: url_rectifier.pike,v 1.2 1999/08/14 13:31:18 jhs Exp $";
+string cvs_version = "$Id: url_rectifier.pike,v 1.3 1999/09/17 20:33:59 nilsson Exp $";
 #include <module.h>
 inherit "module";
 
@@ -14,7 +14,7 @@ mapping(string:object) decoders = mkmapping( encodings,
 
 array (mixed) register_module()
 {
-  return ({ MODULE_LAST, "De-UTF8", // Perhaps a bit misleading nowadays?
+  return ({ MODULE_LAST, "URL Rectifier",
             "If no file is found, assume the url is "
 	    "UTF-8 or Macintosh encoded and try again.",
 	     0, 1 });
