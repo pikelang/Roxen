@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.253 2001/07/09 23:23:05 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.254 2001/07/10 02:43:43 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2065,6 +2065,7 @@ class UserTagContents
 
     array do_return()
     {
+      RXML.Context ctx = RXML_CONTEXT;
       RXML.Frame upframe;
       if (frame) upframe = frame->up;
       else {
@@ -2079,8 +2080,31 @@ class UserTagContents
       if (!upframe)
 	parse_error ("No associated defined tag to get contents from.\n");
 
+      array ret = upframe->user_tag_contents;
+
+      if (ctx->scopes == upframe->saved_scopes)
+	ret[1] = RXML.nil;
+      else {
+	// This is poking in the internals; there ought to be some
+	// sort of interface here.
+	ret[1] = lambda (mapping(string:mixed) old_scopes,
+			 mapping(RXML.Frame:array) old_hidden)
+		 {
+		   // Wrap this in a lambda to avoid getting all the
+		   // locals in do_return in the dynamic frame.
+		   return lambda()
+			  {
+			    RXML_CONTEXT->scopes = old_scopes;
+			    RXML_CONTEXT->hidden = old_hidden;
+			    return RXML.nil;
+			  };
+		 } (ctx->scopes, ctx->hidden);
+	ctx->scopes = upframe->saved_scopes;
+	ctx->hidden = upframe->saved_hidden;
+      }
+
       if (upframe->compile) flags |= RXML.FLAG_COMPILE_RESULT;
-      return upframe->user_tag_contents;
+      return ret;
     }
   }
 }
@@ -2124,27 +2148,30 @@ class UserTag {
   class Frame {
     inherit RXML.Frame;
     RXML.TagSet additional_tags = user_tag_contents_tag_set;
-    mapping vars;
-    string content_text;
-    string raw_tag_text;
-    array tagdef;
     string scope_name;
-    constant is_user_tag = 1;
-    array(string|RXML.PCode) user_tag_contents;
+    mapping vars;
+    string raw_tag_text;
     int do_iterate;
+
+    constant is_user_tag = 1;
+    string content_text;
+    array(string|RXML.PCode) user_tag_contents;
+    mapping(string:mixed) saved_scopes;
+    mapping(RXML.Frame:array) saved_hidden;
     int compile;
 
     array do_enter (RequestID id)
     {
-      if ((tagdef = RXML_CONTEXT->misc[lookup_name]) && tagdef[0]) {
-	do_iterate = content_text ? -1 : 1;
-	return 0;
-      }
-      do_iterate = -1;
-      return ({propagate_tag()});
+      vars = 0;
+      do_iterate = content_text ? -1 : 1;
+      return 0;
     }
 
     array do_return(RequestID id) {
+      RXML.Context ctx = RXML_CONTEXT;
+      array tagdef = ctx->misc[lookup_name];
+      if (!tagdef || !tagdef[0]) return ({propagate_tag()});
+
       [array(string|RXML.PCode) def, mapping defaults,
        string def_scope_name, UserTag ignored] = tagdef;
       id->misc->last_tag_args = vars = defaults+args;
@@ -2183,13 +2210,24 @@ class UserTag {
 #endif
 	}
 	content_text = content;
-	user_tag_contents = ({content || ""});
-	compile = RXML_CONTEXT->make_p_code;
+	user_tag_contents = ({content || RXML.nil, 0});
+	compile = ctx->make_p_code;
       }
 
       vars->args = Roxen.make_tag_attributes(vars)[1..];
       vars["rest-args"] = Roxen.make_tag_attributes(args - defaults)[1..];
       vars->contents = content_text;
+
+      if (compat_level > "2.1") {
+	// Save the scope state so that we can switch back in
+	// <contents/>, thereby achieving static variable binding in
+	// the content. This is poking in the internals; there ought
+	// to be some sort of interface here.
+	saved_scopes = ctx->scopes + ([]);
+	saved_hidden = ctx->hidden + ([]);
+      }
+      else saved_scopes = ctx->scopes; // Makes the test in UserTagContents always true.
+
       return def;
     }
 
