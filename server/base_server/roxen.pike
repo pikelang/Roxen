@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.640 2001/03/05 18:18:41 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.641 2001/03/05 18:58:04 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread.
 Thread.Thread backend_thread;
@@ -2703,7 +2703,7 @@ class ArgCache
 
 #define CACHE_VALUE 0
 #define CACHE_SKEY  1
-#define CACHE_SIZE  600
+#define CACHE_SIZE  900
 #define CLEAN_SIZE  100
 
   static string lq, ulq;
@@ -2757,7 +2757,7 @@ class ArgCache
     master()->resolv( "DBManager.add_dblist_changed_callback" )( init_db );
   }
 
-  static string read_args( string id )
+  static string read_args( int id )
   {
     array res = db->query("SELECT contents FROM "+name+" WHERE id="+id);
     if( sizeof(res) )
@@ -2768,7 +2768,7 @@ class ArgCache
     return 0;
   }
 
-  static string create_key( string long_key )
+  static int create_key( string long_key )
   {
     array data = db->query("SELECT id,contents FROM "+name+" WHERE hash=%d",
 			   hash(long_key));
@@ -2779,7 +2779,7 @@ class ArgCache
     db->query( "INSERT INTO "+name+" (contents,hash,atime) VALUES "
 	       "(%s,%d,UNIX_TIMESTAMP())",
 	       long_key, hash(long_key) );
-    return (string)db->master_sql->insert_id();
+    return db->master_sql->insert_id();
   }
 
   static int low_key_exists( string key )
@@ -2794,7 +2794,7 @@ class ArgCache
     if( !secret )
       secret = query( "argcache_secret" );
   }
-  static string encode_id( string a, string b )
+  static string encode_id( int a, int b )
   {
     ensure_secret();
     object crypto = Crypto.arcfour();
@@ -2817,7 +2817,7 @@ class ArgCache
       // plugin decode here? 
       return 0;
     }
-    return ({ (string)i, (string)j });
+    return ({ i, j });
   }
   
   int key_exists( string key )
@@ -2840,36 +2840,30 @@ class ArgCache
     return id;
   }
 
-  static string low_store( array a )
+  static int low_store( array a )
   {
     string data = encode_value( a );
-    if( mixed q = cache[ data ] )
-      return q[ CACHE_SKEY ];
+    int hv = hash( data );
+    if( mixed q = cache[ hv ] )
+      return q;
     LOCK();
-    if( mixed q = cache[ data ] )
-      return q[ CACHE_SKEY ];
-
+#ifdef THREADS
+    if( mixed q = cache[ hv ] )
+      return q;
+#endif
     if( sizeof( cache ) >= CACHE_SIZE )
     {
       array i = indices(cache);
       while( sizeof(cache) > CACHE_SIZE-CLEAN_SIZE ) {
         string idx=i[random(sizeof(i))];
-        if(arrayp(cache[idx])) {
-          m_delete( cache, cache[idx][CACHE_SKEY] );
-          m_delete( cache, idx );
-        }
-        else {
-          m_delete( cache, cache[idx] );
-          m_delete( cache, idx );
-        }
+	m_delete( cache, cache[idx] );
+	m_delete( cache, idx );
       }
     }
 
-    string id = create_key( data );
-    cache[ data ] = ({ 0, 0 });
-    cache[ data ][ CACHE_VALUE ] = copy_value( a );
-    cache[ data ][ CACHE_SKEY ] = id;
-    cache[ id ] = data;
+    int id = create_key( data );
+    cache[ hv ] = id;
+    cache[ id ] = a;
     return id;
   }
 
@@ -2892,16 +2886,16 @@ class ArgCache
       return (cache[id] = mkmapping( a, b ))+([]);
   }
 
-  static array low_lookup( string id )
+  static array low_lookup( int id )
   {
     mixed v;
-    if( (v=cache[id]) && (v=cache[ v ]) )
-      return v[CACHE_VALUE];
+    if( v = cache[id] )
+      return v;
     string q = read_args( id );
     if(!q) error("Requesting unknown key\n");
     mixed data = decode_value(q);
-    cache[ q ] = ({data,id});
-    cache[ id ] = q;
+    cache[ hash( q ) ] = id;
+    cache[ id ] = data;
     return data;
   }
 
@@ -2910,14 +2904,14 @@ class ArgCache
   {
     m_delete( cache, id );
     
-    foreach( decode_id( id ), string id )
+    foreach( decode_id( id ), int id )
     {
       if(cache[id])
       {
 	m_delete( cache, cache[id] );
 	m_delete( cache, id );
       }
-      db->query( "DELETE FROM "+name+" WHERE id="+(int)id );
+      db->query( "DELETE FROM "+name+" WHERE id="+id );
     }
   }
 }
