@@ -8,13 +8,14 @@
 
 string parse( RequestID id )
 {
-  Variable.Variable v = Variable.get_variables(id->variables->variable);
+  Variable.Variable v =
+    Variable.get_variables(id->variables->variable);
 
   if(!v)
     return " Error in URL ";
   
   return sprintf( "<use file='/template' />\n"
                   "<tmpl title=' %s '>"
-                  "<content>%s</content></tmpl>", 
+                  "<content>%s</content></tmpl>",
 		  LOCALE(258,"Difference"), (v->diff(2)||"") );
 }
