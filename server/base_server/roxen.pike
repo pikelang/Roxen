@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.265 1999/04/20 01:44:25 mast Exp $
+ * $Id: roxen.pike,v 1.266 1999/04/22 09:28:06 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,9 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.265 1999/04/20 01:44:25 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.266 1999/04/22 09:28:06 per Exp $";
+
+object backend_thread;
 
 // Some headerfiles
 #define IN_ROXEN
@@ -86,6 +88,16 @@ class RequestID
   RequestID clone_me();
 };
 
+
+constant pipe = (program)"smartpipe";
+constant __roxen_version__ = "1.4";
+constant __roxen_build__ = "37";
+
+#ifdef __NT__
+constant real_version = "Roxen Challenger/"+__roxen_version__+"."+__roxen_build__+" NT";
+#else
+constant real_version = "Roxen Challenger/"+__roxen_version__+"."+__roxen_build__;
+#endif
 
 /*
  * The privilege changer.
@@ -353,11 +365,7 @@ static object PRIVS(string r, int|string|void u, int|string|void g)
 
 
 // The datashuffler program
-#if constant(spider.shuffle) && (defined(THREADS) || defined(__NT__))
 constant pipe = (program)"smartpipe";
-#else
-constant pipe = Pipe.pipe;
-#endif
 
 #if _DEBUG_HTTP_OBJECTS
 mapping httpobjects = ([]);
@@ -645,7 +653,7 @@ static int thread_reap_cnt;
 void handler_thread(int id)
 {
   array (mixed) h, q;
-  while(1)
+  while(!die_die_die)
   {
     if(q=catch {
       do {
@@ -675,7 +683,6 @@ void handler_thread(int id)
 
 void threaded_handle(function f, mixed ... args)
 {
-  // trace(100);
   handle_queue->write(({f, args }));
 }
 
@@ -709,7 +716,7 @@ void stop_handler_threads()
       perror("Giving up waiting on threads!\n");
       return;
     }
-    sleep(1);
+    sleep(0.1);
   }
 }
 
@@ -823,10 +830,8 @@ object configuration_interface()
   if(enabling_configurations)
     return 0;
   if(loading_config_interface)
-  {
     perror("Recursive calls to configuration_interface()\n"
 	   + describe_backtrace(backtrace())+"\n");
-  }
   
   if(!configuration_interface_obj)
   {
@@ -1478,7 +1483,14 @@ void create()
   add_constant("roxen", this_object());
   add_constant("RequestID", RequestID);
   add_constant("load",    load);
-  (object)"color.pike";
+
+  // compatibility
+  add_constant("hsv_to_rgb",  Colors.hsv_to_rgb  );
+  add_constant("rgb_to_hsv",  Colors.rgb_to_hsv  );
+  add_constant("parse_color", Colors.parse_color );
+  add_constant("color_name",  Colors.color_name  );
+  add_constant("colors",      Colors             );
+
   fonts = (object)"fonts.pike";
   Configuration = (program)"configuration";
   add_constant("Configuration", Configuration);
@@ -2462,10 +2474,31 @@ så här ofta. Tiden är angiven i dagar");
   {
     string c, v;
     if(sscanf(argv[p],"%s=%s", c, v) == 2)
+    {
+      sscanf(c, "%*[-]%s", c);
       if(variables[c])
-	variables[c][VAR_VALUE]=compat_decode_value(v);
+      {
+        if(catch{
+          mixed res = compile_string( "mixed f(){ return "+v+";}")()->f();
+          if(sprintf("%t", res) != sprintf("%t", variables[c][VAR_VALUE]) &&
+             res != 0 && variables[c][VAR_VALUE] != 0)
+            werror("Warning: Setting variable "+c+"\n"
+                   "to a value of a different type than the default value.\n"
+                   "Default was "+sprintf("%t", variables[c][VAR_VALUE])+
+                   " new is "+sprintf("%t", res)+"\n");
+          variables[c][VAR_VALUE]=res;
+        })
+        {
+          werror("Warning: Asuming '"+v+"' should be taken "
+                 "as a string value.\n");
+          if(!stringp(variables[c][VAR_VALUE]))
+            werror("Warning: Old value was not a string.\n");
+          variables[c][VAR_VALUE]=v;
+        }
+      }
       else
 	perror("Unknown variable: "+c+"\n");
+    }
   }
   docurl=QUERY(docurl2);
 
@@ -2782,11 +2815,7 @@ void exit_when_done()
 #ifdef THREADS
     stop_handler_threads();
 #endif /* THREADS */
-    add_constant("roxen", 0);	// Paranoia...
-    add_constant("roxenp", 0);	// Paranoia...
     exit(-1);	// Restart.
-    // kill(getpid(), 9);
-    // kill(0, -9);
   }
 
   // First kill off all listening sockets.. 
@@ -2919,6 +2948,7 @@ int main(int|void argc, array (string)|void argv)
 #ifdef THREADS
   start_handler_threads();
   catch( this_thread()->set_name("Backend") );
+  backend_thread = this_thread();
 #if efun(thread_set_concurrency)
   thread_set_concurrency(QUERY(numthreads)+1);
 #endif
