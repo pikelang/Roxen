@@ -180,17 +180,15 @@ mapping(string:object) get_objects(string lang) {
 }
 
 string translate(LocaleObject locale_object, string id,
-		 string str, mixed ... args)
+		 string str)
   //! Does a translation with the given locale object.
 {
-  string ret=str;
   if(locale_object) {
     locale_object->timestamp=time(1);
     string t_str = locale_object->translate(id);
-    if(t_str) ret=t_str;
+    if(t_str) return t_str;
   }
-  if(!sizeof(args)) return ret;
-  return sprintf(ret, @args);
+  return str;
 }
 
 void clean_cache() {
