@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.1 1998/07/07 15:27:14 grubba Exp $
+ * $Id: smtp.pike,v 1.2 1998/07/07 22:33:30 grubba Exp $
  *
  * SMTP support for Roxen.
  *
- * $Author: grubba $
+ * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.1 1998/07/07 15:27:14 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.2 1998/07/07 22:33:30 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -43,6 +43,25 @@ class Server {
       554:"Transaction failed",
     ]);      
 
+    constant command_help = ([
+      // SMTP Commands in the order from RFC 788
+      "HELO":"<sp> <host>",
+      "MAIL":"<sp> FROM:<reverse-path>",
+      "RCPT":"<sp> TO:<forward-path>",
+      "DATA":"",
+      "RSET":"",
+      "SEND":"<sp> FROM:<reverse-path>",
+      "SOML":"<sp> FROM:<reverse-path>",
+      "SAML":"<sp> FROM:<reverse-path>",
+      "VRFY":"<sp> <string>",
+      "EXPN":"<sp> <string>",
+      "HELP":"[<sp> <string>]",
+      "NOOP":"",
+      "QUIT":"",
+    ]);
+
+    int ehlo_mode;
+
     static void handle_command(string data)
     {
       int i = search(data, " ");
@@ -78,17 +97,39 @@ class Server {
       disconnect();
     }
 
+    void smtp_HELP(string help, string args)
+    {
+      array(string) res;
+      if (!sizeof(args)) {
+	res = ({ "This is " + roxen->version(),
+		 "Commands:",
+		 @(sprintf(" %#70s", sort(indices(command_help))*"\n")/"\n") });
+      } else if (command_help[upper_case(args)]) {
+	res = ({ upper_case(args) + " " + command_help[upper_case(args)] });
+      } else {
+	send(504, ({ sprintf("Unknown command %O", args) }));
+	return;
+      }
+      res += ({ "End of help" });
+      send(214, res);
+    }
+
     void ident_HELO(array(string) ident, string args)
     {
+      array(string) res;
       if (((ident[0] - " ") == "ERROR") || (sizeof(ident) < 3)) {
-	send(250, ({ sprintf("%s Hello %s [%s], pleased to meet you",
-			     gethostname(), args,
-			     (con->query_address()/" ")*":") }));
+	res = ({ sprintf("%s Hello %s [%s], pleased to meet you",
+			 gethostname(), args,
+			 (con->query_address()/" ")*":") });
       } else {
-	send(250, ({ sprintf("%s Hello %s@%s [%s], pleased to meet you",
-			     gethostname(), ident[2], args,
-			     (con->query_address()/" ")*":") }));
+	res = ({ sprintf("%s Hello %s@%s [%s], pleased to meet you",
+			 gethostname(), ident[2], args,
+			 (con->query_address()/" ")*":") });
       }
+      if (ehlo_mode) {
+	res += ({});	// Supported extensions...
+      }
+      send(250, res);
     }
 
     void smtp_HELO(string helo, string args)
@@ -98,9 +139,8 @@ class Server {
 
     void smtp_EHLO(string ehlo, string args)
     {
-      send(250, ({ sprintf("%s Hello %s [%s], pleased to meet you",
-			   gethostname(), args,
-			   (con->query_address()/" ")*":") }));
+      ehlo_mode = 1;
+      Protocols.Ident->lookup_async(con, ident_HELO, args);
     }
 
 
@@ -132,6 +172,7 @@ class Server {
     {
       if (!sizeof(sender)) {
 	send(503);
+	return;
       }
       int i = search(args, ":");
       if (i >= 0) {
@@ -158,6 +199,15 @@ class Server {
 
     void smtp_DATA(string data, string args)
     {
+      if (!sizeof(sender)) {
+	send(503, ({ "Need sender (MAIL FROM)" }));
+	return;
+      }
+      if (!sizeof(recipients)) {
+	send(503, ({ "Need recipient list (RCPT TO)" }));
+	return;
+      }
+      
       send(354);
       handle_data = handle_DATA;
     }
@@ -192,14 +242,32 @@ class Server {
 
   void create(object|mapping callbacks, int|void portno, string|void host)
   {
-    portno = portno || 25;	// SMTP
+    portno = portno || Protocols.Ports.tcp.smtp;
 
-    int res;
-    if (host) {
-      res = port->bind(portno, got_connection, host);
-    } else {
-      res = port->bind(portno, got_connection);
+    object privs;
+
+    if (portno < 1024) {
+      privs = Privs("Opening port below 1024 for SMTP.\n");
     }
+
+    mixed err;
+    int res;
+    err = catch {
+      if (host) {
+	res = port->bind(portno, got_connection, host);
+      } else {
+	res = port->bind(portno, got_connection);
+      }
+    };
+
+    if (privs) {
+      destruct(privs);
+    }
+
+    if (err) {
+      throw(err);
+    }
+
     if (!res) {
       throw(({ "Failed to bind to port\n", backtrace() }));
     }
@@ -220,6 +288,12 @@ array register_module()
 	   "Experimental module for receiving mail." });
 }
 
+void create()
+{
+  defvar("port", Protocols.Ports.tcp.smtp, "SMTP port number", TYPE_INT,
+	 "Portnumber to listen to. Usually " + Protocols.Ports.tcp.smtp + ".\n");
+}
+
 object smtp_server;
 
 void start(int i)
@@ -227,7 +301,7 @@ void start(int i)
   if (!smtp_server) {
     mixed err;
     err = catch {
-      smtp_server = Server(([]), 25252);
+      smtp_server = Server(([]), QUERY(port));
     };
     if (err) {
       report_error(sprintf("SMTP: Failed to initialize the server:\n"
