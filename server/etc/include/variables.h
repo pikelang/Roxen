@@ -1,5 +1,5 @@
 // -*- Pike -*-
-// $Id: variables.h,v 1.5 1998/08/20 07:38:44 per Exp $
+// $Id: variables.h,v 1.6 1998/11/02 07:01:34 per Exp $
 // Fallback-resources, don't change here.
 
 private static constant errors=
@@ -25,7 +25,7 @@ private static constant errors=
   407:"407 Proxy authorization needed",
   408:"408 Request timeout",
   409:"409 Conflict",
-  410:"410 This document is no more. It has gone to meet it's creator. It is gone. It will not be coming back. Give up. I promise. There is no such file or directory.",
+  410:"410 This document is no more. It has gone to meet its creator. It is gone. It will not be back. Give up. I promise. There is no such file or directory.",
   
   500:"500 Internal Server Error.",
   501:"501 Not Implemented",
