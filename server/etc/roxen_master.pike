@@ -5,7 +5,7 @@ inherit "/master": master;
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.106 2000/11/02 08:30:55 per Exp $";
+constant cvs_version = "$Id: roxen_master.pike,v 1.107 2000/11/13 09:57:05 per Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -624,20 +624,23 @@ int refresh( program p, int|void force )
 
 int recursively_check_inherit_time(program root, array up, mapping done)
 {
-  int res;
-  if( done[ root ]++ )
-    return 0;
-
-  foreach( Program.inherit_list( root ), program p )
-    res+=recursively_check_inherit_time( p, up+({root}), done );
-
-  if( !res && (refresh( root )>0 ))
+  catch
   {
-    res++;
-    map( up+({root}), refresh, 1 );
-  }
+    int res;
+    if( done[ root ]++ )
+      return 0;
 
-  return res;
+    foreach( Program.inherit_list( root ), program p )
+      res+=recursively_check_inherit_time( p, up+({root}), done );
+
+    if( !res && (refresh( root )>0 ))
+    {
+      res++;
+      map( up+({root}), refresh, 1 );
+    }
+
+    return res;
+  };
 }
 
 int refresh_inherit( program what )

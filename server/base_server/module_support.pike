@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module_support.pike,v 1.77 2000/09/25 07:03:12 per Exp $
+// $Id: module_support.pike,v 1.78 2000/11/13 09:57:04 per Exp $
 
 #include <roxen.h>
 #include <module_constants.h>
@@ -86,13 +86,99 @@ function|program load( string what, void|int silent )
 //
 object module_cache;
 
-class ModuleInfo
+class BasicModule
 {
-  string sname;
-  string filename;
+  inherit RoxenModule;
+  inherit "basic_defvar";
+  mapping error_log = ([]);
+  constant is_module = 1;
+  constant faked = 1;
+  static Configuration _my_configuration;
 
+  void report_fatal( mixed ... args )  { predef::report_fatal( @args );  }
+  void report_error( mixed ... args )  { predef::report_error( @args );  }
+  void report_notice( mixed ... args ) { predef::report_notice( @args ); }
+  void report_debug( mixed ... args )  { predef::report_debug( @args );  }
+
+  string file_name_and_stuff() { return ""; }
+  Configuration my_configuration() { return _my_configuration; }
+  nomask void set_configuration(Configuration c)
+  {
+    if(_my_configuration && _my_configuration != c)
+      error("set_configuration() called twice.\n");
+    _my_configuration = c;
+  }
+  void start(void|int num, void|Configuration conf) {}
+
+  string status() {}
+
+  string info(Configuration conf)
+  {
+    return (this_object()->register_module()[2]);
+  }
+
+  void save_me() {}
+  void save() {}
+  string comment() { return ""; }
+  array query_seclevels() { return ({}); }
+  mapping api_functions() { return ([]); }
+}
+
+class FakeModuleInfo( string sname )
+{
+  int last_checked = time();
+  constant filename = "NOFILE";
+  constant type = 0;
+  constant multiple_copies = 0;
+  string name, description;
+  
+  void save()  { }
+  void update_with( RoxenModule mod, string what )  { }
+  int init_module( string what )  { }
+  int rec_find_module( string what, string dir )  { }
+  int find_module( string sn )  { }
+  int check (void|int force) { }
+
+  static string _sprintf()
+  {
+    return "FakeModuleInfo("+sname+")";
+  }
+
+  string get_name()
+  {
+    return sname+" (not found)";
+  }
+
+  string get_description( )
+  {
+    return "This module was not found in the module path.";
+  }
+
+  class NotAModule
+  {
+    inherit BasicModule;
+    array register_module()
+    {
+      return ({
+	0, // type
+	"Unknown module '"+sname+"'",
+	"The module "+sname+"  could not be found in the module path.",
+	0,1
+      });
+    }
+  }
+
+  RoxenModule instance( Configuration conf, void|int silent )
+  {
+    return NotAModule();
+  }
+}
+
+class ModuleInfo( string sname, string filename )
+{
   int last_checked;
   int type, multiple_copies;
+
   mapping|string name;
   mapping|string description;
 
@@ -127,13 +213,44 @@ class ModuleInfo
     }
   }
 
-  RoxenModule instance( object conf, void|int silent )
+  static class LoadFailed(roxenloader.ErrorContainer ec) // faked module. 
   {
+    inherit BasicModule;
+
+    string get_compile_errors()
+    {
+      return ("<pre><font color='&usr.warncolor;'>"+
+	      Roxen.html_encode_string( ec->get()+"\n"+
+					ec->get_warnings() ) +
+	      "</font></pre>");
+    }
+
+    array register_module()
+    {
+      return ({
+	0, // type
+	"Load of "+sname+" ("+filename+") failed.",
+	"The module "+sname+" ("+get_name()+") could not be loaded."+
+	get_compile_errors(),
+      });
+    }
+  }
+  
+  RoxenModule instance( Configuration conf, void|int silent )
+  {
+    roxenloader.ErrorContainer ec = roxenloader.LowErrorContainer();
+    roxenloader.push_compile_error_handler( ec );
+    catch
+    {
 #if constant(Java.jvm)
-    if( filename[sizeof(filename)-6..]==".class" )
-      return ((program)"javamodule.pike")(conf, filename);
+      if( filename[sizeof(filename)-6..]==".class" ||
+	  filename[sizeof(filename)-4..]==".jar" )
+	return ((program)"javamodule.pike")(conf, filename);
 #endif
-    return load( filename, silent )( conf );
+      return load( filename, silent )( conf );
+    };
+    roxenloader.pop_compile_error_handler( );
+    return LoadFailed( ec );
   }
 
   void save()
@@ -226,6 +343,7 @@ class ModuleInfo
         {
           if( (search( file, ".pike" ) == strlen(file)-5 ) ||
               (search( file, ".so" ) == strlen(file)-3 ) ||
+              (search( file, ".jar" ) == strlen(file)-4 ) ||
               (search( file, ".class" ) == strlen(file)-6 ) )
           {
             Stdio.File f = Stdio.File( dir+file, "r" );
@@ -282,18 +400,6 @@ class ModuleInfo
     else
       return find_module( sname );
   }
-
-  static void create( string sn, string|void fname )
-  {
-    if( sname )
-    {
-      report_fatal( "IDI\n");
-      exit( 1 );
-    }
-    sname = sn;
-    if( fname )
-      filename = fname;
-  }
 }
 
 string strip_extention( string from )
@@ -330,7 +436,7 @@ array rec_find_all_modules( string dir )
         if( file[-1] == '~' ) continue;
         if( (< "so", "pike",
 #if constant(Java.jvm)
-	       "class"
+	       "class", "jar"
 #endif
 	>)[ extension( file ) ] )
         {
@@ -371,13 +477,13 @@ array(ModuleInfo) all_modules()
 
   foreach( roxenp()->query( "ModuleDirs" ), string dir )
     possible |= rec_find_all_modules( dir );
-  map( possible, find_module );
+  map( possible, find_module, 1 );
   array(ModuleInfo) tmp = values( modules ) - ({ 0 });
   sort( tmp->get_name(), tmp );
   return all_modules_cache = tmp;
 }
 
-ModuleInfo find_module( string name )
+ModuleInfo find_module( string name, int|void noforce )
 {
   if( !modules )
   {
@@ -388,10 +494,13 @@ ModuleInfo find_module( string name )
   if( modules[ name ] )
     return modules[ name ];
 
-  modules[ name ] = ModuleInfo( name );
+  modules[ name ] = ModuleInfo( name,0 );
 
   if( !modules[ name ]->check() )
     m_delete( modules, name );
 
+  if( !modules[ name ] && !noforce )
+    return FakeModuleInfo( name );
+  
   return modules[ name ];
 }

@@ -79,7 +79,10 @@ string rec_print_tree( array q )
 
 string inherit_tree( object m )
 {
-  if( m->get_inherit_tree )
-    return m->get_inherit_tree( );
-  return rec_print_tree( Program.inherit_tree( object_program(m) ) );
+  catch{ // won't work for programs in other programs.
+    if( m->get_inherit_tree )
+      return m->get_inherit_tree( );
+    return rec_print_tree( Program.inherit_tree( object_program(m) ) );
+  };
+  return "";
 }

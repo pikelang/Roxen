@@ -20,7 +20,7 @@ constant s = spider;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.212 2000/10/30 18:57:39 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.213 2000/11/13 09:57:04 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1124,11 +1124,18 @@ void push_compile_error_handler( _error_handler q )
   if( q->do_not_push )
     error("Attempting push of ErrorContainer. "
           "Only push LowErrorContainer classes\n");
+  if( !master()->get_inhibit_compile_errors() )
+    master()->set_inhibit_compile_errors( q );
   compile_error_handlers = ({q})+compile_error_handlers;
 }
 
 void pop_compile_error_handler()
 {
+  if( !sizeof( compile_error_handlers ) )
+    return;
+  if( master()->get_inhibit_compile_errors() == compile_error_handlers[0] )
+    master()->set_inhibit_compile_errors( (sizeof(compile_error_handlers) > 1)
+					  ?  compile_error_handlers[1] : 0 );
   compile_error_handlers = compile_error_handlers[1..];
 }
 
@@ -1136,6 +1143,7 @@ class LowErrorContainer
 {
   string d;
   string errors="", warnings="";
+  constant do_not_push = 0;
   string get()
   {
     return errors;

@@ -154,6 +154,7 @@ string buttons( Configuration c, string mn, RequestID id )
         mod = nm;
         m_delete(current_compile_errors, mn );
       }
+      mod = c->find_module( replace( mn,"!","#" ) );
     }
     else if( a == LOCALE(247, "Clear Log") )
     {
@@ -218,7 +219,8 @@ string buttons( Configuration c, string mn, RequestID id )
   if( c != id->conf )
 #endif
     buttons += "<submit-gbutton>"+LOCALE(253, "Reload")+"</submit-gbutton>";
-
+  if(!mod)
+    return buttons;
   if( sizeof( mod->error_log ) )
     buttons+="<submit-gbutton>"+LOCALE(247, "Clear Log")+"</submit-gbutton>";
 
@@ -357,7 +359,8 @@ string find_module_doc( string cn, string mn, RequestID id )
 		    + "<h2>"+LOCALE(261,"Inherit tree")+"</h2>"+
                     program_info( m ) +
                     "<dl>" + 
-                    inherit_tree( m ) + 
+                    (m->faked?"(Not on disk, faked module)":inherit_tree( m ))
+		    + 
                     "</dl>" 
                     : homepage + creators),
                   ({ "/image/", }), ({ "/internal-roxen-" }));

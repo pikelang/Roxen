@@ -1,6 +1,6 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.393 2000/11/13 04:16:36 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.394 2000/11/13 09:57:04 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2054,10 +2054,14 @@ RoxenModule reload_module( string modname )
   ModuleInfo mi = roxen.find_module( (modname/"#")[0] );
   if( !old_module ) return 0;
 
-  save_one( old_module );
+  master()->clear_compilation_failures();
 
-  master()->refresh_inherit( object_program( old_module ) );
-  master()->refresh( object_program( old_module ), 1 );
+  if( !old_module->fake )
+  {
+    save_one( old_module );
+    master()->refresh_inherit( object_program( old_module ) );
+    master()->refresh( object_program( old_module ), 1 );
+  }
 
   catch( disable_module( modname, 1 ) );
 
@@ -2070,6 +2074,7 @@ RoxenModule reload_module( string modname )
     foreach ((array) old_module->error_log, [string msg, array(int) times])
       nm->error_log[msg] += times;
 
+    ModuleInfo mi = roxen.find_module( (modname/"#")[0] );
     catch( mi->update_with( nm,0 ) ); // This is sort of nessesary...   
 
     nm->report_notice(LOC_C(11, "Reloaded %s.")+"\n", mi->get_name());
