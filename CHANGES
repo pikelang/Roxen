@@ -1,11 +1,15 @@
 Changes since Roxen 2.1.115
 -----------------------------------------------
 
+o Added built in unicode font. Changed the default font to said font.
+
 o GIF support disabled per default to make Unisys happy.
 
 o Updated all Roxen parts and products to work without GIF support.
 
 o All use of sendfile(2) in Stdio.sendfile() is now disabled.
+
+o Polished things up for release. Removed unfinished experimental code.
 
 
 Changes since Roxen 2.1.112
