@@ -48,7 +48,7 @@ static private array(string) truncate(array(string) arr, int len)
   if (sizeof(arr) <= len) {
     return(arr);
   } else {
-    return(({ (arr[..len-1]*",")+"..." }));
+    return(({ (arr[..len-1]*", ")+"..." }));
   }
 }
 
@@ -70,7 +70,7 @@ string describe_errors(object node)
 		   + "<font size=-1>"+
 		   truncate(Array.map(node->data[err],
 				      roxen->language("en","date")),5)*", "
-		   +"</font><br>" + err + "<p>" });
+		   +"</font><br>" + err + "<p>\n" });
 
   return (link("<font size=+2>&nbsp;Error and debug log")
 	  + "</font><dd><pre>"+
