@@ -2,7 +2,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: pathinfo.pike,v 1.12 2000/03/20 03:05:56 mast Exp $";
+constant cvs_version = "$Id: pathinfo.pike,v 1.13 2000/06/19 15:17:20 grubba Exp $";
 constant thread_safe = 1;
 
 #ifdef PATHINFO_DEBUG
@@ -20,6 +20,8 @@ file, but <tt>/index.html/a</tt> and <tt>/index.html/a/b</tt> aren't.
 In this case <tt>/index.html</tt> will be fetched, and the rest,
 <tt>/a/b</tt> is made available in the RXML variable page.pathinfo.";
 
+/* #define PATHINFO_LINEAR */
+
 mapping|int last_resort(object id)
 {
   PATHINFO_WERR(sprintf("Checking %O...", id->not_query));
@@ -30,6 +32,46 @@ mapping|int last_resort(object id)
   }
 
   string query = id->not_query;
+#ifndef PATHINFO_LINEAR
+  array(int) offsets = Array.map(query/"/", sizeof);
+
+  int sum = 0;
+  int i;
+  for (i=0; i < sizeof(offsets); i++) {
+    sum = (offsets[i] += sum) + 1;
+  }
+
+  int lo = (offsets[0] == 0);   // Skip testing the empty string.
+  int hi = sizeof(offsets) - 1;
+
+  while(lo <= hi) {             // Don't let the beams cross.
+    int probe = (lo + hi + 1)/2;
+    string file = query[..offsets[probe]-1];
+
+    PATHINFO_WERR(sprintf("Trying %O...", file));
+
+    /* Note: Zapps id->not_query. */
+    array st = id->conf->stat_file(file, id);
+    if (st) {
+      if (st[1] >= 0) {
+        // Found a file!
+        id->misc->path_info = query[offsets[probe]..];
+        id->not_query = file;
+        PATHINFO_WERR(sprintf("Found: %O:%O",
+			      id->not_query, id->misc->path_info));
+        return 1;       // Go through id->handle_request() one more time...
+      }
+      PATHINFO_WERR(sprintf("Directory: %O", file));
+      /* Hm. Lets try this: */
+      id->misc->path_info = query[offsets[probe]+1..];
+      id->not_query = file+"/";
+      return 1;
+      lo = probe + 1;
+    } else {
+      hi = probe - 1;
+    }
+  }
+#else /* PATHINFO_LINEAR */
   string pi = "";
   while( (search( query[1..], "/" ) != -1) && strlen( query ) > 0 )
   {
@@ -49,5 +91,6 @@ mapping|int last_resort(object id)
       return 1;
     }
   }
+#endif /* !PATHINFO_LINEAR */
   return 0;
 }
