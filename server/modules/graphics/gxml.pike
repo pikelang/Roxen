@@ -8,7 +8,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.22 2004/02/04 18:12:56 wellhard Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.23 2004/02/06 12:54:05 anders Exp $";
 constant module_type = MODULE_TAG;
 
 LocaleString module_name = _(1,"Graphics: GXML tag");
@@ -63,7 +63,10 @@ Image.Layer generate_image( mapping a, mapping node_tree, RequestID id )
     e = LazyImage.layers_extents( ll );
   
   // Crop to the left so that 0,0 is uppmost left corner.
-  return Image.lay( ll, e->x0, e->y0, e->x1, e->y1 );
+  // return Image.lay( ll, e->x0, e->y0, e->x1, e->y1 );
+
+  // Combine layers.
+  return Image.lay( ll );
 }
 
 
