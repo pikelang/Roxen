@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.94 2000/03/10 04:20:30 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.95 2000/03/13 02:40:42 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -935,12 +935,11 @@ class TagFor {
       return count<=to;
     }
 
-    /* FIXME
     array do_return(RequestID id) {
-      RXML.user_set_var(args->variable, count-step, args->scope);
+      if(args->variable) RXML.user_set_var(args->variable, count-step, args->scope);
+      result=content;
       return 0;
     }
-    */
   }
 }
 
