@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997-2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.79 2001/06/15 11:48:09 jonasw Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.80 2001/08/01 17:10:25 per Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -127,11 +127,6 @@ array|object do_sql_query(mapping args, RequestID id,
     host=args->host;
     args->host="SECRET";
   }
-  if(args->db) {
-    host = args->db;
-    args->db = "SECRET";
-  }
-
 #if ROXEN_COMPAT <= 2.1
   if (args->parse && compat_level < "2.2")
     args->query = Roxen.parse_rxml(args->query, id);
@@ -140,50 +135,61 @@ array|object do_sql_query(mapping args, RequestID id,
   Sql.Sql con;
   array(mapping(string:mixed))|object result;
   mixed error;
-  
-#if ROXEN_COMPAT <= 1.3
-  if( !args->db && (host || query("db")==" none") )
+  int ro = !!args["read-only"];
+
+  if( args->module )
   {
-    function sql_connect = id->conf->sql_connect;
-    error = catch(con = sql_connect(host || compat_default_host));
+    RoxenModule module=id->conf->find_module(replace(args->module,"!","#"));
+    if( !module )
+      RXML.run_error( (string)LOCALE(0,"Cannot find the module %s"),
+		      args->module );
 
-    if (error)
+    if( catch( con = module->get_my_sql( ro ) ) )
       RXML.run_error(LOCALE(3,"Couldn't connect to SQL server")+
-                     ": "+error[0]+"\n");
-
-    // Got a connection now. Any errors below this point ought to be
-    // syntax errors and should be reported with parse_error.
+		     ": "+error[0]+"\n");
+      
+    if( catch
+    {
+      string f=(big_query?"big_query":"query")+(ro?"_ro":"");
+      result = module["sql_"+f]( args->query );
+    } )
+    {
+      error = con->error();
+      if (error) error = ": " + error;
+      error = sprintf("Query failed%s\n", error||".");
+      RXML.parse_error(error);
+    }
   }
   else
   {
-#endif
-    error = catch(con = DBManager.get( host || default_db || compat_default_host,
-				       my_configuration() ));
-    if (error)
-      RXML.run_error(LOCALE(3,"Couldn't connect to SQL server")+
-                     ": "+error[0]+"\n");
 #if ROXEN_COMPAT <= 1.3
-  }
+    if( !args->db && (host || query("db")==" none") )
+      error = catch(con = id->conf->sql_connect(host || compat_default_host));
+    if(!con)
 #endif
+      error = catch(con = DBManager.get( host||args->db||
+					 default_db||compat_default_host,
+					 my_configuration(), ro));
+    if( !con )
+      RXML.run_error(LOCALE(3,"Couldn't connect to SQL server")+
+		     (error?": "+error[0]:"")+"\n");
 
-  if (error = catch(result = (big_query?con->big_query(args->query):
-                              con->query(args->query))))
-  {
-    error = con->error();
-    if (error) error = ": " + error;
-    error = sprintf("Query failed%s\n", error||".");
-    RXML.parse_error(error);
+    if( catch(result = (big_query?con->big_query:con->query)(args->query)) )
+    {
+      error = con->error();
+      if (error) error = ": " + error;
+      error = sprintf("Query failed%s\n", error||".");
+      RXML.parse_error(error);
+    }
   }
 
   args->dbobj=con;
-
   if(result && args->rowinfo) {
     int rows;
     if(arrayp(result)) rows=sizeof(result);
     if(objectp(result)) rows=result->num_rows();
     RXML.user_set_var(args->rowinfo, rows);
   }
-
   return result;
 }
 

@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.119 2001/08/01 11:07:59 per Exp $
+// $Id: module.pike,v 1.120 2001/08/01 17:10:32 per Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -356,7 +356,7 @@ mixed get_value_from_file(string path, string index, void|string pre)
 
 static private mapping __my_tables = ([]);
 
-static array(mapping(string:mixed)) sql_query( string query, mixed ... args )
+array(mapping(string:mixed)) sql_query( string query, mixed ... args )
 //! Do a SQL-query using @[get_my_sql], the table names in the query
 //! should be written as &table; instead of table. As an example, if
 //! the tables 'meta' and 'data' have been created with create_tables
@@ -369,12 +369,31 @@ static array(mapping(string:mixed)) sql_query( string query, mixed ... args )
   return get_my_sql()->query( replace( query, __my_tables ), @args );
 }
 
-
-static object sql_big_query( string query, mixed ... args )
+object sql_big_query( string query, mixed ... args )
 //! Identical to @[sql_query], but the @[Sql.sql()->big_query] method
 //! will be used instead of the @[Sql.sql()->query] method.
 {
   return get_my_sql()->big_query( replace( query, __my_tables ), @args );
+}
+
+array(mapping(string:mixed)) sql_query_ro( string query, mixed ... args )
+//! Do a read-only SQL-query using @[get_my_sql], the table names in the query
+//! should be written as &table; instead of table. As an example, if
+//! the tables 'meta' and 'data' have been created with create_tables
+//! or get_my_table, this query will work:
+//!
+//! SELECT &meta;.id AS id, &data;.data as DATA
+//!        FROM &data;, &meta; WHERE &my.meta;.xsize=200
+//!
+{
+  return get_my_sql(1)->query( replace( query, __my_tables ), @args );
+}
+
+object sql_big_query_ro( string query, mixed ... args )
+//! Identical to @[sql_query_ro], but the @[Sql.sql()->big_query] method
+//! will be used instead of the @[Sql.sql()->query] method.
+{
+  return get_my_sql(1)->big_query( replace( query, __my_tables ), @args );
 }
 
 static void create_sql_tables( mapping(string:array(string)) defenitions )
@@ -383,6 +402,18 @@ static void create_sql_tables( mapping(string:array(string)) defenitions )
   foreach( indices( defenitions ), string t )
     get_my_table( t, defenitions[t] );
 }
+
+static string sql_table_exists( string name )
+{
+  if(strlen(name))
+    name = "_"+name;
+  
+  string res = hash(_my_configuration->name)->digits(36)
+    + "_" + replace(sname(),"#","_") + name;
+
+  return catch(sql->query( "SELECT * FROM "+res+" LIMIT 1" ))?0:res;
+}
+
 
 static string get_my_table( string|array(string) name,
 			    void|array(string)|string defenition )
@@ -432,6 +463,7 @@ static string get_my_table( string|array(string) name,
     name = "_"+(oname = name);
 
   Sql.Sql sql = get_my_sql();
+
   string res = hash(_my_configuration->name)->digits(36)
     + "_" + replace(sname(),"#","_") + name;
 
@@ -454,8 +486,8 @@ static string get_my_table( string|array(string) name,
     {
       if( strlen( name ) )
 	name = " "+name;
-      report_notice( "Failed to create table"+name+": "+
-		     describe_error( error ) );
+      report_error( "Failed to create table"+name+": "+
+		    describe_error( error ) );
       return 0;
     }
     return __my_tables[ "&"+oname+";" ] = res;
@@ -489,7 +521,7 @@ static void set_my_db( string to )
   my_db = to;
 }
 
-static Sql.Sql get_my_sql( int|void read_only )
+Sql.Sql get_my_sql( int|void read_only )
 //! Return a SQL-object for the database set with @[set_my_db],
 //! defaulting to the 'shared' database. If read_only is specified,
 //! the database will be opened in read_only mode.
