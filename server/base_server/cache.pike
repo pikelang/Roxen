@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: cache.pike,v 1.75 2001/08/01 11:07:35 per Exp $
+// $Id: cache.pike,v 1.76 2001/08/13 18:15:04 per Exp $
 
 // #pragma strict_types
 
@@ -253,16 +253,16 @@ private mapping(string:int) session_persistence;
 // The sessions, divided into several buckets.
 private array(mapping(string:mixed)) session_buckets;
 // The database for storage of the sessions.
-private Sql.Sql db;
+private function(string:Sql.Sql) db;
 // The biggest value in session_persistence
 private int max_persistence;
 
 // The low level call for storing a session in the database
 private void store_session(string id, mixed data, int t) {
   data = encode_value(data);
-  if(catch(db->query("INSERT INTO session_cache VALUES (%s," +
+  if(catch(db("local")->query("INSERT INTO session_cache VALUES (%s," +
 		     t + ",%s)", id, data)))
-    db->query("UPDATE session_cache SET data=%s, persistence=" +
+    db("local")->query("UPDATE session_cache SET data=%s, persistence=" +
 	      t + " WHERE id=%s", data, id);
 }
 
@@ -319,7 +319,7 @@ void clear_session(string id) {
   m_delete(session_persistence, id);
   foreach(session_buckets, mapping bucket)
     m_delete(bucket, id);
-  db->query("DELETE FROM session_cache WHERE id=%s", id);
+  db("local")->query("DELETE FROM session_cache WHERE id=%s", id);
 }
 
 //! Returns the data associated with the session @[id].
@@ -331,7 +331,7 @@ mixed get_session_data(string id) {
       session_buckets[0][id] = data;
       return data;
     }
-  data = db->query("SELECT data FROM session_cache WHERE id=%s", id);
+  data = db("local")->query("SELECT data FROM session_cache WHERE id=%s", id);
   if(sizeof([array]data) &&
      !catch(data=decode_value( ([array(mapping(string:string))]data)[0]->data )))
     return data;
@@ -358,22 +358,19 @@ string set_session_data(mixed data, void|string id, void|int persistence,
 
 // Sets up the session database tables.
 private void setup_tables() {
-    if(catch(db->query("select id from session_cache where id=''"))) {
-      db->query("CREATE TABLE session_cache ("
-                "id CHAR(32) NOT NULL PRIMARY KEY, "
-		"persistence INT UNSIGNED NOT NULL DEFAULT 0, "
-                "data BLOB NOT NULL)");
-    }
+  db("local")->query("CREATE TABLE IF NOT EXISTS session_cache ("
+		     "id CHAR(32) NOT NULL PRIMARY KEY, "
+		     "persistence INT UNSIGNED NOT NULL DEFAULT 0, "
+		     "data BLOB NOT NULL)");
+  master()->resolv("DBManager.is_module_table")
+    ( 0, "local", "session_cache", "Used by the session manager" );
 }
 
 //! Initializes the session handler.
 void init_session_cache() {
   db = (([function(string:function(string:object(Sql.Sql)))]master()->resolv)
-	("DBManager.get"))("local");
-  if( !db )
-    report_fatal("No 'local' database!\n");
-  else
-    setup_tables();
+	("DBManager.cached_get"));
+  setup_tables();
 }
 
 void init_call_outs()
