@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.200 2001/07/12 18:33:45 mast Exp $
+// $Id: module.pmod,v 1.201 2001/07/12 21:49:00 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -172,9 +172,6 @@ static mapping(string:TagSet|int) all_tagsets = set_weak_flag(([]), 1);
 // number, so that a new tag set with that name will continue the
 // generation sequence. We use the fact that a weak mapping won't
 // remove items that aren't refcounted (and strings).
-//
-// Also, if a name conflict between two tag sets is discovered, the
-// value in all_tagsets is set to 0.
 
 static mapping(string:program/*(Parser)*/) reg_parsers = ([]);
 // Maps each parser name to the parser program.
@@ -929,32 +926,21 @@ class TagSet
   static void set_name (string new_name)
   {
     if (new_name) {
-      object(TagSet)|int old_tag_set;
-      if (zero_type (old_tag_set = all_tagsets[new_name]) ||
-	  (objectp (old_tag_set) && gc() &&
-	   // Have to try to gc here to remove the old tag set object
-	   // in case the only ref left to it is through all_tagsets.
-	   zero_type (old_tag_set = all_tagsets[new_name])))
-	all_tagsets[new_name] = this_object();
-      else if (intp (old_tag_set) && old_tag_set > 0) {
-	all_tagsets[new_name] = this_object();
-	if (generation <= old_tag_set) {
-	  generation = old_tag_set + 1;
-	  changed();
-	}
+      object(TagSet)|int old_tag_set = all_tagsets[new_name];
+      if (objectp (old_tag_set)) {
+	// It'd be nice if we could warn about duplicate tag sets with
+	// the same name here, but unfortunately that doesn't work
+	// well enough: Local tag sets from old module instances might
+	// still be around with references from cached frames in stale
+	// p-code. We can remove the name in the old tag set anyway,
+	// so that it doesn't work to dump references to it.
+	old_tag_set->name = 0;
+	old_tag_set = old_tag_set->generation;
       }
-      else {
-	report_warning ("The tag set name %O is not unique - ignoring it.\n",
-			new_name);
-	if (TagSet other = all_tagsets[new_name]) {
-	  // The already registered name is ambigious anyway.
-	  other->name = 0;
-	  all_tagsets[new_name] = 0;
-	}
-	new_name = 0;
-      }
+      if (generation <= old_tag_set) generation = old_tag_set;
+      all_tagsets[name = new_name] = this_object();
     }
-    name = new_name;
+    else name = 0;
   }
 
   static mapping(string:Tag) tags = ([]), proc_instrs;
@@ -5952,11 +5938,12 @@ static class PikeCompile
 #endif
 
       compiled = res();
+
+      foreach (indices (cur_ids), string i)
+	bindings[i] = compiled[i];
+      cur_ids = ([]);
     }
 
-    foreach (indices (cur_ids), string i)
-      bindings[i] = compiled[i];
-    cur_ids = ([]);
     foreach (indices (delayed_resolve_places), mixed what) {
       mixed index = m_delete (delayed_resolve_places, what);
 #ifdef DEBUG
@@ -6326,6 +6313,7 @@ class PCode
 	  error ("Unresolved argument function in frame at position %d.\n"
 		 "Encoding p-code in unfinished evaluation?\n", pos);
 #endif
+	if (p_code[pos + 1]) p_code[pos + 1]->args = encode_p_code[pos + 2][0];
       }
     }
     fully_resolved = 1;
