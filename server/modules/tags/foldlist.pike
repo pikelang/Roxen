@@ -1,16 +1,14 @@
 // This is a roxen module. Copyright © 1999, Idonex AB.
-// $Id: foldlist.pike,v 1.1 1999/08/05 00:21:50 nilsson Exp $
+// $Id: foldlist.pike,v 1.2 1999/08/05 00:51:10 nilsson Exp $
 
-constant cvs_version = "$Id: foldlist.pike,v 1.1 1999/08/05 00:21:50 nilsson Exp $";
+constant cvs_version = "$Id: foldlist.pike,v 1.2 1999/08/05 00:51:10 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
 
 inherit "module";
 inherit "roxenlib";
-//inherit "state";
-
-#include "../../base_server/state.pike"
+inherit "state";
 
 array (mixed) register_module()
 {
@@ -87,7 +85,7 @@ string tag_foldlist(string tag, mapping m, string c, object id) {
     states=allocate(fds,-1); //All unknown
 
   //Register ourselfs as state consumers and incorporate our initial state.
-  string fl_name = (m->name || "fl")+(id->misc->defines[" fl "] || "");
+  string fl_name = (m->name || "fl")+fds+":"+(id->misc->defines[" fl "] || "");
   string state_id = register_state_consumer(fl_name, id);
   if(id->variables->state)
     decode_state(replace(id->variables->state,({"-","!","*"}),({"+","/","="})), id);
