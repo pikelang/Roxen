@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module_support.pike,v 1.123 2002/10/23 16:29:16 nilsson Exp $
+// $Id: module_support.pike,v 1.124 2002/10/23 20:43:10 nilsson Exp $
 
 #define IN_ROXEN
 #include <module_constants.h>
@@ -301,6 +301,8 @@ class ModuleInfo( string sname, string filename )
 	config_locked[conf] = 1;
 	throw( "" );
       }
+      else
+	m_delete(config_locked, conf);
       return load( filename, silent )( conf );
     };
     loader.pop_compile_error_handler( );
