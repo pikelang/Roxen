@@ -6,7 +6,7 @@
  * in October 1997
  */
 
-constant cvs_version = "$Id: business.pike,v 1.98 1998/03/13 01:09:37 peter Exp $";
+constant cvs_version = "$Id: business.pike,v 1.99 1998/04/06 14:19:21 hedda Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -772,6 +772,8 @@ string tag_diagram(string tag, mapping m, string contents,
   res -= shuffle_args;
 
   m->src = query("location") + quote(res) + ".gif";
+  if ((res->name)&&(!m->alt))
+    m->alt=res->name;
 
   if (res->turn)
   {
