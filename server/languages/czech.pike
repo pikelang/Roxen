@@ -14,10 +14,10 @@
              		(First letter must be lower case)
 
 */
-string cvs_version = "$Id: czech.pike,v 1.8 1999/08/30 09:33:02 per Exp $";
+string cvs_version = "$Id: czech.pike,v 1.9 1999/10/11 18:03:26 hop Exp $";
 string month(int num)
 {
-  return ({ "ledna", "únor", "bøezna", "dubna", "kvìtna",
+  return ({ "ledna", "února", "bøezna", "dubna", "kvìtna",
 	    "èervna", "èervence", "srpna", "záøí", "øíjna",
 	    "listopadu", "prosince" })[ num - 1 ];
 }
