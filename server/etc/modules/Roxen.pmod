@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.162 2003/10/06 12:07:34 grubba Exp $
+// $Id: Roxen.pmod,v 1.163 2003/10/06 12:08:27 grubba Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -480,7 +480,7 @@ string iso8601_date_time(int ts, int|void ns)
   }
   return sprintf("%04d-%02d-%02dT%02d:%02d:%02d.%09dZ",
 		 1900 + gmt->year, gmt->mon+1, gmt->mday,
-		 gmt->hour, gmt->min, gmt->sec, ts);
+		 gmt->hour, gmt->min, gmt->sec, ns);
 }
 
 string http_encode_string(string f)
