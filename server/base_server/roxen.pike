@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.838 2004/02/09 16:50:57 wellhard Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.839 2004/05/07 14:42:48 mast Exp $";
 
 //! @appears roxen
 //!
@@ -619,6 +619,7 @@ local static void handler_thread(int id)
 #endif
   while(1)
   {
+    int thread_flagged_as_busy;
     if(q=catch {
       do {
 //  	if (!busy_threads) werror ("GC: %d\n", gc());
@@ -628,9 +629,11 @@ local static void handler_thread(int id)
 				id, h[0], h[1] / 1));
 	  set_locale();
 	  busy_threads++;
+	  thread_flagged_as_busy = 1;
 	  h[0](@h[1]);
 	  h=0;
 	  busy_threads--;
+	  thread_flagged_as_busy = 0;
 	} else if(!h) {
 	  // Roxen is shutting down.
 	  report_debug("Handle thread ["+id+"] stopped.\n");
@@ -662,6 +665,8 @@ local static void handler_thread(int id)
 	}
       } while(1);
     }) {
+      if (thread_flagged_as_busy)
+	busy_threads--;
       if (h = catch {
 	report_error(/*LOCALE("", "Uncaught error in handler thread: %s"
 		       "Client will not get any response from Roxen.\n"),*/
