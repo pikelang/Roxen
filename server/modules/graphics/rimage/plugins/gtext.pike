@@ -13,7 +13,7 @@ void render( mapping args, mapping this, string channel, object id, object m)
   m_delete(args, "ypos");
   m_delete(args, "text");
 
-  string prefix = parse_rxml( make_tag("gtext-id", args), id );
+  string prefix = parse_rxml( make_tag("gtext-id", args, 1), id );
 
   mapping a = ([
     "file":prefix+"^"+txt,

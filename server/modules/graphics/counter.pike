@@ -23,7 +23,7 @@
 // -----------------------------------------------------------------------
 //
 
-constant cvs_version = "$Id: counter.pike,v 1.33 2000/05/01 06:18:38 nilsson Exp $";
+constant cvs_version = "$Id: counter.pike,v 1.34 2000/08/22 19:02:32 nilsson Exp $";
 
 constant copyright = ("<br>Copyright 1997-1999 "
 		    "<a href=http://savage.apostols.org/>Jordi Murgo</a> and "
@@ -404,7 +404,7 @@ string tag_counter( string tagname, mapping args, RequestID id )
   // Common Part ( /<accessed> and IMG Attributes )
   //
 
-  string accessed=Roxen.parse_rxml(Roxen.make_tag("accessed",args), id);
+  string accessed=Roxen.parse_rxml(Roxen.make_tag("accessed",args,1), id);
 
   url +=  "/" + accessed +".gif";
 
@@ -420,7 +420,9 @@ string tag_counter( string tagname, mapping args, RequestID id )
   }
   if( tagname == "counter_url" ) return url;
 
-  return pre + Roxen.make_tag("img",args) + post;
+  int xml=!args->noxml;
+  m_delete(args, "noxml");
+  return pre + Roxen.make_tag("img",args,xml) + post;
 }
 
 mapping query_tag_callers()

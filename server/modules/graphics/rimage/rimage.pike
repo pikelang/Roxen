@@ -236,5 +236,7 @@ string container_rimage_id( string t, mapping m, string contents, object id )
 string container_rimage(string t, mapping m, string contents, object id)
 {
   m->src = container_rimage_id( t, m, contents, id );
-  return make_tag( "img", m );
+  int xml=!m->noxml;
+  m_delete(m, "noxml");
+  return make_tag( "img", m, xml );
 }

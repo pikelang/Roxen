@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.57 2000/08/15 20:19:02 mast Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.58 2000/08/22 19:00:35 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -764,7 +764,7 @@ class TagGButton {
 	img_attrs->height = size->ysize;
       }
 
-      result = Roxen.make_tag("img", img_attrs);
+      result = Roxen.make_tag("img", img_attrs, !args->noxml);
 
       //  Make button clickable if not dimmed
       if(args->href && !new_args->dim)

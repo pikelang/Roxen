@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.24 2000/08/17 00:38:07 per Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.25 2000/08/22 19:00:25 nilsson Exp $";
 constant module_type = MODULE_PARSER;
 constant module_name = "Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -193,7 +193,9 @@ class TagCImg
 	args->width = size->xsize;
 	args->height = size->ysize;
       }
-      result = Roxen.make_tag( "img", args );
+      int xml=!args->noxml;
+      m_delete(args, "noxml");
+      result = Roxen.make_tag( "img", args, xml );
       return 0;
     }
   }

@@ -10,7 +10,7 @@
 //  o More stuff in the emit variables
 //
 
-constant cvs_version = "$Id: directories.pike,v 1.75 2000/08/21 11:20:21 jhs Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.76 2000/08/22 19:09:13 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <stat.h>
@@ -256,7 +256,7 @@ local static array(mapping) get_directory_dataset( mapping args, RequestID id )
            "src":m->path,
            "format":(args["thumbnail-format"]?args["thumbnail-format"]:"png"),
          ]);
-         m->thumbnail = Roxen.parse_rxml( Roxen.make_tag( "cimg-url", cia ), id );
+         m->thumbnail = Roxen.parse_rxml( RXML.t_xml->format_tag( "cimg-url", cia ), id );
       } else
         m->thumbnail = m->icon;
 
