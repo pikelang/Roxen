@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.127 2004/05/05 21:24:38 mast Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.128 2004/05/06 13:34:37 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -346,6 +346,20 @@ string real_file( string f, RequestID id )
   }
 }
 
+// We support locking if put is enabled.
+mapping(string:mixed) lock_file(string path, DAVLock lock, RequestID id)
+{
+  if (!query("put")) return 0;
+  if(query("check_auth") &&  (!id->conf->authenticate( id ) ) ) {
+    TRACE_LEAVE("PUT: Permission denied");
+    return
+      Roxen.http_auth_required("foo",
+			       "<h1>Permission to 'PUT' files denied</h1>");
+  }
+  register_lock(path, lock, id);
+  return 0;
+}
+
 int dir_filter_function(string f, RequestID id)
 {
   if(f[0]=='.' && !dotfiles)           return 0;
@@ -620,6 +634,12 @@ mapping make_collection(string coll, RequestID id)
 				    sprintf("<h1>Permission to '%s' denied</h1>",
 					    id->method));
   }
+
+  // Disallow if the name is locked, or if the parent directory is locked.
+  mapping(string:mixed) ret = write_access(coll, 0, id) ||
+    write_access(combine_path(coll, ".."), 0, id);
+  if (ret) return ret;
+
   mkdirs++;
   object privs;
   SETUID_TRACE("Creating directory/collection", 0);
@@ -920,6 +940,11 @@ mixed find_file( string f, RequestID id )
 				"<h1>Permission to 'PUT' files denied</h1>");
     }
 
+    if (mapping(string:mixed) ret = write_access(f, 0, id)) {
+      TRACE_LEAVE("PUT: Locked");
+      return ret;
+    }
+
     puts++;
 
     QUOTA_WERR("Checking quota.\n");
@@ -1036,6 +1061,10 @@ mixed find_file( string f, RequestID id )
 				"<h1>Permission to 'CHMOD' files denied</h1>");
     }
 
+    if (mapping(string:mixed) ret = write_access(f, 0, id)) {
+      TRACE_LEAVE("PUT: Locked");
+      return ret;
+    }
 
     SETUID_TRACE("CHMODing file", 0);
 
@@ -1114,6 +1143,13 @@ mixed find_file( string f, RequestID id )
       return 0;
     }
 
+    // FIXME: What about moving of directories containing locked files?
+    if (mapping(string:mixed) ret = write_access(f, 0, id) ||
+	write_access(id->misc->move_from, 0, id)) {
+      TRACE_LEAVE("MV: Locked");
+      return ret;
+    }
+
     SETUID_TRACE("Moving file", 0);
 
     if (query("no_symlinks") &&
@@ -1150,7 +1186,7 @@ mixed find_file( string f, RequestID id )
     return Roxen.http_string_answer("Ok");
 
   case "MOVE":
-    // This little kluge is used by NETSCAPE 4.5
+    // This little kluge is used by NETSCAPE 4.5 and RFC 2518.
 
     // FIXME: Support for quota.
 
@@ -1229,6 +1265,13 @@ mixed find_file( string f, RequestID id )
       id->misc->error_code = 405;
       TRACE_LEAVE("MOVE: Cannot overwrite directory");
       return 0;
+    }
+
+    if (mapping(string:mixed) ret =
+	write_access(moveto, 0, id) ||
+	write_access(f, 0, id)) {
+      TRACE_LEAVE("MOVE: Locked");
+      return ret;
     }
 
     SETUID_TRACE("Moving file", 0);
