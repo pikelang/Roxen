@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.511 2000/07/21 17:37:35 lange Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.512 2000/07/25 16:19:43 marcus Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -661,6 +661,29 @@ void set_port_options( string key, mapping value )
   save( );
 }
 
+class InternalRequestID
+//! ID for internal requests that are not linked to any real request.
+{
+  inherit RequestID;
+
+  void create()
+  {
+    client = ({ "Roxen" });
+    prot = "INTERNAL";
+    method = "GET";
+    variables = ([]);
+    misc = ([]);
+    cookies = ([]);
+    throttle = ([]);
+    request_headers = ([]);
+    prestate = (<>);
+    config = (<>);
+    supports = (<>);
+    pragma = (<>);
+    rest_query = "";
+    extra_extension = "";
+  }
+}
 
 class Protocol
 //! The basic protocol.  
