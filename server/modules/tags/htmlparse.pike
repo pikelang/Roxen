@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.106 1998/06/27 21:09:53 grubba Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.107 1998/06/28 17:02:33 grubba Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -1549,6 +1549,8 @@ multiset simple_parse_group_file(string file, string g)
      }
    }
  }
+ // roxen_perror(sprintf("Parse group:%O => %O\n", g, res));
+
  return res;
 }
 
@@ -1562,12 +1564,23 @@ int group_member(array auth, string group, string groupfile, object id)
     s = Stdio.read_bytes(groupfile);
   };
 
-  if (!(s = s || id->conf->try_get_file(groupfile, id)))
+  if (!s) {
+    if (groupfile[0..0] != "/") {
+      if (id->not_query[-1] != '/')
+	groupfile = combine_path(id->not_query, "../"+groupfile);
+      else
+	groupfile = id->not_query + groupfile;
+    }
+    s = id->conf->try_get_file(groupfile, id);
+  }
+
+  if (!s) {
     return 0;
+  }
 
   multiset(string) members = simple_parse_group_file(s, group);
 
-  return members && members[auth[0]];
+  return members && members[auth[1]];
 }
 
 string tag_prestate(string tag, mapping m, string q, object got);
@@ -1769,10 +1782,12 @@ string tag_allow(string a, mapping (string:string) m,
 	TEST(got->auth && got->auth[0] && search(m->user/",", got->auth[1])
 	     != -1);
 
-  if (m->groupfile && m->group) {
-    TEST(group_member(got->auth, m->group, m->groupfile, got));
-  } else if (m->group) {
-    return("<!-- groupfile not specified --><false>");
+  if (m->group) {
+    if (m->groupfile && sizeof(m->groupfile)) {
+      TEST(group_member(got->auth, m->group, m->groupfile, got));
+    } else {
+      return("<!-- groupfile not specified --><false>");
+    }
   }
 
   return ok?(QUERY(compat_if)?"<true>"+s:s+"<true>"):"<false>";
