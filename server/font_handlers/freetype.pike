@@ -145,6 +145,7 @@ class FTFont
     return res;
   }
 
+  int fake_bold, fake_italic;
   Image.Image write( string ... what )
   {
     object key = lock->lock();
@@ -179,14 +180,25 @@ class FTFont
         rr->paste_alpha_color( r, 255,255,255, 0, (int)start );
       start += r->ysize()*y_spacing;
     }
-    return rr->gamma( 1.3 );
+    if( fake_bold )
+    {
+      object r2 = Image.Image( rr->xsize()+2, rr->ysize() );
+      object r3 = rr*0.3;
+      for( int i = 0; i<2; i++ )
+	for( int j = 0; j<2; j++ )
+	  r2->paste_alpha_color( r3,  255, 255, 255, i, j );
+      rr = r2->paste_alpha_color( rr, 255,255,255, 1,1 );
+    }
+    if( fake_italic )
+      rr = rr->skewx( rr->ysize()/3 );
+    return rr;
   }
 
-  static void create(object r, int s, string fn, mixed|void _lock)
+  static void create(object r, int s, string fn, int fb, int fi)
   {
+    fake_bold = fb;
+    fake_italic = fi;
     string encoding, fn2;
-    if( _lock )
-      lock = _lock;
     face = r; size = s;
 
     if( (fn2 = replace( fn, ".pfa", ".afm" )) != fn && r_file_stat( fn2 ) )
@@ -262,10 +274,11 @@ Font open(string f, int size, int bold, int italic )
   int|string style = font_style( f, size, bold, italic );
   object fo;
 
+  werror("open %s %d %d %d (%s)\n\n", f, size, bold, italic, style);
   if( style == -1 ) // exact file
   {
     if( fo = Image.FreeType.Face( name ) )
-      return FTFont( fo, size, f );
+      return FTFont( fo, size, f,0,0 );
     return 0;
   }
 
@@ -275,10 +288,10 @@ Font open(string f, int size, int bold, int italic )
     if( tmp = ttf_font_names_cache[ f ][ style ] )
     {
       fo = open_face( tmp );
-      if( fo ) return FTFont( fo, size, tmp );
+      if( fo ) return FTFont( fo, size, tmp,0,0 );
     }
     if(fo=open_face( roxen_path(f=values(ttf_font_names_cache[ f ])[0])))
-      return FTFont( fo, size, f );
+      return FTFont( fo, size, f, bold, italic );
   }
   return 0;
 }
