@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.143 2004/05/13 21:00:07 grubba Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.144 2004/05/14 16:54:22 anders Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -1478,7 +1478,7 @@ mapping copy_file(string source, string dest, PropertyBehavior behavior,
   dest_path = NORMALIZE_PATH (dest_path);
   if (query("no_symlinks") && (contains_symlinks(path, dest_path))) {
     errors++;
-    report_error(LOCALE(46,"Copy to %O failed. Permission denied.\n"),
+    report_error(LOCALE(57,"Copy to %O failed. Permission denied.\n"),
 		 dest);
     TRACE_LEAVE("COPY: Contains symlinks. Permission denied");
     return Roxen.http_status(403, "Permission denied.");
@@ -1587,7 +1587,7 @@ mapping copy_file(string source, string dest, PropertyBehavior behavior,
     source_path = NORMALIZE_PATH (source_path);
     if (query("no_symlinks") && (contains_symlinks(path, source_path))) {
       errors++;
-      report_error(LOCALE(46,"Copy to %O failed. Permission denied.\n"),
+      report_error(LOCALE(57,"Copy to %O failed. Permission denied.\n"),
 		   dest);
       TRACE_LEAVE("COPY: Contains symlinks. Permission denied");
       return Roxen.http_status(403, "Permission denied.");

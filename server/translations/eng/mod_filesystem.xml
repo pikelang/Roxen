@@ -229,13 +229,13 @@
 </str>
 
 <str id="46">
-<o>Creation of %s failed. Permission denied.
+<o>Creation of %O failed. Permission denied.
 </o>
 <t></t>
 </str>
 
 <str id="47">
-<o>Creation of %s failed. Out of quota.
+<o>Creation of %O failed. Out of quota.
 </o>
 <t></t>
 </str>
@@ -302,6 +302,12 @@
 
 <str id="64">
 <o>DELETING the directory %s.
+</o>
+<t></t>
+</str>
+
+<str id="57">
+<o>Copy to %O failed. Permission denied.
 </o>
 <t></t>
 </str>

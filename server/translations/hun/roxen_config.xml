@@ -2248,7 +2248,7 @@ as the name of its log file directory.
 &lt;dt&gt;CMD &lt;b&gt;time&lt;/b&gt;=&lt;i&gt;HH:mm-HH:mm&lt;/i&gt;   [return]&lt;/dt&gt;
 &lt;dd&gt;Only allow access to the module from the first time to the  second each day. Both times should be specified in 24-hour  HH:mm format.&lt;/dd&gt;
 &lt;dt&gt;CMD &lt;b&gt;day&lt;/b&gt;=&lt;i&gt;day[,day,...]&lt;/i&gt; [return]&lt;/dt&gt;
-&lt;dd&gt;Only allow access during certain days. Day is either a numerical     value (monday=1, sunday=7) or a string (monday, thuesday etc)&lt;/dd&gt;&lt;/dl&gt;&lt;p&gt;
+&lt;dd&gt;Only allow access during certain days. Day is either a numerical     value (Monday=1, Sunday=7) or a string (monday, tuesday etc)&lt;/dd&gt;&lt;/dl&gt;&lt;p&gt;
   pattern is always a glob pattern (* = any characters, ? = any character).
 &lt;/p&gt;&lt;p&gt;
   return means that reaching this command results in immediate
