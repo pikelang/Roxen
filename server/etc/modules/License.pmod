@@ -2,7 +2,7 @@
 //
 // Created 2002-02-18 by Marcus Wellhardh.
 //
-// $Id: License.pmod,v 1.10 2002/04/08 12:52:43 wellhard Exp $
+// $Id: License.pmod,v 1.11 2002/04/12 16:02:00 wellhard Exp $
 
 #if constant(roxen)
 #define INSIDE_ROXEN
@@ -234,34 +234,49 @@ class Key
   }
 #endif
 
-  string|void verify(object /*Configuration*/|void configuration,
+  string|void verify(int verify_mode, object /*Configuration*/|void configuration,
 		     int|void time, string|void _hostname)
   {
+    array(object /*Configuration*/) confs =
+      get_configurations_for_license(this_object());
     if(configuration)
     {
       // verify configuration integrity.
-      array(object /*Configuration*/) confs =
-	get_configurations_for_license(this_object());
-      if(sizeof(confs - ({ configuration })))
+      if(sizeof(confs - ({ configuration })) && type() == "production") {
 	report_warning("Configuration",
 		       sprintf("License used in multiple configurations: "
 			       "%s.", String.
 			       implode_nicely((confs | ({ configuration }))->name)));
-    }
+      }
+    } else if(verify_mode && sizeof(confs) )
+      return sprintf("The license "+filename()+" is already used in "
+		     "configuration: %s.",
+		     String.implode_nicely(confs->name));
+    
+
+    
     
     if(time)
     {
       // verify expiration integrity.
       if(expires() != "*" && Calendar.ISO->dwim_day(expires()) < time)
-	report_warning("Expiration", sprintf("License expired"));
+	if(verify_mode)
+	  return sprintf("The license "+filename()+" has expired.");
+	else
+	  report_warning("Expiration", sprintf("License expired"));
     }
 
     if(_hostname && configuration)
     {
       // verify hostname integrity.
       if(!glob(hostname(), _hostname))
-	report_warning("Hostname", sprintf("Hostname mismatch: %O does not match %O",
-					   hostname(), _hostname));
+	if(verify_mode)
+	  sprintf("The license "+filename()+" hostname %O does not match "
+		  "primary server url %O.",
+		  _hostname, hostname());
+	else
+	  report_warning("Hostname", sprintf("Hostname mismatch: %O does not match %O",
+					     hostname(), _hostname));
     }
   }
   
@@ -290,6 +305,7 @@ class LicenseVariable
   Configuration configuration;
   string license_dir;
   static Key license_key;
+  static int verify_mode;
   
   Key get_key()
   {
@@ -332,7 +348,7 @@ class LicenseVariable
       
       string url = configuration && configuration->get_url();
       string hostname = url && sizeof(url) && Standards.URI(url)->host;
-      if(string err = key->verify(configuration, time(), hostname))
+      if(string err = key->verify(verify_mode, configuration, time(), hostname))
 	return ({ err, query() });
     }
     return ({ 0, new_value });
@@ -352,10 +368,11 @@ class LicenseVariable
   
   static void create(string _license_dir, void|int _flags,
 		     void|LocaleString std_name, void|LocaleString std_doc,
-		     Configuration _configuration)
+		     Configuration _configuration, int|void _verify_mode)
   {
     license_dir = _license_dir;
     configuration = _configuration;
+    verify_mode = _verify_mode;
     ::create(0, 0, _flags, std_name, std_doc);
     set_invisibility_check_callback(invisibility_check);
   }
