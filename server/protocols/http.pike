@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-string cvs_version = "$Id: http.pike,v 1.22 1997/04/05 01:26:31 per Exp $";
+string cvs_version = "$Id: http.pike,v 1.23 1997/04/07 23:23:43 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 inherit "roxenlib";
@@ -616,7 +616,7 @@ int wants_more()
   return !!cache;
 }
 
-static void handle_request( )
+void handle_request( )
 {
   mixed *err;
   int tmp;
@@ -893,9 +893,9 @@ void got_data(mixed fooid, string s)
     conf->requests++;
   }
 #ifdef THREADS
-  handle(handle_request);
+  handle(this_object()->handle_request);
 #else
-  handle_request();
+  this_object()->handle_request();
 #endif
 }
 

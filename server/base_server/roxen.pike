@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.47 1997/04/05 01:25:39 per Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.48 1997/04/07 23:23:41 per Exp $";
 #define IN_ROXEN
 #ifdef THREADS
 #include <fifo.h>
@@ -275,7 +275,8 @@ void handle(function f, mixed ... args)
 // protocol (http, ftp, ssl, etc.)
 
 object create_listen_socket(mixed port_no, object conf,
-			    string|void ether, program requestprogram)
+			    string|void ether, program requestprogram,
+			    array prt)
 {
   object port;
 #ifdef SOCKET_DEBUG
@@ -1189,6 +1190,7 @@ object enable_configuration(string name)
 {
   object cf = Configuration(name);
   configurations += ({ cf });
+  current_configuration = cf;
   return cf;
 }
 
@@ -1226,7 +1228,7 @@ public string config_url()
   string host;
 
   foreach(ports, tmp)
-    if(tmp[1]=="ssl") 
+    if(tmp[1][0..2]=="ssl") 
     {
       port=tmp; 
       break;
@@ -1253,7 +1255,7 @@ public string config_url()
 #endif
   }
 
-  prot = (port[1]!="ssl"?port[1]:"https");
+  prot = (port[1][0..2]!="ssl"?port[1]:"https");
   p = port[0];
 
   return (prot+"://"+host+":"+p+"/");
@@ -1635,13 +1637,24 @@ void initiate_configuration_port( int|void first )
   
   configuration_ports = ({ });
   main_configuration_port=0;
-    
+
+  current_configuration = 0;
   if(sizeof(QUERY(ConfigPorts)))
   {
     foreach(QUERY(ConfigPorts), port)
     {
-      if(o=create_listen_socket(port[0],0,port[2],
-				(program)(getcwd()+"/protocols/"+port[1])))
+      program requestprogram = (program)(getcwd()+"/protocols/"+port[1]);
+      function rp;
+      array tmp;
+      if(!requestprogram) {
+	report_error("No request program for "+port[1]+"\n");
+	continue;
+      }
+      if(rp = requestprogram()->real_port)
+	if(tmp = rp(port))
+	  port = tmp;
+
+      if(o=create_listen_socket(port[0],0,port[2],requestprogram,port))
       {
 	perror("Configuration port: port number "
 	       +port[0]+" interface " +port[2]+"\n");
