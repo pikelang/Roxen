@@ -1,10 +1,10 @@
-// This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 2000 - 2001, Roxen IS.
 // By Martin Nilsson
 
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: vform.pike,v 1.39 2002/10/23 23:46:21 nilsson Exp $";
+constant cvs_version = "$Id: vform.pike,v 1.40 2004/05/23 02:43:12 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 constant module_type = MODULE_TAG;
@@ -14,10 +14,11 @@ constant module_doc  = "Creates a self verifying form.";
 // maxlength is excluded so that it gets exported. value is included
 // since not all widgets have a value attribute, and those who do add
 // it themselves.
-constant ARGS=(< "type", "min", "max", "scope", "min", "max", "trim"
-		 "regexp", "glob", "minlength", "case",
-		 "mode", "fail-if-failed", "ignore-if-false",
-		 "ignore-if-failed", "ignore-if-verified", "optional", "value" >);
+constant ARGS=(< "type", "min", "max", "scope", "trim",
+		 "regexp", "glob", "minlength", "case", "date",
+		 "mode", "fail-if-failed", "ignore-if-false", "ignore-if-gone",
+		 "ignore-if-failed", "ignore-if-verified", "optional", "value",
+		 "disable-domain-check", >);
 
 constant forbidden = ({"\\", ".", "[", "]", "^",
 		       "$", "(", ")", "*", "+", "|"});
@@ -160,10 +161,11 @@ class VInputFrame {
   array do_return(RequestID id) {
     int ok=!var->get_warnings();
     int show_err=1;
-    if(args["fail-if-failed"] && id->misc->vform_failed[args["fail-if-failed"]])
+    if((args["fail-if-failed"] && id->misc->vform_failed[args["fail-if-failed"]]) ||
+       (args["ignore-if-gone"] && !id->real_variables[args->name]))
       ok=1;
 
-    if(!id->real_variables[args->name] ||
+    if((!id->real_variables[args->name] && !args["ignore-if-gone"]) ||
        (args["ignore-if-false"] && !id->misc->vform_ok) ||
        id->real_variables["__reload"] ||
        id->real_variables["__clear"] ||
@@ -489,6 +491,7 @@ class TagVForm {
       m_delete(id->misc, "vform_xml");
 
       if(!args->method) args->method="post";
+      if(!args->action) args->action=get_var("self", "page");
       result = RXML.t_xml->format_tag("form", args, content);
       return 0;
     }
@@ -550,9 +553,6 @@ constant tagdoc=([
  The name of the vform variable to force as verified ok.</p>
 </attr>",
 
-// It's a tagdoc bug that these, locally defined if-plugins does not show up
-// in the online manual.
-
 "if#vform-failed":#"<desc type='plugin'><p>
  If used with empty argument this will be true if the complete form is
  failed, otherwise only if the named field failed.
@@ -579,6 +579,13 @@ constant tagdoc=([
 
 <attr name='ignore-if-failed' value='name'><p>
   Don't verify if the verification of a named variable failed.</p>
+</attr>
+
+<attr name='ignore-if-gone'><p>
+  Don't verify if the variable is missing from the form scope.
+  This is useful if the widget might be disabled. Be careful not to
+  set this flag on all input fields since this would cause the form
+  to verify upon first request to the page.</p>
 </attr>
 
 <attr name='ignore-if-verified' value='name'><p>
@@ -610,34 +617,36 @@ constant tagdoc=([
  If not specified toghether with the type=\"date\" attribute the date will be
  verified as an ISO-date, i.e Y-M-D. If another date format is
  desired it should be specified with the date-attribute.
+ </p>
 
  <p>
  Examples:<br />
  date='%Y-%M-%D %h:%m' will verify a date formatted as '2040-11-08 2:46',<br />
  date='%Y w%W %e %h:%m %p %z' will verify '1913 w4 monday 2:14 pm CET'
  </p>
- <p>
- These are the format characters:<br />
- %Y absolute year <br />
- %y dwim year (70-99 is 1970-1999, 0-69 is 2000-2069)<br />
- %M month (number, name or short name) (needs %y)<br />
- %W week (needs %y)<br />
- %D date (needs %y, %m)<br />
- %d short date (20000304, 000304)<br />
- %a day (needs %y)<br />
- %e weekday (needs %y, %w)<br />
- %h hour (needs %d, %D or %W)<br />
- %m minute (needs %h)<br />
- %s second (needs %m)<br />
- %f fraction of a second (needs %s)<br />
- %t short time (205314, 2053)<br />
- %z zone<br />
- %p 'am' or 'pm'<br />
- %n empty string (to be put at the end of formats).
- You can also use '%*[....]' to skip some characters.
- </p>
-	    
-</p>
+
+ <p>These are the format characters:</p>
+
+ <xtable>
+  <row><c><p>%Y</p></c><c><p>absolute year</p></c></row>
+  <row><c><p>%y</p></c><c><p>dwim year (70-99 is 1970-1999, 0-69 is 2000-2069)</p></c></row>
+  <row><c><p>%M</p></c><c><p>month (number, name or short name) (needs %y)</p></c></row>
+  <row><c><p>%W</p></c><c><p>week (needs %y)</p></c></row>
+  <row><c><p>%D</p></c><c><p>date (needs %y, %m)</p></c></row>
+  <row><c><p>%d</p></c><c><p>short date (20000304, 000304)</p></c></row>
+  <row><c><p>%a</p></c><c><p>day (needs %y)</p></c></row>
+  <row><c><p>%e</p></c><c><p>weekday (needs %y, %w)</p></c></row>
+  <row><c><p>%h</p></c><c><p>hour (needs %d, %D or %W)</p></c></row>
+  <row><c><p>%m</p></c><c><p>minute (needs %h)</p></c></row>
+  <row><c><p>%s</p></c><c><p>second (needs %m)</p></c></row>
+  <row><c><p>%f</p></c><c><p>fraction of a second (needs %s)</p></c></row>
+  <row><c><p>%t</p></c><c><p>short time (205314, 2053)</p></c></row>
+  <row><c><p>%z</p></c><c><p>zone</p></c></row>
+  <row><c><p>%p</p></c><c><p>'am' or 'pm'</p></c></row>
+  <row><c><p>%n</p></c><c><p>empty string (to be put at the end of formats).
+       You can also use '%*[....]' to skip some characters.</p></c></row>
+ </xtable>
+
 </attr>
 	    
 <attr name='minlength' value='number'><p>
