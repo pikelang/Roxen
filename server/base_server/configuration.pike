@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.97 1998/02/20 11:16:33 per Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.98 1998/02/20 12:57:18 mirar Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -967,6 +967,79 @@ object _lock(object|function f)
 #define TRACE_ENTER(A,B) do{if(id->misc->trace_enter)id->misc->trace_enter((A),(B));}while(0)
 #define TRACE_LEAVE(A) do{if(id->misc->trace_leave)id->misc->trace_leave((A));}while(0)
 
+string examine_return_mapping(mapping m)
+{
+   string res;
+
+   if (m->extra_heads)
+      m->extra_heads=mkmapping(Array.map(indices(m->extra_heads),
+					 lower_case),
+			       values(m->extra_heads));
+   else
+      m->extra_heads=([]);
+
+   switch (m->error||200)
+   {
+      case 302: // redirect
+	 if (m->extra_heads && 
+	     (m->extra_heads->location))
+	    res 
+	       = "Returned <i><b>redirect</b></i>;<br>&nbsp;&nbsp;&nbsp;to "
+	       "<a href="+(m->extra_heads->location)+">"
+	       "<font color=darkgreen><tt>"+
+	       (m->extra_heads->location)+
+	       "</tt></font></a><br>";
+	 else
+	    res = "Returned redirect, but no location header\n";
+	 break;
+
+      case 401:
+	 if (m->extra_heads["www-authenticate"])
+	    res
+	       = "Returned <i><b>authentication failed</b></i>;"
+	       "<br>&nbsp;&nbsp;&nbsp;<tt>"+
+	       m->extra_heads["www-authenticate"]+"</tt><br>";
+	 else
+	    res 
+	       = "Returned <i><b>authentication failed</b></i>.<br>";
+	 break;
+
+      case 200:
+	 res
+	    = "Returned <i><b>ok</b></i><br>\n";
+	 break;
+	 
+      default:
+	 res
+	    = "Returned <b><tt>"+m->error+"</tt></b>.<br>\n";
+   }
+
+   if (!zero_type(m->len))
+      if (m->len<0)
+	 res+="No data ";
+      else
+	 res+=m->len+" bytes ";
+   else if (stringp(m->data))
+      res+=strlen(m->data)+" bytes";
+   else if (objectp(m->file))
+      if (catch {
+	 array a=m->file->stat();
+	 res+=(a[1]-m->file->tell())+" bytes ";
+      }) res+="? bytes";
+
+   if (m->data) res+=" (static)";
+   else if (m->file) res+="(open file)";
+
+   if (stringp(m->extra_heads["http-content-type"]))
+      res+=" of <tt>"+m->type+"</tt>\n";
+   else if (stringp(m->type))
+      res+=" of <tt>"+m->type+"</tt>\n";
+
+   res+="<br>";
+
+   return res;
+}
+
 mapping|int low_get_file(object id, int|void no_magic)
 {
 #ifdef MODULE_LEVEL_SECURITY
@@ -1125,7 +1198,8 @@ mapping|int low_get_file(object id, int|void no_magic)
 
 	if(mappingp(fid))
 	{
-	  TRACE_LEAVE("Returned data");
+	  TRACE_LEAVE("");
+	  TRACE_LEAVE(examine_return_mapping(fid));
 	  return fid;
 	}
 	else
