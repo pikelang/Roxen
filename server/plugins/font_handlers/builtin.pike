@@ -12,7 +12,7 @@ inherit "ttf";
 #define rbuiltin
 #endif
 
-constant cvs_version = "$Id: builtin.pike,v 1.16 2002/10/24 02:21:19 nilsson Exp $";
+constant cvs_version = "$Id: builtin.pike,v 1.17 2002/10/25 23:55:13 nilsson Exp $";
 
 constant name = "Builtin fonts";
 constant doc =  "Fonts included in pike (and roxen)";
@@ -22,7 +22,7 @@ inherit FontHandler;
 array available_fonts()
 {
   return ({ "pike builtin",
-#if rbuiltin
+#ifdef rbuiltin
 	    "roxen builtin"
 #endif
   });
@@ -32,7 +32,7 @@ array(mapping) font_information( string fnt )
 {
   switch( replace(lower_case(fnt)," ","_")-"_" )
   {
-#if rbuiltin
+#ifdef rbuiltin
    case "roxenbuiltin":
      return ({
               ([
@@ -63,7 +63,7 @@ array has_font( string name, int size )
   {
    case "pikebuiltin":
      return ({ "nn" });
-#if rbuiltin
+#ifdef rbuiltin
    case "roxenbuiltin":
      return ({ "nn", "bn", "bi" });
 #endif
@@ -79,7 +79,7 @@ Font open( string name, int size, int bold, int italic )
 {
   switch( replace(lower_case(name)," ","_")-"_" )
   {
-#if rbuiltin
+#ifdef rbuiltin
    case "roxenbuiltin":
 #ifdef THREADS
      object key = lock->lock();
