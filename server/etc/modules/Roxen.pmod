@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.129 2001/11/05 13:34:09 grubba Exp $
+// $Id: Roxen.pmod,v 1.130 2002/01/29 21:51:41 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -184,6 +184,15 @@ string decode_mode(int m)
 }
 
 mapping add_http_header(mapping to, string name, string value)
+//! Adds a header @[name] with value @[value] to the header style
+//! mapping @[to] (which commonly is @tt{id->misc[" _extra_heads"]@})
+//! if no header with that value already exist.
+//!
+//! @note
+//! This function doesn't notify the RXML p-code cache, which makes it
+//! inappropriate to use for updating @tt{id->misc[" _extra_heads"]@}
+//! in RXML tags (which has been its primary use). Use
+//! @[RequestID.add_response_header] instead.
 {
   if(to[name]) {
     if(arrayp(to[name])) {
@@ -3061,9 +3070,10 @@ class ScopeCookie {
     if (!c) c = RXML_CONTEXT;
     if(c->id->cookies[var]!=val) {
       c->id->cookies[var]=val;
-      add_http_header(c->misc[" _extra_heads"], "Set-Cookie", http_encode_cookie(var)+
-		      "="+http_encode_cookie( val )+
-		      "; expires="+http_date(time(1)+(3600*24*365*2))+"; path=/");
+      c->id->add_response_header (
+	"Set-Cookie", http_encode_cookie(var)+
+	"="+http_encode_cookie( val )+
+	"; expires="+http_date(time(1)+(3600*24*365*2))+"; path=/");
     }
     return val;
   }
@@ -3078,8 +3088,9 @@ class ScopeCookie {
     if (!c) c = RXML_CONTEXT;
     if(!c->id->cookies[var]) return;
     predef::m_delete(c->id->cookies, var);
-    add_http_header(c->misc[" _extra_heads"], "Set-Cookie",
-		    http_encode_cookie(var)+"=; expires=Thu, 01-Jan-70 00:00:01 GMT; path=/");
+    c->id->add_response_header (
+      "Set-Cookie",
+      http_encode_cookie(var)+"=; expires=Thu, 01-Jan-70 00:00:01 GMT; path=/");
   }
 
   string _sprintf() { return "RXML.Scope(Cookie)"; }
@@ -3356,8 +3367,8 @@ void set_cookie( RequestID id,
                  int|void expire_time_delta, 
                  string|void domain, 
                  int(1..1)|string|void path )
-//! Set the cookie specified by @[name] to @[value].
-//! Adds a Set-Cookie header to the id->misc->moreheads mapping.
+//! Set the cookie specified by @[name] to @[value]. Adds a Set-Cookie
+//! header in the response that will be made from @[id].
 //!
 //! @param expire_time_delta
 //! If the expire_time_delta variable is -1, the cookie is set to
@@ -3383,9 +3394,7 @@ void set_cookie( RequestID id,
 
   if( domain ) cookie += "; domain="+http_encode_cookie( domain );
   if( path!=1 ) cookie += "; path="+http_encode_cookie( path||"" );
-  if(!id->misc->moreheads)
-    id->misc->moreheads = ([]);
-  add_http_header( id->misc->moreheads, "Set-Cookie",cookie );
+  id->add_response_header ("Set-Cookie", cookie);
 }
 
 void remove_cookie( RequestID id,
