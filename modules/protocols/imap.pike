@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.87 1999/02/26 19:11:54 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.88 1999/02/26 19:12:54 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -1165,7 +1165,7 @@ class backend
        * delimiter is returned. This permits a client to get the hierarchy
        * delimiter even when no mailboxes by that name currently exist.
        */
-      return ({ ({ imap_list( ({ "\Noselect" })), "nil", "" }) });
+      return ({ ({ imap_list( ({ "\Noselect" })), "nil", "\"\"" }) });
     }
     
     return Array.map(imap_glob(glob,
