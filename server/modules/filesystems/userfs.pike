@@ -20,7 +20,7 @@
 
 inherit "chili-module:filesystem" : filesystem;
 
-constant cvs_version="$Id: userfs.pike,v 1.73 2004/06/04 08:29:20 _cvs_stephen Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.74 2004/06/09 21:44:19 _cvs_dirix Exp $";
 constant module_type = MODULE_LOCATION;
 constant module_name = "File systems: User file system";
 constant module_doc  =
@@ -366,7 +366,8 @@ array(int) stat_file(string f, RequestID id)
 
   if(u)
   {
-    array us, st;
+    array us; 
+    Stdio.Stat st;
     us = id->conf->userinfo( u, id );
     if(query("homedir"))
     {
@@ -387,7 +388,7 @@ array(int) stat_file(string f, RequestID id)
       f = query("searchpath") + u + "/" + f;
     st = filesystem::stat_file( f,id );
     if(!st) return 0;
-    if(query("own") && (!us || ((int)us[2] != st[-2]))) return 0;
+    if(query("own") && (!us || ((int)us[2] != st->uid))) return 0;
     return st;
   }
   return 0;
