@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.48 2000/02/11 01:08:25 mast Exp $
+//! $Id: module.pmod,v 1.49 2000/02/12 21:24:03 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -1044,7 +1044,11 @@ class Context
   string _sprintf() {return "RXML.Context" + PAREN_CNT (__count);}
 
 #ifdef MODULE_DEBUG
+#if constant (thread_create)
+  Thread.Thread in_use;
+#else
   int in_use;
+#endif
 #endif
 }
 
@@ -1063,7 +1067,7 @@ inline void set_context (Context ctx) {_context = ctx;}
 inline Context get_context() {return _context;}
 #endif
 
-#ifdef MODULE_DEBUG
+#if defined (MODULE_DEBUG) && constant (thread_create)
 
 // Got races in this debug check, but looks like we have to live with that. :\
 
@@ -1071,9 +1075,9 @@ inline Context get_context() {return _context;}
   Context __old_ctx = get_context();					\
   set_context (ctx);							\
   if (ctx) {								\
-    if (ctx->in_use && __old_ctx != ctx)				\
+    if (ctx->in_use && ctx->in_use != this_thread())			\
       error ("Attempt to use context asynchronously.\n");		\
-    ctx->in_use = 1;							\
+    ctx->in_use = this_thread();					\
   }
 
 #define LEAVE_CONTEXT()							\
