@@ -3,7 +3,7 @@
 // User database. Reads the system password database and use it to
 // authentificate users.
 
-string cvs_version = "$Id: userdb.pike,v 1.8.2.1 1997/03/02 19:25:04 grubba Exp $";
+string cvs_version = "$Id: userdb.pike,v 1.8.2.2 1997/03/09 13:38:26 grubba Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -322,6 +322,8 @@ array|int auth(string *auth, object id)
   id->misc->uid = users[u][2];
   id->misc->gid = users[u][3];
   id->misc->gecos = users[u][4];
+  id->misc->home = users[u][5];
+  id->misc->shell = users[u][6];
   succ++;
   return ({ 1, u, 0 }); // u is a valid user.
 }
