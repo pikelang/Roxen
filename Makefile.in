@@ -15,31 +15,11 @@ LDFLAGS=@LDFLAGS@
 
 PIKEVERSION=@PIKEVERSION@
 
-all:	make_vpath strip_manual @MAKE_GMP@ @MAKE_GDBM@ @MAKE_ZLIB@ @MAKE_PLATFORM@ pike extern
+# Used to avoid make compatibility problems.
+BIN_TRUE=":"
 
-make_vpath: make_vpath.in
-	@touch $(SRCDIR)/make_vpath
-	@echo
-	@echo "Warning: $(MAKE) doesn't seem to understand VPATH"
-	@echo
-	@echo "Fixing..."
-	@echo
-	@echo "Directories..."
-	@for d in `cd $(SRCDIR);find @MAKE_GMP@ @MAKE_GDBM@ @MAKE_ZLIB@ @MAKE_PLATFORM@ pike extern -type d -print`; do\
-	  test -d $$d || mkdir $$d; \
-	done
-	@echo "Creating symlinks for all the files..."
-	@for d in `cd $(SRCDIR);find @MAKE_GMP@ @MAKE_GDBM@ @MAKE_ZLIB@ @MAKE_PLATFORM@ pike extern -depth -type d -print` .; do \
-	  for f in `cd $(SRCDIR)/$$d; echo *`; do \
-	    if test "`ls -d $$d/$$f 2>/dev/null||:`" = ""; then \
-	      (cd $$d; ln -s $(SRCDIR)/$$f $$f); \
-	    else :; fi; \
-	  done; \
-	done
-	@echo "Done."
-	@echo
-	@echo "Applied VPATH workaround"
-	@echo
+all:	strip_manual @MAKE_GMP@ @MAKE_GDBM@ @MAKE_ZLIB@ @MAKE_PLATFORM@ pike extern
+	-@$(BIN_TRUE)
 
 strip_manual: force
 	@cd $(SRCDIR) && \
@@ -76,11 +56,14 @@ zlib: force
 #	else :; fi; \
 
 force:
-	:
+	-@$(BIN_TRUE)
 
 # These are here for compatibility with the easy-start makefile
 easy: all
+	-@$(BIN_TRUE)
+
 hard: all
+	-@$(BIN_TRUE)
 
 depend:
 	-@(cd pike/$(PIKEVERSION)/src;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" depend)
@@ -114,14 +97,17 @@ new_peep_engine:
 	@(cd pike/$(PIKEVERSION)/src;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" new_peep_engine)
 
 check: verify
+	-@$(BIN_TRUE)
 
 clean:
 	@(cd pike/$(PIKEVERSION)/src;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" clean)
 	@(cd extern;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" clean)
 
 install_all: install_pike install
+	-@$(BIN_TRUE)
 
 install: all install_only
+	-@$(BIN_TRUE)
 
 install_only: 
 	$(SRCDIR)/mkdir -p $(prefix)/roxen/
