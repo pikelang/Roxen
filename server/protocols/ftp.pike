@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.64 1997/10/09 15:25:53 grubba Exp $
+ * $Id: ftp.pike,v 1.65 1997/10/11 20:56:29 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -33,6 +33,10 @@ inherit "roxenlib";
 #include <config.h>
 #include <module.h>
 #include <stat.h>
+
+#if !constant(Privs)
+constant Privs=((program)"privs");
+#endif /* !constant(Privs) */
 
 import Array;
 
@@ -780,10 +784,11 @@ void ftp_async_connect(function(object,mixed:void) fun, mixed arg)
   
   object(files.file) f = files.file();
 
-  object privs = ((program)"privs")("FTP: Opening the control-port.");
+  object privs = Privs("FTP: Opening the control-port.");
 
   if(!f->open_socket(controlport_port-1))
   {
+    privs = 0;
 #ifdef FTP_DEBUG
     perror("ftp: socket("+(controlport_port-1)+") failed. Trying with any port.\n");
 #endif
