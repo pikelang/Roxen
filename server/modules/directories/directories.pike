@@ -1,7 +1,7 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
 // A quite complex directory module. Generates macintosh like listings.
-string cvs_version = "$Id: directories.pike,v 1.9 1997/03/26 05:54:09 per Exp $";
+string cvs_version = "$Id: directories.pike,v 1.10 1997/04/09 21:09:28 marcus Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -13,12 +13,19 @@ int idi;
 
 program dirnode_program = class {
 
+  string prefix;
   int finished, idi=time();
   array stat;
   inherit "base_server/struct/node";
 
 #define configurl(f) ("/internal-roxen-"+f)
 #define image(f) ("<img border=0 src="+(f)+" alt=\"\">")
+
+  void create(string|void pseudoroot)
+  {
+    prefix = (pseudoroot||"");
+    // ::create();
+  }
 
   inline string configimage(string f) 
   { 
@@ -40,9 +47,24 @@ program dirnode_program = class {
     return ("<a href="+(b+"?"+(idi++))+">"+(a)); 
   }
 
+  // string path(int i)
+  // {
+  //   return prefix + ::path(i);
+  // }
+
+  object descend(string what, int nook)
+  {
+    object o = ::descend(what, nook);
+    // This is too much work. prefix only needs to be set when the new
+    // node is created.
+    if (o)
+      o->prefix = prefix;
+    return o;
+  }
+
   string show_me(string s, string root)
   {
-    string name = path(1), lname;
+    string name = prefix + path(1), lname;
     lname = name/*[strlen(root)..]*/;
     if(!stat) return "";
     if(stat[1]>-1) return "   "+link(s, name);
@@ -176,7 +198,26 @@ void start()
 object _root;
 object root(object id)
 {
-  return _root||(_root=dirnode_program());
+  if (!_root)
+  {
+    string r;
+    // Find the root of this server. This is usually /, but in some
+    // abnormal cases the Server Location is set to an URL with a
+    // trailing directory.
+    if (sscanf(my_configuration()->QUERY(MyWorldLocation),
+	       "%*s//%*s/%s/", r) == 3)
+    {
+      r = "/"+r;
+      // perror("This is an abnormal MyWorldLocation: %s\n"
+      // 	"Prefix: %s\n",
+      // 	my_configuration()->QUERY(MyWorldLocation), r);
+    }
+    else
+      r = "";
+    
+    _root=dirnode_program(r);
+  }
+  return _root;
 }
 
 
