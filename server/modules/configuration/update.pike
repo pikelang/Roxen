@@ -1,5 +1,5 @@
 /*
- * $Id: update.pike,v 1.38 2004/06/30 16:58:53 mast Exp $
+ * $Id: update.pike,v 1.39 2004/09/27 09:55:26 grubba Exp $
  *
  * The Roxen Update Client
  * Copyright © 2000 - 2004, Roxen IS.
@@ -151,7 +151,7 @@ void create()
 	 TYPE_STRING,
 	 "Format: username@host:password. "
 	 "Will not use auth if left empty.");
-  defvar("do_external_updates",1,"Connect to update.roxen.com for updates",
+  defvar("do_external_updates",0,"Connect to update.roxen.com for updates",
 	 TYPE_FLAG,
          "Turn this off if you're inside a firewall and/or don't want to "
 	 "reveal anything to the outside world.");
