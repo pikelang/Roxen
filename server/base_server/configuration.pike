@@ -1,6 +1,6 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.415 2001/01/29 05:47:58 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.416 2001/01/30 04:49:55 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -679,7 +679,7 @@ User find_user( string user, RequestID|void id )
 {
   User uid;
 
-  if( id->misc->authenticated_user
+  if( id && id->misc->authenticated_user
       && ( uid = id->misc->authenticated_user->database->find_user( user ) ))
     return uid;
   
@@ -687,6 +687,28 @@ User find_user( string user, RequestID|void id )
     if( uid = m->find_user( user ) )
       return uid;
 }
+
+array(string) list_users()
+//! Fetches the full list of valid usernames from the authentication
+//! modules by calling the list-users() methods.
+{
+  array(string) list = ({});
+  foreach( user_databases(), UserDB m )
+    list |= m->list_users();
+  return list;
+}
+
+array(string) list_groups()
+//! Fetches the full list of valid groupnames from the authentication
+//! modules by calling the list-users() methods.
+{
+  array(string) list = ({});
+  foreach( user_databases(), UserDB m )
+    list |= m->list_groups();
+  return list;
+}
+
+
 
 Group find_group( string group, RequestID|void id )
 //! Tries to find the specified group in the currently available user
@@ -697,7 +719,7 @@ Group find_group( string group, RequestID|void id )
 {
   Group uid;
 
-  if( id->misc->authenticated_user
+  if( id && id->misc->authenticated_user
       && ( uid = id->misc->authenticated_user->database->find_group( group ) ))
     return uid;
   
