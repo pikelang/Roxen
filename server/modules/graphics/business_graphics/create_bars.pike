@@ -14,7 +14,7 @@ constant STORT = 1.0e40;
 
 inherit "create_graph.pike";
 
-constant cvs_version = "$Id: create_bars.pike,v 1.52 1997/11/30 05:05:41 hedda Exp $";
+constant cvs_version = "$Id: create_bars.pike,v 1.53 1997/11/30 06:02:10 hedda Exp $";
 
 /*
 These functions is written by Henrik "Hedda" Wallin (hedda@idonex.se)
@@ -25,11 +25,11 @@ Create_bars can draw normal bars, sumbars and normalized sumbars.
 
 mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 {
-  //Supportar bara xsize>=100
+  //Supports only xsize>=100
 
   int si=diagram_data["fontsize"];
  
-  //Fixa defaultfärger!
+  //Fix defaultcolors!
   setinitcolors(diagram_data);
 
 
