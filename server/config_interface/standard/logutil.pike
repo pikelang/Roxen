@@ -120,7 +120,7 @@ array(string) get_conf_url_to_module(string|object(RoxenModule) m, string|void l
   string url_modname = replace(conf->otomod[module], "#", "!"),
 	url_confname = conf->name;
 
-  return ({ sprintf("/%s/sites/site.html/%s/modules/%s/",
+  return ({ sprintf("/%s/sites/site.html/%s/%s/",
 		    lang || "standard", url_confname, url_modname),
 	    Roxen.get_modfullname(module) });
 }
