@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: html_wash.pike,v 1.5 2000/08/21 12:27:34 wellhard Exp $";
+constant cvs_version = "$Id: html_wash.pike,v 1.6 2000/08/29 18:50:21 kuntri Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_PARSER;
 constant module_name = "HTML washer";
@@ -163,5 +163,50 @@ class TagWashHtml
 	     "(((www)|(ftp))(\\.[^ \t\n\r<>\"]+)+)");
   }
 }
+
+// --------------------- Documentation -----------------------
+
+TAGDOCUMENTATION;
+#ifdef manual
+constant tagdoc=([
+"wash-html":#"<desc cont><short hide>
+
+ </short>
+
+</desc>
+
+<attr name='keep-tags' value=''>
+
+</attr>
+
+<attr name='keep-containers' value=''>
+
+</attr>
+
+<attr name='quote' value=''>
+
+</attr>
+
+<attr name='unquote' value=''>
+
+</attr>
+
+<attr name='paragraphify' value=''>
+
+ If more than one newline exists between two text elements, this
+ attribute automatically makes the next text element into a paragraph.
+
+</attr>
+
+<attr name='unparagraphify' value=''>
+
+</attr>
+
+<attr name='keep-all' value=''>
+
+</attr>",
+
+    ]);
+#endif
 
 
