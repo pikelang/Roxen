@@ -31,10 +31,10 @@ esac
 AC_MSG_RESULT($with_pike)
 
 if test "x$with_pike" = "xdual"; then
-  for d in `cd $srcdir; echo [0-9]*`; do
+  for d in `cd $srcdir; echo \[0-9\]*`; do
     test -d $d/. || mkdir $d
   done
-  pike_subdirs=`cd $srcdir; echo [0-9]*/src`
+  pike_subdirs=`cd $srcdir; echo \[0-9\]*/src`
 else
   test -d $with_pike/. || mkdir $with_pike
   pike_subdirs=$with_pike/src
