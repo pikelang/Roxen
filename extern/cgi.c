@@ -83,9 +83,10 @@ fd_set writefd[1];
 Content-Type: text/html\r\n\r\n\
 <title>CGI-script error</title> \n\
 <h1>CGI-script error</h1> \n\
-The CGI script you tried to access is not working correctly. It tries \n\
-to return too many headers (probably due to correct separation between \n\
-the headers and the body of the reply.\n"
+The CGI script you accessed is not working correctly. It tried \n\
+to send too much header data (probably due to incorrect separation between \n\
+the headers and the body. Please notify the author of the script of this\n\
+problem.\n"
 
 
 
