@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.213 2001/03/13 19:46:46 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.214 2001/03/13 20:26:54 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -463,7 +463,7 @@ class TagUnset {
   inherit RXML.Tag;
   constant name = "unset";
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
-  array(RXML.Type) result_types = ({RXML.t_any}); // Returns nil.
+  array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
 
   class Frame {
     inherit RXML.Frame;
@@ -485,7 +485,7 @@ class TagSet {
   constant name = "set";
   mapping(string:RXML.Type) req_arg_types = ([ "variable": RXML.t_text(RXML.PEnt) ]);
   RXML.Type content_type = RXML.t_any (RXML.PXml);
-  array(RXML.Type) result_types = ({RXML.t_any}); // Returns nil.
+  array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
 
   class Frame {
     inherit RXML.Frame;
@@ -529,7 +529,7 @@ class TagInc {
   constant name = "inc";
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
   mapping(string:RXML.Type) req_arg_types = ([ "variable":RXML.t_text ]);
-  array(RXML.Type) result_types = ({RXML.t_any}); // Returns nil.
+  array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
 
   class Frame {
     inherit RXML.Frame;
@@ -548,7 +548,7 @@ class TagDec {
   constant name = "dec";
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
   mapping(string:RXML.Type) req_arg_types = ([ "variable":RXML.t_text ]);
-  array(RXML.Type) result_types = ({RXML.t_any}); // Returns nil.
+  array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
 
   class Frame {
     inherit RXML.Frame;
