@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.3 1998/07/08 18:01:32 grubba Exp $
+ * $Id: smtp.pike,v 1.4 1998/07/08 21:44:08 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.3 1998/07/08 18:01:32 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.4 1998/07/08 21:44:08 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -60,8 +60,35 @@ class Server {
       "QUIT":"",
     ]);
 
+    string localhost = gethostname();
+    string remotehost;
+    string remoteip;
+    string remotename;
     object conf;
-    int ehlo_mode;
+    string prot = "SMTP";
+
+    static string mktimestamp()
+    {
+      mapping lt = localtime(time());
+
+      string tz = "GMT";
+      int off;
+
+      if (off = -lt->timezone) {
+	tz = sprintf("GMT%+d", off/3600);
+      }
+      if (lt->isdst) {
+	tz += "DST";
+	off += 3600;
+      }
+
+      off /= 60;
+
+      return(sprintf("%s, %02d %s %04d %02d:%02d:%02d %+03d%02d (%s)",
+		     weekdays[lt->wday], lt->mday, months[lt->mon],
+		     1900 + lt->year, lt->hour, lt->min, lt->sec,
+		     off/60, off%60, tz));
+    }
 
     static void handle_command(string data)
     {
@@ -127,7 +154,7 @@ class Server {
 			 gethostname(), ident[2], args,
 			 (con->query_address()/" ")*":") });
       }
-      if (ehlo_mode) {
+      if (prot == "ESMTP") {
 	res += ({});	// Supported extensions...
       }
       send(250, res);
@@ -135,13 +162,15 @@ class Server {
 
     void smtp_HELO(string helo, string args)
     {
+      remotename = args;
+      remoteip = con->query_address();
       Protocols.Ident->lookup_async(con, ident_HELO, args);
     }
 
     void smtp_EHLO(string ehlo, string args)
     {
-      ehlo_mode = 1;
-      Protocols.Ident->lookup_async(con, ident_HELO, args);
+      prot = "ESMTP";
+      smtp_HELO("HELO", args);
     }
 
     static multiset(string) expand_recipient(string recipient)
@@ -159,7 +188,7 @@ class Server {
 	  }
 	  to_expand[r] = 0;
 	  seen[r] = 1;
-	  foreach(conf->get_providers("smtp_recipient"), object o) {
+	  foreach(conf->get_providers("smtp_recipient")||({}), object o) {
 	    if (functionp(o->expand_recipient)) {
 	      multiset(string) nr = o->expand_recipient(r);
 	      if (nr) {
@@ -207,7 +236,7 @@ class Server {
 	  sscanf("%*[ ]%s", sender, sender);
 	  if (sizeof(sender)) {
 
-	    foreach(conf->get_providers("smtp_filter"), object o) {
+	    foreach(conf->get_providers("smtp_filter")||({}), object o) {
 	      // roxen_perror("Got SMTP filter\n");
 	      if (functionp(o->verify_sender) &&
 		  o->verify_sender(sender)) {
@@ -242,7 +271,7 @@ class Server {
 	  string recipient = args[i+1..];
 	  sscanf("%*[ ]%s", recipient, recipient);
 	  if (sizeof(recipient)) {
-	    foreach(conf->get_providers("smtp_filter"), object o) {
+	    foreach(conf->get_providers("smtp_filter")||({}), object o) {
 	      // roxen_perror("Got SMTP filter\n");
 	      if (functionp(o->verify_recipient) &&
 		  o->verify_recipient(sender, recipient, this_object())) {
@@ -267,6 +296,34 @@ class Server {
     void handle_DATA(string data)
     {
       // Add received-headers here.
+
+      roxen_perror(sprintf("GOT: %O\n", data));
+
+      object mess = MIME.Message(data, 0, 0, 1);
+
+      string received = sprintf("from %s (%s [%s]) by %s with %s id %s; %s",
+				remotename, remotehost||"", remoteip,
+				localhost, prot, "NONE", mktimestamp());
+
+      roxen_perror(sprintf("Received: %O\n", received));
+
+      if (mess->headers["received"]) {
+      } else {
+	mess->headers["received"] = ({ received });
+      }
+
+      foreach(indices(recipients), string r) {
+	foreach(conf->get_provider("smtp_recipient")||({}), object o) {
+	  if (functionp(o->receive)) {
+	    if (o->receive(mess, sender, r)) {
+	      // Received.
+	      recipients[r] = 0;
+	      break;
+	    }
+	  }
+	}
+      }
+
       send(250);
     }
 
@@ -293,7 +350,7 @@ class Server {
     {
       conf = conf_;
 
-      foreach(conf->get_providers("smtp_filter"), object o) {
+      foreach(conf->get_providers("smtp_filter") ||({}), object o) {
 	// roxen_perror("Got SMTP filter\n");
 	if (functionp(o->verify_connection) &&
 	    o->verify_connection(con_)) {
@@ -309,10 +366,8 @@ class Server {
       ::create(con_);
 
       mapping lt = localtime(time());
-      send(220, ({ sprintf("%s ESMTP %s; %s, %02d %s %04d %02d:%02d:%02d",
-			   gethostname(), roxen->version(),
-			   weekdays[lt->wday], lt->mday, months[lt->mon],
-			   1900 + lt->year, lt->hour, lt->min, lt->sec) }));
+      send(220, ({ sprintf("%s ESMTP %s; %s",
+			   gethostname(), roxen->version(), mktimestamp()) }));
     }
   }
 
