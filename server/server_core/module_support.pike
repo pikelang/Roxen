@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module_support.pike,v 1.130 2004/04/04 14:26:44 mani Exp $
+// $Id: module_support.pike,v 1.131 2004/05/30 00:03:27 _cvs_stephen Exp $
 
 #define IN_ROXEN
 #include <module_constants.h>
@@ -8,6 +8,29 @@
 #include <roxen.h>
 
 int dump( string file, program|void p );
+
+static int got_java_flag = 0;	// 1: yes, -1: no, 0: unknown.
+
+int got_java()
+//! Used to check dynamically whether Java support is available. If it
+//! is then this function will initialize a JVM.
+//!
+//! @appears roxen
+{
+  if (!got_java_flag) {
+    object jvm;
+    if (mixed err = catch (jvm = master()->resolv ("Java.jvm")))
+      report_error ("Failed to initialize Java JVM: %s\n",
+#ifdef DEBUG
+		    describe_backtrace (err)
+#else
+		    describe_error (err)
+#endif
+		   );
+    got_java_flag = jvm ? 1 : -1;
+  }
+  return got_java_flag > 0;
+}
 
 program my_compile_file(string file, void|int silent)
 {
@@ -276,11 +299,9 @@ class ModuleInfo( string sname, string filename )
     loader.push_compile_error_handler( ec );
     mixed err = catch
     {
-#if constant(Java.jvm)
-      if( filename[sizeof(filename)-6..]==".class" ||
-	  filename[sizeof(filename)-4..]==".jar" )
+      if( (has_suffix (filename, ".class") || has_suffix (filename, ".jar")) &&
+	  got_java())
 	return ((program)"javamodule.pike")(conf, filename);
-#endif
       return load( filename, silent )( conf );
     };
     loader.pop_compile_error_handler( );
@@ -490,17 +511,14 @@ array(string) rec_find_all_modules( string dir )
       {
         if( file[0] == '.' ) continue;
         if( file[-1] == '~' ) continue;
-        if( (< "so", "pike",
-#if constant(Java.jvm)
-	       "class", "jar"
-#endif
-	>)[ extension( file ) ] )
+	if( (< "so", "pike">)[ extension( file ) ] ||
+	    (<"class", "jar">)[extension (file)] && got_java())
         {
           Stdio.File f = open( dir+file, "r" );
           if( (f->read( 4 ) != "#!NO" ) )
             modules |= ({ strip_extention( file ) });
         }
-        else if( (s = file_stat( dir+file )) &&
+	else if( (s = file_stat( dir+file )) &&
 		 s->isdir &&
 		 (file != "pike-modules") &&
 		 (file != "CVS") )
