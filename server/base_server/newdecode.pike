@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: newdecode.pike,v 1.23 2000/03/01 19:04:30 per Exp $
+// $Id: newdecode.pike,v 1.24 2000/03/01 20:19:46 per Exp $
 
 // The magic below is for the 'install' program
 #ifndef roxenp
@@ -247,8 +247,7 @@ string encode_config_region(mapping m, string reg, object c)
 string encode_regions(mapping r, object c)
 {
   string v;
-  string res = ("<!-- -*- html -*- -->\n"
-                "<?XML version=\"1.0\"?>\n\n");
+  string res = ("<?XML version=\"1.0\" encoding=\"UTF-8\"?>\n\n");
   foreach(sort(indices(r)), v)
     res += "<region name='"+v+"'>\n" +
              encode_config_region(r[v],v,c)
