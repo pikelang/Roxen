@@ -1,10 +1,12 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module.pike,v 1.111 2001/03/08 14:35:40 per Exp $
+// $Id: module.pike,v 1.112 2001/06/11 02:45:38 per Exp $
 
 #include <module_constants.h>
 #include <module.h>
 #include <request_trace.h>
+
+constant __pragma_save_parent__ = 1;
 
 inherit "basic_defvar";
 mapping(string:array(int)) error_log=([]);
