@@ -1,5 +1,5 @@
 /*
- * $Id: Server.pike,v 1.16 1998/04/09 13:32:00 grubba Exp $
+ * $Id: Server.pike,v 1.17 2000/11/16 11:50:41 per Exp $
  */
 
 #define error(X) throw(({X, backtrace()}))
@@ -43,6 +43,7 @@ class Connection
 
   void handle_cmd(mapping cmd)
   {
+#if 0
     if(cmd->add_refs) refs[cmd->add_refs]++;
     if(cmd->subtract_refs)
     {
@@ -59,6 +60,7 @@ class Connection
 	master->remove_identifier(r,q);
       }
     }
+#endif
   }
   
   void destroy()
