@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.64 2001/08/24 14:44:26 nilsson Exp $
+// $Id: module.pmod,v 1.65 2001/08/28 04:42:42 nilsson Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -511,6 +511,7 @@ class Variable
     mixed val;
     if( sizeof( val = get_form_vars(id)) && val[""])
     {
+      set_warning(0);
       val = transform_from_form( val[""], val );
       if( !force && val == query() )
 	return 0;
@@ -527,7 +528,7 @@ class Variable
       }
       if( b ) 
       {
-        set_warning( b[0] );
+        add_warning( b[0] );
 	set( b[1] );
 	return 1;
       }
@@ -662,8 +663,20 @@ class Float
     return ({ warn, new_value });
   }
   
-  float transform_from_form( string what )
+  float transform_from_form( mixed what )
   {
+    string junk;
+    if(!sizeof(what)) {
+      add_warning(LOCALE(80, "No data entered.\n"));
+      return _min;
+    }
+    sscanf(what, "%f%s", what, junk);
+    if(!junk) {
+      add_warning(LOCALE(81, "Data is not a float.\n"));
+      return _min;
+    }
+    if(sizeof(junk))
+      add_warning(sprintf(LOCALE(82, "Found the string %O trailing after the float.\n"), junk));
     return (float)what;
   }
 
@@ -732,7 +745,18 @@ class Int
 
   int transform_from_form( mixed what )
   {
-    sscanf( what, "%d", what );
+    string junk;
+    if(!sizeof(what)) {
+      add_warning(LOCALE(80, "No data entered.\n"));
+      return _min;
+    }
+    sscanf( what, "%d%s", what, junk );
+    if(!junk) {
+      add_warning(LOCALE(83, "Data is not an integer\n"));
+      return _min;
+    }
+    if(sizeof(junk))
+      add_warning(sprintf(LOCALE(84, "Found the string %O trailing after the integer.\n"), junk));
     return what;
   }
 
@@ -1230,6 +1254,7 @@ class List
     if( (int)vl[".count"] != _current_count )
       return 0;
     _current_count++;
+    set_warning(0);
 
     foreach( indices( vl ), string vv )
       if( sscanf( vv, ".set.%d", rn ) && (vv == ".set."+rn) )
@@ -1275,9 +1300,9 @@ class List
     if( q || sizeof( b ) != 2 )
     {
       if( q )
-	set_warning( q );
+	add_warning( q );
       else
-	set_warning( "Internal error: Illegal sized array "
+	add_warning( "Internal error: Illegal sized array "
 		     "from verify_set_from_form\n" );
       return 0;
     }
@@ -1285,7 +1310,7 @@ class List
     int ret;
     if( b ) 
     {
-      set_warning( b[0] );
+      add_warning( b[0] );
       set( b[1] );
       ret = 1;
     }
