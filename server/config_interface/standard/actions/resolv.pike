@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.3 2000/03/02 21:00:40 mast Exp $
+ * $Id: resolv.pike,v 1.4 2000/03/16 03:52:20 mast Exp $
  */
 
 inherit "wizard";
@@ -158,7 +158,7 @@ string parse(object id)
   res += "<table cellpadding=0 cellspacing=10 border=0>"
          "<tr><td align=left>User: <input name=user  value='&form.user;' size=12></td>\n"
          "<td align=left>&nbsp;&nbsp;&nbsp;Password: <input name=password value='&form.password;' type=password size=12>"
-	 "</td></tr></table><cf-ok> <cf-cancel>\n";
+	 "</td></tr></table><cf-ok> <cf-cancel href='?class=&form.class;'>\n";
 
   string p,a,b;
   object nid, c;
