@@ -74,7 +74,7 @@ string i_lmenu_tag_item(string t, mapping m, string d, mapping c, RequestID id)
 
 string submit_gtxt( string name, mapping gta, string cnts, object id )
 {
-  return "<cset preparse variable=___gtext>"+
+  return "\n<cset preparse variable=___gtext>"+
          make_container( "gtext-url",gta,cnts)+"</cset>"
          "<formoutput quote=½>"+
          make_tag( "input",
@@ -83,7 +83,7 @@ string submit_gtxt( string name, mapping gta, string cnts, object id )
                       "src":"½___gtext:quote=none½",
                       "border":"0",
                    ]) )+
-         "</formoutput>";
+         "</formoutput>\n";
 }
 
 constant nbsp = iso88591["&nbsp;"];
@@ -95,8 +95,8 @@ string present_items(array i, int ind, object id)
     string foreground = "$LEFT_FG$";
     if(item->selected)
     {
-      res += ("<table cols=1 width=100% cellpadding=0 cellspacing=0 border=0>"
-	      "<tr><td bgcolor=$LEFT_SELECTED_BG$>");
+      res += ("<table cols=1 width=100% cellpadding=0 cellspacing=0 border=0>\n"
+	      "<tr>\n<td bgcolor=\"$LEFT_SELECTED_BG$\">\n");
       foreground = "$LEFT_SELECTED_FG$";
     }
 
@@ -108,9 +108,9 @@ string present_items(array i, int ind, object id)
                        ]),
                        (" "*(ind*4+2))+(item->title),
                        id )+
-          "</nobr><br>");
+          "</nobr><br>\n");
     if(item->selected)
-      res += "</td></tr></table>";
+      res += "</td>\n</tr></table>\n";
     res += present_items(item->items,ind+1,id);
   }
   return res;
@@ -128,15 +128,15 @@ string internal_c_leftmenu(string t, mapping m, string d, mapping c, RequestID i
     m->title = "";
   c->left += "<gtext verbatim afont=haru font_size=40 scale=0.5 fg=#dcefff> "+
     (m->title/""*" ")+
-    "</gtext><br><img src=/internal-roxen-unit height=3 width=1><br>" 
+    "</gtext><br>\n<img src=/internal-roxen-unit height=3 width=1><br>\n" 
              + present_items( items,0,id );
   return "";
 }
 
 string internal_c_middle(string t, mapping m, string d, mapping c,RequestID id)
 {
-  c->middle = ("<b><smallcaps space>"+m->title+
-	       "</smallcaps></b><br>"+d);
+  c->middle = ("\n<b><smallcaps space>"+m->title+
+	       "</smallcaps></b><br>\n"+d+"\n");
   return "";
 }
 
@@ -158,7 +158,7 @@ string table(string data, string|void aa)
     aa = "";
   else
     aa=" "+aa;
-  return "<table border=0 cellpadding=0 cellspacing=0 "+aa+">\n"+data+"\n</table>";
+  return "<table border=0 cellpadding=0 cellspacing=0 "+aa+">\n"+data+"\n</table>\n";
 }
 
 string tr(string data, string|void aa)
@@ -176,13 +176,8 @@ string td(string data, string|void aa)
     aa = "";
   else
     aa=" "+aa;
-  return "<td"+aa+">"+data+"</td>";
+  return "<td"+aa+">"+data+"</td>\n";
 }
-
-void start(int n, Configuration c)
-{
-}
-
 
 constant colors_from = 
 ({ 
@@ -714,8 +709,15 @@ string container_configif_output(string t, mapping m, string c, object id)
      variables = map( sort(indices(rl) - ({ "Modules", "standard" })),
                       lambda( string l )
                       {
-                        string q = id->not_query, cl;
-                        sscanf( q, "/%[^/]/%s", cl, q );
+                        string q = id->not_query;
+                        string tmp;
+                        multiset cl = (<>);
+                        sscanf( q, "/%[^/]/%s", tmp, q );
+                        cl[ tmp ] = 1;
+                        cl[ LOW_LOCALE->latin1_name ] = 1;
+                        if( LOW_LOCALE->latin1_name == "standard" )
+                          cl[ "english" ] = 1;
+                        
                         return ([
                           "name":rl[l]->name,
                           "latin1-name":rl[l]->latin1_name,
@@ -725,9 +727,9 @@ string container_configif_output(string t, mapping m, string c, object id)
                                                (id->query&&sizeof(id->query)? 
                                                 "?" +id->query:""),
                                                id),
-                          "selected":( cl == l ? "selected": "" ),
-                          "-selected":( cl == l ? "-selected": "" ),
-                          "selected-int":( cl == l ? "1": "0" ),
+                          "selected":( cl[l] ? "selected": "" ),
+                          "-selected":( cl[l] ? "-selected": "" ),
+                          "selected-int":( cl[l] ? "1": "0" ),
                         ]);
                       } );
      break;
