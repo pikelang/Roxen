@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.448 2004/05/18 18:24:10 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.449 2004/05/19 13:05:38 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -19,8 +19,6 @@ inherit RequestID;
 
 #ifdef PROFILE
 #define HRTIME() gethrtime()
-#define HRSEC(X) ((int)((X)*1000000))
-#define SECHR(X) ((X)/(float)1000000)
 int req_time = HRTIME();
 #endif
 
@@ -1539,17 +1537,19 @@ void send_result(mapping|void result)
   if (result)
     file = result;
 #ifdef PROFILE
-  float elapsed = SECHR(HRTIME()-req_time);
+  int elapsed = HRTIME()-req_time;
   string nid =
 #ifdef FILE_PROFILE
     (raw_url/"?")[0]
 #else
     dirname((raw_url/"?")[0])
 #endif
-         ;
+    + "?method="+method;
   array p;
-  if(!(p=conf->profile_map[nid]))
-    p = conf->profile_map[nid] = ({0,0.0,0.0});
+  if(!(p=conf->profile_map[nid])) {
+    // ({ count, sum, max })
+    p = conf->profile_map[nid] = ({0, 0, 0});
+  }
   p[0]++;
   p[1] += elapsed;
   if(elapsed > p[2]) p[2]=elapsed;
