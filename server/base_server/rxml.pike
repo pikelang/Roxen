@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.150 2000/02/25 01:33:17 nilsson Exp $
+// $Id: rxml.pike,v 1.151 2000/02/25 16:15:20 nilsson Exp $
 
 inherit "roxenlib";
 inherit "rxmlhelp";
@@ -39,12 +39,12 @@ string handle_run_error (RXML.Backtrace err, RXML.Type type, RequestID id)
   else
     _run_error=0;
   id->misc->defines[" _ok"]=0;
-  if(!id->misc->debug && !id->prestate->debug) return "";
   string where=sprintf("Error in %s.\n",id->raw_url);
 #ifdef MODULE_DEBUG
   // FIXME: Make this a user option.
   report_notice (where + describe_error (err));
 #endif
+  if(!id->misc->debug && !id->prestate->debug) return "";
   if (type->subtype_of (RXML.t_html) || type->subtype_of (RXML.t_xml))
     return "<br clear=\"all\" />\n<pre>" +
       html_encode_string (describe_error (err)) + "</pre>\n";
@@ -65,12 +65,12 @@ string handle_parse_error (RXML.Backtrace err, RXML.Type type, RequestID id)
   else
     _parse_error=0;
   id->misc->defines[" _ok"]=0;
-  if(!id->misc->debug && !id->prestate->debug) return "";
   string where=sprintf("Error in %s.\n",id->raw_url);
 #ifdef MODULE_DEBUG
   // FIXME: Make this a user option.
   report_notice (where + describe_error (err));
 #endif
+  if(!id->misc->debug && !id->prestate->debug) return "";
   if (type->subtype_of (RXML.t_html) || type->subtype_of (RXML.t_xml))
     return "<br clear=\"all\" />\n<pre>" +
       html_encode_string (describe_error (err)) + "</pre>\n";
