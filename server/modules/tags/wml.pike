@@ -8,7 +8,7 @@
 inherit "module";
 
 constant thread_safe = 1;
-constant cvs_version = "$Id: wml.pike,v 1.14 2000/12/22 21:58:23 nilsson Exp $";
+constant cvs_version = "$Id: wml.pike,v 1.15 2000/12/22 22:03:58 nilsson Exp $";
 
 constant module_type = MODULE_TAG;
 constant module_name = "WAP WML helper";
@@ -344,8 +344,8 @@ string simpletag_wml(string tag, mapping m, string|array(string) c, RequestID id
    }
   else {
     string ua=id->client*" ";
-    wap[to]->character_encode(c, ua);
-    wap[to]->client_kludge(c, ua);
+    c=wap[to]->character_encode(c, ua);
+    c=wap[to]->client_kludge(c, ua);
   }
 
   if(!m->noheader) c=wap[to]->header+c;
