@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.23 1997/01/27 00:00:20 per Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.23.2.1 1997/02/04 21:39:44 grubba Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -189,7 +189,7 @@ object (Image) load_image(string f)
   return img/*->copy()*/;
 }
 
-object (Image) blur(object (Image) img, int amnt)
+object (Image) blur(object /* (Image) */ img, int amnt)
 {
   img->setcolor(0,0,0);
   img = img->autocrop(amnt, 0,0,0,0, 0,0,0);
@@ -264,7 +264,7 @@ object (Image) bevel(object (Image) in, int width, int|void invert)
 
 object (Image) make_text_image(mapping args, object font, string text)
 {
-  object (Image) text_alpha=font->write(@(text/"\n"));
+  object /* (Image) */ text_alpha=font->write(@(text/"\n"));
   int xoffset=0, yoffset=0;
 
   if(!text_alpha->xsize() || !text_alpha->ysize())
