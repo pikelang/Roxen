@@ -1,15 +1,16 @@
-/* $Id: listfonts.pike,v 1.1 2000/02/04 05:39:13 per Exp $ */
+/* $Id: listfonts.pike,v 1.2 2000/02/04 05:49:18 per Exp $ */
 #if constant(available_font_versions)
 inherit "wizard";
 
 constant action = "maintenance";
 constant name= "List Available Fonts";
 constant doc = "List all available fonts";
+
 string versions(string font)
 {
   array res=({ });
   array b = available_font_versions(font,32);
-  array a = Array.map(b,describe_font_type);
+  array a = map(b,describe_font_type);
   mapping m = mkmapping(b,a);
   foreach(sort(indices(m)), string t)
     res += ({ "<input type=hidden name='"+(font+"/"+t)+"'>"+m[t] });
@@ -18,19 +19,10 @@ string versions(string font)
 
 string list_font(string font)
 {
-  return ("<font size=-1><input type=hidden value=on name='font:"+font+"'></font> "+
-          Array.map(replace(font,"_"," ")/" ",capitalize)*" "+" <font size=-1>"
+  return ("<input type=hidden value=on name='font:"+font+"'>"+
+          map(replace(font,"_"," ")/" ",capitalize)*" "+" <font size=-1>"
           + versions(font)+"</font><br>");
 }
-
-mapping render_font(object font, string text)
-{
-  if(!font) return http_string_answer(Image.GIF.encode(Image.image(10,10)),"image/gif");
-  return http_string_answer(Image.GIF.encode_trans(font->write(text)->invert()
-                                                   ->color(240,240,240), 16),
-                            "image/gif");
-}
-
 
 string page_0(object id)
 {
@@ -48,11 +40,7 @@ string page_1(object id)
   foreach(sort(glob("font:*",indices(v))), string f)
   {
     sscanf(f, "%*s:%s", f);
-    string fn = Array.map(replace(f,"_"," ")/" ",capitalize)*" ";
-    f = sprintf("action=%s&font=%s&italic=0&bold=0&text=%s&render=1",
-                http_encode_string(v->action),
-                http_encode_string(f),
-                http_encode_string(replace(v->text,"&","%26")));
+    string fn = map(replace(f,"_"," ")/" ",capitalize)*" ";
     res += fn+": <gtext align=top font='"+fn+"'>"+v->text+"</gtext><p>";
   }
   return res;
@@ -60,15 +48,7 @@ string page_1(object id)
 
 mixed parse(object id)
 {
-  if(!id->variables->render)
-    return wizard_for(id,0);
-
-  return render_font(get_font(id->variables->font,
-			      32,
-			      (int)id->variables->bold,
-			      (int)id->variables->italic,
-			      "left", 0.0,0.0),
-		     id->variables->text);
+  return wizard_for(id,0);
 }
 #else
 #error Only available under roxen 1.2a11 or newer
