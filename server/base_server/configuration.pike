@@ -1,6 +1,6 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.418 2001/02/27 02:54:18 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.419 2001/03/05 04:43:10 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -217,7 +217,11 @@ private void safe_stop_module (RoxenModule mod, string desc)
 {
   if (mixed err = catch (mod && mod->stop && mod->stop()))
     report_error ("While stopping " + desc + ": " + describe_backtrace (err));
-  if (!--num_modules) modules_stopped->signal();
+  if (!--num_modules)
+#ifdef THREADS
+    modules_stopped->signal()
+#endif
+      ;
 }
 
 void stop (void|int asynch)
