@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.131 2004/05/10 08:22:19 grubba Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.132 2004/05/10 11:41:56 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -1593,12 +1593,11 @@ mapping copy_file(string source, string dest, int(-1..1) behavior,
       return Roxen.http_status(404);
     }
     object privs;
-    SIMPLE_TRACE_ENTER(this, "COPY: Copying file.");
+    SETUID_TRACE("COPY: Copying file.", 0);
     object dest_file = open(dest_path, "cwt");
     privs = 0;
     if (!dest_file) {
       TRACE_LEAVE("Failed to open destination file.");
-      TRACE_LEAVE("Copy failed.");
       return Roxen.http_status(403);
     }
     int len = source_st->size;
@@ -1615,7 +1614,6 @@ mapping copy_file(string source, string dest, int(-1..1) behavior,
 				 dest_file->errno());
 	      dest_file->close();
 	      source_file->close();
-	      SIMPLE_TRACE_LEAVE("Insufficient storage.");
 	      return Roxen.http_status(Protocols.HTTP.DAV_STORAGE_FULL);
 	    }
 	    buf = buf[written..];
@@ -1632,7 +1630,6 @@ mapping copy_file(string source, string dest, int(-1..1) behavior,
     }
     dest_file->close();
     source_file->close();
-    TRACE_LEAVE("Copy ok.");
     return Roxen.http_status(dest_st?Protocols.HTTP.HTTP_NO_CONTENT:
 			     Protocols.HTTP.HTTP_CREATED);
   }
