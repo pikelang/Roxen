@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.14 2000/02/03 18:18:57 per Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.15 2000/02/03 19:54:01 wellhard Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -289,7 +289,7 @@ string tag_button(string tag, mapping args, string contents, RequestID id)
     "icn" : args->icon_src && fix_relative(args->icon_src, id),  // Icon URL
     "icd" : args->icon_data,                             //  Inline icon data
     "ica" : args->align_icon || "left",                  //  Icon alignment
-    "font": (args->font||roxen->query("default_font")),
+    "font": (args->font||id->misc->defines->font||roxen->query("default_font")),
   ]);
 
   array hsv = Image.Color( @new_args->bg )->hsv( );
