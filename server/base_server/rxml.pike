@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.263 2000/11/23 14:53:42 nilsson Exp $
+// $Id: rxml.pike,v 1.264 2000/12/11 16:07:43 kuntri Exp $
 
 
 inherit "rxmlhelp";
@@ -2135,7 +2135,8 @@ private int format_support(string t, mapping m, string c, mapping doc) {
 constant tagdoc=([
 "&roxen;":#"<desc scope='scope'><p><short>
  This scope contains information specific to this Roxen
- WebServer.</short>
+ WebServer.</short> It is not possible to write any information to
+ this scope
 </p></desc>",
 
 "&roxen.domain;":#"<desc ent='ent'><p>
@@ -2226,7 +2227,8 @@ Kibibits.
 "&cookie;":#"<desc scope='scope'><p><short>
  This scope contains the cookies sent by the client.</short> Adding,
  deleting or changing in this scope updates the clients cookies. There
- are no predefined entities for this scope.
+ are no predefined entities for this scope. When adding cookies to
+ this scope they are automatically set to expire after two years.
 </p></desc>",
 
 "&var;":#"<desc scope='scope'><p><short>
@@ -2248,7 +2250,7 @@ Kibibits.
 <ex><case capitalize=''>captalize</case></ex>
 </attr>",
 
-"cond":({ #"<desc cont='cont'><p><short hide='hide'>
+"cond":({ #"<desc cont='cont'><p><short>
  This tag makes a boolean test on a specified list of cases.</short>
  This tag is almost eqvivalent to the <xref href='../if/if.tag'
  />/<xref href='../if/else.tag' /> combination. The main difference is
@@ -2410,11 +2412,18 @@ Kibibits.
 
 }),
 
-"else":#"<desc cont='cont'><p><short hide='hide'>
+"else":#"<desc cont='cont'><p><short>
+
  Show the contents if the previous <xref href='if.tag' /> tag didn't,
- or if there was a <xref href='false.tag' /> tag above.</short> The
- result is undefined if there has been no <tag>if</tag>, <xref
- href='true.tag' /> or <xref href='false.tag' /> tag above.</p>
+ or if there was a <xref href='false.tag' /> tag above.</short> This
+ tag also detects if the page's truthvalue has been set to false.
+ <xref href='../output/emit.tag' /> is an example of a tag that may
+ change a page's truthvalue.</p>
+
+ <p>The result is undefined if there has been no <xref href='if.tag'
+ />, <xref href='true.tag' /> or <xref href='false.tag' /> tag
+ above.</p>
+
 </desc>",
 
 "elseif":#"<desc cont='cont'><p><short>
@@ -2445,7 +2454,7 @@ Kibibits.
 <ex type='vert'><help for='roxen'/></ex>
 </attr>",
 
-"if":#"<desc cont='cont'><p><short hide='hide'>
+"if":#"<desc cont='cont'><p><short>
  <tag>if</tag> is used to conditionally show its contents.</short>The
  <tag>if</tag> tag is used to conditionally show its contents. <xref
  href='else.tag'/> or <xref href='elseif.tag' /> can be used to
@@ -3052,8 +3061,15 @@ Kibibits.
 
 
 "emit":({ #"<desc cont='cont'><p><short>
- Provides data, fetched from different sources, as entities.
- </short></p>
+
+ Provides data, fetched from different sources, as entities. </short>
+ Occasionally an <tag>emit</tag> operation fails to produce output.
+ This might happen when <tag>emit</tag> can't find any matches or if
+ the developer has made an error. When this happens the truthvalue of
+ that page is set to <i>false</i>. By using <xref
+ href='../if/else.tag' /> afterwards it's possible to detect when an
+ <tag>emit</tag> operation fails. </p>
+
 </desc>
 
 <attr name='source' value='plugin' required='required'><p>
