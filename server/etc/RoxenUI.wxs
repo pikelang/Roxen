@@ -1112,7 +1112,12 @@ Click "Next" to start the installation.</Text>
     <Property Id="VSDNETMSG"><![CDATA[This setup requires the .NET Framework version [1].  Please install the .NET Framework and run this setup again.]]></Property>
     <Property Id="VSDINVALIDURLMSG"><![CDATA[The specified path '[2]' is unavailable. The Internet Information Server might not be running or the path exists and is redirected to another machine. Please check the status of this virtual directory in the Internet Services Manager.]]></Property>
     <Property Id="NEWERPRODUCTFOUND" Secure="yes" />
+    <Property Id="UPGRADE" Secure="yes" />
     <Property Id="BROWSER">explorer</Property>
+    <Property Id="OLDTARGETDIR">
+      <ComponentSearch Id="NTSTART" Type="directory"
+        Guid='8c53c060-a679-3ab2-a67f-0e7f84da59ab' />
+    </Property>
     <AdminExecuteSequence>
       <Custom Action="DIRCA_TARGETDIR" Before="CostInitialize"><![CDATA[TARGETDIR=""]]></Custom>
     </AdminExecuteSequence>
