@@ -1,5 +1,5 @@
 /*
- * $Id: smartpipe.pike,v 1.22 1998/04/02 23:23:41 grubba Exp $
+ * $Id: smartpipe.pike,v 1.23 1998/05/22 21:24:42 grubba Exp $
  *
  * A somewhat more optimized Pipe.pipe...
  */
@@ -149,7 +149,11 @@ void next_input()
     spider.shuffle(current_input,outfd,_pipe_done,0,current_input_len);
     return;
   }
+#if constant(thread_create)
+  thread_create(shuffle);
+#else /* !constant(thread_create) */
   shuffle( );
+#endif /* constant(thread_create) */
   return;
 }
 
