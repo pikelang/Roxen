@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.212 2000/03/06 13:43:33 jonasw Exp $";
+constant cvs_version = "$Id: http.pike,v 1.213 2000/03/06 16:48:58 nilsson Exp $";
 
 #define MAGIC_ERROR
 
@@ -489,7 +489,7 @@ class PrefLanguages {
   void sort_lang() {
     if(sorted && decoded) return;
     array(float) q;
-    array(string) s=reverse(languages), u=({});
+    array(string) s=reverse(languages)-({""}), u=({});
 
     if(!decoded) {
       q=({});
