@@ -1,9 +1,26 @@
-<gbutton name=list_boxes value=" Back to mailboxes "><br>
+<table cellpadding=3 cellspacing=0 border=0>
+<tr valign=center>
+  <td>Display</td>
+  <td>
+<input type=hidden name=mailbox_id value=<insert variable=mailbox_id>>
+<gbutton name=list_boxes value=" All mailboxes ">
+<if not variable=listall
+><gbutton selected name=list_unread value="Unread"
+><gbutton name=list_all value="All"></if><else
+><gbutton name=list_unread value="Unread"
+><gbutton selected name=list_all value="All"></else></td>
+<td>matching</td>
+<formoutput>
+ <td><input name=mail_match value="#mail_match:quote=dtag#"></td>
+</formoutput>
+<td><if variable=mail_match><gbutton name=list_clear_match value="Clear"></if><gbutton name=list_match value="Ok"></td>
+</tr>
+</table>
 
-Displaying mailbox 
+<font size=+1>Mailbox: 
   <list-mailboxes>
   <if variable="mailbox_id is #id#">
-     <b>#name#</b> for <mail-userinfo>: <b>#unread#</b> unread, <b>#mail#</b> mail
+<b>#name#</b> for <mail-userinfo>: <b>#unread#</b> unread, <b>#mail#</b> mail</font>
     <set variable=nummail value="#mail#">
     <set variable=_unread value="#unread#">
      <if variable="_unread is 0"> 
@@ -12,33 +29,4 @@ Displaying mailbox
     <unset variable=_unread>
   </if>
   </list-mailboxes>
-<br>
-<br>
-<b>Filter: </b>
-<input type=hidden name=mailbox_id value=<insert variable=mailbox_id>>
-<comment>
-<font size=-1>
-<script language=javascript>
-  document.forms[0].list_all
-  document.forms[0].submit();
-</script>
-
-<select onChange='twiddle();' 
-        name=mailbox_id>
-    <option 
-     selected
-     value=#id#>#name# (unread: #unread#/#mail#)
-  </list-mailboxes>
-</select>
-</font></comment>
-<if not variable=listall
-><gbutton selected name=list_unread value="Unread"
-><gbutton name=list_all value="All"></if><else
-><gbutton name=list_unread value="Unread"
-><gbutton selected name=list_all value="All"></else> 
-<font size=-1>matching</font> 
-<font size=-1><formoutput><input name=mail_match value="#mail_match:quote=dtag#"> 
-<if variable=mail_match><gbutton name=list_clear_match value="Clear"></if>
-<gbutton name=list_match value="Ok"></formoutput></font>
-
 <br>
