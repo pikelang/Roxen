@@ -136,6 +136,11 @@ e</result>
 </test>
 
 <test>
+<rxml><set variable="var.i" value="5"></set>&var.i;</rxml>
+<result>5</result>
+</test>
+
+<test>
 <rxml><set variable='var.i' expr="(1+2)*2/3"/>&var.i;</rxml>
 <result>2</result>
 </test>
@@ -161,6 +166,7 @@ e</result>
  /><copy-scope from="var" to="form"/>&form.foo;&form.bar;&form.fox;</rxml>
 <result>123</result>
 </test>
+
 
 
 <comment>Smallcaps text</comment>
@@ -472,6 +478,16 @@ e</result>
 <test>
 <rxml><set variable='var.foo' value='bar'/><append variable='var.foo' value='baz'/>&var.foo;</rxml>
 <result>barbaz</result>
+</test>
+
+<test>
+<rxml><set variable='var.foo' value='bar'/><append variable='var.foo' value='baz'></append>&var.foo;</rxml>
+<result>barbaz</result>
+</test>
+
+<test>
+<rxml><set variable='var.foo' value='bar'/><append variable="var.foo">disk</append>&var.foo;</rxml>
+<result>bardisk</result>
 </test>
 
 
