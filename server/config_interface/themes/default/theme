@@ -27,9 +27,12 @@
 <theme-set what=toptabs-padwidth     to=190 />
 <theme-set what=left-buttonwidth     to=160 />
 
-<theme-set what=fade1   to="white"/>
+<theme-set what=content-bg to="#f7f8fc" />
 
+<theme-set what=fade1     to="#eff3fc"/>
 <theme-set what=fade2     to="#dee2eb"/>
+<theme-set what=fade3     to="#b3c1dd"/>
+<theme-set what=fade4     to="#222222"/>
 
 <theme-set what=next     to=next.png themefile />
 <theme-set what=selected-indicator    to=sel2.gif themefile />
@@ -67,8 +70,7 @@
 -->
 <theme-set what=content-toptableargs
            to="cellpadding='0' cellspacing='5'" />
-<theme-set what=split-tableargs to="bgcolor='#cccccc'" />
-<theme-set what=split2-width to="6" />
+<theme-set what=split2-width to="0" />
 
 <theme-set what=linkcolor to="#425a84"/>
 
@@ -83,9 +85,6 @@
 
 <theme-set what=content-titlefg to="black"/>
 <theme-set what=content-titlebg to="#dee2eb"/>
-
-<theme-set what=fade3     to=#dee2eb/>
-<theme-set what=fade4     to=#222222/>
 
 <theme-set what=tab-frame-image     to="tabframe.xcf" themefile />
 <theme-set what=gbutton-frame-image to="gbutton.xcf"  themefile />
