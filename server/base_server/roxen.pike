@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.492 2000/07/18 19:56:39 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.493 2000/10/16 17:05:35 grubba Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -1436,6 +1436,8 @@ class FTP
   int ftp_users;
   int ftp_users_now;
 
+  mapping(string:int) ftp_sessions = ([]);
+
   void create( mixed ... args )
   {
     set_up_ftp_variables( this_object() );
@@ -1455,6 +1457,8 @@ class FTPS
   int sessions;
   int ftp_users;
   int ftp_users_now;
+
+  mapping(string:int) ftp_sessions = ([]);
 
   void create( mixed ... args )
   {
