@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.89 1999/04/30 11:28:08 js Exp $
+ * $Id: roxenloader.pike,v 1.90 1999/05/28 09:55:06 mast Exp $
  *
  * Roxen bootstrap program.
  *
@@ -15,7 +15,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.89 1999/04/30 11:28:08 js Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.90 1999/05/28 09:55:06 mast Exp $";
 
 // Macro to throw errors
 #define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
@@ -415,12 +415,14 @@ int spawn_pike(array(string) args, void|string wd, object|void stdin,
 
   if (file_stat(mast))
     preargs += ({ "-m"+mast });
+#ifdef __NT__
   foreach(new_master->pike_include_path, string s)
     preargs += ({ "-I"+s });
   foreach(new_master->pike_module_path, string s)
     preargs += ({ "-M"+s });
   foreach(new_master->pike_program_path, string s)
     preargs += ({ "-P"+s });
+#endif
   object proc = Process.create_process(({ pikebin }) + preargs + args, ([
     "toggle_uid":1,
     "stdin":stdin,
@@ -428,7 +430,11 @@ int spawn_pike(array(string) args, void|string wd, object|void stdin,
     "stderr":stderr,
     "cwd":wd,
 #ifndef __NT__    
-    "env":getenv()
+    "env":getenv() + ([
+      "PIKE_INCLUDE_PATH": new_master->pike_include_path * ":",
+      "PIKE_MODULE_PATH": new_master->pike_module_path * ":",
+      "PIKE_PROGRAM_PATH": new_master->pike_program_path * ":",
+    ]),
 #endif    
   ]));
 
