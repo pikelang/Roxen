@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.29 1999/10/16 02:58:37 mast Exp $
+ * $Id: rxml.pike,v 1.30 1999/10/18 17:10:03 nilsson Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -958,11 +958,12 @@ string tag_if( string t, mapping m, string c, RequestID id )
   if(m->and) { and = 1; m_delete( m, "and" ); }
   array possible = indices(m) & indices(id->misc->_ifs);
 
-  LAST_IF_TRUE=0;
+  int last=0;
   foreach(possible, string s)
   {
     res = id->misc->_ifs[ s ]( m[s], id, m, and, s );
     LAST_IF_TRUE=res;
+    last=res;
     if(res)
     {
       if(!and) 
@@ -974,7 +975,7 @@ string tag_if( string t, mapping m, string c, RequestID id )
         return "<false>";
     }
   }
-  if( LAST_IF_TRUE )
+  if( last )
     return c+"<true>";
   return "<false>";
 }
@@ -1305,8 +1306,8 @@ int if_exists( string u, RequestID id, mapping m)
 mapping query_if_callers()
 {
   return ([
-    "successful":lambda(string u, RequestID id){ return LAST_IF_TRUE; },
-    "failed":lambda(string u, RequestID id){ return !LAST_IF_TRUE; },
+    "true":lambda(string u, RequestID id){ return LAST_IF_TRUE; },
+    "false":lambda(string u, RequestID id){ return !LAST_IF_TRUE; },
     "accept":IfMatch( "accept", 0, 1),
     "config":IfIs( "config", 0 ),
     "cookie":IfIs( "cookies", 0 ),
