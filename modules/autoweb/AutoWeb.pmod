@@ -5,7 +5,7 @@ class AutoFile {
   string real_path(string filename)
   {
     filename = replace(filename, "../", "");
-    return id->misc->wa->query("sites_location")+id->misc->customer_id+
+    return id->misc->wa->query("searchpath")+id->misc->customer_id+
       (sizeof(filename)?(filename[0]=='/'?filename:"/"+filename):"/");
   }
   
@@ -87,7 +87,7 @@ class MetaData {
   }
 }
 
-
+#if 0
 class menufile {
   static private string parse_item(string tag, mapping args,
 				   string contents, mapping items)
@@ -134,3 +134,4 @@ class menufile {
     return items->items;
   }
 }
+#endif
