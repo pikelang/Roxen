@@ -60,19 +60,7 @@ mapping(string:mixed) setinitcolors(mapping(string:mixed) diagram_data)
 	    diagram_data["datacolors"]=0;
     }
 
-  if (diagram_data["datacolors"])
-    {
-      /*     //Colours are given!
-      for(int i=0; i<sizeof(pnumbers); i++)
-	{
-	  piediagram=piediagram->setcolor(@ colors[i]);
-	  piediagram=piediagram->polygone(({(float)xc,(float)yc})+
-			      arr[2*edge_nr..2*(edge_nr+pnumbers[i]+2)+1]);
-	  edge_nr+=pnumbers[i];
-	}
-      */
-    }
-  else
+  if (!(diagram_data["datacolors"]))
     {
       int numbers;
       if (diagram_data["type"]=="pie")
@@ -292,11 +280,6 @@ mapping(string:mixed) init(mapping(string:mixed) diagram_data)
     else
       diagram_data["ymaxvalue"]=ymaxvalue;
 
-  //write("Dymaxvalue:"+ diagram_data["ymaxvalue"]+"\n");
-  //write("Dyminvalue:"+ diagram_data["yminvalue"]+"\n");
-  //write("Dxmaxvalue:"+diagram_data["xmaxvalue"]+"\n");
-  //write("Dxminvalue:"+ diagram_data["xminvalue"]+"\n");
-
   //Ge tomma namn på xnames om namnen inte finns
   //Och ge bars max och minvärde på x-axeln.
   if ((diagram_data["type"]=="bars")||(diagram_data["type"]=="sumbars"))
@@ -388,17 +371,6 @@ mapping(string:mixed) create_text(mapping(string:mixed) diagram_data)
 
 
 }
-
-//Denna funktion returnerar en mapping med 
-// (["graph":image-object, "xstart": var_i_bilden_vi_kan_börja_rita_data-int,
-//   "ystart": var_i_bilden_vi_kan_börja_rita_data-int,
-//   "xstop":int, "ystop":int 
-//    osv...]); Don
-
-/*
- foreach(make_polygon_from_line(...), array(float) p)
-    img->polygone(p);
-*/
 
 string no_end_zeros(string f)
 {
@@ -522,30 +494,8 @@ mapping set_legend_size(mapping diagram_data)
 	  (diagram_data["type"]=="pie"))
 	for(int i=0; i<j; i++)
 	  {
-	    //write("diagram_data[\"legendfontsize\"]"+diagram_data["legendfontsize"]+"\n");
-
 	    plupps[i]=image(diagram_data["legendfontsize"],diagram_data["legendfontsize"]);
-	                //,@(diagram_data["legendcolor"]));
-	    //write("plupps[i]->xsize()-2"+(plupps[i]->xsize()-2)+"\n");
-	    /* 
-	    write("\n\n"+sprintf("%O",make_polygon_from_line(diagram_data["linewidth"], 
-							 ({
-							   (float)(diagram_data["linewidth"]/2+1),
-							   (float)(plupps[i]->ysize()-
-							   diagram_data["linewidth"]/2-2),
-							   (float)(plupps[i]->xsize()-
-								   diagram_data["linewidth"]/2-2),
-							   (float)(diagram_data["linewidth"]/2+1)
-							 }), 
-							 1, 1)[0])+"\n"); 
-	    write("\n\n"+sprintf("%O",  ({
-							   (float)(diagram_data["linewidth"]/2+1),
-							   (float)(plupps[i]->ysize()-
-							   diagram_data["linewidth"]/2-2),
-							   (float)(plupps[i]->xsize()-
-								   diagram_data["linewidth"]/2-2),
-							   (float)(diagram_data["linewidth"]/2+1)
-							   }))+"\n"); */
+
 	    plupps[i]->setcolor(255,255,255);
 	    if ((diagram_data["linewidth"]*1.5<(float)diagram_data["legendfontsize"])&&
 		(diagram_data["subtype"]=="line")&&(diagram_data["drawtype"]!="level"))
@@ -561,20 +511,12 @@ mapping set_legend_size(mapping diagram_data)
 							 1, 1)[0]);
 	    else
 	      {
-		//write("\nboxelibox\n\n");
 	      plupps[i]->box(1,
 			     1,
 			     plupps[i]->xsize()-2,
 			     plupps[i]->ysize()-2
 			     
 			     );
-	      /* plupps[i]->setcolor(0,0,0);
-	      	      draw(plupps[i], 0.5, 
-		   ({1.01, 1 //FIXME
-		     ,plupps[i]->xsize()-2.01 , 1, //FIXME
-		     plupps[i]->xsize()-2.0, plupps[i]->ysize()-2  //FIXME
-		     ,1 , plupps[i]->ysize()-2 //FIXME
-		     }));*/ 
 	      }
 	  }
       else
@@ -601,15 +543,8 @@ mapping set_legend_size(mapping diagram_data)
 	  columnnr=1;
 	}
 
-      //write("columnnr: "+columnnr+"\n");
-      //write("image ->xsize() "+diagram_data["image"]->xsize()+"\n");
-      //write("columnnr: "+columnnr+"\n");
-      //write("b"+b+"\n");
-
       int raws=(j+columnnr-1)/columnnr;
       diagram_data["legend_size"]=raws*diagram_data["legendfontsize"];
-      
-      //write("diagram_data[\"legend_size\"]:"+diagram_data["legend_size"]+"\n");
 
       //placera ut bilder och text.
       for(int i=0; i<j; i++)
@@ -682,9 +617,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 
   set_legend_size(diagram_data);
 
-  //write("ysize:"+diagram_data["ysize"]+"\n");
   diagram_data["ysize"]-=diagram_data["legend_size"];
-  //write("ysize:"+diagram_data["ysize"]+"\n");
   
   //Bestäm största och minsta datavärden.
   init(diagram_data);
@@ -699,7 +632,6 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 	  (range<LITET))
 	range=LITET*10.0;
 
-      //write("range"+range+"\n");
       float space=pow(10.0, floor(log(range/3.0)/log(10.0)));
       if (range/space>5.0)
 	{
@@ -931,9 +863,6 @@ mapping(string:mixed) create_graph(mapping diagram_data)
   //Rita ut axlarna
   graph->setcolor(@(diagram_data["axcolor"]));
   
-  //write((string)diagram_data["xminvalue"]+"\n"+(string)diagram_data["xmaxvalue"]+"\n");
-
-  
   //Rita xaxeln
   if ((diagram_data["xminvalue"]<=LITET)&&
       (diagram_data["xmaxvalue"]>=-LITET))
@@ -950,9 +879,6 @@ mapping(string:mixed) create_graph(mapping diagram_data)
   else
     if (diagram_data["xmaxvalue"]<-LITET)
       {
-	//write("xpos_for_yaxis"+xpos_for_yaxis+"\n");
-
-	//diagram_data["xstop"]-=(int)ceil(4.0/3.0*(float)si);
 	graph->
 	  polygone(make_polygon_from_line(diagram_data["linewidth"], 
 					  ({
@@ -981,7 +907,6 @@ mapping(string:mixed) create_graph(mapping diagram_data)
     else
       if (diagram_data["xminvalue"]>LITET)
 	{
-	  //diagram_data["xstart"]+=(int)ceil(4.0/3.0*(float)si);
 	  graph->
 	    polygone(make_polygon_from_line(diagram_data["linewidth"], 
 					    ({
@@ -1009,26 +934,6 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 
 	}
   
-  //Rita pilen på xaxeln
-  /*graph->
-    polygone(make_polygon_from_line(diagram_data["linewidth"], 
-				    ({
-				      diagram_data["xsize"]-
-				      diagram_data["linewidth"]-
-				      (float)si/2.0-labelx/2, 
-				      diagram_data["ysize"]-ypos_for_xaxis-
-				      (float)si/2.0,
-				      diagram_data["xsize"]-
-				      diagram_data["linewidth"]-labelx/2, 
-				      diagram_data["ysize"]-ypos_for_xaxis,
-				      diagram_data["xsize"]-
-				      diagram_data["linewidth"]-
-				      (float)si/2.0-labelx/2, 
-				      diagram_data["ysize"]-ypos_for_xaxis+
-				      (float)si/2.0
-				    }), 
-				    1, 1)[0]);
-  */
  graph->polygone(
 	  ({
 	    diagram_data["xsize"]-
@@ -1096,37 +1001,6 @@ mapping(string:mixed) create_graph(mapping diagram_data)
     else
       if (diagram_data["yminvalue"]>LITET)
 	{
-	  /*	  write("\n\n"+sprintf("%O",make_polygon_from_line(diagram_data["linewidth"], 
-							   ({
-							     xpos_for_yaxis,
-							     diagram_data["ysize"]-diagram_data["linewidth"],
-							     
-							     xpos_for_yaxis,
-							     diagram_data["ysize"]-ypos_for_xaxis-
-							     si/3.0,
-							     
-							     xpos_for_yaxis-si/2.0,
-							     diagram_data["ysize"]-ypos_for_xaxis-
-							     si/1.5,
-							     
-							     xpos_for_yaxis+si/2.0,
-							     diagram_data["ysize"]-ypos_for_xaxis-
-							     si,
-							     
-							     xpos_for_yaxis,
-							     diagram_data["ysize"]-ypos_for_xaxis-
-							     si*4.0/3.0,
-							     
-							     xpos_for_yaxis+0.0001, //FIXME!
-							     si+
-							     diagram_data["labelsize"]
-							     
-							   }), 
-							   1, 1)[0]
-							   
-			       )
-		+
-		"\n\n");*/
 	  graph->
 	    polygone(make_polygon_from_line(diagram_data["linewidth"], 
 					    ({
@@ -1305,8 +1179,6 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 
   //Rita ut datan
   int farg=0;
-  //write("xstart:"+diagram_data["xstart"]+"\nystart"+diagram_data["ystart"]+"\n");
-  //write("xstop:"+diagram_data["xstop"]+"\nystop"+diagram_data["ystop"]+"\n");
 
   foreach(diagram_data["data"], array(float) d)
     {
@@ -1318,8 +1190,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 	}
 
       graph->setcolor(@(diagram_data["datacolors"][farg++]));
-      //graph->polygone(make_polygon_from_line(diagram_data["linewidth"],d,
-      //				     1, 1)[0]);
+
       draw(graph, diagram_data["linewidth"],d);
     }
 
@@ -1332,8 +1203,6 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 #ifndef ROXEN
 int main(int argc, string *argv)
 {
-  //write("\nRitar axlarna. Filen sparad som test.ppm\n");
-
   mapping(string:mixed) diagram_data;
   diagram_data=(["type":"graph",
 		 "textcolor":({0,255,0}),
