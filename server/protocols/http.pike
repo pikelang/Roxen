@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.406 2003/10/28 21:24:44 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.407 2003/10/28 22:31:24 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -894,10 +894,12 @@ void end(int|void keepit)
     MARK_FD("HTTP closed");
     mixed err = catch
     {
+#if 0
       // Don't set to blocking mode if SSL.
-      if (!my_fd->CipherSpec) {
+      if (!my_fd->CipherSpec)
+	// This causes connections to be closed prematurely, at least on NT.
+#endif
 	my_fd->set_blocking();
-      }
       my_fd->close();
       destruct(my_fd);
     };
