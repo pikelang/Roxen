@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.893 2005/02/23 16:56:19 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.894 2005/02/23 17:01:03 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -2216,12 +2216,12 @@ int register_url( string url, Configuration conf )
       failures++;
       if (has_prefix(describe_error(err), "Invalid address") &&
 	  required_host && has_value(required_host, ":")) {
-	report_error(sprintf("Failed to initialize IPv6 port for URL %s!"
-			     " (ip:%s)\n",
+	report_error(sprintf("Failed to initialize IPv6 port for URL %s"
+			     " (ip %s). Not supported?\n",
 			     url, required_host));
       } else {
 	report_error(sprintf("Initializing the port handler for URL %s"
-			     " failed! (ip:%s)\n"
+			     " failed! (ip %s)\n"
 			     "%s\n",
 			     url,
 			     required_host||"ANY",
