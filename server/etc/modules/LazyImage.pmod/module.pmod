@@ -995,7 +995,7 @@ class Join
   inherit LazyImage;
   constant operation_name = "join";
   constant ignore_parent   = 1;
-  mapping args;
+  Arguments args;
   
   string hash()
   {
