@@ -1,4 +1,4 @@
-constant cvs_version="$Id: newpikescript.pike,v 1.9 1998/09/29 22:46:57 peter Exp $";
+constant cvs_version="$Id: newpikescript.pike,v 1.10 1999/02/15 23:26:51 per Exp $";
 constant thread_safe=1;
 
 #if !constant(Remote)
@@ -238,7 +238,7 @@ class Call
     else if(!result)
       id->send_result(0);
     else if(stringp(result))
-      id->send_result( http_string_answer(parse_rxml(result,id),"text/html") );
+      id->send_result( http_rxml_answer( result, id ) );
     else
       id->send_result( result );
 
