@@ -28,6 +28,8 @@ clean:
 	@(cd extern;$(MAKE) clean)
 	@(cd pike/src;$(MAKE) clean)
 
+install_all: install_pike install
+
 install: all
 	$(SRCDIR)/mkdir -p $(prefix)/roxen/
 	-@mv -f $(prefix)/roxen/server $(prefix)/roxen/server.old
@@ -42,6 +44,9 @@ install: all
 	-@$(SRCDIR)/mkdir -p $(prefix)/roxen/configurations
 	@(cd extern;$(MAKE) install;cd ../)
 
+
+install_pike: all
+	@(cd pike/src;$(MAKE) install)
 
 localinstall: all
 	cp pike/src/pike $(SRCDIR)/server/bin/
