@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.449 2004/05/19 13:05:38 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.450 2004/05/25 18:59:06 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -20,10 +20,6 @@ inherit RequestID;
 #ifdef PROFILE
 #define HRTIME() gethrtime()
 int req_time = HRTIME();
-#endif
-
-#ifdef ID_OBJ_DEBUG
-RoxenDebug.ObjectMarker __marker = RoxenDebug.ObjectMarker (this_object());
 #endif
 
 #ifdef REQUEST_DEBUG
@@ -1774,6 +1770,7 @@ void send_result(mapping|void result)
     }
   else
     if(!file->type) file->type="text/plain";
+
 #if 0
     REQUEST_WERR(sprintf("HTTP: Sending result for prot:%O, method:%O, file:%O",
 			 prot, method, file));
@@ -1789,10 +1786,13 @@ void send_result(mapping|void result)
       {
         if( file->len>0 && // known length.
 	    ((file->len + strlen( head_string )) < 
-             conf->datacache->max_file_size) 
+	     conf->datacache->max_file_size)
+	    // vvv Relying on the interpreter lock from here.
             && misc->cachekey )
-        {
-          string data = "";
+	{
+	  misc->cachekey->activate();
+	  // ^^^ Relying on the interpreter lock to here.
+	  string data = "";
           if( file->file )   data += file->file->read();
           if( file->data )   data += file->data;
 	  MY_TRACE_ENTER (sprintf ("Storing in ram cache, entry: %O", raw_url), 0);
@@ -1868,6 +1868,7 @@ void send_result(mapping|void result)
       send(head_string);
       file->len = 1; // Keep those alive, please...
     }
+
   TIMER_END(send_result);
   start_sender();
 }
@@ -2406,15 +2407,6 @@ void chain(object f, object c, string le)
       do_not_disconnect = 0;
     f->set_nonblocking(!processed && got_data, f->query_write_callback(), close_cb);
   }
-}
-
-string _sprintf( )
-{
-  return "RequestID(" + (raw_url||"") + ")"
-#ifdef ID_OBJ_DEBUG
-    + (__marker ? "[" + __marker->count + "]" : "")
-#endif
-    ;
 }
 
 Stdio.File connection( )
