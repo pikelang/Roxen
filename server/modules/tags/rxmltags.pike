@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.364 2002/04/15 14:49:20 wellhard Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.365 2002/04/15 15:04:09 wellhard Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -4903,7 +4903,7 @@ class TagEmitLicenseWarnings {
     License.Key key = RXML.get_context()->get_var("key")||
 		      id->conf->getvar("license")->get_key();
     if(!key) {
-      RXML.parse_run("No license key defined in the configuration\n");
+      RXML.parse_error("No license key defined in the configuration\n");
       return ({});
     }
     return key->get_warnings();
