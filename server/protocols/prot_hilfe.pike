@@ -7,7 +7,7 @@
 inherit Protocol;
 constant supports_ipless = 0;
 constant name = "hilfe";
-constant prot_name = "hilfe";
+constant prot_name = "telnet";
 constant requesthandlerfile = "protocols/hilfe.pike";
 constant default_port = 2345;
 
