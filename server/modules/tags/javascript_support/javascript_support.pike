@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.28 2001/04/26 16:18:04 wellhard Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.29 2001/04/27 15:48:01 wellhard Exp $";
 //constant thread_safe=1;
 
 #include <module.h>
@@ -283,7 +283,8 @@ class TagJsExternal
       string key = Crypto.md5()->update(string_to_utf8(content))->digest();
       if(!externals[key])
 	externals[key] = c_js_quote("", ([]), content);
-      return ({ "<script language=\"javascript\" src=\""+
+      return ({ "<script "+(args->defer?"defer='defer' ":"")+
+		"language=\"javascript\" src=\""+
 		query_internal_location()+"__ex/"+
 		MIME.encode_base64(key)+"\"></script>" });
     }
