@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.134 2001/06/06 21:02:33 per Exp $
+# $Id: start,v 1.135 2001/10/15 17:29:58 grubba Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -305,6 +305,13 @@ parse_args() {
     program="$2"
     once=1
     shift
+    shift
+    # Pass any remaining arguments along to the program.
+    while [ ! c"$1" = "c" ] ; do
+      pass="$pass $1"
+      shift
+    done
+    break
   ;;
   '--cd')
     cd_to="$2"
