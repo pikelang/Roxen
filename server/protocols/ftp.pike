@@ -1,5 +1,5 @@
 /* Roxen FTP protocol. Written by Pontus Hagland
-string cvs_version = "$Id: ftp.pike,v 1.4.2.7 1997/03/11 04:06:01 grubba Exp $";
+string cvs_version = "$Id: ftp.pike,v 1.4.2.8 1997/03/13 00:19:40 grubba Exp $";
    (law@lysator.liu.se) and David Hedbor (neotron@infovav.se).
 
    Some of the features: 
@@ -200,8 +200,6 @@ string file_ls(array (int) st, string file)
 		 st[1], ct[4..9], ct[11..15], file);
 }
 
-void got_data(mixed fooid, string s);
-
 void done_callback(object fd)
 {
   if(fd)
@@ -259,7 +257,6 @@ varargs int|string list_file(string arg, int srt, int short, int column,
   else
     filename = combine_path(cwd, arg);
 
-  perror("FTP: list \"%s\"\n", filename);
 #if 0
   while(sizeof(filename) && filename[-1] == '.')
     filename=filename[..strlen(filename)-2];
@@ -361,15 +358,19 @@ int open_file(string arg)
   else 
     this_object()->not_query = combine_path(cwd, arg);
       
-  if(!file || (file->full_path != not_query))
+  if(1 || !file || (file->full_path != not_query))
   {
     if(file && file->file)
       destruct(file->file);
-    if(st = roxen->stat_file(not_query, this_object()))
-      if(st[1] < 0)
-	file = -1;
-      else if(catch(file = roxen->get_file(this_object())))
-	file = 1;
+    foreach(conf->first_modules(), function funp)
+      if(file = funp( this_object())) break;
+    if (!file) {
+      if(st = roxen->stat_file(not_query, this_object()))
+	if(st[1] < 0)
+	  file = -1;
+	else if(catch(file = roxen->get_file(this_object())))
+	  file = 1;
+    }
   }
   if(!file)
   {
@@ -446,6 +447,7 @@ void got_data(mixed fooid, string s)
 	auth = 0;
 	reply("331 Give me a password, then!\n");
       }
+      cwd = "/";
       break;
       
      case "pass": 
@@ -613,19 +615,24 @@ void got_data(mixed fooid, string s)
 	if(search(args, "d") != -1)
 	  d = 1;
       }
-      
-      f = ([ "data": 
-	   list_file(arg, tsort, short, C, F, d) ]);
-	
-      if(f->data == 0)
-	reply("550 "+arg+": No such file or directory.\n");
-      else if(f->data == -1)
-	reply("550 "+arg+": Permission denied.\n");
-      else if(connect_and_send(f))
-	reply("150 Opening BINARY mode data connection.\n");
-      else
-	reply("425 Can't build data connect: Connection refused.\n"); 
-      
+      not_query = arg;
+
+      foreach(conf->first_modules(), function funp)
+	if(f = funp( this_object())) break;
+      if(!f)
+      {
+	f = ([ "data":list_file(arg, tsort, short, C, F, d) ]);
+	if(f->data == 0)
+	  reply("550 "+arg+": No such file or directory.\n");
+	else if(f->data == -1)
+	  reply("550 "+arg+": Permission denied.\n");
+	else if(connect_and_send(f))
+	  reply("150 Opening BINARY mode data connection.\n");
+	else
+	  reply("425 Can't build data connect: Connection refused.\n"); 
+      } else {
+	reply(reply_enumerate("Permission denied\n"+(f->data||""), "550"));
+      }
       break;
 	      
      case "retr": 
@@ -646,7 +653,7 @@ void got_data(mixed fooid, string s)
       break;
 
      case "stat":
-      string dirlist;
+      string|int dirlist;
       if(!arg || !strlen(arg))
       {
 	reply("501 'STAT': Missing argument\n");
@@ -654,7 +661,11 @@ void got_data(mixed fooid, string s)
       }
       method="HEAD";
       reply("211-status of "+arg+":\n");
-      dirlist = list_file(arg, 0, 0);
+      not_query = arg = combine_path(cwd, arg);
+      foreach(conf->first_modules(), function funp)
+	if(f = funp( this_object())) break;
+      if(f) dirlist = -1;
+      else dirlist = list_file(arg, 0, 0);
       
       if(!dirlist)
       {
@@ -677,6 +688,9 @@ void got_data(mixed fooid, string s)
       reply("213 "+ file->len +"\n");
       break;
     case "stor": // Store file..
+      // Does NOT work!
+      //
+      // Needs to check conf->first_modules().
       string f;
       if(!arg || !strlen(arg))
       {
