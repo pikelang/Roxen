@@ -1,6 +1,6 @@
 // Symbolic DB handling.
 //
-// $Id: DBManager.pmod,v 1.67 2004/06/04 08:29:27 _cvs_stephen Exp $
+// $Id: DBManager.pmod,v 1.68 2004/06/15 19:05:31 _cvs_stephen Exp $
 
 //! Manages database aliases and permissions
 
@@ -348,7 +348,7 @@ array(mapping(string:mixed)) db_table_fields( string name, string table )
 //! Returns a mapping of fields in the database, if it's supported by
 //! the protocol handler. Otherwise returns 0.
 {
-  Sql.Sql db = cached_get( name );
+  Sql.Sql db = get( name );
   catch {
     if( db->list_fields )
     {
@@ -472,7 +472,7 @@ mapping db_stats( string name )
 //! internal database, or the database does not exist, 0 is returned
 {
   mapping res = ([]);
-  Sql.Sql db = cached_get( name );
+  Sql.Sql db = get( name );
   array d;
 
   switch( db_driver( name ) )
@@ -573,11 +573,6 @@ Sql.Sql get( string name, void|Configuration c, int|void ro )
   return low_get( get_db_user( name,c,ro ), name );
 }
 
-Sql.Sql cached_get( string name, void|Configuration c, void|int ro )
-{
-  return low_get( get_db_user( name,c,ro ), name );
-}
-
 void drop_db( string name )
 //! Drop the database @[name]. If the database is internal, the actual
 //! tables will be deleted as well.
@@ -633,7 +628,7 @@ array(mapping) restore( string dbname, string directory, string|void todb,
 //! return array from @[backup]. If todb is specified, the backup will
 //! be restored in todb, not in dbname.
 {
-  Sql.Sql db = cached_get( todb || dbname );
+  Sql.Sql db = get( todb || dbname );
 
   if( !directory )
     error("Illegal directory\n");
@@ -707,7 +702,7 @@ array(string|array(mapping)) backup( string dbname, string directory )
 //! @note
 //!   Currently this function only works for internal databases.
 {
-  Sql.Sql db = cached_get( dbname );
+  Sql.Sql db = get( dbname );
 
   if( !db )
     error("Illegal database\n");
@@ -980,7 +975,7 @@ mapping module_table_info( string db, string table )
 string insert_statement( string db, string table, mapping row )
 //! Convenience function.
 {
-  function q = cached_get( db )->quote;
+  function q = get( db )->quote;
   string res = "INSERT INTO "+table+" ";
   array(string) vi = ({});
   array(string) vv = ({});

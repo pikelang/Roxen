@@ -126,12 +126,12 @@ mixed move_db( string db, RequestID id )
       } )
 	move_later = 1;
 
-      Sql.Sql odb = DBManager.cached_get( db );
+      Sql.Sql odb = DBManager.get( db );
       if( move_later )
 	DBManager.set_url( id->variables->name,
 			   id->variables->url,
 			   ni );
-      Sql.Sql ndb = DBManager.cached_get( id->variables->name );
+      Sql.Sql ndb = DBManager.get( id->variables->name );
 
       // And copy the data...
       if( DBManager.is_internal( db ) && ni )

@@ -151,7 +151,7 @@ string|mapping parse( RequestID id )
       else
       {
 	mixed err;
-	if( err = catch( DBManager.cached_get( db ) ) )
+	if( err = catch( DBManager.get( db ) ) )
 	  url="<font color='&usr.warncolor;'>"
 	    "Failed to connect: "+describe_error(err)+"</font>";
 	else

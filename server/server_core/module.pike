@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.143 2004/06/09 00:17:43 _cvs_stephen Exp $
+// $Id: module.pike,v 1.144 2004/06/15 19:05:33 _cvs_stephen Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -2082,5 +2082,5 @@ Sql.Sql get_my_sql( int|void read_only )
 //! 
 //! See also @[DBManager.get]
 {
-  return DBManager.cached_get( my_db, _my_configuration, read_only );
+  return DBManager.get( my_db, _my_configuration, read_only );
 }

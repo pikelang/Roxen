@@ -1,7 +1,7 @@
 // This file is part of ChiliMoon.
 // Copyright © 2001, Roxen IS.
 
-constant cvs_version="$Id: replicate.pike,v 1.18 2004/05/16 00:38:46 mani Exp $";
+constant cvs_version="$Id: replicate.pike,v 1.19 2004/06/15 19:05:32 _cvs_stephen Exp $";
 
 #if constant(WS_REPLICATE)
 #define QUERY(X,Y...)    get_db()->query(X,Y)
@@ -21,7 +21,7 @@ object cache;
 
 Sql.Sql get_sdb()
 {
-  object db = DBManager.cached_get( "replicate" );
+  object db = DBManager.get( "replicate" );
   // Make sure the db is online.
   db->query("SELECT 1;");
   return db;
@@ -29,7 +29,7 @@ Sql.Sql get_sdb()
 
 Sql.Sql get_db()
 {
-  return DBManager.cached_get( "local" );
+  return DBManager.get( "local" );
 }
 
 static class Server( string secret )
