@@ -28,7 +28,12 @@ mixed `->(string var)
   if(!rpc) establish();
   remove_call_out(disconnect);
   call_out(disconnect, 60);
-  return predef::`->(rpc,var);
+  mixed v;
+  if(catch(v = predef::`->(rpc,var))) {
+    establish();
+    v = predef::`->(rpc,var);
+  }
+  return v;
 }
 
 void create(string url)
