@@ -1,4 +1,4 @@
-constant cvs_version="$Id: countdown.pike,v 1.13 1999/08/02 15:53:52 nilsson Exp $";
+constant cvs_version="$Id: countdown.pike,v 1.14 1999/08/26 18:04:05 nilsson Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -159,10 +159,6 @@ int unset_from(mapping m, string from) {
 int weekday_handler(int when, mapping time_args) {
   while((localtime(when)->wday) != (time_args->wday))
     when += 3600*24;
-  if(!zero_type(time_args->mon) && localtime(when)->mon!=time_args->mon)
-    return -1;
-  if(!zero_type(time_args->year) && localtime(when)->year!=time_args->year)
-    return -1;
   return when;
 }
 
@@ -221,7 +217,29 @@ string tag_countdown(string t, mapping m, object id)
   float days_per_year = 365.242190; // Y28K safe
 
   string tprec;
-  int unix_now = time();
+  int unix_now = time(1);
+  if(m->now) {
+    mapping newnow=([]);
+    if(sscanf(m->now, "%d-%d-%d", 
+    	 newnow->year, newnow->mon, newnow->mday)==3 ||
+       sscanf(m->now, "%4d%2d%2d",
+	 newnow->year, newnow->mon, newnow->mday)==3 ||
+       sscanf(m->now, "%d-%s-%d",
+         newnow->year, newnow->mon, newnow->mday) == 3)
+       {
+	 if (stringp(newnow->mon))
+           newnow->mon = ([ "jan":  1, "feb":  2, "mar":  3, "apr":  4,
+                     "may":  5, "jun":  6, "jul":  7, "aug":  8,
+                     "sep":  9, "oct": 10, "nov": 11, "dec": 12 ])
+	     [lower_case(sprintf("%s", newnow->mon))[0..2]];
+         if (newnow->year>1900) newnow->year-=1900;
+         newnow->mon--;
+         if(catch {
+           unix_now = mktime(newnow);
+         })
+           return rxml_error(t, "Bad now argument.", id);
+       }
+  }
   mapping now = localtime(unix_now);
   mapping time_args = ([]);
   time_args->year=now->year;
@@ -242,8 +260,15 @@ string tag_countdown(string t, mapping m, object id)
        if(sscanf(m->iso, "%d-%d-%d", 
 		 time_args->year, time_args->mon, time_args->mday)==3 ||
           sscanf(m->iso, "%4d%2d%2d",
-		 time_args->year, time_args->mon, time_args->mday)==3)
-       {
+		 time_args->year, time_args->mon, time_args->mday)==3 ||
+          sscanf(m->iso, "%d-%s-%d",
+                 time_args->year, time_args->mon, time_args->mday) == 3)
+	 {
+	   if (stringp(time_args->mon))
+           time_args->mon = ([ "jan":  1, "feb":  2, "mar":  3, "apr":  4,
+                       "may":  5, "jun":  6, "jul":  7, "aug":  8,
+                       "sep":  9, "oct": 10, "nov": 11, "dec": 12 ])
+	     [lower_case(sprintf("%s", time_args->mon))[0..2]];
          time_args=clear_less_significant(time_args, "day");
 	 tprec="day";
 	 time_args->mon--;
@@ -354,11 +379,11 @@ string tag_countdown(string t, mapping m, object id)
   if(catch {
     when = mktime(time_args);
   })
-    return "Invalid time.";
+    return rxml_error(t, "Resulted in an invalid time.", id);
 
   if(!zero_type(time_args->wday)) {
+    int wen=when;
     when=weekday_handler(when, time_args);
-    if(when==-1) return "Invalid time.";
   }
 
   //FIXME: Clear less significant
@@ -372,10 +397,9 @@ string tag_countdown(string t, mapping m, object id)
     if(catch {
       when = mktime(time_args);
     })
-      return "Invalid time.";
+      return rxml_error(t, "Resulted in an invalid time.", id);
     //if(!zero_type(time_args->wday)) {
     //  when=weekday_handler(when, time_args);
-    //  if(when==-1) return "Invalid time.";
     //}
   }
 
@@ -383,6 +407,7 @@ string tag_countdown(string t, mapping m, object id)
     m_delete(m, tmp);
   }
 
+  if(m->adjust) when+=(int)m->adjust;
   int delay = when-unix_now;
   if(m->since) delay = -delay;
 
