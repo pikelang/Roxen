@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.156 2004/03/03 18:12:24 grubba Exp $
+// $Id: module.pike,v 1.157 2004/03/04 12:58:16 grubba Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -962,13 +962,13 @@ mapping(string:mixed) delete_file(string path, RequestID id)
   tmp_id->not_query = query_location() + "/" + path;
   tmp_id->method = "DELELE";
   // FIXME: Logging?
-  return find_file(path, id) || http_result(404);
+  return find_file(path, id) || Roxen.http_status(404);
 }
 
 int(0..1) recurse_delete_files(string path, MultiStatus stat, RequestID id)
 {
   Stat st = stat_file(path, id);
-  if (!st) return;
+  if (!st) return 0;
   if (st->isdir) {
     // RFC 2518 8.6.2
     //   The DELETE operation on a collection MUST act as if a
