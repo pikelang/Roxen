@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.138 1998/09/20 00:00:13 peter Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.139 1998/09/25 11:52:00 grubba Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -1061,7 +1061,9 @@ string tag_echo(string tag,mapping m,object id,object file,
 			  mapping defines)
 {
   if(m->help) 
-    return ("This tag outputs the value of different configuration and request local variables. They are not really used by Roxen. This tag is included only to provide compatibility with \"normal\" WWW-servers");
+    return ("This tag outputs the value of different configuration and request local "
+	    "variables. They are not really used by Roxen. This tag is included only "
+	    "to provide compatibility with \"normal\" WWW-servers");
   if(!m->var)
   {
     if(sizeof(m) == 1)
@@ -1293,10 +1295,25 @@ string tag_compat_config(string tag,mapping m,object id,object file,
 {
   if(m->help) 
     return ("See the Apache documentation.");
-  if(QUERY(ssi)&& m->sizefmt == "abbrev" || m->sizefmt == "bytes")
-    defines->sizefmt = m->sizefmt;
-  else
-    return "<!-- Config what? -->";
+  if(!QUERY(ssi))
+    return "SSI support disabled";
+
+  if (m->sizefmt) {
+    if ((< "abbrev", "bytes" >)[lower_case(m->sizefmt||"")]) {
+      defines->sizefmt = lower_case(m->sizefmt);
+    } else {
+      return(sprintf("Unknown SSI sizefmt:%O", m->sizefmt));
+    }
+  }
+  if (m->errmsg) {
+    // FIXME: Not used yet.
+    defines->errmsg = m->errmsg;
+  }
+  if (m->timefmt) {
+    // FIXME: Not used yet.
+    defines->timefmt = m->timefmt;
+  }
+  return "";
 }
 
 string tag_compat_include(string tag,mapping m,object id,object file,
@@ -1357,10 +1374,18 @@ string tag_compat_fsize(string tag,mapping m,object id,object file,
   if(!QUERY(ssi))
     return "SSI support disabled";
 
-  if(m->virtual)
+  if(m->virtual && sizeof(m->virtual))
   {
+    m->virtual = http_decode_string(m->virtual);
+    if (m->virtual[0] != '/') {
+      // Fix relative path.
+      m->virtual = combine_path(id->not_query, "../" + m->virtual);
+    }
     m->file = id->conf->real_file(m->virtual, id);
     m_delete(m, "virtual");
+  } else if (m->file && sizeof(m->file) && (m->file[0] != '/')) {
+    // Fix relative path
+    m->file = combine_path(id->conf->real_file(id->not_query) || "/", "../" + m->file);
   }
   if(m->file)
   {
@@ -1376,6 +1401,7 @@ string tag_compat_fsize(string tag,mapping m,object id,object file,
 	else
 	  return sizetostring(s[1]);
       } else {
+	// FIXME: Should use defines->timefmt here.
 	return ctime(s[3]);
       }
     }
