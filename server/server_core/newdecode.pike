@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: newdecode.pike,v 1.36 2003/01/26 02:10:47 mani Exp $
+// $Id: newdecode.pike,v 1.37 2003/03/04 21:00:52 mani Exp $
 
 // The magic below is for the 'install' program
 # if !efun(get_core)
@@ -9,7 +9,7 @@
 
 #include <roxen.h>
 
-#define ENC_ADD(X)do{if(arrayp(res->res))res->res+=({(X)});else res->res=(X); return "foo";}while(0)
+#define ENC_ADD(X)do{if(arrayp(res->res))res->res+=({(X)});else res->res=(X); return 0;}while(0)
 #define SIMPLE_DECODE(X,Y) private string X(Parser.HTML p, mapping m, string s, mapping res) { ENC_ADD( Y );}
 
 SIMPLE_DECODE(decode_int, (int)s );
@@ -47,7 +47,7 @@ string decode_variable(Parser.HTML p, mapping m, string s, mapping res)
   parse(s, mr);
 
   res[m->name] = mr->res;
-  return "bar";
+  return 0;
 }
 
 string name_of_module( RoxenModule m, Configuration c )
