@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.361 2002/04/11 14:59:21 jonasw Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.362 2002/04/15 12:31:33 jonasw Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -4736,6 +4736,25 @@ class TagIfExpr {
   constant plugin_name = "expr";
   int eval(string u) {
     return (int)sexpr_eval(u);
+  }
+}
+
+
+class TagIfTestLicense {
+  inherit RXML.Tag;
+  constant name = "if";
+  constant plugin_name = "test-license";
+  int eval(string u, RequestID id, mapping args)
+  {
+    License.Key key = id->conf->getvar("license")->get_key();
+    if(!key)
+      RXML.run_error("No license key defined for this configuration.");
+    
+    //  Expects a string on the form "module#feature"
+    if(sscanf(u, "%s#%s", string module, string feature) == 2) {
+      return !!key->get_module_feature(module, feature);
+    }
+    RXML.parse_error("Wrong syntax!");
   }
 }
 
