@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.110 2000/04/06 06:16:06 wing Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.111 2000/04/10 21:43:22 grubba Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -683,6 +683,10 @@ string tag_set_cookie(string tag, mapping m, RequestID id)
 
   if(t)
     cookies += "; expires="+Roxen.http_date(t+time(1));
+
+  // FIXME: Shouldn't the domain be encoded?
+  if (m->domain)
+    cookies += "; domain=" + m->domain;
 
   //FIXME: Check the parameter's usability
   cookies += "; path=" +(m->path||"/");
@@ -2297,6 +2301,10 @@ Sets a variable.</short>
 
 <attr name=persistent>
  Keep the cookie for two years.
+</attr>
+
+<attr name=domain>
+ The domain for which the cookie is valid.
 </attr>
 
 <attr name=value value=string>
