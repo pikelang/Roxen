@@ -93,8 +93,8 @@ string module_name_from_file( string file )
   if( data
       && sscanf( data, "%*smodule_name%*s=%[^;];", name )
       && sscanf( name, "%*[^\"]\"%s\"", name ) )
-    return name;
-  return ((file/"/")[-1]/".")[0];
+    return Roxen.html_encode_string(name);
+  return Roxen.html_encode_string(((file/"/")[-1]/".")[0]);
 }
 
 string pafeaw( string errors, string warnings )
