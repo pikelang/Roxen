@@ -5,7 +5,6 @@
 
 array pages =
 ({
-  ({ "home",         "",              0,            0, LOCALE(218, "Startpage")  }),
   ({ "update",       "update.html",   "Update",     0, LOCALE(219, "Update")}),
   ({ "usersettings", "settings.html", 0,            0, LOCALE(220, "Your Settings") }),
   ({ "users",        "users.html",    "Edit Users", 0, LOCALE(221, "Users")}),

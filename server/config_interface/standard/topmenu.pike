@@ -8,11 +8,11 @@
 
 array selections =
 ({
-  ({ LOCALE(212, "Admin"),   "home",      "",                 0 }),
+  ({ LOCALE(0, "Home"),      "hype",      "",                 0 }),
+  ({ LOCALE(212, "Admin"),   "home",     "settings.html",   0 }),
   ({ LOCALE(213, "Sites"),   "sites",     "sites/", "View Settings" }),
   ({ LOCALE(214, "Globals"), "globals",   "global_settings/","View Settings"}),
-  ({ LOCALE(215, "Ports"),   "ports",     "ports/",
-     "View Settings" }),
+  ({ LOCALE(215, "Ports"),   "ports",     "ports/",     "View Settings" }),
   ({ LOCALE(216, "Events"),  "event_log", "event_log/", "View Settings" }),
   ({ LOCALE(196, "Tasks"),   "actions",   "actions/",   "Tasks" }),
   ({ LOCALE(217, "Docs"),    "docs",      "docs/",            0 }),

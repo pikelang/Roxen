@@ -1,5 +1,4 @@
-<gtext font="franklin gothic demi">Welcome to Roxen WebServer &roxen.base-version;</gtext>
-<blockquote>
+<gtext scale='0.7' font="franklin gothic demi">Welcome to Roxen WebServer &roxen.base-version;</gtext>
 <p>
  If your fonts are way too large (or small, depending on personal
  preferences), please adjust the unicode font size in your
@@ -10,4 +9,3 @@
 <p>
 <gtext href="whatsnew.html" scale="0.6" fgcolor="&usr.linkcolor;" font="franklin gothic demi">What's new?</gtext>
 </p>
-</blockquote>
