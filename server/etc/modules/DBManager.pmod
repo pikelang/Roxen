@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.51 2001/10/09 14:56:59 per Exp $
+// $Id: DBManager.pmod,v 1.52 2001/10/29 10:51:25 grubba Exp $
 
 //! Manages database aliases and permissions
 
@@ -350,7 +350,7 @@ array(string) db_tables( string name )
   switch( db_driver( name ) )
   {
     case "mysql":
-      return 0;
+      return ({});
 
     case "odbc":
       // Oracle.
