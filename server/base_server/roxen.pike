@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.718 2001/08/28 15:47:59 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.719 2001/08/29 13:54:05 grubba Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -4579,9 +4579,18 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
     }
   }
   if( !patterns )  return 0;
-  return compile_string( "int|mapping f( RequestID id )\n"
-			 "{\n" +variables *";\n" + ";\n"
-			 "" +  code + "  return fail;\n}\n" )()->f;
+  code = ("int|mapping f( RequestID id )\n"
+	  "{\n" +variables *";\n" + ";\n"
+	  "" +  code + "  return fail;\n}\n");
+#if defined(SECURITY_PATTERN_DEBUG) || defined(HTACCESS_DEBUG)
+   report_debug(sprintf("Compiling security pattern:\n"
+			"%{    %s\n%}\n"
+			"Code:\n"
+			"%{    %s\n%}\n",
+			pattern/"\n",
+			code/"\n"));
+#endif /* SECURITY_PATTERN_DEBUG || HTACCESS_DEBUG */
+  return compile_string(code)()->f;
 }
 
 
