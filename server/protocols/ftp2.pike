@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.54 1998/06/26 00:46:56 grubba Exp $
+ * $Id: ftp2.pike,v 1.55 1998/06/26 14:58:11 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -274,7 +274,7 @@ class ToAsciiWrapper
   static string convert(string s)
   {
     converted += sizeof(s);
-    return(replace(s, "\n", "\r\n"));
+    return(replace(replace(s, "\r\n", "\n"), "\n", "\r\n"));
   }
 }
 
@@ -287,8 +287,11 @@ class FromAsciiWrapper
   static string convert(string s)
   {
     converted += sizeof(s);
-
+#ifdef __NT__
+    return(replace(replace(s, "\r\n", "\n"), "\n", "\r\n"));
+#else /* !__NT__ */
     return(replace(s, "\r\n", "\n"));
+#endif /* __NT__ */
   }
 }
 
