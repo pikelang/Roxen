@@ -131,7 +131,7 @@ case $1 in
 	;;
 
 	*)
-          echo "Syntax: $0 [start|stop|restart|reload]"
+          echo "Syntax: $0 [start|stop|start_msg|stop_msg|restart|reload]"
           ;;
 esac
 
