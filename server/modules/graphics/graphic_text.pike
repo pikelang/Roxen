@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.33 1997/02/27 04:06:58 per Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.34 1997/02/27 04:09:04 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -443,8 +443,8 @@ object (image) make_text_image(mapping args, object font, string text)
   if(args->bshadow)
   {
     int sdist = (int)(args->bshadow)+1;
-    object ta = image(text_alpha->xsize()+sdist*2,
-		      text_alpha->ysize()+sdist*2);
+    object ta = image(text_alpha->xsize()+sdist*2+4,
+		      text_alpha->ysize()+sdist*2+4);
     ta->paste(text_alpha,sdist,sdist);
     ta = blur(ta, MIN((sdist/2),1))->color(256,256,256);
     background->paste_mask(image(txsize,tysize),ta,xoffset, yoffset);
