@@ -13,7 +13,7 @@
  * reference cache shortly.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.48 1997/11/30 05:35:54 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.49 1997/11/30 06:01:59 hedda Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -517,7 +517,7 @@ string tag_diagram(string tag, mapping m, string contents,
 
   m->src = query("location") + quote(encode_value(res)) + ".gif";
 
-  werror(sprintf("%O\n",make_tag("img",m)));
+  //werror(sprintf("%O\n",make_tag("img",m)));
   
   //  trace(2);
 
