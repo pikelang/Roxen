@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.252 2001/10/03 06:01:44 mast Exp $
+// $Id: module.pmod,v 1.253 2001/10/08 09:54:24 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -218,7 +218,8 @@ class Tag
   TagSet tagset;
   //! The tag set that this tag belongs to, if any.
 
-  /*extern*/ int flags;
+  //! @decl int flags;
+  //!
   //! Various bit flags that affect parsing; see the FLAG_* constants.
   //! @[RXML.Frame.flags] is initialized from this.
 
@@ -332,7 +333,7 @@ class Tag
     object/*(Frame)HMM*/ frame =
       ([function(:object/*(Frame)HMM*/)] this_object()->Frame)();
     frame->tag = this_object();
-    frame->flags = flags;
+    frame->flags = this_object()->flags;
     frame->args = args;
     frame->content = zero_type (content) ? nil : content;
     return frame;
@@ -393,7 +394,7 @@ class Tag
     _frame =								\
       ([function(:object/*(Frame)HMM*/)] this_object()->Frame)();	\
     _frame->tag = this_object();					\
-    _frame->flags = flags|FLAG_UNPARSED;				\
+    _frame->flags = this_object()->flags|FLAG_UNPARSED;			\
     _frame->args = _args;						\
     _frame->content = _content || "";					\
     DO_IF_DEBUG(							\
@@ -599,7 +600,8 @@ class TagSet
   //! you should not use that if you create more tag sets in such a
   //! module.
 
-  string prefix;
+  //! @decl string prefix;
+  //!
   //! A namespace prefix that may precede the tags. If it's zero, it's
   //! up to the importing tag set(s). A @tt{:@} is always inserted
   //! between the prefix and the tag name.
@@ -610,7 +612,8 @@ class TagSet
   //! some point, this way of specifying tag prefixes will probably
   //! change.
 
-  int prefix_req;
+  //! @decl int prefix_req;
+  //!
   //! The prefix must precede the tags.
 
   array(TagSet) imported = ({});
@@ -1215,8 +1218,8 @@ class TagSet
   /*static*/ array get_hash_data()
   {
     return ({
-      prefix,
-      prefix_req,
+      this_object()->prefix,
+      this_object()->prefix_req,
       sort (indices (tags)),
       proc_instrs && sort (indices (proc_instrs)),
       string_entities,
