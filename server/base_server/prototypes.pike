@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.115 2004/05/10 19:10:14 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.116 2004/05/10 19:13:06 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -920,7 +920,7 @@ class RequestID
 	    // entity-tag.
 	    string etag = sub_expr[i][1];
 	    // etag is usually something like "[\"some etag\"]" here.
-	    sscanf(etag, "[%*[ \t,]\"%s\"", etag);	// Remove quotes.
+	    sscanf(etag, "[%s]", etag);	// Remove brackets
 	    expr += ({ ({ "etag", etag }) });
 	    break;
 	  case "word":
