@@ -65,6 +65,7 @@ string parse( RequestID id )
   res += "</tr></table>" +
     (roxen->query("cache")?"<br />"+ roxen->get_garb_info():"");
 
+#if constant(Locale.cache_status)
   mapping l=Locale.cache_status();
   res += "<br /><b>"+LOCALE(71, "Locale Cache")+"</b><br />"
     "<table>"
@@ -73,6 +74,6 @@ string parse( RequestID id )
     "<tr><td>"+LOCALE(74, "Loaded projects:")+"</td><td>"+l->load_proj+"</td></tr>"
     "<tr><td>"+LOCALE(75, "Current cache size:")+"</td><td>"+Roxen.sizetostring(l->bytes)+"</td></tr>"
     "</table><br />";
-
+#endif
   return res +  "<p><cf-ok/></p>";
 }

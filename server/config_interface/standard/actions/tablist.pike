@@ -1,4 +1,5 @@
 #include <roxen.h>
+#include <config_interface.h>
 
 //<locale-token project="admin_tasks"> LOCALE </locale-token>
 #define LOCALE(X,Y)  _STR_LOCALE("admin_tasks",X,Y)
@@ -16,6 +17,9 @@ array pages =
 
 string parse( RequestID id )
 {
+  if( !config_setting2("group_tasks") )
+    return "";
+
   string q=id->variables["class"];
   string res="";
   if( !q ) q = "status";

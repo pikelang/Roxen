@@ -235,6 +235,11 @@ class ConfigurationSettings
     defvar( "font", "franklin gothic demi", LOCALE(187, "Font"),
 	    TYPE_FONT, LOCALE(188, "Administration interface font."));
 
+    defvar( "group_tasks", 1, LOCALE(0,"Group Tasks"),
+	    TYPE_FLAG, LOCALE( 0, "If true, tasks are grouped acording to "
+			       "type, otherwise all tasks will be listed on "
+			       "one page") );
+
     defvar( "addmodulemethod", "normal", 
 	    LOCALE(189, "Add/Delete module page type"),
             TYPE_STRING_LIST, 
