@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.361 2000/09/05 08:55:03 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.362 2000/09/05 11:50:14 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -2106,7 +2106,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
   int module_type;
 
 
-  datacache->flush();
+  if( datacache ) datacache->flush();
 
   if( sscanf(modname, "%s#%d", modname, id ) != 2 )
     while( modules[ modname ] && modules[ modname ][ id ] )
@@ -2485,7 +2485,7 @@ int disable_module( string modname, int|void nodest )
   int id, pr;
   sscanf(modname, "%s#%d", modname, id );
 
-  datacache->flush();
+  if( datacache ) datacache->flush();
 
   ModuleInfo moduleinfo =  roxen->find_module( modname );
   mapping module = modules[ modname ];
