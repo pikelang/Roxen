@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.149 2000/08/07 10:14:34 kuntri Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.150 2000/08/07 20:59:11 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -33,7 +33,7 @@ string query_provides() {
   return "modified";
 }
 
-constant permitted = "123456789.xabcdefint\"XABCDEFlo<>=0-*+/%%|()"/"";
+constant permitted = "123456789.xabcdefint\"XABCDEFlo<>=0-*+/%&|()"/"";
 
 string sexpr_eval(string what)
 {
@@ -439,7 +439,8 @@ class TagSet {
 	return 0;
       }
 
-      parse_error("No value specified.\n");
+      RXML.user_set_var(args->variable, content, args->scope);
+      return 0;
     }
   }
 }
@@ -722,6 +723,8 @@ class TagInsert {
   inherit RXML.Tag;
   constant name = "insert";
   constant flags = RXML.FLAG_EMPTY_ELEMENT | RXML.FLAG_SOCKET_TAG;
+  // FIXME: result_types needs to be updated with all possible outputs
+  // from the plugins.
 
   class Frame {
     inherit RXML.Frame;
@@ -729,15 +732,14 @@ class TagInsert {
     void do_insert(RXML.Tag plugin, string name, RequestID id) {
       result=plugin->get_data(args[name], args, id);
 
-      // This is as elegant as eating stew with your hands...
-      if(plugin->get_type) {
-	if(plugin->get_type(args, result)==RXML.t_text)
-	  result=Roxen.html_encode_string(result);
-      }
+      if(plugin->get_type)
+	result_type=plugin->get_type(args, result);
       else if(args->quote=="none")
-	;
+	result_type=RXML.t_xml;
+      else if(args->quote=="html")
+	result_type=RXML.t_text;
       else
-	result=Roxen.html_encode_string(result);
+	result_type=RXML.t_text;
     }
 
     array do_return(RequestID id) {
@@ -849,10 +851,10 @@ class TagInsertFile {
     }
 	
 #ifdef OLD_RXML_COMPAT
-    return Roxen.parse_rxml(id->conf->try_get_file(var, id), id);
-#else
-    return id->conf->try_get_file(args->file, id);
+    if(id->conf->old_rxml_compat)
+      return Roxen.parse_rxml(id->conf->try_get_file(var, id), id);
 #endif
+    return id->conf->try_get_file(args->file, id);
   }
 }
 
