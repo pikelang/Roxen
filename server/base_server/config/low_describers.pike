@@ -1,4 +1,4 @@
-/* $Id: low_describers.pike,v 1.20 1998/02/05 00:59:21 js Exp $ */
+/* $Id: low_describers.pike,v 1.21 1998/03/02 12:58:16 grubba Exp $ */
 // These do _not_ use any nodes, instead, they are called from the node
 // describers (which are called from the nodes)
 object this = this_object();
@@ -420,7 +420,7 @@ string describe_variable_low(mixed *var, mixed path, int really_short,
     
    case TYPE_TEXT_FIELD:
     res="<textarea name="+path+" cols=50 rows=10>"
-      + html_encode_string(var[VAR_VALUE])
+      + html_encode_string(var[VAR_VALUE]||"")
       + "</textarea><br><input type=submit value=Ok>\n";
     break;
     
