@@ -389,6 +389,35 @@
 </test>
 
 <test>
+  <rxml
+    ><define container="x"
+      ><contents copy-of="a/node()"/>
+<contents copy-of="processing-instruction()"/>
+<contents copy-of="processing-instruction(y)"/>
+<contents copy-of="processing-instruction()[-1]"/>
+<contents copy-of="comment()[1]"/>
+<contents value-of="processing-instruction(x)"/>
+<contents value-of="comment()"/>
+<contents copy-of="text()"/>
+</define
+    ><x>a&auml; &amp; b <?x &amp;  y?><!--c--> <?y?><a
+	x='&amp;'>&lt;foo<a x='1' g="'">y</a></a
+      ><b y='&lt;' p='q'
+      />&gt;<a x='2' y='p'><a x='3'/><a x='4'/></a
+    ><!--d--></x
+  ></rxml>
+  <result>&lt;foo<a x='1' g="'">y</a><a x='3'/><a x='4'/>
+<?x &amp;  y?><?y?>
+<?y?>
+<?y?>
+<!--c-->
+&amp;amp;  y
+c
+a&auml; &amp; b  &gt;
+</result>
+</test>
+
+<test>
   <rxml type="string">
     <define container="x">
       <contents copy-of="*[-1]"/>
@@ -416,7 +445,7 @@
       <y b="&var.bar;"/>
     </x>
   </rxml>
-  <result>a="up"b="down"</result>
+  <result>a="up" b="down"</result>
 </test>
 
 <test>
