@@ -708,6 +708,11 @@ mixed do_it( RequestID id )
     }
   }
 
+  if (!conf) {
+    return sprintf(LOCALE(0, "Configuration %O not found."),
+		   id->variables->config);
+  }
+
   if( !conf->inited )
     conf->enable_all_modules();
 
@@ -722,7 +727,8 @@ mixed parse( RequestID id )
   if( !config_perm( "Add Module" ) )
     return LOCALE(226, "Permission denied");
 
-  if( id->variables->module_to_add )
+  if( id->variables->module_to_add &&
+      id->variables->config )
     return do_it( id );
 
   Configuration conf;
