@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.70 1999/02/18 20:57:23 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.71 1999/02/18 21:25:03 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -97,7 +97,7 @@ class imap_mail
 	"\\Deleted" : "deleted",
 	"\\Flagged" : "flagged",
 	"\\Draft" : "draft",
-      ])[f] || (sizeof(f) && (f[0] != '/') && ("IMAP:" + f));
+      ])[f] || (sizeof(f) && (f[0] != '\\') && ("IMAP:" + f));
 
       if (f) {
 	mail->set_flag(cl_flag);
