@@ -1,6 +1,6 @@
 inherit "http";
 
-// static string _cvs_version = "$Id: roxenlib.pike,v 1.70 1998/07/16 06:49:27 mast Exp $";
+// static string _cvs_version = "$Id: roxenlib.pike,v 1.71 1998/07/17 17:06:26 noring Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -854,7 +854,8 @@ string html_encode_string(string str)
 string html_decode_string(string str)
 // Decodes str, opposite to html_encode_string()
 {
-  return replace(str, ({"&amp;", "&lt;", "&gt;"}), ({"&", "<", ">" }) );
+  return replace(str, ({"&amp;", "&lt;", "&gt;", "&#34;", "&#39;"}),
+		 ({"&", "<", ">", "\"", "\'" }) );
 }
 
 string html_encode_tag_value(string str)
