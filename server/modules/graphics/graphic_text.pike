@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.166 1999/03/11 23:07:24 mast Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.167 1999/05/08 00:52:43 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -28,7 +28,7 @@ array register_module()
 	    "See <tt>&lt;gtext help&gt;&lt;/gtext&gt;</tt> for "
 	    "more information.\n<p>"+doc(),
 	    0, 1
-         });
+  });
 }
 
 
@@ -116,37 +116,6 @@ void create()
 }
 
 string query_location() { return query("location"); }
-
-object load_font(string name, string justification, int xs, int ys)
-{
-  object fnt = Image.font();
-
-  if ((!name)||(name == ""))
-  {
-    return get_font("default",32,0,0,lower_case(justification||"left"),
-		    (float)xs, (float)ys);
-  } else if(sscanf(name, "%*s/%*s") != 2) {
-    name=QUERY(default_size)+"/"+name;
-  }
-
-  name = "fonts/" + name;
-
-  if(!fnt->load( name ))
-  {
-    report_debug("Failed to load the compatibility font "+name+
-		 ", using the default font.\n");
-    return get_font("default",32,0,0,lower_case(justification||"left"),
-		    (float)xs, (float)ys);
-  }
-  catch
-  {
-    if(justification=="right") fnt->right();
-    if(justification=="center") fnt->center();
-    if(xs)fnt->set_x_spacing((100.0+(float)xs)/100.0);
-    if(ys)fnt->set_y_spacing((100.0+(float)ys)/100.0);
-  };
-  return fnt;
-}
 
 static private mapping cached_args = ([ ]);
 
