@@ -4,7 +4,7 @@
 // mapping. Given the file 'foo.html', it will per default
 // set the contenttype to 'text/html'
 
-string cvs_version = "$Id: contenttypes.pike,v 1.4 1996/11/27 14:05:18 per Exp $";
+string cvs_version = "$Id: contenttypes.pike,v 1.5 1996/12/02 04:32:42 per Exp $";
 #include <module.h>
 inherit "module";
 
@@ -81,7 +81,7 @@ array register_module()
   return ({ MODULE_TYPES, "Contenttypes",
 	    ("This module handles all normal extension to "+
 	     "contenttype mapping. Given the file 'foo.html', it will "+
-	     "set the contenttype to 'text/html'."), ({}), 1 });
+	     "normally set the contenttype to 'text/html'."), ({}), 1 });
 }
 
 array type_from_extension(string ext)

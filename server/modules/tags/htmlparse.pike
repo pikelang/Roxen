@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 
 
-string cvs_version = "$Id: htmlparse.pike,v 1.7 1996/11/27 14:05:27 per Exp $";
+string cvs_version = "$Id: htmlparse.pike,v 1.8 1996/12/02 04:32:48 per Exp $";
 #pragma all_inline 
 
 #include <config.h>
@@ -267,7 +267,9 @@ array register_module()
 	    "Main RXML parser", 
 	    ("This module makes it possible for other modules to add "
 	     "new tags to the RXML parsing, in addition to the "
-	     "default ones."), ({}), 1 });
+	     "default ones.  The default error message (no such resource) "
+	     "use this parser, so if you do not want it, you will also "
+	     "have to change the error message."), ({}), 1 });
 }
 
 string *query_file_extensions() 

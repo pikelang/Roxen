@@ -1,7 +1,7 @@
 // This is a part of the language system developed by Mattias Wingstedt, ask
 // him if you want more info.
 
-string cvs_version = "$Id: variable.pike,v 1.3 1996/11/27 13:48:19 per Exp $";
+string cvs_version = "$Id: variable.pike,v 1.4 1996/12/02 04:32:51 per Exp $";
 #include <module.h>
 
 inherit "module";
@@ -21,7 +21,9 @@ mixed *register_module()
 {
   return ({ MODULE_URL | MODULE_PARSER, 
 	    "Variable", 
-	    ("Variable"),
+	    ("Variable, makes it possible to define variables based on "
+	     "URL/location of the request. Currently only used by the "
+	     "header and footer module"),
 	    ({ }),
 	    1
 	  });

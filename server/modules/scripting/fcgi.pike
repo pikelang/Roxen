@@ -3,7 +3,7 @@
 // Support for the FastCGI interface, using an external fast-cgi
 // wrapper. This should be handled internally.
 
-string cvs_version = "$Id: fcgi.pike,v 1.4 1996/11/27 14:05:25 per Exp $";
+string cvs_version = "$Id: fcgi.pike,v 1.5 1996/12/02 04:32:47 per Exp $";
 #include <module.h>
 inherit "modules/scripting/cgi";
 
@@ -40,7 +40,7 @@ mixed *register_module()
     return ({ 
       MODULE_FIRST | MODULE_LOCATION | MODULE_FILE_EXTENSION,
 	"Fast-CGI executable support", 
-	"Support for the <a href=http://www.fastcgi.com>Fast-CGI interface</a>"
+	"Partial support for the <a href=http://www.fastcgi.com>Fast-CGI interface</a>. This module is useful, but not finished."
 	});
 }
 

@@ -3,7 +3,7 @@
 // This is a virtual "file-system".
 // It will be located somewhere in the name-space of the server.
 // Also inherited by some of the other filesystems.
-string cvs_version = "$Id: filesystem.pike,v 1.5 1996/11/27 14:05:17 per Exp $";
+string cvs_version = "$Id: filesystem.pike,v 1.6 1996/12/02 04:32:39 per Exp $";
 #include <module.h>
 
 #if DEBUG_LEVEL > 20
@@ -84,7 +84,8 @@ mixed *register_module()
     MODULE_LOCATION, 
     "Filesystem", 
     ("This is a virtual filesystem, use it to make files available to "+
-     "the users of your WWW-server.") 
+     "the users of your WWW-server. If you want to serve any 'normal' "
+      "files from your server, you will have to have atleast one filesystem.") 
     });
 }
 

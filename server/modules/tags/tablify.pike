@@ -3,7 +3,7 @@
 
 
 
-string cvs_version = "$Id: tablify.pike,v 1.3 1996/11/27 13:48:18 per Exp $";
+string cvs_version = "$Id: tablify.pike,v 1.4 1996/12/02 04:32:49 per Exp $";
 #include <module.h>
 inherit "module";
 
@@ -12,9 +12,14 @@ mixed *register_module()
   return ({ 
     MODULE_PARSER,
     "Tablify",
-      ("Generates tables from, as an example, tab separated fields."
-       "<p>This module defines a tag, &lt;tablify&gt;"), ({}), 1,
-    });
+      ("Generates tables from, as an example, tab separated fields in newline"
+       " separated records (this is the default)."
+       "<p>This module defines a tag, &lt;tablify&gt;<p>Arguments:<br>"
+       "cellseparator=str: Use str as the column-separator<br>\n"
+       "rowseparator=str: Use str as the row-separator<br>\n"
+       "cellalign=left|right|center: Align the contents of the cells<br>\n"
+       "rowalign=left|right|center: Align the contents of the rows<br>\n"),
+      ({}), 1, });
 }
 
 string tag_tablify( string tag, mapping m, string q, mapping request_id );
@@ -64,7 +69,7 @@ string tag_tablify( string tag, mapping m, string q, mapping request_id )
   table += ">";
   if(m->rowalign)
   {
-    td = "<tr align="+m->cellalign+">";
+    td = "<tr align="+m->rowalign+">";
     m->rowalign=0;
   } else
     td="<tr>";

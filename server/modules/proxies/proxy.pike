@@ -4,7 +4,7 @@
 // limit of proxy connections/second is somewhere around 70% of normal
 // requests, but there is no real reason for them to take longer.
 
-string cvs_version = "$Id: proxy.pike,v 1.8 1996/12/01 19:18:46 per Exp $";
+string cvs_version = "$Id: proxy.pike,v 1.9 1996/12/02 04:32:45 per Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -55,7 +55,7 @@ void start()
 				   +")")->match))
       report_error("Parse error in 'No cache' regular expression.\n");
 
-  if(!no_cache_for) no_cache_for = lambda(){};
+  if(!no_cache_for) no_cache_for = lambda(string i){return 0;};
   
   if(logfile) 
     destruct(logfile);
@@ -210,7 +210,8 @@ void create()
 mixed *register_module()
 {
   return ({  MODULE_PROXY|MODULE_LOCATION, 
-	       "HTTP-Proxy", "This is a HTTP-proxy.", });
+	       "HTTP-Proxy", "This is a caching HTTP-proxy with quite "
+	       " a few bells and whistles", });
 }
 
 string query_location()  { return QUERY(mountpoint); }

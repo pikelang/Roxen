@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@infovav.se 
 //   Changed into module by Per Hedbor, per@infovav.se
 
-string cvs_version = "$Id: htaccess.pike,v 1.5 1996/11/27 14:05:17 per Exp $";
+string cvs_version = "$Id: htaccess.pike,v 1.6 1996/12/02 04:32:40 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -13,8 +13,8 @@ inherit "roxenlib";
 
 array *register_module()
 {
-  return ({ MODULE_LAST|MODULE_FIRST, ".htaccess support", 
-	      "Support for .htaccess files.", ({}), 1 });
+  return ({ MODULE_SECURITY|MODULE_LAST|MODULE_FIRST, ".htaccess support", 
+	      "Support for NCSA/Apacha .htaccess files.", ({}), 1 });
 }
 
 void create()

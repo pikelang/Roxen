@@ -8,16 +8,30 @@
 // </pike>
  
 inherit "module";
-string cvs_version = "$Id: lpctag.pike,v 1.4 1996/11/27 14:05:29 per Exp $";
+string cvs_version = "$Id: lpctag.pike,v 1.5 1996/12/02 04:32:49 per Exp $";
 #include <module.h>;
 
 array register_module()
 {
   return ({ MODULE_PARSER,
 	    "Pike tag", 
-	    "This module adds a new tag, <pike></pike>. It makes it possible."
-	    " to insert some pike code directly in the document.",
-	    ({}), 1 });
+	    "This module adds a new tag, <pike></pike>. It makes it possible"
+	    " to insert some pike code directly in the document."
+	      " Example:<p><pre>"
+	      " &lt;pike&gt; "
+	      "   return \"Hello world!\\n\";"
+	      " &lt;/pike&gt;\n</pre>"
+	      "<p>Arguments: Any, all arguments are passed to the script "
+	      " in the mapping args. There are also a few helper functions "
+	      "available, "
+	      " output(string fmt, mixed ... args) is a fast way to add new"
+	      " data to a dynamic buffer, flush() returns the contents of the"
+	      " buffer as a string.  A flush() is done automatically if the"
+	      " \"script\" does not return any data, thus, another way to write the"
+	      " hello world script is <tt>&lt;pike&gt;output(\"Hello %s\n\", \"World\");&lt/pike&gt</tt><p>"
+	      "The request id is available as id, all defines are available "
+	      "in the mapping 'defines'. ",
+	      ({}), 1 });
 }
 
 

@@ -1,7 +1,7 @@
 // This is a small sample module.  It is intended to show a simple example
 // of a container.
  
-string cvs_version = "$Id: fnord.pike,v 1.2 1996/11/27 13:47:59 per Exp $";
+string cvs_version = "$Id: fnord.pike,v 1.3 1996/12/02 04:32:39 per Exp $";
 #include <module.h>
 inherit "module";
  
@@ -82,7 +82,9 @@ array register_module()
   return ({ MODULE_PARSER, 
             "Fnord!",
             ("Adds an extra container tag, 'fnord' that's supposed to make "
-	     "things invisible unless the \"fnord\" prestate is present."),
+	     "things invisible unless the \"fnord\" prestate is present."
+	      "<p>This module is here as an example of how to write a "
+	      "very simple RXML-parsing module."),
             0, 1	     
             });
 }

@@ -3,7 +3,7 @@
 // Index files only module, a directory module that will not try to
 // generate any directory listings, instead only using index files.
 
-string cvs_version = "$Id: indexfiles.pike,v 1.3 1996/11/27 13:47:58 per Exp $";
+string cvs_version = "$Id: indexfiles.pike,v 1.4 1996/12/02 04:32:38 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -14,8 +14,12 @@ array register_module()
 {
   return ({ MODULE_DIRECTORIES, 
 	    "Index files only",
-	    "You can use this directory module if you do _not_ want "
-	    "directory listings.\n",
+	      "Index files only module, a directory module that will not try "
+	      "to generate any directory listings, instead only using the  "
+	      "specified index files.<p>"
+	      "You can use this directory module if you do not want "
+	      "any automatic directory listings at all, but still want \n"
+	      "to use index.html with friends",
 	    ({ }), 
 	    1
          });

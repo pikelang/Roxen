@@ -4,7 +4,7 @@
 // they create a file named 'AccessLog' in that directory, and allow
 // write access for roxen.
 
-string cvs_version = "$Id: home_logger.pike,v 1.4 1996/11/27 13:48:05 per Exp $";
+string cvs_version = "$Id: home_logger.pike,v 1.5 1996/12/02 04:32:42 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -15,7 +15,7 @@ mixed register_module()
   return ({ MODULE_LOGGER,
 	    "User logger",
 	    ("This module log the accesses of each user in their home dirs, "
-	     "iff they create a file named 'AccessLog' in that directory, and "
+	     "iff they create a file named 'AccessLog' (or whatever is configurated in the configuration interface) in that directory, and "
 	     "allow write access for roxen."), ({}), 1 });
 }
 

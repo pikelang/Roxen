@@ -6,7 +6,7 @@ object this = this_object();
 
 string fix_cvs(string from)
 {
-  from = replace(from, ({ "$Id: module.pike,v 1.4 1996/12/01 19:18:32 per Exp $" }), ({"",""}));
+  from = replace(from, ({ "$", "Id: "," Exp $" }), ({"","",""}));
   sscanf(from, "%*s,v %s", from);
   return from;
 }

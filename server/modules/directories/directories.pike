@@ -1,7 +1,7 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
 // A quite complex directory module. Generates macintosh like listings.
-string cvs_version = "$Id: directories.pike,v 1.5 1996/11/27 14:05:15 per Exp $";
+string cvs_version = "$Id: directories.pike,v 1.6 1996/12/02 04:32:37 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -112,7 +112,9 @@ array register_module()
   return ({ MODULE_DIRECTORIES, 
 	    "Directory parsing module",
 	    "This is the default directory parsing module. "
-	      "Basically, this one pretty prints a list of files.", 
+	      "This one pretty prints a list of files, with "
+	      "macintosh like fold and unfold buttons next to each "
+	      "directory.", 
 	    ({ }), 
 	    1
 	    });

@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxenloader.pike,v 1.5 1996/12/01 19:18:36 per Exp $";
+string cvs_version = "$Id: roxenloader.pike,v 1.6 1996/12/02 04:32:36 per Exp $";
 
 #include <simulate.h>
 #include <roxen.h>
@@ -149,8 +149,7 @@ void mkdirhier(string from)
 
 void main(mixed ... args)
 {
-  perror("Roxen loader version "+(((cvs_version-"$Id: roxenloader.pike,v 1.5 1996/12/01 19:18:36 per Exp $")
-	 +"\n");
+  perror("Roxen loader version "+cvs_version+"\n");
   add_constant("roxenp", lambda() { return roxen; });
   add_constant("report_debug", report_debug);
   add_constant("report_error", report_error);

@@ -3,7 +3,7 @@
 // User database. Reads the system password database and use it to
 // authentificate users.
 
-string cvs_version = "$Id: userdb.pike,v 1.5 1996/11/27 14:05:20 per Exp $";
+string cvs_version = "$Id: userdb.pike,v 1.6 1996/12/02 04:32:43 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -323,7 +323,7 @@ mixed *register_module()
        ("This module handles the security in roxen, and uses "
 	"the normal system password and user database to validate "
 	"users. It also maintains the user database for all other "
-	"modules in roxen, e.g. the user homepage module"),
+	"modules in roxen, e.g. the user homepage module."),
        ({  }),
        1 
      });

@@ -4,7 +4,7 @@
 // another. This can be done using "internal" redirects (much like a
 // symbolik link in unix), or with normal HTTP redirects.
 
-string cvs_version = "$Id: redirect.pike,v 1.3 1996/11/27 13:48:03 per Exp $";
+string cvs_version = "$Id: redirect.pike,v 1.4 1996/12/02 04:32:41 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -80,7 +80,9 @@ mixed register_module()
 {
   return ({ MODULE_FIRST, 
 	    "Redirect Module v2.0", 
-	    ("This module redirects requests based on regexps."),
+	      "The redirect module. Redirects requests from one filename to "
+	      "another. This can be done using \"internal\" redirects (much"
+	      " like a symbolik link in unix), or with normal HTTP redirects.",
 	      ({}), 1, });
 }
 

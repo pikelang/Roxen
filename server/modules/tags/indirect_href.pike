@@ -5,7 +5,7 @@
 // Written by Mattias Wingstedt, <wing@infovav.se>, please refer
 // to him for further info.
 
-string cvs_version = "$Id: indirect_href.pike,v 1.3 1996/11/27 13:48:17 per Exp $";
+string cvs_version = "$Id: indirect_href.pike,v 1.4 1996/12/02 04:32:48 per Exp $";
 #include <module.h>
 
 inherit "module";
@@ -28,7 +28,7 @@ void create()
 
 array (mixed) register_module()
 {
-  return ({ MODULE_PARSER, "Indirect href", "Indirect href", });
+  return ({ MODULE_PARSER, "Indirect href", "Indirect href. Adds a new tag (with a configurable name, if the name is changed, the module has to be reloaded for the namechange to take effect), with a single arguemnt, name=string. It then uses the name to index a database of URLs, and inserts a &lt;a href=...&gt; tag instead. This can be very useful, since you can move all links to a document at once. It also allows the special case 'name=random'. If this is used, a random link will be selected from the database.", });
 }
 
 void start()

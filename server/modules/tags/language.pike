@@ -3,7 +3,7 @@
 // Written by Mattias Wingstedt <wing@infovav.se>, contact him for
 // more info.
 
-string cvs_version = "$Id: language.pike,v 1.4 1996/11/27 14:05:28 per Exp $";
+string cvs_version = "$Id: language.pike,v 1.5 1996/12/02 04:32:49 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -16,11 +16,8 @@ array register_module()
 {
   return ({ /*MODULE_DIRECTORIES |*/ MODULE_URL, 
 	    "Language module",
-	    "Handles documents in different languages. "
-	    "<br>Is also a directory module with nifty flags "
-	    "if the file exists in more than one langauge.",
-	    ({ }), 
-	    1
+	    "Handles documents in different languages. Needs more work.",
+				       ({ }), 1
          });
 }
 

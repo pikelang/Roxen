@@ -7,7 +7,7 @@
 // caching. This module is therefore quite obsolete, really.  But
 // since it is so small, I have left it here.
 
-string cvs_version = "$Id: relay.pike,v 1.4 1996/11/27 14:05:18 per Exp $";
+string cvs_version = "$Id: relay.pike,v 1.5 1996/12/02 04:32:41 per Exp $";
 #include <module.h>
 
 inherit "module";
@@ -33,8 +33,14 @@ mixed *register_module()
   return ({ 
     MODULE_LAST | MODULE_FIRST,
     "HTTP-Relay", 
-    "Relays HTTP requests, unknown to this server.",
-    });
+    "Relays HTTP requests from this server to another one. <p>"
+      "Like the redirect module, but transparent to the user. This module "
+      "will connect to another server, and get the data from there, and "
+      "then return the new data to the user.  The same results can be "
+      "achieved using the proxy and the redirect module.  With "
+      "caching. This module is therefore quite obsolete, really.  But "
+      "since it is so small, I have left it here. "
+      });
 }
 
 void create()

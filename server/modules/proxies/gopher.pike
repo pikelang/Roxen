@@ -2,7 +2,7 @@
 
 // Gopher proxy module.
 
-string cvs_version = "$Id: gopher.pike,v 1.4 1996/11/27 14:05:22 per Exp $";
+string cvs_version = "$Id: gopher.pike,v 1.5 1996/12/02 04:32:44 per Exp $";
 #include <config.h>
 
 #define CONNECTION_REFUSED "HTTP/1.0 500 Connection refused by remote "	\
@@ -29,8 +29,8 @@ array register_module()
   return ({ 
     MODULE_LOCATION|MODULE_PROXY,
     "Gopher Gateway",
-    "This is a caching gopher gateway, useful for firewall sites and "
-      "for everyone who wants to aquire better 'surfing speed'.", ({}), 1
+    "This is a caching gopher gateway, might be useful for firewall sites, if "
+      "anyone is still using gopher.", ({}), 1
     });
 }
 

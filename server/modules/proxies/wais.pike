@@ -4,7 +4,7 @@
 // seem that I have forgotten who wrote it.
 
 
-string cvs_version = "$Id: wais.pike,v 1.4 1996/11/27 14:05:23 per Exp $";
+string cvs_version = "$Id: wais.pike,v 1.5 1996/12/02 04:32:45 per Exp $";
 #include <config.h>
 
 #define DEF_CONNECTION_REFUSED "HTTP/1.0 500 Connection refused by remote host\r\nContent-type: text/html\r\n\r\n<title>Roxen error: Connection refused</title>\n<h1>Proxy request failed</h1><hr><font size=+2><i>Connection refused by remote host</i></font><hr><font size=-2><a href=http://roxen.com/>Roxen</a></font>"
@@ -329,8 +329,8 @@ array register_module()
   return ({ 
     MODULE_LOCATION|MODULE_PROXY,
     "Wais Gateway",
-    "This is a caching wais gateway, useful for firewall sites and "
-      "for everyone who wants to aquire better 'surfing speed'.", ({}), 1
+    "This is a caching wais gateway, useful for firewall sites."
+      " It has not been maintained for quite a while, but it works", ({}), 1
     });
 }
 

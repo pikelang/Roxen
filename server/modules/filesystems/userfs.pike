@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-// User filesystem. Used the userdatabase (and thus the system passwd
+// User filesystem. Uses the userdatabase (and thus the system passwd
 // database) to find the home-dir of users, and then looks in a
 // specified directory in that directory for the files requested.
 
@@ -8,7 +8,7 @@
 // / is quite useful for IPPs, enabling them to have URLs like
 // http://www.hostname.of.provider/customer/.
 
-string cvs_version = "$Id: userfs.pike,v 1.5 1996/11/27 13:48:01 per Exp $";
+string cvs_version = "$Id: userfs.pike,v 1.6 1996/12/02 04:32:40 per Exp $";
 #include <module.h>
 inherit "modules/filesystems/filesystem";
 
@@ -66,9 +66,12 @@ mixed *register_module()
   return ({ 
     MODULE_LOCATION, 
     "User Filesystem", 
-    ("This is a user filesystem, use it to make it possible "
-     " for your users to add their own home-pages. It use the password "
-     "database to determine the home directory of a user") 
+      "User filesystem. Uses the userdatabase (and thus the system passwd "
+      "database) to find the home-dir of users, and then looks in a "
+      "specified directory in that directory for the files requested. "
+      "<p>Normaly mounted under /~, but / or /users/ would work equally well. "
+      " is quite useful for IPPs, enabling them to have URLs like "
+      " http://www.hostname.of.provider/customer/. "
     });
 }
 

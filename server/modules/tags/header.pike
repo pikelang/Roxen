@@ -3,7 +3,7 @@
 // This module is written by Mattias Wingstedt <wing@infovav.se>,
 // please direct further questsions to him.
 
-string cvs_version = "$Id: header.pike,v 1.4 1996/11/27 14:05:26 per Exp $";
+string cvs_version = "$Id: header.pike,v 1.5 1996/12/02 04:32:47 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -82,7 +82,7 @@ array register_module()
 {
   return ({ MODULE_PARSER,
 	    "Header module",
-	    "Gives header and footer tags. ",
+	    "Gives header and footer tags, normally uses the language _and_ variables module to set variables, used to make dynamic footers and headers.",
 	    ({ }),
 	    1
 	    });

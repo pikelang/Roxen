@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.4 1996/11/27 14:05:25 per Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.5 1996/12/02 04:32:46 per Exp $";
 #include <module.h>
 
 inherit "module";
@@ -146,7 +146,9 @@ mixed *register_module()
     MODULE_LAST | MODULE_LOCATION | MODULE_FILE_EXTENSION,
     "CGI executable support", 
     "Support for the <a href=\"http://hoohoo.ncsa.uiuc.edu/docs/cgi/"
-     + "interface.html\">CGI/1.1 interface</a>"
+      "interface.html\">CGI/1.1 interface</a>, and more. It is too bad "
+      "that the CGI specification is a moving target, it is hard to "
+      "implement a fully compatible copy of it."
     });
 }
 

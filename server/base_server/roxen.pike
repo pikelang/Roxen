@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.11 1996/12/01 19:18:35 per Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.12 1996/12/02 04:32:35 per Exp $";
 #define IN_SPIDER
 #include <module.h>
 #include <variables.h>
@@ -619,8 +619,17 @@ public multiset find_supports(string from)
 // Parse the logging format strings.
 private inline string fix_logging(string s)
 {
+  string pre, post, c;
+  sscanf(s, "%*[\t ]", s);
+  s = replace(s, ({"\\t", "\\n", "\\r" }), ({"\t", "\n", "\r" }));
   while(s[0] == ' ') s = s[1..10000];
   while(s[0] == '\t') s = s[1..10000];
+  while(sscanf(s, "%s$char(%d)%s", pre, c, post)==3)
+    s=sprintf("%s%c%s", pre, c, post);
+  while(sscanf(s, "%s$wchar(%d)%s", pre, c, post)==3)
+    s=sprintf("%s%2c%s", pre, c, post);
+  while(sscanf(s, "%s$int(%d)%s", pre, c, post)==3)
+    s=sprintf("%s%4c%s", pre, c, post);
   return s;
 }
 
@@ -642,7 +651,7 @@ private void write_to_log( string host, string rest, string oh, function fun )
 {
   int s;
   if(!host) host=oh;
-  if(fun) fun(replace(rest, "$host", host)+"\n");
+  if(fun) fun(replace(rest, "$host", host));
 }
 
 // Logging format support functions.
@@ -696,7 +705,7 @@ public void log(mapping file, object request_id)
     form = request_id->conf->log_format["*"];
   
   if(!form) return;
-
+  
   form=replace(form, 
 	       ({ 
 		 "$ip_number", "$bin-ip_number", "$cern_date",
@@ -726,7 +735,7 @@ public void log(mapping file, object request_id)
        ip_to_host(request_id->remoteaddr, write_to_log, form,
 	       request_id->remoteaddr, request_id->conf->log_function);
   else
-    request_id->conf->log_function(form + "\n");
+    request_id->conf->log_function(form);
 }
 
 // Support for unique user id's 
@@ -2203,6 +2212,11 @@ void enable_configuration(string config)
 	 "Log format is normal characters, or one or more of the "
 	 "variables below:\n"
 	 "\n"
+	 "\\n \\t \\r       -- As in C, newline, tab and linefeed\n"
+	 "$char(int)     -- Insert the (1 byte) character specified by the integer.\n"
+	 "$wchar(int)    -- Insert the (2 byte) word specified by the integer.\n"
+	 "$int(int)      -- Insert the (4 byte) word specified by the integer.\n"
+	 "$^             -- Supress newline at the end of the logentry\n"
 	 "$host          -- The remote host name, or ip number.\n"
 	 "$ip_number     -- The remote ip number.\n"
 	 "$bin-ip_number -- The remote host id as a binary integer number.\n"
@@ -2828,7 +2842,7 @@ void scan_module_dir(string d)
 
   foreach( get_dir( d )||({}), file)
   {
-    if ( !backup_extension(file) && (file[-1]!='z'))
+    if ( file[0]!='.' && !backup_extension(file) && (file[-1]!='z'))
     {
       if(file_size(path+file) == -2)
       {
@@ -2844,7 +2858,7 @@ void scan_module_dir(string d)
 	if (!(err=catch( module_info = lambda ( string file ) {
 	  array foo;
 	  object o;
-	  o =  compile_file(file)();
+	  o =  (compile_file(file))();
 #ifdef MODULE_DEBUG
 	  perror(" load ok - ");
 #endif
@@ -2852,11 +2866,12 @@ void scan_module_dir(string d)
 #ifdef DUMPVARS
 	  dump_variables(file, o->variables, foo, o->module_creator, o->module_url);
 #endif
-	  destruct(o);
 #ifdef MODULE_DEBUG
 	  perror("registered.");
 #endif	  
-	  return ({ foo[1], foo[2], foo[0] });
+	  return ({ foo[1], foo[2]+"<p><i>"+replace(o->file_name_and_stuff(),
+						    "0<br>", file+"<br>")
+		      +"</i>", foo[0] });
 	  
 	}(path + file))))
 	{

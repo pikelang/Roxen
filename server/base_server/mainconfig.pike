@@ -1,6 +1,7 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.5 1996/12/01 19:18:31 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.6 1996/12/02 04:32:33 per Exp $";
 inherit "roxenlib";
+inherit "config/draw_things";
 
 #include <confignode.h>
 #include <module.h>
@@ -519,8 +520,9 @@ string new_module_form(object id, object node)
 {
   int i;
   mixed a,b;
+  string q;
   array mods;
-  string res;
+  array (string) res;
   
   if(!roxen->allmodules || sizeof(id->pragma))
   {
@@ -534,47 +536,33 @@ string new_module_form(object id, object node)
     return m[a][0] > m[b][0];
   }, a);
   
-  res = default_head("Add a module")+
-    "<hr noshade><form>"+ TABLEP("<table>","<dl>")+"\n\n";
+  res = ({default_head("Add a module")+"\n\n"+
+	  "<table width=500><tr><td width=500>"
+  "<h2>Select a module to add from the list below</h2>" });
   
-  for(i=0; i<sizeof(mods); i++)
-    if(!(b = module_nomore(mods[i], a[mods[i]][2], node->config())))
+  foreach(mods, q)
+  {
+    if(b = module_nomore(a, a[q][2], node->config()))
     {
-      if(id->supports->tables)
-	res += ("<tr><td><table><tr valign=top><td valign=top><input type=submit value=\"" + 
-		a[mods[i]][0] + "\" name=\"" + mods[i] + "\"><br></td><td>" +
-		a[mods[i]][1]+"<p></td></tr>\n</table>"
-		"<hr noshade size=1></td></tr>\n\n");
-      else
-	res += ("<dt><input type=submit value=\"" + 
-		a[mods[i]][0] + "\" name=\"" + mods[i] + "\"><dd>" +
-		a[mods[i]][1]+"<p><hr noshade size=1>\n\n");
-    }
-    else
-    {
-      if(b->sname != mods[i])
-	if(id->supports->tables)
-	{
-	  res += ("<tr><td><table><tr valign=top><td>"+a[mods[i]][0]+"<br></td><td>" +
-		  a[mods[i]][1] + "<p>"
-		  "<i>A module of the same type is already enabled ("
-		  + b->name
-		  + "). <a href=\"/(delete)" 
-		  + node->descend(b->name, 1)->path(1) + "?"+(bar++)+
+      if(b->sname != q)
+	res += ({("<p>"+
+		  (roxen->QUERY(BS)?"<h2>"+a[q][0]+"</h2>":
+		  "<img alt=\""+a[q][0]+"\" src=/auto/module/"+
+		   q+" width=500>")+ "<br>"+a[q][1] + "<p>"
+		  "<i>A module of the same type is already enabled ("+ b->name
+		  + "). <a href=\"/(delete)" + node->descend(b->name, 1)->path(1)
+		  + "?"+(bar++)+
 		  "\">Disable that module</a> if you want this one insted</i>"
-		  "</td></tr></table><hr noshade size=1></td></tr>\n\n");
-	}
-	else
-	  res += ("<dt>" + a[mods[i]][0] + mods[i] + "<dd>" +
-		  a[mods[i]][1] + "<p>"
-		  "<i>A module of the same type is already enabled ("
-		  + b->name
-		  + "). <a href=\"/(delete)" 
-		  + node->descend(b->name, 1)->path(1) + "?"+(bar++)+
-		  "\">Disable that module</a> if you want this one insted</i>"
-		  "<hr noshade size=1>\n\n");
+		  "\n<p><br><p>")});
+    } else {
+      res += ({"<p><a href=?"+q+"=1>"+ (roxen->QUERY(BS)?"<h2>"+a[q][0]+"</h2>":
+		  "<img border=0 alt=\""+a[q][0]+"\" src=/auto/module/"+
+					q+" width=500>")+
+		 "</a><br>"+a[q][1]+"<p><br><p>"});
     }
-  return res + TABLEP("</table>", "</dl>") +"</form> ";
+  }
+
+  return res*""+"</td></tr></table>";
 }
 
 mapping new_module(object id, object node)
@@ -890,6 +878,33 @@ int nunfolded(object o)
   return i;
 }
 
+
+object module_font = Font()->load("fonts/32/urw_itc_avant_garde-demi-r");
+
+mapping auto_image(string in, object id)
+{
+  string key, value;
+  mapping r;
+  mixed e;
+  sscanf(in, "%s/%s", key, value);
+  switch(key)
+  {
+   case "module":
+    if(!id->pragma["no-cache"] && (r=cache_lookup("module_images", value)))
+      return r;
+    if(e=catch {
+      r = http_string_answer(draw_module_header(roxen->allmodules[value][0],
+						roxen->allmodules[value][2],
+						module_font)
+			     ->togif(16), "image/gif");
+    })
+      perror("While drawing auto-image: \n"+describe_backtrace(e)+"\n");
+    cache_set("module_images", key, r);
+    return r;
+    break;
+  }
+}
+
 mapping configuration_parse(object id)
 {
   string res;
@@ -924,6 +939,9 @@ mapping configuration_parse(object id)
     if(sizeof(id->variables)) // This is not 100% neccesary, really.
       id->variables = ([ ]);
   }
+
+  if(sscanf(id->not_query, "/auto/%s", res))
+    return auto_image(res,id) || (["data":"No such image"]);
 
   o = find_node(id->not_query); // Find the requested node (from the filename)
 

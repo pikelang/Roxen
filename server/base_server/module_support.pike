@@ -1,6 +1,6 @@
 inherit "read_config";
 
-string cvs_version = "$Id: module_support.pike,v 1.6 1996/12/01 19:18:32 per Exp $";
+string cvs_version = "$Id: module_support.pike,v 1.7 1996/12/02 04:32:34 per Exp $";
 #include <roxen.h>
 #include <module.h>
 #include <config.h>
@@ -388,16 +388,14 @@ object enable_module( string modname )
 	  me->defvar("_seclvl",  0, "Security: Trust level", TYPE_INT, 
 		   "When a location module find a file, that file will get "
 		   "a 'Trust level' that equals the level of the module."
-		   " This file will then only be sent to modules with a lower "
+		   " This file will then only be sent to modules with a higher "
 		   " or equal 'Trust level'. <p>As an example: If the trust "
-		   " level of a User filesystem is one, and the CGI module "
-		   "have trust level 2, the file will never get passed to the "
-		   " CGI module. A trust level of '0' is the same thing as "
+		   " level of a User filesystem is one, and the CGI module"
+		   " have trust level two, the file will never get passed to"
+		   " the CGI module. A trust level of zero is the same thing as"
 		   " free access.\n");
 
-	  me->defvar("_seclevels", "",
-		     "Security: Patterns",
-		     TYPE_TEXT_FIELD,
+	  me->defvar("_seclevels", "", "Security: Patterns", TYPE_TEXT_FIELD,
 		     "This is the 'security level=value' list.<br>"
 		     "Each security level can be any or more from this list:"
 		     "<hr noshade>"
@@ -414,10 +412,9 @@ object enable_module( string modname )
 		     " everyone to access the module");
 	  
 	} else {
-	  me->definvisvar("_seclvl", -1, TYPE_INT); /* Lowest possible */
+	  me->definvisvar("_seclvl", -10, TYPE_INT); /* A very low one */
 	  
-	  me->defvar("_seclevels", "",
-		     "Proxy security: Patterns",
+	  me->defvar("_seclevels", "", "Proxy security: Patterns",
 		     TYPE_TEXT_FIELD,
 		     "This is the 'security level=value' list.<br>"
 		     "Each security level can be any or more from "

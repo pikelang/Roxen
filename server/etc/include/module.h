@@ -65,6 +65,7 @@
 #define MODULE_LOGGER            (2<<12)
 #define MODULE_FILTER            (2<<13)
 
+#define MODULE_SECURITY          (2<<14)
 
 #define MOD_ALLOW   1
 #define MOD_USER    2
