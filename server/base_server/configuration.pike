@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.312 2000/06/23 16:11:20 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.313 2000/06/29 21:57:11 mast Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -832,7 +832,7 @@ private static int nest = 0;
 #ifdef MODULE_LEVEL_SECURITY
 private mapping misc_cache=([]);
 
-int|mapping check_security(function a, RequestID id, void|int slevel)
+int|mapping check_security(function|object a, RequestID id, void|int slevel)
 {
   array level;
   array seclevels;
@@ -845,15 +845,26 @@ int|mapping check_security(function a, RequestID id, void|int slevel)
   //     1  May be bad -- Restriction encountered, and test failed.
   //    ~0  OK -- Test passed.
 
-  if(!(seclevels = misc_cache[ a ]))
-    if(function_object(a)->query_seclevels)
+  if(!(seclevels = misc_cache[ a ])) {
+    object mod;
+    if (objectp (a))
+      if (a->query_seclevels) mod = a;
+      else
+	// It's probably an RXML.Tag object, and in that case we
+	// assume that the parent object is the module. FIXME: That's
+	// not necessarily true.
+	mod = function_object (object_program (a));
+    else
+      mod = function_object (a);
+    if(mod->query_seclevels)
       misc_cache[ a ] = seclevels = ({
-	function_object(a)->query_seclevels(),
-	function_object(a)->query("_seclvl"),
-	function_object(a)->query("_sec_group")
+	mod->query_seclevels(),
+	mod->query("_seclvl"),
+	mod->query("_sec_group")
       });
     else
       misc_cache[ a ] = seclevels = ({({}),0,"foo" });
+  }
 
   if(slevel && (seclevels[1] > slevel)) // "Trustlevel" to low.
     return 1;
