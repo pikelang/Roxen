@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.130 1998/06/09 10:57:21 peter Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.131 1998/07/04 03:19:51 peter Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -46,7 +46,7 @@ void create()
   defvar("cache_dir", "../gtext_cache", "Cache directory for gtext images",
 	 TYPE_DIR,
 	 "The gtext tag saves images when they are calculated in this "
-	 "directory. We currently do not clean this directory.");
+	 "directory.");
   
   defvar("cache_age", 48, "Cache max age",
 
@@ -475,10 +475,12 @@ object make_text_image(mapping args, object font, string text,object id)
     if(args->size) { xs=(int)args->size; ys=(int)(args->size/",")[-1]; }
     if(args->xsize) xs=(int)args->xsize; 
     if(args->ysize) ys=(int)args->ysize;
-    background = background->copy(0,0,xs,ys);
+    if(!args->rescale)
+      background = background->copy(0,0,xs-1,ys-1);
+    else
+      background = background->scale(xs, ys);
   }
 
-  
   if(args->turbulence)
   {
     array (float|array(int)) arg=({});
@@ -580,9 +582,26 @@ object make_text_image(mapping args, object font, string text,object id)
     outline(background, text_alpha, parse_color((args->outline/",")[0]),
 	    ((int)(args->outline/",")[-1])+1, xoffset, yoffset);
 
-  background->paste_mask(foreground, text_alpha, xoffset, yoffset);
+  if(args->textbelow)
+  {
+    array color = parse_color(args->textbelow);
+//     foreground = foreground->autocrop();
+//     text_alpha = text_alpha->autocrop();
+    
+    background->setcolor( @color );
+    int oby = background->ysize();
+    background = background->copy(0,0, 
+				  max(background->xsize()-1,
+				      foreground->xsize()-1),
+				  background->ysize()-1
+				  +foreground->ysize());
+    background->paste_mask( foreground, text_alpha,
+			    (background->xsize()-foreground->xsize())/2,
+			    oby );
+  } else
+    background->paste_mask(foreground, text_alpha, xoffset, yoffset);
 
-  if(args->scale)
+  if((float)args->scale>0.0)
     if((float)args->scale <= 2.0)
       background = background->scale((float)args->scale);
 
