@@ -225,7 +225,7 @@ localinstall: all
 	    chmod u+w "$(SRCDIR)/server/share/."; \
 	  fi; \
 	  rm -f "$(SRCDIR)/server/share/pike" >/dev/null 2>&1; \
-	  ln -s "../../../pike/$(PIKEVERSION)/lib" "$(SRCDIR)/server/share/pike"; \
+	  ln -s "../../pike/$(PIKEVERSION)/lib" "$(SRCDIR)/server/share/pike"; \
 	else : ; fi)
 	(cd extern; $(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" localinstall)
 
