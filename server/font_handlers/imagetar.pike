@@ -1,3 +1,4 @@
+#include <config.h>
 inherit "imagedir" : id;
 
 constant name = "Image TAR-file fonts";
@@ -24,7 +25,7 @@ Filesystem.Tar open_tar( string path )
 class myFont
 {
   inherit id::myFont;
-  Filesystem.Tar mytar;
+  object mytar; // don't type, CIF use this file.
 
   static mapping(string:Image.Image) load_char( string c )
   {
@@ -41,7 +42,8 @@ class myFont
     {
       catch {
         if( mapping r = Image._decode( mytar->open( pf[1..], "r" )->read()) )
-          return r;
+          if( r->image )
+            return r;
       };
     }
     if( c == " " ) return spacechar;
@@ -80,7 +82,6 @@ void update_font_list()
       }
     }
   };
-
   foreach(roxen->query("font_dirs"), string dir)
     rec_find_in_dir( dir );
 }
