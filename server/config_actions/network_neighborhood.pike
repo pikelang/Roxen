@@ -49,13 +49,13 @@ string page_0()
 		          getpwuid(neighborhood[s]->uid)[0]+":"+
 		          neighborhood[s]->config_url; }), sn);
   return "A red line indicates that the server is constantly restarting. "
-	  "A orange line indicates that the server is not sending any "
+	  "An orange line indicates that the server is not sending any "
 	  "information about its presence anymore.<p>" +
           html_table(({"Config URL", "User", "Host", "Uptime",
 		      "Last Reboot","Version", /*({"Server info"})*/}),
 		    Array.map(sn, lambda(string s) {
      mapping ns = neighborhood[s];
-     int vanished = (time() - ns->rec_time) > 600;	/* 10 minutes */
+     int vanished = ns->rec_time && ((time() - ns->rec_time) > 600);
      int re=ns->seq_reboots;
      string ER="",RE="";
      if(vanished) {
@@ -68,7 +68,9 @@ string page_0()
      return({  "<a href='"+s+"'>"+s+"</a></font>",
 	       RE+getpwuid(ns->uid)[0]+ER,
 	       RE+ns->host+ER,
-	       RE+(vanished?"???":time_interval(time()-ns->last_reboot))+ER,
+	       RE+(vanished?"(down since "+
+		   time_interval(time()-ns->rec_time)+"???)":
+		   time_interval(time()-ns->last_reboot))+ER,
 	       RE+roxen->language("en","date")(ns->last_reboot)+ER,
 	       RE+sv(ns->version)+ER
      });
