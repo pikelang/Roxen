@@ -11,7 +11,7 @@ import Parser.XML.Tree;
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_webapp",X,Y)
 // end of the locale related stuff
 
-constant cvs_version = "$Id: webapp.pike,v 2.7 2002/02/13 13:54:04 tomas Exp $";
+constant cvs_version = "$Id: webapp.pike,v 2.8 2002/02/15 14:47:26 tomas Exp $";
 
 constant thread_safe=1;
 constant module_unique = 0;
@@ -599,13 +599,24 @@ class BaseWrapper
   static object _id;
   static string _data;
   static string header;
+  mapping(string:string) headermap = ([ ]);
   static int _ident;
   static int first=1;
   int collect=0;
   string content_type;
+  multiset ignore_heads = (<
+    "content-length",
+    "content-type",
+  >);
+
+  string _sprintf()
+  {
+    return "BaseWrapper(#" + _ident + ", collect: " + collect + ")";
+  }
 
   int check(string ct)
   {
+    WRAP_WERR("BASE check called");
     return 0;
   }
 
@@ -628,7 +639,8 @@ class BaseWrapper
         header = _data[..hend+3];
         _data = _data[hend+4..];
 
-        //WRAP_WERR(sprintf("found header:\n'%s'", header));
+        //WRAP_WERR(sprintf("found header(len %d):\n'%s'", sizeof(header),header));
+        //WRAP_WERR(sprintf("with data(len %d):\n'%s'", sizeof(_data), _data));
         WRAP_WERR(sprintf("found header!"));
         headers = (header/"\r\n")-({ "" });
 
@@ -637,18 +649,28 @@ class BaseWrapper
                               lower_case((headers[0]/" ")[1]) ));
           set_collect(0);
         }
-        else
-          foreach(headers, string h) {
-            if (lower_case((h/":")[0]) == "content-type") {
-              content_type = (h/":")[1];
-              content_type = String.trim_all_whites((content_type/";")[0]);
-              WRAP_WERR(sprintf("content-type: '%s'", content_type));
-              if (check(content_type)) {
-                set_collect(1);
+        else {
+          string name, value;
+          foreach(headers[1..], string h) {
+            WRAP_WERR(sprintf("header=%s", h || "null"));
+            if (sscanf(h, "%s:%s", name, value) == 2) {
+              WRAP_WERR(sprintf("name=%s, value=%s", name || "null", value || "null"));
+              if ( !ignore_heads[lower_case(name)] )
+                Roxen.add_http_header(headermap, name,
+                                      String.trim_all_whites(value));
+              if (lower_case(name) == "content-type") {
+                content_type = String.trim_all_whites((value/";")[0]);
+                WRAP_WERR(sprintf("content-type: '%s'", content_type));
+                if (check(content_type)) {
+                  WRAP_WERR("check returned true");
+                  set_collect(1);
+                }
+                else
+                  WRAP_WERR("check returned false");
               }
-              break;
             }
           }
+        }
 
         if (!collect) {
           WRAP_WERR(sprintf("first collect:"));
@@ -657,7 +679,7 @@ class BaseWrapper
       }
     }
     else if (collect) {
-      WRAP_WERR(sprintf("more collect:"));
+      WRAP_WERR(sprintf("more collect (%d)", sizeof(data)));
       _data += data;
       ;
     }
@@ -700,6 +722,7 @@ class BaseWrapper
 
   string get_data(void|int clear)
   {
+    //WRAP_WERR(sprintf("get_data called: clear=%d, data=%s",clear, _data));
     string tmp = _data;
     if (clear)
       _data = "";
@@ -716,7 +739,16 @@ class BaseWrapper
 
   mixed `->(string n)
   {
-    return ::`->(n) || predef::`->(_file, n);
+    //WRAP_WERR(sprintf("`->(%s)", n));
+    mixed val = this_object()[n];
+    if (!zero_type(val)) return val;
+
+    //WRAP_WERR(sprintf("::`->(%s)", n));
+    val = ::`->(n);
+    if (!zero_type(val)) return val;
+
+    //WRAP_WERR(sprintf("predef::`->(%s)", n));
+    return predef::`->(_file, n);
   }
 
   void create(object file, object id)
@@ -735,30 +767,40 @@ class RXMLParseWrapper
   
   static constant clazz = "RXMLWrapper";
 
+  string _sprintf()
+  {
+    return "RXMLParseWrapper(#" + _ident + ", collect: " + collect + ")";
+  }
+
   int check(string ct)
   {
+    WRAP_WERR("RXML check called");
     if (query("rxml")) {
       return sizeof(filter(rxmlmap,
-                           lambda(string gl, string ct) { return glob(gl, ct); },
+                           lambda(string gl, string ct) {
+                             return glob(gl, ct);
+                           },
                            ct)) > 0;
     }
   }
 
-  int close(void|string how)
+  void set_id_headers()
   {
-    if (collect) {
-      WRAP_WERR("Calling parse_rxml!");
-      //WRAP_WERR(sprintf("close header: '%s'", get_header()));
-      //WRAP_WERR(sprintf("close data: '%s'", get_data()));
-      _file->write(get_header(1));
-      _file->write(Roxen.parse_rxml(get_data(1), _id));
-      collect = 0;
-    }
-    else
-      WRAP_WERR("NOT calling parse_rxml!");
-
-    return ::close(how);
+    WRAP_WERR("set_id_headers called");
+    if (!_id->misc->moreheads) _id->misc->moreheads = ([]);
+    _id->misc->moreheads += headermap;
   }
+
+  mapping get_result()
+  {
+    WRAP_WERR("RXML get_result called");
+    set_id_headers();
+    mapping res = Roxen.http_rxml_answer(get_data(1), _id);
+//     WRAP_WERR(sprintf("_id->misc=%O",
+//                       mkmapping(indices(_id->misc), values(_id->misc))));
+    return res;
+  }
+
 }
 
 class ServletChainingWrapper
@@ -767,8 +809,14 @@ class ServletChainingWrapper
   
   static constant clazz = "ChainingWrapper";
 
+  string _sprintf()
+  {
+    return "ServletChainingWrapper(#" + _ident + ", collect: " + collect + ")";
+  }
+
   int check(string ct)
   {
+    WRAP_WERR("CHAIN check called");
     return map_servlet_chain(ct)?1:0;
   }
 }
@@ -1021,11 +1069,14 @@ mixed find_file( string f, RequestID id )
         if(id->my_fd == 0 && id->misc->trace_enter)
           ; /* In "Resolve path...", kluge to avoid backtrace. */
         else {
+          object rxml_wrapper;
+          object org_fd = id->my_fd;
           id->my_fd->set_read_callback(0);
           id->my_fd->set_close_callback(0);
           id->my_fd->set_blocking();
 
-          id->my_fd = RXMLParseWrapper(id->my_fd, id);
+          rxml_wrapper = RXMLParseWrapper(id->my_fd, id);
+          id->my_fd = rxml_wrapper;
 
 #ifdef WEBAPP_CHAINING
           object old_fd = id->my_fd;
@@ -1053,6 +1104,7 @@ mixed find_file( string f, RequestID id )
 
           if (x == 0xffff || (x>=3 && chain_wrapper->collect)) {
             id->misc->cacheable = 5;
+            id->my_fd = org_fd;
             return http_low_answer(500, "<title>Servlet Error - chaining failed</title>"
                                    "<h1>Servlet Error - chaining failed</h1>"
                                    "<h2>Location: " +
@@ -1065,6 +1117,14 @@ mixed find_file( string f, RequestID id )
 #else /* WEBAPP_CHAINING */
           servlet->servlet->service(id);
 #endif /* WEBAPP_CHAINING */
+
+          if (rxml_wrapper->collect) {
+            id->my_fd = org_fd;
+            mixed res = rxml_wrapper->get_result();
+            //WEBAPP_WERR(sprintf("res=%O", res ));
+            return res;
+          }
+
         }
         
         return Roxen.http_pipe_in_progress();
