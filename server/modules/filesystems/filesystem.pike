@@ -8,7 +8,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.44 1998/07/21 16:21:24 js Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.45 1998/08/25 20:03:36 neotron Exp $";
 constant thread_safe=1;
 
 
@@ -333,6 +333,12 @@ mixed find_file( string f, object id )
     default:
       if(f[ -1 ] == '/') /* Trying to access file with '/' appended */
       {
+	/* Neotron was here. I change this to always return 0 as CGI scripts
+	   with path info = / won't work otherwise. If someone accesses a file
+	   with "/" appended, a 404 no such file isn't that weird. Both
+	   Apache and Netscape returns the accessed page, resulting in
+	   incorrect links from that page. */
+	return 0; 
 	/* Do not try redirect on top level directory */
 	if(sizeof(id->not_query) < 2)
 	  return 0;
