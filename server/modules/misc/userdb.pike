@@ -3,7 +3,7 @@
 // User database. Reads the system password database and use it to
 // authentificate users.
 
-constant cvs_version = "$Id: userdb.pike,v 1.21 1997/12/17 17:58:38 grubba Exp $";
+constant cvs_version = "$Id: userdb.pike,v 1.22 1998/01/12 14:38:37 grubba Exp $";
 
 #include <module.h>
 inherit "module";
@@ -192,30 +192,44 @@ void read_data()
   
   users=([]);
   uid2user=([]);
-  object privs = Privs("Reading password database");
   switch(query("method"))
   {
   case "ypcat":
+    object privs = Privs("Reading password database");
     data=popen("ypcat "+query("args")+" passwd");
+    if (objectp(privs)) {
+      destruct(privs);
+    }
+    privs = 0;
     break;
 
   case "getpwent":
 #if efun(getpwent)
-     // This could be a _lot_ faster.
-     tmp2 = ({ });
-     setpwent();
-     while(tmp = getpwent())
-       tmp2 += ({
-	 map(tmp, lambda(mixed s) { return (string)s; }) * ":"
-       }); 
-     endpwent();
-     data = tmp2 * "\n";
-     break;
+    // This could be a _lot_ faster.
+    tmp2 = ({ });
+    object privs = Privs("Reading password database");
+    setpwent();
+    while(tmp = getpwent())
+      tmp2 += ({
+	map(tmp, lambda(mixed s) { return (string)s; }) * ":"
+      }); 
+    endpwent();
+    if (objectp(privs)) {
+      destruct(privs);
+    }
+    privs = 0;
+    data = tmp2 * "\n";
+    break;
 #endif
 
   case "file":
+    object privs = Privs("Reading password database");
     fstat = file_stat(query("file"));
     data = Stdio.read_bytes(query("file"));
+    if (objectp(privs)) {
+      destruct(privs);
+    }
+    privs = 0;
     last_password_read = time();
     break;
     
@@ -223,9 +237,14 @@ void read_data()
     string shadow;
     array pw, sh, a, b;
     mapping sh = ([]);
+    object privs = Privs("Reading password database");
     fstat = file_stat(query("file"));
     data=    Stdio.read_bytes(query("file"));
     shadow = Stdio.read_bytes(query("shadowfile"));
+    if (objectp(privs)) {
+      destruct(privs);
+    }
+    privs = 0;
     if(data && shadow)
     {
       foreach(shadow / "\n", shadow) {
@@ -243,13 +262,14 @@ void read_data()
     break;
 
   case "niscat":
+    object privs = Privs("Reading password database");
     data=popen("niscat "+query("args")+" passwd.org_dir");
+    if (objectp(privs)) {
+      destruct(privs);
+    }
+    privs = 0;
     break;
   }
-  if (objectp(privs)) {
-    destruct(privs);
-  }
-  privs = 0;
 
   if(!data)
     data = "";
