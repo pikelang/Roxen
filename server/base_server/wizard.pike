@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.68 1998/07/17 15:16:24 noring Exp $
+/* $Id: wizard.pike,v 1.69 1998/07/19 17:55:29 per Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -72,8 +72,9 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed b)
 
    case "radio":
     m_delete(m,"default");
-    return make_tag("input "+((!id->variables[m->name] && current) ||
-			      (current==m->value)?" checked":""), m);
+    if((!id->variables[m->name] && current) || (current==m->value))
+      m->checked="checked";
+    return make_tag("input",m);
 
    case "checkbox":
     string res;
