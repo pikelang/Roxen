@@ -138,6 +138,14 @@ urw_itc_avant_garde-demi-r binary
 /server/etc/modules/RoxenRPC.pmod/HTTP.pmod/Client.pike foreign_ident
 /server/etc/modules/RoxenRPC.pmod/HTTP.pmod/Server.pike foreign_ident
 /server/etc/modules/RoxenRPC.pmod/Server.pike foreign_ident
+/server/etc/more_extensions/applications foreign_ident
+/server/etc/more_extensions/audio foreign_ident
+/server/etc/more_extensions/chemical foreign_ident
+/server/etc/more_extensions/image foreign_ident
+/server/etc/more_extensions/other foreign_ident
+/server/etc/more_extensions/text foreign_ident
+/server/etc/more_extensions/video foreign_ident
+/server/etc/more_extensions/vrml foreign_ident
 /server/etc/restart.html foreign_ident
 /server/etc/roxen_hilfe.pike foreign_ident
 /server/etc/roxen_master.pike foreign_ident
