@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.58 2001/06/15 17:17:49 jhs Exp $
+ * $Id: ftp.pike,v 2.59 2001/06/28 13:49:08 wellhard Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -2978,8 +2978,8 @@ class FTPSession
 	return;
       }
     }
-    send(229, ({ sprintf("Entering Extended Passive Mode (|%d|%s|%d|)",
-			 1, local_addr, port) }));
+    send(229, ({ sprintf("Entering Extended Passive Mode (|||%d|)",
+			 /* "1", local_addr,*/ port) }));
   }
 
   void ftp_TYPE(string args)
