@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.50 1998/09/19 13:19:58 grubba Exp $
+# $Id: start,v 1.51 1998/10/16 17:48:37 grubba Exp $
 
 VERSION=202; BETA=.b;
 
@@ -66,6 +66,22 @@ fi
 
 # Extra program-path
 DEFINES="$DEFINES -P`pwd`"
+
+# Support for adding local pike-modules
+if [ -d ../local/etc/. ]; then
+  # Extra module-path
+  if [ -d ../local/etc/modules/. ]; then
+    DEFINES="$DEFINES -M../local/etc/modules"
+  fi
+
+  # Extra include-path
+  if [ -d ../local/etc/include ]; then
+    DEFINES="$DEFINES -I../local/etc/include"
+  fi
+
+  # Extra program-path
+  DEFINES="$DEFINES -P../local/etc"
+fi
 
 # Extra kludge for HPUX
 # HPUX doesn't like group 60001(nobody)
