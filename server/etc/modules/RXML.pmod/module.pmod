@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.147 2001/04/08 23:10:24 per Exp $
+//! $Id: module.pmod,v 1.148 2001/04/18 04:51:40 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -82,11 +82,17 @@ class RequestID { };
 
 #ifdef DEBUG
 #  define TAG_DEBUG(frame, msg) (frame)->tag_debug ("%O: %s", (frame), (msg))
+#  define DO_IF_DEBUG(code...) code
 #else
 #  define TAG_DEBUG(frame, msg) 0
+#  define DO_IF_DEBUG(code...)
 #endif
 
 #define HASH_INT2(m, n) (n < 65536 ? (m << 16) + n : sprintf ("%x,%x", m, n))
+
+// Use defines since typedefs doesn't work in soft casts yet.
+#define SCOPE_TYPE mapping(string:mixed)|object(Scope)
+#define UNWIND_STATE mapping(string:mixed)|mapping(object:array)
 
 
 class Tag
@@ -240,20 +246,88 @@ class Tag
 
   // Internals.
 
-  array _handle_tag (TagSetParser parser, mapping(string:string) args,
-		     void|string content)
-  // Callback for tag set parsers to handle non-PI tags. Returns a
-  // sequence of result values to be added to the result queue. Note
-  // that this function handles an unwind frame for the parser.
+#define MAKE_FRAME(frame, ctx, parser, args)				\
+  make_new_frame: do {							\
+    if (UNWIND_STATE ustate = ctx->unwind_state)			\
+      if (ustate[parser]) {						\
+	frame = [object/*(Frame)HMM*/] ustate[parser][0];		\
+	m_delete (ustate, parser);					\
+	if (!sizeof (ustate)) ctx->unwind_state = 0;			\
+	break make_new_frame;						\
+      }									\
+    frame = `() (args, nil);						\
+    TAG_DEBUG (frame, "New frame\n");					\
+  } while (0)
+
+#define EVAL_FRAME(frame, ctx, parser, type, args, content, result)		\
+  eval_frame: do {								\
+    mixed err = catch {								\
+      frame->_eval (parser, args, content);					\
+      if ((result = frame->result) != nil)					\
+	if (frame->result_type->name != type->name) {				\
+	  TAG_DEBUG (								\
+	    frame, sprintf (							\
+	      "Converting result from %s to %s of surrounding content\n",	\
+	      frame->result_type->name, type->name));				\
+	  result = type->encode (result, frame->result_type);			\
+	}									\
+      break eval_frame;								\
+    };										\
+										\
+    if (objectp (err) && ([object] err)->thrown_at_unwind) {			\
+      UNWIND_STATE ustate = ctx->unwind_state;					\
+      if (!ustate) ustate = ctx->unwind_state = ([]);				\
+      DO_IF_DEBUG (								\
+	if (err != frame)							\
+	  fatal_error ("Internal error: "					\
+		       "Unexpected unwind object catched.\n");			\
+	if (ustate[parser])							\
+	  fatal_error ("Internal error: "					\
+		       "Clobbering unwind state for parser.\n");		\
+      );									\
+      ustate[parser] = ({err});							\
+      throw (err = parser);							\
+    }										\
+    else {									\
+      /* Will rethrow unknown errors. */					\
+      ctx->handle_exception (err, parser);					\
+      result = nil;								\
+    }										\
+  } while (0)
+
+  final mixed handle_tag (TagSetParser parser, mapping(string:string) args,
+			  void|string content)
+  // Callback for tag set parsers to handle tags. Note that this
+  // function handles an unwind frame for the parser.
   {
-    // Note: args may be zero since this is called from _handle_pi_tag().
+    // Note: args may be zero when this is called for PI tags.
+
+    Context ctx = parser->context;
+    // FIXME: P-code generation.
+
+    object/*(Frame)HMM*/ frame;
+    MAKE_FRAME (frame, ctx, parser, args);
+
+    if (!zero_type (frame->raw_tag_text))
+      frame->raw_tag_text = parser->raw_tag_text();
+
+    mixed result;
+    EVAL_FRAME (frame, ctx, parser, parser->type, args, content, result);
+
+    return result;
+  }
+
+  final array _p_xml_handle_tag (object/*(PXml)*/ parser, mapping(string:string) args,
+				 void|string content)
+  {
+    Type type = parser->type;
+    if (type->handle_literals) parser->handle_literal();
 
     Context ctx = parser->context;
     // FIXME: P-code generation.
 
     string splice_args;
     if (args && (splice_args = args["::"])) {
-      // Somewhat kludgy solution for the time being.
 #ifdef MODULE_DEBUG
       if (mixed err = catch {
 #endif
@@ -270,79 +344,56 @@ class Tag
     }
 
     object/*(Frame)HMM*/ frame;
-  make_new_frame: {
-      if (mapping(string:mixed)|mapping(object:array) ustate = ctx->unwind_state)
-	if (ustate[parser]) {
-	  frame = [object/*(Frame)HMM*/] ustate[parser][0];
-	  m_delete (ustate, parser);
-	  if (!sizeof (ustate)) ctx->unwind_state = 0;
-	  break make_new_frame;
-	}
-      frame = `() (args, nil);
-      TAG_DEBUG (frame, "New frame\n");
-    }
+    MAKE_FRAME (frame, ctx, parser, args);
 
-    if (!zero_type (frame->raw_tag_text)) {
+    if (!zero_type (frame->raw_tag_text))
       if (splice_args)
 	frame->raw_tag_text =
 	  t_xml->format_tag (parser->tag_name(), args, content, flags | FLAG_RAW_ARGS);
       else frame->raw_tag_text = parser->current_input();
-    }
 
-    mixed err = catch {
-      frame->_eval (parser, args, content);
-      mixed res;
-      if ((res = frame->result) == nil) return ({});
-      if (frame->result_type->name != parser->type->name) {
-	TAG_DEBUG (frame, sprintf (
-		     "Converting result from %s to %s of surrounding content\n",
-		     frame->result_type->name, parser->type->name));
-	res = parser->type->encode (res, frame->result_type);
-      }
-      return ({res});
-    };
+    mixed result;
+    EVAL_FRAME (frame, ctx, parser, type, args, content, result);
 
-    if (objectp (err) && ([object] err)->thrown_at_unwind) {
-      mapping(string:mixed)|mapping(object:array) ustate = ctx->unwind_state;
-      if (!ustate) ustate = ctx->unwind_state = ([]);
-#ifdef DEBUG
-      if (err != frame)
-	fatal_error ("Internal error: Unexpected unwind object catched.\n");
-      if (ustate[parser])
-	fatal_error ("Internal error: Clobbering unwind state for parser.\n");
-#endif
-      ustate[parser] = ({err});
-      throw (err = parser);
+    if (result != nil) {
+      if (type->free_text) return ({result});
+      parser->add_value (result);
     }
-    else {
-      ctx->handle_exception (err, parser); // Will rethrow unknown errors.
-      return ({});
-    }
+    return ({});
   }
 
-  array _handle_pi_tag (TagSetParser parser, string content)
-  // Callback similar to _handle_tag() for tag set parsers to handle
-  // PI tags.
+  final array _p_xml_handle_pi_tag (object/*(PXml)*/ parser, string content)
   {
+    Type type = parser->type;
+    if (type->handle_literals) parser->handle_literal();
+
     sscanf (content, "%[ \t\n\r]%s", string ws, string rest);
-    if (ws == "" && rest != "")
+    if (ws == "" && rest != "") {
       // The parser didn't match a complete name, so this is a false
       // alarm for an unknown PI tag.
+      if (!type->free_text)
+	return utils->unknown_pi_tag_error (parser, content);
       return 0;
-    return _handle_tag (parser, 0, content);
-  }
+    }
 
-  /* Can't define `== here due to Pike bugs..
-  int __hash()
-  {
-    return hash (this_object()->name);
-  }
+    Context ctx = parser->context;
+    // FIXME: P-code generation.
 
-  int `== (mixed other)
-  {
-    return objectp (other) && other->is_RXML_Tag && other->name == this_object()->name;
+    object/*(Frame)HMM*/ frame;
+    MAKE_FRAME (frame, ctx, parser, 0);
+
+    if (!zero_type (frame->raw_tag_text))
+      frame->raw_tag_text = parser->current_input();
+
+    mixed result;
+    EVAL_FRAME (frame, ctx, parser, type, 0, content, result);
+
+    if (result != nil) {
+      if (type->free_text) return ({result});
+      parser->add_value (result);
+    }
+    return ({});
   }
-  */
 
   MARK_OBJECT;
 
@@ -935,8 +986,6 @@ class Scope
   string _sprintf() {return "RXML.Scope";}
 }
 
-#define SCOPE_TYPE mapping(string:mixed)|object(Scope)
-
 class Context
 //! A parser context. This contains the current variable bindings and
 //! so on. The current context can always be retrieved with
@@ -1406,7 +1455,7 @@ class Context
 #endif
   }
 
-  mapping(string:mixed)|mapping(object:array) unwind_state;
+  UNWIND_STATE unwind_state;
   // If this is a mapping, we have an unwound stack state. It contains
   // strings with arbitrary exception info, and the objects being
   // unwound with arrays containing the extra state info they need.
@@ -2135,7 +2184,7 @@ class Frame
 
 	switch (sprintf ("%t", elem)) {
 	  case "string":
-	    if (result_type->_parser_prog == PNone) {
+	    if (result_type->parser_prog == PNone) {
 	      THIS_TAG_DEBUG (sprintf ("Exec[%d]: String\n", i));
 	      piece = elem;
 	    }
@@ -2356,167 +2405,171 @@ class Frame
 
 #undef PRE_INIT_ERROR
     ctx->frame = this;
-
+    mixed err1 = 0;
   process_tag: {
-      if (tag) {
-	if ((raw_args || args || ([]))->help) {
-	  TRACE_ENTER ("tag &lt;" + tag->name + " help&gt;", tag);
-	  string help = id->conf->find_tag_doc (tag->name, id);
-	  TRACE_LEAVE ("");
-	  THIS_TAG_TOP_DEBUG ("Reporting help - frame done\n");
-	  ctx->handle_exception ( // Will throw if necessary.
-	    Backtrace ("help", help, ctx), parser);
-	  break process_tag;
-	}
+      if ((err1 = catch {
+	if (tag) {
+	  if ((raw_args || args || ([]))->help) {
+	    TRACE_ENTER ("tag &lt;" + tag->name + " help&gt;", tag);
+	    string help = id->conf->find_tag_doc (tag->name, id);
+	    TRACE_LEAVE ("");
+	    THIS_TAG_TOP_DEBUG ("Reporting help - frame done\n");
+	    ctx->handle_exception ( // Will throw if necessary.
+	      Backtrace ("help", help, ctx), parser);
+	    break process_tag;
+	  }
 
-	TRACE_ENTER("tag &lt;" + tag->name + "&gt;", tag);
+	  TRACE_ENTER("tag &lt;" + tag->name + "&gt;", tag);
 
 #ifdef MODULE_LEVEL_SECURITY
-	if (id->conf->check_security (tag, id, id->misc->seclevel)) {
-	  THIS_TAG_TOP_DEBUG ("Access denied - exiting\n");
-	  TRACE_LEAVE("access denied");
-	  break process_tag;
-	}
-#endif
-      }
-
-      if (raw_args) {
-#ifdef MODULE_DEBUG
-	if (flags & FLAG_PROC_INSTR)
-	  fatal_error ("Can't pass arguments to a processing instruction tag.\n");
-#endif
-	if (sizeof (raw_args)) {
-	  // Note: Code duplication in Tag.eval_args().
-	  mapping(string:Type) atypes = raw_args & tag->req_arg_types;
-	  if (sizeof (atypes) < sizeof (tag->req_arg_types)) {
-	    array(string) missing = sort (indices (tag->req_arg_types - atypes));
-	    parse_error ("Required " +
-			 (sizeof (missing) > 1 ?
-			  "arguments " + String.implode_nicely (missing) + " are" :
-			  "argument " + missing[0] + " is") + " missing.\n");
+	  if (id->conf->check_security (tag, id, id->misc->seclevel)) {
+	    THIS_TAG_TOP_DEBUG ("Access denied - exiting\n");
+	    TRACE_LEAVE("access denied");
+	    break process_tag;
 	  }
-	  atypes += raw_args & tag->opt_arg_types;
-#ifdef MODULE_DEBUG
-	  if (mixed err = catch {
 #endif
-	    foreach (indices (raw_args), string arg) {
+	}
+
+	if (raw_args) {
+#ifdef MODULE_DEBUG
+	  if (flags & FLAG_PROC_INSTR)
+	    fatal_error ("Can't pass arguments to a processing instruction tag.\n");
+#endif
+	  if (sizeof (raw_args)) {
+	    // Note: Code duplication in Tag.eval_args().
+	    mapping(string:Type) atypes = raw_args & tag->req_arg_types;
+	    if (sizeof (atypes) < sizeof (tag->req_arg_types)) {
+	      array(string) missing = sort (indices (tag->req_arg_types - atypes));
+	      parse_error ("Required " +
+			   (sizeof (missing) > 1 ?
+			    "arguments " + String.implode_nicely (missing) + " are" :
+			    "argument " + missing[0] + " is") + " missing.\n");
+	    }
+	    atypes += raw_args & tag->opt_arg_types;
+#ifdef MODULE_DEBUG
+	    if (mixed err = catch {
+#endif
+	      foreach (indices (raw_args), string arg) {
 #ifdef DEBUG
-	      Type t = atypes[arg] || tag->def_arg_type;
-	      if (t->_parser_prog != PNone) {
-		Parser p = t->get_parser (ctx, 0, parser);
-		THIS_TAG_DEBUG (sprintf ("Evaluating argument %O with %O\n", arg, p));
-		p->finish (raw_args[arg]); // Should not unwind.
-		raw_args[arg] = p->eval(); // Should not unwind.
-	      }
+		Type t = atypes[arg] || tag->def_arg_type;
+		if (t->parser_prog != PNone) {
+		  Parser p = t->get_parser (ctx, 0, parser);
+		  THIS_TAG_DEBUG (sprintf ("Evaluating argument %O with %O\n", arg, p));
+		  p->finish (raw_args[arg]); // Should not unwind.
+		  raw_args[arg] = p->eval(); // Should not unwind.
+		}
 #else
-	      raw_args[arg] = (atypes[arg] || tag->def_arg_type)->
-		eval (raw_args[arg], ctx, 0, parser, 1); // Should not unwind.
+		raw_args[arg] = (atypes[arg] || tag->def_arg_type)->
+		  eval (raw_args[arg], ctx, 0, parser, 1); // Should not unwind.
 #endif
-	    }
+	      }
 #ifdef MODULE_DEBUG
-	  }) {
-	    if (objectp (err) && ([object] err)->thrown_at_unwind)
-	      fatal_error ("Can't save parser state when evaluating arguments.\n");
-	    throw_fatal (err);
+	    }) {
+	      if (objectp (err) && ([object] err)->thrown_at_unwind)
+		fatal_error ("Can't save parser state when evaluating arguments.\n");
+	      throw_fatal (err);
+	    }
+#endif
 	  }
-#endif
+	  args = raw_args;
 	}
-	args = raw_args;
-      }
 #ifdef MODULE_DEBUG
-      else if (!args && !(flags & FLAG_PROC_INSTR)) fatal_error ("args not set.\n");
+	else if (!args && !(flags & FLAG_PROC_INSTR)) fatal_error ("args not set.\n");
 #endif
 
-      if (!zero_type (this->parent_frame))
-	if (up->local_tags && up->local_tags->has_tag (tag)) {
-	  THIS_TAG_DEBUG (sprintf ("Setting parent_frame to %O from local_tags\n", up));
-	  this->parent_frame = up;
-	}
-	else
-	  for (Frame f = up; f; f = f->up)
-	    if (f->additional_tags && f->additional_tags->has_tag (tag)) {
-	      THIS_TAG_DEBUG (sprintf ("Setting parent_frame to %O "
-				       "from additional_tags\n", f));
-	      this->parent_frame = f;
-	      break;
-	    }
-
-      if (TagSet add_tags = raw_content && [object(TagSet)] this->additional_tags) {
-	TagSet tset = ctx->tag_set;
-	if (!tset->has_effective_tags (add_tags)) {
-	  THIS_TAG_DEBUG (sprintf ("Installing additional_tags %O\n", add_tags));
-	  int hash = HASH_INT2 (tset->id_number, add_tags->id_number);
-	  orig_tag_set = tset;
-	  TagSet local_ts;
-	  if (!(local_ts = local_tag_set_cache[hash])) {
-	    local_ts = TagSet (add_tags->name + "+" + orig_tag_set->name);
-	    local_ts->imported = ({add_tags, orig_tag_set});
-	    local_tag_set_cache[hash] = local_ts; // Race, but it doesn't matter.
+	if (!zero_type (this->parent_frame))
+	  if (up->local_tags && up->local_tags->has_tag (tag)) {
+	    THIS_TAG_DEBUG (sprintf ("Setting parent_frame to %O from local_tags\n", up));
+	    this->parent_frame = up;
 	  }
-	  ctx->tag_set = local_ts;
-	}
-	else
-	  THIS_TAG_DEBUG (sprintf ("Not installing additional_tags %O "
-				   "since they're already in the tag set\n", add_tags));
-      }
+	  else
+	    for (Frame f = up; f; f = f->up)
+	      if (f->additional_tags && f->additional_tags->has_tag (tag)) {
+		THIS_TAG_DEBUG (sprintf ("Setting parent_frame to %O "
+					 "from additional_tags\n", f));
+		this->parent_frame = f;
+		break;
+	      }
 
-      if (!result_type) {
-#ifdef MODULE_DEBUG
-	if (!tag) fatal_error ("result_type not set in Frame object %O, "
-			       "and it has no Tag object to use for inferring it.\n",
-			       this_object());
-#endif
-	Type ptype = parser->type;
-      find_result_type: {
-	  // First check if any of the types is a subtype of the
-	  // wanted type. If so, we can use it directly.
-	  foreach (tag->result_types, Type rtype)
-	    if (rtype->subtype_of (ptype)) {
-	      result_type = rtype;
-	      break find_result_type;
+	if (TagSet add_tags = raw_content && [object(TagSet)] this->additional_tags) {
+	  TagSet tset = ctx->tag_set;
+	  if (!tset->has_effective_tags (add_tags)) {
+	    THIS_TAG_DEBUG (sprintf ("Installing additional_tags %O\n", add_tags));
+	    int hash = HASH_INT2 (tset->id_number, add_tags->id_number);
+	    orig_tag_set = tset;
+	    TagSet local_ts;
+	    if (!(local_ts = local_tag_set_cache[hash])) {
+	      local_ts = TagSet (add_tags->name + "+" + orig_tag_set->name);
+	      local_ts->imported = ({add_tags, orig_tag_set});
+	      local_tag_set_cache[hash] = local_ts; // Race, but it doesn't matter.
 	    }
-	  // Then check if any of the types is a supertype of the
-	  // wanted type. If so, set the result type to the wanted
-	  // type, since the tag has the responsibility to produce a
-	  // value of that type.
-	  foreach (tag->result_types, Type rtype)
-	    if (ptype->subtype_of (rtype)) {
-	      result_type = ptype (rtype->_parser_prog);
-	      break find_result_type;
-	    }
-	  parse_error (
-	    "Tag returns " +
-	    String.implode_nicely ([array(string)] tag->result_types->name, "or") +
-	    " but " + [string] parser->type->name + " is expected.\n");
+	    ctx->tag_set = local_ts;
+	  }
+	  else
+	    THIS_TAG_DEBUG (sprintf ("Not installing additional_tags %O "
+				     "since they're already in the tag set\n", add_tags));
 	}
-	THIS_TAG_DEBUG (sprintf ("Resolved result_type to %O from surrounding %O\n",
-				 result_type, ptype));
-      }
-      else THIS_TAG_DEBUG (sprintf ("Keeping result_type %O\n", result_type));
 
-      if (!content_type) {
+	if (!result_type) {
 #ifdef MODULE_DEBUG
-	if (!tag) fatal_error ("content_type not set in Frame object %O, "
-			       "and it has no Tag object to use for inferring it.\n",
-			       this_object());
+	  if (!tag) fatal_error ("result_type not set in Frame object %O, "
+				 "and it has no Tag object to use for inferring it.\n",
+				 this_object());
 #endif
-	content_type = tag->content_type;
-	if (content_type == t_same) {
-	  content_type = result_type (content_type->_parser_prog);
-	  THIS_TAG_DEBUG (sprintf ("Resolved t_same to content_type %O\n",
-				   content_type));
+	  Type ptype = parser->type;
+	find_result_type: {
+	    // First check if any of the types is a subtype of the
+	    // wanted type. If so, we can use it directly.
+	    foreach (tag->result_types, Type rtype)
+	      if (rtype->subtype_of (ptype)) {
+		result_type = rtype;
+		break find_result_type;
+	      }
+	    // Then check if any of the types is a supertype of the
+	    // wanted type. If so, set the result type to the wanted
+	    // type, since the tag has the responsibility to produce a
+	    // value of that type.
+	    foreach (tag->result_types, Type rtype)
+	      if (ptype->subtype_of (rtype)) {
+		result_type = ptype (rtype->parser_prog, @rtype->parser_args);
+		break find_result_type;
+	      }
+	    parse_error (
+	      "Tag returns " +
+	      String.implode_nicely ([array(string)] tag->result_types->name, "or") +
+	      " but " + [string] parser->type->name + " is expected.\n");
+	  }
+	  THIS_TAG_DEBUG (sprintf ("Resolved result_type to %O from surrounding %O\n",
+				   result_type, ptype));
 	}
-	else THIS_TAG_DEBUG (sprintf ("Setting content_type to %O from tag\n",
-				      content_type));
-      }
-      else THIS_TAG_DEBUG (sprintf ("Keeping content_type %O\n", content_type));
+	else THIS_TAG_DEBUG (sprintf ("Keeping result_type %O\n", result_type));
 
-      if (raw_content) {
-	THIS_TAG_DEBUG ("Initializing the content variable to nil\n");
-	content = content_type->empty_value;
-      }
+	if (!content_type) {
+#ifdef MODULE_DEBUG
+	  if (!tag) fatal_error ("content_type not set in Frame object %O, "
+				 "and it has no Tag object to use for inferring it.\n",
+				 this_object());
+#endif
+	  content_type = tag->content_type;
+	  if (content_type == t_same) {
+	    content_type =
+	      result_type (content_type->parser_prog, @content_type->parser_args);
+	    THIS_TAG_DEBUG (sprintf ("Resolved t_same to content_type %O\n",
+				     content_type));
+	  }
+	  else THIS_TAG_DEBUG (sprintf ("Setting content_type to %O from tag\n",
+					content_type));
+	}
+	else THIS_TAG_DEBUG (sprintf ("Keeping content_type %O\n", content_type));
 
-      mixed err = catch {
+	if (raw_content) {
+	  THIS_TAG_DEBUG ("Initializing the content variable to nil\n");
+	  content = nil;
+	}
+      }))
+	break process_tag;
+
+      if (mixed err2 = catch {
 	switch (eval_state) {
 	  case EVSTAT_BEGIN:
 	    if (array|function(RequestID:array) do_enter =
@@ -2624,7 +2677,7 @@ class Frame
 		      else {
 			subparser = content_type->get_parser (ctx, 0, parser);
 #ifdef DEBUG
-			if (content_type->_parser_prog != PNone)
+			if (content_type->parser_prog != PNone)
 			  THIS_TAG_DEBUG (sprintf ("Iter[%d]: Evaluating content "
 						   "with %O\n", debug_iter, subparser));
 #endif
@@ -2818,7 +2871,7 @@ class Frame
 	    }
 
 	    else if (result == nil && !(flags & FLAG_EMPTY_ELEMENT)) {
-	      if (result_type->_parser_prog == PNone) {
+	      if (result_type->parser_prog == PNone) {
 		if (content_type->name != result_type->name) {
 		  THIS_TAG_DEBUG (sprintf ("Assigning content to result after "
 					   "converting from %s to %s\n",
@@ -2855,15 +2908,12 @@ class Frame
 
 	if (ctx->new_runtime_tags)
 	  _handle_runtime_tags (ctx, parser);
-      };
 
-      ctx->frame_depth--;
-
-      if (err) {
+      }) {
 	THIS_TAG_DEBUG_LEAVE_SCOPE (ctx, this, "Leaving scope\n");
 	LEAVE_SCOPE (ctx, this);
 	string action;
-	if (objectp (err) && ([object] err)->thrown_at_unwind) {
+	if (objectp (err2) && ([object] err2)->thrown_at_unwind) {
 	  mapping(string:mixed)|mapping(object:array) ustate = ctx->unwind_state;
 	  if (!ustate) ustate = ctx->unwind_state = ([]);
 #ifdef DEBUG
@@ -2876,13 +2926,13 @@ class Frame
 	    m_delete (ustate, "exec_left");
 	  }
 
-	  if (err == this || exec && sizeof (exec) && err == exec[0])
+	  if (err2 == this || exec && sizeof (exec) && err2 == exec[0])
 	    // This frame or a frame in the exec array wants to stream.
 	    if (parser->unwind_safe) {
 	      // Rethrow to continue in parent since we've already done
 	      // the appropriate do_process stuff in this frame in
 	      // either case.
-	      if (err == this) err = 0;
+	      if (err2 == this) err2 = 0;
 	      if (orig_tag_set) ctx->tag_set = orig_tag_set, orig_tag_set = 0;
 	      action = "break";
 	      THIS_TAG_TOP_DEBUG ("Interrupted for streaming - "
@@ -2908,7 +2958,7 @@ class Frame
 	    THIS_TAG_TOP_DEBUG ("Interrupted\n");
 	  }
 
-	  ustate[this] = ({err, eval_state, iter, raw_content, subparser, piece,
+	  ustate[this] = ({err2, eval_state, iter, raw_content, subparser, piece,
 			   exec, orig_tag_set, ctx->new_runtime_tags,
 #ifdef DEBUG
 			   debug_iter,
@@ -2919,7 +2969,7 @@ class Frame
 	else {
 	  THIS_TAG_TOP_DEBUG ("Exception\n");
 	  TRACE_LEAVE ("exception");
-	  ctx->handle_exception (err, parser); // Will rethrow unknown errors.
+	  ctx->handle_exception (err2, parser); // Will rethrow unknown errors.
 	  result = nil;
 	  action = "return";
 	}
@@ -2940,14 +2990,18 @@ class Frame
 	    fatal_error ("Internal error: Don't you come here and %O on me!\n", action);
 	}
       }
+
       else {
 	THIS_TAG_TOP_DEBUG ("Done\n");
 	TRACE_LEAVE ("");
       }
-    } 
+    }
 
+    // Normal clean up on tag return or exception.
     if (orig_tag_set) ctx->tag_set = orig_tag_set;
     ctx->frame = up;
+    ctx->frame_depth--;
+    if (err1) throw (err1);
   }
 
   MARK_OBJECT;
@@ -3224,9 +3278,11 @@ final Frame make_unparsed_tag (string name, mapping(string:string) args,
   return frame;
 }
 
-class parse_frame /* (Type type, string to_parse) */
+//! @decl Frame parse_frame (Type type, string to_parse);
+//!
 //! Returns a frame that, when evaluated, parses the given string
 //! according to the type (which typically has a parser set).
+class parse_frame
 {
   inherit Frame;
   constant flags = FLAG_UNPARSED;
@@ -3339,46 +3395,35 @@ class Parser
     LEAVE_CONTEXT();
   }
 
-  array handle_var (string varref, Type surrounding_type)
+  mixed handle_var (string varref, Type surrounding_type)
   // Parses and evaluates a possible variable reference, with the
   // appropriate error handling.
   {
-    // We're always evaluating here, so context is always set.
-    if(varref[0]==':') return ({type->format_entity (varref[1..])});
-    if (has_value (varref, "."))
-      if (mixed err = catch {
-	// It's intentional that we split on the first ':' for now, to
-	// allow for future enhancements of this syntax. Scope and
-	// variable names containing ':' are thus not accessible this way.
-	sscanf (varref, "%[^:]:%s", varref, string encoding);
-	context->current_var = varref;
-	array(string|int) splitted = context->parse_user_var (varref, 1);
-	if (splitted[0] == 1)
-	  parse_error (
-	    "No scope in variable reference.\n"
-	    "(Use ':' in front to quote a character reference containing dots.)\n");
-	mixed val;
-	if (zero_type (val = context->get_var ( // May throw.
-			 splitted[1..], splitted[0],
-			 encoding ? t_string : surrounding_type))) {
-	  context->current_var = 0;
-	  return ({});
-	}
-	if (encoding) {
-	  val = Roxen->roxen_encode (val, encoding);
-	  if (!val) parse_error ("Unknown encoding %s.\n", encoding);
-	}
-	context->current_var = 0;
-	return ({val});
-      }) {
-	context->current_var = 0;
-	context->handle_exception (err, this_object()); // May throw.
-	return ({});
-      }
-    if (!surrounding_type->free_text)
-      parse_error ("Unknown variable reference &%s; not allowed in this "
-		   "context.\n", varref);
-    return 0;
+    if (mixed err = catch {
+      // It's intentional that we split on the first ':' for now, to
+      // allow for future enhancements of this syntax. Scope and
+      // variable names containing ':' are thus not accessible this way.
+      sscanf (varref, "%[^:]:%s", varref, string encoding);
+      context->current_var = varref;
+      array(string|int) splitted = context->parse_user_var (varref, 1);
+      if (splitted[0] == 1)
+	parse_error (
+	  "No scope in variable reference.\n"
+	  "(Use ':' in front to quote a character reference containing dots.)\n");
+      mixed val;
+      if (zero_type (val = context->get_var ( // May throw.
+		       splitted[1..], splitted[0],
+		       encoding ? t_string : surrounding_type)))
+	val = nil;
+      if (encoding && !(val = Roxen->roxen_encode (val + "", encoding)))
+	parse_error ("Unknown encoding %O.\n", encoding);
+      context->current_var = 0;
+      return val;
+    }) {
+      context->current_var = 0;
+      context->handle_exception (err, this_object()); // May throw.
+      return nil;
+    }
   }
 
   //! Interface.
@@ -3501,15 +3546,13 @@ class Parser
   }
 }
 
-
 class TagSetParser
 //! Interface class for parsers that evaluates using the tag set. It
 //! provides the evaluation and compilation functionality. The parser
-//! should call Tag._handle_tag() from feed() and finish() for every
-//! encountered element tag and Tag._handle_pi_tag() for every PI tag.
-//! Parser.handle_var() should be called for encountered variable
-//! references. It must be able to continue cleanly after throw() from
-//! Tag._handle_tag() and Tag._handle_pi_tag().
+//! should call @[Tag.handle_tag] or similar from @[feed] and
+//! @[finish] for every encountered tag. @[Parser.handle_var] should
+//! be called for encountered variable references. It must be able to
+//! continue cleanly after @[throw] from @[Tag.handle_tag].
 {
   inherit Parser;
 
@@ -3545,7 +3588,7 @@ class TagSetParser
 
   mixed read();
   //! No longer optional in this class. Since the evaluation is done
-  //! in Tag._handle_tag() or similar, this always does the same as
+  //! in Tag.handle_tag() or similar, this always does the same as
   //! eval().
 
   optional void add_runtime_tag (Tag tag);
@@ -3561,6 +3604,11 @@ class TagSetParser
   //! of normal element runtime tags. This may only be left undefined
   //! if the parser doesn't parse tags at all.
 
+  string raw_tag_text() {return 0;}
+  //! Used by @[Tag.handle_tag] to set @[Frame.raw_tag_text] in a
+  //! newly created frame. This default implementation simply leaves
+  //! it unset.
+
   // Internals.
 
   int _local_tag_set;
@@ -3570,6 +3618,7 @@ class TagSetParser
     return sprintf ("RXML.TagSetParser(%O,%O)%s", type, tag_set, OBJ_COUNT);
   }
 }
+
 
 class PNone
 //! The identity parser. It only returns its input.
@@ -3630,6 +3679,9 @@ mixed simple_parse (string in, void|program parser)
 //! Types.
 
 
+static mapping(string:Type) reg_types = ([]);
+// Maps each type name to a type object with the PNone parser.
+
 class Type
 //! A static type definition. It does type checking and specifies some
 //! properties of the type. It may also contain a Parser program that
@@ -3657,11 +3709,18 @@ class Type
 
   int subtype_of (Type other)
   //! Returns nonzero iff this type is the same as or a subtype of
-  //! @[other], meaning that any value of this type can be expressed
-  //! by @[other] without (or with at most negligible) loss of
-  //! information.
+  //! @[other].
+  //!
+  //! That means that any value of this type can be expressed by
+  //! @[other] without (or with at most negligible) loss of
+  //! information. There's however one notable exception to that:
+  //! @[RXML.t_any] is the supertype for all types even though it can
+  //! hardly express any value without losing its information context.
   {
-    return glob ([string] other->name, [string] this_object()->name);
+    // FIXME: Add some cache here?
+    for (Type type = this_object(); type; type = type->supertype)
+      if (type->name == other->name) return 1;
+    return 0;
   }
 
   int `< (mixed other)
@@ -3701,21 +3760,25 @@ class Type
     Type newtype;
     if (sizeof (parser_args)) {	// Can't cache this.
       newtype = clone();
-      newtype->_parser_prog = newparser;
-      newtype->_parser_args = parser_args;
+      newtype->parser_prog = newparser;
+      newtype->parser_args = parser_args;
       if (newparser->tag_set_eval) newtype->_p_cache = set_weak_flag (([]), 1);
     }
     else {
       if (!_t_obj_cache) _t_obj_cache = ([]);
       if (!(newtype = _t_obj_cache[newparser]))
-	if (newparser == _parser_prog)
+	if (newparser == parser_prog)
 	  _t_obj_cache[newparser] = newtype = this_object();
 	else {
 	  _t_obj_cache[newparser] = newtype = clone();
-	  newtype->_parser_prog = newparser;
+	  newtype->parser_prog = newparser;
 	  if (newparser->tag_set_eval) newtype->_p_cache = set_weak_flag (([]), 1);
 	}
     }
+#ifdef DEBUG
+    if (reg_types[this_object()->name]->parser_prog != PNone)
+      error ("Incorrect type object registered in reg_types.\n");
+#endif
     return newtype;
   }
 
@@ -3731,7 +3794,7 @@ class Type
 	  parent->clone && parent->type == this_object()) {
 	// There are runtime tags. Try to clone the parent parser if
 	// all conditions are met.
-	p = parent->clone (ctx, this_object(), tset, @_parser_args);
+	p = parent->clone (ctx, this_object(), tset, @parser_args);
 	p->_parent = parent;
 	return p;
       }
@@ -3743,7 +3806,7 @@ class Type
 	  pco->free_parser = p->_next_free;
 	  // ^^^ Using interpreter lock to here.
 	  p->data_callback = p->compile = 0;
-	  p->reset (ctx, this_object(), tset, @_parser_args);
+	  p->reset (ctx, this_object(), tset, @parser_args);
 #ifdef RXML_OBJ_DEBUG
 	  p->__object_marker->create (p);
 #endif
@@ -3752,15 +3815,15 @@ class Type
 	else
 	  // ^^^ Using interpreter lock to here.
 	  if (pco->clone_parser)
-	    p = pco->clone_parser->clone (ctx, this_object(), tset, @_parser_args);
-	  else if ((p = _parser_prog (ctx, this_object(), tset, @_parser_args))->clone) {
+	    p = pco->clone_parser->clone (ctx, this_object(), tset, @parser_args);
+	  else if ((p = parser_prog (ctx, this_object(), tset, @parser_args))->clone) {
 	    // pco->clone_parser might already be initialized here due
 	    // to race, but that doesn't matter.
 	    p->context = 0;	// Don't leave the context in the clone master.
 #ifdef RXML_OBJ_DEBUG
 	    p->__object_marker->create (p);
 #endif
-	    p = (pco->clone_parser = p)->clone (ctx, this_object(), tset, @_parser_args);
+	    p = (pco->clone_parser = p)->clone (ctx, this_object(), tset, @parser_args);
 	  }
       }
 
@@ -3769,14 +3832,14 @@ class Type
 	pco = PCacheObj();
 	pco->tag_set_gen = tset->generation;
 	_p_cache[tset] = pco;	// Might replace an object due to race, but that's ok.
-	if ((p = _parser_prog (ctx, this_object(), tset, @_parser_args))->clone) {
+	if ((p = parser_prog (ctx, this_object(), tset, @parser_args))->clone) {
 	  // pco->clone_parser might already be initialized here due
 	  // to race, but that doesn't matter.
 	  p->context = 0;	// Don't leave the context in the clone master.
 #ifdef RXML_OBJ_DEBUG
 	  p->__object_marker->create (p);
 #endif
-	  p = (pco->clone_parser = p)->clone (ctx, this_object(), tset, @_parser_args);
+	  p = (pco->clone_parser = p)->clone (ctx, this_object(), tset, @parser_args);
 	}
       }
 
@@ -3790,7 +3853,7 @@ class Type
 	// Relying on interpreter lock here.
 	free_parser = p->_next_free;
 	p->data_callback = p->compile = 0;
-	p->reset (ctx, this_object(), @_parser_args);
+	p->reset (ctx, this_object(), @parser_args);
 #ifdef RXML_OBJ_DEBUG
 	p->__object_marker->create (p);
 #endif
@@ -3798,16 +3861,16 @@ class Type
 
       else if (clone_parser)
 	// Relying on interpreter lock here.
-	p = clone_parser->clone (ctx, this_object(), @_parser_args);
+	p = clone_parser->clone (ctx, this_object(), @parser_args);
 
-      else if ((p = _parser_prog (ctx, this_object(), @_parser_args))->clone) {
+      else if ((p = parser_prog (ctx, this_object(), @parser_args))->clone) {
 	// clone_parser might already be initialized here due to race,
 	// but that doesn't matter.
 	p->context = 0;		// Don't leave the context in the clone master.
 #ifdef RXML_OBJ_DEBUG
 	p->__object_marker->create (p);
 #endif
-	p = (clone_parser = p)->clone (ctx, this_object(), @_parser_args);
+	p = (clone_parser = p)->clone (ctx, this_object(), @parser_args);
       }
     }
 
@@ -3823,7 +3886,7 @@ class Type
   {
     mixed res;
     if (!ctx) ctx = get_context();
-    if (_parser_prog == PNone) res = in;
+    if (parser_prog == PNone) res = in;
     else {
       Parser p = get_parser (ctx, tag_set, parent);
       p->_parent = parent;
@@ -3853,6 +3916,22 @@ class Type
     return res;
   }
 
+  //! The parser for this type. Must not be changed after being
+  //! initialized when the type is created; use @[`()] instead.
+  program/*(Parser)HMM*/ parser_prog =
+    lambda () {
+      // Kludge to execute some code at object creation without
+      // bothering with create(), which can be overridden.
+      if (!reg_types[this_object()->name])
+	reg_types[this_object()->name] = this_object();
+      return PNone;
+    }();
+
+  array(mixed) parser_args = ({});
+  //! The arguments to the parser @[parser_prog]. Must not be changed
+  //! after being initialized when the type is created; use @[`()]
+  //! instead.
+
   // Interface
 
   //! @decl constant string name;
@@ -3869,24 +3948,6 @@ class Type
   //! If it doesn't contain a "/", it's treated as a type outside the
   //! MIME system, e.g. "int" for an integer. Any type that can be
   //! mapped to a MIME type should be so.
-  //!
-  //! Type hierarchies are currently implemented with glob patterns,
-  //! e.g. "image/png" is a subtype of "image/*". However, this syntax
-  //! will be developed further.
-  //!
-  //! A type in the type hierarchy should be able to express any value
-  //! that any of its subtypes can express without (or with at most
-  //! negligible) loss of information, but not necessarily on the same
-  //! form. This is different from the type trees described by
-  //! @[conversion_type], although it's always preferable if a
-  //! supertype also can be used as @[conversion_type] in its
-  //! subtypes.
-  //!
-  //! There are however exceptions to the rule above about information
-  //! preservation, since it's impossible to satisfy it for
-  //! sufficiently generic types. E.g. the type @[RXML.t_any] cannot
-  //! express hardly any value (except @[RXML.nil]) without loss of
-  //! information.
 
   constant sequential = 0;
   //! Nonzero if data of this type is sequential, defined as:
@@ -3898,8 +3959,26 @@ class Type
   //!	 provided the data is only split between (sensibly defined)
   //!	 atomic elements.
 
-  //!mixed empty_value;
+  //! @decl constant mixed empty_value;
+  //!
   //! The empty value, i.e. what eval ("") would produce.
+
+  Type supertype;
+  //! The supertype for this type.
+  //!
+  //! The supertype should be able to express any value that this type
+  //! can express without (or with at most negligible) loss of
+  //! information, but not necessarily on the same form. This is
+  //! different from the type trees described by @[conversion_type],
+  //! although it's always preferable if a supertype also can be used
+  //! as @[conversion_type] in its subtypes.
+  //!
+  //! There are however exceptions to the rule above about information
+  //! preservation, since it's impossible to satisfy it for
+  //! sufficiently generic types. E.g. the type @[RXML.t_any] cannot
+  //! express hardly any value (except @[RXML.nil]) without loss of
+  //! information, but still it should be used as the supertype as the
+  //! last resort if no better alternative exists.
 
   Type conversion_type;
   //! The type to use as middlestep in indirect conversions. Required
@@ -3923,10 +4002,22 @@ class Type
   //! indirect conversion for at least a subset of the values. See the
   //! example in @[decode].
 
-  //!int free_text;
-  //! Nonzero if the type keeps the free text between parsed tokens,
-  //! e.g. the plain text between tags in XML. The type must be
-  //! sequential and use strings.
+  //! @decl optional constant int free_text;
+  //!
+  //! Nonzero constant if the type keeps the free text between parsed
+  //! tokens, e.g. the plain text between tags in XML. The type must
+  //! be sequential and use strings. Must be zero when
+  //! @[handle_literals] is nonzero.
+
+  //! @decl optional constant int handle_literals;
+  //!
+  //! Nonzero constant if the type can parse string literals into
+  //! values. This will have the effect that any free text will be
+  //! passed to @[encode] without a specified type. @[free_text] is
+  //! assumed to be zero when this is nonzero.
+  //!
+  //! @note Parsers will commonly trim leading and trailing whitespace
+  //! from the literal before passing it to @[encode].
 
   //! @decl optional constant int entity_syntax;
   //!
@@ -3936,11 +4027,12 @@ class Type
   void type_check (mixed val, void|string msg, mixed... args);
   //! Checks whether the given value is a valid one of this type.
   //! Errors are thrown as RXML parse errors, and in that case @[msg],
-  //! if given, is prepended to the error message with ": " between
-  //! them. If there are any more arguments on the line, the prepended
-  //! message is formatted with @tt{sprintf (@[msg], @@@[args])@}.
-  //! There's a @[type_check_error] helper that can be used to handle
-  //! the message formatting and error throwing.
+  //! if given, is prepended to the error message with ": " in
+  //! between. If there are any more arguments on the line, the
+  //! prepended message is formatted with
+  //! @tt{sprintf (@[msg], @@@[args])@}. There's a @[type_check_error]
+  //! helper that can be used to handle the message formatting and
+  //! error throwing.
 
   mixed encode (mixed val, void|Type from);
   //! Converts the given value to this type.
@@ -3994,8 +4086,8 @@ class Type
   //! shared.
   {
     Type newtype = object_program ((object(this_program)) this_object())();
-    newtype->_parser_prog = _parser_prog;
-    newtype->_parser_args = _parser_args;
+    newtype->parser_prog = parser_prog;
+    newtype->parser_args = parser_args;
     newtype->_t_obj_cache = _t_obj_cache;
     return newtype;
   }
@@ -4085,11 +4177,6 @@ class Type
 
   // Internals
 
-  program/*(Parser)HMM*/ _parser_prog = PNone;
-  // The parser to use. Should never be changed in a type object.
-
-  /*private*/ array(mixed) _parser_args = ({});
-
   /*private*/ mapping(program:Type) _t_obj_cache;
   // To avoid creating new type objects all the time in `().
 
@@ -4133,8 +4220,10 @@ TAny t_any = TAny();
 static class TAny
 {
   inherit Type;
-  constant name = "*";
+  constant name = "any";
+  constant supertype = 0;
   constant conversion_type = 0;
+  constant handle_literals = 1;
 
   mixed encode (mixed val, void|Type from)
   {
@@ -4154,7 +4243,8 @@ static class TNil
   constant name = "nil";
   constant sequential = 1;
   Nil empty_value = nil;
-  Type conversion_type = 0;
+  Type supertype = t_any;
+  constant conversion_type = 0;
 
   void type_check (mixed val, void|string msg, mixed... args)
   {
@@ -4184,7 +4274,51 @@ static class TSame
 {
   inherit Type;
   constant name = "same";
+  Type supertype = t_any;
+  constant conversion_type = 0;
   string _sprintf() {return "RXML.t_same" + OBJ_COUNT;}
+}
+
+TType t_type = TType();
+//! The type for the set of all RXML types as values.
+
+static class TType
+{
+  inherit Type;
+  constant name = "type";
+  constant sequential = 0;
+  Nil empty_value = nil;
+  Type supertype = t_any;
+  constant conversion_type = 0;
+  constant handle_literals = 1;
+
+  void type_check (mixed val, void|string msg, mixed... args)
+  {
+    if (!objectp (val) || !val->is_RXML_Type)
+      type_check_error (msg, args, "Expected a type, got %t.\n", val);
+  }
+
+  Type encode (mixed val, void|Type from)
+  //! If a type is parsed from a string, its parser will be
+  //! @[RXML.PNone].
+  {
+    if (from)
+      switch (from->name) {
+	case TAny.name: type_check (val); // Fall through.
+	case local::name: return [object(Type)] val;
+	default: return [object(Type)] indirect_convert (val, from);
+      }
+    if (stringp (val)) {
+      Type type = reg_types[val];
+      if (!type) parse_error ("There is no type %s.\n", utils->format_short (val));
+      return type;
+    }
+    mixed err = catch {return (object(Type)) val;};
+    parse_error ("Cannot convert %s to type: %s",
+		 utils->format_short (val), describe_error (err));
+  }
+
+  string _sprintf() {return "RXML.t_type" + OBJ_COUNT;}
 }
 
 // Basic types. Even though most of these have a `+ that fulfills
@@ -4206,7 +4340,9 @@ static class TScalar
   constant name = "scalar";
   constant sequential = 0;
   Nil empty_value = nil;
+  Type supertype = t_any;
   Type conversion_type = 0;
+  constant handle_literals = 1;
 
   void type_check (mixed val, void|string msg, mixed... args)
   {
@@ -4224,7 +4360,7 @@ static class TScalar
       }
     if (!stringp (val) && !intp (val) && !floatp (val))
       // Cannot unambigiously use a cast for this type.
-      parse_error ("Cannot convert value of type %t to scalar.\n", val);
+      parse_error ("Cannot convert %s to scalar.\n", utils->format_short (val));
     return [string|int|float] val;
   }
 
@@ -4244,7 +4380,9 @@ static class TNum
   constant name = "number";
   constant sequential = 0;
   constant empty_value = 0;
+  Type supertype = t_scalar;
   Type conversion_type = t_scalar;
+  constant handle_literals = 1;
 
   void type_check (mixed val, void|string msg, mixed... args)
   {
@@ -4264,10 +4402,11 @@ static class TNum
     if (stringp (val))
       if (sscanf (val, "%d%*c", int i) == 1) return i;
       else if (sscanf (val, "%f%*c", float f) == 1) return f;
-      else parse_error ("String contains neither integer nor float.\n");
+      else parse_error ("%s cannot be parsed as neither integer nor float.\n",
+			utils->format_short (val));
     if (!intp (val) && !floatp (val))
       // Cannot unambigiously use a cast for this type.
-      parse_error ("Cannot convert value of type %t to number.\n", val);
+      parse_error ("Cannot convert %s to number.\n", utils->format_short (val));
     return [int|float] val;
   }
 
@@ -4283,7 +4422,9 @@ static class TInt
   constant name = "int";
   constant sequential = 0;
   constant empty_value = 0;
+  Type supertype = t_num;
   Type conversion_type = t_scalar;
+  constant handle_literals = 1;
 
   void type_check (mixed val, void|string msg, mixed... args)
   {
@@ -4302,9 +4443,10 @@ static class TInt
       }
     if (stringp (val))
       if (sscanf (val, "%d%*c", int i) == 1) return i;
-      else parse_error ("String does not contain an integer.\n");
+      else parse_error ("%s cannot be parsed as integer.\n", utils->format_short (val));
     mixed err = catch {return (int) val;};
-    parse_error ("Cannot convert value to integer: " + describe_error (err));
+    parse_error ("Cannot convert %s to integer: %s",
+		 utils->format_short (val), describe_error (err));
   }
 
   string _sprintf() {return "RXML.t_int" + OBJ_COUNT;}
@@ -4319,7 +4461,9 @@ static class TFloat
   constant name = "float";
   constant sequential = 0;
   constant empty_value = 0;
+  Type supertype = t_num;
   Type conversion_type = t_scalar;
+  constant handle_literals = 1;
 
   void type_check (mixed val, void|string msg, mixed... args)
   {
@@ -4338,9 +4482,10 @@ static class TFloat
       }
     if (stringp (val))
       if (sscanf (val, "%f%*c", float f) == 1) return f;
-      else parse_error ("String does not contain a float.\n");
+      else parse_error ("%s cannot be parsed as float.\n", utils->format_short (val));
     mixed err = catch {return (float) val;};
-    parse_error ("Cannot convert value to float: " + describe_error (err));
+    parse_error ("Cannot convert %s to float: %s",
+		 utils->format_short (val), describe_error (err));
   }
 
   string _sprintf() {return "RXML.t_float" + OBJ_COUNT;}
@@ -4366,6 +4511,7 @@ static class TString
   constant name = "text/*";
   constant sequential = 1;
   constant empty_value = "";
+  Type supertype = t_scalar;
   Type conversion_type = t_scalar;
   constant free_text = 1;
 
@@ -4392,7 +4538,8 @@ static class TString
 	case TScalar.name:
       }
     mixed err = catch {return (string) val;};
-    parse_error ("Cannot convert value to %s: %s", name, describe_error (err));
+    parse_error ("Cannot convert %s to %s: %s",
+		 utils->format_short (val), name, describe_error (err));
   }
 
   string lower_case (string val) {return lower_case (val);}
@@ -4416,6 +4563,7 @@ static class TText
 {
   inherit TString;
   constant name = "text/plain";
+  Type supertype = t_string;
 
   string encode (mixed val, void|Type from)
   {
@@ -4427,7 +4575,8 @@ static class TText
 	case TScalar.name:
       }
     mixed err = catch {return (string) val;};
-    parse_error ("Cannot convert value to %s: %s", name, describe_error (err));
+    parse_error ("Cannot convert %s to %s: %s",
+		 utils->format_short (val), name, describe_error (err));
   }
 
   string _sprintf() {return "RXML.t_text" + OBJ_COUNT;}
@@ -4456,7 +4605,8 @@ static class TXml
 	case TText.name:
       }
     else if (mixed err = catch {val = (string) val;})
-      parse_error ("Cannot convert value to %s: %s", name, describe_error (err));
+      parse_error ("Cannot convert %s to %s: %s",
+		   utils->format_short (val), name, describe_error (err));
     return replace (
       [string] val,
       // FIXME: This ignores the invalid Unicode character blocks.
@@ -4815,7 +4965,8 @@ static void init_parsers()
   p->_set_tag_callback (
     lambda (object/*(Parser.HTML)*/ p) {
       parse_error ("Cannot convert XML value to text "
-		   "since it contains a tag %O.\n", p->current());
+		   "since it contains a tag %s.\n",
+		   utils->format_short (p->current()));
     });
   charref_decode_parser = p;
 
@@ -4871,6 +5022,7 @@ static program PXml;
 static program PEnt;
 static program PExpr;
 static program Parser_HTML = master()->resolv ("Parser.HTML");
+static object utils;
 
 void _fix_module_ref (string name, mixed val)
 {
@@ -4879,6 +5031,7 @@ void _fix_module_ref (string name, mixed val)
       case "PXml": PXml = [program] val; break;
       case "PEnt": PEnt = [program] val; break;
       case "PExpr": PExpr = [program] val; break;
+      case "utils": utils = [object] val; break;
       case "Roxen": Roxen = [object] val; init_parsers(); break;
       case "empty_tag_set": empty_tag_set = [object(TagSet)] val; break;
       default: error ("Herk\n");

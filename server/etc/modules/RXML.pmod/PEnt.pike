@@ -4,7 +4,7 @@
 //!
 //! Created 2000-01-28 by Martin Stjernholm.
 //!
-//! $Id: PEnt.pike,v 1.19 2001/03/23 22:49:42 mast Exp $
+//! $Id: PEnt.pike,v 1.20 2001/04/18 04:51:39 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
@@ -78,10 +78,8 @@ static void create (
 
   if (cloned) return;
 
-  if (!type->free_text) {
-    mixed_mode (1);
-    _set_data_callback (.utils.return_empty_array);
-  }
+  if (!type->free_text && !type->handle_literals)
+    _set_data_callback (.utils.free_text_error);
   ignore_tags (1);
   lazy_entity_end (1);
   match_tag (0);
