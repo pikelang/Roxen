@@ -17,9 +17,13 @@ string parse( RequestID id )
       {
 	if( i && q[i] )
 	{
+	  int starttime;
+	  if (q[i]->start && intp(q[i]->start))
+	    starttime = q[i]->start;
+	  else starttime = i->time;
 	  rows += ({
 	    ([
-	      "start":(q[i]->start || i->time),
+	      "start":starttime,
 	      "written":(int)q[i]->written,
 	      "host":i->remoteaddr,
 	      "closed":((!i->my_fd&&2) || !!catch(i->my_fd->query_address())),
@@ -27,7 +31,7 @@ string parse( RequestID id )
 	      "file":i->not_query || "?",
 	      "len":q[i]->len,
 	      "stat":(i->file && i->file->stat) || (i->misc && i->misc->stat),
-	      "hoststart":i->remoteaddr+sprintf("%010d",(time()-(q[i]->start || i->time))),
+	      "hoststart":i->remoteaddr+sprintf("%010d",(time()-starttime)),
 	      ])
 	  });
 	}
