@@ -1,5 +1,5 @@
 <!-- -*- html -*- -->
-<!-- $Id: template,v 1.118 2003/12/29 10:09:55 grubba Exp $ -->
+<!-- $Id: template,v 1.119 2004/01/14 16:14:48 jonasw Exp $ -->
 
 <define tag='cfg-variables'>
   <set variable='form.__redirect' value='1' />
@@ -182,20 +182,19 @@
       <table width="100%" cellpadding="0" cellspacing="0" border="0"
              ::="&usr.top-tableargs:none;">
       <tr>
-      <td valign="top"><a href="http://www.roxen.com/"><eval>&usr.logo-html:none;</eval></a></td>
-      <td align="right" valign="top">
-             <font color="&usr.top-fgcolor;"><colorscope ::=&usr.top-tableargs;>
+      <td width='0%'><a href="http://www.roxen.com/"><eval>&usr.logo-html:none;</eval></a></td>
+      <td width='100%' align="right">
               <gbutton href="/change_user.pike?uid=&usr.user-uid;"
 		       align="right"
 		       icon-src="/themes/&usr.theme;/user.gif"
-                  ><translate id="206">User</translate> </gbutton></colorscope></font><br />
-               <font color="&usr.top-fgcolor;">
-                &usr.user-name;
-               </font>
+		       vspace="2"
+                  ><translate id="206">User</translate></gbutton><br />
+              <font color="&usr.top-fgcolor;">&usr.user-name;</font>
      </td>
+     <td width='0%'><img src='/internal-roxen-unit' width='20'></td>
    </tr>
    <tr>
-     <td colspan="2" ::="&usr.toptabs-tableargs:none;" width="100%" valign="bottom"><img src="/internal-roxen-unit" width="&usr.toptabs-padwidth;" height="1" alt="" />&var._top_content:none;</td>
+     <td colspan="3" ::="&usr.toptabs-tableargs:none;" width="100%" valign="bottom"><img src="/internal-roxen-unit" width="&usr.toptabs-padwidth;" height="1" alt="" />&var._top_content:none;</td>
    </tr>
   </table>
   <img src="/internal-roxen-unit" width="1" height="10" alt="" /><br />
