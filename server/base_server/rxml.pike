@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.268 2000/12/15 17:14:36 nilsson Exp $
+// $Id: rxml.pike,v 1.269 2000/12/19 15:42:58 anders Exp $
 
 
 inherit "rxmlhelp";
@@ -270,6 +270,7 @@ string parse_rxml(string what, RequestID id,
 class CompatTag
 {
   inherit RXML.Tag;
+  constant is_compat_tag=1;
 
   string name;
   int flags;
