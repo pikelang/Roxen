@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module.pike,v 1.93 2000/07/18 15:55:53 jhs Exp $
+// $Id: module.pike,v 1.94 2000/08/05 22:01:45 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -431,33 +431,45 @@ mapping api_functions()
   return _api_functions;
 }
 
-mapping query_tag_callers()
+mapping(string:function) query_tag_callers()
 //! Compat
 {
-  mapping m = ([]);
+  mapping(string:function) m = ([]);
   foreach(glob("tag_*", indices( this_object())), string q)
     if(functionp( this_object()[q] ))
       m[replace(q[4..], "_", "-")] = this_object()[q];
   return m;
 }
 
-mapping query_container_callers()
+mapping(string:function) query_container_callers()
+//! Compat
 {
-  mapping m = ([]);
+  mapping(string:function) m = ([]);
   foreach(glob("container_*", indices( this_object())), string q)
     if(functionp( this_object()[q] ))
       m[replace(q[10..], "_", "-")] = this_object()[q];
   return m;
 }
 
-mapping query_simpletag_callers()
+mapping(string:array(int|function)) query_simpletag_callers()
 {
-  mapping m = ([]);
+  mapping(string:array(int|function)) m = ([]);
   foreach(glob("simpletag_*", indices(this_object())), string q)
     if(functionp(this_object()[q]))
       m[replace(q[10..],"_","-")] =
 	({ intp (this_object()[q + "_flags"]) && this_object()[q + "_flags"],
 	   this_object()[q] });
+  return m;
+}
+
+mapping(string:array(int|function)) query_simple_pi_tag_callers()
+{
+  mapping(string:array(int|function)) m = ([]);
+  foreach (glob ("simple_pi_tag_*", indices (this_object())), string q)
+    if (functionp (this_object()[q]))
+      m[replace (q[sizeof ("simple_pi_tag_")..], "_", "-")] =
+	({(intp (this_object()[q + "_flags"]) && this_object()[q + "_flags"]) |
+	  RXML.FLAG_PROC_INSTR, this_object()[q]});
   return m;
 }
 
