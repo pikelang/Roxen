@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.7 2000/01/31 11:47:45 jonasw Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.8 2000/02/07 15:45:44 wellhard Exp $";
 //constant thread_safe=1;
 
 #include <module.h>
@@ -29,6 +29,71 @@ mapping find_internal(string f, object id)
   string file = combine_path(__FILE__, "../scripts", (f-".."));
   return ([ "data":Stdio.read_bytes(file),
 	    "type":"application/x-javascript" ]);
+}
+
+class JSInsert
+{
+  static private string name;
+  static private mapping(string:string) args;
+  static private string content;
+
+  void add(string s)
+  {
+    content += s;
+  }
+
+  string get()
+  {
+    return content;
+  }
+  
+  string _sprintf(int i, mapping(string:int)|void m)
+  {
+    return sprintf("JSInsert: %s, %O", name, args);
+  }
+
+  void create(string _name, mapping(string:string) _args)
+  {
+    name = _name;
+    args = _args;
+    content = "";
+  }
+}
+
+class JSSupport
+{
+  static private mapping(string:JSInsert) inserts;
+  static private mapping(string:int) keys;
+
+  string get_unique_id(string name)
+  {
+    return name+sprintf("%02x", keys[name]++); 
+  }
+  
+  void create_insert(string name, string tag_name,
+		     mapping(string:string) args)
+  {
+    inserts[name] = JSInsert(tag_name, args);
+  }
+
+  JSInsert get_insert(string name)
+  {
+    if(!inserts[name])
+      create_insert(name, 0, 0);
+    
+    return inserts[name];
+  }
+  
+  string _sprintf(int i, mapping(string:int)|void m)
+  {
+    return sprintf("JSSupport: %d, %O", filter, inserts);
+  }
+
+  void create()
+  {
+    inserts = ([ ]);
+    keys = ([ ]);
+  }
 }
 
 static private
@@ -84,7 +149,7 @@ int jssp(object id)
   return !!id->misc->javascript_support;
 }
 
-JSSupport  get_jss(object id)
+JSSupport get_jss(object id)
 {
   if(!id->misc->javascript_support)
     id->misc->javascript_support = JSSupport();
@@ -193,7 +258,8 @@ string container_js_dragdrop(string name, mapping args, string contents,
 static private
 string tag_js_include(string name, mapping args, object id)
 {
-  if(id->client_var && (float)(id->client_var->javascript) < 1.2)
+  if(id->supports->javascript1.2 ||
+     id->client_var && (float)(id->client_var->javascript) < 1.2)
     return "<!-- Client do not support Javascript 1.2 -->";;
   return ("<script language=\"javascript\" src=\""+
 	  query_internal_location()+args->file+"\"></script>");
@@ -265,67 +331,3 @@ mapping query_tag_callers()
 }
 
 
-class JSInsert
-{
-  static private string name;
-  static private mapping(string:string) args;
-  static private string content;
-
-  void add(string s)
-  {
-    content += s;
-  }
-
-  string get()
-  {
-    return content;
-  }
-  
-  string _sprintf(int i, mapping(string:int)|void m)
-  {
-    return sprintf("JSInsert: %s, %O", name, args);
-  }
-
-  void create(string _name, mapping(string:string) _args)
-  {
-    name = _name;
-    args = _args;
-    content = "";
-  }
-}
-
-class JSSupport
-{
-  static private mapping(string:JSInsert) inserts;
-  static private mapping(string:int) keys;
-
-  string get_unique_id(string name)
-  {
-    return name+sprintf("%02x", keys[name]++); 
-  }
-  
-  void create_insert(string name, string tag_name,
-		     mapping(string:string) args)
-  {
-    inserts[name] = JSInsert(tag_name, args);
-  }
-
-  JSInsert get_insert(string name)
-  {
-    if(!inserts[name])
-      create_insert(name, 0, 0);
-    
-    return inserts[name];
-  }
-  
-  string _sprintf(int i, mapping(string:int)|void m)
-  {
-    return sprintf("JSSupport: %d, %O", filter, inserts);
-  }
-
-  void create()
-  {
-    inserts = ([ ]);
-    keys = ([ ]);
-  }
-}
