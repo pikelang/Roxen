@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.166 2000/09/03 02:33:36 per Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.167 2000/09/03 16:51:03 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -3100,10 +3100,9 @@ available fonts.
 "&_.path;":"<desc ent>The location of the font file.</desc>",
 "&_.postscript;":"<desc ent>The fonts postscript identification. Only available for true type fonts.</desc>",
 "&_.style;":"<desc ent>Font style type. Only available for true type fonts.</desc>",
-"&_.ttf;":"<desc ent>Is either yes or no depending on if the font is a true type font or not</desc>",
+"&_.format;":"<desc ent>The format of the font file, e.g. ttf.</desc>",
 "&_.version;":"<desc ent>The version of the font. Only available for true type fonts.</desc>",
 "&_.trademark;":"<desc ent>Font trademark notice. Only available for true type fonts.</desc>",
-"&_.styles;":"<desc ent>The number of different styles available for this font.</desc>",
 		])
 	     }),
     ]);
