@@ -1,0 +1,40 @@
+-*- html -*-
+<info>
+version="$Id: gtext_list,v 1.1 2000/12/30 08:20:30 nilsson Exp $";
+name="gtext_list";
+doc="Replace the normal list tags with graphical list numbers.";
+help=1;
+</info>
+
+<define container="gol">
+<if variable="help">
+  Within the "Graphical Ordered List Tag", &lt;gol&gt;, you should
+  place &lt;li&gt;-tags, just as you would do in an ordinary ol/li-construction.
+  The difference is that the numbers are generated with gtext. You can give
+  any gtext-attribute to the surrounding gli-tag. E.g.<br />
+<pre>
+&lt;gol fgcolor="#5500ff"&gt;
+&lt;li&gt;This is one reason.&lt;/li&gt;
+&lt;li&gt;This is another.&lt;/li&gt;
+&lt;/gol&gt;
+</pre>
+  would create the following effect:<br />
+<gol fgcolor="#5500ff">
+<li>This is one reason.</li>
+<li>This is another.</li>
+</gol>
+</if>
+<else>
+  <set variable="var.cnt">0</set>
+  <set variable="var.cnt-args">&_.args:none;</set>
+  <define container="li"><inc variable="var.cnt"/>
+    <tr><td align="right"><gtext ::="&var.cnt-args;">&var.cnt;</gtext></td>
+        <td><contents/></td></tr>
+  </define>
+  <table>
+  <contents/>
+  </table>
+  <undefine container="li"/>
+  <unset variable="var.cnt"/>
+</else>
+</define>
