@@ -5,7 +5,7 @@
 //
 // Henrik Grubbström 1997-01-12
 
-constant cvs_version="$Id: sqltag.pike,v 1.51 2000/03/25 03:05:02 nilsson Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.52 2000/03/30 00:50:44 per Exp $";
 constant thread_safe=1;
 #include <module.h>
 
@@ -108,7 +108,7 @@ array|object do_sql_query(string tag, mapping args, RequestID id)
   if (error)
     RXML.run_error("Couldn't connect to SQL server. "+html_encode_string(error[0]));
 
-  if (error = catch(result = tag=="sqltable"?con->big_query(args->query):con->query(args->query))) {
+  if (error = catch(result = (tag=="sqltable"?con->big_query(args->query):con->query(args->query)))) {
     error = html_encode_string(sprintf("Query %O failed. %s", args->query,
 				       con->error()||""));
     RXML.run_error(error);
@@ -169,6 +169,7 @@ string tag_sqlquery(string tag, mapping args, RequestID id)
       RXML.parse_error("No insert_id present.");
 
   id->misc->defines[" _ok"] = 1;
+  return "";
 }
 
 string tag_sqltable(string tag, mapping args, RequestID id)
