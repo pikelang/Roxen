@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2001, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.144 2004/01/22 10:54:07 jonasw Exp $
+// $Id: wizard.pike,v 1.145 2004/03/06 22:39:45 jonasw Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -317,6 +317,74 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
       color_name(a)+"\"> <input type=\"submit\" value=\"" + LOCALE(38, "Ok") + "\"></font>"
       "</td></tr>\n"
       "</table>\n");
+
+   case "color-js":
+     //  Note: This code requires ColorSelector.js
+     if (string color_input = id->variables[m->name])
+       current = color_input;
+     a = parse_color(current || "black");
+     [h, s, v] = rgb_to_hsv(@a);
+     current = upper_case(sprintf("#%02x%02x%02x", a[0], a[1], a[2]));
+     id->variables[m->name] = current;
+     
+     string output =
+       "<script language='javascript'>\n"
+       "  var PREFIX_h = " + h + ";\n"
+       "  var PREFIX_s = " + s + ";\n"
+       "  var PREFIX_v = " + v + ";\n"
+       "  function PREFIX_colsel_click(event, in_bar)\n"
+       "  {\n"
+       "    var new_hsv = colsel_click(event, \"PREFIX_\", PREFIX_h,\n"
+       "                               PREFIX_s, PREFIX_v, in_bar);\n"
+       "    PREFIX_h = new_hsv[0];\n"
+       "    PREFIX_s = new_hsv[1];\n"
+       "    PREFIX_v = new_hsv[2];\n"
+       "  }\n"
+       "  function PREFIX_colsel_type(value, update_field)\n"
+       "  {\n"
+       "    var new_hsv = colsel_type(\"PREFIX_\", value, update_field);\n"
+       "    PREFIX_h = new_hsv[0];\n"
+       "    PREFIX_s = new_hsv[1];\n"
+       "    PREFIX_v = new_hsv[2];\n"
+       "  }\n"
+       "</script>"
+       "<js-popup args-variable='__popup' event='onClick' props='color_props'>"
+       "  <table border='0' cellspacing='0' cellpadding='4' bgcolor='#ffffff'>"
+       "    <tr>"
+       "	 <td style='border: 1px solid #888888'>"
+       "	   <img src='/internal-roxen-colsel-small'"
+       "		width='128' height='128'"
+       "		onClick='PREFIX_colsel_click(event, 0); return false;' />"
+       "	 </td>"
+       "	 <td style='border: 1px solid #888888; border-left: 0px'>"
+       "	   <img id='PREFIX_colorbar' width='16' height='128'"
+       "                src='/internal-roxen-colorbar:" + h + "," + v + "," + s + "'"
+       "		onClick='PREFIX_colsel_click(event, 1); return false;' />"
+       "	 </td>"
+       "    </tr>"
+       "  </table>"
+       "</js-popup>"
+       "<table border='0' cellspacing='0' cellpadding='2'>"
+       "<tr>"
+       "  <td>"
+       "    <input type='text' size='10' value='" + current + "' id='PREFIX_color_input' "
+       "           name='" + m->name + "' onChange='PREFIX_colsel_type(this.value, 1);' />"
+       "  </td>"
+       "  <td>"
+       "    <table border='0' cellspacing='0' cellpadding='0' background='#ffffff'>"
+       "      <tr>"
+       "      	<td style='background: " + current + "; border: 1px solid #888888' "
+       "      	    id='PREFIX_preview'"
+       "      	  ><img src='/internal-roxen-colsel-arrow' width='49' height='16' border='0'"
+       "      	        style='border: 4px solid #ffffff' ::='&form.__popup;'"
+       "        ></td>"
+       "      </tr>"
+       "    </table>"
+       "  </td>"
+       "</tr>"
+       "</table>";
+     string clean_name = replace(m->name, "-", "_");
+     return replace(output, "PREFIX", clean_name);
 
    case "font":
      m->type = "select";
