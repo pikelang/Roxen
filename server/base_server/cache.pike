@@ -1,4 +1,4 @@
-string cvs_version = "$Id: cache.pike,v 1.14 1997/09/18 21:36:01 grubba Exp $";
+string cvs_version = "$Id: cache.pike,v 1.15 1997/10/09 05:08:35 grubba Exp $";
 
 #include <config.h>
 
@@ -218,7 +218,7 @@ void cache_clean()
       }
     }
   }
-  call_out(cache_clean, cache_time_out/10);
+  call_out(cache_clean, cache_time_out/4);
 }
 
 void create()
@@ -227,5 +227,5 @@ void create()
   perror("CACHE: Now online.\n");
 #endif
   cache=([  ]);
-  call_out(cache_clean, 10);
+  call_out(cache_clean, CACHE_TIME_OUT);
 }
