@@ -1,11 +1,10 @@
 #if !constant(Remote)
 # error The remote module was not present
 #endif
+#define SERVERDIR ".pike-script-servers/"
 
 #if constant(roxen)
 // Ok. This is a roxen module, then...
-
-
 #include <config.h>
 #include <module.h>
 inherit "module";
@@ -25,7 +24,7 @@ mixed *register_module()
 }
 
 
-constant cvs_version="$Id: newpikescript.pike,v 1.2 1998/03/24 02:32:13 per Exp $";
+constant cvs_version="$Id: newpikescript.pike,v 1.3 1998/03/25 05:37:03 per Exp $";
 constant thread_safe=1;
 
 void create()
@@ -33,15 +32,24 @@ void create()
   defvar("exts", ({ "pike" }), "Extensions", TYPE_STRING_LIST,
 	 "The extensions to parse");
 
+  defvar("isuser_overrides", 1, "Exec as user overrides patterns", TYPE_FLAG,
+	 "The user filesystem module sets the 'exec as user' flag, indicating "
+	 "that the script should be executed with the UID of the owner, "
+	 "if possible. If this flag is set to 'Yes', this vill have "
+	 "precedence over the 'Local URI to uid patterns' variable");
+
+  defvar("permission maps", "*: STAT\n", "Local URI to uid patterns", TYPE_TEXT,
+	 "Use these user/groups. Syntax: \"pattern: STAT\" or "
+	 "\"pattern: uid[/gid]\"<br>STAT means 'use file owner uid/gid',"
+	 " otherwise the specified uid is used.");
+
   defvar("exec-mask", "0777", 
 	 "Exec mask: Always run scripts matching this permission mask", 
-	 TYPE_STRING|VAR_MORE,
-	 "");
+	 TYPE_STRING|VAR_MORE,	 "");
 
   defvar("noexec-mask", "0000", 
 	 "Exec mask: Never run scripts matching this permission mask", 
-	 TYPE_STRING|VAR_MORE,
-	 "");
+	 TYPE_STRING|VAR_MORE, "");
 }
 
 array query_file_extensions() { return query("exts"); }
@@ -55,7 +63,7 @@ object server_for(int uid, int gid)
   string data;
   for(int i=0; i<5; i++)
   {
-    if(data = Stdio.read_bytes(".pike-script-servers/"+uid))
+    if(data = Stdio.read_bytes(SERVERDIR+uid))
     {
       string host, key;
       int port;
@@ -65,10 +73,11 @@ object server_for(int uid, int gid)
 	return servers_for[uid]=Remote.Client(host,port)->get( key );
       };
     }
-    sleep(0.02);
+    sleep(0.2);
   }
   // fallthrough..
-  rm(".pike-script-servers/"+uid);
+  werror("Failed to connect to old pike-script server.\n");
+  rm(SERVERDIR+uid);
   // So. Now we have to start a new server....
   object pid = 
     Process.create_process(({"./start","--once","--program",
@@ -89,7 +98,7 @@ object server_for(int uid, int gid)
   }
 
   int num;
-  while(!file_stat(".pike-script-servers/"+uid) && num<400)
+  while(!file_stat(SERVERDIR+uid) && num<400)
   {
     num++;
     sleep(0.01);
@@ -97,6 +106,71 @@ object server_for(int uid, int gid)
   in_progress[uid] = 0;
   if(num>399) return 0;
   return server_for(uid,gid);
+}
+
+array uid_patterns = ({});
+void start()
+{
+  foreach(query("permission maps")/"\n", string line)
+    if(strlen(line) && line[0] != '#')
+    {
+      mixed uid, patt;
+      if(sscanf(line, "%s:%s", patt, uid) == 2)
+      {
+	patt = reverse(patt);sscanf(patt, "%*[ \t]%s", patt);
+	patt = reverse(patt);sscanf(patt, "%*[ \t]%s", patt);
+	uid = reverse(uid);sscanf(uid, "%*[ \t]%s", uid);
+	uid = reverse(uid);sscanf(uid, "%*[ \t]%s", uid);
+	if(lower_case(uid) == "stat")
+	  uid_patterns += ({ patt, 0 });
+	else 
+	{
+	  mixed gid;
+	  sscanf(uid, "%s/%s", uid, gid);
+#if efun(getpwnam)
+	  if(!(int)uid && (uid != "0"))
+	  {
+	    array t = getpwnam(uid);
+	    if(!t) report_error("Failed to find UID "+uid+"\n");
+	    else {
+	      if(!gid) gid = t[3];
+	      uid = t[2];
+	    }
+	  }
+#endif
+#if efun(getgrnam)
+	  if(!(int)gid && ((string)gid != "0"))
+	  {
+	    array t = getgrnam(uid);
+	    if(!t) report_error("Failed to find GID "+gid+"\n");
+	    else gid = t[2];
+	  }
+#endif
+	  uid_patterns += ({ patt, ({uid,gid}) });
+	}
+      }
+    }
+}
+
+array (int) find_uid(string file, string isuser, object id)
+{
+  if(isuser && query("isuser_overrides"))
+    return file_stat(isuser)[5..6]; // this overrides the patterns...
+
+  foreach(uid_patterns, array p)
+    if(glob(p[0], file))
+      if(p[1]) 
+	return p[1];
+      else
+	if(catch{ // if stat failes, skip to next...
+	  return file_stat(id->realfile||id->conf->real_file(file,id))[5..6];
+	})
+	  report_error("newpikescript: Failed to stat "+
+		       (id->realfile||id->conf->real_file(file,id))+"\n");
+
+  if(isuser)return file_stat(isuser)[5..6];
+
+  return getpwnam("nodbody")?getpwnam("nodbody")[2..3]:({65535,65535});
 }
 
 mapping handle_file_extension(object file, string ext, object id)
@@ -114,17 +188,14 @@ mapping handle_file_extension(object file, string ext, object id)
   {
     uid = getuid();
     gid = getgid();
-  } else if(id->misc->is_user)
-    [uid,gid] = file_stat(id->misc->is_user)[4..5];
-  else
-    [uid,gid] = getpwnam("nodbody")[4..5];
+  } else 
+    [uid,gid] = find_uid(id->not_query, id->misc->is_user, id);
 
   object server = server_for( uid,gid );
   string file_name = id->conf->real_file( id->not_query, id );
 
   if(!server) 
-    throw(({"Failed to connect to pike-script server for "+uid,
-	  backtrace()}));
+    error("Failed to connect to pike-script server for "+uid+"\n");
 
   if(!file_name) 
   {
@@ -135,7 +206,7 @@ mapping handle_file_extension(object file, string ext, object id)
   }
   array err;
   mixed res;
-  if(err = catch(res=server->call_pikescript
+  if(err=catch(res=server->call_pikescript
 		 (file_name, roxen,mkmapping(indices(id),values(id)))))
   {
     if(!id->misc->__idipikescripterror++)
@@ -160,15 +231,19 @@ mapping handle_file_extension(object file, string ext, object id)
 // o Provide the 'pikescript' service
 // o Wait for calls from Roxen.
 
+#define eventlog(X) do{ if(_eventlog) _eventlog(X); } while(0)
+function _eventlog ;
 mapping globals = ([]);
-
 mapping scripts = ([]);
 int last_call;
-object get_pikescript(string file, mixed id)
+
+object _get_pikescript(string file, mixed id)
 {
   last_call = time();
   if(!scripts[file] || id->pragma["no-cache"])
   {
+    eventlog("Compile "+file+" "+
+	     (id->pragma["no-cache"]?"Client reload":"New"));
     string data = cpp("#define roxen globals->roxen\n# 1 \""+file+"\"\n"
 		      +Stdio.read_bytes(file), file);
     return scripts[file] = compile(data)();
@@ -176,11 +251,33 @@ object get_pikescript(string file, mixed id)
   return scripts[file];
 }
 
-mixed call_pikescript(string file, object roxen, mapping id)
+function get_pikescript = _get_pikescript;
+function set_roxen;
+string errors;
+void got_compile_error(string file, int line, string err)
 {
-  globals->roxen = roxen;
-  return get_pikescript( file, id  )->parse( id );
+  errors += sprintf("%s:%d:%s\n",file,line,err);
 }
+
+mixed _call_pikescript(string file, object roxen, mapping id)
+{
+  eventlog("Call script "+file);
+  globals->roxen = roxen;
+  errors="";
+  if(set_roxen) set_roxen(roxen, id->conf);
+  array err;
+  err = catch {
+    return get_pikescript( file, id  )->parse( id );
+  };
+  if(err[0] == "Compilation failed.\n")
+  {
+    eventlog("Compilation failed:\n   "+replace(errors,"\n", "\n   "));
+    return ("<h1>Compilation of "+file+" failed</h1><pre>"+errors+"</pre>");
+  }
+  throw(err);
+}
+
+function call_pikescript = _call_pikescript;
 
 string get_some_random_data()
 {
@@ -194,46 +291,80 @@ object remote_server;
 
 void die()
 {
-  rm(".pike-script-servers/"+getuid());
+  eventlog("Pike script server PID "+
+	   getpid()+" exiting (no accesses for 30 minutes)");
+  rm(basedir+SERVERDIR+getuid());
   kill(getpid(), 9);
 }
 
-string in_file;
+string in_file, basedir;
+
 void perhaps_die()
 {
-  if(Stdio.read_bytes(".pike-script-servers/"+getuid()) != in_file)   
+  if(Stdio.read_bytes(basedir+SERVERDIR+getuid()) != in_file)   
+  {
+    eventlog("Old pike script server PID "+
+	   getpid()+" exiting (new available?)");
     kill(getpid(), 9);
-  else if(time()-last_call>1800) 
+  }
+  else if(time()-last_call>1800)
     die();
 }
 
 int main()
 {
   object db;
+  basedir = getcwd()+"/";
   add_constant("globals", globals);
   string name = get_some_random_data();
+
   remote_server = Remote.Server(0,0);
+
   in_file=(replace(remote_server->port->query_address(),
 		   "0.0.0.0",gethostname())+"\n"+name);
+
   remote_server->provide(name, this_object());
+
+  array u = getpwuid(getuid());
+  if(u)
+  {
+    werror("Starting a pike-script server for "+u[4]+"; pid = "+getpid()+"\n");
+    cd(u[5]);
+    if(cd(".pikescripts"))
+    {
+      if(file_stat("rc.pike"))
+      {
+	object f = compile_file("rc.pike")(this_object(),remote_server);
+	if(f->call_pikescript) call_pikescript = f->call_pikescript;
+	if(f->get_pikescript)  get_pikescript = f->get_pikescript;
+	if(f->set_roxen) set_roxen = f->set_roxen;
+	if(f["eventlog"]) _eventlog = f["eventlog"];
+      }
+    }
+  }
 
   master()->add_include_path("base_server");
   master()->add_program_path("base_server");
   master()->add_module_path("etc/modules");
   db=spider;
   add_constant("roxenp", lambda(){return globals->roxen;});
-  add_constant("error", lambda(string what){throw(({ what, backtrace()}));});
+  add_constant("error", lambda(string what){array b = backtrace();
+            throw(({ what, b[..sizeof(b)-2]}));});
 
   // ok.. Now write the location to the correct file.
   // pwd is the 'server' directory.
   
-  mkdir(".pike-script-servers");
-  chmod(".pike-script-servers", 07777);
-  rm(".pike-script-servers/"+getuid());
-  Stdio.write_file(".pike-script-servers/"+getuid(), in_file);
-  chmod(".pike-script-servers/"+getuid(), 0644);
-
+  string sd = basedir+SERVERDIR;
+  mkdir(sd[..strlen(sd)-2]);
+  catch(chmod(sd[..strlen(sd)-2], 07777));
+  rm(sd+getuid());
+  Stdio.write_file(sd+getuid(), in_file);
+  chmod(sd+getuid(), 0644);
   call_out(perhaps_die, 300);
+  eventlog("Pike script server started as PID "+
+	   getpid()+" on "+gethostname());
+  werror("Pike script server up and running\n");
+  master()->set_inhibit_compile_errors( got_compile_error );
   return -1;
 }
 #endif
