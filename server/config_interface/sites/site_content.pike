@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.117 2001/07/21 11:02:41 mast Exp $
+// $Id: site_content.pike,v 1.118 2001/07/31 12:02:32 per Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -243,14 +243,19 @@ string get_eventlog( roxen.ModuleInfo o, RequestID id, int|void no_links )
   array report = indices(log), r2;
 
   last_time=0;
-  r2 = map(values(log),lambda(array a){
-     return id->variables->reversed?-a[-1]:a[0];
-  });
-  sort(r2,report);
-  for(int i=0;i<sizeof(report);i++)
+  sort(map(values(log),lambda(array a){
+			 return id->variables->reversed?-a[-1]:a[0];
+		       }),report);
+  for(int i=0;i<min(sizeof(report),1000);i++)
      report[i] = describe_error(report[i], log[report[i]],
 				id->misc->cf_locale, no_links);
-  return "<h2>"+LOCALE(216, "Events")+"</h2>" + (report*"");
+
+  if( sizeof( report ) >= 1000 )
+    report[1000] =
+      sprintf(LOCALE(0,"%d entries skipped. Present in log on disk."),
+	      sizeof( report )-999 );
+
+  return "<h2>"+LOCALE(216, "Events")+"</h2>" + (report[..1000]*"");
 }
 
 #define EC(X) niceerror( lambda(){ return (X); } , #X)
