@@ -1,4 +1,4 @@
-/* $Id: fonts.pike,v 1.20 1998/07/30 13:42:00 js Exp $ */
+/* $Id: fonts.pike,v 1.21 1998/07/30 13:44:39 js Exp $ */
 
 #include <module.h>
 
@@ -77,7 +77,6 @@ string make_font_name(string name, int size, int bold, int italic)
     if((available = get_dir(base_dir)))
       break;
   }
-  werror("make_font_name, availabe=%O\n",available);
   if(!available) return 0;
 
   string bc=(bold>=0?(bold==2?"B":(bold==1?"b":"n")):"l"), ic=(italic?"i":"n");
