@@ -3,7 +3,7 @@
 //
 // A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.457 2001/07/31 09:32:20 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.458 2001/07/31 12:01:08 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3147,10 +3147,10 @@ void low_init(void|int modules_already_enabled)
     }
     enable_module_batch_msgs = 0;
     roxenloader.pop_compile_error_handler();
-    if( strlen( ec->get() ) )
-      report_error( "While enabling modules in "+name+":\n"+ec->get() );
-    if( strlen( ec->get_warnings() ) )
-      report_warning( "While enabling modules in "+name+":\n"+ec->get_warnings());
+// if( strlen( ec->get() ) )
+// report_error( "While enabling modules in "+name+":\n"+ec->get() );
+// if( strlen( ec->get_warnings() ) )
+// report_warning( "While enabling modules in "+name+":\n"+ec->get_warnings());
   }
     
   foreach( ({this_object()})+indices( otomod ), RoxenModule mod )
