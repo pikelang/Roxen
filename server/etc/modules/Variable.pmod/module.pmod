@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.23 2000/09/28 02:07:12 per Exp $
+// $Id: module.pmod,v 1.24 2000/09/28 02:24:30 per Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1211,17 +1211,12 @@ static array(string) verify_port( string port, int nofhttp )
   }
   if(!nofhttp) // it's a port, not a URL
   {
-#if constant(Crypto) && constant(Crypto.rsa) && constant(Standards) && constant(Standards.PKCS.RSA) && constant(SSL) && constant(SSL.sslfile)
+#if constant(SSL.sslfile)
     /* All is A-OK */
 #else
     if( (protocol == "https" || protocol == "ftps") )
-    {
-      warning += 
-              "SSL support not available in this Pike version. "
-              "Transformed "+protocol+" to ";
-      protocol = protocol[ ..strlen(protocol)-2 ];
-      warning += protocol+".\n";
-    }
+      warning +=  "SSL support not available in this Pike version.\n"
+              "Please use "+protocol[..strlen(protocol)-2]+" instead.\n";
 #endif
   }
   int pno;
