@@ -26,6 +26,8 @@ string parse( RequestID id )
   if( !conf->inited )
     conf->enable_all_modules();
   id->misc->current_configuration = conf;
+  if(id->variables->initial)
+    return "<tab first last selected>&locale.initial_variables;</tab>";
   if( sizeof( path ) == 1 )
   {
     string res="";
