@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.387 2002/07/17 15:28:42 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.388 2002/07/17 16:34:22 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2550,8 +2550,9 @@ class UserTagContents
 	  flags |= RXML.FLAG_DONT_RECOVER;
 	if ((upframe = upframe_)) {
 	  // upframe is zero if we're called during preparse.
-	  if (upframe->compiled_content && !upframe->compiled_content->is_stale()) {
-	    content = upframe->compiled_content;
+	  RXML.PCode compiled_content = upframe->compiled_content;
+	  if (compiled_content && !compiled_content->is_stale()) {
+	    content = compiled_content;
 	    // The internal way to flag a compiled but unevaluated
 	    // flag is to set args to a function returning the
 	    // argument mapping. It'd be prettier with a flag for
@@ -2720,8 +2721,9 @@ class UserTagContents
 	mapping(RXML.Frame:array) orig_ctx_hidden = ctx->hidden;
 	ctx->hidden = upframe->saved_hidden;
 
-	if (upframe->compiled_content && !upframe->compiled_content->is_stale())
-	  content = upframe->compiled_content->eval (ctx);
+	RXML.PCode compiled_content = upframe->compiled_content;
+	if (compiled_content && !compiled_content->is_stale())
+	  content = compiled_content->eval (ctx);
 	else if (upframe->compile)
 	  [content, upframe->compiled_content] =
 	    ctx->eval_and_compile (content_type, upframe->content_text);
@@ -2738,7 +2740,17 @@ class UserTagContents
       else
 	content = upframe->content_result;
 
+#if constant (_disable_threads)
+      // If content is a SloppyDOM object, it's not thread safe when
+      // it extends itself lazily, so a lock is necessary. We use the
+      // interpreter lock since it's the cheapest one and since
+      // get_content doesn't block anyway.
+      Thread._Disabled threads_disabled = _disable_threads();
+#endif
       mixed result = get_content (upframe, content);
+#if constant (_disable_threads)
+      threads_disabled = 0;
+#endif
 
       // Note: result_type == content_type (except for the parser).
       return type && type != result_type ?
