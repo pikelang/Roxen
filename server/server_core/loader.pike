@@ -1,34 +1,34 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
 //
-// Roxen bootstrap program.
+// ChiliMoon bootstrap program. Sets up the environment,
+// replces the master, adds custom functions and starts core.pike.
 
-// $Id: loader.pike,v 1.354 2002/10/27 20:18:38 nilsson Exp $
+// $Id: loader.pike,v 1.355 2002/10/28 01:38:46 nilsson Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
 // #pragma strict_types
 
-// Sets up the roxen environment. Including custom functions like spawne().
-
 #include <stat.h>
 #include <config.h>
-//
+
 // NOTE:
 //	This file uses replace_master(). This implies that the
 //	master() efun when used in this file will return the old
 //	master and not the new one.
 //
+
 private static __builtin.__master new_master;
 
 constant s = spider; // compatibility
 
-int      remove_dumped;
-string   configuration_dir;
+static int(0..1) remove_dumped;
+static string    configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: loader.pike,v 1.354 2002/10/27 20:18:38 nilsson Exp $";
+constant cvs_version="$Id: loader.pike,v 1.355 2002/10/28 01:38:46 nilsson Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -114,7 +114,7 @@ int use_syslog, loggingfield;
 
 
 /*
- * Some efuns used by Roxen
+ * Some efuns used by ChiliMoon
  */
 
 static string last_id, last_from;
@@ -123,7 +123,7 @@ string get_cvs_id(string from)
   if(last_from == from) return last_id;
   last_from=from;
   catch {
-    object f = open(from,"r");
+    Stdio.File f = open(from,"r");
     string id;
     id = f->read(1024);
     if(sscanf(id, "%*s$"+"Id: %*s,v %s ", id) == 3)
@@ -135,18 +135,18 @@ string get_cvs_id(string from)
 
 void add_cvs_ids(mixed to)
 {
-  if (arrayp (to) && sizeof (to) >= 2 && arrayp (to[1]) ||
-      objectp (to) && to->is_generic_error)
-    to = to[1];
+  if (arrayp(to) && sizeof([array]to) >= 2 && arrayp(([array]to)[1]) ||
+      objectp (to) && ([object]to)->is_generic_error)
+    to = ([array|object]to)[1];
   else if (!arrayp (to)) return;
   // backtrace_frame is both objectp and arrayp but
   // does not work with foreach. FIXME: Remove this
   // kludge when backtrace_frames is foreach-compatible.
   if(objectp(to)) return;
-  foreach(to, mixed q)
-    if(arrayp (q) && sizeof(q) && stringp(q[0])) {
-      string id = get_cvs_id(q[0]);
-      catch (q[0] += id);
+  foreach([array]to, mixed q)
+    if(arrayp (q) && sizeof([array]q) && stringp(([array]q)[0])) {
+      string id = get_cvs_id(([array(string)]q)[0]);
+      catch (([array(string)]q)[0] += id);
     }
 }
 
@@ -297,29 +297,39 @@ int mkdirhier(string from, int|void mode)
   return 1;
 }
 
-// Roxen itself
+// --- Prototypes
 
 //! @ignore
-class Roxen {
+class Core {
   mixed query(string);
   void nwrite(string, int|void, int|void, void|mixed ...);
+  int main(array(string));
+}
+
+Core core;
+
+class Cache {
+  mixed cache_set(string,mixed,mixed,int|void);
+  mixed cache_lookup(string,mixed);
+  void cache_remove(string,void|mixed);
+  void cache_expire(string);
+  array(string) cache_indices(string|void);
+  void init_call_outs();
 }
 //! @endignore
-
-Roxen roxen;
 
 // The function used to report notices/debug/errors etc.
 function(string, int|void, int|void, void|mixed ...:void) nwrite;
 
 /*
- * Code to get global configuration variable values from Roxen.
+ * Code to get global configuration variable values from the core.
  */
 
 mixed query(string arg)
 {
-  if(!roxen)
-    error("No roxen object!\n");
-  return roxen->query( arg );
+  if(!core)
+    error("No server core object!\n");
+  return core->query( arg );
 }
 
 // used for debug messages. Sent to the administration interface and STDERR.
@@ -601,9 +611,9 @@ Process.Process spawn_pike(array(string) args, void|string wd,
 }
 
 // Add a few cache control related efuns
-static private object initiate_cache()
+static private Cache initiate_cache()
 {
-  object cache;
+  Cache cache;
   cache=((program)"server_core/cache")();
 
   add_constant("http_decode_string", _Roxen.http_decode_string );
@@ -728,12 +738,12 @@ int getuid(){ return 17; }
 int getgid(){ return 42; }
 #endif
 
-// Load Roxen for real
-Roxen really_load_roxen()
+// Load the server core
+Core really_load_core()
 {
   int start_time = gethrtime();
   report_debug("Loading server core ... \b");
-  Roxen res;
+  Core res;
   mixed err = catch {
     res = ((program)"server_core/core.pike")();
   };
@@ -767,7 +777,7 @@ void trace_destruct(mixed x)
 #endif /* TRACE_DESTRUCT */
 
 #define DC(X) add_dump_constant( X,nm_resolv(X) )
-function add_dump_constant;
+function(string,mixed:mixed) add_dump_constant;
 mixed nm_resolv(string x )
 {
   catch {
@@ -776,14 +786,10 @@ mixed nm_resolv(string x )
   return UNDEFINED;
 };
   
-// Set up efuns and load Roxen.
-void load_roxen()
+// Set up efuns and load the server core.
+void load_core()
 {
-//   new_master->resolv("Roxen");
-#if !constant( callablep )
-  add_constant( "callablep",
-		lambda(mixed f){return functionp(f)||programp(f);});
-#endif
+
   add_constant("cd", restricted_cd());
 #ifdef TRACE_DESTRUCT
   add_constant("destruct", trace_destruct);
@@ -807,7 +813,7 @@ void load_roxen()
 
   DC( "Roxen" );
 
-  roxen = really_load_roxen();
+  core = really_load_core();
 }
 
 
@@ -1015,10 +1021,10 @@ string roxen_path( string filename )
   filename = replace( filename, ({"$VVARDIR","$LOCALDIR"}),
                       ({"$VARDIR/"+roxen_version(),
                         getenv ("LOCALDIR") || "../local"}) );
-  if( roxen )
+  if( core )
     filename = replace( filename, 
                         "$LOGDIR", 
-                        [string]roxen->query("logdirprefix") );
+                        [string]core->query("logdirprefix") );
   else
     if( has_value( filename, "$LOGDIR" ) )
       roxen_perror("Warning: mkdirhier with $LOGDIR before variable is available\n");
@@ -1055,7 +1061,7 @@ Stdio.Stat file_stat( string filename, int|void slinks )
 //! @[perm]. Permissions defaults to 0666 if none is provided.
 //! Path variables will be expanded in @[filename]. Only objects
 //! for regular files will be returned.
-object|int(0..0) open(string filename, string mode, int|void perm)
+Stdio.File open(string filename, string mode, int|void perm)
 {
 #ifdef FD_DEBUG
   mf o;
@@ -1115,7 +1121,7 @@ string isodate( int t )
 
 void write_current_time()
 {
-  if( !roxen )
+  if( !core )
   {
     call_out( write_current_time, 10 );
     return;
@@ -1149,7 +1155,7 @@ void paranoia_throw(mixed err)
   throw(err);
 }
 
-// Roxen bootstrap code.
+// ChiliMoon bootstrap code.
 int main(int argc, array(string) argv)
 {
   // For Pike 7.3
@@ -1159,13 +1165,16 @@ int main(int argc, array(string) argv)
   Protocols.HTTP;
 
   // (. Note: Optimal implementation. .)
-  array av = copy_value( argv );
+  array(string) av = copy_value( argv );
   configuration_dir =
-    Getopt.find_option(av, "d",({"config-dir","configuration-directory" }),
-	     ({ "ROXEN_CONFIGDIR", "CONFIGURATIONS" }), "../configurations");
+    [string]Getopt.find_option(av, "d",
+			    ({ "config-dir", "configuration-directory" }),
+			    ({ "ROXEN_CONFIGDIR", "CONFIGURATIONS" }),
+			    "../configurations");
 
   remove_dumped =
-    Getopt.find_option(av, "remove-dumped",({"remove-dumped", }), 0 );
+    [int(0..1)]Getopt.find_option(av, "remove-dumped",
+				  ({ "remove-dumped" }), 0 );
 
   if( configuration_dir[-1] != '/' ) configuration_dir+="/";
 
@@ -1198,7 +1207,7 @@ int main(int argc, array(string) argv)
 #endif
 
   my_mysql_path =
-    Getopt.find_option(av, "m",({"mysql-url", }), 0,defpath);
+    [string]Getopt.find_option(av, "m", ({ "mysql-url" }), 0, defpath);
 
   if( my_mysql_path != defpath )
   {
@@ -1210,7 +1219,7 @@ int main(int argc, array(string) argv)
     mysql_path_is_remote = 1;
   }
 
-  nwrite = lambda(mixed ...x){werror(@x);};
+  nwrite = lambda(string x, mixed ... y){werror(x, @y);};
   call_out( do_main_wrapper, 0, argc, argv );
   // Get rid of the _main and main() backtrace elements..
   return -1;
@@ -2059,7 +2068,7 @@ void do_main( int argc, array(string) argv )
   add_constant("werror",        roxen_perror);
   add_constant("perror",        roxen_perror); // For compatibility.
   add_constant("roxen_perror",  roxen_perror);
-  add_constant("roxenp",        lambda() { return roxen; });
+  add_constant("roxenp",        lambda() { return core; });
   add_constant("ST_MTIME",      ST_MTIME );
   add_constant("ST_CTIME",      ST_CTIME );
   add_constant("ST_SIZE",       ST_SIZE );
@@ -2131,7 +2140,7 @@ void do_main( int argc, array(string) argv )
     "To get TTF support, download a Freetype 1 package from",
     "http://freetype.sourceforge.net/download.html#freetype1",
     "Install it, and then remove config.cache in pike and recompile. "
-    "If this was a binary release of Roxen, there should be no need "
+    "If this was a binary release of ChiliMoon, there should be no need "
     "to recompile the pike binary, since the one included should "
     "already have the FreeType interface module, installing the  "
     "library should be enough." }) );
@@ -2141,7 +2150,6 @@ void do_main( int argc, array(string) argv )
   if( has_value( hider, "--long-error-file-names" ) )
   {
     hider -= ({ "--long-error-file-names" });
-    argc = sizeof(hider);
     new_master->long_file_names = 1;
     new_master->putenv("LONG_PIKE_ERRORS", "yup");
   }
@@ -2246,7 +2254,7 @@ void do_main( int argc, array(string) argv )
   // Load prototypes (after the master is replaces, thus making it
   // possible to dump them to a .o file (in the mysql))
   object prototypes = (object)"server_core/prototypes.pike";
-  dump( "server_core/prototypes.pike", object_program( prototypes ) );
+  dump( "server_core/prototypes.pike", [program]object_program( prototypes ) );
   
   add_constant("Prototypes",    prototypes);
   add_constant("Protocol",      prototypes->Protocol );
@@ -2264,10 +2272,10 @@ void do_main( int argc, array(string) argv )
   add_constant("User",       prototypes->User );
   add_constant("Group",      prototypes->Group );
 
-  object cache = initiate_cache();
-  load_roxen();
+  Cache cache = initiate_cache();
+  load_core();
 
-  int retval = roxen->main(argc,hider);
+  int retval = core->main(hider);
   cache->init_call_outs();
 
   report_debug("-- Total boot time %2.1f seconds ---------------------------\n",
@@ -2281,7 +2289,7 @@ void do_main( int argc, array(string) argv )
 //! @decl int(0..1) callablep(mixed f)
 //! @appears callablep
 
-//! @decl roxen roxenp()
+//! @decl object roxenp()
 //! @appears roxenp
 
 //! @decl int(0..1) r_rm(string f)
