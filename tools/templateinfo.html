@@ -76,8 +76,6 @@
   <insert name="Navigation background colors p2" _wizard_name="Navigation background colors">
   <insert name="Navigation background colors p3" _wizard_name="Navigation background colors">
 
-  <insert name="Navigation images p1" _wizard_name="Navigation images">
-              
 </sql-insert>
 
 <sql-insert table="template_vars"
@@ -128,7 +126,7 @@
 	  _page_name="Heading 1 p2">
 
   <insert name="h1_size" title="Heading 1 size"
-          type="int" help=""
+          type="select" help=""
 	  _page_name="Heading 1 p2">
 	  
   <insert name="h1_align" title="Heading 1 justification"
@@ -149,7 +147,7 @@
 	  _page_name="Heading 2 p2">
 
   <insert name="h2_size" title="Heading 2 size"
-          type="int" help=""
+          type="select" help=""
 	  _page_name="Heading 2 p2">
 	  
   <insert name="h2_align" title="Heading 2 justification"
@@ -174,7 +172,7 @@
 	  _page_name="Page head text p3">
   
   <insert name="page_head_text_size" title="Page head text size"
-          type="float" help=""
+          type="select" help=""
 	  _page_name="Page head text p3">
 
   <insert name="page_head_text_align" title="Page head text justification"
@@ -214,7 +212,7 @@
 	  _page_name="Navigation text p1">
 
   <insert name="nav_size" title="Navigation size"
-          type="float" help=""
+          type="select" help=""
 	  _page_name="Navigation text p1">
 	  
   <insert name="nav_align" title="Navigation text justification"
@@ -303,7 +301,39 @@
   <insert name="Left" value="left" _variable_name="nav_align">
   <insert name="Center" value="center" _variable_name="nav_align">
   <insert name="Right" value="right" _variable_name="nav_align">
-   
+
+  <!--  Heading 1 size  -->
+  <insert name="24" value="1.0" _variable_name="h1_size">
+  <insert name="18" value="0.8" _variable_name="h1_size">
+  <insert name="14" value="0.6" _variable_name="h1_size">
+  <insert name="12" value="0.5" _variable_name="h1_size">
+  <insert name="10" value="0.4" _variable_name="h1_size">
+  <insert name="8"  value="0.3" _variable_name="h1_size">
+     
+  <!--  Heading 2 size  -->
+  <insert name="24" value="1.0" _variable_name="h2_size">
+  <insert name="18" value="0.8" _variable_name="h2_size">
+  <insert name="14" value="0.6" _variable_name="h2_size">
+  <insert name="12" value="0.5" _variable_name="h2_size">
+  <insert name="10" value="0.4" _variable_name="h2_size">
+  <insert name="8"  value="0.3" _variable_name="h2_size">
+     
+  <!--  Page head text size  -->
+  <insert name="24" value="1.0" _variable_name="page_head_text_size">
+  <insert name="18" value="0.8" _variable_name="page_head_text_size">
+  <insert name="14" value="0.6" _variable_name="page_head_text_size">
+  <insert name="12" value="0.5" _variable_name="page_head_text_size">
+  <insert name="10" value="0.4" _variable_name="page_head_text_size">
+  <insert name="8"  value="0.3" _variable_name="page_head_text_size">
+     
+  <!--  Navigation text size  -->
+  <insert name="24" value="1.0" _variable_name="nav_size">
+  <insert name="18" value="0.8" _variable_name="nav_size">
+  <insert name="14" value="0.6" _variable_name="nav_size">
+  <insert name="12" value="0.5" _variable_name="nav_size">
+  <insert name="10" value="0.4" _variable_name="nav_size">
+  <insert name="8"  value="0.3" _variable_name="nav_size">
+     
   <!--  Navigation images  -->
   <insert name="none" value="none" _variable_name="nav_bg_img">
   <insert name="bg 1" value="/img/nav1/bg1.pnm" _variable_name="nav_bg_img">
@@ -355,13 +385,13 @@
 
   <insert scheme_id=1 _variable_name="h1_color" value="black">
   <insert scheme_id=1 _variable_name="h1_font" value="helvetica">
-  <insert scheme_id=1 _variable_name="h1_size" value="3">
+  <insert scheme_id=1 _variable_name="h1_size" value="0.5">
   <insert scheme_id=1 _variable_name="h1_shadow" value="0">
   <insert scheme_id=1 _variable_name="h1_align" value="left">
 
   <insert scheme_id=1 _variable_name="h2_color" value="black">
   <insert scheme_id=1 _variable_name="h2_font" value="helvetica">
-  <insert scheme_id=1 _variable_name="h2_size" value="4">
+  <insert scheme_id=1 _variable_name="h2_size" value="0.4">
   <insert scheme_id=1 _variable_name="h2_shadow" value="0">
   <insert scheme_id=1 _variable_name="h2_align" value="left">
 
@@ -405,13 +435,13 @@
 
   <insert scheme_id=2 _variable_name="h1_color" value="white">
   <insert scheme_id=2 _variable_name="h1_font" value="officina sans bold">
-  <insert scheme_id=2 _variable_name="h1_size" value="3">
+  <insert scheme_id=2 _variable_name="h1_size" value="0.5">
   <insert scheme_id=2 _variable_name="h1_shadow" value="0">
   <insert scheme_id=2 _variable_name="h1_align" value="left">
 
   <insert scheme_id=2 _variable_name="h2_color" value="white">
   <insert scheme_id=2 _variable_name="h2_font" value="officina sans bold">
-  <insert scheme_id=2 _variable_name="h2_size" value="4">
+  <insert scheme_id=2 _variable_name="h2_size" value="0.4">
   <insert scheme_id=2 _variable_name="h2_shadow" value="0">
   <insert scheme_id=2 _variable_name="h2_align" value="left">
 
@@ -455,13 +485,13 @@
 
   <insert scheme_id=3 _variable_name="h1_color" value="black">
   <insert scheme_id=3 _variable_name="h1_font" value="officina sans bold">
-  <insert scheme_id=3 _variable_name="h1_size" value="3">
+  <insert scheme_id=3 _variable_name="h1_size" value="0.5">
   <insert scheme_id=3 _variable_name="h1_shadow" value="0">
   <insert scheme_id=3 _variable_name="h1_align" value="left">
 
   <insert scheme_id=3 _variable_name="h2_color" value="black">
   <insert scheme_id=3 _variable_name="h2_font" value="officina sans bold">
-  <insert scheme_id=3 _variable_name="h2_size" value="4">
+  <insert scheme_id=3 _variable_name="h2_size" value="0.4">
   <insert scheme_id=3 _variable_name="h2_shadow" value="0">
   <insert scheme_id=3 _variable_name="h2_align" value="left">
 
@@ -505,13 +535,13 @@
 
   <insert scheme_id=4 _variable_name="h1_color" value="black">
   <insert scheme_id=4 _variable_name="h1_font" value="officina sans bold">
-  <insert scheme_id=4 _variable_name="h1_size" value="3">
+  <insert scheme_id=4 _variable_name="h1_size" value="0.5">
   <insert scheme_id=4 _variable_name="h1_shadow" value="0">
   <insert scheme_id=4 _variable_name="h1_align" value="center">
 
   <insert scheme_id=4 _variable_name="h2_color" value="black">
   <insert scheme_id=4 _variable_name="h2_font" value="officina sans">
-  <insert scheme_id=4 _variable_name="h2_size" value="4">
+  <insert scheme_id=4 _variable_name="h2_size" value="0.4">
   <insert scheme_id=4 _variable_name="h2_shadow" value="0">
   <insert scheme_id=4 _variable_name="h2_align" value="center">
 
@@ -555,13 +585,13 @@
 
   <insert scheme_id=5 _variable_name="h1_color" value="#180c60">
   <insert scheme_id=5 _variable_name="h1_font" value="officina sans bold">
-  <insert scheme_id=5 _variable_name="h1_size" value="3">
+  <insert scheme_id=5 _variable_name="h1_size" value="0.5">
   <insert scheme_id=5 _variable_name="h1_shadow" value="0">
   <insert scheme_id=5 _variable_name="h1_align" value="left">
 
   <insert scheme_id=5 _variable_name="h2_color" value="#180c60">
   <insert scheme_id=5 _variable_name="h2_font" value="officina sans">
-  <insert scheme_id=5 _variable_name="h2_size" value="4">
+  <insert scheme_id=5 _variable_name="h2_size" value="0.5">
   <insert scheme_id=5 _variable_name="h2_shadow" value="0">
   <insert scheme_id=5 _variable_name="h2_align" value="left">
 
