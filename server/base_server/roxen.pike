@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.691 2001/08/09 12:49:59 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.692 2001/08/10 11:28:22 per Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -2566,18 +2566,25 @@ class ImageCache
   //! <pi>time()</pi>) is provided, only images with their latest access before
   //! that time are flushed.
   {
-    report_debug("Cleaning "+name+" image cache.\n");
+    int num;
+#ifdef DEBUG
+    int t = gethrtime();
+    report_debug("Cleaning "+name+" image cache ... ");
+#endif
     meta_cache = ([]);
     uid_cache  = ([]);
     rst_cache  = ([]);
     if( !age )
     {
       QUERY( "DELETE FROM "+name );
+      num = -1;
       return;
     }
 
     array(string) ids =
       QUERY( "SELECT id FROM "+name+" WHERE atime < "+age)->id;
+
+    num = sizeof( ids );
 
     int q;
     while(q<sizeof(ids)) {
@@ -2586,15 +2593,21 @@ class ImageCache
       QUERY( "DELETE FROM "+name+" WHERE id in ('"+list+"')" );
     }
 
-    catch
-    {
-      // Old versions of Mysql lacks OPTIMIZE. Not that we support
-      // them, really, but it might be nice not to throw an error, at
-      // least.
-      QUERY( "OPTIMIZE TABLE "+name );
-    };
+    if( num )
+      catch
+      {
+	// Old versions of Mysql lacks OPTIMIZE. Not that we support
+	// them, really, but it might be nice not to throw an error, at
+	// least.
+	QUERY( "OPTIMIZE TABLE "+name );
+      };
 
     meta_cache = ([]);
+#ifdef DEBUG
+    report_debug("%s removed, %dms\n",
+		 (num==-1?"all":num?(string)num:"no"),
+		 (gethrtime()-t)/1000);
+#endif
   }
 
   array(int) status(int|void age)
