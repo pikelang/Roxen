@@ -1,5 +1,5 @@
 // This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
-// $Id: flik.pike,v 1.14 1999/08/05 00:55:13 nilsson Exp $
+// $Id: flik.pike,v 1.15 1999/08/05 01:33:37 nilsson Exp $
 
 // Adds the <fl>, <ft> and <fd> tags. This makes it easy to 
 // build a folder list or an outline. Example:
@@ -16,7 +16,7 @@
 
 // made by Pontus Hagland <law@idonex.se> december -96
 
-constant cvs_version = "$Id: flik.pike,v 1.14 1999/08/05 00:55:13 nilsson Exp $";
+constant cvs_version = "$Id: flik.pike,v 1.15 1999/08/05 01:33:37 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -146,7 +146,7 @@ string tag_fl_postparse( string tag, mapping m, string cont, object id,
 }
 
 string tag_fl( string tag, mapping arg, string cont, 
-	       mapping ma, string id, mapping defines)
+	       object ma, string id, mapping defines)
 {
    mapping m=(["ld":"","t":"","cont":"","count":0]);
 
@@ -162,7 +162,7 @@ string tag_fl( string tag, mapping arg, string cont,
 
    if (defines) defines[" fl "]=m;
 
-   id->conf->api_functions()->old_rxml_warning[0](id, "fl tag ","foldlist");
+   ma->conf->api_functions()->old_rxml_warning[0](ma, "fl tag ","foldlist");
    return "<dl>"+m->cont+"</dl>";
 }
 
