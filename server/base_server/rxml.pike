@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.18 1999/08/06 03:14:17 per Exp $
+ * $Id: rxml.pike,v 1.19 1999/08/07 21:39:18 nilsson Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -805,9 +805,6 @@ string tag_for(string t, mapping args, string c, RequestID id)
   int to = (int)args->to;
   int step = (int)args->step||1;
   
-  m_delete(args, "from");
-  m_delete(args, "to");
-  m_delete(args, "variable");
   string res="";
   for(int i=from; i<=to; i+=step)
     res += "<set variable="+v+" value="+i+">"+c;
@@ -1059,15 +1056,21 @@ class IfIs
 
   int match_in_map( string value, RequestID id )
   {
-    string is;
+    string is,var;
     if(!cache) CACHE(0);
-    sscanf( value, "%s is %s", value, is );
-    value = misc? id->misc[index][value] : id[index][value];
-    if(!is || !value) return !!value;
-    value = lower_case( value );
-    is = lower_case( is );
-    return ((is==value)||glob(is,value)||
-            sizeof(Array.filter( is/",", glob, value )));
+    array arr=value/" ";
+    var = misc? id->misc[index][arr[0]] : id[index][arr[0]];
+    if(!var) return !!var;
+    var = lower_case( var );
+    if(sizeof(arr)==1) return !!var;
+    is=lower_case(arr[2..]*" ");
+    if(arr[1]=="==" || arr[1]=="=" || arr[1]=="is")
+      return ((is==var)||glob(is,var)||
+            sizeof(Array.filter( is/",", glob, var )));
+    if(arr[1]=="!=") return (is!=var);
+    if(arr[1]=="<") return ((int)var<(int)is);
+    if(arr[1]==">") return ((int)var>(int)is);
+    return 0;
   }
 }
 
