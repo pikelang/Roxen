@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.1 2000/02/04 03:01:17 per Exp $
+ * $Id: debug_info.pike,v 1.2 2000/02/07 20:27:52 grubba Exp $
  */
 inherit "roxenlib";
 #include <stat.h>
@@ -48,11 +48,12 @@ string program_name(program|object what)
   return "?";
 }
 
-mapping get_prof(string|void foo)
+mapping get_prof()
 {
   mapping res = ([]);
-  foreach(all_modules(), program prog)
-    res[program_name(prog)] = get_profiling_info( prog );
+  foreach(all_modules(), program prog) {
+    res[program_name(prog)] = prog && get_profiling_info( prog );
+  }
   return res;
 }
 
