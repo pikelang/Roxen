@@ -1,6 +1,8 @@
 prefix=$PWD
 AC_INIT(Makefile.in)
 
+AC_SET_MAKE
+
 AC_CONFIG_SUBDIRS(extern pike)
 AC_OUTPUT(Makefile)
 

@@ -3,6 +3,8 @@ SRCDIR=@srcdir@
 VPATH=@srcdir@
 prefix=@prefix@
 
+@SET_MAKE@
+
 all:	extern pike
 	@(cd extern;$(MAKE) all;cd ..)
 	@(cd pike/src;$(MAKE);cd ..)
