@@ -44,19 +44,29 @@ string available_languages(object id) {
 
 static string desc_cont(Parser.HTML parser, mapping m, string c, string rt)
 {
-  string dt=rt;
-  m->type=m->type||"";
-  if(m->tag) dt=sprintf("&lt;%s/&gt;", rt);
-  if(m->cont) dt=(m->tag?dt+" and ":"")+sprintf("&lt;%s&gt;&lt;/%s&gt;", rt, rt);
-  if(m->plugin) {
-    string a;
-    sscanf(dt,"%s#%s",a,dt);
-    dt=a+" plugin "+dt;
+  string type;
+  if(m->tag)	type = "tag";
+  if(m->cont)	type = "cont";
+  if(m->cont &&
+     m->tag)	type = "both";
+  if(m->plugin)	type = "plugin";
+  if(m->ent)	type = "entity";
+  if(m->scope)	type = "scope";
+  if(m->pi)	type = "pi";
+  if(m->type)	type = m->type;
+  switch(type)
+  {
+    case "tag":    rt = sprintf("&lt;%s/&gt;", rt); break;
+    case "cont":   rt = sprintf("&lt;%s/&gt; or "
+				"&lt;%s&gt;&lt;/%s&gt;",
+				rt, rt, rt); break;
+    case "both":   rt = sprintf("&lt;%s&gt;&lt;/%s&gt;", rt, rt); break;
+    case "plugin": rt = replace(rt, "#", " plugin "); break;
+  //case "entity": rt = rt; break;
+    case "scope":  rt = rt[..sizeof(rt)-2] + " ... ;";
+    case "pi":     rt = "&lt;" + rt + " ... ?&gt;";
   }
-  if(m->ent) dt=rt;
-  if(m->scope) dt=rt[..sizeof(rt)-2]+" ... ;";
-  if(m->pi) dt="&lt;" + rt+" ... ?&gt;";
-  return sprintf("<h2>%s</h2><p>%s</p>",dt,c);
+  return sprintf("<h2>%s</h2><p>%s</p>", rt, c);
 }
 
 static string attr_cont(Parser.HTML parser, mapping m, string c)
@@ -131,7 +141,7 @@ static string ex_html_cont(Parser.HTML parser, mapping m, string c, string rt) {
 
 static string ex_src_cont(Parser.HTML parser, mapping m, string c, string rt, void|object id) {
   string quoted = ex_quote(c);
-  string parsed = parse_rxml("<colorscope bgcolor="TDBG+">"+c+"</colorscope>", id);
+  string parsed = parse_rxml("<colorscope bgcolor="+TDBG+">"+c+"</colorscope>", id);
   return "<br />" + mktable( ({ ({ quoted }), ({ ex_quote(parsed) }) }) );
 }
 
@@ -146,7 +156,7 @@ static string list_cont( Parser.HTML parser, mapping m, string c )
 
 static string xtable_cont( mixed a, mixed b, string c )
 {
-  return "<table>"+c+"</table>";
+  return "<table border='1' cellpadding='2' cellspacing='0'>"+c+"</table>";
 }
 
 static string module_cont( mixed a, mixed b, string c )
@@ -162,6 +172,11 @@ static string xtable_row_cont( mixed a, mixed b, string c )
 static string xtable_c_cont( mixed a, mixed b, string c )
 {
   return "<td>"+c+"</td>";
+}
+
+static string xtable_h_cont( mixed a, mixed b, string c )
+{
+  return "<th>"+c+"</th>";
 }
 
 static string help_tag( mixed a, mapping m, string c )
@@ -206,6 +221,7 @@ static string format_doc(string|mapping doc, string name, void|object id)
            "xtable":xtable_cont,
            "row":xtable_row_cont,
            "c":xtable_c_cont,
+           "h":xtable_h_cont,
            "module":module_cont,
            "desc":desc_cont,
            "attr":attr_cont,
