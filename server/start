@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.201 2003/03/03 16:58:50 mast Exp $
+# $Id: start,v 1.202 2003/03/25 14:00:22 mast Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -677,6 +677,13 @@ exit_fail() {
 # This is a trick to get $ROXEN_PID and arguments containing spaces
 # correct at the same time.
 fork_roxen() {
+  if [ $verbose -gt 0 ]; then
+    dp "Server start command:"
+    for arg
+    do
+      dp "    $arg"
+    done
+  fi
   "$@" &
   ROXEN_PID=$!
 }
@@ -697,15 +704,10 @@ start_roxen() {
     cd "$cd_to"
   fi
   if [ "x$gdb" = "xno" ]; then
-    if [ $verbose -gt 0 ]; then
-      if [ $verbose -gt 1 -o -z "$once" ] ; then
-        dp "Executing $pike $args"|sed -e "s!`pwd`!.!g"
-      else
-        dp "Using the '$pike' Pike binary"|sed -e "s!`pwd`!.!g"
-      fi
-    fi
-
     if [ "x$once" = "x" ]; then
+      if [ $verbose -gt 0 ]; then
+	dp "Executing $pike $args"|sed -e "s!`pwd`!.!g"
+      fi
       eval "fork_roxen \"$pike\" $args 2>>\"${DEBUGLOG}.1\" 1>&2"
       dp "Roxen WebServer server pid $ROXEN_PID."
       wait $ROXEN_PID 2>/dev/null 1>&2
