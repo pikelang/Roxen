@@ -1,4 +1,4 @@
-<include file=gtext_headers.inc bg_color=$$bg_color$$>
+<include file=gtext_headers.inc bg_color=$$text_bg_color$$>
 <include file=shadow.inc>
 <include file=bg_image.inc>
 
@@ -11,32 +11,37 @@
 </head>
 <body bgcolor='$$bg_color$$' text='$$text_color$$' link='$$link_color$$'
       vlink='$$vlink_color$$' alink='$$alink_color$$' £bg_image£>
-  <table border=0>
+  <table border=0 cellspacing=0 cellpadding=2>
     <tr>
       <td colspan=4>
 	<gtext bg=$$bg_color$$ fg=$$title_color$$
                background=$$page_head_bar_color$$ $$title_font_style$$
                alpha="/img/night/galler.ppm" talign=$$title_align$$
                scale=$$title_size$$ £title_shadow£
-               nfont=$$title_font$$ rescale><as-meta var=title></gtext>
+               nfont='$$title_font$$' rescale><as-meta var=title></gtext>
       </td>
     </tr>
     <tr>
-      <td valign=top><img src=/internal-roxen-unit width=1 height=50>
+      <td valign=top rowspan=3>
+        <if not match='$$logo_position$$ is '>
+          <img src=/logo.gif alt=""><br><br></if><else>
+          <img src=/internal-roxen-unit width=1 height=50></else>
         <include file='$$nav_name$$'>
       </td>
-      <td width=10%></td>
-      <td valign=top>
+      <td width=15 rowspan=3 bgcolor=$$text_bg_color$$ £text_bg_image£>
+        <img src="/internal-roxen-unit" width=15 height=1></td>
+      <td valign=top bgcolor=$$text_bg_color$$ £text_bg_image£>
         <tmplinsert tag=content>
       </td>
-      <td width=10%></td>
+      <td width=15 rowspan=3 bgcolor=$$text_bg_color$$ £text_bg_image£>
+        <img src="/internal-roxen-unit" width=15 height=1></td>
     </tr>
-    <tr><td colspan=4 height=10></td></tr>
     <tr>
-      <td></td>
-      <td></td>
+      <td height=20 bgcolor=$$text_bg_color$$ £text_bg_image£>
+        <img src="/internal-roxen-unit" width=1 height=1></td>
+    </tr>
+    <tr bgcolor=$$text_bg_color$$ £text_bg_image£>
       <td align=$$footer_align$$><insert file=/footer.html></td>
-      <td></td>
     </tr>
   </table>
 

@@ -1,4 +1,4 @@
-<navigation maxwidth=130 imgbase=/img/ bg=$$bg_color$$>  
+<navigation maxwidth=130 imgbase=/img/ bg=$$bg_color$$ transparent=$$bg_color$$>  
 
   <textstyle $$nav_align$$ scale=$$nav_size$$
     font='$$nav_font$$ $$nav_font_style$$' xspacing=5 yspacing=5>

@@ -1,15 +1,12 @@
-<include file='gtext_headers.inc' bg_color=$$bg_color$$>
-
+<include file=gtext_headers.inc bg_color=$$text_bg_color$$>
+<include file=shadow.inc>
+<include file=bg_image.inc>
 <cset variable=bg_image preparse>background=<rimage-id>
   <layer>
     <solid width=3000 height=16 color='$$bg_color$$'>
     <polygon points='25,0,26,0,26,16,25,16' color='$$page_head_bar_color$$'>
   </layer>
 </rimage-id></cset>
-
-<cset variable=title_shadow></cset>
-<if match='$$title_shadow$$ is 1'><cset
-  variable=title_shadow>shadow=60,0</cset></if>
 
 <formoutput quote='£'>
 
@@ -23,31 +20,50 @@
       £bg_image£>
   <table border=0 cellpadding=0 cellspacing=0>
     <tr>
+      <td align=center><if not match='$$logo_position$$ is '>
+          <img src=/logo.gif alt=""></if><else>
+          <img src=/internal-roxen-unit width=1 height=1></else></td>
       <td><img src="/internal-roxen-unit"></td>
-      <td><img src="/internal-roxen-unit"></td>
-      <td width=100% align=$$title_align$$ valign=bottom>
+      <td colspan=2 align=$$title_align$$ valign=bottom>
         <gtext scale=$$title_size$$ £title_shadow£
-               fg=$$title_color$$ nfont=$$title_font$$
-               $$title_font_style$$><as-meta var=title></gtext>
-      </td>
+               fg=$$title_color$$ nfont='$$title_font$$'
+               $$title_font_style$$><as-meta var=title></gtext></td>
     </tr>
     <tr>
-      <td bgcolor=$$page_head_bar_color$$><img src="/internal-roxen-unit"
-          width=10 height=1></td>
-      <td bgcolor=$$page_head_bar_color$$><img src="/internal-roxen-unit"></td>
-      <td bgcolor=$$page_head_bar_color$$><img src="/internal-roxen-unit"></td>
+      <td bgcolor=$$page_head_bar_color$$>
+        <img src="/internal-roxen-unit" width=10 height=1></td>
+      <td bgcolor=$$page_head_bar_color$$>
+        <img width=1 height=1 src="/internal-roxen-unit"></td>
+      <td colspan=2 bgcolor=$$page_head_bar_color$$>
+        <img width=1 height=1 src="/internal-roxen-unit"></td>
     </tr>
     <tr>
-      <td><img src="/internal-roxen-unit"></td>
-      <td><img src="/internal-roxen-unit"></td>
-      <td align=$$page_head_image_align$$>$$page_head_image$$</td>
+      <td colspan=4><include file=page_head_image.inc></td>
     </tr>
     <tr>
-      <td valign=top><img src="/internal-roxen-unit" height=80 width=1>
+      <td rowspan=4 valign=top>
+        <img width=1 height=1 src="/internal-roxen-unit" height=80 width=1>
         <include file='$$nav_name$$'></td>
-      <td width=10%>&nbsp;</td>
-      <td valign=top><tmplinsert tag=content></td>
+      <td rowspan=4 width=15 bgcolor=$$text_bg_color$$ £text_bg_image£>
+        <img width=15 height=1 src="/internal-roxen-unit"></td>
+      <td valign=top bgcolor=$$text_bg_color$$ £text_bg_image£>
+        <tmplinsert tag=content></td>
+      <td rowspan=4 bgcolor=$$text_bg_color$$ £text_bg_image£>
+        <img src=/internal-roxen-unit width=15 height=1></td>
     </tr>
+    <tr>
+      <td height=20 bgcolor=$$text_bg_color$$ £text_bg_image£>
+        <img src="/internal-roxen-unit" width=1 height=1></td>
+    </tr>
+    <tr>
+      <td bgcolor=$$text_bg_color$$ £text_bg_image£ align=$$footer_align$$>
+        <insert file=/footer.html></td>
+    </tr>
+    <tr>
+      <td bgcolor=$$text_bg_color$$ £text_bg_image£>
+        <img src="/internal-roxen-unit" width=1 height=15></td>
+    </tr>
+
   </table>
 </body>
 </html>
