@@ -1049,6 +1049,15 @@ hej</result>
   <result pass="2">12</result>
 </test>
 
+<test>
+  <rxml type="string">
+    <cache>
+      a &var.foo; b <comment/> c
+    </cache>
+  </rxml>
+  <result>abc</result>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Random tests</comment>
