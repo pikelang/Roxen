@@ -1,3 +1,16 @@
+Changes since Roxen Challenger 1.1.1 alpha 2
+-----------------------------------------------
+
+o Now uses replace_master().
+
+o proxy_auth_needed() has moved to roxenlib.
+
+o Many files updated to Pike 0.5b2.
+
+o Startscript now inserts the value of the environment variable DEFINES
+  into commandline.
+
+o /precompiled/* no longer supported; use the new module-system instead.
 
 Changes since Roxen Challenger 1.1 
 -----------------------------------------------
