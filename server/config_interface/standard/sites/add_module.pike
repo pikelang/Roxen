@@ -191,7 +191,7 @@ string pafeaw( string errors, string warnings )
 
       foreach( res, array e )
         da_string += 
-                  "<tr valign='top'><td></td><td><img src='/internal-roxen-unit' width='30' height='1' />"
+                  "<tr valign='top'><td></td><td><img src='/internal-roxen-unit' width='30' height='1' alt='' />"
                   "</td><td align='right'>"
                   "<tt>"+e[1]+":</tt></td><td align='right'><tt>"+
                   he(e[2])+":</tt></td><td><tt>"+hc(e[3])+"</tt></td></tr>\n";

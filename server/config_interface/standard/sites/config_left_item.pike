@@ -120,11 +120,11 @@ string selected_item( string q, Configuration c, RequestID id, string module )
          foreach( variables, mapping data )
          {
            if( data->sname != module )
-             pre += ("\n<tr><td valign='top'><img src=\"&usr.item-indicator;\" width='12' height='12' /></td>"
+             pre += ("\n<tr><td valign='top'><img src=\"&usr.item-indicator;\" width='12' height='12' alt='' /></td>"
 		     "<td><a href=\""+qurl+data->sname+
                      "/\">"+Roxen.html_encode_string(data->name)+"</a></td></tr>\n");
            else
-             pre += ("\n<tr><td valign='top'><img src=\"&usr.selected-indicator;\" width='12' height='12' /></td>"
+             pre += ("\n<tr><td valign='top'><img src=\"&usr.selected-indicator;\" width='12' height='12' alt='' /></td>"
 		     "<td><b>" + Roxen.html_encode_string(data->name) + "</b></td></tr>\n");
          }
 
