@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.286 2000/03/20 07:05:19 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.287 2000/03/21 07:58:21 mast Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -2683,7 +2683,13 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
     return 0;
   }
   if( inited && me->ready_to_receive_requests )
-    catch( me->ready_to_receive_requests );
+    if( mixed q = catch( me->ready_to_receive_requests( this_object() ) ) ) {
+#ifdef MODULE_DEBUG
+      if (enable_module_batch_msgs) report_debug("\bERROR\n");
+#endif
+      report_error( "While calling ready_to_receive_requests:\n"+
+		    describe_backtrace( q ) );
+    }
   if (err = catch(pr = me->query("_priority")))
   {
 #ifdef MODULE_DEBUG
@@ -3088,13 +3094,13 @@ void low_init()
   foreach( ({this_object()})+indices( otomod ), object mod )
     if( mod->ready_to_receive_requests )
       if( mixed q = catch( mod->ready_to_receive_requests( this_object() ) ) )
-        report_debug( "While calling ready_to_receive_requests in "+
+        report_error( "While calling ready_to_receive_requests in "+
                       otomod[mod]+":\n"+
                       describe_backtrace( q ) );
 
   foreach( after_init_hooks, function q )
     if( mixed w = catch( q ) )
-      report_debug( "While calling after_init_hook %O:\n%s",
+      report_error( "While calling after_init_hook %O:\n%s",
                     q,  describe_backtrace( w ) );
 
   after_init_hooks = ({});
