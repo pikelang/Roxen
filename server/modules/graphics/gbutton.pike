@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.71 2000/12/11 13:25:51 per Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.72 2000/12/16 02:16:12 per Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -551,13 +551,25 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
   }
 
   right = frame->xsize()-right;
-  frame = stretch_layer( frame, left, right, req_width );
   if (mask != frame)
+  {
+    Image.Image i = mask->image();
+    Image.Image m = mask->alpha();
+    int x0 = -mask->xoffset();
+    int y0 = -mask->yoffset();
+    int x1 = frame->xsize()-1+x0;
+    int y1 = frame->ysize()-1+y0;
+    
+    i = i->copy(x0,y0, x1,y1);
+    if( m )
+      m = m->copy(x0,y0, x1,y1);
+    mask->set_image( i, m );
     mask = stretch_layer( mask, left, right, req_width );
-
+  }
+  frame = stretch_layer( frame, left, right, req_width );
   array(Image.Layer) button_layers = ({
      Image.Layer( Image.Image(req_width, frame->ysize(), args->bg),
-                  mask->alpha()->scale(req_width,frame->ysize())),
+                  mask->alpha()->copy(0,0,req_width-1,frame->ysize()-1)),
   });
 
 
@@ -631,6 +643,9 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
       if( args->dim )
         ll->set_alpha_value( 0.3 );
       button_layers += ({stretch_layer(ll,left,right,req_width)});
+      button_layers[-1]->set_offset( 0,
+                                     button_layers[0]->ysize()-
+                                     button_layers[-1]->ysize() );
     }
   }
 
@@ -644,6 +659,7 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
     foreach( args->extra_left_layers/",", string q )
       l += ({ ll[q] });
     l-=({ 0 });
+    l->set_offset( 0, 0 );
     if( sizeof( l ) )
     {
       object q = Image.lay( l );
@@ -653,7 +669,7 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
         int y = b->yoffset();
         b->set_offset( x+q->xsize(), y );
       }
-      q->set_offset( 0, 0 );
+      q->set_offset( 0, button_layers[0]->ysize()-q->ysize() );
       button_layers += ({ q });
     }
   }
@@ -667,11 +683,13 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
     foreach( args->extra_right_layers/",", string q )
       l += ({ ll[q] });
     l-=({ 0 });
+    l->set_offset( 0, 0 );
     if( sizeof( l ) )
     {
       object q = Image.lay( l );
       q->set_offset( button_layers[0]->xsize()+
-                     button_layers[0]->xoffset(),0);
+                     button_layers[0]->xoffset(),
+                     button_layers[0]->ysize()-q->ysize());
       button_layers += ({ q });
     }
   }
