@@ -10,9 +10,8 @@
 #include <roxen.h>
 
 inherit "module";
-inherit "roxenlib";
 
-constant cvs_version = "$Id: business.pike,v 1.137 2000/12/30 08:35:41 per Exp $";
+constant cvs_version = "$Id: business.pike,v 1.138 2001/01/03 14:29:52 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Business graphics";
@@ -142,7 +141,7 @@ string itag_names(string tag, mapping m, string contents,
   int l=query("maxstringlength")-1;
 
   if(!m->noparse)
-    contents = parse_rxml( contents, id );
+    contents = Roxen.parse_rxml( contents, id );
 
   string sep = m->separator || SEP;
 
@@ -206,7 +205,7 @@ string itag_values(string tag, mapping m, string contents,
   VOIDCODE;
 
   if(!m->noparse)
-    contents = parse_rxml( contents, id );
+    contents = Roxen.parse_rxml( contents, id );
 
   string sep = m->separator || SEP;
 
@@ -245,7 +244,7 @@ string itag_data(mapping tag, mapping m, string contents,
     linesep="\n";
 
   if(!m->noparse)
-    contents = parse_rxml( contents, id );
+    contents = Roxen.parse_rxml( contents, id );
 
   if ((sep!="\t")&&(linesep!="\t"))
     contents = contents - "\t";
@@ -360,7 +359,7 @@ string itag_colors(mapping tag, mapping m, string contents,
 		   mapping res, object id)
 {
   if(!m->noparse)
-    contents = parse_rxml( contents, id );
+    contents = Roxen.parse_rxml( contents, id );
 
   string sep = m->separator || SEP;
 
@@ -378,7 +377,7 @@ string itag_legendtext(mapping tag, mapping m, string contents,
   VOIDCODE;
 
   if(!m->noparse)
-    contents = parse_rxml( contents, id );
+    contents = Roxen.parse_rxml( contents, id );
 
   string sep = m->separator || SEP;
 
@@ -706,7 +705,7 @@ string container_diagram(string tag, mapping m, string contents,
     return(sprintf("<pre>Timers: %O\n</pre>", bg_timers) + make_tag("img", m, xml));
 #endif
 
-  return make_tag("img", m, xml);
+  return Roxen.make_tag("img", m, xml);
 }
 
 int|object PPM(string fname, object id)
@@ -724,7 +723,7 @@ mapping find_internal(string f, object id)
 mixed draw_callback(mapping args, object id)
 {
   if(id->prestate->debug)
-    return http_string_answer( sprintf("<pre>%O\n", args) );
+    return Roxen.http_string_answer( sprintf("<pre>%O\n", args) );
 
   array back=0;
   if (args->bgcolor)
