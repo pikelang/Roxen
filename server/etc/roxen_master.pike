@@ -1,7 +1,7 @@
 /*
  * Roxen master
  */
-string cvs_version = "$Id: roxen_master.pike,v 1.80 2000/03/20 07:24:31 mast Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.81 2000/03/23 20:05:27 mast Exp $";
 
 /*
  * name = "Roxen Master";
@@ -316,7 +316,10 @@ void name_program( program p, string name )
 
 string stupid_describe(mixed m, int maxlen)
 {
-  switch(string typ=sprintf("%t",m))
+  string typ;
+  if (catch (typ=sprintf("%t",m)))
+    typ = "object";		// Object with a broken _sprintf(), probably.
+  switch(typ)
   {
     case "int":
     case "float":
@@ -450,7 +453,12 @@ string describe_backtrace(mixed trace, void|int linewidth)
 	}
 	else
 	{
-	  row="Destructed object";
+	  if (tmp) {
+	    if (catch (row = sprintf("%O", tmp)))
+	      row = describe_program(object_program(tmp)) + " with broken _sprintf()";
+	  } else {
+	    row = "Destructed object";
+	  }
 	}
       }) {
 	row += sprintf("Error indexing backtrace line %d (%O)!", e, err[1]);
