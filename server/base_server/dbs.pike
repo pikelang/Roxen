@@ -1,59 +1,155 @@
 // Symbolic DB handling. 
 //
-// $Id: dbs.pike,v 1.6 2001/01/10 08:57:24 per Exp $
-
-Sql.Sql db = connect_to_my_mysql( 0, "roxen" );
-function(string,mixed...:array(mapping(string:string))) query = db->query;
+// $Id: dbs.pike,v 1.7 2001/01/14 06:31:03 per Exp $
+//! @module DBManager
+//! Manages database aliases and permissions
 
 constant NONE  = 0;
+//! No permissions. Used in @[set_permission] and @[get_permission_map]
 constant READ  = 1;
+//! Read permission. Used in @[set_permission] and @[get_permission_map]
 constant WRITE = 2;
+//! Write permission. Used in @[set_permission] and @[get_permission_map]
 
-static string short( string n )
-{
-  return lower_case(sprintf("%s%4x", n[..6],(hash( n )&65535) ));
-}
 
-static void ensure_has_users( Sql.Sql db, Configuration c )
+private
 {
-  array q = db->query( "SELECT User FROM user WHERE User=%s",
-                       short(c->name)+"_rw" );
-  if( !sizeof( q ) )
+  Sql.Sql db = connect_to_my_mysql( 0, "roxen" );
+  function(string,mixed...:array(mapping(string:string))) query=db->query;
+
+  string short( string n )
   {
-    db->query( "INSERT INTO user (Host,User,Password) "
-               "VALUES ('localhost',%s,'')",
-               short(c->name)+"_rw" ); 
-    db->query( "INSERT INTO user (Host,User,Password) "
-               "VALUES ('localhost',%s,'')",
-               short(c->name)+"_ro" ); 
+    return lower_case(sprintf("%s%4x", n[..6],(hash( n )&65535) ));
   }
-}
 
-static void set_user_permissions( Configuration c, string name, int level )
-{
-  Sql.Sql db = connect_to_my_mysql( 0, "mysql" );
-
-  ensure_has_users( db, c );
-
-  db->query("DELETE FROM db WHERE User LIKE '"+
-            short(c->name)+"%%' AND Db=%s", name );
-
-  if( level > 0 )
+  void ensure_has_users( Sql.Sql db, Configuration c )
   {
-    db->query("INSERT INTO db (Host,Db,User,Select_priv) "
-              "VALUES ('localhost',%s,%s,'Y')",
-              name, short(c->name)+"_ro");
-    if( level > 1 )
-      db->query("INSERT INTO db VALUES ('localhost',%s,%s,"
-                "'Y','Y','Y','Y','Y','Y','N','Y','Y','Y')",
-              name, short(c->name)+"_rw");
-    else 
-      db->query("INSERT INTO db  (Host,Db,User,Select_priv) "
+    array q = db->query( "SELECT User FROM user WHERE User=%s",
+                         short(c->name)+"_rw" );
+    if( !sizeof( q ) )
+    {
+      db->query( "INSERT INTO user (Host,User,Password) "
+                 "VALUES ('localhost',%s,'')",
+                 short(c->name)+"_rw" ); 
+      db->query( "INSERT INTO user (Host,User,Password) "
+                 "VALUES ('localhost',%s,'')",
+                 short(c->name)+"_ro" ); 
+    }
+  }
+
+  void set_user_permissions( Configuration c, string name, int level )
+  {
+    Sql.Sql db = connect_to_my_mysql( 0, "mysql" );
+
+    ensure_has_users( db, c );
+
+    db->query("DELETE FROM db WHERE User LIKE '"+
+              short(c->name)+"%%' AND Db=%s", name );
+
+    if( level > 0 )
+    {
+      db->query("INSERT INTO db (Host,Db,User,Select_priv) "
                 "VALUES ('localhost',%s,%s,'Y')",
-                name, short(c->name)+"_rw");
+                name, short(c->name)+"_ro");
+      if( level > 1 )
+        db->query("INSERT INTO db VALUES ('localhost',%s,%s,"
+                  "'Y','Y','Y','Y','Y','Y','N','Y','Y','Y')",
+                  name, short(c->name)+"_rw");
+      else 
+        db->query("INSERT INTO db  (Host,Db,User,Select_priv) "
+                  "VALUES ('localhost',%s,%s,'Y')",
+                  name, short(c->name)+"_rw");
+    }
+    db->query( "FLUSH PRIVILEGES" );
   }
-  db->query( "FLUSH PRIVILEGES" );
-}
+
+
+  class ROWrapper( static Sql.Sql sql )
+  {
+    static int pe;
+    static array(mapping(string:mixed)) query( string query, mixed ... args )
+    {
+      if( has_prefix( lower_case(query), "select" ) ||
+          has_prefix( lower_case(query), "show" ) ||
+          has_prefix( lower_case(query), "describe" ))
+        return sql->query( query, @args );
+      pe = 1;
+      throw( ({ "Permission denied\n", backtrace()}) );
+    }
+    static object big_query( string query, mixed ... args )
+    {
+      if( has_prefix( lower_case(query), "select" ) ||
+          has_prefix( lower_case(query), "show" ) ||
+          has_prefix( lower_case(query), "describe" ))
+        return sql->big_query( query, @args );
+      pe = 1;
+      throw( ({ "Permission denied\n", backtrace()}) );
+    }
+    static string error()
+    {
+      if( pe )
+      {
+        pe = 0;
+        return "Permission denied";
+      }
+      return sql->error();
+    }
+
+    static string host_info()
+    {
+      return sql->host_info()+" (read only)";
+    }
+
+    static mixed `[]( string i )
+    {
+      switch( i )
+      {
+       case "query": return query;
+       case "big_query": return big_query;
+       case "host_info": return host_info;
+       case "error": return error;
+       default:
+         return sql[i];
+      }
+    }
+    static mixed `->( string i )
+    {
+      return `[](i);
+    }
+  }
+  
+
+  mapping (string:Thread.Local) sql_cache = ([]);
+  Sql.Sql sql_cache_get(string what)
+  {
+    if(sql_cache[what] && sql_cache[what]->get())
+      return sql_cache[what]->get();
+    if(!sql_cache[what])
+      sql_cache[what] =  Thread.Local();
+    sql_cache[what]->set( Sql.Sql( what ) );
+    return sql_cache[what]->get();
+  }
+
+  Sql.Sql low_get( string user, string db )
+  {
+    array(mapping(string:mixed)) d =
+                query("SELECT path,local FROM dbs WHERE name=%s", db );
+    if( !sizeof( d ) )
+      return 0;
+    if( (int)d[0]["local"] )
+      return connect_to_my_mysql( user, db );
+
+    // Otherwise it's a tad more complex...  
+    if( user[strlen(user)-2..] == "ro" )
+      // Avoid type-warnings and errors.
+      //
+      // The ROWrapper object really has all member functions Sql.Sql
+      // has, but they are hidden behind an overloaded index operator.
+      // Thus, we have to fool the typechecker.
+      return [object(Sql.Sql)](object)ROWrapper( sql_cache_get( d[0]->path ) );
+    return sql_cache_get( d[0]->path );
+  }
+};
 
 array(string) list( void|Configuration c )
 //! List all database aliases.
@@ -78,10 +174,10 @@ array(string) list( void|Configuration c )
 mapping(string:mapping(string:int)) get_permission_map( )
 //! Get a list of all permissions for all databases.
 //! Return format:
-//!   ([
-//!      "dbname":([ "configname":level, ... ])
-//!      ...
-//!    ])
+//! ([
+//!  "dbname":([ "configname":level, ... ])
+//!   ...
+//!  ])
 //!
 //! Level is as for @[set_permission()].
 {
@@ -110,90 +206,6 @@ mapping(string:mapping(string:int)) get_permission_map( )
       if( zero_type( res[q][c->name] ) )
         res[q][c->name] = 0;
   return res;
-}
-
-static class ROWrapper( Sql.Sql sql )
-{
-  static int pe;
-  array(mapping(string:mixed)) query( string query, mixed ... args )
-  {
-    if( has_prefix( lower_case(query), "select" ) ||
-        has_prefix( lower_case(query), "show" ) ||
-        has_prefix( lower_case(query), "describe" ))
-      return sql->query( query, @args );
-    pe = 1;
-    throw( ({ "Permission denied\n", backtrace()}) );
-  }
-  object big_query( string query, mixed ... args )
-  {
-    if( has_prefix( lower_case(query), "select" ) ||
-        has_prefix( lower_case(query), "show" ) ||
-        has_prefix( lower_case(query), "describe" ))
-      return sql->big_query( query, @args );
-    pe = 1;
-    throw( ({ "Permission denied\n", backtrace()}) );
-  }
-  string error()
-  {
-    if( pe )
-    {
-      pe = 0;
-      return "Permission denied";
-    }
-    return sql->error();
-  }
-
-  string host_info()
-  {
-    return sql->host_info()+" (read only)";
-  }
-
-  mixed `[]( string i )
-  {
-    switch( i )
-    {
-     case "query": return query;
-     case "big_query": return big_query;
-     case "host_info": return host_info;
-     case "error": return error;
-     default:
-       return sql[i];
-    }
-  }
-  mixed `->( string i )
-  {
-    return `[](i);
-  }
-}
-  
-
-static mapping sql_cache = ([]);
-
-static Sql.Sql sql_cache_get(string what)
-{
-  if(sql_cache[what] && sql_cache[what][this_thread()])
-    return sql_cache[what][this_thread()];
-  if(!sql_cache[what])
-    sql_cache[what] =  ([ this_thread():Sql.Sql( what ) ]);
-  else
-    sql_cache[what][ this_thread() ] = Sql.Sql( what );
-  return sql_cache[what][ this_thread() ];
-}
-
-static object low_get( string user, string db )
-{
-  array(mapping(string:mixed)) d =
-           query("SELECT path,local FROM dbs WHERE name=%s", db );
-  if( !sizeof( d ) )
-    return 0;
-  if( (int)d[0]["local"] )
-    return connect_to_my_mysql( user, db );
-
-  // Otherwise it's a tad more complex...  
-  if( user[strlen(user)-2..] == "ro" )
-    return ROWrapper( sql_cache_get( d[0]->path ) );
-
-  return sql_cache_get( d[0]->path );
 }
 
 mapping db_stats( string name )
@@ -238,12 +250,10 @@ string db_url( string name )
   return d[0]->path;
 }
 
-ROWrapper get( string name, void|Configuration c, int|void ro )
+Sql.Sql get( string name, void|Configuration c, int|void ro )
 //! Get the database @[name]. If the configuration @[c] is specified,
 //! only return the database if the configuration has at least read
 //! access.
-//!
-//! The object returned contains at least the methods query() and big_query().
 {
   array(mapping(string:mixed)) res;
   if( c )
