@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.162 2004/03/23 16:46:50 mast Exp $
+// $Id: module.pike,v 1.163 2004/03/23 17:15:16 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -788,13 +788,13 @@ static string sql_table_exists( string name )
 
 
 static string|int get_my_table( string|array(string) name,
-				void|array(string)|string defenition,
+				void|array(string)|string definition,
 				string|void comment,
 				int|void flag )
 //! @decl string get_my_table( string name, array(string) types )
-//! @decl string get_my_table( string name, string defenition )
-//! @decl string get_my_table( string defenition )
-//! @decl string get_my_table( array(string) defenition )
+//! @decl string get_my_table( string name, string definition )
+//! @decl string get_my_table( string definition )
+//! @decl string get_my_table( array(string) definition )
 //!
 //! Returns the name of a table in the 'shared' database that is
 //! unique for this module. It is possible to select another database
@@ -816,7 +816,7 @@ static string|int get_my_table( string|array(string) name,
 //!               }) );
 //! @}
 //!
-//! In the second form, the whole table defenition is instead sent as
+//! In the second form, the whole table definition is instead sent as
 //! a string. The cases where the name is not included (the third and
 //! fourth form) is equivalent to the first two cases with the name ""
 //!
@@ -825,17 +825,17 @@ static string|int get_my_table( string|array(string) name,
 //! @note
 //!   This function may not be called from create
 //
-// If it exists, but it's defenition is different, the table will be
-// altered with a ALTER TABLE call to conform to the defenition. This
+// If it exists, but it's definition is different, the table will be
+// altered with a ALTER TABLE call to conform to the definition. This
 // might not work if the database the table resides in is not a MySQL
 // database (normally it is, but it's possible, using @[set_my_db],
 // to change this).
 {
   string oname;
   int ddc;
-  if( !defenition )
+  if( !definition )
   {
-    defenition = name;
+    definition = name;
     oname = name = "";
   }
   else if(strlen(name))
@@ -851,8 +851,8 @@ static string|int get_my_table( string|array(string) name,
     report_error("Failed to get SQL handle, permission denied for "+my_db+"\n");
     return 0;
   }
-  if( arrayp( defenition ) )
-    defenition *= ", ";
+  if( arrayp( definition ) )
+    definition *= ", ";
   
   if( catch(sql->query( "SELECT * FROM "+res+" LIMIT 1" )) )
   {
@@ -860,7 +860,7 @@ static string|int get_my_table( string|array(string) name,
     mixed error =
       catch
       {
-	get_my_sql()->query( "CREATE TABLE "+res+" ("+defenition+")" );
+	get_my_sql()->query( "CREATE TABLE "+res+" ("+definition+")" );
 	DBManager.is_module_table( this_object(), my_db, res,
 				   oname+"\0"+comment );
       };
@@ -879,17 +879,17 @@ static string|int get_my_table( string|array(string) name,
     }
     return __my_tables[ "&"+oname+";" ] = res;
   }
-//   // Update defenition if it has changed.
+//   // Update definition if it has changed.
 //   mixed error = 
 //     catch
 //     {
-//       get_my_sql()->query( "ALTER TABLE "+res+" ("+defenition+")" );
+//       get_my_sql()->query( "ALTER TABLE "+res+" ("+definition+")" );
 //     };
 //   if( error )
 //   {
 //     if( strlen( name ) )
 //       name = " for "+name;
-//     report_notice( "Failed to update table defenition"+name+": "+
+//     report_notice( "Failed to update table definition"+name+": "+
 // 		   describe_error( error ) );
 //   }
   if( flag )
