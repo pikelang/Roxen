@@ -1734,7 +1734,7 @@ cd</rxml>
 
 <test>
 <rxml>&page.realfile;</rxml>
-<result>etc/roxen_test/filesystem/index.html</result>
+<result>etc/test/filesystem/index.html</result>
 </test>
 
 <!-- This should probably be initialized also -->

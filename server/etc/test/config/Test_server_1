@@ -49,7 +49,7 @@
   </a></var>
   <var name='path_encoding'>     <str>iso-8859-1</str> </var>
   <var name='put'>               <int>0</int> </var>
-  <var name='searchpath'>        <str>etc/roxen_test/filesystem/</str> </var>
+  <var name='searchpath'>        <str>etc/test/filesystem/</str> </var>
   <var name='stat_cache'>        <int>0</int> </var>
   <var name='tilde'>             <int>0</int> </var>
 </region>

@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.26 2001/05/31 14:24:14 nilsson Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.27 2001/06/09 14:55:39 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Roxen self test module";
@@ -39,7 +39,7 @@ RequestID get_id()
   id->pragma=(<>);
   id->client=({});
 
-  id->realfile="etc/roxen_test/filesystem/index.html";
+  id->realfile="etc/test/filesystem/index.html";
   id->not_query="/index.html";
   id->raw_url="/index.html";
   id->method="GET";
@@ -370,7 +370,7 @@ void do_tests()
   tests_to_run = Getopt.find_option(roxen.argv, "d",({"tests"}),0,"" )/",";
   verbose = (int)Getopt.find_option(roxen.argv, "d",({"tests-verbose"}),0, 0 );
   file_stack->push( 0 );
-  file_stack->push( "etc/roxen_test/tests" );
+  file_stack->push( "etc/test/tests" );
   call_out( continue_find_tests, 0 );
 }
 
