@@ -9,7 +9,7 @@ inherit "module";
 #define LOCALE(X,Y)  _DEF_LOCALE("mod_emit_timerange",X,Y)
 // end locale stuff
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.5 2003/10/30 08:25:21 erikd Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.6 2004/02/09 09:28:02 erikd Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -977,14 +977,14 @@ constant tagdoc = ([
   </attr>
 
   <ex>
-    <emit source='timerangesql' unit='hours' 
+    <emit source='timerange' unit='hours' 
       from-date='2002-06-30' to-date='2002-06-30'
       from-time='08:00:00' to-time='12:00:00' inclusive='1'>
       <div>&_.hour;:&_.minute;:&_.second;</div>
     </emit>
   </ex>
   <ex>
-    <emit source='timerangesql' unit='days'
+    <emit source='timerange' unit='days'
       from-date='2002-11-23' to-date='2002-12-25' 
       from-week-day='monday' calendar='ISO' to-week-day='sunday' inclusive='1'>
       <if variable='_.week.day is 7'>
@@ -1025,7 +1025,7 @@ constant tagdoc = ([
   <ex-box>
     <table border='1'>
       <tr>
-        <emit source='timerangesql'
+        <emit source='timerange'
           unit='days' calendar='ISO'
           from-date='2003-03-01'
           to-date='2003-03-31'
@@ -1119,7 +1119,7 @@ constant tagdoc = ([
   Month short name. Language dependent.</p></desc>",
 
     "&_.month.number-of-days;":#"<desc type='entity'><p>
-  Integervalue of how many days the month contains. &_.month.number_of_days;
+  Integervalue of how many days the month contains. &amp;_.month.number_of_days;
   will also work due to backward compatibility.</p></desc>",
 
     "&_.week;":#"<desc type='entity'><p>
@@ -1145,10 +1145,10 @@ constant tagdoc = ([
     "&_.week.name;":#"<desc type='entity'><p>
   the name of the week. I.e. w5 for week number 5 that year.</p></desc>",
 
-    "&_.day;":#"<desc type='entity'><p>Same as &_.month.day;
+    "&_.day;":#"<desc type='entity'><p>Same as &amp;_.month.day;
         </p></desc>",
 
-    "&_.days;":#"<desc type='entity'><p>Same as &_.month.days;
+    "&_.days;":#"<desc type='entity'><p>Same as &amp;_.month.days;
         </p></desc>",
 
     "&_.ymd;":#"<desc type='entity'><p>
