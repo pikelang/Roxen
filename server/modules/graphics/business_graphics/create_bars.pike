@@ -308,7 +308,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
     (diagram_data["ymaxvalue"]-diagram_data["yminvalue"]);
   
   
-  draw_grind(diagram_data, xpos_for_yaxis, ypos_for_xaxis, 
+  draw_grid(diagram_data, xpos_for_yaxis, ypos_for_xaxis, 
 	     xmore, ymore, xstart, ystart, (float) si);
   
 
@@ -776,7 +776,7 @@ int main(int argc, string *argv)
 		 "xminvalue":0.0,
 		 "yminvalue":0,
 		 "horgrid": 0,
-		 "grindwidth": 0.5,
+		 "gridwidth": 0.5,
 		 "backlinecolor":0,//1.0,
 		 "bw":3,
   ]);

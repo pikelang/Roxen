@@ -496,12 +496,12 @@ string no_end_zeros(string f)
 }
 
 
-//Denna funktion ritar ut grinden i bilden.
-mapping draw_grind(mapping diagram_data, int|float xpos_for_yaxis,
+//Denna funktion ritar ut griden i bilden.
+mapping draw_grid(mapping diagram_data, int|float xpos_for_yaxis,
 		   int|float ypos_for_xaxis, float xmore, float ymore, 
 		   float xstart, float ystart, float si)
 {
-  //Placera ut vert grinden
+  //Placera ut vert griden
   int s=sizeof(diagram_data["xnamesimg"]);
   object graph=diagram_data["image"];
   float gw=diagram_data["gridwidth"];
@@ -526,7 +526,7 @@ mapping draw_grind(mapping diagram_data, int|float xpos_for_yaxis,
 					  1, 1)[0]);
     }
 
-  //Placera ut horgrinden
+  //Placera ut horgriden
   s=sizeof(diagram_data["ynamesimg"]);
   if ((diagram_data["horgrid"])&&
       (gw>LITET))
@@ -1264,7 +1264,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
   
 
   
-  draw_grind(diagram_data, xpos_for_yaxis, ypos_for_xaxis, 
+  draw_grid(diagram_data, xpos_for_yaxis, ypos_for_xaxis, 
 	     xmore, ymore, xstart, ystart, (float) si);
   
   //Placera ut texten på X-axeln
