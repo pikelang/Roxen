@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.115 1998/08/25 22:50:49 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.116 1998/09/15 22:35:10 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -1321,7 +1321,8 @@ object clone_me()
   c->query = query;
   c->not_query = not_query;
   c->data = data;
-  
+  c->extra_extension = extra_extension;
+
   c->auth = auth;
   c->realauth = realauth;
   c->rawauth = rawauth;
