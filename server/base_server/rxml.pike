@@ -3,7 +3,7 @@
 //
 // The Roxen RXML Parser. See also the RXML Pike modules.
 //
-// $Id: rxml.pike,v 1.307 2001/07/02 16:44:09 mast Exp $
+// $Id: rxml.pike,v 1.308 2001/07/09 04:03:54 mast Exp $
 
 
 inherit "rxmlhelp";
@@ -128,7 +128,7 @@ string parse_rxml(string what, RequestID id,
   RXML.Context ctx = RXML_CONTEXT;
 
   if (ctx && ctx->id == id)
-    parser = default_content_type->get_parser (ctx, 0, 0);
+    parser = default_content_type->get_parser (ctx, ctx->tag_set, 0);
   else {
     parser = rxml_tag_set->get_parser (default_content_type, id);
     ctx = parser->context;
