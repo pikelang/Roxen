@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.171 1998/03/05 16:17:51 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.172 1998/03/06 13:09:22 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -210,17 +210,24 @@ void handler_thread(int id)
   while(1)
   {
     if(q=catch {
-	 do
-	 {
-	   if((h=handle_queue->read()) && h && h[0])
-	   {
-	     h[0](@h[1]);
-	     h=0;
-	   }
-	 } while(1);
-       })
-      perror("Uncaught error in handler thread: "+describe_backtrace(q)+
-	     "Client will not get any response from Roxen.\n");
+      do {
+	if((h=handle_queue->read()) && h && h[0]) {
+	  h[0](@h[1]);
+	  h=0;
+	}
+      } while(1);
+    }) {
+      report_error("Uncaught error in handler thread: " +
+		   describe_backtrace(q) +
+		   "Client will not get any response from Roxen.\n");
+      if (q = catch {h = 0;}) {
+	report_error("Uncaught error in handler thread: " +
+		     describe_backtrace(q) +
+		     "Client will not get any response from Roxen.\n");
+		     
+      }
+      
+    }
   }
 }
 
