@@ -197,8 +197,6 @@ string find_module_doc( string cn, string mn, object id )
   string dbuttons;
   if( id->misc->config_settings->query( "devel_mode" ) )
     dbuttons = "<h2><cf-locale get=actions></h2>"+devel_buttons( c, mn, id );
-  else
-    dbuttons="";
 
   object m = c->find_module( replace(mn,"!","#") );
 
@@ -209,23 +207,49 @@ string find_module_doc( string cn, string mn, object id )
 
   string eventlog = get_eventlog( m, id );
 
+  string homepage = m->module_url;
+  if(stringp(homepage) && sscanf(homepage, "%*[A-Za-z0-9+.-]:%*s")==2)
+    homepage = sprintf("<br><b>Module homepage:</b> <a href=\"%s\">%s</a>",
+		       homepage, homepage);
+  else homepage = "";
+
+  string|array(string) creators = m->module_creator;
+  if(stringp(creators))
+    creators = ({ creators });
+  if(arrayp(creators))
+  {
+    creators = map(creators,
+		  lambda(string mail)
+		  {
+		    if(sscanf(mail, "%s <%s>", string name, string adr)==2 &&
+		       search(adr, "@") != -1)
+		      mail = sprintf("<a href=\"mailto:%s\">%s</a>", adr, name);
+		    return mail;
+		  });
+    creators = sprintf("<br><b>Module creator%s:</b> %s",
+		      (sizeof(creators)==1 ? "" : "s"),
+		      String.implode_nicely(creators));
+  } else creators = "";
 
   return replace( "<br><b><font size=+2>"
                   + translate(m->register_module()[1]) +
                   "</font></b><br>"
                   + translate(m->info()) + "<p>"
-                  + translate(m->status()||"") +"<p>"
-                  + eventlog
-                  + dbuttons+"<br clear=all>"+
+                  + translate(m->status()||"") + "<p>"
+                  + eventlog +
                   ( id->misc->config_settings->query( "devel_mode" ) ?
-                    "<h2>Developer information</h2>"+
-                    "<b>Identifier:</b> " + mi->sname+" <br>"
-                    "<table><tr><td valign=top><b>Type:</b></td><td "
-                    "valign=top>"+describe_type( m,mi->type )+
-                    "</td></tr></table><br>"+
-                    translate(m->file_name_and_stuff())+ "<dl>"+
+		    dbuttons + "<br clear=all>"
+		    "<h2>Developer information</h2>" +
+                    "<b>Identifier:</b> " + mi->sname + "<br>"
+		    "<b>Thread safe:</b> " + (m->thread_safe ? "Yes" : "No") +
+                    "<br><br><table border=0 cellspacing=0 cellpadding=0>"
+		    "<tr><td valign=top><b>Type:</b> </td><td "
+                    "valign=top>" + describe_type( m,mi->type ) +
+                    "</td></tr></table><br>" +
+                    translate(m->file_name_and_stuff()) +
+		    homepage + creators + "<dl>" +
                     rec_print_tree( Program.inherit_tree( object_program(m) ) )
-                    +"</dl>" : ""),
+                    + "</dl>" : homepage + creators),
                   ({ "/image/", }), ({ "/internal-roxen-" }));
 }
 
