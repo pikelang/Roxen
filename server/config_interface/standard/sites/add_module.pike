@@ -574,6 +574,7 @@ mixed do_it( RequestID id )
     }
   }
   conf->save();
+  conf->save_me();
 
   if( strlen( last_module ) )
     if (got_initial)
