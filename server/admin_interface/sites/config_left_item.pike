@@ -43,11 +43,13 @@ string selected_item( string q, Configuration c, RequestID id,
   }
   pre += 
     ("<gbutton frame-image='&usr.left-buttonframe;' href='/sites/' "
-     "width='&usr.left-buttonwidth;' bgcolor='&usr.left-buttonbg;' icon_src='&usr.selected-indicator;' "
+     "width='&usr.left-buttonwidth;' bgcolor='&usr.left-buttonbg;' "
+     "textcolor='&usr.left-buttonfg;' icon_src='&usr.selected-indicator;' "
      "align_icon='left'>Sites</gbutton><br />"
      "<gbutton frame-image='&usr.left-buttonframe;' width='&usr.left-buttonwidth;' "+
      (module == "" ?
-      "bgcolor='&usr.left-selbuttonbg;'" : "bgcolor='&usr.left-buttonbg;'") +
+      "bgcolor='&usr.left-selbuttonbg;' textcolor='&usr.left-selbuttonfg;'" :
+      "bgcolor='&usr.left-buttonbg;' textcolor='&usr.left-buttonfg;'") +
      " href='"+id->not_query+"/"+replace(c->name, " ", "%20" )+"/' "
      " icon_src='&usr.selected-indicator;' align_icon='left'>"+
      c->query_name()+"</gbutton><br /><br />");
@@ -215,13 +217,13 @@ string selected_item( string q, Configuration c, RequestID id,
   {
     pre+=sprintf("<br />\n<gbutton frame-image='&usr.left-buttonframe;' "
 		 "width='&usr.left-buttonwidth;' bgcolor='&usr.left-buttonbg;' "
-		 "href='"+pre_site_url+
+		 "textcolor='&usr.left-buttonfg;' href='"+pre_site_url+
 		 "add_module.pike?config=%s'> "
 		 "Add module </gbutton>",
 		 Roxen.http_encode_string( c->name ) )+
       sprintf("<br />\n<gbutton frame-image='&usr.left"
 	      "-buttonframe;' width='&usr.left-buttonwidth;' bgcolor='&usr."
-	      "left-buttonbg;' href='"+pre_site_url+
+	      "left-buttonbg;' textcolor='&usr.left-buttonfg;' href='"+pre_site_url+
 	      "drop_module.pike?config=%s'> "
 	      "Drop module </gbutton><br />\n",
 	      Roxen.http_encode_string( c->name ));
