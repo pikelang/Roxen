@@ -21,6 +21,7 @@ Stand alone settings (no other settings are based on these):
   ---------------------------------------------------------
   setting                       default
   ---------------------------------------------------------
+  warncolor                     darkred
   background		        none
   content-background	        none
   err-1                		/internal-roxen-err_1

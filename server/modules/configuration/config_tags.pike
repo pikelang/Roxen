@@ -177,6 +177,7 @@ class Scope_usr
 
 
       /* standalone, nothing is based on these. */
+     case "warncolor":           return "darkred";
      case "content-toptableargs": return "";
      case "left-image":           return "/internal-roxen-unit";
      case "selected-indicator":   return "/internal-roxen-next";
@@ -406,7 +407,7 @@ string set_variable( string v, object in, mixed to, object id )
    case TYPE_DIR:
      if(!strlen(val)) val = "./";
      if( !(file_stat( val ) && (file_stat( val )[ ST_SIZE ] == -2 )))
-       warning = "<font color=darkred>"+val+" is not a directory</font>";
+       warning = "<font color='&usr.warncolor;'>"+val+" is not a directory</font>";
      if( val[-1] != '/' )
        val += "/";
      break;
@@ -451,7 +452,7 @@ string set_variable( string v, object in, mixed to, object id )
          foreach( val, string d )
          {
            if( !(file_stat( d ) && (file_stat( d )[ ST_SIZE ] == -2 )))
-             warning += "<font color=darkred>"+d+
+             warning += "<font color='&usr.warncolor;'>"+d+
                      " is not a directory</font><br>";
            if( d[-1] != '/' )
              val = replace( val, d, d+"/" );
@@ -476,47 +477,66 @@ string set_variable( string v, object in, mixed to, object id )
   if (in->check_variable) {
     string err = in->check_variable(v, val);
     if (err) {
-      warning += "<font color=darkred>"+err+"</font>";
+      warning += "<font color='&usr.warncolor;'>"+err+"</font>";
     }
   }
 
   if( equal( var[ VAR_VALUE ], val ) )
     return "";
 
-  if( v=="MyWorldLocation" && in->is_configuration && val=="" )
-    return "";
+  
+  string verify_port( string port, int nofhttp )
+  {
+    if( (int)port )
+    {
+      warning += "<font color='&usr.warncolor;'>Asuming http://*:"+
+              port+"/ for "+port+"</font><br>";
+      port = "http://*:"+port+"/";
+    }
+    string protocol, host, path;
+
+    if(sscanf( port, "%[^:]://%[^/]%s", protocol, host, path ) != 3)
+      warning += "<font color='&usr.warncolor;'>"+port+" does not conform to URL syntax</font><br>";
+    else if( path == "" )
+    {
+      warning += "<font color='&usr.warncolor;'>Added / to the end of "+port+
+              "</font><br>";
+      port += "/";
+    }
+    if( nofhttp && protocol == "fhttp" )
+    {
+      warning += "<font color='&usr.warncolor;'>Changed "+protocol+" to http</font><br>";
+      protocol = "http";
+      port = lower_case( protocol )+"://"+host+path;
+    }
+    if( protocol != lower_case( protocol ) )
+    {
+      warning += "<font color='&usr.warncolor;'>Changed "+protocol+" to "+
+              lower_case( protocol )+"</font><br>";  
+      port = lower_case( protocol )+"://"+host+path;
+    }
+    if( !roxen->protocols[ lower_case( protocol ) ] )
+      warning += "<font color='&usr.warncolor;'>Warning: The protocol "+
+              lower_case(protocol)+" is unknown</font><br>";
+    return port;
+  };
+
+
+  if( v=="MyWorldLocation" && in->is_configuration )
+  {
+    if( val == "" )
+      return "";
+    val = verify_port( val, 1 );
+  }
+
 
   if( v=="URLs" && in->is_configuration ) 
   {
     foreach( val, string port )
     {
       string op = port;
-      if( (int)port )
-      {
-        warning += "<font color=darkred>Asuming http://*:"+
-                port+"/ for "+port+"</font><br>";
-        port = "http://*:"+port+"/";
-      }
-      string protocol, host, path;
-      if(sscanf( port, "%[^:]://%[^/]%s", protocol, host, path ) != 3)
-        warning += "<font color=darkred>"+port+" is not a URL</font><br>";
-      else if( path == "" )
-      {
-        warning += "<font color=darkred>Added / to the end of "+port+
-                "</font><br>";
-        port += "/";
-      }
-      if( protocol != lower_case( protocol ) )
-      {
-        warning += "<font color=darkred>Changed "+protocol+" to "+
-                lower_case( protocol )+"</font><br>";  
-        port = lower_case( protocol )+"://"+host+path;
-      }
-      if( !roxen->protocols[ lower_case( protocol ) ] )
-        warning += "<font color=darkred>Warning: The protocol "+
-                lower_case(protocol)+" is unknown</font><br>";
-      if( op != port )
-        val = replace( val, op, port );
+      port = verify_port( port, 0 );
+      val = replace( val, op, port );
     }
     string world = in->variables->MyWorldLocation[ VAR_VALUE ];
     if( !world || !sizeof(world) )

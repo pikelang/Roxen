@@ -15,7 +15,7 @@ string parse(object id)
        roxen->restart(0.5);
        return
 #"<input type=hidden name=action value=restart.pike>
-<font color=darkred><h1>&locale.restart;</h1></font>
+<font color='&usr.warncolor;'><h1>&locale.restart;</h1></font>
 Roxen will restart automatically.
 
 <p><i>You might see the old process for a while in the process table
@@ -30,7 +30,7 @@ most 15 minutes.</i> </font>";
      {
        roxen->shutdown(0.5);
        return
-#"<font color=darkred><h1>&locale.shutdown;</h1></font>
+#"<font color=&usr.warncolor;><h1>&locale.shutdown;</h1></font>
 Roxen will <b>not</b> restart automatically.
 
 <p><i>You might see the old process for a while in the process table
@@ -42,7 +42,7 @@ most 15 minutes.</i> </font>";
 
   default:
      return
-#"<blockquote><br>
+#"<blockquote><br />
 
  <cf-perm perm='Restart'>
    <gbutton href='?what=restart&action=restart.pike&class=maintenance' width=300

@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.3 2000/03/16 04:00:48 mast Exp $
+ * $Id: debug_info.pike,v 1.4 2000/04/05 21:07:47 per Exp $
  */
 inherit "roxenlib";
 #include <stat.h>
@@ -125,12 +125,12 @@ array get_prof_info(string|void foo)
 
 mixed page_1(object id)
 {
-  string res = ("<font size=+1>Profiling information</font><br>"
+  string res = ("<font size=+1>Profiling information</font><br />"
 		"All times are in seconds, and real-time. Times incude"
-		" time of child functions. No callgraph is available yet.<br>"
+		" time of child functions. No callgraph is available yet.<br />"
 		"Function glob: <input type=string name=subnode value='"+
                 html_encode_string(id->variables->subnode||"")
-                +"'><br>");
+                +"'><br />");
 
   object t = ADT.Table->table(get_prof_info("*"+
                                             (id->variables->subnode||"")+"*"),
@@ -205,13 +205,13 @@ mixed page_0( object id )
 	foo->num_total += foo[f];
 
       string col
-           ="darkred  ";
+           ="'&usr.warncolor;'";
       if((foo[f]-last_usage[f]) < foo[f]/60)
-	col="brown    ";
+	col="'&usr.warncolor;'";
       if((foo[f]-last_usage[f]) == 0)
-	col="black    ";
+	col="'&usr.fgcolor;'  ";
       if((foo[f]-last_usage[f]) < 0)
-	col="darkgreen";
+	col="'&usr.fade1;'    ";
 
       string bn = f[4..sizeof(f)-2]+"_bytes";
       foo->total_bytes += foo[ bn ];
@@ -229,7 +229,7 @@ mixed page_0( object id )
   mapping bar = roxen->query_var( "__num_clones" )||([]);
 
   object t = ADT.Table->table(table,
-                              ({ "<font color=black    >Type", "Number",
+                              ({ "<font color='&usr.fgcolor'  >Type", "Number",
                                  "Change", "KB", "Change</font>"}),
                               ({
                                 0,
@@ -311,12 +311,12 @@ mixed page_0( object id )
          break;
       }
 
-      string col = "darkred  ";
+      string col = "'&usr.warncolor;'";
 
       if( bar[ s ] > allobj[s] )
-	col="darkgreen";
+	col="'&usr.fade1;'    ";
       else if( bar[ s ] == allobj[s] )
-	col="black    ";
+	col="'&usr.fgcolor;'  ";
 
       string color = "<font color="+col+">";
       string nocolor = "</font>";
@@ -336,14 +336,14 @@ mixed page_0( object id )
     }
 
   roxen->set_var("__num_clones", bar);
-  object t = ADT.Table->table(table, ({ "<font color=black    >File",  "Clones", "Change</font>"}),
+  object t = ADT.Table->table(table, ({ "<font color='&usr.fgcolor;'  >File",  "Clones", "Change</font>"}),
                               ({ 0, ([ "type":"num" ]),([ "type":"num" ])}));
   res += "<pre>"+ADT.Table.ASCII.encode( t ) + "</pre>";
 
 #endif
 
 #if efun(_num_objects)
-  res += ("Number of destructed objects: " + _num_dest_objects() +"<br>\n");
+  res += ("Number of destructed objects: " + _num_dest_objects() +"<br />\n");
 #endif
 
   return res;

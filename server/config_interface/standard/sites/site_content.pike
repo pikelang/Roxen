@@ -217,7 +217,7 @@ string devel_buttons( Configuration c, string mn, RequestID id )
   array(string) path = ((id->misc->path_info||"")/"/")-({""});
 
   return (current_compile_errors[ mn ] ?
-          "<font color=red><pre>"+current_compile_errors[ mn ]+
+          "<font color='&usr.warncolor;'><pre>"+current_compile_errors[ mn ]+
           "</pre></font>" : "" )
          + "<input type=hidden name=section value='" +
           (id->variables->section||"Information") + "'>" +
