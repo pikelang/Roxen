@@ -1,5 +1,5 @@
 /*
- * $Id: clientlayer.pike,v 1.12 1998/09/11 07:03:32 js Exp $
+ * $Id: clientlayer.pike,v 1.13 1998/09/12 20:24:06 js Exp $
  *
  * A module for Roxen AutoMail, which provides functions for
  * clients.
@@ -10,7 +10,7 @@
 #include <module.h>
 inherit "module" : module;
 
-constant cvs_version="$Id: clientlayer.pike,v 1.12 1998/09/11 07:03:32 js Exp $";
+constant cvs_version="$Id: clientlayer.pike,v 1.13 1998/09/12 20:24:06 js Exp $";
 constant thread_safe=1;
 
 
@@ -566,6 +566,16 @@ string get_addr(string addr)
 multiset(string) list_domains()
 {
   return aggregate_multiset(@squery("select distinct domain from dns")->domain);
+}
+
+string get_user_realname(int user_id)
+{
+  array a = squery("select realname from users where user_id='%d'",
+		   user_id);
+  if(!sizeof(a))
+    return 0;
+  else
+    return a[0]->realname;
 }
 
 int find_user( string username_at_host )
