@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.324 2004/02/17 20:14:58 mast Exp $
+// $Id: module.pmod,v 1.325 2004/02/20 19:47:31 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -65,6 +65,7 @@ static object roxen;
 // #define FRAME_DEPTH_DEBUG
 // #define RXML_PCODE_DEBUG
 // #define RXML_PCODE_UPDATE_DEBUG
+// #define RXML_PCODE_COMPACT_DEBUG
 // #define TAGSET_GENERATION_DEBUG
 
 
@@ -7554,6 +7555,10 @@ static class PikeCompile
   string _sprintf() {return "RXML.PikeCompile" + OBJ_COUNT;}
 }
 
+#if defined (RXML_PCODE_COMPACT_DEBUG) && !defined (RXML_PCODE_DEBUG)
+#  define RXML_PCODE_DEBUG
+#endif
+
 #ifdef RXML_PCODE_DEBUG
 #  define PCODE_MSG(X...) do {						\
   Context _ctx_ = RXML_CONTEXT;						\
@@ -7919,6 +7924,12 @@ class PCode
     if (p_code) p_code->add_frame (ctx, frame, evaled_value, cache_frame, frame_state);
   }
 
+#ifdef RXML_PCODE_COMPACT_DEBUG
+#  define PCODE_COMPACT_MSG(X...) PCODE_MSG (X)
+#else
+#  define PCODE_COMPACT_MSG(X...) do {} while (0)
+#endif
+
   void finish()
   {
 #ifdef DEBUG
@@ -7946,28 +7957,35 @@ class PCode
 	m_delete (RXML_CONTEXT->misc, "recorded_changes");
       PCODE_MSG ("end result collection\n");
 
-      //werror ("before compact: %O\n", exec[..length - 1]);
-
       // Collapse sequences of constants. Could be done when not
       // collecting results too, but it's probably not worth the
       // bother then.
+
+      PCODE_COMPACT_MSG ("  Compact: Start with %O\n", exec[..length - 1]);
+
       int max = length;
       length = 0;
       for (int pos = 0; pos < max; pos++) {
 	mixed item = exec[pos];
+	PCODE_COMPACT_MSG ("  Compact: Got %O at %d\n", item, pos);
 
       process_entry: {
 	  VariableChange var_chg = 0;
 
 	  if (objectp (item))
 	    if (item->is_RXML_p_code_frame) {
-	      exec[length++] = exec[pos++];
-	      exec[length++] = exec[pos++];
-	      break process_entry;
+	      PCODE_COMPACT_MSG ("  Compact: Moving frame at %d..%d to %d..%d\n",
+				 pos, pos + 2, length + 2);
+	      exec[length++] = item;
+	      exec[length++] = exec[++pos];
+	      exec[length++] = exec[++pos];
+	      continue;
 	    }
 	    else if (item->is_RXML_VariableChange) {
 	      var_chg = item;
-	      exec[pos] = nil; // Ignore in the `+ below.
+	      // Ignore it in the `+ below.
+	      PCODE_COMPACT_MSG ("  Compact: Removing VariableChange at %d\n", pos);
+	      exec[pos] = nil;
 	    }
 	    else if (item->is_RXML_p_code_entry)
 	      break process_entry;
@@ -7977,15 +7995,24 @@ class PCode
 	  int end = pos + 1;
 	  while (end < max) {
 	    item = exec[end];
+	    PCODE_COMPACT_MSG ("  Compact sequence: Got %O at %d\n", item, end);
 	    if (objectp (item))
 	      if (item->is_RXML_VariableChange) {
 		// Try to compact VariableChange entries separated by
 		// constants.
 		if (var_chg) {
-		  if (!var_chg->add (item)) break;
+		  if (!var_chg->add (item)) {
+		    PCODE_COMPACT_MSG ("  Compact sequence: Adding %O to %O failed\n",
+				       item, var_chg);
+		    break;
+		  }
+		  PCODE_COMPACT_MSG ("  Compact sequence: Added %O to %O\n",
+				     item, var_chg);
 		}
 		else var_chg = item;
-		exec[end] = nil; // Ignore in the `+ below.
+		// Ignore it in the `+ below.
+		PCODE_COMPACT_MSG ("  Compact: Removing VariableChange at %d\n", end);
+		exec[end] = nil;
 	      }
 	      else if (var_chg && item != nil)
 		// Do not allow a VariableChange to switch places with
@@ -7997,19 +8024,25 @@ class PCode
 	    end++;
 	  }
 
-	  if (pos + !!var_chg < --end)
-	    exec[length++] = `+ (@exec[pos..end]);
-	  else
-	    exec[length++] = exec[pos];
+	  item = `+(@exec[pos..--end]);
+	  PCODE_COMPACT_MSG ("  Compact: Loop done - concatenating %d..%d to %O\n",
+			     pos, end, item);
 	  pos = end;
-	  if (var_chg) exec[length++] = var_chg;
-	  continue;
+
+	  if (var_chg) {
+	    PCODE_COMPACT_MSG ("  Compact: Adding VariableChange at %d\n",
+			       var_chg, length);
+	    exec[length++] = var_chg;
+	  }
+
+	  if (item == nil) continue;
 	}
 
-	exec[length++] = exec[pos];
+	PCODE_COMPACT_MSG ("  Compact: Adding %O at %d\n", item, length);
+	exec[length++] = item;
       }
 
-      //werror ("after compact: %O\n", exec[..length - 1]);
+      PCODE_COMPACT_MSG ("  Compact: Done at %d, got %O\n", max, exec[..length - 1]);
     }
 
     else {
