@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.400 2002/12/17 13:08:01 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.401 2003/09/17 15:03:44 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1331,7 +1331,7 @@ class TagCache {
     mapping(string|int:mixed) keymap, overridden_keymap;
     string key;
     RXML.PCode evaled_content;
-    int timeout, persistent_cache;
+    int timeout, persistent_cache = 0;
 
     // The following are retained for frame reuse.
     string content_hash;
@@ -1375,8 +1375,6 @@ class TagCache {
 
     array do_enter (RequestID id)
     {
-      persistent_cache = 0;
-
       if( args->nocache || args["not-post-method"] && id->method == "POST" ) {
 	do_iterate = 1;
 	key = 0;
@@ -1608,13 +1606,13 @@ class TagCache {
 
     array save()
     {
-      return ({content_hash, subvariables,
+      return ({content_hash, subvariables, persistent_cache,
 	       persistent_cache && alternatives});
     }
 
     void restore (array saved)
     {
-      [content_hash, subvariables, alternatives] = saved;
+      [content_hash, subvariables, persistent_cache, alternatives] = saved;
     }
   }
 }
