@@ -6,7 +6,7 @@
 
 // This is an extension module.
 
-constant cvs_version="$Id: pikescript.pike,v 1.59 2000/03/27 01:17:02 per Exp $";
+constant cvs_version="$Id: pikescript.pike,v 1.60 2000/04/25 23:29:53 jhs Exp $";
 
 constant thread_safe=1;
 mapping scripts=([]);
@@ -18,12 +18,12 @@ inherit "roxenlib";
 
 constant module_type = MODULE_FILE_EXTENSION;
 constant module_name = "Pike script support";
-constant module_doc  = "Support for user Pike-scripts, like CGI, but handled internally in the"
-  " server, and thus much faster, but blocking, and less secure.\n"
-  "<br><img src=\"internal-roxen-err_2\" align=\"left\" alt=\"Warning\">"
-  "NOTE: This module should not be enabled if you allow anonymous PUT!<br>\n"
-  "NOTE: Enabling this module is the same thing as letting your users run"
-  " programs with the same right as the server!";
+constant module_doc  = #"Support for user Pike-scripts, like CGI, but
+handled internally in the server, and thus much faster, but blocking,
+and less secure.<br /><img src=\"/internal-roxen-err_2\" align=\"left\"
+alt=\"Warning\" />NOTE: This module should not be enabled if you allow
+anonymous PUT!<br />NOTE: Enabling this module is the same thing as
+letting your users run programs with the same right as the server!";
 
 #if constant(__builtin.security)
 // EXPERIMENTAL: Try using the credential system.
@@ -34,7 +34,7 @@ object luser_creds = security.Creds(luser, 0, 0);
 
 void create()
 {
-  defvar("exts", ({ "pike" }), "Extensions", 
+  defvar("exts", ({ "pike" }), "Extensions",
          TYPE_STRING_LIST,
 	 "The extensions to parse");
 
@@ -47,11 +47,11 @@ void create()
 	 "If set, the decoded password value will be sent to the script. "
 	 "This is not recommended !");
 
-  defvar("exec-mask", "0777", "Exec mask: Needed", 
+  defvar("exec-mask", "0777", "Exec mask: Needed",
 	 TYPE_STRING|VAR_MORE,
 	 "Only run scripts matching this permission mask");
 
-  defvar("noexec-mask", "0000", "Exec mask: Forbidden", 
+  defvar("noexec-mask", "0000", "Exec mask: Forbidden",
 	 TYPE_STRING|VAR_MORE,
 	 "Never run scripts matching this permission mask");
 
@@ -63,7 +63,7 @@ void create()
           "inherits, if any.  Please note that pike modules are currently not "
           "automatically reloaded from disk" );
 
-  defvar( "explicitreload", 1, 
+  defvar( "explicitreload", 1,
           "Reload scripts when the user sends a no-cache header",
           TYPE_FLAG,
           "If this option is true, scripts will be reloaded if the user sends "
@@ -127,20 +127,20 @@ array|mapping call_script(function fun, object got, object file)
     err = catch {
       result = fun(got);
       // werror(sprintf("calling of script succeeded; result = %O\n", result));
-    }; 
+    };
 
   // werror("call_script() err: %O result:%O\n", err, result);
 
-  if(privs) 
+  if(privs)
     destruct(privs);
 
   if(err)
     return ({ -1, err });
 
-  if(stringp(result)) 
+  if(stringp(result))
     return http_rxml_answer( result, got );
 
-  if(result == -1) 
+  if(result == -1)
     return http_pipe_in_progress();
 
   if(mappingp(result))
@@ -199,7 +199,7 @@ mapping handle_file_extension(object f, string e, object got)
 
   if (!(fun = scripts[ got->not_query ]))
   {
-    file=f->read(); 
+    file=f->read();
 
     object e = ErrorContainer();
     master()->set_inhibit_compile_errors(e);
@@ -212,14 +212,14 @@ mapping handle_file_extension(object f, string e, object got)
     };
     master()->set_inhibit_compile_errors(0);
 
-    if(!p) 
+    if(!p)
     {
       if(strlen(e->get()))
       {
         report_debug(e->get());
         return http_string_answer("<h1>Error compiling pike script</h1><p><pre>"+
                                   html_encode_string(e->get())+"</pre>");
-      } 
+      }
       return http_string_answer("<h1>Error while compiling pike script</h1>\n");
     }
 
@@ -231,7 +231,7 @@ mapping handle_file_extension(object f, string e, object got)
 #endif /* constant(__builtin_security) */
 
     o=p();
-    if (!(fun = scripts[got->not_query]=o->parse)) 
+    if (!(fun = scripts[got->not_query]=o->parse))
       /* Should not happen */
       return http_string_answer("<h1>No string parse(object id) "
                                 "function in pike-script</h1>\n");
@@ -239,7 +239,7 @@ mapping handle_file_extension(object f, string e, object got)
   got->misc->cacheable=0;
   err=call_script(fun, got, f);
   if (mappingp(err)) return err;
-  if(arrayp(err)) 
+  if(arrayp(err))
   {
     m_delete( scripts, got->not_query );
     throw( err[1] );
