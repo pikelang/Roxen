@@ -5,7 +5,7 @@
 //
 // Henrik Grubbström 1997-01-12
 
-constant cvs_version="$Id: sqltag.pike,v 1.62 2000/10/18 21:27:12 mast Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.63 2000/10/18 23:23:47 mast Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -108,7 +108,7 @@ array|object do_sql_query(mapping args, RequestID id, void|int big_query)
   }
 
   if (!args->query)
-    RXML.parse_error("No query.");
+    RXML.parse_error("No query.\n");
 
   if (args->parse)
     args->query = Roxen.parse_rxml(args->query, id);
@@ -124,11 +124,12 @@ array|object do_sql_query(mapping args, RequestID id, void|int big_query)
     error = catch(con = Sql.sql(lower_case(host)=="localhost"?"":host));
 
   if (error)
-    RXML.run_error("Couldn't connect to SQL server. "+Roxen.html_encode_string(error[0]));
+    RXML.run_error("Couldn't connect to SQL server: "+error[0]+"\n");
 
   if (error = catch(result = (big_query?con->big_query(args->query):con->query(args->query)))) {
-    error = Roxen.html_encode_string(sprintf("Query %O failed. %s", args->query,
-				       con->error()||""));
+    error = con->error();
+    if (error) error = ": " + error;
+    error = sprintf("Query failed%s\n", error||".");
     RXML.run_error(error);
   }
 
@@ -225,7 +226,7 @@ class TagSQLQuery {
 	if(args->dbobj && args->dbobj->master_sql)
 	  RXML.user_set_var(args["mysql-insert-id"], args->dbobj->master_sql->insert_id());
 	else
-	  RXML.parse_error("No insert_id present.");
+	  RXML.parse_error("No insert_id present.\n");
 
       id->misc->defines[" _ok"] = 1;
       return 0;
