@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.553 2004/04/17 16:04:59 jonasw Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.554 2004/04/19 14:25:15 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2343,8 +2343,6 @@ static RequestID make_fake_id (string s, RequestID id)
 
   // id->misc->common is here for compatibility; it's better to use
   // id->root_id->misc.
-  if ( !id->misc )
-    id->misc = ([]);
   if ( !id->misc->common )
     id->misc->common = ([]);
 
@@ -2397,7 +2395,7 @@ int|string try_get_file(string s, RequestID id,
   fake_id->misc->internal_get = !not_internal;
   fake_id->method = "GET";
 
-  array a = open_file( s, "r", fake_id, !not_internal );
+  array a = open_file( fake_id->not_query, "r", fake_id, !not_internal );
   if(a && a[0]) {
     m = a[1];
     m->file = a[0];
