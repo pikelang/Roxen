@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.238 2000/08/30 00:44:27 mast Exp $
+// $Id: rxml.pike,v 1.239 2000/09/01 22:34:09 mast Exp $
 
 
 inherit "rxmlhelp";
@@ -905,7 +905,8 @@ class TagUndefine {
 
 class Tracer
 {
-  inherit "roxenlib";
+  // Note: \n is used sparingly in output to make it look nice even
+  // inside <pre>.
   string resolv="<ol>";
   int level;
 
@@ -914,68 +915,83 @@ class Tracer
     return "Tracer()";
   }
 
+#if constant (gethrtime)
   mapping et = ([]);
-#if efun(gethrvtime)
+#endif
+#if constant (gethrvtime)
   mapping et2 = ([]);
 #endif
 
-  string module_name(function|RoxenModule m)
+  local void start_clock()
   {
-    if(!m)return "";
-    if(functionp(m)) m = function_object(m);
-    catch {
-      return (strlen(m->query("_name")) ? m->query("_name") :
-              (m->query_name&&m->query_name()&&strlen(m->query_name()))?
-              m->query_name():m->register_module()[1]);
-    };
-    return "Internal RXML tag";
-  }
-
-  void trace_enter_ol(string type, function|RoxenModule module)
-  {
-    level++;
-
-    string efont="", font="";
-    if(level>2) {efont="</font>";font="<font size=-1>";}
-    resolv += (font+"<b><li></b> "+type+" "+module_name(module)+"<ol>"+efont);
-#if efun(gethrvtime)
+#if constant (gethrvtime)
     et2[level] = gethrvtime();
 #endif
-#if efun(gethrtime)
+#if constant (gethrtime)
     et[level] = gethrtime();
 #endif
   }
 
+  local string stop_clock()
+  {
+    string res;
+#if constant (gethrtime)
+    res = sprintf("%.5f", (gethrtime() - et[level])/1000000.0);
+#else
+    res = "";
+#endif
+#if constant (gethrvtime)
+    res += sprintf(" (CPU = %.2f)", (gethrvtime() - et2[level])/1000000.0);
+#endif
+    return res;
+  }
+
+  void trace_enter_ol(string type, function|object thing)
+  {
+    level++;
+
+    if (thing) {
+      string name = Roxen.get_modfullname (Roxen.get_owning_module (thing));
+      if (name)
+	name = "module " + name;
+      else if (this_program conf = Roxen.get_owning_config (thing))
+	name = "configuration " + Roxen.html_encode_string (conf->query_name());
+      else
+	name = Roxen.html_encode_string (sprintf ("object %O", thing));
+      type += " in " + name;
+    }
+
+    string efont="", font="";
+    if(level>2) {efont="</font>";font="<font size=-1>";}
+
+    resolv += font + "<li><b>»</b> " + type + "<ol>" + efont;
+    start_clock();
+  }
+
   void trace_leave_ol(string desc)
   {
-#if efun(gethrtime)
-    int delay = gethrtime()-et[level];
-#endif
-#if efun(gethrvtime)
-    int delay2 = gethrvtime()-et2[level];
-#endif
     level--;
+
     string efont="", font="";
     if(level>1) {efont="</font>";font="<font size=-1>";}
-    resolv += (font+"</ol>"+
-#if efun(gethrtime)
-	       "Time: "+sprintf("%.5f",delay/1000000.0)+
-#endif
-#if efun(gethrvtime)
-	       " (CPU = "+sprintf("%.2f)", delay2/1000000.0)+
-#endif /* efun(gethrvtime) */
-	       "<br />"+Roxen.html_encode_string(desc)+efont)+"<p>";
 
+    resolv += "</ol>" + font;
+    if (sizeof (desc))
+      resolv += "<b>«</b> " + Roxen.html_encode_string(desc);
+    string time = stop_clock();
+    if (sizeof (time)) {
+      if (sizeof (desc)) resolv += "<br />";
+      resolv += "<i>Time: " + time + "</i>";
+    }
+    resolv += efont + "</li>\n";
   }
 
   string res()
   {
     while(level>0) trace_leave_ol("");
-    return resolv+"</ol>";
+    return resolv + "</ol>";
   }
 }
-
-function trace;
 
 class TagTrace {
   inherit RXML.Tag;
@@ -996,14 +1012,18 @@ class TagTrace {
       b = id->misc->trace_leave;
       id->misc->trace_enter = t->trace_enter_ol;
       id->misc->trace_leave = t->trace_leave_ol;
-      t->trace_enter_ol( "tag &lt;trace&gt;", trace);
+      t->start_clock();
       return 0;
     }
 
     array do_return(RequestID id) {
       id->misc->trace_enter = a;
       id->misc->trace_leave = b;
-      content += "\n<h1>Trace report</h1>"+t->res()+"</ol>";
+      result = "<h3>Tracing</h3>" + content +
+	"<h3>Trace report</h3>" + t->res();
+      string time = t->stop_clock();
+      if (sizeof (time))
+	result += "<h3>Total time: " + time + "</h3>";
       return 0;
     }
   }
