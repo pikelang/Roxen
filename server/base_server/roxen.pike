@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.798 2002/06/07 17:14:53 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.799 2002/06/12 22:28:48 nilsson Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -39,9 +39,7 @@ Thread.Thread backend_thread;
 
 // --- Locale defines ---
 
-//<locale-token project="roxen_start">   LOC_S </locale-token>
 //<locale-token project="roxen_message"> LOC_M </locale-token>
-#define LOC_S(X,Y)	_STR_LOCALE("roxen_start",X,Y)
 #define LOC_M(X,Y)	_STR_LOCALE("roxen_message",X,Y)
 #define CALL_M(X,Y)	_LOCALE_FUN("roxen_message",X,Y)
 
@@ -652,9 +650,9 @@ void start_handler_threads()
 {
   if (query("numthreads") <= 1) {
     set( "numthreads", 1 );
-    report_warning (LOC_S(1, "Starting one thread to handle requests.")+"\n");
+    report_warning ("Starting one thread to handle requests.\n");
   } else { 
-    report_notice (LOC_S(2, "Starting %d threads to handle requests.")+"\n",
+    report_notice ("Starting %d threads to handle requests.\n",
 		   query("numthreads") );
   }
   array(object) new_threads = ({});
@@ -1981,7 +1979,7 @@ int register_url( string url, Configuration conf )
     return 0;
   }
   sort_urls();
-  report_notice(" "+LOC_S(3, "Registered %s for %s")+"\n",
+  report_notice(" Registered %s for %s\n",
 		url, conf->query_name() );
 
   return 1;
@@ -3533,7 +3531,6 @@ void create()
 {
   // Register localization projects
 #define __REG_PROJ Locale.register_project
-  __REG_PROJ("roxen_""start",   "translations/%L/roxen_start.xml");
   __REG_PROJ("roxen_""config",  "translations/%L/roxen_config.xml");
   __REG_PROJ("roxen_""message", "translations/%L/roxen_message.xml");
   __REG_PROJ("admin_""tasks",   "translations/%L/admin_tasks.xml");

@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.520 2002/06/11 09:59:11 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.521 2002/06/12 22:28:48 nilsson Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -15,11 +15,9 @@ constant cvs_version = "$Id: configuration.pike,v 1.520 2002/06/11 09:59:11 nils
 #define CATCH(P,X) do{mixed e;if(e=catch{X;})report_error("While "+P+"\n"+describe_backtrace(e));}while(0)
 
 // --- Locale defines ---
-//<locale-token project="roxen_start">   LOC_S  </locale-token>
 //<locale-token project="roxen_config">  LOC_C  </locale-token>
 //<locale-token project="roxen_message"> LOC_M  </locale-token>
 //<locale-token project="roxen_config"> DLOCALE </locale-token>
-#define LOC_S(X,Y)  _STR_LOCALE("roxen_start",X,Y)
 #define LOC_C(X,Y)  _STR_LOCALE("roxen_config",X,Y)
 #define LOC_M(X,Y)  _STR_LOCALE("roxen_message",X,Y)
 #define DLOCALE(X,Y) _DEF_LOCALE("roxen_config",X,Y)
@@ -3288,8 +3286,8 @@ void low_init(void|int modules_already_enabled)
 
   inited = 1;
   if (!modules_already_enabled)
-    report_notice(LOC_S(4, "All modules for %s enabled in %3.1f seconds") +
-		  "\n\n", query_name(), (gethrtime()-start_time)/1000000.0);
+    report_notice("All modules for %s enabled in %3.1f seconds\n\n",
+		  query_name(), (gethrtime()-start_time)/1000000.0);
 
 #ifdef SNMP_AGENT
   // Start trap after real virt.serv. loading
