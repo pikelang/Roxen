@@ -18,7 +18,7 @@ import Stdio;
 
 inherit "polyline.pike";
 
-constant cvs_version = "$Id: create_graph.pike,v 1.103 1998/04/26 13:36:49 hedda Exp $";
+constant cvs_version = "$Id: create_graph.pike,v 1.104 1998/06/24 02:10:43 js Exp $";
 
 /*
  * name = "BG: Create graphs";
@@ -31,12 +31,7 @@ Create_graph draws a graph but there are also some other functions
 used by create_pie and create_bars.
 */ 
 
-#define GETFONT(WHATFONT) \
-    object notext = get_font(diagram_data->WHATFONT||diagram_data->font \
-			     , 32, 0, 0,  \
-			     "left",0,0); \
-    if (!(notext)) \
-      throw(({"Missing font or similar error!\n", backtrace() }));
+#define GETFONT(WHATFONT) object notext=resolve_font(diagram_data->WHATFONT||diagram_data->font);
 
 
 

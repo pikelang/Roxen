@@ -19,7 +19,7 @@ import Stdio;
 inherit "polyline.pike";
 inherit "create_graph.pike";
 
-constant cvs_version = "$Id: create_bars.pike,v 1.70 1998/04/26 13:36:44 hedda Exp $";
+constant cvs_version = "$Id: create_bars.pike,v 1.71 1998/06/24 02:10:42 js Exp $";
 
 /*
  * name = "BG: Create bars";
@@ -31,14 +31,7 @@ These functions were written by Henrik "Hedda" Wallin (hedda@idonex.se)
 Create_bars can draw normal bars, sumbars and normalized sumbars.
 */ 
 
-
-#define GETFONT(WHATFONT) \
-    object notext = get_font(diagram_data->WHATFONT||diagram_data->font \
-			     , 32, 0, 0,  \
-			     "left",0,0); \
-    if (!(notext)) \
-      throw(({"Missing font or similar error!\n", backtrace() }));
-
+#define GETFONT(WHATFONT) object notext=resolve_font(diagram_data->WHATFONT||diagram_data->font);
 
 mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 {

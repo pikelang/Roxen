@@ -6,7 +6,7 @@
  * in October 1997
  */
 
-constant cvs_version = "$Id: business.pike,v 1.102 1998/04/26 18:06:41 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.103 1998/06/24 02:10:40 js Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -549,6 +549,7 @@ string syntax( string error )
 }
 
 mapping(string:mapping) cache = ([]);
+mapping(string:object) palette_cache = ([]);
 int datacounter = 0; 
 
 string quote(mapping in)
@@ -570,7 +571,8 @@ constant _diagram_args =
    "gridwidth", "vertgrid", "labels", "labelsize", "legendfontsize",
    "legendfont",
    "legend_texts", "labelcolor", "axwidth", "linewidth", "center",
-   "rotate", "image", "bw", "eng", "neng", "xmin", "ymin", "turn", "notrans" });
+   "rotate", "image", "bw", "eng", "neng", "xmin", "ymin", "turn", "notrans",
+   "usemymagicpalette"});
 constant diagram_args = mkmapping(_diagram_args,_diagram_args);
 
 constant _shuffle_args = 
@@ -600,6 +602,7 @@ string tag_diagram(string tag, mapping m, string contents,
 
   if(m->help) return register_module()[2];
 
+  if(m->usemymagicpalette) res->usemymagicpalette=m->usemymagicpalette;
   if(m->type) res->type = m->type;
   else return syntax("You must specify a type for your table.<br>"
 		     "Valid types are: "
@@ -917,7 +920,7 @@ mapping find_file(string f, object id)
   if( f=="" )
     return http_img_answer( "This is BG's mountpoint." );
 
-  mapping res = unquote( f );
+  mapping res = copy_value( unquote( f ) );
 
   if(!res)
     return http_img_answer( "Please reload this page." );
@@ -997,31 +1000,49 @@ mapping find_file(string f, object id)
   if (diagram_data->bg_timers)
     bg_timers+=diagram_data->bg_timers;
 #endif
-
-
-  if (res->image)
+  object ct;
+  if(res->usemymagicpalette)
   {
-    if (res->turn)
-      img=img->rotate_ccw();
-	
-    if (back)
-      return http_string_answer(
-	       Image.GIF.encode( img,
-				 Image.colortable( 6,6,6,
-						   ({0,0,0}),
-						   ({255,255,255}),
-						   39)->floyd_steinberg(), 
-						   @back ),
-	       "image/gif");  
-    else
-      return http_string_answer(
-               Image.GIF.encode( img,
-				 Image.colortable( 6,6,6,
-						   ({0,0,0}),
-						   ({255,255,255}),
-						   39)->floyd_steinberg() ),
-	       "image/gif");
+    ct = palette_cache[res->usemymagicpalette];
+    if(ct)
+      werror("Palette found in in cache...\n");
+    if(!ct)
+      ct = palette_cache[res->usemymagicpalette] = Image.colortable(img)->nodither();
   }
+
+//   if (res->image)
+//   {
+//     werror("blablasdfbsdfgbdfgb");
+  if (res->turn)
+    img=img->rotate_ccw();
+	
+//   if (back)
+//     return http_string_answer(
+//       Image.GIF.encode( img,
+// 			Image.colortable( 6,6,6,
+// 					  ({0,0,0}),
+// 					  ({255,255,255}),
+// 					  39)->floyd_steinberg(), 
+// 			@back ),
+//       "image/gif");  
+//     else
+//       return http_string_answer(
+// 	Image.GIF.encode( img,
+// 			  Image.colortable( 6,6,6,
+// 					    ({0,0,0}),
+// 					    ({255,255,255}),
+// 					    39)->floyd_steinberg() ),
+// 	"image/gif");
+//   }
+//   else
+//   {
+#ifdef BG_DEBUG
+  if(id->prestate->debug)
+    werror("Timers: %O\n", bg_timers);
+#endif
+  if(!ct) ct = Image.colortable(img)->nodither();
+  if(back)
+    return http_string_answer(Image.GIF.encode(img, ct, @back), "image/gif");
   else
-    return http_string_answer(Image.GIF.encode(img, @back), "image/gif");      
+    return http_string_answer(Image.GIF.encode(img, ct), "image/gif");
 }

@@ -20,7 +20,7 @@ inherit "polyline.pike";
 inherit "create_graph.pike";
 inherit "create_bars.pike";
 
-constant cvs_version = "$Id: create_pie.pike,v 1.43 1998/04/26 13:36:55 hedda Exp $";
+constant cvs_version = "$Id: create_pie.pike,v 1.44 1998/06/24 02:10:45 js Exp $";
 
 /*
  * name = "BG: Create pies";
@@ -37,13 +37,7 @@ The data is taken from the diagram_data-mapping which is described in doc/diagra
 */ 
 
 
-#define GETFONT(WHATFONT) \
-    object notext = get_font(diagram_data->WHATFONT||diagram_data->font \
-			     , 32, 0, 0,  \
-			     "left",0,0); \
-    if (!(notext)) \
-      throw(({"Missing font or similar error!\n", backtrace() }));
-
+#define GETFONT(WHATFONT) object notext=resolve_font(diagram_data->WHATFONT||diagram_data->font);
 
 mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
 {
