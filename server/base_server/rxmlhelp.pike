@@ -34,7 +34,8 @@ string available_languages(object id) {
   else
     pl="en";
   mapping languages=roxen->language_low(pl)->list_languages();
-  return mktable( map(sort(indices(languages)), lambda(string code) { return ({ code, languages[code] }); } ));
+  return mktable( map(sort(indices(languages) & roxen->list_languages()),
+		      lambda(string code) { return ({ code, languages[code] }); } ));
 }
 
 // --------------------- Help layout functions --------------------
@@ -66,6 +67,10 @@ private string attr_vals(string v)
   // FIXME Use real config url
   // if(v=="langcodes") return "<a href=\"/help/langcodes.pike\">language code</a>";
   return v;
+}
+
+private string noex_cont(string t, mapping m, string c) {
+  return parse_html(c, ([]), (["ex":""]));
 }
 
 private string ex_cont(string t, mapping m, string c, string rt, void|object id)
@@ -116,6 +121,7 @@ private string format_doc(string|mapping doc, string name, void|object id) {
     "desc":desc_cont,
     "attr":attr_cont,
     "ex":ex_cont,
+    "noex":noex_cont,
     "tag":lambda(string tag, mapping m, string c) { return "&lt;"+c+"&gt;"; },
     "ref":lambda(string tag, mapping m, string c) { return c; },
     "short":lambda(string tag, mapping m, string c) { m->hide?"":c; }
@@ -207,6 +213,7 @@ string find_tag_doc(string name, void|object id) {
     }
     else
       continue;
+    if(!functionp(tag)) continue;
     tag=function_object(tag);
     if(!objectp(tag)) continue;
     RXMLHELP_WERR(sprintf("Tag defined in module %O", tag));
