@@ -20,7 +20,7 @@ constant name = "example";
 //! will be impossible to know which of them will be used when
 //! authentication is done, however..
 
-constant cvs_version = "$Id: userdb_ex.pike,v 1.4 2002/06/14 10:34:58 nilsson Exp $";
+constant cvs_version = "$Id: userdb_ex.pike,v 1.5 2002/10/23 23:31:44 nilsson Exp $";
 constant module_name = "RefDoc for MODULE_USERDB";
 constant  module_doc =
   ("This module does nothing special, it implements a simple "
@@ -147,6 +147,7 @@ class ExUser
 
 
 class ExGroup
+//! ExGroup.
 {
   inherit Group;
   //! All groups should inherit the group class.
@@ -164,6 +165,7 @@ class ExGroup
     // Our one and only group is named example.
     return "example";
   }
+  
   int gid()
   //! A numerical GID, or -1 if not applicable
   {
