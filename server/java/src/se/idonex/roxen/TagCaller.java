@@ -1,15 +1,15 @@
 /*
- * $Id: TagCaller.java,v 1.1 1999/12/19 00:26:01 marcus Exp $
+ * $Id: TagCaller.java,v 1.2 1999/12/20 18:51:34 marcus Exp $
  *
  */
 
 package se.idonex.roxen;
 
-import java.util.Dictionary;
+import java.util.Map;
 
 public interface TagCaller {
 
-  public String tagCalled(String tag, Dictionary args, RoxenRequest id,
-			  Object file, Dictionary defines, Object client);
+  public String queryName();
+  public String tagCalled(String tag, Map args, RoxenRequest id);
 
 }

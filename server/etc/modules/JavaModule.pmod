@@ -5,7 +5,10 @@ static constant jvm = Java.machine;
 
 /* Marshalling */
 static object int_class = FINDCLASS("java/lang/Integer");
+static object map_class = FINDCLASS("java/util/HashMap");
 static object int_value = int_class->get_method("intValue", "()I");
+static object map_init = map_class->get_method("<init>", "(I)V");
+static object map_put = map_class->get_method("put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
 
 /* Class loading */
 static object class_class = FINDCLASS("java/lang/Class");
@@ -33,6 +36,9 @@ static object printwriter_flush = printwriter_class->get_method("flush", "()V");
 static object module_class = FINDCLASS("se/idonex/roxen/Module");
 static object defvar_class = FINDCLASS("se/idonex/roxen/Defvar");
 static object location_ifc = FINDCLASS("se/idonex/roxen/LocationModule");
+static object parser_ifc = FINDCLASS("se/idonex/roxen/ParserModule");
+static object tagcaller_ifc = FINDCLASS("se/idonex/roxen/TagCaller");
+static object containercaller_ifc = FINDCLASS("se/idonex/roxen/ContainerCaller");
 static object response_class = FINDCLASS("se/idonex/roxen/RoxenResponse");
 static object response2_class = FINDCLASS("se/idonex/roxen/RoxenStringResponse");
 static object query_type = module_class->get_method("queryType", "()I");
@@ -42,6 +48,12 @@ static object _status = module_class->get_method("status", "()Ljava/lang/String;
 static object _getdefvars = module_class->get_method("getDefvars", "()[Lse/idonex/roxen/Defvar;");
 static object _query_location = location_ifc->get_method("queryLocation", "()Ljava/lang/String;");
 static object _find_file = location_ifc->get_method("findFile", "(Ljava/lang/String;Lse/idonex/roxen/RoxenRequest;)Lse/idonex/roxen/RoxenResponse;");
+static object _query_tag_callers = parser_ifc->get_method("queryTagCallers", "()[Lse/idonex/roxen/TagCaller;");
+static object _query_container_callers = parser_ifc->get_method("queryContainerCallers", "()[Lse/idonex/roxen/ContainerCaller;");
+static object tagcaller_query_name = tagcaller_ifc->get_method("queryName", "()Ljava/lang/String;");
+static object _tag_called = tagcaller_ifc->get_method("tagCalled", "(Ljava/lang/String;Ljava/util/Map;Lse/idonex/roxen/RoxenRequest;)Ljava/lang/String;");
+static object containercaller_query_name = containercaller_ifc->get_method("queryName", "()Ljava/lang/String;");
+static object _container_called = containercaller_ifc->get_method("containerCalled", "(Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Lse/idonex/roxen/RoxenRequest;)Ljava/lang/String;");
 static object dv_var = defvar_class->get_field("var", "Ljava/lang/String;");
 static object dv_name = defvar_class->get_field("name", "Ljava/lang/String;");
 static object dv_doc = defvar_class->get_field("doc", "Ljava/lang/String;");
@@ -103,8 +115,45 @@ class ClassLoader
   }
 }
 
+
 class ModuleWrapper
 {
+  class JavaTag
+  {
+    static object caller;
+
+    string call(string tag, mapping args, RequestID id)
+    {
+      object res = _tag_called(caller, tag, make_args(args), make_reqid(id));
+      check_exception();
+      return res && (string)res;
+    }
+    
+    void create(object o)
+    {
+      caller = o;
+    }
+  }
+
+  class JavaContainer
+  {
+    static object caller;
+
+    string call(string tag, mapping args, string contents, RequestID id)
+    {
+      object res = _container_called(caller, tag, make_args(args),
+				     contents, make_reqid(id));
+      check_exception();
+      return res && (string)res;
+    }
+    
+    void create(object o)
+    {
+      caller = o;
+    }
+  }
+
+
   static object modobj;
   static int modtype;
   static string modname, moddesc;
@@ -130,6 +179,17 @@ class ModuleWrapper
   {
     /* FIXME */
     return 0;
+  }
+
+  static object make_args(mapping args)
+  {
+    object m = map_class->alloc();
+    map_init(m, sizeof(args));
+    check_exception();
+    foreach(indices(args), string key)
+      map_put(m, key, args[key]);
+    check_exception();
+    return m;
   }
 
   static mapping make_response(object r)
@@ -172,6 +232,36 @@ class ModuleWrapper
     object l = _query_location(modobj);
     check_exception();
     return l && (string)l;
+  }
+
+  mapping query_tag_callers()
+  {
+    mapping res = ([ ]);
+    object callers = _query_tag_callers(modobj);
+    check_exception();
+    if(callers)
+      foreach(values(callers), object c)
+	if(c) {
+	  object name = tagcaller_query_name(c);
+	  check_exception();
+	  res[(string)name] = JavaTag(c)->call;
+	}
+    return res;
+  }
+
+  mapping query_container_callers()
+  {
+    mapping res = ([ ]);
+    object callers = _query_container_callers(modobj);
+    check_exception();
+    if(callers)
+      foreach(values(callers), object c)
+	if(c) {
+	  object name = containercaller_query_name(c);
+	  check_exception();
+	  res[(string)name] = JavaContainer(c)->call;
+	}
+    return res;
   }
 
   mixed find_file(string f, RequestID id)
