@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.136 1997/09/18 02:24:57 per Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.137 1997/09/22 21:06:09 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -2347,13 +2347,17 @@ inline static private string checkfd_fix_line(string l)
 {
   string *s;
   s=l/",";
-  s[0]=decode_mode((int)("0"+s[0]));
-  if((int)s[1])
-    s[1]=sizetostring((int)s[1]);
-  else
-    s[1]="-";
-  s[2]=(int)s[3]?s[3]:"-";
-  return s[0..2]*",";
+  if (sizeof(s) > 1) {
+    s[0]=decode_mode((int)("0"+s[0]));
+    if((int)s[1])
+      s[1]=sizetostring((int)s[1]);
+    else
+      s[1]="-";
+    
+    s[2]=(int)s[3]?s[3]:"-";
+    return s[0..2]*",";
+  }
+  return l;
 }
 
 
