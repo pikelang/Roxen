@@ -81,7 +81,7 @@ netsurfer.2\.[0-9].*      align, pjpeginline, tables, frames, java, font,\
 .*               	basic, center, jpeginline
 omniweb.2\.[0-9].*      backgrounds, font, frames, tables, align, bigsmall,\
                         fontcolor, imagealign, pjpeginline, pnginline,\
- 		        supsub, ssl
+ 		        supsub, ssl, cookies
 # }
 
 #section arena {
