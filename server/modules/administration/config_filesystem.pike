@@ -1,6 +1,7 @@
 // This is a roxen module. Copyright © 1999 - 2001, Roxen IS.
 //
 // A filesystem for the roxen administration interface.
+// NGSERVER: Rename to admin_filesystem.pike
 #include <module.h>
 #include <stat.h>
 #include <admin_interface.h>
@@ -8,12 +9,12 @@
 inherit "module";
 
 constant module_type = MODULE_LOCATION;
-constant module_name = "Configuration Filesystem";
+constant module_name = "Administration Interface Filesystem";
 constant module_doc  = "This filesystem serves the administration interface";
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.115 2002/06/15 21:04:40 nilsson Exp $";
+  "$Id: config_filesystem.pike,v 1.116 2002/06/19 23:02:19 nilsson Exp $";
 
 constant path = "admin_interface/";
 
@@ -131,9 +132,9 @@ mixed find_file( string f, RequestID id )
       host = id->remoteaddr;
 
     // Patch it in. This is needed for the image-cache authentication handling.
-    id->conf->set_userdb_module_cache( ({ roxen.config_userdb_module }) );
+    id->conf->set_userdb_module_cache( ({ roxen.admin_userdb_module }) );
 
-    if( user = id->conf->authenticate( id, roxen.config_userdb_module ) )
+    if( user = id->conf->authenticate( id, roxen.admin_userdb_module ) )
     {
       if( !id->misc->cf_theme )
 	id->misc->cf_theme = ([]);
@@ -151,7 +152,7 @@ mixed find_file( string f, RequestID id )
     {
       report_notice("Login attempt from %s\n",host);
       return id->conf->authenticate_throw( id, "Roxen Administration Interface",
-					   roxen.config_userdb_module );
+					   roxen.admin_userdb_module );
     }
 
     string encoding = config_setting( "charset" );
@@ -440,6 +441,7 @@ void start(int n, Configuration cfg)
   call_out( zap_old_modules, 0 );
 }
 
+// NGSERVER: Compatibility. Remove.
 void zap_old_modules()
 {
   if( my_configuration()->find_module("awizard#0") )
