@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.371 1999/12/08 00:07:41 peter Exp $
+ * $Id: roxen.pike,v 1.372 2000/01/08 20:45:27 mast Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -8,7 +8,7 @@
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version = "$Id: roxen.pike,v 1.371 1999/12/08 00:07:41 peter Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.372 2000/01/08 20:45:27 mast Exp $";
 
 object backend_thread;
 object argcache;
@@ -2056,18 +2056,27 @@ class ArgCache
     if( cache[ data ] )
       return cache[ data ][ CACHE_SKEY ];
 
+    if( sizeof( cache ) >= CACHE_SIZE )
+    {
+      array i = indices(cache);
+      while( sizeof(cache) > CACHE_SIZE-CLEAN_SIZE ) {
+        string idx=i[random(sizeof(i))];
+        if(arrayp(cache[idx])) {
+          m_delete( cache, cache[idx][CACHE_SKEY] );
+          m_delete( cache, idx );
+        }
+        else {
+          m_delete( cache, cache[idx] );
+          m_delete( cache, idx );
+        }
+      }
+    }
+
     string id = create_key( data );
     cache[ data ] = ({ 0, 0 });
     cache[ data ][ CACHE_VALUE ] = copy_value( args );
     cache[ data ][ CACHE_SKEY ] = id;
     cache[ id ] = data;
-
-    if( sizeof( cache ) > CACHE_SIZE )
-    {
-      array i = indices(cache);
-      while( sizeof(cache) > CACHE_SIZE-CLEAN_SIZE )
-        m_delete( cache, i[random(sizeof(i))] );
-    }
     return id;
   }
 
