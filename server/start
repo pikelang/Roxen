@@ -1,4 +1,6 @@
 #!/bin/sh
+#
+# $Id: start,v 1.21 1997/09/07 16:37:59 grubba Exp $
 
 VERSION=201; BETA=.a;
 
@@ -6,6 +8,10 @@ VERSION=201; BETA=.a;
 DIR=../configurations/
 LOGDIR=../logs/
 FILES="default"
+
+# Roxen will create files as the initial user,
+# which it expects to be able to read as the run-time user.
+umask 022
 
 # Pike default Master-program
 if [ -f lib/pike/master.pike ]; then
