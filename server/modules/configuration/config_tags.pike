@@ -841,7 +841,7 @@ string container_configif_output(string t, mapping m, string c, object id)
      break;
 
    case "locales":
-     object rl = master()->resolv("Locale")["Roxen"];
+     object rl = RoxenLocale;
      variables = map( sort(indices(rl) - ({ "Modules", "standard" })),
                       lambda( string l )
                       {
