@@ -10,7 +10,7 @@ mixed sql_query( string q, mixed ... e )
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.122 2002/03/04 13:45:48 mast Exp $";
+constant cvs_version = "$Id: roxen_master.pike,v 1.123 2002/04/18 11:53:15 grubba Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -314,18 +314,24 @@ class MyCodec
 
     if(p!=x)
     {
+      mixed tmp;
+
       if( string n = dump_constants_rev[ x ] )
 	return "defun:"+n;
-      if(mixed tmp=search(all_constants(),x))
+
+      if(tmp=search(all_constants(),x))
 	return "efun:"+tmp;
+
+      if((tmp=search(values(__builtin), x))!=-1)
+	return "__builtin."+(indices(__builtin)[tmp]);
+
+      if((tmp=search(values(_static_modules), x))!=-1)
+	return "_static_modules."+(indices(_static_modules)[tmp]);
+
       if ( programp (x) )
       {
-	mixed tmp;
 	if(tmp=search(programs,x))
 	  return tmp;
-
-	if((tmp=search(values(_static_modules), x))!=-1)
-	  return "_static_modules."+(indices(_static_modules)[tmp]);
 
 	if( (program)x != x )
 	  return nameof( (program)x );
@@ -496,7 +502,8 @@ void dump_program( string pname, program what )
   string data;
 #ifdef DUMP_DEBUG
   MyCodec cd;
-  if (!catch (data = encode_value( what, (cd = MyCodec( what )) ) ))
+  mixed err;
+  if (!(err = catch (data = encode_value( what, (cd = MyCodec( what )) ) )))
 #else
   data = encode_value( what, MyCodec( what ) );
 #endif
@@ -511,6 +518,7 @@ void dump_program( string pname, program what )
     array parts = pname / "/";
     if (sizeof(parts) > 3) parts = parts[sizeof(parts)-3..];
     werror("Couldn't dump " + parts * "/" + "\n");
+    werror("Error: %s", describe_error(err));
     werror("Last attempted: %O\n", cd->last_failed );
     mixed w = Describer()->describe( cd->last_failed,10000 );
     if( w == "program" ) w = _typeof( cd->last_failed );
