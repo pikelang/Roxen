@@ -95,7 +95,7 @@ array|string tag_append(string tag, mapping m, RequestID id)
       mixed value=context->user_get_var(m->variable, m->scope);
       // Append the value of a misc variable to an enityt variable.
       if (!id->misc->variables || !id->misc->variables[ m->other ])
-	RXML.run_error("Other variable doesn't exist.");
+	RXML.run_error("Other variable doesn't exist.\n");
       if (value)
 	value+=id->misc->variables[ m->other ];
       else
@@ -113,7 +113,7 @@ string|array tag_redirect(string tag, mapping m, RequestID id)
   if(m->add || m->drop) return ({1});
 
   if (!(m->to && sizeof (m->to)))
-    RXML.parse_error("Requires attribute \"to\".");
+    RXML.parse_error("Requires attribute \"to\".\n");
 
   multiset(string) orig_prestate = id->prestate;
   multiset(string) prestate = (< @indices(orig_prestate) >);
@@ -170,7 +170,7 @@ string|array tag_set(string tag, mapping m, RequestID id)
 	context->user_set_var(m->variable, (string)id->misc->variables[m->other], m->scope);
 	return ({""});
       }
-      RXML.run_error("Other variable doesn't exist.");
+      RXML.run_error("Other variable doesn't exist.\n");
     }
     if (m->eval) {
       // Set an entity variable to the result of some evaluated RXML
@@ -226,13 +226,13 @@ string|array tag_insert(string tag,mapping m,RequestID id)
     m_delete(m, "name");
     if(id->misc->defines[n])
       return ({ do_replace(id->misc->defines[n], m, id) });
-    RXML.run_error("No such define ("+n+").");
+    RXML.run_error("No such define ("+n+").\n");
   }
 
   if(n = m->variable)
   {
     if(zero_type(RXML.get_context()->user_get_var(n, m->scope)))
-      RXML.run_error(tag, "No such variable ("+n+").\n", id);
+      RXML.run_error("No such variable ("+n+").\n");
     string var=(string)RXML.get_context()->user_get_var(n, m->scope);
     m_delete(m, "variable");
     return m->quote=="none"?do_replace(var, m-(["quote":""]), id):
@@ -243,7 +243,7 @@ string|array tag_insert(string tag,mapping m,RequestID id)
     old_rxml_warning(id, "other attribute in insert tag","only regular variables");
     if(stringp(id->misc[n]) || intp(id->misc[n]))
       return m->quote=="none"?(string)id->misc[n]:({ html_encode_string((string)id->misc[n]) });
-    RXML.run_error("No such other variable ("+n+").");
+    RXML.run_error("No such other variable ("+n+").\n");
   }
 
   if(n = m->cookies)
@@ -268,7 +268,7 @@ string|array tag_insert(string tag,mapping m,RequestID id)
       string cookie=do_replace(id->cookies[n], m, id);
       return m->quote=="none"?cookie:({ html_encode_string(cookie) });
     }
-    RXML.run_error("No such cookie ("+n+").");
+    RXML.run_error("No such cookie ("+n+").\n");
   }
 
   if(m->file)
@@ -277,14 +277,14 @@ string|array tag_insert(string tag,mapping m,RequestID id)
       int nocache=id->pragma["no-cache"];
       id->pragma["no-cache"] = 1;
       n=id->conf->try_get_file(fix_relative(m->file,id),id);
-      if(!n) RXML.run_error("No such file ("+m->file+").");
+      if(!n) RXML.run_error("No such file ("+m->file+").\n");
       id->pragma["no-cache"] = nocache;
       m_delete(m, "nocache");
       m_delete(m, "file");
       return do_replace(n, m, id);
     }
     n=id->conf->try_get_file(fix_relative(m->file,id),id);
-    if(!n) RXML.run_error("No such file ("+m->file+").");
+    if(!n) RXML.run_error("No such file ("+m->file+").\n");
     return do_replace(n, m-(["file":""]), id);
   }
 
@@ -344,7 +344,7 @@ string|array container_aconf(string tag, mapping m, string q, RequestID id)
   {
     href=m->href;
     if (search(href, ":") == search(href, "//")-1)
-      RXML.parse_error("It is not possible to add configs to absolute URLs.");
+      RXML.parse_error("It is not possible to add configs to absolute URLs.\n");
     href=fix_relative(href, id);
     m_delete(m, "href");
   }
@@ -608,7 +608,7 @@ string|array(string) tag_realfile(string tag, mapping m, RequestID id)
   old_rxml_warning(id ,"realfile tag","&page.realfile;");
   if(id->realfile)
     return ({ id->realfile });
-  RXML.run_error("Real file unknown");
+  RXML.run_error("Real file unknown.\n");
 }
 
 string|array(string) tag_vfs(string tag, mapping m, RequestID id)
@@ -616,7 +616,7 @@ string|array(string) tag_vfs(string tag, mapping m, RequestID id)
   old_rxml_warning(id ,"vfs tag","&page.virtroot;");
   if(id->virtfile)
     return ({ id->virtfile });
-  RXML.run_error("Virtual file unknown.");
+  RXML.run_error("Virtual file unknown.\n");
 }
 
 array(string) tag_accept_language(string tag, mapping m, RequestID id)
@@ -655,7 +655,7 @@ class TagQuote {
   class Frame {
     inherit RXML.Frame;
     array do_return(RequestID id) {
-      parse_error("<quote> does not work with the new parser.");
+      parse_error("<quote> does not work with the new parser.\n");
     }
   }
 }
@@ -664,7 +664,7 @@ array(string) container_cset(string tag, mapping m, string c, RequestID id) {
   if(!c) c="";
   if( m->quote != "none" )
     c = html_decode_string( c );
-  if( !m->variable ) RXML.parse_error("Variable not specified.");
+  if( !m->variable ) RXML.parse_error("Variable not specified.\n");
 
   RXML.get_context()->user_set_var(m->variable, c, m->scope);
   return ({ "" });
