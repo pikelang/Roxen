@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.137 2003/06/16 15:35:11 grubba Exp $
+// $Id: module.pike,v 1.138 2003/06/16 16:07:25 grubba Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -313,6 +313,7 @@ multiset(string) query_all_properties(string path, RequestID id)
     res += (<
       "DAV:getcontentlength",	// 13.4
       "DAV:getcontenttype",	// 13.5
+      "http://apache.org/dav/props/executable",
     >);
   }
   return res;
@@ -355,6 +356,24 @@ string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
 				     "DAV:collection") });	// 12.2
     }
     return "";
+  case "http://apache.org/dav/props/executable":
+    // http://www.webdav.org/mod_dav/:
+    //
+    // Name:		executable
+    // Namespace:	http://apache.org/dav/props/
+    // Purpose:		Describes the executable status of the resource. 
+    // Value:		"T" | "F"    (case is significant)
+    // Description:	This property is defined by mod_dav's default
+    //			repository, the "filesystem" repository. It
+    //			corresponds to the "executable" permission flag
+    //			in most filesystems.
+    //
+    //			This property is not defined on collections.
+    if (st->isreg) {
+      if (o->mode & 0111) return "T";
+      return "F";
+    }
+    break;
   default:
     break;
   }
@@ -390,13 +409,16 @@ mapping(string:mixed) set_property(string path, string prop_name,
 				   RequestID id)
 {
   switch(prop_name) {
+  case "http://apache.org/dav/props/executable":
+    // FIXME: Could probably be implemented R/W.
+    // FALL_THROUGH
   case "DAV:creationdate":	// 13.1
   case "DAV:displayname":	// 13.2
   case "DAV:getcontentlength":	// 13.4
   case "DAV:getcontenttype":	// 13.5
   case "DAV:getlastmodified":	// 13.7
     return Roxen.http_low_answer(409,
-				 "Attempt to set read-only property.");
+				 "Attempt to set read-only property.");    
   }
   return set_dead_property(path, prop_name, value, id);
 }
