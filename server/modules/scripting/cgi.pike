@@ -9,7 +9,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: cgi.pike,v 1.110 1999/04/24 16:36:38 js Exp $";
+constant cvs_version = "$Id: cgi.pike,v 1.111 1999/04/24 23:27:04 marcus Exp $";
 
 class Shuffle
 {
@@ -162,7 +162,7 @@ array verify_access( object id )
             if (!a || (a[1] == -4) ||
                 !b || ((b[5] != us[5]) && (b[5] >= 10)) ||
                 !QUERY(allow_symlinks)) 
-              error("CGI: Bad symlink or device encountered: \"%s\"\n", fname);
+              error("CGI: Bad symlink or device encountered: \""+fname+"\"\n");
           }
         fname += "/";
       }
