@@ -505,7 +505,7 @@ mapping draw_grind(mapping diagram_data, int|float xpos_for_yaxis,
   int s=sizeof(diagram_data["xnamesimg"]);
   object graph=diagram_data["image"];
   float gw=diagram_data["grindwidth"];
-  if ((diagram_data["vertgrind"])&&
+  if ((diagram_data["vertgrid"])&&
       (gw>LITET))
     for(int i=0; i<s; i++)
       {
@@ -528,7 +528,7 @@ mapping draw_grind(mapping diagram_data, int|float xpos_for_yaxis,
 
   //Placera ut horgrinden
   s=sizeof(diagram_data["ynamesimg"]);
-  if ((diagram_data["horgrind"])&&
+  if ((diagram_data["horgrid"])&&
       (gw>LITET))
   for(int i=0; i<s; i++)
     {
@@ -1061,7 +1061,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 					diagram_data["linewidth"],
 					diagram_data["ysize"]- ypos_for_xaxis,
 					diagram_data["xsize"]-
-					si-labelx/2, 
+					si-labelx/2+0.01, //FIXME 
 					diagram_data["ysize"]-ypos_for_xaxis
 				      }), 
 				      1, 1)[0]);
@@ -1437,7 +1437,7 @@ int main(int argc, string *argv)
 		 "labelsize":12,
 		 "xminvalue":0.0,
 		 "yminvalue":0,
-		 "vertgrind": 1,
+		 "vertgrid": 1,
 		 "grindwidth": 0.5
 
   ]);

@@ -458,7 +458,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 					diagram_data["linewidth"],
 					diagram_data["ysize"]- ypos_for_xaxis,
 					diagram_data["xsize"]-
-					diagram_data["linewidth"]-labelx/2, 
+					diagram_data["linewidth"]-labelx/2-0.01, //FIXME 
 					diagram_data["ysize"]-ypos_for_xaxis
 				      }), 
 				      1, 1)[0]);
@@ -775,7 +775,7 @@ int main(int argc, string *argv)
 		 "labelsize":42,
 		 "xminvalue":0.0,
 		 "yminvalue":0,
-		 "horgrind": 0,
+		 "horgrid": 0,
 		 "grindwidth": 0.5,
 		 "backlinecolor":0,//1.0,
 		 "bw":3,
