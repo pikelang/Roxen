@@ -7,8 +7,18 @@ TMP=/tmp/$$.tmp
 
 # Find all files that contains the locale project id and
 # dump them into the LIST temp file.
-for a in `grep -cr '"'$1'"' ..|grep -v ':0'|sed -e 's/:.*//'|
-         grep -v /translations/|grep -v '#'|grep -v '~'` ;  do
+for a in `grep -cr '"'$1'"'		   \
+  	    ../base_server		   \
+  	    ../bin			   \
+  	    ../config_interface		   \
+  	    ../etc			   \
+  	    ../modules			   \
+  	    ../more_modules		   \
+  	    ../protocols		   \
+  	    ../site_templates		   \
+  	    ../tools			   \
+         |grep -v ':0'|sed -e 's/:.*//'|   \
+         grep -v '#'|grep -v '~'` ;  do
   echo "  <file>$a</file>" >> $LIST
 done
 
