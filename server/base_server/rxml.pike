@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.207 2000/07/26 13:53:35 kuntri Exp $
+// $Id: rxml.pike,v 1.208 2000/07/26 14:00:52 kuntri Exp $
 
 
 inherit "rxmlhelp";
@@ -2097,20 +2097,7 @@ scope created within the define tag.
  attributes provided are and, or and not, used for combining plugins
  or logical negation.</p>
 
- <ex type='box'>
-  <if variable='var.foo > 0' and match='var.bar is No'>
-    ...
-  </if>
- </ex>
 
- <ex type='box'>
-  <if variable='var.foo > 0' not>
-    &var.foo; <= 0
-  </if>
-  <else>
-    &var.foo; > 0
-  </else>
- </ex>
 
  <p>Operators valid in attribute expressions are: '=', '==', 'is', '!=',
  '&lt;' and '&gt;'.</p>
