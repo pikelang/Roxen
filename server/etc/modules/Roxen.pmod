@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.97 2001/06/20 23:29:09 mast Exp $
+// $Id: Roxen.pmod,v 1.98 2001/06/28 19:14:18 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -1485,13 +1485,7 @@ string get_modname (RoxenModule module)
 //! Returns a string uniquely identifying the given module on the form
 //! `<config name>/<module short name>#<copy>'.
 {
-  if (!module) return 0;
-
-  if (Configuration conf = module->my_configuration())
-    if (string mname = conf->otomod[module])
-      return conf->name + "/" + mname;
-
-  return 0;
+  return module && module->module_identifier();
 }
 
 string get_modfullname (RoxenModule module)

@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.113 2001/06/17 20:07:09 nilsson Exp $
+// $Id: module.pike,v 1.114 2001/06/28 19:14:12 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -42,6 +42,13 @@ void report_debug( mixed ... args )  { predef::report_debug( @args );  }
 string module_identifier()
 {
   if (!_module_identifier) {
+#if 1
+    string cname = my_configuration()->name;
+    string mname = my_configuration()->otomod[this_object()];
+    if (!cname || !mname)
+      error ("Called too early; module identifier not known yet.\n");
+    _module_identifier = cname + "/" + mname;
+#else
     string|mapping name = this_object()->register_module()[1];
     if (mappingp (name)) name = name->standard;
     string cname = sprintf ("%O", my_configuration());
@@ -50,14 +57,14 @@ string module_identifier()
       cname = cname[..sizeof (cname) - 2];
     _module_identifier = sprintf ("%s,%s",
 				  name||this_object()->module_name, cname);
+#endif
   }
   return _module_identifier;
 }
 
 string _sprintf()
 {
-  return "RoxenModule(" +
-    (Roxen.get_modname (this_object()) || module_identifier()) + ")";
+  return "RoxenModule(" + module_identifier() + ")";
 }
 
 array register_module()
@@ -97,7 +104,7 @@ int module_dependencies(Configuration configuration,
   if (!conf)
     report_warning ("Configuration not resolved; module(s) %s that %s "
 		    "depend on weren't added.", String.implode_nicely (modules),
-		    Roxen.get_modname (this_object()) || module_identifier());
+		    module_identifier());
   else
     conf->add_modules( modules, now );
   return 1;
