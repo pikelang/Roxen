@@ -10,7 +10,7 @@
 #define old_rxml_compat 1
 #define old_rxml_warning id->conf->api_functions()->old_rxml_warning[0]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.9 1999/09/26 02:44:04 mast Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.10 1999/10/03 01:10:36 jhs Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -101,14 +101,14 @@ string tag_auth_required (string tagname, mapping args, object id)
   return "";
 }
 
-string tag_clientname(string tag, mapping m, object id)
+string|array(string) tag_clientname(string tag, mapping m, object id)
 {
   NOCACHE();
   if (sizeof(id->client))
     if(m->full) 
-      return id->client * " ";
+      return ({ id->client * " " });
     else 
-      return id->client[0];
+      return ({ id->client[0] });
 
   return ""; 
 }
@@ -130,12 +130,12 @@ string tag_expire_time(string tag, mapping m, object id)
   return "";
 }
 
-string tag_file(string tag, mapping m, object id)
+array(string) tag_file(string tag, mapping m, object id)
 {
   if(m->raw)
-    return id->raw_url;
+    return ({ id->raw_url });
   else
-    return id->not_query;
+    return ({ id->not_query });
 }
 
 string tag_header(string tag, mapping m, object id)
@@ -160,9 +160,9 @@ string tag_header(string tag, mapping m, object id)
   return "";
 }
 
-string tag_realfile(string tag, mapping m, object id)
+array(string) tag_realfile(string tag, mapping m, object id)
 {
-  return id->realfile || rxml_error(tag, "Real file unknown", id);
+  return ({ id->realfile || rxml_error(tag, "Real file unknown", id) });
 }
 
 string tag_redirect(string tag, mapping m, object id)
@@ -207,7 +207,7 @@ string tag_redirect(string tag, mapping m, object id)
   return "";
 }
 
-string tag_referrer(string tag, mapping m, object id)
+string|array(string) tag_referrer(string tag, mapping m, object id)
 {
   NOCACHE();
 
@@ -218,7 +218,7 @@ string tag_referrer(string tag, mapping m, object id)
   if(m->help) 
     return ("Shows from which page the client linked to this one.");
 
-  return sizeof(id->referer)?id->referer*"":m->alt?m->alt:"";
+  return ({ sizeof(id->referer) ? id->referer*"" : m->alt || "" });
 }
 
 array(string) tag_scope(string tag, mapping m, string contents, object id)
@@ -281,9 +281,9 @@ string tag_set( string tag, mapping m, object id )
   return rxml_error(tag, "Variable not specified.", id);
 }
 
-string tag_vfs(string tag, mapping m, object id)
+array(string) tag_vfs(string tag, mapping m, object id)
 {
-  return id->virtfile || rxml_error(tag, "Virtual file unknown.", id);
+  return ({ id->virtfile || rxml_error(tag, "Virtual file unknown.", id) });
 }
 
 string tag_language(string tag, mapping m, object id)
@@ -328,7 +328,7 @@ string tag_dec(string tag, mapping m, object id)
   return rxml_error(tag, "No variable to decrement.", id);
 }
 
-string tag_imgs(string tag, mapping m, object id)
+string|array(string) tag_imgs(string tag, mapping m, object id)
 {
   string tmp="";
   if(m->src)
@@ -352,12 +352,12 @@ string tag_imgs(string tag, mapping m, object id)
       string src=src[sizeof(src)-1];
       m->alt=String.capitalize(replace(src[..sizeof(src)-search(reverse(src),".")-2],"_"," "));
     }
-    return make_tag("img", m)+(tmp?rxml_error(tag, tmp, id):"");
+    return ({ make_tag("img", m)+(tmp?rxml_error(tag, tmp, id):"") });
   }
   return rxml_error(tag, "No src given.", id);
 }
 
-string tag_roxen(string tagname, mapping m, object id)
+array(string) tag_roxen(string tagname, mapping m, object id)
 {
 #if old_rxml_compat
   if(tagname=="pr") old_rxml_warning(id,"pr tag","roxen tag");
@@ -371,10 +371,10 @@ string tag_roxen(string tagname, mapping m, object id)
   m->height = (["small":"35","medium":"60","large":"90"])[size];
   if(!m->alt) m->alt="Powered by Roxen";
   if(!m->border) m->border="0";
-  return ("<a href=\"http://www.roxen.com/\">"+make_tag("img", m)+"</a>");
+  return ({ "<a href=\"http://www.roxen.com/\">"+make_tag("img", m)+"</a>" });
 }
 
-string tag_debug( string tag_name, mapping args, object id )
+string|array(string) tag_debug( string tag_name, mapping args, object id )
 {
   if (args->showid){
     array path=lower_case(args->showid)/"->";
@@ -384,7 +384,7 @@ string tag_debug( string tag_name, mapping args, object id )
       if(search(indices(obj),tmp)==-1) return "Could only reach "+tmp+".";
       obj=obj[tmp];
     }
-    return sprintf("<pre>%O</pre>",obj);
+    return ({ sprintf("<pre>%O</pre>",obj) });
   }
   if (args->off)
     id->misc->debug = 0;
@@ -429,7 +429,7 @@ string tag_fsize(string tag, mapping args, object id)
   return rxml_error(tag, "Failed to find file", id);
 }
 
-string tag_configimage(string f, mapping m, object id)
+array(string) tag_configimage(string f, mapping m, object id)
 {
   if (m->src) {
 
@@ -452,7 +452,7 @@ string tag_configimage(string f, mapping m, object id)
   m->border = m->border || "0";
   m->alt = m->alt || m->src;
 
-  return make_tag("img", m);
+  return ({ make_tag("img", m) });
 }
 
 string tag_date(string q, mapping m, object id)
