@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.226 2001/04/24 23:23:39 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.227 2001/05/16 12:56:54 per Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2805,7 +2805,9 @@ class TagEmit {
       vars = (["counter":0]);
 
       TRACE_ENTER("Fetch emit dataset for source "+args->source, 0);
+      PROF_ENTER( args->source, "emit" );
       res=plugin->get_dataset(args, id);
+      PROF_LEAVE( args->source, "emit" );
       TRACE_LEAVE("");
 
       if(plugin->skiprows && args->skiprows)
