@@ -20,7 +20,7 @@ constant thread_safe = 1;
 
 void start(int num, Configuration conf)
 {
-//   conf->parse_html_compat=1;
+  conf->parse_html_compat=1;
 }
 
 void create()
