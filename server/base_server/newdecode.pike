@@ -7,12 +7,12 @@
 #endif
 #endif
 #ifndef IN_INSTALL
-// string cvs_version = "$Id: newdecode.pike,v 1.13 1999/11/05 07:59:13 per Exp $";
+// string cvs_version = "$Id: newdecode.pike,v 1.14 1999/11/19 10:08:37 per Exp $";
 #endif
 
 #include <roxen.h>
 
-#define ENC_ADD(X)do{if(arrayp(res->res))res->res+=({(X)});else res->res=(X); return "";}while(0)
+#define ENC_ADD(X)do{if(arrayp(res->res))res->res+=({(X)});else res->res=(X); return "foo";}while(0)
 #define SIMPLE_DECODE(X,Y) private string X(string foo, mapping m, string s, mapping res) { ENC_ADD( Y );}
 
 SIMPLE_DECODE(decode_int, (int)s );
@@ -45,14 +45,11 @@ private string decode_mapping(string foo, mapping m, string s, mapping res)
 private string decode_variable(string foo, mapping m, string s, mapping res)
 {
   mapping mr;
-  sscanf(s, "%*[ \n\t\r]%s", s);
-  while(s[0] == '#')
-    if(sscanf(s, "%*[^\n]\n%s", s) != 2)
-      break;
   mr = ([ "res":0 ]);
   parse(s, mr);
+
   res[m->name] = mr->res;
-  return "";
+  return "bar";
 }
 
 string name_of_module( object m, object c )
@@ -62,17 +59,24 @@ string name_of_module( object m, object c )
 
 void parse(string s, mapping mr)
 {
-  parse_html(s, ([ ]),  
-	     (["a":decode_array,  "map":decode_mapping,
-	      "lst":decode_list,  "mod":decode_module,
-	      "int":decode_int,   "str":decode_string, 
-	      "flt":decode_float ]), mr);
+  parse_html(s, 
+             ([ 
+               "!--":lambda(){ return ""; },
+             ]),  
+	     ([
+               "a":decode_array,  "map":decode_mapping,
+               "lst":decode_list,  "mod":decode_module,
+               "int":decode_int,   "str":decode_string, 
+               "flt":decode_float 
+             ]), mr);
 }
 
 string decode_config_region(string foo, mapping mr, string s, mapping res2)
 {
   mapping res = ([ ]);
-  parse_html(s, ([]), ([ "var":decode_variable ]), res);
+  s = parse_html( s, (["!--":lambda(){ return ""; },]), ([]) );
+
+  parse_html(s,([]), (["var":decode_variable ]), res);
   res2[mr->name] = res;
   return "";
 }
@@ -81,7 +85,9 @@ string decode_config_region(string foo, mapping mr, string s, mapping res2)
 mapping decode_config_file(string s)
 {
   mapping res = ([ ]);
-  if(!sizeof(s)) return res; // Empty file..
+  if(sizeof(s) < 10) return res; // Empty file..
+  if( sscanf( s, "%*s<?XML version=\"1.0\"?>\n%*s" ) == 2 )
+    s = utf8_to_string( s );
   parse_html(s, ([]), ([ "region":decode_config_region ]), res);
   return res;
 }
@@ -119,9 +125,37 @@ private string encode_mixed(mixed from, object c)
   }
 }
 
+string trim_tags( string what )
+{
+  int i;
+  int add = 1;
+  string res = "";
+  what = replace( what, ({ "<pre>", "</pre>" }),
+                  ({"\n", "\n" }) );
+  for( i=0; i<strlen(what); i++ )
+  {
+    switch( what[i] )
+    {
+     case '&': continue;
+     case '<': add--; continue;
+     case '>': add++; continue;
+     default:
+       if( add > 0 )
+         res += what[i..i];
+    }
+  }
+  return replace( res, ({"amp;", "lt;", "gt;" }),
+                  ({ "&", "<", ">" }) );
+}
+
 string trim_ws( string indata )
 {
   string res="";
+  indata = replace( indata, ({"<br>", "<p>" }),
+                    ({ "\n", "\n\n" }) );
+
+  indata = trim_tags( indata );
+
   foreach(indata/"\n", string line)
   {
     sscanf(line, "%*[ \t]%s", line);
@@ -137,10 +171,23 @@ string encode_config_region(mapping m, string reg, object c)
 {
   string res = "";
   string v;
+
+  if( reg == "EnabledModules" )
+  {
+    foreach( sort(indices( m )), string q )
+      if( catch {
+        res += "<var name='"+q+"'> <int>1</int>  </var> <!-- "+
+            replace(roxenp()->find_module( (q/"#")[0] )->name, "'", "`" )
+            +" -->\n";
+      })
+        res += "<var name='"+q+"'>  <int>1</int>  </var> <!-- Error? -->\n";
+
+    return res;
+  }
+
   foreach(sort(indices(m)), v)
   {
     string doc;
-
     switch(v)
     {
      case "_comment":
@@ -166,10 +213,13 @@ string encode_config_region(mapping m, string reg, object c)
     if(c && c->get_doc_for)
       doc = c->get_doc_for( reg, v );
     if(doc)
-      doc=("\n#   "+trim_ws(replace(sprintf("%*-=s", 74,trim_ws(doc)), "\n", "\n#    ")));
+      doc=("\n  <!--\n    "+
+           replace(sprintf("%*-=s",74,trim_ws(doc)), 
+                   ({"\n","'"}), ({"\n    ","`"}))
+           +"\n   -->\n");
     else
       doc = "";
-    res += " <var name='"+v+"'> "+doc+"  "+encode_mixed(m[v],c)+"\n </var>\n";
+    res += doc+"  <var name='"+v+"'>\n  "+encode_mixed(m[v],c)+"\n</var>\n\n";
   }
   return res;
 }
@@ -177,10 +227,12 @@ string encode_config_region(mapping m, string reg, object c)
 string encode_regions(mapping r, object c)
 {
   string v;
-  string res = "";
+  string res = ("<!-- -*- html -*- -->\n"
+                "<?XML version=\"1.0\"?>\n\n");
   foreach(sort(indices(r)), v)
-    res += "<region name='"+v+"'>\n" + encode_config_region(r[v],v,c)
+    res += "<region name='"+v+"'>\n" + 
+             encode_config_region(r[v],v,c)
            + "</region>\n\n";
-  return res;
+  return string_to_utf8( res );
 }
 
