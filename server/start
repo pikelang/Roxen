@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.211 2004/05/20 12:44:56 _cvs_stephen Exp $
+# $Id: start,v 1.212 2004/05/20 12:47:15 _cvs_stephen Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -361,6 +361,7 @@ the default arguments.
       .B--quiet -qB.:                 Disable most of the messages.
 
       .B--log-dir=DIRB.:              Set the log directory. Defaults to .B../logsB..
+      .B--var-dir=DIRB.:              Set the cache directory. Defaults to .B../varB..
 
       .B--config-dir=DIRB.:           Use an alternate configuration directory.
 				  Defaults to .B../configurationsB..
