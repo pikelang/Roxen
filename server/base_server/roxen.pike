@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.271 1999/05/01 18:23:18 grubba Exp $
+ * $Id: roxen.pike,v 1.272 1999/05/08 19:36:02 grubba Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.271 1999/05/01 18:23:18 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.272 1999/05/08 19:36:02 grubba Exp $";
 
 object backend_thread;
 
@@ -579,11 +579,23 @@ private static void accept_callback( object port )
     {
       switch(port->errno())
       {
-       case 0:
-       case 11:
+      case 0:
+#if constant(system.EAGAIN)
+      case system.EAGAIN:
+#endif /* constant(system.EAGAIN) */
 	return;
 
-       default:
+#if constant(system.EMFILE)
+      case system.EMFILE:
+#endif /* constant(system.EMFILE) */
+#if constant(system.EBADF)
+      case system.EBADF:
+#endif /* constant(system.EBADF) */
+	report_fatal(LOCALE->out_of_sockets());
+	low_shutdown(-1);
+	return;
+
+      default:
 #ifdef DEBUG
 	perror("Accept failed.\n");
 #if constant(real_perror)
@@ -591,11 +603,6 @@ private static void accept_callback( object port )
 #endif
 #endif /* DEBUG */
  	return;
-
-       case 24:
-	report_fatal(LOCALE->out_of_sockets());
-	low_shutdown(-1);
-	return;
       }
     }
 #ifdef FD_DEBUG
