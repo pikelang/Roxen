@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.305 2003/05/27 11:33:04 mast Exp $
+// $Id: module.pmod,v 1.306 2003/08/26 15:43:48 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -1335,7 +1335,7 @@ class Value
     // constant in the current request. Note that we can still
     // overcache the returned result; it's up to the user to avoid
     // that with suitable cache tags.
-    array var_chg = ctx->misc->variable_changes;
+    mapping var_chg = ctx->misc->variable_changes;
     ctx->misc->variable_changes = 0;
     ctx->set_var(var, val, scope_name);
     ctx->misc->variable_changes = var_chg;
@@ -1637,24 +1637,37 @@ class Context
     if (!scope_name) scope_name = "_";
     if (SCOPE_TYPE vars = scopes[scope_name]) {
       string|int index;
-      if (arrayp (var))
-	if (sizeof (var) > 1) {
-	  index = var[-1];
-	  array(string|int) path = var[..sizeof (var) - 1];
-	  vars = rxml_index (vars, path, scope_name, this_object());
-	  scope_name += "." + (array(string)) path * ".";
-	  if (mapping var_chg = misc->variable_changes)
-	    var_chg[encode_value_canonic (({scope_name}) + var)] = val;
-	}
-	else {
-	  index = var[0];
-	  if (mapping var_chg = misc->variable_changes)
-	    var_chg[encode_value_canonic (({scope_name, index}))] = val;
-	}
-      else {
-	index = var;
+
+    record_change: {
+	if (arrayp (var))
+	  if (sizeof (var) > 1) {
+	    if (mapping var_chg = misc->variable_changes)
+	      // Warning: This can't be done reliably if the scope is
+	      // added in var_chg too, but we need sequencing to solve
+	      // it - upgrade to 3.4!
+	      var_chg[encode_value_canonic (({scope_name}) + var)] = val;
+
+	    array(string|int) path = var[..sizeof (var) - 1];
+	    vars = rxml_index (vars, path, scope_name, this_object());
+	    scope_name += "." + (array(string)) path * ".";
+	    index = var[-1];
+	    break record_change;
+	  }
+	  else
+	    index = var[0];
+	else
+	  index = var;
+
 	if (mapping var_chg = misc->variable_changes)
-	  var_chg[encode_value_canonic (({scope_name, index}))] = val;
+	  if (SCOPE_TYPE scope = var_chg[encode_value_canonic (({scope_name}))])
+	    // The scope is added in the same entry so we modify it
+	    // with the new variable setting. This is done not only as
+	    // an optimization but also to ensure that VariableChange
+	    // doesn't try to set the variable before the scope is
+	    // installed.
+	    scope[index] = val;
+	  else
+	    var_chg[encode_value_canonic (({scope_name, index}))] = val;
       }
 
       if (objectp (vars) && vars->`[]=)
@@ -1712,23 +1725,35 @@ class Context
 
     if (!scope_name) scope_name = "_";
     if (SCOPE_TYPE vars = scopes[scope_name]) {
-      if (arrayp (var))
-	if (sizeof (var) > 1) {
-	  array(string|int) path = var[..sizeof (var) - 1];
-	  vars = rxml_index (vars, path, scope_name, this_object());
-	  scope_name += "." + (array(string)) path * ".";
-	  if (mapping var_chg = misc->variable_changes)
-	    var_chg[encode_value_canonic (({scope_name}) + var)] = nil;
-	  var = var[-1];
-	}
-	else {
-	  var = var[0];
-	  if (mapping var_chg = misc->variable_changes)
-	    var_chg[encode_value_canonic (({scope_name, var}))] = nil;
-	}
-      else {
+
+    record_change: {
+	if (arrayp (var))
+	  if (sizeof (var) > 1) {
+	    if (mapping var_chg = misc->variable_changes)
+	      // Warning: This can't be done reliably if the scope is
+	      // added in var_chg too, but we need sequencing to solve
+	      // it - upgrade to 3.4!
+	      var_chg[encode_value_canonic (({scope_name}) + var)] = nil;
+
+	    array(string|int) path = var[..sizeof (var) - 1];
+	    vars = rxml_index (vars, path, scope_name, this_object());
+	    scope_name += "." + (array(string)) path * ".";
+	    var = var[-1];
+	    break record_change;
+	  }
+	  else
+	    var = var[0];
+
 	if (mapping var_chg = misc->variable_changes)
-	  var_chg[encode_value_canonic (({scope_name, var}))] = nil;
+	  if (SCOPE_TYPE scope = var_chg[encode_value_canonic (({scope_name}))])
+	    // The scope is added in the same entry so we modify it
+	    // with the new variable setting. This is done not only as
+	    // an optimization but also to ensure that VariableChange
+	    // doesn't try to set the variable before the scope is
+	    // installed.
+	    m_delete (scope, var);
+	  else
+	    var_chg[encode_value_canonic (({scope_name, var}))] = nil;
       }
 
       if (objectp (vars) && vars->_m_delete)
@@ -2220,11 +2245,18 @@ class Context
       if (!hidden[frame])
 	hidden[frame] = ({scopes["_"], scopes[scope_name]});
       scopes["_"] = scopes[scope_name] = vars;
+      if (mapping var_chg = misc->variable_changes)
+	var_chg[encode_value_canonic (({scope_name}))] =
+	  var_chg[encode_value_canonic (({"_"}))] =
+	  mappingp (vars) ? vars + ([]) : vars;
     }
     else {
       if (!hidden[frame])
 	hidden[frame] = ({scopes["_"], 0});
       scopes["_"] = vars;
+      if (mapping var_chg = misc->variable_changes)
+	var_chg[encode_value_canonic (({"_"}))] =
+	  mappingp (vars) ? vars + ([]) : vars;
     }
   }
 
@@ -7998,7 +8030,7 @@ class PCode
       return intro + ")" + OBJ_COUNT;
   }
 
-  constant P_CODE_VERSION = 3.1;
+  constant P_CODE_VERSION = 3.2;
   // Version spec encoded with the p-code, so we can detect and reject
   // incompatible p-code dumps even when the encoded format hasn't
   // changed in an obvious way.
