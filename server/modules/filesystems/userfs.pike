@@ -14,7 +14,7 @@
 
 inherit "filesystem";
 
-constant cvs_version="$Id: userfs.pike,v 1.20 1998/03/02 19:55:00 grubba Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.21 1998/03/05 19:43:50 grubba Exp $";
 
 // import Array;
 // import Stdio;
@@ -157,8 +157,13 @@ mixed find_file(string f, object got)
     }
     if(QUERY(own))
     {
+      if (!us) {
+	us = got->conf->userinfo( u, got );
+      }
+
       st = stat_file(f,got);
-      if(!st || (st[-2] != (int)us[2]))
+
+      if(!st || (st[-2] != (int)(us[2])))
         return 0;
     }
     f = dude_ok[u]+f;
