@@ -44,3 +44,10 @@ Between InternetServer 2.5 and Roxen WebServer <= 2.4
    users using local protocol plugins. This can be solved by moving or
    symlinking the old local plugins directory to the new location.
      ln -s local/protocols local/plugins/protocols
+
+ - The Administration interface themes are now loaded from the
+   directories server/admin_interface/themes and
+   local/admin_interface/themes. This affects users usig local themes.
+   This can be solved by moving or symlinking the old local themes to
+   the new location.
+     ln -s local/config_interface/themes local/admin_interface/themes
