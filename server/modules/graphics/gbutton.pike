@@ -1,7 +1,7 @@
 //  Button module. Generates graphical buttons for use in Roxen config
 //  interface, Roxen SiteBuilder and other places.
 //
-//  Copyright © 1999 Idonex AB. Author: Jonas Walldén, <jonasw@idonex.se>
+//  Copyright © 1999-2000 Idonex AB. Author: Jonas Walldén, <jonasw@idonex.se>
 
 
 //  Usage:
@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.8 1999/12/09 09:58:57 nilsson Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.9 2000/01/10 11:49:12 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -120,10 +120,16 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
   int          req_width, b_width, b_height, t_width, i_width, icn_x, txt_x;
   mapping      icon;
   
+  //  Load images
+  if (!button_border) {
+    button_border = roxen.load_image("roxen-images/gbutton_border.gif", id);
+    button_mask = roxen.load_image("roxen-images/gbutton_mask.gif", id);
+  }
+
   //  Colorize borders
   if (!args->dim)
     b = button_border->clone()->grey()->
-            modify_by_intensity(1, 1, 1, args->bo, ({ 255, 255, 255 }) );
+            modify_by_intensity(1, 1, 1, args->bo, args->bob );
   else 
   {
     array dim_bg = ({ 255, 255, 255 });
@@ -254,12 +260,6 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
 
 mapping find_internal(string f, RequestID id)
 {
-  //  Load images
-  if (!button_border) {
-    button_border = roxen.load_image("roxen-images/gbutton_border.gif", id);
-    button_mask = roxen.load_image("roxen-images/gbutton_mask.gif", id);
-  }
-
   return button_cache->http_file_answer(f, id);
 }
 
@@ -267,9 +267,10 @@ mapping find_internal(string f, RequestID id)
 string tag_button(string tag, mapping args, string contents, RequestID id)
 {
   mapping new_args = ([
-    "bo"  : parse_color(args->bordercolor || "#333333"), //  Border color
-    "bg"  : parse_color(args->bgcolor || "#eeeeee"),     //  Background color
-    "txt" : parse_color(args->textcolor || "#000000"),   //  Text color
+    "bg"  : parse_color(args->bgcolor || id->misc->defines->theme_bgcolor ||
+			id->misc->defines->bgcolor || "#eeeeee"),     //  Background color
+    "txt" : parse_color(args->textcolor || id->misc->defines->theme_bgcolor ||
+			id->misc->defines->fgcolor || "#000000"),   //  Text color
     "cnd" : args->condensed ||                           //  Condensed text
             (lower_case(args->textstyle || "") == "condensed"),
     "wi"  : (int) args->width,                           //  Min button width
@@ -280,7 +281,17 @@ string tag_button(string tag, mapping args, string contents, RequestID id)
     "icd" : args->icon_data,                             //  Inline icon data
     "ica" : args->align_icon || "left"                   //  Icon alignment
   ]);
-  
+
+  if(args->bordercolor)
+    new_args->bo=parse_color(args->bordercolor); //  Border color
+  else
+    new_args->bo=Array.map(new_args->bg, lambda(int c){ return c/5; });
+
+  if(args->borderbottom)
+    new_args->bob=parse_color(args->borderbottom);
+  else
+    new_args->bob=Array.map(new_args->bg, lambda(int c){ c=c*2+64; return c>255?255:c; });
+
   new_args->quant = args->quant || 128;
   foreach(glob("*-*", indices(args)), string n)
     new_args[n] = args[n];
@@ -304,7 +315,7 @@ string tag_button(string tag, mapping args, string contents, RequestID id)
     img_attrs->width = size->xsize;
     img_attrs->height = size->ysize;
   }
-  
+
   //  Make button clickable if not dimmed
   if (args->href && !new_args->dim) {
     mapping a_attrs = ([ "href" : args->href ]);
