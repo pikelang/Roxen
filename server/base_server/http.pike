@@ -137,7 +137,7 @@ mapping http_stream(object from)
 mapping http_auth_required(string realm, string|void message)
 {
   if(!message)
-    message = "<h1>Authentification failed.\n</h1>";
+    message = "<h1>Authentication failed.\n</h1>";
 #ifdef HTTP_DEBUG
   perror("HTTP: Auth required ("+realm+")\n");
 #endif  
@@ -151,7 +151,7 @@ mapping http_auth_failed(string realm)
 #ifdef HTTP_DEBUG
   perror("HTTP: Auth failed ("+realm+")\n");
 #endif  
-  return http_low_answer(401, "<h1>Authentification failed.\n</h1>")
+  return http_low_answer(401, "<h1>Authentication failed.\n</h1>")
     + ([ "extra_heads":([ "WWW-Authenticate":"basic realm=\""+realm+"\"",]),]);
 }
 #else
