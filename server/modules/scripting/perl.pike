@@ -14,7 +14,7 @@ inherit "module";
 inherit "roxenlib";
 
 string cvs_version =
-       "$Id: perl.pike,v 2.21 2001/09/21 15:58:13 jhs Exp $";
+       "$Id: perl.pike,v 2.22 2001/11/01 15:00:09 grubba Exp $";
 
 constant module_type = MODULE_FILE_EXTENSION | MODULE_TAG;
 
@@ -42,10 +42,10 @@ static object mutex = Thread.Mutex();
 
 void create()
 {
-  defvar("extensions", "pl, perl",
-    LOCALE(0,"Extensions"), TYPE_STRING,
-    LOCALE(0,"Comma-separated list of URL extensions that indicate that "
-    "the document is a Perl script."));
+  defvar("extensions", ({ "pl", "perl" }),
+    LOCALE(0,"Extensions"), TYPE_STRING_LIST,
+    LOCALE(0,"List of URL extensions that indicate that the document "
+	   "is a Perl script."));
 
 #if 0
   defvar("libdir", "./perl",
@@ -352,7 +352,7 @@ mixed simple_pi_tag_perl(string tag, mapping attr, string contents, object id,
 
 array(string) query_file_extensions()
 {
-  return (query("extensions") - " ") / ",";
+  return query("extensions");
 }
 
 TAGDOCUMENTATION;
