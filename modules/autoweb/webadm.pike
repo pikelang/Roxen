@@ -1,12 +1,12 @@
 /*
- * $Id: webadm.pike,v 1.1 1998/07/23 04:38:56 js Exp $
+ * $Id: webadm.pike,v 1.2 1998/07/23 18:56:49 wellhard Exp $
  *
  * AutoWeb administration interface
  *
- * Johan Schön 1998-07-08
+ * Johan Schön, Marcus Wellhardh 1998-07-23
  */
 
-constant cvs_version = "$Id: webadm.pike,v 1.1 1998/07/23 04:38:56 js Exp $";
+constant cvs_version = "$Id: webadm.pike,v 1.2 1998/07/23 18:56:49 wellhard Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -14,21 +14,9 @@ constant cvs_version = "$Id: webadm.pike,v 1.1 1998/07/23 04:38:56 js Exp $";
 inherit "module";
 inherit "roxenlib";
 
-#define BODY  "<body bgcolor="+colorscheme->bgcolor+\
-	      " text="+colorscheme->text+\
-	      " link="+colorscheme->link+\
-	      " vlink="+colorscheme->vlink+\
-	      " alink="+colorscheme->alink+">"
-
-mapping colorscheme= (["bgcolor":"white", "text":"black",
-		       "link":"darkblue", "vlink":"darkblue",
-		       "alink":"lightgreen",
-		       "topbgcolor":"#dddddd", "toptext":"black"]);
-
-string tabsdir,imgsdir,handlerdir,actionsdir;
-mapping tabs,actions;
-array tablist,actionlist;
-
+string tabsdir, templatesdir;
+mapping tabs;
+array tablist;
 
 
 array register_module()
@@ -38,23 +26,22 @@ array register_module()
 }
 
 
-
 mapping credentials;
 
 void update_customer_cache(object id)
 {
-  object db=id->conf->call_provider("sql","sql_object",id);
-  array a=db->query("select id,user_id,password from customers");
-  mapping new_credentials=([]);
+  object db = id->conf->call_provider("sql","sql_object",id);
+  array a = db->query("select id,user_id,password from customers");
+  mapping new_credentials = ([]);
   if(!catch {
-    Array.map(a,lambda(mapping entry, mapping m)
-		{
-		  m[entry->id]=({ entry->user_id, entry->password });
-		},new_credentials);
+    Array.map(a, lambda(mapping entry, mapping m)
+		 {
+		   m[entry->id]=({ entry->user_id, entry->password });
+		 }, new_credentials);
   })
-    credentials=new_credentials;
-
+    credentials = new_credentials;
 }
+
 
 int validate_customer(object id)
 {
@@ -72,6 +59,7 @@ string tag_update(string tag_name, mapping args, object id)
   return "AutoWeb authorization data reloaded.";
 }
 
+
 string customer_name(string tag_name, mapping args, object id)
 {
   return "<sqloutput query="
@@ -79,47 +67,72 @@ string customer_name(string tag_name, mapping args, object id)
     "#name#<sqloutput>";
 }
 
+
+string update_template(string tag_name, mapping args, object id)
+{
+  object db = Sql.sql(query("database"));
+  string templatesdir = combine_path(roxen->filename(this)+
+				     "/", "../../../")+"templates/";
+  string sitesdir = combine_path(roxen->filename(this)+
+  				 "/", "../../../")+"sites/";
+  string destfile = sitesdir+
+		    (string)id->variables->customer_id+
+		    "/templates/default.tmpl";
+  array a =
+    db->query("select * from "
+	      "template_vars,customers_preferences,templates where "
+	      "customers_preferences.customer_id='"+
+	      id->variables->customer_id+"' and " 
+	      "template_vars.name='template_name' and "
+	      "customers_preferences.variable_id=template_vars.id and "
+	      "customers_preferences.value=templates.name");
+  
+  string s = Stdio.read_bytes(templatesdir+a[0]->filename);
+  if(sizeof(s)) {
+    a = db->query("select * from customers_preferences,template_vars where "
+		  "customers_preferences.customer_id='"+
+		  id->variables->customer_id+"' and "
+		  "customers_preferences.variable_id=template_vars.id");
+    
+    foreach(a, mapping variable) {
+      s = replace(s, "$$"+variable->name+"$$", variable->value);
+    }
+    
+    object template_file = Stdio.File();
+    template_file->open(destfile, "wct");
+    template_file->write(s);
+    template_file->close();
+  }
+  
+  return "";
+}
+
+
 mapping query_tag_callers()
 {
   return ([ "autosite-webadm-update" : tag_update,
-            "autosite-webadm-customername" : customer_name]);
+            "autosite-webadm-customername" : customer_name,
+	    "autosite-webadm-update-template" : update_template
+  ]);
 }
+
 
 string make_tablist(array(object) tabs, object current, object id)
 {
-  string res_tabs="";
+  string res_tabs = "";
   foreach(tabs, object tab)
   {
     mapping args = ([]);
-    args->bgcolor=colorscheme->bgcolor;
-    args->href = combine_path(query("location"),tab->tab)+"/";
+    args->href = combine_path(query("location"), tab->tab)+"/";
     if(current==tab)
     {
       args->selected = "selected";
       args->href += "?_reset=";
     }
-    res_tabs += make_container( "tab", args, replace(tab->title,"_"," "));
+    res_tabs += make_container( "tab", args, replace(tab->title, "_"," "));
   }
   return "\n\n<!-- Tab list -->\n"+
-    make_container("config_tablist",([]), res_tabs)+"\n\n";
-}
-
-string status_row(string tab, object id)
-{
-   return
-     "<table cellpadding=0 cellspacing=0 border=0 width='100%'>"
-     "<tr><td valign=bottom align=left>"
-     "<a href=http://www.roxen.com/>"
-     "<img border=0 alt=\"Roxen\" src=/internal-roxen-roxen-icon-gray></a>"
-     "</td><td>&nbsp;</td><td width='100%' height=39>"
-     "<table cellpadding=0 cellspacing=0 width='100%' border=0>"
-     "<tr width='100%'><td width=100% align=right valigh=center height=28>"
-     "<b><font size=+1>AutoSite Administration Interface</font></b>"
-     "</td></tr><tr width='100%'>"
-     "<td bgcolor='#003366' align=right height=12 width='100%'>"
-     "<font color=white size=-2>Roxen AutoSite&nbsp;&nbsp;</td>"
-     "</tr></table></td>"
-     "</tr></table><br>\n";
+    make_container("config_tablist", ([]), res_tabs)+"\n\n";
 }
 
 
@@ -135,17 +148,19 @@ string validate_user(object id)
   return 0;
 }
 
+
 mixed find_file(string f, object id)
 {
   string tab,sub;
   mixed content="";
   mapping state;
-
-  int t1,t2,t3;
-
+  
+  int t1, t2, t3;
+  
   // User validation
   if(!credentials)
     update_customer_cache(id);
+
   // User validation
   if(!validate_customer(id))
     return (["type":"text/html",
@@ -156,49 +171,58 @@ mixed find_file(string f, object id)
 	     "data":"<title>Access Denied</title>"
 	     "<h2 align=center>Access forbidden</h2>\n"
     ]);
-
   
- sscanf(f, "%s/%s", tab, sub);
- string res = "<title>AutoSite Administration Interface</title>"+BODY+status_row(tab,id);
- res+=make_tablist(tablist,tabs[tab],id);
- if (!tabs[tab])
-     content=
-	"You've reached a non-existing tab '"
-	"<tt>"+tab+"</tt> somehow. Select another tab.\n";
- else
-     content = tabs[tab]->show(sub,id,f);
-
- if(mappingp(content))
-       return content;
- res += "<p>" + content + "</body>";
- 
+  if(sscanf(f, "templates/%s", string template)>0) {
+    template -= "../";
+    return http_string_answer(Stdio.read_bytes(templatesdir + template));
+  }
+  
+  sscanf(f, "%s/%s", tab, sub);
+  string res = "<template base=/webadm>\n"+
+	       "<tmpl_body>";
+  res += make_tablist(tablist, tabs[tab], id);
+  if (!tabs[tab])
+    content= "You've reached a non-existing tab '"
+	     "<tt>"+tab+"</tt> somehow. Select another tab.\n";
+  else
+    content = tabs[tab]->show(sub, id, f);
+  
+  if(mappingp(content))
+    return content;
+  res += "<br>"+content+"</tmpl_body>\n</template>";
+  
   return http_string_answer(parse_rxml(res, id)) |
-  ([ "extra_heads":
-     (["Expires": http_date( 0 ), "Last-Modified": http_date( time(1) ) ])
-  ]);
+    ([ "extra_heads":
+       (["Expires": http_date( 0 ), "Last-Modified": http_date( time(1) ) ])
+    ]);
 }
 
 
 void start(int q, object conf)
 {
-   tabsdir=(combine_path(roxen->filename(this)+"/","../")+"tabs/");
-   tabs=mkmapping(
-     get_dir(tabsdir)-({".","..",".no_modules","CVS"}),
-     Array.map(get_dir(tabsdir)-({".","..",".no_modules","CVS"}),
-	       lambda(string s,string d,string l) 
-	       {
-		 return .Tab.tab(d+s,s,this_object());
-	       },tabsdir,query("location")));
-   tablist=values(tabs);
-   sort(indices(tabs),tablist);
-   
-   if(conf)
-     module_dependencies(conf,
-			 ({ "configtablist",
-			    "htmlparse" }));
+  templatesdir = combine_path(roxen->filename(this)+"/", "../")+"templates/";
+  tabsdir = combine_path(roxen->filename(this)+"/", "../")+"tabs/";
+  tabs = mkmapping(get_dir(tabsdir)-({".", "..", ".no_modules", "CVS"}),
+		   Array.map(get_dir(tabsdir)-
+			     ({".", "..", ".no_modules", "CVS"}),
+			     lambda(string s, string d, string l) 
+			     {
+			       return .Tab.tab(d+s, s, this_object());
+			     }, tabsdir, query("location")));
+  tablist = values(tabs);
+  sort(indices(tabs), tablist);
+  
+  if(conf)
+    module_dependencies(conf,
+			({ "configtablist",
+			   "htmlparse" }));
 }
+
 
 void create()
 {
   defvar("location", "/webadm/", "Mountpoint", TYPE_LOCATION);
+  defvar("database",
+	 "mysql://auto:site@kopparorm.idonex.se/autosite",
+	 "Database URL", TYPE_STRING);
 }
