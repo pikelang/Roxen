@@ -4,6 +4,43 @@ Changes since Roxen Challenger 1.2.26 Yellow
 o Bug in protocols/http.pike fixed. If a connection was made, but no
   data was sent, the connection wouldn't timeout.
 
+o ntroxenloader.pike now understands -verbose.
+
+o Fixed the testsuite in extern/ so that it is possible to run as root.
+
+o Pike 0.6 now seems to compile on BeOS/x86.
+
+o "Actions"/"Misc" con now be selected properly.
+
+o Fixed problem with erroneous error messages on start on OSs without threads.
+
+o "Actions"/"Maintenance"/"Show all open ports..." now works again.
+
+o Fixed bug in directories.pike.
+
+o userfs.pike now reports banished users only once.
+
+o Fixed stat bug in userfs.pike.
+
+o Fixed "tagname" bug in graphic_text.pike.
+
+o ip-less.pike now checks if the hostname is an IP number.
+
+o cgi.pike now supports "Send stderr to client" in combination with
+  "Audit trail".
+
+o #include now works in Pike-scripts again.
+
+o Added the attribute "eval" to the <set> tag.
+
+o Added the new tags <nooutput> and <sort>.
+
+o Improved timeout handling in ftp2.pike.
+
+o Disabled some debug output in the http.pike protocol module.
+
+o The internal server error page now attempts to censor any passwords.
+
 
 Changes since Roxen Challenger 1.2.25 Yellow
 -----------------------------------------------
