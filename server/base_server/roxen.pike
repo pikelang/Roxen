@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.619 2001/01/31 01:06:09 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.620 2001/01/31 04:01:38 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -3041,11 +3041,11 @@ void initiate_argcache()
   report_debug("Done [%.2fms]\n", (gethrtime()-t)/1000.0);
 }
 
+array argv;
 int main(int argc, array tmp)
 {
-  array argv = tmp;
   tmp = 0;
-
+  argv = tmp;
   slowpipe = ((program)"base_server/slowpipe");
   fastpipe = ((program)"base_server/fastpipe");
   dump( "base_server/slowpipe.pike" );
