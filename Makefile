@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.22 1997/12/17 18:05:16 grubba Exp $
+# $Id: Makefile,v 1.23 1998/02/28 20:59:57 grubba Exp $
 #
 # Bootstrap Makefile
 #
@@ -51,7 +51,7 @@ all : configure
 configure : configure.in
 	@echo Rebuilding the configure-scripts...
 	@echo
-	@pike/src/run_autoconfig 2>&1 | grep -v warning
+	@pike/src/0.6/run_autoconfig 2>&1 | grep -v warning
 	@echo
 
 install : all
@@ -82,7 +82,7 @@ localinstall : all
 	builddir=`pwd`; \
 	$$srcdir/mkdir -p $$srcdir/server/lib; \
 	rm -f $$srcdir/server/lib/pike; \
-	ln -s "$$builddir"/pike/src/lib $$srcdir/server/lib/pike;
+	ln -s "$$builddir"/pike/0.6/src/lib $$srcdir/server/lib/pike;
 	@echo
 	@echo Roxen successfully installed.
 	@echo
@@ -144,12 +144,26 @@ censor : censor_crypto censor_dbapi dist_clean
 	@echo "Censoring complete."
 
 censor_crypto :
-	@if test -d pike/src/modules/_Crypto/. ; then \
-	  (cd pike/src/modules/_Crypto; ./.build_lobotomized_crypto); \
-	else :; fi
+	@for d in pike/*/src/modules/_Crypto/. pike/src/modules/_Crypto/.; do \
+	  if test -d $$d ; then \
+	    echo "Lobotomizing in $$d..."; \
+	    (cd $$d; ./.build_lobotomized_crypto); \
+	  else : ; fi; \
+	done
+
 	@echo "Censoring the Crypto implementation..."
-	-@rm -rf pike/src/modules/_Crypto pike/lib/modules/Crypto/rsa.pike pike/lib/modules/SSL.pmod server/protocols/ssl3.pike pike/src/modules/Ssleay || true
+	@for d in pike/*/src/. pike/src/.; do \
+	  if test -d $$d ; then \
+	    echo "$$d..."; \
+	    rm -rf $$d/modules/_Crypto $$d/../lib/modules/Crypto/rsa.pike $$d/../lib/modules/SSL.pmod; \
+	  else : ; fi; \
+	done
+	-@rm -rf server/protocols/ssl3.pike pike/src/modules/Ssleay || true
 
 censor_dbapi :
 	@echo "Censoring the DBAPI..."
-	-@rm -rf pike/src/modules/Oracle pike/src/modules/Odbc || true
+	@for d in pike/*/src/. pike/src/.; do \
+	  if test -d $$d ; then \
+	    rm -rf $$d/modules/Oracle $$d/modules/Odbc; \
+	  else : ; fi; \
+	done

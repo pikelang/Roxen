@@ -15,6 +15,7 @@ AC_SET_MAKE
 
 AC_ARG_WITH(pike,   [  --with-pike          Specify version of Pike],[],[with_pike=0.5])
 
+AC_MSG_CHECKING(version of Pike to use)
 case "$with_pike" in
   0.5)
   ;;
@@ -24,6 +25,7 @@ case "$with_pike" in
     with_pike=0.5
   ;;
 esac
+AC_MSG_RESULT($with_pike)
 
 AC_CONFIG_SUBDIRS($with_pike/src)
 
