@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.23 1997/08/24 23:14:01 peter Exp $ */
+/* $Id: module.pike,v 1.24 1997/09/27 13:24:52 grubba Exp $ */
 
 #include <module.h>
 
@@ -342,7 +342,7 @@ class IP_with_mask {
   static private int ip_to_int(string ip)
   {
     int res;
-    foreach(ip/".", string num) {
+    foreach(((ip/".") + ({ "0", "0", "0" }))[..3], string num) {
       res = res*256 + (int)num;
     }
     return(res);
