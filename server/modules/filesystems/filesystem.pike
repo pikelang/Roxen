@@ -8,7 +8,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.49 1999/05/23 00:04:04 mast Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.50 1999/06/08 03:09:41 hubbe Exp $";
 constant thread_safe=1;
 
 
@@ -431,7 +431,8 @@ mixed find_file( string f, object id )
     object privs;
 
 // #ifndef THREADS // Ouch. This is is _needed_. Well well...
-    if (((int)id->misc->uid) && ((int)id->misc->gid)) {
+    if (((int)id->misc->uid) && ((int)id->misc->gid) &&
+      (QUERY(access_as_user))) {
       // NB: Root-access is prevented.
       privs=Privs("Creating directory",
 		  (int)id->misc->uid, (int)id->misc->gid );
@@ -482,7 +483,8 @@ mixed find_file( string f, object id )
     object privs;
 
 // #ifndef THREADS // Ouch. This is is _needed_. Well well...
-    if (((int)id->misc->uid) && ((int)id->misc->gid)) {
+    if (((int)id->misc->uid) && ((int)id->misc->gid) &&
+      (QUERY(access_as_user))) {
       // NB: Root-access is prevented.
       privs=Privs("Saving file", (int)id->misc->uid, (int)id->misc->gid );
     }
@@ -808,7 +810,8 @@ mixed find_file( string f, object id )
     report_notice("DELETING the file "+f+"\n");
     accesses++;
 
-    if (((int)id->misc->uid) && ((int)id->misc->gid)) {
+    if (((int)id->misc->uid) && ((int)id->misc->gid) &&
+      (QUERY(access_as_user))) {
       // NB: Root-access is prevented.
       privs=Privs("Deleting file", id->misc->uid, id->misc->gid );
     }
