@@ -1,7 +1,7 @@
 /* Copyright © 1997, 1998, Idonex AB.
  * Some modifications by Francesco Chemolli
  *
- * $Id: wizard.pike,v 1.87 1999/07/11 16:23:59 peter Exp $
+ * $Id: wizard.pike,v 1.88 1999/10/11 12:27:07 peter Exp $
  *  name="Wizard generator";
  *  doc="This file generates all the nice wizards";
  * 
@@ -329,7 +329,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed b)
      string res="";
      m->type = "select";
      m->lines = "20";
-     m->choices = roxen->available_fonts(1)*",";
+     m->choices = available_fonts()*",";
      if(id->conf && id->conf->modules["graphic_text"] && !m->noexample)
        res = ("<input type=submit value='Example'><br>"+
 	      ((current&&strlen(current))?
