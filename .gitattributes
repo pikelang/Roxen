@@ -256,6 +256,7 @@ urw_itc_avant_garde-demi-r binary
 /server/modules/tags/wizard_tag.pike foreign_ident
 /server/modules/tags/ximg.pike foreign_ident
 /server/modules/throttling/baseline_throttling.pike foreign_ident
+/server/modules/throttling/throttlelib.pike foreign_ident
 /server/modules/throttling/throttling_bytype.pike foreign_ident
 /server/more_modules/bofh.pike foreign_ident
 /server/more_modules/clock.pike foreign_ident
