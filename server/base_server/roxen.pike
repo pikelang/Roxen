@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.451 2000/03/09 03:48:38 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.452 2000/03/09 03:56:53 mast Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -2616,9 +2616,9 @@ void create()
 
   /* Delayed loading. */
   int s = gethrtime();
-  dump( "etc/modules/RXML.pmod/module.pmod" );
   /* Used in all 'new style' tag modules */
   add_constant( "RXML",         master()->resolv("RXML") );
+  dump( "etc/modules/RXML.pmod/module.pmod" );
   add_constant( "RXML.t_text",  master()->resolv("RXML.t_text") );
   add_constant( "RXML.t_same",  master()->resolv("RXML.t_same") );
   add_constant( "RXML.t_none",  master()->resolv("RXML.t_none") );
@@ -2627,7 +2627,7 @@ void create()
   add_constant( "RXML.t_xml",   master()->resolv("RXML.t_xml") );
   add_constant( "RXML.Context", master()->resolv("RXML.Context") );
   add_constant( "RXML.Tag",     master()->resolv("RXML.Tag") );
-  add_constant( "RXML.TagSet",  master()->resolv("RXML.Tag") );
+  add_constant( "RXML.TagSet",  master()->resolv("RXML.TagSet") );
   add_constant( "RXML.Frame",   master()->resolv("RXML.Frame") );
   add_constant( "RXML.Void",    master()->resolv("RXML.Void") );
   add_constant( "RXML.get_context", master()->resolv("RXML.get_context") );
