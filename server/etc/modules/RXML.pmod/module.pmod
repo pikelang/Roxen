@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.43 2000/02/05 05:18:21 mast Exp $
+//! $Id: module.pmod,v 1.44 2000/02/06 23:35:32 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -40,12 +40,11 @@ class Tag
   //! Various bit flags that affect parsing; see the FLAG_* constants.
   //! RXML.Frame.flags is initialized from this.
 
-  mapping(string:Type) req_arg_types;
-  mapping(string:Type) opt_arg_types;
-  //! Define to declare the names and types of the required and
-  //! optional arguments. If a type specifies a parser, it'll be used
-  //! on the argument value. Note that the order in which arguments
-  //! are parsed is arbitrary.
+  mapping(string:Type) req_arg_types = ([]);
+  mapping(string:Type) opt_arg_types = ([]);
+  //! The names and types of the required and optional arguments. If a
+  //! type specifies a parser, it'll be used on the argument value.
+  //! Note that the order in which arguments are parsed is arbitrary.
 
   Type def_arg_type = t_text (PEnt);
   //! The type used for arguments that isn't present in neither
@@ -137,36 +136,29 @@ class Tag
   //! context to use; it defaults to the current context.
   {
     // Note: Code duplication in Frame._eval().
-    mapping(string:Type) atypes;
-    if (req_arg_types) {
-      atypes = args & req_arg_types;
-      if (sizeof (atypes) < sizeof (req_arg_types))
-	if (dont_throw) return 0;
-	else {
-	  array(string) missing = sort (indices (req_arg_types - atypes));
-	  rxml_fatal ("Required " +
-		      (sizeof (missing) > 1 ?
-		       "arguments " + String.implode_nicely (missing) + " are" :
-		       "argument " + missing[0] + " is") + " missing.\n");
-	}
-    }
-    if (opt_arg_types)
-      if (atypes) atypes += args & opt_arg_types;
-      else atypes = args & opt_arg_types;
-    if (atypes) {
-#ifdef MODULE_DEBUG
-      if (mixed err = catch {
-#endif
-	foreach (indices (atypes), string arg)
-	  args[arg] = atypes[arg]->eval (args[arg], ctx); // Should not unwind.
-#ifdef MODULE_DEBUG
-      }) {
-	if (objectp (err) && ([object] err)->thrown_at_unwind)
-	  error ("Can't save parser state when evaluating arguments.\n");
-	throw (err);
+    mapping(string:Type) atypes = args & req_arg_types;
+    if (sizeof (atypes) < sizeof (req_arg_types))
+      if (dont_throw) return 0;
+      else {
+	array(string) missing = sort (indices (req_arg_types - atypes));
+	rxml_fatal ("Required " +
+		    (sizeof (missing) > 1 ?
+		     "arguments " + String.implode_nicely (missing) + " are" :
+		     "argument " + missing[0] + " is") + " missing.\n");
       }
+    atypes += args & opt_arg_types;
+#ifdef MODULE_DEBUG
+    if (mixed err = catch {
 #endif
+      foreach (indices (atypes), string arg)
+	args[arg] = atypes[arg]->eval (args[arg], ctx); // Should not unwind.
+#ifdef MODULE_DEBUG
+    }) {
+      if (objectp (err) && ([object] err)->thrown_at_unwind)
+	error ("Can't save parser state when evaluating arguments.\n");
+      throw (err);
     }
+#endif
     return 1;
   }
 
@@ -522,12 +514,15 @@ class Value
 //! Interface for objects used as variable values that are evaluated
 //! when referenced.
 {
-  mixed rxml_var_eval (Context ctx, string var, string scope_name, void|Type want_type);
+  mixed rxml_var_eval (Context ctx, string var, string scope_name, void|Type type);
   //! This is called to get the value of the variable. ctx, var and
-  //! scope_name are set to where this Value object was found. If
-  //! want_type is given, it hints the type the return value should
-  //! have. However, the caller has no guarantee that the hint will be
-  //! heeded.
+  //! scope_name are set to where this Value object was found.
+  //!
+  //! If the type argument is given, it's the type the returned value
+  //! should have. If the value can't be converted to that type, an
+  //! RXML error should be thrown. If you don't want to do any special
+  //! handling of this, it's enough to call type->convert(value),
+  //! since that function does just that.
 
   string _sprintf() {return "RXML.Value";}
 }
@@ -607,10 +602,9 @@ class Context
   //! current scope if none is given. Returns zero with zero_type 1 if
   //! there's no such variable.
   //!
-  //! If want_type is set, it's taken as a hint for the type the
-  //! caller wants in return. It's only effect is that if the variable
-  //! value is a Value object, want_type is propagated to its
-  //! rxml_var_eval() function.
+  //! If the type argument is set, the value is converted to that type
+  //! with Type.convert(). If the value can't be converted, an RXML
+  //! error is thrown.
   {
     if (SCOPE_TYPE vars = scopes[scope_name || "_"]) {
       mixed val;
@@ -624,7 +618,14 @@ class Context
 	  zero_type (val = ([object(Value)] val)->rxml_var_eval (
 		       this_object(), var, scope_name || "_", want_type)) ||
 	  val == Void ? ([])[0] : val;
-      else return val;
+      else
+	if (want_type)
+	  return
+	    // FIXME: Some system to find out the source type?
+	    zero_type (val = want_type->convert (val)) ||
+	    val == Void ? ([])[0] : val;
+	else
+	  return val;
     }
     else if (scope_name) rxml_fatal ("Unknown scope %O.\n", scope_name);
     else rxml_fatal ("No current scope.\n");
@@ -1620,35 +1621,28 @@ class Frame
     if (raw_args) {
       args = raw_args;
       // Note: Code duplication in Tag.eval_args().
-      mapping(string:Type) atypes;
-      if (tag->req_arg_types) {
-	atypes = raw_args & tag->req_arg_types;
-	if (sizeof (atypes) < sizeof (tag->req_arg_types)) {
-	  array(string) missing = sort (indices (tag->req_arg_types - atypes));
-	  rxml_fatal ("Required " +
-		      (sizeof (missing) > 1 ?
-		       "arguments " + String.implode_nicely (missing) + " are" :
-		       "argument " + missing[0] + " is") + " missing.\n");
-	}
+      mapping(string:Type) atypes = raw_args & tag->req_arg_types;
+      if (sizeof (atypes) < sizeof (tag->req_arg_types)) {
+	array(string) missing = sort (indices (tag->req_arg_types - atypes));
+	rxml_fatal ("Required " +
+		    (sizeof (missing) > 1 ?
+		     "arguments " + String.implode_nicely (missing) + " are" :
+		     "argument " + missing[0] + " is") + " missing.\n");
       }
-      if (tag->opt_arg_types)
-	if (atypes) atypes += raw_args & tag->opt_arg_types;
-	else atypes = raw_args & tag->opt_arg_types;
-      if (atypes) {
+      atypes += raw_args & tag->opt_arg_types;
 #ifdef MODULE_DEBUG
-	if (mixed err = catch {
+      if (mixed err = catch {
 #endif
-	  foreach (indices (args), string arg)
-	    args[arg] = (atypes[arg] || tag->def_arg_type)->
-	      eval (raw_args[arg], ctx, 0, parser, 1); // Should not unwind.
+	foreach (indices (args), string arg)
+	  args[arg] = (atypes[arg] || tag->def_arg_type)->
+	    eval (raw_args[arg], ctx, 0, parser, 1); // Should not unwind.
 #ifdef MODULE_DEBUG
-	}) {
-	  if (objectp (err) && ([object] err)->thrown_at_unwind)
-	    error ("Can't save parser state when evaluating arguments.\n");
-	  throw (err);
-	}
-#endif
+      }) {
+	if (objectp (err) && ([object] err)->thrown_at_unwind)
+	  error ("Can't save parser state when evaluating arguments.\n");
+	throw (err);
       }
+#endif
     }
 #ifdef DEBUG
     if (!args) error ("Internal error: args not set.\n");
@@ -2013,20 +2007,13 @@ class Parser
 	sscanf (split[1], "%[^:]:%s", split[1], string encoding);
 	context->current_var = varref;
 	mixed val;
-	if (zero_type (val = context->get_var (split[1], split[0], type))) { // May throw.
+	if (zero_type (val = context->get_var ( // May throw.
+			 split[1], split[0], encoding ? t_text : type))) {
 	  context->current_var = 0;
 	  return ({});
 	}
 	context->current_var = 0;
-	if (encoding) {
-	  if (mixed err = catch (val = (string) val))
-	    rxml_fatal ("Couldn't convert value to text: " + describe_error (err) + "\n");
-	  val = roxen->roxen_encode (val, encoding);
-	}
-	else
-	  // FIXME: Somehow propagate the type from get_var().
-	  val = type->convert (val, t_text);
-	return val == Void ? ({}) : ({val});
+	return encoding ? ({roxen->roxen_encode (val, encoding)}) : ({val});
       }) {
 	context->current_var = 0;
 	context->handle_exception (err, this_object()); // May throw.
@@ -2530,7 +2517,7 @@ static class TXml
   {
     if (mixed err = catch {val = (string) val;})
       rxml_fatal ("Couldn't convert value to text: " + describe_error (err));
-    if (from && from->quoting_scheme != quoting_scheme)
+    if (!from || from->quoting_scheme != quoting_scheme)
       val = quote (val);
     return val;
   }
