@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.217 2001/03/15 23:31:26 per Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.218 2001/03/24 19:03:50 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -523,6 +523,24 @@ class TagSet {
       else
 	RXML.user_set_var(args->variable, args->value, args->scope);
       return 0;
+    }
+  }
+}
+
+class TagCopyScope {
+  inherit RXML.Tag;
+  constant name = "copy-scope";
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  mapping(string:RXML.Type) req_arg_types = ([ "from":RXML.t_text,
+					       "to":RXML.t_text ]);
+
+  class Frame {
+    inherit RXML.Frame;
+
+    array do_enter(RequestID id) {
+      RXML.Context ctx = RXML.get_context();
+      foreach(ctx->list_var(args->from), string var)
+	ctx->set_var(var, ctx->get_var(var, args->from), args->to);
     }
   }
 }
@@ -3205,6 +3223,19 @@ load.</p>
  If debug is currently on, more specific debug information is provided
  if the operation failed. See also: <xref href='append.tag' /> and <xref href='../programming/debug.tag' />.</p>
 </attr> ",
+
+//----------------------------------------------------------------------
+
+"copy-scope":#"<desc tag='tag'><p><short>
+ Copies the content of one scope into another scope</short></p>
+
+<attr name='from' value='scope name' required='1'>
+ <p>The name of the scope the variables are copied from.</p>
+</attr>
+
+<attr name='to' value='scope name' required='1'>
+ <p>The name of the scope the variables are copied to.</p>
+</attr>",
 
 //----------------------------------------------------------------------
 
