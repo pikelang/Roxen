@@ -86,11 +86,11 @@ class Scope_usr
       /* composite */
      case "count-0": return "/internal-roxen-count_0";
      case "count-1": return "/internal-roxen-count_1";
-     case "count-2": return "/internal-roxen-count_2";
-     case "count-3": return "/internal-roxen-count_3";
+     case "count-2": return "/internal-roxen-count_3";
+     case "count-3": return "/internal-roxen-count_2";
 
      case "logo-html":
-       return "<img border=0 src="+QALIAS("logo")+">";
+       return "<img border=\"0\" src="+QALIAS("logo")+" />";
 
      case "toptabs-args":
        res = "frame-image="+QALIAS("toptabs-frame");
@@ -136,27 +136,27 @@ class Scope_usr
        if( stringp(q = QALIAS( "toptabs-align" )) && strlen( q ) )
          res += " align="+q;
        else
-         res += " align=left";
+         res += " align=\"left\"";
        return res;
 
      case "subtabs-tableargs":
-       res = "valign=bottom bgcolor="+QALIAS("subtabs-bgcolor");
+       res = "valign=\"bottom\" bgcolor="+QALIAS("subtabs-bgcolor");
        if( stringp(q = QALIAS( "subtabs-background" )) && strlen( q ) )
          res += " background="+q;
        if( stringp(q = QALIAS( "subtabs-align" )) && strlen( q ) )
          res += " align="+q;
        else
-         res += " align=left";
+         res += " align=\"left\"";
        return res;
 
      case "left-tableargs":
-       string res = "valign=top width=150";
+       string res = "valign=\"top\" width=\"150\"";
        if( stringp(q = QALIAS( "left-background" )) && strlen( q ) )
          res += " background="+q;
        return res;
 
      case "content-tableargs":
-       string res = " width='100%' valign=top";
+       string res = " width=\"100%\" valign=\"top\"";
        if( stringp(q = QALIAS( "content-background" )) && strlen( q ) )
          res += " background="+q;
        return res;
@@ -1012,6 +1012,10 @@ string container_configif_output(string t, mapping m, string c, object id)
      return "<b>Invalid output source: "+m->source+"</b>";
   }
   m_delete( m, "source" );
+
+#ifndef SERIOUS
+  return replace(do_output_tag( m, variables, c, id ), "Default Theme", "Toxic Orange");
+#endif
 
   return do_output_tag( m, variables, c, id );
 }
