@@ -3,6 +3,7 @@
 *.gif binary
 *.gz binary
 *.jpg binary
+/server/languages/czech.pike eol=crlf
 /server/modules/proxies/gopher.pike -text -crlf
 *.ppm binary
 bi binary
@@ -109,6 +110,7 @@ urw_itc_avant_garde-demi-r binary
 /server/etc/welcome.html foreign_ident
 /server/languages/catala.pike foreign_ident
 /server/languages/croatian.pike foreign_ident
+/server/languages/czech.pike foreign_ident
 /server/languages/dutch.pike foreign_ident
 /server/languages/english.pike foreign_ident
 /server/languages/finnish.pike foreign_ident
