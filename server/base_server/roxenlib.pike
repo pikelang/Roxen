@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.190 2000/08/11 14:35:17 nilsson Exp $
+// $Id: roxenlib.pike,v 1.191 2000/08/14 18:56:11 mast Exp $
 
 //#pragma strict_types
 
@@ -1120,8 +1120,15 @@ string get_modfullname (RoxenModule module)
 {
   if (module) {
     string|mapping(string:string) name = 0;
-    if (module->query_name) name = module->query_name();
-    if (!name || !sizeof (name)) name = [string]module->register_module()[1];
+    if (module->query)
+      catch {
+	mixed res = module->query ("_name");
+	if (res) name = (string) res;
+      };
+    if (!(name && sizeof (name)) && module->query_name)
+      name = module->query_name();
+    if (!(name && sizeof (name)))
+      name = [string]module->register_module()[1];
     if (mappingp (name))
       // FIXME: Use locale from an id object in some standard way.
       name = name->standard;
