@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version="$Id: htaccess.pike,v 1.98 2002/12/09 09:43:49 grubba Exp $";
+constant cvs_version="$Id: htaccess.pike,v 1.99 2002/12/09 12:55:09 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -465,6 +465,8 @@ mapping try_htaccess(RequestID id)
   }
   id->misc->no_proto_cache = 1;
 
+  // HT_WERR(sprintf("id->misc: %O", id->misc));
+
   switch(mixed ret = htaccess(access, id))
   {
    case 1:
@@ -482,7 +484,7 @@ mapping try_htaccess(RequestID id)
 				   "or domain-name. "
 				   "The server couldn't resolve your hostname."
 				   " <b>Your computer might lack a correct "
-				   "PTR DNS entry. In that "
+				   "DNS PTR entry. In that "
 				   "case, ask your system administrator to "
 				   "add one.</b>");
     default:
@@ -523,6 +525,8 @@ mapping remap_url(RequestID id)
 
   TRACE_ENTER("htaccess->remap_url()", remap_url);
 
+  // HT_WERR(sprintf("id->misc: %O", id->misc));
+
   if(strlen(id->not_query)&&id->not_query[0]=='/')
   {
     access_violation = try_htaccess( id );
@@ -542,6 +546,8 @@ mapping remap_url(RequestID id)
     }
   }
   TRACE_LEAVE("OK");
+
+  // HT_WERR(sprintf("id->misc: %O", id->misc));
 }
 
 multiset denylist;
