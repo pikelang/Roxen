@@ -4,7 +4,7 @@
 
 #ifndef IN_INSTALL
 inherit "newdecode";
-// string cvs_version = "$Id: read_config.pike,v 1.23 1998/07/25 04:20:43 neotron Exp $";
+// string cvs_version = "$Id: read_config.pike,v 1.24 1998/09/11 22:15:31 per Exp $";
 #else
 import spider;
 # define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
@@ -38,8 +38,8 @@ array (string) list_all_configurations()
     fii=get_dir(configuration_dir);
     if(!fii)
     {
-      werror("I cannot read from the configurations directory ("+
-	     combine_path(getcwd(), configuration_dir)+")\n");
+      report_fatal("I cannot read from the configurations directory ("+
+		   combine_path(getcwd(), configuration_dir)+")\n");
       exit(-1);	// Restart.
     }
     return ({});

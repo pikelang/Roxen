@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.235 1998/09/06 20:57:17 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.236 1998/09/11 22:15:42 per Exp $";
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
@@ -9,9 +9,9 @@ constant cvs_version = "$Id: roxen.pike,v 1.235 1998/09/06 20:57:17 grubba Exp $
 #include <variables.h>
 
 inherit "read_config";
-#ifdef __NT__
-#define NO_DNS
-#endif
+// #ifdef __NT__
+// #define NO_DNS
+// #endif
 #ifdef NO_DNS
 inherit "dummy_hosts";
 #else
@@ -66,7 +66,7 @@ int new_id(){ return idcount++; }
 int startpid, roxenpid;
 object roxen=this_object(), current_configuration;
 
-private program Configuration;	/*set in create*/
+program Configuration;	/*set in create*/
 
 array configurations = ({});
 object main_configuration_port;
@@ -303,7 +303,7 @@ object do_thread_create(string id, function f, mixed ... args)
 {
   object t = thread_create(f, @args);
   catch(t->set_name( id ));
-  werror(id+" started\n");
+  roxen_perror(id+" started\n");
   return t;
 }
 
@@ -1209,11 +1209,11 @@ void restart_if_stuck (int force) {
     return;
   if(!abs_started) {
     abs_started = 1;
-    werror("Anti-Block System Enabled.\n");
+    roxen_perror("Anti-Block System Enabled.\n");
   }
   call_out (restart_if_stuck,10);
   signal(signum("SIGALRM"),lambda( int n ) {
-			     werror(master()->describe_backtrace( ({
+			     roxen_perror(master()->describe_backtrace( ({
 			       sprintf("**** %s: ABS engaged! Trying to dump backlog: \n",
 				       ctime(time()) - "\n"),
 			       backtrace() }) ) );
@@ -1389,63 +1389,6 @@ mixed query_var(string var)
   return __vars[var];
 }
 
-
-// The update_*_vars functions are here to automatically change the
-// configurationfileformat between releases, so the user can reuse the
-// old configuration files. They are very useful, atleast for me.
-
-private void update_global_vars(int from)
-{
-  string report = "";
-#define perr(X) do { report += X; perror(X); } while(0)
-  perr("Updating global variables file....\n");
-  perr("----------------------------------------------------\n");
-  switch(from)
-  {
-  case 0:
-//    if(!QUERY(IfModified))
-//    {
-//      perr("Setting the 'honor If-Modified-Since: flag to true. The "
-//	   "bug\nin Roxen seems to be gone now.\n"); 
-//      QUERY(IfModified) = 1;
-//    }
-
-  case 1:
-  case 2:
-  case 3:
-    perr("The configuration port variable is now a standard port.\n"
-	 "Adding the port '"+QUERY(ConfigurationPort)+" http "+
-	 QUERY(ConfigurationIP)+"\n");
-    
-    QUERY(ConfigPorts) = ({ ({ QUERY(ConfigurationPort), "http",
-			       QUERY(ConfigurationIP), "" }) });
-  case 4:
-  case 5:
-
-    if(search(QUERY(ident), "Spinner")!=-1) {
-      QUERY(ident) = real_version;
-      perr("Updating version field to "+real_version+"\n");
-    }
-
-    if(search(QUERY(ident), "Enterprice")!=-1)
-      QUERY(ident) = real_version;
-    else if(search(QUERY(ident), "Challenger")!=-1)
-      QUERY(ident) = real_version;
-    if(((!search(QUERY(ident), "Roxen Challenger/1.0")) ||
-	(!search(QUERY(ident), "Roxen Challenger/1.1"))) &&
-       (replace(QUERY(ident),"·"," ") != real_version)) {
-      QUERY(ident)=real_version;
-      perr("Updating version field to "+real_version+"\n");
-    } else {
-      perr("Not updating version field ("+QUERY(ident)+") since it is "
-	   "either already updated, or modified by the administrator.\n");
-    }
-  case 6:
-    // Current level
-  }
-  perr("----------------------------------------------------\n");
-  report_debug(report);
-}
 
 void reload_all_configurations()
 {
@@ -1666,7 +1609,7 @@ private void define_global_variables( int argc, array (string) argv )
   /*	  TYPE_FLAG|VAR_EXPERT,*/
   /*	  "Should the background be set by the configuration interface?");*/
 
-  globvar("_v", CONFIGURATION_FILE_LEVEL, 0, TYPE_INT, 0, 0, 1);
+//   globvar("_v", CONFIGURATION_FILE_LEVEL, 0, TYPE_INT, 0, 0, 1);
   globvar("default_font_size", 32, 0, TYPE_INT, 0, 0, 1);
 
 
@@ -2022,14 +1965,6 @@ private void define_global_variables( int argc, array (string) argv )
 	  );
 
   setvars(retrieve("Variables", 0));
-
-  if(QUERY(_v) < CONFIGURATION_FILE_LEVEL)
-  {
-    update_global_vars(retrieve("Variables", 0)->_v?QUERY(_v):0);
-    QUERY(_v) = CONFIGURATION_FILE_LEVEL;
-    store("Variables", variables, 0, 0);
-    set("_v", CONFIGURATION_FILE_LEVEL);
-  }
 
   for(p = 1; p < argc; p++)
   {
@@ -2503,7 +2438,7 @@ void exit_when_done()
 //   trace(9);
   if(++_recurse > 4)
   {
-    werror("Exiting roxen (spurious signals received).\n");
+    roxen_perror("Exiting roxen (spurious signals received).\n");
     stop_all_modules();
 #ifdef THREADS
     stop_handler_threads();
@@ -2531,7 +2466,7 @@ void exit_when_done()
     call_out(Simulate.this_function(), 5);
     if(!_pipe_debug()[0])
     {
-      werror("Exiting roxen (all connections closed).\n");
+      roxen_perror("Exiting roxen (all connections closed).\n");
       stop_all_modules();
 #ifdef THREADS
       stop_handler_threads();
@@ -2542,7 +2477,7 @@ void exit_when_done()
     }
   }, 0.1);
   call_out(lambda(){
-    werror("Exiting roxen (timeout).\n");
+    roxen_perror("Exiting roxen (timeout).\n");
     stop_all_modules();
 #ifdef THREADS
     stop_handler_threads();

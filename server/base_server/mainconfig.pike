@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.107 1998/07/11 18:48:30 grubba Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.108 1998/09/11 22:15:21 per Exp $";
 //inherit "roxenlib";
 
 inherit "config/draw_things";
@@ -606,9 +606,9 @@ string describe_config_modules(array mods)
     sscanf(mod, "%s#", mod);
     if(!roxen->allmodules)
     {
-      werror("CONFIG: Rescanning modules (doc string).\n");
+      roxen_perror("CONFIG: Rescanning modules (doc string).\n");
       roxen->rescan_modules();
-      werror("CONFIG: Done.\n");
+      roxen_perror("CONFIG: Done.\n");
     }
     if(!roxen->allmodules[mod]) res += "<li>The unknown modules '"+mod+"'\n";
     else res += "<li>"+roxen->allmodules[mod][0]+"\n";
@@ -743,11 +743,11 @@ string new_module_form(object id, object node)
   
   if(!roxen->allmodules || sizeof(id->pragma))
   {
-    werror("CONFIG: Rescanning modules.\n");
+    roxen_perror("CONFIG: Rescanning modules.\n");
     roxen->current_configuration = node->config();
     roxen->rescan_modules();
     roxen->current_configuration = 0;
-    werror("CONFIG: Done.\n");
+    roxen_perror("CONFIG: Done.\n");
   }
   
   a=roxen->allmodules;
