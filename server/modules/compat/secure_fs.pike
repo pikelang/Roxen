@@ -5,7 +5,7 @@
 
 // Mk II changes by Henrik P Johnson <hpj@globecom.net>.
 
-constant cvs_version = "$Id: secure_fs.pike,v 1.30 2002/11/11 01:19:18 mani Exp $";
+constant cvs_version = "$Id: secure_fs.pike,v 1.31 2002/11/13 16:21:51 mani Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -13,7 +13,7 @@ inherit "modules/filesystems/filesystem";
 
 constant module_type = MODULE_LOCATION;
 constant module_name = "File systems: Secure file system";
-constant module_doc  = #!
+constant module_doc  = #"
 This is a file system module that allows for more fine-grained control
 over the ChiliMoons built-in module security. Instead of just having
 security pattern for the whole module it is possible to create several

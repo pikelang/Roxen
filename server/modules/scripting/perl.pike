@@ -10,7 +10,7 @@ inherit "module";
 inherit "roxenlib";
 
 string cvs_version =
-       "$Id: perl.pike,v 2.25 2002/11/11 01:55:25 mani Exp $";
+       "$Id: perl.pike,v 2.26 2002/11/13 16:22:33 mani Exp $";
 
 constant module_type = MODULE_FILE_EXTENSION | MODULE_TAG;
 
@@ -110,7 +110,7 @@ void create()
 	 "User and group to run Perl scripts and tags as. The default "
 	 "for this option is `nobody:*'. Note that ChiliMoon can't change "
 	 "user ID unless it has sufficient permissions to do so. `*' means "
-	 "`use same as ChiliMoon'."));
+	 "`use same as ChiliMoon'.");
 #endif
 }
 
