@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.206 2000/02/15 00:18:06 nilsson Exp $";
+constant cvs_version = "$Id: http.pike,v 1.207 2000/02/16 11:08:32 per Exp $";
 
 #define MAGIC_ERROR
 
@@ -100,56 +100,90 @@ string since;
 array(string) output_charset = ({});
 string input_charset;
 
-void set_output_charset( string|function to, int|void no_override )
+void set_output_charset( string|function to, int|void mode )
 {
-  if(sizeof( output_charset ) && output_charset[0] == to )
+  if( search( output_charset, to ) != -1 ) // Already done.
     return;
-  if( !no_override )
-    output_charset = ({ to }) + output_charset;
-  else if(!sizeof(output_charset) || output_charset[0] == "iso-8859-1" )
-    output_charset = ({ to }) + output_charset;
+
+  switch( mode )
+  {
+   case 0: // Really set.
+     output_charset = ({ to });
+     break;
+
+   case 1: // Only set if not already set.
+     if( !sizeof( output_charset ) )
+       output_charset = ({ to });
+     break;
+
+   case 2: // Join.
+     output_charset |= ({ to });
+     break;
+  }
+}
+
+string charset_name( function|string what )
+{
+  switch( f )
+  {
+   case string_to_unicode:   return "ISO10646-1";
+   case string_to_utf8:      return "UTF-8";
+   default:                  return upper_case((string)what);
+  }
+}
+
+function charset_function( function|string what )
+{
+  switch( f )
+  {
+   case "ISO-10646-1":
+   case "ISO10646-1":
+   case string_to_unicode:
+     return string_to_unicode;
+   case "UTF-8":
+   case string_to_utf8:
+     return string_to_utf8;
+   default:
+     return _charset_decoder( Locale.Charset.encoder( (string)what ) )->decode;
+  }
+}
+
+static array(string) join_charset( string old,
+                                   function|string add,
+                                   function|void oldcodec)
+{
+  switch( old&&upper_case(old) )
+  {
+   case 0:
+     return ({ charset_name( add ), charset_function( add ) });
+   case "ISO10646-1":
+   case "UTF-8":
+     return ({ old, oldcodec }); // Everything goes here. :-)
+   case "ISO-2022":
+     return ({ old, oldcodec }); // Not really true, but how to know this?
+   default:
+     // Not true, but there is no easy way to add charsets yet...
+     return ({ charset_name( add ), charset_function( add ) });
+  }
 }
 
 static array(string) output_encode( string what )
 {
   string charset;
-  if( sizeof( output_charset ) )
-  {
-    foreach( output_charset, string|function f )
-    {
-      if( stringp( f ) )
-        if( !catch( what = Locale.Charset.encoder( f, "?" )
-                    ->feed( what )->drain() ) )
-        {
-          charset = f;
-          break;
-        }
-      else
-        if( !catch( what = f( what ) ) )
-        {
-          switch( f )
-          {
-           case string_to_unicode:
-             charset = "ISO10646-1";
-             break;
-           case string_to_utf8:
-             charset = "UTF-8";
-             break;
-           default:
-             break;
-          }
-          break;
-        }
-    }
-  }
-  else
-  {
+  function encoder;
+
+  foreach( output_charset, string|function f )
+    [charset,encoder] = join_charset( charset, f, encoder );
+
+
+  if( !encoder )
     if( String.width( what ) > 8 )
     {
       charset = "UTF-8";
-      what = string_to_utf8( what );
+      encoder = string_to_utf8;
     }
-  }
+  if( encoder )
+    what = encoder( what );
   return ({ charset, what });
 }
 
