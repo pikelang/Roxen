@@ -1,5 +1,5 @@
 /* Roxen WWW-server version 1.0.
-string cvs_version = "$Id: http.pike,v 1.22 1998/09/30 00:43:52 per Exp $";
+string cvs_version = "$Id: http.pike,v 1.23 1998/12/02 21:33:31 grubba Exp $";
  * http.pike: HTTP convenience functions.
  * inherited by roxenlib, and thus by all files inheriting roxenlib.
  */
@@ -107,11 +107,27 @@ mapping http_pipe_in_progress()
   return ([ "file":-1, "pipe":1, ]);
 }
 
+static string parse_rxml(string what, object id,
+			 void|object file, 
+			 void|mapping defines);
+
 /* Convenience functions to use in Roxen modules. When you just want
  * to return a string of data, with an optional type, this is the
  * easiest way to do it if you don't want to worry about the internal
  * roxen structures.  
  */
+mapping http_rxml_answer( string rxml, object id, 
+                          void|object(Stdio.File) file, string|void type )
+{
+  rxml = parse_rxml(rxml, id, file);
+  return (["data":rxml,
+	   "type":(type||"text/html"),
+	   "stat":id->misc->defines[" _stat"],
+	   "error":id->misc->defines[" _error"],
+	   "rettext":id->misc->defines[" _rettext"],
+	   "extra_heads":id->misc->defines[" _extra_heads"],
+	   ]);
+}
 
 mapping http_string_answer(string text, string|void type)
 {
