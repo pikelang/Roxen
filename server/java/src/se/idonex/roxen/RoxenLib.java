@@ -1,5 +1,5 @@
 /*
- * $Id: RoxenLib.java,v 1.5 2000/02/06 16:50:42 marcus Exp $
+ * $Id: RoxenLib.java,v 1.6 2000/02/06 18:23:07 marcus Exp $
  *
  */
 
@@ -290,8 +290,19 @@ public class RoxenLib extends HTTP {
   }
 
   /**
-   * Bla
+   * Produce repeated output with variable subsitutions.
+   * <p>
+   * This method is used to create tags such as database
+   * query tags, where zero or more results in the form of
+   * variable bindings are applied to a fixed template, and
+   * the results of the subsitutions are concatenated to form
+   * the total result.
    *
+   * @param args     attributes for the output tag itself
+   * @param varArr   an array of variable subsitution mappings
+   * @param contents body text in which to substitute variables
+   * @param id       a request object associated with the parse
+   * @return         the resulting string
    */
   public native static String doOutputTag(Map args, Map[] varArr,
 					  String contents, RoxenRequest id);
