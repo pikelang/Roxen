@@ -4,7 +4,7 @@
 // It will be located somewhere in the name-space of the server.
 // Also inherited by some of the other filesystems.
 
-string cvs_version= "$Id: filesystem.pike,v 1.14 1997/05/25 11:00:53 grubba Exp $";
+string cvs_version= "$Id: filesystem.pike,v 1.15 1997/06/10 19:08:01 grubba Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -87,6 +87,11 @@ void create()
 	 TYPE_FLAG,
 	 "This can speed up the retrieval of files up to 60/70% if you"
 	 " use NFS, but it does use some memory.");
+
+  defvar("access_as_user", 0, "Access file as the logged in user",
+	 TYPE_FLAG,
+	 "EXPERIMENTAL. Access file as the logged in user.<br>\n"
+	 "This is useful for eg named-ftp.");
 }
 
 
@@ -259,7 +264,17 @@ mixed find_file( string f, object id )
 	 && tmp[0] == '.')
 	return 0;
 
+      object privs;
+
+      if (((int)id->misc->uid) && ((int)id->misc->gid) &&
+	  (QUERY(access_as_user))) {
+	privs=((program)"privs")("Getting file", (int)id->misc->uid, 
+			       (int)id->misc->gid );
+      }
+
       o = open( f, "r" );
+
+      privs = 0;
 
       if(!o)
       {
@@ -293,13 +308,16 @@ mixed find_file( string f, object id )
     
     object privs;
 
-    if(id->misc->uid)
+    if (((int)id->misc->uid) && ((int)id->misc->gid)) {
       privs=((program)"privs")("Saving file", (int)id->misc->uid, 
 			       (int)id->misc->gid );
+    }
 
     rm( f );
     mkdirhier( f );
     object to = open(f, "wc");
+
+    privs = 0;
 
     if(!to)
     {
@@ -335,8 +353,9 @@ mixed find_file( string f, object id )
     report_error("DELETING the file "+f+"\n");
     accesses++;
 
-    if(id->misc->uid)
-      privs=((program)"privs")("Saving file", id->misc->uid, id->misc->gid );
+    if (((int)id->misc->uid) && ((int)id->misc->gid)) {
+      privs=((program)"privs")("Deleting file", id->misc->uid, id->misc->gid );
+    }
 
     if(!rm(f))
     {
