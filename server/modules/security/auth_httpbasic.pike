@@ -1,5 +1,5 @@
 constant cvs_version =
-  "$Id: auth_httpbasic.pike,v 1.6 2001/05/18 12:45:09 hop Exp $";
+  "$Id: auth_httpbasic.pike,v 1.7 2001/08/30 19:00:02 grubba Exp $";
 inherit AuthModule;
 inherit "module";
 
@@ -48,7 +48,7 @@ static User low_authenticate( RequestID id,
 			      string user, string password,
 			      UserDB db)
 {
-  if( User u = db->find_user( user ) )
+  if( User u = db->find_user( user, id ) )
     if( u->password_authenticate( password ) )
       return u;
 }
