@@ -2854,7 +2854,7 @@ cd</rxml>
 
 <test>
 <rxml>&client.name;</rxml>
-<result>RoxenTest</result>
+<result>ChiliMoonTest</result>
 </test>
 
 <test>
