@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.62 2000/01/12 08:30:58 nilsson Exp $
+ * $Id: rxml.pike,v 1.63 2000/01/12 14:30:01 mast Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -466,13 +466,19 @@ string tag_list_tags( string t, mapping args, RequestID id, Stdio.File f )
     if (!tag_callers[priority]) tag_callers[priority] = ([]);
     if (!container_callers[priority]) container_callers[priority] = ([]);
     RXML.TagSet tag_set = module_tag_sets[mod];
-    if (tag_set->low_tags) tag_callers[priority] += tag_set->low_tags;
-    if (tag_set->low_containers) container_callers[priority] += tag_set->low_containers;
-    foreach (reverse (tag_set->get_all_tags()), RXML.Tag tag)
-      if (tag->flags & RXML.FLAG_CONTAINER)
-	container_callers[priority][tag->name] = tag;
+    foreach (indices (tag_set->get_tag_names()), string name) {
+      mixed tagdef = tag_set->get_tag (name);
+      if (arrayp (tagdef))
+	if (tagdef[0])
+	  tag_callers[priority][name] = tagdef[0];
+	else
+	  container_callers[priority][name] = tagdef[1];
       else
-	tag_callers[priority][tag->name] = tag;
+	if (tagdef->flags & RXML.FLAG_CONTAINER)
+	  container_callers[priority][name] = tagdef;
+	else
+	  tag_callers[priority][name] = tagdef;
+    }
   }
 
   foreach(indices(tag_callers), int i)
