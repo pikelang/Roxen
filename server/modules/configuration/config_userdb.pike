@@ -7,7 +7,7 @@ inherit "roxenlib";
 #define LOCALE	LOW_LOCALE->config_interface
 
 constant module_type   = MODULE_AUTH | MODULE_FIRST;
-constant module_name   = "Configration UserDB";
+constant module_name   = "Configuration UserDB";
 constant module_doc    = "This userdatabase keeps the configuration users"
                          "passwords and other settings";
 constant module_unique = 1;
