@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.469 2005/03/31 09:53:13 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.470 2005/04/01 16:10:34 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -319,8 +319,19 @@ void send (string|object what, int|void len)
   }
 }
 
+int(0..1) my_fd_busy;
+int(0..1) pipe_pending;
+
 void start_sender( )
 {
+  if (my_fd_busy) {
+    // We're waiting for the previous request to finish.
+    pipe_pending = 1;
+#ifdef CONNECTION_DEBUG
+    werror("HTTP: Pipe pending.\n");
+#endif
+    return;
+  }
   if (pipe) 
   {
     MARK_FD("HTTP really handled, piping response");
@@ -337,6 +348,17 @@ void start_sender( )
   } else {
     MARK_FD("HTTP really handled, pipe done");
     do_log();
+  }
+}
+
+void my_fd_released()
+{
+  my_fd_busy = 0;
+#ifdef CONNECTION_DEBUG
+  werror("HTTP: Fd released.\n");
+#endif
+  if (pipe_pending) {
+    start_sender();
   }
 }
 
@@ -389,6 +411,7 @@ private void really_set_config(array mod_config)
   };
 
   void do_send_reply( string what, string url ) {
+    // FIXME: Delayed chaining! my_fd_busy.
     CHECK_FD_SAFE_USE;
     url = url_base() + url[1..];
     my_fd->set_blocking();
@@ -668,6 +691,7 @@ private final int parse_got_2( )
 	method = "GET"; // 0.9 only supports get.
       else
       {
+	// FIXME: my_fd_busy.
 	my_fd->write("PONG\r\n");
 	TIMER_END(parse_got_2);
 	return 2;
@@ -867,6 +891,7 @@ private final int parse_got_2( )
     if (!misc->host) {
       // RFC 2616 requires this behaviour.
       REQUEST_WERR("HTTP: HTTP/1.1 request without a host header.");
+      // FIXME: my_fd_busy.
       my_fd->write((prot||"HTTP/1.1") +
 		   " 400 Bad request (missing host header).\r\n"
 		   "Content-Length: 0\r\n"
@@ -943,12 +968,14 @@ void end(int|void keepit)
     o->client_var = client_var;
     o->host = host;
     o->conf = conf;
-    o->pipe = pipe;
+    o->my_fd_busy = !!pipe;
+    o->pipe = 0;
     o->connection_misc = connection_misc;
     o->kept_alive = kept_alive+1;
     object fd = my_fd;
     my_fd=0;
     pipe = 0;
+    chained_to = o;
     call_out (o->chain, 0, fd,port_obj,leftovers);
     disconnect();
     return;
@@ -1340,12 +1367,29 @@ int wants_more()
   return !!cache;
 }
 
+static object(this_program) chained_to;
+
+// Paranoia.
+static void destroy()
+{
+  if (chained_to) {
+    werror("HTTP: Still chained in destroy!\n");
+    call_out(chained_to->my_fd_released, 0);
+    chained_to = 0;
+  }
+}
+
 void do_log( int|void fsent )
 {
 #ifdef CONNECTION_DEBUG
   werror ("HTTP: Response sent ============================================\n");
 #endif
   MARK_FD("HTTP logging"); // fd can be closed here
+  if (chained_to) {
+    // Release the other sender.
+    call_out(chained_to->my_fd_released, 0);
+    chained_to = 0;
+  }
   TIMER_START(do_log);
   if(conf)
   {
@@ -1605,7 +1649,8 @@ void ready_to_receive()
   // FIXME: Only send once?
   if (clientprot == "HTTP/1.1" && request_headers->expect &&
       (request_headers->expect ==  "100-continue" ||
-       has_value(request_headers->expect, "100-continue" )))
+       has_value(request_headers->expect, "100-continue" )) &&
+      !my_fd_busy)
     my_fd->write("HTTP/1.1 100 Continue\r\n");
 }
 
@@ -1966,7 +2011,8 @@ void send_result(mapping|void result)
     }
     else 
     {
-      if( strlen( head_string ) < (HTTP_BLOCKING_SIZE_THRESHOLD))
+      if( !kept_alive &&
+	  (strlen(head_string) < (HTTP_BLOCKING_SIZE_THRESHOLD)))
       {
 #ifdef CONNECTION_DEBUG
 	werror ("HTTP: Response =================================================\n"
