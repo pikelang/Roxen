@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.213 2001/07/25 19:28:19 mast Exp $
+// $Id: module.pmod,v 1.214 2001/07/25 21:02:21 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -1330,6 +1330,14 @@ class Context
   //! set.
 #endif
 
+  void state_update()
+  //! Should be called whenever the persistent state changes. For tag
+  //! implementors that means whenever the value that
+  //! @[RXML.Frame.save] would return changes.
+  {
+    state_updated++;
+  }
+
   array(string|int) parse_user_var (string var, void|string|int scope_name)
   //! Parses the var string for scope and/or subindexes according to
   //! the RXML rules, e.g. @tt{"scope.var.1.foo"@}. Returns an array
@@ -1813,7 +1821,7 @@ class Context
   {
     mixed res;
     PCode p_code;
-    int orig_make_p_code = make_p_code;
+    int orig_make_p_code = make_p_code, orig_state_updated = state_updated;
     make_p_code = 1;
     Parser parser = type->get_parser (
       this_object(), tag_set, 0, stale_safe ? RenewablePCode (0) : PCode (0));
@@ -1822,11 +1830,11 @@ class Context
       res = parser->eval();
       p_code = parser->p_code;
       type->give_back (parser, tag_set);
-      make_p_code = orig_make_p_code;
+      make_p_code = orig_make_p_code, state_updated = orig_state_updated;
       return ({res, p_code});
     };
     type->give_back (parser, tag_set);
-    make_p_code = orig_make_p_code;
+    make_p_code = orig_make_p_code, state_updated = orig_state_updated;
     throw (err);
   }
 
@@ -1919,6 +1927,10 @@ class Context
 
   int make_p_code;
   // Nonzero if the parsers should compile along with the evaluation.
+
+  int state_updated;
+  // Nonzero if the persistent state of the evaluated rxml has
+  // changed.
 
   PikeCompile p_code_comp;
   // The PikeCompile object for collecting any produce Pike byte code
@@ -2602,8 +2614,9 @@ class Frame
 
   optional mixed save();
   //! If defined, this will be called after the frame has been
-  //! evaluated (i.e. after @[do_return]) if the frame state is to be
-  //! preserved in p-code. The returned value will be passed to
+  //! evaluated (i.e. after @[do_return]) for the first time, if the
+  //! frame state is to be preserved in p-code. The returned value,
+  //! aka the persistent state of the frame, will be passed to
   //! @[restore] when the frame is reinstantiated from the p-code.
   //!
   //! The function usually saves the frame specific data that should
@@ -2612,6 +2625,10 @@ class Frame
   //! and @[raw_tag_text] (if present). Note that when this function
   //! is called, @[args] and @[content] are set to the function and
   //! p-code, respectively, used for reevaluation of those values.
+  //!
+  //! If the persistent state changes in a later reevaluation of the
+  //! frame, it should call @[RXML.Context.state_update] to trig
+  //! another save of the frame state.
   //!
   //! If this returns zero then @[restore] won't be called.
 
@@ -3446,6 +3463,7 @@ class Frame
 	      // doesn't provide one?
 	      if (!ctx->p_code_comp) ctx->p_code_comp = PikeCompile();
 	      in_args = _prepare (ctx, type, args && args + ([]), p_code);
+	      ctx->state_updated++;
 	    }
 	    else
 	      _prepare (ctx, type, args && args + ([]), 0);
@@ -3685,7 +3703,10 @@ class Frame
 
 		  if (PCode p_code = subevaler->p_code) {
 		    p_code->finish();
-		    if (stringp (in_content) && ctx->make_p_code) in_content = p_code;
+		    if (stringp (in_content) && ctx->make_p_code) {
+		      in_content = p_code;
+		      ctx->state_updated++;
+		    }
 		    subevaler->p_code = 0;
 		    ctx->make_p_code = orig_make_p_code; // Reset before do_return.
 		  }
@@ -3881,6 +3902,7 @@ class Frame
 
   array _save()
   {
+    THIS_TAG_TOP_DEBUG ("Saving persistent state\n");
     return ({args, content, flags, content_type, result_type,
 	     this_object()->raw_tag_text,
 	     this_object()->save && this_object()->save()});
@@ -6335,6 +6357,16 @@ class PCode
     return tag_set && tag_set->generation != generation;
   }
 
+  int is_updated()
+  //! Returns whether or not the p-code has been updated in an earlier
+  //! call to @[eval]. If it has, it's a good idea to save it again to
+  //! disk or similar. A call to this function resets the flag.
+  {
+    int updated = flags & UPDATED;
+    flags &= ~UPDATED;
+    return updated;
+  }
+
   mixed eval (Context context, void|int eval_piece)
   //! Evaluates the p-code in the given context (which typically has
   //! been created by @[new_context]). If @[eval_piece] is nonzero,
@@ -6392,11 +6424,12 @@ class PCode
       type = _type;
       if ((tag_set = _tag_set)) generation = _tag_set->generation;
       exec = allocate (16);
+      flags = UPDATED;
     }
     if (collect_results) {
       // Yes, the internal interaction between create, reset, the
       // context and CTX_ALREADY_GOT_VC is ugly.
-      flags = COLLECT_RESULTS;
+      flags |= COLLECT_RESULTS;
       if (collect_results->misc->variable_changes) flags |= CTX_ALREADY_GOT_VC;
       collect_results->misc->variable_changes = ([]);
     }
@@ -6412,6 +6445,7 @@ class PCode
   static constant FULLY_RESOLVED = 0x1;
   static constant COLLECT_RESULTS = 0x2;
   static constant CTX_ALREADY_GOT_VC = 0x4; // Just as ugly as it sounds, but who cares?
+  static constant UPDATED = 0x8;
 
   static int generation;
   // The generation of tag_set when the p-code object was generated.
@@ -6548,6 +6582,7 @@ class PCode
     int pos = 0;
     array parts;
     int ppos = 0;
+    int update_count = ctx->state_updated;
 
 #ifdef MODULE_DEBUG
     if (tag_set && tag_set->generation != generation) error ("P-code is stale.\n");
@@ -6588,6 +6623,11 @@ class PCode
 		  /* Race here, but it doesn't matter much. */		\
 		  exec[pos + 1] = frame;				\
 		}							\
+		if (ctx->state_updated > update_count) {		\
+		  exec[pos + 2] = frame->_save();			\
+		  flags |= UPDATED;					\
+		  update_count = ctx->state_updated;			\
+		}							\
 		pos += 2;						\
 		if (p_code) p_code->add_frame (ctx, frame, item);	\
 		break chained_p_code_add;				\
@@ -6620,6 +6660,7 @@ class PCode
 	  });
 
 	ctx->eval_finish();
+	if (ctx->state_updated > update_count) flags |= UPDATED;
 
 	if (!ppos)
 	  return type->sequential ? type->empty_value : nil;
@@ -6636,6 +6677,7 @@ class PCode
 	  throw (this_object());
 	}
 	else {
+	  if (ctx->state_updated > update_count) flags |= UPDATED;
 	  if (objectp (item) && item->is_RXML_p_code_frame) {
 	    // If the exception comes from a frame, handle_exception
 	    // already has been called. Thus we don't try to recover
@@ -6675,8 +6717,8 @@ class PCode
   //! in a variable named @tt{ctx@} and the parent evaluator in
   //! @tt{evaler@}. It also assumes there's a mixed variable called
   //! @tt{tmp@} for temporary use. No code is added to handle
-  //! exception unwinding and rewinding, checks for staleness or
-  //! chained p-code. Mostly for internal use.
+  //! exception unwinding and rewinding, checks for staleness, chained
+  //! p-code or state updates. Mostly for internal use.
   {
     if (!length)
       return type->sequential ? comp->bind (type->empty_value) : "RXML.nil";
@@ -6817,6 +6859,7 @@ class RenewablePCode
 	}
 	else parser->finish();	// Might unwind.
 	res = parser->eval();	// Might undwind.
+	flags |= UPDATED;
       })
 	if (objectp (err) && err->thrown_at_unwind) {
 	  ctx->unwind_state[this_object()] = ({parser});
