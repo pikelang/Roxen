@@ -30,6 +30,8 @@ o Added option to let query to be RXML-parsed in modules/tags/sqltag.pike.
 o Parsing of the PEM file-format moved from protocols/ssl3.pike to a new
   Pike-module: SSL.pem.
 
+o Added support for Hungarian. Thanks to Zsolt Varga <redax@agria.hu>.
+
 
 Changes since Roxen Challenger 1.2 alpha 14
 -----------------------------------------------
