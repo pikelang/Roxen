@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.141 2004/06/17 14:38:50 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.142 2004/06/28 17:48:22 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1286,7 +1286,7 @@ class RequestID
 
   MultiStatus get_multi_status()
   //! Returns a @[MultiStatus] object that will be used to produce a
-  //! 207 Multi-Status response (RFC 2518 10.2). It's only consultet
+  //! 207 Multi-Status response (RFC 2518 10.2). It's only consulted
   //! if the result returned from @[RoxenModule.find_file] et al is an
   //! empty mapping.
   //!
