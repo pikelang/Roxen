@@ -1,6 +1,6 @@
 string describe_backtrace(mixed *trace);
 
-string cvs_version = "$Id: roxen_master.pike,v 1.7 1996/12/01 19:18:39 per Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.8 1996/12/05 03:01:03 per Exp $";
 string pike_library_path;
 object stdout, stdin;
 mapping names=([]);
@@ -17,6 +17,11 @@ void handle_error(mixed *trace)
   catch{werror(describe_backtrace(trace));};
 }
 
+object new(mixed prog, mixed ... args)
+{
+  return ((program)prog)(@args);
+}
+
 /* Note that create is called before add_precompiled_program
  */
 void create()
@@ -28,6 +33,8 @@ void create()
   add_constant("version",lambda() { return "Pike v0.2"; });
   add_constant("mkmultiset",lambda(mixed *a) { return aggregate_multiset(@a); });
   add_constant("strlen",sizeof);
+  add_constant("new",new);
+  add_constant("clone",new);
 
   random_seed(time() + (getpid() * 0x11111111));
 }
