@@ -23,13 +23,13 @@
 
 
 <if variable="form.install">
-  <redirect to="/standard/update.html?page=install&install=&form.install;" />
+  <redirect to="update.html?page=install&install=&form.install;" />
 </if>
 
 
 <if variable="form.download">
   <update-start-download package="&form.details;" />
-  <redirect to="/standard/update.html?bar" />
+  <redirect to="update.html?bar" />
 </if>
 
 <if variable="form.uninstall_package">
