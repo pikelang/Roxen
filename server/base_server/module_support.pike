@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module_support.pike,v 1.94 2001/06/30 15:53:36 mast Exp $
+// $Id: module_support.pike,v 1.95 2001/07/05 02:38:56 mast Exp $
 
 #define IN_ROXEN
 #include <roxen.h>
@@ -51,16 +51,9 @@ program my_compile_file(string file, void|int silent)
       report_debug("\b[dontdump] \b");
 #endif
   }
-  else
 #ifdef MODULE_DEBUG
-    switch(
-#endif
-      dump( file, p )
-#ifndef MODULE_DEBUG
-      ;
-#else
-    )
-    {
+  else
+    switch (e->last_dump_status) {
      case 1: // dumped
        if (!silent) report_debug("\b[dump] \b");
        break;
@@ -105,6 +98,14 @@ class BasicModule
   constant is_module = 1;
   constant faked = 1;
   static Configuration _my_configuration;
+  static string _module_identifier =
+    lambda() {
+      mixed init_info = roxenp()->bootstrap_info->get();
+      if (arrayp (init_info)) {
+	[_my_configuration, string modname] = init_info;
+	return _my_configuration->name + "/" + modname;
+      }
+    }();
 
   void report_fatal( mixed ... args )  { predef::report_fatal( @args );  }
   void report_error( mixed ... args )  { predef::report_error( @args );  }
@@ -112,6 +113,7 @@ class BasicModule
   void report_debug( mixed ... args )  { predef::report_debug( @args );  }
 
   string file_name_and_stuff() { return ""; }
+  string module_identifier() {return _module_identifier;}
   Configuration my_configuration() { return _my_configuration; }
   nomask void set_configuration(Configuration c)
   {
@@ -516,8 +518,10 @@ array(ModuleInfo) all_modules()
 
   report_debug("Searching for pike-modules directories ... \b");
   int t = gethrtime();
-  foreach( find_all_pike_module_directories( ), string d )
+  foreach( find_all_pike_module_directories( ), string d ) {
     master()->add_module_path( d );
+    master()->add_dump_path (d);
+  }
   report_debug("\bDone [%dms]\n", (gethrtime()-t)/1000 );
 
   report_debug("Searching for roxen modules ... \b");
