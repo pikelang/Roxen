@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.106 2000/08/31 19:14:35 mast Exp $
+//! $Id: module.pmod,v 1.107 2000/09/07 20:26:14 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -1156,20 +1156,23 @@ class Context
 	e->error_count++;
       if (id && id->conf)
 	while (evaluator) {
-	  if (evaluator->report_error &&
-	      !evaluator->disable_report_error &&
-	      evaluator->type->free_text) {
+	  object(PCode)|object(Parser) reporter = 0;
+	  for (; evaluator; evaluator = evaluator->_parent)
+	    if (evaluator->report_error && evaluator->type->free_text)
+	      if (evaluator->disable_report_error) reporter = 0;
+	      else if (!reporter) reporter = evaluator;
+	  if (reporter) {
 	    string msg = err->type == "help" ? err->msg :
 	      (err->type == "run" ?
 	       ([function(Backtrace,Type:string)]
 		([object] id->conf)->handle_run_error) :
 	       ([function(Backtrace,Type:string)]
 		([object] id->conf)->handle_parse_error)
-	      ) ([object(Backtrace)] err, evaluator->type);
-	    if (evaluator->report_error (msg))
+	      ) ([object(Backtrace)] err, reporter->type);
+	    if (reporter->report_error (msg))
 	      break;
 	  }
-	  evaluator = evaluator->_parent;
+	  evaluator = reporter->_parent;
 	}
       else {
 #ifdef MODULE_DEBUG
