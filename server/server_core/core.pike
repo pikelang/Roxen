@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: core.pike,v 1.861 2004/05/22 21:48:17 _cvs_stephen Exp $";
+constant cvs_version="$Id: core.pike,v 1.862 2004/05/22 21:52:10 _cvs_stephen Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -4430,7 +4430,7 @@ void show_timers()
 class GCTimestamp
 {
   array self_ref;
-  static void create() {self_ref = ({this_object()});}
+  static void create() {self_ref = ({this});}
   static void destroy() {
     werror ("GC runs at %s", ctime(time()));
     GCTimestamp();
