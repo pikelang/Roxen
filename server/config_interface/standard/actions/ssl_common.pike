@@ -1,5 +1,5 @@
 /*
- * $Id: ssl_common.pike,v 1.1 2000/09/09 03:10:31 lange Exp $
+ * $Id: ssl_common.pike,v 1.2 2000/09/09 03:19:46 lange Exp $
  */
 
 #if constant(_Crypto) 
@@ -185,20 +185,20 @@ string certificate_parameters =
 	  "requires that at least one of the locality and the state "
 	  "attributes are present. Do not abbreviate.")+ "</blockquote>"
 
-   "<b>"+LOCALE(107,"Organization/Company")+"</b><br>\n"
+   "<b>"+LOCALE(107,"Organization/Company")+"</b><br />\n"
    "<var name='organizationName' type='string' default='Roxen IS'/><br />"
    "<blockquote>"+
    LOCALE(108, "The organization name under which you are registered with some "
 	  "national or regional authority.")+ "</blockquote>"
 
-   "<b>"+LOCALE(109,"Organizational unit")+"</b><br>\n"
+   "<b>"+LOCALE(109,"Organizational unit")+"</b><br />\n"
    "<var name='organizationUnitName' type='string' "
    "default='Roxen Development'/><br />"
    "<blockquote>"+
    LOCALE(110, "This attribute is optional, and there are no "
 	  "specific requirements on the value of this attribute.")+ "</blockquote>"
 
-   "<b>"+LOCALE(111,"Common Name")+"</b><br>\n"
+   "<b>"+LOCALE(111,"Common Name")+"</b><br />\n"
    "<var name='commonName' type='string' default='www.roxen.com'/><br />"
    "<blockquote>"+
    LOCALE(112, "This is the DNS name of your server (i.e. the host part of "

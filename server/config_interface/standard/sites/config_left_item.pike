@@ -39,7 +39,7 @@ string selected_item( string q, roxen.Configuration c, RequestID id,
            "bgcolor='&usr.left-selbuttonbg;'" : "bgcolor='&usr.left-buttonbg;'") +
           " href='"+id->not_query+"/"+replace(c->name, " ", "%20" )+"/' "
           " icon_src='&usr.selected-indicator;' align_icon='left'>"+
-          c->query_name()+"</gbutton><br><br>");
+          c->query_name()+"</gbutton><br /><br />");
 
   array sub = ({ ({ "settings", LOCALE(256, "Settings") }),
  		 ({ "",  LOCALE(257, "Modules") }),
