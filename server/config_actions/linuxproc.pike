@@ -1,5 +1,5 @@
 /*
- * $Id: linuxproc.pike,v 1.5 1997/10/16 19:34:49 neotron Exp $
+ * $Id: linuxproc.pike,v 1.6 1999/10/28 18:07:17 neotron Exp $
  */
 
 inherit "wizard";
@@ -25,43 +25,50 @@ string format_env_line(string in, int ipid)
   array line = in / "=";
   if(sizeof(line) < 2)
     return "";
-  return sprintf(" <tr>\n  <th align=left>%s</th>\n  <td>%s</td>\n </tr>\n",
+  return sprintf(" <tr valign=top>\n  <th align=left>%s</th>\n  <td>%-=70s</td>\n </tr>\n",
 		 line[0], line[1..]*"=");
   
 }
 
 string format_proc_line(string in, int ipid)
 {
-  string pre;
+  string pre, opts="";
   int end, begin;
   int pid;
   sscanf(in, "%*s(%d)%*s", pid);
+  if(!pid)
+    sscanf(in, "%*s(%*s,%d)%*s", pid);
+
   in = replace(in, ({"|-", "`-"}), ({"+-", "+-"}));
   if(in[0] == ' ')
     begin = search(in, "+-") + 2;
-  if((end = search(in, ") ")) == -1 &&(end = search(in, ")")) == -1)
-    end = strlen(in) -1;
-//  perror("%d %d %s\n", begin, end, in[begin..end]);
+  if((end = search(in, ") ")) == -1 &&(end = search(in, ")")) == -1) 
+    end =  strlen(in) -1;
+  else
+    opts =  html_encode_string(replace(sprintf("%-=65s", in[end+1..]), "\n",
+				       "\n" + " "*(end+2)));
+  //  perror("%d %d %s\n", begin, end, in[begin..end], in[end+1..]);
+
   if(search(in,"/proc/")==-1)
     return ((begin ? html_encode_string(in[0..begin-1]) :"")+
-	    "<a href=/Actions/?action=linuxproc.pike&pid="+pid+"&unique="+time()+">"+
+	    "<a href=?action=linuxproc.pike&pid="+pid+"&unique="+time()+">"+
 	    (ipid==pid?"<b>":"")+
 	    html_encode_string(in[begin..end])+
-	    (ipid==pid?"</b>":"")+"</a>"+ html_encode_string(in[end+1..])+
+	    (ipid==pid?"</b>":"")+"</a>"+opts+
 	    "\n");
   return "";
 }
 
 string get_status(int pid)
 {
+  mapping data = ([ "state": "unknown", "name": "No name is a bad name"]);
   string wd = getcwd();
-  string cwd, status, state = "unknown", name = "who knows";
-  int vmsize, vmrss, vmdata, vmstack, vmexe, vmlib, vmstk, vmlck, ppid;
-  array (string) uid, gid, tmp;
-//  cd("/proc/"+pid+"/cwd/"); 
+
+  //  cd("/proc/"+pid+"/cwd/"); 
 //  cwd = getcwd();
 //  cd(wd);
-  status = Stdio.read_file("/proc/"+pid+"/status");
+  array tmp;
+  string status = Stdio.read_file("/proc/"+pid+"/status");
   if(!status || !strlen(status))
     return "<i>Failed to read /proc/. Process died?</i>";
   foreach(status / "\n", string line)
@@ -72,91 +79,71 @@ string get_status(int pid)
     string unmod = tmp[1];
     tmp[1] -= " ";
     tmp[1] -= "\t";
-    switch(lower_case(tmp[0]))
+    tmp[0] = lower_case(tmp[0]);
+    switch(tmp[0])
     {
      case "name":
-      name = tmp[1];
+      data->name = tmp[1];
       break;
       
      case "state":
-      sscanf(tmp[1], "%*s(%s)", state);
+      sscanf(tmp[1], "%*s(%s)", data->state);
       break;
 
      case "ppid":
-      ppid = (int)tmp[1];
-      break;
-      
      case "vmrss":
-      vmrss = (int)tmp[1];
-      break;
-
      case "vmdata":
-      vmdata = (int)tmp[1];
-      break;
-     
      case "vmstk":
-      vmstk = (int)tmp[1];
-      break;
-
      case "vmexe":
-      vmexe = (int)tmp[1];
-      break;
-
      case "vmlck":
-      vmlck = (int)tmp[1];
-      break;
-
      case "vmlib":
-      vmlib = (int)tmp[1];
-      break;
-
      case "vmsize":
-      vmsize = (int)tmp[1];
+      data[ tmp[0] ] = (int)tmp[1];
       break;
 
      case "uid":
-      uid = unmod / "\t" - ({""});
+      data->uid = unmod / "\t" - ({""});
 #if efun(getpwuid)
-      for(int i = 0; i < sizeof(uid); i++)
+      for(int i = 0; i < sizeof(data->uid); i++)
 	catch {
-	  uid[i] = getpwuid((int)uid[i])[0];
+	  data->uid[i] = getpwuid((int)data->uid[i])[0];
 	};
 #endif
       break;
 
      case "gid":
-      gid = unmod / "\t" - ({""});
+      data->gid = unmod / "\t" - ({""});
 #if efun(getgrgid)
-      for(int i = 0; i < sizeof(gid); i++)
+      for(int i = 0; i < sizeof(data->gid); i++)
 	catch {
-	  gid[i] = getgrgid((int)gid[i])[0];
+	  data->gid[i] = getgrgid((int)data->gid[i])[0];
 	};
 #endif
       break;
-      
     }
   }
-  string ppids = "", fds;
-  while(ppid != 0)
+  data->ppids = "";
+  while(data->ppid != 0)
   {
-    if(strlen(ppids))
-      ppids += " => ";
-    ppids += sprintf("<a href=/Actions/?action=linuxproc.pike&pid=%d&"
-		     "unique=%d>%d</a>", ppid, time(), ppid);
-    status = Stdio.read_file("/proc/"+ppid+"/status");
+    if(strlen(data->ppids))
+      data->ppids += " => ";
+    data->ppids += sprintf("<a href=/Actions/?action=linuxproc.pike&pid=%d&"
+			   "unique=%d>%d</a>", data->ppid, time(), data->ppid);
+    status = Stdio.read_file("/proc/"+data->ppid+"/status");
     if(!stringp(status) || !strlen(status))
     {
-      ppids += " => [ failed, process died? ]";
+      data->ppids += " => [ failed, process died? ]";
       break;
     }
-    sscanf(status, "%*sPPid:\t%d\n%*s", ppid);
+    sscanf(status, "%*sPPid:\t%d\n%*s", data->ppid);
   }
 
-  if(!strlen(ppids))
-    ppids = "None";
+  if(!strlen(data->ppids))
+    data->ppids = "None";
 
+  data->fds   = "";
   if((tmp = get_dir("/proc/"+pid+"/fd/")) && sizeof(tmp))
-    fds = sprintf("<b># open fd's:</b>   %d\n", sizeof(tmp));
+    data->fds = sprintf("<b>Num open fd's:</b> %d\n", sizeof(tmp));
 
   string out = sprintf("<b>Process name:</b>  %s\n"
 		       "<b>Process state:</b> %s\n"
@@ -174,55 +161,59 @@ string get_status(int pid)
 		       "<b>User and group information:</b>\n\n"
 		       "  <b>    %8s  %12s</b>\n"
 		       "  <b>uid</b> %8s  %12s\n"
-		       "  <b>gid</b> %8s  %12s\n\n"
-		       "<b><a href=/Actions/?action=linuxproc.pike&pid=%d&"
-		       "unique=%d&environ=1>Click here for process "
-		       "environment</a>\n",
-		       name, state,
-		       ppids, fds,
-//		       cwd,
-vmsize,
-		       vmrss, vmdata, vmstk, vmlck,
-		       vmexe, vmlib,
+		       "  <b>gid</b> %8s  %12s\n\n",
+		       data->name, data->state,
+		       data->ppids, data->fds,
+		       //		       cwd,
+		       data->vmsize,
+		       data->vmrss, data->vmdata, data->vmstk, data->vmlck,
+		       data->vmexe, data->vmlib,
 		       "real", "effective",
-		       uid[0], uid[1], 
-		       gid[0], gid[1],
-		       pid, time());
+		       data->uid[0], data->uid[1], 
+		       data->gid[0], data->gid[1]);
   status = Stdio.read_file("/proc/"+pid+"/stat");
   if(!stringp(status) || !strlen(status))
     return out;
   array stat = status / " ";
   out += sprintf("\n"
-		 "<b>Page Faults (non I/O) :</b> %s\n"
-		 "<b>Page Faults (I/O)     :</b> %s\n",
-		 stat[9], stat[11]);
+		 "<b>                            Process     In children</b>\n"
+		 "<b>Page Faults (non I/O) :</b>  %10s      %10s\n"
+		 "<b>Page Faults (I/O)     :</b>  %10s      %10s\n",
+		 stat[9], stat[10], stat[11], stat[12]);
 		 
   return out;
 }
 
+mixed page_1(object id, object mc)
+{
+  int pid = (int)id->variables->pid || roxen->roxenpid || roxen->startpid;
+  string environ =
+    Array.map(sort((Stdio.read_file("/proc/"+pid+"/environ") || "") / "\0"),
+	      format_env_line, pid)*"";
+  if(strlen(environ))
+    environ = sprintf("<table width=100%% cellspacing=0 cellpadding=1>\n <tr align=left>\n  <th>Variable</th>\n  "
+		      "<th>Value</th>\n </tr>\n%s"
+		      "</table>", environ);
+  return ("<h2>Process environment for "+pid+"</h2><h3>Cmdline: "+
+	  replace(Stdio.read_file("/proc/"+pid+"/cmdline") || "???",
+		  "\0", " ") +"</h3>" +
+	  environ);
+}
+
 mixed page_0(object id, object mc)
 {
-  object p = ((program)"privs")("Process status");
+  object p = Privs("Process status");
   int pid = (int)id->variables->pid || roxen->roxenpid || roxen->startpid;
  
-  if(id->variables->environ) {
-    string environ =
-      Array.map(sort((Stdio.read_file("/proc/"+pid+"/environ") || "") / "\0"),
-		format_env_line, pid)*"";
-    if(strlen(environ))
-      environ = sprintf("<table width=100%% cellspacing=0 cellpadding=1>\n <tr align=left>\n  <th>Variable</th>\n  "
-			"<th>Value</th>\n </tr>\n%s"
-	      "</table>", environ);
-    return ("<h2>Process environment for "+pid+"</h2><h3>Cmdline: "+
-	    replace(Stdio.read_file("/proc/"+pid+"/cmdline") || "???",
-		    "\0", " ") +"</h3>" +
-	    environ);
-  }
+  string tree = Array.map((Array.map(popen("/usr/bin/pstree -pa "+pid)/"\n" -
+				     ({""}), format_proc_line, pid)*"") / "\n",
+			  lambda(string l) {
+			    l = reverse(l);
+			    sscanf(l, "%*[ ]%s", l);
+			    return reverse(l);
+			  })*"\n";
   
-  string tree = Array.map(popen("/usr/bin/pstree -pa "+pid)/"\n" - ({""}),
-			  format_proc_line, pid)*"";
-
-return ("<h2>Process Tree for "+pid+"</h2><pre>\n"+
+  return ("<h2>Process Tree for "+pid+"</h2><pre>\n"+
 	  tree+"</pre>"+
 	  (roxen->euid_egid_lock ? 
 	   "<p><i>Please note that when using threads on Linux, each "
