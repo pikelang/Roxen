@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1999-2000, Roxen IS.
 //
 
-constant cvs_version = "$Id: foldlist.pike,v 1.16 2000/04/06 06:47:43 wing Exp $";
+constant cvs_version = "$Id: foldlist.pike,v 1.17 2000/04/14 22:39:25 kuntri Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -20,9 +20,9 @@ TAGDOCUMENTATION
 #ifdef manual
 constant tagdoc=([
 
-"foldlist":({#"<desc cont>
+"foldlist":({#"<desc cont><short>
 This tag is used to build folding lists, that are like &lt;dl&gt;
-lists, but where each element can be unfolded. The tags used to build
+lists, but where each element can be unfolded.</short> The tags used to build
 the lists elements are ft and fd.
 </desc>
 
