@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.37 2001/08/22 17:07:08 grubba Exp $
+ * $Id: ftp.pike,v 2.38 2001/08/22 17:21:14 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -596,6 +596,7 @@ class LS_L
   static string name_from_uid(int uid)
   {
     string|array(string) user = master_session->conf->auth_module &&
+      master_session->conf->auth_module->user_from_uid &&
       master_session->conf->auth_module->user_from_uid(uid);
     if (user) {
       if (arrayp(user)) {
