@@ -7,6 +7,8 @@ SRCDIR=@srcdir@
 prefix=@prefix@
 VPATH=@srcdir@
 
+@SET_MAKE@
+
 HAVE_SSL=@ssl@
 HAVE_SHUFFLE=@shuffle@
 
@@ -33,7 +35,7 @@ yes-install: ssl-install
 yes-localinstall: ssl-localinstall
 
 fcgi: 
-	(cd fast_cgi; make)
+	(cd fast_cgi; $(MAKE))
 	cp fast_cgi/cgi-fcgi/cgi-fcgi fcgi
 	@(strip fcgi || echo)
 
@@ -100,7 +102,7 @@ localinstall: fcgi roxen_hostname cgi $(HAVE_SSL)-localinstall $(HAVE_SHUFFLE)-l
 
 clean: 
 	@rm -f roxen_hostname cgi shuffle fcgi ssl *.o  core
-	@(cd fast_cgi; make clean)
+	@(cd fast_cgi; $(MAKE) clean)
 
 spotless: clean
 	@rm -f config.* stamp-h
