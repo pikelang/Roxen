@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.48 1998/04/08 19:34:57 grubba Exp $
+# $Id: configure.in,v 1.49 1998/05/08 17:59:05 grubba Exp $
 #
 
 prefix=$PWD
@@ -457,6 +457,17 @@ AC_SUBST(REALCFLAGS)
 CFLAGS="$CFLAGS $WARN $OPTIMIZE"
 
 export CC CFLAGS REALCFLAGS WARN OPTIMIZE
+
+###################################################################
+## Kluges
+###################################################################
+
+if test "x`uname`" = "xLinux" ; then
+  echo
+  echo 'Warning! Linux detected, enabling the socketpair kluge.'
+  echo
+  pike_cv_select_on_unix_sockets='yes'
+fi
 
 ###################################################################
 ## Libraries that are used by Pike
