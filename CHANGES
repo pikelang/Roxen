@@ -1,3 +1,11 @@
+Changes since Roxen 2.0.35
+-----------------------------------------------
+
+o Catch RXML errors correctly for old-style tags.
+
+o Added a few-, and a removed some other TTF fonts.
+
+
 Changes since Roxen 2.0.34
 -----------------------------------------------
 
