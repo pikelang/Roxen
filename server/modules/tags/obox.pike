@@ -5,7 +5,7 @@
 // Several modifications by Francesco Chemolli.
 
 
-constant cvs_version = "$Id: obox.pike,v 1.32 2000/11/06 11:47:37 kuntri Exp $";
+constant cvs_version = "$Id: obox.pike,v 1.33 2000/11/09 18:19:13 kuntri Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -13,7 +13,8 @@ inherit "module";
 
 TAGDOCUMENTATION
 #ifdef manual
-constant tagdoc=(["obox":([
+constant tagdoc=([
+"obox": ([
   "standard":#"<desc cont='cont'><p><short>
  This tag creates an outlined box.</short>
 </p></desc>

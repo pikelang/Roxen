@@ -215,15 +215,15 @@ constant tagdoc=([
  is only available in the directory template.
 </p></desc>
 
-<attr name='directory' value='path'>
- Apply the listing to this directory.
+<attr name='directory' value='path'><p>
+ Apply the listing to this directory.</p>
 </attr>
 
-<attr name='options' value='(real-file,thumbnail,imagesize)'>
+<attr name='options' value='(real-file,thumbnail,imagesize)'><p>
  Use these options to customize the directory listings. These argument
  have been made options due to them demanding a lot of raw computing
  power, since they involve image manipulation and other demanding
- tasks. These options can be combined.
+ tasks. These options can be combined.</p>
 
 <xtable>
 <row><c>real-file</c><c>Makes it possible to show the absolute
@@ -240,40 +240,40 @@ resolve the image's height and width.</c></row>
 </xtable>
 </attr>
 
-<attr name='thumbnail-size' value='number'>
+<attr name='thumbnail-size' value='number'><p>
  Sets the size of the thumbnail. Defaultsize is 60 pixels. The size is
  set in proportion to the image's longest side, e.g. if the height of
  the image is longer than it's width, then the thumbnail will be 60
  pixels high. The shortest side will be shown in proportion to the
  longest side. This attribute can only be used together with the
- <att>option=\"thumbnail\"</att> attribute.
+ <att>option=\"thumbnail\"</att> attribute.</p>
 </attr>
 
-<attr name='thumbnail-format' value='imageformat'>
+<attr name='thumbnail-format' value='imageformat'><p>
  Set the output format for the thumbnail. Default is <ext>png</ext>.
- All imageformats that the <ref type='tag'><tag>cimg</tag></ref> tag
- handles can be used to produce thumbnails.This attribute can only be
- used together with the <att>option=\"thumbnail\"</att> attribute.
+ All imageformats that <xref href='../graphics/cimg.tag' > handles can
+ be used to produce thumbnails. This attribute can only be used
+ together with the <att>option=\"thumbnail\"</att> attribute.</p>
 </attr>
 
-<attr name='strftime' value='strftime string' default='%Y-%m-%d'>
+<attr name='strftime' value='strftime string' default='%Y-%m-%d'><p>
  Format the date according to this string. Default is the isotime
  format (%Y-%m-%d), which will return (Year(four characters)-month(two
  characters)-day(two characters)), e.g. 2000-11-22. See the attribute
- <att>strftime</att> in the <tag>date</tag> tag for a full listing of
- available formats.
+ <att>strftime</att> in <xref href='../information/date.tag' /> for a
+ full listing of available formats.</p>
 </attr>
 
-<attr name='glob' value='glob-pattern1[,glob-pattern2,...]'>
- Only show files matching the glob-pattern.
+<attr name='glob' value='glob-pattern1[,glob-pattern2,...]'><p>
+ Only show files matching the glob-pattern.</p>
 </attr>
 
-<attr name='type' value='glob-pattern1[,glob-pattern2,...]'>
- Only show files which content-type matches the glob-pattern.
+<attr name='type' value='glob-pattern1[,glob-pattern2,...]'><p>
+ Only show files which content-type matches the glob-pattern.</p>
 </attr>
 
-<attr name='sort-order' value='alpha|dwim|modified|size|type' default='dwim'>
- Sort the files and directories by this method.
+<attr name='sort-order' value='alpha|dwim|modified|size|type' default='dwim'><p>
+ Sort the files and directories by this method.</p>
 <table>
 <tr><td>alpha</td><td>Sort files and directories alphabetically.</td></tr>
 <tr><td>dwim</td><td>Sort files and directories by \"Do What I (want) Method\". In many methods numeriacal sorts fail as the number '10' often appears before '2'. This method sorts numerical characters first then alphabetically, e.g. 1foo.html, 2foo.html, 10foo.html, foo1.html, foo2.html, foo10.html.</td></tr>
@@ -283,8 +283,8 @@ resolve the image's height and width.</c></row>
 </table>
 </attr>
 
-<attr name='sort-reversed'>
- Reverse the sort order.
+<attr name='sort-reversed'><p>
+ Reverse the sort order.</p>
 </attr>",
 
 ([

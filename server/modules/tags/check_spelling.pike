@@ -6,7 +6,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: check_spelling.pike,v 1.14 2000/11/02 13:07:59 kuntri Exp $";
+constant cvs_version = "$Id: check_spelling.pike,v 1.15 2000/11/09 18:19:12 kuntri Exp $";
 
 constant module_type = MODULE_TAG;
 constant module_name = "Spell checker";
@@ -251,20 +251,20 @@ TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
 "spell":#"<desc cont='cont'><p><short>
- Checks words for spellingerrors.</short> The spellchecker uses the ispell dictionary.
+ Checks words for spelling problems.</short> The spellchecker uses the ispell dictionary.
 </p></desc>
 
-<attr name='dict' value='american,others'>
- Select dictionary to use in the spellchecking. American is default.
+<attr name='dict' value='american,others'><p>
+ Select dictionary to use in the spellchecking. American is default.</p>
 </attr>
 
-<attr name='prestate' value='string'>
- What prestate to use.
+<attr name='prestate' value='string'><p>
+ What prestate to use.</p>
 </attr>
 
-<attr name='report' value='popup,table'>
+<attr name='report' value='popup,table'><p>
  Either recieve the spellreport as a popup-window when clicking on the
- misspelled word or as a table with all misspelled words.
+ misspelled word or as a table with all misspelled words.</p>
 </attr>",
 
     ]);

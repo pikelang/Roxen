@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version="$Id: vform.pike,v 1.15 2000/11/07 23:56:37 nilsson Exp $";
+constant cvs_version="$Id: vform.pike,v 1.16 2000/11/09 18:19:15 kuntri Exp $";
 constant thread_safe=1;
 
 constant module_type = MODULE_TAG;
@@ -389,9 +389,9 @@ TAGDOCUMENTATION;
 constant tagdoc=([
   "vform":({ #"<desc cont='cont'><p><short>
  Creates a self verifying form.</short> You can use all stadard
- HTML-input widgets in this container as well.
+ HTML-input widgets in this container as well.</p>
 
-<ex type=box>
+<ex type='box'>
 <vform>
   <vinput name='mail' type='email'>&_.warning;</vinput>
   <input type='hidden' name='user' value='&form.userid:' />
@@ -400,10 +400,10 @@ constant tagdoc=([
 <then><redirect to='other_page.html' /></then>
 <else>No, this form is still not valid</else>
 </ex>
-</p></desc>
+</desc>
 
 <attr name='hide-if-verified'>
- Hides the form if it is verified
+ <p>Hides the form if it is verified</p>
 </attr>",
 
 	     ([
@@ -411,16 +411,16 @@ constant tagdoc=([
  Reload the page without variable checking.</short>
 </p></desc>
 
-<attr name='value' value='string'>
- The text on the button.
+<attr name='value' value='string'><p>
+ The text on the button.</p>
 </attr>",
 
 "clear":#"<desc tag='tag'><p><short>
  Resets all the widgets to their initial values.</short>
 </p></desc>
 
-<attr name='value' value='string'>
- The text in the button.
+<attr name='value' value='string'><p>
+ The text in the button.</p>
 </attr>",
 
 "verify-fail":#"<desc tag='tag'><p><short>
@@ -446,92 +446,92 @@ constant tagdoc=([
  Creates a self verifying input widget.</short>
 </p></desc>
 
-<attr name='fail-if-failed' value='name'>
+<attr name='fail-if-failed' value='name'><p>
   The verification of this variable will always fail if the
-  verification of a named variable also failed.
+  verification of a named variable also failed.</p>
 </attr>
 
-<attr name='ignore-if-false'>
-  Don't verify if the false flag i set.
+<attr name='ignore-if-false'><p>
+  Don't verify if the false flag i set.</p>
 </attr>
 
-<attr name='ignore-if-failed' value='name'>
-  Don't verify if the verification of a named variable failed.
+<attr name='ignore-if-failed' value='name'><p>
+  Don't verify if the verification of a named variable failed.</p>
 </attr>
 
-<attr name='ignore-if-verified' value='name'>
-  Don't verify if the verification of a named variable succeeded.
+<attr name='ignore-if-verified' value='name'><p>
+  Don't verify if the verification of a named variable succeeded.</p>
 </attr>
 
-<attr name='name' value='string' required='required'>
-  The name of the variable that should be set.
+<attr name='name' value='string' required='required'><p>
+  The name of the variable that should be set.</p>
 </attr>
 
-<attr name='value' value='anything'>
-  The default value of this input widget.
+<attr name='value' value='anything'><p>
+  The default value of this input widget.</p>
 </attr>
 
-<attr name='scope' value='name' default='vinput'>
-  The name of the scope that is created in this tag.
+<attr name='scope' value='name' default='vinput'><p>
+  The name of the scope that is created in this tag.</p>
 </attr>
 
-<attr name='trim'>
-  Trim the variable before verification.
+<attr name='trim'><p>
+  Trim the variable before verification.</p>
 </attr>
 
-<attr name='type' value='int|float|email|date|text|string' required='required'>
+<attr name='type' value='int|float|email|date|text|string' required='required'><p>
  Set the type of the data that should be input, and hence what
- widget should be used and how the input should be verified.
+ widget should be used and how the input should be verified.</p>
 </attr>
 
-<attr name='minlength' value='number'>
+<attr name='minlength' value='number'><p>
  Verify that the variable has at least this many characters. Only
- available when using the type string or text.
+ available when using the type string or text.</p>
 </attr>
 
-<attr name='maxlength' value='number'>
+<attr name='maxlength' value='number'><p>
  Verify that the variable has at most this many characters. Only
- available when using the type string or text.
+ available when using the type string or text.</p>
 </attr>
 
-<attr name='is' value='empty'>
+<attr name='is' value='empty'><p>
  Verify that the variable is empty. Pretty useless... Only available
- when using the type string or text.
+ when using the type string or text.</p>
 </attr>
 
-<attr name='glob' value='pattern'>
+<attr name='glob' value='pattern'><p>
  Verify that the variable match a certain glob pattern. Only available
- when using the type string or text.
+ when using the type string or text.</p>
 </attr>
 
-<attr name='regexp' value='pattern'>
+<attr name='regexp' value='pattern'><p>
  Verify that the variable match a certain regexp pattern. Only
- available when using the type string or text.
+ available when using the type string or text.</p>
 </attr>
 
-<attr name='case' value='upper|lower'>
+<attr name='case' value='upper|lower'><p>
  Verify that the variable is all uppercased (or all lowercased). Only
- available when using the type string or text.
+ available when using the type string or text.</p>
 </attr>
 
-<attr name='equal' value='string'>
+<attr name='equal' value='string'><p>
  Verify that the variable is equal to a given string. Pretty
- useless... Only available when using the type string or text.
+ useless... Only available when using the type string or text.</p>
 </attr>
 
-<attr name='disable-domain-check'>
+<attr name='disable-domain-check'><p>
  Only available when using the email type. When set the email domain
- will not be checked against a DNS to verify that it does exists.
+ will not be checked against a DNS to verify that it does exists.</p>
 </attr>
 
-<attr name='mode' value='before|after|complex'>
+<attr name='mode' value='before|after|complex'><p>
  Select how to treat the contents of the vinput container. Before puts
  the contents before the input tag, and after puts it after, in the
  event of failed verification. If complex, use one tag
  <tag>verified</tag> for what should be outputted in the event of
- successful verification tag <tag>failed</tag> for every other event.
+ successful verification tag <tag>failed</tag> for every other event.</p>
 
-<ex type=box>
+<ex type='box'>
 <table>
 <tr><td>upper</td><vinput name='a' case='upper' mode='complex'>
 <verified><td bgcolor=green></verified>
@@ -542,24 +542,24 @@ constant tagdoc=([
 </ex>
 </attr>
 
-<attr name='min' value='number'>
+<attr name='min' value='number'><p>
  Check that the number is at least the given. Only available when
- using the type int or float.
+ using the type int or float.</p>
 </attr>
 
-<attr name='max' value='number'>
+<attr name='max' value='number'><p>
  Check that the number is at most the given. Only available when using
- the type int or float.
+ the type int or float.</p>
 </attr>
 
-<attr name='optional'>
+<attr name='optional'><p>
  Indicates that the variable should only be tested if it does contain
- something.
+ something.</p>
 </attr>",
 	    ([
 "&_.input;":#"<desc ent='ent'><p>
  The input tag, in complex mode.
-</p<</desc>",
+</p></desc>",
 
 "&_.warning;":#"<desc ent='ent'><p>
  May contain a explaination of why the test failed.
@@ -572,7 +572,7 @@ constant tagdoc=([
 
 "failed":#"<desc cont='cont'><p>
  The content will only be shown if the variable failed to verify, in
- complex mode
+ complex mode.
 </p></desc>"
 	    ])
 	 }),

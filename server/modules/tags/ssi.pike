@@ -5,7 +5,7 @@ inherit "module";
 #include <module.h>
 
 constant thread_safe=1;
-constant cvs_version = "$Id: ssi.pike,v 1.37 2000/11/09 10:31:53 jhs Exp $";
+constant cvs_version = "$Id: ssi.pike,v 1.38 2000/11/09 18:19:14 kuntri Exp $";
 
 
 constant module_type = MODULE_TAG;
@@ -108,7 +108,7 @@ constant tagdoc=([
 
  <p>Note that these variables are SSI-related. You cannot access them
  as RXML variables, nor use this tag to print RXML variables.</p>
-</p></desc>
+</desc>
 
 <attr name='var' value='sizefmt'><p>
  Print format for file sizes.</p>
@@ -288,7 +288,7 @@ constant tagdoc=([
 <desc tag='tag'><p><short>
  This tag outputs a listing of all existing variables and their
  values.</short> Attributes won't be printed.</p>
- <ex type='vert'><pre><!--#printenv --></pre></ex>
+ <ex type='box'><pre><!--#printenv --></pre></ex>
 </desc>",
 
 "!--#set":#"<desc tag='tag'><p><short>

@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: html_wash.pike,v 1.16 2000/11/02 13:11:37 kuntri Exp $";
+constant cvs_version = "$Id: html_wash.pike,v 1.17 2000/11/09 18:19:13 kuntri Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "HTML washer";
@@ -180,7 +180,6 @@ TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
 "wash-html":#"<desc cont='cont'><p><short hide='hide'>
-
  Turns a text into HTML.</short>This tag is mostly useful for turning
  user freetext input from a form into HTML intelligently, by turning
  sections of the text separated by more than one newline into
@@ -189,10 +188,10 @@ constant tagdoc=([
  <tag>a</tag>anchor-links<tag>/a</tag> out of potential www-addresses.
 </p></desc>
 
-<attr name='keep-all'>
+<attr name='keep-all'><p>
  Leave all tags containing info intact. Overrides the value of
  keep-tags and keep-containers. This attribute is useful together with
- the attributes <att>unparagraphify</att> and <att>unlink</att>.
+ the attributes <att>unparagraphify</att> and <att>unlink</att>.</p>
 
 <ex type='vert'>
 <wash-html keep-all=''>
@@ -203,12 +202,11 @@ constant tagdoc=([
 </ex>
 </attr>
 
-<attr name='keep-tags' value='list'>
-
+<attr name='keep-tags' value='list'><p>
  Comma-separated array of empty element <tag>tags</tag> not to
  filter. Quote all other empty element tags i.e. transform \"&lt;\",
  \"&gt;\" and \"&amp;\" to \"&amp;lt;\", \"&amp;gt;\" and
- \"&amp;amp;\".
+ \"&amp;amp;\".</p>
 
 <ex type='vert'>
 <wash-html keep-tags='hr'>
@@ -219,11 +217,11 @@ constant tagdoc=([
 </ex>
 </attr>
 
-<attr name='keep-containers' value='list'>
+<attr name='keep-containers' value='list'><p>
  Comma-separated array of <tag>container</tag>...<tag>/</tag> tags not
  to filter. Quote all other container tags e.i. transform \"&lt;\",
  \"&gt;\" and \"&amp;\" to \"&amp;lt;\", \"&amp;gt;\" and
- \"&amp;amp;\".
+ \"&amp;amp;\".</p>
 
 <ex type='vert'>
 <wash-html keep-containers='b'>
@@ -234,11 +232,11 @@ constant tagdoc=([
 </ex>
 </attr>
 
-<attr name='linkify'>
+<attr name='linkify'><p>
  Makes text that looks like it might be useful as a link, e g
  http://www.roxen.com/, into a link. Text that starts with
  \"http://\", \"https://\", \"ftp://\", \"www.\" or \"http.\" will be
- converted to a clickable link with the text as the link label.
+ converted to a clickable link with the text as the link label.</p>
 
 <ex type='vert'>
 <wash-html linkify='' keep-containers='a' keep-tags='br'>
@@ -249,9 +247,9 @@ constant tagdoc=([
 </ex>
 </attr>
 
-<attr name='unlinkify'>
+<attr name='unlinkify'><p>
  Undo a linkify-conversion. Only the links that has the same label as
- address will be converted to plain text.
+ address will be converted to plain text.</p>
 
 <ex type='vert'>
 <wash-html unlinkify='' keep-tags='br' keep-containers='a'>
@@ -261,9 +259,10 @@ constant tagdoc=([
 </ex>
 </attr>
 
-<attr name='paragraphify'>
+<attr name='paragraphify'><p>
  If more than one newline exists between two text elements, this
- attribute automatically makes the next text element into a paragraph.
+ attribute automatically makes the next text element into a
+ paragraph.</p>
 
 <ex type='vert'>
 <wash-html paragraphify=''>
@@ -275,8 +274,8 @@ And some more text to the same paragraph.
 </ex>
 </attr>
 
-<attr name='unparagraphify'>
- Turn paragraph breaks into double newlines instead.
+<attr name='unparagraphify'><p>
+ Turn paragraph breaks into double newlines instead.</p>
 
 <ex type='vert'>
 <pre><wash-html unparagraphify=''>
@@ -285,12 +284,12 @@ And some more text to the same paragraph.
 <p>An other paragraph.
 And some more text to the same paragraph.</p>
 </wash-html></pre>
-</ex>
- The <tag>pre</tag> is only used in the example for layout-purposes.
+</ex><p>
+ The <tag>pre</tag> is only used in the example for layout-purposes.</p>
 </attr>
 
-<attr name='close-tags'>
- Terminate all tags with an ending slash, making them XML-compliant.
+<attr name='close-tags'><p>
+ Terminate all tags with an ending slash, making them XML-compliant.</p>
 </attr>",
 
     ]);

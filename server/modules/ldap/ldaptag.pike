@@ -2,7 +2,7 @@
 //
 // Module code updated to new 2.0 API
 
-constant cvs_version="$Id: ldaptag.pike,v 2.4 2000/11/07 10:49:24 hop Exp $";
+constant cvs_version="$Id: ldaptag.pike,v 2.5 2000/11/09 18:19:11 kuntri Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -31,60 +31,61 @@ constant module_doc  = "This module gives the tag <tt>&lt;ldap&gt;</tt> and "
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
-
- "ldap":#"<desc tag><short>
+ "ldap":#"<desc tag='tag'><p><short>
  Executes a LDAP operation, but doesn't do anything with the
  result.</short>The <tag>ldap</tag> tag is mostly used for LDAP
  operation that change the contents of the directory, for example
- <i>add</i> or<i>modify</i>.</desc>
+ <i>add</i> or<i>modify</i>.</p>
+</desc>
 
-<attr name='server' value='LDAP URL'>
+<attr name='server' value='LDAP URL' default='Server URL'></p>
  Connection LDAP URL. If omitted the <i>Default server URL</i>
- will be used.
+ will be used.</p>
 </attr>
 
-<attr name='password' value='password'>
+<attr name='password' value='password'></p>
  User password for connection to the directory server. If omitted the
- default will be used.
+ default will be used.</p>
  </attr>
 
-<attr name='dn' value='distinguished name'>
- Distinguished name of object. Required.
+<attr name='dn' value='distinguished name' required='required'><p>
+ Distinguished name of object.</p>
 </attr>
 
-<attr name='op' value=add,delete,modify,replace>
- The actual LDAP operation. Required.
- <p>Note that <tt>op='modify'</tt> will change only the attributes
- given by the <i>attr</i> attribute.
+<attr name='op' value='add,delete,modify,replace' required='required'><p>
+ The actual LDAP operation.</p>
+
+ <p>Note that <att>op='modify'</att> will change only the attributes
+ given by the <att>attr</att> attribute.</p>
 </attr>
 
-<attr name='attr' value=''attribute_name1':[('attribute_value1'[,... ])][,'attribute_name2',...]'>
- The actual values of attributes.
-  <p> for example:
- (sn:'Zappa'),(mail:'hello@nowhere.org','athell@pandemonium.com')</p>
+<attr name='attr' value=''attribute_name1':[('attribute_value1'[,... ])][,'attribute_name2',...]'><p>
+ The actual values of attributes.</p>
+  <p> for example:</p>
+ <ex type='box'>
+ (sn:'Zappa'),(mail:'hello@nowhere.org','athell@pandemonium.com')
+ </ex>
 </attr>
 
-<attr name='parser'>
- If specified, the query will be parsed by the RXML parser. This is useful if the operation is to be built dynamically.
- </attr>",
+<attr name='parser'><p>
+ If specified, the query will be parsed by the RXML parser. This is
+ useful if the operation is to be built dynamically.</p>
+</attr>",
 
-"emit#ldap":#"<desc plugin>Use this source to search LDAP directory
- for information. The result will be available in
- variables named as the LDAP entries attribute.</desc>
+"emit#ldap":#"<desc plugin='plugin'><p><short>
+ Use this source to search LDAP directory for information.</short> The
+ result will be available in variables named as the LDAP entries
+ attribute.</p>
+</desc>
 
-<attr name='server' value='LDAP URL'>
+<attr name='server' value='LDAP URL' default='Server URL'><p>
  Connection LDAP URL. If omitted the <i>Default server URL</i>
- will be used.
+ will be used.</p>
 </attr>
 
-<attr name='password' value='user password'>
+<attr name='password' value='user password'><p>
  User password for connection to the directory server. If omitted the
- default will be used.
-</attr>
-
-<attr name='split' value='separator character'>
- Separator character used for distinguish multiple values inside attribute.
- If ommited the default null separator will be used
+ default will be used.</p>
 </attr>
 
 "
@@ -158,6 +159,8 @@ array|object|int do_ldap_op(string op, mapping args, RequestID id)
 
   switch (op) {
     case "search":
+	if (!args->filter)
+	  RXML.parse_error("No filter.");
 	break;
 
     case "add": 
@@ -200,14 +203,16 @@ array|object|int do_ldap_op(string op, mapping args, RequestID id)
       RXML.run_error("Couldn't parse attribute values.");
   }
 
+/*
+  // binding ?
+  if(args->user)
+    con->bind(args->user,pass);
+*/
+
   switch (op) {
     case "search":
-#if __MAJOR__ = 7 && __MINOR__ = 0 && __BUILD__ < 234
-// only v2 support and argument required 
-	error = catch(result = (con->search(args->filter||"")));
-#else
-	error = catch(result = (con->search()));
-#endif
+	// todo: add attributes listing if any
+	error = catch(result = (con->search(args->filter)));
 	break;
 
     case "add":
@@ -379,10 +384,7 @@ void start(int level, Configuration _conf)
 
 string status()
 {
-  string rv = "";
-
-#if __MAJOR__ = 7 && __MINOR__ = 0 && __BUILD__ < 235
-    rv += "<br /><p><b>WARNING! Only LDAP version 2 support detected!</p>\n";
-    rv += "Use Pike 7.0.236 or better for version 3 LDAP support.\n";
-#endif
+      "<font color=\"red\">Not connected:</font> " +
+      replace (Roxen.html_encode_string ("BLAHBLAH..."), "\n", "<br />\n") +
+      "<br />\n";
 }

@@ -8,7 +8,7 @@
 inherit "module";
 
 constant thread_safe = 1;
-constant cvs_version = "$Id: wml.pike,v 1.12 2000/11/02 13:41:18 kuntri Exp $";
+constant cvs_version = "$Id: wml.pike,v 1.13 2000/11/09 18:19:15 kuntri Exp $";
 
 constant module_type = MODULE_TAG;
 constant module_name = "WAP WML helper";
@@ -25,20 +25,20 @@ constant tagdoc=([
  required.
 </p></desc>
 
-<attr name=from value=1.0|1.1>
- Tells what version of wml is used. Default is 1.1
+<attr name='from' value='1.0|1.1' default='1.1'><p>
+ Tells what version of wml is used.</p>
 </attr>
 
-<attr name=to value=1.0|1.1>
- Force conversion to this version of wml
+<attr name='to' value='1.0|1.1'><p>
+ Force conversion to this version of wml.</p>
 </attr>
 
-<attr name=noheader>
- If used, no xml and doctype tags will be added to the document
+<attr name='noheader'><p>
+ If used, no xml and doctype tags will be added to the document.</p>
 </attr>
 
-<attr name=mime value=string>
- Sets the mime-type of the document.
+<attr name='mime' value='string'><p>
+ Sets the mime-type of the document.</p>
 </attr>"]);
 #endif
 

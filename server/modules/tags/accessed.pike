@@ -5,7 +5,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: accessed.pike,v 1.40 2000/11/02 22:44:27 nilsson Exp $";
+constant cvs_version = "$Id: accessed.pike,v 1.41 2000/11/09 18:19:12 kuntri Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_LOGGER;
 constant module_name = "Accessed counter";
@@ -70,7 +70,7 @@ constant tagdoc=([
  been accessed. Needs the accessed module.
 </p></desc>",
 
-  "accessed":#"<desc tag='tag'><p><short>
+"accessed":#"<desc tag='tag'><p><short>
  Generates an access counter that shows how many times the page has
  been accessed.</short> A file, AccessedDB, in the logs directory is
  used to store the number of accesses to each page. By default the
@@ -79,34 +79,36 @@ constant tagdoc=([
  certain type. <ex><accessed/></ex>
 </p></desc>
 
-<attr name=add value=number>
+<attr name='add' value='number'><p>
  Increments the number of accesses with this number instead of one,
- each time the page is accessed.</attr>
+ each time the page is accessed.</p></attr>
 
-<attr name=addreal>
+<attr name='addreal'><p>
  Prints the real number of accesses as an HTML comment. Useful if you
  use the cheat attribute and still want to keep track of the
- real number of accesses.</attr>
+ real number of accesses.</p></attr>
 
-<attr name=case value=upper|lower|capitalize>
- Sets the result to upper case, lower case or with the first letter capitalized.
+<attr name='case' value='upper|lower|capitalize'><p>
+ Sets the result to upper case, lower case or with the first letter
+ capitalized.</p>
 </attr>
 
-<attr name=cheat value=number>
+<attr name='cheat' value='number'><p>
  Adds this number of accesses to the actual number of accesses before
  printing the result. If your page has been accessed 72 times and you
- add &lt;accessed cheat=100&gt; the result will be 172.</attr>
+ add &lt;accessed cheat=100&gt; the result will be 172.</p></attr>
 
-<attr name=database>
- Works like the since attribute, but counts from the day the first entry in the entire accessed database was made.
+<attr name='database'><p>
+ Works like the since attribute, but counts from the day the first
+ entry in the entire accessed database was made.</p>
 </attr>
 
-<attr name=factor value=percent>
- Multiplies the actual number of accesses by the factor. E.g. <tag>accessed factor='50'</tag>
- displays half the actual value.
+<attr name='factor' value='percent'><p>
+ Multiplies the actual number of accesses by the factor. E.g.
+ <tag>accessed factor='50'</tag> displays half the actual value.</p>
 </attr>
 
-<attr name=file value=filename>
+<attr name='file' value='filename'><p>
  Shows the number of times the page filename has been
  accessed instead of how many times the current page has been accessed.
  If the filename does not begin with \"/\", it is assumed to be a URL
@@ -115,60 +117,61 @@ constant tagdoc=([
  of the file. If there is a file named tmp/index.html, you cannot
  shorten the name to tmp/, even if you've set Roxen up to use
  index.html as a default page. The filename refers to the
- virtual filesystem.
+ virtual filesystem.</p>
 
- One limitation is that you cannot reference a file that does not
+ <p>One limitation is that you cannot reference a file that does not
  have its own &lt;accessed&gt; tag. You can use &lt;accessed
  silent&gt; on a page if you want it to be possible to count accesses
- to it, but don't want an access counter to show on the page itself.
+ to it, but don't want an access counter to show on the page itself.</p>
 </attr>
 
-<attr name=lang value=langcodes>
+<attr name='lang' value='langcodes'><p>
  Will print the result as words in the chosen language if used together
- with type=string.
+ with type=string.</p>
 
  <ex><accessed type=\"string\"/></ex>
  <ex><accessed type=\"string\" lang=\"sv\"/></ex>
 </attr>
 
-<attr name=per value=second|minute|hour|day|week|month|year>
- Shows the number of accesses per unit of time.
+<attr name='per' value='second|minute|hour|day|week|month|year'><p>
+ Shows the number of accesses per unit of time.</p>
 
  <ex><accessed per=\"week\"/></ex>
 </attr>
 
-<attr name=prec value=number>
+<attr name='prec' value='number'><p>
  Rounds the number of accesses to this number of significant digits. If
- prec=2 show 12000 instead of 12148.
+ prec=2 show 12000 instead of 12148.</p>
 </attr>
 
-<attr name=reset>
+<attr name='reset'><p>
  Resets the counter. This should probably only be done under very
- special conditions, maybe within an &lt;if&gt; statement.
+ special conditions, maybe within an &lt;if&gt; statement.</p>
 
- This can be used together with the file argument, but it is limited
- to files in the current- and sub-directories.
+ <p>This can be used together with the file argument, but it is
+ limited to files in the current- and sub-directories.</p>
 </attr>
 
-<attr name=silent>
+<attr name='silent'><p>
  Print nothing. The access count will be updated but not printed. This
  option is useful because the access count is normally only kept for
  pages with actual &lt;access&gt; on them. &lt;accessed
  file=filename&gt; can then be used to get the access count for the
- page with the silent counter.
+ page with the silent counter.</p>
 </attr>
 
-<attr name=since>
+<attr name='since'><p>
  Inserts the date that the access count started. The language will
- depend on the lang tag, default is English. All normal date
- related attributes can be used. See the &lt;date&gt; tag.
+ depend on the <att>lang</att> attribute, default is English. All
+ normal date related attributes can be used. Also see: <xref
+ href='date.tag' />.</p>
 
  <ex><accessed since=\"\"/></ex>
 </attr>
 
-<attr name=type value=number|string|roman|iso|discordian|stardate|mcdonalds|linus|ordered>
+<attr name='type' value='number|string|roman|iso|discordian|stardate|mcdonalds|linus|ordered'><p>
  Specifies how the count are to be presented. Some of these are only
- useful together with the since attribute.
+ useful together with the since attribute.</p>
 
  <ex><accessed type=\"roman\"/></ex>
  <ex><accessed since=\"\" type=\"iso\"/></ex>
@@ -180,14 +183,14 @@ constant tagdoc=([
 
 </attr>
 
-<attr name=minlength value=number>
+<attr name='minlength' value='number'><p>
  Defines a minimum length the the resulting string should have. If it is
  shorter it is padded from the left with the padding value. Only values
- between 2 and 10 are valid.
+ between 2 and 10 are valid.</p>
 </attr>
 
-<attr name=padding value=character default=0>
- The padding that the minlength function should use.
+<attr name='padding' value='character' default='0'><p>
+ The padding that the minlength function should use.</p>
 </attr>
 "]);
 #endif

@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: countdown.pike,v 1.41 2000/11/02 12:44:10 kuntri Exp $";
+constant cvs_version="$Id: countdown.pike,v 1.42 2000/11/09 18:19:12 kuntri Exp $";
 #include <module.h>
 inherit "module";
 
@@ -19,29 +19,28 @@ or time.</short> It can also give the time to or from a few special
 events. See below for a full list.</p></desc>
 
 <p>Time:</p>
-<attr name=year value=number>Sets the year.</attr>
-<attr name=month value=number|month_name>Sets the month.</attr>
-<attr name=day value=number|day_name>Sets the weekday.</attr>
-<attr name=mday value=number>Sets the day of the month.</attr>
-<attr name=hour value=number>Sets the hour.</attr>
-<attr name=minute value=number>Sets the minute.</attr>
-<attr name=second value=number>Sets the second.</attr>
-<attr name=iso value=year-month-day>Sets the year, month and day all at once
-(YYYY-MM-DD, YYYYMMDD or YYYY-MMM-DD)
+<attr name='year' value='number'><p>Sets the year.</p></attr>
+<attr name='month' value='number|month_name'><p>Sets the month.</p></attr>
+<attr name='day' value='number|day_name'><p>Sets the weekday.</p></attr>
+<attr name='mday' value='number'><p>Sets the day of the month.</p></attr>
+<attr name='hour' value='number'><p>Sets the hour.</p></attr>
+<attr name='minute' value='number'><p>Sets the minute.</p></attr>
+<attr name='second' value='number'><p>Sets the second.</p></attr>
+<attr name='iso' value='year-month-day'><p>Sets the year, month and day all at once. (YYYY-MM-DD, YYYYMMDD or YYYY-MMM-DD).</p>
 <ex><countdown iso='2020-FEB-12'/></ex>
 </attr>
-<attr name=event value=easter,gregorian-easter,julian-easter,christmas,christmas-day,christmas-eve>
-Sets the time of an evet to count down to.</attr>
+<attr name='event' value='easter,gregorian-easter,julian-easter,christmas,christmas-day,christmas-eve'><p>
+Sets the time of an evet to count down to.</p></attr>
 
-<attr name=years value=number>Add this number of years to the result.</attr>
-<attr name=months value=number>Add this number of months to the result.</attr>
-<attr name=weeks value=number>Add this number of weeks to the result.</attr>
-<attr name=days value=number>Add this number of days to the result.</attr>
-<attr name=hours value=number>Add this number of hours to the result.</attr>
-<attr name=beats value=number>Add this number of beats to the result.</attr>
-<attr name=minutes value=number>Add this number of minutes to the result.</attr>
-<attr name=seconds value=number>Add this number of seconds to the result.</attr>
-<attr name=now value=year-month-day>Sets the 'present' time, if other than really present time. (YYYY-MM-DD, YYYYMMDD or YYYY-MMM-DD)
+<attr name='years' value='number'><p>Add this number of years to the result.</p></attr>
+<attr name='months' value='number'><p>Add this number of months to the result.</p></attr>
+<attr name='weeks' value='number'><p>Add this number of weeks to the result.</p></attr>
+<attr name='days' value='number'><p>Add this number of days to the result.</p></attr>
+<attr name='hours' value='number'><p>Add this number of hours to the result.</p></attr>
+<attr name='beats' value='number'><p>Add this number of beats to the result.</p></attr>
+<attr name='minutes' value='number'><p>Add this number of minutes to the result.</p></attr>
+<attr name='seconds' value='number'><p>Add this number of seconds to the result.</p></attr>
+<attr name='now' value='year-month-day'><p>Sets the 'present' time, if other than really present time. (YYYY-MM-DD, YYYYMMDD or YYYY-MMM-DD)</p>
 
 
 
@@ -51,7 +50,7 @@ Sets the time of an evet to count down to.</attr>
 
 <p>Presentation:</p>
 
-<attr name=display value=when|years|months|weeks|days|hours|beats|minutes|seconds|combined|dogyears|boolean>
+<attr name='display' value='when|years|months|weeks|days|hours|beats|minutes|seconds|combined|dogyears|boolean>
 <xtable>
 <row><c><i>display=when</i></c><c>Shows when the time will occur.
                          All arguments that are valid in a
@@ -82,22 +81,21 @@ Sets the time of an evet to count down to.</attr>
 </xtable>
 </attr>
 
-<attr name=type value=type>As for 'date'. Useful values for type include string, number and ordered.</attr>
-<attr name=lang value=langcodes>The language in which the result should be written if the type is string.
-<lang/>
+<attr name='type' value='type'><p>As for 'date'. Useful values for type include string, number and ordered.</p></attr>
+<attr name='lang' value='langcodes'><p>The language in which the result should be written if the type is string.</p>
 
 <ex type='vert'>Heute ist es ungefähr <countdown event='christmas' display='months' type='string' lang='de'/> Monate bis Weinachten.</ex>
 </attr>
-<attr name=since>Negate the period of time.
+<attr name='since'><p>Negate the period of time.</p>
 <ex type='vert'>I am <countdown iso='1980-06-28' since='' display='years' type='string'/> years old.</ex>
 </attr>
-<attr name=next>Always count down to the next event. &lt;countdown day='friday'
-next=''&gt; says 6 on a friday as opposed to 0 without the next attribute.
+<attr name='next'><p>Always count down to the next event. &lt;countdown day='friday'
+next=''&gt; says 6 on a friday as opposed to 0 without the next attribute.</p>
 
 <ex type='vert'>It is <countdown day='monday' next=''/> to monday.</ex>
 
 </attr>
-<attr name=prec value=year|month|week|day|hour|minute|second>Modifies the precision for 'boolean'- and 'combined'-arguments.</attr>
+<attr name='prec' value='year|month|week|day|hour|minute|second'><p>Modifies the precision for 'boolean'- and 'combined'-arguments.</p></attr>
 "]);
 #endif
 
