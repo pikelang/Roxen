@@ -1,3 +1,5 @@
+mapping cache =  ([]);
+
 class Fetcher
 {
   Protocols.HTTP.Query query;
@@ -7,14 +9,14 @@ class Fetcher
 
   void done( Protocols.HTTP.Query qu )
   {
-    cache_set( "box_data", h+p+q, ({query->data()}),3600*2 );
+    cache[h+p+q] = ({query->data()});
     if( cb )
       cb( query->data() );
   }
   
   void fail( Protocols.HTTP.Query qu )
   {
-    cache_set( "box_data", h+p+q, ({"Failed to connect to server"}) );
+    cache[h+p+q] = ({"Failed to connect to server"});
     if( cb )
       cb(  "Failed to connect to server" );
     call_out( start, 30 );
@@ -40,13 +42,13 @@ string get_http_data( string host, int port, string query,
 		      function|void cb )
 {
   mixed data;
-  if( data = cache_lookup( "box_data", host+port+query ) )
+  if( data = cache[host+port+query] )
   {
     return data[0];
   }
   else
   {
-    cache_set( "box_data", host+port+query, ({0}), 40 );
+    cache[host+port+query] = ({0});
     Fetcher( cb, host, port, query );
   }
 }
