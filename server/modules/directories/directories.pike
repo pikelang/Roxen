@@ -11,7 +11,7 @@
 //
 // Make sure links work _inside_ unfolded dokuments.
 
-string cvs_version = "$Id: directories.pike,v 1.40 2000/01/03 00:56:12 nilsson Exp $";
+string cvs_version = "$Id: directories.pike,v 1.41 2000/01/08 19:01:50 jhs Exp $";
 constant thread_safe=1;
 
 //#define DIRECTORIES_DEBUG
@@ -37,20 +37,12 @@ void start()
     (query("size")?"   %11s":"%.0s")+
     (query("date")!="Don't show dates"?"   %s":"%.0s")+
     "   %s\n";
-
 }
 
-array register_module()
-{
-  return ({ MODULE_DIRECTORIES | MODULE_PARSER,
-	    "Enhanced directory listings",
-	    "This module is an experimental directory parsing module. "
-	    "It pretty prints a list of files much like the ordinary "
-	    "directory parsing module. "
-	    "The difference is that this one uses the flik-module "
-	    "for the fold/unfolding, and uses relative URL's.",
-	      0, 1 });
-}
+constant module_type = MODULE_DIRECTORIES | MODULE_PARSER;
+constant module_name = "Enhanced Directory Listings";
+constant module_doc = "This module pretty prints a list of files.";
+constant module_unique = 1;
 
 void create()
 {
