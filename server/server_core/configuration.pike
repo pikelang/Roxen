@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.559 2004/05/22 15:47:42 mani Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.560 2004/05/24 01:42:40 _cvs_stephen Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -472,8 +472,8 @@ void stop (void|int asynch)
   }
 }
 
-string|array(string) type_from_filename( string file,
-					 int|void to, string|void myext )
+string|array(string) type_from_filename( string file, int|void to,
+					 string|void myext )
 {
   array(string)|string tmp;
   if(!types_fun)
@@ -1033,8 +1033,6 @@ private mapping internal_gopher_image(string from)
   // File not found.
 }
 
-private static int nest = 0;
-
 #ifdef MODULE_LEVEL_SECURITY
 private mapping(RoxenModule:array) security_level_cache=set_weak_flag(([]), 1);
 
@@ -1054,12 +1052,12 @@ int|mapping check_security(function|RoxenModule a, RequestID id,
     // since it can be (in) an object that is very short lived.
     if (!(seclevels = security_level_cache[mod])) {
       if(mod->query_seclevels)
-      seclevels = ({
-        mod->query_seclevels(),
-        mod->query("_seclvl"),
-      });
+	seclevels = ({
+	  mod->query_seclevels(),
+	  mod->query("_seclvl"),
+	});
       else
-      seclevels = ({0,0});
+	seclevels = ({0,0});
       security_level_cache[mod] = seclevels;
     }
   }
@@ -1119,20 +1117,33 @@ void clear_memory_caches()
 }
 
 //  Returns tuple < image, mime-type >
-static array(string) draw_saturation_bar(int hue,int brightness, int where)
+static array(string) draw_saturation_bar(int hue,int brightness, int where,
+					 int small_version)
 {
-  Image.Image bar=Image.Image(30,256);
-
+  Image.Image bar =
+    small_version ? Image.Image(16, 128) : Image.Image(30, 256);
+  
   for(int i=0;i<128;i++)
   {
-    int j = i*2;
-    bar->line(0,j,29,j,@hsv_to_rgb(hue,255-j,brightness));
-    bar->line(0,j+1,29,j+1,@hsv_to_rgb(hue,255-j,brightness));
+    int j = i * 2;
+    array color = hsv_to_rgb(hue, 255 - j, brightness);
+    if (small_version) {
+      bar->line(0, i, 15, i, @color);
+    } else {
+      bar->line(0, j, 29, j, @color);
+      bar->line(0, j + 1,29, j + 1, @color);
+    }
   }
 
-  where = 255-where;
-  bar->line(0,where,29,where, 255,255,255);
-
+  if (where >= 0 && where <= 255) {
+    where = 255 - where;
+    int hilite = (brightness > 128) ? 0 : 255;
+    if (small_version)
+      bar->line(0, where / 2, 15, where / 2, hilite, hilite, hilite);
+    else
+      bar->line(0, where, 29, where, hilite, hilite, hilite);
+  }
+  
 #if constant(Image.JPEG) && constant(Image.JPEG.encode)
   return ({ Image.JPEG.encode(bar), "image/jpeg" });
 #else
@@ -1152,8 +1163,10 @@ private mapping internal_roxen_image( string from, RequestID id )
 
   // Automatically generated colorbar. Used by wizard code...
   int hue,bright,w;
-  if(sscanf(from, "%*s:%d,%d,%d", hue, bright,w)==4) {
-    array bar = draw_saturation_bar(hue, bright, w);
+  string colorbar;
+  if(sscanf(from, "%s:%d,%d,%d", colorbar, hue, bright,w)==4) {
+    array bar = draw_saturation_bar(hue, bright, w,
+				    colorbar == "colorbar-small");
     return Roxen.http_string_answer(bar[0], bar[1]);
   }
 
@@ -1276,7 +1289,7 @@ string examine_return_mapping(mapping m)
       else
 	 res += sprintf("%O bytes ", m->len);
    else if (stringp(m->data))
-     res += sprintf("%O bytes ", strlen(m->data));
+     res += sprintf("%d bytes ", strlen(m->data));
    else if (objectp(m->file))
       if (catch {
 	 Stat a=m->file->stat();
@@ -1292,7 +1305,274 @@ string examine_return_mapping(mapping m)
       res += sprintf(" of %O", m->type||m->extra_heads["content-type"]);
    }
 
+   res+="<br />";
+
    return res;
+}
+
+//! Find all applicable locks for this user on @[path].
+multiset(DAVLock) find_locks(string path, int(0..1) recursive,
+			     int(0..1) exclude_shared, RequestID id)
+{
+  SIMPLE_TRACE_ENTER(0, "find_locks(%O, %O, %O, X)",
+		     path, recursive, exclude_shared);
+  multiset(DAVLock) locks = (<>);
+
+  foreach(location_module_cache||location_modules(),
+	  [string loc, function func])
+  {
+    SIMPLE_TRACE_ENTER(function_object(func),
+		       "Finding locks in %O.", loc);
+    string subpath;
+    if (has_prefix(path, loc)) {
+      // path == loc + subpath.
+      subpath = path[sizeof(loc)..];
+    } else if (recursive && has_prefix(loc, path)) {
+      // loc == path + ignored.
+      subpath = "/";
+    } else {
+      // Does not apply to this location module.
+      TRACE_LEAVE("Skip this module.");
+      continue;
+    }
+    TRACE_ENTER(sprintf("subpath: %O", subpath),
+		function_object(func)->find_locks);
+    multiset(DAVLock) sub_locks =
+      function_object(func)->find_locks(subpath, recursive,
+					exclude_shared, id);
+    TRACE_LEAVE("");
+    if (sub_locks) {
+      SIMPLE_TRACE_LEAVE("Got some locks: %O", sub_locks);
+      locks |= sub_locks;
+    } else {
+      TRACE_LEAVE("Got no locks.");
+    }
+  }
+  SIMPLE_TRACE_LEAVE("Returning %O", locks);
+  return locks;
+}
+
+//! Check if there are any applicable locks for this user on @[path].
+DAVLock|LockFlag check_locks(string path, int(0..1) recursive, RequestID id)
+{
+  LockFlag state = 0;
+  foreach(location_module_cache||location_modules(),
+	  [string loc, function func])
+  {
+    string subpath;
+    int check_above;
+    if (has_prefix(path, loc)) {
+      // path == loc + subpath.
+      subpath = path[sizeof(loc)..];
+    } else if (recursive && has_prefix(loc, path)) {
+      // loc == path + ignored.
+      subpath = "";
+      check_above = 1;
+    } else {
+      // Does not apply to this location module.
+      continue;
+    }
+    int/*LockFlag*/|DAVLock lock_info =
+      function_object(func)->check_locks(subpath, recursive, id);
+    if (objectp(lock_info)) {
+      if (!check_above) {
+	return lock_info;
+      } else {
+	lock_info = LOCK_OWN_BELOW; // We have a lock on some subpath.
+      }
+    }
+    else
+      if (check_above && (lock_info & 1))
+	// Convert LOCK_*_AT to LOCK_*_BELOW.
+	lock_info &= ~1;
+    if (lock_info > state) state = lock_info;
+    if (state == LOCK_EXCL_AT) return LOCK_EXCL_AT; // Doesn't get any worse.
+  }
+  return state;
+}
+
+static multiset(DAVLock) active_locks = (<>);
+
+//! Unlock the lock represented by @[lock] on @[path].
+//!
+//! @returns
+//!   Returns a result-mapping on error, and @expr{0@} (zero) on success.
+mapping(string:mixed) unlock_file(string path, DAVLock lock, RequestID id)
+{
+  // Canonicalize path.
+  if (!has_suffix(path, "/")) path+="/";
+
+  foreach(location_module_cache||location_modules(),
+	  [string loc, function func])
+  {
+    if (has_prefix(path, loc)) {
+      // path == loc + subpath.
+      mapping(string:mixed) ret =
+	function_object(func)->unlock_file(path[sizeof(loc)..], lock, id);
+
+      // FIXME: Semantics for partial unlocking?
+      if (ret) return ret;
+    } else if (lock->recursive && has_prefix(loc, path)) {
+      // loc == path + ignored.
+      mapping(string:mixed) ret =
+	function_object(func)->unlock_file("/", lock, id);
+
+      // FIXME: Semantics for partial unlocking?
+      if (ret) return ret;
+    }
+  }
+  active_locks[lock] = 0;
+  // destruct(lock);
+  return 0;
+}
+
+//! Force expiration of any locks that have timed out.
+int expire_locks(RequestID id)
+{
+  int t = time(1);
+  int min_time = 0x7fffffff;
+  foreach(active_locks; DAVLock lock;) {
+    if (lock->expiry_time) {
+      if (lock->expiry_time < t) {
+	unlock_file(lock->path, lock, id);
+      } else if (lock->expiry_time < min_time) {
+	min_time = lock->expiry_time;
+      }
+    }
+  }
+  return min_time - t;
+}
+
+static void expire_lock_loop()
+{
+  int t = expire_locks(0);	// NOTE: Called with RequestID 0!
+
+  if (sizeof(active_locks)) {
+    // Expire locks at least once every hour.
+    if (t < 3600) {
+      roxen.background_run(t, expire_lock_loop);
+    } else {
+      roxen.background_run(3600, expire_lock_loop);
+    }
+  }
+}
+
+//! Refresh a lock.
+//!
+//! Update the expiry time for the lock.
+void refresh_lock(DAVLock lock)
+{
+  if (lock->expiry_delta) {
+    lock->expiry_time = lock->expiry_delta + time(1);
+  }
+}
+
+//! Attempt to lock @[path].
+//!
+//! @param path
+//!   Path to lock.
+//!
+//! @param locktype
+//!   Type of lock (currently only @expr{"DAV:write"@} is defined).
+//!
+//! @param lockscope
+//!   Scope of lock either @expr{"DAV:exclusive"@} or
+//!   @expr{"DAV:shared"@}.
+//!
+//! @param expiry_delta
+//!   Idle time in seconds before the lock expires. @expr{0@} (zero)
+//!   means no expiry.
+//!
+//! @returns
+//!   Returns a result mapping on failure,
+//!   and the resulting @[DAVLock] on success.
+mapping(string:mixed)|DAVLock lock_file(string path,
+					int(0..1) recursive,
+					string lockscope,
+					string locktype,
+					int(0..) expiry_delta,
+					array(Parser.XML.Tree.Node) owner,
+					RequestID id)
+{
+  // Canonicalize path.
+  if (!has_suffix(path, "/")) path+="/";
+
+  // First check if there's already some lock on path that prevents
+  // us from locking it.
+  int/*LockFlag*/|DAVLock lock_info = check_locks(path, recursive, id);
+
+  if (!intp(lock_info)) {
+    // We already hold a lock that prevents us.
+    if (id->request_headers->if) {
+      return Roxen.http_status(412, "Precondition Failed");
+    } else {
+      return Roxen.http_status(423, "Locked");
+    }
+  } else if (lockscope == "DAV:exclusive" ?
+	     lock_info >= LOCK_SHARED_BELOW :
+	     lock_info >= LOCK_OWN_BELOW) {
+    // Some other lock prevents us.
+    return Roxen.http_status(423, "Locked");
+  }
+
+  // Create the new lock.
+
+  string locktoken = "opaquelocktoken:" + roxen->new_uuid_string();
+  DAVLock lock = DAVLock(locktoken, path, recursive, lockscope, locktype,
+			 expiry_delta, owner);
+  foreach(location_module_cache||location_modules(),
+	  [string loc, function func])
+  {
+    string subpath;
+    if (has_prefix(path, loc)) {
+      // path == loc + subpath.
+      subpath = path[sizeof(loc)..];
+    } else if (recursive && has_prefix(loc, path)) {
+      // loc == path + ignored.
+      subpath = "/";
+    } else {
+      // Does not apply to this location module.
+      continue;
+    }
+
+    mapping(string:mixed) lock_error =
+      function_object(func)->lock_file(subpath, lock, id);
+    if (lock_error) {
+      // Failure. Unlock the new lock.
+      foreach(location_module_cache||location_modules(),
+	      [string loc2, function func2])
+      {
+	if (has_prefix(path, loc2)) {
+	  // path == loc2 + subpath.
+	  mapping(string:mixed) ret =
+	    function_object(func2)->unlock_file(path[sizeof(loc2)..],
+						lock, id);
+	} else if (recursive && has_prefix(loc2, path)) {
+	  // loc2 == path + ignored.
+	  mapping(string:mixed) ret =
+	    function_object(func2)->unlock_file("/", lock, id);
+	}
+	if (func == func2) break;
+      }
+      // destruct(lock);
+      return lock_error;
+    }
+  }
+
+  if (expiry_delta) {
+    // Lock with timeout.
+    // FIXME: Race-conditions.
+    if (!sizeof(active_locks)) {
+      // Start the lock expiration loop.
+      active_locks[lock] = 1;
+      expire_lock_loop();
+    } else {
+      active_locks[lock] = 1;
+    }
+  }
+
+  // Success.
+  return lock;
 }
 
 mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
@@ -1333,19 +1613,15 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
     // min length == 17 (/internal-roxen-?..)
     // This will save some time indeed.
     string type;
-    if((sizeof(file) > 17 &&
-#if ROXEN_COMPAT <= 2.1
-       (file[0] == '/') &&
-       sscanf(file, "%*s/internal-%s-%[^/]", type, loc) == 3
-#else
+    if(sizeof(file) > 17 &&
        sscanf(file, "/internal-%s-%[^/]", type, loc) == 2
-#endif
-       ) || (sizeof(file)>3 && file[1]==1 && sscanf(file, "/\1/%s", loc)==1 && (type="roxen")) ) {
+     || sizeof(file)>3 && file[1]==1 && sscanf(file, "/\1/%s", loc)==1 && (type="roxen") ) {
       switch(type) {
        case "roxen":
 	//  Mark all /internal-roxen-* as cacheable even though the user might be
 	//  authenticated (which normally disables protocol-level caching).
-	id->misc->cacheable = 9999;
+	RAISE_CACHE(60 * 60 * 24 * 365);  //  1 year
+	PROTO_CACHE();
 	
 	TRACE_LEAVE("Magic internal image");
         if(loc=="unit" || loc=="pixel-of-destiny")
@@ -1354,7 +1630,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 	  return (["data":"GIF89a\1\0\1\0\200ÿ\0ÀÀÀ\0\0\0!ù\4\1\0\0\0\0,"
 		   "\0\0\0\0\1\0\1\0\0\1\1""2\0;",
 		   "type":"image/gif",
-		   "stat": ({0, 42, 0, 900000000, 0, 0, 0})]);
+		   "stat": ({0, 0, 0, 900000000, 0, 0, 0})]);
 	}
 	if(has_prefix(loc, "pixel-"))
 	{
@@ -1363,7 +1639,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 				  "\0\1\0\1\0\0\2\2L\1\0;",
 				  @parse_color(loc[6..])),
 		   "type":"image/gif",
-		   "stat": ({0, 35, 0, 900000000, 0, 0, 0})]);
+		   "stat": ({0, 0, 0, 900000000, 0, 0, 0})]);
 	}
 	TIMER_END(internal_magic);
 	return internal_roxen_image(loc, id);
@@ -1414,6 +1690,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 	  {
 	    if(mappingp(fid))
 	    {
+	      TRACE_LEAVE("");
 	      TRACE_LEAVE(examine_return_mapping(fid));
 	      TIMER_END(internal_magic);
 	      return fid;
@@ -1422,8 +1699,9 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 	    {
 #ifdef MODULE_LEVEL_SECURITY
 	      int oslevel = slevel;
-	      slevel = security_level_cache[ Roxen.get_owning_module
-					     (find_internal) ][1];
+	      array slca;
+	      if(slca = security_level_cache[ Roxen.get_owning_module (find_internal) ])
+		slevel = slca[1];
 	      // security_level_cache from
 	      // check_security
 	      id->misc->seclevel = slevel;
@@ -1432,14 +1710,14 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 		TRACE_LEAVE("Returned open filedescriptor. "
 #ifdef MODULE_LEVEL_SECURITY
 			    +(slevel != oslevel?
-			      sprintf(" The security level is now %O.", slevel):"")
+			      sprintf(" The security level is now %d.", slevel):"")
 #endif
 			    );
 	      else
 		TRACE_LEAVE("Returned directory indicator."
 #ifdef MODULE_LEVEL_SECURITY
 			    +(oslevel != slevel?
-			      sprintf(" The security level is now %O.", slevel):"")
+			      sprintf(" The security level is now %d.", slevel):"")
 #endif
 			    );
 	    }
@@ -1480,10 +1758,10 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
       {
 	mixed err;
 
-	nest ++;
+	id->misc->get_file_nest++;
 	err = catch {
-	  if( nest < 20 )
-	    tmp = (id->conf || this)->low_get_file( tmp, no_magic );
+	  if( id->misc->get_file_nest < 20 )
+	    tmp = (id->conf || this_object())->low_get_file( tmp, no_magic );
 	  else
 	  {
 	    TRACE_LEAVE("Too deep recursion");
@@ -1491,7 +1769,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 		  +file+".\n");
 	  }
 	};
-	nest = 0;
+	id->misc->get_file_nest = 0;
 	if(err) throw(err);
 	TRACE_LEAVE("");
 	TRACE_LEAVE("Returning data");
@@ -1536,7 +1814,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 
 	  if(mappingp(fid))
 	  {
-	    TRACE_LEAVE("");
+	    TRACE_LEAVE(""); // Location module [...]
 	    TRACE_LEAVE(examine_return_mapping(fid));
 	    TIMER_END(location_modules);
 	    return fid;
@@ -1545,8 +1823,9 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 	  {
 #ifdef MODULE_LEVEL_SECURITY
 	    int oslevel = slevel;
-	    slevel = security_level_cache[ Roxen.get_owning_module
-					   (tmp[1]) ][1];
+	    array slca;
+	    if(slca = security_level_cache[ Roxen.get_owning_module (tmp[1]) ])
+	      slevel = slca[1];
 	    // security_level_cache from
 	    // check_security
 	    id->misc->seclevel = slevel;
@@ -1575,6 +1854,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 	// the mountpoint is /local/. It will slow things down, but...
 
 	TRACE_ENTER("Automatic redirect to location_module.", tmp[1]);
+	TRACE_LEAVE("");
 	TRACE_LEAVE("Returning data");
 
 	// Keep query (if any).
@@ -1604,6 +1884,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
       LOCK(dir_module);
       TRACE_ENTER("Directory module", dir_module);
       fid = dir_module->parse_directory(id);
+      TRACE_LEAVE("");
       UNLOCK();
       PROF_LEAVE(dir_module->module_name,"directory");
     }
@@ -1699,47 +1980,76 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
   return fid;
 }
 
-mixed handle_request( RequestID id  )
+#define TRY_FIRST_MODULES(FILE, RECURSE_CALL) do {			\
+    TIMER_START(first_modules);						\
+    foreach(first_module_cache||first_modules(), function funp)		\
+    {									\
+      TRACE_ENTER ("First try module", funp);				\
+      if(FILE = funp( id )) {						\
+	TRACE_LEAVE ("Got response");					\
+	break;								\
+      }									\
+      TRACE_LEAVE ("No response");					\
+      if(id->conf != this_object()) {					\
+	TRACE_ENTER (sprintf ("Configuration changed to %O - "		\
+			      "redirecting", id->conf), 0);		\
+	TRACE_LEAVE ("");						\
+	TIMER_END (first_modules);					\
+	TIMER_END (handle_request);					\
+	return id->conf->RECURSE_CALL;					\
+      }									\
+    }									\
+    TIMER_END(first_modules);						\
+  } while (0)
+
+#define TRY_LAST_MODULES(FILE, RECURSE_CALL) do {			\
+    mixed ret;								\
+    TIMER_START(last_modules);						\
+    foreach(last_module_cache||last_modules(), function funp) {		\
+      TRACE_ENTER ("Last try module", funp);				\
+      if(ret = funp(id)) {						\
+	if (ret == 1) {							\
+	  TRACE_LEAVE ("Request rewritten - try again");		\
+	  TIMER_END(last_modules);					\
+	  TIMER_END(handle_request);					\
+	  return RECURSE_CALL;						\
+	}								\
+	TRACE_LEAVE ("Got response");					\
+	break;								\
+      }									\
+      TRACE_LEAVE ("No response");					\
+    }									\
+    FILE = ret;								\
+    TIMER_END(last_modules);						\
+  } while (0)
+
+mixed handle_request( RequestID id, void|int recurse_count)
 {
-  function funp;
   mixed file;
   REQUEST_WERR("handle_request()");
+
+  if (recurse_count > 50) {
+    TRACE_ENTER ("Looped " + recurse_count +
+		 " times in internal redirects - giving up", 0);
+    TRACE_LEAVE ("");
+    return 0;
+  }
+
   TIMER_START(handle_request);
-  TIMER_START(first_modules);
-  foreach(first_module_cache||first_modules(), funp)
-  {
-    if(file = funp( id ))
-      break;
-    if(id->conf != this) {
-      REQUEST_WERR("handle_request(): Redirected (2)");
-      return id->conf->handle_request(id);
-    }
-  }
-  TIMER_END(first_modules);
+  TRY_FIRST_MODULES (file, handle_request (id, recurse_count + 1));
   if(!mappingp(file) && !mappingp(file = get_file(id)))
-  {
-    mixed ret;
-    TIMER_START(last_modules);
-    foreach(last_module_cache||last_modules(), funp) if(ret = funp(id)) break;
-    if (ret == 1) {
-      REQUEST_WERR("handle_request(): Recurse");
-      TIMER_END(last_modules);
-      TIMER_END(handle_request);
-      return handle_request(id);
-    }
-    file = ret;
-    TIMER_END(last_modules);
-  }
+    TRY_LAST_MODULES (file, handle_request(id, recurse_count + 1));
   TIMER_END(handle_request);
+
   REQUEST_WERR("handle_request(): Done");
   MERGE_TIMERS(core);
   return file;
 }
 
-mapping get_file(RequestID id, int|void no_magic, int|void internal_get)
+mapping|int get_file(RequestID id, int|void no_magic, int|void internal_get)
 //! Return a result mapping for the id object at hand, mapping all
 //! modules, including the filter modules. This function is mostly a
-//! wrapper for <ref>low_get_file()</ref>.
+//! wrapper for @[low_get_file()].
 {
   TIMER_START(get_file);
   int orig_internal_get = id->misc->internal_get;
@@ -1747,7 +2057,7 @@ mapping get_file(RequestID id, int|void no_magic, int|void internal_get)
   RequestID root_id = id->root_id || id;
   root_id->misc->_request_depth++;
   if(sub_req_limit && root_id->misc->_request_depth > sub_req_limit)
-    error( "Subrequest limit reached. (Possibly an insertion loop.)" );
+    error("Subrequest limit reached. (Possibly an insertion loop.)");
 
   mapping|int res;
   mapping res2;
@@ -1765,7 +2075,7 @@ mapping get_file(RequestID id, int|void no_magic, int|void internal_get)
     PROF_ENTER(Roxen.get_owning_module(tmp)->module_name,"filter");
     if(res2=tmp(res,id))
     {
-      if(res && res->file && (res2->file != res->file))
+      if(mappingp(res) && res->file && (res2->file != res->file))
 	destruct(res->file);
       TRACE_LEAVE("Rewrote result.");
       res=res2;
@@ -1812,18 +2122,18 @@ array(string) find_dir(string file, RequestID id, void|int(0..1) verbose)
     if(objectp( remap ))
     {
       mixed err;
-      nest ++;
+      id->misc->find_dir_nest++;
 
       TRACE_LEAVE("Recursing");
       file = id->not_query;
       err = catch {
-	if( nest < 20 )
-	  dir = (id->conf || this)->find_dir( file, id );
+	if( id->misc->find_dir_nest < 20 )
+	  dir = (id->conf || this_object())->find_dir( file, id );
 	else
 	  error("Too deep recursion in roxen::find_dir() while mapping "
 		+file+".\n");
       };
-      nest = 0;
+      id->misc->find_dir_nest = 0;
       TRACE_LEAVE("");
       if(err)
 	throw(err);
@@ -1902,7 +2212,6 @@ array(string) find_dir(string file, RequestID id, void|int(0..1) verbose)
 
 array(int)|Stat stat_file(string file, RequestID id)
 {
-  string loc;
   mixed s, tmp;
 #ifdef THREADS
   Thread.MutexKey key;
@@ -1913,70 +2222,69 @@ array(int)|Stat stat_file(string file, RequestID id)
 
 #ifdef URL_MODULES
   // Map URL-modules
-  foreach(url_modules(), function funp)
+  string of = id->not_query;
+  id->not_query = file;
+  foreach(url_module_cache||url_modules(), function funp)
   {
-    string of = id->not_query;
-    id->not_query = file;
-
     TRACE_ENTER("URL module", funp);
     LOCK(funp);
     tmp=funp( id, file );
     UNLOCK();
 
-    if(mappingp( tmp )) {
-      id->not_query = of;
-      TRACE_LEAVE("");
-      TRACE_LEAVE("Returned 'No thanks'.");
-      return 0;
-    }
-    if(objectp( tmp ))
-    {
-      file = id->not_query;
-
-      mixed err;
-      nest ++;
-      TRACE_LEAVE("Recursing");
-      err = catch {
-	if( nest < 20 )
-	  tmp = (id->conf || this)->stat_file( file, id );
-	else
-	  error("Too deep recursion in roxen::stat_file() while mapping "
-		+file+".\n");
-      };
-      nest = 0;
-      if(err)
-	throw(err);
-      TRACE_LEAVE("");
-      TRACE_LEAVE("Returning data");
-      return tmp;
+    if (tmp) {
+      if(mappingp( tmp )) {
+	id->not_query = of;
+	TRACE_LEAVE("");
+	TRACE_LEAVE("Returned 'No thanks'.");
+	return 0;
+      }
+      if(objectp( tmp ))
+      {
+	mixed err;
+	id->misc->stat_file_nest++;
+	id->not_query = of;
+	TRACE_LEAVE("Recursing");
+	err = catch {
+	    if( id->misc->stat_file_nest < 20 )
+	      tmp = (id->conf || this_object())->stat_file( file, id );
+	    else
+	      error("Too deep recursion in roxen::stat_file() while mapping "
+		    +file+".\n");
+	  };
+	id->misc->stat_file_nest = 0;
+	if(err)
+	  throw(err);
+	TRACE_LEAVE("");
+	TRACE_LEAVE("Returning data");
+	return tmp;
+      }
     }
     TRACE_LEAVE("");
-    id->not_query = of;
   }
+  id->not_query = of;
 #endif
 
   // Map location-modules.
-  foreach(location_modules(), tmp)
-  {
-    loc = tmp[0];
+  foreach(location_module_cache||location_modules(),
+	  [string loc, function fun]) {
     if((file == loc) || ((file+"/")==loc))
     {
-      TRACE_ENTER(sprintf("Location module [%s] ", loc), tmp[1]);
+      TRACE_ENTER(sprintf("Location module [%s] ", loc), fun);
       TRACE_LEAVE("Exact match.");
       TRACE_LEAVE("");
-      return ({ 0775, -3, 0, 0, 0, 0, 0 });
+      return Stdio.Stat(({ 0775, -3, 0, 0, 0, 0, 0 }));
     }
     if(has_prefix(file, loc))
     {
-      TRACE_ENTER(sprintf("Location module [%s] ", loc), tmp[1]);
+      TRACE_ENTER(sprintf("Location module [%s] ", loc), fun);
 #ifdef MODULE_LEVEL_SECURITY
-      if(check_security(tmp[1], id)) {
+      if(check_security(fun, id)) {
 	TRACE_LEAVE("");
 	TRACE_LEAVE("Permission denied");
 	continue;
       }
 #endif
-      if(s=function_object(tmp[1])->stat_file(file[strlen(loc)..], id))
+      if(s=function_object(fun)->stat_file(file[strlen(loc)..], id))
       {
 	TRACE_LEAVE("");
 	TRACE_LEAVE("Stat ok.");
@@ -2002,78 +2310,75 @@ mapping error_file( RequestID id )
 }
 
 // this is not as trivial as it sounds. Consider gtext. :-)
-array open_file(string fname, string mode, RequestID id, void|int internal_get)
+array open_file(string fname, string mode, RequestID id, void|int internal_get,
+		void|int recurse_count)
 {
-  if( id->conf && (id->conf != this) )
-    return id->conf->open_file( fname, mode, id, internal_get );
-
-  Configuration oc = id->conf;
-  string oq = id->not_query;
-  function funp;
   mapping|int(0..1) file;
+  string oq = id->not_query;
 
-  id->not_query = fname;
+  if( id->conf && (id->conf != this_object()) )
+    return id->conf->open_file( fname, mode, id, internal_get, recurse_count );
 
-  foreach(first_modules(), funp)
-    if(file = funp( id ))
-      break;
-    else if(id->conf && (id->conf != oc))
-    {
-      return id->conf->open_file(fname, mode,id, internal_get);
-    }
-  fname = id->not_query;
-
-  if(has_value(mode, "R")) //  raw (as in not parsed..)
-  {
-    string f;
-    mode -= "R";
-    if(f = real_file(fname, id))
-    {
-      //      report_debug("opening "+fname+" in raw mode.\n");
-      return ({ open(f, mode), ([]) });
-    }
-//     return ({ 0, (["error":302]) });
+  if (recurse_count > 50) {
+    TRACE_ENTER ("Looped " + recurse_count +
+		 " times in internal redirects - giving up", 0);
+    TRACE_LEAVE ("");
   }
 
-  if(mode=="r")
-  {
+  else {
+    Configuration oc = id->conf;
+    id->not_query = fname;
+    TRY_FIRST_MODULES (file, open_file (fname, mode, id,
+					internal_get, recurse_count + 1));
+    fname = id->not_query;
+
+    if(search(mode, "R")!=-1) //  raw (as in not parsed..)
+    {
+      string f;
+      mode -= "R";
+      if(f = real_file(fname, id))
+      {
+	// report_debug("opening "+fname+" in raw mode.\n");
+	return ({ open(f, mode), ([]) });
+      }
+      // return ({ 0, (["error":302]) });
+    }
+
+    if(mode!="r") {
+      id->not_query = oq;
+      return ({ 0, (["error":501, "data":"Not implemented." ]) });
+    }
+
     if(!file)
     {
       file = get_file( id, 0, internal_get );
-      if(!file) {
-	foreach(last_modules(), funp) if(file = funp( id ))
-	  break;
-	if (file == 1) {
-	  // Recurse.
-	  return open_file(id->not_query, mode, id, internal_get);
-	}
-      }
+      if(!file)
+	TRY_LAST_MODULES (file, open_file (id->not_query, mode, id,
+					   internal_get, recurse_count + 1));
     }
+  }
 
-    if(!mappingp(file))
-    {
-      if(id->misc->error_code)
-	file = Roxen.http_low_answer(id->misc->error_code, "Failed" );
-      else if(id->method!="GET"&&id->method != "HEAD"&&id->method!="POST")
-	file = Roxen.http_low_answer(501, "Not implemented.");
-      else
-        file = error_file( id );
+  if(!mappingp(file))
+  {
+    if(id->misc->error_code)
+      file = Roxen.http_low_answer(id->misc->error_code, "Failed" );
+    else if(id->method!="GET"&&id->method != "HEAD"&&id->method!="POST")
+      file = Roxen.http_low_answer(501, "Not implemented.");
+    else
+      file = error_file( id );
 
-      id->not_query = oq;
-
-      return ({ 0, file });
-    }
-
-    if( file->data )
-    {
-      file->file = StringFile(file->data);
-      m_delete(file, "data");
-    }
     id->not_query = oq;
-    return ({ file->file, file });
+
+    return ({ 0, file });
+  }
+
+  if( file->data )
+  {
+    file->file = StringFile(file->data);
+    m_delete(file, "data");
   }
   id->not_query = oq;
-  return ({ 0, (["error":501, "data":"Not implemented." ]) });
+  return ({ file->file || StringFile(""), file });
 }
 
 
@@ -2121,19 +2426,19 @@ mapping(string:array(mixed)) find_dir_stat(string file, RequestID id)
     if(objectp( tmp ))
     {
       mixed err;
-      nest ++;
+      id->misc->find_dir_stat_nest++;
 
       file = id->not_query;
       err = catch {
-	if( nest < 20 )
-	  tmp = (id->conf || this)->find_dir_stat( file, id );
+	if( id->misc->find_dir_stat_nest < 20 )
+	  tmp = (id->conf || this_object())->find_dir_stat( file, id );
 	else {
 	  TRACE_LEAVE("Too deep recursion");
 	  error("Too deep recursion in roxen::find_dir_stat() while mapping "
 		+file+".\n");
 	}
       };
-      nest = 0;
+      id->misc->find_dir_stat_nest = 0;
       if(err)
 	throw(err);
 #ifdef MODULE_DEBUG
@@ -2159,7 +2464,10 @@ mapping(string:array(mixed)) find_dir_stat(string file, RequestID id)
     {
       /* file == loc + subpath */
 #ifdef MODULE_LEVEL_SECURITY
-      if(check_security(tmp[1], id)) continue;
+      if(check_security(tmp[1], id)) {
+	TRACE_LEAVE("Security check failed.");
+	continue;
+      }
 #endif
       RoxenModule c = function_object(tmp[1]);
       string f = file[strlen(loc)..];
@@ -2296,8 +2604,37 @@ array(int)|Stat try_stat_file(string s, RequestID id, int|void not_internal)
   return res;
 }
 
+static RequestID make_fake_id (string s, RequestID id)
+{
+  RequestID fake_id;
+
+  // id->misc->common is here for compatibility; it's better to use
+  // id->root_id->misc.
+  if ( !id->misc->common )
+    id->misc->common = ([]);
+
+  fake_id = id->clone_me();
+
+  fake_id->misc->common = id->misc->common;
+  fake_id->conf = this_object();
+
+  if (fake_id->scan_for_query)
+    // FIXME: If we're using e.g. ftp this doesn't exist. But the
+    // right solution might be that clone_me() in an ftp id object
+    // returns a vanilla (i.e. http) id instead when this function is
+    // used.
+    s = fake_id->scan_for_query (s);
+
+  s = Roxen.fix_relative (s, id);
+
+  fake_id->raw_url=s;
+  fake_id->not_query=s;
+
+  return fake_id;
+}
+
 int|string try_get_file(string s, RequestID id,
-                        int|void status, int|void nocache,
+			int|void stat_only, int|void nocache,
 			int|void not_internal,
 			mapping|void result_mapping)
 //! Convenience function used in quite a lot of modules. Tries to read
@@ -2313,70 +2650,36 @@ int|string try_get_file(string s, RequestID id,
 //! sent directly to the client. Internal requests are recognized by
 //! the id->misc->internal_get flag being non-zero.
 {
-  string res, q, cache_key;
-  RequestID fake_id;
+  string res;
+  RequestID fake_id = make_fake_id (s, id);
   mapping m;
 
-  if(!objectp(id))
-    error("No ID passed to 'try_get_file'\n");
-
-  // id->misc->common is here for compatibility; it's better to use
-  // id->root_id->misc.
-  if ( !id->misc )
-    id->misc = ([]);
-  if ( !id->misc->common )
-    id->misc->common = ([]);
-
-  fake_id = id->clone_me();
-
-  fake_id->misc->common = id->misc->common;
   fake_id->misc->internal_get = !not_internal;
-  fake_id->conf = this;
-
-  if (fake_id->scan_for_query)
-    // FIXME: If we're using e.g. ftp this doesn't exist. But the
-    // right solution might be that clone_me() in an ftp id object
-    // returns a vanilla (i.e. http) id instead when this function is
-    // used.
-    s = fake_id->scan_for_query (s);
-
-  s = Roxen.fix_relative (s, id);
-
-  fake_id->raw_url=s;
-  fake_id->not_query=s;
   fake_id->method = "GET";
 
-  if(!(m = get_file(fake_id,0,!not_internal))) {
-    // Might be a PATH_INFO type URL.
-    m_delete (fake_id->misc, "path_info");
-    array a = open_file( s, "r", fake_id, !not_internal );
-    if(a && a[0]) {
-      m = a[1];
-      m->file = a[0];
-    }
-    else {
-      destruct (fake_id);
-      return 0;
-    }
+  array a = open_file( fake_id->not_query, "r", fake_id, !not_internal );
+
+  m = a[1];
+
+  if (result_mapping)
+    foreach(indices(m), string i)
+      result_mapping[i] = m[i];
+
+  if(a[0]) {
+    m->file = a[0];
+  }
+  else {
+    destruct (fake_id);
+    return 0;
   }
 
   CACHE( fake_id->misc->cacheable );
   destruct (fake_id);
 
-  if (!mappingp(m) && !objectp(m)) {
-    report_error("try_get_file(%O, %O, %O, %O): m = %O is not a mapping.\n",
-		 s, id, status, nocache, m);
-    return 0;
-  }
-
-  if (result_mapping)
-    foreach(m; string i; mixed v)
-      result_mapping[i] = v;
-
   // Allow 2* and 3* error codes, not only a few specific ones.
   if (!(< 0,2,3 >)[m->error/100]) return 0;
 
-  if(status) return 1;
+  if(stat_only) return 1;
 
   if(m->data)
     res = m->data;
@@ -2400,6 +2703,99 @@ int|string try_get_file(string s, RequestID id,
     if(!sscanf(res, "%*s\n\n%s", res))
       sscanf(res, "%*s\n%s", res);
   }
+  return res;
+}
+
+mapping(string:string) try_get_headers(string s, RequestID id,
+				       int|void not_internal)
+//! Like @[try_get_file] but performs a HEAD request and only returns
+//! the response headers. Note that the returned headers are as they
+//! would be in a formatted response by the http protocol module,
+//! which is completely different from a response mapping.
+{
+  RequestID fake_id = make_fake_id (s, id);
+  mapping m;
+
+  fake_id->misc->internal_get = !not_internal;
+  fake_id->method = "HEAD";
+
+  array a = open_file( s, "r", fake_id, !not_internal );
+  if(a && a[1]) {
+    if (a[0]) a[0]->close();
+    m = a[1];
+  }
+  else {
+    destruct (fake_id);
+    return 0;
+  }
+
+  CACHE( fake_id->misc->cacheable );
+
+  if (!m->raw)
+    m = fake_id->make_response_headers (m);
+
+  else {
+    Roxen.HeaderParser hp = Roxen.HeaderParser();
+    array res;
+
+    if(m->data)
+      res = hp->feed (m->data);
+
+    if (!res && objectp(m->file))
+    {
+      hp->feed (m->file->read());
+      if (m->file) {
+	// Some wrappers may destruct themselves in read()...
+	destruct(m->file);
+      }
+    }
+
+    m = res && res[2];
+  }
+
+  destruct (fake_id);
+  return m;
+}
+
+mapping(string:mixed) try_put_file(string path, string data, RequestID id)
+{
+  TIMER_START(try_put_file);
+
+  // id->misc->common is here for compatibility; it's better to use
+  // id->root_id->misc.
+  if ( !id->misc )
+    id->misc = ([]);
+  if ( !id->misc->common )
+    id->misc->common = ([]);
+
+  RequestID fake_id = id->clone_me();
+  
+  fake_id->misc->common = id->misc->common;
+  fake_id->misc->internal_get = 1;
+  fake_id->conf = this_object();
+
+  fake_id->root_id->misc->_request_depth++;
+  if(sub_req_limit && fake_id->root_id->misc->_request_depth > sub_req_limit)
+    error("Subrequest limit reached. (Possibly an insertion loop.)");
+
+  if (fake_id->scan_for_query)
+    // FIXME: If we're using e.g. ftp this doesn't exist. But the
+    // right solution might be that clone_me() in an ftp id object
+    // returns a vanilla (i.e. http) id instead when this function is
+    // used.
+    path = fake_id->scan_for_query(path);
+
+  path = Roxen.fix_relative(path, id);
+
+  fake_id->raw_url=path;
+  fake_id->not_query=path;
+  fake_id->method = "PUT";
+  fake_id->data = data;
+  fake_id->misc->len = sizeof(data);
+  fake_id->misc->internal_get = 1;
+
+  mapping(string:mixed) res = low_get_file(fake_id, 1);
+  TIMER_END(try_put_file);
   return res;
 }
 
@@ -2438,13 +2834,13 @@ void start(int num)
   fix_my_url();
 
 #if 0
-  report_debug("configuration:start():\n"
-	       "  registered_urls: ({ %{%O, %}})\n"
-	       "  failed_urls:     ({ %{%O, %}})\n"
-	       "  URLs:            ({ %{%O, %}})\n",
-	       registered_urls,
-	       failed_urls,
-	       query("URLs"));
+  report_debug(sprintf("configuration:start():\n"
+		       "  registered_urls: ({ %{%O, %}})\n"
+		       "  failed_urls:     ({ %{%O, %}})\n"
+		       "  URLs:            ({ %{%O, %}})\n",
+		       registered_urls,
+		       failed_urls,
+		       query("URLs")));
 #endif /* 0 */
 
   // Note: This is run as root if ChiliMoon is started as root
@@ -2712,7 +3108,8 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
   if (module_type & (MODULE_LOCATION|MODULE_EXTENSION|
                      MODULE_CONFIG|MODULE_FILE_EXTENSION|MODULE_LOGGER|
                      MODULE_URL|MODULE_LAST|MODULE_PROVIDER|
-                     MODULE_FILTER|MODULE_TAG|MODULE_FIRST|MODULE_USERDB))
+                     MODULE_FILTER|MODULE_TAG|MODULE_FIRST|
+		     MODULE_USERDB))
   {
     if(module_type != MODULE_CONFIG)
     {
