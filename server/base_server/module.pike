@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module.pike,v 1.98 2000/09/06 16:46:45 mast Exp $
+// $Id: module.pike,v 1.99 2000/10/06 15:13:25 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -192,22 +192,19 @@ string query_location()
 
 array(string) location_urls()
 //! Returns an array of all locations where the module is mounted.
-//! The first is the canonical one built with MyWorldLocation.
 {
   string loc = query_location();
   if (!loc) return ({});
   if(!_my_configuration)
     error("Please do not call this function from create()!\n");
-  string world_url = _my_configuration->query("MyWorldLocation");
-  if (world_url == "") world_url = 0;
   array(string) urls = copy_value(_my_configuration->query("URLs"));
-  string hostname = gethostname();
-  for (int i = 0; i < sizeof (urls); i++) {
-    if (world_url && glob (urls[i], world_url)) urls[i] = 0;
-    else if (sizeof (urls[i]/"*") == 2)
+  string hostname;
+  if (string world_url = _my_configuration->query ("MyWorldLocation"))
+    sscanf (world_url, "%*s://%s%*[:/]", hostname);
+  if (!hostname) hostname = gethostname();
+  for (int i = 0; i < sizeof (urls); i++)
+    if (sizeof (urls[i]/"*") == 2)
       urls[i] = replace(urls[i], "*", hostname);
-  }
-  if (world_url) urls = ({world_url}) | (urls - ({0}));
   return map (urls, `+, loc[1..]);
 }
 
