@@ -1,5 +1,5 @@
-#!bin/pike -m etc/master.pike
-string cvs_version = "$Id: install.pike,v 1.8.2.1 1997/03/02 19:18:36 grubba Exp $";
+#!bin/pike -m lib/master.pike
+string cvs_version = "$Id: install.pike,v 1.8.2.2 1997/03/13 22:03:02 grubba Exp $";
 #include <simulate.h>
 #include <roxen.h>
 
@@ -39,6 +39,7 @@ void mkdirhier(string from)
   }
 }
 
+mapping(string:mixed) variables = ([ "audit":0 ]);
 
 #define VAR_VALUE 0
 #define IN_INSTALL 1
