@@ -1,7 +1,7 @@
 /* Copyright © 1997, 1998, Idonex AB.
  * Some modifications by Francesco Chemolli
  *
- * $Id: wizard.pike,v 1.76 1998/11/25 19:33:44 grubba Exp $
+ * $Id: wizard.pike,v 1.77 1998/11/28 17:34:33 peter Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  * 
@@ -86,11 +86,16 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed b)
     // What is not well supported is the case
     // of a checkbox having value 0, so avoid it unless you're sure :)
     // /Francesco
+    // FIXME: value cannot be "0".
+    //        name cannot be "0" or "1".
+    //          Should be fixed be separating current and default.
+    // /ZinO
    case "checkbox":
     string res;
     m_delete(m,"default");
     if (!m->value) m->value="on";
-    if (current && current != "0" && mkmultiset(current/"\0")[m->value])
+    if (current && current != "0" &&
+	(current == "1"||mkmultiset(current/"\0")[m->value]))
       m->checked="checked";
     res=make_tag("input",m);
     m->type="hidden";
