@@ -14,7 +14,8 @@ object db;
 void start(int num, Configuration conf)
 {
   conf->parse_html_compat=1;
-  db=Yabu.db(QUERY("yabuname","wS");
+  db=Yabu.db(QUERY("yabuname","wS"));
+  UpdateInfoFiles();
 }
 
 void create()
@@ -49,7 +50,6 @@ string tag_foo(string t, mapping m, RequestID id)
 string container_bar(string t, mapping m, string c, RequestID id)
 {
 }
-
 
 string encode_ranges(array(int) a)
 {
@@ -99,7 +99,6 @@ array(int) decode_ranges(string s)
   return sort(a);
 }
 
-
 mapping get_headers()
 {
   return ([ "host":QUERY(server)+":"+QUERY(port),
@@ -114,28 +113,40 @@ class GetInfoFile
 {
   inherit Protocols.HTTP.Query();
 
-  void request_ok(object httpquery)
+  string get_containers(string t, mapping m, string c, mapping res)
   {
-    
-  }
-
-  void request_fail(object httpquery)
-  {
-
-  }
-
-  void do_request()
-  {
-    
+    if(sizeof(t) && t[0]!='/')
+      res[t]=c;
   }
   
+  void request_ok(object httpquery, int num)
+  {
+    spider;
+    mapping res=([]);;
+    parse_html_lines(httpquery->data(),
+		     ([])
+		     (["":get_containers]),
+		     res);
+    res->size=httpquery->headers->size;
+    db->pkginfo[(string)num]=res;
+    db->pkginfo->sync();
+    report_notice("Added information about package number "+num+".");
+  }
+
+  void request_fail(object httpquery, int num)
+  {
+    report_error("Failed to connect to upgrade server to fetch "
+		 "information about package number "+num+".");
+  }
+
   void create(int pkgnum)
   {
-    set_callbacks(request_ok, request_fail);
-    async_request(QUERY(server),QUERY(port), query, get_headers());
+    set_callbacks(request_ok, request_fail, pkgnum);
+    async_request(QUERY(server),QUERY(port),
+		  "GET /upgradeserver/packages/"+pkgnum+".info HTTP/1.0",
+		  get_headers());
   }
 }
-
 
 
 class UpdateInfoFiles
@@ -170,32 +181,23 @@ class UpdateInfoFiles
 
   void request_fail(object httpquery)
   {
-    report_error("Failed to connect to upgrade server to fetch information about new packages.");
-  }
-
-  string format_have_packages()
-  {
-    return "have_packages="+encode_ranges(indices(db->pkginfo));
+    report_error("Failed to connect to upgrade server to fetch "
+		 "information about new packages.");
   }
 
   void do_request()
   {
     async_request(QUERY(server),QUERY(PORT),
 		  "POST /upgradeserver/get-packages HTTP/1.0",
-		  get_headers() | (["Content-type":"application/x-www-form-urlencoded"]),
-		  format_have_packages());
+		  get_headers() |
+		  (["Content-type":"application/x-www-form-urlencoded"]),
+		  "have_packages="+encode_ranges((array(int))indices(db->pkginfo)));
+    call_out(do_request, 12*3600);
   }
   
   void create()
   {
     set_callbacks(request_ok, request_fail);
+    call_out(do_request,60);
   }
 }
-
-/*
-  object db=Yabu.lookup(fname,"wS");
-  db->pkginfo[17]["foobar"]="gazonk";
-  
-  indices(db->pkginfo);
-
-*/
