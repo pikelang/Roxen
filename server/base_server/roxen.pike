@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.618 2001/01/31 01:01:41 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.619 2001/01/31 01:06:09 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -409,22 +409,8 @@ void shutdown(float|void i)
  * handle() stuff
  */
 
-#ifndef THREADS
-// handle function used when THREADS is not enabled.
-local static void unthreaded_handle(function f, mixed ... args)
-{
-  f(@args);
-}
-
-function handle = unthreaded_handle;
-#else
-function handle = threaded_handle;
-#endif
-
-/*
- * THREADS code starts here
- */
 #ifdef THREADS
+// function handle = threaded_handle;
 
 Thread do_thread_create(string id, function f, mixed ... args)
 {
@@ -477,7 +463,122 @@ function async_sig_start( function f, int really )
 {
   return lambda( mixed ... args ) { thread_create( f, @args ); };
 }
+local static Queue handle_queue = Queue();
+//! Queue of things to handle.
+//! An entry consists of an array(function fp, array args)
+
+local static int thread_reap_cnt;
+//! Number of handler threads that are alive.
+
+local static void handler_thread(int id)
+//! The actual handling function. This functions read function and
+//! parameters from the queue, calls it, then reads another one. There
+//! is a lot of error handling to ensure that nothing serious happens if
+//! the handler function throws an error.
+{
+  array (mixed) h, q;
+  while(!die_die_die)
+  {
+    if(q=catch {
+      do {
+	THREAD_WERR("Handle thread ["+id+"] waiting for next event");
+	if((h=handle_queue->read()) && h[0]) {
+	  THREAD_WERR(sprintf("Handle thread [%O] calling %O(@%O)...",
+				id, h[0], h[1..]));
+	  set_locale();
+	  h[0](@h[1]);
+	  h=0;
+	} else if(!h) {
+	  // Roxen is shutting down.
+	  report_debug("Handle thread ["+id+"] stopped\n");
+	  thread_reap_cnt--;
+#ifdef NSERIOUS
+	  if(!thread_reap_cnt) report_debug("+++ATH\n");
+#endif
+	  return;
+	}
+      } while(1);
+    }) {
+      if (h = catch {
+	report_error(/*LOCALE("", "Uncaught error in handler thread: %s"
+		       "Client will not get any response from Roxen.\n"),*/
+		     describe_backtrace(q));
+	if (q = catch {h = 0;}) {
+	  report_error(LOC_M(5, "Uncaught error in handler thread: %s Client"
+			     "will not get any response from Roxen.")+"\n",
+		       describe_backtrace(q));
+	}
+      }) {
+	catch {
+	  report_error("Error reporting error:\n");
+	  report_error(sprintf("Raw error: %O\n", h[0]));
+	  report_error(sprintf("Original raw error: %O\n", q[0]));
+	};
+      }
+    }
+  }
+}
+
+local static void handle(function f, mixed ... args)
+{
+  handle_queue->write(({f, args }));
+}
+
+int number_of_threads;
+//! The number of handler threads to run.
+static array(object) handler_threads = ({});
+//! The handler threads, the list is kept for debug reasons.
+
+void start_handler_threads()
+{
+  if (query("numthreads") <= 1) {
+    set( "numthreads", 1 );
+    report_notice (LOC_S(1, "Starting one thread to handle requests.")+"\n");
+  } else { 
+    report_notice (LOC_S(2, "Starting %d threads to handle requests.")+"\n",
+		   query("numthreads") );
+  }
+  array(object) new_threads = ({});
+  for(; number_of_threads < query("numthreads"); number_of_threads++)
+    new_threads += ({ do_thread_create( "Handle thread [" +
+					number_of_threads + "]",
+					handler_thread, number_of_threads ) });
+  handler_threads += new_threads;
+}
+
+void stop_handler_threads()
+//! Stop all the handler threads, but give up if it takes too long.
+{
+  int timeout=10;
+#if constant(_reset_dmalloc)
+  // DMALLOC slows stuff down a bit...
+  timeout *= 10;
+#endif /* constant(_reset_dmalloc) */
+  report_debug("Stopping all request handler threads.\n");
+  while(number_of_threads>0) {
+    number_of_threads--;
+    handle_queue->write(0);
+    thread_reap_cnt++;
+  }
+  handler_threads = ({});
+  while(thread_reap_cnt) {
+    sleep(0.1);
+    if(--timeout<=0) {
+      report_debug("Giving up waiting on threads!\n");
+      return;
+    }
+  }
+}
+
 #else
+// handle function used when THREADS is not enabled.
+local static void handle(function f, mixed ... args)
+{
+  f(@args);
+}
+
+// function handle = unthreaded_handle;
+
 function async_sig_start( function f, int really )
 {
   class SignalAsyncVerifier( function f )
@@ -543,114 +644,6 @@ function async_sig_start( function f, int really )
   if( really < 0 )
     return f;
   return SignalAsyncVerifier( f )->call;
-}
-#endif
-
-local static Queue handle_queue = Queue();
-//! Queue of things to handle.
-//! An entry consists of an array(function fp, array args)
-
-local static int thread_reap_cnt;
-//! Number of handler threads that are alive.
-
-local static void handler_thread(int id)
-//! The actual handling function. This functions read function and
-//! parameters from the queue, calls it, then reads another one. There
-//! is a lot of error handling to ensure that nothing serious happens if
-//! the handler function throws an error.
-{
-  array (mixed) h, q;
-  while(!die_die_die)
-  {
-    if(q=catch {
-      do {
-	THREAD_WERR("Handle thread ["+id+"] waiting for next event");
-	if((h=handle_queue->read()) && h[0]) {
-	  THREAD_WERR(sprintf("Handle thread [%O] calling %O(@%O)...",
-				id, h[0], h[1..]));
-	  set_locale();
-	  h[0](@h[1]);
-	  h=0;
-	} else if(!h) {
-	  // Roxen is shutting down.
-	  report_debug("Handle thread ["+id+"] stopped\n");
-	  thread_reap_cnt--;
-#ifdef NSERIOUS
-	  if(!thread_reap_cnt) report_debug("+++ATH\n");
-#endif
-	  return;
-	}
-      } while(1);
-    }) {
-      if (h = catch {
-	report_error(/*LOCALE("", "Uncaught error in handler thread: %s"
-		       "Client will not get any response from Roxen.\n"),*/
-		     describe_backtrace(q));
-	if (q = catch {h = 0;}) {
-	  report_error(LOC_M(5, "Uncaught error in handler thread: %s Client"
-			     "will not get any response from Roxen.")+"\n",
-		       describe_backtrace(q));
-	}
-      }) {
-	catch {
-	  report_error("Error reporting error:\n");
-	  report_error(sprintf("Raw error: %O\n", h[0]));
-	  report_error(sprintf("Original raw error: %O\n", q[0]));
-	};
-      }
-    }
-  }
-}
-
-local static void threaded_handle(function f, mixed ... args)
-{
-  handle_queue->write(({f, args }));
-}
-
-int number_of_threads;
-//! The number of handler threads to run.
-static array(object) handler_threads = ({});
-//! The handler threads, the list is kept for debug reasons.
-
-void start_handler_threads()
-{
-  if (query("numthreads") <= 1) {
-    set( "numthreads", 1 );
-    report_notice (LOC_S(1, "Starting one thread to handle requests.")+"\n");
-  } else { 
-    report_notice (LOC_S(2, "Starting %d threads to handle requests.")+"\n",
-		   query("numthreads") );
-  }
-  array(object) new_threads = ({});
-  for(; number_of_threads < query("numthreads"); number_of_threads++)
-    new_threads += ({ do_thread_create( "Handle thread [" +
-					number_of_threads + "]",
-					handler_thread, number_of_threads ) });
-  handler_threads += new_threads;
-}
-
-void stop_handler_threads()
-//! Stop all the handler threads, but give up if it takes too long.
-{
-  int timeout=10;
-#if constant(_reset_dmalloc)
-  // DMALLOC slows stuff down a bit...
-  timeout *= 10;
-#endif /* constant(_reset_dmalloc) */
-  report_debug("Stopping all request handler threads.\n");
-  while(number_of_threads>0) {
-    number_of_threads--;
-    handle_queue->write(0);
-    thread_reap_cnt++;
-  }
-  handler_threads = ({});
-  while(thread_reap_cnt) {
-    sleep(0.1);
-    if(--timeout<=0) {
-      report_debug("Giving up waiting on threads!\n");
-      return;
-    }
-  }
 }
 #endif /* THREADS */
 
