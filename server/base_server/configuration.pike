@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.510 2002/04/15 16:29:53 wellhard Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.511 2002/04/17 14:34:28 wellhard Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2603,12 +2603,6 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
     }
   }
 
-  // Check if the module is part of the license.
-  License.Key key = getvar("license")->get_key();
-  if(moduleinfo->locked && (!key || !moduleinfo->unlocked(key)) )
-    key->report_warning("Module", "Loaded module "+modname+
-			" in configuration "+name+" is not part of the license.");
-  
   string descr = moduleinfo->get_name() + (id ? " copy " + (id + 1) : "");
   //  sscanf(descr, "%*s: %s", descr);
 
@@ -2794,8 +2788,16 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
   if(!nostart) call_start_callbacks( me, moduleinfo, module );
 
 #ifdef MODULE_DEBUG
-  if (enable_module_batch_msgs)
-    report_debug("\bOK %6.1fms\n", (gethrtime()-start_time)/1000.0);
+  if (enable_module_batch_msgs) {
+    if(moduleinfo->config_locked[this_object()])
+      report_debug("\bLocked %6.1fms\n", (gethrtime()-start_time)/1000.0);
+    else
+      report_debug("\bOK %6.1fms\n", (gethrtime()-start_time)/1000.0);
+  }
+#else
+  if(moduleinfo->config_locked[this_object()])
+    report_error("   Error: \"%s\" not loaded (license restriction).\n",
+		 moduleinfo->get_name());
 #endif
   if( !enabled_modules[modname+"#"+id] )
   {
