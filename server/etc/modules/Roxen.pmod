@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.99 2001/06/28 20:08:59 mast Exp $
+// $Id: Roxen.pmod,v 1.100 2001/06/28 22:40:13 nilsson Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2780,7 +2780,10 @@ class ScopePage {
 
   array(string) _indices(void|RXML.Context c) {
     if(!c) return ({});
-    array ind=indices(c->misc->scope_page);
+    array ind=indices(c->misc->scope_page) +
+      ({ "pathinfo", "realfile", "virtroot", "virtfile", "path", "query",
+	 "url", "last-true", "language", "scope", "filesize", "self",
+	 "ssl-strength", "dir", "counter" });
     foreach(indices(converter), string def)
       if(c->misc[converter[def]]) ind+=({def});
     return ind + ({"pathinfo"});
