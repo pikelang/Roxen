@@ -8,7 +8,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.4 2001/04/02 13:45:39 per Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.5 2001/04/03 07:29:51 per Exp $";
 constant module_type = MODULE_TAG;
 
 LocaleString module_name = _(0,"Graphics: GXML tag");
@@ -38,13 +38,18 @@ string status() {
 }
 
 mapping(string:LazyImage.LazyImage) images = ([]);
-array(Image.Layer) generate_image( mapping a, string hash, RequestID id )
+Image.Layer generate_image( mapping a, string hash, RequestID id )
 {
   werror( "Render %O\n",hash );
-  if( images[ hash ] )
-    return m_delete(images,hash)->run( );
-  else
+  array ll;
+  if( !images[ hash ] )
     error( "Oops! This was not what we expected.\n" );
+
+  ll = m_delete(images,hash)->run( );
+  mapping e = LazyImage.layers_extents( ll );
+
+  // Crop to the left so that 0,0 is uppmost left corner.
+  return Image.lay( ll, 0, 0, e->x1, e->y1 );
 }
 
 
@@ -70,6 +75,7 @@ class GXML##X								\
 {									\
   inherit RXML.Tag;							\
   constant name = LazyImage.X.operation_name;	  		        \
+  constant flags = RXML.FLAG_DONT_REPORT_ERRORS;                        \
 									\
   class Frame								\
   {									\
@@ -86,6 +92,7 @@ class GXML##X								\
 {									\
   inherit RXML.Tag;							\
   constant name = LazyImage.X.operation_name;	  		        \
+  constant flags = RXML.FLAG_DONT_REPORT_ERRORS;                        \
 									\
   class Frame								\
   {									\
@@ -103,6 +110,7 @@ class GXMLPush
 {
   inherit RXML.Tag;
   constant name = "push";
+  constant flags = RXML.FLAG_DONT_REPORT_ERRORS;
 
   class Frame
   {
@@ -127,6 +135,7 @@ class GXMLStackDup
 {
   inherit RXML.Tag;
   constant name = "stack-dup";
+  constant flags = RXML.FLAG_DONT_REPORT_ERRORS;
 
   class Frame
   {
@@ -147,6 +156,7 @@ class GXMLStackSwap
 {
   inherit RXML.Tag;
   constant name = "stack-swap";
+  constant flags = RXML.FLAG_DONT_REPORT_ERRORS;
 
   class Frame
   {
@@ -168,6 +178,7 @@ class GXMLClearStack
 {
   inherit RXML.Tag;
   constant name = "stack-clear";
+  constant flags = RXML.FLAG_DONT_REPORT_ERRORS;
 
   class Frame
   {
@@ -186,6 +197,7 @@ class GXMLPop
 {
   inherit RXML.Tag;
   constant name = "pop";
+  constant flags = RXML.FLAG_DONT_REPORT_ERRORS;
 
   class Frame
   {
@@ -218,6 +230,7 @@ class GXMLPopDup
 {
   inherit RXML.Tag;
   constant name = "pop-dup";
+  constant flags = RXML.FLAG_DONT_REPORT_ERRORS;
 
   class Frame
   {
@@ -289,7 +302,7 @@ class TagGXML
 {
   inherit RXML.Tag;
   constant name = "gxml";
-  constant flags = RXML.FLAG_SOCKET_TAG;
+  constant flags = RXML.FLAG_SOCKET_TAG|RXML.FLAG_DONT_REPORT_ERRORS;
 
   static class GXTag
   {
@@ -302,7 +315,7 @@ class TagGXML
     void create(string _name, RXML.Tag parent)
     {
       name=_name;
-      flags=parent->flags;
+      flags=parent->flags|RXML.FLAG_DONT_REPORT_ERRORS;
       content_type = parent->content_type;
       Frame = parent->Frame;
     }
@@ -329,13 +342,50 @@ class TagGXML
   }
   
 
+#define V(X) ("$["+X+"]")
+    mapping make_guides_mapping( string v )
+    {
+      mapping res = ([]);
+      for( int i = 1; i<100; i++ )
+      {
+	res[""+i] = V("guides."+v+"."+i);
+	res[""+(-i)] = V("guides."+v+"."+(-i));
+      }
+      return res;
+    }
+    mapping gxml_vars =
+    ([
+      "guides":([
+	"v": make_guides_mapping("v"),
+	"x": make_guides_mapping("v"),
+
+	"h": make_guides_mapping("h"),
+	"y": make_guides_mapping("h"),
+      ]),
+      "image":([
+	"left":V("image.l"),  "l":V("image.l"),
+	"right":V("image.r"), "r":V("image.r"),
+	"top":V("image.r"),   "t":V("image.t"),
+	"width":V("image.w"), "w":V("image.w"),
+	"height":V("image.h"),"h":V("image.h"),
+      ]),
+      "layer":([
+	"left":V("layer.l"),  "l":V("layer.l"),
+	"right":V("layer.r"), "r":V("layer.r"),
+	"top":V("layer.r"),   "t":V("layer.t"),
+	"width":V("layer.w"), "w":V("layer.w"),
+	"height":V("layer.h"),"h":V("layer.h"),
+      ]),
+    ]);
+#undef V
+
   class Frame 
   {
     inherit RXML.Frame;
-
+    constant scope_name = "gxml";
+    mapping vars = gxml_vars;
     RXML.TagSet additional_tags=RXML.TagSet("TagGXML.internal",
 					    gxml_make_tags( get_plugins ));
-
 
     array do_enter( RequestID id )
     {
