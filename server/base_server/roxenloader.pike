@@ -26,7 +26,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.271 2001/08/09 15:02:46 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.272 2001/08/10 11:28:45 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -58,8 +58,13 @@ mapping uname()
 #endif
 
 mapping(object:string) used = ([]);
-class MyMysql( Sql.Sql real, string name )
+class MyMysql( Sql.Sql real, mixed ro, string name )
 {
+  mixed `!( )
+  {
+    return !!real;
+  }
+
   mixed `[]( string what )
   {
     return `->(what);
@@ -67,17 +72,23 @@ class MyMysql( Sql.Sql real, string name )
 
   mixed `->(string what )
   {
+    if( !real || !real->master_sql ) // closed
+      real = low_connect_to_my_mysql( ro, name );
     if( used[real] != name )
     {
+#ifdef DEBUG
+      werror("Switching databaseconnection to %O:%O from %O\n",
+	     ro, name, used[real] );
+#endif
       real->query( "use "+name );
       used[real] = name;
     }
     return real[what];
   }
 
-  string _sprintf( mixed ... x )
+  string _sprintf( int c )
   {
-    return real->_sprintf( @x );
+    return sprintf( sprintf( "%%%c", c ), real );
   }
 }
 
@@ -1163,8 +1174,15 @@ void clear_connect_to_my_mysql_cache( )
   my_mysql_cache = ([]);
 }
 
-
 mixed connect_to_my_mysql( string|int ro, void|string db )
+{
+  mixed res = low_connect_to_my_mysql( ro, db );
+  if( res )
+    return MyMysql( res, ro, db );
+  return 0;
+}
+
+static mixed low_connect_to_my_mysql( string|int ro, void|string db )
 {
   object res;
   mapping m = my_mysql_cache;
@@ -1185,9 +1203,9 @@ mixed connect_to_my_mysql( string|int ro, void|string db )
     if( mixed err = catch
     { 
       // catch in case of lost connection.
-      res->query("USE "+ db );
+      res->query("use "+ db );
       used[res] = db;
-      return MyMysql( res, db );
+      return res;
     } )
 #ifdef MYSQL_CONNECT_DEBUG
       werror ("Couldn't connect to mysql as %s: %s", ro, describe_backtrace (err));
@@ -1204,8 +1222,8 @@ mixed connect_to_my_mysql( string|int ro, void|string db )
 			    ({ ro, db })) );
     if( my_mysql_num_connections++ > 40 )
       clear_connect_to_my_mysql_cache();
-    res->query( "USE "+ db );
-    return MyMysql( m[ i ] = res, db );
+    res->query( "use "+ db );
+    return m[ i ] = res;
   } )
     if( db == "mysql" )
       throw( err );
