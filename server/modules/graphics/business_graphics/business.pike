@@ -6,14 +6,11 @@
  * in October 1997
  *
  * BUGS:
- * Colors might look strange. This is to to a bug in the Image-module.
- * This will be fixed in later versions of Pike.
- *
  * Sends the data through the URL. This will be changed to a internal
  * reference cache shortly.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.49 1997/11/30 06:01:59 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.50 1997/12/01 00:10:13 peter Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -24,18 +21,11 @@ inherit "roxenlib";
 import Array;
 import Image;
 
-program Bars  = (program)"create_bars";
-program Graph = (program)"create_graph";
-program Pie   = (program)"create_pie";
-object pie    = Pie();
-object bars   = Bars();
-object graph  = Graph();
+function create_pie, create_bars, create_graph;
 
 #define SEP "\t"
 
 int loaded;
-
-//mixed __foo = trace(0);
 
 mixed *register_module()
 {
@@ -95,7 +85,7 @@ mixed *register_module()
        "  <b>stop</b>           Limit the end of the diagram at this quantity.\n"
        "  <b>quantity</b>       Name things represented in the diagram.\n"
        "  <b>units</b>          Name the unit.\n"
-       "</pre><hr noshade>"
+       "</pre>"
        ), ({}), 1,
     });
 }
@@ -103,6 +93,21 @@ mixed *register_module()
 void start(int num, object configuration)
 {
   loaded = 1;
+  program Bars  = (program)"create_bars";
+  program Graph = (program)"create_graph";
+  program Pie   = (program)"create_pie";
+  create_pie  = Pie()->create_pie;
+  create_bars = Bars()->create_bars;
+  create_graph = Graph()->create_graph;
+}
+
+void stop()
+{
+  /* Reload Pie, Bars and Graph */
+  mapping progs = master()->programs;
+  foreach(glob(combine_path(roxen->filename(this),"../*"), indices(progs)),
+          string to_delete)
+    m_delete(progs, to_delete);
 }
 
 void create()
@@ -159,6 +164,11 @@ string itag_names(string tag, mapping m, string contents,
   return "";
 }
 
+float floatify( string in )
+{
+  return (float)in;
+}
+
 /* Handle <xvalues> and <yvalues> */
 string itag_values(string tag, mapping m, string contents,
 		   mapping res, object id)
@@ -173,9 +183,9 @@ string itag_values(string tag, mapping m, string contents,
   if( contents-" " != "" )
   {
     if(tag=="xvalues")
-      res->xvalues = contents/sep;
+      res->xvalues = Array.map( contents/sep, floatify );
     else
-      res->yvalues = contents/sep;
+      res->yvalues = Array.map( contents/sep, floatify );
   }
 
   return "";
@@ -210,18 +220,17 @@ string itag_data(mapping tag, mapping m, string contents,
   int maxsize=0;
 
   if (sizeof(lines)==0)
-    {
-      res->data=({});
-      return 0;
-    }
- 
-  
+  {
+    res->data=({});
+    return 0;
+  }
+
   foreach( lines, string entries )
   {
     foreach( filter( ({ entries/sep - ({""}) }), sizeof ), array item)
     {
       foreach( item, string gaz )
-	foo += ({ gaz });
+	foo += ({ (float)gaz });
     }
     if (sizeof(foo)>maxsize)
       maxsize=sizeof(foo);
@@ -230,10 +239,10 @@ string itag_data(mapping tag, mapping m, string contents,
   }
   
   if (sizeof(bar[0])==0)
-    {
-      res->data=({});
-      return 0;
-    }
+  {
+    res->data=({});
+    return 0;
+  }
 
   if (m->form)
     if (m->form[0..2] == "col")
@@ -517,10 +526,6 @@ string tag_diagram(string tag, mapping m, string contents,
 
   m->src = query("location") + quote(encode_value(res)) + ".gif";
 
-  //werror(sprintf("%O\n",make_tag("img",m)));
-  
-  //  trace(2);
-
   return make_tag("img", m);
 }
 
@@ -550,25 +555,6 @@ int|object PPM(string fname, object id)
     return 1;
 }
 
-
-/* Thease two are just ugly kludges until encode_value gets fixed */
-float floatify( string in )
-{
-  return (float)in;
-}
-
-array strange( array in )
-{
-  // encode_value does not support negative floats.
-  array tmp2 = ({});
-  foreach(in, array tmp)
-    {
-      tmp = Array.map( tmp, floatify );
-      tmp2 += ({ tmp });
-    }
-  return tmp2;
-}
-
 mapping find_file(string f, object id)
 {
   if (f[sizeof(f)-4..] == ".gif")
@@ -592,13 +578,6 @@ mapping find_file(string f, object id)
     perror( "Diagram: Fatal Error, f: %s\n", f );
 
   res->labels = ({ res->xstor, res->ystor, res->xunit, res->yunit });
-
-  /* Kludge to work with pre-alpha14 encode_value */
-  res->data = strange( res->data );
-  if(res->xvalues)
-    res->xvalues = Array.map( res->xvalues, floatify );
-  if(res->yvalues)
-    res->yvalues = Array.map( res->yvalues, floatify );
 
   mapping(string:mixed) diagram_data;
   array back = res->bg;
@@ -676,21 +655,17 @@ mapping find_file(string f, object id)
 
   object(Image.image) img;
 
-  /* Check this */
   if(res->image)
     diagram_data["image"] = res->image;
 
   if(res->type == "pie")
-    img = pie->create_pie(diagram_data)["image"];
+    img = create_pie(diagram_data)["image"];
 
-  if(res->type == "bars")
-    img = bars->create_bars(diagram_data)["image"];
+  if(res->type == "bars" || res->type == "sumbars")
+    img = create_bars(diagram_data)["image"];
 
   if(res->type == "graph")
-    img = graph->create_graph(diagram_data)["image"];
-
-  if(res->type == "sumbars")
-    img = bars->create_bars(diagram_data)["image"];
+    img = create_graph(diagram_data)["image"];
 
   img = img->map_closest(img->select_colors(254)+({ back }));
 
