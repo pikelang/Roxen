@@ -2654,7 +2654,7 @@ cd</rxml>
 
 <test>
 <rxml>&client.authenticated;</rxml>
-<result>0</result>
+<result></result>
 </test>
 
 <test>
