@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.555 2000/09/19 04:44:08 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.556 2000/09/19 10:35:19 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -1552,9 +1552,10 @@ mapping protocols = ([
 #endif
   "http":HTTP,
   "ftp":FTP,
-
+#if constant(Crypto) && constant(Crypto.rsa) && constant(Standards) && constant(Standards.PKCS.RSA) && constant(SSL) && constant(SSL.sslfile)
   "https":HTTPS,
   "ftps":FTPS,
+#endif
 
   "gopher":GOPHER,
   "tetris":TETRIS,
