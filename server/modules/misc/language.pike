@@ -1,7 +1,7 @@
 #include <module.h>
 inherit "modules/directories/directories";
 
-string cvs_version = "$Id: language.pike,v 1.15 1997/10/05 01:23:52 peter Exp $";
+string cvs_version = "$Id: language.pike,v 1.16 1998/11/04 20:27:08 peter Exp $";
 /* Is threadsafe. */
 
 #if DEBUG_LEVEL > 20
@@ -69,7 +69,7 @@ void create()
 	  "<p>Empty lines, lines beginning with # or // will be ignored."
 	  " Lines with errors may be ignored, or execute a HCF instruction." );
 
-  defvar( "flag_dir", "/icons", "Flag directory", TYPE_STRING,
+  defvar( "flag_dir", "/icons/", "Flag directory", TYPE_STRING,
 	  "A directory with small pictures of flags, or other symbols, "
 	  "representing the various languages. Each flag should exist in the "
 	  "following versions:"
@@ -386,5 +386,6 @@ mapping query_tag_callers()
 {
   return ([ "unavailable_language" : tag_unavailable_language,
             "language" : tag_language,
+            "available_language" : tag_available_languages,  // compat lio
             "available_languages" : tag_available_languages ]);
 }
