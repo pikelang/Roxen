@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.64 2000/02/16 19:10:45 mast Exp $
+//! $Id: module.pmod,v 1.65 2000/02/16 23:28:05 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -870,7 +870,8 @@ class Context
   }
 
   void remove_runtime_tag (string|Tag tag)
-  //! Removes a tag added by add_runtime_tag().
+  //! Removes a tag added by add_runtime_tag(). If a string is given,
+  //! it's assumed to be a tag name without prefix.
   {
     if (!new_runtime_tags) new_runtime_tags = NewRuntimeTags();
     new_runtime_tags->remove_tags[tag] = 1;
@@ -893,7 +894,7 @@ class Context
   //! evaluation. evaluator is the object that catched the error.
   {
     error_count++;
-    if (objectp (err) && err->is_RXML_Backtrace && err->type != "fatal") {
+    if (objectp (err) && err->is_RXML_Backtrace) {
       string msg;
       for (object(PCode)|object(Parser) e = evaluator->_parent; e; e = e->_parent)
 	e->error_count++;
@@ -2036,7 +2037,7 @@ void throw_fatal (mixed err)
     string msg;
     if (catch (msg = err[0])) throw (err);
     if (stringp (msg) && !has_value (msg, "\nRXML frame backtrace:\n")) {
-      string descr = Backtrace ("fatal", 0)->describe_rxml_backtrace (1);
+      string descr = Backtrace (0, 0)->describe_rxml_backtrace (1);
       if (sizeof (descr)) {
 	if (sizeof (msg) && msg[-1] != '\n') msg += "\n";
 	msg += "RXML frame backtrace:\n" + descr;
@@ -2345,7 +2346,8 @@ class TagSetParser
   //! the parser doesn't parse tags at all.
 
   optional void remove_runtime_tag (string|Tag tag);
-  //! Removes a tag added by add_runtime_tag(). This may only be left
+  //! Removes a tag added by add_runtime_tag(). If it's a string, it's
+  //! assumed to always be without prefix. This may only be left
   //! undefined if the parser doesn't parse tags at all.
 
   // Internals.
