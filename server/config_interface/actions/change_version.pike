@@ -5,8 +5,8 @@
 
 constant action = "maintenance";
 
-LocaleString name = _(41,"Change roxen version...");
-LocaleString doc =  _(42,"If you have more than one roxen version installed\n"
+LocaleString name = _(41,"Change Roxen version...");
+LocaleString doc =  _(42,"If you have more than one Roxen version installed\n"
 		     "in the same location, you can use this action to\n"
 		     "change the currently running version.");
 

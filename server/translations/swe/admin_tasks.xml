@@ -778,13 +778,13 @@ nyckelpar. Den ena halvan ska hållas hemlig</t>
 </str>
 
 <str id="41">
-<o>Change roxen version...</o>
-<t>Ändra roxenversion...</t>
+<o>Change Roxen version...</o>
+<t>Ändra Roxenversion...</t>
 </str>
 
 <str id="42">
 <changed from=""/>
-<o>If you have more than one roxen version installed
+<o>If you have more than one Roxen version installed
 in the same location, you can use this action to
 change the currently running version.</o>
 <t>Om du har mer än en Roxenversion installerad i samma mapp så

@@ -756,12 +756,12 @@ Although most browsers will accept 8 bit ISO 8859-1 characters in these fields, 
 </str>
 
 <str id="41">
-<o>Change roxen version...</o>
+<o>Change Roxen version...</o>
 <t></t>
 </str>
 
 <str id="42">
-<o>If you have more than one roxen version installed
+<o>If you have more than one Roxen version installed
 in the same location, you can use this action to
 change the currently running version.</o>
 <t></t>
