@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.197 2000/09/05 15:06:31 per Exp $
+// $Id: roxenlib.pike,v 1.198 2000/09/05 20:49:12 mast Exp $
 
 //#pragma strict_types
 
@@ -1113,7 +1113,8 @@ string get_modname (RoxenModule module)
 
 string get_modfullname (RoxenModule module)
 //! This determines the full module (human-readable) name in
-//! approximately the same way as the config UI.
+//! approximately the same way as the config UI. Note that the
+//! returned string is text/html.
 {
   if (module) {
     string|mapping(string:string) name = 0;
