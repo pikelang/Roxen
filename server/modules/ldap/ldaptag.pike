@@ -1,5 +1,5 @@
 /*
- * $Id: ldaptag.pike,v 1.5 2000/04/05 17:41:07 kuntri Exp $
+ * $Id: ldaptag.pike,v 1.6 2000/04/06 14:38:38 nilsson Exp $
  *
  * A module for Roxen Challenger, which gives the tags
  * <LDAP>, <LDAPOUTPUT> (with subtag <LDAPFOREACH>) and <LDAPELSE>
@@ -36,7 +36,7 @@
 
  */
 
-constant cvs_version="$Id: ldaptag.pike,v 1.5 2000/04/05 17:41:07 kuntri Exp $";
+constant cvs_version="$Id: ldaptag.pike,v 1.6 2000/04/06 14:38:38 nilsson Exp $";
 //constant thread_safe=0;
 #include <module.h>
 
@@ -766,7 +766,7 @@ string status()
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
-"ldap":#:"<desc tag><short>
+ "ldap":#"<desc tag><short>
  Executes a LDAP operation, but doesn't do anything with the
  result.</short>The <tag>ldap</tag> tag is mostly used for LDAP
  operation that change the contents of the directory, for example
