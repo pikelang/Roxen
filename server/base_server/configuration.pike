@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.347 2000/08/22 22:48:53 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.348 2000/08/22 22:57:24 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -214,7 +214,7 @@ void stop()
 			  destruct(m);
 			}(function_object(log_function)));
   foreach( registered_urls, string url )
-    roxen->unregister_url(url);
+    roxen.unregister_url(url);
 }
 
 public string type_from_filename( string file, int|void to, string|void myext )
@@ -2007,16 +2007,15 @@ array do_not_log_patterns = 0;
 void start(int num)
 {
   // Note: This is run as root if roxen is started as root
-  foreach( registered_urls-query("URLs"), string url )
-  {
-    registered_urls -= ({ url });
-    roxenp()->unregister_url( url );
-  }
-  foreach( query( "URLs" )-registered_urls, string url )
-  {
-    registered_urls += ({ url });
-    roxenp()->register_url( url, this_object() );
-  }
+  foreach( registered_urls, string url )
+    roxen.unregister_url( url );
+
+  registered_urls = ({ });
+
+  foreach( query( "URLs" ), string url )
+    if( roxen.register_url( url, this_object() ) )
+      registered_urls += ({ url });
+
   if( !datacache )
     datacache = DataCache( );
   else
