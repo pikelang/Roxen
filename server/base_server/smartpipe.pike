@@ -1,5 +1,5 @@
 /*
- * $Id: smartpipe.pike,v 1.24 1998/06/07 21:09:32 grubba Exp $
+ * $Id: smartpipe.pike,v 1.25 1998/06/13 20:58:43 grubba Exp $
  *
  * A somewhat more optimized Pipe.pipe...
  */
@@ -123,7 +123,7 @@ void next_input()
     outfd->set_blocking();
     int written = 
       outfd->write((objectp(current_input)
-		    ?current_input->read(current_input_len)
+		    ?current_input->read(current_input_len, 1)
 		    :current_input) || "");
     if(written == -1) {
 #ifdef FD_DEBUG
