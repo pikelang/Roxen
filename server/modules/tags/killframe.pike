@@ -12,7 +12,7 @@
  * Chris Burgess <chris@ibex.co.nz>
  */
 
-constant cvs_version = "$Id: killframe.pike,v 1.29 2000/04/06 06:16:06 wing Exp $";
+constant cvs_version = "$Id: killframe.pike,v 1.30 2000/04/14 22:59:35 kuntri Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -36,8 +36,14 @@ constant module_doc  = "This module defines a the tag &lt;killframe&gt; that "
 
 TAGDOCUMENTATION
 #ifdef manual
-constant tagdoc=(["killframe":"<desc tag>"+module_doc+"</desc>"
-  "<attr name=killindex>Removes trailing index.html from the URL</attr>"]);
+constant tagdoc=(["killframe":#"<desc tag><short>
+ This tag adds some JavaScript that will prevent others from putting
+ the page in a frame.</short> It can also strip any occurrences of
+ index files, like <ext>index.html</ext>, from the end of the
+ URL.</desc>
+
+<attr name=killindex>Removes trailing index.html from the URL</attr>",
+		]);
 #endif
 
 string tag_killframe( string tag, mapping m, object id )
