@@ -9,7 +9,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.3 2001/02/06 15:11:00 hop Exp $";
+constant cvs_version = "$Id: email.pike,v 1.4 2001/02/19 17:38:02 hop Exp $";
 
 constant thread_safe=1;
 
@@ -209,8 +209,9 @@ class TagEmail {
 	  m=MIME.Message(body, ([ 
 			       "content-type":(ftype + (sizeof(aname) ? ";name=\"" + aname + "\"": "")),
 			       "content-transfer-encoding":fenc,
-			       "content-disposition":"attachment"
-			       //"content-disposition":(sizeof(aname)? "attachment; filename=\"" + aname + "\"": "attachment")
+			       "content-disposition":"attachment",
+			       //"content-disposition":(sizeof(aname)? "attachment; filename=\"" + aname + "\"": "attachment"),
+			       "content-id":args->cid||"nocid"
 			     ]))
 	  );
 	  if (error)
@@ -227,15 +228,17 @@ class TagEmail {
 	  return 0;
 	}
 
-	// ---------- we assume container with text and type "text/plain"
+	// ------ we assume container with text (and default type "text/plain")
 	// converting bare LFs (QMail specials:)
 
 	if(query("CI_qmail_spec"))
 	  body = (Array.map(body / "\r\n", lambda(string el1) { return (replace(el1, "\n", "\r\n")); }))*"\r\n";
 
+	aname = sizeof(aname) ? (args->mimetype||"text/plain")+"; name=\"" + aname + "\"": (args->mimetype||"text/plain");
 	error = catch(
 	m=MIME.Message(body, ([ 
-			     "content-type":(sizeof(aname) ? "text/plain; name=\"" + aname + "\"": "text/plain"),
+			     //"content-type":(sizeof(aname) ? "text/plain; name=\"" + aname + "\"": "text/plain"),
+			     "content-type":aname,
 			     "content-transfer-encoding":"8bit",
 			     "content-disposition":(sizeof(aname)? "attachment; filename=\"" + aname + "\"": "attachment")
 			   ]))
@@ -244,6 +247,7 @@ class TagEmail {
 	  RXML.run_error(EMAIL_LABEL+"Attachment: MIME message processing error: "+Roxen.html_encode_string(error[0]));
 
 	id->misc["_email_atts_"] += ({ m });
+//werror(sprintf("D: attachms: %O\n", id->misc["_email_atts_"]));
 	
 	return 0;
       }
@@ -335,25 +339,24 @@ class TagEmail {
 
      // UTF8 -> dest. charset
      if(sizeof(chs)) {
-	if(zero_type(args["subject"]))
-	  subject = Locale.Charset.encoder(chs)->clear()->feed(query("CI_nosubject"))->drain();
+
+	// Subject
+/*	if(zero_type(args["subject"]))
+	  subject = Locale.Charset.encoder(chs)->clear()->feed(query("CI_nosubject"))->drain();*/
+	subject = Locale.Charset.encoder(chs)->clear()->feed(args->subject||query("CI_nosubject"))->drain();
 	subject = MIME.encode_word(({subject, chs}), "base64" );
+
+	// Body
+	body = Locale.Charset.encoder(chs)->clear()->feed(body)->drain();
+
 	chs = ";charset=\""+chs+"\"";
      }
 
-     error = catch(
-       m=MIME.Message(body, ([ "MIME-Version":"1.0", "subject":subject,
-			     "from":fromx,
-			     "to":replace(tox, split, ","),
+     if (arrayp(id->misc->_email_atts_) && sizeof(id->misc->_email_atts_)) {
+       m=MIME.Message(body, ([ "MIME-Version":"1.0",
 			     "content-type":"text/plain" + chs,
 			     "content-transfer-encoding":"8bit",
-			     "x-mailer":"Roxen's email, v1.6"
-			   ]) + headers)
-     );
-     if (error)
-       RXML.run_error(EMAIL_LABEL+"MIME message processing error: "+Roxen.html_encode_string(error[0]));
-
-     if (arrayp(id->misc->_email_atts_) && sizeof(id->misc->_email_atts_))
+			   ]));
        error = catch(
          m=MIME.Message("", ([ "MIME-Version":"1.0", "subject":subject,
 			     "from":fromx,
@@ -363,6 +366,19 @@ class TagEmail {
 			   ]) + headers,
 			({ m }) + id->misc->_email_atts_
          ));
+     } else
+     error = catch(
+       m=MIME.Message(body, ([ "MIME-Version":"1.0", "subject":subject,
+			     "from":fromx,
+			     "to":replace(tox, split, ","),
+			     "content-type":"text/plain" + chs,
+			     "content-transfer-encoding":"8bit",
+			     "x-mailer":"Roxen's email, v1.6"
+			   ]) + headers)
+     );
+
+     if (error)
+       RXML.run_error(EMAIL_LABEL+"MIME message processing error: "+Roxen.html_encode_string(error[0]));
 
      error = catch(o = Protocols.SMTP.client(query("CI_server_restrict") ? query("CI_server") : (args->server||query("CI_server"))));
      if (error)
@@ -370,6 +386,7 @@ class TagEmail {
 
      catch(msglast = (string)m);
 
+//werror(sprintf("D: send_mess: %O\n", (string)m));
      error = catch(o->send_message(fromx, tox/split, (string)m));
      if (error)
        RXML.run_error(EMAIL_LABEL+Roxen.html_encode_string(error[0]));
@@ -401,7 +418,7 @@ string status() {
   rv =  "<h2>Mail processed</h2>\n";
   rv += (sizeof(mails) ? ("Total: <b>" + (string)(sizeof(mails)) + "</b>") : "No mail") + "<br>\n";
   if(query("CI_verbose_status") && sizeof(mails)) {
-#if EMAIL_STATS
+#if 1 //EMAIL_STATS
     rv += "<table>\n";
     rv += "<tr ><th>From</th><th>To</th><th>Size</th></tr>\n";
     foreach(mails, mapping m)
