@@ -842,15 +842,15 @@ Click "Next" to start the installation.</Text>
         <Control Id="Protocol_Label" Type="Text" X="18" Y="144" Width="165" Height="12" TabSkip="no">
           <Text>{\VSI_MS_Sans_Serif13.0_0_0}Protocol:</Text>
         </Control>
-        <Control Id="PortLabel" Type="Text" X="192" Y="144" Width="165" Height="12" TabSkip="no">
+        <Control Id="PortLabel" Type="Text" X="201" Y="144" Width="165" Height="12" TabSkip="no">
           <Text>{\VSI_MS_Sans_Serif13.0_0_0}Port:</Text>
         </Control>
-        <Control Id="List1" Type="ListView" X="18" Y="156" Width="165" Height="18" Property="SERVER_PROTOCOL" Sunken="yes">
-          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiListView</Text>
+        <Control Id="ProtocolSelector" Type="ComboBox" X="18" Y="156" Width="165" Height="18" Property="SERVER_PROTOCOL" Sunken="yes" ComboList="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiComboBox</Text>
 	  <Condition Action="disable">INSTALLATION_TYPE="2"</Condition>
 	  <Condition Action="enable">INSTALLATION_TYPE&lt;&gt;"2"</Condition>
         </Control>
-        <Control Id="Edit2" Type="Edit" X="192" Y="156" Width="165" Height="18" Property="SERVER_PORT" Sunken="yes">
+        <Control Id="Edit2" Type="Edit" X="201" Y="156" Width="165" Height="18" Property="SERVER_PORT" Sunken="yes">
           <Text>{\VSI_MS_Sans_Serif13.0_0_0}</Text>
 	  <Condition Action="disable">INSTALLATION_TYPE="2"</Condition>
 	  <Condition Action="enable">INSTALLATION_TYPE&lt;&gt;"2"</Condition>
@@ -866,13 +866,13 @@ Click "Next" to start the installation.</Text>
         <Control Id="Label4" Type="Text" X="18" Y="216" Width="165" Height="12" TabSkip="no">
           <Text>{\VSI_MS_Sans_Serif13.0_0_0}Admin password:</Text>
         </Control>
-        <Control Id="Label4_2" Type="Text" X="192" Y="216" Width="165" Height="12" TabSkip="no">
+        <Control Id="Label4_2" Type="Text" X="201" Y="216" Width="165" Height="12" TabSkip="no">
           <Text>{\VSI_MS_Sans_Serif13.0_0_0}Password (again):</Text>
         </Control>
         <Control Id="Edit4" Type="Edit" X="18" Y="228" Width="165" Height="18" Property="ADM_PASS1" Sunken="yes" Password="yes">
           <Text>{\VSI_MS_Sans_Serif13.0_0_0}</Text>
         </Control>
-        <Control Id="Edit4_2" Type="Edit" X="192" Y="228" Width="165" Height="18" Property="ADM_PASS2" Sunken="yes" Password="yes">
+        <Control Id="Edit4_2" Type="Edit" X="201" Y="228" Width="165" Height="18" Property="ADM_PASS2" Sunken="yes" Password="yes">
           <Text>{\VSI_MS_Sans_Serif13.0_0_0}</Text>
         </Control>
 
@@ -1003,10 +1003,10 @@ Click "Next" to start the installation.</Text>
         <RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}Custom" X="0" Y="0" Width="348" Height="17">1</RadioButton>
         <RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}Typical" X="0" Y="24" Width="348" Height="17">2</RadioButton>
       </RadioGroup>
-      <ListView Property="SERVER_PROTOCOL">
+      <ComboBox Property="SERVER_PROTOCOL">
 	<ListItem Id="http" />
 	<ListItem Id="https" />
-      </ListView>
+      </ComboBox>
       <TextStyle Id="VSI_MS_Sans_Serif13.0_0_0" FaceName="MS Sans Serif" Size="9" Red="0" Green="0" Blue="0" />
       <TextStyle Id="VSI_MS_Sans_Serif16.0_1_0" FaceName="MS Sans Serif" Size="12" Red="0" Green="0" Blue="0" Bold="yes" />
       <TextStyle Id="VsdDefaultUIFont.524F4245_5254_5341_4C45_534153783400" FaceName="MS Sans Serif" Size="9" Red="0" Green="0" Blue="0" />
