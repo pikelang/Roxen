@@ -1,5 +1,5 @@
 /*
- * $Id: clientlayer.pike,v 1.43 1999/09/13 23:13:05 marcus Exp $
+ * $Id: clientlayer.pike,v 1.44 1999/09/14 21:33:16 marcus Exp $
  *
  * A module for Roxen AutoMail, which provides functions for
  * clients.
@@ -10,7 +10,7 @@
 #include <module.h>
 inherit "module" : module;
 
-constant cvs_version="$Id: clientlayer.pike,v 1.43 1999/09/13 23:13:05 marcus Exp $";
+constant cvs_version="$Id: clientlayer.pike,v 1.44 1999/09/14 21:33:16 marcus Exp $";
 constant thread_safe=1;
 
 
@@ -1066,9 +1066,8 @@ int|string find_user( string username_at_host )
     object l = get_ldap();
 
     if(l) {
-      object r = l->find_all("(mail="+username_at_host+")");
-      if(!r || r->num_entries()<1)
-	r = l->find_all("(mailalternateaddress="+username_at_host+")");
+      object r = l->find_all("(|(mail="+username_at_host+
+			     ")(mailalternateaddress="+username_at_host+"))");
       if(!r || r->num_entries()<1)
 	return 0;
       if(r->num_entries()>1) error("Ambigious user list.\n");
