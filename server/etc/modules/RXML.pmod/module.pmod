@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.285 2002/05/15 22:10:38 mast Exp $
+// $Id: module.pmod,v 1.286 2002/06/11 14:35:16 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -2483,7 +2483,7 @@ final Context get_context() {return [object(Context)] RXML_CONTEXT;}
 
 #if defined (MODULE_DEBUG) && constant (thread_create)
 
-// Got races in this debug check, but looks like we have to live with that. :\
+// Got races in this debug check, but looks like we have to live with that. :/
 
 #define ENTER_CONTEXT(ctx)						\
   Context __old_ctx = RXML_CONTEXT;					\
@@ -2827,12 +2827,26 @@ class Frame
   //! @decl optional string raw_tag_text;
   //!
   //! If this variable exists, it gets the raw text representation of
-  //! the tag, if there is any. Note that it's after parsing of any
-  //! splice argument.
+  //! the tag, if there is any. Note that it's after the parsing of
+  //! any splice argument.
   //!
   //! @note
   //! This variable is assumed to be static, i.e. its value doesn't
   //! depend on any information that's known only at runtime.
+
+  //! @decl optional object check_security_object;
+  //!
+  //! If this is defined, it specifies an object to use for the module
+  //! level security check. The default is to use @[tag] if it's set,
+  //! else this object.
+  //!
+  //! Setting this is useful for short lived tags and tagless frames
+  //! since the security system caches references to these objects,
+  //! which otherwise would cause them to be lying around until the
+  //! next gc round.
+  //!
+  //! @note
+  //! This is used only if the define MODULE_LEVEL_SECURITY exists.
 
   //! @decl optional array do_enter (RequestID id);
   //! @decl optional array do_process (RequestID id, void|mixed piece);
@@ -3828,19 +3842,21 @@ class Frame
 	}
 
 	else {			// Initialize a new evaluation.
-	  if (tag) {
-	    if (!(flags & FLAG_CUSTOM_TRACE))
-	      TRACE_ENTER("tag &lt;" + tag->name + "&gt;", tag);
+	  if (!(flags & FLAG_CUSTOM_TRACE))
+	    TRACE_ENTER(tag ? "tag &lt;" + tag->name + "&gt;" : "tagless frame",
+			tag || this_object());
 #ifdef MODULE_LEVEL_SECURITY
-	    if (id->conf->check_security (tag, id, id->misc->seclevel)) {
+	  if (object sec_obj =
+	      this_object()->check_security_object || tag || this_object())
+	    if (id->conf->check_security (sec_obj, id, id->misc->seclevel)) {
 	      if (flags & FLAG_CUSTOM_TRACE)
-		TRACE_ENTER("tag &lt;" + tag->name + "&gt;", tag);
+		TRACE_ENTER(tag ? "tag &lt;" + tag->name + "&gt;" : "tagless frame",
+			    tag || this_object());
 	      THIS_TAG_TOP_DEBUG ("Access denied - exiting\n");
 	      TRACE_LEAVE("access denied");
 	      return result = nil;
 	    }
 #endif
-	  }
 
 	  orig_make_p_code = ctx->make_p_code;
 
@@ -3907,8 +3923,9 @@ class Frame
 	  }
 
 #ifdef MAGIC_HELP_ARG
-	if (tag && (args || ([]))->help) {
-	  TRACE_ENTER ("tag &lt;" + tag->name + " help&gt;", tag);
+	if ((args || ([]))->help) {
+	  TRACE_ENTER(tag ? "tag &lt;" + tag->name + " help&gt;" : "tagless frame",
+		      tag || this_object());
 	  string help = id->conf->find_tag_doc (tag->name, id);
 	  TRACE_LEAVE ("");
 	  THIS_TAG_TOP_DEBUG ("Reporting help - frame done\n");
@@ -5593,11 +5610,11 @@ class Type
   //! if there is no sensible conversion type. The @[conversion_type]
   //! references must never produce a cycle between types.
   //!
-  //! It's values of the conversion type that @[decode] tries to
-  //! return, and also that @[encode] must handle without resorting to
-  //! indirect conversions. It's used as a fallback between types
-  //! which doesn't have explicit conversion functions for each other;
-  //! see @[indirect_convert].
+  //! @[decode] tries to return values of the conversion type, and
+  //! @[encode] must handle such values without resorting to indirect
+  //! conversions. The conversion type is used as a fallback between
+  //! types which doesn't have explicit conversion functions for each
+  //! other; see @[indirect_convert].
   //!
   //! @note
   //! The trees described by the conversion types aren't proper type
@@ -5612,12 +5629,16 @@ class Type
 
   //! @decl optional constant int free_text;
   //!
+  //! FIXME: This is how parsers use the type.
+  //!
   //! Nonzero constant if the type keeps the free text between parsed
   //! tokens, e.g. the plain text between tags in XML. The type must
   //! be sequential and use strings. Must be zero when
   //! @[handle_literals] is nonzero.
 
   //! @decl optional constant int handle_literals;
+  //!
+  //! FIXME: This is how parsers use the type.
   //!
   //! Nonzero constant if the type can parse string literals into
   //! values. This will have the effect that any free text will be
@@ -5629,6 +5650,8 @@ class Type
   //! the literal before passing it to @[encode].
 
   //! @decl optional constant int entity_syntax;
+  //!
+  //! FIXME: This is how parsers use the type.
   //!
   //! Nonzero constant for all types with string values that use
   //! entity syntax, like XML or HTML.
@@ -6836,8 +6859,8 @@ static class PikeCompile
 	// Don't want to encode the cloning of RoxenDebug.ObjectMarker
 	// in the __INIT that is dumped, since that debug might not be
 	// wanted when the dump is decoded.
-	"mapping|object __object_marker = ",
-	bind (RoxenDebug.ObjectMarker ("object(compiled RXML code)")), ";\n"
+	"mapping|object __object_marker = " +
+	bind (RoxenDebug.ObjectMarker ("object(compiled RXML code)")) + ";\n"
 #else
 	LITERAL (MARK_OBJECT) ";\n"
 #endif
