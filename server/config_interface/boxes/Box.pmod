@@ -88,10 +88,23 @@ class Fetcher
     query->async_request( h, p, q, ([ "Host":h+":"+p ]) );
   }
   
-  void create( function _cb, string _h, int _p, string _q  )
+  void create( function _cb, string _h, int _p, string _q,
+	       RequestID id )
   {
     cb = _cb;
     h = _h; p = _p; q = _q;
+
+    RoxenModule px;
+    if( px = id->conf->find_module("update#0") )
+    {
+      if( strlen( px->query( "proxyserver" ) ) )
+      {
+	sscanf( q, "GET %s", q );
+	q = "GET http://"+h+":"+p+q;
+	h = px->query( "proxyserver" );
+	p = px->query( "proxyport" );
+      }
+    }
     start();
   }
 }
@@ -100,6 +113,9 @@ string get_http_data( string host, int port, string query,
 		      function|void cb )
 {
   mixed data;
+#ifdef OFFLINE
+  return "The server is offline.";
+#else
   if( data = cache[host+port+query] )
   {
     return data[0];
@@ -108,6 +124,7 @@ string get_http_data( string host, int port, string query,
   {
     cache[host+port+query] = ({0});
     RXML.get_context()->id->variables->_box_fetching = 1;
-    Fetcher( cb, host, port, query );
+    Fetcher( cb, host, port, query, RXML.get_context()->id );
   }
+#endif
 }

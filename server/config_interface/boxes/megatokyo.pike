@@ -34,6 +34,8 @@ string parse( RequestID id )
 	    "<!-- comments area ends here for PIRO-->",
 	    rant );
 
+    if( !status || !rant || !img )
+      return ("<box type='"+box+"' title='"+box_name+"'>"+data+"</box>");
     array st = status/"<br>";
     string tmp;
     status = "<font size=-1>";
