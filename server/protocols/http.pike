@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.318 2001/06/22 03:00:36 nilsson Exp $";
+constant cvs_version = "$Id: http.pike,v 1.319 2001/06/25 17:46:51 nilsson Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -774,9 +774,14 @@ private int parse_got( string new_data )
       prot = clientprot;
       if(!(< "HTTP/1.0", "HTTP/1.1" >)[prot])
       {
-	// We're nice here and assume HTTP even if the protocol
-	// is something very weird.
-	prot = "HTTP/1.1";
+	int maj,min;
+	if( sscanf(prot, "HTTP/%d.%d", maj, min) == 2 )
+	  // Comply with the annoying weirdness of RFC 2616.
+	  prot = "HTTP/" + maj + "." + min;
+	else
+	  // We're nice here and assume HTTP even if the protocol
+	  // is something very weird.
+	  prot = "HTTP/1.1";
       }
       break;
       
