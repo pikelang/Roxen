@@ -15,7 +15,7 @@ constant STORT = 1.0e40;
 inherit "create_graph.pike";
 inherit "create_bars.pike";
 
-constant cvs_version = "$Id: create_pie.pike,v 1.34 1998/03/02 19:56:27 hedda Exp $";
+constant cvs_version = "$Id: create_pie.pike,v 1.35 1998/03/05 16:00:26 hedda Exp $";
 
 /*
  * name = "BG: Create pies";
@@ -85,6 +85,9 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
   int imxsize;
   float *arr=allocate(802);
   float *arr2=allocate(802);
+  float *arr3=allocate(802);
+  float *arrplus=allocate(802);
+  float *arrpp=allocate(802);
 
   int yc;
   int xc;
@@ -217,6 +220,8 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
       arr[1+2*i]=yc+yr*sin(-PI/2+i*2.0*PI/400.0+FI);
       arr2[2*i]=xc+(xr+w)*sin((i*2.0*PI/400.0));
       arr2[2*i+1]=yc+(w+yr)*sin(-PI/2+i*2.0*PI/400.0);
+      arr3[2*i]=xc+(xr+w)*sin((-i*2.0*PI/400.0+FI));
+      arr3[2*i+1]=yc+(w+yr)*sin(-PI/2-i*2.0*PI/400.0+FI);
     }
 
   //Draw the slices
@@ -227,6 +232,52 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
   
   int t=sizeof(diagram_data["datacolors"]);
 
+  if (!twoD)
+    {
+      for(int i=0; i<401; i++)
+	{
+	  arrplus[2*i]=xc+(xr+w)*sin((i*2.0*PI/400.0)+FI);
+	  arrplus[1+2*i]=yc+(w+yr)*sin(-PI/2+i*2.0*PI/400.0+FI);
+	  arrpp[2*i]=xc+(xr+w)*sin((-i*2.0*PI/400.0)+FI);
+	  arrpp[1+2*i]=yc+(w+yr)*sin(-PI/2-i*2.0*PI/400.0+FI)+
+	    diagram_data["3Ddepth"];
+	  
+	  
+	}
+      
+      edge_nr=0;
+      for(i=0; i<t; i++)
+	{
+	  piediagram->setcolor(@diagram_data["datacolors"][i]);
+	  if (pnumbers[i])
+	    {
+	      piediagram->
+		polygone(
+			 (arrplus[2*edge_nr..2*(edge_nr+pnumbers[i]+2)+1]
+			  +
+			   arrpp[800-2*(edge_nr+pnumbers[i]+2)..
+				801-2*edge_nr])
+			 );
+	    }
+	  edge_nr+=pnumbers[i];
+	}
+      array arrfoo=copy_value(arr2);
+      for(int i=201; i<604; i+=2)
+	arrfoo[i]=arr2[i]+diagram_data["3Ddepth"];
+
+      piediagram->setcolor(0,0,0);
+      piediagram->polyfill(
+			   make_polygon_from_line(diagram_data["linewidth"],
+						  ({
+						    xc+(xr+w/2.0), 
+						    yc})+
+						  arrfoo[200..
+							601]+
+						  ({xc-(xr+w/2.0), 
+						    yc}),
+						  0,1)[0]);
+    }
+    
   edge_nr=0;
   for(i=0; i<t; i++)
     {
@@ -241,12 +292,11 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
 
   edge_nr=pnumbers[0];
 
-
   //black borders
   if (diagram_data["linewidth"]>LITET)
     {
-      piediagram=piediagram->setcolor(@diagram_data["axcolor"]);
-      piediagram=piediagram->polygone(
+      piediagram->setcolor(@diagram_data["axcolor"]);
+      piediagram->polygone(
 				      make_polygon_from_line(diagram_data["linewidth"],
 							     ({
 							       xc,
@@ -260,7 +310,7 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
 
       for(int i=1; i<sizeof(pnumbers); i++)
 	{
-	  piediagram=piediagram->
+	  piediagram->
 	    polygone(
 		     make_polygon_from_line(diagram_data["linewidth"],
 					    ({xc
@@ -274,11 +324,13 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
 	  
 	  edge_nr+=pnumbers[i];
 	}
-      piediagram=piediagram->polygone(arr
-				      +arr2);
+      piediagram->polygone(arr[..401]
+			   +arr3[400..]);
+      piediagram->polygone(arr[400..]
+			   +arr3[..401]);
     }
   
-  piediagram=piediagram->setcolor(255,255,255);
+  piediagram->setcolor(255,255,255);
   
   //And now some shading!
   if (!twoD)
@@ -289,12 +341,7 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
       
       
       object tbild;
-      /*
-	tbild=image(imxsize, 1, 255, 255, 255)->
-	tuned_box(0, 0 , 1, imysize,
-	({a,a,b,b}))->scale(imxsize, imysize);
-	//400ms
-	*/
+
       int imxsize=piediagram->xsize(); //diagram_data["xsize"];
       int imysize=piediagram->ysize(); //diagram_data["ysize"]+diagram_data["legendsize"];
 
@@ -324,98 +371,30 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
 	    tbild=tbild->paste(tbild->copy(0,0,512, imysize), 512, 0);
 	  piediagram+=tbild;
 	}
-      
-      float* arr3;
-      float* arr4;
-      float* arr5;
-      
-      
-      //Draw the border below.
-      arr3=arr2[200..601];
-      for(int i=1; i<402; i+=2)
-	arr3[i]+=diagram_data["3Ddepth"];
 
-      arr4=arr3[0..200];
-      arr5=arr3[0..200];
-      for(int  i=0; i<201; i++)
+      edge_nr=(int)(FI*200.0/PI);
+      piediagram->setcolor(0,0,0);
+      for(int i=0; i<sizeof(pnumbers); i++)
 	{
-	  arr4[i]=arr3[i*2];
-	  arr5[i]=arr3[i*2+1];
+	  if (sin(-PI/2+edge_nr*2.0*PI/400.0)>0)
+	    {
+	      
+	      float x1=xc+(xr+w/2.0)*sin((edge_nr*2.0*PI/400.0));
+	      float y1=yc+(w/2.0+yr)*sin(-PI/2+edge_nr*2.0*PI/400.0);
+	      piediagram=piediagram->
+		polygone(
+			 make_polygon_from_line(diagram_data["linewidth"],
+						({
+						  x1,y1,
+						  x1,y1+diagram_data["3Ddepth"]
+						})
+						,
+						0, 1)[0]
+			 );
+	      
+	    }
+	  edge_nr+=pnumbers[i];
 	}
-      arr4=reverse(arr4);
-      arr5=reverse(arr5);
-      int j=0;
-
-      for(int i=0; i<201; i++)
-	{
-	  arr3[j++]=arr4[i];
-	  arr3[j++]=arr5[i];
-	}
-
-      array(float) arr6=arr3+arr2[200..601];
-
-      float plusx=ceil(2-(float)most_left);
-      float plusy=ceil(2-(float)yc);
-      for(int i=0; i<sizeof(arr6); )
-	{
-	  arr6[i++]+=plusx;
-	  arr6[i++]+=plusy;
-	}
-      /*
-      arr6=allocate(804);
-      for(int i=0; i<201; i++)
-	{
-	  int j=i+200;
-	  arr6[2*i]=2+(xr+w)+(xr+w)*sin((j*2.0*PI/400.0+0.0001));
-	  arr6[2*i+1]=2+(w+yr)*sin(0.0001-PI/2+j*2.0*PI/400.0);
-
-	  arr6[802-2*i]=arr6[2*i];
-	  arr6[802-2*i+1]=diagram_data["3Ddepth"]+arr6[2*i+1];
-	}
-      */
-      imxsize=(int)(ceil(most_right+4)+floor(-most_left));
-      imysize=(int)(diagram_data["3Ddepth"]+yr+4);
-      if (imxsize<2)
-	imxsize=2;
-      if (imysize<2)
-	imysize=2;
-
-
-      below=image(imxsize, imysize, 0, 0, 0)->
-	setcolor(255,255,255)->
-	polygone(arr6);
-      
-      b=({155,155,155});
-      a=({100,100,100});
-      
-      object tbild;
-      tbild=image(imxsize,imysize , 255, 255, 255)
-	->tuned_box(0,0, imxsize/2, 1,
-		  ({a,b,a,b}))
-	->tuned_box(imxsize/2, 0,imxsize , 1,
-		    ({b,a,b,a}));
-      tbild=tbild->paste(tbild->copy(0,0,imxsize, 0),0, 1);
-      
-      tbild=tbild->paste(tbild->copy(0,0,imxsize, 1),0, 2);
-      tbild=tbild->paste(tbild->copy(0,0,imxsize, 3),0, 4);
-      tbild=tbild->paste(tbild->copy(0,0,imxsize, 7),0, 8);
-      tbild=tbild->paste(tbild->copy(0,0,imxsize, 15),0, 16);
-      if (tbild->ysize()>32)
-	tbild=tbild->paste(tbild->copy(0,0,imxsize, 31),0, 32);
-      if (tbild->ysize()>64)
-	tbild=tbild->paste(tbild->copy(0,0,imxsize, 63),0, 64);
-      if (tbild->ysize()>128)
-	tbild=tbild->paste(tbild->copy(0,0,imxsize, 127),0, 128);
-      if (tbild->ysize()>256)
-	tbild=tbild->paste(tbild->copy(0,0,imxsize, 255),0, 256);
-      if (tbild->ysize()>512)
-	tbild=tbild->paste(tbild->copy(0,0,imxsize, 511),0, 512);
-      
-
-      //piediagram=
-      piediagram->paste_mask(tbild, below, -(int)ceil(plusx), -(int)ceil(plusy) );
-      
-      
       
     }
 
@@ -439,21 +418,6 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
 
 	
 	t=(place<202)?0:-text[i]->xsize();
-	//if (place<20) t-=7;
-	//else if (place>380) t+=7;
-	//else if ((place>180)&&(place<202)) t-=7;
-	//else if ((place>=202)&&(place<220)) t+=7;
-	//if ((place>190)&&(place<202)) t-=4;
-	//if ((place>=202)&&(place<210)) t+=4;
-	//if (place<10) t-=4;
-	//if (place>390) t+=4;
-	
-	//int yt=0;
-	//if ((place>120)&&(place<280))
-	//  yt=(int)(34*sin(2*PI*(float)(place-100)/400.0));
-	//if ((place<=80)||(place>=320)) yt-=ymaxtext;
-	//else
-	//  if (!((place>=120)&&(place<=280))) yt-=ymaxtext/2;
 	int yt=0;
 	if (((place>100)&&(place<300))&&
 	    (!twoD))
@@ -464,29 +428,8 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
 	int y=(int)(-text[i]->ysize()/2+yc +yt+ 
 		    (yr+ex)*sin(-PI/2.0+place*PI*2.0/400.0+0.0001));
       
-
-	//int x=(int)(arr2[2*place]+t);
-	//int y=(int)arr[2*place+1]+yt;
 	piediagram=piediagram->paste_alpha_color(text[i], @fg, x, y);
       }
-
-
-
-
-
-
-
-
-  //////////////////////
-
-  /*
-  piediagram=image(diagram_data["xsize"],
-		   diagram_data["ysize"]+diagram_data["legend_size"], 
-		   @diagram_data["legendcolor"])->paste(piediagram->scale(diagram_data["xsize"],diagram_data["ysize"]));
-
-  diagram_data["image"]=piediagram;
-  set_legend_size(diagram_data);
-  */
 
   diagram_data["ysize"]-=diagram_data["legend_size"];
   diagram_data["image"]=piediagram;
