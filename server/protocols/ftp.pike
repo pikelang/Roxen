@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.88 1998/03/26 07:51:51 per Exp $
+ * $Id: ftp.pike,v 1.89 1998/04/03 19:05:41 js Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -1097,6 +1097,7 @@ void connect_and_receive(string arg)
 
 int open_file(string arg, int|void noport)
 {
+  file=0;
   array (int) st;
   if(!noport)
     if(!dataport_addr || !dataport_port)
@@ -1166,13 +1167,15 @@ int open_file(string arg, int|void noport)
     reply("550 "+arg+": Permission denied by rule.\n");
     roxen->log(file, this_object());
     return 0;
-  } 
+  }
+  
   if(file->error == 302 || file->error == 301)
   {
     reply("550 "+arg+": Redirect to "+file->Location+".\n");
     roxen->log(file, this_object());
     return 0;
-  } 
+  }
+
   return 1;
 }
 
