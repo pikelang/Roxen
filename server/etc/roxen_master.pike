@@ -11,7 +11,7 @@ mixed sql_query( string q, mixed ... e )
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.117 2001/08/15 23:06:17 mast Exp $";
+constant cvs_version = "$Id: roxen_master.pike,v 1.118 2001/08/31 05:18:59 per Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -421,13 +421,28 @@ class MyCodec
   program programof(string x)
   {
     if( sscanf(x,"defun:%s",x) )
-      return dump_constants[x];
+#ifdef DUMP_DEBUG
+      if( !programp(dump_constants[x] ) )
+	werror("%O is not a program, from dc:%O\n", dump_constants[x],x );
+      else
+#endif
+	return dump_constants[x];
     if(sscanf(x,"efun:%s",x))
-      return (program)all_constants()[x];
+#ifdef DUMP_DEBUG
+      if( !programp(all_constants()[x] ) )
+	werror("%O is not a program, from efun:%O\n", all_constants()[x],x );
+      else
+#endif
+	return (program)all_constants()[x];
     if(sscanf(x,"_static_modules.%s",x))
       return (program)_static_modules[x];
-    if(sscanf(x,"resolv:%s",x)) 
-      return resolv(x);
+    if(sscanf(x,"resolv:%s",x))
+#ifdef DUMP_DEBUG
+      if( !programp(resolv(x) ) )
+	werror("%O is not a program, from resolv:%O\n", resolv(x),x );
+      else
+#endif
+	return resolv(x);
     if(program tmp=(program)x)
       return tmp;
     error("Failed to decode program %s\n", x );
@@ -464,9 +479,6 @@ string getcwd()
 mapping handled = ([]);
 
 mapping(program:string) program_names = set_weak_flag (([]), 1);
-
-string dump_path = "../var/"+roxen_version()+"/precompiled/"+
-  replace(uname()->machine, " ", "_") + "."+uname()->release + "/";
 
 string make_ofilename( string from )
 {
