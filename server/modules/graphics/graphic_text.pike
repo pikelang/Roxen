@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.8 1996/12/10 01:59:35 per Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.9 1996/12/10 02:56:50 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -41,6 +41,11 @@ array register_module()
 	      " border=int,#col Draw an border (width is the first argument\n"
 	      "                 in the specified color\n"
 	      " spacing=int     Add this amount of spacing around the text\n"
+	      " xspacing=int    like spacing, but only horizontal\n"
+	      " yspacing=int    like spacing, but only vertical\n"
+	      " size=int,int    Use this (absolute) size\n"
+	      " xsize=int       Use this (absolute) size\n"
+	      " ysize=int       Use this (absolute) size\n"
 	      " bevel=int       Draw a bevel box (width is the argument)\n"
 	      " pressed         Invert the \"direction\" of the bevel box\n"
 	      " talign=dir      Justify the text to the left, right, or center\n"
@@ -292,7 +297,7 @@ object (Image) make_text_image(mapping args, object font, string text)
     background = load_image(args->background);
     xsize = background->xsize();
     ysize = background->ysize();
-    switch(lower_case(args->talign))
+    switch(lower_case(args->talign||"left"))
     {
      case "center":
       xoffset = (xsize/2 - txsize/2);
@@ -304,7 +309,17 @@ object (Image) make_text_image(mapping args, object font, string text)
     }
   } else
     background = Image(xsize, ysize, @bgcolor);
+  background->setcolor(@bgcolor);
+  if(args->size || args->xsize || args->ysize)
+  {
+    int xs=background->xsize(), ys=background->ysize();
+    if(args->size) { xs=(int)args->size; ys=(int)(args->size/",")[-1]; }
+    if(args->xsize) xs=(int)args->xsize; 
+    if(args->ysize) ys=(int)args->ysize;
+    background = background->copy(0,0,xsize,ysize);
+  }
 
+  
   if(args->turbulence)
   {
     array (float|array(int)) arg=({});
@@ -400,7 +415,7 @@ array(int)|string write_text(int _args, string text, int size,
 		      args->xpad+":"+args->ypad);
   if(!data)
   { 
-    data = load_font(args->font, lower_case(args->talign||""),(int)args->xpad,(int)args->ypad);
+    data = load_font(args->font, lower_case(args->talign||"left"),(int)args->xpad,(int)args->ypad);
     cache_set("fonts:fonts", args->font, data);
   }
 

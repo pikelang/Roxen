@@ -1,6 +1,6 @@
 string describe_backtrace(mixed *trace);
 
-string cvs_version = "$Id: roxen_master.pike,v 1.8 1996/12/05 03:01:03 per Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.9 1996/12/10 02:56:49 per Exp $";
 string pike_library_path;
 object stdout, stdin;
 mapping names=([]);
@@ -72,7 +72,7 @@ program cast_to_program(string pname)
   
   if(file_stat(pname))
     ret=compile_file(pname);
-  else if(file_stat(combine_path(d+"/base_server/",p+".pike")))
+  else if(file_stat(combine_path(d+"/base_server/",p+".pike"))) // ROXEN
     ret=compile_file(combine_path(d+"/base_server/",p+".pike"));
   else
     ret=compile_file(pname+".pike");
