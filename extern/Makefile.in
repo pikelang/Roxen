@@ -10,6 +10,8 @@ VPATH=@srcdir@
 HAVE_SSL=@ssl@
 HAVE_SHUFFLE=@shuffle@
 
+OTHERFLAGS=@CFLAGS@
+
 CFLAGS=-g @DEFS@ $(PREFLAGS) $(OTHERFLAGS)
 PREFLAGS=-I. -I$(SRCDIR) -I$(SRCDIR)/../.. -I../..
 
