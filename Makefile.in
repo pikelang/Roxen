@@ -51,6 +51,12 @@ install: all
 	cp -r pike/src/lib/* $(prefix)/roxen/server/lib/pike/
 	-@$(SRCDIR)/mkdir -p $(prefix)/roxen/logs
 	-@$(SRCDIR)/mkdir -p $(prefix)/roxen/configurations
+	-chmod a+x $(prefix)
+	-chmod a+x $(prefix)/roxen
+	-chmod a+x $(prefix)/roxen/server
+	chmod -R a+r $(prefix)/roxen/server/fonts $(prefix)/roxen/server/nfonts
+	find $(prefix)/roxen/server/fonts -type d -exec chmod a+x '{}' \;
+	find $(prefix)/roxen/server/nfonts -type d -exec chmod a+x '{}' \;
 	@(cd extern;$(MAKE) install;cd ../)
 
 
