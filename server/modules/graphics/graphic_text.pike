@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.242 2000/09/18 15:42:45 kuntri Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.243 2000/09/18 21:02:13 kuntri Exp $";
 
 #include <module.h>
 inherit "module";
@@ -379,7 +379,14 @@ of a very short text,<br />
 and here it ends.</ex>
 <noex>"+gtextargs+"</noex>",
 
-"gh":#"<desc cont></desc>
+"gh":#"<desc cont><short> Creates a graphical header.</short> The header
+ operates in the same manner as the <ref type='tag'><tag>gtext
+ /</tag></ref> tag. <ref type='tag'><tag>gh /</tag></ref> is
+ eqvivalent to the <tag>h1 /</tag> through <tag>h6 /</tag> tags used
+ in HTML. There are 6 different sizes of headers to choose from; <ref
+ type='tag'><tag>gh1 /<tag></ref> through <ref type='tag'><tag>gh6
+ /</tag></ref>.
+</desc>
 <noex>"+gtextargs+"</noex>",
 
 "gh1":#"<desc cont></desc>
