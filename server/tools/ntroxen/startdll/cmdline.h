@@ -1,6 +1,6 @@
 // cmdline.h: interface for the CCmdLine class.
 //
-// $Id: cmdline.h,v 1.2 2001/06/18 16:35:15 tomas Exp $
+// $Id: cmdline.h,v 1.3 2001/06/27 16:26:45 tomas Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -114,6 +114,7 @@ private:
   BOOL m_bOnce;
   BOOL m_bHelp;
   BOOL m_bVersion;
+  BOOL m_bPassHelp;
 
   int  m_iVerbose;
   int  m_iDebug;

@@ -1,6 +1,6 @@
 // startdll.cpp : Implementation of WinMain
 //
-// $Id: startdll.cpp,v 1.4 2001/06/26 09:54:43 tomas Exp $
+// $Id: startdll.cpp,v 1.5 2001/06/27 16:26:46 tomas Exp $
 //
 
 
@@ -628,7 +628,9 @@ void CServiceModule::Run()
 
     if (m_roxen->Start(TRUE))
     {
-      LogEvent(_T("Service started"));
+      if (m_bService || _Module.GetCmdLine().GetVerbose() > 0)
+        LogEvent(_T("Service started"));
+
       if (m_bService)
         SetServiceStatus(SERVICE_RUNNING);
       
@@ -728,7 +730,7 @@ extern "C" int __cdecl _tmain(int argc, _TCHAR **argv, _TCHAR **envp)
 
     // The work has already been done above, but the debug printout is better
     // to have _after_ parse_args (consider --help and --version)
-    if (len > 0 && len < sizeof(envArgs)-2)
+    if (len > 0 && len < sizeof(envArgs)-2 && cmdline.GetVerbose() > 0)
     {
       HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
       cmdline.OutputLineFmt(hOut, "Used .B%sB. from .BROXEN_ARGSB..", envArgs+2);

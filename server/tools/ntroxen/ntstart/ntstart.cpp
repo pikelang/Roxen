@@ -172,13 +172,17 @@ int main(int argc, char* argv[])
 {
   BOOL stop = FALSE;
   BOOL bVer = FALSE;
+  BOOL bPassHelp = FALSE;
 
   for (int i=1; i<argc; i++)
   {
-    if (strcmp(argv[i], "--version") == 0)
+    if (strcmp(argv[i], "--program") == 0)
+    {
+      bPassHelp = TRUE;
+    }
+    if (!bPassHelp && strcmp(argv[i], "--version") == 0)
     {
       bVer = TRUE;
-      break;
     }
   }
 

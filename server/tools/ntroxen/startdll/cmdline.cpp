@@ -1,6 +1,6 @@
 // cmdline.cpp: implementation of the CCmdLine class.
 //
-// $Id: cmdline.cpp,v 1.3 2001/06/26 09:54:43 tomas Exp $
+// $Id: cmdline.cpp,v 1.4 2001/06/27 16:26:45 tomas Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -188,6 +188,7 @@ CCmdLine::CCmdLine()
   m_bOnce     = FALSE;
   m_bHelp     = FALSE;
   m_bVersion  = FALSE;
+  m_bPassHelp = FALSE;
 
   m_iVerbose  = 1;
   m_iDebug    = 0;
@@ -941,6 +942,7 @@ int CCmdLine::ParseArg(char *argv[], CCmdLine::tArgType & type)
       Match(*argv, "--quiet", NULL, NULL) )
   {
     m_iVerbose = 0;
+    m_saRoxenArgs.Add("--quiet");
     type = eArgStart;
     return 1;
   }
@@ -997,7 +999,7 @@ int CCmdLine::ParseArg(char *argv[], CCmdLine::tArgType & type)
     m_saRoxenArgs.Add(*argv);
     m_saRoxenArgs.Add(argv[1]);
     m_bOnce = TRUE;
-    //m_bPassHelp = TRUE;
+    m_bPassHelp = TRUE;
     type = eArgNtLoader;
     return 2;
   }
@@ -1060,8 +1062,16 @@ int CCmdLine::ParseArg(char *argv[], CCmdLine::tArgType & type)
   // fi
   if (Match(*argv, "--version", NULL, NULL))
   {
-    m_bVersion = TRUE;
-    type = eArgVersion;
+    if (m_bPassHelp)
+    {
+      m_saRoxenArgs.Add(*argv);
+      type = eArgRoxen;
+    }
+    else
+    {
+      m_bVersion = TRUE;
+      type = eArgVersion;
+    }
     return 1;
   }
 
@@ -1100,8 +1110,16 @@ int CCmdLine::ParseArg(char *argv[], CCmdLine::tArgType & type)
   if (Match(*argv, "--help", NULL, NULL) ||
       Match(*argv, "-?", NULL, NULL) )
   {
-    m_bHelp = TRUE;
-    type = eArgHelp;
+    if (m_bPassHelp)
+    {
+      m_saRoxenArgs.Add(*argv);
+      type = eArgRoxen;
+    }
+    else
+    {
+      m_bHelp = TRUE;
+      type = eArgHelp;
+    }
     return 1;
   }
 
