@@ -1,1 +1,6 @@
 <name>RXML modules</name>
+<doc>
+  Modules that add new tags, scopes for entities or plugins to other tags.
+  Also includes the RXML parser module that is needed for the RXML parsing
+  to be enabled at all
+</doc>

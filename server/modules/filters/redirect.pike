@@ -4,10 +4,11 @@
 // another. This can be done using "internal" redirects (much like a
 // symbolic link in unix), or with normal HTTP redirects.
 
-constant cvs_version = "$Id: redirect.pike,v 1.27 2000/07/03 05:14:21 nilsson Exp $";
+constant cvs_version = "$Id: redirect.pike,v 1.28 2000/08/19 08:52:40 per Exp $";
 constant thread_safe = 1;
 
 inherit "module";
+#include <module.h>
 
 private int redirs = 0;
 

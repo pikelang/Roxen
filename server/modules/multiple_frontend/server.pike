@@ -2,7 +2,6 @@ inherit "module";
 inherit "common";
 #include <module.h>
 
-
 // -- Module glue --------------------------------------------------------
 
 constant module_name = "MultipleFrontend Server";
@@ -17,11 +16,11 @@ string query_provides()
 void create()
 {
   defvar( "keyfile", 
-          Variables.File( "mf_key",
-                          0,
-                          "Key file",
-                          "The file with the encryption key.\n"
-                          "The key can be of any length.\n" ) ); 
+          Variable.File( "mf_key",
+                         0,
+                         "Key file",
+                         "The file with the encryption key.\n"
+                         "The key can be of any length.\n" ) ); 
   
 }
 
@@ -46,7 +45,7 @@ void start( int n, Configuration c )
     set_callback( cb[3..], this_object()[ cb ] );
 
   // 3. Notify listening servers of configuration change
-  clients->command_nb( "simple_event", "server_start" );
+  clients->command_nb( Command( "simple_event", "server_start" ) );
 }
 
 void stop( )
@@ -60,7 +59,7 @@ mapping first_try( RequestID id )
   if( id->method == "ROXEN_FE_RPC" )
     if( (int)id->not_query != 1 )
       return Roxen.http_string_answer(Result("error", 
-                                             "Illegal FE RPC version"),
+                                             "Illegal FE RPC version")->encode(),
                                       "text/x-roxen-rpc");
     else
       return Roxen.http_string_answer(handle_rpc_query_data( id->data ),
@@ -86,7 +85,7 @@ class MFClient
 
   void command_nb( Command ... c )
   {
-    return do_nb_query( host, port, @c );
+    do_nb_query( host, port, @c );
   }
 
   static void create( string _host, int _port )
@@ -115,7 +114,7 @@ void cb_register_client( Command c )
         cl->port == cl->data[1] )
       return;
   }
-  clients += ({ MFClient( @cl->data ) });
+  clients += ({ MFClient( @c->data ) });
 } 
 
 

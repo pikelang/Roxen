@@ -1,7 +1,7 @@
 inherit "module";
 // All roxen modules must inherit module.pike
 
-constant cvs_version = "$Id: last.pike,v 1.1 2000/08/01 15:37:40 jhs Exp $";
+constant cvs_version = "$Id: last.pike,v 1.2 2000/08/19 08:52:40 per Exp $";
 constant module_type = MODULE_LAST;
 constant module_name = "RefDoc for MODULE_LAST";
 constant module_doc = "This module does nothing, but its inlined "
@@ -11,7 +11,7 @@ constant module_doc = "This module does nothing, but its inlined "
 
 int seen_requests;
 
-mapping|int[0..1] last_resort(RequestID id)
+mapping|int(0..1) last_resort(RequestID id)
 //! The <pi>last_resort()</pi> method is called when all previous
 //! modules have failed to return a response.
 //!

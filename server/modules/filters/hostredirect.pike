@@ -7,10 +7,11 @@
 
 // responsible for the changes to the original version 1.3: Martin Baehr mbaehr@iaeste.or.at
 
-constant cvs_version = "$Id: hostredirect.pike,v 1.21 2000/07/03 05:14:20 nilsson Exp $";
+constant cvs_version = "$Id: hostredirect.pike,v 1.22 2000/08/19 08:52:40 per Exp $";
 constant thread_safe=1;
 
 inherit "module";
+#include <module.h>
 
 void create()
 {

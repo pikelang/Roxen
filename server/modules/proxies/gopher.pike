@@ -2,7 +2,7 @@
 
 // Gopher proxy module.
 
-constant cvs_version = "$Id: gopher.pike,v 1.23 2000/07/03 06:15:27 nilsson Exp $";
+constant cvs_version = "$Id: gopher.pike,v 1.24 2000/08/19 08:52:42 per Exp $";
 constant thread_safe = 1;
 
 #include <config.h>
@@ -28,6 +28,7 @@ constant thread_safe = 1;
 inherit "module";
 inherit "socket";
 
+#include <module.h>
 #include <proxyauth.pike>
 
 constant module_type = MODULE_LOCATION|MODULE_PROXY;

@@ -1,1 +1,5 @@
 <name>Logging modules</name>
+<doc>
+ Modules that alter the logging process in roxen, either disabling
+ logging for certain requests or writing to more than the default log.
+</doc>

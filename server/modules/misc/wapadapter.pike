@@ -4,12 +4,14 @@
 inherit "module";
 
 constant thread_safe = 1;
-constant cvs_version = "$Id: wapadapter.pike,v 1.4 2000/08/10 07:59:01 jhs Exp $";
+constant cvs_version = "$Id: wapadapter.pike,v 1.5 2000/08/19 08:52:41 per Exp $";
 
 constant module_type = MODULE_FIRST|MODULE_FILTER;
 constant module_name = "WAP Adapter";
 constant module_doc  = "Improves supports flags and variables as well as "
   "doing a better job finding MIME types than the content type module for WAP clients.";
+
+#include <module.h>
 
 void create() {
   defvar("wap1", 0, "Support WAP 1.0", TYPE_FLAG,
@@ -24,7 +26,7 @@ void first_try(RequestID id)
   if(has_value(id->request_headers->accept,"image/vnd.wap.wbmp") ||
      has_value(id->request_headers->accept,"image/x-wap.wbmp")) id->supports->wbmp0=1;
 
-  if(id->supports["wap1.1"] || id->supports["wap1.0"]) return id;
+  if(id->supports["wap1.1"] || id->supports["wap1.0"]) return;
 
   if(has_value(id->request_headers->accept,"text/vnd.wap.wml") ||
      has_value(id->request_headers->accept,"application/vnd.wap.wml")) id->supports["wap1.1"]=1;

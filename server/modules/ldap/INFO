@@ -1,1 +1,2 @@
-<name>LDAP related modules</name>
+<name>Database modules</name>
+<doc>Modules that access databases. Examples include the SQL and LDAP modules</doc>

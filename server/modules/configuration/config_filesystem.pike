@@ -16,10 +16,10 @@ constant module_type = MODULE_LOCATION;
 constant module_name = "Configuration Filesystem";
 constant module_doc = "This filesystem serves the administration interface";
 constant module_unique = 1;
-constant cvs_version = "$Id: config_filesystem.pike,v 1.44 2000/08/19 04:06:51 per Exp $";
+constant cvs_version = "$Id: config_filesystem.pike,v 1.45 2000/08/19 08:52:39 per Exp $";
 
 constant path = "config_interface/";
-
+string encoding = "iso-8859-1";         // charset for pages
 object charset_decoder;
 
 string template_for( string f, object id )
@@ -44,7 +44,6 @@ array(string|array) low_stat_file(string locale, string f, object id)
       ret = low_stat_file(locale, "", id);
 
       if (ret) return ret;
-
       // Support stuff like /template  =>  /standard/template
       f = locale;
       locale = "standard";
@@ -129,7 +128,7 @@ mixed find_dir( string f, object id )
 
 mixed find_file( string f, object id )
 {
-  id->set_output_charset( QUERY(encoding) );
+  id->set_output_charset( encoding );
 
   id->since = 0;
   if( !id->misc->request_charset_decoded )
@@ -197,8 +196,6 @@ mixed find_file( string f, object id )
   // add template to all rxml/html pages...
   string type = id->conf->type_from_filename( id->not_query );
 
-//   werror( f + " is " + type + "\n");
-
   if( locale != "standard" ) 
     roxen.set_locale( locale );
 
@@ -223,16 +220,6 @@ mixed find_file( string f, object id )
        id->misc->defines = ([]);
      id->misc->defines[" _stat"] = id->misc->stat;
      retval = http_rxml_answer( data, id );
-//      if(charset_encoder)
-//      {
-//        retval->data = charset_encoder->clear()->feed( retval->data )->drain();
-//        retval->extra_heads["Content-type"]
-// 	 = "text/html; charset="+QUERY(encoding);
-//      } else {
-//        retval->data = string_to_utf8( retval->data );
-//        retval->extra_heads["Content-type"]
-// 	 = "text/html; charset=utf-8";
-//      }
      NOCACHE();
      retval->stat = 0;
      retval->len = strlen( retval->data );
@@ -246,10 +233,6 @@ mixed find_file( string f, object id )
     {
       while( id->misc->orig ) id = id->misc->orig;
       q = fix_relative( q, id );
-//       if( charset_encoder )
-//         q = charset_encoder->clear()->feed( q )->drain();
-//       else
-//         q = string_to_utf8( q );
       return http_redirect( q, id );
     }
   return retval;
@@ -257,18 +240,19 @@ mixed find_file( string f, object id )
 
 void start(int n, Configuration cfg)
 {
+  encoding = query( "encoding" );
   if( cfg )
   {
     charset_decoder = 0;
     cfg->add_modules(({
-      "config_tags", "config_userdb", "contenttypes",    "indexfiles",   
-      "gbutton",     "wiretap",       "graphic_text",    "obox",
-      "pathinfo",    "pikescript",    "translation_mod", "rxmlparse",
-      "rxmltags",    "tablist",       "update"
+      "config_tags", "config_userdb",   "contenttypes",    "indexfiles",
+      "gbutton",     "wiretap",         "graphic_text",    "pathinfo",
+      "pikescript",  "translation_mod", "rxmlparse",        "rxmltags",
+      "tablist",     "update"
     }));
-    catch {
-//       charset_encoder = Locale.Charset.encoder(QUERY(encoding), "?");
-      charset_decoder = Locale.Charset.decoder(QUERY(encoding));
+    catch 
+    {
+      charset_decoder = Locale.Charset.decoder( encoding );
     };
   }
 }

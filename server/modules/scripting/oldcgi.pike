@@ -305,8 +305,8 @@ void start(int n, object conf)
 {
   if(n==2) return;
 
-  if(intp(QUERY(wrapper)))
-    QUERY(wrapper)="bin/cgi";
+  if(intp(query("wrapper")))
+    set( "wrapper", "bin/cgi");
 
   if(!conf) return;
 
@@ -860,7 +860,7 @@ class spawn_cgi
 			      "<title>%s</title>\n"
 			      "<h2>%s</h2>\n", errcode, err, err, err);
 
-    object(Stdio.File) output = Stdio.File("stdout");
+    Stdio.File output = Stdio.File("stdout");
     int bytes;
     
     while ((bytes = output->write(to_write)) > 0) {

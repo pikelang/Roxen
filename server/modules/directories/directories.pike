@@ -10,7 +10,7 @@
 //  o More stuff in the emit variables
 //
 
-constant cvs_version = "$Id: directories.pike,v 1.73 2000/08/17 22:10:56 mast Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.74 2000/08/19 08:52:40 per Exp $";
 constant thread_safe = 1;
 
 #include <stat.h>
@@ -18,10 +18,33 @@ constant thread_safe = 1;
 inherit "module";
 
 array(string) readme, indexfiles;
+string template;
+int override;
 
 constant module_type = MODULE_DIRECTORIES | MODULE_PARSER;
 constant module_name = "Directory Listings";
 constant module_doc = "This module pretty prints a list of files.";
+
+void set_template()
+{
+  set( "template", template );
+}
+
+string status()
+{
+  if( query("default-template") && query("template") != template )
+    return 
+#"The directory list template is not the same as the default template, but
+  the default template is used. This might be a residue from an old configuration
+  file, or intentional.";
+}
+
+mapping query_action_buttons()
+{
+  if(query("default-template") && query("template") != template )
+    return ([ "Reset template to the default template"  : set_template ]);
+  return ([]);
+}
 
 void create()
 {
@@ -55,9 +78,10 @@ void create()
 void start(int n, Configuration c)
 {
   indexfiles = query("indexfiles")-({""});
+  override = query("override");
   if( query("default-template" ) )
-    set( "template", 
-         #"
+    template = 
+#"
 <if not='' variable='form.sort'>
   <set variable='form.sort' value='name' />
 </if>
@@ -133,9 +157,9 @@ void start(int n, Configuration c)
 
   </body>
 </html>
-");
-
-
+";
+  else
+    template = query("template");
 }
 
 
@@ -383,7 +407,7 @@ string|mapping parse_directory(RequestID id)
   if(f[-1]!='/' && f[-1]!='.') 
     return Roxen.http_redirect(f+"/", id);
 
-  if(f[-1]=='.' && query("override")) 
+  if(f[-1]=='.' && override) 
     return Roxen.http_redirect(f[..sizeof(f)-2], id);
 
   // If the pathname ends with '.', and the 'override' variable
@@ -420,7 +444,7 @@ string|mapping parse_directory(RequestID id)
       }
     }
 
-  return Roxen.http_rxml_answer( query("template"), id );
+  return Roxen.http_rxml_answer( template, id );
 }
 
 TAGDOCUMENTATION;
