@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.283 2001/10/09 22:14:38 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.284 2001/11/15 09:50:57 grubba Exp $";
 
 #include <module.h>
 inherit "module";
@@ -919,7 +919,10 @@ private mapping mk_gtext_arg(mapping arg, RequestID id)
   else {
     string font = p->font;
     p->font = roxen->fonts->verify_font(p->font, p->fontsize||32);
-    if(!p->font) RXML.parse_error("Font "+font+" could not be loaded.\n");
+    if(!p->font) {
+      RXML.parse_error("Font " + (font || roxen->query("default_font")) +
+		       " could not be loaded.\n");
+    }
   }
 
   return p;
