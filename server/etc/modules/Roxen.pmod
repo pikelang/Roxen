@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.15 2000/03/28 14:46:04 nilsson Exp $
+ * $Id: Roxen.pmod,v 1.16 2000/04/06 17:46:31 grubba Exp $
  *
  * Various helper functions.
  *
@@ -630,10 +630,12 @@ class ScopeRoxen {
 #if constant(SSL)
   void create() {
     ssl_strength=40;
+#if constant(SSL.constants.CIPHER_des)
     if(SSL.constants.CIPHER_algorithms[SSL.constants.CIPHER_des])
       ssl_strength=128;
     if(SSL.constants.CIPHER_algorithms[SSL.constants.CIPHER_3des])
       ssl_strength=168;
+#endif /* !constant(SSL.constants.CIPHER_des) */
   }
 #endif
 
