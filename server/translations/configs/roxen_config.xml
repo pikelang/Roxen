@@ -44,7 +44,6 @@
   <file>../config_interface/sites/new_site.html</file>
   <file>../config_interface/sites/site_content.pike</file>
   <file>../config_interface/sites/site_header.pike</file>
-  <file>../config_interface/sites/site_templates/common.pike</file>
   <file>../etc/modules/Variable.pmod/Date.pike</file>
   <file>../etc/modules/Variable.pmod/Email.pike</file>
   <file>../etc/modules/Variable.pmod/module.pmod</file>
@@ -52,4 +51,5 @@
   <file>../etc/modules/Variable.pmod/Upload.pike</file>
   <file>../modules/configuration/config_filesystem.pike</file>
   <file>../modules/configuration/config_tags.pike</file>
+  <file>../site_templates/common.pike</file>
 </project>
