@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.239 2001/06/11 14:47:08 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.240 2001/06/15 11:48:06 jonasw Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -23,10 +23,18 @@ constant module_type = MODULE_TAG | MODULE_PROVIDER;
 constant module_name = "Tags: RXML 2 tags";
 constant module_doc  = "This module provides the common RXML tags.";
 
+
+//  Cached copy of conf->query("compat_level"). This setting is defined
+//  to require a module reload to take effect so we only query it when
+//  start() is called.
+string compat_level;
+
+
 void start()
 {
   add_api_function("query_modified", api_query_modified, ({ "string" }));
   query_tag_set()->prepare_context=set_entities;
+  compat_level = my_configuration()->query("compat_level");
 }
 
 string query_provides() {
@@ -2198,7 +2206,7 @@ class TagDefine {
 	  return "";
 	};
 
-	if( id->conf->query("compat_level") > "2.1" ) {
+	if( compat_level > "2.1" ) {
 	  string want, rest, attrib="";
 	  while( sscanf(content, "%*[ \t\n\r]<attrib%s</attrib%*[ \t\n\r]>%s",
 			want, rest)==4 ) {

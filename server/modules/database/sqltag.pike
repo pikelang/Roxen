@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997-2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.78 2001/06/11 21:02:53 nilsson Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.79 2001/06/15 11:48:09 jonasw Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -112,6 +112,12 @@ string compat_default_host;
 #endif
 string default_db;
 
+//  Cached copy of conf->query("compat_level"). This setting is defined
+//  to require a module reload to take effect so we only query it when
+//  start() is called.
+string compat_level;
+
+
 array|object do_sql_query(mapping args, RequestID id,
 			  void|int(0..1) big_query)
 {
@@ -127,7 +133,7 @@ array|object do_sql_query(mapping args, RequestID id,
   }
 
 #if ROXEN_COMPAT <= 2.1
-  if (args->parse && id->conf->query("compat_level") < "2.2")
+  if (args->parse && compat_level < "2.2")
     args->query = Roxen.parse_rxml(args->query, id);
 #endif
 
@@ -409,6 +415,7 @@ void start()
   compat_default_host = query("hostname");
 #endif
   default_db          = query("db");
+  compat_level = my_configuration()->query("compat_level");
 }
 
 string status()

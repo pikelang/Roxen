@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000-2001, Roxen IS.
 //
 
-constant cvs_version="$Id: wiretap.pike,v 1.25 2001/04/27 09:37:02 jonasw Exp $";
+constant cvs_version="$Id: wiretap.pike,v 1.26 2001/06/15 11:48:08 jonasw Exp $";
 
 #include <module.h>
 inherit "module";
@@ -58,13 +58,10 @@ adding <tt>wiretap='no'</tt> to the document's <tag>body</tag> tag.</p>
 // -------------------- The actual wiretap code  --------------------------
 
 
-int is_compat_mode(Configuration conf)
-{
-  //  Check whether compatibility with 1.x, 2.0 or 2.1 is needed. When
-  //  compatibility is requested we tap all tags all the time unlike the
-  //  newer design where we require a <body> tag to enable the wiretap.
-  return conf->query("compat_level") < "2.2";
-}
+//  Flag whether compatibility with 1.x, 2.0 or 2.1 is needed. When
+//  compatibility is requested we tap all tags all the time unlike the
+//  newer design where we require a <body> tag to enable the wiretap.
+int compat_mode;
 
 
 array(RXML.Tag) get_tag_variants(string tag_name, mixed tag)
@@ -129,7 +126,7 @@ class TagBody
       if (args["wiretap"] != "no") {
 	//  Register temporary tags unless we're running in compatibility
 	//  mode.
-	if (!is_compat_mode(id->conf)) {
+	if (!compat_mode) {
 	  RXML.Context ctx = RXML.get_context();
 	  foreach(get_temporary_tags(colorparsing), RXML.Tag tag)
 	    ctx->add_runtime_tag(tag);
@@ -170,7 +167,7 @@ class TagEndBody
     array do_return(RequestID id)
     {
       //  Unregister our temporary tags unless we're in compatibility mode
-      if (!is_compat_mode(id->conf)) {
+      if (!compat_mode) {
 	RXML.Context ctx = RXML.get_context();
 	foreach(get_temporary_tags(colorparsing), RXML.Tag tag)
 	  ctx->remove_runtime_tag(tag);
@@ -246,6 +243,10 @@ class TagPopColor
 
 RXML.TagSet query_tag_set()
 {
+  //  Update compat_mode flag. This is used since query() can be a rather
+  //  costly call.
+  compat_mode = my_configuration()->query("compat_level") < "2.2";
+
   if (!module_tag_set) {
     //  Register start and end tags individually so we can handle the
     //  <body> container properly. If compatibility with 2.1 or earlier
@@ -255,7 +256,7 @@ RXML.TagSet query_tag_set()
     //  server restart is currently needed since modules aren't
     //  re-queried for their tag sets.
     array(RXML.Tag) compat_tags = ({ });
-    if (is_compat_mode(my_configuration())) {
+    if (compat_mode) {
       foreach(query("colorparsing"), string tag)
 	if (lower_case(tag) != "body") {
 	  compat_tags +=
