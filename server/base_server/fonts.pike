@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: fonts.pike,v 1.46 2000/02/20 17:41:33 nilsson Exp $
+// $Id: fonts.pike,v 1.47 2000/03/08 01:03:12 nilsson Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -287,12 +287,12 @@ object get_font(string f, int size, int bold, int italic,
     }
     if(!fnt->load( name ))
     {
-      if(f == roxen->QUERY(default_font))
+      if(f == roxen->query("default_font"))
       {
 	report_error("Failed to load the default font ("+f+")!\n");
 	return 0;
       }
-      return get_font(roxen->QUERY(default_font),
+      return get_font(roxen->query("default_font"),
 		      size,bold,italic,justification,xspace,yspace);
     }
     if(justification=="right") fnt->right();
