@@ -28,7 +28,7 @@ string subtyp;
 //"quadratic", "cubic" (Fixa stavningen!)
 
 
-array(array(float)) datapoints; 
+array(array(float)) data; 
 //Innehåller för graph 
  // en array med arrayer av typ x-data, y-data, x-data, ...
 //För Bars:
