@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.66 2000/01/14 05:27:24 mast Exp $
+ * $Id: rxml.pike,v 1.67 2000/01/14 05:35:57 mast Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -20,6 +20,18 @@ array (RoxenModule) parse_modules = ({  });
 
 string rxml_error(string tag, string error, RequestID id) {
   return (id->misc->debug?sprintf("(%s: %s)",capitalize(tag),error):"")+"<false>";
+}
+
+string handle_rxml_error (mixed err, RXML.Type type)
+// This is used for RXML errors thrown in the new parser.
+{
+#ifdef MODULE_DEBUG
+  // FIXME: Make this a user option.
+  report_notice (describe_error (err));
+#endif
+  if (type == RXML.t_html)
+    return "<br clear=all>\n<pre>" + html_encode_string (describe_error (err)) + "</pre>";
+  else return describe_error (err);
 }
 
 // A note on tag overriding: It's possible for old style tags to
@@ -487,16 +499,6 @@ string parse_rxml(string what, RequestID id,
 	 ("  "*id->misc->_rxml_recurse));
 #endif
   return what;
-}
-
-string report_rxml_error (mixed err, RXML.Type type)
-{
-#ifdef MODULE_DEBUG
-  report_notice (describe_error (err));
-#endif
-  if (type == RXML.t_html)
-    return "<br clear=all>\n<pre>" + html_encode_string (describe_error (err)) + "</pre>";
-  else return describe_error (err);
 }
 
 

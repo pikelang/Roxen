@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.16 2000/01/14 05:14:48 mast Exp $
+//! $Id: module.pmod,v 1.17 2000/01/14 05:35:58 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -616,7 +616,7 @@ class Context
       while (evaluator->_parent) evaluator = evaluator->_parent;
       if (id && id->conf)
 	msg = ([function(mixed,Type:string)]
-	       ([object] id->conf)->report_rxml_error) (err, evaluator->type);
+	       ([object] id->conf)->handle_rxml_error) (err, evaluator->type);
       else {
 #ifdef MODULE_DEBUG
 	report_notice (describe_backtrace (err));
