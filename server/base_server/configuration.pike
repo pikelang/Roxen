@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.381 2000/11/02 08:48:49 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.382 2000/11/02 11:34:02 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -2057,7 +2057,23 @@ int save_one( RoxenModule o )
 
   store(q, o->query(), 0, this_object());
   invalidate_cache();
-  o->start(2, this_object());
+  if( error = catch( o->start(2, this_object()) ) )
+  {
+    if( objectp(error ) )
+      error = (array)error;
+    if( sizeof(error)>1 && arrayp( error[1] ) )
+    {
+      int i;
+      for( i = 0; i<sizeof( error[1] ); i++ )
+	if( error[1][i][2] == save_one )
+	  break;
+      error[1] = error[1][i+1..];
+    }
+    if( o->report_error )
+      o->report_error( "Call to start failed.\n"+describe_backtrace( error ) );
+    else
+      report_error( "Call to start failed.\n"+describe_backtrace( error ));
+  }
   invalidate_cache();
   return 1;
 }
@@ -2204,7 +2220,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
   if(module[id] && module[id] != me)
   {
     if( module[id]->stop )
-      module[id]->stop();
+      catch( module[id]->stop() );
 //     if( err = catch( disable_module( modname+"#"+id ) ) )
 //       report_error(LOCALE->error_disabling_module(moduleinfo->get_name(),
 //                                                   describe_backtrace(err)));
