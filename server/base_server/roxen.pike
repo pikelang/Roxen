@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.843 2003/11/04 16:23:52 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.844 2003/11/05 11:10:30 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -5169,33 +5169,27 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 	    code += sprintf( instr, @args )+"\n";
 	    if( cmd == DENY )
 	    {
-	      if (all_shorted) {
-		if (thr_code < max_short_code) {
-		  code += sprintf("    {\n"
-				  "      state->%s = %d;\n"
-				  "      if (short_fail < %d)\n"
-				  "        short_fail = %d;\n"
-				  "      break;\n"
-				  "    }\n",
-				  check[3], thr_code,
-				  thr_code,
-				  thr_code);
-		  max_short_code = thr_code;
-		} else {
-		  code += sprintf("    {\n"
-				  "      state->%s = %d;\n"
-				  "      short_fail = %d;\n"
-				  "      break;\n"
-				  "    }\n",
-				  check[3], thr_code,
-				  thr_code);
-		}
+	      // Make sure we fail regardless of the setting
+	      // of all_shorted when we're done.
+	      if (thr_code < max_short_code) {
+		code += sprintf("    {\n"
+				"      state->%s = %d;\n"
+				"      if (short_fail < %d)\n"
+				"        short_fail = %d;\n"
+				"      break;\n"
+				"    }\n",
+				check[3], thr_code,
+				thr_code,
+				thr_code);
+		max_short_code = thr_code;
 	      } else {
 		code += sprintf("    {\n"
 				"      state->%s = %d;\n"
+				"      short_fail = %d;\n"
 				"      break;\n"
 				"    }\n",
-				check[3], thr_code);
+				check[3], thr_code,
+				thr_code);
 	      }
 	    }
 	    else
