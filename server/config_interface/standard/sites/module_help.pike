@@ -27,7 +27,8 @@ string help_cont(string t, mapping m, string c, string rt)
 
 string attr_vals(string v)
 {
-  if(search(v,",")!=-1) return "{"+v+"}";
+  if(search(v,",")!=-1) return "{"+(v/",")*", "+"}";
+  if(v=="langcodes") return "<a href=\"?show=langcodes\">language code</a>";
   return v;
 }
 

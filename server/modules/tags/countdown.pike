@@ -1,9 +1,80 @@
-constant cvs_version="$Id: countdown.pike,v 1.18 1999/10/24 18:45:40 nilsson Exp $";
+constant cvs_version="$Id: countdown.pike,v 1.19 1999/11/22 18:51:18 nilsson Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
 
 constant thread_safe=1;
+
+mapping TAGDOCUMENTATION;
+mapping tagdocumentation() {
+  if(TAGDOCUMENTATION) return TAGDOCUMENTATION;
+  int start=__LINE__;
+  /*
+    (["countdown":#"<desc type=tag>
+This tag can count days, minutes, months, etc. from a specified date or time. It can also
+give the time to or from a few special events. See below for a full list.</desc>
+
+<p>Time:</p>
+<attr name=year value=int>Sets the year.</attr>
+<attr name=month value=int|month_name>Sets the month.</attr>
+<attr name=day value=int|day_name>Sets the weekday.</attr>
+<attr name=mday value=int>Sets the day of the month.</attr>
+<attr name=hour value=int>Sets the hour.</attr>
+<attr name=minute value=int>Sets the minute.</attr>
+<attr name=second value=int>Sets the second.</attr>
+<attr name=iso value=year-month-day>Sets the year, month and day all at once
+(YYYY-MM-DD, YYYYMMDD or YYYY-MMM-DD, e.g. 1999-FEB-12)</attr>
+<attr name=event value=easter,gregorian-easter,julian-easter,christmas,christmas-day,christmas-eve>
+Sets the time of an evet to count down to.</attr>
+<br>
+<attr name=years value=int>Add this number of years to the result.</attr>
+<attr name=months value=int>Add this number of months to the result.</attr>
+<attr name=weeks value=int>Add this number of weeks to the result.</attr>
+<attr name=days value=int>Add this number of days to the result.</attr>
+<attr name=hours value=int>Add this number of hours to the result.</attr>
+<attr name=beats value=int>Add this number of beats to the result.</attr>
+<attr name=minutes value=int>Add this number of minutes to the result.</attr>
+<attr name=seconds value=int>Add this number of seconds to the result.</attr>
+<attr name=now value=year-month-day>Sets the 'present' time, if other than really present time.
+(YYYY-MM-DD, YYYYMMDD or YYYY-MMM-DD, e.g. 1999-FEB-12)</attr>
+
+<p>Presentation:</p>
+
+<attr name=display value=when,years,months,weeks,days,hours,beats,minutes,seconds,combined,dogyears,boolean>
+<table>
+<tr><td><i>display=when</i></td><td>Shows when the time will occur.
+                         All arguments that are valid in a
+                         &lt;date&gt; tag can be used to modify the display.</td></tr>
+<tr><td><i>display=years</i></td><td>How many years until the time.</td></tr>
+<tr><td><i>display=months</i></td><td>How many months until the time.</td></tr>
+<tr><td><i>display=weeks</i></td><td>How many weeks until the time.</td></tr>
+<tr><td><i>display=days</i></td><td>How many days until the time.</td></tr>
+<tr><td><i>display=hours</i></td><td>How many hours until the time.</td></tr>
+<tr><td><i>display=beats</i></td><td>How many beats until the time.</td></tr>
+<tr><td><i>display=minutes</i></td><td>How many minutes until the time.</td></tr>
+<tr><td><i>display=seconds</i></td><td>How many seconds until the time.</td></tr>
+<tr><td><i>display=combined</i></td><td>Shows an english text describing the time period.
+                         Example: 2 days, 1 hour and 5 seconds. You may use the 'prec'
+                         attribute to limit how precise the description is. Also, you can
+                         use the 'month' attribute if you want to see years/months/days
+                         instead of years/weeks/days.</td></tr>
+<tr><td><i>display=dogyears</i></td><td>How many dog-years until the time. (With one decimal)</td></tr>
+<tr><td><i>display=boolean</i></td><td>Return true or false, depending on if the time is now or not. The
+                         fuzziness of 'now' is decided by the 'prec' option.</td><tr>
+</table>
+</attr>
+<attr name=type value=type>As for 'date'. Useful values for type include string, number and ordered.</attr>
+<attr name=lang value=langcodes>The language in which the result should be written if the type is string.</attr>
+<attr name=since>Negate the period of time.</attr>
+<attr name=next>Always count down to the next event. &lt;countdown day=friday
+next&gt; says 6 on a friday as opposed to 0 without the next attribute.</attr>
+<attr name=prec value=year,month,week,day,hour,minute,second>modifies the precision for 'boolean' and 'combined'.</attr>
+"])
+  */
+  TAGDOCUMENTATION=get_commented_value(__FILE__,start);
+  if(!mappingp(TAGDOCUMENTATION)) TAGDOCUMENTATION=0;
+  return TAGDOCUMENTATION;
+}
 
 mapping set_to_julian_easter(int year) {
   int G = year % 19;
@@ -284,13 +355,6 @@ string tag_countdown(string t, mapping m, object id)
     case "christmas-day":
       time_args->mday=25;
       time_args->mon=11;
-      tprec="day";
-    break;
-
-    case "year2000":
-    case "y2k":
-      time_args->year=100;
-      time_args=clear_less_significant(time_args, "year");
       tprec="day";
     break;
 

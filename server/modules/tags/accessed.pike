@@ -5,7 +5,7 @@
 // by this module.
 //
 
-constant cvs_version="$Id: accessed.pike,v 1.11 1999/11/21 14:56:54 nilsson Exp $";
+constant cvs_version="$Id: accessed.pike,v 1.12 1999/11/22 18:46:44 nilsson Exp $";
 constant thread_safe=1;
 
 constant language = roxen->language;
@@ -57,7 +57,7 @@ mapping tagdocumentation() {
  only kept for files that actually contain an accessed-tag,
  but can also be configured to count all files of a certain type.</desc>
 
-<attr name=add value=number>
+<attr name=add value=int>
  Increments the number of accesses with this number instead of one,
  each time the page is accessed.</attr>
 
@@ -70,7 +70,7 @@ mapping tagdocumentation() {
  Sets the result to upper case, lower case or with the first letter capitalized.
 </attr>
 
-<attr name=cheat value=number>
+<attr name=cheat value=int>
  Adds this number of accesses to the actual number of accesses before
  printing the result. If your page has been accessed 72 times and you
  add &lt;accessed cheat=100&gt; the result will be 172.</attr>
@@ -103,13 +103,13 @@ mapping tagdocumentation() {
 
 <attr name=lang value=langcodes>
  Will print the result as words in the chosen language if used together
- with type=string. Available languages are <langcodes>.
+ with type=string.
   
 <attr name=per value=second,minute,hour,day,week,month,year>
  Shows the number of accesses per unit of time.
 </attr>
 
-<attr name=prec value=number>
+<attr name=prec value=int>
  Rounds the number of accesses to this number of significant digits. If
  prec=2 show 12000 instead of 12148.
 </attr>
@@ -140,8 +140,7 @@ mapping tagdocumentation() {
  Specifies how the count are to be presented. Some of these are only
  useful together with the since attribute.</attr>"])
   */
-  int stop=__LINE__;
-  TAGDOCUMENTATION=get_commented_value(__FILE__,start,stop);
+  TAGDOCUMENTATION=get_commented_value(__FILE__,start);
   if(!mappingp(TAGDOCUMENTATION)) TAGDOCUMENTATION=0;
   return TAGDOCUMENTATION;
 }
