@@ -65,6 +65,7 @@ nn binary
 /server/etc/modules/Dims.pmod foreign_ident
 /server/etc/modules/PDB.pmod foreign_ident
 /server/etc/modules/RXML.pmod/PEnt.pike foreign_ident
+/server/etc/modules/RXML.pmod/PEntCompat.pike foreign_ident
 /server/etc/modules/RXML.pmod/PExpr.pike foreign_ident
 /server/etc/modules/RXML.pmod/PHtmlCompat.pike foreign_ident
 /server/etc/modules/RXML.pmod/PXml.pike foreign_ident
