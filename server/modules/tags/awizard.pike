@@ -2,7 +2,7 @@ inherit "module";
 #include <module.h>
 #include <config.h>
 
-constant cvs_version="$Id: awizard.pike,v 1.7 1999/11/17 15:17:22 per Exp $";
+constant cvs_version="$Id: awizard.pike,v 1.8 1999/11/23 06:43:07 per Exp $";
 constant thread_safe=1;
 
 array register_module()
@@ -245,6 +245,11 @@ class Page
   {
     function fun;
 
+    string _sprintf( )
+    {
+      return sprintf("AWizardTag(%O)", fun);
+    }
+    
     mixed call(object parser, mapping args, mixed... extra)
     {
       if(!fun) 
@@ -262,6 +267,11 @@ class Page
   {
     function fun;
 
+    string _sprintf( )
+    {
+      return sprintf("AWizardContainer(%O)", fun);
+    }
+    
     mixed call(object parser, mapping args, string c, mixed... extra)
     {
       if(!fun) return "";
@@ -472,7 +482,6 @@ class Store
 	}
       }
     }
-
 
     id->misc->next_possible = ((int)v->_page_num) < (sizeof(pages)-1);
     id->misc->prev_possible = ((int)v->_page_num) > 0;
