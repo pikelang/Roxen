@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.343 2000/08/19 01:27:31 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.344 2000/08/19 01:39:17 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -173,7 +173,7 @@ function(string:int) log_function;
 
 // The logging format used. This will probably move to the above
 // mentioned module in the future.
-private mapping (string:string) log_format = ([]);
+private mapping (int:string) log_format = ([]);
 
 // A list of priority objects
 private array (Priority) pri = allocate_pris();
@@ -523,12 +523,11 @@ private void parse_log_formats()
   array foo=query("LogFormat")/"\n";
   foreach(foo, b)
     if(strlen(b) && b[0] != '#' && sizeof(b/":")>1)
-      log_format[(b/":")[0]] = fix_logging((b/":")[1..]*":");
+      log_format[(int)(b/":")[0]] = fix_logging((b/":")[1..]*":");
 }
 
 public void log(mapping file, RequestID request_id)
 {
-  string form;
   function f;
 
 // Call all logging functions
@@ -536,21 +535,19 @@ public void log(mapping file, RequestID request_id)
     if( f( request_id, file ) )
       return;
 
-  if(!log_function || !request_id) 
+  if( !log_function ) 
     return;// No file is open for logging.
 
-
-  if(QUERY(NoLog) && 
-     Roxen._match(request_id->remoteaddr, QUERY(NoLog)))
+  if(do_not_log_patterns && 
+     Roxen._match(request_id->remoteaddr, do_not_log_patterns))
     return;
 
-  if(!(form=log_format[(string)file->error]))
-    form = log_format["*"];
-
+  string form;
+  if(!(form=log_format[file->error])) 
+    form = log_format[0];
   if(!form) return;
-  
-  roxen.LogFormat fmt = roxen.compile_format( form );
-  fmt->log( log_function, request_id, file );
+
+  roxen.run_log_format( form, log_function, request_id, file );
 }
 
 // These are here for statistics and debug reasons only.
@@ -2006,6 +2003,7 @@ int(0..1) is_file(string virt_path, RequestID id)
 }
 
 array registered_urls = ({});
+array do_not_log_patterns = 0;
 void start(int num)
 {
   // Note: This is run as root if roxen is started as root
@@ -2023,6 +2021,12 @@ void start(int num)
     datacache = DataCache( );
   else
     datacache->init_from_variables();
+
+  parse_log_formats();
+  init_log_file();
+  do_not_log_patterns = query("NoLog");
+  if(!sizeof(do_not_log_patterns))
+    do_not_log_patterns = 0;
 }
 
 void save_me()
@@ -2748,9 +2752,6 @@ void low_init()
 
   array modules_to_process = indices( enabled_modules );
   string tmp_string;
-
-  parse_log_formats();
-  init_log_file();
 
   // Always enable the user database module first.
   if(search(modules_to_process, "userdb#0")>-1)
