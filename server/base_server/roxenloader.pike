@@ -22,7 +22,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.242 2001/02/01 10:29:49 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.243 2001/02/02 15:13:18 tomas Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -967,10 +967,15 @@ int main(int argc, array(string) argv)
 
   // The default (internally managed) mysql path
   string defpath =
+#ifdef __NT__
+    // Use pipes with default name "MySQL"
+    "mysql://%user%@./%db%";
+#else
     "mysql://%user%@localhost:"+
     combine_path( getcwd(), query_configuration_dir()+"_mysql/socket")+
     "/%db%";
-  
+#endif
+
   my_mysql_path =
     Getopt.find_option(av, "m",({"mysql-url", }), 0,defpath);
 
@@ -1121,14 +1126,20 @@ void low_start_mysql( string datadir,
 		      string basedir,
 		      string uid )
 {
+  string mysqld =
+#ifdef __NT__
+    "mysqld-nt.exe";
+#else
+    "mysqld";
+#endif
   string bindir = basedir+"libexec/";
-  if( !file_stat( bindir+"mysqld" ) )
+  if( !file_stat( bindir+mysqld ) )
   {
     bindir = basedir+"bin/";
-    if( !file_stat( bindir+"mysqld" ) )
+    if( !file_stat( bindir+mysqld ) )
     {
       bindir = basedir+"sbin/";
-      if( !file_stat( bindir+"mysqld" ) )
+      if( !file_stat( bindir+mysqld ) )
       {
 	report_debug( "\nNo mysql found in "+basedir+"!\n" );
 	exit( 1 );
@@ -1145,8 +1156,12 @@ void low_start_mysql( string datadir,
 #endif
 
   array args = ({ 
+#ifdef __NT__
+		  "--skip-networking",
+                  // Use pipes with default name "MySQL" unless --socket is set
+		  //"--socket=roxen_mysql",
+#else
 		  "--socket="+datadir+"/socket",
-#ifndef __NT__
 		  "--skip-networking",
 #endif
 		  "--skip-locking",
@@ -1162,14 +1177,18 @@ void low_start_mysql( string datadir,
     args += ({ "--user="+uid });
 #endif
   
+#ifdef __NT__
+  string binary = "bin/roxen_mysql.exe";
+#else
   string binary = "bin/roxen_mysql";
+#endif
   rm( binary );
 #if constant(hardlink)
-  if( catch(hardlink( bindir+"mysqld", "bin/roxen_mysql" )) )
+  if( catch(hardlink( bindir+mysqld, binary )) )
 #endif
-    if( !Stdio.cp( bindir+"mysqld", "bin/roxen_mysql" ) ||
-	catch(chmod( "bin/roxen_mysql", 0500 )) )
-      binary = bindir+"mysqld";
+    if( !Stdio.cp( bindir+mysqld, binary ) ||
+	catch(chmod( binary, 0500 )) )
+      binary = bindir+mysqld;
 
   args = ({ binary }) + args;
 
