@@ -148,11 +148,11 @@ mixed page_1(object id, object mc)
              lambda(string s, mapping r) {
                return
                  "<tr><td>"+s+"</td><td>"+
-                 ({LOCALE(242,"Disabled")+":none;",
-                   LOCALE(243,"N/A")+":none;",
+                 ({LOCALE(242,"Disabled"),
+                   LOCALE(243,"N/A"),
                    "<font color='&usr.fade4;'>"+
 		   LOCALE(244,"Enabled")+
-		   "</font>:none;" })[ r[trans[s]] + 1]+
+		   "</font>" })[ r[trans[s]] + 1]+
                  "</td></tr>\n";
              }, modules)*"")+"</table></ul>";
 }
