@@ -11,7 +11,7 @@
 //
 // Make sure links work _inside_ unfolded documents.
 
-constant cvs_version = "$Id: directories.pike,v 1.55 2000/03/07 19:29:31 mast Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.56 2000/03/10 03:11:17 nilsson Exp $";
 constant thread_safe=1;
 
 //#define DIRECTORIES_DEBUG
@@ -25,7 +25,7 @@ inherit "module";
 inherit "roxenlib";
 
 array readme, indexfiles, nobrowse;
-int filename_width, cache;
+int filename_width, cache, config_id;
 
 string output_format(array(string) filenames)
 {
@@ -42,13 +42,14 @@ string output_format(array(string) filenames)
 		 (query("date")!="Don't show dates" ? "   %s" : "%.0s"));
 }
 
-void start()
+void start(int n, Configuration c)
 {
   readme = query("Readme")-({""});
   indexfiles = query("indexfiles")-({""});
   nobrowse = query("nobrowse")-({""});
   filename_width = query("fieldwidth");
   cache = query("cache");
+  config_id = c->get_config_id();
 }
 
 constant module_type = MODULE_DIRECTORIES | MODULE_PARSER;
@@ -370,18 +371,18 @@ string|mapping parse_directory(RequestID id)
 
   DIRS_WERR("Deciding between fancy or slimmed down direcory view");
   if(query("spartan") || id->prestate->spartan_directory) {
-    if(!(dirlist=cache_lookup("directory-s",f))) {
+    if(!(dirlist=cache_lookup("dir-s"+config_id,f))) {
       dirlist=spartan_directory(f,id);
-      if(cache) cache_set("directory-s",f,dirlist);
+      if(cache) cache_set("dir-s"+config_id,f,dirlist);
     }
     return http_string_answer(dirlist);
   }
 
-  if(!(dirlist=cache_lookup("directory-f",f))) {
+  if(!(dirlist=cache_lookup("dir-f"+config_id,f))) {
     id->misc->foldlist_exists=search(indices(id->conf->modules),"foldlist")!=-1;
     id->misc->rel_base="";
     dirlist=parse_rxml(describe_directory(f,id),id);
-    if(cache) cache_set("directory-f",f,dirlist);
+    if(cache) cache_set("dir-f"+config_id,f,dirlist);
   }
   return http_string_answer(dirlist);
 }
