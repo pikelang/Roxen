@@ -107,7 +107,8 @@ private string format_doc(string|mapping doc, string name, void|object id) {
     "attr":attr_cont,
     "ex":ex_cont,
     "tag":lambda(string tag, mapping m, string c) { return "&lt;"+c+"&gt;"; },
-    "ref":lambda(string tag, mapping m, string c) { return c; }
+    "ref":lambda(string tag, mapping m, string c) { return c; },
+    "short":lambda(string tag, mapping m, string c) { m->hide?"":c; }
   ]), name, id);
 }
 
