@@ -9,6 +9,7 @@ static private inherit "roxenlib";
 static object object_class = FINDCLASS("java/lang/Object");
 static object int_class = FINDCLASS("java/lang/Integer");
 static object map_class = FINDCLASS("java/util/HashMap");
+static object set_class = FINDCLASS("java/util/HashSet");
 static object map_ifc = FINDCLASS("java/util/Map");
 static object map_entry_ifc = FINDCLASS("java/util/Map$Entry");
 static object set_ifc = FINDCLASS("java/util/Set");
@@ -16,6 +17,8 @@ static object int_value = int_class->get_method("intValue", "()I");
 static object int_init = int_class->get_method("<init>", "(I)V");
 static object map_init = map_class->get_method("<init>", "(I)V");
 static object map_put = map_class->get_method("put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
+static object set_init = set_class->get_method("<init>", "(I)V");
+static object set_add = set_class->get_method("add", "(Ljava/lang/Object;)Z");
 static object map_entry_set = map_ifc->get_method("entrySet", "()Ljava/util/Set;");
 static object set_to_array = set_ifc->get_method("toArray", "()[Ljava/lang/Object;");
 static object map_entry_getkey = map_entry_ifc->get_method("getKey", "()Ljava/lang/Object;");
@@ -86,9 +89,9 @@ static object _query_file_extensions = fileext_ifc->get_method("queryFileExtensi
 static object _handle_file_extension = fileext_ifc->get_method("handleFileExtension", "(Ljava/io/File;Ljava/lang/String;Lse/idonex/roxen/RoxenRequest;)Lse/idonex/roxen/RoxenResponse;");
 static object _query_tag_callers = parser_ifc->get_method("queryTagCallers", "()[Lse/idonex/roxen/TagCaller;");
 static object _query_container_callers = parser_ifc->get_method("queryContainerCallers", "()[Lse/idonex/roxen/ContainerCaller;");
-static object tagcaller_query_name = tagcaller_ifc->get_method("queryName", "()Ljava/lang/String;");
+static object tagcaller_query_name = tagcaller_ifc->get_method("queryTagName", "()Ljava/lang/String;");
 static object _tag_called = tagcaller_ifc->get_method("tagCalled", "(Ljava/lang/String;Ljava/util/Map;Lse/idonex/roxen/RoxenRequest;)Ljava/lang/String;");
-static object containercaller_query_name = containercaller_ifc->get_method("queryName", "()Ljava/lang/String;");
+static object containercaller_query_name = containercaller_ifc->get_method("queryContainerName", "()Ljava/lang/String;");
 static object _container_called = containercaller_ifc->get_method("containerCalled", "(Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Lse/idonex/roxen/RoxenRequest;)Ljava/lang/String;");
 static object dv_var = defvar_class->get_field("var", "Ljava/lang/String;");
 static object dv_name = defvar_class->get_field("name", "Ljava/lang/String;");
@@ -102,7 +105,7 @@ static object _extra_heads = response_class->get_field("extraHeads", "Ljava/util
 static object _data = response2_class->get_field("data", "Ljava/lang/String;");
 static object _file = response3_class->get_field("file", "Ljava/io/Reader;");
 
-static object natives_bind1, natives_bind2, natives_bind3;
+static object natives_bind1, natives_bind2, natives_bind3, natives_bind4;
 
 static mapping(object:object) jotomod = set_weak_flag( ([]), 1 );
 static mapping(object:object) jotoconf = set_weak_flag( ([]), 1 );
@@ -165,6 +168,8 @@ static mixed objify(mixed v)
 {
   if(!v)
     return v;
+  else if(stringp(v))
+    return v;
   else if(intp(v)) {
     object z = int_class->alloc();
     int_init->call_nonvirtual(z, v);
@@ -177,6 +182,22 @@ static mixed objify(mixed v)
       a[i] = v[i];
     check_exception();
     return a;
+  } else if(mappingp(v)) {
+    object m = map_class->alloc();
+    map_init->call_nonvirtual(m, sizeof(v));
+    check_exception();
+    foreach(indices(v), mixed key)
+      map_put(m, objify(key), objify(v[key]));
+    check_exception();
+    return m;
+  } else if(multisetp(v)) {
+    object s = set_class->alloc();
+    set_init->call_nonvirtual(s, sizeof(v));
+    check_exception();
+    foreach(indices(v), mixed val)
+      set_add(s, objify(val));
+    check_exception();
+    return s;
   } else
     return (string)v;
 }
@@ -235,7 +256,7 @@ class ModuleWrapper
 
     string call(string tag, mapping args, RequestID id)
     {
-      object res = _tag_called(caller, tag, make_args(args), make_reqid(id));
+      object res = _tag_called(caller, tag, objify(args), make_reqid(id));
       check_exception();
       return res && (string)res;
     }
@@ -252,7 +273,7 @@ class ModuleWrapper
 
     string call(string tag, mapping args, string contents, RequestID id)
     {
-      object res = _container_called(caller, tag, make_args(args),
+      object res = _container_called(caller, tag, objify(args),
 				     contents, make_reqid(id));
       check_exception();
       return res && (string)res;
@@ -294,17 +315,6 @@ class ModuleWrapper
     check_exception();
     jotoid[r] = id;
     return r;
-  }
-
-  static object make_args(mapping args)
-  {
-    object m = map_class->alloc();
-    map_init->call_nonvirtual(m, sizeof(args));
-    check_exception();
-    foreach(indices(args), string key)
-      map_put(m, key, args[key]);
-    check_exception();
-    return m;
   }
 
   static mapping make_response(object r, RequestID id)
@@ -581,6 +591,30 @@ static string native_parse_rxml(object what, object id)
   return parse_rxml( what && (string)what, jotoid[id] );
 }
 
+static object native_get_variables(object id)
+{
+  id = jotoid[id];
+  return id && objify(id->variables);
+}
+
+static object native_get_request_headers(object id)
+{
+  id = jotoid[id];
+  return id && objify(id->request_headers);
+}
+
+static object native_get_supports(object id)
+{
+  id = jotoid[id];
+  return id && objify(id->supports);
+}
+
+static object native_get_pragma(object id)
+{
+  id = jotoid[id];
+  return id && objify(id->pragma);
+}
+
 void create()
 {
   natives_bind1 = module_class->register_natives(({
@@ -594,5 +628,11 @@ void create()
   natives_bind3 = FINDCLASS("se/idonex/roxen/RoxenLib")->register_natives(({
     ({"doOutputTag", "(Ljava/util/Map;[Ljava/util/Map;Ljava/lang/String;Lse/idonex/roxen/RoxenRequest;)Ljava/lang/String;", native_do_output_tag}),
     ({"parseRXML", "(Ljava/lang/String;Lse/idonex/roxen/RoxenRequest;)Ljava/lang/String;", native_parse_rxml}),
+  }));
+  natives_bind4 = reqid_class->register_natives(({
+    ({"getVariables", "()Ljava/util/Map;", native_get_variables}),
+    ({"getRequestHeaders", "()Ljava/util/Map;", native_get_request_headers}),
+    ({"getSupports", "()Ljava/util/Set;", native_get_supports}),
+    ({"getPragma", "()Ljava/util/Set;", native_get_pragma}),
   }));
 }
