@@ -1,4 +1,4 @@
-/* $Id: RoxenSSLFile.pike,v 1.6 2005/01/27 14:36:06 mast Exp $
+/* $Id: RoxenSSLFile.pike,v 1.7 2005/01/27 14:43:35 mast Exp $
  */
 
 // This is SSL.sslfile from Pike 7.6, slightly modified for the old
@@ -621,7 +621,7 @@ string read (void|int length, void|int(0..1) not_all)
     }
 
     SSL3_DEBUG_MSG ("SSL.sslfile->read: Read done, returning %d bytes "
-		    "(%d still in buffer)",
+		    "(%d still in buffer)\n",
 		    sizeof (res), sizeof (read_buffer));
     RETURN (res);
   } LEAVE;
@@ -1206,16 +1206,16 @@ static int ssl_read_callback (int called_from_real_backend, string input)
       cb_errno = 0;
 
       if (stringp (data)) {
-	SSL3_DEBUG_MSG ("ssl_read_callback: "
-			"Got %d bytes of application data\n", sizeof (data));
-	// Shouldn't come anything before the handshake is done, but anyway..
-	read_buffer->add (data);
 	if (!handshake_already_finished && conn->handshake_finished) {
 	  SSL3_DEBUG_MSG ("ssl_read_callback: Handshake finished\n");
 	  update_internal_state();
 	  if (called_from_real_backend && accept_callback)
 	    call_accept_cb = 1;
 	}
+
+	SSL3_DEBUG_MSG ("ssl_read_callback: "
+			"Got %d bytes of application data\n", sizeof (data));
+	read_buffer->add (data);
       }
 
       else if (data < 0 || write_res < 0) {
