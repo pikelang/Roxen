@@ -1,6 +1,6 @@
 #if efun(seteuid)
 #include <module.h>
-string cvs_version = "$Id: privs.pike,v 1.29 1997/11/11 00:59:52 grubba Exp $";
+string cvs_version = "$Id: privs.pike,v 1.30 1997/11/11 01:03:14 grubba Exp $";
 
 int saved_uid;
 int saved_gid;
@@ -157,7 +157,7 @@ void destroy()
 			 "Occurs in:\n%s\n",
 			 saved_uid, saved_gid, new_uid, new_gid,
 			 p_level, roxen->privs_level,
-			 describe_error(backtrace())));
+			 describe_backtrace(backtrace())));
     return(0);
   }
   if (p_level != roxen->privs_level-1) {
@@ -166,7 +166,7 @@ void destroy()
 			  "Occurs in:\n%s\n",
 			  saved_uid, saved_gid, new_uid, new_gid,
 			  p_level, roxen->privs_level,
-			  describe_error(backtrace())));
+			  describe_backtrace(backtrace())));
   }
   roxen->privs_level = p_level;
 
