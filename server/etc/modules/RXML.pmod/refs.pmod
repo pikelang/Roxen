@@ -3,6 +3,7 @@
 void create()
 {
   ._fix_module_ref ("PHtml", RXML.PHtml);
+  ._fix_module_ref ("PEnt", RXML.PEnt);
   ._fix_module_ref ("PExpr", RXML.PExpr);
   ._fix_module_ref (
     "empty_tag_set",
