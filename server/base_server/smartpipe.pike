@@ -1,5 +1,5 @@
 /*
- * $Id: smartpipe.pike,v 1.9 1998/03/28 23:06:50 neotron Exp $
+ * $Id: smartpipe.pike,v 1.10 1998/03/28 23:30:02 neotron Exp $
  *
  * A somewhat more optimized Pipe.pipe...
  */
@@ -42,12 +42,12 @@ void write_more()
 {
   int len;
   len = write_out(current_input);
+  sent += len;
   if(len <= 0)
   {
     finish();
     return;
   }
-  sent += len;
   if(len >= strlen(current_input))
     next_input();
   else
@@ -72,11 +72,14 @@ void shuffle()
   string q;
   while(q = r(min(8192,current_input_len),1))
   {
-    if(!q || !strlen(q)) break;
-    if(write_out( q ) != strlen(q)) break;
+    if(!q || !strlen(q))
+      break;
+    if(write_out( q ) != strlen(q))
+      break;
     current_input_len -= strlen(q);
     sent += strlen(q);
-    if(!current_input_len) break;
+    if(!current_input_len)
+      break;
   }
   next_input();
 }
