@@ -1,5 +1,8 @@
 inherit "../pike_test_common.pike";
 
+int db_changed;
+void inc_dbcc( ) { db_changed++; };
+
 void run_tests( Configuration c )
 {
   Configuration c1, c2;
@@ -72,8 +75,6 @@ void run_tests( Configuration c )
   
   
   // Implicitly check the callback in the new/delete tests below.
-  int db_changed;
-  void inc_dbcc( ) {  db_changed++; };
   test( DBManager.add_dblist_changed_callback, inc_dbcc );
 
 
