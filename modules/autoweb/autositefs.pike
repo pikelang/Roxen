@@ -10,7 +10,7 @@ import .AutoWeb;
 #define TRACE_ENTER(A,B) do{if(id->misc->trace_enter)id->misc->trace_enter((A),(B));}while(0)
 #define TRACE_LEAVE(A) do{if(id->misc->trace_leave)id->misc->trace_leave((A));}while(0)
 
-constant cvs_version="$Id: autositefs.pike,v 1.33 1999/09/21 21:35:10 wellhard Exp $";
+constant cvs_version="$Id: autositefs.pike,v 1.34 2000/05/16 20:00:58 stewa Exp $";
 
 mapping host_to_id;
 multiset(int) hidden_sites;
@@ -157,10 +157,145 @@ mixed find_file(string f, object id)
   
   switch(id->method) {
   case "CHMOD":
-  case "MV":
   case "MOVE":
-  case "DELETE":
     return 0;
+
+
+   case "MV":
+    // This little kluge is used by ftp2 to move files. 
+    
+    if(!QUERY(put))
+    {
+      id->misc->error_code = 405;
+      TRACE_LEAVE("MV disallowed (since PUT is disallowed)");
+      return 0;
+    }    
+
+    if(!QUERY(delete) && Stdio.file_size(real_file) != -1)
+    {
+      id->misc->error_code = 405;
+      TRACE_LEAVE("MV disallowed (DELE disabled, can't overwrite file)");
+      return 0;
+    }
+
+    if(Stdio.file_size(real_file) < -1)
+    {
+      id->misc->error_code = 405;
+      TRACE_LEAVE("MV: Cannot overwrite directory");
+      return 0;
+    }
+
+    if(QUERY(check_auth) && (!id->auth || !id->auth[0])) {
+      TRACE_LEAVE("MV: Permission denied");
+      return http_auth_required("foo",
+				"<h1>Permission to 'MV' files denied</h1>");
+    }
+    string movefrom;
+    if(!(movefrom=id->misc->move_from)) {
+      id->misc->error_code = 405;
+      errors++;
+      TRACE_LEAVE("MV: No source file");
+      return 0;
+    }
+    moves++;
+    
+    object privs;
+    
+// #ifndef THREADS // Ouch. This is is _needed_. Well well...
+    if (((int)id->misc->uid) && ((int)id->misc->gid)) {
+      // NB: Root-access is prevented.
+      privs=Privs("Moving file", (int)id->misc->uid, (int)id->misc->gid );
+    }
+// #endif
+    
+    if (QUERY(no_symlinks) &&
+	((contains_symlinks(path, real_file)) ||
+	 (contains_symlinks(path, .AutoWeb.AutoFile(id,movefrom)->real_path(movefrom))))) {
+      privs = 0;
+      errors++;
+      TRACE_LEAVE("MV: Contains symlinks. Permission denied");
+      return http_low_answer(403, "<h2>Permission denied.</h2>");
+    }
+
+    TRACE_ENTER("MV: Accepted", 0);
+
+    /* Clear the stat-cache for this file */
+    if (stat_cache) {
+      cache_set("stat_cache",
+		.AutoWeb.AutoFile(id, f)->real_path(f, "file-cache"), 0);
+      cache_set("stat_cache",
+		.AutoWeb.AutoFile(id, movefrom)->real_path(movefrom, "file-cache"), 0);
+    }
+#ifdef DEBUG
+    report_notice("Moving file "+movefrom+" to "+ f+"\n");
+#endif /* DEBUG */
+
+    int code = .AutoWeb.AutoFile(id,movefrom)->move(f);
+    privs = 0;
+
+    if(!code)
+    {
+      id->misc->error_code = 403;
+      TRACE_LEAVE("MV: Move failed");
+      TRACE_LEAVE("Failure");
+      return 0;
+    }
+    TRACE_LEAVE("MV: Success");
+    TRACE_LEAVE("Success");
+    return http_string_answer("Ok");
+
+
+
+  case "DELETE":
+    if(!QUERY(delete) || Stdio.file_size(real_file)==-1)
+    {
+      id->misc->error_code = 405;
+      TRACE_LEAVE("DELETE: Disabled");
+      return 0;
+    }
+    if(QUERY(check_auth) && (!id->auth || !id->auth[0])) {
+      TRACE_LEAVE("DELETE: Permission denied");
+      return http_low_answer(403, "<h1>Permission to DELETE file denied</h1>");
+    }
+
+    if (QUERY(no_symlinks) && (contains_symlinks(path, real_file))) {
+      errors++;
+      report_error("Deletion of " + f + " failed. Permission denied.\n");
+      TRACE_LEAVE("DELETE: Contains symlinks");
+      return http_low_answer(403, "<h2>Permission denied.</h2>");
+    }
+
+    report_notice("DELETING the file "+f+"\n");
+    accesses++;
+
+    if (((int)id->misc->uid) && ((int)id->misc->gid) &&
+      (QUERY(access_as_user))) {
+      // NB: Root-access is prevented.
+      privs=Privs("Deleting file", id->misc->uid, id->misc->gid );
+    }
+
+    /* Clear the stat-cache for this file */
+    if (stat_cache) {
+      cache_set("stat_cache",
+		.AutoWeb.AutoFile(id, f)->real_path(f, "file-cache"), 0);
+    }
+
+    if(!.AutoWeb.AutoFile(id,f)->rm())
+    {
+      privs = 0;
+      id->misc->error_code = 405;
+      TRACE_LEAVE("DELETE: Failed");
+      return 0;
+    }
+    .AutoWeb.AutoFile(id,f+".md")->rm();
+    privs = 0;
+    deletes++;
+    TRACE_LEAVE("DELETE: Success");
+    return http_low_answer(200,(f+" DELETED from the server"));
+
+
+
+
   case "PUT":
     string oldf = real_file;
     //werror("f: %O, file: %O, real_path: %O\n", f, file, real_file);
