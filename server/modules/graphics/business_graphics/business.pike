@@ -5,6 +5,9 @@
  * 
  * Made by Peter Bortas <peter@idonex.se> and Henrik Wallin <hedda@idonex.se>
  * in October 1997
+ *
+ * BUGS:
+ * The ise of images is broken in this version.
  */
 
 /* TODO:
@@ -16,7 +19,7 @@
  * Prevent less that 100x100 in size.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.22 1997/10/15 15:39:02 peter Exp $";
+constant cvs_version = "$Id: business.pike,v 1.23 1997/10/15 15:58:26 peter Exp $";
 constant thread_safe=0;
 
 #include <module.h>
@@ -36,7 +39,7 @@ mixed *register_module()
       ("Draws graphs that is pleasing to the eye."
        "<br>This module defines some tags,"
        "<pre>"
-       "&lt;diagram&gt; (container): \n"
+       "\n&lt;diagram&gt; (container): \n"
        "Draws differet kinds of diagrams. \n"
        "Defines the following attributes: \n"
        " type=        { sumbars | normsumbars |linechart | barchart | piechart | graph }\n"
@@ -45,32 +48,34 @@ mixed *register_module()
        " ysize=       height of diagram-image in pixels.\n"
        " fontsize=    height if text in pixels.\n"
        " legendfontsize= height if legend text in pixels. Uses fontsize if not defined\n"
-       " 3D=          Does a C00l 3D-effect on piecharts, takes the size in pixels of the 3Dtilt as argument.\n"
-       /* " tone         Do nasty stuff to the background Requires dark background to be visable.\n" */
+       " 3D=          Render piecharts on top of a cylinder, \n"
+       "              takes the size in pixels of the cylinder as argument.\n"
+       /* " tone         Do nasty stuff to the background.\n"
+	  " Requires dark background to be visable.\n" */
        "Defines the following tags: \n"
-       "&lt;xaxis&gt; and &lt;yaxis&gt; (tags)"
-       "Attributes for the x and y axis."
-       " name=        Dunno what this does.\n"
-       " start=       .\n"
-       " stop=        .\n"       
-       " quantity=    name.\n"
-       " units=       name.\n"
-       "&lt;colors&gt; (container)"
-       "Tabseparated list of colors for the diagram."
+       "\n&lt;xaxis&gt; and &lt;yaxis&gt; (tags)\n"
+       "Attributes for the x and y axis.\n"
+       /* " name=        Dunno what this does.\n" */
+       " start=       Limit the start of the diagram at this quantity.\n"
+       " stop=        Limit the end of the diagram at this quantity.\n"
+       " quantity=    Name things represented in the diagram.\n"
+       " units=       Name the unit.\n"
+       "\n&lt;colors&gt; (container)\n"
+       "Tabseparated list of colors for the diagram.\n"
        " separator=   Use the specifyed string as separator intead of tab.\n"
-       "&lt;legend&gt; (container)"
-       "Tabseparated list of strings for the legend."
+       "\n&lt;legend&gt; (container)\n"
+       "Tabseparated list of strings for the legend.\n"
        " separator=   Use the specifyed string as separator intead of tab.\n"
-       "&lt;xdatanames&gt; (container) !!Name will probably change!!"
-       "Tabseparated list of datanames for the diagram."
+       "\n&lt;xdatanames&gt; (container)\n"
+       "Tabseparated list of datanames for the diagram.\n"
        " separator=   Use the specifyed string as separator intead of tab.\n"
-       "&lt;xdatanames&gt; (container) !!Name will probably change!!"
-       "Tabseparated list of dataname for the diagram."
+       "\n&lt;ydatanames&gt; (container)\n"
+       "Tabseparated list of dataname for the diagram.\n"
        " separator=   Use the specifyed string as separator intead of tab.\n"
-       "&lt;xdatanames&gt; (container) !!Name will probably change!!"
-       "Tab- and newline- separated list of data-value for the diagram."
-       " separator=      Use the specifyed string as separator intead of tab.\n"
-       " lineseparator=  Use the specifyed string as lineseparator intead of tab.\n"
+       "\n&lt;data&gt; (container)\n"
+       "Tab- and newline- separated list of data-value for the diagram.\n"
+       " separator=     Use the specifyed string as separator intead of tab.\n"
+       " lineseparator= Use the specifyed string as lineseparator intead of tab.\n"
        "</pre>"
        "BUGS:<br><li>background does not work well.<br>"
        "<br><li>"
