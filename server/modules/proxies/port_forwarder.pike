@@ -25,7 +25,7 @@ inherit "socket";
  * thing...
  */
 
-constant cvs_version="$Id: port_forwarder.pike,v 1.13 2003/03/11 22:43:12 mani Exp $";
+constant cvs_version="$Id: port_forwarder.pike,v 1.14 2004/05/23 00:33:51 _cvs_stephen Exp $";
 
 
 
@@ -46,7 +46,7 @@ int total_connections_number=0, total_transferred_kb=0;
 #endif
 
 #ifdef TCPFORWARDER_DEBUG
-#define WERR Werror
+#define WERR report_debug
 #else
 #define WERR
 #endif
@@ -141,13 +141,16 @@ class Connection
 string status() {
   object req;
   string retval;
-  if (!sizeof(connections)) {
+  if (!accept_port) {
+    retval="<B>No port open</B><br>";
+  }
+  else if (!sizeof(connections)) {
     retval="<B>No connections</B><br>";
   } else {
     retval="<B>"+sizeof(connections)+" connections</B><BR>\n";
-    retval += "<TABLE border=1><TR><TH align=center>From<TH>To<TH>Traffic";
+    retval += "<TABLE border=1 cellpadding=\"10\"><TR><TH align=center>From</TH><TH>To</TH><TH>Traffic</TH></TR>";
     foreach(indices(connections),req) {
-      retval+=sprintf("<TR><TD>%s<TD>%s<TD>%d",
+      retval+=sprintf("<TR><TD>%s</TD><TD>%s</TD><TD>%d</TD></TR>",
 		      req->fdescs[0]->query_address(),
 		      req->fdescs[1]->query_address(),
 		      req->traffic
@@ -184,14 +187,20 @@ void start()
   if (port<1024)
     privs=Privs("Opening forwarded port");
   if (!(accept_port->bind(port,got_connection)))
-    error("Can't bind (errno=%d: %O)\n", accept_port->errno(), strerror(accept_port->errno()));
+  {
+    int err_no = accept_port->errno();
+    string err = strerror(accept_port->errno());
+    destruct(accept_port);
+    accept_port = 0;
+    report_error("Can't bind (errno="+err_no+": \""+err+"\")\n");;
+  }
   privs=0;
 }
 
 void stop()
 {
   WERR("Stopping module\n");
-  destruct(accept_port);
+  if (accept_port) destruct(accept_port);
   accept_port=0; //double-check there's no more references
   foreach(indices(connections),object foo) destruct(foo);
 }
