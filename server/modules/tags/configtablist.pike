@@ -1,12 +1,12 @@
 /*
- * $Id: configtablist.pike,v 1.5 1997/09/04 12:40:59 grubba Exp $
+ * $Id: configtablist.pike,v 1.6 1997/10/15 20:19:59 grubba Exp $
  *
  * Makes a tab-list like the one in the config-interface.
  *
  * $Author: grubba $
  */
 
-constant cvs_version="$Id: configtablist.pike,v 1.5 1997/09/04 12:40:59 grubba Exp $";
+constant cvs_version="$Id: configtablist.pike,v 1.6 1997/10/15 20:19:59 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -83,11 +83,27 @@ mapping query_container_callers()
   return ([ "config_tablist":tag_config_tablist ]);
 }
 
+#if constant(thread_create)
+object interface_lock = Thread.Mutex();
+#endif /* constant(thread_create) */
+
+object load_interface()
+{
+#if constant(thread_create)
+  // Only one thread at a time may call roxen->configuration_interface().
+  //
+  // load_interface() shouldn't be called recursively,
+  // so don't protect against it.
+  mixed key = interface_lock->lock();
+#endif /* constant(thread_create) */
+  return(roxen->configuration_interface());
+}
+
 mapping find_file(string f, object id)
 {
   array(string) arr = f/"/";
   if (sizeof(arr) > 1) {
-    object interface = roxen->configuration_interface();
+    object interface = load_interface();
     object(Image.image) button;
 
     if (arr[-1][sizeof(arr[-1])-4..] == ".gif") {
