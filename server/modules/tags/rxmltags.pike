@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.397 2002/11/13 16:24:36 mani Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.398 2002/11/17 17:58:00 mani Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -731,12 +731,12 @@ class TagFSize {
       catch {
 	Stat s=id->conf->stat_file(Roxen.fix_relative( args->file, id ), id);
 	if (s && (s[1]>= 0)) {
-	  result = Roxen.sizetostring(s[1]);
+	  result = String.int2size(s[1]);
 	  return 0;
 	}
       };
       if(string s=id->conf->try_get_file(Roxen.fix_relative(args->file, id), id) ) {
-	result = Roxen.sizetostring(strlen(s));
+	result = String.int2size(strlen(s));
 	return 0;
       }
       RXML.run_error("Failed to find file.\n");
@@ -2313,8 +2313,8 @@ class TagNumber {
   class Frame {
     inherit RXML.Frame;
     array do_return(RequestID id) {
-      if(args->type=="roman") return ({ Roxen.int2roman((int)args->num) });
-      if(args->type=="memory") return ({ Roxen.sizetostring((int)args->num) });
+      if(args->type=="roman") return ({ String.int2roman((int)args->num) });
+      if(args->type=="memory") return ({ String.int2size((int)args->num) });
       result=roxen.language(args->lang||args->language||
                             RXML_CONTEXT->misc->theme_language,
 			    args->type||"number",id)( (int)args->num );
@@ -3112,7 +3112,7 @@ class TagDefine {
 
 	  Parser.HTML p;
 	  if( compat_level > 2.1 ) {
-	    p = Roxen.get_xml_parser();
+	    p = Parser.get_xml_parser();
 	    p->add_container ("attrib", ({add_default, defaults, id}));
 	    // Stop parsing for attrib tags when we reach something else
 	    // than whitespace and comments.
