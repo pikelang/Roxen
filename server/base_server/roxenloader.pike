@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.157 2000/03/16 12:29:18 nilsson Exp $
+ * $Id: roxenloader.pike,v 1.158 2000/03/17 01:55:54 js Exp $
  *
  * Roxen bootstrap program.
  *
@@ -20,7 +20,7 @@ private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.157 2000/03/16 12:29:18 nilsson Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.158 2000/03/17 01:55:54 js Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1058,7 +1058,7 @@ Please install a newer pike version
 //   add_constant("open_db", open_db);
   add_constant("r_rm", rm);
   add_constant("r_mv", mv);
-  add_constant("r_get_dir", get_dir);
+  add_constant("r_get_dir", r_get_dir);
   add_constant("r_file_stat", file_stat);
   add_constant("roxenloader", this_object());
   add_constant("ErrorContainer", ErrorContainer);
