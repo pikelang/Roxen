@@ -3,7 +3,12 @@
 
 inherit "modules/filesystems/filesystem";
 
-constant cvs_version= "$Id: incoming.pike,v 1.5 1998/12/14 11:24:43 peter Exp $";
+constant cvs_version= "$Id: incoming.pike,v 1.6 1999/10/06 00:08:45 grubba Exp $";
+
+
+constant module_name = "Incoming filesystem";
+constant module_doc = ("This is a virtual filesystem than can be used only "
+		       "for uploads, not downloads.");
 
 
 static class decaying_file {
@@ -106,16 +111,6 @@ void create()
 	 "Scrambled downloads: Percent of bits to rot", TYPE_INT,
 	 "Selects the percentage of the file that will receive bitrot", 0,
 	 lambda(){ return !QUERY(bitrot); });
-}
-
-mixed *register_module()
-{
-  return ({ 
-    MODULE_LOCATION, 
-    "Incoming filesystem", 
-    ("This is a virtual filesystem than can be used only for uploads, not "
-     "downloads.")
-    });
 }
 
 static mixed not_allowed( object id )
