@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.43 1998/09/18 18:56:48 grubba Exp $
+ * $Id: smtp.pike,v 1.44 1998/09/18 18:57:53 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.43 1998/09/18 18:56:48 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.44 1998/09/18 18:57:53 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -628,7 +628,7 @@ static class Smtp_Connection {
 	  do_multi_async(Array.map(conf->get_providers("smtp_filter")||({}),
 				   lambda(object o) {
 				     return(o->async_verify_sender);
-				   }),
+				   }) - ({ 0 }),
 			 ({ current_mail->from }),
 			 lambda(array res) {
 			   roxen_perror("do_multi_async_cb()\n");
