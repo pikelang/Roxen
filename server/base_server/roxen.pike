@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.276 1999/05/14 02:42:30 neotron Exp $
+ * $Id: roxen.pike,v 1.277 1999/05/14 02:50:09 neotron Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.276 1999/05/14 02:42:30 neotron Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.277 1999/05/14 02:50:09 neotron Exp $";
 
 object backend_thread;
 object argcache;
@@ -1940,7 +1940,7 @@ class ArgCache
   {
     if( is_db )
     {
-      mapping res = db->query("select from "+name+" where id='"+id+"'");
+      mapping res = db->query("select * from "+name+" where id='"+id+"'");
       if( sizeof(res) )
       {
         db->query("update "+name+" set atime='"+time()+"' where id='"+id+"'");
