@@ -1,7 +1,7 @@
 /*
  * http.pike: HTTP convenience functions.
  * inherited by roxenlib, and thus by all files inheriting roxenlib.
- * $Id: http.pike,v 1.31 1999/12/14 01:33:30 nilsson Exp $
+ * $Id: http.pike,v 1.32 1999/12/22 01:35:42 per Exp $
  */
 
 #include <config.h>
@@ -236,7 +236,7 @@ static string add_pre_state( string url, multiset state )
 /* Simply returns a http-redirect message to the specified URL.  */
 mapping http_redirect( string url, RequestID|void id )
 {
-  if(url[0] == '/')
+  if(strlen(url) && url[0] == '/')
   {
     if(id)
     {
