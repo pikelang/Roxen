@@ -1,5 +1,5 @@
 /* Roxen FTP protocol. Written by Pontus Hagland
-string cvs_version = "$Id: ftp.pike,v 1.17 1997/05/07 19:31:13 grubba Exp $";
+string cvs_version = "$Id: ftp.pike,v 1.18 1997/05/07 19:37:16 grubba Exp $";
    (law@lysator.liu.se) and David Hedbor (neotron@infovav.se).
 
    Some of the features: 
@@ -956,7 +956,7 @@ void got_data(mixed fooid, string s)
       if (!arg || !strlen(arg) || !sizeof(arr = (arg/" ")-({""}))) {
 	reply(reply_enumerate("The following site dependant commands are available:\n"
 			      "SITE PRESTATE <prestate>\tSet the prestate.\n",
-			      220));
+			      "220"));
 	break;
       }
       if (lower_case(arr[0]) != "prestate") {
