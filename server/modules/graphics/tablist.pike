@@ -1,6 +1,6 @@
 // The Tab lists tag module.
 // Developed by Fredrik Noring <noring@infovav.se>, ask him for more info
-string cvs_version = "$Id: tablist.pike,v 1.6 1997/08/12 06:32:24 per Exp $";
+string cvs_version = "$Id: tablist.pike,v 1.7 1997/09/18 21:35:46 grubba Exp $";
 #include <module.h>
 
 inherit "module";
@@ -15,7 +15,7 @@ constant Font = font;
 #define DEFAULT_FONT "32/urw_itc_avant_garde-demi-r"
 #define DEFAULT_PATH "fonts/"
 
-#define DEBUG_TABLIST 0
+#define DEBUG_TABLIST 1
 
 string *from=map(indices(allocate(256)),lambda(int l) { return sprintf("%c",l); });
 string *to=map(indices(allocate(256)),lambda(int l) {
@@ -172,9 +172,11 @@ object tab(string name, int select, int n, int last, string font,
   else if (n+1 != select)
     right_shadow(img, tc);
 
-  tmp=image(txt->xsize(), txt->ysize());
-  tmp->box(0, 0, tmp->xsize()-1, tmp->ysize()-1, @fc);
-  img->paste_mask(tmp, txt, w_spacing/3, h_spacing/2);
+  if ((txt->xsize()) && (txt->ysize())) {
+    tmp=image(txt->xsize(), txt->ysize());
+    tmp->box(0, 0, tmp->xsize()-1, tmp->ysize()-1, @fc);
+    img->paste_mask(tmp, txt, w_spacing/3, h_spacing/2);
+  }
 
   if (!n)
     left_end(img, bg);
@@ -222,10 +224,10 @@ mapping find_file(string filename, object request_id)
     return http_string_answer(s, "image/gif");
 
   mapping arguments = make_arguments(filename);
-  int n = (int) arguments->n || 0;
-  int last = (int) arguments->last || 0;
-  string name = (string) arguments->name || "";
-  int selected = (int) arguments->selected || 1;
+  int n = (int) arguments->n;
+  int last = (int) arguments->last;
+  string name = (string) (arguments->name || "");
+  int selected = ((int) arguments->selected) || 1;
   selected--;
 
   float scale = 0.5;
