@@ -1,4 +1,4 @@
-string cvs_version="$Id: pimage.pike,v 1.10 1998/05/14 18:35:00 grubba Exp $";
+string cvs_version="$Id: pimage.pike,v 1.11 1998/08/26 17:47:20 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -24,15 +24,12 @@ class Constructors
       if(!img) return;
       if(strlen(buffer))
       {
-// 	werror(strlen(buffer)+" bytes in buffer.\n");
 	buffer = buffer[my_fd->write(buffer)..];
 	return;
       }
       if(!first)
       {
-// 	werror("first frame...\n");
 	buffer=img->first_frame();
-// 	werror(strlen(buffer)+" bytes in buffer.\n");
 	if(buffer) buffer = buffer[my_fd->write(buffer)..];
 	oi = buffer;
 	first++;
@@ -42,12 +39,11 @@ class Constructors
       {
 	toggle = 0;
 	my_fd->set_blocking();
-	call_out(my_fd->set_nonblocking,img->anim_delay,lambda(){},draw_image,done);
+	call_out(my_fd->set_nonblocking,img->anim_delay,
+		 lambda(){},draw_image,done);
       } else {
-// 	werror("new frame..\n");
 	toggle = 1;
 	buffer=img->do_gif_add();
-// 	werror("got: "+buffer+"..\n");
 	if(buffer == oi) buffer=0;
 	oi = buffer;
 	if(buffer) buffer = buffer[my_fd->write(buffer)..];
