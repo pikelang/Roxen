@@ -1,5 +1,5 @@
 /*
- * $Id: update.pike,v 1.36 2001/10/08 12:32:51 anders Exp $
+ * $Id: update.pike,v 1.37 2003/05/12 09:17:07 grubba Exp $
  *
  * The Roxen Update Client
  * Copyright © 2000 - 2001, Roxen IS.
@@ -124,7 +124,7 @@ void start(int num, Configuration conf)
   {
     inited++;
     UPDATE_NOISE("Initializing...");
-#if !constant(thread_create)
+#ifndef THREADS
     call_out( post_start, 1 );
 #else
     thread_create( post_start );
