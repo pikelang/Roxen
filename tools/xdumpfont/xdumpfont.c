@@ -196,8 +196,8 @@ void dump_char(unsigned char c)
     character->spacing=width;
   }
     
-  fprintf(stderr, "%d (%d, %d) x %d\r", c, character->width, 
-	  character->spacing, height);
+//  fprintf(stderr, "%d (%d, %d) x %d\r", c, character->width, 
+//	  character->spacing, height);
 
   XDrawRectangle(display, me, gc2, 0, 0, 2100, 2100);
   XDrawImageString(display, me, gc, 0, font->ascent, todraw, 3);
