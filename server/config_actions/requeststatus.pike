@@ -1,5 +1,5 @@
 /*
- * $Id: requeststatus.pike,v 1.5 1998/07/20 20:51:16 neotron Exp $
+ * $Id: requeststatus.pike,v 1.6 1998/07/20 21:01:33 neotron Exp $
  */
 
 inherit "wizard";
@@ -21,17 +21,25 @@ mixed page_0(object id, object mc)
 
 mixed page_1(object id)
 {
-  string res="<b>These are all virtual servers. They are sorted by the "
-    "number of requests they have received - the most active being first.";
+  string res="";
   foreach(Array.sort_array(roxen->configurations,
 			   lambda(object a, object b) {
 			     return a->requests < b->requests;
-			     }), object o)
+			   }), object o) {
+    if(!o->requests)
+      continue;
     res += sprintf("<h3><a href=%s>%s</a><br>%s</h3>\n",
 		   o->query("MyWorldLocation"),
 		   o->name,
 		   replace(o->status(), "<table>", "<table cellpadding=4>"));
-  return res;
+  }
+  if(!strlen(res))
+    return "<b>There are no active virtual servers.</b>";
+  return
+    "<b>These are all virtual servers. They are sorted by the "
+    "number of requests they have received - the most active being first. "
+    "Servers which hasn't recevied any requests at all are not listed.</b>" +
+    res;
 }
 
 mixed handle(object id) { return wizard_for(id,0); }
