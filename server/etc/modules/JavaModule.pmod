@@ -281,6 +281,11 @@ class ReaderFile
     return (string)s;
   }
 
+  Stat stat()
+  {
+    return 0;
+  }
+
   void create(object r)
   {
     _reader = r;
