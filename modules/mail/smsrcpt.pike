@@ -1,5 +1,5 @@
 /*
- * $Id: smsrcpt.pike,v 1.5 1999/01/29 01:12:23 js Exp $
+ * $Id: smsrcpt.pike,v 1.6 2000/10/04 12:05:30 grubba Exp $
  *
  * A SMS module for the AutoMail system.
  *
@@ -13,7 +13,7 @@ inherit "module";
 
 #define RCPT_DEBUG
 
-constant cvs_version = "$Id: smsrcpt.pike,v 1.5 1999/01/29 01:12:23 js Exp $";
+constant cvs_version = "$Id: smsrcpt.pike,v 1.6 2000/10/04 12:05:30 grubba Exp $";
 
 /*
  * Roxen glue
@@ -153,34 +153,39 @@ int put(string sender, string user, string domain,
   roxen_perror("AutoMail SMS RCPT: put(%O, %O, %O, %O, %O, X)\n",
 	       sender, user, domain, mail, csum);
 
+  mixed err;
+  if (err = catch {
+    object clientlayer=conf->get_provider("automail_clientlayer");
+    mail->seek(0);
+    object msg=MIME.Message(mail->read());
+    mapping headers=decoded_headers(msg->headers);
+    werror("sms: headers: %O\n",headers);
+    int res;
+    object u = clientlayer->get_user_from_address(user+"@"+domain);
+    object a = conf->get_provider("automail_admin");
   
-  object clientlayer=conf->get_provider("automail_clientlayer");
-  mail->seek(0);
-  object msg=MIME.Message(mail->read());
-  mapping headers=decoded_headers(msg->headers);
-  werror("sms: headers: %O\n",headers);
-  int res;
-  object u = clientlayer->get_user_from_address(user+"@"+domain);
-  object a = conf->get_provider("automail_admin");
-  
-  if(u && a->query_status(u->id,query_automail_name()))
-  {
-    string smsnumber=a->query_variable(u->id,query_automail_name(),"sms_number");
-    if(smsnumber)
+    if(u && a->query_status(u->id,query_automail_name()))
     {
-      string res=sprintf(query("outputstring"),
-			 headers->from||"",
-			 headers->subject||"",
-			 get_real_body(msg));
-      if(query("strip_aao"))
-	res=replace(res, "ÅÄÖåäö"/"", "AAOaao"/"");
-      werror("sms: res: %O\n",res);
-      Process.create_process( ({ "/usr/bin/sms",
-				 smsnumber,
-				 res }) );
-      int customer_id=u->query_customer_id();
-      clientlayer->add_charge_to("sms",customer_id);
+      string smsnumber=a->query_variable(u->id,query_automail_name(),"sms_number");
+      if(smsnumber)
+      {
+	string res=sprintf(query("outputstring"),
+			   headers->from||"",
+			   headers->subject||"",
+			   get_real_body(msg));
+	if(query("strip_aao"))
+	  res=replace(res, "ÅÄÖåäö"/"", "AAOaao"/"");
+	werror("sms: res: %O\n",res);
+	Process.create_process( ({ "/usr/bin/sms",
+				   smsnumber,
+				   res }) );
+	int customer_id=u->query_customer_id();
+	clientlayer->add_charge_to("sms",customer_id);
+      }
     }
+  }) {
+    roxen_perror(sprintf("AutoMail SMS RCPT: Failure: %s\n",
+			 describe_backtrace(err)));
   }
   return res;
 }
