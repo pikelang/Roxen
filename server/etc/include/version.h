@@ -3,7 +3,7 @@
  */
 
 constant __roxen_version__ = "2.0";
-constant __roxen_build__ = "9";
+constant __roxen_build__ = "10";
 
 #ifdef __NT__
 string real_version= "Roxen/"+__roxen_version__+"."+__roxen_build__+" NT";
