@@ -53,7 +53,7 @@
           <if match="&selected; is globals"> selected</if> />
     <item perm="Actions" title="<cf-locale get=actions>" href="&base;actions/"
           <if match="&selected; is actions"> selected</if>  />
-    <item last title="<cf-locale get=home>" href="&base;" 
+    <item last=20 title="<cf-locale get=home>" href="&base;" 
           <if match="&selected; is home"> selected</if> />
   </top-menu>
 </define>
