@@ -4,7 +4,7 @@ import spider;
 #define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
 
 // Set up the roxen enviornment. Including custom functions like spawne().
-string cvs_version="$Id: roxenloader.pike,v 1.21 1997/04/26 04:58:25 per Exp $";
+string cvs_version="$Id: roxenloader.pike,v 1.22 1997/05/07 23:07:40 per Exp $";
 
 #define perror roxen_perror
 
@@ -94,7 +94,8 @@ class db {
       res += ({ k });
     return res;
   }
-  
+
+  int s;
   void set(string index, string to)
   {
 //    werror("Store: "+index+"\n");
@@ -111,6 +112,7 @@ class db {
 	mkdirhier(mdb);
 	if(!(mydb=gdbm(mdb,"cwr")))
 	  error("Failed to open database.\n");
+	mydb->reorganize();
       }
     }
   }
@@ -125,12 +127,19 @@ object open_db(string id)
     exit(0);
   }
   string fname = "dbs/"+id+".gdbm";
-  if(dbs[fname]) return db(dbs[fname],gdbm);
+  if(dbs[fname])
+  {
+    catch(remove_call_out(dbs[fname]->reorganize));
+    call_out(dbs[fname]->reorganize,1000);
+    return db(dbs[fname],gdbm);
+  }
   object d = db(fname,gdbm);
   dbs[fname]=d->mydb;
   adbs+=({fname});
+
   if(sizeof(adbs)>100)
   {
+    catch(remove_call_out(dbs[adbs[0]]->reorganize));
     m_delete(dbs,adbs[0]);
     adbs=adbs[1..];
   }

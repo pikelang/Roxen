@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.52 1997/05/07 05:19:59 grubba Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.53 1997/05/07 23:07:37 per Exp $";
 #define IN_ROXEN
 #ifdef THREADS
 #include <fifo.h>
@@ -382,11 +382,11 @@ void nwrite(string s, int|void perr)
 {
   if(root && root->descend("Errors", 1))
   {
-    mapping e = root->descend("Errors")->data;
+    mapping e = root->descend("Errors", 1)->data;
     if(!e[s]) e[s]=({ time(1) });
     else e[s] += ({ time(1) });
   }
-  perror(s);
+  roxen_perror(s);
 }
  
 
@@ -1910,20 +1910,13 @@ void _shuffle(object from, object to)
       return;
     init_shuffler();
   }
-//#if efun(Pipe)
+  // Fallback, when there is no external shuffler.
   object p = Pipe.pipe();
   p->input(from);
   p->output(to);
-//#else
-#if 0
-  perror("Shuffle: using fallback(Ouch!)\n");
-  // Fallback. Very unlikely.
-  from->set_id(to->write);
-  from->set_nonblocking(lambda(function w,string s){w(s);},lambda(){},
-                        lambda(function w){destruct(function_object(w));});
-#endif
 }
 #endif
+
 #ifdef THREADS
 object shuffle_queue = Queue();
 
@@ -1936,9 +1929,8 @@ void shuffle(object a, object b)
 {
   shuffle_queue->write(({a,b}));
 }
-#elif efun(send_fd)
+#else
 function shuffle = _shuffle;
-#endif
 #endif
 
 #ifdef THREADS

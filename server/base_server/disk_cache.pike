@@ -1,4 +1,4 @@
-string cvs_version = "$Id: disk_cache.pike,v 1.18 1997/04/30 12:28:56 grubba Exp $";
+string cvs_version = "$Id: disk_cache.pike,v 1.19 1997/05/07 23:07:30 per Exp $";
 #include <stdio.h>
 #include <module.h>
 #include <simulate.h>
@@ -280,10 +280,10 @@ class Cache {
     /* Child */
     lcs->dup2( files.file ("stdin") );
     object privs = ((program)"privs")("Starting the garbage collector");
-    // start garbagecollector niced as possible to reduce I/O-Load  12-Nov-96-wk
+    // start garbagecollector niced as possible to reduce I/O-Load
     exec("/usr/bin/nice", "-19",
 	 "bin/pike", "-m", "lib/pike/master.pike", "-I", "etc/include",
-	 "-M", "etc/modules", "bin/garbagecollector.pike");
+         "-M", "etc/modules", "bin/garbagecollector.pike");
     perror("Failed to start niced garbage collector - retry without nice\n");
     exec("bin/pike", "-m", "lib/pike/master.pike", "-I", "etc/include",
 	 "-M", "etc/modules", "bin/garbagecollector.pike");
@@ -360,7 +360,6 @@ public void reinit_garber()
 #define DAY (60*60*24)
   if(QUERY(cache_last_ressort))
     cache->last_ressort = QUERY(cache_last_ressort) * DAY;
-// WK has a #endif here
 }
 
 public void init_garber()
@@ -463,6 +462,12 @@ object cache_file(string cl, string entry)
     return 0;
   }
 
+  if(cf->headers[" returncode"] == 302)
+  {
+    destruct(cf);
+    return 0;
+  }
+
   if(cf->headers->name != entry)
   {
 #ifdef CACHE_DEBUG
@@ -480,7 +485,7 @@ object cache_file(string cl, string entry)
     return cf;
 
   // get rid of cache files which have not been checked for content-length in 1.1
-  if((((int)cf->headers["content-length"] <= 0) &&
+  if((((int)cf->headers["content-length"] <= 20) &&
       (cf->headers[" returncode"]/100 == 2)) ||
      ((int)cf->headers["content-length"] > (stat[ST_SIZE] - cf->headers->headers_size)))
   {
@@ -496,7 +501,7 @@ object cache_file(string cl, string entry)
 
   if(cf->headers["expires"])
   {
-    if(!is_modified(cf->headers["expires"], time() + tz))
+    if(!is_modified(cf->headers["expires"], time()))
     {
 #ifdef CACHE_DEBUG
       perror("refresh(expired): "+name+
@@ -511,7 +516,7 @@ object cache_file(string cl, string entry)
   {
     if(QUERY(cache_check_last_modified) &&
        is_modified(cf->headers["last-modified"],
-		   stat[ST_CTIME] - time() + stat[ST_CTIME] + tz))
+		   stat[ST_CTIME] - time() + stat[ST_CTIME]))
     {
 #ifdef CACHE_DEBUG
       perror("refresh(last-modified): "+name+
@@ -651,11 +656,29 @@ void http_check_cache_file(object cachef)
   if(!cachef->parse_headers())
     DELETE_AND_RETURN();
 
-// keep 404 also                                              4-Dec-96-wk
+  if(cachef->headers[" returncode"] == 304) {
+    array fstat = file_stat(cachef->rfiledone);
+    if(fstat && cachef->headers["last-modified"]) {
+      if(is_modified(cachef->headers["last-modified"], fstat[ST_CTIME])) {
+        rmold(cachef->rfiledone);
+#ifdef CACHE_DEBUG
+        perror(cachef->rfiledone+"("+cachef->headers->name+"): "+
+	       age(fstat[ST_CTIME])+", 304-delete-last-modified: "+
+	       cachef->headers["last-modified"]+"\n");
+      } else {
+        perror(cachef->rfiledone+"("+cachef->headers->name+"): "+
+	       age(fstat[ST_CTIME])+", 304-last-modified: "+
+	       cachef->headers["last-modified"]+"\n");
+#endif
+      }
+    }
+    RETURN();
+  }
+
+// keep 2xx, 404, 30[01]
   if((cachef->headers[" returncode"]/100 != 2) &&
-     (cachef->headers[" returncode"] != 302) &&
-     (cachef->headers[" returncode"] != 404) &&
-     (cachef->headers[" returncode"]/2 != 150))
+     (cachef->headers[" returncode"]/2 != 150) &&
+     (cachef->headers[" returncode"] != 404))
     DELETE_AND_RETURN();
 
   if(cachef->headers[" returncode"]/100 == 2) {
@@ -679,13 +702,17 @@ void http_check_cache_file(object cachef)
       stat[ST_SIZE] - cachef->headers->headers_size;
 
   if(cachef->headers["expires"]&&
-     !is_modified(cachef->headers["expires"], time() + tz))
+     !is_modified(cachef->headers["expires"], time()))
     DELETE_AND_RETURN();
 
   if(cachef->headers["pragma"] &&
-     (search(cachef->headers["pragma"], "no-cache") != -1))
+     (search(cachef->headers["pragma"], "no-cache") != -1)) {
+#ifdef CACHE_DEBUG
+    perror(cachef->rfile+": already expired "+cachef->headers["expires"]+"\n");
+#endif
     DELETE_AND_RETURN();
-
+  }
+  
   if(cachef->headers["set-cookie"])
     DELETE_AND_RETURN();
 

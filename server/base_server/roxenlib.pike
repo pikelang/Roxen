@@ -1,6 +1,6 @@
 inherit "http";
 
-static string _cvs_version = "$Id: roxenlib.pike,v 1.23 1997/05/06 21:55:31 neotron Exp $";
+static string _cvs_version = "$Id: roxenlib.pike,v 1.24 1997/05/07 23:07:38 per Exp $";
 // This code has to work booth in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -92,13 +92,8 @@ static mapping build_env_vars(string f, object id, string path_info)
   if(sizeof(id->pragma))
     new["HTTP_PRAGMA"]=sprintf("%O", indices(id->pragma)*", ");
 
-  if(id->misc->connection)
-    if(search(id->misc->connection, "keep-alive") != -1)
-      new["HTTP_CONNECTION"]="Keep-Alive";
-    else if(stringp(id->misc->connection))
-      new["HTTP_CONNECTION"]=id->misc->connection;
-    else
-      new["HTTP_CONNECTION"]=id->misc->connection *", ";
+  if(stringp(id->misc->connection))
+    new["HTTP_CONNECTION"]=id->misc->connection;
     
   new["REMOTE_ADDR"]=addr;
     
@@ -277,7 +272,8 @@ static int is_modified(string a, int t, void|int len)
   string m, extra;
   if(!a)
     return 1;
-  t1=localtime(t);
+  t1=localtime(t+timezone());
+   // Expects 't' as returned from time(), not UTC.
   sscanf(lower_case(a), "%*s, %s; %s", a, extra);
   if(extra && sscanf(extra, "length=%d", length) && len && length != len)
     return 0;
@@ -666,7 +662,7 @@ static string sizetostring( int size )
 
 mapping proxy_auth_needed(object id)
 {
-  mixed res = roxen->check_security(proxy_auth_needed, id);
+  mixed res = id->conf->check_security(proxy_auth_needed, id);
   if(res)
   {
     if(res==1) // Nope...

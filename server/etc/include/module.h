@@ -80,6 +80,13 @@
 #define MOD_DENY    3
 #define MOD_PROXY_USER    4
 
+#define DEFFONT(X,Y,Z,Q) \
+defvar((X)+"_font", (Y), (Z)+": font", TYPE_FONT, (Q));\
+defvar((X)+"_weight", "normal", (Z)+": weight", TYPE_STRING_LIST, "", ({"light","normal","bold","black"}));\
+defvar((X)+"_slant", "plain", (Z)+": slant", TYPE_STRING_LIST, "", ({"italic","plain"}))
+
+
+
 #endif
 
 

@@ -1,22 +1,22 @@
-static private array _vars=({});
+static private array __vars=({});
 
-static private string save_variables()
+static private array save_variables()
 {
   mixed b, a;
   array res = ({ }), variable;
   if(!sizeof(__vars)) // First time, not initialized.
-    foreach(indices(this), a)
+    foreach(indices(this_object()), a)
     {
-      b=this[a];
-      if(!catch { this[a]=b; } ) // It can be assigned. Its a variable!
+      b=this_object()[a];
+      if(!catch { this_object()[a]=b; } ) // It can be assigned. Its a variable!
       {
-	__vars[a] = 1;
+	__vars+=({});
 	res += ({ ({ a, b }) });
       }
     }
   else
-    foreach(indices(__vars), a)
-      res += ({ ({ a, this[a] }) });
+    foreach(__vars, a)
+      res += ({ ({ a, this_object()[a] }) });
   return res;
 }
 
@@ -25,44 +25,7 @@ static private void restore_variables(array var)
 {
   if(var)
     foreach(var, var)
-      catch { this[var[0]] = var[1]; };
-}
-
-static private int max(int a,int b) /* Not macro becasue this is faster.. */
-{
-  return a<b?b:a;
-}
-
-private static void restore_call_out_list(array var)
-{
-  array ci;
-
-  /* Clear call_outs iff any are restored.  This is quite important,
-   * since quite a lot of people start a call_out in create(). That
-   * could kill a server very quickly, since there will be a new callout
-   * each time the object is restored.
-   */
-  if(var)
-  {
-    foreach(call_out_info(), ci)
-      remove_call_out( ci[2] );
-    
-    foreach(var, var)
-      catch {
-	call_out(var[0], max(var[1]-(time(1)-var[2]),0), @var[3]); 
-      };
-  }
-}
-
-private static int save_call_out_list()
-{
-  array ci;
-  array res = ({});
-
-  foreach(call_out_info(), ci)
-    res += ({ ({ ci[2], ci[0], time(1), ci[3..] }) });
-
-  return res;
+      catch { this_object()[var[0]] = var[1]; };
 }
 
 string cast(string to)

@@ -4,7 +4,7 @@
 // limit of proxy connections/second is somewhere around 70% of normal
 // requests, but there is no real reason for them to take longer.
 
-string cvs_version = "$Id: proxy.pike,v 1.15 1997/04/05 01:26:22 per Exp $";
+string cvs_version = "$Id: proxy.pike,v 1.16 1997/05/07 23:07:47 per Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -33,6 +33,7 @@ inherit "socket";
 inherit "roxenlib";
 
 #include <proxyauth.pike>
+#include <roxen.h>
 
 program filep = files.file;
 
@@ -54,7 +55,7 @@ void start()
     set("mountpoint", pos[0..strlen(pos)-2]); // Evil me..
 
   if(strlen(QUERY(NoCacheFor)))
-    if(catch(no_cache_for = Regexp("("+(QUERY(NoCacheFor)-"\r")/"\n"*")|("
+    if(catch(no_cache_for = Regexp("("+(QUERY(NoCacheFor)-"\r"-"\n\n")/"\n"*")|("
 				   +")")->match))
       report_error("Parse error in 'No cache' regular expression.\n");
 
@@ -272,12 +273,11 @@ program Connection = class {
   
   int cache_wanted(object id)
   {
-    if(id && (((id->method == "POST") || (id->query && strlen(id->query)))
-	      || id->auth || (!proxy->query("cache_cookies") 
-			      && sizeof(id->cookies))) && 
-       !proxy->no_cache_for(id->not_query)) {
-      return 0; 
-    }
+    if(!id || (((id->method == "POST") || (id->query && strlen(id->query)))
+	       || id->auth
+	       || (!proxy->query("cache_cookies") && sizeof(id->cookies))
+	       || proxy->no_cache_for(id->not_query)))
+      return 0;
     return 1;
   }
   
@@ -355,19 +355,12 @@ program Connection = class {
       }
     }
     name = f;
-    pipe->set_done_callback(my_pipe_done, cache);
-    pipe->input(s);
-    if(objectp(i))
-    {
-      if(i->my_fd)
-	pipe->output(i->my_fd);
-      else {
-	destruct();
-	return;
-      }
-      my_clients = ({ i->remoteaddr });
-      ids = ({ i });
-    }
+    roxen->shuffle(s, i->my_fd);
+// Using convenience-function instead of doing this manually.
+// Send all from s to i->my_fd.
+    my_clients = ({ i->remoteaddr });
+    ids = ({ i });
+    return my_pipe_done(0);
   }
     
   int send_to(object o, object b)

@@ -1,20 +1,8 @@
-// static private inherit "db";
-
-/* $Id: persistent.pike,v 1.26 1997/04/26 03:38:36 per Exp $ */
+/* $Id: persistent.pike,v 1.27 1997/05/07 23:07:32 per Exp $ */
 
 /*************************************************************,
 * PERSIST. An implementation of persistant objects for Pike.  *
-* Variables and callouts are saved between restarts.          *
-*                                                             *
-* What is not saved?                                          *
-* o Listening info (files.port)                               *
-* o Open files (files.file)                                   *
-*                                                             *
-* This can be solved by specifying two new objects, like      *
-* persists/port and persist/file in Pike. I leave that as an  *
-* exercise for the reader.. :-)                               *
-*                                                             *
-* (remember to save info about seek etc.. But it is possible) *
+* Variables are saved between restarts.                       *
 '*************************************************************/
 
 #define PRIVATE private static inline 
@@ -39,10 +27,9 @@ void really_save()
     else __id = i;
   }
 
-  foreach(persistent_variables(object_program(this_object()), this_object()),
-	  string a)
+  string a;
+  foreach(persistent_variables(object_program(this_object()),this_object()),a)
     res += ({ ({ a, this_object()[a] }) });
-
   open_db(__id[0])->set(__id[1], encode_value(res) );
 }
 
@@ -112,9 +99,9 @@ nomask public void persist(mixed id)
     var=decode_value(open_db(__id[0])->get(__id[1]));
     //perror("decode_value ok\n");
   };
-  if(err)
-    report_error(sprintf("Failed to restore "+(id*":")+": %O",
-			 describe_backtrace((array)err)));
+  //  if(err)
+ //    report_error(sprintf("Failed to restore "+(id*":")+": %O",
+//			 describe_backtrace((array)err)));
   
   if(var && sizeof(var))
   {
@@ -133,10 +120,10 @@ nomask public void persist(mixed id)
 
 public void save()
 {
+  if(nosave()) return;
   if(!___destructed)
   {
     remove_call_out(really_save);
-    if(this_object()->nosave && this_object()->nosave()) return;
     call_out(really_save,60);
   }
 }

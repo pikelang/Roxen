@@ -17,7 +17,7 @@
 //       Fixed the case when you open a directory that is a link.
 //       Some 'stat' replies with 212 instead of 211. 
 //	 The proxy now supports them as well.
-// 1.7d  aug 28 per
+// 1.7d  aug 28 per  (95)
 //       Fixed all 'spinner' -> 'roxen'
 // 1.7c  feb 24 per
 //       Fixed all 'spider' -> 'spinner'
@@ -34,10 +34,12 @@
 //       decription support in uwp directory type
 // 1.6b  nov 23 law
 //       ...version information in footers
-// 1.6   nov 23 law
+// 1.6   nov 23 law (96)
 //       new directory format (used by ftp.uwp.edu) 
+// 1.12  may '97
+//       Applied some patches from  Wilhelm Koehler <wk@cs.tu-berlin.de>
 
-string cvs_version = "$Id: ftpgateway.pike,v 1.11 1997/04/05 01:26:19 per Exp $";
+string cvs_version = "$Id: ftpgateway.pike,v 1.12 1997/05/07 23:07:45 per Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -553,6 +555,7 @@ class Request {
 	if (file!="/") file=((file/"/")[0..sizeof(file/"/")-3])*"/"+"/";
       }
       id->end("HTTP/1.0 302 try this instead... following links\r\nLocation: ftp://"+host+(port==21?"":":"+port)+(effect?"/("+effect+")":"")+file+res+"\r\n\r\n");
+      save_stuff();
       return;
     }
 
@@ -1155,7 +1158,8 @@ void start()
 void do_write(string host, string oh, string id, string more)
 {
   if(!host)     host=oh;
-  logfile->write("ftp://" + host + ":" + id + "\t" + more + "\n");
+  logfile->write("[" + cern_http_date(time(1)) + "] ftp://" +
+		 host + ":" + id + "\t" + more + "\n");
 }
 
 void log(string file, string more)
@@ -1278,7 +1282,7 @@ mixed *register_module()
   return 
     ({  MODULE_PROXY|MODULE_LOCATION, 
 	  "FTP gateway", 
-	  "(soon caching) FTP gateway", 
+	  "FTP gateway, not currently caching", 
 	  });
 }
 
@@ -1311,10 +1315,13 @@ string process_request(object id, int is_remote)
   if(!id) return 0;
 }
 
+string hostname(string s)
+{
+  return roxen->quick_ip_to_host(s);
+}
+
 void connected_to_server(object o, string file, object id, int is_remote)
 {
-  object new_request;
-  
   if(!o)
   {
     id->end(CONNECTION_REFUSED);
@@ -1325,7 +1332,7 @@ void connected_to_server(object o, string file, object id, int is_remote)
   perror("FTP PROXY: Connected.\n");
 #endif
 
-  new_request=Request();
+//  new_request=Request();
   if(o->query_address())
   {
     string to_send;
@@ -1335,17 +1342,16 @@ void connected_to_server(object o, string file, object id, int is_remote)
       id->do_not_disconnect = 0;  
       id->disconnect();
 
-      log(file, "Client abort");
-      destruct(new_request);
+      log(file, "- Clientabort "+hostname(id->remoteaddr));
       return;
     }
-    log(file, "FTP remote gateway: New");
+    log(file, "- RemoteNew "+hostname(id->remoteaddr));
     o->write(to_send);
-    new_request->assign(o, file, id, 0);
+    //new_request->assign(o, file, id, 0);
     id->disconnect();
   } else {
-    log(file, "FTP remote gateway: Cache");
-    new_request->assign(o, file, id, 1);
+    log(file, "- RemoteCache "+hostname(id->remoteaddr));
+    //new_request->assign(o, file, id, 1);
   }
   
   if(objectp(new_request)) requests[new_request] = 1;
@@ -1430,7 +1436,7 @@ mixed|mapping find_file( string f, object id )
     async_connect(more[0], more[1], connected_to_server,  key, id, 1);
 
   requests[Request(id,this_object(),host,port,file, user, passw)]=1;
-
+  log(key, "- New "+hostname(id->remoteaddr));
   return http_pipe_in_progress();
 }	  
 
@@ -1455,9 +1461,9 @@ void remove_connection(string hostid,mixed m)
    ftp_connections[hostid][m]=0;
    if (!sizeof(indices(ftp_connections[hostid])))
       m_delete(ftp_connections,hostid);
-   if (!objectp(m[1])) return;
-   m[1]->close();
-   destruct(m[1]);
+   if (!objectp(m[0])) return;
+   m[0]->close();
+   destruct(m[0]);
 }
 
 
@@ -1539,5 +1545,5 @@ void save_dataport(mixed *m) /* ({portno,object}) */
       m_delete(request_port,m[1]);
       call_out(remove_dataport,QUERY(portkeeptime),m);
    }
-   else destruct(m[1]);
+   if(objectp(m[1])) destruct(m[1]);
 }
