@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.164 1998/11/30 04:02:07 peter Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.165 1999/01/17 13:48:31 peter Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -2480,18 +2480,28 @@ object enable_module( string modname )
 	me->defvar("_seclevels", "", "Proxy security: Patterns",
 		   TYPE_TEXT_FIELD,
 		   "This is the 'security level=value' list.<br>"
-		   "Each security level can be any or more from "
-		   "this list:<br>"
+		   "Each security level can be any or more from this list:"
 		   "<hr noshade>"
-		   "allow ip=pattern<br>"
-		   "allow user=username,...<br>"
-		   "deny ip=pattern<br>"
+		   "accept ip=<i>IP</i>/<i>bits</i><br>"
+		   "accept ip=<i>IP</i>:<i>mask</i><br>"
+		   "accept ip=<i>pattern</i><br>"
+		   "accept user=<i>username</i>,...<br>"
+		   "allow ip=<i>IP</i>/<i>bits</i><br>"
+		   "allow ip=<i>IP</i>:<i>mask</i><br>"
+		   "allow ip=<i>pattern</i><br>"
+		   "allow user=<i>username</i>,...<br>"
+		   "deny ip=<i>IP</i>/<i>bits</i><br>"
+		   "deny ip=<i>IP</i>:<i>mask</i><br>"
+		   "deny ip=<i>pattern</i><br>"
 		   "<hr noshade>"
-		   "In patterns: * is on or more characters, ? is one "
-		   " character.<p>"
-		   "In username: 'any' stands for any valid account"
-		   " (from .htaccess"
-		   " or auth-module. The default is 'deny ip=*'");
+		   "In patterns: * matches one or more characters, "
+		   "and ? matches one character.<p>"
+		   "In username: 'any' stands for any valid account "
+		   "(from .htaccess or auth-module.) "
+		   "<p>allow and deny are short-circuit rules."
+		   "<p>The default (used when _no_ "
+		   "entries are present) is 'deny ip=*', allowing"
+		   " everyone to access the module");
       }
     }
   } else {
