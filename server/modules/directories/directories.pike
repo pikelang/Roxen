@@ -10,7 +10,7 @@
 //  o More stuff in the emit variables
 //
 
-constant cvs_version = "$Id: directories.pike,v 1.88 2000/11/13 10:53:14 per Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.89 2000/12/01 17:07:49 js Exp $";
 constant thread_safe = 1;
 
 #include <stat.h>
@@ -192,7 +192,7 @@ mapping parse_directory(RequestID id)
     foreach(indexfiles, string file)
     {
       array s;
-      if((s = id->conf->stat_file(f+file, id)) && (s[ST_SIZE] > 0))
+      if((s = id->conf->stat_file(f+file, id)) && (s[ST_SIZE] >= 0))
       {
 	id->not_query = f + file;
 	mapping got = id->conf->get_file(id);
