@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.431 2004/04/20 12:36:02 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.432 2004/04/20 21:01:03 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1556,53 +1556,28 @@ void send_result(mapping|void result)
     })
       INTERNAL_ERROR(err);
   } 
-    else 
+  else 
+  {
+    if((file->file == -1) || file->leave_me)
     {
-      if((file->file == -1) || file->leave_me)
-      {
-	TIMER_END(send_result);
-	file = 0;
-	pipe = 0;
-        if(do_not_disconnect) 
-          return;
-        my_fd = 0;
-        return;
-      }
-
-      if(file->type == "raw")  file->raw = 1;
+      TIMER_END(send_result);
+      file = 0;
+      pipe = 0;
+      if(do_not_disconnect) 
+	return;
+      my_fd = 0;
+      return;
     }
+
+    if(file->type == "raw")  file->raw = 1;
+  }
 
   if(!file->raw && (prot != "HTTP/0.9"))
   {
-      if (!file->stat) file->stat = misc->stat;
-      if(objectp(file->file)) {
-	if(!file->stat)
-	  file->stat = file->file->stat();
-	if (zero_type(misc->cacheable) && file->file->is_file) {
-	  // Assume a cacheablity on the order of the age of the file.
-	  misc->cacheable = (predef::time(1) - file->stat[ST_MTIME])/4;
-	}
-      }
-
-      if( Stat fstat = file->stat )
-      {
-	if( !file->len )
-	  file->len = fstat[1];
-
-	if ( fstat[ST_MTIME] > misc->last_modified )
-	  misc->last_modified = fstat[ST_MTIME];
-      }	
-
-      switch (file->error) {
-	case Protocols.HTTP.HTTP_NO_CONTENT:
-	  // We actually give some content cf comment below.
-	  file->len = 2;
-	  file->data = "\r\n";
-	  break;
-
-	case 0:
-	  file->error = Protocols.HTTP.HTTP_OK;
-	  break;
+      if (file->error == Protocols.HTTP.HTTP_NO_CONTENT) {
+	// We actually give some content cf comment below.
+	file->len = 2;
+	file->data = "\r\n";
       }
 
       string head_status = file->rettext;
