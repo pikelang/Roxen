@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.137 1999/06/30 21:09:18 neotron Exp $";
+constant cvs_version = "$Id: http.pike,v 1.138 1999/07/02 20:50:03 neotron Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -662,7 +662,7 @@ private int parse_got(string s)
 	  case "mime-version":
 	    break;
 	    
-	   case "if-modified-since":
+	  case "if-modified-since":
 	    since=contents;
 	    break;
 	  }
@@ -1129,7 +1129,7 @@ class MultiRangeWrapper
       rlen = range_info[0][0] - current_pos;
       if(separator != 1) {
 	// New range, write new separator.
-	write("Initiating new range %d -> %d.\n", @range);
+	//	write("Initiating new range %d -> %d.\n", @range);
 	out += range_info[0][1];
 	num_bytes -= strlen(range_info[0][1]);
 	file->seek(range[0]);
@@ -1359,7 +1359,7 @@ void send_result(mapping|void result)
 					     @ranges[0], file->len);
 	    file->file->seek(ranges[0][0]);
 	    if(ranges[0][1] == (file->len - 1) &&
-	       conf->query("RestoreConnLogFull"))
+	       GLOBVAR(RestoreConnLogFull))
 	      // Log continuations (ie REST in FTP), 'range XXX-'
 	      // using the entire length of the file, not just the
 	      // "sent" part. Ie add the "start" byte location when logging

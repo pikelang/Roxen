@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.202 1999/06/30 21:09:17 neotron Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.203 1999/07/02 20:50:03 neotron Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -3505,28 +3505,6 @@ void create(string config)
 
   deflocaledoc("svenska", "comment", "Kommentar",
 	       "En kommentar som syns i konfigurationsinterfacet");
-
-  defvar("RestoreConnLogFull", 0, "Log entire file length in restored connections",
-	 TYPE_TOGGLE,
-	 "If this toggle is enabled log entries for restored connections "
-	 "will log the amount of sent data plus the restoration location. "
-	 "Ie if a user has downloaded 100 bytes of a file already, and makes "
-	 "a Range request fetching the remaining 900 bytes, the log entry "
-	 "will log it as if the entire 1000 bytes were downloaded. "
-	 "<p>This is useful if you want to know if downloads were successful "
-	 "(the user has the complete file downloaded). The drawback is that "
-	 "bandwidth statistics on the log file will be incorrect. The "
-	 "statistics in Roxen will continue being correct.");
-	 
-  deflocaledoc("svenska", "RestoreConnLogFull", "Logga hela fillängden vid återstartad nerladdning",
-	       "När den här flaggar är satt så loggar Roxen hela längden på "
-	       "en fil vars nerladdning återstartas. Om en användare först "
-	       "laddar hem 100 bytes av en fil och sedan laddar hem de "
-	       "återstående 900 bytes av filen med en Range-request så "
-	       "kommer Roxen logga det som alla 1000 bytes hade laddats hem. "
-	       "<p>Detta kan vara användbart om du vill se om en användare "
-	       "har lyckats ladda hem hela filen. I normalfallet vill du att "
-	       "ha denna flagga avslagen.");
 
   defvar("name", "", "Virtual server name",
 	 TYPE_STRING|VAR_MORE,
