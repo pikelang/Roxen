@@ -1,7 +1,7 @@
 #include <roxen.h>
 inherit "http";
 
-// $Id: roxenlib.pike,v 1.101 1999/06/02 17:54:28 marcus Exp $
+// $Id: roxenlib.pike,v 1.102 1999/06/02 18:36:58 marcus Exp $
 // This code has to work both in the roxen object, and in modules.
 #if !efun(roxen)
 #define roxen roxenp()
@@ -515,6 +515,15 @@ static string make_tag(string s,mapping in)
 {
   string q = make_tag_attributes(in);
   return "<"+s+(strlen(q)?" "+q:"")+">";
+}
+
+static string make_empty_elem_tag(string s,mapping in)
+{
+  // Creates an XML empty-element tag
+  string q = make_tag_attributes(in);
+  if(in["/"]!="/")
+    q=(strlen(q)?q+" /":"/");
+  return "<"+s+" "+q+">";
 }
 
 static string make_container(string s,mapping in, string contents)
