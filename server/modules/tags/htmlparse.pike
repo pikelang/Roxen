@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.165 1999/03/08 15:06:36 peter Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.166 1999/03/23 22:24:58 mast Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -305,15 +305,7 @@ inline void open_names_file()
 {
   if(objectp(names_file)) return;
   remove_call_out(names_file_callout_id);
-#ifndef THREADS
-  object privs = Privs("Opening Access-log names file");
-#endif
   names_file=open(QUERY(Accesslog)+".names", "wrca");
-#if efun(chmod)
-  mixed x;
-  if(x = catch { chmod( QUERY(Accesslog)+".names", 0666 ); })
-    report_warning(master()->describe_backtrace(x)+"\n");
-#endif
   names_file_callout_id = call_out(destruct, 1, names_file);
 }
 
@@ -343,19 +335,11 @@ inline mixed open_db_file()
   if(!database)
   {
     if(db_file_callout_id) remove_call_out(db_file_callout_id);
-#ifndef THREADS
-    object privs = Privs("Opening Access-log database file");
-#endif
     database=open(QUERY(Accesslog)+".db", "wrc");
     if (!database) {
       throw(({ sprintf("Failed to open \"%s.db\". Out of fd's?\n",
 		       QUERY(Accesslog)), backtrace() }));
     }
-#if efun(chmod)
-    mixed x;
-    if(x = catch { chmod( QUERY(Accesslog)+".db", 0666 ); })
-      report_warning(master()->describe_backtrace(x)+"\n");
-#endif
     if (QUERY(close_db)) {
       db_file_callout_id = call_out(close_db_file, 9, database);
     }
@@ -380,18 +364,10 @@ void start()
   if(olf != QUERY(Accesslog))
   {
     olf = QUERY(Accesslog);
-#ifndef THREADS
-    object privs = Privs("Opening Access-log names file");
-#endif
     mkdirhier(query("Accesslog"));
     if(names_file=open(olf+".names", "wrca"))
     {
       cnum=0;
-#if efun(chmod)
-      mixed x;
-      if(x = catch { chmod( QUERY(Accesslog)+".names", 0666 ); })
-	report_warning(master()->describe_backtrace(x)+"\n");
-#endif
       tmp=parse_accessed_database(names_file->read(0x7ffffff));
       fton=tmp[0];
       cnum=tmp[1];

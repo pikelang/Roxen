@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.157 1999/03/11 23:03:31 mast Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.158 1999/03/23 22:24:54 mast Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -697,12 +697,6 @@ void start(int|void val, object|void conf)
   if(conf)
   {
     mkdirhier( query( "cache_dir" )+"/.foo" );
-#ifndef __NT__
-#if efun(chmod)
-    // FIXME: Should this error be propagated?
-    catch { chmod( query( "cache_dir" ), 0777 ); };
-#endif
-#endif
     remove_call_out(clean_cache_dir);
     call_out(clean_cache_dir, 10);
     mc = conf;
@@ -789,12 +783,6 @@ array get_cache_file(string a, string b)
 void store_cache_file(string a, string b, array data)
 {
   object fd = open(FNAME(a,b), "wct");
-#ifndef __NT__
-#if efun(chmod)
-  // FIXME: Should this error be propagated?
-  catch { chmod( FNAME(a,b), 0666 ); };
-#endif
-#endif
   if(!fd) return;
   fd->write(encode_value(({a,b,data})));
   destruct(fd);
@@ -1118,12 +1106,6 @@ void save_cached_args()
   object o = open(ARGHASH, "wct");
   if(o)
   {
-#ifndef __NT__
-#if efun(chmod)
-    // FIXME: Should this error be propagated?
-    catch { chmod( ARGHASH, 0666 ); };
-#endif
-#endif
     string data=encode_value(cached_args);
     catch {
       object q;

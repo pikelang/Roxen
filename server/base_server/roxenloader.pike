@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.85 1999/01/31 20:48:42 peter Exp $
+ * $Id: roxenloader.pike,v 1.86 1999/03/23 22:24:48 mast Exp $
  *
  * Roxen bootstrap program.
  *
@@ -15,10 +15,12 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.85 1999/01/31 20:48:42 peter Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.86 1999/03/23 22:24:48 mast Exp $";
 
 // Macro to throw errors
 #define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
+
+#include <roxen.h>
 
 // The privs.pike program
 program Privs;
@@ -129,12 +131,16 @@ int mkdirhier(string from, int|void mode)
 
   foreach(f[0..sizeof(f)-2], a)
   {
-    r = mkdir(b+a);
+    if (query_num_arg() > 1) {
+      mkdir(b+a, mode);
 #if constant(chmod)
-    if (mode) {
-      catch { chmod(b+a, mode); };
+      array(int) stat = file_stat (b + a, 1);
+      if (stat && stat[0] & ~mode)
+	// Race here. Not much we can do about it at this point. :\
+	catch (chmod (b+a, stat[0] & mode));
+#endif
     }
-#endif /* constant(chmod) */
+    else mkdir(b+a);
     b+=a+"/";
   }
   if(!r)
@@ -361,20 +367,24 @@ string popen(string s, void|mapping env, int|void uid, int|void gid)
 #endif
       object privs;
       if (!getuid()) {
-	array(int) olduid = ({ geteuid() || -2, getegid() || -2 });
-	if(uid) {
-	  olduid[0] = uid;
-	}
-	if (gid) {
-	  olduid[1] = gid;
-	}
-	privs = Privs("Executing script as non-www user");
-#if efun(initgroups)
-	array pw = getpwuid((int)uid);
-	if(pw) initgroups(pw[0], (int)olduid[0]);
+	int olduid = 0, oldgid = getgid();
+#if constant(geteuid) && constant(getegid)
+	olduid = geteuid(), oldgid = getegid();
 #endif
-	setgid(olduid[1]);
-	setuid(olduid[0]);
+	switch(query_num_arg()) {
+	  case 4:
+	    oldgid = gid;
+	  case 3:
+	    olduid = uid;
+	    break;
+	}
+	privs = Privs ("Executing '" + s + "'");
+#if efun(initgroups)
+	array pw = getpwuid(uid);
+	if(pw) catch (initgroups(pw[0], oldgid));
+#endif
+	setgid(oldgid);
+	setuid(olduid);
       }
       catch(exece("/bin/sh", ({ "-c", s }), (env||getenv())));
     };
@@ -427,7 +437,6 @@ int spawne(string s,string *args, mapping|array env, object stdin,
 	   object stdout, object stderr, void|string wd, void|array (int) uid)
 {
   int pid, *olduid = allocate(2, "int");
-  object privs;
 
 #if constant(Process.create_process)
   int u, g;
@@ -453,13 +462,22 @@ int spawne(string s,string *args, mapping|array env, object stdin,
   return(-1);
 #else /* !constant(Process.create_process) */
   if(pid=fork()) return pid;
-  
-  if(arrayp(uid) && sizeof(uid) == 2)
-  {
-    privs = Privs("Executing program as non-www user (outside roxen)");
-    setgid(uid[1]);
-    setuid(uid[0]);
-  } 
+
+  object privs;
+  if (!getuid()) {
+    privs = Privs ("Executing '" + s + "' (outside roxen)");
+    if(arrayp(uid) && sizeof(uid) == 2)
+    {
+      setgid(uid[1]);
+      setuid(uid[0]);
+    }
+#if constant(geteuid) && constant(getegid)
+    else {
+      setgid(getegid());
+      setuid(geteuid());
+    }
+#endif
+  }
   catch(low_spawne(s, args, env, stdin, stdout, stderr, wd));
   exit(99); 
 #endif /* constant(Process.create_process) */
@@ -501,14 +519,16 @@ int spawn_pike(array(string) args, void|string wd, object|void stdin,
 
 #else /* !constant(Process.create_process) */
   if ((pid = fork()) == 0) {
-    stdin && stdin->dup2(Stdio.File("stdin"));
-    stdout && stdout->dup2(Stdio.File("stdout"));
-    stderr && stderr->dup2(Stdio.File("stderr"));
-    if(wd)
-      cd(wd);
-    exece(pikebin, preargs+args, getenv());
-    perror(sprintf("Spawn_pike: Failed to exece %s\n", pikebin));
-    exit(-1);
+    catch {
+      stdin && stdin->dup2(Stdio.File("stdin"));
+      stdout && stdout->dup2(Stdio.File("stdout"));
+      stderr && stderr->dup2(Stdio.File("stderr"));
+      if(wd)
+	cd(wd);
+      exece(pikebin, preargs+args, getenv());
+      perror(sprintf("Spawn_pike: Failed to exece %s\n", pikebin));
+    }
+    exit(99);
   }
   return pid;
 #endif /* constant(Process.create_process) */

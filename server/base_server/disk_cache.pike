@@ -1,4 +1,4 @@
-// string cvs_version = "$Id: disk_cache.pike,v 1.39 1998/05/22 21:25:19 grubba Exp $";
+// string cvs_version = "$Id: disk_cache.pike,v 1.40 1999/03/23 22:24:43 mast Exp $";
 #include <module.h>
 #include <stat.h>
 
@@ -307,7 +307,7 @@ class Cache {
       /* Child */
       err = catch {
 	lcs->dup2( Stdio.File("stdin") );
-	object privs = Privs("Starting the garbage collector");
+	/* object privs = Privs("Starting the garbage collector"); */
 	// start garbagecollector niced as possible to reduce I/O-Load
 
 	// FIXME: Should use spawn_pike() here.

@@ -1,10 +1,11 @@
 // import Array;
 
+#include <roxen.h>
 #include <module.h>
 
 #ifndef IN_INSTALL
 inherit "newdecode";
-// string cvs_version = "$Id: read_config.pike,v 1.27 1999/03/20 00:49:38 js Exp $";
+// string cvs_version = "$Id: read_config.pike,v 1.28 1999/03/23 22:24:45 mast Exp $";
 #else
 import spider;
 # define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
@@ -34,7 +35,7 @@ array (string) list_all_configurations()
   fii=get_dir(configuration_dir);
   if(!fii)
   {
-    mkdirhier(configuration_dir+"test"); // removes the last element..
+    mkdirhier(configuration_dir+"test", 0700); // removes the last element..
     fii=get_dir(configuration_dir);
     if(!fii)
     {
@@ -61,23 +62,12 @@ void save_it(string cl)
 #endif
 
   f = configuration_dir + replace(cl, " ", "_");
-#ifndef THREADS
-  object privs = Privs("Saving config file"); // Change to root user.
-#endif
   mv(f,
 #ifdef __NT__
      "."+  // Don't ask why...
 #endif      
      f+"~");
   fd = open(f, "wc");
-#if efun(chmod)
-#if efun(geteuid)
-  if(geteuid() != getuid()) chmod(f,0660);
-#endif
-#endif
-#ifndef THREADS
-  privs=0;
-#endif
   if(!fd)
   {
     error("Creation of configuration file failed ("+f+") "
@@ -158,9 +148,6 @@ private static void read_it(string cl)
   if(configs[cl]) return;
 
   object fd;
-#ifndef THREADS
-  object privs = Privs("Reading config file"); // Change to root user.
-#endif
 
   mixed err;
   err = catch {
@@ -209,10 +196,6 @@ void remove( string reg , object current_configuration)
 void remove_configuration( string name )
 {
   string f;
-
-#ifndef THREADS
-  object privs = Privs("Removing config file"); // Change to root user.
-#endif
 
   f = configuration_dir + replace(name, " ", "_");
   if(!file_stat( f ))   f = configuration_dir + name;

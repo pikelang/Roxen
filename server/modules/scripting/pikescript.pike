@@ -1,5 +1,3 @@
-#include <config.h>
-
 // This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
 
 // Support for user Pike-scripts, like CGI, but handled internally in
@@ -8,14 +6,18 @@
 
 // This is an extension module.
 
-constant cvs_version = "$Id: pikescript.pike,v 1.30 1999/02/01 00:36:37 peter Exp $";
+constant cvs_version = "$Id: pikescript.pike,v 1.31 1999/03/23 22:24:56 mast Exp $";
+
 constant thread_safe=1;
+// MAST: Blatant lie; we're using fork() here. Disabling this wouldn't
+// really help anyway. :(
 
 mapping scripts=([]);
 
 inherit "module";
 inherit "roxenlib";
 #include <module.h>
+#include <config.h>
 
 #if constant(_static_modules) && efun(thread_create)
 constant Mutex=__builtin.mutex;
@@ -46,8 +48,9 @@ void create()
 	 "If set, pike will fork to execute the script. "
 	 "This is a more secure way if you want to let "
 	 "your users execute pike scripts. "
+	 "NOTE: This doesn't work in threaded servers.\n"
 	 "Note, that fork_exec must be set for Run scripts as, "
-	 "Run user scripts as owner and Change directory variables."
+	 "Run user scripts as owner and Change directory variables.\n"
 	 "Note, all features of pike-scripts are not available when "
 	 "this is enabled.");
 
@@ -168,15 +171,8 @@ array|mapping call_script(function fun, object got, object file)
   } else 
 #endif
   {
-#ifndef THREADS
     if(got->misc->is_user && (us = file_stat(got->misc->is_user)))
       privs = Privs("Executing pikescript as non-www user", @us[5..6]);
-#elif defined(DEBUG)
-    if((got->misc->is_user && (us = file_stat(got->misc->is_user)))&&!getuid())
-
-      report_debug("Not executing pike-script as owner, since we are using"
-		   " threads. UID is not thread local, sadly enough.\n");
-#endif
   }
 
 #ifdef THREADS

@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.167 1999/03/20 00:49:36 js Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.168 1999/03/23 22:24:42 mast Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -626,15 +626,7 @@ void init_log_file()
     if(strlen(logfile))
     {
       do {
-#ifndef THREADS
-	object privs = Privs("Opening logfile \""+logfile+"\"");
-#endif
 	object lf=open( logfile, "wac");
-#if efun(chmod)
-#if efun(geteuid)
-	if(geteuid() != getuid()) catch {chmod(logfile,0666);};
-#endif
-#endif
 	if(!lf) {
 	  mkdirhier(logfile);
 	  if(!(lf=open( logfile, "wac"))) {
@@ -2203,8 +2195,6 @@ void start(int num)
           if(tmp = rp(port, this_object()))
             port = tmp;
 
-	// FIXME: For SSL3 we might need to be root to read our
-        // secret files.
         object privs;
         if(port[0] < 1024)
           privs = Privs("Opening listen port below 1024");

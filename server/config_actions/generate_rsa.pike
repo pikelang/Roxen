@@ -1,5 +1,5 @@
 /*
- * $Id: generate_rsa.pike,v 1.7 1998/04/22 14:34:54 grubba Exp $
+ * $Id: generate_rsa.pike,v 1.8 1999/03/23 22:24:51 mast Exp $
  */
 
 inherit "wizard";
@@ -54,7 +54,7 @@ mixed page_0(object id, object mc)
        "if you so wish."
        "</blockquote></help>"
        "<var name=key_file type=string><br>\n"
-       "Where to store the secret key<br>\n"
+       "Where to store the secret key, relative to " + getcwd() + "<br>\n"
        "<help><blockquote>"
        "A filename in the real filesystem, where the secret key should "
        "be stored. This is the filename you enter in the 'Key file'-field "

@@ -1,4 +1,4 @@
-/* $Id: savers.pike,v 1.6 1997/10/12 21:10:29 grubba Exp $ */
+/* $Id: savers.pike,v 1.7 1999/03/23 22:24:49 mast Exp $ */
 #include <confignode.h>
 #include <module.h>
 
@@ -63,7 +63,6 @@ void save_global_variables(object o)
 {
   roxen->store("Variables", roxen->variables, 0, 0);
   roxen->initiate_configuration_port();
-  roxen->set_u_and_gid();
   init_logger();
   roxen->initiate_supports();
   roxen->reinit_garber();

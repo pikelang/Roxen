@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.312 1999/03/11 03:45:17 mast Exp $
+ * $Id: roxen.pike,v 1.313 1999/03/23 22:24:46 mast Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -8,7 +8,7 @@
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version = "$Id: roxen.pike,v 1.312 1999/03/11 03:45:17 mast Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.313 1999/03/23 22:24:46 mast Exp $";
 
 
 // Some headerfiles
@@ -99,7 +99,7 @@ private function build_root;
 private object root;
 
 #ifdef THREADS
-// This mutex is used by privs.pike
+// This mutex is used by privs.pike and set_u_and_gid().
 object euid_egid_lock = Thread.Mutex();
 
 void stop_handler_threads(); // forward declaration
@@ -129,7 +129,7 @@ private static void really_low_shutdown(int exit_code)
 #endif /* THREADS */
 
   // Don't use fork() with threaded servers.
-#if constant(fork) && !constant(create_thread)
+#if constant(fork) && !constant(thread_create)
 
   // Fork, and then do a 'slow-quit' in the forked copy. Exit the
   // original copy, after all listen ports are closed.
@@ -154,7 +154,7 @@ private static void really_low_shutdown(int exit_code)
   array f=indices(portno);
   for(int i=0; i<sizeof(f); i++)
     catch(destruct(f[i]));
-#else /* !constant(fork) || !constant(create_thread) */
+#else /* !constant(fork) || !constant(thread_create) */
 
   // FIXME:
   // Should probably attempt something similar to the above,
@@ -163,7 +163,7 @@ private static void really_low_shutdown(int exit_code)
 
   exit(exit_code);		// Now we die...
 
-#endif /* constant(fork) && !constant(create_thread) */
+#endif /* constant(fork) && !constant(thread_create) */
 }
 
 // Shutdown Roxen
@@ -737,28 +737,14 @@ void done_with_roxen_com()
   if(old != new) {
     perror("Got new supports data from www.roxen.com\n");
     perror("Replacing old file with new data.\n");
-#ifndef THREADS
-    object privs=Privs("Replacing etc/supports");
-#endif
     mv("etc/supports", "etc/supports~");
     Stdio.write_file("etc/supports", new);
     old = Stdio.read_bytes( "etc/supports" );
-#if efun(chmod)
-#if efun(geteuid)
-    if(geteuid() != getuid()) chmod("etc/supports",0660);
-#endif
-#endif
     if(old != new)
     {
       perror("FAILED to update the supports file.\n");
       mv("etc/supports~", "etc/supports");
-#ifndef THREADS
-      privs = 0;
-#endif
     } else {
-#ifndef THREADS
-      privs = 0;
-#endif
       initiate_supports();
     }
   }
@@ -1379,21 +1365,23 @@ int set_u_and_gid()
 	u = pw[0], uid = pw[2];
 	if (!g) gid = pw[3];
       }
+
+#ifdef THREADS
+      object mutex_key;
+      catch { mutex_key = euid_egid_lock->lock(); };
+#if constant(_disable_threads)
+      object threads_disabled = _disable_threads();
+#endif
+#endif
+
+#if constant(seteuid)
+      if (geteuid() != getuid()) seteuid (getuid());
+#endif
 #if constant(initgroups)
       catch {
 	initgroups(pw[0], gid);
 	// Doesn't always work - David.
       };
-#endif
-
-      // FIXME: Need more Privs paranoia here.
-#ifdef THREADS
-      object mutex_key;
-      catch { mutex_key = euid_egid_lock->lock(); };
-#endif
-
-#if constant(seteuid)
-      if (geteuid() != getuid()) seteuid (getuid());
 #endif
 
       string permanently = "";
@@ -1566,7 +1554,7 @@ object enable_configuration(string name)
 }
 
 // Enable all configurations
-void enable_configurations()
+void enable_configurations (void|int call_set_u_and_gid)
 {
   array err;
 
@@ -1578,6 +1566,9 @@ void enable_configurations()
       perror("Error while loading configuration "+config+":\n"+
 	     describe_backtrace(err)+"\n");
   };
+
+  if (call_set_u_and_gid) set_u_and_gid();
+
   foreach(configurations, object config)
   {
     if(err=catch { config->enable_all_modules();  })
@@ -2177,8 +2168,6 @@ void initiate_configuration_port( int|void first )
 	  if(tmp = rp(port, 0))
 	    port = tmp;
 
-	// FIXME: For SSL3 we might need to be root to read our
-	// secret files.
 	object privs;
 	if(port[0] < 1024)
 	  privs = Privs("Opening listen port below 1024");
@@ -2624,9 +2613,6 @@ int main(int|void argc, array (string)|void argv)
 #ifdef ENABLE_NEIGHBOURHOOD
   neighborhood = (object)"neighborhood";
 #endif /* ENABLE_NEIGHBOURHOOD */
-  
-  create_pid_file(find_arg(argv, "p", "pid-file", "ROXEN_PID_FILE")
-		  || QUERY(pidfile));
 
 #if efun(syslog)
   init_logger();
@@ -2634,28 +2620,26 @@ int main(int|void argc, array (string)|void argv)
 
   init_garber();
   initiate_supports();
-  
+
   initiate_configuration_port( 1 );
-  enable_configurations();
-#if 0
-  restore_current_user_id_number();
-#endif
+  enable_configurations (1);
+
+  create_pid_file(find_arg(argv, "p", "pid-file", "ROXEN_PID_FILE")
+		  || QUERY(pidfile));
+
 // Rebuild the configuration interface tree if the interface was
 // loaded before the configurations was enabled (a configuration is a
 // virtual server, perhaps the name should be changed internally as
 // well.. :-)
-  
+
   if(root)
   {
     destruct(configuration_interface());
     configuration_interface()->build_root(root);
   }
-  
+
   call_out(update_supports_from_roxen_com,
 	   QUERY(next_supports_update)-time());
-  
-  if(set_u_and_gid())
-    perror("Setting UID and GID ...\n");
 
 #ifdef THREADS
   start_handler_threads();

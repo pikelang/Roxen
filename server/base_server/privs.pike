@@ -1,6 +1,6 @@
-#if efun(seteuid)
 #include <module.h>
-// string cvs_version = "$Id: privs.pike,v 1.35 1998/05/17 18:41:48 grubba Exp $";
+#include <roxen.h>
+// string cvs_version = "$Id: privs.pike,v 1.36 1999/03/23 22:24:44 mast Exp $";
 
 int saved_uid;
 int saved_gid;
@@ -36,7 +36,8 @@ static private string dbt(array t)
 }
 
 #ifdef THREADS
-mixed mutex_key;	// Only one thread may modify the euid/egid at a time.
+static mixed mutex_key;	// Only one thread may modify the euid/egid at a time.
+static object threads_disabled;
 #endif /* THREADS */
 
 int p_level;
@@ -44,7 +45,7 @@ int p_level;
 void create(string reason, int|string|void uid, int|string|void gid)
 {
 #ifdef THREADS
-#if constant(roxen_pid)
+#if constant(roxen_pid) && !constant(_disable_threads)
   if(getpid() == roxen_pid)
     werror("Using Privs ("+reason+") in threaded environment, source is\n  "+
 	   replace(describe_backtrace(backtrace()), "\n", "\n  ")+"\n");
@@ -57,11 +58,14 @@ void create(string reason, int|string|void uid, int|string|void gid)
   if (roxen->euid_egid_lock) {
     catch { mutex_key = roxen->euid_egid_lock->lock(); };
   }
+#if constant(_disable_threads)
+  threads_disabled = _disable_threads();
+#endif
 #endif /* THREADS */
 
   p_level = roxen->privs_level++;
 
-  if(getuid()) return;
+  if (getuid()) return;
 
   /* Needs to be here since root-priviliges may be needed to
    * use getpw{uid,nam}.
@@ -95,8 +99,8 @@ void create(string reason, int|string|void uid, int|string|void gid)
   if(!u) {
     if (uid && (uid != "root")) {
       if (intp(uid) && (uid >= 60000)) {
-	report_debug(sprintf("privs.pike: User %d is not in the password database.\n"
-			     "Assuming nobody.\n", uid));
+	report_warning(sprintf("privs.pike: User %d is not in the password database.\n"
+			       "Assuming nobody.\n", uid));
 	// Nobody.
 	gid = gid || uid;	// Fake a gid also.
 	u = ({ "fake-nobody", "x", uid, gid, "A real nobody", "/", "/sbin/sh" });
@@ -191,11 +195,11 @@ void destroy()
     catch {
       array bt = backtrace();
       if (sizeof(bt) >= 2) {
-	report_notice(sprintf("Change back to uid#%d, from %s\n", saved_uid,
-			      dbt(bt[-2])));
+	report_notice(sprintf("Change back to uid#%d gid#%d, from %s\n",
+			      saved_uid, saved_gid, dbt(bt[-2])));
       } else {
-	report_notice(sprintf("Change back to uid#%d, from backend\n",
-			      saved_uid));
+	report_notice(sprintf("Change back to uid#%d gid#%d, from backend\n",
+			      saved_uid, saved_gid));
       }
     };
   }
@@ -227,6 +231,11 @@ void destroy()
   }
   setegid(saved_gid);
   seteuid(saved_uid);
+
+#ifdef THREADS
+  if (threads_disabled) destruct (threads_disabled);
+  if (mutex_key) destruct (mutex_key);
+#endif
+
 #endif /* HAVE_EFFECTIVE_USER */
 }
-#endif

@@ -5,9 +5,10 @@
 // interface</a> (and more, the documented interface does _not_ cover
 // the current implementation in NCSA/Apache)
 
-string cvs_version = "$Id: cgi.pike,v 1.106 1999/03/20 00:50:06 js Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.107 1999/03/23 22:24:55 mast Exp $";
 int thread_safe=1;
 
+#include <config.h>
 #include <module.h>
 
 inherit "module";
@@ -54,15 +55,7 @@ void init_log_file()
     if(strlen(logfile))
     {
       do {
-// 	object privs;
-//      catch(privs = Privs("Opening logfile \""+logfile+"\""));
 	object lf=open( logfile, "wac");
-//         if(privs) destruct(privs);
-// #if efun(chmod)
-// #if efun(geteuid)
-// 	if(geteuid() != getuid()) catch {chmod(logfile,0666);};
-// #endif
-// #endif
 	if(!lf) {
 	  mkdirhier(logfile);
 	  if(!(lf=open( logfile, "wac"))) {
@@ -454,8 +447,6 @@ array get_cached_groups_for_user( int uid )
 
 class spawn_cgi
 {
-  // This program asserts that fork() is called from the backend to
-  // avoid some problems with threads, fork() and buggy OS's.
   string wrapper;
   string f;
   array(string) args;

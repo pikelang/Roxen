@@ -5,7 +5,7 @@
  * doc = "Main part of the installscript that is run upon installation of roxen";
  */
 
-string cvs_version = "$Id: install.pike,v 1.33 1999/02/14 01:31:10 peter Exp $";
+string cvs_version = "$Id: install.pike,v 1.34 1999/03/23 22:24:50 mast Exp $";
 
 #include <simulate.h>
 #include <roxen.h>
@@ -64,19 +64,23 @@ void mkdirhier(string from, int|void mode)
 
   foreach(f[0..sizeof(f)-2], a)
   {
-    mkdir(b+a);
+    if (query_num_arg() > 1) {
+      mkdir(b+a, mode);
 #if constant(chmod)
-    if (mode) {
-      catch { chmod(b+a, mode); };
+      array(int) stat = file_stat (b + a, 1);
+      if (stat && stat[0] & ~mode)
+	// Race here. Not much we can do about it at this point. :\
+	catch (chmod (b+a, stat[0] & mode));
+#endif
     }
-#endif /* constant(chmod) */
+    else mkdir(b+a);
     b+=a+"/";
   }
 }
 
 mapping(string:mixed) variables = ([ "audit":0 ]);
 
-// We never need to change priviliges...
+// We never need to change privileges...
 mixed Privs(mixed ... args) { return 0; }
 
 #define VAR_VALUE 0

@@ -7,6 +7,7 @@ wwwuser=www
 killallwww=no
 # ':0' should be the uid.
 pidfile=/tmp/roxen_pid:0
+umask 022
 
 # If you want to start with another configuration directory:
 #

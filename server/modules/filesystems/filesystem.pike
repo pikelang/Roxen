@@ -8,7 +8,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.47 1999/02/01 03:31:54 peter Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.48 1999/03/23 22:24:52 mast Exp $";
 constant thread_safe=1;
 
 
@@ -100,8 +100,9 @@ void create()
 
   defvar("access_as_user", 0, "Access file as the logged in user",
 	 TYPE_FLAG|VAR_MORE,
-	 "EXPERIMENTAL. Access file as the logged in user.<br>\n"
-	 "This is useful for eg named-ftp.");
+	 "EXPERIMENTAL. Access file as the logged in user.\n"
+	 "This is useful for eg named-ftp.<br>\n"
+	 "NOTE: Not possible when running in a threaded server.");
 
   defvar("no_symlinks", 0, "Forbid access to symlinks", TYPE_FLAG|VAR_MORE,
 	 "EXPERIMENTAL.\n"
