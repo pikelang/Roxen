@@ -6,7 +6,7 @@
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: swedish.pike,v 1.13 2000/01/26 00:29:55 nilsson Exp $";
+constant cvs_version = "$Id: swedish.pike,v 1.14 2000/01/31 16:44:54 nilsson Exp $";
 constant _id = ({ "sv", "swedish", "svenska" });
 constant _aliases = ({ "sv", "se", "sve", "swe", "swedish", "svenska" });
 
@@ -19,7 +19,7 @@ constant days = ({
   "söndag","måndag","tisdag","onsdag", "torsdag","fredag",
   "lördag" });
 
-constant languages=([
+constant languages=ISO639 + ([
   "ca":"katalanska",
   "cs":"tjeckiska",
   "du":"nederländska",
