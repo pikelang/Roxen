@@ -11,7 +11,7 @@
 //
 // Make sure links work _inside_ unfolded documents.
 
-string cvs_version = "$Id: directories.pike,v 1.44 2000/01/27 08:33:05 jhs Exp $";
+string cvs_version = "$Id: directories.pike,v 1.45 2000/01/30 21:18:16 per Exp $";
 constant thread_safe=1;
 
 //#define DIRECTORIES_DEBUG
@@ -323,8 +323,10 @@ string|mapping parse_directory(RequestID id)
 
   if(f[-1] == '/') /* Handle indexfiles */
   {
-    foreach(indexfiles, string file) {
-      if(id->conf->stat_file(f+file, id))
+    foreach(indexfiles, string file)
+    {
+      array s;
+      if((s = id->conf->stat_file(f+file, id)) && (s[ST_SIZE]>0))
       {
 	id->not_query = f + file;
 	mapping got = id->conf->get_file(id);
