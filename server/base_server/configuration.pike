@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.61 1997/08/19 07:03:24 per Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.62 1997/08/20 21:37:06 js Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -811,7 +811,12 @@ private mapping internal_roxen_image(string from)
   // file was sent to the browser)
   // /internal-roxen-../.. was never possible, since that would be remapped to
   // /..
-  return (["file":open("roxen-images/"+from+".gif", "r"),"type":"image/gif"]);
+
+  // changed 970820 by js to allow for jpeg images
+  if(object f=open("roxen-images/"+from+".gif", "r"))
+    return (["file":f,"type":"image/gif"]);
+  else
+    return (["file":open("roxen-images/"+from+".jpg", "r"),"type":"image/jpeg"]);
 }
 
 // The function that actually tries to find the data requested.  All
