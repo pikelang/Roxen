@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.475 2005/01/26 17:28:58 stewa Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.476 2005/01/26 21:56:58 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1683,14 +1683,15 @@ class TagCache {
 
       keymap += ([]);
       do_iterate = 1;
-      TAG_TRACE_ENTER ("cache miss%s, %s",
+      TAG_TRACE_ENTER ("cache miss%s for key %s, %s",
 		       args->shared ?
 		       (timeout ? " (shared timeout cache)" : " (shared cache)") :
 		       (timeout ? " (timeout cache)" : ""),
+		       RXML.utils.format_short (keymap, 200),
 		       removed == 1 ? "entry p-code is stale" :
 		       removed == 2 ? "entry had timed out" :
 		       removed == 3 ? "a pragma no-cache request removed the entry" :
-		       "no entry");
+		       "no matching entry");
       id->cache_status->cachetag = 0;
       id->misc->cache_tag_miss = 1;
       return 0;
