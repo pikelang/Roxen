@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.50 1997/08/12 22:28:09 peter Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.51 1997/08/13 02:58:26 neotron Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -1302,7 +1302,6 @@ void start(int num)
     }
     perror("\n");
   }
-
   if(!num && sizeof(query("Ports")))
   {
     if(err == sizeof(query("Ports")))

@@ -1,4 +1,4 @@
-/* $Id: describers.pike,v 1.34 1997/08/12 22:28:33 peter Exp $ */
+/* $Id: describers.pike,v 1.35 1997/08/13 02:58:33 neotron Exp $ */
 
 #include <module.h>
 int zonk=time();
@@ -122,8 +122,8 @@ mixed describe_actions(object node, object id)
   {
     string res="<dl>";
     array acts = ({});
-    foreach(get_dir("config_actions"), string act)
-      catch {
+    foreach(get_dir("config_actions"), string act) {
+      mixed err = catch {
 	if(act[0]!='#' && act[-1]=='e')
 	  if(!get_action(act)->more || this_object()->more_mode)
 	    acts+=({"<!-- "+get_action(act)->name+" --><dt><font size=\"+2\">"
@@ -131,6 +131,9 @@ mixed describe_actions(object node, object id)
 		      get_action(act)->name+"</a></font><dd>"+
 		      (get_action(act)->doc||"") });
       };
+      if(err)
+	report_error(describe_backtrace(err));
+    }
     return res+(sort(acts)*"\n")+"</dl>";
   }
   mixed res;

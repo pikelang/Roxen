@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.94 1997/08/12 12:01:38 per Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.95 1997/08/13 02:58:31 neotron Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -2194,6 +2194,7 @@ varargs int main(int argc, array (string) argv)
   init_shuffler(); 
 #endif
   create_host_name_lookup_processes();
+
   foreach( ({ "SIGUSR1", "SIGUSR2", "SIGHUP", "SIGINT" }), string sig) {
     catch { signal(signum(sig), exit_when_done); };
   }
