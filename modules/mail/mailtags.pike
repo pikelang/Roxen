@@ -6,7 +6,7 @@ inherit "roxenlib";
 inherit Regexp : regexp;
 
 constant cvs_version = 
-"$Id: mailtags.pike,v 1.21 1998/10/01 04:11:14 per Exp $";
+"$Id: mailtags.pike,v 1.22 1998/10/01 18:17:36 grubba Exp $";
 
 constant thread_safe = 1;
 
@@ -73,7 +73,7 @@ void create()
 	 "high:  All checks. It should be impossible to read mail"
 	 " that is not yours, same goes for list of mail etc.<p>"
 	 "mail: Only the ownership of mail will be checked.<p>"
-	 "low: Only checks that will not generate extra CVS queries"
+	 "low: Only checks that will not generate extra SQL queries"
 	 " will be done. This saves CPU, but the cost is high. A smart and"
 	 " resourcefull user could read all mail.",
 	 ({ "high", "mail", "low"}));
