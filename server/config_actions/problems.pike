@@ -1,5 +1,5 @@
 /*
- * $Id: problems.pike,v 1.7 1997/10/04 23:38:56 grubba Exp $
+ * $Id: problems.pike,v 1.8 1997/10/09 14:53:24 peter Exp $
  */
 
 inherit "wizard";
@@ -12,7 +12,7 @@ constant wizard_name = "Check configuration";
 string page_0(object id)
 {
   return ("<b>Welcome to the problem finder wizard.</b>"
-	  "<p>This action tries to find most "
+	  "<p>This action tries to find the most "
 	  "common errors in your Roxen configuration.");
 }
 
@@ -241,16 +241,6 @@ string page_3(object id)
   return res;
 }
 
-
-//string page_4(object id)
-//{
-//}
-
-
-
-
-
-
 void remove_module_dir(string dir)
 {
   roxen->set("ModuleDirs", roxen->query("ModuleDirs")-({dir}));
@@ -335,7 +325,8 @@ string page_4(object id)
       actions +=({({"Delete the symbolic link <b>"+tmp+"</b>.", rm, tmp }) });
   }
   if(!sizeof(actions)) return res+"No actions will be done</ul>";
-  res += "The following actions will be done to fix problems<p>";
+  res += "In order to fix the problems the following actions "
+    "will be performed.<p>";
   foreach(actions, array act) res += "<li>"+act[0];
   return res+"</ul>";
 }
@@ -354,4 +345,3 @@ string handle(object id)
 {
   return wizard_for(id,0);
 }
-

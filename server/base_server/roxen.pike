@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.141 1997/10/08 19:04:59 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.142 1997/10/09 15:07:55 peter Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -1321,15 +1321,15 @@ private void define_global_variables( int argc, array (string) argv )
 {
   int p;
   globvar("set_cookie", 0, "Set unique user id cookies", TYPE_FLAG,
-	  "If set, all users of your server whose clients supports "
+	  "If set to Yes, all users of your server whose clients support "
 	  "cookies will get a unique 'user-id-cookie', this can then be "
 	  "used in the log and in scripts to track individual users.");
 
   globvar("set_cookie_only_once",1,"Set ID cookies only once",TYPE_FLAG,
-	  "If set, Roxen will attempt to set unique user ID cookies only "
-	  "upon receiving the first request (and again after some minutes). "
-	  "Thus, if the user doesn't allow the cookie to be set, he won't be "
-	  "bothered with multiple requests",0,
+	  "If set to Yes, Roxen will attempt to set unique user ID cookies "
+	  "only upon receiving the first request (and again after some "
+	  "minutes). Thus, if the user doesn't allow the cookie to be set, "
+	  "he won't be bothered with multiple requests",0,
 	  lambda() {return !QUERY(set_cookie);});
 
   globvar("show_internals", 1, "Show the internals", TYPE_FLAG,
@@ -1368,7 +1368,7 @@ private void define_global_variables( int argc, array (string) argv )
   // 'disk_cache.pike'
   
   globvar("cache", 0, "Proxy disk cache: Enabled", TYPE_FLAG,
-	  "Is the cache enabled at all?");
+	  "If set to Yes, caching will be enabled.");
   
   globvar("garb_min_garb", 1, "Proxy disk cache: Clean size", TYPE_INT,
 	 "Minimum number of Megabytes removed when a garbage collect is done",
@@ -1377,8 +1377,8 @@ private void define_global_variables( int argc, array (string) argv )
   globvar("cache_minimum_left", 5, "Proxy disk cache: Minimum "
 	  "available free space and inodes (in %)", TYPE_INT,
 	  "If less than this amount of disk space or inodes (in %) is left, "
-	  "the cache will remove a few files. This check may work half hearted "
-	  "if the diskcache is spread over several filesystems.",
+	  "the cache will remove a few files. This check may work "
+	  "half-hearted if the diskcache is spread over several filesystems.",
 	  0,
 #if efun(filesystem_stat)
 	  cache_disabled_p
@@ -1427,17 +1427,17 @@ private void define_global_variables( int argc, array (string) argv )
 	  0, cache_disabled_p);
 
   globvar("cache_check_last_modified", 0, "Proxy disk cache: "
-	  "Refresh on Last-Modified", TYPE_FLAG, "Refresh files without "
-	  "Expires header information after they stayed in the cache "
-	  "as long as they were old when they got cached ? "
-	  "This may be useful for some regularly updated docs as in "
-	  "online newpapers.",
+	  "Refresh on Last-Modified", TYPE_FLAG,
+	  "If set, refreshes files without Expire header information "
+	  "when they have reached double the age they had when they got "
+	  "cached. This may be useful for some regularly updated docs as "
+	  "online newspapers.",
 	  0, cache_disabled_p);
 
   globvar("cache_last_resort", 0, "Proxy disk cache: "
-	  "Last resort (in days)", TYPE_INT, "How many days "
-	  "shall files without Expires and without Last-Modified header "
-	  "information be kept ?",
+	  "Last resort (in days)", TYPE_INT,
+	  "How many days shall files without Expires and without "
+	  "Last-Modified header information be kept ?",
 	  0, cache_disabled_p);
 
   globvar("cache_gc_logfile",  "",
@@ -1462,9 +1462,11 @@ private void define_global_variables( int argc, array (string) argv )
 
   globvar("default_ident", 1, "Identify: Use default identification string",
 	  TYPE_FLAG|VAR_MORE,
-	  "Should Roxen call itself \"" + real_version + "\" when talking "
-	  "to clients?<br>\n"
-	  "It might be useful to disable this so that you can enter an "
+	  "Setting this variable to No will display the \"Identify as\" node "
+	  "where you can state what Roxen should call itself when talking "
+	  "to clients, otherwise it will present it self as \""+ real_version
+	  +"\".<br>"
+	  "It is possible to disable this so that you can enter an "
 	  "identification-string that does not include the actual version of "
 	  "Roxen, as recommended by the HTTP/1.0 draft 03:<p><blockquote><i>"
 	  "Note: Revealing the specific software version of the server "
@@ -1472,9 +1474,10 @@ private void define_global_variables( int argc, array (string) argv )
 	  "attacks against software that is known to contain security "
 	  "holes. Server implementors are encouraged to make this field "
 	  "a configurable option.</i></blockquote>");
+
   globvar("ident", replace(real_version," ","·"), "Identify: Identify as",
 	  TYPE_STRING /* |VAR_MORE */,
-	  "What Roxen will call itself when talking to clients. ",
+	  "Enter the name that Roxen should use when talking to clients. ",
 	  0, ident_disabled_p);
 
 
@@ -1482,29 +1485,32 @@ private void define_global_variables( int argc, array (string) argv )
 	  "Do you want documentation? (this is an example of documentation)");
 
 
-  globvar("NumAccept", 1, "Number of accepts to attempt", TYPE_INT_LIST|VAR_MORE,
-	  "The maximum number of accepts to attempt for each read callback "
-	  "from the main socket. <p> Increasing this will make the server"
-	  " faster for users making many simultaneous connections to it, or"
+  globvar("NumAccept", 1, "Number of accepts to attempt",
+	  TYPE_INT_LIST|VAR_MORE,
+	  "You can here state the maximum number of accepts to attempt for "
+	  "each read callback from the main socket. <p> Increasing this value "
+	  "will make the server "
+	  "faster for users making many simultaneous connections to it, or"
 	  " if you have a very busy server. <p> It won't work on some systems"
 	  ", though, eg. IBM AIX 3.2<p> To see if it works, change this"
 	  " variable, <b> but don't press save</b>, and then try connecting to"
 	  " your server. If it works, come back here and press the save button"
-	  ". <p> If it doesen't work, just restart the server and be happy "
+	  ". <p> If it doesn't work, just restart the server and be happy "
 	  "with having '1' in this field.<p>"
-	  "The higher you set this value, the less load balancing between"
-	  " virtual servers (if there are 256 more or less simultaneous "
+	  "The higher you set this value, the less load balancing between "
+	  "virtual servers. (If there are 256 more or less simultaneous "
 	  "requests to server 1, and one to server 2, and this variable is "
-	  "set to 256, the 256 accesses to the first server might very well be"
-	  " handled before the one to the second server.)",
+	  "set to 256, the 256 accesses to the first server might very well "
+	  "be handled before the one to the second server.)",
 	  ({ 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024 }));
   
 
   globvar("ConfigPorts", ({ ({ 22202, "http", "ANY", "" }) }),
 	  "Configuration interface: Ports",
 	  TYPE_PORTS,
-	  "The ports that the configuration interface will be "
-	  "accessible via.<p>If you have none, you have a problem.\n");
+	  "These are the ports through which you can configure the"
+	  "server.<br>Note that you should at least have one open port, since "
+	  "otherwise you won't be able to configure your server.");
   
   globvar("ConfigurationURL", 
 	  "",
@@ -1528,8 +1534,9 @@ private void define_global_variables( int argc, array (string) argv )
   
   globvar("ConfigurationIPpattern","*", "Configuration interface: IP-Pattern", 
 	  TYPE_STRING|VAR_MORE,
-	  "The IP-pattern hosts trying to connect to the configuration "
-	  "interface will have to match.");
+	  "Only clients running on computers with IP numbers matching"
+	  "this pattern will be able to use the configuration"
+	  "interface.");
   
   globvar("User", "", "Change uid and gid to", TYPE_STRING,
 	  "When roxen is run as root, to be able to open port 80 "
@@ -1540,11 +1547,12 @@ private void define_global_variables( int argc, array (string) argv )
   
   globvar("NumHostnameLookup", 2, "Number of hostname lookup processes", 
 	  TYPE_INT|VAR_MORE,
-	  "The number of simultaneos host-name lookup processes roxen should "
-	  "run. Roxen must be restarted for a change of this variable to "+
-	  "take effect. If you constantly see a large host name lookup "
-	  "queue size in the configuration interface 'Status' section, "
-	  "consider increasing this variable. A good guidline is: "
+	  "You can here state the number of simultaneos host-name lookup "
+	  "processes Roxen should run. Roxen must be restarted for a change "
+	  "of this variable to take effect. If you constantly see a large "
+	  "host name lookup queue size in the configuration interface "
+	  "'Actions->Status' section, consider increasing this variable. "
+	  "A good guidline is: "
 	  "<ul>\n"
 	  "<li> 1 for normal operation\n"
 	  "<li> 1 extra for each 300 000 accesses/day\n"
@@ -1552,10 +1560,10 @@ private void define_global_variables( int argc, array (string) argv )
 	  "<li> 1 for each 100 proxy users\n"
 	  "</ul>\n");
   
-  
   globvar("ModuleDirs", ({ "../local/modules/", "modules/" }),
 	  "Module directories", TYPE_DIR_LIST,
-	  "Where to look for modules. Can be relative paths, from the "
+	  "This is a list of directories where Roxen should look for "
+	  "modules. Can be relative paths, from the "
 	  "directory you started roxen, " + getcwd() + " this time."
 	  " The directories are searched in order for modules.");
   
@@ -1580,7 +1588,8 @@ private void define_global_variables( int argc, array (string) argv )
 //	  "#If-Modified-Since>specified by the HTTP draft.</a>");
   
   globvar("audit", 0, "Audit trail", TYPE_FLAG,
-	 "If set, log all changes of uid in the event log.");
+	  "If Audit trail is set to Yes, all changes of uid will be"
+	  "logged in the Event log.");
   
 #if efun(syslog)
   globvar("LogA", "file", "Logging method", TYPE_STRING_LIST|VAR_MORE, 
@@ -1616,8 +1625,9 @@ private void define_global_variables( int argc, array (string) argv )
 	  syslog_disabled);
   
   globvar("LogNA", "Roxen", "Syslog: Log as", TYPE_STRING,
-	  "When syslog is used, use this as the id of the Roxen daemon"
-	  ". This will be appended to all logs.", 0, syslog_disabled);
+	  "When syslog is used, this will be the identification of the"
+	  "Roxen daemon. The entered value will be appended to all logs.",
+	  0, syslog_disabled);
 #endif
 
 #ifdef THREADS
@@ -1639,9 +1649,9 @@ private void define_global_variables( int argc, array (string) argv )
   
   globvar("AutoUpdate", 1, "Update the supports database automatically",
 	  TYPE_FLAG, 
-	  "If set, the etc/supports file will be updated automatically "
+	  "If set to Yes, the etc/supports file will be updated automatically "
 	  "from www.roxen.com now and then. This is recomended, since "
-	  "you will then automatically get supports info for new "
+	  "you will then automatically get supports information for new "
 	  "clients, and new versions of old ones.");
 
   globvar("next_supports_update", time()+3600, "", TYPE_INT,"",0,1);
