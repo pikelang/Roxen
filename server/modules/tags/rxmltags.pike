@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.228 2001/05/16 20:53:27 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.229 2001/05/17 22:40:38 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -319,6 +319,8 @@ class TagHeader {
   inherit RXML.Tag;
   constant name = "header";
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  mapping(string:RXML.Type) req_arg_types = ([ "name": RXML.t_text(RXML.PEnt),
+					       "value": RXML.t_text(RXML.PEnt) ]);
 
   class Frame {
     inherit RXML.Frame;
@@ -335,9 +337,6 @@ class TagHeader {
       } else if(args->name=="URI")
 	args->value = "<" + args->value + ">";
 
-      if(!(args->value && args->name))
-	RXML.parse_error("Requires both a name and a value.\n");
-
       Roxen.add_http_header(_extra_heads, args->name, args->value);
       return 0;
     }
@@ -348,15 +347,18 @@ class TagRedirect {
   inherit RXML.Tag;
   constant name = "redirect";
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  mapping(string:RXML.Type) req_arg_types = ([ "to": RXML.t_text(RXML.PEnt) ]);
+  mapping(string:RXML.Type) opt_arg_types = ([ "add": RXML.t_text(RXML.PEnt),
+					       "drop": RXML.t_text(RXML.PEnt),
+					       "drop-all": RXML.t_text(RXML.PEnt) ]);
 
   class Frame {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
-      if ( !args->to )
-	RXML.parse_error("Requires attribute \"to\".\n");
-
-      multiset(string) prestate = (<>) + id->prestate;
+      multiset(string) prestate = (<>);
+      if(!has_value(args->to, "://") && !args["drop-all"])
+	prestate += id->prestate;
 
       if(args->add)
 	foreach((m_delete(args,"add") - " ")/",", string s)
@@ -1306,26 +1308,66 @@ string simpletag_aconf(string tag, mapping m,
   return RXML.t_xml->format_tag("a", m, q);
 }
 
-string simpletag_maketag(string tag, mapping m, string cont, RequestID id)
-{
-  mapping args=([]);
+class TagMaketag {
+  inherit RXML.Tag;
+  constant name = "maketag";
+  mapping(string:RXML.Type) req_arg_types = ([ "type" : RXML.t_text(RXML.PEnt) ]);
+  mapping(string:RXML.Type) opt_arg_types = ([ "noxml" : RXML.t_text(RXML.PEnt),
+					       "name" : RXML.t_text(RXML.PEnt) ]);
 
-  if(m->type=="pi")
-    return RXML.t_xml->format_tag(m->name, 0, cont, RXML.FLAG_PROC_INSTR);
+  class TagAttrib {
+    inherit RXML.Tag;
+    constant name = "attrib";
+    mapping(string:RXML.Type) req_arg_types = ([ "name" : RXML.t_text(RXML.PEnt) ]);
 
-  cont=Parser.HTML()->
-    add_container("attrib", 
-		  lambda(string tag, mapping m, string cont) {
-		    args[m->name]=cont;
-		    return "";
-		  })->
-    feed(cont)->read();
+    class Frame {
+      inherit RXML.Frame;
 
-  if(m->type=="container")
-    return RXML.t_xml->format_tag(m->name, args, cont);
-  if(m->type=="tag")
-    return Roxen.make_tag(m->name, args, !m->noxml);
-  RXML.parse_error("No type given.\n");
+      array do_return(RequestID id) {
+	id->misc->makeargs[args->name] = content;
+	return 0;
+      }
+    }
+  }
+
+  RXML.TagSet internal = RXML.TagSet("TagMaketag.internal", ({ TagAttrib() }) );
+
+  class Frame {
+    inherit RXML.Frame;
+    mixed old_args;
+    RXML.TagSet additional_tags = internal;
+
+    array do_enter(RequestID id) {
+      old_args = id->misc->makeargs;
+      id->misc->makeargs = ([]);
+      return 0;
+    }
+
+    array do_return(RequestID id) {
+      switch(args->type) {
+      case "pi":
+	if(!args->name) parse_error("Type 'pi' requires a name attribute.\n");
+	result = RXML.t_xml->format_tag(args->name, 0, content, RXML.FLAG_PROC_INSTR);
+	break;
+      case "container":
+	if(!args->name) parse_error("Type 'container' requires a name attribute.\n");
+	result = RXML.t_xml->format_tag(args->name, id->misc->makeargs, content);
+	break;
+      case "tag":
+	if(!args->name) parse_error("Type 'tag' requires a name attribute.\n");
+	result = Roxen.make_tag(args->name, id->misc->makeargs, !args->noxml);
+	break;
+      case "comment":
+	result = "<!--" + content + "-->";
+	break;
+      case "cdata":
+	result = "<![CDATA[" + content + "]]>";
+	break;
+      }
+      id->misc->makeargs = old_args;
+      return 0;
+    }
+  }
 }
 
 class TagDoc {
@@ -4954,19 +4996,38 @@ using the pre tag.
 //----------------------------------------------------------------------
 
 "maketag":({ #"<desc cont='cont'><p><short hide='hide'>
- Makes it possible to create tags.</short>This tag creates tags. The contents of the container will be put into the contents of the produced container.
+ Makes it possible to create tags.</short>This tag creates tags.
+ The contents of the container will be put into the contents of the produced container.
 </p></desc>
 
-<attr name=name value=string required='required'>
- <p>The name of the tag.</p>
+<attr name=name value=string>
+ <p>The name of the tag that should be produced. This attribute is required for tags,
+ containers and processing instructions, i.e. for the types 'tag', 'container' and 'pi'.</p>
+<ex type='shor'>
+<maketag name='one' type='tag'></maketag>
+<maketag name='one' type='tag' noxml='noxml'></maketag>
+</ex>
 </attr>
 
 <attr name=noxml>
- <p>Tags should not be terminated with a trailing slash.</p>
+ <p>Tags should not be terminated with a trailing slash. Only makes a difference for
+ the type 'tag'.</p>
 </attr>
 
-<attr name=type value=tag|container|pi default=tag>
- <p>What kind of tag should be produced. The argument 'Pi' will produce a processinstruction tag. </p>
+<attr name=type value=tag|container|pi|comment|cdata>
+ <p>What kind of tag should be produced. The argument 'Pi' will produce a processing instruction tag.</p>
+<ex type='svert'>
+<maketag type='pi' name='PICS'>l gen true r (n 0 s 0 v 0 l 2)</maketag>
+</ex>
+<ex type='shor'>
+<maketag type='comment'>Menu starts here</maketag>
+</ex>
+<ex type='box'>
+<maketag type='comment'>Debug: &form.res; &var.sql;</maketag>
+</ex>
+<ex type='shor'>
+<maketag type='cdata'>Exact   words</maketag>
+</ex>
 </attr>",
 
  ([
