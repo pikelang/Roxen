@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.168 2004/01/27 13:30:27 jonasw Exp $
+// $Id: Roxen.pmod,v 1.169 2004/01/28 12:33:05 anders Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2148,8 +2148,32 @@ int time_dequantifier(mapping m, void|int t )
   if (m->minutes) t+=(int)(m->minutes)*60;
   if (m->beats)   t+=(int)((float)(m->beats)*86.4);
   if (m->hours)   t+=(int)(m->hours)*3600;
-  if (m->days)    t+=(int)(m->days)*86400;
-  if (m->weeks)   t+=(int)(m->weeks)*604800;
+  if (m->days) {
+    int days = (int)m->days;
+    if(initial) {
+      if(days<0)
+	t = (Calendar.ISO.Second("unix", t) -
+	     Calendar.ISO.Day()*abs(days))->unix_time();
+      else
+	t = (Calendar.ISO.Second("unix", t) +
+	     Calendar.ISO.Day()*days)->unix_time();
+    }
+    else
+      t+=days*24*3600;
+  }
+  if (m->weeks) {
+    int weeks = (int)m->weeks;
+    if(initial) {
+      if(weeks<0)
+	t = (Calendar.ISO.Second("unix", t) -
+	     Calendar.ISO.Week()*abs(weeks))->unix_time();
+      else
+	t = (Calendar.ISO.Second("unix", t) +
+	     Calendar.ISO.Week()*weeks)->unix_time();
+    }
+    else
+      t+=weeks*604800;
+  }
   if (m->months) {
     int mon = (int)m->months;
     if(initial) {
