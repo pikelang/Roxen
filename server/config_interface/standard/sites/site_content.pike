@@ -44,11 +44,6 @@ string describe_location( RoxenModule m, RequestID id )
 		   : mp || "";
 }
 
-string format_container(string name)
-{
-  return "<"+replace(name, "#", " ")+"></>";
-}
-
 string describe_tags( RoxenModule m, int q )
 {
   multiset tags=(<>), conts=(<>);
