@@ -55,9 +55,9 @@
 </define>
 
 <define container=subtablist>
-<comment preparse>
+<nooutput>
   <contents>
-</comment><p><br><p>
+</nooutput><p><br><p>
   <table width=100% border=0 cellpadding=0 cellspacing=0 >
     <tr>
       <td ::=&usr.subtabs-tableargs:none;><tablist preparse ::=&usr.subtabs-args:none;>
@@ -96,7 +96,7 @@
 
 <define container=tmpl>
 <title>&roxen.version; &locale.administration_interface; &title;</title>
-<comment preparse> <!-- We do not want any output from this. -->
+<nooutput> <!-- We do not want any output from this. -->
   <insert file=/standard/themes/&usr.theme;/theme nocache>
   <define preparse variable=leftimage><img src=&usr.left-image;></define>
   <define preparse name=tab-frame-image>&usr.tab-frame-image;</define>
@@ -105,7 +105,7 @@
   <define name=font preparse>&usr.font;</define>
   <expire-time now>
   <contents>
-</comment>
+</nooutput>
   <body ::=&usr.body-args:none;>
       <table width=100% cellpadding=0 cellspacing=0 border=0
              ::=&usr.top-tableargs:none;>
