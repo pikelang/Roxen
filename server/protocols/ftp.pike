@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.40 2000/09/18 17:21:34 grubba Exp $
+ * $Id: ftp.pike,v 2.41 2000/09/20 12:42:57 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -3451,6 +3451,10 @@ class FTPSession
 	// Not time yet to sever the connection.
 	call_out(timeout, FTP2_TIMEOUT + 30 - t);
       }
+    } else {
+      // We ought to be dead already...
+      DWRITE("FTP2: Timeout on dead connection.\n");
+      destruct();
     }
   }
 
@@ -3522,14 +3526,26 @@ class FTPSession
 
   void con_closed()
   {
+    DWRITE("FTP2: con_closed()\n");
+
+    logout();
+
     master_session->method = "QUIT";
     master_session->not_query = user || "Anonymous";
     conf->log(([ "error":204, "request_time":(time(1)-master_session->time) ]),
 	      master_session);
+
+    if (fd) {
+      fd->close();
+    }
+    // Make sure we disappear...
+    destruct();
   }
 
   void destroy()
   {
+    DWRITE("FTP2: destroy()\n");
+
     logout();
 
     conf->extra_statistics->ftp->sessions--;
