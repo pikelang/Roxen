@@ -3,7 +3,7 @@
 // This module log the accesses of each user in their home dirs, if
 // they create a file named 'AccessLog' in that directory, and allow
 // write access for roxen.
-constant cvs_version = "$Id: home_logger.pike,v 1.13 1997/10/03 17:16:51 grubba Exp $";
+constant cvs_version = "$Id: home_logger.pike,v 1.14 1998/01/16 17:14:50 grubba Exp $";
 constant thread_safe=1;
 
 
@@ -163,7 +163,7 @@ string create()
 }
 
 
-program CacheFile = class {
+class CacheFile {
   inherit files.file;
   string file;
   int ready = 1, d, n;
