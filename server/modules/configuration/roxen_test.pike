@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.23 2001/04/21 19:57:56 nilsson Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.24 2001/05/17 12:03:56 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Roxen self test module";
@@ -280,6 +280,9 @@ void run_xml_tests(string data) {
   report_debug("Did %d tests, failed on %d.\n", ltests, lfails);
   continue_find_tests();
 }
+
+
+// --- Pike test files -----------------------
 
 void run_pike_tests(object test, string path)
 {
