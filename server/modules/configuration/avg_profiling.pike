@@ -230,7 +230,7 @@ mapping find_file (string f, RequestID id)
     <if variable='var.page == &form.page;'>
       <b>[&var.page;]</b>
     </if><else>
-      <a href='&page.path;?session=&form.session;&amp;config=&form.config;&amp;file=&form.file;&amp;event-class=&form.event-class;&amp;event-name=&form.event-name;&amp;sort-by=&form.sort-by;&amp;sort-dir=&form.sort-dir;&amp;page=&var.page;'>[&var.page;]</a>
+      <a href='&page.path;?session=&form.session;&amp;config=&form.config;&amp;file=&form.file;&amp;event-class=&form.event-class;&amp;event-name=&form.event-name;&amp;order-by=&form.order-by;&amp;sort-dir=&form.sort-dir;&amp;page=&var.page;'>[&var.page;]</a>
     </else>&nbsp;
   </for>
 </define>
@@ -322,8 +322,8 @@ mapping find_file (string f, RequestID id)
     <tr>
       <td><b>Sort by:</b></td>
       <td>
-        <default name='sort' value='&form.sort;'>
-          <select name='sort'>
+        <default name='order-by' value='&form.order-by;'>
+          <select name='order-by'>
             <option value='real-us'>Real</option>
             <option value='cpu-us'>CPU</option>
             <option value='calls'>Calls</option>
@@ -378,7 +378,7 @@ mapping find_file (string f, RequestID id)
   file-glob='&form.file-glob;'
   event-class='&form.event-class;'
   event-name='&form.event-name;'
-  order-by='&form.sort;'
+  order-by='&form.order-by;'
   sort-dir='&form.sort-dir;'
   group-by='&form.group-by;'
 </define>
