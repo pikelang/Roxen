@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.127 2004/05/14 16:29:32 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.128 2004/05/14 16:35:00 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -371,6 +371,17 @@ class Configuration
   void invalidate_cache();
   void clear_memory_caches();
   string examine_return_mapping(mapping m);
+  multiset(DAVLock) find_locks(string path, int(0..1) recursive,
+			       int(0..1) exclude_shared, RequestID id);
+  DAVLock|LockFlag check_locks(string path, int(0..1) recursive, RequestID id);
+  mapping(string:mixed) unlock_file(string path, DAVLock lock, RequestID id);
+  mapping(string:mixed)|DAVLock lock_file(string path,
+					  int(0..1) recursive,
+					  string lockscope,
+					  string locktype,
+					  int(0..) expiry_delta,
+					  array(Parser.XML.Tree.Node) owner,
+					  RequestID id);
   mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic);
   mapping get_file(RequestID id, int|void no_magic, int|void internal_get);
   array(string) find_dir(string file, RequestID id, void|int(0..1) verbose);
