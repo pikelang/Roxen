@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.13 2001/08/01 11:08:17 per Exp $
+// $Id: DBManager.pmod,v 1.14 2001/08/08 23:11:04 nilsson Exp $
 //! @module DBManager
 //! Manages database aliases and permissions
 #include <roxen.h>
@@ -8,8 +8,10 @@
 
 constant NONE  = 0;
 //! No permissions. Used in @[set_permission] and @[get_permission_map]
+
 constant READ  = 1;
 //! Read permission. Used in @[set_permission] and @[get_permission_map]
+
 constant WRITE = 2;
 //! Write permission. Used in @[set_permission] and @[get_permission_map]
 

@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.61 2001/08/05 20:12:36 nilsson Exp $
+// $Id: module.pmod,v 1.62 2001/08/08 23:12:46 nilsson Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -744,8 +744,10 @@ class Text
 {
   inherit String;
   constant type = "Text";
+
   int cols = 60;
   //! The width of the textarea
+
   int rows = 10;
   //! The height of the textarea
   
@@ -1015,6 +1017,7 @@ class MultipleChoice
 	sprintf(LOCALE(332,"(keep stale value %s)"),_name(current)));
     return res + "</select>";
   }
+
   static void create( mixed default_value, array|mapping choices,
                       void|int _flags, void|LocaleString std_name,
 		      void|LocaleString std_doc )
@@ -1108,6 +1111,7 @@ class FontChoice
   {
     return roxenp()->fonts->available_fonts();
   }
+
   static void create(mixed default_value, void|int flags,
                      void|LocaleString std_name, void|LocaleString std_doc)
     //! Constructor. 
@@ -1137,7 +1141,7 @@ class DatabaseChoice
   //! Provide a function that returns a configuration object,
   //! that will be used for authentication against the database
   //! manager. Typically called as
-  //! @code{set_configuration_pointer(my_configuration)}.
+  //! @code{set_configuration_pointer(my_configuration)@}.
   {
     config = configuration;
     return this_object();

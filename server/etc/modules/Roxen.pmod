@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.108 2001/08/05 20:11:14 nilsson Exp $
+// $Id: Roxen.pmod,v 1.109 2001/08/08 23:11:20 nilsson Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -258,6 +258,7 @@ static constant days = ({ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" });
 
 static int chd_lt;
 static string chd_lf;
+
 string cern_http_date(int t)
 //! Return a date, formated to be used in the common log format
 {
@@ -1580,7 +1581,7 @@ string roxen_encode( string val, string encoding )
 		    ({ "''", "\"'\"'\"" }) );
 
    default:
-     //! Unknown encoding. Let the caller decide what to do with it.
+     // Unknown encoding. Let the caller decide what to do with it.
      return 0;
   }
 }
