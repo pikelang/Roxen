@@ -1,7 +1,9 @@
-constant cvs_version="$Id: countdown.pike,v 1.11 1999/07/19 15:11:17 nilsson Exp $";
+constant cvs_version="$Id: countdown.pike,v 1.12 1999/07/24 21:04:16 nilsson Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
+
+#define old_rxml_compat 1
 
 mapping set_to_julian_easter(int year) {
   int G = year % 19;
@@ -259,38 +261,50 @@ int weekday_handler(int when, mapping time_args) {
   return when;
 }
 
-int old_RXML_compat=1;
-
 string tag_countdown(string t, mapping m, object id)
 {
 
-  if(old_RXML_compat) {
-
-    foreach( ({ 
-      ({"min","minute"}),
-      ({"sec","second"}),
-      ({"age","since"}) }), array tmp)
-      { if(m[tmp[0]]) { m[tmp[1]]=m[tmp[0]]; m_delete(m, tmp[0]); } }
-
-    if(m->prec=="min") m->prec="minute";
-
-    foreach(({"christmas_eve","christmas_day","christmas","year2000","easter"}), string tmp)
-      if(m[tmp]) { m->event=tmp; m_delete(m, tmp); }
-
-    if(m->nowp) {
-      m->round="up";
-      m->display="boolean";
+#if old_rxml_compat
+  foreach( ({ 
+    ({"min","minute"}),
+    ({"sec","second"}),
+    ({"age","since"}) }), array tmp)
+    { if(m[tmp[0]]) { 
+      m[tmp[1]]=m[tmp[0]];
+      m_delete(m, tmp[0]);
+      id->conf->api_functions()->old_rxml_warning[0](id, "countdown attribute "+tmp[0],tmp[1]);
     }
-
-    if(!m->display) {
-      foreach(({"seconds","minutes","hours","days","weeks","months","years",
-		"dogyears","combined","when"}), string tmp) {
-        if(m[tmp]) m->display=tmp;
-        m_delete(m, tmp);
-      }
-    }
-
   }
+
+  if(m->prec=="min") {
+    m->prec="minute";
+    id->conf->api_functions()->old_rxml_warning[0](id, "prec=min in countdown tag","prec=minute");
+  }
+
+  foreach(({"christmas_eve","christmas_day","christmas","year2000","easter"}), string tmp)
+    if(m[tmp]) {
+      m->event=tmp;
+      m_delete(m, tmp);
+      id->conf->api_functions()->old_rxml_warning[0](id, "countdown attribute "+tmp,"event="+tmp);
+    }
+
+  if(m->nowp) {
+    m->round="up";
+    m->display="boolean";
+    m_delete(m, "nowp");
+    id->conf->api_functions()->old_rxml_warning[0](id, "countdown attribute nowp",
+      "display=boolean (possibly together with round=up)");
+  }
+
+  if(!m->display) {
+    foreach(({"seconds","minutes","hours","days","weeks","months","years",
+        "dogyears","combined","when"}), string tmp) {
+      if(m[tmp]) m->display=tmp;
+      m_delete(m, tmp);
+      id->conf->api_functions()->old_rxml_warning[0](id, "countdown attribute "+tmp,"display="+tmp);
+    }
+  }
+#endif
 
   if(m->sec || m->prec=="second")
     CACHE(1);
@@ -474,7 +488,7 @@ string tag_countdown(string t, mapping m, object id)
 
   switch(m->display) {
     case "when":
-    m->unix_time = (string)when;
+    m["unix-time"] = (string)when;
     m_delete(m, "display");
     return make_tag("date", m);
 
