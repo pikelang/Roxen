@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.40 1998/05/18 15:11:44 grubba Exp $
+ * $Id: ftp2.pike,v 1.41 1998/05/18 21:22:24 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -2579,7 +2579,7 @@ class FTPSession
       send_MLSD_response(session->conf->find_dir_stat(args, session), session);
     } else {
       if (st) {
-	file->error = 405;
+	session->file->error = 405;
       }
       send_error("MLSD", args, session->file, session);
     }
