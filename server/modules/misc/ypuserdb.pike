@@ -3,7 +3,7 @@
 // YP User database. Reads the system password database and use it to
 // authentificate users.
 
-string cvs_version = "$Id: ypuserdb.pike,v 1.3 1997/06/09 18:51:49 grubba Exp $";
+string cvs_version = "$Id: ypuserdb.pike,v 1.4 1997/06/09 18:54:44 grubba Exp $";
 
 #include <module.h>
 inherit "module";
@@ -28,7 +28,7 @@ mapping(string:int) failed = ([]);
 string status()
 {
   return("<h1>Security info</h1>\n"
-	 "<b>YP-server:</b> " + domain->server() + "<br>\n"
+	 "<b>YP-server:</b> " + domain->server("passwd.byname") + "<br>\n"
 	 "<b>YP-domain:</b> " + default_yp_domain() + "<br>\n"
 	 "<p>\n"
 	 "<b>Successful auths:</b> " + (string)succ +
