@@ -1,6 +1,6 @@
 inherit "http";
 
-static string _cvs_version = "$Id: roxenlib.pike,v 1.27 1997/05/28 01:45:09 per Exp $";
+static string _cvs_version = "$Id: roxenlib.pike,v 1.28 1997/05/29 19:15:39 marcus Exp $";
 // This code has to work booth in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -675,7 +675,8 @@ mapping proxy_auth_needed(object id)
 
 string program_filename()
 {
-  return search(master()->programs, object_program(this_object()));
+  return roxen->filename(this_object()) ||
+    search(master()->programs, object_program(this_object()));
 }
 
 string program_directory()
