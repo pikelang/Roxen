@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.44 1999/02/09 20:51:06 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.45 1999/02/09 21:04:12 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -238,9 +238,15 @@ class imap_mail
   
   array fetch(array(mapping(string:mixed)) attrs)
   {
+    array data = Array.map(attrs, fetch_attr) * ({}) +
+    ({ "UID", imap_number(uid) });
+    
+#ifdef IMAP_DEBUG
+    werror("imap_mail->fetch(%O) => %O\n", attrs, data);
+#endif /* IMAP_DEBUG */
+
     return ({ "FETCH", 
-	      imap_list(Array.map(attrs, fetch_attr) * ({}) +
-			({ "UID", imap_number(uid) }) )
+	      imap_list(data)
     });
   }
 
