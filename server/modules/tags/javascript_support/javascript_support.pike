@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.27 2001/04/20 11:56:47 jonasw Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.28 2001/04/26 16:18:04 wellhard Exp $";
 //constant thread_safe=1;
 
 #include <module.h>
@@ -50,15 +50,17 @@ mapping find_internal(string f, object id)
   }
   
   string file = combine_path(__FILE__, "../scripts", (f-".."));
-  return ([ "data":Stdio.read_bytes(file),
+  return ([ "data":Stdio.File(file,"r"),
 	    "type":"application/x-javascript" ]);
 }
 
+// Provider function
 string get_callback_url(string token)
 {
   return "__cb/" + token + "/";
 }
 
+// Provider function
 void register_callback(string token, function(string,string,object:string) cb)
 {
   callbacks[token] = cb;
@@ -188,7 +190,7 @@ class TagEmitJsLink {
   inherit RXML.Tag;
   constant name = "emit";
   constant plugin_name = "js-link";
-  array get_dataset(mapping m, RequestID id)
+  array get_dataset(mapping args, RequestID id)
   {
     string s = "clearToPopup('"+(id->misc->_popupparent||"none")+"');";
     return ({ ([
@@ -204,12 +206,11 @@ string container_js_popup(string name, mapping args, string contents, object id)
   mapping largs = copy_value(args);
   if(largs["args-variable"]) m_delete(largs, "args-variable");
   if(largs->label) m_delete(largs, "label");
-  if(largs->ox) m_delete(largs, "ox");
-  if(largs->oy) m_delete(largs, "oy");
-  if(largs->od) m_delete(largs, "od");
+  if(largs->props) m_delete(largs, "props");
+  if(!args->props)
+    args->props = "default_props";
   if(!largs->href) largs->href = "javascript:void(0);";
   if(largs->event) m_delete(largs, "event");
-
   string popupname = get_jss(id)->get_unique_id("popup");
   string popupparent =
     (id->misc->_popupparent?id->misc->_popupparent:"none");
@@ -220,16 +221,8 @@ string container_js_popup(string name, mapping args, string contents, object id)
   if(lower_case(args->event||"") == "onclick")
     event = "onClick";
   
-  largs[event] = "return showPopup('"+popupname+
-		 "', '"+popupparent+"', "+args->ox+", "+args->oy+", "+args->od;
-  
-  if(id->supports->js_global_event)
-    largs[event] += ", event";
-  largs[event] += ");";
-  
-  get_jss(id)->get_insert("javascript1.2")->
-    add("if(isNav4) document."+popupname+
-	".onMouseOut = hidePopup;\n");
+  largs[event] = "return showPopup(event, '"+popupname+"', '"+popupparent+
+		 "', "+args->props+");";
   
   get_jss(id)->get_insert("style")->
     add("#"+popupname+" {position:absolute; "
@@ -243,18 +236,16 @@ string container_js_popup(string name, mapping args, string contents, object id)
   id->misc->_popuplevel++;
   
   get_jss(id)->get_insert("div")->
-    add("<div id='"+popupname+"' "
-	"onMouseOut='hidePopup(\""+popupname+"\");'>\n"+
+    add("<div id='"+popupname+"'>\n"+
 	parse_rxml(contents, id)+"</div>\n");
   
   id->misc->_popupparent = old_pparent;
   id->misc->_popuplevel--;
   id->misc->_popupname = popupname;
-  //werror(" leaving.\n");
   
   if(args["args-variable"])
     id->variables[args["args-variable"]] = make_args_unquoted(largs);
-  
+
   if(!args->label)
     return "";
   
@@ -304,9 +295,49 @@ class TagJsExternal
   }
 }
 
+class TagJsDynamicPopupDiv
+{
+  inherit RXML.Tag;
+  constant name = "js-dynamic-popup-div";
+  class Frame
+  {
+    inherit RXML.Frame;
+
+    array do_return(RequestID id)
+    {
+      if(id->supports->layer)
+	result = ("<layer id=\""+args->name+"\" "
+		  " visibility=\"hidden\" z-index:"+(args->zindex||"1")+"></layer>");
+      else
+	result = ("<div id=\""+args->name+"\""
+		  " style=\"position:absolute; z-index:"+(args->zindex||"1")+
+		  " left:0; top:0; visibility:hidden;\"></div>");
+    }
+  }
+}
+
+// Provider function
+string js_dynamic_popup_event(string name, string src, string props)
+{
+  if(!props)
+    props = "default_props";
+  return "return loadLayer(event, \""+name+"\", \""+src+"\", "+props+");";
+}
+
+class TagEmitJsDynamicPopup {
+  inherit RXML.Tag;
+  constant name = "emit";
+  constant plugin_name = "js-dynamic-popup";
+  array get_dataset(mapping args, RequestID id)
+  {
+    return ({ ([ "event":js_dynamic_popup_event(args["name"],
+						args["src"], args["props"]) ]) });
+  }
+}
+
 mixed filter(mapping response, RequestID id)
 {
-  mixed c_filter_insert(Parser.HTML parser, mapping args, object id)
+  mixed c_filter_insert(Parser.HTML parser, mapping args, RequestID id)
   {
     JSInsert js_insert = get_jss(id)->get_insert(args->name);
     
