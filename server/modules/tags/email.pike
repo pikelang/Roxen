@@ -6,7 +6,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.33 2005/01/18 11:57:37 noring Exp $";
+constant cvs_version = "$Id: email.pike,v 1.34 2005/02/10 15:37:27 wellhard Exp $";
 
 constant thread_safe=1;
 
@@ -98,7 +98,7 @@ void create(Configuration conf)
 
 array mails = ({}), errs = ({});
 string msglast = "";
-string revision = ("$Revision: 1.33 $"/" ")[1];
+string revision = ("$Revision: 1.34 $"/" ")[1];
 
 class TagEmail {
   inherit RXML.Tag;
@@ -443,17 +443,38 @@ class TagEmail {
      // UTF8 -> dest. charset
      if(sizeof(chs))
      {
-	// Subject
-	subject = Locale.Charset.encoder(chs)
-	  ->clear()
-	  ->feed(args->subject||query("CI_nosubject"))
-	  ->drain();
-	subject = MIME.encode_word(({subject, chs}), "base64");
+       // Subject
+       // Only encode the subject if it contains non us-ascii (7-bit) characters.
+       if (String.width(subject) != 8 || string_to_utf8(subject) != subject)
+       {
+	 if (catch {
+	     subject = Locale.Charset.encoder(chs)->feed(subject)->drain();
+	   }) {
+	   chs = "utf-8";
+	   subject = string_to_utf8(subject);
+	 }
+	 string subject_b = MIME.encode_word(({subject, chs}), "base64");
+	 string subject_qp = MIME.encode_word(({subject, chs}), "quoted-printable");
 
-	// Body
-	body = Locale.Charset.encoder(chs)->clear()->feed(body)->drain();
+	 // Use quoted printable if it is shorter because it is
+	 // significantly easier to reed in clients not supporting
+	 // encoded subjects.
+	 if(sizeof(subject_b) < sizeof(subject_qp))
+	   subject = subject_b;
+	 else
+	   subject = subject_qp;
+       }
 
+       // Body
+       chs = args->charset || id->misc->input_charset || query("CI_charset");
+       if (catch {
+	   body = Locale.Charset.encoder(chs)->feed(body)->drain();
+	 }) {
+	 chs = ";charset=\"utf-8\"";
+	 body = string_to_utf8(body);
+       } else {
 	chs = ";charset=\""+chs+"\"";
+       }
      }
 
      string fenc =
@@ -652,7 +673,11 @@ value=''><p>
 </attr>
 
 <attr name='charset' value='' default='iso-8859-1'><p>
- The charset of the body.
+ The charset of the body and subject. The body will be encoded in utf-8
+ if the text was unable to be encoded in the supplied charset. The subject
+ will be unencoded if possible otherwise encoded with the supplied charset
+ or encoded in utf-8 if the text was unable to be encoded with the supplied
+ charset.
 </p>
 </attr>
 
