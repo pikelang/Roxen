@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.86 2003/02/05 15:46:15 grubba Exp $
+ * $Id: ftp.pike,v 2.87 2003/02/05 16:24:03 jonasw Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -185,7 +185,8 @@ class RequestID2
 		"send", "scan_for_query", "send_result", "misc",
 		"url_base", "set_response_header",
 		"add_response_header", "set_output_charset",
-		"adjust_for_config_path",
+		"charset_name", "charset_function", "join_charset", 
+		"output_encode", "adjust_for_config_path",
 		"destroy", "_num", "__num">)[var]) {
 #ifdef FTP2_DEBUG
 	  if (catch {
@@ -1876,6 +1877,11 @@ class FTPSession
       return 0;
     }
 
+    //  If data is a wide string we flatten it according to the charset
+    //  preferences in the current ID object.
+    if (file->data && String.width(file->data) > 8)
+      file->data = session->output_encode(file->data, 0)[1];
+    
     file->full_path = fname;
     file->request_start = time(1);
 
