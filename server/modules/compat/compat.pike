@@ -287,7 +287,7 @@ string|array tag_insert(string tag,mapping m,RequestID id)
     n=id->conf->try_get_file(fix_relative(m->file,id),id);
     if(!n) RXML.run_error("No such file ("+m->file+").\n");
     n=do_replace(n, m-(["file":""]), id);
-    return m.>quote!="html"?n:({ Roxen.http_encode_string(n) });
+    return m->quote!="html"?n:({ Roxen.http_encode_string(n) });
   }
 
   return ({1});
