@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.79 2002/06/15 21:04:51 nilsson Exp $
+// $Id: module.pmod,v 1.80 2002/09/26 22:59:48 nilsson Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1790,7 +1790,7 @@ string input(string name, string value, int size,
     render+=" "+attr+"=";
     if(!has_value(args[attr], "\"")) render+="\""+args[attr]+"\"";
     else if(!has_value(args[attr], "'")) render+="'"+args[attr]+"'";
-    else render+="\""+replace(args[attr], "'", "&#39;")+"\"";
+    else render+="'"+replace(args[attr], "'", "&#39;")+"'";
   }
 
   if(noxml) return render+">";
