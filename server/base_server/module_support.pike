@@ -1,6 +1,6 @@
 // This file is part of Internet Server.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module_support.pike,v 1.116 2002/07/03 20:20:32 nilsson Exp $
+// $Id: module_support.pike,v 1.117 2002/07/05 11:21:57 per Exp $
 
 #define IN_ROXEN
 #include <module_constants.h>
@@ -330,10 +330,11 @@ class ModuleInfo( string sname, string filename )
   static LocaleString decode_string( mixed what )
   {
     if( arrayp( what ) )
-    {
-      what[1] = get_locale;
-      return Locale.DeferredLocale( @what );
-    }
+//      {
+      return what[0];
+//        what[1] = get_locale;
+//        return Locale.DeferredLocale( @what );
+//      }
     return what;
   }
 
