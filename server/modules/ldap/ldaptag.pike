@@ -1,5 +1,5 @@
 /*
- * $Id: ldaptag.pike,v 1.2 1999/08/16 00:42:25 peter Exp $
+ * $Id: ldaptag.pike,v 1.3 2000/02/04 14:29:44 hop Exp $
  *
  * A module for Roxen Challenger, which gives the tags
  * <LDAP>, <LDAPOUTPUT> (with subtag <LDAPFOREACH>) and <LDAPELSE>
@@ -31,11 +31,12 @@
      1999-02-22 v1.6	Removed OLD_LDAP_API support
      1999-06-24 v1.7	Fixed bug in testing connection status 
      1999-07-24 v1.8a	LDAPOUTPUT: added new parameter 'sortby' and 'quote'
+     2000-02-04 v1.9	LDAPOUTPUT: added new parameter 'sizelimit', 'timelimit'
 
 
  */
 
-constant cvs_version="$Id: ldaptag.pike,v 1.2 1999/08/16 00:42:25 peter Exp $";
+constant cvs_version="$Id: ldaptag.pike,v 1.3 2000/02/04 14:29:44 hop Exp $";
 //constant thread_safe=0;
 #include <module.h>
 
@@ -141,6 +142,12 @@ array register_module()
 	     "<tr><td valign=top><b>sortby</b></td>"
 	     "<td>The output will be sorted according to the specified "
 	     "attribute</td></tr>"
+	     "<tr><td valign=top><b>sizelimit</b></td>"
+	     "<td>Restriction on size of returned objects"
+	     "</td></tr>"
+	     "<tr><td valign=top><b>timelimit</b></td>"
+	     "<td>Restriction on time of search operation on server side"
+	     "</td></tr>"
 	     "</table></ul><p>\n"
 	     "The following attributes are used by &lt;ldapfor&gt; tag:<ul>\n"
 	     "<table border=0>\n"
@@ -492,6 +499,10 @@ string ldapoutput_tag(string tag_name, mapping args, string contents,
     status_connect_nums++;
 
     con->set_basedn(basedn);
+    if (args->sizelimit)
+      con->set_option(2, (int)args->sizelimit);
+    if (args->timelimit)
+      con->set_option(3, (int)args->timelimit);
     if (args->scope) {
       int scopenum;
       switch (args->scope) {
