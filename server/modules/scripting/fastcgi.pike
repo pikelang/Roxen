@@ -1,6 +1,6 @@
 inherit "cgi.pike": normalcgi;
 
-constant cvs_version = "$Id: fastcgi.pike,v 2.8 2001/03/03 07:15:12 per Exp $";
+constant cvs_version = "$Id: fastcgi.pike,v 2.9 2001/08/24 12:34:27 leif Exp $";
 
 #include <roxen.h>
 #include <module.h>
@@ -63,17 +63,23 @@ class FCGIChannel
         buffer = p->get_leftovers();
         if( stream[p->requestid] && (s = stream[ p->requestid ][ p->type ] ) )
         {
+#ifdef FCGI_DEBUG
           werror( "->%s: %O\n", s->name, p->data );
+#endif
           s->cb( p->data );
         }
         else
         {
+#ifdef FCGI_DEBUG
           werror( "-> %O", p );
+#endif
           if( request_ids[p->requestid] )
             request_ids[p->requestid]( p );
           else if( default_cb )
             default_cb( p );
+#ifdef FCGI_DEBUG
           werror("\n");
+#endif
         }
       }
     }
@@ -120,7 +126,9 @@ class FCGIChannel
 
     void do_setup_channels()
     {
+#ifdef FCGI_DEBUG
       werror("Setting up read/write/close callbacks for FD\n");
+#endif
       fd->set_id( 0 );
       fd->set_blocking();
       thread_create( read_thread );
@@ -158,7 +166,9 @@ class FCGIChannel
 
     void do_setup_channels()
     {
+#ifdef FCGI_DEBUG
       werror("Setting up read/write/close callbacks for FD\n");
+#endif
       fd->set_id( 0 );
       fd->set_read_callback( read_cb );
       fd->set_write_callback( write_cb );
@@ -189,7 +199,9 @@ class FCGIChannel
 
   void send_packet( Packet p )
   {
+#ifdef FCGI_DEBUG
     werror( "<- %O\n", p );
+#endif
     write( (string)p );
   }
 
@@ -294,7 +306,9 @@ class Packet
     int dLen = strlen(data);
     int eLen = (dLen + 7) & (0xFFFF - 7); // align to an 8-byte boundary
     int paddinglen = eLen - dLen;
+#ifdef FCGI_DEBUG
     werror(sprintf("\nPADDING: %d\n", paddinglen));
+#endif
 
     return sprintf( "%c%c%2c%2c%c\0%s%s",1,type,requestid,strlen(data),paddinglen
                     ,data, "X"*paddinglen);
@@ -359,7 +373,9 @@ class Stream
     if( closed ) return;
     closed = 1;
 
+#ifdef FCGI_DEBUG
     werror( name+ " closed\n" );
+#endif
     if( writer )
       fd->send_packet( Packet( id, reqid, "" ) );
     else
@@ -432,7 +448,9 @@ class Stream
   {
     if( closed )
     {
+#ifdef FCGI_DEBUG
       werror("Got data on closed stream ("+id+")!\n");
+#endif
       return;
     }
     buffer += d;
@@ -636,11 +654,13 @@ class FCGIRun
     /* stdout / stderr routed to the above streams.. */
     if( p->type == FCGI_END_REQUEST )
     {
+#ifdef FCGI_DEBUG
       werror(" Got EOR from stream\n");
+#endif
       done();
     }
     else
-      werror(" Unexpected packet: %O\n", p );
+      werror(" Unexpected FCGI packet: %O\n", p );
   }
 
   void set_done_callback( function to )
@@ -696,15 +716,21 @@ class FCGI
     void do_connect( object fd, mixed|void q )
     {
 #if constant(thread_create)
+#ifdef FCGI_DEBUG
       werror(" Connecting...\n" );
+#endif
       while( fd->connect( "localhost",(int)(socket->query_address()/" ")[1]) )
       {
+#ifdef FCGI_DEBUG
         werror(" Connection failed...\n" );
+#endif
         sleep( 0.1 );
       }
       q();
 #else
+#ifdef FCGI_DEBUG
       werror(" Connecting...\n" );
+#endif
       fd->connect( "localhost",(int)(socket->query_address()/" ")[1]);
 #endif
     }
@@ -766,7 +792,9 @@ class FCGI
 
         options[ index-"FCG_" ] = (int)value;
         options[ index ] = value;
+#ifdef FCGI_DEBUG
         werror( "%O == %O\n", index, value );
+#endif
       }
     }
 
@@ -942,7 +970,9 @@ class CGIScript
     //
     if(!blocking)
     {
+#ifdef FCGI_DEBUG
       werror( "***** Non-Blocking ******\n");
+#endif
       Stdio.Stream fd = stdout;
       fd = CGIWrapper( fd, mid, kill_script )->get_fd();
       if( query("rxml") )
