@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.34 2000/12/30 16:49:45 nilsson Exp $
+// $Id: module.pmod,v 1.35 2001/03/01 20:41:28 per Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -242,23 +242,16 @@ class Variable
     //! the variable was changed back to it's default value and 0
     //! otherwise.
   {
+    int rv;
     if( equal( to, query() ) )
       return 0;
-
-    if( !equal(to, default_value() ) )
-    {
+    if( !(rv=equal(to, default_value() )) )
       changed_values[ _id ] = to;
-      if( get_changed_callback() )
-        catch( get_changed_callback()( this_object() ) );
-      return 1;
-    }
     else
-    {
       m_delete( changed_values, _id );
-      if( get_changed_callback() )
-        catch( get_changed_callback()( this_object() ) );
-      return -1;
-    }
+    if( get_changed_callback() )
+      catch( get_changed_callback()( this_object() ) );
+    return rv ? -1 : 1;
   }
 
   mixed query()
@@ -273,8 +266,7 @@ class Variable
   int is_defaulted()
     //! Return true if this variable is set to it's default value.
   {
-    return zero_type( changed_values[ _id ] ) || 
-           equal(changed_values[ _id ], default_value());
+    return zero_type( changed_values[ _id ] );
   }
 
   array(string|mixed) verify_set_from_form( mixed new_value )
