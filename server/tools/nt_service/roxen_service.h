@@ -2,7 +2,7 @@
  *
  * Based on the service example code from Microsoft.
  *
- * $Id: roxen_service.h,v 1.3 2000/06/28 20:47:49 mast Exp $
+ * $Id: roxen_service.h,v 1.4 2000/08/02 18:22:48 mast Exp $
  */
 
 // THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
@@ -64,7 +64,8 @@
 extern "C" {
 #endif
 
-int console_mode;
+int console_mode, run_once;
+DWORD ExitCode;
 
 //////////////////////////////////////////////////////////////////////////////
 //// todo: change to desired strings

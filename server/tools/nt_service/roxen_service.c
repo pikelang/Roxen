@@ -2,7 +2,7 @@
  *
  * Based on the service example code from Microsoft.
  *
- * $Id: roxen_service.c,v 1.6 2000/06/29 21:33:33 mast Exp $
+ * $Id: roxen_service.c,v 1.7 2000/08/02 18:22:48 mast Exp $
  */
 
 #include <windows.h>
@@ -122,7 +122,7 @@ VOID ServiceStart()
       {
 	if(ExitCode!=STILL_ACTIVE)
 	{
-	  if(ExitCode==0)	/* Shutdown */
+	  if(run_once || ExitCode==0) /* Shutdown */
 	  {
 	    if(hServerStopEvent)
 	      SetEvent(hServerStopEvent);
@@ -293,6 +293,8 @@ int start_roxen (int first_time)
 
 #define CONSOLEARG "-console"
 #define CONSOLEARGLEN (sizeof (CONSOLEARG) - sizeof (""))
+#define ONCEARG "-once"
+#define ONCEARGLEN (sizeof (ONCEARG) - sizeof (""))
   cmdline = GetCommandLine();
   if (*cmdline == '"') {
     for (cmdline++; *cmdline && *cmdline != '"'; cmdline++) {}
@@ -304,6 +306,11 @@ int start_roxen (int first_time)
   if (!_tcsncmp (cmdline, TEXT(CONSOLEARG), CONSOLEARGLEN) &&
       (!cmdline[CONSOLEARGLEN] || isspace (cmdline[CONSOLEARGLEN]))) {
     cmdline += CONSOLEARGLEN;
+    for (; *cmdline && isspace (*cmdline); cmdline++) {}
+  }
+  else if (!_tcsncmp (cmdline, TEXT(ONCEARG), ONCEARGLEN) &&
+	   (!cmdline[ONCEARGLEN] || isspace (cmdline[ONCEARGLEN]))) {
+    cmdline += ONCEARGLEN;
     for (; *cmdline && isspace (*cmdline); cmdline++) {}
   }
 

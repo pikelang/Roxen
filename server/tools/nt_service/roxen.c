@@ -2,7 +2,7 @@
  *
  * Based on the service example code from Microsoft.
  *
- * $Id: roxen.c,v 1.6 2000/07/04 15:50:18 mast Exp $
+ * $Id: roxen.c,v 1.7 2000/08/02 18:22:48 mast Exp $
  */
 
 // THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
@@ -29,7 +29,7 @@ SERVICE_STATUS_HANDLE   sshStatusHandle;
 DWORD                   dwErr = 0;
 TCHAR                   szErr[256];
 
-int console_mode = 0;
+int console_mode = 0, run_once = 0;
 
 // internal function prototypes
 VOID WINAPI service_ctrl(DWORD dwCtrlCode);
@@ -83,11 +83,16 @@ void _CRTAPI1 main(int argc, char **argv)
 	    console_mode = 1;
 	    CmdConsoleService();
 	}
+	else if ( _stricmp( "once", argv[1]+1 ) == 0 )
+	{
+	    console_mode = run_once = 1;
+	    CmdConsoleService();
+	}
 	else
 	{
 	    goto dispatch;
 	}
-	exit(0);
+	exit(ExitCode);
     }
 
     // if it doesn't match any of the above parameters
@@ -98,6 +103,7 @@ void _CRTAPI1 main(int argc, char **argv)
 	printf( "%s -install          to install the service\n", SZAPPNAME );
 	printf( "%s -remove           to remove the service\n", SZAPPNAME );
 	printf( "%s -console <params> to run as a console app for debugging\n", SZAPPNAME );
+	printf( "%s -once <params>    like -console, but never restart\n", SZAPPNAME );
 	printf( "\nStartServiceCtrlDispatcher being called.\n" );
 	printf( "This may take several seconds.  Please wait.\n" );
 
