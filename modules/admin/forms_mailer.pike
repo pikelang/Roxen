@@ -1,5 +1,5 @@
 /*
- * $Id: forms_mailer.pike,v 1.6 1998/09/30 23:00:31 js Exp $
+ * $Id: forms_mailer.pike,v 1.7 1998/10/12 09:33:23 js Exp $
  *
  * AutoSite Forms Mailer module
  *
@@ -7,7 +7,7 @@
  * Partly based on code made by <mirar@mirar.org>
  */
 
-constant cvs_version = "$Id: forms_mailer.pike,v 1.6 1998/09/30 23:00:31 js Exp $";
+constant cvs_version = "$Id: forms_mailer.pike,v 1.7 1998/10/12 09:33:23 js Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -46,9 +46,10 @@ string fill_in_input(string tag,mapping args,mapping vars)
     return "··indent··"+(vars[args->name]/"\000")*"·\\n·"+"··/indent··";
 
    case "string":
+   case "text":
     return vars[args->name];
   }
-  return "<???>";
+  return vars[args->name];;
 }
 
 string fill_in_textarea(string tag,mapping args,string cont,mapping vars)

@@ -1,12 +1,12 @@
 /*
- * $Id: intraseek_helper.pike,v 1.6 1998/09/22 23:38:23 js Exp $
+ * $Id: intraseek_helper.pike,v 1.7 1998/10/12 09:43:52 js Exp $
  *
  * AutoSeek, Intraseek helper module
  *
  * Johan Schön 1998-09-08
  */
 
-constant cvs_version = "$Id: intraseek_helper.pike,v 1.6 1998/09/22 23:38:23 js Exp $";
+constant cvs_version = "$Id: intraseek_helper.pike,v 1.7 1998/10/12 09:43:52 js Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -93,8 +93,8 @@ string tag_search(string tag_name, mapping args, object id)
     return "Intraseek not enabled for this host. ("+id->variables->customer_id+")";
   else 
     return 
-      "<intraseek_form lang=en ids="+id->misc->customer_id+" default_id="+
-      id->misc->customer_id+"><intraseek_results lang=en>";
+      "<intraseek_form lang="+(args->lang?args->lang:"en")+" ids="+id->misc->customer_id+" default_id="+
+      id->misc->customer_id+"><intraseek_results lang="+(args->lang?args->lang:"en")+">";
 }
 
 mapping query_tag_callers()
