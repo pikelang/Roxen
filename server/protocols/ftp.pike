@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.61 2001/08/04 23:46:42 grubba Exp $
+ * $Id: ftp.pike,v 2.62 2001/08/05 15:49:31 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -575,14 +575,10 @@ class LS_L(static RequestID master_session,
 
   static string name_from_uid(int uid)
   {
-    // FIXME: Support the new auth API.
-    string|array(string) user = master_session->conf->auth_module &&
-      master_session->conf->auth_module->user_from_uid(uid);
-    if (user) {
-      if (arrayp(user)) {
-	return(user[0]);
-      } else {
-	return(user);
+    User user;
+    foreach(master_session->conf->user_databases(), UserDB user_db) {
+      if (user = user_db->find_user_from_uid(uid)) {
+	return user->name();
       }
     }
     return (uid?((string)uid):"root");
@@ -2651,7 +2647,6 @@ class FTPSession
     master_session->misc->password = password;  // Otherwise we have to emulate
                                                // the Authentication header
 
-//     master_session->auth = ({ 0, master_session->realauth, -1 });
     auth_user = master_session->conf->authenticate(master_session);
 
     if (!auth_user) {
@@ -2705,14 +2700,8 @@ class FTPSession
 	master_session->misc->home += "/";
       }
 
-      // FIXME: htaccess support.
-      // NOTE: roxen->stat_file() might change master_session->auth.
-      array auth = master_session->auth;
-
       array(int)|object st = conf->stat_file(master_session->misc->home,
 					     master_session);
-
-      master_session->auth = auth;
 
       if (st && (st[1] < 0)) {
 	cwd = master_session->misc->home;
