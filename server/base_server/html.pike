@@ -1,10 +1,12 @@
-//string cvs_version = "$Id: html.pike,v 1.5 1998/03/16 02:55:40 mast Exp $";
+//string cvs_version = "$Id: html.pike,v 1.6 1998/04/28 21:35:14 neotron Exp $";
 #define __replace(X) (X)
 
 string input(string name, string|void val, int|void t)
 {
   name = replace (name, ({"&", "\""}), ({"&amp;", "&quot;"}));
-  val = replace (sprintf ("%O", val), ({"&", "\""}), ({"&amp;", "&quot;"}));
+  if(!stringp(val))
+    val = sprintf ("%O", val);
+  val = replace (val, ({"&", "\""}), ({"&amp;", "&quot;"}));
   if(!t)
     return "<input type=hidden name=\"" + name + "\" value=\"" + val + "\">";
   return "<input size=" + t + ",1 name=\"" + name + "\" value=\"" + val + "\">";
