@@ -1,4 +1,4 @@
-## $Id: supports,v 1.82 2000/03/31 12:46:24 nilsson Exp $
+## $Id: supports,v 1.83 2000/05/08 12:25:43 nilsson Exp $
 # name="Supports database";
 # doc="The database used to determine what different user-agents (browsers) support.";
 #
@@ -114,32 +114,32 @@
 		java, frames, autogunzip, js_image_object, javascript,\
 		align, center, images
 
-mozilla/0\..*		-tables, -backgrounds, -ssl, -frames, -java, -javascript,\
+^mozilla/0\..*		-tables, -backgrounds, -ssl, -frames, -java, -javascript,\
 			-js_image_object, -align, -center, -font, -imagealign,\
 			-images
-mozilla/1.[01].*	-tables, -backgrounds, -ssl, -frames, -java, -javascript,\
+^mozilla/1.[01].*	-tables, -backgrounds, -ssl, -frames, -java, -javascript,\
 			-js_image_object
-mozilla/1\..*		-ssl, -frames, -java, -javascript, -js_image_object,\
+^mozilla/1\..*		-ssl, -frames, -java, -javascript, -js_image_object,\
 			bigsmall, supsub
-mozilla.[2-9].[0-9].*	some_html3, fontcolor, pjpeginline, fontcolor
-mozilla.2.0b[2-9].*	-java
+^mozilla.[2-9].[0-9].*	some_html3, fontcolor, pjpeginline, fontcolor
+^mozilla.2.0b[2-9].*	-java
 
 #Old versions on Mac crash the entire machine if you use javascript.
-mozilla/2.*		-js_image_object, -noscript, *javascript=1.0
-mozilla/2.*X11		javascript
-mozilla/2.*OS/2		javascript
-mozilla/2.*Win16	-java, javascript
-mozilla/2.*Macintosh	-java
+^mozilla/2.*		-js_image_object, -noscript, *javascript=1.0
+^mozilla/2.*X11		javascript
+^mozilla/2.*OS/2	javascript
+^mozilla/2.*Win16	-java, javascript
+^mozilla/2.*Macintosh	-java
 
-mozilla/[2-9].*		js_global_event
-mozilla/[3-9].*		javascript, tablecolor, *javascript=1.1
+^mozilla/[2-9].*	js_global_event
+^mozilla/[3-9].*	javascript, tablecolor, *javascript=1.1
 
-mozilla/[4-9].*		stylesheets, tableimages, *javascript=1.1, layer
-mozilla/4\.0[4-9].*	pnginline
-mozilla/4\.0[5-9].*     *javascript=1.2
-mozilla/4\.[5-9].*	pnginline, *javascript=1.2
-mozilla/5\.0b1		-java, pnginline
-mozilla/[5-9].*		pnginline, *javascript=1.3
+^mozilla/[4-9].*	stylesheets, tableimages, *javascript=1.1, layer
+^mozilla/4\.0[4-9].*	pnginline
+^mozilla/4\.0[5-9].*	*javascript=1.2
+^mozilla/4\.[5-9].*	pnginline, *javascript=1.2
+^mozilla/5\.0b1		-java, pnginline
+^mozilla/[5-9].*	pnginline, *javascript=1.3
 
 # Opera
 
@@ -171,8 +171,8 @@ mozilla/[5-9].*		pnginline, *javascript=1.3
 # Netsurfer is a popular commercial Web browser for NEXTSTEP. for more
 # info, contact info@netsurfer.com
 .*			basic, jpeginline, center
-netsurfer.1\.[1-9].*	backgrounds, fontcolor, pnginline, videoinline
-netsurfer.2\.[0-9].*	align, pjpeginline, tables, frames, java, font,\
+^netsurfer.1\.[1-9].*	backgrounds, fontcolor, pnginline, videoinline
+^netsurfer.2\.[0-9].*	align, pjpeginline, tables, frames, java, font,\
 			bigsmall, supsub
 # }
 
@@ -180,7 +180,7 @@ netsurfer.2\.[0-9].*	align, pjpeginline, tables, frames, java, font,\
 # OmniWeb is another popular commercial Web browser for NEXTSTEP
 # for more info, contact info@omnigroup.com
 .*			basic, center, jpeginline
-omniweb.[2-9]\.[0-9].*	backgrounds, font, frames, tables, align, bigsmall,\
+^omniweb.[2-9]\.[0-9].*	backgrounds, font, frames, tables, align, bigsmall,\
 			fontcolor, imagealign, pjpeginline, pnginline,\
 			supsub, ssl, cookies
 # }
@@ -199,9 +199,9 @@ omniweb.[2-9]\.[0-9].*	backgrounds, font, frames, tables, align, bigsmall,\
 # Old Mosaic is not all that interresting..  Even though NCSA claims
 # to have table support, it does in fact not work at all, so, I do not
 # add that here.
-ncsa.mosaic.*[2-9].[5-9]*.*	supsub
-ncsa.mosaic.*[2-9].[6-9]*.*	jpeginline
-ncsa.mosaic.*[2-9].[7-9]*.*	pnginline
+^ncsa.mosaic.*[2-9].[5-9]*.*	supsub
+^ncsa.mosaic.*[2-9].[6-9]*.*	jpeginline
+^ncsa.mosaic.*[2-9].[7-9]*.*	pnginline
 
 # Mosaic "The Comet" final beta
 
@@ -228,8 +228,8 @@ ncsa.mosaic.*[2-9].[7-9]*.*	pnginline
 # }
 
 # Does not support anything at all, really.
-w3.*linemode.*		html
-cern.*linemode.*	html
+^w3.*linemode.*		html
+^cern.*linemode.*	html
 
 #section hotjava {
 # HotJava, SUNs little WWW browser with support for java aplets.
@@ -297,8 +297,8 @@ cern.*linemode.*	html
 #
 
 #section nokia {
-nokia7110.*	phone, wml1.1, wbmp0
-nokia.7110.*	wml1.1, wbmp0
+^nokia7110.*	phone, wml1.1, wbmp0
+^nokia.7110.*	wml1.1, wbmp0
 .*		wml1.1, wbmp0
 # }
 
