@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.49 2000/01/05 17:46:20 mast Exp $
+ * $Id: rxml.pike,v 1.50 2000/01/05 18:09:19 per Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -7,6 +7,7 @@
  */
 
 inherit "roxenlib";
+#include <request_trace.h>
 
 #define old_rxml_compat 1
 
@@ -17,9 +18,6 @@ inherit "roxenlib";
 mapping (string:function) real_if_callers;
 array (RoxenModule) parse_modules = ({  });
 string date_doc=#string "../modules/tags/doc/date_doc";
-
-#define TRACE_ENTER(A,B) do{if(id->misc->trace_enter)id->misc->trace_enter((A),(B));}while(0)
-#define TRACE_LEAVE(A) do{if(id->misc->trace_leave)id->misc->trace_leave((A));}while(0)
 
 string rxml_error(string tag, string error, RequestID id) {
   return (id->misc->debug?sprintf("(%s: %s)",capitalize(tag),error):"")+"<false>";
