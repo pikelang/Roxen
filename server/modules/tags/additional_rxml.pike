@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.29 2004/05/31 02:43:31 _cvs_stephen Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.30 2004/05/31 08:51:46 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -523,6 +523,31 @@ class TagIfGroup {
       if(sizeof(arr = line/":")>1 && (arr[0] == g))
 	res += (< @arr[-1]/"," >);
     return res;
+  }
+}
+
+class TagIfInternalExists {
+  inherit RXML.Tag;
+  constant name = "if";
+  constant plugin_name = "internal-exists";
+
+  int eval(string u, RequestID id) {
+    CACHE(5);
+    return id->conf->is_file(Roxen.fix_relative(u, id), id, 1);
+  }
+}
+
+class TagIfNserious {
+  inherit RXML.Tag;
+  constant name = "if";
+  constant plugin_name = "nserious";
+
+  int eval() {
+#ifdef NSERIOUS
+    return 1;
+#else
+    return 0;
+#endif
   }
 }
 
