@@ -2166,7 +2166,7 @@ as the name of its log file directory.
 </str>
 
 <str id="15">
-<o>The module list mode. One of &lt;dl&gt;&lt;dt&gt;Folded&lt;/dt&gt;&lt;dd&gt;Modules in the same group are folded&lt;/dd&gt;&lt;dt&gt;UnFolded&lt;/dt&gt;&lt;dd&gt;Like the 'old' Roxen 2.1 list&lt;/dd&gt;&lt;dt&gt;JavaScript Popup&lt;/dt&gt;&lt;dd&gt;Like Folded, but when you move the mouse over a folded group, a menu with the folded modules will popup&lt;/dd&gt;&lt;/dl&gt;</o>
+<o>The module list mode. One of &lt;dl&gt;&lt;dt&gt;Zusammengefaltet&lt;/dt&gt;&lt;dd&gt;Modules in the same group are folded&lt;/dd&gt;&lt;dt&gt;Nicht zusammengefaltet&lt;/dt&gt;&lt;dd&gt;Like the 'old' Roxen 2.1 list&lt;/dd&gt;&lt;dt&gt;JavaScript Popup&lt;/dt&gt;&lt;dd&gt;Like Folded, but when you move the mouse over a folded group, a menu with the folded modules will popup&lt;/dd&gt;&lt;/dl&gt;</o>
 <t>Der Modullisten Modus. Kann sein: &lt;dl&gt;&lt;dt&gt;Folded&lt;/dt&gt;&lt;dd&gt;Module derselben Gruppe sind zusammengefaltet&lt;/dd&gt;&lt;dt&gt;UnFolded&lt;/dt&gt;&lt;dd&gt;Wie die 'alte' Roxen 2.1 Liste&lt;/dd&gt;&lt;dt&gt;JavaScript Popup&lt;/dt&gt;&lt;dd&gt;Wie Folded, aber ein Menu mit den untergeordneten Modulen erscheint, wenn man mit der Maus drüberfährt&lt;/dd&gt;&lt;/dl&gt;</t>
 </str>
 
