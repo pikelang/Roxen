@@ -1,4 +1,4 @@
-// $Id: counter.pike,v 1.21 1998/10/31 08:25:39 neotron Exp $
+// $Id: counter.pike,v 1.22 1998/12/17 23:05:05 neotron Exp $
 // 
 // Roxen Graphic Counter Module	by Jordi Murgo <jordi@lleida.net>
 // Modifications  1 OCT 1997 by Bill Welliver <hww3@riverweb.com>
@@ -23,6 +23,9 @@
 // -----------------------------------------------------------------------
 //
 // $Log: counter.pike,v $
+// Revision 1.21  1998/10/31 08:25:39  neotron
+// Fixed a bug which occured when used without a userdb.
+//
 // Revision 1.20  1998/08/07 09:20:38  neotron
 // Added bordercolor documentation.
 //
@@ -118,7 +121,7 @@
 // Initial revision
 //
 
-string cvs_version = "$Id: counter.pike,v 1.21 1998/10/31 08:25:39 neotron Exp $";
+string cvs_version = "$Id: counter.pike,v 1.22 1998/12/17 23:05:05 neotron Exp $";
 
 string copyright = ("<BR>Copyright 1997 "
 		    "<a href=http://savage.apostols.org/>Jordi Murgo</A> and "
@@ -223,7 +226,7 @@ mapping fontlist(string bg, string fg, int scale)
   string out;
   array  fnts;
   int    i;
-	
+  scale=scale/5;	
   out =
     "<HTML><HEAD><TITLE>Available Counter Fonts</TITLE></HEAD>"
     "<BODY BGCOLOR=#ffffff TEXT=#000000>\n"
@@ -237,7 +240,7 @@ mapping fontlist(string bg, string fg, int scale)
       out += "<A HREF='" + query("mountpoint");
       out += "0/" + bg + "/" ;
       out += fg +"/0/1/" + (string)scale + "/0/";
-      out += fnts[i] + "/1234567890'>";
+      out += http_encode_string(fnts[i]) + "/1234567890.gif'>";
       out += fnts[i] + "</A><BR>\n";
     }
     out += "</DL>";
@@ -275,7 +278,7 @@ mapping ppmlist(string font, string user, string dir)
 	out += "<DT><FONT SIZE=+1><B> ["+ initial +"]</B></FONT>\n<DD>";
       }
       out +=
-	"<A HREF='" +query("mountpoint")+ user + "/n/n/0/0/5/0/"+ fnts[i] +
+	"<A HREF='" +query("mountpoint")+ user + "/n/n/0/0/5/0/"+ http_encode_string(fnts[i]) +
 	"/1234567890.gif'>" + fnts[i] + "</A> \n";
       totfonts++;
     }
@@ -438,7 +441,12 @@ mapping find_file_ppm( string f, object id )
     cache_set("counter_digits", fontname,  digits);
   }
 
-  result = image(digits[0]->xsize()*2 * numdigits,
+  if (fontname=="ListAllStyles")
+	return ppmlist( fontname, user, dir );
+
+  
+
+result = image(digits[0]->xsize()*2 * numdigits,
 		 digits[0]->ysize(), @mkcolor(bg));
   for( int dn=0; dn < numdigits; dn++ )
   {
@@ -503,8 +511,7 @@ string tag_counter( string tagname, mapping args, object id )
   if( args->version )
     return cvs_version;
   if( args->revision )
-    return "$Revision: 1.21 $" - "$" - " " - "Revision:";
-
+    return "$Revision: 1.22 $" - "$" - " " - "Revision:";
   //
   // bypass compatible accessed attributes
   // 
