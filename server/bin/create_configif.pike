@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.32 2000/09/19 06:46:31 nilsson Exp $
+ * $Id: create_configif.pike,v 1.33 2001/03/23 14:35:07 noring Exp $
  *
  * Create an initial administration interface server.
  */
@@ -265,6 +265,9 @@ int main(int argc, array argv)
       }
     }
     mkdirhier( configdir );
+    string server_version = Stdio.read_file("VERSION");
+    if(server_version)
+      Stdio.write_file(configdir+"server_version", "server-"+server_version);
     Stdio.write_file( configdir+replace( name, " ", "_" ),
                       replace(
 #"
