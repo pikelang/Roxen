@@ -8,9 +8,8 @@
 #define _error id->misc->defines[" _error"]
 #define _extra_heads id->misc->defines[" _extra_heads"]
 #define _rettext id->misc->defines[" _rettext"]
-#define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmlparse.pike,v 1.34 1999/12/18 13:23:06 nilsson Exp $";
+constant cvs_version="$Id: rxmlparse.pike,v 1.35 1999/12/18 14:14:25 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -20,8 +19,6 @@ constant language = roxen->language;
 inherit "module";
 inherit "roxenlib";
 
-int bytes;  // Holds the number of bytes parsed
-function file2type;
 
 // ------------- Module registration and configuration. ---------------
 
@@ -30,7 +27,7 @@ string status()
   return (bytes/1024 + " Kb parsed.<br>");
 }
 
-void create(object c)
+void create()
 {
   defvar("toparse", ({ "html", "htm", "rxml" }), "Extensions to parse",
 	 TYPE_STRING_LIST, "Parse all files ending with these extensions. "
@@ -51,15 +48,17 @@ void create(object c)
 }
 
 
-void start(int q, object c)
+void start(int q, Configuration c)
 {
-  file2type=my_configuration()->type_from_filename;
+  file2type=c->type_from_filename;
   define_API_functions();
+  require_exec=QUERY(require_exec);
+  parse_exec=QUERY(parse_exec);
 }
 
 array register_module()
 {
-  return ({ MODULE_FILE_EXTENSION|MODULE_PARSER,
+  return ({ MODULE_FILE_EXTENSION,
 	    "RXML 1.4 parser",
 	    "This module handles rxml parsing of HTML pages. It is recommended to also "
             "add the \"RXML 1.4 tags\" module so that this modules gets some tags to parse. "
@@ -78,8 +77,11 @@ array(string) query_file_extensions()
 // ------------------- RXML Parsing -------------------
 
 constant truth=(["defines":([" _ok":1])]);
+int require_exec, parse_exec;
+int bytes;  // Holds the number of bytes parsed
+function file2type;
 
-mapping handle_file_extension(object file, string e, RequestID id)
+mapping handle_file_extension(Stdio.File file, string e, RequestID id)
 {
   array stat;
   if(id->misc->defines)
@@ -89,8 +91,8 @@ mapping handle_file_extension(object file, string e, RequestID id)
     stat=_stat=id->misc->stat || file->stat();
   }
 
-  if(QUERY(require_exec) && !(stat[0] & 07111)) return 0;
-  if(!QUERY(parse_exec) && (stat[0] & 07111)) return 0;
+  if(require_exec && !(stat[0] & 07111)) return 0;
+  if(!parse_exec && (stat[0] & 07111)) return 0;
 
   bytes += stat[1];
 
