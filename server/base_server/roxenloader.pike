@@ -15,7 +15,7 @@ private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.181 2000/07/09 14:13:38 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.182 2000/07/14 18:24:32 jhs Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -239,35 +239,107 @@ mapping make_mapping(array(string) f)
 }
 
 class RequestID
+//! The request information object contains all request-local information and
+//! server as the vessel for most forms of intercommunication between modules,
+//! scripts, RXML and so on. It gets passed round to almost all API callbacks
+//! worth mentioning. A RequestID object is born when an incoming request is
+//! encountered, and its life expectancy is short, as it dies again when the
+//! request has passed through all levels of the <ref>module type calling
+//! sequence</ref>.
 {
   object conf; // Really Configuration, but that's sort of recursive.
   int time;
+  //! Time of the request, standard unix time (seconds since the epoch; 1970).
   string raw_url;
+  //! The nonparsed, nontouched, non-* URL requested by the client.
   int do_not_disconnect;
+  //! Typically 0, meaning the channel to the client will be disconnected upon
+  //! finishing the request and the RequestID object destroyed with it.
   mapping (string:string) variables;
+  //! Form variables submitted by the client browser, as found in the
+  //! <tt>form</tt> scope in RXML. Both query (as found in the query part of
+  //! the URL) and POST (submitted in the request body) variables share this
+  //! scope, with query variables having priority over POST ones. In other
+  //! words, the query part of the URL overrides whatever variables are sent
+  //! in the request body.
+  //!
+  //! The indices and values of this mapping map to the names and values of
+  //! the variable names. All data (names and values) are decoded from their
+  //! possible transport encoding.
   mapping (string:mixed) misc;
+  //! This mapping contains miscellaneous non-standardized information, and
+  //! is the typical location to store away your own request-local data for
+  //! passing between modules et cetera. Be sure to use a key unique to your
+  //! own application.
   mapping (string:string) cookies;
+  //! The indices and values map to the names and values of the cookies sent
+  //! by the client for the requested page. All data (names and values) are
+  //! decoded from their possible transport encoding.
   mapping (string:string) request_headers;
+  //! Indices and values map to the names and values of all HTTP headers sent
+  //! with the request; all data has been transport decoded, and the header
+  //! names are canonized (lowercased) on top of that.
   mapping (string:mixed) throttle;
+  //! ?
   mapping (string:string) client_var;
+  //! ?
   multiset(string) prestate;
+  //! A mapping of all prestates harvested from the URL. Prestates are boolean
+  //! flags, who are introduced in an extra leading path segment of the URL
+  //! path put within parentheses, as in <a
+  //! href="http://docs.roxen.com/(tables)/">docs://www.roxen.com/(tables)/</a>,
+  //! this rendering a prestate multiset <pi>(&lt; "tables" &gt;)</pi>.
+  //!
+  //! Prestates are mostly useful for debugging purposes, since prestates
+  //! generally lead to multiple URLs for identical documents resulting in
+  //! poor usage of browser/proxy caches and the like. See <ref>config</ref>.
   multiset(string) config;
+  //! Much like prestates, the id->config multiset is typically used for
+  //! boolean information of state supplied by the client. The config state,
+  //! however, is hidden in a client-side cookie treated specially by roxen,
+  //! namely the <tt>RoxenConfig</tt> cookie.
   multiset(string) supports;
+  //! ...
   multiset(string) pragma;
+  //! All pragmas (lower-cased for canonization) sent with the request. For
+  //! real-world applications typically only <pi>pragma["no-cache"]</pi> is of
+  //! any particular interest, this being sent when the user does a forced
+  //! reload of the page.
   array(string) client;
   array(string) referer;
+  //! The referer header(s) [sic!] sent with the request (the name misspelled
+  //! by unholy HTTP tradition, in roxen too in the best interest of backwards
+  //! compatibility).
 
   Stdio.File my_fd;
+  // Don't touch; use the returned file descriptor from connection() instead.
   string prot;
+  //! The protocol used for the request, e g "FTP", "HTTP/1.0", "HTTP/1.1".
+  //! (Se also <ref>clientprot</ref>.)
   string clientprot;
+  //! The protocol the client wanted to use in the request. (See also
+  //! <ref>prot</ref>.)
   string method;
+  //! The method used by the client in this request, e g "GET", "POST".
 
   string realfile;
+  //! When the the requested resource is an actual file in the real
+  //! filesystem, this is its path.
   string virtfile;
+  //! ?
   string rest_query;
+  //! The scraps and leftovers of the requested URL's query part after
+  //! removing all variables (that is, all key=value pairs) from it.
   string raw;
+  //! The raw, untouched request in its entirety.
   string query;
+  //! The entire raw query part (all characters after the first question mark,
+  //! '?') of the requested URL.
   string not_query;
+  //! The path segment of the requested URL (or, from HTTP's point of view,
+  //! everything of the requested resource that is not part of the query). In
+  //! other words, all characters from the leading slash, '/', to, but not
+  //! including, the first question mark, '?'.
   string extra_extension;
   string data;
   string leftovers;
@@ -287,13 +359,16 @@ class RequestID
   RequestID clone_me();
 
   Stdio.File connection( );
+  //! Returns the file descriptor used for the connection to the client.
   object     configuration(); // really Configuration
+  //! Returns the <ref>Configuration</ref> object of the virtual server that
+  //! is handling the request.
 }
 
 
 class RoxenModule
 {
-  constant is_module=1;
+  constant is_module = 1;
   constant module_type = 0;
   constant module_unique = 1;
   string|mapping(string:string) module_name;
@@ -417,8 +492,9 @@ void init_logger()
 #endif
 }
 
-// Print a debug message
 void report_debug(string message, mixed ... foo)
+//! Print a debug message in the server's debug log.
+//! Shares argument prototype with <ref>sprintf()</ref>.
 {
   if( sizeof( foo ) )
     message = sprintf(message, @foo );
@@ -453,8 +529,10 @@ array(object) find_module_and_conf_for_log( array(array) q )
 
 #define MC @find_module_and_conf_for_log(backtrace())
 
-// Print a warning
 void report_warning(string message, mixed ... foo)
+//! Report a warning message, that will show up in the server's debug log and
+//! in the event logs, along with the yellow exclamation mark warning sign.
+//! Shares argument prototype with <ref>sprintf()</ref>.
 {
   if( sizeof( foo ) ) message = sprintf(message, @foo );
   nwrite(message,0,2,MC);
@@ -465,8 +543,10 @@ void report_warning(string message, mixed ... foo)
 #endif
 }
 
-// Print a notice
 void report_notice(string message, mixed ... foo)
+//! Report a status message of some sort for the server's debug log and event
+//! logs, along with the blue informational notification sign. Shares argument
+//! prototype with <ref>sprintf()</ref>.
 {
   if( sizeof( foo ) ) message = sprintf(message, @foo );
   nwrite(message,0,1,MC);
@@ -477,8 +557,10 @@ void report_notice(string message, mixed ... foo)
 #endif
 }
 
-// Print an error message
 void report_error(string message, mixed ... foo)
+//! Report an error message, that will show up in the server's debug log and
+//! in the event logs, along with the red exclamation mark sign. Shares
+//! argument prototype with <ref>sprintf()</ref>.
 {
   if( sizeof( foo ) ) message = sprintf(message, @foo );
   nwrite(message,0,3,MC);
