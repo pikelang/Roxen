@@ -20,6 +20,22 @@ o Added some more directories to search by default for nfonts and modules.
   "../local/modules" and "../local/nfonts". Roxen will by default not install
   anything in these directories.
 
+o The configure-scripts are now better att choosing optimizer options.
+
+o The neighbourhood function can now also use TCP.
+
+o Several config_actions updated.
+
+o Directory-module cache-problem fixed.
+
+o Many modules now marked as thread-safe.
+
+o The gtext-module now uses typographically correct spacing.
+
+o The sqltag-module now has improved documentation.
+
+o Pike version bumped to 0.5b10.
+
 o The number of FTP users can now be viewed under "Status and debug info".
 
 o The FTP built-in ls now uses the Getopt-module to parse its arguments.
