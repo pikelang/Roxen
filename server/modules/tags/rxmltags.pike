@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.389 2002/10/24 03:31:11 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.390 2002/10/25 20:37:00 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -27,7 +27,7 @@ constant module_doc  = "This module provides the common RXML tags.";
 //  Cached copy of conf->query("compat_level"). This setting is defined
 //  to require a module reload to take effect so we only query it when
 //  start() is called.
-float compat_level;
+float compat_level = 0.0;
 
 
 void start()
@@ -601,81 +601,62 @@ class TagImgs {
   inherit RXML.Tag;
   constant name = "imgs";
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  mapping(string:RXML.Type) req_arg_types = ([ "src":RXML.t_text(RXML.PEnt) ]);
 
   class Frame {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
-      if(args->src) {
-	string|object file=id->conf->real_file(Roxen.fix_relative(args->src, id), id);
-	if(!file) {
-	  file=id->conf->try_get_file(args->src,id);
-	  if(file)
-	    file=class {
-	      int p=0;
-	      string d;
-	      void create(string data) { d=data; }
-	      int tell() { return p; }
-	      int seek(int pos) {
-		if(abs(pos)>sizeof(d)) return -1;
-		if(pos<0) pos=sizeof(d)+pos;
-		p=pos;
-		return p;
-	      }
-	      string read(int bytes) {
-		p+=bytes;
-		return d[p-bytes..p-1];
-	      }
-	    }(file);
-	}
+      string|object file=id->conf->real_file(Roxen.fix_relative(args->src, id), id);
+      if(!file) {
+	file=id->conf->try_get_file(args->src,id);
+	if(file) file = Stdio.FakeFile(file);
+      }
 
-	if(file) {
-	  array(int) xysize;
-	  if(xysize=Dims.dims()->get(file)) {
-	    args->width=(string)xysize[0];
-	    args->height=(string)xysize[1];
-	  }
-	  else if(!args->quiet)
-	    RXML.run_error("Dimensions quering failed.\n");
+      if(file) {
+	array(int) xysize;
+	if(xysize=Image.Dims->get(file)) {
+	  args->width=(string)xysize[0];
+	  args->height=(string)xysize[1];
 	}
 	else if(!args->quiet)
-	  RXML.run_error("Image file not found.\n");
-
-	if(!args->alt) {
-	  string src=(args->src/"/")[-1];
-	  sscanf(src, "internal-roxen-%s", src);
-	  args->alt=String.capitalize(replace(src[..sizeof(src)-search(reverse(src), ".")-2], "_"," "));
-	}
-
-	int xml=!m_delete(args, "noxml");
-
-	result = Roxen.make_tag("img", args, xml);
-	return 0;
+	  RXML.run_error("Dimensions quering failed.\n");
       }
-      RXML.parse_error("No src given.\n");
+      else if(!args->quiet)
+	RXML.run_error("Image file not found.\n");
+
+      if(!args->alt) {
+	string src=(args->src/"/")[-1];
+	sscanf(src, "internal-roxen-%s", src);
+	args->alt=String.capitalize(replace(src[..sizeof(src)-search(reverse(src), ".")-2], "_"," "));
+      }
+
+      int xml=!m_delete(args, "noxml");
+
+      result = Roxen.make_tag("img", args, xml);
+      return 0;
     }
   }
 }
 
-class TagRoxen {
+class TagChili {
   inherit RXML.Tag;
-  constant name = "roxen";
+  constant name = "chili";
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
 
   class Frame {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
-      string size = m_delete(args, "size") || "medium";
+      string size = m_delete(args, "size") || "small";
       string color = m_delete(args, "color") || "white";
-      mapping aargs = (["href": "http://www.roxen.com/"]);
+      mapping aargs = (["href": "http://www.chilimoon.org/"]);
 
-      args->src = "/internal-roxen-power-"+size+"-"+color;
-      args->width =  (["small":"40","medium":"60","large":"100"])[size];
-      args->height = (["small":"40","medium":"60","large":"100"])[size];
+      args->src = "/%01/chili-"+size+"-"+color;
+      args->width =  (["small":"57","large":"151"])[size];
+      args->height = (["small":"64","large":"169"])[size];
 
-      if( color == "white" && size == "large" ) args->height="99";
-      if(!args->alt) args->alt="Powered by Roxen";
+      if(!args->alt) args->alt="Powered by ChiliMoon";
       if(!args->border) args->border="0";
       int xml=!m_delete(args, "noxml");
       if(args->target) aargs->target = m_delete (args, "target");
@@ -683,6 +664,12 @@ class TagRoxen {
       return 0;
     }
   }
+}
+
+// NGSERVER Remove this tag
+class TagRoxen {
+  inherit TagChili;
+  constant name = "roxen";
 }
 
 class TagDebug {
