@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.402 2003/07/09 09:55:46 wellhard Exp $";
+constant cvs_version = "$Id: http.pike,v 1.403 2003/10/28 21:24:42 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -562,8 +562,12 @@ private int parse_got( string new_data )
   if( !method )
   {
     array res;
-    if( catch( res = hpf( new_data ) ) )
+    if( mixed err = catch( res = hpf( new_data ) ) ) {
+#ifdef DEBUG
+      report_debug ("Got bad request, HeaderParser error: " + describe_error (err));
+#endif
       return 1;
+    }
     if( !res )
     {
       TIMER_END(parse_got);
@@ -842,13 +846,17 @@ void end(int|void keepit)
 
 #if constant(Parser.XML.Tree.XMLNSParser)
   if (xml_data) {
-    catch {
+    mixed err = catch {
       // Disconnect the XML graph to make it easier on the gc.
       xml_data->walk_postorder(lambda(Parser.XML.Tree.AbstractNode node) {
 				 node->mParent = 0;
 			       });
       xml_data = 0;
     };
+#ifdef DEBUG
+    if (err)
+      report_debug ("Failed to disconnect XML tree: " + describe_backtrace (err));
+#endif
   }
 #endif /* Parser.XML.Tree.XMLNSParser */
 
@@ -884,7 +892,7 @@ void end(int|void keepit)
   if(objectp(my_fd))
   {
     MARK_FD("HTTP closed");
-    catch 
+    mixed err = catch
     {
       // Don't set to blocking mode if SSL.
       if (!my_fd->CipherSpec) {
@@ -893,9 +901,15 @@ void end(int|void keepit)
       my_fd->close();
       destruct(my_fd);
     };
-    catch {
+#ifdef DEBUG
+    if (err) report_debug ("Close failure (1): %s", describe_backtrace (err));
+#endif
+    err = catch {
       my_fd = 0;
     };
+#ifdef DEBUG
+    if (err) report_debug ("Close failure (2): %s", describe_backtrace (err));
+#endif
   }
   disconnect();
 }
@@ -1200,12 +1214,15 @@ void do_log( int|void fsent )
     MERGE_TIMERS(conf);
     if( conf )
       conf->connection_drop( this_object() );
-    catch  // paranoia
+    mixed err = catch  // paranoia
     {
       my_fd->close();
       destruct( my_fd );
       destruct( );
     };
+#ifdef DEBUG
+    if (err) report_debug ("Close failure (3): %s", describe_backtrace (err));
+#endif
     return;
   }
   TIMER_END(do_log);
@@ -1679,8 +1696,11 @@ void send_result(mapping|void result)
 	  heads->Connection = "close";
           misc->connection = "close";
         }
-	if( catch( head_string += Roxen.make_http_headers( heads ) ) )
+	if( mixed err = catch( head_string += Roxen.make_http_headers( heads ) ) )
 	{
+#ifdef DEBUG
+	  report_debug ("Roxen.make_http_headers failed: " + describe_error (err));
+#endif
 	  foreach( indices( heads ), string x )
 	    if( stringp( heads[x] ) )
 	      head_string += x+": "+heads[x]+"\r\n";
@@ -1937,13 +1957,16 @@ void got_data(mixed fooid, string s)
     {
       if( conf )
 	conf->connection_drop( this_object() );
-      catch  // paranoia
+      mixed err = catch  // paranoia
       {
 	my_fd->set_blocking();
 	my_fd->close();
 	destruct( my_fd );
 	destruct( );
       };
+#ifdef DEBUG
+      if (err) report_debug ("Close failure (4): %s", describe_backtrace (err));
+#endif
       return;
     }
 
@@ -2048,6 +2071,7 @@ void got_data(mixed fooid, string s)
     conf->requests++;
     my_fd->set_close_callback(0);
     my_fd->set_read_callback(0);
+    if (my_fd->set_accept_callback) my_fd->set_accept_callback (0);
     processed=1;
 
     remove_call_out(do_timeout);
