@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: cache.pike,v 1.72 2001/07/02 23:19:29 nilsson Exp $
+// $Id: cache.pike,v 1.73 2001/07/20 00:06:33 mast Exp $
 
 #pragma strict_types
 
@@ -37,10 +37,17 @@
 static mapping(string:mapping(string:array)) cache;
 static mapping(string:int) hits=([]), all=([]);
 
-void flush_memory_cache() {
-  cache=([]);
-  hits=([]);
-  all=([]);
+void flush_memory_cache (void|string in) {
+  if (in) {
+    m_delete (cache, in);
+    m_delete (hits, in);
+    m_delete (all, in);
+  }
+  else {
+    cache=([]);
+    hits=([]);
+    all=([]);
+  }
 }
 
 constant svalsize = 4*4;
