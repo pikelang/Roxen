@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: disk_cache.pike,v 1.46 2000/03/19 16:55:39 nilsson Exp $
+// $Id: disk_cache.pike,v 1.47 2000/03/29 17:13:46 grubba Exp $
 
 #include <module_constants.h>
 #include <stat.h>
@@ -29,7 +29,7 @@ string file_name_r(string what, int nd, int hv)
 
 string file_name(string what)
 {
-  int hn = hash(what,0xffffffff);
+  int hn = hash(what);
   return file_name_r(what, QUERY(hash_num_dirs), hn);
 }
 
