@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.193 2001/07/10 02:38:55 mast Exp $
+// $Id: module.pmod,v 1.194 2001/07/11 03:10:34 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -152,8 +152,9 @@ static mapping(int|string:TagSet) composite_tag_set_cache =
 #define GET_COMPOSITE_TAG_SET(a, b, res) do {				\
   int|string hash = HASH_INT2 (b->id_number, a->id_number);		\
   if (!(res = composite_tag_set_cache[hash])) {				\
-    res = TagSet (sprintf ("[%d]%s+%s",					\
-			   sizeof (a->name), a->name, b->name));	\
+    res = shared_tag_set (						\
+      a->name && b->name &&						\
+      sprintf ("[%d]%s+%s", sizeof (a->name), a->name, b->name));	\
     res->imported = ({a, b});						\
     /* Race, but it doesn't matter. */					\
     composite_tag_set_cache[hash] = res;				\
@@ -876,8 +877,10 @@ class TagSet
 	  other->name = 0;
 	  all_tagsets[new_name] = 0;
 	}
+	new_name = 0;
       }
     }
+    name = new_name;
   }
 
   static mapping(string:Tag) tags = ([]), proc_instrs;
