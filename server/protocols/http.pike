@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.423 2004/03/03 16:28:55 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.424 2004/03/09 16:18:41 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1745,6 +1745,12 @@ void send_result(mapping|void result)
 	  head_string = errors[file->error] || "";
 	head_string = sprintf("%s %d %s\r\n", prot, file->error, head_string);
 
+	if (file->error == 204) {
+	  // 204 No Content.
+	  // We actually give some content c.f. comment below.
+	  file->len = 2;
+	  file->data = "\r\n";
+	}
 //         if( file->len > 0 || (file->error != 200) )
 	heads["Content-Length"] = (string)file->len;
 
