@@ -12,7 +12,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: business.pike,v 1.131 2000/08/21 01:05:23 nilsson Exp $";
+constant cvs_version = "$Id: business.pike,v 1.132 2000/08/29 18:54:49 kuntri Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_PARSER;
 constant module_name = "Business graphics";
@@ -1019,7 +1019,105 @@ constant tagdoc=([
  slices or under the bars.</short> The datanames are presented to the
  tag as a tab separated list. This tag is useful when the diagram is
  dynamically created. See the <tag>xnames</tag> tag for a complete list of
- attributes.</desc>"
+ attributes.
+
+<p>Some examples:</p>
+
+ <ex type='vert'>
+  <diagram type='pie' width='200' height='200'  name='Population'
+  tonedbox='lightblue,lightblue,white,white'>
+    <data separator=','>5305048,5137269,4399993,8865051</data>
+    <legend separator=','>Denmark,Finland,Norway,Sweden</legend>
+ </diagram>
+ </ex>
+
+ <ex>
+ <diagram type='bar' width='200' height='250' name='Population'
+ horgrid='' tonedbox='lightblue,lightblue,white,white'>
+   <data xnamesvert='' xnames='' separator=','>
+     Denmark,Finland,Norway,Sweden
+     5305048,5137269,4399993,8865051
+   </data>
+ </diagram>
+ </ex>
+
+ <ex>
+ <diagram type='bar' width='200' height='250'
+ name='Age structure' horgrid=''
+ tonedbox='lightblue,lightblue,white,white'>
+   <data xnamesvert='' xnames='' form='column'
+   separator=','>
+     Denmark,951175,3556339,797534
+     Finland,966593,3424107,746569
+     Norway,857952,2846030,696011
+     Sweden,1654180,5660410,1550461
+   </data>
+   <legend separator=','>
+     0-14,15-64,65-
+   </legend>
+ </diagram>
+ </ex>
+
+ <ex>
+ <diagram type='sumbar' width='200' height='250'
+ name='Land Use' horgrid=''
+ tonedbox='lightblue,lightblue,white,white'>
+   <data xnamesvert='' xnames='' form='column'
+   separator=','>
+     Denmark,27300,4200,10500
+     Finland,24400,231800,48800
+     Norway,9240,83160,215600
+     Sweden,32880,279480,102750
+   </data>
+   <legend separator=','>
+     Arable,Forests,Other
+   </legend>
+   <yaxis quantity='area'/>
+   <yaxis unit='km^2'/>
+ </diagram>
+ </ex>
+
+ <ex>
+ <diagram type='normsumbar' width='200' height='250'
+ name='Land Use' horgrid=''
+ tonedbox='lightblue,lightblue,white,white'>
+   <data xnamesvert='' xnames='' form='column'
+   separator=','>
+     Denmark,27300,4200,10500
+     Finland,24400,231800,48800
+     Norway,9240,83160,215600
+     Sweden,32880,279480,102750
+   </data>
+   <legend separator=','>
+     Arable,Forests,Other
+   </legend>
+   <yaxis quantity='%'/>
+ </diagram>
+ </ex>
+
+ <ex>
+ <diagram type='line' width='200' height='250'
+ name='Exchange Rates' horgrid=''
+ tonedbox='lightblue,lightblue,white,white'>
+   <data form='row' separator=','
+   xnamesvert='' xnames=''>
+     1992,1993,1994,1995,1996
+     0.166,0.154,0.157,0.179,0.172
+     0.223,0.175,0.191,0.229,0.218
+     0.161,0.141,0.142,0.158,0.155
+     0.172,0.128,0.130,0.149,0.140</data>
+   <yaxis start='0.09' stop='0.25'/>
+   <legend separator=','>
+     Danish kroner (DKr),
+     Markkaa (FMk),
+     Norwegian kronor (NKr),
+     Swedish kronor (SKr)
+   </legend>
+   <xaxis quantity='year'/>
+   <yaxis quantity='US$'/>
+ </diagram>
+ </ex>
+</desc>"
 	     ])
 
 }),

@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.26 2000/08/28 05:31:54 per Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.27 2000/08/29 18:54:48 kuntri Exp $";
 constant module_type = MODULE_PARSER;
 constant module_name = "Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -42,7 +42,7 @@ resize, crop and in other ways transform images.</desc>
  variables.
 <ex type='box'>
 <emit source='sql' query='select imagedata from images where id=37'>
-<cimg data='&sql.imagedata;'/>
+<cimg data='<ent>sql.imagedata</ent>'/>
 </emit>
 </ex>
 </attr>",
@@ -64,10 +64,46 @@ tag is to insert image-URI's into various places, e.g. a submit-box.
  variables.
 <ex type='box'>
 <emit source='sql' query='select imagedata from images where id=37'>
-<cimg data='&sql.imagedata;'/>
+<cimg data='<ent>sql.imagedata</ent>'/>
 </emit>
 </ex>
 </attr>",
+
+"emit#cimg":({ #"<desc plugin><short>
+
+ </short>
+
+</desc>",
+
+([
+
+"&_type;":#"<desc ent>
+
+</desc>",
+
+"&_src;":#"<desc ent>
+
+</desc>",
+
+"&_file-size;":#"<desc ent>
+
+</desc>",
+
+"&_xsize;":#"<desc ent>
+
+</desc>",
+
+"&_ysize;":#"<desc ent>
+
+</desc>",
+
+"&_data;":#"<desc ent>
+
+</desc>"
+])
+
+}),
+
 ]);
 #endif
 

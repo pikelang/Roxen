@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.58 2000/08/22 19:00:35 nilsson Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.59 2000/08/29 18:54:48 kuntri Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -150,7 +150,7 @@ constant gbuttonattr=#"
   <att>middle</att>.
 </attr>
 
-<attr name='font' value=''>
+<attr name='font' value='fontname'>
 
 </attr>
 
