@@ -1,5 +1,5 @@
 /*
- * $Id: sqltag.pike,v 1.23 1998/03/08 13:48:57 per Exp $
+ * $Id: sqltag.pike,v 1.24 1998/07/15 16:04:55 js Exp $
  *
  * A module for Roxen Challenger, which gives the tags
  * <SQLQUERY> and <SQLOUTPUT>.
@@ -7,7 +7,7 @@
  * Henrik Grubbström 1997-01-12
  */
 
-constant cvs_version="$Id: sqltag.pike,v 1.23 1998/03/08 13:48:57 per Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.24 1998/07/15 16:04:55 js Exp $";
 constant thread_safe=1;
 #include <module.h>
 
@@ -26,7 +26,7 @@ import Sql;
 
 array register_module()
 {
-  return( ({ MODULE_PARSER,
+  return( ({ MODULE_PARSER|MODULE_PROVIDER,
 	     "SQL-module",
 	     "This module gives the three tags &lt;SQLQUERY&gt;, "
 	     "&lt;SQLOUTPUT&gt;, and &lt;SQLTABLE&gt;.<br>\n"
@@ -398,6 +398,7 @@ string dumpid_tag(string tag_name, mapping args,
 
 #endif /* 0 */
 
+
 /*
  * Hook in the tags
  */
@@ -415,6 +416,28 @@ mapping query_tag_callers()
 mapping query_container_callers()
 {
   return( ([ "sqloutput":sqloutput_tag, "sqlelse":sqlelse_tag ]) );
+}
+
+/*
+ *  Callback functions
+ */
+
+
+object(sql) sql_object(object request_id)
+{
+  string host = query("hostname");
+  object(sql) con;
+  function sql_connect = request_id->conf->sql_connect;
+  mixed error;
+  error = catch(con = sql_connect(host));
+  if(error)
+    return 0;
+  return con;
+}
+
+string query_provides()
+{
+  return "sql";
 }
 
 /*
@@ -456,6 +479,7 @@ void start(int level, object _conf)
   if (_conf) {
     conf = _conf;
   }
+//add_api_function("sql_query", api_sql_query, ({ "string", 0,"int" }));
 }
 
 void stop()
