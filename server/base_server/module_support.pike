@@ -1,4 +1,4 @@
-// string cvs_version = "$Id: module_support.pike,v 1.36 1999/11/19 06:50:54 per Exp $";
+// string cvs_version = "$Id: module_support.pike,v 1.37 1999/11/24 01:58:41 per Exp $";
 #include <roxen.h>
 #include <module.h>
 #include <stat.h>
@@ -359,14 +359,16 @@ class Module
 
   void save()
   {
-    module_cache->set( sname, 
-                       ([ "filename":filename,
-                          "last_checked":last_checked,
-                          "type":type,
-                          "multiple_copies":multiple_copies,
-                          "name":name,
-                          "description":description,
-                       ]) );
+    module_cache
+      ->set( sname, 
+             ([ "filename":filename,
+                "sname":sname,
+                "last_checked":last_checked,
+                "type":type,
+                "multiple_copies":multiple_copies,
+                "name":name,
+                "description":description,
+             ]) );
   }
 
   int init_module( string what )
@@ -393,9 +395,6 @@ class Module
       destruct( mod );
       return 1;
     };
-#ifdef MODULE_DEBUG
-    if (q) werror (describe_backtrace (q));
-#endif
     return 0;
   }
 
@@ -408,10 +407,10 @@ class Module
       return 0;
 
     foreach( dirlist, string file )
-      catch 
+      catch
       {
-        if( file_stat( dir+file )[ ST_SIZE ] == -2 &&
-	    file != "." && file != ".." )
+        if( file_stat( dir+file )[ ST_SIZE ] == -2 
+            && file != "." && file != ".." )
           if( rec_find_module( what, dir+file+"/" ) )
             return 1;
 	  else
@@ -449,6 +448,11 @@ class Module
   {
     if( mapping data = module_cache->get( sname ) )
     {
+      if( data->sname && data->sname != sname )
+      {
+        report_fatal( "Inconsistency in module cache. Ouch\n");
+        return find_module(sname);
+      }
       if( filename && (data->filename != filename ))
         report_debug("Possible module conflict for %s, %s != %s\n",
                      data->filename, filename );
@@ -480,13 +484,14 @@ class Module
 
   void create( string sn, string|void fname )
   {
+    if( sname )
+    {
+      report_fatal( "IDI\n");
+      exit( 1 );
+    }
     sname = sn;
     if( fname ) 
       filename = fname;
-    if( !check( ) )
-    {
-      destruct( );
-    }
   }
 }
 
@@ -556,10 +561,14 @@ Module find_module( string name )
     modules = ([]);
     module_cache = roxenp()->ConfigIFCache( "modules" );
   }
+
   if( modules[ name ] )
     return modules[ name ];
+
   modules[ name ] = Module( name );
-  if( !zero_type( modules[ name ] ) )
-    return modules[ name ];
-  return 0;
+
+  if( !modules[ name ]->check() )
+    m_delete( modules, name );
+
+  return modules[ name ];
 }
