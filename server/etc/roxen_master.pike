@@ -2,7 +2,7 @@
  * Roxen master
  */
 
-string cvs_version = "$Id: roxen_master.pike,v 1.49 1999/03/20 00:50:52 js Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.50 1999/06/17 02:23:09 peter Exp $";
 
 /*
  * name = "Roxen Master";
@@ -53,11 +53,12 @@ array persistent_variables(program p, object o)
 
 array|string low_nameof(object|program|function fo)
 {
+  //fo might be of several types, so DON'T return if one search failes.
   if(objectp(fo))
-    if(mixed x=search(objects,fo)) return x; else return 0;  
+    if(mixed x=search(objects,fo)) return x;
 
   if(programp(fo))
-    if(mixed x=search(programs,fo)) return x; else return 0;  
+    if(mixed x=search(programs,fo)) return x;
   string p,post="";
   object foo ;
 
