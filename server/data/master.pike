@@ -1,3 +1,7 @@
+//
+// ChiliMoon's customized master.
+//
+
 object mm=(object)"/master";
 inherit "/master": master;
 
@@ -6,11 +10,7 @@ mixed sql_query( string q, mixed ... e )
   return connect_to_my_mysql( 0, "local" )->query( q, @e );
 }
 
-/*
- * Roxen's customized master.
- */
-
-constant cvs_version = "$Id: master.pike,v 1.129 2002/10/23 19:56:43 nilsson Exp $";
+constant cvs_version = "$Id: master.pike,v 1.130 2002/10/27 20:24:08 nilsson Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -630,8 +630,21 @@ void set_on_load( string f, function cb )
 program low_findprog(string pname, string ext, object|void handler)
 {
   program ret;
-  array s;
-  string fname=pname+ext;
+  string fname = pname+ext;
+  if(ext!="" && has_suffix(ext, ".pmod"))
+    return 0;
+
+#if constant(PIKE_MODULE_RELOC)
+  fname = unrelocate_module(fname);
+#endif
+
+  array s = master_file_stat( relocate_module(fname) );
+  if(!s || s[1]<0)
+    return 0;
+
+  if( load_time[ fname ] > s[ 3 ] )
+    if( !zero_type (ret = programs[fname]) )
+      return ret;
 
 #ifdef THREADED
   object key;
@@ -643,24 +656,13 @@ program low_findprog(string pname, string ext, object|void handler)
   };
 #endif
 
-#if constant(PIKE_MODULE_RELOC)
-  fname = unrelocate_module(fname);
-#endif
-
   if( !handler ) handler = get_inhibit_compile_errors();
 
-  if( (s=master_file_stat( relocate_module(fname) )) && s[1]>=0 )
-  {
-    if( load_time[ fname ] > s[ 3 ] )
-      if( !zero_type (ret = programs[fname]) )
-        return ret;
-
-    switch(ext)
-    {
-    case "":
-    case ".pike":
-      // First check in mysql.
-      array q;
+  switch(ext) {
+  case "":
+  case ".pike":
+    // First check in mysql.
+    array q;
 
 #ifdef DUMP_DEBUG
 #define DUMP_WARNING(fname,err)                                         \
@@ -684,64 +686,63 @@ program low_findprog(string pname, string ext, object|void handler)
           return ret;                                                        \
         }; DUMP_WARNING(fname,err)                                           \
       } while(0)
-      if(sizeof(q=sql_query( "SELECT data,mtime FROM precompiled_files WHERE id=%s",
-			     make_ofilename( fname )))) {
-	if( (int)q[0]->mtime > s[3] ) {
-	  DDEBUG ("Loading dump from sql: %O\n", make_ofilename( fname ));
-	  LOAD_DATA( q[0]->data );
-	}
-	else
-	  DDEBUG ("Ignored stale dump in sql, timestamp %d vs %d: %O\n",
-		  (int)q[0]->mtime, s[3], make_ofilename( fname ));
-      }
 
-      foreach(query_precompiled_names(fname), string ofile )
-        if(array s2=master_file_stat( ofile ))
-          if(s2[1]>0 && s2[3]>=s[3])
-            LOAD_DATA( Stdio.File( ofile,"r")->read() );
-
-      DDEBUG( "Really compile: %O\n", fname );
-#ifdef DUMP_DEBUG
-      int t = gethrtime();
-#endif
-      if ( mixed e=catch { ret=compile_file(fname); } )
-      {
-	// load_time[fname] = time(); not here, no.... reload breaks miserably
-	//
-	// Yes indeed here. How else avoid many many recompilations of
-	// a module that's broken and referenced from a gazillion
-	// places? This also avoids the dreaded infinite loop during
-	// compilation that could occur with misspelled identifiers in
-	// pike modules. /mast
-	load_time[fname] = time();
-	programs[fname]=0;
-        if(arrayp(e) && sizeof(e) &&
-	   (<"Compilation failed.\n", "Cpp() failed\n">)[e[0]])
-          e[1]=({});
-	DDEBUG( "Compile FAILED: %O\n",fname );
-	throw(e);
-      }
-      DDEBUG( "Compile took %dms: %O\n", (gethrtime()-t)/1000, fname );
-      function f;
-      if( functionp( f = has_set_on_load[ fname ] ) )
-      {
-        has_set_on_load[ fname ] = 1;
-	call_out(f,0.1,fname, ret );
+    if(sizeof(q=sql_query( "SELECT data,mtime FROM precompiled_files WHERE id=%s",
+			   make_ofilename( fname )))) {
+      if( (int)q[0]->mtime > s[3] ) {
+	DDEBUG ("Loading dump from sql: %O\n", make_ofilename( fname ));
+	LOAD_DATA( q[0]->data );
       }
       else
-        has_set_on_load[ fname ] = 1;
-      break;
-#if constant(load_module)
-    case ".so":
-      ret=load_module(relocate_module(fname));
-#endif
+	DDEBUG ("Ignored stale dump in sql, timestamp %d vs %d: %O\n",
+		(int)q[0]->mtime, s[3], make_ofilename( fname ));
     }
-    program_names[ret] = fname;
-    if( ret )
+
+    foreach(query_precompiled_names(fname), string ofile )
+      if(array s2=master_file_stat( ofile ))
+	if(s2[1]>0 && s2[3]>=s[3])
+	  LOAD_DATA( Stdio.File( ofile,"r")->read() );
+
+    DDEBUG( "Really compile: %O\n", fname );
+#ifdef DUMP_DEBUG
+    int t = gethrtime();
+#endif
+    if ( mixed e=catch { ret=compile_file(fname); } )
+    {
+      // load_time[fname] = time(); not here, no.... reload breaks miserably
+      //
+      // Yes indeed here. How else avoid many many recompilations of
+      // a module that's broken and referenced from a gazillion
+      // places? This also avoids the dreaded infinite loop during
+      // compilation that could occur with misspelled identifiers in
+      // pike modules. /mast
       load_time[fname] = time();
-    return programs[fname] = ret;
+      programs[fname]=0;
+      if(arrayp(e) && sizeof(e) &&
+	 (<"Compilation failed.\n", "Cpp() failed\n">)[e[0]])
+	e[1]=({});
+      DDEBUG( "Compile FAILED: %O\n",fname );
+      throw(e);
+    }
+    DDEBUG( "Compile took %dms: %O\n", (gethrtime()-t)/1000, fname );
+    function f;
+    if( functionp( f = has_set_on_load[ fname ] ) )
+    {
+      has_set_on_load[ fname ] = 1;
+      call_out(f,0.1,fname, ret );
+    }
+    else
+      has_set_on_load[ fname ] = 1;
+    break;
+#if constant(load_module)
+  case ".so":
+    ret=load_module(relocate_module(fname));
+#endif
   }
-  return 0;
+  program_names[ret] = fname;
+  if( ret )
+    load_time[fname] = time();
+  return programs[fname] = ret;
 }
 
 program handle_inherit (string pname, string current_file, object|void handler)
