@@ -1,6 +1,6 @@
 inherit "http";
 
-static string _cvs_version = "$Id: roxenlib.pike,v 1.39 1997/10/15 20:44:03 peter Exp $";
+static string _cvs_version = "$Id: roxenlib.pike,v 1.40 1997/11/26 22:09:42 grubba Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -99,8 +99,13 @@ static mapping build_env_vars(string f, object id, string path_info)
     new["HTTP_HOST"]=replace(id->my_fd->query_address(1)," ",":");
   if(id->misc["proxy-connection"])
     new["HTTP_PROXY_CONNECTION"]=id->misc["proxy-connection"];
-  if(id->misc->accept)
-    new["HTTP_ACCEPT"]=id->misc->accept*", ";
+  if(id->misc->accept) {
+    if (arrayp(id->misc->accept)) {
+      new["HTTP_ACCEPT"]=id->misc->accept*", ";
+    } else {
+      new["HTTP_ACCEPT"]=(string)id->misc->accept;
+    }
+  }
 
   if(id->misc->cookies)
     new["HTTP_COOKIE"] = id->misc->cookies;
