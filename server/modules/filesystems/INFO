@@ -6,5 +6,5 @@
 
 <svenska>
   <name>Filsystemsmoduler</name>
-  <doc>Bygger upp roxens virtuella filsystem</doc>
-</standard>
+  <doc>Moduler som bygger upp roxens virtuella filsystem.</doc>
+</svenska>
