@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.256 1998/11/30 03:53:16 grubba Exp $
+ * $Id: roxen.pike,v 1.257 1999/02/15 23:21:46 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,9 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-
-constant cvs_version="$Id: roxen.pike,v 1.256 1998/11/30 03:53:16 grubba Exp $";
-
+constant cvs_version="$Id: roxen.pike,v 1.257 1999/02/15 23:21:46 per Exp $";
 
 // Some headerfiles
 #define IN_ROXEN
@@ -782,28 +780,28 @@ void done_with_roxen_com()
   if(old != new) {
     perror("Got new supports data from www.roxen.com\n");
     perror("Replacing old file with new data.\n");
-#ifndef THREADS
-    object privs=Privs(LOCALE->replacing_supports());
-#endif
+// #ifndef THREADS
+//     object privs=Privs(LOCALE->replacing_supports());
+// #endif
     mv("etc/supports", "etc/supports~");
     Stdio.write_file("etc/supports", new);
     old = Stdio.read_bytes( "etc/supports" );
-#if efun(chmod)
-#if efun(geteuid)
-    if(geteuid() != getuid()) chmod("etc/supports",0660);
-#endif
-#endif
+// #if efun(chmod)
+// #if efun(geteuid)
+//     if(geteuid() != getuid()) chmod("etc/supports",0660);
+// #endif
+// #endif
     if(old != new)
     {
       perror("FAILED to update the supports file.\n");
       mv("etc/supports~", "etc/supports");
-#ifndef THREADS
-      privs = 0;
-#endif
+// #ifndef THREADS
+//       privs = 0;
+// #endif
     } else {
-#ifndef THREADS
-      privs = 0;
-#endif
+// #ifndef THREADS
+//       privs = 0;
+// #endif
       initiate_supports();
     }
   }
@@ -2688,4 +2686,129 @@ string check_variable(string name, mixed value)
      }
      break;
   }
+}
+
+
+
+
+
+mapping config_cache = ([ ]);
+mapping host_accuracy_cache = ([]);
+int is_ip(string s)
+{
+  return(replace(s,
+		 ({ "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "." }),
+		 ({ "","","","","","","","","","","" })) == "");
+}
+
+object find_server_for(object id, string host)
+{
+  object old_conf = id->conf;
+
+  host = lower_case(host);
+  if(config_cache[host]) {
+    id->conf=config_cache[host];
+  } else {
+    if (is_ip(host)) {
+      // Not likely to be anything else than the current virtual server.
+      config_cache[host] = id->conf;
+      return (id->conf);
+    }
+
+#if constant(String.fuzzymatch)
+    int best;
+    object c;
+    string hn;
+    foreach(configurations, object s) {
+      string h = lower_case(s->query("MyWorldLocation"));
+
+      // Remove http:// and trailing slash...
+      // Would get interresting correlation problems with the "http" otherwise.
+      sscanf(h, "%*s://%s/", h);
+
+      int corr = String.fuzzymatch(host, h);
+      if ((corr > best) ||
+	  ((corr == best) && hn && (sizeof(hn) > sizeof(h)))) {
+	/* Either better correlation,
+	 * or the same, but a shorter hostname.
+	 */
+	best = corr;
+	c = s;
+	hn = h;
+      }
+    }
+    if(best >= 50)
+      id->conf = config_cache[host] = (c || id->conf);
+    else 
+      config_cache[host] = id->conf;
+    host_accuracy_cache[host] = best;
+#elif constant(Array.diff_longest_sequence)
+    /* The idea of the algorithm is to find the server-url with the longest
+     * common sequence of characters with the host-string, and among those with
+     * the same correlation take the one which is shortest (ie least amount to
+     * throw away).
+     */
+    int best;
+    array a = host/"";
+    string hn;
+    object c;
+    foreach(configurations, object s) {
+      string h = lower_case(s->query("MyWorldLocation"));
+
+      // Remove http:// et al here...
+      // Would get interresting correlation problems with the "http" otherwise.
+      int i = search(h, "://");
+      if (i != -1) {
+	h = h[i+3..];
+      }
+
+      array common = Array.diff_longest_sequence(a, h/"");
+      int corr = sizeof(common);
+      if ((corr > best) ||
+	  ((corr == best) && hn && (sizeof(hn) > sizeof(h)))) {
+	/* Either better correlation,
+	 * or the same, but a shorter hostname.
+	 */
+	best = corr;
+	c = s;
+	hn = h;
+      }
+    }
+    // Minmatch should be counted in percent
+    best=best*100/strlen(host);
+    if(best >= QUERY(minmatch))
+      id->conf = config_cache[host] = (c || id->conf);
+    else
+      config_cache[host] = id->conf;
+    host_accuracy_cache[host] = best;
+#endif /* constant(Array.diff_longest_sequence) */
+  }
+
+  if (id->conf != old_conf) {
+    /* Need to re-authenticate with the new server */
+
+    if (id->rawauth) {
+      array(string) y = id->rawauth / " ";
+
+      id->realauth = 0;
+      id->auth = 0;
+
+      if (sizeof(y) >= 2) {
+	y[1] = MIME.decode_base64(y[1]);
+	id->realauth = y[1];
+	if (id->conf && id->conf->auth_module) {
+	  y = id->conf->auth_module->auth(y, id);
+	}
+	id->auth = y;
+      }
+    }
+  }
+  return id->conf;
+}
+
+object find_site_for( object id )
+{
+  if(id->misc->host) 
+    return find_server_for(id,lower_case((id->misc->host/":")[0]));
+  return id->conf;
 }
