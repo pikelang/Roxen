@@ -8,7 +8,7 @@
    Please consult me before upgrading croatian.pike.
 */
 
-string cvs_version = "$Id: croatian.pike,v 1.1 1997/07/09 15:44:23 grubba Exp $";
+string cvs_version = "$Id: croatian.pike,v 1.2 1997/07/10 09:06:24 grubba Exp $";
 inline string month(int num)
 {
   return ({ "Sijecanj", "Veljaca", "Ozujak", "Travanj", "Svibanj",
@@ -107,19 +107,15 @@ string number(int num)
    case 2000..2999: return "dvije tisuce "+number(num%1000);
    case 3000..4999: return number(num/1000)+" tisuce "+number(num%1000);
    case 1000000..999999999:
-     if ( ((num%10000000)/1000000)==1 ) return number(num/1000000)+"
-milijun "+number(num%1000000);
+     if ( ((num%10000000)/1000000)==1 ) return number(num/1000000)+" milijun "+number(num%1000000);
      return number(num/1000000)+" milijuna "+number(num%1000000);
    default:
     if ( (((num%100000)/1000)<11) || (((num%100000)/1000)>19) ) {
      if ( (((num%10000)/1000)==3) || (((num%10000)/1000)==4) ) return
 number((num-(num%1000))/1000)+" tisuce "+number(num%1000);
-     if (((num%10000)/1000)==2) return number((num-(num%10000))/1000)+"
-dvije tisuce "+number(num%1000);
-     if (((num%10000)/1000)==1) return number((num-(num%10000))/1000)+"
-tisucu "+number(num%1000); };
-    if ((num>4999) && (num<1000000)) return number(num/1000)+" tisuca
-"+number(num%1000);
+     if (((num%10000)/1000)==2) return number((num-(num%10000))/1000)+" dvije tisuce "+number(num%1000);
+     if (((num%10000)/1000)==1) return number((num-(num%10000))/1000)+" tisucu "+number(num%1000); };
+    if ((num>4999) && (num<1000000)) return number(num/1000)+" tisuca "+number(num%1000);
     perror("uf\n"+ num +"\n");
     return "mnogo";
   }
