@@ -17,6 +17,7 @@
 /server/nfonts/puppyface.txt !eol
 *.xcf binary
 map binary
+nn binary
 
 # Handling of foreign (ie CVS) identifiers.
 #
