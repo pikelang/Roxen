@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.115 1998/07/13 14:06:54 grubba Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.116 1998/07/16 12:06:43 grubba Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -108,7 +108,9 @@ void create()
   defvar("exec", 0, "SSI support: execute command", 
 	 TYPE_FLAG,
 	 "If set and if server side include support is enabled, Roxen "
-	 "will accept NCSA / Apache &lt;!--#exec cmd=\"XXX\" --&gt;.",
+	 "will accept NCSA / Apache &lt;!--#exec cmd=\"XXX\" --&gt;. "
+	 "Note that this will allow your users to execute arbitrary "
+	 "commands.",
 	 ssi_is_not_set);
 
 #if constant(getpwnam)
@@ -1202,9 +1204,10 @@ string tag_compat_exec(string tag,mapping m,object got,object file,
 		   | build_roxen_env_vars(got)
 		   | build_env_vars(got->not_query, got, 0),
 		   QUERY(execuid) || -2, QUERY(execgid) || -2);
+    } else {
+      return "<b>Execute command support disabled."
+	"<!-- Check \"Main RXML Parser\"/\"SSI support\". --></b>";
     }
-    else
-      return " <b>execute command support disabled</b> ";
   }
   return "<!-- exec what? -->";
 }
