@@ -7,7 +7,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.16 2002/01/04 07:44:39 hop Exp $";
+constant cvs_version = "$Id: email.pike,v 1.17 2002/02/15 07:25:41 hop Exp $";
 
 constant thread_safe=1;
 
@@ -87,7 +87,7 @@ void create()
 
 array mails = ({}), errs = ({});
 string msglast = "";
-string revision = ("$Revision: 1.16 $"/" ")[1];
+string revision = ("$Revision: 1.17 $"/" ")[1];
 
 class TagEmail {
   inherit RXML.Tag;
@@ -261,6 +261,26 @@ class TagEmail {
 
     RXML.TagSet additional_tags = internal;
 
+    string nice_from_h(string fromx) {
+      string from = String.trim_all_whites(fromx);
+      string addr;
+
+      foreach(from/" ", string el)
+        if(search(el, "@") > 0)
+        addr = el;
+      if(addr)
+        from = "\""+((from/" ")-({addr}))*" "+"\" <"+addr+">";
+
+      return from;
+    }
+
+    string only_from_addr(string fromx) {
+      foreach(Array.map(fromx/" ", String.trim_all_whites), string from1)
+        if(search(from1, "@") > 0)
+        return from1;
+      return String.trim_all_whites(fromx);
+    }
+
     string colorize_parts(string message) {
 
 #define HEADER_ST "<font color=\"green\">"
@@ -357,7 +377,7 @@ class TagEmail {
 			   ]));
        error = catch(
          m=MIME.Message("", ([ "MIME-Version":"1.0", "subject":subject,
-			     "from":fromx,
+			     "from":nice_from_h(fromx),
 			     "to":replace(tox, split, ","),
 			     "content-type":"multipart/mixed",
 			     "x-mailer":"Roxen's email, r"+revision
@@ -368,7 +388,7 @@ class TagEmail {
      } else
      error = catch(
        m=MIME.Message(body, ([ "MIME-Version":"1.0", "subject":subject,
-			     "from":fromx,
+			     "from":nice_from_h(fromx),
 			     "to":replace(tox, split, ","),
 			     "content-type":(args->mimetype||"text/plain")
 				+ chs,
@@ -387,7 +407,8 @@ class TagEmail {
      catch(msglast = (string)m);
 
 //werror(sprintf("D: send_mess: %O\n", (string)m));
-     error = catch(o->send_message(fromx, tox/split, (string)m));
+     error = catch(o->send_message(only_from_addr(fromx), tox/split,
+				   (string)m));
      if (error)
        RXML.run_error(EMAIL_LABEL+Roxen.html_encode_string(error[0]));
 
