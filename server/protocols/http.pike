@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.228 2000/03/27 13:19:06 jhs Exp $";
+constant cvs_version = "$Id: http.pike,v 1.229 2000/04/25 16:19:07 mast Exp $";
 
 #define MAGIC_ERROR
 
@@ -1132,7 +1132,7 @@ string format_backtrace(int eid)
     roxen.query_var ("errors")[eid];
 
   string res = error_page_header ("Internal Server Error") +
-    "<h1>" + html_encode_string (msg) + "</h1>\n";
+    "<h1>" + replace (html_encode_string (msg), "\n", "<br />\n") + "</h1>\n";
 
   if (rxml_bt && sizeof (rxml_bt)) {
     res += "<h3>RXML frame backtrace</h3>\n<ul>\n";
@@ -1737,8 +1737,14 @@ void send_result(mapping|void result)
 	else
           head_string += h+": "+heads[h]+"\r\n";
 
-      if(file->len > -1)
+      if(file->len > -1) {
 	head_string += "Content-Length: "+ file->len +"\r\n";
+	if (file->len == 0)
+	  // Some browsers, e.g. Netscape 4.7, doesn't trust a zero
+	  // content length when using keep-alive. So let's force a
+	  // close in that case.
+	  misc->connection = "close";
+      }
       else
 	misc->connection = "close";
 
