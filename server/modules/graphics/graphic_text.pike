@@ -1,4 +1,5 @@
-string cvs_version="$Id: graphic_text.pike,v 1.23.2.5 1997/03/01 13:25:34 grubba Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.23.2.6 1997/03/08 18:36:00 grubba Exp $";
+
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
