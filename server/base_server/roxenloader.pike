@@ -1,11 +1,11 @@
-#define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
+/*
+ * $Id: roxenloader.pike,v 1.79 1998/10/03 18:04:32 grubba Exp $
+ *
+ * Roxen bootstrap program.
+ *
+ */
 
-program Privs;
-
-// Set up the roxen environment. Including custom functions like spawne().
-constant cvs_version="$Id: roxenloader.pike,v 1.78 1998/09/11 22:16:24 per Exp $";
-
-#define perror roxen_perror
+// Sets up the roxen environment. Including custom functions like spawne().
 
 //
 // NOTE:
@@ -15,7 +15,15 @@ constant cvs_version="$Id: roxenloader.pike,v 1.78 1998/09/11 22:16:24 per Exp $
 //
 private static object new_master;
 
+constant cvs_version="$Id: roxenloader.pike,v 1.79 1998/10/03 18:04:32 grubba Exp $";
 
+// Macro to throw errors
+#define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
+
+// The privs.pike program
+program Privs;
+
+#define perror roxen_perror
 private static int perror_status_reported=0;
 
 int pid = getpid();
@@ -76,6 +84,11 @@ int getppid()
 int use_syslog, loggingfield;
 #endif
 
+/*
+ * Some efuns used by Roxen
+ */
+
+// Used to print error/debug messages
 void roxen_perror(string format,mixed ... args)
 {
   int t = time();
@@ -104,6 +117,7 @@ void roxen_perror(string format,mixed ... args)
   stderr->write(format);
 }
 
+// Make a directory hierachy
 int mkdirhier(string from, int|void mode)
 {
   int r = 1;
@@ -128,6 +142,9 @@ int mkdirhier(string from, int|void mode)
   return 1;
 }
 
+/*
+ * PDB support
+ */
 object db;
 mapping dbs = ([ ]);
 
@@ -146,6 +163,7 @@ object open_db(string id)
 }
 
 
+// Help function used by low_spawne()
 mapping make_mapping(string *f)
 {
   mapping foo=([ ]);
@@ -159,11 +177,16 @@ mapping make_mapping(string *f)
 }
 
 
-
+// Roxen itself
 object roxen;
+
+// The function used to report notices/debug/errors etc.
 function nwrite;
 
 
+/*
+ * Code to get global configuration variable values from Roxen.
+ */
 #define VAR_VALUE 0
 
 mixed query(string arg) 
@@ -219,6 +242,7 @@ void init_logger()
 #endif
 }
 
+// Print a debug message
 void report_debug(string message)
 {
 #if efun(syslog)
@@ -230,6 +254,7 @@ void report_debug(string message)
     nwrite(message,0,2);
 }
 
+// Print a warning
 void report_warning(string message)
 {
 #if efun(syslog)
@@ -241,6 +266,7 @@ void report_warning(string message)
     nwrite(message,0,2);
 }
 
+// Print a notice
 void report_notice(string message)
 {
 #if efun(syslog)
@@ -252,6 +278,7 @@ void report_notice(string message)
     nwrite(message,0,1);
 }
 
+// Print an error message
 void report_error(string message)
 {
 #if efun(syslog)
@@ -263,6 +290,7 @@ void report_error(string message)
     nwrite(message,0,3);
 }
 
+// Print a fatal error message
 void report_fatal(string message)
 {
 #if efun(syslog)
@@ -273,7 +301,8 @@ void report_fatal(string message)
 #endif
     nwrite(message,0,3);
 }
- 
+
+// Pipe open 
 string popen(string s, void|mapping env, int|void uid, int|void gid)
 {
   object p;
@@ -391,6 +420,7 @@ string popen(string s, void|mapping env, int|void uid, int|void gid)
 #endif /* constant(Process.create_process) */
 }
 
+// Low level create process on Pike 0.5
 int low_spawne(string s,string *args, mapping|array env, object stdin, 
 	   object stdout, object stderr, void|string wd)
 {
@@ -414,6 +444,7 @@ int low_spawne(string s,string *args, mapping|array env, object stdin,
   exit(99);
 }
 
+// Create a process
 int spawne(string s,string *args, mapping|array env, object stdin, 
 	   object stdout, object stderr, void|string wd, void|array (int) uid)
 {
@@ -475,6 +506,7 @@ int spawne(string s,string *args, mapping|array env, object stdin,
 #endif /* constant(Process.create_process) */
 }
 
+// Start a new Pike process with the same configuration as the current one
 int spawn_pike(array(string) args, void|string wd, object|void stdin,
 	       object|void stdout, object|void stderr)
 {
@@ -539,7 +571,7 @@ int spawn_pike(array(string) args, void|string wd, object|void stdin,
 }
 
 
-
+// Add a few cache control related efuns
 static private void initiate_cache()
 {
   object cache;
@@ -553,6 +585,7 @@ static private void initiate_cache()
   add_constant("capitalize", lambda(string s){return upper_case(s[0..0])+s[1..];});
 }
 
+// privs.pike placeholder during bootstrap.
 class myprivs
 {
   program privs;
@@ -571,6 +604,7 @@ class myprivs
   }
 }
 
+// Don't allow cd() unless we are in a forked child.
 class restricted_cd
 {
   int locked_pid = getpid();
@@ -583,9 +617,11 @@ class restricted_cd
   }
 }
 
+// Place holder.
 class empty_class {
 };
 
+// Fallback efuns.
 #if !constant(getuid)
 int getuid(){ return 17; }
 int getgid(){ return 42; }
@@ -597,7 +633,7 @@ int gethrtime()
 }
 #endif
 
-
+// Load Roxen for real
 object really_load_roxen()
 {
   int start_time = gethrtime();
@@ -607,6 +643,7 @@ object really_load_roxen()
   return res;
 }
 
+// Debug function to trace calls to destruct().
 #ifdef TRACE_DESTRUCT
 void trace_destruct(mixed x)
 {
@@ -616,6 +653,7 @@ void trace_destruct(mixed x)
 }
 #endif /* TRACE_DESTRUCT */
 
+// Set up efuns and load Roxen.
 void load_roxen()
 {
   add_constant("cd", restricted_cd());
@@ -660,6 +698,7 @@ void load_roxen()
   nwrite = roxen->nwrite;
 }
 
+// Code to trace fd usage.
 #ifdef FD_DEBUG
 class mf
 {
@@ -698,6 +737,7 @@ class mf
 constant mf = Stdio.File;
 #endif
 
+// open() efun.
 object|void open(string filename, string mode, int|void perm)
 {
   object o;
@@ -723,6 +763,7 @@ object|void open(string filename, string mode, int|void perm)
   return o;
 }
 
+// Make a $PATH-style string
 string make_path(string ... from)
 {
   return Array.map(from, lambda(string a, string b) {
@@ -731,6 +772,7 @@ string make_path(string ... from)
   }, getcwd())*":";
 }
 
+// Roxen bootstrap code.
 int main(mixed ... args)
 {
   int start_time = gethrtime();
