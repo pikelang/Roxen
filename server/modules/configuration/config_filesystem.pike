@@ -18,7 +18,7 @@ LocaleString module_doc =
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.76 2001/01/29 09:06:12 per Exp $";
+  "$Id: config_filesystem.pike,v 1.77 2001/02/05 11:51:42 per Exp $";
 
 constant path = "config_interface/";
 
@@ -217,15 +217,18 @@ mixed find_file( string f, RequestID id )
     }
 
     string encoding = config_setting( "charset" );
-    if( encoding != "utf-8" )
-      catch { charset_decoder=Locale.Charset.decoder( encoding ); };
+    if( encoding != "utf-8" &&
+	encoding != "iso-8859-1")
+      catch {
+	charset_decoder=Locale.Charset.decoder( encoding );
+      };
     else
       charset_decoder = 0;
     id->set_output_charset( encoding );
     id->since = 0;
     catch 
     {
-      if( !id->misc->request_charset_decoded )
+      if( !id->misc->request_charset_decoded && encoding != "iso-8859-1" )
       {
         id->misc->request_charset_decoded = 1;
 
@@ -233,22 +236,25 @@ mixed find_file( string f, RequestID id )
         {
           void decode_variable( string v )
           {
-            id->variables[v] = charset_decoder->clear()->
-                             feed(id->variables[v])->drain();
+	    string decode( mixed what ) {
+	      return charset_decoder->clear()->feed(what)->drain();
+	    };
+            id->real_variables[v] =  map( id->real_variables[v], decode );
           };
           f = charset_decoder->clear()->feed( f )->drain();
-          id->not_query = charset_decoder->clear()->feed( id->not_query )->drain();
-          map( indices(id->variables), decode_variable );
+          id->not_query =
+	    charset_decoder->clear()->feed( id->not_query )->drain();
+          map( indices(id->real_variables), decode_variable );
         }
         else
         {
           void decode_variable( string v )
           {
-            id->variables[v] = utf8_to_string( id->variables[v] );
+            id->real_variables[v]=map( id->real_variables[v], utf8_to_string );
           };
           f = utf8_to_string( f );
           id->not_query = utf8_to_string( id->not_query );
-          map( indices(id->variables), decode_variable );
+          map( indices(id->real_variables), decode_variable );
         }
       }
     };
