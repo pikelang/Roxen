@@ -227,17 +227,17 @@ constant tagdoc=([
  tasks. These options can be combined.</p>
 
 <xtable>
-<row><c>real-file</c><c>Makes it possible to show the absolute
-location of the file including the filename from an 'outside Roxen' view.</c></row>
-<row><c>thumbnail</c><c>Makes it possible to use image thumbnails in a
+<row><c><p>real-file</p></c><c><p>Makes it possible to show the absolute
+location of the file including the filename from an 'outside Roxen' view.</p></c></row>
+<row><c><p>thumbnail</p></c><c><p>Makes it possible to use image thumbnails in a
 directory listing. Note: Remember that some imageformats needs heavy
 computations to generate thumbnails. <ext>tiff</ext> for instance
 needs to unpack its image to be able to resolve the image's height and
-width. </c></row> <row><c>imagesize</c><c>Makes it able to show the
+width. </p></c></row> <row><c><p>imagesize</p></c><c><p>Makes it able to show the
 image's height and width in a directory listing. Note: Remember that
 some imageformats needs heavy computations to generate thumbnails.
 <ext>tiff</ext> for instance needs to unpack its image to be able to
-resolve the image's height and width.</c></row>
+resolve the image's height and width.</p></c></row>
 </xtable>
 </attr>
 
@@ -276,11 +276,11 @@ resolve the image's height and width.</c></row>
 <attr name='sort-order' value='alpha|dwim|modified|size|type' default='dwim'><p>
  Sort the files and directories by this method.</p>
 <xtable>
-<row><c>alpha</c><c>Sort files and directories alphabetically.</c></row>
-<row><c>dwim</c><c>Sort files and directories by \"Do What I (want) Method\". In many methods numeriacal sorts fail as the number '10' often appears before '2'. This method sorts numerical characters first then alphabetically, e.g. 1foo.html, 2foo.html, 10foo.html, foo1.html, foo2.html, foo10.html.</c></row>
-<row><c>modified</c><c>Sort files by modification date.</c></row>
-<row><c>size</c><c>Sort files by size.</c></row>
-<row><c>type</c><c>Sort files by content-type.</c></row>
+<row><c><p>alpha</p></c><c><p>Sort files and directories alphabetically.</p></c></row>
+<row><c><p>dwim</p></c><c><p>Sort files and directories by \"Do What I (want) Method\". In many methods numeriacal sorts fail as the number '10' often appears before '2'. This method sorts numerical characters first then alphabetically, e.g. 1foo.html, 2foo.html, 10foo.html, foo1.html, foo2.html, foo10.html.</p></c></row>
+<row><c><p>modified</p></c><c><p>Sort files by modification date.</p></c></row>
+<row><c><p>size</p></c><c><p>Sort files by size.</p></c></row>
+<row><c><p>type</p></c><c><p>Sort files by content-type.</p></c></row>
 </xtable>
 </attr>
 
