@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.847 2003/11/05 15:34:48 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.848 2003/11/05 15:53:55 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -1535,9 +1535,9 @@ class Protocol
 #if constant(System.EADDRINUSE) || constant(system.EADDRINUSE)
     if (
 #if constant(System.EADDRINUSE)
-	(port_obj->errno == System.EADDRINUSE) && 
+	(port_obj->errno() == System.EADDRINUSE) && 
 #else /* !constant(System.EADDRINUSE) */
-	(port_obj->errno == system.EADDRINUSE) && 
+	(port_obj->errno() == system.EADDRINUSE) && 
 #endif /* constant(System.EADDRINUSE) */
 	(retries++ < 10)) {
       // We may get spurious failures on rebinding ports on some OS'es
