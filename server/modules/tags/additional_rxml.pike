@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.2 2000/08/10 16:20:41 per Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.3 2000/08/12 19:23:26 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_PARSER;
 constant module_name = "Additional RXML tags";
@@ -216,6 +216,14 @@ constant tagdoc=([
  two eight sided dices is called '2D8' or 'D8+D8'. Constants may also
  be used, so that a random number between 10 and 20 could be written
  as 'D9+10' (excluding 10 and 20, including 10 and 20 would be 'D11+9').
+</attr>",
+
+  "insert#href":#"<desc plugin>Inserts the contents at that URL. This function has to be enabled in
+ the <module>RXML 2.0 tags</module> module in the Roxen WebServer
+ configuration interface.</desc>
+
+<attr name=href value=string>
+ The URL to the page that should be inserted.
 </attr>",
 
 ]);
