@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.117 2000/10/19 01:50:52 mast Exp $
+//! $Id: module.pmod,v 1.118 2000/11/13 22:06:04 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -891,11 +891,18 @@ class Context
     array(string) splitted = Array.map( replace(var, "..", ";") / ".",
 					lambda(string in) { return replace(in, ";", "."); });
     if(sizeof(splitted)>2) splitted[-1] = splitted[1..]*".";
-    if(sizeof(splitted)==2)
+    if(sizeof(splitted)==2) {
       scope_name=splitted[0];
 #ifdef OLD_RXML_COMPAT
+      if (compatible_scope && !has_index (scopes, scope_name)) {
+	scope_name = "form";
+	splitted[-1] = splitted[0] + "." + splitted[-1];
+      }
+#endif
+    }
+#ifdef OLD_RXML_COMPAT
     else if (compatible_scope)
-      scope_name = scope_name || "form";
+      scope_name = "form";
 #endif
     return ({ scope_name, splitted[-1] });
   }
@@ -936,10 +943,6 @@ class Context
 	  return val;
     }
     else if ((<0, "_">)[scope_name]) parse_error ("No current scope.\n");
-#ifdef OLD_RXML_COMPAT
-    if(compatible_scope && scope_name && scope_name!="form")
-      return get_var(scope_name+"."+var, "form", want_type);
-#endif
     parse_error ("Unknown scope %O.\n", scope_name);
   }
 
@@ -952,11 +955,18 @@ class Context
     array(string) splitted = Array.map( replace(var, "..", ";") / ".",
 					lambda(string in) { return replace(in, ";", "."); });
     if(sizeof(splitted)>2) splitted[-1] = splitted[1..]*".";
-    if(sizeof(splitted)==2)
+    if(sizeof(splitted)==2) {
       scope_name=splitted[0];
 #ifdef OLD_RXML_COMPAT
+      if (compatible_scope && !has_index (scopes, scope_name)) {
+	scope_name = "form";
+	splitted[-1] = splitted[0] + "." + splitted[-1];
+      }
+#endif
+    }
+#ifdef OLD_RXML_COMPAT
     else if (compatible_scope)
-      scope_name = scope_name || "form";
+      scope_name = "form";
 #endif
     return get_var(splitted[-1], scope_name, want_type);
   }
@@ -971,10 +981,6 @@ class Context
       else
 	return vars[var] = val;
     else if ((<0, "_">)[scope_name]) parse_error ("No current scope.\n");
-#ifdef OLD_RXML_COMPAT
-    if(compatible_scope && scope_name && scope_name!="form")
-      return set_var(scope_name+"."+var, val, "form");
-#endif
     parse_error ("Unknown scope %O.\n", scope_name);
   }
 
@@ -987,11 +993,18 @@ class Context
     array(string) splitted = Array.map( replace(var, "..", ";") / ".",
 					lambda(string in) { return replace(in, ";", "."); });
     if(sizeof(splitted)>2) splitted[-1] = splitted[1..]*".";
-    if(sizeof(splitted)==2)
+    if(sizeof(splitted)==2) {
       scope_name=splitted[0];
 #ifdef OLD_RXML_COMPAT
+      if (compatible_scope && !has_index (scopes, scope_name)) {
+	scope_name = "form";
+	splitted[-1] = splitted[0] + "." + splitted[-1];
+      }
+#endif
+    }
+#ifdef OLD_RXML_COMPAT
     else if (compatible_scope)
-      scope_name = scope_name || "form";
+      scope_name = "form";
 #endif
     return set_var(splitted[-1], val, scope_name);
   }
