@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.329 2001/12/03 17:26:54 anders Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.330 2001/12/04 11:01:11 anders Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -5838,13 +5838,13 @@ using the pre tag.
 //----------------------------------------------------------------------
 
 "insert#variables":#"<desc type='plugin'><p><short>
- Inserts a listing of all variables in a scope.</short><note><p>It is
+ Inserts a listing of all variables in a scope.</short><note>It is
  possible to create a scope with an infinite number of variables set.
  In this case the programmer of that scope decides which variables that
  should be listable, i.e. this will not cause any problem except that
  all variables will not be listed. It is also possible to hide
  variables so that they are not listed with this tag.
-</p></note></p></desc>
+</note></p></desc>
 
 <attr name='variables' value='full|plain'>
  <p>Sets how the output should be formatted.</p>
@@ -6626,10 +6626,10 @@ just got zapped?
 </desc>
 
 <attr name='preparse'>
- Parse and execute any RXML inside the comment tag. This can be used
+ <p>Parse and execute any RXML inside the comment tag. This can be used
  to do stuff without producing any output in the response. This is a
  compatibility argument; the recommended way is to use
- <tag>nooutput</tag> instead.
+ <tag>nooutput</tag> instead.</p>
 </attr>",
 
 //----------------------------------------------------------------------
@@ -7405,8 +7405,8 @@ just got zapped?
 "use":#"<desc type='cont'><p><short>
  Reads <i>tag definitions</i>, user defined <i>if plugins</i> and 
  <i>variables</i> from a file or package and includes into the 
- current page.</short>
- <note><p>The file itself is not inserted into the page. This only 
+ current page.</short></p>
+ <note>The file itself is not inserted into the page. This only 
  affects the environment in which the page is parsed. The benefit is 
  that the package file needs only be parsed once, and the compiled 
  versions of the user defined tags can then be used, thus saving time. 
@@ -7417,7 +7417,7 @@ just got zapped?
  such as form variables or client settings, at the compile time. Also 
  note that the use tag only lets you define variables in the form 
  and var scope in advance. Variables with the same name will be 
- overwritten when the use tag is parsed.</p></note></p>
+ overwritten when the use tag is parsed.</note>
 </desc>
 
 <attr name='packageinfo'><p>
