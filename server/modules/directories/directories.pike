@@ -10,9 +10,9 @@
 // the correct background and font colors.
 //
 // Make sure links work _inside_ unfolded documents.
-constant cvs_version = "$Id: directories.pike,v 1.57 2000/03/27 01:17:01 per Exp $";
 
-constant thread_safe=1;
+constant cvs_version = "$Id: directories.pike,v 1.58 2000/05/01 05:30:29 nilsson Exp $";
+constant thread_safe = 1;
 
 //#define DIRECTORIES_DEBUG
 #ifdef DIRECTORIES_DEBUG
@@ -22,7 +22,7 @@ constant thread_safe=1;
 #endif
 
 inherit "module";
-inherit "roxenlib";
+
 array readme, indexfiles, nobrowse;
 int filename_width, cache, config_id;
 
@@ -110,25 +110,39 @@ void create()
          "has expired.");
 }
 
-string tag_directory_insert(string t, mapping m, RequestID id)
-{
-  if(!m->file) RXML.parse_error("File not specified.");
-  if(m->dir) {
-    string old_base=id->misc->rel_base||"";
-    id->misc->rel_base=old_base+m->file;
-    string ret=describe_directory(m->file, id);
-    id->misc->rel_base=old_base;
-    return ret;
-  }
-  Stdio.File f;
-  DIRS_WERR("Showing "+fix_relative(m->file, id));
-  if(f=open(id->conf->real_file(fix_relative(m->file, id), id), "r")) {
-    string s=f->read();
-    if(s && m->quote=="none") return s;
-    if(s) return html_encode_string(s);
-  }
+class TagDirectoryInsert {
+  inherit RXML.Tag;
+  constant name="directory-insert";
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
 
-  RXML.run_error("Couldn't open file \""+m->file+"\".");
+  class Frame {
+    inherit RXML.Frame;
+
+    array do_return(RequestID id) {
+      if(!args->file) RXML.parse_error("File not specified.");
+      if(args->dir) {
+	string old_base=id->misc->rel_base||"";
+	id->misc->rel_base=old_base+args->file;
+	result=describe_directory(args->file, id);
+	id->misc->rel_base=old_base;
+	return 0;
+      }
+      Stdio.File f;
+      DIRS_WERR("Showing "+Roxen.fix_relative(args->file, id));
+      if(f=open(id->conf->real_file(Roxen.fix_relative(args->file, id), id), "r")) {
+	string s=f->read();
+	if(s) {
+	  if(args->quote=="none")
+	    result=s;
+	  else
+	    result=Roxen.html_encode_string(s);
+	  return 0;
+	}
+      }
+
+      RXML.run_error("Couldn't open file \""+args->file+"\".");
+    }
+  }
 }
 
 string find_readme(string d, RequestID id)
@@ -138,7 +152,7 @@ string find_readme(string d, RequestID id)
 
     if (txt) {
       if (id->conf->type_from_filename(f)!="text/html")
-	txt = "<pre>" + html_encode_string(txt) +"</pre>";
+	txt = "<pre>" + Roxen.html_encode_string(txt) +"</pre>";
       return "<hr noshade=\"noshade\" />"+txt;
     }
   }
@@ -244,7 +258,7 @@ string describe_directory(string d, RequestID id)
     default:
       array tmp = id->conf->type_from_filename(file,1);
       if (tmp) type = tmp[0];
-      icon = image_from_type(type);
+      icon = Roxen.image_from_type(type);
       if (tmp && tmp[1]) type += " " + tmp[1];
 
       break;
@@ -252,7 +266,7 @@ string describe_directory(string d, RequestID id)
 
     if(id->misc->foldlist_exists) result+="<ft>";
     result += sprintf(out_form, icon, id->misc->rel_base+file, file,
-		      sizetostring(len), mtime, type);
+		      Roxen.sizetostring(len), mtime, type);
 
     array(string) split_type = type/"/"+({"",""});
     string extras = "No support for this file type.";
@@ -261,7 +275,7 @@ string describe_directory(string d, RequestID id)
     case "text":
       switch(split_type[1]) {
       case "html":
-	extras = "</pre>\n<directory-insert quote=none file=\""+d+file+"\"><pre>";
+	extras = "</pre>\n<directory-insert quote=\"none\" file=\""+d+file+"\"><pre>";
 	break;
       default:
 	extras = "<directory-insert file=\""+d+file+"\">";
@@ -281,7 +295,7 @@ string describe_directory(string d, RequestID id)
       break;
     case "Directory":
     case "Module location":
-      extras = "<directory-insert nocache file=\""+d+file+"\" dir>";
+      extras = "<directory-insert nocache=\"\" file=\""+d+file+"\" dir>";
       break;
     case "Unknown":
       switch(lower_case(file)) {
@@ -322,16 +336,16 @@ string|mapping parse_directory(RequestID id)
 
   if(strlen(f) > 1)
   {
-    if(f[-1]!='/' && f[-1]!='.') return http_redirect(f+"/", id);
+    if(f[-1]!='/' && f[-1]!='.') return Roxen.http_redirect(f+"/", id);
     if(f[-1]=='/' && has_value(f, "//"))
-      return http_redirect("/"+(f/"/"-({""}))*"/"+"/", id);
+      return Roxen.http_redirect("/"+(f/"/"-({""}))*"/"+"/", id);
     if(f[-1]=='.') {
-      if(!query("override")) return http_redirect(f[..sizeof(f)-2], id);
+      if(!query("override")) return Roxen.http_redirect(f[..sizeof(f)-2], id);
       id->not_query="/.";
     }
   }
   else if(f != "/" )
-    return http_redirect(id->not_query+"/", id);
+    return Roxen.http_redirect(id->not_query+"/", id);
   DIRS_WERR("Request \""+f+"\" was not redirected");
 
   // If the pathname ends with '.', and the 'override' variable
@@ -361,8 +375,8 @@ string|mapping parse_directory(RequestID id)
   foreach(nobrowse, string file) {
     string lock=id->conf->try_get_file(f+file, id);
     if(lock) {
-      if(sizeof(lock)) return http_string_answer(lock)+(["error":403]);
-      return http_redirect(f[..sizeof(f)-3], id);
+      if(sizeof(lock)) return Roxen.http_string_answer(lock)+(["error":403]);
+      return Roxen.http_redirect(f[..sizeof(f)-3], id);
     }
   }
 
@@ -374,14 +388,14 @@ string|mapping parse_directory(RequestID id)
       dirlist=spartan_directory(f,id);
       if(cache) cache_set("dir-s"+config_id,f,dirlist);
     }
-    return http_string_answer(dirlist);
+    return Roxen.http_string_answer(dirlist);
   }
 
   if(!(dirlist=cache_lookup("dir-f"+config_id,f))) {
     id->misc->foldlist_exists=search(indices(id->conf->modules),"foldlist")!=-1;
     id->misc->rel_base="";
-    dirlist=parse_rxml(describe_directory(f,id),id);
+    dirlist=Roxen.parse_rxml(describe_directory(f,id),id);
     if(cache) cache_set("dir-f"+config_id,f,dirlist);
   }
-  return http_string_answer(dirlist);
+  return Roxen.http_string_answer(dirlist);
 }
