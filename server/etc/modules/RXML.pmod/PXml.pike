@@ -5,7 +5,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: PXml.pike,v 1.21 2000/02/02 18:23:59 mast Exp $
+//! $Id: PXml.pike,v 1.22 2000/02/04 02:02:28 mast Exp $
 
 #pragma strict_types
 
@@ -100,7 +100,7 @@ static void create (
       if (mapping(string:CONTAINER_TYPE) m = tset->low_containers)
 	foreach (indices (m), string n) new_tagdefs[prefix + ":" + n] = ({0, m[n]});
       foreach (tlist, RXML.Tag tag)
-	if (!(tag->flag & RXML.FLAG_NO_PREFIX))
+	if (!(tag->plugin_name || tag->flag & RXML.FLAG_NO_PREFIX))
 	  new_tagdefs[prefix + ":" + [string] tag->name] =
 	    tag->flags & RXML.FLAG_CONTAINER ?
 	    ({0,
@@ -118,7 +118,7 @@ static void create (
 	foreach (indices (m), string n) new_tagdefs[n] = ({0, m[n]});
     }
     foreach (tlist, RXML.Tag tag)
-      if (!tset->prefix_req || tag->flag & RXML.FLAG_NO_PREFIX)
+      if (!tag->plugin_name && (!tset->prefix_req || tag->flag & RXML.FLAG_NO_PREFIX))
 	new_tagdefs[[string] tag->name] =
 	  tag->flags & RXML.FLAG_CONTAINER ?
 	  ({0,

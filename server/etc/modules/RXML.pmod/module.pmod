@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.37 2000/01/31 03:38:53 nilsson Exp $
+//! $Id: module.pmod,v 1.38 2000/02/04 02:02:28 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -66,28 +66,125 @@ class Tag
   //! result type has a parser, it'll be used to parse any strings
   //! gotten from Frame.do_return (see that function for details).
 
-  program/*(Frame)HMM*/ Frame;
-  //! This program is used to clone the objects used as frames. A
-  //! frame object must (in practice) inherit RXML.Frame. (It can, of
-  //! course, be any function that requires no arguments and returns a
-  //! new frame object.)
+  //!program Frame;
+  //!object(Frame) Frame();
+  //! This program/function is used to clone the objects used as
+  //! frames. A frame object must (in practice) inherit RXML.Frame.
+  //! (It can, of course, be any function that requires no arguments
+  //! and returns a new frame object.) This is not used for plugin
+  //! tags.
+
+  //!object(Frame) Frame (mapping(string:Tag) plugins);
+  //! If this tag is a socket tag (see below), the Frame program/
+  //! function gets a mapping containing the registered plugins.
+  //! Indices are the plugin_name values for the plugins, values are
+  //! the plugin objects themselves. Don't be destructive on the
+  //! mapping.
+
+  //!string plugin_name;
+  //! If this is defined, this is a so-called plugin tag. That means
+  //! it plugs in some sort of functionality in another Tag object
+  //! instead of handling the actual tags of its own. It works as
+  //! follows:
+  //!
+  //! o  Instead of installing the callbacks for this tag, the parser
+  //!    uses another registered "socket" Tag object that got the same
+  //!    name as this one. Socket tags have the FLAG_SOCKET_TAG flag
+  //!    set to signify that they accept plugins.
+  //!
+  //! o  When a frame for the socket tag is created, it gets the
+  //!    registered plugin tags (see Frame above). It's then up to the
+  //!    socket tag to use the plugins according to some API it
+  //!    defines.
+  //!
+  //! o  plugin_name is the name of the plugin. It's used as index in
+  //!    the mapping that the plugin tag receives (see above).
+  //!
+  //! o  The plugin tag is registered in the tag set with the
+  //!    identifier
+  //!
+  //!			name + "#" + plugin_name
+  //!
+  //!	 It overrides other plugin tags with that name according to
+  //!    the normal tag set rules, but, as said above, is never
+  //!    registered for actual parsing at all.
+  //!
+  //!    It's undefined whether plugin tags override normal tags --
+  //!    '#' should never be used in normal tag names.
+  //!
+  //! o  It's not an error to register a plugin for which there is no
+  //!    socket. Such plugins are simply ignored.
 
   //! Services.
 
-  inline object/*(Frame)HMM*/ `() (mapping(string:mixed) args, void|mixed|PCode content)
+  inline object/*(Frame)HMM*/ `() (mapping(string:mixed) args, void|mixed|PCode content,
+				   void|TagSet tag_set)
   //! Make an initialized frame for the tag. Typically useful when
   //! returning generated tags from e.g. RXML.Frame.do_return(). The
   //! argument values and the content are not parsed; see
-  //! RXML.Frame.do_return() for details. Note: Never reuse the same
-  //! frame object.
+  //! RXML.Frame.do_return() for details. The tag set is used to find
+  //! the plugin tags if this is a socket tag (see plugin_name blurb
+  //! above). If it's left out, the current tag set in the current
+  //! context is used.
+  //!
+  //! Note: Never reuse the same frame object.
   {
     Tag this = this_object();
-    object/*(Frame)HMM*/ frame = ([function(:object/*(Frame)HMM*/)] this->Frame)();
+    object/*(Frame)HMM*/ frame;
+    if (flags & FLAG_SOCKET_TAG)
+      frame = ([function(mapping(string:Tag):object/*(Frame)HMM*/)] this->Frame) (
+	(tag_set || get_context()->tag_set)->get_plugins (this->name));
+    else
+      frame = ([function(:object/*(Frame)HMM*/)] this->Frame)();
     frame->tag = this;
     frame->flags = flags;
     frame->args = args;
     if (!zero_type (content)) frame->content = content;
     return frame;
+  }
+
+  int eval_args (mapping(string:mixed) args, void|int dont_throw, void|Context ctx)
+  //! Parses and evaluates the tag arguments according to
+  //! req_arg_types and opt_arg_types. The args mapping contains the
+  //! unparsed arguments on entry, and they get replaced by the parsed
+  //! results. Arguments not mentioned in req_arg_types or
+  //! opt_arg_types are not touched. RXML errors, such as missing
+  //! argument, are thrown if dont_throw is zero or left out,
+  //! otherwise zero is returned for such errors. ctx specifies the
+  //! context to use; it defaults to the current context.
+  {
+    // Note: Code duplication in Frame._eval().
+    mapping(string:Type) atypes;
+    if (req_arg_types) {
+      atypes = args & req_arg_types;
+      if (sizeof (atypes) < sizeof (req_arg_types))
+	if (dont_throw) return 0;
+	else {
+	  array(string) missing = sort (indices (req_arg_types - atypes));
+	  rxml_fatal ("Required " +
+		      (sizeof (missing) > 1 ?
+		       "arguments " + String.implode_nicely (missing) + " are" :
+		       "argument " + missing[0] + " is") + " missing.\n");
+	}
+    }
+    if (opt_arg_types)
+      if (atypes) atypes += args & opt_arg_types;
+      else atypes = args & opt_arg_types;
+    if (atypes) {
+#ifdef MODULE_DEBUG
+      if (mixed err = catch {
+#endif
+	foreach (indices (atypes), string arg)
+	  args[arg] = atypes[arg]->eval (args[arg], ctx); // Should not unwind.
+#ifdef MODULE_DEBUG
+      }) {
+	if (objectp (err) && ([object] err)->thrown_at_unwind)
+	  error ("Can't save parser state when evaluating arguments.\n");
+	throw (err);
+      }
+#endif
+    }
+    return 1;
   }
 
   // Internals.
@@ -107,8 +204,8 @@ class Tag
 	m_delete (ustate, parser);
 	if (!sizeof (ustate)) ctx->unwind_state = 0;
       }
-      else frame = `() (args, Void);
-    else frame = `() (args, Void);
+      else frame = `() (args, Void, ctx->tag_set);
+    else frame = `() (args, Void, ctx->tag_set);
 
     mixed err = catch {
       frame->_eval (parser, args, content);
@@ -200,20 +297,26 @@ class TagSet
   //!
   {
     name = _name;
-    if (_tags) tags = mkmapping ([array(string)] _tags->name, _tags);
+    if (_tags)
+      foreach (_tags, Tag tag)
+	if (tag->plugin_name) tags[tag->name + "#" + tag->plugin_name] = tag;
+	else tags[tag->name] = tag;
   }
 
   void add_tag (Tag tag)
   //!
   {
-    tags[tag->name] = tag;
+    if (tag->plugin_name) tags[tag->name + "#" + tag->plugin_name] = tag;
+    else tags[tag->name] = tag;
     changed();
   }
 
   void add_tags (array(Tag) _tags)
   //!
   {
-    tags += mkmapping (/*[array(string)]HMM*/ _tags->name, _tags);
+    foreach (_tags, Tag tag)
+      if (tag->plugin_name) tags[tag->name + "#" + tag->plugin_name] = tag;
+      else tags[tag->name] = tag;
     changed();
   }
 
@@ -222,8 +325,9 @@ class TagSet
   {
     if (stringp (tag))
       m_delete (tags, tag);
-    else for (string n; !zero_type (n = search (tags, [object(Tag)] tag));)
-      m_delete (tags, n);
+    else
+      for (string n; !zero_type (n = search (tags, [object(Tag)] tag));)
+	m_delete (tags, n);
     changed();
   }
 
@@ -312,6 +416,16 @@ class TagSet
     return `| (res, @imported->get_tag_names());
   }
 
+  mapping(string:Tag) get_plugins (string name)
+  //! Returns the registered plugins for the given tag name. Don't be
+  //! destructive on the returned mapping.
+  {
+    mapping(string:Tag) res;
+    if ((res = plugins[name])) return res;
+    low_get_plugins (name + "#", res = ([]));
+    return plugins[name] = res;
+  }
+
   mixed `->= (string var, mixed val)
   {
     switch (var) {
@@ -347,6 +461,7 @@ class TagSet
   {
     generation++;
     prepare_funs = 0;
+    plugins = 0;
     (notify_funcs -= ({0}))();
     set_weak_flag (notify_funcs, 1);
   }
@@ -370,15 +485,15 @@ class TagSet
     catch (changed());
   }
 
-  private mapping(string:Tag) tags = ([]);
+  static mapping(string:Tag) tags = ([]);
   // Private since we want to track changes in this.
 
-  private array(function(:void)) notify_funcs = ({});
+  static array(function(:void)) notify_funcs = ({});
   // Weak (when nonempty).
 
-  private array(function(Context:void)) prepare_funs;
+  static array(function(Context:void)) prepare_funs;
 
-  /*private*/ array(function(Context:void)) get_prepare_funs()
+  /*static*/ array(function(Context:void)) get_prepare_funs()
   {
     if (prepare_funs) return prepare_funs;
     array(function(Context:void)) funs = ({});
@@ -387,6 +502,20 @@ class TagSet
     if (prepare_context) funs += ({prepare_context});
     // We don't cache in prepare_funs; do that only at the top level.
     return funs;
+  }
+
+  static mapping(string:mapping(string:Tag)) plugins = ([]);
+
+  /*static*/ void low_get_plugins (string prefix, mapping(string:Tag) res)
+  {
+    for (int i = sizeof (imported) - 1; i >= 0; i--)
+      imported[i]->low_get_plugins (prefix, res);
+    foreach (indices (tags), string name)
+      if (name[..sizeof (prefix) - 1] == prefix) {
+	Tag tag = tags[name];
+	if (tag->plugin_name) res[[string] tag->plugin_name] = tag;
+      }
+    // We don't cache in plugins; do that only at the top level.
   }
 
   DECLARE_CNT (__count);
@@ -979,6 +1108,9 @@ Frame get_tag (string name, mapping(string:mixed) args, void|mixed|PCode content
 
 //! Constants for the bit field RXML.Frame.flags.
 
+constant FLAG_NONE = 0x00000000;
+//! The no-flags flag. In case you think 0 is too ugly. ;)
+
 //! Static flags (i.e. tested in the Tag object).
 
 constant FLAG_CONTAINER = 0x00000001;
@@ -987,6 +1119,18 @@ constant FLAG_CONTAINER = 0x00000001;
 
 constant FLAG_NO_PREFIX = 0x00000002;
 //! Never apply any prefix to this tag.
+
+constant FLAG_SOCKET_TAG = 0x0000004;
+//! Declare the tag to be a socket tag, which accepts plugin tags (see
+//! Tag.plugin_name for details).
+
+constant FLAG_DONT_PREPARSE = 0x00000040;
+//! Don't preparse the content with the PHtml parser. This is only
+//! used in the simple tag wrapper. Defined here as placeholder.
+
+constant FLAG_POSTPARSE = 0x00000080;
+//! Postparse the result with the PHtml parser. This is only used in
+//! the simple tag wrapper. Defined here as placeholder.
 
 //! The rest of the flags are dynamic (i.e. tested in the Frame object).
 
@@ -1043,14 +1187,6 @@ constant FLAG_CACHE_EXECUTE_RESULT = 0x00200000;
 //! If set, an array to execute will be stored in the frame instead of
 //! the final result. On a cache hit it'll be executed like the return
 //! value from do_return() to produce the result.
-
-constant FLAG_DONT_PREPARSE = 0x00000004;
-//! This is only used in the simple tag wrapper. Defined here as
-//!  placeholder
-
-constant FLAG_POSTPARSE = 0x00000008;
-//! This is only used in the simple tag wrapper. Defined here as
-//!  placeholder
 
 class Frame
 //! A tag instance.
@@ -1426,6 +1562,7 @@ class Frame
 
     if (raw_args) {
       args = raw_args;
+      // Note: Code duplication in Tag.eval_args().
       mapping(string:Type) atypes;
       if (tag->req_arg_types) {
 	atypes = raw_args & tag->req_arg_types;
@@ -1440,16 +1577,21 @@ class Frame
       if (tag->opt_arg_types)
 	if (atypes) atypes += raw_args & tag->opt_arg_types;
 	else atypes = raw_args & tag->opt_arg_types;
-      if (atypes)
+      if (atypes) {
+#ifdef MODULE_DEBUG
 	if (mixed err = catch {
+#endif
 	  foreach (indices (args), string arg)
-	    args[arg] = (atypes[arg] || tag->def_arg_type)->eval (
-	      raw_args[arg], ctx, 0, parser, 1); // Should currently NOT unwind.
+	    args[arg] = (atypes[arg] || tag->def_arg_type)->
+	      eval (raw_args[arg], ctx, 0, parser, 1); // Should not unwind.
+#ifdef MODULE_DEBUG
 	}) {
 	  if (objectp (err) && ([object] err)->thrown_at_unwind)
 	    error ("Can't save parser state when evaluating arguments.\n");
 	  throw (err);
 	}
+#endif
+      }
     }
 #ifdef DEBUG
     if (!args) error ("Internal error: args not set.\n");
