@@ -1,5 +1,5 @@
 /*
- * $Id: upgrade.pike,v 1.19 1997/08/31 10:21:18 grubba Exp $
+ * $Id: upgrade.pike,v 1.20 1997/09/03 01:19:06 peter Exp $
  */
 constant name= "Maintenance//Upgrade components from roxen.com...";
 constant doc = "Selectively upgrade Roxen components from roxen.com.";
@@ -153,19 +153,28 @@ void find_modules(int mode)
   modules = rm;
 }
 
-
+/* Ask user for upgrade options */
 string page_0(object id)
 {
   return
     ("<font size=+1>What components do you want to upgrade?</font><br>\n"
      "</tr><tr><td colspan=2>\n"
-     "<var type=radio name=how value=1> All installed modules (all modules in your module path)<br>\n"
+
+     "<var type=radio name=how value=1> All installed components<br>\n"
+     "<help><blockquote>"
+     "Check for upgrades of all modules in your module path och installed "
+     "plugins"
+     "</blockquote></help>"
+
      "<var type=radio name=how default=1 value=0> Only currently "
-     "enabled modules (from all virtual servers) <br>\n"
-     "<var type=checkbox name=how2> Also search for new (previously "
-     "uninstalled) modules, actions and server templates<br>\n"
-     "<var type=checkbox name=how3 default=1> Also search for actions "
-     "and server templates");
+     "enabled components (from all virtual servers) <br>\n"
+     "<help><blockquote>"
+     "Check for upgrades of all modules presently used in your Roxen och all "
+     "plugins"
+     "</blockquote></help>"
+     
+     "<var type=checkbox name=new> Also search for new components\n"
+      );
 }
 
 string upgrade_module(string m, object rpc)
@@ -230,20 +239,22 @@ string upgrade_module(string m, object rpc)
   return res+"<p>\n\n\n";
 }
 
+/* Check for uninstalled components */
 string page_3(object id)
 {
-  if(id->variables["how2"]=="0")
+  if(id->variables["new"]=="0" || !id->variables["new"])
     return 0;
 
  object rpc;
   catch {
     rpc=RoxenRPC.Client("skuld.infovav.se",23,"upgrade");
   };
+  if(!rpc)
+    return "Failed to connect to update server at skuld.infovav.se:23.\n";
 
-  if(!rpc)return "Failed to connect to update server at skuld.infovav.se:23.\n";
   update_comps();
   string res=
-    ("<font size=+1>Components that have a newer version available.</font> <br>"
+    ("<font size=+1>Components that have a newer version available.</font><br>"
      "Select the box to add the component to the list of components to "
      "be updated\n<p>");
 
@@ -273,10 +284,12 @@ string page_3(object id)
   return "There are no new components available.";
 }
 
+/* Check for uninstalled modules */
 string page_2(object id)
 {
   object rpc;
-  if(id->variables["how2"]=="0") return 0;
+  if(id->variables["new"]=="0" || !id->variables["new"])
+    return 0;
   catch {
     rpc=RoxenRPC.Client("skuld.infovav.se",23,"upgrade");
   };
@@ -300,10 +313,12 @@ string page_2(object id)
 		    "<font size=+1>"+rm[s]->version+"</font>",
 		    ({"<font size=-1>"+rm[s]->doc+"</font>"})})});
   if(sizeof(tbl))
-    return res + html_table( ({"Name", "File", "Version", ({ "Doc" })}), tbl );
+    return res + html_table( ({"Name", "File", "Available Version",
+				 ({ "Doc" })}), tbl );
   return "There are no new modules available";
 }
 
+/* Check for new versions of installed modules */
 string page_1(object id)
 {
   int num;
@@ -335,38 +350,45 @@ string page_1(object id)
   }
   if(num)
     return res + html_table ( ({ "", "Module", "File", "Available Version",
-				   "Installed Version"}), tbl );
+				   "Your Version"}), tbl );
   else
-    return "There are no new versions of any of your modules available";
+    return "There are no new versions of any of your installed modules "
+           "available";
 }
 
 string upgrade_component(string m, object rpc)
 {
-  array rm = rpc->get_component(m,roxen->real_version);
+  array rthingie = rpc->get_component(m,roxen->real_version);
   string res="";
   object privs = ((program)"privs")("Upgrading components","root");
-  if(!rm) return "Failed to fetch the component '"+m+"'.";
+  string ext="";
+  if(!rthingie) return "Failed to fetch the component '"+m+"'.";
 
-  if(Stdio.file_size(rm[0])>0)
+  if(Stdio.file_size(rthingie[0])>0)
   {
     mkdir("old_components");
-    if(mv(rm[0], "old_components/"+m+".pike"))
-      res+="Moved "+rm[0]+" to old_components/"+m+".pike<br>\n";
+
+    if( rthingie[0][strlen(rthingie[0])-5..] == ".pike" )
+      ext = ".pike";
+    
+    if(mv(rthingie[0], "old_components/"+m+ext))
+      res+="Moved "+rthingie[0]+" to old_components/"+m+ext+"<br>\n";
     else
-      res+="Failed to move "+rm[0]+" to old_components/"+m+".pike<br>\n";
+      res+="Failed to move "+rthingie[0]+" to old_components/"+m+ext+"<br>\n";
   }
-  object o = open(rm[0], "wct");
-  if(!o) res += "Failed to open "+rm[0]+" for writing.<br>";
+  object o = open(rthingie[0], "wct");
+  if(!o) res += "Failed to open "+rthingie[0]+" for writing.<br>";
   else
   {
-    o->write(rm[1]);
-    res+="Fetched "+rm[0]+", "+strlen(rm[1])+" bytes.<br>";
-    report_notice("Upgraded the component "+rm[0]+".");
+    o->write(rthingie[1]);
+    res+="Fetched "+rthingie[0]+", "+strlen(rthingie[1])+" bytes.<br>";
+    report_notice("Upgraded the component "+rthingie[0]+".");
   }
   return res+"<p>\n\n\n";
 }
 
 
+/* Present actions to be taken for the user */
 array todo = ({});
 string page_4(object id)
 {
@@ -380,16 +402,25 @@ string page_4(object id)
     else if(sscanf(s, "C_%s", module))
       todo+=({({"Upgrade "+module,upgrade_component,module,"RPC"})});
   }
+
   string res = "<font size=+1>Summary: These actions will be taken:</font><p>"
     "<ul>";
   foreach(todo, array a)
     res += "<li> "+a[0]+"\n";
+  res += "</ul>";
+
+  if(sizeof(todo)==0)
+    res = "<font size=+1>Summary: No actions will be taken</font><p>";
+    
   return res + "</ul>";
 }
 
 
 string wizard_done(object id)
 {
+  if(sizeof(todo)==0)
+    return 0;
+  
   object rpc;
   int t = time();
   string res = "<font size=+2>Upgrade report</font><p>";
