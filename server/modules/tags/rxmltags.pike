@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.340 2002/02/04 16:10:36 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.341 2002/02/04 18:51:03 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2621,8 +2621,12 @@ class TagDefine {
 	do_iterate = 1;
 	if(args->preparse) {
 	  m_delete(args, "preparse");
-	  vars = identity_vars;
-	  scope_name = args->scope;
+	  if (compat_level >= 2.4) {
+	    // Older rxml code might use the _ scope and don't expect
+	    // it to be overridden in this situation.
+	    vars = identity_vars;
+	    scope_name = args->scope;
+	  }
 	}
 	else
 	  content_type = RXML.t_xml;
