@@ -1,5 +1,4 @@
 <h2>Image cache attributes</h2>
-All examples are made for the &lt;cimg&gt; tag.
 
 <attr name='format' value='gif|jpeg|png|avs|gmp|bd|hrz|ilbm|psx|pnm|ps|pvr|tga|tiff|wbf|xbm|xpm' default='gif'>
  The format to encode the image to. The formats available are:

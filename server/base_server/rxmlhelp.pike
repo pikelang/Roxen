@@ -46,6 +46,7 @@ static string desc_cont(string t, mapping m, string c, string rt)
   m->type=m->type||"";
   if(m->tag) dt=sprintf("&lt;%s/&gt;", rt);
   if(m->cont) dt=(m->tag?dt+" and ":"")+sprintf("&lt;%s&gt;&lt;/%s&gt;", rt, rt);
+  if(m->pi) dt=sprintf("&lt;?%s ... ?&gt;", rt);
   if(m->plugin) {
     sscanf(dt,"%*s#%s",dt);
     dt="plugin "+dt;
