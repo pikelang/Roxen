@@ -1,5 +1,5 @@
 /*
- * $Id: problems.pike,v 1.8 1997/10/09 14:53:24 peter Exp $
+ * $Id: problems.pike,v 1.9 1997/12/15 20:04:04 peter Exp $
  */
 
 inherit "wizard";
@@ -189,22 +189,6 @@ string page_3(object id)
 			"default="+roxen->query("NumAccept")+"><br>",id);
   }
   
-  if(roxen->query("NumHostnameLookup")>8)
-  {
-    errs++;
-    res += html_warning("It is not advisable to have more than eight hostname"
-			" lookup processes, since this might cause unnessesary"
-			" context switches without improving performance. "
-			" If you are operating a very large proxy it might "
-			" be OK anyway.<br>"
-			"Set to: <var type=select name=\""
-			"mod_cvar_G/NumHostnameLookup\" "
-			"choices=1,2,3,4,5,6,7,8,"+
-			roxen->query("NumHostnameLookup")+" "
-			"default="+roxen->query("NumHostnameLookup")
-			+"><br>",id);
-  }
-
   string user;
   if(strlen(user=roxen->query("User")))
   {
