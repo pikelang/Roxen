@@ -102,7 +102,7 @@ if test "$uname_prog" != "no"; then
   if test "$lpc_cv_shuffle" = "SunOS"; then
     case "`uname -r`" in
       5.*) lpc_cv_shuffle="shuffle" ;;
-      *)   lc_cv_shuffle="none"     ;;
+      *)   lpc_cv_shuffle="none"     ;;
     esac
   else
     lpc_cv_shuffle="none"
