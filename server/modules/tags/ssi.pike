@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1999, Idonex AB.
+// This is a roxen module. Copyright © 2000, Idonex AB.
 //
 
 inherit "module";
@@ -6,7 +6,7 @@ inherit "roxenlib";
 #include <module.h>
 
 constant thread_safe=1;
-constant cvs_version = "$Id: ssi.pike,v 1.15 1999/12/18 14:13:29 nilsson Exp $";
+constant cvs_version = "$Id: ssi.pike,v 1.16 2000/01/03 06:01:25 nilsson Exp $";
 
 array register_module()
 {
@@ -20,10 +20,9 @@ array register_module()
 
 void create() {
 
-  defvar("exec", 0, "Execute command", 
+  defvar("exec", 0, "Execute command",
 	 TYPE_FLAG,
-	 "If set and if server side include support is enabled, Roxen "
-	 "will accept NCSA / Apache &lt;!--#exec cmd=\"XXX\" --&gt;. "
+	 "If set Roxen will accept NCSA / Apache &lt;!--#exec cmd=\"XXX\" --&gt;. "
 	 "Note that this will allow your users to execute arbitrary "
 	 "commands.");
 
@@ -64,12 +63,6 @@ constant tagdoc=(["!--#echo":"<desc tag></desc>",
 ]);
 #endif
 
-string trimvar(string var) {
-  int s;
-  if(s=sizeof(var)>2 && var[s-2..]=="--") var=var[..s-3];
-  return var;
-}
-
 function _modified;
 string modified(mapping m, RequestID id) {
   if(_modified) return _modified("modified", m, id);
@@ -77,172 +70,165 @@ string modified(mapping m, RequestID id) {
   return _modified("modified", m, id);
 }
 
-int|string|array(string) tag_echo(string tag, mapping m, RequestID id)
+array(string) tag_echo(string tag, mapping m, RequestID id)
 {
   if(!m->var)
   {
     if(sizeof(m) == 1)
       m->var = m[indices(m)[0]];
-    else 
-      return rxml_error(tag,"You have to select which variable to echo.",id);
+    else
+      return ({ id->misc->ssi_errmsg||"You have to select which variable to echo." });
   }
 
-  if(id->misc->ssi_variables && id->misc->ssi_variables[m->var])
-    // Variables set with !--#set.
-    return id->misc->ssi_variables[m->var];
+  string ret=get_var(fix_var(m->var, id), id);
 
-  mapping myenv =  build_env_vars(0,  id, 0);
-  m->var = lower_case(replace(m->var, " ", "_"));
-  m->var=trimvar(m->var);
-  switch(m->var)
+  if(ret) return ({ ret });
+  return ({ id->misc->ssi_errfmt||"Unknown variable ("+m->var+")." });
+
+}
+
+string get_var(string var, RequestID id)
+{
+
+  if(id->misc->ssi_variables && id->misc->ssi_variables[var])
+    // Variables set with !--#set.
+    return id->misc->ssi_variables[var];
+
+  var = lower_case(replace(var, " ", "_"));
+  switch(var)
   {
    case "sizefmt":
    case "errmsg":
-    return ({ id->misc->defines[m->var] || "" });
+    return id->misc["ssi_"+var] || "";
    case "timefmt":
-    return ({ id->misc->defines[m->var] || "%c" });
-    
+    return id->misc->ssi_timefmt || "%c";
+
    case "date_local":
     NOCACHE();
-    return ({ strftime(id->misc->defines->timefmt || "%c", time(1)) });
+    return strftime(id->misc->ssi_timefmt || "%c", time(1));
 
    case "date_gmt":
     NOCACHE();
-    return ({ strftime(id->misc->defines->timefmt || "%c", time(1) + localtime(time(1))->timezone) });
-      
+    return strftime(id->misc->ssi_timefmt || "%c", time(1) + localtime(time(1))->timezone);
+
+   case "document_name":
+    return id->realfile?reverse(id->realfile/"/")[0]:"";
+
+   case "document_uri":
+     return http_decode_string(id->not_query);
+
    case "query_string_unescaped":
     return id->query || "";
 
    case "last_modified":
-     m->ssi=1;
-     return modified(m, id);
-      
+     return modified((["ssi":1]), id);
+
    case "server_software":
-    return ({ roxen->version() });
-      
+    return roxen->version();
+
    case "server_name":
     string tmp;
     tmp=id->conf->query("MyWorldLocation");
     sscanf(tmp, "%*s//%s", tmp);
     sscanf(tmp, "%s:", tmp);
     sscanf(tmp, "%s/", tmp);
-    return ({ tmp });
-      
+    return tmp;
+
    case "gateway_interface":
-    return ({ "CGI/1.1" });
-      
+    return "CGI/1.1";
+
    case "server_protocol":
-    return ({ "HTTP/1.0" });
-      
+    return "HTTP/1.0";
+
    case "request_method":
-    return ({ html_encode_string(id->method) });
+    return html_encode_string(id->method);
 
    case "auth_type":
-    return ({ "Basic" });
-      
+    return "Basic";
+
    case "http_cookie": case "cookie":
     NOCACHE();
-    return ({ html_encode_string(id->misc->cookies || "") });
+    return html_encode_string(id->misc->cookies || "");
 
    case "http_accept":
     NOCACHE();
-    return ({ html_encode_string(id->misc->accept && sizeof(id->misc->accept)?
-				 id->misc->accept*", ": "None") });
-      
+    return html_encode_string(id->misc->accept && sizeof(id->misc->accept)?
+			      id->misc->accept*", ": "None");
+
    case "http_user_agent":
     NOCACHE();
-    return ({ html_encode_string(id->client && sizeof(id->client)? 
-				 id->client*" " : "Unknown") });
-      
+    return html_encode_string(id->client && sizeof(id->client)?
+			      id->client*" " : "Unknown");
+
    case "http_referer":
     NOCACHE();
-    return ({ html_encode_string(id->referer && sizeof(id->referer) ? 
-				 id->referer*", ": "Unknown") });
-      
-   default:
-    m->var = upper_case(m->var);
-    if(myenv[m->var]) {
-      NOCACHE();
-      return myenv[m->var];
-    }
+    return html_encode_string(id->referer && sizeof(id->referer) ?
+			      id->referer*", ": "Unknown");
 
+   default:
+    var = upper_case(var);
+    mapping myenv =  build_env_vars(0, id, 0);
+    if(myenv[var]) {
+      NOCACHE();
+      return myenv[var];
+    }
   }
-  if(tag=="") return 0;
-  return rxml_error(tag,"Unknown variable ("+m->var+").",id);
+  return 0;
 }
 
-string tag_config(string tag, mapping m, RequestID id)
+string fix_var(string s, RequestID id) {
+  s=replace(s||"",({"\000","\\$"}),({"","\000"}));
+  int size;
+  if(size=sizeof(s)>2 && s[size-2..]=="--") s=s[..size-3];
+  if(s[0]=='$' && s[1]!='{') return get_var(s[1..], id)||"";
+  return ""; //FIXME: No in-string-substitution yet.
+}
+
+array(string) tag_config(string tag, mapping m, RequestID id)
 {
   if (m->sizefmt) {
-    if ((< "abbrev", "bytes" >)[lower_case(m->sizefmt||"")]) {
-      id->misc->defines->sizefmt = lower_case(m->sizefmt);
-    } else {
-      return rxml_error(tag,"Unknown SSI sizefmt ("+m->sizefmt+").",id);
+    m->sizefmt=fix_var(m->sizefmt, id);
+    if ((< "abbrev", "bytes" >)[lower_case(m->sizefmt)]) {
+      id->misc->ssi_sizefmt = lower_case(m->sizefmt);
     }
+    else
+      return ({ id->misc->ssi_errmsg||"Unknown SSI sizefmt ("+m->sizefmt+")." });
   }
   if (m->errmsg) {
-    // FIXME: Not used yet. What would it be used for, really?
-    id->misc->defines->errmsg = m->errmsg;
+    id->misc->ssi_errmsg = fix_var(m->errmsg, id);
   }
   if (m->timefmt) {
     // now used by echo tag and last modified
-    id->misc->defines->timefmt = m->timefmt;
+    id->misc->ssi_timefmt = fix_var(m->timefmt, id);
   }
-  return "";
+  return ({ "" });
 }
 
-string tag_include(string tag, mapping m, RequestID id)
+string|array(string) tag_include(string tag, mapping m, RequestID id)
 {
   if(m->virtual) {
-    int debug=id->misc->debug;
-    id->misc->debug=-1;
-    m->virtual=trimvar(m->virtual);
-    string ret=API_read_file(id, m->virtual)||"";
-    id->misc->debug=debug;
-
-    if(ret=="")
-      return rxml_error(tag,"No such file ("+m->virtual+")",id);
-
+    m->virtual=fix_var(http_decode_string(m->virtual), id);
+    string ret=API_read_file(id, m->virtual);
+    if(!ret) return ({ id->misc->ssi_errmsg||"No such file ("+m->virtual+")." });
     return ret;
   }
 
-  if(m->file)
-  {
-    array tmp;
-    string fname1 = m->file;
-    string fname2;
-    if(m->file[0] != '/')
-    {
-      if(id->not_query[-1] == '/')
-	m->file = id->not_query + m->file;
-      else
-	m->file = ((tmp = id->not_query / "/")[0..sizeof(tmp)-2] +
-		   ({ m->file }))*"/";
-      m->file=trimvar(m->file);
-      fname1 = id->conf->real_file(m->file, id);
-      if ((sizeof(m->file) > 2) && (m->file[sizeof(m->file)-2..] == "--")) {
-	fname2 = id->conf->real_file(m->file[..sizeof(m->file)-3], id);
-      }
-    } else if ((sizeof(fname1) > 2) && (fname1[sizeof(fname1)-2..] == "--")) {
-      fname2 = fname1[..sizeof(fname1)-3];
-    }
-    return((fname1 && Stdio.read_bytes(fname1)) ||
-	   (fname2 && Stdio.read_bytes(fname2)) ||
-           (id->misc->debug?
-	   ("No such file: " +
-	    (fname1 || fname2 || m->file) +
-	    "!"):
-           ""));
+  if(m->file) {
+    m->file=replace(fix_var(m->file, id), "../", "");
+    string ret=API_read_file(id, m->virtual);
+    if(!ret) return ({ id->misc->ssi_errmsg||"No such file ("+m->file+")." });
+    return ret;
   }
-  return rxml_error(tag, "Hm? #include what, my dear?", id);
+
+  return ({ id->misc->ssi_errmsg||"Hm? #include what, my dear?" });
 }
 
 string tag_set(string tag, mapping m, RequestID id)
 {
   if(m->var && m->value)
   {
-    m->var=trimvar(m->var);
-    m->value=trimvar(m->value);
+    m->var=fix_var(m->var, id);
+    m->value=fix_var(m->value, id);
     if(!id->misc->ssi_variables)
       id->misc->ssi_variables = ([]);
     id->misc->ssi_variables[m->var] = m->value;
@@ -250,76 +236,61 @@ string tag_set(string tag, mapping m, RequestID id)
   return "";
 }
 
-string tag_fsize(string tag, mapping m, RequestID id)
+array(string) tag_fsize(string tag, mapping m, RequestID id)
 {
-  if(m->virtual && sizeof(m->virtual))
-  {
-    m->virtual = http_decode_string(m->virtual);
-    if (m->virtual[0] != '/') {
-      // Fix relative path.
-      m->virtual = combine_path(id->not_query, "../" + m->virtual);
-    }
-    m->file = id->conf->real_file(m->virtual, id);
-    m_delete(m, "virtual");
-  } else if (m->file && sizeof(m->file) && (m->file[0] != '/')) {
-    // Fix relative path
-    m->file = combine_path(id->conf->real_file(id->not_query, id) || "/", "../" + m->file);
+  array s;
+  if(m->virtual) {
+    m->virtual=fix_var(http_decode_string(m->virtual), id);
+    s=id->conf->stat_file(m->virtual);
   }
-  if(m->file)
-  {
-    array s;
-    s = file_stat(m->file);
-    CACHE(5);
-    if(s)
-    {
-      if(tag == "!--#fsize")
-      {
-	if(id->misc->defines->sizefmt=="bytes")
-	  return (string)s[1];
-        return sizetostring(s[1]);
-      }
-      return strftime(id->misc->defines->timefmt || "%c", s[3]);
-    }
-    return rxml_error(tag, "Couldn't stat file.", id);
+
+  if(m->file) {
+    m->file=replace(fix_var(m->file, id), "../", "");
+    s=id->conf->stat_file(m->file);
   }
-  return rxml_error(tag, "No such file.", id);
+
+  if(!s) return ({ id->misc->ssi_errmsg||"No such file." });
+
+  CACHE(5);
+
+  if(tag == "!--#fsize") {
+    if(id->misc->ssi_sizefmt=="bytes")
+      return ({ (string)s[1] });
+    return ({ sizetostring(s[1]) });
+  }
+
+  return ({ strftime(id->misc->ssi_timefmt || "%c", s[3]) });
 }
 
-string tag_exec(string tag, mapping m, RequestID id)
+string|array(string) tag_exec(string tag, mapping m, RequestID id)
 {
   if(m->cgi) {
     if(m->cache)
       CACHE((int)m->cache);
     else
       NOCACHE();
-    return API_read_file(id, http_decode_string(m->cgi))||"";
+    return API_read_file(id, http_decode_string(fix_var(m->cgi, id)))||"";
   }
 
   if(m->cmd)
   {
     if(QUERY(exec))
     {
-      string tmp;
-      tmp=id->conf->query("MyWorldLocation");
-      sscanf(tmp, "%*s//%s", tmp);
-      sscanf(tmp, "%s:", tmp);
-      sscanf(tmp, "%s/", tmp);
-      string user;
-      user="Unknown";
+      string user="Unknown";
       if(id->auth && id->auth[0])
 	user=id->auth[1];
       string addr=id->remoteaddr || "Internal";
       NOCACHE();
-      return popen(m->cmd,
+      return popen(fix_var(m->cmd, id),
 		   getenv()
 		   | build_roxen_env_vars(id)
 		   | build_env_vars(id->not_query, id, 0),
 		   QUERY(execuid) || -2, QUERY(execgid) || -2);
     }
     else
-      return rxml_error(tag, "Execute command support disabled.", id);
+      return ({ id->misc->ssi_errmsg||"Execute command support disabled." });
   }
-  return rxml_error(tag, "No arguments given.", id);
+  return ({ id->misc->ssi_errmsg||"No arguments given." });
 }
 
 mapping query_tag_callers() {
@@ -327,9 +298,9 @@ mapping query_tag_callers() {
     "!--#echo":tag_echo,
     "!--#exec":tag_exec,
     "!--#flastmod":tag_fsize,
-    "!--#fsize":tag_fsize, 
-    "!--#set":tag_set, 
-    "!--#include":tag_include, 
+    "!--#fsize":tag_fsize,
+    "!--#set":tag_set,
+    "!--#include":tag_include,
     "!--#config":tag_config
   ]);
-}   
+}
