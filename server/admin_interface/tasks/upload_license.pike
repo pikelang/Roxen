@@ -1,5 +1,5 @@
 /*
- * $Id: upload_license.pike,v 1.6 2002/07/03 13:36:26 nilsson Exp $
+ * $Id: upload_license.pike,v 1.7 2002/09/26 22:34:16 nilsson Exp $
  */
 
 constant task = "maintenance";
@@ -14,7 +14,7 @@ mixed parse( RequestID id )
     <set variable='var.filename'
       ><get-post-filename filename='&form.file..filename;'
                           js-filename='&form.fixedfilename;'/></set>
-    <if variable='form.Overwirte..x'>
+    <if variable='form.Overwrite..x'>
       <set variable='var.ok' value='ok'/>
     </if>
     <elseif license='&var.filename;'>
@@ -23,7 +23,7 @@ mixed parse( RequestID id )
       <input type='hidden' name='file.filename' value='&var.filename;'/>
       Warning the license file <b>&var.filename;</b> does already exists.
       Do you want to overwrite the file? <br />
-      <submit-gbutton>Overwirte</submit-gbutton>
+      <submit-gbutton>Overwrite</submit-gbutton>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
       <cf-cancel/>
