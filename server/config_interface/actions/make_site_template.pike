@@ -1,5 +1,5 @@
 /*
- * $Id: make_site_template.pike,v 1.2 2001/11/21 15:47:57 grubba Exp $
+ * $Id: make_site_template.pike,v 1.3 2001/11/26 16:35:54 anders Exp $
  *
  * Make a site-template from a virtual server configuration.
  *
@@ -7,6 +7,7 @@
  */
 
 #include <roxen.h>
+#include <config_interface.h>
 //<locale-token project="admin_tasks"> LOCALE </locale-token>
 #define LOCALE(X,Y)	_STR_LOCALE("admin_tasks",X,Y)
 
