@@ -11,7 +11,7 @@ import Parser.XML.Tree;
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_webapp",X,Y)
 // end of the locale related stuff
 
-constant cvs_version = "$Id: webapp.pike,v 2.14 2002/04/11 11:58:56 anders Exp $";
+constant cvs_version = "$Id: webapp.pike,v 2.15 2002/04/24 12:53:20 wellhard Exp $";
 
 constant thread_safe=1;
 constant module_unique = 0;
@@ -1243,26 +1243,26 @@ mixed find_file( string f, RequestID id )
         else {
           object rxml_wrapper;
           object org_fd = id->my_fd;
-          id->my_fd->set_read_callback(0);
-          id->my_fd->set_close_callback(0);
+          org_fd->set_read_callback(0);
+          org_fd->set_close_callback(0);
 
           // Don't set to blocking mode if SSL.
-          if (!id->my_fd->CipherSpec) {
-            id->my_fd->set_blocking();
+          if (!org_fd->CipherSpec) {
+            org_fd->set_blocking();
           }
 
           if (mixed e = catch {
-            rxml_wrapper = RXMLParseWrapper(id->my_fd, id);
+            rxml_wrapper = RXMLParseWrapper(org_fd, id);
+	    id = id->clone_me();
             id->my_fd = rxml_wrapper;
 
 #ifdef WEBAPP_CHAINING
-            object old_fd = id->my_fd;
             object chain_wrapper;
             mapping(string:string|mapping|Servlet.servlet) serv;
             int x=1;
             do {
               WEBAPP_WERR(sprintf("Chaining preparing: '%s'", servlet["servlet-name"]));
-              chain_wrapper = ServletChainingWrapper(old_fd, id);
+              chain_wrapper = ServletChainingWrapper(rxml_wrapper, id);
               id->my_fd = chain_wrapper;
               servlet->servlet->service(id);
               if (chain_wrapper->collect) {
@@ -1281,7 +1281,6 @@ mixed find_file( string f, RequestID id )
 
             if (x == 0xffff || (x>=3 && chain_wrapper->collect)) {
               id->misc->cacheable = 5;
-              id->my_fd = org_fd;
               return http_low_answer(500, "<title>Servlet Error - chaining failed</title>"
                                      "<h1>Servlet Error - chaining failed</h1>"
                                      "<h2>Location: " +
@@ -1296,7 +1295,6 @@ mixed find_file( string f, RequestID id )
 #endif /* WEBAPP_CHAINING */
 
             if (rxml_wrapper->collect) {
-              id->my_fd = org_fd;
               mixed res = rxml_wrapper->get_result();
               //WEBAPP_WERR(sprintf("res=%O", res ));
               return res;
@@ -1304,7 +1302,6 @@ mixed find_file( string f, RequestID id )
 
           })
           {
-            id->my_fd = org_fd;
             throw(e);
           }
         }
