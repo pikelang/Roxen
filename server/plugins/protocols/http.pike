@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.390 2002/11/02 03:25:24 mani Exp $";
+constant cvs_version = "$Id: http.pike,v 1.391 2002/11/14 23:31:48 mani Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1443,9 +1443,7 @@ void send_result(mapping|void result)
   REQUEST_WERR(sprintf("HTTP: response: prot %O, method %O, file %O",
 		       prot, method, file));
 
-  if( prot == "HTTP/0.9" )  misc->cacheable = 0;
-
-  if(!leftovers) 
+  if(!leftovers)
     leftovers = data||"";
 
   if(!mappingp(file))
@@ -1498,45 +1496,31 @@ void send_result(mapping|void result)
       }	
 
       if( misc->cacheable < INITIAL_CACHEABLE ) {
-	if (misc->cacheable == 0)
+	if (misc->cacheable == 0) {
 	  heads["Expires"] = Roxen.http_date( 0 );
+
+	  if (!misc->last_modified) {
+	    // Data with immediate expiry is assumed to have been generated
+	    // at the same instant.
+	    misc->last_modified = predef::time(1);
+	  }
+	}
 	else
 	  heads["Expires"] = Roxen.http_date( predef::time(1)+misc->cacheable );
-
-	if (!misc->cacheable && !misc->last_modified) {
-	  // Data with immediate expiry is assumed to have been generated
-	  // at the same instant.
-	  misc->last_modified = predef::time(1);
-	}
       }
 
       if (misc->last_modified)
 	heads["Last-Modified"] = Roxen.http_date(misc->last_modified);
 
-//	    werror("lm:    %O\n"
-//		   "cacheable: %O\n",
-//		   misc->last_modified,
-//		   misc->cacheable);
-
       if(since && (!file->error || file->error == 200) && misc->last_modified)
       {
-	/* ({ time, len }) */
+	// ({ time, len })
 	array(int) since_info = Roxen.parse_since( since );
-//	  werror("since: %{%O, %}\n"
-//		 "lm:    %O\n"
-//		 "cacheable: %O\n",
-//		 since_info,
-//		 misc->last_modified,
-//		 misc->cacheable);
-	if ( ((since_info[0] >= misc->last_modified) && 
-	      ((since_info[1] == -1) || (since_info[1] == file->len)))
+
+	if ( (since_info[0] >= misc->last_modified) &&
+	     ((since_info[1] == -1) || (since_info[1] == file->len))
 	     // never say 'not modified' if cacheable has been lowered.
-	     && (misc->cacheable >= INITIAL_CACHEABLE)
-	     // actually ok, or...
-//	       || ((misc->cacheable>0) 
-//		   && (since_info[0] + misc->cacheable<= predef::time(1))
-//		   // cacheable, and not enough time has passed.
-	     )
+	     && (misc->cacheable >= INITIAL_CACHEABLE) )
 	{
 	  file->error = 304;
 	  file->file = 0;
@@ -1677,7 +1661,6 @@ void send_result(mapping|void result)
           if( file->file )   data += file->file->read();
           if( file->data )   data += file->data;
 	  MY_TRACE_ENTER (sprintf ("Storing in ram cache, entry: %O", raw_url), 0);
-	  MY_TRACE_LEAVE ("");
           conf->datacache->set( raw_url, data,
                                 ([
                                   // We have to handle the date header.
@@ -1693,6 +1676,7 @@ void send_result(mapping|void result)
                                 ]), 
                                 misc->cacheable );
           file = ([ "data":data, "raw":file->raw, "len":strlen(data) ]);
+	  MY_TRACE_LEAVE ("");
         }
       }
 #endif
