@@ -63,6 +63,8 @@ class RoxenSession implements javax.servlet.http.HttpSession
 
   boolean access()
   {
+    if (invalidated)
+      return false;
     previousAccessedTime = lastAccessedTime;
     lastAccessedTime = System.currentTimeMillis();
     if(maxInactiveInterval>=0 &&

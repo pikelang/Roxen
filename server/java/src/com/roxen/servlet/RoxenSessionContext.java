@@ -18,7 +18,8 @@ class RoxenSessionContext
 	  return session;
 	else {
 	  sessions.remove(id);
-	  session.invalidate();
+          if (!session.invalidated)
+            session.invalidate();
 	}
       }
     }

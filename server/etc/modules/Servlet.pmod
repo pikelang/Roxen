@@ -19,12 +19,15 @@ static object session_context_class = FINDCLASS("com/roxen/servlet/RoxenSessionC
 static object dictionary_class = FINDCLASS("java/util/Dictionary");
 static object hashtable_class = FINDCLASS("java/util/Hashtable");
 static object throwable_class = FINDCLASS("java/lang/Throwable");
+static object unavailable_class = FINDCLASS("javax/servlet/UnavailableException");
 static object stringwriter_class = FINDCLASS("java/io/StringWriter");
 static object printwriter_class = FINDCLASS("java/io/PrintWriter");
 static object vector_class = FINDCLASS("java/util/Vector");
 static object file_class = FINDCLASS("java/io/File");
 static object url_class = FINDCLASS("java/net/URL");
 static object string_class = FINDCLASS("java/lang/String");
+static object jarutil_class = FINDCLASS("com/roxen/roxen/JarUtil");
+
 static object new_instance = class_class->get_method("newInstance",
 						     "()Ljava/lang/Object;");
 static object file_init = file_class->get_method("<init>", "(Ljava/lang/String;)V");
@@ -39,7 +42,7 @@ static object cfg_init = config_class->get_method("<init>", "(Ljavax/servlet/Ser
 static object context_init = context_class->get_method("<init>", "(ILjava/lang/String;)V");
 static object context_id_field = context_class->get_field("id", "I");
 static object context_initpars_field = context_class->get_field("initparameters", "Ljava/util/Hashtable;");
-static object request_init = request_class->get_method("<init>", "(Lcom/roxen/servlet/RoxenServletContext;Lcom/roxen/servlet/RoxenSessionContext;ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
+static object request_init = request_class->get_method("<init>", "(Lcom/roxen/servlet/RoxenServletContext;Lcom/roxen/servlet/RoxenSessionContext;ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
 static object response_init = response_class->get_method("<init>", "(Lcom/roxen/servlet/HTTPOutputStream;)V");
 static object dic_field = config_class->get_field("dic", "Ljava/util/Dictionary;");
 static object params_field = request_class->get_field("parameters", "Ljava/util/Dictionary;");
@@ -51,6 +54,9 @@ static object hash_clear = hashtable_class->get_method("clear", "()V");
 static object stream_id_field = stream_class->get_field("id", "I");
 static object stream_init = stream_class->get_method("<init>", "(I)V");
 static object throwable_printstacktrace = throwable_class->get_method("printStackTrace", "(Ljava/io/PrintWriter;)V");
+static object throwable_getmessage = throwable_class->get_method("getMessage", "()Ljava/lang/String;");
+static object unavailable_ispermanent = unavailable_class->get_method("isPermanent", "()Z");
+static object unavailable_getunavailableseconds = unavailable_class->get_method("getUnavailableSeconds", "()I");
 static object stringwriter_init = stringwriter_class->get_method("<init>", "()V");
 static object printwriter_init = printwriter_class->get_method("<init>", "(Ljava/io/Writer;)V");
 static object printwriter_flush = printwriter_class->get_method("flush", "()V");
@@ -58,6 +64,7 @@ static object wrapup_method = response_class->get_method("wrapUp", "()V");
 static object session_context_init = session_context_class->get_method("<init>", "()V");
 static object vector_init = vector_class->get_method("<init>", "()V");
 static object vector_add = vector_class->get_method("add", "(Ljava/lang/Object;)Z");
+static object jarutil_expand = jarutil_class->get_static_method("expand", "(Ljava/lang/String;Ljava/lang/String;)V");
 
 
 static object natives_bind1, natives_bind2, natives_bind3;
@@ -78,6 +85,37 @@ static void check_exception()
     array bt = backtrace();
     throw(({(string)sw, bt[..sizeof(bt)-2]}));
   }
+}
+
+static void check_unavailable_exception()
+{
+  object e = jvm->exception_occurred();
+  if(e) {
+    if (e->is_instance_of(unavailable_class))
+      {
+        jvm->exception_clear();
+        array bt = backtrace();
+        throw(
+              ({ "UnavailableException\n",
+                 (string)throwable_getmessage(e),
+                 (int)unavailable_ispermanent(e),
+                 (int)unavailable_getunavailableseconds(e)
+              })
+              );
+      }
+    else
+      check_exception();
+  }
+}
+
+class jarutil {
+
+  void expand(string dir, string jar)
+  {
+    jarutil_expand(dir, jar);
+    check_exception();
+  }
+
 }
 
 class servlet {
@@ -129,7 +167,7 @@ class servlet {
     if(params)
       cfgctx = config(cfgctx, params, nam||classname);
     servlet_init(s, cfgctx->cfg);
-    check_exception();
+    check_unavailable_exception();
     d = servlet_destroy;
   }
 
@@ -385,8 +423,11 @@ object request(object context, mapping(string:array(string))|object id,
 		   lower_case((id->prot/"/")[0]), tmp,		   
 		   (id->my_fd&&(int)((id->my_fd->query_address(1)||"0 0")/" ")[1]),
 		   addr, (host != addr)&&host, id->data,
-		   id->misc->mountpoint, id->misc->path_info, id->method,
-		   id->auth && id->realauth && (id->realauth/":")[0],
+		   id->misc->mountpoint, id->misc->servlet_path,
+                   id->misc->path_info, id->method,
+                   id->misc->authenticated_user &&
+                   id->misc->authenticated_user->name &&
+                   id->misc->authenticated_user->name(),
 		   uri, query, pathtrans);
   }
   object r = request_class->alloc();

@@ -28,7 +28,7 @@ class ServletRequest implements javax.servlet.http.HttpServletRequest
   int serverPort;
   String remoteAddr, remoteHost;
   String data;
-  String servletPath, pathInfo, method;
+  String mountpoint, servletPath, pathInfo, method;
   String remuser;
   String requestURI, queryString, pathTranslated;
   Dictionary parameters = new Hashtable();
@@ -314,8 +314,8 @@ class ServletRequest implements javax.servlet.http.HttpServletRequest
   ServletRequest(RoxenServletContext cx, RoxenSessionContext sx,
 		 int cl, String ct, String pr, String sc,
 		 String sn, int sp, String ra, String rh, String d,
-		 String ap, String pi, String me, String ru, String u,
-		 String q, String pt)
+		 String mp, String ap, String pi, String me, String ru,
+                 String u, String q, String pt)
   {
     context = cx;
     sessioncontext = sx;
@@ -328,6 +328,7 @@ class ServletRequest implements javax.servlet.http.HttpServletRequest
     remoteAddr = ra;
     remoteHost = rh;
     data = d;
+    mountpoint = mp;
     servletPath = ap;
     pathInfo = pi;
     method = me;
@@ -335,6 +336,28 @@ class ServletRequest implements javax.servlet.http.HttpServletRequest
     requestURI = u;
     queryString = q;
     pathTranslated = pt;
+    /*
+    System.out.println("context = " + cx +
+                       ";\nsessioncontext = " + sx +
+                       ";\ncontentLength = " + cl +
+                       ";\ncontentType = " + ct +
+                       ";\nprotocol = " + pr +
+                       ";\nscheme = " + sc +
+                       ";\nserverName = " + sn +
+                       ";\nserverPort = " + sp +
+                       ";\nremoteAddr = " + ra +
+                       ";\nremoteHost = " + rh +
+                       ";\ndata = " + d + 
+                       ";\nmountpoint = " + mp +
+                       ";\nservletPath = " + ap +
+                       ";\npathInfo = " + pi +
+                       ";\nmethod = " + me +
+                       ";\nremuser = " + ru +
+                       ";\nrequestURI = " + u + 
+                       ";\nqueryString = " + q + 
+                       ";\npathTranslated = " + pt +
+                       ";\n");
+    */
   }
 
   // 2.2 stuff follows
@@ -423,7 +446,7 @@ class ServletRequest implements javax.servlet.http.HttpServletRequest
 
   public String getContextPath()
   {
-    return "";
+    return mountpoint;
   }
 
   public boolean isUserInRole(String role)
