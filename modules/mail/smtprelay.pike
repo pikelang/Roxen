@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 1.41 1999/08/11 15:17:41 grubba Exp $
+ * $Id: smtprelay.pike,v 1.42 1999/08/11 16:19:08 grubba Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RELAY_DEBUG
 
-constant cvs_version = "$Id: smtprelay.pike,v 1.41 1999/08/11 15:17:41 grubba Exp $";
+constant cvs_version = "$Id: smtprelay.pike,v 1.42 1999/08/11 16:19:08 grubba Exp $";
 
 /*
  * Some globals
@@ -58,7 +58,8 @@ void create()
 	 "Email address of the mailer daemon.");
 
   defvar("maxhops", 10, "Maximum number of hops", TYPE_INT,
-	 "Maximum number of MTA hops (used to avoid loops).");
+	 "Maximum number of MTA hops (used to avoid loops).<br>\n"
+	 "Zero means no limit.");
 }
 
 array(string)|multiset(string)|string query_provides()
@@ -1060,25 +1061,34 @@ int relay(string from, string user, string domain,
 	if (headers_found) {
 	  array a = lower_case(headers)/"received:";
 	  int hops = sizeof(a);
-	  int i;
-	  for(i=0; i < sizeof(a)-1; i++) {
-	    if (a[i]=="" || a[i][-1] != '\n') {
-	      hops--;
-	    }
-	  }
+
+	  headers = "";
 
 #ifdef RELAY_DEBUG
-	  report_debug(sprintf("SMTPRelay: hops:%d\n", hops));
+	  report_debug(sprintf("SMTPRelay: raw hops:%d\n", hops));
 #endif /* RELAY_DEBUG */
 
 	  if (hops > QUERY(maxhops)) {
-	    report_error(sprintf("SMTPRelay: Too many hops!\n"));
+	    int i;
+	    for(i=0; i < sizeof(a)-1; i++) {
+	      if (a[i]=="" || a[i][-1] != '\n') {
+		hops--;
+	      }
+	    }
 
-	    // FIXME: Should send a message to from here.
+#ifdef RELAY_DEBUG
+	    report_debug(sprintf("SMTPRelay: vanilla hops:%d\n", hops));
+#endif /* RELAY_DEBUG */
 
-	    rm(fname);
+	    if (hops > QUERY(maxhops)) {
+	      report_error(sprintf("SMTPRelay: Too many hops!\n"));
+	      
+	      // FIXME: Should send a message to from here.
 
-	    return(0);
+	      rm(fname);
+
+	      return(0);
+	    }
 	  }
 	}
       }
