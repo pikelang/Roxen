@@ -5,21 +5,18 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: accessed.pike,v 1.42 2001/03/13 10:19:16 kuntri Exp $";
+constant cvs_version = "$Id: accessed.pike,v 1.43 2001/08/23 21:01:08 per Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_LOGGER;
 constant module_name = "Tags: Accessed counter";
 constant module_doc  = "This module provides access counters, through the "
 "<tt>&lt;accessed&gt;</tt> tag and the <tt>&amp;page.accessed;</tt> entity.";
 
-constant language = roxen->language;
-
 string status() {
   return counter->size()+" entries in the accessed database.<br />";
 }
 
 void create(Configuration c) {
-
   //------ Global defvars
 
   defvar("extcount", ({  }), "Extensions to access count",
@@ -31,15 +28,15 @@ void create(Configuration c) {
 	 "<p>Note: This module must be reloaded before a change of this "
 	 "setting takes effect.</p>");
 
-  defvar("restrict", 1, "Restrict reset", TYPE_FLAG, "Restrict the attribute reset "
+  defvar("restrict", 1, "Restrict reset", TYPE_FLAG,
+	 "Restrict the attribute reset "
 	 "so that the resetted file is in the same directory or below.");
 
-  defvar("backend", "File database", "Database backend", TYPE_MULTIPLE_STRING,
+  defvar("backend", "SQL database", "Database backend", TYPE_MULTIPLE_STRING,
 	 "Select a accessed database backend",
          ({ "File database", "SQL database", "Memory database" }) );
 
   //------ File database settings
-
   defvar("Accesslog","$LOGDIR/"+Roxen.short_name(c?c->name:".")+"/Accessed",
 	 "Access database file", TYPE_FILE|VAR_MORE,
 	 "This file will be used to keep the database of file accesses.",
@@ -52,14 +49,16 @@ void create(Configuration c) {
 	 0, lambda(){ return query("backend")!="File database"; } );
 
   //------ SQL database settings
-
-  defvar("sqldb", "mysql://localhost", "SQL Database", TYPE_STRING, 
-	 "What database to use for the database backend.",
-	 0, lambda(){ return query("backend")!="SQL database"; } );
-
-  defvar("table", "accessed", "SQL Table", TYPE_STRING,
-	 "Which table should be used for the database backend.",
-	 0, lambda(){ return query("backend")!="SQL database"; } );
+  defvar("sqldb",
+	 Variable.DatabaseChoice( "local", 0, "SQL Database", 
+				  "What database to use for the "
+				  "database backend." ) )
+    ->set_invisibility_check_callback(
+      lambda(Variable.Variable v, RequestID id) {
+	return query("backend")!="SQL database";
+      } );
+  getvar("sqldb")
+    ->set_configuration_pointer( my_configuration );
 }
 
 TAGDOCUMENTATION
@@ -214,13 +213,15 @@ void start() {
 }
 
 class Entity_page_accessed {
-  int rxml_var_eval(RXML.Context c) {
+  string rxml_var_eval(RXML.Context c, string var, string scope_name,
+		       void|RXML.Type type)
+  {
     c->id->misc->cacheable=0;
     if(!c->id->misc->accessed) {
       counter->add(c->id->not_query, 1);
       c->id->misc->accessed=1;
     }
-    return counter->query();
+    return ENCODE_RXML_INT( counter->query( c->id->not_query ), type );
   }
 }
 
@@ -402,57 +403,71 @@ class FileCounter {
 
 class SQLCounter {
   // SQL backend counter.
+  string db;
 
-  Sql.Sql db;
-
-  void create() {
-    db=Sql.Sql(module::query("sqldb"));
-    catch {
-      db->query("CREATE TABLE "+query("accessed")+" (path VARCHAR(255) PRIMARY KEY,"
-		" hits INT UNSIGNED DEFAULT 0, made INT UNSIGNED)");
-      db->query("INSERT INTO "+query("accessed")+" (path,made) VALUES ('///',"+time(1)+")" );
-    };
+  constant defs = ([
+    "hits":({  "path VARCHAR(255) PRIMARY KEY",
+	       "hits INT UNSIGNED DEFAULT 0",
+	       "made INT UNSIGNED" }),  ]);
+  
+  void create()
+  {
+    set_my_db( module::query( "sqldb" ) );
+    
+    if( create_sql_tables( defs,
+			   "Hits per file database for the accessed tag "
+			   "and entities", 0 ) )
+      sql_query("INSERT INTO &hits; (path,made) VALUES ('///',"+time(1)+")" );
   }
 
-  int creation_date(void|string file) {
+  int creation_date(void|string file)
+  {
     if(!file) file="///";
-    array x=db->query("SELECT made FROM "+query("accessed")+" WHERE path='"+fix_file(file)+"'");
+    array x=
+      sql_query("SELECT made FROM &hits; WHERE path=%s", fix_file(file) );
     return x && sizeof(x) && (int)(x[0]->made);
   }
 
-  private void create_entry(string file) {
-    if(cache_lookup("access_entry", file)) return;
-    catch(db->query("INSERT INTO "+query("accessed")+" (path,made) VALUES ('"+file+"',"+time(1)+")" ));
-    cache_set("access_entry", file, 1);
+  private void create_entry(string file)
+  {
+    if(cache_lookup("access_entry:"+my_configuration()->name, file))
+      return;
+    catch(sql_query("INSERT INTO &hits; (path,made) VALUES (%s,%d)",
+		    fix_file( file ), time(1 ) ));
+    cache_set("access_entry:"+my_configuration()->name, file, 1);
   }
 
-  private string fix_file(string file) {
+  private string fix_file(string file)
+  {
     if(sizeof(file)>255)
       file="//"+MIME.encode_base64(Crypto.md5()->update(file)->digest(),1);
-    return db->quote(file);
+    return file;
   }
 
-  void add(string file, int count) {
-    file=fix_file(file);
+  void add(string file, int count)
+  {
     create_entry(file);
-    db->query("UPDATE "+query("accessed")+" SET hits=hits+"+(count||1)+" WHERE path='"+file+"'" );
+    sql_query("UPDATE &hits; SET hits=hits+"+(count||1)+" WHERE path=%s",
+	      fix_file( file ) );
   }
 
-  int query(string file) {
-    file=fix_file(file);
-    array x=db->query("SELECT hits FROM "+query("accessed")+" WHERE path='"+file+"'");
+  int query(string file)
+  {
+    array x=sql_query("SELECT hits FROM &hits; WHERE path=%s",
+		      fix_file( file ) );
     return x && sizeof(x) && (int)(x[0]->hits);
   }
 
-  void reset(string file) {
-    file=fix_file(file);
+  void reset(string file)
+  {
     create_entry(file);
-    db->query("UPDATE "+query("accessed")+" SET hits=0 WHERE path='"+file+"'");
+    sql_query("UPDATE &hits; SET hits=0 WHERE path=%s", fix_file(file) );
   }
 
-  int size() {
-    array x=db->query("SELECT count(*) from "+query("accessed"));
-    return (int)(x[0]["count(*)"])-1;
+  int size()
+  {
+    array x=sql_query("SELECT count(*) as c from &hits;");
+    return (int)(x[0]->c)-1;
   }
 }
 
@@ -554,8 +569,8 @@ string tag_accessed(string tag, mapping m, RequestID id)
 
   if(m->since) {
     if(m->database)
-      return Roxen.tagtime(counter->creation_date(), m, id, language);
-    return Roxen.tagtime(counter->creation_date(m->file), m, id, language);
+      return Roxen.tagtime(counter->creation_date(), m, id, roxen.language);
+    return Roxen.tagtime(counter->creation_date(m->file), m, id, roxen.language);
   }
 
   string real="<!-- ("+counts+") -->";
@@ -618,7 +633,7 @@ string tag_accessed(string tag, mapping m, RequestID id)
   case "mcdonalds":
     q=0;
     while(counts>10) { counts/=10; q++; }
-    res="More than "+language("eng", "number", id)(counts*10->pow(q))
+    res="More than "+roxen.language("eng", "number", id)(counts*10->pow(q))
         + " served.";
     break;
 
@@ -628,11 +643,11 @@ string tag_accessed(string tag, mapping m, RequestID id)
 
   case "ordered":
     m->type="string";
-    res=Roxen.number2string(counts, m, language(m->lang||id->misc->defines->theme_language, "ordered", id));
+    res=Roxen.number2string(counts, m, roxen.language(m->lang||id->misc->defines->theme_language, "ordered", id));
     break;
 
   default:
-    res=Roxen.number2string(counts, m, language(m->lang||id->misc->defines->theme_language, "number", id));
+    res=Roxen.number2string(counts, m, roxen.language(m->lang||id->misc->defines->theme_language, "number", id));
   }
 
   if(m->minlength) {
