@@ -5,7 +5,7 @@ void run(object env)
 	"   MySQL database (leave empty for no external access). External\n"
 	"   MySQL access is needed when creating an IntraWise site.\n"
 	"\n");
-  return;
+  
   Stdio.File infd = Stdio.stdin, outfd = Stdio.stdout;
   Stdio.Terminfo.Termcap term = Stdio.Terminfo.getTerm();
   Tools.Install.Readline rl = Tools.Install.Readline();
