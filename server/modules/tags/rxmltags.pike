@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.159 2000/08/22 18:53:11 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.160 2000/08/23 03:14:55 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -199,6 +199,32 @@ class EntityClientHost {
   }
 }
 
+class EntityClientAuthenticated {
+  inherit RXML.Value;
+  int rxml_const_eval(RXML.Context c) {
+    return c->id->auth&&c->id->auth[0]&&c->id->auth[1];
+  }
+}
+
+class EntityClientUser {
+  inherit RXML.Value;
+  string rxml_const_eval(RXML.Context c) {
+    return c->id->rawauth&&(c->id->rawauth/":")[0];
+  }
+}
+
+class EntityClientPassword {
+  inherit RXML.Value;
+  string rxml_const_eval(RXML.Context c) {
+    array tmp;
+    return (c->id->auth 
+	    && !c->id->auth[0] 
+	    && c->id->rawauth
+	    && (sizeof(tmp = c->id->rawauth/":") > 1) 
+	    && tmp[1]);
+  }
+}
+
 mapping client_scope=([
   "ip":EntityClientIP(),
   "name":EntityClientName(),
@@ -208,6 +234,9 @@ mapping client_scope=([
   "language":EntityClientLanguage(),
   "languages":EntityClientLanguages(),
   "host":EntityClientHost(),
+  "authenticated":EntityClientAuthenticated(),
+  "user":EntityClientUser(),
+  "password":EntityClientPassword(),
 ]);
 
 void set_entities(RXML.Context c) {
