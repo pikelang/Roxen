@@ -30,46 +30,82 @@ private string attr_vals(string v)
   return v;
 }
 
-private string parse_doc(string|mapping doc, string name) {
-  if(mappingp(doc)) doc=doc->standard;
+private string format_doc(string|mapping doc, string name, string language) {
+  if(mappingp(doc)) doc=doc[language];
   return parse_html(doc, ([]), ([
     "desc":desc_cont,
     "attr":attr_cont
   ]), name);
 }
 
+
 // ------------------ Parse docs in mappings --------------
 
-private string parse_mapping(mapping doc) {
+private string parse_doc(string|mapping|array doc, string name, string language) {
+  if(arrayp(doc))
+    return format_doc(doc[0], name, language)+
+      "<dl><dd>"+parse_mapping(doc[1], language)+"</dd></dl>";
+  return format_doc(doc, name, language);
+}
+
+private string parse_mapping(mapping doc, string language) {
   string ret="";
   if(!mappingp(doc)) return "";
   foreach(indices(doc), string tmp) {
-    if(arrayp(doc[tmp])) {
-      ret+=parse_doc(doc[tmp][0], tmp);
-      ret+="<dl><dd>"+parse_mapping(doc[tmp][1])+"</dd></dl>";
-    }
-    else
-      ret+=parse_doc(doc[tmp], tmp);
+    ret+=parse_doc(doc[tmp], tmp, language);
   }
   return ret;
 }
 
+
 // --------------------- Find documentation --------------
 
-RXML.TagSet rxml_tag_set;
+mapping call_tagdocumentation(RoxenModule o) {
+  mapping doc;
+  catch { doc=o->tagdocumentation(); };
+  if(!doc || !mappingp(doc)) return 0;
+  return doc;
+}
 
+int generation;
 string find_tag_doc(string name, RequestID id) {
-  if(!rxml_tag_set) rxml_tag_set=id->conf->rxml_tag_set;
-  RXML.PHtml parser = rxml_tag_set (RXML.t_text (RXML.PHtmlCompat));
-  //  foreach(parser->get_overridden_low_tag(name), object x) {
-    // 1. Determine module of origin.
-    // 2. Look up module in global help cache in roxen object.
-    //  2b.  If present, return help.
-    // 3. Query module for documentation mapping with tagdocumentation()
-    //  3b.  If returned 0, loop.
-    //  3c.  If returned mapping, return help.
-    // 4. Break.
-  //  }
+  RXML.TagSet tag_set=RXML.get_context()->tag_set;
+  string doc;
+  int new_gen=tag_set->generation;
+
+  if((doc=cache_lookup("tagdoc",name)) && generation==new_gen) {
+    return doc;
+  }
+
+  if(generation!=new_gen) {
+    cache_expire("tagdoc");
+    generation=new_gen;
+  }
+
+  array tags=tag_set->get_overridden_tags(name);
+  if(!sizeof(tags)) return "<h4>That tag is not defined</h4>";
+
+  foreach(tags, array|object|function tag) {
+    if(objectp(tag)) {
+      // FIXME: New style tag. Check for internal documentation.
+      tag=object_program(tag);
+    }
+    if(arrayp(tag)) {
+      if(tag[0])
+	tag=tag[0][1];
+      else if(tag[1])
+	tag=tag[1][1];
+    }
+    tag=function_object(tag);
+    if(!objectp(tag)) continue;
+
+    mapping tagdoc=call_tagdocumentation(tag);
+    if(!tagdoc || !tagdoc[name]) continue;
+    doc=parse_doc(tagdoc[name], name, "standard");
+    cache_set("tagdoc", name, doc);
+    return doc;
+  }
+
   return "<h4>No documentation available for \""+name+"\".</h4>\n";
 }
 
