@@ -4,7 +4,7 @@
 // ChiliMoon bootstrap program. Sets up the environment,
 // replces the master, adds custom functions and starts core.pike.
 
-// $Id: loader.pike,v 1.372 2003/03/11 22:33:04 mani Exp $
+// $Id: loader.pike,v 1.373 2003/03/11 22:43:52 mani Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -25,9 +25,9 @@ static int(0..1) remove_dumped;
 static string    configuration_dir = "../configuration/";
 static string    var_dir = "../var/";
 
-#define werror roxen_perror
+#define werror roxen_werror
 
-constant cvs_version="$Id: loader.pike,v 1.372 2003/03/11 22:33:04 mani Exp $";
+constant cvs_version="$Id: loader.pike,v 1.373 2003/03/11 22:43:52 mani Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -195,12 +195,9 @@ string possibly_encode( string what )
 //! @decl void werror(string format, mixed ... args)
 //! @appears werror
 
-//! @decl void roxen_perror(string format, mixed ... args)
-//! @appears roxen_perror
-
 static int last_was_nl;
 // Used to print error/debug messages
-void roxen_perror(string format, mixed ... args)
+void roxen_werror(string format, mixed ... args)
 {
   if(sizeof(args))
     format=sprintf(format,@args);
@@ -362,7 +359,7 @@ void report_debug(string message, mixed ... foo)
 {
   if( sizeof( foo ) )
     message = sprintf((string)message, @foo );
-  roxen_perror( message );
+  roxen_werror( message );
 }
 
 
@@ -1020,7 +1017,7 @@ string roxen_path( string filename )
                         [string]core->query("logdirprefix") );
   else
     if( has_value( filename, "$LOGDIR" ) )
-      roxen_perror("Warning: mkdirhier with $LOGDIR before variable is available\n");
+      roxen_werror("Warning: mkdirhier with $LOGDIR before variable is available\n");
 
 #ifdef __NT__
   while( strlen(filename) && filename[-1] == '/' )
@@ -2018,9 +2015,9 @@ void do_main( int argc, array(string) argv )
     "some environment variables are ignored." }) );
 #endif // NOT_INSTALLED
 
-#if __VERSION__ < 7.4
+#if __VERSION__ < 7.5
   feature_warn("FATAL", ({
-    "ChiliMoon requires pike 7.4. "
+    "ChiliMoon requires pike 7.6. "
     "Please install a newer version of Pike." }) );
   exit(0); // 0 means stop start script looping
 #endif // __VERSION__ < 7.4
@@ -2087,9 +2084,7 @@ void do_main( int argc, array(string) argv )
   add_constant("report_fatal",  report_fatal);
   add_constant("report_warning_sparsely", report_warning_sparsely);
   add_constant("report_error_sparsely", report_error_sparsely);
-  add_constant("werror",        roxen_perror);
-  add_constant("perror",        roxen_perror); // For compatibility.
-  add_constant("roxen_perror",  roxen_perror);
+  add_constant("werror",        roxen_werror);
   // NGSERVER: Remove roxenp
   add_constant("roxenp",        lambda() { return core; });
   add_constant("get_core",      lambda() { return core; });
