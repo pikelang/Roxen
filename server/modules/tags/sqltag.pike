@@ -1,5 +1,5 @@
 /*
- * $Id: sqltag.pike,v 1.1 1997/02/20 14:56:08 grubba Exp $
+ * $Id: sqltag.pike,v 1.2 1997/05/19 23:23:54 grubba Exp $
  *
  * A module for Roxen Challenger, which gives the tags
  * <SQLQUERY> and <SQLOUTPUT>.
@@ -8,10 +8,12 @@
  */
 
 #include <module.h>
-#include <sql.h>
 
 inherit "module";
 inherit "roxenlib";
+
+import Array;
+import Sql;
 
 /*
  * Module interface functions
@@ -21,13 +23,13 @@ array register_module()
 {
   return( ({ MODULE_PARSER,
 	       "SQL-module",
-	       "This module gives the two tags &lt;SQLQUERY&gt;, "
+	       "This module gives the three tags &lt;SQLQUERY&gt;, "
 	       "&lt;SQLOUTPUT&gt; and &lt;SQLTABLE&gt;.",
 	       0,
 	       1 }) );
 }
 
-string cvs_version = "$Id: sqltag.pike,v 1.1 1997/02/20 14:56:08 grubba Exp $";
+string cvs_version = "$Id: sqltag.pike,v 1.2 1997/05/19 23:23:54 grubba Exp $";
 
 /*
  * Tag handlers
@@ -41,7 +43,7 @@ string sqloutput_tag(string tag_name, mapping args, string contents,
     string database = query("database");
     string user = query("user");
     string password = query("password");
-    object(Sql) sql;
+    object(sql) con;
     array(mapping(string:mixed)) result;
     mixed error;
 
@@ -64,13 +66,13 @@ string sqloutput_tag(string tag_name, mapping args, string contents,
     host = lower_case(host);
     host = (host == "localhost")?"":host;
     
-    if (error = catch(sql = Sql(host, database, user, password))) {
+    if (error = catch(con = sql(host, database, user, password))) {
       contents = "<h1>Couldn't connect to SQL-server</h1><br>\n" +
 	((master()->describe_backtrace(error)/"\n")*"<br>\n") +
 	contents;
-    } else if (error = catch(result = sql->query(args->query))) {
+    } else if (error = catch(result = con->query(args->query))) {
       contents = "<h1>Query \"" + args->query + "\" failed: " +
-	sql->error() + "</h1>\n" +
+	con->error() + "</h1>\n" +
 	((master()->describe_backtrace(error)/"\n")*"<br>\n") +
 	contents;
     } else if (result) {
@@ -118,7 +120,7 @@ string sqlquery_tag(string tag_name, mapping args,
     string database = query("database");
     string user = query("user");
     string password = query("password");
-    object(Sql) sql;
+    object(sql) con;
     mixed error;
 
     if (args->host) {
@@ -140,12 +142,12 @@ string sqlquery_tag(string tag_name, mapping args,
     host = lower_case(host);
     host = (host == "localhost")?"":host;
     
-    if (error = catch(sql = Sql(host, database, user, password))) {
+    if (error = catch(con = sql(host, database, user, password))) {
       return("<h1>Couldn't connect to SQL-server</h1><br>\n" +
 	     ((master()->describe_backtrace(error)/"\n")*"<br>\n"));
-    } else if (error = catch(sql->query(args->query))) {
+    } else if (error = catch(con->query(args->query))) {
       return("<h1>Query \"" + args->query + "\" failed: " +
-	     sql->error() + "</h1>\n" +
+	     con->error() + "</h1>\n" +
 	     ((master()->describe_backtrace(error)/"\n")*"<br>\n"));
     }
   } else {
@@ -162,9 +164,9 @@ string sqltable_tag(string tag_name, mapping args,
     string database = query("database");
     string user = query("user");
     string password = query("password");
-    object(Sql) sql;
+    object(sql) con;
     mixed error;
-    object(Sql_result) sql_result;
+    object(sql_result) result;
     string res;
 
     if (args->host) {
@@ -186,16 +188,16 @@ string sqltable_tag(string tag_name, mapping args,
     host = lower_case(host);
     host = (host == "localhost")?"":host;
     
-    if (error = catch(sql = Sql(host, database, user, password))) {
+    if (error = catch(con = sql(host, database, user, password))) {
       return("<h1>Couldn't connect to SQL-server</h1><br>\n" +
 	     ((master()->describe_backtrace(error)/"\n")*"<br>\n"));
-    } else if (error = catch(sql_result = sql->big_query(args->query))) {
+    } else if (error = catch(result = con->big_query(args->query))) {
       return("<h1>Query \"" + args->query + "\" failed: " +
-	     sql->error() + "</h1>\n" +
+	     con->error() + "</h1>\n" +
 	     ((master()->describe_backtrace(error)/"\n")*"<br>\n"));
     }
 
-    if (sql_result) {
+    if (result) {
       string nullvalue="";
       array(mixed) row;
 
@@ -215,13 +217,13 @@ string sqltable_tag(string tag_name, mapping args,
 	}
       }
       res += "><tr>";
-      foreach(map(sql_result->fetch_fields(), lambda (mapping m) {
+      foreach(map(result->fetch_fields(), lambda (mapping m) {
 	return(m->name);
       } ), string name) {
 	res += "<th>"+name+"</th>";
       }
       res += "</tr>\n";
-      while (row = sql_result->fetch_row()) {
+      while (row = result->fetch_row()) {
 	res += "<tr>";
 	foreach(row, mixed value) {
 	  value = (string)value;
@@ -282,12 +284,12 @@ string|void check_variable(string var, mixed new_value)
 {
   switch(var) {
   case "hostname":
-    if (catch(Sql(((lower_case(new_value)=="localhost")?"":new_value)))) {
+    if (catch(sql(((lower_case(new_value)=="localhost")?"":new_value)))) {
       return("Couldn't connect to any SQL-server at "+new_value+"\n");
     }
     break;
   case "database":
-    if (catch(Sql(((lower_case(query("hostname"))=="localhost")?"":query("hostname")),
+    if (catch(sql(((lower_case(query("hostname"))=="localhost")?"":query("hostname")),
 		  new_value))) {
       return("Couldn't select database "+new_value+"\n");
     }
@@ -295,7 +297,7 @@ string|void check_variable(string var, mixed new_value)
   case "user":
     break;
   case "password":
-    if (catch(Sql(((lower_case(query("hostname"))=="localhost")?"":query("hostname")),
+    if (catch(sql(((lower_case(query("hostname"))=="localhost")?"":query("hostname")),
 		  query("database"), query("user"), new_value))) {
       return("Couldn't connect to database. Wrong password?\n");
     }
