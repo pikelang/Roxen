@@ -1,7 +1,7 @@
 /*
  * Roxen master
  */
-string cvs_version = "$Id: roxen_master.pike,v 1.83 2000/03/25 03:56:56 mast Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.84 2000/03/26 15:19:12 mast Exp $";
 
 /*
  * name = "Roxen Master";
@@ -351,18 +351,21 @@ string stupid_describe(mixed m, int maxlen)
       if(string tmp=describe_program(m)) return tmp;
       if(object o=function_object(m))
 	return (describe_object(o)||"")+"->"+function_name(m);
-      else
-	return function_name(m) || "function";
+      else {
+	string tmp;
+	if (catch (tmp = function_name(m)))
+	  // The function object has probably been destructed.
+	  return "function";
+	return tmp || "function";
+      }
 
     case "program":
       if(string tmp=describe_program(m)) return tmp;
       return typ;
 
-    case "object":
-      if(string tmp=describe_object(m)) return tmp;
-      return typ;
-
     default:
+      if (objectp(m))
+	if(string tmp=describe_object(m)) return tmp;
       return typ;
   }
 }
