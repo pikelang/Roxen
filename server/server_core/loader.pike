@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: loader.pike,v 1.350 2002/10/24 02:22:08 nilsson Exp $
+// $Id: loader.pike,v 1.351 2002/10/24 19:24:15 nilsson Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: loader.pike,v 1.350 2002/10/24 02:22:08 nilsson Exp $";
+constant cvs_version="$Id: loader.pike,v 1.351 2002/10/24 19:24:15 nilsson Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -2075,9 +2075,9 @@ void do_main( int argc, array(string) argv )
   if (err = catch {
     if(master()->relocate_module)
       add_constant("PIKE_MODULE_RELOC", 1);
-    replace_master(new_master=[object(__builtin.__master)](((program)"data/roxen_master.pike")()));
+    replace_master(new_master=[object(__builtin.__master)](((program)"data/master.pike")()));
   }) {
-    werror("Initialization of Roxen's master failed:\n"
+    werror("Initialization of ChiliMoon's master failed:\n"
 	   "%s\n", describe_backtrace(err));
     exit(1);
   }
@@ -2087,6 +2087,7 @@ void do_main( int argc, array(string) argv )
   add_constant("popen",popen);
   add_constant("roxen_popen",popen);
   add_constant("init_logger", init_logger);
+  // NGSERVER: Remove redundant constant capitalize
   add_constant("capitalize", String.capitalize);
   add_constant("grbz",lambda(string d){return Gz.inflate()->inflate(d);});
 

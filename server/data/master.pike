@@ -10,7 +10,7 @@ mixed sql_query( string q, mixed ... e )
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.129 2002/10/23 19:56:43 nilsson Exp $";
+constant cvs_version = "$Id: master.pike,v 1.129 2002/10/23 19:56:43 nilsson Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;

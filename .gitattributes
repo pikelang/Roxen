@@ -89,6 +89,7 @@ worldmap binary
 /server/data/include/udp.h foreign_ident
 /server/data/include/variables.h foreign_ident
 /server/data/include/version.h foreign_ident
+/server/data/master.pike foreign_ident
 /server/data/modref.xml foreign_ident
 /server/data/more_extensions/apache foreign_ident
 /server/data/more_extensions/chemical foreign_ident
@@ -96,7 +97,6 @@ worldmap binary
 /server/data/randomtext/README foreign_ident
 /server/data/randomtext/company foreign_ident
 /server/data/randomtext/poetry foreign_ident
-/server/data/roxen_master.pike foreign_ident
 /server/data/supports foreign_ident
 /server/data/test/filesystem/test_rxml_package foreign_ident
 /server/data/test/tests/ftp/RoxenTest_ftp.pike foreign_ident
