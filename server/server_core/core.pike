@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: core.pike,v 1.831 2002/10/25 20:05:57 nilsson Exp $";
+constant cvs_version="$Id: core.pike,v 1.832 2002/10/26 00:09:29 nilsson Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -63,7 +63,7 @@ Shuffler.Shuffle get_shuffler( Stdio.File fd )
 {
   if( fd->sslfile )
     fd = fd->sslfile;
-  return shufflers[ random( sizeof( shufflers ) ) ]->shuffle( fd );
+  return random(shufflers)->shuffle( fd );
 }
 
 string md5( string what )
