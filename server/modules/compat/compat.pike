@@ -319,7 +319,6 @@ string|array tag_insert(string tag,mapping m,RequestID id)
 {
   string n;
 
-  // Not part of RXML 1.4
   if(n=m->define || m->name) {
     old_rxml_warning(id, "define or name attribute in insert tag","only variables");
     m_delete(m, "define");
@@ -339,15 +338,29 @@ string|array tag_insert(string tag,mapping m,RequestID id)
   }
 
   if(n = m->other) {
-    if(stringp(id->misc[n]) || intp(id->misc[n])) {
+    old_rxml_warning(id, "other attribute in insert tag","only regular variables");
+    if(stringp(id->misc[n]) || intp(id->misc[n]))
       return m->quote=="none"?(string)id->misc[n]:({ html_encode_string((string)id->misc[n]) });
-    }
     return rxml_error(tag, "No such other variable ("+n+").", id);
+  }
+
+  if(n = m->cookies)
+  {
+    NOCACHE();
+    old_rxml_warning(id, "cookies attribute in insert tag","<insert scope=cookie>");
+    if(n!="cookies")
+      return ({ html_encode_string(Array.map(indices(id->cookies),
+			  lambda(string s, mapping m)
+			  { return sprintf("%s=%O\n", s, m[s]); },
+					     id->cookies) * "\n")
+	      });
+    return ({ String.implode_nicely(indices(id->cookies)) });
   }
 
   if(n=m->cookie)
   {
     NOCACHE();
+    old_rxml_warning(id, "cookie attribute in insert tag","cookie entities");
     m_delete(m, "cookie");
     if(id->cookies[n]) {
       string cookie=do_replace(id->cookies[n], m, id);
@@ -718,9 +731,12 @@ array(string) tag_version(string tag, mapping m, RequestID id) {
   return ({ roxen->version() });
 }
 
-//array(string) tag_line(string tag, mapping m, RequestID id) {
-//  return ({ (string)id->misc->line });
-//}
+array(string) tag_line(string tag, mapping m, RequestID id) {
+  if(query("logold"))
+    report_warning("Old RXML in "+id->not_query+
+    ": contains deprecated tag <line>.\n");
+  return ({ "0" });
+}
 
 class TagQuote {
   inherit RXML.Tag;
@@ -740,7 +756,7 @@ class TagQuote {
 mapping query_tag_callers() {
   mapping active=(["list-tags":tag_list_tags,
 		   "version":tag_version,
-		   //		   "line":tag_line
+		   "line":tag_line
   ]);
   if(enabled->countdown) active->countdown=tag_countdown;
   if(enabled->counter) active->counter=tag_counter;
