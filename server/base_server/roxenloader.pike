@@ -26,7 +26,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.308 2002/02/06 12:51:24 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.309 2002/03/15 16:49:45 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1601,6 +1601,7 @@ void low_start_mysql( string datadir,
 			  "[mysqld]\n"
 			  "set-variable = max_allowed_packet=16M\n"
 			  "set-variable = net_buffer_length=8K\n"
+			  "local-infile = 0\n"
 			));
 
   array(string) args = ({
