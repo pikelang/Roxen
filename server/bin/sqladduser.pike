@@ -1,7 +1,7 @@
 #!/usr/local/bin/pike
 #!NO_MODULE
 
-/* $Id: sqladduser.pike,v 1.4 1998/07/15 18:40:16 grubba Exp $
+/* $Id: sqladduser.pike,v 1.5 2001/01/10 08:57:25 per Exp $
  *
  * name = "SQL Add user";
  * doc = "Add a user to an SQL user-database.";
@@ -28,51 +28,52 @@ string readline_until_got (string query) {
 	return retval;
 }
 
-int main() {
-	mapping data=([]);
-	object sql=Sql.sql("localhost","passwd");
-	mixed tmp,err;
-	string query;
-	data->username=readline_until_got("username: ");
-	data->passwd=crypt(readline_until_got("password: "));
-	data->uid=readline("(deprecated) user ID: ");
-	data->gid=readline("(deprecated) group ID: ");
-	data->homedir=readline("home directory: ");
-	data->shell=readline("login shell: ");
+int main()
+{
+  mapping data=([]);
+  Sql.Sql sql=Sql.Sql("localhost","passwd");
+  mixed tmp,err;
+  string query;
+  data->username=readline_until_got("username: ");
+  data->passwd=crypt(readline_until_got("password: "));
+  data->uid=readline("(deprecated) user ID: ");
+  data->gid=readline("(deprecated) group ID: ");
+  data->homedir=readline("home directory: ");
+  data->shell=readline("login shell: ");
 
-	foreach(indices(data),tmp) {
-		if (!sizeof(data[tmp]))
-			data-=([tmp:0]);
-	}
+  foreach(indices(data),tmp) {
+    if (!sizeof(data[tmp]))
+      data-=([tmp:0]);
+  }
 
-	if(data->uid)
-		data->uid=(int)data->uid;
-	if(data->gid)
-		data->gid=(int)data->gid;
+  if(data->uid)
+    data->uid=(int)data->uid;
+  if(data->gid)
+    data->gid=(int)data->gid;
 
-	query="insert into passwd (" + (indices(data)*",") +
+  query="insert into passwd (" + (indices(data)*",") +
 		") values (";
-	foreach (values(data),tmp) {
-		if (stringp(tmp))
-			query += sprintf ("'%s',",tmp);
-		else
-			query += tmp+",";
-	}
+  foreach (values(data),tmp) {
+    if (stringp(tmp))
+      query += sprintf ("'%s',",sql->quote(tmp));
+    else
+      query += tmp+",";
+  }
 	
-	query=query[..sizeof(query)-2];
-	query += ")";
+  query=query[..sizeof(query)-2];
+  query += ")";
 
-	tmp=sql->query("select * from passwd where username = '"+data->username+"'");
-	if (sizeof(tmp))
-		sql->query("delete from passwd where username = '"+data->username+"'");
+  tmp=sql->query("select * from passwd where username = '"+data->username+"'");
+  if (sizeof(tmp))
+    sql->query("delete from passwd where username = '"+data->username+"'");
 
-	err= catch {
-		sql->query(query);
-	};
-	if (err) {
-		write("SQL query error: "+sql->error()+"\n");
-		write("query was: "+query+"\n");
-		return 1;
-	}
+  err= catch {
+    sql->query(query);
+  };
+  if (err) {
+    write("SQL query error: "+sql->error()+"\n");
+    write("query was: "+query+"\n");
+    return 1;
+  }
 }
 

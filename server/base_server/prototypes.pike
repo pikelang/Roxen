@@ -1,6 +1,6 @@
 #include <stat.h>
 #include <config.h>
-constant cvs_version="$Id: prototypes.pike,v 1.1 2001/01/03 06:00:56 per Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.2 2001/01/10 08:57:24 per Exp $";
 
 class Variable
 {
@@ -272,8 +272,10 @@ class Configuration
   int disable_module( string modname, int|void nodest );
   int add_modules( array(string) mods, int|void now );
   RoxenModule find_module(string name);
-  Sql.sql sql_cache_get(string what);
-  Sql.sql sql_connect(string db);
+#if ROXEN_COMPAT < 2.2
+  Sql.Sql sql_cache_get(string what);
+  Sql.Sql sql_connect(string db);
+#endif
   void enable_all_modules();
   void low_init(void|int modules_already_enabled);
 

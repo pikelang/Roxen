@@ -44,7 +44,7 @@ string program_name_version( program what )
       ofile = master()->make_ofilename( master()->program_name( what ) );
   };
   array q = connect_to_my_mysql( 1, "ofiles" )
-        ->query( "select mtime from files where id='%s'", ofile );
+        ->query( "select mtime from files where id=%s", ofile );
   if( !sizeof( q ) )
     ofs = 0;
   else

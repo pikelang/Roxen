@@ -11,7 +11,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: sqldb.pike,v 1.1 2001/01/02 15:21:40 per Exp $";
+constant cvs_version = "$Id: sqldb.pike,v 1.2 2001/01/10 08:57:27 per Exp $";
 constant module_type = MODULE_ZERO;
 LocaleString module_name_locale = LOCALE(1,"DEPRECATED: SQL databases");
 LocaleString module_doc_locale  = 
@@ -63,10 +63,10 @@ string status()
   if (sizeof(sql_urls)) {
     res += "<table border=\"0\">\n";
     foreach(sort(indices(sql_urls)), string s) {
-      Sql.sql o;
+      Sql.Sql o;
 
       mixed err = catch {
-	o = Sql.sql(sql_urls[s]);
+	o = Sql.Sql(sql_urls[s]);
       };
 
       if (o) {

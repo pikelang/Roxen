@@ -13,7 +13,7 @@
  * or should have been shipped along with the module.
  */
 
-constant cvs_version="$Id: SQLuserdb.pike,v 1.22 2000/11/24 16:50:36 per Exp $";
+constant cvs_version="$Id: SQLuserdb.pike,v 1.23 2001/01/10 08:57:28 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -147,7 +147,7 @@ void open_db() {
   if(objectp(db)) //already open
     return;
   err=catch{
-    db=Sql.sql(QUERY(sqlserver));
+    db=Sql.Sql(QUERY(sqlserver));
   };
   if (err) {
     report_debug("SQLauth: Couldn't open authentication database!\n");

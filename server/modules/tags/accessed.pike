@@ -5,7 +5,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: accessed.pike,v 1.38 2000/11/02 22:45:58 nilsson Exp $";
+constant cvs_version = "$Id: accessed.pike,v 1.39 2001/01/10 08:57:28 per Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_LOGGER;
 constant module_name = "Accessed counter";
@@ -400,10 +400,10 @@ class FileCounter {
 class SQLCounter {
   // SQL backend counter.
 
-  Sql.sql db;
+  Sql.Sql db;
 
   void create() {
-    db=Sql.sql(module::query("sqldb"));
+    db=Sql.Sql(module::query("sqldb"));
     catch {
       db->query("CREATE TABLE "+query("accessed")+" (path VARCHAR(255) PRIMARY KEY,"
 		" hits INT UNSIGNED DEFAULT 0, made INT UNSIGNED)");

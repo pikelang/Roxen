@@ -16,12 +16,12 @@ constant module_type = MODULE_LOCATION;
 constant module_name = "Configuration Filesystem";
 constant module_doc = "This filesystem serves the administration interface";
 constant module_unique = 1;
-constant cvs_version = "$Id: config_filesystem.pike,v 1.66 2001/01/08 16:07:54 per Exp $";
+constant cvs_version = "$Id: config_filesystem.pike,v 1.67 2001/01/10 08:57:27 per Exp $";
 
 constant path = "config_interface/";
 
 object charset_decoder;
-Sql.sql docs;
+Sql.Sql docs;
 
 string template_for( string f, object id )
 {
@@ -85,7 +85,8 @@ mapping get_docfile( string f )
   array q;
   if( f=="" || f[-1] == '/' )
     return get_docfile( f+"index.html" )||get_docfile( f+"index.xml" );
-  if( sizeof(q = docs->query( "SELECT * FROM docs WHERE name='/%s'", f )) )
+  if( sizeof(q = docs->query( "SELECT * FROM docs WHERE name=%s",
+                              "/"+f )) )
     return q[0];
 }
 
@@ -346,7 +347,7 @@ void start(int n, Configuration cfg)
               else
               {
                 if( search( f, "internal-roxen" ) != -1 ) continue;
-                docs->query( "INSERT INTO docs VALUES ('%s','%s')", f,
+                docs->query( "INSERT INTO docs VALUES (%s,%s)", f,
                              T->open(f, "r")->read());
               }
             }

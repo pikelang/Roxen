@@ -1,6 +1,6 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.406 2001/01/04 06:29:04 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.407 2001/01/10 08:57:24 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2675,30 +2675,31 @@ int add_modules( array(string) mods, int|void now )
 #endif
 }
 
+#if ROXEN_COMPAT < 2.2
 // BEGIN SQL
 
 mapping(string:string) sql_urls = ([]);
 
 mapping sql_cache = ([]);
 
-Sql.sql sql_cache_get(string what)
+Sql.Sql sql_cache_get(string what)
 {
 #ifdef THREADS
   if(sql_cache[what] && sql_cache[what][this_thread()])
     return sql_cache[what][this_thread()];
   if(!sql_cache[what])
-    sql_cache[what] =  ([ this_thread():Sql.sql( what ) ]);
+    sql_cache[what] =  ([ this_thread():Sql.Sql( what ) ]);
   else
-    sql_cache[what][ this_thread() ] = Sql.sql( what );
+    sql_cache[what][ this_thread() ] = Sql.Sql( what );
   return sql_cache[what][ this_thread() ];
 #else /* !THREADS */
   if(!sql_cache[what])
-    sql_cache[what] =  Sql.sql( what );
+    sql_cache[what] =  Sql.Sql( what );
   return sql_cache[what];
 #endif
 }
 
-Sql.sql sql_connect(string db)
+Sql.Sql sql_connect(string db)
 {
   if (sql_urls[db])
     return sql_cache_get(sql_urls[db]);
@@ -2707,6 +2708,7 @@ Sql.sql sql_connect(string db)
 }
 
 // END SQL
+#endif
 
 // This is the most likely URL for a site.
 private string get_my_url()

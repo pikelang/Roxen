@@ -3,7 +3,7 @@
 string parse( RequestID id )
 {
   string res = "";
-  Sql.sql sql = connect_to_my_mysql( 0, "mysql" );
+  Sql.Sql sql = connect_to_my_mysql( 0, "mysql" );
 
   res += "<table>";
   res += "<tr><td valign=right><b>Version:</b></td><td align=right>"+q(sql->query( "select VERSION() as v" )[0]->v)+"</td></tr>\n";

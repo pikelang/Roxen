@@ -5,7 +5,7 @@
 //
 // Henrik Grubbström 1997-01-12
 
-constant cvs_version="$Id: sqltag.pike,v 1.70 2001/01/04 06:36:05 nilsson Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.71 2001/01/10 08:57:28 per Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -123,7 +123,7 @@ array|object do_sql_query(mapping args, RequestID id, void|int big_query)
   if (args->parse)
     args->query = Roxen.parse_rxml(args->query, id);
 
-  Sql.sql con;
+  Sql.Sql con;
   array(mapping(string:mixed))|object result;
   mixed error;
   

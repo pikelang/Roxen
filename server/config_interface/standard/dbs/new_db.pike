@@ -55,7 +55,7 @@ ERROR
         error= "<font color='&usr.warncolor;'>"
                "Please specify an URL to define an external database"
                "</font>";
-      else if( catch( Sql.sql( id->variables->url ) ) )
+      else if( catch( Sql.Sql( id->variables->url ) ) )
         error = sprintf("<font color='&usr.warncolor;'>"
                         "It is not possible to connect to %s"
                         "</font>",

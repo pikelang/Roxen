@@ -22,7 +22,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.226 2001/01/08 16:07:43 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.227 2001/01/10 08:57:25 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -994,7 +994,7 @@ string query_configuration_dir()
   return configuration_dir;
 }
 
-Sql.sql connect_to_my_mysql( string|int ro, void|string db )
+Sql.Sql connect_to_my_mysql( string|int ro, void|string db )
 {
   Thread.Local tl;
   if( !db ) db = "mysql";
@@ -1015,11 +1015,11 @@ Sql.sql connect_to_my_mysql( string|int ro, void|string db )
     string mysql_socket = combine_path( getcwd(), query_configuration_dir()+
                                       "_mysql/socket");
     if( stringp( ro ) )
-      tl->set(Sql.sql("mysql://"+ro+"@localhost:"+mysql_socket+"/"+db));
+      tl->set(Sql.Sql("mysql://"+ro+"@localhost:"+mysql_socket+"/"+db));
     else if( ro )
-      tl->set(Sql.sql("mysql://ro@localhost:"+mysql_socket+"/"+db));
+      tl->set(Sql.Sql("mysql://ro@localhost:"+mysql_socket+"/"+db));
     else
-      tl->set(Sql.sql("mysql://rw@localhost:"+mysql_socket+"/"+db));
+      tl->set(Sql.Sql("mysql://rw@localhost:"+mysql_socket+"/"+db));
   };
   if( catch( tl->get()->query( "USE "+db ) ) )
   {
@@ -1032,7 +1032,7 @@ Sql.sql connect_to_my_mysql( string|int ro, void|string db )
 void start_mysql()
 {
   int st = gethrtime();
-  Sql.sql db;
+  Sql.Sql db;
   
   report_debug( "Starting mysql ... ");
   void connected_ok(int was)

@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.607 2001/01/06 07:24:26 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.608 2001/01/10 08:57:25 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -1618,7 +1618,7 @@ class ImageCache
 //! being a cache, however, it serves a wide variety of other
 //! interesting image conversion/manipulation functions as well.
 {
-  Sql.sql db;
+  Sql.Sql db;
   string name;
   string dir;
   function draw_function;
@@ -1952,9 +1952,8 @@ class ImageCache
     if(!stringp(data)) return;
     meta_cache_insert( id, meta );
     string meta_data = encode_value( meta );
-
-    db->query( "INSERT INTO "+name+"_data VALUES ('"+id+"', '"+
-               db->quote(meta_data) + "','" + db->quote(data)+"')" );
+    db->query( "INSERT INTO "+name+"_data VALUES (%s,%s,%s)",
+               id,meta_data,data);
     db->query( "INSERT INTO "+name+" VALUES ('"+id+"', "+strlen(data)+
 	       ", UNIX_TIMESTAMP(), UNIX_TIMESTAMP())" );
   }
@@ -1964,8 +1963,9 @@ class ImageCache
     if( meta_cache[ id ] )
       return meta_cache[ id ];
 
-    array(mapping(string:string)) q = db->query("SELECT meta FROM %s_data WHERE id='%s'",
-					       name, id);
+    array(mapping(string:string)) q = db->query("SELECT meta FROM "+
+                                                name+"_data WHERE id='"+
+                                                id+"'");
     db->query("UPDATE "+name+" SET atime=UNIX_TIMESTAMP() WHERE id='"+id+"'" );
 
     if(!sizeof(q))
@@ -2059,8 +2059,7 @@ class ImageCache
     else
     {
       array(mapping(string:string)) q =
-	db->query( "SELECT data,meta FROM %s_data WHERE id='%s'",
-		   name, id );
+	db->query( "SELECT data,meta FROM "+name+"_data WHERE id=%s",id);
       if( sizeof(q) ) {
         f = q[0]->data;
 	if( catch( m = decode_value(q[0]->meta) ) ) {
@@ -2232,7 +2231,7 @@ class ArgCache
 //! refetched later by a short string key. This being a cache, your
 //! data may be thrown away at random when the cache is full.
 {
-  static Sql.sql db;
+  static Sql.Sql db;
   static string name;
 
 #define CACHE_VALUE 0
@@ -2294,14 +2293,14 @@ class ArgCache
 
   static string create_key( string long_key )
   {
-    array data = db->query("SELECT id,contents FROM %s WHERE lkey='%s'",
-			   name,long_key[5..14]);
+    array data = db->query("SELECT id,contents FROM "+name+" WHERE lkey=%s",
+			   long_key[5..14]);
     foreach( data, mapping m )
       if( m->contents == long_key )
         return m->id;
 
-    db->query( "INSERT INTO %s (contents,lkey,atime) VALUES "
-	       "('%s','%s',UNIX_TIMESTAMP())",
+    db->query( "INSERT INTO "+name+" (contents,lkey,atime) VALUES "
+	       "(%s,%s,UNIX_TIMESTAMP())",
 	       name, long_key, long_key[5..14] );
     return (string)db->master_sql->insert_id();
   }
@@ -2380,7 +2379,7 @@ class ArgCache
       m_delete( cache, cache[id] );
       m_delete( cache, id );
     }
-    db->query( "DELETE FROM "+name+" WHERE id='"+id+"'" );
+    db->query( "DELETE FROM "+name+" WHERE id="+(int)id );
   }
 }
 

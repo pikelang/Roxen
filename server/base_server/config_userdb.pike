@@ -16,7 +16,7 @@ string query_configuration_dir();
 class ConfigIFCache
 {
   string dir;
-  Sql.sql db;
+  Sql.Sql db;
   private static inherit "newdecode";
 
   void create( string name, int|void _settings )
@@ -41,9 +41,9 @@ class ConfigIFCache
   {
     if( db )
     {
-      db->query("DELETE FROM "+dir+" where id='"+db->quote(name)+"'");
-      db->query("INSERT INTO "+dir+" VALUES ('"+db->quote(name)+"','"+
-                db->quote(encode_value(to))+"')");
+      db->query("DELETE FROM "+dir+" where id=%s", name);
+      db->query("INSERT INTO "+dir+" VALUES (%s,%s)",
+                name,encode_value(to));
       return to;
     }
 
@@ -69,8 +69,8 @@ class ConfigIFCache
   {
     if( db )
       if( catch {
-        return decode_value( db->query( "SELECT data  FROM "+dir+" where id='"
-                                        +db->quote(name)+"'")[0]->data );
+        return decode_value( db->query( "SELECT data  FROM "+dir+
+                                        " where id=%s",name)[0]->data );
       })
         return 0;
 
@@ -92,7 +92,7 @@ class ConfigIFCache
   void delete( string name )
   {
     if( db )
-      db->query("DELETE FROM "+dir+" WHERE id='"+db->quote(name)+"'");
+      db->query("DELETE FROM "+dir+" WHERE id=%s",name);
     r_rm( dir + replace( name, "/", "-" ) );
   }
 }
