@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: read_config.pike,v 1.35 2000/03/24 20:54:37 per Exp $
+// $Id: read_config.pike,v 1.36 2000/07/04 03:47:34 per Exp $
 
 #include <module.h>
 
@@ -13,21 +13,10 @@ import spider;
 
 #include <module_constants.h>
 
-mapping (string:mapping) configs = ([ ]);
 mapping (string:array(int)) config_stat_cache = ([]);
 string configuration_dir; // Set by Roxen.
 
-mapping copy_configuration(string from, string to)
-{
-  if(!configs[from]) return 0;
-#ifdef DEBUG
-  werror("Copying configuration \"%s\" to \"%s\"\n", from, to);
-#endif /* DEBUG */
-  configs[to] = copy_value( configs[from] );
-  return configs[to];
-}
-
-array (string) list_all_configurations()
+array(string) list_all_configurations()
 {
   array (string) fii;
   fii=get_dir(configuration_dir);
@@ -43,7 +32,7 @@ array (string) list_all_configurations()
     }
     return ({});
   }
-  return Array.map(Array.filter(fii, lambda(string s){
+  return map(filter(fii, lambda(string s){
     if(s=="CVS" || s=="Global_Variables" || s=="Global Variables"
        || s=="global_variables" || s=="global variables" || s[0] == '_')
       return 0;
@@ -51,133 +40,120 @@ array (string) list_all_configurations()
   }), lambda(string s) { return replace(s, "_", " "); });
 }
 
-void save_it(string cl)
+void save_it(string cl, mapping data)
 {
   Stdio.File fd;
   string f;
+
 #ifdef DEBUG_CONFIG
   werror("CONFIG: Writing configuration file for cl "+cl+"\n");
 #endif
 
   f = configuration_dir + replace(cl, " ", "_");
-  mv(f, f+"~");
-  fd = open(f, "wct");
+  fd = open(f+".new", "wct");
 
   if(!fd)
-  {
     error("Creation of configuration file failed ("+f+") "
-#if efun(strerror)
 	  " ("+strerror(errno())+")"
-#endif
 	  "\n");
-    return;
-  }
-  object config;
+
+  mixed err = catch 
+  {
+    object config;
 #if constant( roxenp )
-  config = roxenp();
-  foreach(config->configurations||({}), object c)
-    if(c->name == cl)
+    config = roxenp();
+    foreach(config->configurations||({}), object c)
+      if(c->name == cl)
+      {
+        config = c;
+        break;
+      }
+#endif
+    string data = encode_regions( data, config );
+    int num = fd->write( data );
+
+    if(num != strlen(data))
+      error("Failed to write all data to configuration file ("+f+") "
+            " ("+strerror(fd->errno())+")"
+            "\n");
+
+    config_stat_cache[cl] = fd->stat();
+
+    destruct(fd);
+
+    fd = open( f+".new", "r" );
+    
+    if(!fd)
+      error("Failed to open new config file for reading\n" );
+    
+    if( fd->read() != data )
+      error("Config file differs from expected result");
+
+    if( !mv(f+"~", f+"~2~") )
+      error("Failed to move backup config file to backup2 file\n");
+
+    if( !mv(f, f+"~") )
+      error("Failed to move current config file to backup file\n");
+
+    if( !mv(f+".new", f) )
     {
-      config = c;
-      break;
+      if( !mv( f+"~", f ) )
+        error("Failed to move new config file to current file\n"
+              "Failed to restore backup file!\n");
+      error("Failed to move new config file to current file\n");
     }
-#endif
-  string data = encode_regions( configs[ cl ], config );
-  int num;
-  catch(num = fd->write(data));
-  if(num != strlen(data))
-  {
-    error("Failed to write all data to configuration file ("+f+") "
-#if efun(strerror)
-	  " ("+strerror(fd->errno())+")"
-#endif
-	  "\n");
-  }
-  config_stat_cache[cl] = fd->stat();
-  catch(fd->close("w"));
-  destruct(fd);
-}
-
-void fix_config(mapping c);
-
-array fix_array(array c)
-{
-  int i;
-  for(i=0; i<sizeof(c); i++)
-    if(arrayp(c[i]))
-      fix_array(c[i]);
-    else if(mappingp(c[i]))
-      fix_config(c[i]);
-    else if(stringp(c[i]))
-      c[i]=replace(c[i],".lpc#", "#");
-}
-
-void fix_config(mixed c)
-{
-  mixed l;
-  if(arrayp(c)) {
-    fix_array((array)c);
     return;
-  }
-  if(!mappingp(c)) return;
-  foreach(indices(c), l)
-  {
-    if(stringp(l) && (search(l, ".lpc") != -1))
-    {
-      string n = l-".lpc";
-      c[n]=c[l];
-      m_delete(c,l);
-    }
-  }
-  foreach(values(c),l)
-  {
-    if(mappingp(l)) fix_config(l);
-    else if(arrayp(l)) fix_array(l);
-    else if (multisetp(l)) perror("Warning; illegal value of config\n");
-  }
+  };
+  if( !file_stat( f ) ) // Oups. Gone.
+    mv( f+"~", f );
+  rm( f+".new");
+  throw( err );
 }
+
 array config_is_modified(string cl)
 {
   array st = file_stat(configuration_dir + replace(cl, " ", "_"));
 
   if(st)
-    if(!config_stat_cache[cl])
+    if( !config_stat_cache[ cl ] )
       return st;
     else
       foreach( ({ 1, 3, 5, 6 }), int i)
 	if(st[i] != config_stat_cache[cl][i])
 	  return st;
 }
-private static void read_it(string cl)
+
+mapping read_it(string cl)
 {
-  if(configs[cl]) return;
-
-  Stdio.File fd;
-
   mixed err;
-  err = catch {
-    fd = open(configuration_dir + replace(cl, " ", "_"), "r");
-    if(!fd)
+  string try_read( string f )
+  {
+    Stdio.File fd;
+    err = catch
     {
-      fd = open(configuration_dir + cl, "r");
-      if(fd) rm(configuration_dir + cl);
-    }
-
-    if(!fd) {
-      configs[cl] = ([ ]);
-      m_delete(config_stat_cache, cl);
-      } else {
-      configs[cl] = decode_config_file( fd->read( 0x7fffffff ));
-      config_stat_cache[cl] = fd->stat();
-      fd->close("rw");
-      fix_config(configs[cl]);
-      destruct(fd);
-    }
+      fd = open(f, "r");
+      if( fd )
+      {
+        string data =  fd->read();
+        if( strlen( data ) )
+        {
+          config_stat_cache[cl] = fd->stat();
+          return data;
+        }
+      }
+    };
   };
-  if (err) {
-    report_error(sprintf("Failed to read configuration file for %O\n"
-			 "%s\n", cl, describe_backtrace(err)));
-  }
+
+  string base = configuration_dir + replace(cl, " ", "_");
+  foreach( ({ base, base+"~", base+"~1~" }), string attempt )
+    if( string data = try_read( attempt ) )
+      return decode_config_file( data );
+
+  if (err) 
+    report_error("Failed to read configuration file for %O\n"
+                 "%s\n", cl, describe_backtrace(err));
+  else
+    report_error( "Failed to read configuration file for %O\n", cl );
 }
 
 
@@ -192,29 +168,20 @@ void remove( string reg , object current_configuration)
   else
     cl=current_configuration->name;
 #endif
-  read_it(cl);
 
-  m_delete(configs[cl], reg);
-  save_it(cl);
+  mapping data = read_it(cl);
+  m_delete( data, reg );
+  save_it( cl, data );
 }
 
 void remove_configuration( string name )
 {
   string f;
-
-  m_delete(configs, name );
   f = configuration_dir + replace(name, " ", "_");
-  m_delete(configs, replace(name," ", "_") );
-
-  if(!file_stat( f ))   f = configuration_dir + name;
-  if(!rm(f) && file_stat(f))
-  {
-    error("Failed to remove configuration file ("+f+")! "+
-#if 0&&efun(strerror)
-	  strerror()
-#endif
-	  "\n");
-  }
+  if(!file_stat( f ))   
+    f = configuration_dir+name;
+  if( !rm(f) && file_stat(f) )
+    error("Failed to remove configuration file ("+f+")!\n");
 }
 
 void store( string reg, mapping vars, int q, object current_configuration )
@@ -229,19 +196,26 @@ void store( string reg, mapping vars, int q, object current_configuration )
   else
     cl=current_configuration->name;
 #endif
-  read_it(cl);
+  mapping data = read_it(cl);
 
   if(q)
-    configs[cl][reg] = copy_value(vars);
+    data[ reg ] = copy_value(vars);
   else
   {
     mixed var;
     m = ([ ]);
+    vars = copy_value( vars );
     foreach(indices(vars), var)
-      m[copy_value(var)] = copy_value( vars[ var ][ VAR_VALUE ] );
-    configs[cl][reg] = m;
+//       if( vars[var]->is_defaulted() )
+//         m_delete( vars, var );
+//       else
+        vars[ var ] = vars[ var ]->query();
+    if(!sizeof( vars ))
+      m_delete( data, reg );
+    else
+      data[reg] = m;
   }
-  save_it(cl);
+  save_it(cl, data);
 }
 
 
@@ -256,8 +230,5 @@ mapping(string:mixed) retrieve(string reg, object current_configuration)
   else
     cl=current_configuration->name;
 #endif
-
-  read_it(cl);
-
-  return configs[cl][reg] || ([ ]);
+  return (read_it(cl)[ reg ]) || ([]);
 }
