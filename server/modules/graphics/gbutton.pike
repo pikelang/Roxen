@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.54 2000/08/07 19:09:31 jonasw Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.55 2000/08/12 21:27:30 mast Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -724,7 +724,7 @@ class TagGButtonURL {
   }
 }
 
-class TagGButtom {
+class TagGButton {
   inherit RXML.Tag;
   constant name = "gbutton";
   RXML.Type content_type = RXML.t_text(RXML.PXml);
