@@ -1,12 +1,12 @@
 /*
- * $Id: configtablist.pike,v 1.3 1997/08/31 02:49:23 peter Exp $
+ * $Id: configtablist.pike,v 1.4 1997/09/03 07:53:37 grubba Exp $
  *
  * Makes a tab-list like the one in the config-interface.
  *
- * $Author: peter $
+ * $Author: grubba $
  */
 
-constant cvs_version="$Id: configtablist.pike,v 1.3 1997/08/31 02:49:23 peter Exp $";
+constant cvs_version="$Id: configtablist.pike,v 1.4 1997/09/03 07:53:37 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -54,9 +54,8 @@ string tag_config_tab(string t, mapping a, string contents)
   }
   m_delete(a, "selected");
 
-  img_attrs->src = QUERY(location) + dir + replace(contents,
-						   ({ "\"", "\'", "%" }),
-						   ({ "%22", "%27", "%25" }));
+  img_attrs->src = QUERY(location) + dir +
+    replace(http_encode_string(contents), "?", "%3f");
   if (a->alt) {
     img_attrs->alt = a->alt;
     m_delete(a, "alt");
