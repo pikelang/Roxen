@@ -13,7 +13,7 @@ o Added config action: Thread backtrace.
 
 o Usefull comments added to some files in base_server  :-)
 
-o Updated Pike 0.6
+o Removed Pike0.6 from the standard 1.2 dist.
 
 
 Changes since Roxen Challenger 1.2.35 Yellow
