@@ -11,7 +11,7 @@ import Parser.XML.Tree;
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_webapp",X,Y)
 // end of the locale related stuff
 
-constant cvs_version = "$Id: webapp.pike,v 2.11 2002/03/06 16:44:42 tomas Exp $";
+constant cvs_version = "$Id: webapp.pike,v 2.12 2002/03/18 13:52:39 tomas Exp $";
 
 constant thread_safe=1;
 constant module_unique = 0;
@@ -360,7 +360,7 @@ void start(int x, Configuration conf)
       
       warname = dir;
     }
-  
+
   webapp_info["webapp"] = (warname/"/")[-1];
 
   if(warname=="servlets/NONE") {
@@ -417,8 +417,103 @@ void start(int x, Configuration conf)
                                               return glob_expand(arg);
                                             } )*({ });
 
+#ifdef ENABLE_JSP
+  switch (query("jspengine"))
+  {
+    case "None":
+      break;
+
+    case "GNUJSP":
+      if (!url_to_servlet["*.jsp"])
+      {
+        codebase += glob_expand("java/lib/gnujsp/*.jar");
+
+        mapping(string:string) data = ([ ]);
+        url_to_servlet["*.jsp"] = "gnujsp_internal";
+
+#ifdef __NT__
+        string sep = ";";
+#else
+        string sep = ":";
+#endif
+        string scratchdir = warname + "/WEB-INF/jsp";
+        mkdir(scratchdir);
+        string compiler = "builtin-javac -classpath " +
+          ( ({ "%classpath%", "%scratchdir%" }) + codebase )*sep +
+          " -d %scratchdir% -deprecation %source%";
+
+        data["servlet-name"] = "gnujsp_internal";
+        data["display-name"] = "GNUJSP";
+        data["description"] = "GNUJSP is a free implementation of Sun's Java Server Pages.";
+        data["servlet-class"] = "org.gjt.jsp.JspServlet";
+        data["initparams"] = ([
+          "debug"             : query("jspdebug")?"true":"false",
+#ifdef WEBAPP_DEBUG
+          "pathdebug"         : query("jspdebug")?"true":"false",
+#else
+          "pathdebug"         : "false",
+#endif
+          "usepackages"       : "true",
+          "checkdependancies" : "true",
+          "checkclass"        : "true",
+          "keepJava"          : "false",
+          "scratchdir"        : scratchdir,
+          "compiler"          : compiler,
+        ]);
+        data["load-on-startup"] = "";
+        data["prio"] = -1;
+        servlets[data["servlet-name"]] = data;
+
+        codebase += ({ (getenv("JREHOME")||"java/jre") + "/lib/tools.jar" });
+      }
+      else
+        report_warning("A servlet mapping for *.jsp exists! GNUJSP disabled.\n");
+      break;
+
+    case "Jasper":
+      if (!url_to_servlet["*.jsp"])
+      {
+        codebase += glob_expand("java/lib/jasper/*.jar");
+
+        mapping(string:string) data = ([ ]);
+        url_to_servlet["*.jsp"] = "jasper_internal";
+
+#ifdef __NT__
+        string sep = ";";
+#else
+        string sep = ":";
+#endif
+        string scratchdir = warname + "/WEB-INF/jsp";
+        mkdir(scratchdir);
+        string classpath = codebase * sep;
+
+        data["servlet-name"] = "jasper_internal";
+        data["display-name"] = "Jasper";
+        data["description"] = "Part of Apache Tomcat";
+        data["servlet-class"] = "org.apache.jasper.servlet.JspServlet";
+        data["initparams"] = ([
+          "keepgenerated"     : "true",
+          "largefile"         : "false",
+          "mappedfile"        : "false",
+          "debug"             : query("jspdebug")?"true":"false",
+          "sendErrToClient"   : query("jspsenderrtoclient")?"true":"false",
+          "scratchdir"        : scratchdir,
+          "classpath"         : classpath,
+        ]);
+        data["load-on-startup"] = "";
+        data["prio"] = -1;
+        servlets[data["servlet-name"]] = data;
+
+        codebase += ({ (getenv("JREHOME")||"java/jre") + "/lib/tools.jar" });
+      }
+      else
+        report_warning("A servlet mapping for *.jsp exists! Jasper disabled.\n");
+      break;
+  }
+#endif // ENABLE_JSP
 
   WEBAPP_WERR(sprintf("codebase:\n%O", codebase));
+
 
   mixed exc2 = catch {
     cls_loader = Servlet.loader(codebase);
@@ -439,6 +534,9 @@ void start(int x, Configuration conf)
     // Sort the url patterns into different categories for easier lookup
     // later on
     foreach ( indices(url_to_servlet), string url) {
+      if (!servlets[url_to_servlet[url]])
+        continue;
+
       servlets[url_to_servlet[url]]->url =
         (servlets[url_to_servlet[url]]->url || ({ }) ) + ({ url });
 
@@ -865,7 +963,7 @@ int load_servlet(mapping(string:string|mapping|Servlet.servlet) servlet)
       mixed e = catch {
         WEBAPP_WERR(sprintf("Trying to initialize %s",
                             servlet["servlet-name"]));
-        servlet->servlet->init(conf_ctx, make_initparam_mapping(servlet["initparams"]));
+        servlet->servlet->init(conf_ctx, make_initparam_mapping(servlet["initparams"]), servlet["servlet-name"]);
         servlet->initialized = 1;
       };
       if (e)
@@ -902,6 +1000,15 @@ mapping(string:string|mapping|Servlet.servlet) match_anyservlet(string f, Reques
             WEBAPP_WERR("match on 'any'!!");
             if (servletmaps["any"][classname])
               ret = servlets[servletmaps["any"][classname]];
+            else if ( servlets[classname] )
+              {
+                // A new servlet mapping to an old servlet name. Setup
+                // the structures for it.
+                servlets[classname]["url"] += ({ fa[..2]*"/" });
+                ret = servlets[classname];
+
+                servletmaps["any"][classname] = classname;
+              }
             else
               {
                 // A new servlet class. Setup the structures for it.
@@ -1061,8 +1168,47 @@ int is_special( string f, RequestID id )
 
 mixed find_file( string f, RequestID id )
 {
+  string oldf = f;
   WEBAPP_WERR("Request for \""+f+"\"" +
 		  (id->misc->internal_get ? " (internal)" : ""));
+
+  string norm_f;
+
+  catch {
+    /* NOTE: NORMALIZE_PATH() may throw errors. */
+    norm_f = NORMALIZE_PATH(norm_f = decode_path(path + f));
+#if constant(system.normalize_path)
+    if (!has_prefix(norm_f, normalized_path) &&
+#ifdef __NT__
+	(norm_f+"\\" != normalized_path)
+#else /* !__NT__ */
+	(norm_f+"/" != normalized_path)
+#endif /* __NT__ */
+	) {
+      errors++;
+      report_error(LOCALE(0, "Path verification of %O failed:\n"
+			  "%O is not a prefix of %O\n"
+			  ), oldf, normalized_path, norm_f);
+      return http_low_answer(403, "<h2>File exists, but access forbidden "
+			     "by user</h2>");
+    }
+    
+    /* Adjust not_query */
+    id->not_query = mountpoint + replace(norm_f[sizeof(normalized_path)..],
+					 "\\", "/");
+    if (sizeof(oldf) && (oldf[-1] == '/')) {
+      id->not_query += "/";
+    }
+
+    /* Adjust f */
+    f = replace(norm_f[sizeof(normalized_path)..], "\\", "/");
+    if (sizeof(oldf) && (oldf[-1] == '/')) {
+      f += "/";
+    }
+#endif /* constant(system.normalize_path) */
+  };
+
+
   mapping(string:string|mapping|Servlet.servlet) servlet;
   string loc = id->misc->mountpoint = query("mountpoint");
   if (loc[-1] == '/')
@@ -1092,56 +1238,62 @@ mixed find_file( string f, RequestID id )
             id->my_fd->set_blocking();
           }
 
-          rxml_wrapper = RXMLParseWrapper(id->my_fd, id);
-          id->my_fd = rxml_wrapper;
+          if (mixed e = catch {
+            rxml_wrapper = RXMLParseWrapper(id->my_fd, id);
+            id->my_fd = rxml_wrapper;
 
 #ifdef WEBAPP_CHAINING
-          object old_fd = id->my_fd;
-          object chain_wrapper;
-          mapping(string:string|mapping|Servlet.servlet) serv;
-          int x=1;
-          do {
-            WEBAPP_WERR(sprintf("Chaining preparing: '%s'", servlet["servlet-name"]));
-            chain_wrapper = ServletChainingWrapper(old_fd, id);
-            id->my_fd = chain_wrapper;
-            servlet->servlet->service(id);
-            if (chain_wrapper->collect) {
-              serv = map_servlet_chain(chain_wrapper->content_type);
-              if (serv && serv->initialized == 1) {
-                id->data = chain_wrapper->get_data();
-                servlet = serv;
+            object old_fd = id->my_fd;
+            object chain_wrapper;
+            mapping(string:string|mapping|Servlet.servlet) serv;
+            int x=1;
+            do {
+              WEBAPP_WERR(sprintf("Chaining preparing: '%s'", servlet["servlet-name"]));
+              chain_wrapper = ServletChainingWrapper(old_fd, id);
+              id->my_fd = chain_wrapper;
+              servlet->servlet->service(id);
+              if (chain_wrapper->collect) {
+                serv = map_servlet_chain(chain_wrapper->content_type);
+                if (serv && serv->initialized == 1) {
+                  id->data = chain_wrapper->get_data();
+                  servlet = serv;
+                }
+                else
+                  x=0xffff;
               }
-              else
-                x=0xffff;
-            }
-            WEBAPP_WERR(sprintf("Chaining: x=%d, collect=%d",
-                                x, chain_wrapper->collect));
-            // Limit the chaining to 3 servlets!!
-          } while (x++<3 && chain_wrapper->collect);
+              WEBAPP_WERR(sprintf("Chaining: x=%d, collect=%d",
+                                  x, chain_wrapper->collect));
+              // Limit the chaining to 3 servlets!!
+            } while (x++<3 && chain_wrapper->collect);
 
-          if (x == 0xffff || (x>=3 && chain_wrapper->collect)) {
-            id->misc->cacheable = 5;
-            id->my_fd = org_fd;
-            return http_low_answer(500, "<title>Servlet Error - chaining failed</title>"
-                                   "<h1>Servlet Error - chaining failed</h1>"
-                                   "<h2>Location: " +
-                                   loc + f + "</h2>"
-                                   "<b>The servlet you tried to run failed "
-                                   "during chaining. Please contact the "
-                                   "server administrator about this "
-                                   "problem.</b>");
-          }
+            if (x == 0xffff || (x>=3 && chain_wrapper->collect)) {
+              id->misc->cacheable = 5;
+              id->my_fd = org_fd;
+              return http_low_answer(500, "<title>Servlet Error - chaining failed</title>"
+                                     "<h1>Servlet Error - chaining failed</h1>"
+                                     "<h2>Location: " +
+                                     loc + f + "</h2>"
+                                     "<b>The servlet you tried to run failed "
+                                     "during chaining. Please contact the "
+                                     "server administrator about this "
+                                     "problem.</b>");
+            }
 #else /* WEBAPP_CHAINING */
-          servlet->servlet->service(id);
+            servlet->servlet->service(id);
 #endif /* WEBAPP_CHAINING */
 
-          if (rxml_wrapper->collect) {
-            id->my_fd = org_fd;
-            mixed res = rxml_wrapper->get_result();
-            //WEBAPP_WERR(sprintf("res=%O", res ));
-            return res;
-          }
+            if (rxml_wrapper->collect) {
+              id->my_fd = org_fd;
+              mixed res = rxml_wrapper->get_result();
+              //WEBAPP_WERR(sprintf("res=%O", res ));
+              return res;
+            }
 
+          })
+          {
+            id->my_fd = org_fd;
+            throw(e);
+          }
         }
         
         return Roxen.http_pipe_in_progress();
@@ -1358,6 +1510,8 @@ class WARPath
 #ifdef __NT__
     value = replace( value, "\\", "/" );
 #endif
+    while (has_suffix(value, "/"))
+      value = value[..sizeof(value)-2];
     string warn = "";
     Stat s = r_file_stat( value );
     Stdio.File f = Stdio.File();
@@ -1437,6 +1591,25 @@ void create()
   defvar("parameters", "", LOCALE(22, "Parameters"), TYPE_TEXT,
 	 LOCALE(23, "Parameters for all servlets on the form "
                 "<tt><i>name</i>=<i>value</i></tt>, one per line.") );
+
+#ifdef ENABLE_JSP
+  defvar("jspengine", "None",
+         LOCALE(0, "Servlet engine"), TYPE_MULTIPLE_STRING,
+         LOCALE(0, "Select the jsp engine that should handle files with "
+                "the .jsp extension."),
+         ({ "None", "GNUJSP", "Jasper" })
+         );
+
+  defvar("jspdebug", 0, LOCALE(0, "JSP Debug"), TYPE_FLAG|VAR_MORE,
+	 LOCALE(0, "Enable debug output from the JSP engine."), 0,
+         lambda() { return query("jspengine") == "None"; } );
+
+  defvar("jspsenderrtoclient", 0, LOCALE(0, "Send Errors To Client"),
+         TYPE_FLAG|VAR_MORE,
+	 LOCALE(0, "Return jsp compilation errors to the client."), 0,
+         lambda() { return query("jspengine") != "Jasper"; } );
+
+#endif // ENABLE_JSP
 
   defvar("anyservlet", 0, LOCALE(24, "Access any servlet"), TYPE_FLAG|VAR_MORE,
 	 LOCALE(25, "Use a servlet mapping that mounts any servlet onto "
