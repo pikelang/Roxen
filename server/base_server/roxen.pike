@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.391 2000/01/17 16:48:09 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.392 2000/01/18 04:42:31 nilsson Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -3121,10 +3121,28 @@ array(int) parse_since(string date)
   return ({ t, length });
 }
 
-object configuration_auth;
+array configuration_auth=({});
 mapping configuration_perm=([]);
 void add_permission(string name, mapping desc) {
   configuration_perm[name]=desc;
-  if(objectp(configuration_auth))
-    configuration_auth->add_permission(name, desc);
+  foreach(configuration_auth, RoxenModule o)
+    o->add_permission(name, desc);
+}
+void add_configuration_auth(RoxenModule o) {
+  configuration_auth-=({o});
+  configuration_auth+=({o});
+}
+string configuration_authenticate(RequestID id, string what) {
+  if(!id->realauth) return 0;
+  array auth;
+  RoxenModule o;
+  foreach(configuration_auth, o) {
+    auth=o->auth( ({"",id->realauth}), id);
+    if(auth) break;
+  }
+  if(!auth) return 0;
+  if(!auth[0]) return 0;
+  if(o->find_admin_user( auth[1] )->auth(what))
+    return auth[1];
+  return 0;
 }
