@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.53 1999/05/22 23:42:43 mast Exp $
+# $Id: Makefile,v 1.54 1999/06/21 15:13:40 marcus Exp $
 #
 # Bootstrap Makefile
 #
@@ -168,7 +168,7 @@ dist_clean :
 
 keep_dbapi:
 	@echo "Keeping DBAPI..."
-	@dirs=`find pike -type d -print|egrep 'Oracle|Odbc'`; \
+	@dirs=`find pike -type d -print|egrep 'Oracle'`; \
 	files=`find pike -type f -print|grep '/rsql'`; \
 	if test "x$dirs" = "x"; then \
 	  echo "DBAPI already censored."; \
@@ -214,7 +214,7 @@ censor_dbapi :
 	@echo "Censoring the DBAPI..."
 	@for d in pike/*/src/. pike/src/.; do \
 	  if test -d $$d ; then \
-	    rm -rf $$d/modules/Oracle $$d/modules/Odbc; \
+	    rm -rf $$d/modules/Oracle; \
 	  else : ; fi; \
 	done
 	@for d in pike/*/bin/. pike/bin/. pike/*/lib/modules/Sql.pmod/. pike/lib/modules/Sql.pmod/.; do \
