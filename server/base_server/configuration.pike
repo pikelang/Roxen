@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.498 2002/01/29 21:17:34 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.499 2002/02/26 13:25:28 wellhard Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3493,8 +3493,14 @@ also set 'URLs'."));
 		 "wanted, and this list contains the default value of 404.inc,"
 		 " these files will be searched for, in this order:</p><br /> "
 		 " /foo/bar/404.inc, /foo/404.inc and /404.inc." ) );
-		 
 
+  defvar("license",
+	 License.Variable("../license/", VAR_NO_DEFAULT,
+			  DLOCALE(0, "License file"),
+			  DLOCALE(0, "The license file for this configuration."),
+			  this_object()));
+  
+  
 
   class NoSuchFileOverride
   {
