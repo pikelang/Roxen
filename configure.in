@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.29 1997/10/05 05:51:02 grubba Exp $
+# $Id: configure.in,v 1.30 1997/10/05 06:13:11 grubba Exp $
 #
 
 prefix=$PWD
@@ -269,6 +269,7 @@ if test $cflags_is_set = no; then
   # AC_SYS_OS_COMPILER_FLAG(IRIX,-sopt,sopt)
   AC_SYS_OS_COMPILER_FLAG(IRIX,-n32,n32)
   if [ x$roxen_cv_option_n32 = xyes ]; then
+    echo Adding -n32 to LDFLAGS.
     LDFLAGS="$LDFLAGS -n32"
   else
     :
