@@ -22,7 +22,7 @@
      <true/>
    </if>
 </if>
-<if variable='var.error is error'><cset variable=var.error><translate id="">Illegal site name</translate></cset><set variable=var.go value='1'></if>
+<if variable='var.error is error'><cset variable=var.error><translate id="296">Illegal site name</translate></cset><set variable=var.go value='1'></if>
 <if not variable='form.name'><set variable=var.go value='1'></if>
 <if variable='var.go'>
 
@@ -43,20 +43,16 @@ as the name of its log file directory.
 </translate>
 </blockquote>
 
-<translate id="202" variable="var.cancel_txt">Cancel</translate>
 <translate id="248" variable="var.create_txt">Create new site</translate>
 <translate id="271" variable="var.template_txt">with template</translate>
 
 <submit-gbutton2 width='230' align_icon='right' icon_src='/internal-roxen-next'
 name=new_with_template>&var.create_txt; &var.template_txt;</submit-gbutton2>
-
+<br />
 <submit-gbutton2 width='230' align_icon='right' icon_src='/internal-roxen-next'
 name=new>&var.create_txt;</submit-gbutton2>
-
-<a href="">
-  <gbutton width='230' align_icon='right' 
-           icon_src='/internal-roxen-next'>&var.cancel_txt;</gbutton>
-</a>
+<br />
+<cf-cancel/>
 
 </if>
 
