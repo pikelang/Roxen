@@ -1,3 +1,6 @@
+string cvs_version = "$Id: roxenloader.pike,v 1.3 1996/11/27 14:10:28 per Exp $";
+#include <roxen.h>
+
 object roxen;
 function nwrite;
 
@@ -108,6 +111,7 @@ static private void initiate_cache()
 void load_roxen()
 {
   roxen = ((program)"roxen")();
+  perror("Roxen version "+roxen->version+"\n");
   nwrite = roxen->nwrite;
 }
 
@@ -141,6 +145,7 @@ void mkdirhier(string from)
 
 void main(mixed ... args)
 {
+  perror("Roxen loader version "+cvs_version+"\n");
   add_constant("roxenp", lambda() { return roxen; });
   add_constant("report_debug", report_debug);
   add_constant("report_error", report_error);

@@ -1,3 +1,4 @@
+string cvs_version = "$Id: roxen.pike,v 1.9 1996/11/27 14:12:35 per Exp $";
 #define IN_SPIDER
 #include <module.h>
 #include <variables.h>
