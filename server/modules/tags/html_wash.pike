@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: html_wash.pike,v 1.19 2001/09/19 10:53:21 jhs Exp $";
+constant cvs_version = "$Id: html_wash.pike,v 1.20 2001/09/19 12:23:34 jhs Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: HTML washer";
@@ -271,7 +271,6 @@ Some more text to the same paragraph.
 
 <ex-src><wash-html unparagraphify='1'>
 <p>A Paragraph</p>
-
 <p>Another paragraph.
 Some more text to the same paragraph.</p>
 </wash-html></ex-src>
