@@ -13,8 +13,11 @@ se till att x-texten inte är för lång.
 se till att den inte är för hög.
 -"- y-texten
 
-Grind!
+%Grind!
 
 
 I create_graph:
 Se till att antalet siffror på axlarna kan varieras.
+
+Default-färger för bars och graph
+
