@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997-2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.97 2002/02/15 18:08:59 mast Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.98 2002/04/24 14:07:04 mast Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -145,9 +145,9 @@ array|object do_sql_query(mapping args, RequestID id,
       RXML.run_error( (string)LOCALE(9,"Cannot find the module %s"),
 		      args->module );
 
-    if( catch( con = module->get_my_sql( ro ) ) )
+    if( error = catch( con = module->get_my_sql( ro ) ) )
       RXML.run_error(LOCALE(3,"Couldn't connect to SQL server")+
-		     ": "+error[0]+"\n");
+		     ": "+ describe_error (error) +"\n");
       
     if( catch
     {
@@ -173,7 +173,7 @@ array|object do_sql_query(mapping args, RequestID id,
 					 my_configuration(), ro));
     if( !con )
       RXML.run_error(LOCALE(3,"Couldn't connect to SQL server")+
-		     (error?": "+error[0]:"")+"\n");
+		     (error?": "+ describe_error (error) :"")+"\n");
 
     if( catch(result = (big_query?con->big_query:con->query)(args->query)) )
     {
