@@ -1,4 +1,4 @@
-# $Id: extensions,v 1.10 1997/06/10 21:36:04 grubba Exp $
+# $Id: extensions,v 1.11 1997/06/11 11:12:55 grubba Exp $
 
 aif	audio/x-aiff
 aifc	audio/x-aiff
@@ -57,8 +57,9 @@ mpe	video/mpeg
 mpeg	video/mpeg
 mpg	video/mpeg
 qt	video/quicktime
-viv     video/vnd.vivo 
-vivo    video/vnd.vivo 
+viv     video/vnd.vivo
+vivo    video/vnd.vivo
+vos	video/vosaic
 
 c	text/x-c-code
 cc	text/x-c++-code
@@ -95,6 +96,8 @@ cpio	application/x-cpio
 csh	application/x-csh
 dll	application/octet-stream
 dnt     application/donut
+# Too general
+# doc	application/msword
 donut   application/donut
 drv	application/octet-stream
 dvi	application/x-dvi
@@ -123,7 +126,12 @@ nc	application/x-netcdf
 oda	application/oda
 pdf	application/pdf
 pl	application/x-perl
+pot	application/mspowerpoint
+ppt	application/mspowerpoint
+ppz	application/mspowerpoint
+pps	application/mspowerpoint
 ps	application/postscript
+quake	application/x-qplug-plugin
 roff	application/x-troff
 rtf	application/rtf
 sh	application/x-sh
