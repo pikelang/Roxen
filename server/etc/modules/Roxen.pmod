@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.45 2000/11/02 08:30:12 per Exp $
+ * $Id: Roxen.pmod,v 1.46 2000/11/02 17:10:23 per Exp $
  *
  * Various helper functions.
  *
@@ -7,6 +7,7 @@
  */
 #include <config.h>
 #include <version.h>
+#include <module.h>
 inherit "roxenlib";
 
 // Low-level C-roxen optimization functions.
@@ -957,6 +958,212 @@ RXML.Scope scope_roxen=ScopeRoxen();
 RXML.Scope scope_page=ScopePage();
 RXML.Scope scope_cookie=ScopeCookie();
 
+class ScopeModVar
+{
+  class Modules( mapping module, string sname )
+  {
+    class ModVars( RoxenModule mod ) 
+    {
+      class Var(object var )
+      {
+	inherit RXML.Value;
+	mixed cast( string type )
+	{
+	  switch( type )
+	  {
+	    case "string": return (string)var->query();
+	    case "int": return (int)var->query();
+	    case "float": return (float)var->query();
+	    case "array": return (array)var->query();
+	  }
+	}
+
+
+    	mixed rxml_var_eval( RXML.Context ctx, string vn, string scp,
+			    void|RXML.Type type )
+	{
+	  mixed res = var->query();
+	  if( type )
+	    res = type->encode( res );
+	  return res;
+	}
+      }
+
+      mixed cast( string type )
+      {
+	switch( type )
+	{
+	  case "string":
+	    return roxenp()->find_module( sname ) ?
+	      roxenp()->find_module( sname )->get_name() : sname;
+	}
+      }
+
+      array _values()
+      {
+	return map( _indices(), `[] );
+      }
+
+      array _indices()
+      {
+	mapping m = mod->getvars();
+	return sort( filter( indices(m),
+			     lambda(string n) {
+			       return m[n]->get_flags()&VAR_PUBLIC;
+			     } ) );
+      }
+
+
+      mixed `[]( string what )
+      {
+	object var;
+	if( (var = mod->getvar( what )) )
+	{
+	  if( (var->get_flags() & VAR_PUBLIC) )
+	    return Var( var );
+	  else
+	    RXML.parse_error("The variable "+what+" is not public\n");
+	} else
+	  RXML.parse_error("The variable "+what+" does not exist\n");
+      }
+    }
+
+    mixed cast( string type )
+    {
+      switch( type )
+      {
+	case "string":
+	  return roxenp()->find_module( sname ) ?
+	    roxenp()->find_module( sname )->get_name() : sname;
+      }
+    }
+
+    array _values()
+    {
+      return map( _indices(), `[] );
+    }
+
+    array _indices()
+    {
+      return sort(indices( module ));
+    }
+
+    
+    mixed `[]( string what )
+    {
+      mixed mod;
+      if( (mod = (int)what) )
+	if( (mod = module[ mod-1 ]) )
+	  return ModVars( module[mod-1] );
+	else
+	  RXML.parse_error("The module copy #"+mod+
+			   " does not exist for this module\n");
+      return ModVars( values( module )[0] )[ what ];
+    }
+  }
+  
+  mixed `[]( string what )
+  {
+    if( what == "site" )
+      return Modules( ([ 0:RXML.get_context()->id->conf ]), "site" );
+    if( what == "global" )
+      return Modules( ([ 0:roxenp() ]), "roxen" );
+    if( !RXML.get_context()->id->conf->modules[ what ] )
+      RXML.parse_error("The module "+what+" does not exist\n");
+    return Modules( RXML.get_context()->id->conf->modules[ what ], what );
+  }
+
+  array _values(  )
+  {
+    return map( _indices(), `[] );
+  }
+
+  array _indices()
+  {
+    return ({ "site" }) +
+      sort(indices(RXML.get_context()->id->conf->modules));
+  }
+}
+
+class FormScope( mapping variables )
+{
+  inherit RXML.Scope;
+  class AVal( array var, string name )
+  {
+    mixed cast( string type )
+    {
+      switch( type )
+      {
+	case "string":
+	  return var*"\0";
+      }
+    }
+
+    array _indices()
+    {
+      return indices( variables );
+    }
+    
+    array _values()
+    {
+      return map( _indices(), `[] );
+    }
+
+    mixed `[]=( string index, mixed newval )
+    {
+      mixed res;
+      if( int ind = (int)index )
+        if( (ind > sizeof( var ))
+	    || ((ind < 0) && (-ind > sizeof( var ) )) )
+	  RXML.parse_error( "Array not big enough for index %d.\n", ind );
+	else if( ind < 0 )
+          var[ind] = to;
+	else
+	  var[ind-1] = to;
+      else
+	RXML.parse_error( "Cannot index array with %O\n", ind );
+      RXML.get_context()->id->variables[name] = ((array(string))var)*"\0";
+      return to;
+    }
+
+    mixed `[]( string index )
+    {
+      if( int ind = (int)index )
+	if( (ind > sizeof( var ))
+	    || ((ind < 0) && (-ind > sizeof( var ) )) )
+	  RXML.parse_error( "Array not big enough for index %d.\n", ind );
+	else if( ind < 0 )
+	  return var[ind];
+	else
+	  return var[ind-1];
+      else
+	RXML.parse_error( "Cannot index array with %O\n", ind );
+    }
+  }
+
+  mixed `[]( string what )
+  {
+    mixed q = variables[ what ];
+    if(!q) return q;
+    q /= "\0";
+    if( sizeof( q ) == 1 )
+      return q[0];
+    return AVal( q, what );
+  }
+
+  array _values(  )
+  {
+    return map( _indices(), `[] );
+  }
+
+  array _indices()
+  {
+    return indices( variables );
+  }
+}
+
+ScopeModVar scope_modvar = ScopeModVar();
+
 RXML.TagSet entities_tag_set = class
 // This tag set always has the lowest priority.
 {
@@ -967,7 +1174,8 @@ RXML.TagSet entities_tag_set = class
     c->id->misc->scope_page=([]);
     c->add_scope("page",scope_page);
     c->add_scope("cookie", scope_cookie);
-    c->add_scope("form", c->id->variables);
+    c->add_scope("modvar", scope_modvar);
+    c->add_scope("form", FormScope( c->id->variables) );
     c->add_scope("client", c->id->client_var);
     c->add_scope("var", ([]) );
   }
