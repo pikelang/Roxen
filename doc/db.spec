@@ -1,4 +1,4 @@
-# $Id: db.spec,v 1.32 1998/09/20 23:25:27 grubba Exp $
+# $Id: db.spec,v 1.33 1998/09/22 19:51:37 wellhard Exp $
 
 drop table mail_misc;
 drop table user_misc;
@@ -122,7 +122,8 @@ create table customers (
              password                varchar(64) not null,
              name                    varchar(255) not null,
              registration_date       timestamp,
-             template_scheme_id      int not null default 1
+             template_scheme_id      int not null,
+             UNIQUE(template_scheme_id)
      );
 
 create table dns (
@@ -148,76 +149,87 @@ create table features_list (
 # AutoWeb
 
 # Template wizards
-create table template_wizards (
-             id                      int auto_increment primary key,
-             name                    varchar(64),
-             title                   varchar(255),
-             help                    blob,
-             category                varchar(8)  # tmpl/nav
+CREATE TABLE template_wizards (
+             id                      INT NOT NULL AUTO_INCREMENT,
+             name                    VARCHAR(64) NOT NULL,
+             title                   VARCHAR(255) NOT NULL,
+             help                    BLOB,
+             category                VARCHAR(8) NOT NULL,  # tmpl/nav
+             PRIMARY KEY(id)
      );
 
 # Tempate wizards pages
-create table template_wizards_pages (
-             id                      int auto_increment primary key,
-             name                    varchar(64),
-             title                   varchar(255),
-             wizard_id               int,
-             help                    blob,
-             example_html            blob
+CREATE TABLE template_wizards_pages (
+             id                      INT NOT NULL AUTO_INCREMENT,
+             name                    VARCHAR(64) NOT NULL,
+             title                   VARCHAR(255),
+             wizard_id               INT NOT NULL,
+             help                    BLOB,
+             example_html            BLOB,
+             PRIMARY KEY(id)
      );
 
 # Template variables
-create table template_vars (
-             id                      int auto_increment primary key,
-             name                    varchar(64) not null,
-             title                   varchar(255),
-             page_id                 int not null,
-             help                    blob,
-             type                    varchar(64), # font/color/image/select
-             option_group_id         int
+CREATE TABLE template_vars (
+             id                      INT NOT NULL AUTO_INCREMENT,
+             name                    VARCHAR(64) NOT NULL,
+             title                   VARCHAR(255) NOT NULL,
+             page_id                 INT NOT NULL,
+             help                    BLOB,
+             type                    VARCHAR(64) NOT NULL,
+             option_group_id         INT,
+             PRIMARY KEY(id)
      );
 
 # Template variables option groups
-create table template_option_groups (
-             id                      int auto_increment primary key,
-             name                    varchar(64) not null
+CREATE TABLE template_option_groups (
+             id                      INT NOT NULL AUTO_INCREMENT,
+             name                    VARCHAR(64) NOT NULL,
+             PRIMARY KEY(id)
      );
 
 # Template variables options
-create table template_options (
-             id                      int auto_increment primary key,
-             option_group_id         int not null,
-             name                    varchar(255),
-             value                   blob
+CREATE TABLE template_options (
+             id                      INT NOT NULL AUTO_INCREMENT,
+             option_group_id         INT NOT NULL,
+             name                    VARCHAR(255) NOT NULL,
+             value                   BLOB,
+             PRIMARY KEY(id)
      );
 
 # Template schemes
-create table template_schemes (
-             id                      int auto_increment primary key,
-             name                    varchar(64),
-             description             blob
+CREATE TABLE template_schemes (
+             id                      INT NOT NULL AUTO_INCREMENT,
+             name                    VARCHAR(64) NOT NULL,
+             description             BLOB,
+             PRIMARY KEY(id)
      );
 
 # Template schemes variables
-create table template_schemes_vars (
-             id                      int auto_increment primary key,
-             scheme_id               int,
-             variable_id             int,
-             value                   blob
+CREATE TABLE template_schemes_vars (
+             id                      INT NOT NULL AUTO_INCREMENT,
+             scheme_id               INT NOT NULL,
+             variable_id             INT NOT NULL,
+             value                   BLOB,
+             PRIMARY KEY(id),
+             UNIQUE(scheme_id, variable_id)
      );
 
 # Customers schemes
 create table customers_schemes (
-             id                      int auto_increment primary key,
-             customer_id             int,
-             name                    varchar(64),
-             description             blob
+             id                      INT NOT NULL AUTO_INCREMENT,
+             customer_id             INT,
+             name                    VARCHAR(64) NOT NULL,
+             description             BLOB,
+             PRIMARY KEY(id)
      );
 
 # Customers schemes variables
-create table customers_schemes_vars (
-             id                      int auto_increment primary key,
-             scheme_id               int,
-             variable_id             int,
-             value                   blob
+CREATE TABLE customers_schemes_vars (
+             id                      INT NOT NULL AUTO_INCREMENT,
+             scheme_id               INT NOT NULL,
+             variable_id             INT NOT NULL,
+             value                   BLOB,
+             PRIMARY KEY(id),
+             UNIQUE(scheme_id, variable_id)
      );
