@@ -9,7 +9,10 @@ inherit "language";
 
 //<locale-token project="roxen_config"> LOCALE </locale-token>
 //<locale-token project="roxen_config"> SLOCALE </locale-token>
-#define LOCALE(X,Y)	_STR_LOCALE("roxen_config",X,Y)
+static inline string GETLOCLANG() {
+  return roxenp()->locale->get();
+}
+#define LOCALE(X,Y)	_DEF_LOCALE("roxen_config",X,Y)
 #define SLOCALE(X,Y)	_STR_LOCALE("roxen_config",X,Y)
 string query_configuration_dir();
 
@@ -165,9 +168,9 @@ class ConfigurationSettings
                     "compact format suitable for servers with many sites." ));
 
     defvar( "charset", "utf-8", 
-            LOCALE(0,"Page charset"),
+            LOCALE(229,"Page charset"),
             TYPE_STRING_LIST,
-            LOCALE(0,"The charset to use when rendering configuration "
+            LOCALE(230,"The charset to use when rendering configuration "
                    "interface pages."),
             ({
               "utf-8",
