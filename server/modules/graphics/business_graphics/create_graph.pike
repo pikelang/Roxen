@@ -540,113 +540,113 @@ mapping set_legend_size(mapping diagram_data)
 	throw( ({"Very bad error while trying to resize the legendfonts!\n",
 		 backtrace()}));
       
-
-  if (diagram_data["legend_texts"])
-    {
-      texts=allocate(sizeof(diagram_data["legend_texts"]));
-      plupps=allocate(sizeof(diagram_data["legend_texts"]));
       
-      notext=get_font("avant_garde",diagram_data["legendfontsize"], 0, 0, 
-			     "left",0,0);
-
-      j=sizeof(texts);
-      if (!diagram_data["legendcolor"])
-	diagram_data["legendcolor"]=diagram_data["bgcolor"];
-      for(int i=0; i<j; i++)
-	if (diagram_data["legend_texts"][i] && (sizeof(diagram_data["legend_texts"][i])))
-	  texts[i]=notext->write(diagram_data["legend_texts"][i])
-	    ->scale(0,diagram_data["legendfontsize"])
-;
-      	else
-	  texts[i]=
-	    image(diagram_data["legendfontsize"],diagram_data["legendfontsize"]);
-
-
-      xmax=0, ymax=0;
-  
-      foreach(texts, object img)
+      if (diagram_data["legend_texts"])
 	{
-	  if (img->ysize()>ymax) 
-	    ymax=img->ysize();
-	}
-      foreach(texts, object img)
-	{
-	  if (img->xsize()>xmax) 
-	    xmax=img->xsize(); 
-	}
-      
-      //Skapa strecket för graph/boxen för bars.
-      if ((diagram_data["type"]=="graph") ||
-	  (diagram_data["type"]=="bars") ||
-	  (diagram_data["type"]=="sumbars") ||
-	  (diagram_data["type"]=="pie"))
-	for(int i=0; i<j; i++)
-	  {
-	    plupps[i]=image(diagram_data["legendfontsize"],diagram_data["legendfontsize"]);
-
-	    plupps[i]->setcolor(255,255,255);
-	    if ((diagram_data["linewidth"]*1.5<(float)diagram_data["legendfontsize"])&&
-		(diagram_data["subtype"]=="line")&&(diagram_data["drawtype"]!="level"))
-	      plupps[i]->polygone(make_polygon_from_line(diagram_data["linewidth"], 
-							 ({
-							   (float)(diagram_data["linewidth"]/2+1),
-							   (float)(plupps[i]->ysize()-
-								   diagram_data["linewidth"]/2-2),
-							   (float)(plupps[i]->xsize()-
-								   diagram_data["linewidth"]/2-2),
-							   (float)(diagram_data["linewidth"]/2+1)
-							 }), 
-							 1, 1)[0]);
+	  texts=allocate(sizeof(diagram_data["legend_texts"]));
+	  plupps=allocate(sizeof(diagram_data["legend_texts"]));
+	  
+	  notext=get_font("avant_garde",diagram_data["legendfontsize"], 0, 0, 
+			  "left",0,0);
+	  
+	  j=sizeof(texts);
+	  if (!diagram_data["legendcolor"])
+	    diagram_data["legendcolor"]=diagram_data["bgcolor"];
+	  for(int i=0; i<j; i++)
+	    if (diagram_data["legend_texts"][i] && (sizeof(diagram_data["legend_texts"][i])))
+	      texts[i]=notext->write(diagram_data["legend_texts"][i])
+		->scale(0,diagram_data["legendfontsize"])
+		;
 	    else
+	      texts[i]=
+		image(diagram_data["legendfontsize"],diagram_data["legendfontsize"]);
+	  
+	  
+	  xmax=0, ymax=0;
+	  
+	  foreach(texts, object img)
+	    {
+	      if (img->ysize()>ymax) 
+		ymax=img->ysize();
+	    }
+	  foreach(texts, object img)
+	    {
+	      if (img->xsize()>xmax) 
+		xmax=img->xsize(); 
+	    }
+	  
+	  //Skapa strecket för graph/boxen för bars.
+	  if ((diagram_data["type"]=="graph") ||
+	      (diagram_data["type"]=="bars") ||
+	      (diagram_data["type"]=="sumbars") ||
+	      (diagram_data["type"]=="pie"))
+	    for(int i=0; i<j; i++)
 	      {
-	      plupps[i]->box(1,
-			     1,
-			     plupps[i]->xsize()-2,
-			     plupps[i]->ysize()-2
-			     
-			     );
+		plupps[i]=image(diagram_data["legendfontsize"],diagram_data["legendfontsize"]);
+		
+		plupps[i]->setcolor(255,255,255);
+		if ((diagram_data["linewidth"]*1.5<(float)diagram_data["legendfontsize"])&&
+		    (diagram_data["subtype"]=="line")&&(diagram_data["drawtype"]!="level"))
+		  plupps[i]->polygone(make_polygon_from_line(diagram_data["linewidth"], 
+							     ({
+							       (float)(diagram_data["linewidth"]/2+1),
+							       (float)(plupps[i]->ysize()-
+								       diagram_data["linewidth"]/2-2),
+							       (float)(plupps[i]->xsize()-
+								       diagram_data["linewidth"]/2-2),
+							       (float)(diagram_data["linewidth"]/2+1)
+							     }), 
+							     1, 1)[0]);
+		else
+		  {
+		    plupps[i]->box(1,
+				   1,
+				   plupps[i]->xsize()-2,
+				   plupps[i]->ysize()-2
+				   
+				   );
+		  }
 	      }
-	  }
-      else
-	throw( ({"\""+diagram_data["type"]+"\" is an unknown graph type!\n",
-		 backtrace()}));
-
-      //Ta redapå hur många kolumner vi kan ha:
-      b;
-      columnnr=(diagram_data["image"]->xsize()-4)/
-	(b=xmax+2*diagram_data["legendfontsize"]);
-      
-      if (columnnr==0)
-	{
-	  int m=((diagram_data["image"]->xsize()-4)-2*diagram_data["legendfontsize"]);
-	  if (m<4) m=4;
-	  for(int i=0; i<sizeof(texts); i++)
-	    if (texts[i]->xsize()>m)
-	      {
-		texts[i]=
-		  texts[i]->scale((int)m,0);
-		//write("x: "+texts[i]->xsize()+"\n");
-		//write("y: "+texts[i]->ysize()+"\n");
-	      }
-	  columnnr=1;
-	}
-
-      raws=(j+columnnr-1)/columnnr;
-      diagram_data["legend_size"]=raws*diagram_data["legendfontsize"];
-
-
-      if (diagram_data["image"]->ysize()/2>=raws*diagram_data["legendfontsize"])
-	tobig=0;
-      else
-	{
-	  tobig++;
-	  if (tobig==2)
-	    diagram_data["legendfontsize"]=diagram_data["image"]->ysize()/raws;
 	  else
-	    diagram_data["legendfontsize"]=diagram_data["image"]->ysize()/2/raws;
+	    throw( ({"\""+diagram_data["type"]+"\" is an unknown graph type!\n",
+		     backtrace()}));
+	  
+	  //Ta redapå hur många kolumner vi kan ha:
+	  b;
+	  columnnr=(diagram_data["image"]->xsize()-4)/
+	    (b=xmax+2*diagram_data["legendfontsize"]);
+	  
+	  if (columnnr==0)
+	    {
+	      int m=((diagram_data["image"]->xsize()-4)-2*diagram_data["legendfontsize"]);
+	      if (m<4) m=4;
+	      for(int i=0; i<sizeof(texts); i++)
+		if (texts[i]->xsize()>m)
+		  {
+		    texts[i]=
+		      texts[i]->scale((int)m,0);
+		    //write("x: "+texts[i]->xsize()+"\n");
+		    //write("y: "+texts[i]->ysize()+"\n");
+		  }
+	      columnnr=1;
+	    }
+	  
+	  raws=(j+columnnr-1)/columnnr;
+	  diagram_data["legend_size"]=raws*diagram_data["legendfontsize"];
+	  
+	  
+	  if (diagram_data["image"]->ysize()/2>raws*diagram_data["legendfontsize"])
+	    tobig=0;
+	  else
+	    {
+	      tobig++;
+	      if (tobig==2)
+		diagram_data["legendfontsize"]=diagram_data["image"]->ysize()/raws;
+	      else
+		diagram_data["legendfontsize"]=diagram_data["image"]->ysize()/2/raws;
+	    }
 	}
-    }
-
+      
     }
 
       //placera ut bilder och text.
@@ -1360,8 +1360,8 @@ int main(int argc, string *argv)
 		 "legend_texts":({"streck 1", "streck 2", "foo", "bar gazonk foobar illalutta!" 
 }),
 		 "labelsize":23,
-		 "xminvalue":0,
-		 "yminvalue":-1,
+		 "xminvalue":1,
+		 "yminvalue":1,
 		 "vertgrind": 1,
 		 "grindwidth": 0.5
 
