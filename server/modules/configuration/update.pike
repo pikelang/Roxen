@@ -1,5 +1,5 @@
 /*
- * $Id: update.pike,v 1.19 2000/08/30 19:24:33 nilsson Exp $
+ * $Id: update.pike,v 1.20 2000/09/03 00:40:10 nilsson Exp $
  *
  * The Roxen Update Client
  * Copyright © 2000, Roxen IS.
@@ -168,71 +168,70 @@ void set_entities(RXML.Context c)
   c->extend_scope("update", update_scope);
 }
 
-array(array) menu = ({
-  ({ "Main","" }),
+class TagUpdateShowBacktrace {
+  inherit RXML.Tag;
+  constant name = "update-show-backtrace";
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+
+  class Frame {
+    inherit RXML.Frame;
+
+    array do_return(RequestID id) {
+      if(init_error)
+      {
+	string s="<font color='darkred'><h1>Update client initialization error</h1></font>";
+	if(search(describe_backtrace(init_error), "Out-locked")!=-1)
+	{
+	  s+="<h>Possible causes:</h2>"
+	    "<ol><li>Yabu does not have permission to create/write/read its files. "
+	    "Solution: Change permissions on the relevant files.</li>"
+	    "<li> Yabu is out locked by another process. This indicates that several "
+	    "Roxen servers are running on the same files! Solution: Kill the offending "
+	    "Roxen processes.</li></ol><br/><br/>";
+	}
+    
+	s+="<h2>Backtrace:</h2><pre>"+describe_backtrace(init_error)+"</pre>";
+	id->variables->category="foo";
+	return ({ s });
+      }
+      return 0;
+    }
+  }
+}
+
+array(array) products = ({
   ({ "Products","products" }),
   ({ "Security","security" }),
   ({ "Bugfixes","bugfixes" }),
   ({ "Third party","3rdpart" }),
 });
 
+class TagEmitUpdateProducts {
+  inherit RXML.Tag;
+  constant name = "emit";
+  constant plugin_name = "update-products";
 
-string tag_update_show_backtrace(string t, mapping m, RequestID id)
-{
-  if(init_error)
-  {
-    string s="<font color='darkred'><h1>Update client initialization error</h1></font>";
-    if(search(describe_backtrace(init_error), "Out-locked")!=-1)
-    {
-      s+="<h>Possible causes:</h2>";
-      s+="<ol><li>Yabu does not have permission to create/write/read its files. Solution: Change permissions on the relevant files.</li>";
-      s+="<li> Yabu is out locked by another process. This indicates that several Roxen servers are running on the same files! Solution: Kill the offending Roxen processes.</li></ol><br/><br/>";
-    }
-    
-    s+="<h2>Backtrace:</h2><pre>"+describe_backtrace(init_error)+"</pre>";
-    id->variables->category="foo";
-    return s;
+  array(mapping(string:string)) get_dataset(mapping m, RequestID id) {
+    return map(products, lambda(array x) {
+			   return ([ "name":x[0], "cat":x[1] ]);
+			     });
   }
-  else
-    return "";
 }
 
-string tag_update_sidemenu(string t, mapping m, RequestID id)
-{
-  string ret =
-    "<gbutton href=\"update.html?update_list=1\" width=150 "
-    "bgcolor=&usr.fade1;>Update List</gbutton><br /><br />";
+class TagUpdateUninstallPackage {
+  inherit RXML.Tag;
+  constant name = "update-uninstall-package";
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
 
-  foreach(menu, array entry)
-  {
-    ret += "<gbutton width='150' ";
-    if((id->variables->category||(id->variables->uninstall||""))==entry[1])
-    {
-      ret += "bgcolor='&usr.left-selbuttonbg;' "+
-	" icon_src='&usr.selected-indicator;' ";
+  class Frame {
+    inherit RXML.Frame;
+
+    array do_return(RequestID id) {
+      if(args->package)
+	catch(installed->delete(args->package));
+      return 0;
     }
-    else
-      ret += "bgcolor='&usr.fade1;' ";
-    ret += "icon_align='left' preparse href=\"update.html?category="+
-      entry[1]+"\">"+entry[0]+"</gbutton><br />";
   }
-
-  ret += "<br /><gbutton href=\"update.html?uninstall=1\" width='150' ";
-  if(id->variables->uninstall)
-    ret += "bgcolor='&usr.left-selbuttonbg;' "+
-      " icon_src='&usr.selected-indicator;' ";
-  else
-      ret += "bgcolor='&usr.fade1;' ";
-  
-  ret+="icon_align='left'>Uninstall packages</gbutton>";
-  return ret;
-}
-
-string tag_update_uninstall_package(string t, mapping m, RequestID id)
-{
-  if(m->package)
-    catch(installed->delete(m->package));
-  return "";
 }
 
 // <update-package>...</>
