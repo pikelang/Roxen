@@ -1,6 +1,6 @@
 /* This file is executed by Pike to bootstrap Roxen on NT.
  *
- * $Id: ntroxenloader.pike,v 1.5 2000/06/29 13:20:21 noring Exp $
+ * $Id: ntroxenloader.pike,v 1.6 2000/08/09 14:50:56 mast Exp $
  */
 
 string dir;
@@ -143,9 +143,11 @@ int main(int argc, array (string) argv)
   {
     mkdir(log_dir+"/debug");
 
-    rm(log_dir+"/debug/default.10");
-    for(int i=9;i>0;i--)
-      mv(log_dir+"/debug/default."+i, log_dir+"/debug/default."+(i+1));
+    if (!opt->script) {
+      rm(log_dir+"/debug/default.10");
+      for(int i=9;i>0;i--)
+	mv(log_dir+"/debug/default."+i, log_dir+"/debug/default."+(i+1));
+    }
 
     if(fd->open(log_dir+"/debug/default.1", "wct"))
     {
@@ -173,14 +175,14 @@ int main(int argc, array (string) argv)
   call_out (write_status_file, 1);
   
   if(key) thread_create(read_from_stdin);
-
-   if(opt->script)
-     argv = opt->script;
-   else
-     argv[0] = dir+"/base_server/roxenloader.pike";
  
-   if(opt->wd)
-     cd(opt->wd);
-  
+  if(opt->wd)
+    cd(opt->wd);
+
+  if(opt->script)
+    argv = opt->script;
+  else
+    argv[0] = dir+"/base_server/roxenloader.pike";
+
   return ((program)(argv[0]))()->main(argc, argv);
 }
