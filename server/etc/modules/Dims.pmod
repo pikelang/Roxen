@@ -1,4 +1,4 @@
-//   $Id: Dims.pmod,v 1.3 1998/02/04 14:01:51 js Exp $
+//   $Id: Dims.pmod,v 1.4 1998/02/19 17:14:27 js Exp $
 //
 //   Imagedimensionreadermodule for Pike.
 //   Created by Johan Schön, <js@idonex.se>.
@@ -109,8 +109,8 @@ class dims
   
   array get_JPEG()
   {
+    werror("Dims.dims - get_JPEG \n");
     int marker;
-    f->seek(0);
     /* Expect SOI at start of file */
     if (first_marker() != M_SOI)
       return 0;
@@ -118,6 +118,7 @@ class dims
     /* Scan miscellaneous markers until we reach SOS. */
     for (;;)
     {
+      werror("Dims.dims - next_marker \n");
       marker = next_marker();
       switch (marker) {
        case M_SOF0:		/* Baseline */
@@ -170,9 +171,9 @@ class dims
   array get_GIF()
   {
     int marker;
-    f->seek(0);
+//    f->seek(0);
     if(f->read(3)!="GIF") return 0;
-    f->seek(6);
+    f->seek(f->tell()+6);
     int image_width = read_2_bytes_intel();
     int image_height = read_2_bytes_intel();
     return ({ image_width, image_height });
@@ -181,9 +182,10 @@ class dims
   array get_PNG()
   {
     int marker;
-    f->seek(1);
+    int offs=f->tell();
+    f->seek(offs+1);
     if(f->read(3)!="PNG") return 0;
-    f->seek(12);
+    f->seek(offs+12);
     if(f->read(4)!="IHDR") return 0;
     read_2_bytes();
     int image_width = read_2_bytes();
@@ -197,8 +199,8 @@ class dims
   array get(string|object fn)
   {
     if(stringp(fn))
-      f=Stdio.File(fn,"r");
-    else if(objectp(fn))
+       f=Stdio.File(fn,"r");
+     else //if(objectp(fn))
       f=fn;
     array a;
     catch {
@@ -211,6 +213,7 @@ class dims
       else
 	return 0;
     };
+    werror("Dims.dims - catch \n");
     return 0;
   }
 }
