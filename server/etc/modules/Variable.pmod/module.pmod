@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.39 2000/11/27 11:44:34 nilsson Exp $
+// $Id: module.pmod,v 1.40 2000/11/27 13:45:06 nilsson Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -330,8 +330,8 @@ class Variable
         if( q )
           add_warning( q );
         else
-          add_warning( LOCALE(327,"Internal error: Illegal sized array "
-			      "from verify_set_from_form\n") );
+          add_warning( "Internal error: Illegal sized array "
+		       "from verify_set_from_form\n" );
         return;
       }
       if( b ) 
@@ -991,8 +991,8 @@ class List
       if( q )
 	set_warning( q );
       else
-	set_warning( LOCALE(327,"Internal error: Illegal sized array "
-			    "from verify_set_from_form\n" ));
+	set_warning( "Internal error: Illegal sized array "
+		     "from verify_set_from_form\n" );
       return;
     }
     if( b ) 

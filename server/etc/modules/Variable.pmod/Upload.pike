@@ -39,8 +39,8 @@ void set_from_form( RequestID id )
       if( q )
         add_warning( q );
       else
-        add_warning( LOCALE(343,"Internal error: Illegal sized array "
-			    "from verify_set_from_form")+"\n" );
+        add_warning( "Internal error: Illegal sized array "
+		     "from verify_set_from_form\n" );
       return;
     }
     if( b ) 
