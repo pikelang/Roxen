@@ -1,7 +1,6 @@
-// string cvs_version = "$Id: disk_cache.pike,v 1.41 1999/03/05 01:29:51 grubba Exp $";
+// string cvs_version = "$Id: disk_cache.pike,v 1.42 1999/09/02 18:31:29 per Exp $";
 #include <module.h>
 #include <stat.h>
-
 
 // Still experimental
 #define CACHE_DEBUG
@@ -25,7 +24,6 @@ string file_name(string what)
   return file_name_r(what, QUERY(hash_num_dirs), hn);
 }
 
-
 /*+----------------------------------------------------------+
   | The cache stream class. Each cache stream is an instance |
   | of this class.                                           |
@@ -33,8 +31,6 @@ string file_name(string what)
 
 class CacheStream 
 {
-//   import Stdio;
-
   inherit "socket";
 
   string fname, rfile, rfiledone;
