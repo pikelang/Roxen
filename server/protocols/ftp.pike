@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.34 1997/08/15 02:02:01 grubba Exp $
+ * $Id: ftp.pike,v 1.35 1997/08/15 03:18:31 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -566,7 +566,6 @@ int open_file(string arg, int|void noport)
     if(file && file->file)
       destruct(file->file);
     file=0;
-    perror("first_modules: %O\n", conf->first_modules());
     foreach(conf->first_modules(), function funp)
       if(file = funp( this_object())) break;
     if (!file) {
@@ -919,7 +918,6 @@ void got_data(mixed fooid, string s)
 
       not_query = arg;
 
-      perror("(1)first_modules: %O\n", conf->first_modules());
       foreach(conf->first_modules(), function funp)
 	if(f = funp( this_object())) break;
       if(!f)
@@ -974,7 +972,6 @@ void got_data(mixed fooid, string s)
       auth = session_auth;
 
       not_query = arg = combine_path(cwd, arg);
-      perror("(2)first_modules: %O\n", conf->first_modules());
       foreach(conf->first_modules(), function funp)
 	if(f = funp( this_object())) break;
       if(f) dirlist = -1;
