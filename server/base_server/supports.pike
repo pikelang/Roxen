@@ -1,6 +1,6 @@
 // Handles supports
 // Copyright © 1999 - 2000, Roxen IS.
-// $Id: supports.pike,v 1.18 2000/03/14 20:30:52 wellhard Exp $
+// $Id: supports.pike,v 1.19 2000/05/08 11:58:31 nilsson Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -39,6 +39,7 @@ private array(multiset(string)|mapping(string:string)) split_supports(array(stri
 private void parse_supports_string(string what, string current_section,
 				   mapping(string:array(string)) defines)
 {
+  what-="\r";
   foreach(replace(what, "\\\n", " ")/"\n"-({""}), string line)
   {
     if(line[0] == '#')
