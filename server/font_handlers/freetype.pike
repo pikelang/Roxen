@@ -82,15 +82,33 @@ class FTFont
     return size;
   }
 
+  static mixed do_write_char( int c )
+  {
+    catch{ return face->write_char( c ); };
+    return 0;
+  }
+
   static Image.Image write_row( string text )
   {
     Image.Image res;
     int xp, ys;
-    array chars = map( (array(int))text, face->write_char );
+    array(int) tx = (array(int))text;
+    array chars = map( tx, do_write_char );
+    int i;
 
+    for( i = 0; i<sizeof( chars ); i++ )
+      if( !chars[i] )
+	tx[i] = 0;
+      else if( !tx[i] )
+	tx[i] = 20;
+
+    tx  -= ({ 0 });
+    chars  -= ({ 0 });
+
+    
     int oc;
     array kerning = ({});
-    foreach( (array(int))text, int c  )
+    foreach( tx, int c  )
     {
       if( oc )
         kerning += ({ face->get_kerning( oc, c )>>6 });
