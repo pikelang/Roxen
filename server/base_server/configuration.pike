@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.194 1999/05/20 16:07:14 kinkie Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.195 1999/05/24 08:41:19 per Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -2041,8 +2041,8 @@ public mapping(string:array(mixed)) find_dir_stat(string file, object id)
       roxen_perror(sprintf("conf->find_dir_stat(\"%s\"): url_module returned mapping:%O\n", 
 			   file, tmp));
 #endif /* MODULE_DEBUG */
-      TRACE_LEAVE(LOCALE->returned_mapping());
-      TRACE_LEAVE(LOCALE->empty_dir());
+      TRACE_LEAVE(LOCALE->returned_mapping()+sprintf("%O", tmp));
+      TRACE_LEAVE("");
       return 0;
     }
     if(objectp( tmp ))
@@ -2093,7 +2093,7 @@ public mapping(string:array(mixed)) find_dir_stat(string file, object id)
       if (c->find_dir_stat) {
 	TRACE_ENTER(LOCALE->has_find_dir_stat(), 0);
 	if (d = c->find_dir_stat(f, id)) {
-	  TRACE_ENTER(LOCALE->returned_mapping(), 0);
+          TRACE_ENTER(LOCALE->returned_mapping()+sprintf("%O", d),c);
 	  dir = d | dir;
 	  TRACE_LEAVE("");
 	}
