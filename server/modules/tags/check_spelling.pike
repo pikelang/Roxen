@@ -6,7 +6,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: check_spelling.pike,v 1.31 2004/08/12 12:29:13 noring Exp $";
+constant cvs_version = "$Id: check_spelling.pike,v 1.32 2004/09/23 15:17:47 jonasw Exp $";
 
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Tags: Spell checker";
@@ -32,7 +32,12 @@ mapping find_internal(string f, RequestID id)
 }
 
 void create() {
-  defvar("spellchecker","/usr/bin/aspell",
+  defvar("spellchecker",
+#ifdef __NT__
+	 "C:/Program Files/Aspell/bin/aspell.exe",
+#else
+	 "/usr/bin/aspell",
+#endif
 	 "Spell checker", TYPE_STRING,
          "Spell checker program to use.");
 
