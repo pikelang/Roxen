@@ -68,6 +68,12 @@ void main(int argc, array argv)
 
   string _d = f->read();
 
+  if ( !_d )
+    if(!fail)
+      _d = "HTTP/1.0 500 Internal Server Error\r\n";
+    else
+      exit( OK );
+  
   array q = _d/"\r\n\r\n";
   if( sizeof( q ) < 2 )
     exit( BADHEADERS );
