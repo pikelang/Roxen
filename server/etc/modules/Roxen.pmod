@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.117 2001/08/27 15:34:32 per Exp $
+// $Id: Roxen.pmod,v 1.118 2001/08/27 18:51:27 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -3470,9 +3470,15 @@ void trace_enter (RequestID id, string msg, object|function thing)
   if (!id->misc->trace_level) {
     id->misc->trace_id_prefix = ({"%%", "##", "§§", "**", "@@", "$$", "¤¤"})[
       all_constants()->id_trace_level_rotate_counter++ % 7];
+#ifdef ID_OBJ_DEBUG
+    report_debug ("%s%s %O: Request handled by: %O\n",
+		  id->misc->trace_id_prefix, id->misc->trace_id_prefix[..0],
+		  id, id->conf);
+#else
     report_debug ("%s%s Request handled by: %O\n",
 		  id->misc->trace_id_prefix, id->misc->trace_id_prefix[..0],
 		  id->conf);
+#endif
   }
 
   string name;
