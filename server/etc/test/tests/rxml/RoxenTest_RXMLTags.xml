@@ -1,3 +1,11 @@
+<comment>Zap the caches for the cache tests to work correctly.</comment>
+<use-module>piketag</use-module>
+<test>
+  <rxml><?pike cache.flush_memory_cache ("tag_cache"); ?></rxml>
+</test>
+
+
+<!-- ............................................................ -->
 <comment>Config image</comment>
 <test>
 <rxml><configimage src="unit"/></rxml>
