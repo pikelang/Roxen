@@ -1,6 +1,6 @@
 // Protocol support for RFC 2518
 //
-// $Id: webdav.pike,v 1.23 2004/05/10 11:44:11 grubba Exp $
+// $Id: webdav.pike,v 1.24 2004/05/10 14:57:29 grubba Exp $
 //
 // 2003-09-17 Henrik Grubbström
 
@@ -9,7 +9,7 @@ inherit "module";
 #include <module.h>
 #include <request_trace.h>
 
-constant cvs_version = "$Id: webdav.pike,v 1.23 2004/05/10 11:44:11 grubba Exp $";
+constant cvs_version = "$Id: webdav.pike,v 1.24 2004/05/10 14:57:29 grubba Exp $";
 constant thread_safe = 1;
 constant module_name = "DAV: Protocol support";
 constant module_type = MODULE_FIRST;
@@ -294,7 +294,6 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
       TRACE_LEAVE("COPY: No destination header.");
       return Roxen.http_status(400, "COPY: Missing destination header.");
     }
-    extras = ({ id->misc["new-uri"] });
     mapping(string:int(-1..1)) propertybehavior = ([]);
     if (xml_data) {
       // Mapping from href to behavior.
@@ -346,12 +345,17 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
 	}
       }
     }
-    extras += ({ propertybehavior });
+    extras = ({ id->misc["new-uri"],
+		propertybehavior,
+		id->request_headers->overwrite?
+		(lower_case(id->request_headers->overwrite)=="t"?1:-1):0,
+    });
     
     recur_func = lambda(string source, string loc, int d, RoxenModule module,
 			MultiStatus.Prefixed stat, RequestID id,
 			string destination,
-			mapping(string:int(-1..1)) behavior) {
+			mapping(string:int(-1..1)) behavior,
+			int(-1..1) overwrite) {
 		   if (!has_prefix(destination, loc)) {
 		     // FIXME: Destination in other filesystem.
 		     return 0;
@@ -360,7 +364,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
 		   destination = destination[sizeof(loc)..];
 		   mapping res =
 		     module->recurse_copy_files(source, destination, d,
-						behavior, stat, id);
+						behavior, overwrite, stat, id);
 		   if (res && ((res->error == 201) || (res->error == 204))) {
 		     empty_result = res;
 		     return 0;
