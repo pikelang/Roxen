@@ -7,8 +7,16 @@
 //  return "Hello world!\n";
 // </pike>
  
-constant cvs_version = "$Id: piketag.pike,v 2.12 2000/08/09 07:35:28 per Exp $";
+constant cvs_version = "$Id: piketag.pike,v 2.13 2000/08/09 11:12:42 per Exp $";
 constant thread_safe=1;
+
+
+#if constant(Parser.C)
+#define PARSER_C Parser.C
+#else
+#define PARSER_C Roxen.Parser.C
+#endif
+
 
 inherit "module";
 #include <module.h>
@@ -149,7 +157,7 @@ string read_roxen_file( string what, object id )
 
 
 #define PS(X) (compile_string( "mixed foo(){ return "+(X)+";}")()->foo())
-#define SPLIT(X) Parser.C.hide_whitespaces(Parser.C.tokenize(Parser.C.split(X)))
+#define SPLIT(X) PARSER_C.hide_whitespaces(PARSER_C.tokenize(PARSER_C.split(X)))
 #define OCIP( )                                                 \
       if( cip )                                                 \
       {                                                         \
@@ -175,7 +183,7 @@ string read_roxen_file( string what, object id )
           flat[i]->text = flat[i]->text[3..]+"\n";              \
         }
 
-#define R(X) Parser.C.simple_reconstitute(X)
+#define R(X) PARSER_C.simple_reconstitute(X)
 
 program my_compile_string(string s, object id, int dom, string fn)
 {
@@ -203,6 +211,7 @@ program my_compile_string(string s, object id, int dom, string fn)
     pre += "inherit ____ih_"+cnt++ + ";\n";
   }
 
+//   werror("parsed to\n%s\n", pre+R(data));
   program p = compile_string(pre+R(data), fn);
   program_cache[ s ] = p;
 
@@ -243,14 +252,14 @@ array parse_magic( string data, RequestID id, int add_md )
 
      case 'p':
        OCIP(); OCIPUP();
-       if( flat[i] == "parse" && flat[i+1] == "(")
+       if( flat[i] == "parse" )
          add_md = 0;
        break;
 
      case '.':
        OCIP(); OCIPUP();
-       if( flat[i] == "." && flat[++i] != "." ) // Parser.C in 7.0 does not
-         flat[i-1]->text = "->";   // recognize .. as a single token.
+       if( flat[i] == "." ) 
+         flat[i]->text = "->"; 
        break;
 
      case '/':
