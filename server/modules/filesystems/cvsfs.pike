@@ -5,7 +5,7 @@
  * Written by Niels Möller 1997
  */
 
-static string cvs_version = "$Id: cvsfs.pike,v 1.4 1997/02/07 23:08:45 nisse Exp $";
+static string cvs_version = "$Id: cvsfs.pike,v 1.5 1997/02/07 23:19:46 grubba Exp $";
 
 #include <module.h>
 #include <string.h>
@@ -184,17 +184,50 @@ mixed stat_file(string name, object id)
   return file_stat(name + ",v") || file_stat(name);
 }
 
+mapping(string:string|int) parse_prestate(multiset|array prestates)
+{
+  if (multisetp(prestates)) {
+    prestates = indices(prestates);
+  }
+
+  return(mkmapping(map(prestates, lambda (string s) {
+    return(lower_case((s/"=")[0]));
+  } ), map(prestates, lambda (string s) {
+    array(string) t = s/"=";
+    if (sizeof(t) > 1) {
+      return(t[1..]*"=");
+    } else {
+      return(1);
+    }
+  }
+}
+
 object|mapping|int find_file(string name, object id)
 {
+  array(string) extra_args = ({});
+  mapping(string:string|int) prestates = parse_prestates(id->prestate);
+
   werror(sprintf("find_file: Looking for '%s'\n", name));
   string fname = query("cvsroot") + cvs_module_path + "/" + name;
+
   if (cvs_module_path)
     {
       if (file_stat(fname + ",v"))
 	{
-	  object f = run_cvs(query("cvsprogram"), 0, 0,
-			     "-d", query("cvsroot"), "checkout", "-p",
-			     cvs_module_path + "/" + name);
+	  object f;
+
+	  if (prestates->log) {
+	    f = run_cvs("rlog", 0, 0, fname);
+	  } else {
+	    if (stringp(prestates->revision)) {
+	      extra_args += ({ "-r", prestates->revision });
+	    }
+
+	    f = run_cvs(query("cvsprogram"), 0, 0,
+			"-d", query("cvsroot"), "checkout", "-p",
+			@extra_args,
+			cvs_module_path + "/" + name);
+	  }
 	  if (f)
 	    accesses++;
 	  return f;
