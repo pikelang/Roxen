@@ -9,6 +9,17 @@ all:	extern pike
 	@(cd extern;$(MAKE) all;cd ..)
 	@(cd pike/src;$(MAKE);cd ..)
 
+depend:
+	@(cd pike/src;$(MAKE) depend)
+	echo "You need to run configure once again."
+
+verify:
+	@(cd pike/src;$(MAKE) verify)
+
+verbose_verify:
+	@(cd pike/src;$(MAKE) verbose_verify)
+
+check: verify
 
 clean:
 	@(cd extern;$(MAKE) clean)
