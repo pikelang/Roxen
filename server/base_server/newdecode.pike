@@ -7,338 +7,122 @@
 #endif
 #endif
 #ifndef IN_INSTALL
-// string cvs_version = "$Id: newdecode.pike,v 1.11 1999/03/13 21:12:36 marcus Exp $";
+// string cvs_version = "$Id: newdecode.pike,v 1.12 1999/04/22 09:24:11 per Exp $";
 #endif
 
 #include <roxen.h>
 
+#define ENC_ADD(X)do{if(arrayp(res->res))res->res+=({(X)});else res->res=(X); return "";}while(0)
+#define SIMPLE_DECODE(X,Y) private string X(string foo, mapping m, string s, mapping res) { ENC_ADD( Y );}
 
-void parse(string s, mapping mr);
-void new_parse(string s, mapping mr);
-
-private string decode_int(string foo, mapping m, string s, mapping res)
-{
-  if(arrayp(res->res)) res->res += ({ (int)s });  else  res->res = (int)s;
-  return "";
-}
-
-private string decode_module(string foo, mapping m, string s, mapping res)
-{
-  if(arrayp(res->res)) 
-    res->res += ({ s }); 
-  else 
-    res->res = s;
-  return "";
-}
-
-
-private string decode_float(string foo, mapping m, string s, mapping res)
-{
-  if(arrayp(res->res)) res->res += ({ (float)s }); else  res->res = (float)s;
-  return "";
-}
-
-private string decode_string(string foo, mapping m, string s, mapping res)
-{
-  s = replace(s, ({ "%3e", "%3c", "%25" }), ({ ">", "<", "%" }) );
-  if(arrayp(res->res)) res->res += ({ s  });  else   res->res = s;
-  return "";
-}
+SIMPLE_DECODE(decode_int, (int)s );
+SIMPLE_DECODE(decode_module, s );
+SIMPLE_DECODE(decode_float, (float)s );
+SIMPLE_DECODE(decode_string, http_decode_string(s));
 
 private string decode_list(string foo, mapping m, string s, mapping res)
 {
   mapping myres = ([ "res":({}) ]);
-
   parse(s, myres);
-
-  if(arrayp(res->res)) 
-    res->res += ({ aggregate_multiset(@myres->res) }); 
-  else
-    res->res = aggregate_multiset(@myres->res);
-  return "";
+  ENC_ADD( mkmultiset(myres->res) );
 }
-
-
-private string new_decode_list(string foo, mapping m, string s, mapping res)
-{
-  mapping myres = ([ "res":({}) ]);
-
-  new_parse(s, myres);
-
-  if(arrayp(res->res)) 
-    res->res += ({ aggregate_multiset(@myres->res) }); 
-  else
-    res->res = aggregate_multiset(@myres->res);
-  return "";
-}
-
 
 private string decode_array(string foo, mapping m, string s, mapping res)
 {
   mapping myres = ([ "res":({}) ]);
-
   parse(s, myres); 
-
-  if(arrayp(res->res)) 
-    res->res += ({ myres->res }); 
-  else
-    res->res = myres->res;
-  return "";
+  ENC_ADD( myres->res );
 }
 
-private string new_decode_array(string foo, mapping m, string s, mapping res)
-{
-  mapping myres = ([ "res":({}) ]);
-
-  new_parse(s, myres); 
-
-  if(arrayp(res->res)) 
-    res->res += ({ myres->res }); 
-  else
-    res->res = myres->res;
-  return "";
-}
-
-
-private string new_decode_mapping(string foo, mapping m, string s, mapping res)
-{
-  mapping myres = ([ "res":({ }) ]);
-  
-  new_parse(s, myres);
-
-  if(arrayp(res->res)) 
-    res->res += ({ aggregate_mapping(@myres->res) }); 
-  else
-    res->res = aggregate_mapping(@myres->res);
-
-  return "";
-}
 
 private string decode_mapping(string foo, mapping m, string s, mapping res)
 {
   mapping myres = ([ "res":({ }) ]);
-
   parse(s, myres);
-
-  if(arrayp(res->res)) 
-    res->res += ({ aggregate_mapping(@myres->res) }); 
-  else
-    res->res = aggregate_mapping(@myres->res);
-
-  return "";
+  ENC_ADD( aggregate_mapping(@myres->res) );
 }
 
 private string decode_variable(string foo, mapping m, string s, mapping res)
 {
   mapping mr;
-
+  sscanf(s, "%*[ \n\t\r]%s", s);
+  while(s[0] == '#')
+    if(sscanf(s, "%*[^\n]\n%s", s) != 2)
+      break;
   mr = ([ "res":0 ]);
-  
   parse(s, mr);
   res[m->name] = mr->res;
-
   return "";
 }
 
-static private string strip_doc(string s)
+string name_of_module( object m, object c )
 {
-  if(s[..2]!=" \n#")
-    // No doc
-    return s;
-
-  int p=-1;
-  while((p=search(s, "\n", p+1))>=0)
-    if(p+1<sizeof(s) && s[p+1]!='#')
-      return s[p..];
-
-  // Hum.  Everything was one huge comment...
-  return "";
+  return (c && c->otomod && c->otomod[m]) || "?";
 }
-
-private string new_decode_variable(string foo, mapping m, string s,
-				   mapping res)
-{
-  mapping mr;
-
-  mr = ([ "res":0 ]);
-  
-  new_parse(strip_doc(s), mr);
-  res[m->name] = mr->res;
-
-  return "";
-}
-
-
-string name_of_module( object m )
-{
-#ifndef IN_INSTALL
-  string name;
-  mapping mod;
-  foreach(values(roxenp()->current_configuration->modules), mod)
-  {
-    if(mod->copies)
-    {
-      int i;
-      if(!zero_type(i=search(mod->copies, m)))
-	return mod->sname+"#"+i;
-    } else 
-      if(mod->enabled==m)
-	return mod->sname+"#0"; 
-  }
-  return name;
-#endif
-}
-
-
 
 void parse(string s, mapping mr)
 {
   parse_html(s, ([ ]),  
-	     (["array":decode_array, 
-	      "mapping":decode_mapping,
-	      "comment":"",
-	      "list":decode_list,
-	      "module":decode_module,
-	      "int":decode_int, 
-	      "string":decode_string, 
-	      "float":decode_float ]), mr);
-}
-
-
-void new_parse(string s, mapping mr)
-{
-  parse_html(s, ([ ]),  
-	     (["a":new_decode_array, 
-	      "map":new_decode_mapping,
-	      "comment":"",
-	      "lst":new_decode_list,
-	      "mod":decode_module,
-	      "int":decode_int, 
-	      "str":decode_string, 
+	     (["a":decode_array,  "map":decode_mapping,
+	      "lst":decode_list,  "mod":decode_module,
+	      "int":decode_int,   "str":decode_string, 
 	      "flt":decode_float ]), mr);
 }
 
 string decode_config_region(string foo, mapping mr, string s, mapping res2)
 {
   mapping res = ([ ]);
-  parse_html(s, ([]), ([ "variable":decode_variable ]), res);
+  parse_html(s, ([]), ([ "var":decode_variable ]), res);
   res2[mr->name] = res;
   return "";
-}
-
-string new_decode_config_region(string foo, mapping mr, string s, mapping res2)
-{
-  mapping res = ([ ]);
-  parse_html(s, ([]), ([ "var":new_decode_variable ]), res);
-  res2[mr->name] = res;
-  return "";
-}
-
-mixed compat_decode_value( string val )
-{
-  if(!val || !strlen(val))  return 0;
-
-  switch(val[0])
-  {
-  case '"':
-    return replace(val[1 .. strlen(val)-2], "%0A", "\n");
-      
-  case '{':
-   return Array.map(val[1 .. strlen(val)-2]/"},{", compat_decode_value);
-      
-  case '<':
-   return aggregate_multiset(Array.map(val[1 .. strlen(val)-2]/"},{", compat_decode_value));
-
-  default:
-    if(search(val,".") != -1)
-      return (float)val;
-    return (int)val;
-  }
-}
-
-
-private mapping compat_parse(string s)
-{
-  mapping res = ([ ]);
-  string current;
-  foreach(s/"\n", s) 
-  {
-    if(strlen(s))
-    {
-      switch(s[0])
-      {
-      case ';':
-	continue;
-      case '[':
-	sscanf(s, "[%s]", current);
-	res[ current ] = ([ ]);
-	break;
-      default:
-	string a, b;
-	sscanf(s, "%s=%s", a, b);
-	res[current][ a ] = compat_decode_value(b);
-      }
-    }
-  }
-  return res;
 }
 
 
 mapping decode_config_file(string s)
 {
-//  werror(sprintf("Decoding \n%s\n",s));
   mapping res = ([ ]);
   if(!sizeof(s)) return res; // Empty file..
   switch(s[0])
   {
-  case ';':
-    // Old (and stupid...) configuration file format 
-    perror("Reading very old (pre b11) configuration file format.\n");
-    return compat_parse(s);
-    break;
-   case '4': // Pre b15 configuration format. Could encode most stuff, but not
-	     // everything.
-    perror("Reading old (pre b15) configuration file format.\n");
-    parse_html(s, ([]), ([ "region":decode_config_region ]), res);
-    return res;
-   case '5': // New (binary) format. Fast and lean, but not very readable
-	     // for a human.. :-)
-    return decode_value(s[1..]); // C-function.
-   case '6': // Newer ((somewhat)readable) format. Can encode everything, _and_
-             // a mere human can edit it.
-    
-//    trace(1);
-    parse_html(s, ([]), ([ "region":new_decode_config_region ]), res);
-//    trace(0);
-//    werror(sprintf("Decoded value is: %O\n", res));
-    return res;
-   }
+   case '6': // Newer ((somewhat)readable) format.    
+     parse_html(s, ([]), ([ "region":decode_config_region ]), res);
+     return res;
+   default:
+     werror("Unknown configuration file format '"+s[0..0]+"'\n");
+     werror("Ignoring file.\n");
+  }
 }
 
-private string encode_mixed(mixed from)
-{
-  if(stringp(from))
-    return "<str>"+replace(from, ({ ">", "<", "%" }),
-			   ({ "%3e", "%3c", "%25" })) + "</str>";
-  else if(intp(from))
-    return "<int>"+from+"</int>";
-  else if(floatp(from))
-    return "<flt>"+from+"</flt>";
-  else if(arrayp(from))
-    return "\n  <a>\n    "+Array.map(from, encode_mixed)*"\n    "
-          +"\n  </a>\n";
-  else if(multisetp(from))
-    return "\n  <lst>\n    "
-      +Array.map(indices(from),encode_mixed)*"\n    "+"\n  </lst>\n";
-  else if(objectp(from)) // Only modules.
-    return "<mod>"+name_of_module(from)+"</mod>";
-  else if(mappingp(from))
+private string encode_mixed(mixed from, object c)
+{ 
+  switch(sprintf("%t", from))
   {
+   case "string":
+    return "<str>"+replace(from, ({ ">", "<" }), ({ "%3e", "%3c" })  )
+           + "</str>";
+   case "int":
+   case "mixed":
+    return "<int>"+from+"</int>";
+   case "float":
+     return "<flt>"+from+"</flt>";
+   case "array":
+    return "<a>\n    "+Array.map(from, encode_mixed, c)*"\n    "
+          +"\n  </a>\n";
+   case "multiset":
+    return "<lst>\n    "
+      +Array.map(indices(from),encode_mixed, c)*"\n    "+"\n  </lst>\n";
+   case "object":
+    return "<mod>"+name_of_module(from,c)+"</mod>";
+   case "mapping":
     string res="<map>";
     mixed i;
     foreach(indices(from), i)
-      res += "    " + encode_mixed(i) + " : " + encode_mixed(from[i])+"\n";
+      res += "    " + encode_mixed(i, c) + " : " + encode_mixed(from[i],c)+"\n";
     return res + "  </map>\n";
+   default:
+     werror("I do not know how to encode "+
+            sprintf("%t (%O)\n", from, from)+"\n");
+     return "<int>0</int>";
   }
 }
 
@@ -364,29 +148,26 @@ string encode_config_region(mapping m, string reg, object c)
   {
     string doc;
 
-    if(v[0] == '_')
+    switch(v)
     {
-      switch(v)
-      {
-       case "_comment":
-       case "_name":
-       case "_seclevels":
-         if(m[v] == "")
-           continue;
-         break;
-       case "_priority":
-         if(m[v] == 5)
-           continue;
-         break;
-       case "_sec_group":
-         if(m[v] == "user")
-           continue;
-         break;
-       case "_seclvl":
-         if(m[v] == 0)
-           continue;
-         break;
-      }
+     case "_comment":
+     case "_name":
+     case "_seclevels":
+       if(m[v] == "")
+         continue;
+       break;
+     case "_priority":
+       if(m[v] == 5)
+         continue;
+       break;
+     case "_sec_group":
+       if(m[v] == "user")
+         continue;
+       break;
+     case "_seclvl":
+       if(m[v] == 0)
+         continue;
+       break;
     }
 
     if(c && c->get_doc_for)
@@ -395,7 +176,7 @@ string encode_config_region(mapping m, string reg, object c)
       doc=("\n#   "+trim_ws(replace(sprintf("%*-=s", 74,trim_ws(doc)), "\n", "\n#    ")));
     else
       doc = "";
-    res += " <var name='"+v+"'> "+doc+"  "+encode_mixed(m[v])+"</var>\n\n";
+    res += " <var name='"+v+"'> "+doc+"  "+encode_mixed(m[v],c)+"</var>\n\n";
   }
   return res;
 }
