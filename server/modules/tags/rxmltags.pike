@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.255 2001/07/11 04:14:07 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.256 2001/07/11 14:55:28 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2170,7 +2170,7 @@ class UserTag {
     array do_return(RequestID id) {
       RXML.Context ctx = RXML_CONTEXT;
       array tagdef = ctx->misc[lookup_name];
-      if (!tagdef || !tagdef[0]) return ({propagate_tag()});
+      if (!tagdef) return ({propagate_tag()});
 
       [array(string|RXML.PCode) def, mapping defaults,
        string def_scope_name, UserTag ignored] = tagdef;
@@ -2345,9 +2345,18 @@ class TagDefine {
 	  def = ({content});
 	}
 
-	UserTag user_tag = UserTag (n, tag);
-	ctx->misc["tag\0" + n] = ({def, defaults, args->scope, user_tag});
-	ctx->add_runtime_tag(user_tag);
+	string lookup_name = "tag\0" + n;
+	array oldtagdef;
+	UserTag user_tag;
+	if ((oldtagdef = ctx->misc[lookup_name]) &&
+	    !((user_tag = oldtagdef[3])->flags & RXML.FLAG_EMPTY_ELEMENT) ==
+	    !tag)		// Redefine.
+	  ctx->misc[lookup_name] = ({def, defaults, args->scope, user_tag});
+	else {
+	  user_tag = UserTag (n, tag);
+	  ctx->misc[lookup_name] = ({def, defaults, args->scope, user_tag});
+	  ctx->add_runtime_tag(user_tag);
+	}
 	return 0;
       }
 
