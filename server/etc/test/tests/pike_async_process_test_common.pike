@@ -53,7 +53,7 @@ void run_pikescript( string p, string ... args  )
   }
 
   test = Process.create_process( ({
-    "pike",
+    getenv("PIKE"),
     combine_path( __FILE__, "../"+p ),
     http_url
   })+args );
