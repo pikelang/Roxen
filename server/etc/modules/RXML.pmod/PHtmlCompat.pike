@@ -6,11 +6,15 @@
 //!
 //! Created 2000-01-08 by Martin Stjernholm.
 //!
-//! $Id: PHtmlCompat.pike,v 1.1 2000/01/08 12:13:02 mast Exp $
+//! $Id: PHtmlCompat.pike,v 1.2 2000/01/10 21:56:09 mast Exp $
 
 #pragma strict_types
 
 inherit RXML.PHtml;
+
+constant unwind_safe = 0;
+// Used from do_parse() in rxml.pike where we recurse without support
+// for unwinding. Hence not unwind safe.
 
 #define TAG_FUNC_TYPE							\
   function(:int(1..1)|string|array)|					\
@@ -130,8 +134,9 @@ static array entity_cb (Parser.HTML ignored, string str)
 
 /*static*/ void set_cbs()
 {
-  _set_tag_callback (tagmap_tag_cb);
   ::set_cbs();
+  _set_tag_callback (tagmap_tag_cb);
+  add_quote_tag ("!--", 0);
 }
 
 this_program clone (RXML.Context ctx, RXML.Type type, RXML.TagSet tag_set)
@@ -159,6 +164,10 @@ static void create (
   }
 
   ::create (ctx, type, tag_set, orig_overridden);
+
+  // parse_html() compatibility.
+  case_insensitive_tag (1);
+  ignore_unknown (1);
 }
 
 string _sprintf() {return "RXML.PHtmlCompat";}
