@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.115 2000/02/10 03:36:11 mast Exp $
+ * $Id: rxml.pike,v 1.116 2000/02/10 04:07:55 mast Exp $
  *
  * The Roxen RXML Parser.
  *
@@ -216,7 +216,7 @@ RXML.TagSet rxml_tag_set = class
   {
     int i = search (imported, entities_tag_set);
     array(RXML.TagSet) new_imported = imported[..i-1] + imported[i+1..];
-    array(RoxenModule) new_modules = modules[..i-1] + imported[i+1..];
+    array(RoxenModule) new_modules = modules[..i-1] + modules[i+1..];
     array(int) priorities = new_modules->query ("_priority", 1);
     priorities = replace (priorities, 0, 4);
     sort (priorities, new_imported, new_modules);
@@ -235,13 +235,23 @@ RXML.TagSet rxml_tag_set = class
     return val;
   }
 
-  void create (string name, object rxml_object)
+  void create (object rxml_object)
   {
-    ::create (name);
+    ::create ("rxml_tag_set");
+
+    // Fix better names later when we know the name of the
+    // configuration.
+    call_out (lambda () {
+		name =
+		  sprintf ("rxml_tag_set,%O", rxml_object);
+		entities_tag_set->name =
+		  sprintf ("entities_tag_set,%O", rxml_object);
+	      }, 0);
+
     imported = ({entities_tag_set});
     modules = ({rxml_object});
   }
-} ("rxml_tag_set", this_object());
+} (this_object());
 
 RXML.Type default_arg_type = RXML.t_text (RXML.PEntCompat);
 
