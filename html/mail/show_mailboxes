@@ -5,6 +5,11 @@ Displaying mailbox
   <if variable="mailbox_id is #id#">
      <b>#name#</b> for <mail-userinfo>: <b>#unread#</b> unread, <b>#mail#</b> mail
     <set variable=nummail value="#mail#">
+    <set variable=_unread value="#unread#">
+     <if variable="_unread is 0"> 
+       <set variable=listall value=1>
+     </if>
+    <unset variable=_unread>
   </if>
   </list-mailboxes>
 <br>
