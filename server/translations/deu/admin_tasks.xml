@@ -795,8 +795,8 @@ ist, kann diese Auswahl die aktuell laufende Version wechseln.</t>
 </str>
 
 <str id="47">
-<o>Changing roxen version</o>
-<t>Roxen-Version wird umbenannt</t>
+<o>Shutting down and changing roxen version</o>
+<t>Herunterfahren und Roxen-Version ändern</t>
 </str>
 
 <str id="48">
@@ -910,8 +910,8 @@ ist, kann diese Auswahl die aktuell laufende Version wechseln.</t>
 </str>
 
 <str id="154">
-<o>Note that the server will be automatically restarted with the new version.</o>
-<t>Hinweis: Der Server wird automatisch neu gestartet mit der neuen Version.</t>
+<o>Note that you will have to start the new server manually because you may have to answer a few questions for the new environment file.</o>
+<t>Hinweis: Der neue Server muss manuell gestartet werden, weil möglicherweise eine Fragen zur neuen Umgebung beantwortet werden müssen</t>
 </str>
 
 <str id="155">
