@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.332 2000/08/11 19:30:26 lange Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.333 2000/08/12 21:47:26 mast Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -844,10 +844,10 @@ int|mapping check_security(function|object a, RequestID id, void|int slevel)
 	// It's probably an RXML.Tag object, and in that case we
 	// assume that the parent object is the module. FIXME: That's
 	// not necessarily true.
-	mod = function_object (object_program (a));
+	catch (mod = function_object (object_program (a)));
     else
-      mod = function_object (a);
-    if(mod->query_seclevels)
+      catch (mod = function_object (a));
+    if(mod && mod->query_seclevels)
       misc_cache[ a ] = seclevels = ({
 	mod->query_seclevels(),
 	mod->query("_seclvl"),
@@ -2251,7 +2251,10 @@ RoxenModule reload_module( string modname )
     catch( mi->update_with( nm,0 ) ); // This is sort of nessesary...   
 
     nm->report_notice(LOC_C(11, "Reloaded %s.\n"), mi->get_name());
-    destruct( old_module );
+    // It's possible e.g. in the config interface that the module
+    // being reloaded is in use for the current request, so delay it a
+    // little.
+    call_out (destruct, 2, old_module);
   }
 
   call_start_callbacks( nm, mi, modules[ (modname/"#")[0] ] );
