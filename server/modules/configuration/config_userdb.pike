@@ -2,7 +2,6 @@
 //
 
 inherit "module";
-inherit "roxenlib";
 #include <config_interface.h>
 #include <roxen.h>
 #include <module.h>
@@ -259,16 +258,17 @@ class User
       }
       m_delete( id->variables, rp );
     }
-    string set_src =  parse_rxml( "<gbutton-url font=&usr.font; width=180 preparse> &locale.save; </gbutton-url>", id );
+    string set_src =  Roxen.parse_rxml( "<gbutton-url font=&usr.font; width=180 preparse> "+SLOCALE("", "Save")+
+					" </gbutton-url>", id );
     string form = error+
 #"
 <table>
-<tr valign=top><td><pre>
-   Real name:   <input name=PPPreal_name value='"+real_name+#"'>
-    Password:   <input type=password name=PPPpassword value=''>
-       Again:   <input type=password name=PPPpassword2 value=''>
-     Crypted:   <input name=PPPc_password value='"+password+"'>  </pre></td>"
-      "<td><img src=\"/internal-roxen-unit\" height=5 /><br />\n\n";
+<tr valign=\"top\"><td><pre>
+   Real name:   <input name='PPPreal_name' value='"+real_name+#"'>
+    Password:   <input type='password' name='PPPpassword' value=''>
+       Again:   <input type='password' name='PPPpassword2' value=''>
+     Crypted:   <input name='PPPc_password' value='"+password+"'>  </pre></td>"
+      "<td><img src=\"/internal-roxen-unit\" height=\"5\" /><br />\n\n";
 
     foreach( possible_permissions, string perm )
     {
@@ -277,22 +277,22 @@ class User
         dim = 1;
       if( permissions[ perm ] )
       {
-        string s = parse_rxml( "<gbutton-url "+(dim?"dim":"")+
-                               "    icon_src=/standard/img/selected.gif "
-                               "    font=&usr.font; "
-                               "    width=180>"+permission_translations[ perm ]+
-                               "</gbutton-url>", id );
+        string s = Roxen.parse_rxml( "<gbutton-url "+(dim?"dim":"")+
+				     "    icon_src=/standard/img/selected.gif "
+				     "    font=&usr.font; "
+				     "    width=180>"+permission_translations[ perm ]+
+				     "</gbutton-url>", id );
 
         form += sprintf( "<input border=0 type=image name='PPPremove_%s'"
                          " src='%s'>\n", perm, s );
       }
       else
       {
-        string s = parse_rxml( "<gbutton-url "+(dim?"dim":"")+
-                               "    icon_src=/standard/img/unselected.gif "
-                               "    font=&usr.font; "
-                               "    width=180>"+permission_translations[ perm ]+
-                               "</gbutton-url>", id );
+        string s = Roxen.parse_rxml( "<gbutton-url "+(dim?"dim":"")+
+				     "    icon_src=/standard/img/unselected.gif "
+				     "    font=&usr.font; "
+				     "    width=180>"+permission_translations[ perm ]+
+				     "</gbutton-url>", id );
         form += sprintf( "<input border=0 type=image name='PPPadd_%s'"
                          " src='%s'>\n", perm, s );
       }
