@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.688 2001/08/05 20:06:33 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.689 2001/08/09 07:57:14 per Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -2012,7 +2012,12 @@ class ImageCache
 
   static mapping meta_cache_insert( string i, mapping what )
   {
-    return meta_cache[i] = what;
+    call_out( meta_cache_insert, 400, i, 0 );
+    if( what )
+      return meta_cache[i] = what;
+    else
+      m_delete( meta_cache, i );
+    return 0;
   }
 
   static mixed frommapp( mapping what )
@@ -2025,8 +2030,7 @@ class ImageCache
 
   static void draw( string name, RequestID id )
   {
-    mixed args = Array.map( Array.map( name/"$",
-				       argcache->lookup,
+    mixed args = Array.map( Array.map( name/"$", argcache->lookup,
 				       id->client ), frommapp);
 
     mapping meta;
@@ -2523,10 +2527,8 @@ class ImageCache
     if(!stringp(data)) return;
     meta_cache_insert( id, meta );
     string meta_data = encode_value( meta );
-    QUERY( "INSERT INTO "+name+"_data (id,meta,data) VALUES (%s,%s,%s)",
-               id,meta_data,data);
-    QUERY( "REPLACE INTO "+name+" (id,size,mtime,atime) VALUES "
-	   "(%s,%d,UNIX_TIMESTAMP(), UNIX_TIMESTAMP())", id, strlen(data) );
+    QUERY( "UPDATE "+name+" SET size=%d, atime=%d, meta=%s, data=%s WHERE id=%s",
+	   strlen(data), time(1), meta_data, data, id );
   }
 
   static mapping restore_meta( string id, RequestID rid )
@@ -2534,9 +2536,8 @@ class ImageCache
     if( meta_cache[ id ] )
       return meta_cache[ id ];
 
-    array(mapping(string:string)) q = QUERY("SELECT meta FROM "+
-					    name+"_data WHERE id='"+
-					    id+"'");
+    array(mapping(string:string)) q = QUERY("SELECT meta FROM "+name+" WHERE id=%s", id );
+
     if(!sizeof(q))
       return 0;
 
@@ -2547,8 +2548,7 @@ class ImageCache
     if (catch (m = decode_value (s)))
     {
       report_error( "Corrupt data in cache-entry "+id+".\n" );
-      QUERY( "DELETE FROM "+name+" WHERE id='"+id+"'" );
-      QUERY( "DELETE FROM "+name+"_data WHERE id='"+id+"'" );
+      QUERY( "DELETE FROM "+name+" WHERE id=%s", id);
       return 0;
     }
     return meta_cache_insert( id, m );
@@ -2559,14 +2559,13 @@ class ImageCache
   //! <pi>time()</pi>) is provided, only images with their latest access before
   //! that time are flushed.
   {
-    report_debug("Flushing "+name+" image cache.\n");
+    report_debug("Cleaning "+name+" image cache.\n");
     meta_cache = ([]);
     uid_cache  = ([]);
     rst_cache  = ([]);
     if( !age )
     {
       QUERY( "DELETE FROM "+name );
-      QUERY( "DELETE FROM "+name+"_data" );
       return;
     }
 
@@ -2575,10 +2574,9 @@ class ImageCache
 
     int q;
     while(q<sizeof(ids)) {
-      string list = ids[q..q+100] * "','";
+      string list = ids[q..q+99] * "','";
       q+=100;
-      QUERY( "DELETE FROM "+name+     " WHERE id in ('"+list+"')" );
-      QUERY( "DELETE FROM "+name+"_data WHERE id in ('"+list+"')" );
+      QUERY( "DELETE FROM "+name+" WHERE id in ('"+list+"')" );
     }
 
     catch
@@ -2586,7 +2584,6 @@ class ImageCache
       // Old versions of Mysql lacks OPTIMIZE. Not that we support
       // them, really, but it might be nice not to throw an error, at
       // least.
-      QUERY( "OPTIMIZE TABLE "+name+"_data" );
       QUERY( "OPTIMIZE TABLE "+name );
     };
 
@@ -2619,6 +2616,7 @@ class ImageCache
 
   static mapping(string:mapping) rst_cache = ([ ]);
   static mapping(string:string) uid_cache = ([ ]);
+
   static mapping restore( string id, RequestID rid )
   {
     array q;
@@ -2626,7 +2624,7 @@ class ImageCache
 
     if( zero_type(uid = uid_cache[id]) )
     {
-      q = QUERY( "SELECT uid  FROM "+name+" WHERE id=%s",id);
+      q = QUERY( "SELECT uid FROM "+name+" WHERE id=%s",id);
       if( sizeof(q) )
 	uid = q[0]->uid;
       else
@@ -2638,40 +2636,47 @@ class ImageCache
     {
       User u;
       if( !(u=rid->conf->authenticate(rid)) || (u->name() != uid ) )
-      {
-// 	werror("Did not get authentication. Expected "+uid+", got "+
-// 	       (u&&u->name())+"\n");
-// 	werror("Returning %O\n", rid->conf->authenticate_throw(rid, "User"));
-// 	werror("Headers: %O\n", rid->request_headers );
 	return rid->conf->authenticate_throw(rid, "User");
-      }
     }
+
 
     if( rst_cache[ id ] )
       return rst_cache[ id ] + ([]);
 
 
-    q = QUERY( "SELECT data FROM "+name+"_data WHERE id=%s",id);
+    q = QUERY( "SELECT data FROM "+name+" WHERE id=%s",id);
     if( sizeof(q) )
     {
-      string f = q[0]->data;
+      if( sizeof(q[0]->data) )
+      {
+	string f = q[0]->data;
 
-      // restore_meta caches. Thus, it's faster calling it than doing
-      // decode_value each time here (the metadata can be extracted in
-      // the query above).
+	// restore_meta caches. Thus, it's faster calling it than doing
+	// decode_value each time here (the metadata can be extracted in
+	// the query above).
 
-      mapping m = restore_meta( id, rid );
-      if( !m ) return 0;
+	mapping m = restore_meta( id, rid );
+	if( !m ) return 0;
 
-      m = Roxen.http_string_answer( f, m->type||("image/gif") );
+	m = Roxen.http_string_answer( f, m->type||("image/gif") );
       
-      if( strlen( f ) > 6000 )
-	return m;
-      rst_cache[ id ] = m;
-      if( sizeof( rst_cache ) > 100 )
-	rst_cache = ([ "id":m ]);
-      return rst_cache[ id ] + ([]);
+	if( strlen( f ) > 6000 )
+	  return m;
+	rst_cache[ id ] = m;
+	if( sizeof( rst_cache ) > 100 )
+	  rst_cache = ([ "id":m ]);
+	return rst_cache[ id ] + ([]);
+      }
     }
+    else
+    {
+      User u = rid->conf->authenticate(rid);
+      string uid = "";
+      if( u ) uid = u->name();
+      QUERY("INSERT INTO "+name+" (id,uid) VALUES (%s,%s)", id, uid );
+    }
+    
+    return 0;
   }
 
 
@@ -2771,10 +2776,13 @@ class ImageCache
 	a["\0u"] = user = id->misc->authenticated_user->name();
     };
     
-    if( mappingp( data ) ) {
+    if( mappingp( data ) )
+    {
       update_args( data );
       ci = argcache->store( data );
-    } else if( arrayp( data ) ) {
+    }
+    else if( arrayp( data ) )
+    {
       if( !mappingp( data[0] ) )
 	error("Expected mapping as the first element of the argument array\n");
       update_args( data[0] );
@@ -2782,12 +2790,13 @@ class ImageCache
     } else
       ci = data;
 
-    if( user && ! uid_cache[ ci ] )
+    if( user && !uid_cache[ ci ] )
     {
       uid_cache[ci] = user;
-      QUERY( "REPLACE INTO "+name+" (id,uid) VALUES (%s,%s)", ci, user);
+      if( catch(QUERY( "UPDATE "+name+" SET uid=%s WHERE id=%s", user, ci )) )
+	QUERY("INSERT INTO "+name+" (id,uid,atime) VALUES (%s,%s,%d)",
+	      ci, user, time(1) );
     }
-
     return ci;
   }
 
@@ -2799,23 +2808,24 @@ class ImageCache
 
   static void setup_tables()
   {
-    if(catch(QUERY("select uid from "+name+" where id=''")))
+    if(catch(QUERY("SELECT DATA FROM "+name+" WHERE id=''")))
     {
       werror("Creating image-cache tables for '"+name+"'\n");
       catch(QUERY("DROP TABLE "+name));
+
+      // The old tables. This is only useful for people who have run
+      // Roxen 2.2 from cvs before
       catch(QUERY("DROP TABLE "+name+"_data"));
 
       QUERY("CREATE TABLE "+name+" ("
 	    "id     CHAR(64) NOT NULL PRIMARY KEY, "
 	    "size   INT      UNSIGNED NOT NULL DEFAULT 0, "
 	    "uid    CHAR(32) NOT NULL DEFAULT '', "
-	    "ctime  INT      UNSIGNED NOT NULL DEFAULT 0, "
-	    "atime  INT      UNSIGNED NOT NULL DEFAULT 0)");
-
-      QUERY("CREATE TABLE "+name+"_data ("
-	    "id CHAR(64) NOT NULL PRIMARY KEY, "
+	    "atime  INT      UNSIGNED NOT NULL DEFAULT 0,"
 	    "meta MEDIUMBLOB NOT NULL DEFAULT '',"
-	    "data MEDIUMBLOB NOT NULL DEFAULT '')");
+	    "data MEDIUMBLOB NOT NULL DEFAULT '',"
+	    "INDEX atime (atime)"
+	    ")" );
     }
   }
 
@@ -2851,7 +2861,7 @@ class ImageCache
     master()->resolv( "DBManager.add_dblist_changed_callback" )( init_db );
 
     // Always remove entries that are older than one week.
-    do_cleanup();
+    call_out( do_cleanup, 10 );
   }
 }
 
