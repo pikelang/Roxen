@@ -230,7 +230,7 @@ string container_rimage_id( string t, mapping m, string contents, object id )
     m->width = (string)t->xsize;
     m->height = (string)t->ysize;
   }
-  return query_internal_location() + i;
+  return query_absolute_internal_location(id) + i;
 }
 
 string container_rimage(string t, mapping m, string contents, object id)

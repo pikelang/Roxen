@@ -5,7 +5,7 @@
  */
 
 constant thread_safe = 1;
-constant cvs_version = "$Id: atlas.pike,v 1.8 2000/11/09 23:15:59 kuntri Exp $";
+constant cvs_version = "$Id: atlas.pike,v 1.9 2000/12/05 00:26:29 nilsson Exp $";
 
 #include <module.h>
 
@@ -116,7 +116,8 @@ string container_atlas(string t, mapping args, string contents, RequestID id)
   state->width = w;
   state->height = h;
 
-  args->src = query_internal_location()+the_cache->store(state, id);
+  args->src = query_absolute_internal_location(id) +
+    the_cache->store(state, id);
   return RXML.t_xml->format_tag("img", args);
 }
 

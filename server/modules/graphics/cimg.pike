@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.35 2000/11/19 21:32:54 kuntri Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.36 2000/12/05 00:25:10 nilsson Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -201,7 +201,8 @@ class TagCimgplugin
     mapping a = get_my_args( check_args( args ), id );
     string data;
 
-    res->src = (query_internal_location()+the_cache->store( a,id ));
+    res->src = (query_absolute_internal_location(id) +
+		the_cache->store( a,id ));
     data = the_cache->data( a, id , 0 );
     res["file-size"] = strlen(data);
     res["file-size-kb"] = strlen(data)/1024;
@@ -225,7 +226,8 @@ class TagCImg
     {
       mapping a = get_my_args( check_args( args ), id );
       args -= a;
-      args->src = query_internal_location()+the_cache->store( a,id );
+      args->src = query_absolute_internal_location(id) +
+	the_cache->store( a,id );
       if( mapping size = the_cache->metadata( a, id, 1 ) )
       {
 	// image in cache (1 above prevents generation on-the-fly)
@@ -251,7 +253,7 @@ class TagCImgURL {
 
     array do_return(RequestID id) 
     {
-      result = query_internal_location()+
+      result = query_absolute_internal_location(id)+
              the_cache->store(get_my_args(check_args( args ), id ),id);
       return 0;
     }
