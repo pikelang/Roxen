@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.801 2002/09/02 14:41:54 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.802 2002/09/03 15:56:43 mast Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -88,10 +88,10 @@ string filename( program|object o )
   return fname-(getcwd()+"/");
 }
 
-// Note that 2.5 is an as yet nonexisting version. It's only used for
-// the cache static optimization for tags such as <if> and <emit>
-// inside <cache> since that optimization can give tricky
-// incompatibilities with 2.4.
+// Note that 2.5 is a nonexisting version. It's only used for the
+// cache static optimization for tags such as <if> and <emit> inside
+// <cache> since that optimization can give tricky incompatibilities
+// with 2.4.
 array(string) compat_levels = ({"2.1", "2.2", "2.4", "2.5", "3.3"});
 
 #ifdef THREADS
@@ -1050,6 +1050,7 @@ class InternalRequestID
   this_program set_path( string f )
   {
     raw_url = Roxen.http_encode_string( f );
+
     if( strlen( f ) > 5 )
     {
       string a;
@@ -1076,6 +1077,12 @@ class InternalRequestID
 
   this_program set_url( string url )
   {
+    sscanf( url, "%s://%s/%s", prot, misc->host, string path );
+    prot = upper_case( prot );
+    method = "GET";
+    raw = "GET /" + url + " HTTP/1.1\r\n\r\n";
+    raw_url = "/" + path;
+
     Configuration c;
     foreach( indices(urls), string u )
     {
@@ -1117,12 +1124,7 @@ class InternalRequestID
       }
     }
 
-    string host;
-    sscanf( url, "%s://%s/%s", prot, host, url );
-    prot = upper_case( prot );
-    method = "GET";
-    misc->host = host;
-    return set_path( "/"+url );
+    return set_path( raw_url );
   }
 
   static string _sprintf()
