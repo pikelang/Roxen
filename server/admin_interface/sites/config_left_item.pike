@@ -3,7 +3,7 @@
 string noendslash( string what )
 {
   while( sizeof( what ) && what[ -1 ] == '/' )
-    what = what[..strlen(what)-2];
+    what = what[..sizeof(what)-2];
   return what;
 }
 

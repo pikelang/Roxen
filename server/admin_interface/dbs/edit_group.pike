@@ -6,7 +6,7 @@
 string trim_sl( string x )
 {
   while( sizeof(x) && x[-1] == '/' )
-    x = x[..strlen(x)-2];
+    x = x[..sizeof(x)-2];
   return x;
 }
 

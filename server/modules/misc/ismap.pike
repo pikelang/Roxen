@@ -3,7 +3,7 @@
 // ISMAP image map support. Quite over-complex, really.  An example is
 // the support for index images, and chromatic distances.
 
-constant cvs_version = "$Id: ismap.pike,v 1.21 2004/06/04 08:29:23 _cvs_stephen Exp $";
+constant cvs_version = "$Id: ismap.pike,v 1.22 2004/06/04 08:33:18 _cvs_stephen Exp $";
 
 #include <module.h>
 inherit "module";
@@ -252,7 +252,7 @@ mixed parse_map_file( object o )
       continue;
     
     if(line[0]==' ')
-      line = line[1..strlen(line)-1];
+      line = line[1..sizeof(line)-1];
     
     cmd = lower_case((line/" ")[0] || "");
 

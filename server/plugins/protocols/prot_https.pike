@@ -1,7 +1,7 @@
 // This is a ChiliMoon protocol module.
 // Copyright © 2001, Roxen IS.
 
-// $Id: prot_https.pike,v 2.12 2004/06/04 08:29:30 _cvs_stephen Exp $
+// $Id: prot_https.pike,v 2.13 2004/06/04 08:33:20 _cvs_stephen Exp $
 
 // --- Debug defines ---
 
@@ -82,7 +82,7 @@ class fallback_redirect_request
 	}
 	if (prefix) {
 	  if (prefix[-1] == '/')
-	    prefix = prefix[..strlen(prefix)-2];
+	    prefix = prefix[..sizeof(prefix)-2];
 	  prefix = prefix + ":" + port;
 	} else {
 	  /* default_prefix (aka MyWorldLocation) already contains the

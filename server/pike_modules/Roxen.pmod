@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.195 2004/06/04 08:29:27 _cvs_stephen Exp $
+// $Id: Roxen.pmod,v 1.196 2004/06/04 08:33:19 _cvs_stephen Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -281,7 +281,7 @@ string short_name(string|Configuration long_name)
     return "x"+id[..19];
 
   while( sizeof(string_to_utf8( id )) > 20 )
-    id = id[..strlen(id)-1];
+    id = id[..sizeof(id)-1];
 
   return string_to_utf8( id );
 }
@@ -787,7 +787,7 @@ mapping build_env_vars(string f, RequestID id, string path_info)
       new["SCRIPT_NAME"]=id->not_query;
     } else {
       new["SCRIPT_NAME"]=
-	id->not_query[0..strlen([string]id->not_query)-sizeof(path_info)-1];
+	id->not_query[0..sizeof([string]id->not_query)-sizeof(path_info)-1];
     }
     new["PATH_INFO"]=path_info;
 
@@ -849,7 +849,7 @@ mapping build_env_vars(string f, RequestID id, string path_info)
     m_delete(new, "PATH_TRANSLATED");
   else if(new["PATH_INFO"][-1] != '/' && new["PATH_TRANSLATED"][-1] == '/')
     new["PATH_TRANSLATED"] =
-      new["PATH_TRANSLATED"][0..strlen(new["PATH_TRANSLATED"])-2];
+      new["PATH_TRANSLATED"][0..sizeof(new["PATH_TRANSLATED"])-2];
 
   // HTTP_ style variables:
 
@@ -1450,7 +1450,7 @@ string extension( string f, RequestID|void id)
     else {
       ext = lower_case(reverse(ext));
       if(sizeof (ext) && (ext[-1] == '~' || ext[-1] == '#'))
-        ext = ext[..strlen(ext)-2];
+        ext = ext[..sizeof(ext)-2];
     }
     if(id) id->misc[key]=ext;
   }

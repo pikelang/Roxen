@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: hosts.pike,v 1.34 2004/06/04 08:29:32 _cvs_stephen Exp $
+// $Id: hosts.pike,v 1.35 2004/06/04 08:33:21 _cvs_stephen Exp $
 
 #include <roxen.h>
 
@@ -77,7 +77,7 @@ string quick_ip_to_host(string ipnumber)
 
 string quick_host_to_ip(string h)
 {
-  if(h[-1] == '.') h=h[..strlen(h)-2];
+  if(h[-1] == '.') h=h[..sizeof(h)-2];
   ISIP(h,return h);
   if(mixed foo = cache_lookup("hosts", h)) return foo;
   LOOKUP(HOST_TO_IP,h,0,0);
@@ -101,7 +101,7 @@ void ip_to_host(string ipnumber, function callback, mixed ... args)
 void host_to_ip(string host, function callback, mixed ... args)
 {
   if(!stringp(host) || !sizeof(host)) return callback(0, @args);
-  if(host[-1] == '.') host=host[..strlen(host)-2];
+  if(host[-1] == '.') host=host[..sizeof(host)-2];
   ISIP(host,callback(host,@args);return);
   if(string entry=cache_lookup("hosts", host))
   {

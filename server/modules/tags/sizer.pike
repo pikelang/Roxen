@@ -1,7 +1,7 @@
 // This is a ChiliMoon module. Copyright © 2000 - 2001, Roxen IS.
 
 constant thread_safe=1;
-constant cvs_version = "$Id: sizer.pike,v 1.30 2004/06/04 08:29:26 _cvs_stephen Exp $";
+constant cvs_version = "$Id: sizer.pike,v 1.31 2004/06/04 08:33:19 _cvs_stephen Exp $";
 #include <request_trace.h>
 #include <module.h>
 inherit "module";
@@ -258,7 +258,7 @@ string simpletag_page_size( string name,
       }
     }
     if( d != "" )
-      if( f[..strlen(d)-1] == d )
+      if( f[..sizeof(d)-1] == d )
 	f = f[sizeof(d)+1..];
     return f;
   };

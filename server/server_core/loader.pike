@@ -4,7 +4,7 @@
 // ChiliMoon bootstrap program. Sets up the environment,
 // replces the master, adds custom functions and starts core.pike.
 
-// $Id: loader.pike,v 1.386 2004/06/04 08:29:32 _cvs_stephen Exp $
+// $Id: loader.pike,v 1.387 2004/06/04 08:33:21 _cvs_stephen Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ static string    var_dir = "../var/";
 
 #define werror roxen_werror
 
-constant cvs_version="$Id: loader.pike,v 1.386 2004/06/04 08:29:32 _cvs_stephen Exp $";
+constant cvs_version="$Id: loader.pike,v 1.387 2004/06/04 08:33:21 _cvs_stephen Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1025,7 +1025,7 @@ string roxen_path( string filename )
 
 #ifdef __NT__
   while( sizeof(filename) && filename[-1] == '/' )
-    filename = filename[..strlen(filename)-2];
+    filename = filename[..sizeof(filename)-2];
 #endif
 
   return filename;

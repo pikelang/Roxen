@@ -6,7 +6,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.28 2004/05/31 23:01:52 _cvs_stephen Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.29 2004/06/04 08:33:17 _cvs_stephen Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: GXML tag";
 constant module_doc  = "Provides the tag <tt>&lt;gxml&gt;</tt>.";
@@ -304,7 +304,7 @@ string parse_coordinates( string from )
 			   return c;
 	           } );
   p->feed( from )->finish();
-  return res[..strlen(res)-2];
+  return res[..sizeof(res)-2];
 }
 
 string parse_coordinate_system( string from )

@@ -2,7 +2,7 @@
 
 // Gopher proxy module.
 
-constant cvs_version = "$Id: gopher.pike,v 1.33 2004/06/04 08:29:24 _cvs_stephen Exp $";
+constant cvs_version = "$Id: gopher.pike,v 1.34 2004/06/04 08:33:18 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 #include <config.h>
@@ -197,7 +197,7 @@ void connected(object ok, string file, object send_to, string query,
     file="";
   } else {
     type=file[0..0];
-    file=file[1..strlen(file)-1];
+    file=file[1..sizeof(file)-1];
   }
 
   GOPHER_WERR("Requesting file");

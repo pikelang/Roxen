@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.91 2004/06/04 08:29:28 _cvs_stephen Exp $
+// $Id: module.pmod,v 1.92 2004/06/04 08:33:20 _cvs_stephen Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1760,7 +1760,7 @@ static array(string) verify_port( string port )
     warning +=
       LOCALE(339,"SSL support not available in this Pike version.")+"\n"+
       sprintf(LOCALE(340,"Please use %s instead."),
-	      protocol[..strlen(protocol)-2])+"\n";
+	      protocol[..sizeof(protocol)-2])+"\n";
 #endif
   int pno;
   if( sscanf( host, "%s:%d", host, pno ) == 2)

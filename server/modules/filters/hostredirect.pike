@@ -7,7 +7,7 @@
 
 // responsible for the changes to the original version 1.3: Martin Baehr mbaehr@iaeste.or.at
 
-constant cvs_version = "$Id: hostredirect.pike,v 1.27 2004/06/04 08:29:21 _cvs_stephen Exp $";
+constant cvs_version = "$Id: hostredirect.pike,v 1.28 2004/06/04 08:33:16 _cvs_stephen Exp $";
 constant thread_safe=1;
 
 inherit "module";
@@ -61,7 +61,7 @@ void start()
       //if(a[1][0] != '/')  //this can now only be done if we
       //  a[1] = "/"+ a[1]; // don't have a HTTP redirect
       //if(a[0] != "default" && sizeof(a[1]) > 1 && a[1][-1] == '/')
-      //  a[1] = a[1][0..strlen(a[1])-2];
+      //  a[1] = a[1][0..sizeof(a[1])-2];
       patterns[lower_case(a[0])] = a[1];
     }
   }
@@ -134,7 +134,7 @@ int|mapping first_try(RequestID id)
   }
 
   string url = id->conf->query("MyWorldLocation");
-  url=url[..strlen(url)-2];
+  url=url[..sizeof(url)-2];
   to = replace(to, "%u", url);
 
 
@@ -170,7 +170,7 @@ int|mapping first_try(RequestID id)
     if(to[0] != '/')
       to = "/"+ to;
     if(host != "default" && sizeof(to) > 1 && to[-1] == '/')
-      to = to[0..strlen(to)-2];
+      to = to[0..sizeof(to)-2];
     if((host != "default") && !path )
       to +=id->not_query;
 

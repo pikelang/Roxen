@@ -510,7 +510,7 @@ mapping|string parse( RequestID id )
     {
       q = (q/" "-({""}))*" ";
       if( sizeof(q) && (q[0] == ' ') )  q = q[1..];
-      if( sizeof(q) && (q[-1] == ' ') ) q = q[..strlen(q)-2];
+      if( sizeof(q) && (q[-1] == ' ') ) q = q[..sizeof(q)-2];
       query +=  q + "\n";
     }
     foreach( (query/";\n")-({""}), string q )

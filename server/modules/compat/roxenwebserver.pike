@@ -17,7 +17,7 @@
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
 constant cvs_version =
- "$Id: roxenwebserver.pike,v 1.8 2004/06/04 08:29:19 _cvs_stephen Exp $";
+ "$Id: roxenwebserver.pike,v 1.9 2004/06/04 08:33:15 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant module_unique = 1;
 
@@ -252,7 +252,7 @@ string|array(string) tag_user(string tag, mapping m, RequestID id)
   
   string dom = id->conf->query("Domain");
   if(sizeof(dom) && (dom[-1]=='.'))
-    dom = dom[0..strlen(dom)-2];
+    dom = dom[0..sizeof(dom)-2];
   
   if(m->realname && !m->email)
   {

@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 // This module implements an ftp proxy
 
-string cvs_version = "$Id: ftpgateway.pike,v 1.46 2004/06/04 08:29:24 _cvs_stephen Exp $";
+string cvs_version = "$Id: ftpgateway.pike,v 1.47 2004/06/04 08:33:18 _cvs_stephen Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -36,7 +36,7 @@ Content-type: text/html\r\n
 <font size=\"-2\"><a href=\"http://www.roxen.com/\">"+core->version()+"</a></font>";
 
 string INFOSTRING="<font size=\"-2\"><a href=\"http://www.roxen.com/\">"+core->version()+
-                  "</a> FTP Gateway "+("$Revision: 1.46 $"-"$")+"</font>";
+                  "</a> FTP Gateway "+("$Revision: 1.47 $"-"$")+"</font>";
 
 #define _ERROR_MESSAGE(XXXX) ("HTTP/1.0 500 FTP gateway error\r\nContent-type: text/html\r\n\r\n<title>Ftp gateway error</title>\n<h2>FTP Gateway failed:</h2><hr><font size=+1>"XXXX"</font><hr>"+INFOSTRING)
 
@@ -1084,7 +1084,7 @@ void start()
   pos=query("mountpoint");
   init_proxies();
   if(sizeof(pos)>2 && (pos[-1] == pos[-2]) && pos[-1] == '/')
-    set("mountpoint", pos[0..strlen(pos)-2]); // Evil me..
+    set("mountpoint", pos[0..sizeof(pos)-2]); // Evil me..
 
   if(logfile)
     destruct(logfile);

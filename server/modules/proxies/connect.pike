@@ -3,7 +3,7 @@
 // An implementation of the CONNECT methos, used for SSL tunneling in
 // Netscape (the "Secure proxy" field)
 
-constant cvs_version = "$Id: connect.pike,v 1.20 2004/06/04 08:29:24 _cvs_stephen Exp $";
+constant cvs_version = "$Id: connect.pike,v 1.21 2004/06/04 08:33:18 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 
@@ -121,7 +121,7 @@ void write_some(array to)
   int sent;
 // Creative indexing. 
   sent = to[1][to[0]]( to[1][2+!to[0]] );
-  to[1][2+!to[0]] = to[1][2+!to[0]][sent..strlen(to[1][2+!to[0]])];
+  to[1][2+!to[0]] = to[1][2+!to[0]][sent..sizeof(to[1][2+!to[0]])];
 }
 
 void send_some(array to, string data)

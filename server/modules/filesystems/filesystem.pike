@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version = "$Id: filesystem.pike,v 1.127 2004/06/04 08:29:20 _cvs_stephen Exp $";
+constant cvs_version = "$Id: filesystem.pike,v 1.128 2004/06/04 08:33:16 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -360,7 +360,7 @@ string decode_path( string p )
     p = string_to_utf8( p );
 #else
   while( sizeof(p) && p[-1] == '/' )
-    p = p[..strlen(p)-2];
+    p = p[..sizeof(p)-2];
 #endif
   return p;
 }

@@ -14,7 +14,7 @@ constant module_doc  = "This filesystem serves the administration interface";
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.124 2004/06/04 08:29:18 _cvs_stephen Exp $";
+  "$Id: config_filesystem.pike,v 1.125 2004/06/04 08:33:15 _cvs_stephen Exp $";
 
 constant path = "admin_interface/";
 
@@ -45,7 +45,7 @@ array(string|Stat) low_stat_file(string f, object id)
 #ifdef __NT__
   string of = f;
   while(sizeof(f) && f[-1]=='/') 
-    f = f[..strlen(f)-2];
+    f = f[..sizeof(f)-2];
 #else
 #define of f
 #endif

@@ -78,7 +78,7 @@ class Connection
 
     void debug_trace_leave_1( string msg )
     {
-      indent = indent[..strlen(indent)-3];
+      indent = indent[..sizeof(indent)-3];
     }
 
     string indent="";
@@ -96,7 +96,7 @@ class Connection
       old_backtrace = backtrace();
       if( sizeof( String.trim_all_whites(msg) ) )
 	rl->readline->write( fix_msg(indent+msg,0), 1 );
-      indent = indent[..strlen(indent)-3];
+      indent = indent[..sizeof(indent)-3];
     }
 
     this_program set_debug( int level )

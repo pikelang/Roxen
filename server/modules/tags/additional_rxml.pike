@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.33 2004/06/04 08:29:26 _cvs_stephen Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.34 2004/06/04 08:33:19 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -641,7 +641,7 @@ class TagPathplugin
     if( m->trim )
       sscanf( p, "%s"+m->trim, p );
     if( has_suffix(p, "/") )
-      p = p[..strlen(p)-2];
+      p = p[..sizeof(p)-2];
     array q = p / "/";
     if( m->skip )
       q = q[(int)m->skip..];

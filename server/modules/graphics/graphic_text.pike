@@ -1,7 +1,7 @@
 // This is a ChiliMoon module. Copyright © 1996 - 2001, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.305 2004/06/04 08:29:21 _cvs_stephen Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.306 2004/06/04 08:33:17 _cvs_stephen Exp $";
 
 #include <module.h>
 inherit "module";
@@ -642,7 +642,7 @@ private Image.Image|mapping draw_callback(mapping args, string text, RequestID i
       res+="\n";
     }
 
-    text=replace(res[..strlen(res)-2], ({"!","?",": "}),({ nbsp+"!",nbsp+"?",nbsp+": "}));
+    text=replace(res[..sizeof(res)-2], ({"!","?",": "}),({ nbsp+"!",nbsp+"?",nbsp+": "}));
     text=replace(replace( replace(text,({". ",". "+nbsp}),({"\000","\001"})),
 			  ".", "."+nbsp+nbsp),
                  ({"\000","\001"}),({". ","."+nbsp}));
@@ -751,7 +751,7 @@ private Image.Image|mapping draw_callback(mapping args, string text, RequestID i
 mapping find_internal(string f, RequestID id)
 {
     if( sizeof(f)>4 && query("ext") && f[-4]=='.') // Remove .ext
-      f = f[..strlen(f)-5];
+      f = f[..sizeof(f)-5];
     if( sizeof(f) && f[0]=='$' )
     {
       array id_text = f/"/";

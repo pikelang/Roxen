@@ -52,7 +52,7 @@ string find_prefix( string dir )
       {
         string against = Stdio.read_bytes( dir+"/"+f );
         while( !has_prefix( against, prefix ) )
-          prefix = prefix[..strlen(prefix)-2];
+          prefix = prefix[..sizeof(prefix)-2];
       }
     }
   }

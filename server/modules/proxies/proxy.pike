@@ -4,7 +4,7 @@
 // limit of proxy connections/second is somewhere around 70% of normal
 // requests, but there is no real reason for them to take longer.
 
-constant cvs_version = "$Id: proxy.pike,v 1.62 2004/06/04 08:29:24 _cvs_stephen Exp $";
+constant cvs_version = "$Id: proxy.pike,v 1.63 2004/06/04 08:33:18 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 #include <config.h>
@@ -58,7 +58,7 @@ void start(int level, Configuration conf)
   check_variable("http_codes_to_cache", query("http_codes_to_cache"));
 
   if(sizeof(pos)>2 && (pos[-1] == pos[-2]) && pos[-1] == '/')
-    set("mountpoint", pos[0..strlen(pos)-2]); // Evil me..
+    set("mountpoint", pos[0..sizeof(pos)-2]); // Evil me..
 
   if(sizeof(query("NoCacheFor")))
     if(catch(no_cache_for = Regexp("("+(query("NoCacheFor")-"\r"-"\n\n")/"\n"*")|("

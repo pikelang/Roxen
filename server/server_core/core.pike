@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: core.pike,v 1.869 2004/06/04 08:29:31 _cvs_stephen Exp $";
+constant cvs_version="$Id: core.pike,v 1.870 2004/06/04 08:33:21 _cvs_stephen Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -2048,7 +2048,7 @@ int register_url( string url, Configuration conf )
   }
 
   if( sizeof( path ) && ( path[-1] == '/' ) )
-    path = path[..strlen(path)-2];
+    path = path[..sizeof(path)-2];
   if( !sizeof( path ) )
     path = 0;
 
@@ -4774,7 +4774,7 @@ function compile_log_format( string fmt )
   int do_it_async = 0;
   int add_nl = 1;
 
-  string sr( string s ) { return s[1..strlen(s)-2]; };
+  string sr( string s ) { return s[1..sizeof(s)-2]; };
   // sr(replace(sprintf("%O", X), "%", "%%"))
 
 #define DO_ES(X) replace(X, ({"\\n", "\\r", "\\t", }), ({ "\n", "\r", "\t" }) )
@@ -4783,7 +4783,7 @@ function compile_log_format( string fmt )
   {
     int c, processed;
     foreach( formats, array q )
-      if( part[..strlen(q[0])-1] == q[0])
+      if( part[..sizeof(q[0])-1] == q[0])
       {
         format += q[1] + DO_ES(part[ sizeof(q[0]) .. ]);
         if( q[2] ) args += ({ q[2] });

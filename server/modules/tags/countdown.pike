@@ -1,7 +1,7 @@
 // This is a ChiliMoon module. Copyright © 1997 - 2001, Roxen IS.
 //
 
-constant cvs_version="$Id: countdown.pike,v 1.52 2004/05/24 10:15:14 mani Exp $";
+constant cvs_version="$Id: countdown.pike,v 1.53 2004/06/04 08:33:19 _cvs_stephen Exp $";
 #include <module.h>
 inherit "module";
 
@@ -146,7 +146,7 @@ int find_a_month(string which)
     for(int i=1; i<13; i++)
       catch {
       if(which ==
-	 lower_case(core.language_low(lang)->month(i))[..strlen(which)])
+	 lower_case(core.language_low(lang)->month(i))[..sizeof(which)])
 	return i-1;
     };
   return 1;
@@ -157,7 +157,7 @@ int find_a_day(string which)
   which = lower_case(which);
   foreach(languages, string lang)
     for(int i=1; i<8; i++)
-      if(which == lower_case(core.language_low(lang)->day(i))[..strlen(which)])
+      if(which == lower_case(core.language_low(lang)->day(i))[..sizeof(which)])
 	return i;
   return 1;
 }
