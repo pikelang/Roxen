@@ -1,5 +1,5 @@
 /*
- * $Id: pathinfo.pike,v 1.4 1999/10/04 15:00:28 per Exp $
+ * $Id: pathinfo.pike,v 1.5 1999/10/08 17:21:20 per Exp $
  *
  * PATH_INFO support for Roxen.
  *
@@ -10,7 +10,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: pathinfo.pike,v 1.4 1999/10/04 15:00:28 per Exp $";
+constant cvs_version = "$Id: pathinfo.pike,v 1.5 1999/10/08 17:21:20 per Exp $";
 constant thread_safe = 1;
 
 // #define PATHINFO_DEBUG
@@ -83,7 +83,7 @@ mapping|int last_resort(object id)
   }
 #else /* Slower, but it works... */
   string pi = "";
-  while( (search( query, "/" ) != -1) && strlen( query ) > 0 )
+  while( (search( query, "/" ) > 0) && strlen( query ) > 0 )
   {
     query = reverse(query);
     string add_path_info;
