@@ -20,7 +20,7 @@
 
 inherit "chili-module:filesystem" : filesystem;
 
-constant cvs_version="$Id: userfs.pike,v 1.71 2002/11/14 04:58:41 mani Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.72 2004/05/22 19:06:58 _cvs_stephen Exp $";
 constant module_type = MODULE_LOCATION;
 constant module_name = "File systems: User file system";
 constant module_doc  =
@@ -313,7 +313,7 @@ mapping|array find_dir(string f, RequestID id)
 
   array a = find_user(f, id);
 
-  if (!a) {
+  if (!a[0]) {
     if (query("user_listing")) {
       array l;
       l = id->conf->userlist(id);
