@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.404 2003/07/16 14:52:34 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.405 2003/09/17 10:53:19 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1821,38 +1821,24 @@ void handle_request( )
 
   MARK_FD("HTTP handling request");
 
-  if (method == "OPTIONS") {
-    file = ([ "type":"text/html",
-	      "data":"",
-	      "extra_heads":([
-		"Allow":"CHMOD,DELETE,GET,HEAD,MKCOL,MKDIR,MOVE,"
-		"MV,PING,POST,PROPFIND,PROPPATCH,PUT,OPTIONS",
-		"Public":"CHMOD,DELETE,GET,HEAD,MKCOL,MKDIR,MOVE,"
-		"MV,PING,POST,PROPFIND,PROPPATCH,PUT,OPTIONS",
-		"Accept-Ranges":"bytes",
-		"DAV":"1",
-	      ]),
-    ]);
-  } else {
-    array e;
-    if(e= catch(file = conf->handle_request( this_object() )))
-      INTERNAL_ERROR( e );
+  array e;
+  if(e= catch(file = conf->handle_request( this_object() )))
+    INTERNAL_ERROR( e );
   
-    // This object gets destructed if conf->handle_request() causes
-    // send_result() to be called.
-    if( this_object()) {
-      if( file )
-	if( file->try_again_later )
-	{
-	  if( objectp( file->try_again_later ) )
-	    ;
-	  else
-	    call_out( roxen.handle, file->try_again_later, handle_request );
-	  return;
-	}
-	else if( file->pipe )
-	  return;
-    }
+  // This object gets destructed if conf->handle_request() causes
+  // send_result() to be called.
+  if( this_object()) {
+    if( file )
+      if( file->try_again_later )
+      {
+	if( objectp( file->try_again_later ) )
+	  ;
+	else
+	  call_out( roxen.handle, file->try_again_later, handle_request );
+	return;
+      }
+      else if( file->pipe )
+	return;
   }
   TIMER_END(handle_request);
   send_result();
