@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.56 2001/04/14 15:58:56 grubba Exp $
+ * $Id: ftp.pike,v 2.57 2001/04/24 18:44:28 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -2944,6 +2944,8 @@ class FTPSession
   {
     // Specified by RFC 2428:
     // Extensions for IPv6 and NATs.
+    int min;
+    int max;
 
     if (args && args != "1") {
       if (lower_case(args) == "all") {
