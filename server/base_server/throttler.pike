@@ -9,14 +9,14 @@
  *
  */
 
-constant cvs_version="$Id: throttler.pike,v 1.1 1999/09/04 22:40:45 kinkie Exp $";
+constant cvs_version="$Id: throttler.pike,v 1.2 1999/10/10 20:45:59 kinkie Exp $";
 
 #define DEFAULT_MINGRANT 1300
 #define DEFAULT_MAXGRANT 65000
 
 #ifdef THROTTLING_DEBUG
 #undef THROTTLING_DEBUG
-#define THROTTLING_DEBUG(X) perror("Throttling: "+X+"\n")
+#define THROTTLING_DEBUG(X) perror("throttler: "+X+"\n")
 #else
 #define THROTTLING_DEBUG(X)
 #endif
@@ -38,7 +38,7 @@ private object (ADT.queue) requests_queue; //lazily instantiated.
 //same for maxgrant
 void throttle (int r, int d, int|void initial, 
                int|void mingrant, int|void maxgrant) {
-  THROTTLING_DEBUG("throttler: throttle(rate="+r+", depth="+d+
+  THROTTLING_DEBUG("throttle(rate="+r+", depth="+d+
                    ",\n\tinitial="+initial+", mingrant="+mingrant+
                    ", maxgrant="+maxgrant);
   fill_rate=r;
@@ -59,7 +59,7 @@ private void fill_bucket() {
     return;
   toadd=((time(1)-last_fill)*fill_rate);
   bucket+=toadd;
-  THROTTLING_DEBUG("throttler: adding "+toadd+" tokens");
+  THROTTLING_DEBUG("adding "+toadd+" tokens");
   last_fill=time(1);
   if (bucket>depth)
     bucket=depth;
@@ -68,21 +68,25 @@ private void fill_bucket() {
 
 //handles as many pending requests as possible
 private void wake_up_some () {
-  THROTTLING_DEBUG("throttler: wake_up_some");
+  THROTTLING_DEBUG("wake_up_some");
   array request;
   while ((!requests_queue->is_empty()) && (bucket >= min_grant)) {
     request=requests_queue->get();
     grant(@request);
   }
-  THROTTLING_DEBUG("throttler: Done waking up requests");
+  THROTTLING_DEBUG("Done waking up requests");
 }
 
 //handles a single request. It assumes it has been granted, otherwise
 //it will allow going over quota.
 private void grant (int howmuch, function callback, array(mixed) cb_args ) {
-  THROTTLING_DEBUG("throttler: grant("+howmuch+"). bucket="+bucket);
+  THROTTLING_DEBUG("grant("+howmuch+"). bucket="+bucket);
+  if (!callback) {
+    THROTTLING_DEBUG("no callback. Exiting");
+    return;
+  }
   if (howmuch >= bucket) {
-    THROTTLING_DEBUG("throttler: limiting granted bandwidth");
+    THROTTLING_DEBUG("limiting granted bandwidth");
     howmuch=bucket;
   }
   bucket-=howmuch;
@@ -96,25 +100,25 @@ private void grant (int howmuch, function callback, array(mixed) cb_args ) {
 void request (int howmuch, function(int,mixed ...:void) callback,
              mixed ... cb_args) {
   if (!fill_rate) { //no throttling is actually done
-    THROTTLING_DEBUG("throttler: auto-grant (not throttling)");
+    THROTTLING_DEBUG("auto-grant (not throttling)");
     callback(howmuch,@cb_args);
     return;
   }
   
   if (howmuch > max_grant) {
-    THROTTLING_DEBUG("throttler: request too big, limiting");
+    THROTTLING_DEBUG("request too big, limiting");
     howmuch=max_grant;
   }
   
   fill_bucket(); //maybe we can squeeze some more bandwidth.
   
   if (bucket <= min_grant ) { //bad luck. Nothing to allow. Enqueue
-    THROTTLING_DEBUG("throttler: no tokens, enqueueing");
+    THROTTLING_DEBUG("no tokens, enqueueing");
     requests_queue->put( ({howmuch,callback,cb_args}) );
     return;
   }
   
-  THROTTLING_DEBUG("throttler: granting");
+  THROTTLING_DEBUG("granting");
   grant (howmuch, callback, cb_args);
 }
 
@@ -122,7 +126,7 @@ void request (int howmuch, function(int,mixed ...:void) callback,
 //after a request has been granted, if the request doesn't use all of the
 //assigned bandwidth, it can return the unused amount.
 void report_unused (int howmuch) {
-  THROTTLING_DEBUG("throttler: got an unused bandwidth report ("+howmuch+")");
+  THROTTLING_DEBUG("got an unused bandwidth report ("+howmuch+")");
   bucket+=howmuch;
 }
 
@@ -130,7 +134,7 @@ void report_unused (int howmuch) {
 //once per second. Otherwise we might enqueue all the pending requests, and
 //get stuck until a new one is done.
 private void safety_net () {
-  THROTTLING_DEBUG("throttler: safety net");
+  /* THROTTLING_DEBUG("throttler: safety net"); */
   call_out(safety_net,1);
   if (requests_queue->is_empty())
     return;
@@ -138,12 +142,12 @@ private void safety_net () {
 }
 
 void destruct () {
-  THROTTLING_DEBUG("throttler: destroying");
+  THROTTLING_DEBUG("destroying");
   remove_call_out(safety_net);
 }
 
 #ifdef THROTTLING_DEBUG
 void create() {
-  THROTTLING_DEBUG("throttler: creating");
+  THROTTLING_DEBUG("creating");
 }
 #endif
