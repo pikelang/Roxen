@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.120 2001/08/10 13:34:40 per Exp $
+// $Id: site_content.pike,v 1.121 2001/08/17 16:55:19 per Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -388,6 +388,8 @@ string find_module_documentation( string conf, string mn, RequestID id )
   {
     RXML.TagSet tags=m->query_tag_set();
     if(!tags) return "";
+    id = id->clone_me();
+    id->conf = c;
     foreach(sort(indices(tags->get_tag_names())), string name)
       full_doc += "<p>"+c->find_tag_doc( name, id, 1 )+"</p>";
   }

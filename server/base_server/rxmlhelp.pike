@@ -5,7 +5,7 @@
 //
 
 // inherited by configuration.pike
-#define parse_rxml this_object()->parse_rxml
+#define parse_rxml Roxen.parse_rxml
 
 #ifdef RXMLHELP_DEBUG
 # define RXMLHELP_WERR(X) report_debug("RXML help: %s\n", X);
@@ -153,7 +153,7 @@ static string xtable_c_cont( mixed a, mixed b, string c )
 static string help_tag( mixed a, mapping m, string c )
 {
   if( m["for"] )
-    return find_tag_doc( m["for"] );
+    return find_tag_doc( m["for"], RXML.get_context()->id );
   return 0; // keep.
 }
 
@@ -260,18 +260,22 @@ mapping call_tagdocumentation(RoxenModule o) {
 
 static int generation;
 multiset undocumented_tags=(<>);
-string find_tag_doc(string name, void|object id, int|void no_undoc) {
+string find_tag_doc(string name, RequestID id, int|void no_undoc)
+{
   RXMLHELP_WERR("Help for tag "+name+" requested.");
   object old_ctx = RXML.get_context();
-  id = id->clone_me();
-  id->conf = this_object();
+
+
+  if( !id )
+    error("find_tag_doc called without ID-object\n");
   parse_rxml( "", id );
-  RXML.TagSet tag_set=this_object()->rxml_tag_set;
+  RXML.TagSet tag_set = id->conf->rxml_tag_set;
   
   string doc;
   int new_gen=tag_set->generation;
 
-  if(generation!=new_gen) {
+  if(generation!=new_gen)
+  {
     undocumented_tags=(<>);
     generation=new_gen;
   }
