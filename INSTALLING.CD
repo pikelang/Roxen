@@ -1,0 +1,57 @@
+          Installing Roxen Challenger 1.1 - the Source distribution
+          +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  0. Make sure you have a working C-compiler for your machine.
+
+  1. Make a build directory (e.g. mkdir build), and cd to it.
+
+  2. Mount the Roxen 1.1 CD somewhere in your filesystem (e.g.
+     volcheck).
+
+  3. Type
+     <path_to_roxencd>/source/configure --prefix=<wanted_base_path_for_Roxen>
+     (defaults to /usr/local, thus placing Roxen in /usr/local/roxen/)
+     followed by make and make install to build the binaries and copy them 
+     to the correct place.
+
+     You can later on move the 'roxen' directory that will be
+     created when you type 'make install' to anywhere in your
+     filesystem. Roxen does not keep any absolute paths.
+     
+  4. If everything worked fine and the compilation is done, type 
+     cd <dir>/server.
+
+  5. Start the install script by typing ./install.
+
+  6. Answer the simple questions and wait for your client.
+
+  7. If everything worked, configure the server, otherwise move on to the
+     troubleshooting section on the roxen WWW-pages. 
+
+ Once you have installed the server, consider joining the Roxen
+ mailinglist (by sending a mail to roxen-request@infovav.se, with
+ the Subject: subscribe).
+
+ For more information about Roxen, read the online documentation at
+ http://roxen.com/
+
+----------------------------------------------------------------------------
+Example installation session:
+
+bash$ mkdir build
+bash$ cd build
+bash$ volcheck
+bash$ /cdrom/roxencd/source/configure --prefix=/usr/www
+
+<Lots and lots of checks...>
+
+bash$ make install
+
+<Lots and lots of compilations>
+
+bash$ cd /usr/www/roxen/server
+bash$ ./install
+<answer a few questions>
+
+
+
