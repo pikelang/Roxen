@@ -10,19 +10,19 @@ void create()
       inherit RXML.TagSet;
       void create() {}
       void add_tag (RXML.Tag t)
-	{RXML.parse_error ("Trying to change the empty tag set.\n");}
+	{error ("Trying to change the empty tag set.\n");}
       void add_tags (array(RXML.Tag) ts)
-	{RXML.parse_error ("Trying to change the empty tag set.\n");}
+	{error ("Trying to change the empty tag set.\n");}
       void remove_tag (string|object(RXML.Tag) t)
-	{RXML.parse_error ("Trying to change the empty tag set.\n");}
+	{error ("Trying to change the empty tag set.\n");}
       mixed `->= (string var, mixed val)
-	{RXML.parse_error ("Trying to change the empty tag set.\n");}
+	{error ("Trying to change the empty tag set.\n");}
       mixed `-> (string var)
       {
 	return (<"low_tags", "low_containers", "low_entities">)[var] ? ([]) : ::`-> (var);
       }
       mixed `[] (string var) {return `-> (var);}
       void changed()
-	{RXML.parse_error ("Trying to change the empty tag set.\n");}
+	{error ("Trying to change the empty tag set.\n");}
     }());
 }
