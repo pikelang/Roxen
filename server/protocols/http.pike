@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.226 2000/03/25 03:23:32 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.227 2000/03/26 15:44:44 mast Exp $";
 
 #define MAGIC_ERROR
 
@@ -1079,7 +1079,7 @@ string get_id(string from)
   catch {
     object f = open(from,"r");
     string id;
-    id = f->read(200);
+    id = f->read(1024);
     if(sscanf(id, "%*s$"+"Id: %*s,v %s ", id) == 3)
       return last_id=" (version "+id+")";
   };
@@ -1089,10 +1089,13 @@ string get_id(string from)
 
 void add_id(mixed to)
 {
-  if (arrayp (to) && sizeof (to) >= 2)
+  if (arrayp (to) && sizeof (to) >= 2 && arrayp (to[1]) ||
+      objectp (to) && to->is_generic_error)
     foreach(to[1], array q)
-      if(stringp(q[0]))
-	q[0]+=get_id(q[0]);
+      if(sizeof(q) && stringp(q[0])) {
+	string id = get_id(q[0]);
+	catch (q[0] += id);
+      }
 }
 
 string link_to(string file, int line, string fun, int eid, int qq)
@@ -1125,7 +1128,7 @@ static string error_page_header (string title)
 string format_backtrace(int eid)
 {
   [string msg, array(string) rxml_bt, array(array) bt,
-   mixed raw_err, string raw_url, string raw] =
+   string raw_bt_descr, string raw_url, string raw] =
     roxen.query_var ("errors")[eid];
 
   string res = error_page_header ("Internal Server Error") +
@@ -1160,16 +1163,15 @@ string format_backtrace(int eid)
 }
 
 string generate_bugreport(string msg, array(string) rxml_bt, array(string) bt,
-			  mixed raw_err, string raw_url, string raw)
+			  string raw_bt_descr, string raw_url, string raw)
 {
-  add_id(raw_err);
-  return ("<pre>"+html_encode_string("Roxen version: "+version()+
-				     (roxen.real_version != version()?
-				      " ("+roxen.real_version+")":"")+
-				     "\nRequested URL: "+raw_url+"\n"
-				     "\nError: "+
-				     describe_backtrace(raw_err)+
-				     "\n\nRequest data:\n"+raw));
+  return ("Roxen version: "+version()+
+	  (roxen.real_version != version()?
+	   " ("+roxen.real_version+")":"")+
+	  "\nPike version: " + predef::version() +
+	  "\nRequested URL: "+raw_url+"\n"
+	  "\nError: " + raw_bt_descr +
+	  "\nRequest data:\n"+raw);
 }
 
 string censor(string what)
@@ -1246,7 +1248,8 @@ int store_error(mixed err)
     }
   }
 
-  e[id] = ({msg,rxml_bt,bt,err,raw_url,censor(raw)});
+  add_id (err);
+  e[id] = ({msg,rxml_bt,bt,describe_backtrace (err),raw_url,censor(raw)});
   return id;
 }
 
@@ -1337,7 +1340,7 @@ void timer(int start)
 #endif
 
 string handle_error_file_request (string msg, array(string) rxml_bt, array(array) bt,
-				  mixed raw_err, string raw_url, string raw)
+				  string raw_bt_descr, string raw_url, string raw)
 {
   string data = Stdio.read_bytes(variables->file);
 
@@ -1807,7 +1810,7 @@ void handle_request( )
       if(prestate->plain)
       {
 	file = ([
-	  "type":"text/html",
+	  "type":"text/plain",
 	  "data":generate_bugreport( @err ),
 	]);
         send_result();
