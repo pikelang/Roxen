@@ -7,13 +7,13 @@ void got_info()
 {
   int cs;
   mapping ns, m;
+
   catch {
-    m = (decode_value(udp_broad->read()->data));
+    m = decode_value(udp_broad->read()->data);
     ns = neighborhood[m->configurl]||([]);
 
     m->rec_time = time();
-    if(m->last_reboot > ns->last_reboot)
-    {
+    if(m->last_reboot > ns->last_reboot) {
       m->last_last_reboot = m->last_reboot;
       m->seq_reboots=ns->seq_reboots+1;
     } else {
