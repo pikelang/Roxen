@@ -1,6 +1,6 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.392 2000/11/08 22:55:15 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.393 2000/11/13 04:16:36 nilsson Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1016,11 +1016,14 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
        ) {
       switch(type) {
        case "roxen":
-	TRACE_LEAVE("Magic internal gopher image");
+	TRACE_LEAVE("Magic internal roxen image");
+        if(loc=="unit")
+	  return (["data":"GIF89a\1\0\1\0\200ÿ\0ÀÀÀ\0\0\0!ù\4\1\0\0\0\0,\0\0\0\0\1\0\1\0\0\1\1""2\0;",
+		   "type":"image/gif" ]);
 	return internal_roxen_image(loc, id);
 
        case "gopher":
-	TRACE_LEAVE("Magic internal roxen image");
+	TRACE_LEAVE("Magic internal gopher image");
 	return internal_gopher_image(loc);
       }
     }
