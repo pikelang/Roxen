@@ -1,4 +1,4 @@
-/* $Id: https.pike,v 1.1 1998/11/30 03:47:33 grubba Exp $
+/* $Id: https.pike,v 1.2 1998/12/19 02:30:48 grubba Exp $
  *
  * Copyright © 1996-1998, Idonex AB
  */
@@ -354,6 +354,11 @@ void send_result(mapping|void result)
   } else {
     if((file->file == -1) || file->leave_me) 
     {
+      if(do_not_disconnect) {
+	file = 0;
+	pipe = 0;
+	return;
+      }
       my_fd = 0;
       file = 0;
       return;
