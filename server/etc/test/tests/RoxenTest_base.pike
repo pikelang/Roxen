@@ -222,6 +222,8 @@ void run_tests( Configuration c )
     string not_query  = "/the/requested/file";
     string prot       = "INTERNAL/1.0";
     string realauth   = "foo:bar";
+
+    mapping misc      = ([]);
   };
 
   FakeID http_id = FakeID(([ "RoxenUserID":"iieff1934"]),
