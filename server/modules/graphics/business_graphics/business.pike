@@ -16,7 +16,7 @@
  * Prevent less that 100x100 in size.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.12 1997/10/15 03:14:38 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.13 1997/10/15 03:15:11 peter Exp $";
 constant thread_safe=0;
 
 #include <module.h>
@@ -36,8 +36,8 @@ mixed *register_module()
       ("Draws graphs that is pleasing to the eye."
        "<br>This module defines some tags,"
        "<pre>"
-       "&lt;diagram&gt;: \n"
-       "Draws different kinds of diagrams. "
+       "&lt;diagram&gt; (container): \n"
+       "Draws differet kinds of diagrams. \n"
        "Defines the following attributes: \n"
        " type=        { sumbars | normsumbars |linechart | barchart | piechart | graph }\n"
        " background=  Takes the filename of a ppm image is input.\n"
@@ -45,8 +45,32 @@ mixed *register_module()
        " ysize=       height of diagram-image in pixels.\n"
        " fontsize=    height if text in pixels.\n"
        " legendfontsize= height if legend text in pixels. Uses fontsize if not defined\n"
-       " 3D=    Does a C00l 3D-effect on piecharts, takes the size in pixels of the 3Dtilt as argument.\n"
-       " tint    Do nasty stuff to the background.\n"
+       " 3D=          Does a C00l 3D-effect on piecharts, takes the size in pixels of the 3Dtilt as argument.\n"
+       /* " tone         Do nasty stuff to the background Requires dark background to be visable.\n" */
+       "Defines the following tags: \n"
+       "&lt;xaxis&gt; and &lt;yaxis&gt; (tags)"
+       "Attributes for the x and y axis."
+       " name=        Dunno what this does.\n"
+       " start=       .\n"
+       " stop=        .\n"       
+       " quantity=    name.\n"
+       " units=       name.\n"
+       "&lt;colors&gt; (container)"
+       "Tabseparated list of colors for the diagram."
+       " separator=   Use the specifyed string as separator intead of tab.\n"
+       "&lt;legend&gt; (container)"
+       "Tabseparated list of strings for the legend."
+       " separator=   Use the specifyed string as separator intead of tab.\n"
+       "&lt;xdatanames&gt; (container) !!Name will probably change!!"
+       "Tabseparated list of datanames for the diagram."
+       " separator=   Use the specifyed string as separator intead of tab.\n"
+       "&lt;xdatanames&gt; (container) !!Name will probably change!!"
+       "Tabseparated list of dataname for the diagram."
+       " separator=   Use the specifyed string as separator intead of tab.\n"
+       "&lt;xdatanames&gt; (container) !!Name will probably change!!"
+       "Tab- and newline- separated list of data-value for the diagram."
+       " separator=      Use the specifyed string as separator intead of tab.\n"
+       " lineseparator=  Use the specifyed string as lineseparator intead of tab.\n"
        "</pre>"
        "BUGS:<br><li>background does not work well.<br>"
        "<br><li>data input is not always what you might expect"
