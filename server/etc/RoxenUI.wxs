@@ -16,7 +16,7 @@
       ExeCommand='"[SERVERDIR]\pike\bin\pike" -e "write(argv[1]); Stdio.write_file(argv[2], argv[3]);" "Creating pikelocation.txt..." "pikelocation.txt" "[SERVERDIR]\pike\bin\pike"'
       Execute="deferred" />
     <CustomAction Id="CreatePikeLocation" Script="vbscript"
-      Execute="deferred">
+      Execute="immediate">
       Dim fso, tf, serverdir
       Set fso = CreateObject("Scripting.FileSystemObject")
       Set serverdir = Session.Property("SERVERDIR")
