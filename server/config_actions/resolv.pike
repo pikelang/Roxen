@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.12 1998/03/17 16:02:48 grubba Exp $
+ * $Id: resolv.pike,v 1.13 1998/05/05 15:12:10 marcus Exp $
  */
 
 inherit "wizard";
@@ -134,9 +134,9 @@ string page_0(object id)
 
        nid->realauth=id->variables->user+":"+id->variables->password;
 
-       nid->auth=({0,id->realauth});
+       nid->auth=({0,nid->realauth});
        if(c && c->auth_module)
-	  nid->auth = c->auth_module->auth( id->auth, nid );
+	  nid->auth = c->auth_module->auth( nid->auth, nid );
     }
 
     int again;
