@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.14 1996/12/03 01:04:39 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.15 1996/12/03 01:17:46 per Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -8,7 +8,7 @@ inherit "config/draw_things";
 
 #define dR "00"
 #define dG "20"
-#define dB "ff"
+#define dB "50"
 
 #define bdR "00"
 #define bdG "30"
