@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.834 2003/05/26 11:21:37 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.835 2003/06/11 13:11:19 mast Exp $";
 
 //! @appears roxen
 //!
@@ -106,7 +106,7 @@ string filename( program|object o )
 // cache static optimization for tags such as <if> and <emit> inside
 // <cache> since that optimization can give tricky incompatibilities
 // with 2.4.
-array(string) compat_levels = ({"2.1", "2.2", "2.4", "2.5", "3.3", "3.4"});
+array(string) compat_levels = ({"2.1", "2.2", "2.4", "2.5", "3.3", "3.4", "3.5"});
 
 #ifdef THREADS
 mapping(string:string) thread_names = ([]);
