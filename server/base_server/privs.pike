@@ -1,6 +1,6 @@
 #if efun(seteuid)
 #include <module.h>
-string cvs_version = "$Id: privs.pike,v 1.24 1997/10/09 03:47:46 grubba Exp $";
+string cvs_version = "$Id: privs.pike,v 1.25 1997/10/09 04:00:53 grubba Exp $";
 
 int saved_uid;
 int saved_gid;
@@ -35,7 +35,7 @@ static private string dbt(array t)
 mixed mutex_key;	// Only one thread may modify the euid/egid at a time.
 #endif /* THREADS */
 
-void create(string reason, int|string|void uid, int|void gid)
+void create(string reason, int|string|void uid, int|string|void gid)
 {
 #ifdef HAVE_EFFECTIVE_USER
   array u;
