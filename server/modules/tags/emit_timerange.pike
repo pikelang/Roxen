@@ -4,7 +4,7 @@
 inherit "module";
 
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.18 2004/05/26 05:10:01 _cvs_stephen Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.19 2004/05/27 17:56:00 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -24,15 +24,15 @@ constant module_doc  = "This module provides the emit sources \"timerange\" and"
 //   [calendar="{ISO/...}"]
 // > &_.week.day.name; and so on from the look of the below scope_layout </emit>
 
-static constant units = ({ "Year", "Month", "Week", "Day",
-			   "Hour", "Minute", "Second" }),
-	  calendars = ({ "ISO", "Gregorian", "Julian", "Coptic",
-			   "Islamic", "Discordian", "unknown" }),
-    output_units = ({ "years", "months", "weeks", "days",
-			   "hours", "minutes", "seconds", "unknown" }),
-    // output_unit_no is used for the comparing when using query attribute.
-    ouput_unit_no = ({ 3,6,0,9,12,15,18,0 }),
-    scope_layout = ([ // Date related data:
+static constant units =        ({ "Year", "Month", "Week", "Day",
+				  "Hour", "Minute", "Second" });
+static constant calendars =    ({ "ISO", "Gregorian", "Julian", "Coptic",
+				  "Islamic", "Discordian", "unknown" });
+static constant output_units = ({ "years", "months", "weeks", "days",
+				  "hours", "minutes", "seconds", "unknown" });
+// output_unit_no is used for the comparing when using query attribute.
+static constant ouput_unit_no = ({ 3,6,0,9,12,15,18,0 });
+static constant scope_layout = ([ // Date related data:
 			 "ymd"      : "format_ymd",
 			 "ymd_short": "format_ymd_short",
 			 "date"			: "format_ymd",
@@ -103,15 +103,14 @@ static constant units = ({ "Year", "Month", "Week", "Day",
 			 "default.timezone"	: "q:timezone",
 			 "default.timezone.region":"TZ:region",
 			 "default.timezone.detail":"TZ:detail",
-			 "default.language"	: "q:language" ]),
-
-  iso_weekdays = ({"monday","tuesday",
-		   "wednesday","thirsday",
-		   "friday","saturday",
-		   "sunday"}),
-  gregorian_weekdays = ({"sunday","monday","tuesday",
-			 "wednesday","thirsday",
-			 "friday","saturday"});
+			 "default.language"	: "q:language" ]);
+static constant iso_weekdays = ({ "monday","tuesday",
+				  "wednesday","thursday",
+				  "friday","saturday",
+				  "sunday"});
+static constant gregorian_weekdays = ({ "sunday","monday","tuesday",
+					"wednesday","thursday",
+					"friday","saturday"});
 
 static mapping layout;
 //! create() constructs this module-global recursive mapping,
@@ -128,9 +127,9 @@ Calendar.TimeRange prev(Calendar.TimeRange t) { return t->prev(); }
 Calendar.TimeRange same(Calendar.TimeRange t) { return t; }
 Calendar.TimeRange next(Calendar.TimeRange t) { return t->next(); }
 function(Calendar.TimeRange:Calendar.TimeRange)
-prev_year,prev_month,prev_week,prev_day,prev_hour,prev_minute,prev_second,
-this_year,this_month,this_week,this_day,this_hour,this_minute,this_second,
-next_year,next_month,next_week,next_day,next_hour,next_minute,next_second;
+  prev_year,prev_month,prev_week,prev_day,prev_hour,prev_minute,prev_second,
+  this_year,this_month,this_week,this_day,this_hour,this_minute,this_second,
+  next_year,next_month,next_week,next_day,next_hour,next_minute,next_second;
 
 function(Calendar.TimeRange:Calendar.TimeRange) get_prev_timerange(string Unit)
 { return lambda(Calendar.TimeRange t) { return t - Calendar[Unit]();}; }
@@ -182,7 +181,7 @@ void create(Configuration conf)
 	    t1[index] += ([ "" : value ]);
 	  else
 	    t1 += ([ index : value,
-		        "" : t2 ]);
+		     "" : t2 ]);
 	else
 	  t1[index] = value;
       else
@@ -849,7 +848,7 @@ constant tagdoc = ([
   <p>
   This tag is very usefull for application that needs a calendar functionality.
   </p>
-  <note><p>All <xhref href='emit.tag'>emit</xhref> attributes apply.</p></note>
+  <note><p>All <xref href='emit.tag'>emit</xref> attributes apply.</p></note>
 
   </desc>
 
@@ -1082,18 +1081,19 @@ constant tagdoc = ([
           host='mydb'>
 
           <if variable='_.ymd_short is &var.ymd_short_old;' not=''>
-            </td>
+            <![CDATA[</td>]]>
           </if>
           <if variable='_.week.day is 1' 
               match='&_.ymd_short; != &var.ymd_short_old;'>
             <if variable='_.counter &gt; 1'>
+              <![CDATA[
               </tr>
-              <tr>
+              <tr>]]>
             </if>
             <td width='30' valign='top'>
               <div>&_.week;</div>
             </td>
-            <td width='100' valign='top'>
+            <![CDATA[<td width='100' valign='top'>]]>
             <div align='right'>&_.month.day;</div>
             <div>&_.day_event;</div>
           </if>
@@ -1101,7 +1101,7 @@ constant tagdoc = ([
             <set variable='var.cal-day-width'
               value='{$working-day-column-width}'/>
             <if variable='_.ymd_short is &var.ymd_short_old;' not=''>
-              <td width='100' valign='top'>
+              <![CDATA[<td width='100' valign='top'>]]>
               <if variable='_.week.day is 7'>
                 <div align='right' style='color: red'>
                   &_.month.day;
@@ -1111,14 +1111,14 @@ constant tagdoc = ([
                 <div align='right'>&_.month.day;</div>
               </else>
             </if>
-            <div>&_.day_event;
+            <div>&_.day_event;</div>
           </else>
           <set variable='var.ymd_short_old' from='_.ymd_short'/>
         </emit>
       </tr>
     </table>
   </ex-box>
-  <note><p>The code above does not work in a XML- or XSLT-file
+  <p>The code above does not work in an XML- or XSLT-file
     unless modified to conform to XML. To accomplish that
     &lt;xsl:text disable-output-escaping='yes'&gt;
     &lt;![CDATA[&lt;td&gt;]]&gt;
@@ -1128,7 +1128,6 @@ constant tagdoc = ([
     &amp;var.start_td:none; see documentation: Encoding,
     under Variables, Scopes &amp; Entities
     </p>
-  </note>
   ",
   ([
     "&_.year;":#"<desc type='entity'><p>
@@ -1159,7 +1158,7 @@ constant tagdoc = ([
   Month short name. Language dependent.</p></desc>",
 
     "&_.month.number-of-days;":#"<desc type='entity'><p>
-  Integervalue of how many days the month contains. &amp;_.month.number_of_days;
+  Integervalue of how many days the month contains. <ent>_.month.number_of_days</ent>
   will also work due to backward compatibility.</p></desc>",
 
     "&_.week;":#"<desc type='entity'><p>
@@ -1185,10 +1184,10 @@ constant tagdoc = ([
     "&_.week.name;":#"<desc type='entity'><p>
   the name of the week. I.e. w5 for week number 5 that year.</p></desc>",
 
-    "&_.day;":#"<desc type='entity'><p>Same as &amp;_.month.day;
+    "&_.day;":#"<desc type='entity'><p>Same as <ent>_.month.day</ent>
         </p></desc>",
 
-    "&_.days;":#"<desc type='entity'><p>Same as &amp;_.month.days;
+    "&_.days;":#"<desc type='entity'><p>Same as <ent>_.month.days</ent>
         </p></desc>",
 
     "&_.ymd;":#"<desc type='entity'><p>
