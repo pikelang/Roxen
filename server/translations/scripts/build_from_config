@@ -1,8 +1,7 @@
-#!/bin/sh
+#! /bin/sh
 
 CFGFILE="$1"
-PIKE="$2"
-EXTRACT="$3"
+EXTRACT="$2"
 #
 # extract.pike [arguments] infile(s)
 #
