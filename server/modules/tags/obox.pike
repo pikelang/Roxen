@@ -5,7 +5,7 @@
 // Several modifications by Francesco Chemolli.
 
 
-constant cvs_version = "$Id: obox.pike,v 1.22 2000/02/24 05:20:11 nilsson Exp $";
+constant cvs_version = "$Id: obox.pike,v 1.23 2000/03/13 21:05:57 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -148,10 +148,10 @@ static string title(mapping args)
 		   args->bgcolor ? " bgcolor=\""+args->bgcolor+"\"" : "",
 		   args->outlinecolor,
 		   empty,
-		   (args->left ? " width="+args->left : ""),
+		   args->left ? " width=\""+args->left+"\"" : "",
 		   (args->fixedleft ?
 		    String.strmult ("&nbsp;", (int) args->fixedleft) : "&nbsp;"),
-		   (args->right ? " width="+args->right : ""),
+		   args->right ? " width=\""+args->right+"\"" : "",
 		   (args->fixedright ?
 		    String.strmult ("&nbsp;", (int) args->fixedright) : "&nbsp;"),
 		   args->outlinecolor,
@@ -184,10 +184,10 @@ static string title(mapping args)
 		   empty,
 		   args->outlinecolor,
 		   empty,
-		   (args->left ? " width="+args->left : ""),
+		   args->left ? " width=\""+args->left+"\"" : "",
 		   (args->fixedleft ?
 		    String.strmult ("&nbsp;", (int) args->fixedleft) : "&nbsp;"),
-		   (args->right ? " width="+args->right : ""),
+		   args->right ? " width=\""+args->right+"\"" : "",
 		   (args->fixedright ?
 		    String.strmult ("&nbsp;", (int) args->fixedright) : "&nbsp;"),
 		   args->outlinecolor,
@@ -195,8 +195,7 @@ static string title(mapping args)
   }
 }
 
-string container_obox(string name, mapping args,
-		      string contents, object request_id)
+string simpletag_obox(string name, mapping args, string contents)
 {
   string s;
 
@@ -248,6 +247,6 @@ constant module_doc =
       "standard":
       "This is a container tag making outlined boxes.",
       "svenska":
-      "<tt>&lt;obox help&gt;&lt;/obox&gt;</tt> är en tag som ramar "
-      "in det som står i den. <obox title=exempel>innehåll</obox>",
+      "<tt>&lt;obox&gt;&lt;/obox&gt;</tt> är en tag som ramar "
+      "in det som står i den.",
     ]);
