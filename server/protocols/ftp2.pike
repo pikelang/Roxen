@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.67 1998/10/06 22:17:17 grubba Exp $
+ * $Id: ftp2.pike,v 1.68 1998/10/21 14:41:31 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -480,7 +480,14 @@ class LS_L
   {
     string user = master_session->conf->auth_module &&
       master_session->conf->auth_module->user_from_uid(uid);
-    return user || (uid?((string)uid):"root");
+    if (user) {
+      if (arrayp(user)) {
+	return(user[0]);
+      } else {
+	return(user);
+      }
+    }
+    return (uid?((string)uid):"root");
   }
 
   string ls_l(string file, array st)
