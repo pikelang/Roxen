@@ -1,3 +1,27 @@
+Changes since Roxen Challenger 1.2.28 Yellow
+-----------------------------------------------
+
+o The HTTP proxy should now work again.
+  Thanks to Wilhelm Köhler <wk@cs.tu-berlin.de>.
+
+o pike/0.5/doc/ is now back in the distribution.
+
+o Fixed a few cosmetic bugs.
+
+o pike/0.5/src/modules/files/file.c didn't compile on OS's with broken
+  socketpair() (eg SCO).
+
+o Fixed bug in FreeBSD 3.0 detection.
+
+o Applied patch by Andy Church <achurch@dragonfire.net>, which fixes
+  the IP address list. Thanks.
+
+o <gtext> now supports PNG on pike's that have Image.PNG.
+
+o The permissions on /tmp/.Roxen_fcgi_pipes/. are now set to 01777.
+  Thanks to Kai Garlipp <garlipp@informatik.uni-rostock.de>.
+
+
 Changes since Roxen Challenger 1.2.27 Yellow
 -----------------------------------------------
 
