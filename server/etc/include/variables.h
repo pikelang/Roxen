@@ -1,11 +1,13 @@
 // -*- Pike -*-
-// $Id: variables.h,v 1.10 2000/01/05 18:20:21 per Exp $
+// $Id: variables.h,v 1.11 2000/05/10 00:54:03 nilsson Exp $
 // Fallback-resources, don't change here.
 
 private static constant errors =
 ([
   100:"100 Continue",
   101:"101 Switching Protocols",
+  102:"102 Processing",
+
   200:"200 OK",
   201:"201 URI follows",	// Created
   202:"202 Accepted",
@@ -13,7 +15,8 @@ private static constant errors =
   204:"204 No Content",
   205:"205 Reset Content",
   206:"206 Partial Content", // Byte Ranges
-  
+  207:"207 Multi-Status",
+
   300:"300 Moved",			// Multiple Choices
   301:"301 Permanent Relocation",
   302:"302 Temporary Relocation",
@@ -38,12 +41,22 @@ private static constant errors =
   414:"414 Request-URI Too Large",
   415:"415 Unsupported Media Type",
   416:"416 Requested range not satisfiable",
-  
+  417:"417 Expectation Failed",
+  418:"418 I'm a teapot",
+  // FIXME: What is 419?
+  420:"420 Server temporarily unavailable",
+  421:"421 Server shutting down at operator request",
+  422:"422 Unprocessable Entity",
+  423:"423 Locked",
+  424:"424 Failed Dependency",
+
   500:"500 Internal Server Error.",
   501:"501 Not Implemented",
   502:"502 Gateway Timeout",
   503:"503 Service unavailable",
   504:"504 Gateway Time-out",
   505:"505 HTTP Version not supported",
+  506:"506 Variant aldo negotiates",
+  507:"507 Insufficient Storage",
 ]);
 
