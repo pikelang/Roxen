@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.116 2000/04/29 23:56:12 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.117 2000/04/30 18:57:11 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -884,13 +884,9 @@ array(string) container_cache(string tag, mapping args,
   string key="";
   contents=parse_html(contents, ([]), (["cache":container_cache]) );
   if(!args->nohash) {
-#if constant(Crypto.md5)
     object md5 = Crypto.md5();
     md5->update(HASH(contents));
     key=md5->digest();
-#else
-    key = (string)hash(HASH(contents));
-#endif
   }
   if(args->key)
     key += args->key;
