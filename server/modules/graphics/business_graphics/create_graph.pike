@@ -507,6 +507,7 @@ mapping draw_grid(mapping diagram_data, int|float xpos_for_yaxis,
   if (!diagram_data["gridwidth"])
     diagram_data["gridwidth"]=diagram_data["linewidth"]/4.0;
 
+  graph->setcolor(@diagram_data["axcolor"]);
   float gw=(float)diagram_data["gridwidth"];
   if ((diagram_data["vertgrid"])&&
       (gw>LITET))
