@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.1 1999/12/11 12:34:56 mast Exp $
+//! $Id: module.pmod,v 1.2 1999/12/13 22:12:40 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -1452,11 +1452,11 @@ class Type
   //!    and
   //!	    eval ("data") + eval ("") == eval ("data")
 
-  mixed empty_value;
+  //!mixed empty_value;
   //! The empty value for sequential data types, i.e. what eval ("")
   //! would produce.
 
-  mixed free_text;
+  //!mixed free_text;
   //! Nonzero if the type keeps the free text between parsed tokens,
   //! e.g. the plain text between tags in HTML. The type must be
   //! sequential and use strings.
