@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.192 2000/11/23 05:04:36 per Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.193 2000/12/04 17:57:22 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -913,6 +913,8 @@ class TagInsertRealfile {
 
   string get_data(string var, mapping args, RequestID id) {
     string filename=id->conf->real_file(Roxen.fix_relative(var, id), id);
+    if(!filename)
+      RXML.run_error("Could not find the file %s.\n", Roxen.fix_relative(var, id));
     Stdio.File file=Stdio.File(filename, "r");
     if(file)
       return file->read();
