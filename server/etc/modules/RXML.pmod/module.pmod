@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.258 2001/11/23 20:57:57 mast Exp $
+// $Id: module.pmod,v 1.259 2001/12/04 16:09:50 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -7166,7 +7166,9 @@ class PCode
       mixed item = encode_p_code[pos];
       if (objectp (item) && item->is_RXML_p_code_frame) {
 	encode_p_code[pos + 1] = 0; // Don't encode the cached frame.
-#ifdef DEBUG
+#if 1 // #ifdef DEBUG
+	// Always do this check, to attempt to get better info about
+	// [bug 2543].
 	if (stringp (encode_p_code[pos + 2][0]))
 	  error ("Unresolved argument function in frame at position %d.\n"
 		 "Encoding p-code in unfinished evaluation?\n", pos);
