@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.219 2000/03/19 23:38:04 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.220 2000/03/20 00:53:00 mast Exp $";
 
 #include <module.h>
 inherit "module";
@@ -744,7 +744,6 @@ mapping mk_gtext_arg(mapping arg, RequestID id)
   foreach(textarg, string tmp)
     foreach( glob( tmp, i ), string a )
     {
-      werror("found "+a+" "+arg[a]+"\n");
       p[a]=arg[a]; // ,id
       i-=({a});
       m_delete(arg,a);
