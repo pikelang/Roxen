@@ -353,6 +353,22 @@ int is_nph(char *foo)
 void main(int argc, char **argv)
 {
   int raw;
+
+  /* Do not allow root execution
+   *
+   * This is probably already fixed in Roxen,
+   * but two levels of security is better than one.
+   */
+  if(!getuid() && !geteuid()) exit(1);
+  if(!geteuid()) exit(1);
+  if(!getuid()) {
+    int euid = geteuid();
+    int egid = getegid();
+    seteuid(0);
+    setgid(egid);
+    setuid(euid);
+  }
+  if(!getuid()) exit(1);
   
   if(argc==1)
   {
