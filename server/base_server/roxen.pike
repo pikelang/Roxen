@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.629 2001/02/05 17:26:05 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.630 2001/02/09 00:15:20 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -1662,17 +1662,23 @@ class ImageCache
     mixed args = Array.map( Array.map( name/"$", argcache->lookup, id->client ), frommapp);
     mapping meta;
     string data;
-
+    array guides;
     mixed reply = draw_function( @copy_value(args), id );
 
     if( arrayp( args ) )
       args = args[0];
 
     if( arrayp( reply ) ) // layers.
+    {
+      guides = reply->get_misc_value( "image_guides" )-({});
+      if( sizeof( guides ) )
+	guides = guides[0];
       reply = Image.lay( reply );
-
+    }
     if( objectp( reply ) && reply->image ) // layer.
     {
+      if( !guides )
+	guides = reply->get_misc_value( "image_guides" );
       reply = ([
         "img":reply->image(),
         "alpha":reply->alpha(),
@@ -1693,7 +1699,7 @@ class ImageCache
       if( args->fs  || dither == "fs" )
 	dither = "floyd_steinberg";
 
-      if(  dither == "random" )
+      if( dither == "random" )
 	dither = "random_dither";
 
       if( format == "jpg" )
@@ -1712,11 +1718,12 @@ class ImageCache
         true_alpha = 1;
 
       if( args["background"] || args["background-color"])
-        bgcolor = Image.Color( (args["background"]||args["background-color"]) );
+        bgcolor = Image.Color( args["background"]||args["background-color"] );
 
       if( args["opaque-value"] )
       {
-        if( !bgcolor ) true_alpha = 1;
+        if( !bgcolor )
+	  true_alpha = 1;
         int ov = (int)(((float)args["opaque-value"])*2.55);
         if( ov < 0 )
           ov = 0;
@@ -1740,79 +1747,187 @@ class ImageCache
         alpha = alpha->threshold( 4 );
       }
 
-      int x0, y0, x1, y1;
+      int x0, y0, x1=reply->xsize(), y1=reply->ysize(), xc, yc;
       if( args["x-offset"] || args["xoffset"] )
         x0 = (int)(args["x-offset"]||args["xoffset"]);
       if( args["y-offset"] || args["yoffset"] )
         y0 = (int)(args["y-offset"]||args["yoffset"]);
-      if( args["width"] || args["x-size"] );
-        x1 = (int)(args["x-size"]||args["width"]);
-      if( args["height"] || args["y-size"] );
-        y1 = (int)(args["y-size"]||args["height"]);
+      if( args["width"] || args["x-size"] )
+	x1 = (int)(args["x-size"]||args["width"]);
+      if( args["height"] || args["y-size"] )
+	y1 = (int)(args["y-size"]||args["height"]);
 
+      array xguides, yguides;
+      void sort_guides()
+      {
+	xguides = ({}); yguides = ({});
+	if( guides )
+	{
+	  foreach( guides, object g  )
+	    if( g->pos > 0 )
+	      if( g->vertical )
+	      {
+		if( g->pos < reply->xsize() )
+		  xguides += ({ g->pos });
+	      }
+	      else
+		if( g->pos < reply->ysize() )
+		  yguides += ({ g->pos });
+	  sort( xguides ); sort( yguides );
+	}
+      };
+	
       if( args->crop )
       {
-        if( sscanf( args->crop, "%d,%d-%d,%d", x0, y0, x1, y1 ) )
-        {
-          x1 -= x0;
-          y1 -= y0;
-        } else {
-          [ x0, y0, x1, y1 ] = reply->find_autocrop();
-          x1 -= x0;
-          y1 -= y0;
-        }
+	int gx=1, gy=1, gx2, gy2;
+	if( sscanf( args["guides-index"]||"", "%d,%d", gx, gy ) == 2 )
+	{
+	  gx2 = gx+1;
+	  gy2 = gy+1;
+	  sscanf( args["guides-index"]||"", "%d,%d-%d,%d", gx, gy, gx2, gy2 );
+	}
+	/* No, I did not forget the break statements. */
+
+	switch( args->crop )
+	{
+	  case "guides-cross":
+	    sort_guides();
+	    if( sizeof(xguides) && sizeof(yguides) )
+	    {
+	      xc = xguides[ min(sizeof(xguides),gx) - 1 ];
+	      yc = yguides[ min(sizeof(yguides),gy) - 1 ];
+	      break;
+	    }
+	    guides=0;
+	  case "guides-region":
+	    sort_guides();
+	    if( (sizeof(xguides)>1) && (sizeof(yguides)>1) )
+	    {
+	      gx = min(sizeof(xguides)-1,gx) - 1;
+	      gy = min(sizeof(yguides)-1,gy) - 1;
+	      gx2 = min(sizeof(xguides),gx2) - 1;
+	      gy2 = min(sizeof(yguides),gy2) - 1;
+
+	      x0 = xguides[gx];   x1 = xguides[gx2] - x0;
+	      y0 = yguides[gy];   y1 = yguides[gy2] - y0;
+	      break;
+	    }
+	  default:
+	    if( sscanf( args->crop, "%d,%d-%d,%d", x0, y0, x1, y1 ) == 4)
+	    {
+	      x1 -= x0;
+	      y1 -= y0;
+	    }
+	  case "auto":
+	    [ x0, y0, x1, y1 ] = reply->find_autocrop();
+	    x1 -= x0;
+	    y1 -= y0;
+	}
       }
 
-      if( x0 || x1 || y0 || y1 )
+#define SCALEI 1
+#define SCALEF 2
+#define CROP   4
+
+      void do_scale_and_crop( int x0, int y0,
+			      int x1, int y1,
+			      int|float w,  int|float h,
+			      int type )
       {
-        if( !x1 ) x1 = reply->xsize()-x0;
-        if( !y1 ) y1 = reply->ysize()-y0;
-        reply = reply->copy( x0,y0,x0+x1-1,y0+y1-1 );
-        if( alpha )
-          alpha = alpha->copy( x0,y0,x0+x1-1,y0+y1-1 );
-      }
+	if( (type & CROP) && x1 && y1 
+	    && ((x1 != reply->xsize()) ||  (y1 != reply->ysize())
+		|| x0 ||  y0 ) )
+	{
+	    reply = reply->copy( x0, y0, x0+x1-1, y0+y1-1,
+				 (bgcolor?bgcolor->rgb():0) );
+	    if( alpha )
+	      alpha = alpha->copy( x0, y0, x0+x1-1,y0+y1-1, Image.Color.black);
+	}
 
+	if( type & SCALEI )
+	{
+	  if( xc || yc )
+	  {
+	    if( h && !w )
+	      w = (reply->xsize() * h) / reply->ysize();
+
+	    if( w && !h )
+	      h = (reply->ysize() * w) / reply->xsize();
+
+	    x0 = max( xc - w/2, 0 );
+	    y0 = max( yc - h/2, 0 );
+
+	    x1 = w; y1 = h;
+	    if( x0 + x1 > reply->xsize() )
+	    {
+	      x0 = reply->xsize()-w;
+	      if( x0 < 0 )
+	      {
+		x0 = 0;
+		x1 = reply->xsize();
+	      }
+	    }
+	    if( y0 + y1 > reply->ysize() )
+	    {
+	      y0 = reply->ysize()-h;
+	      if( y0 < 0 )
+	      {
+		y0 = 0;
+		y1 = reply->ysize();
+	      }
+	    }
+	    reply = reply->copy( x0, y0, x0+x1-1, y0+y1-1,
+				 (bgcolor?bgcolor->rgb():0) );
+
+	    if( alpha )
+	      alpha = alpha->copy( x0, y0, x0+x1-1,y0+y1-1, Image.Color.black);
+	  }
+	}
+
+
+	if( type & SCALEF )
+	{
+	  reply = reply->scale( w );
+	  if( alpha )
+	    alpha = alpha->scale( w );
+	}
+	if( (type & SCALEI) &&
+	    ((reply->xsize() != w)  || (reply->ysize() != h)) )
+	{
+	  if( !(w && reply->xsize() > w) ) { if( h ) w = 0; } else h=0;
+	  if( !(h && reply->ysize() > h) ) { if( w ) h = 0; } else w=0;
+	  reply = reply->scale( w,h );
+	  if( alpha )
+	    alpha = alpha->scale( w,h );
+	}
+      };
+      
       if( args->scale )
       {
         int x, y;
         if( sscanf( args->scale, "%d,%d", x, y ) == 2)
-        {
-          reply = reply->scale( x, y );
-          if( alpha )
-            alpha = alpha->scale( x, y );
-        }
+	  do_scale_and_crop( x0, y0, x1, y1, x, y, SCALEI|CROP );
         else if( (float)args->scale < 3.0)
-        {
-          reply = reply->scale( ((float)args->scale) );
-          if( alpha )
-            alpha = alpha->scale( ((float)args->scale) );
-        }
+	  do_scale_and_crop( x0, y0, x1, y1,
+			     ((float)args->scale), ((float)args->scale),
+			     SCALEF|CROP );
       }
-
-      if( args->maxwidth || args->maxheight ||
-          args["max-width"] || args["max-height"])
+      else
+	if( args->maxwidth || args->maxheight ||
+	    args["max-width"] || args["max-height"] )
       {
-        int x = (int)args->maxwidth||(int)args["max-width"];
+        int x = (int)args->maxwidth|| (int)args["max-width"];
         int y = (int)args->maxheight||(int)args["max-height"];
-        if( x && reply->xsize() > x )
-        {
-          reply = reply->scale( x, 0 );
-          if( alpha )
-            alpha = alpha->scale( x, 0 );
-        }
-        if( y && reply->ysize() > y )
-        {
-          reply = reply->scale( 0, y );
-          if( alpha )
-            alpha = alpha->scale( 0, y );
-        }
+	do_scale_and_crop( x0, y0, x1, y1, x, y, SCALEI|CROP );
       }
+      else
+	do_scale_and_crop( x0, y0, x1, y1, 0, 0, CROP );
 
-      if( args["span-width"] ||
-	  args["span-height"] )
+      if( args["span-width"] || args["span-height"] )
       {
 	int width  = (int)args["span-width"];
 	int height = (int)args["span-height"];
+
 	if( (width && reply->xsize() > width) ||
 	    (height && reply->ysize() > height) )
 	{
@@ -3303,7 +3418,6 @@ function compile_log_format( string fmt )
       format += "$"+part;
   }
   if( add_nl ) format += "\n";
-//   werror("Format = %O  args = %{%O,%} async = %d\n", format, args, do_it_async );
 
   add_constant( "___LogFormat", LogFormat );
   string code = sprintf(
