@@ -1,3 +1,7 @@
+/*
+ * $Id: quick_config.pike,v 1.3 1997/09/17 02:00:56 grubba Exp $
+ */
+
 inherit "wizard";
 
 string name="Maintenance//Quick Config...";
