@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.20 2001/11/27 10:45:09 mast Exp $
+ * $Id: debug_info.pike,v 1.21 2002/02/14 14:39:47 mast Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -252,16 +252,21 @@ mixed page_0( object id )
       TCELL ("align='right'", entry[0], entry[5]) + "</tr>\n";
   res += "</table></p>\n";
 
-  mapping(string:array(string)) allobj = ([]);
+  mapping(string|program:array(string)) allobj = ([]);
+  mapping(string|program:int) numobjs = ([]);
 
   object start = this_object();
   for (object o = start; o; o = _prev (o))
-    if (program p = object_program (o))
-      allobj[Program.defined (p) || p] += ({sprintf ("%O", o)});
+    if (string|program p = object_program (o)) {
+      p = Program.defined (p) || p;
+      if (++numobjs[p] <= 50) allobj[p] += ({sprintf ("%O", o)});
+    }
   start = _next (start);
   for (object o = start; o; o = _next (o))
-    if (program p = object_program (o))
-      allobj[Program.defined (p) || p] += ({sprintf ("%O", o)});
+    if (string|program p = object_program (o)) {
+      p = Program.defined (p) || p;
+      if (++numobjs[p] <= 50) allobj[p] += ({sprintf ("%O", o)});
+    }
 
   table = (array) allobj;
 
@@ -301,14 +306,14 @@ mixed page_0( object id )
 	color = same_color;
       }
       else {
-	change = sizeof (objs) - bar[prog];
+	change = numobjs[prog] - bar[prog];
 	if (change > 0) color = inc_color, change = "+" + change;
 	else if (change < 0) color = dec_color;
 	else color = same_color;
       }
-      bar[prog] = sizeof (objs);
+      bar[prog] = numobjs[prog];
 
-      table[i] = ({color, progstr, objstr, sizeof (objs), change});
+      table[i] = ({color, progstr, objstr, numobjs[prog], change});
     }
     else table[i] = 0;
   }
