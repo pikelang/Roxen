@@ -1,11 +1,12 @@
-constant cvs_version = "$Id: httpbasic.pike,v 1.1 2001/01/19 12:41:40 per Exp $";
+constant cvs_version =
+  "$Id: auth_httpbasic.pike,v 1.1 2001/01/19 16:35:46 per Exp $";
 inherit AuthModule;
 inherit "module";
 
 constant name = "httpbasic";
 
-//<locale-token project="mod_httpbasic">_</locale-token>
-#define _(X,Y)	_DEF_LOCALE("mod_httpbasic",X,Y)
+//<locale-token project="mod_auth_httpbasic">_</locale-token>
+#define _(X,Y)	_DEF_LOCALE("mod_auth_httpbasic",X,Y)
 
 #include <module.h>
 
@@ -14,7 +15,15 @@ LocaleString module_name_locale =
 
 LocaleString module_doc_locale =
   _(0,"Authenticate users using basic username/password authentication.");
-    
+
+static User low_authenticate( RequestID id,
+			      string user, string password,
+			      User DB db )
+{
+  if( User u = db->find_user( user ))
+    if( u->password_authenticate( password ) )
+      return u;
+}
 
 User authenticate( RequestID id, UserDB db )
 //! Try to authenticate the request with users from the specified user
@@ -24,6 +33,15 @@ User authenticate( RequestID id, UserDB db )
 //!
 //! The return value is the autenticated user.
 {
+  string password = id->misc->password;
+  string user     = id->misc->user;
+
+  if( !user )
+    if( id->realauth )
+      [user,password] = (id->realauth/":");
+    else
+      return 0; // Not very likely to work...
+    
   if( !db )
   {
     int res;
