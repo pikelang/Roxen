@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.223 2000/03/24 02:08:54 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.224 2000/03/24 19:15:06 mast Exp $";
 
 #define MAGIC_ERROR
 
@@ -1136,7 +1136,7 @@ string format_backtrace(int eid)
     res += "</ul>\n\n";
   }
 
-  if (sizeof (bt)) {
+  if (bt && sizeof (bt)) {
     res += "<h3>Pike backtrace</h3>\n<ul>\n";
     int q = sizeof (bt);
     foreach(reverse (bt), [string file, int line, string func, string descr])
@@ -1206,7 +1206,8 @@ int store_error(mixed err)
 
   string cwd = getcwd() + "/";
   array bt;
-  if (arrayp (err) && sizeof (err) >= 2 && arrayp (err[1])) {
+  if (arrayp (err) && sizeof (err) >= 2 && arrayp (err[1]) ||
+      objectp (err) && err->is_generic_error) {
     bt = ({});
     foreach (err[1], mixed ent) {
       string file, func, descr;
