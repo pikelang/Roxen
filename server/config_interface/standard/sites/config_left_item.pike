@@ -56,13 +56,12 @@ string selected_item( string q, roxen.Configuration c, RequestID id, string modu
 
        case "modules":
 	 string tmp="";
-	 sscanf(id->raw_url, "%*site.html%s", tmp);
-	 int depth=1+sizeof(tmp/"/"-({""}));
-	 pre+=sprintf("<br><gbutton width=150 bgcolor=&usr.fade1; preparse href='"+("../"*depth)+
+	 sscanf(id->not_query, "%ssite.html", tmp);
+	 pre+=sprintf("<br><gbutton width=150 bgcolor=&usr.fade1; preparse href='"+tmp+
 		      "add_module.pike?config=%s'> "
 		      "<cf-locale get=add_module> </gbutton>",
 		      http_encode_string( c->name ) )+
-	   sprintf("<br><gbutton width=150 bgcolor=&usr.fade1; preparse href='"+("../"*depth)+
+	   sprintf("<br><gbutton width=150 bgcolor=&usr.fade1; preparse href='"+tmp+
 		   "drop_module.pike?config=%s'> "
 		   "<cf-locale get=drop_module> </gbutton><br>",
 		   http_encode_string( c->name ) );
