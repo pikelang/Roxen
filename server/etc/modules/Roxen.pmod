@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.27 2000/08/14 18:53:14 mast Exp $
+ * $Id: Roxen.pmod,v 1.28 2000/08/14 23:52:45 mast Exp $
  *
  * Various helper functions.
  *
@@ -1034,14 +1034,36 @@ Configuration get_owning_config (object|function thing)
 
 #ifdef REQUEST_TRACE
 
-void trace_enter (RequestID id, string msg, object|function thing)
+static string trace_msg (RequestID id, string msg, string name)
 {
-  if (!id->misc->trace_level)
-    report_debug ("%%%%%% Request handled by: %O\n", id->conf);
-
-  string txt = html_decode_string (
+  msg = html_decode_string (
     Parser.HTML()->_set_tag_callback (lambda (object p, string s) {return "";})->
     finish (msg)->read());
+
+  array(string) lines = msg / "\n";
+  if (lines[-1] == "") lines = lines[..sizeof (lines) - 2];
+
+  if (sizeof (lines))
+    report_debug ("%s%s%-40s %s\n",
+		  map (lines[..sizeof (lines) - 2],
+		       lambda (string s) {
+			 return sprintf ("%s%*s%s\n", id->misc->trace_id_prefix,
+					 id->misc->trace_level + 1, "", s);
+		       }) * "",
+		  id->misc->trace_id_prefix,
+		  sprintf ("%*s%s", id->misc->trace_level + 1, "", lines[-1]),
+		  name);
+}
+
+void trace_enter (RequestID id, string msg, object|function thing)
+{
+  if (!id->misc->trace_level) {
+    id->misc->trace_id_prefix = ({"%%", "##", "$$", "¤¤", "**", "@@", "§§"})[
+      all_constants()->id_trace_level_rotate_counter++ % 7];
+    report_debug ("%s%s Request handled by: %O\n",
+		  id->misc->trace_id_prefix, id->misc->trace_id_prefix[..0],
+		  id->conf);
+  }
 
   string name;
   if (thing) {
@@ -1057,8 +1079,7 @@ void trace_enter (RequestID id, string msg, object|function thing)
   }
   else name = "";
 
-  report_debug ("%%%%%-40s %s\n",
-		sprintf ("%*s%s", id->misc->trace_level + 1, "", txt), name);
+  trace_msg (id, msg, name);
   id->misc->trace_level++;
 
   if(function(string,mixed ...:void) _trace_enter =
@@ -1070,12 +1091,7 @@ void trace_leave (RequestID id, string desc)
 {
   if (id->misc->trace_level) id->misc->trace_level--;
 
-  if (sizeof (desc)) {
-    string txt = html_decode_string (
-      Parser.HTML()->_set_tag_callback (lambda (object p, string s) {return "";})->
-      finish (desc)->read());
-    report_debug ("%%%%%*s%s\n", id->misc->trace_level + 1, "", txt);
-  }
+  if (sizeof (desc)) trace_msg (id, desc, "");
 
   if(function(string:void) _trace_leave =
      [function(string:void)]([mapping(string:mixed)]id->misc)->trace_leave)
