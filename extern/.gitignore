@@ -9,3 +9,5 @@
 /ssl
 /stamp-h
 /configure
+/stamp-h.in
+/config.h.in
