@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.78 2002/02/13 10:04:16 grubba Exp $
+ * $Id: ftp.pike,v 2.79 2002/02/26 17:37:03 anders Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -158,9 +158,24 @@ class RequestID2
   {
   }
 
+  constant __num = ({ 0 });
+  int _num;
+
+  void destroy()
+  {
+#ifdef FTP_REQUESTID_DEBUG
+    report_debug("REQUESTID: Destroy request id #%d.\n", _num);
+#endif
+  }
+
   void create(object|void m_rid)
   {
+#ifdef FTP_REQUESTID_DEBUG
+    _num = ++__num[0];
+    report_debug("REQUESTID: New request id #%d.\n", _num);
+#else
     DWRITE("REQUESTID: New request id.\n");
+#endif
 
     if (m_rid) {
       object o = this_object();
@@ -169,7 +184,8 @@ class RequestID2
                 "__INIT", "clone_me", "end", "ready_to_receive",
 		"send", "scan_for_query", "send_result", "misc",
 		"url_base", "set_response_header",
-		"add_response_header" >)[var]) {
+		"add_response_header",
+		"destroy", "_num", "__num">)[var]) {
 #ifdef FTP2_DEBUG
 	  if (catch {
 #endif /* FTP2_DEBUG */
