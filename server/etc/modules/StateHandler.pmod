@@ -1,7 +1,7 @@
 // This is the Roxen WebServer state mechanism.
 // Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: StateHandler.pmod,v 1.3 2001/02/10 22:42:23 nilsson Exp $
+// $Id: StateHandler.pmod,v 1.4 2001/02/11 04:46:41 nilsson Exp $
 
 #ifdef STATE_HANDLER_DEBUG
 # define STATE_WERR(X) werror("State: "+X+"\n")
@@ -110,10 +110,8 @@ class Page_state {
   }
 
   int uri_decode(string from)
-  //! Decode states from a URI safe string.
-  //! Returns 1 for success, 0 for failure.
   {
-    return decode(replace(from,({"-","!","_"}),({"+","/","="})));
+    return decode(replace(from, ([ "%2B":"+", "%2F":"/", "%3D":"=" ])));
   }
 
   int decode(string from)
@@ -131,7 +129,7 @@ class Page_state {
       for(int i=1; i<sizeof(from); i++)
         chksum+=from[i];
       if(from[0] != CHKSPACE[chksum%64]) {
-	report_fatal("Error in state checksum.");
+	report_fatal("Error in state checksum.\n");
         return 0;
       }
       from=from[1..];
@@ -149,13 +147,13 @@ class Page_state {
       from = gz->inflate()->inflate(from);
     };
     if(error) {
-      report_fatal("Error in state compression/transport encoding.");
+      report_fatal("Error in state compression/transport encoding.\n");
       return 0;
     }
 
     mapping new_state;
     if( catch(new_state=decode_value(from)) ) {
-      report_fatal("Error in state decode value.");
+      report_fatal("Error in state decode value.\n");
       return 0;
     }
     if(!new_state) return 1;
@@ -240,8 +238,7 @@ class Page_state {
   string uri_encode(void|mixed value, void|string|array key)
   //! Encode present state into a URI safe string.
   {
-    // The "_" here is better for NT filesystems for the manual dumps.
-    return replace(encode(value,key),({"+","/","="}),({"-","!","_"}));
+    return replace(encode(value,key), ([ "+":"%2B", "/":"%2F", "=":"%3D" ]));
   }
 
 }
