@@ -12,7 +12,7 @@
  */
 
 #ifndef lint
-static const char rcsid[] = "$Id: cgi-fcgi.c,v 1.3 1997/05/09 17:24:01 grubba Exp $";
+static const char rcsid[] = "$Id: cgi-fcgi.c,v 1.4 1997/10/07 22:13:38 grubba Exp $";
 #endif /* not lint */
 
 #include <stdio.h>
@@ -345,7 +345,7 @@ static void AppServerReadHandler(void)
         /*
          * fromAS is not empty.  What to do with the contents?
          */
-        if(headerLen < sizeof(header)) {
+        if((unsigned)headerLen < (unsigned)sizeof(header)) {
             /*
              * First priority is to complete the header.
              */
@@ -353,7 +353,7 @@ static void AppServerReadHandler(void)
             assert(count > 0);
             memcpy(&header + headerLen, ptr, count);
             headerLen += count;
-            if(headerLen < sizeof(header)) {
+            if((unsigned)headerLen < (unsigned)sizeof(header)) {
                 break;
             }
             if(header.version != FCGI_VERSION_1) {
@@ -548,11 +548,11 @@ static int OS_BuildSockAddrUn(char *bindPath,
     int bindPathLen = strlen(bindPath);
 
 #ifdef HAVE_SOCKADDR_UN_SUN_LEN /* 4.3BSD Reno and later: BSDI, DEC */
-    if(bindPathLen >= sizeof(servAddrPtr->sun_path)) {
+    if((unsigned)bindPathLen >= (unsigned)sizeof(servAddrPtr->sun_path)) {
         return -1;
     }
 #else                           /* 4.3 BSD Tahoe: Solaris, HPUX, DEC, ... */
-    if(bindPathLen > sizeof(servAddrPtr->sun_path)) {
+    if((unsigned)bindPathLen > (unsigned)sizeof(servAddrPtr->sun_path)) {
         return -1;
     }
 #endif
@@ -599,7 +599,7 @@ static int FCGI_Connect(char *bindPath)
     int connectStatus;
     char    *tp;
     char    host[MAXPATHLEN];
-    short   port;
+    short   port = 0;
     int	    tcp = FALSE;
 
     strcpy(host, bindPath);
@@ -661,7 +661,7 @@ static void FCGI_Start(char *bindPath, char *appPath, int nServers)
     int listenSock, tmpFD, servLen, forkResult, i;
     union   SockAddrUnion sa;
     char    *tp;
-    short   port;
+    short   port = 0;
     int	    tcp = FALSE;
     char    host[MAXPATHLEN];
 
