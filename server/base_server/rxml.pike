@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.178 2000/03/23 00:35:10 mast Exp $
+// $Id: rxml.pike,v 1.179 2000/03/28 16:33:56 nilsson Exp $
 
 inherit "rxmlhelp";
 #include <request_trace.h>
@@ -827,7 +827,8 @@ class TagDefine {
       string n;
 
       if(n=args->variable) {
-	RXML.get_context()->user_set_var(n, content, args->scope);
+	if(args->trimwhites) content=String.trim_all_whites(content);
+	RXML.user_set_var(n, content, args->scope);
 	return 0;
       }
 
@@ -1488,21 +1489,31 @@ class IfIs
 
   int match_in_map( string value, RequestID id )
   {
-    string is,var;
     if(!cache) CACHE(0);
     array arr=value/" ";
-    var=source(id, arr[0]);
-    if(sizeof(arr)<2 || !var) return !!var;
+    string var=source(id, arr[0]);
+    if(sizeof(arr)<2) return !!var;
     var = lower_case( (var+"") );
     if(sizeof(arr)==1) return !!var;
-    is=lower_case(arr[2..]*" ");
-    //FIXME: We must compare between the same _and_ right types.
+    string is=lower_case(arr[2..]*" ");
+
+    werror("IF: %O %O %O\n",value,var,is);
     if(arr[1]=="==" || arr[1]=="=" || arr[1]=="is")
       return ((is==var)||glob(is,var)||
             sizeof(filter( is/",", glob, var )));
-    if(arr[1]=="!=") return (is!=var);
-    if(arr[1]=="<") return ((float)var<(float)is);
-    if(arr[1]==">") return ((float)var>(float)is);
+    if(arr[1]=="!=") return 1;
+
+    string trash;
+    if(sscanf(var,"%f%s",float f_var,trash)==2 && trash=="" &&
+       sscanf(is ,"%f%s",float f_is ,trash)==2 && trash=="") {
+      if(arr[1]=="<") return f_var<f_is;
+      if(arr[1]==">") return f_var>f_is;
+    }
+    else {
+      if(arr[1]=="<") return (var<is);
+      if(arr[1]==">") return (var>is);
+    }
+
     value=source(id, value);
     return !!value;
   }
@@ -1830,7 +1841,7 @@ class TagIfVariable {
   constant plugin_name = "variable";
   constant cache = 1;
   string source(RequestID id, string s) {
-    mixed var=RXML.get_context()->user_get_var(s);
+    mixed var=RXML.user_get_var(s);
     if(!var) return 0;
     return RXML.t_text->convert (var);
   }
