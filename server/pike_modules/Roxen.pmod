@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.177 2004/05/16 21:51:54 mani Exp $
+// $Id: Roxen.pmod,v 1.178 2004/05/17 00:42:16 mani Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2225,7 +2225,7 @@ function get_client_charset_decoder( string едц, RequestID|void id )
 			({ "?", "?", "?",
 			   "?", "?", "?",
 			   "?", "?", "?",
-			   "?", "?", "?", "?", "?",
+			   "?", "?", "?", "?",
 			   "?" }));
 			
   switch( test ) {
