@@ -1,5 +1,5 @@
 <!-- -*- html -*- -->
-<!-- $Id: template,v 1.117 2002/11/06 00:49:03 mani Exp $ -->
+<!-- $Id: template,v 1.118 2002/11/06 18:59:35 agehall Exp $ -->
 
 <define tag='cfg-variables'>
   <set variable='form.__redirect' value='1' />
@@ -116,12 +116,7 @@
 <define container="content"><cset quote="none" variable="var.content"><contents/></cset></define>
 
 <define container="tmpl">
-<html><head>
-<title>&roxen.version; Administration Interface<eval>&_.title:none;</eval></title>
-<link rel="shortcut icon" href="&usr.favicon;" />
-</head>
-<gauge variable='var.time-spent' resultonly='yes'>
-<nooutput>
+<gauge variable='var.time-spent' resultonly='yes'><nooutput>
   <eval><insert file="/themes/&usr.theme;/theme"/></eval>
   <define preparse="1" variable="var.leftimage"><img src="&usr.left-image;" alt="" /></define>
   <define preparse="1" name="tab-frame-image">&usr.tab-frame-image;</define>
@@ -129,10 +124,13 @@
   <define preparse="1" name="gbutton-frame-image">&usr.gbutton-frame-image;</define>
   <define name="font" preparse="1">&usr.font;</define>
   <expire-time now="1"/>
-<gauge variable='var.time-parse-spent' resultonly='yes'>
+</nooutput><html><head>
+<title>&roxen.version; Administration Interface<eval>&_.title:none;</eval></title>
+<link rel="shortcut icon" href="&usr.favicon;" />
+</head>
+<nooutput><gauge variable='var.time-parse-spent' resultonly='yes'>
   <contents/>
-</gauge>
-</nooutput>
+</gauge></nooutput>
   <body ::="&usr.body-args:none;">
       <table width="100%" cellpadding="0" cellspacing="0" border="0"
              ::="&usr.top-tableargs:none;">
@@ -175,7 +173,6 @@
    </if><else>
      &var.content:none;
    </else>
-</gauge>
     <div align="right">
       <font size="-1">
   	<b>&roxen.version; / &roxen.pike-version;</b><br />
@@ -189,4 +186,5 @@
     </div>
   </body>
 </html>
+</gauge>
 </define>
