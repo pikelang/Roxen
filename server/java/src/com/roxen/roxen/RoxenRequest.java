@@ -1,5 +1,5 @@
 /*
- * $Id: RoxenRequest.java,v 1.8 2000/10/24 16:47:46 marcus Exp $
+ * $Id: RoxenRequest.java,v 1.9 2000/10/24 17:09:11 marcus Exp $
  *
  */
 
@@ -157,6 +157,23 @@ public class RoxenRequest {
 	_prestate = new HashSet();
     return _prestate;
   }
+
+  /**
+   * Sets maximum cache time for this request
+   *
+   * @param  sec  the number of seconds to cache
+   */
+  public native void cache(int sec);
+
+  /**
+   * Disable caching for this request
+   *
+   */
+  public void noCache()
+  {
+    cache(0);
+  }
+
 
   /*
    * Not available (yet):

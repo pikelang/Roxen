@@ -2,6 +2,8 @@ static constant jvm = Java.machine;
 
 static private inherit "roxenlib";
 
+#include <module.h>
+
 #define FINDCLASS(X) (jvm->find_class(X)||(jvm->exception_describe(),jvm->exception_clear(),error("Failed to load class " X ".\n"),0))
 
 /* Marshalling */
@@ -694,6 +696,12 @@ static object native_get_prestate(object id)
   return id && objify(id->prestate);
 }
 
+static void native_cache(object id, int n)
+{
+  id = jotoid[id];
+  CACHE(n);
+}
+
 static string native_real_file(object conf, object filename, object id)
 {
   conf = jotoconf[conf];
@@ -736,5 +744,6 @@ void create()
     ({"getSupports", "()Ljava/util/Set;", native_get_supports}),
     ({"getPragma", "()Ljava/util/Set;", native_get_pragma}),
     ({"getPrestate", "()Ljava/util/Set;", native_get_prestate}),
+    ({"cache", "(I)V", native_cache}),
   }));
 }
