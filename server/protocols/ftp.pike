@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.46 2001/08/04 23:46:12 grubba Exp $
+ * $Id: ftp.pike,v 2.47 2001/08/22 16:54:23 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -1376,7 +1376,7 @@ class FTPSession
     "ABOR":"(Abort current transmission)",
     // Informational commands
     "SYST":"(Get type of operating system)",
-    "STAT":"<sp> path-name (Status for file)",
+    "STAT":"[ <sp> path-name ] (Status for server/file)",
     "HELP":"[ <sp> <string> ] (Give help)",
     // Miscellaneous commands
     "SITE":"<sp> <string> (Site parameters)",	// Has separate help
@@ -3284,7 +3284,32 @@ class FTPSession
     // a file-transfer.
     // FIXME: That is not supported yet.
 
-    if (!expect_argument("STAT", args)) {
+    if ((< "", 0 >)[args]) {
+      /* RFC 959 4.1.3:
+       * If no argument is given, the server should return general
+       * status information about the server FTP process.  This
+       * should include current values of all transfer parameters and
+       * the status of connections.
+       */
+      send(211,
+	   sprintf("%s FTP server status:\n"
+		   "Version %s\n"
+		   "Listening on %s\n"
+		   "Connected to %s\n"
+		   "Logged in %s\n"
+		   "TYPE: %s, FORM: %s; STRUcture: %s; transfer MODE: %s\n"
+		   "End of status",
+		   replace(fd->query_address(1), " ", ":"),
+		   roxen.version(),
+		   port_obj->sorted_urls * "\nListening on ",
+		   replace(fd->query_address(), " ", ":"),
+		   user?sprintf("as %s", user):"anonymously",
+		   (["A":"ASCII", "E":"EBCDIC", "I":"IMAGE", "L":"LOCAL"])
+		   [mode],
+		   "Non-Print",
+		   "File",
+		   "Stream"
+		   )/"\n");
       return;
     }
     string long = fix_path(args);
