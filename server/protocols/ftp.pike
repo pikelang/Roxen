@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.42 2000/12/28 20:09:13 mast Exp $
+ * $Id: ftp.pike,v 2.43 2001/02/19 16:06:25 jonasw Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -696,6 +696,8 @@ class LSFile
 	session = RequestID2(master_session);
 	session->method = "DIR";
       }
+
+      long = replace(long, "//", "/");
       st = session->conf->stat_file(long, session);
       stat_cache[long] = st;
     }
@@ -1759,6 +1761,7 @@ class FTPSession
     }
 
     if (!file) {
+      fname = replace(fname, "//", "/");
       return(conf->stat_file(fname, session));
     }
     return(file);
@@ -2777,7 +2780,8 @@ class FTPSession
 						 return(s[..5] == "README");
 					       })));
       foreach(files, string f) {
-	array|object st = conf->stat_file(cwd + f, session);
+	array|object st = conf->stat_file(replace(cwd + f, "//", "/"),
+					  session);
 
 	if (st && (st[1] >= 0)) {
 	  reply = ({ sprintf("Please read the file %s.", f),

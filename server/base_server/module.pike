@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module.pike,v 1.101 2000/12/05 00:24:25 nilsson Exp $
+// $Id: module.pike,v 1.102 2001/02/19 16:06:21 jonasw Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -430,7 +430,7 @@ mapping(string:Stat) find_dir_stat(string f, RequestID id)
 
   foreach(files || ({}), string fname) {
     TRACE_ENTER("stat()'ing "+ f + "/" + fname, 0);
-    Stat st = stat_file(f + "/" + fname, id);
+    Stat st = stat_file(replace(f + "/" + fname, "//", "/"), id);
     if (st) {
       res[fname] = st;
       TRACE_LEAVE("OK");
