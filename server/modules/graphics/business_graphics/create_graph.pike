@@ -13,7 +13,7 @@ constant LITET = 1.0e-40;
 constant STORTLITET = 1.0e-30;
 constant STORT = 1.0e40;
 
-constant cvs_version = "$Id: create_graph.pike,v 1.80 1997/11/30 05:05:48 hedda Exp $";
+constant cvs_version = "$Id: create_graph.pike,v 1.81 1997/11/30 05:36:03 hedda Exp $";
 
 /*
 These functions are written by Henrik "Hedda" Wallin (hedda@idonex.se)
@@ -956,14 +956,24 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 
 
   if (!(diagram_data["xnames"]))
-    {
-      diagram_data["xnames"]=
-	allocate(sizeof(diagram_data["values_for_xnames"]));
-      
-      for(int i=0; i<sizeof(diagram_data["values_for_xnames"]); i++)
-	diagram_data["xnames"][i]=no_end_zeros((string)(diagram_data["values_for_xnames"][i]));
-    }
-
+    if (diagram_data["eng"])
+      {
+	diagram_data["xnames"]=
+	  allocate(sizeof(diagram_data["values_for_xnames"]));
+	
+	for(int i=0; i<sizeof(diagram_data["values_for_xnames"]); i++)
+	  diagram_data["xnames"][i]=
+	    diagram_eng((float)(diagram_data["values_for_xnames"][i]));
+      }
+    else
+      {
+	diagram_data["xnames"]=
+	  allocate(sizeof(diagram_data["values_for_xnames"]));
+	
+	for(int i=0; i<sizeof(diagram_data["values_for_xnames"]); i++)
+	  diagram_data["xnames"][i]=no_end_zeros((string)(diagram_data["values_for_xnames"][i]));
+      }
+  
 
   //rita bilderna för texten
   //ta ut xmaxynames, ymaxynames xmaxxnames ymaxxnames
