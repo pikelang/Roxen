@@ -1,9 +1,14 @@
 /*
- * $Id: make_selfsigned_dsa.pike,v 1.4 2000/08/19 09:49:39 per Exp $
+ * $Id: make_selfsigned_dsa.pike,v 1.5 2000/09/09 03:11:56 lange Exp $
  */
 
 #if constant(_Crypto) && constant(Crypto.dsa)
+
+inherit "ssl_common.pike";
 inherit "wizard";
+#include <roxen.h>
+//<locale-token project="admin_tasks"> LOCALE </locale-token>
+#define LOCALE(X,Y)	_STR_LOCALE("admin_tasks",X,Y)
 
 import Standards.PKCS;
 import Standards.ASN1.Types;
@@ -14,50 +19,21 @@ import Standards.ASN1.Types;
 #define WERROR(x)
 #endif
 
-constant name = "Generate an DSA key and a Self Signed Certificate...";
-
-constant doc =
-("In order to use the SSL on your server, "
- "you first have to create a key pair. "
- "One part of the key is kept secret. The "
- "other part is used to create a certificate. "
- "You can create a certificate yourself; this is "
- "not the recommended way to use SSL, and browsers "
- "will complain about not recognizing the entity "
- "that has signed the key (i.e. you). But a "
- "self-signed certificate is a lot better than "
- "nothing.");
-
 constant action = "SSL";
+
+string name= LOCALE(134,"Generate an DSA key and a Self Signed Certificate...");
+string doc = doc_string_start + doc_string_end_b;
 
 mixed page_0(object id, object mc)
 {
-  string msg = "";
-
-  if (id->variables->_error)
-  {
-    msg = "<font color=red>" + id->variables->_error
-      + "</font><p>";
-    id->variables->_error = 0;
-  }
-
-  return msg
-    + ("<font size=+1>How large key do you want to generate?</font><p>"
-       "<b>Key size</b><br>"
-       "<var name=key_size type=select default=1024 "
-       "choices=512,576,640,704,768,832,896,960,1024><br>\n"
-       "<blockquote>"
-       "The desired key size. This is a security parameter; larger "
-       "keys gives better security, but it also makes connecting to "
-       "the server a little slower.<p>"
-       "</blockquote>"
-
-       "<b>Key file</b><br>"
-       "<var name=key_file type=string default=my_dsa_key.pem><br>\n"
-       "<blockquote>"
-       "A filename in the real filesystem, where the secret key should "
-       "be stored. May be relative to " + getcwd() + "."
-       "</blockquote>");
+  return
+    ssl_errors(id) +
+    "<p><font size='+1'>" + key_size_question + "</font></p>\n"
+    "<b>" + LOCALE(94, "Key size") + "</b><br />"
+    "<var name='key_size' type='select' default='1024' "
+    "choices='512,576,640,704,768,832,896,960,1024'/><br />\n"
+    "<blockquote><p>"+generic_key_size_string+"</p></blockquote>"
+    + key_file_form("my_dsa_key.pem");
 }
 
 mixed verify_0(object id, object mc)
@@ -66,7 +42,7 @@ mixed verify_0(object id, object mc)
   if ( (key_size < 512) || (key_size > 1024) || (key_size % 64))
   {
     id->variables->_error =
-      "Invalid key size.";
+      LOCALE(135, "Invalid key size.");
     return 1;
   }
   object file = Stdio.File();
@@ -113,101 +89,12 @@ mixed verify_0(object id, object mc)
 
 mixed page_1(mixed id, mixed mc)
 {
-  string msg = "";
-
-  if (id->variables->_error)
-  {
-    msg = "<font color=red>" + id->variables->_error
-      + "</font><p>";
-    id->variables->_error = 0;
-  }
-
-  return msg +
-    ("<font size=+1>Your Distinguished Name?</font><p>"
-     "<blockquote>"
-     "Your X.501 Distinguished Name consists of a chain of attributes "
-     "and values, where each link in the chain defines more precisely "
-     "who you are. Which attributes are necessary or useful "
-     "depends on what you will use the certificate for, and which "
-     "Certificate Authority you use. This page lets you specify "
-     "the most useful attributes. If you leave a field blank, "
-     "that attribute will be omitted from your name.<p>\n"
-     "Although most browsers will accept 8 bit ISO 8859-1 characters in "
-     "these fields, it can't be counted on. To be on the safe side, "
-     "use only US-ASCII.\n"
-     "</blockquote>"
-
-     "<b>Your country code</b><br>\n"
-     "<var name=countryName type=string default=SE><br>"
-     "<blockquote>"
-     "Your two-letter country code, for example GB (United Kingdom). "
-     "This attribute is required."
-     "</blockquote>"
-
-     "<b>State/Province</b><br>\n"
-     "<var name=stateOrProvinceName type=string><br>"
-     "<blockquote>"
-     "The state where you are operating. VeriSign requires this attribute "
-     "to be present for US and Canadian customers. Do not abbreviate."
-     "</blockquote>"
-
-     "<b>City/Locality</b><br>\n"
-     "<var name=localityName type=string default=Stockholm><br>"
-     "<blockquote>"
-     "The city or locality where you are registered. VeriSign "
-     "requires that at least one of the locality and the state "
-     "attributes are present. Do not abbreviate."
-     "</blockquote>"
-
-     "<b>Organization/Company</b><br>\n"
-     "<var name=organizationName type=string default=\"Roxen IS\"><br>"
-     "<blockquote>"
-     "The organization name under which you are registered with some "
-     "national or regional authority."
-     "</blockquote>"
-
-     "<b>Organizational unit</b><br>\n"
-     "<var name=organizationUnitName type=string "
-     "default=\"Roxen Development\"><br>"
-     "<blockquote>"
-     "This attribute is optional, and there are no "
-     "specific requirements on the value of this attribute."
-     "</blockquote>"
-
-     "<b>Common Name</b><br>\n"
-     "<var name=commonName type=string default=\"www.roxen.com\"><br>"
-     "This is the DNS name of your server (i.e. the host part of "
-     "the URL).\n"
-     "<blockquote>"
-     "Browsers will compare the URL they are connecting to with "
-     "the Common Name in the server's certificate, and warn the user "
-     "if they don't match.<p>"
-     "Some Certificate Authorities allow wild cards in the Common "
-     "Name. This means that you can have a certificate for "
-     "<tt>*.roxen.com</tt> which will match all servers at Roxen. "
-     "Thawte allows wild card certificates, while VeriSign does not."
-     "</blockquote>");
+  return certificate_parameters;
 }
 
 mixed page_2(object id, object mc)
 {
-  return ("<font size=+1> For how long should the certificate "
-	  "be valid?</font><p>\n"
-
-	  "<b>Certificate lifetime, in days</b><br>\n"
-	  "<var name=ttl type=int default=500><br>\n"
-	  "<blockquote>"
-	  "A certificate includes a validity period. How many days, "
-	  "from now, do you want the certificate to be valid?"
-	  "</blockquote>"
-#if 0
-	  "<b>Certificate file</b><br>"
-	  "<var name=cert_file type=string default=my_dsa_cert.pem><br>\n"
-	  "<blockquote>"
-	  "A filename in the real filesystem, where the new "
-	  "certificate should be stored."
-#endif
-    );
+  return certificate_TTL;
 }
 
 mixed verify_2(object id, object mc)
@@ -230,25 +117,25 @@ mixed page_3(object id, object mc)
   {
     privs = 0;
 
-    return "<font color=red>Could not open key file: "
+    return "<font color='red'>Could not open key file: "
       + strerror(file->errno()) + "\n</font>";
   }
   privs = 0;
   string s = file->read(0x10000);
   if (!s)
-    return "<font color=red>Could not read private key: "
+    return "<font color='red'>Could not read private key: "
       + strerror(file->errno()) + "\n</font>";
 
   object msg = Tools.PEM.pem_msg()->init(s);
   object part = msg->parts["DSA PRIVATE KEY"];
 
   if (!part)
-    return "<font color=red>Key file not formatted properly.\n</font>";
+    return "<font color='red'>Key file not formatted properly.\n</font>";
 
   object dsa = DSA.parse_private_key(part->decoded_body());
 
   if (!dsa)
-    return "<font color=red>Invalid key.\n</font>";
+    return "<font color='red'>Invalid key.\n</font>";
 
   dsa->use_random(Crypto.randomness.reasonably_random()->read);
 
@@ -288,30 +175,22 @@ mixed page_3(object id, object mc)
   string cert = Tools.X509.make_selfsigned_dsa_certificate
     (dsa, 24 * 3600 * (int) id->variables->ttl, name);
 
-  string res=("<font size=+2>This is your Certificate.</font>"
-	      "<textarea name=certificate cols=80 rows=12>");
+  string res=("<font size='+2'>"+LOCALE(133,"This is your Certificate.")+
+	      "</font>"
+	      "<textarea name='certificate' cols='80' rows='12'>");
 
   res += Tools.PEM.simple_build_pem("CERTIFICATE", cert);
 
   res += "</textarea>";
 
-  res += "<p>";
-
-  res += ("<p><font size=+1>"
-	  "<var type=checkbox name=save checked></font>"
-          "<b>Save the request in a file:</b><br>"
-          "<blockquote><b>Filename</b><br>"
-	  "<var type=string name=cert_file default=my_dsa_certificate.pem><br>"
-	  "This may be relative to " + getcwd() + ".\n"
-	  "</blockquote>");
+  res += save_certificate_form("cert_file", "my_dsa_certificate.pem");
 
   return res;
 }
 
 mixed verify_3(object id, object mc)
 {
-  // werror("save = %O\n", id->variables->save);
-  if (sizeof(id->variables->save && id->variables->cert_file))
+  if (sizeof(id->variables->cert_file))
   {
     object file = Stdio.File();
     if (!file->open(id->variables->cert_file, "wct"))
@@ -339,13 +218,15 @@ mixed verify_3(object id, object mc)
 
 mixed wizard_done(object id, object mc)
 {
-  return http_string_answer( sprintf( "Wrote %d bytes to %s.<br />\n"
-                                      "<a href='index.html?class=SSL'><gbutton>  "
-                                      "Ok  </gbutton></a>", 
-                                      strlen(id->variables->certificate),
-                                      combine_path(getcwd(),
-                                                   id->variables->cert_file)) );
+  return http_string_answer( sprintf("<p>"+LOCALE(131,"Wrote %d bytes to %s.")+
+				     "</p>\n<p><cf-ok/></p>\n",
+				     strlen(id->variables->certificate),
+				     combine_path(getcwd(),
+						  id->variables->cert_file)) );
 }
-mixed parse(object id) { return wizard_for(id,0); }
+
+
+mixed parse( RequestID id ) { return wizard_for(id,0); }
+
 
 #endif /* constant(_Crypto) && constant(Crypto.dsa) */
