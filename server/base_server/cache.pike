@@ -1,6 +1,6 @@
-// This file is part of Roxen Webserver.
-// Copyright © 1996 - 2000, Roxen IS.
-// $Id: cache.pike,v 1.70 2001/05/17 22:31:27 nilsson Exp $
+// This file is part of Roxen WebServer.
+// Copyright © 1996 - 2001, Roxen IS.
+// $Id: cache.pike,v 1.71 2001/06/17 20:07:09 nilsson Exp $
 
 #pragma strict_types
 

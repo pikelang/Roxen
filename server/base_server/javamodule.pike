@@ -1,6 +1,6 @@
-// This file is part of Roxen Webserver.
-// Copyright © 1999 - 2000, Roxen IS.
-// $Id: javamodule.pike,v 1.4 2001/01/19 12:41:34 per Exp $
+// This file is part of Roxen WebServer.
+// Copyright © 1999 - 2001, Roxen IS.
+// $Id: javamodule.pike,v 1.5 2001/06/17 20:07:09 nilsson Exp $
 
 #include <module.h>
 inherit "module";
@@ -14,7 +14,7 @@ static Configuration my_conf;
 
 string file_name_and_stuff()
 {
-  return ("<b>Loaded from:</b> "+my_filename+"<br>");
+  return ("<b>Loaded from:</b> "+my_filename+"<br />");
 }
 
 void create(Configuration conf, string filename)

@@ -1,7 +1,8 @@
+// This file is part of Roxen WebServer.
+// Copyright © 1997 - 2001, Roxen IS.
+//
 // Wizard generator
-// This file generats all the nice wizards
-// Copyright © 1997 - 2000, Roxen IS.
-// $Id: wizard.pike,v 1.135 2001/05/07 09:30:11 jonasw Exp $
+// $Id: wizard.pike,v 1.136 2001/06/17 20:07:11 nilsson Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 

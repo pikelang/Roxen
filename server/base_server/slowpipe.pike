@@ -1,15 +1,16 @@
-/*
- * A throttling pipe connection
- * by Francesco Chemolli
- * Copyright © 1999 - 2000, Roxen IS.
- *
- * Hm... storing the stuff to send in a string might lead to problems on
- * ftp-servers. Will have to be changed. Also, reading stuff from disk
- * on demand might be very interesting to save memory and increase
- * performance. We'll see.
- */
+// This file is part of Roxen WebServer.
+// Copyright © 1999 - 2001, Roxen IS.
+//
+//
+// A throttling pipe connection
+//
 
-constant cvs_version="$Id: slowpipe.pike,v 1.9 2001/03/12 14:08:01 nilsson Exp $";
+// Hm... storing the stuff to send in a string might lead to problems on
+// ftp-servers. Will have to be changed. Also, reading stuff from disk
+// on demand might be very interesting to save memory and increase
+// performance. We'll see.
+
+constant cvs_version="$Id: slowpipe.pike,v 1.10 2001/06/17 20:07:10 nilsson Exp $";
 
 #ifdef THROTTLING_DEBUG
 #undef THROTTLING_DEBUG

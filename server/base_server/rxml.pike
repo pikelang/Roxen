@@ -1,11 +1,9 @@
+// This file is part of Roxen WebServer.
+// Copyright © 1996 - 2001, Roxen IS.
+//
 // The Roxen RXML Parser. See also the RXML Pike modules.
-// Copyright © 1996 - 2000, Roxen IS.
 //
-// Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
-// New parser by Martin Stjernholm
-// New RXML, scopes and entities by Martin Nilsson
-//
-// $Id: rxml.pike,v 1.300 2001/05/16 12:56:40 per Exp $
+// $Id: rxml.pike,v 1.301 2001/06/17 20:07:10 nilsson Exp $
 
 
 inherit "rxmlhelp";

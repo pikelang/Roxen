@@ -1,6 +1,9 @@
-// A vitual server's main configuration
-// Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.436 2001/06/15 01:21:22 mast Exp $";
+// This file is part of Roxen WebServer.
+// Copyright © 1996 - 2001, Roxen IS.
+//
+// A site's main configuration
+
+constant cvs_version = "$Id: configuration.pike,v 1.437 2001/06/17 20:07:09 nilsson Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2467,6 +2470,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
   }
 
   string descr = moduleinfo->get_name() + (id ? " copy " + (id + 1) : "");
+  //  sscanf(descr, "%*s: %s", descr);
 
 #ifdef MODULE_DEBUG
   if (enable_module_batch_msgs)

@@ -1,15 +1,17 @@
-/*
- * A throttling co-ordinator. Will share bandiwdth among many pending requests.
- * By Francesco Chemolli
- * Copyright © 1999 - 2000, Roxen IS.
- *
- * Notice: this works under the hypothesis that there's only one thread
- * shuffling data (so no locking is done). This might be a wrong
- * assumption. Per? Grubba?
- *
- */
+// This file is part of Roxen WebServer.
+// Copyright © 1999 - 2001, Roxen IS.
+//
+// A throttling co-ordinator. Will share bandiwdth among
+// many pending requests.
+//
+// By Francesco Chemolli
+//
+// Notice: this works under the hypothesis that there's only one thread
+// shuffling data (so no locking is done). This might be a wrong
+// assumption. Per? Grubba?
+//
 
-constant cvs_version="$Id: throttler.pike,v 1.7 2001/03/12 14:06:31 nilsson Exp $";
+constant cvs_version="$Id: throttler.pike,v 1.8 2001/06/17 20:07:11 nilsson Exp $";
 
 #define DEFAULT_MINGRANT 1300
 #define DEFAULT_MAXGRANT 65000

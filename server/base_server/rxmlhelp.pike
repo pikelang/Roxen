@@ -1,6 +1,7 @@
-// RXML Help
-// Copyright © 2000, Roxen IS.
-// Martin Nilsson
+// This file is part of Roxen WebServer.
+// Copyright © 2000 - 2001, Roxen IS.
+//
+// RXML Help by Martin Nilsson
 //
 
 #ifdef RXMLHELP_DEBUG

@@ -1,6 +1,6 @@
-// This file is part of Roxen Webserver.
-// Copyright © 1996 - 2000, Roxen IS.
-// $Id: disk_cache.pike,v 1.60 2001/03/12 14:05:19 nilsson Exp $
+// This file is part of Roxen WebServer.
+// Copyright © 1996 - 2001, Roxen IS.
+// $Id: disk_cache.pike,v 1.61 2001/06/17 20:07:09 nilsson Exp $
 
 #include <config.h>
 #include <module_constants.h>

@@ -1,6 +1,6 @@
-// This file is part of Roxen Webserver.
-// Copyright © 1996 - 2000, Roxen IS.
-// $Id: read_config.pike,v 1.57 2001/03/12 14:07:49 nilsson Exp $
+// This file is part of Roxen WebServer.
+// Copyright © 1996 - 2001, Roxen IS.
+// $Id: read_config.pike,v 1.58 2001/06/17 20:07:10 nilsson Exp $
 
 #include <module.h>
 

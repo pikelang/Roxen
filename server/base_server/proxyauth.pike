@@ -1,6 +1,6 @@
-// This file is part of Roxen Webserver.
-// Copyright © 1996 - 2000, Roxen IS.
-// $Id: proxyauth.pike,v 1.6 2000/02/20 17:41:33 nilsson Exp $
+// This file is part of Roxen WebServer.
+// Copyright © 1996 - 2001, Roxen IS.
+// $Id: proxyauth.pike,v 1.7 2001/06/17 20:07:10 nilsson Exp $
 
 inherit "http";
 

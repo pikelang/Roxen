@@ -1,3 +1,6 @@
+// This file is part of Roxen WebServer.
+// Copyright © 2000 - 2001, Roxen IS.
+//
 // Core part of the configuration user database.  Handles creation of
 // users and permissions, and verifies users against the database.
 inherit "language";
@@ -12,6 +15,7 @@ inherit "language";
 #define LOCALE(X,Y)	_DEF_LOCALE("roxen_config",X,Y)
 #define SLOCALE(X,Y)	_STR_LOCALE("roxen_config",X,Y)
 string query_configuration_dir();
+
 // Settings used by the various administration interface modules etc.
 class ConfigIFCache
 {

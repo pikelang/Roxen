@@ -1,4 +1,8 @@
-// Roxen bootstrap program. Copyright © 1996 - 2000, Roxen IS.
+// This file is part of Roxen WebServer.
+// Copyright © 1996 - 2000, Roxen IS.
+//
+// Roxen bootstrap program.
+
 #define LocaleString Locale.DeferredLocale|string
 
 //#pragma strict_types
@@ -22,7 +26,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.255 2001/06/12 11:50:23 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.256 2001/06/17 20:07:10 nilsson Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
