@@ -1,8 +1,7 @@
 <standard>
   <name>Directory modules</name>
-  <doc>Handles index files and the generation
-       of directory lists. You can only have one directory module
-       enabled in each virtual server</doc>
+  <doc>Handles index files and directory list generation. Only one
+ 	 directory module can be enabled per site.</doc>
 </standard>
 
 <svenska>

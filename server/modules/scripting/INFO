@@ -1,1 +1,2 @@
-<name>Modules that provide scripting support</name>
+<name>Scripting modules</name>
+<doc>Modules that support scripting languages or gateways.</doc>

@@ -1,1 +1,3 @@
-<name>Bandwidth throttling rule modules</name>
+<name>Bandwidth throttling modules</name>
+<doc>Modules that provide fine grained control over the bandwidth 
+throttling system.</doc>
