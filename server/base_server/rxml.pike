@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.149 2000/02/24 04:07:53 nilsson Exp $
+// $Id: rxml.pike,v 1.150 2000/02/25 01:33:17 nilsson Exp $
 
 inherit "roxenlib";
 inherit "rxmlhelp";
@@ -36,6 +36,10 @@ string handle_run_error (RXML.Backtrace err, RXML.Type type, RequestID id)
     string res=_run_error(err, type, id);
     if(res) return res;
   }
+  else
+    _run_error=0;
+  id->misc->defines[" _ok"]=0;
+  if(!id->misc->debug && !id->prestate->debug) return "";
   string where=sprintf("Error in %s.\n",id->raw_url);
 #ifdef MODULE_DEBUG
   // FIXME: Make this a user option.
@@ -58,6 +62,10 @@ string handle_parse_error (RXML.Backtrace err, RXML.Type type, RequestID id)
     string res=_parse_error(err, type, id);
     if(res) return res;
   }
+  else
+    _parse_error=0;
+  id->misc->defines[" _ok"]=0;
+  if(!id->misc->debug && !id->prestate->debug) return "";
   string where=sprintf("Error in %s.\n",id->raw_url);
 #ifdef MODULE_DEBUG
   // FIXME: Make this a user option.
