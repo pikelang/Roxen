@@ -1,4 +1,4 @@
-// $Id: SloppyDOM.pmod,v 1.2 2002/02/14 03:31:31 mast Exp $
+// $Id: SloppyDOM.pmod,v 1.3 2002/02/15 13:06:10 mast Exp $
 
 //! A somewhat DOM-like library that implements lazy generation of the
 //! node tree, i.e. it's generated from the data upon lookup. There's
@@ -197,8 +197,9 @@ static class NodeWithChildren
     else if (has_prefix (text, "<!--"))
       node = Comment (doc, text[4..sizeof (text) - 4]);
     else if (has_prefix (text, "<?")) {
-      sscanf (text, "<?%[^ \t\n\r]%*[ \t\n\r]%s?>", string target, string data);
-      node = ProcessingInstruction (doc, target, data);
+      sscanf (text[..sizeof (text) - 3], "<?%[^ \t\n\r]%*[ \t\n\r]%s",
+	      string target, string data);
+      node = ProcessingInstruction (doc, target, data || "");
     }
     else if (has_prefix (text, "<![CDATA["))
       node = CDATASection (doc, text[8..sizeof (text) - 4]);
@@ -208,6 +209,36 @@ static class NodeWithChildren
     node->parent_node = this_object();
     node->pos_in_parent = pos;
     return node;
+  }
+
+  static void make_all_nodes()
+  {
+    CHECK_CONTENT;
+    if (arrayp (content))
+      for (int i = sizeof (content) - 1; i >= 0; i--)
+	if (stringp (content[i]))
+	  make_node (i);
+  }
+
+  static void format_attrs (mapping(string:string) attrs, String.Buffer into)
+  {
+    if (owner_document->raw_values)
+      foreach (indices (attrs), string attr) {
+	string var = attrs[attr];
+	if (has_value (var, "\""))
+	  into->add (" ", attr, "='", var, "'");
+	else
+	  into->add (" ", attr, "=\"", var, "\"");
+      }
+    else
+      foreach (indices (attrs), string attr)
+	into->add (" ", attr, "=\"",
+		   // Serial replace's are currently faster than one parallell.
+		   replace (replace (replace (attrs[attr],
+					      "&", "&amp;"),
+				     "<", "&lt;"),
+			    "\"", "&quot;"),
+		   "\"");
   }
 
   /*protected*/ void _text_content (String.Buffer into)
@@ -286,26 +317,59 @@ static class NodeWithChildElements
     }
   }
 
-  mapping(string:string)|Element|array(mapping(string:string)|Element)
-    simple_path (string path)
-  //! Access an attribute, an element, or a set of them through a
-  //! simple XPath subset expression on the form
-  //! @tt{"element[index]/element[index]/@@attribute"@}, where an
-  //! element or attribute is indexed by name or @tt{"*"@} to select
-  //! all. Negative index numbers are allowed, and count backwards.
+  mapping(string:string)|Node|array(mapping(string:string)|Node)|string
+    simple_path (string path, void|int xml_format)
+  //! Access a node or a set of nodes through an expression that is a
+  //! subset of an XPath RelativeLocationPath. It's one or more Steps
+  //! separated by '/'. A Step consists of an AxisSpecifier followed
+  //! by a NodeTest and then by an optional Predicate. There can
+  //! currently be at most one Predicate in each Step.
+  //!
+  //! The currently allowed AxisSpecifier NodeTest combinations are:
+  //!
+  //! @ul
+  //! @item
+  //!   @tt{name@} to select all child elements with the given name.
+  //!   The name can be @tt{"*"@} to select all.
+  //! @item
+  //!   @tt{@@name@} to select all attributes with the given name. The
+  //!   name can be @tt{"*"@} to select all.
+  //! @item
+  //!   @tt{comment()@} to select all child comments.
+  //! @item
+  //!   @tt{text()@} to select all child text and CDATA blocks. Note
+  //!   that all entity references are also selected, under the
+  //!   assumption that they would expand to text only.
+  //! @item
+  //!   @tt{processing-instruction(name)@} to select all child
+  //!   processing instructions with the given name. The name can be
+  //!   left out to select all.
+  //! @item
+  //!   @tt{node()@} to select all child nodes, i.e. the whole content
+  //!   of an element node.
+  //! @endul
+  //!
+  //! A Predicate is on the form @tt{[PredicateExpr]@} where
+  //! PredicateExpr currently can be an integer to index one item in
+  //! the selected set, according to the document order. A negative
+  //! index counts from the end of the set.
+  //!
+  //! If @[xml_format] is nonzero, the return value is an xml
+  //! formatted string of all the matched nodes, in document order.
+  //! Otherwise the return value is as follows:
   //!
   //! Attributes are returned as one or more index/value pairs in a
-  //! mapping. Elements are returned as the element nodes. If the
+  //! mapping. Other nodes are returned as the node objects. If the
   //! expression is on a form that can give at most one answer then a
-  //! single mapping or element node is returned, or zero if there was
-  //! no match. If the expression can give more answers then the
-  //! return value is an array containing zero or more attribute
-  //! mappings and/or element nodes. The array follows document order.
+  //! single mapping or node is returned, or zero if there was no
+  //! match. If the expression can give more answers then the return
+  //! value is an array containing zero or more attribute mappings
+  //! and/or nodes. The array follows document order.
   //!
   //! @note
   //! Not DOM compliant.
   {
-    sscanf (path, "%*[ \t\n\r]%[^ \t\n\r/[@]%*[ \t\n\r]%s", string name, path);
+    sscanf (path, "%*[ \t\n\r]%[^][ \t\n\r/@(){}:.,]%*[ \t\n\r]%s", string name, path);
 
     void simple_path_error (string msg, mixed... args)
     {
@@ -315,23 +379,116 @@ static class NodeWithChildElements
       error (msg);
     };
 
+    mixed res;
+
     if (!sizeof (name)) {
-      if (sscanf (path, "@%*[ \t\n\r]%[^ \t\n\r/[@]%*[ \t\n\r]%s", name, path)) {
+      if (sscanf (path, "@%*[ \t\n\r]%[^][ \t\n\r/@(){}:.,]%*[ \t\n\r]%s", name, path)) {
 	if (!sizeof (name))
 	  simple_path_error ("No attribute name after @ in ");
-	if (sizeof (path))
-	  simple_path_error ("Unexpected subpath %O after attribute %O in ", path, name);
 	mapping(string:string) attr = this_object()->attributes;
 	if (!mappingp (attr))
 	  simple_path_error ("Cannot access an attribute %O in ", name);
 	if (name == "*")
-	  return attr + ([]);
-	if (string val = attr[name])
-	  return ([name: val]);
-	return 0;
+	  res = attr + ([]);
+	else if (string val = attr[name])
+	  res = ([name: val]);
       }
-      simple_path_error ("Invalid path %O in ", path);
+      else simple_path_error ("Invalid path %O in ", path);
     }
+
+    else if (has_prefix (path, "(")) {
+      string arg;
+      if (sscanf (path, "(%*[ \t\n\r]%[^][ \t\n\r/@(){}:.,]%*[ \t\n\r])%*[ \t\n\r]%s",
+		  arg, path) != 5)
+	simple_path_error ("Invalid node type expression in %O in ", name + path);
+      if (sizeof (arg) && name != "processing-instruction")
+	simple_path_error ("Cannot give an argument %O to the node type %s in ",
+			   arg, name);
+
+      if (name == "node") {
+	if (xml_format && !sizeof (path)) {
+	  res = String.Buffer();
+	  xml_format_children (res);
+	  return res->get();
+	}
+	else {
+	  CHECK_CONTENT;
+	  res = allocate (sizeof (content));
+	  for (int i = sizeof (res) - 1; i >= 0; i--)
+	    if (objectp (content[i])) res[i] = content[i];
+	    else res[i] = i;
+	}
+      }
+
+      else {
+	CHECK_CONTENT;
+	res = ({});
+
+	switch (name) {
+	  case "comment":
+	    for (int i = 0; i < sizeof (content); i++) {
+	      string|Node child = content[i];
+	      if (objectp (child)) {
+		if (child->node_type == COMMENT_NODE)
+		  res += ({child});
+	      }
+	      else
+		if (has_prefix (child, "<!--"))
+		  res += ({i});
+	    }
+	    break;
+
+	  case "text":
+	    //normalize();
+	    for (int i = 0; i < sizeof (content); i++) {
+	      string|Node child = content[i];
+	      if (objectp (child)) {
+		if ((<TEXT_NODE, ENTITY_REFERENCE_NODE,
+		      CDATA_SECTION_NODE>)[child->node_type])
+		  res += ({child});
+	      }
+	      else
+		if (!has_prefix (child, "<!--") && !has_prefix (child, "<?"))
+		  res += ({i});
+	    }
+	    break;
+
+	  case "processing-instruction":
+	    if (sizeof (arg)) {
+	      string scanfmt = "<?" + replace (arg, "%", "%%") + "%[ \t\n\r]";
+	      for (int i = 0; i < sizeof (content); i++) {
+		string|Node child = content[i];
+		if (objectp (child)) {
+		  if (child->node_type == PROCESSING_INSTRUCTION_NODE &&
+		      child->node_name == arg)
+		    res += ({child});
+		}
+		else
+		  if (sscanf (child, scanfmt, string ws) &&
+		      (sizeof (ws) || sizeof (child) == sizeof (arg) + 4))
+		    res += ({i});
+	      }
+	    }
+	    else
+	      for (int i = 0; i < sizeof (content); i++) {
+		string|Node child = content[i];
+		if (objectp (child)) {
+		  if (child->node_type == PROCESSING_INSTRUCTION_NODE)
+		    res += ({child});
+		}
+		else
+		  if (has_prefix (child, "<?"))
+		    res += ({i});
+	      }
+	    break;
+
+	  default:
+	    simple_path_error ("Invalid node type %s in ", name);
+	}
+      }
+    }
+
+    else res = get_elements (name);
 
     if (has_prefix (path, "[")) {
       int index;
@@ -339,36 +496,67 @@ static class NodeWithChildElements
 	simple_path_error ("Invalid index expression in %O in ", name + path);
       if (!index)
 	simple_path_error ("Invalid index 0 in expression %O in ", name + "[0]");
-      object(Element)|array(Element) res = get_elements (name);
+
       if (index > 0) {
-	if (index > sizeof (res)) return 0;
-	res = res[index - 1];
+	if (index > sizeof (res)) return xml_format && "";
+	if (mappingp (res))
+	  res = (mapping) ({((array) res)[index - 1]});
+	else
+	  res = res[index - 1];
       }
       else {
-	if (index < -sizeof (res)) return 0;
-	res = res[index];
+	if (index < -sizeof (res)) return xml_format && "";
+	if (mappingp (res))
+	  res = (mapping) ({((array) res)[index]});
+	else
+	  res = res[index];
       }
-      if (sizeof (path)) {
-	if (!has_prefix (path, "/"))
-	  simple_path_error ("Invalid expression %O after ", path);
-	return res->simple_path (path[1..]);
-      }
-      else
-	return res;
+
+      if (intp (res)) res = make_node (res);
     }
 
-    array(Element) res = get_elements (name);
+    else
+      if (arrayp (res))
+	for (int i = sizeof (res) - 1; i >= 0; i--)
+	  if (intp (res[i])) res[i] = make_node (res[i]);
+
     if (sizeof (path)) {
       if (!has_prefix (path, "/"))
 	simple_path_error ("Invalid expression %O after ", path);
       path = path[1..];
-      array(mapping(string:string)|Element) collected = ({});
-      foreach (res, Element elem)
-	if (mapping(string:string)|Element|array(mapping(string:string)|Element)
-	    subres = elem->simple_path (path))
-	  collected += arrayp (subres) ? subres : ({subres});
-      return collected;
+
+      if (arrayp (res))
+	if (xml_format) {
+	  String.Buffer collected = String.Buffer();
+	  foreach (res, Node child)
+	    if (string subres = child->simple_path && child->simple_path (path, 1))
+	      collected->add (subres);
+	  return collected->get();
+	}
+	else {
+	  mixed collected = ({});
+	  foreach (res, Node child)
+	    if (mixed subres = child->simple_path && child->simple_path (path, 0))
+	      collected += arrayp (subres) ? subres : ({subres});
+	  return collected;
+	}
+
+      if (objectp (res) && res->simple_path)
+	return res->simple_path (path, xml_format);
+      else
+	return xml_format ? "" : ({});
     }
+
+    if (xml_format) {
+      if (!res) return "";
+      String.Buffer collected = String.Buffer();
+      if (mappingp (res))
+	format_attrs (res, collected);
+      else
+	res->_xml_format (collected); // Works both when res is Node and array(Node).
+      return collected->get();
+    }
+
     return res;
   }
 
@@ -533,31 +721,10 @@ class Element
 
   static constant class_name = "Element";
 
-  static void format_attrs (String.Buffer into)
-  {
-    if (owner_document->raw_values)
-      foreach (indices (attributes), string attr) {
-	string var = attributes[attr];
-	if (has_value (var, "\""))
-	  into->add (" ", attr, "='", var, "'");
-	else
-	  into->add (" ", attr, "=\"", var, "\"");
-      }
-    else
-      foreach (indices (attributes), string attr)
-	into->add (" ", attr, "=\"",
-		   // Serial replace's are currently faster than one parallell.
-		   replace (replace (replace (attributes[attr],
-					      "&", "&amp;"),
-				     "<", "&lt;"),
-			    "\"", "&quot;"),
-		   "\"");
-  }
-
   /*protected*/ void _xml_format (String.Buffer into)
   {
     into->add ("<", node_name);
-    format_attrs (into);
+    format_attrs (attributes, into);
     if (content && sizeof (content)) {
       into->add (">");
       xml_format_children (into);
@@ -787,9 +954,25 @@ class ProcessingInstruction
 
   static constant class_name = "ProcessingInstruction";
 
+  /*protected*/ void _text_content (String.Buffer into)
+  {
+    if (owner_document->raw_values) {
+      // Serial replace's are currently faster than one parallell.
+      into->add (replace (replace (replace (node_value,
+					    "&", "&amp;"),
+				   "<", "&lt;"),
+			  ">", "&gt;"));
+    }
+    else
+      into->add (node_value);
+  }
+
   /*protected*/ void _xml_format (String.Buffer into)
   {
-    into->add ("<?", node_name, " ", node_value, "?>");
+    if (sizeof (node_value))
+      into->add ("<?", node_name, " ", node_value, "?>");
+    else
+      into->add ("<?", node_name, "?>");
   }
 
   static string sprintf_name() {return node_name;}
