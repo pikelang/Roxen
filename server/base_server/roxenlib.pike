@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.206 2000/11/24 16:50:34 per Exp $
+// $Id: roxenlib.pike,v 1.207 2000/12/11 00:04:34 nilsson Exp $
 
 //#pragma strict_types
 
@@ -696,7 +696,9 @@ string extension( string f, RequestID|void id)
   return ext;
 }
 
-int backup_extension( string f )
+int(0..1) backup_extension( string f )
+  //! Determines if the provided filename indicates
+  //! that the file is a backup file.
 {
   if(!strlen(f))
     return 1;
@@ -767,6 +769,7 @@ string short_date(int timestamp)
 }
 
 string int2roman(int m)
+  //! Converts the provided integer to a roman integer (i.e. a string).
 {
   string res="";
   if (m>10000000||m<0) return "que";
@@ -824,6 +827,8 @@ string number2string(int n, mapping m, array|function names)
 }
 
 string image_from_type( string t )
+  //! Returns an internal-gopher icon link that corresponds to the
+  //! provided MIME-type, e.g. "internal-gopher-image" for "image/gif".
 {
   if(t)
   {
@@ -1092,73 +1097,72 @@ string get_modfullname (RoxenModule module)
 }
 
 string roxen_encode( string val, string encoding )
-//! Quote content in a multitude of ways. Used primarily by entity quoting.
+//! Quote strings in a multitude of ways. Used primarily by entity quoting.
+//! The encoding string can be any of the following:
+//! none   - No encoding
+//! http   - HTTP encoding
+//! cookie - HTTP cookie encoding
+//! url    - HTTP encoding, including special characters in URL:s
+//! html   - HTML encofing, for generic text in html documents.
+//! pike   - Pike string quoting, for use in e.g. the <pike></pike> tag.
+//! js     - Javascript string quoting.
+//! mysql  - MySQL quoting.
+//! oracle - Oracle quoting.
+//! mysql-pike - MySQL quoting followed by Pike string quoting.
 {
   switch (encoding) {
    case "":
    case "none":
-     //! No encoding
      return val;
 
    case "http":
-     //! HTTP encoding.
      return http_encode_string (val);
 
    case "cookie":
-     //! HTTP cookie encoding.
      return http_encode_cookie (val);
 
    case "url":
-     //! HTTP encoding, including special characters in URL:s.
      return http_encode_url (val);
 
    case "html":
-     //! For generic html text and in tag arguments.
      return html_encode_string (val);
 
    case "dtag":
-     //! Quote quotes for a double quoted tag argument. Only
-     //! for internal use, i.e. in arguments to other RXML tags.
+     // This is left for compatibility...
      return replace (val, "\"", "\"'\"'\"");
 
    case "stag":
-     //! Quote quotes for a single quoted tag argument. Only
-     //! for internal use, i.e. in arguments to other RXML tags.
+     // This is left for compatibility
      return replace(val, "'", "'\"'\"'");
 
    case "pike":
-     //! Pike string quoting (e.g. for use in a <pike> tag).
      return replace (val,
 		    ({ "\"", "\\", "\n" }),
 		    ({ "\\\"", "\\\\", "\\n" }));
 
    case "js":
    case "javascript":
-     //! Javascript string quoting.
      return replace (val,
 		    ({ "\b", "\014", "\n", "\r", "\t", "\\", "'", "\"" }),
 		    ({ "\\b", "\\f", "\\n", "\\r", "\\t", "\\\\",
 		       "\\'", "\\\"" }));
 
    case "mysql":
-     //! MySQL quoting.
      return replace (val,
 		    ({ "\"", "'", "\\" }),
 		    ({ "\\\"" , "\\'", "\\\\" }) );
 
    case "sql":
    case "oracle":
-     //! SQL/Oracle quoting.
      return replace (val, "'", "''");
 
    case "mysql-dtag":
-     //! MySQL quoting followed by dtag quoting.
+     // This is left for compatibility
      return replace (val,
 		    ({ "\"", "'", "\\" }),
 		    ({ "\\\"'\"'\"", "\\'", "\\\\" }));
 
    case "mysql-pike":
-     //! MySQL quoting followed by Pike string quoting.
      return replace (val,
 		    ({ "\"", "'", "\\", "\n" }),
 		    ({ "\\\\\\\"", "\\\\'",
@@ -1166,7 +1170,7 @@ string roxen_encode( string val, string encoding )
 
    case "sql-dtag":
    case "oracle-dtag":
-     //! SQL/Oracle quoting followed by dtag quoting.
+     // This is left for compatibility
      return replace (val,
 		    ({ "'", "\"" }),
 		    ({ "''", "\"'\"'\"" }) );
@@ -1452,10 +1456,13 @@ string fix_relative( string file, RequestID id )
 }
 
 Stdio.File open_log_file( string logfile )
+  //! Opens a log file with the provided name, but
+  //! with %y, %m, %d and %h replaced with year, month
+  //! day and hour. 
 {
   mapping m = localtime(time(1));
-  m->year += 1900;	/* Adjust for years being counted since 1900 */
-  m->mon++;		/* Adjust for months being counted 0-11 */
+  m->year += 1900;	// Adjust for years being counted since 1900
+  m->mon++;		// Adjust for months being counted 0-11
   if(m->mon < 10) m->mon = "0"+m->mon;
   if(m->mday < 10) m->mday = "0"+m->mday;
   if(m->hour < 10) m->hour = "0"+m->hour;
@@ -1481,7 +1488,8 @@ Stdio.File open_log_file( string logfile )
 }
 
 string tagtime(int t, mapping(string:string) m, RequestID id,
-	       function(string, string, object:function(int, mapping(string:string):string)) language)
+	       function(string, string,
+			object:function(int, mapping(string:string):string)) language)
   //! A rather complex function used as presentation function by
   //! several RXML tags. It takes a unix-time integer and a mapping
   //! with formating instructions and returns a string representation
