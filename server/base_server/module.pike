@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.24 1997/09/27 13:24:52 grubba Exp $ */
+/* $Id: module.pike,v 1.25 1997/10/20 15:16:59 grubba Exp $ */
 
 #include <module.h>
 
@@ -473,6 +473,19 @@ array query_seclevels()
 
 mixed stat_file(string f, object id){}
 mixed find_dir(string f, object id){}
+mapping(string:array(mixed)) find_dir_stat(string f, object id)
+{
+  array(string) files = find_dir(f, id);
+  mapping(string:array(mixed)) res = ([]);
+
+  foreach(files || ({}), string f) {
+    array(mixed) st = stat_file(f, id);
+    if (st) {
+      res[f] = st;
+    }
+  }
+  return(res);
+}
 mixed real_file(string f, object id){}
 
 object get_font_from_var(string base)

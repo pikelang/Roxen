@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.82 1997/10/12 21:08:42 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.83 1997/10/20 15:16:59 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -1170,22 +1170,22 @@ public array find_dir(string file, object id)
   {
     loc = tmp[0];
     
-    if(!search(file, loc))
-    {
+    if(!search(file, loc)) {
+      /* file == loc + subpath */
 #ifdef MODULE_LEVEL_SECURITY
       if(check_security(tmp[1], id)) continue;
 #endif
       if(d=function_object(tmp[1])->find_dir(file[strlen(loc)..], id))
 	dir |= d;
-    } else {
-      if(search(loc, file)==0 && loc[strlen(file)-1]=='/' 
-	 && (loc[0]==loc[-1]) && loc[-1]=='/' &&
-	 sizeof(function_object(tmp[1])->find_dir("", id)||({})))
-      {
-	loc=loc[strlen(file)..];
-	sscanf(loc, "%s/", loc);
-	dir += ({ loc });
-      }
+    } else if((search(loc, file)==0) && (loc[strlen(file)-1]=='/') &&
+	      (loc[0]==loc[-1]) && (loc[-1]=='/') &&
+	      (sizeof(function_object(tmp[1])->find_dir("", id) || ({})))) {
+      /* loc == file + "/" + subpath + "/"
+       * and find_dir() returns a non-empty directory.
+       */
+      loc=loc[strlen(file)..];
+      sscanf(loc, "%s/", loc);
+      dir += ({ loc });
     }
   }
   if(sizeof(dir))
@@ -1258,11 +1258,11 @@ public array stat_file(string file, object id)
   }
 }
 
-public array(array(mixed)) find_dir_stat(string file, object id)
+public mapping(string:array(mixed)) find_dir_stat(string file, object id)
 {
   string loc;
-  array(array(mixed)) dir = ({ });
-  array(mixed) d, tmp;
+  mapping(string:array(mixed)) dir = ([]);
+  mixed d, tmp;
 
   file=replace(file, "//", "/");
   
@@ -1312,9 +1312,11 @@ public array(array(mixed)) find_dir_stat(string file, object id)
   foreach(location_modules(id), tmp)
   {
     loc = tmp[0];
-    
+
+    /* Note that only new entries are added. */
     if(!search(file, loc))
     {
+      /* file == loc + subpath */
 #ifdef MODULE_LEVEL_SECURITY
       if(check_security(tmp[1], id)) continue;
 #endif
@@ -1322,21 +1324,24 @@ public array(array(mixed)) find_dir_stat(string file, object id)
       string f = file[strlen(loc)..];
       if (c->find_dir_stat) {
 	if (d = c->find_dir_stat(f, id)) {
-	  dir |= d;
+	  dir = d | dir;
 	}
       } else if(d = c->find_dir(f, id)) {
-	dir |= map(d, lambda(string f, string base, object c, object id) {
-	  return(({ f, c->stat_file(base + f, id) }));
-	}, f, c, id);
+	dir = mkmapping(d, map(d, lambda(string f, string base,
+					 object c, object id) {
+				    return(c->stat_file(base + f, id));
+				  }, f, c, id)) | dir;
       }
-    } else {
-      if(search(loc, file)==0 && loc[strlen(file)-1]=='/' 
-	 && (loc[0]==loc[-1]) && loc[-1]=='/' &&
-	 sizeof(function_object(tmp[1])->find_dir("", id)||({})))
-      {
-	loc=loc[strlen(file)..];
-	sscanf(loc, "%s/", loc);
-	dir += ({ ({ loc, ({ 0775, -3, 0, 0, 0, 0, 0, 0, 0, 0, 0 }) }) });
+    } else if(search(loc, file)==0 && loc[strlen(file)-1]=='/' &&
+	      (loc[0]==loc[-1]) && loc[-1]=='/' &&
+	      sizeof(function_object(tmp[1])->find_dir("", id)||({}))) {
+      /* loc == file + "/" + subpath + "/"
+       * and find_dir() returns a non-empty directory.
+       */
+      loc=loc[strlen(file)..];
+      sscanf(loc, "%s/", loc);
+      if (!dir[loc]) {
+	dir[loc] = ({ 0775, -3, 0, 0, 0, 0, 0, 0, 0, 0, 0 });
       }
     }
   }
