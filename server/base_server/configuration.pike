@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.501 2002/03/06 09:27:42 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.502 2002/03/13 14:11:18 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3577,6 +3577,7 @@ page.
 </blockquote>
 </font>
 </body>
+</html>
 ",
 	 DLOCALE(58, "No such file message"),
 	 TYPE_TEXT_FIELD|VAR_PUBLIC,
