@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.160 2004/03/16 13:58:10 grubba Exp $
+// $Id: module.pike,v 1.161 2004/03/23 14:40:18 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -292,8 +292,11 @@ mapping(string:Stat) find_dir_stat(string f, RequestID id)
 //! @returns
 //!   Returns @tt{0@} (zero) if @[path] does not exist.
 //!
+//!   Returns an error mapping if there's some other error accessing
+//!   the properties.
+//!
 //!   Otherwise returns a @[PropertySet] object.
-PropertySet query_properties(string path, RequestID id)
+PropertySet|mapping(string:mixed) query_properties(string path, RequestID id)
 {
   Stat st = stat_file(path, id);
 
@@ -303,9 +306,6 @@ PropertySet query_properties(string path, RequestID id)
 
 //! Returns the value of the specified property, or an error code
 //! mapping.
-//!
-//! The default implementation takes care of the most important RFC
-//! 2518 properties.
 //!
 //! @param st
 //!   If set, this should be the stat that corresponds to @[path]. Its
@@ -318,11 +318,13 @@ PropertySet query_properties(string path, RequestID id)
 string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
   query_property(string path, string prop_name, RequestID id)
 {
-  PropertySet properties = query_properties(path, id);
+  mapping(string:mixed)|PropertySet properties = query_properties(path, id);
   if (!properties) {
     return Roxen.http_status(Protocols.HTTP.HTTP_NOT_FOUND,
 			     "No such file or directory.");
   }
+  if (mappingp (properties))
+    return properties;
   return properties->query_property(prop_name) ||
     Roxen.http_status(Protocols.HTTP.HTTP_NOT_FOUND, "No such property.");
 }
@@ -335,12 +337,12 @@ void recurse_find_properties(string path, string mode,
 			     multiset(string)|void filt,
 			     void|Stat st)
 {
-  PropertySet properties = query_properties(path, id);
+  mapping(string:mixed)|PropertySet properties = query_properties(path, id);
 
   if (!properties) return;	// Path not found.
 
-  mapping(string:mixed) ret =
-    properties->find_properties(mode, result, filt);
+  mapping(string:mixed) ret = mappingp (properties) ?
+    properties : properties->find_properties(mode, result, filt);
 
   if (ret) {
     result->add_response(path, XMLStatusNode(ret->error, ret->rettext));
@@ -365,9 +367,10 @@ mapping(string:mixed) patch_properties(string path,
 				       array(PatchPropertyCommand) instructions,
 				       MultiStatus result, RequestID id)
 {
-  PropertySet properties = query_properties(path, id);
+  mapping(string:mixed)|PropertySet properties = query_properties(path, id);
 
   if (!properties) return 0;	// Path not found.
+  if (mappingp (properties)) return properties;
 
   mapping(string:mixed) errcode = properties->start();
 
@@ -417,29 +420,30 @@ mapping(string:mixed) patch_properties(string path,
 }
 
 //! Convenience variant of @[patch_properties()] that sets a single
-//! property: The default implementation calls
-//! @[PropertySet::start()], @[PropertySet::set_property()],
-//! @[PropertySet::unroll()] and @[PropertySet::commit()] as appropriate.
+//! property.
 //!
 //! @returns
 //!   Returns a mapping on any error, zero otherwise.
-mapping(string:mixed) set_single_property (string path, string prop_name,
-					   string|array(Parser.XML.Tree.Node) value,
-					   RequestID id)
+mapping(string:mixed) set_property (string path, string prop_name,
+				    string|array(Parser.XML.Tree.Node) value,
+				    RequestID id)
 {
-  PropertySet properties = query_properties(path, id);
+  mapping(string:mixed)|PropertySet properties = query_properties(path, id);
   if (!properties) return Roxen.http_status(Protocols.HTTP.HTTP_NOT_FOUND,
 					    "File not found.");
+  if (mappingp (properties)) return properties;
 
   mapping(string:mixed) result = properties->start();
   if (result) return result;
 
   result = properties->set_property(prop_name, value);
-  if (result && result->error >= 300)
+  if (result && result->error >= 300) {
     properties->unroll();
-  else
-    properties->commit();
-  return result;
+    return result;
+  }
+
+  properties->commit();
+  return 0;
 }
 
 //! Convenience variant of @[patch_properties()] that removes a single
@@ -447,22 +451,25 @@ mapping(string:mixed) set_single_property (string path, string prop_name,
 //!
 //! @returns
 //!   Returns a mapping on any error, zero otherwise.
-mapping(string:mixed) remove_single_property (string path, string prop_name,
-					      RequestID id)
+mapping(string:mixed) remove_property (string path, string prop_name,
+				       RequestID id)
 {
-  PropertySet properties = query_properties(path, id);
+  mapping(string:mixed)|PropertySet properties = query_properties(path, id);
   if (!properties) return Roxen.http_status(Protocols.HTTP.HTTP_NOT_FOUND,
 					    "File not found.");
+  if (mappingp (properties)) return properties;
 
   mapping(string:mixed) result = properties->start();
   if (result) return result;
 
   result = properties->remove_property(prop_name);
-  if (result && result->error >= 300)
+  if (result && result->error >= 300) {
     properties->unroll();
-  else
-    properties->commit();
-  return result;
+    return result;
+  }
+
+  properties->commit();
+  return 0;
 }
 
 mapping(string:mixed)|int(-1..0)|Stdio.File find_file(string path,
