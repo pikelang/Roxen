@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.158 2000/03/06 18:56:45 nilsson Exp $
+// $Id: roxenlib.pike,v 1.159 2000/03/09 22:33:29 nilsson Exp $
 
 #include <roxen.h>
 inherit "http";
@@ -1543,14 +1543,12 @@ string tagtime(int t, mapping m, RequestID id, function language)
     {
      case "iso":
       mapping eris=localtime(t);
-      if(!(m->date && m->time))
-      {
-	if(m->date)
-	  return sprintf("%d-%02d-%02d",
-			 (eris->year+1900), eris->mon+1, eris->mday);
-	if(m->time)
-	  return sprintf("%02d:%02d:%02d", eris->hour, eris->min, eris->sec);
-      }
+      if(m->date)
+	return sprintf("%d-%02d-%02d",
+		       (eris->year+1900), eris->mon+1, eris->mday);
+      if(m->time)
+	return sprintf("%02d:%02d:%02d", eris->hour, eris->min, eris->sec);
+
       return sprintf("%d-%02d-%02dT%02d:%02d:%02d",
 		     (eris->year+1900), eris->mon+1, eris->mday,
 		     eris->hour, eris->min, eris->sec);
