@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: preferred_language.pike,v 1.2 2000/01/28 13:51:15 nilsson Exp $";
+constant cvs_version = "$Id: preferred_language.pike,v 1.3 2000/02/10 10:47:08 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST;
 constant module_name = "Preferred Language Analyzer";
@@ -32,10 +32,8 @@ RequestID first_try(RequestID id) {
   array lang = pre-(pre-languages) +
     config-(config-languages);
 
-  if(id->misc->pref_languages) {
-    lang+=id->misc->pref_languages->get_languages();
-    qualities+=id->misc->pref_languages->get_qualities();
-  }
+  lang+=id->misc->pref_languages->get_languages();
+  qualities+=id->misc->pref_languages->get_qualities();
 
   if(query("propagate") && sizeof(lang)) {
     if(!id->misc->defines) id->misc->defines=([]);
