@@ -51,47 +51,67 @@ This information was last synchronized with the main server &var.last_updated; a
 <cat-list name="3rdpart" title="Third party modules" /> 
 
 
+<?comment --- Information boxes ------------------------- ?>
+
+<define variable="var.dip" preparse="">
+  <update-download-progress>
+  <tr>
+    <td nowrap="nowrap">&_.title;
+      <a href="update.html?details=&_.id;">[Details...]</a></td>
+    <td nowrap="nowrap">&_.size;</td>
+    <td nowrap="nowrap">&_.progress;%</td>
+  </tr>
+  </update-download-progress>
+</define>
+
+<define variable="var.dp" preparse="">
+  <update-downloaded-packages>
+  <tr>
+    <td nowrap="nowrap">&_.title;
+      <a href="update.html?page=details&details=&_.id;">[Details...]</a></td>
+    <td nowrap="nowrap">&_.size;</td>
+    <td nowrap="nowrap">
+      <a href="update.html?install=&_.id;">[Install...]</a>
+    </td>
+  </tr>
+  </update-downloaded-packages>
+</define>
+
+<set variable="var.both" from="var.dip" />
+<append variable="var.both" from="var.dp" />
+
+<if sizeof="var.both > 8">
 <hr size="1" width="95%" />
 <table>
 <tr valign="top">
-<td>
 
-  <cv-obox title="Downloads in progress">
+<if sizeof="var.dip > 4">
+<td>
+  <cv-obox title="Downloads&nbsp;in&nbsp;progress">
     <table cellpadding="4">
       <tr>
 	<td nowrap="nowrap"><b>Description</b></td>
 	<td nowrap="nowrap"><b>Size</b></td>
 	<td nowrap="nowrap"><b>Downloaded</b></td>
      </tr>
-     <update-download-progress>
-     <tr>
-       <td nowrap="nowrap">&_.title;
-         <a href="update.html?details=&_.id;">[Details...]</a></td>
-       <td nowrap="nowrap">&_.size;</td>
-       <td nowrap="nowrap">&_.progress;%</td>
-     </tr>
-     </update-download-progress>
+     &var.dip:none;
     </table>
   </cv-obox>
 </td>
+</if>
+<if sizeof="var.dp > 4">
 <td>
-  <cv-obox title="Downloaded packages">
+  <cv-obox title="Downloaded&nbsp;packages">
     <table cellpadding="4">
       <tr>
 	<td nowrap="nowrap"><b>Description</b></td>
 	<td nowrap="nowrap"><b>Size</b></td>
 	<td nowrap="nowrap"></td>
       </tr>
-      <update-downloaded-packages>
-      <tr>
-        <td nowrap="nowrap">&_.title;
-          <a href="update.html?page=details&details=&_.id;">[Details...]</a></td>
-        <td nowrap="nowrap">&_.size;</td>
-        <td nowrap="nowrap">
-          <a href="update.html?install=&_.id;">[Install...]</a>
-        </td>
-      </tr>
-      </update-downloaded-packages>
+      &var.dp:none;
     </table>
   </cv-obox>
-</td></tr></table>  
+</td>
+</if>
+</tr></table>  
+</if>
