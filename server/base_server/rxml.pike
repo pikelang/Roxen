@@ -1,8 +1,10 @@
 inherit "roxenlib";
 
+
 array (mapping) tag_callers, container_callers;
 mapping (string:mapping(int:function)) real_tag_callers,real_container_callers;
-array (object) parse_modules = ({ this_object() });
+mapping (string:function) real_if_callers;
+array (object) parse_modules = ({  });
 string date_doc=#string "../modules/tags/doc/date_doc";
 
 #define TRACE_ENTER(A,B) do{if(id->misc->trace_enter)id->misc->trace_enter((A),(B));}while(0)
@@ -23,7 +25,7 @@ string handle_help(string file, string tag, mapping args)
 }
 
 array|string call_tag(string tag, mapping args, int line, int i,
-		      object id, object file, mapping defines,
+		      RequestID id, object file, mapping defines,
 		      object client)
 {
   string|function rf = real_tag_callers[tag][i];
@@ -53,7 +55,7 @@ array|string call_tag(string tag, mapping args, int line, int i,
 
 array(string)|string 
 call_container(string tag, mapping args, string contents, int line,
-	       int i, object id, object file, mapping defines, object client)
+	       int i, RequestID id, object file, mapping defines, object client)
 {
   id->misc->line = (string)line;
   string|function rf = real_container_callers[tag][i];
@@ -87,14 +89,15 @@ call_container(string tag, mapping args, string contents, int line,
 }
 
 
-string do_parse(string to_parse, object id, object file, mapping defines,
+string do_parse(string to_parse, RequestID id, object file, mapping defines,
 		object my_fd)
 {
-  if(!tag_callers) build_callers();
   if(!id->misc->_tags)
+  {
     id->misc->_tags = copy_value(tag_callers[0]);
-  if(!id->misc->_containers)
     id->misc->_containers = copy_value(container_callers[0]);
+    id->misc->_ifs = copy_value(real_if_callers);
+  }
   to_parse=parse_html_lines(to_parse,id->misc->_tags,id->misc->_containers,
 			    0, id, file, defines, my_fd);
   for(int i = 1; i<sizeof(tag_callers); i++)
@@ -102,7 +105,6 @@ string do_parse(string to_parse, object id, object file, mapping defines,
 			      i, id, file, defines, my_fd);
   return to_parse;
 }
-
 
 /* parsing modules */
 void insert_in_map_list(mapping to_insert, string map_in_object)
@@ -145,6 +147,7 @@ void build_callers()
   object o;
   real_tag_callers=([]);
   real_container_callers=([]);
+  real_if_callers=([]);
 
   //   misc_cache = ([]);
   tag_callers=({ ([]) });
@@ -152,7 +155,7 @@ void build_callers()
 
   parse_modules-=({0});
 
-  foreach (parse_modules,o)
+  foreach(parse_modules, o)
   {
     mapping foo;
     if(o->query_tag_callers)
@@ -165,6 +168,13 @@ void build_callers()
     {
       foo=o->query_container_callers();
       if(mappingp(foo)) insert_in_map_list(foo, "container");
+    }
+
+    if(o->query_if_callers)
+    {
+      foo=o->query_if_callers();
+      if(mappingp(foo)) 
+        real_if_callers |= foo;
     }
   }
   sort_lists();
@@ -186,7 +196,7 @@ void remove_parse_module(object o)
 
 
 
-string call_user_tag(string tag, mapping args, int line, mixed foo, object id)
+string call_user_tag(string tag, mapping args, int line, mixed foo, RequestID id)
 {
   id->misc->line = line;
   args = id->misc->defaults[tag]|args;
@@ -208,7 +218,7 @@ string call_user_tag(string tag, mapping args, int line, mixed foo, object id)
 }
 
 string call_user_container(string tag, mapping args, string contents, int line,
-			 mixed foo, object id)
+			 mixed foo, RequestID id)
 {
   if(!id->misc->defaults[tag] && id->misc->defaults[""])
     tag = "";
@@ -249,7 +259,6 @@ void sort_lists()
 			   return
 			     function_object(f)->query("_priority");
 			 };
-// 			 werror("no priority for tag function %O\n",f);
 			 return 4;
 		       });
     sort(s,val);
@@ -265,7 +274,6 @@ void sort_lists()
 			   if (functionp(f)) 
 			     return function_object(f)->query("_priority");
 			 };
-// 			 werror("no priority for tag function %O\n",f);
 			 return 4;
 		       });
     sort(s,val);
@@ -280,7 +288,7 @@ void sort_lists()
 #define _rettext defines[" _rettext"]
 #define _ok     defines[" _ok"]
 
-string parse_rxml(string what, object id, 
+string parse_rxml(string what, RequestID id, 
 		  void|object file,
 		  void|mapping defines )
 {
@@ -327,7 +335,7 @@ string parse_rxml(string what, object id,
 
 
 
-string tag_help(string t, mapping args, object id)
+string tag_help(string t, mapping args, RequestID id)
 {
   array tags = sort(Array.filter(get_dir("modules/tags/doc/"),
 			     lambda(string tag) {
@@ -359,7 +367,7 @@ string tag_help(string t, mapping args, object id)
 }
 
 
-string tag_list_tags( string t, mapping args, object id, object f )
+string tag_list_tags( string t, mapping args, RequestID id, object f )
 {
   int verbose;
   string res="";
@@ -405,19 +413,83 @@ string tag_list_tags( string t, mapping args, object id, object f )
   return res;
 }
 
+string tag_line( string t, mapping args, RequestID id)
+{
+  return id->misc->line;
+}
+
 string tag_number(string t, mapping args)
 {
   return roxen->language(args->language||args->lang, 
 			 args->type||"number")( (int)args->num );
 }
 
-string tag_line( string t, mapping args, object id)
+array(string) list_packages()
 {
-  return id->misc->line;
+  return Array.filter(((get_dir("../local/rxml_packages")||({}))
+                       |(get_dir("../rxml_packages")||({}))), 
+                      lambda( string s ) {
+                        return (Stdio.file_size("../local/rxml_packages/"+s)+
+                                Stdio.file_size( "../rxml_packages/"+s )) > 0;
+                      });
+
+}
+
+string read_package( string p )
+{
+  string data;
+  p -= "/";
+  if(file_stat( "../local/rxml_packages/"+p ))
+    catch(data=Stdio.File( "../local/rxml_packages/"+p, "r" )->read());
+  if(!data && file_stat( "../rxml_packages/"+p ))
+    catch(data=Stdio.File( "../rxml_packages/"+p, "r" )->read());
+  return data;
 }
 
 
-string tag_use(string tag, mapping m, object id)
+string use_file_doc( string f, string data, RequestID nid, object id )
+{
+  string res="";
+  catch 
+  {
+    string doc = "";
+    int help=0; /* If true, all tags support the 'help' argument. */
+    sscanf(data, "%*sdoc=\"%s\"", doc);
+    sscanf(data, "%*sdoc=%d", help); 
+    parse_rxml("<scope>"+data+"</scope>", nid);
+    res += "<dt><b>"+f+"</b><dd>"+(doc?doc+"<br>":"");
+    array tags = indices(nid->misc->tags||({}));
+    array containers = indices(nid->misc->containers||({}));
+    array ifs = indices(nid->misc->_ifs||({}))- indices(id->misc->_ifs);
+    array defines = indices(nid->misc->defines||({}))- indices(id->misc->defines);
+    if(sizeof(tags))
+      res += "defines the following tag"+
+        (sizeof(tags)!=1?"s":"") +": "+
+        String.implode_nicely( sort(tags) )+"<br>";
+    if(sizeof(containers))
+      res += "defines the following container"+
+        (sizeof(tags)!=1?"s":"") +": "+
+        String.implode_nicely( sort(containers) )+"<br>";
+    if(sizeof(ifs))
+      res += "defines the following if argument"+
+        (sizeof(ifs)!=1?"s":"") +": "+
+        String.implode_nicely( sort(ifs) )+"<br>";
+    if(sizeof(defines))
+      res += "defines the following macro"+
+        (sizeof(defines)!=1?"s":"") +": "+
+        String.implode_nicely( sort(defines) )+"<br>";
+  };
+  nid->misc->tags = 0;
+  nid->misc->containers = 0;
+  nid->misc->defines = ([]);
+  nid->misc->_tags = 0;
+  nid->misc->_containers = 0;
+  nid->misc->defaults = ([]);
+  nid->misc->_ifs = ([]);
+  return res;
+}
+
+array tag_use(string tag, mapping m, string c, RequestID id)
 {
   mapping res = ([]);
   object nid = id->clone_me();
@@ -427,56 +499,38 @@ string tag_use(string tag, mapping m, object id)
   nid->misc->_tags = 0;
   nid->misc->_containers = 0;
   nid->misc->defaults = ([]);
+  nid->misc->_ifs = ([]);
 
   if(m->packageinfo)
   {
     string res ="<dl>";
-    array dirs = get_dir("../rxml_packages");
-    if(dirs)
-      foreach(dirs, string f)
-	catch 
-	{
-	  string doc = "";
-	  string data = Stdio.read_bytes("../rxml_packages/"+f);
-	  sscanf(data, "%*sdoc=\"%s\"", doc);
-	  parse_rxml(data, nid);
-	  res += "<dt><b>"+f+"</b><dd>"+doc+"<br>";
-	  array tags = indices(nid->misc->tags||({}));
-	  array containers = indices(nid->misc->containers||({}));
-	  if(sizeof(tags))
-	    res += "defines the following tag"+
-	      (sizeof(tags)!=1?"s":"") +": "+
-	      String.implode_nicely( sort(tags) )+"<br>";
-	  if(sizeof(containers))
-	    res += "defines the following container"+
-	      (sizeof(tags)!=1?"s":"") +": "+
-	      String.implode_nicely( sort(containers) )+"<br>";
-	};
-    else
-      return "No package directory installed.";
-    return res+"</dl>";
+    foreach(list_packages(), string f)
+      res += use_file_doc( f, read_package( f ), nid,id );
+    return ({res+"</dl>"});
   }
 
-
   if(!m->file && !m->package) 
-    return "<use help>";
+    return ({"<use help>"});
   
   if(id->pragma["no-cache"] || 
-     !(res = cache_lookup("macrofiles:"+ name ,
-			  (m->file || m->package))))
+     !(res=cache_lookup("macrofiles:"+name,(m->file||("pkg!"+m->package)))))
   {
     res = ([]);
     string foo;
     if(m->file)
       foo = try_get_file( fix_relative(m->file,nid), nid );
     else 
-      foo=Stdio.read_bytes("../rxml_packages/"+combine_path("/",m->package));
+      foo=read_package( m->package );
       
     if(!foo)
       if(id->misc->debug)
-	return "Failed to fetch "+(m->file||m->package);
+	return ({"Failed to fetch "+(m->file||m->package)});
       else
-	return "";
+	return ({""});
+
+    if( m->info )
+      return ({"<dl>"+use_file_doc( m->file || m->package, foo, nid,id )+"</dl>"});
+
     parse_rxml( foo, nid );
     res->tags  = nid->misc->tags||([]);
     res->_tags = nid->misc->_tags||([]);
@@ -488,44 +542,22 @@ string tag_use(string tag, mapping m, object id)
       if(!res->containers[t]) m_delete(res->_containers, t);
     res->defines = nid->misc->defines||([]);
     res->defaults = nid->misc->defaults||([]);
+    res->_ifs = nid->misc->_ifs;
     m_delete(res->defines, "line");
-    cache_set("macrofiles:"+ name, (m->file || m->package), res);
+    cache_set("macrofiles:"+name, (m->file || ("pkg!"+m->package)), res);
   }
-
-  if(!id->misc->tags)
-    id->misc->tags = res->tags;
-  else
-    id->misc->tags |= res->tags;
-
-  if(!id->misc->containers)
-    id->misc->containers = res->containers;
-  else
-    id->misc->containers |= res->containers;
-
-  if(!id->misc->defaults)
-    id->misc->defaults = res->defaults;
-  else
-    id->misc->defaults |= res->defaults;
-
-  if(!id->misc->defines)
-    id->misc->defines = res->defines;
-  else
-    id->misc->defines |= res->defines;
-
-  foreach(indices(res->_tags), string t)
-    id->misc->_tags[t] = res->_tags[t];
-
-  foreach(indices(res->_containers), string t)
-    id->misc->_containers[t] = res->_containers[t];
-
-  if(id->misc->debug)
-    return sprintf("<!-- Using the file %s, id %O -->", m->file, res);
-  else
-    return "";
+  id->misc->tags += res->tags;
+  id->misc->containers += res->containers;
+  id->misc->defaults += res->defaults;
+  id->misc->defines += res->defines;
+  id->misc->_tags += res->_tags;
+  id->misc->_containers += res->_containers;
+  id->misc->_ifs += res->_ifs;
+  return ({parse_rxml( c, id )});
 }
 
-string tag_define(string tag, mapping m, string str, object id, object file,
-		  mapping defines)
+string tag_define(string tag, mapping m, string str, RequestID id, 
+                  object file, mapping defines)
 { 
   if (m->name) 
     defines[m->name]=str;
@@ -533,44 +565,64 @@ string tag_define(string tag, mapping m, string str, object id, object file,
     id->variables[m->variable] = str;
   else if (m->tag) 
   {
+    m->tag = lower_case(m->tag);
+    string n = m->tag;
+    m_delete( m, "tag" );
     if(!id->misc->tags)
       id->misc->tags = ([]);
     if(!id->misc->defaults)
       id->misc->defaults = ([]);
-    m->tag = lower_case(m->tag);
-    if(!id->misc->defaults[m->tag])
-      id->misc->defaults[m->tag] = ([]);
+    if(!id->misc->defaults[n])
+      id->misc->defaults[n] = ([]);
 
     foreach( indices(m), string arg )
-      if( arg[0..7] == "default_" )
-	id->misc->defaults[m->tag] += ([ arg[8..]:m[arg] ]);
+      if( arg[..7] == "default_" )
+      {
+	id->misc->defaults[n][arg[8..]] = m[arg];
+        m_delete( m, arg );
+      }
     
-    id->misc->tags[m->tag] = str;
-    id->misc->_tags[m->tag] = call_user_tag;
+    id->misc->tags[n] = replace( str, indices(m), values(m) );
+    id->misc->_tags[n] = call_user_tag;
   }
   else if (m->container) 
   {
+    string n = lower_case(m->container);
+    m_delete( m, "container" );
     if(!id->misc->containers)
       id->misc->containers = ([]);
-
     if(!id->misc->defaults)
       id->misc->defaults = ([]);
-    if(!id->misc->defaults[m->container])
-      id->misc->defaults[m->container] = ([]);
+    if(!id->misc->defaults[n])
+      id->misc->defaults[n] = ([]);
 
     foreach( indices(m), string arg )
       if( arg[0..7] == "default_" )
-	id->misc->defaults[m->container] += ([ arg[8..]:m[arg] ]);
+      {
+	id->misc->defaults[n][arg[8..]] = m[arg];
+        m_delete( m, arg );
+      }
     
-    id->misc->containers[m->container] = str;
-    id->misc->_containers[m->container] = call_user_container;
+    id->misc->containers[n] = replace( str, indices(m), values(m) );
+    id->misc->_containers[n] = call_user_container;
   }
-  else return "<!-- No name, tag or container specified for the define! "
-	 "&lt;define help&gt; for instructions. -->";
+  else if (m["if"])
+  {
+    id->misc->_ifs[ lower_case(m["if"]) ] = UserIf( str );
+  }
+  else 
+  {
+    if(!id->misc->debug)
+      return "<!-- No name, tag, if or container specified for the define! "
+        "&lt;define help&gt; for instructions. -->";
+      return "No name, tag, if or container specified for the define! "
+        "&lt;define help&gt; for instructions.";
+  }
+  
   return ""; 
 }
 
-string tag_undefine(string tag, mapping m, object id, object file,
+string tag_undefine(string tag, mapping m, RequestID id, object file,
 		    mapping defines)
 { 
   if (m->name) 
@@ -581,6 +633,10 @@ string tag_undefine(string tag, mapping m, object id, object file,
   {
     m_delete(id->misc->tags,m->tag);
     m_delete(id->misc->_tags,m->tag);
+  }
+  else if (m["if"]) 
+  {
+    m_delete(id->misc->_ifs,m["if"]);
   }
   else if (m->container) 
   {
@@ -593,10 +649,279 @@ string tag_undefine(string tag, mapping m, object id, object file,
 }
 
 
+
+class Tracer
+{
+  inherit "roxenlib";
+  string resolv="<ol>";
+  int level;
+
+  mapping et = ([]);
+#if efun(gethrvtime)
+  mapping et2 = ([]);
+#endif
+
+  string module_name(function|object m)
+  {
+    if(!m)return "";
+    if(functionp(m)) m = function_object(m);
+    return (strlen(m->query("_name")) ? m->query("_name") :
+	    (m->query_name&&m->query_name()&&strlen(m->query_name()))?
+	    m->query_name():m->register_module()[1]);
+  }
+
+  void trace_enter_ol(string type, function|object module)
+  {
+    level++; 
+
+    string efont="", font="";
+    if(level>2) {efont="</font>";font="<font size=-1>";} 
+    resolv += (font+"<b><li></b> "+type+" "+module_name(module)+"<ol>"+efont);
+#if efun(gethrvtime)
+    et2[level] = gethrvtime();
+#endif
+#if efun(gethrtime)
+    et[level] = gethrtime();
+#endif
+  }
+
+  void trace_leave_ol(string desc)
+  {
+#if efun(gethrtime)
+    int delay = gethrtime()-et[level];
+#endif
+#if efun(gethrvtime)
+    int delay2 = gethrvtime()-et2[level];
+#endif
+    level--;
+    string efont="", font="";
+    if(level>1) {efont="</font>";font="<font size=-1>";} 
+    resolv += (font+"</ol>"+
+#if efun(gethrtime)
+	       "Time: "+sprintf("%.5f",delay/1000000.0)+
+#endif
+#if efun(gethrvtime)
+	       " (CPU = "+sprintf("%.2f)", delay2/1000000.0)+
+#endif /* efun(gethrvtime) */
+	       "<br>"+html_encode_string(desc)+efont)+"<p>";
+
+  }
+
+  string res()
+  {
+    while(level>0) trace_leave_ol("");
+    return resolv+"</ol>";
+  }
+}
+
+class SumTracer
+{
+  inherit Tracer;
+#if 0
+  mapping levels = ([]);
+  mapping sum = ([]);
+  void trace_enter_ol(string type, function|object module)
+  {
+    resolv="";
+    ::trace_enter_ol();
+    levels[level] = type+" "+module;
+  }
+
+  void trace_leave_ol(string mess)
+  {
+    string t = levels[level--];
+#if efun(gethrtime)
+    int delay = gethrtime()-et[type+" "+module_name(module)];
+#endif
+#if efun(gethrvtime)
+    int delay2 = +gethrvtime()-et2[t];
+#endif
+    t+=html_encode_string(mess);
+    if( sum[ t ] ) {
+      sum[ t ][ 0 ] += delay;
+#if efun(gethrvtime)
+      sum[ t ][ 1 ] += delay2;
+#endif
+    } else {
+      sum[ t ] = ({ delay, 
+#if efun(gethrvtime)
+		    delay2 
+#endif
+      });
+    }
+  }
+
+  string res()
+  {
+    foreach(indices());
+  }
+#endif
+}
+
+string tag_trace(string t, mapping args, string c , RequestID id)
+{
+  NOCACHE();
+  object t;
+  if(args->summary)
+    t = SumTracer();
+  else
+    t = Tracer();
+  function a = id->misc->trace_enter;
+  function b = id->misc->trace_leave;
+  id->misc->trace_enter = t->trace_enter_ol;
+  id->misc->trace_leave = t->trace_leave_ol;
+  t->trace_enter_ol( "tag &lt;trace&gt;", tag_trace);
+  string r = parse_rxml(c, id);
+  id->misc->trace_enter = a;
+  id->misc->trace_leave = b;
+  return r + "<h1>Trace report</h1>"+t->res()+"</ol>";
+}
+
+string tag_for(string t, mapping args, string c, RequestID id)
+{
+  string v = args->variable;
+  int from = (int)args->from;
+  int to = (int)args->to;
+  int step = (int)args->step||1;
+  
+  m_delete(args, "from");
+  m_delete(args, "to");
+  m_delete(args, "variable");
+  string res="";
+  for(int i=from; i<=to; i+=step)
+    res += "<set variable="+v+" value="+i+">"+c;
+  return res;
+}
+
+
+
+array(string) tag_noparse(string t, mapping m, string c)
+{
+  return ({ c });
+}
+
+string tag_nooutput(string t, mapping m, string c, RequestID id)
+{
+  parse_rxml(c, id);
+  return "";
+}
+
+string tag_strlen(string t, mapping m, string c, RequestID id)
+{
+  return (string)strlen(c);
+}
+
+
+string tag_case(string t, mapping m, string c, RequestID id)
+{
+  if(m->lower)
+    c = lower_case(c);
+  if(m->upper)
+    c = upper_case(c);
+  if(m->capitalize)
+    c = capitalize(c);
+  return c;
+}
+
+#define LAST_IF_TRUE id->misc->defines[" _ok"]
+
+string tag_if( string t, mapping m, string c, RequestID id )
+{
+  int res, and = 1;
+
+  if(m->not) 
+  {
+    m_delete( m, "not" );
+    tag_if( t, m, c, id );
+    LAST_IF_TRUE = !LAST_IF_TRUE;
+    if(LAST_IF_TRUE)
+      return c+"<true>";
+    return "<false>";
+  }
+
+  if(m->or)  { and = 0; m_delete( m, "or" ); }
+  if(m->and) { and = 1; m_delete( m, "and" ); }
+  array possible = indices(m) & indices(real_if_callers);
+  foreach(possible, string s)
+  {
+    res = real_if_callers[ s ]( m[s], id, m, and, s );
+    if( res && !and )
+    {
+      LAST_IF_TRUE = 1;
+      return c+"<true>";
+    } else if( !res && and ) {
+      LAST_IF_TRUE = 0;
+      return "<false>";
+    }
+  }
+  LAST_IF_TRUE = and;
+  if(and)
+    return c+"<true>";
+  return "<false>";
+}
+
+string tag_else( string t, mapping m, string c, RequestID id )
+{
+  if(!LAST_IF_TRUE) return c;
+  return "";
+}
+
+string tag_elseif( string t, mapping m, string c, RequestID id )
+{
+  if(!LAST_IF_TRUE) return tag_if( t, m, c, id );
+  return "";
+}
+
+string tag_true( string t, mapping m, string c, RequestID id )
+{
+  LAST_IF_TRUE = 1;
+  return "";
+}
+
+string tag_false( string t, mapping m, string c, RequestID id )
+{
+  LAST_IF_TRUE = 0;
+  return "";
+}
+
+void internal_tag_case( string t, mapping m, string c, int l, RequestID id,
+                        mapping res )
+{
+  if(res->res) return;
+  LAST_IF_TRUE = 0;
+  tag_if( t, m, c, id );
+  if(LAST_IF_TRUE) res->res = c+"<true>";
+  return;
+}
+
+string tag_cond( string t, mapping m, string c, RequestID id )
+{
+  mapping result = ([]);
+  parse_html_lines(c,([]),(["case":internal_tag_case, 
+                            "default":lambda(mixed ... a){
+    result->def = a[2]+"<false>"; }]),id,result);
+  return result->res||result->def;
+}
+
 mapping query_container_callers()
 {
   return ([
+    "comment":lambda(){ return ""; },
+    "if":tag_if,
+    "else":tag_else,
+    "elseif":tag_elseif,
+    "elif":tag_elseif,
+    "true":tag_true,
+    "false":tag_false,
+    "noparse":tag_noparse,
+    "nooutput":tag_nooutput,
+    "case":tag_case,
+    "cond":tag_cond,
+    "strlen":tag_nooutput,
     "define":tag_define,
+    "for":tag_for,
+    "trace":tag_trace,
+    "use":tag_use,
   ]);
 }
 
@@ -609,6 +934,253 @@ mapping query_tag_callers()
     "undefine":tag_undefine,
     "help": tag_help,
     "line":tag_line,
-    "use":tag_use,
+  ]);
+}
+
+
+class UserIf
+{
+  string rxml_code;
+  void create( string what )
+  {
+    rxml_code = what;
+  }
+  
+  int `()( string ind, RequestID id, mapping args, int and, string a )
+  {
+    int oif, res;
+    array replace_from = Array.map(indices(args),
+                                   lambda(string q){return "&"+q+";";});
+    array replace_to = values(args);
+
+    oif = LAST_IF_TRUE;
+    TRACE_ENTER("user defined if argument &lt;"+a+"&gt;", UserIf);
+    LAST_IF_TRUE = 0;
+    parse_rxml( replace(rxml_code, replace_from, replace_to ), id );
+    res = LAST_IF_TRUE;
+
+    TRACE_LEAVE("");
+    LAST_IF_TRUE = oif;
+
+    return res;
+  } 
+}
+
+class IfIs
+{
+  string index;
+  int cache, misc;
+  function `() = match_in_map;
+
+  void create( string ind, int c, int|void m )
+  {
+    index = ind;
+    if(!ind)
+      `() = match_in_string;
+    cache = c;
+    misc = m;
+  }
+
+  int match_in_string( string value, RequestID id )
+  {
+    string is;
+    if(!cache) CACHE(0);
+    sscanf( value, "%s is %s", value, is );
+    if(!is) return strlen(value);
+    value = lower_case( value );
+    is = lower_case( is );
+    return (glob(is,value)||sizeof(Array.filter( is/",", glob, value )));
+  }
+
+  int match_in_map( string value, RequestID id )
+  {
+    string is;
+    if(!cache) CACHE(0);
+    sscanf( value, "%s is %s", value, is );
+    value = misc?id->misc[index][value]:id[index][value];
+    if(!is || !value) return !!value;
+    value = lower_case( value );
+    is = lower_case( is );
+    return (glob(is,value)||sizeof(Array.filter( is/",", glob, value )));
+  }
+}
+
+class IfMatch
+{
+  string index;
+  int cache, misc;
+  void create(string ind, int c, int|void m)
+  {
+    index = ind;
+    cache = c;
+    misc = m;
+  }
+  void `()( string is, RequestID id )
+  {
+    array|string value = misc?id->misc[index]:id[index];
+    if(!cache) CACHE(0);
+    if(!value) return 0;
+    if(arrayp(value)) value=value*" ";
+    value = lower_case( value );
+    is = lower_case( "*"+is+"*" );
+    return (glob(is,value)||sizeof(Array.filter( is/",", glob, value )));
+  }
+}
+
+
+int if_date( string date, RequestID id, mapping m )
+{
+  CACHE(60);
+  int a, b;
+  mapping c;
+  c=localtime(time(1));
+  b=(int)sprintf("%02d%02d%02d", c->year, c->mon + 1, c->mday);
+  a=(int)date;
+  if(a > 999999) a -= 19000000;
+  else if(a < 901201) a += 10000000;
+  if(m->inclusive || !(m->before || m->after) && a==b)
+    return 1;
+  if(m->before && a>b)
+    return 1;
+  else if(m->after && a<b)
+    return 1;
+}
+
+int if_time( string ti, RequestID id, mapping m )
+{
+  CACHE(time(1)%60);
+
+  int tok, a, b, d;
+  mapping c;
+  c=localtime(time());
+  
+  b=(int)sprintf("%02d%02d", c->hour, c->min);
+  a=(int)ti;
+
+  if(m->until) {
+    d = (int)m->until;
+    if (d > a && (b > a && b < d) )
+      return 1;
+    if (d < a && (b > a || b < d) )
+      return 1;
+    if (m->inclusive && ( b==a || b==d ) )
+      return 1;
+  }
+  else if(m->inclusive || !(m->before || m->after) && a==b)
+    return 1;
+  if(m->before && a>b)
+    return 1;
+  else if(m->after && a<b)
+    return 1;
+}
+
+int match_passwd(string try, string org)
+{
+  if(!strlen(org))   return 1;
+  if(crypt(try, org)) return 1;
+}
+
+string simple_parse_users_file(string file, string u)
+{
+  if(!file) return 0;
+  foreach(file/"\n", string line)
+  {
+    array(string) arr = line/":";
+    if (arr[0] == u && sizeof(arr) > 1)
+      return(arr[1]);
+  }
+}
+
+int match_user(array u, string user, string f, int wwwfile, object id)
+{
+  string s, pass;
+  if(u[1]!=user) 
+    return 0;
+  if(!wwwfile)
+    s=Stdio.read_bytes(f);
+  else
+    s=id->conf->try_get_file(fix_relative(f,id), id);
+  return (pass=simple_parse_users_file(s, u[1]) &&
+          (u[0] || match_passwd(u[2], pass)));
+}
+
+multiset simple_parse_group_file(string file, string g)
+{
+ multiset res = (<>);
+ array(string) arr ;
+ foreach(file/"\n", string line)
+   if(sizeof(arr = line/":")>1 && (arr[0] == g))
+     res += (< @arr[-1]/"," >);
+ return res;
+}
+
+int group_member(array auth, string group, string groupfile, object id)
+{
+  if(!auth)
+    return 0; // No auth sent
+
+  string s;
+  catch { s = Stdio.read_bytes(groupfile); };
+
+  if (!s)
+    s = id->conf->try_get_file( fix_relative( groupfile, id), id );
+
+  if (!s) 
+    return 0;
+
+  s = replace(s,({" ","\t","\r" }), ({"","","" }));
+
+  multiset(string) members = simple_parse_group_file(s, group);
+  return members[auth[1]];
+}
+
+int if_user( string u, RequestID id, mapping m )
+{
+  NOCACHE();
+  if(!id->auth)
+    return 0;
+  if(u == "any")
+    if(m->file)
+      return match_user(id->auth,id->auth[1],m->file,!!m->wwwfile, id);
+    else
+      return id->auth[0];
+  else
+    if(m->file)
+      // FIXME: wwwfile attribute doesn't work.
+      return match_user(id->auth,u,m->file,!!m->wwwfile,id);
+    else
+      return id->auth[0] && (search(u/",", id->auth[1]) != -1);
+}
+
+int if_group( string u, RequestID id, mapping m)
+{
+  NOCACHE();
+  return ((m->groupfile && sizeof(m->groupfile)) 
+          && group_member(id->auth, m->group, m->groupfile, id));
+}
+
+mapping query_if_callers()
+{
+  return ([
+    "accept":IfMatch( "accept", 0, 1),
+    "config":IfIs( "config", 0 ),
+    "cookie":IfIs( "cookies", 0 ),
+    "client":IfMatch( "client", 0 ),
+    "date":if_date,
+    "defined":IfIs( "defines", 1 ),
+    "domain":IfMatch( "host", 0 ),
+    "group":if_group,
+    "host":IfMatch( "remoteaddr", 0 ),
+    "ip":IfMatch( "remoteaddr", 0 ),
+    "language":IfMatch( "accept-language", 0, 1),
+    "match":IfIs( 0, 0 ),
+    "name":IfMatch( "client", 0 ),
+    "pragma":IfIs( "pragma", 0 ),
+    "prestate":IfIs( "prestate", 1 ),
+    "referrer":IfMatch( "referrer", 0 ),
+    "supports":IfIs( "supports", 0 ),
+    "time":if_time,
+    "user":if_user,
+    "variable":IfIs( "variables", 1 ),
   ]);
 }
