@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version="$Id: vform.pike,v 1.2 2000/07/17 12:22:53 nilsson Exp $";
+constant cvs_version="$Id: vform.pike,v 1.3 2000/08/21 15:20:42 wellhard Exp $";
 constant thread_safe=1;
 
 constant module_type = MODULE_PARSER;
@@ -18,9 +18,125 @@ constant hi_int   ="ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏĞÑÒÓÔÕÖØÙÚÛÜİŞ";
 constant low_int  ="àáâãäåæçèéêëìíîïğñòóôõöøùúûüışÿß";
 constant interp   ="!\"#$%&'()*+,-./:;<=>?@[\]^_`{|}~";
 
+
 class TagVForm {
   inherit RXML.Tag;
   constant name = "vform";
+
+  int filter(string what, string with) {
+    multiset chars=(multiset)(with/"");
+    foreach(what/"", string char)
+      if(!chars[char]) return 0;
+    return 1;
+  }
+
+  array check_input (mapping args,RequestID id) {
+    int ok = 1;
+    string var = id->variables[args->name];
+    args->value=var||args->value||"";
+    
+    if(args["fail-if-failed"] && id->misc->vform_failed[args["fail-if-failed"]]) {
+    return ({1, 0});
+    }
+    
+    if(!var ||
+       (args["ignore-if-false"] && !id->misc->vform_ok) ||
+       id->variables["__reload"] ||
+       id->variables["__clear"] ||
+       (args["ignore-if-failed"] && id->misc->vform_failed[args["ignore-if-failed"]]) ||
+       (args["ignore-if-verified"] && id->misc->vform_verified[args["ignore-if-verified"]]) ) {
+      if(id->variables["__clear"]) args->value=args->value||"";
+      return ({ 0, 0 });
+    }
+    
+    if(args->trim)
+      id->variables[args->name] = var = args->value = String.trim_whites(var);
+    
+    if(args->minlength &&
+       sizeof(var)<(int)args->minlength)
+      ok=0;
+    
+    if(args->maxlength &&
+       sizeof(var)>(int)args->maxlength)
+      ok=0;
+    
+    
+    if(args->is) {
+      switch(args->is) {
+      case "mail":
+	string a,b,c;
+	int temp=(sscanf(lower_case(var), "%s@%s.%s", a,b,c)==3);
+	ok &= temp && filter(a+b+c, low_alpha+num+"_-.");
+	break;
+      case "int":
+	ok &= filter(var, num);
+	break;
+      case "float":
+	ok &= filter(var, num+".") && sizeof(var/".")==2;
+	break;
+      case "upper-alpha":
+	ok &= filter(var, hi_alpha);
+	break;
+      case "lower-alpha":
+	ok &= filter(var, low_alpha);
+	break;
+      case "upper-alpha-num":
+	ok &= filter(var, hi_alpha+num);
+	break;
+      case "lower-alpha-num":
+	ok &= filter(var, low_alpha+num);
+	break;
+      case "lower":
+	ok &= filter(var, low_alpha+low_int+num+interp);
+	break;
+      case "upper":
+	ok &= filter(var, hi_alpha+hi_int+num+interp);
+	break;
+      case "date":
+	int y,m,d;
+	if( sscanf(var,"%4d-%2d-%2d",y,m,d)!=3 &&
+	    sscanf(var,"%4d%2d%2d",y,m,d)!=3 )
+	  ok = 0;
+	else {
+	  if( sprintf("%4d-%02d-%02d", y, m, d) != Calendar.ISO.Year(y)->
+	      month(m)->day(d)->iso_name() )
+	    ok = 0;
+	}
+	break;
+	
+      default:
+	ok=0;
+	break;
+      }
+    }
+    
+    if(args->filter)
+      ok &= filter(var, args->filter);
+    
+    if(args->min)
+      ok &= (float)var>=(float)args->min;
+    
+    if(args->max)
+      ok &= (float)var<=(float)args->max;
+    
+    if(args->glob)
+      ok &= glob(args->glob, var);
+    
+    if(args->regexp)
+      ok &= Regexp(args->regexp)->match(var);
+    
+    if(args->equal)
+      ok &= (var == id->variables[args->equal]);
+    
+    if(args->empty) {
+      if(var == "")
+	ok = 1;
+    }
+    
+    return({ok, 1});
+  
+  }
+
 
   class TagVInput {
     inherit RXML.Tag;
@@ -31,12 +147,6 @@ class TagVForm {
 		     "ignore-if-false", "ignore-if-failed", "ignore-if-verified",
 		     "filter", "min", "max", "date" });
 
-    int filter(string what, string with) {
-      multiset chars=(multiset)(with/"");
-      foreach(what/"", string char)
-	if(!chars[char]) return 0;
-      return 1;
-    }
 
     class Frame {
       inherit RXML.Frame;
@@ -62,111 +172,7 @@ class TagVForm {
       }
 
       array do_return(RequestID id) {
-	int ok = 1;
-	string var = id->variables[args->name];
-	args->value=var||args->value||"";
-	
-	if(args["fail-if-failed"] && id->misc->vform_failed[args["fail-if-failed"]]) {
-	  make_result(1, 0, id);
-	  return 0;
-	}
-	
-	if(!var ||
-	   (args["ignore-if-false"] && !id->misc->vform_ok) ||
-	   id->variables["__reload"] ||
-	   id->variables["__clear"] ||
-	   (args["ignore-if-failed"] && id->misc->vform_failed[args["ignore-if-failed"]]) ||
-	   (args["ignore-if-verified"] && id->misc->vform_verified[args["ignore-if-verified"]]) ) {
-	  if(id->variables["__clear"]) args->value=args->value||"";
-	  make_result(0, 0, id);
-	  return 0;
-	}
-	
-	if(args->trim)
-	  id->variables[args->name] = var = args->value = String.trim_whites(var);
-	
-	if(args->minlength &&
-	   sizeof(var)<(int)args->minlength)
-	  ok=0;
-	
-	if(args->maxlength &&
-	   sizeof(var)>(int)args->maxlength)
-	  ok=0;
-	
-	
-	if(args->is) {
-	  switch(args->is) {
-	  case "mail":
-	    string a,b,c;
-	    int temp=(sscanf(lower_case(var), "%s@%s.%s", a,b,c)==3);
-	    ok &= temp && filter(a+b+c, low_alpha+num+"_-.");
-	    break;
-	  case "int":
-	    ok &= filter(var, num);
-	    break;
-	  case "float":
-	    ok &= filter(var, num+".") && sizeof(var/".")==2;
-	    break;
-	  case "upper-alpha":
-	    ok &= filter(var, hi_alpha);
-	    break;
-	  case "lower-alpha":
-	    ok &= filter(var, low_alpha);
-	    break;
-     	  case "upper-alpha-num":
-	    ok &= filter(var, hi_alpha+num);
-	    break;
-	  case "lower-alpha-num":
-	    ok &= filter(var, low_alpha+num);
-	    break;
-	  case "lower":
-	    ok &= filter(var, low_alpha+low_int+num+interp);
-	    break;
-	  case "upper":
-	    ok &= filter(var, hi_alpha+hi_int+num+interp);
-	    break;
-	  case "date":
-	    int y,m,d;
-	    if( sscanf(var,"%4d-%2d-%2d",y,m,d)!=3 &&
-		sscanf(var,"%4d%2d%2d",y,m,d)!=3 )
-	      ok = 0;
-	    else {
-	      if( sprintf("%4d-%02d-%02d", y, m, d) != Calendar.ISO.Year(y)->
-		  month(m)->day(d)->iso_name() )
-		ok = 0;
-	    }
-	    break;
-
-	  default:
-	    ok=0;
-	    break;
-	  }
-	}
-
-	if(args->filter)
-	  ok &= filter(var, args->filter);
-	
-	if(args->min)
-	  ok &= (float)var>=(float)args->min;
-	
-	if(args->max)
-	  ok &= (float)var<=(float)args->max;
-	
-	if(args->glob)
-	  ok &= glob(args->glob, var);
-
-	if(args->regexp)
-	  ok &= Regexp(args->regexp)->match(var);
-
-	if(args->equal)
-	  ok &= (var == id->variables[args->equal]);
-
-	if(args->empty) {
-	  if(var == "")
-	    ok = 1;
-	}
-
-	make_result(ok, 1, id);
+	make_result(@check_input(args,id),id);
 	return 0;
       }
 
@@ -223,6 +229,102 @@ class TagVForm {
       }
     }
   }
+
+  class TagVTextarea {
+    inherit RXML.Tag;
+    constant name = "vtextarea";
+    mapping(string:RXML.Type) req_arg_types = ([ "name":RXML.t_text(RXML.PEnt) ]);
+
+    constant ARGS=({ "minlength", "maxlength", "trim", "is", "glob",
+		     "ignore-if-false", "ignore-if-failed", "ignore-if-verified",
+		     "filter", "min", "max", "date" });
+
+    class Frame {
+      inherit RXML.Frame;
+      string scope_name;
+      mapping vars;
+
+      class EntityForm {
+	inherit RXML.Value;
+	string rxml_const_eval(RXML.Context c) {
+	  mapping new_args=args+([]);
+	  foreach(ARGS, string arg)
+	    m_delete(new_args, arg);
+	  new_args->value=c->id->variables[args->name]||args->value||"";
+	  if(c->id->variables["__clear"]) new_args->value=args->value||"";
+	  return Roxen.make_container("textarea", new_args-(["value":0]),new_args->value);
+	}
+      }
+
+      array do_enter(RequestID id) {
+	scope_name=args->scope||"vtextarea";
+	vars=([ "input":EntityForm() ]);
+	return 0;
+      }
+
+      array do_return(RequestID id) {
+	make_result(@check_input(args,id),id);
+	return 0;
+      }
+
+      void make_result(int ok, int show_err, RequestID id) {
+	foreach(ARGS, string arg)
+	  m_delete(args, arg);
+	
+	if(ok) {
+	  id->misc->vform_verified[args->name]=1;
+	  verified_result();
+	}
+	else {
+	  id->misc->vform_failed[args->name]=1;
+	  if(show_err)
+	    failed_result();
+	  else
+	    verified_result();
+	  id->misc->vform_ok = 0;
+	}
+	return;
+      }
+
+      void verified_result()
+	// Create a tag result withut error response.
+      {
+	switch(args->mode||"after") {
+	case "complex":
+	  result = parse_html(content, ([]),
+			      ([ "verified":lambda(string t, mapping m, string c)
+					    { return c; },
+				 "failed":"" ]) );
+	  break;
+	case "before":
+	case "after":
+	default:
+	  result = Roxen.make_container("textarea", args-(["value":0]),args->value);
+	}
+      }
+
+      void failed_result()
+	// Creates a tag result with widget and error response.
+      {
+	switch(args->mode||"after") {
+	case "complex":
+	  result = parse_html(content, ([]),
+			      ([ "failed":lambda(string t, mapping m, string c)
+					  { return c; },
+				 "verified":"" ]) );
+	  break;
+	case "before":
+	  result = content + Roxen.make_container("textarea",
+						  args-(["value":0]),args->value);
+	case "after":
+	default:
+	  result = Roxen.make_container("textarea",
+					args-(["value":0]),args->value) + content;
+	}
+      }
+    }
+  }
+
 
   class TagVerify {
     inherit RXML.Tag;
@@ -350,6 +452,7 @@ class TagVForm {
   }
 
   RXML.TagSet internal = RXML.TagSet("TagVForm.internal", ({ TagVInput(),
+							     TagVTextarea(),
 							     TagReload(),
 							     TagClear(),
 							     TagVerify(),
