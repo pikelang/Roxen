@@ -1,5 +1,5 @@
 /*
- * $Id: PDB.pmod,v 1.20 1998/03/16 15:11:45 noring Exp $
+ * $Id: PDB.pmod,v 1.21 1998/03/16 15:15:59 marcus Exp $
  */
 
 #if constant(thread_create)
@@ -303,14 +303,12 @@ class Table
     object bucket = get_bucket(i[0]);
     d = bucket->get_entry(i[1]);
     UNLOCK();
-    if(compress) {
-      catch {
-	object g;
-	if (sizeof(indices(g=Gz))) {
-	  d=g->inflate()->inflate(d);
-	}
-      };
-    }
+    catch {
+      object g;
+      if (sizeof(indices(g=Gz))) {
+	d=g->inflate()->inflate(d);
+      }
+    };
     return decode_value( d );
   }
 
