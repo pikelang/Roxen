@@ -1,12 +1,7 @@
-constant cvs_version = "$Id: roxen.pike,v 1.191 1998/04/23 13:16:20 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.192 1998/04/24 08:41:24 per Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
-#if 0
-#ifdef THREADS
-#include <fifo.h>
-#endif
-#endif /* 0 */
 #include <module.h>
 #include <variables.h>
 
@@ -25,9 +20,9 @@ inherit "disk_cache";
 inherit "language";
 
 #if constant(spider.shuffle)
-program pipe = (program)"smartpipe";
+constant pipe = (program)"smartpipe";
 #else
-program pipe = Pipe.pipe;
+constant pipe = Pipe.pipe;
 #endif
 
 // This is the real Roxen version. It should be changed before each
@@ -66,7 +61,7 @@ mapping allmodules, somemodules=([]);
 // from the configuration object in the future.
 mapping portno=([]);
 
-constant decode = MIME.decode_base64;
+// constant decode = roxen->decode;
 
 // Function pointer and the root of the configuration interface
 // object.
@@ -1056,14 +1051,15 @@ string docurl;
 
 // I will remove this in a future version of roxen.
 private program __p;
-private mapping my_loaded = ([]);
+mapping my_loaded = ([]);
 program last_loaded() { return __p; }
 
 string last_module_name;
 
-string filename(object o)
+string filename(object|program o)
 {
-  return my_loaded[object_program(o)]||last_module_name;
+  if(objectp(o)) o = object_program(o);
+  return my_loaded[(program)o]||last_module_name;
 }
 
 program my_compile_file(string file)
@@ -1260,18 +1256,31 @@ int set_u_and_gid()
 	// Doesn't always work - David.
       };
 #endif
+#if efun(setuid)
+      if(QUERY(permanent_uid))
+      {
+#if efun(setgid)
+	setgid((int)g);
+#endif
+	setuid((int)u);
+	report_notice("Setting UID permanently to "+u+" and GID to "+g);
+      } else {
+#endif
 #if efun(setegid) && defined(SET_EFFECTIVE)
-      setegid((int)g);
+	setegid((int)g);
 #else
-      setgid((int)g);
+	setgid((int)g);
 #endif
 #if efun(seteuid) && defined(SET_EFFECTIVE)
-      seteuid((int)u);
+	seteuid((int)u);
 #else
-      setuid((int)u);
+	setuid((int)u);
 #endif
-      report_notice("Setting UID to "+u+" and GID to "+g);
-      return 1;
+	report_notice("Setting UID to "+u+" and GID to "+g);
+	return 1;
+#if efun(setuid)
+      }
+#endif
     }
   }
 #endif
@@ -1681,23 +1690,13 @@ private void define_global_variables( int argc, array (string) argv )
 	  "default group of that user will be used. "
 	  "The syntax is user[:group].");
 
-#ifdef EXTERNAL_HOSTNAME_PROCESS
-  globvar("NumHostnameLookup", 2, "Number of hostname lookup processes", 
-	  TYPE_INT|VAR_MORE,
-	  "You can here state the number of simultaneos host-name lookup "
-	  "processes Roxen should run. Roxen must be restarted for a change "
-	  "of this variable to take effect. If you constantly see a large "
-	  "host name lookup queue size in the configuration interface "
-	  "'Actions->Status' section, consider increasing this variable. "
-	  "A good guidline is: "
-	  "<ul>\n"
-	  "<li> 1 for normal operation\n"
-	  "<li> 1 extra for each 300 000 accesses/day\n"
-	  "<li> 1 for each proxy\n"
-	  "<li> 1 for each 100 proxy users\n"
-	  "</ul>\n",0,1);
-#endif
-  
+  globvar("permanent_uid", 0, "Change uid and gid permanently", 
+	  TYPE_FLAG,
+	  "If this variable is set, roxen will set it's uid and gid "
+	  "permanently. This disables the 'exec script as user' fetures "
+	  "for CGI, and also access files as user in the filesystems, but "
+	  "it gives better security.");
+
   globvar("ModuleDirs", ({ "../local/modules/", "modules/" }),
 	  "Module directories", TYPE_DIR_LIST,
 	  "This is a list of directories where Roxen should look for "
@@ -2341,7 +2340,7 @@ int main(int|void argc, array (string)|void argv)
   initiate_languages();
   mixed tmp;
 
-  start_time=time(1);
+  start_time=time();
 
   add_constant("write", perror);
 
@@ -2431,7 +2430,7 @@ int main(int|void argc, array (string)|void argv)
 #ifdef __RUN_TRACE
   trace(1);
 #endif
-//  start_time=time();		// Used by the "uptime" info later on.
+  start_time=time();		// Used by the "uptime" info later on.
   return -1;
 }
 
