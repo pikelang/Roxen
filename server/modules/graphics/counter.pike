@@ -1,4 +1,4 @@
-// $Id: counter.pike,v 1.18 1998/04/17 01:58:39 grubba Exp $
+// $Id: counter.pike,v 1.19 1998/08/07 09:06:17 neotron Exp $
 // 
 // Roxen Graphic Counter Module	by Jordi Murgo <jordi@lleida.net>
 // Modifications  1 OCT 1997 by Bill Welliver <hww3@riverweb.com>
@@ -23,6 +23,9 @@
 // -----------------------------------------------------------------------
 //
 // $Log: counter.pike,v $
+// Revision 1.18  1998/04/17 01:58:39  grubba
+// Now uses id->conf->X instead of roxen->X where possible.
+//
 // Revision 1.17  1998/03/23 08:20:57  neotron
 // o Added new module type, MODULE_PROVIDER. This is a module type which
 //   enables other modules, scripts or protocols to call it very
@@ -112,7 +115,7 @@
 // Initial revision
 //
 
-string cvs_version = "$Id: counter.pike,v 1.18 1998/04/17 01:58:39 grubba Exp $";
+string cvs_version = "$Id: counter.pike,v 1.19 1998/08/07 09:06:17 neotron Exp $";
 
 string copyright = ("<BR>Copyright 1997 "
 		    "<a href=http://savage.apostols.org/>Jordi Murgo</A> and "
@@ -496,7 +499,7 @@ string tag_counter( string tagname, mapping args, object id )
   if( args->version )
     return cvs_version;
   if( args->revision )
-    return "$Revision: 1.18 $" - "$" - " " - "Revision:";
+    return "$Revision: 1.19 $" - "$" - " " - "Revision:";
 
   //
   // bypass compatible accessed attributes
@@ -557,14 +560,18 @@ string tag_counter( string tagname, mapping args, object id )
   // Common Part ( /<accessed> and IMG Attributes )
   //
   url +=  "/" + accessed +".gif";
-	
+
   post =  "\" "  
     + (args->border?"border="+args->border+" ":"")
     + (args->align?"align="+args->align+" ":"")
     + (args->height?"height="+args->height+" ":"")
     + (args->width?"width="+args->width+" ":"")
     + "alt=\"" + accessed + "\">";
-
+  if(args->bordercolor)
+  {
+    pre = "<font color="+args->bordercolor+">" + pre;
+    post += "</font>";
+  }
   if( tagname == "counter_url" )
     if( args->parsed )
       return  parse_rxml(url,id);
