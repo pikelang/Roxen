@@ -10,6 +10,7 @@
 *.ico binary
 /extern/cgi.testsuite/test3.in eol=crlf
 /extern/cgi.testsuite/test4.in -text -crlf
+*.jar binary
 *.jpg binary
 *.out -text -crlf
 /extern/cgi.testsuite/test3.out eol=crlf
