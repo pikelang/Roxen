@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.189 2000/01/21 23:05:21 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.190 2000/01/22 00:25:05 mast Exp $";
 
 #define MAGIC_ERROR
 
@@ -1520,23 +1520,23 @@ void send_result(mapping|void result)
   if(!leftovers) leftovers = data||"";
 #endif
 
-  if(my_fd->query_fd && my_fd->query_fd() >= 0 &&
-     file->len > 0 && file->len < 2000)
-  {
-    // Ordinary connection, and a short file.
-    // Just do a blocking write().
-    my_fd->write((head_string || "") +
-		 (file->file?file->file->read(file->len):
-		  (file->data[..file->len-1])));
-    do_log();
-    return;
-  }
-
   if(head_string) send(head_string);
 
   if(method != "HEAD" && file->error != 304)
     // No data for these two...
   {
+    if(my_fd->query_fd && my_fd->query_fd() >= 0 &&
+       file->len > 0 && file->len < 2000)
+    {
+      // Ordinary connection, and a short file.
+      // Just do a blocking write().
+      my_fd->write((head_string || "") +
+		   (file->file?file->file->read(file->len):
+		    (file->data[..file->len-1])));
+      do_log();
+      return;
+    }
+
     if(file->data && strlen(file->data))
       send(file->data, file->len);
     if(file->file)
@@ -1781,8 +1781,11 @@ void clean()
     end();
 }
 
+private int __count = ++all_constants()->__SDf_DAsdf;
+
 void create(object f, object c)
 {
+  werror ("id create %d\n", __count);
   if(f)
   {
     MARK_FD("HTTP connection");
@@ -1794,6 +1797,8 @@ void create(object f, object c)
     time = _time(1);
   }
 }
+
+void destroy () {werror ("id destroy %d\n", __count);}
 
 void chain(object f, object c, string le)
 {
