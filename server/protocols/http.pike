@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-string cvs_version = "$Id: http.pike,v 1.33 1997/08/03 22:51:55 grubba Exp $";
+string cvs_version = "$Id: http.pike,v 1.34 1997/08/04 12:53:27 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -344,9 +344,8 @@ private int parse_got(string s)
 	
 	if(strlen(contents))
 	{
-	  switch (linename)
-	  {
-	   case "content-length":	
+	  switch (linename) {
+	  case "content-length":	
 	    misc->len = (int)(contents-" ");
 	    
 	    if(method == "POST")
@@ -383,7 +382,7 @@ private int parse_got(string s)
 		}
 		break;
 
-	       case "multipart/form-data":
+	      case "multipart/form-data":
 		string boundary;
 //		perror("Multipart/form-data post detected\n");
 		sscanf(misc["content-type"], "%*sboundary=%s",boundary);
@@ -431,7 +430,7 @@ private int parse_got(string s)
 	    }
 	    break;
 	  
-	   case "authorization":
+	  case "authorization":
 	    string *y;
 	    rawauth = contents;
 	    y = contents /= " ";
@@ -444,7 +443,7 @@ private int parse_got(string s)
 	    auth=y;
 	    break;
 	  
-	   case "proxy-authorization":
+	  case "proxy-authorization":
 	    string *y;
 	    y = contents /= " ";
 	    if(sizeof(y) < 2)
@@ -455,48 +454,48 @@ private int parse_got(string s)
 	    misc->proxyauth=y;
 	    break;
 	  
-	   case "pragma":
+	  case "pragma":
 	    pragma|=aggregate_multiset(@replace(contents, " ", "")/ ",");
 	    break;
 
-	   case "user-agent":
+	  case "user-agent":
 	    sscanf(contents, "%s via", contents);
 	    client = contents/" " - ({ "" });
 	    break;
 
 	    /* Some of M$'s non-standard user-agent info */
-	   case "ua-pixels":	/* Screen resolution */
-	   case "ua-color":	/* Color scheme */
-	   case "ua-os":	/* OS-name */
-	   case "ua-cpu":	/* CPU-type */
-	     /* None of the above are interresting or usefull */
-	     /* IGNORED */
+	  case "ua-pixels":	/* Screen resolution */
+	  case "ua-color":	/* Color scheme */
+	  case "ua-os":		/* OS-name */
+	  case "ua-cpu":	/* CPU-type */
+	    /* None of the above are interresting or usefull */
+	    /* IGNORED */
 	    break;
 
-	   case "referer":
+	  case "referer":
 	    referer = contents/" ";
 	    break;
 	    
-	   case "extension":
+	  case "extension":
 #ifdef DEBUG
 	    perror("Client extension: "+contents+"\n");
 #endif
 	    linename="extension";
 	    
-	   case "connection":
+	  case "connection":
 	    contents = lower_case(contents);
 	    
-	   case "content-type":
-	     misc[linename] = lower_case(contents);
+	  case "content-type":
+	    misc[linename] = lower_case(contents);
 	    break;
 
-	   case "accept":
-	   case "accept-encoding":
-	   case "accept-charset":
-	   case "accept-language":
-	   case "session-id":
-	   case "message-id":
-	   case "from":
+	  case "accept":
+	  case "accept-encoding":
+	  case "accept-charset":
+	  case "accept-language":
+	  case "session-id":
+	  case "message-id":
+	  case "from":
 	    if(misc[linename])
 	      misc[linename] += (contents-" ") / ",";
 	    else
@@ -535,34 +534,47 @@ private int parse_got(string s)
 	    }
 	    break;
 
-	   case "host":
-	   case "proxy-connection":
-	   case "security-scheme":
+	  case "host":
+	  case "proxy-connection":
+	  case "security-scheme":
 	    misc[linename] = contents;
 	    break;	    
 
-	   case "proxy-by":
-	   case "proxy-maintainer":
-	   case "proxy-software":
+	  case "proxy-by":
+	  case "proxy-maintainer":
+	  case "proxy-software":
 #ifdef MORE_HEADERS
 	    if(misc[linename])
 	      misc[linename] += explode(contents-" ", ",");
 	    else
 	      misc[linename] = explode(contents-" ", ",");
 #endif
-	   case "mime-version":
+	  case "mime-version":
 	    break;
 	    
-	   case "if-modified-since":
+	  case "if-modified-since":
 //	    if(QUERY(IfModified))
 	      since=contents;
 	    break;
+	    
+	  case "negotiate":
+	    misc["negotiate"]=contents;
+	    break;
 
-	   case "forwarded":
-	     misc["forwarded"]=contents;
+	  case "via":
+	    misc["via"]=contents;
+	    break;
+
+	  case "cache-control":
+	    misc["cache-control"]=contents;
+	    break;
+
+
+	  case "forwarded":
+	    misc["forwarded"]=contents;
 	    break;
 #ifdef DEBUG
-	   default:
+	  default:
 	    /*   x-* headers are experimental.    */
 	    if(linename[0] != 'x')
 	      perror("Unknown header: `"+linename+"' -> `"+contents+"'\n");
@@ -1079,7 +1091,7 @@ void got_data(mixed fooid, string s)
     conf->requests++;
   }
 #ifdef THREADS
-  handle(this_object()->handle_request);
+  roxen->handle(this_object()->handle_request);
 #else
   this_object()->handle_request();
 #endif
