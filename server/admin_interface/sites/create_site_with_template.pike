@@ -102,7 +102,7 @@ string|mapping parse( RequestID id )
 		   "value='"+get_site_template(id)+"' />\n", q);
   }
 
-  roxenloader.ErrorContainer e = roxenloader.ErrorContainer( );
+  ErrorContainer e = ErrorContainer( );
   master()->set_inhibit_compile_errors( e );
   string res = "";
   array sts = ({});
