@@ -12,6 +12,8 @@ class RDF
     string host, file;
     int port;
 
+    int list_style = sizeof(RXML.user_get_var("list-style-boxes", "usr"));
+
     Standards.URI uri = Standards.URI( url );
     host = uri->host;
     port = uri->port;
@@ -37,18 +39,30 @@ class RDF
 				       title = link = 0;
 				       description="";
 				       itemparser->finish(c);
-				       if(title && link)
-					 contents +=
-					   sprintf("<font size=-1>"
-						   "<a href=\"%s\">%s</a>"
-						   "<br />%s<br />"
-						   "</font>\n",
-						   link, title, description);
+				       if(title && link) {
+					 if (list_style)
+					   contents +=
+					     sprintf("<li style='margin-left: -0.9em; margin-right: 0.9em;'>"
+						     "<font size=-1>"
+						     "<a href=\"%s\">%s</a>"
+						     "<br />%s"
+						     "</font></li>\n",
+						     link, title, description);
+					 else
+					   contents +=
+					     sprintf("<font size=-1>"
+						     "<a href=\"%s\">%s</a>"
+						     "<br />%s<br />"
+						     "</font>\n",
+						     link, title, description);
+				       }
 				     } )->
 	finish(data);
     }
-    return ("<box type='"+this_object()->box+"' title='"+
-	    this_object()->box_name+"'>"+contents+"</box>");
+    return ("<box type='"+this->box+"' title='"+
+	    this->box_name+"'>"+
+	    (list_style?"<ul>":"")+contents+(list_style?"</ul>":"")+
+	    "</box>");
   }
 }
 
@@ -79,7 +93,13 @@ class Fetcher
     remove_call_out( start );
     call_out( start, 3600 );
     query = Protocols.HTTP.Query( )->set_callbacks( done, fail );
-    query->async_request( h, p, q, ([ "Host":h+":"+p ]) );
+    query->async_request( h, p, q,
+			  ([ "Host":h+":"+p,
+			     "User-Agent": (roxen.query("default_ident") ?
+					    (roxen_product_name + "/" +
+					     roxen_dist_version) :
+					    roxen.version()),
+			  ]) );
   }
   
   void create( function _cb, string _h, int _p, string _q,
@@ -91,12 +111,18 @@ class Fetcher
     RoxenModule px;
     if( px = id->conf->find_module("update#0") )
     {
-      if( strlen( px->query( "proxyserver" ) ) )
-      {
-	sscanf( q, "GET %s", q );
-	q = "GET http://"+h+":"+p+q;
-	h = px->query( "proxyserver" );
-	p = px->query( "proxyport" );
+      mixed err = catch {
+	  if( strlen( px->query( "proxyserver" ) ) )
+	  {
+	    sscanf( q, "GET %s", q );
+	    q = "GET http://"+h+":"+p+q;
+	    h = px->query( "proxyserver" );
+	    p = px->query( "proxyport" );
+	  }
+	};
+      if (err) {
+	report_error("Failed to determine proxy server:\n"
+		     "%s\n", describe_error(err));
       }
     }
     start();

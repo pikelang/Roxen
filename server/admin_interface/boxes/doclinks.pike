@@ -11,28 +11,28 @@ string parse( RequestID id )
   string docs = "";
   function exists =
      id->conf->find_module( "config_filesystem#0" )->stat_file;
+  int list_style = sizeof(RXML.user_get_var("list-style-boxes", "usr"));
 
 //    docs += "<a href='"+path("whatsnew.html")+"'>"
 //      "Release notes</a><br />";
 
   void add_doc_link(string doc_path, string title) {
-    if (exists(doc_path))
-      docs +=
-	"<tr><td valign='top'>"
-	"<a href='" + (doc_path - "index.html") + "'>"
+    if (exists(doc_path)) {
+      string s = "<a href='" + (doc_path - "index.html") + "'>"
 	"<font size='-1'>" + title + "</font>"
-	"</a>"
-	"</td></tr>";
+	"</a>";
+      if (list_style)
+	docs +=
+	  "<li style='margin-left: -0.9em; margin-right: 0.9em;'>"+
+	  s+"</br></li>\n";
+      else
+	docs +=
+	  "<tr><td valign='top'>"+s+"</td></tr>\n";
+    }
   };
   
-  foreach( ({ "docs/roxen/3.2/" }), string rpath )
+  foreach( ({ "docs/roxen/4.0/", "docs/chilimoon/2004/" }), string rpath )
   {
-    add_doc_link(rpath + "content_editor_manual_(instant)/index.html",
-		 "Content Editor (Instant Edition)");
-
-    add_doc_link(rpath + "content_editor_manual_(advanced)/index.html",
-		 "Content Editor (Advanced Edition)");
-
     add_doc_link(rpath + "web_developer_manual/index.html",
 		 "Web Developer");
 
@@ -50,43 +50,31 @@ string parse( RequestID id )
 
     add_doc_link(rpath + "tutorial/index.html",
 		 "Tutorials");
+
+    add_doc_link(rpath + "faq/main/index.xml",
+		 "FAQ");
   }
 
-  foreach( ({ "docs/roxen/2.2/", "docs/roxen/2.1/" }), string rpath )
-  {
-    add_doc_link(rpath + "creator/index.html",
-		 "Web Site Creator");
-
-    add_doc_link(rpath + "administrator/index.html",
-		 "Administrator Manual");
-
-    add_doc_link(rpath + "user/index.html",
-		 "User Manual");
-
-    if (exists(rpath + "tutorial/rxml/index.html"))
-      add_doc_link(rpath + "tutorial/rxml/index.html",
-		   "RXML Tutorial");
-    else if (exists(rpath + "tutorial/rxml_tutorial.html"))
-      add_doc_link(rpath + "tutorial/rxml/index.html",
-		   "RXML Tutorial");
-
-    add_doc_link(rpath + "programmer/index.html",
-		 "Programmer Manual");
-  }
-
-  foreach( ({"docs/pike/7.1/","docs/pike/7.0/" }), string ppath )
+  foreach( ({"docs/pike/7.6/", "docs/pike/7.7/" }), string ppath )
   {
     add_doc_link(ppath + "tutorial/index.html",
 		 "Pike Tutorial");
   }
 
   if( docs == "" )
+  {
     docs =
-      "<tr><td><font color='&usr.warncolor;'>"
-      "No documentation found at all"
-      "</font></td></tr>";
-  
-  docs = "<table>" + docs + "</table>";
+      "<font color='&usr.warncolor;'>" +
+      _(397, "No documentation found at all") + 
+      "</font>";
+  }
+  else
+  {
+    if (list_style)
+      docs = "<ul>" + docs + "</ul>";
+    else
+      docs = "<table>" + docs + "</table>";
+  }
   
   return "<box type='"+box+"' title='"+box_name+"'>"+docs+"</box>";
 }
