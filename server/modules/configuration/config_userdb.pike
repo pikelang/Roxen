@@ -1,3 +1,4 @@
+#charset iso-2022-jp
 inherit "module";
 inherit "roxenlib";
 #include <module.h>
@@ -171,39 +172,51 @@ void create()
 {
   add_permission( "Everything",
                   ([ "svenska":"Alla rättingheter",
+                     "nihongo":"$(BK|>l0t5v(B",
                      "standard":"All permissions", ]) );
   add_permission( "View Settings",
                   ([
+                    "nihongo":"$(B%j!<%I%*%s%j!<(B",
                     "svenska":"Läsa inställingar",
                   ]));
   add_permission( "Edit Users",
                   ([
+                    "nihongo":"$(B%(%G%#%H%f!<%6!<%:(B",
                     "svenska":"Editera användare",
                   ]) );
   add_permission( "Edit Global Variables",
                   ([
+                    "nihongo":"$(B%(%G%#%H%0%m!<%P%k(B",
                     "svenska":"Editera globala inställningar"
                   ]));
   add_permission( "Edit Module Variables",
                   ([
+                    "nihongo":"$(B%(%G%#%H%"%I%*%s%b%8%e!<%k(B",
                     "svenska":"Editera modulinställingar"
                   ]));
   add_permission( "Tasks",
                   ([
+                    "nihongo":"$(BMQ;v(B",
                     "svenska":"Funktioner"
                   ]));
   add_permission( "Restart",
                   ([
+                    "nihongo":"$(B%j%9%?!<%H(B",
                     "svenska":"Starta om"
                   ]));
   add_permission( "Shutdown",
                   ([
+                    "nihongo":"$(B%7%c%C%H%@%&%s(B",
                     "svenska":"Stäng av"
                   ]));
-  add_permission( "Create Site",  ([
+  add_permission( "Create Site",
+                  ([
+                    "nihongo":"$(B<yN)%5%$%H(B",
                     "svenska":"Skapa ny site"
                   ]));
-  add_permission( "Add Module",  ([
+  add_permission( "Add Module",
+                  ([
+                    "nihongo":"$(BIU$1$k%"%I%*%s%b%8%e!<%k(B",
                     "svenska":"Addera moduler"
                   ]));
   if(sizeof(roxen->configuration_perm))
