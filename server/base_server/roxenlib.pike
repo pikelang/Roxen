@@ -1,6 +1,6 @@
 inherit "http";
 
-// static string _cvs_version = "$Id: roxenlib.pike,v 1.77 1998/07/19 12:03:52 noring Exp $";
+// static string _cvs_version = "$Id: roxenlib.pike,v 1.78 1998/07/20 07:04:32 mast Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -990,16 +990,12 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 	  array(string) options =  exploded[c] / ":";
 	  string var = remove_leading_trailing_ws (options[0]);
 	  mixed val = vars[var];
-	  array(string) encodings = ({});
+	  array(string) encodings =
+	    args->encode ? Array.map (lower_case (args->encode) / ",",
+				      remove_leading_trailing_ws) : ({});
 	  string multisep = multi_separator;
+	  string zero = args->zero || "";
 	  string empty = args->empty || "";
-
-	  if (!val) {
-	    if (args->debug || id->misc->debug)
-	      val = "<b>No variable " + options[0] + "</b>";
-	    else
-	      val = "";
-	  }
 
 	  foreach(options[1..], string option) {
 	    array (string) foo = option / "=";
@@ -1008,6 +1004,9 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 	    switch (lower_case (remove_leading_trailing_ws( foo[0] ))) {
 	      case "empty":
 		empty = optval;
+		break;
+	      case "zero":
+		zero = optval;
 		break;
 	      case "multisep":
 	      case "multi_separator":
@@ -1033,12 +1032,19 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 	    }
 	  }
 
-	  if (arrayp( val ))
-	    val = Array.map (val, lambda (mixed v) {return (string) v;}) *
-	      multisep;
-	  else
-	    val = replace ((string) val, "\000", multisep);
-	  if (!sizeof (val)) val = empty;
+	  if (!val)
+	    if (zero_type (vars[var]) && (args->debug || id->misc->debug))
+	      val = "<b>No variable " + options[0] + "</b>";
+	    else
+	      val = zero;
+	  else {
+	    if (arrayp( val ))
+	      val = Array.map (val, lambda (mixed v) {return (string) v;}) *
+		multisep;
+	    else
+	      val = replace ((string) val, "\000", multisep);
+	    if (!sizeof (val)) val = empty;
+	  }
 
 	  if (!sizeof (encodings)) encodings = ({"html"});
 	  foreach (encodings, string encoding)
