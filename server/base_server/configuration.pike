@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.162 1998/10/12 22:54:11 per Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.163 1998/10/15 21:27:08 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -10,8 +10,7 @@ mapping profile_map = ([]);
 #define CATCH(X)	do { mixed err; if(err = catch{X;}) report_error(describe_backtrace(err)); } while(0)
 
 // Locale support...
-#define LOCALE	roxen->locale->base_server
-
+#define LOCALE	LOW_LOCALE->base_server
 
 /* A configuration.. */
 
