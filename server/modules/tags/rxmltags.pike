@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.348 2002/05/16 19:56:35 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.349 2002/05/23 14:42:30 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -355,7 +355,9 @@ class TagExpireTime {
 	Roxen.add_http_header(_extra_heads, "Cache-Control", "no-cache");
       }
 
-      Roxen.add_http_header(_extra_heads, "Expires", Roxen.http_date(t));
+      // It's meaningless to have several Expires headers, so just
+      // override.
+      _extra_heads->Expires = Roxen.http_date(t);
       RXML_CONTEXT->set_misc (" _extra_heads", _extra_heads + ([]));
       return 0;
     }
