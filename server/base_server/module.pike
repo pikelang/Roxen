@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.21 1997/08/13 19:19:34 grubba Exp $ */
+/* $Id: module.pike,v 1.22 1997/08/19 00:36:11 grubba Exp $ */
 
 #include <module.h>
 
@@ -50,12 +50,12 @@ int killvar(string var)
 
 void free_some_sockets_please(){}
 
-void start(void|int num) {}
+void start(void|int num, void|object conf) {}
 string status() {}
 
-string info()
+string info(object conf)
 { 
-  return (this->register_module()[2]);
+  return (this->register_module(conf)[2]);
 }
 
 // Define a variable, with more than a little error checking...

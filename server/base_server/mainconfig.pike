@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.72 1997/08/18 00:37:45 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.73 1997/08/19 00:36:13 grubba Exp $";
 //inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -144,7 +144,7 @@ class Node {
       roxen->configuration_interface_obj->changed_port_servers[config()] = 1;
       // A port was changed in the current server...
     }
-    if(saver) saver(this_object());
+    if(saver) saver(this_object(), config());
   }
 }
 

@@ -1,4 +1,4 @@
-/* $Id: savers.pike,v 1.4 1997/05/31 22:01:21 grubba Exp $ */
+/* $Id: savers.pike,v 1.5 1997/08/19 00:36:14 grubba Exp $ */
 #include <confignode.h>
 #include <module.h>
 
@@ -70,31 +70,32 @@ void save_global_variables(object o)
   if(o->changed) o->change(-o->changed);
 }
 
-void save_module_master_copy(object o)
+void save_module_master_copy(object o, object config)
 {
   string s;
   object n;
-  
+
+  roxen->current_configuration = config;
   roxen->store(s=o->data->sname+"#0", o->data->master->query(), 0, o->config());
-  o->data->master->start(2);
+  o->data->master->start(2, config);
   o->config()->unvalidate_cache();
   if(o->changed) o->change(-o->changed);
 }
 
-void save_configuration_global_variables(object o)
+void save_configuration_global_variables(object o, object config)
 {
   roxen->store("spider#0", o->config()->variables, 0, o->config());
   if(o->changed) o->change(-o->changed);
-  o->config()->start(2);
+  o->config()->start(2, config);
 }
 
-void save_configuration(object o)
+void save_configuration(object o, object config)
 {
   if(o->changed) o->change(-o->changed);
-//o->config()->start(2);
+//o->config()->start(2, config);
 }
 
-void save_module_copy(object o)
+void save_module_copy(object o, object config)
 {
   string s;
   object cf;
@@ -105,6 +106,6 @@ void save_module_copy(object o)
   cf->unvalidate_cache();
   
   roxen->store(s, o->data->query(), 0, cf);
-  if(o->data->start) o->data->start(2);
+  if(o->data->start) o->data->start(2, config);
   if(o->changed) o->change(-o->changed);
 }
