@@ -5,7 +5,7 @@
 // interface</a> (and more, the documented interface does _not_ cover
 // the current implementation in NCSA/Apache)
 
-string cvs_version = "$Id: cgi.pike,v 1.104 1998/10/02 15:16:44 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.105 1998/10/08 20:30:55 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -192,7 +192,7 @@ void create()
 	 "By changing this variable you can select where error messages "
 	 "(which means all text written to stderr) from "
 	 "CGI scripts should be sent. By default they will be written to the "
-	 "mail log file - logs/debug/[name-of-configdir].1. You can also "
+	 "main log file - logs/debug/[name-of-configdir].1. You can also "
 	 "choose to send the error messages to a special log file or to the "
 	 "browser.\n",
 	 ({ "main log file",
