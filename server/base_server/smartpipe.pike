@@ -1,5 +1,5 @@
 /*
- * $Id: smartpipe.pike,v 1.27 1999/02/15 23:22:26 per Exp $
+ * $Id: smartpipe.pike,v 1.28 1999/03/05 01:54:53 grubba Exp $
  *
  * A somewhat more optimized Pipe.pipe...
  */
@@ -184,7 +184,7 @@ void output(object to)
   next_input();
 }
 
-void set_done_callback(function f, mixed ... args)
+void set_done_callback(function|void f, void|mixed ... args)
 {
   done_callback = f;
   done_cb_args = args;
