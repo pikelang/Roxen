@@ -42,7 +42,7 @@ mapping|string parse( RequestID id )
     "<use file='/template'/><tmpl>"
     "<topmenu base='../' selected='dbs'/>"
     "<content><cv-split><subtablist width='100%'><st-tabs>"
-    "<insert file='subtabs.pike'/></st-tabs><st-page>"
+    "<!--<insert file='subtabs.pike'/>--></st-tabs><st-page>"
     "<input type=hidden name='db' value='&form.db:http;' />\n";
 
   if( id->variables->table )
