@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.135 1999/03/29 00:35:22 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.136 1999/03/29 00:43:17 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -241,14 +241,14 @@ class imap_mail
 	     imap_number(strlen(data)) });
 
       if (lower_case(msg->type) == "text") {
-	a += ({ imap_number(sizeof(data/"\n") - 1) });
+	a += ({ msg->headers->lines || imap_number(sizeof(data/"\n")) });
       } else if ((lower_case(msg->type) == "message") &&
 		 (lower_case(msg->subtype) == "rfc822")) {
 	object submsg = MIME.Message(data);
 
 	a += ({ make_envelope(submsg->headers),
 		make_bodystructure(submsg, extension_data),
-		imap_number(sizeof(data/"\n") - 1),
+		msg->headers->lines || imap_number(sizeof(data/"\n")),
 	});
       }
 	
