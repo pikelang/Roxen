@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.20 1999/12/06 01:01:09 mast Exp $
+ * $Id: ftp.pike,v 2.21 1999/12/27 14:33:33 nilsson Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -90,14 +90,10 @@
 // #define Query(X) conf->variables[X][VAR_VALUE]
 
 #ifdef FTP2_DEBUG
-
-#define DWRITE(X)	roxen_perror(X)
-
-#else /* !FTP2_DEBUG */
-
-#define DWRITE(X)
-
-#endif /* FTP2_DEBUG */
+# define DWRITE(X)	werror(X)
+#else
+# define DWRITE(X)
+#endif
 
 #if constant(thread_create)
 #define BACKEND_CLOSE(FD)	do { DWRITE("close\n"); FD->set_blocking(); call_out(FD->close, 0); FD = 0; } while(0)
@@ -150,7 +146,7 @@ class RequestID2
 
   void create(object|void m_rid)
   {
-    DWRITE(sprintf("REQUESTID: New request id.\n"));
+    DWRITE("REQUESTID: New request id.\n");
 
     if (m_rid) {
       object o = this_object();
@@ -1522,12 +1518,10 @@ class FTPSession
 					     return(((((line/"#")[0])/"") -
 						     ({" ", "\t"}))*"");
 					   } )-({""})));
-#ifdef FTP2_DEBUG
-	  perror(sprintf("ftp.pike: allowed_shells:%O\n", allowed_shells));
-#endif /* FTP2_DEBUG */
+	  DWRITE(sprintf("ftp.pike: allowed_shells:%O\n", allowed_shells));
 	} else {
-	  perror(sprintf("ftp.pike: Failed to open shell database (\"%s\")\n",
-			 port_obj->query_option("shells")));
+	  report_debug(sprintf("ftp.pike: Failed to open shell database (\"%s\")\n",
+			       port_obj->query_option("shells")));
 	  return(0);
 	}
       }
@@ -1904,10 +1898,10 @@ class FTPSession
          ((throttle->doit && conf->query("req_throttle")) ||
           conf->throttler
           ) ) {
-      perror("ftp: using slowpipe\n");
+      report_debug("ftp: using slowpipe\n");
       pipe=((program)"slowpipe")();
     } else {
-      perror ("ftp: using fastpipe\n");
+      report_debug("ftp: using fastpipe\n");
       pipe=((program)"fastpipe")(); //will use Stdio.sendfile if possible
       throttle->doit=0;
     }

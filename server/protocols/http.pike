@@ -1,19 +1,18 @@
 // This is a roxen module.
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 1998, Idonex AB.
-// $Id: http.pike,v 1.177 1999/12/26 18:18:48 jhs Exp $
+
+constant cvs_version = "$Id: http.pike,v 1.178 1999/12/27 14:33:35 nilsson Exp $";
 
 #define MAGIC_ERROR
 
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.177 1999/12/26 18:18:48 jhs Exp $";
+
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
-
-
 
 #ifdef PROFILE
 #define HRTIME() gethrtime()
@@ -24,15 +23,15 @@ int req_time = HRTIME();
 
 #ifdef REQUEST_DEBUG
 int footime, bartime;
-#define DPERROR(X)	bartime = gethrtime()-footime; werror("%s (%d)\n", (X), bartime);footime=gethrtime()
+#define REQUEST_WERR(X)	bartime = gethrtime()-footime; werror("%s (%d)\n", (X), bartime);footime=gethrtime()
 #else
-#define DPERROR(X)
+#define REQUEST_WERR(X)
 #endif
 
 #ifdef FD_DEBUG
-#define MARK_FD(X) catch{DPERROR(X); mark_fd(my_fd->query_fd(), (X)+" "+remoteaddr);}
+#define MARK_FD(X) catch{REQUEST_WERR(X); mark_fd(my_fd->query_fd(), (X)+" "+remoteaddr);}
 #else
-#define MARK_FD(X) DPERROR(X)
+#define MARK_FD(X) REQUEST_WERR(X)
 #endif
 
 constant decode        = MIME.decode_base64;
@@ -213,9 +212,7 @@ private void setup_pipe()
 
 void send (string|object what, int|void len)
 {
-#ifdef REQUEST_DEBUG
-  roxen_perror(sprintf("send(%O, %O)\n", what, len));
-#endif /* REQUEST_DEBUG */
+  REQUEST_WERR(sprintf("send(%O, %O)\n", what, len));
 
   if(!what) return;
   if(!pipe) setup_pipe();
@@ -274,9 +271,7 @@ private int really_set_config(array mod_config)
   base = conf->query("MyWorldLocation")||"/";
   if(supports->cookies)
   {
-#ifdef REQUEST_DEBUG
-    perror("Setting cookie..\n");
-#endif
+    REQUEST_WERR("Setting cookie..\n");
     if(mod_config)
       foreach(mod_config, m)
 	if(m[-1]=='-')
@@ -301,9 +296,7 @@ private int really_set_config(array mod_config)
 		 "Content-Type: text/html\r\n"
 		 "Content-Length: 0\r\n\r\n");
   } else {
-#ifdef REQUEST_DEBUG
-    perror("Setting {config} for user without Cookie support..\n");
-#endif
+    REQUEST_WERR("Setting {config} for user without Cookie support..\n");
     if(mod_config)
       foreach(mod_config, m)
 	if(m[-1]=='-')
@@ -346,7 +339,7 @@ private int parse_got()
   string a, b, s="", linename, contents;
   int config_in_url;
 
-  DPERROR(sprintf("HTTP: parse_got(%O)", raw));
+  REQUEST_WERR(sprintf("HTTP: parse_got(%O)", raw));
   if (!method) {  // Haven't parsed the first line yet.  
     // We check for \n only if \r\n fails, since Netscape 4.5 sends
     // just a \n when doing a proxy-request. 
@@ -361,7 +354,7 @@ private int parse_got()
       // Not enough data. Unless the client writes one byte at a time,
       // this should never happen, really.
       
-      DPERROR(sprintf("HTTP: parse_got(%O): Not enough data.", raw));
+      REQUEST_WERR(sprintf("HTTP: parse_got(%O): Not enough data.", raw));
       return 0;
     }
     if(strlen(line) < 4)
@@ -369,7 +362,7 @@ private int parse_got()
       // Incorrect request actually - min possible (HTTP/0.9) is "GET /"
       // but need to support PING of course!
       
-      DPERROR(sprintf("HTTP: parse_got(%O): Malformed request.", raw));
+      REQUEST_WERR(sprintf("HTTP: parse_got(%O): Malformed request.", raw));
       return 1;
     }
 
@@ -416,7 +409,7 @@ private int parse_got()
       // Do we have all the headers?
       if (!sscanf(raw, "%s\r\n\r\n%s", s, data)) {
 	// No, we need more data.
-	DPERROR("HTTP: parse_got(): Request is not complete.");
+	REQUEST_WERR("HTTP: parse_got(): Request is not complete.");
 	return 0;
       }
       // Remove the first line (ie the command).
@@ -451,7 +444,7 @@ private int parse_got()
     // Check that the request is complete
     if (!sscanf(raw, "%s\r\n\r\n%s", s, data)) {
       // No, we need more data.
-      DPERROR("HTTP: parse_got(): Request is still not complete.");
+      REQUEST_WERR("HTTP: parse_got(): Request is still not complete.");
       return 0;
     }
   }
@@ -463,7 +456,7 @@ private int parse_got()
   raw_url    = f;
   time       = _time(1);
   // if(!data) data = "";
-  DPERROR(sprintf("RAW_URL:%O", raw_url));
+  REQUEST_WERR(sprintf("RAW_URL:%O", raw_url));
 
   if(!remoteaddr)
   {
@@ -473,17 +466,17 @@ private int parse_got()
       	sscanf(remoteaddr, "%s %*s", remoteaddr);
     }
     if(!remoteaddr) {
-      DPERROR("HTTP: parse_request(): No remote address.");
+      REQUEST_WERR("HTTP: parse_request(): No remote address.");
       end();
       return 2;
     }
   }
 
-  DPERROR(sprintf("After Remote Addr:%O", f));
+  REQUEST_WERR(sprintf("After Remote Addr:%O", f));
   
   f = scan_for_query( f );
 
-  DPERROR(sprintf("After query scan:%O", f));
+  REQUEST_WERR(sprintf("After query scan:%O", f));
 
   f = http_decode_string( f );
   string prf = f[1..1];
@@ -494,7 +487,7 @@ private int parse_got()
     f = "/"+f;
   }
 
-  DPERROR(sprintf("After cookie scan:%O", f));
+  REQUEST_WERR(sprintf("After cookie scan:%O", f));
   
   if (prf == "(" && (sscanf(f, "/(%s)/%s", a, f)==2) && strlen(a))
   {
@@ -502,11 +495,11 @@ private int parse_got()
     f = "/"+f;
   }
 
-  DPERROR(sprintf("After prestate scan:%O", f));
+  REQUEST_WERR(sprintf("After prestate scan:%O", f));
   
   not_query = simplify_path(f);
 
-  DPERROR(sprintf("After simplify_path == not_query:%O", not_query));
+  REQUEST_WERR(sprintf("After simplify_path == not_query:%O", not_query));
 
   request_headers = ([]);	// FIXME: KEEP-ALIVE?
 
@@ -516,14 +509,14 @@ private int parse_got()
     //     Handle rfc822 continuation lines and strip \r
     foreach(s/"\r\n" - ({""}), line)
     {
-      //      DPERROR(sprintf("Header :%s", line));
+      //      REQUEST_WERR(sprintf("Header :%s", line));
       //      linename=contents=0;
       
       if(sscanf(line, "%s:%*[ \t]%s", linename, contents) == 3)
       {
-      	DPERROR(sprintf("Header-sscanf :%s", linename));
+      	REQUEST_WERR(sprintf("Header-sscanf :%s", linename));
       	linename=lower_case(linename);
-      	DPERROR(sprintf("lower-case :%s", linename));
+      	REQUEST_WERR(sprintf("lower-case :%s", linename));
 
 	// FIXME: Multiple headers?
       	request_headers[linename] = contents;
@@ -542,7 +535,7 @@ private int parse_got()
 
 	      if(strlen(data) < l) 
               {
-		DPERROR("HTTP: parse_request(): More data needed in POST.");
+		REQUEST_WERR("HTTP: parse_request(): More data needed in POST.");
 		return 0;
 	      }
 	      leftovers = data[l+2..];
@@ -571,7 +564,7 @@ private int parse_got()
 		break;
 
 	      case "multipart/form-data":
-		//		perror("Multipart/form-data post detected\n");
+		//		werror("Multipart/form-data post detected\n");
 		object messg = MIME.Message(data, misc);
 		foreach(messg->body_parts, object part) {
 		  if(part->disp_params->filename) {
@@ -633,7 +626,7 @@ private int parse_got()
 	    
 	  case "extension":
 #ifdef DEBUG
-          perror("Client extension: "+contents+"\n");
+          werror("Client extension: "+contents+"\n");
 #endif
 	  case "request-range":
 	    contents = lower_case(contents-" ");
@@ -737,7 +730,7 @@ private int parse_got()
     }
   }
 
-  DPERROR("HTTP: parse_got(): after header scan");
+  REQUEST_WERR("HTTP: parse_got(): after header scan");
 #ifndef DISABLE_SUPPORTS    
   if(!client) {
     client = ({ "unknown" });
@@ -757,7 +750,7 @@ private int parse_got()
 #else
   supports = (< "images", "gifinline", "forms", "mailto">);
 #endif
-  DPERROR("HTTP: parse_got(): supports");
+  REQUEST_WERR("HTTP: parse_got(): supports");
   if(!referer) referer = ({ });
   if(misc->proxyauth) {
     // The Proxy-authorization header should be removed... So there.
@@ -770,7 +763,7 @@ private int parse_got()
     raw = tmp2 * "\n"; 
   }
   if(config_in_url) {
-    DPERROR("HTTP: parse_got(): config_in_url");
+    REQUEST_WERR("HTTP: parse_got(): config_in_url");
     return really_set_config( mod_config );
   }
   if(!supports->cookies)
@@ -1335,7 +1328,7 @@ void send_result(mapping|void result)
     file = result;
   }
 
-  DPERROR(sprintf("HTTP: send_result(%O)", file));
+  REQUEST_WERR(sprintf("HTTP: send_result(%O)", file));
   
   if(!mappingp(file))
   {
@@ -1507,10 +1500,8 @@ void send_result(mapping|void result)
       if(conf) conf->hsent += strlen(head_string);
     }
   }
-#ifdef REQUEST_DEBUG
-  roxen_perror(sprintf("Sending result for prot:%O, method:%O file:%O\n",
+  REQUEST_WERR(sprintf("Sending result for prot:%O, method:%O file:%O\n",
 		       prot, method, file));
-#endif /* REQUEST_DEBUG */
 
   MARK_FD("HTTP handled");
 
@@ -1549,7 +1540,7 @@ void send_result(mapping|void result)
 // Execute the request
 void handle_request( )
 {
-  DPERROR("HTTP: handle_request()");
+  REQUEST_WERR("HTTP: handle_request()");
 
 #ifdef MAGIC_ERROR
   if(prestate->old_error)
@@ -1625,7 +1616,7 @@ void got_data(mixed fooid, string s)
       //      cache += ({ s });
       have_data += strlen(s);
 
-      DPERROR("HTTP: We want more data.");
+      REQUEST_WERR("HTTP: We want more data.");
       return;
     }
   }
@@ -1639,16 +1630,16 @@ void got_data(mixed fooid, string s)
    case 0:
     //    if(this_object()) 
     //      cache = ({ s });		// More on the way.
-    DPERROR("HTTP: Request needs more data.");
+    REQUEST_WERR("HTTP: Request needs more data.");
     return;
     
    case 1:
-    DPERROR("HTTP: Stupid Client Error");
+    REQUEST_WERR("HTTP: Stupid Client Error");
     end((prot||"HTTP/1.0")+" 500 Stupid Client Error\r\nContent-Length: 0\r\n\r\n");
     return;			// Stupid request.
     
    case 2:
-    DPERROR("HTTP: Done");
+    REQUEST_WERR("HTTP: Done");
     end();
     return;
   }
@@ -1705,7 +1696,7 @@ void got_data(mixed fooid, string s)
   conf->received += strlen(s);
   conf->requests++;
 
-  DPERROR("HTTP: Calling roxen.handle().");
+  REQUEST_WERR("HTTP: Calling roxen.handle().");
 
   my_fd->set_close_callback(0); 
   my_fd->set_read_callback(0); 

@@ -1,3 +1,11 @@
+// This is a roxen protocol module.
+// Copyright © 1996 - 1999, Idonex AB.
+
+#ifdef FWWW_DEBUG
+# define FWWW_WERR(X) werror("FWWW: "+X+"\n");
+#else
+# define FWWW_WERR(X)
+#endif
 
 inherit HTTPLoop.prog : orig;
 inherit "protocols/http.pike";
@@ -35,7 +43,7 @@ mixed `->(string a)
    case "clone_me": return clone_me;
    case "send_result": return send_result;
    case "my_fd":
-     werror(describe_backtrace( backtrace()) );
+     report_debug(describe_backtrace( backtrace()) );
      object o = Stdio.File();
      o->_fd = orig::`->("my_fd");
      return o;
@@ -64,9 +72,7 @@ void send_result(mapping|void result)
   if (result)
     file = result;
 
-#ifdef FWWW_DEBUG
-  roxen_perror(sprintf("FWWW: send_result(%O)\n", file));
-#endif /* FWWW_DEBUG */
+  FWWW_WERR(sprintf("send_result(%O)", file));
 
   if(!mappingp(file))
   {
@@ -89,13 +95,9 @@ void send_result(mapping|void result)
   } else {
     if((file->file == -1) || file->leave_me) 
     {
-#ifdef FWWW_DEBUG
-      roxen_perror("FWWW: file->file == -1 or file->leave_me.\n");
-#endif /* FWWW_DEBUG */
+      FWWW_WERR("file->file == -1 or file->leave_me.");
       if(_modified->do_not_disconnect) {
-#ifdef FWWW_DEBUG
-        roxen_perror("FWWW: do_not_disconnect.\n");
-#endif /* FWWW_DEBUG */
+	FWWW_WERR("do_not_disconnect.");
         file = 0;
         return;
       }
@@ -224,7 +226,7 @@ void handle_request( object port_obj )
 
   misc->cacheable = 120;
 
-  //  perror("Handle request, got conf.\n");
+  //  werror("Handle request, got conf.\n");
 
   function funp;
   object thiso=this_object();

@@ -1,6 +1,12 @@
-// This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
-constant cvs_version = "$Id: gopher.pike,v 1.11 1999/10/09 16:35:10 grubba Exp $";
+// This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
+constant cvs_version = "$Id: gopher.pike,v 1.12 1999/12/27 14:33:34 nilsson Exp $";
 // Gopher protocol module
+
+#ifdef GOPHER_DEBUG
+# define GOPHER_WERR(X) werror("GOPHER: "+X+"\n")
+#else
+# define GOPHER_WERR(X)
+#endif
 
 inherit "protocols/http"; /* For the variables and such.. */
 #include <config.h>
@@ -105,9 +111,7 @@ void got_data(mixed fooid, string s)
   if(!strlen(not_query))
     not_query = "/";
 
-#ifdef GOPHER_DEBUG
-  roxen_perror(sprintf("GOPHER: got_data(X, %O) => %O\n", s, not_query));
-#endif /* GOPHER_DEBUG */
+  GOPHER_WERR(sprintf("GOPHER: got_data(X, %O) => %O\n", s, not_query));
 
   remoteaddr = my_fd->query_address();
   supports = (< "gopher", "images", "tables", >);
@@ -168,12 +172,12 @@ void got_data(mixed fooid, string s)
 #ifdef GOPHER_DEBUG
 void gopher_trace_enter(string s, mixed foo)
 {
-  roxen_perror("GOPHER ENTER:"+s+"\n");
+  werror("GOPHER ENTER:"+s+"\n");
 }
 
 void gopher_trace_leave(string s)
 {
-  roxen_perror("GOPHER LEAVE:"+s+"\n");
+  werror("GOPHER LEAVE:"+s+"\n");
 }
 #endif /* GOPHER_DEBUG */
 
