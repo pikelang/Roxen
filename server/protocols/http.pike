@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.430 2004/04/14 20:03:48 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.431 2004/04/20 12:36:02 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1811,9 +1811,11 @@ void send_result(mapping|void result)
         int s;
 	TIMER_END(send_result);
 	TIMER_START(blocking_write);
-	string data = head_string +
-	  (file->file?file->file->read(file->len):
-	   (file->data[..file->len-1]));
+	string data = head_string;
+	if (file->data)
+	  data += file->data[..file->len-1];
+	if (file->file)
+	  data += file->file->read(file->len);
 	REQUEST_WERR (sprintf ("HTTP: Send %O", data));
 	s = my_fd->write(data);
 	TIMER_END(blocking_write);
@@ -1931,7 +1933,8 @@ string url_base()
 
     // Then use the port object.
     else {
-      string host = port_obj->conf_data[conf]->hostname;
+      string host = (port_obj->conf_data[conf] ||
+		     (["hostname":"*"]))->hostname;
       if (host == "*")
 	if (conf && sizeof (host = conf->get_url()) &&
 	    sscanf (host, "%*s://%[^:/]", host) == 2) {
