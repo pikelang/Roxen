@@ -1,4 +1,4 @@
-// string cvs_version = "$Id: disk_cache.pike,v 1.38 1998/05/21 19:08:39 grubba Exp $";
+// string cvs_version = "$Id: disk_cache.pike,v 1.39 1998/05/22 21:25:19 grubba Exp $";
 #include <module.h>
 #include <stat.h>
 
@@ -222,9 +222,9 @@ class CacheStream
 
 class Cache {
 
-#if constant(create_thread)
+#if constant(thread_create)
   object lock = Thread.Mutex();
-#endif /* constant(create_thread) */
+#endif /* constant(thread_create) */
   object this = this_object();
   string cd;
   object command_stream = Stdio.File();
@@ -234,15 +234,15 @@ class Cache {
 
   void really_send()
   {
-#if constant(create_thread)
+#if constant(thread_create)
     mixed key = lock->lock();
-#endif /* constant(create_thread) */
+#endif /* constant(thread_create) */
     if(strlen(to_send))
       to_send=to_send[ command_stream->write(to_send) .. ];
-#if constant(create_thread)
+#if constant(thread_create)
     destruct(key);
     key = 0;
-#endif /* constant(create_thread) */
+#endif /* constant(thread_create) */
   }  
 
   void command(mixed ... cmd)
