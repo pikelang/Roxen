@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.502 2000/07/10 20:44:34 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.503 2000/07/11 01:52:52 nilsson Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -340,7 +340,7 @@ object fonts;
 //<locale-token project="base_server">LOCALE</locale-token>
 
 LOCALE_PROJECT(base_server);
-#define LOCALE(X,Y)	LOW_LOCALE(X,Y)
+#define LOCALE(X,Y)	_STR_LOCALE(base_server,X,Y)
 
 string default_locale;
 
@@ -393,11 +393,14 @@ void set_locale(void|string lang)
     // Default to default?
     return;
   }
+  mapping objects;
 #if constant(Locale.get_objects)
-  locale->set(Locale.get_objects( set ));
+  objects=Locale.get_objects( set );
 #else
-  locale->set(RoxenLocale.get_objects( set ));
+  objects=RoxenLocale.get_objects( set );
 #endif
+  objects->locale=set;
+  locale->set(objects);
 }
 
 
