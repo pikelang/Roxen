@@ -1,7 +1,7 @@
 #include <roxen.h>
 
-//<locale-token project="roxen_config"> LOCALE </locale-token>
-#define LOCALE(X,Y)  _STR_LOCALE("roxen_config",X,Y)
+//<locale-token project="admin_tasks"> LOCALE </locale-token>
+#define LOCALE(X,Y)  _STR_LOCALE("admin_tasks",X,Y)
 
 array pages =
 ({
