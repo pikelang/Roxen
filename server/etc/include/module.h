@@ -1,4 +1,4 @@
-// $Id: module.h,v 1.23 1999/05/08 00:52:37 per Exp $
+// $Id: module.h,v 1.24 1999/10/11 18:33:27 per Exp $
 #ifndef ROXEN_MODULE_H
 #define ROXEN_MODULE_H
 
@@ -51,6 +51,7 @@
 #define VAR_TYPE_MASK     255
 #define VAR_EXPERT        256
 #define VAR_MORE          512
+#define VAR_DEVELOPER    1024
 
 // Fast but unreliable.
 #define QUERY(var)	variables[ #var ][VAR_VALUE]

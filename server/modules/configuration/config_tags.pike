@@ -730,7 +730,8 @@ string container_configif_output(string t, mapping m, string c, object id)
                         cl[ LOW_LOCALE->latin1_name ] = 1;
                         if( LOW_LOCALE->latin1_name == "standard" )
                           cl[ "english" ] = 1;
-                        
+                        if( !rl[l] )
+                          return 0;
                         return ([
                           "name":rl[l]->name,
                           "latin1-name":rl[l]->latin1_name,
@@ -744,7 +745,7 @@ string container_configif_output(string t, mapping m, string c, object id)
                           "-selected":( cl[l] ? "-selected": "" ),
                           "selected-int":( cl[l] ? "1": "0" ),
                         ]);
-                      } );
+                      } ) - ({ 0 });
      break;
 
    case "global-modules":

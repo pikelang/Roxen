@@ -1,14 +1,14 @@
 // This is a roxen module.
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 1998, Idonex AB.
-// $Id: http.pike,v 1.163 1999/10/10 19:21:55 per Exp $
+// $Id: http.pike,v 1.164 1999/10/11 18:33:28 per Exp $
 
 #define MAGIC_ERROR
 
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.163 1999/10/10 19:21:55 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.164 1999/10/11 18:33:28 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -467,18 +467,21 @@ private int parse_got()
 	    if(!misc->len) continue;
 	    if(method == "POST")
 	    {
+              werror("getting content <%d> ", misc->len);
 	      if(!data) data="";
-	      int l = misc->len-1; /* Length - 1 */
+	      int l = misc->len;
 	      wanted_data=l;
 	      have_data=strlen(data);
 
-	      if(strlen(data) <= l) { // \r are included. 
+	      if(strlen(data) < l) 
+              {
 		DPERROR("HTTP: parse_request(): More data needed in POST.");
 		return 0;
 	      }
+	      leftovers = data[l+2..];
+	      data = data[..l+1];
+              werror("got <%O>\n", data);
 
-	      leftovers = data[l+1..];
-	      data = data[..l];
 	      switch(lower_case((((misc["content-type"]||"")+";")/";")[0]-" "))
 	      {
 	      default: // Normal form data.

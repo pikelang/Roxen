@@ -107,8 +107,8 @@ några minuter");
 	  "bandwidth statistics on the log file will be incorrect. The "
 	 "statistics in Roxen will continue being correct.");
 	 
-  deflocaledoc("svenska", "Loggning: RestoreConnLogFull",
-	       "Logga hela fillängden vid återstartad nerladdning",
+  deflocaledoc("svenska", "RestoreConnLogFull",
+	       "Loggning: Logga hela fillängden vid återstartad nerladdning",
 	       "När den här flaggar är satt så loggar Roxen hela längden på "
 	       "en fil vars nerladdning återstartas. Om en användare först "
 	       "laddar hem 100 bytes av en fil och sedan laddar hem de "

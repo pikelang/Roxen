@@ -189,11 +189,13 @@ mixed find_file( string f, object id )
   logged_in[ identifier ] = time();
   get_context( identifier, host, id );
   
-  id->misc->more_mode = 1;
 
   if( !id->misc->path_decoded )
-    id->not_query = f = revert_browser_encoding( f );
-
+  {
+    id->misc->path_decoded = 1;
+    f = utf8_to_string( f );
+    id->not_query = utf8_to_string( id->not_query );
+  }
   if( (f == "") && !id->misc->pathinfo )
     return http_redirect(fix_relative( "/standard/", id ), id );
 
