@@ -1,5 +1,5 @@
-<hr noshade>
-<table><tr>
+<table border=0 cellpadding=5 cellspacing=0 bgcolor="#cbcbea" width=100%>
+<tr>
 <if variable=mail_id>
 <td><mail-index>/<insert variable=nummail><nobr> &nbsp; </nobr></td>
 </if>
@@ -8,4 +8,3 @@
 </td>
 </tr>
 </table>
-<hr noshade>

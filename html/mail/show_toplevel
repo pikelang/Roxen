@@ -1,27 +1,36 @@
-<table width=400 bgcolor=black cellpadding=1><tr><td>
-<table width=100% bgcolor=#ffeedd border=0 cellspacing=0 cellpadding=2>
-<tr bgcolor=black><td><font color=white>Mailbox</td><td align=right><font color=white>Mail</td><td align=right><font color=white>Unread</td></tr>
-<list-mailboxes>
+<table width=400 bgcolor=#223366 cellpadding=1>
+<tr><td>
+  <table width=100% bgcolor=#f2f2ff border=0 cellspacing=0 cellpadding=2>
+  <tr bgcolor=#223366>
+    <td><font color=white>Mailbox</td>
+    <td align=right><font color=white>Mail</td>
+    <td align=right><font color=white>Unread</td>
+  </tr>
+  <list-mailboxes>
   <tr><td>
-<if not match="#mail# is 0">
-<mail-a mailbox_id=#id#><case capitalize>#name#</case></a>
-</if>
-<else><case capitalize>#name#</case></else></td>
-<td align=right>#mail#</td><td align=right>#unread#</td></tr>
-</list-mailboxes>
-</table></tr></td>
+    <if not match="#mail# is 0">
+      <mail-a mailbox_id=#id#><case capitalize>#name#</case></a>
+    </if>
+    <else><case capitalize>#name#</case>
+    </else></td>
+    <td align=right>#mail#</td>
+    <td align=right>#unread#</td>
+  </tr>
+  </list-mailboxes>
+  </table>
+  </tr></td>
 </table>
 
-
-<gh2>Actions</gh2>
-<blockquote>
 <mailbox-has-mail box=deleted>
- <gtext scale=0.5 href='delete_mailbox.pike?mbox=deleted&_page=1'>Empty 'Deleted' mailbox</gtext><br>
+ <a href='delete_mailbox.pike?mbox=deleted&_page=1'>Empty 'Deleted' mailbox</a><br>
 </mailbox-has-mail>
+
+
+<comment>
+
  <gtext scale=0.5 href=edit.html>Send an email</gtext><br>
  <gtext scale=0.5 href=new_mailbox.pike>Create a new mailbox</gtext><br>
  <gtext scale=0.5 href=delete_mailbox.pike>Delete a mailbox</gtext><br>
-</blockquote>
 
 <gh2>Preferences</gh2>
   
@@ -33,3 +42,4 @@
 <blockquote><i>This options is for advanced users only.</i></blockquote>
 </blockquote>
 
+</comment>

@@ -22,13 +22,12 @@
 
 
 
-
+<template mail.tmpl>
 <title>Mail composer for <mail-userinfo real> &lt;<mail-userinfo email>&gt;</title>
-<gauge resultonly>
+<headline>Compose a new message</headline>
+<content>
   <use file=macros>
   <expire_time now>
-  <body bgcolor="#ffffff" text="#000000" link="#000088"
-        vlink="#000088" alink="#880000">
 
   <set variable="gtextid&selected;" 
        eval="<gtext-id talign=center xspacing=20 yspacing=8 
@@ -56,10 +55,8 @@
   <cset variable=mail_id preparse><new-outgoing-mail></cset>
 </else>
 
-<formoutput>
-<obox title=Headers>
 <table>
-
+<formoutput>
 <form action="edit.html" method=GET>
 <mail-if-address-book>
   <tr><td></td>
@@ -80,17 +77,17 @@
   <tr><td align=right><b>Subject:</td><td><input size=64 name=subject value='#subject:quote=html#'></tr>
   <tr><td align=right><b>Cc:</td><td><input size=64 name=cc value='#cc:quote=html#'></tr>
   <tr><td align=right><b>Bcc:</td><td><input size=64 name=bcc value='#bcc:quote=html#'></tr>
+  <tr><td align=right valign=top><b>Attachments:</td><td><mail-show-attachments show></td></tr>
 </table>
-</obox>
-<obox title=Attachments><mail-show-attachments show></obox>
-<textarea cols=80 rows=30 wrap=hard name=body>#body:quote=html#</textarea>
+<textarea cols=80 rows=22 wrap=hard name=body>#body:quote=html#</textarea>
 <tt>
-<br><input type=submit         value="    Save    "><input type=submit name=send   value="    Send    "><input type=submit name=cancel value="  Postpone  "><input type=submit name=abort value="    Abort   "><input type=hidden name=mail_id value=#mail_id#></tt>
+<br>
+<input type=submit name=send value="   Send   ">
+<input type=submit name=cancel value=" Save Draft ">
+<input type=submit name=abort value=" Cancel ">
+<input type=hidden name=mail_id value=#mail_id#></tt>
 </form>
 </formoutput>
-</gauge>
-<p>
-<br>Time: <b><insert name=gauge_time></b>
-
-</form>
+</content>
+</template>
 </mail-verify-login>

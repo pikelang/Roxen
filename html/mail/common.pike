@@ -10,8 +10,8 @@ mixed parse( object id )
   mixed res =wizard_for( id, fix_relative("",id) );
 
   if(stringp(res))
-    return ("<body bgcolor=darkblue><br><p><center>"+res+
-	    "</center></body>");
+    return ("<template mail.tmpl><headline><insert variable=tabname></headline><content><br><p><center>"+res+
+	    "</center></content></template>");
 
   return res;
 }

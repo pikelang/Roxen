@@ -1,9 +1,10 @@
-<table cellpadding=3 cellspacing=0 border=0>
+<table border=0 cellpadding=2 cellspacing=0 bgcolor="#cbcbea" width=100%>
+<tr>
 <tr valign=center>
-  <td>Display</td>
+  <td>Display a list of</td>
   <td>
 <input type=hidden name=mailbox_id value=<insert variable=mailbox_id>>
-<gbutton name=list_boxes value=" All mailboxes ">
+<comment><gbutton name=list_boxes value=" All mailboxes "></comment>
 <if not variable=listall
    ><gbutton selected name=list_unread value="Unread"
    ><gbutton name=list_all value="All"
@@ -19,18 +20,18 @@
      ><gbutton selected name=list_selected value="Selected"
    ></else
 ></else></td>
-<td>matching</td>
+<td>messages with headers containing</td>
 <formoutput>
  <td><input name=mail_match value="#mail_match:quote=dtag#"></td>
 </formoutput>
 <td><if variable=mail_match><gbutton name=list_clear_match value="Clear"></if><gbutton name=list_match value="Ok"></td>
 </tr>
-</table>
-
-<font size=+1>Mailbox: 
-  <list-mailboxes>
+<tr>
+<td colspan=5>
+in mailbox
+<list-mailboxes>
   <if variable="mailbox_id is #id#">
-<b>#name#</b> for <mail-userinfo>: <b>#unread#</b> unread, <b>#mail#</b> mail</font>
+<b>#name#</b> for <mail-userinfo> (<b>#unread#</b> unread, <b>#mail#</b> mail).</font>
     <set variable=nummail value="#mail#">
     <set variable=_unread value="#unread#">
      <if variable="_unread is 0"> 
@@ -39,4 +40,7 @@
     <unset variable=_unread>
   </if>
   </list-mailboxes>
+</td>
+</tr>
+</table>
 <br>

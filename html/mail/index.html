@@ -1,19 +1,16 @@
 <mail-verify-login>
-<title>Automail for <mail-userinfo real> &lt;<mail-userinfo email>&gt;</title>
-
-
-<gauge resultonly>
+<template mail.tmpl preparse noparse>
+<title>Mail for <mail-userinfo real> &lt;<mail-userinfo email>&gt;</title>
+<content>
   <expire_time now>
-  <body bgcolor="#ffffff" text="#000000" link="#000088"
-        vlink="#000088" alink="#880000">
   <use file=macros>
   <set variable="gtextid&selected;" 
-       eval="<gtext-id talign=center xspacing=20 yspacing=8 
-                       bg=#fea fg=black scale=0.3 notrans 
+       eval="<gtext-id talign=center xspacing=20 yspacing=6 bold
+                       bg=#404085 fg=white scale=0.3 notrans 
                        bevel=3 quant=14>$">
   <set variable="gtextidselected" 
-       eval="<gtext-id talign=center xspacing=20 yspacing=8 
-                       bg=#aef fg=black scale=0.3 notrans 
+       eval="<gtext-id talign=center xspacing=20 yspacing=6 bold
+                       bg=#404085 fg=white scale=0.3 notrans 
                        bevel=3 quant=14>$">
 
   <process-user-buttons>
@@ -23,6 +20,9 @@
   <if not variable=mailbox_id>
     <insert file=show_toplevel>
     <user-buttons>
+    Click on a mailbox to view it's contents.
+    </content>
+    <headline>All mailboxes</headline>
   </if>
   <else>
     <insert file=show_mailboxes>
@@ -30,14 +30,23 @@
       <if variable=mailbox_id>
         <insert file=show_mailbox>
       </if>
+      <insert file=show_buttons>
+      <mail-make-hidden>
+      </content>
+      <headline>
+      <list-mailboxes>
+        <if variable="mailbox_id is #id#">
+         Mailbox: <case capitalize>#name#</case>, #unread# unread
+	</if>
+      </list-mailboxes></headline>
     </if>
-    <insert file=show_buttons>
     <if variable=mail_id noparse>
+      <insert file=show_buttons>
       <insert file=show_mail>
       <insert file=show_buttons>
+      <mail-make-hidden>
+      </content>
+      <headline>Mail: </headline>
     </if>
-    <mail-make-hidden>
   </else>
-</gauge>
-<p>
-<br>Time: <b><insert name=gauge_time></b>
+</template>

@@ -5,6 +5,7 @@ constant name="Create a new mailbox...";
 string error="";
 string page_0( object id )
 {
+  id->variables->tabname="Create mailbox";
   string res=(#"<font color=red size=+1>"+error+
 #"</font><font size=+1>Mailbox name:</font><br>
  <var name=mbox><br>
@@ -27,6 +28,7 @@ string quote(string in)
 constant forbidden = ({ ",", "&", "<", ">" });
 int verify_0(object id)
 {
+
 // id->variables->mbox=replace(id->variables->mbox,
 // 		               " ",sprintf("%c",148));
 //

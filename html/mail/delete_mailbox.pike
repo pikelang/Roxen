@@ -4,6 +4,7 @@ constant name="Delete a mailbox...";
 
 string page_0( object id )
 {
+  id->variables->tabname="Delete mailbox";
   return (#"<font size=+1>Delete this mailbox:</font><br>
  <var type=select name=mbox options='"+(UID->mailboxes()->name*",")+"'><br>");
 }

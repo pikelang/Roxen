@@ -40,7 +40,7 @@
       <tr>
         <td valign=top><font color=black>Sent:</td>
         <td valign=top><font color=##550000>#reldate#</td>
-        <td valign=botom><font color=black>Date:</td>  
+        <td valign=bottom><font color=black>Date:</td>  
         <td valign=bottom><font color=##550000><font size=-1>#date#</font></td>
       </tr>
     </table></td></tr></table>
