@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.47 2003/01/14 20:41:35 marcus Exp $
+ * $Id: create_configif.pike,v 1.48 2004/05/16 00:46:18 mani Exp $
  *
  * Create an initial administration interface server.
  */
@@ -322,7 +322,7 @@ ent text/html
 string_to_utf8(#"<?XML version=\"1.0\"  encoding=\"UTF-8\"?>
 <map>
   <str>permissions</str> : <a> <str>Everything</str> </a>
-  <str>real_name</str>   : <str>Default Administrator</str>
+  <str>real_name</str>   : <str>Administrator</str>
   <str>password</str>    : <str>" + crypt(password) + #"</str>
   <str>name</str>        : <str>" + user + "</str>\n</map>" ));
 
