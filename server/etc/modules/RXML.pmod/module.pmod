@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.125 2001/05/08 00:37:35 mast Exp $
+//! $Id: module.pmod,v 1.126 2001/05/17 02:34:25 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -1992,7 +1992,7 @@ class Frame
 	if (!mappingp (args))
 	  fatal_error ("Failed to parse tag args for <%s> from %O.\n",
 		       tag->name, this_object()->raw_tag_text);
-	if (!stringp (content))
+	if (!stringp (content) && !(flags & FLAG_EMPTY_ELEMENT))
 	  fatal_error ("Failed to parse tag content for <%s> from %O.\n",
 		       tag->name, this_object()->raw_tag_text);
 #endif
