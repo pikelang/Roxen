@@ -12,6 +12,7 @@ o <expire-time> now supports the argument "now".
 
 o Updated Pike 0.6
 
+
 Changes since Roxen Challenger 1.2.34 Yellow
 -----------------------------------------------
 
@@ -56,6 +57,7 @@ o Added new variable to decide what tags will be parsed for colors in
 
 o Fixed some bugs that prevented the language module from working.
   Thanks to Peter Holzer <hjp@wsr.ac.at>.
+
 
 Changes since Roxen Challenger 1.2.31 Yellow
 -----------------------------------------------
