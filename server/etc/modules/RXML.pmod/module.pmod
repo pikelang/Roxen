@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.290 2002/08/14 18:22:55 mast Exp $
+// $Id: module.pmod,v 1.291 2002/09/03 16:36:46 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -7389,8 +7389,10 @@ class PCode
 	exec[length + 2] = frame_state;
       else {
 	frame_state = exec[length + 2] = frame->_save();
-	if (stringp (frame_state[0]))
+	if (stringp (frame->args)) {
+	  p_code_comp->delayed_resolve (frame, "args");
 	  p_code_comp->delayed_resolve (frame_state, 0);
+	}
 	RESET_FRAME (frame);
       }
 
@@ -7401,6 +7403,8 @@ class PCode
 	else
 	  exec[length] = frame = exec[length]->_clone_empty();
 	frame->_restore (exec[length + 2]);
+	if (stringp (frame->args))
+	  p_code_comp->delayed_resolve (frame, "args");
 	frame->flags = frame_flags;
 	exec[length + 1] = frame;
       }
@@ -7557,88 +7561,76 @@ class PCode
     while (1) {			// Loops only if errors are catched.
       mixed item;
       Frame frame;
-      PikeCompile orig_comp;
-
       if (mixed err = catch {
 
-#define EVAL_LOOP(RESOLVE_ARGFUNC_1, RESOLVE_ARGFUNC_2)			\
-	do for (; pos < length; pos++) {				\
-	  item = exec[pos];						\
-	chained_p_code_add: {						\
-	    if (objectp (item))						\
-	      if (item->is_RXML_p_code_frame) {				\
-		if ((frame = exec[pos + 1])) {				\
-		  /* Relying on the interpreter lock here. */		\
-		  exec[pos + 1] = 0;					\
-		  RESOLVE_ARGFUNC_1;					\
-		}							\
-		else {							\
-		  if (item->is_RXML_Tag)				\
-		    frame = item->Frame(), frame->tag = item;		\
-		  else frame = item->_clone_empty();			\
-		  RESOLVE_ARGFUNC_2;					\
-		  frame->_restore (exec[pos + 2]);			\
-		}							\
-		item = frame->_eval (					\
-		  ctx, this_object(), type); /* Might unwind. */	\
-		if (flags & COLLECT_RESULTS &&				\
-		    ((frame->flags & (FLAG_DONT_CACHE_RESULT|FLAG_MAY_CACHE_RESULT)) ==	\
-		     FLAG_MAY_CACHE_RESULT)) {				\
-		  exec[pos] = item;					\
-		  /* Relying on the interpreter lock here. */		\
-		  exec[pos + 1] = exec[pos + 2] = nil;			\
-		  flags |= UPDATED;					\
-		  update_count = ++ctx->state_updated;			\
-		  if (new_p_code) new_p_code->add_frame (ctx, frame, item, 1); \
-		}							\
-		else {							\
-		  if (ctx->state_updated > update_count) {		\
-		    exec[pos + 2] = frame->_save();			\
-		    flags |= UPDATED;					\
-		    update_count = ctx->state_updated;			\
-		  }							\
-		  if (!exec[pos + 1]) {					\
-		    RESET_FRAME (frame);				\
-		    /* Race here, but it doesn't matter much. */	\
-		    exec[pos + 1] = frame;				\
-		    if (new_p_code) new_p_code->add_frame (ctx, frame, item, 0); \
-		  }							\
-		  else							\
-		    if (new_p_code) new_p_code->add_frame (ctx, frame, item, 1); \
-		}							\
-		pos += 2;						\
-		break chained_p_code_add;				\
-	      }								\
-	      else if (item->is_RXML_p_code_entry)			\
-		item = item->get (ctx); /* Might unwind. */		\
-	    if (new_p_code) new_p_code->add (ctx, item, item);		\
-	  }								\
-	  if (item != nil)						\
-	    parts[ppos++] = item;					\
-	  if (string errmsgs = m_delete (ctx->misc, this_object()))	\
-	    parts[ppos++] = errmsgs;					\
-	} while (0)
-
 	if (p_code_comp) {
-	  orig_comp = ctx->p_code_comp;
-	  ctx->p_code_comp = p_code_comp;
-	  EVAL_LOOP ({
-	    array frame_state = exec[pos + 2];
-	    if (stringp (frame->args))
-	      if (stringp (frame_state[0]))
-		frame->args = frame_state[0] =
-		  p_code_comp->resolve (frame_state[0]);
-	      else
-		frame->args = frame_state[0];
-	  }, {
-	    array frame_state = exec[pos + 2];
-	    if (stringp (frame_state[0]))
-	      frame_state[0] = p_code_comp->resolve (frame_state[0]);
-	  });
-	  ctx->p_code_comp = orig_comp;
+	  p_code_comp->compile();
+	  if (flags & FINISHED) p_code_comp = 0;
 	}
-	else
-	  EVAL_LOOP (;, ;);
+
+	for (; pos < length; pos++) {
+	  item = exec[pos];
+
+	chained_p_code_add: {
+	    if (objectp (item))
+	      if (item->is_RXML_p_code_frame) {
+
+		if ((frame = exec[pos + 1])) {
+		  /* Relying on the interpreter lock here. */
+		  exec[pos + 1] = 0;
+		}
+		else {
+		  if (item->is_RXML_Tag)
+		    frame = item->Frame(), frame->tag = item;
+		  else frame = item->_clone_empty();
+		  frame->_restore (exec[pos + 2]);
+		}
+
+		item = frame->_eval (
+		  ctx, this_object(), type); /* Might unwind. */
+
+		if (flags & COLLECT_RESULTS &&
+		    ((frame->flags & (FLAG_DONT_CACHE_RESULT|FLAG_MAY_CACHE_RESULT)) ==
+		     FLAG_MAY_CACHE_RESULT)) {
+		  exec[pos] = item;
+		  /* Relying on the interpreter lock here. */
+		  exec[pos + 1] = exec[pos + 2] = nil;
+		  flags |= UPDATED;
+		  update_count = ++ctx->state_updated;
+		  if (new_p_code) new_p_code->add_frame (ctx, frame, item, 1);
+		}
+
+		else {
+		  if (ctx->state_updated > update_count) {
+		    exec[pos + 2] = frame->_save();
+		    flags |= UPDATED;
+		    update_count = ctx->state_updated;
+		  }
+		  if (!exec[pos + 1]) {
+		    RESET_FRAME (frame);
+		    /* Race here, but it doesn't matter much. */
+		    exec[pos + 1] = frame;
+		    if (new_p_code) new_p_code->add_frame (ctx, frame, item, 0);
+		  }
+		  else
+		    if (new_p_code) new_p_code->add_frame (ctx, frame, item, 1);
+		}
+
+		pos += 2;
+		break chained_p_code_add;
+	      }
+
+	      else if (item->is_RXML_p_code_entry)
+		item = item->get (ctx); /* Might unwind. */
+
+	    if (new_p_code) new_p_code->add (ctx, item, item);
+	  }
+
+	  if (item != nil)
+	    parts[ppos++] = item;
+	  if (string errmsgs = m_delete (ctx->misc, this_object()))
+	    parts[ppos++] = errmsgs;
+	}
 
 	ctx->eval_finish();
 	if (ctx->state_updated > update_count) flags |= UPDATED;
@@ -7653,8 +7645,6 @@ class PCode
 	    else return parts[0];
 
       }) {
-	if (p_code_comp) ctx->p_code_comp = orig_comp;
-
 	if (objectp (err) && ([object] err)->thrown_at_unwind) {
 	  ctx->unwind_state[this_object()] = ({err, pos, parts, ppos});
 	  throw (this_object());
@@ -7815,20 +7805,25 @@ class PCode
 #ifdef DEBUG
     if (!(flags & FINISHED)) report_warning ("Encoding unfinished p-code.\n");
 #endif
+
+    if (p_code_comp) {
+      p_code_comp->compile();
+      p_code_comp = 0;
+    }
+
     if (length != sizeof (exec)) exec = exec[..length - 1];
     array encode_p_code = exec + ({});
     for (int pos = 0; pos < length; pos++) {
       mixed item = encode_p_code[pos];
       if (objectp (item) && item->is_RXML_p_code_frame) {
 	encode_p_code[pos + 1] = 0; // Don't encode the cached frame.
-	array frame_state = encode_p_code[pos + 2];
-	if (stringp (frame_state[0]))
-	  frame_state[0] = p_code_comp->resolve (frame_state[0]);
-	if (exec[pos + 1])
-	  exec[pos + 1]->args = frame_state[0];
+	if (stringp (encode_p_code[pos + 2][0]) ||
+	    exec[pos + 1] && stringp (exec[pos + 1]->args))
+	  // This is a debug check, but let's always do it since this
+	  // case would be very hard to track down otherwise.
+	  error ("Unresolved argument function in frame at position %d.\n", pos);
       }
     }
-    p_code_comp = 0;
 
     return ({P_CODE_VERSION, flags & (COLLECT_RESULTS|FINISHED),
 	     tag_set, tag_set && tag_set->get_hash(),
