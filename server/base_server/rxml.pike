@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.116 2000/02/10 04:07:55 mast Exp $
+ * $Id: rxml.pike,v 1.117 2000/02/10 04:13:39 nilsson Exp $
  *
  * The Roxen RXML Parser.
  *
@@ -88,11 +88,11 @@ class ScopeRoxen {
      case "uptime-days":
        return (time(1)-roxen->start_time)/3600/24;
      case "uptime-hours":
-       return (time(1)-roxen->start_time)/3600 % 24;
+       return (time(1)-roxen->start_time)/3600;
      case "uptime-minutes":
-       return (time(1)-roxen->start_time)/60 % 60;
+       return (time(1)-roxen->start_time)/60;
      case "hits-per-minute":
-       return c->id->conf->requests / (time(1)-roxen->start_time || 1);
+       return c->id->conf->requests / ((time(1)-roxen->start_time)/60 + 1);
      case "hits":
        return c->id->conf->requests;
      case "sent-mb":
@@ -330,7 +330,7 @@ array|string call_tag(RXML.PHtml parser, mapping args, string|function rf)
   RXML.Context ctx = parser->context;
   RequestID id = ctx->id;
   string tag = parser->tag_name();
-  id->misc->line = parser->at_line();
+  id->misc->line = (string)parser->at_line();
 
   if(args->help)
   {
@@ -379,7 +379,7 @@ array(string)|string call_container(RXML.PHtml parser, mapping args,
   RXML.Context ctx = parser->context;
   RequestID id = ctx->id;
   string tag = parser->tag_name();
-  id->misc->line = parser->at_line();
+  id->misc->line = (string)parser->at_line();
 
   if(args->help)
   {
@@ -580,7 +580,7 @@ string call_user_tag(RXML.PHtml parser, mapping args)
 {
   RequestID id = parser->context->id;
   string tag = parser->tag_name();
-  id->misc->line = parser->at_line();
+  id->misc->line = (string)parser->at_line();
   args = id->misc->defaults[tag]|args;
   TRACE_ENTER("user defined tag &lt;"+tag+"&gt;", call_user_tag);
   array replace_from = map(indices(args),make_entity)+({"#args#"});
@@ -597,7 +597,7 @@ array|string call_user_container(RXML.PHtml parser, mapping args, string content
   string tag = parser->tag_name();
   if(!id->misc->defaults[tag] && id->misc->defaults[""])
     tag = "";
-  id->misc->line = parser->at_line();
+  id->misc->line = (string)parser->at_line();
   args = id->misc->defaults[tag]|args;
   if( args->preparse )
   {
