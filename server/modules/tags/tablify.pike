@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: tablify.pike,v 1.74 2004/03/17 12:33:16 grubba Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.75 2004/06/04 09:24:24 anders Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -527,6 +527,7 @@ string simpletag_tablify(string tag, mapping m, string q, RequestID id)
 				   return q+"\t";
 				 }
     ]), m);
+    q = replace(q, "\t\n", "\n");
   }
 
   sep = m->rowseparator||"\n";
