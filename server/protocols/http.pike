@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.210 2000/02/17 15:50:13 js Exp $";
+constant cvs_version = "$Id: http.pike,v 1.211 2000/02/23 19:14:43 nilsson Exp $";
 
 #define MAGIC_ERROR
 
@@ -461,7 +461,7 @@ class PrefLanguages {
   }
 
   string get_language() {
-    if(!languages) return 0;
+    if(!languages || !sizeof(languages)) return 0;
     sort_lang();
     return languages[0];
   }
@@ -472,7 +472,7 @@ class PrefLanguages {
   }
 
   float get_quality() {
-    if(!qualities) return 0.0;
+    if(!qualities || !sizeof(qualities)) return 0.0;
     sort_lang();
     return qualities[0];
   }
