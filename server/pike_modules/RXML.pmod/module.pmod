@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.289 2002/07/17 18:05:05 nilsson Exp $
+// $Id: module.pmod,v 1.290 2002/09/26 23:03:33 nilsson Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -3368,6 +3368,8 @@ class Frame
     mixed res = nil;
     Parser subparser = 0;
     int orig_make_p_code = ctx->make_p_code;
+    PCode orig_evaled_p_code = ctx->evaled_p_code;
+    ctx->evaled_p_code = 0;
 
     mixed err = catch {
       for (; i < sizeof (exec); i++) {
@@ -3492,12 +3494,14 @@ class Frame
       else res = result;
 
       ctx->make_p_code = orig_make_p_code;
+      ctx->evaled_p_code = orig_evaled_p_code;
       return res;
     };
 
     if (result_type->sequential) result = result + (result = 0, res);
 
     ctx->make_p_code = orig_make_p_code;
+    ctx->evaled_p_code = orig_evaled_p_code;
     if (objectp (err) && ([object] err)->thrown_at_unwind) {
       THIS_TAG_DEBUG ("Exec: Interrupted at position %d\n", i);
       UNWIND_STATE ustate;
@@ -4272,10 +4276,8 @@ class Frame
 		    finished = 1;
 		  } while (1); // Only loops when an unwound subevaler has been recovered.
 
-		  if (flags & FLAG_GET_EVALED_CONTENT) {
+		  if (flags & FLAG_GET_EVALED_CONTENT)
 		    this_object()->evaled_content->finish();
-		    ctx->evaled_p_code = orig_evaled_p_code;
-		  }
 		  if (unevaled_content) {
 		    unevaled_content->finish();
 		    in_content = unevaled_content;
@@ -4286,6 +4288,7 @@ class Frame
 		  }
 		  flags |= FLAG_MAY_CACHE_RESULT;
 
+		  ctx->evaled_p_code = orig_evaled_p_code;
 		  subevaler = 0;
 		}
 
