@@ -70,6 +70,24 @@
   </tr>
 </define>
 
+<comment> ================ Show uninstall page ================== </comment>
+
+<if variable=uninstall>
+
+  <if variable=uninstall_package>
+    <update-uninstall-package package="&form.uninstall_package;">
+  </if>
+
+  Installed packages:
+  <rul>
+  <update-package-output installed>
+    <rli>#title# <a href="update.html?details=#id#">[Details...]</a></rli>
+    <cset variable="_&_.name;">foo</cset>
+  </update-package-output>
+  </rul>
+
+</if>
+<else>
 
 <comment> ================ Show details page ================== </comment>
 
@@ -93,7 +111,14 @@
 </table>
 </update-package-output>
 
-<update-package-is-downloaded package="&form.details;" variable=downloaded>
+<update-package-is-downloaded package="&form.details;"
+   variable=downloaded installed_variable=installed>
+<if variable="installed">
+  <input type="hidden" name="uninstall" value="1" />
+  <input type="hidden" name="uninstall_package" value="&form.details;" />
+  <input type="submit" name="do_uninstall" value="Uninstall this package" />
+</if>
+<else>
 <if not variable="downloaded">
   <input type="hidden" name="details" value="&form.details;" />
   <input type="submit" name="download" value="Download this package" />
@@ -101,6 +126,7 @@
 <else>
   <input type="hidden" name="install" value="&form.details;" />
   <input type="submit" name="do_install" value="Install this package" />
+</else>
 </else>
 </if>
 
@@ -218,6 +244,6 @@ The following files will be installed:<br>
     <package-box name="&form.category;" title="Foo">
   </if>
 </if>
-
+</else>
 </cv-startpage>
 </content>

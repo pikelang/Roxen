@@ -1,5 +1,5 @@
 /*
- * $Id: update.pike,v 1.3 2000/03/17 03:09:53 js Exp $
+ * $Id: update.pike,v 1.4 2000/03/17 04:25:13 js Exp $
  *
  * The Roxen Update Client
  * Copyright © 2000, Roxen IS.
@@ -139,7 +139,7 @@ string tag_update_sidemenu(string t, mapping m, RequestID id)
   foreach(menu, array entry)
   {
     ret += "<gbutton width=150 ";
-    if((id->variables->category||"")==entry[1])
+    if((id->variables->category||(id->variables->uninstall||""))==entry[1])
     {
       ret += "bgcolor=&usr.left-selbuttonbg; "+
 	" icon_src=&usr.selected-indicator; ";
@@ -150,7 +150,22 @@ string tag_update_sidemenu(string t, mapping m, RequestID id)
       entry[1]+"\">"+entry[0]+"</gbutton><br>";
   }
 
+  ret += "<br><gbutton href=\"update.html?uninstall=1\" width=150 ";
+  if(id->variables->uninstall)
+    ret += "bgcolor=&usr.left-selbuttonbg; "+
+      " icon_src=&usr.selected-indicator; ";
+  else
+      ret += "bgcolor=&usr.fade1; ";
+  
+  ret+="icon_align=left>Uninstall packages</gbutton>";
   return ret;
+}
+
+string tag_update_uninstall_package(string t, mapping m, RequestID id)
+{
+  if(m->package)
+    catch(installed->delete(m->package));
+  return "";
 }
 
 string container_update_package_output(string t, mapping m, string c, RequestID id)
@@ -169,6 +184,8 @@ string container_update_package_output(string t, mapping m, string c, RequestID 
     {
       mapping p=pkginfo[pkg];
       if( !installed[pkg] && ((m->type && p["package-type"]==m->type) || !m->type))
+	res+=({ p });
+      if(m->installed && installed[pkg])
 	res+=({ p });
       i++;
       if(m->limit && i>=(int)m->limit)
@@ -203,6 +220,8 @@ string tag_update_package_is_downloaded(string t, mapping m, RequestID id)
 
   if(completely_downloaded(((int)m->package)))
     id->variables[m->variable]="1";
+  if(installed[m->package])
+    id->variables[m->installed_variable]="1";
   return "";
 }
 
