@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.127 1999/06/07 00:22:50 mast Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.128 1999/06/11 15:46:30 grubba Exp $";
 //inherit "roxenlib";
 
 inherit "config/draw_things";
@@ -908,19 +908,19 @@ object get_template(string t)
 
 int check_config_name(string name)
 {
-  if(strlen(name) && name[-1] == '~') name = "";
-  if(search(name, "/")!= -1) return 1;
-  
-  foreach(roxen->configurations, object c)
-    if(lower_case(c->name) == lower_case(name))
-      return 1;
-
-  switch(lower_case(name)) {
-   case " ": case "\t": case "cvs":
-   case "global variables":
+  if((name == "") ||
+     (name[-1] == '~') ||
+     (search(name, "/") != -1)) {
     return 1;
   }
-  return !strlen(name);
+  
+  name = lower_case(name);
+
+  foreach(roxen->configurations, object c)
+    if(lower_case(c->name) == name)
+      return 1;
+
+  return (< " ", "\t", "cvs", "global variables" >)[name];
 }
 
 int low_enable_configuration(string name, string type)
@@ -993,6 +993,8 @@ mapping new_configuration(object id)
     return stores(new_configuration_form());
   if(id->variables->no)
     return http_redirect(roxen->config_url()+id->not_query[1..]+"?"+bar++);
+
+  // FIXME: Localize!
   
   if(!id->variables->name)
     return stores(default_head("Bad luck")+
@@ -1004,11 +1006,12 @@ mapping new_configuration(object id)
   if(!low_enable_configuration(id->variables->name, id->variables->type))
     return stores(default_head("Bad luck") +
 		  "<blockquote><h1>Illegal configuration name</h1>"
-		  "The name of the configuration must contain characters"
-		  " other than space and tab, it should not end with "
+		  "The name of the configuration must contain characters "
+		  "other than space and tab, it should not end with "
 		  "~, and it must not be 'CVS', 'Global Variables' or "
 		  "'global variables', nor the name of an existing "
-		  "configuration, and the character '/' cannot be included</blockquote>");
+		  "configuration, and the character '/' cannot be "
+		  "used</blockquote>");
   return std_redirect(root->descend("Configurations"), id);
 }
 
@@ -1436,7 +1439,7 @@ mapping configuration_parse(object id)
     // _above_ them. This is supposed to be some nice introductory
     // text about the configuration interface...
 
-    // We also need to determine wether this is the full or the
+    // We also need to determine whether this is the full or the
     // lobotomized international version.
 
     int full_version=0;
@@ -1471,7 +1474,7 @@ mapping configuration_parse(object id)
     case "nomorevars": more_mode = 0; save_more_mode(); break;
       
       // Fold and unfold nodes, this is _very_ simple, once all the
-      // supporting code was writte.
+      // supporting code was written.
     case "fold":     o->folded=1;      break;
     case "unfold":   o->folded=0;      break;
 
