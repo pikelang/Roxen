@@ -87,7 +87,7 @@ string nice_relative_date( object t )
     else
       return sprintf( (string)_(44,"%d months"),
 		      t->how_many( Calendar.Month() ) );
-  if( t->how_many( Calendar.Day() ) == 1 )    return "one day";
+  if( t->how_many( Calendar.Day() ) == 1 )    return (string)_(0,"one day");
 
   if( t->how_many( Calendar.Day() ) == 0 )    return "-";
   return sprintf( (string)_(45,"%d days"),
@@ -129,7 +129,8 @@ string parse( RequestID id )
     warn += f->cannot_change_back;
     res += f->version+"</td><td>"+
       (f->cannot_change_back?"<img alt='#' src='&usr.err-2;' />":"")+
-      "</td><td>"+d->set_language( roxen.get_locale() )->format_ext_ymd() + "</td>"
+      "</td><td>"+d->set_language( roxen.get_locale()+"_UNICODE" )
+      ->format_ext_ymd() + "</td>"
       "<td>"+nice_relative_date( diff )+"</td>"
       "<td>"+f->dir+"</td></tr>\n";
   }
