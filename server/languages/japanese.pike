@@ -1,13 +1,14 @@
 #charset iso-2022
-/* name="Japanese (Was Kanji) language plugin"; */
-/* doc="Adds support for japanese";
- * Bugs by Marcus Comstedt <marcus@roxen.com>
- * Some more bugs by Henrik Grubbstr,Av(Bm <grubba@roxen.com>
- */
+
+// Japanese (Was Kanji) language plugin
+//
+// Adds support for japanese
+// Bugs by Marcus Comstedt <marcus@roxen.com>
+// Some more bugs by Henrik Grubbstr,Av(Bm <grubba@roxen.com>
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: japanese.pike,v 1.15 2000/03/16 17:21:16 nilsson Exp $";
+constant cvs_version = "$Id: japanese.pike,v 1.16 2000/09/16 19:52:21 nilsson Exp $";
 constant _id = ({ "kj", "japanese", "" });
 constant _aliases =  ({ "kj", "kanji", /* For backward compatibility */
 			"jp", "japanese", "nihongo" /* To keep Peter Evans happy */,

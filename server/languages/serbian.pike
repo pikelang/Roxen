@@ -1,16 +1,18 @@
-/*name=" Serbian language support for Roxen ";
-   doc="Author: Goran Opacic 1996/12/11<br>"
-   "E-mail: goran@sdc.co.yu<br>"
-   "SDC-CIP Co. Kneza Milosa 12, 11000 Belgrade, Yugoslavia<br>"
-   "tel. +381 11 643 466<br>";
-   You can do anything you want with this code.
-   Don't change the name of the author !!!
-   Please consult me before upgrading serbian.pike.
-*/
+
+// Serbian language support for Roxen
+//
+// Author: Goran Opacic 1996/12/11
+// E-mail: goran@sdc.co.yu
+// SDC-CIP Co. Kneza Milosa 12, 11000 Belgrade, Yugoslavia
+// tel. +381 11 643 466
+//
+// You can do anything you want with this code.
+// Don't change the name of the author !!!
+// Please consult me before upgrading serbian.pike.
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: serbian.pike,v 1.7 2000/01/26 00:29:55 nilsson Exp $";
+constant cvs_version = "$Id: serbian.pike,v 1.8 2000/09/16 19:52:23 nilsson Exp $";
 constant _id = ({ "sr", "serbian", "" });
 constant _aliases = ({ "sr", "ser", "serbian" });
 

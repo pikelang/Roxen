@@ -1,14 +1,16 @@
-/* name="Slovenian language support for Roxen ";
-   doc="Author: Iztok Umek 7. 8. 1997<br>"
-   "Help by: Henrik Grubbström <grubba@roxen.com> tnx!<br>"
-   "E-mail: iztok.umek@snet.fri.uni-lj.si<br>";
-   You can do anything you want with this code.
-   Please consult me before modifying slovenian.pike.
-*/
+
+// Slovenian language support for Roxen
+//
+// Author: Iztok Umek 7. 8. 1997
+// Help by: Henrik Grubbström <grubba@roxen.com> tnx!
+// E-mail: iztok.umek@snet.fri.uni-lj.si
+//
+// You can do anything you want with this code.
+// Please consult me before modifying slovenian.pike.
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: slovenian.pike,v 1.13 2000/03/16 17:21:40 nilsson Exp $";
+constant cvs_version = "$Id: slovenian.pike,v 1.14 2000/09/16 19:52:23 nilsson Exp $";
 constant _id = ({ "si", "slovenian", "" });
 constant _aliases = ({ "si", "svn", "slovenian" });
 

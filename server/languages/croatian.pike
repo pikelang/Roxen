@@ -1,16 +1,17 @@
-/* name="Croatian language support for Roxen";
-   doc="Author: Klara Makovac 1997/07/02<br>"
-   "E-mail: makovac@istria.nexus.com.hr<br>"
-   "SDC-CIP Co. Ernesta Milosa 25, 52470 Umag, Croatia<br>";
-   "tel. +385 52 741 967<br>";
-   You can do anything you want with this code.
-   Don't change the name of the author !!!
-   Please consult me before upgrading croatian.pike.
-*/
+// Croatian language support for Roxen
+//
+// Author: Klara Makovac 1997/07/02
+// E-mail: makovac@istria.nexus.com.hr
+// SDC-CIP Co. Ernesta Milosa 25, 52470 Umag, Croatia
+// tel. +385 52 741 967
+//
+// You can do anything you want with this code.
+// Don't change the name of the author !!!
+// Please consult me before upgrading croatian.pike.
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: croatian.pike,v 1.8 2000/01/26 00:29:54 nilsson Exp $";
+constant cvs_version = "$Id: croatian.pike,v 1.9 2000/09/16 19:52:20 nilsson Exp $";
 constant _id = ({ "hr", "croatian", "" });
 constant _aliases = ({ "hr", "cro", "croatian" });
 
@@ -123,7 +124,7 @@ number((num-(num%1000))/1000)+" tisuce "+number(num%1000);
      if (((num%10000)/1000)==2) return number((num-(num%10000))/1000)+" dvije tisuce "+number(num%1000);
      if (((num%10000)/1000)==1) return number((num-(num%10000))/1000)+" tisucu "+number(num%1000); };
     if ((num>4999) && (num<1000000)) return number(num/1000)+" tisuca "+number(num%1000);
-    werror("uf\n"+ num +"\n");
+    //    werror("uf\n"+ num +"\n");
     return "mnogo";
   }
 }

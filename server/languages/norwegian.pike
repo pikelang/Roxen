@@ -1,13 +1,10 @@
-/*
-string cvs_version = "$Id: norwegian.pike,v 1.7 2000/01/26 00:29:54 nilsson Exp $";
-  norwegian.lpc         morten@nvg.unit.no
-  Støtte for norsk på www-serveren..
-  name="Norwegian language plugin";
-  doc="Støtte for norsk på www-serveren.. morten@nvg.unit.no";
-*/
+
+// Norwegian language plugin
+// Støtte for norsk på www-serveren.. morten@nvg.unit.no
 
 inherit "abstract.pike";
 
+constant cvs_version = "$Id: norwegian.pike,v 1.8 2000/09/16 19:52:22 nilsson Exp $";
 constant _id = ({ "no", "norwegian", "norsk" });
 constant _aliases = ({ "no", "nor", "norwegian", "norsk" });
 

@@ -1,24 +1,23 @@
 #charset iso-8859-2
 constant required_charset = "iso-8859-2";
 
-/* name="Czech language support for Roxen";
-   doc="Author: Jan Petrous 16.10.1997<br>"
-   "Based on Slovenian language module by Iztok Umek<br>"
-   "E-mail: hop@unibase.cz<br>";
-
-   You can do enything you want this code.
-   Please consult me before modifying czech.pike.
-
-   13.05.1998	hop	corrected one a little bug
-			All texts are now in ISO 8859-2
-   16.11.1998	hop	corrected name of months and days
-             		(First letter must be lower case)
-
-*/
+// Czech language support for Roxen
+//
+// Author: Jan Petrous 16.10.1997
+// Based on Slovenian language module by Iztok Umek
+// E-mail: hop@unibase.cz
+//
+// You can do enything you want this code.
+// Please consult me before modifying czech.pike.
+//
+// 13.05.1998	hop	corrected one a little bug
+//			All texts are now in ISO 8859-2
+// 16.11.1998	hop	corrected name of months and days
+//             		(First letter must be lower case)
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: czech.pike,v 1.14 2000/09/08 22:46:24 nilsson Exp $";
+constant cvs_version = "$Id: czech.pike,v 1.15 2000/09/16 19:52:21 nilsson Exp $";
 constant _id = ({ "cs", "czech", "" });
 constant _aliases = ({ "cs", "cz", "cze", "ces", "czech" });
 
