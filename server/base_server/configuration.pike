@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.179 1999/06/06 20:35:50 peter Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.180 1999/06/06 20:49:49 peter Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -2159,7 +2159,7 @@ void start(int num, void|object conf_id, array|void args)
     {
       string name, c, v;
       if(sscanf(variable, "%s:%s=%s", name, c, v) == 3)
-	if(server_name == name)
+	if(server_name == replace(name,"_"," "))
 	  if(variables[c])
 	    variables[c][VAR_VALUE]=compile_string(
 					"mixed f(){ return"+v+";}")()->f();
