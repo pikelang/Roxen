@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.187 2001/06/30 16:00:00 mast Exp $
+// $Id: module.pmod,v 1.188 2001/06/30 16:50:40 per Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -5371,24 +5371,15 @@ static class TXml
 	default: return [string] indirect_convert (val, from);
 	case TText.name:
       }
-    else if (mixed err = catch {val = (string) val;})
+
+    // Automatically handles the casting (if nessesary)
+    if (mixed err = catch { // The catch comes from the cast, if any
+      // Cannot use Roxen.* here.
+      return _Roxen.html_encode_string( val );
+    } )
       parse_error ("Cannot convert %s to %s: %s",
-		   utils->format_short (val), name, describe_error (err));
-    return replace (
-      [string] val,
-      // FIXME: This ignores the invalid Unicode character blocks.
-      ({"&", "<", ">", "\"", "\'",
-//  	"\000", "\001", "\002", "\003", "\004", "\005", "\006", "\007",
-//  	"\010",                 "\013", "\014",         "\016", "\017",
-//  	"\020", "\021", "\022", "\023", "\024", "\025", "\026", "\027",
-//  	"\030", "\031", "\032", "\033", "\034", "\035", "\036", "\037",
-      }),
-      ({"&amp;", "&lt;", "&gt;", /*"&quot;"*/ "&#34;", /*"&apos;"*/ "&#39;",
-//  	"&#0;",  "&#1;",  "&#2;",  "&#3;",  "&#4;",  "&#5;",  "&#6;",  "&#7;",
-//  	"&#8;",                    "&#11;", "&#12;",          "&#14;", "&#15;",
-//  	"&#16;", "&#17;", "&#18;", "&#19;", "&#20;", "&#21;", "&#22;", "&#23;",
-//  	"&#24;", "&#25;", "&#26;", "&#27;", "&#28;", "&#29;", "&#30;", "&#31;",
-      }));
+ 		   utils->format_short (val), name, describe_error (err));
+
   }
 
   string decode (mixed val)

@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.100 2001/06/28 22:40:13 nilsson Exp $
+// $Id: Roxen.pmod,v 1.101 2001/06/30 16:50:39 per Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -1317,13 +1317,6 @@ string sizetostring( int size )
   return sprintf("%.1f %s", s, PREFIX[ size ]);
 }
 
-string html_encode_string(LocaleString str)
-//! Encodes `str' for use as a literal in html text.
-{
-  return replace((string)str, ({"&", "<", ">", "\"", "\'", "\000" }),
-		 ({"&amp;", "&lt;", "&gt;", "&#34;", "&#39;", "&#0;"}));
-}
-
 string html_decode_string(LocaleString str)
 //! Decodes `str', opposite to <ref>html_encode_string()</ref>
 {
@@ -1863,9 +1856,7 @@ function get_client_charset_decoder( string едц, RequestID|void id )
 
 
 // Low-level C-roxen optimization functions.
-#if constant( _Roxen )
 inherit _Roxen;
-#endif
 
 /*
  * TODO:
