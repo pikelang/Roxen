@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.14 1999/02/01 20:31:48 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.15 1999/02/02 23:06:47 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -223,10 +223,10 @@ class imap_mail
   // array collect(mixed ...args) { return args; }
   
   array fetch(array attrs)
-    {
-      return ({ "FETCH", 
-		  imap_list(Array.map(attrs, fetch_attr) * ({})) });
-    }
+  {
+    return ({ "FETCH", 
+	      imap_list(Array.map(attrs, fetch_attr) * ({})) });
+  }
 
   string format_headers(mapping headers)
     {
@@ -306,180 +306,184 @@ class imap_mail
   /* FIXME: Don't do too much MIME-decoding. Use
    * MIME.Message->getencoded(), not MIME.Message->getdata(). */
   mixed fetch_attr(mapping attr)
-    {
-      /* This variable is cleared if we recurse into a multipart the
-       * message. It is used to decide if the headers in the database
-       * are relevant. */
-      int top_level = 1;
+  {
+#ifdef IMAP_DEBUG
+    werror(sprintf("imap_mail->fetch_attr(%O)\n", attr));
+#endif /* IMAP_DEBUG */
 
-      object response = fetch_response(attr->raw_wanted || attr->wanted);
+    /* This variable is cleared if we recurse into a multipart the
+     * message. It is used to decide if the headers in the database
+     * are relevant. */
+    int top_level = 1;
+
+    object response = fetch_response(attr->raw_wanted || attr->wanted);
       
-      switch(attr->wanted)
+    switch(attr->wanted)
+    {
+    case "body":
+    case "body.peek": {
+      object body_response = fetch_body_response(attr->wanted,
+						 attr->raw_options,
+						 attr->range);
+      if (!(sizeof(attr->section) + sizeof(attr->part)))
       {
-      case "body":
-      case "body.peek": {
-	object body_response = fetch_body_response(attr->wanted,
-						   attr->raw_options,
-						   attr->range);
-	if (!(sizeof(attr->section) + sizeof(attr->part)))
-	{
-	  /* Entire message */
-	  return body_response();
-	}
+	/* Entire message */
+	return body_response();
+      }
 
-	string raw_body = mail->body();
-	// Use multiple headers
-	MIME.Message msg = get_message(raw_body);
-	
-	if (sizeof(attr->part))
+      string raw_body = mail->body();
+      // Use multiple headers
+      MIME.Message msg = get_message(raw_body);
+      
+      if (sizeof(attr->part))
+      {
+	foreach(attr->part, int i)
 	{
-	  foreach(attr->part, int i)
+	  if (!i)
+	    throw("There's no part zero");
+	  
+	  /* Recurse into parts of type message/rfc822 */
+	  while (!msg->body_parts)
 	  {
-	    if (!i)
-	      throw("There's no part zero");
-
-	    /* Recurse into parts of type message/rfc822 */
-	    while (!msg->body_parts)
+	    if ( (msg->type == "message")
+		 && (msg->subtype == "rfc822"))
 	    {
-	      if ( (msg->type == "message")
-		   && (msg->subtype == "rfc822"))
-	      {
-		msg = get_message(msg->getdata());
-		top_level = 0;
-	      }
-	      else
-		break;
+	      msg = get_message(msg->getdata());
+	      top_level = 0;
 	    }
-	    if (!msg->body_parts)
-	    {
-	      /* Every message has a part 1. This may be more liberal
-	       * than rfc-2060, which seems to require this only at
-	       * the top level. */
-	      if (i == 1)
-		continue;
-	      else
-		throw("No such part");
-	    }
-	    if (i > sizeof(msg->body_parts))
+	    else
+	      break;
+	  }
+	  if (!msg->body_parts)
+	  {
+	    /* Every message has a part 1. This may be more liberal
+	     * than rfc-2060, which seems to require this only at
+	     * the top level. */
+	    if (i == 1)
+	      continue;
+	    else
 	      throw("No such part");
-	    msg = msg->body_parts[i-1];
-	    top_level = 0;
 	  }
+	  if (i > sizeof(msg->body_parts))
+	    throw("No such part");
+	  msg = msg->body_parts[i-1];
+	  top_level = 0;
 	}
+      }
 
-	if (!sizeof(attr->section))
-	  return body_response(top_level ? raw_body : (string) msg);
+      if (!sizeof(attr->section))
+	return body_response(top_level ? raw_body : (string) msg);
 	
-	switch(attr->section[0])
-	{
-	case "text":
-	  if (sizeof(attr->section) != 1)
-	    throw("Invalid section");
-	  return body_response(msg->getdata());
-	  
-	case "mime": 
-	  if (sizeof(attr->section) != 1)
-	    throw("Invalid section");
+      switch(attr->section[0])
+      {
+      case "text":
+	if (sizeof(attr->section) != 1)
+	  throw("Invalid section");
+	return body_response(msg->getdata());
+	
+      case "mime": 
+	if (sizeof(attr->section) != 1)
+	  throw("Invalid section");
 
-	  if (!sizeof(attr->parts))
-	    throw("MIME section requires numeric part specifier");
+	if (!sizeof(attr->parts))
+	  throw("MIME section requires numeric part specifier");
 
-	  /* Filter headers */
-	  return body_response(format_headers
-			       ( ([ "mime-version" : 1,
-				    "content-type" : 1,
-				    "content-length" : 1,
-				    "content-transfer-encoding" : 1 ])
-				 & msg->headers ));
+	/* Filter headers */
+	return body_response(format_headers
+			     ( ([ "mime-version" : 1,
+				  "content-type" : 1,
+				  "content-length" : 1,
+				  "content-transfer-encoding" : 1 ])
+			       & msg->headers ));
 	    
-	case "header": {
-	  mapping headers = msg->headers;
+      case "header": {
+	mapping headers = msg->headers;
+	
+	if (sizeof(attr->section) == 1)
+	  return body_response(format_headers(headers));
+
+	/* Section should be HEADER.FIELDS or HEADER.FIELDS.NOT.
+	 * Options should be a list of atoms corresponding to header names. */
+	if (attr->section[1] != "fields")
+	  throw("Invalid section");
 	  
-	  if (sizeof(attr->section) == 1)
-	    return body_response(format_headers(headers));
+	if (sizeof(attr->options) != 1)
+	  throw("Invalid section");
+	
+	array list = attr->options[0]->list;
 
-	  /* Section should be HEADER.FIELDS or HEADER.FIELDS.NOT.
-	   * Options should be a list of atoms corresponding to header names. */
-	  if (attr->section[1] != "fields")
-	    throw("Invalid section");
-	  
-	  if (sizeof(attr->options) != 1)
-	    throw("Invalid section");
+	if (!list
+	    || sizeof(list->type - ({ "atom" }))
+	    || sizeof(list->options -({ 0 })))
+	  throw("Invalid header list");
 
-	  array list = attr->options[0]->list;
+	list = Array.map(lower_case, list->atom);
+	mapping filter = mkmapping(list, list);
 
-	  if (!list
-	      || sizeof(list->type - ({ "atom" }))
-	      || sizeof(list->options -({ 0 })))
-	    throw("Invalid header list");
-
-	  list = Array.map(lower_case, list->atom);
-	  mapping filter = mkmapping(list, list);
-
-	  switch(sizeof(attr->section))
-	  {
-	  case 2:
-	    return body_response(format_headers(filter & headers));
-	  case 3:
-	    if (attr->section[2] == "not")
-	      return body_response(format_headers(headers - filter));
-	    /* Fall through */
-	  default:
-	    throw("Invalid section");
-	  }
-	}
+	switch(sizeof(attr->section))
+	{
+	case 2:
+	  return body_response(format_headers(filter & headers));
+	case 3:
+	  if (attr->section[2] == "not")
+	    return body_response(format_headers(headers - filter));
+	  /* Fall through */
 	default:
 	  throw("Invalid section");
 	}
-	/* Should not happen */
-	throw( ({ "Internal error", backtrace() }) );
       }
-      case "bodystructure": 
-	return response(make_bodystructure
-			      (MIME.Message(mail->getdata(), 0, 0, 1),
-			       !attr->no_extention_data));
-
-      case "envelope": 
-	return response(make_envelope(get_headers()));
-	
-      case "flags":
-	return response(imap_list(indices(get_flags())));
-
-      case "internaldate":
-	// FIXME: Where can a suitable date be found?
-	// Use mail->headers()->incoming_date
-	werror("mail->headers(): %O\n", mail->headers());
-	// FIXME
-	return response("internaldate_unimplemented");
-
-      case "rfc822":
-	switch(sizeof(attr->section))
-	  {
-	  default:
-	    throw("Invalid fetch");
-	  case 0:
-	    return response(mail->body());
-	  case 1:
-	    switch(attr->section[0])
-	    {
-	    case "header":
-	      return response(mail->read_headers());
-	    case "size":
-	      // FIXME: How does rfc-822 define the size of the message?
-	      return response(imap_number(mail->get_size()));
-	    case "text":
-	      return response(get_message()->getdata());
-	    default:
-	      throw("Invalid fetch");
-	    }
-	  }
-	break;
-      case "uid":
-	return response(imap_number(uid));
       default:
-	throw( ({ "Internal error", backtrace() }) );
+	throw("Invalid section");
       }
+      /* Should not happen */
+      throw( ({ "Internal error", backtrace() }) );
     }
+    case "bodystructure": 
+      return response(make_bodystructure
+		      (MIME.Message(mail->getdata(), 0, 0, 1),
+		       !attr->no_extention_data));
+
+    case "envelope": 
+      return response(make_envelope(get_headers()));
+	
+    case "flags":
+      return response(imap_list(indices(get_flags())));
+
+    case "internaldate":
+      // FIXME: Where can a suitable date be found?
+      // Use mail->headers()->incoming_date
+      werror("mail->headers(): %O\n", mail->headers());
+      // FIXME
+      return response("internaldate_unimplemented");
+
+    case "rfc822":
+      switch(sizeof(attr->section))
+      {
+      default:
+	throw("Invalid fetch");
+      case 0:
+	return response(mail->body());
+      case 1:
+	switch(attr->section[0])
+	{
+	case "header":
+	  return response(mail->read_headers());
+	case "size":
+	  // FIXME: How does rfc-822 define the size of the message?
+	  return response(imap_number(mail->get_size()));
+	case "text":
+	  return response(get_message()->getdata());
+	default:
+	  throw("Invalid fetch");
+	}
+      }
+      break;
+    case "uid":
+      return response(imap_number(uid));
+    default:
+      throw( ({ "Internal error", backtrace() }) );
+    }
+  }
   
   void mark_as_read()
     {
