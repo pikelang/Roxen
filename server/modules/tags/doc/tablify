@@ -1,25 +1,51 @@
 This module defines the tag {tablify}.<p>
 
+<h3>Tablify</h3>
+
 {tablify} generates tables from, for example, tab separated fields in
 newline separated records (this is the default).<p>
 
-<p><b>Arguments:</b>
-<pre>
- help                Display this text.
- cellseparator=str   Use str as the column-separator.
- rowseparator=str    Use str as the row-separator.
- cellalign=left|right|center
-                     Align the contents of the cells.
- rowalign=left|right|center
-                     Align the contents of the rows.
- nice                Generate ``nice'' tables. The first row is the title row. There are several additional
-                     arguments available for nice.
+<h3>Tablify options</h3>
+<blockquote><dl>
+<dt><b>help</b><dd>
+         Display this text.
+<dt><b>cellseparator</b>=<tt>str</tt><dd>
+         Use <tt>str</tt> as the column separator. Tab is default.
+<dt><b>rowseparator</b>=<tt>str</tt><dd>
+         Use <tt>str</tt> as the row separator. Newline is default.
+<dt><b>cellalign</b>=<tt>[left|right|center]</tt><dd>
+         Align the contents of the cells.
+<dt><b>rowalign</b>=<tt>[left|right|center]</tt><dd>
+         Align the contents of the rows.
+<dt><b>nice</b><dd>
+         Generate ``nice'' tables. The first row is the title row.
+         There are several additional arguments available with <tt>nice</tt>
+         (see below).
+<dt><b>bgcolor</b>=<tt>color</tt>,
+    <b>titlebgcolor</b>=<tt>color</tt>,
+    <b>titlecolor</b>=<tt>color</tt>,
+    <b>fgcolor0</b>=<tt>color</tt>,
+    <b>fgcolor1</b>=<tt>color</tt><dd>
+         Color definitions.
+<dt><b>modulo</b>=<tt>mod</tt><dd>
+         Sets the number of rows using the same color to <tt>mod</tt>.
+<dt><b>{fields}</b><tt>[num|text, ...]</tt><b>{/fields}</b><dd>
+         This container tag sets the field type for each
+         column. Numerical fields will be right aligned and formated.
+</dl></blockquote>
 
-   bgcolor,titlebgcolor,titlecolor,fgcolor0,fgcolor1
-                     Color definitions.
-   modulo            Sets the number of rows using the same color in a row
-   {fields}<i>[num|text, ...]</i>{/fields}
-                     Optional. This container tag sets the field type for each column. Numerical fields
-                     will be right aligned and formated.
- 
+<h3>Tablify examples</h3>
+
+<blockquote>
+<pre>
+{tablify nice cellseparator='#'}Item#Quantity
+Orange#123452
+Banana#42432
+Mango#1723{/tablify}
+
+{tablify nice cellseparator='#'}{fields}text#num{/fields}Item#Quantity
+Orange#123452
+Banana#42432
+Mango#1723{/tablify}
 </pre>
+</blockquote>
