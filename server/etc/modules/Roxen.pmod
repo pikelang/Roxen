@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.94 2001/06/18 15:23:07 mast Exp $
+// $Id: Roxen.pmod,v 1.95 2001/06/19 00:13:56 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -761,8 +761,10 @@ RXML.Parser get_rxml_parser (RequestID id, void|RXML.Type type, void|int make_p_
 //! with an @[RXML.PCode] object to collect p-code during the
 //! evaluation.
 {
-  return id->conf->rxml_tag_set->get_parser (
+  RXML.Parser parser = id->conf->rxml_tag_set->get_parser (
     type || id->conf->default_content_type, id, make_p_code);
+  parser->recover_errors = 1;
+  return parser;
 }
 
 static int(0..0) return_zero() {return 0;}
