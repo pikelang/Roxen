@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.108 1998/03/02 04:30:36 neotron Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.109 1998/03/02 18:50:26 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -587,6 +587,8 @@ private void write_to_log( string host, string rest, string oh, function fun )
   if(!host) host=oh;
   if(!stringp(host))
     host = "error:no_host";
+  else
+    host = (host/" ")[0];	// In case it's an IP we don't want the port.
   if(fun) fun(replace(rest, "$host", host));
 }
 
@@ -646,22 +648,22 @@ public void log(mapping file, object request_id)
 		 "$referer", "$user_agent", "$user", "$user_id",
 	       }), ({
 		 (string)request_id->remoteaddr,
-		   host_ip_to_int(request_id->remoteaddr),
-		   cern_http_date(time(1)),
-		   unsigned_to_bin(time(1)),
-		   (string)request_id->method,
-		   http_encode_string((string)request_id->not_query),
-		   (string)request_id->prot,
-		   (string)(file->error||200),
-		   unsigned_short_to_bin(file->error||200),
-		   (string)(file->len>=0?file->len:"?"),
-		   unsigned_to_bin(file->len),
-		   (string)
-		   (sizeof(request_id->referer||({}))?request_id->referer[0]:"-"),
-		   http_encode_string(sizeof(request_id->client||({}))?request_id->client*" ":"-"),
-		   extract_user(request_id->realauth),
-		   (string)request_id->cookies->RoxenUserID,
-		 }));
+		 host_ip_to_int(request_id->remoteaddr),
+		 cern_http_date(time(1)),
+		 unsigned_to_bin(time(1)),
+		 (string)request_id->method,
+		 http_encode_string((string)request_id->not_query),
+		 (string)request_id->prot,
+		 (string)(file->error||200),
+		 unsigned_short_to_bin(file->error||200),
+		 (string)(file->len>=0?file->len:"?"),
+		 unsigned_to_bin(file->len),
+		 (string)
+		 (sizeof(request_id->referer||({}))?request_id->referer[0]:"-"),
+		 http_encode_string(sizeof(request_id->client||({}))?request_id->client*" ":"-"),
+		 extract_user(request_id->realauth),
+		 (string)request_id->cookies->RoxenUserID,
+	       }));
   
   if(search(form, "host") != -1)
     roxen->ip_to_host(request_id->remoteaddr, write_to_log, form,
