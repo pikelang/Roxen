@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: cache.pike,v 1.50 2000/04/30 18:58:43 nilsson Exp $
+// $Id: cache.pike,v 1.51 2000/05/14 23:43:17 nilsson Exp $
 
 #pragma strict_types
 
@@ -44,6 +44,12 @@
 mapping(string:mapping(string:array)) cache;
 mapping(string:int) hits=([]), all=([]);
 
+void flush_memory_cache() {
+  cache=([]);
+  hits=([]);
+  all=([]);
+}
+
 // Calculates the size of an entry, though it isn't very good at it.
 constant svalsize = 4*4; // if pointers are 4 bytes..
 int get_size(mixed x, void|int iter)
@@ -78,6 +84,7 @@ int get_size(mixed x, void|int iter)
 // Expire a whole cache
 void cache_expire(string in)
 {
+  CACHE_WERR(sprintf("cache_expire(\"%s\")", in));
   m_delete(cache, in);
 }
 
@@ -202,14 +209,6 @@ mixed cache_set(string in, string what, mixed to, int|void tm)
   if(tm) cache[in][what][TIMEOUT] = t + tm;
   cache[in][what][TIMESTAMP] = t;
   return to;
-}
-
-// Remove an entire cache.
-void cache_clear(string in)
-{
-  CACHE_WERR(sprintf("cache_clear(\"%s\")", in));
-  if(cache[in])
-    m_delete(cache,in);
 }
 
 // Clean the cache.
