@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 2000, Roxen IS.
-// $Id: basic_defvar.pike,v 1.25 2001/02/23 03:54:34 mast Exp $
+// $Id: basic_defvar.pike,v 1.26 2001/02/23 07:06:12 per Exp $
 // (string:Variable.Variable) 
 mapping(string:Variable.Variable)  variables=([]);
 //! Please do not modify this list directly, instead use 
@@ -236,6 +236,7 @@ mixed query(string|void var, int|void ok)
       return variables[var]->query();
     else if(!ok && var[0] != '_')
       error("Querying undefined variable %O in %O\n", var, this_object());
+    return ([])[0];
   }
   return variables;
 }
