@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.182 2000/07/04 03:47:03 per Exp $
+// $Id: roxenlib.pike,v 1.183 2000/07/13 12:55:27 nilsson Exp $
 
 //#pragma strict_types
 
@@ -1046,7 +1046,11 @@ string strftime(string fmt, int t)
       break;
     case 'V':	// ISO week number of the year as a decimal number [01,53]; 0-prefix
 #if constant(Calendar.ISO)
+#if constant(Calendar.II)
+      res += sprintf("%02d", Calendar.ISO.Second(t)->week_no());
+#else
       res += sprintf("%02d", Calendar.ISO.Second(t)->minute()->hour()->day()->week()->number());
+#endif
 #endif
       break;
     case 'W':	// Week number of year as a decimal number [00,53],
@@ -1528,8 +1532,13 @@ string tagtime(int t, mapping(string:string) m, RequestID id,
 			   language(lang, sp||"month",id));
 #if constant(Calendar.ISO)
      case "week":
-      return number2string(Calendar.ISO.Second(t)->minute()->hour()->day()->week()->number(),m,
-                           language(lang, sp||"number",id));
+      return number2string(
+#if constant(Calendar.II)
+			   Calendar.ISO.Second(t)->week_no(),
+#else
+			   Calendar.ISO.Second(t)->minute()->hour()->day()->week()->number(),
+#endif
+			   m, language(lang, sp||"number",id));
 #endif
      case "beat":
        //FIXME This should be done inside Calendar.
