@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.55 2003/10/27 10:06:58 anders Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.56 2003/11/17 12:55:24 jonasw Exp $";
 
 #include <module.h>
 #include <request_trace.h>
@@ -241,7 +241,8 @@ static private
 string container_js_popup(string name, mapping args, string contents, object id)
 {
   // Link arguments.
-  mapping largs = copy_value(args - (< "args-variable", "label", "props", "event",
+  mapping largs = copy_value(args - (< "args-variable", "label", "props",
+				       "event", "name-variable",
 				       "ox", "oy", "op" >));
   // Compatibility. The arguments 'ox', 'oy' and 'op' are depricated.
   if(!args->props && (args->ox || args->oy || args->op))
@@ -290,6 +291,8 @@ string container_js_popup(string name, mapping args, string contents, object id)
   
   if(args["args-variable"])
     id->variables[args["args-variable"]] = make_args_unquoted(largs);
+  if(args["name-variable"])
+    id->variables[args["name-variable"]] = popupname;
 
   if(args["event-variable"])
     id->variables[args["event-variable"]] = largs[event];
@@ -595,6 +598,12 @@ props_arg+
 
 <gtext ::='&form.popup-args;'>popup</gtext>
 </ex-box>
+</attr>
+
+<attr name='name-variable' value='RXML form variable name'>
+  <p>The name of the created popup item menu will be stored in this
+     variable. This is useful if you want to write custom JavaScript
+     code to refer to the popup menu.</p>
 </attr>
 
 <attr name='event-variable' value='RXML form variable name'>
