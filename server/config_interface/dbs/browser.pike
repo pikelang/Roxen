@@ -785,7 +785,7 @@ mapping|string parse( RequestID id )
       break;
       
     default:
-      foreach( indices( actions ), string x )
+      foreach( sort(indices( actions )), string x )
 	ADD_ACTION( x );
       break;
   }
