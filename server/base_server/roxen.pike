@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.697 2001/08/15 15:37:20 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.698 2001/08/15 17:44:19 per Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -3706,12 +3706,12 @@ array(Image.Layer) load_layers(string f, RequestID id, mapping|void opt)
     {
       file=Stdio.File();
       if(!file->open(f,"r") || !(data=file->read()))
-#ifdef THREADS
+// #ifdef THREADS
         catch
         {
           data = Protocols.HTTP.get_url_nice( f )[1];
         };
-#endif
+// #endif
       if( !data )
 	return 0;
     }
