@@ -125,20 +125,67 @@ void get_context( string ident, string host, object id )
   id->misc->config_settings->host = host;
 }
 
-constant possible_permissions = 
-({
-  "Everything",
-  "View Settings",
-  "Edit Users",
-  "Edit Global Variables",
-  "Edit Site Variables",
-  "Edit Module Variables",
-  "Actions",
-  "Restart",
-  "Shutdown",
-  "Create Site",
-  "Add Module",
-});
+array possible_permissions = ({ });
+
+mapping permission_translations = ([ ]);
+
+void add_permission( string perm, mapping translations )
+{
+  possible_permissions += ({ perm });
+  if( !translations )
+    translations = ([]);
+  if( !translations->standard )
+    translations->standard = perm;
+  permission_translations[ perm ] = translations;
+}
+
+string translate_perm( string perm, object id )
+{
+  return (permission_translations[ perm ][ id->misc->cf_locale ] ||
+          permission_translations[ perm ]->standard );
+}
+
+void create()
+{
+  add_permission( "Everything",
+                  ([ "svenska":"Alla rättingheter",
+                     "standard":"All permissions", ]) );
+  add_permission( "View Settings",
+                  ([
+                    "svenska":"Läsa inställingar",
+                  ]));
+  add_permission( "Edit Users", 
+                  ([
+                    "svenska":"Editera användare",
+                  ]) );
+  add_permission( "Edit Global Variables",
+                  ([
+                    "svenska":"Editera globala inställningar"
+                  ]));
+  add_permission( "Edit Module Variables",
+                  ([
+                    "svenska":"Editera modulinställingar"
+                  ]));
+  add_permission( "Actions",
+                  ([
+                    "svenska":"Funktioner"
+                  ]));
+  add_permission( "Restart",
+                  ([
+                    "svenska":"Starta om"
+                  ]));
+  add_permission( "Shutdown",
+                  ([
+                    "svenska":"Stäng av"
+                  ]));
+  add_permission( "Create Site",  ([
+                    "svenska":"Skapa ny site"
+                  ]));
+  add_permission( "Add Module",  ([
+                    "svenska":"Addera moduler"
+                  ]));
+}
+
 
 class User
 {
@@ -181,12 +228,20 @@ class User
        default:
          if( sscanf( v, "add_%s.x", v ) )
          {
-           werror("add permission "+v+"\n");
+           report_notice( "Permission "+v+" added to "+real_name+
+                          " ("+name+") by "+
+                          id->misc->config_user->real_name+
+                          " ("+name+") from "+
+                          id->misc->remote_config_host+"\n");
            permissions[v] = 1;
          }
          else if( sscanf( v, "remove_%s.x", v ) )
          {
-           werror("remove permission "+v+"\n");
+           report_notice( "Permission "+v+" removed from "+real_name+
+                          " ("+name+") by "+
+                          id->misc->config_user->real_name+
+                          " ("+name+") from "+
+                          id->misc->remote_config_host+"\n");
            permissions[v] = 0;
          }
          save();
@@ -208,20 +263,25 @@ class User
 
     foreach( possible_permissions, string perm )
     {
+      int dim;
+      if( perm != "Everything" && permissions->Everything )
+        dim = 1;
       if( permissions[ perm ] )
       {
-        string s = parse_rxml( "<gbutton-url "
+        string s = parse_rxml( "<gbutton-url "+(dim?"dim":"")+
                                "    icon_src=/standard/img/selected.gif "
-                               "    width=180>"+perm+"</gbutton-url>", id );
+                               "    width=180>"+translate_perm(perm,id)+
+                               "</gbutton-url>", id );
 
         form += sprintf( "<input border=0 type=image name='PPPremove_%s'"
                          " src='%s'>\n", perm, s );
       }
       else
       {
-        string s = parse_rxml( "<gbutton-url "
+        string s = parse_rxml( "<gbutton-url "+(dim?"dim":"")+
                                "    icon_src=/standard/img/unselected.gif "
-                               "    width=180>"+perm+"</gbutton-url>", id );
+                               "    width=180>"+translate_perm(perm,id)+
+                               "</gbutton-url>", id );
         form += sprintf( "<input border=0 type=image name='PPPadd_%s'"
                          " src='%s'>\n", perm, s );
       }
@@ -265,13 +325,22 @@ mapping admin_users = ([]);
 
 User find_admin_user( string s )
 {
+  if( admin_users[ s ] )
+    return admin_users[ s ];
   if( settings->get( s+"_uid" ) )
-    return User( s );
+    return admin_users[ s ] = User( s );
 }
 
 User create_admin_user( string s )
 {
   return User( s )->save();
+}
+
+void delete_admin_user( string s )
+{
+  m_delete( admin_users,  s );
+  settings->delete( s );
+  settings->delete( s+"_uid" );
 }
 
 array(string) list_admin_users()
@@ -309,7 +378,7 @@ array auth( array auth, RequestID id )
     q->save();
   }
 
-  if( admin_users[ u ] = find_admin_user( u ) )
+  if( find_admin_user( u ) )
   {
     if( !crypt( p, admin_users[ u ]->password ) )
     {
@@ -318,7 +387,9 @@ array auth( array auth, RequestID id )
     }
     id->variables->config_user_uid = u;
     id->variables->config_user_name = admin_users[u]->real_name;
+    id->misc->remote_config_host = host;
     id->misc->create_new_config_user = create_admin_user;
+    id->misc->delete_old_config_user = delete_admin_user;
     id->misc->list_config_users = list_admin_users;
     id->misc->get_config_user = find_admin_user;
     id->misc->config_user = admin_users[ u ];
