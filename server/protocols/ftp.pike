@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.54 2001/03/13 19:48:22 mast Exp $
+ * $Id: ftp.pike,v 2.55 2001/03/13 19:50:41 mast Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -2884,12 +2884,12 @@ class FTPSession
       send(501, ({ sprintf("Bad IPv4 address: '%s'", segments[2]) }));
       return;
     }
-    if (!((int)segemnts[3])) {
+    if (!((int)segments[3])) {
       send(501, ({ sprintf("Bad port number: '%s'", segments[3]) }));
       return;
     }
-    dataport_addr = segemnts[2];
-    dataport_port = (int)segemnts[3];
+    dataport_addr = segments[2];
+    dataport_port = (int)segments[3];
 
     if (pasv_port) {
       destruct(pasv_port);
