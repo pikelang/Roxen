@@ -6,7 +6,7 @@
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: swedish.pike,v 1.14 2000/01/31 16:44:54 nilsson Exp $";
+constant cvs_version = "$Id: swedish.pike,v 1.15 2000/09/08 22:46:24 nilsson Exp $";
 constant _id = ({ "sv", "swedish", "svenska" });
 constant _aliases = ({ "sv", "se", "sve", "swe", "swedish", "svenska" });
 
@@ -19,27 +19,28 @@ constant days = ({
   "söndag","måndag","tisdag","onsdag", "torsdag","fredag",
   "lördag" });
 
-constant languages=ISO639 + ([
-  "ca":"katalanska",
-  "cs":"tjeckiska",
-  "du":"nederländska",
-  "fi":"finska",
-  "fr":"franska",
-  "de":"tyska",
-  "en":"engelska",
-  "es":"spanska",
-  "hr":"kroatiska",
-  "hu":"ungerska",
-  "it":"italienska",
-  "jp":"japanska",
-  "mi":"maori",
-  "no":"norska",
-  "pl":"polska",
-  "pt":"portugisiska",
-  "ru":"ryska",
-  "si":"slovenska",
-  "sr":"serbiska",
-  "sv":"svenska"
+constant languages=([
+  "cat":"katalanska",
+  "ces":"tjeckiska",
+  "nld":"nederländska",
+  "fin":"finska",
+  "fra":"franska",
+  "deu":"tyska",
+  "eng":"engelska",
+  "spa":"spanska",
+  "hrv":"kroatiska",
+  "hun":"ungerska",
+  "ita":"italienska",
+  "jpn":"japanska",
+  "mri":"maori",
+  "nor":"norska",
+  "pol":"polska",
+  "por":"portugisiska",
+  "rus":"ryska",
+  "sin":"slovenska",
+  "slk":"slovakiska",
+  "srp":"serbiska",
+  "swe":"svenska"
 ]);
 
 string ordered(int i)

@@ -18,32 +18,32 @@ constant required_charset = "iso-8859-2";
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: czech.pike,v 1.13 2000/07/11 08:15:29 hop Exp $";
+constant cvs_version = "$Id: czech.pike,v 1.14 2000/09/08 22:46:24 nilsson Exp $";
 constant _id = ({ "cs", "czech", "" });
 constant _aliases = ({ "cs", "cz", "cze", "ces", "czech" });
 
-constant languages=ISO639 + ([
-  "ca":"katalánsky",
-  "cs":"èesky",
-  "du":"holandsky",
-  "fi":"finsky",
-  "fr":"francouzsky",
-  "de":"nìmecky",
-  "en":"anglicky",
-  "es":"¹panìlsky",
-  "hr":"chorvatsky",
-  "hu":"maïarsky",
-  "it":"italsky",
-  "jp":"japonsky",
-  "mi":"maorsky",
-  "no":"norsky",
-  "pl":"polsky",
-  "pt":"portugalsky",
-  "ru":"rusky",
-  "si":"slovinsky",
-  "sk":"slovensky",
-  "sr":"srbsky",
-  "sv":"¹védsky"
+constant languages=([
+  "cat":"katalánsky",
+  "ces":"èesky",
+  "nld":"holandsky",
+  "fin":"finsky",
+  "fra":"francouzsky",
+  "deu":"nìmecky",
+  "eng":"anglicky",
+  "spa":"¹panìlsky",
+  "hrv":"chorvatsky",
+  "hun":"maïarsky",
+  "ita":"italsky",
+  "jpn":"japonsky",
+  "mri":"maorsky",
+  "nor":"norsky",
+  "pol":"polsky",
+  "por":"portugalsky",
+  "rus":"rusky",
+  "sin":"slovinsky",
+  "slk":"slovensky",
+  "srn":"srbsky",
+  "swe":"¹védsky"
 ]);
 
 
