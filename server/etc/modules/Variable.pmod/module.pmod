@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.54 2001/06/16 15:48:40 nilsson Exp $
+// $Id: module.pmod,v 1.55 2001/06/18 06:00:58 nilsson Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -927,6 +927,12 @@ class DatabaseChoice
   array get_choice_list( )
   {
     return ({ " none" }) + sort(DBManager.list( config() ));
+  }
+
+  static void create(string default_value, void|int flags,
+		     void|LocaleString std_name, void|LocaleString std_doc)
+  {
+    ::create( default_value, ({}), flags, std_name, std_doc );
   }
 }
 
