@@ -127,12 +127,12 @@ string|mapping parse( RequestID id )
         else
           group = q->group;
 	
-	string button = "<cset variable='var.url'>"
+	string button = "<set variable='var.url'>"
 	  "<gbutton-url width='400' "
 	  "             icon_src='&usr.next;' "
 	  "             align_icon='right'>"
 	  + Roxen.html_encode_string(name) +
-	  "</gbutton-url></cset>"
+	  "</gbutton-url></set>"
 	  "<input border='0' type='image' src='&var.url;' name='"+st+"' />\n";
 	
 	//  Build a sort identifier on the form "999|Group name|template name"

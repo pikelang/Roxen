@@ -1,5 +1,5 @@
 <!-- -*- html -*- -->
-<!-- $Id: template,v 1.130 2004/06/06 11:03:51 _cvs_stephen Exp $ -->
+<!-- $Id: template,v 1.131 2005/02/12 23:13:34 _cvs_dirix Exp $ -->
 
 <define tag='cfg-variables'>
   <set variable='form.__redirect' value='1' />
@@ -48,7 +48,7 @@
  <table ::="&usr.content-toptableargs:none;" width="100%">
    <tr>
      <td ::="&usr.left-tableargs:none;">
-       <cset variable="var.left-content">&var.leftside:none;</cset>
+       <set variable="var.left-content" value="&var.leftside:none;" />
        <if variable="var.left-content is ?*">
 	 <set variable="var.leftside-padwidth" value="&usr.leftside-padwidth;"/>
        </if>
@@ -155,7 +155,7 @@
    <submit-gbutton2 preparse="1" name="next" width="&usr.gbutton-width;" align="center" icon_src="&usr.next;" align_icon="right"> Next </submit-gbutton2>
 </define>
 
-<define container="content"><cset quote="none" variable="var.content"><contents/></cset></define>
+<define container="content" scope=rx><define variable="var.content" preparse><eval>&rx.contents:none;</eval></define></define>
 
 <define container="tmpl">
 <gauge variable='var.time-spent' resultonly='yes'><nooutput>
