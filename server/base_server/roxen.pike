@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.311 1999/03/03 11:37:57 peter Exp $
+ * $Id: roxen.pike,v 1.312 1999/03/11 03:45:17 mast Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -8,7 +8,7 @@
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version = "$Id: roxen.pike,v 1.311 1999/03/03 11:37:57 peter Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.312 1999/03/11 03:45:17 mast Exp $";
 
 
 // Some headerfiles
@@ -316,7 +316,6 @@ function handle = unthreaded_handle;
  * THREADS code starts here
  */
 #ifdef THREADS
-#define THREAD_DEBUG
 
 object do_thread_create(string id, function f, mixed ... args)
 {
@@ -1343,6 +1342,7 @@ int set_u_and_gid()
 {
 #ifndef __NT__
   string u, g;
+  int uid, gid;
   array pw;
   
   u=QUERY(User);
@@ -1351,50 +1351,104 @@ int set_u_and_gid()
   {
     if(getuid())
     {
-      perror("It is not possible to change uid and gid if the server\n"
-             "is not started as root.\n");
+      report_error ("It is only possible to change uid and gid if the server "
+		    "is running as root.\n");
     } else {
-      if(pw = getpwnam(u))
-      {
-	u = (string)pw[2];
-	if(!g) g = (string)pw[3];
-      } else
-	pw = getpwuid((int)u);
-#if efun(initgroups)
+      if (g) {
+#if constant(getgrnam)
+	pw = getgrnam (g);
+	if (!pw)
+	  if (sscanf (g, "%d", gid)) pw = getgrgid (gid), g = (string) gid;
+	  else report_error ("Couldn't resolve group " + g + ".\n"), g = 0;
+	if (pw) g = pw[0], gid = pw[2];
+#else
+	if (!sscanf (g, "%d", gid))
+	  report_warning ("Can't resolve " + g + " to gid on this system; "
+			  "numeric gid required.\n");
+#endif
+      }
+
+      pw = getpwnam (u);
+      if (!pw)
+	if (sscanf (u, "%d", uid)) pw = getpwuid (uid), u = (string) uid;
+	else {
+	  report_error ("Couldn't resolve user " + u + ".\n");
+	  return 0;
+	}
+      if (pw) {
+	u = pw[0], uid = pw[2];
+	if (!g) gid = pw[3];
+      }
+#if constant(initgroups)
       catch {
-	if(pw)
-	  initgroups(pw[0], (int)g);
+	initgroups(pw[0], gid);
 	// Doesn't always work - David.
       };
 #endif
-#if efun(setuid)
-      if(QUERY(permanent_uid))
-      {
-#if efun(setgid)
-	setgid((int)g);
+
+      // FIXME: Need more Privs paranoia here.
+#ifdef THREADS
+      object mutex_key;
+      catch { mutex_key = euid_egid_lock->lock(); };
 #endif
-	setuid((int)u);
-	report_notice("Setting UID permanently to "+u+" and GID to "+g+"\n");
-      } else {
+
+#if constant(seteuid)
+      if (geteuid() != getuid()) seteuid (getuid());
 #endif
-#if efun(setegid) && defined(SET_EFFECTIVE)
-	setegid((int)g);
+
+      string permanently = "";
+      if (
+#ifdef SET_EFFECTIVE
+	QUERY(permanent_uid)
 #else
-	setgid((int)g);
+	1
 #endif
-#if efun(seteuid) && defined(SET_EFFECTIVE)
-	seteuid((int)u);
+      ) {
+	permanently = " permanently";
+#if constant(setuid)
+	if (g) {
+#  if constant(setgid)
+	  setgid(gid);
+	  if (getgid() != gid) report_error ("Failed to set gid.\n"), g = 0;
+#  else
+	  report_warning ("Setting gid not supported on this system.\n");
+	  g = 0;
+#  endif
+	}
+	setuid(uid);
+	if (getuid() != uid) report_error ("Failed to set uid.\n"), u = 0;
 #else
-	setuid((int)u);
+	report_warning ("Setting uid not supported on this system.\n");
+	u = g = 0;
 #endif
-	report_notice("Setting UID to "+u+" and GID to "+g+"\n");
-	return 1;
-#if efun(setuid)
       }
+      else {
+#if constant(seteuid)
+	if (g) {
+#  if constant(setegid)
+	  setegid(gid);
+	  if (getegid() != gid) report_error ("Failed to set effective gid.\n"), g = 0;
+#  else
+	  report_warning ("Setting effective gid not supported on this system.\n");
+	  g = 0;
+#  endif
+	}
+	seteuid(uid);
+	if (geteuid() != uid) report_error ("Failed to set effective uid.\n"), u = 0;
+#else
+	report_warning ("Setting effective uid not supported on this system.\n");
+	u = g = 0;
 #endif
+      }
+
+      if (u) report_notice("Setting uid to "+uid+" ("+u+")"+
+			   (g ? " and gid to "+gid+" ("+g+")" : "")+
+			   permanently+".\n");
+      return !!u;
     }
   }
 #endif
+  return 0;
 }
 
 static mapping __vars = ([ ]);
