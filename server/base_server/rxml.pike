@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.22 1999/08/16 17:35:36 nilsson Exp $
+ * $Id: rxml.pike,v 1.23 1999/08/16 18:56:40 wellhard Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -815,6 +815,8 @@ string tag_foreach(string t, mapping args, string c, RequestID id)
 {
   string v = args->variable;
   array what;
+  if(!args->in)
+    return "";  // FIXME: Some kind of usage message would be nice.
   if(args->variables)
     what = Array.map(args->in/"," - ({""}),
 		     lambda(string name, mapping v) {
