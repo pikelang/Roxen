@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.143 2000/02/20 17:41:34 nilsson Exp $
+// $Id: rxml.pike,v 1.144 2000/02/20 19:20:34 nilsson Exp $
 
 inherit "roxenlib";
 inherit "rxmlhelp";
@@ -858,12 +858,15 @@ class UserTag {
 
   string c;
   mapping defaults;
+  string scope;
 
-  void create(string _name, string _c, mapping _defaults, int tag) {
+  void create(string _name, string _c, mapping _defaults,
+	      int tag, void|string scope_name) {
     name=_name;
     c=_c;
     defaults=_defaults;
     flags|=RXML.FLAG_NONCONTAINER*tag;
+    scope=scope_name;
   }
 
   class Frame {
@@ -876,9 +879,8 @@ class UserTag {
     array do_return(RequestID id) {
       mapping nargs=defaults+args;
       id->misc->last_tag_args = nargs;
-      scope_name=args->scope||name;
+      scope_name=scope||name;
       vars = nargs;
-      m_delete(args, "scope");
 
       if(!(RXML.FLAG_NONCONTAINER&flags) && args->trimwhites)
 	content=String.trim_all_whites(content);
@@ -929,13 +931,12 @@ class TagDefine {
 
       if (n=args->tag||args->container) {
 	n = lower_case(n);
-	int container=0;
-	if(args->tag)
+	int tag=0;
+	if(args->tag) {
+	  tag=1;
 	  m_delete(args, "tag");
-	else {
-	  container=1;
+	} else
 	  m_delete(args, "container");
-	}
 
 	mapping defaults=([]);
 
@@ -963,7 +964,8 @@ class TagDefine {
 	if(parse_html_compat) content = replace( content, indices(args), values(args) );
 #endif
 
-	RXML.get_context()->add_runtime_tag(UserTag(n, content, defaults, !container));
+	RXML.get_context()->add_runtime_tag(UserTag(n, content, defaults,
+						    tag, args->scope));
 	return 0;
       }
 
@@ -2002,7 +2004,7 @@ constant tagdoc=([
 </attr>
 
 <attr name=trimwhites>
- Trim all white space characters fromt the begining and the end of the contents.
+ Trim all white space characters from the begining and the end of the contents.
 </attr>
 
  When defining a container the tag <tag>contents</tag> can be used to
