@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.217 2000/08/08 12:27:49 kuntri Exp $
+// $Id: rxml.pike,v 1.218 2000/08/11 09:51:17 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -1338,7 +1338,7 @@ class TagEmit {
       scope_name=args->scope||args->source;
       res=plugin->get_dataset(args, id);
       if(arrayp(res)) {
-	if(args->sort)
+	if(args->sort && !plugin->sort)
 	{
 	  array(string) order = (args->sort - " ")/"," - ({ "" });
 	  res = Array.sort_array( res,
