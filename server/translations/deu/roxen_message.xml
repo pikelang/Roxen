@@ -328,22 +328,19 @@ string setting_uid_gid(int uid, int gid, string uname, string gname) {
 </str>
 
 <str id="58">
-<new/>
 <o>Syntax error in security patterns: Cannot find the user database ''
 </o>
-<t></t>
+<t>Syntaxfehler in Security-Muster: Kann nicht die Benuterdatenbank finden ''</t>
 </str>
 
 <str id="59">
-<new/>
 <o>Syntax error in security patterns: Cannot find the auth method ''
 </o>
-<t></t>
+<t>Syntaxfehler in Security-Muster: Kann nicht die Auth-Methode finden ''</t>
 </str>
 
 <str id="60">
-<new/>
 <o>Syntax error in security patterns: Expected 'allow' or 'deny'
 </o>
-<t></t>
+<t>Syntaxfehler in Security-Muster: 'allow' oder 'deny' erwartet</t>
 </str>
