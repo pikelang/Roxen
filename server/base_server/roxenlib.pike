@@ -1,6 +1,6 @@
 inherit "http";
 
-// static string _cvs_version = "$Id: roxenlib.pike,v 1.47 1998/02/10 18:36:09 per Exp $";
+// static string _cvs_version = "$Id: roxenlib.pike,v 1.48 1998/02/11 07:10:18 mast Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -826,7 +826,7 @@ object get_module (string modname)
 // one exists.
 {
   string cname, mname;
-  int mid = -1;
+  int mid = 0;
 
   if (sscanf (modname, "%s/%s", cname, mname) != 2 ||
       !sizeof (cname) || !sizeof(mname)) return 0;
@@ -841,6 +841,7 @@ object get_module (string modname)
       }
       else if (moddata->enabled) return moddata->enabled;
       if (moddata->master) return moddata->master;
+      return 0;
     }
   }
 
@@ -849,13 +850,16 @@ object get_module (string modname)
 
 string get_modname (object module)
 // Returns a string uniquely identifying the given module on the form
-// `<config name>/<module short name>#<copy>', where `#<copy>' only is
-// added for modules with copies.
+// `<config name>/<module short name>#<copy>', where `<copy>' is 0 for
+// modules with copies. Note that this function uses structures that
+// aren't consistent at all times, most notably when called from
+// start() in a module.
 {
   if (!module) return 0;
 
-  foreach (roxen->configurations, object conf)
-    foreach (indices (conf->modules), string mname) {
+  foreach (roxen->configurations, object conf) {
+    string mname = conf->otomod[module];
+    if (mname) {
       object moddata = conf->modules[mname];
       if (moddata->copies)
 	for (int i = 0; i < sizeof (moddata->copies); i++) {
@@ -863,8 +867,9 @@ string get_modname (object module)
 	    return conf->name + "/" + mname + "#" + i;
 	}
       else if (moddata->master == module || moddata->enabled == module)
-	return conf->name + "/" + mname;
+	return conf->name + "/" + mname + "#0";
     }
+  }
 
   return 0;
 }
