@@ -85,8 +85,7 @@ string selected_item( string q, roxen.Configuration c, RequestID id, string modu
                      "/\">"+replace(data->name, " ", "&nbsp;")+"</a><br>\n");
            else 
              pre += ("\n<img src=\"/internal-roxen-next\" width=12 height=12>"
-		     "<a href=\""+qurl+data->sname+
-                     "/\"><b>"+replace(data->name, " ", "&nbsp;")+"</b></a><br>\n");
+		     "<b>" + replace(data->name, " ", "&nbsp;") + "</b><br>\n");
          }
          break;
       }
