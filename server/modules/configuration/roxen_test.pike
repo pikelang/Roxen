@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.21 2001/04/07 23:46:14 nilsson Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.22 2001/04/21 18:30:43 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Roxen self test module";
@@ -46,6 +46,8 @@ RequestID get_id()
   id->method="GET";
   id->remoteaddr="127.0.0.1";
   NOCACHE();
+
+  id->misc->defines[" _stat"] = conf->stat_file("/index.html", id);
   return id;
 }
 
@@ -212,6 +214,12 @@ void xml_test(string t, mapping args, string c) {
 			       case "variable":
 				 id->variables[m->name] = m->value || m->name;
 				 break;
+			       case "rvariable":
+				 if(m->split && m->value)
+				   id->real_variables[m->name] = m->value / m->split;
+				 else
+				   id->real_variables[m->name] = ({ m->value || m->name });
+				 break;
 			       case "cookies":
 				 id->cookies[m->name] = m->value || "";
 				 break;
@@ -223,6 +231,18 @@ void xml_test(string t, mapping args, string c) {
 				 break;
 			       case "client_var":
 				 id->client_var[m->name] = m->value || "";
+				 break;
+			       case "misc":
+				 id->misc[m->name] = m->value || "1";
+				 break;
+			       case "define":
+				 id->misc->defines[m->name] = m->value || 1;
+				 break;
+			       case "not_query":
+				 id->not_query = m->value;
+				 break;
+			       case "query":
+				 id->query = m->value;
 				 break;
 			     }
 			   },
