@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.162 1999/05/19 02:57:18 peter Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.163 1999/05/19 09:11:46 peter Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 array register_module()
 {
-  return ({ MODULE_PARSER|MODULE_LOCATION,
+  return ({ MODULE_PARSER,
 	    "Graphics text",
 	    "Generates graphical texts.<p>"
 	    "See <tt>&lt;gtext help&gt;&lt;/gtext&gt;</tt> for "
@@ -52,11 +52,7 @@ void create()
 	 " whole document. This can be overrided with maxlen=... in the "
 	 "tag.");
 
-  defvar("location", "/gtext/", "Mountpoint", TYPE_LOCATION|VAR_MORE,
-	 "The URL-prefix for the graphic characters.");
-
-  defvar("gif", 0, "Append .fmt (gif, jpeg etc) to all images",
-	 TYPE_FLAG|VAR_MORE,
+  defvar("gif", 0, "Append .fmt (gif, jpeg etc) to all images", TYPE_FLAG|VAR_MORE,
 	 "Append .gif, .png, .gif etc to all images made by gtext. "
          "Normally this will only waste bandwidth");
 }
@@ -639,8 +635,8 @@ mixed draw_callback(mapping args, object id)
       array (int) bgcolor = parse_color(args->bg);
       object alpha;
       alpha = img->distancesq( @bgcolor );
-      alpha->gamma( 20 );
-      return ([ "img":img, "alpha":alpha ]);
+      alpha->gamma( 8 );
+       return ([ "img":img, "alpha":alpha ]);
     }
     return img;
   }
@@ -695,12 +691,9 @@ mixed draw_callback(mapping args, object id)
 }
 
 
-array stat_file() { return 0; }
-array find_dir() { return 0; }
-
-mapping find_file(string f, object rid)
+mapping find_internal(string f, object rid)
 {
-  if( query("gif") && f[-4]=='.') // Remove .ext
+  if( strlen(f)>4 && query("gif") && f[-4]=='.') // Remove .ext
     f = f[..strlen(f)-5];
   return image_cache->http_file_answer( f, rid );
 }
@@ -796,9 +789,10 @@ string tag_gtext_id(string t, mapping arg, string ctn,
   arg->text = ctn;
 
   if(!short)
-    return QUERY(location)+image_cache->store( arg, id );
+    return query_internal_location()+image_cache->store( arg, id )+
+      (query("gif")?".foo":"");
   else
-    return image_cache->store( arg, id );
+    return image_cache->store( arg, id )+(query("gif")?".foo":"");
 }
 
 string tag_graphicstext(string t, mapping arg, string contents,
@@ -830,7 +824,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
   
 
   string gif="";
-  if(query("gif")) gif=".gif";
+  if(query("gif")) gif="."+(arg->format?arg->format[..2]:"gif");
   
 #if efun(_static_modules)
   contents = parse_rxml(contents, id, foo, defines);
@@ -892,14 +886,14 @@ string tag_graphicstext(string t, mapping arg, string contents,
   for(i=2; i<10; i++) 
     if(arg[(string)i])
     {
-      arg->scale = 1.0 / ((float)i*0.6);
+      arg->scale = (string)(1.0 / ((float)i*0.6));
       m_delete(arg, (string)i);
       break;
     }
 
   // Support for <gh1> like things.
   if(sscanf(t, "%s%d", t, i)==2)
-    if(i > 1) arg->scale = 1.0 / ((float)i*0.6);
+    if(i > 1) arg->scale = (string)(1.0 / ((float)i*0.6));
 
   string na = arg->name, al=arg->align;
   m_delete(arg, "name"); m_delete(arg, "align");
@@ -939,7 +933,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
       mapping tag = 
       ([ 
         "alt":(arg->alt||word),
-        "src":QUERY(location)+fn+gif,
+        "src":query_internal_location()+fn+gif,
       ]);
       if( size )
       {
@@ -982,11 +976,11 @@ string tag_graphicstext(string t, mapping arg, string contents,
     if(!defines->magic_java) 
       res = magic_javascript_header(id);
     defines->magic_java="yes";
-
+    if(!size) size = ([ ]);
     return replace(res +
 		   magic_image(url||"", size->xsize, size->ysize, "i"+(defines->mi++),
-			       QUERY(location)+num+"/"+gif,
-			       QUERY(location)+num2+"/"+gif,
+			       query_internal_location()+num+gif,
+			       query_internal_location()+num2+gif,
 			       (arg->alt?arg->alt:replace(gt, "\"","'")),
 			       (magic=="magic"?0:magic),
 			       id,input?na||"submit":0,ea,lp),
@@ -995,7 +989,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
   if(input)
     return (pre+"<input type=image name=\""+na+"\" border=0 alt=\""+
 	    (arg->alt?arg->alt:replace(gt,"\"","'"))+
-	    "\" src="+QUERY(location)+num+gif
+	    "\" src="+query_internal_location()+num+gif
 	    +" align="+(al || defalign)+ea+
             (size?(" width="+size->xsize+" height="+size->ysize):"")+">"+
             rest+post);
@@ -1004,7 +998,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
 	  + "<img border=0 alt=\""
 	  + (arg->alt?arg->alt:replace(gt,"\"","'"))
 	  + "\" src=\""
-	  + QUERY(location)+num+gif+"\" "+ea
+	  + query_internal_location()+num+gif+"\" "+ea
 	  + " align="+(al || defalign)
 	  + (size?(" width="+size->xsize+" height="+size->ysize):"")+">"+
           rest+(lp?"</a>":"")+post);
