@@ -1,10 +1,9 @@
-#!/usr/local/bin/pike
+#!NOMODULE
 #define max(i, j) (((i)>(j)) ? (i) : (j))
 #define min(i, j) (((i)<(j)) ? (i) : (j))
 #define abs(arg) ((arg)*(1-2*((arg)<0)))
 
 #define PI 3.14159265358979
-//inherit Stdio;
 
 import Image;
 import Array;
@@ -463,53 +462,3 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
 
 
 }
-
-#ifndef ROXEN
-int main(int argc, string *argv)
-{
-  //write("\nRitar axlarna. Filen sparad som test.ppm\n");
-
-  mapping(string:mixed) diagram_data;
-  diagram_data=(["type":"pie",
-		 "textcolor":({0,255,0}),
-		 "subtype":"box",
-		 "orient":"vert",
-		 "data": 
-		 ({ ({55.5, 40, 30 ,20, 10, 10, 10, 10, 5 })/*,
-		     ({91.2, 101.3, 91.5, 101.7,  -91.0, 101.5}),
-		    ({91.2, 103.3, -91.5, 100.1, 94.3, 95.2 }),
-		    ({93.2, -103.3, 93.5, 103.7, 94.3, -91.2 }) */}),
-		 "fontsize":3,
-		 "axcolor":({0,0,0}),
-		 "bgcolor":0, //({255,255,255}),
-		 "labelcolor":({0,0,0}),
-		 "datacolors":({({0,255,0}),({255,255,0}), ({0,255,255}), ({255,0,255}),({0,255,0}),({255,255,0})  }),
-		 "linewidth":2.2,
-		 "xsize":300,
-		 "ysize":300,
-		 "xnames":0,//({"jan", "feb", "mar", "aprfgh", "j", "jungd", "jul", "aug"//, "sep"
-		 // }),
-		 "labels":({"xstor", "ystor", "xenhet", "yenhet"}),
-		 //"legendfontsize":12,
-		 "legend_texts":({"streck 1", "streck 2", "foo", "bar gazonk foobar illalutta!", "lila", "turkos" }),
-		 "labelsize":3,
-		 "xminvalue":0.1,
-		 "yminvalue":0,
-		 "3Ddepth":10,
-		 "drawtype": "2D",
-		 "tone":0,
-		 "center":9,
-		 "rotate":30
-
-  ]);
-
-  //diagram_data["image"]=image(2,2)->fromppm(read_file("girl.ppm"));
-
-
-  object o=Stdio.File();
-  o->open("test.ppm", "wtc");
-  o->write(create_pie(diagram_data)["image"]->toppm());
-  o->close();
-
-};
-#endif

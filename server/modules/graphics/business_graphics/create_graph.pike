@@ -1,10 +1,9 @@
-#!/usr/local/bin/pike
+#!NOMODULE
 #define max(i, j) (((i)>(j)) ? (i) : (j))
 #define min(i, j) (((i)<(j)) ? (i) : (j))
 #define abs(arg) ((arg)*(1-2*((arg)<0)))
 
 #define PI 3.14159265358979
-//inherit Stdio;
 
 import Image;
 import Array;
@@ -1417,49 +1416,3 @@ mapping(string:mixed) create_graph(mapping diagram_data)
   diagram_data["image"]=graph;
   return diagram_data;
 }
-
-
-#ifndef ROXEN
-int main(int argc, string *argv)
-{
-  mapping(string:mixed) diagram_data;
-  diagram_data=(["type":"graph",
-		 "textcolor":({0,255,0}),
-		 "subtype":"",
-		 "orient":"vert",
-		 "data": 
-		 ({ ({1.2, 12.3, 4.01, 10.0, 4.3, 12.0 }),
-		    ({1.2, 11.3, -15, 11.7,  1.0, 11.5, 1.0, 13.0, 40.0, 4.0  }),
-		    ({1.2, 13.3, 1.5, 10.1 }),
-		    ({10.2, 13.3, 1.5, 10.1 }),
-		    ({3.2, 13.3, 3.5, 13.7} )}),
-		 "fontsize":12,
-		 "axcolor":({0,0,0}),
-		 "bgcolor":0,//({255,255,255}),
-		 "labelcolor":({0,0,0}),
-		 "datacolors":0,//({({0,255,0}),({255,255,0}), ({0,255,255}), ({255,0,255}) }),
-		 "linewidth":3.2,
-		 "xsize":300,
-		 "ysize":200,
-		 "labels":({"j", "", "xenhet super maga ultra futur", "yenhet fghfg fgh fgh fgh fgh fghj  fghf gh fgh fgh fgh   gfhfgh fghfgh", "do"}),
-		 "legendfontsize":12,
-		 "legend_texts":({"streck 1", "j", "foo", "bar gazonk foobar illalutta!", "hgh" 
-}),
-		 "labelsize":12,
-		 "xminvalue":0.0,
-		 "yminvalue":0,
-		 "vertgrid": 1,
-		 "gridwidth": 0.5
-
-  ]);
-
-  //  diagram_data["image"]=image(2,2)->fromppm(read_file("girl.ppm"));
-
-  object o=Stdio.File();
-  o->open("test.ppm", "wtc");
-  o->write(create_graph(diagram_data)["image"]->toppm());
-  //o->write(diagram_data["image"]->toppm());
-  o->close();
-
-};
-#endif

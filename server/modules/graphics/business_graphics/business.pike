@@ -13,7 +13,7 @@
  * 
  */
 
-constant cvs_version = "$Id: business.pike,v 1.32 1997/10/20 00:58:52 peter Exp $";
+constant cvs_version = "$Id: business.pike,v 1.33 1997/10/20 02:50:48 peter Exp $";
 constant thread_safe=0;
 
 #include <module.h>
@@ -64,10 +64,10 @@ mixed *register_module()
        "\n&lt;legend&gt; (container)\n"
        "Tab separated list of strings for the legend.\n"
        " separator=   Use the specified string as separator instead of tab.\n"
-       "\n&lt;xdatanames&gt; (container)\n"
+       "\n&lt;xnames&gt; (container)\n"
        "Tab separated list of datanames for the diagram.\n"
        " separator=   Use the specified string as separator instead of tab.\n"
-       "\n&lt;ydatanames&gt; (container)\n"
+       "\n&lt;ynames&gt; (container)\n"
        "Tab separated list of dataname for the diagram.\n"
        " separator=   Use the specified string as separator instead of tab.\n"
        "\n&lt;data&gt; (container)  Mandatory!\n"
@@ -114,7 +114,7 @@ string itag_yaxis(string tag, mapping m, mapping res)
 }
 
 /* Handle <xnames> and <ynames> */
-string itag_datanames(string tag, mapping m, string contents,
+string itag_names(string tag, mapping m, string contents,
 		      mapping res)
 {
   string sep=SEP;
@@ -123,7 +123,7 @@ string itag_datanames(string tag, mapping m, string contents,
   
   if( contents-" " != "" )
   {
-    if(tag=="xdatanames")
+    if(tag=="xnames")
       res->xnames = contents/sep;
     else
       res->ynames = contents/sep;
@@ -235,15 +235,13 @@ string quote(string in)
 {
   string option;
   if(option = url_cache[in]) return option;
-  /*
   object g;
   if (sizeof(indices(g=Gz))) {
     option=MIME.encode_base64(g->deflate()->deflate(in), 1);
   } else {
-  */
     option=MIME.encode_base64(in, 1);
-    //  }
-  //  if(search(in,"/")!=-1) return url_cache[in]=option;
+  }
+  if(search(in,"/")!=-1) return url_cache[in]=option;
   string res="$";	// Illegal in BASE64
   for(int i=0; i<strlen(in); i++)
     switch(in[i])
@@ -325,20 +323,20 @@ string tag_diagram(string tag, mapping m, string contents,
     res->subtype="line";
   
   if(res->type == "sumbars")
-    if(res->subtype!="norm")
+    if(res->subtype!="norm");
+
+  parse_html(contents, ([]), ([ "data":itag_data ]), res, id );
 
   parse_html(contents,
 	     ([ "xaxis":itag_xaxis,
 		"yaxis":itag_yaxis ]),
-	     ([ "xnames":itag_datanames,
-		"ynames":itag_datanames,
+	     ([ "xnames":itag_names,
+		"ynames":itag_names,
 		"xvalues":itag_values,
 		"yvalues":itag_values,
 		"colors":itag_colors,
 		"legend":itag_legendtext ]), 
 	     res );
-
-  parse_html(contents, ([]), ([ "data":itag_data ]), res, id );
 
   if( res->data == ({ }) )
     return "<hr noshade><h3>No data for the diagram</h3><hr noshade>";
@@ -461,10 +459,35 @@ object PPM(string fname, object id)
   return image()->fromppm(q);
 }
 
+
+/* Thease two are just ugly kludges until encode_value gets fixed */
 float floatify( string in )
 {
   return (float)in;
 }
+
+array strange( array in )
+{
+  // encode_value does not support negative floats.
+  array tmp2 = ({});
+  foreach(in, array tmp)
+  {
+    tmp = Array.map( tmp, floatify );
+    tmp2 += ({ tmp });
+  }
+  return tmp2;
+}
+
+  // encode_value does not support negative floats.
+/*
+  array tmp2 = ({});
+  foreach(res->data, array tmp)
+  {
+    tmp = Array.map( tmp, floatify );
+    tmp2 += ({ tmp });
+  }
+  res->data = tmp2;
+*/
 
 mapping find_file(string f, object id)
 {
@@ -484,49 +507,27 @@ mapping find_file(string f, object id)
     object g;
     if (f[0] == '$') {	// Illegal in BASE64
       f = f[1..];
-      //    } else if (sizeof(indices(g=Gz))) {
+    } else if (sizeof(indices(g=Gz))) {
       /* Catch here later */
-      //      f = g->inflate()->inflate(MIME.decode_base64(f));
+      f = g->inflate()->inflate(MIME.decode_base64(f));
     } else if (sizeof(f)) {
       /* Catch here later */
       f = MIME.decode_base64(f);
     }
-    //perror("res-post: %O\n", decode_value(f));
     res = decode_value(f);  
   } else
     perror( "Diagram: Fatal Error, f: %s\n", f );
 
-  perror("f-res: %O\n", res);
+  res->labels = ({ res->xstor, res->ystor, res->xunit, res->yunit });
 
-  /*
-  if (sizeof(f))
-  {
-    object g=Gz;
-    catch(f = g->inflate()->inflate(MIME.decode_base64(f)));
-    perror("f-data: %O\n", f);
-    res = decode_value(f);  
-
-    FIXME
-Rad 466 returnerar:
-Error: Internal server error.
-
-Format Error: Error in format string, invalid integer.
-find_file(string[467],object) in line 466 in Business_graphics/business.pike
-low_get_file(object,0) in line 1004 in /home/peter/hack/roxen/server/base_server/configuration.pike
-get_file(object,0) in line 1090 in /home/peter/hack/roxen/server/base_server/configuration.pike
-handle_request() in line 814 in protocols/http.pike
-handler_thread(8) in line 201 in /home/peter/hack/roxen/server/base_server/roxen.pike
-
-
-  }
-  else
-    return 0;
-    */
-
-  res->labels=      ({ res->xstor, res->ystor, res->xunit, res->yunit });
+  /* Kludge */
+  res->data = strange( res->data );
+  if(res->xvalues)
+    res->xvalues = Array.map( res->xvalues, floatify );
+  if(res->yvalues)
+    res->yvalues = Array.map( res->yvalues, floatify );
 
   mapping(string:mixed) diagram_data;
-
   array back = res->bg;
 
   if(res->image)
@@ -538,14 +539,6 @@ handler_thread(8) in line 201 in /home/peter/hack/roxen/server/base_server/roxen
   if(res->xstart > res->xstop) m_delete( res, "xstart" );
   if(res->ystart > res->ystop) m_delete( res, "ystart" );
 
-  // encode_value does not support negative floats.
-  array tmp2 = ({});
-  foreach(res->data, array tmp)
-  {
-    tmp = Array.map( tmp, floatify );
-    tmp2 += ({ tmp });
-  }
-  res->data = tmp2;
 
   diagram_data=(["type":      res->type,
 		 "subtype":   res->subtype,

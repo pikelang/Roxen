@@ -1,3 +1,4 @@
+#!NOMODULE
 #define CAP_BUTT       0
 #define CAP_ROUND      1
 #define CAP_PROJECTING 2
@@ -171,4 +172,3 @@ array(array(float)) make_polygon_from_line(float h, array(float) coords,
     return ({ left + xyreverse(right) });
 
 }
-

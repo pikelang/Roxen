@@ -1,10 +1,9 @@
-#!/usr/local/bin/pike
+#!NOMODULE
 #define max(i, j) (((i)>(j)) ? (i) : (j))
 #define min(i, j) (((i)<(j)) ? (i) : (j))
 #define abs(arg) ((arg)*(1-2*((arg)<0)))
 
 #define PI 3.14159265358979
-//inherit Stdio;
 
 import Image;
 import Array;
@@ -744,57 +743,3 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 
 
 }
-
-#ifndef ROXEN
-int main(int argc, string *argv)
-{
-  //write("\nRitar axlarna. Filen sparad som test.ppm\n");
-
-  mapping(string:mixed) diagram_data;
-  diagram_data=(["type":"bars",
-		 "textcolor":({0,20,0}),
-		 "subtype":"box",
-		 "orient":"vert",
-		 "data": 
-		 ({ ({12.2, 10.3, 8.01, 9.0, 5.3, 4 }),
-		     ({91.2, 101.3, 91.5, 101.7,  141.0, 181.5}),
-		    ({191.2, 203.3, 241.5, 200.1, 194.3 }),
-		    ({191.2, 203.3, 241.5, 200.1, 194.3 }),
-		    ({93.2, -413.3, 133.5, 143.7, 154.3, 100, 133}) }),
-		 "axcolor":({0,0,255}),
-		 "bgcolor":0,//({255,255,255}),
-		 "labelcolor":0, //({0,0,0}),
-		 //"datacolors":({({0,255,0}),({255,255,0}), ({0,255,255}), ({255,0,255}) }),
-		 //"linewidth":2.2,
-		 "backlinewidth":0,
-		 "xsize":400,
-		 "ysize":200,
-		 "xnames":({"j", "", "mar", "apr", "maj", "jun"
-		 }),
-		 "fontsize":22,
-		 "labels":({"xstor", "ystor", "xenhet", "yenhet"}),
-		 "legendfontsize":3, 
-		 "legend_texts": ({"Roxen"//, "Netscape", "Apache", "Microsoft", "" 
-}),
-		 "labelsize":42,
-		 "xminvalue":0.0,
-		 "yminvalue":0,
-		 "horgrid": 1,
-		 "vertgrid": 1,
-		 "gridwidth": 0.5,
-		 "backlinecolor":0,//1.0,
-		 "bw":3,
-  ]);
-  
-  /*    diagram_data["image"]=image(2,2)->fromppm(read_file("girl.ppm"));
-  diagram_data["image"]=diagram_data["image"]->copy(10,10, diagram_data["image"]->xsize()-10,
-  diagram_data["image"]->ysize()-10);
-  */
-
-  object o=Stdio.File();
-  o->open("test.ppm", "wtc");
-  o->write(create_bars(diagram_data)["image"]->toppm());
-  o->close();
- 
-};
-#endif
