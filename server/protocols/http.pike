@@ -1,12 +1,14 @@
-// This is a roxen module. 
+// This is a roxen module.
+// Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 1998, Idonex AB.
+// $Id: http.pike,v 1.152 1999/09/04 22:40:45 kinkie Exp $
 
 #define MAGIC_ERROR
 
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.151 1999/08/17 18:37:51 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.152 1999/09/04 22:40:45 kinkie Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -41,7 +43,7 @@ constant decode        = MIME.decode_base64;
 constant find_supports = roxen.find_supports;
 constant version       = roxen.version;
 constant _query        = roxen.query;
-constant thepipe       = roxen.pipe;
+//constant thepipe       = roxen.pipe; //can be removed
 constant _time         = predef::time;
 
 private static array(string) cache;
@@ -102,61 +104,44 @@ string since;
 
 void end(string|void a,int|void b);
 
-#if constant(Stdio.sendfile)
-object pipe;	// Always 0.
-
-static array(string) result_headers = ({});
-static object result_file;
-static int result_f_len;
-
-void send(string|object what, int|void len)
-{
-  if (stringp(what)) {
-    result_headers += ({ what });
-  } else {
-    if (result_file) {
-      error("HTTP: Multiple result files are not supported!\n");
-    }
-    result_file = what;
-    result_f_len = len;
-  }
-}
-
-static void send_done(int bytes, function callback, array(mixed) args)
-{
-  file->len = bytes;
-  callback(@args);
-}
-
-void start_sender(function callback, mixed ... args)
-{
-  array(string) headers = result_headers;
-  object file = result_file;
-  int len = result_f_len;
-
-  result_headers = 0;
-  result_file = 0;
-  result_f_len = 0;
-
-  // FIXME: Timeout handling!
-
-  Stdio.sendfile(headers, file, -1, len, 0, my_fd, send_done, callback, args);
-}
-
-#else /* !constant(Stdio.sendfile) */
 object pipe;
 
+int throttle=0;  //if nonzero, we're throttling.
+int rate=0;      //the throttling rate.
+object throttler;//the inter-request throttling object.
+
+/* Pipe-using send functions */
+
+// FIXME:
+//I'm choosing the pipe type upon setup. Thus I'm assuming that all headers
+//have been defined before then. This is actually not true in case
+//of throttling and keep-alive. We'll take care of that later.
 private void setup_pipe()
 {
-  if(!my_fd) 
-  {
+  if(!my_fd) {
     end();
     return;
   }
-  if(!pipe) pipe=thepipe();
+  if (!conf || !conf->query("req_throttle"))
+    throttle=0;
+  if(!pipe) {
+    if (throttle || (conf && conf->throttler)) {
+      pipe=((program)"slowpipe")();
+    } else {
+      pipe=((program)"fastpipe")();
+    }
+  }
+  if (throttle) {
+    rate=max(rate,conf->query("req_throttle_min")); //if conf=0 => throttle=0
+    pipe->throttle(rate,(int)(rate*conf->query("req_throttle_depth_mult")),0);
+  }
+  if (conf && conf->throttler) { 
+    pipe->assign_throttler(conf->throttler);
+  }
 }
 
-void send(string|object what, int|void len)
+
+void send (string|object what, int|void len)
 {
 #ifdef REQUEST_DEBUG
   roxen_perror(sprintf("send(%O, %O)\n", what, len));
@@ -169,7 +154,7 @@ void send(string|object what, int|void len)
   else               pipe->input(what,len);
 }
 
-void start_sender(function callback, mixed ... args)
+void start_sender (function callback, mixed ... args)
 {
   if (pipe) {
     MARK_FD("HTTP really handled, piping "+not_query);
@@ -184,8 +169,6 @@ void start_sender(function callback, mixed ... args)
     callback(@args);
   }
 }
-
-#endif /* constant(Stdio.sendfile) */
 
 string scan_for_query( string f )
 {

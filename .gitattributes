@@ -58,6 +58,7 @@ urw_itc_avant_garde-demi-r binary
 /server/base_server/configuration.pike foreign_ident
 /server/base_server/dates.pike foreign_ident
 /server/base_server/disk_cache.pike foreign_ident
+/server/base_server/fastpipe.pike foreign_ident
 /server/base_server/fonts.pike foreign_ident
 /server/base_server/hosts.pike foreign_ident
 /server/base_server/html.pike foreign_ident
@@ -79,6 +80,7 @@ urw_itc_avant_garde-demi-r binary
 /server/base_server/socket.pike foreign_ident
 /server/base_server/state.pike foreign_ident
 /server/base_server/struct/node.pike foreign_ident
+/server/base_server/throttler.pike foreign_ident
 /server/base_server/wizard.pike foreign_ident
 /server/bin/fixquota.pike foreign_ident
 /server/bin/garbagecollector.pike foreign_ident
@@ -242,6 +244,7 @@ urw_itc_avant_garde-demi-r binary
 /server/modules/tags/tablist.pike foreign_ident
 /server/modules/tags/wizard_tag.pike foreign_ident
 /server/modules/tags/ximg.pike foreign_ident
+/server/modules/throttling/baseline_throttling.pike foreign_ident
 /server/more_modules/bofh.pike foreign_ident
 /server/more_modules/clock.pike foreign_ident
 /server/more_modules/configure.pike foreign_ident

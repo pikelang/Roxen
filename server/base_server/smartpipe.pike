@@ -1,5 +1,5 @@
 /*
- * $Id: smartpipe.pike,v 1.28 1999/03/05 01:54:53 grubba Exp $
+ * $Id: smartpipe.pike,v 1.29 1999/09/04 22:40:45 kinkie Exp $
  *
  * A somewhat more optimized Pipe.pipe...
  */
@@ -113,7 +113,7 @@ void shuffle()
 
 void next_input()
 {
-  remove_call_out(check_for_closing);
+  remove_call_out(check_for_closing); //why? -Kinkie
   if(!sizeof(to_send))
   {
     finish();
@@ -188,4 +188,8 @@ void set_done_callback(function|void f, void|mixed ... args)
 {
   done_callback = f;
   done_cb_args = args;
+}
+
+void create() {
+  perror("using smartpipe\n");
 }

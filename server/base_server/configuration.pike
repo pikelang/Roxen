@@ -1,4 +1,9 @@
-string cvs_version = "$Id: configuration.pike,v 1.205 1999/08/30 09:29:03 per Exp $";
+/*
+ * A vitual server's main configuration 
+ * (C) 1996, 1999 Idonex AB.
+ */
+
+constant cvs_version = "$Id: configuration.pike,v 1.206 1999/09/04 22:40:43 kinkie Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -12,10 +17,19 @@ mapping profile_map = ([]);
 // Locale support...
 #define LOCALE	LOW_LOCALE->base_server
 
+#ifdef THROTTLING_DEBUG
+#undef THROTTLING_DEBUG
+#define THROTTLING_DEBUG(X) perror("Throttling: "+X+"\n")
+#else
+#define THROTTLING_DEBUG(X)
+#endif
+
 /* A configuration.. */
 
 
 #include "rxml.pike";
+
+object throttler=0;
 
 public string real_file(string file, object id);
 
@@ -2923,7 +2937,8 @@ object enable_module( string modname )
 }
 
 // Called from the configuration interface.
-string check_variable(string name, string value)
+// TODO: doesn't work! It looks like it's not being called
+string check_variable(string name, mixed value)
 {
   switch(name)
   {
@@ -2931,6 +2946,31 @@ string check_variable(string name, string value)
     if(strlen(value)<7 || value[-1] != '/' ||
        !(sscanf(value,"%*s://%*s/")==2))
       return LOCALE->url_format();
+    return 0;
+  case "throttle":
+    if (value) {
+      THROTTLING_DEBUG("configuration: Starting throttler up");
+      throttler=.throttler();
+      throttler->throttle(query("throttle_fill_rate"),
+                          query("throttle_bucket_depth"),
+                          query("throttle_min_grant"),
+                          query("throttle_max_grant"));
+    } else {
+      THROTTLING_DEBUG("configuration: Stopping throttler");
+      destruct(throttler);
+      throttler=0;
+    }
+    return 0;
+  case "throttle_fill_rate":
+  case "throttle_bucket_depth":
+  case "throttle_min_grant":
+  case "throttle_max_grant":
+    THROTTLING_DEBUG("configuration: setting throttling parameter: "+
+                     name+"="+value);
+    throttler->throttle(query("throttle_fill_rate"),
+                        query("throttle_bucket_depth"),
+                        query("throttle_min_grant"),
+                        query("throttle_max_grant"));
     return 0;
   }
 }
@@ -3440,6 +3480,7 @@ void enable_all_modules()
 
 void create(string config)
 {
+
   add_parse_module( this_object() );
 
   name=config;
@@ -3704,7 +3745,7 @@ epostadresser, samt för att generera skönskvärdet för serverurl variablen.");
  skal. (normalt sett /etc/shells). Används för icke-anonym ftp. Ange
  tomma strängen för att stänga av verifieringen av användarskal");
 
-  defvar("InternalLoc", "/_internal/", 
+  defvar("InternalLoc", "/_internal/",
 	 "Internal module resource mountpoint", TYPE_LOCATION|VAR_MORE,
          "Some modules may want to create links to internal resources.  "
 	 "This setting configures an internally handled location that can "
@@ -3717,5 +3758,85 @@ epostadresser, samt för att generera skönskvärdet för serverurl variablen.");
   för sådana ändamål.  Välj bara en location som du förmodligen inte kommer
   behöva för vanliga resurser.");
 
+  // throttling-related variables
+  defvar("throttle",0,
+         "Server Bandwidth Throttling: Enabled",TYPE_FLAG,
+#"If set, per-server bandwidth throttling will be enabled. 
+It will allow you to limit the total available bandwidth for 
+this Virtual Server.<BR>Bandwidth is assigned using a Token Bucket.
+The principle under which it works is: for each byte we send we use a token.
+Tokens are added to a repository at a constant rate. When there's not enough,
+we can't transmit. When there's too many, they \"spill\" and are lost.");
+  //TODO: move this explanation somewhere on the website and just put a link.
+
+  defvar("throttle_fill_rate",102400,
+         "Server Bandwidth Throttling: Average available bandwidth",
+         TYPE_INT,
+#"This is the average bandwidth available to this Virtual Server in 
+bytes/sec (the bucket \"fill rate\").",
+         0,arent_we_throttling_server);
+
+  defvar("throttle_bucket_depth",1024000,
+         "Server Bandwidth Throttling: Bucket Depth", TYPE_INT,
+#"This is the maximum depth of the bucket. After a long enough period
+of inactivity, a request will get this many unthrottled bytes of data, before
+throttling kicks back in.<br>Set equal to the Fill Rate in order not to allow
+any data bursts. This value determines the length of the time over which the
+bandwidth is averaged",0,arent_we_throttling_server);
+  
+  defvar("throttle_min_grant",1300,
+         "Server Bandwidth Throttling: Minimum Grant", TYPE_INT,
+#"When the bandwidth availability is below this value, connections will
+be delayed rather than granted minimal amounts of bandwidth. The purpose
+is to avoid sending too small packets (which would increase the IP overhead)",
+         0,arent_we_throttling_server);
+
+  defvar("throttle_max_grant",14900,
+         "Server Bandwidth Throttling: Maximum Grant", TYPE_INT,
+#"This is the maximum number of bytes assigned in a single request
+to a connection. Keeping this number low will share bandwidth more evenly
+among the pending connections, but keeping it too low will increase IP
+overhead and (marginally) CPU usage. You'll want to set it just a tiny
+bit lower than any integer multiple of your network's MTU (typically 1500
+for ethernet)",0,arent_we_throttling_server);
+         
+
+  defvar("req_throttle", 0,
+         "Request Bandwidth Throttling: Enabled", TYPE_FLAG,
+#"If set, per-request bandwidth throttling will be enabled."
+         );
+         
+  defvar("req_throttle_min", 1024,
+         "Request Bandwidth Throttling: Minimum guarranteed bandwidth",
+         TYPE_INT,
+#"The maximum bandwidth each connection (in bytes/sec) can use is determined
+combining a number of modules. But doing so can lead to too small 
+or even negative bandwidths for particularly unlucky requests. This variable
+guarantees a minimum bandwidth for each request",
+         0,arent_we_throttling_request);
+  
+  defvar("req_throttle_depth_mult", 60.0,
+         "Request Bandwidth Throttling: Bucket Depth Multiplier",
+         TYPE_FLOAT,
+#"The average bandwidth available for each request will be determined by 
+the modules combination. The bucket depth will be determined multiplying
+the rate by this factor.",
+         0,arent_we_throttling_request);
+
   setvars(retrieve("spider#0", this));
+
+  if (query("throttle")) {
+    throttler=.throttler();
+    throttler->throttle(query("throttle_fill_rate"),
+                        query("throttle_bucket_depth"),
+                        query("throttle_min_grant"),
+                        query("throttle_max_grant"));
+  }
+}
+
+int arent_we_throttling_server () {
+  return !query("throttle");
+}
+int arent_we_throttling_request() {
+  return !query("req_throttle");
 }

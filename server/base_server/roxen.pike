@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.321 1999/09/03 11:21:20 grubba Exp $
+ * $Id: roxen.pike,v 1.322 1999/09/04 22:40:44 kinkie Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.321 1999/09/03 11:21:20 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.322 1999/09/04 22:40:44 kinkie Exp $";
 
 object backend_thread;
 object argcache;
@@ -89,7 +89,7 @@ class RequestID
 };
 
 
-constant pipe = (program)"smartpipe";
+constant pipe = (program)"slowpipe";
 
 /*
  * The privilege changer.
