@@ -90,7 +90,7 @@ string|mapping parse( RequestID id )
     {
       object q;
       if( catch( q = ((program)("../local/"+st))( ) ) )
-	q = ((program)st)())
+	q = ((program)st)();
       if( q->site_template )
       {
         string name, doc;
