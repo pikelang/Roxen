@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.56 2000/01/31 16:36:37 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.57 2000/02/03 15:10:42 wellhard Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -999,6 +999,10 @@ class Entity_page_virtfile {
   string rxml_var_eval(RXML.Context c) { return c->id->not_query; }
 }
 
+class Entity_page_query {
+  string rxml_var_eval(RXML.Context c) { return c->id->query; }
+}
+
 class Entity_page_url {
   string rxml_var_eval(RXML.Context c) { return c->id->raw_url; }
 }
@@ -1030,6 +1034,7 @@ class Entity_page_self {
 mapping page_scope=(["realfile":Entity_page_realfile(),
 		     "virtroot":Entity_page_virtroot(),
 		     "virtfile":Entity_page_virtfile(),
+		     "query":Entity_page_query(),
 		     "url":Entity_page_url(),
 		     "last-true":Entity_page_last_true(),
 		     "language":Entity_page_language(),
