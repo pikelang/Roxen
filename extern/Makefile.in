@@ -63,7 +63,10 @@ verify: verbose_verify
 
 verbose_verify: cgi
 	@test -d cgi.testsuite || mkdir cgi.testsuite
-	@for t in `cd $(SRCDIR)/cgi.testsuite; find . -name '*.in' -print`; \
+	@if test "x$UID" = "x0"; then \
+	  echo Running as root. Attempting to run as nobody...; \
+	  su nobody $(MAKE) verbose_verify || exit 1; \
+	else for t in `cd $(SRCDIR)/cgi.testsuite; find . -name '*.in' -print`; \
 	  do \
 	    base="`echo $$t|sed -e 's/\.in$$//'`"; \
 	    echo CGI Test: $$base; \
@@ -73,7 +76,8 @@ verbose_verify: cgi
 		cgi.testsuite/$$base.output ; then :; else \
 	      echo "Failed."; exit 1; \
 	    fi; \
-	  done
+	  done; \
+	fi
 
 shuffle-install: shuffle
 	-/bin/rm -f $(prefix)/roxen/server/bin/shuffle
