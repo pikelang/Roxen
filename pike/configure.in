@@ -1,4 +1,7 @@
 AC_INIT(Makefile.in)
+
+AC_SET_MAKE
+
 # This is an ugly hack, but it seems to work...
 # /grubba
 old_ac_configure_args="$ac_configure_args"

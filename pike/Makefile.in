@@ -1,8 +1,10 @@
+@SET_MAKE@
+
 all:
-	(cd src;make)
+	(cd src; $(MAKE))
 
 clean:
-	(cd src;make clean)
+	(cd src; $(MAKE) clean)
 
 spotless:
-	(cd src;make spotless)
+	(cd src; $(MAKE) spotless)
