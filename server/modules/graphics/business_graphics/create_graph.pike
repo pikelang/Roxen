@@ -1,4 +1,4 @@
-!/usr/local/bin/pike
+#!/usr/local/bin/pike
 #define max(i, j) (((i)>(j)) ? (i) : (j))
 #define min(i, j) (((i)<(j)) ? (i) : (j))
 #define abs(arg) ((arg)*(1-2*((arg)<0)))
@@ -367,18 +367,19 @@ mapping(string:mixed) create_text(mapping(string:mixed) diagram_data)
   int j;
   diagram_data["xnamesimg"]=allocate(j=sizeof(diagram_data["xnames"]));
   for(int i=0; i<j; i++)
-    if (((diagram_data["values_for_xnames"][i]>LITET)||(diagram_data["values_for_xnames"][i]<-LITET))&&
-	((diagram_data["xnames"][i]) && sizeof(diagram_data["xnames"][i])))
-      diagram_data["xnamesimg"][i]=notext->write(diagram_data["xnames"][i])
-->scale(0,diagram_data["fontsize"])
-;
-    else
-      diagram_data["xnamesimg"][i]=
-	image(diagram_data["fontsize"],diagram_data["fontsize"]);
-
-  if (diagram_data["xnamesimg"][i]->xsize()<1)
-    diagram_data["xnamesimg"][i]=image(diagram_data["fontsize"],diagram_data["fontsize"]);
-
+    {
+      if (((diagram_data["values_for_xnames"][i]>LITET)||(diagram_data["values_for_xnames"][i]<-LITET))&&
+	  ((diagram_data["xnames"][i]) && sizeof(diagram_data["xnames"][i])))
+	diagram_data["xnamesimg"][i]=notext->write(diagram_data["xnames"][i])
+	  ->scale(0,diagram_data["fontsize"])
+	  ;
+      else
+	diagram_data["xnamesimg"][i]=
+	  image(diagram_data["fontsize"],diagram_data["fontsize"]);
+      
+      if (diagram_data["xnamesimg"][i]->xsize()<1)
+	diagram_data["xnamesimg"][i]=image(diagram_data["fontsize"],diagram_data["fontsize"]);
+    }
 
   diagram_data["ynamesimg"]=allocate(j=sizeof(diagram_data["ynames"]));
   for(int i=0; i<j; i++)
@@ -1371,7 +1372,7 @@ int main(int argc, string *argv)
 		    ({1.2, 11.3, -1.5, 11.7,  1.0, 11.5, 1.0, 13.0, 2.0, 16.0  }),
 		    ({1.2, 13.3, 1.5, 10.1 }),
 		    ({3.2, 13.3, 3.5, 13.7} )}),
-		 "fontsize":32,
+		 "fontsize":2,
 		 "axcolor":({0,0,0}),
 		 "bgcolor":0,//({255,255,255}),
 		 "labelcolor":({0,0,0}),
@@ -1379,12 +1380,11 @@ int main(int argc, string *argv)
 		 "linewidth":2.2,
 		 "xsize":400,
 		 "ysize":800,
-		 "fontsize":16,
-		 "labels":({"xstor", "ystor", "xenhet super maga ultra futur", "yenhet fghfg fgh fgh fgh fgh fghj  fghf gh fgh fgh fgh   gfhfgh fghfgh"}),
-		 "legendfontsize":12,
-		 "legend_texts":({"streck 1", "streck 2", "foo", "bar gazonk foobar illalutta!" 
+		 "labels":({"j", "", "xenhet super maga ultra futur", "yenhet fghfg fgh fgh fgh fgh fghj  fghf gh fgh fgh fgh   gfhfgh fghfgh"}),
+		 "legendfontsize":2,
+		 "legend_texts":({"streck 1", "j", "foo", "bar gazonk foobar illalutta!" 
 }),
-		 "labelsize":23,
+		 "labelsize":3,
 		 "xminvalue":1,
 		 "yminvalue":1,
 		 "vertgrind": 1,
