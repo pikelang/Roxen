@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.533 2002/07/08 11:06:36 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.534 2002/07/22 14:48:15 nilsson Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1305,20 +1305,21 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 
   if(!no_magic)
   {
+    // NGSERVER: Remove the /internal-foo-bar and use only /%00/bar
     TIMER_START(internal_magic);
 #ifndef NO_INTERNAL_HACK
     // Find internal-foo-bar images
     // min length == 17 (/internal-roxen-?..)
     // This will save some time indeed.
     string type;
-    if(sizeof(file) > 17 &&
+    if((sizeof(file) > 17 &&
 #if ROXEN_COMPAT <= 2.1
        (file[0] == '/') &&
        sscanf(file, "%*s/internal-%s-%[^/]", type, loc) == 3
 #else
        sscanf(file, "/internal-%s-%[^/]", type, loc) == 2
 #endif
-       ) {
+       ) || (sizeof(file)>3 && file[1]==0 && sscanf(file, "/\0/%s", loc)==1 && (type="roxen")) ) {
       switch(type) {
        case "roxen":
 	//  Mark all /internal-roxen-* as cacheable even though the user might be
@@ -1332,7 +1333,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 	  return (["data":"GIF89a\1\0\1\0\200ÿ\0ÀÀÀ\0\0\0!ù\4\1\0\0\0\0,"
 		   "\0\0\0\0\1\0\1\0\0\1\1""2\0;",
 		   "type":"image/gif",
-		   "stat": ({0, 0, 0, 900000000, 0, 0, 0})]);
+		   "stat": ({0, 42, 0, 900000000, 0, 0, 0})]);
 	}
 	if(has_prefix(loc, "pixel-"))
 	{
@@ -1341,7 +1342,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 				  "\0\1\0\1\0\0\2\2L\1\0;",
 				  @parse_color(loc[6..])),
 		   "type":"image/gif",
-		   "stat": ({0, 0, 0, 900000000, 0, 0, 0})]);
+		   "stat": ({0, 35, 0, 900000000, 0, 0, 0})]);
 	}
 	TIMER_END(internal_magic);
 	return internal_roxen_image(loc, id);
