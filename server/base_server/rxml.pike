@@ -569,8 +569,8 @@ string tag_define(string tag, mapping m, string str, RequestID id,
 	id->misc->defaults[n][arg[8..]] = m[arg];
         m_delete( m, arg );
       }
-    
-    id->misc->tags[n] = replace( str, indices(m), values(m) );
+
+    id->misc->tags[n] = replace( str, indices(m), values(m) ); // The replace is not part of RXML 1.4
     id->misc->_tags[n] = call_user_tag;
   }
   else if (m->container) 
@@ -590,8 +590,8 @@ string tag_define(string tag, mapping m, string str, RequestID id,
 	id->misc->defaults[n][arg[8..]] = m[arg];
         m_delete( m, arg );
       }
-    
-    id->misc->containers[n] = replace( str, indices(m), values(m) );
+
+    id->misc->containers[n] = replace( str, indices(m), values(m) ); // The replace is not part of RXML 1.4
     id->misc->_containers[n] = call_user_container;
   }
   else if (m["if"])
@@ -601,9 +601,9 @@ string tag_define(string tag, mapping m, string str, RequestID id,
   else 
   {
     if(!id->misc->debug)
-      return "<!-- No name, tag, if or container specified for the define! "
+      return "<!-- No name, tag, variable, if or container specified for the define! "
         "&lt;define help&gt; for instructions. -->";
-      return "No name, tag, if or container specified for the define! "
+      return "No name, tag, variable, if or container specified for the define! "
         "&lt;define help&gt; for instructions.";
   }
   
@@ -631,7 +631,7 @@ string tag_undefine(string tag, mapping m, RequestID id, object file,
     m_delete(id->misc->containers,m->container);
     m_delete(id->misc->_containers,m->container);
   }
-  else return "<!-- No name, tag or container specified for undefine! "
+  else return "<!-- No name, variable, if, tag or container specified for undefine! "
 	 "&lt;undefine help&gt; for instructions. -->";
   return ""; 
 }
@@ -829,6 +829,13 @@ string tag_strlen(string t, mapping m, string c, RequestID id)
 
 string tag_case(string t, mapping m, string c, RequestID id)
 {
+  if(m["case"])
+    switch(lower_case(m["case"])) {
+    case "lower": return lower_case(c);
+    case "upper": return upper_case(c);
+    case "capitalize": return capitalize(c);
+    }
+
   if(m->lower)
     c = lower_case(c);
   if(m->upper)
@@ -885,19 +892,25 @@ string tag_else( string t, mapping m, string c, RequestID id )
   return "";
 }
 
+string tag_then( string t, mapping m, string c, RequestID id )
+{
+  if(LAST_IF_TRUE) return c;
+  return "";
+}
+
 string tag_elseif( string t, mapping m, string c, RequestID id )
 {
   if(!LAST_IF_TRUE) return tag_if( t, m, c, id );
   return "";
 }
 
-string tag_true( string t, mapping m, string c, RequestID id )
+string tag_true( string t, mapping m, RequestID id )
 {
   LAST_IF_TRUE = 1;
   return "";
 }
 
-string tag_false( string t, mapping m, string c, RequestID id )
+string tag_false( string t, mapping m, RequestID id )
 {
   LAST_IF_TRUE = 0;
   return "";
@@ -928,6 +941,7 @@ mapping query_container_callers()
     "comment":lambda(){ return ""; },
     "if":tag_if,
     "else":tag_else,
+    "then":tag_then, 
     "elseif":tag_elseif,
     "elif":tag_elseif,
     "noparse":tag_noparse,
