@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.319 1999/05/18 06:16:16 peter Exp $
+ * $Id: roxen.pike,v 1.320 1999/05/18 21:19:09 mast Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -8,7 +8,7 @@
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version = "$Id: roxen.pike,v 1.319 1999/05/18 06:16:16 peter Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.320 1999/05/18 21:19:09 mast Exp $";
 
 object backend_thread;
 object argcache;
@@ -2480,6 +2480,69 @@ array available_fonts(int cache)
   }
   sort(res);
   return font_cache = res;
+}
+
+string get_domain(int|void l)
+{
+  array f;
+  string t, s;
+
+//  ConfigurationURL is set by the 'install' script.
+  if (!l) {
+    f = (QUERY(ConfigurationURL)/"://");
+    if (sizeof(f) > 1) {
+      t = (replace(f[1], ({ ":", "/" }), ({ "\0", "\0" }))/"\0")[0];
+      f = t/".";
+      if (sizeof(f) > 1) {
+	s = f[1..]*".";
+      }
+    }
+  }
+#if efun(gethostbyname)
+#if efun(gethostname)
+  if(!s) {
+    f = gethostbyname(gethostname()); // First try..
+    if(f)
+      foreach(f, f) {
+	if (arrayp(f)) {
+	  foreach(f, t) {
+	    f = t/".";
+	    if ((sizeof(f) > 1) &&
+		(replace(t, ({ "0", "1", "2", "3", "4", "5",
+				 "6", "7", "8", "9", "." }),
+			 ({ "","","","","","","","","","","" })) != "")) {
+	      t = f[1..]*".";
+	      if(!s || strlen(s) < strlen(t))
+		s=t;
+	    }
+	  }
+	}
+      }
+  }
+#endif
+#endif
+#if __NT__
+  s=get_tcpip_param("Domain")||"";
+#else
+  if(!s) {
+    t = Stdio.read_bytes("/etc/resolv.conf");
+    if(t) {
+      if(!sscanf(t, "domain %s\n", s))
+	if(!sscanf(t, "search %s%*[ \t\n]", s))
+	  s="nowhere";
+    } else {
+      s="nowhere";
+    }
+  }
+  if(s && strlen(s))
+  {
+    if(s[-1] == '.') s=s[..strlen(s)-2];
+    if(s[0] == '.') s=s[1..];
+  } else {
+    s="unknown"; 
+  }
+#endif
+  return s;
 }
 
 

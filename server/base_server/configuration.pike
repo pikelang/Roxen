@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.171 1999/05/04 07:23:35 js Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.172 1999/05/18 21:19:09 mast Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -2748,6 +2748,8 @@ int log_is_not_enabled()
     }
 #endif
 
+#if 0
+// This function is in roxen.pike now.
 private string get_domain(int|void l)
 {
   array f;
@@ -2810,6 +2812,7 @@ private string get_domain(int|void l)
 #endif
   return s;
 }
+#endif
 
 int disable_module( string modname )
 {
@@ -3416,7 +3419,7 @@ void create(string config)
 	 "of the patterns in this list. This also affects the access counter "
 	 "log.\n",0, log_is_not_enabled);
   
-  defvar("Domain", get_domain(), "Domain", TYPE_STRING, 
+  defvar("Domain", roxen->get_domain(), "Domain", TYPE_STRING,
 	 "Your domainname, should be set automatically, if not, "
 	 "enter the correct domain name here, and send a bug report to "
 	 "<a href=\"mailto:roxen-bugs@idonex.se\">roxen-bugs@idonex.se"
