@@ -79,7 +79,7 @@ string page_base( RequestID id, string content, int|void noform )
                   "<if not='1' variable='form.initial'>"
                   "<gbutton href='add_module.pike?config=&form.config:http;"
                   "&reload_module_list=yes' > %s </gbutton> "
-                  "<gbutton href='site.html/&form.config;'> %s </gbutton>"
+                  "<gbutton href='site.html/&form.config;/'> %s </gbutton>"
                   "<p>\n</if>%s\n</p>\n"
                   "</st-page></subtablist></td></tr></table>"
                   "</cv-split></content></tmpl>", 
