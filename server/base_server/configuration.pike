@@ -3,7 +3,7 @@
 //
 // A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.460 2001/08/05 20:05:03 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.461 2001/08/13 18:19:35 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2460,6 +2460,9 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
   mixed err;
   int module_type;
 
+  if( forcibly_added[modname] )
+    return search(otomod, modname);
+  
   if( datacache ) datacache->flush();
 
   if( sscanf(modname, "%s#%d", modname, id ) != 2 )
@@ -2782,7 +2785,7 @@ void call_low_start_callbacks( RoxenModule me,
   if(module_type & MODULE_PROVIDER)
     if (err = catch
     {
-      mixed provs = me->query_provides();
+      mixed provs = me->query_provides ? me->query_provides() : ({});
       if(stringp(provs))
 	provs = (< provs >);
       if(arrayp(provs))
@@ -3043,8 +3046,8 @@ int add_modules( array(string) mods, int|void now )
 	else
 	  report_debug("Adding required module" + (sizeof (mods) > 1 ? "s" : "") + "\n");
 #endif
-      forcibly_added[ mod+"#0" ] = 1;
       enable_module( mod+"#0" );
+      forcibly_added[ mod+"#0" ] = 1;
     }
   }
 #ifdef MODULE_DEBUG
@@ -3127,8 +3130,8 @@ void low_init(void|int modules_already_enabled)
 
   if (!modules_already_enabled) {
     enabled_modules = retrieve("EnabledModules", this_object());
-    roxenloader.LowErrorContainer ec = roxenloader.LowErrorContainer();
-    roxenloader.push_compile_error_handler( ec );
+//     roxenloader.LowErrorContainer ec = roxenloader.LowErrorContainer();
+//     roxenloader.push_compile_error_handler( ec );
 
     array modules_to_process = indices( enabled_modules );
     string tmp_string;
@@ -3139,9 +3142,10 @@ void low_init(void|int modules_already_enabled)
     foreach( modules_to_process, tmp_string )
     {
       if( !forcibly_added[ tmp_string ] )
-	if(err = catch( enable_module( tmp_string ))) {
-	  report_error(LOC_M(45, "Failed to enable the module %s. Skipping.\n%s"),
-		       tmp_string, describe_backtrace(err));
+	if(err = catch( enable_module( tmp_string )))
+	{
+	  report_error(LOC_M(45, "Failed to enable the module %s. Skipping.")
+		       +"\n%s\n", tmp_string, describe_backtrace(err));
 	  got_no_delayed_load = -1;
 	}
     }
@@ -3151,6 +3155,7 @@ void low_init(void|int modules_already_enabled)
 // report_error( "While enabling modules in "+name+":\n"+ec->get() );
 // if( strlen( ec->get_warnings() ) )
 // report_warning( "While enabling modules in "+name+":\n"+ec->get_warnings());
+    forcibly_added = (<>);
   }
     
   foreach( ({this_object()})+indices( otomod ), RoxenModule mod )
