@@ -1,4 +1,4 @@
-// $Id: counter.pike,v 1.9 1998/02/23 00:57:53 neotron Exp $
+// $Id: counter.pike,v 1.10 1998/02/23 00:57:56 neotron Exp $
 // 
 // Roxen Graphic Counter Module	by Jordi Murgo <jordi@lleida.net>
 // Modifications  1 OCT 1997 by Bill Welliver <hww3@riverweb.com>
@@ -23,6 +23,9 @@
 // -----------------------------------------------------------------------
 //
 // $Log: counter.pike,v $
+// Revision 1.9  1998/02/23 00:57:53  neotron
+// *** empty log message ***
+//
 // Revision 1.8  1998/02/23 00:57:52  neotron
 // *** empty log message ***
 //
@@ -75,7 +78,7 @@
 // Initial revision
 //
 
-string cvs_version = "$Id: counter.pike,v 1.9 1998/02/23 00:57:53 neotron Exp $";
+string cvs_version = "$Id: counter.pike,v 1.10 1998/02/23 00:57:56 neotron Exp $";
 
 string copyright = ("<BR>Copyright 1997 "
 		    "<a href=http://savage.apostols.org/>Jordi Murgo</A> and "
@@ -450,7 +453,7 @@ string tag_counter( string tagname, mapping args, object id )
   if( args->version )
     return cvs_version;
   if( args->revision )
-    return "$Revision: 1.9 $" - "$" - " " - "Revision:";
+    return "$Revision: 1.10 $" - "$" - " " - "Revision:";
 
   //
   // bypass compatible accessed attributes
@@ -524,6 +527,7 @@ mapping query_tag_callers()
 	return ([ "counter":tag_counter,
 		  "counter_url":tag_counter ]);
 }
+
 
 
 
