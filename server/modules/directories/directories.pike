@@ -11,24 +11,22 @@
 //
 // Make sure links work _inside_ unfolded dokuments.
 
-string cvs_version = "$Id: directories.pike,v 1.34 1999/12/28 03:43:48 nilsson Exp $";
+string cvs_version = "$Id: directories.pike,v 1.35 1999/12/28 11:28:44 nilsson Exp $";
 int thread_safe=1;
 
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
 
-int DIRLISTING;
 array README;
 string OUT_FORM;
 void start( int num, Configuration conf )
 {
-  DIRLISTING=query("dirlisting");
   README=query("Readme");
   OUT_FORM="<img border=\"0\" src=\"%s\" alt=\"\"> "
     "<a href=\"%s\">%-40s</a>"+
     (query("size")?"   %11s":"%.0s")+
-    (query("date")=="Don't show dates"?"   %s":"%.0s")+
+    (query("date")!="Don't show dates"?"   %s":"%.0s")+
     "   %s\n";
 
 }
@@ -53,48 +51,29 @@ void create()
 	 "If one of these files is present in a directory, it will "
 	 "be returned instead of the directory listing.");
 
-  defvar("dirlisting", 1, "Enable directory listings", TYPE_FLAG,
-	 "If set, a directory listing is generated if there is "
-	 "no index file for the directory.<br>\n"
-	 "If disabled, a file not found error will be generated "
-	 "instead.<br>\n");
-
   defvar("Readme", ({ "README.html", "README" }),
 	 "Include readme files", TYPE_STRING_LIST,
-	 "Include one of these readme files in directory listings",
-	 0, !DIRLISTING);
+	 "Include one of these readme files in directory listings");
 
   defvar("override", 0, "Allow directory index file overrides", TYPE_FLAG,
 	 "If this variable is set, you can get a listing of all files "
 	 "in a directory by appending '.' or '/' to the directory name, like "
 	 "this: <a href=http://www.roxen.com//>http://www.roxen.com//</a>"
 	 ". It is _very_ useful for debugging, but some people regard it as a "
-	 "security hole.",
-	 0, !DIRLISTING);
+	 "security hole.");
 
   defvar("size", 1, "Include file size", TYPE_FLAG,
-	 "If set, include the size of the file in the listing.",
-	 0, !DIRLISTING);
+	 "If set, include the size of the file in the listing.");
 
   defvar("spartan", 0, "Spartan listings.", TYPE_FLAG,
-	 "Show minimalistic file listings.",
-	 0, !DIRLISTING);
+	 "Show minimalistic file listings.");
 
   defvar("date", "Don't show dates", "Dates", TYPE_MULTIPLE_STRING,
 	 "Select whether to include the last modification date in directory "
 	 "listings, and if so, on what format. `ISO dates' gives dates "
          "like 1999-11-26, while `Text dates' gives dates like `Fri Nov 26, "
          "1999'.",
-         ({ "Don't show dates", "Show ISO dates", "Show text dates" }),
-	 !DIRLISTING);
-}
-
-string container_arel(string t, mapping m, string contents, RequestID id)
-{
-  if (id->misc->rel_base)
-    m->href = id->misc->rel_base+m->href;
-
-  return make_container("a", m, contents);
+         ({ "Don't show dates", "Show ISO dates", "Show CTIME dates" }));
 }
 
 string tag_directory_insert(string t, mapping m, RequestID id)
@@ -123,9 +102,8 @@ string find_readme(string d, RequestID id)
     string readme = id->conf->try_get_file(d+f, id);
 
     if (readme) {
-      if (id->conf->type_from_filename(f)!="text/html") {
+      if (id->conf->type_from_filename(f)!="text/html")
 	readme = "<pre>" + html_encode_string(readme) +"</pre>";
-      }
       return "<hr noshade>"+readme;
     }
   }
@@ -162,8 +140,8 @@ string describe_directory(string d, RequestID id)
   if (sizeof(dir)) dir = sort(dir);
 
   string result="";
-  int level=id->misc->dir_no_head++;
-  if(!level)
+  int toplevel=!id->misc->dir_no_head++;
+  if(toplevel)
   {
     result = "<html><head><title>Directory listing of "+d+"</title></head>\n"
 	     "<body><debug on>\n<h1>Directory listing of "+d+"</h1>\n<p>";
@@ -183,8 +161,16 @@ string describe_directory(string d, RequestID id)
     string mtime = "";
     if(stats) {
       len=stats[1];
-      mtime=ctime(stats[3]);
-      mtime=mtime[0..sizeof(mtime)-2];
+      switch(query("date")) {
+      case "Show CTIME dates":
+        mtime=ctime(stats[3]);
+        mtime=mtime[0..sizeof(mtime)-2];
+	break;
+      case "Show ISO dates":
+	mapping t=localtime(stats[3]);
+	mtime=sprintf("%4d-%02d-%02d %02d:%02d.%02d", t->year+1900, t->mon+1,
+		      t->mday, t->hour, t->min, t->sec);
+      }
     }
 
     switch(-len) {
@@ -209,30 +195,26 @@ string describe_directory(string d, RequestID id)
     result += sprintf(OUT_FORM, icon, id->misc->rel_base+file, file,
 		      sizetostring(len), mtime, type);
 
-    array(string) split_type = type/"/";
+    array(string) split_type = type/"/"+({"",""});
     string extras = "No support for this file type.";
 
     switch(split_type[0]) {
     case "text":
-      if (sizeof(split_type) > 1) {
-	switch(split_type[1]) {
-	case "html":
-	  extras = "</pre>\n<directory-insert quote=none file=\""+d+file+"\"><pre>";
-	  break;
-	case "plain":
-          extras = "<directory-insert file=\""+d+file+"\">";
-	  break;
-	}
+      switch(split_type[1]) {
+      case "html":
+	extras = "</pre>\n<directory-insert quote=none file=\""+d+file+"\"><pre>";
+	break;
+      default:
+	extras = "<directory-insert file=\""+d+file+"\">";
+	break;
       }
       break;
     case "application":
-      if (sizeof(split_type) > 1) {
-	switch(split_type[1]) {
-	case "x-include-file":
-	case "x-c-code":
-	  extras = "<directory-insert file=\""+d+file+"\">";
-	  break;
-	}
+      switch(split_type[1]) {
+      case "x-include-file":
+      case "x-c-code":
+	extras = "<directory-insert file=\""+d+file+"\">";
+	break;
       }
       break;
     case "image":
@@ -263,7 +245,7 @@ string describe_directory(string d, RequestID id)
     if(id->misc->foldlist_exists) result += "<fd>"+extras+"</fd></ft>\n";
   }
   if(id->misc->foldlist_exists) result += "</foldlist>\n";
-  if (!level) {
+  if (toplevel) {
     result +="</pre></body></html>\n";
   }
 
@@ -280,13 +262,14 @@ string|mapping parse_directory(RequestID id)
 
   if(strlen(f) > 1)
   {
-    if(!((f[-1] == '/') ||
-	 (QUERY(override) && (f[-1] == '.') && (f[-2] == '/'))))
-      return http_redirect(id->not_query+"/", id);
-  } else {
-    if(f != "/" )
-      return http_redirect(id->not_query+"/", id);
+    if(f[-1]!='/' && f[-1]!='.') return http_redirect(f+"/", id);
+    if(!QUERY(override)) {
+      if(f[-1]=='/' && f[-2]=='/') return http_redirect((f/"/"-({""}))*"/"+"/", id);
+      if(f[-1]=='.') return http_redirect(f[..sizeof(f)-3], id);
+    }
   }
+  else if(f != "/" )
+    return http_redirect(id->not_query+"/", id);
 
   // If the pathname ends with '.', and the 'override' variable
   // is set, a directory listing should be sent instead of the
@@ -307,14 +290,6 @@ string|mapping parse_directory(RequestID id)
     }
     // Restore the old query.
     id->not_query = f;
-  }
-
-  if (!DIRLISTING) {
-    return 0;
-  }
-
-  if (f[-1] != '.') {
-    f += ".";
   }
 
   if(query("spartan") || id->prestate->spartan_directory)
