@@ -1,10 +1,12 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
-string cvs_version = "$Id: gopher.pike,v 1.4 1997/01/29 04:59:44 per Exp $";
+string cvs_version = "$Id: gopher.pike,v 1.5 1997/07/16 01:02:01 grubba Exp $";
 // Gopher protocol module
 
 inherit "protocols/http"; /* For the variables and such.. */
 #include <config.h>
 #include <module.h>
+
+import Array;
 
 inline static private string extract_title(string from)
 {
@@ -72,7 +74,7 @@ mapping generate_directory()
   if(!mydir)
     return ([ "type":"text/gopherdir", "data":"0No such dir.\n" ]);
 
-  res = sort_array(map_array(map_array(mydir, lambda(string s, string f) {
+  res = sort(map(map(mydir, lambda(string s, string f) {
     array st;
     f += s;
     if(st = roxen->stat_file(f, this_object()))
