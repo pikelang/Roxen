@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.170 1998/11/30 00:44:59 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.171 1998/11/30 02:31:31 per Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -1734,6 +1734,11 @@ class StringFile
 
   string read(int nbytes)
   {
+    if(!nbytes)
+    {
+      offset = strlen(data);
+      return data;
+    }
     string d = data[offset..offset+nbytes-1];
     offset += strlen(d);
     return d;
