@@ -6,7 +6,7 @@
  * in October 1997
  */
 
-constant cvs_version = "$Id: business.pike,v 1.95 1998/03/08 20:35:17 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.96 1998/03/12 02:28:08 peter Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -170,12 +170,9 @@ mixed *register_module()
 void start(int num, object configuration)
 {
   loaded = 1;
-  program Bars  = (program)"create_bars";
-  program Graph = (program)"create_graph";
-  program Pie   = (program)"create_pie";
-  create_pie   = Pie()->create_pie;
-  create_bars  = Bars()->create_bars;
-  create_graph = Graph()->create_graph;
+  create_pie   = ((program)"create_pie")()->create_pie;
+  create_bars  = ((program)"create_bars")()->create_bars;
+  create_graph = ((program)"create_graph")()->create_graph;
 }
 
 void stop()
