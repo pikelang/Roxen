@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.399 2004/05/24 13:40:49 _cvs_stephen Exp $";
+constant cvs_version = "$Id: http.pike,v 1.400 2004/05/24 21:02:48 mani Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -120,15 +120,15 @@ class AuthEmulator
     switch( i )
     {
       case 0:
-	return conf->authenticate( this_object() );
+	return conf->authenticate( this );
       case 1:
-	if( u = conf->authenticate( this_object() ) )
+	if( u = conf->authenticate( this ) )
 	  return u->name();
 	if( realauth )
 	  return (realauth/":")[0];
 
       case 2:
-	if( u = conf->authenticate( this_object() ) )
+	if( u = conf->authenticate( this ) )
 	  return 0;
 	if( realauth )
 	  return ((realauth/":")[1..])*":";
@@ -841,7 +841,7 @@ void end(int|void keepit)
      && !catch(my_fd->query_address()) )
   {
     // Now.. Transfer control to a new http-object. Reset all variables etc..
-    object o = object_program(this)(0, 0, 0);
+    this_program o = this_program(0, 0, 0);
     o->remoteaddr = remoteaddr;
     o->client = client;
     o->supports = supports;
@@ -2152,9 +2152,9 @@ void got_data(mixed fooid, string s)
 /* Get a somewhat identical copy of this object, used when doing
  * 'simulated' requests. */
 
-object clone_me()
+this_program clone_me()
 {
-  object c=object_program(this)(0, port_obj, conf);
+  this_program c=this_program(0, port_obj, conf);
 #ifdef ID_OBJ_DEBUG
   werror ("clone %O -> %O\n", this, c);
 #endif
