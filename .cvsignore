@@ -3,6 +3,7 @@ Makefile
 config.cache
 config.log
 config.status
+config.h.in
 logs
 ulpc
 configure
