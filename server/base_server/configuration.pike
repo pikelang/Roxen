@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.176 1999/05/24 01:01:20 js Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.177 1999/05/25 01:40:03 mast Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -2132,14 +2132,13 @@ mapping(string:object) server_ports = ([]);
 int ports_changed = 1;
 void start(int num)
 {
+  // Note: This may be run before uid:gid is changed.
+
   string server_name = query_name();
   array port;
   int err=0;
   object lf;
   mapping new=([]), o2;
-
-  parse_log_formats();
-  init_log_file();
 
 #if 0
   // Doesn't seem to be set correctly.
@@ -3224,6 +3223,10 @@ void enable_all_modules()
 #endif
   array modules_to_process=sort(indices(retrieve("EnabledModules",this)));
   string tmp_string;
+
+  parse_log_formats();
+  init_log_file();
+
   perror("\nEnabling all modules for "+query_name()+"... \n");
 
 #if constant(_compiler_trace)
