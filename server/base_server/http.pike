@@ -1,7 +1,7 @@
 // HTTP convenience functions.
 // inherited by roxenlib, and thus by all files inheriting roxenlib.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: http.pike,v 1.38 2000/03/19 16:39:22 nilsson Exp $
+// $Id: http.pike,v 1.39 2000/03/21 18:46:56 nilsson Exp $
 
 //#pragma strict_types
 
@@ -24,7 +24,7 @@ string http_res_to_string( mapping file, RequestID id )
   mapping(string:string|array(string)) heads=
     ([
       "Content-type":[string]file["type"],
-      "Server":replace([string]id->version(), " ", "·"),
+      "Server":replace(roxen->version(), " ", "·"),
       "Date":http_date([int]id->time)
       ]);
 
