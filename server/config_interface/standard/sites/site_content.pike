@@ -2,57 +2,11 @@ inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
 #include <module.h>
 
-string module_global_page( RequestID id, Configuration conf )
+string module_global_page( RequestID id, string conf )
 {
-  if( id->misc->needs_reload )
-    return #"
- Needs reload
-<header name=Refresh value=0>
-";
-  return 
-#"<awizard debug=1>
-  <page name=top>
-    <button page=add_module gbutton_title='Add module'>
-    <button page=delete_module gbutton_title='Drop module'>
-  </page>
-
-  <page name=add_module>
-    <insert file=add_module.inc>
-    <dbutton page=return gbutton_title=' Add selected modules '>
-      <pike>
-       id->variables[\"cf_goto_.x\"] = \"10\";
-       array modules = id->variables->_add_new_modules/\"\\0\";
-       id->variables->_add_new_modules = \"\";
-       modules = indices(mkmapping(modules,modules))-({\"\"});
-       foreach( modules, string module )
-       {
-         werror(\"Enabling \"+module+\"\\n\");
-         id->misc->current_configuration->enable_module( module );
-       }
-       return \"<header name=Refresh value=0>\";
-      </pike>
-    </dbutton>
-  </page>
-
-  <page name=return>
-    <pike>id->misc->needs_reload=1;id->variables=([]);return \"\"</pike>
-  </page>
-  
-   <page name=delete_module>
-     <configif-output source=config-modules
-                      configuration='"+conf->name+#"'>
-       <dbutton gbutton_title=' Drop #name#'>
-         <pike> 
-           id->misc->current_configuration->
-               disable_module( replace(\"#sname#\",\"!\",\"##\") ); 
-           id->variables[\"cf_goto_.x\"] = \"10\";
-           return \"\";
-         </pike>
-       </dbutton><br>
-     </configif-output><p>
-   <button page=return gbutton_title=' Done '>
-   </page>
-</awizard>";
+  return sprintf("<gbutton preparse href='../../../add_module.pike?config=%s'> "
+                 "<cf-locale get=add_module> </gbutton>",
+                 http_encode_string( conf ) );
 }
 
 #define translate( X ) _translate( (X), id )
@@ -198,7 +152,7 @@ string get_eventlog( object o, RequestID id )
      return id->variables->reversed?-a[-1]:a[0];
   });
   sort(r2,report);
-  for(int i=0;i<sizeof(report);i++) 
+  for(int i=0;i<sizeof(report);i++)
      report[i] = describe_error(report[i], log[report[i]]);
   return "<h2><cf-locale get=eventlog></h2>"+(report*"");
 }
@@ -224,10 +178,10 @@ string find_module_doc( string cn, string mn, object id )
   roxen.ModuleInfo mi = roxen.find_module( (mn/"!")[0] );
 
   string eventlog = get_eventlog( m,id );
-  
+
 
   return replace( "<br><b><font size=+2>"
-                  + translate(m->register_module()[1]) + 
+                  + translate(m->register_module()[1]) +
                   "</font></b><br>"
                   + translate(m->info()) + "<p>"
                   + translate(m->status()||"") +"<p>"
@@ -247,7 +201,7 @@ string module_page( RequestID id, string conf, string module )
 {
   while( id->misc->orig )
     id = id->misc->orig;
-  if((id->variables->section == "Information") 
+  if((id->variables->section == "Information")
      ||!(id->variables->section)
      ||id->variables->info_section_is_it)
     return "<blockquote>"+find_module_doc( conf, module, id )+"</blockquote>";
@@ -272,13 +226,13 @@ string parse( RequestID id )
   array(string) path = ((id->misc->path_info||"")/"/")-({""});
 
   // roxen_perror(sprintf("site_content:parse(): path: %{%O,%}\n", path));
-  
+
   if( id->variables->section )
     sscanf( id->variables->section, "%s\0", id->variables->section );
 
   if( !sizeof( path )  )
     return "Hm?";
-  
+
   object(Configuration) conf = roxen->find_configuration( path[0] );
   id->misc->current_configuration = conf;
 
@@ -312,7 +266,7 @@ string parse( RequestID id )
     switch( path[ 1 ] )
     {
      case "settings":
-       return   
+       return
 #"<formoutput quote=\"¤\">
 <configif-output source=config-variables configuration=\""+
 path[ 0 ]+#"\" section=\"¤section:quote=dtag¤\"></configif-output>"+#"
@@ -331,7 +285,7 @@ path[ 0 ]+#"\" section=\"¤section:quote=dtag¤\">
 
      case "modules":
        if( sizeof( path ) == 2 )
-         return module_global_page( id, conf );
+         return module_global_page( id, path[0] );
        else
          return module_page( id, path[0], path[2] );
     }
