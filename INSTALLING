@@ -19,7 +19,7 @@
      (where "Roxen-archive-name" is the name of the Roxen archive
      file.).
 
-  3. Type "cd roxen_version" to change to the new directory. This
+  3. Type "cd <roxen_version>" to change to the new directory. This
      directory should contain at the very least four directories:
      server (Roxen server source), pike (the Pike intepreter), extern
      (misc. programs used by Roxen) and tools (misc tools). See README
@@ -62,7 +62,7 @@
  http://www.roxen.com/
 
 ----------------------------------------------------------------------------
-Example installation session using 4b:
+Example installation session using the 4b route:
 
 bash$ tar xzf roxen_1.2.tar.gz
 bash$ cd roxen_1.2
