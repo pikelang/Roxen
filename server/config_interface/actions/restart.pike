@@ -1,5 +1,5 @@
 /*
- * $Id: restart.pike,v 1.10 2001/02/02 12:27:37 per Exp $
+ * $Id: restart.pike,v 1.11 2001/02/07 21:57:22 per Exp $
  */
 
 #include <config_interface.h>
@@ -55,23 +55,23 @@ LOCALE(234, "You might see the old process for a while in the process table "
 
  <cf-perm perm='Restart'>
    <gbutton href='?what=restart&action=restart.pike&class=maintenance' 
-            width=300 icon_src=/internal-roxen-err_2> "+
+            width=300 icon_src=&usr.err-2;> "+
        LOCALE(197,"Restart")+#" </gbutton>
  </cf-perm>
 
 <cf-perm not perm='Restart'>
-  <gbutton dim width=300 icon_src=/internal-roxen-err_2> "+
+  <gbutton dim width=300 icon_src=&usr.err-2;> "+
        LOCALE(197,"Restart")+#" </gbutton>
 </cf-perm>
 
 <cf-perm perm='Shutdown'>
   <gbutton href='?what=shutdown&action=restart.pike&class=maintenance' 
-           width=300  icon_src=/internal-roxen-err_3> "+
+           width=300  icon_src=&usr.err-3;> "+
        LOCALE(198,"Shutdown")+#" </gbutton>
 </cf-perm>
 
 <cf-perm not perm='Shutdown'>
-  <gbutton dim width=300 icon_src=/internal-roxen-err_3> "+
+  <gbutton dim width=300 icon_src=&usr.err-3;> "+
        LOCALE(198,"Shutdown")+#" </gbutton>
 </cf-perm>
 

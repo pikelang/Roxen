@@ -126,7 +126,7 @@ string parse( RequestID id )
 
     warn += f->cannot_change_back;
     res += f->version+"</td><td>"+
-      (f->cannot_change_back?"<img alt='#' src='/internal-roxen-err_2' />":"")+
+      (f->cannot_change_back?"<img alt='#' src='&usr.err-2;' />":"")+
       "</td><td>"+d->set_language( roxen.get_locale() )->format_ext_ymd() + "</td>"
       "<td>"+nice_relative_date( diff )+"</td>"
       "<td>"+f->dir+"</td></tr>\n";
@@ -136,7 +136,7 @@ string parse( RequestID id )
 
   if( warn )
     res += "<table><tr><td valign='top'>"
-      "<img src='/internal-roxen-err_2' alt='#' /></td>\n"
+      "<img src='&usr.err-2;' alt='#' /></td>\n"
       "<td>"+
       sprintf((string)
 	      _(0,"If you change to one these roxen versions, you will not be "

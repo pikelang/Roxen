@@ -12,7 +12,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.135 2001/02/06 20:39:10 marcus Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.136 2001/02/07 21:57:25 per Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Administration interface RXML tags";
 
@@ -73,6 +73,9 @@ class Scope_usr
      case "count-2": return "/internal-roxen-count_3";
      case "count-3": return "/internal-roxen-count_2";
 
+
+     case "toptabs-padwidth": return "50";
+     case "leftside-padwidth": return "150";
      case "logo-html":
        return "<img border=\"0\" src="+QALIAS("logo")+" />";
 
@@ -159,10 +162,11 @@ class Scope_usr
 
 
       /* standalone, nothing is based on these. */
-     case "warncolor":           return "darkred";
+     case "warncolor":            return "darkred";
      case "content-toptableargs": return "";
      case "left-image":           return "/internal-roxen-unit";
      case "selected-indicator":   return "/internal-roxen-next";
+     case "database-small":       return "/internal-roxen-database_small";
      case "next":                 return "/internal-roxen-next";
      case "item-indicator":       return "/internal-roxen-dot";
      case "logo":                 return "/internal-roxen-roxen";

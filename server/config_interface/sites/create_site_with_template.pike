@@ -103,7 +103,7 @@ string|mapping parse( RequestID id )
         sts += ({({ name,
                     "<cset variable='var.url'>"
                     "<gbutton-url width='400' "
-                    "             icon_src='/internal-roxen-next' "
+                    "             icon_src='&usr.next;' "
                     "             align_icon='right'>"
                     + Roxen.html_encode_string(name) +
                     "</gbutton-url></cset>"
