@@ -197,6 +197,7 @@ worldmap binary
 /server/modules/examples/userdb_ex.pike foreign_ident
 /server/modules/filesystems/filesystem.pike foreign_ident
 /server/modules/filesystems/incoming.pike foreign_ident
+/server/modules/filesystems/repositoryfs.pike foreign_ident
 /server/modules/filesystems/restrictedfs.pike foreign_ident
 /server/modules/filesystems/sqlfs.pike foreign_ident
 /server/modules/filesystems/tarfs.pike foreign_ident
