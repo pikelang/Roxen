@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.6 2000/01/31 11:11:33 wellhard Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.7 2000/01/31 11:47:45 jonasw Exp $";
 //constant thread_safe=1;
 
 #include <module.h>
@@ -193,7 +193,7 @@ string container_js_dragdrop(string name, mapping args, string contents,
 static private
 string tag_js_include(string name, mapping args, object id)
 {
-  if((float)(id->client_var->javascript) < 1.2)
+  if(id->client_var && (float)(id->client_var->javascript) < 1.2)
     return "<!-- Client do not support Javascript 1.2 -->";;
   return ("<script language=\"javascript\" src=\""+
 	  query_internal_location()+args->file+"\"></script>");
