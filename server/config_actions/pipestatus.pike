@@ -1,11 +1,11 @@
 /*
- * $Id: pipestatus.pike,v 1.1 1997/08/24 02:20:46 peter Exp $
+ * $Id: pipestatus.pike,v 1.2 1997/08/29 17:20:09 grubba Exp $
  */
 
 inherit "wizard";
 constant name= "Status//Pipe system status";
 
-constant doc = ("Show the bimber of data schuffling channels.");
+constant doc = ("Show the number of data shuffling channels.");
 
 constant more=1;
 
