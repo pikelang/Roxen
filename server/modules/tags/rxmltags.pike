@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.372 2002/05/23 14:42:31 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.373 2002/06/11 14:27:27 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2958,6 +2958,35 @@ class TagDefine {
       return 0;
     }
 
+    // Callbacks used by the <attrib> parser. These are intentionally
+    // defined outside the scope of do_return to avoid getting dynamic
+    // frames with cyclic references. (Pike ought to be able to
+    // refcount garb this.)
+
+    private string add_default(Parser.HTML p, mapping m, string c,
+			       mapping defaults, RequestID id)
+    {
+      if(m->name) defaults[m->name]=Roxen.parse_rxml(c, id);
+      return "";
+    };
+
+    private array no_more_attrib (Parser.HTML p, void|string ignored)
+    {
+      p->add_container ("attrib", 0);
+      p->_set_tag_callback (0);
+      p->_set_data_callback (0);
+      p->add_quote_tag ("?", 0, "?");
+      p->add_quote_tag ("![CDATA[", 0, "]]");
+      return 0;
+    };
+
+    private array data_between_attribs (Parser.HTML p, string d)
+    {
+      sscanf (d, "%[ \t\n\r]", string ws);
+      if (d != ws) no_more_attrib (p);
+      return 0;
+    }
+
     array do_return(RequestID id) {
       string n;
       RXML.Context ctx = RXML_CONTEXT;
@@ -2995,37 +3024,19 @@ class TagDefine {
 
 	  if(!content) content = "";
 
-	  string add_default(Parser.HTML p, mapping m, string c) {
-	    if(m->name) defaults[m->name]=Roxen.parse_rxml(c, id);
-	    return "";
-	  };
-
 	  Parser.HTML p;
 	  if( compat_level > 2.1 ) {
 	    p = Roxen.get_xml_parser();
-	    p->add_container ("attrib", add_default);
-	    array no_more_attrib (Parser.HTML p, void|string ignored)
-	    {
-	      p->add_container ("attrib", 0);
-	      p->_set_tag_callback (0);
-	      p->_set_data_callback (0);
-	      p->add_quote_tag ("?", 0, "?");
-	      p->add_quote_tag ("![CDATA[", 0, "]]");
-	      return 0;
-	    };
+	    p->add_container ("attrib", ({add_default, defaults, id}));
 	    // Stop parsing for attrib tags when we reach something else
 	    // than whitespace and comments.
 	    p->_set_tag_callback (no_more_attrib);
-	    p->_set_data_callback (lambda (Parser.HTML p, string d) {
-				     sscanf (d, "%[ \t\n\r]", string ws);
-				     if (d != ws) no_more_attrib (p);
-				     return 0;
-				   });
+	    p->_set_data_callback (data_between_attribs);
 	    p->add_quote_tag ("?", no_more_attrib, "?");
 	    p->add_quote_tag ("![CDATA[", no_more_attrib, "]]");
 	  }
 	  else
-	    p = Parser.HTML()->add_container("attrib", add_default);
+	    p = Parser.HTML()->add_container("attrib", ({add_default, defaults, id}));
 
 	  if (preparsed_contents_tags) {
 	    // Translate the &_internal_.4711; references to
