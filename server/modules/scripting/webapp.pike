@@ -7,7 +7,7 @@ inherit "roxen-module://filesystem";
 
 import Parser.XML.Tree;
 
-constant cvs_version = "$Id: webapp.pike,v 2.19 2002/06/28 23:33:18 nilsson Exp $";
+constant cvs_version = "$Id: webapp.pike,v 2.20 2002/07/17 17:39:03 nilsson Exp $";
 
 constant thread_safe=1;
 constant module_unique = 0;
@@ -910,7 +910,7 @@ class RXMLParseWrapper
     if (collect == 1)
     {
       res = Roxen.http_rxml_answer(get_data(1), _id);
-      WEBAPP_WERR(sprintf("get_result returns rxml_answer=%O", res));
+      //WEBAPP_WERR(sprintf("get_result returns rxml_answer=%O", res));
     }
     else
     {
@@ -1107,8 +1107,15 @@ mapping(string:string|mapping|Servlet.servlet) match_ext_servlet(string f, Reque
 //              f, e, e[1..], f[sizeof(f)-sizeof(e)+1..]));
       if (e[1..] == f[sizeof(f)-sizeof(e)+1..])
         {
-          WEBAPP_WERR("match on 'ext'!!");
-          return servlets[servletmaps["ext"][e]];
+          WEBAPP_WERR("match on 'ext' "+e+"!");
+	  mixed s = servlets[servletmaps["ext"][e]];
+	  // Kludge to be able to mount jsp pages on a mountpoint
+	  // other than / with gnujsp.
+	  if(s["servlet-class"] == "org.gjt.jsp.JspServlet") {
+	    WEBAPP_WERR("applying pathinfo kludge");
+	    id->misc->path_info = id->misc->servlet_path;
+	  }
+          return s;
         }
     }
 
@@ -1243,11 +1250,14 @@ mixed find_file( string f, RequestID id )
   if (loc[-1] == '/')
     id->misc->mountpoint = loc[..sizeof(loc)-2];
 
+  string path_info = id->misc->path_info;
   servlet = map_servlet(f, id);
 
   if (!servlet) {
-    if (!is_special(f, id))
+    if (!is_special(f, id)) {
+      id->misc->path_info = path_info;
       return ::find_file(f, id);
+    }
     else 
       return 0;
   }
@@ -1410,8 +1420,9 @@ mixed call_servlet( RXML.Frame frame, RequestID id, string f, string name )
     id->misc->servlet_path = combine_path("/", f);
     id->misc->path_info = 0;
   }
-  else
+  if(!servlet) {
     servlet = map_servlet(f, id);
+  }
 
   if (!servlet) {
       frame->parse_error("Servlet not found!\n");
@@ -1425,9 +1436,11 @@ mixed call_servlet( RXML.Frame frame, RequestID id, string f, string name )
           object rxml_wrapper;
 
           if (mixed e = catch {
+	    mapping request_headers = copy_value(id->request_headers);
             rxml_wrapper = RXMLParseWrapper(0, id);
 	    id = id->clone_me();
             id->my_fd = rxml_wrapper;
+	    id->request_headers = request_headers;
 
 #ifdef WEBAPP_CHAINING
             object chain_wrapper;
@@ -1517,6 +1530,11 @@ class TagServlet
   mapping(string:RXML.Type) req_arg_types = ([
     "webapp": RXML.t_text(RXML.PEnt)
   ]);
+  mapping(string:RXML.Type) opt_arg_types = ([
+    "name": RXML.t_text(RXML.PEnt),
+    "uri": RXML.t_text(RXML.PEnt),
+    "no-headers": RXML.t_text(RXML.PEnt)
+  ]);
   //array(RXML.Type) result_types = ({RXML.t_any});
 
   class Frame {
@@ -1535,7 +1553,7 @@ class TagServlet
         WEBAPP_WERR(sprintf("module:%O\n", m->query_name()));
         if (m->query("tagtarget") == args->webapp)
         {
-          string uri = args->uri || "";
+          string uri = args->uri || id->raw_url;
           RequestID fake_id;
 
           if(!objectp(id))
@@ -1564,10 +1582,17 @@ class TagServlet
 
           fake_id->raw_url=uri;
           fake_id->not_query=uri;
-          fake_id->method = "GET";
+
+	  // Remove mountpoint from the faked uri.
+	  string f = has_prefix(uri, mountpoint)? uri[sizeof(mountpoint)..]: uri;
+
+	  // Remove fake_id->raw to prevent the java bridge to use the raw and incorrect url.
+	  fake_id->raw = 0;
+	  // Restore headers.
+	  fake_id->request_headers = copy_value(id->request_headers);
 
           mapping hdrs = m->call_servlet(this_object(), fake_id,
-                                         uri, args->name || "");
+                                         f, args->name || "");
 
           CACHE( fake_id->misc->cacheable );
           destruct (fake_id);
@@ -1577,10 +1602,15 @@ class TagServlet
                          id, uri, hdrs);
           }
 
-          if (hdrs->error)
-            RXML_CONTEXT->set_misc (" _error", hdrs->error);
-          if (hdrs->extra_heads)
-            RXML_CONTEXT->extend_scope ("header", hdrs->extra_heads);
+	  if (!args["no-headers"]) {
+	    if (hdrs->error && hdrs->error != 200) {
+	      RXML_CONTEXT->set_misc (" _error", hdrs->error);
+	      if (hdrs->rettext)
+		RXML_CONTEXT->set_misc (" _rettext", hdrs->rettext);
+	    }
+	    if (hdrs->extra_heads)
+	      RXML_CONTEXT->extend_scope ("header", hdrs->extra_heads);
+	  }
 //               foreach(rxml_wrapper->headermap, string h)
 //               {
 //                 if (stringp(rxml_wrapper->headermap[h]))
@@ -1597,8 +1627,6 @@ class TagServlet
 //                     id->add_response_header(h, v);
 //                   }
 //               }
-          if (hdrs->rettext)
-            RXML_CONTEXT->set_misc (" _rettext", hdrs->rettext);
           result = hdrs["data"];
 
           return 0;
@@ -1961,6 +1989,10 @@ constant tagdoc=([
  <p>The uri of the servlet. This is matched against the &lt;url-pattern&gt;
  entry in the web.xml file if the name attribute is not given, otherwise
  it is just passed on to the servlet as the servlet path.</p>
+</attr>
+
+<attr name='no-headers'>
+ <p>If set no headers from the result will be set in the page.</p>
 </attr>"
 ,
 
