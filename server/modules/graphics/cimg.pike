@@ -7,7 +7,7 @@ inherit "roxenlib";
 constant thread_safe=1;
 
 roxen.ImageCache the_cache;
-constant cvs_version="$Id: cimg.pike,v 1.17 2000/06/01 11:49:20 kuntri Exp $";
+constant cvs_version="$Id: cimg.pike,v 1.18 2000/06/01 12:05:06 kuntri Exp $";
 constant tagdesc="Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
 "to convert images between different image formats.";
 
@@ -123,16 +123,16 @@ All examples are made for the &lt;cimg&gt; tag.
 <attr name='gamma' value='number' default='1.0'>
  Perform gamma adjustment.
 <ex>
-<cimg src='internal-roxen-robodog' gamma='0.1' />
+<cimg src='internal-roxen-robodog' gamma='0.1'/>
 </ex>
 <ex>
-<cimg src='internal-roxen-robodog' gamma='0.5'/ />
+<cimg src='internal-roxen-robodog' gamma='0.5'/>
 </ex>
 <ex>
 <cimg src='internal-roxen-robodog' gamma='1.0'/>
 </ex>
 <ex>
-<cimg src='internal-roxen-robodog' gamma='2.0' />
+<cimg src='internal-roxen-robodog' gamma='2.0'/>
 </ex>
 <ex>
 <cimg src='internal-roxen-robodog' gamma='8.0'/>
