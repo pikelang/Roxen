@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.481 2000/04/14 22:32:28 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.482 2000/04/17 10:36:17 grubba Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -599,6 +599,7 @@ void threaded_handle(function f, mixed ... args)
 }
 
 int number_of_threads;
+static array(object) handler_threads = ({});
 void start_handler_threads()
 {
   if (QUERY(numthreads) <= 1) {
@@ -609,26 +610,34 @@ void start_handler_threads()
                  language_low("en")->number(  QUERY(numthreads) )
                  +" threads to handle requests.\n");
   }
+  array(object) new_threads = ({});
   for(; number_of_threads < QUERY(numthreads); number_of_threads++)
-    do_thread_create( "Handle thread ["+number_of_threads+"]",
-		   handler_thread, number_of_threads );
+    new_threads += ({ do_thread_create( "Handle thread [" +
+					number_of_threads + "]",
+					handler_thread, number_of_threads ) });
+  handler_threads += new_threads;
 }
 
 void stop_handler_threads()
 {
   int timeout=10;
+#if constant(_reset_dmalloc)
+  // DMALLOC slows stuff down a bit...
+  timeout *= 10;
+#endif /* constant(_reset_dmalloc) */
   report_debug("Stopping all request handler threads.\n");
   while(number_of_threads>0) {
     number_of_threads--;
     handle_queue->write(0);
     thread_reap_cnt++;
   }
+  handler_threads = ({});
   while(thread_reap_cnt) {
+    sleep(0.1);
     if(--timeout<=0) {
       report_debug("Giving up waiting on threads!\n");
       return;
     }
-    sleep(0.1);
   }
 }
 #endif /* THREADS */
