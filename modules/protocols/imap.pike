@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.120 1999/03/22 19:50:12 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.121 1999/03/22 21:29:41 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -584,7 +584,7 @@ class imap_mail
 	    || sizeof(list->options -({ 0 })))
 	  throw("Invalid header list");
 
-	list = Array.map(lower_case, list->atom);
+	list = Array.map(list->atom, lower_case);
 	mapping(string:string) filter = mkmapping(list, list);
 
 	switch(sizeof(attr->section))
