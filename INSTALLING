@@ -25,7 +25,7 @@
      extern (misc. programs used by Roxen) and tools (misc tools). See
      README for more information about the directory structure.
 
-  4. Type ./configure --prefix=<wanted_base_path_for_Roxen>
+  4. Type ./configure --prefix=<wanted_base_path_for_roxen>
      (defaults to /usr/local, thus placing Roxen in /usr/local/roxen/)
      followed by make and make install to build the binaries and copy them 
      to the correct place.
