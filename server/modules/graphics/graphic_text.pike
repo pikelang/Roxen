@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.75 1997/09/19 16:37:20 js Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.76 1997/09/22 01:21:26 js Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -921,6 +921,7 @@ string magic_javascript_header(object id)
      "  setTimeout(\"top.window.status = '\"+txt+\"'\", 100);\n"
      "}\n"
      "</script>\n");
+
 }
 
 
@@ -942,7 +943,7 @@ string magic_image(string url, int xs, int ys, string sn,
      "</script>\n"+
      ("<a "+extra_args+"href=\""+url+"\" "+
       (input?"onClick='document.forms[0].submit();' ":"")
-      +"onMouseover=\"img_act('"+sn+"',"+sn+"h,'"+(mess||url)+"');\"\n"
+      +"onMouseover=\"img_act('"+sn+"',"+sn+"h,'"+(mess||url)+"'); return true;\"\n"
       "onMouseout='document.images[\""+sn+"\"].src = "+sn+"l.src;'><img "
       "_parsed=1 width="+xs+" height="+ys+" src=\""+image_1+"\" name="+sn+
       " border=0 alt=\""+alt+"\" ></a>\n"));
