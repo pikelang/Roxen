@@ -1,5 +1,5 @@
 /*
- * $Id: upload_license.pike,v 1.1 2002/03/06 16:21:23 wellhard Exp $
+ * $Id: upload_license.pike,v 1.2 2002/04/08 12:49:53 wellhard Exp $
  */
 
 #include <roxen.h>
@@ -17,14 +17,17 @@ mixed parse( RequestID id )
   string txt = #"
   <h1>Upload License</h1>
   <if variable='form.file'>
+    <set variable='var.filename'
+      ><get-post-filename filename='&form.file..filename;'
+                          js-filename='&form.fixedfilename;'></set>
     <if variable='form.Overwirte..x'>
       <set variable='var.ok' value='ok'/>
     </if>
-    <elseif license='&form.file..filename;'>
+    <elseif license='&var.filename;'>
       <input type='hidden' name='action' value='&form.action;'/>
       <input type='hidden' name='file' value='&form.file;'/>
-      <input type='hidden' name='file.filename' value='&form.file..filename;'/>
-      Warning the license file &form.file..filename; does already exists.
+      <input type='hidden' name='file.filename' value='&var.filename;'/>
+      Warning the license file <b>&var.filename;</b> does already exists.
       Do you want to overwrite the file? <br />
       <submit-gbutton>Overwirte</submit-gbutton>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -35,7 +38,7 @@ mixed parse( RequestID id )
       <set variable='var.ok' value='ok'/>
     </else>
     <if variable='var.ok'>
-      <upload-license filename='&form.file..filename;' from='form.file'/>
+      <upload-license filename='&var.filename;' from='form.file'/>
       License uploaded successfuly. <cf-ok/>
     </if>
   </if>
@@ -43,7 +46,10 @@ mixed parse( RequestID id )
     <input type='hidden' name='action' value='&form.action;'/>
     Select local file to upload: <br />
     <input type='file' name='file'/>
-    <submit-gbutton name='ok'>Ok</submit-gbutton>
+    <input type='hidden' name='fixedfilename' value='' />
+    <submit-gbutton name='ok'
+      onClick=\"this.form.fixedfilename.value=this.form.file.value.replace(/\\\\/g,'\\\\\\\\')\">Ok</submit-gbutton>
+
     <cf-cancel/>
   </else>
 ";
