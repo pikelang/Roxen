@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.475 2005/02/10 16:29:19 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.476 2005/02/15 14:38:34 grubba Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -3742,6 +3742,7 @@ class TagCase {
     array do_process(RequestID id) {
       if(args->case) {
 	string op;
+	if (!content) return ({ RXML.nil });
 	switch(lower_case(args->case)) {
 	  case "lower":
 	    if (content_type->lower_case)
