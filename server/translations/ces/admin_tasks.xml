@@ -26,9 +26,8 @@
 <file>../config_interface/standard/actions/make_selfsigned_dsa.pike</file>
 
 <str id="1">
-<new/>
 <o>Pike memory usage information</o>
-<t></t>
+<t>Vyu¾ití pamìti Pikem</t>
 </str>
 
 <str id="2">
@@ -38,27 +37,23 @@
 </str>
 
 <str id="3">
-<new/>
 <o>Type</o>
-<t></t>
+<t>Typ</t>
 </str>
 
 <str id="4">
-<new/>
 <o>Number</o>
-<t></t>
+<t>Èíslo</t>
 </str>
 
 <str id="5">
-<new/>
 <o>Change</o>
-<t></t>
+<t>Zmìnit</t>
 </str>
 
 <str id="6">
-<new/>
 <o>Pike module list</o>
-<t></t>
+<t>Seznam Pike modulù</t>
 </str>
 
 <str id="7">
@@ -332,9 +327,8 @@
 </str>
 
 <str id="235">
-<new/>
 <o>Roxen will &lt;b&gt;not&lt;/b&gt; restart automatically.</o>
-<t></t>
+<t>Roxen &lt;b&gt;nebude&lt;/b&gt; automaticky restartován.</t>
 </str>
 
 <str id="35">
@@ -350,9 +344,8 @@
 </str>
 
 <str id="37">
-<new/>
 <o>version</o>
-<t></t>
+<t>verze</t>
 </str>
 
 <str id="38">
@@ -362,9 +355,8 @@
 </str>
 
 <str id="39">
-<new/>
 <o>Thread</o>
-<t></t>
+<t>Vlákna</t>
 </str>
 
 <str id="16">
@@ -374,9 +366,8 @@
 </str>
 
 <str id="228">
-<new/>
 <o>Status</o>
-<t></t>
+<t>Stav</t>
 </str>
 
 <str id="229">
@@ -396,15 +387,13 @@
 </str>
 
 <str id="40">
-<new/>
 <o>Version:</o>
-<t></t>
+<t>Verze:</t>
 </str>
 
 <str id="41">
-<new/>
 <o>Booted:</o>
-<t></t>
+<t>Startován:</t>
 </str>
 
 <str id="42">
@@ -504,9 +493,8 @@
 </str>
 
 <str id="58">
-<new/>
 <o>Available font loaders</o>
-<t></t>
+<t>Dostupné zavadìèe fontù</t>
 </str>
 
 <str id="59">
