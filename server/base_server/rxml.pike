@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.243 2000/09/15 12:09:37 kuntri Exp $
+// $Id: rxml.pike,v 1.244 2000/09/16 18:02:01 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -1561,13 +1561,25 @@ class TagEmitSources {
 class TagEmitForeach {
   inherit RXML.Tag;
   constant name="emit";
-  constant plugin_name="foreach";
+  constant plugin_name="values";
 
   array(mapping(string:string)) get_dataset(mapping m, RequestID id) {
+    if(m["from-scope"]) {
+      m->values=([]);
+      RXML.Context context=RXML.get_context();
+      map(context->list_var(m["from-scope"]),
+	  lambda(string var){ m->values[var]=context->get_var(var, m["from-scope"]);
+	  return ""; });
+    }
     if(!m->values) return ({});
     if(stringp(m->values)) m->values=m->values / (m->split || "\000");
-    return Array.map( m->values,
-		      lambda(mixed val) { return (["value":val]); } );
+    if(mappingp(m->values))
+      return map( indices(m->values),
+		  lambda(mixed ind) { return (["index":ind,"value":m->values[ind]]); });
+    if(arrayp(m->values))
+      return map( m->values,
+		  lambda(mixed val) { return (["value":val]); } );
+    RXML.run_error("Values variable has wrong type %t.\n", m->values);
   }
 }
 
@@ -2801,17 +2813,22 @@ Available variables are:",
 </desc>",
   ([ "&_.source;":"<desc ent>The name of the source.</desc>" ]) }),
 
-"emit#foreach":({ #"<desc plugin>
+"emit#values":({ #"<desc plugin>
  Splits the string provided in the values attribute and outputs the parts in a loop. The
- value in the values attribute may also be an array.
+ value in the values attribute may also be an array or mapping.
 </desc>
-<attr name=values value='string or array' required>
-The string to be splitted into an array or an array.
+<attr name=values value='string, mapping or array' required>
+An array or the string to be splitted into an array.
 </attr>
 <attr name=split value=string default=NULL>
 The string the values string is splitted with.
-</attr>",
-  ([ "&_.value;":"<desc ent>The value of one part of the splitted string</desc>" ]) }),
+</attr>
+<attr name=form-scope value=name>
+Create a mapping out of a scope and give it as indata to the emit.
+</attr>
+",
+  ([ "&_.value;":"<desc ent>The value of one part of the splitted string</desc>",
+     "&_.index;":"<desc ent>The index of this mapping entry, if input was a mapping</desc>" ]) }),
 
 "emit":({ #"<desc cont><short>Provides data, fetched from different sources, as
  entities</short></desc>
