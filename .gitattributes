@@ -44,7 +44,6 @@ worldmap binary
 # Files containing CVS ids follow.
 # Remove the corresponding line before committing
 # changes to these files.
-/local/rxml_packages/cucimorph.pkg foreign_ident
 /server/admin_interface/boxes/userfriendly.pike foreign_ident
 /server/admin_interface/sites/add_module.pike foreign_ident
 /server/admin_interface/sites/site_content.pike foreign_ident
