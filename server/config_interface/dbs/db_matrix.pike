@@ -44,7 +44,7 @@ string|mapping parse( RequestID id )
   mapping q = DBManager.get_permission_map( );
   if( !sizeof( q ) )
     return "No defined datbases\n";
-  string res = "<br /><table width='80%' border='0' cellpadding='4' cellspacing='0'>\n";
+  string res = "<br /><table border='0' cellpadding='4' cellspacing='0'>\n";
   int x, y;
   int i = 1;
   int tc = sizeof( roxen->configurations )+2;
@@ -116,7 +116,7 @@ string|mapping parse( RequestID id )
         +"&nbsp; &nbsp;<a href='browser.pike?db="+db+"'>"+
         "<cimg border='0' format='gif'"
         "      src='&usr.database-small;' alt='' max-height='12'/>"
-        "  "+db+"</a>"+
+        "&nbsp;&nbsp;"+db+"</a>"+
         "</nobr>"
         "</td>";
     foreach( sort(roxen->configurations->name), string conf )
