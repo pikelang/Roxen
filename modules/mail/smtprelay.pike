@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 1.10 1998/09/15 19:06:34 grubba Exp $
+ * $Id: smtprelay.pike,v 1.11 1998/09/15 19:08:11 grubba Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RELAY_DEBUG
 
-constant cvs_version = "$Id: smtprelay.pike,v 1.10 1998/09/15 19:06:34 grubba Exp $";
+constant cvs_version = "$Id: smtprelay.pike,v 1.11 1998/09/15 19:08:11 grubba Exp $";
 
 /*
  * Some globals
@@ -643,7 +643,7 @@ static void check_mail(int t)
     check_interval = t;
     if (send_mail_id) {
       // Keep only one send_mail() at a time. 
-      remove_callout(send_mail_id);
+      remove_call_out(send_mail_id);
     }
     // Send mailid asynchronously.
     send_mail_id = call_out(send_mail, t);
