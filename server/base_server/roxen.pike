@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.513 2000/07/27 00:48:21 jhs Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.514 2000/07/31 00:57:49 nilsson Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -326,92 +326,12 @@ static object PRIVS(string r, int|string|void u, int|string|void g)
   return Privs(r, u, g);
 }
 
-#ifndef THREADS
-// Emulates a thread_local() object.
-class container
-{
-  mixed value;
-  mixed set(mixed to)
-  {
-    return value=to;
-  }
-  mixed get()
-  {
-    return value;
-  }
-}
-#endif
-
 // font cache and loading.
 // 
 // This will be changed to a list of server global modules, to make it
 // easier to implement new types of fonts (such as PPM color fonts, as
 // an example)
 object fonts;
-
-
-// ----------- Locale support ------------
-string default_locale;
-
-#if constant( thread_local )
-object locale = thread_local();
-#else
-object locale = container();
-#endif /* THREADS */
-
-private constant languages = ([
-  "english":"eng",
-  "svenska":"swe",
-  "nihongo":"jpn",
-  "cestina":"ces",
-  "deutsch":"deu",
-  "magyar":"hun",
-  "nederlands":"nld",
-]);
-
-private string verify_locale(string lang) {
-  if(!lang || lang=="standard")
-    lang = default_locale;
-  string set;
-  if(
-#if constant(Standards.ISO639_2)
-     Standards.ISO639_2.get_language(lang)
-#else
-     RoxenLocale.ISO639_2.get_language(lang)
-#endif
-     )
-    set=lang;
-  else if(
-#if constant(Standards.ISO639_2)
-	  set = Standards.ISO639_2.map_639_1(lang)
-#else
-	  set = RoxenLocale.ISO639_2.map_639_1(lang)
-#endif
-	  )
-    ;
-  else
-    set = languages[lang];
-
-  return set;
-}
-
-int set_locale(void|string lang)
-  //! Changes the locale of the current thread. If no
-  //! argument is given, the default locale if used.
-  //! Valid arguments are ISO-639-2 codes, ISO-639-1
-  //! codes and the old symbolic names.
-{
-  string set;
-  if( !(set = verify_locale(lang)) ) {
-    if( lang!=default_locale )
-      // lang not ok, try default_locale
-      set_locale( default_locale );
-    return 0;
-  }
-  locale->set( set );
-  return 1;
-}
-
 
 // For prototype reasons.
 program Configuration;	/*set in create*/
@@ -3451,11 +3371,8 @@ int main(int argc, array tmp)
               dump( "base_server/smartpipe.pike" );
               dump( "base_server/slowpipe.pike" );
               dump( "base_server/fastpipe.pike" );
+	      dump( "languages/abstract.pike" );
             }, 9);
-
-  initiate_languages();
-  dump( "languages/abstract.pike" );
-  mixed tmp;
 
   mark_fd(0, "Stdin");
   mark_fd(1, "Stdout");
@@ -3471,6 +3388,7 @@ int main(int argc, array tmp)
   restore_global_variables(); // restore settings...
 
   // Dangerous...
+  mixed tmp;
   if(tmp = Getopt.find_option(argv, "r", "root")) fix_root(tmp);
 
   argv -= ({ 0 });
@@ -3479,23 +3397,8 @@ int main(int argc, array tmp)
   call_out(update_supports_from_roxen_com,
 	   QUERY(next_supports_update)-time());
 
-  if(QUERY(locale) != "standard") {
-    // Default locale from Globals
-    default_locale = QUERY(locale);
-    set_locale();
-  }
-  else if(getenv("LANG")) {
-    // Default locale from environment
-    default_locale = getenv("LANG");
-    sscanf(default_locale, "%s_%*s", default_locale);
-    set_locale();
-  }
-
-  if(!locale->get()) {
-    // Failed to set locale, fallback to English
-    default_locale = "eng";
-    set_locale();
-  }
+  initiate_languages(query("locale"));
+  set_locale();
 
 #if efun(syslog)
   init_logger();
