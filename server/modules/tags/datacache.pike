@@ -9,7 +9,7 @@
 //
 
 constant cvs_version =
- "$Id: datacache.pike,v 1.5 2004/06/09 00:17:11 _cvs_stephen Exp $";
+ "$Id: datacache.pike,v 1.6 2004/06/10 00:01:31 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -52,7 +52,7 @@ void create() {
  * A generic memory-based cache implementation
  * by Stephen R. van den Berg <srb@cuci.nl>
  *
- * $Id: datacache.pike,v 1.5 2004/06/09 00:17:11 _cvs_stephen Exp $
+ * $Id: datacache.pike,v 1.6 2004/06/10 00:01:31 _cvs_stephen Exp $
  *
  */
 
@@ -176,7 +176,7 @@ class MemCache {
       thestore[match[inext]][iprev]=match[iprev];    // Take it out of the list
       thestore[match[iprev]][inext]=match[inext];
       m_delete(thestore,key);
-      destruct(k);			     // These locks won't die otherwise
+      k=0;	  			     // These locks won't die otherwise
     }
     mixed op=match[ivalue];
     cmem-=match[isize];
@@ -202,7 +202,7 @@ class MemCache {
         Thread.MutexKey k=listorder->lock();
         if(!zero_type(match=thestore[key]))
           hit(key, match);
-        destruct(k);
+        k=0;
       }
       else
         drop(key), match=0;
@@ -257,7 +257,7 @@ class MemCache {
             match[isize]=size;
             hit(key,match);
           }
-          destruct(k);
+          k=0;
         }
         if(spurge && objectp(op) && op!=value)
           destruct(op);
@@ -270,7 +270,7 @@ class MemCache {
              = match;
 	    ccount++;cmem+=size;
           }
-          destruct(k);
+          k=0;
         }
       }
       doexpire(t);
