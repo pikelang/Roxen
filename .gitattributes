@@ -47,7 +47,6 @@ worldmap binary
 # Files containing CVS ids follow.
 # Remove the corresponding line before committing
 # changes to these files.
-/mkdir foreign_ident
 /server/arg_cache_plugins/replicate.pike foreign_ident
 /server/base_server/basic_defvar.pike foreign_ident
 /server/base_server/cache.pike foreign_ident
