@@ -4,7 +4,7 @@
 #include <stat.h>
 #include <config.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.41 2001/09/13 21:27:58 nilsson Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.42 2001/09/28 21:01:40 mast Exp $";
 
 class Variable
 {
@@ -467,7 +467,7 @@ class RequestID
   //!
   //! The value is always an array
 
-  FakedVariables variables;
+  mapping(string:mixed)|FakedVariables variables;
   //! @decl mapping(string:mixed) variables;
   //!
   //! The variables mapping is more or less identical to the
