@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.55 1998/06/26 14:58:11 grubba Exp $
+ * $Id: ftp2.pike,v 1.56 1998/06/26 15:14:03 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -9,7 +9,6 @@
 /*
  * TODO:
  *
- * There seems to be problems with the .htaccess-support.
  * How much is supposed to be logged?
  */
 
