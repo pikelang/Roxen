@@ -9,9 +9,8 @@ array register_module()
    return 
    ({ 
       MODULE_PARSER,
-      "Image converter",
-      "Provides a tag 'cimg'. Usage: "
-      "<cimg src=indata format=outformat [quant=numcolors] [img args]>",
+      "Image cropper",
+      "Provides a tag 'crop'.",
       0,1
    });
 }
