@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.133 1999/12/29 18:46:29 mast Exp $
+ * $Id: roxenloader.pike,v 1.134 2000/01/05 17:45:28 mast Exp $
  *
  * Roxen bootstrap program.
  *
@@ -19,7 +19,7 @@ private static object new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.133 1999/12/29 18:46:29 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.134 2000/01/05 17:45:28 mast Exp $";
 
 int pid = getpid();
 object stderr = Stdio.File("stderr");
@@ -666,10 +666,6 @@ void load_roxen()
 	       "Running on NT\n"
 #endif
     );
-
-  // This is currently needed to resolve the circular references in
-  // RXML.pmod correctly. :P
-  master()->resolv("RXML")->refs;
 }
 
 

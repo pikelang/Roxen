@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.383 2000/01/05 17:39:56 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.384 2000/01/05 17:45:28 mast Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -2393,6 +2393,10 @@ void create()
     add_constant("Privs", class {
       void create(string reason, int|string|void uid, int|string|void gid) {}
     });
+
+  // This is currently needed to resolve the circular references in
+  // RXML.pmod correctly. :P
+  RXML.refs;
 
 
   // for module encoding stuff
