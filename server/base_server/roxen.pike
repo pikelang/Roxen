@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.806 2002/06/14 16:05:03 jhs Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.807 2002/06/15 16:16:45 nilsson Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -1634,7 +1634,7 @@ mapping(string:Protocol) build_protocols_mapping()
   mapping protocols = ([]);
   int st = gethrtime();
   report_debug("Protocol handlers ... \b");
-#ifndef DEBUG
+#ifdef 1
   class lazy_load( string prog, string name )
   {
     program real;
@@ -1675,10 +1675,10 @@ mapping(string:Protocol) build_protocols_mapping()
 
     catch
     {
-#ifdef DEBUG
-      protocols[ s ] = (program)("plugins/protocols/prot_"+s+".pike");
-#else
+#ifdef 1
       protocols[ s ] = lazy_load( ("plugins/protocols/prot_"+s+".pike"),s );
+#else
+      protocols[ s ] = (program)("plugins/protocols/prot_"+s+".pike");
 #endif
     };
   }
@@ -1696,10 +1696,10 @@ mapping(string:Protocol) build_protocols_mapping()
 #endif
     report_debug( "\b%s \b", s );
     catch {
-#ifdef DEBUG
-      protocols[ s ] = (program)("../local/plugins/protocols/prot_"+s+".pike");
-#else
+#ifdef 1
       protocols[ s ] = lazy_load( ("../local/plugins/protocols/prot_"+s+".pike"),s );
+#else
+      protocols[ s ] = (program)("../local/plugins/protocols/prot_"+s+".pike");
 #endif
     };
   }
