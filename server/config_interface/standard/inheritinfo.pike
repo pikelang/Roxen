@@ -1,5 +1,6 @@
 inherit "roxenlib";
 
+
 string get_id(string from)
 {
   catch 
@@ -49,7 +50,7 @@ string program_name_version( program what )
     if( ofs[ ST_MTIME ] < fs[ ST_MTIME ] )
     {
       color = "red";
-      warning = "(<i>percompiled file out of date</i>)";
+      warning = "(<i>Precompiled file out of date</i>)";
     }
   } else
     warning = "(<i>No precompiled file available</i>)";
@@ -57,7 +58,7 @@ string program_name_version( program what )
   if( fs[ ST_MTIME ] > master()->loaded_at( what ) )
   {
     color = "red";
-    warning += " (<i>Needs reloading</i>)";
+    warning = "(<i>Needs reloading</i>)";
   }
   return "<font color="+color+">"+name+" "+get_id( file )+"</font> "+warning;
 }
