@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.104 1997/08/19 07:03:26 per Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.105 1997/08/20 07:49:23 per Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -1729,6 +1729,7 @@ void initiate_configuration_port( int|void first )
 // user. This is not needed when the server is started.
 void scan_module_dir(string d)
 {
+  if(sscanf(d, "%*s.pmod")!=0) return;
   MD_PERROR(("\n\nLooking for modules in "+d+" "));
 
   string file,path=d;

@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.1 1997/08/20 07:46:57 per Exp $
+/* $Id: wizard.pike,v 1.2 1997/08/20 07:49:25 per Exp $
  *  name="Wizard generator";
  *  doc="This plugin generats all the nice wizards";
  */
@@ -122,7 +122,8 @@ string parse_wizard_page(string form, object id, string wiz_name)
 	 "         cellspacing=3 border=0 width=100%>\n"
 	 "    <tr><td>\n"
 	 "<font size=+2>"+(this_object()->wizard_name||this_object()->name())+"</font>"
-	 " </td>\n<td align=right>Page "+(page+1)+"/"+(max_page+1)+"</td>\n"
+	 " </td>\n<td align=right>"+
+	 (max_page!=1?"Page "+(page+1)+"/"+(max_page+1):"")+"</td>\n"
 	  " \n<td align=right>"+
 	 (!id->variables->help?
 	  "<font size=-1><input type=image name=help src=/image/help.gif border=0 value=\"Help\"></font>":"")
