@@ -4,14 +4,16 @@
  *
  * Copyright © 1996 - 2000, Roxen IS.
  *
- * $Id: language.pike,v 1.25 2000/02/20 17:41:33 nilsson Exp $
+ * $Id: language.pike,v 1.26 2000/03/07 22:17:37 nilsson Exp $
  *
  * WARNING:
  * If the environment variable 'ROXEN_LANG' is set, it is used as the default
  * language.
  */
 
-private mapping languages = ([ ]);
+#pragma strict_types
+
+private mapping(string:object) languages = ([ ]);
 
 void initiate_languages()
 {
@@ -28,12 +30,12 @@ void initiate_languages()
   int start = gethrtime();
   foreach(glob("*.pike",langs), string lang)
   {
-    array tmp;
+    array(string) tmp;
     mixed err;
     if (err = catch {
       object l = (object)("languages/"+lang);
       roxenp()->dump( "languages/"+lang );
-      if(tmp=l->aliases())
+      if(tmp=([function(void:array(string))]l->aliases)())
 	foreach(tmp, string alias)
 	  languages[alias] = l;
     }) {
@@ -53,7 +55,7 @@ private string nil()
   return "No such function in that language, or no such language.";
 }
 
-string default_language = getenv("ROXEN_LANG")||"en";
+string default_language = [string]getenv("ROXEN_LANG")||"en";
 
 /* Return a pointer to an language-specific conversion function. */
 public function language(string what, string func, object|void id)
@@ -63,14 +65,14 @@ public function language(string what, string func, object|void id)
 #endif
   object l;
   if( id && id->set_output_charset && (l=languages[what]) && l->charset )
-    id->set_output_charset( l->charset, 2 );
+    ([function(string,int:void)]id->set_output_charset)( [string]l->charset, 2 );
 
   if(!l)
     if(!(l=languages[default_language]))
       if(!(l=languages->en))
-	return languages->en[func];
+	return [function]languages->en[func];
 
-  return l[func] || nil;
+  return [function]l[func] || nil;
 }
 
 array list_languages() {
