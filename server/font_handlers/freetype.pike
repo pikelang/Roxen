@@ -88,6 +88,7 @@ class FTFont
     return 0;
   }
 
+  static int line_height;
   static Image.Image write_row( string text )
   {
     Image.Image res;
@@ -127,16 +128,30 @@ class FTFont
       w += (int)(chars[i]->advance*x_spacing + kerning[i+1])+(fake_bold>0?1:0);
 
     w += (int)(chars[-1]->img->xsize()+chars[-1]->x);
-    ys = chars[0]->height;
+    ys = chars[0]->ascender-chars[0]->descender;
+    line_height = (int)chars[0]->height;
 			   
     res = Image.Image( w, ys );
 
     if( x_spacing < 0 )
       xp = w-(chars[0]->xsize+chars[0]->x);
-  
+
+#ifdef FREETYPE_RENDER_DEBUG
+    res->setcolor( 0,128,200 );
+    res->line( 0,0, res->xsize()-1, 0 );
+    res->line( 0,ys+chars[0]->descender, res->xsize()-1,
+	       ys+chars[0]->descender );
+    res->line( 0,res->ysize()-1, res->xsize()-1, res->ysize()-1 );
+#endif
     for( int i = 0; i<sizeof( chars); i++ )
     {
       mapping c = chars[i];
+#ifdef FREETYPE_RENDER_DEBUG
+       res->paste_alpha_color( c->img->copy()->clear( 100,100,100 ),
+ 			      ({255,255,255}),
+ 			      xp+c->x,
+ 			      ys+c->descender-c->y );
+#endif
       res->paste_alpha_color( c->img, ({255,255,255}),
                               xp+c->x,
                               ys+c->descender-c->y );
@@ -164,7 +179,9 @@ class FTFont
     array(Image.Image) res = map( what, write_row );
 
     Image.Image rr = Image.Image( max(0,@res->xsize()),
-                                  (int)abs(`+(0,0,@res[..sizeof(res)-2]->ysize())*y_spacing)+res[-1]->ysize() );
+				  (int)(res[0]->ysize()+
+					abs(line_height*(sizeof(res)-1)
+					    *y_spacing) ));
 
     float start;
     if( y_spacing < 0 )
@@ -178,7 +195,7 @@ class FTFont
         rr->paste_alpha_color( r, 255,255,255,(rr->xsize()-r->xsize())/2, (int)start );
       else
         rr->paste_alpha_color( r, 255,255,255, 0, (int)start );
-      start += r->ysize()*y_spacing;
+      start += floatp(y_spacing)?line_height*y_spacing:line_height+y_spacing;
     }
     if( fake_bold > 0 )
     {
