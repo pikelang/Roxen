@@ -10,7 +10,7 @@ constant module_type = MODULE_LOCATION;
 constant module_name = "Configration Filesystem";
 constant module_doc = "This filesystem serves the configuration interface";
 constant module_unique = 1;
-constant cvs_version = "$Id: config_filesystem.pike,v 1.12 1999/11/19 10:09:48 per Exp $";
+constant cvs_version = "$Id: config_filesystem.pike,v 1.13 1999/11/19 16:38:17 per Exp $";
 
 constant path = "config_interface/";
 
@@ -110,7 +110,7 @@ mixed find_file( string f, object id )
   // add template to all rxml/html pages...
   string type = id->conf->type_from_filename( id->not_query );
 
-  werror( f + " is " + type + "\n");
+//   werror( f + " is " + type + "\n");
 
   switch( type )
   {
