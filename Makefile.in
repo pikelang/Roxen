@@ -299,7 +299,8 @@ $(SRCDIR)/ChangeLog.rxml.gz:
 
 force_update: force
 	@rm $(SRCDIR)/ChangeLog.gz $(SRCDIR)/ChangeLog.rxml.gz \
-	    $(SRCDIR)/VERSION bump_version bump_version.stamp || true
+	    $(SRCDIR)/VERSION bump_version bump_version.stamp \
+	    2>/dev/null || true
 	@echo Prepared for version update.
 
 pre_dist: bump_version
