@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997-1999, Idonex AB.
 // Makes a tab list like the one in the config interface.
 
-constant cvs_version="$Id: tablist.pike,v 1.37 2000/02/08 22:41:15 per Exp $";
+constant cvs_version="$Id: tablist.pike,v 1.38 2000/02/11 13:58:29 jonasw Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -65,7 +65,9 @@ string internal_tag_tab(string t, mapping a, string contents, mapping d,
   else if(id->misc->defines["tab-frame-image"])
     fimage = fix_relative( id->misc->defines["tab-frame-image"], id );
   else
-    fimage = "roxen-images/tabframe.xcf";
+    //  We need an absolute path or else gbutton will "fix" this according
+    //  to the path in the request...
+    fimage = getcwd() + "/roxen-images/tabframe.xcf";
 
   mapping gbutton_args = d|a;
 
