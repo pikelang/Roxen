@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.175 1998/03/20 03:34:42 per Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.176 1998/03/20 12:18:52 js Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -2178,7 +2178,7 @@ void shuffle(object from, object to,
     object p = Pipe.pipe();
     if (callback) p->set_done_callback(callback);
     p->output(to);
-    p->output(to2);
+    if(to2) p->output(to2);
     p->input(from);
 #if efun(spider.shuffle)
   }
