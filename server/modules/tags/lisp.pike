@@ -1,5 +1,5 @@
 #define error(X) throw( ({ (X), backtrace() }) )
-constant cvs_version = "$Id: lisp.pike,v 1.6 1998/02/03 22:47:53 per Exp $";
+constant cvs_version = "$Id: lisp.pike,v 1.7 1998/02/11 01:31:30 nisse Exp $";
 
 #include <module.h>
 inherit "module";
@@ -17,72 +17,225 @@ void create()
 {
   defvar("max-eval-time", 10000, "Max eval time", TYPE_INT);
   
-  defvar("bootcode", 
-"(progn\n"
-"  (defmacro (cddr x)\n"
-"    (list (quote cdr) (list (quote cdr) x)))\n"
-"  (defmacro (cadr x)\n"
-"    (list (quote car) (list (quote cdr) x)))\n"
-"  (defmacro (cdar x)\n"
-"    (list (quote cdr) (list (quote car) x)))\n"
-"  (defmacro (caar x)\n"
-"    (list (quote car) (list (quote car) x)))\n"
-"\n"
-"  (defmacro (defun name arguments . body) (cons (quote define) (cons (cons name arguments) body)))\n"
-"\n"
-"  (defmacro (when cond . body)\n"
-"    (list (quote if) cond\n"
-"	  (cons (quote progn) body)))\n"
-"  \n"
-"  (define (mapcar fun list)\n"
-"    (if list (cons (fun (car list))\n"
-"		   (mapcar fun (cdr list)))\n"
-"      nil))\n"
-"\n"
-"  (defmacro (let decl . body)\n"
-"    (cons (cons (quote lambda)\n"
-"		(cons (mapcar car decl) body))\n"
-"	  (mapcar cadr decl))))",
-	 "Boot code for the lisp interpreter",
+  defvar("bootcode", "(begin)", 
+	 "Lisp code executed to initialize the top-level environments.",
 	 TYPE_TEXT);
+
+  defvar("enable_context", 1, "Enable the context attribute.",
+	 TYPE_FLAG);
 }
 
-object parse(string s);
+import Languages.PLIS;
+
+class RoxenEnv
+{
+  import Languages.PLIS;
+
+  inherit Environment;
+
+  int once_done;
+}
+
+/* This contains request specific data */
+class RoxenId
+{
+  import Languages.PLIS;
+
+  object lisp_env;
+  int limit;
+  
+  object roxen_id;
+  mapping defines;
+  string lisp_result;
+    
+  int limit_apply()
+    {
+      if (!limit)
+	return 1;
+      limit--;
+      return 0;
+    }
+
+  object query_binding(object symbol) { return lisp_env->query_binding(symbol); }
+  
+  object copy() { return lisp_env->copy(); }
+  
+  object extend(object symbol, object value)
+    {
+      return lisp_env->extend(symbol, value);
+    }
+
+  string print(int display)
+    // { return "Global roxen environment"; }
+    { return lisp_env->print(display); }
+
+  void create(object env, object id, mapping defs)
+    {
+      lisp_env = env;
+      roxen_id = id;
+      defines = defs;
+      lisp_result = "";
+    }
+}
+
+class API_Function
+{
+  import Languages.PLIS;
+  
+  inherit LObject;
+  function fun;
+  array types;
+  
+  string print(int display) { return sprintf("API_Function %O", fun); }
+
+  object to_lisp(mixed o)
+    {
+      if(stringp(o)) 
+	return String( o );
+
+      if(intp(o) && !zero_type(o)) 
+	return Number(o);
+
+      if(arrayp(o) || multisetp(o))
+      {
+	object res = Lempty;
+	int m = 0;
+	if(multisetp(o)) { m = 1; o = indices( o ); }
+	for(int i=sizeof(o)-1; i>=0; i--)
+	{
+	  object t;
+	  if(m && stringp(o[i]))
+	    t =  make_symbol( o[i] );
+	  else
+	    t =  to_lisp(o[i]);
+	  res = Cons( t , res );
+	}
+	return res;
+      }
+      return Lfalse;
+    }
+
+  object apply(object arglist, object env, object globals)
+    {
+      object id;
+      
+      if (!globals->roxen_id)
+	return 0;
+
+      array args = ({ });
+      int i = 0;
+      int optional;
+      
+      while(arglist != Lempty)
+      {
+	if (i == sizeof(types))
+	{
+	  if (!optional)
+	    return 0;
+	  else
+	    break;
+	}
+	
+	switch(types[i])
+	{
+	case 0: /* Any arguments left are optional */
+	  optional = 1;
+	  i++;
+	  break;
+	case "string":
+	  if (!arglist->car->is_string)
+	    return 0;
+	  args += ({ arglist->car->value });
+	  arglist = arglist->cdr;
+	  break;
+	case "int":
+	  if (!arglist->car->is_number)
+	    return 0;
+	  args += ({ (int) arglist->car->value });
+	  arglist = arglist->cdr;
+	  break;
+	default:
+	  error(sprintf("API_Function: Unexpected type '%s'\n", types[i]));
+	}
+	i++;
+      }
+
+      return to_lisp(fun(globals->roxen_id, @args));
+    }
+  
+  void create(array a)
+    {
+      [ fun, types ] = a;
+    }
+}
+
+mapping environments;
+mapping(string:object) lisp_code;
+object boot_code;
 
 void start()
 {
-  boot_code = parse( query("bootcode") );
+  werror("Lisp: starting...\n");
+  boot_code = Parser( query("bootcode") )->read();
+  werror(sprintf("Read boot_code: %s\n",
+		 boot_code ? boot_code->print(1) : "<error>"));
+  environments = ([]);
+  lisp_code = ([]);
 }
 
-void init_for(object e);
-
-mapping environs = ([]);
-program E = this_object()->Environment;
-object find_environment(string f, mapping m, object id)
+void init_environment(object e, object conf)
 {
-  if(environs[f]) 
+  init_specials(e);
+  init_functions(e);
+  
+  init_roxen_functions(e, conf);
+  default_boot_code->eval(e, e);
+  boot_code->eval(e,e);
+}
+
+object find_environment(string f, object conf)
+{
+  if(environments[f]) 
   {
-    environs[f]->id = id;
-    return environs[f];
+    return environments[f];
   }
 
-  m_delete(m, "once");
-  environs[f] = E();
-  environs[f]->id = id;
-  init_for( environs[f] );
-  return environs[f];
+  environments[f] = RoxenEnv();
+  init_environment( environments[f], conf );
+  return environments[f];
+}
+
+object lisp_compile(string s)
+{
+  object o = lisp_code[s];
+  if (o)
+    return o;
+  o = Parser("(begin\n" + s + " )")->read();
+  lisp_code[s] = o;
+  return o;
 }
 
 string tag_lisp(string t, mapping m, string c, 
 		object id, object f, mapping defines)
 {
-  object e = find_environment(m->context||id->not_query, m, id);
-  if(m->once) return "";
-  object lisp = parse( "(progn\n"+c+")" );
-  id->misc->lisp_result="";
-  e->eval_limit = query("max-eval-time");
-  lisp->eval( e, e );
-  return (id->misc->lisp_result);
+  string context = (query("enable_context") && m->context)
+    || id->not_query;
+  object e = find_environment(context, id->conf);
+  // werror(sprintf("Environment: %s\n", e->print(1)));
+  if(m->once && e->once_done) return "";
+
+  object lisp = lisp_compile(c);
+  if (!lisp)
+    return "<!-- syntax error in lisp code -->\n";
+  
+  object globals = RoxenId(e, id, defines);
+
+  globals->limit = query("max-eval-time");
+  lisp->eval( e, globals );
+
+  if (m->once)
+    e->once_done = 1;
+  return globals->lisp_result;
 }
 
 mapping query_container_callers()
@@ -90,672 +243,14 @@ mapping query_container_callers()
   return ([ "lisp":tag_lisp, ]);
 }
 
-
-class lisp_types
-{
-  /* Data shared between all Lisp objects */
-  mapping symbol_table = ([ ]);
-  object Nil = NilSymbol(symbol_table);
-  object True = ConstantSymbol("t", symbol_table);
-
-  class LObject 
-  {
-  }
-
-  class SelfEvaluating 
-  {
-    inherit LObject;
-    object eval(object env, object globals)
-    {
-      return this_object();
-    }
-  }
-
-  class Cons 
-  {
-    inherit LObject;
-  
-    object car;
-    object cdr;
-
-    void create(object a, object d)
-    {
-      car = a; cdr = d;
-    }
-
-    object mapcar(string|function fun, mixed ...extra)
-    {
-      object new_car, new_cdr;
-      new_car = stringp(fun)? car[fun](@extra) : fun(car, @extra);
-      if (!new_car)
-      {
-	error("No car");
-      }
-    
-      object new_cdr = (!cdr->is_nil) ? cdr->mapcar(fun, @extra)
-	: cdr;
-      if (cdr) 
-	return object_program(this_object())(new_car, new_cdr);
-      else
-      {
-	error("No cdr");
-      }
-    }
-  
-    object map(string|function fun, mixed ...extra)
-    {
-      /* Do this as a special case to allow tail recursion */
-      if (!cdr || cdr->is_nil) 
-      {
-	if (stringp(fun))
-	  return car[fun](@extra);
-	else
-	  return fun(car, @extra);
-      }
-      if (stringp(fun) ? car[fun](@extra) : fun(car, @extra))
-	return cdr->map(fun, @extra);
-      else
-	error("Function ["+(stringp(fun)?fun:sprintf("%O", fun))+
-	      "]\nin "+car->print()+" returned error\n");
-
-    }
-  
-    string print()
-    {
-      string s = "(";
-      object p = this_object();
-      while (!p->is_nil)
-      {
-	if (!p->car)
-	{ /* Not a cons cell */
-	  s += " . " + p->print();
-	  break;
-	}
-	s += " " + p->car->print();
-	p = p->cdr;
-      }
-      s += " )";
-      return s;
-    }
-  
-    object eval(object env, object globals)
-    {
-      object fun = car->eval(env, globals);
-      if (fun && fun->is_special)
-	return fun->apply(cdr, env, globals);
-
-      object args = cdr->mapcar("eval", env, globals);
-      if (args)
-	return fun->apply(args, env, globals);
-      else
-      {
-	error("No function to eval");
-      }
-    }
-  }
-
-  object make_list(object ...args)
-  {
-    object res = Nil;
-    for (int i = sizeof(args) - 1; i >= 0; i--)
-      res = Cons(args[i], res);
-    return res;
-  }
-
-  class Symbol 
-  {
-    inherit LObject;
-
-    string name;
-
-    object eval(object env, object globals)
-    {
-      if(globals->eval_limit)
-      {
-	globals->eval_limit--;
-	if(globals->eval_limit==0)
-	{
-	  globals->eval_limit=1;  
-	error("Maximum eval-depth reached.");
-	}
-      }
-      object binding =  env->query_binding(this_object())
-	|| globals->query_binding(this_object());
-      if (!binding)
-      {
-	error("No binding for this symbol ["+name+"].\n");
-      }
-      return binding->query();
-    }
-  
-    //  int __hash() { return hash(name); }
-
-    string print()
-    {
-      return name;
-    }
-  
-    void create(string n, mapping|void table)
-    {
-      //     werror(sprintf("Creating symbol '%s'\n", n));
-      name = n;
-      if (table)
-	table[name] = this_object();
-    }
-  }
-
-  class ConstantSymbol 
-  {
-    inherit Symbol : symbol;
-    inherit SelfEvaluating;
-  }
-
-  class NilSymbol 
-  {
-    inherit Cons : cons;
-    inherit ConstantSymbol : symbol;
-
-    constant is_nil = 1;
-  
-    void create(mapping|void table)
-    {
-      symbol :: create("nil", table);
-      cons :: create(this_object(), this_object());;
-    }
-    object mapcar(mixed ...ignored) { return this_object(); }
-    object map(mixed ...ignored) { return this_object(); }
-  }
-
-  class String 
-  {
-    inherit SelfEvaluating;
-    string value;
-
-    void create(string s)
-    {
-      value = s;
-    }
-  
-    string print() { return "\"" + replace(value, ({ "\"", "\n",}),
-					   ({ "\\\"", "\\n"}) ) + "\""; }
-    string to_string() { return value; }
-  }
-
-  class Number 
-  {
-    inherit SelfEvaluating;
-    int|float|object value;
-
-    void create(int|float|object x) { value = x; }
-
-    string print() { return (string) value; }
-  }
-  
-  object make_symbol(string name)
-  {
-    return symbol_table[name] || Symbol(name, symbol_table);
-  }
-
-  class Binding 
-  {
-    object value;
-    object query() { return value; }
-    void set(object v) { value = v; }
-    void create(object v) { value = v; }
-  }
-  
-  class Environment 
-  {
-    inherit LObject;
-    int eval_limit; // ugly hack..
-      
-    /* Mapping of symbols and their values.
-     * As a binding may exist in several environments, they
-     * are accessed indirectly. */
-    mapping env = ([ ]);
-    object id; // roxen typ ID.
-
-    object query_binding(object symbol)
-    {
-      return env[symbol];
-    }
-
-    void create(mapping|void bindings)
-    {
-      env = bindings || ([ ]);
-    }
-
-    object copy() { return object_program(this_object())(copy_value(env)); };
-
-    object extend(object symbol, object value)
-    {
-      //     werror(sprintf("Binding '%s'\n", symbol->print()));
-      env[symbol] = Binding(value);
-    }
-
-    string print() 
-    {
-      string res="";
-      foreach(indices(env), object s)
-      {
-	if(env[s]->value != this_object())
-	  res += s->print()+": "+env[s]->value->print()+"\n";
-	else
-	  res += "global-environment: ...\n";
-      }
-      return res;
-    }
-  }
-  
-  class Lambda
-  {
-    inherit LObject;
-
-    object formals; /* May be a dotted list */
-    object list; /* expressions */
-
-    void create(object formals_list, object expressions)
-    {
-      formals = formals_list;
-      list = expressions;
-    }
-
-    string print() { return "lambda "+list->print(); }
-
-    int build_env1(object env, object symbols, object arglist)
-    {
-      if (symbols->is_nil)
-	return arglist->is_nil;
-      if (!symbols->car)
-      {
-	/* An atom */
-	env->extend(symbols, arglist);
-	return 1;
-      } else {
-	return build_env1(env, symbols->car, arglist->car)
-	  && build_env1(env, symbols->cdr, arglist->cdr);
-      }
-    }
-
-    object build_env(object env, object arglist)
-    {
-      object res = env->copy();
-      return build_env1(res, formals, arglist) ? res : 0;
-    }
-
-    object new_env(object env, object arglist);
-  
-    object apply(object arglist, object env, object globals)
-    {
-      env = new_env(env, arglist); 
-      if (env)
-	return list->map("eval", env, globals);
-      error("Nothing to apply with.\n");
-    }
-  }
-  
-  class Lexical 
-  {
-    inherit Lambda : l;
-    object env;
-
-    void create(object e, object formals_list, object expressions)
-    {
-      env = e;
-      //    werror(sprintf("Building lexical closure, env = %s\n",
-      //		   env->print()));
-      l :: create(formals_list, expressions);
-    }
-  
-    object new_env(object ignored, object arglist)
-    {
-      return build_env(env, arglist);
-    }
-  }
-
-  class Macro 
-  {
-    inherit Lexical;
-    constant is_special = 1;
-    object apply(object arglist, object env, object globals)
-    {
-      return ::apply(arglist, env, globals)->eval(env, globals);
-    }
-  }
-
-  class Dynamic 
-  {
-    inherit Lambda;
-    object new_env(object env, object arglist)
-    {
-      return build_env(env, arglist);
-    }
-  }
-
-  class Builtin 
-  {
-    inherit LObject;
-  
-    function apply;
-
-    void create(function f)
-    {
-      apply = f;
-    }
-
-    string print()
-    {
-      return sprintf("Builtin (%O)", apply);
-    }
-  }  
-
-  class Special 
-  {
-    inherit Builtin;
-    constant is_special = 1;
-    string print()
-    {
-      return sprintf("Special (%O)", apply);
-    }
-  }
-
-
-  class APIObject
-  {
-    inherit LObject;
-    function fun;
-
-    string print() { return sprintf("APIfunction %O", fun); }
-    
-    object apply(object arglist, object env, object globals)
-    {
-      array args = ({ globals->id });
-      while(arglist->car && !arglist->car->is_nil)
-      {
-	mixed v = arglist->car->print();
-	if((int)v || v=="0") v=(int)v;
-	args += ({ v });
-	arglist = arglist->cdr;
-      }
-      mixed val = fun( @ args );
-
-      if(stringp(val)) 
-	return String( val );
-
-      if(intp(val) && !zero_type(val)) 
-	return Number( val );
-
-      if(arrayp(val) || multisetp(val))
-      {
-	object res = Nil;
-	int m;
-	if(multisetp(val)) { m = 1; val = indices( val ); }
-	for(int i=sizeof(val)-1; i>=0; i--)
-	{
-	  object t;
-	  if(m)
-	    t = make_symbol( (string)val[i] );
-	  else
-	    t = stringp(val[i])?String(val[i]):Number((int)val[i]);
-	  res = Cons( t , res );
-	}
-	return res;
-      }
-      return Nil;
-    }
-
-    void create(array f)
-    {
-      fun = f[0]; // f[1] is list of types for arguments..
-    }
-  }
-  /* Parser */
-
-  class Parser 
-  {
-    object number_re = Regexp("^(-|)([0-9]+)");
-    object symbol_re = Regexp("^([^0-9 \t\n(.)\"]+)");
-    object space_re = Regexp("^([ \t\n]+)");
-    object comment_re = Regexp("^(;[^\n]*\n)");
-    object string_re = Regexp("^(\"[^\"]*\")");
-  
-    string buffer;
-    object globals;
-  
-    void create(string s, object ctx)
-    {
-      buffer = s;
-      globals = ctx;
-    }
-
-    object read_list();
-  
-    mixed _read()
-    {
-      if (!strlen(buffer))
-      {
-	return 0;
-      }
-      array a;
-      if (a = space_re->split(buffer) || comment_re->split(buffer))
-      {
-	//	werror(sprintf("Ignoring space and comments: '%s'\n", a[0]));
-	buffer = buffer[strlen(a[0])..];
-	return _read();
-      }
-      if (a = number_re->split(buffer))
-      {
-	//	werror("Scanning number\n");
-	string s = `+(@ a);
-	buffer = buffer[ strlen(s) ..];
-	return Number(Gmp.mpz(s));
-      }
-      if (a = symbol_re->split(buffer))
-      {
-	// 	werror("Scanning symbol\n");
-	buffer = buffer[strlen(a[0])..];
-	return globals->make_symbol(a[0]);
-      }
-      if (a = string_re->split(buffer))
-      {
-	//	werror("Scanning string\n");
-	buffer = buffer[strlen(a[0])..];
-	return String(a[0][1 .. strlen(a[0]) - 2]);
-      }
-      
-      switch(int c = buffer[0])
-      {
-       case '(':
-	 // 	werror("Reading (\n");
-	 buffer = buffer[1 ..];
-	 return read_list();
-       case '.':
-       case ')':
-	 // 	werror(sprintf("Reading %c\n", c));
-	 buffer = buffer[1..];
-	 return c;
-       default:
-      error("Parse error while reading.");
-      }
-    }
-
-    object read()
-    {
-      mixed res = _read();
-      if (intp(res))
-      {
-	return 0;
-      }
-      return res;
-    }
-  
-    object read_list()
-    {
-      mixed item = _read();
-      if (!item)
-      {
-	return 0;
-      }
-      if (intp(item))
-	switch(item)
-	{
-	 case ')': return globals->Nil;
-	 case '.':
-	   object final = _read();
-	   if (intp(final) || (_read() != ')'))
-	   {
-	     return 0;
-	   }
-	   return final;
-	 default:
-	   throw( ({ "lisp->parser: internal error\n",
-		     backtrace() }) );
-	}
-      return Cons(item , read_list());
-    }
-  }
-}  
-
-
-
-inherit lisp_types;
-
-
-/* Special forms */
-object s_quote(object arglist, object env, object globals)
-{
-  return arglist->car;
-}
-
-
-
-object s_setq(object arglist, object env, object globals)
-{
-//  werror(sprintf("set!, arglist: %s\n", arglist->print() + "\n"));
-  object value = arglist->cdr->car->eval(env, globals);
-  object binding = env->query_binding(arglist->car)
-    || globals->query_binding(arglist->car);
-  if (binding)
-    {
-      binding->set(value);
-      return value;
-    }
-  else
-    return 0;
-}
-
-object s_define(object arglist, object env, object globals)
-{
-  object symbol, value;
-  if (arglist->car->car)
-  { /* Function definition */
-    symbol = arglist->car->car;
-    value = Lexical(env, arglist->car->cdr, arglist->cdr);
-  } else {
-    symbol = arglist->car;
-    value = arglist->cdr->car->eval(env, globals);
-  }
-  if (!value)
-    return 0;
-  env->extend(symbol, value);
-  return symbol;
-}    
-
-object s_defmacro(object arglist, object env, object globals)
-{
-  object symbol = arglist->car->car;
-  object value = Macro(env, arglist->car->cdr, arglist->cdr);
-  if (!value)
-    return 0;
-  env->extend(symbol, value);
-  return symbol;
-}
-  
-object s_if(object arglist, object env, object globals)
-{
-  if (!arglist->car->eval(env, globals)->is_nil)
-    return arglist->cdr->car->eval(env, globals);
-  object e = arglist->cdr->cdr;
-  return e ? e->car->eval(env, globals) : Nil;
-}
-
-object s_and(object arglist, object env, object globals)
-{
-  object res;
-  while(!arglist->cdr->is_nil)
-  {
-    res = arglist->car->eval(env, globals);
-    if (!res || res->is_nil)
-      return res;
-    arglist = arglist->cdr;
-  }
-  return arglist->car->eval(env, globals);
-}
-
-object s_or(object arglist, object env, object globals)
-{
-  object res;
-  while(!arglist->cdr->is_nil)
-  {
-    res = arglist->car->eval(env, globals);
-    if (!res || !res->is_nil)
-      return res;
-    arglist = arglist->cdr;
-  }
-  return arglist->car->eval(env, globals);
-}
-
-object s_progn(object arglist, object env, object globals)
-{
-  return arglist->map("eval", env, globals);
-}
-
-object s_lambda(object arglist, object env, object globals)
-{
-  return Lexical(env, arglist->car, arglist->cdr);
-}
-
-/* In general, errors are signaled by returning 0, and are
- * fatal.
- *
- * The catch special form catches errors, returning nil
- * if an error occured. */
-object s_catch(object arglist, object env, object globals)
-{
-  return s_progn(arglist, env, globals) || Nil;
-}
-
-
-object s_while(object arglist, object env, object globals)
-{
-  object expr = arglist->car, res;
-  object to_eval = arglist->cdr;
-  werror( to_eval->print() );
-  while (!expr->eval(env,globals)->is_nil)
-    to_eval->map("eval", env, globals);//f_eval (to_eval,env,globals);
-  return Nil;
-}
-
-void init_specials(object environment)
-{
-  environment->extend(make_symbol("quote"), Special(s_quote));
-  environment->extend(make_symbol("set!"), Special(s_setq));
-  environment->extend(make_symbol("setq"), Special(s_setq));
-  environment->extend(make_symbol("while"), Special(s_while));
-  environment->extend(make_symbol("define"), Special(s_define));
-  environment->extend(make_symbol("defmacro"), Special(s_defmacro));
-  environment->extend(make_symbol("lambda"), Special(s_lambda));
-  environment->extend(make_symbol("if"), Special(s_if));
-  environment->extend(make_symbol("and"), Special(s_and));
-  environment->extend(make_symbol("or"), Special(s_or));
-  environment->extend(make_symbol("progn"), Special(s_progn));
-  environment->extend(make_symbol("catch"), Special(s_catch));
-}
-
-
+#if 0
 object f_get_id_int(object arglist, object env, object globals)
 {
-  return Number( (int)globals->id[arglist->car->value] );
+  object id = globals->roxen_id;
+  if (id && arglist->car->is_string)
+    return Number( (int)globals->id[arglist->car->value] );
+  else
+    return 0;
 }
 
 
@@ -786,160 +281,85 @@ object f_get_id(object arglist, object env, object globals)
   }
   return Nil;
 }
+#endif
 
-object f_car(object arglist, object env, object globals)
+/* Returns a string, instead of outputting it directly.
+ * Usually, you want to html-quote it before output. */
+object f_display(object arglist, object env, object globals)
 {
-  return arglist->car->car;
-}
-
-object f_cdr(object arglist, object env, object globals)
-{
-  return arglist->car->cdr;
-}
-
-object f_cons(object arglist, object env, object globals)
-{
-  return Cons(arglist->car, arglist->cdr->car);
-}
-
-object f_list(object arglist, object env, object globals)
-{
-  return arglist;
-}
-
-object f_setcar(object arglist, object env, object globals)
-{
-  return arglist->car->car = arglist->cdr->car;
-}
-
-object f_setcdr(object arglist, object env, object globals)
-{
-  return arglist->car->cdr = arglist->cdr->car;
-}
-
-
-object parse(string s)
-{
-  object res = Parser(s, this_object())->read();
-  return res;
-}
-
-object f_read(object arglist, object env, object globals)
-{
-  function line = arglist->car->to_string;
-  if (!line)
+  if (!globals->lisp_result)
     return 0;
-  return parse(line());
-}
-
-object f_print(object arglist, object env, object globals)
-{
-  globals->id->misc->lisp_result += arglist->car->print() + "\n";
-  return Nil;
-}
-
-object f_eval(object arglist, object env, object globals)
-{
-  if (!arglist->cdr->is_nil)
-    env = arglist->cdr->car;
-  else env = Environment();
-  return arglist->car->eval(env, globals);
-}
-
-object f_apply(object arglist, object env, object globals)
-{
-  return arglist->car->apply(arglist->cdr, env, globals);
-}
-
-object f_add(object arglist, object env, object globals)
-{
-  object sum = Gmp.mpz(0);
-  while(!arglist->is_nil)
-  {
-    sum += arglist->car->value;
-    arglist = arglist->cdr;
-  }
-  return Number(sum);
-}
-
-object f_mult(object arglist, object env, object globals)
-{
-  object product = Gmp.mpz(1);
-  while(!arglist->is_nil)
-  {
-    product *= arglist->car->value;
-    arglist = arglist->cdr;
-  }
-  return Number(product);
-}
-
-object f_subtract(object arglist, object env, object globals)
-{
-  if (arglist->is_nil)
-    return Number(Gmp.mpz(0));
-  if (arglist->cdr->is_nil)
-    return Number(- arglist->car->value);
-  object diff = arglist->car->value;
-  arglist = arglist->cdr;
-  do {
-    diff -= arglist->car->value;
-  } while( !(arglist = arglist->cdr)->is_nil);
-  return Number(diff);
-}
-
-object f_equal(object arglist, object env, object globals)
-{
-  return ( (arglist->car == arglist->cdr->car)
-	   || (arglist->car->value == arglist->cdr->car->value)) ? True : Nil;
-}
-
-object f_lt(object arglist, object env, object globals)
-{
-  return (arglist->car->value < arglist->cdr->car->value) ? True : Nil;
-}
-
-object f_gt(object arglist, object env, object globals)
-{
-  return (arglist->car->value > arglist->cdr->car->value) ? True : Nil;
+  return String(arglist->car->print(1) + "\n");
+  return Lfalse;
 }
 
 
 object f_get(object arglist, object env, object globals)
 {
-  if(globals->id->variables[arglist->car->value])
-    return String( globals->id->variables[arglist->car->value] );
-  if(globals->id->misc->defines[arglist->car->value])
-    return String( globals->id->misc->defines[arglist->car->value] );
-  return Nil;
+  object id = globals->roxen_id;
+  werror(sprintf("lisp.pike->f_get %s\n", arglist->print(1)));
+  if (!id)
+    return 0;
+  werror("lisp.pike->f_get: id ok\n");
+
+  if (!arglist->car->to_string)
+    return 0;
+
+  string name = arglist->car->to_string();
+
+  if (!name)
+    return 0;
+
+  werror(sprintf("lisp.pike->f_get: name '%s'\n", name));
+
+  string res = id->variables[name];
+  if (res)
+  {
+    werror(sprintf("lisp.pike->f_get: variable = '%s'\n", res));
+    return String(res);
+  }
+
+  res = id->misc->defines[name];
+  if (res)
+  {
+    werror(sprintf("lisp.pike->f_get: define = '%s'\n", res));
+    return String(res);
+  }
+
+  return Lfalse;
 }
 
 object f_getint(object arglist, object env, object globals)
 {
-  if(globals->id->variables[arglist->car->value])
-    return Number( (int)globals->id->variables[arglist->car->value] );
-  if(globals->id->misc->defines[arglist->car->value])
-    return Number( (int)globals->id->misc->defines[arglist->car->value] );
-  return Nil;
+  object id = globals->roxen_id;
+  if (!id)
+    return 0;
+  if(id->variables[arglist->car->value])
+    return Number( (int)id->variables[arglist->car->value] );
+  if(id->misc->defines[arglist->car->value])
+    return Number( (int)id->misc->defines[arglist->car->value] );
+  return Lfalse;
 }
 
-object f_output(object arglist, object env, object globals)
+object f_write(object arglist, object env, object globals)
 {
-  int foo = strlen( globals->id->misc->lisp_result );
-  do {
-    globals->id->misc->lisp_result += (string)arglist->car->value;
-  } while( !(arglist = arglist->cdr)->is_nil);
-  return Number( strlen(globals->id->misc->lisp_result) - foo );
+  if (!globals->lisp_result)
+    return 0;
+  
+  int len = 0;
+
+  while(arglist != Lempty)
+  {
+    string s = arglist->car->print(0);
+    len += strlen(s);
+    globals->lisp_result += s;
+    arglist = arglist->cdr;
+  }
+
+  return Number( len );
 }
 
-object f_concat(object arglist, object env, object globals)
-{
-  string res="";
-  do {
-    res += arglist->car->value;
-  } while( !(arglist = arglist->cdr)->is_nil);
-  return String( res );
-}
-
+#if 0
 object f_format(object arglist, object env, object globals)
 {
   string f = arglist->car->value;
@@ -956,7 +376,7 @@ object f_format(object arglist, object env, object globals)
   }
   return String( sprintf(f, @args) );
 }
-  
+
 object f_line_break(object arglist, object env, object globals)
 {
   string f = arglist->car->print();
@@ -969,50 +389,35 @@ object f_line_break(object arglist, object env, object globals)
   }
   return String( res );
 }
+#endif
 
-object boot_code;
-void init_functions(object environment)
+void init_roxen_functions(object environment, object conf)
 {
-  environment->extend(make_symbol("+"), Builtin(f_add));
-  environment->extend(make_symbol("*"), Builtin(f_mult));
-  environment->extend(make_symbol("-"), Builtin(f_subtract));
-  environment->extend(make_symbol("="), Builtin(f_equal));
-  environment->extend(make_symbol("<"), Builtin(f_lt));
-  environment->extend(make_symbol(">"), Builtin(f_gt));
+  // environment->extend(make_symbol("format"), Builtin(f_format));
 
-  environment->extend(make_symbol("concat"), Builtin(f_concat));
-  environment->extend(make_symbol("format"), Builtin(f_format));
-
-  environment->extend(make_symbol("variable"), Builtin(f_get));
-  environment->extend(make_symbol("variable-number"), Builtin(f_getint));
-  environment->extend(make_symbol("id"), Builtin(f_get));
-  environment->extend(make_symbol("id-number"), Builtin(f_getint));
-  environment->extend(make_symbol("output"), Builtin(f_output));
-
-  environment->extend(make_symbol("line-break"), Builtin(f_line_break));
-  environment->extend(make_symbol("read"), Builtin(f_read));
-  environment->extend(make_symbol("print"), Builtin(f_print));
-  environment->extend(make_symbol("princ"), Builtin(f_print));
-  environment->extend(make_symbol("eval"), Builtin(f_eval));
-  environment->extend(make_symbol("apply"), Builtin(f_apply));
-  environment->extend(make_symbol("global-environment"), environment);
-  environment->extend(make_symbol("car"), Builtin(f_car));
-  environment->extend(make_symbol("cdr"), Builtin(f_cdr));
-  environment->extend(make_symbol("setcar!"), Builtin(f_setcar));
-  environment->extend(make_symbol("setcdr!"), Builtin(f_setcdr));
-  environment->extend(make_symbol("cons"), Builtin(f_cons));
-  environment->extend(make_symbol("list"), Builtin(f_list));
+  environment->extend(make_symbol("r-get-string"), Builtin(f_get));
+  environment->extend(make_symbol("r-get-int"), Builtin(f_getint));
+  environment->extend(make_symbol("write"), Builtin(f_write));
+  environment->extend(make_symbol("display"), Builtin(f_display));
   
-  mapping m = environment->id->conf->api_functions();
+  // environment->extend(make_symbol("line-break"), Builtin(f_line_break));
+  // environment->extend(make_symbol("read"), Builtin(f_read));
+  // environment->extend(make_symbol("print"), Builtin(f_print));
+  // environment->extend(make_symbol("princ"), Builtin(f_print));
+  // environment->extend(make_symbol("eval"), Builtin(f_eval));
+  // environment->extend(make_symbol("apply"), Builtin(f_apply));
+  // environment->extend(make_symbol("global-environment"), environment);
+  // environment->extend(make_symbol("car"), Builtin(f_car));
+  // environment->extend(make_symbol("cdr"), Builtin(f_cdr));
+  // environment->extend(make_symbol("setcar!"), Builtin(f_setcar));
+  // environment->extend(make_symbol("setcdr!"), Builtin(f_setcdr));
+  // environment->extend(make_symbol("cons"), Builtin(f_cons));
+  // environment->extend(make_symbol("list"), Builtin(f_list));
+  
+  mapping m = conf->api_functions();
   foreach(indices(m), string f)
-    environment->extend(make_symbol(replace(f, "_", "-")), APIObject( m[f] ));
+    environment->extend(make_symbol("r-" + replace(f, "_", "-")),
+			API_Function( m[f] ));
 }
 
 
-void init_for(object e)
-{
-  init_specials(e);
-  init_functions(e);
-
-  boot_code->eval(e,e);
-}
