@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.264 2001/07/20 15:23:32 jhs Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.265 2001/07/21 14:24:41 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1206,7 +1206,9 @@ array(string) container_catch( string tag, mapping m, string c, RequestID id )
 class TagCache {
   inherit RXML.Tag;
   constant name = "cache";
-  constant flags = RXML.FLAG_GET_RAW_CONTENT|RXML.FLAG_GET_EVALED_CONTENT;
+  constant flags = (RXML.FLAG_GET_RAW_CONTENT |
+		    RXML.FLAG_GET_EVALED_CONTENT |
+		    RXML.FLAG_DONT_CACHE_RESULT);
 
   class Frame {
     inherit RXML.Frame;
@@ -1225,7 +1227,12 @@ class TagCache {
 
       if(!args->nohash) {
 	Crypto.md5 md5 = Crypto.md5();
-	if (!content_hash) content_hash = md5->update (content)->digest();
+	if (!content_hash)
+	  // Include the content type in the hash since we cache the
+	  // p-code which has static type inference.
+	  content_hash = md5->update (content)
+			    ->update (content_type->name)
+			    ->digest();
 
 	string form_vars;
 	if(id->method == "POST")
@@ -1233,11 +1240,15 @@ class TagCache {
 	else
 	  form_vars = id->query;
 
-	key = content_hash +
-	  md5->update(id->not_query + form_vars +
-		      id->conf->query("MyWorldLocation"))->digest();
+	key = content_hash + md5->update (id->not_query)
+				->update (form_vars)
+				->update (id->conf->name)
+				->digest();
       }
-      else key = "";
+      else
+	// Always use the configuration in the key; noone really wants
+	// cache tainting between servers.
+	key = id->conf->name;
 
       if(args->key)
 	key += args->key;
