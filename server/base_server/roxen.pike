@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.593 2000/12/30 06:22:27 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.594 2000/12/30 07:02:56 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -61,14 +61,27 @@ string query_mysql_dir()
   return combine_path( __FILE__, "../../mysql/" );
 }
 
+mapping my_mysql_cache = ([]);
+
 Sql.sql connect_to_my_mysql( int ro, string db )
 {
-  string mysql_socket = combine_path( getcwd(),
-                                      query_configuration_dir()+
+  Thread.Local tl;
+  if( !my_mysql_cache[ro] )
+    my_mysql_cache[ro] = ([]);
+  if( !( tl = my_mysql_cache[ro][db] ) )
+    tl = my_mysql_cache[ro][db] = Thread.Local();
+
+  if( tl->get() )
+    return tl->get();
+  
+  string mysql_socket = combine_path( getcwd(), query_configuration_dir()+
                                       "_mysql/socket");
   if( ro )
-    return Sql.sql("mysql://ro@localhost:"+mysql_socket+"/"+db );
-  return Sql.sql("mysql://rw@localhost:"+mysql_socket+"/"+db );
+    tl->set(Sql.sql("mysql://ro@localhost:"+mysql_socket+"/"+db));
+  else
+    tl->set(Sql.sql("mysql://rw@localhost:"+mysql_socket+"/"+db));
+
+  return tl->get();
 }
 
 void start_mysql()
@@ -1676,6 +1689,7 @@ class ImageCache
 //! being a cache, however, it serves a wide variety of other
 //! interesting image conversion/manipulation functions as well.
 {
+  Sql.sql db;
   string name;
   string dir;
   function draw_function;
@@ -2008,30 +2022,19 @@ class ImageCache
   static void store_meta( string id, mapping meta )
   {
     meta_cache_insert( id, meta );
-
     string data = encode_value( meta );
-    Stdio.File f;
-    if(!(f=open(dir+id+".i", "wct" )))
-    {
-      report_error( "Failed to open image cache persistant cache file "+
-                    dir+id+".i: "+strerror( errno() )+ "\n" );
-      return;
-    }
-    f->write( data );
+    db->query( "INSERT INTO "+name+"_meta VALUES ('"+id+"', '"+
+               db->quote( data )+"')" );
   }
 
   static void store_data( string id, string data )
   {
-    if(!data) return;
-    Stdio.File f;
-    if(!(f = open(dir+id+".d", "wct" )))
-    {
-      data_cache_insert( id, data );
-      report_error( "Failed to open image cache persistant cache file "+
-                    dir+id+".d: "+strerror( errno() )+ "\n" );
-      return;
-    }
-    f->write( data );
+    if(!stringp(data)) return;
+
+    db->query( "INSERT INTO "+name+"_data VALUES ('"+id+"', '"+
+               db->quote(data)+"')" );
+    db->query( "INSERT INTO "+name+" VALUES ('"+id+"', "+strlen(data)+", "
+               +time()+","+time()+")" );
   }
 
   static mapping restore_meta( string id )
@@ -2039,14 +2042,19 @@ class ImageCache
     Stdio.File f;
     if( meta_cache[ id ] )
       return meta_cache[ id ];
-    if( !(f=open(dir+id+".i", "r" ) ) )
+    
+    db->query( "select GET_LOCK('"+name+"',10)" );
+    array q = db->query(sprintf("select data from %s_meta where id='%s'",
+                                name, id ));
+    db->query("UPDATE "+name+" SET atime="+time()+" WHERE id='"+id+"'" );
+    db->query( "select RELEASE_LOCK('"+name+"')" );
+    if(!sizeof(q))
       return 0;
-    string s = f->read();
+    string s = q[0]->data;
     mapping m;
-    if (catch (m = decode_value (s))) {
-      rm (dir + id + ".i");
-      report_error( "Corrupt data in persistent cache file "+
-                    dir+id+".i; removed it.\n" );
+    if (catch (m = decode_value (s)))
+    {
+      report_error( "Corrupt data in cache-entry "+id+".\n" );
       return 0;
     }
     return meta_cache_insert( id, m );
@@ -2057,11 +2065,27 @@ class ImageCache
   //! <pi>time()</pi>) is provided, only images generated earlier than
   //! that are flushed.
   {
+    db->query( "select GET_LOCK('"+name+"',10)" );
     report_debug("Flushing "+name+" image cache.\n");
-    foreach(r_get_dir(dir), string f)
-      if(f[-2]=='.' && (f[-1]=='i' || f[-1]=='d') && 
-         (!age || age>r_file_stat(dir+f)[2]))
-	r_rm(dir+f);
+    if( !age )
+    {
+      db->query( "DELETE FROM "+name+"_data" );
+      db->query( "DELETE FROM "+name+"_meta" );
+      db->query( "DELETE FROM "+name );
+    }
+    else
+    {
+      array ids = db->query( "SELECT id FROM "+name+" WHERE ctime < "+age)->id;
+      foreach( ids, string q )
+      {
+        db->query( "DELETE FROM "+name+"_data WHERE id='"+q+"'" );
+        db->query( "DELETE FROM "+name+"_meta WHERE id='"+q+"'" );
+        db->query( "DELETE FROM "+name+     " WHERE id='"+q+"'" );
+      }
+    }
+    db->query( "OPTIMIZE TABLE "+name+"_data\n");
+    db->query( "OPTIMIZE TABLE "+name+"_meta\n");
+    db->query( "select RELEASE_LOCK('"+name+"')" );
   }
 
   array(int) status(int|void age)
@@ -2072,14 +2096,14 @@ class ImageCache
   //! parameter was given.)
   {
     int files=0, size=0, aged=0;
-    Stat stat;
-    foreach(r_get_dir(dir), string f)
-      if(f[-2]=='.' && (f[-1]=='i' || f[-1]=='d')) {
-	files++;
-	stat=r_file_stat(dir+f,1);
-	if(stat[1]>0) size+=stat[1];
-        if(age<stat[2]) aged++;
-      }
+    array q;
+
+    q=db->query("select SUM(size) as size,COUNT(*) as num from "+name);
+    files = (int)q[0]->num;
+    size = (int)q[0]->size;
+
+    q=db->query("select SUM(1) as num from "+name+" where ctime < "+age);
+    aged = (int)q[0]->num;
     return ({files, size, aged});
   }
 
@@ -2091,17 +2115,23 @@ class ImageCache
     if( data_cache[ id ] )
       f = data_cache[ id ];
     else
-      if(!(f = open( dir+id+".d", "r" )))
+    {
+      db->query( "select GET_LOCK('"+name+"',10)" );
+      array q = db->query( sprintf("select data from %s_data where id='%s'",
+                                   name, id ));
+      db->query( "select RELEASE_LOCK('"+name+"')" );
+      if( sizeof(q) )
+        f = q[0]->data;
+      else
         return 0;
+    }
 
     m = restore_meta( id );
 
     if(!m)
       return 0;
 
-    if( stringp( f ) )
-      return Roxen.http_string_answer( f, m->type||("image/gif") );
-    return Roxen.http_file_answer( f, m->type||("image/gif") );
+    return Roxen.http_string_answer( f, m->type||("image/gif") );
   }
 
 
@@ -2213,12 +2243,30 @@ class ImageCache
     draw_function = to;
   }
 
-  void create( string id, function draw_func, string|void d )
+  static void setup_tables()
+  {
+    if(catch(db->query("select id from "+name+" where id=-1")))
+    {
+      db->query("create table "+name+" ("
+                "id char(64) not null primary key, "
+                "size  int not null default 0, "
+                "ctime bigint not null default 0, "
+                "atime bigint not null default 0)");
+
+      db->query("create table "+name+"_data ("
+                "id char(64) not null primary key, "
+                "data blob not null default '')");
+
+      db->query("create table "+name+"_meta ("
+                "id char(64) not null primary key, "
+                "data blob not null default '')");
+    }
+  }
+
+  
+  void create( string id, function draw_func )
   //! Instantiate an image cache of your own, whose image files will
-  //! be stored in a directory `id' in the argument cache directory,
-  //! typically <tt>../var/cache/</tt>. If you supply the optional
-  //! third parameter, this path will be used instead of the common
-  //! argument cache directory.
+  //! be stored in a table `id' in the cache mysql database,
   //!
   //! The `draw_func' callback passed will be responsible for
   //! (re)generation of the images in the cache. Your draw callback
@@ -2226,16 +2274,10 @@ class ImageCache
   //! you give the <ref>store()</ref> method, but its final argument
   //! will be the RequestID object.
   {
-    if(!d) d = roxenp()->query("argument_cache_dir");
-    if( d[-1] != '/' )
-      d+="/";
-    d += id+"/";
-
-    mkdirhier( d+"foo");
-
-    dir = d;
+    db = connect_to_my_mysql( 0, "cache" );
     name = id;
     draw_function = draw_func;
+    catch(setup_tables());
   }
 }
 
@@ -2293,9 +2335,16 @@ class ArgCache
     path = _path;
     is_db = _is_db;
 
-    if(is_db)
+    if( is_db )
     {
-      db = Sql.sql( path );
+      if( path == "internal" )
+      {
+        db = connect_to_my_mysql( 0, "mysql" );
+        catch(db->query( "create database cache" ));
+        catch(db->query( "use cache" ));
+      }
+      else
+        db = Sql.sql( path );
       if(!db)
         error("Failed to connect to database for argument cache\n");
       setup_table( );
@@ -3111,21 +3160,10 @@ void initiate_argcache()
 {
   int t = gethrtime();
   report_debug( "Initiating argument cache ... ");
-  int id;
-  string cp = QUERY(argument_cache_dir), na = "args";
-  if( QUERY(argument_cache_in_db) )
-  {
-    id = 1;
-    cp = QUERY(argument_cache_db_path);
-    na = "argumentcache";
-  }
-  mixed e;
-  e = catch( argcache = ArgCache(na,cp,id) );
-  if( e )
+  if( mixed e = catch( argcache = ArgCache("arguments","internal",1) ) )
   {
     report_fatal( "Failed to initialize the global argument cache:\n"
                   + (describe_backtrace( e )/"\n")[0]+"\n");
-    sleep(10);
     exit(1);
   }
   add_constant( "roxen.argcache", argcache );
