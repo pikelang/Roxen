@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.44 1997/11/06 05:15:11 neotron Exp $
+/* $Id: wizard.pike,v 1.45 1997/11/06 06:09:20 neotron Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -153,7 +153,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed b)
       "<hr size=2 align=left noshade width=70>\n"+
       "<font size=-1><input type=string name="+
       m->name+".entered size=8 value='"+
-      color_name(a)+"'></font></td></table>\n");
+      color_name(a)+"'> <input type=submit value=Ok></font></td></table>\n");
 
    case "font":
      string res="";
