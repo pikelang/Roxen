@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.173 2000/03/16 11:35:16 nilsson Exp $
+// $Id: rxml.pike,v 1.174 2000/03/18 02:58:06 mast Exp $
 
 inherit "roxenlib";
 inherit "rxmlhelp";
@@ -125,7 +125,11 @@ RXML.TagSet rxml_tag_set = class
     // Fix a better name later when we know the name of the
     // configuration.
     call_out (lambda () {
-		name = sprintf ("rxml_tag_set,%O", rxml_object);
+		string cname = sprintf ("%O", rxml_object);
+		if (sscanf (cname, "Configuration(%s", cname) == 1 &&
+		    sizeof (cname) && cname[-1] == ')')
+		  cname = cname[..sizeof (cname) - 2];
+		name = sprintf ("rxml_tag_set,%s", cname);
 	      }, 0);
 
     imported = ({Roxen.entities_tag_set});
@@ -369,23 +373,7 @@ string do_parse(string to_parse, RequestID id,
   if (parent_parser && (ctx = parent_parser->context) && ctx->id == id)
     parser = default_content_type->get_parser (ctx, 0, parent_parser);
   else {
-#ifdef OLD_RXML_COMPAT
-    // Got to temporarily set the default context to get the compat
-    // setting into the master parser object used for cloning.
-    // RXML.TagSet.`() is essentially duplicated here. Ghurckkl!
-    if(old_rxml_compat) {
-      rxml_tag_set->call_prepare_funs (ctx = RXML.Context (rxml_tag_set, id));
-      RXML.Context orig_ctx = RXML.get_context();
-      RXML.set_context (ctx);
-      parser = ctx->new_parser (default_content_type);
-      RXML.set_context (orig_ctx);
-      ctx->compatible_scope=1;
-    }
-    else
-      parser = rxml_tag_set (default_content_type, id);
-#else
     parser = rxml_tag_set (default_content_type, id);
-#endif
     parent_parser = 0;
   }
   id->misc->_parser = parser;
