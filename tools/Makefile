@@ -1,5 +1,5 @@
 # For gcc
-CC= gcc
+CC= cc
 # For ANSI compilers
 #CC= cc
 
