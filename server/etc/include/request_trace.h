@@ -2,7 +2,7 @@
 //
 // Some stuff to do logging of a request through the server.
 //
-// $Id: request_trace.h,v 1.11 2002/10/25 14:49:40 mast Exp $
+// $Id: request_trace.h,v 1.12 2002/10/25 17:46:18 mast Exp $
 
 #ifndef REQUEST_TRACE_H
 #define REQUEST_TRACE_H
@@ -10,8 +10,9 @@
 #include <roxen.h>
 #include <module.h>
 
-// Messages to TRACE_ENTER and TRACE_LEAVE are preferably a single
-// line, and they should not end with period and/or newline.
+// Note that TRACE_ENTER (but not TRACE_LEAVE) takes html encoded
+// message strings. Messages are preferably a single line, and they
+// should not end with period and/or newline.
 
 #ifdef REQUEST_TRACE
 
@@ -41,15 +42,16 @@
 #endif
 
 // SIMPLE_TRACE_ENTER and SIMPLE_TRACE_LEAVE are simpler variants of
-// the above macros since they handle sprintf style format lists. Note
-// the reversed argument order in SIMPLE_TRACE_ENTER compared to
-// TRACE_ENTER.
+// the above macros: They handle sprintf style format lists and don't
+// take html encoded messages. Note the reversed argument order in
+// SIMPLE_TRACE_ENTER compared to TRACE_ENTER.
 
 #define SIMPLE_TRACE_ENTER(OBJ, MSG...) do {				\
     array _msg_arr_;							\
-    TRACE_ENTER ((_msg_arr_ = ({MSG}),					\
-		  sizeof (_msg_arr_) > 1 ? sprintf (@_msg_arr_) :	\
-		  (sizeof (_msg_arr_) ? _msg_arr_[0] : "")),		\
+    TRACE_ENTER (Roxen.html_encode_string (				\
+		   (_msg_arr_ = ({MSG}),				\
+		    sizeof (_msg_arr_) > 1 ? sprintf (@_msg_arr_) :	\
+		    (sizeof (_msg_arr_) ? _msg_arr_[0] : ""))),		\
 		 (OBJ));						\
   } while (0)
 
@@ -65,14 +67,18 @@
 // debug logging which is activated with the DEBUG define in
 // combination with the magic _debug_ tag argument or the RXML_VERBOSE
 // or RXML_REQUEST_VERBOSE defines.
+//
+// These two macros do not take html encoded messages, as opposed to
+// TRACE_ENTER and TRACE_LEAVE.
 
 #define TAG_TRACE_ENTER(MSG...) do {					\
     array _msg_arr_;							\
     string _msg_;							\
-    TRACE_ENTER ("tag <" + (tag && tag->name) + "> " +			\
-		 (_msg_arr_ = ({MSG}),					\
-		  _msg_ = sizeof (_msg_arr_) > 1 ? sprintf (@_msg_arr_) : \
-		  (sizeof (_msg_arr_) ? _msg_arr_[0] : "")),		\
+    TRACE_ENTER ("tag &lt;" + (tag && tag->name) + "&gt; " +		\
+		 Roxen.html_encode_string (				\
+		   (_msg_arr_ = ({MSG}),				\
+		    _msg_ = sizeof (_msg_arr_) > 1 ? sprintf (@_msg_arr_) : \
+		    (sizeof (_msg_arr_) ? _msg_arr_[0] : ""))),		\
 		 tag);							\
     DO_IF_DEBUG (							\
       if (TAG_DEBUG_TEST (flags & RXML.FLAG_DEBUG))			\
@@ -81,7 +87,7 @@
 		   (_msg_arr_ = ({MSG}),				\
 		    sizeof (_msg_arr_) > 1 ? sprintf (@_msg_arr_) :	\
 		    (sizeof (_msg_arr_) ? _msg_arr_[0] : "")));		\
-		);							\
+    );									\
   } while (0)
 
 #define TAG_TRACE_LEAVE(MSG...) do {					\
