@@ -45,6 +45,8 @@
   <file>../config_interface/standard/boxes/slashdot.pike</file>
   <file>../config_interface/standard/boxes/doclinks.pike</file>
   <file>../config_interface/standard/boxes/welcome.pike</file>
+  <file>../config_interface/standard/boxes/server_status.pike</file>
+  <file>../config_interface/standard/dbs/subtabs.pike</file>
   <file>../etc/modules/Variable.pmod/Date.pike</file>
   <file>../etc/modules/Variable.pmod/Email.pike</file>
   <file>../etc/modules/Variable.pmod/VerifiedString.pike</file>
