@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.291 1999/05/30 22:43:30 per Exp $
+ * $Id: roxen.pike,v 1.292 1999/06/07 00:22:51 mast Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.291 1999/05/30 22:43:30 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.292 1999/06/07 00:22:51 mast Exp $";
 
 object backend_thread;
 object argcache;
@@ -2790,7 +2790,7 @@ källservern om de har en last-modified header som anger när de senast
   /// End of cache variables..
   
   globvar("docurl2", "http://www.roxen.com/documentation/context.pike?page=",
-	  "Documentation URL", TYPE_STRING|VAR_MORE,
+	  "Documentation URL", TYPE_STRING|VAR_MORE|VAR_EXPERT,
 	  "The URL to prepend to all documentation urls throughout the "
 	  "server. This URL should _not_ end with a '/'.");
   deflocaledoc("svenska", "docurl2", "DokumentationsURL",
@@ -2994,7 +2994,8 @@ normal grupper.");
 	  "What do the different clients support?\n<br>"
 	  "The default information is normally fetched from the file "+
 	  getcwd()+"etc/supports, and the format is:<pre>"
-	  "<a href=$docurl/configuration/regexp.html>regular-expression</a>"
+	  //"<a href=$docurl/configuration/regexp.html>regular-expression</a>"
+	  "regular-expression"
 	  " feature, -feature, ...\n"
 	  "</pre>"
 	  "If '-' is prepended to the name of the feature, it will be removed"
