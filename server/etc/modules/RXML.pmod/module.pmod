@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.209 2001/07/20 06:34:31 mast Exp $
+// $Id: module.pmod,v 1.210 2001/07/21 14:23:24 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -199,6 +199,7 @@ class Tag
   constant is_RXML_Tag = 1;
   constant is_RXML_encodable = 1;
   constant is_RXML_p_code_frame = 1;
+  constant is_RXML_p_code_entry = 1;
 
   // Interface:
 
@@ -1113,7 +1114,7 @@ class TagSet
 
   string _sprintf()
   {
-    return sprintf ("RXML.TagSet(%O,%d)%s", name, generation, OBJ_COUNT);
+    return "RXML.TagSet(" + id_number + ")" + OBJ_COUNT;
   }
 
   MARK_OBJECT_ONLY;
@@ -2311,6 +2312,7 @@ class Frame
   constant is_RXML_Frame = 1;
   constant is_RXML_encodable = 1;
   constant is_RXML_p_code_frame = 1;
+  constant is_RXML_p_code_entry = 1;
   constant thrown_at_unwind = 1;
 
   // Interface:
@@ -3558,21 +3560,24 @@ class Frame
 			    ctx, [object(TagSet)] this_object()->local_tags,
 			    evaler, p_code);
 			  subevaler->_local_tag_set = 1;
-			  THIS_TAG_DEBUG ("Iter[%d]: Parsing%s content %s "
+			  THIS_TAG_DEBUG ("Iter[%d]: Parsing%s%s content %s "
 					  "with %O from local_tags\n", debug_iter,
 					  ctx->make_p_code ? " and compiling" : "",
+					  flags & FLAG_GET_EVALED_CONTENT ?
+					  " and result compiling" : "",
 					  utils->format_short (in_content), subevaler);
 			}
 			else {
 			  subevaler = content_type->get_parser (
 			    ctx, ctx->tag_set, evaler, p_code);
-#ifdef DEBUG
-			  if (content_type->parser_prog != PNone)
-			    THIS_TAG_DEBUG ("Iter[%d]: Parsing%s content %s "
-					    "with %O\n", debug_iter,
-					    ctx->make_p_code ? " and compiling" : "",
-					    utils->format_short (in_content), subevaler);
-#endif
+			  THIS_TAG_DEBUG ("Iter[%d]: Parsing%s%s content %s "
+					  "with %O%s\n", debug_iter,
+					  ctx->make_p_code ? " and compiling" : "",
+					  flags & FLAG_GET_EVALED_CONTENT ?
+					  " and result compiling" : "",
+					  utils->format_short (in_content), subevaler,
+					  this_object()->additional_tags ?
+					  " from additional_tags" : "");
 			}
 			if (evaler->recover_errors && !(flags & FLAG_DONT_RECOVER)) {
 			  subevaler->recover_errors = 1;
@@ -3588,12 +3593,14 @@ class Frame
 		    }
 		  }
 		  else {
-		    THIS_TAG_DEBUG ("Iter[%d]: Evaluating compiled content\n",
-				    debug_iter);
 		    subevaler = in_content;
 		    if (flags & FLAG_GET_EVALED_CONTENT)
 		      subevaler->p_code = this_object()->evaled_content =
 			PCode (content_type, subevaler->tag_set, ctx);
+		    THIS_TAG_DEBUG ("Iter[%d]: Evaluating%s with compiled content\n",
+				    debug_iter,
+				    flags & FLAG_GET_EVALED_CONTENT ?
+				    " and result compiling" : "");
 		  }
 
 		eval_sub:
@@ -3651,7 +3658,9 @@ class Frame
 		  } while (1); // Only loops when an unwound subevaler has been recovered.
 
 		  if (PCode p_code = subevaler->p_code) {
-		    (in_content = p_code)->finish();
+		    p_code->finish();
+		    if (stringp (in_content) && ctx->make_p_code) in_content = p_code;
+		    subevaler->p_code = 0;
 		    ctx->make_p_code = orig_make_p_code; // Reset before do_return.
 		  }
 
@@ -3724,7 +3733,7 @@ class Frame
 	  if (in_content) content = in_content;				\
 	  ctx->make_p_code = orig_make_p_code;				\
 	  if (orig_tag_set) ctx->tag_set = orig_tag_set;		\
-	  if (flags & FLAG_DONT_CACHE_RESULT)				\
+	  if (flags & FLAG_DONT_CACHE_RESULT && up)			\
 	    up->flags |= FLAG_DONT_CACHE_RESULT;			\
 	  ctx->frame = up;						\
 	  FRAME_DEPTH_MSG ("%*s%O frame_depth decrease line %d\n",	\
@@ -6400,10 +6409,43 @@ class PCode
 
   void finish()
   {
+    if (flags & COLLECT_RESULTS) {
+      if (!(flags & CTX_ALREADY_GOT_VC))
+	m_delete (RXML_CONTEXT->misc, "variable_changes");
+
+      // Collapse sequences of constants. Could be done when not
+      // collecting results too, but it's probably not worth the
+      // bother then.
+      int max = length;
+      length = 0;
+      for (int pos = 0; pos < max; pos++) {
+	mixed item = exec[pos];
+      process_entry: {
+	  if (objectp (item))
+	    if (item->is_RXML_p_code_frame) {
+	      exec[length++] = exec[pos++];
+	      exec[length++] = exec[pos++];
+	      break process_entry;
+	    }
+	    else if (item->is_RXML_p_code_entry)
+	      break process_entry;
+	    else if (item == nil)
+	      continue;
+	  int end = pos + 1;
+	  while (end < max &&
+		 (!objectp (exec[end]) || !exec[end]->is_RXML_p_code_entry))
+	    end++;
+	  if (pos < --end) {
+	    exec[length++] = `+ (@exec[pos..pos = end]);
+	    continue;
+	  }
+	}
+	exec[length++] = exec[pos];
+      }
+    }
+
     if (length != sizeof (exec)) exec = exec[..length - 1];
-    if (p_code) p_code->finish();
-    if ((flags & (COLLECT_RESULTS|CTX_ALREADY_GOT_VC)) == COLLECT_RESULTS)
-      m_delete (RXML_CONTEXT->misc, "variable_changes");
+    if (p_code) p_code->finish(), p_code = 0;
   }
 
   mixed _eval (Context ctx)
