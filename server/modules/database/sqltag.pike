@@ -5,7 +5,7 @@
 //
 // Henrik Grubbström 1997-01-12
 
-constant cvs_version="$Id: sqltag.pike,v 1.58 2000/05/03 16:27:36 nilsson Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.59 2000/05/26 15:27:30 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -180,16 +180,33 @@ class TagSQLOutput {
 }
 #endif
 
+#ifdef SQL_EMIT_FOR_DATABASES_WITHOUT_NULL_ENTRIES
 class TagSqlplugin {
   inherit RXML.Tag;
   constant name = "emit";
   constant plugin_name = "sql";
 
   array get_dataset(mapping m, RequestID id) {
-    array|string res=do_sql_query(m, id);
+    return do_sql_query(m, id);
+  }
+}
+#else
+class TagSqlplugin {
+  inherit RXML.Tag;
+  constant name = "emit";
+  constant plugin_name = "sql";
+
+  array get_dataset(mapping m, RequestID id) {
+    array(mapping(string:string|int)) res=do_sql_query(m, id);
+
+    foreach(res, mapping(string:string|int) row)
+      foreach(indices(row), string col)
+	if(!row[col]) row[col]=RXML.Void;
+
     return res;
   }
 }
+#endif
 
 class TagSQLQuery {
   inherit RXML.Tag;
