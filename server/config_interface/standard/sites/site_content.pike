@@ -289,9 +289,12 @@ string parse( RequestID id )
     {
      default: /* Status info */
        string res="<br><blockquote><h1>Urls</h1>";
-       foreach( conf->query( "URLs" ), string url )
-         res += "<a href='"+url+"'>"+url+"</a><br>";
-
+       foreach( conf->query( "URLs" ), string url ) {
+	 if(search(url, "*")==-1)
+           res += "<a href='"+url+"'>"+url+"</a><br>";
+	 else
+	   res += url+"<br>";
+       }
        res+="<h1><cf-locale get=eventlog></h1><insert file=log.pike nocache>";
 
        res +="<h1>Request status</h1>";
