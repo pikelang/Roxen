@@ -5,7 +5,7 @@
 //
 // Henrik Grubbström 1997-01-12
 
-constant cvs_version="$Id: sqltag.pike,v 1.57 2000/04/06 01:49:51 wing Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.58 2000/05/26 00:24:50 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -175,7 +175,12 @@ class TagSqlplugin {
   constant plugin_name = "sql";
 
   array get_dataset(mapping m, RequestID id) {
-    array|string res=do_sql_query("sqloutput", m, id);
+    array(mapping(string:string|int)) res=do_sql_query("sqloutput", m, id);
+
+    foreach(res, mapping(string:string|int) row)
+      foreach(indices(row), string col)
+	if(!row[col]) row[col]="";
+
     return res;
   }
 }
