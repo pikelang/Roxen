@@ -5,14 +5,14 @@
 
 // Mk II changes by Henrik P Johnson <hpj@globecom.net>.
 
-constant cvs_version = "$Id: secure_fs.pike,v 1.19 2000/04/06 01:49:41 wing Exp $";
+constant cvs_version = "$Id: secure_fs.pike,v 1.20 2000/04/06 02:18:46 wing Exp $";
 constant thread_safe=1;
 
 #include <module.h>
 inherit "filesystem";
 
 constant module_type = MODULE_LOCATION;
-constant module_name = "Secure file system module";
+constant module_name = "Secure file system";
 constant module_doc  = 
 #"This is a file system module that allows for more fine-grained control
 over the Roxen's built-in module security. Instead of just having security 
