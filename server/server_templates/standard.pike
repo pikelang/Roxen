@@ -1,8 +1,8 @@
 /*
- * $Id: standard.pike,v 1.2 1997/08/13 21:49:39 grubba Exp $
+ * $Id: standard.pike,v 1.3 1997/08/13 22:05:36 grubba Exp $
  */
 
-constant default = 1;
+constant selected = 1;
 constant name = "Generic server";
 constant desc = "A virtual server with the most popular modules";
 constant modules = ({
