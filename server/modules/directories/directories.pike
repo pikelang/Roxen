@@ -10,7 +10,7 @@
 //  o More stuff in the emit variables
 //
 
-constant cvs_version = "$Id: directories.pike,v 1.71 2000/08/15 01:26:31 mast Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.72 2000/08/17 00:40:01 per Exp $";
 constant thread_safe = 1;
 
 #include <stat.h>
@@ -59,7 +59,7 @@ void start(int n, Configuration c)
     set( "template", 
          #"
 <if not='' variable='form.sort'>
-  <set variable='form.sort' value='name'>a
+  <set variable='form.sort' value='name' />
 </if>
 
 <html>
