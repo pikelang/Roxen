@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.497 2000/07/09 16:53:05 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.498 2000/07/09 18:19:36 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -502,13 +502,13 @@ private static void low_shutdown(int exit_code)
 // listen ports and then quit.  The 'start' script should then start a
 // new copy of roxen automatically.
 void restart(float|void i)
-//. Restart roxen, if the start script is running
+//! Restart roxen, if the start script is running
 {
   call_out(low_shutdown, i, -1);
 }
 
 void shutdown(float|void i)
-//. Shut down roxen
+//! Shut down roxen
 {
   call_out(low_shutdown, i, 0);
 }
@@ -545,9 +545,9 @@ object do_thread_create(string id, function f, mixed ... args)
 // Shamelessly uses facts about pikes preemting algorithm.
 // Might have to be fixed in the future.
 class Queue 
-//. Thread.Queue lookalike, which uses some archaic and less
-//. known features of the preempting algorithm in pike to optimize the
-//. read function.
+//! Thread.Queue lookalike, which uses some archaic and less
+//! known features of the preempting algorithm in pike to optimize the
+//! read function.
 {
   inherit Thread.Condition : r_cond;
   array buffer=allocate(8);
@@ -580,17 +580,17 @@ class Queue
 }
 
 local static Queue handle_queue = Queue();
-//. Queue of things to handle.
-//. An entry consists of an array(function fp, array args)
+//! Queue of things to handle.
+//! An entry consists of an array(function fp, array args)
 
 local static int thread_reap_cnt;
-//. Number of handler threads that are alive.
+//! Number of handler threads that are alive.
 
 local static void handler_thread(int id)
-//. The actual handling function. This functions read function and
-//. parameters from the queue, calls it, then reads another one. There
-//. is a lot of error handling to ensure that nothing serious happens if
-//. the handler function throws an error.
+//! The actual handling function. This functions read function and
+//! parameters from the queue, calls it, then reads another one. There
+//! is a lot of error handling to ensure that nothing serious happens if
+//! the handler function throws an error.
 {
   array (mixed) h, q;
   while(!die_die_die)
@@ -639,9 +639,9 @@ local static void threaded_handle(function f, mixed ... args)
 }
 
 int number_of_threads;
-//. The number of handler threads to run.
+//! The number of handler threads to run.
 static array(object) handler_threads = ({});
-//. The handler threads, the list is kept for debug reasons.
+//! The handler threads, the list is kept for debug reasons.
 
 void start_handler_threads()
 {
@@ -662,7 +662,7 @@ void start_handler_threads()
 }
 
 void stop_handler_threads()
-//. Stop all the handler threads, bug give up if it takes too long.
+//! Stop all the handler threads, bug give up if it takes too long.
 {
   int timeout=10;
 #if constant(_reset_dmalloc)
@@ -688,15 +688,15 @@ void stop_handler_threads()
 
 
 mapping get_port_options( string key )
-//. Get the options for the key 'key'.
-//. The intepretation of the options is protocol specific.
+//! Get the options for the key 'key'.
+//! The intepretation of the options is protocol specific.
 {
   return (query( "port_options" )[ key ] || ([]));
 }
 
 void set_port_options( string key, mapping value )
-//. Set the options for the key 'key'.
-//. The intepretation of the options is protocol specific.
+//! Set the options for the key 'key'.
+//! The intepretation of the options is protocol specific.
 {
   mapping q = query("port_options");
   q[ key ] = value;
@@ -706,39 +706,39 @@ void set_port_options( string key, mapping value )
 
 
 class Protocol
-//. The basic protocol.  
-//. Implements reference handling, finding Configuration objects 
-//. for URLs, and the bind/accept handling.
+//! The basic protocol.  
+//! Implements reference handling, finding Configuration objects 
+//! for URLs, and the bind/accept handling.
 {
   inherit Stdio.Port: port;
   inherit "basic_defvar";
 
   constant name = "unknown";
   constant supports_ipless = 0;
-  //. If true, the protocol handles ip-less virtual hosting
+  //! If true, the protocol handles ip-less virtual hosting
   constant requesthandlerfile = "";
-  //. Filename of a by-connection handling class. It is also possible
-  //. to set the 'requesthandler' class member in a overloaded create
-  //. function.
+  //! Filename of a by-connection handling class. It is also possible
+  //! to set the 'requesthandler' class member in a overloaded create
+  //! function.
  
   constant default_port = 4711;
-  //. If no port is specified in the URL, use this one
+  //! If no port is specified in the URL, use this one
 
   int port;
-  //. The currently bound portnumber
+  //! The currently bound portnumber
   string ip;
-  //. The IP-number (0 for ANY) this port is bound to
+  //! The IP-number (0 for ANY) this port is bound to
   int refs;
-  //. The number of references to this port
+  //! The number of references to this port
   program requesthandler;
-  //. The per-connection request handling class
+  //! The per-connection request handling class
   array(string) sorted_urls = ({});
-  //. Sorted by length, longest first
+  //! Sorted by length, longest first
   mapping(string:mapping) urls = ([]);
-  //. .. url -> ([ "conf":.., ... ])
+  //! .. url -> ([ "conf":.., ... ])
 
   void ref(string name, mapping data)
-  //. Add a ref for the URL 'name' with the data 'data'
+  //! Add a ref for the URL 'name' with the data 'data'
   {
     if(urls[name])
     {
@@ -754,7 +754,7 @@ class Protocol
   }
 
   void unref(string name)
-  //. Remove a ref for the URL 'name'
+  //! Remove a ref for the URL 'name'
   {
     if(!urls[name]) // only unref once
       return;
@@ -776,10 +776,10 @@ class Protocol
 
   object find_configuration_for_url( string url, RequestID id, 
                                      int|void no_default )
-  //. Given a url and requestid, try to locate a suitable configuration
-  //. (virtual site) for the request. 
-  //. This interface is not at all set in stone, and might change at 
-  //. any time.
+  //! Given a url and requestid, try to locate a suitable configuration
+  //! (virtual site) for the request. 
+  //! This interface is not at all set in stone, and might change at 
+  //! any time.
   {
     url = lower_case( url );
     object c;
@@ -851,19 +851,19 @@ class Protocol
   }
 
   mixed query_option( string x )
-  //. Query the port-option 'x' for this port. 
+  //! Query the port-option 'x' for this port. 
   {
     return query( x );
   }
 
   string get_key()
-  //. Return he key used for this port (protocol:ip:portno)
+  //! Return he key used for this port (protocol:ip:portno)
   {
     return name+":"+ip+":"+port;
   }
 
   void save()
-  //. Save all port options
+  //! Save all port options
   {
     set_port_options( get_key(),
                       mkmapping( indices(variables),
@@ -871,14 +871,14 @@ class Protocol
   }
 
   void restore()
-  //. Restore all port options from saved values
+  //! Restore all port options from saved values
   {
     foreach( (array)get_port_options( get_key() ),  array kv )
       set( kv[0], kv[1] );
   }
 
   static void create( int pn, string i )
-  //. Constructor. Bind to the port 'pn' ip 'i'
+  //! Constructor. Bind to the port 'pn' ip 'i'
   {
     port = pn;
     ip = i;
@@ -902,7 +902,7 @@ class Protocol
 }
 
 class SSLProtocol
-//. Base protocol for SSL ports. Exactly like Port, but uses SSL.
+//! Base protocol for SSL ports. Exactly like Port, but uses SSL.
 {
   inherit Protocol;
 
@@ -3594,4 +3594,10 @@ array(string|object) list_config_users(string uname, string|void required_auth)
         res += ({ o });
   }
   return res;
+}
+
+
+static string _sprintf( )
+{
+  return "roxen";
 }
