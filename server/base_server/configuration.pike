@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.567 2004/05/04 13:23:46 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.568 2004/05/06 16:51:16 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1334,11 +1334,15 @@ string examine_return_mapping(mapping m)
 multiset(DAVLock) find_locks(string path, int(0..1) recursive,
 			     int(0..1) exclude_shared, RequestID id)
 {
+  TRACE_ENTER(sprintf("find_locks(%O, %O, %O, X)",
+		      path, recursive, exclude_shared), 0);
   multiset(DAVLock) locks = (<>);
 
   foreach(location_module_cache||location_modules(),
 	  [string loc, function func])
   {
+    TRACE_ENTER(sprintf("Finding locks in %O.", loc),
+		function_object(func));
     string subpath;
     if (has_prefix(path, loc)) {
       // path == loc + subpath.
@@ -1348,13 +1352,23 @@ multiset(DAVLock) find_locks(string path, int(0..1) recursive,
       subpath = "/";
     } else {
       // Does not apply to this location module.
+      TRACE_LEAVE("Skip this module.");
       continue;
     }
+    TRACE_ENTER(sprintf("subpath: %O", subpath),
+		function_object(func)->find_locks);
     multiset(DAVLock) sub_locks =
       function_object(func)->find_locks(subpath, recursive,
 					exclude_shared, id);
-    if (sub_locks) locks |= sub_locks;
+    TRACE_LEAVE("");
+    if (sub_locks) {
+      TRACE_LEAVE(sprintf("Got some locks: %O", sub_locks));
+      locks |= sub_locks;
+    } else {
+      TRACE_LEAVE("Got no locks.");
+    }
   }
+  TRACE_LEAVE(sprintf("Returning %O", locks));
   return locks;
 }
 
