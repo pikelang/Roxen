@@ -1,6 +1,6 @@
 inherit "http";
 
-// static string _cvs_version = "$Id: roxenlib.pike,v 1.88 1999/01/31 22:45:06 neotron Exp $";
+// static string _cvs_version = "$Id: roxenlib.pike,v 1.89 1999/02/03 19:58:46 mast Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -1113,6 +1113,15 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 		val = replace (val,
 			       ({ "\"", "\\", "\n" }),
 			       ({ "\\\"", "\\\\", "\\n" }));
+		break;
+
+	      case "js":
+	      case "javascript":
+		// Javascript string quoting.
+		val = replace (val,
+			       ({ "\b", "\f", "\n", "\r", "\t", "\\", "'", "\"" }),
+			       ({ "\\b", "\\f", "\\n", "\\r", "\\t", "\\\\",
+				  "\\'", "\\\"" }));
 		break;
 
 	      case "mysql":
