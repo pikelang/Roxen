@@ -1,7 +1,7 @@
-// This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
+// This is a roxen module. Copyright © 1996 - 2000, Idonex AB.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.198 2000/01/02 01:29:21 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.199 2000/01/02 01:36:28 nilsson Exp $";
 constant thread_safe=1;
 
 #include <config.h>

@@ -1,4 +1,4 @@
-// This is a Roxen module. Copyright © 1996 - 1999, Idonex AB
+// This is a Roxen module. Copyright © 1996 - 2000, Idonex AB
 //
 // Directory listings mark 2
 //
@@ -11,7 +11,7 @@
 //
 // Make sure links work _inside_ unfolded dokuments.
 
-string cvs_version = "$Id: directories.pike,v 1.38 2000/01/02 01:24:29 nilsson Exp $";
+string cvs_version = "$Id: directories.pike,v 1.39 2000/01/02 01:36:51 nilsson Exp $";
 constant thread_safe=1;
 
 //#define DIRECTORIES_DEBUG
