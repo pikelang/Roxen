@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.360 1999/08/11 07:23:14 peter Exp $
+ * $Id: roxen.pike,v 1.361 1999/08/12 13:33:08 grubba Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -8,7 +8,7 @@
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version = "$Id: roxen.pike,v 1.360 1999/08/11 07:23:14 peter Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.361 1999/08/12 13:33:08 grubba Exp $";
 
 object backend_thread;
 object argcache;
@@ -2367,6 +2367,9 @@ private void define_global_variables( int argc, array (string) argv )
 	  "This is very useful if you are debugging your own modules "
 	  "or writing Pike scripts.");
   
+<<<<<<< roxen.pike
+  
+=======
  
   globvar("RestoreConnLogFull", 0,
 	  "Range: Log entire file length in restored connections",
@@ -2388,6 +2391,7 @@ private void define_global_variables( int argc, array (string) argv )
 	  "download partial files. Mostly used to continue interrupted "
 	  "connections");	
 
+>>>>>>> 1.360
   // Hidden variables (compatibility ones, or internal or too
   // dangerous
   /*  globvar("BS", 0, "Configuration interface: Compact layout",*/
@@ -3372,6 +3376,26 @@ object neighborhood;
 #endif /* ENABLE_NEIGHBOURHOOD */
 
 
+// Dump all threads to the debug log.
+void describe_all_threads()
+{
+  array(mixed) all_backtraces;
+#if constant(all_threads)
+  all_backtraces = all_threads()->backtrace();
+#else /* !constant(all_threads) */
+  all_backtraces = ({ backtrace() });
+#endif /* constant(all_threads) */
+
+  werror("Describing all threads:\n");
+  int i;
+  for(i=0; i < sizeof(all_backtraces); i++) {
+    werror(sprintf("Thread %d:\n"
+		   "%s\n",
+		   i+1,
+		   describe_backtrace(all_backtraces[i])));
+  }
+}
+
 // And then we have the main function, this is the oldest function in
 // Roxen :) It has not changed all that much since Spider 2.0.
 int main(int|void argc, array (string)|void argv)
@@ -3493,13 +3517,17 @@ int main(int|void argc, array (string)|void argv)
 #endif /* THREADS */
 
   // Signals which cause a restart (exitcode != 0)
-  foreach( ({ "SIGUSR1", "SIGUSR2", "SIGINT" }), string sig) {
+  foreach( ({ "SIGINT" }), string sig) {
     catch { signal(signum(sig), exit_when_done); };
   }
   catch { signal(signum("SIGHUP"), reload_all_configurations); };
   // Signals which cause a shutdown (exitcode == 0)
   foreach( ({ "SIGTERM" }), string sig) {
     catch { signal(signum(sig), shutdown); };
+  }
+  // Signals which cause Roxen to dump the thread state
+  foreach( ({ "SIGUSR1", "SIGUSR2", "SIGTRAP" }), string sig) {
+    catch { signal(signum(sig), describe_all_threads); };
   }
 
   report_notice("Roxen started in "+(time()-start_time)+" seconds.\n");
