@@ -1,7 +1,7 @@
 #include <roxen.h>
 inherit "http";
 
-// $Id: roxenlib.pike,v 1.117 1999/10/11 14:10:58 per Exp $
+// $Id: roxenlib.pike,v 1.118 1999/10/17 15:35:56 nilsson Exp $
 // This code has to work both in the roxen object, and in modules.
 #if !efun(roxen)
 #define roxen roxenp()
@@ -1584,4 +1584,16 @@ string|int API_read_file(object id, string file)
   return s;
 }
 
-
+int time_dequantifier(mapping m)
+{
+  float t = 0.0;
+  if (m->seconds) t+=((float)(m->seconds));
+  if (m->minutes) t+=((float)(m->minutes))*60;
+  if (m->beats)   t+=((float)(m->beats))*86.4;
+  if (m->hours)   t+=((float)(m->hours))*3600;
+  if (m->days)    t+=((float)(m->days))*86400;
+  if (m->weeks)   t+=((float)(m->weeks))*604800;
+  if (m->months)  t+=((float)(m->months))*(24*3600*30.46);
+  if (m->years)   t+=((float)(m->years))*(3600*(24*365.242190));
+  return (int)t;
+}
