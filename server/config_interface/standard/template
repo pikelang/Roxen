@@ -11,7 +11,8 @@
     <emit ::='&_.args;' noset=''>
       <cond>
         <case variable='usr.changemark is not'>
-          <tr><td width="20%" valign="top"><b>&_.name;</b></td><td><eval>&_.form:none;</eval></td></tr>
+          <tr><td valign=top width="20%" valign="top"><b>&_.name;</b></td>
+		<td valign=top><eval>&_.form:none;</eval></td></tr>
           <tr><td colspan="2">&_.doc:none;<p>&_.type_hint;</p></td></tr>
         </case>
     
@@ -23,8 +24,8 @@
            <set variable='var.extraargs' value=''/>
           </else>
           <tr>
-            <td width="20%"><b>&_.name;</b></td>
-            <td ::='&var.extraargs;'><eval>&_.form:none;</eval></td>
+            <td valign=top width="20%"><b>&_.name;</b></td>
+            <td valign=top ::='&var.extraargs;'><eval>&_.form:none;</eval></td>
           </tr>
           <tr>
             <td colspan="2">&_.doc:none;<p>&_.type_hint;</p></td>
@@ -49,7 +50,7 @@
             </tr>
           </else>
          </if>
-         <tr><td width="20%"><b>&_.name;</b></td><td><eval>&_.form:none;</eval></td></tr>
+         <tr><td valign=top width="20%"><b>&_.name;</b></td><td valign=top><eval>&_.form:none;</eval></td></tr>
          <tr><td colspan="2">&_.doc:none;<p>&_.type_hint;</p></td></tr>
         </case>
       </cond>
@@ -120,10 +121,10 @@
 
 <define container='box'>
  <if variable="_.type is small">
-   <cv-obox width=300 iwidth=298 title='&_.title;'><contents/></cv-obox>
+   <cv-obox width='200' iwidth=198 title='&_.title;'><contents/></cv-obox>
  </if>
  <else>
-   <cv-obox width=400 iwidth=398 title='&_.title;'><contents/></cv-obox>
+   <cv-obox width='400' iwidth='398' title='&_.title;'><contents/></cv-obox>
  </else>
 </define>
 
