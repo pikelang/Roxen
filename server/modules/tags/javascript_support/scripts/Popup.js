@@ -185,10 +185,10 @@ function PopupProperties(ox, oy)
     function(poy) { this.poy = poy; return this;};
 
   // Modify the offsets
-  if(isNav5) {
-    this.ox += 8;
-    this.oy += 8;
-  }
+    if(isNav5) {
+      this.ox += 1;
+      this.oy += 1;
+    }
   if(isMac) {
     this.ox += 10;
     this.oy += 15;
