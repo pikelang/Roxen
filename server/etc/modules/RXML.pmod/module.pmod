@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.135 2001/03/05 19:08:16 nilsson Exp $
+//! $Id: module.pmod,v 1.136 2001/03/12 16:39:36 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -3630,7 +3630,7 @@ class Type
   //! A type in the type hierarchy should be able to express any value
   //! that any of its subtypes can express without (or with at most
   //! negligible) loss of information, but not necessarily on the same
-  //! form. This is different from the type tree described by
+  //! form. This is different from the type trees described by
   //! @[conversion_type], although it's always preferable if a
   //! supertype also can be used as @[conversion_type] in its
   //! subtypes.
@@ -3650,10 +3650,9 @@ class Type
 
   Type conversion_type;
   //! The type to use as middlestep in indirect conversions. Required
-  //! and considered constant. As a last fallback, it should be set to
-  //! @[t_any] (for any type but @[t_any] itself). The
-  //! @[conversion_type] references must never produce a cycle between
-  //! types.
+  //! and considered constant. It should be zero (not @[t_any]) if
+  //! there is no sensible conversion type. The @[conversion_type]
+  //! references must never produce a cycle between types.
   //!
   //! It's values of the conversion type that @[decode] tries to
   //! return, and also that @[encode] must handle without resorting to
@@ -3661,8 +3660,8 @@ class Type
   //! which doesn't have explicit conversion functions for each other;
   //! see @[indirect_convert].
   //!
-  //! @note The tree described by the conversion types is not a proper
-  //! type hierarchy in the sense of value set sizes, as opposed to
+  //! @note The trees described by the conversion types aren't proper
+  //! type hierarchies in the sense of value set sizes, as opposed to
   //! the relations expressed by the glob patterns in @[name]. The
   //! conversion type is chosen purely on pragmatic grounds for doing
   //! indirect conversions. It's better if the conversion type is a
@@ -3998,7 +3997,6 @@ class Type
   //! it won't do a direct conversion from @[conversion_type] to this
   //! type. Throws RXML parse error on any conversion error.
   {
-    error ("test\n");
 #ifdef MODULE_DEBUG
     if (conversion_type->name == from->name)
       error ("Won't convert the conversion type %s to %s; "
@@ -4064,8 +4062,9 @@ static class PCacheObj
 
 TAny t_any = TAny();
 //! A completely unspecified nonsequential type. Every type is a
-//! subtype of this one, and it's also the root of the tree that
-//! @[Type.conversion_type] describes.
+//! subtype of this one. This type is also special in that any value
+//! can be converted to this type without changing it (i.e. with no
+//! intermediate @[Type.decode] calls).
 
 static class TAny
 {
@@ -4075,8 +4074,6 @@ static class TAny
 
   mixed encode (mixed val, void|Type from)
   {
-    if (from && from->name != local::name)
-      return indirect_convert (val, from);
     return val;
   }
 
@@ -4093,7 +4090,7 @@ static class TNil
   constant name = "nil";
   constant sequential = 1;
   Nil empty_value = nil;
-  Type conversion_type = t_any;
+  Type conversion_type = 0;
 
   void type_check (mixed val, void|string msg, mixed... args)
   {
@@ -4148,7 +4145,7 @@ static class TNum
   constant name = "number";
   constant sequential = 0;
   constant empty_value = 0;
-  Type conversion_type = t_any;
+  Type conversion_type = 0;
 
   void type_check (mixed val, void|string msg, mixed... args)
   {
@@ -4252,7 +4249,7 @@ static class TText
   constant name = "text/*";
   constant sequential = 1;
   constant empty_value = "";
-  Type conversion_type = t_any;
+  Type conversion_type = 0;
   constant free_text = 1;
 
   void type_check (mixed val, void|string msg, mixed... args)
