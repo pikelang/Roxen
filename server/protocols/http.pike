@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.460 2004/08/11 12:11:06 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.461 2004/08/11 13:13:22 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1004,7 +1004,23 @@ static void do_timeout()
   int elapsed = predef::time(1)-time;
   if(time && elapsed >= 30)
   {
-    REQUEST_WERR("HTTP: Connection timed out. Closing.");
+#ifdef CONNECTION_DEBUG
+    werror("HTTP: Connection timed out. Closing.\n"
+	   "rcb:%O\n"
+	   "wcb:%O\n"
+	   "ccb:%O\n",
+	   my_fd->query_read_callback(),
+	   my_fd->query_write_callback(),
+	   my_fd->query_close_callback());
+#else
+    REQUEST_WERR(sprintf("HTTP: Connection timed out. Closing.\n"
+			 "rcb:%O\n"
+			 "wcb:%O\n"
+			 "ccb:%O\n",
+			 my_fd->query_read_callback(),
+			 my_fd->query_write_callback(),
+			 my_fd->query_close_callback()));
+#endif
     MARK_FD("HTTP timeout");
     end();
   } else {
@@ -1828,7 +1844,9 @@ void send_result(mapping|void result)
       // Some browsers, e.g. Netscape 4.7, don't trust a zero
       // content length when using keep-alive. So let's force a
       // close in that case.
-      if( file->error/100 == 2 && file->len <= 0 )
+      // Opera 7.54/Solaris seems to have the same problem.
+      // (Observed with 304's).
+      if( file->error/100 >= 2 && file->len <= 0 )
       {
 	heads->Connection = "close";
 	misc->connection = "close";
@@ -2495,8 +2513,14 @@ void chain(object f, object c, string le)
     f->set_nonblocking(!processed && got_data, f->query_write_callback(), close_cb);
   }
 
-  if ( le && strlen( le ) )
-    got_data( 0,le );
+  if ( le && strlen( le ) ) {
+#ifdef CONNECTION_DEBUG
+    werror("HTTP: Leftovers: %O\n", le);
+#else
+    REQUEST_WERR(sprintf("HTTP: %d bytes left over.\n", sizeof(le)));
+#endif
+    got_data(0, le);
+  }
   else
   {
     // If no pipelined data is available, call out...
