@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: global_variables.pike,v 1.21 2000/02/20 17:41:33 nilsson Exp $
+// $Id: global_variables.pike,v 1.22 2000/02/28 05:21:57 peter Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -267,7 +267,7 @@ void define_global_variables( int argc, array (string) argv )
 	       "har lyckats ladda hem hela filen. I normalfallet vill du "
 	       "ha denna flagga avslagen.");
 
-  globvar("default_font", "bitstreamcybersans", "Default font", TYPE_FONT,
+  globvar("default_font", "franklin_gothic_demi", "Default font", TYPE_FONT,
 	  "The default font to use when modules request a font.");
 
   deflocaledoc( "svenska", "default_font", "Normaltypsnitt",
