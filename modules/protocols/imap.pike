@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.60 1999/02/14 23:20:03 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.61 1999/02/14 23:50:58 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -945,7 +945,48 @@ class backend
       //   that does not exist.
       return(0);
     }
+
+    // FIXME: What if we are deleting the selected mailbox?
+
     mailbox->delete();
+    return(1);
+  }
+
+  int rename(object|mapping(string:mixed) session,
+	     string old_mailbox_name,
+	     string new_mailbox_name)
+  {
+    // Clientlayer Mailbox object
+    object mailbox;
+
+    // FIXME: What if we are renaming the selected mailbox?
+
+    if ((lower_case(new_mailbox_name) == "inbox") ||
+	(lower_case(new_mailbox_name) == "incoming") ||
+	(session->user->get_mailbox(new_mailbox_name)))
+    {
+      // RFC 2060, Section 6.3.5:
+      //   It is an error to rename from a mailbox name that does not exist
+      //   or to a mailbox  name that already exists.
+      return(0);
+    }
+    if ((lower_case(old_mailbox_name) == "inbox") ||
+	(lower_case(old_mailbox_name) == "incoming"))
+    {
+      // RFC 2060, Section 6.3.5:
+      //   Renaming INBOX is permitted, and has special behaviour. It moves
+      //   all messages in INBOX to a new mailbox with the givan name, leaving
+      //   INBOX empty.
+      mailbox = session->user->get_incoming();
+      mailbox->rename(new_mailbox_name);
+      // Create a new incoming.
+      session->user->get_incoming();
+      return(1);
+    }
+    if (!(mailbox = session->user->get_mailbox(old_mailbox_name))) {
+      return(0);
+    }
+    mailbox->rename(new_mailbox_name);
     return(1);
   }
 
