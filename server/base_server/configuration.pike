@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.278 2000/03/18 03:02:15 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.279 2000/03/19 16:56:10 nilsson Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -37,6 +37,7 @@ mapping profile_map = ([]);
 #endif
 
 /* A configuration.. */
+
 
 #include "rxml.pike";
 
@@ -233,7 +234,7 @@ public string type_from_filename( string file, int|void to, string|void myext )
   if(!types_fun)
     return to?({ "application/octet-stream", 0 }):"application/octet-stream";
 
-  string ext=myext || extension(file);
+  string ext=myext || Roxen.extension(file);
 
   if(tmp = types_fun(ext))
   {
@@ -665,7 +666,7 @@ public void log(mapping file, RequestID request_id)
   if(!log_function || !request_id) return;// No file is open for logging.
 
 
-  if(QUERY(NoLog) && _match(request_id->remoteaddr, QUERY(NoLog)))
+  if(QUERY(NoLog) && Roxen._match(request_id->remoteaddr, QUERY(NoLog)))
     return;
 
   if(!(form=log_format[(string)file->error]))
@@ -684,11 +685,11 @@ public void log(mapping file, RequestID request_id)
                ({
 		 (string)request_id->remoteaddr,
 		 host_ip_to_int(request_id->remoteaddr),
-		 cern_http_date(time(1)),
+		 Roxen.cern_http_date(time(1)),
 		 unsigned_to_bin(time(1)),
 		 (string)request_id->method,
-		 http_encode_string((string)request_id->not_query),
-		 http_encode_string((string)request_id->raw_url),
+		 Roxen.http_encode_string((string)request_id->not_query),
+		 Roxen.http_encode_string((string)request_id->raw_url),
 		 (string)request_id->prot,
 		 (string)(file->error||200),
 		 unsigned_short_to_bin(file->error||200),
@@ -696,7 +697,7 @@ public void log(mapping file, RequestID request_id)
 		 unsigned_to_bin(file->len),
 		 (string)
 		 (sizeof(request_id->referer||({}))?request_id->referer[0]:"-"),
-		 http_encode_string(sizeof(request_id->client||({}))?request_id->client*" ":"-"),
+		 Roxen.http_encode_string(sizeof(request_id->client||({}))?request_id->client*" ":"-"),
 		 extract_user(request_id->realauth),
 		 request_id->cookies->RoxenUserID||"0",
 		 (string)(time(1)-request_id->time)
@@ -861,7 +862,7 @@ int|mapping check_security(function a, RequestID id, void|int slevel)
 
 	// FIXME: LOCALE?
 	if(level[1](id->remoteaddr))
-	  return http_low_answer(403, "<h2>Access forbidden</h2>");
+	  return Roxen.http_low_answer(403, "<h2>Access forbidden</h2>");
 	break;
 
       case MOD_USER: // allow user=...
@@ -877,7 +878,7 @@ int|mapping check_security(function a, RequestID id, void|int slevel)
 	  // IP is OK as of yet.
 	  if(id->misc->proxyauth && id->misc->proxyauth[0] &&
 	     level[1](id->misc->proxyauth[1])) return 0;
-	  return http_proxy_auth_required(seclevels[2]);
+	  return Roxen.http_proxy_auth_required(seclevels[2]);
 	} else {
 	  // Bad IP.
 	  return 1;
@@ -904,7 +905,7 @@ int|mapping check_security(function a, RequestID id, void|int slevel)
 	    auth_ok |= 1;	// Auth may be bad.
 	  } else {
 	    // No auth yet, get some.
-	    return http_auth_required(seclevels[2]);
+	    return Roxen.http_auth_required(seclevels[2]);
 	  }
 	}
 	break;
@@ -925,7 +926,7 @@ int|mapping check_security(function a, RequestID id, void|int slevel)
     if (auth_ok == 1) {
       // Bad authentification.
       // Query for authentification.
-      return http_auth_required(seclevels[2]);
+      return Roxen.http_auth_required(seclevels[2]);
     } else {
       // No auth required, or authentification OK.
       return 0;
@@ -994,7 +995,7 @@ private mapping internal_roxen_image(string from)
   // Automatically generated colorbar. Used by wizard code...
   int hue,bright,w;
   if(sscanf(from, "%*s:%d,%d,%d", hue, bright,w)==4)
-    return http_string_answer(draw_saturation_bar(hue,bright,w),"image/gif");
+    return Roxen.http_string_answer(draw_saturation_bar(hue,bright,w),"image/gif");
 
   Stdio.File f;
 
@@ -1370,10 +1371,10 @@ mapping|int low_get_file(RequestID id, int|void no_magic)
 	/* FIXME: Should probably keep prestate etc.
 	 *	/grubba 1999-01-14
 	 */
-	string new_query = http_encode_string(id->not_query) + "/" +
+	string new_query = Roxen.http_encode_string(id->not_query) + "/" +
 	  (id->query?("?"+id->query):"");
 
-	return http_redirect(new_query, id);
+	return Roxen.http_redirect(new_query, id);
       }
     }
   }
@@ -1406,7 +1407,7 @@ mapping|int low_get_file(RequestID id, int|void no_magic)
 
   // Map the file extensions, but only if there is a file...
   if(objectp(fid) &&
-     (tmp = file_extension_modules(loc = extension(id->not_query, id), id))) {
+     (tmp = file_extension_modules(loc = Roxen.extension(id->not_query, id), id))) {
     foreach(tmp, funp)
     {
       TRACE_ENTER(LOCALE->extension_module(loc), funp);
@@ -1448,7 +1449,7 @@ mapping|int low_get_file(RequestID id, int|void no_magic)
   {
     if(stringp(id->extension)) {
       id->not_query += id->extension;
-      loc = extension(id->not_query, id);
+      loc = Roxen.extension(id->not_query, id);
     }
     TRACE_ENTER(LOCALE->content_type_module(), types_module);
     tmp=type_from_filename(id->not_query, 1, loc);
@@ -1815,11 +1816,11 @@ public array open_file(string fname, string mode, RequestID id)
     if(!mappingp(file))
     {
       if(id->misc->error_code)
-	file = http_low_answer(id->misc->error_code, "Failed" );
+	file = Roxen.http_low_answer(id->misc->error_code, "Failed" );
       else if(id->method!="GET"&&id->method != "HEAD"&&id->method!="POST")
-	file = http_low_answer(501, "Not implemented.");
+	file = Roxen.http_low_answer(501, "Not implemented.");
       else {
-	file = http_low_answer(404,
+	file = Roxen.http_low_answer(404,
 			       parse_rxml(
 #ifdef OLD_RXML_COMPAT
 					  replace(query("ZNoSuchFile"),
@@ -3242,7 +3243,7 @@ $user_id       -- Ett unikt användarid. Tas från kakan RoxenUserID, du
   deflocaledoc("svenska", "Log", "Loggning: På",
 	       "Ska roxen logga alla förfrågningar till en logfil?");
 
-  defvar("LogFile", "$LOGDIR/"+short_name(name)+"/Log",
+  defvar("LogFile", "$LOGDIR/"+Roxen.short_name(name)+"/Log",
 
 	 "Logging: Log file", TYPE_FILE, "The log file. "
 	 ""
