@@ -42,7 +42,7 @@ string available_languages(object id) {
 
 // --------------------- Help layout functions --------------------
 
-static string desc_cont(string t, mapping m, string c, string rt)
+static string desc_cont(Parser.HTML parser, mapping m, string c, string rt)
 {
   string dt=rt;
   m->type=m->type||"";
@@ -59,7 +59,7 @@ static string desc_cont(string t, mapping m, string c, string rt)
   return sprintf("<h2>%s</h2><p>%s</p>",dt,c);
 }
 
-static string attr_cont(string t, mapping m, string c)
+static string attr_cont(Parser.HTML parser, mapping m, string c)
 {
   string p="";
   if(!m->name) m->name="(Not entered)";
@@ -80,7 +80,7 @@ static string attr_vals(string v)
   return v;
 }
 
-static string noex_cont(string t, mapping m, string c) {
+static string noex_cont(Parser.HTML parser, mapping m, string c) {
   return Parser.HTML()->add_container("ex","")->
     add_quote_tag("!--","","--")->feed(c)->read();
 }
@@ -89,9 +89,9 @@ static string ex_quote(string in) {
   return "<pre>"+replace(in, ({"<",">","&"}), ({"&lt;","&gt;","&amp;"}) )+"</pre>";
 }
 
-static string ex_cont(string t, mapping m, string c, string rt, void|object id)
+static string ex_cont(Parser.HTML parser, mapping m, string c, string rt, void|object id)
 {
-  c=Parser.HTML()->add_container("ent", lambda(string t, mapping m, string c) {
+  c=Parser.HTML()->add_container("ent", lambda(Parser.HTML parser, mapping m, string c) {
 					  return "&amp;"+c+";"; 
 					} )->
     add_quote_tag("!--","","--")->feed(c)->read();
@@ -121,7 +121,7 @@ static string ex_cont(string t, mapping m, string c, string rt, void|object id)
   }
 }
 
-static string list_cont( string t, mapping m, string c )
+static string list_cont( Parser.HTML parser, mapping m, string c )
 {
   if( m->type == "ol" )
     return "<ol>"+replace( c, ({"<item>","</item>", "<item/>"}), 
@@ -197,16 +197,19 @@ static string format_doc(string|mapping doc, string name, void|object id)
            "attr":attr_cont,
            "ex":ex_cont,
            "noex":noex_cont,
-           "tag":lambda(string tag, mapping m, string c) { 
-                   return "&lt;"+c+"&gt;"; 
+           "tag":lambda(Parser.HTML p, mapping m, string c) {
+                   return ({ "&lt;"+c+"&gt;" });
                  },
-           "ref":lambda(string tag, mapping m, string c) { return c; },
-           "short":lambda(string tag, mapping m, string c) { 
+	   "ent":lambda(Parser.HTML p, mapping m, string c) {
+		   return ({ "&amp;" + c + ";" });
+		 },
+           "ref":lambda(Parser.HTML p, mapping m, string c) { return c; },
+           "short":lambda(Parser.HTML p, mapping m, string c) {
                      return m->hide?"":c; 
                    },
          ]) )->
     add_quote_tag("!--","","--")->
-    set_extra(name, id)->feed(doc)->read();
+    set_extra(name, id)->finish(doc)->read();
 }
 
 
