@@ -27,7 +27,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.107 2004/02/16 13:43:29 jonasw Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.108 2004/05/20 20:44:43 jonasw Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -786,6 +786,7 @@ class ButtonFrame {
 		 id->misc->defines["gbutton-frame-image"]);
     if( fi )
       fi = Roxen.fix_relative( fi, id );
+    m_delete(args, "frame-image");
     
     //  Harmonize some attribute names to RXML standards...
     args->icon_src = args["icon-src"]       || args->icon_src;
@@ -839,6 +840,15 @@ class ButtonFrame {
 	"gamma":args["gamma"],
 	"crop":args["crop"],
       ]);
+
+    //  Remove extra layer attributes to avoid *-* copying below
+    m_delete(args, "extra-layers");
+    m_delete(args, "extra-left-layers");
+    m_delete(args, "extra-right-layers");
+    m_delete(args, "extra-background-layers");
+    m_delete(args, "extra-mask-layers");
+    m_delete(args, "extra-frame-layers");
+    
     if( fi ) {
       new_args->stat = get_file_stat( fi, id );
 #if constant(Sitebuilder)
