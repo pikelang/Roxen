@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.139 2004/06/02 21:49:32 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.140 2004/06/16 09:57:14 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1523,7 +1523,7 @@ class RequestID
   {
     if (!file->stat) file->stat = misc->stat;
     if(objectp(file->file)) {
-      if(!file->stat)
+      if(!file->stat && file->file->stat)
 	file->stat = file->file->stat();
       if (zero_type(misc->cacheable) && file->file->is_file) {
 	// Assume a cacheablity on the order of the age of the file.
@@ -2149,7 +2149,7 @@ class RoxenModule
 
   string query_internal_location();
   string query_location();
-  string query_provides();
+  multiset(string) query_provides();
   function(RequestID:int|mapping) query_seclevels();
   void set_status_for_path (string path, RequestID id, int status_code,
 			    string|void message, mixed... args);
