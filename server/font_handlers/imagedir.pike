@@ -1,6 +1,6 @@
 #include <config.h>
 #include <stat.h>
-constant cvs_version = "$Id: imagedir.pike,v 1.8 2001/01/02 18:30:00 nilsson Exp $";
+constant cvs_version = "$Id: imagedir.pike,v 1.9 2001/01/02 18:56:35 nilsson Exp $";
 
 constant name = "Image directory fonts";
 constant doc = ("Handles a directory with images (in almost any format), each "
@@ -112,7 +112,7 @@ class myFont
 			(int)abs(`+(0,@res->ysize())*y_spacing) );
     else
       rr = Image.Image( max(0,@res->xsize()),
-    			abs(`+(0,@res->ysize())+(sizeof(res)+y_spacing)) );
+    			abs(`+(0,@res->ysize())+(sizeof(res)*y_spacing)) );
 
     float start;
     if( y_spacing < 0 )  start = (float)rr->ysize()-res[0]->ysize();
@@ -180,9 +180,12 @@ void update_font_list()
   font_list = ([]);  
   foreach(roxen->query("font_dirs"), string dir)
     foreach( (get_dir( dir )||({})), string d )
-      if( file_stat( dir+d )[ ST_SIZE ] == -2 ) // isdir
-        if( file_stat( dir+d+"/fontname" ) )
+      if( file_stat( dir+d )[ ST_SIZE ] == -2 ) { // isdir
+        if( file_stat( dir+d+"/fontinfo" ) )
+          font_list[font_name(Stdio.read_bytes(dir+d+"/fontinfo"))]=dir+d+"/";
+        else if( file_stat( dir+d+"/fontname" ) )
           font_list[font_name(Stdio.read_bytes(dir+d+"/fontname"))]=dir+d+"/";
+      }
 }
 
 array available_fonts()
