@@ -73,6 +73,8 @@ o Added truetype font support.
 
 o Support for jpeg, gif and png as indata for gtext.
 
+o Added <fsize> tag.
+
 
 Changes since Roxen Challenger 1.2.93 Yellow
 -----------------------------------------------
