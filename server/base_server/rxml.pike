@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.280 2001/02/18 23:37:20 nilsson Exp $
+// $Id: rxml.pike,v 1.281 2001/03/01 03:15:28 mast Exp $
 
 
 inherit "rxmlhelp";
@@ -1139,79 +1139,39 @@ class TagCase {
   inherit RXML.Tag;
   constant name = "case";
 
-  static Parser.HTML lowercaser =
-    lambda () {
-      Parser.HTML p = Parser.HTML();
-      p->_set_data_callback (
-	lambda (Parser.HTML p, string data) {
-	  return ({lower_case (data)});
-	});
-      p->_set_entity_callback (
-	lambda (Parser.HTML p, string data) {
-	  if (string char = Roxen.decode_charref (data))
-	    return ({Roxen.encode_charref (lower_case (char))});
-	  return 0;
-	});
-      return p;
-    }();
-
-  static Parser.HTML uppercaser =
-    lambda () {
-      Parser.HTML p = Parser.HTML();
-      p->_set_data_callback (
-	lambda (Parser.HTML p, string data) {
-	  return ({upper_case (data)});
-	});
-      p->_set_entity_callback (
-	lambda (Parser.HTML p, string data) {
-	  if (string char = Roxen.decode_charref (data))
-	    return ({Roxen.encode_charref (upper_case (char))});
-	  return 0;
-	});
-      return p;
-    }();
-
-  static Parser.HTML capitalizer =
-    lambda () {
-      Parser.HTML p = Parser.HTML();
-      p->_set_data_callback (
-	lambda (Parser.HTML p, string data) {
-	  p->_set_data_callback (0);
-	  p->_set_entity_callback (0);
-	  return ({String.capitalize (data)});
-	});
-      p->_set_entity_callback (
-	lambda (Parser.HTML p, string data) {
-	  p->_set_data_callback (0);
-	  p->_set_entity_callback (0);
-	  if (string char = Roxen.decode_charref (data))
-	    return ({Roxen.encode_charref (upper_case (char))});
-	  return 0;
-	});
-      return p;
-    }();
-
   class Frame {
     inherit RXML.Frame;
     int cap=0;
     array do_process(RequestID id) {
-      if(args->case)
+      if(args->case) {
+	string op;
 	switch(lower_case(args->case)) {
-	case "lower":
-	  return ({content_type->encoding_type == "xml" ?
-		   lowercaser->clone()->finish (content)->read() :
-		   lower_case (content)});
-	case "upper":
-	  return ({content_type->encoding_type == "xml" ?
-		   uppercaser->clone()->finish (content)->read() :
-		   upper_case (content)});
-	case "capitalize":
-	  if(cap) return ({content});
-	  if (sizeof (content)) cap=1;
-	  return ({content_type->encoding_type == "xml" ?
-		   capitalizer->clone()->finish (content)->read() :
-		   String.capitalize (content)});
+	  case "lower":
+	    if (content_type->lower_case)
+	      return ({content_type->lower_case (content)});
+	    op = "lowercased";
+	    break;
+	  case "upper":
+	    if (content_type->upper_case)
+	      return ({content_type->upper_case (content)});
+	    op = "uppercased";
+	    break;
+	  case "capitalize":
+	    if (content_type->capitalize) {
+	      if(cap) return ({content});
+	      if (sizeof (content)) cap=1;
+	      return ({content_type->capitalize (content)});
+	    }
+	    op = "capitalized";
+	    break;
+	  default:
+	    // FIXME: 2.1 compat: Not an error.
+	    parse_error ("Invalid value %O to the case argument.\n", args->case);
 	}
+	// FIXME: 2.1 compat: Not an error.
+	parse_error ("Content of type %s doesn't handle being %s.\n",
+		     content_type->name, op);
+      }
 
 #if ROXEN_COMPAT <= 1.3
       if(args->lower) {
