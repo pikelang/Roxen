@@ -6,7 +6,7 @@
    You can do enything you want this code.
    Please consult me before modifying czech.pike.
 */
-string cvs_version = "$Id: czech.pike,v 1.1 1997/11/18 16:27:04 grubba Exp $";
+string cvs_version = "$Id: czech.pike,v 1.2 1997/11/19 15:38:51 grubba Exp $";
 inline string month(int num)
 {
   return ({ "Leden", "Unor", "Brezen", "Duben", "Kveten",

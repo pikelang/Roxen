@@ -3,7 +3,6 @@
 *.gif binary
 *.gz binary
 *.jpg binary
-/server/languages/czech.pike eol=crlf
 /server/modules/proxies/gopher.pike -text -crlf
 *.ppm binary
 bi binary
