@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.179 2000/06/01 12:39:00 nilsson Exp $
+// $Id: roxenlib.pike,v 1.180 2000/06/05 21:06:44 grubba Exp $
 
 //#pragma strict_types
 
@@ -111,10 +111,18 @@ mapping build_env_vars(string f, RequestID id, string path_info)
 
   array(int) tmpi;
   string real_file=tmpid->conf->real_file(tmpid->not_query||"", tmpid);
-  if(real_file && 
-     (tmpi = file_stat(real_file)) &&
-     sizeof(tmpi))
-      new["LAST_MODIFIED"]=http_date(tmpi[3]);
+  if (real_file) {
+    if(stringp(real_file)) {
+      if ((tmpi = file_stat(real_file)) &&
+	  sizeof(tmpi)) {
+	new["LAST_MODIFIED"]=http_date(tmpi[3]);
+      }
+    } else {
+      // Extra paranoia.
+      report_error(sprintf("real_file(%O, %O) returned %O\n",
+			   tmpid->not_query||"", tmpid, real_file));
+    }
+  }
 
   // End SSI vars.
 
@@ -877,6 +885,7 @@ mapping proxy_auth_needed(RequestID id)
   return 0;
 }
 
+// Please use __FILE__ if possible.
 string program_filename()
 {
   return master()->program_name(this_object())||"";
@@ -1627,8 +1636,11 @@ int time_dequantifier(mapping m)
 
 class _charset_decoder
 {
-  //  _Charset.ascii cs;
+#if constant(_Charset.ascii)
+  _Charset.ascii cs;
+#else /* !constant(_Charset.ascii) */
   object cs;
+#endif /* constant(_Charset.ascii) */
   void create( object c )
   {
     cs = c;
