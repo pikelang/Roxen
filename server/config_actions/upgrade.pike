@@ -1,5 +1,5 @@
 /*
- * $Id: upgrade.pike,v 1.21 1997/09/03 02:28:42 peter Exp $
+ * $Id: upgrade.pike,v 1.22 1997/09/03 08:35:44 grubba Exp $
  */
 constant name= "Maintenance//Upgrade components from roxen.com...";
 constant doc = "Selectively upgrade Roxen components from roxen.com.";
@@ -162,14 +162,14 @@ string page_0(object id)
 
      "<var type=radio name=how value=1> All installed components<br>\n"
      "<help><blockquote>"
-     "Check for upgrades of all modules in your module path och installed "
+     "Check for upgrades of all modules in your module path and installed "
      "plugins"
      "</blockquote></help>"
 
      "<var type=radio name=how default=1 value=0> Only currently "
      "enabled components (from all virtual servers) <br>\n"
      "<help><blockquote>"
-     "Check for upgrades of all modules presently used in your Roxen och all "
+     "Check for upgrades of all modules presently used in your Roxen and all "
      "plugins"
      "</blockquote></help>"
      
