@@ -1,4 +1,4 @@
-//string cvs_version = "$Id: cache.pike,v 1.37 2000/02/12 01:55:15 nilsson Exp $";
+//string cvs_version = "$Id: cache.pike,v 1.38 2000/02/14 23:50:06 nilsson Exp $";
 
 #define LOCALE	roxenp()->locale->get()->config_interface
 #include <roxen.h>
@@ -31,12 +31,12 @@ int get_size(mixed x)
   return svalsize; // base
 }
 
-
 #define TIMESTAMP 0
 #define DATA 1
 #define TIMEOUT 2
+#define SIZE 3
 
-#define ENTRY_SIZE 3
+#define ENTRY_SIZE 4
 
 #define CACHE_TIME_OUT 300
 
@@ -51,6 +51,13 @@ int get_size(mixed x)
 # define CACHE_WERR(X) werror("CACHE: "+X+"\n");
 #else
 # define CACHE_WERR(X)
+#endif
+
+#undef CACHE40_WERR
+#if DEBUG_LEVEL > 40
+# define CACHE40_WERR(X) werror("CACHE: "+X+"\n");
+#else
+# define CACHE40_WERR(X)
 #endif
 
 mapping cache;
@@ -194,44 +201,41 @@ void cache_clean()
   CACHE_WERR("cache_clean()");
   foreach(indices(cache), a)
   {
-#if DEBUG_LEVEL > 40
-    CACHE_WERR("  Class  " + a);
-#endif
+    CACHE40_WERR("  Class  " + a);
     foreach(indices(cache[a]), b)
     {
-#if DEBUG_LEVEL > 40
-      CACHE_WERR("     " + b + " ");
-#endif
+      CACHE40_WERR("     " + b + " ");
       c = cache[a][b];
 #ifdef DEBUG
       if(!intp(c[TIMESTAMP]))
-	error("Illegal timestamp in cache ("+a+":"+b+")\n");
+	error("     Illegal timestamp in cache ("+a+":"+b+")\n");
 #endif
       if(c[TIMEOUT] && c[TIMEOUT] < t) {
-#if DEBUG_LEVEL > 40
-	CACHE_WERR("     DELETED (explicit timeout)");
-#endif
+	CACHE40_WERR("     DELETED (explicit timeout)");
 	m_delete(cache[a], b);
       }
-      else if(c[TIMESTAMP]+1 < t && c[TIMESTAMP] + CACHE_TIME_OUT -
-	      get_size(c[DATA])/100 < t)
-      {
-#if DEBUG_LEVEL > 40
-	CACHE_WERR("     DELETED");
-#endif
-	m_delete(cache[a], b);
-      }
+      else {
+	if(!c[SIZE]) {
+	  c[SIZE]=(get_size(c[DATA])+4*svalsize)/100;
+	  // (Entry size + cache overhead) / arbitrary factor
+          CACHE40_WERR("     Cache entry size percieved as "+(c[SIZE]*100)+" bytes\n");
+	}
+	if(c[TIMESTAMP]+1 < t && c[TIMESTAMP] + CACHE_TIME_OUT -
+	   c[SIZE] < t)
+	  {
+	    CACHE40_WERR("     DELETED");
+	    m_delete(cache[a], b);
+	  }
 #ifdef CACHE_DEBUG
 #if DEBUG_LEVEL > 40
-      else
-	CACHE_WERR("Ok");
+	else
+	  CACHE_WERR("Ok");
 #endif
 #endif
+      }
       if(!sizeof(cache[a]))
       {
-#if DEBUG_LEVEL > 40
-	CACHE_WERR("  Class DELETED.");
-#endif
+	CACHE40_WERR("  Class DELETED.");
 	m_delete(cache, a);
       }
     }
@@ -240,9 +244,9 @@ void cache_clean()
 
 void create()
 {
-  CACHE_WERR("Now online.");
-  cache=([  ]);
+  cache=([ ]);
   add_constant( "cache", this_object() );
   add_constant( "Cache", this_object() );
   call_out(cache_clean, CACHE_TIME_OUT);
+  CACHE_WERR("Now online.");
 }
