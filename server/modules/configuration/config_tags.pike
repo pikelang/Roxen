@@ -12,7 +12,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.131 2001/01/28 05:46:02 per Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.132 2001/01/29 05:41:59 per Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Administration interface RXML tags";
 
@@ -373,11 +373,12 @@ string get_var_form( string s, object var, object mod, object id,
   //
   // Thus, we have to do all that  work above even if the variable will not
   // be visible
+  werror( RXML.get_var( "intiial", "form" )+"\n");
   if( !var->check_visibility( id,
                               config_setting2("more_mode"),
                               config_setting2("expert_mode"),
                               config_setting2("devel_mode"),
-                              (int)id->variables->initial,
+                              (int)RXML.get_var( "intiial", "form" ),
                               get_conf( mod ) == id->conf) )
     return 0;
 
@@ -961,6 +962,106 @@ class TagCfPerm
       return 0;
     }
   }
+}
+
+
+string simpletag_cf_obox( string t, mapping m, string c, RequestID id )
+{
+  return
+#"<table cellpadding='1' cellspacing='0' border='0'
+         width='"+m->width+"' align='center' bgcolor='"+
+    config_setting2("obox-border")+#"'>
+ <tr><td>
+  <table cellpadding='2' cellspacing='0' border='0'
+          width='"+m->iwidth+#"' align='center'>
+  <tr bgcolor='"+config_setting2("obox-titlebg")+#"'>
+    <td valign='top'>
+      <font color='"+config_setting2( "obox-titlefg" )+#"' 
+            face='"+config_setting2("obox-titlefont")+
+    "'><b>"+m->title+#"</b></font>
+    </td>
+  </tr>
+
+  <tr><td bgcolor='"+config_setting2("obox-bodybg")+"'><font color='"+
+    config_setting2("obox-bodyfg")+"'>"+c+#"</font></td></tr>
+  </table>
+  </td></tr></table>";
+}
+
+string simpletag_cf_render_variable( string t, mapping m,
+				     string c, RequestID id )
+{
+  string extra = "";
+#define   _(X) RXML.get_var( X, 0 )
+#define usr(X) RXML.get_var( X, "usr" )
+#define var(X) RXML.get_var( X, "var" )
+
+  switch( usr( "changemark" ) )
+  {
+    case "not":
+      return
+	"<tr><td valign='top' width='20%'><b>"+
+	Roxen.html_encode_string(_("name"))+"</b></td>\n"
+	"<td valign='top'>"+_("form")+"</td></tr>\n"
+	"<tr><td colspan='2'>"+_("doc")+"</td></tr>\n";
+
+    case "color":
+      if( (int)_("changed") == 1 )
+	extra = "bgcolor='"+usr("fade2")+"'";
+      return "<tr>\n"
+	"<td valign='top' width='20%'><b>"+
+	Roxen.html_encode_string(_("name"))+"</b></td>\n"
+	"<td valign='top' "+extra+">"+_("form")+"</td>\n"
+	"</tr>\n"
+	"<tr>\n"
+	"<td colspan='2'>"+_("doc")+"</td>\n"
+	"</tr>\n";
+      break;
+
+    case "header":
+      int c;
+      if( (c=(int)_("changed")) != (int)var("oldchanged") )
+      {
+	RXML.set_var( "oldchanged", c, "var" );
+	if( c )
+	  extra = 
+	    "<tr bgcolor='"+usr("content-titlebg")+"'>\n"
+	    "<td colspan='2' width='100%'>\n"
+	    "<font size='+1' color='"+usr("content-titlefg")+"'>"+
+	    LOCALE(358,"Changed")+"</font>\n"
+	    "</td>\n"
+            "</tr>\n";
+	else
+	  extra = 
+	    "<tr bgcolor='"+usr("content-titlebg")+"'>\n"
+	    "<td colspan='2' width='100%'>\n"
+	    "<font size='+1' color='"+usr("content-titlefg")+"'>"+
+	    LOCALE(359,"Unchanged")+"</font>\n"
+	    "</td>\n"
+            "</tr>\n";
+
+      }
+      return
+	extra+
+	"<tr><td valign='top' width='20%'><b>"+
+	Roxen.html_encode_string(_("name"))+"</b></td>"
+	"<td valign='top'>"+_("form")+"</td></tr>"
+	"<tr><td colspan='2'>"+_("doc")+"</td></tr>\n";
+  }
+}
+
+
+string simpletag_box( string t, mapping m, string c, RequestID id )
+{
+  if( m->type == "small" )
+  {
+    m->width=200;
+    m->iwidth=198;
+    return simpletag_cf_obox( t, m, c, id );
+  }
+  m->width=400;
+  m->iwidth=398;
+  return simpletag_cf_obox( t, m, c, id );
 }
 
 class TagCfUserWants
