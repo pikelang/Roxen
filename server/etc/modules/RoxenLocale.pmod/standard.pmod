@@ -1,5 +1,5 @@
 /*
- * $Id: standard.pmod,v 1.8 2000/03/24 10:55:23 jhs Exp $
+ * $Id: standard.pmod,v 1.9 2000/03/27 15:13:42 wing Exp $
  *
  * Roxen locale support -- Default language (English)
  *
@@ -436,7 +436,7 @@ class _config_interface
   constant update = "Update";
   constant modules = "Modules";
   constant globals = "Globals";
-  constant eventlog = "Event Log";
+  constant eventlog = "Events";
   constant ports = "Ports";
   constant reverse = "Reversed";
   constant normal = "Normal";
@@ -454,7 +454,7 @@ class _config_interface
   constant users = "Users";
   constant shutdown = "Shutdown";
   constant home = "Startpage";
-  constant configiftab = "Configuration Interface";
+  constant configiftab = "Admin";
 
   constant create_user = "Create new user";
   constant delete_user = "Delete old user";

@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.12 2000/03/27 04:37:48 per Exp $
+ * $Id: create_configif.pike,v 1.13 2000/03/27 15:13:41 wing Exp $
  *
  * Create an initial configuration interface server.
  */
@@ -34,7 +34,7 @@ int main(int argc, array argv)
   string def_port = "http://*:"+(random(20000)+10000)+"/";
 #endif
 
-  write( "Roxen 2.0 configuration interface installation script\n");
+  write( "Roxen 2.0 administration interface installation script\n");
 
   configdir =
    Getopt.find_option(argv, "d",({"config-dir","configuration-directory" }),
@@ -59,14 +59,14 @@ int main(int argc, array argv)
   if(admin)
     write( "Creating an administrator user.\n" );
   else
-    write( "Creating a configuration interface server in "+configdir+"\n");
+    write( "Creating a administration interface server in "+configdir+"\n");
 
   do
   {
     if(!admin) {
-      name = rl->read( "Server name [Configuration Interface]: " );
+      name = rl->read( "Server name [Administration Interface]: " );
       if( !strlen(name-" ") )
-	name = "Configuration Interface";
+	name = "Administration Interface";
 
       port = rl->read( "Port ["+def_port+"]: ");
       if( !strlen(port-" ") )
@@ -137,7 +137,7 @@ int main(int argc, array argv)
 string_to_utf8(#"<?XML version=\"1.0\"  encoding=\"UTF-8\"?>
 <map>
   <str>permissions</str> : <a> <str>Everything</str> </a>
-  <str>real_name</str>   : <str>Configuration Interface Default User</str>
+  <str>real_name</str>   : <str>Administration Interface Default User</str>
   <str>password</str>    : <str>" + crypt(password) + #"</str>
   <str>name</str>        : <str>" + user + "</str>\n</map>" ));
 
@@ -186,6 +186,6 @@ replace(
     "$PROXY_HOST", "$COMMUNITY_USERPASSWORD$" }),
  ({ name, port, (string)use_update_system, proxy_port,
     proxy_host, community_userpassword }) ));
-  write("Configuration interface created\n");
+  write("Administration interface created\n");
 
 }
