@@ -180,14 +180,14 @@ class FTFont
         rr->paste_alpha_color( r, 255,255,255, 0, (int)start );
       start += r->ysize()*y_spacing;
     }
-    if( fake_bold )
+    if( fake_bold > 0 )
     {
       object r2 = Image.Image( rr->xsize()+2, rr->ysize() );
       object r3 = rr*0.3;
-      for( int i = 0; i<2; i++ )
-	for( int j = 0; j<2; j++ )
-	  r2->paste_alpha_color( r3,  255, 255, 255, i, j );
-      rr = r2->paste_alpha_color( rr, 255,255,255, 1,1 );
+      for( int i = 0; i<=fake_bold; i++ )
+	for( int j = 0; j<=fake_bold; j++ )
+	  r2->paste_alpha_color( r3,  255, 255, 255, i, j-2 );
+      rr = r2->paste_alpha_color( rr, 255,255,255, 1, -1 );
     }
     if( fake_italic )
       rr = rr->skewx( -(rr->ysize()/3), Image.Color.black );
