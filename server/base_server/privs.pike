@@ -1,6 +1,6 @@
 #if efun(seteuid)
 #include <module.h>
-string cvs_version = "$Id: privs.pike,v 1.5 1996/12/10 04:47:33 per Exp $";
+string cvs_version = "$Id: privs.pike,v 1.6 1997/01/13 06:53:23 per Exp $";
 
 int saved_uid;
 int saved_gid;
@@ -14,32 +14,45 @@ static private string dbt(array t)
 }
 
 
-void create(string reason, int|void uid, int|void gid)
+void create(string reason, int|string|void uid, int|void gid)
 {
-  if(LOGP)
-    perror("Change to ROOT privs wanted ("+reason+"), from "+dbt(backtrace()[-2]));
+  if(!stringp(uid))
+    array u = getpwuid(uid);
+  else
+  {
+    array u = getpwnam(uid);
+    uid = u[2];
+  }
 
-  saved_uid = geteuid();
-  saved_gid = getegid();
+  if(u && !gid) gid = u[3];
+  
+  if(!u) error("Unknown user: "+uid+"\n");
+
+  if(LOGP)
+    perror("Change to %s privs wanted (%s), from %s",u[0],reason,
+	   dbt(backtrace()[-2]));
 
   if(getuid()) return;
 
   saved_uid = geteuid();
   saved_gid = getegid();
   seteuid(0);
-  seteuid(uid);
+  initgroups(u[0], u[3]);
   setegid(gid||getgid());
+  if(getgid()!=gid) setgid(gid||getgid());
+  seteuid(uid);
 }
 
 void destroy()
 {
   if(LOGP)
-    perror("Change back to uid#"+saved_uid+" requested, from "+
-	   dbt(backtrace()[-2]));
+    perror("Change back to uid#%d, from %s",saved_uid, dbt(backtrace()[-2]));
 
   if(getuid()) return;
 
   seteuid(0);
+  array u = getpwuid(saved_uid);
+  if(u) initgroups(u[0], u[3]);
   setegid(saved_gid);
   seteuid(saved_uid);
 }
