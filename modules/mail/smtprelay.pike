@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 1.36 1998/12/06 18:10:00 grubba Exp $
+ * $Id: smtprelay.pike,v 1.37 1998/12/06 18:26:15 grubba Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RELAY_DEBUG
 
-constant cvs_version = "$Id: smtprelay.pike,v 1.36 1998/12/06 18:10:00 grubba Exp $";
+constant cvs_version = "$Id: smtprelay.pike,v 1.37 1998/12/06 18:26:15 grubba Exp $";
 
 /*
  * Some globals
@@ -28,6 +28,7 @@ static object sql;
 static object dns = Protocols.DNS.async_client();
 
 static void check_mail(int seconds);
+static void init_db();
 
 /*
  * Roxen glue
@@ -62,12 +63,23 @@ array(string)|multiset(string)|string query_provides()
   return(< "smtp_relay" >);
 }
 
+string status()
+{
+  if (!sql) {
+    return("<font color=red>Failed to connect to sql database!</font>");
+  }
+  return("Connected OK.");
+}
+
 void start(int i, object c)
 {
   if (c) {
     conf = c;
 
     if (!catch { sql = Sql.sql(QUERY(sqlurl)); }) {
+
+      /* Initialize the sql-database if needed */
+      init_db();
 
       /* Start delivering mail soon after everything has loaded. */
       check_mail(10);
@@ -1081,10 +1093,26 @@ int relay(string from, string user, string domain,
   return(1);
 }
 
-string status()
+static void init_db()
 {
-  if (!sql) {
-    return("<font color=red>Failed to connect to sql database!</font>");
+  /* Check if the required tables exist.
+   * FIXME: Probably only works with mysql!
+   */
+  if (catch(sql->query("DESCRIBE send_q"))) {
+    /* Create the required tables. */
+
+    sql->query("CREATE TABLE send_q ("
+	       "id int auto_increment primary key,"
+	       "sender varchar(255) not null,"
+	       "user varchar(255) not null,"
+	       "domain varchar(255) not null,"
+	       "mailid varchar(32) not null,"
+	       "received_at int not null,"
+	       "send_at int not null,"
+	       "times int not null,"
+	       "remoteident varchar(255) not null,"
+	       "remoteip varchar(32) not null,"
+	       "remotename varchar(255) not null"
+	       ")");
   }
-  return("Connected OK.");
 }
