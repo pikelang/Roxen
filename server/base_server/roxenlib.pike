@@ -1,4 +1,4 @@
-// $Id: roxenlib.pike,v 1.144 2000/01/18 10:17:57 nilsson Exp $
+// $Id: roxenlib.pike,v 1.145 2000/01/21 22:34:16 nilsson Exp $
 
 #include <roxen.h>
 inherit "http";
@@ -699,7 +699,7 @@ static int backup_extension( string f )
 {
   if(!strlen(f))
     return 1;
-  return (f[-1] == '#' || f[-1] == '~'
+  return (f[-1] == '#' || f[-1] == '~' || (strlen(f)>1 && f[1]=='#')
 	  || (f[-1] == 'd' && sscanf(f, "%*s.old"))
 	  || (f[-1] == 'k' && sscanf(f, "%*s.bak")));
 }
