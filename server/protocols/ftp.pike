@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.57 1997/10/03 21:39:37 grubba Exp $
+ * $Id: ftp.pike,v 1.58 1997/10/04 19:07:12 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -184,7 +184,24 @@ constant decode_mode = ({
   ({ S_IXOTH|S_ISVTX, S_IXOTH|S_ISVTX, 9, "t" })
 });
 
-string file_ls(array (int) st, string file)
+/********************************/
+/* Flags for the simulated 'ls' */
+
+#define LS_FLAG_A	1
+#define LS_FLAG_a	2
+#define LS_FLAG_C	4
+#define LS_FLAG_d	8
+#define LS_FLAG_F	16
+#define LS_FLAG_f	32
+#define LS_FLAG_G	64
+#define LS_FLAG_l	128
+#define LS_FLAG_n	256
+#define LS_FLAG_r	512
+#define LS_FLAG_R	1024
+#define LS_FLAG_t	2048
+#define LS_FLAG_U	4096
+
+string file_ls(array (int) st, string file, int flags)
 {
   int mode = st[0] & 007777;
   array(string) perm = "----------"/"";
@@ -200,25 +217,19 @@ string file_ls(array (int) st, string file)
   }
   
   string ct = ctime(st[-4]);
-  return sprintf("%s   1 %-10s %-6d%12d %s %s %s\n", perm*"",
-		 name_from_uid(st[-2]), st[-1],
-		 (st[1]<0? 512:st[1]), ct[4..9], ct[11..15], file);
+  if (flags & LS_FLAG_G) {
+    // No group.
+    return sprintf("%s   1 %-10s %12d %s %s %s\n", perm*"",
+		   ((flags & LS_FLAG_n)?(string)st[-2]:name_from_uid(st[-2])),
+		   (st[1]<0? 512:st[1]), ct[4..9], ct[11..15], file);
+  } else {
+    return sprintf("%s   1 %-10s %-6d%12d %s %s %s\n", perm*"",
+		   ((flags & LS_FLAG_n)?(string)st[-2]:name_from_uid(st[-2])),
+		   st[-1], (st[1]<0? 512:st[1]), ct[4..9], ct[11..15], file);
+  }
 }
 
 class ls_program {
-
-  /********************************/
-  /* Flags for the simulated 'ls' */
-
-#define LS_FLAG_A	1
-#define LS_FLAG_a	2
-#define LS_FLAG_C	4
-#define LS_FLAG_d	8
-#define LS_FLAG_F	16
-#define LS_FLAG_l	32
-#define LS_FLAG_r	128
-#define LS_FLAG_R	256
-#define LS_FLAG_t	512
 
   constant decode_flags =
   ([
@@ -227,10 +238,15 @@ class ls_program {
     "C":LS_FLAG_C,
     "d":LS_FLAG_d,
     "F":LS_FLAG_F,
+    "f":(LS_FLAG_a|LS_FLAG_A|LS_FLAG_U),
+    "G":LS_FLAG_G,
     "l":LS_FLAG_l,
+    "n":LS_FLAG_n,
+    "o":(LS_FLAG_l|LS_FLAG_G),
     "r":LS_FLAG_r,
     "R":LS_FLAG_R,
-    "t":LS_FLAG_t
+    "t":LS_FLAG_t,
+    "U":LS_FLAG_U
    ]);
 
   object id;
@@ -279,29 +295,31 @@ class ls_program {
   string list_files(array(array(mixed)) files, string dir, int flags)
   {
     int i;
-    if (flags & LS_FLAG_t) {
-      array(int) times = allocate(sizeof(files));
-      for (i=0; i < sizeof(files); i++) {
-	array st = files[i][1];
-	if (st) {
-	  times[i] = st[-4];
-	} else {
-	  files[i] = 0;
+    if (!flags & LS_FLAG_U) {
+      if (flags & LS_FLAG_t) {
+	array(int) times = allocate(sizeof(files));
+	for (i=0; i < sizeof(files); i++) {
+	  array st = files[i][1];
+	  if (st) {
+	    times[i] = st[-4];
+	  } else {
+	    files[i] = 0;
+	  }
+	}
+	sort(times, files);
+	if (!(flags & LS_FLAG_r)) {
+	  reverse(files);
+	}
+      } else {
+	files = sort(files);
+	if (flags & LS_FLAG_r) {
+	  files = reverse(files);
 	}
       }
-      sort(times, files);
-      if (!(flags & LS_FLAG_r)) {
-	reverse(files);
+      files -= ({ 0 });
+      if (!sizeof(files)) {
+	return(0);
       }
-    } else {
-      files = sort(files);
-      if (flags & LS_FLAG_r) {
-	files = reverse(files);
-      }
-    }
-    files -= ({ 0 });
-    if (!sizeof(files)) {
-      return(0);
     }
     string res = "";
     foreach(files, array(mixed) file_spec) {
@@ -318,7 +336,7 @@ class ls_program {
 	  }
 	}
 	if (flags & LS_FLAG_l) {
-	  res += id->file_ls(st, short);
+	  res += id->file_ls(st, short, flags);
 	} else {
 	  res += short + "\n";
 	}
@@ -606,11 +624,17 @@ class ls_program {
 	  ({ "C", Getopt.NO_ARG, "-C" }),
 	  ({ "d", Getopt.NO_ARG, ({ "-d", "--directory" })}),
 	  ({ "F", Getopt.NO_ARG, ({ "-F", "--classify" })}),
+	  ({ "f", Getopt.NO_ARG, "-f" }),
+	  ({ "G", Getopt.NO_ARG, ({ "-G", "--no-group" })}),
 	  ({ "g", Getopt.NO_ARG, "-g" }),
+	  ({ "L", Getopt.NO_ARG, ({ "-L", "--dereference" })}),
 	  ({ "l", Getopt.NO_ARG, "-l" }),
+	  ({ "n", Getopt.NO_ARG, ({ "-n", "--numeric-uid-gid" })}),
+	  ({ "o", Getopt.NO_ARG, "-o" }),
 	  ({ "r", Getopt.NO_ARG, ({ "-r", "--reverse" })}),
 	  ({ "R", Getopt.NO_ARG, ({ "-R", "--recursive" })}),
 	  ({ "t", Getopt.NO_ARG, "-t" }),
+	  ({ "U", Getopt.NO_ARG, "-U" }),
         }), 1, 1);
       }) {
 	id->reply(id->reply_enumerate(err[0], "550"));
@@ -623,6 +647,9 @@ class ls_program {
 
       if (flags & LS_FLAG_d) {
 	flags &= ~LS_FLAG_R;
+      }
+      if (flags & LS_FLAG_f) {
+	flags &= ~LS_FLAG_l;
       }
       if (err = catch {
 	args = Getopt.get_args(args, 1, 1)[1..];
@@ -1384,7 +1411,7 @@ void handle_data(string s, mixed key)
       if(f) dirlist = -1;
       else {
 	array st = my_stat_file(arg);
-	dirlist = st && file_ls(st, arg);
+	dirlist = st && file_ls(st, arg, 0);
       }
       
       if(!dirlist)
