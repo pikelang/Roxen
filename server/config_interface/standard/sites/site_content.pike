@@ -321,6 +321,7 @@ string module_page( RequestID id, string conf, string module )
 
   return #"
  <input type=hidden name=section value=\"&form.section;\">
+ <cf-save what=Module><br clear=\"all\" />
 <table>
   <configif-output source=module-variables configuration=\""+
    conf+"\" section=\"&form.section;\" module=\""+module+#"\">
