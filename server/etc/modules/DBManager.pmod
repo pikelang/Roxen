@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.2 2001/01/31 00:56:23 per Exp $
+// $Id: DBManager.pmod,v 1.3 2001/04/23 08:59:24 anders Exp $
 //! @module DBManager
 //! Manages database aliases and permissions
 
@@ -309,7 +309,7 @@ void drop_db( string name )
   if(!sizeof( q ) )
     error( "The database "+name+" does not exist\n" );
   if( sizeof( q ) && (int)q[0]["local"] )
-    query( "DROP DATABASE "+name );
+    query( "DROP DATABASE `"+name+"`" );
   query( "DELETE FROM dbs WHERE name=%s", name );
   query( "DELETE FROM db_permissions WHERE db=%s", name );
   changed();
@@ -329,7 +329,7 @@ void create_db( string name, string path, int is_internal )
   query( "INSERT INTO dbs values (%s,%s,%s)",
          name, (is_internal?name:path), (is_internal?"1":"0") );
   if( is_internal )
-    catch(query( "CREATE DATABASE "+name));
+    catch(query( "CREATE DATABASE `"+name+"`"));
   changed();
 }
 

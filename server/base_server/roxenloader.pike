@@ -22,7 +22,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.251 2001/04/08 23:08:17 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.252 2001/04/23 08:59:24 anders Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1096,7 +1096,7 @@ Sql.Sql connect_to_my_mysql( string|int ro, void|string db )
   if( res = my_mysql_cache[ i ] )
 #endif
     catch { // catch in case of lost connection.
-      res->query("USE "+db);
+      res->query("USE `"+db+"`");
       return res;
     };
 
@@ -1107,7 +1107,7 @@ Sql.Sql connect_to_my_mysql( string|int ro, void|string db )
     Sql.Sql sql = Sql.Sql( replace( my_mysql_path,
 				    ({"%user%", "%db%" }),
 				    ({ ro, db })) );
-    sql->query( "USE "+db );
+    sql->query( "USE `"+db+"`" );
 #ifdef THREADS
     return tl->set( sql );
 #else
@@ -1121,7 +1121,7 @@ Sql.Sql connect_to_my_mysql( string|int ro, void|string db )
 #endif
 
   connect_to_my_mysql( 0, "mysql" )
-    ->query( "CREATE DATABASE "+db );
+    ->query( "CREATE DATABASE `"+db+"`" );
   return connect_to_my_mysql( ro, db );
 }
 
