@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: global_variables.pike,v 1.26 2000/03/13 06:12:32 per Exp $
+// $Id: global_variables.pike,v 1.27 2000/03/17 18:19:13 mast Exp $
 
 #pragma strict_types
 #define DEFVAR string,int|string,string|mapping,int,string|mapping(string:string),void|array(string),void|function:void
@@ -690,7 +690,7 @@ durchsucht.");
 	  "Client supports regexps", TYPE_TEXT_FIELD|VAR_MORE,
 	  "What do the different clients support?\n<br />"
 	  "The default information is normally fetched from the file "+
-	  getcwd()+"etc/supports, and the format is:<pre>"
+	  getcwd()+"/etc/supports, and the format is:<pre>"
 	  "regular-expression"
 	  " feature, -feature, ...\n"
 	  "</pre>"
@@ -701,7 +701,7 @@ durchsucht.");
   deflocaledoc("svenska", "Supports",
 	       "Bläddrarfunktionalitetsdatabas",
 #"En databas över vilka funktioner de olika bläddrarna som används klarar av.
-  Normalt sätt så hämtas den här databasen från filen server/etc/supports, men
+  Normalt sett hämtas den här databasen från filen server/etc/supports, men
   du kan om du vill specifiera fler mönster i den här variabeln. Formatet ser
   ur så här:<pre>
   reguljärt uttryck 	funktion, funktion
