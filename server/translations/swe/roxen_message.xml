@@ -321,7 +321,7 @@ string setting_uid_gid(int uid, int gid, string uname, string gname) {
 
 <str id="57">
 <o>Next -&amp;gt;</o>
-<t>Nästa -&amp;mp;gt;</t>
+<t>Nästa -&amp;gt;</t>
 </str>
 
 <str id="58">
