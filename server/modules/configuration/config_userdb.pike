@@ -61,7 +61,7 @@ class ConfigurationSettings
       deflocaledoc( l, v, q[l], d[l], (translate?translate[l]:0));
   }
 
-  void query( string what )
+  mixed query( string what )
   {
     if( variables[ what ] )
       return variables[what][VAR_VALUE];
