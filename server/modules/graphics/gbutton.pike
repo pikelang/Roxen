@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.72 2001/03/30 17:01:59 kuntri Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.73 2001/03/30 17:06:54 kuntri Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -110,8 +110,10 @@ Non working example.
 <ex type='vert'>
 <gbutton frame-image='/internal-roxen-tab_frame'>foo</gbutton>
 </ex>
-</attr>
 -->
+
+</attr>
+
 
 <attr name='alt' value='string'><p>
  Alternative button and alt text.</p>
