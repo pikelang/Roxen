@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.115 2001/12/21 13:10:35 grubba Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.116 2002/07/01 09:23:07 anders Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -67,7 +67,7 @@ string status()
   return "<h2>"+LOCALE(3,"Accesses to this filesystem")+"</h2>"+
     (redirects?"<b>"+LOCALE(4,"Redirects")+"</b>: "+redirects+"<br>":"")+
     (accesses?"<b>"+LOCALE(5,"Normal files")+"</b>: "+accesses+"<br>"
-     :LOCALE(6,"No file accesses)")+"<br>")+
+     :LOCALE(6,"No file accesses")+"<br>")+
     (query("put")&&puts?"<b>"+LOCALE(7,"PUTs")+"</b>: "+puts+"<br>":"")+
     (query("put")&&mkdirs?"<b>"+LOCALE(8,"MKDIRs")+"</b>: "+mkdirs+"<br>":"")+
     (query("put")&&query("delete")&&moves?
