@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.134 2001/03/01 03:06:00 mast Exp $
+//! $Id: module.pmod,v 1.135 2001/03/05 19:08:16 nilsson Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -990,7 +990,7 @@ class Context
   //! variable in a scope always is a string.
   {
 #ifdef OLD_RXML_COMPAT
-    if (compatible_scope)
+    if (compatible_scope && !intp(scope_name))
       return ({scope_name || "form", var});
 #endif
 
@@ -1987,7 +1987,7 @@ class Frame
   //! Writes the message to the debug log if this tag has FLAG_DEBUG
   //! set.
   {
-    if (flags & FLAG_DEBUG) werror (msg, @args);
+    if (flags & FLAG_DEBUG) report_debug (msg, @args);
   }
 
   void terminate()
@@ -3175,7 +3175,7 @@ final void tag_debug (string msg, mixed... args)
 {
   if (Frame f = get_context()->frame) // It's intentional that this assumes a context.
     if (f->flags & FLAG_DEBUG)
-      werror (msg, @args);
+      report_debug (msg, @args);
 }
 
 final Frame make_tag (string name, mapping(string:mixed) args, void|mixed content,
@@ -4738,5 +4738,5 @@ void _fix_module_ref (string name, mixed val)
       default: error ("Herk\n");
     }
   };
-  if (err) werror (describe_backtrace (err));
+  if (err) report_debug (describe_backtrace (err));
 }
