@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.116 1998/07/16 12:06:43 grubba Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.117 1998/07/16 19:32:58 peter Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -887,8 +887,10 @@ string tag_use(string tag, mapping m, object id)
     return "<use help>";
   
   if(id->pragma["no-cache"] || 
-     !(res = cache_lookup("macrofiles", (m->file || m->package))))
+     !(res = cache_lookup("macrofiles:"+ id->conf->name ,
+			  (m->file || m->package))))
   {
+    res = ([]);
     string foo;
     if(m->file)
       foo = nid->conf->try_get_file( fix_relative(m->file,nid), nid );
@@ -912,7 +914,7 @@ string tag_use(string tag, mapping m, object id)
     res->defines = nid->misc->defines||([]);
     res->defaults = nid->misc->defaults||([]);
     m_delete(res->defines, "line");
-    cache_set("macrofiles", (m->file || m->package), res);
+    cache_set("macrofiles:"+ id->conf->name, (m->file || m->package), res);
   }
 
   if(!id->misc->tags)
