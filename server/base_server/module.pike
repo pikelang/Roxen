@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.131 2002/02/26 13:24:44 wellhard Exp $
+// $Id: module.pike,v 1.132 2003/01/15 15:19:55 grubba Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -349,7 +349,7 @@ RXML.TagSet query_tag_set()
     array(function|program|object) tags =
       filter (rows (this_object(),
 		    glob ("Tag*", indices (this_object()))),
-	      functionp);
+	      lambda(mixed x) { return functionp(x)||programp(x); });
     for (int i = 0; i < sizeof (tags); i++)
       if (programp (tags[i]))
 	if (!tags[i]->is_RXML_Tag) tags[i] = 0;
