@@ -1,17 +1,17 @@
-/* This is a Roxen module. Copyright © 1996 - 1999, Idonex AB
- *
- * Directory listings mark 2
- *
- * Henrik Grubbström 1997-02-13
- *
- * TODO:
- * Filter out body statements and replace them with tables to simulate
- * the correct background and fontcolors.
- *
- * Make sure links work _inside_ unfolded dokuments.
- */
+// This is a Roxen module. Copyright © 1996 - 1999, Idonex AB
+//
+// Directory listings mark 2
+//
+// Henrik Grubbström 1997-02-13
+// Martin Nilsson 1999-12-27
+//
+// TODO:
+// Filter out body statements and replace them with tables to simulate
+// the correct background and fontcolors.
+//
+// Make sure links work _inside_ unfolded dokuments.
 
-constant cvs_version = "$Id: directories2.pike,v 1.19 1999/12/27 21:37:25 nilsson Exp $";
+constant cvs_version = "$Id: directories2.pike,v 1.20 1999/12/27 22:14:57 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -76,6 +76,10 @@ void create()
 	 "If set, include the size of the file in the listing.",
 	 0, !DIRLISTING);
 
+  defvar("spartan", 0, "Spartan listings.", TYPE_FLAG,
+	 "Show minimalistic file listings.",
+	 0, !DIRLISTING);
+
   defvar("date", "Don't show dates", "Dates", TYPE_MULTIPLE_STRING,
 	 "Select whether to include the last modification date in directory "
 	 "listings, and if so, on what format. `ISO dates' gives dates "
@@ -119,7 +123,7 @@ string find_readme(string d, RequestID id)
     string readme = id->conf->try_get_file(d+f, id);
 
     if (readme) {
-      if (f[strlen(f)-5..] != ".html") {
+      if (id->conf->type_from_filename(f)!="text/html") {
 	readme = "<pre>" + html_encode_string(readme) +"</pre>";
       }
       return "<hr noshade>"+readme;
@@ -128,34 +132,34 @@ string find_readme(string d, RequestID id)
   return "";
 }
 
+string spartan_directory(string d, RequestID id)
+{
+  array(string) path = d/"/" - ({ "","." });
+  d = "/"+path*"/" + "/";
+  array(string) dir = id->conf->find_dir(d, id)||({});
+  if (sizeof(dir)) dir = sort(dir);
+
+  return sprintf("<html><head><title>Directory listing of %s</title></head>\n"
+		 "<body><h1>Directory listing of %s</h1>\n"
+		 "<pre>%s</pre></body</html>\n",
+		 d, d,
+		 Array.map(sort(dir),
+			   lambda(string f, string d, object r, RequestID id)
+			   {
+			     array stats = r->stat_file(d+f, id);
+			     if(stats && stats[1]<0)
+			       return "<a href=\""+f+"/.\">"+f+"/</a>";
+			     else
+			       return "<a href=\""+f+"\">"+f+"</a>";
+			   }, d, id->conf, id)*"\n"+"</pre></body></html>\n");
+}
+
 string describe_directory(string d, RequestID id)
 {
-  array(string) path = d/"/" - ({ "" });
-
-  path -= ({ "." });
+  array(string) path = d/"/" - ({ "","." });
   d = "/"+path*"/" + "/";
-
-  array(string) dir = id->conf->find_dir(d, id);
-
-  if (dir && sizeof(dir))
-    dir = sort(dir);
-  else
-    dir = ({});
-
-  if(id->prestate->spartan_directories)
-    return sprintf("<html><head><title>Directory listing of %s</title></head>\n"
-		   "<body><h1>Directory listing of %s</h1>\n"
-		   "<pre>%s</pre></body</html>\n",
-		   d, d,
-		   Array.map(sort(dir),
-			     lambda(string f, string d, object r, RequestID id)
-			     {
-			       array stats = r->stat_file(d+f, id);
-			       if(stats && stats[1]<0)
-				 return "<a href=\""+f+"/.\">"+f+"/</a>";
-			       else
-				 return "<a href=\""+f+"\">"+f+"</a>";
-			     }, d, id->conf, id)*"\n"+"</pre></body></html>\n");
+  array(string) dir = id->conf->find_dir(d, id)||({});
+  if (sizeof(dir)) dir = sort(dir);
 
   string result="";
   int level=id->misc->dir_no_head++;
@@ -234,8 +238,8 @@ string describe_directory(string d, RequestID id)
     case "image":
       extras = "<img src=\""+ replace( d, "//", "/" ) + file +"\" border=\"0\">";
       break;
-    case "   Directory":
-    case "   Module location":
+    case "Directory":
+    case "Module location":
       extras = "<directory-insert nocache file=\""+d+file+"\" dir>";
       break;
     case "Unknown":
@@ -270,42 +274,51 @@ string|mapping parse_directory(RequestID id)
 {
   string f = id->not_query;
 
-  /* First fix the URL
-   *
-   * It must end with "/" or "/."
-   */
-  if (!(((sizeof(f) > 1) && ((f[-1] == '/') ||
-			     ((f[-2] == '/') && (f[-1] == '.')))) ||
-	(f == "/"))) {
-    string new_query = http_encode_string(f) + "/" +
-      (id->query?("?" + id->query):"");
-    return(http_redirect(new_query, id));
+  // First fix the URL
+  //
+  // It must end with "/" or "/."
+
+  if(strlen(f) > 1)
+  {
+    if(!((f[-1] == '/') ||
+	 (QUERY(override) && (f[-1] == '.') && (f[-2] == '/'))))
+      return http_redirect(id->not_query+"/", id);
+  } else {
+    if(f != "/" )
+      return http_redirect(id->not_query+"/", id);
   }
-  /* If the pathname ends with '.', and the 'override' variable
-   * is set, a directory listing should be sent instead of the
-   * indexfile.
-   */
-  if(!(sizeof(f)>1 && f[-2]=='/' && f[-1]=='.' &&
-       DIRLISTING && QUERY(override))) {
-    /* Handle indexfiles */
-    string file, old_file;
-    string old_not_query;
-    mapping got;
-    old_file = old_not_query = id->not_query;
-    if(old_file[-1]=='.') old_file = old_file[..strlen(old_file)-2];
-    foreach(query("indexfiles")-({""}), file) { // Make recursion impossible
-      id->not_query = old_file+file;
-      if(got = id->conf->get_file(id))
-	return got;
+
+  // If the pathname ends with '.', and the 'override' variable
+  // is set, a directory listing should be sent instead of the
+  // indexfile.
+
+  if(f[-1] == '/') /* Handle indexfiles */
+  {
+    string file;
+    foreach(query("indexfiles") - ({""}), file) {
+      if(id->conf->stat_file(f+file, id))
+      {
+	id->not_query = f + file;
+	mapping got = id->conf->get_file(id);
+	if (got) {
+	  return(got);
+	}
+      }
     }
-    id->not_query = old_not_query;
+    // Restore the old query.
+    id->not_query = f;
   }
+
   if (!DIRLISTING) {
     return 0;
   }
+
   if (f[-1] != '.') {
     f += ".";
   }
+
+  if(query("spartan") || id->prestate->spartan_directory)
+    return http_string_answer(spartan_directory(f,id));
 
   id->misc->foldlist_exists=search(indices(id->conf->modules),"foldlist")!=-1;
   id->misc->rel_base="";
