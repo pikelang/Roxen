@@ -94,13 +94,10 @@ urw_itc_avant_garde-demi-r binary
 /server/modules/scripting/fcgi.pike foreign_ident
 /server/modules/scripting/pikescript.pike foreign_ident
 /server/modules/tags/flik.pike foreign_ident
-/server/modules/tags/header.pike foreign_ident
 /server/modules/tags/htmlparse.pike foreign_ident
 /server/modules/tags/indirect_href.pike foreign_ident
-/server/modules/tags/language.pike foreign_ident
 /server/modules/tags/lpctag.pike foreign_ident
 /server/modules/tags/tablify.pike foreign_ident
-/server/modules/tags/variable.pike foreign_ident
 /server/more_modules/bofh.pike foreign_ident
 /server/more_modules/clock.pike foreign_ident
 /server/more_modules/configure.pike foreign_ident
