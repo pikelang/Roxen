@@ -9,11 +9,14 @@
   <st-tabs><insert file="tablist.pike" nocache="" /></st-tabs>
   <st-page><blockquote><br />
     <if not="" variable="form.class"><set variable="form.class" value="status"/></if>
-    <if variable="form.action">
-      <input type="hidden" name="class" value="&form.class;" />
-      <eval><insert file="&form.action;" nocache="" /></eval>
+    <if not variable="form.cancel">
+      <if variable="form.action">
+	<input type="hidden" name="class" value="&form.class;" />
+	<eval><insert file="&form.action;" nocache="" /></eval>
+	<set variable="var.doing-action" value="yes"/>
+      </if>
     </if>
-    <else>
+    <if not variable="var.doing-action">
       <define container="action">
 	<font size="+1"><a href="?action=&_.fname;&amp;class=&form.class;">&_.name;</a></font><br /><blockquote>
 	<contents/></blockquote>
