@@ -13,7 +13,7 @@ constant LITET = 1.0e-40;
 constant STORTLITET = 1.0e-30;
 constant STORT = 1.0e40;
 
-constant cvs_version = "$Id: create_graph.pike,v 1.83 1997/11/30 21:58:03 hedda Exp $";
+constant cvs_version = "$Id: create_graph.pike,v 1.84 1997/12/06 13:30:02 hedda Exp $";
 
 /*
 These functions are written by Henrik "Hedda" Wallin (hedda@idonex.se)
@@ -343,6 +343,11 @@ mapping(string:mixed) init(mapping(string:mixed) diagram_data)
   if (diagram_data["type"]=="sumbars")
     diagram_data["box"]=0;
 
+  if (diagram_data["type"]=="pie")
+    {
+      diagram_data["vertgrid"]=0;
+      diagram_data["horgrid"]=0;
+    }
 
   xmaxvalue=max(xmaxvalue, xminvalue+STORTLITET);
   ymaxvalue=max(ymaxvalue, yminvalue+STORTLITET);
@@ -374,10 +379,14 @@ mapping(string:mixed) init(mapping(string:mixed) diagram_data)
     }
 
   //Om xnames finns så sätt xspace om inte values_for_xnames finns
+  if (diagram_data["xnames"] && sizeof(diagram_data["xnames"])==0)
+    diagram_data["xnames"]=0;
   if (diagram_data["xnames"])
     diagram_data["xspace"]=max((diagram_data["xmaxvalue"]-
 				diagram_data["xminvalue"])
-			       /(float)(diagram_data["datasize"]), 
+			       /(float)(max(sizeof(diagram_data["xnames"])
+					   ,diagram_data["datasize"]))
+					   , 
 			       LITET*20);
 
   //Om ynames finns så sätt yspace.
