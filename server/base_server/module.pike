@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.190 2004/05/10 13:41:20 grubba Exp $
+// $Id: module.pike,v 1.191 2004/05/10 17:19:13 grubba Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -487,9 +487,14 @@ mapping(string:mixed) patch_properties(string path,
     return properties;
   }
 
-  mapping(string:mixed) errcode = properties->start();
+  mapping(string:mixed) errcode;
 
-  if (errcode) {
+  if (errcode = write_access(path, 0, id)) {
+    SIMPLE_TRACE_LEAVE("Patching denied by write_access().");
+    return errcode;
+  }
+
+  if (errcode = properties->start()) {
     SIMPLE_TRACE_LEAVE ("Got error %d from PropertySet.start: %O",
 			errcode->error, errcode->rettext);
     return errcode;
@@ -1127,36 +1132,38 @@ mapping(string:mixed) delete_file(string path, RequestID id)
 
 //! Delete @[path] recursively.
 //! @returns
-//!   Returns @expr{0@} (zero) on success.
-//!   Returns @expr{1@} on file not found.
-//!   Returns @expr{2@} or @expr{3@} on other errors.
-int(0..3) recurse_delete_files(string path, MultiStatus.Prefixed stat, RequestID id)
+//!   Returns @expr{0@} (zero) on file not found.
+//!   Returns @[Roxen.http_status(204)] on success.
+//!   Returns other result mappings on failure.
+mapping(string:mixed) recurse_delete_files(string path,
+					   MultiStatus.Prefixed stat,
+					   RequestID id)
 {
   Stat st = stat_file(path, id);
-  if (!st) return 1;
+  if (!st) return 0;
   if (st->isdir) {
     // RFC 2518 8.6.2
     //   The DELETE operation on a collection MUST act as if a
     //   "Depth: infinity" header was used on it.
-    int(0..3) fail;
+    mapping fail;
     if (!has_suffix(path, "/")) path += "/";
     foreach(find_dir(path, id) || ({}), string fname) {
-      fail |= recurse_delete_files(path+fname, stat, id);
+      mapping sub_res = recurse_delete_files(path+fname, stat, id);
+      // RFC 2518 8.6.2
+      //   424 (Failed Dependancy) errors SHOULD NOT be in the
+      //   207 (Multi-Status).
+      //
+      //   Additionally 204 (No Content) errors SHOULD NOT be returned
+      //   in the 207 (Multi-Status). The reason for this prohibition
+      //   is that 204 (No Content) is the default success code.
+      if (sub_res && sub_res->error != 204 && sub_res->error != 424) {
+	stat->add_status(path+fname, sub_res->error, sub_res->rettext);
+	if (sub_res->error >= 300) fail = Roxen.http_status(424);
+      }
     }
-    // RFC 2518 8.6.2
-    //   424 (Failed Dependancy) errors SHOULD NOT be in the
-    //   207 (Multi-Status).
-    if (fail) return fail;
+    if (fail) return Roxen.http_status(424);
   }
-  mapping ret = delete_file(path, id);
-  if (ret->error != 204) {
-    // RFC 2518 8.6.2
-    //   Additionally 204 (No Content) errors SHOULD NOT be returned
-    //   in the 207 (Multi-Status). The reason for this prohibition
-    //   is that 204 (No COntent) is the default success code.
-    stat->add_status (path, ret->error, ret->rettext);
-  }
-  return (ret->error >= 300) && 2;
+  return delete_file(path, id) || Roxen.http_status(204);
 }
 
 mapping make_collection(string path, RequestID id)
@@ -1251,7 +1258,8 @@ mapping copy_collection(string source, string destination,
       //   MUST perform a DELETE with "Depth: infinity" on the
       //   destination resource.
       TRACE_ENTER("Destination exists and overwrite is on.", this);
-      if (recurse_delete_files(destination, result, id)) {
+      mapping res = recurse_delete_files(destination, result, id);
+      if (res && (res->error >= 300)) {
 	// Failed to delete something.
 	TRACE_LEAVE("Deletion failed.");
 	TRACE_LEAVE("Copy collection failed.");
