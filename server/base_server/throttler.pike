@@ -9,7 +9,7 @@
  *
  */
 
-constant cvs_version="$Id: throttler.pike,v 1.2 1999/10/10 20:45:59 kinkie Exp $";
+constant cvs_version="$Id: throttler.pike,v 1.3 1999/11/29 22:11:31 per Exp $";
 
 #define DEFAULT_MINGRANT 1300
 #define DEFAULT_MAXGRANT 65000
@@ -29,8 +29,8 @@ private int last_fill=0;
 private int min_grant=0;    //if we'd grant less than this, don't grant at all.
 private int max_grant=0;    //maximum granted size for a single request
 
+ADT.Queue requests_queue; //lazily instantiated.
 
-private object (ADT.queue) requests_queue; //lazily instantiated.
 //request format: ({ int howmuch, function callback, array(mixed) extra_args })
 
 //start throttling, given rate, depth, initial fillup, and min grant
@@ -47,7 +47,7 @@ void throttle (int r, int d, int|void initial,
   min_grant=(zero_type(mingrant)?DEFAULT_MINGRANT:mingrant);
   max_grant=(zero_type(maxgrant)?DEFAULT_MAXGRANT:maxgrant);
   last_fill=time(1);
-  requests_queue=ADT.queue();
+  requests_queue=ADT.Queue();
   remove_call_out(safety_net);
   call_out(safety_net,1);
 }
