@@ -8,6 +8,10 @@ constant modules = ({});
 constant silent_modules = ({}); 
 //! Silent modules does not get their initial variables shown.
 
+void init_modules(Configuration conf, RequestID id)
+{
+}
+
 string initial_form( RequestID id )
 {
   Configuration conf = id->misc->new_configuration;
@@ -112,6 +116,8 @@ mixed parse( RequestID id, mapping|void opt )
     
     foreach( silent_modules, string mod )
       conf->enable_module( mod );
+
+    init_modules( conf, id );
     
     conf->add_parse_module( conf );
     foreach( conf->after_init_hooks, function q )
@@ -125,6 +131,6 @@ mixed parse( RequestID id, mapping|void opt )
   return "<h2>"+
          LOCALE("","Initial variables for the site")+
          "</h2><table>" + cf_form + initial_form( id ) + 
-         "</table><p>"+
+         ((opt||([]))->no_end_table?"":"</table><p>")+
          ((opt||([]))->no_ok?"":"<cf-ok />");
 }
