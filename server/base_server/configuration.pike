@@ -3,7 +3,7 @@
  * (C) 1996 - 2000 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.252 2000/01/12 14:29:13 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.253 2000/01/20 21:09:58 grubba Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -541,6 +541,8 @@ array filter_modules(RequestID id)
 }
 
 
+static string cached_hostname = gethostname();
+
 void init_log_file()
 {
   remove_call_out(init_log_file);
@@ -558,9 +560,11 @@ void init_log_file()
     if(m->mon < 10) m->mon = "0"+m->mon;
     if(m->mday < 10) m->mday = "0"+m->mday;
     if(m->hour < 10) m->hour = "0"+m->hour;
-    logfile = replace(logfile,({"%d","%m","%y","%h" }),
+    logfile = replace(logfile,({"%d","%m","%y","%h", "%H" }),
 		      ({ (string)m->mday, (string)(m->mon),
-			 (string)(m->year),(string)m->hour,}));
+			 (string)(m->year),(string)m->hour,
+			 cached_hostname,
+		      }));
     if(strlen(logfile))
     {
       do {
@@ -1750,7 +1754,7 @@ class StringFile
 
   void write(mixed ... args)
   {
-    throw( ({ "File not open for write", backtrace() }) );
+    throw( ({ "File not open for write\n", backtrace() }) );
   }
 
   void seek(int to)
@@ -2066,6 +2070,12 @@ int|string try_get_file(string s, RequestID id,
 
   if(!(m = get_file(fake_id)))
     return 0;
+
+  if (!mappingp(m) && !objectp(m)) {
+    report_error("try_get_file(%O, %O, %O, %O): m = %O is not a mapping.\n",
+		 s, id, status, nocache, m);
+    return 0;
+  }
 
   if (!(< 0, 200, 201, 202, 203 >)[m->error]) return 0;
 
@@ -3063,7 +3073,9 @@ $user_id       -- Ett unikt användarid. Tas från kakan RoxenUserID, du
 	 "%y    Year  (e.g. '1997')\n"
 	 "%m    Month (e.g. '08')\n"
 	 "%d    Date  (e.g. '10' for the tenth)\n"
-	 "%h    Hour  (e.g. '00')\n</pre>"
+	 "%h    Hour  (e.g. '00')\n"
+	 "%H    Hostname\n"
+	 "</pre>"
 	 ,0, lambda(){ return !query("Log");});
   deflocaledoc("svenska", "LogFile",
 	       "Loggning: Loggfil",
