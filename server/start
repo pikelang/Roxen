@@ -1,6 +1,8 @@
 #!/bin/sh
 #
-# $Id: start,v 1.73 1999/09/02 18:30:52 per Exp $
+# $Id: start,v 1.74 1999/09/05 01:34:43 per Exp $
+
+pre="`echo \" $$             \" | sed -e 's/\(.........\)\(.*\)/\1/g'` : "
 
 cd `dirname $0`
 
@@ -44,12 +46,13 @@ DEFINES="$DEFINES -DKEEP_ALIVE"
 if uname | grep 'SunOS' >/dev/null 2>&1; then
   if uname -r | grep '5\.[5-9]' >/dev/null 2>&1; then
     if [ $verbose -gt 0 ] ; then
-      echo 'Solaris 2.5 or later detected. Enabling threads (if available).'
+      echo "$pre Solaris 2.5 or later detected. Enabling threads (if available)."
     fi
     DEFINES="$DEFINES -DENABLE_THREADS -DTHREADS"
     if $pike --version 2>&1|head -1|grep 0.5 ; then
        if [ $verbose -gt 0 ] ; then
-         echo Pike 0.5 detected. Threads disabled
+         echo "$pre Pike 0.5 detected. Exiting."
+         exit 1
        fi
        DEFINES="`echo $DEFINES | sed -e 's/-DENABLE_THREADS//'`"
     fi
@@ -91,6 +94,9 @@ parse_args() {
   ;;
   '--fd-debug'|'--with-fd-debug'|'--enable-fd-debug')
     DEFINES="-DFD_DEBUG $DEFINES"
+  ;;
+  '--dump-debug'|'--with-dump-debug'|'--enable-dump-debug')
+    DEFINES="-DDUMP_DEBUG $DEFINES"
   ;;
   '--threads'|'--with-threads'|'--enable-threads')
     DEFINES="-DENABLE_THREADS $DEFINES"
@@ -219,10 +225,17 @@ the default arguments.
 	
       .B--with-fd-debugB.:            Enable FD debug.
 
+      .B--with-dump-debugB.:          Enable dump debug.
+
       .B--trussB.:                    (Solaris only). Run the server under
 				  truss, shows .BallB. system calls. This is 
 				  extremely noisy, and is not intented for 
 				  anything but debug.
+
+      .B--truss-cB.:                  (Solaris only). Run the server under
+				  truss -c, shows times for all system calls
+                                  on exit. This is not intented for anything 
+                                  but debug. Slows the server down.
 
       .B--pid-file=<file>B.:          Store the roxen and startscript pids in this
 				  file. Defaults to .B/tmp/roxen_$UIDB.
@@ -276,7 +289,7 @@ parse_args $@
 
 if [ ! "X$ROXEN_ARGS" = "X" ]; then
   if [ $verbose -gt 0 ]; then
-    echo $$: Using $ROXEN_ARGS from ROXEN_ARGS.
+    echo "$pre Using $ROXEN_ARGS from ROXEN_ARGS."
   else :; fi
   parse_args $ROXEN_ARGS
 fi
@@ -357,7 +370,7 @@ fi
 # HPUX doesn't like group 60001(nobody)
 if uname | grep 'HP-UX' >/dev/null 2>&1; then
   if [ $verbose -gt 0 ]; then
-    echo 'WARNING: Applying kludge for HPUX. (see base_server/privs.pike)'
+    echo "$pre WARNING: Applying kludge for HPUX. (see base_server/privs.pike)"
   else :; fi
   DEFINES="$DEFINES -DHPUX_KLUDGE"
 fi
@@ -376,21 +389,20 @@ rotate () {
 
 start_roxen() {
   if [ "x$DIR" != "x../configurations/" ] ; then 
-    args="-DROXEN $DEBUG $DEFINES $program --config-dir=$DIR $pass"
+    args="$DEBUG $DEFINES $program --config-dir=$DIR $pass"
   else
-    args="-DROXEN $DEBUG $DEFINES $program $pass"
+    args="$DEBUG $DEFINES $program $pass"
   fi
   if [ x$cd_to != x ] ; then 
     cd $cd_to
   fi
   if [ "x$gdb" = "xno" ]; then
     if [ $verbose -gt 0 ]; then
-      echo "PIKE_MODULE_PATH=$PIKE_MODULE_PATH"
-      echo Executing $pike $args $@
+      echo "$pre Executing $pike $args $@"|sed -e "s!`pwd`!.!g"
     else :; fi
     $pike $args $@
   else
-    echo Executing gdb $pike $args $@
+    echo $pre Executing gdb $pike $args $@
     echo >.gdbinit handle SIGPIPE nostop noprint pass
     echo >>.gdbinit handle SIGUSR1 nostop noprint pass
     echo >>.gdbinit handle SIGUSR2 nostop noprint pass
@@ -416,7 +428,7 @@ else :; fi
 
 if [ -z "$once" ] ; then
   if [ $verbose -gt 0 ]; then
-    echo $$: Starting the Roxen Challenger World Wide Web server.
+    echo $pre Starting the Roxen Challenger World Wide Web server.
   else :; fi
   ./mkdir -p $LOGDIR/debug/
 
@@ -435,8 +447,8 @@ oo
   exec </dev/null
 
   (while : ; do
-    echo $$: "Server restart at `date`"
-    echo $$: "Debug log in $LOGDIR/debug/$FILES.1"
+    echo $pre "Server restart at `date`"
+    echo $pre "Debug log in $LOGDIR/debug/$FILES.1"
     rotate $LOGDIR/debug/$FILES
 
     start_roxen $extra_args 2>>$LOGDIR/debug/$FILES.1 1>&2
@@ -445,19 +457,19 @@ oo
 
     if [ "$exitcode" -eq "0" ] ; then
       # Clean shutdown.
-      echo $$: "Roxen shutdown."
+      echo $pre "Roxen shutdown."
       exit 0
     fi
     if [ "$exitcode" -lt "0" ] ; then
       # Signal death.
-      echo $$: "Roxen died of signal $exitcode. Restarting..."
+      echo $pre "Roxen died of signal $exitcode. Restarting..."
     else
-      echo $$: Roxen down. Restarting.
+      echo $pre Roxen down. Restarting.
     fi
   done) < /dev/null > $LOGDIR/debug/start_$FILES.output 2>&1 &
 else
   if [ $verbose -gt 0 ]; then
-    echo $$: "Start at `date`"
+    echo "$pre Start at `date`"
   else :; fi
   start_roxen $extra_args
 fi
