@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 1.35 1998/10/15 16:17:03 grubba Exp $
+ * $Id: smtprelay.pike,v 1.36 1998/12/06 18:10:00 grubba Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RELAY_DEBUG
 
-constant cvs_version = "$Id: smtprelay.pike,v 1.35 1998/10/15 16:17:03 grubba Exp $";
+constant cvs_version = "$Id: smtprelay.pike,v 1.36 1998/12/06 18:10:00 grubba Exp $";
 
 /*
  * Some globals
@@ -45,7 +45,7 @@ void create()
   defvar("spooldir", "/var/spool/mqueue/", "Mail queue directory", TYPE_DIR,
 	 "Directory where the mail spool queue is stored.");
 
-  defvar("sqlurl", "mysql://auto:site@kopparorm/autosite", "Database URL",
+  defvar("sqlurl", "mysql://mail:mail@/mail", "Database URL",
 	 TYPE_STRING, "");
 
   defvar("postmaster", "Postmaster <postmaster@"+gethostname()+">",
@@ -67,10 +67,11 @@ void start(int i, object c)
   if (c) {
     conf = c;
 
-    sql = Sql.sql(QUERY(sqlurl));
+    if (!catch { sql = Sql.sql(QUERY(sqlurl)); }) {
 
-    /* Start delivering mail soon after everything has loaded. */
-    check_mail(10);
+      /* Start delivering mail soon after everything has loaded. */
+      check_mail(10);
+    }
   }
 }
 
@@ -983,6 +984,11 @@ int relay(string from, string user, string domain,
 		       from, user, domain, csum));
 #endif /* RELAY_DEBUG */
 
+  if (!sql) {
+    /* Module is not properly configured yet... */
+    return(0);
+  }
+
   if (!domain) {
     // Shouldn't happen, but...
     return(0);
@@ -1075,3 +1081,10 @@ int relay(string from, string user, string domain,
   return(1);
 }
 
+string status()
+{
+  if (!sql) {
+    return("<font color=red>Failed to connect to sql database!</font>");
+  }
+  return("Connected OK.");
+}
