@@ -54,10 +54,12 @@ array(string) verify_set( string new_value ) {
     return ({ "Du ska inte ha något!", "krukon@pugo.org" });
 #endif
 
+#ifndef NO_DNS
   if(check_domain && !Protocols.DNS.client()->get_primary_mx(domain))
     return ({ sprintf(LOCALE(319,"The domain %s could not be found."),domain),
 	      new_value });
   // We could perhaps take this a step further and ask the mailserver if the account is present.
+#endif /* !NO_DNS */
 
   return ({ 0, new_value });
 }
