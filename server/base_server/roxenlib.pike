@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.165 2000/03/20 02:05:52 nilsson Exp $
+// $Id: roxenlib.pike,v 1.166 2000/03/20 03:31:03 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -708,8 +708,9 @@ static int ipow(int what, int how)
 string simplify_path(string file)
   //! This one will remove .././ etc. in the path.
 {
-  // Faster for most cases since "./" and "../" rarely exists.
-  if(!strlen(file) || ((search(file, "./") == -1) && (file[-1] != '.')))
+  // Faster for most cases since "//", "./" or "../" rarely exists.
+  if(!strlen(file) || (!has_value(file, "./") && (file[-1] != '.') &&
+		       !has_value (file, "//")))
     return file;
 
   int t2,t1;
