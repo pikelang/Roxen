@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.341 2001/10/09 12:26:44 wellhard Exp $";
+constant cvs_version = "$Id: http.pike,v 1.342 2001/10/25 12:28:55 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1605,9 +1605,14 @@ void send_result(mapping|void result)
     if(!file->raw)
     {
       heads = ([]);
-      if(objectp(file->file))
+      if(objectp(file->file)) {
 	if(!file->stat && !(file->stat=misc->stat))
 	  file->stat = file->file->stat();
+	if (zero_type(misc->cacheable) && file->file->is_file) {
+	  // Assume a cacheablity on the order of the age of the file.
+	  misc->cacheable = (time(1) - file->stat[ST_MTIME])/4;
+	}
+      }
 
       if( Stat fstat = file->stat )
       {
@@ -1617,7 +1622,8 @@ void send_result(mapping|void result)
 	if ( fstat[ST_MTIME] > misc->last_modified )
 	  misc->last_modified = fstat[ST_MTIME];
 	
-	if(prot != "HTTP/0.9" && (misc->cacheable >= INITIAL_CACHEABLE) )
+	if(prot != "HTTP/0.9" &&
+	   (misc->cacheable >= INITIAL_CACHEABLE))
 	{
 	  heads["Last-Modified"] = Roxen.http_date(misc->last_modified);
 
