@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.53 1997/10/25 07:50:13 per Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.54 1997/11/05 14:24:35 grubba Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -645,10 +645,12 @@ string fix_relative(string file, object got)
     return file;
   other=got->not_query;
   if(file != "" && file[0] == '#')
-    file = got->not_query+  file;
+    file = got->not_query + file;
   else
     file = dirname(got->not_query) + "/" +  file;
-  return simplify_path(replace(file, ({ "//", "..."}), ({"./..", "//"})));
+  // The below looks really buggy...
+  // return simplify_path(replace(file, ({ "//", "..."}), ({"./..", "//"})));
+  return simplify_path(file);
 }
 
 string tag_date(string q, mapping m)
