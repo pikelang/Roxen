@@ -126,13 +126,13 @@ function getObjectWidth(obj)  {
 
 // Retrieving the actual top scrollposition
 function getScrollTop()  {
-  if (isNav4) return window.pageYOffset;
+  if (isNav4||isNav5) return window.pageYOffset;
   else return document.body.scrollTop;
 }
 
 // Retrieving the actual left scrollposition
 function getScrollLeft()  {
-  if (isNav4) return window.pageXOffset;
+  if (isNav4||isNav5) return window.pageXOffset;
   else return document.body.scrollLeft;
 }
 
@@ -150,13 +150,13 @@ function scrollHorizontal(h)  {
 
 // Retrieving the clients viewable hight
 function getClientHeight()  {
-  if (isNav4) return innerHeight;
+  if (isNav4||isNav5) return innerHeight;
   else return document.body.clientHeight;
 }
 
 // Retrieving the clients viewable width
 function getClientWidth()  {
-  if (isNav4) return innerWidth;
+  if (isNav4||isNav5) return innerWidth;
   else return document.body.clientWidth;
 }
 
