@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.10 1997/10/06 00:03:37 grubba Exp $
+# $Id: Makefile,v 1.11 1997/10/07 12:20:32 grubba Exp $
 #
 # Bootstrap Makefile
 #
@@ -12,7 +12,7 @@ easy : blurb all
 
 hard : configure
 	@grep Bootstrap Makefile >/dev/null 2>&1 && mv Makefile Makefile.boot
-	./configure
+	./configure --prefix=$(prefix)
 	@echo
 	@echo 'Please run make again.'
 	@exit 1
