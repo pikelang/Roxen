@@ -1,6 +1,6 @@
 #if efun(seteuid)
 #include <module.h>
-// string cvs_version = "$Id: privs.pike,v 1.33 1998/02/10 18:36:07 per Exp $";
+// string cvs_version = "$Id: privs.pike,v 1.34 1998/03/03 12:18:59 grubba Exp $";
 
 int saved_uid;
 int saved_gid;
@@ -94,7 +94,15 @@ void create(string reason, int|string|void uid, int|string|void gid)
   
   if(!u) {
     if (uid && (uid != "root")) {
-      error("Unknown user: "+uid+"\n");
+      if (intp(uid) && (uid >= 60000)) {
+	report_debug(sprintf("privs.pike: User %d is not in the password database.\n"
+			     "Assuming nobody.\n", uid));
+	// Nobody.
+	gid = gid || uid;	// Fake a gid also.
+	u = ({ "fake-nobody", "x", uid, gid, "A real nobody", "/", "/sbin/sh" });
+      } else {
+	error("Unknown user: "+uid+"\n");
+      }
     } else {
       u = ({ "root", "x", 0, gid, "The super-user", "/", "/sbin/sh" });
     }
