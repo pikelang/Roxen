@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.104 1999/12/06 15:07:23 wellhard Exp $
+/* $Id: wizard.pike,v 1.105 1999/12/08 13:31:20 jonasw Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -990,7 +990,8 @@ string html_table(array(string) subtitles, array(array(string)) table,
 	//  where trailing spaces will give really ugly results
 	if (!(stringp(s)
 	      && (strlen(s) > 2)
-	      && (< "<img ", "<tabl", "<gtex", "<var ", "<pre>" >)[s[0..4]]
+	      && (< "<img ", "<tabl", "<gtex", "<var ",
+		    "<pre>", "<sb-i" >)[s[0..4]]
 	      && (s[-1] == '>' || s[-2] == '>'))) {
 	  r += "&nbsp;&nbsp;";
 	}
