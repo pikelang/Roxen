@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version="$Id: htaccess.pike,v 1.87 2001/09/27 14:08:27 grubba Exp $";
+constant cvs_version="$Id: htaccess.pike,v 1.88 2001/10/04 14:41:01 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -627,7 +627,7 @@ mapping parse_userfile( string f, mapping u2g, mapping groups )
     array q = r/":";
     switch( sizeof( q ) )
     {
-      case 2: // user:passwd
+      case 2..6: // user:passwd
 	users[q[0]] = ({q[0],q[1],uid++,10000,q[0],"/tmp/","/nosuchshell",
 			u2g[q[0]], 0});
 	users[uid-1] = users[q[0]];
