@@ -1,4 +1,4 @@
-# $Id: extensions,v 1.41 1999/11/15 16:09:12 nilsson Exp $
+# $Id: extensions,v 1.42 2000/02/16 17:54:09 peter Exp $
 # name="Extension database";
 # doc="The database used to map from extension to mime-type (example: *.gif to image/gif)";
 #
@@ -97,6 +97,10 @@ wbmp    image/vnd.wap.wbmp
 # image/prs.pti
 # image/vnd.cns.inf2
 # image/vnd.mix
+
+# Pending registration
+
+svg	image/svg
 
 # Other
 
@@ -677,6 +681,10 @@ wri	application/x-write
 xcf	application/x-gimp
 zpa	application/pcphoto
 
+#Dreamcast specific
+lcd application/x-dreamcast-lcdimg
+vmi application/x-dreamcast-vms-info
+vms application/x-dreamcast-vms
 
 # -------------------- Model ---------------------
 
