@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.421 2000/02/10 04:16:44 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.422 2000/02/10 09:18:11 per Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -3060,8 +3060,11 @@ void dump( string file )
 
 program slowpipe, fastpipe;
 
-int main(int argc, array argv)
+int main(int argc, array tmp)
 {
+  array argv = tmp;
+  tmp = 0;
+
   mkdirhier("precompiled/"+ uname()->machine+"."+uname()->release+"/");
   slowpipe = ((program)"slowpipe");
   fastpipe = ((program)"fastpipe");

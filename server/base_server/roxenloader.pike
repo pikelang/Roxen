@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.138 2000/02/09 01:07:44 per Exp $
+ * $Id: roxenloader.pike,v 1.139 2000/02/10 09:18:11 per Exp $
  *
  * Roxen bootstrap program.
  *
@@ -19,7 +19,7 @@ private static object new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.138 2000/02/09 01:07:44 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.139 2000/02/10 09:18:11 per Exp $";
 
 int pid = getpid();
 object stderr = Stdio.File("stderr");
@@ -1069,6 +1069,9 @@ int main(int argc, array argv)
 
 void do_main( int argc, array argv )
 {
+  array hider = argv;
+  argv = 0;
+
 #ifdef NOT_INSTALLED
 report_debug(
 #"
@@ -1159,10 +1162,10 @@ Please install a newer pike version
     add_constant ("has_Image_TTF", 1);
 #endif
 
-  if( search( argv, "--long-error-file-names" ) != -1 )
+  if( search( hider, "--long-error-file-names" ) != -1 )
   {
-    argv -= ({ "--long-error-file-names" });
-    argc = sizeof(argv);
+    hider -= ({ "--long-error-file-names" });
+    argc = sizeof(hider);
     new_master->long_file_names = 1;
     new_master->putenv("LONG_PIKE_ERRORS", "yup");
   }
@@ -1170,7 +1173,7 @@ Please install a newer pike version
   initiate_cache();
   load_roxen();
 
-  int retval = roxen->main(argc,argv);
+  int retval = roxen->main(argc,hider);
   report_debug("\n-- Total boot time %2.1f seconds ---------------------------\n",
 	       (gethrtime()-start_time)/1000000.0);
   write_current_time();
