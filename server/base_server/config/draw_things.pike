@@ -1,6 +1,6 @@
 #include <module.h>
 
-string cvs_verison = "$Id: draw_things.pike,v 1.37 1999/04/22 09:22:12 per Exp $";
+string cvs_verison = "$Id: draw_things.pike,v 1.38 1999/04/22 14:18:09 per Exp $";
 
 Image.image load_image(string f)
 {
@@ -74,8 +74,7 @@ Image.image draw_module_header(string name, int type, object font)
   knappar = knappar->autocrop();
 
   result->paste(knappar,result->xsize()-knappar->xsize(),0);
-  result->paste_alpha_color(font->write(name)->scale(0.5), 255,255,0, 6,3);
-  result->paste_alpha_color(font->write(name)->scale(0.5), 255,255,0, 6,3);
+  result->paste_alpha_color(font->write(name)/*->scale(0.5)*/, 255,255,0, 6,3);
   knappar = 0;
   text=0;
   return result;
@@ -130,7 +129,7 @@ object selected_tab_image = load_image("../tab_selected.ppm");
 
 Image.image draw_config_button(string name, object font, int lm, int rm)
 {
-  if(!strlen(name)) return Image.image(1,15, dR,dG,dB);
+  if(!strlen(name)) return Image.image(1,20, dR,dG,dB);
 
   object txt = font->write(name)->scale(0.5);
   int w = txt->xsize();
@@ -148,15 +147,16 @@ Image.image draw_config_button(string name, object font, int lm, int rm)
     ruta->setcolor(dR, dG, dB)->polygone(({ 36+w,0, 41+w,0, 40+w,20, 26+w,20 }));
   }
 
-  ruta->paste_alpha_color(txt, btR,btG,btB, 18, 0);
-  ruta->paste_alpha_color(txt, btR,btG,btB, 18, 0);
+  ruta->paste_alpha_color(txt, btR,btG,btB, 18, 1);
+  ruta->paste_alpha_color(txt, btR,btG,btB, 18, 1);
 
-  return ruta->scale(0,15);
+  return ruta;/*->scale(0,15);*/
 }
 
+#define OFFSET 0
 Image.image draw_tab( object tab, object text, array(int) bgcolor )
 {
-  text = text->scale( 0, tab->ysize()-2 );
+  text = text->scale( 0, tab->ysize()+OFFSET*2 );
   object i = Image.image( tab->xsize()*2 + text->xsize(), tab->ysize() );
   i = i->paste( tab );
   i = i->paste( tab->mirrorx(), i->xsize()-tab->xsize(), 0 );
@@ -165,13 +165,13 @@ Image.image draw_tab( object tab, object text, array(int) bgcolor )
     i->paste( linje, x, 0 );
   if(`+(@tab->getpixel( tab->xsize()-1, tab->ysize()/2 )) < 200)
   {
-    i->paste_alpha_color( text, 255,255,255, tab->xsize(), 1 );
-    i->paste_alpha_color( text, 255,255,255, tab->xsize(), 1 );
+    i->paste_alpha_color( text, 255,255,255, tab->xsize(), (-(OFFSET-1))-1 );
+    i->paste_alpha_color( text, 255,255,255, tab->xsize(), (-(OFFSET-1))-1 );
   }
   else
   {
-//     i->paste_alpha_color( text, 128,128,128, tab->xsize(), 1 );
-    i->paste_alpha_color( text, 0,0,0, tab->xsize(), 1 );
+    i->paste_alpha_color( text, 0,0,0, tab->xsize(), -OFFSET-1 );
+    i->paste_alpha_color( text, 0,0,0, tab->xsize(), -OFFSET-1 );
   }
   return i;
 }
