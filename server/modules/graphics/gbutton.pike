@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.13 2000/02/03 17:19:01 wellhard Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.14 2000/02/03 18:18:57 per Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -120,25 +120,32 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
   object       button_font = resolve_font( args->font );
 
   //  Load images
-  if (!button_border) {
+  if (!button_border)
+  {
     button_border = roxen.load_image("roxen-images/gbutton_border.gif", id);
     button_mask = roxen.load_image("roxen-images/gbutton_mask.gif", id);
   }
 
   //  Colorize borders
   if (!args->dim)
+  {
     b = button_border->clone()->grey()->
             modify_by_intensity(1, 1, 1, args->bo, args->bob );
+  }
   else
   {
-    array dim_bg = ({ 255, 255, 255 });
-    array dim_bo = ({ 0, 0, 0 });
-    for (int i = 0; i < 3; i++) {
-      dim_bo[i] = (args->bo[i] + args->bg[i]) / 2;
-      dim_bg[i] = (args->bg[i] + dim_bg[i]) / 2;
-    }
+    array dim_bg;
+    array dim_bo;
 
-    b = button_border->clone()->grey()->
+    array hsv = Image.Color( @args->bg )->hsv( );
+    hsv[-1] = min( hsv[-1]+70, 255 );
+
+    dim_bg = (array)Image.Color.hsv( @hsv );
+
+    hsv[-1] = max( hsv[-1]-140, 0 );
+    dim_bo = (array)Image.Color.hsv( @hsv );
+
+    b = button_border->grey()->
             modify_by_intensity(1, 1, 1, dim_bo, dim_bg);
   }
   b_width = b->xsize();
@@ -285,15 +292,18 @@ string tag_button(string tag, mapping args, string contents, RequestID id)
     "font": (args->font||roxen->query("default_font")),
   ]);
 
+  array hsv = Image.Color( @new_args->bg )->hsv( );
+  hsv[-1] = min( hsv[-1]+70, 255 );
+  hsv[1] = max( hsv[1]-20, 0 );
+  new_args->bob = (array)Image.Color.hsv( @hsv );
+  hsv[-1] = max( hsv[-1]-140, 0 );
+  new_args->bo = (array)Image.Color.hsv( @hsv );
+
   if(args->bordercolor)
     new_args->bo=parse_color(args->bordercolor); //  Border color
-  else
-    new_args->bo=Array.map(new_args->bg, lambda(int c){ return c/5; });
 
   if(args->borderbottom)
     new_args->bob=parse_color(args->borderbottom);
-  else
-    new_args->bob=Array.map(new_args->bg, lambda(int c){ c=c*2+64; return c>255?255:c; });
 
   new_args->quant = args->quant || 128;
   foreach(glob("*-*", indices(args)), string n)
