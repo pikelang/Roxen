@@ -1,5 +1,5 @@
 /*
- * $Id: clientlayer.pike,v 1.4 1998/08/28 12:12:42 js Exp $
+ * $Id: clientlayer.pike,v 1.5 1998/08/30 04:24:30 per Exp $
  *
  * A module for Roxen AutoMail, which provides functions for
  * clients.
@@ -10,7 +10,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version="$Id: clientlayer.pike,v 1.4 1998/08/28 12:12:42 js Exp $";
+constant cvs_version="$Id: clientlayer.pike,v 1.5 1998/08/30 04:24:30 per Exp $";
 constant thread_safe=1;
 
 mapping sql_objs=([]);
@@ -120,14 +120,14 @@ int update_message_refcount(int message_id, int deltacount)
   array a=get_sql()->query("select refcount from messages where id='"+message_id+"'");
   if(!a||!sizeof(a))
     return 0;
-  int refcount=(int)a[0]->refcount;
-  if(refcount+deltacount == 0)
+  int refcount=(int)a[0]->refcount + deltacount;
+  if(refcount <= 0)
   {
     get_sql()->query("delete from messages where id='"+message_id+"'");
     delete_body(a[0]->body_id);
   }
   else
-    get_sql()->query("update messages set refcount='"+refcount+"'");
+    get_sql()->query("update messages set refcount='"+refcount+"' where id='"+message_id+"'");
   
 }
 
