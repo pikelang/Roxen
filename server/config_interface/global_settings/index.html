@@ -1,5 +1,9 @@
 <topmenu base="../" selected='globals' />
 
+<if not variable='form.section'>
+  <set variable='form.section' value='Settings' />
+</if>
+
 <content><cv-split><subtablist width='100%'>
  <st-tabs>
   <if variable='form.section is event_log'>
