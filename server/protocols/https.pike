@@ -1,4 +1,4 @@
-/* $Id: https.pike,v 1.2 1998/12/19 02:30:48 grubba Exp $
+/* $Id: https.pike,v 1.3 1999/01/14 02:22:25 neotron Exp $
  *
  * Copyright © 1996-1998, Idonex AB
  */
@@ -342,8 +342,6 @@ void send_result(mapping|void result)
   {
     if(misc->error_code)
       file = http_low_answer(misc->error_code, errors[misc->error]);
-    else if(method != "GET" && method != "HEAD" && method != "POST")
-      file = http_low_answer(501, "Not implemented.");
     else
       file=http_low_answer(404,
 			   replace(parse_rxml(conf->query("ZNoSuchFile"),

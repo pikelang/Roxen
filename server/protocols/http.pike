@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.122 1998/12/19 02:40:30 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.123 1999/01/14 02:22:24 neotron Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -305,6 +305,12 @@ private int parse_got(string s)
   { 
     my_fd->write("PONG\r\n"); 
     return -2; 
+  }
+ 
+  if(! (<"GET", "HEAD", "POST", "PUT", "MOVE", "DELETE">)[method] ) {
+    send_result(http_low_answer(501, "<title>Method Not Implemented</title>"
+				"\n<h1>Method not implemented.</h1>\n"));
+    return -2;
   }
 
   raw_url    = f;
@@ -1001,8 +1007,6 @@ void send_result(mapping|void result)
   {
     if(misc->error_code)
       file = http_low_answer(misc->error_code, errors[misc->error]);
-    else if(method != "GET" && method != "HEAD" && method != "POST")
-      file = http_low_answer(501, "Not implemented.");
     else if(err = catch {
       file=http_low_answer(404,
 			   replace(conf->parse_rxml(conf->query("ZNoSuchFile"),
