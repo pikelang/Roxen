@@ -1,6 +1,6 @@
 // Protocol support for RFC 2518
 //
-// $Id: webdav.pike,v 1.10 2004/03/23 16:48:48 mast Exp $
+// $Id: webdav.pike,v 1.11 2004/03/24 13:28:12 anders Exp $
 //
 // 2003-09-17 Henrik Grubbström
 
@@ -9,7 +9,7 @@ inherit "module";
 #include <module.h>
 #include <request_trace.h>
 
-constant cvs_version = "$Id: webdav.pike,v 1.10 2004/03/23 16:48:48 mast Exp $";
+constant cvs_version = "$Id: webdav.pike,v 1.11 2004/03/24 13:28:12 anders Exp $";
 constant thread_safe = 1;
 constant module_name = "DAV: Protocol support";
 constant module_type = MODULE_FIRST;
@@ -80,9 +80,11 @@ class PatchPropertySetCmd
     SIMPLE_TRACE_ENTER (0, "Setting property %O to %O", property_name, value);
 #endif
     mapping(string:mixed) res = context->set_property(property_name, value);
+#ifdef REQUEST_TRACE
     SIMPLE_TRACE_LEAVE (res ?
 			sprintf ("Got status %d: %O", res->error, res->rettext) :
 			"");
+#endif
     return res;
   }
 }
@@ -99,9 +101,11 @@ class PatchPropertyRemoveCmd(string property_name)
     SIMPLE_TRACE_ENTER (0, "Removing property %O", property_name);
 #endif
     mapping(string:mixed) res = context->remove_property(property_name);
+#ifdef REQUEST_TRACE
     SIMPLE_TRACE_LEAVE (res ?
 			sprintf ("Got status %d: %O", res->error, res->rettext) :
 			"");
+#endif
     return res;
   }
 }
