@@ -1,4 +1,4 @@
-/* $Id: ssl3.pike,v 1.6 1997/05/16 15:58:40 nisse Exp $
+/* $Id: ssl3.pike,v 1.7 1997/05/16 17:36:31 grubba Exp $
  *
  * © 1997 Informationsvävarna AB
  *
@@ -224,7 +224,8 @@ void handle_request( )
   object thiso=this_object();
 
 #ifndef SPEED_MAX
-  remove_call_out(timeout);
+  remove_call_out(do_timeout);
+  remove_call_out(do_timeout);
 #endif
 
   my_fd->set_read_callback(0);
