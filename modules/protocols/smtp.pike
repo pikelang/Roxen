@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.62 1998/09/27 12:44:29 grubba Exp $
+ * $Id: smtp.pike,v 1.63 1998/09/29 12:47:47 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.62 1998/09/27 12:44:29 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.63 1998/09/29 12:47:47 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -52,7 +52,7 @@ inherit "module";
  * 	int relay(string sender, string user, string domain,
  * 	          object spoolfile, string csum, object o);
  *
- * NOTE: Modules need to handle the terminating '.'.
+ * NOTE: Modules need to handle the terminating '.' in domainnames.
  */
 
 static class Mail {
