@@ -1,6 +1,10 @@
 Changes since Roxen Challenger 1.2 alpha 13
 -----------------------------------------------
 
+o New status action: Extended process status for Linux. It uses pstree
+  and the /proc/ file system. A bonus is that it can be used as a
+  general process tree browser!
+
 o Added a configurable "default content type" to the Content type
   module. Now it's easy to use text/plain instead of the default
   application/octet-stream for all unknown files.
