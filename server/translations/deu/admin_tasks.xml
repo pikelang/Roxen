@@ -282,7 +282,6 @@ schmerz bis qual folgt jeder unexakten motivtypwahl.
 </str>
 
 <str id="38">
-<changed from="Backend thread"/>
 <o>backend thread</o>
 <t>Backend-Thread</t>
 </str>
@@ -858,73 +857,61 @@ ist, kann diese Auswahl die aktuell laufende Version wechseln.</t>
 </str>
 
 <str id="144">
-<new/>
 <o>Create site template</o>
-<t></t>
+<t>Site-Template erstellen</t>
 </str>
 
 <str id="145">
-<new/>
 <o>Create a site template from a site configuration</o>
-<t></t>
+<t>Site-Template aus anderer Site-Konfiguration erstellen</t>
 </str>
 
 <str id="146">
-<new/>
 <o>Coundn't find configuration</o>
-<t></t>
+<t>Konfiguration konnte nicht gefunden werden</t>
 </str>
 
 <str id="147">
-<new/>
 <o>Select configuration to base the template on.</o>
-<t></t>
+<t>Konfiguration als Grundlage für Template auswählen.</t>
 </str>
 
 <str id="148">
-<new/>
 <o>Selected configuration</o>
-<t></t>
+<t>Ausgewählte Konfigurationen</t>
 </str>
 
 <str id="149">
-<new/>
 <o>Coundn't create directory</o>
-<t></t>
+<t>Verzeichnis konnte nicht erstellt werden</t>
 </str>
 
 <str id="150">
-<new/>
 <o>Failed to create template file</o>
-<t></t>
+<t>Fehler beim Erstellen der Template-Datei</t>
 </str>
 
 <str id="151">
-<new/>
 <o>Failed to write template file</o>
-<t></t>
+<t>Fehler beim Schreiben der Template-Datei</t>
 </str>
 
 <str id="152">
-<new/>
 <o>Site template created successfully.</o>
-<t></t>
+<t>Site-Template erfolgreich erstellt.</t>
 </str>
 
 <str id="153">
-<new/>
 <o>Ok</o>
-<t></t>
+<t>Ok</t>
 </str>
 
 <str id="296">
-<new/>
 <o>Note that the server will be automatically restarted with the new version.</o>
-<t></t>
+<t>Hinweis: Der Server wird automatisch mit der neuen Version neugestartet.</t>
 </str>
 
 <str id="297">
-<new/>
 <o>Failed to write CSR to %s.</o>
-<t></t>
+<t>Fehler beim Schreiben des CSR nach %s.</t>
 </str>

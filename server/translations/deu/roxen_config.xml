@@ -2387,7 +2387,6 @@ Wird ersetzt durch %s</t>
 </str>
 
 <str id="424">
-<changed from="The database %s was deleted by b%s"/>
 <o>The database %s was deleted by %s</o>
 <t>Die Datenbank %s wurde gelöscht durch %s</t>
 </str>
