@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.89 2000/03/07 03:13:19 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.90 2000/03/07 22:12:50 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -2463,5 +2463,12 @@ Sets a variable.</short> The variable attribute is required.
 <attr name=realname>
  Only print the full name of the user, with no link.
 </attr>",
+
+"if#expr":#"<desc plugin>
+ Evaluates expressions. The following characters may be used: \"1, 2,
+ 3, 4, 5, 6, 7, 8, 9, x, a, b, c, d, e, f, i, n, t, \, X. A, B, C, D, E,
+ F, l, o, &lt;, &gt;, =, 0, -, +, /, %, &, |, (, ), .\".
+</desc>",
+
     ]);
 #endif
