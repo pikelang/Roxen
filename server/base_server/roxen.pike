@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.782 2002/04/25 14:42:08 anders Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.783 2002/05/08 13:08:31 jonasw Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -3978,8 +3978,11 @@ mapping low_load_image(string f, RequestID id)
     id->misc->_load_image_called++;
     if(!(data=id->conf->try_get_file(f, id)))
     {
-      file=Stdio.File();
-      if(!file->open(f,"r") || !(data=file->read()))
+      //  This is a major security hole! It can load any (image) file
+      //  in the low-level file system using the server's user privileges.
+      //
+      //  file=Stdio.File();
+      //  if(!file->open(f,"r") || !(data=file->read()))
 #ifdef THREADS
         catch
         {
@@ -4014,8 +4017,11 @@ array(Image.Layer) load_layers(string f, RequestID id, mapping|void opt)
     id->misc->_load_image_called++;
     if(!(data=id->conf->try_get_file(f, id)))
     {
-      file=Stdio.File();
-      if(!file->open(f,"r") || !(data=file->read()))
+      //  This is a major security hole! It can load any (image) file
+      //  in the low-level file system using the server's user privileges.
+      //
+      //  file=Stdio.File();
+      //  if(!file->open(f,"r") || !(data=file->read()))
 // #ifdef THREADS
         catch
         {
