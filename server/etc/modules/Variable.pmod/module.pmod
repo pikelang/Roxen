@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.47 2001/04/11 05:32:28 per Exp $
+// $Id: module.pmod,v 1.48 2001/05/22 20:08:12 nilsson Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -310,10 +310,12 @@ class Variable
     return what;
   }
   
-  void set_from_form( RequestID id )
+  void set_from_form( RequestID id, void|int(0..1) force )
     //! Set this variable from the form variable in id->Variables,
     //! if any are available. The default implementation simply sets
-    //! the variable to the string in the form variables.
+    //! the variable to the string in the form variables. @[force]
+    //! forces the variable to be set even if the variable already
+    //! has the new value, forcing possible warnings to be added.
     //!
     //! Other side effects: Might create warnings to be shown to the 
     //! user (see get_warnings)
@@ -321,9 +323,11 @@ class Variable
     //! Calls verify_set_from_form and verify_set
   {
     mixed val;
-    if( sizeof( val = get_form_vars(id)) && val[""] && 
-        (val = transform_from_form( val[""] )) != query() )
+    if( sizeof( val = get_form_vars(id)) && val[""])
     {
+      val = transform_from_form( val[""] );
+      if( !force && val != query() )
+	return;
       array b;
       mixed q = catch( b = verify_set_from_form( val ) );
       if( q || sizeof( b ) != 2 )
