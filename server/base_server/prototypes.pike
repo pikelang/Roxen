@@ -1,7 +1,7 @@
 #include <stat.h>
 #include <config.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.12 2001/01/29 22:40:23 per Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.13 2001/01/30 04:50:33 per Exp $";
 
 class Variable
 {
@@ -656,19 +656,21 @@ class AuthModule
   //! database.
 }
 
-static int user_sql_inited;
+static mapping(string:int) user_sql_inited = ([]);
 static Sql.Sql user_mysql;
-static void init_user_sql()
+static void init_user_sql(string table)
 {
-  user_mysql = master()->resolv("DBManager.get")( "shared" );
-
-  if(catch(user_mysql->query( "SELECT module FROM user_data WHERE module=''")))
-    user_mysql->query( "CREATE TABLE user_data "
-		       " (module varchar(30), "
-		       "  user   varchar(30) NOT NULL, "
+  if( !user_mysql )
+    user_mysql = master()->resolv("DBManager.get")( "shared" );
+  if(catch(user_mysql->query( "SELECT module FROM "+table+" WHERE module=''")))
+    user_mysql->query( "CREATE TABLE "+table+" "
+		       " (module varchar(30) NOT NULL,  "
 		       "  name   varchar(30) NOT NULL, "
-		       "  value  blob, raw int not null, "
-		       " INDEX foo (module,user,name))" );
+		       "  user   varchar(30) NOT NULL, "
+		       "  value  blob, "
+		       "  raw    int not null, "
+		       " INDEX foo (module,name,user))" );
+  user_sql_inited[ table ] = 1;
 }
 
 class Group( UserDB database )
@@ -695,6 +697,8 @@ class Group( UserDB database )
 
 class User( UserDB database )
 {
+  static string table;
+
   string name();
   //! The user (short) name
   string real_name();
@@ -756,6 +760,23 @@ class User( UserDB database )
     return ({name(),crypted_password(),uid(),gid(),gecos(),homedir(),shell()});
   }
 
+
+#define INIT_SQL() do{ \
+    if(!table) table = replace(database->my_configuration()->name," ","_")+"_user_variables"; \
+    if(!user_sql_inited[ table ] )init_user_sql( table ); \
+  } while( 0 )
+  
+
+
+  static string module_name( RoxenModule module )
+  {
+    if( !module )
+      // NULL does not work together with indexes, but this is
+      // not a valid modulename, so it's not a problem.
+      return "'0'";
+    else
+      return replace("'"+user_mysql->quote(module->sname())+"'","%","%%");
+  }
   
   mixed set_var( RoxenModule module, string index, mixed value )
   //! Set a specified variable in the user. If @[value] is a string,
@@ -765,20 +786,16 @@ class User( UserDB database )
   //! You can use 0 for the @[module] argument.
   //! 
   //! The default implementation stores the value in a mysql table
-  //! 'user_data' in the 'roxen' database.
+  //! '*_user_data' in the 'shared' database.
   //!
   //! Use @[get_var] to retrieve the value, and @[delete_var] to
   //! delete it.
   {
     delete_var( module, index );
-    if( !user_sql_inited ) init_user_sql();
+    mixed oval = value;
+    INIT_SQL();
     int encoded;
-    string mm;
-    if( !module )
-      mm = "NULL";
-    else
-      mm = replace("'"+user_mysql->quote(module->sname()||module->name )+"'",
-		   "%","%%");
+
     if( stringp( value ) )
       value = string_to_utf8( value );
     else
@@ -787,29 +804,27 @@ class User( UserDB database )
       encoded = 1;
     }
     user_mysql->query(
-      "INSERT INTO user_data VALUES ("+mm+", %s, %s, %s, %d)",
-      index, name(), value, encoded
+      "INSERT INTO "+table+" (module,name,user,value,raw) "
+      "VALUES ("+module_name( module )+", %s, %s, %s, %d)",
+        index, name(), value, encoded
     );
-    return value;
+    return oval;
   }
 
   mixed get_var( RoxenModule module, string index )
   //! Return the value of a variable previously set with @[set_var]
   {
     array rows;
-    string mm;
-    if( !user_sql_inited ) init_user_sql();
-    if( !module )
-      mm = "NULL";
-    else
-      mm = replace("'"+user_mysql->quote(module->sname()||module->name )+"'",
-		   "%","%%");
-    rows = user_mysql->query( "SELECT value,raw FROM user_data "
-			      "WHERE module="+mm+" AND name=%s AND user=%s",
+    INIT_SQL();
+
+    rows = user_mysql->query( "SELECT * FROM "+table+
+			      " WHERE (module="+module_name( module )
+			      +" AND name=%s AND user=%s)",
 			      index, name() );
     if( !sizeof( rows ) )
       return 0;
     mapping m = rows[0];
+
     if( (int)m->raw )
       return decode_value( m->value );
     return utf8_to_string( m->value );
@@ -818,18 +833,12 @@ class User( UserDB database )
   void delete_var( RoxenModule module, string index )
   //! Delete a variable previously created with @[set_var]
   {
-    string mm;
-    if( !user_sql_inited ) init_user_sql();
-    if( !module )
-      mm = "NULL";
-    else
-      mm = replace("'"+user_mysql->quote(module->sname()||module->name )+"'",
-		   "%","%%");
-
-    user_mysql->query( "DELETE FROM user_data WHERE module="+mm+
-		       " AND name=%s AND user=%s",
-		       index, name() );
+    INIT_SQL();
+    user_mysql->query( "DELETE FROM "+table+" WHERE (module="+
+		       module_name( module )+
+		       " AND name=%s AND user=%s)", index, name() );
   }
+#undef INIT_SQL
 }
 
 class UserDB
@@ -881,11 +890,11 @@ class UserDB
   //! Return a list of all users handled by this database module.
 
   User create_user( string s )
-  {
-    return 0;
-  }
   //! Not nessesarily implemented, as an example, it's not possible to
   //! create users in the system user database from Roxen WebServer.
   //! The default implementation returns 0.
+  {
+    return 0;
+  }
 }
 
