@@ -1,25 +1,46 @@
+
 <define tag=uservar><b>&title;</b> /// <input size=&size; type=&type; name=&name;>\\\</define>
 <formoutput quote='¤'>
   <if variable=save>
-    <b>Information saved.</b><p>
-    <sqlquery query="insert into customers
-                     values('¤client:quote=mysql¤',
-		            '¤user_id:quote=mysql¤',
-		            '¤name:quote=mysql¤',
-			    NULL,1,1,
-		            '¤sms:quote=mysql¤',
-		            '¤fax:quote=mysql¤',NULL)">
+   <sqloutput query="select * from customers where user_id='¤user_id:quote=mysql¤' and
+    name='¤name:quote=mysql¤'"><set variable=notok value=1></sqloutput>
+
+   <if not variable=notok>
+     <sqlquery query="insert into customers
+                      values(NULL,
+	                     '¤user_id:quote=mysql¤',
+	                     '¤password:quote=mysql¤',
+		             '¤name:quote=mysql¤',
+		 	     1,1,
+		             '¤sms:quote=mysql¤',
+		             '¤fax:quote=mysql¤',NULL)">
+     <sqloutput query="select * from customers where user_id='¤user_id:quote=mysql¤' and
+      name='¤name:quote=mysql¤'"><set variable=id value=#id#></sqloutput>
+     <formoutput quote='#'>
+       <sqlquery query="insert into dns values(NULL,#id#,'CNAME','www.#domain:quote=mysql#')">
+       <sqlquery query="insert into dns values(NULL,#id#,'MX','#domain:quote=mysql#')">
+     </formoutput>
+     <b>Information saved.</b><p>
+   </if>
+   <else>
+     <b>Already saved.</b><p>
+   </else>
+
 
   </if>
+  <else>
     <preparse tag=tablify cellseparator=/// rowseparator=\\\
               cellpadding=0 cellspacing=0>
-      <form method=get>
+      <form method=post>
         <uservar title='Customer name:' type=text size=40 name=name>
         <uservar title='Login name:' type=text size=20 name=user_id>
         <uservar title='Password:' type=password size=20 name=password>
+        <uservar title='Domain name:' type=text size=20 name=domain>
         <uservar title='Fax number:' type=text size=20 name=fax>
         <uservar title='SMS number:' type=text size=20 name=sms>
 	<input type=submit name=save value='Save'>
       </form>
     </preparse>
+  </else> 
 </formoutput>  
+

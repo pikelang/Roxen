@@ -1,12 +1,12 @@
 /*
- * $Id: admin.pike,v 1.2 1998/07/13 07:08:28 js Exp $
+ * $Id: admin.pike,v 1.3 1998/07/15 22:57:43 js Exp $
  *
  * AutoAdmin, administration interface
  *
  * Johan Schön 1998-07-08
  */
 
-constant cvs_version = "$Id: admin.pike,v 1.2 1998/07/13 07:08:28 js Exp $";
+constant cvs_version = "$Id: admin.pike,v 1.3 1998/07/15 22:57:43 js Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -115,7 +115,9 @@ mixed find_file(string f, object id)
    if((int)customer)
    {
      if(!tab)
-       tab=tablist[0]->tab,sub="";
+       tab=tablist[0]->tab;
+     if(!sub)
+       sub="";
      content = tabs[tab]->show(sub,id,f);
      res+="<hr noshade size=2><p>"+make_tablist(tablist,tabs[tab],customer,id);
    }
@@ -177,4 +179,7 @@ void create()
 	 "Admin password", TYPE_PASSWORD,
 	 "This password grants full access to the configuration "
 	 "part of AutoSite Admin.");
+  defvar("da_ip", "194.52.182.27",
+	 "Admin user name", TYPE_STRING,
+	 "The default IP number.");
 }
