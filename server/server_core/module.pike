@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.135 2002/11/07 17:56:45 mani Exp $
+// $Id: module.pike,v 1.136 2003/01/21 23:28:41 mani Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -83,9 +83,11 @@ RoxenModule this_module()
   return this_object(); // To be used from subclasses.
 }
 
-string _sprintf()
-{
-  return sprintf ("RoxenModule(%s)", _module_identifier || "?");
+string _sprintf(int t) {
+  switch(t) {
+  case 't': return "RoxenModule";
+  case 'O': return sprintf("RoxenModule(%s)", _module_identifier || "?");
+  }
 }
 
 array register_module()

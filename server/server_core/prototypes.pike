@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 2001, Roxen IS.
-// $Id: prototypes.pike,v 1.63 2003/01/19 18:33:02 mani Exp $
+// $Id: prototypes.pike,v 1.64 2003/01/21 23:28:41 mani Exp $
 
 #include <stat.h>
 #include <config.h>
@@ -69,9 +69,8 @@ class StringFile( string data, mixed|void _st )
 {
   int offset;
 
-  string _sprintf()
-  {
-    return "StringFile("+strlen(data)+","+offset+")";
+  string _sprintf(int t) {
+    return t=='O' && sprintf("%O(%d,%d)", this_program, strlen(data), offset);
   }
 
   string read(int nbytes)
@@ -141,7 +140,9 @@ class ModuleCopies
   {
     return values(copies);
   }
-  string _sprintf( ) { return "ModuleCopies("+sizeof(copies)+")"; }
+  string _sprintf(int t) {
+    return t=='O' && sprintf("%O(%d)", sizeof(copies));
+  }
 }
 
 class Configuration
@@ -157,11 +158,6 @@ class Configuration
 
   class Priority
   {
-    string _sprintf()
-    {
-      return "Priority()";
-    }
-
     array (RoxenModule) url_modules = ({ });
     array (RoxenModule) logger_modules = ({ });
     array (RoxenModule) location_modules = ({ });
@@ -286,9 +282,8 @@ class Configuration
   AuthModule find_auth_module( string name );
   UserDB find_user_database( string name );
   
-  static string _sprintf( )
-  {
-    return "Configuration("+name+")";
+  static string _sprintf(int t) {
+    return t=='O' && sprintf("%O(%s)", this_program, name);
   }
 }
 
@@ -368,7 +363,6 @@ class FakedVariables( mapping real_variables )
   }
 
   static mixed _m_delete( mixed what ) {
-//     report_debug(" _m_delete( %O )\n", what );
     return fix_value( m_delete( real_variables, what ) );
   }
 
@@ -777,7 +771,9 @@ class RequestID
       sorted=1;
     }
 
-    string _sprintf() { return sprintf("PrefLanguages(%O)", languages); }
+    string _sprintf(int t) {
+      return t=='O' && sprintf("%O(%O)", this_program, languages);
+    }
   }
 
   array(string) output_charset = ({});

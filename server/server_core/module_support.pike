@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module_support.pike,v 1.126 2003/01/19 18:33:02 mani Exp $
+// $Id: module_support.pike,v 1.127 2003/01/21 23:28:41 mani Exp $
 
 #define IN_ROXEN
 #include <module_constants.h>
@@ -153,9 +153,8 @@ class FakeModuleInfo( string sname )
   int find_module( string sn )  { }
   int check (void|int force) { }
 
-  static string _sprintf()
-  {
-    return "FakeModuleInfo("+sname+")";
+  static string _sprintf(int t) {
+    return t=='O' && sprintf("%O(%s)", this_program, sname);
   }
 
   string get_name()
@@ -209,9 +208,8 @@ class ModuleInfo( string sname, string filename )
   mapping|string name;
   mapping|string description;
 
-  static string _sprintf()
-  {
-    return "ModuleInfo("+sname+")";
+  static string _sprintf(int t) {
+    return t=='O' && sprintf("%O(%s)", this_program, sname);
   }
 
   string get_name()
@@ -265,9 +263,8 @@ class ModuleInfo( string sname, string filename )
       });
     }
     
-    string _sprintf()
-    {
-      return sprintf("LoadFailed(%s)", sname);
+    string _sprintf(int t) {
+      return t=='O' && sprintf("%O(%s)", this_program, sname);
     }
   }
   

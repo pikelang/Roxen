@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: core.pike,v 1.849 2003/01/21 22:59:11 mani Exp $";
+constant cvs_version="$Id: core.pike,v 1.850 2003/01/21 23:28:40 mani Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -359,8 +359,9 @@ static class Privs
   void create(string reason, int|string|void uid, int|string|void gid){}
 #endif /* efun(seteuid) */
 
-  string _sprintf() { return sprintf("Privs( {%O:%O}->{%O,%O} )",
-				     saved_uid, saved_gid, new_uid, new_gid); }
+  string _sprintf(int t) {
+    return t=='O' && sprintf("%O( {%O:%O}->{%O,%O} )", this_program,
+			     saved_uid, saved_gid, new_uid, new_gid); }
 }
 
 /* Used by read_config.pike, since there seems to be problems with
@@ -531,7 +532,9 @@ class Queue
     r_cond::signal();
   }
 
-  string _sprintf() { return "Queue("+size()+")"; }
+  string _sprintf(int t) {
+    return t=='O' && "Queue("+size()+")";
+  }
 }
 
 // // This is easier than when there are no threads.
@@ -873,7 +876,9 @@ function async_sig_start( function f, int really )
       }
     }
 
-    string _sprintf() { return sprintf("SignalAsyncVerifier(%O)",f); }
+    string _sprintf(int t) {
+      return t=='O' && sprintf("SignalAsyncVerifier(%O)",f);
+    }
   };
   // call_out is not really useful here, since we probably want to run
   // the signal handler immediately, not whenever the backend thread
@@ -1056,8 +1061,6 @@ class BackgroundProcess
   {
     stopping = 1;
   }
-
-  string _sprintf() {return "BackgroundProcess()";}
 }
 
 
@@ -1209,9 +1212,9 @@ class InternalRequestID
     return set_path( raw_url );
   }
 
-  static string _sprintf()
-  {
-    return sprintf("InternalRequestID(conf=%O; not_query=%O)", conf, not_query );
+  static string _sprintf(int t) {
+    return t=='O' && sprintf("%O(conf=%O; not_query=%O)", this_program,
+			     conf, not_query );
   }
 
   static void create()
@@ -1519,15 +1522,15 @@ class Protocol
     if(!port_obj->bind( port, got_connection, ip ))
     {
       report_error("Failed to bind %s://%s:%d/ (%s)\n",
-		   (string)name, (ip||"*"), (int)port, strerror( errno() ));
+		   (string)name, (ip||"*"), port, strerror( errno() ));
       bound = 0;
     } else
       bound = 1;
   }
 
-  static string _sprintf( )
-  {
-   return "Protocol("+name+"://"+ip+":"+port+")";
+  static string _sprintf(int t) {
+    return t=='O' && sprintf("%O(%s://%s:%d)", this_program,
+			     (string)name, ip||"*", port);
   }
 }
 
@@ -1580,7 +1583,9 @@ class SSLProtocol
       sslfile = SSL.sslfile(q, ctx);
     }
 
-    string _sprintf() { return sprintf("ProtectedSSL(%O)",sslfile); }
+    string _sprintf(int t) {
+      return t=='O' && sprintf("%O(%O)", this_program, sslfile);
+    }
   }
 
   Stdio.File accept()
@@ -1733,9 +1738,9 @@ class SSLProtocol
     ::create(pn, i);
   }
 
-  string _sprintf( )
-  {
-    return "SSLProtocol("+name+"://"+ip+":"+port+")";
+  string _sprintf(int t) {
+    return t=='O' && sprintf("%O(%s://%s:%d)", this_program,
+			     (string)name, ip||"*", port);
   }
 }
 #endif
@@ -1769,7 +1774,9 @@ mapping(string:Protocol) build_protocols_mapping()
       if(!real) realize();
       return predef::`->(real, x);
     }
-    string _sprintf() { return sprintf("lazy_load(%O,%O)", prog, name); }
+    string _sprintf(int t) {
+      return t=='O' && sprintf("%O(%O,%O)", this_program, prog, name);
+    }
   };
 #endif
   foreach( glob( "prot_*.pike", get_dir("plugins/protocols") ), string s )
@@ -3233,7 +3240,9 @@ class ImageCache
     call_out( do_cleanup, 10 );
   }
 
-  string _sprintf() { return sprintf("ImageCache(%O,%O)", name, draw_function); }
+  string _sprintf(int t) {
+    return t=='O' && sprintf("%O(%O,%O)", this_program, name, draw_function);
+  }
 }
 
 
@@ -3622,7 +3631,9 @@ class ArgCache
     QUERY("UPDATE "+name+" SET atime='"+time(1)+"' WHERE id="+i[1]);
   }
 
-  string _sprintf() { return sprintf("ArgCache(%O)", name); }
+  string _sprintf(int t) {
+    return t=='O' && sprintf("%O(%O)", this_program, name);
+  }
 }
 
 // NGSERVER Remove this function
@@ -4526,9 +4537,12 @@ int is_ip(string s)
   return s&&(sscanf(s,"%*d.%*d.%*d.%*d")==4 && s[-1]>47 && s[-1]<58);
 }
 
-static string _sprintf( )
+static string _sprintf(int t)
 {
-  return "roxen()";
+  switch(t) {
+  case 't': return "core";
+  case 'O': return "core()";
+  }
 }
 
 function(string:Sql.Sql) dbm_cached_get;
@@ -4558,8 +4572,6 @@ class LogFormat
     if( c ) 
       c( replace( data, "\4711", (host||ip) ) );
   }
-
-  string _sprintf() { return "LogFormat()"; }
 }
 
 static mapping(string:function) compiled_formats = ([ ]);
@@ -5143,5 +5155,7 @@ class LogFile(string fname)
     return strlen(what); 
   }
 
-  string _sprintf() { return sprintf("LogFile(%O)", fname); }
+  string _sprintf(int t) {
+    return t=='O' && sprintf("%O(%O)", this_program, fname);
+  }
 }

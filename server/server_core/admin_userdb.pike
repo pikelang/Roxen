@@ -199,9 +199,9 @@ class ConfigurationSettings
     config_settings2->set( name, trim_variables(variables) );
   }
 
-  static string _sprintf()
+  static string _sprintf(int t)
   {
-    return sprintf("ConfigSettings( %O )", name );
+    return t=='O' && sprintf("%O( %O )", this_program, name );
   }
 
   void restore()
@@ -689,10 +689,10 @@ class AdminUser
     restore( );
   }
 
-  static string _sprintf()
+  static string _sprintf(int t)
   {
-    return sprintf("AdminUser( %O, %O, %{%s %} )", 
-                   name, real_name, (array)permissions);
+    return t=='O' && sprintf("%O( %O, %O, %{%s %} )", this_program,
+			     name, real_name, (array)permissions);
   }
 }
 

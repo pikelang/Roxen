@@ -10,7 +10,7 @@ mixed sql_query( string q, mixed ... e )
   return connect_to_my_mysql( 0, "local" )->query( q, @e );
 }
 
-constant cvs_version = "$Id: master.pike,v 1.132 2002/11/14 04:58:00 mani Exp $";
+constant cvs_version = "$Id: master.pike,v 1.133 2003/01/21 23:28:41 mani Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -244,9 +244,8 @@ class UID
     ::create( this_object(), allow_bits, data_bits );
   }
 
-  static string _sprintf( )
-  {
-    return sprintf("UID( %s (%s) )",_name,_rname);
+  static string _sprintf(int t) {
+    return t=='O' && sprintf("%O( %s (%s) )", this_program, _name, _rname);
   }
 }
 

@@ -4,7 +4,7 @@
 // ChiliMoon bootstrap program. Sets up the environment,
 // replces the master, adds custom functions and starts core.pike.
 
-// $Id: loader.pike,v 1.369 2003/01/14 21:18:02 mani Exp $
+// $Id: loader.pike,v 1.370 2003/01/21 23:28:40 mani Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -29,7 +29,7 @@ static string    var_dir = "../var/";
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: loader.pike,v 1.369 2003/01/14 21:18:02 mani Exp $";
+constant cvs_version="$Id: loader.pike,v 1.370 2003/01/21 23:28:40 mani Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -673,7 +673,10 @@ class LowErrorContainer
     if (sizeof(d) && (d[-1] != '/') && (d[-1] != '\\'))
       d += "/";
   }
-  string _sprintf() { return sprintf("LowErrorContainer(%O,%O)", errors, warnings); }
+
+  string _sprintf(int t) {
+    return t=='O' && sprintf("%O(%O,%O)", this_program, errors, warnings);
+  }
 }
 
 //! @appears ErrorContainer
@@ -693,7 +696,10 @@ class ErrorContainer
       (compile_error_handlers-({0}))->compile_warning( file,line, err );
     ::compile_warning(file,line,err);
   }
-  string _sprintf() { return sprintf("ErrorContainer(%O,%O)", errors, warnings); }
+
+  string _sprintf(int t) {
+    return t=='O' && sprintf("%O(%O,%O)", this_program, errors, warnings);
+  }
 }
 
 //! @decl int cd(string path)
@@ -711,7 +717,10 @@ class restricted_cd
     }
     return cd(path);
   }
-  string _sprintf() { return sprintf("restricted_cd(%O)", locked_pid); }
+
+  string _sprintf(int t) {
+    return t=='O' && sprintf("%O(%O)", this_program, locked_pid);
+  }
 }
 
 // Fallback efuns.
@@ -857,7 +866,6 @@ class ParseHtmlCompat
     match_tag (0);
     ignore_unknown (1);
   }
-  string _sprintf() { return "ParseHtmlCompat()"; }
 }
 
 string parse_html (string data, mapping(string:function|string) tags,
@@ -914,7 +922,6 @@ class ParseHtmlLinesCompat
     match_tag (0);
     ignore_unknown (1);
   }
-  string _sprintf() { return "ParseHtmlLinesCompat()"; }
 }
 
 string parse_html_lines (string data, mapping tags, mapping containers,
@@ -1311,7 +1318,10 @@ class MySQLTimeout(static Sql.Sql real)
     real = 0;
     return res;
   }
-  string _sprintf() { return sprintf("MySQLTimeout(%O)", timeout); }
+
+  string _sprintf(int t) {
+    return t=='O' && sprintf("%O(%O)", this_program, timeout);
+  }
 }
 
 class MySQLResKey(static object real, static MySQLKey key)
@@ -1368,7 +1378,7 @@ class MySQLResKey(static object real, static MySQLKey key)
 
   static string _sprintf(int type)
   {
-    return sprintf( "MySQLRes( X, %O )", key );
+    return type=='O' && sprintf( "%O( X, %O )", this_program, key );
   }
 
 #if 0
@@ -1476,10 +1486,12 @@ class MySQLKey
   static string _sprintf(int type)
   {
 #ifdef DB_DEBUG
-    if (type == 'd') return (string)num;
-    return sprintf( "SQL( %O:%d )", name, num );
+    switch(type) {
+    case 'd': return (string)num;
+    case 'O': sprintf( "SQL( %O:%d )", name, num );
+    }
 #else
-    return sprintf( "SQL( %O )", name );
+    return type=='O' && sprintf( "%O( %O )", this_program, name );
 #endif /* DB_DEBUG */
   }
 }

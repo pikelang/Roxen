@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: fonts.pike,v 1.88 2002/10/22 00:06:12 nilsson Exp $
+// $Id: fonts.pike,v 1.89 2003/01/21 23:28:40 mani Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -53,10 +53,6 @@ class Font
   //! Multiply real row spacing with this value.
   {
     y_spacing = delta;
-  }
-
-  optional string _sprintf() {
-    return "Font";
   }
 }
 
@@ -119,16 +115,10 @@ class FontHandler
     if( style == -1 ) return name;
     return name+"/"+style;
   }
-
-  string _sprintf() {
-    return "FontHandler";
-  }
 }
 
 
-
 array(FontHandler) font_handlers = ({});
-
 
 array available_font_versions(string name, int size)
 {
