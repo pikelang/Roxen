@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: wizz.pike,v 1.9 2003/01/23 16:52:57 mani Exp $";
+constant cvs_version = "$Id: wizz.pike,v 1.10 2004/05/16 21:31:36 mani Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Really advanced wizard";
@@ -107,13 +107,14 @@ class PageFrame {
 
   array do_return(RequestID id) {
     result = "\n<!-- Wizard -->\n"
-      "<form method=\""+(vars->method||"POST")+"\" >\n"
-      "<input type=\"hidden\" name=\"magic_roxen_automatic_charset_variable\" value=\"едц\" />\n"
-      "<input type=\"hidden\" name=\"__state\" value=\"" + vars->__state + "\" />\n"
-      "<input type=\"hidden\" name=\"__done-url\" value=\""+vars->done+"\" />\n"
-      "<input type=\"hidden\" name=\"__page\"  value=\""+vars->page+"\" />\n"+
-      (vars->cancel?"<input type=\"hidden\" name=\"__cancel-url\" value=\""+
-       vars->cancel+"\" />\n":"");
+      "<form method='"+(vars->method||"POST")+"'>\n"
+      "<input type='hidden' name='magic_roxen_automatic_charset_variable'"
+      " value='" + Roxen.magic_charset_variable_value + "' />\n"
+      "<input type='hidden' name='__state' value='" + vars->__state + "' />\n"
+      "<input type='hidden' name='__done-url' value='"+vars->done+"' />\n"
+      "<input type='hidden' name='__page'  value='"+vars->page+"' />\n"+
+      (vars->cancel?"<input type='hidden' name='__cancel-url' value='"+
+       vars->cancel+"' />\n":"");
 
     result += content+"</form>\n";
     id->misc->wizard = old_wizard;
