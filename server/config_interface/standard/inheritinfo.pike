@@ -62,7 +62,7 @@ string program_name_version( program what )
   } else
     warning = "(<i>No precompiled file available</i>)";
 
-  if( fs[ ST_MTIME ] > master()->loaded_at( what ) )
+  if( (fs && (fs[ ST_MTIME ] > master()->loaded_at( what ) )) )
   {
     color = "red";
     warning = "(<i>Needs reloading</i>)";
