@@ -133,9 +133,6 @@ class FTFont
     // nbsp -> ""
     what = map( (array(string))what, replace, " ", "" );
 
-    // cannot write "" with Image.TTF.
-    what = replace( what, "", " " );
-
     if( encoder )
       what = Array.map(what, lambda(string s) {
                                return encoder->clear()->feed(s)->drain();
@@ -165,11 +162,15 @@ class FTFont
 
   static void create(object r, int s, string fn, mixed|void _lock)
   {
-    string encoding;
+    string encoding, fn2;
     if( _lock )
       lock = _lock;
     face = r; size = s;
 
+    if( (fn2 = replace( fn, ".pfa", ".afm" )) != fn && r_file_stat( fn2 ) )
+      catch(face->attach_file( replace( fn, ".pfa", ".afm" ) ));
+
+    
     if(r_file_stat(fn+".properties"))
       parse_html(lopen(fn+".properties","r")->read(), ([]),
                  (["encoding":lambda(string tag, mapping m, string enc) {
