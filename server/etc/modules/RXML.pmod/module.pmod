@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.284 2002/05/13 12:36:44 mast Exp $
+// $Id: module.pmod,v 1.285 2002/05/15 22:10:38 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -4334,6 +4334,8 @@ class Frame
   array _save()
   {
     THIS_TAG_TOP_DEBUG ("Saving persistent state\n");
+    // Note: Caller assumes element zero is the args value in case
+    // it's a delay resolved function, i.e. a string.
     return ({copy_value (args), copy_value (content), flags,
 	     content_type, result_type,
 	     this_object()->raw_tag_text,
@@ -7328,6 +7330,12 @@ class PCode
 					protocol_cache_time);
     }
 
+    PCODE_MSG ((p_code_comp ?
+		sprintf ("evaluating partially resolved p-code %O, using "
+			 "resolver %O\n", this_object(), p_code_comp) :
+		sprintf ("evaluating completely resolved p-code %O\n",
+			 this_object())));
+
     while (1) {			// Loops only if errors are catched.
       mixed item;
       Frame frame;
@@ -7595,12 +7603,11 @@ class PCode
       mixed item = encode_p_code[pos];
       if (objectp (item) && item->is_RXML_p_code_frame) {
 	encode_p_code[pos + 1] = 0; // Don't encode the cached frame.
-	if (stringp (encode_p_code[pos + 2][0]))
-	  // This is a debug check, but let's always do it since this
-	  // case would be very hard to track down otherwise.
-	  error ("Unresolved argument function in frame at position %d.\n"
-		 "Encoding p-code in unfinished evaluation?\n", pos);
-	if (exec[pos + 1]) exec[pos + 1]->args = encode_p_code[pos + 2][0];
+	array frame_state = encode_p_code[pos + 2];
+	if (stringp (frame_state[0]))
+	  frame_state[0] = p_code_comp->resolve (frame_state[0]);
+	if (exec[pos + 1])
+	  exec[pos + 1]->args = frame_state[0];
       }
     }
     p_code_comp = 0;
