@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 core.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.63 2004/09/12 13:20:50 _cvs_dirix Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.64 2004/10/07 14:27:44 _cvs_dirix Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -185,12 +185,12 @@ array(Image.Layer)|mapping generate_image( mapping args, RequestID id )
         //  Let SiteBuilder get a chance to decode its argument data
     if (Sitebuilder.sb_start_use_imagecache) {
       Sitebuilder.sb_start_use_imagecache(args, id);
-      tmp = roxen.load_layers(args->src, id, opts);
+      tmp = core.load_layers(args->src, id, opts);
       Sitebuilder.sb_end_use_imagecache(args, id);
     } else
 #endif
     {
-      tmp = roxen.load_layers(args->src, id, opts);
+      tmp = core.load_layers(args->src, id, opts);
     }
 
     if (mappingp(tmp)) {
