@@ -1,7 +1,8 @@
-string cvs_version = "$Id: roxen.pike,v 1.39 1997/02/19 02:19:03 per Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.40 1997/02/20 00:46:24 neotron Exp $";
 #define IN_ROXEN
-
+#ifdef THREADS
 #include <fifo.h>
+#endif
 #include <module.h>
 #include <variables.h>
 #include <roxen.h>
@@ -1727,6 +1728,7 @@ void init_shuffler();
 // serve new requests. The file descriptors of the open files and the
 // clients are sent to the program, then the shuffler just shuffles 
 // the data to the client.
+#if efun(send_fd)
 void _shuffle(object from, object to)
 {
   if(shuffle_fd)
@@ -1748,7 +1750,7 @@ void _shuffle(object from, object to)
                         lambda(function w){destruct(function_object(w));});
 #endif
 }
-
+#endif
 #ifdef THREADS
 object shuffle_queue = Queue();
 
@@ -1761,8 +1763,9 @@ void shuffle(object a, object b)
 {
   shuffle_queue->write(({a,b}));
 }
-#else
+#elif efun(send_fd)
 function shuffle = _shuffle;
+#endif
 #endif
 
 #ifdef THREADS
@@ -1770,6 +1773,7 @@ object st=thread_create(shuffle_thread);
 #endif
 
   
+#if efun(send_fd)
 object shuffler;
 void init_shuffler()
 {
@@ -1790,7 +1794,7 @@ void init_shuffler()
   }
 }
 #endif
-
+#endif
 static private int _recurse;
 
 void exit_when_done()
