@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.121 1999/01/17 15:43:40 peter Exp $";
+constant cvs_version = "$Id: http.pike,v 1.122 1999/05/27 20:37:13 neotron Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -1371,9 +1371,12 @@ void chain(object f, object c, string le)
   if(strlen(le))
     // More to handle already.
     got_data(0,le);
-//   else
-//      // If no pipelined data is available, call out...
-//     call_out(do_timeout, 150);
+  else
+  {
+    // If no pipelined data is available, call out...
+    call_out(do_timeout, 150);
+    time = _time(1);
+  }
 
   if(!my_fd)
   {
