@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.43 2001/10/09 11:46:01 jhs Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.44 2001/10/09 12:01:27 jhs Exp $";
 
 #include <module.h>
 inherit "module";
@@ -458,10 +458,11 @@ TAGDOCUMENTATION;
 #ifdef manual
 
 constant props_arg =
-#"<p>A javascript PopupProperties object containing properties for the
-  popup. PopupProperties is defined in the <i>Popup.js</i> component and takes
-  two arguments: x, and y offsets from the target event for positioning
-  of the popup at a desired location.</p>
+#"<p>The name of the javascript PopupProperties object that is created
+  by the tag. This object contains various properties for the popup.
+  PopupProperties is defined in the <i>Popup.js</i> component and
+  takes two arguments: x, and y offsets from the target event for
+  positioning of the popup at a desired location.</p>
 
   <p>There are some methods available in the object to set properties:</p>
 
@@ -515,8 +516,8 @@ javascript support.</p></desc>
   This tag creates a popup of its content and returns a link that
   activates the popup if the cursor hovers over the link.</p>
   
-  <p>This tag generates some javascript support strings that has to be
-  inserted inte the page with the <tag>js-insert</tag> tag. The strings are:
+  <p>This tag generates some javascript support strings that have to be
+  inserted into the page with the <tag>js-insert</tag> tag. The strings are:
   <i>div</i> and <i>style</i>.</p>
 
   <p>The components <tt>CrossPlatform.js</tt> and <tt>Popup.js</tt> must be
