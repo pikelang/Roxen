@@ -82,7 +82,6 @@ string|array tag_echo(string tag, mapping m, object id)
     return id->query || "";
 
    case "last_modified":
-     // FIXME: Use id->misc->defines->timefmt
      return make_tag("modified", m+(["ssi":1])); //FIXME: Performance
       
    case "server_software":
