@@ -1,5 +1,5 @@
 /*
- * $Id: flush.pike,v 1.2 1997/08/24 03:35:22 peter Exp $
+ * $Id: flush.pike,v 1.3 1997/08/24 23:07:37 peter Exp $
  */
 
 inherit "wizard";
@@ -52,7 +52,6 @@ string text_andify( array(string) info )
 {
   int i=0;
   int l=sizeof(info);
-  perror("%O\n", l);
   string ret;
 
   foreach( info, string item )
