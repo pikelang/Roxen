@@ -7,7 +7,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.23 2002/11/26 10:32:04 _cvs_hop Exp $";
+constant cvs_version = "$Id: email.pike,v 1.24 2004/05/20 23:20:45 _cvs_stephen Exp $";
 
 constant thread_safe=1;
 
@@ -85,14 +85,17 @@ void create()
 
 }
 
+object notasciicharset = Regexp("[^\1-\177]");
 array mails = ({}), errs = ({});
 string msglast = "";
-string revision = ("$Revision: 1.23 $"/" ")[1];
+string revision = ("$Revision: 1.24 $"/" ")[1];
 
 class TagEmail {
   inherit RXML.Tag;
 
   constant name  = "email";
+
+  RXML.Type content_type = RXML.t_text (RXML.PXml);
 
   // It says that the resulting code has the type "any" and
   // should be parsed once by the XML-parser.
@@ -108,16 +111,24 @@ class TagEmail {
 
       array do_return(RequestID id) {
 
+	string value;
 	if(args->name && args->value)
-	  id->misc["_email_headers_"] += ([ upper_case(args->name) : (string)(args->value) ]);
+	  value = args->value;
 	else {
+	  value = (string)content;
 	  // converting bare LFs (QMail specials:)
 	  if(query("CI_qmail_spec")) {
-	    content = replace(content, "\r", "");
-	    content = replace(content, "\n", "");
+	    value = replace(value, "\r", "");
+	    value = replace(value, "\n", "");
 	  }
-	  id->misc["_email_headers_"] += ([ upper_case(args->name) : (string)content ]);
 	}
+	if (!id->misc["_email_headers_"])
+	  id->misc["_email_headers_"] = ([]);
+	string header_name = upper_case(args->name);
+	if (id->misc["_email_headers_"][header_name])
+	  id->misc["_email_headers_"][header_name] += ","+value;
+	else
+	  id->misc["_email_headers_"][header_name] = value;
 
         return 0;
       }
@@ -215,12 +226,12 @@ class TagEmail {
 	else
 	{
 	  // We assume container with text (and default type "text/plain")
-
-	  ftype = args->mimetype     || "text/plain";
+	  string guess_mimetype = aname && id->conf->type_from_filename(aname);
+	  ftype = args->mimetype     || guess_mimetype || "text/plain";
 	  fenc  = args->mimeencoding || "8bit";
 
 	  // Converting bare LFs (QMail specials:)
-	  if(query("CI_qmail_spec") && ftype == "test/plain")
+	  if(query("CI_qmail_spec") && ftype == "text/plain")
 	    body = (Array.map(body / "\r\n",
 			      lambda(string el1) {
 				return (replace(el1, "\n", "\r\n"));
@@ -229,7 +240,7 @@ class TagEmail {
 	}
 
 	content_type = ftype + (aname ? "; name=\""+aname+"\"" : "");
-	content_disp = ("attachment" +
+	content_disp = ((args->disposition || "attachment") +
 			(aname ? "; filename=\""+aname+"\"" : ""));
 	content_id   = args->cid || "nocid";
 
@@ -271,17 +282,21 @@ class TagEmail {
 
       foreach(from/" ", string el)
         if(search(el, "@") > 0)
-        addr = el;
-      if(addr)
-        from = "\""+((from/" ")-({addr}))*" "+"\" <"+addr+">";
-
+	  addr = el;
+      if(addr && search(addr, "<") == -1) {
+	string name = ((from/" ")-({addr}))*" ";
+	if (sizeof(name-" "))
+	  from = "\""+name+"\" <"+addr+">";
+	else
+	  from = addr;
+      }
       return from;
     }
 
     string only_from_addr(string fromx) {
       foreach(Array.map(fromx/" ", String.trim_all_whites), string from1)
         if(search(from1, "@") > 0)
-        return from1;
+	  return from1;
       return String.trim_all_whites(fromx);
     }
 
@@ -305,10 +320,12 @@ class TagEmail {
       string subject;
       string fromx;
       string tox, split = args->separator || query("CI_split");
+      string ccx;
+      string bccx;
       string chs = "";
       mixed error;
       mapping headers = ([]);
-      string fenc;
+
 
      if(stringp(id->misc->_email_sign_))
 	body += "\n-- \n" + id->misc->_email_sign_;
@@ -342,16 +359,33 @@ class TagEmail {
      
      if(!stringp(split) || !sizeof(split))
 	split = "\0"; //default 
-     tox = args->to || headers->TO || ((replace(query("CI_to"),"\r","")/"\n")*split);
-     if (!tox || sizeof(tox)<1)
-       RXML.run_error(EMAIL_LABEL+"Recipient address is missing!");
+     tox = args->to || headers->TO ||
+       ((replace(query("CI_to"),"\r","")/"\n")*split);
+
+     if (args->cc)
+       ccx = args->cc;
+     if (headers->CC)
+       ccx = (ccx?ccx+",":"") + headers->CC;
+     if (ccx) {
+       headers->CC = ccx;
+     }
+     if (args->bcc)
+       bccx = args->bcc;
+     if (headers->BCC)
+       bccx = (bccx?bccx+",":"") + headers->BCC;
+     // Our SMTP.client should remove any BCC header, but it does not parse
+     // headers at all so we have to do it here.
+     m_delete(headers, "BCC");
 
       subject = args->subject || headers->SUBJECT || query("CI_nosubject");
       fromx = args->from || headers->FROM || query("CI_from");
 
      // converting bare LFs (QMail specials:)
      if(query("CI_qmail_spec"))
-       body = (Array.map(body / "\r\n", lambda(string el1) { return (replace(el1, "\n", "\r\n")); }))*"\r\n";
+       body = Array.map(body / "\r\n",
+			lambda(string el1) {
+			  return (replace(el1, "\n", "\r\n")); }
+			)*"\r\n";
 
      // charset
      chs = args->charset || id->misc->input_charset || query("CI_charset");
@@ -359,13 +393,15 @@ class TagEmail {
      //	id->misc->input_charset;
 
      // UTF8 -> dest. charset
-     if(sizeof(chs)) {
-
+     if(sizeof(chs))
+     {
 	// Subject
-/*	if(zero_type(args["subject"]))
-	  subject = Locale.Charset.encoder(chs)->clear()->feed(query("CI_nosubject"))->drain();*/
-	subject = Locale.Charset.encoder(chs)->clear()->feed(args->subject||query("CI_nosubject"))->drain();
-	subject = MIME.encode_word(({subject, chs}), "base64" );
+	subject = Locale.Charset.encoder(chs)
+	  ->clear()
+	  ->feed(args->subject||query("CI_nosubject"))
+	  ->drain();
+	if(notasciicharset->match(subject))
+	  subject = MIME.encode_word(({subject, chs}), "quoted-printable");
 
 	// Body
 	body = Locale.Charset.encoder(chs)->clear()->feed(body)->drain();
@@ -373,47 +409,74 @@ class TagEmail {
 	chs = ";charset=\""+chs+"\"";
      }
 
-     fenc = args->mimeencoding || "8bit";
-     if (arrayp(id->misc->_email_atts_) && sizeof(id->misc->_email_atts_)) {
-       m=MIME.Message(body, ([ "MIME-Version":"1.0",
-			     "content-type":(headers["CONTENT-TYPE"]||args->mimetype||"text/plain")
-				+ chs,
-			     "content-transfer-encoding":(headers["CONTENT-TRANSFER-ENCODING"]||fenc),
-			   ]));
-       error = catch(
-         m=MIME.Message("", ([ "MIME-Version":"1.0", "subject":subject,
-			     "from":nice_from_h(fromx),
-			     "to":replace(tox, split, ","),
-			     "content-type":"multipart/mixed",
-			     "x-mailer":"ChiliMoon email, r"+revision
-			   ]) + headers,
-			({ m }) + id->misc->_email_atts_
-         ));
+     string fenc =
+       headers["CONTENT-TRANSFER-ENCODING"] || args->mimeencoding || "8bit";
+
+     if (arrayp(id->misc->_email_atts_) && sizeof(id->misc->_email_atts_))
+     {
+       m = MIME.Message(body,
+			([ "MIME-Version" : "1.0",
+			   "content-type" : ( (headers["CONTENT-TYPE"] ||
+					       args->mimetype ||
+					       "text/plain") +
+					      chs ),
+			   "content-transfer-encoding" : fenc,
+			]));
+       error = catch {
+	 m=MIME.Message("",
+			([ "MIME-Version" : "1.0",
+			   "subject"      : subject,
+			   "from"         : nice_from_h(fromx),
+			   "to"           : replace(tox, split, ","),
+			   "content-type" : "multipart/"
+				+(args->alternative?"alternative":"mixed"),
+			   "x-mailer"     : "ChiliMoon email, r"+revision
+			]) + headers,
+			({ m }) + id->misc->_email_atts_ );
+       };
        m_delete(id->misc,"_email_atts_");
      } else
-     error = catch(
-       m=MIME.Message(body, ([ "MIME-Version":"1.0", "subject":subject,
-			     "from":nice_from_h(fromx),
-			     "to":replace(tox, split, ","),
-			     "content-type":(headers["CONTENT-TYPE"]||args->mimetype||"text/plain")
-				+ chs,
-			     "content-transfer-encoding":(headers["CONTENT-TRANSFER-ENCODING"]||fenc),
-			     "x-mailer":"ChiliMoon email, r"+revision
-			   ]) + headers)
-     );
+       error = catch {
+	 m = MIME.Message(body,
+			  ([ "MIME-Version" : "1.0",
+			     "subject"      : subject,
+			     "from"         : nice_from_h(fromx),
+			     "to"           : replace(tox, split, ","),
+			     "content-type" : ( (headers["CONTENT-TYPE"] ||
+						 args->mimetype ||
+						 "text/plain") +
+						chs ),
+			     "content-transfer-encoding" : fenc,
+			     "x-mailer"     : "ChiliMoon email, r"+revision
+			  ]) + headers );
+       };
 
      if (error)
-       RXML.run_error(EMAIL_LABEL+"MIME message processing error: "+Roxen.html_encode_string(error[0]));
+       RXML.run_error(EMAIL_LABEL+"MIME message processing error: "+
+		      Roxen.html_encode_string(error[0]));
 
-     error = catch(o = Protocols.SMTP.client(query("CI_server_restrict") ? query("CI_server") : (args->server||query("CI_server"))));
+     error = catch {
+       o = Protocols.SMTP.client(query("CI_server_restrict") ?
+				 query("CI_server") :
+				 (args->server || query("CI_server")));
+     };
      if (error)
-       RXML.run_error(EMAIL_LABEL+"Couldn't connect to mail server. "+Roxen.html_encode_string(error[0]));
+       RXML.run_error(EMAIL_LABEL+"Couldn't connect to mail server. "+
+		      Roxen.html_encode_string(error[0]));
 
      catch(msglast = (string)m);
 
-//werror("D: send_mess: %O\n", (string)m);
-     error = catch(o->send_message(only_from_addr(fromx), tox/split,
-				   (string)m));
+     array(string) to = tox / split;
+     if (ccx)  to |= ccx / split;
+     if (bccx) to |= bccx / split;
+     string from = only_from_addr(fromx);
+     string message = (string)m;
+     to -= ({""});
+
+     if (!sizeof(to))
+       RXML.run_error(EMAIL_LABEL+"Recipient address is missing!");
+
+     error = catch(o->send_message(from, to, message));
      if (error)
        RXML.run_error(EMAIL_LABEL+Roxen.html_encode_string(error[0]));
 
@@ -483,20 +546,34 @@ module's</i> administration interface.</p>
 of the machine that operates the mail server.  </p>
 </attr>
 
-<attr name='subject' default='\"[ * No Subject * ]\"'
+<attr name='subject' default='[ * No Subject * ]'
 value=''><p>
  The subject line.
 </p>
 </attr>
 
-<attr name='from' value='' default='(empty)'><p>
- The email address of sender.
+<attr name='from' value=''><p>
+ The email address of sender. Values on the form <tt>John Doe foo@bar.com</tt>
+ renders a From: header like <tt>From: \"John Doe\" &lt;foo@bar.com&gt;</tt>.
+ If the value contains a '&lt;' the value is left unaltered.
 </p>
 </attr>
 
-<attr name='to' value='' default='(empty)'><p>
+<attr name='to' value=''><p>
  The list of recipient email address(es). Separator character can be
  defined by the 'separator' attribute.
+</p>
+</attr>
+
+<attr name='cc' value=''><p>
+ The list of carbon copy recipient email address(es).
+ Separator character can be defined by the 'separator' attribute.
+</p>
+</attr>
+
+<attr name='bcc' value=''><p>
+ The list of blind carbon copy recipient email address(es).
+ Separator character can be defined by the 'separator' attribute.
 </p>
 </attr>
 
@@ -508,6 +585,10 @@ value=''><p>
 <attr name='mimetype' value='MIME type'><p>
  Overrides the MIME type of the body.
 </p>
+</attr>
+
+<attr name='mimeencoding' value='MIME encoding'><p>
+ Sets the MIME encoding of the message.</p>
 </attr>
 
 <attr name='charset' value='' default='iso-8859-1'><p>
@@ -533,15 +614,17 @@ separator=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\" >
 </desc>
 
 <attr name='name' value='string' required='required'><p>
- The name of the header. Standard headers are 'From:', 'To:', 'Cc:',
- 'Bcc:' and 'Subject:'. However, there are no restrictions on how many
+ The name of the header. Standard headers are 'From', 'To', 'Cc',
+ 'Bcc' and 'Subject'. However, there are no restrictions on how many
  headers are sent.</p>
 </attr>
 
 <attr name='value' value=''><p>
  The value of the header. This attribute is only used when using the
  singletag version of the tag. In case of the tag being used as a
- containertag the content will be the value.</p>
+ containertag the content will be the value. The 'Bcc' and
+ 'Cc' headers can contain multiple addresses separated by
+ ',' or the string in the split attribute of <tag>email</tag>.</p>
 </attr>
 
 
@@ -549,6 +632,7 @@ separator=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\" >
 <email from=\"foo@bar.com\" to=\"johny@pub.com|pity@bufet.com|ely@rest.com\"
 separator=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\">
 
+<header name=\"Bcc\">joe@bar.com|jane@foo.com</header>
 <header name=\"X-foo-header\" value=\"one two three\" />
 <header name=\"Importance\">Normal</header>
 <header name=\"X-MSMail-Priority\" value=\"Normal\" />
@@ -624,6 +708,17 @@ separator=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\">
  reciever will see in his/hers list of attachment, not the original
  filename. If omitted, the original name will be used. This attribute
  is required when sending inline text or binary attachments.</p>
+</attr>
+
+<attr name='disposition' value='Content-disposition'><p>
+ The MIME content-disposition to use for the attachment.
+ The default disposition is \"attachment\".
+</p>
+</attr>
+
+<attr name='alternative'><p>
+ The MIME multipart is set to alternative instead of mixed.
+</p>
 </attr>
 
 <attr name='mimetype' value='MIME type'><p>
