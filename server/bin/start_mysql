@@ -20,21 +20,6 @@ pid_file=$datadir/mysql_pid
 log=$datadir/log
 err_log=$datadir/error_log
 
-if test -f $pid_file; then
-  PID=`cat $pid_file`
-  if /usr/bin/kill -0 $PID ; then
-#    dp "A mysqld process already exists as pid $PID"
-    exit 0
-  fi
-  rm -f $pid_file
-  if test -f $pid_file;  then
-    dp "Error: Cannot remove $pid_file"
-    dp "Please remove it manually and restart roxen"
-    exit 1
-  fi
-fi
-
-
 # dp "Starting mysql with databases from $datadir"
 MYSQL_UNIX_PORT="$datadir/socket"
 export MYSQL_UNIX_PORT    
@@ -48,6 +33,8 @@ echo "Restart at `date`" >> $err_log
 
 # Max packet set to 225Mb or so. 
 # Should hopefully be enough...
+args="--socket=\"$MYSQL_UNIX_PORT\" "
+args="--skip-networking "
 args="--set-variable max_allowed_packet=16777215 "
 args="$args --skip-locking "
 args="$args --set-variable net_buffer_length=8192"
