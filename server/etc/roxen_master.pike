@@ -1,7 +1,7 @@
 /*
  * Roxen master
  */
-string cvs_version = "$Id: roxen_master.pike,v 1.94 2000/05/24 17:29:31 mast Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.95 2000/07/12 18:37:31 mast Exp $";
 
 /*
  * name = "Roxen Master";
@@ -259,6 +259,7 @@ program low_findprog(string pname, string ext, object|void handler)
             mixed err = catch
             {
               load_time[ fname ] = time();
+	      programs[fname] = 0;
               ret = programs[fname]=
                      decode_value(_static_modules.files()->
                                   Fd(ofile,"r")->read(),MyCodec());
@@ -280,7 +281,14 @@ program low_findprog(string pname, string ext, object|void handler)
       if ( mixed e=catch { ret=compile_file(fname); } )
       {
 	// load_time[fname] = time(); not here, no.... reload breaks miserably
-	programs[fname]=([])[0];
+	//
+	// Yes indeed here. How else avoid many many recompilations of
+	// a module that's broken and referenced from a gazillion
+	// places? This also avoids the dreaded infinite loop during
+	// compilation that could occur with misspelled identifiers in
+	// pike modules. /mast
+	load_time[fname] = time();
+	programs[fname]=0;
         if(arrayp(e) && sizeof(e) && e[0] == "Compilation failed.\n")
           e[1]=({});
 	throw(e);
