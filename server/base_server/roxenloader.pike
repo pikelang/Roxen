@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.355 2004/05/13 23:18:46 mast Exp $
+// $Id: roxenloader.pike,v 1.356 2004/06/24 13:06:40 grubba Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -30,7 +30,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.355 2004/05/13 23:18:46 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.356 2004/06/24 13:06:40 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -2180,13 +2180,14 @@ and recompile pike, after removing the file 'config.cache'
     add_constant( "Image.TTF", Image.TTF );
     // We can load the builtin font.
     add_constant("__rbf", "font_handlers/rbf" );
-  }
-#else
+  } else
+#endif
+  {
 #if constant(Image.FreeType.Face)
-  // We can load the builtin font.
-  add_constant("__rbf", "font_handlers/rbf" );
+    // We can load the builtin font.
+    add_constant("__rbf", "font_handlers/rbf" );
 #else
-  report_debug(
+    report_debug(
 #"
 ------- WARNING ----------------------------------------------
 Neither the Image.TTF nor the Image.FreeType module is available.
@@ -2204,7 +2205,7 @@ library should be enough.
 
 " );
 #endif
-#endif
+  }
 
   if( search( hider, "--long-error-file-names" ) != -1 )
   {
