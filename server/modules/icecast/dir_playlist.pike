@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2001, Roxen IS.
 
 inherit "module";
-constant cvs_version="$Id: dir_playlist.pike,v 1.7 2002/10/22 00:25:24 nilsson Exp $";
+constant cvs_version="$Id: dir_playlist.pike,v 1.8 2002/11/19 13:50:15 _cvs_hop Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -78,10 +78,14 @@ string peek_next()
 
 string status()
 {
-  if( !current_file ) return "Nothing is playing\n";
-  return sprintf("Currently playing %s <br />\n"
-  		 "Next song is %s\n", current_filename(),
-		 peek_next());
+  string stat;
+
+  if( !current_file )
+    stat =  "Nothing is playing\n";
+  else
+    stat = sprintf("Currently playing %s", current_filename());
+  stat += sprintf("<br />\n Next song is %s\n", peek_next());
+  return stat;
 }
 
 string current_filename()
