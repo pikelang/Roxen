@@ -159,14 +159,25 @@ mixed find_file( string f, object id )
   return retval;
 }
 
-void start()
+void start(int n, object cfg)
 {
-  ::start();
-  charset_encoder = charset_decoder = 0;
-  catch {
-    charset_encoder = Locale.Charset.encoder(QUERY(encoding), "?");
-    charset_decoder = Locale.Charset.decoder(QUERY(encoding));
-  };
+  if( query( "searchpath" ) == "NONE" )
+    set( "searchpath", "config_interface/" );
+  ::start( );
+  if( cfg )
+  {
+    charset_encoder = charset_decoder = 0;
+    cfg->add_modules(({
+      "awizard",      "config_tags", "config_userdb","contenttypes",
+      "directories",  "gbutton",     "graphic_text", "lpctag",
+      "obox",         "pathinfo",    "pikescript",   "rxmlparse",
+      "rxmltags",     "tablist",
+    }));
+    catch {
+      charset_encoder = Locale.Charset.encoder(QUERY(encoding), "?");
+      charset_decoder = Locale.Charset.decoder(QUERY(encoding));
+    };
+  }
 }
 
 void create()
