@@ -1,7 +1,7 @@
 inherit "module";
 // All roxen modules must inherit module.pike
 
-constant cvs_version = "$Id: common_api.pike,v 1.1 2000/07/07 17:39:30 jhs Exp $";
+constant cvs_version = "$Id: common_api.pike,v 1.2 2000/08/24 10:56:10 jhs Exp $";
 //! This string (filtered to remove some ugly cvs id markup) shows up in
 //! the roxen administration interface when handling module parameters in
 //! developer mode (configured under "User Settings" below the Admin tab).
@@ -47,12 +47,19 @@ int itching = 0;
 // Like this, see? We keep global state here, which is a really bad habit
 // most of the time - hence the zero for thread_safe just above.
 
-void create()
+void create(Configuration|void conf)
 //! In <pi>create()</pi>, you typically define your module's
-//! configurable variables (using <ref>defvar()</ref>) and set
-//! data about it using <ref>set_module_creator()</ref> and
-//! <ref>set_module_url()</ref>. Se also <ref>start</ref>.
+//! configurable variables (using <ref>defvar()</ref>) and set data
+//! about it using <ref>set_module_creator()</ref> and
+//! <ref>set_module_url()</ref>. The configuration object of the
+//! virtual server the module was initialized in is always passed,
+//! except for the one occation when the file is compiled for the
+//! first time, when the `conf' argument passed is 0. Se also
+//! <ref>start</ref>.
 {
+  report_debug("tamagotchi(%O)\n", conf); // Ends up in the debug log
+  set_module_creator("Johan Sundström <jhs@roxen.com>");
+  set_module_url("https://jhs.user.roxen.com/examples/common_api.html");
 }
 
 mapping(string:function(RequestID:void)) query_action_buttons( RequestID id )
@@ -81,7 +88,7 @@ void scratch_me()
     report_warning("Ouch!\n");
 }
 
-string info( Configuration conf )
+string info( Configuration|void conf )
 //! Implementing this function in your module is optional.
 //!
 //! When present, it returns a string that describes the module.
@@ -90,8 +97,11 @@ string info( Configuration conf )
 //! is present in a virtual server, so it won't show up when adding
 //! modules to a server.
 {
+  string mp = query_internal_location();
   return "This string overrides the documentation string given in "
-         "module_doc, but only once the module is added to a server.";
+         "module_doc, but only once the module is added to a server. "
+	 "The module's internal mountpoint is found at <tt>" +
+	 mp + "</tt>.";
 }
 
 string|void check_variable(string variable, mixed set_to)
@@ -116,13 +126,20 @@ string|void check_variable(string variable, mixed set_to)
   }
 }
 
-void start()
-//! Set up shop. (optional)
+void start(int occasion, Configuration conf)
+//! Set up shop / perform some action when saving variables. (optional)
 //!
-//! Do anything required before we are able to service requests. This
-//! method is called when the virtual server the module belongs to
-//! gets initialized, just after the module is successfully added by
-//! the administrator or when reloading the module.
+//! If occasion is 0, we're being called when starting up the module,
+//! to perform whatever actions necessary before we are able to service
+//! requests. This call is received when the virtual server the module
+//! belongs to gets initialized, just after the module is successfully
+//! added by the administrator or when reloading the module.
+//!
+//! This method is also called with occasion set to 2 whenever the
+//! configuration is saved, as in when some module variable has changed
+//! and the administrator clicked "save" in the admin interface. This
+//! also happens just before calling <ref>stop()</ref> upon reloading
+//! the module.
 {
   report_notice("Wow, I feel good!\n");
 }
@@ -160,4 +177,19 @@ string status()
     default: how_much = "more than any sane person could stand!";
   }
   return sprintf("I'm itching %s Please scratch me!", how_much);
+}
+
+mapping|int|Stdio.File|void find_internal(string file, RequestID id)
+//! Internal magic location. May return a result mapping,
+//! -1 for a directory indicator, an open file descriptor
+//! or 0, signifying file not found / request not handled.
+//! Similar to the MODULE_LOCATION <ref>find_file()</ref>
+//! in most respects, except that the mountpoint is defined
+//! by the virtual server, and mostly used for background
+//! things where a URL doesn't show too much, such as when
+//! generating background images and the like. To get the
+//! internal mountpoint below which find_internal will handle
+//! requests, use <ref>query_internal_location()</ref>.
+{
+  return Roxen.http_string_answer(status());
 }
