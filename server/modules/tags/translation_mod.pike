@@ -17,7 +17,7 @@ constant module_doc  = "This module provides an RXML API to the Pike localizatio
 class TagTranslationRegistration {
   inherit RXML.Tag;
   constant name = "trans-reg";
-  constant flags = RXML.FLAG_EMPTY_ENTITY;
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
 
   mapping(string:RXML.Type) req_arg_types = ([ "project":RXML.t_text,
 					       "path":RXML.t_text ]);
@@ -31,6 +31,7 @@ class TagTranslationRegistration {
 #else
       RoxenLocale.register_project(args->project, args->path);
 #endif
+      id->misc->translation_proj=args->project;
       result = "";
       return 0;
     }
@@ -41,21 +42,22 @@ class TagTranslate {
   inherit RXML.Tag;
   constant name = "translate";
 
-  mapping(string:RXML.Type) req_arg_types = ([ "project":RXML.t_text,
-					       "id":RXML.t_text ]);
-  mapping(string:RXML.Type) opt_arg_types = ([ "variable":RXML.t_text,
+  mapping(string:RXML.Type) req_arg_types = ([ "id":RXML.t_text ]);
+  mapping(string:RXML.Type) opt_arg_types = ([ "project":RXML.t_text,
+					       "variable":RXML.t_text,
 					       "scope":RXML.t_text ]);
 
   class Frame {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
+      string proj = args->project || id->misc->translation_proj;
 #if constant(Locale.transtale)
-      string trans = Locale.translate(roxen.locale->get()[args->project],
+      string trans = Locale.translate(roxen.locale->get()[proj],
 				      args->id,
 				      content);
 #else
-      string trans = RoxenLocale.translate(roxen.locale->get()[args->project],
+      string trans = RoxenLocale.translate(roxen.locale->get()[proj],
 					   args->id,
 					   content);
 #endif
