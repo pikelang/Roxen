@@ -6,7 +6,7 @@ inherit "roxenlib";
 inherit Regexp : regexp;
 
 constant cvs_version = 
-"$Id: mailtags.pike,v 1.13 1998/09/18 14:08:50 per Exp $";
+"$Id: mailtags.pike,v 1.14 1998/09/20 00:49:38 per Exp $";
 
 constant thread_safe = 1;
 
@@ -28,6 +28,20 @@ constant thread_safe = 1;
 /* Prototypes ----------------------------------------------------- */
 #define WANT_CLIENTINIT
 #include "clientlayer.h"
+
+class SMTPRelay
+{
+  void send_message(string from, multiset(string) rcpt,
+		    string message, string|void csum);
+
+  /* Semi private */
+  void bounce(mapping msg, string code, array(string) text, 
+	      string last_command);
+  int relay(string from, string user, string domain,
+	    Stdio.File mail, string csum, object o);
+};
+
+
 
 
 /* Globals ---------------------------------------------------------*/
@@ -59,7 +73,7 @@ void create()
   defvar("location", "/mailextras/", "Location", TYPE_LOCATION|VAR_MORE, "");
 
   regexp::create("^(.*)((http://|https://|ftp:/|news:|wais://|mailto:"
-		 "|telnet:)[^ \n\t\012\014\"<>|\\\\]*[^ \n\t\012\014"
+		 "|telnet:)[^ \n\t\012\014\"<>|\\\\]*[^ \r\n\t\012\014"
 		 "\"<>|\\\\.,(){}?'`*])");
 }
 
@@ -270,6 +284,7 @@ static int gettime( int year, string month, int date, int hour,
 
 static string describe_time_period( int amnt )
 {
+  if(amnt < 0) return "some time";
   amnt/=60;
   if(amnt < 120) return amnt+" minutes";
   amnt/=60;
@@ -477,25 +492,480 @@ string login(object id)
   }
 }
 
+static SMTPRelay get_smtprelay()
+{
+  catch {
+    module_dependencies( conf, ({ "smtprelay" }) );
+    return conf->get_providers( "smtp_relay" )[ 0 ];
+  };
+  error("Failed to lookup the smptrelay module!\n");
+}
+
+static string send_mail_from_mid( string mid, multiset to, object id )
+{
+  string from = tag_mail_userinfo("",(["email":1]),id);
+  
+  string body = 
+    tag_mail_body( "", ([ "mail":mid ]), id );
+  
+  return get_smtprelay()->send_message( from, to, body );
+}
+
+
+constant actions = 
+({
+  ({ "delete", "Delete mail", 0 }),
+  ({ "next", "Move to next mail", 0 }),
+  ({ "previous", "Move to previous mail", 1 }),
+  ({ "show_unread", "Go to mailbox page and show unread mail", 1 }),
+  ({ "show_all", "Go to mailbox page and show all mail", 1 }),
+  ({ "select_unread", "Select all unread mail", 0 }),
+  ({ "select_all", "Select all mail", 0 }),
+});
+
+static string describe_action( string foo )
+{
+  foreach(actions, array a)
+    if(foo == a[0]) 
+      return a[1];
+
+  if(sscanf(foo, "move_mail_to_%s", foo))
+    return "Move mail to the mailbox '"+foo+"'";
+
+  if(sscanf(foo, "copy_mail_to_%s", foo))
+    return "Copy mail to the mailbox '"+foo+"'"; 
+
+  if(sscanf(foo, "bounce_mail_to_%s", foo))
+    return "Forward mail to the email address '"+foo+"'"; 
+
+  return 0;
+}
+
+static string describe_button( array b )
+{
+  if(sizeof(b) == 2)
+    return "";
+  return String.implode_nicely(Array.map(sort(indices(b[2])),
+					 describe_action));
+}
+
+
+constant weekdays = ({ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"});
+constant months = ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+		     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" });
+
+static string mktimestamp(int t)
+{
+  mapping lt = localtime(t);
+    
+  string tz = "GMT";
+  int off;
+  
+  if (off = -lt->timezone) {
+    tz = sprintf("GMT%+d", off/3600);
+  }
+  if (lt->isdst) {
+    tz += "DST";
+    off += 3600;
+  }
+  
+  off /= 60;
+  
+  return(sprintf("%s, %02d %s %04d %02d:%02d:%02d %+03d%02d (%s)",
+		 weekdays[lt->wday], lt->mday, months[lt->mon],
+		 1900 + lt->year, lt->hour, lt->min, lt->sec,
+		 off/60, off%60, tz));
+}
 
 /* Tag functions --------------------------------------------------- */
 
+// <new-outgoing-mail>
+// Returns: A mailid usable for a new outgoing mail.
+// This mail is created in the 'drafts' outbox.
+//
+string tag_new_outgoing_mail( string t, mapping args, object id )
+{
+  foreach(UID->get_drafts()->mail(), Mail m)
+  {
+    if(!m->flags()->am_edited)
+      return m->id;
+  }
+  UID->get_drafts()->create_mail_from_data( "Subject: No subject\r\n"
+					    "To: Nobody\r\n\r\n"
+					    "From: You\r\n\r\n" )->id;
+}
+
+//
+// <mail-show-attachments> 
+// Nowdays includes the former <mail-edit-attachments>.
+//
+string tag_mail_show_attachments( string t, mapping args, object id )
+{
+  MIME.Message M = id->misc->_message;
+
+  if(!M) return "<input type=submit name=add_attachment value=\"New Attachment\">";
+
+  foreach(glob("delete_part_*", indices(id->variables)), string v)
+  {
+    int partno;
+    sscanf(v, "delete_part_%d", partno);
+    m_delete(id->variables, v);
+    array q;
+    if(M->body_parts)
+    {
+      q = M->body_parts[..partno-1] + M->body_parts[partno+1..];
+      if(sizeof(q)==1)
+      {
+	M->body_parts = 0;
+	M->headers |= q[0]->headers;
+	M->setdata( q[0]->getdata() );
+      } else {
+	M->body_parts = q;
+	M->type = "multipart";
+	M->subtype = "mixed";
+      }
+    }
+    id->misc->_mail->change( M );
+    return "";
+  }
+
+  if(id->variables->attach_file)
+  {
+    if(!M->body_parts)
+    {
+      M = MIME.Message( 0,
+			M->headers,
+			({MIME.Message("Content-Type: text/plain; "
+				       "charset=iso-8859-1\r\n\r\n"+
+				       M->getdata()) }));
+      M->type = "multipart";
+      M->subtype = "mixed";
+      foreach(indices(M->body_parts[0]->headers), string h)
+	if(!sscanf(h, "content%*s"))
+	  m_delete(M->body_parts[0]->headers, h);
+    }
+    MIME.Message m;
+    string t=conf->type_from_filename(id->variables["attach_file.filename"]);
+    m = MIME.Message(id->variables->attach_file, (["content-type":t]));
+    m->setencoding( "base64" );
+    m->setdisp_param("filename",id->variables["attach_file.filename"]);
+    M->body_parts += ({ m });
+    m_delete(id->variables, "attach_file");
+    id->misc->_message = M;
+    if(id->misc->_mail)
+      id->misc->_mail->change( M );
+  }
+
+  if(args->show)
+  {
+    string res=("<table cellpadding=3 cellspacing=0 border=0>"
+		"<tr bgcolor=black><td align=left bgcolor=black><font "
+		"color=white><b>Filename</td><td align=right "
+		"bgcolor=black><b><font color=white align=right>Content type</td>"
+		"<td bgcolor=black align=right><b><font color=white>Size"
+		"</td></tr>");
+    if(!M->body_parts)
+      res="No attachments<br>";
+    // We do not (currently) support multipart attachments (or, rather,
+    // we do, but there is no easy way to edit them right now)
+    else
+    {
+      for(int i=1; i<sizeof(M->body_parts); i++)
+      {
+	object m = M->body_parts[ i ];
+	res += ("<tr><td><a target=Display href=display.html?mail="+
+		id->variables->mail_id+"&part="+i+"&name="+m->get_filename()
+		+">"+m->get_filename()+"</a></td><td align=right>"+
+		m->type+"/"+m->subtype+"</td><td align=right>"+
+		sizeof(m->getdata())/1024+"Kb"+
+		"</td><td><font size=-1><input type=submit name=delete_part_"+i+
+		" value=Delete></font>");
+      }
+      res += "</table>";
+    }
+
+    if(id->variables->add_attachment)
+      res += "File to attach: <input type=file name=attach_file>"
+	"<input type=submit value=Ok>";
+    else
+      res+="<input type=submit name=add_attachment value=\"New Attachment\">";
+    m_delete(id->variables, "add_attachment");
+    return res;
+  }
+  return "";
+}
+
+//
+// <-compose-mail> and <-decompose-mail> are used without any
+// arguments or contents to modify the current mail using the contents 
+// of id->variables.
+//
+//  Automatic headers:
+//   from
+//   date
+//   message-id
+//   x-mailer
+//
+//  Headers taken from variables:
+//   to
+//   cc
+//   bcc
+//   subject
+//   
+//  Body taken from 'body', if multipart, this modifies part 0.
+//  Content type of mail body segment is per default text/plain;
+//  encoding is 8bit; charset is iso-8859-1, the type and charset can
+//  be modified using 'content-type' and 'content-charset' variables.
+//
+string tag__compose_mail( string t, mapping args, object id )
+{
+  MIME.Message m;
+  id->variables->mail_id = (id->variables->mail_id/"\0")[0];
+  m = (id->misc->_message ||
+       MIME.Message(tag_mail_body("",(["mail":id->variables->mail_id]),id)));
+
+  if(id->variables->to)
+    if(strlen(id->variables->to))
+      m->headers->to = id->variables->to;
+
+  if(id->variables->cc)
+    if(strlen(id->variables->cc))
+      m->headers->cc = id->variables->cc;
+    else
+      m_delete(m->headers, "cc");
+
+  if(id->variables->subject)
+    if(strlen(id->variables->subject))
+      m->headers->subject = id->variables->subject;
+
+  if(id->variables->bcc)
+    if(strlen(id->variables->bcc))
+      m->headers->bcc = id->variables->bcc;
+    else
+      m_delete(m->headers, "bcc");
+
+//   if(id->variables->
+
+  m->headers->from=html_decode_string(tag_mail_userinfo("",
+							(["address":1]),id));
+  m->headers["Content-Transfer-Encoding"] = "8bit";
+  m->headers->date = mktimestamp( time() );
+
+  m->headers["message-id"] = ("<\""+tag_mail_userinfo("",(["email":1]),id)+
+			      time()+gethrtime()+"\"@"+gethostname()+">");
+
+  m->headers["x-mailer"] = roxen->version()+" Automail HTML client";
+  if(id->variables->body)
+  {
+    string ct="text/plain", cs="iso-8859-1";
+    if(id->variables["content-type"])
+      ct = id->variables["content-type"];
+    if(id->variables["content-charset"])
+      cs = id->variables["content-charset"];
+    if(m->body_parts)
+    {
+      m->body_parts[0]->setdata(id->variables->body);
+      m->body_parts[0]->headers["content-type"] = ct+"; charset="+cs;
+      m->body_parts[0]->headers->lines=
+	(string)sizeof(id->variables->body/"\n");
+    }
+    else
+    {
+      m->headers->lines = (string)sizeof( id->variables->body/"\n" );
+      m->headers["content-type"] = ct+"; charset="+cs;
+      m->setdata( id->variables->body );
+    }
+  }  
+
+  Mail mid = clientlayer->get_cache_obj( clientlayer->Mail, 
+					 id->variables->mail_id );
+  if(!mid) return "CANNOT GET MAIL '"+id->variables->mail_id+"'\n";
+  id->misc->_message = m;
+  id->misc->_mail =  mid;
+  mid->set_flag("am_editable");
+  mid->set_flag("am_edited");
+  mid->change( m );
+  return "";
+}
+
+//
+// Set variables from the contents of a mail.
+// More or less the reverse of <-compose-mail>
+//
+string tag__decompose_mail( string t, mapping args, object id )
+{
+  MIME.Message m;
+  id->variables->mail_id = (id->variables->mail_id/"\0")[0];
+  m = (id->misc->_message ||
+
+       MIME.Message(tag_mail_body("",(["mail":id->variables->mail_id]),id)));
+  id->variables->to = m->headers->to||"";
+  id->variables->subject = m->headers->subject||"No subject";
+  id->variables->cc = m->headers->cc||"";
+  id->variables->bcc = m->headers->bcc||"";
+  if(m->body_parts)
+    id->variables->body = m->body_parts[0]->getdata();
+  else
+    id->variables->body = m->getdata();
+  id->misc->_message = m;
+  return "";
+}
+
+//
+// <mail-index>: Returns the index of the mail in the mailbox.
+//
+string tag_mail_index( string t, mapping args, object id )
+{
+  Mailbox mbox;
+  foreach( UID->mailboxes(), Mailbox m )
+    if(m->id == (int)id->variables->mailbox_id )
+    {
+      mbox = m;
+      break;
+    }
+  
+  int ind;
+  array(Mail) mail = mbox->mail();
+  if( ((int)id->variables->index < sizeof(mail) )
+      && mail[ (int)id->variables->index ]->id ==
+      id->variables->mail_id )
+    ind = (int)id->variables->index;
+  else
+    if(id->variables->mail_id)
+      ind = search(mail->id, id->variables->mail_id);
+  
+  if(ind == -1) return "?";
+  return (string)(ind+1);
+}
+
+// <show-mail-user-buttons>
+//   #id# #name# #desc#
+// </show-mail-user-buttons>
+//
+string container_show_mail_user_buttons( string tag, mapping args, 
+					 string contents, object id )
+{
+#ifdef UIDPARANOIA
+  if(!UID) return "";
+#endif
+  array b = UID->get( "html_buttons" );
+  if(!b || !sizeof(b)) return "No user defined buttons<br>";
+  array vars = ({});
+
+  for(int i=0; i<sizeof(b); i++)
+  {
+    vars += ({ 
+      ([
+	"id":i,
+	"name":(sizeof(b[i])>2?b[i][0]:
+		((b[i][0][1]=='b'?"Newline":"Space"))),
+	"desc":describe_button( b[i] ),
+      ]) 
+    });
+  }
+  return do_output_tag( args, vars, contents, id );
+}
+
+// <mail-userinfo firstname> --> First name
+// <mail-userinfo lastname>  --> Last name
+// <mail-userinfo email>     --> email address
+// <mail-userinfo address>   --> Real Name <email@address>
+// <mail-userinfo>           --> Real Name
+//
+// More to come, probably.
+//
 string tag_mail_userinfo( string tag, mapping args, object id )
 {
+#ifdef UIDPARANOIA
   if(!UID) return "";
+#endif
+  string t = UID->get( "amhc_realname" )||UID->query_name();
+  string e = UID->get( "amhc_email" )||(id->realauth/":")[0];
   if(args->email)
-    return (id->realauth/":")[0];
-  return UID->query_name();
+    return e;
+
+  if(args->organization)
+  {
+    return UID->get( "amhc_organization" )||"Unkown";
+  }
+
+  if(args->address)
+    return t + " &lt;" + e + "&gt;";
+
+  if(args->firstname)
+  {
+    array q = t/" "-({""});
+    return q[..sizeof(q)-2]*" ";
+  }
+  if(args->lastname)
+  {
+    array q = t/" "-({""});
+    return q[-1];
+  }
+  return t;
 }
+
+string container_mail_if_address_book( string tag, mapping args,
+				       string contents, object id )
+{
+#ifdef UIDPARANOIA
+  if(!UID) return "";
+#endif
+  if( !UID->get( "addressbook" ) ) return "";
+  return contents;
+}
+
+//
+//    <mail-address-book quote=$ variable=to>
+//      <option $selected$ value='$email:quote=stag$'>$name$
+//    </mail-address-book>
+//
+string container_mail_address_book( string tag, mapping args, 
+				    string contents, object id )
+{
+#ifdef UIDPARANOIA
+  if(!UID) return "";
+#endif
+
+  array vars = ({});
+
+  //
+  // ({
+  //    ({
+  //        email,
+  //        name,
+  //        .. optional, reserved for future use ..
+  //    })
+  //  })
+  //
+  array book = UID->get( "addressbook" ) || ({});
+
+  
+  foreach(book, array b)
+  {
+    vars += ({ 
+      ([
+	"name":b[1],
+	"email":b[0],
+	"selected":(id->variables[args->variable]==b[0]?"selected":"")
+      ]),
+    });
+  }
+
+  return do_output_tag( args, vars, contents, id );
+}
+
 
 // <delete-mail mail=id>
 // Please note that this function only removes a reference from the
 // mail, if it is referenced by e.g. other clients, or is present in
 // more than one mailbox, the mail will not be deleted.
-
+//
 string tag_delete_mail(string tag, mapping args, object id)
 {
+#ifdef UIDPARANOIA
   if(!UID) return "";
+#endif
   Mail mid = clientlayer->get_cache_obj( clientlayer->Mail, args->mail );
   if(mid && mid->user == UID )
     mid->mailbox->remove_mail( mid );
@@ -503,18 +973,24 @@ string tag_delete_mail(string tag, mapping args, object id)
 }
 
 // <mail-body mail=id>
+// Returns the _raw_ body.
+// Not currently used except for internaly from mail_body_part.
+//
 string tag_mail_body(string tag, mapping args, object id)
 {
+#ifdef UIDPARANOIA
   if(!UID) return "";
+#endif
   Mail mail = clientlayer->get_cache_obj( clientlayer->Mail, args->mail );
   if(mail && mail->user == UID )
     return mail->body( );
 }
 
+
 // <mail-verify-login>
 //  .. page ...
 // </mail-verify-login>
-
+//
 string container_mail_verify_login(string tag, mapping args, string
 				   contents, object id)
 {
@@ -526,11 +1002,14 @@ string container_mail_verify_login(string tag, mapping args, string
 // <list-mailboxes>
 //  #name# #id# #unread# #read# #mail#
 // </list-mailboxes>
+//
 string container_list_mailboxes(string tag, mapping args, string contents, 
 				object id)
 {
   string res;
+#ifdef UIDPARANOIA
   if(!UID) return "";
+#endif
   UID->get_incoming();
 //   UID->get_drafts();
 
@@ -557,6 +1036,11 @@ string container_list_mailboxes(string tag, mapping args, string contents,
   return do_output_tag( args, vars, contents, id );
 }
 
+//
+// <mail-next>
+// <mail-next previous>
+//  Assumes mailid is id->variables->mail_id
+//
 string tag_mail_next( string tag, mapping args, object id )
 {
   Mailbox mbox;
@@ -564,7 +1048,9 @@ string tag_mail_next( string tag, mapping args, object id )
   int i;
   int start;
 
+#ifdef UIDPARANOIA
   if(!UID) return "";
+#endif
   
   foreach( UID->mailboxes(), Mailbox m )
     if(m->id == (int)id->variables->mailbox_id )
@@ -630,6 +1116,10 @@ string tag_mail_next( string tag, mapping args, object id )
   return "NOPE";
 }
 
+//  <mail-make-hidden>
+//    returns 4711 <input type=hidden value=""> for all variables in
+//    id->variables.
+//
 string tag_mail_make_hidden( string tag, mapping args, object id )
 {
   mapping q = copy_value(id->variables);
@@ -653,7 +1143,43 @@ string tag_mail_make_hidden( string tag, mapping args, object id )
 
 string tag_process_move_actions( string tag, mapping args, object id )
 {
+#ifdef UIDPARANOIA
   if(!UID) return "";
+#endif
+  foreach( glob("bounce_mail_to*.x", indices(id->variables)), 
+	   string v )
+  {
+    string to;
+    sscanf(v, "bounce_mail_to_%s.x", to);
+    if(id->variables->mail_id)
+      send_mail_from_mid( id->variables->mail_id, (< to >), id );
+  }
+
+  foreach( glob("copy_mail_to_*.x", indices(id->variables)), string v)
+  {
+    string mbox;
+    m_delete(id->variables, v);
+    m_delete(id->variables, replace(v, ".x", ".y"));
+
+    sscanf(v, "copy_mail_to_%s.x", mbox);
+
+    if(mbox)
+    {
+      Mailbox m = UID->get_or_create_mailbox( mbox );
+      if(id->variables->mail_id)
+      {
+	id->variables["next.x"]="1";
+	Mail mid = 
+	  clientlayer->get_cache_obj(clientlayer->Mail,
+				     id->variables->mail_id);
+	if(!mid)
+	  return "Unknown mail to copy!\n";
+	m->add_mail( mid );
+// 	mid->mailbox->remove_mail( mid );
+      }
+    } else
+      return "Unknown mailbox to copy to!\n";
+  }
   foreach( glob("move_mail_to_*.x", indices(id->variables)), string v)
   {
     string mbox;
@@ -661,7 +1187,7 @@ string tag_process_move_actions( string tag, mapping args, object id )
     m_delete(id->variables, replace(v, ".x", ".y"));
 
     sscanf(v, "move_mail_to_%s.x", mbox);
-
+    
     if(mbox)
     {
       Mailbox m = UID->get_or_create_mailbox( mbox );
@@ -674,16 +1200,20 @@ string tag_process_move_actions( string tag, mapping args, object id )
 	if(!mid)
 	  return "Unknown mail to move!\n";
 	m->add_mail( mid );
-	mid->mailbox->remove_mail( mid );
+	if(mid->mailbox != m )
+	  mid->mailbox->remove_mail( mid );
       }
     } else
       return "Unknown mailbox to move to!\n";
   }
+
 }
 
-string tag_process_user_buttons( string tag, mapping args, object id )
+  string tag_process_user_buttons( string tag, mapping args, object id )
 {
+#ifdef UIDPARANOIA
   if(!UID) return "";
+#endif
   array b = UID->get( "html_buttons" );
 
   if(!b) return "";
@@ -705,7 +1235,9 @@ string tag_process_user_buttons( string tag, mapping args, object id )
 // <user-buttons type=type>
 string tag_user_buttons( string tag, mapping args, object id )
 {
+#ifdef UIDPARANOIA
   if(!UID) return "";
+#endif
   // A button is:
   //    ({ /* one button... */
   //      "title",
@@ -735,6 +1267,55 @@ string tag_user_buttons( string tag, mapping args, object id )
   //  handled from RXML.
 
   array b = UID->get( "html_buttons" );
+
+  if(!b || !sizeof(b))
+  {
+    b = ({
+      ({
+	"Previous",
+	(< "mail" >),
+	(< "previous" >),
+      }),
+      ({
+	"Next",
+	(< "mail" >),
+	(< "next" >),
+      }),
+      ({
+	" &nbsp; ",
+	(< "mail" >),
+      }),
+      ({
+	"Reply to sender",
+	(< "mail" >),
+	(< "reply" >),
+      }),
+      ({
+	"Reply to all",
+	(< "mail" >),
+	(< "followup" >),
+      }),
+      ({
+	" &nbsp; ",
+	(< "mail" >),
+      }),
+      ({
+	"Delete",
+	(< "mail","mailbox" >),
+	(< "move_mail_to_Deleted" >),
+      }),
+    });
+    UID->set( "html_buttons", b );
+  }
+
+  if(!id->variables->mail_id)
+    if(id->variables->mailbox_id)
+      args->type =  "mailbox";
+    else
+      args->type =  "global";
+  else
+    args->type =  "mail";
+
   string res = "";
   if(!b)
     return "";
@@ -855,6 +1436,7 @@ array(string) tag_list_mail_quick( string tag, mapping args, object id )
   string post="";
 
   mail = reverse(Array.filter(mail, filter_mail_list, id));
+
   if(sizeof(mail) > MAIL_PER_PAGE)
   {
     int start;
@@ -1000,7 +1582,9 @@ string container_list_mail( string tag, mapping args, string contents,
   int start = (int)args->start;
   int num = (int)args->num;
 
+#ifdef UIDPARANOIA
   if(!UID) return "";
+#endif
   foreach( UID->mailboxes(), Mailbox m )
     if(m->id == (int)args->mailbox )
     {
@@ -1053,7 +1637,9 @@ string container_mail_a( string tag, mapping args, string c, object id )
 string tag_amail_user_variable( string tag, mapping args, object id )
 {
   mixed res;
+#ifdef UIDPARANOIA
   if(!UID) return "";
+#endif
   if( args->set )
     return UID->set( "amhc_"+args->variable, args->set );
   else
@@ -1064,8 +1650,8 @@ string tag_amail_user_variable( string tag, mapping args, object id )
 //
 // Part 0 is the non-multipart part of the mail.
 // If part > the available number of parts, part 0 is returned.
-MIME.Message last_mail_mime;
-string last_mail;
+// MIME.Message last_mail_mime;
+// string last_mail;
 
 string tag_mail_body_part( string tag, mapping args, object id )
 {
@@ -1074,9 +1660,9 @@ string tag_mail_body_part( string tag, mapping args, object id )
   if(mixed q = login( id )) 
     return q;
 
-  if(args->mail == last_mail)
-    m = last_mail_mime;
-  else
+//   if(args->mail == last_mail)
+//     m = last_mail_mime;
+//   else
     m = MIME.Message( tag_mail_body( tag, args, id ) );
 
 
@@ -1091,7 +1677,7 @@ string tag_mail_body_part( string tag, mapping args, object id )
     object p;
     foreach( (array(int))(args->part / "/" - ({""})), int p )
     {
-      if(m->body_parts&& sizeof(m->body_parts) > p )
+      if(m->body_parts && sizeof(m->body_parts) > p )
 	m = m->body_parts[ p ];
     }
     p=m;
@@ -1132,11 +1718,11 @@ string low_container_mail_body_parts( string tag, mapping args,
   if(id->prestate->raw) return "<pre>"+html_encode_string(contents)+"</pre>";
 
   MIME.Message msg;
-  if(stringp(contents) && args->mail == last_mail)
-  {
-    msg = last_mail_mime;
-  }
-  else
+//   if(stringp(contents) && args->mail == last_mail)
+//   {
+//     msg = last_mail_mime;
+//   }
+//   else
   {
     array r;
     r = catch {
@@ -1172,11 +1758,11 @@ string low_container_mail_body_parts( string tag, mapping args,
 	return "Illegal mime message: "+r[0]+"\n <pre>"+
 	  html_encode_string((string)contents)+"</pre>";
     }
-    if(stringp(contents))
-    {
-      last_mail = args->mail;
-      last_mail_mime = msg;
-    }
+//     if(stringp(contents))
+//     {
+//       last_mail = args->mail;
+//       last_mail_mime = msg;
+//     }
   }
 
   string html_part_format = (args["html-part-format"] || 
@@ -1337,7 +1923,9 @@ string tag_debug_import_mail_from_dir( string tag, mapping args,
 {
   if(!debug) return "Debug is not enabled!\n";
 
+#ifdef UIDPARANOIA
   if(!UID) return "";
+#endif
   Mailbox incoming = UID->get_incoming();
 
   string res = "Importing from "+args->dir+"<p>\n";
@@ -1371,10 +1959,30 @@ string container_get_mail( string tag, mapping args,
 			   string contents, object id )
 {
   string res;
-  Mail mid = clientlayer->get_cache_obj( clientlayer->Mail, args->mail );
+  Mail mid;
 
-  if(!mid) return "Unknown mail!\n";
+  while(!mid) 
+  {
+    mid =clientlayer->get_cache_obj( clientlayer->Mail, args->mail );
+    if(!mid)
+    {
+      string om = args->mail;
+      args->mail = tag_mail_next("",([]),id);
+      if(mid == "NOPE")
+      {
+	m_delete(id->variables->mail_id);
+	return "<p>No more mail<p>";
+      }
+      if(args->mail == om)
+      {
+	m_delete(id->variables,"mail_id");
+	return "<p>No more mail<p>";
+      }
+    }
+  }
+#ifdef UIDPARANOIA
   if(!UID) return "";
+#endif
   mid->set_flag( "read" );
 
   if(mid && mid->user == UID)
