@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.181 2000/06/28 20:58:41 jonasw Exp $
+// $Id: roxenlib.pike,v 1.182 2000/07/04 03:47:03 per Exp $
 
 //#pragma strict_types
 
@@ -940,9 +940,9 @@ string strftime(string fmt, int t)
   mapping lt = localtime(t);
   fmt=replace(fmt, "%%", "\0");
   array(string) a = fmt/"%";
-  string res = "";
+  string res = a[0];
 
-  foreach(a, string key) {
+  foreach(a[1..], string key) {
     if(key=="") continue;
     switch(key[0]) {
     case 'a':	// Abbreviated weekday name
