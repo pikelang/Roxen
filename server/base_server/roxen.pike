@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.868 2004/05/03 16:11:38 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.869 2004/05/03 16:29:26 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -2175,25 +2175,27 @@ Configuration find_configuration( string name )
 }
 
 static int last_hrtime = gethrtime(1)/100;
-static int clock_sequence = random(0x3fff);
+static int clock_sequence = random(0x4000);
 // Generate an uuid string.
 string new_uuid_string()
 {
   object rnd = Crypto.randomness.reasonably_random();
   string mac_address = rnd->read(6)|"\0\0\0\0\0\1";	// Multicast bit.
   int now = gethrtime(1)/100;
-  int seq = clock_sequence++;
   if (now != last_hrtime) {
-    seq = 0;
-    clock_sequence = 1;
+    clock_sequence = random(0x4000);
     last_hrtime = now;
   }
-  // 100's of ns between 1582-10-15 00:00:00.00 and 1970-01-01 00:00:00.00.
+  int seq = clock_sequence++;
+  // FIXME: Check if clock_sequence has wrapped during this @[now].
+
+  // Adjust @[now] with the number of 100ns intervals between
+  // 1582-10-15 00:00:00.00 GMT and 1970-01-01 00:00:00.00 GMT.
 #if 0
   now -= Calendar.parse("%Y-%M-%D %h:%m:%s.%f %z",
 			"1582-10-15 00:00:00.00 GMT")->unix_time() * 10000000;
 #else /* !0 */
-  now += 0x01b21dd213814000;
+  now += 0x01b21dd213814000;	// Same as above.
 #endif /* 0 */
   now &= 0x0fffffffffffffff;
   now |= 0x1000000000000000;	// DCE version 1.
