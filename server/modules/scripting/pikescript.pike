@@ -8,7 +8,7 @@
 
 // This is an extension module.
 
-constant cvs_version = "$Id: pikescript.pike,v 1.25 1998/05/06 22:18:09 per Exp $";
+constant cvs_version = "$Id: pikescript.pike,v 1.26 1998/05/26 19:45:48 grubba Exp $";
 constant thread_safe=1;
 
 mapping scripts=([]);
@@ -270,7 +270,7 @@ mapping handle_file_extension(object f, string e, object got)
   if (!functionp(fun = scripts[got->not_query])) {
     file=f->read(655565);   // fix this?
 #if constant(cpp)
-    file = cpp(file);
+    file = cpp(file, got->realfile);
 #endif
     array (function) ban = allocate(6, "function");
 #ifndef __NT__
