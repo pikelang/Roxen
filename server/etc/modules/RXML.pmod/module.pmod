@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.305 2003/01/15 21:23:40 mast Exp $
+// $Id: module.pmod,v 1.306 2003/01/20 12:37:31 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -73,9 +73,11 @@ static object roxen;
      mapping|object __object_marker = RoxenDebug.ObjectMarker (this_object())
 #  define MARK_OBJECT_ONLY \
      mapping|object __object_marker = RoxenDebug.ObjectMarker (0)
+#  define DO_IF_RXML_OBJ_DEBUG(X...) X
 #else
 #  define MARK_OBJECT ;
 #  define MARK_OBJECT_ONLY ;
+#  define DO_IF_RXML_OBJ_DEBUG(X...)
 #endif
 
 #ifdef OBJ_COUNT_DEBUG
@@ -323,6 +325,9 @@ class Tag
     frame->flags = this_object()->flags;
     frame->args = args;
     frame->content = zero_type (content) ? nil : content;
+#ifdef RXML_OBJ_DEBUG
+    frame->__object_marker->create (frame);
+#endif
     return frame;
   }
 
@@ -384,6 +389,7 @@ class Tag
     _frame->flags = this_object()->flags|FLAG_UNPARSED;			\
     _frame->args = _args;						\
     _frame->content = _content || "";					\
+    DO_IF_RXML_OBJ_DEBUG (_frame->__object_marker->create (_frame));	\
     DO_IF_DEBUG(							\
       if (_args && ([mapping] (mixed) _args)["_debug_"]) {		\
 	_frame->flags |= FLAG_DEBUG;					\
@@ -698,6 +704,12 @@ class TagSet
     else
       if (tag->plugin_name) tags[tag->name + "#" + tag->plugin_name] = tag;
       else tags[tag->name] = tag;
+    tag->tagset = this_object();
+#ifdef RXML_OBJ_DEBUG
+    // The object marker might not have gotten the proper name from
+    // Tag._sprintf so try to give it a better string now.
+    tag->__object_marker->create (tag);
+#endif
     changed();
   }
 
@@ -723,6 +735,11 @@ class TagSet
 	if (tag->plugin_name) tags[tag->name + "#" + tag->plugin_name] = tag;
 	else tags[tag->name] = tag;
       tag->tagset = this_object();
+#ifdef RXML_OBJ_DEBUG
+      // The object marker might not have gotten the proper name from
+      // Tag._sprintf so try to give it a better string now.
+      tag->__object_marker->create (tag);
+#endif
     }
     changed();
   }
@@ -7573,8 +7590,13 @@ class PCode
 
       if (frame_flags != frame->flags) {
 	// Must copy the stored frame if we change the flags.
-	if (exec[length]->is_RXML_Tag)
-	  frame = exec[length]->Frame(), frame->tag = exec[length];
+	if (exec[length]->is_RXML_Tag) {
+	  frame = exec[length]->Frame();
+	  frame->tag = exec[length];
+#ifdef RXML_OBJ_DEBUG
+	  frame->__object_marker->create (frame);
+#endif
+	}
 	else
 	  exec[length] = frame = exec[length]->_clone_empty();
 	frame->_restore (exec[length + 2]);
@@ -7755,8 +7777,13 @@ class PCode
 		  exec[pos + 1] = 0;
 		}
 		else {
-		  if (item->is_RXML_Tag)
-		    frame = item->Frame(), frame->tag = item;
+		  if (item->is_RXML_Tag) {
+		    frame = item->Frame();
+		    frame->tag = item;
+#ifdef RXML_OBJ_DEBUG
+		    frame->__object_marker->create (frame);
+#endif
+		  }
 		  else frame = item->_clone_empty();
 		  frame->_restore (exec[pos + 2]);
 		}
@@ -8037,8 +8064,13 @@ class PCode
       mixed item = exec[pos];
       if (objectp (item) && item->is_RXML_p_code_frame) {
 	Frame frame;
-	if (item->is_RXML_Tag)
-	  exec[pos + 1] = frame = item->Frame(), frame->tag = item;
+	if (item->is_RXML_Tag) {
+	  exec[pos + 1] = frame = item->Frame();
+	  frame->tag = item;
+#ifdef RXML_OBJ_DEBUG
+	  frame->__object_marker->create (frame);
+#endif
+	}
 	else
 	  exec[pos + 1] = frame = item->_clone_empty();
 	frame->_restore (exec[pos + 2]);
@@ -8151,6 +8183,9 @@ class PCodec (Configuration default_config, int check_tag_set_hash)
 	  [string ignored, Tag tag, mixed saved] = what;
 	  Frame frame = tag->Frame();
 	  frame->tag = tag;
+#ifdef RXML_OBJ_DEBUG
+	  frame->__object_marker->create (frame);
+#endif
 	  frame->_restore (saved);
 	  ENCODE_DEBUG_RETURN (frame);
 	}
