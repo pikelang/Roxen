@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.52 2000/01/26 00:44:17 kuntri Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.53 2000/01/27 01:57:21 kuntri Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -166,7 +166,7 @@ constant tagdoc=(["roxen_automatic_charset_variable":#"<desc tag>
 "catch":#"<desc cont>
  Evaluates the RXML code, and, if nothing goes wrong, returns the
  parsed contents. If something does go wrong, the error message is
- returned instead. See also <tag><ref type=tag>throw</ref></tag>.
+ returned instead. See also <tag><ref type=cont>throw</ref></tag>.
 </desc>",
 
 "configimage":#"<desc tag>
@@ -677,7 +677,7 @@ constant tagdoc=(["roxen_automatic_charset_variable":#"<desc tag>
  Arguments prefixed with \"add\" or \"drop\" are treated as prestate
  toggles, which are added or removed, respectively, from the current
  set of prestates in the URL in the redirect header (see also <tag
- <ref type=tag>apre</ref></tag>). Note that this only works when the
+ <ref type=cont>apre</ref></tag>). Note that this only works when the
  to=... URL is absolute, i.e. begins with a \"/\", otherwise these
  state toggles have no effect.",
 
@@ -863,7 +863,7 @@ Adds a cookie named \"name\" with the value \"value\".
 
  If persistent is specified; the cookie will be persistent until year
  2038, otherwise, the specified delays are used, just as for <tag><ref
- type=tag>expire-time</ref></tag> (<expire-time help>).
+ type=tag>expire-time</ref></tag>.
 
  Note that the change of a cookie will not take effect until the
  next page load.",
