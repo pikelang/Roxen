@@ -11,11 +11,7 @@
 *.png binary
 *.ppm binary
 *.rc eol=crlf
-bi binary
-bn binary
 map binary
-ni binary
-nn binary
 
 # Handling of foreign (ie CVS) identifiers.
 #
