@@ -4,7 +4,7 @@
  * generate any directory listings, instead only using index files.
  */
 
-constant cvs_version = "$Id: indexfiles.pike,v 1.8 1999/01/14 00:30:54 grubba Exp $";
+constant cvs_version = "$Id: indexfiles.pike,v 1.9 1999/01/14 00:51:37 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -44,7 +44,7 @@ mapping parse_directory(object id)
   // Redirect to an url with a '/' at the end, to make relative links
   // work as expected.
   if(id->not_query[-1] != '/') {
-    string new_query = id->not_query + "/" +
+    string new_query = http_encode_string(id->not_query) + "/" +
       (id->query?("?" + id->query):"");
     return http_redirect(new_query, id);
   }
