@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.24 2002/07/23 13:16:44 mast Exp $
+ * $Id: debug_info.pike,v 1.25 2003/01/15 21:31:09 mast Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -178,7 +178,6 @@ string find_class( string f, int l )
 mixed page_0( object id )
 {
   mapping last_usage;
-  gc();
   last_usage = roxen->query_var("__memory_usage");
   if(!last_usage)
   {
@@ -186,9 +185,62 @@ mixed page_0( object id )
     roxen->set_var( "__memory_usage", last_usage );
   }
 
-  string res="";
-  string first="";
+  mapping(string|program:array) allobj = ([]);
+  mapping(string|program:int) numobjs = ([]);
+
+  // Collect data. Disable threads to avoid inconsistencies. Note that
+  // in Pike 7.4 and earlier, we can't stop automatic gc calls in here
+  // which would mess things up.
+  object threads_disabled = _disable_threads();
+
+#if constant (Pike.gc_parameters)
+  int orig_enabled = Pike.gc_parameters()->enabled;
+  Pike.gc_parameters ((["enabled": 0]));
+#endif
+
+  int gc_freed = id->real_variables->do_gc && gc();
+
   mixed foo = _memory_usage();
+  object start = this_object();
+  int walked_objects = 0;
+  for (object o = start;
+       objectp (o) ||		// It's a normal object.
+       (intp (o) && o) ||	// It's a bignum object.
+       zero_type (o);		// It's a destructed object.
+       o = _prev (o)) {
+    string|program p = object_program (o);
+    p = p ? Program.defined (p) || p : "    ";
+    if (++numobjs[p] <= 50) allobj[p] += ({o});
+    walked_objects++;
+  }
+  start = _next (start);
+  for (object o = start; objectp (o) || (intp (o) && o) || zero_type (o); o = _next (o)) {
+    string|program p = object_program (o);
+    p = p ? Program.defined (p) || p : "    ";
+    if (++numobjs[p] <= 50) allobj[p] += ({o});
+    walked_objects++;
+  }
+  int num_objs_afterwards = _memory_usage()->num_objects;
+
+#if constant (Pike.gc_parameters)
+  Pike.gc_parameters ((["enabled": orig_enabled]));
+#endif
+  mapping gc_status = _gc_status();
+  threads_disabled = 0;
+
+  string res = "<p>";
+  if (id->real_variables->do_gc)
+    res += sprintf (LOCALE (0, "The garbage collector freed %d of %d things (%f%%).\n"),
+		    gc_freed, gc_freed + num_objs_afterwards,
+		    (float) gc_freed / (gc_freed + num_objs_afterwards) * 100);
+  else
+    res += sprintf (LOCALE (0, "%d seconds since last garbage collection.\n"),
+		    time() - gc_status->last_gc);
+  res += "<br /><input type='checkbox' name='do_gc' value='yes'" +
+    (id->real_variables->do_gc ? " checked='checked'" : "") +
+    " /> " + LOCALE (0, "Run the garbage collector first.") + "</p>\n";
+
+  string first="";
   foo->total_usage = 0;
   foo->num_total = 0;
   array ind = sort(indices(foo));
@@ -224,7 +276,6 @@ mixed page_0( object id )
     }
   roxen->set_var("__memory_usage", foo);
 
-
   mapping bar = roxen->query_var( "__num_clones" )||([]);
 
 #define HCELL(thargs, color, text)					\
@@ -252,35 +303,22 @@ mixed page_0( object id )
       TCELL ("align='right'", entry[0], entry[5]) + "</tr>\n";
   res += "</table></p>\n";
 
-  mapping(string|program:array) allobj = ([]);
-  mapping(string|program:int) numobjs = ([]);
-
-  // Go through all objects. Disable threads to avoid changes in the
-  // object linked list. Note that a gc call in here will mess things
-  // up, and we can't protect against that. It's however unlikely
-  // since it's done explicitly above.
-  object threads_disabled = _disable_threads();
-  object start = this_object();
-  for (object o = start;
-       objectp (o) ||		// It's a normal object.
-       (intp (o) && o) ||	// It's a bignum object.
-       zero_type (o);		// It's a destructed object.
-       o = _prev (o))
-    if (string|program p = object_program (o)) {
-      p = Program.defined (p) || p;
-      if (++numobjs[p] <= 50) allobj[p] += ({o});
-    }
-  start = _next (start);
-  for (object o = start; objectp (o) || (intp (o) && o) || zero_type (o); o = _next (o))
-    if (string|program p = object_program (o)) {
-      p = Program.defined (p) || p;
-      if (++numobjs[p] <= 50) allobj[p] += ({o});
-    }
-  threads_disabled = 0;
+  if (walked_objects != foo->num_objects)
+    if (num_objs_afterwards != foo->num_objects)
+      res += "<p><font color='&usr.warncolor;'>Warning:</font> "
+	"Number of objects changed during object walkthrough "
+	"(probably due to automatic gc call) - "
+	"the list below is not complete.</p>\n";
+    else
+      res += "<p><font color='&usr.warncolor;'>Warning:</font> "
+	"The object walkthrough only visited " + walked_objects +
+	" of " + foo->num_objects + " objects - "
+	"the list below is not complete.</p>\n";
 
   foreach (values (allobj), array objs)
     for (int i = 0; i < sizeof (objs); i++)
-      objs[i] = sprintf ("%O", objs[i]);
+      objs[i] = zero_type (objs[i]) ?
+	"<destructed object>" : sprintf ("%O", objs[i]);
 
   table = (array) allobj;
 
@@ -363,21 +401,36 @@ mixed page_0( object id )
       TCELL ("align='right'", entry[0], entry[4]) + "</tr>\n";
   res += "</table></p>\n";
 
-#if efun(_num_dest_objects)
-  res += ("Number of destructed objects: " + _num_dest_objects() +"<br />\n");
-#endif
+  if (gc_status->non_gc_time)
+    gc_status->gc_time_ratio = (float) gc_status->gc_time / gc_status->non_gc_time;
+
+  res += "<p><b>" + LOCALE (0,"Status from last garbage collection") + "</b><br />\n"
+    "<table border='0' cellpadding='0'>\n";
+  foreach (sort (indices (gc_status)), string field)
+    res += "<tr>" +
+      TCELL ("align='left'", "&usr.fgcolor;",
+	     Roxen.html_encode_string (field)) +
+      TCELL ("align='left'", "&usr.fgcolor;",
+	     Roxen.html_encode_string (gc_status[field])) +
+      "</tr>\n";
+  res += "</table></p>\n";
 
   return res;
 }
 
 mixed parse( RequestID id )
 {
-  return "<p><cf-refresh/></p>\n" +
+  return
+    "<input type='hidden' name='action' value='debug_info.pike' />\n"
+    "<p><submit-gbutton name='refresh'> "
+    "<translate id='520'>Refresh</translate> "// <cf-refresh> doesn't submit.
+    "</submit-gbutton>\n"
+    "<cf-cancel href='?class=&form.class;'/>\n" +
     page_0( id )
 #if 0
 #if constant( get_profiling_info )
          + page_1( id )
 #endif
 #endif
-    + "<p><cf-ok/></p>";
+    ;
 }
