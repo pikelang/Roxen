@@ -1,13 +1,13 @@
 /*
- * $Id: problems.pike,v 1.12 1998/11/18 04:54:04 per Exp $
+ * $Id: problems.pike,v 1.13 1998/11/22 17:08:45 per Exp $
  */
 
 inherit "wizard";
 inherit "configlocale";
 
-constant name= "Maintenance//Check your Roxen configuration for problems...";
-constant doc = "Perform several sanity-checks of your configuration.";
-constant wizard_name = "Check configuration";
+constant name="Maintenance//Check your Roxen configuration for problems...";
+constant doc="Perform several sanity-checks of your configuration.";
+constant wizard_name="Check configuration";
 
 constant name_svenska="Underhåll//Leta fel i dina roxeninställingar...";
 constant doc_svenska="Utför flera olika kontroller av dina roxeninställingar.";

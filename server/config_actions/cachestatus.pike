@@ -1,23 +1,23 @@
 /*
- * $Id: cachestatus.pike,v 1.4 1998/11/18 04:53:58 per Exp $
+ * $Id: cachestatus.pike,v 1.5 1998/11/22 17:08:43 per Exp $
  */
 
 inherit "wizard";
 inherit "configlocale";
 
 string name_svenska = "Cache//Cachestatus";
-string name_standard = "Cache//Cache status";
+string name = "Cache//Cache status";
 
 string doc_svenska  = "Visa cachesystemts träffratio och minnesanvändning";
-constant doc_standard = ("Show the hitrate of the caching system.");
+constant doc = ("Show the hitrate of the caching system.");
 
 constant more=1;
 
 constant ok_label_svenska =     " Uppdatera ";
 constant cancel_label_svenska = " Klar ";
 
-constant ok_label_standard = " Refresh ";
-constant cancel_label_standard = " Done ";
+constant ok_label = " Refresh ";
+constant cancel_label = " Done ";
 
 mixed page_0(object id, object mc)
 {

@@ -5,7 +5,7 @@
 // Several modifications by Francesco Chemolli.
 
 
-constant cvs_version = "$Id: obox.pike,v 1.8 1998/10/18 00:25:26 mast Exp $";
+constant cvs_version = "$Id: obox.pike,v 1.9 1998/11/22 17:02:50 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -169,10 +169,19 @@ array register_module()
 {
   return ({
     MODULE_PARSER,
-      "Outlined box",
+    ([
+      "standard":"Outlined box",
+      "svenska":"Ramlåda",
+    ]),
+    ([ 
+      "standard":
       "This is a container tag making outlined boxes.<p>"
-      "<tt>&lt;obox help&gt;&lt;/obox&gt;</tt> gives help.\n\n<p>"+doc(),
-      0, 1 });
+      "<tt>&lt;obox help&gt;&lt;/obox&gt;</tt> gives help.\n\n "
+      "<obox title=example>contents</obox>",
+      "svenska":
+      "<tt>&lt;obox help&gt;&lt;/obox&gt;</tt> är en tag som ramar "
+      "in det som står i den. <obox title=exempel>innehåll</obox>",
+    ]), 0, 1 });
 }
 
 void start(int num, object configuration)

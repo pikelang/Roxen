@@ -1,13 +1,13 @@
 /*
- * $Id: flush.pike,v 1.7 1998/11/18 04:54:02 per Exp $
+ * $Id: flush.pike,v 1.8 1998/11/22 17:08:44 per Exp $
  */
 
 inherit "wizard";
 inherit "configlocale";
-constant name_standard= "Cache//Flush caches...";
+constant name= "Cache//Flush caches...";
 constant name_svenska= "Cache//Töm cachear...";
 
-constant doc_standard = ("Flush a cache or two");
+constant doc = ("Flush a cache or two");
 constant doc_svenska = ("Töm en cache eller två");
 
 mixed page_0(object id, object mc)
