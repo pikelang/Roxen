@@ -25,13 +25,11 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.46 2000/04/06 07:34:41 wing Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.47 2000/05/01 06:17:36 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
 inherit "module";
-inherit "roxenlib";
-
 
 roxen.ImageCache  button_cache;
 
@@ -43,44 +41,37 @@ constant module_doc  =
 
 TAGDOCUMENTATION
 #ifdef manual
-constant tagdoc=(["gbutton":"","gbutton-url":""]);
-/*
-	     "<table border=0>"
+constant tagdoc=(["gbutton":#"<desc cont><short>Generates graphical buttons</short></desc>
 
-	     "<tr><td><b>bgcolor</b></td><td>Background color inside and "
-	     "outside button</td></tr>"
+<attr name=bgcolor value=color>Background color inside and outside button.</attr>
 
-	     "<tr><td><b>bordercolor</b></td><td>Button border color</td></tr>"
+<attr name=bordercolor value=color>Button border color</attr>
 
-	     "<tr><td><b>textcolor</b></td><td>Button text color</td></tr>"
+<attr name=textcolor value=color>Button text color</attr>
 
-	     "<tr><td><b>href</b></td><td>Button URL</td></tr>"
+<attr name=href value=url>Button URL</attr>
 
-	     "<tr><td><b>alt</b></td><td>Alternative button alt text</td></tr>"
+<attr name=alt value=string>Alternative button alt text</attr>
 
-	     "<tr><td><b>border</b></td><td>Image border</td></tr>"
+<attr name=border value=number>Image border</attr>
 
-	     "<tr><td><b>state</b></td><td>Set to <tt>enabled</tt> or "
-	     "<tt>disabled</tt> to select button state</td></tr>"
+<attr name=state value=enabled|disabled>Set to enabled or disabled to select button state.</attr>
 
-	     "<tr><td><b>textstyle</b></td><td>Set to <tt>normal</tt> or "
-	     "<tt>condensed</tt> to alter text style.</td></tr>"
+<attr name=textstyle value=normal|condensed>Set to normal or condensed to alter text style.</attr>
 
-	     "<tr><td><b>icon_src</b></td><td>Icon reference</td></tr>"
+<attr name=icon_src value=path>Icon reference</attr>
 
-	     "<tr><td><b>icon_data</b></td><td>Inline icon data</td></tr>"
+<attr name=icon_data value=string>Inline icon data</attr>
 
-	     "<tr><td><b>align</b></td><td>Text alignment: "
-	     "<tt>left|center|right</tt></td></tr>"
+<attr name=align value=left|center|right>Text alignment</attr>
 
-	     "<tr><td><b>align_icon</b></td><td>Icon alignment: "
-	     "<tt>left|center_before|center_after|right</tt></td></tr>"
+<attr name=align_icon value=left|center_before|center_after|right>Icon alignment.
+	     There are some alignment restrictions: when text alignment is 
+	     either left or right, icons must also be 
+	     aligned left or right.</attr>
+",
 
-	     "</table><p>"
-	     "There are some alignment restrictions: when text alignment is "
-	     "either <tt>left</tt> or <tt>right</tt>, icons must also be "
-	     "aligned <tt>left</tt> or <tt>right</tt>."
- */
+"gbutton-url":""]);
 #endif
 
 function TIMER( function f )
@@ -479,7 +470,7 @@ class ButtonFrame {
   {
     string fi = (args["frame-image"]||id->misc->defines["gbutton-frame-image"]);
     if( fi )
-      fi = fix_relative( fi, id );
+      fi = Roxen.fix_relative( fi, id );
     mapping new_args = ([
       "pagebg" :parse_color(args->pagebgcolor ||
 			    id->misc->defines->theme_bgcolor ||
@@ -498,7 +489,7 @@ class ButtonFrame {
       "al"  : args->align || "left",                       //  Text alignment
       "dim" : (args->dim ||                                 //  Button dimming
 	       (< "dim", "disabled" >)[lower_case(args->state || "")]),
-      "icn" : args->icon_src && fix_relative(args->icon_src, id),  // Icon URL
+      "icn" : args->icon_src && Roxen.fix_relative(args->icon_src, id),  // Icon URL
       "icd" : args->icon_data,                             //  Inline icon data
       "ica" : args->align_icon || "left",                  //  Icon alignment
       "font": (args->font||id->misc->defines->font||
@@ -563,7 +554,7 @@ class TagGButtom {
 	img_attrs->height = size->ysize;
       }
 
-      result = make_tag("img", img_attrs);
+      result = Roxen.make_tag("img", img_attrs);
 
       //  Make button clickable if not dimmed
       if(args->href && !new_args->dim)
@@ -575,7 +566,7 @@ class TagGButtom {
 		       "onmouseover/onkeypress/onkeyup/onkeydown"/"/", lower_case(arg)))
 	    a_attrs[arg] = args[arg];
 
-	result = make_container("a", a_attrs, result);
+	result = Roxen.make_container("a", a_attrs, result);
       }
 
       return 0;
