@@ -217,8 +217,8 @@ spotless:  clean
 distribute:	spotless
 	@(cd extern; $(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" distribute)
 
-run_autoconf:
-	@(cd $(SRCDIR); pike/$(PIKEVERSION)/src/run_autoconf .)
+run_autoconfig:
+	@(cd $(SRCDIR); pike/$(PIKEVERSION)/src/run_autoconfig .)
 
 weak_cleanup:
 	@for f in `find $(SRCDIR) -type f -name '*~' -print` \
@@ -275,7 +275,7 @@ ChangeLog.rxml.gz:
 	cd $(SRCDIR); pike tools/make_changelog.pike --rxml |gzip -9 > ChangeLog.rxml.gz
 
 
-pre_dist: bump_version weak_cleanup run_autoconf depend
+pre_dist: bump_version weak_cleanup run_autoconfig depend
 	@(cd pike; $(MAKE) pre_dist)
 
 dist: ChangeLog.gz ChangeLog.rxml.gz
