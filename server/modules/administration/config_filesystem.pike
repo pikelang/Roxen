@@ -14,7 +14,7 @@ constant module_doc  = "This filesystem serves the administration interface";
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.127 2004/06/15 19:54:54 _cvs_stephen Exp $";
+  "$Id: config_filesystem.pike,v 1.128 2004/06/15 22:11:01 _cvs_stephen Exp $";
 
 constant path = "admin_interface/";
 
@@ -394,13 +394,13 @@ void start(int n, Configuration cfg)
 	  DBManager.create_db( "docs", 0, 1 );
 	  DBManager.is_module_db( this_module(), "docs", "All documentation");
 	  foreach( core->configurations, Configuration c )
-	    DBManager.set_permission( "docs", c, DBManager.WRITE );
+	    DBManager.set_permission( "docs", c, DBManager.READ );
 	}
 	DBManager.restore( "docs", getcwd()+"/data/", "docs", ({ "docs" }) );
 	DBManager.set_permission( "docs", cfg, DBManager.WRITE );
 	DBManager.get( "docs", cfg )->
 	  query("REPLACE docs set name='_version', contents='"+roxen_version()+"'");
-	DBManager.set_permission( "docs", cfg, DBManager.WRITE );
+	DBManager.set_permission( "docs", cfg, DBManager.READ );
 	docs = DBManager.get( "docs", cfg );
       }
       else

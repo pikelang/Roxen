@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: cache.pike,v 1.92 2004/06/15 19:54:56 _cvs_stephen Exp $
+// $Id: cache.pike,v 1.93 2004/06/15 22:11:03 _cvs_stephen Exp $
 
 // #pragma strict_types
 

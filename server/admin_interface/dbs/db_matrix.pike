@@ -17,6 +17,10 @@ string|mapping parse( RequestID id )
 
   if( id->variables->db  && !view_mode )
   {
+    if( id->variables->set_read )
+      DBManager.set_permission( id->variables->db,
+                                core.find_configuration(id->variables->set_read),
+                                DBManager.READ );
     if( id->variables->set_write )
       DBManager.set_permission( id->variables->db,
                                 core.find_configuration(id->variables->set_write),
@@ -136,6 +140,7 @@ string|mapping parse( RequestID id )
 		     Roxen.http_encode_string(db))
 
       PERM(NONE,"N","none");
+      PERM(READ,"R","read");
       PERM(WRITE,"W","write");
       rres[DBManager.db_group(db)] += "</nobr></td>";
     }

@@ -1,7 +1,7 @@
 // This file is part of ChiliMoon.
 // Copyright © 2001, Roxen IS.
 
-constant cvs_version="$Id: replicate.pike,v 1.19 2004/06/15 19:05:32 _cvs_stephen Exp $";
+constant cvs_version="$Id: replicate.pike,v 1.20 2004/06/15 22:11:03 _cvs_stephen Exp $";
 
 #if constant(WS_REPLICATE)
 #define QUERY(X,Y...)    get_db()->query(X,Y)

@@ -1,7 +1,7 @@
 // This is a ChiliMoon module. Copyright © 1997-2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.106 2004/06/15 19:54:55 _cvs_stephen Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.107 2004/06/15 22:11:02 _cvs_stephen Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -139,6 +139,7 @@ array|object do_sql_query(mapping args, RequestID id,
   Sql.Sql con;
   array(mapping(string:mixed))|object result;
   mixed error;
+  int ro = !!args["read-only"];
 
   mapping bindings;
   
@@ -158,13 +159,13 @@ array|object do_sql_query(mapping args, RequestID id,
     if( !module )
       RXML.run_error( "Cannot find the module" + args->module );
 
-    if( error = catch( con = module->get_my_sql() ) )
+    if( error = catch( con = module->get_my_sql( ro ) ) )
       RXML.run_error( "Couldn't connect to SQL server: " +
 		      describe_error(error) + "\n");
       
     if( catch
     {
-      string f=(big_query?"big_query":"query");
+      string f=(big_query?"big_query":"query")+(ro?"_ro":"");
       result = bindings ?  
 	module["sql_"+f]( args->query, bindings ) :
 	module["sql_"+f]( args->query );
@@ -180,7 +181,7 @@ array|object do_sql_query(mapping args, RequestID id,
   {
     error = catch(con = DBManager.get( host||args->db||
 				       default_db,
-				       my_configuration()));
+				       my_configuration(), ro));
     if( !con )
       RXML.run_error( "Couldn't connect to SQL server"+
 		      (error?": "+ describe_error (error) :"")+"\n" );
