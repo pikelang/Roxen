@@ -1,7 +1,7 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
 
-string cvs_version = "$Id: http.pike,v 1.19 1997/02/27 12:06:17 marcus Exp $";
+string cvs_version = "$Id: http.pike,v 1.20 1997/03/02 09:52:44 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 inherit "roxenlib";
@@ -621,7 +621,7 @@ static void handle_request( )
 #ifndef SPEED_MAX
   remove_call_out(timeout);
 #endif
-  
+
   my_fd->set_read_callback(0);
   my_fd->set_close_callback(0); 
 
@@ -640,6 +640,7 @@ static void handle_request( )
     if(err==-1) return;
     internal_error(err);
   }
+
   if(!mappingp(file))
   {
     if(method != "GET" && method != "HEAD" && method != "POST")
@@ -768,7 +769,8 @@ static void handle_request( )
 
     if(conf)
       conf->sent+=(file->len>0 ? file->len : 1000);
-    
+
+
     if(!file->data &&
        (file->len<=0 || (file->len > 30000))
 #ifdef KEEP_CONNECTION_ALIVE
@@ -783,14 +785,14 @@ static void handle_request( )
       destruct(thiso);
       return;
     }
-  
+
     if(file->len < 3000 &&
 #ifdef KEEP_CONNECTION_ALIVE
        !keep_alive &&
 #endif
        file->len >= 0)
     {
-//    perror("fo\n");
+
       if(file->data)
 	head_string += file->data;
       if(file->file) 
@@ -800,12 +802,10 @@ static void handle_request( )
       }
       if(conf) conf->log(file, thiso);
       end(head_string);
-//      perror("end\n");
       return;
     }
   }
 
-// perror("Last case...\n");
   if(head_string) send(head_string);
   if(file->data)  send(file->data);
   if(file->file)  send(file->file);

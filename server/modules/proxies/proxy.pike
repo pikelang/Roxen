@@ -4,7 +4,7 @@
 // limit of proxy connections/second is somewhere around 70% of normal
 // requests, but there is no real reason for them to take longer.
 
-string cvs_version = "$Id: proxy.pike,v 1.12 1997/02/14 03:43:02 per Exp $";
+string cvs_version = "$Id: proxy.pike,v 1.13 1997/03/02 09:52:43 per Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -25,7 +25,6 @@ Content-type: text/html\r\n\
 <hr>\
 <font size=-2><a href=http://roxen.com/>Roxen Challenger</a></font>"
 
-import Regexp;
 import Stdio;
 import Array;
 

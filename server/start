@@ -1,64 +1,44 @@
 #!/bin/sh
 
-VERSION=116
-BETA=1
+VERSION=201; BETA=.a;
 
 # Can be set with '--config-dir=DIR'
 DIR=../configurations/
 LOGDIR=../logs/
 FILES="default"
 
-ulpc=pike
-if [ -x bin/pike ] ; then ulpc=bin/pike; fi
-
 rotate () {
   b=5;
   for a in 4 3 2 1 ; do mv -f $1.$a $1.$b 2> /dev/null;  b=$a; done
 }
 
-# Change the permissions of the configuration files so that they match
-# those of the user Roxen runs as when it has started, not the one Roxen
-# is started as.
-
-fixperms() {
- uline=`./configvar --query --config-dir=$DIR --region=Variables User`
-
- uid=`echo $uline | sed -e 's![^"]*"!!' -e 's/:.*//'`
- gid=`echo $uline | sed -e 's![^:]*:!!' -e 's/".*//'` 
-
- if [ ! -z "$gid" ] ; then find $DIR $LOGDIR -print | xargs chgrp $gid; fi
- if [ ! -z "$uid" ] ; then find $DIR $LOGDIR -print | xargs chown $uid; fi
-
- find $DIR -print | xargs chmod og-rw
- find $DIR -print | xargs chmod u+rw
-}
-
 
 start_roxen() {
-  args="-DROXEN $DEFINES $DEBUG base_server/roxenloader --config-dir=$DIR --start-script-pid=$$"
-  echo Executing $ulpc $args $@
-  $ulpc $args $@
+  PIKE=pike
+  if [ -x bin/pike ] ; then PIKE=bin/pike; fi
+  export PIKE
+  args="-DROXEN $DEFINES $DEBUG base_server/roxenloader.pike --config-dir=$DIR"
+tput 'bold' 2>/dev/null
+  echo $$: Executing $PIKE $args $@
+tput 'rmso' 2>/dev/null
+  $PIKE $args $@
 }
-####### END PREAMBLE
-
 
 ## Parse all arguments.
-## GNU-style, long options only.
-while [ ! c"$1" = "c" ] ; do
+## GNU-style, long options only, except for -D, simply passed on.
+parse_args() {
+ while [ ! c"$1" = "c" ] ; do
   case $1 in
-# Used by the 'install' script
   -D*)
    DEFINES="$DEFINES $1"
   ;;
-  --no-chown) 
-   NOCHOWN=TRUE
-  ;;
+# Used by the 'install' script
   --log-dir=*)
    LOGDIR=`echo $1 | sed -e 's/--log-dir=//'`
   ;;
   --config-dir=*)
    DIR=`echo $1 | sed -e 's/--config-dir=//'`
-   FILES=`echo $1 | sed -e 's/--config-dir=//' -e 's/..//' -e 's./..g' -e 's.-..g'`
+   FILES=`echo $1 | sed -e's/--config-dir=//' -e's/.//g' -e's./..g' -e 's.-..g'`
   ;;
   '--debug')
     debug=1
@@ -67,37 +47,48 @@ while [ ! c"$1" = "c" ] ; do
     once=1
   ;;
   '--version')
-    if [ x$BETA = x1 ] ; then
-      more='ß'
-    else
-      more='.'
-    fi
-    echo `expr $VERSION / 100`$more`expr $VERSION % 100`
+    echo 1.`expr $VERSION / 100`$BETA`expr $VERSION % 100`
     exit 0
   ;;
   '--help'|'-?')
-    echo Syntax: $0 '[--version] [--help] [--config-dir=DIR] [--pid-file=FILE] [--root=CHROOT] [--no-chown] [--log-dir=DIR]' 
-    echo This command will start the Roxen server.
-    echo If the configuration dir is set, a different set of debuglogfiles
-    echo will be used.
+  tput 'bold' 2>/dev/null
+  cat << EOF
+Syntax: $0 [--version] [--config-dir=DIR] [--log-dir=DIR] [-DDEFINE]
+This command will start the Roxen server.
+If the configuration dir is set, a different set of debuglogfiles
+will be used.
+
+The environment variable ROXEN_ARGS can be used to specify
+the default arguments.
+EOF
+    tput 'rmso' 2>/dev/null
     exit 0
    ;;
   *)
     pass="$pass $1"
   esac
   shift
-done
+ done
+}
 
-if [ ! X$pass = "X" ] ; then set $pass ;fi
+####### END PREAMBLE
+
+parse_args $@
+
+if [ ! "X$ROXEN_ARGS" = "X" ]; then
+  echo $$: Using $ROXEN_ARGS from ROXEN_ARGS.
+  parse_args $ROXEN_ARGS
+fi
+
+if [ ! "X$pass" = "X" ] ; then set $pass ;fi
 
 
-echo Starting the Roxen Challenger World Wide Web server.
+tput 'clear' 2>/dev/null
+tput 'bold' 2>/dev/null
+echo $$: Starting the Roxen Challenger World Wide Web server.
 
 ./mkdir -p $LOGDIR/debug/
 
-if [ "$NOCHOWN" != "TRUE" ]; then 
-  fixperms 2>/dev/null
-fi
 if [ -z "$debug" ] ; then
   DEBUG="";
 else
@@ -110,7 +101,7 @@ if [ -z "$once" ] ; then
    rm $sdfile
    if [ -f "$sdfile" ] ; then
      cat << oo
- WARNING:
+WARNING:
 A shutdown file '('$sdfile')' is present, and the file cannot be
 removed by this script.
 
@@ -119,15 +110,17 @@ the future.
 
 The file:
 oo
-   ls -l $sdfile
+    ls -l $sdfile
     noshutdown="yes"
   else
     noshutdown=""
   fi
   
-  echo "Server restart at `date`"
+  echo $$: "Server restart at `date`"
   rotate $LOGDIR/debug/$FILES
+
   start_roxen
+
   if [ -z "$noshutdown" ] ; then 
     if [ -f "$sdfile" ] ; then
 
@@ -140,10 +133,10 @@ oo
 # shutdown file, but since it is extremely unlikely that two
 # start-scripts get the same PID, this is not done.
 
-      echo Server shutdown file detected. Shutting down
+      echo $$: Server shutdown file detected. Shutting down
       rm "$sdfile"
       if [ -f "$sdfile" ] ; then
-        echo "Failed to remove '"$sdfile"'. This could be a problem"
+        echo $$: "Failed to remove '"$sdfile"'. This could be a problem"
         exit 0
       else
         exit 0
@@ -152,14 +145,16 @@ oo
   fi
 done
     
-echo Not Reached "(famous last words)"
+echo $$: Not Reached "(famous last words)"
 
 ) < /dev/null > $LOGDIR/debug/start_$FILES.output 2>&1&
 cat << oo
 Using configuration from $DIR, storing the debug log in $LOGDIR/debug/$FILES.1
 You can use the configuration interface in the server to get debug info.
 oo
+tput 'rmso' 2>/dev/null
+
 else
-  echo "Server restart at `date`"
+  echo $$: "Server restart at `date`"
   start_roxen
 fi

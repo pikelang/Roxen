@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.41 1997/02/27 19:46:01 per Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.42 1997/03/02 09:52:41 per Exp $";
 #define IN_ROXEN
 #ifdef THREADS
 #include <fifo.h>
@@ -889,7 +889,7 @@ mapping shutdown()
 	    "type":"text/html" ]);
 } 
 
-private string docurl; 
+private string docurl;
 
 // I will remove this in a future version of roxen.
 private program __p;
@@ -903,10 +903,13 @@ string filename(object o)
 
 object load(string s)   // Should perhaps be renamed to 'reload'. 
 {
+//  perror("Module is "+s+"?");
   if(file_stat(s+".pike"))
   {
+//    perror("Yes, compile "+s+"?");
     if(__p=compile_file(s+".pike"))
     {
+//      perror("Yes.");
       my_loaded[__p]=s+".pike";
       return __p();
     } else
@@ -935,11 +938,11 @@ array(string) expand_dir(string d)
   array(string) dirs=({d});
 
 //perror("Expand dir "+d+"\n");
-  
-  foreach((get_dir(d) || ({})) - ({"CVS"}) , nd) 
-    if(file_stat(d+nd)[1]==-2)
-      dirs+=expand_dir(d+nd+"/");
-
+  catch {
+    foreach((get_dir(d) || ({})) - ({"CVS"}) , nd) 
+      if(file_stat(d+nd)[1]==-2)
+	dirs+=expand_dir(d+nd+"/");
+  }; // This catch is needed....
   return dirs;
 }
 
@@ -967,8 +970,8 @@ object load_from_dirs(array dirs, string f)
 void create()
 {
   add_constant("roxen", this_object());
-  (object)"color";
-  (object)"fonts";
+  (object)"color.pike";
+  (object)"fonts,pike";
   Configuration = (program)"configuration";
 }
 
