@@ -69,7 +69,10 @@ function clearToPopup(popup)
   clearHideTimers(popups.length - 1);
   while(popups.length > 0 && popup != popups[popups.length - 1].name)
   {
-    hide(popups[popups.length - 1].name);
+    var p = popups[popups.length - 1];
+    hide(p.name);
+    if (p.properties.hide_callback)
+      p.properties.hide_callback(p.name);
     popups.length--;
   }
 }
@@ -200,16 +203,6 @@ function PopupProperties(ox, oy, absx, absy)
     function(x) { this.ox = x; this.absx = true; return this; };
   this.setPageY =
     function(y) { this.oy = y; this.absy = true; return this; };
-
-  // Modify the offsets
-    if(isNav5) {
-      this.ox += 1;
-      this.oy += 1;
-    }
-  if(isMac) {
-    this.ox += 10;
-    this.oy += 15;
-  }
 }
 
 // Default popup properties

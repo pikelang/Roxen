@@ -69,8 +69,56 @@ FileLoader.prototype.loadDocument = function(url)
   ifrWin.document.close();
 }
 
+FileLoader.prototype.loadSafariDocument = function(url)
+{
+  this.loaded = false;
+  this.document = null;
+  this.doclen = -1;
+  var ifr = document.getElementById(this.frameName);
+  if (ifr.contentDocument.body)
+    ifr.contentDocument.body.innerHTML = "";
+  ifr.contentDocument.location.replace(url);
+  if (!FileLoader.interval)
+    FileLoader.interval = setInterval("checkSafariLoad()", 250);
+}
+
+
 FileLoader.cnt = 0;
 FileLoader.elements = new Array();
+FileLoader.interval = 0;
+
+function checkSafariLoad()
+{
+  var allLoaded = true;
+  for (var i = 0; i < FileLoader.cnt; i++) {
+    var fl = FileLoader.elements[i];
+    if (fl.loaded == false) {
+      var ifr = document.getElementById(fl.frameName);
+      if (ifr.contentDocument.body != null) {
+	//  Since we don't know for sure when the new document has finished
+	//  loading (nope, adding an onLoad handler dynamically doesn't work)
+	//  we'll poll until the document length stabilizes.
+	//
+	//  FIXME: Doesn't handle popups which are zero bytes long.
+	var newlen = ifr.contentDocument.body.innerHTML.length;
+	if (!newlen || (newlen != fl.doclen)) {
+	  //  Not yet loaded
+	  fl.doclen = newlen;
+	  allLoaded = false;
+	} else {
+	  fl.loaded = true;
+	  fl.document = ifr.contentDocument;
+	  fl.onload(fl);
+	}
+      } else
+	allLoaded = false;
+    }
+  }
+  if (allLoaded) {
+    clearInterval(FileLoader.interval);
+    FileLoader.interval = 0;
+  }
+}
 
 // layerLoadHandler: Handles a loaded document from the file loader <file_loader>.
 // Sets the layers content to the loaded documents content and displays the layer.
@@ -119,15 +167,16 @@ function loadLayer(e, layer_name, src, properties, parent)
     l.onload = layerLoadHandler;
     l.src = src;
     l.properties = properties;
-  }
-  else
-  {
+  } else {
     if(!file_loader || isMacIE50)
       file_loader = new FileLoader(layerLoadHandler);
     
     file_loader.layer_name = layer_name;
     file_loader.properties = properties;
-    file_loader.loadDocument(src);
+    if (isSafari)
+      file_loader.loadSafariDocument(src);
+    else
+      file_loader.loadDocument(src);
   }
   var pos = new properties.LayerPosition(new TriggerCoord(e, 0), 0, properties);
   if(!properties.stay_put)
