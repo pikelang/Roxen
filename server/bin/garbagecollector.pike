@@ -1,7 +1,7 @@
 //#include <stdio.h>
 #include <simulate.h>
 
-string cvs_version = "$Id: garbagecollector.pike,v 1.8 1997/06/01 19:06:23 grubba Exp $";
+string cvs_version = "$Id: garbagecollector.pike,v 1.9 1997/06/13 14:09:09 grubba Exp $";
 
 //#define DEBUG
 
@@ -560,17 +560,17 @@ string statistics()
   string gc_info;
   
   if(!removed)
-    last_garb="";
+    gc_info="";
   else
-    last_garb=sprintf("GC(%s):\n"
-		      "\t%2.2f Mb (%d files) removed\n"
-		      "\tlast run was %d minutes ago\n"
-		      "\tremoved files were last accessed %s\n",
-		      ctime(lastgc)-"\n",
-                      (float)removed/(1048576.0/BLOCK_SIZE),
-		      removed_files,
-		      (time()-lastgc)/60,
-		      ctime(garbage_time)-"\n");
+    gc_info=sprintf("GC(%s):\n"
+		    "\t%2.2f Mb (%d files) removed\n"
+		    "\tlast run was %d minutes ago\n"
+		    "\tremoved files were last accessed %s\n",
+		    ctime(lastgc)-"\n",
+		    (float)removed/(1048576.0/BLOCK_SIZE),
+		    removed_files,
+		    (time()-lastgc)/60,
+		    ctime(garbage_time)-"\n");
 
   rm("statistics");
   write_file("statistics",
@@ -633,10 +633,10 @@ void init_disk_check(string dir, int minfree)
   
   disk_time = time();
 
-  float i = (st->blocksize / 1024)||512;
-  disk_max = st->blocks * i;
-  disk_used = (st->blocks - st->bfree) * i;
-  disk_avail = st->bavail * i;
+  float i = (((float)st->blocksize) / 1024.0)||512.0;
+  disk_max = (int)(st->blocks * i);
+  disk_used = (int)((st->blocks - st->bfree) * i);
+  disk_avail = (int)(st->bavail * i);
   disk_capacity = (disk_max - disk_avail) * 100 / disk_max;
   disk_name = st->fsname||"";
   disk_type = st->fstype||"";
