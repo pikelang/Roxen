@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright � 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.185 2004/07/02 13:17:50 wellhard Exp $
+// $Id: Roxen.pmod,v 1.186 2004/08/06 12:46:42 noring Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2340,6 +2340,7 @@ function get_client_charset_decoder( string ���, RequestID|void id )
   case "åäö?":
   case "åä":
   case "åäö\350\212\237":
+  case "\357\277\275\357\277\275\357\277\275\350\212\237":
     id && id->set_output_charset && id->set_output_charset( "utf-8" );
     return utf8_to_string;
 
