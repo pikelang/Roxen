@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.231 2001/08/22 14:14:27 mast Exp $
+// $Id: module.pmod,v 1.232 2001/08/22 16:26:39 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -6608,7 +6608,7 @@ class PCode
       type = _type;
       if ((tag_set = _tag_set)) generation = _tag_set->generation;
       exec = allocate (16);
-      flags = UPDATED;
+      flags |= UPDATED;
       if (flags & COLLECT_RESULTS)
 	PCODE_MSG ("create for result collection\n");
       else
@@ -6886,7 +6886,7 @@ class PCode
 	    "%O: Restoring p-code update count from %d to %d "
 	    "since the frame is stored unevaluated "
 	    "due to exception.\n",
-	    item, _ctx->state_updated, update_count);
+	    item, ctx->state_updated, update_count);
 	  ctx->state_updated = update_count;
 	  if (objectp (item) && item->is_RXML_p_code_frame) {
 	    // If the exception comes from a frame, handle_exception
