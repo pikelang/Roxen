@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.194 2000/08/22 18:52:35 nilsson Exp $
+// $Id: roxenlib.pike,v 1.195 2000/08/24 08:01:58 lange Exp $
 
 //#pragma strict_types
 
@@ -879,10 +879,10 @@ string image_from_type( string t )
   return "internal-gopher-unknown";
 }
 
-#define  PREFIX ({ "bytes", "Kb", "Mb", "Gb", "Tb", "Hb" })
+#define  PREFIX ({ "bytes", "kb", "Mb", "Gb", "Tb", "Hb" })
 string sizetostring( int size )
   //! Returns the size as a memory size string with suffix,
-  //! e.g. 43210 is converted into "42.2 Kb.
+  //! e.g. 43210 is converted into "42.2 kb.
 {
   if(size<0) return "--------";
   float s = (float)size;
