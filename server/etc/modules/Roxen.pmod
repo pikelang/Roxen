@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.32 2000/08/27 14:21:18 mast Exp $
+ * $Id: Roxen.pmod,v 1.33 2000/08/27 14:27:16 mast Exp $
  *
  * Various helper functions.
  *
@@ -748,11 +748,12 @@ string decode_charref (string chref)
 
 string encode_charref (string char)
 //! Encodes a character to a character reference entity. The symbolic
-//! form is preferred over the numeric. The lowercased hexadecimal
-//! variety of the numeric form is used.
+//! form is preferred over the numeric. The decimal variety of the
+//! numeric form is used (since it's understood better than the
+//! hexadecimal form by at least Netscape 4).
 {
   if (string chref = inverse_charref_table[char]) return "&" + chref + ";";
-  return sprintf ("&#x%x;", char[0]);
+  return sprintf ("&#%d;", char[0]);
 }
 
 
