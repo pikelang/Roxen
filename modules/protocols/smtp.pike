@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.26 1998/09/12 14:38:50 grubba Exp $
+ * $Id: smtp.pike,v 1.27 1998/09/12 17:53:42 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.26 1998/09/12 14:38:50 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.27 1998/09/12 17:53:42 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -186,7 +186,7 @@ static class Smtp_Connection {
 
       string f = combine_path(dir, spoolid);
 
-      if (o->open(f, "cwax")) {
+      if (o->open(f, "crwax")) {
 #ifndef __NT__
 	rm(f);
 #endif /* !__NT__ */
