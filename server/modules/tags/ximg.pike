@@ -1,4 +1,4 @@
-constant cvs_version="$Id: ximg.pike,v 1.2 1999/05/20 03:26:24 neotron Exp $";
+constant cvs_version="$Id: ximg.pike,v 1.3 1999/05/20 03:36:01 neotron Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -36,8 +36,6 @@ string tag_ximg(string t, mapping m, mixed id)
     tmp+=sprintf(" %s=\"%s\"",s,m[s]);
   return "<img"+tmp+">";
 }
-
-mapping query_tag_callers() { return ([]); }
 
 mapping query_tag_callers()
 {
