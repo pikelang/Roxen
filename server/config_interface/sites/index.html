@@ -10,7 +10,7 @@
          icon_src='&usr.selected-indicator;' 
          icon_align='left' 
          href=''><translate id="213">Sites</translate></gbutton><br />
-<img src="/internal-roxen-unit" width="1" height="1"/><br />
+<img src="/internal-roxen-unit" width="1" height="5"/><br />
 <if variable="usr.configlistmode is 1">
 <if variable='form.goto_site'>
 <if not="1" variable='form.goto_site is '>
@@ -31,14 +31,14 @@
 </if>
 
 <else>
- <emit source='configurations'>
-  <cf-perm perm="Site:&_.name;">
-   <gbutton frame-image='&usr.left-buttonframe;' 
+ <emit source='configurations'
+   ><cf-perm perm="Site:&_.name;"
+      ><gbutton frame-image='&usr.left-buttonframe;' 
             bgcolor='&usr.left-buttonbg;' 
             href='site.html/&_.sname;/' 
-            width='&usr.left-buttonwidth;'>&_.name;</gbutton><br />
-  </cf-perm>
- </emit>
+            width='&usr.left-buttonwidth;'>&_.name;</gbutton
+      ><br /><img src="/internal-roxen-unit" width="1" height="1"/
+  ><br /></cf-perm></emit>
 </else>
 
 

@@ -63,14 +63,15 @@ string selected_item( string q, Configuration c, RequestID id,
      "width='&usr.left-buttonwidth;' bgcolor='&usr.left-buttonbg;' "
      "icon_src='&usr.selected-indicator;' "
      "align_icon='left'>"+LOCALE(213, "Sites")+"</gbutton><br />"
-     "<img src='/internal-roxen-unit' width='1' height='1'/><br />"
+     "<img src='/internal-roxen-unit' width='1' height='5'/><br />"
      "<gbutton frame-image='&usr.left-buttonframe;' "
      "width='&usr.left-buttonwidth;' "+
      (module == "" ?
       "bgcolor='&usr.left-selbuttonbg;'" : "bgcolor='&usr.left-buttonbg;'") +
      " href='"+id->not_query+"/"+replace(c->name, " ", "%20" )+"/' "
      " icon_src='&usr.selected-indicator;' align_icon='left'>"+
-     c->query_name()+"</gbutton><br /><br />");
+     c->query_name()+"</gbutton><br />"
+     "<img src='/internal-roxen-unit' width='1' height='2'/><br />");
 
   string url = id->not_query + id->misc->path_info;
   string pre_site_url="";
@@ -285,7 +286,7 @@ string selected_item( string q, Configuration c, RequestID id,
 	      "    onMouseOver='p_on(this);' onMouseOut='p_off(this);' "
 	      "    onClick=\"window.location='" +
 	      (quoted_url + Roxen.http_encode_string(real_group_name) + "!0/" +
-	       data->sname + "/") + "';\">"
+	       data->sname + "/") + "'; return false;\">"
 	      "<a href='" +
 	      (quoted_url + Roxen.http_encode_string(real_group_name) + "!0/" +
 	       data->sname + "/") + "'>" +
@@ -303,7 +304,7 @@ string selected_item( string q, Configuration c, RequestID id,
 	      "onMouseOver='p_on_sub(this);' onMouseOut='p_off_sub(this);' "
 	      "onClick=\"window.location='" +
 	      (quoted_url + Roxen.http_encode_string(real_group_name) + "!0/" +
-	       data->sname+"/") + "';\">"
+	       data->sname+"/") + "'; return false;\">"
 	      "<a href='" +
 	      (quoted_url +
 	       Roxen.http_encode_string(group_name) + "!0/"+data->sname +
@@ -359,14 +360,15 @@ string selected_item( string q, Configuration c, RequestID id,
       if (list)
 	pre += "</ul>\n";
       else
-	pre += "</table>\n</td></tr>\n";
+	pre += "</table></td></tr>";
   }
   if (list)
     pre += "</ul>";
   else
     pre += "</table>";
-  pre += "</box-frame>\n"
-    "<br clear='all'/></br />\n";
+  pre += "</box-frame>"
+    "<br clear='all'/>"
+    "<img src='/internal-roxen-unit' width='1' height='2'/><br />";
 
   // Do not allow easy addition and removal of modules to and
   // from the configuration interface server. Most of the time
