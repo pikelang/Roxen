@@ -9,7 +9,35 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: cgi.pike,v 2.17 1999/05/24 02:30:16 peter Exp $";
+/* maximum size of the header before sending and error message and
+ * killing the script.
+ */
+#define MAXHEADERLEN 32769
+
+/* Message sent if the header is too long */
+
+#define LONGHEADER "Status: 500 Buggy CGI Script\r\n\
+Content-Type: text/html\r\n\r\n\
+<title>CGI-Script Error</title> \n\
+<h1>CGI-Script Error</h1> \n\
+The CGI script you accessed is not working correctly. It tried \n\
+to send too much header data (probably due to incorrect separation between \n\
+the headers and the body). Please notify the author of the script of this\n\
+problem.\n"
+
+/* Message sent if no header is sent at all */
+
+#define NOHEADER "Status: 500 Buggy CGI Script\r\n\
+Content-Type: text/html\r\n\r\n\
+<title>CGI-Script Error</title> \n\
+<h1>CGI-Script Error</h1> \n\
+The CGI script you accessed is not working correctly. It didn't \n\
+send any header data (possibly due to incorrect separation between \n\
+the headers and the body). Please notify the author of the script of this\n\
+problem.\n"
+
+
+constant cvs_version = "$Id: cgi.pike,v 2.18 1999/05/24 23:19:58 neotron Exp $";
 
 #ifdef CGI_DEBUG
 #define DWERROR(X)	report_debug(X)
@@ -51,11 +79,11 @@ array lookup_user( string what )
   if(pwuid_cache[what]) return pwuid_cache[what];
   if((int)what)
     uid = getpwuid( (int)what );
-  else
+  else 
     uid = getpwnam( what );
   if(uid)
     return pwuid_cache[what] = ({ uid[2],uid[3] });
-  report_warning("CGI: Failed to get user information for "+what+"\n");
+  report_warning("CGI: Failed to get user information for ["+what+"] (assuming nobody)\n");
   catch {
     return getpwnam("nobody")[2..3];
   };
@@ -161,7 +189,6 @@ class Wrapper
   Stdio.File fromfd, tofd, tofdremote; 
   RequestID mid;
   mixed done_cb;
-
   int close_when_done;
   void write_callback() 
   {
@@ -196,7 +223,7 @@ class Wrapper
   void close_callback()
   {
     DWERROR("CGI:Wrapper::close_callback()\n");
-
+    
     done();
   }
 
@@ -272,8 +299,8 @@ class Wrapper
   // override these to get somewhat more non-trivial behaviour
   void done()
   {
-    DWERROR("CGI:Wrapper::done()\n");
-
+    DWERROR(sprintf("CGI:Wrapper::done(%d)\n", strlen(buffer)));
+    
     if(strlen(buffer))
       close_when_done = 1;
     else
@@ -346,11 +373,9 @@ class CGIWrapper
   {
     DWERROR("CGI:CGIWrapper::done()\n");
 
-    if(strlen(headers))
-    {
-      output( headers );
-      headers="";
-    }
+    if(!mode && !parse_headers( ))
+      headers = NOHEADER;
+    parse_headers( );
     ::done();
   }
 
@@ -414,8 +439,13 @@ class CGIWrapper
   {
     DWERROR("CGI:CGIWrapper::parse_headers()\n");
 
-    int pos, skip = 4;
-
+    int pos, skip = 4, force_exit;
+    if(strlen(headers) > MAXHEADERLEN)
+    {
+      DWERROR("CGI:CGIWrapper::parse_headers()::Incorrect Headers\n");
+      headers = LONGHEADER;
+      force_exit = 1;
+    }
     pos = search(headers, "\r\n\r\n");
     if(pos == -1) {
       // Check if there's a \n\n instead.
@@ -437,6 +467,8 @@ class CGIWrapper
     output( handle_headers( headers[..pos-1] ) );
     output( headers[pos+skip..] );
     headers="";
+    if(force_exit)
+      call_out(done, 0);
     return 1;
   }
 
