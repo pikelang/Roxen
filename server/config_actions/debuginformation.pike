@@ -1,5 +1,5 @@
 /*
- * $Id: debuginformation.pike,v 1.6 1998/03/02 04:30:36 neotron Exp $
+ * $Id: debuginformation.pike,v 1.7 1998/03/02 04:34:34 neotron Exp $
  */
 
 inherit "wizard";
@@ -32,7 +32,7 @@ mixed page_0(object id, object mc)
   mapping (string:int) foo = _memory_usage();
   foo->total_usage = 0;
   foo->num_total = 0;
-  array (string) ind = sort(indices(foo));
+  array ind = sort(indices(foo));
   string f;
   res+=("<table cellpadding=0 cellspacing=0 border=0>"
 	"<tr valign=top><td valign=top>");
