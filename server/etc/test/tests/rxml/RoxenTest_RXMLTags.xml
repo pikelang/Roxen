@@ -1,0 +1,774 @@
+<comment>Config image</comment>
+<test>
+<rxml><configimage src="unit"/></rxml>
+<result><img alt="unit" border="0" src="/internal-roxen-unit" /></result>
+</test>
+
+<test>
+<rxml><configimage src="unit" noxml=''/></rxml>
+<result><img alt="unit" border="0" src="/internal-roxen-unit"></result>
+</test>
+
+<test>
+<rxml><configimage alt=x border=1 src=fold class=a /></rxml>
+<result><img alt="x" border="1" class="a" src="/internal-roxen-fold" /></result>
+</test>
+
+
+<comment>Imgs</comment>
+<test>
+<rxml><imgs src="/internal-roxen-unit"/></rxml>
+<result><img alt="Unit" height="1" src="/internal-roxen-unit" width="1" /></result>
+</test>
+
+<test>
+<rxml><imgs src="/internal-roxen-unit" noxml=''/></rxml>
+<result><img alt="Unit" height="1" src="/internal-roxen-unit" width="1"></result>
+</test>
+
+
+<comment>Insert</comment>
+<test>
+<rxml><set variable='var.foo' value='a,b,c,d,e,f,g,h'/><insert variable='var.foo' index='1' split=','/></rxml>
+<result>a</result>
+</test>
+
+<test>
+<rxml><set variable='var.foo' value='a,b,c,d,e,f,g,h'/><insert variable='var.foo' index='-1' split=','/></rxml>
+<result>h</result>
+</test>
+
+<!test>
+<rxml><set variable='var.a' value="x"/>&var.a;<insert file="test1.html"/>&var.a;</rxml>
+<result>xayx</result>
+</!test>
+
+
+<comment>Autoformat</comment>
+<test>
+<rxml><autoformat>abc
+abc
+
+
+c</autoformat></rxml>
+<result>abc<br />
+abc<br />
+<br />
+<br />
+c</result>
+</test>
+
+<test>
+<rxml><autoformat p>abc
+abc
+
+
+c</autoformat></rxml>
+<result><p>abc<br />
+abc
+</p><p>
+<br />
+c</p></result>
+</test>
+
+<test>
+<rxml><autoformat p nobr>abc
+abc
+
+
+c</autoformat></rxml>
+<result><p>abc
+abc
+</p><p>
+
+c</p></result>
+</test>
+
+<test>
+<rxml><autoformat p class=x>abc
+abc
+
+
+c</autoformat></rxml>
+<result><p class="x">abc<br />
+abc
+</p><p class="x">
+<br />
+c</p></result>
+</test>
+
+<test>
+<rxml><autoformat p nobr class=x>abc
+abc
+
+
+c</autoformat></rxml>
+<result><p class="x">abc
+abc
+</p><p class="x">
+
+c</p></result>
+</test>
+
+
+<comment>Catch/throw</comment>
+<test>
+<rxml>a<catch>b<throw>c</throw>d</catch>e</rxml>
+<result>ac
+e</result>
+</test>
+
+<test>
+<rxml>a<catch>b</catch>c</rxml>
+<result>abc</result>
+</test>
+
+
+<comment>Set/unset</comment>
+<test>
+<rxml><set variable='var.foo'>bar</set>x&var.foo;</rxml>
+<result>xbar</result>
+</test>
+
+<test>
+<rxml><set variable='var.a..b' value='5'/>&var.a..b;</rxml>
+<result>5</result>
+</test>
+
+<test>
+<rxml><set variable='var.i' expr="(1+2)*2/3"/>&var.i;</rxml>
+<result>2</result>
+</test>
+
+<test>
+<rxml><set variable='var.i' value='3'/><unset variable='var.i'/>&var.i;</rxml>
+<result></result>
+</test>
+
+<test>
+<rxml><set variable=var.foobar value="a b % !"/><insert variable=var.foobar /></rxml>
+<result>a b % !</result>
+</test>
+
+<test>
+<rxml><set variable=var.i value=3 /><insert variable=var.i /></rxml>
+<result>3</result>
+</test>
+
+
+<comment>Smallcaps text</comment>
+<test>
+<rxml><smallcaps space>abc</smallcaps></rxml>
+<result><small>A&nbsp;B&nbsp;C&nbsp;</small></result>
+</test>
+
+<test>
+<rxml><smallcaps size=0>a</smallcaps></rxml>
+<result><font size="-1">A</font></result>
+</test>
+
+<test>
+<rxml><smallcaps class=a>Aa</smallcaps></rxml>
+<result><big class="a">A</big><small class="a">A</small></result>
+</test>
+
+<test>
+<rxml><smallcaps space>a a A A</smallcaps></rxml>
+<result><small>A&nbsp; A&nbsp; </small><big>A&nbsp;</big><small> </small><big>A&nbsp;</big></result>
+</test>
+
+<test>
+<rxml><smallcaps size=6 small=4 class=a bigclass=b>Aa</smallcaps></rxml>
+<result><font class="b" size="6">A</font><font class="a" size="4">A</font></result>
+</test>
+
+<test>
+<rxml><smallcaps size=-1>Aa</smallcaps></rxml>
+<result><font size="-1">A</font><font size="-2">A</font></result>
+</test>
+
+<test>
+<rxml><smallcaps size=6>Aa</smallcaps></rxml>
+<result><font size="6">A</font><font size="5">A</font></result>
+</test>
+
+<test>
+<rxml><smallcaps>A<br>a</smallcaps></rxml>
+<result><big>A</big><br><small>A</small></result>
+</test>
+
+<test>
+<rxml><smallcaps size=+3>Aa</smallcaps></rxml>
+<result><font size="+3">A</font><font size="+2">A</font></result>
+</test>
+
+<test>
+<rxml><smallcaps class=a bigclass=b smallclass=c>Aa</smallcaps></rxml>
+<result><big class="b">A</big><small class="c">A</small></result>
+</test>
+
+<test>
+<rxml><smallcaps>aAa Aa</smallcaps></rxml>
+<result><small>A</small><big>A</big><small>A </small><big>A</big><small>A</small></result>
+</test>
+
+
+<comment>Crypt</comment>
+<test>
+<rxml><eval><maketag type='tag' name='set'><attrib name='variable'>var.i</attrib><attrib name='value'><crypt>foobar</crypt></attrib></maketag></eval><eval><maketag name='crypt' type='container'><attrib name='compare'>&var.i;</attrib>foobar</maketag></eval><then>1</then><else>0</else></rxml>
+<result>1</result>
+</test>
+
+<test>
+<rxml><crypt compare="LAF2kkMr6BjXW">Roxen</crypt><then>1</then><else>0</else></rxml>
+<result>0</result>
+</test>
+
+<test>
+<rxml><crypt compare="LAF2kkMr6BjXw">Roxen</crypt><then>1</then><else>0</else></rxml>
+<result>1</result>
+</test>
+
+
+<comment>Inc/dec</comment>
+<test>
+<rxml><set variable='var.i' value='3'/><dec variable='var.i' value='0'/>&var.i;</rxml>
+<result>3</result>
+</test>
+
+<test>
+<rxml><set variable='var.i' value='3'/><inc variable='var.i' value='0'/>&var.i;</rxml>
+<result>3</result>
+</test>
+
+<test>
+<rxml><set variable='var.i' value='3'/><dec variable='var.i' value='2'/>&var.i;</rxml>
+<result>1</result>
+</test>
+
+<test>
+<rxml><set variable='var.i' value='3'/><inc variable='var.i' value='2'/>&var.i;</rxml>
+<result>5</result>
+</test>
+
+<test>
+<rxml><set variable='var.i' value='3'/><dec variable='var.i'/><insert variable='var.i'/></rxml>
+<result>2</result>
+</test>
+
+<test>
+<rxml><set variable='var.i' value='3'/><inc variable='var.i'/><insert variable='var.i'/></rxml>
+<result>4</result>
+</test>
+
+
+<comment>Doc</comment>
+<test>
+<rxml><doc>{b}</doc></rxml>
+<result>&lt;b&gt;</result>
+</test>
+
+<test>
+<rxml><doc pre quote class=n><b></doc></rxml>
+<result>
+<pre class="n">&lt;b&gt;</pre>
+</result>
+</test>
+
+<test>
+<rxml><doc quote><roxen/></doc></rxml>
+<result>&lt;roxen/&gt;</result>
+</test>
+
+<test>
+<rxml><doc quote><b></doc></rxml>
+<result>&lt;b&gt;</result>
+</test>
+
+<test>
+<rxml><doc pre>{b}</doc></rxml>
+<result>
+<pre>&lt;b&gt;</pre>
+</result>
+</test>
+
+<test>
+<rxml><doc pre class=m>{b}</doc></rxml>
+<result>
+<pre class="m">&lt;b&gt;</pre>
+</result>
+</test>
+
+<test>
+<rxml><doc pre quote><b></doc></rxml>
+<result>
+<pre>&lt;b&gt;</pre>
+</result>
+</test>
+
+<test>
+<rxml><doc quote preparse><noparse><roxen/></noparse></doc></rxml>
+<result>&lt;roxen/&gt;</result>
+</test>
+
+
+<comment>Maketag</comment>
+<test>
+<rxml><maketag name=x type=container><attrib name=a>b</attrib><maketag name=y type=tag><attrib name=c>d</attrib></maketag></maketag></rxml>
+<result><x a="b"><y c="d" /></x></result>
+</test>
+
+<test>
+<rxml><maketag name=x type=tag><attrib name=y>z</attrib><attrib name=g><replace from=x>ax</replace></attrib></maketag></rxml>
+<result><x g="a" y="z" /></result>
+</test>
+
+<test>
+<rxml>2<maketag name=x type=tag noxml></maketag></rxml>
+<result>2<x></result>
+</test>
+
+<test>
+<rxml>1<maketag name=x type=tag></maketag></rxml>
+<result>1<x /></result>
+</test>
+
+<test>
+<rxml><maketag name=x type=tag><attrib name=y>z</attrib></maketag></rxml>
+<result><x y="z" /></result>
+</test>
+
+<test>
+<rxml><maketag name=X type=container>a<br></maketag></rxml>
+<result><X>a<br></X></result>
+</test>
+
+
+<comment>Form defaults</comment>
+<test>
+<rxml><set variable='var.foo' value='x'/><default value=x name=a><input name=a><input type=checkbox value=x name=a><input type=radio value=x></default></rxml>
+<result><input name=a><input checked="checked" name="a" type="checkbox" value="x" /><input type=radio value=x></result>
+</test>
+
+<test>
+<rxml><set variable='var.foo' value='x'/><default value=x><input><input type=checkbox value=x><input type=radio value=x></default></rxml>
+<result><input><input checked="checked" type="checkbox" value="x" /><input checked="checked" type="radio" value="x" /></result>
+</test>
+
+<test no-canon="1">
+<rxml><set variable='var.foo' value='x'/><default value='foo bar'><select><option value='foo bar'></option></select></default></rxml>
+<result><select><option value='foo bar' selected="selected"></option></select></result>
+</test>
+
+<test>
+<rxml><set variable='var.foo' value='x'/><default value=x><select><OPtion>y<optIon>x</select></default></rxml>
+<result><select><OPtion>y</OPtion><optIon selected="selected">x</optIon></select></result>
+</test>
+
+<test>
+<rxml><set variable='var.foo' value='x'/><default value=A><select><option value=A></select></default></rxml>
+<result><select><option selected="selected" value=A></option></select></result>
+</test>
+
+<test>
+<rxml><set variable='var.foo' value='x'/><default value=x><select><option value=x></option><option value=y></option></select></default></rxml>
+<result><select><option selected="selected" value=x></option><option value=y></option></select></result>
+</test>
+
+<test>
+<rxml><set variable='var.foo' value='x'/><default><select name=y><option value=x></select></default></rxml>
+<result><select name="y"><option value=x></option></select></result>
+</test>
+
+<test>
+<rxml><set variable='var.foo' value='x'/><default name=x><select name=y><option value=x></select></default></rxml>
+<result><select name="y"><option value=x></select></result>
+</test>
+
+<test>
+<rxml><set variable='var.foo' value='x'/><default><input></default></rxml>
+<result><input></result>
+</test>
+
+<test>
+<rxml><set variable='var.foo' value='x'/><default name=a value=x><select name=a><option value=x></option></select><select name=b><option value=x></option></select></default></rxml>
+<result><select name="a"><option selected="selected" value=x></option></select><select name="b"><option value=x></option></select></result>
+</test>
+
+<test>
+<rxml><set variable='var.foo' value='x'/><default value="x"><select><option value="x"></option><option value="y"></option></select></default></rxml>
+<result><select><option selected="selected" value="x"></option><option value="y"></option></select></result>
+</test>
+
+<test>
+<rxml><set variable='var.foo' value='x'/><default value=on><input noxml type=checkbox></default></rxml>
+<result><input checked="checked" type="checkbox"></result>
+</test>
+
+<test>
+<rxml><set variable='var.foo' value='x'/><default value=on><input type=checkbox></default></rxml>
+<result><input checked="checked" type="checkbox" /></result>
+</test>
+
+<test>
+<rxml><set variable='var.foo' value='x'/><default variable='var.foo'><select><option value=x></option><option value=y></option></select></default></rxml>
+<result><select><option selected="selected" value=x></option><option value=y></option></select></result>
+</test>
+
+<test>
+<rxml><set variable='var.foo' value='x'/><default value=x,y><select><option value=x></option><option value=y></option></select></default></rxml>
+<result><select><option selected="selected" value=x></option><option selected="selected" value=y></option></select></result>
+</test>
+
+<test>
+<rxml><set variable='var.foo' value='x'/><default value=a><select><option value=A></select></default></rxml>
+<result><select><option value=A></option></select></result>
+</test>
+
+<test>
+<rxml><set variable='var.foo' value='x'/><default value=A><select><option value=a></select></default></rxml>
+<result><select><option value=a></option></select></result>
+</test>
+
+<test>
+<rxml><set variable='var.foo' value='x'/><default value=x><select><option></select></default></rxml>
+<result><select><option></option></select></result>
+</test>
+
+<test>
+<rxml><set variable='var.foo' value='x'/><default value=g><select><option VALUE=g></option></select></default></rxml>
+<result><select><option VALUE=g selected="selected"></option></select></result>
+</test>
+
+<test>
+<rxml><set variable='var.foo' value='x'/><default value='x'><select><option value='x'></option><option value='y'></option></select></default></rxml>
+<result><select><option selected="selected" value='x'></option><option value='y'></option></select></result>
+</test>
+
+<test>
+<rxml><set variable='var.foo' value='x'/><default value=a><select><option value=a></select></default></rxml>
+<result><select><option selected="selected" value=a></option></select></result>
+</test>
+
+
+<comment>Append</comment>
+<test>
+<rxml><set variable='var.foo' value='bar'/><append variable='var.bar' value='y'/>&var.bar;</rxml>
+<result>y</result>
+</test>
+
+<test>
+<rxml><set variable='var.foo' value='bar'/><set variable='var.bar' value='baz'/><append variable='var.foo' from='var.bar'/>&var.foo;</rxml>
+<result>barbaz</result>
+</test>
+
+<test>
+<rxml><set variable='var.foo' value='bar'/><append variable='var.foo' value='baz'/>&var.foo;</rxml>
+<result>barbaz</result>
+</test>
+
+
+<comment>Replace</comment>
+<test>
+<rxml><replace from=a,b to=c,d type=words>acdbx</replace></rxml>
+<result>ccddx</result>
+</test>
+
+<test>
+<rxml><replace from=x>axc</replace></rxml>
+<result>ac</result>
+</test>
+
+<test>
+<rxml><replace from=a:b to=A:,c type=words separator=:>abc</replace></rxml>
+<result>A,cc</result>
+</test>
+
+<test>
+<rxml><replace from=a,b,c to=x,y type=words>axceb</replace></rxml>
+<result>xxey</result>
+</test>
+
+<test>
+<rxml><replace from=x to=b>axc</replace></rxml>
+<result>abc</result>
+</test>
+
+<test>
+<rxml><replace from=x to=b type=word>axc</replace></rxml>
+<result>abc</result>
+</test>
+
+
+<comment>Trimlines</comment>
+<test>
+<rxml>x<trimlines>
+a
+</trimlines>x</rxml>
+<result>xax</result>
+</test>
+
+<test>
+<rxml><trimlines>
+
+
+a
+
+
+b
+c
+
+</trimlines></rxml>
+<result>a
+b
+c</result>
+</test>
+
+
+<comment>Date and time test</comment>
+<test>
+<rxml><date unix-time='87654321' part='day'/></rxml>
+<result>4</result>
+</test>
+
+<test>
+<rxml><date unix-time='87654321' time/></rxml>
+<result>13:25</result>
+</test>
+
+<test>
+<rxml><date unix-time='87654321' part='date' type='string' case='capitalize'/></rxml>
+<result>Eleven</result>
+</test>
+
+<test>
+<rxml><date unix-time='87654321' part='day' type='string' lang='sv'/></rxml>
+<result>onsdag</result>
+</test>
+
+<test>
+<rxml><date unix-time='87654321' date lang='sv'/></rxml>
+<result>den 11:e oktober 1972</result>
+</test>
+
+<test>
+<rxml><date unix-time='87654321' part='yday'/></rxml>
+<result>284</result>
+</test>
+
+<test>
+<rxml><date unix-time='87654321' part='date' type='ordered'/></rxml>
+<result>11th</result>
+</test>
+
+<test>
+<rxml><date unix-time='87654321' part='date' type='string' case='lower'/></rxml>
+<result>eleven</result>
+</test>
+
+<test>
+<rxml><date unix-time='87654321' part='month'/></rxml>
+<result>10</result>
+</test>
+
+<test>
+<rxml><date unix-time='87654321' part='year'/></rxml>
+<result>1972</result>
+</test>
+
+<test>
+<rxml><date unix-time='87654321' part='seconds' seconds='10' adjust='-1'/></rxml>
+<result>87654330</result>
+</test>
+
+<test>
+<rxml><date unix-time='87654321' part='wday'/></rxml>
+<result>4</result>
+</test>
+
+<test>
+<rxml><date unix-time='87654321' part='day' type='string'/></rxml>
+<result>Wednesday</result>
+</test>
+
+<test>
+<rxml><date unix-time='87654321' part='second'/></rxml>
+<result>21</result>
+</test>
+
+<test>
+<rxml><date unix-time='87654321' part='date'/></rxml>
+<result>11</result>
+</test>
+
+<test>
+<rxml><date unix-time='87654321' part='month' type='string'/></rxml>
+<result>October</result>
+</test>
+
+<test>
+<rxml><date unix-time='87654321' type='discordian'/></rxml>
+<result>Prickle-Prickle, the 64th day of Bureaucracy</result>
+</test>
+
+<test>
+<rxml><date unix-time='87654321' type='iso' time/></rxml>
+<result>13:25:21</result>
+</test>
+
+<test>
+<rxml><date unix-time='87654321' lang='sv'/></rxml>
+<result>13:25, den 11:e oktober 1972</result>
+</test>
+
+<test>
+<rxml><date unix-time='87654321' part='minute'/></rxml>
+<result>25</result>
+</test>
+
+<test>
+<rxml><date unix-time='87654321' date/></rxml>
+<result>October the 11th in the year of 1972</result>
+</test>
+
+<test>
+<rxml><date unix-time='87654321' hours='3' minutes='-4'/></rxml>
+<result>16:21, October the 11th, 1972</result>
+</test>
+
+<test>
+<rxml><date unix-time='87654321' type='iso' date/></rxml>
+<result>1972-10-11</result>
+</test>
+
+<test>
+<rxml><date unix-time='87654321' brief/></rxml>
+<result>October 1972</result>
+</test>
+
+<test>
+<rxml><date unix-time='87654321'/></rxml>
+<result>13:25, October the 11th, 1972</result>
+</test>
+
+<test>
+<rxml><date unix-time='87654321' part='hour'/></rxml>
+<result>13</result>
+</test>
+
+<test>
+<rxml><date unix-time='87654321' part='seconds'/></rxml>
+<result>87654321</result>
+</test>
+
+<test>
+<rxml><date unix-time='87654321' type='stardate'/></rxml>
+<result>26581.6</result>
+</test>
+
+<test>
+<rxml><date unix-time='87654321' part='mday'/></rxml>
+<result>11</result>
+</test>
+
+<test>
+<rxml><date unix-time='87654321' part='date' type='string' case='upper'/></rxml>
+<result>ELEVEN</result>
+</test>
+
+<test>
+<rxml><date unix-time='87654321' type='stardate' prec='2'/></rxml>
+<result>26581.57</result>
+</test>
+
+<test>
+<rxml><date unix-time='87654321' part='week'/></rxml>
+<result>41</result>
+</test>
+
+<test>
+<rxml><date unix-time='87654321' part='year' type='string'/></rxml>
+<result>one thousand nine hundred and seventytwo</result>
+</test>
+
+<test>
+<rxml><date unix-time='87654321' type='iso'/></rxml>
+<result>1972-10-11T13:25:21</result>
+</test>
+
+
+<comment>HTTP tests</comment>
+These only tests that the tags does not produce a backtrace, for now.
+<test>
+<rxml><set-cookie name="huu" /></rxml>
+</test>
+
+<test>
+<rxml><redirect to="http://www.foo.bar" add="huu" drop="hoo" /></rxml>
+</test>
+
+<test>
+<rxml><header name=SDMI value=boo.com /></rxml>
+</test>
+
+<test>
+<rxml><auth-required realm='test' message='hello'/></rxml>
+</test>
+
+<test>
+<rxml><header name='URI' value='balubas'/></rxml>
+</test>
+
+<test>
+<rxml><header name='WWW-Authenticate' value='zork'/></rxml>
+</test>
+
+<test>
+<rxml><expire-time years="1" /></rxml>
+</test>
+
+<test>
+<rxml><expire-time now="1" /></rxml>
+</test>
+
+
+<comment>Prestate links</comment>
+<test>
+<add what="prestate" name="x"/>
+<rxml><apre drop="x" class="q">x</apre></rxml>
+<result><a class="q" href="/index.html">x</a></result>
+</test>
+
+<test>
+<rxml><apre drop="x" class="q">x</apre></rxml>
+<result><a class="q" href="/index.html">x</a></result>
+</test>
+
+<!test>
+<rxml><apre add="y" href=/(x)/g.html>x</apre></rxml>
+<result><a href="/(x,y)/g.html">x</a></result>
+</!test>
+
+<test>
+<add what="prestate" name="x"/>
+<rxml><apre add="a" drop="x">x</apre></rxml>
+<result><a href="/(a)/index.html">x</a></result>
+</test>
+
+<test>
+<add what="prestate" name="x"/>
+<rxml><apre add="y" href="/g.html">x</apre></rxml>
+<result><a href="/(x,y)/g.html">x</a></result>
+</test>
+
+<test>
+<add what="prestate" name="x"/>
+<rxml><apre add="y">x</apre></rxml>
+<result><a href="/(x,y)/index.html">x</a></result>
+</test>
+
+<test>
+<add what="prestate" name="x"/>
+<rxml><apre add="a,b">x</apre></rxml>
+<result><a href="/(a,b,x)/index.html">x</a></result>
+</test>
