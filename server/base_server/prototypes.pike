@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.131 2004/05/17 16:33:15 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.132 2004/05/18 15:36:52 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1490,9 +1490,12 @@ class RequestID
       heads->ETag = misc->etag =
 	sprintf("\"%s\"",
 		Crypto.string_to_hex(Crypto.md5()->update(data)->digest()));
-      heads->Vary = "ETag";
     }
 #endif /* RAM_CACHE */
+
+    if (misc->vary && sizeof(misc->vary)) {
+      heads->Vary = ((array)misc->vary)*", "
+    }
 
     if(mappingp(file->extra_heads))
       heads |= file->extra_heads;
