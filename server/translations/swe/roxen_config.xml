@@ -2347,6 +2347,8 @@ modules.&lt;/p&gt;
   &lt;td&gt;Corresponds to Roxen 3.4.&lt;/td&gt;&lt;/tr&gt;
 &lt;tr valign='top'&gt;&lt;td&gt;4.0&amp;nbsp;&amp;nbsp;&lt;/td&gt;
   &lt;td&gt;Corresponds to Roxen 4.0.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr valign='top'&gt;&lt;td&gt;4.1&amp;nbsp;&amp;nbsp;&lt;/td&gt;
+  &lt;td&gt;Corresponds to Roxen 4.1.&lt;/td&gt;&lt;/tr&gt;
 &lt;/table&gt;&lt;/p&gt;</o>
 <t></t>
 </str>
@@ -3333,5 +3335,11 @@ server must be a MySQL server, nothing else will work.
 <str id="357">
 <new/>
 <o>Load of %s failed: Module not found.</o>
+<t></t>
+</str>
+
+<str id="512">
+<new/>
+<o>This does not look like a valid email address.</o>
 <t></t>
 </str>
