@@ -1,23 +1,16 @@
 #include <config_interface.h>
 inherit "roxenlib";
 
-constant tablist = #"<tablist preparse
-	 bgcolor=&usr.toptabs-bgcolor;
-	 font=&usr.toptabs-font;
-	 dimcolor=&usr.toptabs-dimcolor;
-	 textcolor=&usr.toptabs-textcolor;
-	 dimtextcolor=&usr.toptabs-dimtextcolor;
-	 selcolor=&usr.toptabs-selcolor;>";
-
+constant tablist = #"<tablist preparse ::=&usr.toptabs-args;>";
 
 constant selections =
 ({
-  ({ "configiftab",    "home",  "",                 0 }),
+  ({ "configiftab",    "home",  "",               0 }),
   ({ "sites",       "sites",  "sites/",           0 }),
   ({ "globals",   "globals",  "global_settings/", 0 }),
   ({ "ports",       "ports",  "ports/",           0 }),
   ({ "eventlog","event_log",  "event_log/",       0 }),
-  ({ "actions",   "actions",  "actions/",         "Tasks" }),
+  ({ "actions",   "actions",  "actions/",   "Tasks" }),
 });
 
 string parse( object id )
