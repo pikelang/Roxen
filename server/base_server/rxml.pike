@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.197 2000/05/28 14:15:43 nilsson Exp $
+// $Id: rxml.pike,v 1.198 2000/06/19 12:47:26 grubba Exp $
 
 
 inherit "rxmlhelp";
@@ -390,6 +390,13 @@ string do_parse(string to_parse, RequestID id,
     id->misc->_parser = parent_parser;
     return result;
   }) {
+    if (!parser) {
+      werror("RXML: Parser destructed!\n");
+#if constant(_describe)
+      _describe(parser);
+#endif /* constant(_describe) */
+      error("Parser destructed!\n");
+    }
     parser->_defines = 0;
     id->misc->_parser = parent_parser;
     if (objectp (err) && err->thrown_at_unwind)
@@ -608,7 +615,7 @@ private array(string) list_packages()
 private string read_package( string p )
 {
   string data;
-  p = replace(p, ({"/", "\\"}), ({"",""}));
+  p = combine_path("/", p);
   if(file_stat( "../local/rxml_packages/"+p ))
     catch(data=Stdio.File( "../local/rxml_packages/"+p, "r" )->read());
   if(!data && file_stat( "../rxml_packages/"+p ))
@@ -2314,11 +2321,12 @@ The following features are supported:
  internal tag used to set the return value of <tag><ref
  type='tag'>if</ref></tag> tags. It will ensure that the next
  <tag><ref type='tag'>else</ref></tag> tag will not show its contents.
- It can be useful if you are writing your own <tag><ref
- type='tag'>if</ref></tag> lookalike tag. </desc>",
+ It can be useful if you are writing your own
+ <tag><ref type='tag'>if</ref></tag> lookalike tag.
+</desc>",
 
-"undefine":#"<desc tag><short>
- Removes a definition made by the define container.</short> One attribute is
+"undefine":#"<desc tag>
+ Removes a definition made by the define container. One attribute is
  required.
 </desc>
 
