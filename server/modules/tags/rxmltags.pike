@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.444 2004/02/04 14:14:50 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.445 2004/02/04 17:57:27 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -3657,7 +3657,9 @@ class TagIf {
   constant name = "if";
   int flags = RXML.FLAG_SOCKET_TAG | cache_static_in_2_5();
   array(RXML.Type) result_types = ({RXML.t_any});
-  program Frame = FrameIf;
+  class Frame {
+    inherit FrameIf;
+  }
 }
 
 class TagElse {
@@ -3681,8 +3683,7 @@ class TagThen {
   int flags = cache_static_in_2_5();
   array(RXML.Type) result_types = ({RXML.t_any});
   class Frame {
-    inherit RXML.Frame;
-    int do_iterate;
+    inherit FrameIf;
     array do_enter(RequestID id) {
       do_iterate= _ok ? 1 : -1;
       return 0;
