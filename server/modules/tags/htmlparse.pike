@@ -1,24 +1,15 @@
-// This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
-//
+// This is (not really) a roxen module. Copyright © 1996 - 1998, Idonex AB.
 
 #include <module.h>
 inherit "module";
 
-array register_module() {
-  return ({ MODULE_PARSER, "Old RXML parser", "Use the <i>RXML parser</i> and "
-    "<i>RXML tags</i> modules instead", 0, 1});
-}
-
-// This is heavy stuff, boys and girls. Do not try this at home!
-void create(object configuration, int q) {
-  werror("\nHTML parse outdated. Add other modules instead.");
+void start() 
+{
+  object configuration = my_configuration();
+  werror("\n ***** HTML parse outdated. Adding other modules instead.\n");
   if(configuration)
     foreach(({"rxmlparse","rxmltags","ssi","accessed"}), string mod)
-      if(!configuration->modules[mod] ||
-        (!configuration->modules[mod]->copies &&
-         !configuration->modules[mod]->master)) {
+      if(!configuration->enabled_modules[mod] )
         configuration->enable_module(mod+"#0");
-    if(roxen->root)
-      roxen->configuration_interface()->build_root(roxen->root);
-  }
+  call_out( configuration->disable_module, 0.5,  "htmlparse#0" );
 }
