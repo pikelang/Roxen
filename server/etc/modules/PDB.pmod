@@ -26,8 +26,11 @@ class FileIO {
     d = encode_value(d);
     catch {
       string q;
-      if(strlen(q=Gz->deflate()->deflate(d)) < strlen(d))
-	d=q;
+      object g;
+      if (sizeof(indices(g=Gz))) {
+	if(strlen(q=g->deflate()->deflate(d)) < strlen(d))
+	  d=q;
+      }
     };
     object o = open(f+".tmp","wct");
     int n = o->write(d);
@@ -42,7 +45,12 @@ class FileIO {
   {
     object o = open(f,"r");
     string d = o->read();
-    catch { d=Gz->inflate()->inflate(d); };
+    catch {
+      object g;
+      if (sizeof(indices(g=Gz))) {
+	d=g->inflate()->inflate(d);
+      }
+    };
     return decode_value(d);
   }
 }
@@ -243,7 +251,11 @@ class Table
     if(compress)
       catch {
 	string q;
-	if(strlen(q=Gz->deflate()->deflate(ts)) < strlen(ts)) ts=q;
+	object g;
+	if (sizeof(indices(g=Gz))) {
+	  if(strlen(q=g->deflate()->deflate(ts)) < strlen(ts))
+	    ts=q;
+	}
       };
     LOCK();
     object bucket = get_bucket(scheme(strlen(ts)));
@@ -274,7 +286,14 @@ class Table
     object bucket = get_bucket(i[0]);
     d = bucket->get_entry(i[1]);
     UNLOCK();
-    if(compress) catch { d=Gz->inflate()->inflate(d); };
+    if(compress) {
+      catch {
+	object g;
+	if (sizeof(indices(g=Gz))) {
+	  d=g->inflate()->inflate(d);
+	}
+      };
+    }
     return decode_value( d );
   }
 
