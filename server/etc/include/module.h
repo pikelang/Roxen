@@ -1,4 +1,4 @@
-// $Id: module.h,v 1.44 2000/11/20 13:36:35 per Exp $
+// $Id: module.h,v 1.45 2000/12/08 08:11:25 nilsson Exp $
 #ifndef ROXEN_MODULE_H
 #define ROXEN_MODULE_H
 /* #include "config.h" */
@@ -52,6 +52,7 @@
 #define VAR_DEVELOPER     1024
 #define VAR_INITIAL       2048
 #define VAR_NOT_CFIF      4096
+#define VAR_INVISIBLE     8192
 
 #define VAR_PUBLIC        8192
 
