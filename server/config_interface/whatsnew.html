@@ -5,7 +5,6 @@
 <br />
 <blockquote>
 
-<rul>
 <define container="new-feature">
   <eval><rli>
    <dl><dt><b><font size='+1'>&_.name;</font></b></dt>
@@ -14,28 +13,60 @@
    </rli></eval>
 </define>
 
+
+
+<h1>Release notes for Roxen 2.2</h1>
+
+
+<h2>User level changes</h2>
+
+
+<rul>
+
+<new-feature name='Configuration interface changes'>
+<b>'content boxes'</b> added in the config interface (the first page)
+
+    If you want to write your own boxes, see the files in
+    <i>config_interface/boxes</i>.
+<p>
+
+<b>Added memory to the toplevel tabs</b> in the configuration interface
+   When you click on a toplevel tab, you return to the page you last visited below that tab, just like in Roxen 1.3, click again to go to toplevel
+
+<p>
+<b>The configuration interface now works with more browsers</b>
+
+Some HTML changes were made so that the configuration interface works
+better with the Mozilla and Opera browsers.
+
+<p>
+
+<b>The ports tab has been merged into the site tabs</b>, the old
+(overview) ports tab is available under the globals tab.
+
+<p>
+
+<b>Two new themes added</b> Square orange, and the new default theme
+(old default now known as '2.0 and 2.1 theme').
+
+<p>
+</new-feature>
+
+
 <new-feature name="Built-in MySQL Database">
 <p>
- Roxen WebServer now comes bundled with MySQL, and the internal
- database is used for various things inside Roxen. Also, there is a
+ Roxen WebServer now comes bundled with MySQL, and the 
+ database is used for various things inside Roxen Webserver. Also, there is a
  new <a href='dbs/'>database administration interface</a> available
  inside the configuration interface.
-</p>
-<p>
-  Two new APIs are available to module programmers. For more
-  information, see the
-<a href='https://community.roxen.com/articles/014_db/'>Roxen Community article</a>
 </p>
 </new-feature>
 
 
-<new-feature name='New User-database and Authentication module API'>
-The user-database and authentication module API has been rewritten
-from scratch.
+<new-feature name='New User-database and Authentication module system'>
+The user-database and authentication module API has been redesigned.
 
-<p>
-
-You can now have multiple user database and multiple authentication
+<p> You can now have multiple user database and multiple authentication
 modules, and the modules only has to implement one of the two services.
 
 <p> Two example authentication modules are included, one that uses
@@ -53,58 +84,26 @@ The module level security patterns and the htaccess files now include
 many new options, and are compiled for quicker execution.
 </p>
 
-<i>Module level security</i>
-<p>
-New permission rules:
-<ul>
-<li>day=day1,[day2],...
-<li>time=time1-time2
-<li>dns=hostname
-<li>accept_language=language
-<li>luck=percent%
-</ul>
-<p>
-New commands:
-<ul>
-<li>userdb database-name
-<li>authmethod authmodule-name
-</ul>
-This relates to another newsitem: Totally rewritten authentication and
-user-database module interfaces.
-<p>
-<i>htaccess</i>
-<ul>
-
-<li>Accepts the same commands as the module level security, but with a
-slitghtly different pattern. If you would have typed 'allow
-accept_language=en' in the module level security patters, you would
-instead write 'require accept_language en' in a htaccess file. The
-reason is that the allow syntax is already used. For deny you simply
-skip the '=' character, i.e., 'deny luck 10%' instead of 'deny
-luck=10%'
-
-<li>The module now acts as a user-database, so you can use &lt;if
-user=username&gt; in your RXML pages (and, if you feel like it, your
-module level security patterns) with users and groups authenticated
-from the htaccess module.
-</ul>
+The htaccess module now also acts as a user-database, so you can use
+<tt>&lt;if&nbsp;user=username&gt;</tt> in your RXML pages (and, if you feel
+like it, your module level security patterns) with users and groups
+authenticated from the htaccess module, even if the page does not
+otherwise use the htaccess permission system.
 </new-feature>
 
-<new-feature name='Protocol module changes'>
+<new-feature name='Major protocol module changes'>
 <dl>
-<dt><b>Hilfe protocol</b>
-
-<dd>A Hilfe (interactive pike evaluator) protocol has been added.
-    You can use this to evaluate Pike expressions inside your running
-    Roxen Server.
-
-<p>
 <dt><b>Gopher and fhttp removed</b>
-
 <dd>The gopher and fhttp protocols has been removed. The former
-because it has not worked for three years, and nobody notices, and the
+because it has not worked for three years, and nobody noticed, and the
 latter because it did only offer benchmark performance, it was not all
-that useful for real life applications.
+that useful for real life applications. However
+<p>
+<dt><b>HTTP protocol module has some C-optimizations</b>
+
+<dd>Parts of the normal HTTP protocol module has been rewritten in C,
+and some other optimizations has been done. Overall, the HTTP parsing
+is now about twice as fast as it was in Roxen 2.1.
 <p>
 <dt><b>The HTTP protocol auto-encodes unicode</b>
 
@@ -113,31 +112,21 @@ This includes recoding of unsupported characters to entities (as an
     example, when a $B6b(B character is encountered and the output charset
     is iso-8859-1, or å and the output charset is iso-8859-9)
 <p>
-<dt><b>HTTP module has some C-optimizations</b>
-<dd>Parts of the normal HTTP protocol module has been rewritten in C. 
-<p>
-
-<dt><b>Protocol modules are found dynamically</b>
-<dd>When Roxen starts, it search for protocol modules in the
-'protocols' directory, there is no longer any hard-coded list of known
-protocols.
-</dl>
 </new-feature>
 
-<new-feature name='Changes in image related modules'>
+<new-feature name='Changes in the generic image cache'>
 <ul>
-  <li>Rather ungessable URLs to the images.
+  <li>The URLs for the images in the image cache are now encrypted
+  before they are sent to the client. 
 
-  <li>The user ID is now saved for the images, no user can get an image
-    rendered for another user. This does cause some double-cacheing,
-    and will probably be reworked in the future so that double entries
-    are not saved.
+  <li>The user ID is now saved for the images, no authenticated user
+  can get an image rendered for another authenticated user.
+</ul>
+</new-feature>
 
- <li><b>New generic arguments for the image-modules:</b> (applies to all image tags)
-
+<new-feature name='New generic arguments for the image-related tags'>
   <ul>
-
-  <li> <b>span-width</b> and <b>span-height</b>. Like max-width and max-height, but if the image is smaller, it's padded to the specified size.
+ <li> <b>span-width</b> and <b>span-height</b>. Like max-width and max-height, but if the image is smaller, it's padded to the specified size.
 
 <li><b>crop=guides-cross</b> <b>guides-index=x,y</b>: Crop
   <i>around</i> the point specified by the intersection of the two
@@ -157,16 +146,75 @@ protocols.
 </new-feature>
 
 <new-feature name='Font handling changes'>
-
  FreeType 2 support added. Roxen can now render text using TrueType
  and PostScript Type1 fronts using FreeType 2.
 
-<p>There are now more CIF (Compact Image Font) generation and unpacking
-programs available in the bin directory.
+<p>There are now more CIF (Compact Image Font) generation and
+unpacking programs available in the bin directory.
 </new-fetaure>
 
+<new-feature name='New start script NT compatibility option'>
+ The option <b>--strip-backslash</b> has been added. This causes all \
+ in the URL to be transformed to /. Useful for NT-compatibility reasons
+ on Unix, this behaviour has been the default on NT since Roxen 2.0.
+</rul>
 
+<h2>RXML changes</h2>
 
+<rul>
+<new-feature name='Optimizations'>
+The RXML parser has been optimized
+</new-feature>
+
+<new-feature name='P-Code'>
+
+ RXML is now compiled to P-Code the first time it's run, then
+ evaluated directly from this form on subsequent accesses to the same
+ file. This means that the RXML does not have to be reparsed from the
+ source code for each access.
+</new-feature>
+
+<new-feature name='Type system implemented'>
+ The RXML parser can now handle any type of data in entities and as
+ return value/arguments to tags. This is not widely used yet, but will
+ be in the future.
+</new-feature>
+
+<new-feature name='Entity indexing'>
+Entities holding complex data types (lists of values etc) can now be
+indexed using the <tt>&amp;scope.variable.index;</tt> syntax. As an
+example, if the page requested has two form variables with the name
+<tt>'file'</tt>, you can access them one at a time as
+<tt>&amp;form.file.1;</tt> and <tt>&amp;form.file.2;</tt>, respectively.
+</new-feature>
+
+<new-feature name='Emit extended'>
+Emit now supports more filtering and sorting options
+</new-feature>
+
+<new-feature name='Set and append'>
+Set and append can now act as container tags, with the value inside them. As an example, to set the variable var.foo to bar, you can use <tt>&lt;set variable=foo&fr;bar&lt/set&gt;</tt>
+</new-feature>
+
+<new-feature name='Insert can now insert the "closest" file with a certain name'>
+A new argument has been added to &lt;insert&gt; and &lt;use&gt;:
+locate=filename. This will attempt to locate the specified file in the
+directory the current file recides and all directories above that
+directory, up to the root of the virtual filesystem.
+</new-feature>
+
+<new-feature name='The expr argument is now more powerful'>
+
+The expr argument (expression evaluation) can now handle much more
+complex expressions. As an example, it can do type conversions, and
+use complex datatypes.
+</new-feature>
+
+</rul>
+
+<h2>New modules</h2>
+
+<rul>
 <new-feature name='New image related module, GXML'> 
 There is a new image generating module available, the GXML module. It
 renders images from a XML language, and is quite easily extended with
@@ -186,35 +234,89 @@ See the <a href='http://community.roxen.com/projects/webserver2.2/gxml1.html'>fo
 </ul>
 </new-feature>
 
-<new-feature name='Configuration interface changes'>
-<b>'content boxes'</b> added in the config interface (first page)
-
-    If you want to write your own boxes, see the files in
-    <i>config_interface/boxes</i>. New boxes cheerfully accepted.
-<p>
-
-<b>Added memory to the toplevel tabs</b> in the configuration interface
-   When you click on a toplevel tab, you return to the page you last visited below that tab, just like in Roxen 1.3, click again to go to toplevel
-
-<p>
-<b>The configuration interface now works with Mozilla</b>
-
-Some HTML changes were made so that the configuration interface works
-better with the Mozilla and Opera browsers.
-
-<p>
-
-<b>The ports tab has been merged into the site tabs</b>, the old
-(overview) ports tab is available under the globals tab.
-
-<p>
-
-<b>Two new themes added</b> Square orange, by Per Hedbor, with help
-from Mirar for compressing the background image, and the new default
-(old default now known as '2.0 and 2.1 theme') theme, also by Per,
-with most design elements from www.roxen.com.
+<new-feature name='Writefile'>
+ A module that allows the creation of files from normal RXML using the
+ &lt;writefile&gt; tag.
 </new-feature>
 
+<new-feature name='robots.txt generator'>
+  Generates a robots.txt on demand from various information. 
+</new-feature>
+<new-feature name='Word highlighter'>
+  Highlights the words stored in the form variable <tt>highlight</tt> in
+  HTML pages, mostly useful for searchengines.
+</new-feature>
+
+<new-feature name='Whitespace sucker'>
+  This module removes redundant whitespace from HTML pages.
+</new-feature>
+
+<new-feature name='Session tag'>
+  A session state handling system.
+</new-feature>
+
+<new-feature name='Sizer'>
+This module provides the <tt>&lt;page-size&gt;</tt> tag that 
+ calculates the size of a page, including inline images, HTTP headers
+ etc, and gives an estimates of the time it will take to download the
+ page over various connections.<p> You can also use the <i>size</i>
+ prestate to trigger the sizing process.
+</new-feature>
+
+
+<new-feature name='Table/Image Border Unveiler'>
+Another helping module for HTML-writers. This one allows you to toggle the viewing of table and image borders using a prestate.
+</new-feature>
+
+<new-feature name='Implicit &lt;use&gt;'>
+  Automatically &lt;use&gt; a package before parsing files.
+<p>
+  Useful for creating template files whose tags and variables are
+  automatically included before any RXML parsing is done of the
+  content files.
+</new-feature>
+
+<new-feature name='Javascript support module'>
+This module provides some tags to support javascript development (as
+an example, Javascript popup menus)
+</new-feature>
+
+<new-feature name='Simple MPEG streaming server'>
+  A simple mpeg streaming server has been added, mostly for example purposes.
+</new-feature>
+
+</rul>
+
+
+
+
+<h2>News for developers</h2>
+
+<rul>
+<dt><b>Hilfe protocol</b>
+
+<dd>A Hilfe (interactive pike evaluator) protocol has been added.
+    You can use this to evaluate Pike expressions inside your running
+    Roxen Server.
+
+
+<dt><b>Protocol modules are found dynamically</b>
+<dd>When Roxen starts, it search for protocol modules in the
+'protocols' directory, there is no longer any hard-coded list of known
+protocols.
+</dl>
+<p>
+DB
+<p>
+  Two new APIs are available to module programmers. For more
+  information, see the
+<a href='https://community.roxen.com/articles/014_db/'>Roxen Community article</a>
+</p>
+</rul>
+
+<h2>Pike changes since Pike 7.0</h2>
+
+<rul>
 <new-feature name='The Crypto module is always included'>
 This includes SSL, complete with SSL client support.
 </new-feature>
@@ -691,17 +793,11 @@ these efuns disappear to compat mode only in the future. They will,
 however, of course be available in the system module.
 </new-feature>
 
-
 </rul>
 
 
 <pre>
 Quick (not yet finished) newsitems
-
-o  New option to the start script (unix only, always on on NT):
-   --strip-backslash, causes all \ in the URL to be transformed to
-   /. Useful for compatibility reasons on unix, quite nessesary for
-   security reasons on NT.
 
 o built-in testsuite (accessible via start --self-test)
 
@@ -727,50 +823,12 @@ o API
   o Roxen.compile_rxml Roxen.eval_p_code
 
 o Modules
-  o robots.txt
-  o word_highlight
-  o writefile
-  o rövarspråkare
-  o whitespace_sucker
-  o session_tag
-  o sizer
-  o gxml
-  o tableborder
-  o implicit_use
-  o javascript_support
-  o Simple icecast server, with plugin-system for the datasources (playlists).
-
-o RXML
-  o Several optimizations
-
-  o RXML is compiled to PCode the first time it's run, then executed
-    from the PCode on subsequent accesses to the same file.
-
-  o The RXML parser can now handle any type of data in entities and as
-    return value/arguments to tags.
-
-  o Entities 
-    o &amp;roxen.path;
-    o &amp;roxen.unique-id;
-    o &amp;page.dir;
-    o &amp;scope.entity.index;
-
-  o Tags
-    o (quite a lot of) new features in emit
-    o &lt;emit values&gt;
-    o &lt;set ... &gt;value&gt;/set&gt; &lt;append ... &gt;value&gt;/append&gt;
-    o &lt;insert  &gt;
-    o vinput fixes
-    o &lt;debug werror&gt;
-    o expr evaluation more powerful
 
 
 
 o FTP
   o Implemented RFC 2428 (EPRT & EPSV).
   o MLSD bugfix
-
-o Image modules
 
 o Java
   o Java patches by Tom Palmer applied.
