@@ -1,4 +1,4 @@
-/* $Id: ssl3.pike,v 1.29 1998/04/13 15:15:56 grubba Exp $
+/* $Id: ssl3.pike,v 1.30 1998/04/15 15:09:24 grubba Exp $
  *
  * Copyright © 1996-1998, Idonex AB
  */
@@ -469,7 +469,7 @@ void handle_request( )
 class fallback_redirect_request {
   string in = "";
   string out;
-  string prefix;
+  string default_prefix;
   int port;
   object f;
 
@@ -509,6 +509,7 @@ class fallback_redirect_request {
 #endif /* SSL3_DEBUG */
     in += s;
     string name;
+    string prefix;
 
     if (search(in, "\r\n\r\n") >= 0)
     {
@@ -532,13 +533,29 @@ class fallback_redirect_request {
 	  {
 	    if ( (lower_case(header[0]) == "host")
 		 &&  (sizeof(header) >= 2))
-	      prefix = "https://" + header[1] - " ";
+	      prefix = "https://" + (header[1]/":")[0] - " ";
 	  }
 	}
-	if (prefix[-1] == '/')
-	  prefix = prefix[..strlen(prefix)-2];
+	if (prefix) {
+	  if (prefix[-1] == '/')
+	    prefix = prefix[..strlen(prefix)-2];
+	  prefix = prefix + ":" + port;
+	} else {
+	  /* default_prefix (aka MyWorldLocation) already contains the
+	   * portnumber.
+	   */
+	  if (!(prefix = default_prefix)) {
+	    /* This case is most unlikely to occur,
+	     * but better safe than sorry...
+	     */
+	    prefix = "https://localhost:" + port;
+	  } else if (prefix[..4] == "http:") {
+	    /* Broken MyWorldLocation -- fix. */
+	    prefix = "https:" + prefix[5..];
+	  }
+	}
 	out = sprintf("HTTP/1.0 301 Redirect to secure server\r\n"
-		      "Location: %s:%d%s\r\n\r\n", prefix, port, name);
+		      "Location: %s%s\r\n\r\n", prefix, name);
       }
       f->set_read_callback(0);
       f->set_write_callback(write_callback);
@@ -551,7 +568,7 @@ class fallback_redirect_request {
     roxen_perror(sprintf("SSL3:fallback_redirect_request(X, \"%s\", \"%s\", %d)\n", s, l, p));
 #endif /* SSL3_DEBUG */
     f = socket;
-    prefix = l;
+    default_prefix = l;
     port = p;
     f->set_nonblocking(read_callback, 0, die);
     f->set_id(f);
@@ -578,8 +595,8 @@ void http_fallback(object alert, object|int n, string data)
 //    my_fd->set_close_callback(0);
 //    my_fd->leave_me_alone = 1;
     fallback_redirect_request(my_fd->raw_file, data,
-			      (my_fd->config &&
-			       my_fd->config->query("MyWorldLocation")) || "/",
+			      my_fd->config && 
+			      my_fd->config->query("MyWorldLocation"),
 			      my_fd->context->port);
     destruct(my_fd);
     destruct(this_object());
