@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.223 2000/08/14 15:16:58 mast Exp $
+// $Id: rxml.pike,v 1.224 2000/08/15 01:27:26 mast Exp $
 
 
 inherit "rxmlhelp";
@@ -1448,16 +1448,11 @@ class TagComment {
     inherit RXML.Frame;
     int do_iterate=-1;
     array do_enter() {
-      if(args && args->preparse) {
+      if(args && args->preparse)
 	do_iterate=1;
-	return 0;
-      }
-      else
-	return ({ "" });
+      return 0;
     }
-    array do_return() {
-      return ({ "" });
-    }
+    array do_return = ({});
   }
 }
 
