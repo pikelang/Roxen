@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version = "$Id: cgi.pike,v 2.48 2000/09/23 02:04:07 per Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.49 2000/11/13 07:32:42 per Exp $";
 
 #if !defined(__NT__) && !defined(__AmigaOS__)
 # define UNIX 1
@@ -20,7 +20,7 @@ inherit "module";
 
 /* Message sent if the header is too long */
 
-#define LONGHEADER "Status: 500 Buggy CGI Script\r\n\
+#define LONGHEADER "HTTP/1.0 500 Buggy CGI Script\r\n\
 Content-Type: text/html\r\n\r\n\
 <title>CGI-Script Error</title> \n\
 <h1>CGI-Script Error</h1> \n\
@@ -31,7 +31,7 @@ problem.\n"
 
 /* Message sent if no header is sent at all */
 
-#define NOHEADER "Status: 500 Buggy CGI Script\r\n\
+#define NOHEADER "HTTP/1.0 500 Buggy CGI Script\r\n\
 Content-Type: text/html\r\n\r\n\
 <title>CGI-Script Error</title> \n\
 <h1>CGI-Script Error</h1> \n\
@@ -221,8 +221,8 @@ class Wrapper
       // if nelems == 0, network buffer is full. We still want to continue.
     {
       buffer="";
-      done();
-    } else {
+      destroy();
+    } else if( nelems > 0 ) {
       buffer = buffer[nelems..];
       if(close_when_done && !strlen(buffer))
         destroy();
@@ -386,10 +386,8 @@ class CGIWrapper
   void done()
   {
     DWERR("CGIWrapper::done()");
-
     if(!mode && !parse_headers( ))
-      headers = NOHEADER;
-    parse_headers( );
+      output( NOHEADER );
     ::done();
   }
 
@@ -457,8 +455,12 @@ class CGIWrapper
     if(strlen(headers) > MAXHEADERLEN)
     {
       DWERR("CGIWrapper::parse_headers()::Incorrect Headers");
-      headers = LONGHEADER;
-      force_exit = 1;
+      output( LONGHEADER );
+      close_when_done = 1;
+      mode++;
+      done();
+      return 1;
+//       destroy( );
     }
     pos = search(headers, "\r\n\r\n");
     if(pos == -1) {
