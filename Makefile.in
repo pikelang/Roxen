@@ -342,10 +342,7 @@ bump_version: bump_version.stamp
 	  else :; fi; \
 	done
 #end pike version bump
-	@if test -d platform/. ; then \
-	  extratag=-p; \
-	else :; fi; \
-	(cd $(SRCDIR)/server/base_server; \
+	@(cd $(SRCDIR)/server/base_server; \
 	  echo Bumping Roxen version...; \
 	  build=`sed <roxen.pike -e'/__roxen_build__/s/[^0-9]*//gp' -ed|head -1`; \
 	  newbuild=`echo $$build 1+p|dc`; \
@@ -365,9 +362,16 @@ bump_version: bump_version.stamp
 	)
 	@(cd $(SRCDIR); \
 	  echo Tagging...; \
-	  cvs tag `cat VERSION | tr 'A-Z. ' 'a-z__'`$$extratag||exit 1; \
+	  cvs tag `cat VERSION | tr 'A-Z. ' 'a-z__'`||exit 1; \
 	)
 	@touch bump_version
+
+same_version:
+	@cd $(SRCDIR)/server/base_server; \
+	 build=`sed <roxen.pike -e'/__roxen_build__/s/[^0-9]*//gp' -ed|head -1`; \
+	 version=`sed <roxen.pike -e'/__roxen_version__/s/[^.0-9]*//gp' -ed|head -1`; \
+	 echo "Roxen $$version.$$build" >../../VERSION;
+
 
 $(SRCDIR)/ChangeLog.gz:
 	cd $(SRCDIR); pike tools/make_changelog.pike | gzip -9 > ChangeLog.gz
@@ -387,6 +391,11 @@ pre_dist: bump_version
 	-@$(MAKE) run_autoconfig
 #	@(cd pike; $(MAKE) pre_dist)
 
+same_pre_dist: same_version
+	-@$(MAKE) depend
+	-@$(MAKE) new_peep_engine
+	-@$(MAKE) run_autoconfig
+
 faked_pre_dist:
 	echo "test_build" > $(SRCDIR)/VERSION
 	-@$(MAKE) depend
@@ -399,9 +408,6 @@ copy_dist: $(SRCDIR)/ChangeLog.gz $(SRCDIR)/ChangeLog.rxml.gz
 	  exit 1; \
 	fi
 	@version=`cat $(SRCDIR)/VERSION | tr 'A-Z ' 'a-z_'`; \
-	if test -d platform/. ; then \
-	  version=$$version; \
-	else :; fi; \
 	if ls -d $$version* >/dev/null 2>&1; then \
 	  echo Deleting old distributions...; \
 	  rm -rf $$version* || exit 1; \
@@ -432,9 +438,6 @@ copy_dist: $(SRCDIR)/ChangeLog.gz $(SRCDIR)/ChangeLog.rxml.gz
 
 tar_dist:
 	@version=`cat $(SRCDIR)/VERSION | tr 'A-Z ' 'a-z_'`; \
-	if test -d platform/. ; then \
-	  version=$$version; \
-	else :; fi; \
 	echo "Altering some CVS files to point to developer.roxen.com..."; \
 	for f in `find $$version/ -type d -name CVS -print`; do \
 	  if egrep '^//*cvs//*roxen_src' "$$f/Repository" 2>&1 >/dev/null; \
