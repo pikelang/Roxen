@@ -1,5 +1,7 @@
-{debugs off|on} Sets or clears the 'debug' flag. This flag is local to
-this request only.
+<kbd><b>{debug off|on}</b></kbd>
+<p>
+Sets or clears the 'debug' flag. This flag is local to this request
+only.
 
 <p>
 When debug is one, many RXML-tags will output more detailed error messages.

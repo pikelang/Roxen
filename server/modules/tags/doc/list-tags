@@ -1,4 +1,5 @@
-{list-tags [verbose]}; lists all available RXML containers and
+<b><kbd>{list-tags [verbose]}</kbd></b>:
+<br> Lists all available RXML containers and
 tags. If verbose is specified, do a call to {tag help} for each and
 every tag.
 

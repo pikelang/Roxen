@@ -1,0 +1,21 @@
+Generates wizards<p>
+	    Syntax:<br>
+<br>
+{wizard [next-label=...] [previous-label=...] [ok-label=...] [cancel-label=...] [page-label=...] name=A Name cancel=url to go to when cancel is pressed done=url to go to when ok (or cancel, if not 'cancel' option is specified) is pressed}<br>
+  {page}<br>
+    A page (RXML code, with two extra tags, {var} and {cvar}, see below)<br>
+  {/page}<br>
+  {page}<br>
+    Another page...<br>
+  {/page}<br>
+{/wizard}<br>
+<br>
+{var <br>
+   <nobr>type=string|password|list|text|radio|checkbox|int|float|color|font|toggle|select|select_multiple</nobr><br>
+     name=var_name<br>
+     options=foo,bar,gazonk    -- (for select and select_multiple) --<br>
+     default=default value<br>
+     rows=num and cols=num       -- (for text) --<br>
+     size=chars                  -- (for most) --}<br>
+{cvar -- same as var,but the default value is the contents of the container --}<br>
+{/cvar}<br>

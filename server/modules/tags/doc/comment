@@ -1,0 +1,8 @@
+<kbd><b>{comment}text{/comment}</b></kbd>
+
+<p>The enclosed text will be removed from the document. The difference
+from a normal SGML comment is that the text is removed from the
+document, and can not be seen even with view source. Another
+difference is that any RXML tags inside this container will _not_ be
+parsed.
+

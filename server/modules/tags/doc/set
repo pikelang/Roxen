@@ -1,7 +1,7 @@
 <b>Syntax:</b>
 <kbd>
-{set variable=variable-to-set [value=value] [from=another-variable-name] 
-     [other=...] [define=...]}
+<b>{set variable=variable-to-set [value=value] [from=another-variable-name] 
+     [other=...] [define=...]}</b>
 </kbd>
 <p>
 <b>Attributes</b>

@@ -1,0 +1,6 @@
+<b><kbd>{source separator=...}{/source}</kbd></b><p>
+Old tag. The result is somewhat horrible:
+
+{source separator=results}This is some example {b}HTML{/b} source{/source}
+<p>Gives you <p>
+<source separator=results>This is some example <b>HTML</b> source</source>

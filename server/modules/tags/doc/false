@@ -1,3 +1,5 @@
-{false}: Internal tag, sets the return value of the last if to
-false. Enables the next {else}. Use it if you are writing your own
-'if' lookalike tag.
+<b><kbd>{false}</kbd></b>:
+
+ Internal tag, sets the return value of the last if to false. Enables
+the next {else}. Use it if you are writing your own 'if' lookalike
+tag.

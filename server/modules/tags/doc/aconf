@@ -1,6 +1,6 @@
-{aconf href=... [+config -config ...]}:
+<b><kbd>{aconf href=... [+config -config ...]}:</kbd></b>
 
-
+<p>
  Adds or removes a config option. Config options are simple toggles,
 and are always server-global but client-local. If the server supports
 cookies, they are placed in the 'roxen-config' cookie, otherwise they

@@ -1,4 +1,4 @@
 DEPRECATED: kept for compatibility reasons.<br>
-{signature name=... [realname] [email] [link] [nolink]}: Returns
+<kbd><b>{signature [name=...] [realname] [email] [link] [nolink]}:</b></kbd><p> Returns
 information about the user-account specified by the name argument,
 flused right, in italics. Equivalent to {p align=right}{address}{user [arguments]}{/address}{/p}

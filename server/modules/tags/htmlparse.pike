@@ -12,9 +12,9 @@ import Simulate;
 // 'USER' related tags, one with all CLIENT related tags, etc.
 // 
 // the only thing that should be in this file is the main parser.  
+string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-
-constant cvs_version = "$Id: htmlparse.pike,v 1.85 1998/03/05 20:35:39 neotron Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.86 1998/03/06 11:05:37 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -348,12 +348,28 @@ string *query_file_extensions()
 #define TRACE_ENTER(A,B) do{if(id->misc->trace_enter)id->misc->trace_enter((A),(B));}while(0)
 #define TRACE_LEAVE(A) do{if(id->misc->trace_leave)id->misc->trace_leave((A));}while(0)
 
+string parse_doc(string doc, string tag)
+{
+  return replace(doc, ({"{","}","<tag>","<roxen-languages>"}),
+		 ({"&lt;", "&gt;", tag, 
+	String.implode_nicely(sort(indices(roxen->languages)), "and")}));
+}
+
+string handle_help(string file, string tag, mapping args)
+{
+  return parse_doc(replace(Stdio.read_bytes(file),
+			   "<date-attributes>",date_doc),tag);
+}
+
 string call_tag(string tag, mapping args, int line, int i,
 		object id, object file, mapping defines,
 		object client)
 {
   string|function rf = real_tag_callers[tag][i];
   defines->line = (string)line;
+  if(args->help && Stdio.file_size("modules/tags/doc/"+tag) > 0)
+    return handle_help("modules/tags/doc/"+tag, tag, args);
+
   if(stringp(rf)) return rf;
 
   TRACE_ENTER("tag (&lt;" + tag + "&gt; on line "+line+")", rf);
@@ -376,6 +392,8 @@ string call_container(string tag, mapping args, string contents, int line,
 {
   defines->line = (string)line;
   string|function rf = real_container_callers[tag][i];
+  if(args->help && Stdio.file_size("modules/tags/doc/"+tag) > 0)
+    return handle_help("modules/tags/doc/"+tag, tag, args);
   if(stringp(rf)) return rf;
   TRACE_ENTER("container (&lt;"+tag+"&gt on line "+line+")", rf);
 #ifdef MODULE_LEVEL_SECURITY
@@ -415,10 +433,8 @@ mapping handle_file_extension( object file, string e, object id)
       return 0;
   }
   
-
   if(!defines->sizefmt)
   {
-    // Already partially parsed.
 #if efun(set_start_quote)
     set_start_quote(set_end_quote(0));
 #endif
@@ -436,10 +452,9 @@ mapping handle_file_extension( object file, string e, object id)
   if(QUERY(parse_exec) &&   !(_stat[0] & 07111)) return 0;
   if(QUERY(no_parse_exec) && (_stat[0] & 07111)) return 0;
 
-  to_parse = file->read(0x7fffffff);
-
-  if(err = catch( to_parse = do_parse( to_parse,id,file,defines,id->my_fd ) ))
+  if(err=catch(to_parse = do_parse(file->read(),id,file,defines,id->my_fd )))
   {
+    file->close();
     destruct(file);
     throw(err);
   }
@@ -687,6 +702,9 @@ inline string do_replace(string s, mapping (string:string) m)
 
 string tag_set( string tag, mapping m, object id )
 {
+  if(m->help) 
+    return ("<b>&lt;unset variable=...&gt;</b>: Unset the variable specified "
+	    "by the 'variable' argument");
   if (m->variable)
   {
     if (m->value)
@@ -706,8 +724,11 @@ string tag_set( string tag, mapping m, object id )
 	id->variables[ m->variable ] = id->misc->variables[ m->other ];
       else if (m->debug || id->misc->debug)
 	return "Set: other variable doesn't exist";
-      else
+      else 
 	return "";
+    else if(m->define)
+      // Set variable to the value of a define
+      id->variables[ m->variable ] = id->misc->defines[ m->define ];
     else
       // Unset variable.
       m_delete( id->variables, m->variable );
@@ -749,6 +770,9 @@ string tag_append( string tag, mapping m, object id )
 	return "<b>Append: other variable doesn't exist</b>";
       else
 	return "";
+    else if(m->define)
+      // Set variable to the value of a define
+      id->variables[ m->variable ] += id->misc->defines[ m->define ]||"";
     else if (m->debug || id->misc->debug)
       return "<b>Append: nothing to append from</b>";
     else
@@ -774,16 +798,18 @@ string tag_insert(string tag,mapping m,object got,object file,mapping defines)
   string n;
   mapping fake_id=([]);
 
-  if (n=m->name) 
+  if (n=m->name || m->define) 
   {
     m_delete(m, "name");
-    return do_replace(defines[n]||"<!-- No such define: "+n+" -->", m);
+    return do_replace(defines[n]||
+		      (got->misc->debug?"No such define: "+n:""), m);
   }
 
   if (n=m->variable) 
   {
     m_delete(m, "variable");
-    return do_replace(got->variables[n]||"<!-- No such variable: "+n+" -->", m);
+    return do_replace(got->variables[n]||
+		      (got->misc->debug?"No such variable: "+n:""), m);
   }
 
   if (n=m->variables) 
@@ -807,7 +833,8 @@ string tag_insert(string tag,mapping m,object got,object file,mapping defines)
   if (n=m->cookie) 
   {
     m_delete(m, "cookie");
-    return do_replace(got->cookies[n]||"<!-- No such variable: "+n+" -->", m);
+    return do_replace(got->cookies[n]||
+		      (got->misc->debug?"No such cookie: "+n:""), m);
   }
 
   if (m->file) 
@@ -826,7 +853,7 @@ string tag_insert(string tag,mapping m,object got,object file,mapping defines)
 	s = roxen->try_get_file(f[..sizeof(f)-3], got);
       }
       if (!s) {
-	return "<!-- No such file: "+f+"! -->";
+	return got->misc->debug?"No such file: "+f+"!":"";
       }
     }
 
@@ -843,8 +870,14 @@ string tag_modified(string tag, mapping m, object got, object file,
 string tag_compat_exec(string tag,mapping m,object got,object file,
 		       mapping defines)
 {
+
   if(!QUERY(ssi))
     return "SSI support disabled";
+
+  if(m->help) 
+    return ("See the Apache documentation. This tag is more or less equivalent"
+	    " to &lt;insert file=...&gt;, but you can run any command. Please "
+	    "note that this can present a severe security hole.");
 
   if(m->cgi)
   {
@@ -888,6 +921,8 @@ string tag_compat_exec(string tag,mapping m,object got,object file,
 string tag_compat_config(string tag,mapping m,object got,object file,
 			 mapping defines)
 {
+  if(m->help) 
+    return ("See the Apache documentation.");
   if(QUERY(ssi)&& m->sizefmt == "abbrev" || m->sizefmt == "bytes")
     defines->sizefmt = m->sizefmt;
   else
@@ -897,6 +932,8 @@ string tag_compat_config(string tag,mapping m,object got,object file,
 string tag_compat_include(string tag,mapping m,object got,object file,
 			  mapping defines)
 {
+  if(m->help) 
+    return ("This tag is more or less equivalent to the 'insert' RXML command.");
   if(!QUERY(ssi))
     return "SSI support disabled";
 
@@ -939,6 +976,8 @@ string tag_compat_echo(string tag,mapping m,object got,object file,
 {
   if(!QUERY(ssi))
     return "SSI support disabled";
+  if(m->help) 
+    return ("This tag outputs the value of different configuration and request local variables. They are not really used by Roxen. This tag is included only to provide compatibility with \"normal\" WWW-servers");
   if(m->var)
   {
     string addr=got->remoteaddr || "Internal";
@@ -1033,6 +1072,8 @@ string tag_compat_echo(string tag,mapping m,object got,object file,
 string tag_compat_fsize(string tag,mapping m,object got,object file,
 			mapping defines)
 {
+  if(m->help) 
+    return ("Returns the size of the file specified (as virtual=... or file=...)");
   if(!QUERY(ssi))
     return "SSI support disabled";
 
@@ -1061,6 +1102,7 @@ string tag_compat_fsize(string tag,mapping m,object got,object file,
   }
   return "<!-- No file? -->";
 }
+
 
 string tag_accessed(string tag,mapping m,object got,object file,
 		    mapping defines)
@@ -1235,7 +1277,10 @@ string tag_modified(string tag, mapping m, object got, object file,
   return s ? tagtime(s[3], m) : "Error: Cannot stat file";
 }
 
-string tag_version() { return roxen->version(); }
+string tag_version(string rag, mapping m) 
+{
+  return roxen->version(); 
+}
 
 string tag_clientname(string tag, mapping m, object got)
 {
@@ -1252,11 +1297,7 @@ string tag_clientname(string tag, mapping m, object got)
 string tag_signature(string tag, mapping m, object got, object file,
 		     mapping defines)
 {
-  string w;
-  if(!(w=m->user || m->name))
-    return "";
-  return "<right><address>"+tag_user(tag, m, got, file,defines)
-    +"</address></right>";
+  return "<right><address>"+tag_user(tag, m, got, file,defines)+"</address></right>";
 }
 
 string tag_user(string tag, mapping m, object got, object file,mapping defines)
@@ -1370,6 +1411,8 @@ string tag_allow(string a, mapping (string:string) m,
 {
   int ok;
 
+  if(m->help)
+    return ("DEPRECATED: Kept for compatibility reasons.");
   if(m->not)
   {
     m_delete(m, "not");
@@ -1542,7 +1585,7 @@ string tag_allow(string a, mapping (string:string) m,
   return ok?(QUERY(compat_if)?"<true>"+s:s+"<true>"):"<false>";
 }
 
-string tag_configurl()
+string tag_configurl(string f, mapping m)
 {
   return roxen->config_url();
 }
@@ -1605,6 +1648,8 @@ string tag_aconfig(string tag, mapping m, string q, object got)
 {
   string href;
   mapping(string:string) cookies = ([]);
+  
+  if(m->help) return "Alias for &lt;aconf&gt;";
 
   if(!m->href)
     href=strip_prestate(strip_config(got->raw_url));
@@ -1699,6 +1744,7 @@ string tag_remove_cookie(string tag, mapping m, object got, object file,
 
 string tag_prestate(string tag, mapping m, string q, object got)
 {
+  if(m->help) return "DEPRECATED: This tag is here for compatibility reasons only";
   int ok, not=!!m->not, or=!!m->or;
   multiset pre=got->prestate;
   string s;
@@ -1745,6 +1791,7 @@ string tag_if(string tag, mapping m, string s, object got, object file,
 	      mapping defines, object client)
 {
   string res, a, b;
+
   if(sscanf(s, "%s<otherwise>%s", a, b) == 2)
   {
     // compat_if mode?
@@ -1766,6 +1813,7 @@ string tag_if(string tag, mapping m, string s, object got, object file,
 string tag_deny(string tag, mapping m, string s, object got, object file, 
 		mapping defines, object client)
 {
+  if(m->help) return ("DEPRECATED. This tag is only here for compatibility reasons");
   if(m->not)
   {
     m->not = 0;
@@ -1791,6 +1839,7 @@ string tag_else(string tag, mapping m, string s, object got, object file,
 string tag_elseif(string tag, mapping m, string s, object got, object file, 
 		  mapping defines, object client) 
 { 
+  if(m->help) return ("alias for &lt;elseif&gt;");
   return _ok?"":tag_if(tag, m, s, got, file, defines, client); 
 }
 
@@ -1798,6 +1847,7 @@ string tag_client(string tag,mapping m, string s,object got,object file)
 {
   int isok, invert;
 
+  if(m->help) return ("DEPRECATED, This is a compatibility tag");
   if (m->not) invert=1; 
 
   if (m->supports)
@@ -1823,6 +1873,8 @@ string tag_return(string tag, mapping m, object got, object file,
 string tag_referer(string tag, mapping m, object got, object file,
 		   mapping defines)
 {
+  if(m->help) 
+    return ("Compatibility alias for referrer");
   if(got->referer)
     return sizeof(got->referer)?got->referer*"":m->alt?m->alt:"..";
   return m->alt?m->alt:"..";
@@ -1936,13 +1988,6 @@ string tag_pr(string tagname, mapping m)
 {
   string size = m->size || "small";
   string color = m->color || "blue";
-  string align = m->align ? " align=\""+m->align+"\" " : "";
-  if(m->help)
-    return "Syntax: "
-      "&lt;pr [align=left|right|center|middle] [size=large|small|medium] [color=blue|brown|green|purple]&gt;"
-      "<br>All colors are not available in all sizes, available choices:<br>"
-      "<pr list><br>The default size is small, the default color is blue\n";
-
   if(m->list)
   {
     string res = "<table><tr><td><b>size</b></td><td><b>color</b></td></tr>";
@@ -1951,10 +1996,16 @@ string tag_pr(string tagname, mapping m)
 	res += "<tr><td>"+replace(f-".gif","-","</td><td>")+"</tr>";
     return res + "</table>";
   }
-  return ("<a href=http://www.roxen.com/><img border="+m->border+" "+
-	  get_pr_size(size,color)+" "+
-	  "src=/internal-roxen-power-"+size+"-"+color+align+
-	  " alt=\"\"></a>");
+  m_delete(m, "color");
+  m_delete(m, "size");
+  m->src = "/internal-roxen-power-"+size+"-"+color;
+  int w;
+  sscanf(get_pr_size(size,color), "%*swidth=%d", w);
+  m->width = (string)w;
+  sscanf(get_pr_size(size,color), "%*sheight=%d", w);
+  m->height = (string)w;
+  if(!m->alt) m->alt="Powered by Roxen";
+  return ("<a href=http://www.roxen.com/>"+make_tag("img", m)+"</a>");
 }
 
 string tag_number(string t, mapping args)
@@ -1974,6 +2025,52 @@ string tag_debug( string tag_name, mapping args, object id )
   return "";
 }
 
+string tag_list_tags( string t, mapping args, object id, object f )
+{
+  int verbose;
+  string res="";
+  if(args->verbose) verbose = 1;
+
+  for(int i = 0; i<sizeof(tag_callers); i++)
+  {
+    res += ("<b><font size=+1>Tags at prioity level "+i+": </b></font><p>");
+    foreach(sort(indices(tag_callers[i])), string tag)
+    {
+      res += "  <a name=\""+replace(tag, "#", ".")+"\"><a href=\""+id->not_query+"?verbose="+replace(tag, "#","%23")+"#"+replace(tag, "#", ".")+"\">&lt;"+tag+"&gt;</a></a><br>";
+      if(verbose || id->variables->verbose == tag)
+      {
+	res += "<blockquote><table><tr><td>";
+	string tr;
+	catch(tr=call_tag(tag, (["help":"help"]), 
+			  id->misc->defines->line,i,
+			  id, f, id->misc->defines, id->my_fd ));
+	if(tr) res += tr; else res += "no help";
+	res += "</td></tr></table></blockquote>";
+      }
+    }
+  }
+
+  for(int i = 0; i<sizeof(container_callers); i++)
+  {
+    res += ("<p><b><font size=+1>Containers at prioity level "+i+": </b></font><p>");
+    foreach(sort(indices(container_callers[i])), string tag)
+    {
+      res += " <a name=\""+replace(tag, "#", ".")+"\"><a href=\""+id->not_query+"?verbose="+replace(tag, "#", "%23")+"#"+replace(tag,"#",".")+"\">&lt;"+tag+"&gt;&lt;/"+tag+"&gt;</a></a><br>";
+      if(verbose || id->variables->verbose == tag)
+      {
+	res += "<blockquote><table><tr><td>";
+	string tr;
+	catch(tr=call_container(tag, (["help":"help"]), "",
+				id->misc->defines->line,
+				i, id,f, id->misc->defines, id->my_fd ));
+	if(tr) res += tr; else res += "no help";
+	res += "</td></tr></table></blockquote>";
+      }
+    }
+  }
+  return res;
+}
+
 string tag_line( string t, mapping args, object id)
 {
   return id->misc->defines->line;
@@ -1984,6 +2081,7 @@ mapping query_tag_callers()
    return (["accessed":tag_accessed,
 	    "modified":tag_modified,
 	    "pr":tag_pr,
+	    "list-tags":tag_list_tags,
 	    "number":tag_number,
 	    "imgs":tag_ximage,
 	    "version":tag_version,
@@ -2053,9 +2151,10 @@ string tag_source2(string tag, mapping m, string s, object got,object file)
 
 string tag_autoformat(string tag, mapping m, string s, object got,object file)
 {
+  s-="\r";
   if(m->p)
     s = replace(s, "\n\n", "<p>");
-  if(!m->nobr)
+  else if(!m->nobr)
     s = replace(s, "\n", "<br>\n");
   return s;
 }
@@ -2130,9 +2229,10 @@ string tag_random(string tag, mapping m, string s)
 
 string tag_right(string t, mapping m, string s, object got)
 {
+  if(m->help) 
+    return "DEPRECATED: compatibility alias for &lt;p align=right&gt;";
   if(got->supports->alignright)
     return "<p align=right>"+s+"</p>";
-  
   return "<table width=100%><tr><td align=right>"+s+"</td></tr></table>";
 }
 
@@ -2311,7 +2411,6 @@ mapping query_container_callers()
 	   "client":tag_client,
 	   "if":tag_if,
 	   "elif":tag_elseif,
-	   "else if":tag_elseif,
 	   "elseif":tag_elseif,
 	   "else":tag_else,
 	   "gauge":tag_gauge,

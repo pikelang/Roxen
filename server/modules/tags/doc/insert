@@ -1,4 +1,4 @@
-<b>Syntax:</b>
+<b>Syntax:</b><br>
 <kbd>
 {insert [file=file-to-insert] [define=define-to-insert] [variable=variable-to-insert] [cookie=cookie-to-insert] [variables[=full]] [cookies[=full]] [from=to]}
 </kbd>
@@ -26,22 +26,13 @@ If <kbd><b>path</b></kbd> does not begin with "/", it is assumed to be a
     inserted text is finally parsed. 
     
 
-</td></tr>
- <tr><td valign=top>
- <center>
- <img src=/documentation/challenger1.2/img/note.gif width=23 height=37 border=0 alt="">
- </center>
  <br>
- <font size=-1></font></td>
- <td valign=top>
-
 Note that included files will be parsed if they are named with the 
     extension<kbd> .html</kbd> (or whatever extension the RXML 
     parser should parse according to configurations in the main RXML 
     parser module). It's not a good idea to name include files like 
     this, because it might render define tags unusable. 
     
-
 <p>
 If we put <kbd>{insert file="aaa/bbb"}</kbd> in the file 
     <kbd>ccc.html</kbd> and <kbd>aaa/bbb</kbd> contains 
@@ -52,15 +43,11 @@ If we put <kbd>{insert file="aaa/bbb"}</kbd> in the file
     <kbd>aaa/bbb</kbd> to <kbd>aaa/bbb.html</kbd>, Roxen 
     will instead look for <kbd>ddd</kbd> in  the directory
     <kbd>aaa/</kbd>. <p>
-  
 
-<dl>
 <dt><kbd><b>fromword=toword</b></kbd>
 <dd>Replaces <kbd>fromword</kbd> with 
     <kbd>toword</kbd> in the macro or file. Note that only lowercase
     character sequences can be replaced.<p>
-    
-
     <p>
 <dt><kbd><b><a name=macroname>define=macroname</a></b></kbd>
 <dd>Inserts this macro, which should have 
@@ -68,8 +55,6 @@ If we put <kbd>{insert file="aaa/bbb"}</kbd> in the file
     resides in another file, you have to <kbd>{insert
     file=filename}</kbd> before you can insert the macro, see
     example below.  
-</dl>
-<dt><kbd>name=..</kbd>
 </dl>
 <p> 
 <b>Example</b>

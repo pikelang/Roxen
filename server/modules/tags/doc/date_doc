@@ -1,7 +1,7 @@
 <dt><kbd><b>type=discordian|stardate</b></kbd>
 <dd>These attributes only make a
-    difference when <em>not</em> using <kbd>part</kbd> (<a href=#sb>see
-    below</a>). Note that <kbd>stardate</kbd> has a separate companion
+    difference when <em>not</em> using <kbd>part</kbd>. Note that
+<kbd>stardate</kbd> has a separate companion
     attribute, <kbd>prec</kbd>, which sets the precision. 
 <p>
 <dt><kbd><b>type=number|string|roman</b></kbd>
@@ -9,11 +9,8 @@
 <dt><kbd><b>lang=language</b></kbd>
 <dd>When using <kbd>type=string</kbd>,
     return the equivalent in the given language. This also affects the
-    <kbd>part</kbd> attribute, <a href=#sb>see below</a>.
-    Available languages are
-    Swedish (se), Finnish (fi), German (de), Catala (ca or es_CA),
-    Dutch (du), Spanish (es), French (fr), English (en, default) and
-    Norwegian (no). 
+    <kbd>part</kbd> attribute.
+    Available languages are <roxen-languages>. 
 <p>
 <dt><kbd><b><a name=sb>part=year|month|day|date|hour|minute|second|yday</a></b></kbd> 
 

@@ -11,25 +11,25 @@ sure to use the 'nocache' gtext argument. </if>
 <p>
 <b>Attributes</b>
 <dl>
-<dt><kbd><b><a name=add>add[=how_much]</a></b></kbd>
+<dt><kbd><b>add[=how_much]</b></kbd>
 <dd>Adds one or "<kbd>how_much</kbd>" to the number of accesses of the
     file that is accessed, or, in the case of no file, the current document.<p>
 Notice that the <kbd>add</kbd> attribute adds <kbd>how_much</kbd> to
     each time the page is accessed and not only
     once which is the case with the <kbd>cheat</kbd> attribute.
 
-<dt><kbd><b><a name=addreal>addreal</a></b></kbd>
+<dt><kbd><b>addreal</b></kbd>
 <dd>If you use <kbd>cheat</kbd> or other modifiers
     to the count, this attribute adds the correct count as comment
     in the HTML code, like this: <kbd>{!-- (4711) --}</kbd>.
     
 <p>
-<dt><kbd><b><a name=capitalize>capitalize</a></b></kbd>
+<dt><kbd><b>capitalize</b></kbd>
 <dd>Capitalizes the first letter of the string.
 
 <p>
 
-<dt><kbd><b><a name=cheat>cheat=num</b></kbd>
+<dt><kbd><b>cheat=num</kbd>
 <dd> Adds <kbd>num</kbd> to the actual number of
     accesses once. If your page for example has been accessed 56 times
     and you add <kbd>{accessed cheat=100}</kbd> the result will
@@ -37,12 +37,12 @@ Notice that the <kbd>add</kbd> attribute adds <kbd>how_much</kbd> to
     and so on.
 <p>
 
-<dt><kbd><b><a name=factor>factor=mult_factor</a></b></kbd>
+<dt><kbd><b>factor=mult_factor</b></kbd>
 <dd>    Multiplies the actual number of
    accesses by <kbd>mult_factor</kbd> and divides the result by one hundred.
    
 <p>
-<dt><kbd><b><a name=file>file=filename</a></b></kbd>
+<dt><kbd><b>file=filename</b></kbd>
 <dd>Shows the number of times the file
     <kbd>filename</kbd> has been accessed instead of how many times
     the current page has been accessed. If <kbd>filename</kbd> does
@@ -55,16 +55,6 @@ to type in the full name of the file. If there is a file named
     <kbd>index.html</kbd>as a default page.
 </dl>
  
-</td></tr>
- <tr><td valign=top>
- <center>
- <img src=/internal-roxen-err2.gif alt="">
- </center>
- <br>
- <font size=-1></font></td>
- <td valign=top>
-
-
 One limitation is that you cannot reference a file that does not
     have its own <kbd>{accessed}</kbd> tag. It suffices to
     enter this in a comment in the file, i.e. you do not need to
@@ -80,7 +70,7 @@ This is done for reasons of efficiency, since it would be very
     ending with certain extensions.<p>
     
 <dl>
-<dt><kbd><b><a name=lang>lang=language</a></b></kbd>
+<dt><kbd><b>lang=language</b></kbd>
 <dd>When using <kbd>type=string</kbd>, the
      number string is replaced by the string in the language indicated
      by this attribute. This also affects the <kbd>since</kbd> and
@@ -92,28 +82,28 @@ This is done for reasons of efficiency, since it would be very
     Slovenian (si), Spanish (es),Swedish (se) Portuguese (pt).
 <p>
 
-<dt><kbd><b><a name=lower>lower</a></b></kbd>
+<dt><kbd><b>lower</b></kbd>
 <dd>Lowercases the string.
 <p>
-<dt><kbd><b><a name=per>per=second|minute|hour|day|week|month</a></b></kbd>
+<dt><kbd><b>per=second|minute|hour|day|week|month</b></kbd>
 <dd> Shows the number of accesses per unit of time.
 <p>    
 
-<dt><kbd><b><a name=prec>prec(precision)=number</a></b></kbd>
+<dt><kbd><b>prec(precision)=number</b></kbd>
 <dd>    Rounds the number of accesses. The result is an integer with
     <kbd>number</kbd> valid digits. If <kbd>prec=2</kbd>, show
     <kbd>12000</kbd> instead of 
     <kbd>12149</kbd>.<p>
 
-<dt><kbd><b><a name=reset>reset</a></b></kbd>
+<dt><kbd><b>reset</b></kbd>
 <dd>Resets the access counter. Only do this
      under special conditions, i.e. within an
     <kbd>{if}...{/if}</kbd>. 
     <p>
-<dt><kbd><b><a name=silent>silent</a></b></kbd>
+<dt><kbd><b>silent</b></kbd>
 <dd>Do not show the count. The accessed tag is replaced with the empty string.
 <p>
-<dt><kbd><b><a name=since>since</a></b></kbd>
+<dt><kbd><b>since</b></kbd>
 <dd>Inserts the date that the accessed number is
     counted from. The language will depend on the <kbd>lang</kbd> tag, default
     is English. All normal date-attributes can be used. See below<p>
@@ -121,29 +111,13 @@ This is done for reasons of efficiency, since it would be very
 
 In the example below the <kbd>cheat</kbd> attribute adds 90 to the actual
     number of accesses, while the <kbd>addreal</kbd> gives you
-    information about the actual number of accesses. </td></tr>
- <tr><td valign=top>
- <center>
- <img src=/documentation/challenger1.2/img/note.gif width=23 height=37 border=0 alt="">
- </center>
+    information about the actual number of accesses.
  <br>
- <font size=-1></font></td>
- <td valign=top>
-
  Note that the "addreal"
     information only can be seen in the HTML-code.
 </dl>
 
-</td></tr>
- <tr><td colspan=2>
- <center>
-    
 <p>
-<center>
-<table bgcolor=#d0d0d0 cellpadding=12 cellspacing=0 border=0>
-<tr>
-<td>
-
 This page has been accessed<kbd>{accessed type=string cheat=90
 addreal}</kbd><br>times since<kbd>{accessed since}.</kbd> <p>
     
@@ -157,18 +131,9 @@ addreal}</kbd> <br> fois depuis <kbd>{accessed lang=fr since}.</kbd> <p>
 
  will display as:<p>
 Ce fichier a été accédé 4765<!-- (4675) --> <br> fois depuis octobre 1997.
-</td>
-</tr>
-</table>
-</center>
-
- </center>
- </td></tr>
- <tr><td></td><td>
-
 <p>
 <dl>
-<dt><kbd><b><a name=type>type=string</a></b></kbd>: four thousand six hundred seventyfive<br>
+<dt><kbd><b>type=string</b></kbd>: four thousand six hundred seventyfive<br>
     <kbd><b>type=roman</b> </kbd>:MMMMDCLXXV<br>
     <kbd><b>type=mcdonalds</b></kbd>: More than four thousand  served.<br>
     <kbd><b>type=linus</b></kbd>: 4675 since Thu Oct 16 11:39:54 1997
@@ -179,7 +144,7 @@ This attribute allows you to specify how the access counting should
     print; as a number (default), as a Roman numeral or something else.
     Try them!
        <p>
-<dl><dt><kbd><b><a name=upper>upper</a></b></kbd>
+<dl><dt><kbd><b>upper</b></kbd>
 <dd> Uppercases the string.
 </dl>
 <p>

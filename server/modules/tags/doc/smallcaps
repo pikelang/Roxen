@@ -1,0 +1,6 @@
+<b><kbd>{smallcaps [size=number] [space]]</kbd></b>:<p>Generate a smallcaps string from the enclosed text. Example:<p>
+{smallcaps space size=3}This is smallcaps{/smallcaps} <br>
+<smallcaps space size=3>This is smallcaps</smallcaps>
+<p>
+{smallcaps size=5}This is smallcaps{/smallcaps} <br>
+<smallcaps size=5>This is smallcaps</smallcaps>

@@ -1,0 +1,17 @@
+<b><kbd>{preparse tag=name [tag options]}</kbd></b>
+<p>
+ Changes the parsing order by first parsing it's contents and then
+ morphing itself into another tag that gets parsed. Makes it possible to
+ use, for example, tablify together with sqloutput.
+<p>
+Example:
+
+{preparse tag=foo}
+  hi there, {accessed}
+{/preparse}
+
+<p> returns <p>
+
+{foo}
+  hi there, <accessed>
+{/foo}

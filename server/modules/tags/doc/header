@@ -1,4 +1,4 @@
-{tag name= value=}:
+<b><kbd>{tag name= value=}</kbd></b>:<br>
 
 Adds a header to this document, example: 
 {header name=WWW-Authenticate value='Realm=foo'}

@@ -1,0 +1,9 @@
+<b><kbd>{modified [by] [file=...] [realfile=...]}</kbd></b>: <br>
+
+Returns a date, or username indicating the last modification of the
+specified file (if no file is specified, the current file is used). If
+by is specified, the tag takes the same argument as the 'user' tag
+(<user help>) in addition to the normal ones. If 'by' is not
+specified, the tag takes these arguments in addition to the normal ones:
+<p>
+<date-attributes>

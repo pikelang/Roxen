@@ -1,4 +1,4 @@
-{expire_time [hours=...] [minutes=...] [seconds=...] [days=...]}:<p>
+<kbd><b>{expire_time [hours=...] [minutes=...] [seconds=...] [days=...]}</b></kbd>:<p>
 
 	    Sets the expire-time for this document.<br>
 	    hours=int: Add int * 3600 to the expire time<br>

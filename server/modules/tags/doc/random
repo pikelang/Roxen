@@ -1,0 +1,13 @@
+<b><kbd>{random [separator=...]}choices{/random}</kbd></b>:<p>
+
+Returns a randomly chosen string. The coices are the strings enclosed
+in the tag, if no separator is specified, newline is used.
+
+<p>Example:<p>
+{random separator='+'}
+1+2+3+4+5+6+7+8+9+10
+{/random}
+<p> results in <p>
+<random separator='+'>
+1+2+3+4+5+6+7+8+9+10
+</random>

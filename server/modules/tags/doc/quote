@@ -1,4 +1,4 @@
-{quote start=character end=character}:
+<kbd><b>{quote start=character end=character}:</b></kbd>
 Sets the 'end' and 'start' quote characters.<p>
 
 Warning: This function is not thread-safe, and might behave
@@ -13,7 +13,7 @@ otherwise. Consider:<p>
 {quote start=[ end=]}
 <p>
 The second time this code is run, the starting quote character would
-be set to ' '. Not a very good idea, really. :-)
+be set to ' '.
 
 
 	    
