@@ -1,5 +1,5 @@
 //
-// $Id: php.pike,v 2.2 2005/03/09 15:59:42 grubba Exp $
+// $Id: php.pike,v 2.3 2005/03/09 17:04:44 grubba Exp $
 //
 // Support for files with php markup.
 //
@@ -11,7 +11,7 @@
 
 inherit "cgi.pike";
 
-constant cvs_version = "$Id: php.pike,v 2.2 2005/03/09 15:59:42 grubba Exp $";
+constant cvs_version = "$Id: php.pike,v 2.3 2005/03/09 17:04:44 grubba Exp $";
 
 constant module_type = MODULE_FILE_EXTENSION;
 constant module_name = "Scripting: PHP scripting support";
@@ -182,11 +182,15 @@ class PHPScript
       "stdin":stdin,
       "stdout":(t=stdout->pipe(/*Stdio.PROP_IPC|Stdio.PROP_NONBLOCK*/)),
       "stderr":(stderr==stdout?t:stderr),
-      //      "cwd":dirname( query("command") ),
       "env":environment,
       "noinitgroups":1,
     ]);
     stdin = stdin->pipe(/*Stdio.PROP_IPC|Stdio.PROP_NONBLOCK*/);
+
+    if (mid->realfile ||
+	(mid->realfile = mid->conf->real_file(mid->not_query, mid))) {
+      options->cwd = combine_path(getcwd(), mid->realfile, "..");
+    }
 
 #if UNIX
     if(!getuid())
