@@ -1,4 +1,4 @@
-/* $Id: https.pike,v 1.6 1999/06/08 02:59:26 mast Exp $
+/* $Id: https.pike,v 1.7 1999/06/08 03:22:34 mast Exp $
  *
  * Copyright © 1996-1998, Idonex AB
  */
@@ -44,7 +44,7 @@ class roxen_ssl_context {
 #endif
 }
 
-private object new_context(object c)
+private object new_context(object c, int port)
 {
 #ifdef SSL3_DEBUG
   roxen_perror(sprintf("SSL3:new_context(X)\n"));
@@ -54,22 +54,23 @@ private object new_context(object c)
   
   if (!contexts)
   {
-    contexts = ([ c : ctx ]);
+    contexts = ([ c : ([ port : ctx ]) ]);
     roxen->set_var("ssl3_contexts", contexts);
   }
   else
-    contexts[c] = ctx;
+    if (!contexts[c]) contexts[c] = ([ port : ctx ]);
+    else contexts[c][port] = ctx;
   return ctx;
 }
 
-private object get_context(object c)
+private object get_context(object c, int port)
 {
 #ifdef SSL3_DEBUG
   roxen_perror(sprintf("SSL3:get_context()\n"));
 #endif /* SSL3_DEBUG */
   mapping contexts = roxen->query_var("ssl3_contexts");
 
-  return contexts && contexts[c];
+  return contexts && contexts[c] && contexts[c][port];
 }
 
 array|void real_port(array port, object cfg)
@@ -80,7 +81,7 @@ array|void real_port(array port, object cfg)
 #endif
 
   string cert, key;
-  object ctx = new_context(cfg);
+  object ctx = new_context(cfg, port[0]);
   ctx->port = port[0];
   mapping options = parse_args(port[3]);
 
@@ -699,30 +700,16 @@ void destroy()
   };
 }
 
-void create(object f, object c)
+void create(object f, object c, array port)
 {
 #ifdef SSL3_DEBUG
   roxen_perror(sprintf("SSL3:create(X, X)\n"));
 #endif /* SSL3_DEBUG */
   if(f)
   {
-    object ctx;
-    array port;
-
-#if 0
-    werror(sprintf("%O\n", indices(conf)));
-    werror(sprintf("port_open: %O\n", conf->port_open));
-    werror(sprintf("open_ports: %O\n", conf->open_ports));
-    if (sizeof(conf->open_ports) != 1)
-      report_error("ssl3->assign bug: Only one ssl port supported\n");
-    port = values(conf->open_ports)[0];
-#endif
-    ctx = get_context(c);
+    object ctx = get_context(c, port[0]);
     if (!ctx)
-    {
-      roxen_perror("ssl3.pike: No SSL context!\n");
       throw( ({ "ssl3.pike: No SSL context!\n", backtrace() }) );
-    }
     my_fd_for_destruct = my_fd = roxen_sslfile(f, ctx, c);
     if(my_fd->set_alert_callback)
       my_fd->set_alert_callback(http_fallback);

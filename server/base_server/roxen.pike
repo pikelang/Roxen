@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.293 1999/06/07 05:21:12 mast Exp $
+ * $Id: roxen.pike,v 1.294 1999/06/08 03:22:33 mast Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.293 1999/06/07 05:21:12 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.294 1999/06/08 03:22:33 mast Exp $";
 
 object backend_thread;
 object argcache;
@@ -600,7 +600,7 @@ private static void accept_callback( object port )
     mark_fd( file->query_fd(),
 	     LOCALE->out_of_sockets(file->query_address()));
 #endif
-    pn[-1](file,pn[1]);
+    pn[-1](file,pn[1],pn);
 #ifdef SOCKET_DEBUG
     perror(sprintf("SOCKETS:   Ok. Connect on %O:%O from %O\n", 
 		   pn[2], pn[0], file->query_address()));
