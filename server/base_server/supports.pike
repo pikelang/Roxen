@@ -171,6 +171,19 @@ mapping(string:string) find_client_var(string from, void|mapping existing_cv)
   return lookup_supports(from)[1]|existing_cv;
 }
 
+array(mapping) find_supports_and_vars(string from, void|multiset existing_sup, void|mapping existing_cv)
+{
+  if(!multisetp(existing_sup)) existing_sup=(<>);
+  if(!mappingp(existing_cv)) existing_cv=([]);
+  if(!strlen(from) || from == "unknown")
+    return ({ default_supports|existing_sup, default_client_var|existing_cv });
+
+  array ret = lookup_supports(from);
+  ret[0]|=existing_sup;
+  ret[1]|=existing_cv;
+  return ret;
+}
+
 
 //------------------- Code that updates the supports database --------------
 
