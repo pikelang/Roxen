@@ -1,6 +1,8 @@
 Changes since Roxen Challenger 1.2 alpha 5
 -----------------------------------------------
 
+o Added better checks during module-initialization.
+
 o Fixed permission bug in the ftp-module.
 
 o Userdatabase module using YP (NIS) added.
