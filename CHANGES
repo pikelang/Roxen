@@ -1,3 +1,13 @@
+Changes since Roxen 1.1 alpha 3
+-----------------------------------------------
+
+o Small bug fixed in protocols/http.lpc
+
+o Correct pike/lib and pike/bin dirs. 
+
+o CGI-bin path in the CGI and FCGI modules now get a trailing slash
+  appended if it was missing. 
+
 Changes since Roxen 1.1 alpha 2
 -----------------------------------------------
 
