@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.75 2001/03/12 23:46:05 nilsson Exp $
+// $Id: Roxen.pmod,v 1.76 2001/03/13 01:20:42 nilsson Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2645,7 +2645,6 @@ class ScopePage {
 		       "theme-language":"theme_language"]);
 
   mixed `[] (string var, void|RXML.Context c, void|string scope, void|RXML.Type type) {
-    NOCACHE(c->id);
     switch (var) {
       case "pathinfo": return ENCODE(c->id->misc->path_info, t_text, type);
     }
@@ -2669,7 +2668,6 @@ class ScopePage {
 
   array(string) _indices(void|RXML.Context c) {
     if(!c) return ({});
-    NOCACHE(c->id);
     array ind=indices(c->id->misc->scope_page);
     foreach(indices(converter), string def)
       if(c->id->misc->defines[converter[def]]) ind+=({def});
