@@ -1,5 +1,5 @@
 /*
- * $Id: update.pike,v 1.13 2000/04/12 19:08:28 js Exp $
+ * $Id: update.pike,v 1.14 2000/06/29 13:24:01 js Exp $
  *
  * The Roxen Update Client
  * Copyright © 2000, Roxen IS.
@@ -40,7 +40,7 @@ constant module_doc = "This is the update client. "
                       "the settings tab.";
 
 object db;
-
+mixed init_error; // Used to store backtraces from yabu init
 object updater;
 Yabu.Table pkginfo, misc, installed;
 
@@ -49,16 +49,24 @@ mapping(int:GetPackage) package_downloads = ([ ]);
 int inited;
 void post_start()
 {
-#ifdef UPDATE_DEBUG
-  if(mixed error =
-#endif
-  catch(db=Yabu.db(roxen_path(QUERY(yabudir)),"wcSQ"))
-#ifdef UPDATE_DEBUG
-    )
-    UPDATE_MSGS("post_start() failed to create yabu database: %O", ({ error }));
-#else
-  ;
-#endif
+  // It is very important that errors from the Yabu database are
+  // reported properly. Events which cause errors include:
+  //
+  //    1. Yabu does not have permission to create/write/read its files.
+  //       Solution: Change permissions on the relevant files.
+  //
+  //    2. Yabu is out locked by another process. This indicates
+  //       that several Roxen servers are running on the same files!
+  //       Solution: Kill the offending Roxen processes.
+  //
+  // Both errors listed above should be corrected by the administrator
+  // of Roxen.
+  //
+  init_error = catch { db=Yabu.db(roxen_path(QUERY(yabudir)),"wcSQ"); };
+  
+  if(init_error)
+    throw(init_error);
+
   pkginfo=db["pkginfo"];
   misc=db["misc"];
   installed=db["installed"];
@@ -66,6 +74,7 @@ void post_start()
   if(QUERY(do_external_updates))
     updater=UpdateInfoFiles();
   UPDATE_NOISES("db == %O", ({ db }));
+
 }
 
 void start(int num, Configuration conf)
@@ -159,6 +168,27 @@ array(array) menu = ({
   ({ "Third party","3rdpart" }),
 });
 
+
+string tag_update_show_backtrace(string t, mapping m, RequestID id)
+{
+  if(init_error)
+  {
+    string s="<font color='darkred'><h1>Update client initialization error</h1></font>";
+    if(search(describe_backtrace(init_error), "Out-locked")!=-1)
+    {
+      s+="<h>Possible causes:</h2>";
+      s+="<ol><li>Yabu does not have permission to create/write/read its files. Solution: Change permissions on the relevant files.</li>";
+      s+="<li> Yabu is out locked by another process. This indicates that several Roxen servers are running on the same files! Solution: Kill the offending Roxen processes.</li></ol><br/><br/>";
+    }
+    
+    s+="<h2>Backtrace:</h2><pre>"+describe_backtrace(init_error)+"</pre>";
+    id->variables->category="foo";
+    return s;
+  }
+  else
+    return "";
+}
+
 string tag_update_sidemenu(string t, mapping m, RequestID id)
 {
   string ret =
@@ -202,6 +232,8 @@ string tag_update_uninstall_package(string t, mapping m, RequestID id)
 // Arguments: package, reverse, type, limit
 string container_update_package_output(string t, mapping m, string c, RequestID id)
 {
+  if(init_error)
+    return "";
   UPDATE_NOISES("<%s>: args = %O, contents = %O", ({ t, m, c }));
   array res=({ });
   int i=0;
@@ -269,7 +301,7 @@ string container_update_download_progress_output(string t, mapping m,
   {
     mapping pkg=pkginfo[(string)package];
     pkg->size=sprintf("%.1f",pkg->size/1024.0);
-    pkg->progress=sprintf("%3.1f",package_downloads[package]->percent_done());
+    pkg->progress=sprintf("%3.1f",100.0*package_downloads[package]->percent_done());
     res+=({ pkg });
   }
 
@@ -432,7 +464,7 @@ string tag_update_install_package(string t, mapping m, RequestID id)
   installed[m->package]=1;
   installed->sync();
 
-  Stdio.recursive_rm(roxen_path("$VVARDIR/precompiled/"));
+  catch(Stdio.recursive_rm(roxen_path("$VVARDIR/precompiled/")));
   
   return res+"<br /><br /><b>Package installed completely.</b>";
 }
@@ -602,11 +634,10 @@ class GetPackage
     return (float)downloaded_bytes() / (float)b;
   }
 
-  void request_ok(object httpquery, int _num)
+  void got_data()
   {
     // FIXME: rewrite this to use a file object and stream to disk?
     Stdio.File f;
-    num=_num;
 
     if(catch(f=Stdio.File(roxen_path(QUERY(pkgdir))+num+".tar","wc")))
     {
@@ -615,7 +646,7 @@ class GetPackage
       catch(m_delete(package_downloads, num));
       return;
     }
-    if(catch(f->write(httpquery->data())))
+    if(catch(f->write(data())))
     {
       report_error("Update: Failed to write package to file: "+
 		   roxen_path(QUERY(pkgdir))+num+".tar\n");
@@ -627,6 +658,11 @@ class GetPackage
     catch(m_delete(package_downloads, num));
   }
 
+  void request_ok(object httpquery, int _num)
+  {
+    async_fetch(got_data);
+  }
+
   void request_fail(object httpquery, int num)
   {
     report_error("Update: Failed to connect to update server to fetch "
@@ -636,7 +672,8 @@ class GetPackage
 
   void create(int pkgnum)
   {
-    set_callbacks(request_ok, request_fail, pkgnum);
+    num=pkgnum;
+    set_callbacks(request_ok, request_fail);
     async_request(get_server(), get_port(),
 		  "GET "+proxyprefix()+"/updateserver/packages/"+
 		  pkgnum+".tar HTTP/1.0",
@@ -675,29 +712,34 @@ mapping parse_info_file(string s)
 class GetInfoFile
 {
   inherit Protocols.HTTP.Query;
-
-
-  void request_ok(object httpquery, int num)
+  int num;
+  
+  void got_data()
   {
     spider;
     mapping res=([]);
 
-    if(httpquery->status!=200)
+    if(status!=200)
     {
       report_error("Update: Wrong answer from server for package %d. "
-		   "HTTP status code: %d\n",num,httpquery->status);
+		   "HTTP status code: %d\n",num,status);
       return;
     }
 
-    res=parse_info_file(httpquery->data());
-    res->size=(int)httpquery->headers->pkgsize;
+    res=parse_info_file(data());
+    res->size=(int)headers->pkgsize;
     pkginfo[(string)num]=res;
     pkginfo->sync();
     report_notice("Update: Added information about package number "
 		  +num+".\n");
   }
 
-  void request_fail(object httpquery, int num)
+  void request_ok(object httpquery)
+  {
+    async_fetch(got_data);
+  }
+
+  void request_fail(object httpquery)
   {
     report_error("Update: Failed to connect to update server to fetch "
 		 "information about package number "+num+".\n");
@@ -705,7 +747,8 @@ class GetInfoFile
 
   void create(int pkgnum)
   {
-    set_callbacks(request_ok, request_fail, pkgnum);
+    num=pkgnum;
+    set_callbacks(request_ok, request_fail);
     async_request(get_server(), get_port(),
 		  "GET "+proxyprefix()+"/updateserver/packages/"+pkgnum+
 		  ".info HTTP/1.0",
@@ -718,23 +761,23 @@ class UpdateInfoFiles
 {
   inherit Protocols.HTTP.Query;
 
-  void request_ok(object httpquery)
+  void got_data()
   {
-    string s=httpquery->data();
+    string s=data();
 
     array lines=s/"\n";
 
-    if(httpquery->status==401)
+    if(status==401)
     {
       report_error("Update: Authorization failed. Will not receive any "
 		   "new update packages.\n");
       return;
     }
     
-    if(httpquery->status!=200 || lines[0]!="update" || sizeof(lines)<3)
+    if(status!=200 || lines[0]!="update" || sizeof(lines)<3)
     {
       report_error("Update: Wrong answer from server. "
-		   "HTTP status code: %d\n",httpquery->status);
+		   "HTTP status code: %d\n",status);
       return;
     }
 
@@ -760,6 +803,11 @@ class UpdateInfoFiles
 
     catch(misc["last_updated"]=time());
   }
+  
+  void request_ok(object httpquery)
+  {
+    async_fetch(got_data);
+  }
 
   void request_fail(object httpquery)
   {
@@ -778,11 +826,16 @@ class UpdateInfoFiles
   
   void do_request()
   {
+    buf="";
+    headerbuf="";
     async_request(get_server(), get_port(),
 		  "POST "+proxyprefix()+"/updateserver/get_packages HTTP/1.0",
 		  get_headers() |
 		  (["content-type":"application/x-www-form-urlencoded"]),
 		  "roxen_version="+version_as_float()+"&"+
+		  "sysname="+uname()->sysname+"&"+
+		  "machine="+uname()->machine+"&"+
+		  "release="+uname()->release+"&"+
 		  "have_packages="+
 		  encode_ranges((array(int))indices(pkginfo)));
     call_out(do_request, 12*3600);
