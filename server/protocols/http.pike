@@ -1,14 +1,14 @@
 // This is a roxen module.
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 1998, Idonex AB.
-// $Id: http.pike,v 1.154 1999/09/26 02:39:42 mast Exp $
+// $Id: http.pike,v 1.155 1999/09/29 20:25:10 kinkie Exp $
 
 #define MAGIC_ERROR
 
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.154 1999/09/26 02:39:42 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.155 1999/09/29 20:25:10 kinkie Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -105,8 +105,11 @@ void end(string|void a,int|void b);
 
 object pipe;
 
-int throttle=0;  //if nonzero, we're throttling.
-int rate=0;      //the throttling rate.
+//used values: throttle->doit=0|1 to enable it
+//             throttle->rate the rate
+//             throttle->fixed if it's not to be touched again
+mapping throttle=([]);
+
 object throttler;//the inter-request throttling object.
 
 /* Pipe-using send functions */
@@ -122,17 +125,20 @@ private void setup_pipe()
     return;
   }
   if (!conf || !conf->query("req_throttle"))
-    throttle=0;
+    throttle->doit=0;
   if(!pipe) {
-    if (throttle || (conf && conf->throttler)) {
+    if (throttle->doit || (conf && conf->throttler)) {
       pipe=((program)"slowpipe")();
     } else {
       pipe=((program)"fastpipe")();
     }
   }
-  if (throttle) {
-    rate=max(rate,conf->query("req_throttle_min")); //if conf=0 => throttle=0
-    pipe->throttle(rate,(int)(rate*conf->query("req_throttle_depth_mult")),0);
+  if (throttle->doit) {
+    throttle->rate=max(throttle->rate,
+             conf->query("req_throttle_min")); //if conf=0 => throttle=0
+    pipe->throttle(throttle->rate,
+                   (int)(throttle->rate*conf->query("req_throttle_depth_mult")),
+                   0);
   }
   if (conf && conf->throttler) { 
     pipe->assign_throttler(conf->throttler);
