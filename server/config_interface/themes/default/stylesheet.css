@@ -8,10 +8,8 @@ pre, textarea
 	font-family: monospace;
 }
 
-a:link { text-decoration: none; color: #215dc6 }
-a:visited { text-decoration: none; color: #215dc6 }
-a:active { text-decoration: none; color: #6d8dc6 }
-a:hover { text-decoration: underline; color: #5690f5 }
+a { text-decoration: none; color: #2331d1 }
+a:hover { text-decoration: underline; color: #6d7cff }
 
 li
 {
