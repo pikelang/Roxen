@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.11 2001/01/31 08:01:06 nilsson Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.12 2001/01/31 08:09:24 per Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Roxen self test module";
@@ -13,6 +13,9 @@ constant is_roxen_tester_module = 1;
 Configuration conf;
 Stdio.File index_file;
 Protocol port;
+
+int verbose;
+
 
 void start(int n, Configuration c) {
   conf=c;
@@ -91,20 +94,61 @@ void xml_test(string t, mapping args, string c) {
   ltests++;
   tests++;
 
-  string rxml, res;
+  string rxml="", res;
+
+  string indent( int l, string what )
+  {
+    array q = what/"\n";
+    //   if( q[-1] == "" )  q = q[..sizeof(q)-2];
+    string i = (" "*l+"|  ");
+    return i+q*("\n"+i)+"\n";
+  };
+  string test_error( string message, mixed ... args )
+  {
+    if( sizeof( args ) )
+      message = sprintf( message, @args );
+    if( verbose )
+      if( strlen( rxml ) )
+	report_debug("FAIL\n" );
+    if( strlen( rxml ) )
+      report_debug( indent(2, rxml ) );
+    rxml="";
+    report_debug( indent(2, message ) );
+  };
+  string test_ok(  )
+  {
+    rxml = "";
+    if( verbose )
+      report_debug( "PASS\n" );
+  };
+  string test_test( string test )
+  {
+    if( verbose && strlen( rxml ) )
+      test_ok();
+    rxml = test;
+    if( verbose )
+    {
+      report_debug( "%4d %-69s  ",
+		    ltests, replace(test[..68],
+				    ({"\t","\n", "\r"}),
+				    ({"\\t","\\n", "\\r"}) ));
+    }
+  };
+  
   RequestID id = get_id();
   Parser.HTML parser =
     Parser.HTML()->
     add_containers( ([ "rxml" :
 		       lambda(string t, mapping m, string c) {
-			 rxml=c;
-			 mixed err = catch( res = Roxen.parse_rxml( rxml, id ));
-			 if(err) {
-			   report_error(" Test \"%s\"\nFailed (backtrace)\n",rxml);
-			   report_error("%s\n",describe_backtrace(err));
+			 test_test( c );
+			 mixed err =
+			   catch( res = Roxen.parse_rxml( rxml, id ));
+			 if(err)
+			 {
+			   test_error("Failed (backtrace)\n");
+			   test_error("%s\n",describe_backtrace(err));
 			   throw(1);
 			 }
-
 			 if(!args["no-canon"])
 			   res = canon_html(res);
 		       },
@@ -112,53 +156,58 @@ void xml_test(string t, mapping args, string c) {
 		       lambda(string t, mapping m, string c) {
 			 if(res != c) {
 			   if(m->not) return;
-			   report_error(" Test \"%s\"\n Failed (%O != %O)\n", rxml, res, c);
+			   test_error("Failed (%O != %O)\n", res, c);
 			   throw(1);
 			 }
+			 test_ok( );
 		       },
 		       "glob" :
 		       lambda(string t, mapping m, string c) {
 			 if( !glob(c, res) ) {
 			   if(m->not) return;
-			   report_error(" Test \"%s\"\n Failed (%O does not match %O)\n",
-					rxml, res, c);
+			   test_error("Failed (%O does not match %O)\n",
+				      res, c);
 			   throw(1);
 			 }
+			 test_ok( );
 		       },
 		       "has-value" :
 		       lambda(string t, mapping m, string c) {
 			 if( !has_value(res, c) ) {
 			   if(m->not) return;
-			   report_error(" Test \"%s\"\n Failed (%O does not contain %O)\n",
-					rxml, res, c);
+			   test_error("Failed (%O does not contain %O)\n",
+				      rxml, res, c);
 			   throw(1);
 			 }
+			 test_ok( );
 		       },
-    ]) )->add_tags( ([ "add" : lambda(string t, mapping m, string c) {
-				 switch(m->what) {
-				 default:
-				   report_error("Could not <add> %O; unknown variable.\n", m->what);
-				   break;
-				 case "prestate":
-				   id->prestate[m->name] = 1;
-				   break;
-				 case "variable":
-				   id->variables[m->name] = m->value || m->name;
-				   break;
-				 case "cookies":
-				   id->cookies[m->name] = m->value || "";
-				   break;
-				 case "supports":
-				   id->supports[m->name] = 1;
-				   break;
-				 case "config":
-				   id->config[m->name] = 1;
-				   break;
-				 case "client_var":
-				   id->client_var[m->name] = m->value || "";
-				   break;
-				 }
-			       },
+    ]) )
+    ->add_tags( ([ "add" : lambda(string t, mapping m, string c) {
+			     switch(m->what) {
+			       default:
+				 test_error("Could not <add> %O; "
+					    "unknown variable.\n", m->what);
+				 break;
+			       case "prestate":
+				 id->prestate[m->name] = 1;
+				 break;
+			       case "variable":
+				 id->variables[m->name] = m->value || m->name;
+				 break;
+			       case "cookies":
+				 id->cookies[m->name] = m->value || "";
+				 break;
+			       case "supports":
+				 id->supports[m->name] = 1;
+				 break;
+			       case "config":
+				 id->config[m->name] = 1;
+				 break;
+			       case "client_var":
+				 id->client_var[m->name] = m->value || "";
+				 break;
+			     }
+			   },
     ]) );
 
   if( catch(parser->finish(c)) ) {
@@ -166,6 +215,7 @@ void xml_test(string t, mapping args, string c) {
     lfails++;
   }
 
+  if( verbose && strlen( rxml ) ) test_ok();
   return;
 }
 
@@ -182,7 +232,8 @@ void run_xml_tests(string data) {
 				    "test" : xml_test,
 				    "comment": xml_comment,
   ]) )->finish(data);
-  if(ltests<sizeof(data/"</test>")-1) report_warning("Possibly XML error in testsuite.\n");
+  if(ltests<sizeof(data/"</test>")-1)
+    report_warning("Possibly XML error in testsuite.\n");
   report_debug("Did %d tests, failed on %d.\n", ltests, lfails);
 }
 
@@ -196,6 +247,7 @@ void run_pike_tests(object test, string path) {
       [tsts,fail] = test->run_tests(conf);
       tests+=tsts;
       fails+=fail;
+      report_debug("Did %d tests, failed on %d.\n", tsts, fail);
     };
 }
 
@@ -205,40 +257,48 @@ void run_pike_tests(object test, string path) {
 array(string) tests_to_run;
 
 void find_tests(string path) {
-  report_debug("Looking for tests in %s\n",path);
+  if( verbose )
+    report_debug("Looking for tests in %s\n",path);
   foreach(get_dir(path), string file)
-    if(file!="CVS" && file_stat(path+file)[1]==-2)
-      find_tests( path + file + "/" );
-    else if(file[-1]!='~' && glob("RoxenTest_*", file))
+  {
+    if( Stdio.Stat st = file_stat(path+file) )
     {
-      report_debug("\nFound test file %s\n",path+file);
-      int done;
-      foreach( tests_to_run, string p )
-	if( glob( "*"+p+"*", file ) )
-	{
-	  if(glob("*.xml",file))
-	    run_xml_tests(Stdio.read_file(path+file));
-	  else if(glob("*.pike",file)) {
-	    object test;
-	    mixed error;
-	    if( error=catch( test=compile_file(path+file)() ) )
-	      report_error("Failed to compile %s\n%O\n", path+file, error);
-	    else
-	      run_pike_tests( compile_file(path+file)(), path+file );
+      if(file!="CVS" && st[1]==-2)
+	find_tests( path + file + "/" );
+      else if(file[-1]!='~' && glob("RoxenTest_*", file))
+      {
+	report_debug("\nFound test file %s\n",path+file);
+	int done;
+	foreach( tests_to_run, string p )
+	  if( glob( "*"+p+"*", file ) )
+	  {
+	    if(glob("*.xml",file))
+	      run_xml_tests(Stdio.read_file(path+file));
+	    else if(glob("*.pike",file))
+	    {
+	      object test;
+	      mixed error;
+	      if( error=catch( test=compile_file(path+file)() ) )
+		report_error("Failed to compile %s\n%O\n", path+file, error);
+	      else
+		run_pike_tests( compile_file(path+file)(), path+file );
+	    }
+	    done++;
+	    break;
 	  }
-	  done++;
-	  break;
-	}
-      if( !done )
-	report_debug( "Skipped (not matched by --tests argument)\n" );
+	if( !done )
+	  report_debug( "Skipped (not matched by --tests argument)\n" );
+      }
     }
+  }
 }
 
 int die;
 void do_tests() {
 
   tests_to_run = Getopt.find_option(roxen.argv, "d",({"tests"}),0,"" )/",";
-
+  verbose = (int)Getopt.find_option(roxen.argv, "d",({"tests-verbose"}),0, 0 );
+  
   if(time() - roxen->start_time < 2) {
     call_out( do_tests, 2 );
     return;
@@ -248,8 +308,10 @@ void do_tests() {
   die=1;
   find_tests("etc/roxen_test/tests/");
   report_debug("\n\nDid a grand total of %d tests, %d failed.\n", tests, fails);
-
-  roxen->shutdown(1.0);
+  if( fails > 127 )
+    fails = 127;
+  _exit( fails );
+//   roxen->shutdown(1.0);
 }
 
 
