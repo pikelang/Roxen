@@ -1,5 +1,5 @@
 /*
- * $Id: upload_license.pike,v 1.4 2002/07/01 15:29:20 anders Exp $
+ * $Id: upload_license.pike,v 1.5 2002/08/13 11:59:48 wellhard Exp $
  */
 
 #include <roxen.h>
@@ -29,7 +29,7 @@ mixed parse( RequestID id )
       <input type='hidden' name='file.filename' value='&var.filename;'/>
       Warning the license file <b>&var.filename;</b> does already exists.
       Do you want to overwrite the file? <br />
-      <submit-gbutton>Overwirte</submit-gbutton>
+      <submit-gbutton>Overwrite</submit-gbutton>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
       <cf-cancel/>
