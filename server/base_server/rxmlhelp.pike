@@ -114,11 +114,21 @@ static string ex_cont(Parser.HTML parser, mapping m, string c, string rt, void|o
   case "shor":
     return "<br />" + mktable( ({ ({ quoted, ex_quote(parsed) }) }) );
   case "vert":
+  default:
     return "<br />"+mktable( ({ ({ quoted }), ({ parsed }) }) );
   case "hor":
-  default:
     return "<br />"+mktable( ({ ({ quoted, parsed }) }) );
   }
+}
+
+static string ex_box_cont(Parser.HTML parser, mapping m, string c, string rt, void|object id) {
+  return "<br />"+mktable( ({ ({ ex_quote(c) }) }) );
+}
+
+static string ex_src_cont(Parser.HTML parser, mapping m, string c, string rt, void|object id) {
+  string quoted = ex_quote(c);
+  string parsed = parse_rxml("<colorscope bgcolor="TDBG+">"+c+"</colorscope>", id);
+  return "<br />" + mktable( ({ ({ quoted }), ({ ex_quote(parsed) }) }) );
 }
 
 static string list_cont( Parser.HTML parser, mapping m, string c )
@@ -196,6 +206,8 @@ static string format_doc(string|mapping doc, string name, void|object id)
            "desc":desc_cont,
            "attr":attr_cont,
            "ex":ex_cont,
+	   "ex-box":ex_box_cont,
+	   "ex-src":ex_src_cont,
            "noex":noex_cont,
            "tag":lambda(Parser.HTML p, mapping m, string c) {
                    return ({ "&lt;"+c+"&gt;" });
