@@ -1,4 +1,4 @@
-/* $Id: describers.pike,v 1.51 1997/12/04 04:26:50 per Exp $ */
+/* $Id: describers.pike,v 1.52 1997/12/20 22:44:07 hedda Exp $ */
 
 #include <module.h>
 int zonk=time();
@@ -350,7 +350,7 @@ string describe_module(object node)
        && strlen(name)))
     name = node->data->name;
 
-  if(node->data->enabled)
+  if(node->data->master)
     com = (node->data->master->file_name_and_stuff()+
 	   (node->data->master->query("_comment")||""));
 
