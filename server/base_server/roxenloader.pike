@@ -5,7 +5,7 @@ import spider;
 program Privs;
 
 // Set up the roxen environment. Including custom functions like spawne().
-constant cvs_version="$Id: roxenloader.pike,v 1.41 1997/09/12 06:14:30 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.42 1997/09/17 19:52:09 grubba Exp $";
 
 #define perror roxen_perror
 
@@ -396,8 +396,21 @@ class myprivs
   }
 }
 
+class restricted_cd
+{
+  int locked_pid = getpid();
+  int `()(string path)
+  {
+    if (locked_pid == getpid()) {
+      throw(({ "Use of cd() is restricted.\n", backtrace() }));
+    }
+    return cd(path);
+  }
+}
+
 void load_roxen()
 {
+  add_constant("cd", restricted_cd());
   add_constant("Privs", myprivs(this_object()));
   roxen = ((program)"roxen")();
   Privs = ((program)"privs");
