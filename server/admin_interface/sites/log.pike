@@ -18,5 +18,5 @@ string parse(RequestID id)
     report[1000] =
       sprintf("%d entries skipped. Present in log on disk",
 	      sizeof( report )-999 );
-  return "</dl>"+(sizeof(report)?(report[..1000]*""):"Empty<dl>";
+  return "</dl>"+(sizeof(report)?(report[..1000]*""):"Empty<dl>");
 }
