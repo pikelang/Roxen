@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.203 2004/05/12 20:20:44 mast Exp $
+// $Id: module.pike,v 1.204 2004/05/13 13:40:52 grubba Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -1274,11 +1274,11 @@ mapping(string:mixed) copy_properties(string source, string destination,
     }
     mapping(string:mixed) subres =
       destination_properties->set_property(property_name, source_val);
-    if (behavior == PROPERTY_OMIT) {
+    if (!behavior) {
       TRACE_LEAVE("Omit verify.");
       continue;
     }
-    if ((behavior == PROPERTY_ALIVE) && (subres->error < 300)) {
+    if ((intp(behavior) || behavior[property_name]) && (subres->error < 300)) {
       // FIXME: Check that if the property was live in source,
       //        it is still live in destination.
       // This is likely already so, since we're in the same module.
@@ -1382,6 +1382,7 @@ static mapping(string:mixed) copy_collection(string source,
   return copy_properties(source, destination, behavior, id) || res;
 }
 
+//! Used by the default @[recurse_copy_files] to copy a single file.
 mapping(string:mixed) copy_file(string source, string destination,
 				PropertyBehavior behavior,
 				Overwrite overwrite, RequestID id)
@@ -1393,7 +1394,7 @@ mapping(string:mixed) copy_file(string source, string destination,
 }
 
 mapping(string:mixed) recurse_copy_files(string source, string destination, int depth,
-					 mapping(string:PropertyBehavior) behavior,
+					 PropertyBehavior behavior,
 					 Overwrite overwrite, RequestID id)
 {
   SIMPLE_TRACE_ENTER(this, "recurse_copy_files(%O, %O, %O, %O, %O)\n",
@@ -1422,9 +1423,7 @@ mapping(string:mixed) recurse_copy_files(string source, string destination, int 
     // FIXME: Check destination?
     if (st->isdir) {
       mapping(string:mixed) res =
-	copy_collection(source, destination,
-			behavior[loc+source] || behavior[0],
-			overwrite, result, id);
+	copy_collection(source, destination, behavior, overwrite, result, id);
       if (res && res->error >= 300) {
 	// RFC 2518 8.8.3 and 8.8.8 (error minimization).
 	TRACE_LEAVE("Copy of collection failed.");
@@ -1449,10 +1448,7 @@ mapping(string:mixed) recurse_copy_files(string source, string destination, int 
       return res;
     } else {
       TRACE_LEAVE("");
-      return copy_file(source, destination,
-		       behavior[query_location()+source] ||
-		       behavior[0],
-		       overwrite, id);
+      return copy_file(source, destination, behavior, overwrite, id);
     }
   };
 
@@ -1464,6 +1460,85 @@ mapping(string:mixed) recurse_copy_files(string source, string destination, int 
     return ([]);
   else
     return res;
+}
+
+//! Move/rename a single file.
+static mapping(string:mixed) move_file(string source, string destination,
+				       PropertyBehavior behavior,
+				       Overwrite overwrite, RequestID id)
+{
+  // Fall back to find_file().
+  RequestID tmp_id = id->clone_me();
+  tmp_id->not_query = query_location() + source;
+  tmp_id->misc["new-uri"] = query_location() + destination;
+  tmp_id->request_headers->destination =
+    id->url_base() + query_location()[1..] + destination;
+  tmp_id->method = "MOVE";
+  mapping(string:mixed) res = find_file(source, tmp_id);
+  if (!res || res->error != 501) return res;
+  // Not implemented. Fall back to COPY + DELETE.
+  res = copy_file(source, destination, behavior, overwrite, id);
+  if (res && res->error >= 300) {
+    // Copy failed.
+    return res;
+  }
+  return delete_file(source, id);
+}
+
+//! Move/rename a collection (aka directory) and all it's content.
+static mapping(string:mixed) move_collection(string source, string destination,
+					     PropertyBehavior behavior,
+					     Overwrite overwrite, RequestID id)
+{
+  // Fall back to find_file().
+  RequestID tmp_id = id->clone_me();
+  tmp_id->not_query = query_location() + source;
+  tmp_id->misc["new-uri"] = query_location() + destination;
+  tmp_id->request_headers->destination =
+    id->url_base() + query_location()[1..] + destination;
+  tmp_id->method = "MOVE";
+  mapping(string:mixed) res = find_file(source, tmp_id);
+  if (!res || res->error != 501) return res;
+  // Not implemented. Fall back to COPY + DELETE.
+  MultiStatus.Prefixed result =
+    id->get_multi_status()->prefix (id->url_base() + query_location()[1..]);
+  res = copy_collection(source, destination, behavior, overwrite, result, id);
+  if (res && (res->error >= 300 || !sizeof(res))) {
+    // Copy failed.
+    return res;
+  }
+  int fail;
+  foreach(find_dir(source, id), string filename) {
+    string subsrc = combine_path_unix(source, filename);
+    string subdst = combine_path_unix(destination, filename);
+    SIMPLE_TRACE_ENTER(this, "Recursive move from %O to %O\n",
+		       subsrc, subdst);
+    mapping(string:mixed) sub_res =
+      recurse_move_file(subsrc, subdst, behavior, overwrite, id);
+    if (sub_res && (sub_res->error != 204) && (sub_res->error != 201)) {
+      result->add_status(subdst, sub_res->error, sub_res->rettext);
+      if (sub_res->error >= 300) {
+	// Failed to move some content.
+	fail = 1;
+      }
+    }  
+  }
+  if (fail) return ([]);
+  return delete_file(source, id);
+}
+
+//! Move/rename a file or collection (aka directory).
+mapping(string:mixed) recurse_move_file(string source, string destination,
+					PropertyBehavior behavior,
+					Overwrite overwrite, RequestID id)
+{
+  Stat st = stat_file(source, id);
+  if (!st) return 0;
+
+  if (st->isdir) {
+    return move_collection(source, destination, behavior, overwrite, id);
+  }
+  return move_file(source, destination, behavior, overwrite, id);
 }
 
 string real_file(string f, RequestID id){}
