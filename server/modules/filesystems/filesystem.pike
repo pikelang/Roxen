@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version = "$Id: filesystem.pike,v 1.118 2002/06/13 22:33:05 nilsson Exp $";
+constant cvs_version = "$Id: filesystem.pike,v 1.119 2002/06/14 00:06:47 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -1099,7 +1099,7 @@ mixed find_file( string f, RequestID id )
     }
 
     TRACE_LEAVE("DELETE: Success");
-    return http_low_answer(200, sprintf( LOCALE("%s DELETED from the server."), f));
+    return http_low_answer(200, sprintf( LOCALE(77, "%s DELETED from the server."), f));
 
   default:
     TRACE_LEAVE("Not supported");
@@ -1112,6 +1112,6 @@ mixed find_file( string f, RequestID id )
 string query_name()
 {
   if (sizeof(path) > 20)
-    return mountpoint + " from " + path[..7]...path[sizeof(path)-8..];
+    return mountpoint + " from " + path[..7] + "..." + path[sizeof(path)-8..];
   return mountpoint + " from " + path;
 }

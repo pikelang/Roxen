@@ -7,7 +7,7 @@ inherit "roxen-module://filesystem";
 
 import Parser.XML.Tree;
 
-constant cvs_version = "$Id: webapp.pike,v 2.16 2002/06/13 22:58:33 nilsson Exp $";
+constant cvs_version = "$Id: webapp.pike,v 2.17 2002/06/14 00:06:47 nilsson Exp $";
 
 constant thread_safe=1;
 constant module_unique = 0;
@@ -1516,7 +1516,7 @@ class WARPath
     Stat s = r_file_stat( value );
     Stdio.File f = Stdio.File();
     if( !s )
-      warn += value + " does not exist.\n");
+      warn += value + " does not exist.\n";
     else if( s[ ST_SIZE ] == -2 )
       { // directory
         if ( f->open(combine_path(value, "WEB-INF/web.xml"), "r") )
