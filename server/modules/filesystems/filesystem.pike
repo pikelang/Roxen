@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.142 2004/05/13 18:20:39 grubba Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.143 2004/05/13 21:00:07 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -1243,6 +1243,11 @@ mixed find_file( string f, RequestID id )
     new_uri = new_uri[sizeof(mountpoint)..];
     string moveto = path + "/" + new_uri;
 
+    // Workaround for Linux, Tru64 and FreeBSD.
+    if (has_suffix(moveto, "/")) {
+      moveto = moveto[..sizeof(moveto)-2];
+    }
+
     if (FILTER_INTERNAL_FILE (f, id) ||
 	FILTER_INTERNAL_FILE (moveto, id)) {
       id->misc->error_code = 405;
@@ -1604,7 +1609,7 @@ mapping copy_file(string source, string dest, PropertyBehavior behavior,
       TRACE_LEAVE("Failed to open source file.");
       return Roxen.http_status(404);
     }
-    // Workaround for Linux, Tru64 and FreeBSD not being POSIX.
+    // Workaround for Linux, Tru64 and FreeBSD.
     if (has_suffix(dest_path, "/")) {
       dest_path = dest_path[..sizeof(dest_path)-2];
     }
