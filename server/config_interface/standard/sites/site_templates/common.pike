@@ -125,7 +125,7 @@ mixed parse( RequestID id, mapping|void opt )
     conf->after_init_hooks = ({});
     conf->inited = 1;
     conf->start( 0 );
-    conf->save( ); // save it all in one go
+    conf->save (1); // save it all in one go
     return "<done/>";
   }
   return "<h2>"+
