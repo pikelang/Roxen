@@ -1,7 +1,6 @@
 [attr]binary -text -crlf -diff -ident
 * text ident
 *.gif binary
-/sites/1/index.html eol=crlf
 *.jpg binary
 *.pnm binary
 *.ppm binary
