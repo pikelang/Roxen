@@ -5,7 +5,26 @@ inherit "../logutil.pike";
 
 string module_global_page( RequestID id, Configuration conf )
 {
-  return "<insert file=global_module_page.inc nocache>\n";
+  return 
+#"<awizard>
+  <page>
+     <button page=add_module gbutton_title='Add module'>
+     <button page=delete_module gbutton_title='Delete module'>
+  </page>
+  <page name=add_module>
+    <insert file=add_module.inc>
+    <button page=final_add_module title=' OK '>
+  </page>
+
+  <page name=final_add_module>
+    <pike>
+     foreach( id->variables->_add_new_modules/\"\\0\", string module )
+       id->misc->current_configuration->enable_module( module );
+     return \"\";
+    </pike>
+    <goto href=../>
+  </page>
+</awizard>";
 }
 
 #define translate( X ) _translate( (X), id )
