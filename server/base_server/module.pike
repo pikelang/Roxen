@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.42 1999/06/09 01:49:22 mast Exp $ */
+/* $Id: module.pike,v 1.43 1999/06/21 19:31:47 mast Exp $ */
 
 #include <module.h>
 
@@ -28,7 +28,7 @@ int module_dependencies(object configuration, array (string) modules)
 	configuration->enable_module(module+"#0");
     }
     if(roxen->root)
-      roxen->configuration_interface()->build_root(roxen->root);
+      roxen->build_root(roxen->root);
   }
   mixed err;
   if (err = catch (_do_call_outs()))
