@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.7 2001/06/13 13:48:52 per Exp $
+// $Id: DBManager.pmod,v 1.8 2001/06/15 09:58:09 per Exp $
 //! @module DBManager
 //! Manages database aliases and permissions
 #include <roxen.h>
@@ -29,6 +29,8 @@ private
   void changed()
   {
     changed_callbacks-=({0});
+    sql_cache = ([]);
+    connection_cache = ([]);
     foreach( changed_callbacks, function cb ) catch( cb() );
   }
 
@@ -129,15 +131,20 @@ private
   }
   
 
-  mapping (string:Thread.Local) sql_cache = ([]);
+  // Note: we cannot use Thread.Local here, since we want to reset
+  // this when the list of databases or the permissions is changed,
+  // and using Thread.Local would cause the old connections to leak.
+  //
+  // Bad luck. :-)
+  mapping(Thread.Thread:mapping(string:Sql.Sql)) sql_cache = ([]);
   Sql.Sql sql_cache_get(string what)
   {
-    if(sql_cache[what] && sql_cache[what]->get())
-      return sql_cache[what]->get();
-    if(!sql_cache[what])
-      sql_cache[what] =  Thread.Local();
-    sql_cache[what]->set( Sql.Sql( what ) );
-    return sql_cache[what]->get();
+    mapping m = sql_cache[ this_thread() ] || ([]);
+    if(m[ what ] )
+      return m[ what ];
+    m[ what ] =  Sql.Sql( what );
+    sql_cache[ this_thread() ] = m;    
+    return m[ what ]; 
   }
 
   Sql.Sql low_get( string user, string db )
@@ -316,7 +323,13 @@ Sql.Sql get( string name, void|Configuration c, int|void ro )
 }
 
 #ifdef THREADS
- static Thread.Local connection_cache = Thread.Local();
+// Note: we cannot use Thread.Local here, since we want to reset this
+// when the list of databases or the permissions is changed.
+//
+// Bad luck. :-)
+static mapping(Thread.Thread:mapping(string:Sql.Sql))
+  connection_cache = ([]);
+
 Sql.Sql cached_get( string name, void|Configuration c, void|int ro )
 //! Identical to get(), but the authentication verification and
 //! mapping database name <--> DB-url mapping is cached between
@@ -330,7 +343,7 @@ Sql.Sql cached_get( string name, void|Configuration c, void|int ro )
 //! caching.
 {
   string key = name+"|"+(c&&c->name)+"|"+ro;
-  mapping cm = connection_cache->get() || ([]);
+  mapping cm = connection_cache[ this_thread() ] || ([]);
 
   Sql.Sql res;
 
@@ -342,7 +355,7 @@ Sql.Sql cached_get( string name, void|Configuration c, void|int ro )
   if( res )
   {
     cm[key]=res;
-    connection_cache->set( cm );
+    connection_cache[ this_thread() ] = cm;
   }
   return res;
 }
