@@ -8,7 +8,7 @@
 // / is quite useful for IPPs, enabling them to have URLs like
 // http://www.hostname.of.provider/customer/.
 
-string cvs_version = "$Id: userfs.pike,v 1.12 1997/04/05 01:26:05 per Exp $";
+string cvs_version = "$Id: userfs.pike,v 1.13 1997/05/16 15:39:32 grubba Exp $";
 #include <module.h>
 
 inherit "filesystem";
@@ -114,10 +114,16 @@ mixed find_file(string f, object got)
 	path = us[ 5 ] + "/" + QUERY(pdir);
     else	
       path = us[ 5 ] + QUERY(pdir);
-    
+
+    //  if public dir is not a directory 
+    if(!strlen(f)) {
+      st = file_stat(path + f);
+      if(!st || st[1] != -2)
+	return 0;
+    }
+
     if(QUERY(own))
     {
-      array st;
       st = file_stat(path + f);
       if(!st || (st[-2] != (int)us[2])) 
         return 0;
@@ -144,7 +150,7 @@ string real_file( mixed f, mixed id )
   if(u)
   {
     string *us;
-    int fs;
+    array(int) fs;
     us = roxen->userinfo( u, id );
     if(!us) return 0;
     if(QUERY(only_password) && strlen(us[ 1 ]) < 8)     return 0;
@@ -154,7 +160,9 @@ string real_file( mixed f, mixed id )
     else
       path = us[ 5 ] + QUERY(pdir);
 
-    if( file_stat(path + f) )
+    fs = file_stat(path + f);
+    // FIXME: Should probably have a look at this code.
+    if (fs && ((fs[1] >= 0) || (fs[1] == -2)))
       return path+f;
   }
   return 0;
