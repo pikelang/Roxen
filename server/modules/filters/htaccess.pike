@@ -5,7 +5,7 @@
 
 // import Stdio;
 
-constant cvs_version = "$Id: htaccess.pike,v 1.39 1998/06/26 15:10:13 grubba Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.40 1998/06/26 15:13:26 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -567,7 +567,11 @@ mapping|string|int htaccess(mapping access, object id)
       TRACE_LEAVE("Assumed OK");
       return 0;
       
-    case "put": case "delete":
+    case "mv":
+    case "chmod":
+    case "mkdir":
+    case "put":
+    case "delete":
     default:
       TRACE_LEAVE("Unknown method or PUT or DELETE");
       TRACE_LEAVE("Assumed denied");
