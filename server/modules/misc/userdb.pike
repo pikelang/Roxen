@@ -3,7 +3,7 @@
 // User database. Reads the system password database and use it to
 // authentificate users.
 
-constant cvs_version = "$Id: userdb.pike,v 1.32 1999/06/09 07:27:44 mast Exp $";
+constant cvs_version = "$Id: userdb.pike,v 1.33 1999/06/15 00:03:44 mast Exp $";
 
 #include <module.h>
 inherit "module";
@@ -12,9 +12,25 @@ inherit "roxenlib";
 // import Stdio;
 // import Array;
 
+// Fairly weak check of password for portability.
+#define CRYPTWD_CHECK(cryptwd) \
+  (!!(cryptwd) && sizeof (cryptwd) >= 10 && \
+   search ((cryptwd), "*") < 0 && search ((cryptwd), "!") < 0)
+
 mapping users, uid2user;
 array fstat;
 void read_data();
+
+void report_io_error (string f, mixed... args)
+{
+  f = sprintf (f, @args);
+#if constant (strerror)
+  f += ": " + strerror (errno()) + "\n";
+#else
+  f += ": errno " + errno() + "\n";
+#endif
+  report_error (f);
+}
 
 
 void try_find_user(string|int u) 
@@ -199,6 +215,7 @@ void read_data()
       destruct(privs);
     }
     privs = 0;
+    if (!data) report_io_error ("Error reading passwd database with ypcat");
     break;
 
   case "getpwent":
@@ -230,6 +247,7 @@ void read_data()
       destruct(privs);
     }
     privs = 0;
+    if (!data) report_io_error ("Error reading passwd database from " + query ("file"));
     last_password_read = time();
     break;
     
@@ -242,13 +260,16 @@ void read_data()
 #endif
     fstat = file_stat(query("file"));
     data=    Stdio.read_bytes(query("file"));
-    shadow = Stdio.read_bytes(query("shadowfile"));
+    if (data) shadow = Stdio.read_bytes(query("shadowfile"));
     if (objectp(privs)) {
       destruct(privs);
     }
     privs = 0;
-    if(data && shadow)
-    {
+    if (!data)
+      report_io_error ("Error reading passwd database from " + query ("file"));
+    else if (!shadow)
+      report_io_error ("Error reading shadow database from " + query ("shadowfile"));
+    else {
       foreach(shadow / "\n", shadow) {
 	if(sizeof(a = shadow / ":") > 2)
 	  sh[a[0]] = a[1];
@@ -258,8 +279,8 @@ void read_data()
 	if(sizeof(a = pw[i] / ":") && sh[a[0]])
 	  pw[i] = `+(a[0..0],({sh[a[0]]}),a[2..])*":";
       }
+      data = pw*"\n";
     }
-    catch { data = pw*"\n"; };
     last_password_read = time();
     break;
 
@@ -272,6 +293,7 @@ void read_data()
       destruct(privs);
     }
     privs = 0;
+    if (!data) report_io_error ("Error reading passwd database with niscat");
     break;
   }
 
@@ -394,18 +416,22 @@ array|int auth(string *auth, object id)
 
 string status()
 {
+  int cryptwd_ok = 0;
+  foreach (values (users), array e)
+    cryptwd_ok += CRYPTWD_CHECK (e[1]);
+
   return 
     ("<h1>Security info</h1>"+
      "<b>Successful auths:</b> "+(string)succ+"<br>\n" + 
      "<b>Failed auths:</b> "+(string)fail
      +", "+(string)nouser+" had the wrong username<br>\n"
-     + "<p>"+
-     "<h3>Failure by host</h3>" +
+     + "<p>The database has "+ sizeof(users)+" entries, "
+     "of which " + cryptwd_ok + " seems to have valid passwords."
+//     + "<P>The netgroup database has "+sizeof(group)+" entries"
+     + "<h3>Failure by host</h3>" +
      Array.map(indices(failed), lambda(string s) {
        return roxen->quick_ip_to_host(s) + ": "+failed[s]+"<br>\n";
      }) * "" 
-     + "<p>The database has "+ sizeof(users)+" entries"
-//     + "<P>The netgroup database has "+sizeof(group)+" entries"
 );
 }
 
