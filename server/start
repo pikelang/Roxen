@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.128 2000/09/24 01:49:17 per Exp $
+# $Id: start,v 1.129 2000/09/25 07:55:02 per Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -636,14 +636,16 @@ start_roxen() {
 #
 # Now do the stuff
 #
-PIKEVERSION=`$pike --version 2>&1`
+PIKEVERSION="`$pike --version 2>&1|head -1`"
+LS="`ls -lL $pike 2>/dev/null`"
 
+VERSION_DATA="$PIKEVERSION   $DEFINES   $LS"
 
 if [ "$program" = "base_server/roxenloader.pike" ] ; then
-  if [ "`cat $old_roxen_defines 2>/dev/null`" != "$PIKEVERSION $DEFINES" ] ; then
+  if [ "`cat $old_roxen_defines 2>/dev/null`" != "$VERSION_DATA" ] ; then
     remove_old_dot_o_files "defines or pike version changed"
   fi
-  echo "$PIKEVERSION $DEFINES" > $old_roxen_defines
+  echo "$VERSION_DATA" > $old_roxen_defines
 fi
 
 if [ -z "$once" ] ; then
