@@ -12,7 +12,7 @@ constant module_type = MODULE_LOCATION;
 constant module_name = "Configuration Filesystem";
 constant module_doc = "This filesystem serves the configuration interface";
 constant module_unique = 1;
-constant cvs_version = "$Id: config_filesystem.pike,v 1.27 2000/03/02 21:33:32 grubba Exp $";
+constant cvs_version = "$Id: config_filesystem.pike,v 1.28 2000/03/03 22:00:33 grubba Exp $";
 
 constant path = "config_interface/";
 
@@ -28,29 +28,63 @@ string template_for( string f, object id )
       return cd[..i]*"/"+"/template";
 }
 
-string real_file( mixed f, mixed id )
-{
-  if(stat_file( f, id ))
-    return path + f;
-}
-
 // Try finding the locale-specific file first.
 // Returns ({ realfile, statinfo }).
-array(string|array) low_stat_file(string f, object id)
+array(string|array) low_stat_file(string locale, string f, object id)
 {
   array ret;
-  ret = file_stat(path+f);
-  if (!ret) {
-    sscanf( f, "%*[^/]/%s", f );
-    f = "standard/"+f;
-    ret = file_stat( path+f );
+  if (!f) {
+    ret = low_stat_file(locale, "", id);
+
+    if (ret) {
+      return ret;
+    }
+
+    // Support stuff like /template  =>  /standard/template
+    f = locale;
+    locale = "standard";
   }
-  return ret && ({ path+f, ret });
+  if (locale == "standard") {
+    locale = roxen->default_locale->latin1_name;
+  }
+  string p;
+  ret = file_stat(p = path+locale+"/"+f);
+  if (!ret && (locale != "standard")) {
+    locale = "standard";
+    ret = file_stat(p = path+locale+"/"+f);
+  }
+  return ret && ({ p, ret });
+}
+
+string real_file( mixed f, mixed id )
+{
+  while( strlen( f ) && (f[0] == '/' ))
+    f = f[1..];
+
+  if (f == "") return path;
+
+  string locale;
+  string rest;
+
+  sscanf(f, "%[^/]/%s", locale, rest);
+
+  array(string|array) stat_info = low_stat_file(locale, rest, id);
+  return stat_info && stat_info[0];
 }
 
 array stat_file( string f, object id )
 {
-  array(string|array) ret = low_stat_file(f, id);
+  while( strlen( f ) && (f[0] == '/' ))
+    f = f[1..];
+
+  if (f == "") return file_stat(path);
+
+  string locale;
+  string rest;
+
+  sscanf(f, "%[^/]/%s", locale, rest);
+
+  array(string|array) ret = low_stat_file(locale, rest, id);
   return ret && ret[1];
 }
 
@@ -58,14 +92,24 @@ constant base ="<use file='%s' /><tmpl title='%s'>%s</tmpl>";
 
 mixed find_dir( string f, object id )
 {
-  // FIXME: Shouldn't this look at the locale?
-  return get_dir( path+f );
+  while( strlen( f ) && (f[0] == '/' ))
+    f = f[1..];
+
+  if (f == "") return indices(RoxenLocale) - ({ "Modules" });
+
+  string locale;
+  string rest;
+
+  sscanf(f, "%[^/]/%s", locale, rest);
+
+  if (rest || RoxenLocale[locale]) {
+    return get_dir(path + "standard/" + (rest || ""));
+  }
+  return get_dir(path + "standard/" + locale);
 }
 
 mixed find_file( string f, object id )
 {
-  string locale;
-
   id->set_output_charset( QUERY(encoding) );
 
   id->since = 0;
@@ -97,11 +141,14 @@ mixed find_file( string f, object id )
   while( strlen( f ) && (f[0] == '/' ))
     f = f[1..];
 
-  sscanf( f, "%[^/]/%*s", locale );
+  string locale;
+  string rest;
+
+  sscanf(f, "%[^/]/%s", locale, rest);
 
   id->misc->cf_locale = locale;
 
-  array(string|array) stat_info = low_stat_file( f, id );
+  array(string|array) stat_info = low_stat_file( locale, rest, id );
   if( !stat_info ) // No such luck...
     return 0;
   [string realfile, array stat] = stat_info;
