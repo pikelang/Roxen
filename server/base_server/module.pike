@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module.pike,v 1.104 2001/01/19 16:37:43 per Exp $
+// $Id: module.pike,v 1.105 2001/01/29 05:45:50 per Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -47,9 +47,7 @@ string module_identifier()
 	sizeof (cname) && cname[-1] == ')')
       cname = cname[..sizeof (cname) - 2];
     _module_identifier = sprintf ("%s,%s",
-				  name
-				  || this_object()->module_name_locale
-				  || this_object()->module_name, cname);
+				  name||this_object()->module_name, cname);
   }
   return _module_identifier;
 }
@@ -64,8 +62,8 @@ array register_module()
 {
   return ({
     this_object()->module_type,
-    this_object()->module_name_locale || this_object()->module_name,
-    this_object()->module_doc_locale  || this_object()->module_doc,
+    this_object()->module_name,
+    this_object()->module_doc,
     0,
     module_unique,
   });
