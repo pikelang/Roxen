@@ -1,6 +1,6 @@
 inherit "http";
 
-// static string _cvs_version = "$Id: roxenlib.pike,v 1.96 1999/05/24 04:20:58 peter Exp $";
+// static string _cvs_version = "$Id: roxenlib.pike,v 1.97 1999/05/24 05:16:45 peter Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -938,103 +938,102 @@ string get_modfullname (object module)
 }
 
 //Quote content in a multitude of ways. Used primarily bu do_output_tag
-string|mapping roxen_encode( string val, array encodings )
+string roxen_encode( string val, string encoding )
 {
-  foreach (encodings, string encoding)
-    switch (encoding) {
-     case "none":
-     case "":
-       break;
+  switch (encoding) {
+   case "none":
+   case "":
+     break;
+   
+   case "http":
+     // HTTP encoding.
+     val = http_encode_string (val);
+     break;
+     
+   case "cookie":
+     // HTTP cookie encoding.
+     val = http_encode_cookie (val);
+     break;
+     
+   case "url":
+     // HTTP encoding, including special characters in URL:s.
+     val = http_encode_url (val);
+     break;
        
-     case "http":
-       // HTTP encoding.
-       val = http_encode_string (val);
-       break;
+   case "html":
+     // For generic html text and in tag arguments. Does
+     // not work in RXML tags (use dtag or stag instead).
+     val = html_encode_string (val);
+     break;
+     
+   case "dtag":
+     // Quote quotes for a double quoted tag argument. Only
+     // for internal use, i.e. in arguments to other RXML tags.
+     val = replace (val, "\"", "\"'\"'\"");
+     break;
+     
+   case "stag":
+     // Quote quotes for a single quoted tag argument. Only
+     // for internal use, i.e. in arguments to other RXML tags.
+     val = replace(val, "'", "'\"'\"'");
+     break;
        
-     case "cookie":
-       // HTTP cookie encoding.
-       val = http_encode_cookie (val);
-       break;
-       
-     case "url":
-       // HTTP encoding, including special characters in URL:s.
-       val = http_encode_url (val);
-       break;
-       
-     case "html":
-       // For generic html text and in tag arguments. Does
-       // not work in RXML tags (use dtag or stag instead).
-       val = html_encode_string (val);
-       break;
-		
-     case "dtag":
-       // Quote quotes for a double quoted tag argument. Only
-       // for internal use, i.e. in arguments to other RXML tags.
-       val = replace (val, "\"", "\"'\"'\"");
-       break;
-       
-     case "stag":
-       // Quote quotes for a single quoted tag argument. Only
-       // for internal use, i.e. in arguments to other RXML tags.
-       val = replace(val, "'", "'\"'\"'");
-       break;
-       
-     case "pike":
-       // Pike string quoting (e.g. for use in a <pike> tag).
-       val = replace (val,
-		      ({ "\"", "\\", "\n" }),
-		      ({ "\\\"", "\\\\", "\\n" }));
-       break;
+   case "pike":
+     // Pike string quoting (e.g. for use in a <pike> tag).
+     val = replace (val,
+		    ({ "\"", "\\", "\n" }),
+		    ({ "\\\"", "\\\\", "\\n" }));
+     break;
 
-     case "js":
-     case "javascript":
-       // Javascript string quoting.
-       val = replace (val,
-		      ({ "\b", "\014", "\n", "\r", "\t", "\\", "'", "\"" }),
-		      ({ "\\b", "\\f", "\\n", "\\r", "\\t", "\\\\",
-			 "\\'", "\\\"" }));
-       break;
+   case "js":
+   case "javascript":
+     // Javascript string quoting.
+     val = replace (val,
+		    ({ "\b", "\014", "\n", "\r", "\t", "\\", "'", "\"" }),
+		    ({ "\\b", "\\f", "\\n", "\\r", "\\t", "\\\\",
+		       "\\'", "\\\"" }));
+     break;
        
-     case "mysql":
-       // MySQL quoting.
-       val = replace (val,
-		      ({ "\"", "'", "\\" }),
-		      ({ "\\\"" , "\\'", "\\\\" }) );
-       break;
+   case "mysql":
+     // MySQL quoting.
+     val = replace (val,
+		    ({ "\"", "'", "\\" }),
+		    ({ "\\\"" , "\\'", "\\\\" }) );
+     break;
        
-     case "sql":
-     case "oracle":
-       // SQL/Oracle quoting.
-       val = replace (val, "'", "''");
-       break;
+   case "sql":
+   case "oracle":
+     // SQL/Oracle quoting.
+     val = replace (val, "'", "''");
+     break;
        
-     case "mysql-dtag":
-       // MySQL quoting followed by dtag quoting.
-       val = replace (val,
-		      ({ "\"", "'", "\\" }),
-		      ({ "\\\"'\"'\"", "\\'", "\\\\" }));
-       break;
+   case "mysql-dtag":
+     // MySQL quoting followed by dtag quoting.
+     val = replace (val,
+		    ({ "\"", "'", "\\" }),
+		    ({ "\\\"'\"'\"", "\\'", "\\\\" }));
+     break;
        
-     case "mysql-pike":
-       // MySQL quoting followed by Pike string quoting.
-       val = replace (val,
-		      ({ "\"", "'", "\\", "\n" }),
-		      ({ "\\\\\\\"", "\\\\'",
-			 "\\\\\\\\", "\\n" }) );
-       break;
+   case "mysql-pike":
+     // MySQL quoting followed by Pike string quoting.
+     val = replace (val,
+		    ({ "\"", "'", "\\", "\n" }),
+		    ({ "\\\\\\\"", "\\\\'",
+		       "\\\\\\\\", "\\n" }) );
+     break;
        
-     case "sql-dtag":
-     case "oracle-dtag":
-       // SQL/Oracle quoting followed by dtag quoting.
-       val = replace (val,
-		      ({ "'", "\"" }),
-		      ({ "''", "\"'\"'\"" }) );
-       break;
+   case "sql-dtag":
+   case "oracle-dtag":
+     // SQL/Oracle quoting followed by dtag quoting.
+     val = replace (val,
+		    ({ "'", "\"" }),
+		    ({ "''", "\"'\"'\"" }) );
+     break;
        
-     default:
-       // Unknown encoding. Let the caller decide what to do with it.
-       return ([ "unknown":encoding ]);
-    }
+   default:
+     // Unknown encoding. Let the caller decide what to do with it.
+     return 0;
+  }
   return val;
 }
 
@@ -1234,11 +1233,10 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 			 remove_leading_trailing_ws) : ({"html"});
 
 	  string tmp_val;
-	  if( stringp(tmp_val = roxen_encode( val, encodings )) )
-	    val = tmp_val;
-	  else
-	    return ("<b>Unknown encoding " + tmp_val->unknown
-		    + " in replace field " + ((c >> 1) + 1) + "</b>");
+	  foreach (encodings, string encoding)
+	    if( !(val = roxen_encode( val, encoding )) )
+	      return ("<b>Unknown encoding " + encoding
+		      + " in replace field " + ((c >> 1) + 1) + "</b>");
 
 	  exploded[c] = val;
 	}
