@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.21 1997/09/07 16:37:59 grubba Exp $
+# $Id: start,v 1.22 1997/10/11 19:50:44 grubba Exp $
 
 VERSION=201; BETA=.a;
 
@@ -43,6 +43,15 @@ fi
 if uname | grep 'HP-UX' >/dev/null 2>&1; then
   echo 'WARNING: Applying kludge for HPUX. (see base_server/privs.pike)'
   DEFINES="$DEFINES -DHPUX_KLUDGE"
+fi
+
+# Enable threads (if available) on Solaris.
+# Most other OS's have thread bugs that cause them or Roxen to crash.
+if uname | grep 'SunOS' >/dev/null 2>&1; then
+  if uname -r | grep '5\.' >/dev/null 2>&1; then
+    echo 'Solaris detected. Enabling threads (if available).'
+    DEFINES="$DEFINES -DENABLE_THREADS"
+  fi
 fi
 
 pike=pike
