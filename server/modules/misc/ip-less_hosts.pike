@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
  
-constant cvs_version = "$Id: ip-less_hosts.pike,v 1.11 1998/03/09 15:53:19 grubba Exp $";
+constant cvs_version = "$Id: ip-less_hosts.pike,v 1.12 1998/03/09 16:18:07 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -26,7 +26,15 @@ object find_server_for(object id, string host)
 {
   host = lower_case(host);
   if(config_cache[host]) return id->conf=config_cache[host];
+
 #if constant(Array.diff_longest_sequence)
+
+  /* The idea of the algorithm is to find the server-url with the longest
+   * common sequence of characters with the host-string, and among those with
+   * the same correlation take the one which is shortest (ie least amount to
+   * throw away).
+   */
+
   int best;
   array a = host/"";
   string hn;
@@ -36,11 +44,18 @@ object find_server_for(object id, string host)
 #endif /* IP_LESS_DEBUG */
   foreach(roxen->configurations, object s) {
     string h = lower_case(s->query("MyWorldLocation"));
-    // Should probably remove http:// here...
+
+    // Remove http:// et al here...
+    // Would get interresting correlation problems with the "http" otherwise.
+    int i = search(h, "://");
+    if (i != -1) {
+      h = h[i+3..];
+    }
+
     array common = Array.diff_longest_sequence(a, h/"");
     int corr = sizeof(common);
-    string common_s = rows(h/"", common)*"";
 #ifdef IP_LESS_DEBUG
+    string common_s = rows(h/"", common)*"";
     roxen_perror(sprintf("IPLESS: h: \"%s\"\n"
 			 "IPLESS: common: %O (\"%s\")\n"
 			 "IPLESS: corr: %d\n",
