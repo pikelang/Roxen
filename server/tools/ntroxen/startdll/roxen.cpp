@@ -1,6 +1,6 @@
 // roxen.cpp: implementation of the CRoxen class.
 //
-// $Id: roxen.cpp,v 1.11 2001/11/28 11:29:44 tomas Exp $
+// $Id: roxen.cpp,v 1.12 2002/02/04 17:43:29 tomas Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -157,7 +157,7 @@ std::string CRoxen::FindPike(BOOL setEnv)
         if (_chdir (server_location + sizeof (LOCATION_COOKIE) - sizeof (""))) {
           ErrorMsg (1, TEXT("Could not change to the Roxen server directory %hs"),
             server_location + sizeof (LOCATION_COOKIE) - sizeof (""));
-          return 0;
+          return "notfound";
         }
         if (!(fd = fopen ("pikelocation.txt", "r"))) {
           ErrorMsg (1, TEXT("Roxen server directory not found - "
@@ -415,12 +415,18 @@ int CRoxen::Start(int first_time)
   info.hStdInput=GetStdHandle(STD_INPUT_HANDLE);
   info.hStdOutput=GetStdHandle(STD_OUTPUT_HANDLE);
   info.hStdError=GetStdHandle(STD_ERROR_HANDLE);
+  SetHandleInformation(info.hStdInput, HANDLE_FLAG_INHERIT, 0);
+  SetHandleInformation(info.hStdOutput, HANDLE_FLAG_INHERIT, 0);
+  SetHandleInformation(info.hStdError, HANDLE_FLAG_INHERIT, 0);
+
   SECURITY_ATTRIBUTES sa;
   sa.nLength = sizeof(SECURITY_ATTRIBUTES);
   sa.bInheritHandle = TRUE;
   sa.lpSecurityDescriptor = NULL;
 
   HANDLE hFile = INVALID_HANDLE_VALUE;
+  HANDLE hFile2 = INVALID_HANDLE_VALUE;
+  HANDLE hFile3 = INVALID_HANDLE_VALUE;
   if (_Module.m_bService || (cmdline.GetVerbose() == 0 && !cmdline.IsPassHelp()))
   {
     CreateDirectory(cmdline.GetLogDir().c_str(), NULL);
@@ -441,13 +447,33 @@ int CRoxen::Start(int first_time)
         FILE_END  // starting point
         );
       info.hStdOutput = hFile;
-      info.hStdError = hFile;
+      if (!DuplicateHandle(GetCurrentProcess(),hFile,
+                           GetCurrentProcess(),
+                           &hFile3, // Address of new handle.
+                           0,TRUE, // Make it inheritable.
+                           DUPLICATE_SAME_ACCESS))
+           ErrorMsg(1, "DuplicateHandle");
+      info.hStdError = hFile3;
+    }
+    hFile2 = CreateFile("NUL:",
+      GENERIC_READ|GENERIC_WRITE,   // desired access
+      FILE_SHARE_READ,              // share mode
+      &sa,                          // security
+      OPEN_ALWAYS,                  // creation disposition
+      FILE_ATTRIBUTE_NORMAL,        // flags and attributes
+      NULL);                        // template file
+    if (hFile2 != INVALID_HANDLE_VALUE)
+    {
+      info.hStdInput = hFile2;
     }
   }
   
   if (hProcess != 0)
     CloseHandle(hProcess);
   hProcess = 0;
+  SetHandleInformation(info.hStdInput, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
+  SetHandleInformation(info.hStdOutput, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
+  SetHandleInformation(info.hStdError, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
   ret=CreateProcess(NULL,
     cmd,
     NULL,  /* process security attribute */
@@ -466,6 +492,8 @@ int CRoxen::Start(int first_time)
   }
   
   CloseHandle(hFile);
+  CloseHandle(hFile2);
+  CloseHandle(hFile3);
   CloseHandle(proc.hThread);
   hProcess=proc.hProcess;
   return TRUE;
