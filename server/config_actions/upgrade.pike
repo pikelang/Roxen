@@ -1,11 +1,38 @@
 /*
- * $Id: upgrade.pike,v 1.24 1997/09/08 18:24:57 grubba Exp $
+ * $Id: upgrade.pike,v 1.25 1997/09/14 14:14:44 per Exp $
  */
 constant name= "Maintenance//Upgrade components from roxen.com...";
 constant doc = "Selectively upgrade Roxen components from roxen.com.";
 
 inherit "wizard";
 
+object _rpc;
+string rpc_to;
+void clear_rpc()
+{
+  destruct(_rpc);
+  _rpc = 0;
+}
+
+mapping upgrade_servers = ([]);
+object connect_to_rpc(object id)
+{
+  remove_call_out(clear_rpc);
+  call_out(clear_rpc, 20);
+
+  mapping v = id->variables;
+  if(_rpc && rpc_to == v->rpc_host)
+    if(!catch { _rpc->module_version(([]),"PING"); }) return _rpc;
+  catch
+  {
+    string host,port, rpc_host;
+    rpc_host = upgrade_servers[v->rpc_host]||"";
+    sscanf(rpc_host, "%s:%d", host, port);
+    _rpc=RoxenRPC.Client(host||"skuld.infovav.se",port||23,"upgrade");
+    rpc_to = v->rpc_host;
+  };
+  return _rpc;
+}
 
 int is_older(string v1, string v2)
 {
@@ -153,6 +180,28 @@ void find_modules(int mode)
   modules = rm;
 }
 
+string upgrade_server_help="";
+array (string) upgrade_server_list()
+{
+  upgrade_server_help="<b>Upgrade servers</b><dl>";
+  upgrade_servers = ([]);
+  array res=({});
+  foreach(Stdio.read_bytes("etc/upgrade_servers")/"\n", string l)
+  {
+    if(strlen(l) && (l[0] != '#'))
+    {
+      l = ((l/"\t")-({""}))*"\t";
+      string server, help, url;
+      sscanf(l, "%s\t%s\t%s", server, url, help);
+      res += ({ server });
+      upgrade_servers[server]=url;
+      upgrade_server_help+="<dt compact><b>"+server+"</b><dd>"+help+"\n";
+    }
+  }
+  upgrade_server_help += "</dl>";
+  return res;
+}
+
 /* Ask user for upgrade options */
 string page_0(object id)
 {
@@ -173,7 +222,9 @@ string page_0(object id)
      "plugins"
      "</blockquote></help>"
      
-     "<var type=checkbox name=new> Also search for new components\n");
+     "<var type=checkbox name=new> Also search for new components\n<br>"
+     "<p>Use this upgrade server: <var type=select name=rpc_host default='skuld.infovav.se:23' "
+     "choices='"+upgrade_server_list()*","+"'><help><p>"+upgrade_server_help+"</help>");
 }
 
 string upgrade_module(string m, object rpc)
@@ -242,16 +293,13 @@ string page_3(object id)
   if(id->variables["new"]=="0" || !id->variables["new"])
     return 0;
 
- object rpc;
-  catch {
-    rpc=RoxenRPC.Client("skuld.infovav.se",23,"upgrade");
-  };
-  if(!rpc)
-    return "Failed to connect to update server at skuld.infovav.se:23.\n";
+ object rpc = connect_to_rpc(id);
+ if(!rpc) return "Failed to connect to update server.\n";
 
-  update_comps();
-  string res=
-    ("<font size=+1>Components that have a newer version available.</font><br>"
+
+ update_comps();
+ string res=
+   ("<font size=+1>Components that have a newer version available.</font><br>"
      "Select the box to add the component to the list of components to "
      "be updated\n<p>");
 
@@ -284,13 +332,10 @@ string page_3(object id)
 /* Check for uninstalled modules */
 string page_2(object id)
 {
-  object rpc;
   if(id->variables["new"]=="0" || !id->variables["new"])
     return 0;
-  catch {
-    rpc=RoxenRPC.Client("skuld.infovav.se",23,"upgrade");
-  };
-  if(!rpc)return "Failed to connect to update server at skuld.infovav.se:23.\n";
+  object rpc = connect_to_rpc(id);
+  if(!rpc) return "Failed to connect to update server.\n";
 
   string res=""
     "New modules that are available<br> "
@@ -324,11 +369,8 @@ string page_1(object id)
     ("<font size=+2>Modules that have a newer version available.</font><p>"
      "Select the box to add the module to the list of modules to "
      "be updated<p></b>\n");
-  catch {
-    rpc=RoxenRPC.Client("skuld.infovav.se",23,"upgrade");
-  };
-  if(!rpc)
-    return "Failed to connect to update server at skuld.infovav.se:23.\n";
+  object rpc = connect_to_rpc(id);
+  if(!rpc) return "Failed to connect to update server.\n";
 
   find_modules((int)id->variables->how);
   mapping mv = rpc->module_versions( modules, roxen->real_version );
@@ -421,7 +463,7 @@ string wizard_done(object id)
   object rpc;
   int t = time();
   string res = "<font size=+2>Upgrade report</font><p>";
-  catch(rpc=RoxenRPC.Client("skuld.infovav.se",23,"upgrade"));
+  object rpc = connect_to_rpc(id);
   if(rpc) foreach(todo, array a) res+=a[1](@replace(a[2..], "RPC", rpc));
   roxen->rescan_modules();
   res += "<p>Done in "+(time()-t)+" seconds.";
