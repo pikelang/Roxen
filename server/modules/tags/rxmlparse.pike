@@ -12,12 +12,10 @@
 
 #define old_rxml_compat 1
 
-constant cvs_version="$Id: rxmlparse.pike,v 1.20 1999/09/18 01:31:48 nilsson Exp $";
+constant cvs_version="$Id: rxmlparse.pike,v 1.21 1999/09/23 20:26:44 nilsson Exp $";
 constant thread_safe=1;
 
 constant language = roxen->language;
-
-function call_user_tag, call_user_container;
 
 #include <config.h>
 #include <module.h>
@@ -27,7 +25,8 @@ inherit "roxenlib";
 
 int bytes;  // Holds the number of bytes parsed
 
-// Configuration interface fluff.
+// ------------- Module registration and configuration. ---------------
+
 string comment()
 {
   return query("toparse")*", ";
@@ -71,23 +70,33 @@ void create(object c)
 
 void start(int q, object c)
 {
-  if(!c) return;
-  call_user_container = c->parse_module->call_user_container;
-  call_user_tag = c->parse_module->call_user_tag;
   define_API_functions();
 }
 
 array register_module()
 {
   return ({ MODULE_FILE_EXTENSION|MODULE_PARSER, 
-	    "RXML 1.4 stand alone parser", 
-	    ("This module handles the mapping from .html to the rxml parser."), 0, 1 });
+	    "RXML 1.4 parser",
+	    "This module handles rxml parsing of HTML pages. It is recommended to also "
+            "add the \"RXML 1.4 tags\" module so that this modules gets some tags to parse. "
+            "Some bare bones logic tags are already provided by this module (case, cond, "
+            "comment, define, elif, else, elseif, false, for, foreach, help, if, "
+            "line, list-tags, nooutput, noparse, number, strlen, then, "
+            "trace, true, undefine and use)."
+            , 0, 1 });
+}
+
+mapping query_tag_callers()
+{
+  return (["version":tag_version]);
 }
 
 array(string) query_file_extensions() 
 {
   return query("toparse");
 }
+
+// ------------------- RXML Parsing -------------------
 
 mapping handle_file_extension(object file, string e, object id)
 {
@@ -107,6 +116,8 @@ mapping handle_file_extension(object file, string e, object id)
   bytes += strlen(to_parse = file->read());
   return http_rxml_answer( to_parse, id, file, "text/html" );
 }
+
+// ------- Stuff to connect to the API function -------
 
 string tagtime(int t,mapping m,object id)
 {
@@ -342,8 +353,6 @@ string tag_user(string tag, mapping m, object id, object file)
 	  b + "@" + dom + "&gt;</a>");
 }
 
-string api_configurl(string f, mapping m) { return roxen->config_url(); }
-
 string add_header(mapping to, string name, string value)
 {
   if(to[name])
@@ -355,15 +364,9 @@ string add_header(mapping to, string name, string value)
     to[name] = value;
 }
 
-mapping query_tag_callers()
-{
-  return ([
-	   "version":tag_version]);
-}
+// ------------- Define the API functions --------------
 
-mapping query_container_callers()
-{
-}
+string api_configurl(string f, mapping m) { return roxen->config_url(); }
 
 string api_parse_rxml(object id, string r)
 {
@@ -545,7 +548,7 @@ int time_quantifier(object id, mapping m)
   return (int)round(t);
 }
 
-//Variables after 0 are optional.
+// Variables after 0 are optional.
 void define_API_functions()
 {
   add_api_function("parse_rxml", api_parse_rxml, ({ "string" }));
