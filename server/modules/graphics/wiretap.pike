@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000-2001, Roxen IS.
 //
 
-constant cvs_version="$Id: wiretap.pike,v 1.27 2001/06/27 19:21:23 jonasw Exp $";
+constant cvs_version="$Id: wiretap.pike,v 1.28 2001/07/11 06:19:50 mast Exp $";
 
 #include <module.h>
 inherit "module";
@@ -198,17 +198,7 @@ class TagPushColor
     name = _name;
     colormode = (int) query("colormode");
   }
-  
-  mixed _encode()
-  {
-    return ({ name, colormode });
-  }
-  
-  void _decode(mixed v)
-  {
-    [name, colormode] = v;
-  }
-  
+
   class Frame
   {
     inherit RXML.Frame;
@@ -239,18 +229,7 @@ class TagPopColor
     tagname = _name;
     name = "/" + _name;
   }
-  
-  mixed _encode()
-  {
-    return ({ tagname });
-  }
-  
-  void _decode(mixed v)
-  {
-    [tagname] = v;
-    name = "/" + tagname;
-  }
-  
+
   class Frame
   {
     inherit RXML.Frame;
