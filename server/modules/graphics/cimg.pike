@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.62 2003/10/17 11:39:43 anders Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.63 2004/05/05 09:41:20 anders Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -205,7 +205,7 @@ array(Image.Layer)|mapping generate_image( mapping args, RequestID id )
       error("Failed to load specified image [%O]\n", args->src);
   }
 
-  if (!sizeof(layers->image() - ({0})))
+  if (!sizeof(filter(layers->image(), objectp)))
     error("Failed to decode layers in specified image [%O]\n", args->src);
 
   layers->set_misc_value( "visible",1 );
