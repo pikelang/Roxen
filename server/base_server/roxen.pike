@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.851 2003/11/10 12:22:08 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.852 2003/11/11 15:40:07 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -2897,22 +2897,12 @@ class ImageCache
 #endif
     meta_cache_insert( id, meta );
     string meta_data = encode_value( meta );
-    if( catch {
-      QUERY( "UPDATE "+name+" SET size=%d, atime=%d, meta=%s, "
-	     "data=%s WHERE id=%s",
-	     strlen(data)+strlen(meta_data), time(1), meta_data, data, id );
 #ifdef ARG_CACHE_DEBUG
-      werror("updated entry for %O, existed before\n", id );
+    werror("Replacing entry for %O\n", id );
 #endif
-    } )
-    {
-#ifdef ARG_CACHE_DEBUG
-      werror("new entry for %O\n", id );
-#endif
-      QUERY("INSERT INTO "+name+
-	    " (id,size,atime,meta,data) VALUES (%s,%d,%d,%s,%s)",
-	    id, strlen(data)+strlen(meta_data), time(1), meta_data, data );
-    }
+    QUERY("REPLACE INTO "+name+
+	  " (id,size,atime,meta,data) VALUES (%s,%d,%d,%s,%s)",
+	  id, strlen(data)+strlen(meta_data), time(1), meta_data, data );
   }
 
   static mapping restore_meta( string id, RequestID rid )
@@ -3091,11 +3081,9 @@ class ImageCache
       string uid = "";
       if( u ) uid = u->name();
       // Might have been insterted from elsewhere.
-      catch {
-	QUERY("INSERT INTO "+name+
-	      " (id,uid,atime) VALUES (%s,%s,UNIX_TIMESTAMP())",
-	      id, uid );
-      };
+      QUERY("REPLACE INTO "+name+
+	    " (id,uid,atime) VALUES (%s,%s,UNIX_TIMESTAMP())",
+	    id, uid );
     }
     
     return 0;
@@ -3232,10 +3220,8 @@ class ImageCache
     if( zero_type( uid_cache[ ci ] ) )
     {
       uid_cache[ci] = user;
-      if( catch(QUERY( "UPDATE "+name+" SET uid=%s WHERE id=%s",
-		       user||"", ci )) )
-	QUERY("INSERT INTO "+name+" (id,uid,atime) VALUES (%s,%s,%d)",
-	      ci, user||"", time(1) );
+      QUERY("REPLACE INTO "+name+" (id,uid,atime) VALUES (%s,%s,%d)",
+	    ci, user||"", time(1) );
     }
 
 #ifndef NO_ARG_CACHE_SB_REPLICATE
@@ -4849,8 +4835,7 @@ function compile_log_format( string fmt )
   string enc = encode_value(res, master()->MyCodec(res));
   object con = dbm_cached_get("local");
   
-  con->query("DELETE FROM compiled_formats WHERE md5=%s", kmd5);
-  con->query("INSERT INTO compiled_formats (md5,full,enc) VALUES (%s,%s,%s)",
+  con->query("REPLACE INTO compiled_formats (md5,full,enc) VALUES (%s,%s,%s)",
 	     kmd5, fmt, enc);
   con = 0;
   
@@ -5362,9 +5347,7 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
   mixed res = compile_string( code );
    
   dbm_cached_get( "local" )
-    ->query("DELETE FROM compiled_formats WHERE md5=%s", kmd5 );
-  dbm_cached_get( "local" )
-    ->query("INSERT INTO compiled_formats (md5,full,enc) VALUES (%s,%s,%s)",
+    ->query("REPLACE INTO compiled_formats (md5,full,enc) VALUES (%s,%s,%s)",
 	    kmd5,pattern,encode_value( res, master()->MyCodec( res ) ) );
   return compile_string(code)()->f;
 }
