@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.57 1999/02/13 16:51:53 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.58 1999/02/13 17:43:20 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -723,6 +723,15 @@ class imap_mailbox
     });
   }
 
+  array(object) fetch_mail(object message_set)
+  {
+    array(int) message_numbers = message_set->expand(sizeof(contents));
+
+    return(Array.map(message_numbers, lambda(int i) {
+					return(contents[i-1]);
+				      }));
+  }
+
   array(array(string|object)) fetch(object message_set, array(mapping) attrs)
   {
     array message_numbers =  message_set->expand(sizeof(contents));
@@ -981,6 +990,47 @@ class backend
   {
     return session->mailbox->fetch(message_set, fetch_attrs)
       + (session->mailbox->update() || ({}));
+  }
+
+  int copy(object|mapping(string:mixed) session,
+	   object message_set, string mailbox_name) {
+
+    // Clientlayer Mailbox object.
+    object mbox = session->user->get_mailbox(mailbox_name);
+
+    if (!mbox) {
+      // No such mailbox
+      return -1;
+    }
+    if (mbox == session->mailbox->mailbox) {
+      // Source and destination are the same.
+      return 0;
+    }
+
+    // array(Clientlayer Mail objects).
+    array(object) messages session->mailbox->fetch_mail(message_set)->mail;
+
+    if (!messages || !sizeof(messages)) {
+      // Nothing to copy.
+      return(0);
+    }
+
+    // array(Clientlayer Mail objects).
+    array(object) new_messages = allocate(sizeof(messages));
+
+    mixed err;
+    err = catch {
+      int i;
+      for (i=0; i < sizeof(messages); i++) {
+	new_messages[i] = mbox->add_mail(messages[i], 1);
+      }
+    };
+    if (err) {
+      // FIXME: What if the mail already was in the mailbox?
+      new_messages->delete();
+      return(0);
+    }
+    return(1);	// OK
   }
 
   object uid_to_local(object|mapping(string:mixed) session, object uid_set)
