@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.354 2000/08/28 12:02:54 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.355 2000/08/29 18:24:51 wellhard Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -2281,11 +2281,6 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
   if (enable_module_batch_msgs)
     report_debug("\bOK %6.1fms\n", (gethrtime()-start_time)/1000.0);
 #endif
-  if( me->no_delayed_load ) 
-  {
-    set( "no_delayed_load", 1 );
-    save_me();
-  }
   if( !enabled_modules[modname+"#"+id] )
   {
     enabled_modules[modname+"#"+id] = 1;
@@ -2295,6 +2290,9 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
   if (!has_stored_vars)
     store (modname + "#" + id, me->query(), 0, this_object());
 
+  if( me->no_delayed_load )
+    set( "no_delayed_load", 1 );
+
   return me;
 }
 
@@ -2302,7 +2300,8 @@ void call_start_callbacks( RoxenModule me,
                            ModuleInfo moduleinfo, 
                            ModuleCopies module )
 {
-  int module_type = moduleinfo->type, pr;
+  call_low_start_callbacks(  me, moduleinfo, module );
+
   mixed err;
   if((me->start) && (err = catch( me->start(0, this_object()) ) ) )
   {
@@ -2329,6 +2328,17 @@ void call_start_callbacks( RoxenModule me,
       report_error( "While calling ready_to_receive_requests:\n"+
 		    describe_backtrace( q ) );
     }
+  
+  if( me->no_delayed_load )
+    save_me();
+}
+
+void call_low_start_callbacks( RoxenModule me, 
+			       ModuleInfo moduleinfo, 
+			       ModuleCopies module )
+{
+  int module_type = moduleinfo->type, pr;
+  mixed err;
   if (err = catch(pr = me->query("_priority")))
   {
 #ifdef MODULE_DEBUG
