@@ -40,34 +40,57 @@ void register_project(string name, string path, void|string path_base)
   projects[name]=path;
 }
 
+static class LanguageListObject {
+
+  array(string) languages;  
+  int timestamp;
+
+  void create(array _languages) {
+    languages = _languages;    
+    timestamp = time(1);
+  }
+
+}
+
 array(string) list_languages(string project) {
   if(!projects[project]) return ({});
 
-  string pattern=replace(projects[project], "%%", "%");
-  string dirbase=(pattern/"%L")[0];
+  if(!locales[0])
+    // language==0 not allowed, so this is good for internal data
+    locales[0] = ([]);
+  else if(locales[0][project] &&
+	  // Only cache list for three minutes
+	  ((3*60 + locales[0][project]->timestamp) > time(1) )) {
+    return locales[0][project]->languages;
+  }
+  
+  string pattern = replace(projects[project], "%%", "%");
+  string dirbase = (pattern/"%L")[0];
   if(dirbase[-1]!='/') {
-    array split=dirbase/"/";
-    dirbase=split[..sizeof(split)-2]*"/"+"/";
+    array split = dirbase/"/";
+    dirbase = split[..sizeof(split)-2]*"/"+"/";
   }
   string s_patt;
   if(search(pattern, "/", sizeof(dirbase))==-1)
     s_patt=pattern;
   else
     s_patt=pattern[sizeof(dirbase)..search(pattern, "/", sizeof(dirbase))-1];
-  s_patt=replace(s_patt, "%L", "%3s");
+  s_patt = replace(s_patt, "%L", "%3s");
 
   array dirlist = get_dir(dirbase);
   if(!dirlist)
     return ({});
-  array list=({});
+  array list = ({});
   foreach(dirlist, string path) {
     string lang;
     if(!sscanf(path, s_patt, lang)) continue;
     if(!file_stat(replace(pattern, "%L", lang))) continue;
-    list+=({ lang });
+    list += ({ lang });
   }
+  locales[0][project] = LanguageListObject( list );  
+
 #ifdef LOCALE_DEBUG
-  werror("\nLanguages for project %O are%{ %O%}\n", project, list);
+  werror("Languages for project %O are%{ %O%}\n", project, list);
 #endif
   return list;
 }
