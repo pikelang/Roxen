@@ -1,6 +1,6 @@
 // startdll.cpp : Implementation of WinMain
 //
-// $Id: startdll.cpp,v 1.11 2002/02/06 17:24:37 tomas Exp $
+// $Id: startdll.cpp,v 1.12 2002/04/12 08:54:25 tomas Exp $
 //
 
 
@@ -512,13 +512,13 @@ void CServiceModule::MsgLoopCallback(int index)
   else if (exitcode == 0)
   {
     //clean shutdown
-    LogEvent("Roxen WebServer shutdown.");
+    LogEvent("Roxen CMS shutdown.");
     Stop(FALSE);
   }
   else if (exitcode == 100)
   {
     // restart using possibly new version of ourself
-    LogEvent("Changing Roxen WebServer version. Restarting...");
+    LogEvent("Changing Roxen CMS version. Restarting...");
     
     // restart the new version of the server!!
     SetRestartFlag(TRUE);
@@ -529,11 +529,11 @@ void CServiceModule::MsgLoopCallback(int index)
   {
     if (exitcode < 0)
     {
-      LogEvent("Roxen WebServer died of signal %d. Restarting...", exitcode);
+      LogEvent("Roxen CMS died of signal %d. Restarting...", exitcode);
     }
     else // exitcode < 0
     {
-      LogEvent("Roxen WebServer down. Restarting...");
+      LogEvent("Roxen CMS down. Restarting...");
     }
     Sleep(100);
     if (IsStopping())

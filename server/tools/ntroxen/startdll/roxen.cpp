@@ -1,6 +1,6 @@
 // roxen.cpp: implementation of the CRoxen class.
 //
-// $Id: roxen.cpp,v 1.14 2002/02/06 17:24:37 tomas Exp $
+// $Id: roxen.cpp,v 1.15 2002/04/12 08:54:25 tomas Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -15,7 +15,7 @@
 
 
 #define LOCATION_COOKIE "(#*&)@(*&$Server Location Cookie:"
-#define DEFAULT_LOCATION "C:\\Program Files\\Roxen Internet Software\\WebServer\\server"
+#define DEFAULT_LOCATION "C:\\Program Files\\Roxen Internet Software\\Roxen CMS\\server"
 #define DEFAULT_PIKE_JRE_JVMDLL "java/jre/bin/hotspot/jvm.dll"
 
 char server_location[_MAX_PATH * 2] = LOCATION_COOKIE DEFAULT_LOCATION;
@@ -78,6 +78,11 @@ void CRoxen::PrintVersion()
   */
   char version[100];
   char build[100];
+  char rel[100];
+  version[0] = '\0';
+  build[0]   = '\0';
+  rel[0]     = '\0';
+
   if (GetFileAttributes("base_server/roxen.pike") != -1)
   {
     FILE *f = fopen("etc/include/version.h", "rb");
@@ -86,7 +91,8 @@ void CRoxen::PrintVersion()
       char line[200];
       BOOL ver_done = FALSE;
       BOOL build_done = FALSE;
-      while (!ver_done || !build_done)
+      BOOL rel_done = FALSE;
+      while (!ver_done || !build_done || !rel_done)
       {
         if (!fgets(line, sizeof(line), f))
           break;
@@ -114,11 +120,30 @@ void CRoxen::PrintVersion()
           build_done = TRUE;
         }
 
+        if (!rel_done && strstr(line, "roxen_release") != NULL && strchr(line, '=') != NULL)
+        {
+          char *p = line;
+          char *b = rel;
+          while(*p && *p != '"') p++;
+          *p && p++;
+          while(*p && *p != '"') *b++ = *p++;
+          *b = '\0';
+          rel_done = TRUE;
+        }
+
       }
 
       fclose(f);
 
-      printf("Roxen WebServer %s.%s", version, build);
+      f = fopen("RELEASE", "rb");
+      if (f != NULL)
+      {
+        if (fgets(line, sizeof(line), f))
+          strcpy(rel, line);
+        fclose(f);
+      }
+
+      printf("Roxen CMS %s.%s%s NT", version, build, rel);
     }
     else
       printf("etc\\include\\version.h not found!");

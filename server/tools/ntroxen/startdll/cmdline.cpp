@@ -1,6 +1,6 @@
 // cmdline.cpp: implementation of the CCmdLine class.
 //
-// $Id: cmdline.cpp,v 1.17 2002/02/06 17:24:36 tomas Exp $
+// $Id: cmdline.cpp,v 1.18 2002/04/12 08:54:25 tomas Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -354,7 +354,7 @@ void CCmdLine::PrintHelp()
   {
     "",
     "",
-    ".BThis command will start the Roxen WebServerB..",
+    ".BThis command will start Roxen CMSB..",
     "",
     "The environment variable .BROXEN_ARGSB. can be used to specify",
     "the default arguments.",
@@ -373,7 +373,7 @@ void CCmdLine::PrintHelp()
     "      .B--removeB.:                   Remove all registry setting and uninstall",
     "                                  the NT service.",
     "",
-    "       .B--offlineB.:                  Indicate that there is no network",
+    "      .B--offlineB.:                  Indicate that there is no network",
     "                                  connection available. Disables DNS and some",
     "                                  other similar things.",
     "",
