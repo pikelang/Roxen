@@ -12,7 +12,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: business.pike,v 1.125 2000/04/06 07:34:43 wing Exp $";
+constant cvs_version = "$Id: business.pike,v 1.126 2000/04/15 00:16:24 kuntri Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_PARSER|MODULE_LOCATION;
 constant module_name = "Business graphics";
@@ -35,117 +35,7 @@ mapping bg_timers = ([]);
 
 int loaded;
 
-TAGDOCUMENTATION;
-#ifdef manual
-constant tagdoc=([]);
-/*
-       "<font size=+1><b>The Business Graphics tag</b></font>\n<br>"
-       "Draws different kinds of diagrams.<br>"
-       "<p><pre>"
-       "\n&lt;<b>diagram</b>&gt; (container)\n"
-       "Options:\n"
-       "  <b>help</b>           Displays this text.\n"
-       "  <b>type</b>           Mandatory. Type of graph. Valid types are:\n"
-       "                 <b>sumbars</b>, <b>normsumbars</b>, <b>linechart</b>,"
-       " <b>barchart</b>,\n"
-       "                 <b>piechart</b> and <b>graph</b>\n"
-       "  <b>background</b>     Takes the filename of a pnm-, gif- or\n"
-       "                 jpeg-image as input.\n"
-       "  <b>width</b>          Width of diagram image in pixels.\n"
-       "                 (will not have any effect below 100)\n"
-       "  <b>height</b>         Height of diagram image in pixels.\n"
-       "                 (will not have any effect below 100)\n"
-       "  <b>fontsize</b>       Height of text in pixels.\n"
-       "  <b>font</b>           Name of the font used. This can be\n"
-       "                 overridden in the legend-, axis- and\n"
-       "                 names-tags.\n"
-       "  <b>namefont</b>       Name of the font for the diagram name.\n"
-       "  <b>legendfontsize</b> Height of legend text in pixels.\n"
-       "                 <b>fontsize</b> is used if this is undefined.\n"
-       "  <b>name</b>           Writes a name at the top of the diagram.\n"
-       "  <b>namecolor</b>      The color of the name-text. Textcolor\n"
-       "                 is used if this is not defined.\n"
-       "  <b>namesize</b>       Height of the name text in pixels.\n"
-       "                 <b>Fontsize</b> is used if this is undefined.\n"
-       "  <b>grey</b>           Makes the default colors in greyscale.\n"
 
-       "  <b>3D</b>             Render piecharts on top of a cylinder, takes"
-       " the\n                 height in pixels of the cylinder as argument.\n"
-       "  <b>eng</b>            If present, numbers are shown like 1.2M.\n"
-       "  <b>neng</b>           As above but 0.1-1.0 is written 0.xxx .\n"
-       "  <b>tonedbox</b>       Creates a background shading between the\n"
-       "                 colors assigned to each of the four corners.\n"
-       "  <b>center</b>         (Only for <b>pie</b>) center=n centers the nth"
-       " slice\n"
-       "  <b>rotate</b>         (Only for <b>pie</b>) rotate=X rotate the pie"
-       " X degrees.\n"
-       "  <b>turn</b>           If given, the diagram is turned 90 degrees.\n"
-       "                 (To make big diagrams printable)\n"
-       "  <b>voidsep</b>        If this separator is given it will be used\n"
-       "                 instead of VOID (This option can also\n"
-       "                 be given i <b>xnames</b> and so on)\n"
-       "  <b>bgcolor</b>        Use this background color for antialias.\n"
-       "  <b>notrans</b>        If given, the bgcolor will be opaque.\n"
-       "  <b>textcolor</b>      Sets the color for all text\n"
-       "                 (Can be overrided)\n"
-       "  <b>labelcolor</b>     Sets the color for the labels of the axis\n"
-
-       "  <b>horgrid</b>        If present a horizontal grid is drawn\n"
-       "  <b>vertgrid</b>       If present a vertical grid is drawn\n"
-       "  <b>xgridspace</b>     The space between two vertical grids in the\n"
-       "                 same unit as the data.\n"
-       "  <b>ygridspace</b>     The space between two horizontal grids in\n"
-       "                 the same unit as the data.\n"
-
-       "\n  You can also use the regular &lt;<b>img</b>&gt; arguments. They"
-       " will be passed\n  on to the resulting &lt;<b>img</b>&gt; tag.\n\n"
-       "The following internal tags are available:\n"
-       "\n&lt;<b>data</b>&gt; (container) Mandatory.\n"
-       "Tab and newline separated list of data values for the diagram."
-       " Options:\n"
-       "  <b>separator</b>      Use the specified string as separator instead"
-       " of tab.\n"
-       "  <b>lineseparator</b>  Use the specified string as lineseparator\n"
-       "                 instead of newline.\n"
-       "  <b>form</b>           Can be set to either row or column. Default\n"
-       "                 is row.\n"
-       "  <b>xnames</b>         If given, the first line or column is used as\n"
-       "                 xnames. If set to a number N, N lines or columns\n"
-       "                 are used.\n"
-       "  <b>xnamesvert</b>     If given, the xnames are written vertically.\n"
-       "  <b>noparse</b>        Do not run the content of the tag through\n"
-       "                 the RXML parser before data extraction is done.\n"
-       "\n&lt;<b>colors</b>&gt; (container)\n"
-       "Tab separated list of colors for the diagram. Options:\n"
-       "  <b>separator</b>      Use the specified string as separator instead"
-       " of tab.\n"
-       "\n&lt;<b>legend</b>&gt; (container)\n"
-       "Tab separated list of titles for the legend. Options:\n"
-       "  <b>separator</b>      Use the specified string as separator instead"
-       " of tab.\n"
-       "\n&lt;<b>xnames</b>&gt; (container)\n"
-       "Tab separated list of datanames for the diagram. Options:\n"
-       "  <b>separator</b>      Use the specified string as separator instead"
-       " of tab.\n"
-       "  <b>orient</b>         If set to vert the xnames will be written"
-       " vertically.\n"
-       "\n&lt;<b>ynames</b>&gt; (container)\n"
-       "Tab separated list of datanames for the diagram. Options:\n"
-       "  <b>separator</b>      Use the specified string as separator instead"
-       " of tab.\n"
-       "\n&lt;<b>xaxis</b>&gt; and &lt;<b>yaxis</b>&gt; (tags)\n"
-       "Options:\n"
-       "  <b>start</b>          Limit the start of the diagram at this"
-       " quantity.\n"
-       "                 If set to <b>min</b> the axis starts at the lowest"
-       " value.\n\n"
-       "  <b>stop</b>           Limit the end of the diagram at this"
-       " quantity.\n"
-       "  <b>quantity</b>       Name things represented in the diagram.\n"
-       "  <b>unit</b>           Name the unit.\n"
-       "</pre>"
-*/
-#endif
 
 roxen.ImageCache image_cache;
 
@@ -901,3 +791,224 @@ mixed draw_callback(mapping args, object id)
 
   return img;
 }
+
+TAGDOCUMENTATION;
+#ifdef manual
+constant tagdoc=([
+"diagram":({ #"<desc cont><short hide>
+ The <diagram> tag is used to draw pie, bar, or line charts as well as
+ graphs. </short>The <tag>diagram</tag> tag is used to draw pie, bar,
+ or line charts as well as graphs. It is quite complex with six
+ internal tags. </desc>
+
+<attr name='3d' value='number'>
+ Draws a pie-chart on top of a cylinder, takes the height in pixels of the
+ cylinder as argument.
+ </attr>
+
+ <attr name='background' value='path'>
+ Use an image as background. Valid types are gif-, jpeg- or pnm-images.
+ </attr>
+
+ <attr name='bgcolor' value='color'>
+ Set the background color to use for anti-aliasing.
+ </attr>
+
+ <attr name='center' value='number'>
+ Centers a pie chart around the <i>n</i>th slice.
+ </attr>
+
+ <attr name='eng'>
+ Write numbers in engineering fashion, i.e like 1.2M.
+ </attr>
+
+ <attr name='font' value='font'>
+ Use this font. Can be overridden in the <tag>legend</tag>,
+ <tag>xaxis</tag>, <tag>yaxis</tag> and <tag>names</tag> tags.
+ </attr>
+
+ <attr name='fontsize' value='number'>
+ Height of the text in pixels.
+ </attr>
+
+ <attr name='height' value='number'>
+ Height of the diagram in pixels. Will not have effect below 100.
+ </attr>
+
+ <attr name='horgrid'>
+ Draw a horizontal grid.
+ </attr>
+
+ <attr name='labelcolor' value='color'>
+ Sets the color for the labels of the axis.
+ </attr>
+
+ <attr name='legendfontsize' value='number'>
+ Height of the legend text. <att>fontsize</att> is used if this is undefined.
+ </attr>
+
+ <attr name='name' value='string'>
+ Write a name at the top of the diagram.
+ </attr>
+
+ <attr name='namecolor' value='color'>
+ Set the color of the name, by default <att>textcolor</att>.
+ </attr>
+
+ <attr name='namefont' value='font'>
+ Set the font for the diagram name.
+ </attr>
+
+ <attr name='namesize' value='number'>
+ Sets the height of the name, by default <att>fontsize</att>.
+ </attr>
+
+ <attr name='neng'>
+ As eng, but 0.1-1.0 is written as 0.xxx.
+ </attr>
+
+ <attr name='notrans'>
+ Make bgcolor opaque.
+ </attr>
+
+ <attr name='rotate' value='degree'>
+ Rotate a pie chart this much.
+ </attr>
+
+ <attr name='textcolor'>
+ Set the color for all text.
+ </attr>
+
+ <attr name='tonedbox' value='color1,color2,color3,color4'>
+ Create a background shading between the colors assigned to each of the
+ four corners.
+ </attr>
+
+ <attr name='turn'>
+ Turn the diagram 90 degrees. Useful when printing large diagrams.
+ </attr>
+
+ <attr name='type' value='sumbars,normsum,line,bar,pie,graph'>
+  The type of diagram. This attribute is required.
+ </attr>
+
+ <attr name='vertgrid'>
+ Draw vertical grid lines.
+ </attr>
+
+ <attr name='voidsep' value='string'>
+ Change the string that means no such value, by default 'VOID'.
+ </attr>
+
+ <attr name='width' value='number'>
+ Set the width of the diagram in pixels. Values below 100 will not take effect.  This attribute is required.
+ </attr>
+
+ <attr name='xgridspace' value='number'>
+ Set the space between two vertical grid lines. The unit is the same as
+ for the data.
+ </attr>
+
+ <attr name='ygridspace'>
+ Set the space between two horizontal grid lines. The unit is the same
+ as for the data.
+ </attr>
+
+ <p>Regular <tag>img</tag> arguments will be passed on to the generated
+ <tag>img</tag> tag.</p>",
+
+
+
+	     (["data":#"<desc cont><short>This tag contains the data the diagram is to visualize </short> It is required that the data is presented to the tag in a tabular or newline separated form.</desc>
+
+ <attr name='form' value='column,row'>
+  How to interpret the tabular data, by default row.
+  </attr>
+
+ <attr name='lineseparator' value='string'>
+ Use the specified string as lineseparator instead of newline.
+ </attr>
+
+ <attr name='noparse'>
+ Do not parse the contents by the RXML parser, before data extraction is done.
+ </attr>
+
+ <attr name='separator' value='string'>
+ Set the separator between elements, by default tab.
+ </attr>
+
+ <attr name='xnames' value='number'>
+ If given, treat the first row or column as names for the data to
+ come. If <att>xnames</att> is set to a number N, N lines or columns
+ are used. The name will be written along the pie slice or under the
+ bar.
+ </attr>
+
+ <attr name='xnamesvert'>
+ Write the <att>xnames</att> vertically.
+ </attr>",
+
+
+	       "colors":#"<desc cont><short>This tag sets the colors for different pie slices, bars or lines.</short> The colors are presented to the tag in a tab separated list.</desc>
+
+ <attr name='separator' value='string'>
+ Set the separator between colors, by default tab.
+ </attr>",
+
+	       "legend":#"<desc cont><short>A separate legend with description of the different pie slices, bars or lines.</short>The titles are presented to the tag in a tab separated list.</desc>
+
+ <attr name='separator' value='string'>
+ Set the separator between legends, by default tab.
+ </attr>",
+
+	       "xaxis":#"<desc tag><short>Used for specifying the quantity and unit of the x-axis, as well as its scale, in a graph.</short> The <tag>yaxis</tag> tag uses the same attributes.</desc>
+
+ <attr name='start' value='float'>
+ Limit the start of the diagram at this value. If set to <i>min</i> the
+ axis starts at the lowest value in the data.
+ </attr>
+
+ <attr name='stop' value='float'>
+ Limit the end of the diagram at this value.
+ </attr>
+
+ <attr name='quantity' value='string'>
+ Set the name of the quantity of this axis.
+ </attr>
+
+ <attr name='unit' value='string'>
+ Set the name of the unit of this axis.
+ </attr>",
+
+	       "yaxis":#"<desc tag><short>
+ Used for specifying the quantity and unit of the y-axis, as well as
+ its scale, in a graph or line chart.</short>Se the <tag>xaxis</tag>
+ tag for a complete list of attributes.</desc>",
+
+	       "xnames":#"<desc cont><short>
+ Separate tag that can be used to give names to put along the pie
+ slices or under the bars.</short> The datanames are presented to the
+ tag as a tab separated list. This tag is useful when the diagram is
+ dynamically created. The <tag>ynames</tag> tag uses the same
+ attributes.</desc>
+
+ <attr name='separator' value='string'>
+ Set the separator between names, by default tab.
+ </attr>
+
+ <attr name='orient' value='vert,horiz'>
+ How to write names, vertically or horizontally.
+ </attr>",
+
+"ynames":#"<desc cont><short>
+ Separate tag that can be used to give names to put along the pie
+ slices or under the bars.</short> The datanames are presented to the
+ tag as a tab separated list. This tag is useful when the diagram is
+ dynamically created. See the <tag>xnames</tag> tag for a complete list of
+ attributes.</desc>"
+	     ])
+
+}),
+
+    ]);
+#endif
