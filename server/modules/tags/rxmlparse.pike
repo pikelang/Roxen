@@ -18,7 +18,7 @@
 
 #define old_rxml_compat 1
 
-constant cvs_version="$Id: rxmlparse.pike,v 1.7 1999/07/25 01:24:56 nilsson Exp $";
+constant cvs_version="$Id: rxmlparse.pike,v 1.8 1999/08/01 17:28:07 nilsson Exp $";
 constant thread_safe=1;
 
 function call_user_tag, call_user_container;
@@ -965,24 +965,45 @@ string tag_quote(string tagname, mapping m)
   return "";
 }
 
+string tag_inc(string tag, mapping m, object id)
+{
+  id->variables[m->variable]=(string)((int)id->variables[m->variable]+1);
+  return "";
+}
+
+string tag_dec(string tag, mapping m, object id)
+{
+  id->variables[m->variable]=(string)((int)id->variables[m->variable]-1);
+  return "";
+}
+
 string tag_imgs(string tagname, mapping m, object id)
 {
-  string img = id->conf->real_file(fix_relative(m->src||"", id), id);
-  if(img && search(img, ".gif")!=-1) {
-    object fd = open(img, "r");
-    if(fd) {
-      int x, y;
-      sscanf(gif_size(fd), "width=%d height=%d", x, y);
-      m->width=x;
-      m->height=y;
+  string tmp="";
+  if(m->src)
+  {
+    string file;
+    if(file=id->conf->real_file(fix_relative(m->src, id), id))
+    {
+      array(int) xysize;
+      if(xysize=Dims.dims()->get(file))
+      {
+	m->width=(string)xysize[0];
+	m->height=(string)xysize[1];
+      }else{
+	tmp+="<!-- Dimensions quering failed -->";
+      }
+    }else{
+      tmp+="<!-- Virtual path failed -->";
     }
+    if(!m->alt) {
+      array src=m->src/"/";
+      string src=src[sizeof(src)-1];
+      m->alt=String.capitalize(replace(src[..sizeof(src)-search(reverse(src),".")-2],"_"," "));
+    }
+    return make_tag("img", m)+tmp;
   }
-  if(!m->alt) {
-    array src=m->src/"/";
-    string src=src[sizeof(src)-1];
-    m->alt=String.capitalize(replace(src[..sizeof(m->src)-5],"_"," "));
-  }
-  return make_tag("img", m);
+  return "<!-- No src given -->";
 }
 
 string tag_roxen(string tagname, mapping m, object id)
@@ -1072,12 +1093,14 @@ mapping query_tag_callers()
 	    "configurl":tag_configurl,
 	    "date":tag_date,
 	    "debug":tag_debug,
+            "dec":tag_dec,
 	    "expire-time":tag_expire_time,
 	    "file":tag_file,
 	    "fsize":tag_fsize,           
 	    "header":tag_header,
 	    "imgs":tag_imgs,
 	    "insert":tag_insert,
+            "inc":tag_inc,
 	    "modified":tag_modified,
  	    "quote":tag_quote,
 	    "realfile":tag_realfile,
@@ -1539,6 +1562,12 @@ string api_tagtime(object id, int ti, string t, string l)
   return tagtime( ti, m, id );
 }
 
+string api_tagtimemap(object id, int ti, mapping m)
+{
+  NOCACHE();
+  return tagtime( ti, m, id );
+}
+
 string api_relative(object id, string path)
 {
   return fix_relative( path, id );
@@ -1671,6 +1700,7 @@ void define_API_functions()
 {
   add_api_function("parse_rxml", api_parse_rxml, ({ "string" }));
   add_api_function("tag_time", api_tagtime, ({ "int", 0,"string", "string" }));
+  add_api_function("tag_time_map", api_tagtimemap, ({ "int", 0,"mapping"}));
   add_api_function("fix_relative", api_relative, ({ "string" }));
   add_api_function("set_variable", api_set, ({ "string", "string" }));
   add_api_function("define", api_define, ({ "string", "string" }));
