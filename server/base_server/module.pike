@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.155 2004/03/03 17:36:06 mast Exp $
+// $Id: module.pike,v 1.156 2004/03/03 18:12:24 grubba Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -943,6 +943,54 @@ mapping(string:mixed) remove_single_property (string path, string prop_name,
   else
     patch_property_commit (path, id, context);
   return result;
+}
+
+mapping(string:mixed)|int(-1..0)|Stdio.File find_file(string path,
+						      RequestID id);
+
+//! Delete the file specified by @[path].
+//!
+//! @note
+//!   Should return a 204 status on success.
+//!
+//! @note
+//!   The default implementation falls back to @[find_file()].
+mapping(string:mixed) delete_file(string path, RequestID id)
+{
+  // Fall back to find_file().
+  RequestID tmp_id = id->close_me();
+  tmp_id->not_query = query_location() + "/" + path;
+  tmp_id->method = "DELELE";
+  // FIXME: Logging?
+  return find_file(path, id) || http_result(404);
+}
+
+int(0..1) recurse_delete_files(string path, MultiStatus stat, RequestID id)
+{
+  Stat st = stat_file(path, id);
+  if (!st) return;
+  if (st->isdir) {
+    // RFC 2518 8.6.2
+    //   The DELETE operation on a collection MUST act as if a
+    //   "Depth: infinity" header was used on it.
+    int(0..1) fail;
+    foreach(find_dir(path, id) || ({}), string fname) {
+      fail |= recurse_delete_files(path+"/"+fname, stat, id);
+    }
+    // RFC 2518 8.6.2
+    //   424 (Failed Dependancy) errors SHOULD NOT be in the
+    //   207 (Multi-Status).
+    if (fail) return fail;
+  }
+  mapping ret = delete_file(path, id);
+  if (ret->code != 204) {
+    // RFC 2518 8.6.2
+    //   Additionally 204 (No Content) errors SHOULD NOT be returned
+    //   in the 207 (Multi-Status). The reason for this prohibition
+    //   is that 204 (No COntent) is the default success code.
+    stat->add_response(path, XMLStatusNode(ret->code));
+  }
+  return ret->code >= 300;
 }
 
 mapping copy_file(string path, string dest, int(-1..1) behavior, RequestID id)
