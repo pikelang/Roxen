@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 1.14 1998/09/15 21:00:20 grubba Exp $
+ * $Id: smtprelay.pike,v 1.15 1998/09/16 16:58:44 grubba Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RELAY_DEBUG
 
-constant cvs_version = "$Id: smtprelay.pike,v 1.14 1998/09/15 21:00:20 grubba Exp $";
+constant cvs_version = "$Id: smtprelay.pike,v 1.15 1998/09/16 16:58:44 grubba Exp $";
 
 /*
  * Some globals
@@ -694,20 +694,19 @@ void bounce(mapping msg, string code, array(string) text)
     // Create a bounce message.
 
     object f = Stdio.File();
+    string oldmessage = "";
     string oldheaders = "";
     if (f->open(combine_path(QUERY(spooldir), msg->mailid), "r")) {
       int i;
-      int j;
       string s;
       while((s = f->read(8192)) && (s != "")) {
-	oldheaders += s;
-	if (i = search(oldheaders, "\r\n\r\n", j)) {
-	  oldheaders = oldheaders[..i+1];
-	  break;
-	}
-	j = sizeof(oldheaders) - 4;
+	oldmessage += s;
       }
       f->close();
+      if (i = search(oldmessage, "\r\n\r\n")) {
+	oldheaders = oldmessage[..i+1];
+	break;
+      }
     }
 
     string statusmessage = sprintf("Reporting-MTA: DNS; %s\r\n"
@@ -735,40 +734,66 @@ void bounce(mapping msg, string code, array(string) text)
 			  msg->user, msg->domain, msg->sender, code,
 			  msg->mailid,
 			  text*"\r\n");
-    string message = (string)
-      MIME.Message(body,
-		   ([ "Subject":"Delivery failure",
-		      "X-Mailer":roxen->version(),
-		      "MIME-Version":"1.0",
-		      "From":QUERY(postmaster),
-		      "To":msg->sender,
-		      "CC":QUERY(postmaster),
-		      "Date":mktimestamp(time()),
-		      "Content-Type":"multipart/report; "
-		      "Report-Type=delivery-status",
-		      "Content-Transfer-Encoding":"8bit",
-		   ]),
-		   ({
-		     MIME.Message(body,
-				  ([ "MIME-Version":"1.0",
-				     "Content-Type":
-				     "text/plain; "
-				     "charset=iso-8859-1",
-				     "Content-Transfer-Encoding":"8bit"
-				  ])),
-		     MIME.Message(statusmessage,
-				  ([ "MIME-Version":"1.0",
-				     "Content-Type":"message/delivery-status; "
-				     "charset=iso-8859-1",
-				     "Content-Transfer-Encoding":"8bit"
-				  ])),
-		     MIME.Message(oldheaders,
-				  ([ "MIME-Version":"1.0",
-				     "Content-Type":
-				     "text/rfc822-headers" ])),
-		   }));
 
-    send_message("<>", (< msg->sender, QUERY(postmaster) >), message);
+    // Send a bounce
+    string message = (string)
+      MIME.Message(body, ([
+	"Subject":"Delivery failure",
+	"X-Mailer":roxen->version(),
+	"MIME-Version":"1.0",
+	"From":QUERY(postmaster),
+	"To":msg->sender,
+	"Date":mktimestamp(time()),
+	"Content-Type":"multipart/report; "
+	"Report-Type=delivery-status",
+	"Content-Transfer-Encoding":"8bit",
+      ]), ({
+	MIME.Message(body, ([
+	  "MIME-Version":"1.0",
+	  "Content-Type":"text/plain; charset=iso-8859-1",
+	  "Content-Transfer-Encoding":"8bit",
+	])),
+	MIME.Message(statusmessage, ([
+	  "MIME-Version":"1.0",
+	  "Content-Type":"message/delivery-status; charset=iso-8859-1",
+	  "Content-Transfer-Encoding":"8bit",
+	])),
+	MIME.Message(oldmessage, ([
+	  "MIME-Version":"1.0",
+	  "Content-Type":"message/rfc822",
+	])),
+      }));
+    send_message("<>", (< msg->sender >), message);
+
+    // Inform the postmaster too, but send only the headers.
+    message = (string)
+      MIME.Message(body, ([
+	"Subject":"Delivery failure",
+	"X-Mailer":roxen->version(),
+	"MIME-Version":"1.0",
+	"From":QUERY(postmaster),
+	"To":QUERY(postmaster),
+	"Date":mktimestamp(time()),
+	"Content-Type":"multipart/report; "
+	"Report-Type=delivery-status",
+	"Content-Transfer-Encoding":"8bit",
+      ]), ({
+	MIME.Message(body, ([
+	  "MIME-Version":"1.0",
+	  "Content-Type":"text/plain; charset=iso-8859-1",
+	  "Content-Transfer-Encoding":"8bit",
+	])),
+	MIME.Message(statusmessage, ([
+	  "MIME-Version":"1.0",
+	  "Content-Type":"message/delivery-status; charset=iso-8859-1",
+	  "Content-Transfer-Encoding":"8bit",
+	])),
+	MIME.Message(oldheaders, ([
+	  "MIME-Version":"1.0",
+	  "Content-Type":"text/rfc822-headers",
+	])),
+      }));
+    send_message("<>", (< QUERY(postmaster) >), message);
   } else {
     roxen_perror("A bounce which bounced!\n");
   }
