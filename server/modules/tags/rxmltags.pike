@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1996 - 2003, Roxen IS.
+// This is a roxen module. Copyright © 1996 - 2004, Roxen IS.
 //
 
 #define _stat RXML_CONTEXT->misc[" _stat"]
@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.447 2004/02/17 15:09:56 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.448 2004/02/17 20:05:18 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2860,6 +2860,11 @@ class UserTagContents
 	// Used as a frame. The real contents frame is just above, so
 	// suppress this one.
 	return "";
+    }
+
+    string _sprintf (int flag)
+    {
+      return flag == 'O' && sprintf ("ExpansionFrame(contents in %O)", upframe);
     }
   }
 }
