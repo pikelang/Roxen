@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version="$Id: htaccess.pike,v 1.84 2001/09/03 18:40:49 nilsson Exp $";
+constant cvs_version="$Id: htaccess.pike,v 1.85 2001/09/12 15:58:14 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -249,10 +249,13 @@ mapping parse_and_find_htaccess( RequestID id )
 	roxen_deny += line+"\n";
       }
       else if(sscanf(line, "deny from %s", data))
-	if( (int)data )
-	  roxen_deny += "deny ip="+data+"*\n";
+	if (data != "all")
+	  if( (int)data )
+	    roxen_deny += "deny ip="+data+"*\n";
+	  else
+	    roxen_deny += "deny dns=*"+data+"\n";
 	else
-	  roxen_deny += "deny dns=*"+data+"\n";
+	  roxen_deny += "deny ip=*\n";
       else if(sscanf(line, "allow from %s", data))
 	if( data != "all" )
 	  if( (int)data )
@@ -288,6 +291,10 @@ mapping parse_and_find_htaccess( RequestID id )
 	else
 	  order = 0;
 	continue;
+#ifdef HTACCESS_DEBUG
+      } else {
+	report_debug("HTACCESS: Unknown directive %O\n", line);
+#endif /* HTACCESS_DEBUG */
       }
     }
 
