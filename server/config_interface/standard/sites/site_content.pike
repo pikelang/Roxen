@@ -66,7 +66,7 @@ string describe_tags( object m, int q )
   foreach(indices(simple), string name) {
     if(tags[name] || conts[name])
       continue;
-    if(simple[name][0] & 1)
+    if(simple[name][0] & RXML.FLAG_EMPTY_ELEMENT)
       tags+=(< name >);
     else
       conts+=(< name >);
@@ -76,7 +76,7 @@ string describe_tags( object m, int q )
   foreach(indices(new->get_tag_names()), string name) {
     if(tags[name] || conts[name])
       continue;
-    if(new->get_tag(name)->flags & 1)
+    if(new->get_tag(name)->flags & RXML.FLAG_EMPTY_ELEMENT)
       tags+=(< name >);
     else
       conts+=(< name >);
