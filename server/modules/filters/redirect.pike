@@ -4,7 +4,7 @@
 // another. This can be done using "internal" redirects (much like a
 // symbolic link in unix), or with normal HTTP redirects.
 
-constant cvs_version = "$Id: redirect.pike,v 1.32 2001/12/05 13:53:07 grubba Exp $";
+constant cvs_version = "$Id: redirect.pike,v 1.33 2002/05/06 09:33:27 anders Exp $";
 constant thread_safe = 1;
 
 inherit "module";
@@ -31,7 +31,7 @@ void create()
 	 "</pre>"
 
 	 "A %f in the 'to' field will be replaced with the filename of "
-	 "the matched file, %p will be replaced with the full path, and %u"
+	 "the matched file, %p will be replaced with the full path, and %u "
 	 "will be replaced with this server's URL (useful if you want to send "
 	 "a redirect instead of doing an internal one). The last two "
 	 "examples are special cases. <p>"
