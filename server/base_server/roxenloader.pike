@@ -26,7 +26,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.281 2001/08/31 20:01:00 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.282 2001/09/03 14:41:53 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1242,8 +1242,6 @@ string query_mysql_dir()
   return combine_path( __FILE__, "../../mysql/" );
 }
 
-mapping my_mysql_cache = ([]);
-int     my_mysql_num_connections;
 string  my_mysql_path;
 
 string query_configuration_dir()
@@ -1254,53 +1252,82 @@ string query_configuration_dir()
 //! @appears clear_connect_to_my_mysql_cache
 void clear_connect_to_my_mysql_cache( )
 {
-#ifdef THREADS
-  foreach( values( my_mysql_cache ), mapping q )
-    foreach( values( q ), Sql.Sql s )
-#else
-  foreach( values( my_mysql_cache ), Sql.Sql s )
-#endif
-    {
-      if( s->master_sql )
-	destruct( s->master_sql );
-      destruct( s );
-    }
-  my_mysql_num_connections = 0;
-  my_mysql_cache = ([]);
+  sql_free_list = ([]);
 }
+
+
+mapping sql_free_list = ([ ]);
+mapping sql_active_list = ([ ]);
+
+class MySQLKey( object real, string name )
+{
+  void destroy()
+  {
+#ifdef DB_DEBUG
+    werror("%O added to free list\n", name );
+#endif
+    sql_active_list[name]--;
+    sql_free_list[ name ] += ({ real });
+    if( `+( 0, @map(values( sql_free_list ),sizeof ) ) > 20 )
+    {
+#ifdef DB_DEBUG
+      werror("Free list too large. Cleaning.\n" );
+#endif
+      clear_connect_to_my_mysql_cache();
+    }
+  }
+
+  mixed `[]( string what )
+  {
+    return `->(what);
+  }
+  
+  mixed `->(string what )
+  {
+    return real[what];
+  }
+
+  string _sprintf( )
+  {
+    return sprintf( "MySQL( %O )", name );
+  }
+}
+
 
 //! @appears connect_to_my_mysql
 mixed connect_to_my_mysql( string|int ro, void|string db )
 {
-  mixed res = low_connect_to_my_mysql( ro, db );
-//   if( res )
-//     return MyMysql( res, ro, db );
-  return res;
+  mixed res;  
+  string i = db+":"+(intp(ro)?(ro&&"ro")||"rw":ro);
+  if( sql_free_list[ i ] )
+  {
+#ifdef DB_DEBUG
+    werror("%O found in free list\n", i );
+#endif
+    res = sql_free_list[i][0];
+    if( sizeof( sql_free_list[ i ] ) > 1)
+      sql_free_list[ i ] = sql_free_list[i][1..];
+    else
+      m_delete( sql_free_list, i );
+    sql_active_list[i]++;
+    return MySQLKey( res, i );
+  }
+  if( res = low_connect_to_my_mysql( ro, db ) )
+  {
+    sql_active_list[i]++;
+    return MySQLKey( res, i );
+  }
 }
 
 static mixed low_connect_to_my_mysql( string|int ro, void|string db )
 {
   object res;
-  mapping m = my_mysql_cache;
 #ifdef DB_DEBUG
   werror("Requested %O for %O DB\n", db, ro );
 #endif
+
   if( !db )
     db = "mysql";
-  
-#ifdef THREADS
-  {
-    object t = this_thread();
-    if( !m[ t ] )
-      m = (m[ t ] = ([]));
-    else
-      m = m[ t ];
-  }
-#endif
-//   string i = "<all local>:"+ (intp(ro)?(ro&&"ro")||"rw":ro);
-  string i = db+":"+(intp(ro)?(ro&&"ro")||"rw":ro);
-  if( res = m[ i ] )
-    return res;
   
   if( mixed err = catch
   {
@@ -1312,26 +1339,7 @@ static mixed low_connect_to_my_mysql( string|int ro, void|string db )
 #ifdef DB_DEBUG
     werror("Connect took %.2fms\n", (gethrtime()-t)/1000.0 );
 #endif
-    if( my_mysql_num_connections++ > 40 ) {
-      clear_connect_to_my_mysql_cache();
-      m = my_mysql_cache;
-#ifdef THREADS
-      m = (m[this_thread()] = ([]));
-#endif /* THREADS */
-    }
-    call_out( lambda(){
-		if (m[i] == res) {
-		  m_delete(m,i);
-		  my_mysql_num_connections--;
-		}
-		if (res) {
-		  if (res->master_sql) {
-		    destruct(res->master_sql);
-		  }
-		  destruct(res);
-		}
-	      }, 10 );
-    return m[ i ] = res;
+    return res;
   } )
     if( db == "mysql" )
       throw( err );
