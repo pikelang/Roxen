@@ -1,7 +1,7 @@
 #
 # Main Makefile for extracting autodoc.
 #
-# $Id: Makefile,v 1.1 2002/10/29 20:44:42 nilsson Exp $
+# $Id: Makefile,v 1.2 2002/10/29 20:47:53 nilsson Exp $
 #
 
 PIKE=pike
@@ -63,8 +63,9 @@ build/traditional.xml: build/autodoc.xml $(REFDOC)/structure/traditional.xml \
 
 build/modref.xml: build/autodoc.xml $(REFDOC)/structure/modref.xml \
 	  $(REFDOC)/bin/assembler.pike
-	@$(PIKE) $(REFDOC)/bin/assembler.pike $(REFDOC)/structure/modref.xml \
-	  build/autodoc.xml > build/modref.xml
+	cp build/autodoc.xml buid/modref.xml
+#	@$(PIKE) $(REFDOC)/bin/assembler.pike $(REFDOC)/structure/modref.xml \
+#	  build/autodoc.xml > build/modref.xml
 
 # Directories
 
