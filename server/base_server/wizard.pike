@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.18 1997/08/20 11:34:24 per Exp $
+/* $Id: wizard.pike,v 1.19 1997/08/20 14:17:48 noring Exp $
  *  name="Wizard generator";
  *  doc="This plugin generats all the nice wizards";
  */
@@ -279,4 +279,26 @@ mixed wizard_menu(object id, string dir, string base, mixed ... args)
       (sort(acts[id->variables->sm]||({}))*"\n")+"</dl></td></tr></table>";
   }
   return get_wizard(id->variables->action,dir)->wizard_for(id,base,0,@args);
+}
+
+/*** Additional Action Functions ***/
+
+string html_table(array(string) subtitles, array(array(string)) table)
+{
+  string r = "";
+
+  r += "<table border=0 cellspacing=0 cellpadding=4>";
+  r += "<tr bgcolor=#113377>";
+  foreach(subtitles, string s)
+    r += "<th nowrap align=left><font color=#ffffff><b>"+s+
+         "</b></font></th>\n";
+  r += "</tr>";
+  for(int i = 0; i < sizeof(table); i++) {
+    r += "<tr bgcolor="+(i%2?"#ddeeff":"#ffffff")+">";
+    foreach(table[i], string s)
+      r += "<td nowrap>"+(sizeof(s)?s:"")+"&nbsp; </td>";
+    r += "</tr>\n";
+  }
+  r += "</table><br>\n";
+  return r;
 }
