@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.21 2001/12/04 15:30:14 mast Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.22 2002/12/14 14:43:48 anders Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -91,7 +91,7 @@ class TagSprintf {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
-      array(string) in;
+      array(mixed) in;
       if(args->split)
 	in=content/args->split;
       else

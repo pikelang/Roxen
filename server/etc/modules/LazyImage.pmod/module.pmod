@@ -794,7 +794,7 @@ class Text
   constant destructive    = (<"image","alpha">);
 
   static {
-    Layers process( Layers l )
+    Layers process( array(Image.Layer|array(Image.Layer)) l )
     {
       Image.Layer ti;
       Font f;

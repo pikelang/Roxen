@@ -5,7 +5,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: accessed.pike,v 1.50 2002/04/05 11:55:08 grubba Exp $";
+constant cvs_version = "$Id: accessed.pike,v 1.51 2002/12/14 14:43:48 anders Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_LOGGER;
 constant module_name = "Tags: Accessed counter";
@@ -49,6 +49,10 @@ void create(Configuration c) {
 	 0, lambda(){ return query("backend")!="File database"; } );
 
 }
+
+#if __VERSION__ > 7.2
+#define parse_accessed_database spider.parse_accessed_database
+#endif
 
 TAGDOCUMENTATION
 #ifdef manual

@@ -28,7 +28,7 @@ constant name = "example";
 //! will be impossible to know which of them will be used when
 //! authentication is done, however..
 
-constant cvs_version="$Id: userdb_ex.pike,v 1.4 2002/10/22 08:49:08 jonasw Exp $";
+constant cvs_version="$Id: userdb_ex.pike,v 1.5 2002/12/14 14:43:48 anders Exp $";
 
 LocaleString module_name = LOCALE(1,"RefDoc for MODULE_USERDB");
 
@@ -190,7 +190,7 @@ class ExGroup
   {
     // All our users are members of this group, the default
     // implementation would work, bit it would be rather inefficient.
-    return ::list_users();
+    return ::members();
   }
 }
 
