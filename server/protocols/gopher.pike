@@ -1,5 +1,5 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: gopher.pike,v 1.14 2000/03/16 18:24:37 nilsson Exp $";
+constant cvs_version = "$Id: gopher.pike,v 1.15 2000/09/15 14:14:11 grubba Exp $";
 // Gopher protocol module
 
 #ifdef GOPHER_DEBUG
@@ -142,27 +142,27 @@ void got_data(mixed fooid, string s)
 
   if(!file)
   {
-    end("0No such file, bugger.\r\n");
-    return 0;
-  }
+    send("0No such file, bugger.\r\n");
+  } else {
 
-  if(!file->error)
-    file->error=200;
+    if(!file->error)
+      file->error=200;
 
-  if(!file->len)
-  {
-    if(file->data)   file->len = strlen(file->data);
-    if(file->file)   file->len += file->file->stat()[1];
-  }
-  if(file->len > 0) conf->sent+=file->len;
+    if(!file->len)
+    {
+      if(file->data)   file->len = strlen(file->data);
+      if(file->file)   file->len += file->file->stat()[1];
+    }
+    if(file->len > 0) conf->sent+=file->len;
 
-  conf->log(file, this_object());
+    conf->log(file, this_object());
 
-  if(file->data) send(file->data);
-  if(file->file) send(file->file);
-  if(stringp(file->type) && file->type[0..3] == "text")
-  {
-    send(".\r\n");
+    if(file->data) send(file->data);
+    if(file->file) send(file->file);
+    if(stringp(file->type) && file->type[0..3] == "text")
+    {
+      send(".\r\n");
+    }
   }
   pipe->set_done_callback(end);
   pipe->output(my_fd);
