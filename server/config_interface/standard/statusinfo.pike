@@ -21,7 +21,7 @@ string status(object|mapping conf)
     "&nbsp;kbit/"+ LOCALE(3,"sec") +") </td>"
     "</tr><tr align='left'><th>"+ LOCALE(4,"Sent headers:")+"</th>"
     "<td>"+ NBSP(Roxen.sizetostring(conf->hsent)) +"</td></tr>\n"
-    "<tr align='left'><th>"+ LOCALE(0,"Requests:") +"</th>"
+    "<tr align='left'><th>"+ LOCALE(234,"Requests:") +"</th>"
     "<td align='right'>"+ conf->requests +"</td>"
     "<td align='right'>"+ sprintf(" (%.2f", 
 				  ((float)conf->requests*60.0)/dt)+
