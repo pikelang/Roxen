@@ -42,9 +42,9 @@ string describe_location( object m, RequestID id )
   }
   if(sizeof(url/"*") == 2)
     url = replace(url, "*", gethostname());
-  return url ? sprintf("<a href=\"%s%s\">%s</a>",
-		       url, mp[1..], mp)
-	     : mp;
+  return url && mp ? sprintf("<a href=\"%s%s\">%s</a>",
+			     url, mp[1..], mp)
+		   : mp || "";
 }
 
 string make_if( string q )
