@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 2000, Roxen IS.
-// $Id: basic_defvar.pike,v 1.9 2000/03/21 04:43:07 mast Exp $
+// $Id: basic_defvar.pike,v 1.10 2000/04/03 13:20:23 mast Exp $
 
 #pragma strict_types
 
@@ -12,7 +12,9 @@ void deflocaledoc( string locale, string variable,
                    string name, string doc, mapping|void translate)
 {
   if(!locs[locale] )
-    locs[locale] = [function(mixed,string,string,string,void|mapping:void)]RoxenLocale[locale]->register_module_doc;
+    locs[locale] =
+      ([mapping(string:function(mixed,string,string,string,void|mapping:void))]
+       RoxenLocale[locale])->register_module_doc;
   if(!locs[locale])
     report_debug("Invalid locale: "+locale+". Ignoring.\n");
   else
