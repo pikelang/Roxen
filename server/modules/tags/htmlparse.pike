@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.84 1998/03/03 13:09:35 grubba Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.85 1998/03/05 20:35:39 neotron Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -1936,9 +1936,10 @@ string tag_pr(string tagname, mapping m)
 {
   string size = m->size || "small";
   string color = m->color || "blue";
+  string align = m->align ? " align=\""+m->align+"\" " : "";
   if(m->help)
     return "Syntax: "
-      "&lt;pr [size=large|small|medium] [color=blue|brown|green|purple]&gt;"
+      "&lt;pr [align=left|right|center|middle] [size=large|small|medium] [color=blue|brown|green|purple]&gt;"
       "<br>All colors are not available in all sizes, available choices:<br>"
       "<pr list><br>The default size is small, the default color is blue\n";
 
@@ -1952,7 +1953,7 @@ string tag_pr(string tagname, mapping m)
   }
   return ("<a href=http://www.roxen.com/><img border="+m->border+" "+
 	  get_pr_size(size,color)+" "+
-	  "src=/internal-roxen-power-"+size+"-"+color+
+	  "src=/internal-roxen-power-"+size+"-"+color+align+
 	  " alt=\"\"></a>");
 }
 
