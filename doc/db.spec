@@ -1,4 +1,4 @@
- $Id: db.spec,v 1.40 1998/11/29 19:39:58 js Exp $
+ $Id: db.spec,v 1.41 1999/09/03 20:47:58 grubba Exp $
 
 drop table mail_misc;
 drop table user_misc;
@@ -88,7 +88,8 @@ create table send_q (
              times                   int not null,
 	     remoteident	     varchar(255) not null,
 	     remoteip		     varchar(32) not null,
-	     remotename		     varchar(255) not null
+	     remotename		     varchar(255) not null,
+	     INDEX mailid_index (mailid)
      );
  
 create table users (
@@ -96,7 +97,9 @@ create table users (
              realname                varchar(255) not null,
              username                varchar(64) not null,
              password                varchar(13) not null,
-             customer_id             int not null
+             customer_id             int not null,
+	     INDEX customer_index (customer_id),
+	     INDEX name_index (username)
      );
 
 create table flags ( 
