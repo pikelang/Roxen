@@ -344,14 +344,16 @@ array(int|string) class_visible_normal( string c, string d, RequestID id )
                    "bgcolor='&usr.content-titlebg;'><tr><td>");
 
   if( id->variables->unfolded == c ) {
-    header+=("<gbutton "
+    header+=("<a name="+Roxen.http_encode_string(c)+
+	     "></a><gbutton "
 	     "href='add_module.pike?config=&form.config;"
 	     "#"+Roxen.http_encode_string(c)+"' > "+
 	     LOCALE(168, "Hide")+" </gbutton>");
     x=1;
   }
   else
-    header+=("<gbutton "
+    header+=("<a name="+Roxen.http_encode_string(c)+
+	     "></a><gbutton "
 	     "href='add_module.pike?config=&form.config;"
 	     "&unfolded="+Roxen.http_encode_string(c)+
 	     "#"+Roxen.http_encode_string(c)+"' > "+
@@ -424,7 +426,8 @@ array(int|string) class_visible_faster( string c, string d, RequestID id )
     x=1;
   }
   else
-    header+=("<gbutton "
+    header+=("<a name="+Roxen.http_encode_string(c)+
+	     "></a><gbutton "
 	     "href='add_module.pike?config=&form.config;"
 	     "&unfolded="+Roxen.http_encode_string(c)+
 	     "#"+Roxen.http_encode_string(c)+"' > "+
@@ -457,7 +460,8 @@ array(int|string) class_visible_compact( string c, string d, RequestID id )
   string res="";
   if(first++)
     res = "</select><br /><submit-gbutton> "+LOCALE(251, "Add Module")+" </submit-gbutton> ";
-  res += "<p><font size='+2'>"+c+"</font><br />"+d+"<p><select multiple name='module_to_add'>";
+  res += "<p><a name="+Roxen.http_encode_string(c)+
+    "></a><font size='+2'>"+c+"</font><br />"+d+"<p><select multiple name='module_to_add'>";
   return ({ 1, res });
 }
 
