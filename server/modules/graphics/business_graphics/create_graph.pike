@@ -950,12 +950,12 @@ mapping(string:mixed) create_graph(mapping diagram_data)
   //Bestäm positionen för y-axeln
   diagram_data["xstart"]=(int)ceil(diagram_data["linewidth"]);
   diagram_data["xstop"]=diagram_data["xsize"]-
-    (int)ceil(diagram_data["linewidth"])-max(si,labelx)-diagram_data["xmaxxnames"]/2;
+    (int)ceil(diagram_data["linewidth"])-max(si,labelx+si/2)-diagram_data["xmaxxnames"]/2;
   if (((float)diagram_data["xminvalue"]>-LITET)&&
       ((float)diagram_data["xminvalue"]<LITET))
     diagram_data["xminvalue"]=0.0;
   
-  if (diagram_data["xminvalue"]<0)
+  if (diagram_data["xminvalue"]<0.0)
     {
       //placera ut y-axeln.
       //om detta inte funkar så rita yaxeln längst ner/längst upp och räkna om diagram_data["xstart"]
@@ -992,9 +992,11 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 	//write("\nNu blev xminvalue noll!\nxmaxynames:"+diagram_data["xmaxynames"]+"\n");
 	
 	diagram_data["xstop"]=diagram_data["xsize"]-
-	  (int)ceil(diagram_data["linewidth"])-max(si,labelx)-diagram_data["xmaxxnames"]/2;
+	  (int)ceil(diagram_data["linewidth"])-max(si,labelx+si/2)-diagram_data["xmaxxnames"]/2;
 	xpos_for_yaxis=diagram_data["xmaxynames"]+si/2;
 	diagram_data["xstart"]=xpos_for_yaxis;
+	write("h\n");
+
       }
     else
       {
@@ -1002,7 +1004,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 	//write("\nNu blev xminvalue större än noll!\nxmaxynames:"+diagram_data["xmaxynames"]+"\n");
 
 	diagram_data["xstop"]=diagram_data["xsize"]-
-	  (int)ceil(diagram_data["linewidth"])-max(si,labelx)-diagram_data["xmaxxnames"]/2;
+	  (int)ceil(diagram_data["linewidth"])-max(si,labelx+si/2)-diagram_data["xmaxxnames"]/2;
 	xpos_for_yaxis=diagram_data["xmaxynames"]+si/2;
 	diagram_data["xstart"]=xpos_for_yaxis+si*2;
       }
@@ -1010,9 +1012,6 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 
 
 
-  
-
-  
   //Rita ut axlarna
   graph->setcolor(@(diagram_data["axcolor"]));
   
@@ -1214,6 +1213,19 @@ mapping(string:mixed) create_graph(mapping diagram_data)
   float ystart=(float)diagram_data["ystart"];
   float ymore=(-ystart+diagram_data["ystop"])/
     (diagram_data["ymaxvalue"]-diagram_data["yminvalue"]);
+
+  /*  for(int i=0; i<sizeof(diagram_data["ynamesimg"]); i++)
+    if (diagram_data["ynamesimg"][i]->ysize()>=
+	(int)floor(diagram_data["yspace"]*ymore))
+      diagram_data["ynamesimg"][i]=diagram_data["ynamesimg"][i]->
+	scale(0, (int)floor(diagram_data["yspace"]*ymore));
+  */
+      
+
+
+
+  
+
   
   draw_grind(diagram_data, xpos_for_yaxis, ypos_for_xaxis, 
 	     xmore, ymore, xstart, ystart, (float) si);
@@ -1369,23 +1381,23 @@ int main(int argc, string *argv)
 		 "orient":"vert",
 		 "data": 
 		 ({ ({1.2, 12.3, 4.01, 10.0, 4.3, 12.0 }),
-		    ({1.2, 11.3, -1.5, 11.7,  1.0, 11.5, 1.0, 13.0, 40.0, 4.0  }),
+		    ({1.2, 11.3, -15, 11.7,  1.0, 11.5, 1.0, 13.0, 40.0, 4.0  }),
 		    ({1.2, 13.3, 1.5, 10.1 }),
 		    ({3.2, 13.3, 3.5, 13.7} )}),
-		 "fontsize":12,
+		 "fontsize":42,
 		 "axcolor":({0,0,0}),
 		 "bgcolor":0,//({255,255,255}),
 		 "labelcolor":({0,0,0}),
 		 "datacolors":0,//({({0,255,0}),({255,255,0}), ({0,255,255}), ({255,0,255}) }),
 		 "linewidth":2.2,
-		 "xsize":400,
-		 "ysize":800,
+		 "xsize":300,
+		 "ysize":200,
 		 "labels":({"j", "", "xenhet super maga ultra futur", "yenhet fghfg fgh fgh fgh fgh fghj  fghf gh fgh fgh fgh   gfhfgh fghfgh"}),
 		 "legendfontsize":2,
 		 "legend_texts":({"streck 1", "j", "foo", "bar gazonk foobar illalutta!" 
 }),
 		 "labelsize":12,
-		 "xminvalue":0,
+		 "xminvalue":0.0,
 		 "yminvalue":1,
 		 "vertgrind": 1,
 		 "grindwidth": 0.5

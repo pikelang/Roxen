@@ -232,7 +232,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
   //Bestäm positionen för y-axeln
   diagram_data["xstart"]=(int)ceil(diagram_data["linewidth"]);
   diagram_data["xstop"]=diagram_data["xsize"]-
-    (int)ceil(diagram_data["linewidth"])-max(si,labelx)-
+    (int)ceil(diagram_data["linewidth"])-max(si,labelx+si/2)-
     diagram_data["xmaxxnames"]/2;
   if (((float)diagram_data["xminvalue"]>-LITET)&&
       ((float)diagram_data["xminvalue"]<LITET))
@@ -275,7 +275,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	//write("\nNu blev xminvalue noll!\nxmaxynames:"+diagram_data["xmaxynames"]+"\n");
 	
 	diagram_data["xstop"]=diagram_data["xsize"]-
-	  (int)ceil(diagram_data["linewidth"])-max(si,labelx)-
+	  (int)ceil(diagram_data["linewidth"])-max(si,labelx+si/2)-
 	  diagram_data["xmaxxnames"]/2;
 	xpos_for_yaxis=diagram_data["xmaxynames"]+si/2;
 	diagram_data["xstart"]=xpos_for_yaxis;
@@ -286,7 +286,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	//write("\nNu blev xminvalue större än noll!\nxmaxynames:"+diagram_data["xmaxynames"]+"\n");
 
 	diagram_data["xstop"]=diagram_data["xsize"]-
-	  (int)ceil(diagram_data["linewidth"])-max(si,labelx)-
+	  (int)ceil(diagram_data["linewidth"])-max(si,labelx+si/2)-
 	  diagram_data["xmaxxnames"]/2;
 	xpos_for_yaxis=diagram_data["xmaxynames"]+si/2;
 	diagram_data["xstart"]=xpos_for_yaxis+si*2;
