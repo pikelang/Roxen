@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.283 2002/04/22 14:39:21 mast Exp $
+// $Id: module.pmod,v 1.284 2002/05/13 12:36:44 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -4334,7 +4334,8 @@ class Frame
   array _save()
   {
     THIS_TAG_TOP_DEBUG ("Saving persistent state\n");
-    return ({args, content, flags, content_type, result_type,
+    return ({copy_value (args), copy_value (content), flags,
+	     content_type, result_type,
 	     this_object()->raw_tag_text,
 	     this_object()->save && this_object()->save()});
   }
@@ -7009,9 +7010,9 @@ class PCode
 	  context->unwind_state->top = this_object();
 	  break eval;
 	}
-	if (context->p_code_comp)
+	if (p_code_comp)
 	  // Fix all delayed resolves in any ongoing p-code compilation.
-	  context->p_code_comp->compile();
+	  p_code_comp->compile();
 	LEAVE_CONTEXT();
 	throw_fatal (err);
       }
@@ -7330,6 +7331,8 @@ class PCode
     while (1) {			// Loops only if errors are catched.
       mixed item;
       Frame frame;
+      PikeCompile orig_comp;
+
       if (mixed err = catch {
 
 #define EVAL_LOOP(RESOLVE_ARGFUNC_1, RESOLVE_ARGFUNC_2)			\
@@ -7390,7 +7393,9 @@ class PCode
 	    parts[ppos++] = errmsgs;					\
 	} while (0)
 
-	if (p_code_comp)
+	if (p_code_comp) {
+	  orig_comp = ctx->p_code_comp;
+	  ctx->p_code_comp = p_code_comp;
 	  EVAL_LOOP ({
 	    array frame_state = exec[pos + 2];
 	    if (stringp (frame->args))
@@ -7404,6 +7409,8 @@ class PCode
 	    if (stringp (frame_state[0]))
 	      frame_state[0] = p_code_comp->resolve (frame_state[0]);
 	  });
+	  ctx->p_code_comp = orig_comp;
+	}
 	else
 	  EVAL_LOOP (;, ;);
 
@@ -7419,7 +7426,9 @@ class PCode
 	    if (ppos != 1) return utils->get_non_nil (type, @parts[..ppos - 1]);
 	    else return parts[0];
 
-      })
+      }) {
+	if (p_code_comp) ctx->p_code_comp = orig_comp;
+
 	if (objectp (err) && ([object] err)->thrown_at_unwind) {
 	  ctx->unwind_state[this_object()] = ({err, pos, parts, ppos});
 	  throw (this_object());
@@ -7458,6 +7467,7 @@ class PCode
 	    catch (err[0] += "Note: Error happened in stale p-code.\n");
 	  throw (err);
 	}
+      }
 
       error ("Should not get here.\n");
     }
