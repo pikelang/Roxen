@@ -2,13 +2,17 @@
 //
 // Originally by Leif Stensson <leif@roxen.com>, June/July 2000.
 //
-// $Id: ExtScript.pmod,v 1.13 2001/02/17 17:13:24 nilsson Exp $
+// $Id: ExtScript.pmod,v 1.14 2001/07/18 14:07:12 leif Exp $
+
+// 
 
 mapping scripthandlers = ([ ]);
 
 static void diag(string x)
 {
-  // werror(x);
+#ifdef EXTSCRIPT_DEBUG
+  werror(x);
+#endif
 }
 
 class Handler
@@ -26,8 +30,10 @@ class Handler
   function   nb_when_done;
   int        nb_status = 0, nb_returncode = 0;
   string     nb_output = 0, nb_errmsg = 0, nb_headers = 0, nb_data;
-  Thread.Mutex mutex = Thread.Mutex();
-  Thread.MutexKey run_lock = 0;
+  Thread.Mutex
+             mutex = Thread.Mutex();
+  Thread.MutexKey
+             run_lock = 0;
 
   void terminate()
   {
@@ -60,7 +66,17 @@ class Handler
   }
 
   static void putvar(string vtype, string vname, string vval)
+  // Send a variable name and value to the subprocess. The
+  // one-character string in vtype indicates the type; "E" is
+  // an environment variable, "I" a Roxen-internal RequestID
+  // object variable, "F" a FORM variable, "H" a request header
+  // variable, and "L" a configuration variable for the script
+  // helper subprocess. The last category includes "cd", which
+  // is the current directory that should be used for running
+  // scripts.
   {
+    if (!vtype || strlen(vtype) != 1)
+      error("Bad variable type in external script .\n");
     pipe->write("%s%c%s%3c", vtype, strlen(vname), vname, strlen(vval));
     pipe->write(vval);
   }
@@ -88,7 +104,9 @@ class Handler
     if (run_lock)
     { Thread.MutexKey tmplock = run_lock;
       RequestID id = id1 ? id1 : nb_id; // nb_id can get reset before we're done.
-//      werror("ExtScript/finalize: %O %O\n", id, run_lock);
+#ifdef EXTSCRIPT_DEBUG
+      werror("ExtScript/finalize: %O %O\n", id, run_lock);
+#endif
       if (nb_when_done)
         nb_when_done(id, get_results());
       run_lock = 0;
@@ -102,7 +120,7 @@ class Handler
     if (nb_data != 0)
       { data = nb_data + data; nb_data = 0;}
     string ptype = data[0..0];
-//    werror("ExtScript/rcb0: %O %O\n", nb_id, run_lock);
+//    diag(sprintf("ExtScript/rcb0: %O %O\n", nb_id, run_lock));
     if ( (< "+", "*", "?", "=" >) [ ptype ] )
     { if (strlen(data) < 4)
         { nb_data = data; return;}
@@ -133,7 +151,9 @@ class Handler
         nb_output = (nb_output || "") + data[4..];
         break;
       case "*":
-//        werror("ExtScript/rcb*: %O %O\n", nb_id, run_lock);
+#ifdef EXTSCRIPT_DEBUG
+        werror("ExtScript/rcb*: %O %O\n", nb_id, run_lock);
+#endif
         nb_output = (nb_output || "") + data[4..];
         nb_status = 1;
         finalize(nb_id);
@@ -168,15 +188,32 @@ class Handler
       diag("(L1)");
 
       mapping opts = ([ "fds":({pipe_other}) ]);
-      if (settings->set_uid)
-	opts["set_uid"] = settings->set_uid;
+#if constant(system.getpid)
+      if (system.getpid() == 0)
+      { if (settings->set_uid > 0)
+          opts["uid"] = settings->set_uid;
+        if (settings->set_gid > 0)
+          opts["gid"] = settings->set_gid;
+	else if (settings->set_uid && settings->set_gid != -1)
+        {
+	  // If we have set the uid, create_process may change the
+	  // group ID to the user's primary group ID, which is not
+	  // what we want here.
+	  opts["gid"] = system.getgid();
+	}
+      }
+#endif
 
-      if (catch (
+      mixed bt;
+      if (bt = catch (
         proc = Process.create_process( ({ binpath, "--cmdsocket=3" }),
                                        opts
                                      )
                ))
-         return ({ -1, "unable to start helper process" });
+	{ werror("ExtScript, create_process failed: " +
+                 describe_backtrace(bt) + "\n");
+          return ({ -1, "unable to start helper process" });
+        }
 
       diag("(L2)");
       runcount = 0;
@@ -185,8 +222,8 @@ class Handler
       diag("(L2p)");
       string res = pipe->read(4);
       if (!stringp(res) || sizeof(res) < 4 || res[0] != '=')
-	return ({ -1, "external process didn't respond"
-		  + sprintf("(Got: %O)", res) });
+	return ({ -1, "external process didn't respond" +
+                        sprintf(" (Got: %O)", res) });
       diag("(NewSubprocess)");
       if (mode == "run")
         putvar("L", "cd", dirname(arg));
@@ -301,7 +338,9 @@ class Handler
       if (nonblock)
       { if (functionp(nonblock))
             nb_when_done = nonblock;
-//        werror("ExtScript/launch/nonblock: %O\n", nb_id);
+#ifdef EXTSCRIPT_DEBUG
+        werror("ExtScript/launch/nonblock: %O\n", nb_id);
+#endif
         if (!catch ( pipe->set_nonblocking(read_callback, 0, finalize) ) )
         { run_lock = lock;
           return ({ });
@@ -405,6 +444,8 @@ static void objdiag()
   	if (h)
   	  line += "  H" + (++n) + "=" + h->procstat();
       diag(line + "\n");
+      if (!n)
+        remove_call_out(periodic_cleanup);
     }
   }
 }
@@ -441,6 +482,7 @@ void periodic_cleanup()
       }
     }
   }
+  remove_call_out(periodic_cleanup); // remove a doubled call_out, if any.
   call_out(periodic_cleanup, 50);
   objdiag();
 }
@@ -454,7 +496,8 @@ Handler getscripthandler(string binpath, void|int multi, void|mapping settings)
 
   if (!intp(multi) || multi < 1) multi = 1;
 
-  objdiag();
+  if (lastcleanup+900 < time(0))
+    periodic_cleanup();
 
   if (!(m = scripthandlers[binpath])) 
   {
@@ -493,3 +536,7 @@ Handler getscripthandler(string binpath, void|int multi, void|mapping settings)
 
   return m->handlers[random(sizeof(m->handlers))];
 }
+
+
+
+
