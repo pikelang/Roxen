@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.852 2003/11/11 15:40:07 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.853 2003/11/25 16:01:35 anders Exp $";
 
 //! @appears roxen
 //!
@@ -3145,8 +3145,8 @@ class ImageCache
     //  sessions. However, this flag also controls whether the file should
     //  be placed in the protocol-level cache, so we'll counter by setting a
     //  separate flag.
-    id->misc->cacheable = INITIAL_CACHEABLE;
-    id->misc->no_proto_cache = 1;
+    RAISE_CACHE(INITIAL_CACHEABLE);
+    NO_PROTO_CACHE();
     return res;
   }
 
