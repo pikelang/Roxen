@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.173 1998/12/14 11:29:38 peter Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.174 1999/01/14 00:27:24 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -1412,7 +1412,15 @@ mapping|int low_get_file(object id, int|void no_magic)
       {
 	TRACE_ENTER(LOCALE->automatic_redirect_to_location(), tmp[1]);
 	TRACE_LEAVE(LOCALE->returning_data());
-	return http_redirect(id->not_query + "/", id);
+
+	// Keep query (if any).
+	/* FIXME: Should probably keep prestate etc.
+	 *	/grubba 1999-01-14
+	 */
+	string new_query = id->not_query + "/" +
+	  (id->query?("?"+id->query):"");
+
+	return http_redirect(new_query, id);
       }
     }
   }
