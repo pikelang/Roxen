@@ -4,7 +4,7 @@
 // ChiliMoon bootstrap program. Sets up the environment,
 // replces the master, adds custom functions and starts core.pike.
 
-// $Id: loader.pike,v 1.355 2002/10/28 01:38:46 nilsson Exp $
+// $Id: loader.pike,v 1.356 2002/10/30 03:54:48 nilsson Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ static string    configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: loader.pike,v 1.355 2002/10/28 01:38:46 nilsson Exp $";
+constant cvs_version="$Id: loader.pike,v 1.356 2002/10/30 03:54:48 nilsson Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -998,7 +998,7 @@ string roxen_version()
 
 //! @appears roxen_path
 //!
-//! Buhu
+//! Expands the following tokens in the provided @[filename].
 //!
 //! @string
 //!   @value "$LOCALDIR"
@@ -1036,21 +1036,33 @@ string roxen_path( string filename )
   return filename;
 }
 
-int rm( string filename )
+//! @decl int(0..1) r_rm(string f)
+//! @appears r_rm
+//! rm function that expands @[filename] as @[roxen_path].
+int(0..1) rm( string filename )
 {
   return predef::rm( roxen_path(filename) );
 }
 
+//! @decl array(string) r_get_dir(string dirname)
+//! @appears r_get_dir
+//! get_dir function that expands @[filename] as @[roxen_path].
 array(string) r_get_dir( string path )
 {
   return predef::get_dir( roxen_path( path ) );
 }
 
-int mv( string f1, string f2 )
+//! @decl int(0..1) r_mv(string from, string to)
+//! @appears r_mv
+//! mv function that expands @[f1] and @[f2] as @[roxen_path].
+int(0..1) mv( string f1, string f2 )
 {
   return predef::mv( roxen_path(f1), roxen_path( f2 ) );
 }
 
+//! @decl Stdio.Stat r_file_stat(string path, void|int(0..1) symlink)
+//! @appears r_file_stat
+//! file_stat function that expands @[filename] as @[roxen_path].
 Stdio.Stat file_stat( string filename, int|void slinks )
 {
   return predef::file_stat( roxen_path(filename), slinks );
@@ -2286,27 +2298,8 @@ void do_main( int argc, array(string) argv )
   return;
 }
 
-//! @decl int(0..1) callablep(mixed f)
-//! @appears callablep
-
 //! @decl object roxenp()
 //! @appears roxenp
-
-//! @decl int(0..1) r_rm(string f)
-//! @appears r_rm
-//! Alias for rm.
-
-//! @decl int(0..1) r_mv(string from, string to)
-//! @appears r_mv
-//! Alias for mv.
-
-//! @decl array(string) r_get_dir(string dirname)
-//! @appears r_get_dir
-//! Alias for get_dir.
-
-//! @decl Stdio.Stat r_file_stat(string path, void|int(0..1) symlink)
-//! @appears r_file_stat
-//! Alias for file_stat.
 
 //! @decl string capitalize(string text)
 //! @appears capitalize
