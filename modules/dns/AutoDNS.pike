@@ -3,6 +3,7 @@
 #include <stdio.h>
 inherit "module";
 inherit "roxenlib";
+import Thread;
 
 string host_ip_no;
 
@@ -100,7 +101,9 @@ static string rr_entry(string owner, int ttl, string type, string value)
 
 void do_update()
 // Update the DNS master file from the DOMAINS table.
-{ if (!database)
+{
+  werror("do_update()\n");
+  if (!database)
   { // If the database is not available, leave the
     // update_schduled variable in its current state,
     // return for now, and let the update take until
@@ -133,8 +136,6 @@ void do_update()
        "    category lame-servers { null; };\n"
        "    category cname { null; };\n"
        "};\n\n" 
-       "zone \"foo.se\" in {\n"
-       "    type master;\n"
     );
 
   array row;
@@ -194,7 +195,9 @@ void do_update()
 
         file->write(rr_entry(rr_owner, ttl, rr_type, rr_value) + "\n");
       }
-      masterfile->write("    file \"db." + domain + "\";\n");
+      masterfile->write("zone \""+domain+".\" in {\n"
+			"    type master;\n"
+			"    file \"db." + domain + "\";\n");
     }
     else
     { ++error_count;
@@ -221,7 +224,7 @@ void update()
 { // Schedule an update if one is not already scheduled.
   if (update_scheduled) return;
   update_scheduled = 1;
-  call_out(do_update, 60);
+  thread_create(do_update);
 }
 
 string tag_update()
