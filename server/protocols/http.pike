@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.269 2000/09/02 22:22:59 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.270 2000/09/04 08:54:43 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2041,8 +2041,8 @@ void got_data(mixed fooid, string s)
     // consider caching them?
     conf = 
          port_obj->find_configuration_for_url(port_obj->name + "://" +
-                                             misc->host +
-                                             (search(misc->host, ":")<0?
+                                             (misc->host||"*") +
+                                             (search(misc->host||"", ":")<0?
                                              (":"+port_obj->default_port):"") +
                                               raw_url,
                                               this_object());
