@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.163 1999/02/16 19:47:56 peter Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.164 1999/02/26 15:51:08 mast Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -226,7 +226,7 @@ void create()
 	 short_name(roxen->current_configuration?
 		    roxen->current_configuration->name:".")+"/Accessed", 
 	 "Access log file", TYPE_FILE|VAR_MORE,
-	 "In this file all accesses to files using the &lt;accessd&gt;"
+	 "In this file all accesses to files using the &lt;accessed&gt;"
 	 " tag will be logged.", 0, ac_is_not_set);
 
   defvar("noparse", ({  }), "Extensions to accesscount",
