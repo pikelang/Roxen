@@ -1,9 +1,9 @@
 /*
- * $Id: smtprelay.pike,v 2.0 1999/10/18 14:18:08 grubba Exp $
+ * $Id: smtprelay.pike,v 2.1 1999/10/18 14:38:31 grubba Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
- * Henrik Grubbström 1998-09-02
+ * Henrik Grubbström 1998-09-02, 1999-10-18.
  */
 
 #include <module.h>
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RELAY_DEBUG
 
-constant cvs_version = "$Id: smtprelay.pike,v 2.0 1999/10/18 14:18:08 grubba Exp $";
+constant cvs_version = "$Id: smtprelay.pike,v 2.1 1999/10/18 14:38:31 grubba Exp $";
 
 /*
  * Some globals
@@ -46,17 +46,31 @@ void create()
   defvar("sqlurl", "mysql://mail:mail@/mail", "Database URL",
 	 TYPE_STRING, "");
 
-  defvar("postmaster", "Postmaster <postmaster@"+gethostname()+">",
+  defvar("maxhops", 10, "Limits: Maximum number of hops", TYPE_INT,
+	 "Maximum number of MTA hops (used to avoid loops).<br>\n"
+	 "Zero means no limit.");
+
+  defvar("bounce_size_limit", 262144, "Limits: Maximum bounce size", TYPE_INT,
+	 "Maximum size (bytes) of the embedded message in generated bounces.");
+
+  // Try to get our FQDN.
+  string hostname = gethostname();
+  array hostinfo = gethostbyname(hostname);
+  if (hostinfo && sizeof(hostinfo)) {
+    hostname = hostinfo[0];
+  }
+
+  defvar("hostname", hostname, "Mailserver host name", TYPE_STRING,
+	 "This is the hostname used by the server in the SMTP "
+	 "handshake (EHLO & HELO).");
+
+  defvar("postmaster", "Postmaster <postmaster@" + hostname + ">",
 	 "Postmaster address", TYPE_STRING,
 	 "Email address of the postmaster.");
 
   defvar("mailerdaemon", "Mail Delivery Subsystem <MAILER-DAEMON@" +
-	 gethostname()+">", "Mailer daemon address", TYPE_STRING,
+	 hostname + ">", "Mailer daemon address", TYPE_STRING,
 	 "Email address of the mailer daemon.");
-
-  defvar("maxhops", 10, "Maximum number of hops", TYPE_INT,
-	 "Maximum number of MTA hops (used to avoid loops).<br>\n"
-	 "Zero means no limit.");
 }
 
 array(string)|multiset(string)|string query_provides()
@@ -84,6 +98,10 @@ void start(int i, object c)
 
       /* Start delivering mail soon after everything has loaded. */
       check_mail(10);
+    } else {
+      /* Try reconnecting to the SQL-server in a minute */
+      remove_call_out(start);
+      call_out(start, 60, i, c);
     }
   }
 }
@@ -903,6 +921,7 @@ void bounce(mapping msg, string code, array(string) text, string last_command,
     object f = Stdio.File();
     string oldmessage = "";
     string oldheaders = "";
+    int only_headers;
     if (f->open(combine_path(QUERY(spooldir), msg->mailid), "r")) {
       int i;
       string s;
@@ -913,14 +932,14 @@ void bounce(mapping msg, string code, array(string) text, string last_command,
 	  // Too large bounce.
 	  if ((i = search(oldmessage, "\r\n\r\n")) != -1) {
 	    // Just keep the headers.
-	    oldmessage = oldmessage[..i+3] + "[ Body truncated ]\r\n";
+	    // FIXME: What about the content-length header?
+	    oldmessage = oldmessage[..i+1];
 	  } else {
 	    // Lots of headers.
 	    oldmessage =
-	      "Subject: Huge amount of headers -- Headers truncated\r\n"
-	      "\r\n"
-	      "[ Body truncated ]\r\n";
+	      "Subject: Huge amount of headers -- Headers truncated\r\n";
 	  }
+	  only_headers = 1;
 	  break;
 	}
       }
@@ -1009,7 +1028,8 @@ void bounce(mapping msg, string code, array(string) text, string last_command,
 	])),
 	MIME.Message(oldmessage, ([
 	  "MIME-Version":"1.0",
-	  "Content-Type":"message/rfc822",
+	  "Content-Type":
+	  only_headers?"message/rfc822-headers":"message/rfc822",
 	])),
       }));
     send_message("", (< msg->sender >), message);
