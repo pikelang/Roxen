@@ -8,7 +8,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.63 2000/01/31 03:48:21 per Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.64 2000/02/14 09:25:26 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -132,6 +132,9 @@ void create()
 	 "Forbid access to paths containing symbolic links.<br>\n"
 	 "NOTE: This can cause *alot* of lstat system-calls to be performed "
 	 "and can make the server much slower.");
+
+  defvar("charset", "iso-8859-1", "File charset", TYPE_STRING,
+	 "The charset the files on disk have.");
 }
 
 
@@ -476,6 +479,7 @@ mixed find_file( string f, object id )
       TRACE_LEAVE("");
       accesses++;
       TRACE_LEAVE("Normal return");
+      id->misc->input_charset = query("charset");
       return o;
     }
     break;
