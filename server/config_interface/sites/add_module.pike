@@ -504,8 +504,10 @@ string page_really_compact( RequestID id )
   mods = roxen->all_modules();
   roxenloader.pop_compile_error_handler();
 
-  sort(map(mods->get_name(), lambda(LocaleString in){
-			       return lower_case((string)in);
+  sort(map(mods->get_name(), lambda(LocaleString in) {
+			       in = lower_case((string)in);
+			       sscanf(in, "%*s: %s", in);
+			       return in;
 			     }), mods);
   string res = "";
 
