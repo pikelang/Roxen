@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.625 2001/02/02 13:04:46 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.626 2001/02/03 07:25:46 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -2952,24 +2952,21 @@ void create_pid_file(string where)
 #endif
 }
 
-program pipe;
 Pipe.pipe shuffle(Stdio.File from, Stdio.File to,
-		       Stdio.File|void to2,
-		       function(:void)|void callback)
+		  Stdio.File|void to2,
+		  function(:void)|void callback)
 {
 #if efun(spider.shuffle)
   if(!to2)
   {
-    if(!pipe)
-      pipe = ((program)"smartpipe");
-    object p = pipe( );
+    object p = fastpipe( );
     p->input(from);
     p->set_done_callback(callback);
     p->output(to);
     return p;
   } else {
 #endif
-    // 'smartpipe' does not support multiple outputs.
+    // 'fastpipe' does not support multiple outputs.
     Pipe.pipe p = Pipe.pipe();
     if (callback) p->set_done_callback(callback);
     p->output(to);
@@ -3076,8 +3073,6 @@ int main(int argc, array tmp)
   DDUMP(  "base_server/proxyauth.pike" );
   DDUMP(  "base_server/module.pike" );
   DDUMP(  "base_server/throttler.pike" );
-  DDUMP(  "base_server/smartpipe.pike" );
-  DDUMP(  "base_server/fastpipe.pike" );
 
   mark_fd(0, "Stdin");
   mark_fd(1, "Stdout");
