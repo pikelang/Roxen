@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version="$Id: htaccess.pike,v 1.97 2002/11/27 13:22:45 anders Exp $";
+constant cvs_version="$Id: htaccess.pike,v 1.98 2002/12/09 09:43:49 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -587,7 +587,7 @@ class HtUser
 
   array(string) groups()
   {
-    return (array)pwent[7]+(({pwent[8]})-({0}));
+    return ((array)(pwent[7]||(<>)))+(({pwent[8]})-({0}));
   }
   
   static void create( UserDB p, array _pwent )
