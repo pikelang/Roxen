@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.129 2000/06/09 12:21:00 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.130 2000/06/12 20:08:12 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -290,80 +290,105 @@ class TagAuthRequired {
   }
 }
 
-string tag_expire_time(string tag, mapping m, RequestID id)
-{
-  int t,t2;
-  t=t2==time(1);
-  if(!m->now) {
-    t+=Roxen.time_dequantifier(m);
-    CACHE(max(t-time(),0));
-  }
-  if(t==t2) {
-    NOCACHE();
-    Roxen.add_http_header(_extra_heads, "Pragma", "no-cache");
-    Roxen.add_http_header(_extra_heads, "Cache-Control", "no-cache");
-  }
+class TagExpireTime {
+  inherit RXML.Tag;
+  constant name = "expire-time";
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
 
-  Roxen.add_http_header(_extra_heads, "Expires", Roxen.http_date(t));
-  return "";
+  class Frame {
+    inherit RXML.Frame;
+
+    array do_return(RequestID id) {
+      int t,t2;
+      t=t2==time(1);
+      if(!args->now) {
+	t+=Roxen.time_dequantifier(args);
+	CACHE(max(t-t2,0));
+      }
+      if(t==t2) {
+	NOCACHE();
+	Roxen.add_http_header(_extra_heads, "Pragma", "no-cache");
+	Roxen.add_http_header(_extra_heads, "Cache-Control", "no-cache");
+      }
+
+      Roxen.add_http_header(_extra_heads, "Expires", Roxen.http_date(t));
+      return 0;
+    }
+  }
 }
 
-string tag_header(string tag, mapping m, RequestID id)
-{
-  if(m->name == "WWW-Authenticate")
-  {
-    string r;
-    if(m->value)
-    {
-      if(!sscanf(m->value, "Realm=%s", r))
-	r=m->value;
-    } else
-      r="Users";
-    m->value="basic realm=\""+r+"\"";
-  } else if(m->name=="URI")
-    m->value = "<" + m->value + ">";
+class TagHeader {
+  inherit RXML.Tag;
+  constant name = "header";
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
 
-  if(!(m->value && m->name))
-    RXML.parse_error("Requires both a name and a value.\n");
+  class Frame {
+    inherit RXML.Frame;
 
-  Roxen.add_http_header(_extra_heads, m->name, m->value);
-  return "";
+    array do_return(RequestID id) {
+      if(args->name == "WWW-Authenticate") {
+	string r;
+	if(args->value) {
+	  if(!sscanf(args->value, "Realm=%s", r))
+	    r=args->value;
+	} else
+	  r="Users";
+	args->value="basic realm=\""+r+"\"";
+      } else if(args->name=="URI")
+	args->value = "<" + args->value + ">";
+
+      if(!(args->value && args->name))
+	RXML.parse_error("Requires both a name and a value.\n");
+
+      Roxen.add_http_header(_extra_heads, args->name, args->value);
+      return 0;
+    }
+  }
 }
 
-string tag_redirect(string tag, mapping m, RequestID id)
-{
-  if (!(m->to && sizeof (m->to)))
-    RXML.parse_error("Requires attribute \"to\".\n");
+class TagRedirect {
+  inherit RXML.Tag;
+  constant name = "redirect";
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
 
-  multiset(string) orig_prestate = id->prestate;
-  multiset(string) prestate = (< @indices(orig_prestate) >);
+  class Frame {
+    inherit RXML.Frame;
 
-  if(m->add) {
-    foreach((m->add-" ")/",", string s)
-      prestate[s]=1;
-    m_delete(m,"add");
+    array do_return(RequestID id) {
+      if ( !(args->to && sizeof(args->to)) )
+	RXML.parse_error("Requires attribute \"to\".\n");
+
+      multiset(string) orig_prestate = id->prestate;
+      multiset(string) prestate = (< @indices(orig_prestate) >);
+
+      if(args->add) {
+	foreach((args->add-" ")/",", string s)
+	  prestate[s]=1;
+	m_delete(args,"add");
+      }
+      if(args->drop) {
+	foreach((args->drop-" ")/",", string s)
+	  prestate[s]=0;
+	m_delete(args,"drop");
+      }
+
+      id->prestate = prestate;
+      mapping r = Roxen.http_redirect(args->to, id);
+      id->prestate = orig_prestate;
+
+      if (r->error)
+	_error = r->error;
+      if (r->extra_heads)
+	_extra_heads += r->extra_heads;
+      // We do not need this as long as r only contains strings and numbers
+      //    foreach(indices(r->extra_heads), string tmp)
+      //      Roxen.add_http_header(_extra_heads, tmp, r->extra_heads[tmp]);
+      if (args->text)
+	_rettext = args->text;
+
+      return 0;
+    }
   }
-  if(m->drop) {
-    foreach((m->drop-" ")/",", string s)
-      prestate[s]=0;
-    m_delete(m,"drop");
-  }
-
-  id->prestate = prestate;
-  mapping r = Roxen.http_redirect(m->to, id);
-  id->prestate = orig_prestate;
-
-  if (r->error)
-    _error = r->error;
-  if (r->extra_heads)
-    _extra_heads += r->extra_heads;
-  // We do not need this as long as r only contains strings and numbers
-  //    foreach(indices(r->extra_heads), string tmp)
-  //      Roxen.add_http_header(_extra_heads, tmp, r->extra_heads[tmp]);
-  if (m->text)
-    _rettext = m->text;
-
-  return "";
 }
 
 class TagUnset {
@@ -468,113 +493,154 @@ private string dec(mapping m, RequestID id)
   return inc(m, id);
 }
 
-string|array(string) tag_imgs(string tag, mapping m, RequestID id)
-{
-  if(m->src)
-  {
-    string|object file=id->conf->real_file(Roxen.fix_relative(m->src, id), id);
-    if(!file) {
-      file=id->conf->try_get_file(Roxen.fix_relative(m->src,id),id);
-      if(file)
-	file=class {
-	  int p=0;
-	  string d;
-          void create(string data) { d=data; }
-	  int tell() { return p; }
-	  int seek(int pos) {
-	    if(abs(pos)>sizeof(d)) return -1;
-	    if(pos<0) pos=sizeof(d)+pos;
-	    p=pos;
-	    return p;
-	  }
-	  string read(int bytes) {
-	    p+=bytes;
-	    return d[p-bytes..p-1];
-	  }
-	}(file);
-    }
+class TagImgs {
+  inherit RXML.Tag;
+  constant name = "imgs";
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
 
-    if(file)
-    {
-      array(int) xysize;
-      if(xysize=Dims.dims()->get(file))
-      {
-	m->width=(string)xysize[0];
-	m->height=(string)xysize[1];
+  class Frame {
+    inherit RXML.Frame;
+
+    array do_return(RequestID id) {
+      if(args->src) {
+	string|object file=id->conf->real_file(Roxen.fix_relative(args->src, id), id);
+	if(!file) {
+	  file=id->conf->try_get_file(Roxen.fix_relative(args->src,id),id);
+	  if(file)
+	    file=class {
+	      int p=0;
+	      string d;
+	      void create(string data) { d=data; }
+	      int tell() { return p; }
+	      int seek(int pos) {
+		if(abs(pos)>sizeof(d)) return -1;
+		if(pos<0) pos=sizeof(d)+pos;
+		p=pos;
+		return p;
+	      }
+	      string read(int bytes) {
+		p+=bytes;
+		return d[p-bytes..p-1];
+	      }
+	    }(file);
+	}
+
+	if(file) {
+	  array(int) xysize;
+	  if(xysize=Dims.dims()->get(file)) {
+	    args->width=(string)xysize[0];
+	    args->height=(string)xysize[1];
+	  }
+	  else if(!args->quiet)
+	    RXML.run_error("Dimensions quering failed.\n");
+	}
+	else if(!args->quiet)
+	  RXML.run_error("Virtual path failed.\n");
+
+	if(!args->alt) {
+	  array src=args->src/"/";
+	  string src=src[sizeof(src)-1];
+	  sscanf(src, "internal-roxen-%s", src);
+	  args->alt=String.capitalize(replace(src[..sizeof(src)-search(reverse(src),".")-2],"_"," "));
+	}
+
+	result = Roxen.make_tag("img", args);
+	return 0;
       }
-      else if(!m->quiet)
-	RXML.run_error("Dimensions quering failed.\n");
+      RXML.parse_error("No src given.\n");
     }
-    else if(!m->quiet)
-      RXML.run_error("Virtual path failed.\n");
-
-    if(!m->alt) {
-      array src=m->src/"/";
-      string src=src[sizeof(src)-1];
-      sscanf(src, "internal-roxen-%s", src);
-      m->alt=String.capitalize(replace(src[..sizeof(src)-search(reverse(src),".")-2],"_"," "));
-    }
-
-    return ({ Roxen.make_tag("img", m) });
   }
-  RXML.parse_error("No src given.\n");
 }
 
-array(string) tag_roxen(string tagname, mapping m, RequestID id)
-{
-  string size = m->size || "medium";
-  string color = m->color || "white";
-  mapping aargs = (["href": "http://www.roxen.com/"]);
-  m_delete(m, "color");
-  m_delete(m, "size");
-  m->src = "/internal-roxen-power-"+size+"-"+color;
-  m->width =  (["small":"40","medium":"60","large":"100"])[size];
-  m->height = (["small":"40","medium":"60","large":"100"])[size];
+class TagRoxen {
+  inherit RXML.Tag;
+  constant name = "roxen";
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
 
-  if( color == "white" && size == "large" ) m->height="99";
-  if(!m->alt) m->alt="Powered by Roxen";
-  if(!m->border) m->border="0";
-  if(!m->noxml) m["/"]="/";
-  if(m->target) aargs->target = m->target, m_delete (m, "target");
-  return ({ Roxen.make_container ("a", aargs, Roxen.make_tag("img", m)) });
-}
+  class Frame {
+    inherit RXML.Frame;
 
-string|array(string) tag_debug( string tag_name, mapping m, RequestID id )
-{
-  if (m->showid)
-  {
-    array path=lower_case(m->showid)/"->";
-    if(path[0]!="id" || sizeof(path)==1) RXML.parse_error("Can only show parts of the id object.");
-    mixed obj=id;
-    foreach(path[1..], string tmp) {
-      if(search(indices(obj),tmp)==-1) RXML.run_error("Could only reach "+tmp+".");
-      obj=obj[tmp];
+    array do_return(RequestID id) {
+      string size = args->size || "medium";
+      string color = args->color || "white";
+      mapping aargs = (["href": "http://www.roxen.com/"]);
+      m_delete(args, "color");
+      m_delete(args, "size");
+      args->src = "/internal-roxen-power-"+size+"-"+color;
+      args->width =  (["small":"40","medium":"60","large":"100"])[size];
+      args->height = (["small":"40","medium":"60","large":"100"])[size];
+
+      if( color == "white" && size == "large" ) args->height="99";
+      if(!args->alt) args->alt="Powered by Roxen";
+      if(!args->border) args->border="0";
+      if(!args->noxml) args["/"]="/";
+      if(args->target) aargs->target = args->target, m_delete (args, "target");
+      result = Roxen.make_container ("a", aargs, Roxen.make_tag("img", args));
+      return 0;
     }
-    return ({ "<pre>"+Roxen.html_encode_string(sprintf("%O",obj))+"</pre>" });
   }
-  //  if (m->werror) {
-  //    report_debug(replace(m->werror,"\\n","\n"));
-  //  }
-  if (m->off)
-    id->misc->debug = 0;
-  else if (m->toggle)
-    id->misc->debug = !id->misc->debug;
-  else
-    id->misc->debug = 1;
-  return "<!-- Debug is "+(id->misc->debug?"enabled":"disabled")+" -->";
 }
 
-string tag_fsize(string tag, mapping args, RequestID id)
-{
-  if(args->file) {
-    catch {
-      array s = id->conf->stat_file(Roxen.fix_relative( args->file, id ), id);
-      if (s && (s[1]>= 0)) return (string)s[1];
-    };
-    if(string s=id->conf->try_get_file(Roxen.fix_relative(args->file, id), id) )
-      return (string)strlen(s);
+class TagDebug {
+  inherit RXML.Tag;
+  constant name = "debug";
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+
+  class Frame {
+    inherit RXML.Frame;
+
+    array do_return(RequestID id) {
+      if (args->showid) {
+	array path=lower_case(args->showid)/"->";
+	if(path[0]!="id" || sizeof(path)==1) RXML.parse_error("Can only show parts of the id object.");
+	mixed obj=id;
+	foreach(path[1..], string tmp) {
+	  if(search(indices(obj),tmp)==-1) RXML.run_error("Could only reach "+tmp+".");
+	  obj=obj[tmp];
+	}
+	result = "<pre>"+Roxen.html_encode_string(sprintf("%O",obj))+"</pre>";
+	return 0;
+      }
+      //  if (args->werror) {
+      //    report_debug(replace(m->werror,"\\n","\n"));
+      //  }
+      if (args->off)
+	id->misc->debug = 0;
+      else if (args->toggle)
+	id->misc->debug = !id->misc->debug;
+      else
+	id->misc->debug = 1;
+      result = "<!-- Debug is "+(id->misc->debug?"enabled":"disabled")+" -->";
+      return 0;
+    }
   }
-  RXML.run_error("Failed to find file.\n");
+}
+
+class TagFSize {
+  inherit RXML.Tag;
+  constant name = "fsize";
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+
+  mapping(string:RXML.Type) req_arg_types = ([ "file" : RXML.t_text ]);
+
+  class Frame {
+    inherit RXML.Frame;
+
+    array do_return(RequestID id) {
+      catch {
+	array s = id->conf->stat_file(Roxen.fix_relative( args->file, id ), id);
+	if (s && (s[1]>= 0)) {
+	  result = (string)s[1];
+	  return 0;
+	}
+      };
+      if(string s=id->conf->try_get_file(Roxen.fix_relative(args->file, id), id) ) {
+	result = (string)strlen(s);
+	return 0;
+      }
+      RXML.run_error("Failed to find file.\n");
+    }
+  }
 }
 
 class TagCoding {
@@ -598,144 +664,221 @@ class TagCoding {
   }
 }
 
-array(string)|string tag_configimage(string t, mapping m, RequestID id)
-{
-  if (!m->src) RXML.parse_error("No src given.\n", id);
+class TagConfigImage {
+  inherit RXML.Tag;
+  constant name = "configimage";
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
 
-  if (m->src[sizeof(m->src)-4..][0] == '.')
-    m->src = m->src[..sizeof(m->src)-5];
+  mapping(string:RXML.Type) req_arg_types = ([ "src" : RXML.t_text ]);
 
-  m->alt = m->alt || m->src;
-  m->src = "/internal-roxen-" + m->src;
-  m->border = m->border || "0";
+  class Frame {
+    inherit RXML.Frame;
 
-  return ({ Roxen.make_tag("img", m) });
-}
+    array do_return(RequestID id) {
+      if (args->src[sizeof(args->src)-4..][0] == '.')
+	args->src = args->src[..sizeof(args->src)-5];
 
-string tag_date(string q, mapping m, RequestID id)
-{
-  int t=(int)m["unix-time"] || time(1);
-  t+=Roxen.time_dequantifier(m);
+      args->alt = args->alt || args->src;
+      args->src = "/internal-roxen-" + args->src;
+      args->border = args->border || "0";
 
-  if(!(m->brief || m->time || m->date))
-    m->full=1;
-
-  if(m->part=="second" || m->part=="beat" || m->strftime)
-    NOCACHE();
-  else
-    CACHE(60); // One minute is good enough.
-
-  return Roxen.tagtime(t, m, id, language);
-}
-
-string|array(string) tag_insert( string tag, mapping m, RequestID id )
-{
-  string n;
-
-  if(n = m->variable)
-  {
-    if(zero_type(RXML.user_get_var(n, m->scope)))
-      RXML.run_error("No such variable ("+n+").\n", id);
-    string var=(string)RXML.user_get_var(n, m->scope);
-    return m->quote=="none"?var:({ Roxen.html_encode_string(var) });
-  }
-
-  if(n = m->variables || m->scope) {
-    RXML.Context context=RXML.get_context();
-    if(n!="variables")
-      return ({ Roxen.html_encode_string(Array.map(sort(context->list_var(m->scope)),
-						   lambda(string s) {
-						     return sprintf("%s=%O", s, context->get_var(s, m->scope) );
-						   } ) * "\n")
-      });
-    return ({ String.implode_nicely(sort(context->list_var(m->scope))) });
-  }
-
-  if(m->scopes) {
-    return ({ String.implode_nicely(sort(RXML.get_context()->list_scopes())) });
-  }
-
-  if(m->file)
-  {
-    if(m->nocache) {
-      int nocache=id->pragma["no-cache"];
-      id->pragma["no-cache"] = 1;
-      n=id->conf->try_get_file(Roxen.fix_relative(m->file,id),id);
-      if(!n) RXML.run_error("No such file ("+m->file+").\n");
-      id->pragma["no-cache"] = nocache;
-      return m->quote!="html"?n:({ Roxen.html_encode_string(n) });
+      result = Roxen.make_tag("img", args);
+      return 0;
     }
-    n=id->conf->try_get_file(Roxen.fix_relative(m->file,id),id);
-    if(!n) RXML.run_error("No such file ("+m->file+").\n");
-    return m->quote!="html"?n:({ Roxen.html_encode_string(n) });
   }
-
-  if(m->href && query("insert_href")) {
-    if(m->nocache)
-      NOCACHE();
-    else
-      CACHE(60);
-    Protocols.HTTP q=Protocols.HTTP.get_url(m->href);
-    if(q && q->status>0 && q->status<400)
-      return ({ m->quote!="html"?q->data():Roxen.html_encode_string(q->data()) });
-    RXML.run_error(q ? q->status_desc + "\n": "No server response\n");
-  }
-
-  if(m->var) {
-    object|array tagfunc=RXML.get_context()->tag_set->get_tag("!--#echo");
-    if(!tagfunc) RXML.run_error("No SSI module added.\n");
-    return ({ 1, "!--#echo", m});
-  }
-
-  RXML.parse_error("No correct insert attribute given.\n");
 }
 
-string tag_return(string tag, mapping m, RequestID id)
-{
-  int c=(int)m->code;
-  if(c) _error=c;
-  string p=m->text;
-  if(p) _rettext=Roxen.http_encode_string(p);
-  return "";
+class TagDate {
+  inherit RXML.Tag;
+  constant name = "date";
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+
+  class Frame {
+    inherit RXML.Frame;
+
+    array do_return(RequestID id) {
+      int t=(int)args["unix-time"] || time(1);
+      t+=Roxen.time_dequantifier(args);
+
+      if(!(args->brief || args->time || args->date))
+	args->full=1;
+
+      if(args->part=="second" || args->part=="beat" || args->strftime)
+	NOCACHE();
+      else
+	CACHE(60);
+
+      result = Roxen.tagtime(t, args, id, language);
+      return 0;
+    }
+  }
 }
 
-string tag_set_cookie(string tag, mapping m, RequestID id)
-{
-  if(!m->name)
-    RXML.parse_error("Requires a name attribute.\n");
+class TagInsert {
+  inherit RXML.Tag;
+  constant name = "insert";
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
 
-  string cookies = Roxen.http_encode_cookie(m->name)+"="+Roxen.http_encode_cookie(m->value||"");
-  int t;     //time
+  class Frame {
+    inherit RXML.Frame;
 
-  if(m->persistent)
-    t=(3600*(24*365*2));
-  else
-    t=Roxen.time_dequantifier(m);
+    array do_return(RequestID id) {
 
-  if(t)
-    cookies += "; expires="+Roxen.http_date(t+time(1));
+      string n;
 
-  if (m->domain)
-    cookies += "; domain=" + Roxen.http_encode_cookie(m->domain);
+      if(n = args->variable) {
+	if(zero_type(RXML.user_get_var(n, args->scope)))
+	  RXML.run_error("No such variable ("+n+").\n", id);
+	result=(string)RXML.user_get_var(n, args->scope);
+	if(args->quote!="none") result=Roxen.html_encode_string(result);
+	return 0;
+      }
 
-  //FIXME: Check the parameter's usability
-  cookies += "; path=" + Roxen.http_encode_cookie(m->path||"/");
+      if(n = args->variables || args->scope) {
+	RXML.Context context=RXML.get_context();
+	if(n!="variables")
+	  result = Roxen.html_encode_string(Array.map(sort(context->list_var(args->scope)),
+						      lambda(string s) {
+							return sprintf("%s=%O", s, context->get_var(s, args->scope) );
+						      } ) * "\n");
+	else
+	  result = String.implode_nicely(sort(context->list_var(args->scope)));
+	return 0;
+      }
 
-  Roxen.add_http_header(_extra_heads, "Set-Cookie", cookies);
+      if(n = args->scopes) {
+	RXML.Context context=RXML.get_context();
+	if(n=="full") {
+	  result = "";
+	  foreach(sort(context->list_scopes()), string scope) {
+	    result += scope+"\n";
+	    result += Roxen.html_encode_string(Array.map(sort(context->list_var(args->scope)),
+						      lambda(string s) {
+							return sprintf("%s.%s=%O", scope, s,
+								       context->get_var(s, args->scope) );
+						      } ) * "\n");
+	    result += "\n";
+	  }
+	  return 0;
+	}
+	result = String.implode_nicely(sort(context->list_scopes()));
+	return 0;
+      }
 
-  return "";
+      if(args->file) {
+	if(args->nocache) {
+	  int nocache=id->pragma["no-cache"];
+	  id->pragma["no-cache"] = 1;
+	  result=id->conf->try_get_file(Roxen.fix_relative(args->file,id),id);
+	  if(!result) RXML.run_error("No such file ("+args->file+").\n");
+	  id->pragma["no-cache"] = nocache;
+	}
+	else
+	  result=id->conf->try_get_file(Roxen.fix_relative(args->file,id),id);
+	if(args->quote=="html") result=Roxen.html_encode_string(result);
+	return 0;
+      }
+
+      if(args->href && query("insert_href")) {
+	if(args->nocache)
+	  NOCACHE();
+	else
+	  CACHE(60);
+	Protocols.HTTP q=Protocols.HTTP.get_url(args->href);
+	if(q && q->status>0 && q->status<400) {
+	  result=q->data();
+	  if(args->quote!="html") result=Roxen.html_encode_string(result);
+	  return 0;
+	}
+	RXML.run_error(q ? q->status_desc + "\n": "No server response\n");
+      }
+
+      RXML.parse_error("No correct insert attribute given.\n");
+    }
+  }
 }
 
-string tag_remove_cookie(string tag, mapping m, RequestID id)
-{
-  if(!m->name || !id->cookies[m->name]) RXML.run_error("That cookie does not exists.\n");
+class TagReturn {
+  inherit RXML.Tag;
+  constant name = "return";
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
 
-  Roxen.add_http_header(_extra_heads, "Set-Cookie",
-    Roxen.http_encode_cookie(m->name)+"="+Roxen.http_encode_cookie(m->value||"")+
-			"; expires=Thu, 01-Jan-70 00:00:01 GMT; path=/"
-  );
+  class Frame {
+    inherit RXML.Frame;
 
-  return "";
+    array do_return(RequestID id) {
+      int c=(int)args->code;
+      if(c) _error=c;
+      string p=args->text;
+      if(p) _rettext=Roxen.http_encode_string(p);
+      return 0;
+    }
+  }
+}
+
+class TagSetCookie {
+  inherit RXML.Tag;
+  constant name = "set-cookie";
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+
+  mapping(string:RXML.Type) req_arg_types = ([ "name" : RXML.t_text ]);
+
+  class Frame {
+    inherit RXML.Frame;
+
+    array do_return(RequestID id) {
+      if(!args->name)
+	RXML.parse_error("Requires a name attribute.\n");
+
+      string cookies = Roxen.http_encode_cookie(args->name)+"="+
+	Roxen.http_encode_cookie(args->value||"");
+      int t;
+
+      if(args->persistent)
+	t=(3600*(24*365*2));
+      else
+	t=Roxen.time_dequantifier(args);
+
+      if(t)
+	cookies += "; expires="+Roxen.http_date(t+time(1));
+
+      if (args->domain)
+	cookies += "; domain=" + Roxen.http_encode_cookie(args->domain);
+
+      //FIXME: Check the parameter's usability
+      cookies += "; path=" + Roxen.http_encode_cookie(args->path||"/");
+
+      Roxen.add_http_header(_extra_heads, "Set-Cookie", cookies);
+
+      return 0;
+    }
+  }
+}
+
+class TagRemoveCookie {
+  inherit RXML.Tag;
+  constant name = "remove-cookie";
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+
+  mapping(string:RXML.Type) req_arg_types = ([ "name" : RXML.t_text ]);
+  mapping(string:RXML.Type) opt_arg_types = ([ "value" : RXML.t_text ]);
+
+  class Frame {
+    inherit RXML.Frame;
+
+    array do_return(RequestID id) {
+      if(!id->cookies[args->name])
+	RXML.run_error("That cookie does not exists.\n");
+
+      Roxen.add_http_header(_extra_heads, "Set-Cookie",
+			    Roxen.http_encode_cookie(args->name)+"="+
+			    Roxen.http_encode_cookie(args->value||"")+
+			    "; expires=Thu, 01-Jan-70 00:00:01 GMT; path=/"
+			    );
+
+      return 0;
+    }
+  }
 }
 
 string tag_modified(string tag, mapping m, RequestID id, Stdio.File file)
@@ -1077,7 +1220,7 @@ class TagDoc {
     inherit RXML.Frame;
 
     array do_enter(RequestID id) {
-      if(args->preparse) content_type = RXML.t_same(RXML.PXml);
+      if(args->preparse) content_type = result_type(RXML.PXml);
       return 0;
     }
 
