@@ -11,7 +11,7 @@ import Parser.XML.Tree;
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_webapp",X,Y)
 // end of the locale related stuff
 
-constant cvs_version = "$Id: webapp.pike,v 2.3 2002/01/23 15:00:15 tomas Exp $";
+constant cvs_version = "$Id: webapp.pike,v 2.4 2002/01/30 16:31:43 tomas Exp $";
 
 constant thread_safe=1;
 constant module_unique = 0;
@@ -41,15 +41,32 @@ LOCALE(2,"An interface to Java <a href=\"http://java.sun.com/"
 
 #if constant(Servlet.servlet)
 
-// map from various url-patterns to servlet
-mapping(string:Servlet.servlet) servlets_path = ([ ]);
-mapping(string:Servlet.servlet) servlets_ext = ([ ]);
-mapping(string:Servlet.servlet) servlets_exact = ([ ]);
-mapping(string:Servlet.servlet) servlets_default = ([ ]);
-mapping(string:Servlet.servlet) servlets_any = ([ ]);
+// map from servlet name to various info about the servlet
+// Each servlet maps to a mapping that contains the following info:
+//   Servlet.servlet servlet;
+//   int(-1..1) loaded;
+//   int(-1..1) initialized;
+//   string url;
+//   mapping(string:string) initparams;
+//   string servlet-name;
+//   string display-name;
+//   string description;
+//   string servlet-class;
+//   //string jsp-file; (not implemented!)
+//   string load-on-startup;
+//   ....
+mapping(string:mapping(string:string|mapping|Servlet.servlet)) servlets = ([ ]);
 
-// contains mappings read from web.xml
-mapping(string:string) servlet_to_class = ([ ]);
+// map from url patterns to servlet name
+mapping(string:mapping(string:string)) servletmaps = ([
+  "path" : ([ ]),
+  "ext" : ([ ]),
+  "exact" : ([ ]),
+  "default" : ([ ]),
+  "any" : ([ ]),
+]);
+
+// map from url-patterns to servlet name read from web.xml
 mapping(string:string) url_to_servlet = ([ ]);
 
 // hold the pike wrapper for RoxenServletContext
@@ -79,26 +96,29 @@ static mapping http_low_answer(int errno, string data, string|void desc)
 
 void stop()
 {
-  foreach(values(servlets_path),object servlet)
-    destruct(servlet);
-  servlets_path = ([ ]);
-  foreach(values(servlets_ext),object servlet)
-    destruct(servlet);
-  servlets_ext = ([ ]);
-  foreach(values(servlets_exact),object servlet)
-    destruct(servlet);
-  servlets_exact = ([ ]);
-  foreach(values(servlets_default),object servlet)
-    destruct(servlet);
-  servlets_default = ([ ]);
-  foreach(values(servlets_any),object servlet)
-    destruct(servlet);
-  servlets_any = ([ ]);
+  foreach(indices(servlets), string serv)
+    {
+      if (servlets[serv]->loaded == 1)
+        destruct(servlets[serv]->servlet);
+    }
 
   if (objectp(conf_ctx)) {
     destruct(conf_ctx);
     conf_ctx= 0;
   }
+
+  servlets = ([ ]);
+  webapp_info = ([ ]);
+  webapp_context = ([ ]);
+  url_to_servlet = ([ ]);
+
+  servletmaps = ([
+    "path" : ([ ]),
+    "ext" : ([ ]),
+    "exact" : ([ ]),
+    "default" : ([ ]),
+    "any" : ([ ]),
+  ]);
 }
 
 static mapping(string:string) make_initparam_mapping()
@@ -140,6 +160,77 @@ int parse_param(Node c, mapping(string:string) data)
         return 0;
 }
 
+void do_parse_servlet(Node c, mapping(string:string) data)
+{
+  mapping(string:string) param = ([ ]);
+  int prio;
+  switch (c->get_tag_name())
+    {
+    case "icon":
+      break;
+    case "servlet-name":
+      data["servlet-name"] = String.trim_all_whites(c->value_of_node());
+      break;
+    case "display-name":
+      data["display-name"] = String.trim_all_whites(c->value_of_node());
+      break;
+    case "description":
+      data["description"] = String.trim_all_whites(c->value_of_node());
+      break;
+    case "servlet-class":
+      data["servlet-class"] = String.trim_all_whites(c->value_of_node());
+      break;
+    case "jsp-file":
+      //data["jsp-file"] = String.trim_all_whites(c->value_of_node());
+      break;
+    case "init-param":
+      param = ([ ]);
+      if (parse_param(c, param))
+        {
+          if (data["initparams"] == 0)
+            data["initparams"] = ([ ]);
+          data["initparams"] += ([ param["name"] : param["value"] ]);
+        }
+      break;
+    case "load-on-startup":
+      data["load-on-startup"] = String.trim_all_whites(c->value_of_node());
+      prio = (int)data["load-on-startup"];
+      //convert prio to negative numbers with -1 as the lowest priority
+      //to make it easier to sort on prio (prio not set will be load on demand)
+      if (prio > 0)
+        data["prio"] = prio - 65536;
+      else
+        data["prio"] = -1;
+        
+      break;
+    case "security-role-ref":
+      break;
+    }
+}
+
+void parse_servlet(Node c)
+{
+  mapping(string:string) data = ([ ]);
+
+  c->iterate_children(do_parse_servlet, data);
+
+  if (data["servlet-name"] && data["servlet-class"])
+    {
+      WEBAPP_WERR(sprintf("servlet %s parsed:\n%O", data["servlet-name"], data));
+      if (servlets[data["servlet-name"]])
+        {
+          report_error(LOCALE(0, "Duplicate entry of %s in web.xml\n"),
+                       data["servlet-name"]);
+          status_info+=sprintf(LOCALE(0,"<pre>Duplicate entry of %s in web.xml</pre>"),
+                              data["servlet-name"]);
+        }
+      else
+        {
+          servlets[data["servlet-name"]] = data;
+        }
+    }
+}
+
 void parse_webapp(Node c)
 {
   mapping(string:string) data;
@@ -162,20 +253,7 @@ void parse_webapp(Node c)
         webapp_context[data["name"]] = data["value"];
       break;
     case "servlet":
-      data = ([ ]);
-      c->iterate_children(lambda (Node c, mapping(string:string) data) {
-                            switch (c->get_tag_name())
-                            {
-                              case "servlet-name":
-                                data["name"] = String.trim_all_whites(c->value_of_node());
-                                break;
-                              case "servlet-class":
-                                data["class"] = String.trim_all_whites(c->value_of_node());
-                                break;
-                            }
-                          }, data);
-      if (data["name"] && data["class"])
-        servlet_to_class[data["name"]] = data["class"];
+      parse_servlet(c);
       break;
     case "servlet-mapping":
       data = ([ ]);
@@ -235,10 +313,8 @@ void start(int x, Configuration conf)
       return;
 
   string warname = query("warname");
-  //if (search(warname, ".war") >= sizeof(warname)-4) {
   if (has_suffix(warname, ".war"))
     {
-      // FIXME: extract archive
       string dir = warname[..sizeof(warname)-5];
       Stat s = r_file_stat( dir );
       if( !s )
@@ -285,12 +361,16 @@ void start(int x, Configuration conf)
     return(0);
   }
 
+  status_info="";
   if (webapp)
   {
     webapp->iterate_children(parse_webapp);
   }
   else
-    status_info = LOCALE(7, "Deployment descriptor is corrupt");
+    {
+      status_info += LOCALE(7, "Deployment descriptor is corrupt");
+      return (0);
+    }
 
   // Build the classpath used by the classloader for this Web App
   array(string) codebase = ({ });
@@ -307,7 +387,6 @@ void start(int x, Configuration conf)
                                             } )*({ });
   WEBAPP_WERR(sprintf("codebase:\n%O", codebase));
 
-  status_info="";
   mixed exc2 = catch {
     cls_loader = Servlet.loader(codebase);
     conf_ctx = Servlet.conf_context(conf);
@@ -323,38 +402,30 @@ void start(int x, Configuration conf)
     if (sizeof(webapp_context) > 0)
       conf_ctx->set_init_parameters(webapp_context);
 
+    // Sort the url patterns into different categories for easier lookup
+    // later on
     foreach ( indices(url_to_servlet), string url) {
-      object servlet;
-      mapping(string:object) table;
+      servlets[url_to_servlet[url]]->url = url;
       if (url == "/")
-        table = servlets_default;
+        servletmaps["default"][url] = url_to_servlet[url];
       else if (url[..1] == "*.")
-        table = servlets_ext;
+        servletmaps["ext"][url] = url_to_servlet[url];
       else if (sizeof(url) > 1 && url[0] == '/' &&
                url[sizeof(url)-2..] == "/*")
-        table = servlets_path;
+        servletmaps["path"][url] = url_to_servlet[url];
       else
-        table = servlets_exact;
-      string classname = servlet_to_class[url_to_servlet[url]];
-      if (classname) {
-        mixed exc = catch(table[url] = Servlet.servlet(classname,
-                                                          //query("codebase")-({""})));
-                                                          //codebase ));
-                                                          cls_loader ));
-        if(exc)
-        {
-          report_error(LOCALE(4, "Servlet: %s\n"),exc[0]);
-          status_info+=sprintf(LOCALE(5, "<pre>%s</pre>"),exc[0]);
-        }
-        else
-          if(table[url])
-            {
-              mixed e = catch( table[url]->init(conf_ctx, make_initparam_mapping()) );
-              if (e)
-                if (!is_unavailable_exception(e))
-                  throw(e);
-            }
-      }
+        servletmaps["exact"][url] = url_to_servlet[url];
+    }
+    
+    // Generate a list sorted on init order
+    array ind = indices(servlets);
+    sort(values(servlets)->prio, ind);
+
+    // Preload servlets in priority order
+    foreach ( ind, string serv) {
+      WEBAPP_WERR(sprintf("servlet: %s prio: %O", serv, servlets[serv]->prio));
+      if (servlets[serv]->prio < 0 || query("preloadall"))
+        load_servlet(servlets[serv]);
     }
   }
 
@@ -377,67 +448,42 @@ void start(int x, Configuration conf)
 
 string status()
 {
-  /*
-  return (servlet?
-	  servlet->info() || "<i>No servlet information available</i>" :
-	  "<font color=red>Servlet not loaded</font>"+"<br>"+
-	  status_info);
-  */
-
   return LOCALE(8, "<h2>Servlets:</h2>")+
-    ((map(indices(servlets_exact),
-          lambda(string url) {
-            return "<h3>"+
-              url+
-              LOCALE(9, " mapped to ")+
-              servlet_to_class[url_to_servlet[url]]+
-              "</h3>"+
-              ((servlets_exact[url] && servlets_exact[url]->info()) ||
-               LOCALE(10, "<i>No servlet information available</i>") )+
-              "<br />"; 
-          })+
-      map(indices(servlets_path),
-          lambda(string url) {
-            return "<h3>"+
-              url+
-              LOCALE(9, " mapped to ")+
-              servlet_to_class[url_to_servlet[url]]+
-              "</h3>"+
-              ((servlets_path[url] && servlets_path[url]->info()) ||
-               LOCALE(10, "<i>No servlet information available</i>") )+
-              "<br />"; 
-          })+
-      map(indices(servlets_ext),
-          lambda(string url) {
-            return "<h3>"+
-              url+
-              LOCALE(9, " mapped to ")+
-              servlet_to_class[url_to_servlet[url]]+
-              "</h3>"+
-              ((servlets_ext[url] && servlets_ext[url]->info()) ||
-               LOCALE(10, "<i>No servlet information available</i>") )+
-              "<br />"; 
-          })+
-      map(indices(servlets_default),
-          lambda(string url) {
-            return "<h3>"+
-              url+
-              LOCALE(9, " mapped to ")+
-              servlet_to_class[url_to_servlet[url]]+
-              "</h3>"+
-              ((servlets_default[url] && servlets_default[url]->info()) ||
-               LOCALE(10, "<i>No servlet information available</i>") )+
-              "<br />"; 
-          })+
-      map(indices(servlets_any),
-          lambda(string url) {
-            return "<h3>"+
-              "/servlet/" + url+
-              LOCALE(9, " mapped to ")+
-              url+
-              "</h3><br />"+
-              ((servlets_any[url] && servlets_any[url]->info()) ||
-               LOCALE(10, "<i>No servlet information available</i>") ); 
+    ((map(indices(servlets),
+          lambda(string serv) {
+            string ret = "<h3>";
+            ret += ( servlets[serv]["display-name"] ||
+                     servlets[serv]["servlet-name"] );
+            ret += "</h3>";
+            if (servlets[serv]->url)
+              ret += servlets[serv]->url +
+                LOCALE(9, " mapped to ") +
+                servlets[serv]["servlet-class"] +
+                "<br />";
+            if (servlets[serv]->description)
+              ret += servlets[serv]->description + "<br />";
+            if (servlets[serv]->initialized == 1)
+              ret += servlets[serv]->servlet->info() ||
+                LOCALE(10, "<i>No servlet information available</i>");
+            else if (!servlets[serv]->loaded)
+              ret += LOCALE(0, "<i>Servlet not loaded</i>");
+            else if (servlets[serv]->loaded == -1)
+              {
+                ret += "<font color='&usr.warncolor;'>";
+                ret += LOCALE(0, "<b>Servlet failed to load!</b>");
+                ret += "</font>";
+              }
+            else if (!servlets[serv]->initialized)
+              ret += LOCALE(0, "<i>Servlet not initialized</i>");
+            else if (servlets[serv]->initialized == -1)
+              {
+                ret += "<font color='&usr.warncolor;'>";
+                ret += LOCALE(0, "<b>Servlet failed to initialize!</b>");
+                ret += "</font>";
+              }
+
+            ret += "<br />";
+            return ret;
           })
       )*"<br /><br />") + status_info;
 }
@@ -450,6 +496,25 @@ string query_name()
 		   name[..7], name[sizeof(name)-8..]);
   }
   return sprintf(LOCALE(11, "WAR loaded from %s"), name);
+}
+
+mapping(string:function) query_action_buttons()
+{
+  return ([ "Load all servlets":load_all ]);
+}
+
+void load_all()
+{
+  WEBAPP_WERR("Loading all servlets");
+
+  // Generate a list sorted on init order
+  array ind = indices(servlets);
+  sort(values(servlets)->prio, ind);
+
+  // Preload servlets in priority order
+  foreach ( ind, string serv) {
+    load_servlet(servlets[serv]);
+  }
 }
 
 class RXMLParseWrapper
@@ -484,22 +549,122 @@ class RXMLParseWrapper
   }
 }
 
-object match_path_servlet(string f, RequestID id)
+int load_servlet(mapping(string:string|mapping|Servlet.servlet) servlet)
 {
-  foreach(indices(servlets_path), string p)
+  string classname = servlet["servlet-class"];
+
+  if (!servlet->loaded)
     {
-      WEBAPP_WERR(sprintf("match_path_servlet(%s) trying %s (p[..sizeof(p)-3]='%s')",
-             f, p, p[..sizeof(p)-3]));
-      if (p[..sizeof(p)-3] == f)
+      if (classname) {
+        WEBAPP_WERR(sprintf("Trying to load %s from %s",
+                            servlet["servlet-name"], classname));
+        mixed exc = catch(servlet->servlet = Servlet.servlet(classname, cls_loader));
+        if(exc)
+          {
+            servlet->loaded = -1;
+            report_error(LOCALE(4, "Servlet: %s\n"),exc[0]);
+            status_info=sprintf(LOCALE(5, "<pre>%s</pre>"),exc[0]);
+          }
+        else
+          if(servlet->servlet)
+            {
+              servlet->loaded = 1;
+            }
+      }
+    }
+  
+  if ( servlet->loaded == 1 &&
+       ( !servlet->initialized ||
+         ( servlet->initialized == -1 && !servlet->permanent)))
+    {
+      mixed e = catch {
+        WEBAPP_WERR(sprintf("Trying to initialize %s",
+                            servlet["servlet-name"]));
+        servlet->servlet->init(conf_ctx, make_initparam_mapping());
+        servlet->initialized = 1;
+      };
+      if (e)
         {
-          WEBAPP_WERR("match on 'path'!!");
-          return servlets_path[p];
+          if (is_unavailable_exception(e))
+            {
+              servlet->initialized = -1; // mark unavailable exception
+              servlet->permanent = e[2];
+              servlet->exc_msg = e[1];
+              servlet->retry = e[3];
+            }
+          else
+            {
+              servlet->initialized = -2; // mark unknown exception
+              //report_error(LOCALE(4, "Servlet: %s\n"),e[0]);
+              report_error(LOCALE(4, "Servlet: %s\n"),describe_backtrace(e));
+              status_info=sprintf(LOCALE(5, "<pre>%s</pre>"),e[0]);
+            }
+        }
+    }
+}
+
+mapping(string:string|mapping|Servlet.servlet) match_anyservlet(string f, RequestID id)
+{
+  mapping(string:string|mapping|Servlet.servlet) ret;
+  if (query("anyservlet") && has_prefix(f, "/servlet/"))
+    {
+      //WEBAPP_WERR(sprintf("match_anyservlet(%s)", f));
+      mixed fa = f/"/";
+      if (sizeof(fa)>2)
+        {
+          string classname = fa[2];
+          if (classname && sizeof(classname)>0) {
+            WEBAPP_WERR("match on 'any'!!");
+            if (servletmaps["any"][classname])
+              ret = servlets[servletmaps["any"][classname]];
+            else
+              {
+                // A new servlet class. Setup the structures for it.
+                ret = ([ ]);
+                ret["servlet-class"] = classname;
+                ret["servlet-name"] = classname;
+                ret["url"] = fa[..2]*"/";
+                servlets[ret["servlet-name"]] = ret;
+
+                servletmaps["any"][classname] = classname;
+              }
+          }
+          if (ret)
+            {
+              id->misc->servlet_path = fa[..2]*"/";
+              if (sizeof(fa)>3)
+                id->misc->path_info = "/" + fa[3..]*"/";
+              return ret;
+            }
         }
     }
 
-  WEBAPP_WERR("NO match on 'path'!!");
+  //WEBAPP_WERR("NO match on 'any'!!");
+  return 0;
+}
+
+mapping(string:string|mapping|Servlet.servlet) match_exact_servlet(string f, RequestID id)
+{
+  return servletmaps["exact"] && servletmaps["exact"][f] &&
+    servlets[servletmaps["exact"][f]];
+}
+
+mapping(string:string|mapping|Servlet.servlet) match_path_servlet(string f, RequestID id)
+{
+  foreach(indices(servletmaps["path"]), string p)
+    {
+//       WEBAPP_WERR(sprintf("match_path_servlet(%s) trying %s (p[..sizeof(p)-3]='%s')",
+//              f, p, p[..sizeof(p)-3]));
+      if (p[..sizeof(p)-3] == f)
+        {
+          WEBAPP_WERR("match on 'path'!!");
+          return servlets[servletmaps["path"][p]];
+        }
+    }
+
+  //WEBAPP_WERR("NO match on 'path'!!");
   array a = f/"/";
-  if (sizeof(a)<2)
+  if (sizeof(a)<3)
     return 0;
   else
     {
@@ -509,80 +674,50 @@ object match_path_servlet(string f, RequestID id)
     }
 }
 
-object match_ext_servlet(string f, RequestID id)
+mapping(string:string|mapping|Servlet.servlet) match_ext_servlet(string f, RequestID id)
 {
-  foreach(indices(servlets_ext), string e)
+  foreach(indices(servletmaps["ext"]), string e)
     {
-      WEBAPP_WERR(sprintf("match_ext_servlet(%s) trying %s " +
-             "(e[1..]='%s', f[sizeof(f)-sizeof(e)..]='%s')",
-             f, e, e[1..], f[sizeof(f)-sizeof(e)+1..]));
+//       WEBAPP_WERR(sprintf("match_ext_servlet(%s) trying %s " +
+//              "(e[1..]='%s', f[sizeof(f)-sizeof(e)..]='%s')",
+//              f, e, e[1..], f[sizeof(f)-sizeof(e)+1..]));
       if (e[1..] == f[sizeof(f)-sizeof(e)+1..])
         {
           WEBAPP_WERR("match on 'ext'!!");
-          return servlets_ext[e];
+          return servlets[servletmaps["ext"][e]];
         }
     }
 
-  WEBAPP_WERR("NO match on 'ext'!!");
+  //WEBAPP_WERR("NO match on 'ext'!!");
   return 0;
 }
 
-object match_anyservlet(string f, RequestID id)
+mapping(string:string|mapping|Servlet.servlet) match_default_servlet(string f, RequestID id)
 {
-  object ret;
-  if (query("anyservlet") && has_prefix(f, "/servlet/"))
-    {
-      WEBAPP_WERR(sprintf("match_anyservlet(%s)", f));
-      mixed fa = f/"/";
-      if (sizeof(fa)>2)
-        {
-          string classname = fa[2];
-          if (classname) {
-            if (servlets_any[classname])
-              ret = servlets_any[classname];
-            else
-              {
-                mixed exc =
-                  catch(servlets_any[classname] = Servlet.servlet(classname,
-                                                                  cls_loader));
-                if(exc)
-                  {
-                    report_error(LOCALE(4, "Servlet: %s\n"),exc[0]);
-                    status_info+=sprintf(LOCALE(5, "<pre>%s</pre>"),exc[0]);
-                  }
-                else
-                  if(servlets_any[classname])
-                    {
-                      servlets_any[classname]->init(conf_ctx, make_initparam_mapping());
-                      ret = servlets_any[classname];
-                    }
-              }
-          }
-          if (ret)
-            {
-              id->misc->servlet_path = "/servlet/" + classname;
-              if (sizeof(fa)>3)
-                id->misc->path_info = "/" + fa[3..]*"/";
-              return ret;
-            }
-        }
-    }
-  
-  WEBAPP_WERR("NO match on 'any'!!");
-  return 0;
+  return servletmaps["default"] && servletmaps["default"][f] &&
+    servlets[servletmaps["default"][f]];
 }
 
-object map_servlet(string f, RequestID id)
+mapping(string:string|mapping|Servlet.servlet) map_servlet(string f, RequestID id)
 {
+  mapping(string:string|mapping|Servlet.servlet) serv;
   string index = combine_path("/", f);
   id->misc->servlet_path = index;
   id->misc->path_info = 0;
 
-  return match_anyservlet(index, id) ||
-    servlets_exact[index] ||
+  serv = match_anyservlet(index, id) ||
+    match_exact_servlet(index, id) ||
     match_path_servlet(index, id) ||
     match_ext_servlet(index, id) ||
-    servlets_default[index];
+    match_default_servlet(index, id);
+
+  if (serv)
+    {
+      load_servlet(serv);
+      return serv;
+    }
+
+  return 0;
 }
 
 int is_special( string f, RequestID id )
@@ -601,63 +736,73 @@ mixed find_file( string f, RequestID id )
 {
   WEBAPP_WERR("Request for \""+f+"\"" +
 		  (id->misc->internal_get ? " (internal)" : ""));
-  object servlet;
+  mapping(string:string|mapping|Servlet.servlet) servlet;
   string loc = id->misc->mountpoint = query("mountpoint");
   if (loc[-1] == '/')
     id->misc->mountpoint = loc[..sizeof(loc)-2];
 
-  mixed e = catch( servlet = map_servlet(f, id));
-  if (e)
-    if (is_unavailable_exception(e))
-      {
-        WEBAPP_WERR("Unavailable exc detected in find_file");
-        if (e[2])
-          return http_low_answer(503, "<h1>Error: 503</h1>"
-                                 "<h2>Location: " +
-                                 loc + f + "</h2>"
-                                 "<b>Permanently Unavailable</b><br><br>"
-                                 "Service is permanently unavailable<br>");
-        else
-          {
-            id->misc->cacheable = e[3];
-            return http_low_answer(503, "<h1>Error: 503</h1>\n"
-                                   "<h2>Location: " +
-                                   loc + f + "</h2>"
-                                   "<b>" + e[1] + "</b><br><br>"
-                                   "Service is unavailable, try again in " +
-                                   e[3] + " seconds<br>");
-          }
-      }
-  else
-      throw(e);
+  servlet = map_servlet(f, id);
 
   if (!servlet) {
+//     WEBAPP_WERR(sprintf("Servlet mapping not found for '%s'!\n"
+//            "servlets_exact=%O\n"
+//            "servlets_path=%O\n"
+//            "servlets_ext=%O\n"
+//            "servlets_default=%O\n"
+//            "servlets_any=%O\n"
+//            , f, servlets_exact, servlets_path, servlets_ext, servlets_default, servlets_any));
     WEBAPP_WERR(sprintf("Servlet mapping not found for '%s'!\n"
-           "servlets_exact=%O\n"
-           "servlets_path=%O\n"
-           "servlets_ext=%O\n"
-           "servlets_default=%O\n"
-           "servlets_any=%O\n"
-           , f, servlets_exact, servlets_path, servlets_ext, servlets_default, servlets_any));
+                        "servlets=%O\n"
+                        , f, servlets));
     if (!is_special(f, id))
       return ::find_file(f, id);
     else 
       return 0;
   }
   else {
-    if(id->my_fd == 0 && id->misc->trace_enter)
-      ; /* In "Resolve path...", kluge to avoid backtrace. */
-    else {
-      id->my_fd->set_read_callback(0);
-      id->my_fd->set_close_callback(0);
-      id->my_fd->set_blocking();
-      if(query("rxml"))
-        id->my_fd = RXMLParseWrapper(id->my_fd, id);
-      //    WEBAPP_WERR(sprintf("servlet_war: servlet=%O\nid=%O,%O", servlet, id->my_fd, mkmapping(indices(id), values(id))));
-      servlet->service(id);
-    }
-
-    return Roxen.http_pipe_in_progress();
+    if (servlet->initialized == 1)
+      {
+        if(id->my_fd == 0 && id->misc->trace_enter)
+          ; /* In "Resolve path...", kluge to avoid backtrace. */
+        else {
+          id->my_fd->set_read_callback(0);
+          id->my_fd->set_close_callback(0);
+          id->my_fd->set_blocking();
+          if(query("rxml"))
+            id->my_fd = RXMLParseWrapper(id->my_fd, id);
+//           WEBAPP_WERR(sprintf("servlet_war: servlet=%O\nid=%O,%O",
+//                               servlet, id->my_fd,
+//                               mkmapping(indices(id), values(id))));
+          servlet->servlet->service(id);
+        }
+        
+        return Roxen.http_pipe_in_progress();
+      }
+    else if  (servlet->initialized == -1)
+      if (servlet->permanent)
+        {
+          WEBAPP_WERR("Permanently unavailable detected in find_file");
+          return http_low_answer(503, "<h1>Error: 503</h1>"
+                                 "<h2>Location: " +
+                                 loc + f + "</h2>"
+                                 "<b>Permanently Unavailable</b><br><br>"
+                                 "Service is permanently unavailable<br>");
+        }
+      else
+        {
+          WEBAPP_WERR("Service unavailable detected in find_file");
+          id->misc->cacheable = servlet->retry;
+          return http_low_answer(503, "<h1>Error: 503</h1>\n"
+                                 "<h2>Location: " +
+                                 loc + f + "</h2>"
+                                 "<b>" + servlet->exc_msg + "</b><br><br>"
+                                 "Service is unavailable, try again in " +
+                                 servlet->retry + " seconds<br>");
+        }
+    else
+      {
+        return 0;
+      }
   }
 }
 
@@ -923,5 +1068,10 @@ void create()
   defvar("anyservlet", 0, LOCALE(24, "Access any servlet"), TYPE_FLAG|VAR_MORE,
 	 LOCALE(25, "Use a servlet mapping that mounts any servlet onto "
                 "&lt;Mount Point&gt;/servlet/") );
+
+  defvar("preloadall", 0, LOCALE(0, "Preload all servlets"),
+         TYPE_FLAG|VAR_MORE,
+	 LOCALE(0, "Load all servlets at module initialization time "
+                "even if load-on-startup is not specified in web.xml") );
 }
 
