@@ -1,7 +1,7 @@
 /* Copyright © 1997, 1998, Idonex AB.
  * Some modifications by Francesco Chemolli
  *
- * $Id: wizard.pike,v 1.91 2000/01/19 08:07:51 mast Exp $
+ * $Id: wizard.pike,v 1.92 2000/02/13 14:39:57 grubba Exp $
  *  name="Wizard generator";
  *  doc="This file generates all the nice wizards";
  * 
@@ -115,7 +115,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed b)
   {
    default: // String or password field or hidden value....
     if((m->type != "password") && (m->type != "hidden"))
-      m->type = "string";
+      m->type = "text";
     m_delete(m,"default");
     m->value = loc_encode(current||m->value||"", m, "none");
     if(!m->size)m->size="60,1";
@@ -125,7 +125,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed b)
     string n = m->name, res="<table cellpadding=0 cellspacing=0 border=0>";
     if(!id->variables[n]) id->variables[n]=current;
     
-    m->type = "string";
+    m->type = "text";
     if(!m->size)m->size="60,1";
     m_delete(m,"default");
     foreach((current||"")/"\0"-({""}), string v)
@@ -137,7 +137,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed b)
       res+=make_tag("input",m)+"</td></tr>";
     }
     m->name = "_new_"+n;
-    m->type = "string";
+    m->type = "text";
     m->value = "";
     res+= "<tr><td>"+make_tag("input", m)+"</td><td><font size=-2>";
     m->name="_Add";
