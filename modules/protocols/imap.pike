@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.31 1999/02/04 22:28:09 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.32 1999/02/04 22:35:30 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -193,27 +193,30 @@ class imap_mail
     }
 
   object|string address_list_to_imap(string s)
-    {
-      array tokens = MIME.tokenize(s) / ',';
+  {
+    array tokens = MIME.tokenize(s) / ',';
 
-      return imap_list(Array.map(tokens, parse_address));
-    }
+    return imap_list(Array.map(tokens, parse_address));
+  }
 
   string first_header(array|string v)
     {
-      return arrayp(v) ? v[0] : v;
+      return arrayp(v) ? v[0] : (v || "");
     }
   
   // FIXME: Handle multiple headers... 
   object make_envelope(mapping(string:string|array(string)) h)
   {
     object|string from = address_list_to_imap(first_header(h->from));
-    object|string sender = (h->sender
-			    ? address_list_to_imap(first_header(h->sender))
-			    : from);
-    object|string reply_to = (h["reply-to"]
-			      ? address_list_to_imap(first_header(h["reply-to"]))
-			      : from);
+    object|string sender = from;
+    object|string reply_to = from;
+    
+    if (h->sender) {
+      sender = address_list_to_imap(first_header(h->sender));
+    }
+    if (h["reply-to"]) {
+      reply_to = address_list_to_imap(first_header(h["reply-to"]));
+    }
 
 #ifdef IMAP_DEBUG
     werror("make_envelope(%O)\n", h);
