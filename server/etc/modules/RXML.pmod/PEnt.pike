@@ -4,7 +4,7 @@
 //!
 //! Created 2000-01-28 by Martin Stjernholm.
 //!
-//! $Id: PEnt.pike,v 1.4 2000/02/08 06:28:14 mast Exp $
+//! $Id: PEnt.pike,v 1.5 2000/02/11 01:09:13 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
@@ -36,6 +36,7 @@ static void create (
     if (list[i]->low_entities) add_entities (list[i]->low_entities);
 
   mixed_mode (!type->free_text);
+  ignore_tags (1);
   lazy_entity_end (1);
   match_tag (0);
   _set_entity_callback (.utils.p_html_entity_cb);
