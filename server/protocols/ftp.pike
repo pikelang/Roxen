@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.82 1998/03/11 19:42:43 neotron Exp $
+ * $Id: ftp.pike,v 1.83 1998/03/20 20:20:32 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -56,6 +56,9 @@ mixed pasv_arg;
 array(object) pasv_accepted;
 array(string|int) session_auth = 0;
 string username="", mode="A";
+int restart_point = 0;
+string oldcmd;
+
 #undef QUERY
 #define QUERY(X) roxen->variables->X[VAR_VALUE]
 #define Query(X) conf->variables[X][VAR_VALUE]  /* Per */
@@ -1146,6 +1149,7 @@ mapping(string:string) cmd_help = ([
   "nlst":"[ <sp> path-name ]",
   "list":"[ <sp> path-name ]",
   "rein":"(reinitialize)",
+  "rest":"<sp> marker",
   "retr":"<sp> file-name",
   "stat":"<sp> path-name",
   "size":"<sp> path-name",
@@ -1481,6 +1485,15 @@ void handle_data(string s, mixed key)
       }
 #endif /* 0 */
       break;
+
+    case "rest":
+      if (!arg || !strlen(arg)) {
+	reply("501 'REST': Missing argument\n");
+	break;
+      }
+      restart_point = (int)arg;
+      reply("350 REST OK\n");
+      break;
 	      
     case "retr": 
       // Count this as a request
@@ -1499,6 +1512,13 @@ void handle_data(string s, mixed key)
 
       if(!open_file(arg))
 	break;
+      if (restart_point && (oldcmd == "rest")) {
+	if (!(file->file->seek || (file->file->seek(restart_point) == -1))) {
+	  reply("550 'RETR': Error restoring restart point\n");
+	  break;
+	}
+      }
+      restart_point = 0;
       connect_and_send(file);
       roxen->log(file, this_object());
       break;
@@ -1698,6 +1718,7 @@ void handle_data(string s, mixed key)
     default:
       reply("502 command '"+ cmd +"' unimplemented.\n");
     }
+    oldcmd = cmd;
   }
   if (objectp(key))
     destruct(key);
