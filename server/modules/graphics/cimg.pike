@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.34 2000/12/10 04:30:23 per Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.35 2000/12/30 07:21:14 per Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -122,8 +122,9 @@ void flush_cache() {
 
 string status() {
   array s=the_cache->status();
-  return sprintf("<b>Images in cache:</b> %d images<br />\n<b>Cache size:</b> %s",
-		 s[0]/2, Roxen.sizetostring(s[1]));
+  return sprintf("<b>Images in cache:</b> %d images<br />\n"
+                 "<b>Cache size:</b> %s",
+		 s[0], Roxen.sizetostring(s[1]));
 }
 
 array(Image.Layer) generate_image( mapping args, RequestID id )

@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.253 2000/12/05 00:40:12 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.254 2000/12/30 07:21:15 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -499,8 +499,9 @@ roxen.ImageCache image_cache;
 
 string status() {
   array s=image_cache->status();
-  return sprintf("<b>Images in cache:</b> %d images<br />\n<b>Cache size:</b> %s",
-		 s[0]/2, Roxen.sizetostring(s[1]));
+  return sprintf("<b>Images in cache:</b> %d images<br />\n"
+                 "<b>Cache size:</b> %s",
+		 s[0], Roxen.sizetostring(s[1]));
 }
 
 mapping(string:function) query_action_buttons() {

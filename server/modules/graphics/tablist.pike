@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997-2000, Roxen IS.
 // Makes a tab list like the one in the config interface.
 
-constant cvs_version="$Id: tablist.pike,v 1.47 2000/09/10 16:37:50 nilsson Exp $";
+constant cvs_version="$Id: tablist.pike,v 1.48 2000/12/30 07:21:15 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -35,7 +35,8 @@ void start(int num, Configuration conf)
 
 void add_layers( mapping m, string lay )
 {
-  foreach( ({"","background-","mask-","frame-","left-","right-" }), string s )
+  foreach( ({"","background-","mask-","frame-","left-","right-",
+             "above-","below-" }), string s )
   {
     string ind="extra-"+s+"layers", l;
     if( strlen( s ) )

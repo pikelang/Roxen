@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.73 2000/12/21 05:32:35 per Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.74 2000/12/30 07:21:15 per Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -225,8 +225,9 @@ void start()
 
 string status() {
   array s=button_cache->status();
-  return sprintf("<b>Images in cache:</b> %d images<br />\n<b>Cache size:</b> %s",
-		 s[0]/2, Roxen.sizetostring(s[1]));
+  return sprintf("<b>Images in cache:</b> %d images<br />\n"
+                 "<b>Cache size:</b> %s",
+		 s[0], Roxen.sizetostring(s[1]));
 }
 
 mapping(string:function) query_action_buttons() {
