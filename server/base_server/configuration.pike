@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.268 2000/03/06 14:44:09 peter Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.269 2000/03/06 18:57:11 nilsson Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -222,7 +222,7 @@ void stop()
 
 public string type_from_filename( string file, int|void to, string|void myext )
 {
-  mixed tmp;
+  array(string)|string tmp;
   if(!types_fun)
     return to?({ "application/octet-stream", 0 }):"application/octet-stream";
 
