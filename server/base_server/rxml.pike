@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.196 2000/05/14 23:47:53 nilsson Exp $
+// $Id: rxml.pike,v 1.197 2000/05/28 14:15:43 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -1411,6 +1411,17 @@ class TagEmit {
   }
 }
 
+class TagEmitSources {
+  inherit RXML.Tag;
+  constant name="emit";
+  constant plugin_name="sources";
+
+  array(mapping(string:string)) get_dataset(mapping m, RequestID id) {
+    return Array.map( indices(RXML.get_context()->tag_set->get_plugins("emit")),
+		      lambda(string source) { return (["source":source]); } );
+  }
+}
+
 class TagComment {
   inherit RXML.Tag;
   constant name = "comment";
@@ -2362,6 +2373,10 @@ The following features are supported:
  RXML-code. <tag>eval</tag> is then placed around the entity to get its
  content parsed.</desc>",
 
+"emit#sources":({
+  "<desc plugin>Provides a list of all available emit sources.</desc>",
+  ([ "&_.source;":"<desc ent>The name of the source.</desc>" ]) }),
+
 "emit":#"<desc cont><short>Provides data, fetched from different sources, as
  entities</short></desc>
 
@@ -2378,7 +2393,8 @@ The following features are supported:
 </attr>
 
 <attr name=skiprows value=number>
- Makes it possible to skip the first rows of the result.
+ Makes it possible to skip the first rows of the result. Negative numbers means
+ to skip everything execept the last n rows.
 </attr>
 
 <attr name=rowinfo value=variable>
