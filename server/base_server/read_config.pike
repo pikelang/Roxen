@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: read_config.pike,v 1.63 2002/04/08 15:03:17 mast Exp $
+// $Id: read_config.pike,v 1.64 2003/09/15 15:14:26 mast Exp $
 
 #include <module.h>
 
@@ -31,7 +31,7 @@ array(string) list_all_configurations()
     {
       report_fatal("I cannot read from the configurations directory ("+
 		   combine_path(getcwd(), configuration_dir)+")\n");
-      exit(-1);	// Restart.
+      roxenloader.real_exit(-1); // Restart.
     }
     return ({});
   }
