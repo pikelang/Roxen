@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.15 2001/02/05 13:21:16 per Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.16 2001/02/06 22:42:06 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Roxen self test module";
@@ -226,7 +226,8 @@ void xml_test(string t, mapping args, string c) {
 }
 
 void xml_comment(string t, mapping m, string c) {
-  report_debug(c + (c[-1]=='\n'?"":"\n"));
+  if(verbose)
+    report_debug(c + (c[-1]=='\n'?"":"\n"));
 }
 
 void run_xml_tests(string data) {
