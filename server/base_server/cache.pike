@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: cache.pike,v 1.84 2004/06/30 16:58:36 mast Exp $
+// $Id: cache.pike,v 1.85 2004/09/20 17:50:24 mast Exp $
 
 // #pragma strict_types
 
@@ -16,38 +16,75 @@
 #define DATA 1
 // A timeout telling when the data is no longer valid.
 #define TIMEOUT 2
-// The size of the entry, in byts.
+// The size of the entry, in bytes.
 #define SIZE 3
 
 #undef CACHE_WERR
 #ifdef CACHE_DEBUG
-# define CACHE_WERR(X) report_debug("CACHE: "+X+"\n");
+# define CACHE_WERR(X...) report_debug("CACHE: "+X);
 #else
-# define CACHE_WERR(X)
+# define CACHE_WERR(X...)
 #endif
 
 #undef MORE_CACHE_WERR
 #ifdef MORE_CACHE_DEBUG
-# define MORE_CACHE_WERR(X) report_debug("CACHE: "+X+"\n");
+# define MORE_CACHE_WERR(X...) report_debug("CACHE: "+X);
 #else
-# define MORE_CACHE_WERR(X)
+# define MORE_CACHE_WERR(X...)
 #endif
 
 // The actual cache along with some statistics mappings.
 static mapping(string:mapping(string:array)) cache;
 static mapping(string:int) hits=([]), all=([]);
 
-void flush_memory_cache (void|string in) {
+#ifdef CACHE_DEBUG
+static array(int) memory_usage_summary()
+{
+  mapping(string:int) usage = _memory_usage();
+  int count, bytes;
+  foreach (_memory_usage(); string descr; int amount)
+    if (has_prefix (descr, "num_")) count += amount;
+    else if (has_suffix (descr, "_bytes")) bytes += amount;
+  return ({count, bytes});
+}
+#endif
+
+void flush_memory_cache (void|string in)
+{
+  CACHE_WERR ("flush_memory_cache(%O)\n", in);
+
   if (in) {
     m_delete (cache, in);
     m_delete (hits, in);
     m_delete (all, in);
   }
+
   else {
-    cache=([]);
-    hits=([]);
-    all=([]);
+#ifdef CACHE_DEBUG
+    gc();
+    [int before_count, int before_bytes] = memory_usage_summary();
+#endif
+    foreach (cache; string cache_class; mapping(string:array) subcache) {
+#ifdef CACHE_DEBUG
+      int num_entries_before= sizeof (subcache);
+#endif
+      m_delete (cache, cache_class);
+      m_delete (hits, cache_class);
+      m_delete (all, cache_class);
+#ifdef CACHE_DEBUG
+      gc();
+      [int after_count, int after_bytes] = memory_usage_summary();
+      CACHE_WERR ("  Flushed %O that had %d entries: "
+		  "Freed %d things and %d bytes\n",
+		  cache_class, num_entries_before,
+		  before_count - after_count, before_bytes - after_bytes);
+      before_count = after_count;
+      before_bytes = after_bytes;
+#endif
+    }
   }
+
+  CACHE_WERR ("flush_memory_cache() done\n");
 }
 
 constant svalsize = 4*4;
@@ -55,14 +92,13 @@ constant svalsize = 4*4;
 // Expire a whole cache
 void cache_expire(string in)
 {
-  CACHE_WERR(sprintf("cache_expire(%O)", in));
+  CACHE_WERR("cache_expire(%O)\n", in);
   m_delete(cache, in);
 }
 
 // Lookup an entry in a cache
 mixed cache_lookup(string in, mixed what)
 {
-  CACHE_WERR(sprintf("cache_lookup(%O, %O)  ->  ", in, what));
   all[in]++;
   int t=time(1);
   // Does the entry exist at all?
@@ -70,16 +106,17 @@ mixed cache_lookup(string in, mixed what)
     // Is it time outed?
     if (entry[TIMEOUT] && entry[TIMEOUT] < t) {
       m_delete (cache[in], what);
-      CACHE_WERR("Timed out");
+      MORE_CACHE_WERR("cache_lookup(%O, %O)  ->  Timed out\n", in, what);
     }
     else {
       // Update the timestamp and hits counter and return the value.
       cache[in][what][TIMESTAMP]=t;
-      CACHE_WERR("Hit");
+      MORE_CACHE_WERR("cache_lookup(%O, %O)  ->  Hit\n", in, what);
       hits[in]++;
       return entry[DATA];
     }
-  else CACHE_WERR("Miss");
+  else
+    MORE_CACHE_WERR("cache_lookup(%O, %O)  ->  Miss\n", in, what);
   return ([])[0];
 }
 
@@ -122,7 +159,7 @@ mapping(string:array(int)) status()
 // entry key is given.
 void cache_remove(string in, mixed what)
 {
-  CACHE_WERR(sprintf("cache_remove(%O, %O)", in, what));
+  MORE_CACHE_WERR("cache_remove(%O, %O)\n", in, what);
   if(!what)
     m_delete(cache, in);
   else
@@ -133,13 +170,7 @@ void cache_remove(string in, mixed what)
 // Add an entry to a cache
 mixed cache_set(string in, mixed what, mixed to, int|void tm)
 {
-#if MORE_CACHE_DEBUG
-  CACHE_WERR(sprintf("cache_set(%O, %O, %O)\n",
-		     in, what, /* to */ _typeof(to)));
-#else
-  CACHE_WERR(sprintf("cache_set(%O, %O, %t)\n",
-		     in, what, to));
-#endif
+  MORE_CACHE_WERR("cache_set(%O, %O, %O)\n", in, what, /* to */ _typeof(to));
   int t=time(1);
   if(!cache[in])
     cache[in]=([ ]);
@@ -154,31 +185,37 @@ mixed cache_set(string in, mixed what, mixed to, int|void tm)
 void cache_clean()
 {
   int gc_time=[int](([function(string:mixed)]roxenp()->query)("mem_cache_gc"));
-  string a, b;
-  array c;
-  int t=time(1);
-  CACHE_WERR("cache_clean()");
-  foreach(indices(cache), a)
-  {
-    MORE_CACHE_WERR(sprintf("  Class  %O ", a));
-    foreach(indices(cache[a]), b)
-    {
-      MORE_CACHE_WERR(sprintf("     %O ", b));
-      c = cache[a][b];
-#ifdef DEBUG
-      if(!intp(c[TIMESTAMP]))
-	error("     Illegal timestamp in cache ("+a+":"+b+")\n");
+  int now=time(1);
+#ifdef CACHE_DEBUG
+  [int mem_count, int mem_bytes] = memory_usage_summary();
+  CACHE_WERR("cache_clean() [memory usage: %d things, %d bytes]\n",
+	     mem_count, mem_bytes);
 #endif
-      if(c[TIMEOUT] && c[TIMEOUT] < t) {
-	MORE_CACHE_WERR("     DELETED (explicit timeout)");
-	m_delete(cache[a], b);
+
+  foreach(cache; string cache_class_name; mapping(string:array) cache_class)
+  {
+#ifdef CACHE_DEBUG
+    int num_entries_before = sizeof (cache_class);
+#endif
+    MORE_CACHE_WERR("  Class %O\n", cache_class_name);
+
+    foreach(cache_class; string idx; array entry)
+    {
+#ifdef DEBUG
+      if(!intp(entry[TIMESTAMP]))
+	error("Illegal timestamp in cache ("+cache_class_name+":"+idx+")\n");
+#endif
+      if(entry[TIMEOUT] && entry[TIMEOUT] < now) {
+	MORE_CACHE_WERR("    %O: Deleted (explicit timeout)\n", idx);
+	m_delete(cache_class, idx);
       }
       else {
-	if(!c[SIZE]) {
+	if(!entry[SIZE]) {
 	  // Perform a size calculation.
 	  if (catch{
-	      c[SIZE] = sizeof(encode_value(b)) + sizeof(encode_value(c[DATA]));
-	    }) {
+		entry[SIZE] = sizeof(encode_value(idx)) +
+		  sizeof(encode_value(entry[DATA]));
+	      }) {
 	    // encode_value() failed,
 	    // probably because some object is in there...
 
@@ -186,31 +223,42 @@ void cache_clean()
 	    //        for PCode here.
 
 	    // We guess that it takes 1KB space.
-	    c[SIZE] = 1024;
+	    entry[SIZE] = 1024;
 	  }
-	  c[SIZE] = (c[SIZE] + 5*svalsize + 4)/100;
+	  entry[SIZE] = (entry[SIZE] + 5*svalsize + 4)/100;
 	  // (Entry size + cache overhead) / arbitrary factor
-	  MORE_CACHE_WERR("     Cache entry size perceived as " +
-			  ([int]c[SIZE]*100) + " bytes");
 	}
-	if(c[TIMESTAMP]+1 < t && c[TIMESTAMP] + gc_time -
-	   c[SIZE] < t)
-	  {
-	    MORE_CACHE_WERR("     DELETED");
-	    m_delete(cache[a], b);
-	  }
-#ifdef MORE_CACHE_DEBUG
+	if(entry[TIMESTAMP]+1 < now &&
+	   entry[TIMESTAMP] + gc_time - entry[SIZE] < now)
+	{
+	  m_delete(cache_class, idx);
+	  MORE_CACHE_WERR("    %O with perceived size %d bytes: Deleted\n",
+			  idx, [int] entry[SIZE] * 100);
+	}
 	else
-	  CACHE_WERR("     Ok");
-#endif
-      }
-      if(!sizeof(cache[a]))
-      {
-	MORE_CACHE_WERR("  Class DELETED.");
-	m_delete(cache, a);
+	  MORE_CACHE_WERR("    %O with perceived size %d bytes: Ok\n",
+			  idx, [int] entry[SIZE] * 100);
       }
     }
+
+    if(!sizeof(cache_class))
+      m_delete(cache, cache_class_name);
+
+#ifdef CACHE_DEBUG
+    [int new_mem_count, int new_mem_bytes] = memory_usage_summary();
+    CACHE_WERR("  Class %O: Cleaned up %d of %d entries "
+	       "[freed %d things and %d bytes]\n",
+	       cache_class_name,
+	       num_entries_before - sizeof (cache_class),
+	       num_entries_before,
+	       mem_count - new_mem_count,
+	       mem_bytes - new_mem_bytes);
+    mem_count = new_mem_count;
+    mem_bytes = new_mem_bytes;
+#endif
   }
+
+  CACHE_WERR("cache_clean() done\n");
   roxenp()->background_run (gc_time, cache_clean);
 }
 
@@ -425,7 +473,7 @@ void create()
   session_buckets = ({ ([]) }) * SESSION_BUCKETS;
   session_persistence = ([]);
 
-  CACHE_WERR("Now online.");
+  CACHE_WERR("Now online.\n");
 }
 
 void destroy() {
