@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.344 2002/02/06 18:05:30 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.345 2002/02/14 03:28:14 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2388,6 +2388,7 @@ class UserTagContents
     inherit RXML.Frame;
     constant is_user_tag_contents = 1;
     array exec;
+    string select_path;
 
     local RXML.Frame get_upframe()
     {
@@ -2402,6 +2403,102 @@ class UserTagContents
       parse_error ("No associated defined tag to get contents from.\n");
     }
 
+    string|RXML.PCode get_content (RXML.Frame upframe)
+    {
+      if (string expr = args["copy-of"] || args["value-of"]) {
+	if (args["copy-of"] && args["value-of"])
+	  parse_error ("Attributes copy-of and value-of are mutually exclusive.\n");
+	string insert_type = args["copy-of"] ? "copy-of" : "value-of";
+
+	mapping(string:string|RXML.PCode) subs = upframe->user_tag_subcontents;
+	if (!subs) subs = upframe->user_tag_subcontents = ([]);
+
+	select_path = "v" + expr;
+	string|RXML.PCode value = subs[select_path];
+	if (!value || objectp (value) && value->is_stale()) {
+	  string|SloppyDOM.Document doc = upframe->content_text;
+	  if (stringp (doc))
+	    doc = upframe->content_text = SloppyDOM.parse (doc, 1);
+	  mixed res = 0;
+
+	  if (sscanf (expr, "%*[ \t\n\r]@%*[ \t\n\r]%s", expr) == 3) {
+	    // Special treatment to select attributes at the top level.
+	    sscanf (expr, "%[^ \t\n\r@/[]%*[ \t\n\r]%s", expr, string rest);
+	    if (!sizeof (expr))
+	      parse_error ("Error in %s attribute: No attribute name after @.\n",
+			   insert_type);
+	    if (sizeof (rest))
+	      parse_error ("Error in %s attribute: "
+			   "Unexpected subpath %O after attribute %s.\n",
+			   insert_type, rest, expr);
+	    if (expr == "*") {
+	      res = upframe->vars - (["args": 1, "rest-args": 1, "contents": 1]);
+	      foreach (indices (res), string var)
+		if (has_prefix (var, "__contents__"))
+		  m_delete (res, var);
+	    }
+	    else if (!(<"args", "rest-args", "contents">)[expr] &&
+		     !has_prefix (expr, "__contents__"))
+	      if (string val = upframe->vars[expr])
+		res = ([expr: val]);
+	  }
+
+	  else
+	    if (mixed err = catch (res = doc->simple_path (expr)))
+	      // Assume that the error is some parse error regarding the expression.
+	      parse_error ("Error in %s attribute: %s", insert_type,
+			   describe_error (err));
+
+	  if (insert_type == "copy-of") {
+	    if (!res) res = ({});
+	    else if (!arrayp (res)) res = ({res});
+	    value = "";
+	    foreach (res, mapping(string:string)|SloppyDOM.Node node)
+	      if (objectp (node))
+		value += node->xml_format();
+	      else {
+		array(string) attrs = indices (node);
+		for (int i = sizeof (attrs) - 1; i >= 0; i--) {
+		  string attr = attrs[i], attr_val = node[attr];
+		  // This encoding is ugly but complete; the attribute
+		  // values has been kept undecoded so they can't
+		  // contain both " and '. The reason for that is mainly
+		  // to not touch rxml entities etc.
+		  if (has_value (attr_val, "\""))
+		    attrs[i] = attr + "='" + attr_val + "'";
+		  else
+		    attrs[i] = attr + "=\"" + attr_val + "\"";
+		}
+		value += attrs * " ";
+	      }
+	  }
+
+	  else {
+	    if (arrayp (res)) res = sizeof (res) && res[0];
+	    if (objectp (res))
+	      value = res->get_text_content();
+	    else if (mappingp (res) && sizeof (res))
+	      value = values (res)[0];
+	    else
+	      value = "";
+	  }
+
+	  subs[select_path] = value;
+	}
+	return value;
+      }
+
+      else {
+	string|RXML.PCode value = upframe->user_tag_contents;
+	if (value && (stringp (value) || !value->is_stale()))
+	  return value;
+	if (objectp (value = upframe->content_text))
+	  return value->xml_format();
+	else
+	  return value;
+      }
+    }
+
     array do_return()
     {
       RXML.Frame upframe = get_upframe();
@@ -2409,11 +2506,11 @@ class UserTagContents
       array ret;
 
       if (ctx->scopes == upframe->saved_scopes)
-	ret = ({upframe->user_tag_contents});
+	ret = ({get_content (upframe)});
       else {
 	// This is poking in the internals; there ought to be some
 	// sort of interface here.
-	ret = ({upframe->user_tag_contents,
+	ret = ({get_content (upframe),
 		lambda (mapping(string:mixed) old_scopes,
 			mapping(RXML.Frame:array) old_hidden)
 		{
@@ -2437,19 +2534,60 @@ class UserTagContents
       return ret;
     }
 
+    // The frame might be used as a variable value if preparsing is in
+    // use (see DefineContents below).
+    mixed rxml_var_eval (RXML.Context ctx, string var, string scope_name,
+			 void|RXML.Type type)
+    {
+      RXML.Frame upframe = ctx->frame;
+#ifdef DEBUG
+      if (!upframe || !upframe->is_user_tag)
+	error ("Expected current frame to be UserTag, but it's %O.\n", upframe);
+#endif
+      string|RXML.PCode value = get_content (upframe);
+      string res;
+      if (objectp (value))
+	res = value->eval (ctx);
+      else {
+	[res, value] =
+	  ctx->eval_and_compile ((type || RXML.t_html) (RXML.PXml), value);
+	if (select_path)
+	  upframe->user_tag_subcontents[select_path] = value;
+	else
+	  upframe->user_tag_contents = value;
+      }
+      return ENCODE_RXML_XML (res, type);
+    }
+
     int save()
     {
       if (exec) {
 	RXML.Frame upframe = get_upframe();
-	upframe->user_tag_contents = exec[0];
+	if (select_path)
+	  upframe->user_tag_subcontents[select_path] = exec[0];
+	else
+	  upframe->user_tag_contents = exec[0];
       }
       return 0;
+    }
+
+    // Can be dumped if we're inserted into
+    // UserTag.Frame.preparsed_contents_tags. All we need to know is
+    // in the argument mapping then.
+    mapping _encode() {return args;}
+    void _decode (mixed data)
+    {
+      if (!mappingp (data)) error ("Invalid dump of UserTagContents.Frame.\n");
+      args = data;
     }
   }
 }
 
-private RXML.TagSet user_tag_contents_tag_set =
-  RXML.shared_tag_set (0, "/rxmltags/user_tag", ({UserTagContents()}));
+RXML.Tag user_tag_contents = UserTagContents();
+
+// Can get problems with destructed parents if this tag set is shared.
+RXML.TagSet user_tag_contents_tag_set =
+  RXML.TagSet (this_module(), "/rxmltags/user_tag", ({user_tag_contents}));
 
 class UserTag {
   inherit RXML.Tag;
@@ -2494,8 +2632,9 @@ class UserTag {
     int do_iterate;
 
     constant is_user_tag = 1;
-    string content_text;
+    string|SloppyDOM.Document content_text;
     string|RXML.PCode user_tag_contents;
+    mapping(string:string|RXML.PCode) user_tag_subcontents;
     mapping(string:mixed) saved_scopes;
     mapping(RXML.Frame:array) saved_hidden;
     int compile;
@@ -2508,7 +2647,7 @@ class UserTag {
       do_iterate = content_text ? -1 : 1;
       if ((tagdef = RXML_CONTEXT->misc[lookup_name]))
 	if (tagdef[4]) {
-	  local_tags = user_tag_contents_tag_set;
+	  local_tags = RXML.empty_tag_set;
 	  additional_tags = 0;
 	}
 	else {
@@ -2523,13 +2662,14 @@ class UserTag {
       RXML.Context ctx = RXML_CONTEXT;
 
       [array(string|RXML.PCode) def, mapping defaults,
-       string def_scope_name, UserTag ignored, int no_normal_eval] = tagdef;
-      id->misc->last_tag_args = vars = defaults+args;
+       string def_scope_name, UserTag ignored,
+       mapping(string:RXML.Value) preparsed_contents_tags] = tagdef;
+      vars = defaults+args;
       scope_name = def_scope_name || name;
 
       if (content_text)
 	// A previously evaluated tag was restored.
-	content = content_text;
+	content = objectp (content_text) ? content_text->xml_format() : content_text;
       else {
 	if(content && args->trimwhites)
 	  content = String.trim_all_whites(content);
@@ -2560,14 +2700,16 @@ class UserTag {
 #endif
 	}
 
-	content_text = content;
-	user_tag_contents = content || RXML.nil;
+	content_text = content || "";
+	user_tag_contents = user_tag_subcontents = 0;
 	compile = ctx->make_p_code;
       }
 
       vars->args = Roxen.make_tag_attributes(vars)[1..];
       vars["rest-args"] = Roxen.make_tag_attributes(args - defaults)[1..];
-      vars->contents = content_text;
+      vars->contents = content;
+      if (preparsed_contents_tags) vars += preparsed_contents_tags;
+      id->misc->last_tag_args = vars;
 
       if (compat_level > 2.1) {
 	// Save the scope state so that we can switch back in
@@ -2582,8 +2724,18 @@ class UserTag {
       return def;
     }
 
-    array save() {return ({content_text, user_tag_contents});}
-    void restore (array saved) {[content_text, user_tag_contents] = saved;}
+    array save()
+    {
+      return ({
+	objectp (content_text) ? content_text->xml_format() : content_text,
+	user_tag_contents,
+	user_tag_subcontents
+      });
+    }
+    void restore (array saved)
+    {
+      [content_text, user_tag_contents, user_tag_subcontents] = saved;
+    }
 
     string _sprintf() {return sprintf ("UserTag.Frame(%O)", name);}
   }
@@ -2603,10 +2755,55 @@ class IdentityVars
     // Note: The fallback for scope_name here is not necessarily
     // correct, but this is typically only called from the rxml
     // parser, which always sets it.
-    return ENCODE_RXML_XML ("&" + (scope_name || "_") + "." + var + ";", type);
+    return ENCODE_RXML_XML ("&_." + var + ";", type);
   }
 };
 IdentityVars identity_vars = IdentityVars();
+
+// This is the <contents> tag used inside <define> when it's
+// preparsed. It outputs entities on the form &_.__contents__n; and
+// registers magic entity values for the corresponding __contents__n
+// variable. This way it works if the preparsing makes a <contents>
+// tag end up in an attribute value.
+class DefineContents
+{
+  inherit RXML.Tag;
+  constant name = "contents";
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  array(RXML.Type) result_types = ({RXML.t_xml});
+  program Frame = DefineContentsFrame;
+}
+
+class DefineContentsFrame
+{
+  inherit RXML.Frame;
+  constant is_define_contents = 1;
+
+  local RXML.Frame get_upframe()
+  {
+    RXML.Frame upframe = up;
+    int nest = 1;
+    for (; upframe; upframe = upframe->up)
+      if (upframe->is_define_tag) {
+	if (!--nest) return upframe;
+      }
+      else
+	if (upframe->is_define_contents) nest++;
+    parse_error ("No associated define tag to get contents from.\n");
+  }
+
+  array do_return()
+  {
+    RXML.Frame upframe = get_upframe();
+    string var = "__contents__" + ++upframe->last_contents_id;
+    upframe->preparsed_contents_tags[var] = user_tag_contents (args, content);
+    return ({"&_." + var + ";"});
+  }
+}
+
+// Can get problems with destructed parents if this tag set is shared.
+RXML.TagSet define_contents_tag_set =
+  RXML.TagSet (this_module(), "/rxmltags/define", ({DefineContents()}));
 
 class TagDefine {
   inherit RXML.Tag;
@@ -2617,9 +2814,12 @@ class TagDefine {
 
   class Frame {
     inherit RXML.Frame;
+    RXML.TagSet additional_tags;
 
-    int preparse;
+    constant is_define_tag = 1;
     array(string|RXML.PCode) def;
+    int last_contents_id;
+    mapping(string:RXML.Value) preparsed_contents_tags;
     mapping defaults;
     int do_iterate;
 
@@ -2628,11 +2828,11 @@ class TagDefine {
     string scope_name;
 
     array do_enter(RequestID id) {
-      preparse = 0;
       if (def)
 	// A previously evaluated tag was restored.
 	do_iterate = -1;
       else {
+	preparsed_contents_tags = 0;
 	do_iterate = 1;
 	if(args->preparse) {
 	  m_delete(args, "preparse");
@@ -2641,7 +2841,8 @@ class TagDefine {
 	    // it to be overridden in this situation.
 	    vars = identity_vars;
 	    scope_name = args->scope;
-	    preparse = 1;
+	    additional_tags = define_contents_tag_set;
+	    preparsed_contents_tags = ([]);
 	  }
 	}
 	else
@@ -2745,10 +2946,12 @@ class TagDefine {
 	if ((oldtagdef = ctx->misc[lookup_name]) &&
 	    !((user_tag = oldtagdef[3])->flags & RXML.FLAG_EMPTY_ELEMENT) ==
 	    !(moreflags & RXML.FLAG_EMPTY_ELEMENT)) // Redefine.
-	  ctx->set_misc (lookup_name, ({def, defaults, args->scope, user_tag, preparse}));
+	  ctx->set_misc (lookup_name, ({def, defaults, args->scope, user_tag,
+					preparsed_contents_tags}));
 	else {
 	  user_tag = UserTag (n, moreflags);
-	  ctx->set_misc (lookup_name, ({def, defaults, args->scope, user_tag, preparse}));
+	  ctx->set_misc (lookup_name, ({def, defaults, args->scope, user_tag,
+					preparsed_contents_tags}));
 	  ctx->add_runtime_tag(user_tag);
 	}
 	return 0;
@@ -2768,8 +2971,8 @@ class TagDefine {
       parse_error("No tag, variable, if or container specified.\n");
     }
 
-    array save() {return ({def, defaults, preparse});}
-    void restore (array saved) {[def, defaults, preparse] = saved;}
+    array save() {return ({def, defaults, preparsed_contents_tags});}
+    void restore (array saved) {[def, defaults, preparsed_contents_tags] = saved;}
   }
 }
 
@@ -6777,12 +6980,61 @@ just got zapped?
 </p></desc>",
 
 "&_.contents;":#"<desc type='entity'><p>
- The containers contents.
+ The whole contents of the container.
 </p></desc>",
 
 "contents":#"<desc type='tag'><p>
- As the contents entity, but unquoted.
-</p></desc>"
+ Selects the whole or some part of the contents of the container,
+ evaluates it, and inserts the result.
+</p></desc>
+
+<attr name='copy-of' value='expression'><p>
+ Selects a part of the content node tree to copy. As opposed to the
+ value-of attribute, all the selected nodes are copied, with all
+ markup.</p>
+
+ <p>The expression is a simplified variant of XPath: It is a path
+ consisting of one or more steps delimited by \'<code>/</code>\'. Each
+ step selects an element (i.e. tag or container) in the content of the
+ current element or an attribute of it, starting at the defined tag or
+ container itself. A step on the form \'<code>@<i>name</i></code>\'
+ selects the attribute with the given name. A step on the form
+ \'<code><i>name</i></code>\' selects all elements with the given name
+ in the content. A name may be \'<code>*</code>\' to select all
+ attributes or child elements. A step on the form
+ \'<code><i>name</i>[<i>n</i>]</code>\' selects the nth child element
+ with the given name, according to the order in which they occur in
+ the content. The index n may be negative to select an element in
+ reverse order, i.e. -1 selects the last element, -2 the
+ second-to-last, etc. Note that since attributes have no child
+ elements, a step on the \'<code>@<i>name</i></code>\' form cannot be
+ followed by another one.</p>
+
+ <p>An example: The expression \'<code>p/*[2]/@href</code>\' first
+ selects all <tag>p</tag> elements in the content. In the content of
+ each of these, the second element with any name is selected. It\'s
+ not an error if some of the <tag>p</tag> elements have less than two
+ child elements; those who haven\'t are simply ignored. Lastly, all
+ \'href\' attributes of all those elements are selected. Again it\'s
+ not an error if some of the elements lack \'href\' attributes.</p>
+
+ <p>Note that an attribute node is both the name and the value, so in
+ the example above the result might be
+ \'<code>href=\"index.html\"</code>\' and not
+ \'<code>index.html</code>\'. If you only want the value, use the
+ value-of attribute instead.</p>
+</attr>
+
+<attr name='value-of' value='expression'><p>
+ Selects a part of the content node tree and inserts its text value.
+ As opposed to the copy-of attribute, only the value of the first
+ selected node is inserted. The expression is the same as for the
+ copy-of attribute.</p>
+
+ <p>The text value of an element node is all the text in it and all
+ its subelements, without the elements themselves or any processing
+ instructions.</p>
+</attr>"
 	    ])
 
 }),
