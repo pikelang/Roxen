@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.23 2002/07/23 12:56:51 mast Exp $
+ * $Id: debug_info.pike,v 1.24 2002/07/23 13:16:44 mast Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -278,7 +278,7 @@ mixed page_0( object id )
     }
   threads_disabled = 0;
 
-  foreach (values (allobj), array(object) objs)
+  foreach (values (allobj), array objs)
     for (int i = 0; i < sizeof (objs); i++)
       objs[i] = sprintf ("%O", objs[i]);
 
