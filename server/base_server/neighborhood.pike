@@ -81,6 +81,9 @@ class UDPNeigh
       destruct(master->udp_sock);
       master->udp_sock = spider.dumUDP();
       master->udp_sock->bind(port);
+      if (master->udp_sock->enable_broadcast) {
+	master->udp_sock->enable_broadcast();
+      }
       master->udp_sock->set_nonblocking(read);
     }
   }
@@ -130,6 +133,9 @@ class UDPNeigh
 #endif
 	master->udp_sock = 0;
       } else {
+	if (master->udp_sock->enable_broadcast) {
+	  master->udp_sock->enable_broadcast();
+	}
 	master->udp_sock->set_nonblocking(read);
       }
     } else {
