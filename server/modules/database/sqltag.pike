@@ -5,13 +5,12 @@
 //
 // Henrik Grubbström 1997-01-12
 
-constant cvs_version="$Id: sqltag.pike,v 1.57 2000/04/06 01:49:51 wing Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.58 2000/05/03 16:27:36 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
 
 inherit "module";
-inherit "roxenlib";
 
 Configuration conf;
 
@@ -100,7 +99,7 @@ constant tagdoc=([
 ]);
 #endif
 
-array|object do_sql_query(string tag, mapping args, RequestID id)
+array|object do_sql_query(mapping args, RequestID id, void|int big_query)
 {
   string host = query("hostname");
   if (args->host) {
@@ -112,7 +111,7 @@ array|object do_sql_query(string tag, mapping args, RequestID id)
     RXML.parse_error("No query.");
 
   if (args->parse)
-    args->query = parse_rxml(args->query, id);
+    args->query = Roxen.parse_rxml(args->query, id);
 
   Sql.sql con;
   array(mapping(string:mixed))|object result;
@@ -125,15 +124,15 @@ array|object do_sql_query(string tag, mapping args, RequestID id)
     error = catch(con = Sql.sql(lower_case(host)=="localhost"?"":host));
 
   if (error)
-    RXML.run_error("Couldn't connect to SQL server. "+html_encode_string(error[0]));
+    RXML.run_error("Couldn't connect to SQL server. "+Roxen.html_encode_string(error[0]));
 
-  if (error = catch(result = (tag=="sqltable"?con->big_query(args->query):con->query(args->query)))) {
-    error = html_encode_string(sprintf("Query %O failed. %s", args->query,
+  if (error = catch(result = (big_query?con->big_query(args->query):con->query(args->query)))) {
+    error = Roxen.html_encode_string(sprintf("Query %O failed. %s", args->query,
 				       con->error()||""));
     RXML.run_error(error);
   }
 
-  if(tag=="sqlquery") args["dbobj"]=con;
+  args["dbobj"]=con;
   if(result && args->rowinfo) {
     int rows;
     if(arrayp(result)) rows=sizeof(result);
@@ -148,24 +147,36 @@ array|object do_sql_query(string tag, mapping args, RequestID id)
 // -------------------------------- Tag handlers ------------------------------------
 
 #ifdef OLD_RXML_COMPAT
-string simpletag_sqloutput(string tag, mapping args, string contents,
-			   RequestID id)
-{
-  NOCACHE();
+class TagSQLOutput {
+  inherit RXML.Tag;
+  constant name = "sqloutput";
 
-  array res=do_sql_query(tag, args, id);
+  class Frame {
+    inherit RXML.Frame;
+    inherit "roxenlib";
 
-  if (res && sizeof(res)) {
-    string ret = do_output_tag(args, res, contents, id);
-    id->misc->defines[" _ok"] = 1; // The effect of <true>, since res isn't parsed.
+    array do_return(RequestID id) {
+      NOCACHE();
 
-    return ret;
+      array res=do_sql_query(args, id);
+
+      if (res && sizeof(res)) {
+	result = do_output_tag(args, res, content, id);
+	id->misc->defines[" _ok"] = 1; // The effect of <true>, since res isn't parsed.
+
+	return 0;
+      }
+
+      if (args["do-once"]) {
+	result = do_output_tag( args, ({([])}), content, id );
+	id->misc->defines[" _ok"] = 1;
+	return 0;
+      }
+
+      id->misc->defines[" _ok"] = 0;
+      return 0;
+    }
   }
-
-  if (args["do-once"])
-    return do_output_tag( args, ({([])}), contents, id )+ "<true>";
-
-  id->misc->defines[" _ok"] = 0;
 }
 #endif
 
@@ -175,69 +186,89 @@ class TagSqlplugin {
   constant plugin_name = "sql";
 
   array get_dataset(mapping m, RequestID id) {
-    array|string res=do_sql_query("sqloutput", m, id);
+    array|string res=do_sql_query(m, id);
     return res;
   }
 }
 
-string tag_sqlquery(string tag, mapping args, RequestID id)
-{
-  NOCACHE();
+class TagSQLQuery {
+  inherit RXML.Tag;
+  constant name = "sqlquery";
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
 
-  array res=do_sql_query(tag, args, id);
+  class Frame {
+    inherit RXML.Frame;
 
-  if(args["mysql-insert-id"])
-    if(args->dbobj && args->dbobj->master_sql)
-      RXML.user_set_var(args["mysql-insert-id"], args->dbobj->master_sql->insert_id());
-    else
-      RXML.parse_error("No insert_id present.");
+    array do_return(RequestID id) {
+      NOCACHE();
 
-  id->misc->defines[" _ok"] = 1;
-  return "";
+      array res=do_sql_query(args, id);
+
+      if(args["mysql-insert-id"])
+	if(args->dbobj && args->dbobj->master_sql)
+	  RXML.user_set_var(args["mysql-insert-id"], args->dbobj->master_sql->insert_id());
+	else
+	  RXML.parse_error("No insert_id present.");
+
+      id->misc->defines[" _ok"] = 1;
+      return 0;
+    }
+  }
 }
 
-string tag_sqltable(string tag, mapping args, RequestID id)
-{
-  NOCACHE();
+class TagSQLTable {
+  inherit RXML.Tag;
+  constant name = "sqltable";
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
 
-  object res=do_sql_query(tag, args, id);
+  class Frame {
+    inherit RXML.Frame;
 
-  int ascii=!!args->ascii;
-  string ret="";
+    array do_return(RequestID id) {
+      NOCACHE();
 
-  if (res) {
-    string nullvalue=args->nullvalue||"";
-    array(mixed) row;
+      object res=do_sql_query(args, id, 1);
 
-    if (!ascii) {
-      ret="<tr>";
-      foreach(map(res->fetch_fields(), lambda (mapping m) {
-					      return m->name;
-					    } ), string name)
-        ret += "<th>"+name+"</th>";
-      ret += "</tr>\n";
-    }
+      int ascii=!!args->ascii;
+      string ret="";
 
-    while(arrayp(row=res->fetch_row())) {
-      if (ascii)
-        ret += row * "\t" + "\n";
-      else {
-        ret += "<tr>";
-        foreach(row, mixed value)
-          ret += "<td>"+(value==""?nullvalue:value)+"</td>";
-        ret += "</tr>\n";
+      if (res) {
+	string nullvalue=args->nullvalue||"";
+
+	if (!ascii) {
+	  ret="<tr>";
+	  foreach(map(res->fetch_fields(), lambda (mapping m) {
+					     return m->name;
+					   } ), string name)
+	    ret += "<th>"+name+"</th>";
+	  ret += "</tr>\n";
+	}
+
+	array row;
+	while(arrayp(row=res->fetch_row())) {
+	  if (ascii)
+	    ret += row * "\t" + "\n";
+	  else {
+	    ret += "<tr>";
+	    foreach(row, mixed value)
+	      ret += "<td>"+(value==""?nullvalue:value)+"</td>";
+	    ret += "</tr>\n";
+	  }
+	}
+
+	if (!ascii)
+	  ret=Roxen.make_container("table", args-(["host":"", "database":"", "user":"", "password":"",
+						   "query":"", "nullvalue":"", "dbobj":""]), ret);
+
+	id->misc->defines[" _ok"] = 1;
+	result=ret;
+	return 0;
       }
+
+      id->misc->defines[" _ok"] = 0;
+      return 0;
     }
-
-    if (!ascii)
-      ret=make_container("table", args-(["host":"", "database":"", "user":"", "password":"",
-					 "query":"", "nullvalue":""]), ret);
-
-    id->misc->defines[" _ok"] = 1;
-    return ret;
   }
-
-  id->misc->defines[" _ok"] = 0;
 }
 
 
@@ -302,6 +333,6 @@ string status()
   })
     return
       "<font color=\"red\">Not connected:</font> " +
-      replace (html_encode_string (describe_error(err)), "\n", "<br />\n") +
+      replace (Roxen.html_encode_string (describe_error(err)), "\n", "<br />\n") +
       "<br />\n";
 }
