@@ -8,7 +8,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.36 1998/05/14 08:22:52 neotron Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.37 1998/05/14 15:58:34 grubba Exp $";
 constant thread_safe=1;
 
 
@@ -515,7 +515,7 @@ mixed find_file( string f, object id )
     break;
 
    case "MV":
-    // This little kludge is used by ftp2 to move files. 
+    // This little kluge is used by ftp2 to move files. 
     
     if(!QUERY(put))
     {
@@ -530,7 +530,7 @@ mixed find_file( string f, object id )
       return 0;
     }
 
-    if(size == -2)
+    if(size < -1)
     {
       id->misc->error_code = 405;
       TRACE_LEAVE("MV: Cannot overwrite directory");
@@ -559,10 +559,11 @@ mixed find_file( string f, object id )
       // NB: Root-access is prevented.
       privs=Privs("Moving file", (int)id->misc->uid, (int)id->misc->gid );
     }
-    // #endif
+// #endif
     
-    if (QUERY(no_symlinks) && (contains_symlinks(path, oldf)) &&
-	(contains_symlinks(path, id->misc->move_from))) {
+    if (QUERY(no_symlinks) &&
+	((contains_symlinks(path, oldf)) ||
+	 (contains_symlinks(path, id->misc->move_from)))) {
       privs = 0;
       errors++;
       TRACE_LEAVE("MV: Contains symlinks. Permission denied");
@@ -570,7 +571,6 @@ mixed find_file( string f, object id )
     }
 
     TRACE_ENTER("MV: Accepted", 0);
-
 
     /* Clear the stat-cache for this file */
 #ifdef __NT__
@@ -581,7 +581,10 @@ mixed find_file( string f, object id )
       cache_set("stat_cache", movefrom, 0);
       cache_set("stat_cache", f, 0);
     }
-    werror("Moving file "+movefrom+" to "+ f+"\n");
+#ifdef DEBUG
+    report_notice("Moving file "+movefrom+" to "+ f+"\n");
+#endif /* DEBUG */
+
     int code = mv(movefrom, f);
     privs = 0;
 
@@ -593,6 +596,7 @@ mixed find_file( string f, object id )
       return 0;
     }
     TRACE_LEAVE("MV: Success");
+    TRACE_LEAVE("Success");
     return http_string_answer("Ok");
    
   case "DELETE":
