@@ -7,7 +7,7 @@
 
 #pragma strict_types
 
-constant cvs_version = "$Id: indirect_href.pike,v 1.28 2001/06/26 17:48:45 nilsson Exp $";
+constant cvs_version = "$Id: indirect_href.pike,v 1.29 2001/08/17 18:41:59 nilsson Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -76,9 +76,9 @@ class TagAI {
 	args->href=values(hrefs)[random(sizeof(hrefs))];
       else
 	args->href=hrefs[args->name];
-      m_delete(args, "name");
+      m_delete([mapping(string:string)]args, "name");
 
-      result = Roxen.make_container("a", [mapping(string:string)]args, content);
+      result = Roxen.make_container("a", [mapping(string:string)]args, [string]content);
       return 0;
     }
   }
