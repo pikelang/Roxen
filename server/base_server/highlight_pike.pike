@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: highlight_pike.pike,v 1.3 2000/02/20 17:41:33 nilsson Exp $
+// $Id: highlight_pike.pike,v 1.4 2001/03/12 14:09:20 nilsson Exp $
 
 string quote(string s)
 {
@@ -10,47 +10,47 @@ string quote(string s)
 string highlight_string(string s,mapping m)
 {
   if(m->dark)
-    return "<i><font color=darkred>"+quote(s)+"</font></i>";
+    return "<i><font color='darkred'>"+quote(s)+"</font></i>";
   else
-    return "<i><font color=skyblue>"+quote(s)+"</font></i>";
+    return "<i><font color='skyblue'>"+quote(s)+"</font></i>";
 }
 
 string highlight_comment(string s, mapping m)
 {
   if(m->dark)
-    return ("<font color=red>"+quote(s)+"</font>");
-  return ("<font color=yellow>"+quote(s)+"</font>");
+    return ("<font color='red'>"+quote(s)+"</font>");
+  return ("<font color='yellow'>"+quote(s)+"</font>");
 }
 
 string highlight_keyword(string s, mapping m)
 {
-  if(m->dark) return ("<b><font color=darkblue>"+quote(s)+"</font></b>");
-  return ("<b><font color=lightblue>"+quote(s)+"</font></b>");
+  if(m->dark) return ("<b><font color='darkblue'>"+quote(s)+"</font></b>");
+  return ("<b><font color='lightblue'>"+quote(s)+"</font></b>");
 }
 
 string highlight_type(string s, mapping m)
 {
-  if(m->dark) return ("<b><font color=darkgreen>"+quote(s)+"</font></b>");
-  return ("<b><font color=lightgreen>"+quote(s)+"</font></b>");
+  if(m->dark) return ("<b><font color='darkgreen'>"+quote(s)+"</font></b>");
+  return ("<b><font color='lightgreen'>"+quote(s)+"</font></b>");
 }
 
 string highlight_pre(string s, mapping m)
 {
   if(m->dark) return ("<font color=brown>"+quote(s)+"</font>");
-  return ("<font color=pink>"+quote(s)+"</font>");
+  return ("<font color='pink'>"+quote(s)+"</font>");
 }
 
 string highlight_declarator(string s, mapping m)
 {
-  if(m->dark) return ("<b><font color=darkbrown>"+quote(s)+"</font></b>");
-  return ("<b><font color=#ffeeaa>"+quote(s)+"</font></b>");
+  if(m->dark) return ("<b><font color='darkbrown'>"+quote(s)+"</font></b>");
+  return ("<b><font color='#ffeeaa'>"+quote(s)+"</font></b>");
 }
 
 
 string highlight_case(string s, mapping m)
 {
-  if(m->dark) return ("<font color=black>"+quote(s)+"</font>");
-  return ("<font color=aquamarine>"+quote(s)+"</font>");
+  if(m->dark) return ("<font color='black'>"+quote(s)+"</font>");
+  return ("<font color='aquamarine'>"+quote(s)+"</font>");
 }
 
 constant keywords=({"foreach","break","constant","catch","gauge","class","continue","do","else","for","foreach","if","import","inherit","inline","lambda","nomask","private","protected","public","return","static","final", "switch","throw","while",});
@@ -116,7 +116,7 @@ array (string) find_type(string in)
       if(i) switch(in[i-1])
       {
        default:
-//	werror("Invalid type thingie: '"+in[i..i]+"'\n");
+//      report_debug("Invalid type thingie: '"+in[i..i]+"'\n");
 	continue;
        case ' ':
        case '\n':
@@ -141,7 +141,7 @@ array (string) find_type(string in)
 
     p = op[..strlen(p)-1];
     post = op[strlen(p)..];
-//    werror("Found type: '%s' (left: %s)\n", s+p, post-"\n");
+//    report_debug("Found type: '%s' (left: %s)\n", s+p, post-"\n");
     return ({ pre, s+p, @find_decl(post) });
   }
 }
@@ -230,12 +230,12 @@ string highlight_line(string l, mapping m)
 {
   array p,r;
   string res = "";
-//  werror(l+"\n");
+//  report_debug(l+"\n");
   foreach(highlight_patterns, p)
   {
     if(r=p[0](l))
     {
-//      werror("Match %O (%s, %s)\n", p[-1][-1],(r[..sizeof(p[1])-1]*""),
+//      report_debug("Match %O (%s, %s)\n", p[-1][-1],(r[..sizeof(p[1])-1]*""),
 //	     (r[sizeof(p[1])..]*""));
       for(int i=0; i<sizeof(p[1]) && i<sizeof(r); i++)
 	if(functionp(p[1][i]))
