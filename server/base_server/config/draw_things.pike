@@ -1,6 +1,6 @@
 #include <module.h>
 
-string cvs_verison = "$Id: draw_things.pike,v 1.8 1996/12/04 07:15:12 per Exp $";
+string cvs_verison = "$Id: draw_things.pike,v 1.9 1996/12/04 07:38:25 per Exp $";
 
 object (Image) bevel(object (Image) in, int width)
 {
@@ -131,20 +131,29 @@ object (Image) draw_module_header(string name, int type, object font)
 #define hG 0xa0
 #define hB 0xff
 
-object (Image) draw_config_button(string name, object font)
+object (Image) draw_config_button(string name, object font, int lm, int rm)
 {
   if(!strlen(name)) return Image(1,15,dR, dG, dB);
 
   object txt = font->write(name)->scale(0.5);
   object ruta = Image(txt->xsize()+25, 20, bR, bG, bB);
-  object linje = Image(2,30, bhR,bhG,bhB);
+  object linje = Image(2,30, rm?0:bhR,rm?0:bhG,rm?0:bhB);
 
   linje=linje->setcolor(0,0,0)->line(0,0,0,30);
   linje=linje->setcolor(bR,bG,bB)->rotate(-25)->copy(0,3,29,28);
 
-  ruta=ruta->paste_alpha(linje, 50);
-  ruta=ruta->paste_mask(Image(txt->xsize(),20,btR,btG,btB), txt, 22, 0);
+  ruta->paste_alpha(linje, 50);
+  ruta->paste_mask(Image(txt->xsize(),20,btR,btG,btB), txt, 22, 0);
 
+  if(lm)
+  {
+    object s=ruta->select_from(0,0);
+    ruta->paste_mask(Image(25,20, dR,dG,dB), s, 0,0);
+  } else if(rm) {
+    object s=ruta->select_from(20,18);
+    ruta->paste_mask(Image(200,20, dR,dG,dB), s, 0,0);
+  }
+  
   txt=linje=0;
   return ruta->scale(0,15);
 }
@@ -194,31 +203,29 @@ object (Image) draw_selected_button(string name, object font)
 }
 
 
-object draw_unfold(int c)
+object pil(int c)
 {
   object f=Image(50,50,dR,dG,dB);
-  f->setcolor(c?255:0,255,c?0:255);
+  f->setcolor(c?bB:bR,c?200:bG,c?bR:bB);
   for(int i=1; i<25; i++)
     f->line(25-i,i,25+i,i);
-  f->setcolor(dR,dG,dB);
-  return f->rotate(-90)->scale(12,0);
+  return f;
+}
+
+object draw_unfold(int c)
+{
+  return pil(c)->setcolor(dR,dG,dB)->rotate(-90)->scale(12,0);
 }
 
 object draw_fold(int c)
 {
-  object f=Image(50,50,dR,dG,dB);
-  f->setcolor(c?255:0,200,c?0:255);
-  for(int i=1; i<25; i++) f=f->line(25-i,i,25+i,i);
-  f->setcolor(dR,dG,dB);
-  return f->rotate(180)->scale(12,0);
+  return pil(c)->setcolor(dR,dG,dB)->rotate(-180)->scale(12,0);
 }
 
 object draw_back(int c)
 {
-  object f=Image(50,50,dR,dG,dB);
-  f->setcolor(c?255:0,200,c?0:255);
-  for(int i=1; i<25; i++) f=f->line(25-i,i,25+i,i);
-  for(i=0; i<10; i++){
+  object f=pil(c);
+  for(int i=0; i<10; i++){
     f=f->line(25-i,24,25-i,50);
     f=f->line(25+i,24,25+i,50);
   }

@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.17 1996/12/04 07:15:11 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.18 1996/12/04 07:38:23 per Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -147,7 +147,7 @@ void create()
 }
 
 #define PUSH(X) do{res+=({(X)});}while(0)
-#define BUTTON(ACTION,TEXT,ALIGN) PUSH("<a href=\"/(ACTION)"+(o?o->path(1):"/")+"?"+(bar++)+"\"><img border=0 hspacing=0 vspacing=0 src=/auto/button/"+replace(TEXT," ","%20")+" alt=\""+TEXT+"\""+(("ALIGN"-" ")=="left"?"":" align="+("ALIGN"-" "))+"></a>")
+#define BUTTON(ACTION,TEXT,ALIGN) do{PUSH("<a href=\"/(ACTION)"+(o?o->path(1):"/")+"?"+(bar++)+"\"><img border=0 hspacing=0 vspacing=0 src=/auto/button/"+(lm?"lm/":"")+replace(TEXT," ","%20")+" alt=\""+TEXT+"\""+(("ALIGN"-" ")=="left"?"":" align="+("ALIGN"-" "))+"></a>");lm=0;}while(0)
 
 inline string shutdown_restart(string save, int compact,void|object o)
 {
@@ -891,10 +891,8 @@ mapping auto_image(string in, object id)
   mixed e;
   object i;
 
-  if(!id->pragma["no-cache"] && (r=cache_lookup("config_images", in)))
-    return r;
-  if(!sscanf(in, "%s/%s", key, value))
-    key=in;
+  if(r=cache_lookup("config_images", in))  return r;
+  if(!sscanf(in, "%s/%s", key, value)) key=in;
 
   switch(key)
   {
@@ -905,7 +903,10 @@ mapping auto_image(string in, object id)
     break;
     
    case "button":
-    i=draw_config_button(value,button_font);
+    int lm,rm;
+    if(sscanf(value, "lm/%s", value)) lm=1;
+    if(sscanf(value, "rm/%s", value)) rm=1;
+    i=draw_config_button(value,button_font,lm,rm);
     break;
 
    case "fold":
@@ -1337,8 +1338,9 @@ mapping configuration_parse(object id)
   PUSH("</dl>");
 //  PUSH("<nobr><img height=15 src=/auto/button/ width=100% align=right>");
   PUSH("<br clear=all>");
-  PUSH("<table width=100%><tr><td bgcolor=#"+bdR+bdG+bdB+">");
-  PUSH("<img src=/auto/button/>");
+//  PUSH("<table width=100%><tr><td bgcolor=#"+bdR+bdG+bdB+">");
+
+  int lm=1;
   
   if(o->type == NODE_CONFIGURATIONS)
     BUTTON(newconfig, "New virtual server", left);
@@ -1362,22 +1364,23 @@ mapping configuration_parse(object id)
   }
   
   if(o->type == NODE_CONFIGURATION)
-    BUTTON(delete,"Remove virtual server", left);
+    BUTTON(delete,"Delete this server", left);
 
   if(nunfolded(o))
     BUTTON(foldall, "Close all",left);
   if(o->changed)
-    BUTTON(unfoldmodified, "Open all modified", left);
+    BUTTON(unfoldmodified, "Open modified", left);
 
   if((o->changed||root->changed))
-    BUTTON(save, "Save changes", left);
+    BUTTON(save, "Save", left);
   BUTTON(restart, "Restart", left);
   BUTTON(shutdown,"Shutdown", left);
 
   
-  PUSH("<img src=/auto/button/%20>");
+  PUSH("<img border=0 hspacing=0 vspacing=0 src=/auto/button/rm/%20>");
+
   PUSH("</nobr><br clear=all>");
-  PUSH("</td></tr></table>");
+//  PUSH("</td></tr></table>");
   PUSH("<p align=right><a href=$docurl>"+roxen->real_version +"</a></body>");
   return stores(res*"");
 }
