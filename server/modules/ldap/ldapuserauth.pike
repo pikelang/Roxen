@@ -30,7 +30,7 @@
 
 */
 
-constant cvs_version = "$Id: ldapuserauth.pike,v 1.1 1999/04/24 16:37:52 js Exp $";
+constant cvs_version = "$Id: ldapuserauth.pike,v 1.2 1999/05/31 22:19:31 js Exp $";
 constant thread_safe=0;
 
 #include <module.h>
@@ -67,11 +67,11 @@ int access_mode_is_guess() {
 
 int default_uid() {
 
-  #if efun(getuid)
+#if efun(geteuid)
   return(geteuid());
-  #else
+#else
   return(0);
-  #endif
+#endif
 }
 
 /*
