@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.144 2004/05/14 16:54:22 anders Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.145 2004/05/14 21:21:22 mast Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -407,6 +407,20 @@ mapping(string:mixed) lock_file(string path, DAVLock lock, RequestID id)
 			       "<h1>Permission to 'PUT' files denied</h1>");
   }
   register_lock(path, lock, id);
+  return 0;
+}
+
+mapping(string:mixed) unlock_file(string path, DAVLock lock, RequestID|int(0..0) id)
+{
+  if (!query("put")) return 0;
+  if(query("check_auth") && (!id || (!id->conf->authenticate( id ) )) ) {
+    TRACE_LEAVE("PUT: Permission denied");
+    return
+      // FIXME: Sane realm.
+      Roxen.http_auth_required("foo",
+			       "<h1>Permission to 'PUT' files denied</h1>");
+  }
+  unregister_lock(path, lock, id);
   return 0;
 }
 
@@ -1327,7 +1341,7 @@ mixed find_file( string f, RequestID id )
 
     if(!code)
     {
-      SIMPLE_TRACE_LEAVE("MOVE: Move failed (errno: %d)", err_code);
+      SIMPLE_TRACE_LEAVE("MOVE: Move failed (%s)", strerror (err_code));
       return errno_to_status (err_code, 1, id);
     }
     TRACE_LEAVE("MOVE: Success");
