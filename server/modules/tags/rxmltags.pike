@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.387 2002/10/23 23:58:26 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.388 2002/10/24 00:01:14 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -105,7 +105,7 @@ private void old_rxml_warning(RequestID id, string no, string yes) {
 
 class EntityClientTM {
   inherit RXML.Value;
-  mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
+  mixed rxml_var_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
     c->id->misc->cacheable=0;
     if(c->id->supports->trade) return ENCODE_RXML_XML("&trade;", type);
     if(c->id->supports->supsub) return ENCODE_RXML_XML("<sup>TM</sup>", type);
@@ -1614,6 +1614,11 @@ class TagCache {
       }
       else
 	TAG_TRACE_LEAVE ("");
+
+      if (overridden_keymap) {
+	RXML_CONTEXT->misc->cache_key = overridden_keymap;
+	overridden_keymap = 0;
+      }
 
       if (overridden_keymap) {
 	RXML_CONTEXT->misc->cache_key = overridden_keymap;
@@ -5448,6 +5453,11 @@ constant tagdoc=([
  The root of the present virtual filesystem, usually \"/\".
 </p></desc>",
 
+"&page.mountpoint;":#"<desc type='entity'><p>
+ The root of the present virtual filesystem without the ending slash,
+ usually \"\".
+</p></desc>",
+
 //  &page.virtfile; is same as &page.path; but deprecated since we want to
 //  harmonize with SiteBuilder entities.
 "&page.path;":#"<desc type='entity'><p>
@@ -5874,8 +5884,8 @@ using the pre tag.
  <ent>page.path</ent>). This is often a bad policy since it's easy for
  a client to generate many cache entries.</p>
 
- <p>There are no cache static tags if the compatibility level is 2.4
- or lower.</p>
+ <p>None of the standard RXML tags are cache static if the
+ compatibility level is 2.4 or lower.</p>
 </desc>
 
 <attr name='variable' value='string'>
