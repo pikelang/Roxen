@@ -5,7 +5,7 @@
 
 // import Stdio;
 
-constant cvs_version = "$Id: htaccess.pike,v 1.33 1998/04/06 19:02:34 grubba Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.34 1998/04/11 08:23:19 neotron Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -146,7 +146,8 @@ mapping|int parse_htaccess(object f, object id, string rht)
 
   access = ([]); 
 
-  htaccess = parse_html(htaccess, ([]), (["limit": parse_limit ]), id, access);
+  htaccess = parse_html(htaccess - "\r",
+			([]), (["limit": parse_limit ]), id, access);
 
   if ((!access["head"]) && access["get"]) {
     access["head"] = access["get"];
