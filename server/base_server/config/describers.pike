@@ -231,7 +231,7 @@ string describe_global_debug(object node)
     if(!search(f, "num_"))
     {
       foo->num_total += foo[f];
-      string col="#ff6666";
+      string col="#ff0000";
       if((foo[f]-last_usage[f]) < foo[f]/60)
 	col="yellow";
       if((foo[f]-last_usage[f]) == 0)

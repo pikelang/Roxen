@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.21 1996/12/05 14:20:13 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.22 1996/12/05 16:01:58 per Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -7,7 +7,7 @@ inherit "config/draw_things";
 #include <module.h>
 
 #define dR "00"
-#define dG "10"
+#define dG "06"
 #define dB "30"
 
 #define bdR "00"
@@ -15,7 +15,7 @@ inherit "config/draw_things";
 #define bdB "90"
 
 
-#define BODY "<body "+(roxen->QUERY(BG)?"background=image/background.gif ":"")+"bgcolor=#"+dR+dG+dB+" text=#ffffff link=#ffffaa vlink=#ffffaa alink=#f0e0f0>"
+#define BODY "<body "+(roxen->QUERY(BG)?"background=/image/background.gif ":"")+"bgcolor=#"+dR+dG+dB+" text=#ffffff link=#ffffaa vlink=#ffffaa alink=#f0e0f0>"
 
 #define TABLEP(x, y) (id->supports->tables ? x : y)
 #define PUSH(X) do{res+=({(X)});}while(0)
@@ -871,7 +871,7 @@ int nunfolded(object o)
 
 
 object module_font = Font()->load("base_server/config/font");
-object button_font = module_font;
+object button_font = Font()->load("base_server/config/button_font");
 
 mapping auto_image(string in, object id)
 {
@@ -970,7 +970,6 @@ mapping configuration_parse(object id)
   int i;
 
   id->since = 0; // We do not want 'get-if-modified-since' to work here.
-
 
   // Permisson denied by address?
   if(id->remoteaddr)
@@ -1351,6 +1350,7 @@ mapping configuration_parse(object id)
   }
   
   PUSH(default_head("Roxen server configuration", root->changed?o->path(1):0));
+  PUSH("<blockquote>\n");
 //  PUSH("<table width=\"100%\" cellpadding=0 cellspacing=0>\n");
 //  PUSH("<tr><td>\n");
   PUSH("\n"+display_tabular_header( o )+"\n");
@@ -1419,6 +1419,7 @@ mapping configuration_parse(object id)
   PUSH("</nobr><br clear=all>");
 //  PUSH("<a href=$docurl>"+roxen->real_version +"</a>"
   PUSH("</body>\n");
+  PUSH("</blockquote>\n");
   return stores(res*"");
 }
 
