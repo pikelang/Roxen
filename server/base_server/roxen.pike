@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.692 2001/08/10 11:28:22 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.693 2001/08/13 18:21:58 per Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -188,7 +188,7 @@ static class Privs
       if(u)
 	uid = u[2];
     }
-
+    
     if(u && !gid)
       gid = u[3];
 
@@ -2548,7 +2548,7 @@ class ImageCache
     if(!sizeof(q))
       return 0;
 
-    QUERY("UPDATE "+name+" SET atime=UNIX_TIMESTAMP() WHERE id='"+id+"'" );
+    QUERY("UPDATE "+name+" SET atime=UNIX_TIMESTAMP() WHERE id=%s",id );
 
     string s = q[0]->meta;
     mapping m;
@@ -2605,7 +2605,7 @@ class ImageCache
     meta_cache = ([]);
 #ifdef DEBUG
     report_debug("%s removed, %dms\n",
-		 (num==-1?"all":num?(string)num:"no"),
+		 (num==-1?"all":num?(string)num:"none"),
 		 (gethrtime()-t)/1000);
 #endif
   }
@@ -2691,7 +2691,9 @@ class ImageCache
       User u = rid->conf->authenticate(rid);
       string uid = "";
       if( u ) uid = u->name();
-      QUERY("INSERT INTO "+name+" (id,uid) VALUES (%s,%s)", id, uid );
+      QUERY("INSERT INTO "+name+
+	    " (id,uid,atime) VALUES (%s,%s,UNIX_TIMESTAMP())",
+	    id, uid );
     }
     
     return 0;
@@ -2778,7 +2780,6 @@ class ImageCache
   //! will be called like <pi>callback( @data, id )</pi>.
   {
     string ci, user;
-
     void update_args( mapping a )
     {
       if (!a->format)
@@ -2835,6 +2836,10 @@ class ImageCache
       // Roxen 2.2 from cvs before
       catch(QUERY("DROP TABLE "+name+"_data"));
 
+
+      master()->resolv("DBManager.is_module_table")
+	( 0,"local",name,"Image cache for "+name);
+      
       QUERY("CREATE TABLE "+name+" ("
 	    "id     CHAR(64) NOT NULL PRIMARY KEY, "
 	    "size   INT      UNSIGNED NOT NULL DEFAULT 0, "
@@ -2943,12 +2948,18 @@ class ArgCache
   static void setup_table()
   {
     if(catch(QUERY("SELECT id FROM "+name+" WHERE id=0")))
+    {
+      master()->resolv("DBManager.is_module_table")( 0, "shared", name,
+				 "The argument cache, used to map between "
+				 "a short unique string and an argument "
+				 "mapping" );
       QUERY("CREATE TABLE "+name+" ("
                 "id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, "
                 "hash INT NOT NULL DEFAULT 0, "
                 "atime INT UNSIGNED NOT NULL DEFAULT 0, "
                 "contents BLOB NOT NULL DEFAULT '', "
                 "INDEX hind (hash))");
+    }
   }
 
   static void init_db()
@@ -3081,6 +3092,7 @@ class ArgCache
     string hv = Crypto.md5()->update( data )->digest();
     if( mixed q = cache[ hv ] )
       return q;
+
     LOCK();
 #ifdef THREADS
     if( mixed q = cache[ hv ] )
