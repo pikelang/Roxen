@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.45 1997/11/06 06:09:20 neotron Exp $
+/* $Id: wizard.pike,v 1.46 1997/11/13 23:28:50 neotron Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -15,7 +15,8 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed b)
     id = a;
 
   string current = id->variables[m->name] || m["default"];
-
+  if(current)
+    current = current +"";
   switch(m->type)
   {
    default: // String or password field....
