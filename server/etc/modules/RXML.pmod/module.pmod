@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.274 2002/03/15 16:43:27 mast Exp $
+// $Id: module.pmod,v 1.275 2002/03/25 16:52:21 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -1922,6 +1922,9 @@ class Context
       fatal_error ("Cannot handle plugin tags added at runtime.\n");
 #endif
     if (!new_runtime_tags) new_runtime_tags = NewRuntimeTags();
+    if (mapping var_chg = misc->variable_changes)
+      var_chg[encode_value_canonic (({0, tag->flags & FLAG_PROC_INSTR ?
+				      "?" + tag->name : tag->name}))] = tag;
     new_runtime_tags->add_tag (tag);
   }
 
@@ -1933,8 +1936,13 @@ class Context
   //! runtime tags.
   {
     if (!new_runtime_tags) new_runtime_tags = NewRuntimeTags();
-    if (objectp (tag)) tag = tag->name;
-    new_runtime_tags->remove_tag (tag);
+    if (objectp (tag)) {
+      proc_instr = tag->flags & FLAG_PROC_INSTR;
+      tag = tag->name;
+    }
+    if (mapping var_chg = misc->variable_changes)
+      var_chg[encode_value_canonic (({0, proc_instr ? "?" + tag : tag}))] = 0;
+    new_runtime_tags->remove_tag (tag, proc_instr);
   }
 
   multiset(Tag) get_runtime_tags()
@@ -2044,10 +2052,13 @@ class Context
 		      "after eval_and_compile\n",
 		      this_object(), state_updated, orig_state_updated);
     make_p_code = orig_make_p_code, state_updated = orig_state_updated;
-    if (frame && !(orig_top_frame_flags & FLAG_DONT_CACHE_RESULT))
-      // Don't let the subevaluation propagate the cache disabling
-      // flag since it's not the same cache.
-      frame->flags &= ~FLAG_DONT_CACHE_RESULT;
+    if (frame)
+      // The subevaluation might change the cache result control
+      // flags, but they should be ignored since it's not the same
+      // cache. These flags are set but never cleared, so we only need
+      // to clear those that are cleared in orig_top_frame_flags.
+      frame->flags &= orig_top_frame_flags |
+	~(FLAG_DONT_CACHE_RESULT|FLAG_MAY_CACHE_RESULT);
 
     if (err) throw (err);
     return ({res, p_code});
@@ -2140,6 +2151,20 @@ class Context
   mapping(string:Tag) runtime_tags = ([]);
   // The active runtime tags. PI tags are stored in the same mapping
   // with their names prefixed by '?'.
+
+  void direct_add_runtime_tag (string name, Tag tag)
+  {
+    if (mapping var_chg = misc->variable_changes)
+      var_chg[encode_value_canonic (({0, name}))] = tag;
+    runtime_tags[name] = tag;
+  }
+
+  void direct_remove_runtime_tag (string name)
+  {
+    if (mapping var_chg = misc->variable_changes)
+      var_chg[encode_value_canonic (({0, name}))] = 0;
+    m_delete (runtime_tags, name);
+  }
 
   NewRuntimeTags new_runtime_tags;
   // Used to record the result of any add_runtime_tag() and
@@ -2558,6 +2583,18 @@ constant FLAG_DONT_CACHE_RESULT	= 0x00080000;
 //! this flag is therefore automatically propagated by the parser into
 //! surrounding frames. The flag is tested after the first evaluation
 //! of the frame has finished.
+
+constant FLAG_MAY_CACHE_RESULT	= 0x00100000;
+//! Mostly for internal use to flag that the result may be cached.
+//! It's not enough to check the absence of @[FLAG_DONT_CACHE_RESULT]
+//! for this: If the content of a frame isn't evaluated at all, we
+//! don't know whether it might contain @[FLAG_DONT_CACHE_RESULT]
+//! frames or not. Thus it's required that @[FLAG_DONT_CACHE_RESULT]
+//! is cleared and this flag is set for the result of a frame to be
+//! cached instead of the frame itself.
+//!
+//! This flag may be set explicitly to improve caching of tags that
+//! unconditionally ignore their content.
 
 constant FLAG_CUSTOM_TRACE	= 0x00000100;
 //! Normally the parser runs TRACE_ENTER and TRACE_LEAVE for every tag
@@ -3214,6 +3251,9 @@ class Frame
 		// Could perhaps collect adjacent PCode objects here.
 		p_code->finish();
 		exec[i] = p_code;
+		// Not flagging the update here in ctx->state_updated,
+		// since we don't know whether this will be part of
+		// the persistent p-code or not.
 	      }
 	      result_type->give_back (subparser, ctx->tag_set);
 	      subparser = 0;
@@ -3711,6 +3751,7 @@ class Frame
 	    THIS_TAG_TOP_DEBUG ("Evaluating with compiled arguments\n");
 	    args = (in_args = [EVAL_ARGS_FUNC] args) (ctx, evaler);
 	    in_content = content;
+	    if (!in_content || in_content == "") flags |= FLAG_MAY_CACHE_RESULT;
 	    content = nil;
 	  }
 	  else if (flags & FLAG_UNPARSED) {
@@ -3733,6 +3774,7 @@ class Frame
 	    else
 	      _prepare (ctx, type, args && args + ([]), 0);
 	    in_content = content;
+	    if (!in_content || in_content == "") flags |= FLAG_MAY_CACHE_RESULT;
 	  }
 	  else {
 	    THIS_TAG_TOP_DEBUG ("Evaluating with constant arguments and content\n");
@@ -3974,6 +4016,7 @@ class Frame
 		    subevaler->p_code = 0;
 		    ctx->make_p_code = orig_make_p_code; // Reset before do_return.
 		  }
+		  flags |= FLAG_MAY_CACHE_RESULT;
 
 		  subevaler = 0;
 		}
@@ -4048,8 +4091,8 @@ class Frame
 	  if (in_content) content = in_content;				\
 	  ctx->make_p_code = orig_make_p_code;				\
 	  if (orig_tag_set) ctx->tag_set = orig_tag_set;		\
-	  if (flags & FLAG_DONT_CACHE_RESULT && up)			\
-	    up->flags |= FLAG_DONT_CACHE_RESULT;			\
+	  if (up && flags & (FLAG_DONT_CACHE_RESULT|FLAG_MAY_CACHE_RESULT)) \
+	    up->flags |= flags & (FLAG_DONT_CACHE_RESULT|FLAG_MAY_CACHE_RESULT); \
 	  ctx->frame = up;						\
 	  FRAME_DEPTH_MSG ("%*s%O frame_depth decrease line %d\n",	\
 			   ctx->frame_depth, "", this_object(),		\
@@ -4061,7 +4104,9 @@ class Frame
 	
 	THIS_TAG_TOP_DEBUG ("Done%s\n",
 			    flags & FLAG_DONT_CACHE_RESULT ?
-			    " (don't cache result)" : "");
+			    " (don't cache result)" :
+			    !(flags & FLAG_MAY_CACHE_RESULT) ?
+			    " (don't cache result for now)" : "");
 	if (!(flags & FLAG_CUSTOM_TRACE))
 	  TRACE_LEAVE ("");
 	return conv_result;
@@ -4155,7 +4200,9 @@ class Frame
 
 	THIS_TAG_TOP_DEBUG ("Exception%s\n",
 			    flags & FLAG_DONT_CACHE_RESULT ?
-			    " (don't cache result)" : "");
+			    " (don't cache result)" :
+			    !(flags & FLAG_MAY_CACHE_RESULT) ?
+			    " (don't cache result for now)" : "");
 	TRACE_LEAVE ("exception");
 	CLEANUP;
 	result = nil;
@@ -6376,29 +6423,45 @@ class VariableChange (/*static*/ mapping settings)
       if (stringp (encoded_var)) {
 	var = decode_value (encoded_var);
 	if (arrayp (var)) {
-	  if (sizeof (var) == 1) {
+	  if (stringp (var[0])) { // A scope or variable change.
+	    if (sizeof (var) == 1) {
 #ifdef DEBUG
-	    if (TAG_DEBUG_TEST (ctx->frame))
-	      TAG_DEBUG (ctx->frame, "    Installing cached scope %s with %d variables\n",
-			 replace (var[0], ".", ".."), sizeof (settings[encoded_var]));
+	      if (TAG_DEBUG_TEST (ctx->frame))
+		TAG_DEBUG (ctx->frame,
+			   "    Installing cached scope %s with %d variables\n",
+			   replace (var[0], ".", ".."), sizeof (settings[encoded_var]));
 #endif
-	    if (SCOPE_TYPE vars = settings[encoded_var])
-	      ctx->add_scope (var[0], settings[encoded_var]);
-	    else
-	      ctx->remove_scope (var[0]);
+	      if (SCOPE_TYPE vars = settings[encoded_var])
+		ctx->add_scope (var[0], settings[encoded_var]);
+	      else
+		ctx->remove_scope (var[0]);
+	    }
+	    else {
+#ifdef DEBUG
+	      if (TAG_DEBUG_TEST (ctx->frame))
+		TAG_DEBUG (ctx->frame, "    Installing cached value for %s: %s\n",
+			   map ((array(string)) var, replace, ".", "..") * ".",
+			   format_short (settings[encoded_var]));
+#endif
+	      mixed val = settings[encoded_var];
+	      if (val != nil)
+		ctx->set_var (var[1..], val, var[0]);
+	      else
+		ctx->delete_var (var[1..], var[0]);
+	    }
 	  }
 	  else {
+	    // A runtime tag change. Can extend this by looking closer at var[0].
 #ifdef DEBUG
 	    if (TAG_DEBUG_TEST (ctx->frame))
-	      TAG_DEBUG (ctx->frame, "    Installing cached value for %s: %s\n",
-			 map ((array(string)) var, replace, ".", "..") * ".",
-			 format_short (settings[encoded_var]));
+	      TAG_DEBUG (ctx->frame,
+			 "    Installing cached runtime tag definition for %s: %O\n",
+			 var[1], settings[encoded_var]);
 #endif
-	    mixed val = settings[encoded_var];
-	    if (val != nil)
-	      ctx->set_var (var[1..], val, var[0]);
+	    if (Tag tag = settings[encoded_var])
+	      ctx->direct_add_runtime_tag (var[1], tag);
 	    else
-	      ctx->delete_var (var[1..], var[0]);
+	      ctx->direct_remove_runtime_tag (var[1]);
 	  }
 	  continue handle_var_loop;
 	}
@@ -6903,7 +6966,8 @@ class PCode
 	  ctx->set_misc (" _ok", ctx->misc[" _prev_ok"] = ctx->misc[" _ok"]);
 	mapping var_chg = ctx->misc->variable_changes;
 	ctx->misc->variable_changes = ([]);
-	if (frame_flags & FLAG_DONT_CACHE_RESULT)
+	if ((frame_flags & (FLAG_DONT_CACHE_RESULT|FLAG_MAY_CACHE_RESULT)) !=
+	    FLAG_MAY_CACHE_RESULT)
 	  PCODE_MSG ("frame %O not result cached\n", frame);
 	else {
 	  if (evaled_value == PCode) {
@@ -7112,19 +7176,31 @@ class PCode
 		}							\
 		item = frame->_eval (					\
 		  ctx, this_object(), type); /* Might unwind. */	\
-		if (ctx->state_updated > update_count) {		\
-		  exec[pos + 2] = frame->_save();			\
+		if (flags & COLLECT_RESULTS &&				\
+		    ((frame->flags & (FLAG_DONT_CACHE_RESULT|FLAG_MAY_CACHE_RESULT)) ==	\
+		     FLAG_MAY_CACHE_RESULT)) {				\
+		  exec[pos] = item;					\
+		  /* Relying on the interpreter lock here. */		\
+		  exec[pos + 1] = exec[pos + 2] = nil;			\
 		  flags |= UPDATED;					\
-		  update_count = ctx->state_updated;			\
-		}							\
-		if (!exec[pos + 1]) {					\
-		  RESET_FRAME (frame);					\
-		  /* Race here, but it doesn't matter much. */		\
-		  exec[pos + 1] = frame;				\
-		  if (p_code) p_code->add_frame (ctx, frame, item, 0);	\
-		}							\
-		else							\
+		  update_count = ++ctx->state_updated;			\
 		  if (p_code) p_code->add_frame (ctx, frame, item, 1);	\
+		}							\
+		else {							\
+		  if (ctx->state_updated > update_count) {		\
+		    exec[pos + 2] = frame->_save();			\
+		    flags |= UPDATED;					\
+		    update_count = ctx->state_updated;			\
+		  }							\
+		  if (!exec[pos + 1]) {					\
+		    RESET_FRAME (frame);				\
+		    /* Race here, but it doesn't matter much. */	\
+		    exec[pos + 1] = frame;				\
+		    if (p_code) p_code->add_frame (ctx, frame, item, 0); \
+		  }							\
+		  else							\
+		    if (p_code) p_code->add_frame (ctx, frame, item, 1); \
+		}							\
 		pos += 2;						\
 		break chained_p_code_add;				\
 	      }								\
@@ -7301,7 +7377,7 @@ class PCode
       return intro + ")" + OBJ_COUNT;
   }
 
-  constant P_CODE_VERSION = 5;
+  constant P_CODE_VERSION = 6;
   // Version spec encoded with the p-code, so that we can detect and
   // reject incompatible p-code dumps even when the encoded format
   // hasn't changed in an obvious way.
@@ -7324,13 +7400,14 @@ class PCode
     }
     flags |= FULLY_RESOLVED;
 
-    return ({P_CODE_VERSION, tag_set, tag_set && tag_set->get_hash(),
+    return ({P_CODE_VERSION, flags & (COLLECT_RESULTS|FULLY_RESOLVED),
+	     tag_set, tag_set && tag_set->get_hash(),
 	     type, recover_errors, encode_p_code, protocol_cache_time});
   }
 
   void _decode(array v, int check_hash)
   {
-    [int version, tag_set, string tag_set_hash,
+    [int version, flags, tag_set, string tag_set_hash,
      type, recover_errors, exec, protocol_cache_time] = v;
     if (version != P_CODE_VERSION)
       error ("P-code is stale; it was made with an incompatible version.\n");
@@ -7340,7 +7417,6 @@ class PCode
 	error ("P-code is stale; the tag set has changed since it was encoded.\n");
       generation = tag_set->generation;
     }
-    flags |= FULLY_RESOLVED;
 
     // Instantiate the cached frames, mainly so that any errors in
     // their restore functions due to old data are triggered here and
