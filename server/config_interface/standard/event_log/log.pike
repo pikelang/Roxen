@@ -1,3 +1,4 @@
+inherit "roxenlib";
 #include <config.h>
 #include <roxen.h>
 #define LOCALE	LOW_LOCALE->config_interface
@@ -63,7 +64,7 @@ string fix_err(string s)
   if(s=="")
     return s;
   if(!(<'.','!','?'>)[s[-1]]) s+=".";
-  return capitalize(s);
+  return html_encode_string(capitalize(s));
 }
 
 int last_time;
