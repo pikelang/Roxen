@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.26 2000/02/10 05:29:54 nilsson Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.27 2000/02/10 10:57:50 jonasw Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -344,11 +344,23 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
   Image.Image button = Image.Image(req_width, frame->ysize(), args->bg);
 
   button = button->rgb_to_hsv();
-  if( args->dim )
-    frame->set_image( frame->image()->modify_by_intensity( 1,1,1,
-                                                           ({ 64,64,64 }),
-                                                           ({ 196,196,196 })),
+  if( args->dim ) {
+    //  Adjust dimmed border intensity to the background
+    int bg_value = Image.Color(@args->bg)->hsv()[2];
+    int dim_high, dim_low;
+    if (bg_value < 128) {
+      dim_low = max(bg_value - 64, 0);
+      dim_high = dim_low + 128;
+    } else {
+      dim_high = min(bg_value + 64, 255);
+      dim_low = dim_high - 128;
+    }
+    frame->set_image( frame->image()->
+		      modify_by_intensity( 1, 1, 1,
+					   ({ dim_low, dim_low, dim_low }),
+					   ({ dim_high, dim_high, dim_high })),
                       frame->alpha());
+  }
   object h = button*({255,0,0});
   object s = button*({0,255,0});
   object v = button*({0,0,255});
