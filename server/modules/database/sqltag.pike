@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997-2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.87 2001/10/08 12:32:52 anders Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.88 2001/10/12 09:17:58 grubba Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -253,16 +253,18 @@ class TagSqlplugin {
     private int fetched;
 
     private mapping(string:mixed) really_get_row() {
-      array val = sqlres->fetch_row();
-      if(val)
+      array val;
+      if(sqlres && (val = sqlres->fetch_row()))
 	fetched++;
-      else
+      else {
+	sqlres = 0;
 	return 0;
+      }
       return mkmapping(cols, val);
     }
 
     int num_rows_left() {
-      return sqlres->num_rows() - fetched + !!next_row;
+      return sqlres && (sqlres->num_rows() - fetched + !!next_row);
     }
 
     void create(object _sqlres) {
