@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.57 2000/02/15 02:19:33 mast Exp $
+//! $Id: module.pmod,v 1.58 2000/02/15 02:57:37 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -1253,7 +1253,7 @@ class Frame
   //!mapping(string:mixed) vars;
   //! Set this to introduce a new variable scope that will be active
   //! during parsing of the content and return values (but see also
-  //! FLAG_PARENT_SCOPE). It must be set in do_iterate() or earlier.
+  //! FLAG_PARENT_SCOPE).
 
   //!string scope_name;
   //! The scope name for the variables. Must be set before the scope
@@ -1731,8 +1731,6 @@ class Frame
 	  /* Fall through. */
 	case EVSTAT_ENTERED:
 	case EVSTAT_LAST_ITER:
-	  ENTER_SCOPE (ctx, this);
-
 	  do {
 	    if (eval_state != EVSTAT_LAST_ITER) {
 	      int|function(RequestID:int) do_iterate =
@@ -1749,8 +1747,9 @@ class Frame
 		if (!iter) eval_state = EVSTAT_LAST_ITER;
 	      }
 	    }
-	    for (; iter > 0; iter--) {
+	    ENTER_SCOPE (ctx, this);
 
+	    for (; iter > 0; iter--) {
 	      if (raw_content) { // Got nested parsing to do.
 		int finished = 0;
 		if (!subparser) { // The nested content is not yet parsed.
@@ -1779,6 +1778,7 @@ class Frame
 			    _handle_runtime_tags (ctx, parser);
 			}
 			if (exec) {
+			  ENTER_SCOPE (ctx, this);
 			  mixed res = _exec_array (
 			    parser, exec, flags & FLAG_PARENT_SCOPE); // Might unwind.
 			  if (flags & FLAG_STREAM_RESULT) {
@@ -1832,6 +1832,7 @@ class Frame
 		    _handle_runtime_tags (ctx, parser);
 		}
 		if (exec) {
+		  ENTER_SCOPE (ctx, this);
 		  mixed res = _exec_array (
 		    parser, exec, flags & FLAG_PARENT_SCOPE); // Might unwind.
 		  if (flags & FLAG_STREAM_RESULT) {
