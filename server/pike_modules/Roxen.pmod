@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.146 2002/07/03 12:46:07 nilsson Exp $
+// $Id: Roxen.pmod,v 1.147 2002/10/02 00:01:19 nilsson Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -196,7 +196,7 @@ mapping add_http_header(mapping to, string name, string value)
 {
   if(to[name]) {
     if(arrayp(to[name])) {
-      if (search(to[name], value) == -1)
+      if (!has_value(to[name], value))
 	to[name] += ({ value });
     } else {
       if (to[name] != value)
@@ -1791,7 +1791,7 @@ string fix_relative( string file, RequestID id )
 //! root directory. The returned path is @[simplify_path()]:ed.
 {
   string path = id->not_query;
-  if( !search( file, "http:" ) )
+  if( has_prefix( file, "http:" ) )
     return file;
 
   [string prefix, file] = win_drive_prefix(file);

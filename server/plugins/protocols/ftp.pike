@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.81 2002/07/04 11:42:19 per Exp $
+ * $Id: ftp.pike,v 2.82 2002/10/01 23:55:33 nilsson Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -1217,7 +1217,7 @@ class TelnetSession {
     int lineno;
     for(lineno = 0; lineno < sizeof(lines); lineno++) {
       string line = lines[lineno];
-      if (search(line, "\377") != -1) {
+      if (has_value(line, "\377")) {
 	array a = line / "\377";
 
 	string parsed_line = a[0];

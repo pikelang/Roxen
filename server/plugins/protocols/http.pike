@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.381 2002/10/01 23:19:36 nilsson Exp $";
+constant cvs_version = "$Id: http.pike,v 1.382 2002/10/01 23:55:49 nilsson Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -659,7 +659,7 @@ int things_to_do_when_not_sending_from_cache( )
     mixed tmp1,tmp2;
 
     foreach(tmp2 = (raw / "\n"), tmp1) {
-      if(!search(lower_case(tmp1), "proxy-authorization:"))
+      if(has_prefix(lower_case(tmp1), "proxy-authorization:"))
 	tmp2 -= ({tmp1});
     }
     raw = tmp2 * "\n";
@@ -822,14 +822,14 @@ private final int parse_got_2( )
 
      case "request-range":
        contents = lower_case(contents-" ");
-       if(!search(contents, "bytes"))
+       if(has_prefix(contents, "bytes"))
          // Only care about "byte" ranges.
          misc->range = contents[6..];
        break;
 
      case "range":
        contents = lower_case(contents-" ");
-       if(!misc->range && !search(contents, "bytes"))
+       if(!misc->range && has_prefix(contents, "bytes"))
          // Only care about "byte" ranges. Also the Request-Range header
          // has precedence since Stupid Netscape (TM) sends both but can't
          // handle multipart/byteranges but only multipart/x-byteranges.
@@ -1994,8 +1994,8 @@ void got_data(mixed fooid, string s)
 	  conf =
 	    port_obj->find_configuration_for_url(port_obj->name + "://" +
 						 misc->host +
-						 (search(misc->host, ":")<0?
-						  (":"+port_obj->port):"") +
+						 (has_value(misc->host, ":")<0?
+						  "":(":"+port_obj->port)) +
 						 raw_url,
 						 this_object());
 	} else {
