@@ -1,4 +1,4 @@
-// $Id: roxenlib.pike,v 1.138 2000/01/03 06:44:37 nilsson Exp $
+// $Id: roxenlib.pike,v 1.139 2000/01/03 06:45:45 nilsson Exp $
 
 #include <roxen.h>
 inherit "http";
@@ -759,13 +759,11 @@ string html_encode_tag_value(string str)
 
 string strftime(string fmt, int t)
 {
-  werror(fmt+"\n");
   mapping lt = localtime(t);
   array a = fmt/"%";
   string res = "";
 
   foreach(a, string key) {
-    werror(key+"\n");
     if (key=="") {
       key = "%";
       continue;
