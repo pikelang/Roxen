@@ -274,6 +274,10 @@ string module_page( RequestID id, string conf, string module )
 {
   while( id->misc->orig )
     id = id->misc->orig;
+
+  if( id->variables->section )
+    id->variables->section = (id->variables->section/"\0")[0];
+
   if((id->variables->section == "Information")
      ||!(id->variables->section)
      ||id->variables->info_section_is_it)

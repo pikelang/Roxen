@@ -1,21 +1,22 @@
 <topmenu base="../" selected=sites>
 
 <content>
-<h1>&locale.create_new_site;</h1>
-
+<cv-split>
+<subtablist>
+<st-page>
+<br>
+<blockquote>
 <awizard>
    <page name=select_name>
-     <blockquote>
-     <obox>
        <b>&locale.site_name;:</b> <var name=name default=""><p>
 
 <blockquote>
        &locale.site_name_doc;</blockquote>
 
-<table width=100%>
+<table width=80%>
 <tr>
 <td>
-       <dbutton gbutton-preparse  gbutton-width=150
+       <dbutton gbutton-preparse  gbutton-width=230
                 gbutton-align_icon=right
                 gbutton-icon_src=/internal-roxen-next
                 gbutton_title="&locale.create_new_site; &locale.with_template;"
@@ -23,7 +24,7 @@
          <insert file=verify_site_name.pike nocache>
        </dbutton><br>
        <dbutton
-          gbutton-preparse gbutton-width=150
+          gbutton-preparse gbutton-width=230
           gbutton-icon_src=/internal-roxen-next
           gbutton-align_icon=right
           gbutton_title="&locale.create_new_site;"
@@ -35,22 +36,21 @@
                gbutton_title=" &locale.cancel; "
                href="../sites/">
 </td></tr></table>
-     </obox>
-     </blockquote>
    </page>
 
 
    <page name=final_create>
      <insert file=create_site.pike nocache>
-     <goto href="../sites/site.html/&form.name;/">
+     <goto href="site.html/&form.name;/">
    </page>
 
    <page name=new_with_template>
-     <obox title="<h2>Create new site using template</h2>">
-     </obox>
+     <goto href='create_site_with_template.pike?name=&form.name;'>
    </page>
-
 </awizard>
-
+</blockquote>
+</st-page>
+</subtablist>
+</cv-split>
 
 </content>

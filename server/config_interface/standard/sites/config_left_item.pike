@@ -27,7 +27,7 @@ string selected_item( string q, roxen.Configuration c, RequestID id, string modu
 
   string pre = ("<gbutton frame-image=&usr.left-buttonframe; href='/"+id->misc->cf_locale+"/sites' "
                 "width=150 bgcolor=&usr.left-buttonbg; icon_src=&usr.selected-indicator; "
-                "align_icon=left preparse>&locale.servers;</gbutton><br>"
+                "align_icon=left preparse>&locale.sites;</gbutton><br>"
                 "<gbutton frame-image=&usr.left-buttonframe; width=150 "+(subsel == ""?"bgcolor=&usr.left-selbuttonbg;":
 			      "bgcolor=&usr.left-buttonbg; href='"+id->not_query+"/"+replace(c->name, " ", "%20" )+"/' ")+
                 " icon_src=&usr.selected-indicator; align_icon=left>"+
