@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.38 2000/02/04 02:02:28 mast Exp $
+//! $Id: module.pmod,v 1.39 2000/02/04 16:47:55 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -117,15 +117,14 @@ class Tag
 
   //! Services.
 
-  inline object/*(Frame)HMM*/ `() (mapping(string:mixed) args, void|mixed|PCode content,
+  inline object/*(Frame)HMM*/ `() (mapping(string:mixed) args, void|mixed content,
 				   void|TagSet tag_set)
   //! Make an initialized frame for the tag. Typically useful when
   //! returning generated tags from e.g. RXML.Frame.do_return(). The
-  //! argument values and the content are not parsed; see
-  //! RXML.Frame.do_return() for details. The tag set is used to find
-  //! the plugin tags if this is a socket tag (see plugin_name blurb
-  //! above). If it's left out, the current tag set in the current
-  //! context is used.
+  //! argument values and the content are normally not parsed. The tag
+  //! set is used to find the plugin tags if this is a socket tag (see
+  //! plugin_name blurb above). If it's left out, the current tag set
+  //! in the current context is used.
   //!
   //! Note: Never reuse the same frame object.
   {
@@ -567,7 +566,6 @@ class Scope
 }
 
 #define SCOPE_TYPE mapping(string:mixed)|object(Scope)
-
 
 class Context
 //! A parser context. This contains the current variable bindings and
@@ -1071,6 +1069,9 @@ inline Context get_context() {return _context;}
 
 #endif
 
+
+// Global services.
+
 void rxml_error (string msg, mixed... args)
 //! Tries to throw an error with rxml_error() in the current context.
 {
@@ -1100,9 +1101,31 @@ void rxml_fatal (string msg, mixed... args)
   }
 }
 
-Frame get_tag (string name, mapping(string:mixed) args, void|mixed|PCode content)
+Frame make_tag (string name, mapping(string:mixed) args, void|mixed content)
+//! Returns a frame for the specified tag. The tag definition is
+//! looked up in the current context and tag set. args and content are
+//! not parsed or evaluated.
 {
-  // FIXME
+  TagSet tag_set = get_context()->tag_set;
+  object(Tag)|array(LOW_TAG_TYPE|LOW_CONTAINER_TYPE) tag = tag_set->get_tag (name);
+  if (arrayp (tag))
+    error ("Getting frames for low level tags are currently not implemented.\n");
+  return tag (args, content, tag_set);
+}
+
+Frame make_unparsed_tag (string name, mapping(string:string) args, void|string content)
+//! Returns a frame for the specified tag. The tag definition is
+//! looked up in the current context and tag set. args and content are
+//! given unparsed in this variant; they're parsed when the frame is
+//! about to be evaluated.
+{
+  TagSet tag_set = get_context()->tag_set;
+  object(Tag)|array(LOW_TAG_TYPE|LOW_CONTAINER_TYPE) tag = tag_set->get_tag (name);
+  if (arrayp (tag))
+    error ("Getting frames for low level tags are currently not implemented.\n");
+  Frame frame = tag (args, content, tag_set);
+  frame->flags |= FLAG_UNPARSED;
+  return frame;
 }
 
 
@@ -1187,6 +1210,10 @@ constant FLAG_CACHE_EXECUTE_RESULT = 0x00200000;
 //! If set, an array to execute will be stored in the frame instead of
 //! the final result. On a cache hit it'll be executed like the return
 //! value from do_return() to produce the result.
+
+constant FLAG_UNPARSED = 0x80000000;
+//! Only used internally. Signifies that args and content in the frame
+//! contain unparsed strings.
 
 class Frame
 //! A tag instance.
@@ -1533,6 +1560,20 @@ class Frame
       PRE_INIT_ERROR ("Looks like Context.add_runtime_tag() or "
 		      "Context.remove_runtime_tag() was used outside any parser.\n");
 #endif
+
+    if (flags & FLAG_UNPARSED) {
+#ifdef DEBUG
+      if (raw_args || raw_content)
+	PRE_INIT_ERROR ("Internal error: raw_args or raw_content given for "
+			"unparsed frame.\n");
+#endif
+      raw_args = args, args = 0;
+      raw_content = content, content = Void;
+#ifdef MODULE_DEBUG
+      if (!stringp (raw_content))
+	PRE_INIT_ERROR ("Content is not a string in unparsed tag frame.\n");
+#endif
+    }
 
     if (array state = ctx->unwind_state && ctx->unwind_state[this]) {
 #ifdef DEBUG
