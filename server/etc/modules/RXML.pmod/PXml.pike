@@ -5,7 +5,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: PXml.pike,v 1.17 2000/01/19 19:00:49 mast Exp $
+//! $Id: PXml.pike,v 1.18 2000/01/21 22:31:34 mast Exp $
 
 #pragma strict_types
 
@@ -38,30 +38,11 @@ static mapping(string:array(array(TAG_TYPE|CONTAINER_TYPE))) overridden;
 // container_definition}) tuples, with the closest to top last. Shared
 // between clones.
 
-static array entity_cb (Parser.HTML this, string str)
-{
-  string entity = tag_name();
-  if (sizeof (entity)) {
-    if (entity[0] == '#') {
-      if (!type->free_text) return ({});
-      string out;
-      if ((<"#x", "#X">)[entity[..1]]) {
-	if (sscanf (entity, "%*2s%x%*c", int c) == 2) out = (string) ({c});
-      }
-      else
-	if (sscanf (entity, "%*c%d%*c", int c) == 2) out = (string) ({c});
-      return out && ({out});
-    }
-    return handle_var (entity);
-  }
-  return type->free_text ? 0 : ({});
-}
-
 // Kludge to get to the functions in Parser.HTML from inheriting
 // programs.. :P
-static this_program _low_add_tag (string name, TAG_TYPE tdef)
+/*static*/ this_program _low_add_tag (string name, TAG_TYPE tdef)
   {return [object(this_program)] low_parser::add_tag (name, tdef);}
-static this_program _low_add_container (string name, CONTAINER_TYPE tdef)
+/*static*/ this_program _low_add_container (string name, CONTAINER_TYPE tdef)
   {return [object(this_program)] low_parser::add_container (name, tdef);}
 static this_program _low_clone (mixed... args)
   {return [object(this_program)] low_parser::clone (@args);}
@@ -70,17 +51,14 @@ static void set_comment_tag_cb()
 {
   add_quote_tag (
     "!--",
-    type->free_text ?
-    lambda (Parser.HTML this, string str) {return 0;} :
-    lambda (Parser.HTML this, string str) {return ({});},
+    type->free_text ? .utils.return_zero : .utils.return_empty_array,
     "--");
 }
 
 /*static*/ void set_cbs()
 {
-  _set_entity_callback (entity_cb);
-  if (!type->free_text)
-    _set_data_callback (lambda (Parser.HTML this, string str) {return ({});});
+  _set_entity_callback (.utils.p_html_entity_cb);
+  if (!type->free_text) _set_data_callback (.utils.return_empty_array);
   set_comment_tag_cb();
 }
 
@@ -310,4 +288,8 @@ array(TAG_TYPE|CONTAINER_TYPE) get_overridden_low_tag (
     return ({tags()[name], containers()[name]});
 }
 
+#ifdef OBJ_COUNT_DEBUG
+string _sprintf() {return "RXML.PHtml(" + __count + ")";}
+#else
 string _sprintf() {return "RXML.PHtml";}
+#endif

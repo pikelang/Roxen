@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.27 2000/01/21 19:47:31 nilsson Exp $
+//! $Id: module.pmod,v 1.28 2000/01/21 22:31:35 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -11,6 +11,19 @@
 //! changes.
 
 #pragma strict_types
+
+
+#ifdef OBJ_COUNT_DEBUG
+// This debug mode gives every object a unique number in the
+// _sprintf() string.
+#  define DECLARE_CNT(count) static int count = ++all_constants()->_obj_count
+#  define PAREN_CNT(count) ("(" + (count) + ")")
+#  define COMMA_CNT(count) ("," + (count))
+#else
+#  define DECLARE_CNT(count)
+#  define PAREN_CNT(count) ""
+#  define COMMA_CNT(count) ""
+#endif
 
 
 class Tag
@@ -94,7 +107,11 @@ class Tag
     // FIXME: P-code generation.
     object/*(Frame)HMM*/ frame;
     if (mapping(string:mixed)|mapping(object:array) ustate = ctx->unwind_state)
-      if (ustate[parser]) frame = [object/*(Frame)HMM*/] ustate[parser][0];
+      if (ustate[parser]) {
+	frame = [object/*(Frame)HMM*/] ustate[parser][0];
+	m_delete (ustate, parser);
+	if (!sizeof (ustate)) ctx->unwind_state = 0;
+      }
       else frame = `() (args, Void);
     else frame = `() (args, Void);
 
@@ -119,9 +136,11 @@ class Tag
     throw (err);
   }
 
+  DECLARE_CNT (__count);
+
   string _sprintf()
   {
-    return "RXML.Tag(" + [string] this_object()->name + ")";
+    return "RXML.Tag(" + [string] this_object()->name + COMMA_CNT (__count) + ")";
   }
 }
 
@@ -375,9 +394,12 @@ class TagSet
     return funs;
   }
 
+  DECLARE_CNT (__count);
+
   string _sprintf()
   {
-    return name ? "RXML.TagSet(" + name + ")" : "RXML.TagSet";
+    return name ? "RXML.TagSet(" + name + COMMA_CNT (__count) + ")" :
+      "RXML.TagSet" + PAREN_CNT (__count);
   }
 }
 
@@ -390,6 +412,8 @@ class Value
 //! when referenced.
 {
   mixed rxml_var_eval (Context ctx, string var, string scope_name);
+
+  string _sprintf() {return "RXML.Value";}
 }
 
 class Scope
@@ -414,6 +438,8 @@ class Scope
       else return " in the current scope";
     else return "";
   }
+
+  string _sprintf() {return "RXML.Scope";}
 }
 
 #define SCOPE_TYPE mapping(string:mixed)|object(Scope)
@@ -735,7 +761,7 @@ class Context
   // Used to record the result of any add_runtime_tag() and
   // remove_runtime_tag() calls since the last time the parsers ran.
 
-   void create (TagSet _tag_set, void|RequestID _id)
+  void create (TagSet _tag_set, void|RequestID _id)
   // Normally TagSet.`() should be used instead of this.
   {
     tag_set = _tag_set;
@@ -755,7 +781,9 @@ class Context
   // "exec_left": array (Exec array left to evaluate. Only used
   //	between Frame._exec_array() and Frame._eval().)
 
-  string _sprintf() {return "RXML.Context";}
+  DECLARE_CNT (__count);
+
+  string _sprintf() {return "RXML.Context" + PAREN_CNT (__count);}
 
 #ifdef MODULE_DEBUG
   int in_use;
@@ -1464,9 +1492,11 @@ class Frame
     ctx->frame = up;
   }
 
+  DECLARE_CNT (__count);
+
   string _sprintf()
   {
-    return "RXML.Frame(" + (tag && [string] tag->name) + ")";
+    return "RXML.Frame(" + (tag && [string] tag->name) + COMMA_CNT (__count) + ")";
   }
 }
 
@@ -1671,7 +1701,9 @@ class Parser
   mapping _defines;
   // These two are compatibility kludges for use with parse_rxml().
 
-  string _sprintf() {return "RXML.Parser";}
+  DECLARE_CNT (__count);
+
+  string _sprintf() {return "RXML.Parser" + PAREN_CNT (__count);}
 }
 
 
@@ -1717,7 +1749,7 @@ class TagSetParser
   void remove_runtime_tag (string|Tag tag);
   //! Removes a tag added by add_runtime_tag().
 
-  string _sprintf() {return "RXML.TagSetParser";}
+  string _sprintf() {return "RXML.TagSetParser" + PAREN_CNT (__count);}
 }
 
 class PNone
@@ -1763,7 +1795,7 @@ class PNone
     evalpos = 0;
   }
 
-  string _sprintf() {return "RXML.PNone";}
+  string _sprintf() {return "RXML.PNone" + PAREN_CNT (__count);}
 }
 
 
@@ -1888,7 +1920,7 @@ class Type
 	  // ^^^ Using interpreter lock to here.
 	  if (pco->clone_parser)
 	    p = pco->clone_parser->clone (ctx, this_object(), tset, @_parser_args);
-	  else if ((p = _parser_prog (ctx, this_object(), tset, @_parser_args))->clone)
+	  else if ((p = _parser_prog (0, this_object(), tset, @_parser_args))->clone)
 	    // pco->clone_parser might already be initialized here due
 	    // to race, but that doesn't matter.
 	    p = (pco->clone_parser = p)->clone (ctx, this_object(), tset, @_parser_args);
@@ -1898,7 +1930,7 @@ class Type
 	pco = PCacheObj();
 	pco->tag_set_gen = tset->generation;
 	_p_cache[tset] = pco;	// Might replace an object due to race, but that's ok.
-	if ((p = _parser_prog (ctx, this_object(), tset, @_parser_args))->clone)
+	if ((p = _parser_prog (0, this_object(), tset, @_parser_args))->clone)
 	  // pco->clone_parser might already be initialized here due
 	  // to race, but that doesn't matter.
 	  p = (pco->clone_parser = p)->clone (ctx, this_object(), tset, @_parser_args);
@@ -1914,7 +1946,7 @@ class Type
       else if (clone_parser)
 	// Relying on interpreter lock here.
 	p = clone_parser->clone (ctx, this_object(), @_parser_args);
-      else if ((p = _parser_prog (ctx, this_object(), @_parser_args))->clone)
+      else if ((p = _parser_prog (0, this_object(), @_parser_args))->clone)
 	// clone_parser might already be initialized here due to race,
 	// but that doesn't matter.
 	p = (clone_parser = p)->clone (ctx, this_object(), @_parser_args);
@@ -1978,20 +2010,22 @@ class Type
   }
   /*private*/ mapping(TagSet:PCacheObj) _p_cache;
 
-  string _sprintf() {return "RXML.Type";}
+  DECLARE_CNT (__count);
+
+  string _sprintf() {return "RXML.Type" + PAREN_CNT (__count);}
 }
 
 
-static class TypeAny
+static class TAny
 //! A completely unspecified nonsequential type.
 {
   inherit Type;
   constant name = "*";
-  string _sprintf() {return "RXML.t_any";}
+  string _sprintf() {return "RXML.t_any" + PAREN_CNT (__count);}
 }
-TypeAny t_any = TypeAny();
+TAny t_any = TAny();
 
-static class TypeText
+static class TText
 //! The standard type for generic document text.
 {
   inherit Type;
@@ -1999,18 +2033,18 @@ static class TypeText
   constant sequential = 1;
   constant empty_value = "";
   constant free_text = 1;
-  string _sprintf() {return "RXML.t_text";}
+  string _sprintf() {return "RXML.t_text" + PAREN_CNT (__count);}
 }
-TypeText t_text = TypeText();
+TText t_text = TText();
 
-static class TypeHtml
+static class THtml
 //! The standard type for generic document text.
 {
-  inherit TypeText;
+  inherit TText;
   constant name = "text/html";
-  string _sprintf() {return "RXML.t_html";}
+  string _sprintf() {return "RXML.t_html" + PAREN_CNT (__count);}
 }
-TypeHtml t_html = TypeHtml();
+THtml t_html = THtml();
 
 
 // P-code compilation and evaluation.
@@ -2026,7 +2060,9 @@ class VarRef
   mixed set (Context ctx, mixed val) {return ctx->set_var (var, val, scope);}
   void delete (Context ctx) {ctx->delete_var (var, scope);}
   string name() {return scope + "." + var;}
-  string _sprintf() {return "RXML.VarRef(" + scope + "." + var + ")";}
+  DECLARE_CNT (__count);
+  string _sprintf()
+    {return "RXML.VarRef(" + scope + "." + var + COMMA_CNT (__count) + ")";}
 }
 
 class PCode
@@ -2052,8 +2088,6 @@ class PCode
   //! Returns a compiled function for doing the evaluation. The
   //! function will receive a context to do the evaluation in.
 
-  string _sprintf() {return "RXML.PCode";}
-
 
   // Internals.
 
@@ -2064,6 +2098,10 @@ class PCode
 
   PCode|Parser _parent;
   // The parent evaluator if this one is nested.
+
+  DECLARE_CNT (__count);
+
+  string _sprintf() {return "RXML.PCode" + PAREN_CNT (__count);}
 }
 
 
@@ -2190,7 +2228,9 @@ class ScanStream
     return fin;
   }
 
-  string _sprintf() {return "RXML.ScanStream";}
+  DECLARE_CNT (__count);
+
+  string _sprintf() {return "RXML.ScanStream" + PAREN_CNT (__count);}
 }
 
 

@@ -6,7 +6,7 @@
 //!
 //! Created 2000-01-08 by Martin Stjernholm.
 //!
-//! $Id: PHtmlCompat.pike,v 1.4 2000/01/14 05:16:18 mast Exp $
+//! $Id: PHtmlCompat.pike,v 1.5 2000/01/21 22:31:35 mast Exp $
 
 #pragma strict_types
 
@@ -34,7 +34,7 @@ constant unwind_safe = 0;
   string|array|								\
   function(void|Parser.HTML:int(1..1)|string|array)
 
-static int flag_parse_html_compat;
+/*static*/ int flag_parse_html_compat;
 
 // Local mappings for the tagdefs. Used instead of the one built-in in
 // Parser.HTML for compatibility with certain things that changes the
@@ -42,40 +42,6 @@ static int flag_parse_html_compat;
 // as soon as possible.
 mapping(string:TAG_TYPE) tagmap_tags;
 mapping(string:CONTAINER_TYPE) tagmap_containers;
-
-static int(1..1)|string|array tagmap_tag_cb (
-  Parser.HTML this, string str, mixed... extra)
-{
-  string name = flag_parse_html_compat ? lower_case (tag_name()) : tag_name();
-  if (TAG_TYPE tdef = tagmap_tags[name])
-    if (stringp (tdef))
-      return ({[string] tdef});
-    else if (arrayp (tdef))
-      return ([TAG_FUNC_TYPE] tdef[0]) (this, tag_args(), @tdef[1..], @extra);
-    else
-      return ([TAG_FUNC_TYPE] tdef) (this, tag_args(), @extra);
-  else if (CONTAINER_TYPE cdef = tagmap_containers[name])
-    // A container has been added.
-    _low_add_container (name, tagmap_container_cb);
-  return 1;
-}
-
-static int(1..1)|string|array tagmap_container_cb (
-  Parser.HTML this, mapping(string:string) args, string content, mixed... extra)
-{
-  string name = flag_parse_html_compat ? lower_case (tag_name()) : tag_name();
-  if (CONTAINER_TYPE cdef = tagmap_containers[name])
-    if (stringp (cdef))
-      return ({[string] cdef});
-    else if (arrayp (cdef))
-      return ([CONTAINER_FUNC_TYPE] cdef[0]) (this, args, content, @cdef[1..], @extra);
-    else
-      return ([CONTAINER_FUNC_TYPE] cdef) (this, args, content, @extra);
-  else
-    // The container has disappeared from the mapping.
-    _low_add_container (name, 0);
-  return 1;
-}
 
 this_program add_tag (string name, TAG_TYPE tdef)
 {
@@ -121,17 +87,11 @@ mapping(string:TAG_TYPE) tags() {return tagmap_tags;}
 
 mapping(string:CONTAINER_TYPE) containers() {return tagmap_containers;}
 
-static array entity_cb (Parser.HTML ignored, string str)
-{
-  string entity = tag_name();
-  if (sizeof (entity) && entity[0] != '#') return handle_var (entity);
-  return type->free_text ? 0 : ({});
-}
-
 /*static*/ void set_cbs()
 {
   ::set_cbs();
-  _set_tag_callback (tagmap_tag_cb);
+  _set_entity_callback (.utils.p_html_compat_entity_cb);
+  _set_tag_callback (.utils.p_html_compat_tagmap_tag_cb);
 }
 
 this_program clone (RXML.Context ctx, RXML.Type type, RXML.TagSet tag_set)
@@ -191,4 +151,8 @@ int parse_html_compat (void|int flag)
   return oldflag;
 }
 
+#ifdef OBJ_COUNT_DEBUG
+string _sprintf() {return "RXML.PHtmlCompat(" + __count + ")";}
+#else
 string _sprintf() {return "RXML.PHtmlCompat";}
+#endif
