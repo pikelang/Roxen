@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.80 1998/02/19 05:21:06 per Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.81 1998/02/20 11:16:40 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -345,52 +345,53 @@ string *query_file_extensions()
 #define _rettext defines[" _rettext"]
 #define _ok     defines[" _ok"]
 
-string call_tag(string tag, mapping args, int i,
+#define TRACE_ENTER(A,B) do{if(id->misc->trace_enter)id->misc->trace_enter((A),(B));}while(0)
+#define TRACE_LEAVE(A) do{if(id->misc->trace_leave)id->misc->trace_leave((A));}while(0)
+
+string call_tag(string tag, mapping args, int line, int i,
 		object id, object file, mapping defines,
 		object client)
 {
   string|function rf = real_tag_callers[tag][i];
+  defines->line = (string)line;
   if(stringp(rf)) return rf;
-  if(!rf)
+
+  TRACE_ENTER("tag (&lt;" + tag + "&gt; on line "+line+")", rf);
+  if(id->conf->check_security(rf, id, id->misc->seclevel))
   {
-    report_error("Call to non-registered tag from parse module.\n");
+    TRACE_LEAVE("Access denied");
     return 0;
   }
-  if(id->conf->check_security(rf, id, id->misc->seclevel))
-    return 0;
-  return rf(tag,args,id,file,defines,client);
+  mixed result=rf(tag,args,id,file,defines,client);
+  TRACE_LEAVE("");
+  return result;
 }
 
-string call_container(string tag, mapping args, string contents, int i,
+string call_container(string tag, mapping args, string contents, int line,
+		      int i,
 		      object id, object file, mapping defines,
 		      object client)
 {
+  defines->line = (string)line;
   string|function rf = real_container_callers[tag][i];
   if(stringp(rf)) return rf;
-  if(!rf)
+  TRACE_ENTER("container (&lt;"+tag+"&gt on line "+line+")", rf);
+  if(id->conf->check_security(rf, id, id->misc->seclevel))
   {
-    report_error("Call to non-registered container from parse module.\n");
+    TRACE_LEAVE("Access denied");
     return 0;
   }
-  if(id->conf->check_security(rf, id, id->misc->seclevel))
-    return 0;
-  return rf(tag,args,contents,id,file,defines,client);
+  mixed result=rf(tag,args,contents,id,file,defines,client);
+  TRACE_LEAVE("");
+  return result;
 }
 
 string do_parse(string to_parse, object id, object file, mapping defines,
 		object my_fd)
 {  
   for(int i = 0; i<sizeof(tag_callers); i++)
-  {
-#ifdef PARSE_DEBUG
-    werror("Parse pass "+i+"\n");
-    werror(sprintf("Tags: %s\nContainers:%s\n",
-		   indices(tag_callers[i])*", ",
-		   indices(container_callers[i])*", "));
-#endif
-    to_parse=parse_html(to_parse, tag_callers[i], container_callers[i],
-			i, id, file, defines, my_fd);
-  }
+    to_parse=parse_html_lines(to_parse, tag_callers[i], container_callers[i],
+			      i, id, file, defines, my_fd);
   return to_parse;
 }
 
@@ -708,7 +709,7 @@ string tag_set( string tag, mapping m, object id )
     return("");
   }
   else
-    return("<!-- set: variable not specified -->");
+    return("<!-- set (line "+id->misc->defines->line+"): variable not specified -->");
 }
 
 string tag_append( string tag, mapping m, object id )
@@ -1967,6 +1968,11 @@ string tag_debug( string tag_name, mapping args, object id )
   return "";
 }
 
+string tag_line( string t, mapping args, object id)
+{
+  return id->misc->defines->line;
+}
+
 mapping query_tag_callers()
 {
    return (["accessed":tag_accessed,
@@ -1999,6 +2005,7 @@ mapping query_tag_callers()
 	    "expire_time":tag_expire_time,
 	    "signature":tag_signature,
 	    "user":tag_user,
+	    "line":tag_line,
  	    "quote":tag_quote,
 	    "true":tag_true,	// Used internally
 	    "false":tag_false,	// by <if> and <else>

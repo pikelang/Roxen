@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.103 1998/02/19 19:40:59 noring Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.104 1998/02/20 11:16:39 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -256,7 +256,6 @@ object load_image(string f,object id)
   =Image.image()
 #endif
     ;
-
   
   if(!(data=roxen->try_get_file(fix_relative(f, id),id)))
     if(!(file=open(f,"r")) || (!(data=file->read())))
@@ -1006,10 +1005,30 @@ array(int)|string write_text(int _args, string text, int size, object id)
   throw(err);
 }
 
+array stat_file(string f, object rid)
+{
+  if(f[-1]=='/') f = f[..strlen(f)-2];
+  if(sizeof(f/"/")==1) return ({ 509,-3,time(),time(),time(),0,0 });
+  int len=4711;
+  catch(len= strlen(find_file(f,rid)->data));
+  return ({ 33204,len,time(),time(),time(),0,0 });
+}
+
+array find_dir(string f, object rid)
+{
+  if(!strlen(f))
+  {
+    restore_cached_args();
+    return Array.map(indices(cached_args), lambda(mixed m){return (string)m;});
+  }
+  return ({"Example"});
+}
+
   
 mapping find_file(string f, object rid)
 {
   int id;
+  if(rid->method != "GET") return 0;
   sscanf(f,"%d/%s", id, f);
 
   if( query("gif") )             //Remove .gif
@@ -1157,7 +1176,7 @@ string magic_image(string url, int xs, int ys, string sn,
   if(!id->supports->images) return alt;
   if(!id->supports->netscape_javascript)
     return (!input)?
-      ("<a "+extra_args+"href=\""+url+"\"><img _parsed=1 src=\""+image_1+"\" name="+sn+" border=0 "+
+      ("<a "+extra_args+"href=\""+url+"\"><img src=\""+image_1+"\" name="+sn+" border=0 "+
        "alt=\""+alt+"\"></a>\n"):
     ("<input type=image "+extra_args+" src=\""+image_1+"\" name="+input+">");
 
@@ -1169,8 +1188,8 @@ string magic_image(string url, int xs, int ys, string sn,
      ("<a "+extra_args+"href=\""+url+"\" "+
       (input?"onClick='document.forms[0].submit();' ":"")
       +"onMouseover=\"i('"+sn+"',"+sn+"h,'"+(mess||url)+"'); return true;\"\n"
-      "onMouseout='document.images[\""+sn+"\"].src = "+sn+"l.src;'><img "
-      "_parsed=1 width="+xs+" height="+ys+" src=\""+image_1+"\" name="+sn+
+      "onMouseout='top.window.status=\"\";document.images[\""+sn+"\"].src = "+sn+"l.src;'><img "
+      "width="+xs+" height="+ys+" src=\""+image_1+"\" name="+sn+
       " border=0 alt=\""+alt+"\" ></a>\n"));
 }
 
@@ -1262,6 +1281,17 @@ string tag_graphicstext(string t, mapping arg, string contents,
 //Allow <accessed> and others inside <gtext>.
   if(arg->help)
     return register_module()[2];
+
+  if(arg->background) 
+    arg->background = fix_relative(arg->background,id);
+  if(arg->texture) 
+    arg->texture = fix_relative(arg->texture,id);
+  if(arg->magic_texture)
+    arg->magic_texture=fix_relative(arg->magic_texture,id);
+  if(arg->magic_background) 
+    arg->magic_background=fix_relative(arg->magic_background,id);
+  if(arg->magicbg) 
+    arg->magicbg = fix_relative(arg->magicbg,id);
 
   string gif="";
   if(query("gif")) gif=".gif";
@@ -1433,7 +1463,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
 	}
 	foreach (arr, word) {
 	  array size = write_text(num,word,1,id);
-	  res += ({ "<img _parsed=1 border=0 alt=\"" +
+	  res += ({ "<img border=0 alt=\"" +
 		      replace(arg->alt || word, "\"", "'") +
 		      "\" src=\"" + pre + quote(word) + gif + "\" width=" +
 		      size[0] + " height=" + size[1] + " " + ea + ">"
@@ -1442,7 +1472,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
 	res += ({"\n"});
       } else {
 	array size = write_text(num,word,1,id);
-	res += ({ "<img _parsed=1 border=0 alt=\"" +
+	res += ({ "<img border=0 alt=\"" +
 		    replace(arg->alt || word, "\"", "'") +
 		    "\" src=\"" + pre + quote(word) + gif + "\" width=" +
 		    size[0] + " height=" + size[1] + " " + ea + ">\n"
@@ -1503,7 +1533,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
 	    " width="+size[0]+" height="+size[1]+">"+rest+post);
 
   return (pre+(lp?lp:"")
-	  + "<img _parsed=1 border=0 alt=\""
+	  + "<img border=0 alt=\""
 	  + (arg->alt?arg->alt:replace(gt,"\"","'"))
 	  + "\" src=\""
 	  + query_location()+num+"/"+quote(gt)+gif+"\" "+ea
@@ -1531,7 +1561,7 @@ string make_args(mapping in)
   return a*" ";
 }
 
-string tag_body(string t, mapping args, object id, object file,
+array (string) tag_body(string t, mapping args, object id, object file,
 		mapping defines)
 {
   int cols,changed;
@@ -1555,12 +1585,12 @@ string tag_body(string t, mapping args, object id, object file,
     FIX(alink,  "#ff0000",alink);
     FIX(vlink,  "#551a8b",vlink);
   }
-  if(changed) return ("<body "+make_args(args)+">");
+  if(changed) return ({"<body "+make_args(args)+">"});
 }
 
 
-string tag_fix_color(string tagname, mapping args, object id, object file,
-		     mapping defines)
+array (string) tag_fix_color(string tagname, mapping args, object id, object file,
+			     mapping defines)
 {
   int changed;
 
@@ -1574,11 +1604,11 @@ string tag_fix_color(string tagname, mapping args, object id, object file,
   FIX(bgcolor,bg);
   FIX(text,fg);
   FIX(color,fg);
-  if(changed) return ("<"+tagname+" "+make_args(args)+">");
+  if(changed) return ({"<"+tagname+" "+make_args(args)+">"});
   return 0;
 }
 
-string pop_color(string tagname,mapping args,object id,object file,
+void pop_color(string tagname,mapping args,object id,object file,
 		 mapping defines)
 {
   array c = id->misc->colors;

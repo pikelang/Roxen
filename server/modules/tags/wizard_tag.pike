@@ -3,7 +3,7 @@
  * made by Per Hedbor
  */
 
-constant cvs_version = "$Id: wizard_tag.pike,v 1.3 1998/02/03 22:51:08 per Exp $";
+constant cvs_version = "$Id: wizard_tag.pike,v 1.4 1998/02/20 11:16:41 per Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -15,7 +15,7 @@ mixed *register_module()
 	   ("Generates wizards<p>\n"
 	    "Syntax:<br>\n"
 "<br>"
-"&lt;wizard name=\"A Name\" done=\"url to go to when ok or cancel is pressed\"&gt;<br>"
+"&lt;wizard [next-label=...] [previous-label=...] [ok-label=...] [cancel-label=...] [page-label=...] name=\"A Name\" done=\"url to go to when ok or cancel is pressed\"&gt;<br>"
 "&nbsp;&nbsp;&lt;page&gt;<br>"
 "&nbsp;&nbsp;&nbsp;&nbsp;A page (RXML code, with two extra tags, &lt;var&gt; and &lt;cvar&gt;, see below)<br>"
 "&nbsp;&nbsp;&lt;/page&gt;<br>"
@@ -46,6 +46,14 @@ string tag_wizard(string t, mapping args, string contents, object id)
   string pike = ("inherit \"wizard\";\n"
 		 "string name=\""+(args->name||"unnamed")+"\";\n");
   int p;
+  foreach(glob("*-label", indices(args)), string a)
+  {
+    pike += "  string "+replace(replace(a,"-","_"),({"(",")","+",">"}),
+				({"","","",""}))+ 
+      " = \""+replace(args[a], ({"\"","\n","\r", "\\"}), 
+		      ({"\\\"", "\\n", "\\r", "\\\\"}))+"\";\n";
+  }
+
   parse_html(contents, ([]), (["page":internal_page]),f);
   foreach(f->pages, string d)
   {
@@ -54,6 +62,7 @@ string tag_wizard(string t, mapping args, string contents, object id)
 				 ({"\\\"", "\\n", "\\r", "\\\\"}))+"\";}\n");
     p++;
   }
+//   werror("compiling:\n"+pike+"\n");
   mixed res = compile_string(pike)()->wizard_for(id,args->done);
   if(mappingp(res))
   {

@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.50 1998/02/20 00:58:14 per Exp $
+/* $Id: wizard.pike,v 1.51 1998/02/20 11:16:36 per Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -272,6 +272,14 @@ int num_pages(string wiz_name)
     }
   return max_page+1;
 }
+#define Q(X) replace(X,({"<",">","&","\""}),({"&lt;","&gt;","&amp;","&quote;"}))
+
+#define PAGE Q((this_object()->page_label?this_object()->page_label:"Page"))
+#define OK Q((this_object()->ok_label?this_object()->ok_label:"Ok"))
+#define CANCEL Q((this_object()->cancel_label?this_object()->cancel_label:"Cancel"))
+#define NEXT Q((this_object()->next_label?this_object()->next_label:"Next ->"))
+#define PREVIOUS Q((this_object()->previous_label?this_object()->previous_label:"<- Previous"))
+#define COMPLETED Q((this_object()->completed_label?this_object()->completed_label:"Completed"))
 
 string parse_wizard_page(string form, object id, string wiz_name)
 {
@@ -296,8 +304,8 @@ string parse_wizard_page(string form, object id, string wiz_name)
 	 "<font size=+2>"+make_title()+"</font>"
 	 " </td>\n<td align=right>"+
 	 (wiz_name=="done"
-	  ?"Completed"
-	  :(max_page?"Page "+(page+1)+"/"+(max_page+1):""))+
+	  ?COMPLETED
+	  :(max_page?PAGE+(page+1)+"/"+(max_page+1):""))+
 	 "</td>\n"
 	  " \n<td align=right>"+
 	 (foo->help && !id->variables->help?
@@ -315,18 +323,18 @@ string parse_wizard_page(string form, object id, string wiz_name)
 	 "\n</td></tr></table>\n"
 	 "      <table width=100%><tr><td width=33%>"+
 	 ((page>0 && wiz_name!="done")?
-	  "        <input type=submit name=prev_page value=\"<- Previous\">":"")+
+	  "        <input type=submit name=prev_page value=\""+PREVIOUS+"\">":"")+
 	 "</td><td width=33% align=center >"+
 	 (wiz_name!="done"
 	  ?((page==max_page
-	     ?"        <input type=submit name=ok value=\" Ok \">"
+	     ?"        <input type=submit name=ok value=\" "+OK+" \">"
 	     :"")+
-	    "         <input type=submit name=cancel value=\" Cancel \">")
-	  :"         <input type=submit name=cancel value=\" Ok \">")+
+	    "         <input type=submit name=cancel value=\" "+CANCEL+" \">")
+	  :"         <input type=submit name=cancel value=\" "+OK+" \">")+
 	  "</td>"
 	 "</td><td width=33% align=right >"+
 	 ((page!=max_page && wiz_name!="done")?
-	  "        <input type=submit name=next_page value=\"Next ->\">":"")+
+	  "        <input type=submit name=next_page value=\""+NEXT+"\">":"")+
 	 "</td></tr></table>"
 	 "    </td><tr>\n"
 	 "  </table>\n"
@@ -422,7 +430,7 @@ object get_wizard(string act, string dir, mixed ... args)
   //  catch {
     if(!wizards[dir+act]) wizards[dir+act]=compile_file(dir+act)(@args);
     //  };
-  if(_master->errrors && strlen(_master->errors)) err+=_master->errors;
+//   if(_master->errrors && strlen(_master->errors)) err+=_master->errors;
   //  _master->set_inhibit_compile_errors(0);
   //  if(!wizards[dir+act]) throw("Failed to compile "+act+"\n");
   return wizards[dir+act];

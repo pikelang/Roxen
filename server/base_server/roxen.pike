@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.168 1998/02/20 00:58:13 per Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.169 1998/02/20 11:16:35 per Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -2308,7 +2308,7 @@ int main(int|void argc, array (string)|void argv)
   start_handler_threads();
   catch( this_thread()->set_name("Backend") );
 #if efun(thread_set_concurrency)
-  thread_set_concurrency(QUERY(numthreads)+QUERY(numshufflethreads)+1);
+  thread_set_concurrency(QUERY(numthreads)+1);
 #endif
 
 #endif /* THREADS */

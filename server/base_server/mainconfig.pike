@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.95 1998/02/17 04:58:58 mast Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.96 1998/02/20 11:16:34 per Exp $";
 //inherit "roxenlib";
 
 inherit "config/draw_things";
@@ -375,7 +375,7 @@ mixed decode_form_result(string var, int type, object node, mapping allvars)
     return Array.map(var/"\000", find_module);
 
   case TYPE_MODULE:
-   return find_module(var, node->config());
+   return find_module((var/"\000")[0], node->config());
 
   case TYPE_PORTS:  
    /*
@@ -458,13 +458,13 @@ mixed decode_form_result(string var, int type, object node, mapping allvars)
    case TYPE_STRING:
    case TYPE_FILE:
    case TYPE_LOCATION:
-    return var;
+    return (var/"\000")[0];
     
    case TYPE_PASSWORD:
-    return crypt(var);
+    return crypt((var/"\000")[0]);
     
    case TYPE_FLAG:
-    return lower_case(var) == "yes";
+    return lower_case((var/"\000")[0]) == "yes";
     
    case TYPE_INT:
     int tmp;

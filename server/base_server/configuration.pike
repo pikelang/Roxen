@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.96 1998/02/19 19:41:42 noring Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.97 1998/02/20 11:16:33 per Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -963,6 +963,10 @@ object _lock(object|function f)
 #define UNLOCK()
 #endif
 
+
+#define TRACE_ENTER(A,B) do{if(id->misc->trace_enter)id->misc->trace_enter((A),(B));}while(0)
+#define TRACE_LEAVE(A) do{if(id->misc->trace_leave)id->misc->trace_leave((A));}while(0)
+
 mapping|int low_get_file(object id, int|void no_magic)
 {
 #ifdef MODULE_LEVEL_SECURITY
@@ -972,12 +976,14 @@ mapping|int low_get_file(object id, int|void no_magic)
 #ifdef THREADS
   object key;
 #endif
+  TRACE_ENTER("Request for "+id->not_query, 0);
 
   string file=id->not_query;
   string loc;
   function funp;
   mixed tmp, tmp2;
   mapping|object fid;
+
 
   if(!no_magic)
   {
@@ -987,36 +993,52 @@ mapping|int low_get_file(object id, int|void no_magic)
        sscanf(id->not_query, "%*s/internal-%s", loc))
     {
       if(sscanf(loc, "gopher-%[^/]", loc))    // The directory icons.
+      {
+	TRACE_LEAVE("Magic internal gopher image");
 	return internal_gopher_image(loc);
-
+      }
       if(sscanf(loc, "spinner-%[^/]", loc)  // Configuration interface images.
 	 ||sscanf(loc, "roxen-%[^/]", loc)) // Try /internal-roxen-power
+      {
+	TRACE_LEAVE("Magic internal roxen image");
 	return internal_roxen_image(loc);
+      }
     }
 #endif
 
     if(id->prestate->diract && dir_module)
     {
       LOCK(dir_module);
+      TRACE_ENTER("Directory module", dir_module);
       tmp = dir_module->parse_directory(id);
       UNLOCK();
-      if(mappingp(tmp)) return tmp;
+      if(mappingp(tmp)) 
+      {
+	TRACE_LEAVE("");
+	TRACE_LEAVE("Returning data");
+	return tmp;
+      }
+      TRACE_LEAVE("");
     }
   }
 
   // Well, this just _might_ be somewhat over-optimized, since it is
   // quite unreadable, but, you cannot win them all.. 
-
 #ifdef URL_MODULES
   // Map URL-modules
   foreach(url_modules(id), funp)
   {
     LOCK(funp);
+    TRACE_ENTER("URL Module", funp);
     tmp=funp( id, file );
     UNLOCK();
     
     if(mappingp(tmp)) 
+    {
+      TRACE_LEAVE("");
+      TRACE_LEAVE("Returning data");
       return tmp;
+    }
     if(objectp( tmp ))
     {
       array err;
@@ -1026,14 +1048,19 @@ mapping|int low_get_file(object id, int|void no_magic)
 	if( nest < 20 )
 	  tmp = (id->conf || this_object())->low_get_file( tmp, no_magic );
 	else
+	{
+	  TRACE_LEAVE("Too deep recursion");
 	  error("Too deep recursion in roxen::get_file() while mapping "
 		+file+".\n");
+	}
       };
       nest = 0;
-      if(err)
-	throw(err);
+      if(err) throw(err);
+      TRACE_LEAVE("");
+      TRACE_LEAVE("Returned data");
       return tmp;
     }
+    TRACE_LEAVE("");
   }
 #endif
 #ifdef EXTENSION_MODULES  
@@ -1041,20 +1068,33 @@ mapping|int low_get_file(object id, int|void no_magic)
   {
     foreach(tmp, funp)
     {
+      TRACE_ENTER("Extension Module ["+loc+"] ", funp);
       LOCK(funp);
       tmp=funp(loc, id);
       UNLOCK();
       if(tmp)
       {
 	if(!objectp(tmp)) 
+	{
+	  TRACE_LEAVE("Returing data");
 	  return tmp;
+	}
 	fid = tmp;
 #ifdef MODULE_LEVEL_SECURITY
 	slevel = function_object(funp)->query("_seclvl");
+#endif
+	TRACE_LEAVE("Retured open filedescriptor."
+#ifdef MODULE_LEVEL_SECURITY
+		    +(slevel != id->misc->seclevel?
+		    ". The security level is now "+slevel:"")
+#endif
+		    );
+#ifdef MODULE_LEVEL_SECURITY
 	id->misc->seclevel = slevel;
 #endif
 	break;
-      }
+      } else
+	TRACE_LEAVE("");
     }
   }
 #endif 
@@ -1065,11 +1105,14 @@ mapping|int low_get_file(object id, int|void no_magic)
     if(!search(file, loc)) 
     {
 #ifdef MODULE_LEVEL_SECURITY
+      TRACE_ENTER("Location Module ["+loc+"] ", tmp[1]);
       if(tmp2 = check_security(tmp[1], id, slevel))
 	if(intp(tmp2))
 	{
+	  TRACE_LEAVE("Persmission to access module denied");
 	  continue;
 	} else {
+	  TRACE_LEAVE("Request denied.");
 	  return tmp2;
 	}
 #endif
@@ -1081,36 +1124,71 @@ mapping|int low_get_file(object id, int|void no_magic)
 	id->virtfile = loc;
 
 	if(mappingp(fid))
+	{
+	  TRACE_LEAVE("Returned data");
 	  return fid;
+	}
 	else
 	{
+	  int oslevel = slevel;
 #ifdef MODULE_LEVEL_SECURITY
 	  slevel = misc_cache[ tmp[1] ][1];// misc_cache from check_security
-	  id->misc->seclevel = slevel;
 #endif
+	  if(objectp(fid))
+	    TRACE_LEAVE("Returned open file"
+#ifdef MODULE_LEVEL_SECURITY
+			+(slevel != oslevel?
+			  ". The security level is now "+slevel:"")
+#endif
+			
+			+".");
+	  else
+	    TRACE_LEAVE("Returned directory indicator"
+#ifdef MODULE_LEVEL_SECURITY
+			+(oslevel != slevel?
+			  ". The security level is now "+slevel:"")
+#endif
+			);
 	  break;
 	}
-      }
+      } else
+	TRACE_LEAVE("");
     } else if(strlen(loc)-1==strlen(file)) {
       // This one is here to allow accesses to /local, even if 
       // the mountpoint is /local/. It will slow things down, but...
       if(file+"/" == loc) 
+      {
+	TRACE_ENTER("Automatic redirect to location module", tmp[1]);
+	TRACE_LEAVE("Returning data");
 	return http_redirect(id->not_query + "/", id);
+      }
     }
   }
   
   if(fid == -1)
   {
-    if(no_magic) return -1;
+    if(no_magic)
+    {
+      TRACE_LEAVE("No magic requested. Returning -1");
+      return -1;
+    }
     if(dir_module)
     {
       LOCK(dir_module);
+      TRACE_ENTER("Directory module", dir_module);
       fid = dir_module->parse_directory(id);
       UNLOCK();
     }
     else
+    {
+      TRACE_LEAVE("No directory module. Returning 'no such file'");
       return 0;
-    if(mappingp(fid)) return (mapping)fid;
+    }
+    if(mappingp(fid)) 
+    {
+      TRACE_LEAVE("Returned data");
+      return (mapping)fid;
+    }
   }
   
   // Map the file extensions, but only if there is a file...
@@ -1118,14 +1196,20 @@ mapping|int low_get_file(object id, int|void no_magic)
      (tmp=file_extension_modules(loc=extension(id->not_query), id)))
     foreach(tmp, funp)
     {
+      TRACE_ENTER("Extension module", funp);
 #ifdef MODULE_LEVEL_SECURITY
       if(tmp=check_security(funp, id, slevel))
 	if(intp(tmp))
 	{
+	  TRACE_LEAVE("Permission to access module denied");
 	  continue;
 	}
 	else
+	{
+	  TRACE_LEAVE("");
+	  TRACE_LEAVE("Permission denied");
 	  return tmp;
+	}
 #endif
       LOCK(funp);
       tmp=funp(fid, loc, id);
@@ -1133,26 +1217,41 @@ mapping|int low_get_file(object id, int|void no_magic)
       if(tmp)
       {
 	if(!objectp(tmp))
+	{
+	  TRACE_LEAVE("");
+	  TRACE_LEAVE("Returning data");
 	  return tmp;
+	}
 	if(fid)
           destruct(fid);
+	TRACE_LEAVE("Returned new open file");
 	fid = tmp;
 	break;
-      }
+      } else
+	TRACE_LEAVE("");
     }
   
   if(objectp(fid))
   {
     if(stringp(id->extension))
       id->not_query += id->extension;
-    
+
+
+    TRACE_ENTER("Content-type mapping module", types_module);
     tmp=type_from_filename(id->not_query, 1);
-    
+    TRACE_LEAVE(tmp?"Returned type "+tmp[0]+" "+tmp[1]:"Missing");
     if(tmp)
+    {
+      TRACE_LEAVE("");
       return ([ "file":fid, "type":tmp[0], "encoding":tmp[1] ]);
-    
+    }    
+    TRACE_LEAVE("");
     return ([ "file":fid, ]);
   }
+  if(!fid)
+    TRACE_LEAVE("Returning 'no such file'");
+  else
+    TRACE_LEAVE("Returning data");
   return fid;
 }
 
@@ -1165,12 +1264,17 @@ mixed get_file(object id, int|void no_magic)
   // Filter modules are like TYPE_LAST modules, but they get called
   // for _all_ files.
   foreach(filter_modules(id), tmp)
+  {
+    TRACE_ENTER("Filter module", tmp);
     if(res2=tmp(res,id))
     {
       if(res && res->file && (res2->file != res->file))
 	destruct(res->file);
+      TRACE_LEAVE("Rewrote result");
       res=res2;
-    }
+    } else
+      TRACE_LEAVE("");
+  }
   return res;
 }
 
@@ -1178,7 +1282,7 @@ public array find_dir(string file, object id)
 {
   string loc;
   array dir = ({ }), d, tmp;
-
+  TRACE_ENTER("List directory "+file, 0);
   file=replace(file, "//", "/");
   
   if(file[0] != '/')
@@ -1194,12 +1298,15 @@ public array find_dir(string file, object id)
     string of = id->not_query;
     id->not_query = file;
     LOCK(funp);
+    TRACE_ENTER("URL module", funp);
     tmp=funp( id, file );
     UNLOCK();
 
     if(mappingp( tmp ))
     {
       id->not_query=of;
+      TRACE_LEAVE("Returned 'no thanks'");
+      TRACE_LEAVE("");
       return 0;
     }
     if(objectp( tmp ))
@@ -1207,6 +1314,7 @@ public array find_dir(string file, object id)
       array err;
       nest ++;
       
+      TRACE_LEAVE("Recursing");
       file = id->not_query;
       err = catch {
 	if( nest < 20 )
@@ -1216,6 +1324,7 @@ public array find_dir(string file, object id)
 		+file+".\n");
       };
       nest = 0;
+      TRACE_LEAVE("");
       if(err)
 	throw(err);
       return tmp;
@@ -1227,27 +1336,39 @@ public array find_dir(string file, object id)
   foreach(location_modules(id), tmp)
   {
     loc = tmp[0];
-    
+    TRACE_ENTER("Location module", tmp[1]);
     if(!search(file, loc)) {
       /* file == loc + subpath */
 #ifdef MODULE_LEVEL_SECURITY
-      if(check_security(tmp[1], id)) continue;
+      if(check_security(tmp[1], id)) {
+	TRACE_LEAVE("Permission denied");
+	continue;
+      }
 #endif
       if(d=function_object(tmp[1])->find_dir(file[strlen(loc)..], id))
+      {
+	TRACE_LEAVE("Got files");
 	dir |= d;
+      } else
+	TRACE_LEAVE("");
     } else if((search(loc, file)==0) && (loc[strlen(file)-1]=='/') &&
 	      (loc[0]==loc[-1]) && (loc[-1]=='/') &&
 	      (sizeof(function_object(tmp[1])->find_dir("", id) || ({})))) {
       /* loc == file + "/" + subpath + "/"
        * and find_dir() returns a non-empty directory.
        */
+      TRACE_LEAVE("Added module mountpoint");
       loc=loc[strlen(file)..];
       sscanf(loc, "%s/", loc);
       dir += ({ loc });
     }
   }
   if(sizeof(dir))
+  {
+    TRACE_LEAVE("Returning list of "+sizeof(dir)+" files");
     return dir;
+  } 
+  TRACE_LEAVE("Returning 'no such directory'");
 }
 
 // Stat a virtual file. 
@@ -1256,6 +1377,7 @@ public array stat_file(string file, object id)
 {
   string loc;
   array s, tmp;
+  TRACE_ENTER("Stat file"+file, 0);
   
   file=replace(file, "//", "/"); // "//" is really "/" here...
 
@@ -1269,12 +1391,15 @@ public array stat_file(string file, object id)
     string of = id->not_query;
     id->not_query = file;
 
+    TRACE_ENTER("URL module", funp);
     LOCK(funp);
     tmp=funp( id, file );
     UNLOCK();
 
     if(mappingp( tmp )) {
       id->not_query = of;
+      TRACE_LEAVE("");
+      TRACE_LEAVE("said 'No thanks'");
       return 0;
     }
     if(objectp( tmp ))
@@ -1283,6 +1408,7 @@ public array stat_file(string file, object id)
 
       array err;
       nest ++;
+      TRACE_LEAVE("Recursing");
       err = catch {
 	if( nest < 20 )
 	  tmp = (id->conf || this_object())->stat_file( file, id );
@@ -1293,6 +1419,7 @@ public array stat_file(string file, object id)
       nest = 0;
       if(err)
 	throw(err);
+      TRACE_LEAVE("Returning data");
       return tmp;
     }
     id->not_query = of;
@@ -1304,16 +1431,31 @@ public array stat_file(string file, object id)
   {
     loc = tmp[0];
     if((file == loc) || ((file+"/")==loc))
+    {
+      TRACE_ENTER("Location module", tmp[1]);
+      TRACE_LEAVE("Exact match");
+      TRACE_LEAVE("");
       return ({ 0775, -3, 0, 0, 0, 0, 0, 0, 0, 0, 0 });
+    }
     if(!search(file, loc)) 
     {
+      TRACE_ENTER("Location module", tmp[1]);
 #ifdef MODULE_LEVEL_SECURITY
-      if(check_security(tmp[1], id)) continue;
+      if(check_security(tmp[1], id)) {
+	TRACE_LEAVE("Permission denied");
+	continue;
+      }
 #endif
       if(s=function_object(tmp[1])->stat_file(file[strlen(loc)..], id))
+      {
+	TRACE_LEAVE("");
+	TRACE_LEAVE("Stat ok");
 	return s;
+      }
+      TRACE_LEAVE("");
     }
   }
+  TRACE_LEAVE("Returning 'no such file'");
 }
 
 class StringFile
@@ -1323,7 +1465,7 @@ class StringFile
 
   string read(int nbytes)
   {
-    string d = data[offset..offset+nbytes];
+    string d = data[offset..offset+nbytes-1];
     offset += strlen(d);
     return d;
   }
@@ -1342,6 +1484,7 @@ class StringFile
   {
     data = d;
   }
+
 }
 
 
@@ -1367,7 +1510,10 @@ public array open_file(string fname, string mode, object id)
     string f;
     mode -= "R";
     if(f = real_file(fname, id))
+    {
+      werror("open in raw mode.\n");
       return ({ open(f, mode), ([]) });
+    }
   }
 
   if(mode=="r")
@@ -1376,15 +1522,14 @@ public array open_file(string fname, string mode, object id)
     {
       file = oc->get_file( id );
       if(!file)
-	foreach(oc->last_modules(), funp) if(file = funp( id )) 
+	foreach(oc->last_modules(), funp) if(file = funp( id ))
 	  break;
     }
 
     if(!mappingp(file))
     {
       if(id->misc->error_code)
-	file = http_low_answer(id->misc->error_code,
-			       id->errors[id->misc->error]);
+	file = http_low_answer(id->misc->error_code,"Failed" );
       else if(id->method != "GET" && id->method != "HEAD" && id->method != "POST")
 	file = http_low_answer(501, "Not implemented.");
       else
@@ -1400,7 +1545,7 @@ public array open_file(string fname, string mode, object id)
     {
       file->file = StringFile(file->data);
       m_delete(file, "data");
-    }
+    } else 
     id->not_query = oq;
     return ({ file->file, file });
   }
