@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.179 2003/04/25 16:50:03 anders Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.180 2003/04/30 09:01:59 anders Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -1069,6 +1069,7 @@ string simpletag_cf_obox( string t, mapping m, string c, RequestID id )
 string simpletag_box_frame( string t, mapping m, string c, RequestID id )
 {
   if (!m["content-frame"]) return c;
+  string bodybg = m->bodybg || config_setting2("obox-bodybg");
   return
 #"<table cellpadding='1' cellspacing='0' border='0'
          width='"+m->width+"' align='left' bgcolor='"+
@@ -1077,7 +1078,7 @@ string simpletag_box_frame( string t, mapping m, string c, RequestID id )
   <table cellpadding='2' cellspacing='0' border='0'
           width='"+m->iwidth+#"' align='center'>
 
-  <tr><td bgcolor='"+config_setting2("obox-bodybg")+"'><font color='"+
+  <tr><td bgcolor='"+bodybg+"'><font color='"+
     config_setting2("obox-bodyfg")+"'>"+c+#"</font></td></tr>
   </table>
   </td></tr></table>";
