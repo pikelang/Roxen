@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.1 2000/07/30 20:16:54 nilsson Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.2 2000/08/10 16:20:41 per Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_PARSER;
 constant module_name = "Additional RXML tags";
@@ -177,6 +177,7 @@ class TagDice {
 
     string do_return(RequestID id) {
       if(!args->type) args->type="T6";
+      args->type = replace( args->type, "D", "T" );
       int value;
       args->type=replace(args->type, "-", "+-");
       foreach(args->type/"+", string dice) {
@@ -211,10 +212,10 @@ constant tagdoc=([
   "dice":#"<desc cont>Simulates a D&D style dice algorithm.</desc>
 
 <attr name=type value=string default=T6>
- Describes the dices. A six sided dice is called 'T6' or '1T6', while
- two eight sided dices is called '2T8' or 'T8+T8'. Constants may also
+ Describes the dices. A six sided dice is called 'D6' or '1D6', while
+ two eight sided dices is called '2D8' or 'D8+D8'. Constants may also
  be used, so that a random number between 10 and 20 could be written
- as 'T9+10' (excluding 10 and 20, including 10 and 20 would be 'T11+9').
+ as 'D9+10' (excluding 10 and 20, including 10 and 20 would be 'D11+9').
 </attr>",
 
 ]);
