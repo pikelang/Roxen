@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: global_variables.pike,v 1.114 2004/07/11 14:10:15 _cvs_stephen Exp $
+// $Id: global_variables.pike,v 1.115 2004/07/15 21:45:01 _cvs_dirix Exp $
 
 // NGSERVER: Move protocol settings to their own files.
 
@@ -264,7 +264,7 @@ void define_global_variables(  )
 	 "of various graphics caches like the Graphic text and "
 	 "GButton caches to take full effect.");
 
-  defvar("logdirprefix", "../logs/",
+  defvar("logdirprefix", "/var/log/chilimoon/",
 	 "Logging: Log directory prefix",
 	 TYPE_STRING|VAR_MORE,
 	 ("This is the default file path that will be prepended "
