@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.40 1997/08/25 17:24:11 grubba Exp $
+ * $Id: ftp.pike,v 1.41 1997/08/26 12:44:06 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -902,12 +902,12 @@ void got_data(mixed fooid, string s)
     }
     if (!((session_auth && session_auth[0]) ||
 	  Query("anonymous_ftp") ||
-	  (< "user", "pass", "rest" >)[cmd])) {
+	  (< "user", "pass", "rein" >)[cmd])) {
       reply("530 Please login with USER and PASS.\n");
       continue;
     }
     switch (cmd) {
-    case "rest":
+    case "rein":
       reply("220 Server ready for new user.\n");
       session_auth = 0;
       rawauth = 0;
