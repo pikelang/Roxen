@@ -11,7 +11,7 @@ import Parser.XML.Tree;
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_webapp",X,Y)
 // end of the locale related stuff
 
-constant cvs_version = "$Id: webapp.pike,v 2.5 2002/02/04 13:09:04 tomas Exp $";
+constant cvs_version = "$Id: webapp.pike,v 2.6 2002/02/07 10:35:30 tomas Exp $";
 
 constant thread_safe=1;
 constant module_unique = 0;
@@ -127,17 +127,10 @@ void stop()
   ]);
 }
 
-static mapping(string:string) make_initparam_mapping()
+static mapping(string:string) make_initparam_mapping(mapping(string:string) p)
 {
-  mapping(string:string) p = ([]);
-
-  // FIXME: read parameters from web.xml
-  /*
-  mapping(string:string) p = ([
-    "app.home":"e:/iw/intrawise",
-    "app.data":"e:/iw/data",
-  ]);
-  */
+  if (!p)
+    p = ([ ]);
 
   string n, v;
   foreach(query("parameters")/"\n", string s)
@@ -153,10 +146,10 @@ int parse_param(Node c, mapping(string:string) data)
                             switch (c->get_tag_name())
                             {
                               case "param-name":
-                                data["name"] = c->value_of_node();
+                                data["name"] = String.trim_all_whites(c->value_of_node());
                                 break;
                               case "param-value":
-                                data["value"] = c->value_of_node();
+                                data["value"] = String.trim_all_whites(c->value_of_node());
                                 break;
                             }
                           }, data);
@@ -397,8 +390,8 @@ void start(int x, Configuration conf)
 
   mixed exc2 = catch {
     cls_loader = Servlet.loader(codebase);
-    //    conf_ctx = Servlet.context(conf, this_object());
-    conf_ctx = Servlet.conf_context(conf);
+    //conf_ctx = Servlet.conf_context(conf);
+    conf_ctx = Servlet.context(conf, this_object());
   };
   
   if(exc2)
@@ -597,7 +590,7 @@ int load_servlet(mapping(string:string|mapping|Servlet.servlet) servlet)
       mixed e = catch {
         WEBAPP_WERR(sprintf("Trying to initialize %s",
                             servlet["servlet-name"]));
-        servlet->servlet->init(conf_ctx, make_initparam_mapping());
+        servlet->servlet->init(conf_ctx, make_initparam_mapping(servlet["initparams"]));
         servlet->initialized = 1;
       };
       if (e)

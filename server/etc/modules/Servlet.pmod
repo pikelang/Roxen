@@ -121,6 +121,7 @@ class jarutil {
 class servlet {
 
   static object s, d;
+  static object context;
   static string classname;
   int singlethreaded = 0;
 #if constant(thread_create)
@@ -139,7 +140,7 @@ class servlet {
   {
     if(!res) {
       res = response(req->my_fd);
-      req = request(0, req);
+      req = request(context, req);
     }
     set_response_method(req, res);
 #if constant(thread_create)
@@ -164,6 +165,7 @@ class servlet {
 
   void init(object cfgctx, mapping(string:string)|void params, string|void nam)
   {
+    context = cfgctx;
     if(params)
       cfgctx = config(cfgctx, params, nam||classname);
     servlet_init(s, cfgctx->cfg);
@@ -272,12 +274,15 @@ static object ctx_object(object ctx)
 class context {
 
   object ctx, sctx, conf;
+  RoxenModule parent_module;
   static int id;
 
   string gettempdir()
   {
     string dir = "servlettmp/";
-    if(conf)
+    if (parent_module)
+      dir += "conf_mod/" + parent_module->module_identifier() + "/";
+    else if(conf)
       dir += "conf/" + conf->name + "/";
     else
       dir += "unbound/";
@@ -286,8 +291,9 @@ class context {
     return dir;
   }
 
-  void create(object|void c)
+  void create(object|void c, RoxenModule|void mod)
   {
+    parent_module = mod;
     id = context_id++;
     conf = c;
     ctx = context_class->alloc();
@@ -298,7 +304,7 @@ class context {
     check_exception();
     session_context_init(sctx);
     contexts[id] = this_object();
-    if(conf) {
+    if(conf && !parent_module) {
       if(context_for_conf[conf])
 	destruct(context_for_conf[conf]);
       context_for_conf[conf] = this_object();
@@ -327,9 +333,36 @@ class context {
 
   string get_real_path(string path)
   {
-    return conf && conf->real_file(path, make_dummy_id());
-  }
+    string loc;
+    string real_loc;
+    if (parent_module) {
+      loc = parent_module->query_location();
+      real_loc = conf->real_file(loc, make_dummy_id());
+    }
+    else if (conf) {
+      foreach(conf->location_modules(), array tmp) {
+        loc = tmp[0];
+        if (has_prefix(path, loc)) {
+          real_loc = conf->real_file(loc, make_dummy_id());
+        }
+      }
+    } 
 
+    if (real_loc) {
+      if (real_loc[-1] != '/')
+        real_loc += "/";
+      if (path[0] == '/')
+        path = path[1..];
+      real_loc = combine_path(real_loc + path);
+#ifdef __NT__
+      real_loc = replace(real_loc, "/", "\\");
+#endif
+      return real_loc;
+    }
+
+    return 0;
+  }
+  
   string get_mime_type(string file)
   {
     return conf && conf->type_from_filename(file);
@@ -393,27 +426,8 @@ object request(object context, mapping(string:array(string))|object id,
 	query = 0;
     }
 
-    if(id->misc->path_info && strlen(id->misc->path_info)) {
-      string t, t2, path_info;
-      array(string) tmp;
-
-      if((path_info = id->misc->path_info)[0] != '/')
-	path_info = "/" + path_info;
-    
-      t = t2 = "";
-
-      while(1) {
-	t2 = id->conf->real_file(path_info, id);
-	if(t2) {
-	  pathtrans = t2 + t;
-	  break;
-	}
-	tmp = path_info/"/" - ({""});
-	if(!sizeof(tmp))
-	  break;
-	path_info = "/" + (tmp[0..sizeof(tmp)-2]) * "/";
-	t = tmp[-1] +"/" + t;
-      }
+    if(id->misc->path_info && strlen(id->misc->path_info) && context) {
+      pathtrans = context->get_real_path(id->misc->path_info);
     }
 
     return request(context||conf_context(id->conf), id->real_variables, attrs,
@@ -489,7 +503,10 @@ object response(object file)
 
 static void native_log(object ctx, object msg)
 {
-  ctx_object(ctx)->log((string)msg);
+  if (ctx_object(ctx))
+    ctx_object(ctx)->log((string)msg);
+  else
+    werror((string)msg + "\n");
 }
 
 static string native_getRealPath(object ctx, object path)
