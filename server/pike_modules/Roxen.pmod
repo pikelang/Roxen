@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.172 2004/05/16 21:41:24 mani Exp $
+// $Id: Roxen.pmod,v 1.173 2004/05/16 21:44:10 mani Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -469,12 +469,17 @@ string http_date( mixed t )
 
 //! Returns a timestamp formatted according to ISO 8601 Date and Time
 //! RFC 2518 23.2. No fraction, UTC only.
-string iso8601_date_time(int ts)
+string iso8601_date_time(int ts, int|void ns)
 {
   mapping(string:int) gmt = gmtime(ts);
-  return sprintf("%04d-%02d-%02dT%02d:%02d:%02dZ",
-		 1900 + gmt->year, gmt->mon, gmt->mday,
-		 gmt->hour, gmt->min, gmt->sec);
+  if (zero_type(ns)) {
+    return sprintf("%04d-%02d-%02dT%02d:%02d:%02dZ",
+		   1900 + gmt->year, gmt->mon+1, gmt->mday,
+		   gmt->hour, gmt->min, gmt->sec);
+  }
+  return sprintf("%04d-%02d-%02dT%02d:%02d:%02d.%09dZ",
+		 1900 + gmt->year, gmt->mon+1, gmt->mday,
+		 gmt->hour, gmt->min, gmt->sec, ns);
 }
 
 string http_encode_string(string f)
@@ -1611,7 +1616,7 @@ string strftime(string fmt, int t,
     switch(key[0]) {
     case 'a':	// Abbreviated weekday name
       if (language)
-	res += number2string(lt->wday+1,m,language(lang,"day",id))[..2];
+	res += number2string(lt->wday+1,m,language(lang,"short_day",id));
       else
 	res += ({ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" })[lt->wday];
       break;
@@ -1625,7 +1630,7 @@ string strftime(string fmt, int t,
     case 'b':	// Abbreviated month name
     case 'h':	// Abbreviated month name
       if (language)
-	res += number2string(lt->mon+1,m,language(lang,"month",id))[..2];
+	res += number2string(lt->mon+1,m,language(lang,"short_month",id));
       else
 	res += ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
 		  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" })[lt->mon];
