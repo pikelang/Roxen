@@ -7,7 +7,7 @@
 #endif
 #endif
 #ifndef IN_INSTALL
-// string cvs_version = "$Id: newdecode.pike,v 1.16 1999/12/08 02:30:53 mast Exp $";
+// string cvs_version = "$Id: newdecode.pike,v 1.17 1999/12/13 04:23:00 mast Exp $";
 #endif
 
 #include <roxen.h>
@@ -59,24 +59,26 @@ string name_of_module( object m, object c )
 
 void parse(string s, mapping mr)
 {
-  parse_html(s, 
-             ([ 
-               "!--":lambda(){ return ""; },
-             ]),  
-	     ([
-               "a":decode_array,  "map":decode_mapping,
-               "lst":decode_list,  "mod":decode_module,
-               "int":decode_int,   "str":decode_string, 
-               "flt":decode_float 
-             ]), mr);
+  Parser.HTML()
+    ->add_containers (([
+      "a":decode_array,  "map":decode_mapping,
+      "lst":decode_list,  "mod":decode_module,
+      "int":decode_int,   "str":decode_string, 
+      "flt":decode_float 
+    ]))
+    ->add_quote_tag ("!--", "", "--")
+    ->set_extra (mr)
+    ->finish (s);
 }
 
 string decode_config_region(string foo, mapping mr, string s, mapping res2)
 {
   mapping res = ([ ]);
-  s = parse_html( s, (["!--":lambda(){ return ""; },]), ([]) );
-
-  parse_html(s,([]), (["var":decode_variable ]), res);
+  Parser.HTML()
+    ->add_container ("var", decode_variable)
+    ->add_quote_tag ("!--", "", "--")
+    ->set_extra (res)
+    ->finish (s);
   res2[mr->name] = res;
   return "";
 }
@@ -101,7 +103,11 @@ mapping decode_config_file(string s)
     s = utf8_to_string( s );
   else
     s = trim_comments( s );
-  parse_html(s, ([]), ([ "region":decode_config_region ]), res);
+  Parser.HTML()
+    ->add_container ("region", decode_config_region)
+    ->add_quote_tag ("!--", "", "--")
+    ->set_extra (res)
+    ->finish (s);
   return res;
 }
 
@@ -227,9 +233,10 @@ string encode_config_region(mapping m, string reg, object c)
       doc = c->get_doc_for( reg, v );
     if(doc)
       doc=("\n  <!--\n    "+
-           replace(sprintf("%*-=s",74,trim_ws(replace(doc,"--","- -"))),
-                   ({"\n","'","--"}), ({"\n    ","`","- -"}))
-           +"\n   -->\n");
+           replace(replace(sprintf("%*-=s",74,trim_ws(doc)),
+			   ({"\n","--"}), ({"\n    ","- -"})),
+		   "--", "- -")
+	   +"\n   -->\n");
     else
       doc = "";
     res += doc+"  <var name='"+v+"'>\n  "+encode_mixed(m[v],c)+"\n</var>\n\n";
