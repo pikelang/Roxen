@@ -1,5 +1,5 @@
 #! /usr/env/bin pike
-// $Id: tetris.pike,v 1.6 2002/06/04 23:32:26 nilsson Exp $
+// $Id: tetris.pike,v 1.7 2002/06/07 10:29:17 nilsson Exp $
 import Process;mixed a,h,Q,e=([]),q=Q=([]),c,s,I,_,j,K,x=252,m,f=((array)"H45"
 "BBI65@CJ@BMED45@GM@LBFP@NBHS@BCDA5@LBB5BNCK5BMEL5@BEC5@MEN5MNFO6@BFE45MFQ65M"
 "HR4B@HF5MLHG5MYD")[*]-65,n=25,io,tm;int u(){foreach(sort(indices(Q)),_)_>11&&
@@ -18,8 +18,8 @@ if(i==-1)return;io->write("\33[H\33[J\33[7m");h=m;call_out(tick,h);k(_,Z[i+1..
 ;#if constant(roxen)
 catch(Q=roxen.retrieve("tetris-highscores",0)->idi);if(!Q)#endif
 Q=({});if(p){io->normal();Q+=({({s,tm+"\n"})});}sort(Q);j=([]);foreach(reverse
-(Q),m)if(++j[m[1]]<4&&(io->write(sprintf("\t%5d by %s\r",m[0],m[1])),j[0]++>19
-))break;m=h;#if constant(roxen)
+(Q),m)if(++j[m[1]]<4&&(io->write("\t%5d by %s\r",@m),j[0]++>19))break;m=h;
+#if constant(roxen)
 roxen.store("tetris-highscores",(["idi":Q]),1,0);#endif
 if(p){io->quit();remove_call_out(tick);destruct(this_object());return 1;}io->
 raw();Q=q;K=0;e=([]);remove_call_out(tick);io->set_read_callback(pause);return
