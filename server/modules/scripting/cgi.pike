@@ -9,7 +9,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: cgi.pike,v 1.123 1999/05/18 00:08:50 neotron Exp $";
+constant cvs_version = "$Id: cgi.pike,v 1.124 1999/05/21 04:57:11 neotron Exp $";
 
 class Shuffle
 {
@@ -432,17 +432,33 @@ class CGIWrapper
     return "HTTP/1.0 "+code+"\r\n"+result+"\r\n"+post;
   }
 
-  string parse_headers( )
+  // Rewritten by David. Before it bugged when headers were terminated with
+  // \n\n, but the document contained \r\n\r\n somewhere in it. More complex
+  // now, but it works and parsing-time-wise it should be about the same.
+
+  int parse_headers( )
   {
-    int pos, skip=4;
-    if(((pos=search( headers, "\r\n\r\n" )) != -1) ||
-       ((skip=2) && ((pos=search( headers, "\n\n" )) != -1)))
-    {
-      output( handle_headers( headers[..pos-1] ) );
-      output( headers[pos+skip..] );
-      headers="";
-      return "";
-    }
+    int pos1, pos2, pos, skip = 2; 
+
+    pos1 = search( headers, "\r\n\r\n" );
+    pos2 = search( headers, "\n\n" );
+    
+    if(pos1 == -1) {
+      if(pos2 == -1)
+	// Didn't find anything here.
+	return 0;
+    } else if(pos1 < pos2)
+      // \r\n\r\n search smaller than \n\n which means \r\n\r\n is the end of
+      // the headers.
+      skip = 4;
+    if(skip == 2) // Headers end with \n\n
+      pos = pos2;
+    else	  // Headers end with \r\n\r\n
+      pos = pos1;
+    output( handle_headers( headers[..pos-1] ) );
+    output( headers[pos+skip..] );
+    headers="";
+    return 1;
   }
 
   static int mode;
