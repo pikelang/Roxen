@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: fonts.pike,v 1.78 2001/09/27 21:51:02 per Exp $
+// $Id: fonts.pike,v 1.79 2001/11/14 13:15:39 grubba Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -72,7 +72,7 @@ class FontHandler
   void flush_caches();
   //! Flush all memory caches that are used to save some memory
 
-  array(string) available_fonts( );
+  array(string) available_fonts(int(0..1)|void force_reload);
   //! return a list of all valid font names
   
   array(mapping(string:mixed)) font_information( string font );
