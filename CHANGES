@@ -15,6 +15,8 @@ o You can now use path's like /cvs:/roxen_src/server/modules as a module
 
   So normal pike-scripts can also take advantage of this.
 
+  This is only enabled if CVS_FILESYSTEM is defined.
+
 o The somewhat annoying 'Roxen is alive!' message will no longer be 
   written to the log once per minute unless something else is written
   to the log. It will only be output once if DEBUG isn't defined.

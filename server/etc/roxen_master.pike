@@ -2,7 +2,7 @@
  * Roxen master
  */
 
-string cvs_version = "$Id: roxen_master.pike,v 1.35 1997/05/28 01:45:11 per Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.36 1997/05/31 19:19:45 grubba Exp $";
 
 object stdout, stdin;
 mapping names=([]);
@@ -168,6 +168,8 @@ function functionof(array f)
   return o[f[-1]];
 }
 
+#ifdef CVS_FILESYSTEM
+
 array cvs_get_dir(string name)
 {
   array info;
@@ -196,19 +198,25 @@ mixed cvs_file_stat(string name)
   return file_stat(name + ",v") || file_stat(name);
 }
 
+#endif /* CVS_FILESYSTEM */
+
 array r_file_stat(string f)
 {
 //werror("file stat "+f+"\n");
+#ifdef CVS_FILESYSTEM
   if(sscanf(f, "/cvs:%s", f)||sscanf(f, "/cvs;%s", f))
     return cvs_file_stat(f);
+#endif /* CVS_FILESYSTEM */
   return file_stat(f);
 }
 
 array r_get_dir(string f)
 {
 //  werror("get dir "+f+"\n");
+#ifdef CVS_FILESYSTEM
   if(sscanf(f, "/cvs:%s", f)||sscanf(f, "/cvs;%s", f))
     return cvs_get_dir(f);
+#endif /* CVS_FILESYSTEM */
   return get_dir(f);
 }
 
@@ -237,13 +245,11 @@ void create()
 }
 
 
-string errors;
-string set_inhibit_compile_errors(mixed f)
+string errors = "";
+void set_inhibit_compile_errors(mixed f)
 {
-  mixed fr = errors||"";
-  inhibit_compile_errors=f;
+  ::set_inhibit_compile_errors(f);
   errors="";
-  return fr;
 }
 
 /*
@@ -256,16 +262,22 @@ string set_inhibit_compile_errors(mixed f)
 void compile_error(string file,int line,string err)
 {
   if(stringp(inhibit_compile_errors))
-    errors+=sprintf("%s:%d:%s\n",file,line,err);
+    errors += sprintf("%s:%d:%s\n",trim_file_name(file),line,err);
   else
     ::compile_error(file,line,err);
 }
 
+#ifdef CVS_FILESYSTEM
+
 string cvs_read_file(string name)
 {
   if(cvs_file_stat(name))
-    return Process.popen("cvs co -p "+name+" 2>/dev/null");
+    return Process.popen("cvs co -p '" +
+			 replace(name, "'", "\\'") +
+			 "' 2>/dev/null");
 }
+
+#endif /* CVS_FILESYSTEM */
 
 string handle_include(string f, string current_file, int local_include)
 {
@@ -273,13 +285,19 @@ string handle_include(string f, string current_file, int local_include)
   if(f[0]=='/') rfile = f;
   else rfile=combine_path(current_file+"/","../"+f);
 
+#ifdef CVS_FILESYSTEM
+
   if(sscanf(rfile, "/cvs:%s", rfile)|| sscanf(rfile, "/cvs;%s", rfile))
   {
     rfile=cvs_read_file(rfile);
     if(rfile && strlen(rfile)) return rfile;
   }
+#endif /* CVS_FILESYSTEM */
+
   return ::handle_include(f,current_file,local_include);
 }
+
+#ifdef CVS_FILESYSTEM
 
 program cvs_load_file(string name)
 {
@@ -289,8 +307,13 @@ program cvs_load_file(string name)
   return compile_string(data, "/cvs:"+name);
 }
 
+#endif /* CVS_FILESYSTEM */
+
 program findprog(string pname, string ext)
 {
+
+#ifdef CVS_FILESYSTEM
+
   if(sscanf(pname, "/cvs:%s", pname) || sscanf(pname, "/cvs;%s", pname))
   {
     program prog;
@@ -302,6 +325,8 @@ program findprog(string pname, string ext)
       prog = cvs_load_file(pname+ext);
     if(prog) return prog;
   }
+
+#endif /* CVS_FILESYSTEM */
   
   switch(ext)
   {
