@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.297 2002/10/14 16:41:49 mast Exp $
+// $Id: module.pmod,v 1.298 2002/10/15 12:05:13 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -1327,14 +1327,20 @@ class Value
   //! is free to leave out that argument, not that the function
   //! implementor is free to ignore it.
   {
-    mixed val = rxml_const_eval (ctx, var, scope_name, type);
+    mixed val = rxml_const_eval (ctx, var, scope_name);
     ctx->set_var(var, val, scope_name);
-    return val;
+    return type ? type->encode (val) : val;
   }
 
-  mixed rxml_const_eval (Context ctx, string var, string scope_name, void|Type type);
+  mixed rxml_const_eval (Context ctx, string var, string scope_name);
   //! If the variable value is the same throughout the life of the
-  //! context, this method should be used instead of @[rxml_var_eval].
+  //! context, this method can be used instead of @[rxml_var_eval] to
+  //! only get a call the first time the value is evaluated.
+  //!
+  //! Note that this doesn't provide any control over the type
+  //! conversion; this function should return a raw unquoted value,
+  //! which will always be encoded with the current type when it's
+  //! used.
 
   optional string format_rxml_backtrace_frame (
     Context ctx, string var, string scope_name);
