@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.248 2000/09/19 15:33:16 per Exp $
+// $Id: rxml.pike,v 1.249 2000/09/19 22:01:31 kuntri Exp $
 
 
 inherit "rxmlhelp";
@@ -2240,6 +2240,14 @@ constant tagdoc=([
  Parse and execute any RXML inside the comment tag. This is useful to
  do stuff without producing any output in the response.
 </attr>",
+
+
+"?comment":#"<desc pi><short>
+ Processing instruction tag for comments.</short> This tag is similar
+ to the RXML <ref type='tag'><tag>comment</tag> tag but should be used
+ when commenting arbitrary text that doesn't contain '?&gt;'.
+</desc>",
+
 
 "define":({ #"<desc cont><short>
  Defines variables, tags, containers and if-callers.</short> One, and only one,
