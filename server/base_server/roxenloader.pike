@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.85 1999/06/21 20:24:56 mast Exp $
+ * $Id: roxenloader.pike,v 1.86 1999/07/10 21:45:04 peter Exp $
  *
  * Roxen bootstrap program.
  *
@@ -20,7 +20,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.85 1999/06/21 20:24:56 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.86 1999/07/10 21:45:04 peter Exp $";
 
 #define perror roxen_perror
 private static int perror_status_reported=0;
@@ -160,7 +160,11 @@ object open_db(string id)
 #if constant(thread_create)
   object key = db_lock::lock();
 #endif
+#if constant(myPDB)
+  if(!db) db = myPDB.PDB()->db("pdb_dir", "wcCr"); //myPDB ignores 2nd arg.
+#else
   if(!db) db = PDB->db("pdb_dir", "wcCr");
+#endif
   if(dbs[id]) return dbs[id];
   return dbs[id]=db[id];
 }
