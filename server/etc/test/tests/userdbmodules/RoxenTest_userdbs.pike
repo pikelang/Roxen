@@ -48,7 +48,7 @@ void lookup_threaded( array f, RoxenModule m )
 void do_thread_tests( RoxenModule m )
 {
   // 1: Look up all users in parallell
-  do_test( 0, lookup_threaded, m->list_users(), m );
+  test( lookup_threaded, m->list_users(), m );
 }
 
 
@@ -122,31 +122,31 @@ array(int) run_tests( Configuration c )
 {
   RoxenModule m;
 
-  do_test( 0, roxen.enable_configuration, "usertestconfig" );
+  test( roxen.enable_configuration, "usertestconfig" );
   
 
-  c = do_test( check_is_configuration,
-	       roxen.find_configuration,
-	       "usertestconfig" );
+  c = test_generic( check_is_configuration,
+		    roxen.find_configuration,
+		    "usertestconfig" );
 
   if( !c )  {
     report_error( "Failed to find test configuration\n");
     return ({ current_test, tests_failed });
   }
 
-  do_test( 0, c->enable_module, "userdb_system" );
+  test( c->enable_module, "userdb_system" );
 
-  m = do_test( check_is_module, c->find_module,  "userdb_system#0" );
+  m = test_generic( check_is_module, c->find_module,  "userdb_system#0" );
 
-  if( !do_test( check_true, predef::`[], m, "list_users"  ) )  {
+  if( !test_true( predef::`[], m, "list_users"  ) )  {
     report_error( "Failed to enable userdb module\n");
     return ({ current_test, tests_failed });
   }
   
   
   // 1: Do a few simple tests by calling the module directly.
-  array user_list = do_test( 0, m->list_users );
-  array group_list = do_test( 0, m->list_groups );
+  array user_list =  test_true( m->list_users );
+  array group_list = test_true( m->list_groups );
 
 
   // 2: Test the interfaces in the config and module objects.
@@ -157,60 +157,60 @@ array(int) run_tests( Configuration c )
   
   foreach( ({ m, c }), object o )
   {
-    do_test( 0, verify_user_list, user_list, o );
+    test( verify_user_list, user_list, o );
 #if constant(thread_create)
     do_thread_tests( o );
 #endif
   }
 
   // 3: Test functions in config object
-  do_test( check_is( m ), c->find_user_database, "system" );
+  test_equal( m, c->find_user_database, "system" );
 
 
 
   // 4: Test get/set interface in user objects
 
   User u =
-    do_test( 0, c->find_user, user_list[ random( sizeof( user_list ) )] );
+    test( c->find_user, user_list[ random( sizeof( user_list ) )] );
   
 
   foreach( ({ "A Random String", 10, "\4711\4712\4713" }),
 	   mixed value )
   {
-    do_test( check_equal( value ), u->set_var, 0, "v", value );
+    test_equal( value, u->set_var, 0, "v", value );
 
     // 0,v exists
-    do_test( check_equal( value ), u->get_var, 0, "v" );
-    do_test( check_equal( 0 ),     u->get_var, m, "v", value );
+    test_equal( value, u->get_var, 0, "v" );
+    test_false( u->get_var, m, "v", value );
 
 
-    do_test( check_equal( value ), u->set_var, m, "v", value );
+    test_equal( value, u->set_var, m, "v", value );
 
     // m,v 0,v exists
-    do_test( check_equal( value ), u->get_var, m, "v" );
-    do_test( check_equal( value ), u->get_var, 0, "v" );
+    test_equal( value, u->get_var, m, "v" );
+    test_equal( value, u->get_var, 0, "v" );
 
-    do_test( 0, u->delete_var, 0, "v" );
+    test( u->delete_var, 0, "v" );
 
     // m,v exists
-    do_test( check_equal( 0 ),     u->get_var, 0, "v" );
-    do_test( check_equal( value ), u->get_var, m, "v" );
+    test_false(  u->get_var, 0, "v" );
+    test_equal( value, u->get_var, m, "v" );
 
-    do_test( 0, u->delete_var, m, "v" );
+    test( u->delete_var, m, "v" );
     // no variables exists
   }
 
 
   // 5: Test (deprecated) compat interfaces
-  array list = do_test( 0, c->userlist );
-  do_test( 0, verify_compat_userinfo, c, list );
-  do_test( 0, verify_compat_user_from_uid, c, list );
+  array list = test( c->userlist );
+  test( verify_compat_userinfo, c, list );
+  test( verify_compat_user_from_uid, c, list );
   
 
   // 6: Shutdown.
 
-  do_test( 0, c->disable_module, "userdb_system" );
-  do_test( 0, roxen.disable_configuration, "usertestconfig" );
+  test( c->disable_module, "userdb_system" );
+  test( roxen.disable_configuration, "usertestconfig" );
 
   return ({ current_test, tests_failed });
 }
