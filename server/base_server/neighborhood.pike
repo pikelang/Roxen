@@ -36,6 +36,7 @@ void broadcast()
 		     	"uid":getuid(),
 		     	"version":roxen->real_version,
 			"last_reboot":lr,
+			"time":lr,
 			"comment":roxen->query("neigh_com"),
 			"server_urls":Array.map(roxen->configurations,
 				   lambda(object c)  {

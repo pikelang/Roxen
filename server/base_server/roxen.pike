@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.112 1997/08/21 13:45:27 per Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.113 1997/08/21 15:36:07 per Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -2172,9 +2172,9 @@ varargs int main(int argc, array (string) argv)
   mark_fd(1, "Stdout");
   mark_fd(2, "Stderr");
 
-  configuration_dir = find_arg(argv, "d",({"config-dir","configuration-directory" }),
-			       ({ "ROXEN_CONFIGDIR", "CONFIGURATIONS" }),
-			       "../configurations");
+  configuration_dir =
+    find_arg(argv, "d",({"config-dir","configuration-directory" }),
+	     ({ "ROXEN_CONFIGDIR", "CONFIGURATIONS" }), "../configurations");
 
   if(configuration_dir[-1] != '/')
     configuration_dir += "/";
@@ -2189,14 +2189,12 @@ varargs int main(int argc, array (string) argv)
   if(tmp = find_arg(argv, "r", "root")) fix_root(tmp);
 
   argv -= ({ 0 });
-  argc=sizeof(argv);
+  argc = sizeof(argv);
 
   perror("Restart initiated at "+ctime(time())); 
-  
 
   define_global_variables(argc, argv);
   neighborhood = (object)"neighborhood";
-
   
   create_pid_file(QUERY(pidfile));
 
