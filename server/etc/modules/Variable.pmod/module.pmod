@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.52 2001/06/13 22:03:26 nilsson Exp $
+// $Id: module.pmod,v 1.53 2001/06/14 20:07:11 js Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -554,7 +554,7 @@ class String
 {
   inherit Variable;
   constant type = "String";
-  constant width = 40;
+  int width = 40;
   //! The width of the input field. Used by overriding classes.
 
   array(string) verify_set_from_form( mixed new )
@@ -576,9 +576,9 @@ class Text
 {
   inherit String;
   constant type = "Text";
-  constant cols = 60;
+  int cols = 60;
   //! The width of the textarea
-  constant rows = 10;
+  int rows = 10;
   //! The height of the textarea
   string render_form( RequestID id, void|mapping additional_args )
   {
@@ -597,7 +597,7 @@ class Password
 //! Password variable (uses crypt)
 {
   inherit String;
-  constant width = 20;
+  int width = 20;
   constant type = "Password";
 
   int(0..1) set_from_form( RequestID id )
@@ -629,7 +629,7 @@ class File
 {
   inherit String;
   constant type = "File";
-  constant width = 50;
+  int width = 50;
 
   string read( )
   //! Read the file as a string.
@@ -657,7 +657,7 @@ class Location
 {
   inherit String;
   constant type = "Location";
-  constant width = 50;
+  int width = 50;
 
   array verify_set( string value )
   {
@@ -675,7 +675,7 @@ class URL
 {
   inherit String;
   constant type = "URL";
-  constant width = 50;
+  int width = 50;
 
   array verify_set_from_form( string new_value )
   {
@@ -688,7 +688,7 @@ class Directory
 {
   inherit String;
   constant type = "Directory";
-  constant width = 50;
+  int width = 50;
 
   array verify_set( string value )
   {
@@ -915,7 +915,7 @@ class List
 {
   inherit Variable;
   constant type="List";
-  constant width = 40;
+  int width = 40;
 
   string transform_to_form( mixed what )
     //! Override this function to do the value->form mapping for
@@ -1118,7 +1118,7 @@ class IntList
 {
   inherit List;
   constant type="IntList";
-  constant width=20;
+  int width=20;
 
   string transform_to_form(int what) { return (string)what; }
   int transform_from_form(string what,mapping v) { return (int)what; }
@@ -1129,7 +1129,7 @@ class FloatList
 {
   inherit List;
   constant type="DirectoryList";
-  constant width=20;
+  int width=20;
 
   static int _prec = 3;
 
