@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.267 2001/07/12 17:05:33 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.268 2001/07/12 21:40:00 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -1071,7 +1071,8 @@ string do_gtext(mapping arg, string c, RequestID id)
 
     if(!id->supports->images) return sprintf(lp,arg->alt);
 
-    string sn = "gtext" + (magic_counter++ % 65535);
+    magic_counter = (magic_counter+1) % (2<<24);
+    string sn = "gtext" + magic_counter;
     if(!id->supports->js_image_object) {
       return (!input)?
         ("<a"+ea+"href=\""+url+"\">"+Roxen.make_tag("img",arg+(["name":sn]),xml)+"</a>"):
