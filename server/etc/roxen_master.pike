@@ -11,11 +11,15 @@
 
 string describe_backtrace(mixed *trace);
 
-string cvs_version = "$Id: roxen_master.pike,v 1.16.2.5 1997/02/11 13:57:40 grubba Exp $";
-string pike_library_path;
+string cvs_version = "$Id: roxen_master.pike,v 1.16.2.6 1997/03/01 17:32:13 grubba Exp $";
+
 object stdout, stdin;
 mapping names=([]);
 int unique_id=time();
+
+string pike_library_path;
+string *pike_include_path=({});
+string *pike_module_path=({});
 
 mapping (string:string) environment=([]);
 
@@ -28,6 +32,152 @@ varargs mixed getenv(string s)
 void putenv(string var, string val)
 {
   environment[var]=val;
+}
+
+void add_include_path(string tmp)
+{
+  tmp=combine_path(getcwd(),tmp);
+  pike_include_path-=({tmp});
+  pike_include_path=({tmp})+pike_include_path;
+}
+ 
+void remove_include_path(string tmp)
+{
+  tmp=combine_path(getcwd(),tmp);
+  pike_include_path-=({tmp});
+}
+ 
+void add_module_path(string tmp)
+{
+  tmp=combine_path(getcwd(),tmp);
+  pike_module_path-=({tmp});
+  pike_module_path=({tmp})+pike_module_path;
+}
+ 
+void remove_module_path(string tmp)
+{
+  tmp=combine_path(getcwd(),tmp);
+  pike_module_path-=({tmp});
+}
+ 
+mapping (string:program) programs=(["/master":object_program(this_object())]);
+
+string program_name(program p)
+{
+  return search(programs, p);
+}
+
+#define capitalize(X)	(upper_case((X)[..0])+(X)[1..])
+
+/* NEW in Pike 0.4pl9
+ *
+ *
+ */
+static program low_findprog(string pname, string ext)
+{
+  program ret;
+  string fname=pname+ext;
+
+  if(ret=programs[fname]) return ret;
+
+  if(file_stat(fname)) {
+    switch(ext) {
+    case "":
+    case ".pike":
+      ret = compile_file(fname);
+      break;
+    case ".so":
+#if constant(_static_modules)
+      ret = load_module(fname);
+#else
+      ret = object_program(load_module(fname));
+#endif /* _static_modules */
+    }
+    return programs[fname]=ret;
+  } else {
+    return UNDEFINED;
+  }
+}
+
+static program findprog(string pname, string ext)
+{
+  switch(ext)
+  {
+  case ".pike":
+  case ".so":
+    return low_findprog(pname,ext);
+ 
+  default:
+    pname+=ext;
+    return
+      low_findprog(pname,"") ||
+      low_findprog(pname,".pike") ||
+      low_findprog(pname,".so");
+  }
+}
+
+
+/* This function is called whenever a module has built a clonable program
+ * with functions written in C and wants to notify the Pike part about
+ * this. It also supplies a suggested name for the program.
+ *
+ * OBSOLETE in Pike 0.4pl9
+ */
+void add_precompiled_program(string name, program p)
+{
+  if (p) {
+    programs[name]=p;
+
+    if(sscanf(name,"/precompiled/%s",name)) {
+      string const="";
+      foreach(reverse(name/"/"), string s) {
+	const = capitalize(s) + const;
+	add_constant(const, p);
+      }
+    }
+  } else {
+    throw(({ sprintf("add_precompiled_program(): Attempt to add NULL program \"%s\"\n",
+		     name), backtrace() }));
+  }
+}
+
+/* This function is called when the driver wants to cast a string
+ * to a program, this might be because of an explicit cast, an inherit
+ * or a implict cast. In the future it might receive more arguments,
+ * to aid the master finding the right program.
+ */
+program cast_to_program(string pname, string current_file)
+{
+  string ext;
+
+  if (sscanf(reverse(pname),"%s.%s",ext,pname))
+  {
+    ext="."+reverse(ext);
+    pname=reverse(pname);
+  }else{
+    ext="";
+  }
+  if(pname[0]=='/') {
+    pname = combine_path("/",pname);
+    return findprog(pname, ext);
+  } else {
+    string cwd;
+    if (current_file) {
+      string *tmp=current_file/"/";
+      cwd=tmp[..sizeof(tmp)-2]*"/";
+    }else{
+      cwd=getcwd();
+    }
+
+    if (program ret=findprog(combine_path(cwd,pname),ext))
+      return ret;
+
+    foreach(pike_include_path, string path)
+      if(program ret=findprog(combine_path(path,pname),ext))
+        return ret;
+
+    return 0;
+  }
 }
 
 /* This function is called when an error occurs that is not caught
@@ -43,7 +193,9 @@ void handle_error(mixed *trace)
 
 object new(mixed prog, mixed ... args)
 {
-  return ((program)prog)(@args);
+  if (stringp(prog))
+    prog=cast_to_program(prog,backtrace()[-2][0]);
+  return prog(@args);
 }
 
 /* Note that create is called before add_precompiled_program
@@ -51,6 +203,10 @@ object new(mixed prog, mixed ... args)
 void create()
 {
   /* make ourselves known */
+  add_constant("add_include_path",add_include_path);
+  add_constant("remove_include_path",remove_include_path);
+  add_constant("add_module_path",add_module_path);
+  add_constant("remove_module_path",remove_module_path);
   add_constant("_master",this_object());
   add_constant("master",lambda() { return this_object(); });
   add_constant("describe_backtrace",describe_backtrace);
@@ -62,118 +218,6 @@ void create()
 
   random_seed(time() + (getpid() * 0x11111111));
 }
-
-mapping (string:program) programs=([]);
-
-string program_name(program p)
-{
-  return search(programs, p);
-}
-
-#define capitalize(X)	(upper_case((X)[..0])+(X)[1..])
-
-/* NEW in Pike 0.4pl9
- *
- *
- */
-static program findprog(string pname)
-{
-  program ret;
-
-  if(ret=programs[pname]) return ret;
-
-  if(file_stat(pname)) {
-    ret=compile_file(pname);
-  } else if(file_stat(pname+".pike")) {
-    ret=compile_file(pname+".pike");
-  }
-#if efun(load_module)
-  else if(file_stat(pname+".so")) {
-    /* Bug in pike 0.4 */
-    mixed foo=load_module(pname+".so");
-    ret = foo;
-  }
-#endif /* load_module */
-  if (ret) {
-    programs[pname]=ret;
-    return(ret);
-  } else {
-    return UNDEFINED;
-  }
-}
-
-/* This function is called whenever a module has built a clonable program
- * with functions written in C and wants to notify the Pike part about
- * this. It also supplies a suggested name for the program.
- *
- * OBSOLETE in Pike 0.4pl9
- */
-void add_precompiled_program(string name, program p)
-{
-  programs[name]=p;
-
-  if(sscanf(name,"/precompiled/%s",name)) {
-    string const="";
-    foreach(reverse(name/"/"), string s) {
-      const = capitalize(s) + const;
-      add_constant(const, p);
-    }
-  }
-}
-
-/* This function is called when the driver wants to cast a string
- * to a program, this might be because of an explicit cast, an inherit
- * or a implict cast. In the future it might receive more arguments,
- * to aid the master finding the right program.
- */
-program cast_to_program(string pname)
-{
-  program ret;
-  string d=getcwd();
-
-  if(pname[sizeof(pname)-3..sizeof(pname)]==".pike")
-    pname=pname[0..sizeof(pname)-5];
-
-  if(ret=programs[pname]) return ret;
-
-  if(pname[0]=='/') {
-    return findprog(pname);
-  } else {
-    /*
-      if(search(pname,"/")==- 1) {
-      */
-      string path;
-      if(string path=getenv("PIKE_INCLUDE_PATH")) {
-	foreach(path/":", path)
-	  if(program ret=findprog(combine_path(getcwd(),
-					       combine_path(path,pname))))
-	    return ret;
-	/*
-	  }
-	  */
-    }
-    return findprog(combine_path(getcwd(),pname));
-  }
-}
- 
-#if 0
-{ 
-  if(file_stat(pname))
-    ret=compile_file(pname);
-  else if(file_stat(combine_path(d+"/base_server/",pname+".pike"))) // ROXEN
-    ret=compile_file(combine_path(d+"/base_server/",pname+".pike"));
-  else if (file_stat(pname + ".pike"))
-    ret=compile_file(pname+".pike");
-  else if (pname[sizeof(pname)-3..sizeof(pname)]==".pmod") {
-    /* Old versions of pike used .pre */
-    return(cast_to_program(pname[0..sizeof(pname)-5]+".pre"));
-  } else
-    throw(({ sprintf("No such program \"%s\"\n", pname), backtrace() }));
-
-  return programs[pname]=ret;
-}
-
-#endif /* 0 */
 
 /*
  * This function is called whenever a inherit is called for.
@@ -187,40 +231,28 @@ program cast_to_program(string pname)
  */
 program handle_inherit(string pname, string current_file)
 {
-  program p;
-  string *tmp;
-  p=cast_to_program(pname);
-  if(p) return p;
-  tmp=current_file/"/";
-  tmp[-1]=pname;
-  return cast_to_program(tmp*"/");
+  return cast_to_program(pname, current_file);
 }
 
-mapping (string:object) objects=(["/master":this_object()]);
+mapping (program:object) objects=([object_program(this_object()):this_object()]);
 
 /* This function is called when the drivers wants to cast a string
  * to an object because of an implict or explicit cast. This function
  * may also receive more arguments in the future.
  */
-object cast_to_object(string oname)
+object cast_to_object(string oname, string current_file)
 {
-  object ret;
   program p;
+  object o;
 
-  if(oname[0]=='/')
-    oname=combine_path(getcwd(),oname);
-
-  if(oname[sizeof(oname)-3..sizeof(oname)]==".pike")
-    oname=oname[0..sizeof(oname)-4];
-
-  if(ret=objects[oname]) return ret;
-
-  if (p = cast_to_program(oname)) {
-    return objects[oname]=p();
-  } else {
-    throw(({ sprintf("Can't cast \"%s\" to program\n", oname),
-	     backtrace() }));
+  p = cast_to_program(oname, current_file);
+  if (!p) {
+    return 0;
   }
+  if (!(o = objects[p])) {
+    o = objects[p]=p();
+  }
+  return(o);
 }
 
 class dirnode
@@ -230,8 +262,13 @@ class dirnode
   object|program `[](string index)
   {
     index=dirname+"/"+index;
-    return
-      ((object)"/master")->findmodule(index) || (program) index;
+    if(object o=((object)"/master")->findmodule(index)) {
+      if(mixed tmp=o->_module_value) {
+	return tmp;
+      }
+      return o;
+    }
+    return (program) index;
   }
 };
 
@@ -251,95 +288,75 @@ object findmodule(string fullname)
 {
   mixed *stat;
   program p;
-  if(!catch(p=(program)(fullname+".pmod")) && p)
-    return (object)(fullname+".pmod");
+
+  if(mixed *stat=file_stat(fullname+".pmod"))
+  {
+    if(stat[1]==-2)
+      return dirnode(fullname+".pmod");
+    else
+      return (object)(fullname+".pmod");
+  }
+
 #if constant(load_module)
   if(file_stat(fullname+".so")) {
     return (object)(fullname);
   }
 #endif
 
+#ifdef NOT_INSTALLED
   /* Hack for pre-install testing */
   if(mixed *stat=file_stat(fullname))
   {
     if(stat[1]==-2)
       return findmodule(fullname+"/module");
   }
+#endif
 
-  if(mixed *stat=file_stat(fullname+".pmd")) {
-    if(stat[1]==-2)
-      return dirnode(fullname+".pmd");
-  }
+#if constant(_static_modules)
+  return(_static_modules[fullname]);
+#endif /* _static_modules */
 
   return UNDEFINED;
 }
 
-#if constant(_static_modules)
-mixed idiresolv(string identifier)
-{
-  string path=combine_path(pike_library_path+"/modules",identifier);
-  array(mixed) err;
-  mixed ret = 0;
-
-  if ((err = catch(ret=findmodule(path))) || !ret)
-    if (!(ret = _static_modules[identifier]))
-      throw(err);
-  return(ret);
-}
-#endif
-
-mixed resolv(string identifier, string current_file)
+varargs mixed resolv(string identifier, string current_file)
 {
   mixed ret;
   string *tmp,path;
   multiset tested=(<>);
   mixed *modules=({});
 
-  tmp=current_file/"/";
-  tmp[-1]=identifier;
-  path=combine_path(getcwd(), tmp*"/");
-  if(!tested[path]) {
-    tested[path]=1;
-    if(ret=findmodule(path)) modules+=({ret});
+  if (current_file) {
+    tmp=current_file/"/";
+    tmp[-1]=identifier;
+    path=combine_path(getcwd(), tmp*"/");
+    ret=findmodule(path);
   }
 
-  if(path=getenv("PIKE_MODULE_PATH"))
-  {
-    foreach(path/":", path) {
-      if(!sizeof(path)) continue;
-      path=combine_path(path,identifier);
-      if(!tested[path]) {
-	tested[path]=1;
-	if(ret=findmodule(path)) modules+=({ret});
-      }
+  if (!ret) {
+    foreach(pike_module_path, path) {
+      string file=combine_path(path,identifier);
+      if(ret=findmodule(file)) break;
     }
   }
-  string path=combine_path(pike_library_path+"/modules",identifier);
-  if(!tested[path]) {
-    tested[path]=1;
-    if(ret=findmodule(path)) modules+=({ret});
-  }
-#if constant(_static_modules)
-  if(ret=_static_modules[identifier]) modules+=({ret});
-#endif
   
-  switch(sizeof(modules)) {
-  default:
-    mixed tmp=mergenode(modules);
-    werror(sprintf("%O\n",tmp["file"]));
-    return tmp;
-  case 1:
-    return modules[0];
-  case 0:
-    switch(identifier) {
-    case "readline":
-      if(!resolv("readlinemod", current_file))
-	werror("No readline module.\n");
-      return all_constants()->readline;
-    }
-    return UNDEFINED;
+  if (!ret) {
+    string path=combine_path(pike_library_path+"/modules",identifier);
+    ret=findmodule(path);
   }
-  return findmodule(path);
+
+  if (!ret) {
+    ret=findmodule(identifier);
+  }
+
+  if (ret) {
+    if (programp(ret)) {
+      ret = ret();
+    }
+    if (mixed tmp=ret->_module_value) return tmp;
+    return ret;
+  }
+  return UNDEFINED;
 }
 
 /* This function is called when all the driver is done with all setup
@@ -354,7 +371,7 @@ void _main(string *argv, string *env)
   object script;
   object tmp;
   string a,b;
-  string *q;
+  mixed *q;
 
   foreach(env,a) if(sscanf(a,"%s=%s",a,b)) environment[a]=b;
   add_constant("getenv",getenv);
@@ -370,29 +387,43 @@ void _main(string *argv, string *env)
   q=a/"/";
   pike_library_path = q[0..sizeof(q)-2] * "/";
 
+  add_include_path(pike_library_path+"/include");
+  add_module_path(pike_library_path+"/modules");
+ 
+  q=(getenv("PIKE_INCLUDE_PATH")||"")/":"-({""});
+  for(i=sizeof(q)-1;i>=0;i--) add_include_path(q[i]);
+ 
+  q=(getenv("PIKE_MODULE_PATH")||"")/":"-({""});
+  for(i=sizeof(q)-1;i>=0;i--) add_module_path(q[i]);
+
 #if constant(_static_modules)
-  /* Pike 0.4pl9 */
-  add_constant("write", idiresolv("files")->file("stdout")->write);
-  add_constant("stdin", idiresolv("files")->file("stdin"));
-  add_constant("stdout",idiresolv("files")->file("stdout"));
-  add_constant("stderr",idiresolv("files")->file("stderr"));
+  /* Pike 0.4pl9 or later */
+  add_constant("write", _static_modules.files()->file("stdout")->write);
+  add_constant("stdin", _static_modules.files()->file("stdin"));
+  add_constant("stdout",_static_modules.files()->file("stdout"));
+  add_constant("stderr",_static_modules.files()->file("stderr"));
   /*
    * Backward compatibility
    */
-  add_precompiled_program("/precompiled/file", idiresolv("files")->file);
-  add_precompiled_program("/precompiled/port", idiresolv("files")->port);
-  add_precompiled_program("/precompiled/regexp",
-			  object_program(resolv("regexp",
-						pike_library_path+"/include/modules/")));
-  add_precompiled_program("/precompiled/pipe",
-			    object_program(resolv("pipe",
-						  pike_library_path+"/include/modules/")));
+  add_precompiled_program("/precompiled/file", _static_modules.files()->file);
+  add_precompiled_program("/precompiled/port", _static_modules.files()->port);
+  add_precompiled_program("/precompiled/regexp", resolv("Regexp", pike_library_path+"/modules/"));
+  /*  add_precompiled_program("/precompiled/image", resolv("Image", pike_library_path+"/modules/")->image); */
+  add_precompiled_program("/precompiled/font", resolv("Image", pike_library_path+"/modules/")->font);
+  add_precompiled_program("/precompiled/pipe", resolv("Pipe", pike_library_path+"/modules/")->pipe);
+#if !efun(mark_fd)
+  resolv("spider", pike_library_path+"/modules/");
+#endif
+
+//  add_precompiled_program("/precompiled/pipe",
+//			    object_program(resolv("Pipe",
+//						  pike_library_path+"/modules/")));
 
 #else
-  add_constant("write",cast_to_program("/precompiled/file")("stdout")->write);
-  add_constant("stdin",cast_to_program("/precompiled/file")("stdin"));
-  add_constant("stdout",cast_to_program("/precompiled/file")("stdout"));
-  add_constant("stderr",cast_to_program("/precompiled/file")("stderr"));
+  add_constant("write",cast_to_program("/precompiled/file","/")("stdout")->write);
+  add_constant("stdin",cast_to_program("/precompiled/file","/")("stdin"));
+  add_constant("stdout",cast_to_program("/precompiled/file","/")("stdout"));
+  add_constant("stderr",cast_to_program("/precompiled/file","/")("stderr"));
 #endif
 
 //  clone(compile_file(pike_library_path+"/simulate.pike"));
@@ -406,19 +437,36 @@ void _main(string *argv, string *env)
    */
 
 #if constant(_static_modules)
-  tmp=idiresolv("getopt");
+  tmp=resolv("Getopt");
 #else
-  tmp=new(pike_library_path+"/include/getopt.pre.pike");
+  tmp=new("include/getopt.pre.pike");
 #endif /* _static_modules */
 
-  foreach(tmp->find_all_options(argv,({
+  q = tmp->find_all_options(argv,({
     ({"version",tmp->NO_ARG,({"-v","--version"})}),
     ({"help",tmp->NO_ARG,({"-h","--help"})}),
     ({"execute",tmp->HAS_ARG,({"-e","--execute"})}),
     ({"modpath",tmp->HAS_ARG,({"-M","--module-path"})}),
+    ({"ipath",tmp->HAS_ARG,({"-I","--include-path"})}),
     ({"ignore",tmp->HAS_ARG,"-ms"}),
-    ({"ignore",tmp->MAY_HAVE_ARG,"-Ddatp",0,1})}),1),
-	  mixed *opts)
+    ({"ignore",tmp->MAY_HAVE_ARG,"-Ddatpl",0,1})}),1);
+
+  /* Parse -M and -I backwards */
+  for(i=sizeof(q)-1;i>=0;i--)
+  {
+    switch(q[i][0])
+    {
+      case "modpath":
+        add_module_path(q[i][1]);
+        break;
+ 
+      case "ipath":
+        add_include_path(q[i][1]);
+        break;
+    }
+  }
+
+  foreach(q, mixed *opts)
     {
       switch(opts[0])
       {
@@ -431,7 +479,9 @@ void _main(string *argv, string *env)
       case "help":
 	werror("Usage: pike [-driver options] script [script arguments]\n"
 	       "Driver options include:\n"
-	       " -e --execute <cmd>   : Run the given command instead of a script.\n"
+	       " -I --include-path=<p>: Add <p> to the include path\n"
+	       " -M --module-path=<p> : Add <p> to the module path\n"
+	       " -e --execute=<cmd>   : Run the given command instead of a script.\n"
 	       " -h --help            : see this message\n"
 	       " -v --version         : See what version of pike you have.\n"
 	       " -s#                  : Set stack size\n"
@@ -444,11 +494,6 @@ void _main(string *argv, string *env)
       case "execute":
 	compile_string("#include <simulate.h>\nmixed create(){"+opts[1]+";}")();
 	break;
-      case "modpath":
-	putenv("PIKE_MODULE_PATH",opts[1]+":"+(getenv("PIKE_MODULE_PATH")||""));
-	break;
-      case "ignore":
-	break;
       }
     }
 
@@ -458,14 +503,7 @@ void _main(string *argv, string *env)
   /*
    * Search base_server also
    */
-  string path = getenv("PIKE_INCLUDE_PATH");
-
-  if (path) {
-    path = getcwd()+"/base_server/:"+path;
-  } else {
-    path = getcwd()+"/base_server/";
-  }
-  putenv("PIKE_INCLUDE_PATH", path);
+  add_include_path("base_server");
 
   if(sizeof(argv) == 1) {
     argv=argv[0]/"/";
@@ -491,7 +529,20 @@ void _main(string *argv, string *env)
     werror("Usage: pike [-driver options] script [script arguments]\n");
     exit(1);
   }
-  script=(object)argv[0];
+
+  program tmp = (program)argv[0];
+#if 0
+  if (catch(tmp=(program)argv[0]) || (!tmp)) {
+    tmp = compile_file(argv[0]+".pike");
+  }
+#endif /* 0 */
+  if(!tmp)
+  {
+    werror("Pike: Couldn't find script to execute.\n");
+    exit(1);
+  }
+ 
+  object script=tmp();
 
   if(!script->main)
   {
@@ -551,27 +602,20 @@ string handle_include(string f,
     tmp=current_file/"/";
     tmp[-1]=f;
     path=combine_path(getcwd(),tmp*"/");
-    if(!file_stat(path))
-    {
-      path = f;
-      if(!file_stat(path))
-	return 0;
+    if(!file_stat(path)) {
+      return 0;
     }
   }
   else
   {
-    if(path=getenv("PIKE_INCLUDE_PATH"))
-    {
-      foreach(path/":", path)
+    foreach(pike_include_path, path)
       {
-	if(!sizeof(path)) continue;
 	path=combine_path(path,f);
 	if(file_stat(path))
 	  break;
 	else
 	  path=0;
       }
-    }
     
     if(!path)
     {
@@ -587,11 +631,36 @@ string handle_include(string f,
     if(path[-1]=='h' && path[-2]=='.' &&
        file_stat(path[0..sizeof(path)-2]+"pre.pike"))
     {
-      cast_to_object(path[0..sizeof(path)-2]+"pre.pike");
+      cast_to_object(path[0..sizeof(path)-2]+"pre.pike", "/");
     }
   }
 
   return path;
+}
+
+// FIXME
+string stupid_describe(mixed m)
+{
+  switch(string typ=sprintf("%t",m))
+  {
+  case "int":
+  case "float":
+    return (string)m;
+ 
+  case "string":
+    if(sizeof(m) < 60 && sscanf(m,"%*[-a-zAZ0-9.~`!@#$%^&*()_]%n",int i) && i==sizeof(m))
+    {
+      return "\""+m+"\"";
+    }
+ 
+  case "array":
+  case "mapping":
+  case "multiset":
+    return typ+"["+sizeof(m)+"]";
+ 
+  default:
+    return sprintf("%t",m);
+  }
 }
 
 /* It is possible that this should be a real efun,
@@ -631,7 +700,15 @@ string describe_backtrace(mixed *trace)
 	row="";
 	if(sizeof(tmp)>=3 && functionp(tmp[2]))
 	{
+#if constant(_static_modules)
+	  row=function_name(tmp[2])+"(";
+	  for(int v=3;v<sizeof(tmp);v++) {
+	    row+=stupid_describe(tmp[v])+",";
+	  }
+	  row=row[..sizeof(row)-2]+") in ";
+#else
 	  row=function_name(tmp[2])+" in ";
+#endif /* _static_modules */
 	}
 
 	if(sizeof(tmp)>=2 && stringp(tmp[0]) && intp(tmp[1]))
