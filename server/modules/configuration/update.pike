@@ -1,5 +1,5 @@
 /*
- * $Id: update.pike,v 1.8 2000/03/24 18:40:12 jhs Exp $
+ * $Id: update.pike,v 1.9 2000/03/24 20:01:07 js Exp $
  *
  * The Roxen Update Client
  * Copyright © 2000, Roxen IS.
@@ -197,6 +197,9 @@ string tag_update_uninstall_package(string t, mapping m, RequestID id)
   return "";
 }
 
+// <update-package-output>...</>
+// Show information about one or several packages.
+// Arguments: package, reverse, type, limit
 string container_update_package_output(string t, mapping m, string c, RequestID id)
 {
   UPDATE_NOISES("<%s>: args = %O, contents = %O", ({ t, m, c }));
@@ -285,6 +288,8 @@ mapping get_package_info(string dir, int package)
   return parse_info_file(s) | ([ "size":stat[1] ]);    
 }
 
+// Find any new packages in the package dir that's not in the database,
+// and index them there.
 string tag_update_scan_local_packages(string t, mapping m,
 				      RequestID id)
 {
@@ -326,6 +331,7 @@ string container_update_downloaded_packages_output(string t, mapping m,
   return do_output_tag(m, res, c, id);
 }
 
+// Safely unpack a file
 string|void unpack_file(Stdio.File from, string to)
 {
   string prefix="../";
@@ -406,6 +412,8 @@ string unpack_tarfile(string tarfile)
   return res*"<br>";
 }
 
+
+// Really unpack/install a package.
 string tag_update_install_package(string t, mapping m, RequestID id)
 {
   if(!m->package)
@@ -423,6 +431,9 @@ string tag_update_install_package(string t, mapping m, RequestID id)
   id->variables[m->variable]="1";
   installed[m->package]=1;
   installed->sync();
+
+  Stdio.recursive_rm(roxen_path("$VVARDIR/precompiled/"));
+  
   return res+"<br><br><b>Package installed completely.</b>";
 }
 
@@ -459,8 +470,13 @@ string tag_update_update_list(string t, mapping m, RequestID id)
 {
   if(QUERY(do_external_updates))
   {
-    remove_call_out(updater->do_request);
-    updater->do_request();
+    if(!updater)
+      updater=UpdateInfoFiles();
+    else
+    {
+      remove_call_out(updater->do_request);
+      updater->do_request();
+    }
   }
   return "";
 }
