@@ -1,3 +1,4 @@
+#include <module.h>
 #include <variables.h>
 inherit "module";
 
@@ -14,7 +15,7 @@ inherit "module";
 
 #include <roxen.h>
 
-constant cvs_version="$Id: php4.pike,v 2.8 2000/07/03 06:43:20 nilsson Exp $";
+constant cvs_version="$Id: php4.pike,v 2.9 2000/07/04 03:42:45 per Exp $";
 constant thread_safe=1;
 constant module_type=MODULE_FILE_EXTENSION;
 

@@ -6,12 +6,13 @@
 
 // This is an extension module.
 
-constant cvs_version="$Id: pikescript.pike,v 1.62 2000/07/03 06:43:20 nilsson Exp $";
+constant cvs_version="$Id: pikescript.pike,v 1.63 2000/07/04 03:42:45 per Exp $";
 
 constant thread_safe=1;
 mapping scripts=([]);
 
 #include <config.h>
+#include <module.h>
 inherit "module";
 
 constant module_type = MODULE_FILE_EXTENSION;
