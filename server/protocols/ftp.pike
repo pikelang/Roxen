@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.39 1997/08/23 01:40:48 grubba Exp $
+ * $Id: ftp.pike,v 1.40 1997/08/25 17:24:11 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -49,7 +49,7 @@ string username="";
 /* Flags for the simulated 'ls' */
 
 #define LS_FLAG_A	1
-#define LS_FLAG_a	3
+#define LS_FLAG_a	2
 #define LS_FLAG_C	4
 #define LS_FLAG_d	8
 #define LS_FLAG_F	16
@@ -60,7 +60,7 @@ string username="";
 constant decode_flags =
 ([
   "A":LS_FLAG_A,
-  "a":LS_FLAG_a,
+  "a":(LS_FLAG_a|LS_FLAG_A),
   "C":LS_FLAG_C,
   "d":LS_FLAG_d,
   "F":LS_FLAG_F,
@@ -632,6 +632,12 @@ varargs int|string list_file(string arg, int flags)
 				this_object());
 	  if (dir && sizeof(dir)) {
 	    dir = glob(part, dir);
+	    if ((< '*', '?' >)[part[0]]) {
+	      // Glob-expanding does not expand to files starting with '.'
+	      dir = filter(dir, lambda(string f) {
+		return (sizeof(f) && (f[0] != '.'));
+	      });
+	    }
 	    foreach(sort(dir), string f) {
 	      array(string) arr = my_combine_path_array(path, f);
 	      string p = arr*"/";
@@ -716,7 +722,7 @@ varargs int|string list_file(string arg, int flags)
   }
   foreach(sort(indices(dirs)), string short) {
     array(string) dir = roxen->find_dir(comb_path[short]+"/", this_object());
-    if ((flags & LS_FLAG_a & ~LS_FLAG_A) &&
+    if ((flags & LS_FLAG_a) &&
 	(comb_path[short] != "") &&
 	(comb_path[short] != "/")) {
       if (dir) {
@@ -727,9 +733,9 @@ varargs int|string list_file(string arg, int flags)
     }
     string s = "";
     if (dir && sizeof(dir)) {
-      if (!flags & LS_FLAG_A) {
+      if (!(flags & LS_FLAG_A)) {
 	dir = filter(dir, lambda(string f){return(f[0] != '.');});
-      } else if (!(flags & LS_FLAG_a & ~LS_FLAG_A)) {
+      } else if (!(flags & LS_FLAG_a)) {
 	dir = filter(dir, lambda(string f){return((f-".") != "");});
       }
       if (sizeof(dir)) {
@@ -1081,12 +1087,14 @@ void got_data(mixed fooid, string s)
       break;
       
     case "nlst":
-      int flags=LS_FLAG_l;
-      flags = 0;
-
     case "list": 
+      int flags = 0;
       mapping f;
       string args;
+
+      if (cmd == "list") {
+	flags = LS_FLAG_l;
+      }
 
       // Count this as a request.
       conf->requests++;
