@@ -33,18 +33,24 @@ none-localinstall:
 
 fcgi: force
 	(cd fast_cgi; $(MAKE) "CFLAGSUP=$(CFLAGS)" "LDFLAGS=$(LDFLAGS)" "CC=$(CC)")
+	-@if test -f fcgi ; then \
+	  if test -f fgci.old ; then \
+	    rm -f fcgi.old ; \
+	  fi ; \
+	  mv fcgi fcgi.old ; \
+	fi
 	cp fast_cgi/cgi-fcgi/cgi-fcgi fcgi
 	@(strip fcgi || echo)
 
 force:
 
-roxen_hostname: roxen_hostname.o Makefile
+roxen_hostname: roxen_hostname.o
 	$(CC) $(LDFLAGS) -o roxen_hostname roxen_hostname.o $(LIBS)
 
-cgi: cgi.o Makefile
+cgi: cgi.o config.h
 	$(CC) $(LDFLAGS) -o cgi cgi.o $(LIBS)
 
-purecgi: cgi.o Makefile
+purecgi: cgi.o
 	purify $(CC) $(LDFLAGS) -o cgi cgi.o $(LIBS)
 
 shuffle:	shuffle.o
@@ -93,3 +99,20 @@ spotless: clean
 
 distribute: spotless
 	@rm -f Makefile
+
+roxen_hostname.o : config.h
+
+cgi.o : config.h
+
+shuffle.o : config.h
+
+config.h : stamp-h
+
+stamp-h: $(SRCDIR)/config.h.in config.status
+	CONFIG_FILES="" CONFIG_HEADERS=config.h ./config.status
+
+$(SRCDIR)/config.h.in : $(SRCDIR)/stamp-h.in
+
+$(SRCDIR)/stamp-h.in : $(SRCDIR)/configure.in $(SRCDIR)/acconfig.h
+	cd $(SRCDIR) && autoheader
+	echo foo > $(SRCDIR)/stamp-h.in
