@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.123 2003/12/23 12:14:24 grubba Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.124 2003/12/29 12:14:33 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -1151,15 +1151,15 @@ mixed find_file( string f, RequestID id )
 
 
   case "DELETE":
+    if (size==-1) {
+      id->misc->error_code = 404;
+      TRACE_LEAVE("DELETE: Not found");
+      return 0;
+    }
     if(!query("delete"))
     {
       id->misc->error_code = 405;
       TRACE_LEAVE("DELETE: Disabled");
-      return 0;
-    }
-    if (size==-1) {
-      id->misc->error_code = 404;
-      TRACE_LEAVE("DELETE: Not found");
       return 0;
     }
 
@@ -1249,6 +1249,7 @@ mixed find_file( string f, RequestID id )
     return http_low_answer(204,(f+" DELETED from the server"));
 
   default:
+    id->misc->error_code = 501;
     TRACE_LEAVE("Not supported");
     return 0;
   }
