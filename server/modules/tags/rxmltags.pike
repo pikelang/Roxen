@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.90 2000/03/07 22:12:50 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.91 2000/03/09 02:23:42 mast Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -480,6 +480,7 @@ array(string) tag_roxen(string tagname, mapping m, RequestID id)
 {
   string size = m->size || "small";
   string color = m->color || "blue";
+  mapping aargs = (["href": "http://www.roxen.com/"]);
   m_delete(m, "color");
   m_delete(m, "size");
   m->src = "/internal-roxen-power-"+size+"-"+color;
@@ -488,7 +489,8 @@ array(string) tag_roxen(string tagname, mapping m, RequestID id)
   if(!m->alt) m->alt="Powered by Roxen";
   if(!m->border) m->border="0";
   if(!m->noxml) m["/"]="/";
-  return ({ "<a href=\"http://www.roxen.com/\">"+make_tag("img", m)+"</a>" });
+  if (m->target) aargs->target = m->target, m_delete (m, "target");
+  return ({ make_container ("a", aargs, make_tag("img", m)) });
 }
 
 string|array(string) tag_debug( string tag_name, mapping m, RequestID id )
@@ -2226,6 +2228,10 @@ load.",
 
 <attr name=class value=string>
  This CSS definition will be applied on the img element.
+</attr>
+
+<attr name=target value=string>
+ Names a target frame for the link around the image.
 </attr>
  All other attributes will be inherited by the generated img tag.",
 
