@@ -1,6 +1,6 @@
 #include <module.h>
 
-string cvs_verison = "$Id: draw_things.pike,v 1.15 1996/12/06 23:01:19 per Exp $";
+string cvs_verison = "$Id: draw_things.pike,v 1.16 1996/12/13 00:41:17 per Exp $";
 
 
 object (Image) load_image(string f)
@@ -58,7 +58,7 @@ object (Image) draw_module_header(string name, int type, object font)
   object knappar = Image(1000,48);
   object text;
   int cxp = 0;
-  text = font->write(name);
+  text = font->write(name)->color(255,255,0);
   
   if((type&MODULE_AUTH)||(type&MODULE_SECURITY)) PASTE(security,"");
   if(type&MODULE_FIRST) PASTE(first,"First");
@@ -76,6 +76,7 @@ object (Image) draw_module_header(string name, int type, object font)
   knappar = knappar->autocrop();
 
   result->paste(knappar,result->xsize()-knappar->xsize(),0);
+  result->line(0,0,1000,0,255,255,0);
   result->paste(text,6,3);
   knappar = 0;
   text=0;
@@ -193,7 +194,7 @@ object (Image) draw_selected_button(string name, object font)
 object pil(int c)
 {
   object f=Image(50,50,dR,dG,dB);
-  f->setcolor(c?bB:bR,c?200:bG,c?bR:bB);
+  f->setcolor(c?255:bR,c?255:bG,c?bR:bB);
   for(int i=1; i<25; i++)
     f->line(25-i,i,25+i,i);
   return f;
@@ -211,12 +212,12 @@ object draw_fold(int c)
 
 object draw_back(int c)
 {
-  object f=pil(1);
+  object f=pil(1)->color(0,255,255)->setcolor(0,255,0);
   for(int i=0; i<10; i++){
     f=f->line(25-i,24,25-i,50);
     f=f->line(25+i,24,25+i,50);
   }
-  f->setcolor(dR,dG,dB);
+  f->setcolor(0,dG,dB);
   f=f->rotate(45)->autocrop()->scale(15,0)->autocrop(5, 0,1,0,0, dR,dG,dB);
   return f;
 }

@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 
 
-string cvs_version = "$Id: htmlparse.pike,v 1.12 1996/12/10 23:14:37 neotron Exp $";
+string cvs_version = "$Id: htmlparse.pike,v 1.13 1996/12/13 00:41:18 per Exp $";
 #pragma all_inline 
 
 #include <config.h>
@@ -1548,7 +1548,7 @@ mapping query_tag_callers()
 	    "configimage":tag_configimage,
 	    "date":tag_date,
 	    "referer":tag_referer,
-	    "language":tag_language,
+	    "accept-language":tag_language,
 	    "insert":tag_insert,
 	    "return":tag_return,
 	    "file":tag_file,

@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.28 1996/12/10 03:39:45 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.29 1996/12/13 00:41:16 per Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -482,11 +482,12 @@ mixed new_module_copy(object node, string name, object id)
   
   // Now it is the module..
   // We want to see this one immediately.
-  node->folded = 0;
-  
-  // Mark the node and all its parents as modified.
-  node->change(1);
-  
+  if(node)
+  {
+    node->folded = 0;
+    // Mark the node and all its parents as modified.
+    node->change(1);
+  }
   return std_redirect(root, id);
 }
 
@@ -517,7 +518,6 @@ string new_module_form(object id, object node)
   }, a);
   
   res = ({default_head("Add a module")+"\n\n"+
-	  "<table width=500><tr><td width=500>"
   "<h2>Select a module to add from the list below</h2>" });
   
   foreach(mods, q)
@@ -528,21 +528,21 @@ string new_module_form(object id, object node)
 	res += ({("<p>"+
 		  (roxen->QUERY(BS)?"<h2>"+a[q][0]+"</h2>":
 		  "<img alt=\""+a[q][0]+"\" src=/auto/module/"+
-		   q+" width=500>")+ "<br>"+a[q][1] + "<p>"
+		   q+" width=500>")+ "<br><blockquote>"+a[q][1] + "<p>"
 		  "<i>A module of the same type is already enabled ("+ b->name
 		  + "). <a href=\"/(delete)" + node->descend(b->name, 1)->path(1)
 		  + "?"+(bar++)+
 		  "\">Disable that module</a> if you want this one insted</i>"
-		  "\n<p><br><p>")});
+		  "\n<p><br><p></blockquote>")});
     } else {
       res += ({"<p><a href=/(newmodule)"+node->path(1)+"?"+q+"=1>"+
 		 (roxen->QUERY(BS)?"<h2>"+a[q][0]+"</h2>":
 		  "<img border=0 alt=\""+a[q][0]+"\" src=/auto/module/"+
 					q+" width=500>")+
-		 "</a><br>"+a[q][1]+"<p><br><p>"});
+		 "</a><blockquote><br>"+a[q][1]+"<p><br><p></blockquote>"});
     }
   }
-  return res*""+"</td></tr></table>";
+  return res*"";
 }
 
 mapping new_module(object id, object node)
@@ -1384,7 +1384,7 @@ mapping configuration_parse(object id)
   
   if(o->type == NODE_MODULE)
   {
-    BUTTON(delete, "Delete", left);
+    BUTTON(delete, "Delete module", left);
     if(o->data->copies)
       BUTTON(newmodulecopy, "Copy module", left);
   }
@@ -1393,8 +1393,8 @@ mapping configuration_parse(object id)
   if(o->type == NODE_MODULE_MASTER_COPY || o->type == NODE_MODULE_COPY 
      || o->type == NODE_MODULE_COPY_VARIABLES)
   {
-    BUTTON(delete, "Delete", left);
-    BUTTON(refresh, "Reload", left);
+    BUTTON(delete, "Delete module", left);
+    BUTTON(refresh, "Reload module", left);
   }
   
   if(o->type == NODE_CONFIGURATION)
@@ -1419,7 +1419,10 @@ mapping configuration_parse(object id)
   }
 
   if((o->changed||root->changed))
+  {
     BUTTON(save, "Save", left);
+    PUSH("<img border=0 alt=\"\" hspacing=0 vspacing=0 src=/auto/button/%20%20%20%20%20%20>");
+  }
   BUTTON(restart, "Restart", left);
   BUTTON(shutdown,"Shutdown", left);
 

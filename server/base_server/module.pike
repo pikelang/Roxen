@@ -80,17 +80,17 @@ varargs int defvar(string var, mixed value, string name, int type,
    case TYPE_STRING:
    case TYPE_LOCATION:
     if(value && !stringp(value))
-      error("Passing illegal value to string type variable.\n");
+      report_error("Passing illegal value to string type variable.\n");
     break;
     
    case TYPE_FLOAT:
     if(!floatp(value))
-      error("Passing illegal value (not float) to floating point "
-	    "decimal number variable.\n");
+      report_error("Passing illegal value (not float) to floating point "
+		   "decimal number variable.\n");
     break;
    case TYPE_INT:
     if(!intp(value))
-      error("Passing illegal value (not int) to integer number variable.\n");
+      report_error("Passing illegal value (not int) to integer number variable.\n");
     break;
 
    case TYPE_MODULE_LIST:
@@ -105,7 +105,7 @@ varargs int defvar(string var, mixed value, string name, int type,
    case TYPE_DIR_LIST:
      int i;
      if(!arrayp(value))
-       error("Illegal type to TYPE_DIR_LIST, must be array.\n");
+       report_error("Illegal type to TYPE_DIR_LIST, must be array.\n");
      for(i=0; i<sizeof(value); i++)
        if(strlen(value[i]))
        {
@@ -118,7 +118,7 @@ varargs int defvar(string var, mixed value, string name, int type,
 
    case TYPE_DIR:
     if(value && !stringp(value))
-      error("Passing illegal value (not string) to directory variable.\n");
+      report_error("Passing illegal value (not string) to directory variable.\n");
 
     if(value && strlen(value) && ((string)value)[-1] != '/')
       value+="/";
@@ -127,11 +127,11 @@ varargs int defvar(string var, mixed value, string name, int type,
    case TYPE_INT_LIST:
    case TYPE_STRING_LIST:
     if(!misc && value && !arrayp(value))
-      error("Passing illegal misc (not array) to multiple choice variable.\n");
+      report_error("Passing illegal misc (not array) to multiple choice variable.\n");
     if(misc && !arrayp(misc))
-      error("Passing illegal misc (not array) to multiple choice variable.\n");
+      report_error("Passing illegal misc (not array) to multiple choice variable.\n");
     if(misc && search(misc, value)==-1)
-      error("Passing value passed not present in the misc array.\n");
+      report_error("Passing value passed not present in the misc array.\n");
     break;
     
    case TYPE_FLAG:
@@ -143,11 +143,11 @@ varargs int defvar(string var, mixed value, string name, int type,
 
    case TYPE_COLOR:
     if (!intp(value))
-      error("Passing illegal value (not int) to color variable.\n");
+      report_error("Passing illegal value (not int) to color variable.\n");
     break;
     
    default:
-    error("Illegal type ("+type+") in defvar.\n");
+    report_error("Illegal type ("+type+") in defvar.\n");
   }
 
   variables[var]=allocate( VAR_SIZE );
