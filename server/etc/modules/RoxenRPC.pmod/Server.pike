@@ -1,5 +1,5 @@
 /*
- * $Id: Server.pike,v 1.14 1997/11/09 18:28:55 grubba Exp $
+ * $Id: Server.pike,v 1.15 1998/02/13 21:58:25 mirar Exp $
  */
 
 #define error(X) throw(({X, backtrace()}))
@@ -335,6 +335,7 @@ int num_connections()
 
 void got_connection(object on)
 {
+  if (!on) return;
   object c = on->accept();
   string addr = c->query_address();
   if(low_got_connection(c))
@@ -363,9 +364,16 @@ void create(string|object host, int|string|void p, string|void key)
       werror("Remote host failed authentification test.\n");
     else
       host->write("=");
-  } else if(host) {
-    if(!port->bind(p, got_connection, host))
-      error("Failed to bind to port\n");
-  } else if(!port->bind(p, got_connection))
-    error("Failed to bind to port\n");
+  } 
+  else 
+  {
+    port->set_id(port);
+    if(host) 
+    {
+       if(!port->bind(p, got_connection, host))
+	  error("Failed to bind to port\n");
+    } 
+    else if(!port->bind(p, got_connection))
+       error("Failed to bind to port\n");
+  }
 }

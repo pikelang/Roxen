@@ -1,5 +1,5 @@
 /*
- * $Id: Client.pike,v 1.11 1998/01/19 21:04:15 mirar Exp $
+ * $Id: Client.pike,v 1.12 1998/02/13 21:58:25 mirar Exp $
  */
 
 #define error(X) throw( ({ X, backtrace() }) )
@@ -42,10 +42,13 @@ class RemoteFunctionCall
 
   void destroy()
   {
-    string v = encode_value(([ "subtract_refs":cl ]));
-    server->write(sprintf("%4c%s", strlen(v), v));
-    if(server->read(1) != "!")
-      error("server->subtract_refs("+cl+") failed\n");
+    if (server) 
+    {
+      string v = encode_value(([ "subtract_refs":cl ]));
+      server->write(sprintf("%4c%s", strlen(v), v));
+      if(server->read(1) != "!")
+	error("server->subtract_refs("+cl+") failed\n");
+    }
   }
 
   void create(string m, string c, object s, function l, object mast)
