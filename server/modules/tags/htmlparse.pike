@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.128 1998/08/01 09:25:24 neotron Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.129 1998/08/01 10:12:59 neotron Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -2409,7 +2409,6 @@ string tag_help(string t, mapping args, object id)
 			     }));
   string help_for = args["for"] || id->variables->_r_t_h;
 
-  TRACE_ENTER("tag &lt;hhelp&gt", t);
   if(!help_for)
   {
     string out = "<h3>Roxen Interactive RXML Help</h3>"
@@ -2420,14 +2419,11 @@ string tag_help(string t, mapping args, object id)
     {
       tag_links += ({ sprintf("<a href=?_r_t_h=%s>%s</a>", tag, tag) });
     }
-    TRACE_LEAVE("");
     return out + String.implode_nicely(tag_links);
   } else if(Stdio.file_size("modules/tags/doc/"+help_for) > 0) {
     string h = handle_help("modules/tags/doc/"+help_for, help_for, args);
-    TRACE_LEAVE("");
     return h;
   } else {
-    TRACE_LEAVE("");
     return "<h3>No help available for "+help_for+".</h3>";
   }
 }
