@@ -451,6 +451,9 @@ object request(object context, mapping(string:array(string))|object id,
       uri = (uri/" "+({"",""}))[1];
       if(!strlen(query))
 	query = 0;
+    } else {
+      uri = id->not_query;
+      query = id->query;
     }
 
     if(id->misc->path_info && strlen(id->misc->path_info) && context) {
@@ -458,7 +461,7 @@ object request(object context, mapping(string:array(string))|object id,
     }
 
     return request(context||conf_context(id->conf), id->real_variables, attrs,
-		   id->raw && MIME.parse_headers(id->raw)[0],
+		   (id->raw && MIME.parse_headers(id->raw)[0])||id->request_headers,
 		   (zero_type(id->misc->len)? -1:id->misc->len),
 		   id->misc["content-type"], id->prot,
                    (id && id->port_obj && lower_case(id->port_obj->prot_name))||
