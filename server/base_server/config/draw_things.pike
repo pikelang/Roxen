@@ -2,7 +2,7 @@
 import Image;
 
 constant Image = image;
-string cvs_verison = "$Id: draw_things.pike,v 1.24 1997/08/13 00:17:31 grubba Exp $";
+string cvs_verison = "$Id: draw_things.pike,v 1.25 1997/08/13 02:47:47 grubba Exp $";
 
 
 object (Image) load_image(string f)
@@ -136,28 +136,23 @@ object (Image) draw_config_button(string name, object font, int lm, int rm)
   if(!strlen(name)) return Image(1,15,dR, dG, dB);
 
   object txt = font->write(name)->scale(0.48);
-  object ruta = Image(txt->xsize()+25, 20, bR, bG, bB);
-  object linje = Image(2,30, rm?0:bhR,rm?0:bhG,rm?0:bhB);
+  int w = txt->xsize();
+  object ruta = Image(w+20, 20, bR, bG, bB);
 
-  linje=linje->setcolor(0,0,0)->line(0,0,0,30);
-  linje=linje->setcolor(bR,bG,bB)->rotate(-25)->copy(0,3,29,28);
-
-  ruta->paste_alpha(linje, 50);
-  ruta->paste_alpha_color(txt, btR,btG,btB, 22, 0);
-
-  if(lm)
-  {
-    object s=ruta->select_from(0,0);
-    ruta->paste_alpha_color(s, dR,dG,dB, 0,0);
-    ruta->setpixel(0,0, dR, dG, dB);
+  if (lm) {
+    // Left-most
+    ruta->setcolor(dR, dG, dB)->polygone(({ 0,0, 15,0, 5,20, 0,20 }));
   }
-  if(rm)
-  {
-    object s=ruta->select_from(20,18);
-    ruta->paste_alpha_color(s, dR,dG,dB, 0,0);
-    ruta->setpixel(20,18, dR, dG, dB);
+  if (rm) {
+    // Right-most
+    ruta->setcolor(dR, dG, dB)->polygone(({ 16+w,0, 20+w,0, 20+w,20, 6+w,20 }));
+  } else if (!lm) {
+    // Add separator.
+    ruta->setcolor(bhR, bhG, bhB)->polygone(({ 5,20, 15,0, 16,0, 6,20 }));
   }
-  txt=linje=0;
+
+  ruta->paste_alpha_color(txt, btR,btG,btB, 18, 0);
+
   return ruta->scale(0,15);
 }
 
