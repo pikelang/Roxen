@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.620 2001/01/31 04:01:38 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.621 2001/01/31 05:34:40 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -1448,6 +1448,10 @@ Configuration find_configuration( string name )
 //! Searches for a configuration with a name or fullname like the
 //! given string. See also get_configuration().
 {
+  // Optimization, in case the exact name is given...
+  if( Configuration o = get_configuration( name ) )
+    return o;
+
   name = replace( lower_case( replace(name,"-"," ") )-" ", "/", "-" );
   foreach( configurations, Configuration o )
   {
@@ -3240,8 +3244,8 @@ constant formats =
      "sizeof(request_id->referer||({}))?request_id->referer[0]:\"-\"", 0 }),
   ({ "user_agent",  "%s",    
      "request_id->client?request_id->client*\"%20\":\"-\"", 0 }),
+  ({ "user_id",     "%s",    "(request_id->cookies&&request_id->cookies->RoxenUserID)||\"0\"",0 }),
   ({ "user",        "%s",    "extract_user( request_id->realauth )",0 }),
-  ({ "user_id",     "%s",    "request_id->cookies->RoxenUserID||\"0\"",0 }),
   ({ "request-time","%1.2f",  "time(request_id->time )",0 }),
   ({ "host",        "\4711",    0, 1 }), // unlikely to occur normally
 });
