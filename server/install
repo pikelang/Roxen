@@ -1,15 +1,25 @@
 #!/bin/sh
 #
-# $Id: install,v 1.4 1998/03/02 18:40:39 grubba Exp $
+# $Id: install,v 1.5 1998/05/11 00:07:20 grubba Exp $
 #
 
 # Find the default master
 if [ -f lib/pike/master.pike ]; then
   DEFINES="$DEFINES -mlib/pike/master.pike"
+  PIKE_MODULE_PATH="$PIKE_MODULE_PATH:lib/pike/modules"
 else
-  # This is used with localinstall
-  if [ -f ../pike/src/lib/master.pike ]; then
-    DEFINES="$DEFINES -m../pike/src/lib/master.pike"
+  if [ -f lib/master.pike ]; then
+    DEFINES="$DEFINES -mlib/master.pike"
+    PIKE_MODULE_PATH="$PIKE_MODULE_PATH:lib/modules"
+  else
+    # This is used with localinstall
+    if [ -f ../pike/src/lib/master.pike ]; then
+      DEFINES="$DEFINES -m../pike/src/lib/master.pike"
+      PIKE_MODULE_PATH="$PIKE_MODULE_PATH:../pike/src/lib/modules"
+      if [ -d ../pike/src/share/modules/. ]; then
+	PIKE_MODULE_PATH="$PIKE_MODULE_PATH:../pike/src/share/modules"
+      fi
+    fi
   fi
 fi
 
@@ -27,7 +37,10 @@ fi
 if [ -d base_server ]; then
   DEFINES="$DEFINES -Ibase_server"
 fi
- 
+
+# Extra program-path
+DEFINES="$DEFINES -P`pwd`"
+
 if [ -f base_server/roxen.pike ]; then
   exec bin/pike $DEFINES ./bin/install.pike $@
 else
