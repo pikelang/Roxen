@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.366 2000/09/10 17:19:01 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.367 2000/09/12 22:04:06 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -2296,6 +2296,10 @@ void call_start_callbacks( RoxenModule me,
                            ModuleInfo moduleinfo, 
                            ModuleCopies module )
 {
+  if(!me) return;
+  if(!moduleinfo) return;
+  if(!module) return;
+
   call_low_start_callbacks(  me, moduleinfo, module );
 
   mixed err;
@@ -2331,6 +2335,10 @@ void call_low_start_callbacks( RoxenModule me,
 			       ModuleInfo moduleinfo, 
 			       ModuleCopies module )
 {
+  if(!me) return;
+  if(!moduleinfo) return;
+  if(!module) return;
+
   int module_type = moduleinfo->type, pr;
   mixed err;
   if (err = catch(pr = me->query("_priority")))
