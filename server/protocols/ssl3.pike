@@ -1,4 +1,4 @@
-/* $Id: ssl3.pike,v 1.22 1997/11/30 12:03:14 nisse Exp $
+/* $Id: ssl3.pike,v 1.23 1998/01/30 02:36:35 grubba Exp $
  *
  * © 1997 Informationsvävarna AB
  *
@@ -100,7 +100,7 @@ array|void real_port(array port, object cfg)
   ctx->random = Crypto.randomness.reasonably_random()->read;
 }
 
-#define CHUNK 15000
+#define CHUNK 16384
 
 string to_send_buffer;
 
@@ -167,6 +167,74 @@ static void write_more()
   string s;
   if(!cache)
     s = get_data();
+  else
+    s = cache;
+
+  if(!s)
+  {
+//    perror("SSL3:: Done.\n");
+    my_fd->set_blocking();
+    my_fd->close();
+    my_fd = 0;
+    destruct();
+    return;
+  }    
+
+  if (sizeof(s)) {
+    int pos = my_fd->write(s);
+
+    // perror("Wrote "+pos+" bytes ("+s+")\n");
+  
+    if(pos <= 0) // Ouch.
+    {
+#ifdef DEBUG
+      perror("SSL3:: Broken pipe.\n");
+#endif
+      my_fd->set_blocking();
+      my_fd->close();
+      my_fd = 0;
+      destruct();
+      return;
+    }  
+    if(pos < strlen(s))
+      cache = s[pos..];
+    else
+      cache = 0;
+  } else {
+    cache = 0;
+  }
+}
+
+string get_data_file()
+{
+  string s;
+  if(to_send->head)
+  {
+    s = to_send->head;
+    to_send->head = 0;
+    return s;
+  }
+
+  if(to_send->data)
+  {
+    s = to_send->data;
+    to_send->data = 0;
+    return s;
+  }
+
+  if(to_send->file) {
+    // Read some more data
+    s = to_send->file->read(CHUNK,1);
+  }
+
+  return s;
+}
+
+static void write_more_file()
+{
+  string s;
+  if(!cache)
+    s = get_data_file();
   else
     s = cache;
 
@@ -355,10 +423,19 @@ void handle_request( )
   file->head = head_string;
   to_send = copy_value(file);
   
-  my_fd->set_nonblocking(0, write_more, end);
   if (objectp(to_send->file)) {
-    to_send->file->set_nonblocking(got_data_to_send, 0, no_data_to_send);
+    array st = to_send->file->stat && to_send->file->stat();
+    if (st && (st[1] >= 0)) {
+      // Ordinary file -- can't use non-blocking I/O
+      my_fd->set_nonblocking(0, write_more_file, end);
+    } else {
+      my_fd->set_nonblocking(0, write_more, end);
+      to_send->file->set_nonblocking(got_data_to_send, 0, no_data_to_send);
+    }
+  } else {
+    my_fd->set_nonblocking(0, write_more, end);
   }
+
 
   if(conf) conf->log(file, thiso);
 }
