@@ -1,6 +1,6 @@
 // -*- pike -*-
 //
-// $Id: roxen.h,v 1.26 2002/07/10 12:42:01 nilsson Exp $
+// $Id: roxen.h,v 1.27 2004/05/16 01:09:59 mani Exp $
 
 #ifndef _ROXEN_H_
 
@@ -33,8 +33,52 @@
 
 #ifdef DEBUG
 #define DO_IF_DEBUG(X...) X
+#define ASSERT_IF_DEBUG(TEST, ARGS...) do {				\
+    if (!(TEST)) error ("Assertion failed: " #TEST "\n", ARGS);		\
+  } while (0)
 #else
 #define DO_IF_DEBUG(X...)
+#define ASSERT_IF_DEBUG(TEST, ARGS...) do {} while (0)
 #endif
+
+#ifdef DEBUG_CACHEABLE
+#  define CACHE(seconds) do {                                                 \
+  int old_cacheable = ([mapping(string:mixed)]id->misc)->cacheable;           \
+  ([mapping(string:mixed)]id->misc)->cacheable =                              \
+    min(([mapping(string:mixed)]id->misc)->cacheable,seconds);                \
+  report_debug("%s:%d lowered cacheable to %d (was: %d, now: %d)\n",          \
+               __FILE__, __LINE__, seconds, old_cacheable,                    \
+               ([mapping(string:mixed)]id->misc)->cacheable);                 \
+} while(0)
+#  define RAISE_CACHE(seconds) do {                                           \
+  int old_cacheable = ([mapping(string:mixed)]id->misc)->cacheable;           \
+  ([mapping(string:mixed)]id->misc)->cacheable =                              \
+    max(([mapping(string:mixed)]id->misc)->cacheable,seconds);                \
+  report_debug("%s:%d raised cacheable to %d (was: %d, now: %d)\n",           \
+               __FILE__, __LINE__, seconds, old_cacheable,                    \
+               ([mapping(string:mixed)]id->misc)->cacheable);                 \
+} while(0)
+#  define NOCACHE() do {                                                      \
+  int old_cacheable = ([mapping(string:mixed)]id->misc)->cacheable;           \
+  ([mapping(string:mixed)]id->misc)->cacheable = 0;                           \
+  report_debug("%s:%d set cacheable to 0 (was: %d)\n",                        \
+               __FILE__, __LINE__, old_cacheable,                             \
+               ([mapping(string:mixed)]id->misc)->cacheable);                 \
+} while(0)
+#  define NO_PROTO_CACHE() do {                                               \
+  ([mapping(string:mixed)]id->misc)->no_proto_cache = 1;                      \
+  report_debug("%s:%d disabled proto cache\n", __FILE__, __LINE__);           \
+} while(0)
+#  define PROTO_CACHE() do {                                                  \
+  ([mapping(string:mixed)]id->misc)->no_proto_cache = 0;                      \
+  report_debug("%s:%d enabled proto cache\n", __FILE__, __LINE__);            \
+} while(0)
+#else
+#  define CACHE(seconds) ([mapping(string:mixed)]id->misc)->cacheable=min(([mapping(string:mixed)]id->misc)->cacheable,seconds)
+#  define RAISE_CACHE(seconds) ([mapping(string:mixed)]id->misc)->cacheable=max(([mapping(string:mixed)]id->misc)->cacheable,seconds)
+#  define NOCACHE() ([mapping(string:mixed)]id->misc)->cacheable=0
+#  define NO_PROTO_CACHE() ([mapping(string:mixed)]id->misc)->no_proto_cache=1
+#  define PROTO_CACHE() ([mapping(string:mixed)]id->misc)->no_proto_cache=0
+#endif /* DEBUG_CACHEABLE */
 
 #endif  /* !_ROXEN_H_ */
