@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.331 2002/06/11 00:42:18 nilsson Exp $
+// $Id: roxenloader.pike,v 1.332 2002/06/13 14:16:14 nilsson Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.331 2002/06/11 00:42:18 nilsson Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.332 2002/06/13 14:16:14 nilsson Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1937,12 +1937,15 @@ object(Stdio.Stat)|array(int) da_Stat_type;
 LocaleString da_String_type;
 void do_main( int argc, array(string) argv )
 {
+  // Hide main arguments in backtraces.
   array(string) hider = argv;
   argv = 0;
 
-  add_constant( "connect_to_my_mysql", connect_to_my_mysql );
-  add_constant( "clear_connect_to_my_mysql_cache",
-		clear_connect_to_my_mysql_cache );  
+  // Set start time and report server version info.
+  int start_time = gethrtime();
+  last_was_nl = 1;
+  report_debug("-"*58+"\n"+version()+", Roxen WebServer "+roxen_version()+"\n");
+
 
   //
   // Test Pike for required capabilities.
@@ -2000,9 +2003,14 @@ void do_main( int argc, array(string) argv )
     "and recompile pike, after removing the file 'config.cache'." }) );
 #endif
 
-  int start_time = gethrtime();
-  last_was_nl = 1;
-  report_debug("-"*58+"\n"+version()+", Roxen WebServer "+roxen_version()+"\n");
+
+  //
+  // Add various constants.
+  //
+
+  add_constant( "connect_to_my_mysql", connect_to_my_mysql );
+  add_constant( "clear_connect_to_my_mysql_cache",
+		clear_connect_to_my_mysql_cache );  
 
   add_constant ("get_cvs_id", get_cvs_id);
   add_constant ("add_cvs_ids", add_cvs_ids);
@@ -2018,8 +2026,6 @@ void do_main( int argc, array(string) argv )
   add_constant( "LocaleString", typeof(da_String_type) );
   add_constant( "Stat", typeof(da_Stat_type) );
   
-  mixed err;
-
   add_constant("open",          open);
   add_constant("roxen_path",    roxen_path);
   add_constant("roxen_version", roxen_version);
@@ -2065,8 +2071,10 @@ void do_main( int argc, array(string) argv )
 
   start_mysql();
 
+  mixed err;
   if (err = catch {
-    if(master()->relocate_module) add_constant("PIKE_MODULE_RELOC", 1);
+    if(master()->relocate_module)
+      add_constant("PIKE_MODULE_RELOC", 1);
     replace_master(new_master=[object(__builtin.__master)](((program)"data/roxen_master.pike")()));
   }) {
     werror("Initialization of Roxen's master failed:\n"
