@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.51 1999/02/07 16:51:10 peter Exp $
+# $Id: start,v 1.52 1999/03/28 20:05:53 marcus Exp $
 
 VERSION=202; BETA=.b;
 
@@ -9,6 +9,11 @@ DIR=../configurations/
 LOGDIR=../logs/
 FILES="default"
 program=base_server/roxenloader.pike
+
+# Set up environment
+if test -f etc/environment; then
+  . etc/environment
+fi
 
 # Enable threads (if available) on Solaris.
 # Most other OS's have thread bugs that cause them or Roxen to crash.
@@ -96,6 +101,9 @@ parse_args() {
 # Used by the 'install' script
   --truss)
      pike="truss $pike"
+  ;;
+  --no-env-setup)
+   pass2="$pass2 $1"
   ;;
   --log-dir=*)
    LOGDIR=`echo $1 | sed -e 's/--log-dir=//'`
@@ -287,7 +295,7 @@ rotate () {
 }
 
 start_roxen() {
-  args="-DROXEN $DEBUG $DEFINES $pass $program --config-dir=$DIR"
+  args="-DROXEN $DEBUG $DEFINES $pass $program --config-dir=$DIR $pass2"
   if [ "x$gdb" = "xno" ]; then
     echo "PIKE_MODULE_PATH=$PIKE_MODULE_PATH"
     echo Executing $pike $args $@
