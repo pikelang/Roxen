@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.306 2000/05/04 23:28:52 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.307 2000/05/05 23:29:48 nilsson Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -1534,13 +1534,10 @@ mapping get_file(RequestID id, int|void no_magic, int|void internal_get)
   return res;
 }
 
-public array(string) find_dir(string file, RequestID id)
+public array(string) find_dir(string file, RequestID id, void|int(0..1) verbose)
 {
-  string loc;
   array dir;
-  array | mapping d;
   TRACE_ENTER(LOCALE->list_directory(file), 0);
-//   file=replace(file, "//", "/");
 
   if(file[0] != '/')
     file = "/" + file;
@@ -1590,6 +1587,10 @@ public array(string) find_dir(string file, RequestID id)
   }
 #endif /* URL_MODULES */
 
+  array(string) | mapping d;
+  array(string) locks=({});
+  object mod;
+  string loc;
   foreach(location_modules(id), array tmp)
   {
     loc = tmp[0];
@@ -1602,7 +1603,8 @@ public array(string) find_dir(string file, RequestID id)
 	continue;
       }
 #endif
-      if(d=function_object(tmp[1])->find_dir(file[strlen(loc)..], id))
+      mod=function_object(tmp[1]);
+      if(d=mod->find_dir(file[strlen(loc)..], id))
       {
 	if(mappingp(d))
 	{
@@ -1614,11 +1616,15 @@ public array(string) find_dir(string file, RequestID id)
 	    TRACE_LEAVE("");
 	} else {
 	  TRACE_LEAVE(LOCALE->got_files());
-	  if(!dir && d) dir=({ });
+	  if(!dir) dir=({ });
 	  dir |= d;
 	}
-      } else
+      }
+      else {
+	if(verbose && mod->list_lock_files)
+	  locks |= mod->list_lock_files();
 	TRACE_LEAVE("");
+      }
     } else if((search(loc, file)==0) && (loc[strlen(file)-1]=='/') &&
 	      (loc[0]==loc[-1]) && (loc[-1]=='/') &&
 	      (function_object(tmp[1])->stat_file(".", id))) {
@@ -1632,7 +1638,7 @@ public array(string) find_dir(string file, RequestID id)
       TRACE_LEAVE(LOCALE->added_module_mountpoint());
     }
   }
-  if(!dir) return ([])[0];
+  if(!dir) return verbose ? ({0})+locks : ([])[0];
   if(sizeof(dir))
   {
     TRACE_LEAVE(LOCALE->returning_file_list(sizeof(dir)));
