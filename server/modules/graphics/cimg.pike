@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.56 2002/11/06 15:06:07 anders Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.57 2003/07/04 12:07:36 jonasw Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -143,7 +143,11 @@ string status() {
 array(Image.Layer)|mapping generate_image( mapping args, RequestID id )
 {
   array layers;
-  mapping opts = ([]);
+
+  //  Photoshop layers: don't let individual layers expand the image
+  //  beyond the bounds of the overall image.
+  mapping opts = ([ "crop_to_bounds" : 1 ]);
+  
   if( args["process-all-layers"] )
     opts->draw_all_layers = 1;
 
