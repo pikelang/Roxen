@@ -1,13 +1,14 @@
-/* $Id: wizard.pike,v 1.22 1997/08/21 10:50:29 per Exp $
+/* $Id: wizard.pike,v 1.23 1997/08/21 11:31:22 per Exp $
  *  name="Wizard generator";
  *  doc="This plugin generats all the nice wizards";
  */
 
+
 inherit "roxenlib";
 string wizard_tag_var(string n, mapping m, object id)
 {
-    
   string current = id->variables[m->name] || m["default"];
+
   switch(m->type)
   {
    default: // String....
@@ -57,10 +58,16 @@ string wizard_tag_var(string n, mapping m, object id)
 			      (current==m->value)?" checked":""), m);
 
    case "checkbox":
+    string res;
     m_delete(m,"default");
     m_delete(m, m->name);
     m_delete(id->variables, m->name);
-    return make_tag("input "+(current?" checked":""), m);
+    if(!search(lower_case(current||""),"on")) current="1";
+    if((int)current) m->checked="checked";
+    res=make_tag("input", m);
+    m->type="hidden";
+    m->value="0";
+    return res+make_tag("input", m);
 
    case "int":
     m->type = "number";
@@ -126,7 +133,8 @@ string compress_state(mapping state)
   m_delete(state,"unique");
   m_delete(state,"help");
 
-//  perror("State=%O\n", state);
+//  werror(sprintf("State=%O\n", state));
+
   string from = encode_value(state);
   object gz = Gz;
   if(sizeof(indices(gz)))
@@ -145,14 +153,14 @@ string parse_wizard_help(string t, mapping m, string contents, object id,
   return contents;
 }
 
-string name_of()
+string make_title()
 {
-  string n = (this_object()->wizard_name||this_object()->name)-"<p>";
-  sscanf(n, "%*s//%s", n);
-  sscanf(n, "%*d//%s", n);
-  return n;
+  string s = (this_object()->wizard_name||this_object()->name) - "<p>";
+  sscanf(s, "%*s//%s", s);
+  sscanf(s, "%*d:%s", s);
+  return s;
 }
-
+  
 string parse_wizard_page(string form, object id, string wiz_name)
 {
   int max_page;
@@ -178,10 +186,10 @@ string parse_wizard_page(string form, object id, string wiz_name)
 	 "<table bgcolor=black cellpadding=1 border=0 cellspacing=0 width=80%>\n"
 	 "  <tr><td><table bgcolor=#eeeeee cellpadding=0 "
 	 "         cellspacing=0 border=0 width=100%>\n"
-	 "    <tr><td><table width=100% height=100% cellspacing=0 cellpadding=5>\n<tr><td>"
-	 "<font size=+2>"+name_of()+"</font>"
+	 "    <tr><td valign=top><table width=100% height=100% cellspacing=0 cellpadding=5>\n<tr><td valign=top>\n"
+	 "<font size=+2>"+make_title()+"</font>"
 	 " </td>\n<td align=right>"+
-	 (max_page!=1?"Page "+(page+1)+"/"+(max_page+1):"")+"</td>\n"
+	 (max_page?"Page "+(page+1)+"/"+(max_page+1):"")+"</td>\n"
 	  " \n<td align=right>"+
 	 (foo->help && !id->variables->help?
 	  "<font size=-1><input type=image name=help src="+
@@ -243,7 +251,7 @@ mapping|string wizard_for(object id,string cancel,mixed ... args)
     v->help="1";
   } else if(v->cancel) 
     return http_redirect(cancel||id->not_query, @(id->conf?({id}):({})));
-
+  
   mapping s = decompress_state(v->_state);
   foreach(indices(s), string q)
     v[q] = v[q]||s[q];
@@ -264,7 +272,7 @@ mapping|string wizard_for(object id,string cancel,mixed ... args)
     } else if(sscanf(n, "_delete_%s:%s", n,q)==2) {
       if(v[n]) v[n]=replace(replace(v[n]/"\0",q,"")*"\0","\0\0","\0");
       m_delete(v, on);
-    }
+    } 
   }
 
   for(; !data; v->_page=PAGE(offset))
@@ -326,14 +334,8 @@ string focused_wizard_menu;
 mixed wizard_menu(object id, string dir, string base, mixed ... args)
 {
   mapping acts;
-  if(id->pragma["no-cache"]) {
-    foreach(indices(wizards), string w)
-    {
-      destruct(wizards[w]);
-      m_delete(wizards,w);
-    }
-    wizards=([]);
-  }  
+  if(id->pragma["no-cache"]) wizards=([]);
+  
   if(!id->variables->sm)
     id->variables->sm = focused_wizard_menu;
   else
@@ -345,7 +347,7 @@ mixed wizard_menu(object id, string dir, string base, mixed ... args)
     return ("<table cellpadding=10><tr><td valign=top bgcolor=#eeeeee>"+
 	    act_describe_submenues(indices(acts),base,id->variables->sm)+
 	    "</td>\n\n<td valign=top>"+
-	    (acts[id->variables->sm]?"<font size=+3>"+
+	    (sizeof(acts)>1 && acts[id->variables->sm]?"<font size=+3>"+
 	     (id->variables->sm||"Misc")+"</font><dl>":"<dl>")+
 	    (sort(acts[id->variables->sm]||({}))*"\n")+
 	    "</dl></td></tr></table>");
@@ -355,33 +357,12 @@ mixed wizard_menu(object id, string dir, string base, mixed ... args)
 
 /*** Additional Action Functions ***/
 
-string html_notice(string notice, object id)
-{
-  return ("<table><tr><td valign=top><img src=\""+
-	  (id->conf?"/internal-roxen-":"/image/")
-	  +"err_1.gif\"></td><td valign=top>"+notice+"</td></tr></table>");
-}
-
-string html_warning(string notice, object id)
-{
-  return ("<table><tr><td valign=top><img src=\""+
-	  (id->conf?"/internal-roxen-":"/image/")
-	  +"err_2.gif\"></td><td valign=top>"+notice+"</td></tr></table>");
-}
-
-string html_error(string notice, object id)
-{
-  return ("<table><tr><td valign=top><img src=\""+
-	  (id->conf?"/internal-roxen-":"/image/")
-	  +"err_3.gif\"></td><td valign=top>"+notice+"</td></tr></table>");
-}
-
 string html_table(array(string) subtitles, array(array(string)) table)
 {
   string r = "";
 
-  r += "<table bgcolor=black border=0 cellspacing=0 cellpadding=1>\n"
-       "<tr><td>\n";
+  r += ("<table bgcolor=black border=0 cellspacing=0 cellpadding=1>\n"
+	"<tr><td>\n");
   r += "<table border=0 cellspacing=0 cellpadding=4>\n";
   r += "<tr bgcolor=#113377>\n";
   foreach(subtitles, string s)
@@ -399,3 +380,24 @@ string html_table(array(string) subtitles, array(array(string)) table)
   return r;
 }
 
+
+string html_notice(string notice, object id)
+{
+  return ("<table><tr><td valign=top><img src=\""+
+        (id->conf?"/internal-roxen-":"/image/")
+        +"err_1.gif\"></td><td valign=top>"+notice+"</td></tr></table>");
+}
+
+string html_warning(string notice, object id)
+{
+  return ("<table><tr><td valign=top><img src=\""+
+        (id->conf?"/internal-roxen-":"/image/")
+        +"err_2.gif\"></td><td valign=top>"+notice+"</td></tr></table>");
+}
+
+string html_error(string notice, object id)
+{
+  return ("<table><tr><td valign=top><img src=\""+
+        (id->conf?"/internal-roxen-":"/image/")
+        +"err_3.gif\"></td><td valign=top>"+notice+"</td></tr></table>");
+}

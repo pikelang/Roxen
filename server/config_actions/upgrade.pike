@@ -1,8 +1,25 @@
 /*
- * $Id: upgrade.pike,v 1.9 1997/08/21 10:50:39 per Exp $
+ * $Id: upgrade.pike,v 1.10 1997/08/21 11:31:24 per Exp $
  */
 
-inherit "roxenlib";
+inherit "wizard";
+
+
+int is_older(string v1, string v2)
+{
+  int def;
+  array a1,a2;
+  if(sizeof(a1=v1/".") == sizeof(a2=v2/"."))
+    return v1<v2;
+  if(sizeof(a1)<sizeof(a2))
+    def=1;
+  for(int i=0; i<(def?sizeof(a1):sizeof(a2)); i++)
+    if((int)a1[i]!=(int)a2[i])
+      return a1[i]<a2[i];
+  return def;
+}
+
+
 
 constant name= "Maintenance//Upgrade components from roxen.com...";
 constant doc = "Selectively upgrade Roxen components from roxen.com.";
@@ -71,23 +88,15 @@ void find_modules(int mode)
 string page_0(object id)
 {
   return
-    ("<table bgcolor=black cellpadding=1><tr><td>\n"
-     "<table cellpadding=10 width=100% height=100% cellspacing=0 border=0 bgcolor=#eeeeff>\n"
-     "<tr><td align=center valign=center colspan=2>"
-     "<h1>Upgrade Roxen Components</h1>"
-     "<form>\n"
-     "<font size=+1>What components do you want to upgrade?</font><br>\n"
-     "</tr><tr><td  colspan=2>\n"
-     "<input type=radio name=how value=1> All installed modules (all modules in your module path)<br>\n"
-     "<input type=radio name=how checked value=0> All currently enabled modules in all virtual servers <br>\n"
-     "<input type=radio name=how value=2> New (previously "
+    ("<font size=+1>What components do you want to upgrade?</font><br>\n"
+     "</tr><tr><td colspan=2>\n"
+     "<var type=radio name=how value=1> All installed modules (all modules in your module path)<br>\n"
+     "<var type=radio name=how default=1 value=0> Only currently "
+     "enabled modules (from all virtual servers) <br>\n"
+     "<var type=checkbox name='how2'> Also search for new (previously "
      "uninstalled) modules<br>\n"
-     "<input type=radio name=how value=3> Actions and server templates "
-     "</tr><tr><td>"
-     "<input type=submit name=ok value=\" Ok \"></form>\n"
-     "</td><td align=right>"
-     "<td><form><input type=submit name=cancel value=\" Cancel \">\n"
-     "</form></table></td></tr></table></table>\n");
+     "<var type=checkbox name='how3' default=1> Also search for actions "
+     "and server templates ");
 }
 
 string upgrade_module(string m, object rpc)
@@ -150,6 +159,63 @@ string upgrade_module(string m, object rpc)
   }
   
   return res+"<p>\n\n\n";
+}
+
+string page_2(object id)
+{
+  object rpc;
+  catch {
+    rpc=RoxenRPC.Client("skuld.infovav.se",23,"upgrade");
+  };
+  if(!rpc)return "Failed to connect to update server at skuld.infovav.se:23.\n";
+//  if((int)id->variables["how:3"]) return handle_components(id,rpc);
+}
+
+string page_3(object id)
+{
+  object rpc;
+  catch {
+    rpc=RoxenRPC.Client("skuld.infovav.se",23,"upgrade");
+  };
+  if(!rpc)return "Failed to connect to update server at skuld.infovav.se:23.\n";
+
+//  if((int)id->variables["how:2"])
+//    return new_form(id,rpc);
+}
+
+string page_1(object id)
+{
+  int num;
+  object rpc;
+  string res=
+    ("<font size=+2>Modules that have a newer version available.</font><p>"
+     "Select the box to add the module to the list of modules to "
+     "be updated</b></td></tr>\n");
+  catch {
+    rpc=RoxenRPC.Client("skuld.infovav.se",23,"upgrade");
+  };
+  if(!rpc)
+    return "Failed to connect to update server at skuld.infovav.se:23.\n";
+
+  find_modules((int)id->variables->how);
+  mapping mv = rpc->module_versions( modules, roxen->real_version );
+  array tbl = ({});
+  foreach(sort(indices(modules)), string m)
+  {
+    if(mv[m] && (is_older(modules[m]->version, mv[m])))
+    {
+      num++;
+      tbl += ({({"<var type=checkbox name=M_"+m+">",
+		 modules[m]->name,modules[m]->fname,modules[m]->version,
+		 (mv[m]?mv[m]:"?")})});
+    }
+  }
+  if(num)
+    return res + html_table ( ({ "", "Module", "File", "Available Version",
+				   "Installed Version"}), tbl );
+  else
+    return "There are no new versions of any of your modules available";
+
 }
 
 string handle_upgrade(object id, object rpc)
@@ -272,20 +338,6 @@ void update_comps()
 }
 
 
-int is_older(string v1, string v2)
-{
-  int def;
-  array a1,a2;
-  if(sizeof(a1=v1/".") == sizeof(a2=v2/"."))
-    return v1<v2;
-  if(sizeof(a1)<sizeof(a2))
-    def=1;
-  for(int i=0; i<(def?sizeof(a1):sizeof(a2)); i++)
-    if((int)a1[i]!=(int)a2[i])
-      return a1[i]<a2[i];
-  return def;
-}
-
 string upgrade_component(string m, object rpc)
 {
   array rm = rpc->get_component(m,roxen->real_version);
@@ -379,7 +431,7 @@ string handle_components(object id, object rpc)
 
 string handle(object id)
 {
-
+  return wizard_for(id,0);
   string res=""
     "<form>\n"
     "<input type=hidden name=action value="+id->variables->action+">\n"
@@ -439,6 +491,4 @@ string handle(object id)
       "<td><input type=submit name=cancel value=\" Cancel \"></table></form>\n";
     return res;
   }
-  
-  return initial_form(id);
 }
