@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.872 2004/05/04 15:02:35 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.873 2004/05/07 14:41:21 mast Exp $";
 
 //! @appears roxen
 //!
@@ -625,6 +625,7 @@ local static void handler_thread(int id)
 #endif
   while(1)
   {
+    int thread_flagged_as_busy;
     if(q=catch {
       do {
 //  	if (!busy_threads) werror ("GC: %d\n", gc());
@@ -634,9 +635,11 @@ local static void handler_thread(int id)
 				id, h[0], h[1] / 1));
 	  set_locale();
 	  busy_threads++;
+	  thread_flagged_as_busy = 1;
 	  h[0](@h[1]);
 	  h=0;
 	  busy_threads--;
+	  thread_flagged_as_busy = 0;
 	} else if(!h) {
 	  // Roxen is shutting down.
 	  report_debug("Handle thread ["+id+"] stopped.\n");
@@ -668,6 +671,8 @@ local static void handler_thread(int id)
 	}
       } while(1);
     }) {
+      if (thread_flagged_as_busy)
+	busy_threads--;
       if (h = catch {
 	report_error(/*LOCALE("", "Uncaught error in handler thread: %s"
 		       "Client will not get any response from Roxen.\n"),*/
@@ -1424,7 +1429,7 @@ class Protocol
     {
       if(!mu) mu=urls[sorted_urls[0]];
       INIT( mu );
-      URL2CONF_MSG ("%O %O cached: %O\n", this_object(), url, c);
+      URL2CONF_MSG ("%O %O Only one configuration: %O\n", this_object(), url, c);
       return c;
     } else if (!sizeof(sorted_urls)) {
       URL2CONF_MSG("%O %O No active URLS!\n", this_object(), url);
@@ -4404,6 +4409,8 @@ void describe_all_threads()
   report_debug("Describing single thread:\n%s\n",
 	       describe_backtrace (backtrace()));
 #endif
+
+  report_debug (RoxenDebug.report_leaks());
 }
 
 constant dump = roxenloader.dump;
@@ -4446,12 +4453,27 @@ void show_timers()
 #endif
 
 
+class GCTimestamp
+{
+  array self_ref;
+  static void create() {self_ref = ({this_object()});}
+  static void destroy() {
+    werror ("GC runs at %s", ctime(time()));
+    GCTimestamp();
+  }
+}
+
+
 array argv;
 int main(int argc, array tmp)
 {
   // __builtin.gc_parameters((["enabled": 0]));
   argv = tmp;
   tmp = 0;
+
+#ifdef LOG_GC_TIMESTAMPS
+  GCTimestamp();
+#endif
 
   // For RBF
   catch(mkdir( "../var" ));
@@ -4932,7 +4954,7 @@ function compile_log_format( string fmt )
 // In the tests array the following types has the following meaning:
 // function
 //   The function will be run during compilation. It gets the values
-//   aquired though sscanf-ing the command as input and should return
+//   acquired through sscanf-ing the command as input and should return
 //   an array with corresponding data.
 // string
 //   The string will be compiled into the actual test code. It is
@@ -4951,7 +4973,7 @@ function compile_log_format( string fmt )
 // NOTE: It's up to the security checks in this file to ensure that
 // nothing is overcached. All patterns that perform checks using
 // information from the client (such as remote address, referer etc)
-// _have_ to use NOCACHE() or NO_PROTO_CACHE(). It's not nessesary, however,
+// _have_ to use NOCACHE() or NO_PROTO_CACHE(). It's not necessary, however,
 // to do that for checks that use the authentication module API, since
 // then it's up to the user database and authentication modules to ensure
 // that nothing is overcached in that case.
