@@ -7,7 +7,7 @@
 
 #pragma strict_types
 
-constant cvs_version = "$Id: indirect_href.pike,v 1.32 2001/09/21 15:58:15 jhs Exp $";
+constant cvs_version = "$Id: indirect_href.pike,v 1.33 2002/01/17 22:37:53 nilsson Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -55,7 +55,7 @@ void start()
 class TagAI {
   inherit RXML.Tag;
   string name;
-  mapping(string:object/*(RXML.Type)*/) req_arg_types = (["name":RXML.t_text(RXML.PEnt)]);
+  mapping(string:object(RXML.Type)) req_arg_types = (["name":RXML.t_text(RXML.PEnt)]);
 
   void create() {
     if(variables->tagname)
