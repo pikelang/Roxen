@@ -1,7 +1,7 @@
 #include <stat.h>
 #include <config.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.16 2001/02/18 13:40:53 mirar Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.17 2001/02/18 13:50:35 mirar Exp $";
 
 class Variable
 {
@@ -421,7 +421,11 @@ class FakedVariables( mapping real_variables )
   static mapping cast(string to)
   {
     if (to[..6]=="mapping")
-       return copy_value(real_variables);
+    {
+       array v=indices(real_variables);
+       return mkmapping(v,map(v,`[]));
+    }	  
+	  
     error("can't cast to %O\n",to);
   }
 }
