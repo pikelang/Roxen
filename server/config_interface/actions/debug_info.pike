@@ -1,15 +1,15 @@
 /*
- * $Id: debug_info.pike,v 1.8 2000/09/12 20:54:45 per Exp $
+ * $Id: debug_info.pike,v 1.9 2001/02/02 12:27:36 per Exp $
  */
 #include <stat.h>
 #include <roxen.h>
 //<locale-token project="admin_tasks">LOCALE</locale-token>
-#define LOCALE(X,Y)	_STR_LOCALE("admin_tasks",X,Y)
+#define LOCALE(X,Y)	_DEF_LOCALE("admin_tasks",X,Y)
 
 constant action = "debug_info";
 
-string name= LOCALE(1,"Pike memory usage information");
-string doc = LOCALE(2,
+LocaleString name= LOCALE(1,"Pike memory usage information");
+LocaleString doc = LOCALE(2,
 		    "Show some information about how pike is using the "
 		    "memory it has allocated. Mostly useful for developers.");
 

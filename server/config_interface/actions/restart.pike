@@ -1,16 +1,16 @@
 /*
- * $Id: restart.pike,v 1.9 2000/08/17 11:11:42 jhs Exp $
+ * $Id: restart.pike,v 1.10 2001/02/02 12:27:37 per Exp $
  */
 
 #include <config_interface.h>
 #include <roxen.h>
 
 //<locale-token project="admin_tasks"> LOCALE </locale-token>
-#define LOCALE(X,Y)  _STR_LOCALE("admin_tasks",X,Y)
+#define LOCALE(X,Y)  _DEF_LOCALE("admin_tasks",X,Y)
 
 constant action = "maintenance";
 
-string name= LOCALE(34, "Restart or shutdown");
+LocaleString name= LOCALE(34, "Restart or shutdown");
 constant doc = "";
 
 

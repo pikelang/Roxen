@@ -15,9 +15,11 @@ string parse( RequestID id )
       if( (q = ((program)f)()) && q->action &&
 	  (!config_setting2("group_tasks")
 	   || (q->action == (id->variables->class||"status") )) )
+      {
         res += ({("<action name='" + 
-		  replace(q->name, ({"\"", "'"}), ({"&#34;", "&#39;"})) + 
+		  replace((string)q->name, ({"\"", "'"}), ({"&#34;", "&#39;"})) + 
 		  "' fname="+f+" >" + q->doc + "</action>")});
+      }
     };
   }
   roxenloader.pop_compile_error_handler( );
