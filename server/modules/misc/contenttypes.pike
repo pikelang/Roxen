@@ -1,10 +1,10 @@
-// This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
+// This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
 
 // This module handles all normal extension to content type
 // mapping. Given the file 'foo.html', it will per default
 // set the contenttype to 'text/html'
 
-constant cvs_version = "$Id: contenttypes.pike,v 1.13 1999/07/15 16:59:28 neotron Exp $";
+constant cvs_version = "$Id: contenttypes.pike,v 1.14 1999/09/24 16:55:20 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -20,7 +20,7 @@ void create()
 	 "# Feel free to add to this, but do it after the #include line if\n"
 	 "# you want to override any defaults\n"
 	 "\n"
-	 "#include <etc/extensions>\n\n", "Extensions", 
+	 "#include <etc/more_extensions/vanilla>\n\n", "Extensions", 
 	 TYPE_TEXT_FIELD, 
 	 "This is file extension "
 	 "to content type mapping. The format is as follows:\n"
@@ -37,16 +37,11 @@ void create()
 
 string status()
 {
-  string a,b;
-  b="<h2>Accesses per extension</h2>\n\n";
-  foreach(indices(accessed), a)
-    b += a+": "+accessed[ a ]+"<br>\n";
-  return b;
-}
-
-string comment()
-{
-  return sizeof(extensions) + " extensions, " + sizeof(accessed)+" used.";
+  string b=sizeof(extensions) + " extensions, " + sizeof(accessed)+" used.\n"
+    "<h3>Accesses per extension</h3>\n\n<table border=1 cellpadding=4 cellspacing=0>";
+  foreach(indices(accessed), string a)
+    b += "<tr><td>"+a+"</td><td>"+accessed[ a ]+"</td></tr>\n";
+  return b+"</table>\n";
 }
 
 void parse_ext_string(string exts)
@@ -92,7 +87,6 @@ array register_module()
 array type_from_extension(string ext)
 {
   if(ext == "default") {
-//    roxen_perror("%O\n", ({ QUERY(default), 0 }));
     accessed[ ext ] ++;
     return ({ QUERY(default), 0 });
   } else if(extensions[ ext ]) {
@@ -100,9 +94,3 @@ array type_from_extension(string ext)
     return ({ extensions[ ext ], encodings[ ext ] });
   }
 }
-
-int may_disable() 
-{ 
-  return 0; 
-}
-
