@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.89 2000/05/03 08:52:15 mast Exp $
+//! $Id: module.pmod,v 1.90 2000/05/26 15:24:51 nilsson Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -3003,7 +3003,28 @@ static class VoidType
   mixed ``+ (mixed val) {return val;}
   int `!() {return 1;}
   string _sprintf() {return "RXML.Void";}
+  mixed cast(string type)
+  {
+    switch(type)
+    {
+    case "int":
+      return 0;
+    case "float":
+      return 0.0;
+    case "string":
+      return "";
+    case "array":
+      return ({});
+    case "multiset":
+      return (<>);
+    case "mapping":
+      return ([]);
+    default:
+      throw( ({ "Cannot cast RXML.Void to "+type+".\n", backtrace() }) );
+    }
+  }
 };
+
 VoidType Void = VoidType();
 //! An object representing the void value. Works as initializer for
 //! sequences, since Void + anything == anything + Void == anything.
