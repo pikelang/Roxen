@@ -545,7 +545,6 @@ mapping draw_grid(mapping diagram_data, int|float xpos_for_yaxis,
 					     diagram_data["yminvalue"])
 					   *ymore+diagram_data["ysize"]-ystart),
 
-					  diagram_data["xsize"]-
 					  diagram_data["xstop"],
 					  (-(diagram_data["values_for_ynames"][i]-
 					     diagram_data["yminvalue"])
