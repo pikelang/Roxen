@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.275 2000/03/13 06:10:22 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.276 2000/03/14 02:20:39 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -512,8 +512,34 @@ class LogFile
   string fname;
   void do_open()
   {
-    fd = open( fname, "wac" );
+    string ff = fname;
+    mapping m = localtime(time());
+    m->year += 1900;	/* Adjust for years being counted since 1900 */
+    m->mon++;		/* Adjust for months being counted 0-11 */
+    if(m->mon < 10) m->mon = "0"+m->mon;
+    if(m->mday < 10) m->mday = "0"+m->mday;
+    if(m->hour < 10) m->hour = "0"+m->hour;
+    ff = replace(fname,({"%d","%m","%y","%h", "%H" }),
+		      ({ (string)m->mday, (string)(m->mon),
+			 (string)(m->year),(string)m->hour,
+			 cached_hostname,
+		      }));
+    mkdirhier( ff );
+    fd = open( ff, "wac" );
+    if(!fd) 
+    {
+      remove_call_out( do_open );
+      call_out( do_open, 120 ); 
+      report_error("Failed to open logfile "+fname+" "
+#if constant(strerror)
+                   "(" + strerror(errno()) + ")"
+#endif
+                   "\n");
+      return;
+    }
     opened = 1;
+    remove_call_out( do_open );
+    call_out( do_open, 1800 ); 
   }
   
   void do_close()
@@ -522,29 +548,18 @@ class LogFile
     opened = 0;
   }
 
-  void write( string what )
+  int write( string what )
   {
-    if( !opened )
-      do_open();
+    if( !opened ) do_open();
+    if( !opened ) return 0;
     remove_call_out( do_close );
     call_out( do_close, 10.0 );
-    fd->write( what );
+    return fd->write( what );
   }
 
   static void create( string f ) 
   {
-    mapping m = localtime(time());
-    m->year += 1900;	/* Adjust for years being counted since 1900 */
-    m->mon++;		/* Adjust for months being counted 0-11 */
-    if(m->mon < 10) m->mon = "0"+m->mon;
-    if(m->mday < 10) m->mday = "0"+m->mday;
-    if(m->hour < 10) m->hour = "0"+m->hour;
-    fname = replace(f,({"%d","%m","%y","%h", "%H" }),
-		      ({ (string)m->mday, (string)(m->mon),
-			 (string)(m->year),(string)m->hour,
-			 cached_hostname,
-		      }));
-    mkdirhier( fname );
+    fname = f;
     opened = 0;
   }
 }
