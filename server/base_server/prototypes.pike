@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.99 2004/05/05 13:11:40 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.100 2004/05/05 13:14:10 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -822,14 +822,17 @@ class RequestID
   //!   For speed reasons the parsing is rather forgiving.
   //!
   //! @returns
-  //!   Returns a mapping from resource name to condition.
-  //!   The resource @expr{0@} (zero) represents the default resource.
+  //!   Returns @expr{0@} (zero) if there was no if header, or
+  //!   if parsing of the if header failed.
+  //!   Returns a mapping from resource name to condition on success.
   //!
   //!   A condition is represented as an array of sub-conditions
   //!   (@tt{List@} in RFC 2518), where each sub-condition is an array
   //!   of tokens, and each token is an array of two elements, where
   //!   the first is one of the strings @expr{"not"@}, @expr{"etag"@},
   //!   or @expr{"key"@}, and the second is the value.
+  //!
+  //!   The resource @expr{0@} (zero) represents the default resource.
   mapping(string:array(array(array(string)))) get_if_data()
   {
     if (!if_data || sizeof(if_data)) return if_data;
