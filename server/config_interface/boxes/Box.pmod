@@ -67,9 +67,9 @@ class Fetcher
 
   void done( Protocols.HTTP.Query qu )
   {
-    cache[h+p+q] = ({query->data()});
+    cache[h+p+q] = ({qu->data()});
     if( cb )
-      cb( query->data() );
+      cb( qu->data() );
   }
   
   void fail( Protocols.HTTP.Query qu )
