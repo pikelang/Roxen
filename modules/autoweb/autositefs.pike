@@ -5,20 +5,20 @@ inherit "module";
 inherit "roxenlib";
 inherit "modules/filesystems/filesystem.pike" : filesystem;
 
-constant cvs_version="$Id: autositefs.pike,v 1.1 1998/07/15 22:57:53 js Exp $";
+constant cvs_version="$Id: autositefs.pike,v 1.2 1998/07/16 12:44:55 js Exp $";
 
 mapping host_to_id;
 
 array register_module()
 {
   return ({ MODULE_LOCATION|MODULE_PARSER,
-	    "AutoSite filesystem",
+	    "AutoSite Filesystem",
 	    "" });
 }
 
 string get_host(object id)
 {
-  return "www.gazonk.se";
+  return "www.idonex.se";
   if(id->misc->host)
     return (id->misc->host / ":")[0];
   else
@@ -39,23 +39,35 @@ void update_host_cache(object id)
     host_to_id=new_host_to_id;
 }
 
-string dir_from_host(object id)
+string file_from_host(object id, string file)
 {
   string prefix,dir;
   if(prefix=host_to_id[get_host(id)])
     dir = "/" + prefix + "/";
   else
-    return 0; // No such host
+  {
+    string host,rest="";
+    sscanf(file,"%s/%s",host,rest);
+    if(prefix=host_to_id[host])
+    {
+      dir="/" + prefix + "/";
+      if(rest)
+	file=rest;
+    }
+    else
+      return 0; // No such host
+  }
   dir = replace(dir, "//", "/");
-  return dir;
+  werror("file_from_host: %O\n",dir+file);
+  return dir+file;
 }
 
 mixed find_file(string f, object id)
 {
   if(!host_to_id)
     update_host_cache(id);
-  string dir=dir_from_host(id);
-  if(!dir)
+  string file=file_from_host(id,f);
+  if(!file)
   {
     string s="";
     s+=
@@ -67,10 +79,8 @@ mixed find_file(string f, object id)
       s+="<li><a href='/"+host+"/'>"+host+"</a>";
     return http_string_answer(parse_rxml(s,id),"text/html");
   }
-  else
-    f=dir+f;
-  
-  mixed res = filesystem::find_file(f, id);
+
+  mixed res = filesystem::find_file(file, id);
   if(objectp(res))
   {
     if(roxen->type_from_filename( f, 0 ) == "text/html")
@@ -90,15 +100,13 @@ string real_file(string f, mixed id)
     return 0;
   if(!host_to_id)
     update_host_cache(id);
-  string dir=dir_from_host(id);
-  if(!dir)
+  string file=file_from_host(id,f);
+  if(!file)
     return 0; // FIXME, return a helpful page
-  else
-    f=dir+f;
   array(int) fs;
 
   // Use the inherited stat_file
-  fs = filesystem::stat_file( f,id );
+  fs = filesystem::stat_file( file,id );
 
   if (fs && ((fs[1] >= 0) || (fs[1] == -2)))
     return f;
@@ -109,26 +117,20 @@ array find_dir(string f, object id)
 {
   if(!host_to_id)
     update_host_cache(id);
-  string dir=dir_from_host(id);
-  if(!dir)
+  string file=file_from_host(id,f);
+  if(!file)
     return 0; // FIXME, return got->conf->userlist(id);
   else
-  {
-    f=dir+f;
-    return filesystem::find_dir(f, id);
-  }
+    return filesystem::find_dir(file, id);
 }
 
 mixed stat_file(mixed f, mixed id)
 {
   if(!host_to_id)
     update_host_cache(id);
-  string dir=dir_from_host(id);
-  if(!dir)
+  string file=file_from_host(id,f);
+  if(!file)
     return 0; // FIXME, return a helpful page
   else
-  {
-    f=dir+f;
-    return filesystem::stat_file( f,id );
-  }
+    return filesystem::stat_file( file,id );
 }

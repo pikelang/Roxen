@@ -1,12 +1,12 @@
 /*
- * $Id: admin.pike,v 1.3 1998/07/15 22:57:43 js Exp $
+ * $Id: admin.pike,v 1.4 1998/07/16 12:44:51 js Exp $
  *
  * AutoAdmin, administration interface
  *
  * Johan Schön 1998-07-08
  */
 
-constant cvs_version = "$Id: admin.pike,v 1.3 1998/07/15 22:57:43 js Exp $";
+constant cvs_version = "$Id: admin.pike,v 1.4 1998/07/16 12:44:51 js Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -179,7 +179,4 @@ void create()
 	 "Admin password", TYPE_PASSWORD,
 	 "This password grants full access to the configuration "
 	 "part of AutoSite Admin.");
-  defvar("da_ip", "194.52.182.27",
-	 "Admin user name", TYPE_STRING,
-	 "The default IP number.");
 }
