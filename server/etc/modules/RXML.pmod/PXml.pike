@@ -3,6 +3,8 @@
 //! Parses tags and entities. Entities on the form &scope.variable;
 //! are replaced by variable references.
 
+#pragma strict_types
+
 inherit RXML.TagSetParser;
 inherit Parser.HTML : low_parser;
 
@@ -33,16 +35,16 @@ void create (RXML.Context ctx, RXML.Type type, RXML.TagSet tag_set, void|int is_
     plist = plist[1..];
 
     if (tset->prefix_required && prefix) {
-      mapping(string:mixed) m;
+      mapping(string:string|function) m;
       if ((m = tset->low_containers))
 	foreach (indices (m), string n) add_container (prefix + n, m[n]);
       if ((m = tset->low_tags))
 	foreach (indices (m), string n) add_tag (prefix + n, m[n]);
       foreach (tlist, RXML.Tag tag)
 	if (tag->flags & RXML.FLAG_CONTAINER)
-	  add_container (prefix + tag->name, tag->_parsed_tag_cb);
+	  add_container (prefix + tag->name, tag->handle_tag);
 	else
-	  add_tag (prefix + tag->name, tag->_parsed_tag_cb);
+	  add_tag (prefix + tag->name, tag->handle_tag);
     }
 
     if (!tset->prefix_required) {
@@ -50,9 +52,9 @@ void create (RXML.Context ctx, RXML.Type type, RXML.TagSet tag_set, void|int is_
       if (tset->low_tags) add_tags (tset->low_tags);
       foreach (tlist, RXML.Tag tag)
 	if (tag->flags & RXML.FLAG_CONTAINER)
-	  add_container (tag->name, tag->_parsed_tag_cb);
+	  add_container (tag->name, tag->handle_tag);
 	else
-	  add_tag (tag->name, tag->_parsed_tag_cb);
+	  add_tag (tag->name, tag->handle_tag);
     }
 
     if (tset->low_entities) add_entities (tset->low_entities);
@@ -60,7 +62,12 @@ void create (RXML.Context ctx, RXML.Type type, RXML.TagSet tag_set, void|int is_
 
   _set_entity_callback (entity_callback);
 
-  _set_tag_callback (1);
+  // parse_html() compatibility. FIXME: Some sort of old_rxml_compat
+  // check here.
+  case_insensitive_tag (1);
+  lazy_entity_end (1);
+  match_tag (0);
+  ignore_unknown (1);
 
   if (!type->free_text)
     _set_data_callback (lambda (object this, string str) {

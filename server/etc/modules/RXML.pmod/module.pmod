@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.2 1999/12/13 22:12:40 mast Exp $
+//! $Id: module.pmod,v 1.3 1999/12/19 00:56:35 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -55,7 +55,7 @@ class Tag
   //! RXML.Frame.additional_tags and RXML.Frame.local_tags are
   //! initialized from these.
 
-  //!function(:object)|program frame;
+  function(:Frame) frame();
   //! This function should return an object to be used as a frame. The
   //! frame object must (in practice) inherit RXML.Frame.
 
@@ -68,8 +68,8 @@ class Tag
   //! RXML.Frame.do_return() for details. Note: Never reuse the same
   //! frame object.
   {
-    Tag this = [object(Tag)]/*HMM*/ this_object();
-    Frame frame = [object(Frame)] this->frame();
+    Tag this = this_object();
+    Frame frame = ([function(:Frame)] this->frame)();
     frame->tag = this;
     frame->flags = flags;
     if (scope_name) frame->scope_name = scope_name;
@@ -86,10 +86,33 @@ class Tag
   // Callback for tag set parsers. Returns a sequence of result values
   // to be added to the result queue.
   {
+    Context ctx = parser->context;
     // FIXME: P-code generation.
-    Frame frame = `() (args, Void);
-    frame->_eval (parser, args, content);
-    return frame->result == Void ? ({}) : ({frame->result});
+    Frame frame;
+    if (mapping(string:mixed)|mapping(object:array) ustate = ctx->unwind_state)
+      if (ustate[parser]) frame = ustate[parser][0];
+      else frame = `() (args, Void);
+    else frame = `() (args, Void);
+
+    mixed err = catch {
+      frame->_eval (parser, args, content);
+      return frame->result == Void ? ({}) : ({frame->result});
+    };
+
+    if (objectp (err) && ([object] err)->thrown_at_unwind) {
+      mapping(string:mixed)|mapping(object:array) ustate = ctx->unwind_state;
+      if (!ustate) ustate = ctx->unwind_state = ([]);
+#ifdef DEBUG
+      if (err != frame)
+	parse_error ("Internal error: Unexpected unwind object catched.\n");
+      if (ustate[parser])
+	parse_error ("Internal error: Clobbering unwind state for parser.\n");
+#endif
+      ustate[parser] = ({err});
+      err = parser;
+    }
+
+    throw (err);
   }
 
   string _sprintf()
@@ -123,7 +146,18 @@ class TagSet
   //! A number that is increased every time something changes in this
   //! object or in some tag set it imports.
 
-  mapping(string:mixed) low_tags, low_containers, low_entities;
+  mapping(string:string|
+	  function(:int(0..1)|string|array)|
+	  function(Parser,mapping(string:string):
+		   int(0..1)|string|array)) low_tags;
+  mapping(string:string|
+	  function(:int(0..1)|string|array)|
+	  function(Parser,mapping(string:string),string:
+		   int(0..1)|string|array)) low_containers;
+  mapping(string:string|
+	  function(:int(0..1)|string|array)|
+	  function(Parser,string:
+		   int(0..1)|string|array)) low_entities;
   //! Passed directly to Parser.HTML. Note: Changes in these aren't
   //! tracked; changed() must be called.
 
@@ -152,7 +186,7 @@ class TagSet
   {
     if (stringp (tag))
       m_delete (tags, tag);
-    else for (string n; !zero_type (n = search (tags, tag));)
+    else for (string n; !zero_type (n = search (tags, [object(Tag)] tag));)
       m_delete (tags, n);
     changed();
   }
@@ -163,7 +197,7 @@ class TagSet
     Tag tag;
     if ((tag = tags[name])) return tag;
     foreach (imported, TagSet tag_set)
-      if ((tag = [object(Tag)]/*HMM*/ tag_set->get_tag (name))) return tag;
+      if ((tag = tag_set->get_tag (name))) return tag;
     return 0;
   }
 
@@ -277,8 +311,9 @@ class Context
     if (mapping(string:mixed) vars = scopes[scope_name || ""]) {
       mixed val;
       if (zero_type (val = vars[var])) return ([])[0];
-      else if (objectp (val) && val->eval)
-	return val->eval (this_object(), var, scope_name);
+      else if (objectp (val) && ([object] val)->eval)
+	return ([function(Context,string,string:mixed)] ([object] val)->eval) (
+	  this_object(), var, scope_name);
       else return val;
     }
     else if (scope_name) error ("Unknown scope %O.\n", scope_name);
@@ -482,15 +517,14 @@ class Context
     id = _id;
   }
 
-  mapping(string:mixed)|mapping(Frame:array) unwind_state;
+  mapping(string:mixed)|mapping(object:array) unwind_state;
   // If this is a mapping, we have an unwound stack state. It contains
-  // strings with arbitrary exception info, and frames with arrays
-  // containing the extra state info needed by Frame._eval(). The
-  // first entry in these arrays are always the subframe. The special
-  // entries are:
+  // strings with arbitrary exception info, and the objects being
+  // unwound with arrays containing the extra state info they need.
+  // The first entry in these arrays are always the subobject. The
+  // special entries are:
   //
-  // "top": ({Frame (top frame), Parser (parser for frame)})
-  // "up_frames": int (Go up these many frames and continue.)
+  // "top": ({Frame|Parser|PCode (top object)})
   // "stream_piece": mixed (When continuing, do a streaming
   //	do_return() with this stream piece.)
   // "exec_left": array (Exec array left to evaluate. Only used
@@ -507,7 +541,7 @@ class Context
 //! It's set before any function in RXML.Tag or RXML.Frame is called.
 
 #if constant (thread_create)
-private object _context = thread_local();
+private Thread.Local _context = thread_local();
 inline void set_context (Context ctx) {_context->set (ctx);}
 inline Context get_context() {return [object(Context)] _context->get();}
 #else
@@ -630,6 +664,7 @@ class Frame
 //! A tag instance.
 {
   constant is_RXML_Frame = 1;
+  constant thrown_at_unwind = 1;
 
   //! Interface.
 
@@ -680,7 +715,7 @@ class Frame
   //! the content, instead of the one inherited from the surrounding
   //! parser. The tags are not inherited by subparsers.
 
-  //!int|function(RequestID:int|function) do_enter (RequestID id);
+  int|function(RequestID:int|function) do_enter (RequestID id);
   //! Called before the content (if any) is processed. This function
   //! typically only initializes vars. Return values:
   //!
@@ -754,7 +789,7 @@ class Frame
   //! called. If it returns 1, the frame is reused. FIXME: Not yet
   //! implemented.
 
-  //!array cached_return (Context ctx, void|mixed piece);
+  array cached_return (Context ctx, void|mixed piece);
   //! If defined, this will be called to get the value from a cached
   //! frame (that's still valid) instead of using the cached result.
   //! It's otherwise handled like do_return(). Note that the cached
@@ -797,7 +832,7 @@ class Frame
 
   mixed _exec_array (Context ctx, array exec)
   {
-    Frame this = [object(Frame)]/*HMM*/ this_object();
+    Frame this = this_object();
     int i = 0;
     mixed res = Void;
     Parser subparser = 0;
@@ -814,19 +849,20 @@ class Frame
 	      piece = elem;
 	    else {
 	      subparser = result_type->get_parser (ctx);
-	      subparser->finish (elem);	// May unwind.
-	      piece = subparser->eval(); // May unwind.
+	      subparser->finish ([string] elem); // Might unwind.
+	      piece = subparser->eval(); // Might unwind.
 	      subparser = 0;
 	    }
 	    break;
 	  case "object":
-	    if (elem->is_RXML_Frame) {
-	      elem->_eval (0);	// May unwind.
-	      piece = elem->result;
+	    if (([object] elem)->is_RXML_Frame) {
+	      ([object(Frame)] elem)->_eval (0); // Might unwind.
+	      piece = ([object(Frame)] elem)->result;
 	    }
-	    else if (elem->is_RXML_Parser) { // The subparser above unwound.
-	      elem->finish();	// May unwind.
-	      piece = elem->eval(); // May unwind.
+	    else if (([object] elem)->is_RXML_Parser) {
+	      // The subparser above unwound.
+	      ([object(Parser)] elem)->finish(); // Might unwind.
+	      piece = ([object(Parser)] elem)->eval(); // Might unwind.
 	    }
 	    else
 	      error ("File objects not yet implemented.\n");
@@ -835,9 +871,9 @@ class Frame
 	    error ("Header mappings not yet implemented.\n");
 	    break;
 	  case "multiset":
-	    if (sizeof (elem) == 1) piece = ((array) elem)[0];
-	    else if (sizeof (elem) > 1)
-	      error (sizeof (elem) + " values in multiset in exec array.\n");
+	    if (sizeof ([multiset] elem) == 1) piece = ((array) elem)[0];
+	    else if (sizeof ([multiset] elem) > 1)
+	      error (sizeof ([multiset] elem) + " values in multiset in exec array.\n");
 	    else error ("No value in multiset in exec array.\n");
 	    break;
 	  default:
@@ -855,8 +891,8 @@ class Frame
 
     if (result_type->sequential) result += res;
 
-    if (objectp (err) && err->is_RXML_Frame) {
-      mapping(string:mixed)|mapping(Frame:array) ustate;
+    if (objectp (err) && ([object] err)->thrown_at_unwind) {
+      mapping(string:mixed)|mapping(object:array) ustate;
       if ((ustate = ctx->unwind_state) && !zero_type (ustate->stream_piece))
 	// Subframe wants to stream. Update stream_piece and send it on.
 	if (result_type->sequential)
@@ -866,9 +902,9 @@ class Frame
       ustate->exec_left = exec[i..]; // Left to execute.
       if (subparser)
 	// Replace the string with the subparser object so that we'll
-	// continue in it later. It's done here so that the original
-	// exec array isn't touched.
-	ustate->exec_left[0] = subparser;
+	// continue in it later. It's done here to keep the original
+	// exec array untouched.
+	([array] ustate->exec_left)[0] = subparser;
     }
     throw (err);
   }
@@ -878,7 +914,7 @@ class Frame
 	      void|string raw_content)
   // Note: It might be somewhat tricky to override this function.
   {
-    Frame this = [object(Frame)]/*HMM*/ this_object();
+    Frame this = this_object();
     Context ctx = parser->context;
 #ifdef DEBUG
     if (ctx != get_context()) error ("Internal error: Context not current.\n");
@@ -891,7 +927,6 @@ class Frame
     //string raw_content;
     Parser subparser;
     mixed piece;
-    Frame subframe;
     array exec;
     int tags_added;		// Flag that we added additional_tags to ctx->tag_set.
 
@@ -904,19 +939,10 @@ class Frame
 	PRE_INIT_ERROR ("Internal error: Can't feed new arguments or content "
 			"when resuming parse.\n");
 #endif
-      [subframe, fn, iter, raw_content, subparser, piece, exec, tags_added] = state;
+      object ignored;
+      [ignored, fn, iter, raw_content, subparser, piece, exec, tags_added] = state;
       m_delete (ctx->unwind_state, this);
       if (!sizeof (ctx->unwind_state)) ctx->unwind_state = 0;
-#ifdef DEBUG
-      if (piece && subframe && exec && (!sizeof (exec) || exec[0] != subframe))
-	PRE_INIT_ERROR ("Internal error: Subframe ambiguity "
-			"when handling a stream piece.\n");
-#endif
-#ifdef MODULE_DEBUG
-      if (piece && !(flags & FLAG_STREAM_CONTENT))
-	PRE_INIT_ERROR ("The subframe failed to notice that this frame doesn't support "
-			"streaming - flags did probably change.\n");
-#endif
     }
     else {
 #ifdef MODULE_DEBUG
@@ -929,13 +955,13 @@ class Frame
 #undef PRE_INIT_ERROR
     ctx->frame = this;
 
-    int tag_set_gen = [int]/*HMM*/ parser->tag_set->generation;
+    int tag_set_gen = parser->tag_set->generation;
 
     if (raw_args) {
       args = ([]);
       mapping(string:Type) atypes;
       if (tag->req_arg_types) {
-	atypes = [mapping(string:Type)] (raw_args & tag->req_arg_types);
+	atypes = raw_args & tag->req_arg_types;
 	if (sizeof (atypes) < sizeof (tag->req_arg_types)) {
 	  array(string) missing = sort (indices (tag->req_arg_types - atypes));
 	  parse_error ("Required " +
@@ -945,17 +971,15 @@ class Frame
 	}
       }
       if (tag->opt_arg_types)
-	if (atypes)
-	  atypes += /*[mapping(string:Type)]HMM*/ (raw_args & tag->opt_arg_types);
-	else
-	  atypes = [mapping(string:Type)] (raw_args & tag->opt_arg_types);
+	if (atypes) atypes += raw_args & tag->opt_arg_types;
+	else atypes = raw_args & tag->opt_arg_types;
       if (atypes)
 	if (mixed err = catch {
 	  foreach (indices (atypes), string arg)
-	    args[arg] =
-	      atypes[arg]->eval (raw_args[arg], ctx, 0, 1); // May currently NOT unwind.
+	    args[arg] = atypes[arg]->eval (
+	      raw_args[arg], ctx, 0, 1); // Should currently NOT unwind.
 	}) {
-	  if (objectp (err) && err->is_RXML_Frame)
+	  if (objectp (err) && ([object] err)->thrown_at_unwind)
 	    error ("Can't save parser state when evaluating arguments.\n");
 	  throw (err);
 	}
@@ -973,27 +997,25 @@ class Frame
     }
 
     if (!result_type) {
-      Type ptype = [object(Type)]/*HMM*/ parser->type;
+      Type ptype = parser->type;
       foreach (tag->result_types, Type rtype)
 	if (rtype->subtype_of (ptype)) {result_type = rtype; break;}
       if (!result_type)		// Sigh..
-	error ("Tag returns " + String.implode_nicely (tag->result_types->name, "or") +
-	       " but " + parser->type->name + " is expected.\n");
+	error ("Tag returns " +
+	       String.implode_nicely ([array(string)] tag->result_types->name, "or") +
+	       " but " + [string] parser->type->name + " is expected.\n");
     }
     if (!content_type) content_type = tag->content_type || result_type;
 
     mixed err = catch {
-      if (!fn)
-	fn = this->do_enter ?
-	  [int|function(RequestID:int|function)] this->do_enter (ctx->id) : // May unwind.
-	  1;
+      if (!fn) fn = this->do_enter ? this->do_enter (ctx->id) : 1; // Might unwind.
 
       do {
 	if (!iter) {
 	  iter = fn;
 	  while (functionp (iter)) { // Got a function from do_enter.
 	    int|function(RequestID:int|function) newiter =
-	      [int|function(mixed/*HMM*/:int|function)] iter (ctx->id); // May unwind.
+	      [int|function(RequestID:int|function)] iter (ctx->id); // Might unwind.
 	    fn = iter, iter = newiter;
 	  }
 	}
@@ -1003,8 +1025,9 @@ class Frame
 	  if (raw_content) {	// Got nested parsing to do.
 	    int finished = 0;
 	    if (!subparser) {	// The nested content is not yet parsed.
-	      subparser = content_type->get_parser (ctx, this->local_tags);
-	      subparser->finish (raw_content); // May unwind.
+	      subparser = content_type->get_parser (
+		ctx, [object(TagSet)] this->local_tags);
+	      subparser->finish (raw_content); // Might unwind.
 	      finished = 1;
 	    }
 
@@ -1012,7 +1035,7 @@ class Frame
 	      if (flags & FLAG_STREAM_CONTENT && subparser->read) {
 		// Handle a stream piece.
 		// Squeeze out any free text from the subparser first.
-		mixed res = subparser->read();
+		mixed res = ([function(:mixed)] subparser->read)();
 		if (content_type->sequential) piece = res + piece;
 		else if (piece == Void) piece = res;
 		if (piece != Void) {
@@ -1020,9 +1043,9 @@ class Frame
 		  if ((do_return =
 		       [array|function(RequestID,mixed:array)] this->do_return) &&
 		      !arrayp (do_return)) {
-		    if (!exec) exec = do_return (ctx->id, piece); // May unwind.
+		    if (!exec) exec = do_return (ctx->id, piece); // Might unwind.
 		    if (exec) {
-		      mixed res = _exec_array (ctx, exec); // May unwind.
+		      mixed res = _exec_array (ctx, exec); // Might unwind.
 		      if (flags & FLAG_STREAM_RESULT) {
 #ifdef DEBUG
 			if (!zero_type (ctx->unwind_state->stream_piece))
@@ -1048,24 +1071,14 @@ class Frame
 	      else {		// The frame doesn't handle streamed content.
 		piece = Void;
 		if (finished) {
-		  mixed res = subparser->eval(); // May unwind.
+		  mixed res = subparser->eval(); // Might unwind.
 		  if (content_type->sequential) content += res;
 		  else if (res != Void) content = res;
 		  break;
 		}
 	      }
 
-	      // subparser has unwound if we get here; nested content
-	      // is half parsed.
-	      if (subframe && subparser->tag_set_eval) {
-		// A subframe unwound. Since the subparser already
-		// processed it, we got to handle it ourselves.
-		subframe->_eval (subparser); // May unwind.
-		if (subframe->result != Void)
-		  subparser->write_out (subframe->result);
-		subframe = 0;
-	      }
-	      subparser->finish(); // May unwind.
+	      subparser->finish(); // Might unwind.
 	      finished = 1;
 	    } while (1); // Only loops when an unwound subparser has been recovered.
 	    subparser = 0;
@@ -1075,9 +1088,9 @@ class Frame
 	      [array|function(RequestID,mixed:array)] this->do_return) {
 	    if (!exec)
 	      exec = arrayp (do_return) ?
-		[array] do_return : do_return (ctx->id); // May unwind.
+		[array] do_return : do_return (ctx->id); // Might unwind.
 	    if (exec) {
-	      mixed res = _exec_array (ctx, exec); // May unwind.
+	      mixed res = _exec_array (ctx, exec); // Might unwind.
 	      if (flags & FLAG_STREAM_RESULT) {
 #ifdef DEBUG
 		if (ctx->unwind_state)
@@ -1105,8 +1118,8 @@ class Frame
 
     if (err) {
       string action;
-      if (objectp (err) && err->is_RXML_Frame) {
-	mapping(string:mixed)|mapping(Frame:array) ustate = ctx->unwind_state;
+      if (objectp (err) && ([object] err)->thrown_at_unwind) {
+	mapping(string:mixed)|mapping(object:array) ustate = ctx->unwind_state;
 	if (!ustate) ustate = ctx->unwind_state = ([]);
 #ifdef DEBUG
 	if (ustate[this])
@@ -1118,18 +1131,25 @@ class Frame
 	  m_delete (ustate, "exec_left");
 	}
 
-	if (err == this || exec && sizeof (exec) && err == exec[0]) {
+	if (err == this || exec && sizeof (exec) && err == exec[0])
 	  // This frame or a frame in the exec array wants to stream.
-	  // Rethrow to continue in parent since we've already done
-	  // the appropriate do_return stuff in this frame in either
-	  // case.
-	  if (err == this) err = 0;
-	  if (tags_added) {
-	    ctx->tag_set->imported -= ({/*[object(TagSet)]HMM*/ this->additional_tags});
-	    tags_added = 0;
+	  if (parser->unwind_safe) {
+	    // Rethrow to continue in parent since we've already done
+	    // the appropriate do_return stuff in this frame in either
+	    // case.
+	    if (err == this) err = 0;
+	    if (tags_added) {
+	      ctx->tag_set->imported -= ({/*[object(TagSet)]HMM*/ this->additional_tags});
+	      tags_added = 0;
+	    }
+	    action = "break";
 	  }
-	  action = "break";
-	}
+	  else {
+	    // Can't stream since the parser isn't unwind safe. Just
+	    // continue.
+	    m_delete (ustate, "stream_piece");
+	    action = "continue";
+	  }
 	else if (!zero_type (ustate->stream_piece)) {
 	  // Got a stream piece from a subframe. We handle it above;
 	  // store the state and tail recurse.
@@ -1145,6 +1165,10 @@ class Frame
 
       switch (action) {
 	case "break":		// Throw and handle in parent frame.
+#ifdef MODULE_DEBUG
+	  if (!parser->unwind_state)
+	    error ("Trying to unwind inside a parser that isn't unwind safe.\n");
+#endif
 	  throw (this);
 	case "continue":	// Continue in this frame through tail recursion.
 	  _eval (parser);
@@ -1179,6 +1203,7 @@ class Parser
 //! be done in a thread safe way except where noted.
 {
   constant is_RXML_Parser = 1;
+  constant thrown_at_unwind = 1;
 
   //! Services.
 
@@ -1196,12 +1221,20 @@ class Parser
     int res;
     ENTER_CONTEXT (context);
     mixed err = catch {
-      if (context && context->unwind_state) _handle_rewind(); // May unwind.
-      if (feed (in)) res = 1;	// May unwind.
+      if (context && context->unwind_state && context->unwind_state->top) {
+	m_delete (context->unwind_state, "top");
+	if (!sizeof (context->unwind_state)) context->unwind_state = 0;
+      }
+      if (feed (in)) res = 1;	// Might unwind.
       if (res && data_callback) data_callback (this_object());
     };
     LEAVE_CONTEXT();
-    if (err) _handle_unwind (err);
+    if (err)
+      if (objectp (err) && ([object] err)->thrown_at_unwind) {
+	if (!context->unwind_state) context->unwind_state = ([]);
+	context->unwind_state->top = err;
+      }
+      else throw (err);
     return res;
   }
 
@@ -1212,12 +1245,20 @@ class Parser
     int res;
     ENTER_CONTEXT (context);
     mixed err = catch {
-      if (context && context->unwind_state) _handle_rewind(); // May unwind.
-      finish (in);		// May unwind.
+      if (context && context->unwind_state && context->unwind_state->top) {
+	m_delete (context->unwind_state, "top");
+	if (!sizeof (context->unwind_state)) context->unwind_state = 0;
+      }
+      finish (in);		// Might unwind.
       if (data_callback) data_callback (this_object());
     };
     LEAVE_CONTEXT();
-    if (err) _handle_unwind (err);
+    if (err)
+      if (objectp (err) && ([object] err)->thrown_at_unwind) {
+	if (!context->unwind_state) context->unwind_state = ([]);
+	context->unwind_state->top = err;
+      }
+      else throw (err);
   }
 
   //! Interface.
@@ -1235,48 +1276,45 @@ class Parser
   //! Must be set to nonzero before a stream is fed which should be
   //! compiled to p-code.
 
+  //!mixed unwind_safe;
+  //! If nonzero, the parser supports unwinding with throw()/catch().
+  //! Whenever an exception is thrown from some evaluation function,
+  //! it should be able to call that function again with identical
+  //! arguments the next time it continues.
+
   mixed feed (string in);
   //! Feeds some source data to the parse stream. The parser may do
   //! scanning and parsing before returning. If context is set, it may
   //! also do evaluation in that context. Returns nonzero if there
   //! could be new data to get from eval().
-  //!
-  //! Note: If write_out() is given, this function may be interrupted
-  //! by throw() and must be able to continue after that; don't store
-  //! state in local variables.
 
   void finish (void|string in);
   //! Like feed(), but also finishes the parse stream. A last bit of
   //! data may be given. It should work to call this on an already
   //! finished stream if no argument is given to it.
 
-  //!void write_out (mixed data);
-  //! Define to allow continuation after broken parsing. Takes the
-  //! evaluated result from some subexpression (e.g. a tag or entity)
-  //! and adds it to the accumulated result.
-
-  //!mixed read();
+  mixed read();
   //! Define to allow streaming operation. Returns the evaluated
   //! result so far, but does not do any evaluation. Returns Void if
   //! there's no data (for sequential types the empty value is also
   //! ok).
 
-  //!mixed eval();
+  mixed eval();
   //! Evaluates the data fed so far and returns the result. The result
   //! returned by previous eval() calls should not be returned again
   //! as (part of) this return value. Returns Void if there's no data
   //! (for sequential types the empty value is also ok).
 
-  //!PCode p_compile()
+  PCode p_compile();
   //! Define this to return a p-code representation of the current
   //! stream, which always is finished.
 
-  //!void reset (Context ctx, Type type, mixed... args);
+  void reset (Context ctx, Type type, mixed... args);
   //! Define to support reuse of a parser object. It'll be called
   //! instead of making a new object for a new stream. It keeps the
   //! static configuration, i.e. the type.
 
-  //!Parser clone (Context ctx, Type type, mixed... args);
+  Parser clone (Context ctx, Type type, mixed... args);
   //! Define to create new parser objects by cloning instead of
   //! creating from scratch. It returns a new instance of this parser
   //! with the same static configuration, i.e. the type.
@@ -1291,37 +1329,6 @@ class Parser
 
   Parser _next_free;
   // Used to link together unused parser objects for reuse.
-
-  void _handle_rewind()
-  {
-    Parser this = [object(Parser)]/*HMM*/ this_object();
-    mapping(string:mixed)|mapping(Frame:array) ustate;
-    if ((ustate = context->unwind_state) && ustate->top && this->write_out) {
-#ifdef MODULE_DEBUG
-      if (ustate->top[1] != this)
-	context->error ("Resuming parse state with different parser.\n");
-#endif
-      Frame top = [object(Frame)] ustate->top[0];
-      m_delete (ustate, "top");
-      if (!sizeof (ustate)) context->unwind_state = ustate = 0;
-      top->_eval (this);	// May unwind.
-      if (top->result != Void) this->write_out (top->result);
-    }
-  }
-
-  void _handle_unwind (mixed err)
-  {
-    if (context && objectp (err) && err->is_RXML_Frame) {
-      mapping(string:mixed)|mapping(Frame:array) ustate = context->unwind_state;
-      if (!ustate) ustate = context->unwind_state = ([]);
-#ifdef DEBUG
-      if (ustate->exec_left || ustate->stream_piece || ustate->top)
-	error ("Internal error: Unexpected unwind_state at top level: %O\n", ustate);
-#endif
-      ustate->top = ({err, this_object()});
-    }
-    else throw (err);
-  }
 }
 
 
@@ -1343,12 +1350,8 @@ class TagSetParser
   TagSet tag_set;
   //! The tag set used for parsing.
 
-  void write_out (mixed data);
-  mixed read();
-  //! Must be defined for tag set parsers.
-
-  //!void reset (Context ctx, Type type, TagSet tag_set, mixed... args);
-  //!Parser clone (Context ctx, Type type, TagSet tag_set, mixed... args);
+  void reset (Context ctx, Type type, TagSet tag_set, mixed... args);
+  Parser clone (Context ctx, Type type, TagSet tag_set, mixed... args);
   void create (Context ctx, Type type, TagSet _tag_set /*, mixed... args*/)
   {
     ::create (ctx, type);
@@ -1361,13 +1364,6 @@ class TagSetParser
   //! Called when the tags in tag_set have changed during the
   //! evaluation and need to take effect immediately. Only the local
   //! tags in tag_set needs to be checked for changes.
-
-  // Services.
-
-  mixed eval()
-  {
-    return read();
-  }
 }
 
 
@@ -1468,8 +1464,7 @@ class Type
   Type clone()
   //! Returns a copy of the type.
   {
-    Type newtype =
-      [object(Type)]/*HMM*/ object_program ([object(Type)]/*HMM*/ this_object())();
+    Type newtype = object_program (this_object())();
     newtype->_parser_prog = _parser_prog;
     newtype->_parser_args = _parser_args;
     newtype->_t_obj_cache = _t_obj_cache;
@@ -1481,15 +1476,14 @@ class Type
   int `== (mixed other)
   //!
   {
-    return objectp (other) && other->is_RXML_Type &&
-      other->name == this_object()->name;
+    return objectp (other) && ([object] other)->is_RXML_Type &&
+      ([object(Type)] other)->name == this_object()->name;
   }
 
   int subtype_of (Type other)
   //!
   {
-    return glob ([string] other->name,
-		 [string] ([object(Type)]/*HMM*/ this_object())->name);
+    return glob ([string] other->name, [string] this_object()->name);
   }
 
   Type `() (program newparser, mixed... parser_args)
@@ -1507,7 +1501,7 @@ class Type
       if (!_t_obj_cache) _t_obj_cache = ([]);
       if (!(newtype = _t_obj_cache[newparser]))
 	if (newparser == _parser_prog)
-	  _t_obj_cache[newparser] = newtype = [object(Type)]/*HMM*/ this_object();
+	  _t_obj_cache[newparser] = newtype = this_object();
 	else {
 	  _t_obj_cache[newparser] = newtype = clone();
 	  newtype->_parser_prog = newparser;
@@ -1537,8 +1531,7 @@ class Type
 	  if (pco->clone_parser)
 	    p = [object(Parser)] pco->clone_parser->clone (
 	      ctx, this_object(), @_parser_args);
-	  else if ((p = [object(Parser)]/*HMM*/ _parser_prog (
-		      ctx, this_object(), @_parser_args))->clone)
+	  else if ((p = _parser_prog (ctx, this_object(), @_parser_args))->clone)
 	    // pco->clone_parser might already be initialized here due
 	    // to race, but that doesn't matter.
 	    p = [object(Parser)] (pco->clone_parser = p)->clone (
@@ -1547,10 +1540,9 @@ class Type
       else {
 	// ^^^ Using interpreter lock to here.
 	pco = PCacheObj();
-	pco->tag_set_gen = [int]/*HMM*/ tset->generation;
+	pco->tag_set_gen = tset->generation;
 	_p_cache[tset] = pco;	// Might replace an object due to race, but that's ok.
-	if ((p = [object(Parser)]/*HMM*/ _parser_prog (
-	       ctx, this_object(), @_parser_args))->clone)
+	if ((p = _parser_prog (ctx, this_object(), @_parser_args))->clone)
 	  // pco->clone_parser might already be initialized here due
 	  // to race, but that doesn't matter.
 	  p = [object(Parser)] (pco->clone_parser = p)->clone (
@@ -1568,8 +1560,7 @@ class Type
 	// Relying on interpreter lock here.
 	p = [object(Parser)] clone_parser->clone (
 	  ctx, this_object(), @_parser_args);
-      else if ((p = [object(Parser)]/*HMM*/ _parser_prog (
-		  ctx, this_object(), @_parser_args))->clone)
+      else if ((p = _parser_prog (ctx, this_object(), @_parser_args))->clone)
 	// clone_parser might already be initialized here due to race,
 	// but that doesn't matter.
 	p = [object(Parser)] (clone_parser = p)->clone (
@@ -1673,6 +1664,7 @@ class PCode
 //! after parsing and before evaluation.
 {
   constant is_RXML_PCode = 1;
+  constant thrown_at_unwind = 1;
 
   array p_code = ({});
 
@@ -1682,7 +1674,7 @@ class PCode
     // FIXME
   }
 
-  //!function(Context:mixed) compile()
+  function(Context:mixed) compile();
   //! Returns a compiled function for doing the evaluation. The
   //! function will receive a context to do the evaluation in.
 }
@@ -1784,7 +1776,7 @@ class ScanStream
     if (i) {
       Link l = Link();
       l->next = head, head = l;
-      l->data = allocate (next_token = [int]/*HMM*/ max (i - 32, 0)) + put_back[..--i];
+      l->data = allocate (next_token = max (i - 32, 0)) + put_back[..--i];
     }
   }
 
