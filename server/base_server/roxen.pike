@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.785 2002/03/28 09:55:25 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.786 2002/04/15 15:23:35 mast Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -817,9 +817,9 @@ function async_sig_start( function f, int really )
 
     void call( mixed ... args )
     {
-      werror("Received signal %O\n", signame( args[0] ) );
       if( async_called && async_called-time() )
       {
+	report_debug("Received signal %s\n", (string) signame( args[0] ) );
         report_debug("\n\n"
                      "Async calling failed for %O, calling synchronous\n", f);
         report_debug("Backtrace at time of hangup:\n%s\n",
@@ -829,6 +829,7 @@ function async_sig_start( function f, int really )
       }
       if( !async_called ) // Do not queue more than one call at a time.
       {
+	report_debug("Received signal %s\n", (string) signame( args[0] ) );
         async_called=time();
         call_out( really_call, 0, args );
       }
