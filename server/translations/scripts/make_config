@@ -6,7 +6,7 @@ TMP=/tmp/$$.tmp
 grep -v '<file>' $2 | grep -v '</project>' > $TMP
 
 for a in `grep -cr '"'$1'"' ..|grep -v ':0'|sed -e 's/:.*//'|
-         grep -v /translations/` ;  do
+         grep -v /translations/|grep -v '#'|grep -v '~'` ;  do
   echo "  <file>$a</file>" >> $TMP
 done
 
