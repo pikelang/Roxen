@@ -1,12 +1,12 @@
 /*
- * $Id: pop3.pike,v 1.1 1998/09/27 23:57:54 grubba Exp $
+ * $Id: pop3.pike,v 1.2 1998/09/28 00:03:34 grubba Exp $
  *
  * POP3 protocols module.
  *
  * Henrik Grubbström 1998-09-27
  */
 
-constant cvs_version = "$Id: pop3.pike,v 1.1 1998/09/27 23:57:54 grubba Exp $";
+constant cvs_version = "$Id: pop3.pike,v 1.2 1998/09/28 00:03:34 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -29,7 +29,7 @@ static class Pop_Session
     send_q->put(s);
   }
 
-  static void send_error(string e)
+  static void send_error(string s)
   {
     send("-ERR "+s+"\r\n");
   }
@@ -39,7 +39,7 @@ static class Pop_Session
     send("+OK "+s+"\r\n");
   }
 
-  static void bytestuff(string s)
+  static string bytestuff(string s)
   {
     // RFC 1939 doesn't explicitly say what quoting is to be used,
     // but it says something about bytestuffing lines beginning with '.',
@@ -142,7 +142,7 @@ static class Pop_Session
     send(".\r\n");
   }
 
-  void pop_DELE(array(strinng) args)
+  void pop_DELE(array(string) args)
   {
     if (sizeof(args) != 1) {
       send_error("Bad number of arguments to DELE.");
@@ -268,7 +268,7 @@ static class Pop_Session
       send_error("Bad number of arguments to USER command.");
       return;
     }
-    username = uname;
+    username = args[0];
     user = 0;
     send_ok(sprintf("Password required for %s.", username));
   }
