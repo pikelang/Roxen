@@ -1,6 +1,6 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.403 2000/12/11 03:07:46 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.404 2000/12/17 21:18:18 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1589,7 +1589,7 @@ mapping error_file( RequestID id )
   NOCACHE();
 #ifdef OLD_RXML_COMPAT
   data = replace(data,({"$File", "$Me"}),
-                 ({"&page.virtfile;",query("MyWorldLocation")}));
+                 ({"&page.virtfile;", "&roxen.server;"}));
 #endif
   id->misc->defines = ([ " _error":404 ]);
   return Roxen.http_rxml_answer( data, id, 0, "text/html" );
