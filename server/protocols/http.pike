@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.388 2002/12/18 15:04:38 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.389 2003/01/07 13:37:38 anders Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2106,6 +2106,7 @@ void got_data(mixed fooid, string s)
     array cv;
     if( prot != "HTTP/0.9" &&
 	misc->cacheable    &&
+	!misc->no_proto_cache &&
 	!since             &&
 	(cv = conf->datacache->get( raw_url )) )
     {
