@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.5 1997/08/19 00:33:36 grubba Exp $
+# $Id: Makefile,v 1.6 1997/08/20 03:00:16 grubba Exp $
 #
 # Bootstrap Makefile
 #
@@ -34,7 +34,7 @@ blurb :
 	@sleep 10
 
 all : configure
-	@os=`uname -srm|sed -e 's/ /-/g'|tr '[A-Z]' '[a-z]'`; \
+	@os=`uname -srm|sed -e 's/ /-/g'|tr '[A-Z/]' '[a-z_]'`; \
 	srcdir=`pwd`; \
 	echo Attempting to build Roxen 1.2 in build/$$os...; \
 	echo; \
@@ -50,7 +50,7 @@ configure : configure.in
 	@echo
 
 install : all
-	@os=`uname -srm|sed -e 's/ /-/g'|tr '[A-Z]' '[a-z]'`; \
+	@os=`uname -srm|sed -e 's/ /-/g'|tr '[A-Z/]' '[a-z_]'`; \
 	srcdir=`pwd`; \
 	echo Installing Roxen 1.2 from build/$$os...; \
 	echo; \
@@ -58,7 +58,7 @@ install : all
 	$(MAKE) install;
 
 install_all :
-	@os=`uname -srm|sed -e 's/ /-/g'|tr '[A-Z]' '[a-z]'`; \
+	@os=`uname -srm|sed -e 's/ /-/g'|tr '[A-Z/]' '[a-z_]'`; \
 	srcdir=`pwd`; \
 	echo Installing Roxen 1.2 and Pike 0.5 from build/$$os...; \
 	echo; \
@@ -66,7 +66,7 @@ install_all :
 	$(MAKE) install_all;
 
 install_pike :
-	@os=`uname -srm|sed -e 's/ /-/g'|tr '[A-Z]' '[a-z]'`; \
+	@os=`uname -srm|sed -e 's/ /-/g'|tr '[A-Z/]' '[a-z_]'`; \
 	srcdir=`pwd`; \
 	echo Installing Pike 0.5 from build/$$os...; \
 	echo; \
@@ -74,7 +74,7 @@ install_pike :
 	$(MAKE) install_pike;
 
 verify: all
-	@os=`uname -srm|sed -e 's/ /-/g'|tr '[A-Z]' '[a-z]'`; \
+	@os=`uname -srm|sed -e 's/ /-/g'|tr '[A-Z/]' '[a-z_]'`; \
 	srcdir=`pwd`; \
 	echo Verifying Roxen 1.2 in build/$$os...; \
 	echo; \
@@ -82,7 +82,7 @@ verify: all
 	$(MAKE) verify;
 
 verbose_verify: all
-	@os=`uname -srm|sed -e 's/ /-/g'|tr '[A-Z]' '[a-z]'`; \
+	@os=`uname -srm|sed -e 's/ /-/g'|tr '[A-Z/]' '[a-z_]'`; \
 	srcdir=`pwd`; \
 	echo Verifying Roxen 1.2 in build/$$os...; \
 	echo; \
@@ -90,4 +90,5 @@ verbose_verify: all
 	$(MAKE) verbose_verify;
 
 check : verify
+
 
