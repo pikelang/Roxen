@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.9 1996/12/10 02:56:50 per Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.10 1996/12/10 03:06:30 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -568,7 +568,7 @@ string extra_args(mapping in)
     {
      case "target":
      case "onClick":
-      s+=i+"='"+in[s]+"' ";
+      s+=i+"='"+in[i]+"' ";
       m_delete(in, i);
       break;
     }
@@ -622,11 +622,12 @@ string tag_graphicstext(string t, mapping arg, string contents,
     m_delete(arg,"submit");
   }
   
-  string lp, url;
+  string lp, url, ea;
+  ea = extra_args(arg);
   if(arg->href)
   {
     url = arg->href;
-    lp = "<a href=\""+arg->href+"\" "+extra_args(arg)+">";
+    lp = "<a href=\""+arg->href+"\" "+ea+">";
     if(!arg->fg) arg->fg=defines->link||"#0000ff";
     m_delete(arg,"href");
   }
@@ -730,8 +731,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
 			     query_location()+num+"/"+quote(gt),
 			     query_location()+num2+"/"+quote(gt),
 			     replace(gt, "\"","'"),(magic=="magic"?0:magic),
-			     id,input?(arg->name||"submit"):0,
-			     extra_args(arg));
+			     id,input?(arg->name||"submit"):0,ea);
   }
   if(input && id->supports->images)
     return (pre+"<input type=image name=\""+arg->name+"\" border=0 alt=\""+
