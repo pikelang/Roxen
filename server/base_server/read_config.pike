@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: read_config.pike,v 1.67 2005/02/08 18:41:22 mast Exp $
+// $Id: read_config.pike,v 1.68 2005/04/02 14:46:51 mast Exp $
 
 #include <module.h>
 
@@ -16,7 +16,7 @@ import spider;
 
 #define COPY( X ) ((X||([])) + ([]))
 
-mapping (string:array(int)) config_stat_cache = ([]);
+mapping (string:Stdio.Stat) config_stat_cache = ([]);
 string configuration_dir; // Set by Roxen.
 
 array(string) list_all_configurations()
