@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.61 1998/07/23 16:38:17 grubba Exp $
+ * $Id: ftp2.pike,v 1.61.2.1 1999/05/19 18:33:02 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -159,6 +159,16 @@ class RequestID
   }
 #endif /* FTP2_DEBUG */
 
+  void read_to_receive()
+  {
+    // FIXME: Should hook the STOR reply to this function.
+  }
+
+  void send_result(mapping|void result)
+  {
+    error("Asynch sending with send_result() not supported yet.\n");
+  }
+
   object clone_me()
   {
     object o = this_object();
@@ -172,16 +182,18 @@ class RequestID
   void create(object|void m_rid)
   {
     DWRITE(sprintf("REQUESTID: New request id.\n"));
-    object o = this_object();
+
     if (m_rid) {
+      object o = this_object();
       foreach(indices(m_rid), string var) {
-	if (!(< "create", "__INIT", "clone_me", "end",
-		"clientprot", "prot" >)[var]) {
+	if (!(< "create", "__INIT", "clone_me", "end", "ready_to_receive",
+		"clientprot", "prot", "send", "scan_for_query",
+		"send_result", >)[var]) {
 	  o[var] = m_rid[var];
 	}
       }
     }
-    o->time = predef::time(1);
+    time = predef::time(1);
 #ifdef FTP2_DEBUG
     misc->trace_enter = trace_enter;
     misc->trace_leave = trace_leave;
@@ -478,9 +490,16 @@ class LS_L
   
   static string name_from_uid(int uid)
   {
-    array(string) user = master_session->conf->auth_module &&
+    string|array(string) user = master_session->conf->auth_module &&
       master_session->conf->auth_module->user_from_uid(uid);
-    return (user && user[0]) || (uid?((string)uid):"root");
+    if (user) {
+      if (arrayp(user)) {
+	return(user[0]);
+      } else {
+	return(user);
+      }
+    }
+    return (uid?((string)uid):"root");
   }
 
   string ls_l(string file, array st)
@@ -500,22 +519,43 @@ class LS_L
       }
     }
   
-    mapping lt = localtime(st[-4]);
-    if (flags & LS_FLAG_n) {
-      st[-2] = name_from_uid(st[-2]);
+    mapping lt = localtime(st[3]);
+
+    // NOTE: SiteBuilder may set st[5] and st[6] to strings.
+    string user = (string)st[5];
+    string group = (string)st[6];
+    if (!(flags & LS_FLAG_n)) {
+      // Use symbolic names for uid & gid;
+      if (!stringp(st[5])) {
+	user = name_from_uid(st[5]);
+      }
+
+      // FIXME: Convert st[6] to symbolic group name.
+    }
+
+    string ts;
+    int now = time(1);
+    // Half a year:
+    //   365.25*24*60*60/2 = 15778800
+    if ((st[3] <= now - 15778800) || (st[3] > now)) {
+      // Month Day  Year
+      ts = sprintf("%s %02d  %04d",
+		   months[lt->mon], lt->mday, 1900+lt->year);
+    } else {
+      // Month Day Hour:minute
+      ts = sprintf("%s %02d %02d:%02d",
+		   months[lt->mon], lt->mday, lt->hour, lt->min);
     }
 
     if (flags & LS_FLAG_G) {
       // No group.
-      return sprintf("%s   1 %-10s %12d %s %02d %02d:%02d %s\n", perm*"",
-		     (string)st[-2], (st[1]<0? 512:st[1]),
-		     months[lt->mon], lt->mday,
-		     lt->hour, lt->min, file);
+      return sprintf("%s   1 %-10s %12d %s %s\n", perm*"",
+		     user, (st[1]<0? 512:st[1]),
+		     ts, file);
     } else {
-      return sprintf("%s   1 %-10s %-6d%12d %s %02d %02d:%02d %s\n", perm*"",
-		     (string)st[-2], st[-1], (st[1]<0? 512:st[1]),
-		     months[lt->mon], lt->mday,
-		     lt->hour, lt->min, file);
+      return sprintf("%s   1 %-10s %-6d%12d %s %s\n", perm*"",
+		     user, group, (st[1]<0? 512:st[1]),
+		     ts, file);
     }
   }
 
@@ -820,6 +860,7 @@ class LSFile
       return s;
     } else {
       // EOF
+      master_session->file = 0;		// Avoid extra log-entry.
       return "";
     }
   }
@@ -1543,6 +1584,11 @@ class FTPSession
     }
     curr_pipe = 0;
 
+    if (session && session->file) {
+      session->conf->log(session->file, session);
+      session->file = 0;
+    }
+
     send(226, ({ "Transfer complete." }));
   }
 
@@ -1779,6 +1825,9 @@ class FTPSession
 	case 401:
 	  send(530, ({ sprintf("%s: Need account for storing files.", args)}));
 	  break;
+	case 413:
+	  send(550, ({ sprintf("%s: Quota exceeded.", args) }));
+	  break;
 	case 501:
 	  send(502, ({ sprintf("%s: Command not implemented.", args) }));
 	  break;
@@ -1897,7 +1946,7 @@ class FTPSession
               array(string) dir;
 	      object id = RequestID(master_session);
 	      id->method = "LIST";
-              dir = roxen->find_dir(combine_path(cwd, path*"/")+"/", id);
+              dir = id->conf->find_dir(combine_path(cwd, path*"/")+"/", id);
               if (dir && sizeof(dir)) {
                 dir = glob(part, dir);
                 if ((< '*', '?' >)[part[0]]) {
@@ -2196,6 +2245,10 @@ class FTPSession
     curr_pipe = 0;
     restart_point = 0;
     logged_in = 0;
+    if (pasv_port) {
+      destruct(pasv_port);
+      pasv_port = 0;
+    }
     if (args != 1) {
       // Not called by QUIT.
       send(220, ({ "Server ready for new user." }));
@@ -2473,6 +2526,9 @@ class FTPSession
     if(pasv_port)
       destruct(pasv_port);
     pasv_port = Stdio.Port(0, pasv_accept_callback, local_addr);
+    /* FIXME: Hmm, getting the address from an anonymous port seems not
+     * to work on NT...
+     */
     int port=(int)((pasv_port->query_address()/" ")[1]);
     send(227, ({ sprintf("Entering Passive Mode. %s,%d,%d",
 			 replace(local_addr, ".", ","),
@@ -3056,6 +3112,9 @@ class FTPSession
 	  if (objectp(master_session->file->pipe)) {
 	    destruct(master_session->file->pipe);
 	  }
+	}
+	if (objectp(pasv_port)) {
+	  destruct(pasv_port);
 	}
 	master_session->method = "QUIT";
 	master_session->not_query = user || "Anonymous";
