@@ -9,7 +9,7 @@ inherit "module";
 #define LOCALE(X,Y)  _DEF_LOCALE("mod_emit_timerange",X,Y)
 // end locale stuff
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.15 2004/07/08 22:08:42 erikd Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.16 2004/08/09 10:01:10 erikd Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -552,26 +552,6 @@ class TagEmitTimeRange
   array get_dataset(mapping args, RequestID id)
   {
     // DEBUG("get_dataset(%O, %O)\b", args, id);
-    // Start Eriks stuff, july 8 2004
-    string plugin;
-    RoxenModule provider;
-    if(plugin = m_delete(args, "plugin")) {
-      array(RoxenModule) data_providers = id->conf->get_providers("timerange-plugin");
-      foreach(data_providers, RoxenModule prov) {
-	if(prov->supplies_plugin_name && prov->supplies_plugin_name(plugin)) {
-	  provider = prov;
-	  break;
-	}
-      }
-      if(provider) {
-	werror(sprintf("We have a provider: %O\n", provider));
-
-
-      } else {
-	RXML.run_error(sprintf("Timerange %s plugin does not exist", plugin));
-      }
-    }
-    // End Eriks stuff, july 8 2004
     string cal_type = args["calendar"];
     Calendar cal = get_calendar(m_delete(args, "calendar"));
     Calendar.TimeRange from, to, range;
@@ -748,6 +728,47 @@ class TagEmitTimeRange
 	} //End foreach
       }
     }// End if we have a SQL query
+
+    // Start Eriks stuff, july 8 2004
+    string plugin;
+    RoxenModule provider;
+    if(plugin = m_delete(args, "plugin")) {
+      array(RoxenModule) data_providers = id->conf->get_providers("timerange-plugin");
+      foreach(data_providers, RoxenModule prov) {
+	if(prov->supplies_plugin_name && prov->supplies_plugin_name(plugin)) {
+	  provider = prov;
+	  break;
+	}
+      }
+      if(provider) {
+	// Here we retrieve the data...
+	werror(sprintf("We have a provider: %O\n", provider));
+	string compare_column = provider->get_column_name();
+	array(mapping(string:mixed)) provider_data = provider->get_dataset(args, range);
+        foreach(dataset,Calendar.TimeRange test_date)
+        {
+	  int i = 0;
+	  int test = 1;
+
+	  foreach(provider_data, mapping pro_data)
+	  {
+            if(pro_data[compare_column]->overlaps(test_date) )
+            {
+	      dset += ({ ({ test_date, pro_data }) });
+	      test = 0;
+	    }
+            i++;
+          }
+
+	  if(test == 1)
+	    dset += ({test_date});
+	} //End foreach
+
+      } else {
+	RXML.run_error(sprintf("Timerange %s plugin does not exist", plugin));
+      }
+    }
+    // End Eriks stuff, july 8 2004
 
 #ifndef RXML_FUTURE_COMPAT
     RXML.Tag emit = id->conf->rxml_tag_set->get_tag("emit");
