@@ -197,6 +197,7 @@ rbf binary
 /server/modules/filters/url_rectifier.pike foreign_ident
 /server/modules/filters/whitespace_sucker.pike foreign_ident
 /server/modules/filters/word_highlight.pike foreign_ident
+/server/modules/graphics/atlas.pike foreign_ident
 /server/modules/graphics/atlas/atlas.pike foreign_ident
 /server/modules/graphics/business_graphics/business.pike foreign_ident
 /server/modules/graphics/cimg.pike foreign_ident
