@@ -80,9 +80,9 @@ private string noex_cont(string t, mapping m, string c) {
 
 private string ex_cont(string t, mapping m, string c, string rt, void|object id)
 {
-  c="<pre>"+replace(c, ({"<",">","&"}), ({"&lt;","&gt;","&amp;"}) )+"</pre>";
+  string quoted="<pre>"+replace(c, ({"<",">","&"}), ({"&lt;","&gt;","&amp;"}) )+"</pre>";
   if(m->type=="box")
-    return "<br />"+mktable( ({ ({ c }) }) );
+    return "<br />"+mktable( ({ ({ quoted }) }) );
 
   if(!id) return "";
 
@@ -92,12 +92,12 @@ private string ex_cont(string t, mapping m, string c, string rt, void|object id)
 			 c, id);
   switch(m->type) {
   case "hr":
-    return c+"<hr />"+parsed;
+    return quoted+"<hr />"+parsed;
   case "vert":
-    return "<br />"+mktable( ({ ({ c }), ({ parsed }) }) );
+    return "<br />"+mktable( ({ ({ quoted }), ({ parsed }) }) );
   case "hor":
   default:
-    return "<br />"+mktable( ({ ({ c, parsed }) }) );
+    return "<br />"+mktable( ({ ({ quoted, parsed }) }) );
   }
 }
 
