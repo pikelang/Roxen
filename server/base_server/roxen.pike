@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.520 2000/08/14 22:50:52 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.521 2000/08/15 12:54:04 jhs Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -605,8 +605,8 @@ class InternalRequestID
 }
 
 class Protocol
-//! The basic protocol.  
-//! Implements reference handling, finding Configuration objects 
+//! The basic protocol.
+//! Implements reference handling, finding Configuration objects
 //! for URLs, and the bind/accept handling.
 {
   inherit Stdio.Port: port;
@@ -619,7 +619,7 @@ class Protocol
   //! Filename of a by-connection handling class. It is also possible
   //! to set the 'requesthandler' class member in a overloaded create
   //! function.
- 
+
   constant default_port = 4711;
   //! If no port is specified in the URL, use this one
 
@@ -1595,7 +1595,7 @@ void sort_urls()
   sort( map( map( sorted_urls, strlen ), `-), sorted_urls );
 }
 
-int register_url( string url, object conf )
+int register_url( string url, object/*(Configuration)*/ conf )
 {
   url = lower_case( url );
   if (!sizeof (url - " " - "\t")) return 1;
@@ -1739,10 +1739,10 @@ int register_url( string url, object conf )
 }
 
 
-object find_configuration( string name )
+object/*(Configuration)*/ find_configuration( string name )
 {
   name = replace( lower_case( replace(name,"-"," ") )-" ", "/", "-" );
-  foreach( configurations, object o )
+  foreach( configurations, object/*(Configuration)*/ o )
   {
     if( (lower_case( replace( replace(o->name, "-"," ") - " " ,
 			      "/", "-" ) ) == name) ||
@@ -3086,7 +3086,7 @@ object/*(Configuration)*/ get_configuration (string name)
   return config_lookup[name];
 }
 
-object enable_configuration(string name)
+object/*(Configuration)*/ enable_configuration(string name)
 {
 #ifdef DEBUG
   if (get_configuration (name))
