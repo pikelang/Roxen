@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.173 2001/08/06 16:44:37 mast Exp $
+# $Id: start,v 1.174 2001/08/10 09:08:25 wellhard Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -67,6 +67,7 @@ FILES="default"
 program=base_server/roxenloader.pike
 VARDIR=../var
 LOCALDIR=../local
+SELF_TEST_DIR=etc/test
 
 # Make LOCALDIR an absolute path
 if test -d $LOCALDIR/.; then
@@ -134,11 +135,13 @@ setup_for_tests() {
       kill `cat $VARDIR/test_config/_mysql/mysql_pid`
     fi
     self_test=y
-    DEFINES="-DRUN_SELF_TEST $DEFINES"
+    DEFINES="-DRUN_SELF_TEST -DSELF_TEST_DIR=\"$SELF_TEST_DIR\" $DEFINES"
     rm -rf $VARDIR/test_config*
-    cp -R etc/test/config $VARDIR/test_config
-    cp etc/test/filesystem/test_rxml_package rxml_packages/test_rxml_package
+    cp -R $SELF_TEST_DIR/config $VARDIR/test_config
     DIR=$VARDIR/test_config
+    if [ -f $SELF_TEST_DIR/scripts/setup.sh ] ; then
+      $SELF_TEST_DIR/scripts/setup.sh $SELF_TEST_DIR $VARDIR
+    fi
     once=1
     remove_dumped=1
 }
@@ -274,6 +277,9 @@ parse_args() {
     fi
    fi
   ;;
+  --self-test-dir=*)
+    SELF_TEST_DIR=`echo $1 | sed -e's/--self-test-dir=//'`
+  ;;
   '--self-test')
     setup_for_tests
   ;;
@@ -354,6 +360,8 @@ the default arguments.
       .B--self-testB.:                Runs a testsuite.
       .B--self-test-verboseB.:        Runs a testsuite, report all tests.
       .B--self-test-quietB.:          Runs a testsuite, only report errors.
+      .B--self-test-dir=DIRB.:        Use this self test directory instead of
+                                  the default .Betc/testB. directory.
 
       .B--onceB.:                     Run the server only once, in the foreground.
 			   	  This is very useful when debugging. Implies
