@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.98 1999/11/17 11:08:20 jonasw Exp $
+/* $Id: wizard.pike,v 1.99 1999/11/19 13:48:50 jonasw Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -334,6 +334,8 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed b)
      m_delete(m,"default");
      m_delete(m,"type");
      mapping m2 = copy_value(m);
+     if (m->autosubmit)
+       m2->onChange = "javascript:submit();";
      m_delete(m2, "choices");
      m_delete(m2, "options");
      //escape the characters we need for internal purposes..
