@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.138 2001/03/13 20:21:46 mast Exp $
+//! $Id: module.pmod,v 1.139 2001/03/13 20:35:18 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -828,12 +828,12 @@ class Value
   //!
   //! By using knowledge about the actual value, the producer can in
   //! many cases avoid the call to the encode function. A typical case
-  //! is when the value is known to be an arbitrary string (not zero),
-  //! which is preferably optimized like this:
+  //! is when the value is known to be an arbitrary literal string
+  //! (not zero), which is preferably optimized like this:
   //!
   //! @example
-  //!   return type && type != RXML.t_text ?
-  //!          type->encode (my_string, RXML.t_text) : my_string;
+  //!   return type && type != RXML.t_plain ?
+  //!          type->encode (my_string, RXML.t_plain) : my_string;
   //! @endexample
   //!
   //! Also, by letting the producer know the type context of the value
@@ -841,7 +841,7 @@ class Value
   //! to adapt the value according to the context it'll be used in,
   //! e.g. to return a powerful object if no type conversion is
   //! wanted, a simple text representation of it when the type is
-  //! @[RXML.t_text], and a more nicely formatted representation when
+  //! @[RXML.t_plain], and a more nicely formatted representation when
   //! it's @[RXML.t_html].
   //!
   //! @note The @[type] argument being @tt{void|Type@} means that the
@@ -3359,7 +3359,7 @@ class Parser
 	mixed val;
 	if (zero_type (val = context->get_var ( // May throw.
 			 splitted[1..], splitted[0],
-			 encoding ? t_text : surrounding_type))) {
+			 encoding ? t_plain : surrounding_type))) {
 	  context->current_var = 0;
 	  return ({});
 	}
@@ -3956,13 +3956,13 @@ class Type
   //! thrown. That might happen if the value contains markup or
   //! similar that can't be represented in the conversion type.
   //!
-  //! E.g. in a type for XML markup which have @[RXML.t_text] as the
+  //! E.g. in a type for XML markup which have @[RXML.t_plain] as the
   //! conversion type, this function should return a literal string
   //! only if the text doesn't contain tags, otherwise it should throw
-  //! an error. It should never both decode e.g. "&lt;" to "<" and
-  //! just leave literal "<" in the string. It should also not parse
-  //! the value with some evaluating parser (see @[get_parser]) since
-  //! the value should only change representation. (This example shows
+  //! an error. It should never both decode "&lt;" to "<" and just
+  //! leave literal "<" in the string. It should also not parse the
+  //! value with some evaluating parser (see @[get_parser]) since the
+  //! value should only change representation. (This example shows
   //! that a more fitting conversion type for XML markup would be a
   //! DOM type that can represent XML node trees, since values
   //! containing tags could be decoded then.)
@@ -4173,10 +4173,10 @@ static class TSame
 
 TScalar t_scalar = TScalar();
 //! Any type of scalar, i.e. text or number. It's not sequential, as
-//! opposed to the subtype @[RXML.t_text].
+//! opposed to the subtype @[RXML.t_string].
 //!
-//! FIXME: This is currently not labeled as a supertype for t_text and
-//! t_num, so it's only marginally useful. It's name will probably
+//! FIXME: This is currently not labeled as a supertype for t_string
+//! and t_num, so it's only marginally useful. It's name will probably
 //! change.
 
 static class TScalar
@@ -4378,7 +4378,7 @@ static class TString
   string capitalize (string val) {return String.capitalize (val);}
   //! Converts the first literal character in @[val] to uppercase.
 
-  string _sprintf() {return "RXML.t_text" + OBJ_COUNT;}
+  string _sprintf() {return "RXML.t_string" + OBJ_COUNT;}
 }
 
 TPlain t_plain = TPlain();
@@ -4401,6 +4401,8 @@ static class TPlain
     mixed err = catch {return (string) val;};
     parse_error ("Cannot convert value to %s: %s", name, describe_error (err));
   }
+
+  string _sprintf() {return "RXML.t_plain" + OBJ_COUNT;}
 }
 
 TPlain t_text = t_plain;	// For compatibility.
