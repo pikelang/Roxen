@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997-2000, Roxen IS.
 // Makes a tab list like the one in the config interface.
 
-constant cvs_version="$Id: tablist.pike,v 1.53 2001/05/21 15:13:45 kuntri Exp $";
+constant cvs_version="$Id: tablist.pike,v 1.54 2001/06/28 20:25:41 mast Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -336,7 +336,8 @@ class TagTablist {
     }
   }
 
-  RXML.TagSet internal = RXML.TagSet("TagTablist.internal", ({ TagTab() }) );
+  RXML.TagSet internal =
+    RXML.TagSet(module_identifier() + "/tablist", ({ TagTab() }) );
 
   class Frame {
     inherit RXML.Frame;
