@@ -1,9 +1,8 @@
 // This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: config_userdb.pike,v 1.58 2000/11/20 13:36:36 per Exp $
+// $Id: config_userdb.pike,v 1.59 2000/11/21 13:14:37 per Exp $
 
 inherit "module";
-#define IN_ROXEN
 #include <config_interface.h>
 #include <roxen.h>
 #include <module.h>
