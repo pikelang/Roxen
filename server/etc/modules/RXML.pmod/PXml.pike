@@ -5,7 +5,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: PXml.pike,v 1.20 2000/01/28 16:48:44 mast Exp $
+//! $Id: PXml.pike,v 1.21 2000/02/02 18:23:59 mast Exp $
 
 #pragma strict_types
 
@@ -143,6 +143,7 @@ static void create (
   mixed_mode (!type->free_text);
   lazy_entity_end (1);
   match_tag (0);
+  ignore_unknown (1);		// Temporary kludge.
   _set_entity_callback (.utils.p_html_entity_cb);
   if (!type->free_text) _set_data_callback (.utils.return_empty_array);
   set_comment_tag_cb();
