@@ -31,7 +31,7 @@ string parse( RequestID id )
 	"</td></tr>";
   };
   
-  foreach( ({ "docs/roxen/3.2/" }), string rpath )
+  foreach( ({ "docs/roxen/3.3/" }), string rpath )
   {
     add_doc_link(rpath + "content_editor_manual_(instant)/index.xml",
 		 _(512, "Content Editor (Instant Edition)"));
