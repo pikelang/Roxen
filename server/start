@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.62 1998/11/28 21:36:46 grubba Exp $
+# $Id: start,v 1.63 1998/11/28 21:43:50 grubba Exp $
 
 cd `dirname $0`
 
@@ -98,6 +98,10 @@ parse_args() {
     once=1
     shift
   ;;
+  -D*|-d*|-s*|-M*|-I*|-P*|-t*)
+    # Argument passed along to Pike.
+    DEFINES="$DEFINES $1"
+  ;;
   '--version')
     echo Roxen Challenger 1.`expr $VERSION / 100`$BETA`expr $VERSION % 100`
     exit 0
@@ -150,7 +154,7 @@ the default arguments.
       .B--gdbB.:                      Run the server in gdb. Implies .B--onceB..
 
       .B--programB.:                  Start a different program with the roxen
-				  pike. As an example, 
+				  Pike. As an example, 
                                   .B./start --program bin/install.pikeB. will 
 				  start the installation program normally 
                                   started with .B./installB.
@@ -173,22 +177,24 @@ the default arguments.
 
        .B-DDEFINEB.:                  Define the symbol .BDEFINEB..
 
-       .B-d<level>B.:                 Set the runtime pike debug to level.
-				  This only works if pike is compiled 
+       .B-d<level>B.:                 Set the runtime Pike debug to level.
+				  This only works if Pike is compiled 
 				  with debug.
 
        .B-s<size>B.:                  Set the stack size.
 
-       .B-M <path>B.:                 Add the path to the pike module path.
+       .B-M<path>B.:                  Add the path to the Pike module path.
 
-       .B-I <path>B.:                 Add the path to the pike include path.
+       .B-I<path>B.:                  Add the path to the Pike include path.
+
+       .B-P<path>B.:                  Add the path to the Pike program path.
 
        .B-dtB.:                       Turn of tail recursion optimization.
 
-       .B-tB.:                        Turn on pike level tracing.
+       .B-tB.:                        Turn on Pike level tracing.
 
-       .B-t<level>B.:                 Turn on more pike tracing. This only 
-				  works if pike is compiled with debug.
+       .B-t<level>B.:                 Turn on more Pike tracing. This only 
+				  works if Pike is compiled with debug.
 
 
   .BEnvironment variables:B.
