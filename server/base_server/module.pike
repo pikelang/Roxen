@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.202 2004/05/12 20:12:52 mast Exp $
+// $Id: module.pike,v 1.203 2004/05/12 20:20:44 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -1354,7 +1354,7 @@ static mapping(string:mixed) copy_collection(string source,
 	  //
 	  // So if the failure was on the root destination resource we
 	  // have to convert it to a multi-status.
-	  result->add_status (destination, res);
+	  result->add_status (destination, res->error, res->rettext);
 	}
 	return ([]);
 #endif
