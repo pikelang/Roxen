@@ -13,7 +13,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: PXml.pike,v 1.65 2004/04/04 14:52:54 mani Exp $
+//! $Id: PXml.pike,v 1.66 2004/05/16 22:15:15 mani Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
@@ -499,14 +499,14 @@ local void remove_runtime_tag (string|RXML.Tag tag, void|int proc_instr)
 
 #if defined (OBJ_COUNT_DEBUG) || defined (RXML_OBJ_DEBUG)
 static int master_parser;
-string _sprintf(int t)
+static string _sprintf(int t)
 {
   return sprintf ("RXML.PXml(%s,%O,%O)%s",
 		  master_parser ? "master" : "clone", type, tag_set,
 		  __object_marker ? "[" + __object_marker->count + "]" : "");
 }
 #else
-string _sprintf(int t)
+static string _sprintf(int t)
 {
   return sprintf ("RXML.PXml(%O,%O)", type, tag_set);
 }
