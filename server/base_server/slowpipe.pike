@@ -9,11 +9,11 @@
  * performance. We'll see.
  */
 
-constant cvs_version="$Id: slowpipe.pike,v 1.3 1999/09/29 20:22:51 kinkie Exp $";
+constant cvs_version="$Id: slowpipe.pike,v 1.4 1999/10/10 20:45:12 kinkie Exp $";
 
 #ifdef THROTTLING_DEBUG
 #undef THROTTLING_DEBUG
-#define THROTTLING_DEBUG(X) perror("Throttling: "+X+"\n")
+#define THROTTLING_DEBUG(X) perror("slowpipe: "+X+"\n")
 #else
 #define THROTTLING_DEBUG(X)
 #endif
@@ -34,6 +34,7 @@ private int writing_starttime=0;
 private int bucket=0x7fffffff;
 private int fill_rate=0; //if != 0, we're throttling
 private int max_depth=0;
+private int initial_bucket=0;
 
 
 //API functions
@@ -45,9 +46,11 @@ int bytes_sent() {
 
 //set the fileobject to write to. Also start the writing process up
 void output (object(Stdio.File) fd) {
-  THROTTLING_DEBUG("slwpipe: output to "+fd->query_address());
+  THROTTLING_DEBUG("output to "+fd->query_address());
   outfd=fd;
   last_write=writing_starttime=time(1);
+  bucket=initial_bucket; //need to initialize it here, or ftp
+                         //will cause problems with long-lived sessions..
   fd->set_nonblocking(0,write_some,0);
   call_out(check_for_closing,10);
 }
@@ -57,13 +60,15 @@ void output (object(Stdio.File) fd) {
 //when sending the results. Will use more memory (and save FDs), we can
 //change this at a later moment
 void input (object what, int len) {
-  if (len<0)
+  THROTTLING_DEBUG("adding file input: len="+len);
+  if (len<=0)
     len=0x7fffffff;
   tosend+=what->read(len);
 }
 
 //add a string to the write-queue
 void write(string what) {
+  THROTTLING_DEBUG("adding "+sizeof(what)+"-bytes string");
   tosend+=what;
 }
 
@@ -75,15 +80,15 @@ void set_done_callback(function|void f, void|mixed ... args) {
 
 //extra API functions
 void throttle (int rate, int depth, int initial) {
-  THROTTLING_DEBUG("slowpipe: throttle. rate="+rate+", depth="+depth+
+  THROTTLING_DEBUG("throttle. rate="+rate+", depth="+depth+
                    ", initial="+initial);
   fill_rate=rate;
   max_depth=depth;
-  bucket=initial;
+  initial_bucket=initial;
 }
 
 void assign_throttler(void|object throttler_object) {
-  THROTTLING_DEBUG("slowpipe: assign_throttler");
+  THROTTLING_DEBUG("slowpipe: assigning throttler object");
   throttler=throttler_object;
 }
 
@@ -93,6 +98,8 @@ void assign_throttler(void|object throttler_object) {
 private void write_some () {
   int towrite;
   //have we finished?
+
+  THROTTLING_DEBUG("write_some: still "+strlen(tosend)+" bytes to be sent");
   if (strlen(tosend)<=0) {
     finish();
     return;
