@@ -65,13 +65,13 @@ mixed parse( RequestID id )
 	    q += "&init_var=" + http_encode_string (replace (var, "#", "!"));
 	}
         call_out( c->save, 1, 1 );
-        return http_redirect( q, id );
+        return http_redirect( fix_relative(q, id), id );
       }
       else
       {
         call_out( c->save, 1, 1 );
-        return http_redirect("site.html/"+
-                             http_encode_string(id->variables->name)+"/",id);
+        return http_redirect(fix_relative("site.html/"+
+                         http_encode_string(id->variables->name)+"/", id), id);
       }
     }
     return sprintf(base,q);
