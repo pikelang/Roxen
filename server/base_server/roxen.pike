@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.239 1998/09/17 07:24:44 mast Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.240 1998/09/20 01:15:45 peter Exp $";
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
@@ -43,7 +43,7 @@ constant __roxen_version__ = "1.2";
 #else /* PIKE_VERSION >= 0.6 */
 constant __roxen_version__ = "1.3";
 #endif /* PIKE_VERSION */
-constant __roxen_build__ = "34";
+constant __roxen_build__ = "35";
 
 #ifdef __NT__
 constant real_version = "Roxen Challenger/"+__roxen_version__+"."+__roxen_build__+" NT";
