@@ -164,13 +164,12 @@ mixed parse( RequestID id, mapping|void opt )
       conf->enable_module( mod );
     }
 
-    conf->forcibly_added = ([]);
-
     init_modules( conf, id );
 
     conf->fix_no_delayed_load_flag();
     conf->save (1); // Call start callbacks and save it all in one go.
     conf->low_init (1); // Handle the init hooks.
+    conf->forcibly_added = ([]);
     return "<done/>";
   }
   return
