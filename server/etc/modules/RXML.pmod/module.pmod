@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.74 2000/03/06 17:50:06 mast Exp $
+//! $Id: module.pmod,v 1.75 2000/03/09 09:53:10 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -1117,12 +1117,12 @@ class Backtrace
 
 #if constant (thread_create)
 private Thread.Local _context = thread_local();
-inline void set_context (Context ctx) {_context->set (ctx);}
-inline Context get_context() {return [object(Context)] _context->get();}
+local void set_context (Context ctx) {_context->set (ctx);}
+local Context get_context() {return [object(Context)] _context->get();}
 #else
 private Context _context;
-inline void set_context (Context ctx) {_context = ctx;}
-inline Context get_context() {return _context;}
+local void set_context (Context ctx) {_context = ctx;}
+local Context get_context() {return _context;}
 #endif
 
 #if defined (MODULE_DEBUG) && constant (thread_create)
@@ -2018,6 +2018,20 @@ class Frame
 
 
 // Global services.
+
+//! Shortcuts to some common functions in the current context.
+mixed get_var (string var, void|string scope_name, void|Type want_type)
+  {return get_context()->get_var (var, scope_name, want_type);}
+mixed user_get_var (string var, void|string scope_name, void|Type want_type)
+  {return get_context()->user_get_var (var, scope_name, want_type);}
+mixed set_var (string var, mixed val, void|string scope_name)
+  {return get_context()->set_var (var, val, scope_name);}
+mixed user_set_var (string var, mixed val, void|string scope_name)
+  {return get_context()->user_set_var (var, val, scope_name);}
+void delete_var (string var, void|string scope_name)
+  {get_context()->delete_var (var, scope_name);}
+void user_delete_var (string var, void|string scope_name)
+  {get_context()->user_delete_var (var, scope_name);}
 
 void run_error (string msg, mixed... args)
 //! Throws an RXML run error with a dump of the parser stack in the
