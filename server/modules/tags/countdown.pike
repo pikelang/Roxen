@@ -1,9 +1,12 @@
-constant cvs_version="$Id: countdown.pike,v 1.22 1999/12/14 01:39:15 nilsson Exp $";
+constant cvs_version="$Id: countdown.pike,v 1.23 2000/01/23 06:37:24 nilsson Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
 
 constant thread_safe=1;
+constant module_type = MODULE_PARSER;
+constant module_name = "Countdown";
+constant module_doc  = "Shows how long time it is until a certain event.";
 
 TAGDOCUMENTATION;
 #ifdef manual
@@ -97,12 +100,6 @@ mapping set_to_gregorian_easter(int year) {
   return easter;
 }
 
-array register_module()
-{
-  return ({ MODULE_PARSER, "Countdown",
-            "Shows how long time it is until a certain event.",0,1 });
-}
-
 void start( int num, Configuration conf )
 {
   module_dependencies (conf, ({ "rxmltags" }));
@@ -114,14 +111,14 @@ void start( int num, Configuration conf )
 // month->number code that did not depend on a static mapping.
 // Currently, this means that you can enter the name of the month or day in
 // your native language, if it is supported by roxen.
-constant language = roxen->language;
+constant languages = roxen->languages;
 int find_a_month(string which)
 {
   which = lower_case(which);
-  foreach(indices(roxen->languages), string lang)
+  foreach(indices(languages), string lang)
     for(int i=1; i<13; i++)
       catch {
-      if(which == lower_case(language(lang,"month")(i))[..strlen(which)])
+      if(which == lower_case(languages[lang]->month(i))[..strlen(which)])
 	return i-1;
     };
   return 1;
@@ -130,16 +127,17 @@ int find_a_month(string which)
 int find_a_day(string which)
 {
   which = lower_case(which);
-  foreach(indices(roxen->languages), string lang)
+  foreach(indices(languages), string lang)
     for(int i=1; i<8; i++)
-      if(which == lower_case(language(lang,"day")(i))[..strlen(which)])
+      if(which == lower_case(languages[lang]->day(i))[..strlen(which)])
 	return i;
   return 1;
 }
 
-string show_number(int n,mapping m)
+constant language=roxen->language;
+string show_number(int n, mapping m, RequestID id)
 {
-  return number2string(n,m,language(m->lang,m->ordered?"ordered":"number"));
+  return number2string(n, m, language(m->lang||id->misc->defines->pref_language, m->ordered?"ordered":"number"));
 }
 
 // This function should be fixed to support different languages.
@@ -447,28 +445,28 @@ string tag_countdown(string t, mapping m, object id)
     return sprintf("%1.1f",(delay/(3600*24*days_per_year/7)));
 
     case "years":
-    return  show_number((int)(delay/(3600*24*days_per_year)),m);
+    return  show_number((int)(delay/(3600*24*days_per_year)), m, id);
 
     case "months":
-    return show_number((int)(delay/((3600*24*days_per_year)/12)),m);
+    return show_number((int)(delay/((3600*24*days_per_year)/12)), m, id);
 
     case "weeks":
-    return  show_number(delay/(3600*24*7),m);
+    return  show_number(delay/(3600*24*7), m, id);
 
     case "days":
-    return   show_number(delay/(3600*24),m);
+    return   show_number(delay/(3600*24), m, id);
 
     case "hours":
-    return  show_number(delay/3600, m);
+    return  show_number(delay/3600, m, id);
 
     case "beats":
-    return "@"+show_number(delay/(3600*24/1000), m);
+    return "@"+show_number(delay/(3600*24/1000), m, id);
 
     case "minutes":
-    return show_number(delay/60,m);
+    return show_number(delay/60, m, id);
 
     case "seconds":
-    return show_number(delay,m);
+    return show_number(delay, m, id);
 
     case "boolean":
     return (string)((when/prec) == (mktime(now)/prec));
@@ -489,13 +487,8 @@ string tag_countdown(string t, mapping m, object id)
   //FIXME: L10N
   if(tprec) return delay/prec+" "+tprec+(delay/prec>1?"s":"");
 
-  m->unix_time = (string)when;
+  m["unix-time"] = (string)when;
   return "I don't think I understood that, but I think you want to count to "+
     make_tag("date",m)+" to which it is "+when+" seconds. Write &lt;countdown"
     " help&gt; to get an idea of what you ougt to write.";
-}
-
-mapping query_tag_callers()
-{
-  return ([ "countdown":tag_countdown, ]);
 }

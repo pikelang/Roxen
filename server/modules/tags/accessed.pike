@@ -5,7 +5,7 @@
 // by this module.
 //
 
-constant cvs_version="$Id: accessed.pike,v 1.15 2000/01/16 17:12:15 nilsson Exp $";
+constant cvs_version="$Id: accessed.pike,v 1.16 2000/01/23 06:36:14 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -433,11 +433,11 @@ string tag_accessed(string tag, mapping m, RequestID id)
 
    case "ordered":
     m->type="string";
-    res=number2string(counts,m,language(m->lang, "ordered"));
+    res=number2string(counts,m,language(m->lang||id->misc->defines->theme_language, "ordered"));
     break;
 
    default:
-    res=number2string(counts,m,language(m->lang, "number"));
+    res=number2string(counts,m,language(m->lang||id->misc->defines->theme_language, "number"));
   }
   return res+(m->addreal?real:"");
 }                  
