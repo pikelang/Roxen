@@ -11,6 +11,7 @@
 *.jpg binary
 /server/modules/proxies/gopher.pike -text -crlf
 *.png binary
+*.raw binary
 /server/tools/roxenstarter/roxenstarter.rc eol=crlf
 *.tar binary
 *.ttf binary
