@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: fonts.pike,v 1.70 2001/02/28 00:13:52 nilsson Exp $
+// $Id: fonts.pike,v 1.71 2001/02/28 09:54:08 nilsson Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -74,7 +74,7 @@ class FontHandler
   array(string) available_fonts( );
   //! return a list of all valid font names
   
-  mapping(string:mixed) font_information( string font );
+  array(mapping(string:mixed)) font_information( string font );
   //! return a mapping with information about the specified font
 
   static int|string font_style( string name, int size, int bold, int italic )
