@@ -1,12 +1,12 @@
 /*
- * $Id: configtablist.pike,v 1.8 1998/03/13 15:29:05 js Exp $
+ * $Id: configtablist.pike,v 1.9 1998/03/14 20:57:30 js Exp $
  *
  * Makes a tab-list like the one in the config-interface.
  *
  * $Author: js $
  */
 
-constant cvs_version="$Id: configtablist.pike,v 1.8 1998/03/13 15:29:05 js Exp $";
+constant cvs_version="$Id: configtablist.pike,v 1.9 1998/03/14 20:57:30 js Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -56,7 +56,7 @@ string tag_config_tab(string t, mapping a, string contents)
     dir = "s/";
   }
   if(a->bgcolor)
-    dir+=a->bgcolor;
+    dir+=replace(a->bgcolor,"#","|");
   else
     dir+="white";
   dir+="/";
