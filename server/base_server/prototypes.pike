@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.80 2004/04/13 16:51:02 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.81 2004/04/13 18:34:02 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -975,9 +975,15 @@ class RequestID
     return f;
   }
 
-  // The returned response header mapping is incomplete wrt the
-  // Content-Range header for range requests.
   mapping(string:string) make_response_headers (mapping(string:mixed) file)
+  //! Make the response headers from a response mapping for this
+  //! request. The headers associated with transfer modifications of
+  //! the response, e.g. 206 Partial Content and 304 Not Modified, are
+  //! not calculated here.
+  //!
+  //! @note
+  //! Is destructive on @[file] and on various data in the request;
+  //! should only be called once for a @[RequestID] instance.
   {
     mapping(string:string) heads = ([]);
 
@@ -1033,18 +1039,13 @@ class RequestID
     if(file->expires)
       heads->Expires = Roxen->http_date(file->expires);
 
-    if(mappingp(file->extra_heads))
-      heads |= file->extra_heads;
-
-    if(mappingp(misc->moreheads))
-      heads |= misc->moreheads;
-
     //if( file->len > 0 || (file->error != 200) )
     heads["Content-Length"] = (string)file->len;
 
 #ifdef RAM_CACHE
-    if (!(misc->etag = heads->ETag) && file->len &&
+    if (!(heads->ETag = misc->etag) && file->len &&
 	(file->data || file->file) &&
+	file->error == 200 && (<"HEAD", "GET">)[method] &&
 	(file->len < conf->datacache->max_file_size)) {
       string data = "";
       if (file->file) {
@@ -1052,7 +1053,7 @@ class RequestID
 	if (file->data && (sizeof(data) < file->len)) {
 	  data += file->data[..file->len - (sizeof(data)+1)];
 	}
-	m_delete(file, file);
+	m_delete(file, "file");
       } else if (file->data) {
 	data = file->data[..file->len - 1];
       }
@@ -1062,6 +1063,12 @@ class RequestID
       heads->Vary = "ETag";
     }
 #endif /* RAM_CACHE */
+
+    if(mappingp(file->extra_heads))
+      heads |= file->extra_heads;
+
+    if(mappingp(misc->moreheads))
+      heads |= misc->moreheads;
 
     return heads;
   }
