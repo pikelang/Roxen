@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.293 2000/03/30 20:08:38 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.294 2000/04/03 15:56:57 grubba Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -223,7 +223,9 @@ void stop()
         dir_module && dir_module->stop && dir_module->stop());
   for(int i=0; i<10; i++)
     CATCH("stopping priority group",
-          (pri[i],pri[i]->stop,pri[i]->stop()));
+          (pri[i] && pri[i]->stop && pri[i]->stop()));
+  catch("stopping the logger",
+	log_function && destruct(function_object(log_function)));
   foreach( registered_urls, string url )
     roxen->unregister_url(url);
 }
@@ -513,6 +515,17 @@ class LogFile
   string fname;
   void do_open()
   {
+    mixed parent;
+    if (catch { parent = function_object(object_program(this_object())); } ||
+	!parent) {
+      /* Our parent (aka the configuration) has been destructed.
+       * Time to die.
+       */
+      remove_call_out(do_open);
+      remove_call_out(do_close);
+      destruct();
+      return;
+    }
     string ff = fname;
     mapping m = localtime(time());
     m->year += 1900;	/* Adjust for years being counted since 1900 */
