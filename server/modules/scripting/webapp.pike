@@ -11,7 +11,7 @@ import Parser.XML.Tree;
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_webapp",X,Y)
 // end of the locale related stuff
 
-constant cvs_version = "$Id: webapp.pike,v 2.10 2002/03/06 11:25:10 tomas Exp $";
+constant cvs_version = "$Id: webapp.pike,v 2.11 2002/03/06 16:44:42 tomas Exp $";
 
 constant thread_safe=1;
 constant module_unique = 0;
@@ -1086,7 +1086,11 @@ mixed find_file( string f, RequestID id )
           object org_fd = id->my_fd;
           id->my_fd->set_read_callback(0);
           id->my_fd->set_close_callback(0);
-          id->my_fd->set_blocking();
+
+          // Don't set to blocking mode if SSL.
+          if (!id->my_fd->CipherSpec) {
+            id->my_fd->set_blocking();
+          }
 
           rxml_wrapper = RXMLParseWrapper(id->my_fd, id);
           id->my_fd = rxml_wrapper;
