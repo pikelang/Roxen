@@ -3,7 +3,7 @@
 //
 // A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.451 2001/07/19 20:23:02 hop Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.452 2001/07/21 09:44:59 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3320,7 +3320,12 @@ static void create()
          DLOCALE(36, "Primary Server URL"), TYPE_URL|VAR_PUBLIC,
 	 DLOCALE(37, "This is the main server URL, where your start page is "
 		 "located. Please note that you also have to configure the "
-		 "'URLs' variable."));
+		 "'URLs' variable. This is for instance used as fallback to "
+		 "generate absolute URLs to the server, but in most "
+		 "circumstances the URL sent by the clients are used, or "
+		 "the setting in 'URLs' for the port in question if that "
+		 "doesn't exist. This setting should not contain any subpath "
+		 "setting that is part of the port(s) in 'URLs'."));
   
   defvar("URLs", 
          Variable.PortList( ({"http://*/"}), VAR_INITIAL,
