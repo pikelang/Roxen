@@ -20,7 +20,7 @@
 *.jpeg binary
 *.jpg binary
 *.mc eol=crlf
-/server/demo_certificate.pem -text -crlf
+*.pem -text -crlf
 /server/modules/proxies/gopher.pike -text -crlf
 *.png binary
 *.raw binary
