@@ -5,7 +5,7 @@ import spider;
 program Privs;
 
 // Set up the roxen environment. Including custom functions like spawne().
-constant cvs_version="$Id: roxenloader.pike,v 1.49 1997/12/15 01:39:45 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.50 1998/01/16 02:02:25 grubba Exp $";
 
 #define perror roxen_perror
 
@@ -95,6 +95,34 @@ string popen(string s, void|mapping env, int|void uid, int|void gid)
   p=p2->pipe();
   if(!p) error("Popen failed. (couldn't create pipe)\n");
 
+  p2->set_close_on_exec(1);	// Paranoia.
+
+#if constant(Process.create_process)
+
+  object privs;
+  if (uid || gid) {
+    privs = Privs("Executing script as non-www user", uid, gid);
+  }
+  mapping opts = ([
+    "toggle_uid":1,
+    "env": env || getenv(),
+    "stdout":p
+  ]);
+  object proc;
+  proc = Process.create_process(({ "/bin/sh", "-c", s }), opts);
+
+  privs = 0;
+  if (proc) {
+    p->close();
+    destruct(p);
+    string t = p2->read(0x7fffffff);
+    p2->close();
+    destruct(p2);
+    return t;
+  }
+  return 0;
+  
+#else /* !constant(Process.create_process) */
   if(!fork())
   {
     array (int) olduid = ({ -1, -1 });
@@ -105,6 +133,7 @@ string popen(string s, void|mapping env, int|void uid, int|void gid)
 	exit(99);
       }
       p->dup2(file("stdout"));
+      p->close();
       if(uid || gid)
       {
 	object privs = Privs("Executing script as non-www user");
@@ -126,6 +155,7 @@ string popen(string s, void|mapping env, int|void uid, int|void gid)
     destruct(p2);
     return t;
   }
+#endif /* constant(Process.create_process) */
 }
 
 
@@ -161,7 +191,7 @@ int low_spawne(string s,string *args, mapping|array env, object stdin,
     cd(wd);
   exece(s, args, env);
   perror(sprintf("Spawne: Failed to exece %s\n", s));
-  exit(0);
+  exit(99);
 }
 
 int spawne(string s,string *args, mapping|array env, object stdin, 
@@ -170,6 +200,27 @@ int spawne(string s,string *args, mapping|array env, object stdin,
   int pid, *olduid = allocate(2, "int");
   object privs;
 
+#if constant(Process.create_process)
+  if (arrayp(uid) && (sizeof(uid) == 2)) {
+    privs = Privs("Executing program as non-www user (outside roxen)", @uid);
+  }
+  object proc = Process.create_process(({ s }) + (args || ({})), ([
+    "toggle_uid":1,
+    "stdin":stdin,
+    "stdout":stdout,
+    "stderr":stderr,
+    "cwd":wd,
+    "env":env
+  ]));
+
+  privs = 0;
+
+  if (proc) {
+    return(proc->pid());
+  }
+  return(-1);
+
+#else /* !constant(Process.create_process) */
   if(pid=fork()) return pid;
 
   if(arrayp(uid) && sizeof(uid) == 2)
@@ -179,7 +230,8 @@ int spawne(string s,string *args, mapping|array env, object stdin,
     setuid(uid[0]);
   } 
   catch(low_spawne(s, args, env, stdin, stdout, stderr, wd));
-  exit(0); 
+  exit(99); 
+#endif /* constant(Process.create_process) */
 }
 
 int spawn_pike(array(string) args, void|string wd, object|void stdin,
@@ -200,6 +252,23 @@ int spawn_pike(array(string) args, void|string wd, object|void stdin,
     preargs += ({ "-M"+s });
   foreach(new_master->pike_program_path, string s)
     preargs += ({ "-P"+s });
+
+#if constant(Process.create_process)
+  object proc = Process.create_process(({ pikebin }) + preargs + args, ([
+    "toggle_uid":1,
+    "stdin":stdin,
+    "stdout":stdout,
+    "stderr":stderr,
+    "cwd":wd,
+    "env":getenv()
+  ]));
+
+  if (proc) {
+    return(proc->pid());
+  }
+  return -1;
+
+#else /* !constant(Process.create_process) */
   if ((pid = fork()) == 0) {
     stdin && stdin->dup2(file("stdin"));
     stdout && stdout->dup2(file("stdout"));
@@ -211,6 +280,7 @@ int spawn_pike(array(string) args, void|string wd, object|void stdin,
     exit(-1);
   }
   return pid;
+#endif /* constant(Process.create_process) */
 }
 
 
@@ -402,13 +472,18 @@ class restricted_cd
   }
 }
 
+class empty_class {
+};
+
 void load_roxen()
 {
   add_constant("cd", restricted_cd());
+
+  // Attempt to resolv cross-references...
   if(!getuid())
     add_constant("Privs", myprivs(this_object()));
   else  // No need, we are not running as root.
-    add_constant("Privs", (Privs=class{}));
+    add_constant("Privs", (Privs=empty_class));
   roxen = ((program)"roxen")();
   if(!getuid())
   {
