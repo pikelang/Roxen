@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.112 1998/08/20 07:41:47 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.113 1998/08/20 18:04:52 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -25,10 +25,16 @@ private inherit "roxenlib";
 int req_time = HRTIME();
 #endif
 
-#ifdef FD_DEBUG
-#define MARK_FD(X) catch(mark_fd(my_fd->query_fd(), (X)+" "+remoteaddr))
+#ifdef REQUEST_DEBUG
+#define DPERROR(X)	roxen_perror((X)+"\n")
 #else
-#define MARK_FD(X)
+#define DPERROR(X)
+#endif
+
+#ifdef FD_DEBUG
+#define MARK_FD(X) catch{DPERROR(X); mark_fd(my_fd->query_fd(), (X)+" "+remoteaddr);}
+#else
+#define MARK_FD(X) DPERROR(X)
 #endif
 
 constant decode        = MIME.decode_base64;
@@ -111,6 +117,10 @@ private void setup_pipe()
 
 void send(string|object what, int|void len)
 {
+#ifdef REQUEST_DEBUG
+  roxen_perror(sprintf("send(%O, %O)\n", what, len));
+#endif /* REQUEST_DEBUG */
+
   if(!what) return;
   if(!pipe) setup_pipe();
   if(!pipe) return;
@@ -890,7 +900,9 @@ void do_log()
 #ifdef FD_DEBUG
 void timer(int start)
 {
-  if(pipe) 
+  if(pipe) {
+    // FIXME: Disconnect if no data has been sent for a long while
+    //   (30min?)
     MARK_FD(sprintf("HTTP_piping_%d_%d_%d_%d_(%s)",
 		    pipe->sent,
 		    stringp(pipe->current_input) ?
@@ -898,8 +910,9 @@ void timer(int start)
 		    pipe->last_called,
 		    _time(1) - start, 
 		    not_query));
-  else
+  } else {
     MARK_FD("HTTP piping, but no pipe for "+not_query);
+  }
   call_out(timer, 30, start);
 }
 #endif
@@ -948,6 +961,7 @@ string handle_error_file_request(array err, int eid)
   return format_backtrace(bt,eid)+"<hr noshade><pre>"+data+"</pre>";
 }
 
+
 // Send the result.
 void send_result(mapping|void result)
 {
@@ -985,7 +999,8 @@ void send_result(mapping|void result)
 	pipe = 0;
 	return;
       }
-      my_fd = 0; file = 0;
+      my_fd = 0;
+      file = 0;
       return;
     }
 
