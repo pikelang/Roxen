@@ -48,9 +48,10 @@
 /1.[01].*	-tables, -backgrounds, -ssl, -frames, -java, -javascript
 /1\..*		-ssl, -frames, -java, -javascript
 
-.*[2-9].[0-9].*  some_html3, fontcolor, pjpeginline
+.*[2-9].[0-9].*  some_html3, fontcolor, pjpeginline, tablecolor
 .*[2-9].[0-9]b[2-9].*           -java
 
+#Old versions on Mac craches the entire mashine if you use javascript.
 .*2	        -javascript
 .*2.*solaris	 javascript
 
