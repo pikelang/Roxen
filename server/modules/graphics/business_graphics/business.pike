@@ -6,7 +6,7 @@
  * in October 1997
  */
 
-constant cvs_version = "$Id: business.pike,v 1.114 1999/05/19 06:47:30 peter Exp $";
+constant cvs_version = "$Id: business.pike,v 1.115 1999/06/15 06:56:41 peter Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -32,7 +32,7 @@ function create_pie, create_bars, create_graph;
 
 int loaded;
 
-mixed *register_module()
+array register_module()
 {
   return ({ 
     MODULE_PARSER|MODULE_LOCATION,
@@ -161,6 +161,8 @@ mixed *register_module()
     });
 }
 
+roxen.ImageCache image_cache;
+
 void start(int num, object configuration)
 {
   if (!loaded) {
@@ -168,6 +170,7 @@ void start(int num, object configuration)
     create_pie   = ((program)"create_pie")()->create_pie;
     create_bars  = ((program)"create_bars")()->create_bars;
     create_graph = ((program)"create_graph")()->create_graph;
+    /* Use the global cache
     if (get_dir(query("cachedir")))
       foreach(get_dir(query("cachedir")), string file)
 	rm(query("cachedir")+file);
@@ -175,7 +178,9 @@ void start(int num, object configuration)
       if (!mkdir(query("cachedir")))
 	report_warning ("BG: Cache directory "+
 			query("cachedir")+" can not be created.\n");
+    */
   }
+  image_cache = roxen.ImageCache( "diagram", draw_callback );  
 }
 
 void stop()
@@ -186,23 +191,30 @@ void stop()
           string to_delete)
     m_delete(progs, to_delete);
   loaded = 0;
+  /* use the global cache
   if (get_dir(query("cachedir")))
     foreach(get_dir(query("cachedir")), string file)
       rm(query("cachedir")+file);
+  */
 }
 
 void create()
 {
-  defvar( "location", "/diagram/", "Mountpoint", TYPE_LOCATION|VAR_MORE,
-	  "The URL-prefix for the diagrams." );
   defvar( "maxwidth", 3000, "Limits:Max width", TYPE_INT,
 	  "Maximal width of the generated image." );
   defvar( "maxheight", 1000, "Limits:Max height", TYPE_INT,
 	  "Maximal height of the generated image." );
   defvar( "maxstringlength", 60, "Limits:Max string length", TYPE_INT,
 	  "Maximal length of the strings used in the diagram." );
+  defvar( "ext", 1, "Append .fmt (gif, jpeg etc) to all images",
+	  TYPE_FLAG|VAR_MORE, "Append .gif, .png, .gif etc to all images"
+	  " made. Normally this will only waste bandwidth");
+  /* use the global mountpoint and cache
+  defvar( "location", "/diagram/", "Mountpoint", TYPE_LOCATION|VAR_MORE,
+	  "The URL-prefix for the diagrams." );
   defvar( "cachedir", "../bgcache/", "Cache directory", TYPE_DIR|VAR_MORE,
 	  "The directory that will be used to store diagrams." );
+  */
 }
 
 string itag_xaxis(string tag, mapping m, mapping res)
@@ -532,28 +544,16 @@ string syntax( string error )
 mapping(string:object) palette_cache = ([]);
 int datacounter = 0; 
 
-string quote(mapping in)
-{
-  // Don't try to be clever here. It will break threads.
-  /*
-  string out;
-  cache[ out =
-       sprintf("%d%08x%x", ++datacounter, random(99999999), time(1)) ] = in;
-  */
-  //NU: Create key
+
+//FIXME: Put back some hash on the URL. Easily done by putting the hash
+//in the metadata.
+/* Old hashcode:
   object o=Crypto.sha();
   string data=encode_value(in);
   o->update(data);
   string out=replace(http_encode_string(MIME.encode_base64(o->digest(),1)),
 		     "/", "$");
-  if (file_stat(query("cachedir")+out)) return out;
-  
-  //NU: Create the file <Key>
-
-  Stdio.write_file(query("cachedir")+out, data);
-  
-  return out;
-}
+*/
 
 constant _diagram_args =
 ({ "xgridspace", "ygridspace", "horgrid", "size", "type", "3d",
@@ -715,7 +715,7 @@ string container_diagram(string tag, mapping m, string contents,
   if(m->eng) res->eng=1;
   if(m->neng) res->neng=1;
 
-  res->format         = m->format;
+  res->format         = (int)m->format || "gif";
   res->encoding       = m->encoding || "iso-8859-1";
   res->fontsize       = (int)m->fontsize || 16;
   res->legendfontsize = (int)m->legendfontsize || res->fontsize;
@@ -809,7 +809,6 @@ string container_diagram(string tag, mapping m, string contents,
 
   res -= shuffle_args;
 
-  m->src = query("location") + quote(res) + ".gif";
   if ((res->name)&&(!m->alt))
     m->alt=res->name;
 
@@ -824,6 +823,17 @@ string container_diagram(string tag, mapping m, string contents,
   };
 #endif
 
+  string ext = "";
+  if(query("ext")) ext="."+res->format;
+
+  m->src = query_internal_location()+image_cache->store( res )+ext;
+
+  if( mapping size = image_cache->metadata( m, id, 1 ) ) 
+  {
+    // image in cache (1 above prevents generation on-the-fly)
+    m->width = size->xsize;
+    m->height = size->ysize;
+  }
 
 #ifdef BG_DEBUG
   if(id->prestate->debug)
@@ -905,52 +915,34 @@ mapping unquote( string f )
   //  return cache[ f ];
 }
 
-mapping find_file(string f, object id)
+mapping find_internal(string f, object id)
 {
-#ifdef BG_DEBUG
-  //return 0;
-#endif
+  if( strlen(f)>4 && query("ext") && f[-4]=='.') // Remove .ext
+    f = f[..strlen(f)-5];
+  return image_cache->http_file_answer( f, id );
+}
 
-  //NU: If the file <f>.gif exists return it
-  string temp;
-  if (temp=Stdio.read_file(query("cachedir")+f+".gif"))
-    return http_string_answer(temp, "image/gif");
-
-
-  if (f[sizeof(f)-4..] == ".gif")
-    f = f[..sizeof(f)-5];
-
-  if( f=="" )
-    return http_img_answer( "This is BG's mountpoint." );
-
-  mapping res = copy_value( unquote( f ) );
-
-  //FIXME Ta bort f?
-
-  if(!res)
-    return http_img_answer( "Please reload this page." );
-
+mixed draw_callback(mapping args, object id)
+{
   if(id->prestate->debug)
-    return http_string_answer( sprintf("<pre>%O\n", res) );
+    return http_string_answer( sprintf("<pre>%O\n", args) );
   
-  mapping(string:mixed) diagram_data;
-
   array back=0;
-  if (res->bgcolor)
-    back = res->bgcolor;
+  if (args->bgcolor)
+    back = args->bgcolor;
 
-  if(res->background)
+  if(args->background)
   {
-    m_delete( res, "bgcolor" );
-    res->image = PPM(res->background, id);
+    m_delete( args, "bgcolor" );
+    args->image = PPM(args->background, id);
 
     /* Image was not found or broken */
-    if(res->image == 1) 
+    if(args->image == 1) 
     {
-      res->image=get_font(0, 24, 0, 0,"left", 0, 0);
-      if (!(res->image))
+      args->image=get_font(0, 24, 0, 0,"left", 0, 0);
+      if (!(args->image))
 	throw(({"Missing font or similar error!\n", backtrace() }));
-      res->image=res->image->
+      args->image=args->image->
 #if constant(Image.JPEG.decode)
 	write("The file was", "not found ",
 	      "or was not a","jpeg-, gif- or","pnm-picture.");
@@ -959,65 +951,60 @@ mapping find_file(string f, object id)
 	      "or was not a","pnm-picture.");
 #endif
     }
-  } else if(res->tonedbox) {
-    m_delete( res, "bgcolor" );
-    res->image = Image.image(res->xsize, res->ysize)->
-      tuned_box(0, 0, res->xsize, res->ysize, res->tonedbox);
+  } else if(args->tonedbox) {
+    m_delete( args, "bgcolor" );
+    args->image = Image.image(args->xsize, args->ysize)->
+      tuned_box(0, 0, args->xsize, args->ysize, args->tonedbox);
   }
-  else if (res->colorbg)
+  else if (args->colorbg)
   {
-    back=0; //res->bgcolor;
-    m_delete( res, "bgcolor" );
-    res->image = Image.image(res->xsize, res->ysize, @res->colorbg);
+    back=0; //args->bgcolor;
+    m_delete( args, "bgcolor" );
+    args->image = Image.image(args->xsize, args->ysize, @args->colorbg);
   } 
-  /*else if (res->notrans)
+  /*else if (args->notrans)
     {
-      res->image = Image.image(res->xsize, res->ysize, @res->bgcolor);
-      m_delete( res, "bgcolor" );
+      args->image = Image.image(args->xsize, args->ysize, @args->bgcolor);
+      m_delete( args, "bgcolor" );
     }
   */
   
-  diagram_data = res;
-
   object(Image.image) img;
-
-  if(res->image)
-    diagram_data["image"] = res->image; //FIXME: Why is this here?
 
 #ifdef BG_DEBUG
   bg_timers->drawing = gauge {
 #endif
 
-  switch(res->type) {
+  switch(args->type) {
    case "pie":
-     img = create_pie(diagram_data)["image"];
+     img = create_pie(args)["image"];
      break;
    case "bars":
    case "sumbars":
-     img = create_bars(diagram_data)["image"];
+     img = create_bars(args)["image"];
      break;
    case "graph":
-     img = create_graph(diagram_data)["image"];
+     img = create_graph(args)["image"];
      break;
   }
 #ifdef BG_DEBUG
   };
-  if (diagram_data->bg_timers)
-    bg_timers+=diagram_data->bg_timers;
+  if (args->bg_timers)
+    bg_timers+=args->bg_timers;
 #endif
   object ct;
-  if(res->colortable_cache)
+  if(args->colortable_cache)
   {
-    ct = palette_cache[res->colortable_cache];
+    ct = palette_cache[args->colortable_cache];
     if(!ct)
-      ct = palette_cache[res->colortable_cache] =
+      ct = palette_cache[args->colortable_cache] =
 	   Image.colortable(img)->nodither();
   }
 
-//   if (res->image)
+//   if (args->image)
 //   {
 //     werror("blablasdfbsdfgbdfgb");
-  if (res->turn)
+  if (args->turn)
     img=img->rotate_ccw();
 	
 //   if (back)
@@ -1045,18 +1032,22 @@ mapping find_file(string f, object id)
     werror("Timers: %O\n", bg_timers);
 #endif
 
-  //NU: Save the created gif as <f>.gif!
-
-  if(diagram_data->format)
+  string pic;
+  if(args->format == "gif")
   {
-    return
-      http_string_answer(Image[upper_case(diagram_data->format)]->
-			 encode( img ), 
-			 "image/"+lower_case(diagram_data->format));
-  } else {
     if(!ct) ct = Image.colortable(img);
-    string foo=Image.GIF.encode(img, ct, @(back||({})));
-    Stdio.write_file(query("cachedir")+f+".gif", foo);
-    return http_string_answer(foo, "image/gif");
-  }
+    pic = Image.GIF.encode(img, ct, @(back||({})));
+  } else
+    pic = Image[upper_case(args->format)]->encode( img );
+
+  return
+  ([
+    "data":pic,
+    "meta":
+    ([
+      "xsize":img->xsize(),
+      "ysize":img->ysize(),
+      "type":"image/"+lower_case(args->format)
+    ])
+  ]);
 }
