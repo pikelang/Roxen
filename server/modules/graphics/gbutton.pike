@@ -27,7 +27,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.107 2004/06/07 11:00:01 _cvs_stephen Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.108 2004/09/12 00:08:46 _cvs_dirix Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -287,9 +287,22 @@ array(Image.Layer)|mapping draw_button(mapping args, string text, object id)
 
   if( args->border_image )
   {
+#ifndef SiteBuilder
     array(Image.Layer)|mapping tmp =
      core.load_layers(args->border_image, id, opts);
-    
+#else
+//  Let SiteBuilder get a chance to decode its argument data
+array(Image.Layer)|mapping tmp;
+    if (Sitebuilder.sb_start_use_imagecache) {
+      Sitebuilder.sb_start_use_imagecache(args, id);
+      tmp = roxen.load_layers(args->border_image, id, opts);
+      Sitebuilder.sb_end_use_imagecache(args, id);
+    } else
+    {
+      tmp = roxen.load_layers(args->border_image, id, opts);
+    }
+#endif   
+ 
     if (mappingp(tmp))
       if (tmp->error == 401)
 	return tmp;
