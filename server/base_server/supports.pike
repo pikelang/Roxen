@@ -1,6 +1,6 @@
 // Handles supports
 // Copyright © 1999 - 2000, Roxen IS.
-// $Id: supports.pike,v 1.15 2000/03/07 02:38:35 nilsson Exp $
+// $Id: supports.pike,v 1.16 2000/03/11 17:18:20 nilsson Exp $
 
 #pragma strict_types
 
@@ -13,6 +13,7 @@ inherit "socket";
 private mapping (string:array (array (object|multiset))) supports;
 private multiset(string) default_supports;
 private mapping (string:string) default_client_var;
+private array(string) supports_ind;
 
 
 //------------------ Code to decode the supports file ----------------------
@@ -107,6 +108,7 @@ private void parse_supports_string(string what, string current_section,
       }
     }
   }
+  supports_ind=({0})+(indices(supports)-({0}));
 }
 
 public void initiate_supports()
@@ -127,9 +129,9 @@ private array(multiset(string)|mapping(string:string)) lookup_supports(string fr
   mapping (string:string) m = ([]);
   multiset (string) nsup = (< >);
 
-  foreach(indices(supports), string v)
+  foreach(supports_ind, string v)
   {
-    if(!v || !search(from, v))
+    if(!v || (sizeof(v)<=sizeof(from) && from[..sizeof(v)-1]==v))
     {
       //  werror("Section "+v+" match "+from+"\n");
       foreach(supports[v], array(function|multiset) s)
@@ -139,6 +141,7 @@ private array(multiset(string)|mapping(string:string)) lookup_supports(string fr
           nsup |= s[2];
           m |= s[3];
         }
+      if(v) break;
     }
   }
   if(!sizeof(sup))
