@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.130 1999/03/28 23:23:32 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.131 1999/03/29 00:15:37 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -228,7 +228,8 @@ class imap_mail
     } else {
       string data = msg->getdata() || "";
 
-      a = ({ imap_string(msg->type), imap_string(msg->subtype),
+      a = ({ imap_string(upper_case(msg->type)),
+	     imap_string(upper_case(msg->subtype)),
 	     mapping_to_list(msg->params),
 	     "NIL", // FIXME: Content id (rfc 2045)
 	     "NIL", // FIXME: Body description
@@ -236,6 +237,18 @@ class imap_mail
 	     // NOTE: The MIME module decodes any transfer encoding
 	     imap_string("binary"),  // msg->transfer_encoding, 
 	     imap_number(strlen(data)) });
+
+      if (lower_case(msg->type) == "text") {
+	a += ({ imap_number(sizeof(data/"\n") - 1) });
+      } else if ((lower_case(msg->type) == "message") &&
+		 (lower_case(msg->type) == "rfc822")) {
+	object submsg = MIME.Message(data);
+
+	a += ({ make_envelope(submsg->headers),
+		make_body_structure(submsg, extension_data),
+		imap_number(sizeof(data/"\n") - 1),
+	});
+      }
 	
       // FIXME: Type specific fields, for text/* and message/rfc822 messages
       if (extension_data)
