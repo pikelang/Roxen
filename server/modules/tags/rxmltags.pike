@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.243 2001/06/22 01:08:50 marcus Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.244 2001/06/25 17:30:12 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -51,6 +51,7 @@ private object compile_handler = class {
 		"`/":`/,
 		"`%":`%,
 
+		"`!":`!,
 		"`&":`&,
 		"`|":`|,
 		"`^":`^,
@@ -78,7 +79,7 @@ string sexpr_eval(string what)
   what -= "lambda";
   what -= "\"";
   what -= ";";
-  return compile_string( "mixed foo=" + what + ";",
+  return compile_string( "int|float foo=" + what + ";",
 			 0, compile_handler )()->foo;
 }
 
