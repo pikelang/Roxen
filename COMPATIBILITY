@@ -140,8 +140,9 @@ and Roxen WebServer 4.0.
    and <?noparse ?>
    has been moved to the module usertags.pike
 
- - Existing Admin-Interface virtual servers should load three extra modules
-   to keep working: "roxenwebserver", "development" and "usertags"
+ - Existing Admin-Interface virtual servers should load four extra modules
+   to keep working: "roxenwebserver", "development", "usertags"
+   and "admin_userdb", in addition to dropping any "config_userdb"
 
  - /internal-gopher- generation has moved to the diremit module.
 
