@@ -365,6 +365,39 @@ string find_module_doc( string cn, string mn, RequestID id )
                   ({ "/image/", }), ({ "/internal-roxen-" }));
 }
 
+string initial_vars( RequestID id, string conf, array(string) modules )
+{
+  while( id->misc->orig )
+    id = id->misc->orig;
+
+  Configuration c = roxen->find_configuration( conf );
+
+  array(string) rets=({});
+  foreach(modules, string module) {
+    RoxenModule m = c->find_module( replace(module, "!", "#") );
+    rets+=({ "Initial variables for "+ EC(translate(m->register_module()[1])) + ":<br /><br />" +
+ #"<nooutput>
+  This is necessary to update all the variables before showing them.
+  <configif-output source=module-variables configuration=\""+
+   conf+"\" section=\"&form.section;\" module=\""+module+#"\">
+   </configif-output>
+</nooutput>
+<table>
+  <configif-output source=module-variables configuration=\""+
+   conf+"\" section=\"&form.section;\" module=\""+module+#"\">
+    <tr><td width=20%><b>#name#</b></td><td>#form:quote=none#</td></tr>
+    <tr><td colspan=2>#doc:quote=none#<p>#type_hint#</td></tr>
+  </configif-output>
+</table>" });
+  }
+
+  return "<input type=\"hidden\" name=\"initial\" value=\"1\" />"
+    "<input type=\"hidden\" name=\"mod\" value=\""+modules*","+"\" >"
+    "<cf-save what='Module'/><br clear=\"all\" />"+
+    rets*"\n<hr noshadow=\"\" size=\"1\" width=\"90%\" />\n"+
+    "<cf-save what='Module'/>";
+}
+
 string module_page( RequestID id, string conf, string module )
 {
   while( id->misc->orig )
@@ -379,7 +412,7 @@ string module_page( RequestID id, string conf, string module )
     return "<blockquote>"+find_module_doc( conf, module, id )+"</blockquote>";
 
   return #"
- <input type=hidden name=section value=\"&form.section;\">
+ <input type=\"hidden\" name=\"section\" value=\"&form.section;\">
  <cf-save what='Module'/><br clear=\"all\" />
 <nooutput>
   This is necessary to update all the variables before showing them.
@@ -476,6 +509,7 @@ path[ 0 ]+#"\" section=\"&form.section;\">
        break;
 
      case "modules":
+       if(id->variables->initial) return initial_vars( id, path[0], id->variables->mod/"," );
        if( sizeof( path ) == 2 )
          return module_global_page( id, path[0] );
        else
