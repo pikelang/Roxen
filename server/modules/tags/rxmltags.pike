@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.59 2000/02/07 00:15:42 mast Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.60 2000/02/07 18:26:56 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -51,63 +51,58 @@ string sexpr_eval(string what)
 
 // ----------------- Entities ----------------------
 
-class Entity_page_realfile {
+class EntityPageRealfile {
   string rxml_var_eval(RXML.Context c) { return c->id->realfile||""; }
 }
 
-class Entity_page_virtroot {
+class EntityPageVirtroot {
   string rxml_var_eval(RXML.Context c) { return c->id->virtfile||""; }
 }
 
-class Entity_page_virtfile {
+class EntityPageVirtfile {
   string rxml_var_eval(RXML.Context c) { return c->id->not_query; }
 }
 
-class Entity_page_query {
+class EntityPageQuery {
   string rxml_var_eval(RXML.Context c) { return c->id->query; }
 }
 
-class Entity_page_url {
+class EntityPageURL {
   string rxml_var_eval(RXML.Context c) { return c->id->raw_url; }
 }
 
-class Entity_page_last_true {
+class EntityPageLastTrue {
   int rxml_var_eval(RXML.Context c) { return c->id->misc->defines[" _ok"]; }
 }
 
-class Entity_page_language {
+class EntityPageLanguage {
   string rxml_var_eval(RXML.Context c) { return c->id->misc->defines->language || ""; }
 }
 
-class Entity_page_scope {
+class EntityPageScope {
   string rxml_var_eval(RXML.Context c) { return c->current_scope(); }
 }
 
-class Entity_page_filesize {
+class EntityPageFileSize {
   int rxml_var_eval(RXML.Context c) { return c->id->misc->defines[" _stat"]?c->id->misc->defines[" _stat"][1]:-4; }
 }
 
-//class Entity_page_line {
-//  int rxml_var_eval(RXML.Context c) { return c->id->misc->line; }
-//}
-
-class Entity_page_self {
+class EntityPageSelf {
   string rxml_var_eval(RXML.Context c) { return (c->id->not_query/"/")[-1]; }
 }
 
-mapping page_scope=(["realfile":Entity_page_realfile(),
-		     "virtroot":Entity_page_virtroot(),
-		     "virtfile":Entity_page_virtfile(),
-		     "query":Entity_page_query(),
-		     "url":Entity_page_url(),
-		     "last-true":Entity_page_last_true(),
-		     "language":Entity_page_language(),
-		     "scope":Entity_page_scope(),
-		     "filesize":Entity_page_filesize(),
-		     //		     "line":Entity_page_line(),
-		     "self":Entity_page_self()]);
+mapping page_scope=(["realfile":EntityPageRealfile(),
+		     "virtroot":EntityPageVirtroot(),
+		     "virtfile":EntityPageVirtfile(),
+		     "query":EntityPageQuery(),
+		     "url":EntityPageURL(),
+		     "last-true":EntityPageLastTrue(),
+		     "language":EntityPageLanguage(),
+		     "scope":EntityPageScope(),
+		     "filesize":EntityPageFileSize(),
+		     "self":EntityPageSelf()]);
 
-class Entity_client_referrer {
+class EntityClientReferrer {
   string rxml_var_eval(RXML.Context c) {
     c->id->misc->cacheable=0;
     array referrer=c->id->referer;
@@ -115,7 +110,7 @@ class Entity_client_referrer {
   }
 }
 
-class Entity_client_name {
+class EntityClientName {
   string rxml_var_eval(RXML.Context c) {
     c->id->misc->cacheable=0;
     array client=c->id->client;
@@ -123,14 +118,14 @@ class Entity_client_name {
   }
 }
 
-class Entity_client_ip {
+class EntityClientIP {
   string rxml_var_eval(RXML.Context c) {
     c->id->misc->cacheable=0;
     return c->id->remoteaddr;
   }
 }
 
-class Entity_client_accept_language {
+class EntityClientAcceptLanguage {
   string rxml_var_eval(RXML.Context c) {
     c->id->misc->cacheable=0;
     if(!c->id->misc["accept-language"]) return "";
@@ -138,7 +133,7 @@ class Entity_client_accept_language {
   }
 }
 
-class Entity_client_accept_languages {
+class EntityClientAcceptLanguages {
   string rxml_var_eval(RXML.Context c) {
     c->id->misc->cacheable=0;
     if(!c->id->misc["accept-language"]) return "";
@@ -146,7 +141,7 @@ class Entity_client_accept_languages {
   }
 }
 
-class Entity_client_language {
+class EntityClientLanguage {
   string rxml_var_eval(RXML.Context c) {
     c->id->misc->cacheable=0;
     if(!c->id->misc->pref_languages) return "";
@@ -154,7 +149,7 @@ class Entity_client_language {
   }
 }
 
-class Entity_client_languages {
+class EntityClientLanguages {
   string rxml_var_eval(RXML.Context c) {
     c->id->misc->cacheable=0;
     if(!c->id->misc->pref_languages) return "";
@@ -162,13 +157,13 @@ class Entity_client_languages {
   }
 }
 
-mapping client_scope=([ "ip":Entity_client_ip(),
-			"name":Entity_client_name(),
-			"referrer":Entity_client_referrer(),
-			"accept-language":Entity_client_accept_language(),
-			"accept-languages":Entity_client_accept_languages(),
-			"language":Entity_client_language(),
-			"languages":Entity_client_languages()]);
+mapping client_scope=([ "ip":EntityClientIP(),
+			"name":EntityClientName(),
+			"referrer":EntityClientReferrer(),
+			"accept-language":EntityClientAcceptLanguage(),
+			"accept-languages":EntityClientAcceptLanguages(),
+			"language":EntityClientLanguage(),
+			"languages":EntityClientLanguages()]);
 
 void set_entities(RXML.Context c) {
   c->extend_scope("page", page_scope);
@@ -478,6 +473,9 @@ string|array(string) tag_debug( string tag_name, mapping m, RequestID id )
       obj=obj[tmp];
     }
     return ({ "<pre>"+html_encode_string(sprintf("%O",obj))+"</pre>" });
+  }
+  if (m->werror) {
+    werror(m->werror+"\n");
   }
   if (m->off)
     id->misc->debug = 0;
@@ -1419,8 +1417,9 @@ array(string) container_cset( string t, mapping m, string c, RequestID id )
 
 // ----------------- If registration stuff --------------
 
-class TagIfexpr {
+class TagIfExpr {
   inherit RXML.Tag;
+  constant name = "if";
   constant plugin_name = "expr";
   int `() (string u) {
     return (int)sexpr_eval(u);
