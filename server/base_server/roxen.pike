@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.458 2000/03/19 16:54:50 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.459 2000/03/20 07:03:26 mast Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -2554,6 +2554,15 @@ void create()
   // Dump some programs (for speed)
   dump( "etc/roxen_master.pike" );
   dump( "etc/modules/Dims.pmod" );
+  dump( "etc/modules/RXML.pmod/module.pmod" );
+  foreach( glob("*.p???",get_dir( "etc/modules/RXML.pmod/")), string q )
+    if( q != "PXml.pike" )
+    dump( "etc/modules/RXML.pmod/"+ q );
+  dump( "etc/modules/Roxen.pmod" );
+
+  // This is currently needed to resolve the circular references in
+  // RXML.pmod correctly. :P
+  master()->resolv ("RXML.refs");
 
   dump( "base_server/disk_cache.pike" );
   foreach( glob("*.pmod",get_dir( "etc/modules/RoxenLocale.pmod/")), string q )
@@ -2587,10 +2596,10 @@ void create()
   // for module encoding stuff
 
   add_constant( "ArgCache", ArgCache );
-  add_constant( "roxen.load_image", load_image );
+  //add_constant( "roxen.load_image", load_image );
 
   add_constant( "roxen", this_object());
-  add_constant( "roxen.decode_charset", decode_charset);
+  //add_constant( "roxen.decode_charset", decode_charset);
 
   add_constant( "RequestID", RequestID);
   add_constant( "RoxenModule", RoxenModule);
@@ -2599,7 +2608,7 @@ void create()
   add_constant( "load",    load);
   add_constant( "Roxen.set_locale", set_locale );
   add_constant( "roxen.locale", locale );
-  add_constant( "roxen.ImageCache", ImageCache );
+  //add_constant( "roxen.ImageCache", ImageCache );
 
   // compatibility
 //   int s = gethrtime();
@@ -2607,40 +2616,6 @@ void create()
                 (fonts = ((program)"base_server/fonts.pike")()) );
 //   report_debug( "[fonts: %.2fms] ", (gethrtime()-s)/1000.0);
   dump( "base_server/fonts.pike" );
-
-  /* Delayed loading. */
-  int s = gethrtime();
-  /* Used in all 'new style' tag modules */
-  add_constant( "RXML",         master()->resolv("RXML") );
-  dump( "etc/modules/RXML.pmod/module.pmod" );
-  add_constant( "RXML.t_text",  master()->resolv("RXML.t_text") );
-  add_constant( "RXML.t_same",  master()->resolv("RXML.t_same") );
-  add_constant( "RXML.t_none",  master()->resolv("RXML.t_none") );
-  add_constant( "RXML.t_any",   master()->resolv("RXML.t_any") );
-  add_constant( "RXML.t_html",  master()->resolv("RXML.t_html") );
-  add_constant( "RXML.t_xml",   master()->resolv("RXML.t_xml") );
-  add_constant( "RXML.Context", master()->resolv("RXML.Context") );
-  add_constant( "RXML.Tag",     master()->resolv("RXML.Tag") );
-  add_constant( "RXML.TagSet",  master()->resolv("RXML.TagSet") );
-  add_constant( "RXML.Frame",   master()->resolv("RXML.Frame") );
-  add_constant( "RXML.Void",    master()->resolv("RXML.Void") );
-  add_constant( "RXML.get_context", master()->resolv("RXML.get_context") );
-
-  // This is currently needed to resolve the circular references in
-  // RXML.pmod correctly. :P
-  master()->resolv ("RXML.refs");
-
-  foreach( glob("*.p???",get_dir( "etc/modules/RXML.pmod/")), string q )
-//     if( q != "PXml.pike" )
-    dump( "etc/modules/RXML.pmod/"+ q );
-
-  add_constant( "Roxen",        master()->resolv("Roxen") );
-
-  add_constant( "Roxen.entities_tag_set",
-                master()->resolv("Roxen.entities_tag_set") );
-  dump( "etc/modules/Roxen.pmod" );
-
-  report_debug( "[RXML: %.2fms] ", (gethrtime()-s)/1000.0);
 
 //   int s = gethrtime();
   Configuration = (program)"configuration";
