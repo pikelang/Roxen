@@ -42,7 +42,7 @@ string tag_blob(string tag_name, mapping args, object request_id,
   string key=add_image(args);
   args["src"] = query("mountpoint") + key + ".gif";
   args += ([ "width":(string)size, "height":(string)size ]); 
-  args -= ([ "size":1, "corner":1, "bg":1, "fg":1 ]);
+  args -= ([ "size":1, "corner":1, "bg":1, "fg":1, "transparent":1 ]);
   return make_tag("img", args);
   
 }
