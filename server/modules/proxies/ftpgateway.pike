@@ -39,7 +39,7 @@
 // 1.12  may '97
 //       Applied some patches from  Wilhelm Koehler <wk@cs.tu-berlin.de>
 
-string cvs_version = "$Id: ftpgateway.pike,v 1.22 1998/06/08 14:44:48 grubba Exp $";
+string cvs_version = "$Id: ftpgateway.pike,v 1.23 1998/06/08 17:22:26 grubba Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -1491,6 +1491,10 @@ void remove_dataport(mixed m)
 
 void dataport_accept(object u)
 {
+  if(!u){
+    roxen_perror("FTP GATEWAY: no arguments to dataport_accept()");
+    return;
+  }
   if (request_port[u])
     (request_port[u])(u);
   else 
