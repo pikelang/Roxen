@@ -8,8 +8,9 @@
  * made by Peter Bortas <peter@infovav.se> Januari -97
  */
 
-constant cvs_version = "$Id: killframe.pike,v 1.8 1997/08/31 02:49:25 peter Exp $";
+constant cvs_version = "$Id: killframe.pike,v 1.9 1997/08/31 21:54:44 peter Exp $";
 constant thread_safe=1;
+
 #include <module.h>
 inherit "module";
 
