@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.742 2001/09/27 12:25:53 anders Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.743 2001/09/27 13:03:52 grubba Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -156,6 +156,9 @@ static class Privs
 
   void create(string reason, int|string|void uid, int|string|void gid)
   {
+    // No need for Privs if the uid has been changed permanently.
+    if(getuid()) return;
+
 #ifdef PRIVS_DEBUG
     report_debug(sprintf("Privs(%O, %O, %O)\n"
 			 "privs_level: %O\n",
@@ -173,8 +176,6 @@ static class Privs
 #endif /* THREADS */
 
     p_level = privs_level++;
-
-    if(getuid()) return;
 
     /* Needs to be here since root-priviliges may be needed to
      * use getpw{uid,nam}.
@@ -283,6 +284,9 @@ static class Privs
 
   void destroy()
   {
+    // No need for Privs if the uid has been changed permanently.
+    if(getuid()) return;
+
 #ifdef PRIVS_DEBUG
     report_debug(sprintf("Privs->destroy()\n"
 			 "privs_level: %O\n",
@@ -322,8 +326,6 @@ static class Privs
 	}
       };
     }
-
-    if(getuid()) return;
 
 #ifdef PRIVS_DEBUG
     int uid = geteuid();
@@ -4536,6 +4538,7 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 
   string kmd5 = md5( pattern );
 
+#if 1
   array tmp =
     dbm_cached_get( "local" )
     ->query("SELECT full,enc FROM compiled_formats WHERE md5=%s", kmd5 );
@@ -4550,7 +4553,7 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 		 describe_backtrace(err));
 // #endif
   }
-  
+#endif /* 0 */  
 
 
 
