@@ -7,7 +7,7 @@
 //!
 //! Created 2000-01-21 by Martin Stjernholm
 //!
-//! $Id: utils.pmod,v 1.27 2001/07/09 04:03:03 mast Exp $
+//! $Id: utils.pmod,v 1.28 2001/07/16 14:13:00 mast Exp $
 
 constant is_RXML_encodable = 1;
 
@@ -17,10 +17,11 @@ string _sprintf() {return "RXML.utils.pmod";}
 
 constant short_format_length = 40;
 
-final string format_short (mixed val)
+final string format_short (mixed val, void|int length)
 // This one belongs somewhere else..
 {
   string res = "";
+  if (!length) length = short_format_length;
 
   void format_val (mixed val)
   {
@@ -28,35 +29,35 @@ final string format_short (mixed val)
       string end;
       if (multisetp (val)) res += "(<", end = ">)", val = indices (val);
       else res += "({", end = "})";
-      if (sizeof (res) >= short_format_length) throw (0);
+      if (sizeof (res) >= length) throw (0);
       for (int i = 0; i < sizeof (val);) {
 	format_val (val[i]);
 	if (++i < sizeof (val)) res += ", ";
-	if (sizeof (res) >= short_format_length) throw (0);
+	if (sizeof (res) >= length) throw (0);
       }
       res += end;
     }
     else if (mappingp (val)) {
       res += "([";
-      if (sizeof (res) >= short_format_length) throw (0);
+      if (sizeof (res) >= length) throw (0);
       array ind = sort (indices (val));
       for (int i = 0; i < sizeof (ind);) {
 	format_val (ind[i]);
 	res += ": ";
-	if (sizeof (res) >= short_format_length) throw (0);
+	if (sizeof (res) >= length) throw (0);
 	format_val (val[ind[i]]);
 	if (++i < sizeof (ind)) res += ", ";
-	if (sizeof (res) >= short_format_length) throw (0);
+	if (sizeof (res) >= length) throw (0);
       }
       res += "])";
     }
     else {
-      if (stringp (val) && sizeof (val) > short_format_length - sizeof (res)) {
+      if (stringp (val) && sizeof (val) > length - sizeof (res)) {
 	sscanf (val, "%[ \t\n\r]", string lead);
 	if (sizeof (lead) > sizeof ("/.../") && sizeof (lead) < sizeof (val))
 	  val = val[sizeof (lead)..], res += "/.../";
-	if (sizeof (val) > short_format_length - sizeof (res)) {
-	  res += sprintf ("%O", val[..short_format_length - sizeof (res) - 1]);
+	if (sizeof (val) > length - sizeof (res)) {
+	  res += sprintf ("%O", val[..length - sizeof (res) - 1]);
 	  throw (0);
 	}
       }
