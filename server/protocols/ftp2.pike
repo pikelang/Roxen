@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.69 1998/10/22 20:59:08 grubba Exp $
+ * $Id: ftp2.pike,v 1.70 1998/10/29 02:07:27 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -1919,7 +1919,7 @@ class FTPSession
               array(string) dir;
 	      object id = RequestID(master_session);
 	      id->method = "LIST";
-              dir = roxen->find_dir(combine_path(cwd, path*"/")+"/", id);
+              dir = id->conf->find_dir(combine_path(cwd, path*"/")+"/", id);
               if (dir && sizeof(dir)) {
                 dir = glob(part, dir);
                 if ((< '*', '?' >)[part[0]]) {
