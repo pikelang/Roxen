@@ -280,7 +280,15 @@ mixed move_db( string db, RequestID id )
 
 mixed delete_db( string db, RequestID id )
 {
-  VERIFY(_(423,"Are you sure you want to delete the database %s?"));
+  string msg;
+  if( DBManager.is_internal( db ) )
+    msg = (string)_(423, "Are you sure you want to delete the database %s "
+		    "and the data?");
+  else
+    msg = (string)_(423,"Are you sure you want to delete the database %s?"
+		    " No data will be deleted from the remote datbase.");
+    
+  VERIFY(msg);
   report_notice( _(424,"The database %s was deleted by %s")+"\n",
 		 db, id->misc->authenticated_user->name() );
   DBManager.drop_db( db );

@@ -13,6 +13,9 @@ void really_do_create( RequestID id  )
   if( strlen( id->variables->comment ) )
     DBManager.is_module_db( 0, id->variables->name,
 			    id->variables->comment-"\r" );
+  foreach( roxen->configurations, Configuration c )
+    DBManager.set_permission( id->variables->name, c, DBManager.READ );
+  DBManager.set_permission( id->variables->name, id->conf, DBManager.WRITE );
 }
 
 string parse(RequestID id )
@@ -64,7 +67,7 @@ ERROR
   <tr>
      <td><nbsp><b>"+_(444,"URL")+#":</b></nbsp></td>
       <td><input name='url' size=30 value='&form.url;'/></td>
-       <td><b>"+_(445,"Category")+#":</b></td> <td width='100%'>
+       <td><b>"+_(0,"Group")+#":</b></td> <td width='100%'>
        <default variable='form.group'><select name=group> "+
       group_selector()+#"
        </select></default>
