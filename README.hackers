@@ -98,3 +98,6 @@ ChiliMoon specific guidelines.
 - The Roxen webserver source contains the file: "ntroxenloader.pike", 
    which is not in the Chilimoon source. Is this file needed to run
    Chilimoon on the win32 platform?
+
+- If by accident one adds an \ to a module chilimoon will crash
+   when trying to reload the modules tree. 
