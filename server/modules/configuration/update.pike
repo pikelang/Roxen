@@ -1,5 +1,5 @@
 /*
- * $Id: update.pike,v 1.17 2000/06/03 04:03:11 js Exp $
+ * $Id: update.pike,v 1.18 2000/06/04 17:18:44 js Exp $
  *
  * The Roxen Update Client
  * Copyright © 2000, Roxen IS.
@@ -269,7 +269,7 @@ string container_update_download_progress_output(string t, mapping m,
   {
     mapping pkg=pkginfo[(string)package];
     pkg->size=sprintf("%.1f",pkg->size/1024.0);
-    pkg->progress=sprintf("%3.1f",package_downloads[package]->percent_done());
+    pkg->progress=sprintf("%3.1f",100.0*package_downloads[package]->percent_done());
     res+=({ pkg });
   }
 
