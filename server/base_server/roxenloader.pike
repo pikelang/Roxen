@@ -15,7 +15,7 @@ private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.177 2000/06/12 15:18:50 nilsson Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.178 2000/06/23 16:09:20 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -833,13 +833,13 @@ string roxen_path( string filename )
 {
   filename = replace( filename, ({"$VVARDIR","$LOCALDIR"}),
                       ({"$VARDIR/"+roxen_version(),
-                        "../local"}) );
+                        getenv ("LOCALDIR") || "../local"}) );
   if( roxen && roxen->variables->logdirprefix )
     filename = replace( filename, "$LOGDIR", [string]roxen->query("logdirprefix") );
   else
     if( search( filename, "$LOGDIR" ) != -1 )
       roxen_perror("Warning: mkdirhier with $LOGDIR before variable is available\n");
-  filename = replace( filename, "$VARDIR", "../var" );
+  filename = replace( filename, "$VARDIR", getenv ("VARDIR") || "../var" );
   return filename;
 }
 
