@@ -1,0 +1,68 @@
+<define tag=item>
+  <tr valign=top>
+    <td align="right"><b>&_.title;:</b></td>
+    <if match="&_.type; is pre">
+      <td><pre>#&_.name;#</pre></td>
+    </if>
+    <else>
+      <td>#&_.name;#</td>
+    </else>
+  </tr>
+</define>
+
+<if variable="form.no">
+foobar
+  <redirect to="/standard/update.html?foo" />
+</if>
+<if variable="form.yes">
+
+  <update-install-package package="&form.install;"><br />
+  
+  <a href="update.html">[Return]</a>
+</if>
+<else>
+
+<h1>Install package</h1>
+
+<update-package-output preparse package="&form.install;">
+<table>
+  <item title="Description" name="description" type="pre" />
+  <item title="Organization" name="organization" />
+  <item title="Author" name="author-name" />
+  <item title="License" name="license" />
+  <item title="Date" name="date" />
+</table>
+</update-package-output>
+<br/>
+
+<if variable="form.show">
+
+  <input type=submit name="hide" value="Hide package contents"><br />
+  <br />
+  <cv-obox title="The following files will be installed:">
+  <table cellpadding="0">
+    <tr>
+      <td nowrap="nowrap"><b>Size</b></td>
+      <td>&nbsp;</td>
+      <td nowrap="nowrap"><b>Path</b></td>
+    </tr>
+    <update-package-contents-output package="&form.install;">
+      <tr>
+  	<td align="right" nowrap="nowrap">#size#</td>
+	<td>&nbsp;</td>
+  	<td nowrap="nowrap">#path#</tt></td>
+      </tr>
+    </update-package-contents-output>
+  </table>
+  </cv-obox>  
+</if>
+<else>
+  <input type="submit" name="show" value="Show package contents" />
+</else> 
+<br />
+<br />
+<b>Do you really want to install this package?</b>
+<br />
+<input type="hidden" name="install" value="&form.install;" />
+<input type="submit" name="yes" value="   Yes   " />&nbsp;&nbsp;&nbsp;
+<input type="submit" name="no" value="   No   " />

@@ -1,0 +1,88 @@
+
+<define tag="cat-list">
+  <br />
+  <table bgcolor="&usr.obox-titlebg;" width="100%">
+    <tr><td><font size="+1" color="&usr.obox-titlefg;"><b>&_.title;</b></font></td></tr>
+  </table>
+  <rul>
+  <update-package-output type="&_.name;" limit="5">
+    <rli>#title# <a href="update.html?page=details&details=#id#">[Details...]</a></rli>
+    <set variable="var._&_.name;" value='foo'/>
+  </update-package-output>
+  </rul>
+  <if not variable="var._&_.name;">
+     &nbsp; Currently no packages in this category.<br />
+  </if>
+  <else>
+    <a href="update.html?page=category&category=&_.name;">[More..]</a><br />
+  </else>
+  &nbsp;
+</define>
+
+<update-show-backtrace/>
+
+  <if variable="form.uninstall_package">
+    <update-uninstall-package package="&form.uninstall_package;">
+  </if>
+
+
+<h1>Roxen Update System</h1>
+
+<if variable="form.update_list">
+  <update-update-list/>
+  <update-scan-local-packages/>
+  Launched a package list update request.<br />
+</if>
+
+This information was last synchronized with the main server &update.last_updated; ago.
+
+<cat-list name="idonex" title="Products" />
+<cat-list name="security" title="Security fixes" />
+<cat-list name="bugfixes" title="Bug fixes" />
+<cat-list name="3rdpart" title="Third party modules" /> 
+
+
+<hr size="1" width="95%" />
+<table>
+<tr valign="top">
+<td>
+
+  <cv-obox title="Downloads in progress">
+    <table cellpadding="4">
+      <tr>
+	<td nowrap="nowrap"><b>Description</b></td>
+	<td nowrap="nowrap"><b>Size</b></td>
+	<td nowrap="nowrap"><b>Downloaded</b></td>
+     </tr>
+     <update-download-progress-output>
+     <tr>
+       <td nowrap="nowrap">#title#
+         <a href="update.html?details=#id#">[Details...]</a></td>
+       <td nowrap="nowrap">#size# kB</td>
+       <td nowrap="nowrap">#progress#%</td>
+     </tr>
+     </update-download-progress-output>
+    </table>
+  </cv-obox>
+</td>
+<td>
+  <cv-obox title="Downloaded packages">
+    <table cellpadding="4">
+      <tr>
+	<td nowrap="nowrap"><b>Description</b></td>
+	<td nowrap="nowrap"><b>Size</b></td>
+	<td nowrap="nowrap"></td>
+      </tr>
+      <update-downloaded-packages-output>
+      <tr>
+        <td nowrap="nowrap">#title#
+          <a href="update.html?details=#id#">[Details...]</a></td>
+        <td nowrap="nowrap">#size# kB</td>
+        <td nowrap="nowrap">
+          <a href="update.html?install=#id#">[Install...]</a>
+        </td>
+      </tr>
+      </update-downloaded-packages-output>
+    </table>
+  </cv-obox>
+</td></tr></table>  

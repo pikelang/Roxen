@@ -1,0 +1,20 @@
+<define tag="package-box">
+  <rul>
+  <update-package-output type="&_.name;">
+    <rli>#title# <a href="update.html?page=details&details=#id#">[Details...]</a></rli>
+    <cset variable="var._&_.name;">foo</cset>
+  </update-package-output>
+  </rul>
+  <if not variable="var._&_.name;">
+     <p>Currently no packages in this category</p>
+  </if>
+</define>
+
+<if variable="form.category">
+  <if not variable="form.category is ">
+    <package-box name="&form.category;" title="Foo" />
+  </if>
+</if>
+</else>
+</cv-startpage>
+</content>

@@ -1,0 +1,47 @@
+<define tag="item">
+  <tr valign="top">
+    <td align="right"><b>&_.title;:</b></td>
+    <if match="&_.type; is pre">
+      <td><pre>#&_.name;#</pre></td>
+    </if>
+    <else>
+      <td>#&_.name;#</td>
+    </else>
+  </tr>
+</define>
+
+  <if variable="form.download">
+    <update-start-download package="&form.details;" />
+    <redirect to="/standard/update.html?bar" />
+  </if>
+
+<update-package-output package="&form.details;">
+<headline>#title#</headline>
+</update-package-output>
+<update-package-output preparse package="&form.details;">
+<table>
+  <item title="Description" name="description" type="pre" />
+  <item title="Size" name="size" />
+  <item title="Organization" name="organization" />
+  <item title="Author" name="author-name" />
+  <item title="License" name="license" />
+  <item title="Date" name="date" />
+</table>
+</update-package-output>
+
+<update-package-is-downloaded package="&form.details;"
+   variable="downloaded" installed_variable="installed" />
+<if variable="form.installed">
+  <input type="hidden" name="uninstall_package" value="&form.details;" />
+  <input type="submit" name="do_uninstall" value="Uninstall this package" />
+</if>
+<else>
+<if not variable="form.downloaded">
+  <input type="hidden" name="details" value="&form.details;" />
+  <input type="submit" name="download" value="Download this package" />
+</if>
+<else>
+  <input type="hidden" name="install" value="&form.details;" />
+  <input type="submit" name="do_install" value="Install this package" />
+</else>
+</else>
