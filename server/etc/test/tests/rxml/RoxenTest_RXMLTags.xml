@@ -15,6 +15,7 @@
 </test>
 
 
+<!-- ............................................................ -->
 <comment>Imgs</comment>
 <test>
 <rxml><imgs src="/internal-roxen-unit"/></rxml>
@@ -27,6 +28,7 @@
 </test>
 
 
+<!-- ............................................................ -->
 <comment>Insert</comment>
 <test>
 <rxml><set variable='var.foo' value='a,b,c,d,e,f,g,h'/><insert variable='var.foo' index='1' split=','/></rxml>
@@ -44,6 +46,7 @@
 </!test>
 
 
+<!-- ............................................................ -->
 <comment>Autoformat</comment>
 <test>
 <rxml><autoformat>abc
@@ -111,6 +114,7 @@ c</p></result>
 </test>
 
 
+<!-- ............................................................ -->
 <comment>Catch/throw</comment>
 <test>
 <rxml>a<catch>b<throw>c</throw>d</catch>e</rxml>
@@ -124,6 +128,7 @@ e</result>
 </test>
 
 
+<!-- ............................................................ -->
 <comment>Set/unset</comment>
 <test>
 <rxml><set variable='var.foo'>bar</set>x&var.foo;</rxml>
@@ -168,7 +173,7 @@ e</result>
 </test>
 
 
-
+<!-- ............................................................ -->
 <comment>Smallcaps text</comment>
 <test>
 <rxml><smallcaps space>abc</smallcaps></rxml>
@@ -226,6 +231,7 @@ e</result>
 </test>
 
 
+<!-- ............................................................ -->
 <comment>Crypt</comment>
 <test>
 <rxml><eval><maketag type='tag' name='set'><attrib name='variable'>var.i</attrib><attrib name='value'><crypt>foobar</crypt></attrib></maketag></eval><eval><maketag name='crypt' type='container'><attrib name='compare'>&var.i;</attrib>foobar</maketag></eval><then>1</then><else>0</else></rxml>
@@ -243,6 +249,7 @@ e</result>
 </test>
 
 
+<!-- ............................................................ -->
 <comment>Inc/dec</comment>
 <test>
 <rxml><set variable='var.i' value='3'/><dec variable='var.i' value='0'/>&var.i;</rxml>
@@ -275,6 +282,7 @@ e</result>
 </test>
 
 
+<!-- ............................................................ -->
 <comment>Doc</comment>
 <test>
 <rxml><doc>{b}</doc></rxml>
@@ -325,6 +333,7 @@ e</result>
 </test>
 
 
+<!-- ............................................................ -->
 <comment>Maketag</comment>
 <test>
 <rxml><maketag name=x type=container><attrib name=a>b</attrib><maketag name=y type=tag><attrib name=c>d</attrib></maketag></maketag></rxml>
@@ -387,6 +396,7 @@ e</result>
 </test>
 
 
+<!-- ............................................................ -->
 <comment>Form defaults</comment>
 <test>
 <rxml><set variable='var.foo' value='x'/><default value=x name=a><input name=a><input type=checkbox value=x name=a><input type=radio value=x></default></rxml>
@@ -494,6 +504,7 @@ e</result>
 </test>
 
 
+<!-- ............................................................ -->
 <comment>Append</comment>
 <test>
 <rxml><set variable='var.foo' value='bar'/><append variable='var.bar' value='y'/>&var.bar;</rxml>
@@ -521,6 +532,7 @@ e</result>
 </test>
 
 
+<!-- ............................................................ -->
 <comment>Replace</comment>
 <test>
 <rxml><replace from=a,b to=c,d type=words>acdbx</replace></rxml>
@@ -553,6 +565,7 @@ e</result>
 </test>
 
 
+<!-- ............................................................ -->
 <comment>Trimlines</comment>
 <test>
 <rxml>x<trimlines>
@@ -578,6 +591,7 @@ c</result>
 </test>
 
 
+<!-- ............................................................ -->
 <comment>Date and time test</comment>
 <test>
 <rxml><date unix-time='87654321' part='day'/></rxml>
@@ -755,6 +769,7 @@ c</result>
 </test>
 
 
+<!-- ............................................................ -->
 <comment>HTTP tests</comment>
 These only tests that the tags does not produce a backtrace, for now.
 <test>
@@ -790,6 +805,7 @@ These only tests that the tags does not produce a backtrace, for now.
 </test>
 
 
+<!-- ............................................................ -->
 <comment>Prestate links</comment>
 <test>
 <add what="prestate" name="x"/>
@@ -832,6 +848,7 @@ These only tests that the tags does not produce a backtrace, for now.
 </test>
 
 
+<!-- ............................................................ -->
 <comment>Cache tests</comment>
 <test>
 <rxml><cache><append variable="var.foo" value="x"/></cache>
@@ -860,6 +877,7 @@ yy</result>
 </test>
 
 
+<!-- ............................................................ -->
 <comment>Random tests</comment>
 <test>
 <rxml><random seed="foo">a
@@ -883,6 +901,7 @@ e</random></rxml>
 </test>
 
 
+<!-- ............................................................ -->
 <comment>Expr tests</comment>
 <test>
 <rxml><set variable="var.x" expr="((1+2)*3+1)/4"/>&var.x;</rxml>
