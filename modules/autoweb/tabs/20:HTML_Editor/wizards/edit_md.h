@@ -36,11 +36,14 @@ string get_content_type( string f, object id, object wa, mapping|void m )
 }
 
 
-string page_editmetadata( object id, string f)
+string page_editmetadata( object id, mapping|void m)
 {
   object wa = id->misc->wa;
+  string f = id->variables->path;
+
+  if(!m && f)
+    m = wa->get_md(id, f);
   
-  mapping m = wa->get_md(id, f);
   foreach (glob( "__*", indices( m ) ), string s)
     m_delete( m, s );
   

@@ -15,15 +15,9 @@ void create (object webadm)
   wa = webadm;
 }
 
-string real_path(object id, string filename)
-{
-  return wa->query("sites_location")+id->misc->customer_id+
-    (sizeof(filename)?(filename[0]=='/'?filename:"/"+filename):"/");
-}
-
 mapping dl(object id, string filename)
 {
-  object f = Stdio.File(real_path(id, filename), "r");
+  object f = Stdio.File(wa->real_path(id, filename), "r");
   if(f)
     return ([ "type" : "application/octet-stream",
 	      "data" : f->read() ]);
@@ -35,7 +29,7 @@ string|mapping navigate(object id, string f, string base_url)
 {
 
   // werror("File: %O\n", f);
-  // werror("Real file: %O\n", real_path(id, f));
+  // werror("Real file: %O\n", wa->real_path(id, f));
   
   string res="";
   
@@ -43,10 +37,9 @@ string|mapping navigate(object id, string f, string base_url)
   {
     array br = ({ });
     int t;
-    object file = Stdio.File(real_path(id, f), "r");
-
-    if(!objectp(file))
-      return "File not found or permission denied.\n";
+    
+    if(!file_stat(wa->real_path(id, f)))
+      return "File '"+f+"' not found or permission denied.\n";
 
     mapping md = wa->get_md(id, f);
     br += ({ ({ "View",  f+" target=_autosite_show_real" }) });
@@ -93,8 +86,8 @@ string|mapping navigate(object id, string f, string base_url)
     array dirs = ({ });
 
     // Scan directory for files and directories.
-    foreach(get_dir(real_path(id, f)), string file) {
-      array f_stat = file_stat(real_path(id, f+file));
+    foreach(get_dir(wa->real_path(id, f)), string file) {
+      array f_stat = file_stat(wa->real_path(id, f+file));
       if((sscanf(file, "%*s.md") == 0)&&(file!="templates")) {
 	if(f_stat&&(sizeof(f_stat)>0)&&f_stat[1]==-2)
 	  dirs += ({ file });
@@ -130,8 +123,7 @@ string|mapping navigate(object id, string f, string base_url)
 string|mapping handle(string sub, object id)
 {
   wanted_buttons=({ });
-  if(!id->misc->state)
-    id->misc->state=([]);
+
   string resource="/";
   string base_url = id->not_query[..sizeof(id->not_query)-sizeof(sub)-1];
 

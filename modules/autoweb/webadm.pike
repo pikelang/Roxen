@@ -1,12 +1,12 @@
 /*
- * $Id: webadm.pike,v 1.7 1998/07/29 19:26:58 wellhard Exp $
+ * $Id: webadm.pike,v 1.8 1998/07/30 20:18:48 wellhard Exp $
  *
  * AutoWeb administration interface
  *
  * Johan Schön, Marcus Wellhardh 1998-07-23
  */
 
-constant cvs_version = "$Id: webadm.pike,v 1.7 1998/07/29 19:26:58 wellhard Exp $";
+constant cvs_version = "$Id: webadm.pike,v 1.8 1998/07/30 20:18:48 wellhard Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -251,6 +251,7 @@ string validate_admin(object id)
 
 mixed find_file(string f, object id)
 {
+  //werror("find_file: %O",id->variables);
   string tab,sub;
   mixed content="";
   mapping state;
@@ -489,3 +490,20 @@ void init_content_types()
     name_to_type[ content_types[ ct ]->name ] = ct;
 }
 
+string get_content_type_from_extension( string filename )
+{
+  string extension = (filename / ".")[-1];
+
+  foreach (indices( content_types ), string i)
+    if (content_types[i]->extensions[ extension ])
+      return i;
+  if (sizeof( filename / "." ) >= 2)
+  {
+    extension = (filename / ".")[-2];
+      
+    foreach (indices( content_types ), string i)
+      if (content_types[i]->extensions[ extension ])
+	return i;
+  }
+  return "application/octet-stream";
+}

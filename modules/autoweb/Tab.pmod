@@ -44,10 +44,13 @@ class tab
 	{
 	  s+="<td><form method=get action="+a[1]+
 	    "><input type=submit name=\""+a[0]+"\" value=\""+a[0]+"\">";
-	  a[2]=(["cancel_url":id->not_query])+a[2]||([]);
-	  foreach(indices(a[2]electrong), string input_hidden)
+	  if(sizeof(a)>2)
+	  {
+	    a[2]=(["cancel_url":id->not_query])+a[2]||([]);
+	    foreach(indices(a[2]), string input_hidden)
 	      s+="<input type=hidden name=\""+input_hidden+
-		"\" value=\""+a[2][input_hidden]+"\">";
+       "\" value=\""+a[2][input_hidden]+"\">";
+	  }
 	  s+="</form></td>";
 	}
 	else
