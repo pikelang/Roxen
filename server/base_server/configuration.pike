@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.480 2001/09/03 16:38:42 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.481 2001/09/04 05:42:33 hop Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3539,8 +3539,12 @@ page.
                 " specific objects.",
          0, snmp_disabled);
   defvar("snmp_traphosts", ({ }),
-                 "SNMP: Trap hosts", TYPE_STRING_LIST,
-         "The remote nodes, where should be sent traps.", 0, snmp_disabled);
+                 "SNMP: Trap host URLs", TYPE_STRING_LIST,
+         "The remote nodes, where should be sent traps."
+	 "<p>\n"
+	 "The URL syntax is: snmptrap://community@hostname:portnumber"
+	 "</p><br/>",
+	 0, snmp_disabled);
 
   if (query("snmp_process")) {
     if(objectp(roxen()->snmpagent)) {
