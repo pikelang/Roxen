@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.126 1999/03/24 21:52:34 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.127 1999/03/28 23:08:00 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -1232,6 +1232,57 @@ class backend
 				       || (< >))),
 		     lambda (string name)
 		     { return ({ imap_list( ({}) ), "nil", name }); } );
+  }
+
+  array(array(object|string)) status(object|mapping(string:mixed) session,
+				     string mailbox, array(string) list)
+  {
+    // Remap INBOX => incoming.
+    mailbox = (mailbox == "INBOX")?"incoming":mailbox;
+    object m = session->user->get_mailbox(mailbox);
+
+    if (!m) {
+      return 0;
+    }
+
+    array res = ({});
+
+    foreach(list, string s) {
+      if (!stringp(s)) {
+	werror(sprintf("STATUS: Bad list: %O\n", list));
+	continue;
+      }
+      switch(lower_case(s)) {
+      case "messages":
+	res += ({ "MESSAGES",
+		  imap_number(sizeof(m->contents)),
+	});
+	break;
+      case "recent":
+	res += ({ "RECENT",
+		  imap_number(sizeof(m->contents->is_recent - ({ 0 }))),
+	});
+	break;
+      case "uidnext":
+	res += ({ "UIDNEXT",
+		  imap_number(m->next_uid),
+	});
+      case "uidvalidity":
+	res += ({ "UIDVALIDITY",
+		  imap_number(m->uid_validity),
+	});
+	break;
+      case "unseen":
+	res += ({ "UNSEEN",
+		  imap_number(sizeof(m->contents->flags->read - ({ 0 }))),
+	});
+	break;
+      default:
+	werror(sprintf("STATUS: Unknown item name: %O\n", s));
+	break;
+      }
+    }
+    
   }
 
   array(array(object|string)) select(object|mapping(string:mixed) session,
