@@ -227,6 +227,11 @@ weak_cleanup:
 	  echo $$f; rm $$f || exit 1; \
 	done
 
+./Makefile: $(SRCDIR)/Makefile.in config.status
+	CONFIG_FILES=Makefile CONFIG_HEADERS="" ./config.status
+	@echo "Run make again"
+	@exit 1
+
 bump_version.stamp:
 	@touch bump_version.stamp
 
