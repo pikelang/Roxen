@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.41 2001/08/21 14:33:27 mast Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.42 2001/08/29 17:04:43 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Roxen self test module";
@@ -289,6 +289,28 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
 			   if(m->not) return;
 			   test_error("Failed (result %O does not match %O)\n",
 				      res, c);
+			   throw(1);
+			 }
+			 test_ok( );
+		       },
+		       "pike" :
+		       lambda(object t, mapping m, string c) {
+			 c = "string test(string res) {\n" + c + "\n}";
+			 object test;
+			 mixed err = catch {
+			   test = compile_string(c)();
+			 };
+			 if(err) {
+			   int i;
+			   c = map(c/"\n", lambda(string in) {
+					     return sprintf("%3d: %s", ++i, in); }) * "\n";
+			   werror("Error while compiling test\n%s\n\nBacktrace\n%s\n",
+				  c, describe_backtrace(err));
+			   throw(1);
+			 }
+			 string r = test->test(res);
+			 if(r) {
+			   test_error("Failed (%s)\n", r);
 			   throw(1);
 			 }
 			 test_ok( );
@@ -681,4 +703,17 @@ class TagSEmitTESTER {
   constant skiprows = 1;
   constant maxrows = 1;
   constant sort = 1;
+}
+
+class TagTestSleep {
+  inherit RXML.Tag;
+  constant name = "testsleep";
+
+  class Frame {
+    inherit RXML.Frame;
+
+    array do_return(RequestID id) {
+      sleep((int)args->time);
+    }
+  }
 }
