@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.271 2002/02/27 15:23:34 mast Exp $
+// $Id: module.pmod,v 1.272 2002/03/12 13:27:51 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -50,7 +50,7 @@ static object roxen;
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
 #include <config.h>
-
+#include <module.h>
 #include <request_trace.h>
 
 #define MAGIC_HELP_ARG
@@ -94,29 +94,12 @@ static object roxen;
 #  define OBJ_COUNT ""
 #endif
 
-#ifdef RXML_VERBOSE
-#  define TAG_DEBUG_TEST(test) 1
-#elif defined (RXML_REQUEST_VERBOSE)
-#  define TAG_DEBUG_TEST(test)						\
-  ((test) || RXML_CONTEXT->id && RXML_CONTEXT->id->misc->rxml_verbose)
-#else
-#  define TAG_DEBUG_TEST(test) (test)
-#endif
-
 #ifdef DEBUG
 #  define TAG_DEBUG(frame, msg, args...)				\
   (TAG_DEBUG_TEST (frame && frame->flags & FLAG_DEBUG) &&		\
    report_debug ("%O: " + (msg), (frame), args), 0)
-#  define DO_IF_DEBUG(code...) code
 #else
 #  define TAG_DEBUG(frame, msg, args...) 0
-#  define DO_IF_DEBUG(code...)
-#endif
-
-#ifdef MODULE_DEBUG
-#  define DO_IF_MODULE_DEBUG(code...) code
-#else
-#  define DO_IF_MODULE_DEBUG(code...)
 #endif
 
 #ifdef FRAME_DEPTH_DEBUG
@@ -2950,7 +2933,7 @@ class Frame
   //! Writes the message to the debug log if this tag has
   //! @[FLAG_DEBUG] set.
   {
-    if (flags & FLAG_DEBUG) report_debug (msg, @args);
+    if (TAG_DEBUG_TEST (flags & FLAG_DEBUG)) report_debug (msg, @args);
   }
 
   void break_frame (void|Frame|string frame_or_scope)
