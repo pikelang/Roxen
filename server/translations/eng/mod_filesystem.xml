@@ -261,3 +261,16 @@
 <o>File systems: Normal File system</o>
 <t></t>
 </str>
+
+<str id="1">
+<o>Path verification of %s failed.
+</o>
+<t></t>
+</str>
+
+<str id="52">
+<o>Path verification of %O failed:
+%O is not a prefix of %O
+</o>
+<t></t>
+</str>

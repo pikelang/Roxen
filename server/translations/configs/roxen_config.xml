@@ -13,6 +13,7 @@
   <file>../base_server/module_support.pike</file>
   <file>../base_server/roxen.pike</file>
   <file>../config_interface/cv_startpage_tabs.pike</file>
+  <file>../config_interface/diff.pike</file>
   <file>../config_interface/logutil.pike</file>
   <file>../config_interface/statusinfo.pike</file>
   <file>../config_interface/template</file>
@@ -21,16 +22,23 @@
   <file>../config_interface/user_form.pike</file>
   <file>../config_interface/users.html</file>
   <file>../config_interface/actions/index.html</file>
+  <file>../config_interface/boxes/Box.pmod</file>
   <file>../config_interface/boxes/articles.pike</file>
   <file>../config_interface/boxes/crunch.pike</file>
   <file>../config_interface/boxes/doclinks.pike</file>
+  <file>../config_interface/boxes/megatokyo.pike</file>
   <file>../config_interface/boxes/ris_news.pike</file>
   <file>../config_interface/boxes/server_status.pike</file>
-  <file>../config_interface/boxes/slashdot.pike</file>
   <file>../config_interface/boxes/welcome.pike</file>
   <file>../config_interface/dbs/browser.pike</file>
   <file>../config_interface/dbs/db_matrix.pike</file>
+  <file>../config_interface/dbs/new_db.pike</file>
+  <file>../config_interface/dbs/restore_db.pike</file>
+  <file>../config_interface/dbs/status.pike</file>
   <file>../config_interface/dbs/subtabs.pike</file>
+  <file>../config_interface/dbs/import_dbs.pike</file>
+  <file>../config_interface/dbs/new_group.pike</file>
+  <file>../config_interface/dbs/edit_group.pike</file>
   <file>../config_interface/event_log/clear_log.pike</file>
   <file>../config_interface/event_log/log.pike</file>
   <file>../config_interface/sites/add_module.pike</file>
@@ -44,14 +52,14 @@
   <file>../config_interface/sites/new_site.html</file>
   <file>../config_interface/sites/site_content.pike</file>
   <file>../config_interface/sites/site_header.pike</file>
-  <file>../config_interface/diff.pike</file>
   <file>../etc/modules/Variable.pmod/Date.pike</file>
   <file>../etc/modules/Variable.pmod/Email.pike</file>
   <file>../etc/modules/Variable.pmod/Image.pike</file>
+  <file>../etc/modules/Variable.pmod/Mapping.pike</file>
   <file>../etc/modules/Variable.pmod/Upload.pike</file>
   <file>../etc/modules/Variable.pmod/VerifiedString.pike</file>
   <file>../etc/modules/Variable.pmod/module.pmod</file>
-  <file>../etc/modules/Variable.pmod/Mapping.pike</file>
+  <file>../etc/modules/Variable.pmod/Schedule.pike</file>
   <file>../modules/configuration/config_filesystem.pike</file>
   <file>../modules/configuration/config_tags.pike</file>
   <file>../site_templates/common.pike</file>

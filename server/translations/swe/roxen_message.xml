@@ -33,7 +33,6 @@ Kontrollera att gruppdatabasen stämmer, och att lösenordsdatabasen för användare
 </str>
 
 <str id="5">
-<changed from="Uncaught error in handler thread: %s Clientwill not get any response from Roxen."/>
 <o>Uncaught error in handler thread: %sClient will not get any response from Roxen.</o>
 <t>Ofångat fel i en hanterartåd: %sKlienten kommer inte att få något svar från Roxen.</t>
 </str>
@@ -222,9 +221,8 @@ Kunde inte hitta någon modul "%s".
 </str>
 
 <str id="45">
-<o>Failed to enable the module %s. Skipping.
-%s</o>
-<t>Misslyckades med att aktivera modulen %s, skippar den.</t>
+<o>Failed to enable the module %s. Skipping.</o>
+<t>Misslyckades med att aktivera modulen %s, ignorerar den.</t>
 </str>
 
 <pike>
@@ -329,8 +327,7 @@ string setting_uid_gid(int uid, int gid, string uname, string gname) {
 <str id="58">
 <changed from="Syntax error in security patterns: Cannot find the user database '%s'
 "/>
-<o>Syntax error in security patterns: Cannot find the user database ''
-</o>
+<o>Syntax error in security patterns: Cannot find the user database '%s'</o>
 <t>Syntaxfel i säkerhetsmönstren: Kan inte hitta användardatabasen '%s'
 </t>
 </str>
@@ -338,8 +335,7 @@ string setting_uid_gid(int uid, int gid, string uname, string gname) {
 <str id="59">
 <changed from="Syntax error in security patterns: Cannot find the auth method '%s'
 "/>
-<o>Syntax error in security patterns: Cannot find the auth method ''
-</o>
+<o>Syntax error in security patterns: Cannot find the auth method '%s'</o>
 <t>Syntaxfel i säkerhetsmönstren: Kan inte hitta authentifieringsmetoden '%s'
 </t>
 </str>

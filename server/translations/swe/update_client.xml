@@ -2,9 +2,9 @@
 <locale version="1.0"/>
 <project>update_client</project>
 <language>swe</language>
-<file>../config_interface/update.html</file>
 <file>../config_interface/update/category.txt</file>
 <file>../config_interface/update/details.txt</file>
+<file>../config_interface/update.html</file>
 <file>../config_interface/update/index.txt</file>
 <file>../config_interface/update/install.txt</file>
 <file>../config_interface/update/uninstall.txt</file>
@@ -68,14 +68,13 @@
 </str>
 
 <str id="12">
-<changed from="Thirs party modules"/>
 <o>Third party modules</o>
 <t>Tredjepartsmoduler</t>
 </str>
 
 <str id="13">
 <o>Downloads&amp;nbsp;in&amp;nbsp;progress</o>
-<t>Nedladdning&amp;pågår</t>
+<t>Nedladdning&amp;nbsp;pågår</t>
 </str>
 
 <str id="14">

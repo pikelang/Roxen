@@ -2,9 +2,9 @@
 <locale version="1.0"/>
 <project>update_client</project>
 <language>deu</language>
-<file>../config_interface/update.html</file>
 <file>../config_interface/update/category.txt</file>
 <file>../config_interface/update/details.txt</file>
+<file>../config_interface/update.html</file>
 <file>../config_interface/update/index.txt</file>
 <file>../config_interface/update/install.txt</file>
 <file>../config_interface/update/uninstall.txt</file>

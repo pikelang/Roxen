@@ -64,40 +64,11 @@
 <t>Vlastnosti</t>
 </str>
 
-<str id="dM">
-<o>Disabled modules</o>
-<t>Zakázané moduly</t>
-</str>
 
-<str id="239">
-<o>All modules</o>
-<t>V¹echny moduly</t>
-</str>
 
-<str id="240">
-<o>Name</o>
-<t>Jméno</t>
-</str>
 
-<str id="241">
-<o>State</o>
-<t>Stav</t>
-</str>
 
-<str id="242">
-<o>Disabled</o>
-<t>Zakázán</t>
-</str>
 
-<str id="243">
-<o>N/A</o>
-<t>N/A</t>
-</str>
-
-<str id="244">
-<o>Enabled</o>
-<t>Povolen</t>
-</str>
 
 <str id="8">
 <new/>
@@ -944,5 +915,17 @@ change the currently running version.</o>
 <str id="87">
 <new/>
 <o>Non-garbing Memory Cache</o>
+<t></t>
+</str>
+
+<str id="139">
+<new/>
+<o>one day</o>
+<t></t>
+</str>
+
+<str id="140">
+<new/>
+<o>Unavailable features</o>
 <t></t>
 </str>

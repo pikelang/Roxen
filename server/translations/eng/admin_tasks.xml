@@ -64,40 +64,11 @@
 <t></t>
 </str>
 
-<str id="dM">
-<o>Disabled modules</o>
-<t></t>
-</str>
 
-<str id="239">
-<o>All modules</o>
-<t></t>
-</str>
 
-<str id="240">
-<o>Name</o>
-<t></t>
-</str>
 
-<str id="241">
-<o>State</o>
-<t></t>
-</str>
 
-<str id="242">
-<o>Disabled</o>
-<t></t>
-</str>
 
-<str id="243">
-<o>N/A</o>
-<t></t>
-</str>
-
-<str id="244">
-<o>Enabled</o>
-<t></t>
-</str>
 
 <str id="8">
 <o>Flush caches</o>
@@ -859,5 +830,15 @@ change the currently running version.</o>
 
 <str id="87">
 <o>Non-garbing Memory Cache</o>
+<t></t>
+</str>
+
+<str id="139">
+<o>one day</o>
+<t></t>
+</str>
+
+<str id="140">
+<o>Unavailable features</o>
 <t></t>
 </str>
