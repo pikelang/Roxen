@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.352 2002/03/12 13:29:52 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.353 2002/03/12 13:36:56 anders Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -6984,7 +6984,7 @@ just got zapped?
 
  <p>Note that when the preparse attribute is used, this tag is
  converted to a special variable reference on the form
- \'<code>&_.__contents__<i>n</i>;</code>\', which is then substituted
+ \'<ent>_.__contents__<i>n</i></ent>\', which is then substituted
  with the real value when the tag is used. It\'s that way to make the
  expansion work when the preparsed code puts it in an attribute value.
  (This is mostly an internal implementation detail, but it can be good
