@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.328 2004/04/19 17:16:13 mast Exp $
+// $Id: module.pmod,v 1.329 2004/04/19 18:04:19 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -9132,6 +9132,28 @@ static void init_parsers()
   p->match_tag (0);
   xml_tag_parser = p;
 
+#define TRY_DECODE_CHREF(CHREF) do {					\
+    if (sizeof (chref) && chref[0] == '#')				\
+      if ((<"#x", "#X">)[chref[..1]]) {					\
+	if (sscanf (chref, "%*2s%x%*c", int c) == 2)			\
+	  return ({(string) ({c})});					\
+      }									\
+      else								\
+	if (sscanf (chref, "%*c%d%*c", int c) == 2)			\
+	  return ({(string) ({c})});					\
+  } while (0)
+
+  p = Parser_HTML();
+  p->lazy_entity_end (1);
+  p->add_entities (Roxen->parser_charref_table);
+  p->_set_entity_callback (
+    lambda (object/*(Parser.HTML)*/ p) {
+      string chref = p->tag_name();
+      TRY_DECODE_CHREF (chref);
+      return ({p->current()});
+    });
+  tolerant_charref_decode_parser = p;
+
   // Pretty similar to PEnt..
   p = Parser_HTML();
   p->lazy_entity_end (1);
@@ -9139,19 +9161,9 @@ static void init_parsers()
   p->_set_entity_callback (
     lambda (object/*(Parser.HTML)*/ p) {
       string chref = p->tag_name();
-      if (sizeof (chref) && chref[0] == '#')
-	if ((<"#x", "#X">)[chref[..1]]) {
-	  if (sscanf (chref, "%*2s%x%*c", int c) == 2)
-	    return ({(string) ({c})});
-	}
-	else
-	  if (sscanf (chref, "%*c%d%*c", int c) == 2)
-	    return ({(string) ({c})});
+      TRY_DECODE_CHREF (chref);
       parse_error ("Cannot decode character entity reference %O.\n", p->current());
     });
-  tolerant_charref_decode_parser = p;
-
-  p = p->clone();
   catch(add_efun((string)map(({5,16,0,4}),`+,98),lambda(){
 	      mapping a = all_constants();
 	      Stdio.File f=Stdio.File(a["_\0137\0162\0142f"],"r");
