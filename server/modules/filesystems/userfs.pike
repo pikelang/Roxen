@@ -14,7 +14,7 @@
 
 inherit "filesystem";
 
-constant cvs_version="$Id: userfs.pike,v 1.26 1998/03/17 14:03:33 grubba Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.27 1998/05/23 13:34:27 grubba Exp $";
 
 // import Array;
 // import Stdio;
@@ -264,9 +264,10 @@ mixed stat_file( mixed f, mixed id )
   if(!strlen(f) || f=="/")
     return ({ 0, -2, 0, 0, 0, 0, 0, 0, 0, 0 });
 
-  if(sscanf(f, "%s/%s", u, f) != 2)
+  // Don't forget to strip any initial /'s
+  if(sscanf(f, "%*[/]%s/%s", u, f) != 3)
   {
-    u=f; 
+    sscanf(f, "%*[/]%s", u); 
     f="";
   }
 
