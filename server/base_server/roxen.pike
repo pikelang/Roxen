@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.566 2000/11/27 09:25:13 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.567 2000/11/27 09:46:05 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -1603,7 +1603,7 @@ void unregister_url( string url )
 
   // No need to unregister this... It cannot exist
   if (!host || !stringp(host))   return;
-  if( !protocls[ protocol ] )    return;
+  if( !protocols[ protocol ] )    return;
 
   sscanf(host, "%[^:]:%d", host, port);
 
