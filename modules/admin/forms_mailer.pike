@@ -1,5 +1,5 @@
 /*
- * $Id: forms_mailer.pike,v 1.3 1998/09/28 04:52:00 js Exp $
+ * $Id: forms_mailer.pike,v 1.4 1998/09/28 06:08:20 js Exp $
  *
  * AutoSite Forms Mailer module
  *
@@ -7,7 +7,7 @@
  * Partly based on code made by <mirar@mirar.org>
  */
 
-constant cvs_version = "$Id: forms_mailer.pike,v 1.3 1998/09/28 04:52:00 js Exp $";
+constant cvs_version = "$Id: forms_mailer.pike,v 1.4 1998/09/28 06:08:20 js Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -101,7 +101,9 @@ string container_forms_mail(string tag_name, mapping args, string contents, obje
       "</form>";
   else
   {
-    Protocols.SMTP.client()->simple_mail(args->to,"Automatic form reply","postmaster@foo.org",
+    string domain;
+    
+    Protocols.SMTP.client()->simple_mail(args->to,"Automatic form reply","postmaster",
 			       fill_in_form(contents,id->variables));
     return "Sent.";
   }

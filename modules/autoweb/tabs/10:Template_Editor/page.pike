@@ -9,9 +9,9 @@ int visible(object id)
   if(sizeof(id->conf->get_provider("sql")->sql_object(id)->
     query("select feature from features where feature='Template Editor' and"
 	  " customer_id='"+id->misc->customer_id+"'")))
-    return vis=1;
+    return 1;
   else
-    return vis=0;
+    return 0;
 }
 
 

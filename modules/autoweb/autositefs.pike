@@ -5,10 +5,10 @@ inherit "module";
 inherit "roxenlib";
 inherit "modules/filesystems/filesystem.pike" : filesystem;
 
-constant cvs_version="$Id: autositefs.pike,v 1.22 1998/09/18 00:54:46 js Exp $";
+constant cvs_version="$Id: autositefs.pike,v 1.23 1998/09/28 06:08:23 js Exp $";
 
 mapping host_to_id;
-
+multiset(int) hidden_sites;
 array register_module()
 {
   return ({ MODULE_LOCATION|MODULE_PARSER,
@@ -61,6 +61,13 @@ void update_host_cache(object id)
     host_to_id=new_host_to_id;
 }
 
+void update_hidden_sites(object id)
+{
+  object db=id->conf->call_provider("sql","sql_object",id);
+  array a=db->query("select customer_id from features where feature='Hidden Site'");
+  hidden_sites=(< @a->customer_id >);
+}
+
 string file_from_host(object id, string file)
 {
   string prefix,dir;
@@ -87,10 +94,27 @@ string file_from_host(object id, string file)
   return dir+file;
 }
 
+int hiddenp(object id)
+{
+  return hidden_sites[id->misc->customer_id];
+}
+
+int validate_user(object id)
+{
+  array a=id->conf->get_provider("sql")->sql_object(id)->
+    query("select user_id,password from customers where id='"+id->misc->customer_id+"'");
+  if(!sizeof(a))
+    return 0;
+  else
+    return equal( ({ a[0]->user_id, a[0]->password }),
+		  ((id->realauth||"*:*")/":") );
+}
+
 mixed find_file(string f, object id)
 {
-  if(!host_to_id)
-    update_host_cache(id);
+  if(!host_to_id)   update_host_cache(id);
+  if(!hidden_sites) update_hidden_sites(id);
+
   string file=file_from_host(id,f);
   //werror("customer_id: %O\n",id->misc->customer_id);
   id->misc->wa = this_object();
@@ -110,6 +134,9 @@ mixed find_file(string f, object id)
   }
   if(!file)
     return 0;
+  if(hiddenp(id) && !validate_user(id))
+    return http_auth_required(get_host(id));
+	     
   mixed res = filesystem::find_file(file, id);
   if(objectp(res)) {
     mapping md = .AutoWeb.MetaData(id, f)->get();
@@ -169,6 +196,7 @@ mixed stat_file(mixed f, mixed id)
 string tag_update(string tag_name, mapping args, object id)
 {
   update_host_cache(id);
+  update_hidden_sites(id);
   return "Filesystem configuration reloaded.";
 }
 

@@ -25,7 +25,13 @@
   <if variable="disable is Intraseek">
      <autosite-intraseek-delete id=¤customer¤>
   </if>
-
+  <if variable="enable is Hidden Site">
+    <autosite-fs-update>
+  </if>
+  <if variable="disable is Hidden Site">
+    <autosite-fs-update>
+  </if>
+  
   <sqloutput quote='£' query="select feature from features_list order by feature">
     <obox title='£feature£'>
     Status:

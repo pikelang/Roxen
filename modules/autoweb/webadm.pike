@@ -1,12 +1,12 @@
 /*
- * $Id: webadm.pike,v 1.29 1998/09/27 16:27:01 wellhard Exp $
+ * $Id: webadm.pike,v 1.30 1998/09/28 06:08:24 js Exp $
  *
  * AutoWeb administration interface
  *
  * Johan Schön, Marcus Wellhardh 1998-07-23
  */
 
-constant cvs_version = "$Id: webadm.pike,v 1.29 1998/09/27 16:27:01 wellhard Exp $";
+constant cvs_version = "$Id: webadm.pike,v 1.30 1998/09/28 06:08:24 js Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -285,7 +285,6 @@ mixed find_file(string f, object id)
     .AutoWeb.Icons(combine_path(__FILE__+"/", "../img"),
 		   "/webadmimg");
   // User validation
-#if 1
   if(!validate_admin(id)&&!validate_customer(id))
     return (["type":"text/html",
 	     "error":401,
@@ -295,10 +294,6 @@ mixed find_file(string f, object id)
 	     "data":"<title>Access Denied</title>"
 	     "<h2 align=center>Access forbidden</h2>\n"
     ]);
-#else
-  id->misc->customer_id = "1";
-  id->variables->customer_id = "1";
-#endif
 
   // State
   if (id->variables->_reset)
