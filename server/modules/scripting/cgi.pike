@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: cgi.pike,v 2.57 2001/09/04 21:48:34 nilsson Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.58 2001/09/14 18:05:14 grubba Exp $";
 
 #if !defined(__NT__) && !defined(__AmigaOS__)
 # define UNIX 1
@@ -527,13 +527,23 @@ class NTOpenCommand
   array(string) open(string file, array(string) args)
   {
     array(string) res;
-    res = map(line, replace, repsrc,
-              (({file})+args+
-               (sizeof(args)+1>=sizeof(repsrc)? ({}) :
-                allocate(sizeof(repsrc)-sizeof(args)-1, "")))
-              [..sizeof(repsrc)-1]);
-    if(starpos>=0)
-      res = res[..starpos-1]+args+res[starpos+1..];
+    if (repsrc) {
+      res = map(line, replace, repsrc,
+		(({file})+args+
+		 (sizeof(args)+1>=sizeof(repsrc)? ({}) :
+		  allocate(sizeof(repsrc)-sizeof(args)-1, "")))
+		[..sizeof(repsrc)-1]);
+      if(starpos>=0)
+	res = res[..starpos-1]+args+res[starpos+1..];
+    } else {
+      // Check for #!
+      string s = Stdio.read_file(file, 0, 1);
+      if (s && has_prefix(s, "#!")) {
+	res = Process.split_quoted_string(s[2..]) + ({ file }) + args;
+      } else {
+	error(sprintf("CGI: Unknown filetype %O\n", file));
+      }
+    }
     return res;
   }
 
@@ -545,11 +555,11 @@ class NTOpenCommand
       ft = RegGetValue(HKEY_CLASSES_ROOT, ext, "");
       cmd = RegGetValue(HKEY_CLASSES_ROOT, ft+"\\shell\\open\\command", "");
     };
-    if(!ft)
-      error("Unknown extension "+ext+"\n");
-    else if(!cmd)
-      error("No open command for filetype "+ft+"\n");
-    else {
+    if(!ft || !cmd) {
+      // Unknown filetype/command.
+      // Will try #! in open().
+      repsrc = 0;
+    } else {
       line = cmd/" "-({""});
       starpos = search(line, "%*");
       int i=-1, n=0;
