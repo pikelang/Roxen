@@ -3,7 +3,7 @@
 //
 // A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.450 2001/07/18 21:10:03 hop Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.451 2001/07/19 20:23:02 hop Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3503,6 +3503,32 @@ page.
 	 DLOCALE(59, "What to return when there is no resource or file "
 		 "available at a certain location."));
 
+#ifdef SNMP_AGENT
+  // SNMP stuffs
+  defvar("snmp_process", 0,
+         "SNMP: Enabled",TYPE_FLAG,
+         "If set, per-server objects will be added to the SNMP agent database.",
+          0, snmp_global_disabled);
+  defvar("snmp_community", "public:ro",
+         "SNMP: Community string", TYPE_STRING,
+         "The community string and access level for manipulation on server "
+                " specific objects.",
+         0, snmp_disabled);
+  defvar("snmp_traphosts", ({ }),
+                 "SNMP: Trap hosts", TYPE_STRING_LIST,
+         "The remote nodes, where should be sent traps.", 0, snmp_disabled);
+
+  if (query("snmp_process")) {
+    if(objectp(roxen()->snmpagent)) {
+      int servid;
+      servid = roxen()->snmpagent->add_virtserv(get_config_id());
+      // todo: make invisible varibale and set it to this value for future reference
+      // (support for per-reload persistence of server index?)
+    } else
+      report_error("SNMPagent: something gets wrong! The main agent is disabled!\n");  }
+#endif
+
+
   definvisvar( "no_delayed_load", 0, TYPE_FLAG|VAR_PUBLIC );
 
 //   report_debug("[defvar: %.1fms] ", (gethrtime()-st)/1000.0 );
@@ -3523,31 +3549,6 @@ page.
                         query("throttle_min_grant"),
                         query("throttle_max_grant"));
   }
-#ifdef SNMP_AGENT
-  // SNMP stuffs
-  defvar("snmp_process", 0,
-         "SNMP: Enabled",TYPE_FLAG,
-         "If set, per-server objects will be added to the SNMP agent database.",
-          0, snmp_global_disabled);
-  defvar("snmp_community", "public:ro",
-         "SNMP: Community string", TYPE_STRING,
-         "The community string and access level for manipulation on server "
-                " specific objects.",
-         0, snmp_disabled);
-  defvar("snmp_traphosts", ({ }),
-                 "SNMP: Trap hosts", TYPE_STRING_LIST,
-         "The remote nodes, where should be sent traps.", 0, snmp_disabled);
-
-  if (query("snmp_process")) {
-    if(objectp(roxen()->snmpagent)) {
-      int servid;
-      servid = roxen()->snmpagent->add_virtserv();
-      // todo: make invisible varibale and set it to this value for future reference
-      // (support for per-reload persistence of server index?)
-    } else
-      report_error("SNMPagent: something gets wrong! The main agent is disabled!\n");  }
-#endif
-
 }
 
 static int arent_we_throttling_server () {

@@ -1,5 +1,5 @@
 /*
- * $Id: snmpagent.pike,v 1.5 2001/07/18 21:10:04 hop Exp $
+ * $Id: snmpagent.pike,v 1.6 2001/07/19 20:23:02 hop Exp $
  *
  * The Roxen SNMP agent
  * Copyright © 2001, Roxen IS.
@@ -27,8 +27,6 @@ Developer notes:
 	  used then. [threads leak] // FIXME: solved by switching to the async i/o
 	- the OID must be minimally 5 elements long, otherwise GETNEXT return
 	  "no such name" error
-	- the tree walking returns the 'end of MIB' instead of some object
-	  from next subtree
  Todos:
     v1.0 todo:
 	- cold/warm start trap generation
@@ -124,11 +122,12 @@ class SNMPagent {
   int enable() {
 
     mib = SubMIBsystem();		// system.* table
-    if(objectp(mib)) 			// snmp.* table
-      //mib->register(MIBTREE_BASE+"."+"2.1.11", SubMIBsnmp(this_object()));
-{ object mib2 = SubMIBsnmp(this_object());
+    if(objectp(mib)) {
+      // snmp.*
       mib->register(MIBTREE_BASE+"."+"2.1.11", SubMIBsnmp(this_object()));
-}
+      // enterprises.roxenis.*
+      mib->register(MIBTREE_BASE+"."+"4.1.8614", SubMIBroxenis(this_object()));
+    }
     if (!status())
       start();
     enabled = 1;
@@ -325,16 +324,20 @@ class SNMPagent {
 	  return;
 	foreach(vsarr, int vsid)
 	  if(vsdb[vsid] && vsdb[vsid]->variables["snmp_traphosts"]) {
-		SNMPAGENT_MSG(sprintf("virt.serv[%d/%s]'s traphosts:%O", vsid, vsdb[vsid]->name, vsdb[vsid]->variables["snmp_traphosts"]));
+	     SNMPAGENT_MSG(sprintf("virt.serv[%d/%s]'s traphosts:%O", vsid,
+			vsdb[vsid]->name, vsdb[vsid]->variables["snmp_traphosts"]));
 	    foreach(vsdb[vsid]->variables["snmp_traphosts"], string thost) {
 		  uri = Standards.URI(thost);
 		  SNMPAGENT_MSG(sprintf("Trap sent: %s.", thost));
 		  fd->trap(RISMIB_BASE_WEBSERVER,
-				   Standards.URI(vsdb[vsid]->varibles["MyWorldLocation"])->host, 0, 0,
-				   get_uptime(), 0, uri->host, uri->port);
+			Standards.URI(vsdb[vsid]->varibles["MyWorldLocation"])->host,
+			0, 0,
+			get_uptime(), 0, uri->host, uri->port);
 		}
 	  } else
-		SNMPAGENT_MSG(sprintf("virt.serv[%d/%s] hasn't any traphosts.", vsid, vsdb[vsid]->name));
+	    if(vsdb[vsid])
+	      SNMPAGENT_MSG(sprintf("virt.serv[%d/%O] hasn't any traphosts.",
+			    vsid, vsdb[vsid] && vsdb[vsid]->name));
 
   }
 
@@ -360,7 +363,7 @@ class SNMPagent {
 report_debug(sprintf("snmpagent:DEB: add: %O->%O\n",vsid,roxen->configurations[vsid]->name));
 //report_debug(sprintf("snmpagent:DEB: %O\n",mkmapping(indices(roxen->configurations[vsid]), values(roxen->configurations[vsid]))));
 	  vsdb += ([vsid: roxen->configurations[vsid]]);
-	}
+     }
 
     return(1);
   }
@@ -545,7 +548,7 @@ SNMPAGENT_MSG(sprintf("DEB: %d: %O", cnt, s[..cnt]*"."));
 
 //! External function for MIB object 'system.sysDescr'
 array get_description() {
-  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.5 $"/" ")[1]+" (devel. rel.)");
+  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.6 $"/" ")[1]+" (devel. rel.)");
 }
 
 //! External function for MIB object 'system.sysOID'
@@ -691,22 +694,24 @@ class SubMIBsnmp {
   }
 }
 
-/*
+//! roxenis enterprise subtree manager
+//! Manages the enterprise.roxenis.* submib tree.
+class SubMIBroxenis {
+
+  inherit SubMIBManager;
+
+  constant name = "roxenis";
+  constant tree = "4.1.8614";
+
+  void create(object agent) {
+
+    submibtab = ([
 	// enterprises
-	"4.1": ({ 0, get_null, "4.1.8614.1.1.999.1.0" }),
-	// enterprises.roxenIS
-	"4.1.8614": ({ 0, get_null, "4.1.8614.1.1.999.1.0" }),
-	// enterprises.roxenIS.app
-	"4.1.8614.1.1": ({ 0, get_null, "4.1.8614.1.1.999.1.0" }),
-	// enterprises.roxenIS.app.webserver
-	"4.1.8614.1.1": ({ 0, get_null, "4.1.8614.1.1.999.1.0" }),
-	// HACK!!
-	"4.1.8614.1.1.999.1.0": ({ 0, get_null, 0 }),
-
-    // hack2 :)
-	"4.1.8614.1.1.999.2.1.0": ({ "int", get_virtserv, "4.1.8614.1.1.999.2.2.0" })
-
-*/
+	// hack2 :)
+	"4.1.8614.1.1.999.2.1.0": agent->get_virtserv
+    ]);
+  }
+}
 
 /*
 	    switch (attrname) {
