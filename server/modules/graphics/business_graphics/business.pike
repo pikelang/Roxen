@@ -12,7 +12,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: business.pike,v 1.126 2000/04/15 00:16:24 kuntri Exp $";
+constant cvs_version = "$Id: business.pike,v 1.127 2000/04/15 00:42:59 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_PARSER|MODULE_LOCATION;
 constant module_name = "Business graphics";
@@ -888,7 +888,7 @@ constant tagdoc=([
  Turn the diagram 90 degrees. Useful when printing large diagrams.
  </attr>
 
- <attr name='type' value='sumbars,normsum,line,bar,pie,graph'>
+ <attr name='type' value='sumbars|normsum|line|bar|pie|graph'>
   The type of diagram. This attribute is required.
  </attr>
 
@@ -921,7 +921,7 @@ constant tagdoc=([
 
 	     (["data":#"<desc cont><short>This tag contains the data the diagram is to visualize </short> It is required that the data is presented to the tag in a tabular or newline separated form.</desc>
 
- <attr name='form' value='column,row'>
+ <attr name='form' value='column|row'>
   How to interpret the tabular data, by default row.
   </attr>
 
@@ -996,7 +996,7 @@ constant tagdoc=([
  Set the separator between names, by default tab.
  </attr>
 
- <attr name='orient' value='vert,horiz'>
+ <attr name='orient' value='vert|horiz'>
  How to write names, vertically or horizontally.
  </attr>",
 

@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.115 2000/04/14 23:29:19 kuntri Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.116 2000/04/15 00:44:43 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -1585,7 +1585,7 @@ documentation for that module.</desc>",
 </attr>",
 
 "autoformat":#"<desc cont><short hide>
- Replaces newlines with <br/>:s'.</short>Replaces newlines with <tagbr/</tag>:s'.
+ Replaces newlines with <br/>:s'.</short>Replaces newlines with <tag>br /</tag>:s'.
 </desc>
 
 <attr name=nobr>
