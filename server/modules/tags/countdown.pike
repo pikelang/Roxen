@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997 - 2001, Roxen IS.
 //
 
-constant cvs_version="$Id: countdown.pike,v 1.47 2001/10/01 14:14:08 anders Exp $";
+constant cvs_version="$Id: countdown.pike,v 1.48 2001/10/04 09:23:42 sara Exp $";
 #include <module.h>
 inherit "module";
 
@@ -52,34 +52,35 @@ Sets the time of an event to count down to.</p></attr>
 <p>Presentation:</p>
 
 <attr name='display' value='when|years|months|weeks|days|hours|beats|minutes|seconds|combined|dogyears|boolean'>
-<xtable>
-<row><c><i>display=when</i></c><c>Shows when the time will occur.
-                         All arguments that are valid in
-                         <xref href='date.tag' /> can be used to modify the display.</c></row>
-<row><c><i>display=years</i></c><c>How many years until the time.</c></row>
-<row><c><i>display=months</i></c><c>How many months until the time.</c></row>
-<row><c><i>display=weeks</i></c><c>How many weeks until the time.</c></row>
-<row><c><i>display=days</i></c><c>How many days until the time.</c></row>
-<row><c><i>display=hours</i></c><c>How many hours until the time. <ex><countdown day=\"friday\" display=\"hours\"/></ex></c></row>
-<row><c><i>display=beats</i></c><c>How many beats until the time.</c></row>
-<row><c><i>display=minutes</i></c><c>How many minutes until the time.</c></row>
-<row><c><i>display=seconds</i></c><c>How many seconds until the time.</c></row>
-<row><c><i>display=combined</i></c><c>Shows an english text describing the time period.
+
+<list type='dl'>
+<item name='display=when'><p>Shows when the time will occur. All arguments that are valid in
+                         <xref href='date.tag' /> can be used to modify the display.</p></item>
+<item name='display=years'><p>How many years until the time.</p></item>
+<item name='display=months'><p>How many months until the time.</p></item>
+<item name='display=weeks'><p>How many weeks until the time.</p></item>
+<item name='display=days'><p>How many days until the time.</p></item>
+<item name='display=hours'><p>How many hours until the time. <ex><countdown day='friday' display='hours'/></ex></p></item>
+<item name='display=beats'><p>How many beats until the time.</p></item>
+<item name='display=minutes'><p>How many minutes until the time.</p></item>
+<item name='display=seconds'><p>How many seconds until the time.</p></item>
+<item name='display=combined'><p>Shows an english text describing the time period.
                          Example: 2 days, 1 hour and 5 seconds. You may use the 'prec'
                          attribute to limit how precise the description is. Also, you can
                          use the 'month' attribute if you want to see years/months/days
-                         instead of years/weeks/days.
+                         instead of years/weeks/days.</p>
 
-<ex>The world will go under in <countdown year='2038' display='combined' prec='day'/>.</ex></c></row>
-<row><c><i>display=dogyears</i></c><c>How many dog-years until the time. (With one decimal) <ex><countdown years=\"2\" display=\"dogyears\"/></ex></c></row>
-<row><c><i>display=boolean</i></c><c>Return true or false (1 or 0), depending on if the time is now or not. The fuzziness of 'now' is decided by the 'prec' option.
+<ex>The world will go under in <countdown year='2038' display='combined' prec='day'/>.</ex></item>
+<item name='display=dogyears'><p>How many dog-years until the time. (With one decimal) <ex><countdown years='2' display='dogyears'/></ex></p></item>
+<item name='display=boolean'><p>Return true or false (1 or 0), depending on if the time is now or not. The fuzziness of 'now' is decided by the 'prec' option.</p>
 
 <ex><b>Is this a Sunday?</b>
 <define variable='var.test' preparse=''><countdown day='sunday' display='boolean'/></define>
 <if variable='var.test = 1'>Yes, this is a Sunday.</if>
-<else>No, it isn´t.</else></ex>
-</c></row>
-</xtable>
+<else>No, it isn't.</else></ex>
+</item>
+</list>
+
 </attr>
 
 <attr name='type' value='type'><p>As for 'date'. Useful values for type include string, number and ordered.</p></attr>
