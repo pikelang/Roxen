@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.333 2003/02/03 13:08:20 mattias Exp $
+// $Id: roxenloader.pike,v 1.334 2003/02/19 09:49:05 grubba Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.333 2003/02/03 13:08:20 mattias Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.334 2003/02/19 09:49:05 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1798,16 +1798,23 @@ void start_mysql()
   string mysqldir = combine_path(getcwd(),query_configuration_dir()+"_mysql");
   rm( mysqldir+"/mysql_pid" );
   rm( mysqldir+"/error_log" );
-#ifdef THREADS
-  thread_create( do_tailf, 1, mysqldir+"/error_log" );
-  sleep(0.1);
-#else
-  void do_do_tailf( )
-  {
-    call_out( do_do_tailf, 1 );
-    do_tailf( 0, mysqldir+"/error_log"  );
-  };
-  call_out( do_do_tailf, 0 );
+#ifdef(THREADS)
+  // Linux pthreads hangs in mutex handling if
+  // uid is changed permanently and there are threads
+  // already running.
+  if (uname()->sysname != "Linux") {
+    thread_create( do_tailf, 1, mysqldir+"/error_log" );
+    sleep(0.1);
+  } else {
+#endif
+    void do_do_tailf( )
+    {
+      call_out( do_do_tailf, 1 );
+      do_tailf( 0, mysqldir+"/error_log"  );
+    };
+    call_out( do_do_tailf, 0 );
+#ifdef(THREADS)
+  }
 #endif
 
   if( !file_stat( mysqldir+"/mysql/user.MYD" ) ||
