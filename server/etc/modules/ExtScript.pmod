@@ -2,14 +2,13 @@
 //
 // Originally by Leif Stensson <leif@roxen.com>, June/July 2000.
 //
-// $Id: ExtScript.pmod,v 1.7 2000/10/04 15:21:46 leif Exp $
-
-#define THREADS 1
+// $Id: ExtScript.pmod,v 1.8 2000/11/27 21:27:43 leif Exp $
 
 mapping scripthandlers = ([ ]);
 
 static void diag(string x)
-{ // werror(x);
+{
+  // werror(x);
 }
 
 class Handler
@@ -20,13 +19,13 @@ class Handler
   mapping settings;
   int     runcount = 0;
   int     timeout;
-#ifdef THREADS
+#if constant(Thread.Mutex)
   object  mutex = Thread.Mutex();
 #endif
 
   void terminate()
   {
-#ifdef THREADS
+#if constant(Thread.Mutex)
     object lock = mutex ? mutex->lock() : 0;
 #endif
     if (proc && !proc->status() && pipe)
@@ -38,7 +37,7 @@ class Handler
 
   int busy()
   {
-#ifdef THREADS
+#if constant(Thread.Mutex)
     if (mutex)
     { if (mutex->trylock()) return 0;
       return 1;
@@ -63,7 +62,7 @@ class Handler
 
   array launch(string how, string arg, object id)
   {
-#ifdef THREADS
+#if constant(Thread.Mutex)
     object lock = mutex ? mutex->lock() : 0;
 #endif
     timeout = time(0) + 190;
@@ -71,7 +70,7 @@ class Handler
     if (!proc || proc->status() != 0)
     {
       pipe = Stdio.File();
-      pipe_other = pipe->pipe(Stdio.PROP_IPC);
+      pipe_other = pipe->pipe(); // Stdio.PROP_IPC);
 
       diag("(L1)");
 
@@ -89,6 +88,7 @@ class Handler
       runcount = 0;
       pipe_other = 0;
       pipe->write("QP"); // send 'ping'
+      diag("(L2p)");
       string res = pipe->read(4);
       if (!stringp(res) || sizeof(res) < 4 || res[0] != '=')
               return ({ -1, "external process didn't respond"
@@ -110,7 +110,7 @@ class Handler
       pipe->write("R");
 
       // Environment variables.
-      putvar("E", "GATEWAY_INTERFACE", "PerlRoxen/0.9");
+      putvar("E", "GATEWAY_INTERFACE", "RoxenExtScript/0.9");
 
       foreach( ({ ({ "remoteaddr", "REMOTE_ADDR" }),
                   ({ "raw_url", "DOCUMENT_URI" }),
@@ -183,7 +183,10 @@ class Handler
       pipe->write("QP");
       string res = pipe->read(4);
       if (!stringp(res) || sizeof(res) != 4 || res[0] != '=' || res[3] != 0)
-      { pipe = 0; proc = 0; diag("@"); lock = 0;
+      { pipe = 0; proc = 0; diag("@");
+#if constant(Thread.Mutex)
+        lock = 0;
+#endif
         return launch(how, arg, id);
       }
 
@@ -208,11 +211,16 @@ class Handler
           { if (res == "=")
             { array arr = tmp / "=";
               if (arr[0] == "RETURNCODE")
-              { if (sscanf(arr[1], "%d", returncode) != 1)
+              { diag(":ExtScript:RETURNCODE=" + arr[1]*"=" + "\n");
+                if (sscanf(arr[1], "%d", returncode) != 1)
                   returncode = 200;
               }
               else if (arr[0] == "HEADERS")
               { headers = arr[1..] * "=";
+              }
+              else if (arr[0] == "ADDHEADER")
+              { headers = (headers || "") + arr[1..]*"=" + "\n";
+                diag(":ExtScript:ADDHEADER=" + arr[1..]*"=" + "\n");
               }
             }
             else if (res == "?")
@@ -254,7 +262,7 @@ class Handler
   }
 }
 
-#ifdef THREADS
+#if constant(Thread.Mutex)
 object dispatchmutex = Thread.Mutex();
 #endif
 
@@ -285,7 +293,7 @@ void periodic_cleanup()
     { mapping m = scripthandlers[binpath];
       if (m->expire < now)
       {
-#ifdef THREADS
+#if constant(Thread.Mutex)
         object lock = m->mutex->lock();
 #endif
   	diag("(Z)");
@@ -302,7 +310,9 @@ void periodic_cleanup()
   	   m->handlers = ({ 0 });
   	now = time(0);
   	m->expire   = now+600/(2+sizeof(m->handlers));
+#if constant(Thread.Mutex)
   	lock = 0;
+#endif
       }
     }
   }
@@ -322,20 +332,20 @@ object getscripthandler(string binpath, void|int multi, void|mapping settings)
 
   if (!(m = scripthandlers[binpath])) 
   {
-#ifdef THREADS
+#if constant(Thread.Mutex)
     lock = dispatchmutex->lock();
 #endif
     scripthandlers[binpath] = m =
        ([ "handlers": ({ Handler(binpath) }),
           "expire": time(0) + 600,  
-#ifdef THREADS
+#if constant(Thread.Mutex)
           "mutex": Thread.Mutex(),
 #endif
           "binpath": binpath
         ]);
   }
 
-#if THREADS
+#if constant(Thread.Mutex)
   lock = m->mutex->lock();
 #endif
   for(i = 0; i < multi && i < sizeof(m->handlers); ++i)
