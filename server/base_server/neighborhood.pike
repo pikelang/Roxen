@@ -154,9 +154,9 @@ int lr=time();
 
 mapping low_neighbours = ([]);
 
-void add_neighbour(object neigh)
+void add_neighbour(object neigh, int nosend)
 {
-  low_neighbours[neigh] = time();
+  low_neighbours[neigh] = ({ time(), nosend });
 }
 
 object master;
@@ -171,16 +171,20 @@ void send_to_all(string f, object from)
     sent_to[ip]++;
   }
   foreach(indices(low_neighbours), object o)
+  {
     if(objectp(o) && (o!=from))
     {
-      catch
-      {
-	string ip = o->me ? (((o->me->query_address()||"")/" ")[0]) : o->net;
-	if(ip=="") this_object()->remove_neighbour(o);
-	if(!sent_to[ip]++)
-	  o->send(f,from?from->me?from->me->query_address():from->last_from:0);
-      };
+      if(!low_neighbours[o][1])
+	catch
+	{
+	  string ip = o->me ? (((o->me->query_address()||"")/" ")[0]) : o->net;
+	  if(ip=="") this_object()->remove_neighbour(o);
+	  if(!sent_to[ip]++)
+	    o->send(f,from?from->me?from->me->query_address():
+		    from->last_from:0);
+	};
     }
+  }
 }
 
 array config_info(object c)
@@ -213,6 +217,7 @@ mapping neigh_data()
 }  
 
 void low_got_info(string data, object from);
+
 void broadcast()
 {
   string data = encode_value(neigh_data());
@@ -271,7 +276,7 @@ void got_connection(object port)
 #ifdef NEIGH_DEBUG
     werror("Neighbourhood: Got TCP connection from "+o->query_address()+"\n");
 #endif
-    add_neighbour(TCPNeigh(o, 0, this_object()));
+    add_neighbour(TCPNeigh(o, 0, this_object()), 1);
   }
 }
 
@@ -298,19 +303,19 @@ void create()
     if(!master->bind(51521,got_connection))
     {
       master=0;
-      add_neighbour(TCPNeigh(0,51521,this_object()));
+      add_neighbour(TCPNeigh(0,51521,this_object()),0);
     }
 #ifdef NEIGH_DEBUG
     else
       werror("Neighbourhood: Bound to ALL:51521\n");
 #endif
   }
-  add_neighbour(UDPNeigh(0,51521,this_object()));
+  add_neighbour(UDPNeigh(0,51521,this_object()),0);
     
   foreach(tcp_numbers(), string s)
-    add_neighbour(TCPNeigh(s,51521,this_object()));
+    add_neighbour(TCPNeigh(s,51521,this_object()),0);
   foreach(network_numbers(), string s)
-    add_neighbour(UDPNeigh(s,51521,this_object()));
+    add_neighbour(UDPNeigh(s,51521,this_object()),0);
   if(roxen->query("neighborhood")) broadcast();else remove_call_out(broadcast);
   remove_call_out(create);
   add_constant("neighborhood", neighborhood);
