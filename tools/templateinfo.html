@@ -1,26 +1,12 @@
-<sql-insert table="templates">
-
-  <delete all>
-
-  <!--  Template files  -->
-  <insert name="Template 1" filename="tmpl1.tmpl" category="tmpl">
-  <insert name="Template 2" filename="tmpl2.tmpl" category="tmpl">
-  <insert name="Template 3" filename="tmpl3.tmpl" category="tmpl">
-
-  <!--  Navigation files  -->
-  <insert name="Nav 1" filename="nav1.ntmpl" category="nav">
-  <insert name="Nav 2" filename="nav2.ntmpl" category="nav">
-  <insert name="Nav 3" filename="nav3.ntmpl" category="nav">
-
-</sql-insert>
-
-
 <sql-insert table="template_wizards">
 
   <delete all>
 
   <!--  Template groups  -->
   <insert name="General" title="Edit general template preferences"
+          help="help" category="tmpl">
+	  
+  <insert name="Link colors" title="Edit link colors"
           help="help" category="tmpl">
 	  
   <insert name="Heading 1" title="Edit heading 1 preferences"
@@ -35,93 +21,208 @@
 	  
   <insert name="Color" title="Edit navigation colors"
           help="help" category="nav">
+
+  <insert name="Test" title="Test some wizard types"
+          help="help" category="nav">
     
 </sql-insert>
 
 
-<sql-insert table="template_vars" switchvariable>
+
+<sql-insert table="template_vars"
+            removevariables="_wizard_name,_wizard_category"
+	    insertvariable="wizard_id"
+	    query="select id from template_wizards where
+	           name='#_wizard_name#' and category='#_wizard_category#'">
   <delete all>
 
   <!--  Template variables  -->
   <!--  General  -->
-  <insert name="template_name" title="Template name" wizard_name="General"
-          type="select" help="Template name" category="tmpl">
+  <insert name="template_name" title="Template name"
+          type="select" help="Template name"
+	  _wizard_name="General" _wizard_category="tmpl">
 	  
-  <insert name="bg_color" title="Background color" wizard_name="General"
-          type="color" help="Background color" category="tmpl">
+  <insert name="bg_color" title="Background color"
+          type="color" help="Background color"
+	   _wizard_name="General" _wizard_category="tmpl">
 
-  <insert name="text_color" title="Text color" wizard_name="General"
-          type="color" help="Text color" category="tmpl">
+  <insert name="text_color" title="Text color"
+          type="color" help="Text color"
+	   _wizard_name="General" _wizard_category="tmpl">
 
-  <insert name="link_color" title="Link color" wizard_name="General"
-          type="color" help="Link color" category="tmpl">
+  <!--  Link colors  -->
+  <insert name="link_color" title="Link color"
+          type="color" help="Link color"
+	   _wizard_name="Link colors"  _wizard_category="tmpl">
 
-  <insert name="vlink_color" title="Visited link color" wizard_name="General"
-          type="color" help="Visited link color" category="tmpl">
+  <insert name="vlink_color" title="Visited link color"
+          type="color" help="Visited link color"
+	  _wizard_name="Link colors" _wizard_category="tmpl">
 
-  <insert name="alink_color" title="Active link color" wizard_name="General"
-          type="color" help="Active link color" category="tmpl">
-
+  <insert name="alink_color" title="Active link color"
+          type="color" help="Active link color"
+	  _wizard_name="Link colors" _wizard_category="tmpl">
 
   <!--  Heading 1  -->	  
-  <insert name="h1_color" title="Heding 1 color" wizard_name="Heading 1"
-          type="color" help="Heding 1 color" category="tmpl">
+  <insert name="h1_color" title="Heding 1 color"
+          type="color" help="Heding 1 color"
+	  _wizard_name="Heading 1" _wizard_category="tmpl">
 
-  <insert name="h1_font" title="Heading 1 font" wizard_name="Heading 1"
-          type="font" help="Heading 1 font" category="tmpl">
+  <insert name="h1_font" title="Heading 1 font"
+          type="font" help="Heading 1 font"
+	  _wizard_name="Heading 1" _wizard_category="tmpl">
 
-  <insert name="h1_size" title="Heading 1 size" wizard_name="Heading 1"
-          type="int" help="Heading 1 size" category="tmpl">
+  <insert name="h1_size" title="Heading 1 size"
+          type="int" help="Heading 1 size"
+	  _wizard_name="Heading 1"  _wizard_category="tmpl">
 	  
-
   <!--  Heading 2  -->	  
-  <insert name="h2_color" title="Heading 2 color" wizard_name="Heading 2"
-          type="color" help="Heading 2 color" category="tmpl">
+  <insert name="h2_color" title="Heading 2 color"
+          type="color" help="Heading 2 color"
+	  _wizard_name="Heading 2" _wizard_category="tmpl">
 
-  <insert name="h2_font" title="Heading 1 font" wizard_name="Heading 2"
-          type="font" help="Heading 2 font" category="tmpl">
+  <insert name="h2_font" title="Heading 1 font"
+          type="font" help="Heading 2 font"
+	  _wizard_name="Heading 2" _wizard_category="tmpl">
 
-  <insert name="h2_size" title="Heading 2 size" wizard_name="Heading 2"
-          type="int" help="Heading 2 size" category="tmpl">
+  <insert name="h2_size" title="Heading 2 size"
+          type="int" help="Heading 2 size"
+	  _wizard_name="Heading 2" _wizard_category="tmpl">
 	  
-
   <!--  Navigation Variables  -->
   <!--  General  -->
-  <insert name="nav_name" title="Navigation name" wizard_name="General"
-          type="select" help="Navigation template name" category="nav">
+  <insert name="nav_name" title="Navigation name"
+          type="select" help="Navigation template name"
+	  _wizard_name="General" _wizard_category="nav">
 	  
-  <insert name="nav_size" title="Navigation size" wizard_name="General"
-          type="int" help="Navigation size" category="nav">
+  <insert name="nav_size" title="Navigation size"
+          type="int" help="Navigation size"
+	  _wizard_name="General" _wizard_category="nav">
 	  
-  <insert name="nav_font" title="Navigation font" wizard_name="General"
-          type="font" help="Navigation font" category="nav">
+  <insert name="nav_font" title="Navigation font"
+          type="font" help="Navigation font"
+	  _wizard_name="General" _wizard_category="nav">
 
 	  
   <!--  Color  -->
-  <insert name="nav_color1" title="Navigation color1" wizard_name="Color"
-          type="color" help="Navigation color1" category="nav">
+  <insert name="nav_color1" title="Navigation color1"
+          type="color" help="Navigation color1"
+	  _wizard_name="Color" _wizard_category="nav">
 	  
-  <insert name="nav_color2" title="Navigation color2" wizard_name="Color"
-          type="color" help="Navigation color2" category="nav">
+  <insert name="nav_color2" title="Navigation color2"
+          type="color" help="Navigation color2"
+	  _wizard_name="Color" _wizard_category="nav">
 
-  <insert name="nav_color3" title="Navigation color3" wizard_name="Color"
-          type="color" help="Navigation color3" category="nav">
+  <insert name="nav_color3" title="Navigation color3"
+          type="color" help="Navigation color3"
+	  _wizard_name="Color" _wizard_category="nav">
 
+  <!--  Test variabler  -->
+  <insert name="password" title="password"
+          type="password" help=""
+	  _wizard_name="Test" _wizard_category="nav">
+  
+  <insert name="int" title="int"
+          type="int" help=""
+	  _wizard_name="Test" _wizard_category="nav">
+  
+  <insert name="float" title="float"
+          type="float" help=""
+	  _wizard_name="Test" _wizard_category="nav">
+  
+  <insert name="select" title="select"
+          type="select" help=""
+	  _wizard_name="Test" _wizard_category="nav">
+  
+  <insert name="list" title="list"
+          type="list" help=""
+	  _wizard_name="Test" _wizard_category="nav">
+  
+  <insert name="text" title="text"
+          type="text" help=""
+	  _wizard_name="Test" _wizard_category="nav">
+  
+  <insert name="radio" title="radio"
+          type="radio" help=""
+	  _wizard_name="Test" _wizard_category="nav">
+  
+  <insert name="checkbox" title="checkbox"
+          type="checkbox" help=""
+	  _wizard_name="Test" _wizard_category="nav">
+  
+  <insert name="color" title="color"
+          type="color" help=""
+	  _wizard_name="Test" _wizard_category="nav">
+  
+  <insert name="font" title="font"
+          type="font" help=""
+	  _wizard_name="Test" _wizard_category="nav">
+  
+  <insert name="toggle" title="toggle"
+          type="toggle" help=""
+	  _wizard_name="Test" _wizard_category="nav">
+  
 </sql-insert>
 
 
-<sql-insert table="color_schemes">
+<sql-insert table="template_vars_opts" removevariables="_variable_name"
+            insertvariable="variable_id"
+	    query="select id from template_vars where name='#_variable_name#'">
 
   <delete all>
 
-  <insert colorscheme_id="1" name="color1" value="green">
-  <insert colorscheme_id="1" name="color2" value="blue">
-  <insert colorscheme_id="1" name="color3" value="red">
-  <insert colorscheme_id="1" name="color4" value="grey">
+  <!--  Template files  -->
+  <insert name="Template 1" value="tmpl1.tmpl" _variable_name="template_name">
+  <insert name="Template 2" value="tmpl2.tmpl" _variable_name="template_name">
+  <insert name="Template 3" value="tmpl3.tmpl" _variable_name="template_name">
 
-  <insert colorscheme_id="2" name="color1" value="green">
-  <insert colorscheme_id="2" name="color2" value="blue">
-  <insert colorscheme_id="2" name="color3" value="red">
-  <insert colorscheme_id="2" name="color4" value="grey">
+  <!--  Navigation files  -->
+  <insert name="Nav 1" value="nav1.ntmpl" _variable_name="nav_name">
+  <insert name="Nav 2" value="nav2.ntmpl" _variable_name="nav_name">
+  <insert name="Nav 3" value="nav3.ntmpl" _variable_name="nav_name">
+
+  <insert name="foo"    value="" _variable_name="select">
+  <insert name="bar"    value="" _variable_name="select">
+  <insert name="gazonk" value="" _variable_name="select">
+  <insert name="fie"    value="" _variable_name="select">
+
+  <insert name="foo"    value="" _variable_name="checkbox">
+  <insert name="bar"    value="" _variable_name="checkbox">
+  <insert name="gazonk" value="" _variable_name="checkbox">
+  <insert name="fie"    value="" _variable_name="checkbox">
+  
+  <insert name="foo"    value="" _variable_name="radio">
+  <insert name="bar"    value="" _variable_name="radio">
+  <insert name="gazonk" value="" _variable_name="radio">
+  <insert name="fie"    value="" _variable_name="radio">
+        
+  <insert name="foo"    value="" _variable_name="list">
+  <insert name="bar"    value="" _variable_name="list">
+  <insert name="gazonk" value="" _variable_name="list">
+  <insert name="fie"    value="" _variable_name="list">      
+</sql-insert>
+
+
+<sql-insert table="template_schemes">
+
+  <delete all>
+
+  <insert name="Clasic" title="">
+  <insert name="Modern" title="">
+  <insert name="Strict" title="">
+  <insert name="Sunshine" title="">
+  <insert name="Depresive" title="">
+  
+</sql-insert>
+
+<sql-insert table="template_schemes_vars"
+            removevariables="_variable_name"
+            insertvariable="variable_id"
+	    query="select id from template_vars where
+	           name='#_variable_name#'">
+
+  <delete all>
+
+  <insert scheme_id=1 _variable_name="template_name" value="Template 1">
 
 </sql-insert>

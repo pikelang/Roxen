@@ -1,6 +1,6 @@
 #!/usr/local/bin/pike
 
-#define DB_URL "mysql://auto:site@kopparorm.idonex.se/autosite"
+#define DB_URL "mysql://root@localhost/autosite"
 
 object db;
 
@@ -8,18 +8,27 @@ string tag_insert(string tag, mapping args, mapping oa)
 {
   string cols = "", values = ""; 
   int i = 0;
-  if(oa->switchvariable) {
-    string query = "select * from template_wizards where name='"+
-		    args->wizard_name+"' and category='"+args->category+"'";
-    string result = db->query(query);
-    if(sizeof(result)>0) 
-      args->wizard_id = db->query(query)[0]->id;
-    else {
-      write("  *** Wizard ["+args->wizard_name+"] does not exist\n");
+  if(oa->removevariables&&
+     oa->insertvariable&&
+     oa->query)
+  {
+    string query = oa->query;
+    foreach(oa->removevariables/",", string variable) {
+      query = replace(query, "#"+variable+"#", args[variable]);
+    }
+    
+    array query_result = db->query(query);
+    if(!sizeof(query_result)) {
+      write("  *** query ["+query+"] returns zero rows\n");
       return "";
     }
-    args -= ([ "wizard_name":"" ]);
+    args[oa->insertvariable] = query_result[0]->id;
+    
+    foreach(oa->removevariables/",", string variable) {
+      args -= ([ variable:1 ]);
+    }
   }
+  
   foreach(indices(args), string arg) {
     cols += (i?",":"")+arg;
     values += (i?",":"")+"'"+db->quote(args[arg])+"'";
@@ -29,6 +38,7 @@ string tag_insert(string tag, mapping args, mapping oa)
 		     oa->table + " ("+cols+") values ("+values+")");
   db->query(q);
   write("  "+q+"\n");
+  return "";
 }
 
 string tag_delete(string tag, mapping args, mapping oa)
