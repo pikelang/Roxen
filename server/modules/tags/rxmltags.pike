@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.181 2000/10/10 22:02:59 jhs Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.182 2000/10/12 01:24:05 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -453,7 +453,6 @@ class TagUnset {
 class TagSet {
   inherit RXML.Tag;
   constant name = "set";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT;
   mapping(string:RXML.Type) req_arg_types = ([ "variable": RXML.t_text(RXML.PEnt) ]);
 
   class Frame {
