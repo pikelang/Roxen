@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.11 1997/01/29 04:59:33 per Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.12 1997/01/29 05:32:09 per Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -35,7 +35,7 @@ public mixed query(string var)
   if(var && variables[var])
     return variables[var][ VAR_VALUE ];
   if(!var) return variables;
-  error("query("+var+"). Unknown variable.\n");
+  error("query("+var+"): Unknown variable.\n");
 }
 
 mixed set(string var, mixed val)

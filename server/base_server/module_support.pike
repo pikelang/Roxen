@@ -1,6 +1,6 @@
 inherit "read_config";
 
-string cvs_version = "$Id: module_support.pike,v 1.9 1997/01/29 05:28:20 per Exp $";
+string cvs_version = "$Id: module_support.pike,v 1.10 1997/01/29 05:32:10 per Exp $";
 #include <roxen.h>
 #include <module.h>
 #include <config.h>
@@ -52,6 +52,8 @@ public mixed query(string var)
 {
   if(var && variables[var])
     return variables[var][ VAR_VALUE ];
+  if(this_object()->current_configuration)
+    return this_object()->current_configuration->query(var);
   error("query("+var+"). Unknown variable.\n");
 }
 

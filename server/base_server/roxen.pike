@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.33 1997/01/29 05:28:20 per Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.34 1997/01/29 05:30:30 per Exp $";
 #define IN_ROXEN
 
 #include <fifo.h>
@@ -6,8 +6,6 @@ string cvs_version = "$Id: roxen.pike,v 1.33 1997/01/29 05:28:20 per Exp $";
 #include <variables.h>
 #include <roxen.h>
 #include <config.h>
-
-#define THREADS
 
 #ifdef NO_DNS
 inherit "dummy_hosts";

@@ -1,6 +1,6 @@
 inherit "http";
 
-string _cvs_version = "$Id: roxenlib.pike,v 1.9 1997/01/26 23:53:11 per Exp $";
+string _cvs_version = "$Id: roxenlib.pike,v 1.10 1997/01/29 05:41:24 per Exp $";
 // This code has to work booth in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -334,9 +334,18 @@ string strip_prestate(string from)
   return from;
 }
 
+#define _error defines[" _error"]
+#define _extra_heads defines[" _extra_heads"]
+#define _rettext defines[" _rettext"]
+
 string parse_rxml(string what, void|object|mapping id, void|object file,
 		  void|mapping defines)
 {
+  if(!defines)
+    defines = ([]);
+  
+  _error=200;
+  _extra_heads=([ ]);
   if(!id)
     id=([
 	 "prestate":(< >), 
@@ -350,11 +359,14 @@ string parse_rxml(string what, void|object|mapping id, void|object file,
 
   if(!(id->conf && id->conf->parse_module))
     return what;
-  return parse_html(what, 
+  
+  what = parse_html(what, 
 		    (mapping)id->conf->parse_module->tag_callers,
 		    (mapping)id->conf->parse_module->container_callers,
-		    id, file||this_object(), defines||([]), id->my_fd);
+		    id, file||this_object(), defines, id->my_fd);
 
+  id->misc->more_heads |= _extra_heads;
+  return what;
 }
 
 constant safe_characters = "abcdefghijkklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789Â‰ˆ≈ƒ÷"/"";
