@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.153 1998/09/21 16:29:40 js Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.154 1998/11/02 07:00:39 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -286,7 +286,16 @@ object  bevel(object  in, int width, int|void invert)
 
 object make_text_image(mapping args, object font, string text,object id)
 {
-  object text_alpha=font->write(@(text/"\n"));
+  object text_alpha=font->write(@(
+#if constant(Locale.Charset)
+				  args->encoding?
+				  Array.map(text/"\n",
+					    lambda(string s, object d) {
+					      return d->feed(s)->drain();
+					    },
+					    Locale.Charset.decoder(args->encoding)) :
+#endif
+				  text/"\n"));
   int xoffset=0, yoffset=0;
 
   if(!text_alpha->xsize() || !text_alpha->ysize())
