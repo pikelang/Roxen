@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.147 2000/07/28 15:54:44 kuntri Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.148 2000/08/04 14:15:00 mast Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -602,9 +602,11 @@ class TagDebug {
 	result = "<pre>"+Roxen.html_encode_string(sprintf("%O",obj))+"</pre>";
 	return 0;
       }
-      //  if (args->werror) {
-      //    report_debug(replace(m->werror,"\\n","\n"));
-      //  }
+      if (args->werror) {
+	report_debug(map (replace(args->werror,"\\n","\n") / "\n",
+			  lambda (string s) {return "<debug>: " + s;}) * "\n" +
+		     "\n");
+      }
       if (args->off)
 	id->misc->debug = 0;
       else if (args->toggle)
