@@ -82,8 +82,8 @@ install: all install_only
 install_only: 
 	$(SRCDIR)/mkdir -p $(prefix)/roxen/
 	@for f in `cd $(SRCDIR); ls [A-Z]* | grep -v Makefile`; do \
-	  if test -f $(SRCDIR)/$f ; then \
-	    cp $(SRCDIR)/$f $(prefix)/roxen/; \
+	  if test -f $(SRCDIR)/$$f ; then \
+	    cp $(SRCDIR)/$$f $(prefix)/roxen/; \
 	  else :; fi; \
 	done
 	@if test -d $(prefix)/roxen/server.old/.; then \
@@ -160,8 +160,8 @@ install_only:
 	done
 	-@for f in BUGS CHANGES CONTRIBUTORS COPYING GPL INSTALLING \
 		README README.ssl3 TODO; do \
-	  if test -f $(SRCDIR)/$f ; then \
-	    echo Copying $f...; cp $(SRCDIR)/$f $(prefix)/roxen/$f; \
+	  if test -f $(SRCDIR)/$$f ; then \
+	    echo Copying $$f...; cp $(SRCDIR)/$$f $(prefix)/roxen/$$f; \
 	  else :; fi; \
 	done
 	-@for f in cgi fcgi install.pike pdbi.pike pike roxen roxen_hostname; \
@@ -359,21 +359,21 @@ dist: $(SRCDIR)/ChangeLog.gz $(SRCDIR)/ChangeLog.rxml.gz
 	done; \
 	echo "Zapping absolute paths in language.c..."; \
 	for f in $$version/pike/*/src/language.c; do \
-	  if test -f "$f"; then \
-	    echo "Fixing $f.."; \
-	    sed <"$f" >"$f.fix" -e '/^#line/s!/.*/\(language\.yacc\)!\1!' && \
-	      mv "$f.fix" "$f"; \
+	  if test -f "$$f"; then \
+	    echo "Fixing $$f.."; \
+	    sed <"$$f" >"$$f.fix" -e '/^#line/s!/.*/\(language\.yacc\)!\1!' && \
+	      mv "$$f.fix" "$$f"; \
 	  else :; fi; \
 	done; \
 	echo "Altering some CVS files to point to developer.roxen.com..."; \
 	for f in `find $$version/ -type d -name CVS -print`; do \
-	  if egrep '^//*cvs//*roxen_src' "$f/Repository" 2>&1 >/dev/null; \
+	  if egrep '^//*cvs//*roxen_src' "$$f/Repository" 2>&1 >/dev/null; \
 	  then \
-	    echo "Altering $f..."; \
-	    sed -e 's/^\/\/*cvs\/\/*roxen_src/\/cvs\/roxen/' <"$f/Repository" \
-	      >"$f/Repository.new" && \
-	      mv "$f/Repository.new" "$f/Repository"; \
-	    echo "anonymous@developer.roxen.com:/cvs" >"$f/Root"; \
+	    echo "Altering $$f..."; \
+	    sed -e 's/^\/\/*cvs\/\/*roxen_src/\/cvs\/roxen/' <"$$f/Repository" \
+	      >"$$f/Repository.new" && \
+	      mv "$$f/Repository.new" "$$f/Repository"; \
+	    echo "anonymous@developer.roxen.com:/cvs" >"$$f/Root"; \
 	  else :; fi; \
 	done; \
 	echo Determining if this is a 0.5, 0.6 or dual distribution...; \
