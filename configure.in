@@ -1,12 +1,52 @@
 #
-# $Id: configure.in,v 1.57 1998/09/29 23:00:58 grubba Exp $
+# $Id: configure.in,v 1.58 1998/10/16 20:27:07 grubba Exp $
 #
 
 prefix=$PWD
 AC_INIT(Makefile.in)
 
-AC_ARG_WITH(fullwarn, [  --with-fullwarn	enable as many warnings as possible],[],[with_fullwarn=no])
-AC_ARG_WITH(rtldebug, [  --with-rtldebug	enable run-time level debug],[],[with_rtldebug=no])
+# Check the arguments
+
+# Most of the below are only there to provide help texts.
+# The ones that are actually tested are:
+#   fullwarn
+#   gdbm
+#   gmp
+#   pike
+#   rtldebug
+#   zlib
+
+AC_ARG_WITH(cdebug,               [  --without-cdebug                 Disable -g])
+AC_ARG_WITH(compiler-trace,       [  --with-compiler-trace            Enable tracing of the compiler])
+AC_ARG_WITH(dbm,                  [  --with(out)-dbm                  (New) DataBase Manager support ])
+AC_ARG_WITH(debug,                [  --without-debug                  Disable run time debugging])
+AC_ARG_WITH(dmalloc,              [  --with-dmalloc                   Enable memory-leak tests])
+AC_ARG_WITH(dynamic_modules,      [  --without-dynamic-modules        Link modules statically])
+AC_ARG_WITH(fullwarn,             [  --with-fullwarn                  Enable as many warnings as possible],[],[with_fullwarn=no])
+AC_ARG_WITH(gdbm,                 [  --with(out)-gdbm                 GNU database manager support ],[],[with_gdbm=yes])
+AC_ARG_WITH(gmp,                  [  --with(out)-gmp                  Support bignums],[],[with_gmp=yes])
+AC_ARG_WITH(include-path,         [  --with-include-path              A list of paths to search for include files])
+AC_ARG_WITH(jpeglib,              [  --with(out)-jpeglib              Support JPEG (Image.JPEG)])
+AC_ARG_WITH(lib-path,             [  --with-lib-path                  A list of paths to search for libraries])
+AC_ARG_WITH(libpq-dir,            [  --with-libpq-dir=dir             Look for library-files in dir])
+AC_ARG_WITH(max-fd,               [  --with-max-fd=X                  Set how many filedescriptors can be used at once])
+AC_ARG_WITH(msql,                 [  --with(out)-msql                 mSQL Database engine support ])
+AC_ARG_WITH(mysql,                [  --without-mysql                  No support for the Mysql database])
+AC_ARG_WITH(odbc,                 [  --without-odbc                   No support for ODBC databases])
+AC_ARG_WITH(oob,                  [  --with-oob                       Enable out-of-band data handling])
+AC_ARG_WITH(oracle,               [  --without-oracle                 No support for the Oracle databases])
+AC_ARG_WITH(pike,                 [  --with-pike                      Specify version of Pike],[],[with_pike=0.5])
+AC_ARG_WITH(poll,                 [  --with-poll                      Use poll(2) instead of select(2)])
+AC_ARG_WITH(postgres,             [  --with(out)-postgres             Postgres95 DB server support])
+AC_ARG_WITH(postgres-include-dir, [  --with-postgres-include-dir=dir  Look for header-files in dir])
+AC_ARG_WITH(profiling,            [  --with-profiling                 Add code used to profile pike code ])
+AC_ARG_WITH(readline,             [  --without-readline               No support for command line editing])
+AC_ARG_WITH(rtldebug,             [  --with-rtldebug                  Enable run-time level debug],[],[with_rtldebug=no])
+AC_ARG_WITH(ssleay,               [  --with-ssleay                    Enable the ssleay-module])
+AC_ARG_WITH(streamed_parser,      [ --with-streamed-parser            Enable the streamed-parser module])
+AC_ARG_WITH(thread-trace,         [  --with-trace-threads             Enable individual tracing of threads])
+AC_ARG_WITH(threads,              [  --without-threads                No threads support])
+AC_ARG_WITH(zlib,                 [  --with(out)-zlib                 Support gzip compression],[],[with_zlib=yes])
 
 # Make sure with_rtldebug is propagated to the other configure-scripts.
 export with_rtldebug
@@ -58,12 +98,6 @@ If this does not work, please use an absolute path to the configure script. ])
     ;;
 esac
 
-# Check the arguments
-
-AC_ARG_WITH(gmp,     [  --with(out)-gmp        Support bignums],[],[with_gmp=yes])
-AC_ARG_WITH(zlib,    [  --with(out)-zlib       Support gzip compression],[],[with_zlib=yes])
-AC_ARG_WITH(gdbm,    [  --with(out)-gdbm       GNU database manager support ],[],[with_gdbm=yes])
-AC_ARG_WITH(pike,    [  --with-pike            Specify version of Pike],[],[with_pike=0.5])
 
 #
 # Version of Pike
