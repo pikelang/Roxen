@@ -1,5 +1,5 @@
 /*
- * $Id: RoxenRequest.java,v 1.5 2000/02/06 18:44:35 marcus Exp $
+ * $Id: RoxenRequest.java,v 1.6 2000/02/06 21:30:59 marcus Exp $
  *
  */
 
@@ -76,6 +76,11 @@ public class RoxenRequest {
     return conf;
   }
 
+  /**
+   * Returns a Map with all the query variables of the request
+   *
+   * @return      the query variables
+   */
   public synchronized Map variables()
   {
     if(_variables == null)
@@ -84,6 +89,11 @@ public class RoxenRequest {
     return _variables;
   }
 
+  /**
+   * Returns a Map with all the headers of the request
+   *
+   * @return      the headers
+   */
   public synchronized Map requestHeaders()
   {
     if(_requestHeaders == null)
@@ -92,6 +102,11 @@ public class RoxenRequest {
     return _requestHeaders;
   }
 
+  /**
+   * Returns a Set with all known supported features of the client
+   *
+   * @return      the feature set
+   */
   public synchronized Set supports()
   {
     if(_supports == null)
@@ -100,6 +115,11 @@ public class RoxenRequest {
     return _supports;
   }
 
+  /**
+   * Returns a Set with all pragmas sent by the client
+   *
+   * @return      the pragmas
+   */
   public synchronized Set pragma()
   {
     if(_pragma == null)

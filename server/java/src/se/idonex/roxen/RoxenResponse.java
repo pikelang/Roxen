@@ -1,5 +1,5 @@
 /*
- * $Id: RoxenResponse.java,v 1.4 2000/01/10 00:14:59 marcus Exp $
+ * $Id: RoxenResponse.java,v 1.5 2000/02/06 21:30:59 marcus Exp $
  *
  */
 
@@ -8,6 +8,17 @@ package se.idonex.roxen;
 import java.util.Map;
 import java.util.HashMap;
 
+/**
+ * The base class for response objects.
+ * Use the methods in the {@link HTTP} class to create
+ * response objects.
+ *
+ * @see RoxenLib
+ *
+ * @version	$Version$
+ * @author	marcus
+ */
+
 public abstract class RoxenResponse {
 
   int errno;
@@ -15,6 +26,12 @@ public abstract class RoxenResponse {
   long len;
   Map extraHeads;
 
+  /**
+   * Add a specific HTTP header to the response
+   *
+   * @param name  the name of the header
+   * @param value the value of the header
+   */
   public void addHTTPHeader(String name, String value)
   {
     if(name == null)
