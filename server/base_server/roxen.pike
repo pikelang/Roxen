@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.71 1997/06/11 22:34:53 grubba Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.72 1997/06/11 23:07:19 grubba Exp $";
 #define IN_ROXEN
 #ifdef THREADS
 #include <fifo.h>
@@ -275,15 +275,6 @@ void start_handler_threads()
 }
 #endif /* THREADS */
 
-void handle(function f, mixed ... args)
-{
-#ifdef THREADS
-/*  thread_create(f, @args); */
-  handle_queue->write(({f, args }));
-#else
-  f(@args);
-#endif
-}
 
 // Listen to a port, connected to the configuration 'conf', binding
 // only to the netinterface 'ether', using 'requestprogram' as a
