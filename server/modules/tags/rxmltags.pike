@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.476 2005/02/15 14:38:34 grubba Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.477 2005/02/15 14:40:35 grubba Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -3770,9 +3770,11 @@ class TagCase {
 	  parse_error ("Content of type %s doesn't handle being %s.\n",
 		       content_type->name, op);
       }
-      else
+      else {
 	if (compat_level > 2.1)
 	  parse_error ("Argument \"case\" is required.\n");
+	if (!content) return ({ RXML.nil });
+      }
 
 #if ROXEN_COMPAT <= 1.3
       if(args->lower) {
