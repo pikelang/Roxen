@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.35 2001/07/25 18:51:21 mast Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.36 2001/07/25 18:57:19 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Roxen self test module";
@@ -107,7 +107,7 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
   {
     if( sizeof( args ) )
       message = sprintf( message, @args );
-    message = (p_code ? "[Eval from p-code] " : "[Eval from source] ") + message;
+    message = (p_code ? "[Pass 2 (p-code)] " : "[Pass 1 (source)] ") + message;
     if( verbose )
       if( strlen( rxml ) )
 	report_debug("FAIL\n" );
@@ -133,7 +133,7 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
 		    ltests, replace(test[..68],
 				    ({"\t","\n", "\r"}),
 				    ({"\\t","\\n", "\\r"}) ),
-		    p_code ? "(p-code)" : "(source)");
+		    p_code ? "(pass 2)" : "(pass 1)");
     }
   };
 
@@ -177,7 +177,7 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
 		       },
 		       "result" :
 		       lambda(object t, mapping m, string c) {
-			 if (m->pass && (int) m->pass == pass) {
+			 if (!m->pass || (int) m->pass == pass) {
 			   if (m->type || m->parser) {
 			     RXML.Type type = m->type ? RXML.t_type->encode (m->type) :
 			       conf->default_content_type (RXML.PNone);
