@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.9 2000/01/07 04:52:43 mast Exp $
+//! $Id: module.pmod,v 1.10 2000/01/08 03:41:49 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -165,8 +165,9 @@ class TagSet
 	  function(:int(1..1)|string|array)|
 	  function(object:int(1..1)|string|array)
 	 ) low_entities;
-  //! Passed directly to Parser.HTML when that parser is used. Note:
-  //! Changes in these aren't tracked; changed() must be called.
+  //! Passed directly to Parser.HTML when that parser is used. This is
+  //! intended for compatibility only and might eventually be removed.
+  //! Note: Changes in these aren't tracked; changed() must be called.
 
   static void create (string _name, void|array(Tag) _tags)
   //!
@@ -221,17 +222,35 @@ class TagSet
     return values (tags);
   }
 
-  array(Tag) get_all_tags()
+  array(Tag) get_all_tags (void|string name)
   //! Returns all tags, even those who get overridden. A tag to the
-  //! left overrides one to the right.
+  //! left overrides one to the right. If a name is given, only tags
+  //! with that name are returned.
   {
-    array(Tag) tags = ({});
-    for (array(TagSet) list = ({this_object()}); sizeof (list);) {
-      TagSet tag_set = list[0];
-      list = tag_set->imported + list[1..];
-      tags += tag_set->get_local_tags();
+    if (name)
+      if (tags[name]) return ({tags[name]}) + imported->get_all_tags (name) * ({});
+      else return imported->get_all_tags() * ({});
+    else return values (tags) + imported->get_all_tags() * ({});
+  }
+
+  Tag get_overridden_tag (Tag tag)
+  //! Returns the tag that the given tag overrides, if any.
+  {
+    if (tags[tag->name] == tag) {
+      foreach (imported, TagSet tag_set)
+	if ((tag = tag_set->get_tag (name))) return tag;
     }
-    return tags;
+    else {
+      int found = 0;
+      foreach (imported, TagSet tag_set)
+	if (Tag subtag = tag_set->get_tag (name))
+	  if (found) return subtag;
+	  else if (subtag == tag) {
+	    if ((subtag = tag_set->get_overridden_tag (tag))) return subtag;
+	    found = 1;
+	  }
+    }
+    return 0;
   }
 
   mixed `->= (string var, mixed val)
@@ -1483,11 +1502,6 @@ class TagSetParser
 
   void remove_runtime_tag (string|Tag tag);
   //! Removes a tag added by add_runtime_tag().
-
-  void ignore_tag (Tag tag);
-  //! Temparily ignores the currently parsing tag (also given) so that
-  //! the tag definition it hides (if any) will be active if the
-  //! returned result is reparsed.
 
   string _sprintf() {return "RXML.TagSetParser";}
 }
