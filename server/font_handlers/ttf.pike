@@ -4,7 +4,7 @@
 #if !constant(Image.FreeType.Face)
 #if constant(has_Image_TTF)
 #include <config.h>
-constant cvs_version = "$Id: ttf.pike,v 1.15 2003/05/05 14:31:08 jonasw Exp $";
+constant cvs_version = "$Id: ttf.pike,v 1.16 2003/11/05 17:44:09 jonasw Exp $";
 
 constant name = "TTF fonts";
 constant doc = "True Type font loader. Uses freetype to render text.";
@@ -118,6 +118,8 @@ class TTFWrapper
     if( !sizeof( what ) )
       return Image.Image( 1,height() );
 
+    int oversample = roxen->query("font_oversampling");
+
     // nbsp -> ""
     what = map( (array(string))what, replace, " ", "" );
 
@@ -126,13 +128,26 @@ class TTFWrapper
 
     array(Image.Image) res = map( what, real_write );
 
-    Image.Image rr = Image.Image( max(0,@res->xsize()),
-                                  (int)abs(`+(0,0,@res[..sizeof(res)-2]->ysize())*y_spacing)+res[-1]->ysize() );
-
+    int image_width = max(0, @res->xsize());
+    int image_height =
+      (int)abs(`+(0, 0, @res[..sizeof(res) - 2]->ysize()) * y_spacing) +
+      res[-1]->ysize();
+    int y_add = 0;
+    if (oversample) {
+      //  Make sure image dimensions are a multiple of 2. If height is odd
+      //  we'll offset the text baseline one pixel to get the extra line at
+      //  the top of the image.
+      image_width = (image_width + 1) & 0xFFFFFFFE;
+      y_add = (image_height & 1);
+      image_height = (image_height + 1) & 0xFFFFFFFE;
+    }
+    Image.Image rr = Image.Image(image_width, image_height);
+    
     float start;
     if( y_spacing < 0 )
       start = (float)rr->ysize()-res[0]->ysize();
-
+    start += (float) y_add;
+    
     foreach( res, object r )
     {
       if( j_right )
@@ -155,7 +170,7 @@ class TTFWrapper
     rr->setcolor( 0,0,0 );
     if( fake_italic )
       rr = rr->skewx( -(rr->ysize()/3) );
-    if( roxen->query("font_oversampling") )
+    if (oversample)
       return rr->scale(0.5);
     else
       return rr;

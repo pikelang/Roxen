@@ -137,6 +137,7 @@ class FTFont
       w += (int)(chars[i]->advance*x_spacing + kerning[i+1])+(fake_bold>0?1:0);
 
     w += (int)(chars[-1]->img->xsize()+chars[-1]->x);
+    
     ys = chars[0]->ascender-chars[0]->descender;
     line_height = (int)chars[0]->height;
 			   
@@ -173,7 +174,8 @@ class FTFont
   Image.Image write( string ... what )
   {
     object key = lock->lock();
-    if( roxen->query("font_oversampling") )
+    int oversample = roxen->query("font_oversampling");
+    if (oversample)
       face->set_size( 0, size * 2);
     else
       face->set_size( 0, size );
@@ -190,15 +192,25 @@ class FTFont
     
     array(Image.Image) res = map( what, write_row );
 
-    Image.Image rr = Image.Image( max(0,@res->xsize()),
-				  (int)(res[0]->ysize()+
-					abs(line_height*(sizeof(res)-1)
-					    *y_spacing) ));
+    int image_width = max(0, @res->xsize());
+    int image_height = (int)(res[0]->ysize() +
+			     abs(line_height * (sizeof(res) - 1) * y_spacing));
+    int y_add = 0;
+    if (oversample) {
+      //  Make sure image dimensions are a multiple of 2. If height is odd
+      //  we'll offset the text baseline one pixel to get the extra line at
+      //  the top of the image.
+      image_width = (image_width + 1) & 0xFFFFFFFE;
+      y_add = (image_height & 1);
+      image_height = (image_height + 1) & 0xFFFFFFFE;
+    }
+    Image.Image rr = Image.Image(image_width, image_height);
 
     float start;
     if( y_spacing < 0 )
       start = (float)rr->ysize()-res[0]->ysize();
-
+    start += (float) y_add;
+    
     foreach( res, object r )
     {
       if( j_right )
@@ -221,7 +233,7 @@ class FTFont
     rr->setcolor( 0,0,0 );
     if( fake_italic )
       rr = rr->skewx( -(rr->ysize()/3) );
-    if( roxen->query("font_oversampling") )
+    if (oversample)
       return rr->scale(0.5);
     else
       return rr;
