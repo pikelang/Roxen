@@ -1135,6 +1135,7 @@ class NewLayer
   };
 }
 
+
 class Crop
 //! Crop the layers to the specified size.
 //! Uses the 'x', 'y', 'width' and 'height' arguments.
@@ -1187,8 +1188,59 @@ class Crop
   };
 }
 
+
+class Scale
+//! Scale the layers to the specified size. Uses the 'width' and
+//! 'height' arguments (in pixels). If either width or height are not
+//! specified, the aspect of the image will be maintained.
+//!
+//! If 'mode=relative' is specified, the width and height will be
+//! given as percentages of the original width and height.
+{
+  inherit LazyImage;
+  constant operation_name = "scale";
+  constant destructive    = (<"meta","image","alpha">);
+  static {
+    Layers process( Layers layers )
+    {
+      int|float width, height;
+      if( args->mode == "relative" )
+      {
+	width = translate_coordinate_f( args->width, 0 ) / 100.0;
+	height = translate_coordinate_f( args->height, 0 ) / 100.0;
+      }
+      else
+      {
+	width = translate_coordinate( args->width, 0 );
+	height = translate_coordinate( args->height, 0 );
+      }
+      foreach( layers, Image.Layer l )
+      {
+	Image.Image i = l->image(), a = l->alpha();
+	if( i )
+	  i = i->scale( width, height );
+	if( a )
+	  a = i->scale( width, height );
+	l->set_image( i, a );
+      }
+    }
+
+    Arguments check_args( Arguments args )
+    {
+      if( !args->width && !args->height )
+	RXML.parse_error("Either 'width' or 'height' arguments "
+			 "must be specified\n" );
+      if( !parent )
+	RXML.parse_error( "scale cannot be the toplevel node\n" );
+      return args;
+    }
+  };
+}
+
+
 class GreyBlur
-//! Much faster version of blur, but only blurs greyscale images.
+//! About three times faster version of blur, but only blurs greyscale
+//! images.
 {
   inherit LazyImage;
   constant operation_name = "grey-blur";
