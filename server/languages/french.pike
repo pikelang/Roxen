@@ -1,6 +1,6 @@
 /*
 
-string cvs_version = "$Id: french.pike,v 1.11 2000/11/27 14:09:13 per Exp $";
+string cvs_version = "$Id: french.pike,v 1.12 2000/12/15 15:24:33 jhs Exp $";
 Created by:
 
 ---------------------+--------------------------------------------------
@@ -79,11 +79,13 @@ string date(int timestamp, mapping|void m)
 
 string number(int num)
 {
+  if(!num)
+    return "zéro";
   if(num<0)
     return "moins "+number(-num);
   switch(num)
   {
-   case 0:  return "zéro";
+   case 0:  return "";
    case 1:  return "une";
    case 2:  return "deux";
    case 3:  return "trois";

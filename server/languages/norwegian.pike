@@ -4,7 +4,7 @@
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: norwegian.pike,v 1.9 2000/11/27 14:09:14 per Exp $";
+constant cvs_version = "$Id: norwegian.pike,v 1.10 2000/12/15 15:24:34 jhs Exp $";
 constant _id = ({ "no", "norwegian", "norsk" });
 constant _aliases = ({ "no", "nor", "norwegian", "norsk" });
 
@@ -60,11 +60,13 @@ string date(int timestamp, mapping m)
 
 string number(int num)
 {
+  if(!num)
+    return "null";
   if(num<0)
     return "minus "+number(-num);
   switch(num)
   {
-   case 0:  return "null";
+   case 0:  return "";
    case 1:  return "en";
    case 2:  return "to";
    case 3:  return "tre";
