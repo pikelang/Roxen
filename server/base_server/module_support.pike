@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module_support.pike,v 1.108 2002/02/26 15:28:42 wellhard Exp $
+// $Id: module_support.pike,v 1.109 2002/02/26 16:50:29 wellhard Exp $
 
 #define IN_ROXEN
 #include <roxen.h>
@@ -209,7 +209,8 @@ class FakeModuleInfo( string sname )
 class ModuleInfo( string sname, string filename )
 {
   int last_checked;
-  int type, multiple_copies, locked;
+  int type, multiple_copies;
+  int|string locked;
 
   mapping|string name;
   mapping|string description;
@@ -475,7 +476,7 @@ class ModuleInfo( string sname, string filename )
 
   int unlocked(object /*License.Key*/ key)
   {
-    return key->is_module_unlocked(sname);
+    return key->is_module_unlocked(stringp(locked)?locked:sname);
   }
 }
 
