@@ -10,7 +10,15 @@ mapping(string:Filesystem.Tar) tarcache = ([]);
 Filesystem.Tar open_tar( string path )
 {
   if( tarcache[ path ] ) return tarcache[ path ];
-  return (tarcache[ path ] = Filesystem.Tar( path ));
+  tarcache[ path ] = Filesystem.Tar( path );
+  while( sizeof( tarcache ) > 10 )
+  {
+    array q = indices( tarcache );
+    string w = q[ random( sizeof(q) ) ];
+    if( w != path )
+      m_delete( tarcache, w );
+  }
+  return open_tar( path );
 }
 
 class myFont
@@ -45,6 +53,12 @@ class myFont
     ::create( _p, _s );
     mytar = open_tar( _p );
   }
+}
+array(mapping) font_information( string fnt )
+{
+  array res = ::font_information( fnt );
+  if( sizeof( res ) ) res[0]->format = "imagetar";
+  return res;
 }
 
 void update_font_list()
