@@ -1,5 +1,5 @@
 /*
- * $Id: debuginformation.pike,v 1.3 1997/08/26 18:34:23 grubba Exp $
+ * $Id: debuginformation.pike,v 1.4 1997/10/09 13:26:49 grubba Exp $
  */
 
 inherit "wizard";
@@ -131,9 +131,9 @@ mixed page_0(object id, object mc)
   first += "<p><br><p> Only functions that have been called more than "
     "ten times are listed.<p>";
   res += "<table border=0 cellspacing=0 cellpadding=2 width=50%>\n"
-    "<tr bgcolor=#ddddff><th align=left colspan=2>Program</th>"
+    "<tr bgcolor=lightblue><th align=left colspan=2>Program</th>"
     "<th>&nbsp;</th><th align=right>Times cloned</th></tr>\n"
-    "<tr bgcolor=#ddddff><th>&nbsp;</th><th align=left>Function</th>"
+    "<tr bgcolor=lightblue><th>&nbsp;</th><th align=left>Function</th>"
     "<th>&nbsp;</th><th align=right>Times called</th></tr>\n";
   mapping programs = master()->programs;
   foreach(sort(indices(programs)), string prog) {
@@ -152,7 +152,7 @@ mixed page_0(object id, object mc)
       if(arr[1][fun] > 10)
       {
 	if ((line % 6)<3) {
-	  tf += sprintf("<tr bgcolor=#eeeeee><td>&nbsp;</td><td>%s()</td>"
+	  tf += sprintf("<tr bgcolor=#f0f0ff><td>&nbsp;</td><td>%s()</td>"
 			 "<td>&nbsp;</td><td align=right>%d</td></tr>\n",
 			 html_encode_string(fun), arr[1][fun]); 
 	} else {
@@ -164,7 +164,7 @@ mixed page_0(object id, object mc)
       }
     }
     if(line && strlen(tf))
-      res+=sprintf("<tr bgcolor=#eeeeee><td colspan=2><b>%s</b></td>"
+      res+=sprintf("<tr bgcolor=#f0f0ff><td colspan=2><b>%s</b></td>"
 		   "<td>&nbsp</td><td align=right><b>%d</b></td></tr>\n",
 		   html_encode_string(prog), arr[0]) + tf;
   }
