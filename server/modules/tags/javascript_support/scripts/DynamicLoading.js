@@ -73,6 +73,7 @@ FileLoader.prototype.loadSafariDocument = function(url)
 {
   this.loaded = false;
   this.document = null;
+  this.doclen = -1;
   var ifr = document.getElementById(this.frameName);
   if (ifr.contentDocument.body)
     ifr.contentDocument.body = 0;
@@ -94,9 +95,19 @@ function checkSafariLoad()
     if (fl.loaded == false) {
       var ifr = document.getElementById(fl.frameName);
       if (ifr.contentDocument.body != null) {
-	fl.loaded = true;
-	fl.document = ifr.contentDocument;
-	fl.onload(fl);
+	//  Since we don't know for sure when the new document has finished
+	//  loading (nope, adding an onLoad handler dynamically doesn't work)
+	//  we'll poll until the document length stabilizes.
+	var newlen = ifr.contentDocument.body.innerHTML.length;
+	if (newlen != fl.doclen) {
+	  //  Not yet loaded
+	  fl.doclen = newlen;
+	  allLoaded = false;
+	} else {
+	  fl.loaded = true;
+	  fl.document = ifr.contentDocument;
+	  fl.onload(fl);
+	}
       } else
 	allLoaded = false;
     }
