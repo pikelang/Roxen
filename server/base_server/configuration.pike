@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.175 1999/05/22 23:53:36 mast Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.176 1999/05/24 01:01:20 js Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -2752,90 +2752,6 @@ int log_is_not_enabled()
   return !query("Log");
 }
 
-
-
-// Get the current domain. This is not as easy as one could think.
-
-#ifdef __NT__
-  string get_tcpip_param(string val)
-    {
-      foreach(({
-	"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters",
-	  "SYSTEM\\CurrentControlSet\\Services\\VxD\\MSTCP"
-	  }),string key)
-	{
-	  catch {
-	    return RegGetValue(HKEY_LOCAL_MACHINE, key, val);
-	  };
-	}
-    }
-#endif
-
-#if 0
-// This function is in roxen.pike now.
-private string get_domain(int|void l)
-{
-  array f;
-  string t, s;
-
-//  ConfigurationURL is set by the 'install' script.
-  if (!l) {
-    f = (roxen->QUERY(ConfigurationURL)/"://");
-    if (sizeof(f) > 1) {
-      t = (replace(f[1], ({ ":", "/" }), ({ "\0", "\0" }))/"\0")[0];
-      f = t/".";
-      if (sizeof(f) > 1) {
-	s = f[1..]*".";
-      }
-    }
-  }
-#if efun(gethostbyname)
-#if efun(gethostname)
-  if(!s) {
-    f = gethostbyname(gethostname()); // First try..
-    if(f)
-      foreach(f, f) {
-	if (arrayp(f)) {
-	  foreach(f, t) {
-	    f = t/".";
-	    if ((sizeof(f) > 1) &&
-		(replace(t, ({ "0", "1", "2", "3", "4", "5",
-				 "6", "7", "8", "9", "." }),
-			 ({ "","","","","","","","","","","" })) != "")) {
-	      t = f[1..]*".";
-	      if(!s || strlen(s) < strlen(t))
-		s=t;
-	    }
-	  }
-	}
-      }
-  }
-#endif
-#endif
-#if __NT__
-  s=get_tcpip_param("Domain")||"";
-#else
-  if(!s) {
-    t = Stdio.read_bytes("/etc/resolv.conf");
-    if(t) {
-      if(!sscanf(t, "domain %s\n", s))
-	if(!sscanf(t, "search %s%*[ \t\n]", s))
-	  s="nowhere";
-    } else {
-      s="nowhere";
-    }
-  }
-  if(s && strlen(s))
-  {
-    if(s[-1] == '.') s=s[..strlen(s)-2];
-    if(s[0] == '.') s=s[1..];
-  } else {
-    s="unknown"; 
-  }
-#endif
-  return s;
-}
-#endif
 
 int disable_module( string modname )
 {

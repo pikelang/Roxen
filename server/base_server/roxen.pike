@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.331 1999/05/23 05:22:22 peter Exp $
+ * $Id: roxen.pike,v 1.332 1999/05/24 01:01:20 js Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -8,7 +8,7 @@
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version = "$Id: roxen.pike,v 1.331 1999/05/23 05:22:22 peter Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.332 1999/05/24 01:01:20 js Exp $";
 
 object backend_thread;
 object argcache;
@@ -2756,6 +2756,24 @@ array available_fonts(int cache)
   return font_cache = res;
 }
 
+
+// Get the current domain. This is not as easy as one could think.
+
+#ifdef __NT__
+string get_tcpip_param(string val)
+{
+  foreach(({
+    "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters",
+    "SYSTEM\\CurrentControlSet\\Services\\VxD\\MSTCP"
+  }),string key)
+  {
+    catch {
+      return RegGetValue(HKEY_LOCAL_MACHINE, key, val);
+    };
+  }
+}
+#endif
+
 string get_domain(int|void l)
 {
   array f;
@@ -2795,7 +2813,7 @@ string get_domain(int|void l)
   }
 #endif
 #endif
-#if __NT__
+#ifdef __NT__
   s=get_tcpip_param("Domain")||"";
 #else
   if(!s) {
