@@ -1,5 +1,5 @@
 /* Roxen WWW-server version 1.0.
-string cvs_version = "$Id: http.pike,v 1.28 1999/10/08 16:12:12 nilsson Exp $";
+string cvs_version = "$Id: http.pike,v 1.29 1999/10/11 14:09:01 per Exp $";
  * http.pike: HTTP convenience functions.
  * inherited by roxenlib, and thus by all files inheriting roxenlib.
  */
@@ -240,12 +240,13 @@ mapping http_redirect( string url, object|void id )
   {
     if(id)
     {
+      if( id->misc->site_prefix_path )
+        url = replace( id->misc->site_prefix_path + url, "//", "/" );
       url = add_pre_state(url, id->prestate);
-      if(id->misc->host) {
+      if(id->misc->host) 
+      {
 	array h;
-
 	// werror("REDIR: id->port_obj:%O\n", id->port_obj);
-
 	string prot = id->port_obj->name + "://";
 	string p = ":" + id->port_obj->default_port;
 
