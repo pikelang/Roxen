@@ -1,5 +1,5 @@
 /* Roxen FTP protocol. Written by Pontus Hagland
-string cvs_version = "$Id: ftp.pike,v 1.4.2.8 1997/03/13 00:19:40 grubba Exp $";
+string cvs_version = "$Id: ftp.pike,v 1.4.2.9 1997/03/13 22:04:05 grubba Exp $";
    (law@lysator.liu.se) and David Hedbor (neotron@infovav.se).
 
    Some of the features: 
@@ -25,7 +25,7 @@ import Array;
 
 #define perror	roxen_perror
 
-string dataport_addr, cwd ="/", remote_addr;
+string dataport_addr, cwd ="/";
 int dataport_port;
 int GRUK = random(_time(1));
 #undef QUERY
@@ -194,8 +194,8 @@ string file_ls(array (int) st, string file)
   if(st[1] < 0)
     st[1] =  512;
   string ct = ctime(st[-4]);
-  return sprintf("%s   1 %-10s %-6d%12d %s %s %s\r\n", perm, 
-		 (roxen->user_from_uid(st[-2])?roxen->user_from_uid(st[-2])[0]:"")
+  return sprintf("%s   1 %-10s %-6d%12d %s %s %s\r\n", perm,
+		 (roxen->user_from_uid(st[-2])?roxen->user_from_uid(st[-2])[0]:""+st[-2])
 		 ||(string)st[-2], st[-1],
 		 st[1], ct[4..9], ct[11..15], file);
 }
@@ -208,42 +208,45 @@ void done_callback(object fd)
     destruct(fd);
   }
   reply("226 Transfer complete.\n");
-  my_fd->set_nonblocking(got_data, lambda(){}, end);
+  my_fd->set_read_callback(got_data);
+  my_fd->set_write_callback(lambda(){});
+  my_fd->set_close_callback(end);
   mark_fd(my_fd->query_fd(), GRUK+" cmd channel not sending data");
 }
 
-int connect_and_send(mapping file)
+void connected_to_send(object fd,mapping file)
 {
-  object fd, pipe;
-  my_fd->set_blocking();
+  object pipe=Pipe.pipe();
+  if(!file->len)
+    file->len = file->data?(stringp(file->data)?strlen(file->data):0):0;
 
-  fd = files.file();
-  if(!fd->open_socket())
+  if(fd)
   {
-    perror("ftp.pike: Open of socket failed\n");
-    destruct(fd);
-    return 0;
+    reply(sprintf("150 Opening BINARY mode data connection for %s "
+		  "(%d bytes).\n", not_query, file->len));
   }
-  if(!fd->connect(dataport_addr, dataport_port))
+  else
   {
-    perror("ftp.pike: Connect failed\n");
-    destruct(fd);
-    return 0;
+    reply("425 Can't build data connect: Connection refused.\n"); 
+    return;
   }
-  
-  mark_fd(fd->query_fd(), GRUK+" file");
-  mark_fd(my_fd->query_fd(), GRUK+" cmd channel sending data");
-  pipe=Pipe.pipe();
+
   if(stringp(file->data))  pipe->write(file->data);
   if(file->file)  pipe->input(file->file);
 
   pipe->set_done_callback(done_callback, fd);
   pipe->output(fd);
-  return 1;
+}
+
+inherit "socket";
+void connect_and_send(mapping file)
+{
+//  my_fd->set_blocking();
+  async_connect(dataport_addr,dataport_port, connected_to_send, file);
 }
 
 varargs int|string list_file(string arg, int srt, int short, int column, 
-			     int F, int directory)
+			     int F, int directory, int all_mode)
 {
   string filename;
   array (int) st;
@@ -257,16 +260,6 @@ varargs int|string list_file(string arg, int srt, int short, int column,
   else
     filename = combine_path(cwd, arg);
 
-#if 0
-  while(sizeof(filename) && filename[-1] == '.')
-    filename=filename[..strlen(filename)-2];
-  /* #else */
-  filename = ((filename/"/")-({ "." }))*"/";
-  if (filename == "") {
-    filename="/";
-  }
-#endif /* 0 */
-  
   this_object()->not_query = filename;
   st = roxen->stat_file(filename, this_object());
   if(!st)
@@ -305,6 +298,10 @@ varargs int|string list_file(string arg, int srt, int short, int column,
       foreach(dir, s)
       {
 	st = 0;
+	if (((!all_mode) && (s[0]=='.')) ||
+	    ((all_mode == 1) && (s - "." == ""))) {
+	  continue;
+	}
 	if(F && (st = roxen->stat_file(filename+s, this_object())) 
 	   && st[1] < 0)
 	  s += "/";
@@ -567,7 +564,7 @@ void got_data(mixed fooid, string s)
       break;
       
      case "nlst": 
-      int short=0, tsort=0, F=0, C=0, d=0;
+      int short=0, tsort=0, F=0, C=0, d=0, a=0;
       short = 1;
 
      case "list": 
@@ -614,6 +611,12 @@ void got_data(mixed fooid, string s)
 
 	if(search(args, "d") != -1)
 	  d = 1;
+
+	if(search(args, "A") != -1)
+	  a = 1;
+
+	if(search(args, "a") != -1)
+	  a = 2;
       }
       not_query = arg;
 
@@ -621,15 +624,12 @@ void got_data(mixed fooid, string s)
 	if(f = funp( this_object())) break;
       if(!f)
       {
-	f = ([ "data":list_file(arg, tsort, short, C, F, d) ]);
+	f = ([ "data":list_file(arg, tsort, short, C, F, d, a) ]);
 	if(f->data == 0)
 	  reply("550 "+arg+": No such file or directory.\n");
 	else if(f->data == -1)
 	  reply("550 "+arg+": Permission denied.\n");
-	else if(connect_and_send(f))
-	  reply("150 Opening BINARY mode data connection.\n");
-	else
-	  reply("425 Can't build data connect: Connection refused.\n"); 
+	connect_and_send(f);
       } else {
 	reply(reply_enumerate("Permission denied\n"+(f->data||""), "550"));
       }
@@ -644,12 +644,8 @@ void got_data(mixed fooid, string s)
       }
       if(!open_file(arg))
 	break;
-      if(connect_and_send(file)) {
-	reply(sprintf("150 Opening BINARY mode data connection for %s "
-		      "(%d bytes).\n", arg, file->len));
-	roxen->log(file, this_object());
-      } else
-	reply("425 Can't build data connect: Connection refused.\n"); 
+      connect_and_send(file);
+      roxen->log(file, this_object());
       break;
 
      case "stat":
@@ -665,7 +661,7 @@ void got_data(mixed fooid, string s)
       foreach(conf->first_modules(), function funp)
 	if(f = funp( this_object())) break;
       if(f) dirlist = -1;
-      else dirlist = list_file(arg, 0, 0);
+      else dirlist = list_file(arg, 0, 0, 0);
       
       if(!dirlist)
       {
@@ -736,7 +732,11 @@ void assign(object f, object c)
   conf = c;
   my_fd = f;
   my_fd->set_id(0);
-  my_fd->set_nonblocking(got_data, lambda(){}, end);
+
+  my_fd->set_read_callback(got_data);
+  my_fd->set_write_callback(lambda(){});
+  my_fd->set_close_callback(end);
+
   not_query = "/welcome.msg";
   call_out(end, 3600);
   
