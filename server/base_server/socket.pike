@@ -1,5 +1,5 @@
 // This code has to work both in 'roxen.pike' and all modules
-string cvs_version = "$Id: socket.pike,v 1.5 1997/04/05 01:25:42 per Exp $";
+string cvs_version = "$Id: socket.pike,v 1.6 1997/05/25 10:57:37 grubba Exp $";
 
 #if !efun(roxen)
 #define roxen roxenp()
@@ -13,6 +13,12 @@ string cvs_version = "$Id: socket.pike,v 1.5 1997/04/05 01:25:42 per Exp $";
 
 private void connected(array args)
 {
+  if (!args) {
+#ifdef SOCKET_DEBUG
+    perror("SOCKETS: async_connect: No arguments to connected\n");
+#endif /* SOCKET_DEBUG */
+    return;
+  }
 #ifdef SOCKET_DEBUG
   perror("SOCKETS: async_connect ok.\n");
 #endif
@@ -134,7 +140,7 @@ varargs void async_cache_connect(string host, int port, string cl,
 {
   object cache;
 #ifdef SOCKET_DEBUG
-  perror("SOCKETS: async_connect requested to "+host+":"+port+"\n");
+  perror("SOCKETS: async_cache_connect requested to "+host+":"+port+"\n");
 #endif
   cache = roxen->cache_file(cl, entry);
   if(cache)
