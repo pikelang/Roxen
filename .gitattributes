@@ -27,7 +27,6 @@
 *.png binary
 *.raw binary
 *.rc eol=crlf
-/server/tools/nt_service/roxen.rc !eol
 *.rgs eol=crlf
 *.tar binary
 *.ttf binary
@@ -342,10 +341,6 @@ worldmap binary
 /server/rxml_packages/roxenlogo foreign_ident
 /server/start foreign_ident
 /server/tools/addfp98.pike foreign_ident
-/server/tools/nt_service/Makefile foreign_ident
-/server/tools/nt_service/roxen.c foreign_ident
-/server/tools/nt_service/roxen_service.c foreign_ident
-/server/tools/nt_service/roxen_service.h foreign_ident
 /server/tools/ntroxen/startdll/StdAfx.cpp foreign_ident
 /server/tools/ntroxen/startdll/StdAfx.h foreign_ident
 /server/tools/ntroxen/startdll/cmdline.cpp foreign_ident
