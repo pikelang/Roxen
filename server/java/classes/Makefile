@@ -4,7 +4,6 @@ CLASSPATH = servlet.jar
 JAVAFLAGS = -deprecation -encoding iso-8859-1
 
 JAVAC = javac
-# /i/jdk/default/bin/javac
 
 SRCDIR = ../src
 
