@@ -30,6 +30,7 @@ class Scope_usr
 {
   inherit RXML.Scope;
 
+#define ALIAS( X ) `[](X,c,scope)
   mixed `[]  (string var, void|RXML.Context c, void|string scope)
   {
     object id = c->id;
@@ -42,25 +43,67 @@ class Scope_usr
 
     switch( var )
     {
-     case "left-image":         return "/internal-roxen-unit";
-     case "selected-indicator": return "/internal-roxen-next";
-     case "logo":               return "/internal-roxen-roxen";
-     case "err-1":              return "/internal-roxen-err_1";
-     case "err-2":              return "/internal-roxen-err_2";
-     case "err-3":              return "/internal-roxen-err_3";
-     case "tab-frame-image":    return "/internal-roxen-tabframe";
-     case "gbutton-frame-image":return "/internal-roxen-gbutton";
-     case "backgroundimage-top":
-     case "backgroundimage-leftside":
-     case "backgroundimage-content":
-     case "backgroundimage":
-       return ""; /* Not by default, no.. */
+      /* standalone, nothing is based on these. */
+     case "left-image":           return "/internal-roxen-unit";
+     case "selected-indicator":   return "/internal-roxen-next";
+     case "logo":                 return "/internal-roxen-roxen";
+     case "err-1":                return "/internal-roxen-err_1";
+     case "err-2":                return "/internal-roxen-err_2";
+     case "err-3":                return "/internal-roxen-err_3";
+     case "background-top":       return "";
+     case "background-toptabs":   return "";
+     case "background-leftside":  return "";
+     case "background-content":   return "";
+     case "background":           return "";
+     case "obox-titlefont":       return "helvetica,arial";
+
+
+      /* 1-st level */
+     case "tab-frame-image":      return "/internal-roxen-tabframe";
+     case "gbutton-frame-image":  return "/internal-roxen-gbutton";
+
+    /* also: font, bgcolor, fgcolor */
+
+  /* 2nd level */
+     case "content-titlebg":      return ALIAS( "bgcolor" );
+     case "content-titlefg":      return ALIAS( "fgcolor" );
+     case "gbutton-font":         return ALIAS( "font" );
+     case "left-buttonframe":     return ALIAS( "gbutton-frame-image" );
+     case "obox-bodybg":          return ALIAS( "bgcolor" );
+     case "obox-bodyfg":          return ALIAS( "fgcolor" );
+     case "obox-titlefg":         return ALIAS( "bgcolor" );
+     case "subtabs-bgcolor":      return ALIAS( "bgcolor" );
+     case "subtabs-dimtextcolor": return ALIAS( "bgcolor" );
+     case "subtabs-frame":        return ALIAS( "tab-frame-image" );
+     case "subtabs-seltextcolor": return ALIAS( "fgcolor" );
+     case "tabs-font":            return ALIAS( "font" );
+     case "toptabs-frame":        return ALIAS( "tab-frame-image" );
+     case "toptabs-dimtextcolor": return ALIAS( "bgcolor" );
+     case "toptabs-selcolor":     return ALIAS( "bgcolor" );
+     case "toptabs-seltextcolor": return ALIAS( "fgcolor" );
+
+    /* also: fade1 - fade4 */
+
+    /* 3rd level */
+
+     case "content-bg":           return ALIAS( "fade1" );
+     case "left-buttonbg":        return ALIAS( "fade1" );
+     case "left-selbuttonbg":     return ALIAS( "fade3" );
+     case "obox-titlebg":         return ALIAS( "fade2" );
+     case "subtabs-dimcolor":     return ALIAS( "fade2" );
+     case "subtabs-font":         return ALIAS( "tabs-font" );
+     case "subtabs-selcolor":     return ALIAS( "fade1" );
+     case "top-bgcolor":          return ALIAS( "fade3" );
+     case "top-fgcolor":          return ALIAS( "fade4" );
+     case "toptabs-bgcolor":      return ALIAS( "fade3" );
+     case "toptabs-dimcolor":     return ALIAS( "fade2" );
+     case "toptabs-font":         return ALIAS( "tabs-font" );
     }
 
 
     if( var != "bgcolor" )
     {
-      c1 = Image.Color( `[]( "bgcolor",c,scope ) );
+      c1 = Image.Color( ALIAS("bgcolor") );
       if(!c1)
         c1 = Image.Color.black;
     }
@@ -114,6 +157,7 @@ class Scope_usr
 
   string _sprintf() { return "RXML.Scope(usr)"; }
 }
+#undef ALIAS
 
 RXML.Scope usr_scope=Scope_usr();
 
@@ -140,23 +184,23 @@ string internal_c_topmenu(string t, mapping m, string d, mapping c, RequestID id
 
   items = items->them;
 
-  c->top=( "<tablist bgcolor='"+config_setting2("fade3")+
-           "' font='"+config_setting2( "font" ) +"'>" );
+  c->top=( "<tablist bgcolor='"+config_setting2("toptabs-bgcolor")+
+           "' font='"+config_setting2( "toptabs-font" ) +"'>" );
   foreach(items, mapping i)
   {
     mapping targs = ([]);
     if(i->selected)
     {
       targs->selected = "selected";
-      targs->bgcolor =  config_setting2( "fade3" );
-      targs->selcolor = config_setting2( "bgcolor" );
-      targs->textcolor = config_setting2( "fgcolor" );
+      targs->bgcolor =  config_setting2( "toptabs-bgcolor" );
+      targs->selcolor = config_setting2( "toptabs-selcolor" );
+      targs->textcolor = config_setting2( "toptabs-seltextcolor" );
     }
     else
     {
-      targs->bgcolor =  config_setting2( "fade3" );
-      targs->dimcolor = config_setting2( "fade2" );
-      targs->textcolor = config_setting2( "bgcolor" );
+      targs->bgcolor =  config_setting2( "toptabs-bgcolor" );
+      targs->dimcolor = config_setting2( "toptabs-dimcolor" );
+      targs->textcolor = config_setting2( "toptabs-dimtextcolor" );
     }
     if( i->first ) targs->first=i->first;
     if( i->last )  targs->last=i->last;
@@ -264,17 +308,19 @@ string container_roxen_config(string t, mapping m, string data, RequestID id)
 
 //   c->title =
   string page =  #"
-  <table width=100% cellpadding=0 cellspacing=0 border=0 "
-         "bgcolor='"+config_setting2("fade3")+#"'>
-    <tr bgcolor='"+config_setting2("fade3")+#"'>
-       <td rowspan=2><a href=http://www.roxen.com/><img border=0 src=&usr.logo;></a></td>
+  <table width=100% cellpadding=0 cellspacing=0 border=0
+         bgcolor=&usr.top-bgcolor;>
+    <tr bgcolor=&usr.top-bgcolor;>
+       <td rowspan=2><a href=http://www.roxen.com/>
+         <img border=0 src=&usr.logo;></a></td>
        <td align=center>
-         <font size=+1 color='"+config_setting2("fade4")+#"'><cf-locale get=administration_interface></font>
+         <font size=+1 color=&usr.top-fgcolor;><cf-locale get=administration_interface></font>
        </td>
-       <td align=right valign=top>"+c->middle+#"</td>
+       <td bgcolor=&usr.top-bgcolor; align=center valign=top>"+c->middle+#"</td>
     </tr>
     <tr>
-      <td colspan=2 align=left width=100% valign=bottom>"+c->top+#"</td>
+      <td colspan=2 bgcolor=&usr.toptabs-bgcolor; align=left
+          width=100% valign=bottom>"+c->top+#"</td>
     </tr>
   </table>
 ";
@@ -702,7 +748,7 @@ mapping get_variable_map( string s, object mod, object id )
   return ([
     "sname":s,
     "rname": get_var_doc( s, mod, 0, id ),
-    "doc":  (id->misc->config_settings->query("docs")?
+    "doc":  (config_setting2( "docs" )?
              get_var_doc( s, mod, 1, id ):""),
     "name": get_var_doc( s, mod, 2, id ),
     "value":get_var_value( s, mod, id ),
@@ -718,9 +764,9 @@ int var_configurable( array var, object id )
   if( mixed cf = var[ VAR_CONFIGURABLE ] )
   {
     if(functionp(cf) &&
-       cf( config_setting("more_mode"),
-           config_setting("expert_mode"),
-           config_setting("devel_mode"),
+       cf( config_setting2("more_mode"),
+           config_setting2("expert_mode"),
+           config_setting2("devel_mode"),
            (int)id->variables->initial))
     {
       return 0;
@@ -728,9 +774,9 @@ int var_configurable( array var, object id )
     else if( intp( cf ) )
     {
       if((int)id->variables->initial && !(cf&VAR_INITIAL))      return 0;
-      if((cf & VAR_EXPERT) && !config_setting("expert_mode"))   return 0;
-      if((cf & VAR_MORE) && !config_setting("more_mode"))       return 0;
-      if((cf & VAR_DEVELOPER) && !config_setting("devel_mode")) return 0;
+      if((cf & VAR_EXPERT) && !config_setting2("expert_mode"))   return 0;
+      if((cf & VAR_MORE) && !config_setting2("more_mode"))       return 0;
+      if((cf & VAR_DEVELOPER) && !config_setting2("devel_mode")) return 0;
     }
     return 1;
   }
@@ -1032,6 +1078,8 @@ string tag_theme_set( string t, mapping m, object id )
     id->misc->cf_theme = ([]);
   if( m->themefile )
     m->to = "/standard/themes/"+config_setting2( "theme" )+"/"+m->to;
+  if( m->integer )
+    m->to = (int)m->to;
   id->misc->cf_theme[ m->what ] = m->to;
   return "";
 }
@@ -1080,7 +1128,5 @@ string container_cf_perm( string t, mapping m, string c, RequestID id )
 
 string container_cf_userwants( string t, mapping m, string c, RequestID id )
 {
-  if( !id->misc->config_settings )
-    return "";
-  return id->misc->config_settings->query( m->option ) ? c : "";
+  return config_setting2( m->option ) ? c : "";
 }

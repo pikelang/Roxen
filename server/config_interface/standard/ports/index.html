@@ -9,11 +9,11 @@
   <table>
    <input type=hidden name=port value='&form.port;'>
    <configif-output source=ports>
-    <tr><td bgcolor="&usr.bgcolor;" colspan=2>
+    <tr><td bgcolor="&usr.content-titlebg;" colspan=2>
       <table border=0 cellpadding=0 cellspacing=0>
       <tr width=100%>
        <td width=100%>
-    <if variable="port is #port#"><img src=&usr.selected-indicator;></if><else>&nbsp;</else>&nbsp;<a href='?port=#port:quote=dtag#'><b><font size=+2>#name#</font></a>
+    <font color=&usr.content-titlefg;><if variable="port is #port#"><img src=&usr.selected-indicator;></if><else>&nbsp;</else>&nbsp;<a href='?port=#port:quote=dtag#'><b><font size=+2>#name#</font></a></font>
        </td>
         <td align=right>
     <if variable="port is #port#"><cf-save></if>

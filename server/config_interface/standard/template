@@ -34,13 +34,15 @@
   <table cellpadding=1 cellspacing=0 border=0 width="202" align=center bgcolor="#000000">
   <tr><td>
   <table cellpadding=2 cellspacing=0 border=0 width="200" align=center>
-  <tr bgcolor="&usr.fade2;">
+  <tr bgcolor="&usr.obox-titlebg;">
     <td valign=top>
-      <font color="&usr.bgcolor;" face="helvetica,arial" size=+1><b>&title;</b></font>
+      <font color="&usr.obox-titlefg;"
+            face="&usr.obox-titlefont;"
+            size=+1><b>&title;</b></font>
     </td>
   </tr>
 
-  <tr><td bgcolor="&usr.bgcolor;"><font color="&usr.fgcolor;" size=2>
+  <tr><td bgcolor="&usr.obox-bodybg;"><font color="&usr.obox-bodyfg;" size=2>
     <contents>
   </font></td></tr>
 
@@ -56,44 +58,46 @@
 <tr>
 <td valign=bottom
 ><tablist preparse
-         font="&usr.font;"
-         dimcolor="&usr.fade2;"
-         textcolor="&usr.bgcolor;"
-         seltextcolor="&usr.fgcolor;"
-         selcolor="&usr.fade1;"
-         fgcolor="&usr.fgcolor;">
+         frame-image=&usr.subtabs-frame;
+         bgcolor=&usr.subtabs-bgcolor;
+         font="&usr.subtabs-font;"
+         textcolor="&usr.subtabs-dimtextcolor;"
+         dimcolor="&usr.subtabs-dimcolor;"
+         seltextcolor="&usr.subtabs-seltextcolor;"
+         selcolor="&usr.subtabs-selcolor;">
    <eval>&form.__tabs:none;</eval>
 </tablist
 ></td></tr>
 <tr>
-<td bgcolor="&usr.fade1;">&form.__contents:none;</td>
+<td bgcolor="&usr.content-bg;">&form.__contents:none;</td>
 </tr></table>
 </define>
 
 <define tag=topmenu default_base="" default_selected=home>
   <top-menu>
-    <item first title="<cf-locale get=home>" href="&base;"
-          <if match="&selected; is home"> selected</if> />
-    <item perm="View Settings"
+    <item tab-frame-image=&usr.toptab-frame;
+          title="<cf-locale get=configiftab>" href="&base;"
+      <if match="&selected; is home"> selected</if>           />
+    <item tab-frame-image=&usr.toptab-frame; perm="View Settings"
           title="<cf-locale get=sites>" href="&base;sites/"
       <if match="&selected; is sites"> selected</if> />
-    <item perm="View Settings"
+    <item tab-frame-image=&usr.toptab-frame; perm="View Settings"
           title="<cf-locale get=globals>" href="&base;global_settings/"
           <if match="&selected; is globals"> selected</if> />
-    <item perm="View Settings"
+    <item tab-frame-image=&usr.toptab-frame; perm="View Settings"
           title="<cf-locale get=ports>" href="&base;ports/"
           <if match="&selected; is ports"> selected</if> />
-    <item perm="View Settings"
+    <item tab-frame-image=&usr.toptab-frame; perm="View Settings"
           title="<cf-locale get=eventlog>" href="&base;event_log/"
           <if match="&selected; is event_log"> selected</if> />
-    <item last=20 perm="Tasks" title="<cf-locale get=actions>" href="&base;actions/"
+    <item tab-frame-image=&usr.toptab-frame; perm="Tasks" title="<cf-locale get=actions>" href="&base;actions/"
           <if match="&selected; is actions"> selected</if>  />
   </top-menu>
 </define>
 
 <define container=submit-gbutton default_align=baseline>
 <input align=&align; type=image name='<contents>' value='<contents>'
-       src='<gbutton-url font='&usr.font;' preparse><contents></gbutton-url>' border=0>
+       src='<gbutton-url font='&usr.gbutton-font;' preparse><contents></gbutton-url>' border=0>
 </define>
 
 <define tag=cf-ok><submit-gbutton> <cf-locale get=ok> </submit-gbutton></define>
@@ -129,7 +133,7 @@
           <table>
          <cf-userwants option=devel_mode>
           <tr><td align=right>
-            <gtext preparse bgcolor="&usr.fade3;" font='&usr.font;' fgcolor='&usr.fgcolor;' scale=0.45 hspace=3><cf-locale get=language>:</gtext>
+            <gtext preparse bgcolor="&usr.top-bgcolor;" font='&usr.font;' fgcolor='&usr.top-fgcolor;' scale=0.45 hspace=3><cf-locale get=language>:</gtext>
           </td><td><font color=black>
           <configif-output quote=¤ source=locales>
             <a href="¤path¤"><img
@@ -139,11 +143,12 @@
           </configif-output></font>
           </tr>
          </cf-userwants>
-         <tr><td bgcolor=&usr.fade3; align=right><font color=&usr.fgcolor;>
-         <gbutton font="&usr.font;" preparse href='/standard/change_user.pike?uid=&form.config_user_uid;'
-                  align=right textcolor=&usr.fgcolor; bgcolor='&usr.fade3;' width=70> <cf-locale get=user>: </gbutton>
+         <tr><td bgcolor=&usr.top-bgcolor; align=right>
+             <font color=&usr.top-fgcolor;>
+         <gbutton preparse href='/standard/change_user.pike?uid=&form.config_user_uid;'
+                  align=right textcolor=&usr.top-fgcolor; bgcolor='&usr.top-bgcolor;' width=70> <cf-locale get=user>: </gbutton>
           </td><td>
-            <font color=&usr.fade4;>
+            <font color=&usr.top-fgcolor;>
                &form.config_user_name; (&form.config_user_uid;)
             </font>
            </td></tr>

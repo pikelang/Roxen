@@ -25,11 +25,11 @@ string selected_item( string q, roxen.Configuration c, RequestID id, string modu
 
   sscanf( id->misc->path_info, "/"+q+"/%[^/]", subsel );
 
-  string pre = ("<gbutton href='/"+id->misc->cf_locale+"/sites' "
-                "width=150 bgcolor=&usr.fade1; icon_src=&usr.selected-indicator; "
+  string pre = ("<gbutton frame-image=&usr.left-buttonframe; href='/"+id->misc->cf_locale+"/sites' "
+                "width=150 bgcolor=&usr.left-buttonbg; icon_src=&usr.selected-indicator; "
                 "align_icon=left preparse><cf-locale get=servers></gbutton><br>"
-                "<gbutton width=150 "+(subsel == ""?"bgcolor=&usr.fade3;":
-			      "bgcolor=&usr.fade1; href='"+id->not_query+"/"+replace(c->name, " ", "%20" )+"/' ")+
+                "<gbutton frame-image=&usr.left-buttonframe; width=150 "+(subsel == ""?"bgcolor=&usr.left-selbuttonbg;":
+			      "bgcolor=&usr.left-buttonbg; href='"+id->not_query+"/"+replace(c->name, " ", "%20" )+"/' ")+
                 " icon_src=&usr.selected-indicator; align_icon=left>"+
                 c->query_name()+"</gbutton><br><br>");
 
@@ -41,8 +41,8 @@ string selected_item( string q, roxen.Configuration c, RequestID id, string modu
   {
     if( subsel == q )
     {
-      pre += ("<gbutton icon_src=&usr.selected-indicator; align_icon=left "
-              "width=150 preparse bgcolor=&usr.fade3; href='"+DOTDOT(3)+q+"/'>"
+      pre += ("<gbutton frame-image=&usr.left-buttonframe; icon_src=&usr.selected-indicator; align_icon=left "
+              "width=150 preparse bgcolor=&usr.left-selbuttonbg; href='"+DOTDOT(3)+q+"/'>"
               "<cf-locale get="+q+"></gbutton><br>");
 
       string url = id->not_query + id->misc->path_info;
@@ -57,11 +57,11 @@ string selected_item( string q, roxen.Configuration c, RequestID id, string modu
        case "modules":
 	 string tmp="";
 	 sscanf(id->not_query, "%ssite.html", tmp);
-	 pre+=sprintf("<br><gbutton width=150 bgcolor=&usr.fade1; preparse href='"+tmp+
+	 pre+=sprintf("<br><gbutton frame-image=&usr.left-buttonframe; width=150 bgcolor=&usr.left-buttonbg; preparse href='"+tmp+
 		      "add_module.pike?config=%s'> "
 		      "<cf-locale get=add_module> </gbutton>",
 		      http_encode_string( c->name ) )+
-	   sprintf("<br><gbutton width=150 bgcolor=&usr.fade1; preparse href='"+tmp+
+	   sprintf("<br><gbutton frame-image=&usr.left-buttonframe; width=150 bgcolor=&usr.left-buttonbg; preparse href='"+tmp+
 		   "drop_module.pike?config=%s'> "
 		   "<cf-locale get=drop_module> </gbutton><br>",
 		   http_encode_string( c->name ) );
@@ -101,7 +101,8 @@ string selected_item( string q, roxen.Configuration c, RequestID id, string modu
       }
       pre += "\n";
     } else
-      pre += ("<gbutton preparse bgcolor=&usr.fade1; width=150 href='"+DOTDOT(3)+q+"/'>"
+      pre += ("<gbutton frame-image=&usr.left-buttonframe; preparse bgcolor=&usr.left-buttonbg; "
+              " width=150 href='"+DOTDOT(3)+q+"/'>"
               "<cf-locale get="+q+"></gbutton><br>");
   }
   pre += "</item>";
