@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.149 2001/05/16 02:11:34 per Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.150 2001/05/16 07:32:12 per Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -557,6 +557,9 @@ array get_variable_sections( object mod, mapping m, RequestID id )
 
 object(Configuration) find_config_or_error(string config)
 {
+  if(!config)
+    error("No configuration specified!\n", config);
+    
   object(Configuration) conf = roxen->find_configuration(config);
   if (!conf)
     error("Unknown configuration %O\n", config);
