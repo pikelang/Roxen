@@ -1,7 +1,7 @@
 #include <roxen.h>
 inherit "http";
 
-// $Id: roxenlib.pike,v 1.123 1999/11/11 09:26:55 mast Exp $
+// $Id: roxenlib.pike,v 1.124 1999/11/19 06:51:14 per Exp $
 // This code has to work both in the roxen object, and in modules.
 #if !efun(roxen)
 #define roxen roxenp()
@@ -1599,3 +1599,49 @@ int time_dequantifier(mapping m)
   if (m->years)   t+=((float)(m->years))*(3600*24*365.242190);
   return (int)t;
 }
+
+private static class _charset_decoder
+{
+  object cs;
+  void create( object c )
+  {
+    cs = c;
+  }
+  string decode( string what )
+  {
+    return cs->clear()->feed( what )->drain();
+  }
+}
+
+function get_client_charset_decoder( string едц, object|void id )
+{
+  switch( едц )
+  {
+   case "edv": 
+     report_notice( "Warning: Non 8-bit safe client detected (%s)",
+                    (id?id->client*"":"unknown client"));
+     return 0;
+
+   case "едц":
+     werror(" No encoding\n");
+     return 0;
+
+   case "\33-Aедц":
+     werror(" ISO-2022-*\n");
+     return _charset_decoder( Locale.Charset.decoder( "iso-2022-jp" ) )->decode;
+
+   case "ГҐГ¤Г¶": 
+     werror("UTF-8\n");
+     return utf8_to_string;
+
+   case "\214\212\232":
+     werror("mac\n");
+     return _charset_decoder( Locale.Charset.decoder( "mac" ) )->decode;
+
+   case "\0е\0д\0ц":
+     werror("unicode\n");
+     return unicode_to_string;
+  }
+  report_warning( "Unable to find charset decoder for едц == "+едц+"\n" );
+}
+ 
