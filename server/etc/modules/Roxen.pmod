@@ -1,6 +1,6 @@
-// This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
+// This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.122 2001/09/10 15:26:38 nilsson Exp $
+// $Id: Roxen.pmod,v 1.123 2001/09/13 00:33:22 nilsson Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -482,6 +482,26 @@ string http_encode_url (string f)
 		       "&", "?", "=", "/", ":", "+"}),
 		  ({"%00", "%20", "%09", "%0a", "%0d", "%25", "%27", "%22", "%23",
 		    "%26", "%3f", "%3d", "%2f", "%3a", "%2b"}));
+
+}
+
+//! Encodes any string to be used as a literal in a URL. This function
+//! quotes all reserved and forbidden characters, including eight bit
+//! characters. If the string is a wide string a UTF-8 conversion is
+//! made.
+string correctly_http_encode_url(string f) {
+  if(String.width(f)>8)
+    f = string_to_utf8(f);
+  return map(f/1, lambda(string in) {
+    int c = in[0];
+    // if(c>255) return sprintf("%%u%04x", c);
+    if( c<33 || c>126 ||
+	(< '"', '#', '%', '&', '\'', '+',
+	   '<', '>', '?', '/', ':', ';',
+	   '@', ',', '$', '=' >)[c] )
+      return sprintf("%%%02x", c);
+    return in;
+  } ) * "";
 }
 
 string add_pre_state( string url, multiset state )
@@ -1718,8 +1738,14 @@ string roxen_encode( string val, string encoding )
    case "url":
      return http_encode_url (val);
 
+   case "wml-url":
+     return correctly_http_encode_url(val);
+
    case "html":
      return html_encode_string (val);
+
+   case "wml":
+     return replace(html_encode_string(val), "$", "$$");
 
    case "dtag":
      // This is left for compatibility...
