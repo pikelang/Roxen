@@ -3,7 +3,7 @@
 program Privs;
 
 // Set up the roxen environment. Including custom functions like spawne().
-constant cvs_version="$Id: roxenloader.pike,v 1.71 1998/05/10 20:20:52 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.72 1998/05/28 17:44:07 grubba Exp $";
 
 #define perror roxen_perror
 
@@ -263,39 +263,63 @@ void report_fatal(string message)
  
 string popen(string s, void|mapping env, int|void uid, int|void gid)
 {
-  object p,p2;
+  object p;
+  object f;
 
-  p2 = Stdio.File();
-  p=p2->pipe();
+  f = Stdio.File();
+#if constant(Stdio.PROP_IPC)
+  p = f->pipe(Stdio.PROP_IPC);
+#else /* !constant(Stdio.PROP_IPC) */
+  p = f->pipe();
+#endif /* constant(Stdio.PROP_IPC) */
   if(!p) error("Popen failed. (couldn't create pipe)\n");
 
 #if constant(Process.create_process)
 
-  p2->set_close_on_exec(1);	// Paranoia.
+  f->set_close_on_exec(1);	// Paranoia.
 
   mapping opts = ([
-    "uid":uid,
-    "gid":gid,
     "env": (env || getenv()),
-    "stdout":p
+    "stdout":p,
   ]);
 
-#ifdef MODULE_DEBUG
-//   report_debug(sprintf("POPEN: Creating process( %O, %O)...\n",
-// 		       ({ "/bin/sh", "-c", s }), opts));
-#endif /* MODULE_DEBUG */
+  if (!getuid()) {
+    switch(query_num_arg()) {
+    case 4:
+      opts->gid = gid;
+      // FALL THROUGH
+    case 3:
+      opts->uid = uid;
+      break;
+    }
+  }
+
+#ifdef DEBUG
+  report_debug(sprintf("POPEN: Creating process( %O, %O)...\n",
+ 		       ({ "/bin/sh", "-c", s }), opts));
+#endif /* DEBUG */
   object proc;
 #ifndef __NT__
   proc = Process.create_process(({ "/bin/sh", "-c", s }), opts);
+  p->close();
+  destruct(p);
+
   if (proc) {
-    p->close();
-    destruct(p);
-    string t = p2->read(0x7fffffff);
-    p2->close();
-    destruct(p2);
+    string t = f->read(0x7fffffff);
+    f->close();
+    destruct(f);
     return t;
+#ifdef DEBUG
+  } else {
+    roxen_perror("POPEN: create_process() failed.\n");
+#endif /* DEBUG */
   }
-#endif
+#else /* __NT__ */
+  p->close();
+  destruct(p);
+#endif /* !__NT__ */
+  f->close();
+  destruct(f);
   return 0;
   
 #else /* !constant(Process.create_process) */
@@ -342,8 +366,8 @@ string popen(string s, void|mapping env, int|void uid, int|void gid)
     string t;
     // p->close();
     destruct(p);
-    t=p2->read(0x7fffffff);
-    destruct(p2);
+    t=f->read(0x7fffffff);
+    destruct(f);
     return t;
   }
 #endif /* constant(Process.create_process) */
