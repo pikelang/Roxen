@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.550 2003/01/21 23:46:26 mani Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.551 2003/03/04 21:00:15 mani Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -472,7 +472,8 @@ void stop (void|int asynch)
   }
 }
 
-string type_from_filename( string file, int|void to, string|void myext )
+string|array(string) type_from_filename( string file,
+					 int|void to, string|void myext )
 {
   array(string)|string tmp;
   if(!types_fun)
