@@ -1,5 +1,5 @@
 /* Roxen FTP protocol. Written by Pontus Hagland
-string cvs_version = "$Id: ftp.pike,v 1.12 1997/04/16 20:41:46 marcus Exp $";
+string cvs_version = "$Id: ftp.pike,v 1.13 1997/04/28 22:05:30 grubba Exp $";
    (law@lysator.liu.se) and David Hedbor (neotron@infovav.se).
 
    Some of the features: 
@@ -33,6 +33,8 @@ int GRUK = random(_time(1));
 function(object,mixed:void) pasv_callback;
 mixed pasv_arg;
 array(object) pasv_accepted;
+array(string|int) session_auth = 0;
+string username="";
 #undef QUERY
 #define QUERY(X) roxen->variables->X[VAR_VALUE]
 #define Query(X) conf->variables[X][VAR_VALUE]  /* Per */
@@ -629,10 +631,12 @@ void got_data(mixed fooid, string s)
       if(!arg || arg == "ftp" || arg == "anonymous")
       {
 	reply("230 Anonymous ftp, at your service\n");
+	session_auth = 0;
 	rawauth = 0;
 	auth = 0;
       } else {
-	rawauth = arg;
+	session_auth = 0;
+	rawauth = username = arg;
 	auth = 0;
 	reply("331 Give me a password, then!\n");
       }
@@ -644,7 +648,7 @@ void got_data(mixed fooid, string s)
 	reply("230 Guest login ok, access restrictions apply.\n"); 
       else {	
 	method="LOGIN";
-	y = ({ "Basic", rawauth+":"+arg});
+	y = ({ "Basic", username+":"+arg});
 	realauth = y[1];
 	if(conf && conf->auth_module) {
 	  y = conf->auth_module->auth( y, this_object() );
@@ -658,12 +662,12 @@ void got_data(mixed fooid, string s)
 	    }
 	  }
 	}
-	auth=y;
-	if(auth[0]) {
+	session_auth = auth = y;
+	if(auth[0] == 1) {
 	  cwd = misc->home;
-	  reply("230 User "+rawauth+" logged in.\n"); 
+	  reply("230 User "+username+" logged in.\n"); 
 	} else
-	  reply("230 Luser "+rawauth+" logged in.\n"); 
+	  reply("230 Guest user "+username+" logged in.\n"); 
 	/* roxen->log(([ "error": 202, "len":-1 ]), this_object()); */
       }
       break;
@@ -695,6 +699,9 @@ void got_data(mixed fooid, string s)
       else 
 	ncwd = combine_path(cwd, arg);
       
+      // Restore auth-info
+      auth = session_auth;
+
       st = roxen->stat_file(ncwd, this_object());
 
       if(!st) {
@@ -762,6 +769,9 @@ void got_data(mixed fooid, string s)
      case "list": 
       mapping f;
       string args;
+
+      // Restore auth-info
+      auth = session_auth;
 
       if(!dataport_addr || !dataport_port)
       {
@@ -835,6 +845,10 @@ void got_data(mixed fooid, string s)
 	reply("501 'RETR': Missing argument\n");
 	break;
       }
+
+      // Restore auth-info
+      auth = session_auth;
+
       if(!open_file(arg))
 	break;
       connect_and_send(file);
@@ -850,6 +864,10 @@ void got_data(mixed fooid, string s)
       }
       method="HEAD";
       reply("211-status of "+arg+":\n");
+
+      // Restore auth-info
+      auth = session_auth;
+
       not_query = arg = combine_path(cwd, arg);
       foreach(conf->first_modules(), function funp)
 	if(f = funp( this_object())) break;
@@ -872,6 +890,10 @@ void got_data(mixed fooid, string s)
 	reply("501 'SIZE': Missing argument\n");
 	break;
       }
+
+      // Restore auth-info
+      auth = session_auth;
+
       if(!open_file(arg))
 	break;
       reply("213 "+ file->len +"\n");
@@ -883,6 +905,10 @@ void got_data(mixed fooid, string s)
 	reply("501 'STOR': Missing argument\n");
 	break;
       }
+
+      // Restore auth-info
+      auth = session_auth;
+
       connect_and_receive(arg);
       break;
 
@@ -926,10 +952,12 @@ void create(object f, object c)
     not_query = "/welcome.msg";
     call_out(end, 3600);
     
-    if((fi = roxen->try_get_file("/welcome.msg", this_object())) ||
+#if 0
+    if((fi = roxen->try_get_file("/welcome.msg", this_object()))||
        (fi = roxen->try_get_file("/.message", this_object())))
       reply(reply_enumerate(fi, "220"));
     else
+#endif /* 0 */
       reply(reply_enumerate(Query("FTPWelcome"),"220"));
   }
 }
