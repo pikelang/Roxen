@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbstrm, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.580 2001/11/01 15:57:09 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.581 2001/11/05 10:59:04 stewa Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -3723,8 +3723,8 @@ constant formats =
      "sizeof(request_id->referer||({}))?request_id->referer[0]:\"-\"", 0 }),
   ({ "user_agent",  "%s",    
      "(request_id->client?request_id->client*\"%20\":\"-\")", 0 }),
-  ({ "user",        "%s",    "extract_user( request_id->realauth )",0 }),
   ({ "user_id",     "%s",    "request_id->cookies->RoxenUserID||\"0\"",0 }),
+  ({ "user",        "%s",    "extract_user( request_id->realauth )",0 }),
   ({ "request-time","%1.2f",  "time(request_id->time )",0 }),
   ({ "host",        "\4711",    0, 1 }), // \4711 is unlikely to occur normally
 });
