@@ -15,7 +15,7 @@
 #define _rettext _defines[" _rettext"]
 #define _ok _defines[" _ok"]
 
-constant cvs_version="$Id: rxmlparse.pike,v 1.43 2000/03/07 03:14:32 nilsson Exp $";
+constant cvs_version="$Id: rxmlparse.pike,v 1.44 2000/03/19 17:43:32 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -23,7 +23,6 @@ constant language = roxen->language;
 #include <module.h>
 
 inherit "module";
-inherit "roxenlib";
 
 
 // ------------- Module registration and configuration. ---------------
@@ -133,8 +132,8 @@ mapping handle_file_extension(Stdio.File file, string e, RequestID id)
      break;
   }
 
-  return http_rxml_answer(data, id, file,
-			  file2type([string](id->realfile || id->no_query || "index.html")) );
+  return Roxen.http_rxml_answer(data, id, file,
+				file2type([string](id->realfile || id->no_query || "index.html")) );
 }
 
 
@@ -148,7 +147,7 @@ string rxml_run_error(RXML.Backtrace err, RXML.Type type, RequestID id) {
     if(query("quietr") && !_misc->debug && !([multiset(string)]id->prestate)->debug)
       return "";
     return "<br clear=\"all\" />\n<pre>" +
-      html_encode_string (describe_error (err)) + "</pre>\n";
+      Roxen.html_encode_string (describe_error (err)) + "</pre>\n";
   }
   return 0;
 }
@@ -160,7 +159,7 @@ string rxml_parse_error(RXML.Backtrace err, RXML.Type type, RequestID id) {
     if(query("quietp") && !_misc->debug && !([multiset(string)]id->prestate)->debug)
       return "";
     return "<br clear=\"all\" />\n<pre>" +
-      html_encode_string (describe_error (err)) + "</pre>\n";
+      Roxen.html_encode_string (describe_error (err)) + "</pre>\n";
   }
   return 0;
 }
@@ -170,19 +169,19 @@ string rxml_parse_error(RXML.Backtrace err, RXML.Type type, RequestID id) {
 
 string api_parse_rxml(RequestID id, string r)
 {
-  return parse_rxml( r, id );
+  return Roxen.parse_rxml( r, id );
 }
 
 string api_tagtime(RequestID id, int ti, string t, string l)
 {
   mapping m = ([ "type":t, "lang":l ]);
   NOCACHE();
-  return tagtime( ti, m, id, language );
+  return Roxen.tagtime( ti, m, id, language );
 }
 
 string api_relative(RequestID id, string path)
 {
-  return fix_relative( path, id );
+  return Roxen.fix_relative( path, id );
 }
 
 string api_set(RequestID id, string what, string to, void|string scope)
@@ -214,7 +213,7 @@ string api_query_cookie(RequestID id, string f)
 
 void api_add_header(RequestID id, string h, string v)
 {
-  add_http_header([mapping(string:string)]_extra_heads, h, v);
+  Roxen.add_http_header([mapping(string:string)]_extra_heads, h, v);
 }
 
 int api_set_cookie(RequestID id, string c, string v, void|string p)
@@ -222,9 +221,9 @@ int api_set_cookie(RequestID id, string c, string v, void|string p)
   if(!c)
     return 0;
 
-  add_http_header([mapping(string:string)]_extra_heads, "Set-Cookie",
-    c+"="+http_encode_cookie(v||"")+
-    "; expires="+http_date(time(1)+(3600*24*365*2))+
+  Roxen.add_http_header([mapping(string:string)]_extra_heads, "Set-Cookie",
+    c+"="+Roxen.http_encode_cookie(v||"")+
+    "; expires="+Roxen.http_date(time(1)+(3600*24*365*2))+
     "; path=" +(p||"/")
   );
 
@@ -236,8 +235,8 @@ int api_remove_cookie(RequestID id, string c, string v)
   if(!c)
     return 0;
 
-  add_http_header([mapping(string:string)]_extra_heads, "Set-Cookie",
-    c+"="+http_encode_cookie(v||"")+"; expires=Thu, 01-Jan-70 00:00:01 GMT; path=/"
+  Roxen.add_http_header([mapping(string:string)]_extra_heads, "Set-Cookie",
+			c+"="+Roxen.http_encode_cookie(v||"")+"; expires=Thu, 01-Jan-70 00:00:01 GMT; path=/"
   );
 
   return 1;
@@ -282,12 +281,12 @@ string api_get_referer(RequestID id)
 
 string api_html_quote(RequestID id, string what)
 {
-  return html_encode_string(what);
+  return Roxen.html_encode_string(what);
 }
 
 string api_html_dequote(RequestID id, string what)
 {
-  return html_decode_string(what);
+  return Roxen.html_decode_string(what);
 }
 
 string api_html_quote_attr(RequestID id, string value)
@@ -296,7 +295,7 @@ string api_html_quote_attr(RequestID id, string value)
 }
 
 string api_read_file(RequestID id, string file) {
-  return API_read_file(id,file);
+  return Roxen.API_read_file(id,file);
 }
 
 void add_api_function(string name, function f, void|array(string) types)
