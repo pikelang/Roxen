@@ -78,7 +78,7 @@ mixed parse( RequestID id, mapping|void opt )
   Configuration conf = id->misc->new_configuration;
   id->misc->do_not_goto = 1;  
 
-  foreach( modules, string mod ) 
+  foreach( modules, string mod )
   {
     RoxenModule module;
     
@@ -118,14 +118,10 @@ mixed parse( RequestID id, mapping|void opt )
       conf->enable_module( mod );
 
     init_modules( conf, id );
-    
-    conf->add_parse_module( conf );
-    foreach( conf->after_init_hooks, function q )
-      catch(q( conf ));
-    conf->after_init_hooks = ({});
-    conf->inited = 1;
-    conf->start( 0 );
-    conf->save (1); // save it all in one go
+
+    conf->fix_no_delayed_load_flag();
+    conf->save (1); // Call start callbacks and save it all in one go.
+    conf->low_init (1); // Handle the init hooks.
     return "<done/>";
   }
   return "<h2>"+

@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.364 2000/09/08 18:41:25 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.365 2000/09/09 05:07:12 mast Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -2690,60 +2690,68 @@ mixed add_init_hook( mixed what )
     after_init_hooks |= ({ what });
 }
 
-static int got_no_delayed_load;
+static int got_no_delayed_load = 0;
 // 0 -> enabled delayed loading, 1 -> disable delayed loading,
 // -1 -> don't change.
 
-void enable_all_modules()
+void fix_no_delayed_load_flag()
 {
-  MODULE_LOCK;
-  int q = query( "no_delayed_load" );
-  got_no_delayed_load = 0;
-  low_init( );
-  if( got_no_delayed_load >= 0 && q != got_no_delayed_load ) {
+  if( got_no_delayed_load >= 0 &&
+      query ("no_delayed_load") != got_no_delayed_load ) {
     set( "no_delayed_load", got_no_delayed_load );
     save_one( 0 );
   }
 }
 
-void low_init()
+void enable_all_modules()
+{
+  MODULE_LOCK;
+  low_init( );
+  fix_no_delayed_load_flag();
+}
+
+void low_init(void|int modules_already_enabled)
 {
   if( inited )
     return; // already done
 
   int start_time = gethrtime();
-  report_debug("\nEnabling all modules for "+query_name()+"... \n");
+  if (!modules_already_enabled)
+    report_debug("\nEnabling all modules for "+query_name()+"... \n");
 
   add_parse_module( (object)this_object() );
-  enabled_modules = retrieve("EnabledModules", this_object());
-  object ec = roxenloader.LowErrorContainer();
-  roxenloader.push_compile_error_handler( ec );
 
-  array modules_to_process = indices( enabled_modules );
-  string tmp_string;
+  if (!modules_already_enabled) {
+    enabled_modules = retrieve("EnabledModules", this_object());
+    object ec = roxenloader.LowErrorContainer();
+    roxenloader.push_compile_error_handler( ec );
 
-  // Always enable the user database module first.
-  if(search(modules_to_process, "userdb#0")>-1)
-    modules_to_process = (({"userdb#0"})+(modules_to_process-({"userdb#0"})));
+    array modules_to_process = indices( enabled_modules );
+    string tmp_string;
 
-  array err;
-  forcibly_added = (<>);
-  enable_module_batch_msgs = 1;
-  foreach( modules_to_process, tmp_string )
-  {
-    if( !forcibly_added[ tmp_string ] )
-      if(err = catch( enable_module( tmp_string ))) {
-	report_error(LOC_M(45, "Failed to enable the module %s. Skipping.\n%s"),
-			    tmp_string, describe_backtrace(err));
-	got_no_delayed_load = -1;
-      }
+    // Always enable the user database module first.
+    if(search(modules_to_process, "userdb#0")>-1)
+      modules_to_process = (({"userdb#0"})+(modules_to_process-({"userdb#0"})));
+
+    array err;
+    forcibly_added = (<>);
+    enable_module_batch_msgs = 1;
+    foreach( modules_to_process, tmp_string )
+    {
+      if( !forcibly_added[ tmp_string ] )
+	if(err = catch( enable_module( tmp_string ))) {
+	  report_error(LOC_M(45, "Failed to enable the module %s. Skipping.\n%s"),
+		       tmp_string, describe_backtrace(err));
+	  got_no_delayed_load = -1;
+	}
+    }
+    enable_module_batch_msgs = 0;
+    roxenloader.pop_compile_error_handler();
+    if( strlen( ec->get() ) )
+      report_error( "While enabling modules in "+name+":\n"+ec->get() );
+    if( strlen( ec->get_warnings() ) )
+      report_warning( "While enabling modules in "+name+":\n"+ec->get_warnings());
   }
-  enable_module_batch_msgs = 0;
-  roxenloader.pop_compile_error_handler();
-  if( strlen( ec->get() ) )
-    report_error( "While enabling modules in "+name+":\n"+ec->get() );
-  if( strlen( ec->get_warnings() ) )
-    report_warning( "While enabling modules in "+name+":\n"+ec->get_warnings());
     
   foreach( ({this_object()})+indices( otomod ), object mod )
     if( mod->ready_to_receive_requests )
@@ -2764,8 +2772,9 @@ void low_init()
   after_init_hooks = ({});
 
   inited = 1;
-  report_notice(LOC_S(4, "All modules for %s enabled in %3.1f seconds") +
-		"\n\n", query_name(), (gethrtime()-start_time)/1000000.0);
+  if (!modules_already_enabled)
+    report_notice(LOC_S(4, "All modules for %s enabled in %3.1f seconds") +
+		  "\n\n", query_name(), (gethrtime()-start_time)/1000000.0);
 }
 
 
