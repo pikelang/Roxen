@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.188 2004/05/10 08:21:36 grubba Exp $
+// $Id: module.pike,v 1.189 2004/05/10 11:43:07 grubba Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -1221,22 +1221,22 @@ mapping copy_file(string path, string dest, int(-1..1) behavior, RequestID id)
   return Roxen.http_status (Protocols.HTTP.HTTP_NOT_IMPL);
 }
 
-void recurse_copy_files(string source, string destination, int depth,
-			mapping(string:int(-1..1)) behavior,
-			MultiStatus.Prefixed result, RequestID id)
+mapping recurse_copy_files(string source, string destination, int depth,
+			   mapping(string:int(-1..1)) behavior,
+			   MultiStatus.Prefixed result, RequestID id)
 {
   SIMPLE_TRACE_ENTER(this, "recurse_copy_files(%O, %O, %O, %O, %O, %O)\n",
 		     source, destination, depth, behavior, result, id);
-  if (source == destination) {
-    result->add_status(source, 403,
-		       "Source and destination are the same.");
-    TRACE_LEAVE("Source and destination are the same.");
-    return;
+  if ((source == destination) ||
+      has_prefix(source, destination) ||
+      has_prefix(destination, source)) {
+    TRACE_LEAVE("Source and destination overlap.");
+    return Roxen.http_status(403, "Source and destination overlap.");
   }
   Stat st = stat_file(source, id);
   if (!st) {
     TRACE_LEAVE("Source not found.");
-    return;	/* FIXME: 404? */
+    return 0;	/* FIXME: 404? */
   }
   // FIXME: Check destination?
   if (st->isdir) {
@@ -1245,32 +1245,35 @@ void recurse_copy_files(string source, string destination, int depth,
 				  behavior[0],
 				  result, id);
     if (res && (res->error != 204) && (res->error != 201)) {
-      result->add_status(destination, res->error, res->rettext);
       if (res->error >= 300) {
 	// RFC 2518 8.8.3 and 8.8.8 (error minimization).
-	return;
+	TRACE_LEAVE("Copy of collection failed.");
+	return res;
+      }
+      result->add_status(destination, res->error, res->rettext);
+    }
+    if (depth <= 0) {
+      TRACE_LEAVE("Non-recursive copy of collection done.");
+      return res;
+    }
+    depth--;
+    foreach(find_dir(source, id), string filename) {
+      mapping sub_res = recurse_copy_files(combine_path(source, filename),
+					   combine_path(destination, filename),
+					   depth,
+					   behavior, result, id);
+      if (sub_res && (sub_res->error != 204) && (sub_res->error != 201)) {
+	result->add_status(combine_path(destination, filename),
+			   sub_res->error, sub_res->rettext);
       }
     }
-    if (depth <= 0) return;
+    TRACE_LEAVE("Recursive copy done.");
+    return res;
   } else {
-    mapping res = copy_file(source, destination,
-			    behavior[query_location()+destination] ||
-			    behavior[0],
-			    id);
-    if (res) {
-      result->add_status(destination, res->error, res->rettext);
-      if (res->error >= 300) {
-	// RFC 2518 8.8.3 and 8.8.8 (error minimization).
-	return;
-      }
-    }
-    return;
-  }
-  depth--;
-  foreach(find_dir(source, id), string filename) {
-    recurse_copy_files(combine_path(source, filename),
-		       combine_path(destination, filename), depth,
-		       behavior, result, id);
+    return copy_file(source, destination,
+		     behavior[query_location()+destination] ||
+		     behavior[0],
+		     id);
   }
 }
 
