@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.278 2000/09/26 22:51:18 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.279 2000/09/28 03:35:54 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1874,8 +1874,8 @@ void send_result(mapping|void result)
                                   "rf":realfile,
                                 ]), 
                                 misc->cacheable );
-          m_delete(file, "file" );
-          file->data = data;
+	  file = ([ "data":data,
+		    "raw":(file->raw||misc->connection=="close") ]);
           head_string = "";
         }
       }
