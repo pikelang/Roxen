@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.155 1998/11/28 16:35:23 leif Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.156 1998/11/30 04:05:43 peter Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -1407,18 +1407,35 @@ string tag_insert(string tag,mapping m,object id,object file,mapping defines)
     string s;
     string f;
     f = fix_relative(m->file, id);
+    id = id->clone_me();
 
     if(m->nocache) id->pragma["no-cache"] = 1;
-
+    if(id->scan_for_query)
+      f = id->scan_for_query( f );
     s = id->conf->try_get_file(f, id);
+
 
     if(!s) {
       if ((sizeof(f)>2) && (f[sizeof(f)-2..] == "--")) {
-	// Might be a compat insert.
+	// Might be a compat insert. <!--#inclide file=foo.html-->
 	s = id->conf->try_get_file(f[..sizeof(f)-3], id);
       }
       if (!s) {
-	return id->misc->debug?"No such file: "+f+"!":"";
+
+	// Might be a PATH_INFO type URL.
+	array a = id->conf->open_file( f, "r", id );
+	if(a && a[0])
+	{
+	  s = a[0]->read();
+	  if(a[1]->raw)
+	  {
+	    s -= "\r";
+	    if(!sscanf(s, "%*s\n\n%s", s))
+	      sscanf(s, "%*s\n%s", s);
+	  }
+	}
+	if(!s)
+	  return id->misc->debug?"No such file: "+f+"!":"";
       }
     }
 
