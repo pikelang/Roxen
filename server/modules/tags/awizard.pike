@@ -3,7 +3,7 @@ inherit "module";
 #include <module.h>
 #include <config.h>
 
-constant cvs_version="$Id: awizard.pike,v 1.13 2000/01/10 21:45:57 mast Exp $";
+constant cvs_version="$Id: awizard.pike,v 1.14 2000/02/07 17:02:24 kuntri Exp $";
 constant thread_safe=1;
 
 array register_module()
@@ -510,3 +510,112 @@ mapping query_container_callers()
 {
   return ([ "awizard" : container_awizard, ]);
 }
+
+// --------------------- Documentation -----------------------
+
+TAGDOCUMENTATION;
+#ifdef manual
+constant tagdoc=([
+"awizard":({#"<desc tag>
+
+</desc>
+
+<attr name=title value=string>
+
+</attr>",
+
+(["page":({#"<desc tag>
+ Creates a new page in the wizard.
+</desc>
+
+<attr name=name value=string>
+ A name for the page.
+</attr>",
+
+(["verify":#"<desc cont>
+ RXML code to be executed when leaving the page.
+</desc>",
+
+"button":#"<desc tag>
+ Creates a button.
+</desc>
+
+<attr name=page value=string>
+ Send the user to this page when the button is pressed.
+</attr>
+
+<attr name=title value=string>
+ Put a name on the button.
+</attr>
+
+<attr name=image value=path>
+ Put an image on the button.
+</attr>",
+
+"ebutton":#"<desc cont>
+ A more advanved button. When pressed the content of this container
+ will be parsed before the user are allowed to leave the page.
+</desc>
+
+<attr name=href value=URL>
+ Send the user to this URL.
+</attr>
+
+<attr name=title value=string>
+ Put a name on the button.
+</attr>
+
+<attr name=image value=path>
+ Put an image on the button.
+</attr>",
+
+"come-from-page":#"<desc cont>
+
+</desc>
+
+<attr name=page value=string>
+
+</attr>",
+
+"goto":#"<desc tag>
+
+</desc>
+
+<attr name=page value=string>
+
+</attr>
+
+<attr name=href value=URL>
+
+</attr>",
+
+"warn":#"<desc cont>
+
+</desc>",
+
+"notice":#"<desc cont>
+
+</desc>",
+
+"error":#"<desc cont>
+
+</desc>",])
+	 })])
+	})]);
+#endif
+
+
+
+// tags:
+//  <awizard title=...>
+//  <page [name=...]>
+//   <verify>...</verify> --> Will be executed when leaving the page.
+//   <button [page=...] [title=...] [image=...]>
+//   <ebutton [href=...] [title=...] [image=...]>RXML code to execute when the button is pressed</ebutton>
+//   <come-from page=...>RXML to be executed when arriving from page</come-from>
+//   <goto page=...>
+//   <goto href=...>
+//   <warn>string</warn>
+//   <notice>string</notice>
+//   <error>string</error> (can be used to prevent the user from leaving this page)
+//  </page>
