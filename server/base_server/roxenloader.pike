@@ -18,7 +18,7 @@ private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.206 2000/09/25 07:55:58 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.207 2000/09/26 23:11:32 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1046,6 +1046,9 @@ class _error_handler {
 array(_error_handler) compile_error_handlers = ({});
 void push_compile_error_handler( _error_handler q )
 {
+  if( q->do_not_push )
+    error("Attempting push of ErrorContainer. "
+          "Only push LowErrorContainer classes\n");
   compile_error_handlers = ({q})+compile_error_handlers;
 }
 
@@ -1095,7 +1098,7 @@ class LowErrorContainer
 class ErrorContainer
 {
   inherit LowErrorContainer;
-
+  constant do_not_push = 1;
   void compile_error(string file, int line, string err)
   {
     if( sizeof(compile_error_handlers) )
@@ -1632,9 +1635,9 @@ Please install a newer version of Pike.
   add_constant("roxenloader", this_object());
   add_constant("ErrorContainer", ErrorContainer);
 #if constant( Gz.inflate )
-  add_constant("grbf",lambda(string d){return Gz.inflate()->inflate(d);});
+  add_constant("grbz",lambda(string d){return Gz.inflate()->inflate(d);});
 #else
-  add_constant("grbf",lambda(string d){return d;});
+  add_constant("grbz",lambda(string d){return d;});
   report_debug(
 #"
 ------- WARNING -----------------------------------------
