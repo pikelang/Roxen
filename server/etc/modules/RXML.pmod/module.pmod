@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.78 2000/03/13 00:42:04 mast Exp $
+//! $Id: module.pmod,v 1.79 2000/03/16 10:38:24 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -17,6 +17,29 @@
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
 #include <config.h>
+
+#ifdef RXML_OBJ_DEBUG
+#  ifndef OBJ_COUNT_DEBUG
+#    define OBJ_COUNT_DEBUG
+#  endif
+mapping(string:int) object_markers = ([]);
+class ObjectMarker
+{
+  string id;
+  void create (string _id) {werror ("create  %s\n", id = _id); object_markers[id] = 1;}
+  void destroy() {werror ("destroy %s\n", id); m_delete (object_markers, id);}
+}
+#  define MARK_OBJECT(marker) \
+  private ObjectMarker marker = ObjectMarker (sprintf ("%O", this_object()))
+string report_leaks()
+{
+  string res = "leaks: " + sort (indices (object_markers)) * ", " + "\n";
+  object_markers = ([]);
+  return res;
+}
+#else
+#  define MARK_OBJECT(marker)
+#endif
 
 #ifdef OBJ_COUNT_DEBUG
 // This debug mode gives every object a unique number in the
@@ -228,6 +251,8 @@ class Tag
   {
     return "RXML.Tag(" + [string] this_object()->name + COMMA_CNT (__count) + ")";
   }
+
+  MARK_OBJECT (__object_marker);
 }
 
 
@@ -526,6 +551,8 @@ class TagSet
     return name ? "RXML.TagSet(" + name + COMMA_CNT (__count) + ")" :
       "RXML.TagSet" + PAREN_CNT (__count);
   }
+
+  MARK_OBJECT (__object_marker);
 }
 
 TagSet empty_tag_set;
@@ -997,12 +1024,6 @@ class Context
   }
 
   multiset(Tag) runtime_tags = (<>);
-
-  class NewRuntimeTags
-  {
-    multiset(Tag) add_tags = (<>);
-    multiset(Tag|string) remove_tags = (<>);
-  }
   NewRuntimeTags new_runtime_tags;
   // Used to record the result of any add_runtime_tag() and
   // remove_runtime_tag() calls since the last time the parsers ran.
@@ -1031,6 +1052,8 @@ class Context
 
   string _sprintf() {return "RXML.Context" + PAREN_CNT (__count);}
 
+  MARK_OBJECT (__object_marker);
+
 #ifdef MODULE_DEBUG
 #if constant (thread_create)
   Thread.Thread in_use;
@@ -1038,6 +1061,12 @@ class Context
   int in_use;
 #endif
 #endif
+}
+
+static class NewRuntimeTags
+{
+  multiset(Tag) add_tags = (<>);
+  multiset(Tag|string) remove_tags = (<>);
 }
 
 class Backtrace
@@ -1074,6 +1103,7 @@ class Backtrace
       txt += current_var ? " | &" + current_var + ";\n" : "";
       for (Frame f = frame; f; f = f->up) {
 	if (f->tag) txt += " | <" + f->tag->name;
+	else if (f->tag_name) txt += " | <" + f->tag_name;
 	else if (!f->up) break;
 	else txt += " | <(unknown tag)";
 	if (f->args)
@@ -2034,6 +2064,8 @@ class Frame
   {
     return "RXML.Frame(" + (tag && [string] tag->name) + COMMA_CNT (__count) + ")";
   }
+
+  MARK_OBJECT (__object_marker);
 }
 
 
@@ -2360,6 +2392,8 @@ class Parser
   DECLARE_CNT (__count);
 
   string _sprintf() {return "RXML.Parser" + PAREN_CNT (__count);}
+
+  MARK_OBJECT (__object_marker);
 }
 
 
@@ -2619,10 +2653,12 @@ class Type
 	  // ^^^ Using interpreter lock to here.
 	  if (pco->clone_parser)
 	    p = pco->clone_parser->clone (ctx, this_object(), tset, @_parser_args);
-	  else if ((p = _parser_prog (0, this_object(), tset, @_parser_args))->clone)
+	  else if ((p = _parser_prog (ctx, this_object(), tset, @_parser_args))->clone) {
 	    // pco->clone_parser might already be initialized here due
 	    // to race, but that doesn't matter.
+	    p->context = 0;	// Don't leave the context in the clone master.
 	    p = (pco->clone_parser = p)->clone (ctx, this_object(), tset, @_parser_args);
+	  }
       }
 
       else {
@@ -2630,10 +2666,12 @@ class Type
 	pco = PCacheObj();
 	pco->tag_set_gen = tset->generation;
 	_p_cache[tset] = pco;	// Might replace an object due to race, but that's ok.
-	if ((p = _parser_prog (0, this_object(), tset, @_parser_args))->clone)
+	if ((p = _parser_prog (ctx, this_object(), tset, @_parser_args))->clone) {
 	  // pco->clone_parser might already be initialized here due
 	  // to race, but that doesn't matter.
+	  p->context = 0;	// Don't leave the context in the clone master.
 	  p = (pco->clone_parser = p)->clone (ctx, this_object(), tset, @_parser_args);
+	}
       }
 
       if (ctx->tag_set == tset && p->add_runtime_tag && sizeof (ctx->runtime_tags))
@@ -2653,10 +2691,12 @@ class Type
 	// Relying on interpreter lock here.
 	p = clone_parser->clone (ctx, this_object(), @_parser_args);
 
-      else if ((p = _parser_prog (0, this_object(), @_parser_args))->clone)
+      else if ((p = _parser_prog (ctx, this_object(), @_parser_args))->clone) {
 	// clone_parser might already be initialized here due to race,
 	// but that doesn't matter.
+	p->context = 0;		// Don't leave the context in the clone master.
 	p = (clone_parser = p)->clone (ctx, this_object(), @_parser_args);
+      }
     }
 
     p->_parent = parent;
@@ -2679,7 +2719,8 @@ class Type
       if (dont_switch_ctx) p->finish (in); // Optimize the job in p->write_end().
       else p->write_end (in);
       res = p->eval();
-      if (p->reset)
+      if (p->reset) {
+	p->context = p->_parent = 0;
 	if (_p_cache) {
 	  // Relying on interpreter lock in this block.
 	  PCacheObj pco = _p_cache[tag_set || ctx->tag_set];
@@ -2691,6 +2732,7 @@ class Type
 	  p->_next_free = free_parser;
 	  free_parser = p;
 	}
+      }
     }
     if (ctx->type_check) type_check (res);
     return res;
@@ -2711,17 +2753,20 @@ class Type
   private Parser free_parser;	// The list of objects to reuse with Parser.reset().
 
   // Cache used for parsers that depend on the tag set.
-  private class PCacheObj
-  {
-    int tag_set_gen;
-    Parser clone_parser;
-    Parser free_parser;
-  }
   /*private*/ mapping(TagSet:PCacheObj) _p_cache;
 
   DECLARE_CNT (__count);
 
   string _sprintf() {return "RXML.Type" + PAREN_CNT (__count);}
+
+  MARK_OBJECT (__object_marker);
+}
+
+static class PCacheObj
+{
+  int tag_set_gen;
+  Parser clone_parser;
+  Parser free_parser;
 }
 
 
@@ -2856,6 +2901,7 @@ class VarRef
   DECLARE_CNT (__count);
   string _sprintf()
     {return "RXML.VarRef(" + scope + "." + var + COMMA_CNT (__count) + ")";}
+  MARK_OBJECT (__object_marker);
 }
 
 class PCode
@@ -2895,6 +2941,8 @@ class PCode
   DECLARE_CNT (__count);
 
   string _sprintf() {return "RXML.PCode" + PAREN_CNT (__count);}
+
+  MARK_OBJECT (__object_marker);
 }
 
 
@@ -2916,11 +2964,6 @@ class ScanStream
 //! stream that takes unparsed strings and splits them into tokens
 //! which are queued. Intended to be inherited in a Parser class.
 {
-  private class Link
-  {
-    array data;
-    Link next;
-  }
   private Link head = Link();	// Last link is an empty eof marker.
   private Link tail = head;
   private int next_token = 0;
@@ -3024,6 +3067,14 @@ class ScanStream
   DECLARE_CNT (__count);
 
   string _sprintf() {return "RXML.ScanStream" + PAREN_CNT (__count);}
+
+  MARK_OBJECT (__object_marker);
+}
+
+private class Link
+{
+  array data;
+  Link next;
 }
 
 
