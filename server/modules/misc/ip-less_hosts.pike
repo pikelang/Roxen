@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
  
-constant cvs_version = "$Id: ip-less_hosts.pike,v 1.23 1998/09/06 07:26:30 hubbe Exp $";
+constant cvs_version = "$Id: ip-less_hosts.pike,v 1.24 1999/02/15 23:28:36 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -11,20 +11,22 @@ inherit "module";
 array register_module()
 {
   return ({ MODULE_FIRST,
-	      "IP-Less virtual hosting",
-	      "This module adds support for IP-less virtual hosts, "
-	      "simply add this module to a server with a real listen port "
-	      "(Server Variables -&gt; Listen ports) "
-	      "configured, then add no ports to all the servers you want to "
-	      "use ip-less virtual hosting for, but configure their "
-	      "server-URLs. This module will then automagically "
-	      "select the server the request should be sent to."
-	      "<p><b>Please note that the ip less hosting module "
-	      "doesn't work together with proxies. The reason is that the "
-	      "host header sent isn't the one of the proxy server, but the "
-	      "one of the requested host. We recommend having the proxies in "
-	      "their own virtual server, with a unique IP and / or port.</b>",
-	      0, 1 });
+	      "IP-Less virtual hosting DEPRECTATED",
+            "<h2>The support for ip-less hosting is now included in the "
+            "Roxen Challenger core</h2>"+
+            "this module adds support for IP-less virtual hosts, "
+            "simply add this module to a server with a real listen port "
+            "(Server Variables -&gt; Listen ports) "
+            "configured, then add no ports to all the servers you want to "
+            "use ip-less virtual hosting for, but configure their "
+            "server-URLs. This module will then automagically "
+            "select the server the request should be sent to."
+            "<p><b>Please note that the ip less hosting module "
+            "doesn't work together with proxies. The reason is that the "
+            "host header sent isn't the one of the proxy server, but the "
+            "one of the requested host. We recommend having the proxies in "
+            "their own virtual server, with a unique IP and / or port.</b>",
+            0, 1 });
 }
 
 mapping config_cache = ([ ]);
@@ -225,4 +227,4 @@ string status()
       (config_cache[s]->name)+"</a></td><td>"+match+"</td></tr>";
   }
   return res+"</table>";
-}
+ }
