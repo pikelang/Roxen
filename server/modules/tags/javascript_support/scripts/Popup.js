@@ -98,13 +98,13 @@ function showPopup(name, parent, ox, oy, e)
   
   
   //alert("px:"+p_x+" pw:"+p_w+" sl:"+s_l+" cw"+c_w);
-  // If the popup is placed outside the screen move it inside.
-//  if(p_x + p_w > s_l + c_w)
-//    p_x = s_l + c_w - p_w;
-//  
-//  if(p_y + p_h > s_t + c_h)
-//    p_y = s_t + c_h - p_h;
-
+  //If the popup is placed outside the screen move it inside.
+  if(p_x + p_w > s_l + c_w)
+    p_x = s_l + c_w - p_w;
+  
+  if(p_y + p_h > s_t + c_h)
+    p_y = s_t + c_h - p_h;
+  
   //alert("D, "+p_x);
   popups[popups.length] = new popup_coord(name, parent,
 					  p_x, p_y - (parent == "none"?oy:0),
