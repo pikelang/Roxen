@@ -36,7 +36,7 @@ string query_provides() {
 void old_rxml_warning(RequestID id, string problem, string solution)
 {
   if(query("logold"))
-    report_warning("Old RXML in "+(id->query||id->not_query)+
+    report_warning("Old RXML in "+id->not_query+
     ": contains "+problem+". Use "+solution+" instead.\n");
 }
 
@@ -464,12 +464,19 @@ array tag_counter(string t, mapping m, RequestID id) {
   if(m->fg) {
     m->fgcolor=m->fg;
     m_delete(m,"fg");
+    old_rxml_warning(id ,"counter attribute fg","fgcolor");
   }
   if(m->bg) {
     m->bgcolor=m->bg;
     m_delete(m,"bg");
+    old_rxml_warning(id ,"counter attribute bg","bgcolor");
   }
   return ({1, t, m});
+}
+
+array tag_list_tags(string t, mapping m, RequestID id) {
+  old_rxml_warning(id ,"list-tags tag","help tag");
+  return ({1, "help", m});
 }
 
 mapping query_tag_callers() {
@@ -483,7 +490,8 @@ mapping query_tag_callers() {
 	   "set":tag_set,
 	   "redirect":tag_redirect,
 	   "append":tag_append,
-	   "gtext-id":tag_gtext_id
+	   "gtext-id":tag_gtext_id,
+	   "list-tags":tag_list_tags
   ]);
 }
 
