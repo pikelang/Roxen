@@ -1,12 +1,12 @@
 /*
- * $Id: listfonts.pike,v 1.14 2000/09/08 20:23:28 lange Exp $
+ * $Id: listfonts.pike,v 1.15 2000/09/19 08:02:28 per Exp $
  */
 
 #include <roxen.h>
 //<locale-token project="admin_tasks"> LOCALE </locale-token>
 #define LOCALE(X,Y)  _STR_LOCALE("admin_tasks",X,Y)
 
-constant action = "maintenance";
+constant action = "status";
 
 string name= LOCALE(10, "List fonts");
 string doc = LOCALE(11, "List all available fonts");
