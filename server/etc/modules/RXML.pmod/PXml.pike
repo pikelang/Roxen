@@ -13,7 +13,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: PXml.pike,v 1.60 2001/06/29 15:11:29 mast Exp $
+//! $Id: PXml.pike,v 1.61 2001/07/20 06:35:00 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
@@ -298,7 +298,7 @@ void drain_output()
     case FREE_TEXT_P_CODE: {
       string literal = low_parser::read();
       value = value + (value = 0, literal); // Keep one ref to value.
-      if (sizeof (literal)) p_code->add (literal);
+      if (sizeof (literal)) p_code->add (context, literal, literal);
       break;
     }
 
@@ -317,7 +317,7 @@ void drain_output()
 		.utils.format_short (literal), type->name);
 	    value = newval = type->encode (literal);
 	  }
-	  if (p_code) p_code->add (newval);
+	  if (p_code) p_code->add (context, newval, newval);
 	}
       }) context->handle_exception (err, this_object(), 1);
       break;
