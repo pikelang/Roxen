@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.144 2000/07/26 14:27:02 kuntri Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.145 2000/07/26 14:52:30 jhs Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -778,10 +778,10 @@ class TagInsertVariables {
   string get_data(string var, mapping args) {
     RXML.Context context=RXML.get_context();
     if(var=="full")
-      return Roxen.html_encode_string(Array.map(sort(context->list_var(args->scope)),
-						lambda(string s) {
-						  return sprintf("%s=%O", s, context->user_get_var(s, args->scope) );
-						} ) * "\n");
+      return Array.map(sort(context->list_var(args->scope)),
+		       lambda(string s) {
+			 return sprintf("%s=%O", s, context->user_get_var(s, args->scope) );
+		       } ) * "\n";
     return String.implode_nicely(sort(context->list_var(args->scope)));
   }
 }
@@ -1648,6 +1648,20 @@ class TagIfExpr {
   constant plugin_name = "expr";
   int eval(string u) {
     return (int)sexpr_eval(u);
+  }
+}
+
+
+// ---------------- Emit registration stuff --------------
+
+class TagEmitFonts
+{
+  inherit RXML.Tag;
+  constant name = "emit", plugin_name = "fonts";
+  array get_dataset(mapping arg, RequestID id)
+  {
+    return map(roxen->fonts->available_fonts(),
+	       lambda(string name) { return ([ "name" : name ]); });
   }
 }
 
