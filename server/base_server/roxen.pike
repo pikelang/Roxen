@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.892 2005/02/23 13:42:41 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.893 2005/02/23 16:56:19 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -1574,6 +1574,12 @@ class Protocol
       return;
     }
     privs = 0;
+#if constant(System.EAFNOSUPPORT)
+    if (port_obj->errno() == System.EAFNOSUPPORT) {
+      // Fail permanently.
+      error("Invalid address " + ip);
+    }
+#endif /* System.EAFNOSUPPORT */
     report_error(LOC_M(6, "Failed to bind %s://%s:%d/ (%s)")+"\n",
 		 (string)name, (ip||"*"), (int)port,
 		 strerror(port_obj->errno()));
@@ -2208,10 +2214,19 @@ int register_url( string url, Configuration conf )
 	m[ required_host ][ port ] = prot( port, required_host );
       }) {
       failures++;
-      report_error(sprintf("Initializing the port handler for URL " +
-			   url + " failed!\n"
-			   "%s\n",
-			   describe_backtrace(err)));
+      if (has_prefix(describe_error(err), "Invalid address") &&
+	  required_host && has_value(required_host, ":")) {
+	report_error(sprintf("Failed to initialize IPv6 port for URL %s!"
+			     " (ip:%s)\n",
+			     url, required_host));
+      } else {
+	report_error(sprintf("Initializing the port handler for URL %s"
+			     " failed! (ip:%s)\n"
+			     "%s\n",
+			     url,
+			     required_host||"ANY",
+			     describe_backtrace(err)));
+      }
       continue;
     }
 
