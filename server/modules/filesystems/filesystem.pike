@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version = "$Id: filesystem.pike,v 1.119 2002/06/14 00:06:47 nilsson Exp $";
+constant cvs_version = "$Id: filesystem.pike,v 1.120 2002/08/05 13:26:56 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -640,8 +640,8 @@ mixed find_file( string f, RequestID id )
       TRACE_LEAVE("Normal return");
       if( charset != "iso-8859-1" )
       {
-        if( id->misc->set_output_charset )
-          id->misc->set_output_charset( charset, 2 );
+	if( id->set_output_charset )
+	  id->set_output_charset( charset, 2 );
         id->misc->input_charset = charset;
       }
       return o;
