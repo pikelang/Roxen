@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.9 2001/01/29 22:39:48 per Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.10 2001/01/31 04:27:13 per Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Roxen self test module";
@@ -202,22 +202,36 @@ void run_pike_tests(object test, string path) {
 
 // --- Mission control ------------------------
 
+array(string) tests_to_run;
+
 void find_tests(string path) {
   report_debug("Looking for tests in %s\n",path);
   foreach(get_dir(path), string file)
     if(file!="CVS" && file_stat(path+file)[1]==-2)
       find_tests( path + file + "/" );
-    else if(file[-1]!='~' && glob("RoxenTest_*", file)) {
+    else if(file[-1]!='~' && glob("RoxenTest_*", file))
+    {
       report_debug("\nFound test file %s\n",path+file);
-      if(glob("*.xml",file))
-	run_xml_tests(Stdio.read_file(path+file));
-      if(glob("*.pike",file))
-	run_pike_tests( compile_file(path+file)(), path+file );
+      int done;
+      foreach( tests_to_run, string p )
+	if( glob( "*"+p+"*", file ) )
+	{
+	  if(glob("*.xml",file))
+	    run_xml_tests(Stdio.read_file(path+file));
+	  else if(glob("*.pike",file))
+	    run_pike_tests( compile_file(path+file)(), path+file );
+	  done++;
+	  break;
+	}
+      if( !done )
+	report_debug( "Skipped (not matched by --tests argument)\n" );
     }
 }
 
 int die;
 void do_tests() {
+
+  tests_to_run = Getopt.find_option(roxen.argv, "d",({"tests"}),0,"" )/",";
 
   if(time() - roxen->start_time < 2) {
     call_out( do_tests, 2 );
