@@ -57,6 +57,7 @@ int fontsize;
 
 int labelsize;
 // anger med vilken storlek texten för labels ska skrivas
+// Denna ska sättas till 0 om det inte finns några labels!!!
 
 array(froat) values_for_xnames;
 //Innehåller en array med nivåerna som ska förknippas med vissa xnames.
