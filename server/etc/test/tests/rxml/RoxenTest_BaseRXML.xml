@@ -2978,7 +2978,7 @@ cd</rxml>
 
 <test>
 <rxml>&roxen.version;</rxml>
-<regexp>Roxen/2\.4\.[0-9]+</regexp>
+<regexp>Roxen/3\.3\.[0-9]+</regexp>
 </test>
 
 <test>
