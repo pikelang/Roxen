@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1999, Idonex AB.
-// $Id: foldlist.pike,v 1.7 1999/11/11 12:09:57 nilsson Exp $
+// $Id: foldlist.pike,v 1.8 1999/11/24 15:38:58 nilsson Exp $
 
-constant cvs_version = "$Id: foldlist.pike,v 1.7 1999/11/11 12:09:57 nilsson Exp $";
+constant cvs_version = "$Id: foldlist.pike,v 1.8 1999/11/24 15:38:58 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -12,37 +12,55 @@ inherit "state";
 
 array (mixed) register_module()
 {
-  return ({ MODULE_PARSER, "Folding list tag", 
-	      "Adds the &lt;foldlist&gt;, &lt;ft&gt; and &lt;fd&gt; tags."
-	       " This makes it easy to build a folder list or an outline. "
-	       "Example:<pre>"
-	       "&lt;foldlist&gt;\n"
-	       "  &lt;ft unfolded&gt;ho\n"
-	       "   &lt;fd&gt;heyhepp&lt;/fd&gt;\n"
-               "  &lt;/ft&gt;\n"
-	       "  &lt;ft&gt;alakazot\n"
-	       "   &lt;fd&gt;no more&lt;/fd&gt;\n"
-               "  &lt;/ft&gt;\n"
-	       "&lt;/foldlist&gt;</pre>",
-	       0,1 });
+  return ({ MODULE_PARSER, "Folding list tag",
+	    "Adds the &lt;foldlist&gt; tag. This makes it easy to build a folder list or an outline.",
+	    0,1 });
 }
+
+mapping TAGDOCUMENTATION;
+mapping tagdocumentation() {
+  if(TAGDOCUMENTATION) return TAGDOCUMENTATION;
+  int start=__LINE__;
+  /*
+    (["foldlist":({#"<desc cont>This tag is used to build folding lists,
+that are like &lt;dl&gt; lists, but where each element can be unfolded.
+The tags used to build the lists elements are ft and fd.</desc>
+
+<attr name=unfolded>Will make all the elements in the list unfolded by default.</attr>
+",(["ft":({#"<desc cont>This tag is used within the foldlist tag.
+  The contents of this container, that is not within an fd, tag will be
+  visible both when the element is folded and unfolded
+
+  <attr name=folded>Will make this element folded by default. Overrides an unfolded attribute
+  set in the foldlist tag.</attr>
+  <attr name=unfolded>Will make this element unfolded by default.</attr>
+  ",(["fd":#"<desc cont>The contents of this container will only be visible
+    when the element it is written in is unfolded."])
+  })])
+})])
+  */
+  TAGDOCUMENTATION=get_commented_value(__FILE__,start);
+  if(!mappingp(TAGDOCUMENTATION)) TAGDOCUMENTATION=0;
+  return TAGDOCUMENTATION;
+}
+
 
 string encode_url(array states, object state, object id){
   string value="";
-  
+
   foreach(states, int tmp) {
     if(tmp>-1)
       value+=(string)tmp;
     else
       return id->not_query+"?state="+
         state->uri_encode(value);
-  }    
+  }
   return id->not_query+"?state="+
     state->uri_encode(value);
 }
 
 //It seams like the fold/unfold images are mixed up.
-string tag_ft(string tag, mapping m, string cont, object id, object state, mapping fl) {
+private string tag_ft(string tag, mapping m, string cont, object id, object state, mapping fl) {
     int index=fl->cnt++;
     array states=copy_value(fl->states);
     if((m->unfolded && states[index]==-1) ||
@@ -72,7 +90,7 @@ string tag_ft(string tag, mapping m, string cont, object id, object state, mappi
 	   "alt=\"+\" /></a>"+parse_html(cont,([]),(["fd":""]))+"</dt>";
 }
 
-string tag_foldlist(string tag, mapping m, string c, object id) {
+string container_foldlist(string tag, mapping m, string c, object id) {
   array states;
   int fds=sizeof(lower_case(c)/"<fd")-1;
 
@@ -89,7 +107,7 @@ string tag_foldlist(string tag, mapping m, string c, object id) {
 
   //Register ourselfs as state consumers and incorporate our initial state.
   string fl_name = (m->name || "fl")+fds+(id->misc->defines[" fl "]!=""?":"+id->misc->defines[" fl "]:"");
-  object state=page_state(id);
+  object state=Page_state(id);
   string state_id = state->register_consumer(fl_name, id);
   string error="";
   if(id->variables->state)
@@ -114,11 +132,3 @@ string tag_foldlist(string tag, mapping m, string c, object id) {
 
   return (id->misc->debug?"<!-- "+state_id+" -->":"")+"<dl>"+c+"</dl>"+error+"\n";
 }
-
-mapping query_tag_callers() { return ([]); }
-  
-mapping query_container_callers()
-{
-  return ([ "foldlist" : tag_foldlist ]);
-}
-
