@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.57 1998/01/12 19:14:04 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.58 1998/01/12 19:18:25 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -66,7 +66,7 @@ int uid_was_zero()
 int run_as_user_enabled()
 {
   // Return 0 if run_as_user is enabled...
-  return(uid_was_zero() || !QUERY(user))
+  return(uid_was_zero() || !QUERY(user));
 }
 
 void create()
