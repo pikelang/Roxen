@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.81 2000/01/25 17:29:25 nilsson Exp $
+ * $Id: rxml.pike,v 1.82 2000/01/25 18:05:33 nilsson Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -114,11 +114,10 @@ class Scope_roxen {
 
 class Scope_page {
   inherit RXML.Scope;
-  constant in_defines=(<"fgcolor","bgcolor","theme_bgcolor","theme_fgcolor",
-			"theme_language">);
   constant converter=(["fgcolor":"fgcolor", "bgcolor":"bgcolor",
-		       "theme_bgcolor":"theme-bgcolor", "theme_fgcolor":"theme-fgcolor",
-		       "theme_language":"theme-language"]);
+		       "theme-bgcolor":"theme_bgcolor", "theme-fgcolor":"theme_fgcolor",
+		       "theme-language":"theme_language"]);
+  constant in_defines=aggregate_multiset(@indices(converter));
 
   mixed `[] (string var, void|RXML.Context c, void|string scope) {
     if(in_defines[var])
@@ -166,6 +165,16 @@ RXML.TagSet entities_tag_set = class
 {
   inherit RXML.TagSet;
 
+  void prepare_context (RXML.Context c) {
+    c->add_scope("roxen",scope_roxen);
+    c->id->misc->page=([]);
+    c->extend_scope("page",scope_page);
+    c->extend_scope("cookie" ,c->id->cookies);
+    c->extend_scope("form", c->id->variables);
+    c->extend_scope("client", c->id->client_var);
+    c->extend_scope("var", ([]) );
+  }
+
   // These are only used in new style tags.
   constant low_entities = ([
     "quot": "\"",
@@ -183,16 +192,6 @@ RXML.TagSet rxml_tag_set = class
   inherit RXML.TagSet;
 
   string prefix = RXML_NAMESPACE;
-
-  void prepare_context (RXML.Context c) {
-    c->add_scope("roxen",scope_roxen);
-    c->id->misc->page=([]);
-    c->extend_scope("page",scope_page);
-    c->extend_scope("cookie" ,c->id->cookies);
-    c->extend_scope("form", c->id->variables);
-    c->extend_scope("client", c->id->client_var);
-    c->extend_scope("var", ([]) );
-  }
 
   array(RoxenModule) modules;
   // Each element in the imported array is the registered tag set of a
