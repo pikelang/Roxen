@@ -1,4 +1,4 @@
-# $Id: supports,v 1.86 2000/12/12 13:37:06 anders Exp $
+# $Id: supports,v 1.87 2000/12/15 15:43:56 nilsson Exp $
 
 # --- Supports database ---
 # The database used to determine what different user-agents (browsers) support.
@@ -73,6 +73,7 @@
 #! tables - The browser handles tables according to the HTML3.0 specification.
 #! tablecolor - It is possible to set the background color in the browser.
 #! tableimages - It is possible to set a backgroud image in a table in the browser.
+#! trade - The browser supports the &trade; entity.
 #! unknown - The browser is not known, hence the supports classes can not be trusted.
 #! vrml - The browser supports VRML.
 #! wbmp0 - The browser supports Wireless Bitmap Picture Format, type 0.
@@ -138,6 +139,7 @@
 				-supsub
 .*compatible.*opera.2.*		align, fontcolor, tablecolor
 .*compatible.*opera.[3-9].*	-java, javascript, fontcolor, tablecolor, *javascript=1.1
+.*compatible.*opera.[4-9].*	trade
 
 # BLAM BLAM BLAM BLAM
 .*compatible.*			-push, -layer, -js_global_event
@@ -151,7 +153,7 @@
 .*compatible.*msie.[2-9]	tablecolor, fontcolor
 .*compatible.*msie.[3-9]	activex, tableimages, javascript, *javascript=1.0
 # MSIE3 stylesheets are broken
-.*compatible.*msie.[4-9]	stylesheets, *javascript=1.2
+.*compatible.*msie.[4-9]	stylesheets, trade, *javascript=1.2
 .*compatible.*msie.[5-9]	js_inner_html, pnginline
 .*compatible.*msie.5\.0		*javascript=1.3
 # }
