@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.184 1998/04/07 19:44:12 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.185 1998/04/09 13:27:10 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -953,7 +953,9 @@ mapping restart()
 		  "type":"text/html" ]);
 } 
 
-private array configuration_ports = ({  });
+// Is this only used to hold the config-ports?
+// Seems like it. Changed to a mapping.
+private mapping(string:object) configuration_ports = ([]);
 int startpid, roxenpid;
 
 
@@ -1850,21 +1852,48 @@ void initiate_configuration_port( int|void first )
   
   config_ports_changed = 0;
 
-#ifndef THREADS  
-  if(catch(Array.map(configuration_ports, destruct)))
-    catch(Array.map(configuration_ports, do_dest));
-  
-  catch(do_dest(main_configuration_port));
-  
-  configuration_ports = ({ });
-#endif
-  main_configuration_port=0;
+  // FIXME: Where does SSL3 hide its configuration?
 
-  current_configuration = 0;
-  if(sizeof(QUERY(ConfigPorts)))
+  // First find out if we have any new ports.
+  mapping(string:array(string)) new_ports = ([]);
+  foreach(QUERY(ConfigPorts), port) {
+    string key = port[1]+"://"+port[2]+":"+port[0];
+    if (!configuration_ports[key]) {
+      report_notice(sprintf("New configuration port: %s\n", key));
+      new_ports[key] = port;
+    } else {
+      // This is needed not to delete old unchanged ports.
+      new_ports[key] = 0;
+    }
+  }
+
+  // Then disable the old ones that are no more.
+  foreach(indices(configuration_ports), string key) {
+    if (zero_type(new_ports[key])) {
+      report_notice(sprintf("Disabling configuration port: %s...\n", key));
+      object o = configuration_ports[key];
+      if (main_configuration_port == o) {
+	main_configuration_port = 0;
+      }
+      m_delete(configuration_ports, key);
+      mixed err;
+      if (err = catch{
+	destruct(o);
+      }) {
+	report_warning(sprintf("Error disabling configuration port: %s:\n"
+			       "%s\n", key, describe_backtrace(err)));
+      }
+      o = 0;	// Be sure that there are no references left...
+    }
+  }
+
+  current_configuration = 0;	// Compatibility...
+
+  // Now we can create the new ports.
+  foreach(indices(new_ports), string key)
   {
-    foreach(QUERY(ConfigPorts), port)
-    {
+    port = new_ports[key];
+    if (port) {
       array old = port;
       mixed erro;
       erro = catch {
@@ -1884,25 +1913,27 @@ void initiate_configuration_port( int|void first )
 	if(rp = requestprogram()->real_port)
 	  if(tmp = rp(port, 0))
 	    port = tmp;
-	
+
+	// FIXME: For SSL3 we might need to be root to read our
+	// secret files.
 	object privs;
 	if(port[0] < 1024)
 	  privs = Privs("Opening listen port below 1024");
 	if(o=create_listen_socket(port[0],0,port[2],requestprogram,port)) {
-	  perror("Configuration port: "+port[1]+" port number "+
-		 port[0]+" interface " +port[2]+"\n");
-	  main_configuration_port = o;
-	  configuration_ports += ({ o });
+	  report_notice(sprintf("Opening configuration port: %s\n", key));
+	  if (!main_configuration_port) {
+	    main_configuration_port = o;
+	  }
+	  configuration_ports[key] = o;
 	} else {
-	  report_error("The configuration port " + port[0] +
-		       " on the interface " + port[2] + " (" + port[1] + ") "
-		       "could not be opened\n");
+	  report_error(sprintf("The configuration port %s "
+			       "could not be opened\n", key));
 	}
       };
       if (erro) {
-	report_error("Failed to open configuration port " +
-		     old[0] + " at " + old[2] + " (" + old[1] + "): " +
-		     (stringp(erro)?erro:describe_backtrace(erro)));
+	report_error(sprintf("Failed to open configuration port %s:\n"
+			     "%s\n", key,
+			     (stringp(erro)?erro:describe_backtrace(erro))));
       }
     }
     if(!main_configuration_port)
@@ -1912,12 +1943,6 @@ void initiate_configuration_port( int|void first )
       if(first)
 	exit( -1 );	// Restart.
     }
-  } else {
-    perror("No configuration port. I hope this is what you want.\n"
-	   "Unless the configuration interface as a location module\n"
-	   "is enabled, you will not be allowed access to the configuration\n"
-	   "interface. You can re-enable the configuration port like this:\n"
-	   "./configvar ConfigurationPort=22202\n");
   }
 }
 #include <stat.h>
