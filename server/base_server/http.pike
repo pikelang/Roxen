@@ -1,7 +1,7 @@
 // HTTP convenience functions.
 // inherited by roxenlib, and thus by all files inheriting roxenlib.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: http.pike,v 1.47 2000/08/28 05:31:50 per Exp $
+// $Id: http.pike,v 1.48 2000/09/11 14:15:19 nilsson Exp $
 
 //#pragma strict_types
 
@@ -309,13 +309,15 @@ mapping http_proxy_auth_required(string realm, void|string message)
     + ([ "extra_heads":([ "Proxy-Authenticate":"basic realm=\""+realm+"\"",]),]);
 }
 
-string add_http_header(mapping to, string name, string value)
+mapping add_http_header(mapping to, string name, string value)
 {
-  if(to[name])
+  if(to[name]) {
     if(arrayp(to[name]))
       to[name] += ({ value });
     else
       to[name] = ({ to[name], value });
+  }
   else
     to[name] = value;
+  return to;
 }
