@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.188 1998/04/11 13:47:06 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.189 1998/04/15 15:37:38 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -33,7 +33,7 @@ program pipe = Pipe.pipe;
 // This is the real Roxen version. It should be changed before each
 // release
 constant __roxen_version__ = "1.2";
-constant __roxen_build__ = "23";
+constant __roxen_build__ = "24";
 
 #ifdef __NT__
 constant real_version = "Roxen Challenger/"+__roxen_version__+"."+__roxen_build__+" NT";
