@@ -1,5 +1,5 @@
 /*
- * $Id: sqltag.pike,v 1.14 1997/10/15 19:05:08 grubba Exp $
+ * $Id: sqltag.pike,v 1.15 1997/10/15 19:40:13 grubba Exp $
  *
  * A module for Roxen Challenger, which gives the tags
  * <SQLQUERY> and <SQLOUTPUT>.
@@ -7,7 +7,7 @@
  * Henrik Grubbström 1997-01-12
  */
 
-constant cvs_version="$Id: sqltag.pike,v 1.14 1997/10/15 19:05:08 grubba Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.15 1997/10/15 19:40:13 grubba Exp $";
 constant thread_safe=1;
 #include <module.h>
 
@@ -305,20 +305,22 @@ string sqltable_tag(string tag_name, mapping args,
 	  res += "</tr>\n";
 	}
       }
-      if (!ascii) {
+      if (ascii) {
+	res += "<true>";
+      } else {
 	res += "</table><true>";
       }
 
       return(res);
     } else {
       if (ascii) {
-	return("");
+	return("<false>");
       }
       return("<!-- No result from query --><false>");
     }
   } else {
     if (ascii) {
-      return("");
+      return("<false>");
     }
     return("<!-- No query! --><false>");
   }
