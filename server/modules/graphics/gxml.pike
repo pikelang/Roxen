@@ -8,7 +8,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.17 2001/09/03 18:15:07 nilsson Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.18 2001/09/05 16:43:36 per Exp $";
 constant module_type = MODULE_TAG;
 
 LocaleString module_name = _(1,"Graphics: GXML tag");
@@ -445,8 +445,8 @@ class TagGXML
 	additional_tags = internal =
 	  RXML.TagSet(this_module(), "gxml",
 		      gxml_make_tags( get_plugins ));
-      if( id->misc->gxml_stack )
-	parse_error("Recursive gxml tags not supported\n" );
+//       if( id->misc->gxml_stack )
+// 	parse_error("Recursive gxml tags not supported\n" );
       LazyImage.clear_cache();
       id->misc->gxml_stack = ADT.Stack();
       id->misc->gxml_stack->push( 0 );
@@ -458,10 +458,16 @@ class TagGXML
       // The image is now in the top of id->misc->gxml_stack, hopefully.
       LazyImage.LazyImage i;
       if( catch( i = STACK_POP() ) )
+      {
+	LazyImage.clear_cache();
 	parse_error("Popping out of stack\n");
-
+      }
+      LazyImage.clear_cache();
       if( !catch( STACK_POP() ) )
 	tag_debug("Elements left on stack after end of rendering.\n");
+
+      m_delete( id->misc, "gxml_stack" );
+      m_delete( id->misc, "gxml_tmp_stack" );
       
       if( !i )
 	parse_error( "No image\n");
@@ -482,6 +488,7 @@ class TagGXML
       if( aa->border ) a2->border = aa->border;
 
       images[ i->hash() ] = i;
+      the_cache->http_file_answer( ind, id );
       if( mapping size = the_cache->metadata( ind, id ) )
       {
 	aa->width = size->xsize;
@@ -493,9 +500,6 @@ class TagGXML
 	result = Roxen.make_tag( "img", a2, 1 );
       else
 	result = a2->src;
-      m_delete( id->misc, "gxml_stack" );
-      m_delete( id->misc, "gxml_tmp_stack" );
-      LazyImage.clear_cache();
     }
   }
 }
