@@ -1,5 +1,5 @@
 /*
- * $Id: Client.pike,v 1.13 1998/04/09 13:31:29 grubba Exp $
+ * $Id: Client.pike,v 1.14 1998/04/22 15:07:26 grubba Exp $
  */
 
 #define error(X) throw( ({ X, backtrace() }) )
@@ -75,7 +75,7 @@ object lock = 0;
 
 mixed `->(string id)
 {
-  return RemoteFunctionCall(id, myclass, server, lock->lock, this_object())->call;
+  return RemoteFunctionCall(id, myclass, server, lock && lock->lock, this_object())->call;
 }
 
 void create(string|object ip, int port, string cl,
