@@ -1,659 +1,33 @@
-/*
- * $Id: ldaptag.pike,v 1.8 2000/04/15 01:18:19 per Exp $
- *
- * A module for Roxen Challenger, which gives the tags
- * <LDAP>, <LDAPOUTPUT> (with subtag <LDAPFOREACH>) and <LDAPELSE>
- *
- * Honza Petrous
- *
- *
- * TODO: ldap_last_error: not works at all!
- *	 show_internals: checking for quit mode
- *	 backtrace
+// This is a roxen module. Copyright © 1998-2000, Honza Petrous
+//
+// Module code updateted to new 2.0 API
 
-!!! Needs more testings, mainly for error handling !!!
-
-   History:
-
-     1998-03-17 v1.0	initial version (only for Ldap module!)
-     1998-07-03 v1.1	modified for Protocols.LDAP module
-			corrected one-level parsing of LDAPFOREACH tag
-     1998-07-09 v1.2	LDAPFOR: corrected checking of attribute to case
-			insensitive
-     1998-07-10 v1.2a	LDAPFOR: corrected sizechecking for 'labeleduri*'
-     1998-07-13 v1.2b	LDAP: corrected attribute values reading
-			corrected typo: fialed -> failed (Thx Matt Brookes)
-     1998-08-18 v1.2	release version
-     1998-11-10 v1.4	LDAPOUTPUT: added checking for number of returned
-			entries
-			LDAPOUTPUT: added flag 'norem'
-     1998-11-10 v1.5	read_attrs: added support for 'replace' op
-     1999-02-22 v1.6	Removed OLD_LDAP_API support
-     1999-06-24 v1.7	Fixed bug in testing connection status 
-     1999-07-24 v1.8a	LDAPOUTPUT: added new parameter 'sortby' and 'quote'
-     2000-02-04 v1.9	LDAPOUTPUT: added new parameter 'sizelimit', 'timelimit'
-
-
- */
-
-constant cvs_version="$Id: ldaptag.pike,v 1.8 2000/04/15 01:18:19 per Exp $";
-//constant thread_safe=0;
+constant cvs_version="$Id: ldaptag.pike,v 2.0 2000/08/13 20:23:46 hop Exp $";
+constant thread_safe=1;
 #include <module.h>
+#include <config.h>
 
 inherit "module";
-inherit "roxenlib";
 
-import Array;
+Configuration conf;
 
-#define LDAPTAGDEBUG
-#ifdef LDAPTAGDEBUG
-#define DEBUGLOG(s) perror("LDAPtag: " + s + "\n")
+#define LDAP_DEBUG 1
+#ifdef LDAP_DEBUG
+# define LDAP_WERR(X) werror("LDAPtags: "+X+"\n")
 #else
-#define DEBUGLOG(s)
+# define LDAP_WERR(X)
 #endif
 
-string status_connect_server = "";
-string status_connect_last = "";
-int status_connect_nums = 0;
-string ldap_last_error = "";
-//mapping status_connect_unsuc = ([]);
 
-/*
- * Module interface functions
- */
+// Module interface functions
 
-constant module_type = MODULE_PARSER;
-constant module_name = "LDAP module";
-constant module_doc  = "This module gives the tag &lt;LDAP&gt; and containers"
-  " &lt;LDAPOUTPUT&gt;, &lt;LDAPFOR&gt; and &lt;LDAPELSE&gt;<br>\n";
+//constant module_type=MODULE_PARSER|MODULE_PROVIDER;
+constant module_type=MODULE_PARSER;
+constant module_name="LDAP tags";
+constant module_doc  = "This module gives the tag <tt>&lt;ldap&gt;</tt> and containers"
+  " <tt>&lt;ldapoutput&gt;</tt>, <tt>&lt;ldapfor&gt</tt>; and "
+  "<tt>&lt;emit&gt;</tt> tag (<tt>&lt;emit source=\"ldap\" ... &gt;</tt>).\n";
 
-/*
- * Tag handlers
- */
-
-int|mapping(string:array(mixed)) read_attrs(string attrs, int op) {
-// from string: (attname1:'val1','val2'...)(attname2:'val1',...) to
-// ADD: (["attname1":({"val1","val2"...}), ...
-// REPLACE|MODIFY: (["attname1":({op, "val1","val2"...}), ...
-
-  array(string) atypes; // = ({"objectclass","cn","mail","o"});
-  array(array(mixed)) avals; // = ({({op, "top","person"}),({op, "sysdept"}), ({op, "sysdept@unibase.cz", "xx@yy.cc"}),({op, "UniBASE Ltd."})});
-  array(mixed) tmpvals, tmparr;
-  string aval;
-  mapping(string:array(mixed)) rv;
-  int vcnt, ix, cnt = 0, flg = (op > 0);;
-
-  if(flg)
-    flg = 1;
-  DEBUGLOG(sprintf("DEB: string: %O\n",attrs));
-  if (sizeof(attrs / "(") < 2)
-    return(0);
-  atypes = allocate(sizeof(attrs / "(")-1);
-  avals = allocate(sizeof(attrs / "(")-1);
-  foreach(attrs / "(", string tmp)
-    if (sizeof(tmp)) { // without empty '()'
-      if ((ix = search(tmp, ":")) < 1) // missed ':' or is first char
-	continue;
-      //atypes[cnt] = (tmp / ":")[0];
-      atypes[cnt] = tmp[..(ix-1)];
-      //tmparr = tmp[(sizeof(atypes[cnt])+1)..] / ",";
-      tmparr = tmp[(ix+1)..] / ",";
-  DEBUGLOG(sprintf("DEB: tmparr: %O\n",tmparr));
-      vcnt = sizeof(tmparr); // + 1;
-      tmpvals = allocate(vcnt+flg);
-      for (ix=0; ix<vcnt; ix++) {
-	tmpvals[ix+flg] = (sscanf(tmparr[ix], "'%s'", aval))? aval : "";
-      }
-      if(flg)
-	tmpvals[0] = op;
-      avals[cnt] = tmpvals;
-      cnt++;
-    } // if
-
-    /*if (avals[al] != ")") {
-      // Missed right ')'
-      return (0);
-    }*/
-
-  rv = mkmapping(atypes,avals);
-  DEBUGLOG(sprintf("DEB: mapping: %O\n",rv));
-  return rv;
-}
-
-string ldap_tag(string tag_name, mapping args,
-		    object request_id, object f,
-		    mapping defines, object fd)
-{
-  if (args->op && args->dn) {
-
-    if (args->parse) {
-      args->attr = parse_rxml(args->attr, request_id, f, defines);
-    }
-
-    string host = query("hostname");
-    string basedn = query("basedn");
-    string user = query("user");
-    string password = query("password");
-    int scopenum, rv, attrop;
-    object con = 0, en = 0;
-    mixed error;
-    function dir_connect = request_id->conf->dir_connect;
-    mapping(string:array(string)) attrval = ([]);
-
-    if (args->host) {
-      host = args->host;
-      user = "";
-      password = "";
-    }
-    if (args->basedn) {
-      basedn = args->basedn;
-      user = "";
-      password = "";
-      dir_connect = 0;
-    }
-    if (args->user) {
-      user = args->user;
-      password = "";
-      dir_connect = 0;
-    }
-    if (args->password) {
-      password = args->password;
-      dir_connect = 0;
-    }
-    if (dir_connect) {
-      error = catch(con = dir_connect(host));
-    } else {
-      //host = (lower_case(host) == "localhost")?"":host;
-      error = catch(con = Protocols.LDAP.client(host));
-      if(!error)
-        error = catch(con->bind(user,password));
-    }
-    if (error || !objectp(con)) {
-      ldap_last_error = "Couldn't connect to LDAP server." + "";
-      return("<h1>Couldn't connect to LDAP server</h1><br>\n" +
-	     ((master()->describe_backtrace(error)/"\n")*"<br>\n"));
-    }
-
-    /* add, delete or modify ? */
-    status_connect_server = "host: " + host +
-			    (sizeof(user)?(", user: "+user):"") +
-			    (sizeof(password)?(", password: "+password):"");
-    status_connect_last = ctime(time());
-    status_connect_nums++;
-    con->set_basedn(basedn);
-    if (args->scope)
-      switch (args->scope) {
-          case "onelevel": scopenum = 1; break;
-	  case "subtree": scopenum = 2; break;
-	  default: scopenum = 0;
-      }
-    con->set_scope(scopenum);
-
-    attrop = 0;
-    if(args->op == "replace")
-      attrop = 2; // ldap->modify with flag 'replace'
-    if (args->attr && (args->op != "delete"))
-      if(!(attrval = read_attrs(args->attr, attrop))) {
-	// error
-	ldap_last_error = "Attribute parse error: " + args->attr;
-        return("<h1>Attribute parse error:" + args->attr + "</h1><br>\n" +
-	       ((master()->describe_backtrace(error)/"\n")*"<br>\n"));
-      }
-
-    DEBUGLOG(args->op);
-    DEBUGLOG(sprintf("%O",attrval));
-    switch (args->op) {
-      case "add": error = catch(rv = con->add(args->dn,attrval)); break;
-      case "delete": error = catch(rv = con->delete(args->dn)); break;
-      case "modify": error = catch(rv = con->modify(args->dn,attrval)); break;
-      case "replace": error = catch(rv = con->modify(args->dn,attrval,1)); break;
-      default:  ldap_last_error = "Operation \"" + args->op + "\" is unknown.";
-		return("<h1>Operation \"" + args->op + "\" is unknown.</h1>\n" +
-		((master()->describe_backtrace(error)/"\n")*"<br>\n"));
-    }
-
-    con->unbind();
-
-    if (error || rv) {
-      ldap_last_error = "LDAP Operation \"" + args->op + "\" failed: " + con->error_string();
-      return("<h1>" + ldap_last_error + "</h1>\n" +
-	     ((master()->describe_backtrace(error)/"\n")*"<br>\n"));
-    }
-
-    DEBUGLOG(rv?"<false>":"<true>");
-    return(rv?"<false>":"<true>");
-  }
-
-  return("<!-- Missing attribute op= and/or dn= ! --><false>");
-
-}
-
-// Subcontainer <LDAPFOR> support functions
-
-#define SUBTAG_VAL_S    "<ldapfor"
-#define SUBTAG_VAL_E    "</ldapfor"
-#define TAG_E           ">"
-
-int find_subc0(string strbody) {
-// Returns first char of the appearance of subtag
-
-  int ix = 0, addrv = 0, cnt = 0;
-  string strh = lower_case(strbody);
-
-  if ((addrv = search(strh[ix..], SUBTAG_VAL_S))<0)
-      return(-1);
-  cnt = ix + addrv;
-  ix += addrv + 1;
-  if ((addrv = search(strh[ix..], TAG_E))<0)
-      return(-1);
-  ix += addrv + 1;
-  if ((addrv = search(strh[ix..], SUBTAG_VAL_E))<0)
-      return(-1);
-  ix += addrv + 1;
-  if ((addrv = search(strh[ix..], TAG_E))<0)
-      return(-1);
-  ix += addrv + 1;
-
-  return(cnt);
-}
-
-
-array(int)|int find_subc(string strbody) {
-// Returns first & last position of subcontainer
-
-  int ix = 0, addrv = 0, cnt = 0;
-  string strh = lower_case(strbody);
-
-  if ((addrv = search(strh[ix..], SUBTAG_VAL_S))<0)
-      return(-1);
-  cnt = ix + addrv;
-  ix += addrv + 1;
-  if ((addrv = search(strh[ix..], TAG_E))<0)
-      return(-1);
-  ix += addrv + 1;
-  if ((addrv = search(strh[ix..], SUBTAG_VAL_E))<0)
-      return(-1);
-  ix += addrv + 1;
-  if ((addrv = search(strh[ix..], TAG_E))<0)
-      return(-1);
-  ix += addrv + 1;
-
-  return(({cnt, ix-1}));
-}
-
-string recurse_parse_ldapfor(string contents, mapping m, object request_id)
-{
-
-  return parse_html(contents,([]),
-	(["ldapfor":
-	  lambda(string tag, mapping args, string contents, mapping m,
-		 object request_id)
-	  {
-	     
-	     if(args->attr)
-		m->attr = lower_case(args->attr);
-	     else
-		contents = "<!-- Missing attribute attr= ! --><false>";
-	     if(args->index)
-		m->index = (int)args->index;
-	     if(args->step)
-		m->step = (int)args->step;
-	     if(args->max)
-		m->max = (int)args->max;
-	     m->body = contents;
-	     return("");
-	  }
-	]), m, request_id);
-}
-
-mapping(string:mixed) parse_subc(string contents, object id) {
-
-    mapping m = (["attr":"","index":1,"step":1,"max":0,"body":""]);
-
-    recurse_parse_ldapfor(contents, m, id);
-    if(m->body)
-      return (m);
-    return(([]));
-}
-
-int is_attrval_greater(mapping m1, mapping m2, string attrname) {
-// Returns 1 if m1 >= m2 sorted by attribute 'attrname'
-
-    if(zero_type(m1[attrname]))
-        return 0;
-    if(zero_type(m2[attrname]))
-        return 1;
-    if(m1[attrname][0] >= m2[attrname][0])
-        return 1;
-    return 0;
-}
-
-
-string ldapoutput_tag(string tag_name, mapping args, string contents,
-		     object request_id, object f,
-		     mapping defines, object fd)
-{
-  if (args->filter) {
-
-    if (args->parse) {
-      args->filter = parse_rxml(args->filter, request_id, f, defines);
-    }
-
-    string host = query("hostname");
-    string basedn = query("basedn");
-    string user = query("user");
-    string password = query("password");
-    object con = 0, en;
-    array(mapping(string:mixed)) result;
-    function dir_connect = request_id->conf->dir_connect;
-    mixed error;
-    string atype;
-    string quote = "#";  // DEFAULT
-    mapping m = (["attr":"","index":0,"step":1,"max":0,"body":""]);
-
-    if (args->quote && sizeof(quote))
-      quote = args->quote;  // do_output_tag doing this itself?
-    if (args->host) {
-      host = args->host;
-      user = "";
-      password = "";
-    }
-    if (args->basedn) {
-      basedn = args->basedn;
-      user = "";
-      password = "";
-      dir_connect = 0;
-    }
-    if (args->user) {
-      user = args->user;
-      password = "";
-      dir_connect = 0;
-    }
-    if (args->password) {
-      password = args->password;
-      dir_connect = 0;
-    }
-    if (dir_connect) {
-      error = catch(con = dir_connect(host));
-    } else {
-      host = (lower_case(host) == "localhost")?"":host;
-      error = catch(con = Protocols.LDAP.client(host));
-      if(!error)
-        error = catch(con->bind(user,password));
-    }
-    if (error || !objectp(con)) {
-      contents = "<h1>Couldn't connect to LDAP-server</h1><br>\n" +
-	((master()->describe_backtrace(error)/"\n")*"<br>\n");
-      return(contents);
-    }
-    status_connect_server = "host: " + host +
-			    (sizeof(user)?(", user: "+user):"") +
-			    (sizeof(password)?(", password: "+password):"");
-    status_connect_last = ctime(time());
-    status_connect_nums++;
-
-    con->set_basedn(basedn);
-    if (args->sizelimit)
-      con->set_option(2, (int)args->sizelimit);
-    if (args->timelimit)
-      con->set_option(3, (int)args->timelimit);
-    if (args->scope) {
-      int scopenum;
-      switch (args->scope) {
-        case "onelevel": scopenum = 1; break;
-        case "subtree": scopenum = 2; break;
-        default: scopenum = 0;
-      }
-      con->set_scope(scopenum);
-    }
-
-    if (error = catch(en = con->search(args->filter))) {
-      ldap_last_error = "LDAP search \"" + args->filter + "\" failed: " + con->error_string();
-      contents = "<h1>" + ldap_last_error + "</h1>\n" +
-	((master()->describe_backtrace(error)/"\n")*"<br>\n");
-    }
-    con->unbind();
-
-    if (objectp(en) && en->num_entries()) {
-      string nullvalue="";
-      array parsed_content_array = ({});
-      array(string) content_array; // = contents / quote;
-      mapping(string:array(string)) res;
-      array(string) res_array = ({});
-      int ix, cnt;
-      string contents2;
-      array pos;
-
-      DEBUGLOG(sprintf("entries: %d",en->num_entries()));
-      DEBUGLOG(sprintf("%O",en->fetch()));
-      if (args->nullvalue) {
-	nullvalue = (string)args->nullvalue;
-      }
-
-      // Preprocess subcontainer
-      contents2 = contents;
-      while(arrayp(pos = find_subc(contents2))) {
-	if(pos[0])
-	  parsed_content_array += ({contents2[..(pos[0]-1)]});
-	parsed_content_array += ({parse_subc(contents2[pos[0]..pos[1]], request_id)});
-	contents2 = contents2[(pos[1]+1)..];
-	if(!sizeof(contents2))
-	  break;
-      } // while
-      if (sizeof(contents2))
-	  parsed_content_array += ({contents2}); // trailing text
-
-      //DEBUGLOG(sprintf("DEB: preparsed: $%O$",parsed_content_array));
-
-      // Sorting the entries
-      array sen, ena = ({});
-      do
-        ena = ena + ({ en->fetch() });
-      while (en->next());
-      ena = ena - ({});
-      if (args->sortby && sizeof(args->sortby))
-        sen = Array.sort_array(ena, is_attrval_greater, args->sortby);
-      else
-        sen = ena;
-      ena = ({});
-
-      // Walking through all entries
-      foreach(sen, res) {
-	int i;
-
-	contents2 = "";
-	foreach(parsed_content_array, mixed elem) {
-	  if (stringp(elem))
-	    contents2 += elem;
-	  else
-	    if (res[elem->attr] || !zero_type(res[elem->attr])) {
-	      ix = sizeof(res[elem->attr]);
-	      cnt = 0;
-	      for (i=(elem->index)-1; i < ix; i+=elem->step) {
-		if (elem->max)
-		  if (cnt++ >= elem->max)
-		    break;
-		contents2 += replace (elem->body, quote+elem->attr+quote,
-				     quote+elem->attr+":"+(i+1)+quote);
-	      }
-	    } else
-#if 1
-		if(((elem->attr == "labeledurianchor")
-		  || (elem->attr == "labeleduriuri")
-		  || (elem->attr == "labeledurilabel")) && res->labeleduri) {
-		  // optimization remark: the body is closer bellow -^
-		  ix = sizeof(res->labeleduri);
-		  cnt = 0;
-		  for (i=(elem->index)-1; i < ix; i+=elem->step) {
-		    if (elem->max)
-		      if (cnt++ >= elem->max)
-			break;
-		      contents2 += replace (elem->body, quote+elem->attr+quote,
-				     quote+elem->attr+":"+(i+1)+quote);
-		  }
-	        } else
-#endif
-                  if (zero_type(args["norem"]))
-	            contents2 += "<!-- Missing attribute \"" + elem->attr +
-		 		"\" ! -->"; // + elem->body;
-	}
-	//DEBUGLOG(sprintf("DEB: preparsed_2: $%s$",contents2));
-	content_array = contents2 / quote;
-
-	for (i=0; i < sizeof(content_array); i++) {
-	  int ord = 0;
-	  if (i & 1) {
-	    atype = lower_case((content_array[i] / ":")[0]);
-	    //DEBUGLOG(sprintf("DEB2: atype: %s",atype));
-	    if (sizeof(content_array[i] / ":") == 2)
-	      ord = ((int)(content_array[i] / ":")[1]) - 1;
-	    if((atype == "labeledurianchor") || (atype == "labeleduriuri")
-		  || (atype == "labeledurilabel"))
-	      atype = "labeleduri";
-	    //if (!zero_type(res[atype]) || res[atype]) {
-	    if (!zero_type(res[atype])) {
-	      string value = "";
-	      if (sizeof(res[atype]) > ord) {
-	        value = (string)res[atype][ord];
-		// special attribute processing
-		atype = lower_case((content_array[i] / ":")[0]);
-		if((atype == "labeledurianchor") || (atype == "labeleduriuri")
-		  || (atype == "labeledurilabel")) {
-		  int ix = search(value, " "); // cut leadings ' ' ?
-		  string uriuri = (value / " ")[0];
-		  string urilabel;
-
-		  if(ix > 1) // URI Label exists!
-		    urilabel = value[(ix+1)..]; // after 1.space to end
-		  else
-		    urilabel = uriuri;
-		  switch (atype) {
-		    case "labeleduriuri":
-			value = uriuri;
-			break;
-		    case "labeledurilabel":
-			value = urilabel;
-			break;
-		    case "labeledurianchor":
-			value = "<a href=\"" + uriuri + "\">" + urilabel + "</a>";
-			break;
-		  } //case
-		}
-	      }
-	      res_array += ({ ((value=="")?nullvalue:value) }) + ({});
-	    } else if (atype == "dn") {
-	      /* Get DN */
-		;
-	    } else if (content_array[i] == "") {
-	      /* Dual #'s to get one */
-	      res_array += ({ quote }) + ({});
-	    } else {
-                if (zero_type(args["norem"]))
-	          res_array += ({"<!-- Missing attribute " + 
-			    (content_array[i] / ":")[0] + " -->"}) + ({});
-	    }
-	  } else {
-	    res_array += ({ content_array[i] });
-	  }
-	} // for
-      } // foreach
-      contents = (res_array * "") + "<true>";
-    } else {
-      contents = "<false>";
-    } // if (en && sizeof
-
-#if 0
-    if (result && sizeof(result)) {
-      contents = do_output_tag( args, result, contents, request_id )
-        + "<true>";
-    } else {
-      contents = "<false>";
-    }
-#endif
-
-  } else
-    contents = "<!-- No filter specified! --><false>";
-
-  //DEBUGLOG(sprintf("DEB3: contents: %s",contents));
-  DEBUGLOG((contents[-6..] == "<true>") ? "<true>" : "<false>");
-  return(contents);
-}
-
-
-string ldapelse_tag(string tag_name, mapping args, string contents,
-		   object request_id, mapping defines)
-{
-  string contents2 = replace(contents, "#ldaperror#", "I don't know ;-(");
-  return(make_container("else", args, contents2));
-}
-
-string dumpid_tag(string tag_name, mapping args,
-		  object request_id, mapping defines)
-{
-  return(sprintf("<pre>ID:%O\n</pre>\n",
-		 mkmapping(indices(request_id), values(request_id))));
-}
-
-/*
- * Hook in the tags
- */
-
-mapping query_tag_callers()
-{
-  return( ([ "ldap":ldap_tag, "dumpid":dumpid_tag ]) );
-}
-
-mapping query_container_callers()
-{
-  return( ([ "ldapoutput":ldapoutput_tag, "ldapelse":ldapelse_tag ]) );
-}
-
-/*
- * Setting the defaults
- */
-
-void create()
-{
-  defvar("hostname", "localhost", "Defaults:  LDAP server location", 
-	 TYPE_STRING, "Specifies the default LDAP directory server hostname.\n");
-  defvar("basedn", "", "Defaults: LDAP search base DN",
-	 TYPE_STRING,
-	 "Specifies the distinguished name to use as a base for queries.\n");
-  defvar("user", "", "Defaults:  username",
-	 TYPE_STRING,
-	 "Specifies the default username to use for access.\n"
-	 "<br><p><b>DEPRECATED!</b>");
-  defvar("password", "", "Defaults:  password",
-	 TYPE_STRING,
-	 "Specifies the default password to use for access.\n"
-	 "<br><p><b>DEPRECATED!</b>");
-}
-
-/*
- * More interface functions
- */
-
-object conf;
-
-void start(int level, object _conf)
-{
-  if (_conf) {
-    conf = _conf;
-  }
-}
-
-void stop()
-{
-}
-
-string status()
-{
-  if (status_connect_nums)
-    return(sprintf("<p>Last connected to %s [ %s]<br>Number of connections: %d<br><p>Last error: %s<br>\n",
-		   status_connect_server, status_connect_last,
-		   status_connect_nums, sizeof(ldap_last_error) ? ldap_last_error : "[none]"));
-  return("<p><font color=red>Zero connections.</font><br>\n");
-}
 
 TAGDOCUMENTATION;
 #ifdef manual
@@ -798,7 +172,286 @@ constant tagdoc=([
 
 <attr name='parse'>
  If specified, the content will be parsed by the RXML parser.
-</attr>",
+</attr>"
 
 ]);
 #endif
+
+// Internal helpers
+
+mapping(string:array(mixed))|int read_attrs(string attrs, int op) {
+// from string: (attname1:'val1','val2'...)(attname2:'val1',...) to
+// ADD: (["attname1":({"val1","val2"...}), ...
+// REPLACE|MODIFY: (["attname1":({op, "val1","val2"...}), ...
+
+  array(string) atypes; // = ({"objectclass","cn","mail","o"});
+  array(array(mixed)) avals; // = ({({op, "top","person"}),({op, "sysdept"}), ({op, "sysdept@unibase.cz", "xx@yy.cc"}),({op, "UniBASE Ltd."})});
+  array(mixed) tmpvals, tmparr;
+  string aval;
+  mapping(string:array(mixed)) rv;
+  int vcnt, ix, cnt = 0, flg = (op > 0);;
+
+  if(flg)
+    flg = 1;
+  if (sizeof(attrs / "(") < 2)
+    return(0);
+  atypes = allocate(sizeof(attrs / "(")-1);
+  avals = allocate(sizeof(attrs / "(")-1);
+  foreach(attrs / "(", string tmp)
+    if (sizeof(tmp)) { // without empty '()'
+      if ((ix = search(tmp, ":")) < 1) // missed ':' or is first char
+	continue;
+      //atypes[cnt] = (tmp / ":")[0];
+      atypes[cnt] = tmp[..(ix-1)];
+      //tmparr = tmp[(sizeof(atypes[cnt])+1)..] / ",";
+      tmparr = (tmp[(ix+1)..] / ",") - ({ "" });
+      vcnt = sizeof(tmparr); // + 1;
+      tmpvals = allocate(vcnt+flg);
+      for (ix=0; ix<vcnt; ix++) {
+	tmpvals[ix+flg] = (sscanf(tmparr[ix], "'%s'", aval))? aval : "";
+      }
+      if(flg)
+	tmpvals[0] = op;
+      avals[cnt] = tmpvals;
+      cnt++;
+    } // if
+
+    /*if (avals[al] != ")") {
+      // Missed right ')'
+      return (0);
+    }*/
+
+  rv = mkmapping(atypes,avals);
+  //LDAP_WERR(sprintf("DEB: mapping: %O\n",rv));
+  return rv;
+}
+
+
+array|object|int do_ldap_op(string op, mapping args, RequestID id)
+{
+  string host = query("server");
+  string pass = ""; // = query("server");
+
+  if (args->server) {
+    host=args->server;
+    args->server="CENSORED";
+  }
+
+  if (args->password) {
+    pass=args->password;
+    args->password="CENSORED";
+  }
+
+  switch (op) {
+    case "search":
+	if (!args->filter)
+	  RXML.parse_error("No filter.");
+	break;
+
+    case "add": 
+    case "replace": 
+    case "modify": 
+	if (!args->dn)
+	  RXML.parse_error("No DN.");
+	if (!args->attr)
+	  RXML.parse_error("No attribute.");
+	break;
+
+    case "delete": 
+	if (!args->dn)
+	  RXML.parse_error("No DN.");
+	break;
+
+  } //switch
+
+  if (args->parse)
+    args->query = Roxen.parse_rxml(args->query, id);
+
+  Protocols.LDAP.client con;
+  array(mapping(string:mixed))|object|int result;
+  function ldap_connect = id->conf->ldap_connect;
+  mixed error;
+  mapping|int attrvals;
+
+  if(ldap_connect)
+    error = catch(con = ldap_connect(host));
+  else
+    error = catch(con = Protocols.LDAP.client(host));
+
+  if (error)
+    RXML.run_error("Couldn't connect to LDAP server. "+Roxen.html_encode_string(error[0]));
+
+
+  if(op != "delete" && op != "search") {
+    attrvals = read_attrs(args->attr, (args->op == "replace") ? 2 : 0); // ldap->modify with flag 'replace'
+    if(intp(attrvals))
+      RXML.run_error("Couldn't parse attribute values.");
+  }
+
+  // binding ?
+  if(args->user)
+    con->bind(args->user,pass);
+
+  switch (op) {
+    case "search":
+	// todo: add attributes listing if any
+	error = catch(result = (con->search(args->filter)));
+	break;
+
+    case "add":
+	error = catch(result = (con->add(args->dn, attrvals)));
+	break;
+
+    case "delete":
+	error = catch(result = (con->delete(args->dn)));
+	break;
+
+  } //switch
+
+
+  if(error) {
+    error = Roxen.html_encode_string(sprintf("LDAP operation %s failed. %s",
+	    op, con->error_string()||""));
+    con->unbind();
+    RXML.run_error(error);
+  }
+  con->unbind();
+
+#if 0
+  args["ldapobj"]=con;
+  if(result && args->rowinfo) {
+    int rows;
+    if(arrayp(result)) rows=sizeof(result);
+    if(objectp(result)) rows=result->num_rows();
+    RXML.user_set_var(args->rowinfo, rows);
+  }
+#endif
+
+  if(op = "search" && objectp(result) && result->num_entries()) {
+    array res = ({});
+    do
+      res += ({ result->fetch() });
+    while(result->next());
+    return res - ({});
+  }
+    
+  return result;
+}
+
+
+// -------------------------------- Tag handlers -----------------------------
+
+class TagLDAPplugin {
+  inherit RXML.Tag;
+  constant name = "emit";
+  constant plugin_name = "ldap";
+
+
+  array get_dataset(mapping m, RequestID id) {
+    array res;
+    array rv = ({});
+    string split = m->split || "\0";
+
+    res=do_ldap_op("search", m, id);
+
+   if(arrayp(res) && sizeof(res)) {
+     foreach(res, mapping elem) {
+       mapping avalnew = ([]);;
+       foreach(indices(elem), string attr) {
+#if 0 // var_name.0 .. var_name.n 
+         for(int ix=0; ix<sizeof(elem[attr]); ix++)
+	   avalnew += ([ (attr+"."+(string)ix): elem[attr][ix] ]);
+#else // var_name0\0var_name1 ...
+	 switch(String.capitalize(attr)) { // special attributes
+	   case "LABELEDURI": //avalnew += ([ "ldabeleduriuri": elem[attr]
+		break;
+	   case "DN":
+		break;
+	 }
+	 avalnew += ([ attr:(elem[attr]*split) ]);
+#endif
+       }
+       rv += ({ avalnew });
+     }
+   } else
+     rv = ({([])});
+
+   //LDAP_WERR(sprintf("emit search: rv: %O", rv));
+   return(rv);
+ 
+  }
+}
+
+class TagLDAPQuery {
+  inherit RXML.Tag;
+  constant name = "ldap";
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+
+  class Frame {
+    inherit RXML.Frame;
+
+    array do_return(RequestID id) {
+      NOCACHE();
+
+      array res=do_ldap_op(args->op, args, id);
+
+      id->misc->defines[" _ok"] = 1;
+      return 0;
+    }
+
+  }
+}
+
+// ------------------- Callback functions -------------------------
+
+Protocols.LDAP.client ldap_object(void|string host)
+{
+  string host = stringp(host)?host:query("server");
+  Protocols.LDAP.client con;
+  function ldap_connect = conf->ldap_connect;
+  mixed error;
+  /* Is this really a good idea? /mast
+  error = catch(con = sql_connect(host));
+  if(error)
+    return 0;
+  return con;
+  */
+  return ldap_connect(host);
+}
+
+string query_provides()
+{
+  return "ldap";
+}
+
+
+// ------------------------ Setting the defaults -------------------------
+
+void create()
+{
+  defvar("server", "ldap://localhost/??sub", "Default server URL",
+	 TYPE_STRING | VAR_INITIAL,
+	 "The default LDAP URL that will be used if no <i>host</i> "
+	 "attribute is given to the tags. Usually the <i>host</i> "
+	 "attribute should be used with a symbolic name definied "
+	 "in the <i>Symbolic names</i>."
+	 "<p>The default connection is specified as a LDAP URL in the "
+	 "format "
+	 "<tt>ldap://host:port/basedn??scope?filter?!...</tt>.\n");
+}
+
+
+// --------------------- More interface functions --------------------------
+
+void start(int level, Configuration _conf)
+{
+  if (_conf)
+    conf = _conf;
+}
+
+string status()
+{
+      "<font color=\"red\">Not connected:</font> " +
+      replace (Roxen.html_encode_string ("BLAHBLAH..."), "\n", "<br />\n") +
+      "<br />\n";
+}
