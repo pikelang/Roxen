@@ -316,10 +316,12 @@ bump_version: bump_version.stamp
 	  echo Deleting old $(SRCDIR)/server/base_server/roxen.pike.new...; \
 	  rm $(SRCDIR)/server/base_server/roxen.pike.new || exit 1; \
 	else : ; fi
-	@(cd $(SRCDIR); \
-	  echo Updating sources...; \
-	  if cvs -q update -d|egrep '^[CM?]'; then exit 1; else : ; fi; \
-	)
+# Do not update the source.
+#	@(cd $(SRCDIR); \
+#	  echo Updating sources...; \
+#	  if cvs -q update -d|egrep '^[CM?]'; then exit 1; else : ; fi; \
+#	)
+# Do not update the Pike build for every Roxen build. Irritates people.
 #	@for d in $(SRCDIR)/pike/0.5 $(SRCDIR)/pike/0.6; do \
 #	  if test -f $$d/src/version.c; then \
 #	    (cd $$d/; \
