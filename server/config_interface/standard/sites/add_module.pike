@@ -3,7 +3,7 @@ inherit "roxenlib";
 #include <module.h>
 
 // Class is the name of the directory.
-array(string) class_description( string d, object id )
+array(string) class_description( string d, RequestID id )
 {
   string name, doc;
   while(!(< "", "/" >)[d] && !file_stat( d+"/INFO" ))
@@ -28,7 +28,7 @@ array(string) class_description( string d, object id )
   return ({ name, doc });
 }
 
-array(string) module_class( object m, object id )
+array(string) module_class( object m, RequestID id )
 {
   return class_description( m->filename, id );
 }
@@ -187,7 +187,7 @@ return sprintf(
   };
 }
 
-array(int|string) class_visible_normal( string c, string d, object id )
+array(int|string) class_visible_normal( string c, string d, RequestID id )
 {
   string header = ("<tr><td colspan='2'><table width='100%' "
                    "cellspacing='0' border='0' cellpadding='3' "
@@ -251,7 +251,7 @@ return sprintf(
   }
 }
 
-array(int|string) class_visible_faster( string c, string d, object id )
+array(int|string) class_visible_faster( string c, string d, RequestID id )
 {
   string header = ("<tr><td colspan='2'><table width='100%' cellspacing='0' "
                    "border='0' cellpadding='3' bgcolor='&usr.content-titlebg;'>"
@@ -288,7 +288,7 @@ string page_faster( RequestID id )
 
 int first;
 
-array(int|string) class_visible_compact( string c, string d, object id )
+array(int|string) class_visible_compact( string c, string d, RequestID id )
 {
   string res="";
   if(first++)
@@ -377,6 +377,7 @@ mixed do_it( RequestID id )
 
   object conf = roxen.find_configuration( id->variables->config );
   string last_module = "";
+  array(string) initial_modules = ({});
   int got_initial = 0;
   if(!conf)
     return "Configuration gone!\n";
@@ -384,7 +385,7 @@ mixed do_it( RequestID id )
   if( !conf->inited )
     conf->enable_all_modules();
 
-  foreach( id->variables->module_to_add/"\0", string mod )
+  foreach( id->variables->module_to_add/"\0", string mod ) {
     if (RoxenModule m = conf->enable_module( mod )) {
       mod = conf->otomod[m];
       last_module = replace(mod, "#", "!" );
@@ -405,11 +406,13 @@ mixed do_it( RequestID id )
 	    got_initial = 1;
     }
     else last_module = "";
+    if(got_initial) initial_modules += ({ last_module });
+  }
 
   if( strlen( last_module ) )
     if (got_initial)
       return http_redirect( site_url( id, id->variables->config )+
-			    "modules/"+last_module+"/?initial=1&section=_all", id );
+			    "modules/?initial=1&mod="+initial_modules*",", id );
     else
       return http_redirect( site_url( id, id->variables->config )+
 			    "modules/"+last_module+"/", id );
