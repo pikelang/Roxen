@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.294 2001/09/01 03:17:30 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.295 2001/09/03 18:42:10 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -5180,7 +5180,8 @@ using the pre tag.
 //----------------------------------------------------------------------
 
 "cset":#"<desc cont='cont'><p>
- Sets a variable with its content.</p>
+ Sets a variable with its content. This is deprecated in favor of
+ using the &lt;set&gt;&lt;/set&gt; construction.</p>
 </desc>
 
 <attr name=variable value=name>
@@ -6053,9 +6054,11 @@ load.</p>
 
 //----------------------------------------------------------------------
 
-"set":#"<desc tag='tag'><p><short>
- Sets a variable.</short>
-</p></desc>
+"set":#"<desc tag='tag' cont='cont'><p><short>
+ Sets a variable in any scope that isn't read-only.</short>
+</p>
+<ex-box><set variable='var.language'>Pike</set></ex-box>
+</desc>
 
 <attr name=variable value=string required='required'>
  <p>The name of the variable.</p>
@@ -6522,16 +6525,6 @@ just got zapped?
   This comment will not ever be shown.
 ?></ex-box>
 </desc>",
-
-//----------------------------------------------------------------------
-
-// <cset> is deprecated. This information is to be put in a special
-// 'deprecated' chapter in the manual, due to many persons asking
-// about its whereabouts.
-"cset":#"<desc tag='tag'><p><short>
- Deprecated in favor of <tag>define variable</tag></short> Deprecated
- in Roxen 2.0.
-</p></desc>",
 
 //----------------------------------------------------------------------
 
