@@ -2,7 +2,7 @@
  * A quite complex directory module. Generates macintosh like listings.
  */
 
-string cvs_version = "$Id: directories.pike,v 1.25 1998/12/07 18:23:17 grubba Exp $";
+string cvs_version = "$Id: directories.pike,v 1.26 1999/11/26 16:56:22 leif Exp $";
 int thread_safe=1;   /* Probably. Check _root */
 
 #include <module.h>
@@ -172,11 +172,14 @@ void create()
   defvar("readme", 1, "Include readme files", TYPE_FLAG|VAR_MORE,
 	 "If set, include readme files in directory listings");
   
+  defvar("date", "Don't show dates", "Dates", TYPE_MULTIPLE_STRING,
+	 "Select whether to include the last modification date in directory "
+	 "listings, and if so, on what format. `ISO dates' gives dates "
+         "like 1999-11-26, while `Text dates' gives dates like `Fri Nov 26, "
+         "1999'.",
+         ({ "Don't show dates", "Show ISO dates", "Show text dates" })
+        );
 #if 0
-  defvar("date", 1, "Include date", TYPE_FLAG,
-	 "If set, include the last modification date in directory "
-	 "listings.");
-  
   defvar("user", 0, "Include file user", TYPE_FLAG,
 	 "If set, include the last user who modified the file in "
 	 "directory listings. This requires a user database module.");
@@ -318,13 +321,38 @@ array|string describe_dir_node_mac(object node, object id)
    * o The icon to use
    * o The type of the file
    */
+
+  string line =
+     sprintf("%s %-"+QUERY(sizes)+"s</a> ",
+                image(icon),
+                filename[0..QUERY(sizes)-1]);
+
+  if (QUERY(size))
+  { if (len >= 1024*9999) line += sprintf("%5d Mbytes", len/(1024*1024));
+    else if (len >= 9999) line += sprintf("%5d Kbytes", len/1024);
+    else if (len >= 0   ) line += sprintf("%5d bytes ", len);
+                     else line += "            ";
+  }
+
+  switch (QUERY(date))
+  { case "Show text dates":
+      string ct = ctime(node->stat[3]);
+      if (node->stat[3] != 0) line += " " + ct[0..9] + "," + ct[19..23] + " ";
+                         else line += "                 ";
+      break;
+    case "Show ISO dates":
+      mapping lt = localtime(node->stat[3]);
+      if (node->stat[3] != 0)
+           line += sprintf(" %04d-%02d-%02d",
+                                1900+lt->year, 1+lt->mon, lt->mday);
+        else line += "           ";
+      break;
+    default:
+      // Don't show dates.
+      break;
+  }
   
-  return
-    ({ "<dt>" ,
-       sprintf("%s %-"+QUERY(sizes)+"s</a> %8s %-40s\n", 
-	       image(icon), filename[0..QUERY(sizes)-1], sizetostring(len), type)
-     });
-  
+  return  ({ "<dt>" ,  line + " " + type + "\n"  });
 }
 
 object create_node(string f, object id, int nocache)
