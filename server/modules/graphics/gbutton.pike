@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.18 2000/02/08 03:12:34 nilsson Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.19 2000/02/08 03:35:57 per Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -34,10 +34,6 @@ inherit "roxenlib";
 
 
 roxen.ImageCache  button_cache;
-
-
-//  Distance between icon image and text
-#define IMAGE_SPC  5
 
 
 array register_module()
@@ -109,95 +105,142 @@ mapping query_container_callers()
   return ([ "gbutton" : tag_button, "gbutton-url" : tag_button ]);
 }
 
+Image.Layer layer_slice( Image.Layer l, int from, int to )
+{
+  return Image.Layer( ([
+    "image":l->image()->copy( from,0, to-1, l->ysize()-1 ),
+    "alpha":l->alpha()->copy( from,0, to-1, l->ysize()-1 ),
+  ]) );
+}
+
+Image.Layer stretch_layer( Image.Layer o, int x1, int x2, int w )
+{
+  Image.Layer l, m, r;
+  int leftovers = w - (x1 + (o->xsize()-x2) );
+  object oo = o;
+
+  l = layer_slice( o, 0, x1 );
+  m = layer_slice( o, x1+1, x2+1 );
+  r = layer_slice( o, x2, o->xsize() );
+
+  m->set_image( m->image()->scale( leftovers, l->ysize() ),
+                m->alpha()->scale( leftovers, l->ysize() ));
+
+  l->set_offset(  0,0 );
+  m->set_offset( x1,0 );
+  r->set_offset( w-r->xsize(),0 );
+  o = Image.lay( ({ l, m, r }) );
+  return o;
+}
 
 object(Image.Image)|mapping draw_button(mapping args, string text, object id)
 {
-  Image.Image  text_img, b, tmp, button;
-  int          req_width, b_width, b_height, t_width, i_width, icn_x, txt_x;
+  Image.Image  text_img;
   mapping      icon;
   object       button_font = resolve_font( args->font );
-  Image.Image button_border;
-  Image.Image button_mask;
+
+  Image.Layer background;
+  Image.Layer frame;
+  Image.Layer mask;
+
+  int left, right, top, bottom; /* offsets */
+  int req_width;
 
   if( args->border_image )
   {
-    mapping q = roxen.low_load_image(args->border_image, id);
-    if( q  )
+    array layers = roxen.load_layers(args->border_image, id);
+
+    foreach( layers, object l )
     {
-      button_border = q->img;
-      if(!q->alpha)
-        button_mask = Image.Image( q->img->xsize(),q->img->ysize(),
-                                   255,255,255 );
-      else
-        button_mask = q->alpha;
+      switch( lower_case((l->get_misc_value( "name" )/" ")[0]) )
+      {
+       case "background": background = l; break;
+       case "frame":      frame = l;     break;
+       case "mask":       mask = l;     break;
+      }
     }
   }
+
   //  otherwise load default images
-  if (!button_border)
+  if ( !frame )
   {
-    mapping q = Image._load("roxen-images/gbutton_border.xcf");
-    button_border = q->img;
-    button_mask = q->alpha;
+    array layers = roxen.load_layers("roxen-images/gbutton.xcf", id);
+    foreach( layers, object l )
+    {
+      switch( lower_case((l->get_misc_value( "name" )/" ")[0]) )
+      {
+       case "background": background = l; break;
+       case "frame":      frame = l;     break;
+       case "mask":       mask = l;     break;
+      }
+    }
   }
 
-  //  Colorize borders
-  if (!args->dim)
-  {
-    b = button_border->grey()->
-            modify_by_intensity(1, 1, 1, args->bo, args->bob );
-  }
-  else
-  {
-    array dim_bg;
-    array dim_bo;
 
-    array hsv = Image.Color( @args->bg )->hsv( );
-    hsv[-1] = min( hsv[-1]+70, 255 );
+  if( !mask )
+    mask = frame;
 
-    dim_bg = (array)Image.Color.hsv( @hsv );
+  array x = ({});
+  array y = ({});
+  foreach( frame->get_misc_value( "image_guides" ), object g )
+    if( g->vertical )
+      x += ({ g->pos });
+    else
+      y += ({ g->pos });
 
-    hsv[-1] = max( hsv[-1]-140, 0 );
-    dim_bo = (array)Image.Color.hsv( @hsv );
+  sort( y ); sort( x );
+  if(sizeof( x ) < 2)
+    x = ({ 5, frame->xsize()-5 });
+  if(sizeof( y ) < 2)
+    y = ({ 2, frame->ysize()-2 });
 
-    b = button_border->grey()->
-            modify_by_intensity(1, 1, 1, dim_bo, dim_bg);
-  }
-  b_width = b->xsize();
-  b_height = b->ysize();
+  left = x[0]; right = x[-1];    top = y[0]; bottom = y[-1];
+  right = frame->xsize()-right;
+
+  int text_height = bottom - top;
 
   //  Get icon
   if (args->icn)
     icon = roxen.low_load_image(args->icn, id);
   else if (args->icd)
     icon = roxen.low_decode_image(args->icd);
-  i_width = icon && (icon->img->xsize() + IMAGE_SPC);
+
+  int i_width = icon && icon->img->xsize();
 
   //  Generate text
-  if (sizeof(text)) {
-    text_img = button_font->write(text)->scale(0, b_height - IMAGE_SPC);
+  if (sizeof(text))
+  {
+    text_img = button_font->write(text)->scale(0, text_height );
     if (args->cnd)
       text_img = text_img->scale((int) round(text_img->xsize() * 0.8),
 				 text_img->ysize());
-    t_width = text_img->xsize();
   }
 
+  int t_width = text_img && text_img->xsize();
+
   //  Compute text and icon placement
-  req_width = t_width + b_width + i_width;
+  req_width = text_img->xsize() + left + right + (i_width?i_width + 5:0);
+
   if (args->wi && (req_width < args->wi))
     req_width = args->wi;
-  switch (lower_case(args->al)) {
+
+  int icn_x, txt_x;
+
+  switch (lower_case(args->al))
+  {
   case "left":
     //  Allow icon alignment: left, right
-    switch (lower_case(args->ica)) {
-    case "left":
-      icn_x = b_width / 2;
-      txt_x = icn_x + i_width;
-      break;
-    default:
-    case "right":
-      txt_x = b_width / 2;
-      icn_x = req_width - b_width / 2 - i_width + IMAGE_SPC;
-      break;
+    switch (lower_case(args->ica))
+    {
+     case "left":
+       icn_x = left;
+       txt_x = icn_x + i_width + 5;
+       break;
+     default:
+     case "right":
+       txt_x = left;
+       icn_x = req_width - right - i_width;
+       break;
     }
     break;
 
@@ -205,80 +248,106 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
   case "center":
   case "middle":
     //  Allow icon alignment: left, center, center_before, center_after, right
-    switch (lower_case(args->ica)) {
-    case "left":
-      icn_x = b_width / 2;
-      txt_x = icn_x + i_width +
-	      (req_width - icn_x - i_width - b_width / 2 - t_width) / 2;
-      break;
-    default:
-    case "center":
-    case "center_before":
-      icn_x = (req_width - i_width - t_width) / 2;
-      txt_x = icn_x + i_width;
-      break;
-    case "center_after":
-      txt_x = (req_width - i_width - t_width) / 2;
-      icn_x = txt_x + t_width + IMAGE_SPC;
-      break;
-    case "right":
-      icn_x = req_width - b_width / 2 - i_width + IMAGE_SPC;
-      txt_x = b_width / 2 + (icn_x - IMAGE_SPC - b_width / 2 - t_width) / 2;
-      break;
+    switch (lower_case(args->ica))
+    {
+     case "left":
+       icn_x = left;
+       txt_x = icn_x + i_width +
+             (req_width - icn_x - i_width - 5)
+             - t_width / 2;
+       break;
+     default:
+     case "center":
+     case "center_before":
+       icn_x = (req_width - i_width - t_width) / 2;
+       txt_x = icn_x + i_width;
+       break;
+     case "center_after":
+       txt_x = (req_width - i_width - t_width) / 2;
+       icn_x = txt_x + t_width + left;
+       break;
+     case "right":
+       icn_x = req_width - right - i_width;
+       txt_x = left + (icn_x - 5 - t_width) / 2;
+       break;
     }
     break;
 
   case "right":
     //  Allow icon alignment: left, right
-    switch (lower_case(args->ica)) {
-    default:
-    case "left":
-      icn_x = b_width / 2;
-      txt_x = req_width - b_width / 2 - t_width;
-      break;
-    case "right":
-      icn_x = req_width - b_width / 2 - i_width + IMAGE_SPC;
-      txt_x = icn_x - IMAGE_SPC - t_width;
-      break;
+    switch (lower_case(args->ica))
+    {
+     default:
+     case "left":
+       icn_x = left;
+       txt_x = req_width - right - t_width;
+       break;
+     case "right":
+       icn_x = req_width - right - i_width;
+       txt_x = icn_x - 5 - t_width;
+       break;
     }
     break;
   }
 
-  button = Image.Image(req_width, b_height, args->bg);
 
-  //  Paste left and right edge of border
-  tmp = b->copy(0, 0, b_width / 2 - 1, b_height - 1);
-  button->paste_mask(tmp, button_mask->copy(0, 0,
-					    b_width / 2 - 1, b_height - 1));
-  tmp = b->copy(b_width / 2, 0, b_width - 1, b_height - 1);
+  right = frame->xsize()-right;
 
-  button->paste_mask(tmp, button_mask->copy(b_width / 2, 0,
-					    b_width - 1, b_height - 1),
-		     req_width - b_width / 2, 0);
+  frame = stretch_layer( frame, left, right, req_width );
 
-  tmp = button_mask->copy(0, 0, b_width / 2 - 1, b_height - 1)
-      ->invert()->threshold(250);
-  button->paste_alpha_color(tmp, args->pagebg);
-  tmp = button_mask->copy(b_width / 2, 0, b_width - 1, b_height - 1)
-      ->invert()->threshold(250);
-  button->paste_alpha_color(tmp, args->pagebg,
-                            button->xsize()-tmp->xsize(), 0);
+  if( background )
+  {
+    if( !background->alpha() )
+      background->set_image( background->image(),
+                             Image.Image( background->xsize(),
+                                          background->ysize(),
+                                          ({255,255,255}) ) );
+    if( args->dim )
+      background->set_image(background->image(),
+                            background->alpha() * 0.3 );
+    background = stretch_layer( background, left, right, req_width );
+  }
+
+  Image.Image button = Image.Image(req_width, frame->ysize(), args->bg);
+
+  button = button->rgb_to_hsv();
+  if( args->dim )
+    frame->set_image( frame->image()->modify_by_intensity( 1,1,1,
+                                                           ({ 64,64,64 }),
+                                                           ({ 196,196,196 })),
+                      frame->alpha());
+  object h = button*({255,0,0});
+  object s = button*({0,255,0});
+  object v = button*({0,0,255});
+  v->paste_mask( frame->image(), frame->alpha() );
+  button = Image.lay( ({
+    Image.Layer( h )->set_mode( "red" ),
+    Image.Layer( s )->set_mode( "green" ),
+    Image.Layer( v )->set_mode( "blue" ),
+  }) )->image();
+  button = button->hsv_to_rgb();
+
+  // if there is a background, draw it.
+  if( background )
+    button->paste_mask( background->image(), background->alpha() );
+
+  //  fix transparency (somewhat)
+  if( !equal( args->pagebg, args->bg ) )
+    button->paste_alpha_color( mask->alpha()->invert()->threshold( 200 ),
+                               args->pagebg );
 
 
-
-  //  Stretch top/bottom borders
-  tmp = button->copy(b_width / 2 - 1, 0, b_width / 2 - 1, b_height - 1);
-  for (int offset = b_width / 2; offset <= req_width - b_width / 2; offset++)
-    button->paste(tmp, offset, 0);
-
-  //  Draw icon
-  if (icon) {
-    int icn_y = (b_height - icon->img->ysize()) / 2;
+  //  Draw icon.
+  if (icon)
+  {
+    int icn_y = (button->ysize() - icon->img->ysize()) / 2;
 
     if (!icon->alpha)
       icon->alpha = icon->img->clone()->clear(({255,255,255}));
+
     if (args->dim)
       icon->alpha *= 0.3;
+
     button->paste_mask(icon->img, icon->alpha, icn_x, icn_y);
   }
 
@@ -286,10 +355,14 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
   if (args->dim)
     for (int i = 0; i < 3; i++)
       args->txt[i] = (args->txt[i] + args->bg[i]) / 2;
-  if(text_img)
-    button->paste_alpha_color(text_img, args->txt, txt_x, 2);
 
-  return button;
+  if(text_img)
+    button->paste_alpha_color(text_img, args->txt, txt_x, top);
+
+  return ([
+    "img":button,
+    "alpha":mask->alpha()->threshold( 40 ),
+  ]);
 }
 
 
@@ -329,17 +402,17 @@ string tag_button(string tag, mapping args, string contents, RequestID id)
     "border_image":fi,
   ]);
 
-  array hsv = Image.Color( @new_args->bg )->hsv( );
-  hsv[-1] = min( hsv[-1]+70, 255 );
-  new_args->bob = (array)Image.Color.hsv( @hsv );
-  hsv[-1] = max( hsv[-1]-140, 0 );
-  new_args->bo = (array)Image.Color.hsv( @hsv );
+//   array hsv = Image.Color( @new_args->bg )->hsv( );
+//   hsv[-1] = min( hsv[-1]+70, 255 );
+//   new_args->bob = (array)Image.Color.hsv( @hsv );
+//   hsv[-1] = max( hsv[-1]-140, 0 );
+//   new_args->bo = (array)Image.Color.hsv( @hsv );
 
-  if(args->bordercolor)
-    new_args->bo=parse_color(args->bordercolor); //  Border color
+//   if(args->bordercolor)
+//     new_args->bo=parse_color(args->bordercolor); //  Border color
 
-  if(args->borderbottom)
-    new_args->bob=parse_color(args->borderbottom);
+//   if(args->borderbottom)
+//     new_args->bob=parse_color(args->borderbottom);
 
   new_args->quant = args->quant || 128;
   foreach(glob("*-*", indices(args)), string n)
