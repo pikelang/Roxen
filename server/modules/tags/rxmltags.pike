@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
+// This is a roxen module. Copyright © 1996 - 2000, Idonex AB.
 //
 
 #define _stat id->misc->defines[" _stat"]
@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.39 2000/01/03 06:05:58 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.40 2000/01/14 12:57:02 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -444,12 +444,14 @@ string|array(string) tag_debug( string tag_name, mapping m, RequestID id )
 
 string tag_fsize(string tag, mapping args, RequestID id)
 {
-  catch {
-    array s = id->conf->stat_file( fix_relative( args->file, id ), id );
-    if (s && (s[1]>= 0)) return (string)s[1];
-  };
-  if(string s=id->conf->try_get_file(fix_relative(args->file, id), id ) )
-    return (string)strlen(s);
+  if(args->file) {
+    catch {
+      array s = id->conf->stat_file( fix_relative( args->file, id ), id );
+      if (s && (s[1]>= 0)) return (string)s[1];
+    };
+    if(string s=id->conf->try_get_file(fix_relative(args->file, id), id ) )
+      return (string)strlen(s);
+  }
   return rxml_error(tag, "Failed to find file", id);
 }
 
@@ -886,7 +888,6 @@ string|array(string) container_aconf(string tag, mapping m,
                                      string q, RequestID id)
 {
   string href,s;
-  mapping cookies = ([]);
 
   if(!m->href)
     href=strip_prestate(strip_config(id->raw_url));
@@ -899,18 +900,19 @@ string|array(string) container_aconf(string tag, mapping m,
     m_delete(m, "href");
   }
 
+  array cookies = ({});
   if(m->add) {
     foreach((m->add-" ")/",", s)
-      cookies[s]=s;
+      cookies+=({s});
     m_delete(m,"add");
   }
   if(m->drop) {
     foreach((m->drop-" ")/",", s)
-      cookies["-"+s]="-"+s;
+      cookies+=({"-"+s});
     m_delete(m,"drop");
   }
 
-  m->href = add_config(href, indices(cookies), id->prestate);
+  m->href = add_config(href, cookies, id->prestate);
   return make_container("a", m, q);
 }
 
