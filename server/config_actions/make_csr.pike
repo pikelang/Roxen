@@ -1,5 +1,5 @@
 /*
- * $Id: make_csr.pike,v 1.9 1999/02/15 23:23:27 per Exp $
+ * $Id: make_csr.pike,v 1.10 1999/03/02 17:58:59 nisse Exp $
  */
 
 inherit "wizard";
@@ -188,6 +188,8 @@ mixed page_1(mixed id, mixed mc)
 	  "</blockquote>");
 }
 
+/* FIXME: Certificate attributes should be considered obsoleted by
+ * X.509 v3. See RFC-2459. */
 mixed page_2(object id, object mc)
 {
   return ("<font size=+1>Certificate Attributes?</font><p>"
