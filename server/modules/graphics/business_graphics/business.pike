@@ -13,7 +13,7 @@
  * 
  */
 
-constant cvs_version = "$Id: business.pike,v 1.24 1997/10/15 20:45:57 peter Exp $";
+constant cvs_version = "$Id: business.pike,v 1.25 1997/10/15 21:29:32 peter Exp $";
 constant thread_safe=0;
 
 #include <module.h>
@@ -39,15 +39,17 @@ mixed *register_module()
        " help         Displays this text.\n"
        " type=        { sumbars | normsumbars | linechart | barchart | piechart | graph }\n"
        "              Mandatory!"
-       /*FIXME " background=  Takes the filename of a ppm image is input.\n" */
-       " xsize=       width of diagram-image in pixels. (Will not have any effect below 100.)\n"
-       " ysize=       height of diagram-image in pixels. (Will not have any effect below 100.)\n"
+       " background=  Takes the filename of a ppm image is input.\n"
+       " width=       width of diagram-image in pixels. (Will not have any effect below 100.)\n"
+       " height=       height of diagram-image in pixels. (Will not have any effect below 100.)\n"
        " fontsize=    height if text in pixels.\n"
        " legendfontsize= height if legend text in pixels. Uses fontsize if not defined\n"
        " 3D=          Render piecharts on top of a cylinder, \n"
        "              takes the size in pixels of the cylinder as argument.\n"
        /* " tone         Do nasty stuff to the background.\n"
 	  " Requires dark background to be visable.\n" */
+       " You can also use regular &lt;img&gt; arguments. They will be passed\n"
+       " on to the resulting &lt;img&gt; tag."
        "Defines the following tags: \n"
        "\n&lt;xaxis&gt; and &lt;yaxis&gt; (tags)\n"
        "Attributes for the x and y axis.\n"
@@ -72,6 +74,7 @@ mixed *register_module()
        "Tab- and newline- separated list of data-value for the diagram.\n"
        " separator=     Use the specified string as separator instead of tab.\n"
        " lineseparator= Use the specified string as lineseparator instead of tab.\n"
+       " form=          Can be set to either row or column. Default is row.\n"
        " parse          Run the content of the tag through the RXML-parser before data extraction is done.\n"
        "</pre>"
        ), ({}), 1,
@@ -82,9 +85,9 @@ void create()
 {
   defvar("location", "/diagram/", "Mountpoint", TYPE_LOCATION|VAR_MORE,
 	 "The URL-prefix for the diagrams.");
-  defvar( "x-max", 800, "Maxwidth", TYPE_INT,
+  defvar( "maxwidth", 800, "Maxwidth", TYPE_INT,
 	  "Maximal width of the generated image.");
-  defvar( "y-max", 600, "Maxheight", TYPE_INT,
+  defvar( "maxheight", 600, "Maxheight", TYPE_INT,
 	  "Maximal height of the generated image.");
 }
 
@@ -159,7 +162,7 @@ string itag_data(mapping tag, mapping m, string contents,
   if(m->parse)
     contents = parse_rxml( contents, id );
 
-  if( !m->form || m->form == "db" || m->form == "straight" )
+  if( 1 )
   {
     contents = contents - " ";
     array lines = filter( contents/linesep, sizeof );
@@ -180,7 +183,7 @@ string itag_data(mapping tag, mapping m, string contents,
       foo = ({});
     }
 
-    if (m->form == "db")
+    if (m->form == "column")
     {
       for(int i=0; i<sizeof(bar); i++)
 	if (sizeof(bar[i])<maxsize)
@@ -368,15 +371,29 @@ string tag_diagram(string tag, mapping m, string contents,
   if(m->sw) res->sw = 1;
   else res->sw = 0;
 
+  if(m->width) {
+    if((int)m->width > query("maxwidth"))
+      m->width  = (string)query("maxwidth");
+    if((int)m->width < 100)
+      m->width  = "100";
+  }
+  if(m->height) {  
+    if((int)m->hight > query("maxheight"))
+      m->height = (string)query("maxheight");
+    if((int)m->hight < 100)
+      m->height = "100";
+  }
+
   if(!m->image)
   {
-    if(m->xsize) res->xsize = (int)m->xsize;
-    else res->xsize = 400;
-    if(m->ysize) res->ysize = (int)m->ysize;
-    else res->ysize = 300;
+    if(m->width) res->xsize = (int)m->width;
+    else         res->xsize = 400; // A better algo for this is coming.
+
+    if(m->height) res->ysize = (int)m->height;
+    else res->ysize = 300; // Dito.
   } else {
-    if(m->xsize) res->xsize = (int)m->xsize;
-    if(m->ysize) res->ysize = (int)m->ysize;
+    if(m->width) res->xsize = (int)m->width;
+    if(m->height) res->ysize = (int)m->height;
   }
 
   if(m->tone) res->tone = 1;
@@ -390,8 +407,6 @@ string tag_diagram(string tag, mapping m, string contents,
     if(res->yname) res->ynames = ({ res->yname });
     else res->ynames = 0;
 
-  m_delete( m, "ysize" );
-  m_delete( m, "xsize" );
   m_delete( m, "size" );
   m_delete( m, "type" );
   m_delete( m, "3d" );
