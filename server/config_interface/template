@@ -1,5 +1,5 @@
 <!-- -*- html -*- -->
-<!-- $Id: template,v 1.114 2003/04/25 16:50:03 anders Exp $ -->
+<!-- $Id: template,v 1.115 2003/04/28 14:43:04 anders Exp $ -->
 
 <define tag='cfg-variables'>
   <set variable='form.__redirect' value='1' />
@@ -56,6 +56,9 @@
        <img src="/internal-roxen-unit" width="&var.leftside-padwidth;" height="1" alt="" /><br />
        &var.left-content:none;&var.leftimage:none;
      </td>
+     <if variable="usr.split2-width is ?*">
+       <td ::="&usr.split2-tableargs:none;"><img height="1" src="/internal-roxen-unit" width="&usr.split2-width;"></td>
+     </if>
      <td ::="&usr.split-tableargs:none;"><img height="1" src="/internal-roxen-unit" width="1"></td>
      <if variable="usr.split2-width is ?*">
        <td ::="&usr.split2-tableargs:none;"><img height="1" src="/internal-roxen-unit" width="&usr.split2-width;"></td>
