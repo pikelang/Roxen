@@ -77,8 +77,8 @@ o Added ":" to the characters that are quoted by default by formoutput,
   sqloutput.
 
 NOTE: The two quoting changes above might break RXML-pages the rely on
-      unquoted content. Those Change was therefore not made lightly, but
-      due to security conserns it had to be done.
+      unquoted content. Those changes was therefore not made lightly, but
+      due to security concerns it had to be done.
 
 o Moved newpikescript.pike to unfinishedmodules/
 
