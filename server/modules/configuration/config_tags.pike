@@ -526,11 +526,12 @@ string container_configif_output(string t, mapping m, string c, object id)
      break;
 
    case "locales":
-     //DEBUG
-     //object rl = RoxenLocale;
-     // FIXME How to get list of languages?
-     mapping rl = ([]);
-     variables = map( sort(indices(rl) - ({ "Modules", "standard" })),
+#if constant(Locale.list_languages)
+     array(string) langs=Locale.list_languages("config_interface");
+#else
+     array(string) langs=Locale.list_languages("config_interface");
+#endif
+     variables = map( sort(langs),
                       lambda( string l )
                       {
                         string q = id->not_query;
@@ -538,13 +539,14 @@ string container_configif_output(string t, mapping m, string c, object id)
                         multiset cl = (<>);
                         sscanf( q, "/%[^/]/%s", tmp, q );
                         cl[ tmp ] = 1;
-                        cl[ LOW_LOCALE->latin1_name ] = 1;
-                        if( LOW_LOCALE->latin1_name == "standard" )
-                          cl[ "english" ] = 1;
+			//                        cl[ LOW_LOCALE->latin1_name ] = 1;
+			//                        if( LOW_LOCALE->latin1_name == "standard" )
+			//                          cl[ "english" ] = 1;
                         if( !rl[l] )
                           return 0;
                         return ([
-                          "name":rl[l]->name,
+                          "name":l,
+			  /*
                           "latin1-name":rl[l]->latin1_name,
                           "path":fix_relative( "/"+l+"/"+ q +
                                                (id->misc->path_info?
@@ -555,6 +557,7 @@ string container_configif_output(string t, mapping m, string c, object id)
                           "selected":( cl[l] ? "selected": "" ),
                           "-selected":( cl[l] ? "-selected": "" ),
                           "selected-int":( cl[l] ? "1": "0" ),
+			  */
                         ]);
                       } ) - ({ 0 });
      break;
