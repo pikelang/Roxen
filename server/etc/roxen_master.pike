@@ -1,7 +1,7 @@
 /*
  * Roxen master
  */
-string cvs_version = "$Id: roxen_master.pike,v 1.81 2000/03/23 20:05:27 mast Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.82 2000/03/24 02:11:15 mast Exp $";
 
 /*
  * name = "Roxen Master";
@@ -371,103 +371,6 @@ int long_file_names;
 string describe_backtrace(mixed trace, void|int linewidth)
 {
   return ::describe_backtrace(trace, 999999);
-
-  int e;
-  string ret;
-  linewidth=999999;
-
-  if((arrayp(trace) && sizeof(trace)==2 && stringp(trace[0])) ||
-     (objectp(trace) && trace->is_generic_error))
-  {
-    if (catch {
-      ret = trace[0];
-      trace = trace[1];
-    }) {
-      return "Error indexing backtrace!\n";
-    }
-  }else{
-    ret="";
-  }
-
-  if(!arrayp(trace))
-  {
-    ret+="No backtrace.\n";
-  }else{
-    for(e = sizeof(trace)-1; e>=0; e--)
-    {
-      mixed tmp;
-      string row;
-
-      if (mixed err=catch
-      {
-	tmp = trace[e];
-	if(stringp(tmp))
-	{
-	  row=tmp;
-	}
-	else if(arrayp(tmp))
-	{
-	  string pos;
-	  if(sizeof(tmp)>=2 && stringp(tmp[0]) && intp(tmp[1]))
-	  {
-            if( !long_file_names )
-              pos=trim_file_name(tmp[0])+":"+tmp[1];
-            else
-              pos=tmp[0]+":"+tmp[1];
-	  }else{
-	    mixed desc="Unknown program";
-	    if(sizeof(tmp)>=3 && functionp(tmp[2]))
-	    {
-	      catch {
-		if(mixed tmp=function_object(tmp[2]))
-		  if(tmp=object_program(tmp))
-		    if(tmp=describe_program(tmp))
-		      desc=tmp;
-	      };
-	    }
-	    pos=desc;
-	  }
-
-	  string data;
-
-	  if(sizeof(tmp)>=3)
-	  {
-	    if(functionp(tmp[2]))
-	      data = function_name(tmp[2]);
-	    else if (stringp(tmp[2])) {
-	      data= tmp[2];
-	    } else
-	      data ="unknown function";
-
-	    data+="("+
-	      stupid_describe_comma_list(tmp[3..], 99999999)+
-	    ")";
-
-	    if(sizeof(pos)+sizeof(data) < linewidth-4)
-	    {
-	      row=sprintf("%s: %s",pos,data);
-	    }else{
-	      row=sprintf("%s:\n%s",pos,sprintf("    %*-/s",linewidth-6,data));
-	    }
-	  }
-	}
-	else
-	{
-	  if (tmp) {
-	    if (catch (row = sprintf("%O", tmp)))
-	      row = describe_program(object_program(tmp)) + " with broken _sprintf()";
-	  } else {
-	    row = "Destructed object";
-	  }
-	}
-      }) {
-	row += sprintf("Error indexing backtrace line %d (%O)!", e, err[1]);
-      }
-      ret += row + "\n";
-    }
-  }
-
-  return ret;
 }
 
 
