@@ -5,23 +5,6 @@
 <baselang>eng</baselang>
 <xmlpath>../translations/%L/roxen_message.xml</xmlpath>
 
-
-<add id="1">
-<pike>
-
-string setting_uid_gid_permanently(int uid, int gid, string uname, string gname) {
-  return("Setting uid to "+uid+" ("+uname+")"+
-	 (gname ? " and gid to "+gid+" ("+gname+")" : "")+" permanently.\n");
-}
-
-string setting_uid_gid(int uid, int gid, string uname, string gname) {
-  return("Setting uid to "+uid+" ("+uname+")"+
-	 (gname ? " and gid to "+gid+" ("+gname+")" : "")+".\n");
-}
-
-</pike>
-</add>
-
   <file>../base_server/configuration.pike</file>
   <file>../base_server/roxen.pike</file>
   <file>../base_server/wizard.pike</file>
