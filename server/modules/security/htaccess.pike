@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version="$Id: htaccess.pike,v 1.94 2002/06/05 18:14:24 grubba Exp $";
+constant cvs_version="$Id: htaccess.pike,v 1.95 2002/08/13 11:43:26 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -261,10 +261,10 @@ mapping parse_and_find_htaccess( RequestID id )
 
     foreach( replace(s, "\r", "\n") / "\n"-({""}), line )
     {
+      line = (replace(line, "\t", " ") / " " - ({""})) * " ";
+
       if(!strlen(line))
 	continue;
-
-      line = (replace(line, "\t", " ") / " " - ({""})) * " ";
 
       if(line[0] == ' ') /* There can be only one /Connor MacLeod */
 	line = line[1..];
