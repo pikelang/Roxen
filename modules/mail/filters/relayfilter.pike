@@ -1,5 +1,5 @@
 /*
- * $Id: relayfilter.pike,v 1.1 1998/09/20 17:43:32 grubba Exp $
+ * $Id: relayfilter.pike,v 1.2 1998/09/27 12:53:42 grubba Exp $
  *
  * Support for RBL (Real-time Blackhole List).
  *
@@ -9,8 +9,10 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version="$Id: relayfilter.pike,v 1.1 1998/09/20 17:43:32 grubba Exp $";
+constant cvs_version="$Id: relayfilter.pike,v 1.2 1998/09/27 12:53:42 grubba Exp $";
 constant thread_safe=1;
+
+#define RELAYFILTER_DEBUG
 
 /*
  * Programs
@@ -80,6 +82,9 @@ class Checker
 
   int check(string ... names)
   {
+#ifdef RELAYFILTER_DEBUG
+    roxen_perror(sprintf("RELAYFILTER: check(%O)\n", names));
+#endif /* RELAYFILTER_DEBUG */
     queries++;
 
     string current_rules = parent->query(query_variable);
@@ -93,6 +98,10 @@ class Checker
       if (a) {
 	// Cached
 	hits++;
+#ifdef RELAYFILTER_DEBUG
+	roxen_perror(sprintf("RELAYFILTER: cache-hit: %O -> %d\n",
+			     name, a[1]));
+#endif /* RELAYFILTER_DEBUG */
 	return(a[1]);
       }
     }
@@ -109,13 +118,24 @@ class Checker
 	if (stringp(rule[0])) {
 	  if (rule[0] == name) {
 	  // Verbatim match.
+#ifdef RELAYFILTER_DEBUG
+	    roxen_perror(sprintf("RELAYFILTER: verbatim: %O => %d\n",
+				 name, rule[1]));
+#endif /* RELAYFILTER_DEBUG */
 	    return((cache[name] = ({ time(1)+60*60, rule[1] }))[1]);
 	  }
 	} else if (rule[0](name)) {
+#ifdef RELAYFILTER_DEBUG
+	  roxen_perror(sprintf("RELAYFILTER: glob: %O => %d\n",
+			       name, rule[1]));
+#endif /* RELAYFILTER_DEBUG */
 	  return((cache[name] = ({ time(1)+60*60, rule[1] }))[1]);
 	}
       }
     }
+#ifdef RELAYFILTER_DEBUG
+    roxen_perror(sprintf("RELAYFILTER: default\n"));
+#endif /* RELAYFILTER_DEBUG */
     return(parent->query(query_variable + "_default"));
   }
 
@@ -169,7 +189,7 @@ void create()
   defvar("cache_size", 1024, "Maximum cache size", TYPE_INT | VAR_MORE,
 	 "Maximum size the caches may have before they are cleared.");
   
-  defvar("connection_patterns", "100\t*", "Connection filter",
+  defvar("connection_patterns", "", "Connection filter",
 	 TYPE_TEXT_FIELD,
 	 "Syntax:<br><blockquote><pre>"
 	 "# Allow relaying from our local machines, and our friends.\n"
@@ -179,7 +199,7 @@ void create()
 	 "Note that IP address is matched against first, "
 	 "and then the resolved address (if any).");
 
-  defvar("connection_patterns_default", 0, "Default connection level",
+  defvar("connection_patterns_default", 100, "Default connection level",
 	 TYPE_INT | VAR_MORE,
 	 "The default connection trust level.");
 
