@@ -93,9 +93,10 @@ void next_input()
   if(current_input_len < 8192)
   {
     outfd->set_blocking();
-    outfd->write(objectp(current_input)
-		 ?current_input->read(current_input_len)
-		 :current_input);
+    sent +=
+      outfd->write(objectp(current_input)
+		   ?current_input->read(current_input_len)
+		   :current_input);
     next_input();
     return;
   }
