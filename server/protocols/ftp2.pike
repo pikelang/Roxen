@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.42 1998/05/20 07:43:01 neotron Exp $
+ * $Id: ftp2.pike,v 1.43 1998/05/20 10:41:10 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -873,6 +873,8 @@ class TelnetSession {
     255:"IAC",		// Interpret As Command
   ]);
 
+  static private void got_data(mixed ignored, string s);
+
   void set_write_callback(function(mixed|void:string) w_cb)
   {
     if (fd) {
@@ -903,6 +905,10 @@ class TelnetSession {
 	  conf->hsent += n;
 	
 	  to_send = to_send[n..];
+
+	  if (sizeof(to_send)) {
+	    fd->set_write_callback(send_data);
+	  }
 	} else {
 	  // Error.
 	  DWRITE(sprintf("TELNET: write failed: errno:%d\n", fd->errno()));
@@ -912,7 +918,7 @@ class TelnetSession {
 	// Nothing to send for the moment.
 
 	// FIXME: Is this the correct use?
-	set_write_callback(0);
+	fd->set_write_callback(0);
 
 	report_warning("FTP2: Write callback with nothing to send.\n");
       }
@@ -1220,10 +1226,10 @@ class FTPSession
 
       DWRITE(sprintf("FTP2: write_cb(): Sending \"%s\"\n", s));
 
-      if (to_send->is_empty()) {
-	if (!end_marker) {
-	  ::set_write_callback(0);
-	}
+      if ((to_send->is_empty()) && (!end_marker)) {
+	::set_write_callback(0);
+      } else {
+	::set_write_callback(write_cb);
       }
       return(s);
     }
