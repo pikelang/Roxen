@@ -3,9 +3,9 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.48 2001/09/19 00:36:33 nilsson Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.49 2001/09/25 15:31:27 wellhard Exp $";
 constant thread_safe = 1;
-constant module_type = MODULE_TAG;
+constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Roxen self test module";
 constant module_doc  = "Tests Roxen WebServer.";
 constant is_roxen_tester_module = 1;
@@ -14,19 +14,72 @@ Configuration conf;
 Stdio.File index_file;
 Protocol port;
 
-#ifdef SELF_TEST_DIR
-string self_test_dir = SELF_TEST_DIR;
-#else
-string self_test_dir = "/etc/test";
-#endif
-
 int verbose;
+private int running;
+private int finished;
+
+int is_running()
+{
+  return running;
+}
+
+int is_not_finished()
+{
+  return !finished;
+}
+
+int is_ready_to_start()
+{
+  int ready = 1;
+  foreach(roxen.configurations, Configuration config)
+    if(config->call_provider("roxen_test", "is_running"))
+      ready = 0;
+  return ready;
+}
+
+int is_last_test_configuration()
+{
+  foreach(roxen.configurations, Configuration config)
+    if(config->call_provider("roxen_test", "is_not_finished"))
+      return 0;
+  return 1;
+}
+
+int tests, ltests;
+int fails, lfails;
+
+int do_continue(int _tests, int _fails)
+{
+  if(finished)
+    return 0;
+  
+  tests += _tests;
+  fails += _fails;
+  call_out( do_tests, 0.5 );
+  return 1;
+}
+
+string query_provides()
+{
+  return "roxen_test";
+}
+
+void create()
+{
+  defvar("selftestdir", "etc/test", "Self test directory", 
+         TYPE_STRING);
+}
 
 void start(int n, Configuration c)
 {
   conf=c;
   index_file = Stdio.File();
-  call_out( do_tests, 0.5 );
+
+  if(is_ready_to_start())
+  {
+    running = 1;
+    call_out( do_tests, 0.5 );
+  }
 }
 
 class FakePrefLang() {
@@ -107,7 +160,7 @@ RequestID get_id()
   id->client = ({ "RoxenTest" });
   id->set_url("http://localhost:17369/index.html");
 
-  id->realfile=self_test_dir+"/filesystem/index.html";
+  id->realfile = combine_path_unix(query("selftestdir"), "filesystem/index.html");
   id->misc->stat = conf->stat_file("/index.html", id);
   id->misc->pref_languages = FakePrefLang();
   id->misc->pref_languages->set_sorted( ({"sv","en","bräk"}) );
@@ -139,6 +192,11 @@ string canon_html(string in) {
 
 // --- XML-based test files -------------------------------
 
+void xml_set_module_var(string t, mapping m, string c) {
+  conf->find_module(m->module)->getvar(m->variable)->set(c);
+  return;
+}
+
 void xml_add_module(string t, mapping m, string c) {
   conf->enable_module(c);
   return;
@@ -155,9 +213,6 @@ void xml_use_module(string t, mapping m, string c,
   used_modules[c] = 1;
   return;
 }
-
-int tests, ltests;
-int fails, lfails;
 
 void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_cache) {
 
@@ -501,7 +556,7 @@ class TagTestData {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
-      return ({ tag_test_data });
+      return ({ tag_test_data||"" });
     }
   }
 }
@@ -626,12 +681,19 @@ void continue_find_tests( )
       }
     }
   }
-
-  report_debug("\n\nDid a grand total of %d tests, %d failed.\n",
-	       tests, fails);
-  if( fails > 127 )
-    fails = 127;
-  exit( fails );
+  
+  running = 0;
+  finished = 1;
+  if(is_last_test_configuration())
+  {
+    report_debug("\n\nDid a grand total of %d tests, %d failed.\n",
+		 tests, fails);
+    exit( fails > 127? 127: fails );
+  }
+  else
+    foreach(roxen.configurations, Configuration config)
+      if(config->call_provider("roxen_test", "do_continue", tests, fails))
+	return;
 }
 
 void do_tests()
@@ -641,6 +703,7 @@ void do_tests()
     call_out( do_tests, 0.2 );
     return;
   }
+  report_debug("Starting roxen self test in directory %O.\n", query("selftestdir"));
 
   tests_to_run = Getopt.find_option(roxen.argv, 0,({"tests"}),0,"" )/",";
   verbose = !!Getopt.find_option(roxen.argv, 0,({"tests-verbose"}),0, 0 );
@@ -649,10 +712,9 @@ void do_tests()
   conf->rxml_tag_set->handle_parse_error = rxml_error;
 
   file_stack->push( 0 );
-  file_stack->push( self_test_dir + "/tests" );
+  file_stack->push( combine_path(query("selftestdir"), "tests" ));
   call_out( continue_find_tests, 0 );
 }
-
 
 // --- Some tags used in the RXML tests ---------------
 
