@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.145 2001/03/26 16:37:10 mast Exp $
+//! $Id: module.pmod,v 1.146 2001/03/26 23:59:36 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -3364,8 +3364,12 @@ class Parser
 	  context->current_var = 0;
 	  return ({});
 	}
+	if (encoding) {
+	  val = Roxen->roxen_encode (val, encoding);
+	  if (!val) parse_error ("Unknown encoding %s.\n", encoding);
+	}
 	context->current_var = 0;
-	return encoding ? ({Roxen->roxen_encode (val, encoding)}) : ({val});
+	return ({val});
       }) {
 	context->current_var = 0;
 	context->handle_exception (err, this_object()); // May throw.
