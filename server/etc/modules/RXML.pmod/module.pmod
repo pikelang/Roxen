@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.192 2001/07/10 00:57:02 mast Exp $
+// $Id: module.pmod,v 1.193 2001/07/10 02:38:55 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -2012,9 +2012,12 @@ constant FLAG_POSTPARSE		= 0x00000080;
 
 // Flags tested in the Frame object:
 
-constant FLAG_PARENT_SCOPE	= 0x00000100;
-//! If set, exec arrays will be interpreted in the scope of the parent
-//! tag, rather than in the current one.
+// constant FLAG_PARENT_SCOPE	= 0x00000100;
+//
+// This feature proved unnecessary and no longer exists.
+//
+// If set, exec arrays will be interpreted in the scope of the parent
+// tag, rather than in the current one.
 
 constant FLAG_NO_IMPLICIT_ARGS	= 0x00000200;
 // If set, the parser won't apply any implicit arguments. FIXME: Not
@@ -2158,8 +2161,7 @@ class Frame
   //! @decl optional mapping(string:mixed) vars;
   //!
   //! Set this to introduce a new variable scope that will be active
-  //! during parsing of the content and return values (but see also
-  //! @[FLAG_PARENT_SCOPE]).
+  //! during parsing of the content and return values.
 
   //! @decl optional string scope_name;
   //!
@@ -2240,12 +2242,12 @@ class Frame
   //!	  Added or put into the result. If the result type has a
   //!	  parser, the string will be parsed with it before it's
   //!	  assigned to the result variable and passed on.
-  //!    @item RXML.Frame
+  //!    @item @[RXML.Frame]
   //!	  Already initialized frame to process. Neither arguments nor
   //!	  content will be parsed. It's result is added or put into the
   //!	  result of this tag. The functions @[RXML.make_tag],
   //!	  @[RXML.make_unparsed_tag] are useful to create frames.
-  //!	 @item RXML.PCode
+  //!	 @item @[RXML.PCode]
   //!	  A p-code object to evaluate. It's not necessary that the
   //!	  type it evaluates to is the same as @[result_type]; it will
   //!	  be converted if it isn't.
@@ -2253,6 +2255,9 @@ class Frame
   //!	  A response mapping which will be returned instead of the
   //!	  evaluated page. The evaluation is stopped immediately after
   //!	  this. FIXME: Not yet implemented.
+  //!	 @item function(RequestID:mixed)
+  //!	  Run the function and add its return value to the result.
+  //!	  It's assumed to be a valid value of @[result_type].
   //!    @item object
   //!	  Treated as a file object to read in blocking or nonblocking
   //!	  mode. FIXME: Not yet implemented, details not decided.
@@ -2266,6 +2271,8 @@ class Frame
   //!	  this is used, it's probably necessary to define the
   //!	  @[raw_tag_text] variable. For further details see the doc
   //!	  for @[propagate_tag] in this class.
+  //!	 @item @[RXML.nil]
+  //!	  Ignored.
   //!   @enddl
   //!  @item 0
   //!   Do nothing special. Exits the tag when used from
@@ -2623,11 +2630,6 @@ class Frame
     ctx->make_p_code = flags & FLAG_COMPILE_RESULT;
 
     mixed err = catch {
-      if (flags & FLAG_PARENT_SCOPE) {
-	THIS_TAG_DEBUG_LEAVE_SCOPE (ctx, this_object());
-	LEAVE_SCOPE (ctx, this_object());
-      }
-
       for (; i < sizeof (exec); i++) {
 	mixed elem = exec[i], piece = nil;
 
@@ -2677,7 +2679,7 @@ class Frame
 	    break;
 
 	  default:
-	    if (objectp (elem))
+	    if (objectp (elem)) {
 	      // Can't count on that sprintf ("%t", ...) on an object
 	      // returns "object".
 	      if (([object] elem)->is_RXML_Frame) {
@@ -2712,6 +2714,14 @@ class Frame
 		piece = ([object(Parser)] elem)->eval(); // Might unwind.
 		break;
 	      }
+	      else if (elem == nil)
+		break;
+	    }
+	    else if (functionp (elem)) {
+	      THIS_TAG_DEBUG ("Exec[%d]: Calling function %O\n", i, elem);
+	      piece = ([function(RequestID:mixed)] elem) (ctx->id); // Might unwind.
+	      break;
+	    }
 	    _exec_array_fatal (where, i, elem, "Not a valid type.\n");
 	}
 
@@ -2722,20 +2732,11 @@ class Frame
       if (result_type->sequential) result = result + (result = 0, res);
       else res = result;
 
-      if (flags & FLAG_PARENT_SCOPE) {
-	THIS_TAG_DEBUG_ENTER_SCOPE (ctx, this_object());
-	ENTER_SCOPE (ctx, this_object());
-      }
-
       ctx->make_p_code = orig_make_p_code;
       return res;
     };
 
     if (result_type->sequential) result = result + (result = 0, res);
-    if (flags & FLAG_PARENT_SCOPE) {
-      THIS_TAG_DEBUG_ENTER_SCOPE (ctx, this_object());
-      ENTER_SCOPE (ctx, this_object());
-    }
 
     ctx->make_p_code = orig_make_p_code;
     if (objectp (err) && ([object] err)->thrown_at_unwind) {
