@@ -4,7 +4,7 @@
 // mapping. Given the file 'foo.html', it will per default
 // set the contenttype to 'text/html'
 
-constant cvs_version = "$Id: contenttypes.pike,v 1.16 1999/11/27 09:00:36 per Exp $";
+constant cvs_version = "$Id: contenttypes.pike,v 1.17 2000/02/10 06:44:08 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -77,13 +77,11 @@ void start()
   parse_ext_string(QUERY(exts));
 }
 
-array register_module()
-{
-  return ({ MODULE_TYPES, "Content types",
-	    ("This module handles all normal extension to "+
-	     "content type mapping. Given the file 'foo.html', it will "+
-	     "normally set the content type to 'text/html'."), ({}), 1 });
-}
+constant module_type = MODULE_TYPES;
+constant module_name = "Content types";
+constant module_doc  = "This module handles all normal extension to "
+  "content type mapping. Given the file 'foo.html', it will "
+  "normally set the content type to 'text/html'.";
 
 array type_from_extension(string ext)
 {

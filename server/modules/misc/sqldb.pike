@@ -1,20 +1,18 @@
 /*
- * $Id: sqldb.pike,v 1.2 2000/01/31 03:48:21 per Exp $
+ * $Id: sqldb.pike,v 1.3 2000/02/10 06:44:08 nilsson Exp $
  *
  * Associates a name with an SQL-database.
  *
- * $Author: per $
+ * $Author: nilsson $
  */
 
 #include <module.h>
 
 inherit "module";
 
-array register_module()
-{
-  return (({ 0, "SQL Databases",
-	     "Associates names with SQL Database URLs.", ({}), 1 }));
-}
+constant module_type = MODULE_ZERO;
+constant module_name = "SQL Databases";
+constant module_doc  = "Associates names with SQL Database URLs.";
 
 void create()
 {
@@ -64,7 +62,7 @@ string status()
   string res = "";
 
   if (sizeof(sql_urls)) {
-    res += "<table border=0>\n";
+    res += "<table border=\"0\">\n";
     foreach(sort(indices(sql_urls)), string s) {
       object o;
 

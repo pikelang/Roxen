@@ -3,7 +3,7 @@
 // User database. Reads the system password database and use it to
 // authentificate users.
 
-constant cvs_version = "$Id: userdb.pike,v 1.36 2000/01/31 03:48:21 per Exp $";
+constant cvs_version = "$Id: userdb.pike,v 1.37 2000/02/10 06:44:08 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -432,16 +432,9 @@ string status()
 );
 }
 
-mixed *register_module()
-{
-  return
-    ({ MODULE_AUTH,
-       "User database",
-       ("This module handles the security in roxen, it uses "
-	"the normal system password and user database to validate "
-	"users. It also maintains the user database for all other "
-	"modules in roxen, e.g. the user homepage module."),
-       ({  }),
-       1
-     });
-}
+constant module_type = MODULE_AUTH;
+constant module_name = "User database";
+constant module_doc  = "This module handles the security in roxen, it uses "
+  "the normal system password and user database to validate "
+  "users. It also maintains the user database for all other "
+  "modules in roxen, e.g. the user homepage module.";

@@ -3,7 +3,7 @@
 // ISMAP image map support. Quite over-complex, really.  An example is
 // the support for index images, and chromatic distances.
 
-string cvs_version = "$Id: ismap.pike,v 1.13 1999/04/22 09:10:27 per Exp $";
+string cvs_version = "$Id: ismap.pike,v 1.14 2000/02/10 06:44:08 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -17,16 +17,10 @@ void create()
 	 "All files ending with this extension will be parsed as map-files.");
 }
 
-mixed *register_module()
-{
-  return ({ MODULE_FILE_EXTENSION, 
-	   "ISMAP image-maps",
-	   "Internal support for server side image-maps, including a quite "
-	      "odd color-per-url imagemap method" ,
-	   ({ }),1
-	   });
-
-}
+constant module_type = MODULE_FILE_EXTENSION;
+constant module_name = "ISMAP image-maps";
+constant module_doc  = "Internal support for server side image-maps, including a quite "
+  "odd color-per-url imagemap method";
 
 inline int sqr(int a) { return a*a; }
 

@@ -1,4 +1,4 @@
-// $Id: demo.pike,v 1.10 1999/07/27 20:23:20 js Exp $
+// $Id: demo.pike,v 1.11 2000/02/10 06:44:08 nilsson Exp $
 //
 // (c) 1998 Idonex AB
 #include <module.h>
@@ -8,7 +8,7 @@ inherit "roxenlib";
 
 // import Array;
 
-constant cvs_version = "$Id: demo.pike,v 1.10 1999/07/27 20:23:20 js Exp $";
+constant cvs_version = "$Id: demo.pike,v 1.11 2000/02/10 06:44:08 nilsson Exp $";
 
 void create()
 {
@@ -17,14 +17,9 @@ void create()
 	 "namespace of your server.");
 }
 
-
-mixed *register_module()
-{
-  return ({ 
-    MODULE_LOCATION, 
-    "Demo module", 
-    "This module makes it possible to develop, RXML code interactively." });
-}
+constant module_type = MODULE_LOCATION;
+constant module_name = "Demo module";
+constant module_doc  = "This module makes it possible to develop, RXML code interactively.";
 
 #define FOO "<title>Demo</title>\n" \
 "<body bgcolor=white>\n" \

@@ -3,7 +3,7 @@
 // YP User database. Reads the system password database and use it to
 // authentificate users.
 
-constant cvs_version = "$Id: ypuserdb.pike,v 1.11 1999/09/24 20:30:55 grubba Exp $";
+constant cvs_version = "$Id: ypuserdb.pike,v 1.12 2000/02/10 06:44:08 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -11,10 +11,6 @@ inherit "module";
 inherit "roxenlib";
 
 #if constant(Yp.Domain)
-
-// import Stdio;
-// import Array;
-// import Yp;
 
 /*
  * Globals
@@ -119,14 +115,10 @@ array|int auth(array(string) auth, object id)
  * Registration and initialization
  */
 
-array register_module()
-{
-  return(({ MODULE_AUTH,
-	      "YP (NIS) authorization",
-	      "Experimental module for authorization using "
-	      "Pike's internal YP-database interface.",
-	      ({}), 1 }));
-}
+constant module_type = MODULE_AUTH;
+constant module_name = "YP (NIS) authorization";
+constant module_doc  = "Experimental module for authorization using "
+  "Pike's internal YP-database interface.";
 
 void start(int i)
 {

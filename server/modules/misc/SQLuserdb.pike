@@ -13,7 +13,7 @@
  * or should have been shipped along with the module.
  */
 
-string cvs_version="$Id: SQLuserdb.pike,v 1.11 1999/12/28 03:17:15 nilsson Exp $";
+string cvs_version="$Id: SQLuserdb.pike,v 1.12 2000/02/10 06:44:08 nilsson Exp $";
 
 //#define SQLAUTHDEBUG
 
@@ -328,15 +328,9 @@ string|void check_variable (string name, mixed newvalue)
 	return 0; //should never reach here...
 }
 
-array register_module() {
-	return ({
-	MODULE_AUTH,
-	"SQL user database",
-	"This module implements user authentication via a SQL server.<p>\n "
-	"For setup instruction, see the comments at the beginning of the module "
-	"code.<P>"
-	"&copy; 1997 Francesco Chemolli, distributed freely under GPL license.",
-	0,
-	1
-	});
-};
+constant module_type = MODULE_AUTH;
+constant module_name = "SQL user database";
+constant module_doc  = "This module implements user authentication via a SQL server.\n"
+  "<p>For setup instruction, see the comments at the beginning of the module "
+  "code.</p>"
+  "&copy; 1997 Francesco Chemolli, distributed freely under GPL license.";

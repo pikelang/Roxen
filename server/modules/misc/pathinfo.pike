@@ -9,7 +9,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: pathinfo.pike,v 1.8 1999/12/28 03:46:41 nilsson Exp $";
+constant cvs_version = "$Id: pathinfo.pike,v 1.9 2000/02/10 06:44:08 nilsson Exp $";
 constant thread_safe = 1;
 
 // #define PATHINFO_DEBUG
@@ -20,12 +20,9 @@ constant thread_safe = 1;
 # define PATHINFO_WERR(X)
 #endif
 
-array register_module()
-{
-  return ({ MODULE_LAST, "PATH_INFO support",
-	    "Support for PATH_INFO style URLs.",
-	    0, 1 });
-}
+constant module_type = MODULE_LAST;
+constant module_name = "PATH_INFO support";
+constant module_doc  = "Support for PATH_INFO style URLs.";
 
 mapping|int last_resort(object id)
 {
