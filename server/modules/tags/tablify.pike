@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: tablify.pike,v 1.58 2001/01/21 21:43:53 nilsson Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.59 2001/01/25 23:22:34 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -219,7 +219,7 @@ string encode_url(int col, int state, object stateobj, RequestID id){
   string global_not_query=id->raw_url;
   sscanf(global_not_query, "%s?", global_not_query);
 
-  return global_not_query+"?state="+
+  return global_not_query+"?__state="+
     stateobj->uri_encode(state);
 }
 
@@ -402,10 +402,10 @@ string simpletag_tablify(string tag, mapping m, string q, RequestID id)
 
   if(m["interactive-sort"]) {
     m->state=StateHandler.Page_state(id);
-    m->state->register_consumer((m->name || "tb")+sizeof(rows), id);
+    m->state->register_consumer((m->name || "tb")+sizeof(rows));
     m->sortcol=(int)m->sortcol;
-    if(id->variables->state){
-      m->state->uri_decode(id->variables->state);
+    if(id->variables->__state){
+      m->state->uri_decode(id->variables->__state);
       m->sortcol=m->state->get()||m->sortcol;
     }
   }

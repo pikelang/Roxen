@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1999-2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: foldlist.pike,v 1.25 2001/01/21 21:43:42 nilsson Exp $";
+constant cvs_version = "$Id: foldlist.pike,v 1.26 2001/01/25 23:22:24 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -77,13 +77,13 @@ string encode_url(array states, RequestID id){
   value=(value<<1)+1;
 
   //  if(id->query)
-  //    return id->not_query+"?"+id->query+"&state="+
+  //    return id->not_query+"?"+id->query+"&__state="+
   //      state->uri_encode(value);
 
   string global_not_query=id->raw_url;
   sscanf(global_not_query, "%s?", global_not_query);
 
-  return global_not_query+"?state="+
+  return global_not_query+"?__state="+
     state->uri_encode(value);
 }
 
@@ -114,7 +114,7 @@ class TagFoldlist {
 	if(show)
 	  result="<dt><dd>"+content+"</dd>";
 	else
-	  result="</dt>";
+	  result="</dt>\n";
 	return 0;
       }
     }
@@ -200,9 +200,9 @@ class TagFoldlist {
 
       // Register ourselfs as state consumers and incorporate our initial state.
       state_id = (args->name || "fl")+":"+id->misc->foldlist_depth+":"+hist;
-      object state=StateHandler.Page_state(id);
-      state_id = state->register_consumer(state_id, id);
-      if(id->variables->state && !state->uri_decode(id->variables->state))
+      StateHandler.Page_state state=StateHandler.Page_state(id);
+      state_id = state->register_consumer(state_id);
+      if(id->variables->__state && !state->uri_decode(id->variables->__state))
 	RXML.run_error("Error in state.");
 
       //Get our real state
