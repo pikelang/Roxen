@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.385 2002/11/18 18:05:51 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.386 2002/11/27 12:46:41 anders Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2018,7 +2018,7 @@ void got_data(mixed fooid, string s)
 	return;
     }
 
-    if( method == "GET"  )
+    if( method == "GET" || method == "HEAD" )
       misc->cacheable = INITIAL_CACHEABLE; // FIXME: Make configurable.
 
     TIMER_START(find_conf);
