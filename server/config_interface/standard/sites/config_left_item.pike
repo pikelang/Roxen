@@ -70,6 +70,8 @@ string selected_item( string q, roxen.Configuration c, RequestID id, string modu
            qurl += "../";
          array variables = ({});
          object c = roxen->find_configuration(cfg);
+         if( !c->inited )
+           c->enable_all_modules();
          foreach( indices(c->modules), string q )
          {
            object mi = roxen->find_module( q );
