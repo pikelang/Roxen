@@ -6,7 +6,7 @@
  * in October 1997
  */
 
-constant cvs_version = "$Id: business.pike,v 1.84 1998/03/07 00:05:14 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.85 1998/03/07 00:10:13 hedda Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -115,6 +115,8 @@ mixed *register_module()
        "                 instead of newline.\n"
        "  <b>form</b>           Can be set to either row or column. Default\n"
        "                 is row.\n"
+       "  <b>xnames</b>         If given, the first line or column is used as\n"
+       "                 xnames.\n"
        "  <b>noparse</b>        Do not run the content of the tag through\n"
        "                 the RXML parser before data extraction is done.\n"
        "\n&lt;<b>colors</b>&gt; (container)\n"
