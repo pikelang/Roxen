@@ -28,7 +28,7 @@ static object servlet_init = servlet_ifc->get_method("init", "(Ljavax/servlet/Se
 static object servlet_destroy = servlet_ifc->get_method("destroy", "()V");
 static object servlet_getservletinfo = servlet_ifc->get_method("getServletInfo", "()Ljava/lang/String;");
 static object servlet_service = servlet_ifc->get_method("service", "(Ljavax/servlet/ServletRequest;Ljavax/servlet/ServletResponse;)V");
-static object cfg_init = config_class->get_method("<init>", "(Ljavax/servlet/ServletContext;)V");
+static object cfg_init = config_class->get_method("<init>", "(Ljavax/servlet/ServletContext;Ljava/lang/String;)V");
 static object context_init = context_class->get_method("<init>", "(I)V");
 static object context_id_field = context_class->get_field("id", "I");
 static object request_init = request_class->get_method("<init>", "(Ljavax/servlet/ServletContext;Lse/idonex/servlet/RoxenSessionContext;ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
@@ -71,6 +71,7 @@ static void check_exception()
 class servlet {
 
   static object s, d;
+  static string classname;
   int singlethreaded = 0;
 #if constant(thread_create)
   static object lock;
@@ -111,10 +112,10 @@ class servlet {
     return i && (string)i;
   }
 
-  void init(object cfgctx, mapping(string:string)|void params)
+  void init(object cfgctx, mapping(string:string)|void params, string|void nam)
   {
     if(params)
-      cfgctx = config(cfgctx, params);
+      cfgctx = config(cfgctx, params, nam||classname);
     servlet_init(s, cfgctx->cfg);
     check_exception();
   }
@@ -122,6 +123,7 @@ class servlet {
   void create(string|object name, string|object|void dir)
   {
     if(stringp(name)) {
+      classname = name;
       if(!objectp(dir))
 	dir = loader(dir||".");
       name = dir->low_load(name);
@@ -176,11 +178,12 @@ class config {
 
   object cfg;
 
-  void create(object context, mapping(string:string)|void params)
+  void create(object context, mapping(string:string)|void params,
+	      string|void name)
   {
     cfg = config_class->alloc();
     check_exception();
-    cfg_init(cfg, context->ctx);
+    cfg_init(cfg, context->ctx, name);
     check_exception();
     if(params) {
       object dic = dic_field->get(cfg);
@@ -239,14 +242,13 @@ class context {
 
   string get_real_path(string path)
   {
-    // FIXME
+    // FIXME (no id object...)
     return 0;
   }
 
   string get_mime_type(string file)
   {
-    // FIXME
-    return 0;
+    return conf && conf->type_from_filename(file);
   }
 
   string get_server_info()
