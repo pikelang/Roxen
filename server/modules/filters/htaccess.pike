@@ -5,7 +5,7 @@
 
 // import Stdio;
 
-constant cvs_version = "$Id: htaccess.pike,v 1.38 1998/06/26 14:53:32 grubba Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.39 1998/06/26 15:10:13 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -550,6 +550,7 @@ mapping|string|int htaccess(mapping access, object id)
 	method = "dir";
 	break;
       }
+    case "stat":
     case "head":
     case "cwd":
     case "post":
