@@ -635,15 +635,15 @@ mapping set_legend_size(mapping diagram_data)
 	  diagram_data["legend_size"]=raws*diagram_data["legendfontsize"];
 	  
 	  
-	  if (diagram_data["image"]->ysize()/2>raws*diagram_data["legendfontsize"])
+	  if (diagram_data["image"]->ysize()/2>=raws*diagram_data["legendfontsize"])
 	    tobig=0;
 	  else
 	    {
 	      tobig++;
 	      if (tobig==2)
-		diagram_data["legendfontsize"]=diagram_data["image"]->ysize()/raws;
+		diagram_data["legendfontsize"]=diagram_data["image"]->ysize()/raws-1;
 	      else
-		diagram_data["legendfontsize"]=diagram_data["image"]->ysize()/2/raws;
+		diagram_data["legendfontsize"]=diagram_data["image"]->ysize()/2/raws-1;
 	    }
 	}
       
