@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.213 2004/02/04 15:39:29 mast Exp $
+# $Id: start,v 1.214 2004/03/11 18:26:59 grubba Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -855,7 +855,7 @@ if [ -z "$once" ] ; then
   fi
   if [ -f "bin/setup_nsr.pike" ]; then
     # Setup .nsr (Networker) files for the logfile directories.
-    $pike bin/setup_nsr.pike --logdir="$LOGDIR" --debugdir="$DEBUGDIR"
+    $pike $DEFINES bin/setup_nsr.pike --logdir="$LOGDIR" --debugdir="$DEBUGDIR"
   fi
   if [ $verbose -gt 0 ]; then
     dp "Using configuration from $DIR"
