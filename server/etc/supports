@@ -1,4 +1,4 @@
-## $Id: supports,v 1.48 1998/01/14 11:14:01 peter Exp $
+## $Id: supports,v 1.49 1998/01/30 22:52:42 grubba Exp $
 # name="Supports database";
 # doc="The database used to determine what different user-agents (browsers) support.";
 #
@@ -216,6 +216,10 @@ cern.*linemode.*           nothing
 .*exp.*	basic, ms, font, center, fonttype, imagealign, frames, activex
 # }
 
+#section microsoft {
+.*url.*control		robot	ms-url-control
+# }
+
 #section chimera {
 # Chimera.
 .*	basic, -mailto
@@ -259,7 +263,7 @@ cern.*linemode.*           nothing
 # }
 
 #section slurp {
-.*			robot	hotbot
+.*		robot	hotbot
 # }
 
 #section freeseek {
@@ -281,6 +285,25 @@ cern.*linemode.*           nothing
 #section checkbot {
 .*              robot   checkbot
 # }
+
+#section gcreep {
+.*		robot	gcreep
+# }
+
+# Unknown clients:
+
+#section fly {
+.*	basic
+# }
+
+#section prodigy-wb {
+.*	basic
+# }
+
+#section infolink {
+.*	robot
+# }
+
 
 
 
