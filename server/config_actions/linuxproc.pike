@@ -1,5 +1,5 @@
 /*
- * $Id: linuxproc.pike,v 1.3 1997/10/11 08:54:43 neotron Exp $
+ * $Id: linuxproc.pike,v 1.4 1997/10/11 19:48:26 neotron Exp $
  */
 
 inherit "wizard";
@@ -16,6 +16,18 @@ void create()
   if(!file_stat("/proc/1/status")) {
     throw("You need a kernel with the proc filesystem mounted.\n");
   }
+}
+string format_env_line(string in, int ipid)
+{
+  if(!strlen(in))
+    return "";
+
+  array line = in / "=";
+  if(sizeof(line) < 2)
+    return "";
+  return sprintf(" <tr>\n  <th align=left>%s</th>\n  <td>%s</td>\n </tr>\n",
+		 line[0], line[1..]*"=");
+  
 }
 
 string format_proc_line(string in, int ipid)
@@ -45,7 +57,7 @@ string get_status(int pid)
   string wd = getcwd();
   string cwd, status, state = "unknown", name = "who knows";
   int vmsize, vmrss, vmdata, vmstack, vmexe, vmlib, vmstk, vmlck, ppid;
-  array (string) uid, gid;
+  array (string) uid, gid, tmp;
   cd("/proc/"+pid+"/cwd/"); 
   cwd = getcwd();
   cd(wd);
@@ -54,7 +66,7 @@ string get_status(int pid)
     return "<i>Failed to read /proc/. Process died?</i>";
   foreach(status / "\n", string line)
   {
-    array tmp = line / ":";
+    tmp = line / ":";
     if(sizeof(tmp) != 2)
       continue;
     string unmod = tmp[1];
@@ -124,31 +136,57 @@ string get_status(int pid)
       
     }
   }
+  string ppids = "", fds;
+  while(ppid != 0)
+  {
+    if(strlen(ppids))
+      ppids += " => ";
+    ppids += sprintf("<a href=/Actions/?action=linuxproc.pike&pid=%d&"
+		     "unique=%d>%d</a>", ppid, time(), ppid);
+    status = Stdio.read_file("/proc/"+ppid+"/status");
+    if(!stringp(status) || !strlen(status))
+    {
+      ppids += " => [ failed, process died? ]";
+      break;
+    }
+    sscanf(status, "%*sPPid:\t%d\n%*s", ppid);
+  }
+
+  if(!strlen(ppids))
+    ppids = "None";
+
+  if((tmp = get_dir("/proc/"+pid+"/fd/")) && sizeof(tmp))
+    fds = sprintf("<b># open fd's:</b>   %d\n", sizeof(tmp));
+
   string out = sprintf("<b>Process name:</b>  %s\n"
-		 "<b>Process state:</b> %s\n"
-		 "<b>Parent pid:</b>    <a href="
-		 "/Actions/?action=linuxproc.pike&pid=%d&unique=%d>%d</a>\n"
- 		 "<b>CWD:</b>           %s\n\n"
-	 	 "<b>Memory usage</b>:\n\n"
-		 "  Virtual:      %6d kB"
-		 "    RSS:          %6d kB\n"
-		 "  Data:         %6d kB"
-		 "    Stack:        %6d kB\n"
-		 "  Locked:       %6d kB"
-		 "    Executable:   %6d kB\n"
-		 "  Libraries:    %6d kB\n\n"
-		 "<b>User and group information:</b>\n\n"
-		 "  <b>    %8s  %12s</b>\n"
-		 "  <b>uid</b> %8s  %12s\n"
-		 "  <b>gid</b> %8s  %12s\n\n",
-		 name, state,
-		 ppid, time(), ppid, 
-		 cwd, vmsize,
-		 vmrss, vmdata, vmstk, vmlck,
-		 vmexe, vmlib,
-		 "real", "effective",
-		 uid[0], uid[1], 
-		 gid[0], gid[1]);
+		       "<b>Process state:</b> %s\n"
+		       "<b>Parent pid(s):</b> %s\n"
+		       "%s" // fds
+		       "<b>CWD:</b>           %s\n\n"
+		       "<b>Memory usage</b>:\n\n"
+		       "  Size (incl. mmap): %6d kB"
+		       "    RSS:          %6d kB\n"
+		       "  Data:              %6d kB"
+		       "    Stack:        %6d kB\n"
+		       "  Locked:            %6d kB"
+		       "    Executable:   %6d kB\n"
+		       "  Libraries:         %6d kB\n\n"
+		       "<b>User and group information:</b>\n\n"
+		       "  <b>    %8s  %12s</b>\n"
+		       "  <b>uid</b> %8s  %12s\n"
+		       "  <b>gid</b> %8s  %12s\n\n"
+		       "<b><a href=/Actions/?action=linuxproc.pike&pid=%d&"
+		       "unique=%d&environ=1>Click here for process "
+		       "environment</a>\n",
+		       name, state,
+		       ppids, fds,
+		       cwd, vmsize,
+		       vmrss, vmdata, vmstk, vmlck,
+		       vmexe, vmlib,
+		       "real", "effective",
+		       uid[0], uid[1], 
+		       gid[0], gid[1],
+		       pid, time());
   status = Stdio.read_file("/proc/"+pid+"/stat");
   if(!stringp(status) || !strlen(status))
     return out;
@@ -165,11 +203,25 @@ mixed page_0(object id, object mc)
 {
   object p = ((program)"privs")("Process status");
   int pid = (int)id->variables->pid || roxen->roxenpid || roxen->startpid;
+ 
+  if(id->variables->environ) {
+    string environ =
+      Array.map(sort((Stdio.read_file("/proc/"+pid+"/environ") || "") / "\0"),
+		format_env_line, pid)*"";
+    if(strlen(environ))
+      environ = sprintf("<table width=100%% cellspacing=0 cellpadding=1>\n <tr align=left>\n  <th>Variable</th>\n  "
+			"<th>Value</th>\n </tr>\n%s"
+	      "</table>", environ);
+    return ("<h2>Process environment for "+pid+"</h2><h3>Cmdline: "+
+	    replace(Stdio.read_file("/proc/"+pid+"/cmdline") || "???",
+		    "\0", " ") +"</h3>" +
+	    environ);
+  }
   
   string tree = Array.map(popen("/usr/bin/pstree -pa "+pid)/"\n" - ({""}),
 			  format_proc_line, pid)*"";
 
-  return ("<h2>Process Tree for "+pid+"</h2><pre>\n"+
+return ("<h2>Process Tree for "+pid+"</h2><pre>\n"+
 	  tree+"</pre>"+
 	  (roxen->euid_egid_lock ? 
 	   "<p><i>Please note that when using threads on Linux, each "
@@ -180,6 +232,12 @@ mixed page_0(object id, object mc)
 }
 
 mixed handle(object id) { return wizard_for(id,0); }
+
+
+
+
+
+
 
 
 
