@@ -13,7 +13,7 @@
  * reference cache shortly.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.36 1997/10/28 09:10:01 peter Exp $";
+constant cvs_version = "$Id: business.pike,v 1.37 1997/10/28 09:16:13 peter Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -115,7 +115,7 @@ string itag_yaxis(string tag, mapping m, mapping res)
 
 /* Handle <xnames> and <ynames> */
 string itag_names(string tag, mapping m, string contents,
-		      mapping res)
+		      mapping res, object id)
 {
   string sep=SEP;
   if(!m->noparse)
@@ -137,7 +137,7 @@ string itag_names(string tag, mapping m, string contents,
 
 /* Handle <xvalues> and <yvalues> */
 string itag_values(string tag, mapping m, string contents,
-		   mapping res)
+		   mapping res, object id)
 {
   string sep=SEP;
   if(!m->noparse)
@@ -207,7 +207,7 @@ string itag_data(mapping tag, mapping m, string contents,
 }
 
 string itag_colors(mapping tag, mapping m, string contents,
-		   mapping res)
+		   mapping res, object id)
 {
   string sep=SEP;
   if(!m->noparse)
@@ -221,7 +221,7 @@ string itag_colors(mapping tag, mapping m, string contents,
 }
 
 string itag_legendtext(mapping tag, mapping m, string contents,
-		       mapping res)
+		       mapping res, object id)
 {
   string sep=SEP;
   if(!m->noparse)
@@ -339,17 +339,20 @@ string tag_diagram(string tag, mapping m, string contents,
   if(res->type == "sumbars")
     if(res->subtype!="norm");
 
-  parse_html(contents, ([]), ([ "data":itag_data ]), res, id );
-
-  parse_html(contents,
-	     ([ "xaxis":itag_xaxis,
-		"yaxis":itag_yaxis ]),
-	     ([ "xnames":itag_names,
+  parse_html(contents, ([]),
+	     ([ "data":itag_data,
+		"xnames":itag_names,
 		"ynames":itag_names,
 		"xvalues":itag_values,
 		"yvalues":itag_values,
 		"colors":itag_colors,
-		"legend":itag_legendtext ]), 
+		"legend":itag_legendtext ]),
+	     res, id );
+
+  parse_html(contents,
+	     ([ "xaxis":itag_xaxis,
+		"yaxis":itag_yaxis ]),
+	     ([ ]), 
 	     res );
 
   if( res->data == ({ }) )
