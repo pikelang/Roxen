@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.49 2000/01/25 16:44:55 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.50 2000/01/25 20:20:06 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -1031,25 +1031,25 @@ string tag_append( string tag, mapping m, RequestID id )
   if (m->variable)
   {
     RXML.Context context=RXML.get_context();
-    mixed value=context->user_get_var(m->variable, m->scope||"form");
+    mixed value=context->user_get_var(m->variable, m->scope);
     if (m->value) {
       // Append a value to an entity variable.
       if (value)
 	value+=m->value;
       else
 	value=m->value;
-      context->user_set_var(m->variable, value, m->scope||"form");
+      context->user_set_var(m->variable, value, m->scope);
       return "";
     }
     if (m->from) {
       // Append the value of another entity variable.
-      mixed from=context->user_get_var(m->from, m->scope||"form");
+      mixed from=context->user_get_var(m->from, m->scope);
       if(!from) return rxml_error(tag, "From variable doesn't exist.", id);
       if (value)
 	value+=from;
       else
 	value=from;
-      context->user_set_var(m->variable, value, m->scope||"form");
+      context->user_set_var(m->variable, value, m->scope);
       return "";
     }
 
@@ -1062,7 +1062,7 @@ string tag_append( string tag, mapping m, RequestID id )
 	value+=id->misc->variables[ m->other ];
       else
 	value=id->misc->variables[ m->other ];
-      context->user_set_var(m->variable, value, m->scope||"form");
+      context->user_set_var(m->variable, value, m->scope);
       return "";
     }
 
@@ -1087,12 +1087,13 @@ string tag_auth_required (string tagname, mapping args, RequestID id)
 
 string tag_expire_time(string tag, mapping m, RequestID id)
 {
-  int t=time();
-  if(!m->now)
-  {
+  int t,t2;
+  t=t2==time(1);
+  if(!m->now) {
     t+=time_dequantifier(m);
     CACHE(max(t-time(),0));
-  } else {
+  }
+  if(t==t2) {
     NOCACHE();
     add_http_header(_extra_heads, "Pragma", "no-cache");
     add_http_header(_extra_heads, "Cache-Control", "no-cache");
@@ -1167,7 +1168,7 @@ string tag_unset(string tag, mapping m, RequestID id) {
     RXML.get_context()->add_scope(m->scope, ([]) );
     return "";
   }
-  RXML.get_context()->user_delete_var(m->variable, m->scope||"form");
+  RXML.get_context()->user_delete_var(m->variable, m->scope);
   return "";
 }
 
@@ -1178,19 +1179,19 @@ string tag_set( string tag, mapping m, RequestID id )
     RXML.Context context=RXML.get_context();
     if (m->value) {
       // Set an entity variable to a value.
-      context->user_set_var(m->variable, m->value, m->scope||"form");
+      context->user_set_var(m->variable, m->value, m->scope);
       return "";
     }
     if (m->expr) {
       // Set an entity variable to an evaluated expression.
-      context->user_set_var(m->variable, sexpr_eval(m->expr), m->scope||"form");
+      context->user_set_var(m->variable, sexpr_eval(m->expr), m->scope);
       return "";
     }
     if (m->from) {
       // Copy a value from another entity variable.
-      mixed from=context->user_get_var(m->from, m->scope||"form");
+      mixed from=context->user_get_var(m->from, m->scope);
       if(!from) return rxml_error(tag, "From variable doesn't exist.", id);
-      context->user_set_var(m->variable, from, m->scope||"form");
+      context->user_set_var(m->variable, from, m->scope);
       return "";
     }
 	
@@ -1198,14 +1199,14 @@ string tag_set( string tag, mapping m, RequestID id )
     if (m->other) {
       if (id->misc->variables && id->misc->variables[ m->other ]) {
 	// Set an entity variable to the value of a misc variable
-	context->user_set_var(m->variable, (string)id->misc->variables[m->other], m->scope||"form");
+	context->user_set_var(m->variable, (string)id->misc->variables[m->other], m->scope);
 	return "";
       }
       return rxml_error(tag, "Other variable doesn't exist.", id);
     }
     if (m->eval) {
       // Set an entity variable to the result of some evaluated RXML
-      context->user_set_var(m->variable, parse_rxml(m->eval, id), m->scope||"form");
+      context->user_set_var(m->variable, parse_rxml(m->eval, id), m->scope);
       return "";
     }
 
@@ -1230,10 +1231,10 @@ string tag_inc(string tag, mapping m, RequestID id)
 {
   if(!m->variable) return rxml_error(tag, "No variable to increment.", id);
   RXML.Context context=RXML.get_context();
-  array entity=context->parse_user_var(m->variable, m->scope||"form");
+  array entity=context->parse_user_var(m->variable, m->scope);
   if(!context->exist_scope(entity[0])) return rxml_error(tag, "Scope "+entity[0]+" does not exist.", id);
   int val=(int)m->value||1;
-  context->user_set_var(m->variable, (int)context->user_get_var(m->variable, m->scope||"form")+val, m->scope||"form");
+  context->user_set_var(m->variable, (int)context->user_get_var(m->variable, m->scope)+val, m->scope);
   return "";
 }
 
@@ -1357,7 +1358,7 @@ string|array(string) tag_insert( string tag, mapping m, RequestID id )
 
   if(n = m->variable)
   {
-    string var=RXML.get_context()->get_user_var(m->variable, m->scope||"form");
+    string var=RXML.get_context()->user_get_var(m->variable, m->scope);
     if(!var) return rxml_error(tag, "No such variable ("+n+").", id);
     return m->quote=="none"?(string)id->variables[n]:({ html_encode_string((string)id->variables[n]) });
   }
@@ -1365,12 +1366,12 @@ string|array(string) tag_insert( string tag, mapping m, RequestID id )
   if(n = m->variables || m->scope) {
     RXML.Context context=RXML.get_context();
     if(m->variables!="variables")
-      return ({ html_encode_string(Array.map(context->list_var(m->scope||"form"),
+      return ({ html_encode_string(Array.map(context->list_var(m->scope),
 					     lambda(string s) {
-					       return sprintf("%s=%O", s, context->get_var(s, m->scope||"form") );
+					       return sprintf("%s=%O", s, context->get_var(s, m->scope) );
 					     } ) * "\n")
 				   });
-    return ({ String.implode_nicely(context->list_var(m->scope||"form")) });
+    return ({ String.implode_nicely(context->list_var(m->scope)) });
   }
 
 
