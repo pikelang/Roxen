@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.297 2001/09/04 13:48:14 jhs Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.298 2001/09/10 15:27:59 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -777,7 +777,7 @@ class TagDate {
     array do_return(RequestID id) {
       int t=(int)args["unix-time"] || time(1);
       if(args->timezone=="GMT") t += localtime(t)->timezone;
-      t+=Roxen.time_dequantifier(args);
+      t = Roxen.time_dequantifier(args, t);
 
       if(!(args->brief || args->time || args->date))
 	args->full=1;
