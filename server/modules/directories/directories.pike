@@ -2,7 +2,7 @@
  * A quite complex directory module. Generates macintosh like listings.
  */
 
-string cvs_version = "$Id: directories.pike,v 1.17 1997/08/31 03:47:15 peter Exp $";
+string cvs_version = "$Id: directories.pike,v 1.18 1997/10/02 15:07:31 grubba Exp $";
 int thread_safe=1;   /* Probably. Check _root */
 
 #include <module.h>
@@ -64,24 +64,27 @@ class Dirnode
     return o;
   }
 
-  string show_me(string s, string root)
+  string show_me(string s, string root, object id)
   {
     string name = prefix + path(1), lname;
     lname = name/*[strlen(root)..]*/;
     if(!stat) return "";
     if(stat[1]>-1) return "   "+link(s, name);
     if(stat[1]<0) lname+="/";
-    if(folded)
+    if (id->supports->robot) {
+      return linkname(link(s, lname), name);
+    } else if(folded) {
       return linkname(link(configimage("unfold"), "/(diract,unfold)" +
 			   name+"?"+(nocache++)) + blink(s, lname), name);
-    else
+    } else {
       return linkname(link(configimage("fold"), "/(diract,fold)"+name+"?"
 			    +(nocache++))
 		      + blink(s, name), name);
+    }
   }
 
   mixed dcallout;
-  string describe(int i, string|void foo)
+  string describe(object id, int i, string|void foo)
   {
     string res="";
     object node,prevnode;
@@ -105,7 +108,7 @@ class Dirnode
     if(!tmp) return "";
 
     if(!i)
-      res += tmp[0] +  show_me(tmp[1], root);
+      res += tmp[0] +  show_me(tmp[1], root, id);
     else if(up) 
       res += link("Previous Directory", up->path(1));
 
@@ -126,7 +129,7 @@ class Dirnode
 	}
 	prevnode = node;
 	node = node->next;
-	res += prevnode->describe(0,root);
+	res += prevnode->describe(id,0,root);
       }
       if(!i)
 	res += "</dl>";
@@ -453,7 +456,7 @@ mapping parse_directory(object id)
   if(id->prestate->diract) return 0; // This should not happend
   
   f=node->folded;node->folded=0;gid=id;
-  tmp=http_string_answer(head(node,id)+node->describe(1)+foot(node,id));
+  tmp=http_string_answer(head(node,id)+node->describe(id,1)+foot(node,id));
   gid=0;if(node)node->folded = f;
   
   return tmp;
