@@ -1,6 +1,6 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.409 2001/01/19 12:41:32 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.410 2001/01/19 16:38:16 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -199,6 +199,7 @@ private array (function) filter_module_cache;
 private array (array (string|function)) location_module_cache;
 private mapping (string:array (function)) file_extension_module_cache=([]);
 private mapping (string:array (RoxenModule)) provider_module_cache=([]);
+private array (RoxenModule) auth_module_cache, userdb_module_cache;
 
 
 // Call stop in all modules.
@@ -208,9 +209,9 @@ void stop()
   CATCH("stopping type modules",
         types_module && types_module->stop && types_module->stop());
   allmods[types_module] = 0;
-  CATCH("stopping auth module",
-        auth_module && auth_module->stop && auth_module->stop());
-  allmods[auth_module] = 0;
+//   CATCH("stopping auth module",
+//         auth_module && auth_module->stop && auth_module->stop());
+//   allmods[auth_module] = 0;
   CATCH("stopping directory module",
         dir_module && dir_module->stop && dir_module->stop());
   allmods[dir_module] = 0;
@@ -448,9 +449,36 @@ array (function) first_modules()
   return first_module_cache;
 }
 
+array(UserDB) user_databases()
+{
+  if( userdb_module_cache )
+    return userdb_module_cache;
+  array tmp = ({});
+  foreach( values( modules ), mapping m )
+    foreach( values(m->copies), RoxenModule mo )
+      if( mo->module_type & MODULE_USERDB )
+	tmp += ({ ({ mo->query( "_priority" ), mo }) });
+
+  sort( tmp );
+  tmp += ({ ({ 0, roxen->config_userdb_module }) });
+  return userdb_module_cache = reverse(column(tmp,1));
+}
+
+array(AuthModule) auth_modules()
+{
+  if( auth_module_cache )
+    return auth_module_cache;
+  array tmp = ({});
+  foreach( values( modules ), mapping m )
+    foreach( values(m->copies), RoxenModule mo )
+      if( mo->module_type & MODULE_AUTH )
+	tmp += ({ ({ mo->query( "_priority" ), mo }) });
+  sort( tmp );
+  return auth_module_cache = reverse(column(tmp,1));
+}
 
 array location_modules()
-//! Return an array of all location modules the request would be
+//! Return an array of all location modules the request should be
 //! mapped through, by order of priority.
 {
   if(!location_module_cache)
@@ -564,40 +592,80 @@ public void log(mapping file, RequestID request_id)
 }
 
 public array(string) userinfo(string u, RequestID|void id)
+//! @note DEPRECATED COMPATIBILITY FUNCTION
+//! 
 //! Fetches user information from the authentication module by calling
 //! its userinfo() method. Returns zero if no auth module was present.
 {
-  if(auth_module) return auth_module->userinfo(u, id);
-  else report_warning(sprintf("userinfo(): %s\n"
-			      "%s\n",
-			      LOC_M(38, "No authorization module"),
-			      describe_backtrace(backtrace())));
+  User uid;
+  foreach( user_databases(), UserDB m )
+    if( uid = m->find_user( u ) )
+      return uid->compat_userinfo();
 }
 
 public array(string) userlist(RequestID|void id)
+//! @note DEPRECATED COMPATIBILITY FUNCTION
+//! 
 //! Fetches the full list of valid usernames from the authentication
 //! module by calling its userlist() method. Returns zero if no auth
 //! module was present.
 {
-  if(auth_module) return auth_module->userlist(id);
-  else report_warning(sprintf("userlist(): %s\n"
-			      "%s\n",
-			      LOC_M(38, "No authorization module"),
-			      describe_backtrace(backtrace())));
+  array(string) list = ({});
+  foreach( user_databases(), UserDB m )
+    list |= m->list_users();
+  return list;
 }
 
 public array(string) user_from_uid(int u, RequestID|void id)
+//! @note DEPRECATED COMPATIBILITY FUNCTION
+//! 
 //! Return the user data for id u from the authentication module. The
 //! id parameter might be left out if FTP. Returns zero if no auth
 //! module was present.
 {
-  if(auth_module)
-    return auth_module->user_from_uid(u, id);
-  else report_warning(sprintf("user_from_uid(): %s\n"
-			      "%s\n",
-			      LOC_M(38, "No authorization module"),
-			      describe_backtrace(backtrace())));
+  User uid;
+  foreach( user_databases(), UserDB m )
+    if( uid = m->find_user_from_uid( u ) )
+      return uid->compat_userinfo();
 }
+
+
+public User authenticate( RequestID id,
+			  UserDB|void database,
+			  AuthModule|void method )
+//! Try to authenticate the request with users from the specified user
+//! database. If no @[database] is specified, all datbases in the
+//! current configuration are searched in priority order, then the
+//! configuration user database. Same goes for the @[method].
+//!
+//! The return value is the autenticated user.
+{
+  User u;
+  if( method )
+    return method->authenticate( id, database );
+  else
+    foreach( auth_modules(), method )
+      if( u  = method->authenticate( id, database ) )
+	return u;
+}
+
+public mapping authenticate_throw( RequestID id, string realm,
+				   UserDB|void database,
+				   AuthModule|void method)
+//! Returns a reply mapping, similar to @[Roxen.http_rxml_reply] with
+//! friends. If no @[database] is specified, all datbases in the
+//! current configuration are searched in priority order, then the
+//! configuration user database. Same goes for the @[method]
+{
+  mapping m;
+  if( method )
+    return method->authenticate_throw( id, realm, database );
+  else
+    foreach( auth_modules(), method )
+      if( m  = method->authenticate_throw( id, realm, database ) )
+	return m;
+}
+
 
 public string last_modified_by(Stdio.File file, RequestID id)
 {
@@ -770,6 +838,8 @@ void invalidate_cache()
 {
   last_module_cache = 0;
   filter_module_cache = 0;
+  userdb_module_cache = 0;
+  auth_module_cache = 0;
   first_module_cache = 0;
   url_module_cache = 0;
   location_module_cache = 0;

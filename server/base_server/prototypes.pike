@@ -1,7 +1,7 @@
 #include <stat.h>
 #include <config.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.5 2001/01/19 12:41:34 per Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.6 2001/01/19 16:38:24 per Exp $";
 
 class Variable
 {
@@ -634,26 +634,179 @@ class AuthModule
 
   constant name = "method name";
   
-  int authenticate( RequestID id, UserDB db );
+  User authenticate( RequestID id, UserDB db );
   //! Try to authenticate the request with users from the specified user
   //! database. If no @[db] is specified, all datbases in the current
   //! configuration are searched in order, then the configuration user
   //! database.
 
-  mapping authenticate_throw( RequestID id , UserDB db );
+  mapping authenticate_throw( RequestID id, string realm, UserDB db );
   //! Returns a reply mapping, similar to @[Roxen.http_rxml_reply] with
   //! friends. If no @[db] is specified,  all datbases in the current
   //! configuration are searched in order, then the configuration user
   //! database.
 }
 
-class User
+static Sql.Sql user_mysql = connect_to_my_mysql( 0, "roxen" );
+
+static void create()
+{
+  if(catch(user_mysql->query( "SELECT module FROM user_data WHERE module=''")))
+    user_mysql->query( "CREATE TABLE user_data "
+		       " (module varchar(30), "
+		       "  user   varchar(30) NOT NULL, "
+		       "  name   varchar(30) NOT NULL, "
+		       "  value  blob, raw int not null, "
+		       " INDEX foo (module,user,name))" );
+}
+
+class Group( UserDB database )
 {
   string name();
-  string real_name();
+  //! The group name
+  array(User) members()
+  //! All users that are members of this group. The default
+  //! implementation loops over all users handled by the user database
+  //! and looks for users with the same gid as this group.
+  {
+    array res = ({});
+    User uid;
+    int id = gid();
+    foreach( database->list_users(), string u )
+      if( (uid = database->find_user( u )) && (uid->gid() == id) )
+	res += ({ uid });
+    return res;
+  }
+  
+  int gid();
+  //! A numerical GID, or -1 if not applicable
+}
 
-  void set( RoxenModule m, string index, string value );
-  void get( RoxenModule m, string index );
+class User( UserDB database )
+{
+  string name();
+  //! The user (short) name
+  string real_name();
+  //! The real name of the user
+
+  int password_authenticate( string password )
+  //! Return 1 if the password is correct, 0 otherwise. The default
+  //! implementation uses the crypted_password() method.
+  {
+    return crypt( password, crypted_password() );
+  }
+
+  int uid();
+  //! A numerical UID, or -1 if not applicable
+  int gid();
+  //! A numerical GID, or -1 if not applicable
+  string shell();
+  //! The shell, or 0 if not applicable
+  
+  string gecos()
+  //! The gecos field, defaults to return the real name
+  {
+    return real_name();
+  }
+
+  string homedir();
+  string crypted_password() { return "x"; }
+  //! Used by compat_userinfo(). The default implementation returns "x"
+
+
+  int set_name()              {}
+  int set_real_name()         {}
+  int set_uid()               {}
+  int set_gid()               {}
+  int set_shell()             {}
+  int set_gecos()             {}
+  int set_homedir()           {}
+  int set_crypted_password()  {}
+  
+  array compat_userinfo( )
+  //! Return a unix passwd compatible array with user information. The
+  //! defualt implementation uses the other methods to assemble this
+  //! information.
+  //!
+  //! Basically:
+  //!  return ({ name(), crypted_password(),
+  //!            uid(), gid(), gecos(), homedir(),
+  //!	         shell() });
+
+  {
+    return ({name(),crypted_password(),uid(),gid(),gecos(),homedir(),shell()});
+  }
+
+  
+  void set_var( RoxenModule module, string index, mixed value )
+  //! Set a specified variable in the user. If @[value] is a string,
+  //! it's stored as is in the database, otherwise it's encoded using
+  //! encode_value before it's stored.
+  //!
+  //! You can use 0 for the @[module] argument.
+  //! 
+  //! The default implementation stores the value in a mysql table
+  //! 'user_data' in the 'roxen' database.
+  //!
+  //! Use @[get_var] to retrieve the value, and @[delete_var] to
+  //! delete it.
+  {
+    delete_var( module, index );
+    int encoded;
+    string mm;
+    if( !module )
+      mm = "NULL";
+    else
+      mm = replace("'"+user_mysql->quote(module->sname()||module->name )+"'",
+		   "%","%%");
+    if( stringp( value ) )
+      value = string_to_utf8( value );
+    else
+    {
+      value = encode_value( value );
+      encoded = 1;
+    }
+    user_mysql->query(
+      "INSERT INTO user_data VALUES ("+mm+", %s, %s, %s, %d)",
+      index, name(), value, encoded
+    );
+  }
+
+  mixed get_var( RoxenModule module, string index )
+  //! Return the value of a variable previously set with @[set_var]
+  {
+    array rows;
+    string mm;
+    if( !module )
+      mm = "NULL";
+    else
+      mm = replace("'"+user_mysql->quote(module->sname()||module->name )+"'",
+		   "%","%%");
+    rows = user_mysql->query( "SELECT value,raw FROM user_data "
+			      "WHERE module="+mm+" AND name=%s AND user=%s",
+			      index, name() );
+    if( !sizeof( rows ) )
+      return 0;
+    mapping m = rows[0];
+    if( (int)m->raw )
+      return decode_value( m->value );
+    return utf8_to_string( m->value );
+  }
+
+  void delete_var( RoxenModule module, string index )
+  //! Delete a variable previously created with @[set_var]
+  {
+    string mm;
+    if( !module )
+      mm = "NULL";
+    else
+      mm = replace("'"+user_mysql->quote(module->sname()||module->name )+"'",
+		   "%","%%");
+
+    user_mysql->query( "DELETE FROM user_data WHERE module="+mm+
+		       " AND name=%s AND user=%s",
+		       index, name() );
+  }
 }
 
 class UserDB
@@ -665,13 +818,48 @@ class UserDB
   User find_user( string s );
   //! Find a user
 
+  User find_user_from_uid( int id )
+  //! Find a user given a UID. The default implementation loops over
+  //! list_users() and checks the uid() of each one.
+  {
+    User uid;
+    foreach( list_users(), string u )
+      if( (uid = find_user( u )) && (uid->uid() == id) )
+	return uid;
+  }    
+
+  Group find_group( string group )
+  //! Find a group object given a group name.
+  //! The default implementation returns 0.
+  {
+  }
+  
+  User find_group_from_gid( int id )
+  //! Find a group given a GID. The default implementation loops over
+  //! list_groups() and checks the gid() of each one.
+  {
+    Group uid;
+    foreach( list_groups(), string u )
+      if( (uid = find_group( u )) && (uid->gid() == id) )
+	return uid;
+  }
+  
+  array(string) list_groups( )
+  //! Return a list of all groups handled by this database module.
+  //! The default implementation returns the empty array.
+  {
+    return ({});
+  }
+
   array(string) list_users( );
   //! Return a list of all users handled by this database module.
 
-  User create_user( string s );
+  User create_user( string s )
+  {
+    return 0;
+  }
   //! Not nessesarily implemented, as an example, it's not possible to
   //! create users in the system user database from Roxen WebServer.
-  //!
-  //! Returns 0 on failure
+  //! The default implementation returns 0.
 }
 
