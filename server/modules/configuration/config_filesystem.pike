@@ -32,7 +32,7 @@ static string revert_browser_encoding( string s )
 mixed stat_file( string f, object id )
 {
   mixed ret;
-  f = revert_browser_encoding( f );
+  f = decode_id_from_browser_encoding( f, id );
   ret = ::stat_file( f, id );
   if( !ret )
   {
@@ -53,7 +53,7 @@ string idi_netscape( string what )
 
 mixed find_dir( string f, object id )
 {
-  f = revert_browser_encoding( f );
+  f = decode_id_from_browser_encoding( f, id );
   return ::find_dir( f, id );
 }
 
@@ -156,6 +156,26 @@ class ConfigurationSettings
   }
 }
 
+string decode_id_from_browser_encoding( string f, object id )
+{
+  if( !id->misc->path_decoded )
+  {
+    id->misc->path_decoded = 1;
+    f = revert_browser_encoding( f );
+    id->not_query = revert_browser_encoding( id->not_query );
+    mapping new_variables = ([]);
+    foreach( indices(id->variables), string q )
+      new_variables[ revert_browser_encoding( q ) ] = 
+               revert_browser_encoding( id->variables[q] );
+    id->variables = new_variables;
+    multiset new_prestate = (<>);
+    foreach( indices( id->prestate ), string q )
+      new_prestate[revert_browser_encoding( q ) ]=1;
+    id->prestate = new_prestate;
+  }
+  return f;
+}
+
 mapping settings_cache = ([ ]);
 
 void get_context( string ident, string host, object id )
@@ -190,12 +210,8 @@ mixed find_file( string f, object id )
   get_context( identifier, host, id );
   
 
-  if( !id->misc->path_decoded )
-  {
-    id->misc->path_decoded = 1;
-    f = utf8_to_string( f );
-    id->not_query = utf8_to_string( id->not_query );
-  }
+  f = decode_id_from_browser_encoding( f, id );
+
   if( (f == "") && !id->misc->pathinfo )
     return http_redirect(fix_relative( "/standard/", id ), id );
 
@@ -256,8 +272,13 @@ mixed find_file( string f, object id )
 
   foreach( glob( "goto_*", indices( id->variables )  ), string q )
     if( sscanf( q, "goto_%s.x", q ) )
+    {
+      if( charset_encoder )
+        q = charset_encoder->clear()->feed( q )->drain();
+      else
+        q = string_to_utf8( q );
       return http_redirect( fix_relative( q, id ), id );
-
+    }
   return retval;
 }
 

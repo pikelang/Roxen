@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.339 1999/10/11 14:10:29 per Exp $
+ * $Id: roxen.pike,v 1.340 1999/10/12 13:19:17 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.339 1999/10/11 14:10:29 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.340 1999/10/12 13:19:17 per Exp $";
 
 object backend_thread;
 object argcache;
@@ -705,7 +705,7 @@ class Protocol
 
   object find_configuration_for_url( string url, RequestID id )
   {
-    werror("find configuration for '"+url+"'\n");
+//     werror("find configuration for '"+url+"'\n");
     foreach( sorted_urls, string in )
     {
       if( glob( in+"*", url ) )

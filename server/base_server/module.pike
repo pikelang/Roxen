@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.47 1999/10/04 15:11:54 per Exp $ */
+/* $Id: module.pike,v 1.48 1999/10/12 13:19:17 per Exp $ */
 #include <module.h>
 #include <request_trace.h>
 
@@ -98,17 +98,13 @@ static class ConfigurableWrapper
 {
   int mode;
   function f;
-  int check()
+  int check(  int|void more, int|void expert )
   {
-    if ((mode & VAR_EXPERT) &&
-	(!roxen->configuration_interface()->expert_mode)) {
+    if ((mode & VAR_EXPERT) && !expert)
       return 1;
-    }
-    if ((mode & VAR_MORE) &&
-	(!roxen->configuration_interface()->more_mode)) {
+    if ((mode & VAR_MORE) && !more)
       return 1;
-    }
-    return(f());
+    return f();
   }
   void create(int mode_, function f_)
   {

@@ -786,8 +786,27 @@ string container_configif_output(string t, mapping m, string c, object id)
      break;
 
    case "urls":
+     break;
+
    case "module-variables":
+     object conf = roxen->find_configuration( m->configuration );
+     if( !conf )
+       error("Unknown configuration "+ m->configuration +"\n");
+     object mod = conf->find_module( replace( m->module, "!", "#" ) );
+     if( !mod )
+       error("Unknown module "+ m->module +"\n");
+     variables = get_variable_maps( mod, m, id );
+     break;
+
    case "module-variables-sections":
+     object conf = roxen->find_configuration( m->configuration );
+     if( !conf )
+       error("Unknown configuration "+ m->configuration +"\n");
+     object mod = conf->find_module( replace( m->module, "!", "#" ) );
+     if( !mod )
+       error("Unknown module "+ m->module +"\n");
+     werror("sections in "+m->module+" in "+conf->name+"\n");
+     variables = get_variable_sections( mod, m, id );
      break;
 
    case "global-variables-sections":
@@ -822,7 +841,8 @@ string container_configif_output(string t, mapping m, string c, object id)
 string tag_cf_num_dotdots( string t, mapping m, object id )
 {
   while( id->misc->orig ) id = id->misc->orig;
-  int depth = sizeof( (id->not_query + (id->misc->path_info||""))/"/" )-3;
+  //+ (id->misc->path_info||"")
+  int depth = sizeof( (id->not_query )/"/" )-3;
   string dotodots = depth>0?(({ "../" })*depth)*"":"./";
   return dotodots;
 }

@@ -3,7 +3,7 @@
  * (C) 1996, 1999 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.212 1999/10/09 17:26:25 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.213 1999/10/12 13:19:17 per Exp $";
 #include <module.h>
 #include <roxen.h>
 #include <request_trace.h>
@@ -2488,7 +2488,7 @@ object enable_module( string modname )
 
 
   module->copies[ id ] = me;
-  otomod[ me ] = modname;
+  otomod[ me ] = modname+"#"+id;
       
   mixed err;
   if((me->start) && (err = catch( me->start(0, this_object()) ) ) )

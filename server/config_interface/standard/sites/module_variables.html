@@ -1,0 +1,14 @@
+<item href="¤_url¤?section=section" 
+     title="Misc"
+   <if variable="section is section">selected</if>>
+</item>
+
+<configif-output source="module-variables-sections"
+                  configuration="¤_config¤"
+                  module="¤module¤"
+                  quote="%">
+   <item href="¤_url¤?section=%section%"
+         title="%section:quote=dtag%"
+         <if variable="section is %section%">selected</if>>
+   </item>
+</configif-output>

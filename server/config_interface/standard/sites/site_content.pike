@@ -1,11 +1,28 @@
 string module_global_page( RequestID id, Configuration conf )
 {
-
+  return "Global modules page\n";
 }
 
-string module_page( RequestID id, Configuration conf, object module )
+string module_page( RequestID id, string conf, string module )
 {
-
+  if( id->variables->section )
+  {
+    werror("hmm\n");
+return #"<formoutput quote=\"¤\">
+<input type=hidden name=section value=\"¤section¤\">
+<table>
+  <configif-output source=module-variables configuration=\""+
+   conf+"\" section=\"¤section:quote=dtag¤\" module=\""+module+#"\">
+    <tr><td width=20%><b>#name#</b></td><td>#form:quote=none#</td></tr>
+    <tr><td colspan=2>#doc:quote=none#<p>#type_hint#</td></tr>
+   </configif-output>
+  </table>
+  <input type=submit value=\" Apply \" name=action>
+</formoutput>";
+    
+  } else {
+    
+  }
 }
 
 
@@ -41,10 +58,9 @@ path[ 0 ]+#"\" section=\"¤section:quote=dtag¤\">
 
      case "modules":
        if( sizeof( path ) == 2 )
-         return module_global_page( id, conf );
+         return module_global_page( id, path[0] );
        else
-         return module_page( id, conf, 
-                             conf->find_module( replace(path[2],"!","#") ) );
+         return module_page( id, path[0], path[2] );
     }
   }
 
