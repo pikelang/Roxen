@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.117 1998/10/01 23:37:39 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.118 1998/10/18 21:25:32 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -551,6 +551,7 @@ private int parse_got(string s)
 	  case "cache-control":
 	  case "negotiate":
 	  case "forwarded":
+	  case "new-uri":
 	    misc[linename]=contents;
 	    break;	    
 
