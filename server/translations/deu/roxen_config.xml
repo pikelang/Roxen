@@ -570,15 +570,13 @@ aufgerufen wird. '$File' wird ersetzt durch den Dateinamen,
 </str>
 
 <str id="521">
-<new/>
 <o>Font oversampling</o>
-<t></t>
+<t>Schriftarten glätten</t>
 </str>
 
 <str id="522">
-<new/>
 <o>If set to Yes, fonts will be oversampled resulting in higher quality but more fuzz. This will require clearing of various graphics caches like the Graphic text and GButton caches to take full effect.</o>
-<t></t>
+<t>Schriftarten werden geglättet, um eine höhere Qualität mit weichen Kanten zu erzielen. Hierzu müssen die Grafik-Caches gelöscht werden, damit die Änderungen aktiv werden.</t>
 </str>
 
 <str id="96">
@@ -2164,9 +2162,6 @@ as the name of its log file directory.
 </str>
 
 <str id="386">
-<changed from="The compatibility level is used by different modules to select the right behavior to remain compatible with earlier Roxen versions. When a server configuration is created, this variable is set to the latest version. After that it's never changed automatically, thereby ensuring that server configurations migrated from earlier Roxen versions is kept at the right compatibility level.
-&lt;p&gt;
-This variable may be changed manually, but it's advisable to test the site carefully afterwards. A reload of the whole server configuration is required to propagate the change properly to all modules."/>
 <o>&lt;p&gt;The compatibility level is used by different modules to select the
 right behavior to remain compatible with earlier Roxen versions. When
 a server configuration is created, this variable is set to the current
@@ -2195,7 +2190,22 @@ modules.&lt;/p&gt;
   issues with 2.4, notably the optimization of cache static tags in
   the &amp;lt;cache&amp;gt; tag.&lt;/td&gt;&lt;/tr&gt;
 &lt;/table&gt;&lt;/p&gt;</o>
-<t>Der Kompatibilitäts-Level wird von einigen Modulen benutzt, um das korrekte Verhalten zu wählen, um mit früheren Roxen-Version kompatibel zu bleiben. Wenn eine Server-Konfiguration erstellt wird, wird diese Variable auf die aktuelle Version gesetzt. Danach wird sie niemals automatisch geändert, um zu gewährleisten, dass Server-Konfigurationen, die von früheren Roxen-Versionen migriert werden, auf dem richtigen Kompatibilitäts-Level zu halten.</t>
+<t>&lt;p&gt;Der Kompatibilitäts-Level wird von einigen Modulen benutzt, um das korrekte Verhalten zu wählen, um mit früheren Roxen-Version kompatibel zu bleiben. Wenn eine Server-Konfiguration erstellt wird, wird diese Variable auf die aktuelle Version gesetzt. Danach wird sie niemals automatisch geändert, um zu gewährleisten, dass Server-Konfigurationen, die von früheren Roxen-Versionen migriert werden, auf dem richtigen Kompatibilitäts-Level zu halten.&lt;/p&gt;
+
+&lt;p&gt;Diese Variable kann manuell geändert werden, die Site sollte danach jedoch ausführlich getestet werden. Ein Neustart der gesamten Server-Konfiguration ist notwendig, um die Änderung ordentlich an alle Module mitzuteilen.&lt;/p&gt;
+
+&lt;p&gt;Verfügbare Kompatibilitäts-Level:
+&lt;table&gt;
+&lt;tr valign='top'&gt;&lt;td&gt;2.1&amp;nbsp;&amp;nbsp;&lt;/td&gt;
+  &lt;td&gt;Entspricht Roxen WebServer 2.1.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr valign='top'&gt;&lt;td&gt;2.2&amp;nbsp;&amp;nbsp;&lt;/td&gt;
+  &lt;td&gt;Entspricht Roxen WebServer 2.2.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr valign='top'&gt;&lt;td&gt;2.4&amp;nbsp;&amp;nbsp;&lt;/td&gt;
+  &lt;td&gt;Entspricht Roxen WebServer 2.4. Diese Version ist auch
+  als 3.2 bekannt - die Versionsnummer des Roxen CMS, die den Roxen
+  WebServer 2.4 enthält.&lt;/td&gt;&lt;/tr&gt;&lt;tr valign='top'&gt;&lt;td&gt;2.5&amp;nbsp;&amp;nbsp;&lt;/td&gt;
+  &lt;td&gt;Entspricht keiner veröffentlichten Version. Dieser Kompatibilitäts-Level wird nur für einige Optimierungen gegenüber der Version 2.4 benutzt,
+  besonders der Optimierung des &amp;lt;cache&amp;gt;-Tags.&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/p&gt;
 </str>
 
 <str id="387">
@@ -2994,37 +3004,31 @@ Roxen verwaltet.&lt;/p&gt;</t>
 </str>
 
 <str id="312">
-<new/>
 <o>(none)</o>
-<t></t>
+<t>(keine)</t>
 </str>
 
 <str id="352">
-<new/>
 <o>Delete group</o>
-<t></t>
+<t>Gruppe löschen</t>
 </str>
 
 <str id="353">
-<new/>
 <o>You can not delete this group because it is not empty.</o>
-<t></t>
+<t>Diese Gruppe ist nicht leer, und kann deswegen nicht gelöscht werden.</t>
 </str>
 
 <str id="354">
-<new/>
 <o>Are you sure you want to delete the group %s?</o>
-<t></t>
+<t>Soll die Gruppe %s wirklich gelöscht werden?</t>
 </str>
 
 <str id="355">
-<new/>
 <o>Please give a name for the group.</o>
-<t></t>
+<t>Bitte einen Namen für die Gruppe angeben.</t>
 </str>
 
 <str id="356">
-<new/>
 <o>Configuration %O not found.</o>
-<t></t>
+<t>Konfiguration %O nicht gefunden.</t>
 </str>
