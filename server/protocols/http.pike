@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-string cvs_version = "$Id: http.pike,v 1.35 1997/08/13 10:24:15 grubba Exp $";
+string cvs_version = "$Id: http.pike,v 1.36 1997/08/14 17:22:47 marcus Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -383,46 +383,19 @@ private int parse_got(string s)
 		break;
 
 	      case "multipart/form-data":
-		string boundary;
 //		perror("Multipart/form-data post detected\n");
-		sscanf(misc["content-type"], "%*sboundary=%s",boundary);
-		foreach((data/("--"+boundary))-({"--",""}), contents)
-		{
-		  string pre, metainfo,post;
-		  if(sscanf(contents,
-			    "%[\r\n]%*[Cc]ontent-%*[dD]isposition:%[^\r\n]%[\r\n]%s",
-			    pre,metainfo,post,contents)>4)
-		  {
-		    mapping info=([]);
-		    if(!strlen(contents))
-		      continue;
-		    while(contents[-1]=='-')
-		      contents=contents[..strlen(contents)-2];
-		    if(contents[-1]=='\r')contents=contents[..strlen(contents)-2];
-		    if(contents[-1]=='\n')contents=contents[..strlen(contents)-2];
-		    if(contents[-1]=='\r')contents=contents[..strlen(contents)-2];
-		    foreach(metainfo/";", v)
-		    {
-		      sscanf(v, "%*[ \t]%s", v); v=reverse(v);
-		      sscanf(v, "%*[ \t]%s", v); v=reverse(v);
-		      if(lower_case(v)!="form-data")
-		      {
-			string var, value;
-			if(sscanf(v, "%s=\"%s\"", var, value))
-			  info[lower_case(var)]=value;
-		      }
-		    }
-		    if(info->filename)
-		    {
-		      variables[info->name]=contents;
-		      variables[info->name+".filename"]=info->filename;
-		      if(!misc->files)
-			misc->files = ({ info->name });
-		      else
-			misc->files += ({ info->name });
-		    } else {
-		      variables[info->name]=contents;
-		    }
+		object messg = MIME.Message(data, misc);
+		foreach(messg->body_parts, object part) {
+		  if(part->disp_params->filename) {
+		    variables[part->disp_params->name]=part->getdata();
+		    variables[part->disp_params->name+".filename"]=
+		      part->disp_params->filename;
+		    if(!misc->files)
+		      misc->files = ({ part->disp_params->name });
+		    else
+		      misc->files += ({ part->disp_params->name });
+		  } else {
+		    variables[part->disp_params->name]=part->getdata();
 		  }
 		}
 		break;
