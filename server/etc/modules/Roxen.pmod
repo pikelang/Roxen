@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.25 2000/08/12 06:15:36 per Exp $
+ * $Id: Roxen.pmod,v 1.26 2000/08/12 21:49:41 mast Exp $
  *
  * Various helper functions.
  *
@@ -842,6 +842,18 @@ class ScopePage {
 RXML.Scope scope_roxen=ScopeRoxen();
 RXML.Scope scope_page=ScopePage();
 
+//! A mapping suitable for Parser.HTML.add_entities to initialize it
+//! to transform the standard character reference entities.
+mapping(string:string) parser_charref_table =
+  lambda () {
+    mapping(string:string) table = ([]);
+    for (int i = 0; i < sizeof (replace_entities); i++) {
+      string chref = replace_entities[i];
+      table[chref[1..sizeof (chref) - 2]] = replace_values[i];
+    }
+    return table;
+  }();
+
 RXML.TagSet entities_tag_set = class
 // This tag set always has the lowest priority.
 {
@@ -861,15 +873,9 @@ RXML.TagSet entities_tag_set = class
   void create (string name)
   {
     ::create (name);
-
     // Note: No string entities are replaced when the result type for
     // the parser is t_xml or t_html.
-    mapping(string:string) entities = ([]);
-    for (int i = 0; i < sizeof (replace_entities); i++) {
-      string chref = replace_entities[i];
-      entities[chref[1..sizeof (chref) - 2]] = replace_values[i];
-    }
-    add_string_entities (entities);
+    add_string_entities (parser_charref_table);
   }
 } ("entities_tag_set");
 
