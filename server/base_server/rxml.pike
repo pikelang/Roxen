@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.103 2000/02/07 14:21:27 nilsson Exp $
+ * $Id: rxml.pike,v 1.104 2000/02/07 15:47:17 nilsson Exp $
  *
  * The Roxen RXML Parser.
  *
@@ -1720,7 +1720,7 @@ class TagIfVariable {
   constant cache = 1;
   string source(RequestID id, string s) {
     mixed var=RXML.get_context()->user_get_var(s);
-    if(zero_type(var)) return 0;
+    if(!var) return 0;
     return RXML.t_text->convert (var);
   }
 }
