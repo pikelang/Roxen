@@ -10,7 +10,7 @@
  * reference cache shortly.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.54 1997/12/03 11:56:55 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.55 1997/12/03 14:15:03 hedda Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -59,6 +59,7 @@ mixed *register_module()
        "  <b>eng</b>            If present, numbers are shown like 1.2M.\n"
        "  <b>tonedbox</b>       Creates a background shading between the\n"
        "                        colors assigned to each of the four corners.\n"
+       "  <b>center</b>         (Only for pie) center=n centers the nth slice\n"
        "\n  You can also use the regular &lt;<b>img</b>&gt; arguments. They will be passed\n  on to the resulting &lt;<b>img</b>&gt; tag.\n\n"
        "The following internal tags are available:\n"
        "\n&lt;<b>data</b>&gt; (container) Mandatory.\n"
@@ -77,6 +78,7 @@ mixed *register_module()
        "\n&lt;<b>xnames</b>&gt; (container)\n"
        "Tab separated list of datanames for the diagram. Options:\n"
        "  <b>separator</b>      Use the specified string as separator instead of tab.\n"
+       "  <b>orient</b>         If set to vert the xnames vill be written vertical.\n"
        "\n&lt;<b>ynames</b>&gt; (container)\n"
        "Tab separated list of datanames for the diagram. Options:\n"
        "  <b>separator</b>      Use the specified string as separator instead of tab.\n"
@@ -158,7 +160,14 @@ string itag_names(string tag, mapping m, string contents,
   if( contents-" " != "" )
   {
     if(tag=="xnames")
-      res->xnames = contents/sep;
+      {
+	res->xnames = contents/sep;
+	if(m->orient) 
+	  if (m->orient[0..3] == "vert")
+	    res->orientation = "vert";
+	  else 
+	    res->orientation="hor";
+      }
     else
       res->ynames = contents/sep;
   }
@@ -436,12 +445,20 @@ string tag_diagram(string tag, mapping m, string contents,
   if( sizeof(res->data) == 0 )
     return "<hr noshade><h3>No data for the diagram</h3><hr noshade>";
 
-  res->bg = parse_color(defines->bg || "#e0e0e0");
-  res->fg = parse_color(defines->fg || "black"); //FIXME
-  /*
- res->bg = parse_color(m->bgcolor || defines->bg || "#e0e0e0");
+  res->bg = parse_color(m->bgcolor || defines->bg || "#e0e0e0");
   res->fg = parse_color(m->textcolor || defines->fg || "black");
-   */
+
+
+  //This code is obsolet. It's now placed in xnames
+  //But this can not be taken away...
+  if (!res->orientation)
+    if (m->orient && m->orient[0..3] == "vert")
+      res->orientation = "vert";
+    else res->orientation="hor";
+  
+
+
+
 
   if(m->center) res->center = (int)m->center;
 
@@ -459,10 +476,6 @@ string tag_diagram(string tag, mapping m, string contents,
     if(res->type=="pie") res->drawtype = "2D";
     else res->drawtype = "linear";
       
-  if(m->orient && m->orient[0..3] == "vert")
-    res->orientation = "vert";
-  else res->orientation="hor";
-
   if(m->fontsize) res->fontsize = (int)m->fontsize;
   else res->fontsize=16;
 
