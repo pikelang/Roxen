@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.61 1998/01/17 02:57:28 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.62 1998/01/21 14:44:07 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -303,17 +303,29 @@ static inline array make_args( string rest_query )
 
 array stat_file(string f, object id) 
 {
+#ifdef CGI_DEBUG
+  perror("CGI: stat_file(\"" + f + "\")\n");
+#endif /* CGI_DEBUG */
+
   return file_stat(path+f);
 }
 
 string real_file( mixed f, mixed id )
 {
+#ifdef CGI_DEBUG
+  perror("CGI: real_file(\"" + f + "\")\n");
+#endif /* CGI_DEBUG */
+
   if(stat_file( f, id )) 
     return path+f;
 }
 
 array find_dir(string f, object id) 
 {
+#ifdef CGI_DEBUG
+  perror("CGI: find_dir(\"" + f + "\")\n");
+#endif /* CGI_DEBUG */
+
   if(QUERY(ls)) 
     return get_dir(path+f);
 }
@@ -630,6 +642,11 @@ mixed find_file(string f, object id)
   object pipe3, pipe4;
   string path_info, wd;
   int pid;
+
+#ifdef CGI_DEBUG
+  perror("CGI: find_file(\"" + f + "\")...\n");
+#endif /* CGI_DEBUG */
+
   if(id->misc->path_info && strlen(id->misc->path_info))
     // From last_try code below..
     path_info = id->misc->path_info;
