@@ -8,10 +8,11 @@
 // later version.
 //
 
-#define _ok id->misc->defines[" _ok"]
+#define _(X,Y)	_DEF_LOCALE("mod_writefile",X,Y)
+#define _ok	id->misc->defines[" _ok"]
 
 constant cvs_version =
- "$Id: writefile.pike,v 1.12 2001/12/03 13:03:17 anders Exp $";
+ "$Id: writefile.pike,v 1.13 2003/01/08 10:24:31 mattias Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -23,31 +24,32 @@ inherit "module";
 // ---------------- Module registration stuff ----------------
 
 constant module_type = MODULE_TAG;
-constant module_name = "Writefile";
-constant module_doc  = "This module provides the writefile RXML tags.<br>"
- "<p>Copyright &copy; 2001, by "
+LocaleString module_name = _(1,"Tags: Writefile");
+LocaleString module_doc  = _(2,
+ "This module provides the writefile RXML tags.<br>"
+ "<p>Copyright &copy; 2001-2002, by "
  "<a href='mailto:srb@cuci.nl'>Stephen R. van den Berg</a>, "
  "The Netherlands.</p>"
  "<p>This module is open source software; you can redistribute it and/or "
  "modify it under the terms of the GNU General Public License as published "
  "by the Free Software Foundation; either version 2, or (at your option) any "
- "later version.</p>";
+ "later version.</p>");
 
 void create() {
   set_module_creator("Stephen R. van den Berg <srb@cuci.nl>");
   defvar ("onlysubdirs", 1,
-	  "Within tree only", TYPE_FLAG,
-          "Setting this will force all specified chroots and filenames to be "
-	  "relative to the directory this tag is located in.  "
-	  "It functions as an enforced dynamic chroot to constrain users in "
-	  "e.g. a user filesystem."
-          );
+	_(3,"Within tree only"), TYPE_FLAG,
+        _(4,"Setting this will force all specified chroots and filenames "
+	    "to be relative to the directory this tag is located in.  "
+	    "It functions as an enforced dynamic chroot to constrain users in "
+	    "e.g. a user filesystem.")
+        );
 }
 
 static string lastfile;
 
 string status() {
-  return sprintf("Last file written: %s",lastfile||"NONE");
+  return sprintf(_(0,"Last file written: %s"),lastfile||"NONE");
 }
 
 #define IS(arg)	((arg) && sizeof(arg))
@@ -87,93 +89,110 @@ class TagWritefile {
 	return 0;
       }
 
-      string filename,rootpath,path,schroot=args->chroot||"";
+      string real_filename,rootpath,path,schroot=args->chroot||"";
 
-      path = id->conf->real_file(id->not_query||"/", id);
-      if (!path)
-	parse_error ("There is no file system for %O that supports this tag "
-		     "(i.e. implements real_file).\n", id->not_query || "/");
-
+      path = id->not_query || "/";
       path=dirname(path)+"/";
+
       if (QUERY(onlysubdirs))
 	rootpath = path;
-      else {
-	rootpath = id->conf->real_file("/",id);
-	if (!rootpath)
-	  parse_error ("There is no file system for / that supports this tag "
-		       "(i.e. implements real_file).\n");
-      }
+      else
+	rootpath = "/";
 
-      filename=((schroot+args->filename)[0]=='/'?rootpath:path)+
-       Stdio.append_path(schroot, args->filename);
+      string filename = 
+	Stdio.append_path(((schroot+args->filename)[0]=='/'?
+			   rootpath:path),
+			  Stdio.append_path(schroot, args->filename));
+      string real_dirname = id->conf->real_file(dirname(filename)+"/",id);
+      if (!real_dirname)
+	parse_error ("There is no file system for %O that supports this tag "
+		     "(i.e. implements real_file).\n", dirname(filename));
+
+      real_filename = Stdio.append_path(real_dirname, basename(filename));
+
       if(args->remove) {
         if(!rm(filename))
 	  _ok = 0;
-      }	else if(IS(args->moveto)) {
-	if(!mv(filename,((schroot+args->moveto)[0]=='/'?rootpath:path)+
-	   Stdio.append_path(schroot, args->moveto)))
-	  _ok = 0;
-      } else {
-	string towrite;
-	if(args->from) {
-	  towrite=RXML.user_get_var(args->from, "form");
-	  if(!towrite ||
-	   IS(args["max-size"]) && sizeof(towrite)>(int)args["max-size"]) {
+      }
+      else 
+	if(IS(args->moveto)) {
+	  string filename = 
+	    Stdio.append_path(((schroot+args->moveto)[0]=='/'?
+			       rootpath:path),
+			      Stdio.append_path(schroot, args->moveto));
+	  string real_dirname = id->conf->real_file(dirname(filename)+"/",id);
+	  if (!real_dirname)
+	    parse_error ("There is no file system for %O that supports this "
+			 "tag (i.e. implements real_file).\n", 
+			 dirname(filename));
+	  string real_moveto = 
+	    Stdio.append_path(real_dirname, basename(filename));
+
+	  if(!mv(real_filename, real_moveto))
 	    _ok = 0;
-	    return 0;
+	} 
+	else {
+	  string towrite;
+	  if(args->from) {
+	    towrite=RXML.user_get_var(args->from, "form");
+	    if(!towrite ||
+	       IS(args["max-size"]) && sizeof(towrite)>(int)args["max-size"]) {
+	      _ok = 0;
+	      return 0;
+	    }
 	  }
-	} else
-	  towrite=content;
-	object privs;
-	;{ Stat st;
-	   string diro,dirn;
-	   int domkdir=0;
-	   for(dirn=filename;
+	  else
+	    towrite=content;
+	  object privs;
+	  ;{ Stat st;
+	  string diro,dirn;
+	  int domkdir=0;
+	  for(dirn=real_filename;
 	      diro=dirn, diro!=(dirn=dirname(dirn)) && !(st = file_stat(dirn));
 	      domkdir=1);
-	   if(st) {
-	     privs = Privs("Writefile", st->uid, st->gid);
-	     if(domkdir && args->mkdirhier)
-	       Stdio.mkdirhier(dirname(filename));
-	   }
-	 }
-	_ok = 0;
-        object file=Stdio.File();
-	if(file->open(lastfile=filename, args->append?"wrca":"wrct")) {
-	  _ok = 1;
-	  file->write(towrite);
-	  object dims;
-	  if (IS(args["min-height"])|| IS(args["max-height"])||
-	      IS(args["min-width"]) || IS(args["max-width"])) {
-	    file->seek(0);
-	    dims = Dims.dims();
-	    array xy = dims->get(file);
-	    if(xy && 
-	       (IS(args["min-height"])&& xy[1] < (int)args["min-height"]||
-	        IS(args["max-height"])&& xy[1] > (int)args["max-height"]||
-	        IS(args["min-width"]) && xy[0] < (int)args["min-width"]||
-	        IS(args["max-width"]) && xy[0] > (int)args["max-width"]))
+	  if(st) {
+	    privs = Privs("Writefile", st->uid, st->gid);
+	    if(domkdir && args->mkdirhier)
+	      Stdio.mkdirhier(dirname(real_filename));
+	  }
+	  }
+	  _ok = 0;
+	  object file=Stdio.File();
+	  if(file->open(lastfile=real_filename, args->append?"wrca":"wrct")) {
+	    _ok = 1;
+	    file->write(towrite);
+	    object dims;
+	    if (IS(args["min-height"])|| IS(args["max-height"])||
+		IS(args["min-width"]) || IS(args["max-width"])) {
+	      file->seek(0);
+	      dims = Dims.dims();
+	      array xy = dims->get(file);
+	      if(xy && 
+		 (IS(args["min-height"])&& xy[1] < (int)args["min-height"]||
+		  IS(args["max-height"])&& xy[1] > (int)args["max-height"]||
+		  IS(args["min-width"]) && xy[0] < (int)args["min-width"]||
+		  IS(args["max-width"]) && xy[0] > (int)args["max-width"]))
+		_ok = 0;
+	    }
+	    if (_ok && args["accept-type"]) {
+	      file->seek(0);
+	      array(string) types = args["accept-type"]/",";
 	      _ok = 0;
+	      catch {
+		if (!dims) {
+		  dims = Dims.dims();
+		  dims->f = file;
+		}
+		if (0<=search(types, "jpeg") && dims->get_JPEG() ||
+		    0<=search(types, "png") && (file->seek(0),dims->get_PNG()) ||
+		    0<=search(types, "gif") && (file->seek(0),dims->get_GIF()))
+		  _ok = 1;
+	      };
+	    }
+	    file->close();
 	  }
-	  if (_ok && args["accept-type"]) {
-	    file->seek(0);
-	    array(string) types = args["accept-type"]/",";
-	    _ok = 0;
-	    catch {
-	      if (!dims) {
-		dims = Dims.dims();
-		dims->f = file;
-	      }
-	      if (0<=search(types, "jpeg") && dims->get_JPEG() ||
-	          0<=search(types, "png") && (file->seek(0),dims->get_PNG()) ||
-	          0<=search(types, "gif") && (file->seek(0),dims->get_GIF()))
-		_ok = 1;
-	    };
-	  }
-	  file->close();
+	  privs = 0;
 	}
-	privs = 0;
-      }
       return 0;
     }
   }
