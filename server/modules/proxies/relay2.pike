@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 2000, Roxen IS.
 #include <module.h>
-constant cvs_version = "$Id: relay2.pike,v 1.17 2000/12/22 16:26:27 per Exp $";
+constant cvs_version = "$Id: relay2.pike,v 1.18 2001/04/17 06:51:22 per Exp $";
 
 inherit "module";
 constant module_type = MODULE_FIRST|MODULE_LAST;
@@ -137,6 +137,8 @@ class Relay
           switch( lower_case( a ) )
           {
            case "connection":
+           case "content-length":
+           case "content-location":
              break;
            case "content-type":
              h["Content-Type"] = b;
