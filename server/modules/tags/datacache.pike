@@ -9,7 +9,7 @@
 //
 
 constant cvs_version =
- "$Id: datacache.pike,v 1.3 2004/06/07 08:42:55 _cvs_stephen Exp $";
+ "$Id: datacache.pike,v 1.4 2004/06/07 10:58:09 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -52,7 +52,7 @@ void create() {
  * A generic memory-based cache implementation
  * by Stephen R. van den Berg <srb@cuci.nl>
  *
- * $Id: datacache.pike,v 1.3 2004/06/07 08:42:55 _cvs_stephen Exp $
+ * $Id: datacache.pike,v 1.4 2004/06/07 10:58:09 _cvs_stephen Exp $
  *
  */
 
@@ -62,16 +62,12 @@ void create() {
 //! ordering to decide which elements are due for removal.
 //! The underlying technique used is a native Pike mapping augmented
 //! by a LRU linked list.
-
 class MemCache {
   static int smaxmem;
-//! The total amount of memory in use as accounted by the @[size] parameter
-//! to the @[store] method.
-  int usedmem;
+  static int cmem;
   static int smaxage;
   static int smaxcount;
-//! The total number of cache entries in use.
-  int entrycount;
+  static int ccount;
   static int smaxsize;
   static int(0..1) spurge;
   static array(mixed) root=({0,0});
@@ -79,16 +75,30 @@ class MemCache {
   static mapping(string|int:array(mixed)) thestore=([0:root]);
   private Thread.Mutex listorder=Thread.Mutex();
 
+//! The total amount of memory in use as accounted by the @[size] parameter
+//! to the @[store] method.
+  int usedmem() {
+    return cmem;
+  }
+
+//! The total number of cache entries in use.
+  int entrycount() {
+    return ccount;
+  }
+
 //! Adjust the constraints for the cache, can be called while the cache
 //! is already operational.
 //! @seealso
 //!  @[create]
   void setparameters(int maxmem,void|int maxage, void|int maxcount,
    void|int maxsize, void|int(0..1) purge) {
-    if(entrycount)
+    if(ccount)
       expire(maxmem, maxage, maxcount, maxsize, purge);
-    smaxmem=maxmem; smaxcount=maxcount; smaxage=maxage;
-    smaxsize=maxsize; spurge=purge;
+    smaxmem=maxmem;
+#define SETIF(var)   \
+  if(!zero_type(var))    \
+    s##var=var
+    SETIF(maxcount); SETIF(maxage); SETIF(maxsize); SETIF(purge);
   }
 
 //! Initialise the @[MemCache] object.
@@ -114,8 +124,8 @@ class MemCache {
   }
 
   static void doexpire(int t, void|int purge) {
-    while(entrycount
-     && (smaxmem && usedmem>smaxmem || smaxcount && entrycount>smaxcount
+    while(ccount
+     && (smaxmem && cmem>smaxmem || smaxcount && ccount>smaxcount
       || smaxage && smaxage<=t-thestore[root[inext]][iexpires]))
       drop(root[inext], purge);
   }
@@ -169,10 +179,10 @@ class MemCache {
       destruct(k);			     // These locks won't die otherwise
     }
     mixed op=match[ivalue];
-    usedmem-=match[isize];
+    cmem-=match[isize];
     if((spurge||purge) && objectp(op))
       destruct(op);
-    entrycount--;
+    ccount--;
   }
 
 //! Retrieve an element from the cache.  Returns 0 if the element could not
@@ -243,7 +253,7 @@ class MemCache {
           if(match=thestore[key]) {
             match[ivalue]=value;
             match[iexpires]=expires; match[iautorefresh]=autorefresh;
-	    usedmem+=size-match[isize];
+	    cmem+=size-match[isize];
             match[isize]=size;
             hit(key,match);
           }
@@ -258,7 +268,7 @@ class MemCache {
           if(!thestore[key]) {
             thestore[root[iprev]=thestore[match[iprev]=root[iprev]][inext]=key]
              = match;
-	    entrycount++;usedmem+=size;
+	    ccount++;cmem+=size;
           }
           destruct(k);
         }
@@ -267,7 +277,7 @@ class MemCache {
     }
 #ifdef DEBUG
     else
-      throw(0);	     // empty keys should not and cannot be stored in the cache
+      throw("Empty keys should not and cannot be stored in the MemCache");
 #endif
     return value;
   }
@@ -306,7 +316,7 @@ string status() {
         "<td align=right>%d</td><td align=right>%s</td>"
         "<td align=right>%d</td><td align=right>%s</td>"
         "<td align=right>%d</td><td align=right>%s</td></tr>"
-        ,store,cache->entrycount,String.int2size(cache->usedmem),
+        ,store,cache->entrycount(),String.int2size(cache->usedmem()),
         cnt[0],String.int2size(cnt[1]),cnt[2],String.int2size(cnt[3]));
      }
    }
