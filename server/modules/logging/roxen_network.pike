@@ -1,4 +1,4 @@
-// The Roxen Network module. Copyright © 2000 - 2001, Roxen IS.
+// The ChiliMoon Network module. Copyright © 2000 - 2001, Roxen IS.
 //
 
 #include <module.h>
@@ -8,10 +8,10 @@ inherit "module";
 
 // ---------------- Module registration stuff ----------------
 
-constant cvs_version = "$Id: roxen_network.pike,v 1.12 2004/04/22 15:09:09 mani Exp $";
+constant cvs_version = "$Id: roxen_network.pike,v 1.13 2004/05/22 22:23:42 _cvs_stephen Exp $";
 constant module_type = MODULE_ZERO;
 constant thread_safe = 1;
-constant module_name = "Roxen Network module";
+constant module_name = "ChiliMoon Network module";
 constant module_doc  = #"This module advertises the servers capabilities 
 on community.roxen.com. In practice that means that the server sends the
 following information to Roxen:
@@ -54,10 +54,11 @@ void create(Configuration _conf) {
 			"E-mail addres to the webmaster"))
     -> may_be_empty(1);
 
-  var = [object(PositionAccess)]defvar("location",
-	       PositionAccess(0, internal_location, 0,
-			      "Geographical location",
-			      "The physical location of the server."));
+  var = [object(Variable.MapLocation)](mixed)
+    defvar("location",
+	   PositionAccess(0, internal_location, 0,
+			  "Geographical location",
+			  "The physical location of the server."));
 
   defvar("ad",
 	 Variable.Text("", 0, "Free Text",
@@ -94,12 +95,12 @@ class Poster
 
   void done( Protocols.HTTP.Query qu )
   {
-    //    werror("Roxen Network: %s\n", query->data());
+    //    werror("ChiliMoon Network: %s\n", query->data());
   }
   
   void fail( Protocols.HTTP.Query qu )
   {
-    report_warning( "Roxen Network: Failed to connect to community.roxen.com.\n" );
+    report_warning( "ChiliMoon Network: Failed to connect to community.roxen.com.\n" );
     call_out( start, 60 );
   }
 
