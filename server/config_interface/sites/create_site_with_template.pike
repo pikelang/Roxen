@@ -6,7 +6,7 @@ constant base = #"
 <topmenu base='../' selected='sites'/>
 <content><cv-split><subtablist><st-page>
  <input type='hidden' name='name' value='&form.name;' />
- <input type='hidden' name='site_template' value='&form.site_template;' />
+ %s
  %s
 </st-page></subtablist></cv-split></content></tmpl>
 ";
@@ -26,6 +26,13 @@ string encode_site_name( string what )
               } ) * "";
 }
 
+string get_site_template(RequestID id)
+{
+  if( id->real_variables->site_template )
+    return id->real_variables->site_template[0];
+  return "&form.site_template;";
+}
+
 string|mapping parse( RequestID id )
 {
   if( !config_perm( "Create Site" ) )
@@ -37,7 +44,10 @@ string|mapping parse( RequestID id )
 
   foreach( glob( SITE_TEMPLATES "*.x",
                  indices(id->variables) ), string t )
+  {
+    id->real_variables->site_template = ({ t-".x" });
     id->variables->site_template = t-".x";
+  }
 
   if( id->variables->site_template &&
       search(id->variables->site_template, "site_templates")!=-1 )
@@ -60,7 +70,8 @@ string|mapping parse( RequestID id )
                                                     id->variables->name+"/", 
                                                     id), id);
     }
-    return sprintf(base,q);
+    return sprintf(base,"<input name='site_template' type='hidden' "
+		   "value='"+get_site_template(id)+"' />\n", q);
   }
 
   roxenloader.ErrorContainer e = roxenloader.ErrorContainer( );
@@ -107,5 +118,5 @@ string|mapping parse( RequestID id )
             Roxen.html_encode_string(e->get())+
             "</pre>");
   master()->set_inhibit_compile_errors( 0 );
-  return sprintf(base,res);
+  return sprintf(base,"",res);
 }

@@ -12,32 +12,42 @@ void init_modules(Configuration conf, RequestID id)
 {
 }
 
-string initial_form( RequestID id )
+string initial_form( Configuration conf, RequestID id, int setonly )
 {
-  Configuration conf = id->misc->new_configuration;
-  id->variables->initial = 1;
+  id->variables->initial = "1";
+  id->real_variables->initial = ({ "1" });
+
   string res = "";
+  int num;
+
   foreach( modules, string mod )
   {
-    ModuleInfo mi = roxen.find_module( mod );
-    if(mi)
+    ModuleInfo mi = roxen.find_module( (mod/"!")[0] );
+    RoxenModule moo = conf->find_module( replace(mod,"!","#") );
+    foreach( indices(moo->query()), string v )
     {
-      RoxenModule moo = conf->find_module( mod );
-      foreach( indices(moo->query()), string v )
+      if( moo->getvar( v )->get_flags() & VAR_INITIAL )
       {
-	if( moo->getvar( v )->get_flags() & VAR_INITIAL )
-	{
+        num++;
+        res += "<tr><td colspan='3'><h2>"
+        +LOCALE(1,"Initial variables for ")+
+            Roxen.html_encode_string(mi->get_name())+"</h2></td></tr>"
+        "<emit source='module-variables' "
+	  " configuration=\""+conf->name+"\""
+	  " module=\""+mod+#"\"/>";
+	if( !setonly )
 	  res += 
-	    "<tr><td colspan='3'><h2>"
-	    +LOCALE(1,"Initial variables for ")+
-	    mi->get_name()+"</h2></td></tr>"
-	    "<emit source=module-variables configuration=\""+conf->name+"\""
-	    " module=\""+mod+#"\">
- <tr><td width='50'></td><td width=20%><b>&_.name;</b></td><td><eval>&_.form:none;</eval></td></tr>
- <tr><td></td><td colspan=2>&_.doc:none;<p>&_.type_hint;</td></tr>
+        "<emit noset='1' source='module-variables' "
+	  " configuration=\""+conf->name+"\""
+        " module=\""+mod+#"\">
+ <tr>
+ <td width='150' valign='top' colspan='2'><b>&_.name;</b></td>
+ <td valign='top'><eval>&_.form:none;</eval></td></tr>
+ <tr>
+<td width='30'><img src='/internal-roxen-unit' width=50 height=1 alt='' /></td>
+  <td colspan=2>&_.doc:none;</td></tr>
 </emit>";
-	  break;
-	}
+        break;
       }
     }
   }
@@ -92,15 +102,16 @@ mixed parse( RequestID id, mapping|void opt )
   }
 
   string cf_form = 
-    "<emit source=config-variables configuration='"+conf->name+"'>"
-    "  <tr><td width='50'></td><td width=20%><b>&_.name;</b></td>"
-    "      <td><eval>&_.form:none;</eval></td></tr>"
+    "<emit noset='1' source=config-variables configuration='"+conf->name+"'>"
+    "  <tr><td colspan=2 valign=top width=20%><b>&_.name;</b></td>"
+    "      <td valign=top><eval>&_.form:none;</eval></td></tr>"
     "  <tr><td></td><td colspan=2>&_.doc:none;<p>&_.type_hint;</td></tr>"
     "</emit>";
   
   // set initial variables from form variables...
-  Roxen.parse_rxml( cf_form, id );
-  Roxen.parse_rxml( initial_form( id ), id );
+  Roxen.parse_rxml("<emit source=config-variables configuration='"+
+		   conf->name+"'/>", id );
+  Roxen.parse_rxml( initial_form( conf, id, 1 ), id );
   
   if( id->variables["ok.x"] && form_is_ok( id ) )
   {
@@ -124,9 +135,9 @@ mixed parse( RequestID id, mapping|void opt )
     conf->low_init (1); // Handle the init hooks.
     return "<done/>";
   }
-  return "<h2>"+
-         LOCALE(190,"Initial variables for the site")+
-         "</h2><table>" + cf_form + initial_form( id ) + 
+  return
+    "<h2>"+LOCALE(190,"Initial variables for the site")+"</h2>"
+    "<table>" + cf_form + initial_form( conf, id, 0 ) + 
          ((opt||([]))->no_end_table?"":"</table><p>")+
          ((opt||([]))->no_ok?"":"<cf-ok />");
 }
