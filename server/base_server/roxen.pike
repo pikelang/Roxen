@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.283 1999/05/19 09:32:16 peter Exp $
+ * $Id: roxen.pike,v 1.284 1999/05/21 14:20:35 grubba Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.283 1999/05/19 09:32:16 peter Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.284 1999/05/21 14:20:35 grubba Exp $";
 
 object backend_thread;
 object argcache;
@@ -3364,9 +3364,15 @@ void initiate_configuration_port( int|void first )
   }
   if(!main_configuration_port)
   {
-    report_error(LOCALE->no_config_port());
-    if(first)
-      exit( -1 );	// Restart.
+    if (sizeof(configuration_ports)) {
+      // This case happens when you delete the main config port,
+      // but still have others left.
+      main_configuration_port = values(configurations_ports)[0];
+    } else {
+      report_error(LOCALE->no_config_port());
+      if(first)
+	exit( -1 );	// Restart.
+    }
   }
 }
 #include <stat.h>
