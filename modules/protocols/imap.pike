@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.108 1999/03/08 21:22:39 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.109 1999/03/11 20:16:28 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -393,8 +393,12 @@ class imap_mail
   /* Read a part of the body */
   string get_body_range(array(int) range, string|void s)
   {
+    s = replace(s || mail->body(),
+		({ "\r\n", "\r", "\n" }),
+		({ "\r\n", "\r\n", "\r\n" }));
+
     if (!range)
-      return s || mail->body();
+      return s;
 
     if (s)
       return s[range[0]..range[0] + range[1] - 1];
@@ -419,6 +423,8 @@ class imap_mail
     {
       if (stringp(response)) {
 	if (search(response, "\n") != -1) {
+	  response = replace(response, ({ "\r\n", "\r", "\n" }),
+			     ({ "\r\n", "\r\n", "\r\n" }));
 	  return ({ wanted,
 		    sprintf("{%d}\r\n%s", sizeof(response), response)
 	  });
