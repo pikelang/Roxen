@@ -22,7 +22,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.244 2001/02/05 11:50:18 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.245 2001/02/05 21:12:36 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -395,6 +395,52 @@ void report_fatal(string message, mixed ... foo)
   if(use_syslog && (loggingfield&LOG_EMERG))
     foreach(message/"\n", message)
       syslog(LOG_EMERG, replace(message+"\n", "%", "%%"));
+#endif
+}
+
+static mapping(string:int) sparsely_dont_log = (garb_sparsely_dont_log(), ([]));
+
+static void garb_sparsely_dont_log()
+{
+  if (sparsely_dont_log && sizeof (sparsely_dont_log)) {
+    int now = time (1);
+    foreach (indices (sparsely_dont_log), string msg)
+      if (sparsely_dont_log[msg] < now) m_delete (sparsely_dont_log, msg);
+  }
+  call_out (garb_sparsely_dont_log, 10*60);
+}
+
+void report_warning_sparsely (LocaleString message, mixed ... args)
+//! Like @[report_warning], but doesn't repeat the same message if
+//! it's been logged in the last ten minutes. Useful in situations
+//! where an error can cause a warning message to be logged rapidly.
+{
+  if( sizeof( args ) ) message = sprintf((string)message, @args );
+  int now = time (1);
+  if (sparsely_dont_log[message] >= now) return;
+  sparsely_dont_log[message] = now + 10*60;
+  nwrite(message,0,2,MC);
+#if efun(syslog)
+  if(use_syslog && (loggingfield&LOG_WARNING))
+    foreach(message/"\n", message)
+      syslog(LOG_WARNING, replace(message+"\n", "%", "%%"));
+#endif
+}
+
+void report_error_sparsely (LocaleString message, mixed... args)
+//! Like @[report_error], but doesn't repeat the same message if it's
+//! been logged in the last ten minutes. Useful in situations where an
+//! error can cause an error message to be logged rapidly.
+{
+  if( sizeof( args ) ) message = sprintf((string)message, @args );
+  int now = time (1);
+  if (sparsely_dont_log[message] >= now - 10*60*60) return;
+  sparsely_dont_log[message] = now;
+  nwrite(message,0,3,MC);
+#if efun(syslog)
+  if(use_syslog && (loggingfield&LOG_ERR))
+    foreach(message/"\n", message)
+      syslog(LOG_ERR, replace(message+"\n", "%", "%%"));
 #endif
 }
 
@@ -1066,6 +1112,9 @@ Sql.Sql connect_to_my_mysql( string|int ro, void|string db )
   } )
     if( db == "mysql" )
       throw( err );
+#ifdef MYSQL_CONNECT_DEBUG
+    else werror ("Couldn't connect to mysql as %s: %s", ro, describe_error (err));
+#endif
 
   connect_to_my_mysql( 0, "mysql" )
     ->query( "CREATE DATABASE "+db );
@@ -1217,8 +1266,11 @@ void start_mysql()
   void assure_that_base_tables_exists( )
   {
     // 1: Create the 'ofiles' database.
-    if( catch( db->query( "USE local" ) ) )
+    if( mixed err = catch( db->query( "USE local" ) ) )
     {
+#ifdef MYSQL_CONNECT_DEBUG
+      werror ("Error doing 'USE local': %s", describe_error (err));
+#endif
       db->query( "CREATE DATABASE local" );
       db->query( "USE local" );
       db->query( "CREATE TABLE precompiled_files ("
@@ -1229,11 +1281,15 @@ void start_mysql()
     if( remove_dumped )
     {
       report_notice("Removing precompiled files\n");
-      catch
+      if (mixed err = catch
       {
 	db->query( "USE local" );
 	db->query( "DELETE FROM precompiled_files" );
-      };
+      }) {
+#ifdef MYSQL_CONNECT_DEBUG
+	werror ("Error removing dumped files: %s", describe_error (err));
+#endif
+      }
     }
   };
 
@@ -1252,8 +1308,12 @@ void start_mysql()
 
   report_debug( "Starting mysql ... ");
   
-  if( !catch( db = connect_to_my_mysql( 0, "mysql" ) ) )
-  {
+  if( mixed err = catch( db = connect_to_my_mysql( 0, "mysql" ) ) ) {
+#ifdef MYSQL_CONNECT_DEBUG
+    werror ("Error connecting to local mysql: %s", describe_error (err));
+#endif
+  }
+  else {
     connected_ok(1);
     return;
   }
@@ -1325,8 +1385,12 @@ void start_mysql()
       report_fatal("\nFailed to start mysql. Aborting\n");
       exit(1);
     }
-    if( !catch( db = connect_to_my_mysql( 0, "mysql" ) ) )
-    {
+    if( mixed err = catch( db = connect_to_my_mysql( 0, "mysql" ) ) ) {
+#ifdef MYSQL_CONNECT_DEBUG
+      werror ("Error connecting to local mysql: %s", describe_error (err));
+#endif
+    }
+    else {
       connected_ok(0);
       return;
     }
