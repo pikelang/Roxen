@@ -4,7 +4,7 @@
 // It will be located somewhere in the name-space of the server.
 // Also inherited by some of the other filesystems.
 
-string cvs_version= "$Id: filesystem.pike,v 1.24 1997/10/11 20:54:21 grubba Exp $";
+string cvs_version= "$Id: filesystem.pike,v 1.25 1998/01/04 07:25:54 peter Exp $";
 int thread_safe=1;
 
 
@@ -76,7 +76,7 @@ void create()
 	 "If set, files ending with '~' or '#' or '.bak' will "+
 	 "be shown in directory listings");
 
-  defvar("put", 1, "Handle the PUT method", TYPE_FLAG,
+  defvar("put", 0, "Handle the PUT method", TYPE_FLAG,
 	 "If set, PUT can be used to upload files to the server.");
 
   defvar("delete", 0, "Handle the DELETE method", TYPE_FLAG,
