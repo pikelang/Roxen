@@ -15,7 +15,8 @@ void start(int num, Configuration conf)
   conf->parse_html_compat=1;
 }
 
-void create() {
+void create()
+{
   query_tag_set()->prepare_context=set_entities;
 }
 
@@ -29,18 +30,93 @@ class Scope_usr
     return "foo";
   }
 
-  string _sprintf() { return "RXML.Scope(usr)"; }
+  string _sprintf() { return "RXML.Scope(upgrade)"; }
 }
 
-RXML.Scope usr_scope=Scope_usr();
+RXML.Scope upgade_scope=Scope_upgrade();
 
-void set_entities(RXML.Context c) {
-  c->extend_scope("usr", usr_scope);
-}
-
-string get_var_type( string s, object mod, object id )
+void set_entities(RXML.Context c)
 {
+  c->extend_scope("upgrade", upgrade_scope);
 }
-string container_cf_perm( string t, mapping m, string c, RequestID id )
+
+string tag_foo(string t, mapping m, RequestID id)
 {
+  
 }
+
+string container_bar(string t, mapping m, string c, RequestID id)
+{
+  
+}
+
+/*
+
+Fetchers:
+
+get_new_info_files
+
+
+*/
+
+
+
+class GetInfoFile
+{
+  inherit Protocols.HTTP.Query();
+
+  void request_ok(object httpquery)
+  {
+    
+  }
+
+  void request_fail(object httpquery)
+  {
+
+  }
+
+  void do_request()
+  {
+    
+  }
+  
+  void create()
+  {
+    set_callbacks(request_ok, request_fail);
+    async_request(QUERY(server),QUERY(port), query, headers);
+  }
+}
+
+class UpdateInfoFiles
+{
+  inherit Protocols.HTTP.Query();
+
+  void request_ok(object httpquery)
+  {
+    
+  }
+
+  void request_fail(object httpquery)
+  {
+
+  }
+
+  void do_request()
+  {
+    async_request(string server,int port,string query,mapping headers,void|string data);
+  }
+  
+  void create()
+  {
+    set_callbacks(request_ok, request_fail);
+  }
+}
+
+
+/*
+object db=Yabu.lookup(fname,"wS");
+  db->pkginfo[17]["foobar"]="gazonk";
+
+  indices(db->pkginfo);
+
+*/
