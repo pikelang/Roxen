@@ -5,7 +5,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: preferred_language.pike,v 1.25 2002/12/11 16:38:49 stewa Exp $";
+constant cvs_version = "$Id: preferred_language.pike,v 1.26 2002/12/11 17:55:03 stewa Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST | MODULE_TAG;
 constant module_name = "Preferred Language Analyzer";
@@ -385,7 +385,6 @@ RequestID first_try(RequestID id) {
       if(sizeof(action) > 2)
 	if(glob(action[1], id->misc->host || ""))
 	  lang+= map(action[2]/",",String.trim_all_whites);
-      werror("HOST:%O\n",id->misc->host);
       break;
     }
   }
