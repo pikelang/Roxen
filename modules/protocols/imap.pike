@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.49 1999/02/09 21:34:51 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.50 1999/02/11 21:00:51 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -683,8 +683,15 @@ class imap_mailbox
 
   array(string|object) get_unseen()
   {
-    int unseen = sizeof(contents->flags["\\Seen"] - ({ 1 }) );
-    return ({ "OK", imap_prefix( ({ "UNSEEN", imap_number(unseen) }) ) });
+    // RFC 2060: 6.3.1:
+    //   The server SHOULD also send an UNSEEN response code in an OK
+    //   untagged response, indicating the message sequence number of
+    //   the first unseen message in the mailbox.
+    int unseen = search(contents->flags["\\Seen"], 0) + 1;
+    if (unseen) {
+      return({ "OK", imap_prefix( ({ "UNSEEN", imap_number(unseen) }) ) });
+    }
+    return 0;
   }
 
   array(string|object) get_flags()
