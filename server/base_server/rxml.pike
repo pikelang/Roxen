@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.209 2000/07/26 12:37:38 kuntri Exp $
+// $Id: rxml.pike,v 1.210 2000/07/26 14:11:25 kuntri Exp $
 
 
 inherit "rxmlhelp";
@@ -2249,7 +2249,7 @@ scope created within the define tag.
 </attr>",
 
 "if":#"<desc cont><short hide>
-  <if> is used to conditionally show its contents.</short><tag><ref
+ <if> is used to conditionally show its contents.</short><tag><ref
  type='tag'>If</ref></tag> is used to conditionally show its contents.
  <tag><ref type='tag'>else</ref></tag>, <tag><ref
  type='tag'>elif</ref></tag> or <tag><ref
@@ -2259,7 +2259,7 @@ scope created within the define tag.
  <p>It is possible to use glob patterns in almost all attributes,
  where * means match zero or more characters while ? matches one
  character. * Thus t*f?? will match trainfoo as well as * tfoo but not
- trainfork or tfo. It is however not possible to use regexp's together
+ trainfork or tfo. It is not possible to use regexp's together
  with any of the if-plugins.</p>
 
  <p>The <ref type='tag'>if</ref> tag itself is useless without its
@@ -2277,11 +2277,11 @@ scope created within the define tag.
  </ex>
 
  <ex type='box'>
-  <if variable='var.foo > 0' not>
-    &var.foo; <= 0
+  <if variable='var.foo > 0' not=''>
+    &var.foo; is lesser than 0
   </if>
   <else>
-    &var.foo; > 0
+    &var.foo; is greater than 0
   </else>
  </ex>
 
@@ -2330,7 +2330,7 @@ scope created within the define tag.
   <if time='1700' after=''>
     Are you still at work?
   </if>
-  <elseif time='0900' before>
+  <elseif time='0900' before=''>
      Wow, you work early!
   </elseif>
   <else>
@@ -2344,8 +2344,9 @@ scope created within the define tag.
 </desc>
 
 <attr name=not>
- Inverts the result (true->false, false->true).
+ Inverts the result (true-&gt;false, false-&gt;true).
 </attr>
+
 <attr name=or>
  If any criterion is met the result is true.
 </attr>
