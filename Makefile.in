@@ -305,6 +305,29 @@ bump_version: bump_version.stamp
 	      echo Done with $$d.); \
 	  else :; fi; \
 	done
+	@for d in $(SRCDIR)/pike/0.7; do \
+	  if test -f $$d/src/version.h; then \
+	    (cd $$d/; \
+	      echo Bumping Pike version in directory $$d...; \
+	      build=`sed <src/version.h -e'/PIKE_BUILD_VERSION/s/[^0-9]*\([0-9]*\).*/\1/p' -ed|head -1`; \
+	      newbuild=`echo $$build 1+p|dc`; \
+	      sed <src/version.h -e"/PIKE_BUILD_VERSION/s/$$build/$$newbuild/" >src/version.h.new; \
+	      checkbuild=`sed <src/version.h.new -e'/PIKE_BUILD_VERSION/s/[^0-9]*\([0-9]*\).*/\1/p' -ed|head -1`; \
+	      if test "x$$newbuild" = "x$$checkbuild"; then \
+		mv -f src/version.h.new src/version.h || exit 1; \
+		echo "Successfull bump to build $$newbuild."; \
+	      else \
+		echo "Version bump failed: $$newbuild != $$checkbuild."; \
+		exit 1; \
+	      fi; \
+	      cvs ci -m "Pike release bumped to $$newbuild by bump_version." src/version.h || exit 1; \
+	      echo "Tagging Pike in $$d..."; \
+	      major=`sed <src/version.h -e'/PIKE_MAJOR_VERSION/s/[^0-9]*\([0-9]*\).*/\1/p' -ed|head -1`; \
+	      minor=`sed <src/version.h -e'/PIKE_MINOR_VERSION/s/[^0-9]*\([0-9]*\).*/\1/p' -ed|head -1`; \
+	      cvs tag "pike_v$major.$minor""_release_$newbuild" || exit 1; \
+	      echo Done with $$d.); \
+	  else :; fi; \
+	done
 	@(cd $(SRCDIR)/server/base_server; \
 	  echo Bumping Roxen version...; \
 	  build=`sed <roxen.pike -e'/__roxen_build__/s/[^0-9]*//gp' -ed|head -1`; \
