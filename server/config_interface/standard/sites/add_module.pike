@@ -264,6 +264,7 @@ mixed do_it( RequestID id )
 {
   object conf = roxen.find_configuration( id->variables->config );
   string last_module;
+  int got_initial = 0;
   if(!conf)
     return "Configuration gone!\n";
 
@@ -276,19 +277,29 @@ mixed do_it( RequestID id )
       last_module = replace(mod, "#", "!" );
       if (id->variables->mod_init_vars) {
 	foreach (indices (m->variables), string var)
-	  roxen->change_configurable (m->variables[var], VAR_INITIAL, 0);
+	  roxen.change_configurable (m->variables[var], VAR_INITIAL, 0);
 	foreach (id->variables->init_var / "\0", string var) {
 	  array(string) split = array_sscanf (var, "%s/%s");
-	  if (sizeof (split) == 2 && split[0] == mod && m->variables[split[1]])
-	    roxen->change_configurable (m->variables[split[1]], VAR_INITIAL, VAR_INITIAL);
+	  if (sizeof (split) == 2 && split[0] == mod && m->variables[split[1]]) {
+	    roxen.change_configurable (m->variables[split[1]], VAR_INITIAL, VAR_INITIAL);
+	    got_initial = 1;
+	  }
 	}
       }
+      else if (!got_initial)
+	foreach (indices (m->variables), string var)
+	  if (roxen.query_configurable (m->variables[var], VAR_INITIAL))
+	    got_initial = 1;
     }
     else last_module = "";
 
   if( strlen( last_module ) )
-    return http_redirect( site_url( id, id->variables->config )+
-                          "modules/"+last_module+"/?initial=1&section=_all", id );
+    if (got_initial)
+      return http_redirect( site_url( id, id->variables->config )+
+			    "modules/"+last_module+"/?initial=1&section=_all", id );
+    else
+      return http_redirect( site_url( id, id->variables->config )+
+			    "modules/"+last_module+"/", id );
   return http_redirect( site_url( id, id->variables->config )+"modules/",id);
 }
 
