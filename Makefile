@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.16 1997/10/15 23:19:57 grubba Exp $
+# $Id: Makefile,v 1.17 1997/10/25 15:30:05 grubba Exp $
 #
 # Bootstrap Makefile
 #
@@ -7,6 +7,8 @@
 VPATH=.
 MAKE=make
 prefix=/usr/local
+OS=`uname -srm|sed -e 's/ /-/g'|tr '[A-Z]' '[a-z]'|tr '/' '_'`
+BUILDDIR=build/$(OS)
 
 easy : blurb all
 
@@ -34,12 +36,12 @@ blurb :
 	@sleep 10
 
 all : configure
-	@os=`uname -srm|sed -e 's/ /-/g'|tr '[A-Z]' '[a-z]'|tr '/' '_'`; \
+	@builddir="$(BUILDDIR)"; \
 	srcdir=`pwd`; \
-	echo Attempting to build Roxen 1.2 in build/$$os...; \
+	echo "Attempting to build Roxen 1.2 in $$builddir ..."; \
 	echo; \
-	./mkdir -p build/$$os; \
-	cd build/$$os && \
+	./mkdir -p "$$builddir"; \
+	cd "$$builddir" && \
 	(test -f stamp-h || CONFIG_SITE=x $$srcdir/configure --prefix=$(prefix)) && \
 	$(MAKE) "prefix=$(prefix)"
 	@echo
@@ -53,11 +55,11 @@ configure : configure.in
 	@echo
 
 install : all
-	@os=`uname -srm|sed -e 's/ /-/g'|tr '[A-Z]' '[a-z]'|tr '/' '_'`; \
+	@builddir="$(BUILDDIR)"; \
 	srcdir=`pwd`; \
-	echo Installing Roxen 1.2 from build/$$os...; \
+	echo "Installing Roxen 1.2 from $$builddir ..."; \
 	echo; \
-	cd build/$$os && \
+	cd "$$builddir" && \
 	$(MAKE) install "prefix=$(prefix)"
 	@echo
 	@echo Roxen successfully installed.
@@ -67,22 +69,22 @@ install : all
 	@cd $(prefix)/roxen/server; ./install
 
 localinstall : all
-	@os=`uname -srm|sed -e 's/ /-/g'|tr '[A-Z]' '[a-z]'|tr '/' '_'`; \
+	@builddir="$(BUILDDIR)"; \
 	srcdir=`pwd`; \
-	echo Installing Roxen 1.2 from build/$$os...; \
+	echo "Installing Roxen 1.2 from $$builddir ..."; \
 	echo; \
-	cd build/$$os && \
+	cd "$$builddir" && \
 	$(MAKE) localinstall;
 	@echo
 	@echo Roxen successfully installed.
 	@echo
 
 install_all :
-	@os=`uname -srm|sed -e 's/ /-/g'|tr '[A-Z]' '[a-z]'|tr '/' '_'`; \
+	@builddir="$(BUILDDIR)"; \
 	srcdir=`pwd`; \
-	echo Installing Roxen 1.2 and Pike 0.5 from build/$$os...; \
+	echo "Installing Roxen 1.2 and Pike 0.5 from $$builddir ..."; \
 	echo; \
-	cd build/$$os && \
+	cd "$$builddir" && \
 	$(MAKE) install_all "prefix=$(prefix)"
 	@echo
 	@echo Roxen and Pike successfully installed.
@@ -92,33 +94,33 @@ install_all :
 	@cd $(prefix)/roxen/server; ./install
 
 install_pike :
-	@os=`uname -srm|sed -e 's/ /-/g'|tr '[A-Z]' '[a-z]'|tr '/' '_'`; \
+	@builddir="$(BUILDDIR)"; \
 	srcdir=`pwd`; \
-	echo Installing Pike 0.5 from build/$$os...; \
+	echo "Installing Pike 0.5 from $$builddir ..."; \
 	echo; \
-	cd build/$$os && \
+	cd "$$builddir" && \
 	$(MAKE) install_pike "prefix=$(prefix)"
 	@echo
 	@echo Pike successfully installed.
 	@echo
 
 verify:
-	@os=`uname -srm|sed -e 's/ /-/g'|tr '[A-Z]' '[a-z]'|tr '/' '_'`; \
+	@builddir="$(BUILDDIR)"; \
 	srcdir=`pwd`; \
-	echo Verifying Roxen 1.2 in build/$$os...; \
+	echo "Verifying Roxen 1.2 in $$builddir ..."; \
 	echo; \
-	cd build/$$os && \
+	cd "$$builddir" && \
 	$(MAKE) verify "prefix=$(prefix)"
 	@echo
 	@echo Verify OK.
 	@echo
 
 verbose_verify:
-	@os=`uname -srm|sed -e 's/ /-/g'|tr '[A-Z]' '[a-z]'|tr '/' '_'`; \
+	@builddir="$(BUILDDIR)"; \
 	srcdir=`pwd`; \
-	echo Verifying Roxen 1.2 in build/$$os...; \
+	echo "Verifying Roxen 1.2 in $$builddir ..."; \
 	echo; \
-	cd build/$$os && \
+	cd "$$builddir" && \
 	$(MAKE) verbose_verify "prefix=$(prefix)"
 	@echo
 	@echo Verify OK.
@@ -127,20 +129,20 @@ verbose_verify:
 check : verify
 
 dist_clean :
-	@echo Clearing the build-tree
+	@echo "Clearing the build-tree..."
 	-@rm -rf build || true
 
 censor : censor_crypto censor_dbapi censor_tetris dist_clean
-	@echo Censoring complete.
+	@echo "Censoring complete."
 
 censor_crypto :
-	@echo Censoring the Crypto implementation...
+	@echo "Censoring the Crypto implementation..."
 	-@rm -rf pike/src/modules/_Crypto pike/lib/modules/Crypto* pike/lib/modules/SSL3.pmod server/protocols/ssl3.pike pike/src/modules/Ssleay || true
 
 censor_dbapi :
-	@echo Censoring the DBAPI...
+	@echo "Censoring the DBAPI..."
 	-@rm -rf pike/src/modules/Oracle pike/src/modules/Odbc || true
 
 censor_tetris :
-	@echo Censoring the Tetris...
+	@echo "Censoring the Tetris..."
 	-@rm -f server/protocols/tetris.pike || true
