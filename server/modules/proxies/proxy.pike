@@ -4,7 +4,7 @@
 // limit of proxy connections/second is somewhere around 70% of normal
 // requests, but there is no real reason for them to take longer.
 
-constant cvs_version = "$Id: proxy.pike,v 1.50 2000/08/19 08:52:42 per Exp $";
+constant cvs_version = "$Id: proxy.pike,v 1.51 2001/02/02 12:10:16 mast Exp $";
 constant thread_safe = 1;
 
 #include <config.h>
@@ -837,7 +837,7 @@ class Server
 	 //SERVER_DEBUG("server_got(" + len + ") - setup and write to_disk_pipe")
 
 	 if (!pipe)
-	   pipe = (program)"smartpipe";
+	   pipe = (program)"fastpipe";
 	 to_disk_pipe = pipe();
 	 to_disk_pipe->write(d);
 	 to_disk_pipe->set_done_callback(lambda(){to_disk_pipe=0;});
@@ -926,7 +926,7 @@ class Server
       //SERVER_DEBUG("finish - write memory cache to_disk_pipe")
 
       if (!pipe)
-	pipe = (program)"smartpipe";
+	pipe = (program)"fastpipe";
       to_disk_pipe = pipe();
       to_disk_pipe->write(_data);
       to_disk_pipe->set_done_callback(lambda(){to_disk_pipe=0;finish();});
