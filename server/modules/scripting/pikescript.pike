@@ -8,7 +8,7 @@
 
 // This is an extension module.
 
-constant cvs_version = "$Id: pikescript.pike,v 1.35 1999/09/25 14:57:45 nilsson Exp $";
+constant cvs_version = "$Id: pikescript.pike,v 1.36 1999/10/06 22:30:48 grubba Exp $";
 constant thread_safe=1;
 
 mapping scripts=([]);
@@ -198,7 +198,7 @@ array|mapping call_script(function fun, object got, object file)
 #endif
 #if constant(__builtin.security)
     // EXPERIMENTAL: Call with low credentials.
-    err = catch(result = call_with_creds(luser_creds, fun, got); 
+    err = catch(result = call_with_creds(luser_creds, fun, got)); 
 #else /* !constant(__builtin.security) */
     err = catch(result = fun(got)); 
 #endif /* constant(__builtin.security) */
