@@ -12,7 +12,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: business.pike,v 1.128 2000/05/11 10:16:07 per Exp $";
+constant cvs_version = "$Id: business.pike,v 1.129 2000/05/26 18:07:21 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_PARSER|MODULE_LOCATION;
 constant module_name = "Business graphics";
@@ -577,6 +577,7 @@ string container_diagram(string tag, mapping m, string contents,
   if(m->eng) res->eng=1;
   if(m->neng) res->neng=1;
 
+  res->quant          = (int)m->quant || (m->tonedbox?128:32);
   res->format         = (int)m->format || "gif";
   res->encoding       = m->encoding || "iso-8859-1";
   res->fontsize       = (int)m->fontsize || 16;
@@ -882,6 +883,11 @@ constant tagdoc=([
  <attr name='tonedbox' value='color1,color2,color3,color4'>
  Create a background shading between the colors assigned to each of the
  four corners.
+ </attr>
+
+ <attr name='quant' value='number'>
+ The number of colors that the result image should have. Default is 128 if
+ tonedbox is used and 32 otherwise.
  </attr>
 
  <attr name='turn'>
