@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.271 2001/07/16 00:01:01 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.272 2001/07/25 15:14:58 jhs Exp $";
 
 #include <module.h>
 inherit "module";
@@ -116,11 +116,10 @@ constant gtextargs=#"
  negative values for distance is possible, but you might have to add
  'spacing'.</p>
  <ex type=vert>
-<gtext scale=\"0.8\" fgcolor=\"#FF6600\" bshadow=\"1\">&lt;gtext
-bshadow=1&gt;</gtext><br />
-
-<gtext scale=\"0.8\" fgcolor=\"#FF6600\" bshadow=\"2\">&lt;gtext
-bshadow=2&gt;</gtext>
+<gtext scale=\"0.8\" fgcolor=\"#FF6600\"
+bshadow=\"1\">&lt;gtext bshadow=1&gt;</gtext>
+<br /><gtext scale=\"0.8\" fgcolor=\"#FF6600\"
+bshadow=\"2\">&lt;gtext bshadow=2&gt;</gtext>
  </ex>
 </attr>
 
@@ -176,12 +175,7 @@ background=\"/internal-roxen-squares\"> Chisel opaque=\"70\"</gtext>
 <attr name='ghost' value='dist,blur,color'><p>
  Apply a ghost effect. Cannot be used together with shadow or magic
  coloring.</p>
- <ex type='vert'>
-<gtext spacing=\"2\" crop=\"\" ghost=\"1,1,red\">ghost=1,1,red</gtext>
-<gtext spacing=\"2\" crop=\"\" ghost=\"1,3,blue\">ghost=1,3,blue</gtext>
-<gtext spacing=\"2\" crop=\"\" bshadow=\"1\" opaque=\"90\" ghost=\"-1,1,yellow\">
-ghost=-1,1,yellow opaque=90 bshadow=1</gtext>
- </ex>
+ <ex type='vert'><gtext spacing=\"2\" crop=\"\" ghost=\"1,1,red\">ghost=1,1,red</gtext></ex>
 </attr>
 
 <attr name='glow' value='color'><p>
@@ -291,13 +285,10 @@ outline=\"black,1\"
  Draw a blured black drop-shadow behind the text. Using 0 as distance
  does not currently place the shadow directly below the text. Using negative
  values for distance is possible,</p>
- <ex type=vert>
-<gtext scale=\"0.8\" fgcolor=\"blue\" shadow=\"40,0\">&lt;gtext
-shadow=40,0&gt;</gtext><br />
-
-<gtext scale=\"0.8\" fgcolor=\"blue\" shadow=\"40,2\">&lt;gtext
-shadow=40,2&gt;</gtext><br />
- </ex>
+ <ex type=vert><gtext scale=\"0.8\" fgcolor=\"blue\"
+shadow=\"40,0\">&lt;gtext shadow=40,0&gt;</gtext>
+<br /><gtext scale=\"0.8\" fgcolor=\"blue\"
+shadow=\"40,2\">&lt;gtext shadow=40,2&gt;</gtext></ex>
 </attr>
 
 <attr name='size' value='width,height'><p>
@@ -332,15 +323,16 @@ textbelow=\"#c0c0c0\">Roxen</gtext>
  It is probably a good idea to increase the 'quant' value when
  using this argument.</p>
  <ex type=vert>
-<gtext quant=\"128\" textscale=\"blue,red,black,darkgreen\"
->Blue, red, black, darkgreen</gtext>
+<gtext quant=\"128\" textscale=\"blue,white,red,darkgreen\"
+>Blue, white,
+red, darkgreen</gtext>
  </ex>
 </attr>
 
 <attr name='texture' value='path'><p>
  Uses the specified images as a field texture.</p>
 <ex type=hor>
-<gtext font=\"yikes\" fontsize=\"100\"
+<gtext font=\"\" fontsize=\"100\"
 texture=\"/internal-roxen-squares\">A</gtext>
 </ex>
 </attr>
@@ -470,9 +462,8 @@ constant tagdoc=([
  Same as for any <tag>gtext</tag> attribute, except for the
  highlighted image.</p>
 
-<ex type=vert>
-<gtext fgcolor=\"blue\" magic-glow=\"yellow\" magic=\"\">Magic attribute</gtext>
- </ex>
+<ex type=vert><gtext fgcolor=\"blue\" magic=\"\"
+magic-glow=\"red\" magic-fg=\"white\">Mouse me!</gtext></ex>
 </attr>
 
 <attr name='noxml'><p>
@@ -496,9 +487,7 @@ constant tagdoc=([
  wraping functionality of this example cannot be shown as the size of
  the browser window is determined by the largest example box. </p>
 
- <ex type='vert'>
-<gtext scale=\"0.4\" split=\"\">Make each word..</gtext>
- </ex>
+ <ex type='vert'><gtext scale=\"0.4\" split=\"\">One image per character.</gtext></ex>
 </attr>
 
 <attr name='submit'><p>
