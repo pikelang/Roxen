@@ -18,7 +18,7 @@ Roxen 2.2+ LDAP directory user database module
 #define ROXEN_HASH_SIGN		"{x-roxen-hash}"
 
 constant cvs_version =
-  "$Id: userdb_ldap.pike,v 1.5 2001/05/24 12:22:25 hop Exp $";
+  "$Id: userdb_ldap.pike,v 1.6 2001/05/25 08:59:52 hop Exp $";
 inherit UserDB;
 inherit "module";
 
@@ -503,16 +503,20 @@ int bind_dir(string|void userdn, string|void pass) {
         ldapurl = dir->parse_url(serverurl);
         binddn = zero_type(ldapurl["ext"]) ? "" : zero_type(ldapurl->ext["bindname"]) ? "" : ldapurl->ext->bindname;
     } else {                      // access type is "user"
-        //ldapurl = dir->parse_url(replace(serverurl, "%u%", user));
 	bindpwd = pass;
 	binddn = userdn;
     }
 
     DEBUGLOG(sprintf("Binding to the directory: DN: %O P: %O", binddn, bindpwd));
-    dir->bind(binddn, bindpwd);
-    if(dir->error_number()) {
-	werror ("LDAPuserdb: authentication error ["+dir->error_string()+"]\n");
-	dir=0;
+    err = catch(dir->bind(binddn, bindpwd));
+    if (err) {
+	werror ("LDAPuserdb: authentication error [not binded]\n");
+	return 0;
+    }
+    if(dir->error_number())
+      err = catch(dir->bind(binddn, bindpwd, 2)); // fallback to v2 protocol
+    if(err || dir->error_number()) {
+	werror ("LDAPuserdb: authentication error ["+(err?err[0]:dir->error_string())+"]\n");
 	return 0;
     }
 
