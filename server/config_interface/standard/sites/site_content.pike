@@ -351,12 +351,13 @@ string find_module_doc( string cn, string mn, RequestID id )
                     "valign='top'>" + describe_type( m, mi->type, id ) +
                     "</td></tr></table><br />\n" +
                     EC(TRANSLATE(m->file_name_and_stuff())) +
-		    homepage + creators + 
-		    "<h2>"+LOCALE(261,"Inherit tree")+"</h2>"+
+		    homepage + creators  
+		    + "<h2>"+LOCALE(261,"Inherit tree")+"</h2>"+
                     program_info( m ) +
                     "<dl>" + 
                     inherit_tree( m ) + 
-                    "</dl>" : homepage + creators),
+                    "</dl>" 
+                    : homepage + creators),
                   ({ "/image/", }), ({ "/internal-roxen-" }));
 }
 
@@ -447,13 +448,13 @@ string parse( RequestID id )
          else
 	   res += url + " "+port_for(url)+"<br />\n";
        }
-       res+="<h1>"+LOCALE(216, "Events")+"</h1><insert file='log.pike' nocache='' />";
 
-       res +="<h1>"+LOCALE(260, "Request status")+"</h1>";
+       res += "<br /><br /><table><tr><td valign=top>";
+       res +="<h2>"+LOCALE(260, "Request status")+"</h2>";
        res += status(conf);
+       res += "</td><td valign=top>";
+       res += "<h2>"+LOCALE(292, "Cache status")+"</h2><table cellpading='0' cellspacing='0' width='50'%>\n";
 
-       res += "<h1>"+LOCALE(292, "Cache status")+"</h1><table cellpading='0' cellspacing='0' width='50'%>\n";
-       
        int total = conf->datacache->hits+conf->datacache->misses;
 
        if( !total )
@@ -478,12 +479,18 @@ string parse( RequestID id )
        
        res += "</table>\n";
                    
+       res += "</td></tr></table><br />";
 
-       if( id->misc->config_settings->query( "devel_mode" ) )
-       {
-         res += "<h1>"+LOCALE(261, "Inherit tree")+"</h1>";
-         res += program_info( conf ) + "<dl>" + inherit_tree( conf ) + "</dl>";
-       }
+
+
+       res+="<h1>"+LOCALE(216, "Events")+"</h1><insert file='log.pike' nocache='' />";
+
+
+//     if( id->misc->config_settings->query( "devel_mode" ) )
+//     {
+//       res += "<h1>"+LOCALE(261, "Inherit tree")+"</h1>";
+//       res += program_info( conf ) + "<dl>" + inherit_tree( conf ) + "</dl>";
+//     }
        return res+"<br />\n";
     }
   } else {

@@ -19,14 +19,14 @@ string status(object|mapping conf)
     "<td>"+ sprintf(" (%.2f",
 		    (((float)conf->sent)/(1024.0*1024.0)/dt) * 8192.0)+
     "&nbsp;kbit/"+ LOCALE(3,"sec") +") </td>"
-    "<th>"+ LOCALE(4,"Sent headers:")+"</th>"
+    "</tr><tr align='left'><th>"+ LOCALE(4,"Sent headers:")+"</th>"
     "<td>"+ NBSP(Roxen.sizetostring(conf->hsent)) +"</td></tr>\n"
-    "<tr align='left'><th>"+ LOCALE(5,"Number of requests:") +"</th>"
+    "<tr align='left'><th>"+ LOCALE(0,"Requests:") +"</th>"
     "<td align='right'>"+ conf->requests +"</td>"
     "<td align='right'>"+ sprintf(" (%.2f", 
 				  ((float)conf->requests*60.0)/dt)+
     "/"+ LOCALE(6,"min") +") </td>"
-    "<th>"+ LOCALE(7,"Received data:") +"</th>"
+    "</tr><tr align='left'><th>"+ LOCALE(7,"Received data:") +"</th>"
     "<td>"+ NBSP(Roxen.sizetostring(conf->received)) +"</td></tr>\n";
 
   if (conf->misc && !zero_type(conf->misc->ftp_users)) {
