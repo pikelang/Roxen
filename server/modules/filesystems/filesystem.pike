@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.89 2000/09/05 15:06:41 per Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.90 2000/12/29 16:03:15 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -221,7 +221,7 @@ mixed stat_file( string f, RequestID id )
 
 string real_file( string f, RequestID id )
 {
-  if(stat_file( f, id ))
+  if(local::stat_file( f, id ))
     return path + f;
 }
 
