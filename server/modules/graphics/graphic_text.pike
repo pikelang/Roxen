@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.22 1997/01/13 06:54:50 per Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.23 1997/01/27 00:00:20 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -474,6 +474,13 @@ object (Image) make_text_image(mapping args, object font, string text)
   return background;
 }
 
+string base_key = "gtext:"+roxen->current_configuration->name;
+
+//void print_colors(array from)
+//{
+//  for(int i=0; i<sizeof(from); i++)
+//    perror("%d: %s\n", i, color_name(from[i]));
+//}
 
 int number=time(1), _start=time(1);
 
@@ -482,14 +489,20 @@ array(int)|string write_text(int _args, string text, int size,
 {
   object img;
   mapping args = cached_args[_args];
+  if(!args) {
+    args=(["fg":"black","bg":"white"]);
+    text="Please reload this page";
+  }
 
-  if(!args) return 0;
+  string key = base_key+(_args-_start);
 
   text = replace(text, ({ "&lt;", "&gt;", "&amp;" }), ({ "<", ">", "&" }));
 
   // Check the cache first..
-  if(mixed data = cache_lookup("gtext:"+(_args-_start), text))
+  if(mixed data = cache_lookup(key, text))
   {
+    if(args->nocache) // Remove from cache. Very usable for access counters
+      cache_remove(key, text);
     if(size) return data[1];
     return data[0];
   }
@@ -497,12 +510,12 @@ array(int)|string write_text(int _args, string text, int size,
 
 
 
-  string key = args->font+"/"+args->talign+"/"+args->xpad+"/"+args->ypad;
-  data = cache_lookup("fonts", key);
+  string fkey = args->font+"/"+args->talign+"/"+args->xpad+"/"+args->ypad;
+  data = cache_lookup("fonts", fkey);
   if(!data)
   { 
     data = load_font(args->font, lower_case(args->talign||"left"),(int)args->xpad,(int)args->ypad);
-    cache_set("fonts", key, data);
+    cache_set("fonts", fkey, data);
   }
 
   // Fonts and such are now initialized.
@@ -513,10 +526,18 @@ array(int)|string write_text(int _args, string text, int size,
 
   if(!img) return 0;
   
-  // place in cache.
-  int q = (int)args->quant || (args->background||args->texture?256:QUERY(cols));
+  int q = (int)args->quant||(args->background||args->texture?250:QUERY(cols));
+
+  if(q>255) q=255;
+  if(q<3) q=3;
+
+  // Quantify
   if(!args->fs)
+  {
+//  print_colors(img->select_colors(q-1)+({parse_color(args->bg)}));
     img = img->map_closest(img->select_colors(q-1)+({parse_color(args->bg)}));
+  }
+  // place in cache.
   if(args->fs)
     data=({ img->togif_fs(@(args->notrans?({}):parse_color(args->bg))),
 	    ({img->xsize(),img->ysize()})});
@@ -525,7 +546,7 @@ array(int)|string write_text(int _args, string text, int size,
 	    ({img->xsize(),img->ysize()})});
   img=0;
 
-  cache_set("gtext:"+(_args-_start), text, data);
+  cache_set(key, text, data);
   if(size) return data[1];
   return data[0];
 }
@@ -667,7 +688,8 @@ string extra_args(mapping in)
 string tag_graphicstext(string t, mapping arg, string contents,
 			object id, object foo, mapping defines)
 {
-  contents = parse_rxml(contents, id);// Allow <accessed> inside <gtext>.
+// Allow <accessed> and others inside <gtext>.
+  contents = parse_rxml(contents, id, foo, defines);
   
   string pre, post, defalign, gt, rest, magic;
   int i, split;
