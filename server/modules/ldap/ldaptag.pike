@@ -2,7 +2,7 @@
 //
 // Module code updated to new 2.0 API
 
-constant cvs_version="$Id: ldaptag.pike,v 2.23 2001/11/05 12:23:39 nilsson Exp $";
+constant cvs_version="$Id: ldaptag.pike,v 2.24 2001/11/05 13:09:07 hop Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -94,7 +94,7 @@ constant tagdoc=([
  the corresponding part of URL.</p>
 </attr>
 
-<attr name='sscope' value='search scope'><p>
+<attr name='search-scope' value='search scope'><p>
  Scope of an LDAP search operation. If used that this value rewrites
  the corresponding part of URL.</p>
 </attr>
@@ -239,8 +239,8 @@ array|object|int do_ldap_op(string op, mapping args, RequestID id)
     case "search":
 	if(args->basedn)
 	  con->set_basedn(args->basedn);
-	if(args->sscope)
-	  con->set_scope(args->sscope); // FIXME: add error checking
+	if(args["search-scope"])
+	  con->set_scope(args["search-scope"]); // FIXME: add error checking
 	error = catch(result = (con->search(args->filter)));
 	break;
 
