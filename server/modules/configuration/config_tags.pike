@@ -371,14 +371,15 @@ string set_variable( string v, object in, mixed to, object id )
   }
   if( equal( var[ VAR_VALUE ], val ) )
     return "";
-  if( stringp(val) )
-    val = utf8_to_string(val);
-  if( arrayp( val ) )
-    val = map( val, lambda( mixed q ) { 
-                      if(stringp(q)) 
-                        return utf8_to_string(q);
-                      return q;
-                    } );
+// Already done...
+//   if( stringp(val) )
+//     val = utf8_to_string(val);
+//   if( arrayp( val ) )
+//     val = map( val, lambda( mixed q ) { 
+//                       if(stringp(q)) 
+//                         return utf8_to_string(q);
+//                       return q;
+//                     } );
   if( in->set )
     in->set( v, val );
   else
@@ -530,7 +531,7 @@ string get_var_form( string s, object mod, object id )
       return tmp+"</select>";
     }
     if( view_mode )
-      return "<b><tt>"+html_encode_string((((array(string))var[VAR_VALUE])*","))+"</tt></b>";;
+      return "<b><tt>"+html_encode_string((((array(string))var[VAR_VALUE])*","))+"</tt></b>";
     return input( path, ((array(string))var[VAR_VALUE])*", ", 60 );
 
 
