@@ -1,7 +1,7 @@
 /*
  * Roxen master
  */
-string cvs_version = "$Id: roxen_master.pike,v 1.58 1999/11/24 17:35:02 per Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.59 1999/11/24 19:10:16 per Exp $";
 
 /*
  * name = "Roxen Master";
@@ -186,9 +186,18 @@ mixed resolv(string a, string b)
   return resolv_cache[a]->value ? resolv_cache[a]->value : ([])[0];
 }
 
-int refresh( program p )
+int refresh( program p, int|void force )
 {
   string fname = program_name( p );
+  if(!fname) return 0; /*  Already rather fresh. :) */
+
+  if( force )
+  {
+    m_delete( programs, fname );
+    rm( make_ofilename( fname ) );
+    return 1;
+  }
+
   /*
    * No need to do anything right now, low_findprog handles 
    * refresh automatically. 
@@ -196,16 +205,63 @@ int refresh( program p )
    * simply return 1 if a refresh will take place.
    *
    */
-  array s;
-  if( (s=master_file_stat( fname )) && s[1]>=0 )
+  array s=file_stat( fname );
+
+  if( s && s[1]>=0 )
+  {
     if( load_time[ fname ] > s[ 3 ] )
+    {
       return 0;
+    }
+  } else {
+    return -1; /* No such file... */
+  }
+
+//   werror("****** refreshing "+fname+"\n");
+  m_delete( programs, fname );
+  rm( fname+".o" );
+  rm( make_ofilename( fname ) );
+  low_findprog( fname, "", 0 );
   return 1;
 }
+
+int recursively_check_inherit_time(program root, array up, mapping done)
+{
+  int res;
+  if( done[ root ]++ )
+    return 0;
+  
+//   if(!sizeof(up)) werror("\n\n");
+//   werror("**"+("-"*sizeof(up))+" checking "+program_name( root )+"\n");
+
+  foreach( Program.inherit_list( root ), program p )
+    res+=recursively_check_inherit_time( p, up+({root}), done );
+
+  if( !res && (refresh( root )>0 ))
+  {
+    res++;
+    map( up+({root}), refresh, 1 );
+  }
+
+  return res;
+}
+
+int refresh_inherit( program what )
+{
+  int ret = recursively_check_inherit_time( what, ({}), ([]) );;
+  return ret;
+}
+
 
 string program_name(program p)
 {
   return search(programs, p);
+}
+
+void name_program( program p, string name )
+{
+  programs[name] = p;
+  load_time[ name ] = time();
 }
 
 string describe_backtrace(mixed trace, void|int linewidth)
