@@ -75,8 +75,9 @@ FileLoader.prototype.loadSafariDocument = function(url)
   this.document = null;
   this.doclen = -1;
   var ifr = document.getElementById(this.frameName);
-  if (ifr.contentDocument.body)
-    ifr.contentDocument.body = 0;
+  //  The following code breaks Safari 1.2.
+  //  if (ifr.contentDocument.body)
+  //  	ifr.contentDocument.body = 0;
   ifr.contentDocument.location.replace(url);
   if (!FileLoader.interval)
     FileLoader.interval = setInterval("checkSafariLoad()", 250);
