@@ -11,18 +11,27 @@
 //
 // Make sure links work _inside_ unfolded dokuments.
 
-string cvs_version = "$Id: directories.pike,v 1.36 1999/12/28 15:19:45 grubba Exp $";
+string cvs_version = "$Id: directories.pike,v 1.37 1999/12/29 23:49:28 nilsson Exp $";
 constant thread_safe=1;
+
+//#define DIRECTORIES_DEBUG
+#ifdef DIRECTORIES_DEBUG
+# define DIRS_WERR(X) werror("Directories: "+X+"\n");
+#else
+# define DIRS_WERR(X)
+#endif
 
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
 
-array README;
+array README, INDEXFILES, NOBROWSE;
 string OUT_FORM;
-void start( int num, Configuration conf )
+void start()
 {
-  README=query("Readme");
+  README=query("Readme")-({""});
+  INDEXFILES=query("indexfiles")-({""});
+  NOBROWSE=query("nobrowse")-({""});
   OUT_FORM="<img border=\"0\" src=\"%s\" alt=\"\"> "
     "<a href=\"%s\">%-40s</a>"+
     (query("size")?"   %11s":"%.0s")+
@@ -45,8 +54,8 @@ array register_module()
 
 void create()
 {
-  defvar("indexfiles", ({ "index.html", "Main.html", "welcome.html",
-			  "index.cgi", "index.lpc", "index.pike" }),
+  defvar("indexfiles", ({ "index.html", "index.htm", "index.pike",
+			  "index.cgi", "welcome.html", "Main.html" }),
 	 "Index files", TYPE_STRING_LIST,
 	 "If one of these files is present in a directory, it will "
 	 "be returned instead of the directory listing.");
@@ -55,6 +64,10 @@ void create()
 	 "Include readme files", TYPE_STRING_LIST,
 	 "Include one of these readme files in directory listings");
 
+  defvar("nobrowse", ({".www_not_browsable",".nodiraccess"}), "List prevention files",
+	 TYPE_STRING_LIST, "All directories containing any of these files will not be "
+	 "browsable.");
+
   defvar("override", 0, "Allow directory index file overrides", TYPE_FLAG,
 	 "If this variable is set, you can get a listing of all files "
 	 "in a directory by appending '.' or '/' to the directory name, like "
@@ -62,11 +75,11 @@ void create()
 	 ". It is _very_ useful for debugging, but some people regard it as a "
 	 "security hole.");
 
-  defvar("size", 1, "Include file size", TYPE_FLAG,
-	 "If set, include the size of the file in the listing.");
-
   defvar("spartan", 0, "Spartan listings.", TYPE_FLAG,
 	 "Show minimalistic file listings.");
+
+  defvar("size", 1, "Include file size", TYPE_FLAG,
+	 "If set, include the size of the file in the listing.");
 
   defvar("date", "Don't show dates", "Dates", TYPE_MULTIPLE_STRING,
 	 "Select whether to include the last modification date in directory "
@@ -87,7 +100,8 @@ string tag_directory_insert(string t, mapping m, RequestID id)
     return ret;
   }
   Stdio.File f;
-  if(f=open(fix_relative(m->file, id), "r")) {
+  DIRS_WERR("Showing "+fix_relative(m->file, id));
+  if(f=open(id->conf->real_file(fix_relative(m->file, id), id), "r")) {
     string s=f->read();
     if(s && m->quote=="none") return s;
     if(s) return html_encode_string(s);
@@ -98,7 +112,7 @@ string tag_directory_insert(string t, mapping m, RequestID id)
 
 string find_readme(string d, RequestID id)
 {
-  foreach(query("Readme"), string f) {
+  foreach(README, string f) {
     string readme = id->conf->try_get_file(d+f, id);
 
     if (readme) {
@@ -136,6 +150,7 @@ string describe_directory(string d, RequestID id)
 {
   array(string) path = d/"/" - ({ "","." });
   d = "/"+path*"/" + "/";
+  if(d=="//") d="/";
   array(string) dir = id->conf->find_dir(d, id)||({});
   if (sizeof(dir)) dir = sort(dir);
 
@@ -150,15 +165,26 @@ string describe_directory(string d, RequestID id)
       result += find_readme(d, id);
     result += "<hr noshade><pre>\n";
   }
+  else {
+    DIRS_WERR("Looking for lock file in "+d);
+    foreach(NOBROWSE, string file) {
+      string lock=id->conf->try_get_file(d+file, id);
+      if(lock) return lock;
+    }
+  }
 
   if(id->misc->foldlist_exists) result += "<foldlist folded>\n";
 
   foreach(sort(dir), string file) {
+    string tmp=id->not_query;
     array stats = id->conf->stat_file(d + file, id);
+    id->not_query=tmp;
+
     string type = "Unknown";
     string icon;
     int len = 0;
     string mtime = "";
+
     if(stats) {
       len=stats[1];
       switch(query("date")) {
@@ -191,6 +217,7 @@ string describe_directory(string d, RequestID id)
 
       break;
     }
+
     if(id->misc->foldlist_exists) result+="<ft>";
     result += sprintf(OUT_FORM, icon, id->misc->rel_base+file, file,
 		      sizetostring(len), mtime, type);
@@ -255,6 +282,7 @@ string describe_directory(string d, RequestID id)
 string|mapping parse_directory(RequestID id)
 {
   string f = id->not_query;
+  DIRS_WERR("Request for \""+f+"\"");
 
   // First fix the URL
   //
@@ -263,13 +291,15 @@ string|mapping parse_directory(RequestID id)
   if(strlen(f) > 1)
   {
     if(f[-1]!='/' && f[-1]!='.') return http_redirect(f+"/", id);
-    if(!QUERY(override)) {
-      if(f[-1]=='/' && f[-2]=='/') return http_redirect((f/"/"-({""}))*"/"+"/", id);
-      if(f[-1]=='.') return http_redirect(f[..sizeof(f)-3], id);
+    if(f[-1]=='/' && f[-2]=='/') return http_redirect((f/"/"-({""}))*"/"+"/", id);
+    if(f[-1]=='.') {
+      if(!QUERY(override)) return http_redirect(f[..sizeof(f)-3], id);
+      id->not_query="/.";
     }
   }
   else if(f != "/" )
     return http_redirect(id->not_query+"/", id);
+  DIRS_WERR("Request \""+f+"\" was not redirected");
 
   // If the pathname ends with '.', and the 'override' variable
   // is set, a directory listing should be sent instead of the
@@ -277,14 +307,14 @@ string|mapping parse_directory(RequestID id)
 
   if(f[-1] == '/') /* Handle indexfiles */
   {
-    string file;
-    foreach(query("indexfiles") - ({""}), file) {
+    foreach(INDEXFILES, string file) {
       if(id->conf->stat_file(f+file, id))
       {
 	id->not_query = f + file;
 	mapping got = id->conf->get_file(id);
 	if (got) {
-	  return(got);
+	  DIRS_WERR("A suitable index file found.");
+	  return got;
 	}
       }
     }
@@ -292,6 +322,16 @@ string|mapping parse_directory(RequestID id)
     id->not_query = f;
   }
 
+  DIRS_WERR("Looking for lock file in"+f);  
+  foreach(NOBROWSE, string file) {
+    string lock=id->conf->try_get_file(f+file, id);
+    if(lock) {
+      if(sizeof(lock)) return http_string_answer(lock)+(["error":403]);
+      return http_redirect(f[..sizeof(f)-3], id);
+    }
+  }
+
+  DIRS_WERR("Deciding between fancy or slimmed down direcory view");
   if(query("spartan") || id->prestate->spartan_directory)
     return http_string_answer(spartan_directory(f,id));
 
