@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.148 2000/07/28 21:57:00 kuntri Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.149 2000/08/07 10:14:53 kuntri Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -1521,9 +1521,12 @@ TAGDOCUMENTATION;
 constant tagdoc=([
 "&client.ip;":"<desc ent>The client is located on this IP-address.</desc>",
 "&client.name;":"<desc ent>The name of the client, i.e. \"Mozilla/4.7\". </desc>",
-"&client.full-name;":#"<desc ent>The full user agent string, i.e. name of the client
+"&client.Fullname;":#"<desc ent>The full user agent string, i.e. name of the client
  and additional info like; operating system, type of computer, etc.
  E.g. \"Mozilla/4.7 [en] (X11; I; SunOS 5.7 i86pc)\". </desc>",
+"&client.fullname;":#"<desc ent>The full user agent string, i.e. name of the client
+ and additional info like; operating system, type of computer, etc.
+ E.g. \"mozilla/4.7 [en] (x11; i; sunos 5.7 i86pc)\". </desc>",
 "&client.referrer;":#"<desc ent>Prints the URL of the page on which the user followed
  a link that brought her to this page. The information comes from the referrer header
  sent by the browser.</desc>",
@@ -1904,7 +1907,7 @@ Roxen module.
 
 <attr name=case value=upper|lower|capitalize>
  Changes the case of the output to upper, lower or capitalize.
- <ex><date date='' lang='&client.language;' case='upper'/></ex>
+ <ex><date date='' lang='<ent>client.language</ent>' case='upper'/></ex>
 </attr>
 
 <attr name=prec value=number>
@@ -1968,7 +1971,7 @@ Roxen module.
 </attr>
 
 <ex type='box'>
- <default name='my-select' value='&form.preset;'>
+ <default name='my-select' value='<ent>form.preset</ent>'>
    <select name='my-select'>
      <option value='1'>First</option>
      <option value='2'>Second</option>
@@ -2094,7 +2097,7 @@ Roxen module.
 
 <attr name=define value=string>
  The result will be put into a variable. E.g. define=var.gauge vill
- put the result in a variable that can be reached with &var.gauge;.
+ put the result in a variable that can be reached with <ent>var.gauge</ent>.
 </attr>
 
 <attr name=silent>
@@ -2512,7 +2515,7 @@ Sets a variable.</short>
  The path in which the cookie should be available.
 </attr>
 
- If persistent is specified; the cookie will be persistent until year
+ If persistent is specified, the cookie will be persistent until year
  2038, otherwise, the specified delays are used, just as for
  <tag><ref type='tag'>expire-time</ref></tag>.
 
@@ -2681,9 +2684,9 @@ Sets a variable.</short>
 
  <ex>
   <set variable='var.jump' value='do it'/>
-  &var.jump;
+  <ent>var.jump</ent>
   <unset variable='var.jump'/>
-  &var.jump;
+  <ent>var.jump</ent>
  </ex>
 </attr>",
 
