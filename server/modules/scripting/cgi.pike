@@ -5,7 +5,7 @@
 // interface</a> (and more, the documented interface does _not_ cover
 // the current implementation in NCSA/Apache)
 
-string cvs_version = "$Id: cgi.pike,v 1.112 1999/03/30 23:14:33 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.113 1999/03/30 23:40:31 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -1035,30 +1035,58 @@ class closer
 // Used to send some data to the CGI-script.
 class sender
 {
+  object more_to_send;
   string to_send;
   object fd;
+
+  void read_more(mixed ignored, string more)
+  {
+    to_send += more;
+    if (sizeof(to_send) > 0x10000) {
+      more_to_send->set_nonblocking(0,0,0);
+    }
+    fd->set_nonblocking(0, write_cb, 0);
+  }
+
+  void no_more(mixed ignored)
+  {
+    more_to_send->close();
+    more_to_send = 0;
+  }
 
   void write_cb()
   {
     if (sizeof(to_send)) {
       int len = fd->write(to_send);
-      if ((to_send = to_send[len..]) == "") {
+      to_send = to_send[len..];
+      if (len <= 0) {
 	fd->close();
+	fd = 0;
+	if (more_to_send) {
+	  more_to_send->close();
+	  more_to_send = 0;
+	}
+	return;
       }
-    } else {
-      fd->close();
+    }
+    if (to_send == "") {
+      if (more_to_send) {
+	more_to_send->set_nonblocking(read_more, 0, no_more);
+	fd->set_nonblocking(0, 0, 0);
+      } else {
+	fd->close();
+	fd = 0;
+      }
     }
   }
-  void close_cb()
-  {
-    fd->close();
-  }
-  void create(object fd_, string to_send_)
+
+  void create(object fd_, string to_send_, object more_to_send_)
   {
     fd = fd_;
     // fd->close("r");	// We aren't interrested in reading from the fd.
     to_send = to_send_;
-    fd->set_nonblocking(0, write_cb, close_cb);
+    more_to_send = more_to_send_;
+    fd->set_nonblocking(0, write_cb, 0);
   }
 };
 
@@ -1247,11 +1275,19 @@ mixed low_find_file(string f, object id, string path)
 			 );
   
   if(id->my_fd && id->data) {
-    sender(pipe4, id->data);
-    id->my_fd->set_id( pipe4 );                       // for put.. post?
-    id->my_fd->set_read_callback(lambda(object to, string d) {
-				   to->write(d);
-				 });		      // lets try, atleast..
+    sender(pipe4, id->data, id->my_fd);
+    // for put.. post?
+    // lets try, atleast..
+
+    // NOTE: Race-condition against sender above.
+    id->my_fd->set_read_callback(lambda(mixed ignored, string d) {
+				   // NOTE: Lexical scope.
+				   pipe4->write(d);
+				 });
+    id->my_fd->set_close_callback(lambda(mixed ignored) {
+				    // NOTE: Lexical scope.
+				    pipe4->close();
+				  });
     id->my_fd->set_nonblocking();
   } else {
     closer(pipe4);
