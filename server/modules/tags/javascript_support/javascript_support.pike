@@ -1,6 +1,6 @@
-// This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
+// This is a roxen module. Copyright © 1999 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.39 2001/08/21 09:29:25 jonasw Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.40 2001/09/03 18:47:46 nilsson Exp $";
 
 #include <module.h>
 inherit "module";

@@ -1,3 +1,5 @@
+// This file is part of Roxen WebServer. Copyright (c) 1999 - 2001, Roxen IS.
+
 popups = new Array(0);
 
 // Removes all hide timers.

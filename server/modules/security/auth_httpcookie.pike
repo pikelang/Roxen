@@ -1,5 +1,7 @@
+// This is a roxen module. Copyright © 2001, Roxen IS.
+
 constant cvs_version =
-  "$Id: auth_httpcookie.pike,v 1.8 2001/08/28 15:48:00 per Exp $";
+  "$Id: auth_httpcookie.pike,v 1.9 2001/09/03 18:40:49 nilsson Exp $";
 inherit AuthModule;
 inherit "module";
 

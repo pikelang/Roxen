@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
+// This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 //
 // The main RXML parser. If this module is not added to a configuration,
 // no RXML parsing will be done at all for .html files.
@@ -15,7 +15,7 @@
 #define _rettext _context_misc[" _rettext"]
 #define _ok _context_misc[" _ok"]
 
-constant cvs_version = "$Id: rxmlparse.pike,v 1.66 2001/08/22 20:05:06 mast Exp $";
+constant cvs_version = "$Id: rxmlparse.pike,v 1.67 2001/09/03 18:52:20 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 

@@ -1,9 +1,9 @@
-// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
+// This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 
 // YP User database. Reads the system password database and use it to
 // authentificate users.
 
-constant cvs_version = "$Id: ypuserdb.pike,v 1.15 2000/07/03 05:35:41 nilsson Exp $";
+constant cvs_version = "$Id: ypuserdb.pike,v 1.16 2001/09/03 18:31:06 nilsson Exp $";
 constant thread_safe = 1;
 
 inherit "module";

@@ -1,3 +1,5 @@
+// This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
+
 // randomtext.pike -- random text generator module
 //
 // By Leif Stensson.
@@ -58,7 +60,7 @@ inherit "module";
 
 #include <module.h>
 
-string version = "$Id: randomtext.pike,v 1.6 2001/05/04 13:54:24 leif Exp $";
+string version = "$Id: randomtext.pike,v 1.7 2001/09/03 18:31:05 nilsson Exp $";
 
 constant module_type = MODULE_TAG;
 constant module_name = "Random Text";

@@ -1,6 +1,7 @@
-// This is a roxen module. Copyright © 2000, Roxen IS.
+// This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
+
 #include <module.h>
-constant cvs_version = "$Id: relay2.pike,v 1.23 2001/05/16 07:51:00 per Exp $";
+constant cvs_version = "$Id: relay2.pike,v 1.24 2001/09/03 18:35:38 nilsson Exp $";
 
 inherit "module";
 constant module_type = MODULE_FIRST|MODULE_LAST;

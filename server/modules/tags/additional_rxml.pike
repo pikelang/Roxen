@@ -1,10 +1,10 @@
-// This is a roxen module. Copyright © 2000, Roxen IS.
+// This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
 //
 
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.15 2001/08/28 03:49:50 nilsson Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.16 2001/09/03 18:52:17 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";

@@ -1,8 +1,8 @@
-// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
+// This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 
 // Gopher proxy module.
 
-constant cvs_version = "$Id: gopher.pike,v 1.25 2001/01/04 06:03:28 nilsson Exp $";
+constant cvs_version = "$Id: gopher.pike,v 1.26 2001/09/03 18:35:37 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <config.h>

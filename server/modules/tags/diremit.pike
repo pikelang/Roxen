@@ -1,3 +1,5 @@
+// This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
+
 #include <module.h>
 #include <stat.h>
 inherit "module";

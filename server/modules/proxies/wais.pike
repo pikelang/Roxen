@@ -1,10 +1,10 @@
-// This is a roxen module.
+// This is a roxen module. Copyright © 1997 - 2001, Roxen IS.
 
 // A WAIS proxy module, not written by anyone at Roxen IS, and it would
 // seem that I have forgotten who wrote it.
 
 
-string cvs_version = "$Id: wais.pike,v 1.24 2001/03/15 23:31:25 per Exp $";
+string cvs_version = "$Id: wais.pike,v 1.25 2001/09/03 18:35:38 nilsson Exp $";
 
 #include <config.h>
 #include <module.h>

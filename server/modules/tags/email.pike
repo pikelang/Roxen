@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright (c) 2000, Roxen IS
+// This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
 
 // Todo:
 //	- checking 'valid' email addresses
@@ -9,7 +9,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.12 2001/08/30 12:25:48 jhs Exp $";
+constant cvs_version = "$Id: email.pike,v 1.13 2001/09/03 18:52:18 nilsson Exp $";
 
 constant thread_safe=1;
 

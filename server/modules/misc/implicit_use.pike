@@ -1,10 +1,10 @@
-// This is a roxen module. Copyright © 2000, Roxen IS.
+// This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
 
 #include <module.h>
 #include <config.h>
 inherit "module";
 
-constant cvs_version = "$Id: implicit_use.pike,v 1.4 2001/01/13 18:17:18 nilsson Exp $";
+constant cvs_version = "$Id: implicit_use.pike,v 1.5 2001/09/03 18:31:04 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST;
 constant module_name = "Implicit <use> Module";

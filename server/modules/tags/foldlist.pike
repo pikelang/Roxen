@@ -1,7 +1,7 @@
-// This is a roxen module. Copyright © 1999-2001, Roxen IS.
+// This is a roxen module. Copyright © 1999 - 2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: foldlist.pike,v 1.30 2001/08/23 23:34:48 mast Exp $";
+constant cvs_version = "$Id: foldlist.pike,v 1.31 2001/09/03 18:52:19 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <module.h>

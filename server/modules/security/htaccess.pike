@@ -1,9 +1,9 @@
-// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
+// This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version="$Id: htaccess.pike,v 1.83 2001/08/30 22:40:04 grubba Exp $";
+constant cvs_version="$Id: htaccess.pike,v 1.84 2001/09/03 18:40:49 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>

@@ -1,10 +1,10 @@
-// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
+// This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 
 // HTTP Proxy module. Should be cleaned and optimized. Currently the
 // limit of proxy connections/second is somewhere around 70% of normal
 // requests, but there is no real reason for them to take longer.
 
-constant cvs_version = "$Id: proxy.pike,v 1.52 2001/02/02 12:10:17 mast Exp $";
+constant cvs_version = "$Id: proxy.pike,v 1.53 2001/09/03 18:35:37 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <config.h>

@@ -1,6 +1,8 @@
+// This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
+
 inherit "cgi.pike": normalcgi;
 
-constant cvs_version = "$Id: fastcgi.pike,v 2.9 2001/08/24 12:34:27 leif Exp $";
+constant cvs_version = "$Id: fastcgi.pike,v 2.10 2001/09/03 18:38:37 nilsson Exp $";
 
 #include <roxen.h>
 #include <module.h>

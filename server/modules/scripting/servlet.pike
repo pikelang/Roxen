@@ -1,10 +1,10 @@
-// This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
+// This is a roxen module. Copyright © 1999 - 2001, Roxen IS.
 
 inherit "module";
 
 #include <module.h>
 
-string cvs_version = "$Id: servlet.pike,v 2.19 2001/03/03 07:15:13 per Exp $";
+string cvs_version = "$Id: servlet.pike,v 2.20 2001/09/03 18:38:38 nilsson Exp $";
 int thread_safe=1;
 constant module_unique = 0;
 

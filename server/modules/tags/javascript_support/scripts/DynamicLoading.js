@@ -1,3 +1,5 @@
+// This file is part of Roxen WebServer. Copyright (c) 2001, Roxen IS.
+
 // DynamicLoading: A component for dynamic loading of documents into layers. 
 // different methods are used to accomplish this. For Netscape 4 the layer/src
 // method is used. For IE4/Mozilla the iframe/iframe/src method is used.

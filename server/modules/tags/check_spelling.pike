@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 2000, Roxen IS.
+// This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
 //
 
 #include <module.h>
@@ -6,7 +6,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: check_spelling.pike,v 1.16 2001/03/08 14:35:46 per Exp $";
+constant cvs_version = "$Id: check_spelling.pike,v 1.17 2001/09/03 18:52:18 nilsson Exp $";
 
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Spell checker";

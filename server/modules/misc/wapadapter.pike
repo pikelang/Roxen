@@ -1,10 +1,10 @@
-// This is a roxen module. Copyright © 2000, Roxen IS.
+// This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
 //
 
 inherit "module";
 
 constant thread_safe = 1;
-constant cvs_version = "$Id: wapadapter.pike,v 1.7 2000/12/30 00:01:46 nilsson Exp $";
+constant cvs_version = "$Id: wapadapter.pike,v 1.8 2001/09/03 18:31:06 nilsson Exp $";
 
 constant module_type = MODULE_FIRST|MODULE_FILTER|MODULE_TAG;
 constant module_name = "WAP Adapter";

@@ -1,4 +1,4 @@
-// The translation module. Copyright © 2000, Roxen IS.
+// The translation module. Copyright © 2000 - 2001, Roxen IS.
 //
 
 #include <module.h>
@@ -11,7 +11,7 @@ constant module_type = MODULE_TAG;
 constant module_name = "Tags: Translation module";
 constant module_doc  = "This module provides an RXML API to the Pike localization system.";
 constant thread_safe = 1;
-constant cvs_version = "$Id: translation_mod.pike,v 1.10 2001/03/08 14:35:48 per Exp $";
+constant cvs_version = "$Id: translation_mod.pike,v 1.11 2001/09/03 18:52:21 nilsson Exp $";
 
 
 

@@ -1,8 +1,8 @@
-// This is a roxen module. Copyright © 1997-2000, Roxen IS.
+// This is a roxen module. Copyright © 1997 - 2001, Roxen IS.
 // Released under GPL
 // made by Per Hedbor
 
-constant cvs_version = "$Id: wizard_tag.pike,v 1.29 2001/03/08 14:35:49 per Exp $";
+constant cvs_version = "$Id: wizard_tag.pike,v 1.30 2001/09/03 18:52:22 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";

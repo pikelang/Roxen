@@ -1,3 +1,5 @@
+// This file is part of Roxen WebServer. Copyright (c) 1999 - 2001, Roxen IS.
+
 // Global variables
 var isNav4 = false, isIE4 = false, isNav5 = false, isMac = false,
     isMacIE50 = false;
