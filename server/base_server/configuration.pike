@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.556 2004/04/20 14:06:45 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.557 2004/04/20 14:07:14 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1806,7 +1806,7 @@ mixed handle_request( RequestID id, void|int recurse_count)
 mapping|int get_file(RequestID id, int|void no_magic, int|void internal_get)
 //! Return a result mapping for the id object at hand, mapping all
 //! modules, including the filter modules. This function is mostly a
-//! wrapper for <ref>low_get_file()</ref>.
+//! wrapper for @[low_get_file()].
 {
   TIMER_START(get_file);
   int orig_internal_get = id->misc->internal_get;
