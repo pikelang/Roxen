@@ -22,7 +22,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.250 2001/03/29 02:49:46 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.251 2001/04/08 23:08:17 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -683,6 +683,10 @@ void trace_destruct(mixed x)
 void load_roxen()
 {
 //   new_master->resolv("Roxen");
+#if !constant( callablep )
+  add_constant( "callablep",
+		lambda(mixed f){return functionp(f)||programp(f);});
+#endif
   add_constant("cd", restricted_cd());
 #ifdef TRACE_DESTRUCT
   add_constant("destruct", trace_destruct);
