@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.191 2000/08/14 18:56:11 mast Exp $
+// $Id: roxenlib.pike,v 1.192 2000/08/20 16:40:10 nilsson Exp $
 
 //#pragma strict_types
 
@@ -642,40 +642,42 @@ string make_entity( string q )
   return "&"+q+";";
 }
 
-string make_tag_attributes(mapping(string:string) in)
+string make_tag_attributes(mapping(string:string) in, void|int xml)
 {
   if(!in || !sizeof(in)) return "";
-  int sl=0;
   string res=" ";
 #ifdef MODULE_DEBUG
-  array(string) s=sort(indices(in));
-  foreach(s, string a)
+  foreach(sort(indices(in)), string a)
 #else
   foreach(indices(in), string a)
 #endif
   {
+#ifdef OLD_RXML_COMPAT
     if(a=="/" && in[a]=="/")
-      sl=1;
+      xml=1;
     else
+#endif
       res+=a+"=\""+html_encode_string((string)in[a])+"\" ";
   }
-  if(sl) return res+"/";
+  if(xml) return res+"/";
   return res[..sizeof(res)-2];
 }
 
-string make_tag(string s, mapping(string:string) in)
-//! Returns an empty element tag `s', with the tag arguments dictated
-//! by the mapping `in'.
+string make_tag(string name, mapping(string:string) args, void|int xml)
+//! Returns an empty element tag `name', with the tag arguments dictated
+//! by the mapping `args'. If the flag xml is set, slash character will be
+//! added in the end of the tag. Use RXML.TXml.format_tag(name, args) instead.
 {
-  return "<"+s+make_tag_attributes(in)+">";
+  return "<"+name+make_tag_attributes(args,xml)+">";
 }
 
-string make_container(string s, mapping(string:string) in, string contents)
-//! Returns a container tag `s' encasing the string `contents', with
-//! the tag arguments dictated by the mapping `in'.
+string make_container(string name, mapping(string:string) args, string content)
+//! Returns a container tag `name' encasing the string `content', with
+//! the tag arguments dictated by the mapping `args'. Use
+//! RXML.TXml.format_tag(name, args, content) instead.
 {
-  if(in["/"]) m_delete(in, "/");
-  return make_tag(s,in)+contents+"</"+s+">";
+  if(args["/"]=="/") m_delete(args, "/");
+  return make_tag(name,args)+content+"</"+name+">";
 }
 
 string dirname( string file )
