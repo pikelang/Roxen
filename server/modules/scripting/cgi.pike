@@ -5,7 +5,7 @@
 // interface</a> (and more, the documented interface does _not_ cover
 // the current implementation in NCSA/Apache)
 
-string cvs_version = "$Id: cgi.pike,v 1.82 1998/04/21 17:35:18 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.83 1998/04/22 15:08:57 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -765,7 +765,14 @@ mixed low_find_file(string f, object id, string path)
 			 f, make_args(id->rest_query),
 			 my_build_env_vars(f, id, path_info),
 			 wd, uid, pipe1, pipe2, pipe3, pipe4, QUERY(err),
-			 QUERY(kill_call_out), QUERY(setgroups));
+			 QUERY(kill_call_out),
+#if constant(Process.create_process)
+			 QUERY(setgroups)
+#else /* !constant(Process.create_process) */
+			 /* Ignored anyway */
+			 0
+#endif /* constant(Process.create_process) */
+	  );
   
   if(id->my_fd && id->data) {
     sender(pipe4, id->data);
