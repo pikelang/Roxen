@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.830 2003/04/05 22:15:36 anders Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.831 2003/04/14 16:29:59 wellhard Exp $";
 
 //! @appears roxen
 //!
@@ -3403,6 +3403,8 @@ class ArgCache
     QUERY( "INSERT INTO "+name+" (contents,md5,atime,index_id) VALUES "
 	   "(%s,%s,UNIX_TIMESTAMP(),"+index_id_value+")", long_key, md );
     int id = (int)db->master_sql->insert_id();
+    if(!id)
+      error("ArgCache::create_key() insert_id returned 0.\n");
 #ifdef REPLICATE_DEBUG
     werror("Create new local key: id: %d, index_id: %d.\n", id, index_id);
 #endif
@@ -3580,6 +3582,7 @@ class ArgCache
   void delete( string id )
   //! Remove the data element stored under the key 'id'.
   {
+    LOCK();
     (plugins->delete-({0}))( id );
     m_delete( cache, id );
     
@@ -3675,6 +3678,7 @@ class ArgCache
     array i = decode_id( id );
     if( !i )
       error("Requesting unknown key\n");
+    LOCK();
     QUERY("UPDATE "+name+" SET atime='"+time(1)+"' WHERE id="+i[0]);
     QUERY("UPDATE "+name+" SET atime='"+time(1)+"' WHERE id="+i[1]);
   }
