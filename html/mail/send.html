@@ -1,2 +1,11 @@
 <mail-verify-login>
+  <formoutput><send-mail-by-id mail=#mail_id#></formoutput>
+  <set variable=move_mail_to_sent.x value=1>
+  <mail-set-flag name=am_sent value=1>
+  <process-move-actions>
+
+  <set variable=mailbox_id eval='<mail-mailboxid mailbox=sent>'>
+  <formoutput>
+   <redirect to="./?mailbox_id=#mailbox_id#&listall=1">
+  </formoutput>
 </mail-verify-login>
