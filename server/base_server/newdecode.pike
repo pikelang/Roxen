@@ -7,7 +7,7 @@
 #endif
 #endif
 #ifndef IN_INSTALL
-// string cvs_version = "$Id: newdecode.pike,v 1.12 1999/04/22 09:24:11 per Exp $";
+// string cvs_version = "$Id: newdecode.pike,v 1.13 1999/11/05 07:59:13 per Exp $";
 #endif
 
 #include <roxen.h>
@@ -82,15 +82,8 @@ mapping decode_config_file(string s)
 {
   mapping res = ([ ]);
   if(!sizeof(s)) return res; // Empty file..
-  switch(s[0])
-  {
-   case '6': // Newer ((somewhat)readable) format.    
-     parse_html(s, ([]), ([ "region":decode_config_region ]), res);
-     return res;
-   default:
-     werror("Unknown configuration file format '"+s[0..0]+"'\n");
-     werror("Ignoring file.\n");
-  }
+  parse_html(s, ([]), ([ "region":decode_config_region ]), res);
+  return res;
 }
 
 private string encode_mixed(mixed from, object c)
@@ -176,7 +169,7 @@ string encode_config_region(mapping m, string reg, object c)
       doc=("\n#   "+trim_ws(replace(sprintf("%*-=s", 74,trim_ws(doc)), "\n", "\n#    ")));
     else
       doc = "";
-    res += " <var name='"+v+"'> "+doc+"  "+encode_mixed(m[v],c)+"</var>\n\n";
+    res += " <var name='"+v+"'> "+doc+"  "+encode_mixed(m[v],c)+"\n </var>\n";
   }
   return res;
 }
@@ -184,8 +177,7 @@ string encode_config_region(mapping m, string reg, object c)
 string encode_regions(mapping r, object c)
 {
   string v;
-  string res = "6 <- Do not remove this number!   It's the "
-    "Roxen Challenger save file format identifier -->\n\n";
+  string res = "";
   foreach(sort(indices(r)), v)
     res += "<region name='"+v+"'>\n" + encode_config_region(r[v],v,c)
            + "</region>\n\n";
