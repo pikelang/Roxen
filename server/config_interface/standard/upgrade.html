@@ -11,16 +11,76 @@
 
 
 
+<if not variable=category>
+  <cset variable=category></cset>
+</if>
 
 
+<comment><if variable="category is "></comment>
+
+<h1>Roxen Upgrade System</h1>
 Welcome to the upgrade system.
+This information was last synchronized with the main server at FIXME.
 
 
-<package-list type="main">
+<table cellpadding=10 cellspacing=20>
+  <tr valign=top>
+    <td>
+      <cv-obox title="Security fixes">
+        <rul>
+          <rli>Serious remote vulnerability fixed. <a href=".">[Details...]</a></rli>
+          <rli>Graphical Text DoS vulnerability fixed <a href=".">[Details...]</a></rli>
+        </rul>
+        <div align=right>
+          <a href="upgrade.html?category=security">[More..]</a>
+        </div>
+      </cv-obox>
+    </td>
+    <td>
+      <cv-obox title="Bug fixes">
+        Currently no packages in this category<p>
+        <div align=right>
+          <a href="upgrade.html?category=bugfixes">[More..]</a>
+        </div>
+      </cv-obox>
+    </td>
+  </tr>
+  <tr  valign=top>
+    <td>
+      <cv-obox title="Idonex modules">
+        Currently no packages in this category<p>
+        <div align=right>
+          <a href="upgrade.html?category=idonex">[More..]</a>
+        </div>
+      </cv-obox>
+    </td>
+    <td>
+      <cv-obox title="3rd party modules">
+        Currently no packages in this category<p>
+        <div align=right>
+          <a href="upgrade.html?category=3dpart">[More..]</a>
+        </div>
+      </cv-obox>
+    </td>
+  
+  </tr>
+</table>
+
+</if>
+<else>
+
+
+</else>
+
+
+
+
+
+<package-list type=&category;>
 
 </package-list>
 
-This information was last synchronized with the main server at FIXME.
+
 
 
 
