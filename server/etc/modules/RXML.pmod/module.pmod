@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.132 2001/02/11 15:28:07 mast Exp $
+//! $Id: module.pmod,v 1.133 2001/02/17 17:57:34 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -1632,7 +1632,8 @@ constant FLAG_PROC_INSTR	= 0x00000010;
 constant FLAG_EMPTY_ELEMENT	= 0x00000001;
 //! If set, the tag does not use any content. E.g. with an HTML parser
 //! this defines whether the tag is a container or not, and in XML
-//! parsing it simply causes the content (if any) to be thrown away.
+//! parsing the parser will signal an error if the tag have anything
+//! but "" as content.
 
 constant FLAG_COMPAT_PARSE	= 0x00000002;
 //! Makes the PXml parser parse the tag in an HTML compatible way: If
