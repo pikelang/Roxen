@@ -2,7 +2,7 @@
 //
 // Created 2002-02-18 by Marcus Wellhardh.
 //
-// $Id: License.pmod,v 1.18 2002/06/05 10:18:07 nilsson Exp $
+// $Id: License.pmod,v 1.19 2002/06/05 20:14:18 nilsson Exp $
 
 #if constant(roxen)
 #define INSIDE_ROXEN
@@ -60,7 +60,7 @@ Key|mapping get_license(string license_dir, string filename)
 array(Key|mapping) get_licenses(string license_dir)
 {
   array(Key|mapping) licenses = ({});
-  foreach(glob("*.lic", get_dir(license_dir)), string filename)
+  foreach(glob("*.lic", get_dir(license_dir)||({}) ), string filename)
   {
     object(Key)|mapping key;
     if(mixed err = catch { key = get_license(license_dir, filename); } )
