@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.108 2000/03/31 16:45:03 leif Exp $
+# $Id: start,v 1.109 2000/04/01 12:26:30 grubba Exp $
 
 pre="`echo \" $$             \" | sed -e 's/\(.........\)\(.*\)/\1/g'` :"
 
@@ -19,6 +19,11 @@ LOCALDIR=../local/
 if test -d $LOCALDIR/.; then
   LOCALDIR=`cd $LOCALDIR; pwd`
 else :; fi
+
+if test -d $VARDIR/.; then :; else
+  echo "Creating directory $VARDIR/."
+  mkdir $VARDIR || exit 1
+fi
 
 roxen_version() {
    VERSION="`sed <etc/include/version.h -e '/__roxen_version__/s/[^0-9]*\([0-9][0-9]*\.[0-9][0-9]*\)[^0-9]*/\1/p' -n | head -1`"
