@@ -10,7 +10,7 @@
 //  o More stuff in the emit variables
 //
 
-constant cvs_version = "$Id: directories.pike,v 1.79 2000/09/10 16:56:20 nilsson Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.80 2000/09/14 19:26:15 kuntri Exp $";
 constant thread_safe = 1;
 
 #include <stat.h>
@@ -195,10 +195,10 @@ local static array(mapping) get_directory_dataset( mapping args, RequestID id )
       "mode":(Roxen.decode_mode( st[ ST_MODE ] )/"<tt>")[-1]-"</tt>",
     ]);
 
-    if( args->timeformat )
+    if( args->strftime )
     {
-      m["mtime"] = Roxen.strftime( args->timeformat, st[ ST_MTIME ] );
-      m["atime"] = Roxen.strftime( args->timeformat, st[ ST_ATIME ] );
+      m["mtime"] = Roxen.strftime( args->strftime, st[ ST_MTIME ] );
+      m["atime"] = Roxen.strftime( args->strftime, st[ ST_ATIME ] );
     }  else {
       m->mtime = m["mtime-iso"];
       m->atime = m["atime-iso"];
@@ -476,22 +476,61 @@ constant tagdoc=([
 	    }),
 
 
-"emit#directory":({ #"<desc plugin><short>This plugin is used to generate directory listings.</short> The directory module must be added to use these entities.</desc>
+"emit#directory":({ #"<desc plugin><short>
+ This plugin is used to generate directory listings.</short> The
+ directory module must be added to use these entities.</desc>
 
 <attr name='directory' value='path'>
-
+ Apply the listing to this directory.
 </attr>
 
-<attr name='options' value='option1,[option2,...]'>
+<attr name='options' value='(real-file,thumbnail,imagesize)'>
+ Use these options to customize the directory listings. These argument
+ have been made options due to them demanding a lot of raw computing
+ power, since they involve image manipulation and other demanding
+ tasks. These options can be combined.
 
+<xtable>
+<row><c>real-file</c><c>Makes it possible to show the absolute
+location of the file including the filename from an 'outside Roxen' view.</c></row>
+<row><c>thumbnail</c><c>Makes it possible to use image thumbnails in a
+directory listing. Note: Remember that some imageformats needs heavy
+computations to generate thumbnails. <ext>tiff</ext> for instance
+needs to unpack its image to be able to resolve the image's height and
+width. </c></row> <row><c>imagesize</c><c>Makes it able to show the
+image's height and width in a directory listing. Note: Remember that
+some imageformats needs heavy computations to generate thumbnails.
+<ext>tiff</ext> for instance needs to unpack its image to be able to
+resolve the image's height and width.</c></row>
+</xtable>
 </attr>
 
-<attr name='timeformat' value=''>
+<attr name='thumbnail-size' value='number'>
+ Sets the size of the thumbnail. Defaultsize is 60 pixels. The size is
+ set in proportion to the image's longest side, e.g. if the height of
+ the image is longer than it's width, then the thumbnail will be 60
+ pixels high. The shortest side will be shown in proportion to the
+ longest side. This attribute can only be used together with the
+ <att>option=\"thumbnail\"</att> attribute.
+</attr>
 
+<attr name='thumbnail-format' value='imageformat'>
+ Set the output format for the thumbnail. Default is <ext>png</ext>.
+ All imageformats that the <ref type='tag'><tag>cimg</tag></ref> tag
+ handles can be used to produce thumbnails.This attribute can only be
+ used together with the <att>option=\"thumbnail\"</att> attribute.
+</attr>
+
+<attr name='strftime' value='strftime string' default='%Y-%m-%d'>
+ Format the date according to this string. Default is the isotime
+ format (%Y-%m-%d), which will return (Year(four characters)-month(two
+ characters)-day(two characters)), e.g. 2000-11-22. See the attribute
+ <att>strftime</att> in the <tag>date</tag> tag for a full listing of
+ available formats.
 </attr>
 
 <attr name='glob' value='glob-pattern1[,glob-pattern2,...]'>
- Only show files that matches the glob-pattern.
+ Only show files matching the glob-pattern.
 </attr>
 
 <attr name='type-glob' value='glob-pattern1[,glob-pattern2,...]'>
@@ -499,32 +538,105 @@ constant tagdoc=([
 </attr>
 
 <attr name='sort-order' value='alpha|dwim|modified|size|type' default='dwim'>
- Sort the files by this method.
+ Sort the files and directories by this method.
+<table>
+<tr><td>alpha</td><td>Sort files and directories alphabetically.</td></tr>
+<tr><td>dwim</td><td>Sort files and directories by \"Do What I (want) Method\". In many methods numeriacal sorts fail as the number '10' often appears before '2'. This method sorts numerical characters first then alphabetically, e.g. 1foo.html, 2foo.html, 10foo.html, foo1.html, foo2.html, foo10.html.</td></tr>
+<tr><td>modified</td><td>Sort files by modification date.</td></tr>
+<tr><td>size</td><td>Sort files by size.</td></tr>
+<tr><td>type</td><td>Sort files by content-type.</td></tr>
+</table>
 </attr>
 
 <attr name='sort-reversed'>
  Reverse the sort order.
 </attr>",
 
-(["&_.atime;":#"<desc ent></desc>",
-"&_.atime-iso;":#"<desc ent></desc>",
-"&_.atime-unix;":#"<desc ent></desc>",
-"&_.dirname;":#"<desc ent></desc>",
-"&_.filename;":#"<desc ent></desc>",
-"&_.icon;":#"<desc ent></desc>",
-"&_.mode;":#"<desc ent></desc>",
-"&_.mode-int;":#"<desc ent></desc>",
-"&_.mtime;":#"<desc ent></desc>",
-"&_.mtime-iso;":#"<desc ent></desc>",
-"&_.mtime-unix;":#"<desc ent></desc>",
-"&_.name;":#"<desc ent></desc>",
-"&_.path;":#"<desc ent></desc>",
-"&_.size;":#"<desc ent></desc>",
-"&_.size-int;":#"<desc ent></desc>",
-"&_.type;":#"<desc ent></desc>",
-"&_.thumbnail;":#"<desc ent></desc>",
-"&_.x-size;":#"<desc ent></desc>",
-"&_.y-size;":#"<desc ent></desc>",
+([
+"&_.atime;":#"<desc ent>
+  Returns the date when the file was last accessed.
+</desc>",
+
+"&_.atime-iso;":#"<desc ent>
+ Returns the date when the file was last accessed. Uses isotime
+ (%Y-%m-%d).
+</desc>",
+
+"&_.atime-unix;":#"<desc ent>
+ Returns the date when the file was last accessed. Uses unixtime.
+</desc>",
+
+"&_.dirname;":#"<desc ent>
+ Returns the directoryname.
+</desc>",
+
+"&_.filename;":#"<desc ent>
+ Returns the filename.
+</desc>",
+
+"&_.icon;":#"<desc ent>
+ Returns the internal Roxen name of the icon representating the
+ directory or the file's content-type, e.g. internal-gopher-menu for a
+ directory-folder or internal-gopher-text for a HTML-file.
+</desc>",
+
+"&_.mode;":#"<desc ent>
+ Returns file permission rights represented binary, e.g. \"r-xr-xr-x\".
+</desc>",
+
+"&_.mode-int;":#"<desc ent>
+ Returns file permission rights represented by integers. When encoded to
+ binary this represents what is shown when using the Unix command \"ls
+ -l\" or as shown using <ent>_.mode</ent>, e.g. \"16749\".
+</desc>",
+
+"&_.mtime;":#"<desc ent>
+ Returns the date when the file was last modified.
+</desc>",
+
+"&_.mtime-iso;":#"<desc ent>
+ Returns the date when the file was last modified. Uses isotime (%Y-%m-%d).
+</desc>",
+
+"&_.mtime-unix;":#"<desc ent>
+ Returns the date when the file was last modified. Uses unixtime.
+</desc>",
+
+"&_.name;":#"<desc ent>
+ Returns the name of the file or directory.
+</desc>",
+
+"&_.path;":#"<desc ent>
+ Returns the path to the file or directory.
+</desc>",
+
+"&_.size;":#"<desc ent>
+ Returns a file's size in kb(kilobytes).
+</desc>",
+
+"&_.size-int;":#"<desc ent>
+ Returns a file's size in bytes. Directories get the size \"-2\".
+</desc>",
+
+"&_.type;":#"<desc ent>
+ Returns the file's content-type.
+</desc>",
+
+"&_.thumbnail;":#"<desc ent>
+ Returns the image associated with the file's content-type or
+ directory. Only available when <att>option=\"thumbnail\"</att> is
+ used.
+</desc>",
+
+"&_.x-size;":#"<desc ent>
+ Returns the width of the image. Only available when
+ <att>option=\"imagesize\"</att> is used.
+</desc>",
+
+"&_.y-size;":#"<desc ent>
+ Returns the height of the image. Only available when
+ <att>option=\"imagesize\"</att> is used.
+</desc>",
 ])
 		 })
 ]);
