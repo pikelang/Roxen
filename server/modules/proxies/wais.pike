@@ -4,7 +4,7 @@
 // seem that I have forgotten who wrote it.
 
 
-string cvs_version = "$Id: wais.pike,v 1.29 2003/01/14 20:37:56 agehall Exp $";
+string cvs_version = "$Id: wais.pike,v 1.30 2004/05/22 17:25:03 _cvs_stephen Exp $";
 
 #include <config.h>
 #include <module.h>
@@ -857,7 +857,7 @@ string display_search_response(mapping response,string database,
 void my_pipe_done(array (object) a)
 {
   if(a[0])
-    global::my_pipe_done(a[0]);
+    ::my_pipe_done(a[0]);
 }
 
 void write_to_client_and_cache(object client, string data, string key)
