@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-string cvs_version = "$Id: http.pike,v 1.31 1997/07/06 16:00:56 grubba Exp $";
+string cvs_version = "$Id: http.pike,v 1.32 1997/07/19 23:26:24 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -171,13 +171,17 @@ private int really_set_config(array mod_config)
     if(sscanf(replace(raw_url,({"%3c","%3e","%3C","%3E" }),
 		      ({"<",">","<",">"})),"/<%*s>/%s",url)!=2)
       url = "/";
-  
-    url = base + url;
 
-    my_fd->write(prot+" 302 Config in cookie!\r\n"
+    if ((base[-1] == '/') && (url[0] == '/')) {
+      url = base + url[1..];
+    } else {
+      url = base + url;
+    }
+
+    my_fd->write(prot + " 302 Config in cookie!\r\n"
 		 "Set-Cookie: "
-		 +http_roxen_config_cookie(indices(config)*",")+"\r\n"
-		 "Location: "+url+"\r\n"
+		  + http_roxen_config_cookie(indices(config) * ",") + "\r\n"
+		 "Location: " + url + "\r\n"
 		 "Content-Type: text/html\r\n"
 		 "Content-Length: 0\r\n\r\n");
   } else {
@@ -191,15 +195,27 @@ private int really_set_config(array mod_config)
 	else
 	  prestate[m]=1;
       
-    sscanf(replace(raw_url, ({ "%3c", "%3e", "%3C", "%3E" }), 
-		   ({ "<", ">", "<", ">" })),   "/<%*s>/%s", url);
-    sscanf(replace(url, ({ "%28", "%29" }), ({ "(", ")" })),"/(%*s)/%s", url);
+    if (sscanf(replace(raw_url, ({ "%3c", "%3e", "%3C", "%3E" }), 
+		       ({ "<", ">", "<", ">" })),   "/<%*s>/%s", url) == 2) {
+      url = "/" + url;
+    }
+    if (sscanf(replace(url, ({ "%28", "%29" }), ({ "(", ")" })),
+	       "/(%*s)/%s", url) == 2) {
+      url = "/" + url;
+    }
 
-    my_fd->write(prot+" 302 Config In Prestate!\r\n"
-		 +"\r\nLocation: "+conf->query("MyWorldLocation")+
-		 add_pre_state(url, prestate)+"\r\n"
-		 +"Content-Type: text/html\r\n"
-		 +"Content-Length: 0\r\n\r\n");
+    url = add_pre_state(url, prestate);
+
+    if (base[-1] == '/') {
+      url = base + url[1..];
+    } else {
+      url = base + url;
+    }
+
+    my_fd->write(prot + " 302 Config In Prestate!\r\n"
+		 "\r\nLocation: " + url + "\r\n"
+		 "Content-Type: text/html\r\n"
+		 "Content-Length: 0\r\n\r\n");
   }
   return -2;
 }
