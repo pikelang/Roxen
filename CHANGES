@@ -7,6 +7,12 @@ o FTP data connections are now opened on the same IP as the command
 o Fixed an old bug in protocols/ssl3.pike. It should no longer generate
   an internal error when accessing a config-interface with ssl3 using http.
 
+o host lookup now doesn't need any external processes to work. Protocols.DNS
+  is used instead.
+
+o The folder list module now works on pages with query variables
+  (foo.html?bar=baz&gaz=zonk). The non-fl related variables will be
+  kept when unfolding / folding.
 
 Changes since Roxen Challenger 1.2 alpha 14
 -----------------------------------------------
