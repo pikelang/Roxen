@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.202 2000/09/25 07:03:13 per Exp $
+// $Id: roxenlib.pike,v 1.203 2000/10/02 19:43:20 nilsson Exp $
 
 //#pragma strict_types
 
@@ -615,11 +615,7 @@ string make_tag_attributes(mapping(string:string) in)
 {
   if(!in || !sizeof(in)) return "";
   string res="";
-#ifdef MODULE_DEBUG
-  foreach(sort(indices(in)), string a)
-#else
   foreach(indices(in), string a)
-#endif
     res+=" "+a+"=\""+html_encode_string((string)in[a])+"\"";
   return res;
 }
