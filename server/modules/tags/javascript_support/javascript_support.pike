@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.45 2001/10/09 12:22:20 jhs Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.46 2001/11/07 16:57:23 anders Exp $";
 
 #include <module.h>
 inherit "module";
@@ -327,7 +327,7 @@ class TagJSInclude {
 	 id->client_var && (float)(id->client_var->javascript) < 1.2)
 	result = "<!-- Client do not support Javascript 1.2 -->"; // Throw an run_error instead?
       else
-	result = "<script language=\"javascript\" src=\"" +
+	result = "<script charset=\"iso-8859-1\" language=\"javascript\" src=\"" +
 	  query_absolute_internal_location(id) + args->file + "\"></script>";
       return 0;
     }
