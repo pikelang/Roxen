@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<locale version="1.0"/>
+<project>roxen_start</project>
+<language>Swedish</language>
+<file>../base_server/roxen.pike</file>
+<file>../base_server/configuration.pike</file>
+<file>../modules/configuration/update.pike</file>
+<added id="1"/>
+
+<!-- [1] "Starting one thread to handle requests.
+" -->
+<t id="1">Startar en tråd för att hantera anrop.
+</t>
+
+<!-- [2] "Starting %d threads to handle requests.
+" -->
+<t id="2">Startar %d trådar för att hantera anrop.
+</t>
+
+<!-- [3] "Registered %s for %s
+" -->
+<t id="3">Registrerade %s åt %s
+</t>
+
+<!-- [4] "All modules for %s enabled in %3.1f seconds" -->
+<t id="4">Alla moduler till %s aktiverade på %3.1f sekunder</t>
+
+<!-- [5] "Update: Found new packages: %s
+" -->
+<t id="5">Uppdatering: Nya paket: %s
+</t>
+
+<!-- [6] "Update: No new packages found.
+" -->
+<t id="6">Uppdatering: Inga nya paket.
+</t>
+
+
+<!--
+*
+*  The 'roxen_start' project is intended only for messages that are
+*  printed to at least the event log during a normal server start.
+*  It should be kept small to avoid overhead.
+*
+*  Strings to report_debug() should not be translated.
+*  Admin Interface-related messages belong in 'roxen_config'
+*  Errormessages and messages caused by other events should 
+*  be in 'roxen_message'.
+*
+-->
+

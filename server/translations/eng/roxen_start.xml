@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<locale version="1.0"/>
+<project>roxen_start</project>
+<language>English</language>
+<dumped>964145246</dumped>
+<file>../base_server/roxen.pike</file>
+<file>../base_server/configuration.pike</file>
+<file>../modules/configuration/update.pike</file>
+<added id="1"/>
+
+<!-- [1] "Starting one thread to handle requests.
+" -->
+<t id="1"></t>
+
+<!-- [2] "Starting %d threads to handle requests.
+" -->
+<t id="2"></t>
+
+<!-- [3] "Registered %s for %s
+" -->
+<t id="3"></t>
+
+<!-- [5] "Update: Found new packages: %s
+" -->
+<t id="5"></t>
+
+<!-- [6] "Update: No new packages found.
+" -->
+<t id="6"></t>
+
+
+<!--
+*
+*  The 'roxen_start' project is intended only for messages that are
+*  printed to at least the event log during a normal server start.
+*  It should be kept small to avoid overhead.
+*
+*  Strings to report_debug() should not be translated.
+*  Admin Interface-related messages belong in 'roxen_config'
+*  Errormessages and messages caused by other events should 
+*  be in 'roxen_message'.
+*
+-->
+
+<!-- [4] "All modules for %s enabled in %3.1f seconds" -->
+<t id="4"></t>
