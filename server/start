@@ -170,7 +170,7 @@ done
     
 echo $$: Not Reached "famous last words"
 
-) < /dev/null > $LOGDIR/debug/start_$FILES.output 2>&1&
+) < /dev/null > $LOGDIR/debug/start_$FILES.output 2>&1 &
 cat << oo
 Using configuration from $DIR, storing the debug log in $LOGDIR/debug/$FILES.1
 You can use the configuration interface in the server to get debug info.
