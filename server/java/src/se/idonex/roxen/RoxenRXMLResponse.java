@@ -1,9 +1,21 @@
 /*
- * $Id: RoxenRXMLResponse.java,v 1.1 2000/01/05 18:10:55 marcus Exp $
+ * $Id: RoxenRXMLResponse.java,v 1.2 2000/02/06 18:44:35 marcus Exp $
  *
  */
 
 package se.idonex.roxen;
+
+/**
+ * A class of responses using an RXML parsed string as
+ * their source.
+ * Use the methods in the {@link HTTP} class to create
+ * objects of this class.
+ *
+ * @see RoxenLib
+ *
+ * @version	$Version$
+ * @author	marcus
+ */
 
 public class RoxenRXMLResponse extends RoxenStringResponse {
 

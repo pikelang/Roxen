@@ -1,5 +1,5 @@
 /*
- * $Id: RoxenRequest.java,v 1.4 2000/02/03 22:55:17 marcus Exp $
+ * $Id: RoxenRequest.java,v 1.5 2000/02/06 18:44:35 marcus Exp $
  *
  */
 
@@ -10,11 +10,50 @@ import java.util.Map;
 import java.util.HashSet;
 import java.util.TreeMap;
 
+/**
+ * A class representing requests from clients.
+ *
+ * @version	$Version$
+ * @author	marcus
+ */
+
 public class RoxenRequest {
 
+  /** The virtual server which is handling this request */
   public final RoxenConfiguration conf;
-  public final String rawURL, prot, clientprot, method;
-  public final String realfile, virtfile, raw, query, notQuery, remoteaddr;
+
+  /** The requested URL path, exactly as sent by the client */
+  public final String rawURL;
+
+  /** The protocol used when talking to the client,
+   *  such as "HTTP/1.1" or "FTP"                   */
+  public final String prot;
+
+  /** The protocol actually requested by the client */
+  public final String clientprot;
+
+  /** The method of the request, such as "GET" or "POST" */
+  public final String method;
+
+  /** The filename of the file in the host filesystem used to
+   *  satisfy this request, if any                            */
+  public final String realfile;
+
+  /** The pathname of the resource in the namespace of
+   *  the virtual server used to satisfy this request, if any */
+  public final String virtfile;
+
+  /** The exact text of the client's request, if available */
+  public final String raw;
+
+  /** The query part of the requested URL path, if any */
+  public final String query;
+
+  /** The requested URL path, without any query part */
+  public final String notQuery;
+
+  /** The IP address of the client system */
+  public final String remoteaddr;
 
   private Map _variables, _requestHeaders;
   private Set _supports, _pragma;
@@ -26,6 +65,12 @@ public class RoxenRequest {
   private native Set getSupports();
   private native Set getPragma();
 
+  /**
+   * Returns the configuration object of the virtual server by which
+   * this request is handled
+   *
+   * @return      the configuration
+   */
   public final RoxenConfiguration configuration()
   {
     return conf;
