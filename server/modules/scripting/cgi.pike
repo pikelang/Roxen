@@ -9,7 +9,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: cgi.pike,v 1.130 1999/07/07 20:29:47 grubba Exp $";
+constant cvs_version = "$Id: cgi.pike,v 1.131 1999/08/11 06:51:27 peter Exp $";
 
 class Shuffle
 {
@@ -690,8 +690,32 @@ class CGIScript
 #if UNIX
     if(!getuid())
     {
-      options->uid = uid;
-      options->gid = gid;
+      if (uid >= 0) {
+	options->uid = uid;
+      } else {
+	// Some OS's (HPUX) have negative uids in /etc/passwd,
+	// but don't like them in setuid() et al.
+	// Remap them to the old 16bit uids.
+	options->uid = 0xffff & uid;
+	
+	if (options->uid <= 10) {
+	  // Paranoia
+	  options->uid = 65534;
+	}
+      }
+      if (gid >= 0) {
+	options->gid = gid;
+      } else {
+	// Some OS's (HPUX) have negative gids in /etc/passwd,
+	// but don't like them in setgid() et al.
+	// Remap them to the old 16bit gids.
+	options->gid = 0xffff & gid;
+	
+	if (options->gid <= 10) {
+	  // Paranoia
+	  options->gid = 65534;
+	}
+      }
       options->setgroups = extra_gids;
       if( !uid && QUERY(warn_root_cgi) )
         report_warning( "CGI: Running "+command+" as root (as per request)" );
