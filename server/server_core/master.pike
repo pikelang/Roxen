@@ -2,10 +2,10 @@
 // ChiliMoon's customized master.
 //
 
-object mm=(object)"/master";
+object mm=master();
 inherit "/master": master;
 
-constant cvs_version = "$Id: master.pike,v 1.139 2004/05/29 23:56:37 _cvs_stephen Exp $";
+constant cvs_version = "$Id: master.pike,v 1.140 2004/06/03 21:06:51 mani Exp $";
 
 #define Stat _static_modules.files.Stat
 
