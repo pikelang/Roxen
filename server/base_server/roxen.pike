@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.331 1999/10/08 17:19:52 per Exp $
+ * $Id: roxen.pike,v 1.332 1999/10/08 18:45:07 grubba Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.331 1999/10/08 17:19:52 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.332 1999/10/08 18:45:07 grubba Exp $";
 
 object backend_thread;
 object argcache;
@@ -780,6 +780,15 @@ class Protocol
     }
     // Ouch.
     return values( urls )[0]->conf;
+  }
+
+  void set_option_default(string option, mixed value)
+  {
+    mapping all_options = QUERY(port_options);
+    all_options[""][option] = value;
+
+    // FIXME: Mark as changed?
+    // FIXME: Save?
   }
 
   mixed query_option(string option)
