@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.329 2001/12/03 17:26:54 anders Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.330 2001/12/03 17:37:45 anders Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -5383,9 +5383,9 @@ using the pre tag.
  the precision.</p>
 
 <xtable>
-<row><c><p><i>type=discordian</i></p></c><c><ex><date date='' type='discordian'/> </ex></c></row>
+<row><c><p><i>type=discordian</i></p></c><c><ex><date date='' type='discordian'/></ex></c></row>
 <row><c><p><i>type=iso</i></p></c><c><ex><date date='' type='iso'/></ex></c></row>
-<row><c><i>type=number</i></p></c><c><ex><date date='' type='number'/></ex></c></row>
+<row><c><p><i>type=number</i></p></c><c><ex><date date='' type='number'/></ex></c></row>
 <row><c><p><i>type=ordered</i></p></c><c><ex><date date='' type='ordered'/></ex></c></row>
 <row><c><p><i>type=stardate</i></p></c><c><ex><date date='' type='stardate'/></ex></c></row>
 <row><c><p><i>type=string</i></p></c><c><ex><date date='' type='string'/></ex></c></row>
