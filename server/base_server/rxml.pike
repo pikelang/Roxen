@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.59 2000/01/10 19:27:47 nilsson Exp $
+ * $Id: rxml.pike,v 1.60 2000/01/10 21:52:41 mast Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -33,8 +33,8 @@ string rxml_error(string tag, string error, RequestID id) {
 // these arguments. If the name is the same as the current tag, the
 // overridden tag function is called. If there's no overridden
 // function, the tag is generated in the output. Any argument may be
-// left out to default to its value in the current tag. ({1, 0, 0})
-// may be shortened to ({1}).
+// left out to default to its value in the current tag. ({1, 0, 0}) or
+// ({1, 0, 0, 0}) may be shortened to ({1}).
 //
 // Note that there's no other way to handle tag overriding -- the page
 // is no longer parsed multiple times.
@@ -182,12 +182,18 @@ array(string)|string call_container(RXML.PHtml parser, mapping args,
   return result;
 }
 
-
 string do_parse(string to_parse, RequestID id,
                 Stdio.File file, mapping defines)
 {
-  RXML.PHtml parser = rxml_tag_set (RXML.t_text (RXML.PHtmlCompat), id);
+  RXML.PHtml parent_parser = id->misc->_parser;	// Don't count on that this exists.
+  RXML.PHtml parser;
+
+  if (parent_parser)
+    parser = RXML.t_text (RXML.PHtmlCompat)->get_parser (parent_parser->context);
+  else
+    parser = rxml_tag_set (RXML.t_text (RXML.PHtmlCompat), id);
   parser->set_extra (id, file, defines);
+  id->misc->_parser = parser;
 
 #ifdef TAGMAP_COMPAT
   if (id->misc->_tags) {
@@ -202,8 +208,20 @@ string do_parse(string to_parse, RequestID id,
 
   if(!id->misc->_ifs) id->misc->_ifs = copy_value(real_if_callers);
 
-  parser->write_end (to_parse);
-  return parser->eval();
+  if (mixed err = catch {
+    if (parent_parser)
+      parser->finish (to_parse);
+    else
+      parser->write_end (to_parse);
+    id->misc->_parser = parent_parser;
+    return parser->eval();
+  }) {
+    id->misc->_parser = parent_parser;
+    if (objectp (err) && err->thrown_at_unwind)
+      error ("Can't handle RXML parser unwinding in "
+	     "compatibility mode (error=%O).\n", err);
+    else throw (err);
+  }
 }
 
 void build_callers()
@@ -567,6 +585,7 @@ string use_file_doc( string f, string data, RequestID nid, Stdio.File id )
   nid->misc->_containers = 0;
   nid->misc->defaults = ([]);
   nid->misc->_ifs = ([]);
+  nid->misc->_parser = 0;
   return res;
 }
 
@@ -582,7 +601,8 @@ string|array tag_use(string tag, mapping m, string c, RequestID id)
     nid->misc->_tags = 0;                       \
     nid->misc->_containers = 0;                 \
     nid->misc->defaults = ([]);                 \
-    nid->misc->_ifs = ([]);
+    nid->misc->_ifs = ([]);                     \
+    nid->misc->_parser = 0;
 
   if(m->packageinfo)
   {
