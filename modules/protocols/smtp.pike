@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.44 1998/09/18 18:57:53 grubba Exp $
+ * $Id: smtp.pike,v 1.45 1998/09/18 18:59:12 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.44 1998/09/18 18:57:53 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.45 1998/09/18 18:59:12 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -122,9 +122,9 @@ static class do_multi_async
     callback = cb;
     callback_args = cb_args;
 
-    foreach(func, function f) {
-      f(@args, low_callback);
-    }
+    // This is an interresting way to call all the functions in the
+    // array with the same arguments.
+    func(@args, low_callback);
   }
 };
 
