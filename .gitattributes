@@ -53,7 +53,6 @@ urw_itc_avant_garde-demi-r binary
 /pike-roxen.in foreign_ident
 /rxml_packages/gtext_headers foreign_ident
 /server/base_server/cache.pike foreign_ident
-/server/base_server/color.pike foreign_ident
 /server/base_server/config/builders.pike foreign_ident
 /server/base_server/config/describers.pike foreign_ident
 /server/base_server/config/draw_things.pike foreign_ident
