@@ -295,15 +295,15 @@ class ConfigurationSettings
                                     LOCALE(327,"Theme"),
                                     LOCALE(343,"The theme to use") ) );
 
-    defvar( "form-font-size", -1, LOCALE(0,"Form font size"),
+    defvar( "form-font-size", -1, LOCALE(167,"Form font size"),
 	    TYPE_INT_LIST,
-	    LOCALE(0,"The fontsize of the variables in the "
+	    LOCALE(178,"The fontsize of the variables in the "
 		   "configuration interface"),
 	    ({ -2, -1, 0, 1, 2, }) );
 
-    defvar( "docs-font-size", -1, LOCALE(0,"Documentation font size"),
+    defvar( "docs-font-size", -1, LOCALE(179,"Documentation font size"),
 	    TYPE_INT_LIST,
-	    LOCALE(0,"The fontsize of the documentation in the "
+	    LOCALE(193,"The fontsize of the documentation in the "
 		   "configuration interface"),
 	    ({ -2, -1, 0, 1, 2, }) );
 

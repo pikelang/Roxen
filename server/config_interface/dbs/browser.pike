@@ -37,7 +37,7 @@ string format_decode_value( string what )
   {
     mixed q = decode_value( what );
     if( objectp( q ) || programp( q ) )
-      return Roxen.http_encode_string("<"+_(0,"bytecode data")+">");
+      return Roxen.http_encode_string("<"+_(233,"bytecode data")+">");
     return trim_comments( sprintf("%O", q ) );
   };
   return what;
@@ -107,7 +107,7 @@ mapping|string parse( RequestID id )
       res += "<tr>\n";
       res += "<td><font size=-1><b>"+r->Field+"</b></font></td>\n";
       res += "<td><font size=-1>"+r->Type+"</font></td>\n";
-      res += "<td><font size=-1>"+(strlen(r->Key)?_(0,"Key"):"")+"</font></td>\n";
+      res += "<td><font size=-1>"+(strlen(r->Key)?_(373,"Key"):"")+"</font></td>\n";
       res += "<td><font size=-1>"+r->Extra+"</font></td>\n";
       res += "</tr>\n";
     }
@@ -126,8 +126,8 @@ mapping|string parse( RequestID id )
     if( tbi )
     {
       res += "<td align=right> <font size=-1>"+
-	tbi->Rows+" "+_(0,"rows")+"</font></td><td align=right><font size=-1>"+
-	( (int)tbi->Data_length+(int)tbi->Index_length)/1024+_(0,"KiB")+
+	tbi->Rows+" "+_(374,"rows")+"</font></td><td align=right><font size=-1>"+
+	( (int)tbi->Data_length+(int)tbi->Index_length)/1024+_(375,"KiB")+
 	"</font></td>";
     }
     res += "</tr>\n";
@@ -183,13 +183,13 @@ mapping|string parse( RequestID id )
     res +=
       "<tr><td align=right>"+SEL("name",1)+"</td>"
       "<td><b><a href='browser.pike?db=&form.db:http;&sort=name'>"+
-      _(0,"Name")+
+      _(376,"Name")+
       "</a></b></td>\n"
       "<td align=right><b><a href='browser.pike?db=&form.db:http;&sort=rows'>"+
-      SEL("rows",0)+String.capitalize(_(0,"rows"))+
+      SEL("rows",0)+String.capitalize(_(374,"rows"))+
       "</a></b></td>\n"
       "<td align=right><b><a href='browser.pike?db=&form.db:http;&sort=size'>"+
-      SEL("size",0)+_(0,"Size")+
+      SEL("size",0)+_(377,"Size")+
       "</a></b></td>\n"
       "</tr>";
   }
@@ -207,9 +207,9 @@ mapping|string parse( RequestID id )
     "<table><tr><td valign=top><font size=-1>"
     "<textarea rows=4 cols=40 name='query'>&form.query:html;</textarea>"
     "</font></td><td valign=top>"
-    "<submit-gbutton2 name=clear_q> "+_(0,"Clear query")+" </submit-gbutton2>"
+    "<submit-gbutton2 name=clear_q> "+_(378,"Clear query")+" </submit-gbutton2>"
     "<br />"
-    "<submit-gbutton2 name=run_q> "+_(0,"Run query")+" </submit-gbutton2>"
+    "<submit-gbutton2 name=run_q> "+_(379,"Run query")+" </submit-gbutton2>"
     "<br /></td></tr></table>";
 
   if( id->variables["run_q.x"] )
@@ -272,7 +272,7 @@ mapping|string parse( RequestID id )
       };
       if( e )
 	res += "<tr><td> <font color='&usr.warncolor;'>"+
-	  sprintf((string)_(0,"While running %s: %s"), q,describe_error(e) )+
+	  sprintf((string)_(380,"While running %s: %s"), q,describe_error(e) )+
 	  "</td></tr>\n";
       res += "</table>";
     }

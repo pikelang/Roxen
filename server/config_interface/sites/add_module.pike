@@ -601,7 +601,7 @@ mixed do_it_pass_2( array modules, Configuration conf,
       RoxenModule mm = conf->enable_module( mod,0,0,1 );
       if( !mm || !conf->otomod[mm] )
       {
-	report_error(LOCALE(0,"Failed to enable %s")+"\n");
+	report_error(LOCALE(382,"Failed to enable %s")+"\n");
 	return Roxen.http_redirect( site_url(id,conf->name), id );
       }      
       conf->call_low_start_callbacks( mm, 

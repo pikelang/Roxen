@@ -1,5 +1,5 @@
 /*
- * $Id: ssl_common.pike,v 1.3 2001/01/31 01:09:52 per Exp $
+ * $Id: ssl_common.pike,v 1.4 2001/03/05 18:15:47 nilsson Exp $
  */
 
 #if constant(_Crypto) 
@@ -14,7 +14,7 @@
 #define WERROR(x)
 #endif
 
-string doc_string_start = LOCALE(0,
+string doc_string_start = LOCALE(40,
 			     "In order to use the SSL on your server, you "
 			     "first have to create a random key pair. "
 			     "One part of the key is kept secret. ");

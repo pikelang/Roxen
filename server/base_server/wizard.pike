@@ -1,7 +1,7 @@
 // Wizard generator
 // This file generats all the nice wizards
 // Copyright © 1997 - 2000, Roxen IS.
-// $Id: wizard.pike,v 1.128 2001/02/22 10:41:09 stewa Exp $
+// $Id: wizard.pike,v 1.129 2001/03/05 18:14:39 nilsson Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -64,9 +64,13 @@
    Can we say id->misc? :P */
 
 inherit "roxenlib";
+#include <roxen.h>
+
+//<locale-token project="roxen_message">LOCALE</locale-token>
+#define LOCALE(X,Y)	_STR_LOCALE("roxen_message",X,Y)
 
 #ifdef DEBUG_WIZARD
-# define DEBUGMSG(msg) werror(msg)
+# define DEBUGMSG(msg) report_debug(msg)
 #else
 # define DEBUGMSG(msg)
 #endif
@@ -128,7 +132,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
     {
       res+="<tr><td>"+loc_encode(v, m, "html")+"</td><td><font size=\"-2\">";
       m->name="_delete_"+n+":"+v;
-      m->value = " Remove ";
+      m->value = " " + LOCALE(16, "Remove") + " ";
       m->type = "submit";
       res+=make_tag("input",m-(["quote":""]))+"</td></tr>";
     }
@@ -137,7 +141,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
     m->value = "";
     res+= "<tr><td>"+make_tag("input", m)+"</td><td><font size=\"-2\">";
     m->name="_Add";
-    m->value = " Add ";
+    m->value = " " + LOCALE(18, "Add") + " ";
     m->type = "submit";
     res+=make_tag("input",m)+"</font></td></tr>";
     res+="</table>";
@@ -309,7 +313,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
       "<tr><td width=\"110\">\n"
       "<font size=\"-1\"><input type=\"string\" name=\""+
       m->name+".entered\" size=\"8\" value=\""+
-      color_name(a)+"\"> <input type=\"submit\" value=\"Ok\"></font>"
+      color_name(a)+"\"> <input type=\"submit\" value=\"" + LOCALE(38, "Ok") + "\"></font>"
       "</td></tr>\n"
       "</table>\n");
 
@@ -318,9 +322,9 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
      m->lines = "20";
      m->choices = roxen.fonts->available_fonts() * ",";
      if(id->conf && id->conf->modules["graphic_text"] && !m->noexample)
-       res = ("<input type=\"submit\" value=\"Example\"><br />"+
+       res = ("<input type=\"submit\" value=\"" + LOCALE(47, "Example") + "\"><br />"+
 	      ((current&&strlen(current))?
-	       "<gtext nfont=\""+current+"\">Example Text</gtext><br />"
+	       "<gtext nfont=\""+current+"\">" + LOCALE(48, "Example Text") + "</gtext><br />"
 	       :""));
      m_delete(m, "noexample");
      return make_tag("var", m)+res;
@@ -328,8 +332,10 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
    case "toggle":
     m_delete(m,"default");
     return make_container("select", m,
-			  "<option"+((int)current?" selected=\"selected\"":"")+" value=\"1\">Yes</option>\n"
-			  "<option"+(!(int)current?" selected=\"selected\"":"")+" value=\"0\">No</option>\n");
+			  "<option"+((int)current?" selected=\"selected\"":"")+" value=\"1\">" +
+			  LOCALE(49, "Yes") + "</option>\n"
+			  "<option"+(!(int)current?" selected=\"selected\"":"")+" value=\"0\">" +
+			  LOCALE(50, "No") + "</option>\n");
 
    case "select":
      if(!m->choices && m->options)
@@ -356,7 +362,8 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
 	t=replace(t,({"__CoMma__",
 		      "__CoLon__"}),({",",":"}));
 
-        return "<option value=\""+s+"\" "+(s==c?" selected=\"selected\"":"")+">"+loc_encode(t, m, "html")+"</option>\n";
+        return "<option value=\""+s+"\" "+(s==c?" selected=\"selected\"":"")+">"+
+	  loc_encode(t, m, "html")+"</option>\n";
      },current,m)*"");
 
 
@@ -384,8 +391,8 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
       t=replace(t,({"__CoMma__",
 		    "__CoLon__"}),({",",":"}));
 
-      return "<option value=\""+s+"\" "+(search(c,s)!=-1?"selected=\"selected\"":"")+">"+loc_encode(t, m, "html")+
-        "</option>\n";
+      return "<option value=\""+s+"\" "+(search(c,s)!=-1?"selected=\"selected\"":"")+">"+
+	loc_encode(t, m, "html")+"</option>\n";
     },(current||"")/"\0",m)*"");
   }
 }
@@ -441,7 +448,7 @@ string parse_wizard_help(string t, mapping m, string contents, RequestID id,
 string make_title()
 {
   string s = (string)(this_object()->wizard_name || 
-		      this_object()->name || "No name") -
+		      this_object()->name || LOCALE(51, "No name")) -
     "<p>";
   sscanf(s, "%*s//%s", s);
   sscanf(s, "%*d:%s", s);
@@ -460,13 +467,7 @@ int num_pages(string wiz_name)
   return max_page+1;
 }
 #define Q(X) replace(X,({"<",">","&","\""}),({"&lt;","&gt;","&amp;","&quote;"}))
-
-#define PAGE Q((this_object()->page_label?this_object()->page_label:"Page "))
-#define OK Q((this_object()->ok_label?this_object()->ok_label:"Ok"))
-#define CANCEL Q((this_object()->cancel_label?this_object()->cancel_label:"Cancel"))
-#define NEXT Q((this_object()->next_label?this_object()->next_label:"Next ->"))
-#define PREVIOUS Q((this_object()->previous_label?this_object()->previous_label:"<- Previous"))
-#define COMPLETED Q((this_object()->completed_label?this_object()->completed_label:"Completed"))
+#define LABEL(X,Y) (this_object()->X?Q(this_object()->X):Y)
 
 string parse_wizard_page(string form, RequestID id, string wiz_name, void|string page_name)
 {
@@ -514,8 +515,8 @@ string parse_wizard_page(string form, RequestID id, string wiz_name, void|string
          "      <tr><td valign=top><font size=\"+2\">"+make_title()+"</font></td>\n"
          "<td align=\"right\">"+
 	 (wiz_name=="done"
-	  ?COMPLETED
-	  :page_name || (max_page?PAGE+(pageno+1)+"/"+(max_page+1):""))+
+	  ?LABEL(completed_label, LOCALE(52, "Completed"))
+	  :page_name || (max_page?LABEL(page_label, LOCALE(53, "Page "))+(pageno+1)+"/"+(max_page+1):""))+
 	 "</td>\n"
 	  " \n<td align=\"right\">"+
 	 (foo->help && !id->variables->help?
@@ -535,20 +536,24 @@ string parse_wizard_page(string form, RequestID id, string wiz_name, void|string
 	 "      <table width=\"100%\"><tr><td width=\"33%\">"+
 	 (((automaton ? stringp (id->variables->_prev) : pageno>0) &&
 	   wiz_name!="done")?
-	  "\n        <input type=submit name=prev_page value=\""+PREVIOUS+"\" />":"")+
+	  "\n        <input type=submit name=prev_page value=\""+
+	  LABEL(previous_label, LOCALE(54, "&lt;- Previous"))+"\" />":"")+
+
 	 "</td><td width=\"33%\" align=\"center\">"+
 	 (wiz_name!="done"
 	  ?(((automaton ? !id->variables->_next : pageno==max_page)
 	     ?"\n&nbsp;&nbsp;<input type=\"submit\" name=\"ok\" value=\" "+
-	     OK+" \" />&nbsp;&nbsp;"
+	     LABEL(ok_label, LOCALE(55, "OK"))+" \" />&nbsp;&nbsp;"
 	     :"")+
 	    "\n&nbsp;&nbsp;<input type=\"submit\" name=\"cancel\" value=\" "+
-	    CANCEL+" \" />&nbsp;&nbsp")
-	  :"\n         <input type=\"submit\" name=\"cancel\" value=\" "+OK+" \" />")+
+	    LABEL(cancel_label, LOCALE(56, "Cancel"))+" \" />&nbsp;&nbsp")
+	  :"\n         <input type=\"submit\" name=\"cancel\" value=\" "+
+	  LABEL(ok_label, LOCALE(55, "OK"))+" \" />")+
 	 "</td><td width=\"33%\" align=\"right\">"+
 	 (((automaton ? stringp (id->variables->_next) : pageno!=max_page) &&
 	   wiz_name!="done")?
-	  "\n        <input type=\"submit\" name=\"next_page\" value=\""+NEXT+"\" />":"")+
+	  "\n        <input type=\"submit\" name=\"next_page\" value=\""+
+	  LABEL(next_label, LOCALE(57, "Next -&gt;"))+"\" />":"")+
 	 "</td></tr></table>\n"
 	 "    </td></tr>\n"
 	 "  </table>\n"
@@ -839,7 +844,6 @@ mapping get_actions(RequestID id, string base,string dir, array args)
       report_warning( e->get_warnings() );
     if(strlen(e->get()))
       error("While compiling wizards:\n"+e->get());
-
     if(err) report_error(describe_backtrace(err));
   }
   return acts;

@@ -5,8 +5,8 @@
 
 constant action = "maintenance";
 
-LocaleString name = _(0,"Change roxen version...");
-LocaleString doc =  _(0,"Indeed");
+LocaleString name = _(41,"Change roxen version...");
+LocaleString doc =  _(42,"Indeed");
 
 class Server(string dir,
 	     string version,
@@ -81,20 +81,20 @@ string nice_relative_date( object t )
 {
   if( t->how_many( Calendar.Month() ) )
     if( t->how_many( Calendar.Month() ) == 1 )
-      return sprintf( (string)_(0,"1 month") );
+      return sprintf( (string)_(43,"1 month") );
     else
-      return sprintf( (string)_(0,"%d months"),
+      return sprintf( (string)_(44,"%d months"),
 		      t->how_many( Calendar.Month() ) );
   if( t->how_many( Calendar.Day() ) == 1 )    return "one day";
 
   if( t->how_many( Calendar.Day() ) == 0 )    return "-";
-  return sprintf( (string)_(0,"%d days"),
+  return sprintf( (string)_(45,"%d days"),
 		  t->how_many( Calendar.Day() ) );
 }
 
 string parse( RequestID id )
 {
-  string res = "<gtext>"+_(0,"Change Roxen version")+"</gtext>";
+  string res = "<gtext>"+_(46,"Change Roxen version")+"</gtext>";
   int warn;
 
   if( id->variables->server )
@@ -104,14 +104,14 @@ string parse( RequestID id )
 				   "server_version"),
 		      id->variables->server );
     roxen.restart( 0.1, 100 );
-    return (string)_(0,"Changing roxen version");
+    return (string)_(47,"Changing roxen version");
   }
   
   res += "<input type=hidden name='action' value='change_version.pike' />";
   
-  res += "<table><tr>"    "<td><b>"+    _(0,"Version")+    "</b></td><td></td>"
-    "<td><b>"+    _(0,"Release date")+    "</b></td>"    "<td><b>"+
-    _(0,"Age")+    "</b></td>"    "<td><b>"+    _(0,"Directory")+
+  res += "<table><tr>"    "<td><b>"+    _(48,"Version")+    "</b></td><td></td>"
+    "<td><b>"+    _(85,"Release date")+    "</b></td>"    "<td><b>"+
+    _(86,"Age")+    "</b></td>"    "<td><b>"+    _(136,"Directory")+
     "</b></td>"   "</tr>\n";
   foreach( available_versions(), Server f )
   {
@@ -139,7 +139,7 @@ string parse( RequestID id )
       "<img src='&usr.err-2;' alt='#' /></td>\n"
       "<td>"+
       sprintf((string)
-	      _(0,"If you change to one these roxen versions, you will not be "
+	      _(137,"If you change to one these roxen versions, you will not be "
 		"able to change back from the administration interface, you will "
 		"instead have to edit the file %O manually, shutdown the server, "
 		"and execute %O again"),
@@ -150,7 +150,7 @@ string parse( RequestID id )
       +"</td></tr></table>";
 	      
 
-  res += "<submit-gbutton>"+_(0,"Change version")+"</submit-gbutton>";
+  res += "<submit-gbutton>"+_(138,"Change version")+"</submit-gbutton>";
 	      
   return res;
 }

@@ -159,7 +159,7 @@ string parse( RequestID id )
       {
 	if( catch( DBManager.get( db )->query("select 1") ) )
 	  url="<font color='&usr.warncolor;'>"+
-	    _(0,"Failed to connect")+"</font>";
+	    _(381,"Failed to connect")+"</font>";
 	else
 	  url = "remote";
       }
