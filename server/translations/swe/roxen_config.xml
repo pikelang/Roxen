@@ -2855,15 +2855,13 @@ server must be a MySQL server, nothing else will work.
 </str>
 
 <str id="474">
-<new/>
 <o>Show changes</o>
-<t></t>
+<t>Visa ändringar</t>
 </str>
 
 <str id="475">
-<new/>
 <o>Restore default value</o>
-<t></t>
+<t>Återställ standardvärde</t>
 </str>
 
 <str id="476">
@@ -2904,69 +2902,58 @@ server must be a MySQL server, nothing else will work.
 </str>
 
 <str id="482">
-<new/>
 <o>Never</o>
-<t></t>
+<t>Aldrig</t>
 </str>
 
 <str id="483">
-<new/>
 <o>Every %s hour(s).</o>
-<t></t>
+<t>Med %s timmars intervall.</t>
 </str>
 
 <str id="484">
-<new/>
 <o>Day</o>
-<t></t>
+<t>dag</t>
 </str>
 
 <str id="485">
-<new/>
 <o>Sunday</o>
-<t></t>
+<t>söndag</t>
 </str>
 
 <str id="486">
-<new/>
 <o>Monday</o>
-<t></t>
+<t>måndag</t>
 </str>
 
 <str id="487">
-<new/>
 <o>Tuesday</o>
-<t></t>
+<t>tisdag</t>
 </str>
 
 <str id="488">
-<new/>
 <o>Wednesday</o>
-<t></t>
+<t>onsdag</t>
 </str>
 
 <str id="489">
-<new/>
 <o>Thursday</o>
-<t></t>
+<t>torsdag</t>
 </str>
 
 <str id="490">
-<new/>
 <o>Friday</o>
-<t></t>
+<t>fredag</t>
 </str>
 
 <str id="491">
-<new/>
 <o>Saturday</o>
-<t></t>
+<t>lördag</t>
 </str>
 
 <str id="492">
-<new/>
 <o>Every %s %s at %s o'clock.</o>
-<t></t>
+<t>Var %s %s vid klockan %s.</t>
 </str>
 
 <str id="493">
