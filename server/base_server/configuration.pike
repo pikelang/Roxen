@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.192 1999/05/18 21:46:13 mast Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.193 1999/05/20 02:30:35 neotron Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -1652,10 +1652,8 @@ mixed handle_request( object id  )
       return id->conf->handle_request(id);
     }
   }
-
-  file = get_file(id);
-    
-  if(!mappingp(file)) 
+ 
+  if(!mappingp(file) && !mappingp(file = get_file(id)))
   {
     mixed ret;
     foreach(last_modules(id), funp) if(ret = funp(id)) break;
