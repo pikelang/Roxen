@@ -26,6 +26,7 @@
 /modules/mail/filters/rbl.pike foreign_ident
 /modules/mail/filters/relayfilter.pike foreign_ident
 /modules/mail/filters/verify_addr.pike foreign_ident
+/modules/mail/lyskomrcpt.pike foreign_ident
 /modules/mail/mailadmin.pike foreign_ident
 /modules/mail/mailtags.pike foreign_ident
 /modules/mail/smsrcpt.pike foreign_ident

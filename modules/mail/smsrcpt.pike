@@ -1,5 +1,5 @@
 /*
- * $Id: smsrcpt.pike,v 1.4 1999/01/27 01:42:02 js Exp $
+ * $Id: smsrcpt.pike,v 1.5 1999/01/29 01:12:23 js Exp $
  *
  * A SMS module for the AutoMail system.
  *
@@ -13,7 +13,7 @@ inherit "module";
 
 #define RCPT_DEBUG
 
-constant cvs_version = "$Id: smsrcpt.pike,v 1.4 1999/01/27 01:42:02 js Exp $";
+constant cvs_version = "$Id: smsrcpt.pike,v 1.5 1999/01/29 01:12:23 js Exp $";
 
 /*
  * Roxen glue
@@ -124,6 +124,28 @@ string get_real_body(object msg)
   return ((msg->body_parts || ({ msg })) -> getdata() ) * "";
 }
 
+mapping decoded_headers(mapping heads)
+{
+  foreach(indices(heads), string w)
+  {
+    array(string) fusk0 = heads[w]/"=?";
+    heads[w]=fusk0[0];
+    foreach(fusk0[1..], string fusk)
+    {
+	string fusk2;
+	string p1,p2,p3;
+	if(sscanf(fusk, "%[^?]?%1s?%[^?]%s", p1,p2,p3, fusk) == 4)
+	{
+	  werror("dw: =?"+p1+"?"+p2+"?"+p3+"?=\n");
+	  heads[w] += MIME.decode_word("=?"+p1+"?"+p2+"?"+p3+"?=")[0];
+	}
+	sscanf(fusk, "?=%s", fusk);
+	heads[w] += fusk;
+    }
+  }
+  return heads;
+}
+
 
 int put(string sender, string user, string domain,
 	object mail, string csum, object o)
@@ -135,7 +157,7 @@ int put(string sender, string user, string domain,
   object clientlayer=conf->get_provider("automail_clientlayer");
   mail->seek(0);
   object msg=MIME.Message(mail->read());
-  mapping headers=msg->headers;
+  mapping headers=decoded_headers(msg->headers);
   werror("sms: headers: %O\n",headers);
   int res;
   object u = clientlayer->get_user_from_address(user+"@"+domain);

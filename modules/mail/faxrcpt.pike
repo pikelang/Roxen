@@ -1,7 +1,7 @@
 /*
- * $Id: faxrcpt.pike,v 1.6 1999/01/27 01:42:00 js Exp $
+ * $Id: faxrcpt.pike,v 1.7 1999/01/29 01:12:21 js Exp $
  *
- * A LysKOM FAX module for the AutoMail system.
+ * A FAX module for the AutoMail system.
  *
  * Johan Schön, September 1998.
  */
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RCPT_DEBUG
 
-constant cvs_version = "$Id: faxrcpt.pike,v 1.6 1999/01/27 01:42:00 js Exp $";
+constant cvs_version = "$Id: faxrcpt.pike,v 1.7 1999/01/29 01:12:21 js Exp $";
 
 /*
  * Roxen glue
@@ -156,6 +156,29 @@ string fontify_mail(mapping headers, string body)
   return s+"\n";
 }
 
+mapping decoded_headers(mapping heads)
+{
+  foreach(indices(heads), string w)
+  {
+    array(string) fusk0 = heads[w]/"=?";
+    heads[w]=fusk0[0];
+    foreach(fusk0[1..], string fusk)
+    {
+	string fusk2;
+	string p1,p2,p3;
+	if(sscanf(fusk, "%[^?]?%1s?%[^?]%s", p1,p2,p3, fusk) == 4)
+	{
+	  werror("dw: =?"+p1+"?"+p2+"?"+p3+"?=\n");
+	  heads[w] += MIME.decode_word("=?"+p1+"?"+p2+"?"+p3+"?=")[0];
+	}
+	sscanf(fusk, "?=%s", fusk);
+	heads[w] += fusk;
+    }
+  }
+  return heads;
+}
+
+
 int put(string sender, string user, string domain,
 	object mail, string csum, object o)
 {
@@ -166,7 +189,7 @@ int put(string sender, string user, string domain,
   mail->seek(0);
   string x=mail->read();
   object msg=MIME.Message(x);
-  mapping headers=msg->headers;
+  mapping headers=decoded_headers(msg->headers);
 //   werror("Fax: x: %O\n",x);
 //   werror("headers: %O\n",headers);
 //   werror("real_body: %O\n",get_real_body(msg));
