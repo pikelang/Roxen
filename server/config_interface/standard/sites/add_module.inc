@@ -34,6 +34,7 @@ string parse(object id )
   object conf = id->misc->current_configuration;
 
   object ec = roxenloader.LowErrorContainer();
+  master()->set_inhibit_compile_errors( ec );
   array mods;
   roxenloader.push_compile_error_handler( ec );
   mods = roxen->all_modules();
