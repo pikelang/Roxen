@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: read_config.pike,v 1.69 2002/11/04 20:26:18 mani Exp $
+// $Id: read_config.pike,v 1.70 2002/11/17 14:30:57 agehall Exp $
 
 #include <module.h>
 #include <module_constants.h>
@@ -11,9 +11,16 @@ inherit "newdecode";
 
 #define COPY( X ) ((X||([])) + ([]))
 
+constant IGNORE_NAMES = ({ "CVS", "Global_Variables", "Global Variables",
+			   "global_variables", "global variables", "server_version",
+			   "server version", "_",
+			   });
+
 mapping (string:array(int)) config_stat_cache = ([]);
 string configuration_dir; // NGSERVER: Remove this
 
+//! @return
+//! @array all configurationfiles
 array(string) list_all_configurations()
 {
   array (string) fii = r_get_dir("$CONFIGDIR");
@@ -25,13 +32,12 @@ array(string) list_all_configurations()
     exit(-1); // Restart.
   }
 
-  return map(filter(fii, lambda(string s){
-    if(s=="CVS" || s=="Global_Variables" || s=="Global Variables"
-       || s=="global_variables" || s=="global variables" || s=="server_version"
-       || s[0] == '_')
-      return 0;
-    return (s[-1]!='~' && s[0]!='#' && s[0]!='.');
-  }), lambda(string s) { return replace(utf8_to_string(s), "_", " "); });
+  // Remove files that are not configurations
+  fii -= IGNORE_NAMES;
+
+  return replace(utf8_to_string(filter(fii, lambda(string s){
+					      return (s[-1]!='~' && s[0]!='#' && s[0]!='.');
+					    })[*]), "_", " ");
 }
 
 private string config_file(string cl) {
