@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.374 2002/06/11 14:37:10 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.375 2002/06/14 14:42:11 ian Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1120,49 +1120,67 @@ string tag_modified(string tag, mapping m, RequestID id, Stdio.File file)
   RXML.run_error("Couldn't stat file.\n");
 }
 
-string|array(string) tag_user(string tag, mapping m, RequestID id )
-{
-  if(!id->conf->auth_module)
-    RXML.run_error("Requires a user database.\n");
 
+string|array(string) tag_user(string tag, mapping m, RequestID id)
+{
   if (!m->name)
     return "";
-
-  string b=m->name;
-
-  array(string) u=id->conf->userinfo(b, id);
-  if(!u) return "";
-
+  
+  User uid, tmp;
+  foreach( id->conf->user_databases(), UserDB udb ){
+    if( tmp = udb->find_user( m->name ) )
+      uid = tmp;
+  }
+ 
+  if(!uid)
+    return "";
+  
   string dom = id->conf->query("Domain");
   if(sizeof(dom) && (dom[-1]=='.'))
     dom = dom[0..strlen(dom)-2];
-
+  
   if(m->realname && !m->email)
   {
     if(m->link && !m->nolink)
-      return ({ "<a href=\"/~"+b+"/\">"+u[4]+"</a>" });
-    return ({ u[4] });
+      return ({ 
+	sprintf("<a href=%s>%s</a>", 
+		Roxen.html_encode_tag_value( "/~"+uid->name() ),
+		Roxen.html_encode_string( uid->gecos() ))
+      });
+    
+    return ({ Roxen.html_encode_string( uid->gecos() ) });
   }
-
+  
   if(m->email && !m->realname)
   {
     if(m->link && !m->nolink)
-      return ({ sprintf("<a href=\"mailto:%s@%s\">%s@%s</a>",
-			b, dom, b, dom)
-	      });
-    return ({ b + "@" + dom });
-  }
+      return ({ 
+	sprintf("<a href=%s>%s</a>",
+		Roxen.html_encode_tag_value(sprintf("mailto:%s@%s",
+					      uid->name(), dom)), 
+		Roxen.html_encode_string(sprintf("%s@%s", uid->name(), dom)))
+      });
+    return ({ Roxen.html_encode_string(uid->name()+ "@" + dom) });
+  } 
 
   if(m->nolink && !m->link)
-    return ({ sprintf("%s &lt;%s@%s&gt;",
-		      u[4], b, dom)
-	    });
+    return ({ Roxen.html_encode_string(sprintf("%s <%s@%s>",
+					 uid->gecos(), uid->name(), dom))
+    });
 
-  return ({ sprintf( (m->nohomepage?"":"<a href=\"/~%s/\">%s</a> ")+
-		    "<a href=\"mailto:%s@%s\">&lt;%s@%s&gt;</a>",
-		    b, u[4], b, dom, b, dom)
-	  });
+  return 
+    ({ sprintf( (m->nohomepage?"":
+		 sprintf("<a href=%s>%s</a>",
+			 Roxen.html_encode_tag_value( "/~"+uid->name() ),
+			 Roxen.html_encode_string( uid->gecos() ))+
+		 sprintf(" <a href=%s>%s</a>",
+			 Roxen.html_encode_tag_value(sprintf("mailto:%s@%s", 
+						       uid->name(), dom)),
+			 Roxen.html_encode_string(sprintf("<%s@%s>", 
+						    uid->name(), dom)))))
+    });
 }
+
 
 class TagSetMaxCache {
   inherit RXML.Tag;
