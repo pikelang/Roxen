@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.143 2001/01/01 08:30:34 nilsson Exp $
+# $Id: start,v 1.144 2001/01/03 05:58:45 per Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -11,10 +11,9 @@ if [ "x$1" = "x--silent-start" ] ; then
 fi
 
 check_owner() {
-   uid=`$pike -e 'write("%d",getuid())'`
    gargs=''
 
-   if [ x"$uid" = x0 ] ; then
+   if [ -w / ] ; then
      # Shall we change uid/gid?
      num=`grep --help 2>&1|grep gnu|wc -l`
      num=`echo $num`
@@ -413,16 +412,6 @@ if [ ! "X$ROXEN_ARGS" = "X" ]; then
   else :; fi
 fi
 
-
-#if uname | grep 'SunOS' >/dev/null 2>&1; then
-#  if uname -r | grep '5\.[5-9]' >/dev/null 2>&1; then
-#    if [ $verbose -gt 0 ] ; then
-#      dp "Solaris 2.5 or later was detected. Threads enabled by default."
-#    fi
-#  fi
-#fi
-
-
 if [ ! "X$pass" = "X" ] ; then set -- $pass ;fi
 
 
@@ -454,23 +443,23 @@ if [ "x$PIKE_NO_DEFAULT_PATHS" = "x" ]; then
 fi
 
 # Extra module-path
-if [ -d etc/modules ]; then
+#if [ -d etc/modules ]; then
   DEFINES="$DEFINES -M$roxendir/etc/modules"
-fi
+#fi
 
 # Extra include-path
-if [ -d etc/include ]; then
+#if [ -d etc/include ]; then
   DEFINES="$DEFINES -I$roxendir/etc/include"
-fi
+#fi
 
 if [ -d $LOCALDIR/include ]; then
   DEFINES="$DEFINES -I$LOCALDIR/include"
 fi
 
 # Extra include-path (2)
-if [ -d base_server ]; then
+#if [ -d base_server ]; then
   DEFINES="$DEFINES -I$roxendir/base_server"
-fi
+#fi
 
 if [ -d $LOCALDIR/base_server ]; then
   DEFINES="$DEFINES -I$LOCALDIR/base_server -P$LOCALDIR/base_server"
@@ -499,7 +488,7 @@ fi
 # HPUX doesn't like group 60001(nobody)
 if uname | grep 'HP-UX' >/dev/null 2>&1; then
   if [ $verbose -gt 0 ]; then
-    dp "WARNING: Applying kludge for HPUX. (see base_server/privs.pike)"
+    dp "WARNING: Applying kludge for HPUX. (see base_server/roxen.pike)"
   else :; fi
   DEFINES="$DEFINES -DHPUX_KLUDGE"
 fi
@@ -527,11 +516,6 @@ DEFINES="$DEBUG $DEFINES"
 #
 # Some useful functions
 #
-
-rotate () {
-  b=5;
-  for a in 4 3 2 1 ; do mv -f $1.$a $1.$b 2> /dev/null;  b=$a; done
-}
 
 signal_exit() {
   dp "Start script terminated."
@@ -609,8 +593,8 @@ start_roxen() {
 #
 PIKEVERSION="`$pike --version 2>&1|head -1`"
 LS="`ls -lL $pike 2>/dev/null`"
-LS="$LS `ls -lL etc/modules/ etc/modules/*/. 2>/dev/null`"
-LS="$LS `ls -lL base_server 2>/dev/null`"
+LS="$LS `find -ls etc/modules 2>/dev/null`"
+LS="$LS `find -ls base_server 2>/dev/null`"
 
 VERSION_DATA="$PIKEVERSION   $DEFINES   $LS"
 

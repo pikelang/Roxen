@@ -1,5 +1,9 @@
 # Support functions for the startscript and some other scripts.
 
+rotate () {
+  b=5;
+  for a in 4 3 2 1 ; do mv -f $1.$a $1.$b 2> /dev/null;  b=$a; done
+}
 
 setup_environment() {
   # If environment file doesn't exist, try to create it.
@@ -107,18 +111,19 @@ raise_limit() {
   if ulimit -n unlimited 2>/dev/null ; then 
    :
   else
-    nfds=1073741824
+    nfds=1048576
     while [ $nfds -gt "`ulimit -n`" ] ; do 
-      nfds=`expr $nfds / 2`
+      nfds=`expr $nfds / 4`
       ulimit -n $nfds 2>/dev/null
     done
   fi
   if [ "x$1" = "x" ] ; then
-    if [ x`ulimit -n` = xunlimited ] ; then
+    nn="`ulimit -n`"
+    if [ "x$nn" = xunlimited ] ; then
       dp "Maximum number of open FDs: unlimited (2147483648)"
     else
-      dp "Maximum number of open FDs: `ulimit -n`"
-      if [ "`ulimit -n`" -lt 1024 ] 2>/dev/null; then
+      dp "Maximum number of open FDs: $nn"
+      if [ "$nn" -lt 1024 ] 2>/dev/null; then
         dp "Warning: This is dangerously low"
       fi
     fi
