@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.340 2002/07/03 20:20:33 nilsson Exp $
+// $Id: roxenloader.pike,v 1.341 2002/09/26 22:23:24 nilsson Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.340 2002/07/03 20:20:33 nilsson Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.341 2002/09/26 22:23:24 nilsson Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1791,6 +1791,7 @@ void start_mysql()
 
   string mysqldir = combine_path(getcwd(),query_configuration_dir()+"_mysql");
   rm( mysqldir+"/mysql_pid" );
+  rm( mysqldir+"/error_log"  );
 #ifdef THREADS
   thread_create( do_tailf, 1, mysqldir+"/error_log" );
   sleep(0.1);
@@ -1833,8 +1834,6 @@ void start_mysql()
 #endif
     }
   }
-
-  rm( mysqldir+"/error_log"  );
 
   low_start_mysql( mysqldir,query_mysql_dir(),
 #if constant(getpwuid)
@@ -2205,9 +2204,6 @@ void do_main( int argc, array(string) argv )
     DC( "Standards.PKCS.DSA.parse_private_key" );
     DC( "SSL.cipher.dh_parameters" );
   }
-
-  if( DC( "HTTPLoop.prog" ) )
-    DC( "HTTPLoop.Loop" );
 
   if( DC( "Image.FreeType" ) )
     DC( "Image.FreeType.Face" );
