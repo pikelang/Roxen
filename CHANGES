@@ -1,7 +1,7 @@
 Changes since Roxen Challenger 1.2 alpha 10
 -----------------------------------------------
 
-o Threads are enabled per default, and actually works.
+o Threads are enabled by default, and actually work.
 
 o The HTTP protocol now does it's very best to log the ACTUAL number
   of sent bytes, even for CGI scripts. It will not work for
@@ -22,7 +22,17 @@ o Added some more directories to search by default for nfonts and modules.
 
 o The number of FTP users can now be viewed under "Status and debug info".
 
+o The FTP built-in ls now uses the Getopt-module to parse its arguments.
+  It also sends the data asynchronously for improved response-times. Not
+  threaded (yet).
+
+o The FTP built-in ls now supports -R.
+
 o Fixed double \r-bug in the simulated "ls -l" in the ftp-protocol module.
+
+o The ftp-protocol module now supports the MDTM (modification time) command.
+
+o Fixed bug in the setting of the default domain.
 
 
 Changes since Roxen Challenger 1.2 alpha 9
