@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.117 2000/04/15 02:20:38 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.118 2000/04/29 19:51:39 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -1714,6 +1714,7 @@ documentation for that module.</desc>",
 
 <attr name=unix-time value=number>
  Display this time instead of the current.
+<ex><date unix-time=\"1\"/></ex>
 </attr>
 
 <attr name=years value=number>
@@ -1754,18 +1755,23 @@ documentation for that module.</desc>",
 
 <attr name=brief>
  Show in brief format.
+<ex><date brief=\"\"/></ex>
 </attr>
 
 <attr name=time>
  Show only time.
+<ex><date time=\"\"/></ex>
 </attr>
 
 <attr name=date>
  Show only date.
+<ex><date date=\"\"/></ex>
 </attr>
 
 <attr name=type value=string|ordered|iso|discordian|stardate|number>
  Defines in which format the date should be displayed in.
+<ex><date type=\"string\"/></ex>
+<ex><date type=\"discordian\"/></ex>
 </attr>
 
 <attr name=part value=year|month|day|wday|date|mday|hour|minute|second|yday|beat|week|seconds>
@@ -1773,12 +1779,14 @@ documentation for that module.</desc>",
  the same. Date and mday is the same. Yday is the day number of the
  year. Seconds is unix time type. Only the types string, number and
  ordered applies when the part attribute is used.
+<ex><date part=\"year\"/></ex>
+<ex><date part=\"beat\"/></ex>
 </attr>
 
 <attr name=lang value=langcode>
  Defines in what language the a string will be presented in.
- Available languages:
  <lang/>
+<ex><date type=\"string\" lang=\"sv\"/></ex>
 </attr>
 
 <attr name=case value=upper|lower|capitalized>
