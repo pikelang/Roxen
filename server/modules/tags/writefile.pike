@@ -13,7 +13,7 @@
 #define _ok	id->misc->defines[" _ok"]
 
 constant cvs_version =
- "$Id: writefile.pike,v 1.17 2004/02/24 17:37:52 anders Exp $";
+ "$Id: writefile.pike,v 1.18 2005/02/09 19:47:21 mast Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -76,7 +76,9 @@ class TagWritefile {
    "max-width" : RXML.t_text(RXML.PEnt),
    "min-height" : RXML.t_text(RXML.PEnt),
    "min-width" : RXML.t_text(RXML.PEnt),
-   "accept-type" : RXML.t_text(RXML.PEnt)
+   "accept-type" : RXML.t_text(RXML.PEnt),
+   "charset": RXML.t_text(RXML.PEnt),
+   "encode-with-entities": RXML.t_text(RXML.PEnt),
   ]);
 
   class Frame {
@@ -154,6 +156,56 @@ class TagWritefile {
 	  }
 	  else
 	    towrite=content||"";
+
+	  {
+	    string charset = args->charset;
+
+#ifdef WRITEFILE_UTF8_ENCODE
+	    // Handle this define for 4.0 compat.
+	    if (!charset) charset = "utf8";
+#endif
+
+	    if (charset ||
+		(String.width (towrite) > 8 && args["encode-with-entities"])) {
+	      charset = charset ? lower_case (charset - "-") : "iso88591";
+
+	      // Optimize some special cases first.
+	      if (charset == "utf8")
+		towrite = string_to_utf8 (towrite);
+	      else if (charset == "iso106461")
+		towrite = string_to_unicode (towrite);
+	      else if (charset == "iso88591" && String.width (towrite) == 8) {
+		// Nothing to do.
+	      }
+
+	      else {
+		string charset = args->charset || "iso-8859-1";
+		Locale.Charset._encoder enc;
+		if (mixed err = catch (enc = Locale.Charset.encoder (charset)))
+		  if (has_prefix (describe_error (err), "Unknown character encoding"))
+		    parse_error ("Unknown charset %O.\n", charset);
+		  else
+		    throw (err);
+		enc->set_replacement_callback (
+		  args["encode-with-entities"] ?
+		  lambda (string chr) {
+		    return sprintf ("&#x%x;", chr[0]);
+		  } :
+		  lambda (string chr) {
+		    run_error ("Encountered unencodable character %x (hex).\n", chr[0]);
+		  });
+		towrite = enc->feed (towrite)->drain();
+	      }
+	    }
+
+	    else if (String.width (towrite) > 8) {
+	      foreach (towrite; int pos; int chr)
+		if (chr >= 256)
+		  run_error ("Encountered wide character %x (hex) at position %d.\n",
+			     chr, pos);
+	    }
+	  }
+
 	  object privs;
 	  ;{ Stat st;
 	  string diro,dirn;
@@ -171,8 +223,6 @@ class TagWritefile {
 	  object file=Stdio.File();
 	  if(file->open(lastfile=real_filename, args->append?"wrca":"wrct")) {
 	    _ok = 1;
-	    if(String.width(towrite)>8)
-	      towrite = string_to_utf8(towrite);
 	    file->write(towrite);
 	    object dims;
 	    if (IS(args["min-height"])|| IS(args["max-height"])||
@@ -273,6 +323,22 @@ File uploaded:
 
 <attr name='max-size' value='integer'>
  <p>Specifies the maximum upload file size in bytes which is accepted.</p>
+</attr>
+
+<attr name='charset' value='string'>
+ <p>Specifies a character set to encode the file content with before
+ writing it. This is only useful for text data, like when the source
+ is a form variable which can contain characters from the full Unicode
+ charset. A useful charset is \"utf-8\" which can encode all Unicode
+ characters.</p>
+</attr>
+
+<attr name='encode-with-entities'>
+ <p>Causes all characters that aren't encodable with the charset
+ specified by the \"charset\" attribute to be written as numerical XML
+ entity references (e.g. \"&amp;#x20ac;\"). If no \"charset\"
+ attribute is given then all characters wider than 8 bits are written
+ as entity references.</p>
 </attr>
 
 <attr name='max-height' value='integer'>
