@@ -36,7 +36,7 @@
 //
 // where line is numeral, first line==1
 
-constant cvs_version = "$Id: sed.pike,v 1.12 2001/09/03 18:52:20 nilsson Exp $";
+constant cvs_version = "$Id: sed.pike,v 1.13 2002/08/05 13:37:29 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -305,7 +305,7 @@ string container_sed(string tag,mapping m,string cont,object id)
 	      (["source":lambda(string tag,mapping m,mapping c,object id)
 			 {
 			    if (m->variable)
-			       c->data=id->variables[m->variable]||"";
+			      c->data = RXML_CONTEXT->user_get_var (m->variable) || "";
 			    else if (m->cookie)
 			       c->data=id->cookie[m->cookie]||"";
 			    else
@@ -348,14 +348,19 @@ string container_sed(string tag,mapping m,string cont,object id)
 
    if (c->destvar)
    {
-      if (m->prepend) d+=id->variables[c->destvar]||"";
-      if (m->apppend) d=(id->variables[c->destvar]||"")+d;
-      id->variables[c->destvar]=d;
+      if (m->prepend) d += RXML_CONTEXT->user_get_var (c->destvar) || "";
+      if (m->apppend || m->append)
+	d = (RXML_CONTEXT->user_get_var (c->destvar) || "") + d;
+      RXML_CONTEXT->user_set_var (c->destvar, d);
    }
    else if (c->destcookie)
    {
-      if (m->prepend) d+=id->variables[c->destvar]||"";
-      if (m->apppend) d=(id->variables[c->destvar]||"")+d;
+      // Hmm, shouldn't the prepend and append attributes work on the
+      // cookie? Looks like a cut'n'paste bug here, but I leave it be
+      // for compatibility. /mast
+      if (m->prepend) d += RXML_CONTEXT->user_get_var (c->destvar) || "";
+      if (m->apppend || m->append)
+	d = (RXML_CONTEXT->user_get_var (c->destvar) || "") + d;
       id->cookie[c->destcookie]=d;
    }
    else if (!c->nodest)
