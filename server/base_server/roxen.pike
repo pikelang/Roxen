@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.485 2000/05/17 15:25:07 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.486 2000/05/26 22:19:48 per Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -714,6 +714,7 @@ class Protocol
   //. This interface is not at all set in stone, and might change at 
   //. any time.
   {
+    url = lower_case( url );
     object c;
     // The URLs are sorted from longest to shortest, so that short
     // urls (such as http://*/) will not match before more complete
@@ -1544,6 +1545,7 @@ array(string) find_ips_for( string what )
 
 void unregister_url( string url )
 {
+  url = lower_case( url );
   report_debug("Unregister "+url+"\n");
   if( urls[ url ] && urls[ url ]->port )
   {
@@ -1573,6 +1575,7 @@ void sort_urls()
 
 int register_url( string url, object conf )
 {
+  url = lower_case( url );
   if (!sizeof (url - " " - "\t")) return 1;
   string protocol;
   string host;
