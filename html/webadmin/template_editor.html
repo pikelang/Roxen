@@ -12,18 +12,19 @@
   #name# #type# <br>
 </sqloutput>
 <br>
-  <pike>
-    string r = "";
-    foreach(indices(id->variables), string variable)
-      r += variable + " : " + id->variables[variable] + "<br>";
-    return r;
-  </pike>
 </if>
 
 <if variable=help>
 <wizard help>
 <sqlquery help>
 </if>
+
+<pike>
+  id->variables->show_wizard=!(id->variables->ok||id->variables->cancel);
+  id->variables->show_menu=
+    !id->variables->edit||id->variables->ok||id->variables->cancel;
+  return "";
+</pike>
 
 <if variable=edit>
   <wizard preparse name="Edit template preferences">
@@ -34,19 +35,25 @@
        <input type=hidden name=edit value='¤edit:quote=mysql¤'>
        <input type=hidden name=category value='¤category:quote=mysql¤'>
         <h3>#title#</h3>
-        <cvar preparse name=variable_#id# type=#type#><sqloutput quote='£' query="select * from customers_preferences where customer_id='¤customer_id¤' and variable_id='#id#'">£value£</sqloutput></cvar>
+	<cset preparse variable=options><sqloutput quote='£' query="select * from templates where category='¤category¤'">£name£,</sqloutput></cset>
+	<cset preparse variable=default><sqloutput quote='£' query="select * from customers_preferences where customer_id='¤customer_id¤' and variable_id='#id#'">£value£</sqloutput></cset>
+	<formoutput quote='$'>
+	  <var preparse name=variable_#id# type=#type#
+	        options=$options$ default=$default$>
+	</formoutput>
 	<br>
         #help#<br>
-	name=variable_#id# type=#type# <br>
-        <sqloutput quote='£' query="select * from customers_preferences
-            where customer_id='¤customer_id¤' and variable_id='#id#'">
-	  default=£value£  
-	</sqloutput>
+	<comment>
+	  name=variable_#id# type=#type# <br>
+          <tablify preparse nice cellseparator='='>Variable=Value
+            <insert variables=full></tablify>
+	</comment>
       </page>
     </sqloutput>
+    <noparse><noparse>
     <done>
-      *saving...* <br>
       <pike>
+        werror("%O\n\n",id->variables);
         string r = "";
 	
 	foreach(indices(id->variables), string variable) {
@@ -55,32 +62,26 @@
 	         "delete from customers_preferences "
 		 "where customer_id='¤customer_id¤' and "
 		 "variable_id='"+variable_id+"'"
-		 "\"><br>\n";
+		 "\">\n";
 	    r += "<sqlquery query=\""
 	         "insert into customers_preferences "
 	         "(customer_id,variable_id,value) "
 	         " values ('¤customer_id¤','"+variable_id+"','"+
 		 id->variables[variable]+"')"+
-		 "\"><br>\n";
+		 "\">\n";
 	  }
 	}
         return r;
       </pike>
-      
-      <tablify preparse nice cellseparator='='>
-        Variable=Value
-        <insert variables=full>
-      </tablify>
-      <sql>
-    </done>
+    </done></noparse></noparse>
   </formoutput>
   </wizard>
 </if>
-<else>
+<if variable=show_menu>
   <h3>Template variables</h3>
   <ul>
-    <sqloutput query="select distinct group_name from template_vars
-    where category='tmpl'">
+    <sqloutput query="select * from template_vars
+    where category='tmpl' group by group_name order by id">
       <li><a href="template_editor.html?edit=#group_name#&category=tmpl">
         #group_name#
       </a>
@@ -89,12 +90,16 @@
 
   <h3>Navigation variables</h3>
   <ul>
-    <sqloutput query="select distinct group_name from template_vars
-    where category = 'nav'">
-      <li><a href="template_editor.html?category=nav&edit=#group_name#">
+    <sqloutput query="select * from template_vars
+    where category='nav' group by group_name order by id">
+      <li><a href="template_editor.html?edit=#group_name#&category=nav">
         #group_name#
       </a>
     </sqloutput>
   </ul>
-</else>
+</if>
+
+<tablify preparse nice cellseparator='='>Variable=Value
+  <insert variables=full></tablify>
+
 </tmpl_body>
