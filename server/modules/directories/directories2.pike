@@ -1,12 +1,12 @@
 /*
- * $Id: directories2.pike,v 1.1.2.1 1997/02/14 02:45:29 grubba Exp $
+ * $Id: directories2.pike,v 1.1.2.2 1997/02/14 03:16:24 grubba Exp $
  *
  * Directory listings mark 2
  *
  * Henrik Grubbström 1997-02-13
  */
 
-string cvs_version = "$Id: directories2.pike,v 1.1.2.1 1997/02/14 02:45:29 grubba Exp $";
+string cvs_version = "$Id: directories2.pike,v 1.1.2.2 1997/02/14 03:16:24 grubba Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -262,7 +262,8 @@ string|mapping parse_directory(object id)
    * is set, a directory listing should be sent instead of the
    * indexfile.
    */
-  if(!(f[-2]=='/' && f[-1]=='.' && QUERY(override))) { /* Handle indexfiles */
+  if(!(sizeof(f)>1 && f[-2]=='/' && f[-1]=='.' && QUERY(override))) {
+    /* Handle indexfiles */
     string file, old_file;
     string old_not_query;
     mapping got;
