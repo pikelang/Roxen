@@ -356,6 +356,26 @@ e</result>
 <result><X>a<br></X></result>
 </test>
 
+<test>
+<rxml><maketag name="hej" type="pi">tja</maketag></rxml>
+<result><?hej tja?></result>
+</test>
+
+<test>
+<rxml><maketag name="hej" type="pi"></maketag></rxml>
+<result><?hej?></result>
+</test>
+
+<test>
+<rxml><maketag type="comment"> hej </maketag></rxml>
+<result><!-- hej --></result>
+</test>
+
+<test>
+<rxml><maketag type="cdata"> hej </maketag></rxml>
+<result><![CDATA[ hej ]]></result>
+</test>
+
 
 <comment>Form defaults</comment>
 <test>
