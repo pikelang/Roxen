@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.17 1997/08/20 11:31:40 per Exp $
+/* $Id: wizard.pike,v 1.18 1997/08/20 11:34:24 per Exp $
  *  name="Wizard generator";
  *  doc="This plugin generats all the nice wizards";
  */
@@ -177,8 +177,7 @@ string parse_wizard_page(string form, object id, string wiz_name)
 
 #define PAGE(X)  ((string)(((int)v->_page)+(X)))
 
-mapping|string wizard_for(object id, string|void cancel, string|void wiz_name,
-			  mixed ... args)
+mapping|string wizard_for(object id,string cancel,string wiz_name,mixed ... args)
 {
   string data;
   int offset = 1;
