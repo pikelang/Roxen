@@ -10,7 +10,7 @@
 #define old_rxml_compat 1
 #define old_rxml_warning id->conf->api_functions()->old_rxml_warning[0]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.11 1999/10/04 00:05:55 jhs Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.12 1999/10/04 10:00:08 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -160,7 +160,7 @@ string tag_header(string tag, mapping m, object id)
   return "";
 }
 
-array(string) tag_realfile(string tag, mapping m, object id)
+string|array(string) tag_realfile(string tag, mapping m, object id)
 {
   if(id->realfile)
     return ({ id->realfile });
@@ -283,7 +283,7 @@ string tag_set( string tag, mapping m, object id )
   return rxml_error(tag, "Variable not specified.", id);
 }
 
-array(string) tag_vfs(string tag, mapping m, object id)
+string|array(string) tag_vfs(string tag, mapping m, object id)
 {
   if(id->virtfile)
     return ({ id->virtfile });
@@ -521,7 +521,7 @@ string|array(string) tag_insert(string tag,mapping m,object id)
     if(m->parse)
     {
       m_delete(m, "parse");
-      return do_replace(id->variables[n]);
+      return do_replace(id->variables[n], m, id);
     }
     return ({ do_replace(id->variables[n], m, id) });
 #else
@@ -548,8 +548,11 @@ string|array(string) tag_insert(string tag,mapping m,object id)
     return ({ String.implode_nicely(indices(id->variables)) });
 
   if(n = m->other)
-    if(stringp(id->misc[n]) || intp(id->misc[n]))
+    if(stringp(id->misc[n]) || intp(id->misc[n])) {
+      if(m->parse)
+        return (string)id->misc[n];
       return ({ (string)id->misc[n] });
+    }
     else
       return rxml_error(tag, "No such other variable ("+n+").", id);
 
@@ -560,7 +563,7 @@ string|array(string) tag_insert(string tag,mapping m,object id)
       return ({ Array.map(indices(id->cookies),
 			  lambda(string s, mapping m)
 			  { return sprintf("%s=%O\n", s, m[s]); },
-			  id->cookies) * "\n";
+			  id->cookies) * "\n"
 	      });
     return ({ String.implode_nicely(indices(id->cookies)) });
   }
@@ -786,16 +789,16 @@ string|array(string) tag_aconf(string tag, mapping m, string q, object id)
 
 string tag_maketag(string tag, mapping m, string cont, object id) {
   NOCACHE();
-  id->misc+=(["maketag_args":(!m->noxml&&m->type=="tag"?(["/":"/"]):([]))]);
-  cont=replace(parse_html(cont,([]),(["attrib":
-    lambda(string tag, mapping m, string cont, mapping c, object id) {
-      id->misc->maketag_args+=([m->name:parse_rxml(cont,id)]);
+  mapping args=(!m->noxml&&m->type=="tag"?(["/":"/"]):([]));
+  cont=parse_html(cont, ([]), (["attrib":
+    lambda(string tag, mapping m, string cont, mapping c, object id, mapping args) {
+      args[m->name]=parse_rxml(cont, id);
       return "";
     }
-  ]),([]),id), ({"\"","<",">"}), ({"'","&lt;","&gt;"}));
+  ]), ([]), id, args);
   if(m->type=="container")
-    return make_container(m->name, id->misc->maketag_args, cont);
-  return make_tag(m->name,id->misc->maketag_args);
+    return make_container(m->name, args, cont);
+  return make_tag(m->name, args);
 }
 
 string tag_doc(string tag, mapping m, string s)
