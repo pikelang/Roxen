@@ -1,226 +1,151 @@
-Changes since Roxen 2.0.44
+Changes since Roxen 2.0.112
 -----------------------------------------------
 
-o Dump and decode fixes
+o Typo that prevented that Administration Interface from loading
+  fixed.
+
+o The bug that prevented you from running a Roxen from a path
+  containing a symlink has been found and eliminated. (Thanks Mirar!)
 
 
-Changes since Roxen 2.0.43
+Changes since Roxen 2.0.105
 -----------------------------------------------
 
-o Reduced the length of the paths in the distribution to lessen the
-  effect of old buggy tars.
+o New filesystem module that mounts tar-files.
 
-o Fixed bug in ldaptag.
+o The manual is not unpacked any longer, but instead mounted directly
+  from the tar-file. This solves the issue with long paths in the
+  manual in a more robust way than earlier attempts.
 
-o Fixed create_configinterface to set up all the extensions used by
-  the manual.
+o Fixed strange problem that prevented disk_cache.pike to compile on
+  systems without threads.
+
+  (This would be the problem Boyd had some weeks ago.)
+
+o Fixed numerous smaller bugs.
 
 
-Changes since Roxen 2.0.40
+Changes since Roxen 2.0
 -----------------------------------------------
 
-o Fixed bug that prevented the update server to work with unthreaded Pikes.
-
-
-Changes since Roxen 2.0.35
------------------------------------------------
-
-o Catch RXML errors correctly for old-style tags.
-
-o Added a few-, and a removed some other TTF fonts.
-
-
-Changes since Roxen 2.0.34
------------------------------------------------
-
-o Fixed problem with parts of Roxen that didn't work without 128-bit
-  crypto.
-
-
-Changes since Roxen 2.0.30
------------------------------------------------
-
-o Made output from Roxen XML-compliant.
-
-o Added manual to the admin interface.
-
-
-Changes since Roxen 2.0.28
------------------------------------------------
-
-o Made --without-rtldebug default for the binary dists again. Makes
-  for faster Roxen.
-
-o Added reconnect code by Zsolt Varga to the Postgres module. Thanks.
-
-o Added more paranoia in error handling in Pike and Roxen.
-
-
-Changes since Roxen 2.0.27
------------------------------------------------
-
-o Added the alternative power-user module adder by Martin Baehr,
-  thanks!
-
-o Some small bugfixes.
-
-
-Changes since Roxen 2.0.22
------------------------------------------------
-
-o Configuration Interface changed name to Administration Interface.
-
-o create_configinterface(sp) will now abort if there already exists an
-  administration interface.
-
-o Fixed binary installation-script to work even if there was earlier
-  installations with a server.older in.
-
-o Fixes for AIX m4, FreeBSD make and True64 cc.
-
-o Thread-fixes for FreeBSD 4.0+.
-
-o rc4 was renamed arcfour.
-
-o Added automatic environment setup for Java, Oracle and Informix.
-
-o Applied patch to proxy by Wilhelm Koehler, thanks.
-
-o Applied patch for UnixWare by Boyd Lynn Gerber. Thanks.
-
-o Fixed bug where Pike warnings were reported as errors in the
-  admininterface.
-
-o Pike is now called 7.0 instead of 0.7 in most places.
-
-o --without-Perl is now default.
-
-o Fixed bug in the Pike binary installer that resulted in huge amounts
-  of (harmless) backtraces.
-
-
-Changes since Roxen 2.0.20
------------------------------------------------
-
-o Fixed crash-bug in Pike.
-
-o Fixed various bugs.
-
-
-Changes since Roxen 2.0.19
------------------------------------------------
-
-o Changed behavior: If you delete a site and add a new one with the
-  same name as the old had it will now NOT get the old servers
-  configuration.
-
-o Added decoding of palette based TIMs to the Image module.
-
-o Fixed -KPIC problem on Solaris.
-
-o Fixed problem with uninstalled pikes.
-
-o Made configure work in a separate build dir.
-
-o Fixed bug virtual hosting bug.
-
-o Fixed bug in redirect module.
-
-o Fixed gbutton bug.
-
-o Fixed bug that made SSL use the demo certificate even if you
-  configured it to use another one.
-
-o Fixed resolve path.
-
-o Roxenlib is no longer inherited into roxen core. If you want
-  to call roxenlib functions either inherit roxenlib or call
-  Roxen.pmod.
-
-o Various other bugfixes.
-
-
-Changes since Roxen 2.0.15
------------------------------------------------
-
-o Added test to see if sendfile(2) on FreeBSD is broken.
-
-o Update-client now even more useful. There is a package available for
-  testing. Really.
-
-o You can now remove servers from the config interface.
-
-o Added TIM (PSX format) image support.
-
-o try_get_file() now supports more stuff like PATH_INFO and
-  query-variables.
-
-o Fixed bug in PATH_INFO.
-
-o The "create_configinterface" script now asks a few questions about
-  how you want your update client set up.
-
-o http_auth_failed() removed from roxenlib. It was deprecated in
-  favor of http_auth_required() some years ago.
-
-o Fixed bug in compatibility module.
-
-o The wizard tag now propagates enctype and method.
-
-
-Changes since Roxen 2.0.12
------------------------------------------------
-
-o Fixed memory leak introduced in 2.0.12
-
-o Fixed disabling of sendfile(2) on FreeBSD.
-
-o Update-client now useful. There is a package available for testing.
-
-o New powered-by images.
-
-
-Changes since Roxen 2.0.11
------------------------------------------------
-
-o Added German translation by Kai Voigt.  Thanks Kai!
-
-o Fixed installation of cvs in Platform.
-
-o Following the wishes expressed on the list Roxen is moving to clean
-  out the directory structure. Some notes on this:
- 
- + Almost everything is shadowed from ../local. e.g. config_interface,
-   supports, extensions, languages, roxen-images and so on checks
-   ../local first.
-
- + ../var/ is added and is used to store caches and the like.
-
- + The configdir now only stores settings. No caches.
-
- + There are some new functions in Roxen to handle this, but that goes
-   outside the scope of this letter. Will post in separate letter.
-
- + This is not complete yet.
-
-o Disabled sendfile(2) on FreeBSD 4.0.16 and earlier.
-
-o Added SANE (scanner interface) support to Pike.
-
-o Added Gnome support to Pike.
-
-o Added Gtk+Extra support to Pike.
-
-o Lots of bugs fixed.
-
-
-Changes since Roxen Challenger 1.3
------------------------------------------------
-
- o New Administration interface
- o New port system
- o New RXML parser 	
- o Updated and homogenized RXML language
- o XSLT
- o Etc.
-
+o Configuration variables are now widgets in their own right, and it
+  is easy for module developers to develop their own type of variables.
+
+o The fonts are now loaded by plugins, it's relatively easy to add new
+  font formats to roxen.
+
+  The currently supported formats are:
+   o Compatibility bitmap fonts
+   o The old font format, one file per font, uncompressed 8bpl bitmaps
+   o TTF fonts
+   o TrueType fonts, using freetype
+   o Image directory
+     A directory with a file 'fontname' and one image per character.
+     The images can use any format Roxen knows.
+   o Image TAR file
+     Just like an image directory, but in a TAR file
+   o Compact Image File
+     Basically just like the image tar format, but more optimal. There
+     is 8 bytes overhead per character, and 68 bytes header.
+
+o Pike tag module
+  <?pike ... ?>;  XML compliant processing instruction for pike-code. 
+
+   o //X text-here   parses the text as if it was RXML. 
+   o //O text-here   returns the text as if it was HTML. 
+   o scope.variable is handled like &amp;scope.variable; in RXML. 
+   o #inherit will inherit a file from the roxen filesystem, and
+     #include will include one. 
+   o The magic with parse() functions and whatnot is removed. 
+
+  Small example:
+
+  <?pike
+
+   //O <pre>
+   int first = 1; 
+   for( var.counter=100; var.counter>1; var.counter--,first=0 )
+   {
+     if( !first )
+     {
+       //X &var.counter; bottles of beer on the wall
+       //O
+     }
+     //X &var.counter; bottles of beer on the wall
+     //X &var.counter; bottles of beer
+     //O take one down, pass it around
+   }
+   //O one bottle of beer on the wall
+   //O one bottle of beer
+   //O take it down, pass it around
+   //O no bottles of beer on the wall
+   //O </pre>;
+
+  ?>    
+
+o Perl module
+  A module for embedded perl.
+  <?perl ... ?> and <perl></perl> in RXML pages.
+  .pl pages for CGI-like interface that is much faster than CGI.
+
+o Processing instructions in the low-level RXML parser
+  <?... ?> tags can now be registered.
+
+o New locale system
+  Completely new locale/translation system with XML-based language files
+  (in server/translations).
+
+o New and changed tags
+  o <wash-html>...</wash-html> do some common text->html tasks. 
+  o <?comment ..... ?> 
+  o <if sizeof=.../> 
+  o <sprintf [split=separator] format=...>values,...</sprintf> 
+  o <sscanf variables=a,b,... format=...>data</sscanf>
+  o &_.scopename; will be the name of the default scope, if scopename
+    is not used as a variable in that scope.
+  o <dice type='3D6+D4'>
+  o <fsize> now prints the size in a somwhat less user-unfriendly way. 
+  o <gbutton> can now have images above or below the text (for toolbar
+    style images).
+  o <cimg> checks mtime on the source file (if any). 
+  o <date strftime=format>
+  o <vform>, with which you can create self-verified forms. Uses the
+    same widgets as the configuration variables.
+
+o Servlets
+  o File extension servlets added, as an example, for .jsp pages.
+  o Better classpath handling. 
+
+o The directory module
+  o The Directory module now uses a template and normal RXML (using
+    emit sources directory and path) to generate the lists.
+  o The directory and path emit sources can also be used to generate
+     other directory lists, such as image listings with thumbnails.
+
+o Emit
+  o New sources
+    o fonts - A list of all fonts available. 
+    o directory - Directory listings. 
+    o path - Separate a path on '/'. 
+    o foreach - Traverse a list, e.g. the response from a multivalue select. 
+    o cimg - Like the <cimg> tag, but entity based. 
+      Includes &_.type;, &_.src;, &_.file-size;, &_.xsize;, &_.ysize;
+               and &_.data; 
+    o ldap - LDAP search query. 
+  o Emit can now sort the result. 
+  o You can now select a sub-range of the result. 
+  o remainderinfo=variablename (number of lines after current selected range). 
+
+o HTTP protocol module
+  o The module is greatly optimized. For a 100Kb file it went from 112
+    to 640 req/seconds.
+  o There is now a memory cache that can be used to optimize the
+    server. For a 10Kb file, the performance went from 240 to 1490
+    req/second. The cache can be configured on the Settings page for
+    each Site.
+
+
+
+Those are the main changes. Naturally, there has been lots of bug fixes
+too. Notably, CGI works properly on NT now, and the stability of Java
+on said platform has been drasticly improved.
