@@ -10,179 +10,7 @@
  * reference cache shortly.
  */
 
-
-/*
-84228 idag 11:02 /25 rader/ Mirar
-Kommentar till text 84186 av Per Hedbor (det är lagom varmt ute)
-Mottagare: Pike (-) erfarenhetsutbyte <498>
-Ärende: Finns det något enkelt sätt att göra det här snabbare?
-------------------------------------------------------------
-Hm, jag pratade med zino om en sån igår, eller nåt.
-
-array my_indices=({});
-mapping cached_args=([]);
-mapping cached_args_lookup=([]);
-
-int find_or_insert(mapping find)
-{
-   my_indices+=(array)(indices(find)-my_indices);
-
-   string vs=encode_value(rows(find,my_indices)); // statisk ordning
-   int i;
-
-   if (!zero_type(i=cached_args_lookup[vs]))
-      return cached_args[i];
-
-   cached_args_lookup[vs]=number;
-   cached_args[number]=find;
-
-   remove_call_out(save_cached_args);
-   call_out(save_cached_args, 10);
-   return number++;
-}
-
-...givet att find inte innehåller mappings.
-(84228) /Mirar/-------------------------------------
-Kommentar i text 84229 av Mirar
-Läsa nästa kommentar.
-84229 idag 11:05 /12 rader/ Mirar
-Kommentar till text 84228 av Mirar
-Mottagare: Pike (-) erfarenhetsutbyte <499>
-Ärende: Finns det något enkelt sätt att göra det här snabbare?
-------------------------------------------------------------
-Om encode_value hade statisk ordning på sina mappings, skulle man
-slippa komma ihåg vilken indexordning man hade...
-
-Den där innehåller förresten en bug, ju...
-
- >   string vs=encode_value(rows(find,my_indices)); // statisk ordning
-
-int i;
-
-array a=reverse(rows(find,my_indices));
-for (i=0; i<sizeof(a)&&!a[i]; i++);
-string vs=encode_value(reverse(a[i..]));
-(84229) /Mirar/-------------------------------------
-Kommentar i text 84239 av Mirar
-Läsa nästa kommentar.
-84239 idag 12:20 /11 rader/ Mirar
-Kommentar till text 84229 av Mirar
-Mottagare: Pike (-) erfarenhetsutbyte <502>
-Ärende: Finns det något enkelt sätt att göra det här snabbare?
-------------------------------------------------------------
-Lite mätningar i en mapping med storlek 42:
-
- int i;
- array a;
-
- my_indices+=(array)(indices(find)-my_indices); // 180µs
- 
- a=rows(find,my_indices);                       // 180µs
- a=reverse(a);                                  // 30µs
- for (i=0; i<sizeof(a)&&!a[i]; i++);            // ~0
- string vs=encode_value(reverse(a[i..]));       // 180µs
-(84239) /Mirar/-------------------------------------
-Kommentar i text 84241 av Mirar
-Läsa nästa kommentar.
-84241 idag 12:25 /12 rader/ Mirar
-Kommentar till text 84239 av Mirar
-Mottagare: Pike (-) erfarenhetsutbyte <504>
-Ärende: Finns det något enkelt sätt att göra det här snabbare?
-------------------------------------------------------------
-ursprungliga varianten:
-
-mapping f2 = copy_value(find);              // 140µs
-
-[...]
-equal(...,find)                             // 10µs, om de är olika
-                                            // 180µs, om de är lika
-
-... så, på under 40 element i mappingen, så är den snabbare. 
-
-Jag antar att det snabbaste alternativet skulle vara att bygga en egen
-hashklass...
-(84241) /Mirar/-------------------------------------
-Kommentar i text 84243 av Mirar
-Läsa nästa kommentar - Återse det kommenterade
-Återse text nummer 84239
-84239 idag 12:20 /11 rader/ Mirar
-Kommentar till text 84229 av Mirar
-Mottagare: Pike (-) erfarenhetsutbyte <502>
-Ärende: Finns det något enkelt sätt att göra det här snabbare?
-------------------------------------------------------------
-Lite mätningar i en mapping med storlek 42:
-
- int i;
- array a;
-
- my_indices+=(array)(indices(find)-my_indices); // 180µs
- 
- a=rows(find,my_indices);                       // 180µs
- a=reverse(a);                                  // 30µs
- for (i=0; i<sizeof(a)&&!a[i]; i++);            // ~0
- string vs=encode_value(reverse(a[i..]));       // 180µs
-(84239) /Mirar/-------------------------------------
-Kommentar i text 84241 av Mirar
-Läsa nästa kommentar - Återse det kommenterade
-Återse text nummer 84229
-84229 idag 11:05 /12 rader/ Mirar
-Kommentar till text 84228 av Mirar
-Mottagare: Pike (-) erfarenhetsutbyte <499>
-Ärende: Finns det något enkelt sätt att göra det här snabbare?
-------------------------------------------------------------
-Om encode_value hade statisk ordning på sina mappings, skulle man
-slippa komma ihåg vilken indexordning man hade...
-
-Den där innehåller förresten en bug, ju...
-
- >   string vs=encode_value(rows(find,my_indices)); // statisk ordning
-
-int i;
-
-array a=reverse(rows(find,my_indices));
-for (i=0; i<sizeof(a)&&!a[i]; i++);
-string vs=encode_value(reverse(a[i..]));
-(84229) /Mirar/-------------------------------------
-Kommentar i text 84239 av Mirar
-
-84240 idag 12:23 /28 rader/ Niels Möller
-Kommentar till text 84232 av Per Hedbor (det är lagom varmt ute)
-Mottagare: Pike (-) erfarenhetsutbyte <503>
-Ärende: Finns det något enkelt sätt att göra det här snabbare?
-------------------------------------------------------------
-Har du provat med mappingar som går att peta in i en hashtabell?
-
-class my_mapping
-{
-  mapping m;
-
-  mixed `[](key) { return m[key]; }
-
-  int `==(mixed o)
-  {
-    return equal(m, objectp(o) ? o->m : o);
-  }
-
-  int _hash()
-  {
-    int h = 4711*sizeof(m);
-
-    foreach(m, mixed i)
-      h += hash(i)*(17+hash(m[i]));
-    return h;
-  }
-}
-
-Förutsätter förstås att man inte ändrar destruktivt i mappingar som
-används som index (eller ser till att kopiera dem vid behov).
-
-Förutsätter såklart att pike ger dig en funktion hash() som fungerar
-på alla saker du använder i mappingarna.
-(84240) /Niels Möller/------------------------------(Ombruten)
-
-*/
-
-constant cvs_version = "$Id: business.pike,v 1.75 1998/02/24 15:22:44 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.76 1998/02/24 22:43:15 peter Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -284,14 +112,12 @@ mixed *register_module()
        " Options:\n"
        "  <b>separator</b>      Use the specified string as separator instead"
        " of tab.\n"
-       "  <b>lineseparator</b>  Use the specified string as lineseparator"
+       "  <b>lineseparator</b>  Use the specified string as lineseparator\n"
        "                 instead of newline.\n"
-       "  <b>form</b>           Can be set to either row or column. Default"
+       "  <b>form</b>           Can be set to either row or column. Default\n"
        "                 is row.\n"
-       "  <b>noparse</b>        Do not run the content of the tag through"
-       "                 the RXML"
-       " parser\n"
-       "                 before data extraction is done.\n"
+       "  <b>noparse</b>        Do not run the content of the tag through\n"
+       "                 the RXML parser before data extraction is done.\n"
        "\n&lt;<b>colors</b>&gt; (container)\n"
        "Tab separated list of colors for the diagram. Options:\n"
        "  <b>separator</b>      Use the specified string as separator instead"
@@ -351,11 +177,11 @@ void create()
 {
   defvar( "location", "/diagram/", "Mountpoint", TYPE_LOCATION|VAR_MORE,
 	  "The URL-prefix for the diagrams." );
-  defvar( "maxwidth", 800, "Maxwidth", TYPE_INT,
+  defvar( "maxwidth", 800, "Restrictions:Max width", TYPE_INT,
 	  "Maximal width of the generated image." );
-  defvar( "maxheight", 600, "Maxheight", TYPE_INT,
+  defvar( "maxheight", 600, "Restrictions:Max height", TYPE_INT,
 	  "Maximal height of the generated image." );
-  defvar( "maxstringlength", 60, "Maxstringlength", TYPE_INT,
+  defvar( "maxstringlength", 60, "Restrictions:Max string length", TYPE_INT,
 	  "Maximal length of the strings used in the diagram." );
 }
 
