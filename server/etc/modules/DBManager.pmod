@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.14 2001/08/08 23:11:04 nilsson Exp $
+// $Id: DBManager.pmod,v 1.15 2001/08/09 12:07:54 per Exp $
 //! @module DBManager
 //! Manages database aliases and permissions
 #include <roxen.h>
@@ -19,7 +19,21 @@ constant WRITE = 2;
 private
 {
   Sql.Sql db = connect_to_my_mysql( 0, "roxen" );
-  function(string,mixed...:array(mapping(string:string))) query=db->query;
+#ifdef THREADS
+  Thread.Mutex lock;
+#endif
+  function(string,mixed...:array(mapping(string:string))) query =
+#ifdef THREADS
+    lambda( mixed ... args )
+    {
+      object key = lock->lock();
+      mixed res = db->query( @args );
+      return res;
+    }
+#else
+  db->query
+#endif
+    ;
 
   string short( string n )
   {
@@ -31,15 +45,20 @@ private
   void changed()
   {
     changed_callbacks-=({0});
+    gc( );
     sql_cache = ([]);
+    gc( );
 #ifdef THREADS
     sql_cache_size = 0;
 #endif
     connection_cache = ([]);
+    gc( );
 #ifdef THREADS
     connection_cache_size = 0;
 #endif
+    gc( );
     foreach( changed_callbacks, function cb ) catch( cb() );
+    gc( );
   }
 
   void ensure_has_users( Sql.Sql db, Configuration c )
