@@ -1,5 +1,5 @@
 /*
- * $Id: smsrcpt.pike,v 1.1 1998/09/28 03:37:24 js Exp $
+ * $Id: smsrcpt.pike,v 1.2 1998/10/26 20:43:07 js Exp $
  *
  * A LysKOM SMS module for the AutoMail system.
  *
@@ -13,7 +13,7 @@ inherit "module";
 
 #define RCPT_DEBUG
 
-constant cvs_version = "$Id: smsrcpt.pike,v 1.1 1998/09/28 03:37:24 js Exp $";
+constant cvs_version = "$Id: smsrcpt.pike,v 1.2 1998/10/26 20:43:07 js Exp $";
 
 /*
  * Roxen glue
@@ -31,7 +31,7 @@ object conf;
 
 void create()
 {
-  defvar("outputstring", "Mail from: %s, Subject: %s",
+  defvar("outputstring", "Mail from: %s, Subject: %s, Mail body: %s",
 	 "SMS Message description string" ,TYPE_STRING,"");
 }
 
@@ -138,7 +138,8 @@ int put(string sender, string user, string domain,
       werror(Process.popen("/usr/bin/sms "+smsnumber+" '"+
 			   sprintf(query("outputstring"),
 				   headers->from,
-				   headers->subject)+"'"));
+				   headers->subject,
+				   msg->getdata())+"'"));
   }
   return res;
 }
