@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.44 1997/07/06 15:21:08 grubba Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.45 1997/07/19 22:22:14 grubba Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -541,7 +541,7 @@ string new_module_form(object id, object node)
 		  "<p><i>A module of the same type is already enabled (" +
 		  b->name + "). <a href=\"/(delete)" +
 		  node->descend(b->name, 1)->path(1) + "?" + (bar++) +
-		  "\">Disable that module</a> if you want this one insted</i>"
+		  "\">Disable that module</a> if you want this one instead</i>"
 		  "\n<p><br><p></blockquote>")});
     } else {
       res += ({"<p><a href=/(newmodule)"+node->path(1)+"?"+q+"=1>"+
