@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.18 1996/12/10 04:40:34 per Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.19 1996/12/10 04:52:30 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -170,10 +170,10 @@ object (Image) load_image(string f)
   if(!(data=file->read(0x7fffffff))) return 0;
   if(!img->frompnm(data) && !img->fromgif(data)) return 0;
 
-  last_image_name=f;
-  last_image=img;
+//  last_image_name=f;
+//  last_image=img;
 //call_out(lambda(){last_image=last_image_name=0;}, 10);
-  return img->copy();;
+  return img/*->copy()*/;
 }
 
 object (Image) blur(object (Image) img, int amnt)
