@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.441 2004/05/07 11:53:04 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.442 2004/05/07 17:35:55 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -748,8 +748,15 @@ private final int parse_got_2( )
          misc->range = contents[6..];
        break;
 
-     case "host":
      case "connection":
+       misc->client_connection = (<@(lower_case(contents)/" " - ({""}))>);
+       if (misc->client_connection->close) {
+	 misc->connection = "close";
+       } else if (misc->client_connection["keep-alive"]) {
+	 misc->connection = "keep-alive";
+       }
+       break;
+     case "host":
        misc[linename] = lower_case(contents);
        break;
      case "content-type":
@@ -915,8 +922,8 @@ void end(int|void keepit)
 
   if(keepit
      && !file->raw
-     && (misc->connection == "keep-alive" ||
-         (prot == "HTTP/1.1" && misc->connection != "close"))
+     && misc->connection != "close"
+     && ((prot == "HTTP/1.1") || (misc->connection == "keep-alive"))
      && my_fd
      // Is this necessary now when this function no longer is called
      // from the close callback? /mast
@@ -1589,9 +1596,14 @@ void send_result(mapping|void result)
 	file = multi_status->http_answer();
 
       if (file->error == Protocols.HTTP.HTTP_NO_CONTENT) {
+#if 0
 	// We actually give some content cf comment below.
 	file->len = 2;
 	file->data = "\r\n";
+#else
+	file->len = 0;
+	file->data = "";
+#endif /* 0 */
       }
 
       string head_status = file->rettext;
