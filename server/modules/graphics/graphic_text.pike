@@ -1,11 +1,10 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.229 2000/05/03 14:48:31 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.230 2000/06/03 04:10:56 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
-inherit "roxenlib";
 
 
 // ------------------- Module registration ---------------------
@@ -432,7 +431,7 @@ and here it ends.</ex>
 <attr name=magic-attribute value=value> Same as for any
  <tag>gtext</tag> attribute, except for the highlighted image.
  <ex type=vert>
-<gtext fgcolor=\"blue\" magic-glow=\"yellow\" magic=\"\">Magic_attribute</gtext>
+<gtext fgcolor=\"blue\" magic-glow=\"yellow\" magic=\"\">Magic attribute</gtext>
  </ex>
 </attr>
 
@@ -491,12 +490,16 @@ roxen.ImageCache image_cache;
 
 string status() {
   array s=image_cache->status();
-  return sprintf("<b>Images in cache:</b> %d images<br>\n<b>Cache size:</b> %s",
-		 s[0]/2, sizetostring(s[1]));
+  return sprintf("<b>Images in cache:</b> %d images<br />\n<b>Cache size:</b> %s",
+		 s[0]/2, Roxen.sizetostring(s[1]));
 }
 
 mapping(string:function) query_action_buttons() {
-  return ([ "Clear cache":image_cache->flush ]);
+  return ([ "Clear cache":flush_cache ]);
+}
+
+void flush_cache() {
+  image_cache->flush();
 }
 
 void start(int num, Configuration conf)
@@ -506,9 +509,9 @@ void start(int num, Configuration conf)
   if(query("colorparse")) module_dependencies(conf, ({ "wiretap" }) );
 }
 
-constant nbsp = iso88591["&nbsp;"];
-constant replace_from = indices( iso88591 )+ ({"&ss;","&lt;","&gt;","&amp;",});
-constant replace_to   = values( iso88591 ) + ({ nbsp, "<", ">", "&", });
+constant nbsp = Roxen.iso88591["&nbsp;"];
+constant replace_from = indices( Roxen.iso88591 )+ ({"&ss;","&lt;","&gt;","&amp;",});
+constant replace_to   = values( Roxen.iso88591 ) + ({ nbsp, "<", ">", "&", });
 
 #define simplify_text( from ) replace(from,replace_from,replace_to)
 
@@ -748,7 +751,7 @@ mapping mk_gtext_arg(mapping arg, RequestID id)
    foreach(filearg, string tmp)
      if(arg[tmp]) 
      {
-       p[tmp]=fix_relative(arg[tmp],id);
+       p[tmp]=Roxen.fix_relative(arg[tmp],id);
        m_delete(arg,tmp);
      }
 
@@ -797,8 +800,8 @@ string fix_text(string c, mapping m, RequestID id) {
   m_delete(m, "noparse");
   m_delete(m, "preparse");
 
-  c=replace(c, replace_entities+({"   ","  ", "\n\n\n", "\n\n", "\r"}),
-	    replace_values+({" ", " ", "\n", "\n", ""}));
+  c=replace(c, Roxen.replace_entities+({"   ","  ", "\n\n\n", "\n\n", "\r"}),
+	    Roxen.replace_values+({" ", " ", "\n", "\n", ""}));
 
   if(m->maxlen) {
     c = c[..(((int)m->maxlen||QUERY(deflen))-1)];
@@ -852,7 +855,7 @@ string simpletag_gtext(string t, mapping arg, string c, RequestID id)
   if(arg->href)
   {
     url = arg->href;
-    lp = replace(make_tag("a",arg-hreffilter),"%","%%")+"%s</a>";
+    lp = replace(Roxen.make_tag("a",arg-hreffilter),"%","%%")+"%s</a>";
     if(!p->fgcolor) p->fgcolor=id->misc->gtext_link||"#0000ff";
     m_delete(arg, "href");
   }
@@ -878,7 +881,7 @@ string simpletag_gtext(string t, mapping arg, string c, RequestID id)
         arg->width  = (string)size->xsize;
         arg->height = (string)size->ysize;
       }
-      res+=make_tag( "img", arg )+" ";
+      res+=Roxen.make_tag( "img", arg )+" ";
     }
     return sprintf(lp,res);
   }
@@ -922,8 +925,8 @@ string simpletag_gtext(string t, mapping arg, string c, RequestID id)
     string sn="i"+id->misc->gtext_mi++;
     if(!id->supports->js_image_object) {
       return (!input)?
-        ("<a "+ea+"href=\""+url+"\">"+make_tag("img",arg+(["name":sn]))+"</a>"):
-        make_tag("input",arg+(["type":"image"]));
+        ("<a "+ea+"href=\""+url+"\">"+Roxen.make_tag("img",arg+(["name":sn]))+"</a>"):
+        Roxen.make_tag("input",arg+(["type":"image"]));
     }
 
     arg->name=sn;
@@ -949,13 +952,13 @@ string simpletag_gtext(string t, mapping arg, string c, RequestID id)
                                             "'"+replace(magic,"'","`")+"'":
                                             "0")+"); return true;\" "
       "onMouseout=\"document.images['"+sn+"'].src = "+sn+"l.src;\">"
-      +make_tag("img",arg)+"</a>";
+      +Roxen.make_tag("img",arg)+"</a>";
   }
 
   if(input)
-    return make_tag("input",arg+(["type":"image"]));
+    return Roxen.make_tag("input",arg+(["type":"image"]));
 
-  return sprintf(lp,make_tag("img",arg));
+  return sprintf(lp,Roxen.make_tag("img",arg));
 }
 
 array(string) simpletag_gh(string t, mapping m, string c, RequestID id) {
