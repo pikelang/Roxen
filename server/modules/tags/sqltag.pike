@@ -1,11 +1,11 @@
-// This is a roxen module. Copyright © 1997-1999, Idonex AB.
+// This is a roxen module. Copyright © 1997-2000, Roxen IS.
 //
 // A module for Roxen, which gives the tags
 // <sqltable>, <sqlquery> and <sqloutput>.
 //
 // Henrik Grubbström 1997-01-12
 
-constant cvs_version="$Id: sqltag.pike,v 1.46 2000/02/21 17:26:50 kuntri Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.47 2000/02/24 03:54:00 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
 
@@ -92,10 +92,10 @@ constant tagdoc=([
 "]);
 #endif
 
-array|string|object do_sql_query(string tag, mapping args, RequestID id)
+array|object do_sql_query(string tag, mapping args, RequestID id)
 {
   if (!args->query)
-    return rxml_error(tag, "No query.", id);
+    RXML.parse_error("No query.");
 
   if (args->parse)
     args->query = parse_rxml(args->query, id);
@@ -147,30 +147,14 @@ array|string|object do_sql_query(string tag, mapping args, RequestID id)
     error = catch(con = Sql.sql(lower_case(host)=="localhost"?"":host));
 #endif
 
-  if (error) {
-    if (!args->quiet) {
-      if (args->log_error && QUERY(log_error)) {
-        report_error(sprintf("SQLTAG: Couldn't connect to SQL server:\n"
-       		       "%s\n", describe_backtrace(error)));
-      }
-      return "<h3>Couldn't connect to SQL server</h3><br>\n" +
-              html_encode_string(error[0]) + "<false>";
-    }
-    return rxml_error(tag, "Couldn't connect to SQL server. "+html_encode_string(error[0]), id);
-  }
+  if (error && !args->quiet)
+    RXML.run_error("Couldn't connect to SQL server. "+html_encode_string(error[0]));
 
   if (error = catch(result = tag=="sqltable"?con->big_query(args->query):con->query(args->query))) {
     error = html_encode_string(sprintf("Query %O failed. %s", args->query,
 				       con->error()||""));
-    if (!args->quiet) {
-      if (args->log_error && QUERY(log_error)) {
-        report_error(sprintf("SQLTAG: Query %O failed:\n"
-	       "%s\n",
-	       args->query, describe_backtrace(error)));
-      }
-      return "<h3>"+error+"</h3>\n<false>";
-    }
-    return rxml_error(tag, error, id);
+    if (!args->quiet)
+      RXML.run_error(error);
   }
 
   if(tag=="sqlquery") args["dbobj"]=con;
@@ -185,8 +169,7 @@ array|string container_sqloutput(string tag, mapping args, string contents,
 {
   NOCACHE();
 
-  string|array res=do_sql_query(tag, args, id);
-  if(stringp(res)) return res;
+  array res=do_sql_query(tag, args, id);
 
   if (res && sizeof(res)) {
     array ret = ({ do_output_tag(args, res, contents, id) });
@@ -201,7 +184,8 @@ array|string container_sqloutput(string tag, mapping args, string contents,
   if (args["do-once"])
     return do_output_tag( args, ({([])}), contents, id )+ "<true>";
 
-  return rxml_error(tag, "No SQL return values.", id);
+  if(args->quiet) return "";
+  RXML.run_error("No SQL return values.");
 }
 
 class TagSqlplugin {
@@ -211,10 +195,6 @@ class TagSqlplugin {
 
   array get_dataset(mapping m, RequestID id) {
     array|string res=do_sql_query("sqloutput", m, id);
-    if(stringp(res)) {
-      //      rxml_error(res);
-      return ({});
-    }
     if(m->rowinfo) id->variables[m->rowinfo] = sizeof(res);
     return res;
   }
@@ -224,24 +204,22 @@ string tag_sqlquery(string tag, mapping args, RequestID id)
 {
   NOCACHE();
 
-  string|array res=do_sql_query(tag, args, id);
-  if(stringp(res)) return res;
+  array res=do_sql_query(tag, args, id);
 
   if(args["mysql-insert-id"])
     if(args->dbobj && args->dbobj->master_sql)
       id->variables[args["mysql-insert-id"]] = args->dbobj->master_sql->insert_id();
     else
-      return rxml_error(tag, "No insert_id present.", id);
+      RXML.parse_error("No insert_id present.");
 
-  return "<true>";
+  return "<true />";
 }
 
 string tag_sqltable(string tag, mapping args, RequestID id)
 {
   NOCACHE();
 
-  string|object res=do_sql_query(tag, args, id);
-  if(stringp(res)) return res;
+  object res=do_sql_query(tag, args, id);
 
   int ascii=!!args->ascii;
   string ret="";
@@ -280,7 +258,8 @@ string tag_sqltable(string tag, mapping args, RequestID id)
     return ret+"<true>";
   }
 
-  return rxml_error(tag, "No SQL return values.", id);
+  if(args->quiet) return "";
+  RXML.run_error("No SQL return values.");
 }
 
 
@@ -320,10 +299,6 @@ void create()
 	 "Valid values for \"sqlserver\" depend on which "
 	 "SQL servers your pike has support for, but the following "
 	 "might exist: msql, mysql, odbc, oracle, postgres.\n");
-
-  defvar("log_error", 0, "Log errors to the event log",
-	 TYPE_FLAG, "Enable this to log database connection and SQL "
-	 "errors to the event log.\n");
 
 #ifdef SQL_TAG_COMPAT
   defvar("database", "", "Default SQL database (deprecated)",

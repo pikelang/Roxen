@@ -1,6 +1,6 @@
-// This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
+// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: tablify.pike,v 1.42 2000/02/10 07:13:28 nilsson Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.43 2000/02/24 03:54:42 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -305,7 +305,7 @@ string container_tablify(string tag, mapping m, string q, RequestID id)
   if(m->min || m->max) {
     m->min=m->min?(int)m->min-1:0;
     m->max=m->max?(int)m->max-1:sizeof(rows)-1;
-    if(m->max < m->min) return rxml_error(tag, "Min attribute greater than the max attribute.", id);
+    if(m->max < m->min) RXML.parse_error("Min attribute greater than the max attribute.");
     rows = rows[m->min..m->max];
     m_delete(m,"min");
     m_delete(m,"max");

@@ -1,7 +1,7 @@
-// This is a roxen module. Copyright © 1999-2000, Idonex AB.
+// This is a roxen module. Copyright © 1999-2000, Roxen IS.
 //
 
-constant cvs_version = "$Id: foldlist.pike,v 1.12 2000/02/07 12:08:58 kuntri Exp $";
+constant cvs_version = "$Id: foldlist.pike,v 1.13 2000/02/24 03:54:21 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -115,10 +115,8 @@ string container_foldlist(string tag, mapping m, string c, RequestID id) {
   string fl_name = (m->name || "fl")+fds+(id->misc->foldlist_id!=""?":"+id->misc->foldlist_id:"");
   object state=Page_state(id);
   string state_id = state->register_consumer(fl_name, id);
-  string error="";
-  if(id->variables->state)
-    if(!state->uri_decode(id->variables->state))
-      error=rxml_error(tag, "Error in state.", id);
+  if(id->variables->state && !state->uri_decode(id->variables->state))
+      RXML.run_error("Error in state.");
 
   //Get our real state
   array new=(state->get(state_id)||"")/"";
@@ -136,5 +134,5 @@ string container_foldlist(string tag, mapping m, string c, RequestID id) {
   c=parse_html(c,([]),(["ft":tag_ft]),id,state,fl);
   id->misc->foldlist_id=fl->inh;
 
-  return (id->misc->debug?"<!-- "+state_id+" -->":"")+"<dl>"+c+"</dl>"+error+"\n";
+  return (id->misc->debug?"<!-- "+state_id+" -->":"")+"<dl>"+c+"</dl>\n";
 }
