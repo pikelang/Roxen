@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.71 1998/11/22 00:16:48 grubba Exp $
+ * $Id: ftp2.pike,v 1.72 1998/11/22 18:51:01 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -107,45 +107,9 @@
 
 class RequestID2
 {
-  array client = ({ "ftp" });
-  constant prot = "FTP";
-  constant clientprot = "FTP";
-
-  object conf;
-
-  int time;
-
-  string raw_url;
-  int do_not_disconnect;
-
-  mapping(string:string) variables = ([]);
-  mapping(string:mixed) misc = ([]);
-  mapping(string:string) cookies = ([]);
-
-  multiset(string) prestate = (<>);
-  multiset(string) config = (<>);
-  multiset(string) supports = (< "ftp", "images", "tables", >);
-  multiset(string) pragma = (<>);
-
-  string remoteaddr;
+  inherit RequestID;
 
   mapping file;
-
-  object my_fd; /* The client. */
-
-  // string range;
-  string method;
-
-  string realfile, virtfile;
-  string rest_query = "";
-  string raw;
-  string query;
-  string not_query;
-  string extra_extension = ""; // special hack for the language module
-  string data, leftovers;
-  array(int|string) auth;
-  string rawauth, realauth;
-  string since;
 
 #ifdef FTP2_DEBUG
   static void trace_enter(mixed a, mixed b)
@@ -159,9 +123,19 @@ class RequestID2
   }
 #endif /* FTP2_DEBUG */
 
-  object clone_me()
+  void ready_to_receive()
   {
-    object o = this_object();
+    // FIXME: Should hook the STOR reply to this function.
+  }
+
+  void send_result(mapping|void result)
+  {
+    error("Assync sending with send_result() not supported yet.\n");
+  }
+
+  object(RequestID2) clone_me()
+  {
+    object(RequestID2) o = this_object();
     return(object_program(o)(o));
   }
 
@@ -172,16 +146,33 @@ class RequestID2
   void create(object|void m_rid)
   {
     DWRITE(sprintf("REQUESTID: New request id.\n"));
-    object o = this_object();
+
     if (m_rid) {
+      object o = this_object();
       foreach(indices(m_rid), string var) {
-	if (!(< "create", "__INIT", "clone_me", "end",
-		"clientprot", "prot" >)[var]) {
+	if (!(< "create", "__INIT", "clone_me", "end", "ready_to_receive",
+		"clientprot", "prot", "send", "scan_for_query",
+		"send_result", >)[var]) {
 	  o[var] = m_rid[var];
 	}
       }
+    } else {
+      // Defaults...
+      client = ({ "ftp" });
+      prot = "FTP";
+      clientprot = "FTP";
+      variables = ([]);
+      misc = ([]);
+      cookies = ([]);
+
+      prestate = (<>);
+      config = (<>);
+      supports = (< "ftp", "images", "tables", >);
+      pragma = (<>);
+      rest_query = "";
+      extra_extension = "";
     }
-    o->time = predef::time(1);
+    time = predef::time(1);
 #ifdef FTP2_DEBUG
     misc->trace_enter = trace_enter;
     misc->trace_leave = trace_leave;
