@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.12 1998/09/03 17:10:58 grubba Exp $
+ * $Id: smtp.pike,v 1.13 1998/09/04 17:56:45 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.12 1998/09/03 17:10:58 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.13 1998/09/04 17:56:45 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -266,7 +266,8 @@ class Server {
 			 (con->query_address()/" ")*":") });
       }
       if (prot == "ESMTP") {
-	res += ({});	// Supported extensions...
+	// Supported extensions...
+	res += ({ "EXPN", "8BITMIME", "SIZE", "HELP" });
       }
       send(250, res);
     }
@@ -385,9 +386,48 @@ class Server {
 	string from_colon = args[..i];
 	sscanf("%*[ ]%s", from_colon, from_colon);
 	if (upper_case(from_colon) == "FROM:") {
-	  sender = args[i+1..];
-	  sscanf("%*[ ]%s", sender, sender);
-	  if (sizeof(sender)) {
+	  array a = (args[i+1..]/" ") - ({ "" });
+
+	  if (sizeof(a)) {
+	    sender = a[0];
+
+	    a = a[1..];
+
+	    if (sizeof(a)) {
+	      mapping extensions = ([]);
+	      foreach(a, string ext) {
+		array b = ext/"=";
+		if (sizeof(b) > 1) {
+		  extensions[upper_case(b[0])] = b[1..]*"=";
+		} else {
+		  extensions[upper_case(ext)] = 1;
+		}
+	      }
+
+	      // Check extensions here.
+
+	      foreach(indices(extensions), string ext) {
+		switch(ext) {
+		case "SIZE":
+		  // The message will be approx this size.
+		  // We can reply with 452 (temporary limit, try later)
+		  // or 552 (hard limit).
+		  break;
+		case "BODY":
+		  switch(extensions->BODY) {
+		  case "8BITMIME":
+		    // We always support 8bit.
+		    break;
+		  default:
+		    // Should we have a warning here?
+		    break;
+		  }
+		  break;
+		default:
+		  break;
+		}
+	      }
+	    }
 
 	    foreach(conf->get_providers("smtp_filter")||({}), object o) {
 	      // roxen_perror("Got SMTP filter\n");
@@ -472,6 +512,8 @@ class Server {
       send(501);
     }
 
+    // DATA handling
+
     void handle_DATA(string data)
     {
       roxen_perror(sprintf("GOT: %O\n", data));
@@ -536,8 +578,6 @@ class Server {
 	return;
       }
 
-      // Handling of 8BITMIME?
-      
       send(354);
       handle_data = handle_DATA;
     }
