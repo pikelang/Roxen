@@ -174,12 +174,12 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
   //Initiate the piediagram!
   float FI=0;
   if (diagram_data["center"])
-    if (diagram_data["center"]>sizeof(numbers))
-      throw( ({"To great center integer is given! Center can not be greater than sizeof(data[0]).\n",
-	       backtrace()}));
-    else
+    {
+      //To great center integer is given! Center can not be greater than sizeof(data[0]).
+      diagram_data["center"]%=sizeof(numbers);
       FI=(400-`+(0,@pnumbers[0..diagram_data["center"]-2])
 	-pnumbers[diagram_data["center"]-1]*0.5)*2.0*PI/400.0;
+    }
   else
     if (diagram_data["rotate"])
       FI=((float)(diagram_data["rotate"])*2.0*PI/360.0)%(2*PI);
@@ -503,7 +503,7 @@ int main(int argc, string *argv)
 
   ]);
 
-  diagram_data["image"]=image(2,2)->fromppm(read_file("girl.ppm"));
+  //diagram_data["image"]=image(2,2)->fromppm(read_file("girl.ppm"));
 
 
   object o=Stdio.File();
