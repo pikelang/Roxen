@@ -1,11 +1,10 @@
 /*
- * $Id: Roxen.pmod,v 1.33 2000/08/27 14:27:16 mast Exp $
+ * $Id: Roxen.pmod,v 1.34 2000/08/31 20:52:59 per Exp $
  *
  * Various helper functions.
  *
  * Henrik Grubbström 1999-05-03
  */
-
 #include <config.h>
 inherit "roxenlib";
 
@@ -1038,6 +1037,15 @@ int is_modified(string a, int t, void|int len)
 int httpdate_to_time(string date)
 {
   return parse_since(date)[0]||-1;
+}
+
+void add_cache_callback( RequestID id, function(RequestID:int) callback )
+//! The request id object is not yet fully initialized in this callback.
+//! The only valid fields are raw_url and request_headers.
+{
+  while( id->misc->orig )
+    id = id->misc->orig;
+  id->misc->_cachecallbacks |= ({ callback });
 }
 
 string get_server_url(object c) {
