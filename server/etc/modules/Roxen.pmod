@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.160 2003/07/11 13:10:30 anders Exp $
+// $Id: Roxen.pmod,v 1.161 2003/07/15 08:50:46 anders Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -1662,7 +1662,7 @@ string strftime(string fmt, int t,
     switch(key[0]) {
     case 'a':	// Abbreviated weekday name
       if (language)
-	res += number2string(lt->wday+1,m,language(lang,"day",id))[..2];
+	res += number2string(lt->wday+1,m,language(lang,"short_day",id));
       else
 	res += ({ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" })[lt->wday];
       break;
@@ -1676,7 +1676,7 @@ string strftime(string fmt, int t,
     case 'b':	// Abbreviated month name
     case 'h':	// Abbreviated month name
       if (language)
-	res += number2string(lt->mon+1,m,language(lang,"month",id))[..2];
+	res += number2string(lt->mon+1,m,language(lang,"short_month",id));
       else
 	res += ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
 		  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" })[lt->mon];
