@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.4 1999/05/12 21:42:14 grubba Exp $
+ * $Id: Roxen.pmod,v 1.5 1999/05/14 18:42:40 grubba Exp $
  *
  * Various helper functions.
  *
@@ -258,7 +258,7 @@ class QuotaDB
 		     sizeof(index), sizeof(index_acc), acc_scale));
   }
 
-  static void rebuild_index()
+  void rebuild_index()
   {
     // FIXME: Actually make an index file.
     array(string) new_keys = sort(indices(new_entries_cache));
