@@ -10,7 +10,7 @@ constant module_type = MODULE_LOCATION;
 constant module_name = "Configuration Filesystem";
 constant module_doc = "This filesystem serves the configuration interface";
 constant module_unique = 1;
-constant cvs_version = "$Id: config_filesystem.pike,v 1.21 2000/02/02 02:05:38 per Exp $";
+constant cvs_version = "$Id: config_filesystem.pike,v 1.22 2000/02/10 04:20:43 nilsson Exp $";
 
 constant path = "config_interface/";
 
@@ -171,7 +171,7 @@ mixed find_file( string f, object id )
   return retval;
 }
 
-void start(int n, object cfg)
+void start(int n, Configuration cfg)
 {
   if( cfg )
   {
