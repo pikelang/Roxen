@@ -8,7 +8,7 @@
 </else>
 <theme-set what=logo-html
 	   to="<imgs border=0 src='&usr.logo;' vspace=0 hspace=3
-	             style='padding-bottom: 10'>"/>
+	             class='logo'>"/>
 
 <set variable="var.fg" value="#000000"/>
 <set variable="var.page-bg" value="#f2f1eb"/>
