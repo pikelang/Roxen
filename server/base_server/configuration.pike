@@ -3,7 +3,7 @@
 //
 // A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.446 2001/07/02 21:59:34 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.447 2001/07/05 04:32:25 nilsson Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2305,7 +2305,6 @@ void start(int num)
 
   failed_urls = ({ });
 
-  int st = gethrtime();
   foreach( (query( "URLs" )-registered_urls), string url )
     if( roxen.register_url( url, this_object() ) )
       registered_urls += ({ url });
@@ -2464,7 +2463,9 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
     while( modules[ modname ] && modules[ modname ][ id ] )
       id++;
 
+#ifdef MODULE_DEBUG
   int start_time = gethrtime();
+#endif
 
   if( !moduleinfo )
   {
@@ -2991,10 +2992,10 @@ int disable_module( string modname, int|void nodest )
 
   clean_up_for_module( moduleinfo, me );
 
-  m_delete( enabled_modules, modname + "#" + id );
-  forcibly_added[ modname + "#" + id ] = 0;
   if( !nodest )
   {
+    m_delete( enabled_modules, modname + "#" + id );
+    forcibly_added[ modname + "#" + id ] = 0;
     store( "EnabledModules",enabled_modules, 1, this_object());
     destruct(me);
   }
