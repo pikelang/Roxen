@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.337 1999/10/10 19:14:57 marcus Exp $
+ * $Id: roxen.pike,v 1.338 1999/10/10 20:47:03 kinkie Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.337 1999/10/10 19:14:57 marcus Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.338 1999/10/10 20:47:03 kinkie Exp $";
 
 object backend_thread;
 object argcache;
@@ -52,6 +52,7 @@ class RequestID
   mapping (string:mixed) misc;
   mapping (string:string) cookies;
   mapping (string:string) request_headers;
+  mapping (string:mixed) throttle;
   multiset(string) prestate;
   multiset(string) config;
   multiset(string) supports;
