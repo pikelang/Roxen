@@ -6,7 +6,7 @@ inherit "roxenlib";
 // by Leif Stensson.
 
 string cvs_version =
-       "$Id: perl.pike,v 2.16 2000/12/18 14:08:40 leif Exp $";
+       "$Id: perl.pike,v 2.17 2001/01/12 16:55:48 leif Exp $";
 
 constant module_type = MODULE_FILE_EXTENSION | MODULE_TAG;
 
@@ -65,7 +65,7 @@ void create()
   defvar("helper",
 #if constant(system.NetWkstaUserEnum)
   // NT
-     "perl/bin/ntperl",
+     "perl/bin/ntperl.pl",
 #else
   // Assume Unix
      "perl/bin/perlrun",
