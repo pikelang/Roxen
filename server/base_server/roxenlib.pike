@@ -1,4 +1,4 @@
-// $Id: roxenlib.pike,v 1.146 2000/01/23 06:21:51 nilsson Exp $
+// $Id: roxenlib.pike,v 1.147 2000/01/26 23:17:53 jhs Exp $
 
 #include <roxen.h>
 inherit "http";
@@ -699,7 +699,7 @@ static int backup_extension( string f )
 {
   if(!strlen(f))
     return 1;
-  return (f[-1] == '#' || f[-1] == '~' || (strlen(f)>1 && f[1]=='#')
+  return (f[-1] == '#' || f[-1] == '~' || f[0..1]==".#"
 	  || (f[-1] == 'd' && sscanf(f, "%*s.old"))
 	  || (f[-1] == 'k' && sscanf(f, "%*s.bak")));
 }
@@ -1677,4 +1677,3 @@ function get_client_charset_decoder( string едц, RequestID|void id )
   }
   report_warning( "Unable to find charset decoder for едц == "+едц+"\n" );
 }
-
