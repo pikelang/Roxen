@@ -2,7 +2,7 @@
 inherit "module";
 
 #if constant(Servlet.servlet)
-string cvs_version = "$Id: servlet.pike,v 2.5 2000/02/12 15:55:56 nilsson Exp $";
+string cvs_version = "$Id: servlet.pike,v 2.6 2000/03/13 02:17:15 nilsson Exp $";
 int thread_safe=1;
 
 inherit "roxenlib";
@@ -138,6 +138,12 @@ mixed find_file( string f, RequestID id )
   servlet->service(id);
 
   return http_pipe_in_progress();
+}
+
+#else
+
+void create() {
+  report_error("No servlet support found in pike.\n");
 }
 
 #endif
