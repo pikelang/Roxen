@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.111 2000/04/05 14:44:08 grubba Exp $
+# $Id: start,v 1.112 2000/04/25 12:05:25 mast Exp $
 
 pre="`echo \" $$             \" | sed -e 's/\(.........\)\(.*\)/\1/g'` :"
 
@@ -21,7 +21,7 @@ if test -d $LOCALDIR/.; then
 else :; fi
 
 if test -d $VARDIR/.; then :; else
-  echo "Creating directory $VARDIR/."
+  echo "$pre Creating directory $VARDIR"
   mkdir $VARDIR || exit 1
 fi
 
