@@ -2,12 +2,6 @@
 <locale version="1.0"/>
 <project>roxen_config</project>
 <language>deu</language>
-<file>../config_interface/boxes/Box.pmod</file>
-<file>../config_interface/boxes/crunch.pike</file>
-<file>../config_interface/boxes/doclinks.pike</file>
-<file>../config_interface/boxes/megatokyo.pike</file>
-<file>../config_interface/boxes/server_status.pike</file>
-<file>../config_interface/boxes/welcome.pike</file>
 <file>../config_interface/cv_startpage_tabs.pike</file>
 <file>../config_interface/dbs/backups.html</file>
 <file>../config_interface/dbs/browser.pike</file>
@@ -23,7 +17,6 @@
 <file>../config_interface/dbs/status.html</file>
 <file>../config_interface/dbs/status.pike</file>
 <file>../config_interface/dbs/subtabs.pike</file>
-<file>../config_interface/diff.pike</file>
 <file>../config_interface/event_log/clear_log.pike</file>
 <file>../config_interface/event_log/log.pike</file>
 <file>../config_interface/global_settings/index.html</file>
@@ -154,35 +147,7 @@
 <t>Benutzer</t>
 </str>
 
-<str id="cw">
-<o>and</o>
-<t>und</t>
-</str>
 
-<str id="207">
-<o>every</o>
-<t>jede</t>
-</str>
-
-<str id="208">
-<o>since</o>
-<t>seit</t>
-</str>
-
-<str id="209">
-<o>Notice</o>
-<t>Notiz</t>
-</str>
-
-<str id="210">
-<o>Warning</o>
-<t>Warnung</t>
-</str>
-
-<str id="211">
-<o>Error</o>
-<t>Fehler</t>
-</str>
 
 <str id="212">
 <o>Admin</o>
@@ -599,16 +564,6 @@ as the name of its log file directory.
 <t>Illegaler Sitename</t>
 </str>
 
-<str id="232">
-<o>Crunch activity</o>
-<t>Crunch-Aktivität</t>
-</str>
-
-<str id="262">
-<o>Recently changed Crunch reports</o>
-<t>Kürzlich geänderte Crunch-Reports</t>
-</str>
-
 <str id="358">
 <o>Changed</o>
 <t>Geändert</t>
@@ -624,55 +579,14 @@ as the name of its log file directory.
 <t>Startseite</t>
 </str>
 
-<str id="363">
-<o>Documentation links</o>
-<t>Dokumentationsverweise</t>
-</str>
 
-<str id="364">
-<o>Links to the inline documentation</o>
-<t>Verweise auf die Inline-Dokumentation</t>
-</str>
-
-<str id="365">
-<o>Welcome message</o>
-<t>Begrüssungsnachricht</t>
-</str>
-
-<str id="366">
-<o>Roxen welcome message and news</o>
-<t>Roxen Begrüssungsnachricht und Neuigkeiten</t>
-</str>
 
 <str id="218">
 <o>DBs</o>
 <t>Datenbanken</t>
 </str>
 
-<str id="367">
-<o>Server status</o>
-<t>Server-Status</t>
-</str>
 
-<str id="368">
-<o>Various global server statistics</o>
-<t>Verschiedene globale Server-Statistiken</t>
-</str>
-
-<str id="369">
-<o>Server started</o>
-<t>Server gestartet</t>
-</str>
-
-<str id="370">
-<o>Server uptime</o>
-<t>Server-Laufzeit</t>
-</str>
-
-<str id="371">
-<o>CPU-time used</o>
-<t>Benutzte CPU-Zeit</t>
-</str>
 
 <str id="372">
 <o>MySQL status</o>
@@ -784,55 +698,9 @@ as the name of its log file directory.
 <t>HTTP Cookies</t>
 </str>
 
-<str id="389">
-<o>Fetching data from %s...</o>
-<t>Beziehe Daten von %s...</t>
-</str>
 
-<str id="391">
-<o>Web Site Creator</o>
-<t>Website-Autor</t>
-</str>
 
-<str id="392">
-<o>Administrator Manual</o>
-<t>Administrator-Handbuch</t>
-</str>
 
-<str id="393">
-<o>User Manual</o>
-<t>Benutzer-Handbuch</t>
-</str>
-
-<str id="394">
-<o>RXML Tutorial</o>
-<t>RXML-Tutorial</t>
-</str>
-
-<str id="395">
-<o>Programmer Manual</o>
-<t>Programmierer-Handbuch</t>
-</str>
-
-<str id="396">
-<o>Pike Tutorial</o>
-<t>Pike-Tutorial</t>
-</str>
-
-<str id="397">
-<o>No documentation found at all</o>
-<t>Keine Dokumentation gefunden</t>
-</str>
-
-<str id="398">
-<o>Todays MegaTokyo comic</o>
-<t>MegaTokyo-Comic von heute</t>
-</str>
-
-<str id="399">
-<o>Todays comic from MegaTokyo</o>
-<t>MegaTokyo-Comic von heute</t>
-</str>
 
 <str id="401">
 <o>Copy or move database</o>
@@ -1175,11 +1043,6 @@ Dies muss ein MySQL-Server sein, keine anderen Datenbank wird funktionieren.
 <t>Datenbank-Backups</t>
 </str>
 
-<str id="466">
-<o>Difference</o>
-<t>Unterschied</t>
-</str>
-
 <str id="467">
 <o>%d entries skipped. Present in log on disk</o>
 <t>%d Einträge übersprungen. Im Log auf Festplatte vorhanden</t>
@@ -1474,53 +1337,9 @@ Roxen verwaltet.&lt;/p&gt;</t>
 <t>Diesen Port binden: </t>
 </str>
 
-<str id="1000">
-<new/>
-<o>Content Editor (Instant Edition)</o>
-<t></t>
-</str>
 
-<str id="1001">
-<new/>
-<o>Content Editor (Advanced Edition)</o>
-<t></t>
-</str>
 
-<str id="1002">
-<new/>
-<o>Web Developer</o>
-<t></t>
-</str>
 
-<str id="1003">
-<new/>
-<o>System Developer</o>
-<t></t>
-</str>
-
-<str id="1004">
-<new/>
-<o>Administrator</o>
-<t></t>
-</str>
-
-<str id="1005">
-<new/>
-<o>Forms And Response Module</o>
-<t></t>
-</str>
-
-<str id="1006">
-<new/>
-<o>Categorization Module</o>
-<t></t>
-</str>
-
-<str id="1007">
-<new/>
-<o>Tutorials</o>
-<t></t>
-</str>
 
 <str id="1008">
 <new/>

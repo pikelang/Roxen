@@ -2,12 +2,6 @@
 <locale version="1.0"/>
 <project>roxen_config</project>
 <language>ces</language>
-<file>../config_interface/boxes/Box.pmod</file>
-<file>../config_interface/boxes/crunch.pike</file>
-<file>../config_interface/boxes/doclinks.pike</file>
-<file>../config_interface/boxes/megatokyo.pike</file>
-<file>../config_interface/boxes/server_status.pike</file>
-<file>../config_interface/boxes/welcome.pike</file>
 <file>../config_interface/cv_startpage_tabs.pike</file>
 <file>../config_interface/dbs/backups.html</file>
 <file>../config_interface/dbs/browser.pike</file>
@@ -23,7 +17,6 @@
 <file>../config_interface/dbs/status.html</file>
 <file>../config_interface/dbs/status.pike</file>
 <file>../config_interface/dbs/subtabs.pike</file>
-<file>../config_interface/diff.pike</file>
 <file>../config_interface/event_log/clear_log.pike</file>
 <file>../config_interface/event_log/log.pike</file>
 <file>../config_interface/global_settings/index.html</file>
@@ -154,35 +147,7 @@
 <t>U¾ivatel</t>
 </str>
 
-<str id="cw">
-<o>and</o>
-<t>a</t>
-</str>
 
-<str id="207">
-<o>every</o>
-<t>v¾dy</t>
-</str>
-
-<str id="208">
-<o>since</o>
-<t>od</t>
-</str>
-
-<str id="209">
-<o>Notice</o>
-<t>Poznámka</t>
-</str>
-
-<str id="210">
-<o>Warning</o>
-<t>Upozornìní</t>
-</str>
-
-<str id="211">
-<o>Error</o>
-<t>Chyba</t>
-</str>
 
 <str id="212">
 <o>Admin</o>
@@ -653,18 +618,6 @@ as the name of its log file directory.
 <t></t>
 </str>
 
-<str id="232">
-<new/>
-<o>Crunch activity</o>
-<t></t>
-</str>
-
-<str id="262">
-<new/>
-<o>Recently changed Crunch reports</o>
-<t></t>
-</str>
-
 <str id="358">
 <new/>
 <o>Changed</o>
@@ -683,29 +636,7 @@ as the name of its log file directory.
 <t></t>
 </str>
 
-<str id="363">
-<new/>
-<o>Documentation links</o>
-<t></t>
-</str>
 
-<str id="364">
-<new/>
-<o>Links to the inline documentation</o>
-<t></t>
-</str>
-
-<str id="365">
-<new/>
-<o>Welcome message</o>
-<t></t>
-</str>
-
-<str id="366">
-<new/>
-<o>Roxen welcome message and news</o>
-<t></t>
-</str>
 
 <str id="218">
 <new/>
@@ -713,35 +644,7 @@ as the name of its log file directory.
 <t></t>
 </str>
 
-<str id="367">
-<new/>
-<o>Server status</o>
-<t></t>
-</str>
 
-<str id="368">
-<new/>
-<o>Various global server statistics</o>
-<t></t>
-</str>
-
-<str id="369">
-<new/>
-<o>Server started</o>
-<t></t>
-</str>
-
-<str id="370">
-<new/>
-<o>Server uptime</o>
-<t></t>
-</str>
-
-<str id="371">
-<new/>
-<o>CPU-time used</o>
-<t></t>
-</str>
 
 <str id="372">
 <new/>
@@ -875,65 +778,9 @@ as the name of its log file directory.
 <t></t>
 </str>
 
-<str id="389">
-<new/>
-<o>Fetching data from %s...</o>
-<t></t>
-</str>
 
-<str id="391">
-<new/>
-<o>Web Site Creator</o>
-<t></t>
-</str>
 
-<str id="392">
-<new/>
-<o>Administrator Manual</o>
-<t></t>
-</str>
 
-<str id="393">
-<new/>
-<o>User Manual</o>
-<t></t>
-</str>
-
-<str id="394">
-<new/>
-<o>RXML Tutorial</o>
-<t></t>
-</str>
-
-<str id="395">
-<new/>
-<o>Programmer Manual</o>
-<t></t>
-</str>
-
-<str id="396">
-<new/>
-<o>Pike Tutorial</o>
-<t></t>
-</str>
-
-<str id="397">
-<new/>
-<o>No documentation found at all</o>
-<t></t>
-</str>
-
-<str id="398">
-<new/>
-<o>Todays MegaTokyo comic</o>
-<t></t>
-</str>
-
-<str id="399">
-<new/>
-<o>Todays comic from MegaTokyo</o>
-<t></t>
-</str>
 
 <str id="401">
 <new/>
@@ -1328,12 +1175,6 @@ server must be a MySQL server, nothing else will work.
 <t></t>
 </str>
 
-<str id="466">
-<new/>
-<o>Difference</o>
-<t></t>
-</str>
-
 <str id="467">
 <new/>
 <o>%d entries skipped. Present in log on disk</o>
@@ -1682,53 +1523,9 @@ server must be a MySQL server, nothing else will work.
 <t></t>
 </str>
 
-<str id="1000">
-<new/>
-<o>Content Editor (Instant Edition)</o>
-<t></t>
-</str>
 
-<str id="1001">
-<new/>
-<o>Content Editor (Advanced Edition)</o>
-<t></t>
-</str>
 
-<str id="1002">
-<new/>
-<o>Web Developer</o>
-<t></t>
-</str>
 
-<str id="1003">
-<new/>
-<o>System Developer</o>
-<t></t>
-</str>
-
-<str id="1004">
-<new/>
-<o>Administrator</o>
-<t></t>
-</str>
-
-<str id="1005">
-<new/>
-<o>Forms And Response Module</o>
-<t></t>
-</str>
-
-<str id="1006">
-<new/>
-<o>Categorization Module</o>
-<t></t>
-</str>
-
-<str id="1007">
-<new/>
-<o>Tutorials</o>
-<t></t>
-</str>
 
 <str id="1008">
 <new/>

@@ -5,12 +5,6 @@
 <baselang>eng</baselang>
 <xmlpath>../translations/%L/roxen_config.xml</xmlpath>
 
-  <file>../config_interface/boxes/Box.pmod</file>
-  <file>../config_interface/boxes/crunch.pike</file>
-  <file>../config_interface/boxes/doclinks.pike</file>
-  <file>../config_interface/boxes/megatokyo.pike</file>
-  <file>../config_interface/boxes/server_status.pike</file>
-  <file>../config_interface/boxes/welcome.pike</file>
   <file>../config_interface/cv_startpage_tabs.pike</file>
   <file>../config_interface/dbs/backups.html</file>
   <file>../config_interface/dbs/browser.pike</file>
@@ -26,7 +20,6 @@
   <file>../config_interface/dbs/status.html</file>
   <file>../config_interface/dbs/status.pike</file>
   <file>../config_interface/dbs/subtabs.pike</file>
-  <file>../config_interface/diff.pike</file>
   <file>../config_interface/event_log/clear_log.pike</file>
   <file>../config_interface/event_log/log.pike</file>
   <file>../config_interface/global_settings/index.html</file>
