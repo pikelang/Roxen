@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.82 2000/01/25 18:05:33 nilsson Exp $
+ * $Id: rxml.pike,v 1.83 2000/01/25 20:17:23 nilsson Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -406,8 +406,12 @@ string do_parse(string to_parse, RequestID id,
     parser = RXML.t_html (RXML.PHtmlCompat)->get_parser (ctx);
     parser->_parent = parent_parser;
   }
-  else
+  else { 
     parser = rxml_tag_set (RXML.t_html (RXML.PHtmlCompat), id);
+#ifdef OLD_RXML_COMPAT
+    parser->context->add_scope("_", id->variables);
+#endif
+  }
   parser->parse_html_compat (parse_html_compat);
   id->misc->_parser = parser;
   parser->_source_file = file;
