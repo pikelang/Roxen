@@ -9,6 +9,7 @@ inherit "roxenlib";
 
 LOCALE_PROJECT(config_interface);
 #define LOCALE(X,Y)	_DEF_LOCALE(X,Y)
+#define SLOCALE(X,Y)	_STR_LOCALE(config_interface,X,Y)
 
 constant module_type   = MODULE_AUTH | MODULE_FIRST;
 constant module_name   = "Configuration UserDB";
@@ -436,8 +437,8 @@ void first_try( RequestID id )
     host = h[0];
   else
     host = id->remoteaddr;
-  if( (time() - logged_in[ u+host ]) > 1800 )
-    report_notice(LOCALE("", "Administrator logged on as %s from %s.\n"),
+  if( (time(1) - logged_in[ u+host ]) > 1800 )
+    report_notice(SLOCALE("", "Administrator logged on as %s from %s.\n"),
 		  u, host+" ("+id->remoteaddr+")" );
 
   logged_in[ u+host ] = time();
