@@ -7,7 +7,7 @@
 #endif
 #endif
 #ifndef IN_INSTALL
-// string cvs_version = "$Id: newdecode.pike,v 1.15 1999/11/21 02:27:27 per Exp $";
+// string cvs_version = "$Id: newdecode.pike,v 1.16 1999/12/08 02:30:53 mast Exp $";
 #endif
 
 #include <roxen.h>
@@ -227,8 +227,8 @@ string encode_config_region(mapping m, string reg, object c)
       doc = c->get_doc_for( reg, v );
     if(doc)
       doc=("\n  <!--\n    "+
-           replace(sprintf("%*-=s",74,trim_ws(doc)), 
-                   ({"\n","'"}), ({"\n    ","`"}))
+           replace(sprintf("%*-=s",74,trim_ws(replace(doc,"--","- -"))),
+                   ({"\n","'","--"}), ({"\n    ","`","- -"}))
            +"\n   -->\n");
     else
       doc = "";
