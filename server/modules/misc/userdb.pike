@@ -3,7 +3,7 @@
 // User database. Reads the system password database and use it to
 // authentificate users.
 
-constant cvs_version = "$Id: userdb.pike,v 1.48 2000/08/28 05:31:55 per Exp $";
+constant cvs_version = "$Id: userdb.pike,v 1.49 2000/08/28 16:08:20 jhs Exp $";
 
 inherit "module";
 #include <module.h>
@@ -374,7 +374,7 @@ int succ, fail, nouser;
 
 mapping failed  = ([ ]);
 
-array|int auth(array(string) auth, object id)
+array|int auth(array(string) auth, RequestID id)
 {
   string u, p;
   array(string) arr = auth[1]/":";
