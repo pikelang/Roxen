@@ -5,7 +5,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: PXml.pike,v 1.14 2000/01/11 01:57:28 mast Exp $
+//! $Id: PXml.pike,v 1.15 2000/01/14 05:16:18 mast Exp $
 
 #pragma strict_types
 
@@ -52,11 +52,7 @@ static array entity_cb (Parser.HTML this, string str)
 	if (sscanf (entity, "%*c%d%*c", int c) == 2) out = (string) ({c});
       return out && ({out});
     }
-    array(string) split = entity / ".";
-    if (sizeof (split) == 2) {
-      mixed val = context->get_var (split[1], split[0]);
-      return val == RXML.Void ? ({}) : ({val});
-    }
+    return handle_var (entity);
   }
   return type->free_text ? 0 : ({});
 }
@@ -203,6 +199,8 @@ mixed read()
   }
   // Not reached.
 }
+
+void report_error (string msg) {low_parser::write_out (msg);}
 
 // mixed feed (string in) {return low_parser::feed (in);}
 // void finish (void|string in) {low_parser::finish (in);}

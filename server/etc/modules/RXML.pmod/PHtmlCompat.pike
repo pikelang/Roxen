@@ -6,7 +6,7 @@
 //!
 //! Created 2000-01-08 by Martin Stjernholm.
 //!
-//! $Id: PHtmlCompat.pike,v 1.3 2000/01/11 01:59:08 mast Exp $
+//! $Id: PHtmlCompat.pike,v 1.4 2000/01/14 05:16:18 mast Exp $
 
 #pragma strict_types
 
@@ -124,13 +124,7 @@ mapping(string:CONTAINER_TYPE) containers() {return tagmap_containers;}
 static array entity_cb (Parser.HTML ignored, string str)
 {
   string entity = tag_name();
-  if (sizeof (entity) && entity[0] != '#') {
-    array(string) split = entity / ".";
-    if (sizeof (split) == 2) {
-      mixed val = context->get_var (split[1], split[0]);
-      return val == RXML.Void ? ({}) : ({val});
-    }
-  }
+  if (sizeof (entity) && entity[0] != '#') return handle_var (entity);
   return type->free_text ? 0 : ({});
 }
 
