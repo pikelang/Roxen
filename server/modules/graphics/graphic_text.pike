@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Idonex AB.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.200 2000/01/05 22:35:40 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.201 2000/01/12 13:39:16 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -237,6 +237,7 @@ constant textarg=({"afont",
 		   "alpha",
 		   "bevel",
 		   "bgcolor",
+		   "bgturbulence",
 		   "black",
 		   "bold",
 		   "bshadow",
@@ -275,7 +276,6 @@ constant textarg=({"afont",
 		   "textbox",
 		   "textbelow",
 		   "textscale",
-		   "turbulence",
 		   "verbatim",
 		   "xpad",
 		   "xsize",
