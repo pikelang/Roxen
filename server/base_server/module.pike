@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.195 2004/05/10 19:25:05 mast Exp $
+// $Id: module.pike,v 1.196 2004/05/10 21:37:30 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -426,53 +426,57 @@ string|array(Parser.XML.Tree.SimpleNode)|mapping(string:mixed)
 //! RFC 2518 PROPFIND implementation with recursion according to
 //! @[depth]. See @[find_properties] for details.
 void recurse_find_properties(string path, string mode,
-			     int depth, MultiStatus.Prefixed result,
-			     RequestID id,
+			     int depth, RequestID id,
 			     multiset(string)|void filt)
 {
-  SIMPLE_TRACE_ENTER (this, "%s for %O, depth %d",
-		      mode == "DAV:propname" ? "Listing property names" :
-		      mode == "DAV:allprop" ? "Retrieving all properties" :
-		      mode == "DAV:prop" ? "Retrieving specific properties" :
-		      "Finding properties with mode " + mode,
-		      path, depth);
-  mapping(string:mixed)|PropertySet properties = query_property_set(path, id);
+  MultiStatus.Prefixed result =
+    id->get_multi_status()->prefix (id->url_base() + query_location()[1..]);
 
-  if (!properties) {
-    SIMPLE_TRACE_LEAVE ("No such file or dir");
-    return;
-  }
+  void recurse (string path, int depth) {
+    SIMPLE_TRACE_ENTER (this, "%s for %O, depth %d",
+			mode == "DAV:propname" ? "Listing property names" :
+			mode == "DAV:allprop" ? "Retrieving all properties" :
+			mode == "DAV:prop" ? "Retrieving specific properties" :
+			"Finding properties with mode " + mode,
+			path, depth);
+    mapping(string:mixed)|PropertySet properties = query_property_set(path, id);
 
-  {
-    mapping(string:mixed) ret = mappingp (properties) ?
-      properties : properties->find_properties(mode, result, filt);
-
-    if (ret) {
-      result->add_status (path, ret->error, ret->rettext);
-      SIMPLE_TRACE_LEAVE ("Got status %d: %O", ret->error, ret->rettext);
+    if (!properties) {
+      SIMPLE_TRACE_LEAVE ("No such file or dir");
       return;
     }
-  }
 
-  if (properties->get_stat()->isdir) {
-    if (depth <= 0) {
-      SIMPLE_TRACE_LEAVE ("Not recursing due to depth limit");
-      return;
-    }
-    depth--;
-    foreach(find_dir(path, id) || ({}), string filename) {
-      recurse_find_properties(combine_path(path, filename), mode, depth,
-			      result, id, filt);
-    }
-  }
+    {
+      mapping(string:mixed) ret = mappingp (properties) ?
+	properties : properties->find_properties(mode, result, filt);
 
-  SIMPLE_TRACE_LEAVE ("");
-  return;
+      if (ret) {
+	result->add_status (path, ret->error, ret->rettext);
+	SIMPLE_TRACE_LEAVE ("Got status %d: %O", ret->error, ret->rettext);
+	return;
+      }
+    }
+
+    if (properties->get_stat()->isdir) {
+      if (depth <= 0) {
+	SIMPLE_TRACE_LEAVE ("Not recursing due to depth limit");
+	return;
+      }
+      depth--;
+      foreach(find_dir(path, id) || ({}), string filename) {
+	recurse(combine_path_unix(path, filename), depth);
+      }
+    }
+
+    SIMPLE_TRACE_LEAVE ("");
+  };
+
+  recurse (path, depth);
 }
 
 mapping(string:mixed) patch_properties(string path,
 				       array(PatchPropertyCommand) instructions,
-				       MultiStatus.Prefixed result, RequestID id)
+				       RequestID id)
 {
   SIMPLE_TRACE_ENTER (this, "Patching properties for %O", path);
   mapping(string:mixed)|PropertySet properties = query_property_set(path, id);
@@ -509,6 +513,8 @@ mapping(string:mixed) patch_properties(string path,
     properties->unroll();
     throw (err);
   } else {
+    MultiStatus.Prefixed result =
+      id->get_multi_status()->prefix (id->url_base() + query_location()[1..] + path);
     int any_failed;
     foreach(results, mapping(string:mixed) answer) {
       if (any_failed = (answer && (answer->error >= 300))) {
@@ -522,10 +528,10 @@ mapping(string:mixed) patch_properties(string path,
 	Roxen.http_status (Protocols.HTTP.DAV_FAILED_DEP, "Failed dependency.");
       for(i = 0; i < sizeof(results); i++) {
 	if (!results[i] || results[i]->error < 300) {
-	  result->add_property(path, instructions[i]->property_name,
+	  result->add_property("", instructions[i]->property_name,
 			       answer);
 	} else {
-	  result->add_property(path, instructions[i]->property_name,
+	  result->add_property("", instructions[i]->property_name,
 			       results[i]);
 	}
       }
@@ -533,7 +539,7 @@ mapping(string:mixed) patch_properties(string path,
     } else {
       int i;
       for(i = 0; i < sizeof(results); i++) {
-	result->add_property(path, instructions[i]->property_name,
+	result->add_property("", instructions[i]->property_name,
 			     results[i]);
       }
       properties->commit();
@@ -1137,7 +1143,8 @@ mapping(string:mixed)|int(0..1) write_access(string relative_path,
 mapping(string:mixed)|int(-1..0)|Stdio.File find_file(string path,
 						      RequestID id);
 
-//! Delete the file specified by @[path].
+//! Delete the file specified by @[path]. It's unspecified if it works
+//! recursively or not.
 //!
 //! @note
 //!   Should return a 204 status on success.
@@ -1161,34 +1168,41 @@ mapping(string:mixed) delete_file(string path, RequestID id)
 //!   Returns @[Roxen.http_status(204)] on success.
 //!   Returns other result mappings on failure.
 mapping(string:mixed) recurse_delete_files(string path,
-					   MultiStatus.Prefixed stat,
-					   RequestID id)
+					   RequestID id,
+					   void|MultiStatus.Prefixed stat)
 {
-  Stat st = stat_file(path, id);
-  if (!st) return 0;
-  if (st->isdir) {
-    // RFC 2518 8.6.2
-    //   The DELETE operation on a collection MUST act as if a
-    //   "Depth: infinity" header was used on it.
-    mapping(string:mixed) fail;
-    if (!has_suffix(path, "/")) path += "/";
-    foreach(find_dir(path, id) || ({}), string fname) {
-      mapping sub_res = recurse_delete_files(path+fname, stat, id);
+  if (!stat)
+    id->get_multi_status()->prefix (id->url_base() + query_location()[1..]);
+
+  mapping(string:mixed) recurse (string path)
+  {
+    Stat st = stat_file(path, id);
+    if (!st) return 0;
+    if (st->isdir) {
       // RFC 2518 8.6.2
-      //   424 (Failed Dependancy) errors SHOULD NOT be in the
-      //   207 (Multi-Status).
-      //
-      //   Additionally 204 (No Content) errors SHOULD NOT be returned
-      //   in the 207 (Multi-Status). The reason for this prohibition
-      //   is that 204 (No Content) is the default success code.
-      if (sub_res && sub_res->error != 204 && sub_res->error != 424) {
-	stat->add_status(path+fname, sub_res->error, sub_res->rettext);
-	if (sub_res->error >= 300) fail = Roxen.http_status(424);
+      //   The DELETE operation on a collection MUST act as if a
+      //   "Depth: infinity" header was used on it.
+      int fail;
+      if (!has_suffix(path, "/")) path += "/";
+      foreach(find_dir(path, id) || ({}), string fname) {
+	mapping(string:mixed) sub_res = recurse(path+fname);
+	// RFC 2518 8.6.2
+	//   424 (Failed Dependancy) errors SHOULD NOT be in the
+	//   207 (Multi-Status).
+	//
+	//   Additionally 204 (No Content) errors SHOULD NOT be returned
+	//   in the 207 (Multi-Status). The reason for this prohibition
+	//   is that 204 (No Content) is the default success code.
+	if (sub_res && sub_res->error != 204 && sub_res->error != 424) {
+	  stat->add_status(path+fname, sub_res->error, sub_res->rettext);
+	  if (sub_res->error >= 300) fail = 1;
+	}
       }
+      if (fail) return Roxen.http_status(424);
     }
-    if (fail) return Roxen.http_status(424);
-  }
-  return delete_file(path, id) || Roxen.http_status(204);
+  };
+
+  return recurse (path) || delete_file(path, id) || Roxen.http_status(204);
 }
 
 mapping(string:mixed) make_collection(string path, RequestID id)
@@ -1199,20 +1213,6 @@ mapping(string:mixed) make_collection(string path, RequestID id)
   tmp_id->method = "MKCOL";
   // FIXME: Logging?
   return find_file(path, tmp_id);
-}
-
-//! State of the Overwrite header.
-static enum Overwrite {
-  NEVER_OVERWRITE = -1,	//! The Overwrite header is "F".
-  MAYBE_OVERWRITE = 0,	//! No Overwrite header.
-  DO_OVERWRITE = 1,	//! The Overwrite header is "T".
-};
-
-//! State of the DAV:PropertyBehavior for this source.
-static enum PropertyBehavior {
-  PROPERTY_OMIT = -1,	//! DAV:omit (Omit if it can't be copied).
-  PROPERTY_COPY = 0,	//! Copy if it can't be kept alive (default).
-  PROPERTY_ALIVE = 1,	//! DAV:keepalive (Live properties must be kept alive).
 }
 
 mapping(string:mixed) copy_properties(string source, string destination,
@@ -1268,9 +1268,12 @@ mapping(string:mixed) copy_properties(string source, string destination,
 
 //! Used by the default @[recurse_copy_files] to copy a collection
 //! (aka directory).
-mapping(string:mixed) copy_collection(string source, string destination,
-				      PropertyBehavior behavior, Overwrite overwrite,
-				      MultiStatus.Prefixed result, RequestID id)
+static mapping(string:mixed) copy_collection(string source,
+					     string destination,
+					     PropertyBehavior behavior,
+					     Overwrite overwrite,
+					     MultiStatus.Prefixed result,
+					     RequestID id)
 {
   SIMPLE_TRACE_ENTER(this, "copy_collection(%O, %O, %O, %O, %O, %O).",
 		     source, destination, behavior, overwrite, result, id);
@@ -1285,7 +1288,7 @@ mapping(string:mixed) copy_collection(string source, string destination,
       //   MUST perform a DELETE with "Depth: infinity" on the
       //   destination resource.
       TRACE_ENTER("Destination exists and overwrite is on.", this);
-      mapping(string:mixed) res = recurse_delete_files(destination, result, id);
+      mapping(string:mixed) res = recurse_delete_files(destination, id, result);
       if (res && (res->error >= 300)) {
 	// Failed to delete something.
 	TRACE_LEAVE("Deletion failed.");
@@ -1315,22 +1318,22 @@ mapping(string:mixed) copy_collection(string source, string destination,
   return copy_properties(source, destination, behavior, id) || res;
 }
 
-mapping(string:mixed) copy_file(string path, string dest, PropertyBehavior behavior,
+mapping(string:mixed) copy_file(string source, string destination,
+				PropertyBehavior behavior,
 				Overwrite overwrite, RequestID id)
 {
   SIMPLE_TRACE_ENTER(this, "copy_file(%O, %O, %O, %O, %O)\n",
-		     path, dest, behavior, overwrite, id);
+		     source, destination, behavior, overwrite, id);
   TRACE_LEAVE("Not implemented yet.");
   return Roxen.http_status (Protocols.HTTP.HTTP_NOT_IMPL);
 }
 
 mapping(string:mixed) recurse_copy_files(string source, string destination, int depth,
 					 mapping(string:PropertyBehavior) behavior,
-					 Overwrite overwrite,
-					 MultiStatus.Prefixed result, RequestID id)
+					 Overwrite overwrite, RequestID id)
 {
-  SIMPLE_TRACE_ENTER(this, "recurse_copy_files(%O, %O, %O, %O, %O, %O)\n",
-		     source, destination, depth, behavior, result, id);
+  SIMPLE_TRACE_ENTER(this, "recurse_copy_files(%O, %O, %O, %O, %O)\n",
+		     source, destination, depth, behavior, id);
   string src_tmp = has_suffix(source, "/")?source:(source+"/");
   string dst_tmp = has_suffix(destination, "/")?destination:(destination+"/");
   if ((src_tmp == dst_tmp) ||
@@ -1339,48 +1342,61 @@ mapping(string:mixed) recurse_copy_files(string source, string destination, int 
     TRACE_LEAVE("Source and destination overlap.");
     return Roxen.http_status(403, "Source and destination overlap.");
   }
-  Stat st = stat_file(source, id);
-  if (!st) {
-    TRACE_LEAVE("Source not found.");
-    return 0;	/* FIXME: 404? */
-  }
-  // FIXME: Check destination?
-  if (st->isdir) {
-    mapping(string:mixed) res =
-      copy_collection(source, destination,
-		      behavior[query_location()+source] || behavior[0],
-		      overwrite, result, id);
-    if (res && (res->error != 204) && (res->error != 201)) {
-      if (res->error >= 300) {
-	// RFC 2518 8.8.3 and 8.8.8 (error minimization).
-	TRACE_LEAVE("Copy of collection failed.");
+
+  string loc = query_location();
+  MultiStatus.Prefixed result =
+    id->get_multi_status()->prefix (id->url_base() + loc[1..]);
+
+  mapping(string:mixed) recurse(string source, string destination, int depth) {
+    // Note: Already got an extra TRACE_ENTER level on entry here.
+
+    Stat st = stat_file(source, id);
+    if (!st) {
+      TRACE_LEAVE("Source not found.");
+      return 0;	/* FIXME: 404? */
+    }
+    // FIXME: Check destination?
+    if (st->isdir) {
+      mapping(string:mixed) res =
+	copy_collection(source, destination,
+			behavior[loc+source] || behavior[0],
+			overwrite, result, id);
+      if (res && (res->error != 204) && (res->error != 201)) {
+	if (res->error >= 300) {
+	  // RFC 2518 8.8.3 and 8.8.8 (error minimization).
+	  TRACE_LEAVE("Copy of collection failed.");
+	  return res;
+	}
+	result->add_status(destination, res->error, res->rettext);
+      }
+      if (depth <= 0) {
+	TRACE_LEAVE("Non-recursive copy of collection done.");
 	return res;
       }
-      result->add_status(destination, res->error, res->rettext);
-    }
-    if (depth <= 0) {
-      TRACE_LEAVE("Non-recursive copy of collection done.");
-      return res;
-    }
-    depth--;
-    foreach(find_dir(source, id), string filename) {
-      mapping(string:mixed) sub_res =
-	recurse_copy_files(combine_path(source, filename),
-			   combine_path(destination, filename),
-			   depth, behavior, overwrite, result, id);
-      if (sub_res && (sub_res->error != 204) && (sub_res->error != 201)) {
-	result->add_status(combine_path(destination, filename),
-			   sub_res->error, sub_res->rettext);
+      depth--;
+      foreach(find_dir(source, id), string filename) {
+	string subsrc = combine_path_unix(source, filename);
+	string subdst = combine_path_unix(destination, filename);
+	SIMPLE_TRACE_ENTER(this, "Recursive copy from %O to %O, depth %O\n",
+			   subsrc, subdst, depth);
+	mapping(string:mixed) sub_res = recurse(subsrc, subdst, depth);
+	if (sub_res && (sub_res->error != 204) && (sub_res->error != 201)) {
+	  result->add_status(combine_path_unix(destination, filename),
+			     sub_res->error, sub_res->rettext);
+	}
       }
+      TRACE_LEAVE("");
+      return res;
+    } else {
+      TRACE_LEAVE("");
+      return copy_file(source, destination,
+		       behavior[query_location()+source] ||
+		       behavior[0],
+		       overwrite, id);
     }
-    TRACE_LEAVE("Recursive copy done.");
-    return res;
-  } else {
-    return copy_file(source, destination,
-		     behavior[query_location()+source] ||
-		     behavior[0],
-		     overwrite, id);
-  }
+  };
+
+  return recurse (source, destination, depth);
 }
 
 string real_file(string f, RequestID id){}
