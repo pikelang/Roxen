@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.212 2000/07/31 02:02:18 nilsson Exp $
+// $Id: rxml.pike,v 1.213 2000/07/31 18:03:11 jhs Exp $
 
 
 inherit "rxmlhelp";
@@ -772,16 +772,23 @@ class TagUse {
 
       array res;
       if(!id->misc->_ifs) id->misc->_ifs=([]);
-      string name=args->file?(id->conf->get_config_id()+"|"+args->file):("|"+args->package);
-      RXML.Context ctx=RXML.get_context();
+      string name, filename;
+      if(args->file)
+      {
+	filename = Roxen.fix_relative(args->file, id);
+	name = id->conf->get_config_id() + "|" + filename;
+      }
+      else
+	name = "|" + args->package;
+      RXML.Context ctx = RXML.get_context();
 
       if(args->info || id->pragma["no-cache"] ||
 	 !(res=cache_lookup("macrofiles",name)) ) {
 	res = ({ ([]), ({}) });
 
 	string file;
-	if(args->file)
-	  file = try_get_file( Roxen.fix_relative(args->file, id), id );
+	if(filename)
+	  file = try_get_file( filename, id );
 	else
 	  file = read_package( args->package );
 
@@ -792,7 +799,8 @@ class TagUse {
 	  return ({"<dl>"+use_file_doc( args->file || args->package, file )+"</dl>"});
 
 	multiset before=ctx->get_runtime_tags();
-	mapping before_ifs=id->misc->_ifs;
+	mapping before_ifs = mkmapping(indices(id->misc->_ifs),
+				       indices(id->misc->_ifs));
 	parse_rxml( file, id );
 
 	res[0] = id->misc->_ifs - before_ifs;
