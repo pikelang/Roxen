@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.103 1998/05/22 01:51:31 neotron Exp $";
+constant cvs_version = "$Id: http.pike,v 1.104 1998/05/25 16:43:12 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -751,15 +751,24 @@ string format_backtrace(array bt, int eid)
   return res+"</body>";
 }
 
-string generate_bugreport(array from)
+string generate_bugreport(array from, string u, string rd)
 {
   add_id(from);
   return ("<pre>"+html_encode_string("Roxen version: "+version()+
-	  (roxen->real_version != version()?" ("+roxen->real_version+")":"")+
-	  "\nRequested URL: "+not_query+(query?"?"+query:"")+"\n"
+	  (roxen->real_version != version()?
+	   " ("+roxen->real_version+")":"")+
+	  "\nRequested URL: "+u+"\n"
 	  "\nError: "+
 	  describe_backtrace(from)-(getcwd()+"/")+
-	  "\n\nRequest data:\n"+raw));
+	  "\n\nRequest data:\n"+rd));
+}
+
+string censor(string what)
+{
+  string a, b, c;
+  if(sscanf(what, "%shorization:%s\n%s", a, b, c)==3)
+    return a+" ################ (censored)\n"+c;
+  return what;
 }
 
 int store_error(array err)
@@ -770,7 +779,7 @@ int store_error(array err)
   
   int id = ++e[0];
   if(id>1024) id = 1;
-  e[id] = err;
+  e[id] = ({err,raw_url,censor(raw)});
   return id;
 }
 
@@ -1103,7 +1112,7 @@ void handle_request( )
       {
 	file = ([
 	  "type":"text/html",
-	  "data":generate_bugreport( err ),
+	  "data":generate_bugreport( @err ),
 	]);
       } else {
 	
@@ -1120,7 +1129,8 @@ void handle_request( )
 	    else
 	      file = ([
 		"type":"text/html",
-		"data":handle_error_file_request( err, (int)variables->error ),
+		"data":handle_error_file_request( err[0], 
+						  (int)variables->error ),
 	      ]);
 	  }
 	}
