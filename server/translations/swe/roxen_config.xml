@@ -1533,7 +1533,7 @@ ihåg vilka supportsflaggor som hör till vilken klient.</t>
 
 <str id="1">
 <o>Initial variables for </o>
-<t>Begynnelseinställningar för</t>
+<t>Begynnelseinställningar för </t>
 </str>
 
 <str id="190">
@@ -1548,7 +1548,7 @@ ihåg vilka supportsflaggor som hör till vilken klient.</t>
 
 <str id="230">
 <o>The charset to use when rendering configuration interface pages.</o>
-<t>Den teckenuppsättning som används i admingränssnittet</t>
+<t>Den teckenuppsättning som används i admingränssnittet.</t>
 </str>
 
 <str id="234">
