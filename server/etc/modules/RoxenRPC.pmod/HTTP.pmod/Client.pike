@@ -17,10 +17,14 @@ static private void establish()
 {
   int rpc_port;
   object o = files.file();
+  signal(signum("SIGALRM"), lambda() { throw("timeout"); });
+  alarm(5);
   o->connect(host, port);
   o->write(sprintf("GET %s\r\n", "/"+combine_path(path, "rpc/")));
   sscanf(o->read(), "port %d", rpc_port);
   rpc = RoxenRPC.Client(host, rpc_port, "Q");
+  signal(signum("SIGALRM"), lambda() {});
+  alarm(time());
 }
 
 mixed `->(string var)
