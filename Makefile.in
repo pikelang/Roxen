@@ -462,7 +462,7 @@ tar_dist:
 	echo Type $$type.; \
 	echo "Storing away manuals..."; \
 	mv $$version/server/manual/*parsed*.tar . || exit 1; \
-	echo "Restoring Pro manual..."
+	echo "Restoring Pro manual..."; \
 	mv unparsed_pro.tar $$version/server/manual/unparsed.tar || exit 1; \
 	mv parsed_pro.tar $$version/server/manual/parsed.tar || exit 1; \
 	echo "Building full Pro distribution..."; \
