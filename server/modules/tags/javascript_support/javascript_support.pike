@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.36 2001/06/11 14:47:36 per Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.37 2001/06/19 16:12:52 wellhard Exp $";
 
 #include <module.h>
 inherit "module";
@@ -202,17 +202,33 @@ class TagEmitJsHidePopup {
   }
 }
 
+// Compatibility. The tag js-link is depricated.
+static private string container_js_link(string name, mapping args,
+					string contents, object id)
+{
+  args->onMouseOver = "clearToPopup('"+(id->misc->_popupparent||"none")+"')";
+  return make_container_unquoted("a", args, contents);
+}
+
 static private
 string container_js_popup(string name, mapping args, string contents, object id)
 {
-  mapping largs = copy_value(args);
-  if(largs["args-variable"]) m_delete(largs, "args-variable");
-  if(largs->label) m_delete(largs, "label");
-  if(largs->props) m_delete(largs, "props");
+  // Link arguments.
+  mapping largs = copy_value(args - (< "args-variable", "label", "props", "event",
+				       "ox", "oy", "op" >));
+  // Compatibility. The arguments 'ox', 'oy' and 'op' are depricated.
+  if(!args->props && (args->ox || args->oy || args->op))
+  {
+    args->props = "new PopupProperties("+args->ox+", "+args->oy+")";
+    if(args->op){
+      args->props = "("+args->props+").setParentRightOffset("+args->op+")";
+    }
+  }
+  
   if(!args->props)
     args->props = "default_props";
-  if(!largs->href) largs->href = "javascript:void(0);";
-  if(largs->event) m_delete(largs, "event");
+  if(!largs->href) 
+    largs->href = "javascript:void(0);";
   string popupname = get_jss(id)->get_unique_id("popup");
   string popupparent =
     (id->misc->_popupparent?id->misc->_popupparent:"none");
@@ -389,6 +405,7 @@ mapping query_container_callers()
 {
   return ([ "js-popup"       : container_js_popup,
 	    "js-write"       : container_js_write,
+	    "js-link"        : container_js_link,
   ]);
 }
 
