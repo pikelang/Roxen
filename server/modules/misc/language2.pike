@@ -7,31 +7,34 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: language2.pike,v 1.25 2004/05/23 22:47:32 mani Exp $";
+constant cvs_version = "$Id: language2.pike,v 1.26 2004/05/30 19:17:21 _cvs_stenitzer Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_URL | MODULE_TAG;
 constant module_name = "Language module II";
 constant module_doc  = "Handles documents in different languages. "
-            "What language a file is in is specified with the "
-	    "language code before the extension. index.sv.html would be a file in swedish "
-            "while index.en.html would be one in english. ";
+            "The language of file is specified with the language code "
+	    "before the extension. index.sv.html would be a file in swedish "
+            "while index.en.html would be one in english. "
+	    "Works usally with the Preferred Language Analyzer module which provides the "
+	    "information to decide the most appropriate language of the file sent to the "
+	    "user according to the \"accept-language\" header, prestates and cookies.";
 
 void create() {
-  defvar( "default_language", "en", "Default language", TYPE_STRING,
-	  "The default language for this server. Is used when trying to "
-	  "decide which language to send when the user hasn't selected any." );
+//	  "The default language for this server. Is used when trying to "
+//	  "decide which language to send when the user hasn't selected any." );
 
   defvar( "languages", ({"en","de","sv"}), "Languages", TYPE_STRING_LIST,
-	  "The languages supported by this site." );
+	  "The languages supported by this site. If the user hasn't selected "
+	  "any (valid) language and/or some of the languages are not available "
+	  "it will be tried to find an appropriate language file according to "
+	  "to the order of this list." );
 }
 
-string default_language;
 array(string) languages;
 string cache_id;
 array(string) roxen_languages;
 
 void start(int n, Configuration c) {
-  default_language = lower_case([string]query("default_language"));
   languages = map([array(string)]query("languages"), lower_case);
   cache_id = "lang_mod"+c->get_config_id();
 
@@ -47,10 +50,9 @@ void start(int n, Configuration c) {
 
 array(string) find_language(RequestID id) {
   if (id->misc->pref_languages) {
-    return (id->misc->pref_languages->get_languages() +
-	    ({ default_language })) & languages;
+    return Array.uniq(id->misc->pref_languages->get_languages() + languages);
   } else {
-    return ({ default_language }) & languages;
+    return languages;
   }
 }
 
@@ -63,14 +65,12 @@ object remap_url(RequestID id, string url) {
   if(id->conf->stat_file(url, id)) return 0;
 
   // find files
-
   multiset(string) found;
   mapping(string:string) files;
   array split=[array]cache_lookup(cache_id,url);
   if(!split) {
     found=(<>);
     files=([]);
-
     split=url/"/";
     string path=split[..sizeof(split)-2]*"/"+"/", file=split[-1];
 
@@ -82,7 +82,6 @@ object remap_url(RequestID id, string url) {
     split=file/".";
     if(!sizeof(split)) split=({""});
     file=split[..sizeof(split)-2]*".";
-
     string this;
     foreach(languages, string lang) {
       string this=file+"."+lang+"."+split[-1];
@@ -104,7 +103,6 @@ object remap_url(RequestID id, string url) {
     if(found[lang]) {
       url=Roxen.fix_relative(url, id);
       string type=id->conf->type_from_filename(url);
-
       if(!id->misc->defines) id->misc->defines=([]);
       id->misc->defines->language=lang;
       id->misc->defines->present_languages=found;
@@ -120,8 +118,7 @@ object remap_url(RequestID id, string url) {
 // ---------------- Tag definitions --------------
 
 function(string:string) translator(array(string) client, RequestID id) {
-  client= ({ id->misc->defines->language }) + client + ({ default_language });
-
+  client= ({ id->misc->defines->language }) + client + ({ languages[0] });
   foreach(client, string lang)
     if(has_value(roxen_languages,lang)) {
       return roxen->language_low(lang)->language;
@@ -158,7 +155,8 @@ class TagUnavailableLanguage {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
-      string lang=id->misc->pref_languages->get_languages()[0];
+      if ( sizeof(id->misc->pref_languages->get_languages()) == 0 ) return 0;
+      string lang = id->misc->pref_languages->get_languages()[0];
       if(lang==([mapping(string:mixed)]id->misc->defines)->language) return 0;
       if(args->type=="code") {
 	result=lang;
@@ -174,7 +172,7 @@ TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
   "language":"<desc type='tag'><p><short>Show the pages language.</short></p></desc>",
-  "unavailable-language":"<desc type='cont'><p><short>Show what language the user "
+  "unavailable-language":"<desc type='tag'><p><short>Show what language the user "
                          "wanted, if this isn't it.</short></p></desc>"
 ]);
 #endif
