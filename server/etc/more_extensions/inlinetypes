@@ -1,0 +1,38 @@
+# $Id: inlinetypes,v 1.1 1999/11/14 03:26:42 nilsson Exp $
+# name="Browser inline types database";
+# doc="The database used to map from extension to mime-type (example: *.gif to image/gif)";
+#
+
+# This file provides extensions for files used for online publication.
+# It should be sufficient for most sites with non-downloadable contents.
+
+aif	audio/x-aiff
+au	audio/basic
+mid	audio/midi
+
+gif	image/gif
+jpg	image/jpeg
+png	image/png
+
+mov	video/quicktime
+viv	video/vnd.vivo
+
+css	text/css
+htm	text/html
+html	text/html
+txt	text/plain
+
+jar	application/x-java-archive
+js	application/x-javascript
+pdf	application/pdf
+swf	application/x-shockwave-flash
+
+# WML - Wireless Markup Language (1.1)
+
+wml	text/vnd.wap.wml
+wmlc	application/vnd.wap.wmlc
+wbxml	application/vnd.wap.wbxml
+wmls	text/vnd.wap.wmlscript
+wmlsc	application/vnd.wap.wmlscriptc
+wbmp	image/vnd.wap.wbmp
+
