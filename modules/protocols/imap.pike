@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.77 1999/02/19 21:13:36 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.78 1999/02/19 21:15:57 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -930,7 +930,7 @@ class imap_mailbox
 #endif /* IMAP_DEBUG */
       if (intp(item)) {
 	// Specific UID
-	if (uid_lookup[item]) {
+	if (!zero_type(uid_lookup[item])) {
 	  local_set->items += ({ uid_lookup[item] });
 	}
       } else if (item == "*") {
