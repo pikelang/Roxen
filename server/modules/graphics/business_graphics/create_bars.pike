@@ -355,7 +355,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	}
   
   //Rita pilen på xaxeln
-  barsdiagram->
+  /*  barsdiagram->
     polygone(make_polygon_from_line(diagram_data["linewidth"], 
 				    ({
 				      diagram_data["xsize"]-
@@ -372,7 +372,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 				      diagram_data["ysize"]-ypos_for_xaxis+
 				      (float)si/2.0
 				    }), 
-				    1, 1)[0]);
+				    1, 1)[0]);*/
 
   //Rita yaxeln
   if ((diagram_data["yminvalue"]<=LITET)&&
@@ -472,7 +472,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 					      diagram_data["ysize"]-ypos_for_xaxis-
 					      si*4.0/3.0,
 					    
-					      xpos_for_yaxis+0.0001, //FIXME!
+					      xpos_for_yaxis+0.01, //FIXME!
 					      diagram_data["linewidth"]+
 					      diagram_data["labelsize"]
 					      
@@ -482,7 +482,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	}
     
   //Rita pilen
-  /*  barsdiagram->
+  barsdiagram->
     polygone(make_polygon_from_line(diagram_data["linewidth"], 
 				    ({
 				      xpos_for_yaxis-
@@ -502,7 +502,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 					  diagram_data["labelsize"]
 				    }), 
 				    1, 1)[0]);
-  */
+  
 
   //Räkna ut lite skit
   float xstart=(float)diagram_data["xstart"];
@@ -643,8 +643,46 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
       throw( ({"\""+diagram_data["drawtype"]+"\" is an unknown bars-diagram drawtype!\n",
 	       backtrace()}));
   else
-    throw( ({"\""+diagram_data["subtype"]+"\" is an unknown bars-diagram subtype!\n",
-	     backtrace()}));
+    if (diagram_data["subtype"]=="box")
+      if (diagram_data["drawtype"]=="2D")
+	{
+	  int s=sizeof(diagram_data["data"]);
+	  float barw=diagram_data["xspace"]*xmore/1.5;
+	  float dnr=-barw/2.0+ barw/s/2.0;
+	  barw/=s;
+	  barw/=2.0;
+
+	  foreach(diagram_data["data"], array(float) d)
+	    {
+	      barsdiagram->setcolor(@(diagram_data["datacolors"][farg++]));
+
+	      for(int i=0; i<sizeof(d); i++)
+		{
+		  float x,y;
+		  x=xstart+(diagram_data["xspace"]/2.0+diagram_data["xspace"]*i)*
+		    xmore;
+		  y=-(d[i]-diagram_data["yminvalue"])*ymore+
+		    diagram_data["ysize"]-ystart;	 
+		  
+		  if (y>diagram_data["ysize"]-ypos_for_xaxis-diagram_data["linewidth"]) 
+		    y=diagram_data["ysize"]-ypos_for_xaxis-diagram_data["linewidth"];
+		  
+		  barsdiagram->polygone(
+					({x-barw+0.01+dnr, y //FIXME
+					  , x+barw+0.01+dnr, y, //FIXME
+					  x+barw+dnr, diagram_data["ysize"]-ypos_for_xaxis
+					  , x-barw+dnr,diagram_data["ysize"]- ypos_for_xaxis
+					})); 
+		}
+	      dnr+=barw*2.0;
+	    }   
+	}
+      else
+	throw( ({"\""+diagram_data["drawtype"]+"\" is an unknown bars-diagram drawtype!\n",
+		 backtrace()}));
+    else
+      throw( ({"\""+diagram_data["subtype"]+"\" is an unknown bars-diagram subtype!\n",
+	       backtrace()}));
 
 
 
@@ -663,29 +701,29 @@ int main(int argc, string *argv)
   mapping(string:mixed) diagram_data;
   diagram_data=(["type":"bars",
 		 "textcolor":({0,0,0}),
-		 "subtype":"",
+		 "subtype":"box",
 		 "orient":"vert",
 		 "data": 
-		 ({ ({1.2, 12.3, 4.01, 10.0, 4.3, 12.0 }),
-		    ({1.2, 11.3, -1.5, 11.7,  1.0, 11.5}),
-		    ({1.2, 13.3, 1.5, 10.1, 34.3, 1.2 }),
-		    ({3.2, 13.3, 3.5, 13.7, 34.3, 1.2 } )}),
+		 ({ ({91.2, 102.3, 94.01, 100.0, 94.3, 102.0 }),
+		    ({91.2, 101.3, 91.5, 101.7,  91.0, 101.5}),
+		    ({91.2, 103.3, 91.5, 100.1, 94.3, 95.2 }),
+		    ({93.2, 103.3, 93.5, 103.7, 94.3, 91.2 } )}),
 		 "fontsize":32,
 		 "axcolor":({0,0,0}),
 		 "bgcolor":({255,255,255}),
 		 "labelcolor":({0,0,0}),
 		 "datacolors":({({0,255,0}),({255,255,0}), ({0,255,255}), ({255,0,255}) }),
-		 "orient":"hor",
 		 "linewidth":2.2,
 		 "xsize":400,
 		 "ysize":200,
+		 "xnames":({"jan", "feb", "mar", "apr", "maj", "jun"}),
 		 "fontsize":16,
 		 "labels":({"xstor", "ystor", "xenhet", "yenhet"}),
 		 "legendfontsize":12,
 		 "legend_texts":({"streck 1", "streck 2", "foo", "bar gazonk foobar illalutta!" }),
-		 "labelsize":0//,
-		 //"xminvalue":0.1,
-		 ,"yminvalue":0.1
+		 "labelsize":12,
+		 "xminvalue":0.1,
+		 "yminvalue":90
 
   ]);
   /*
