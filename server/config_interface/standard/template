@@ -15,10 +15,12 @@
 </define>
 
 <define container=cv-obox>
+  <table cellpadding=1 cellspacing=0 border=0 width="202" align=center bgcolor="#000000">
+  <tr><td>
   <table cellpadding=2 cellspacing=0 border=0 width="200" align=center>
   <tr bgcolor="&usr.fade2;">
     <td valign=top>
-      <gtext bgcolor="&usr.fade2;" fgcolor="&usr.bgcolor;" font=bastard font_size=24>&title;</gtext>
+      <gtext bgcolor="&usr.fade2;" fgcolor="&usr.bgcolor;" font=budhand font_size=24>&title;</gtext>
     </td>
   </tr>
   <cset preparse variable=usr.fade2>&usr.bgcolor;</cset>
@@ -29,6 +31,7 @@
   </font></td></tr>
   </formoutput>
   </table>
+  </td></tr></table>
 </define>
 
 <define container=subtablist default_width=90%>
