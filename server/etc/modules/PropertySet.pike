@@ -554,10 +554,11 @@ mapping(string:mixed) find_properties(string mode,
 {
   switch(mode) {
   case "DAV:propname":
-    foreach(query_all_properties(); string prop_name;) {
+    filt = query_all_properties();
+    foreach(filt; string prop_name;) {
       result->add_property(path, prop_name, "");
     }
-    return 0;
+    break;
   case "DAV:allprop":
     if (filt) {
       // Used in http://sapportals.com/xmlns/cm/webdavinclude case.
@@ -568,12 +569,18 @@ mapping(string:mixed) find_properties(string mode,
     }
     // FALL_THROUGH
   case "DAV:prop":
-    foreach(indices(filt), string prop_name) {
+    foreach(filt; string prop_name;) {
       result->add_property(path, prop_name,
 			   query_property(prop_name));
     }
+    break;
+  default:
+    // FIXME: Unsupported DAV operation.
     return 0;
   }
-  // FIXME: Unsupported DAV operation.
+
+  if (filt["http://apache.org/dav/props/executable"])
+    // Not really necessary.
+    result->add_namespace ("http://apache.org/dav/props/");
   return 0;
 }
