@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.92 2000/06/29 22:00:16 mast Exp $
+//! $Id: module.pmod,v 1.93 2000/07/05 23:09:00 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -316,28 +316,6 @@ class TagSet
   int id_number;
   //! Unique number identifying this tag set.
 
-#define LOW_TAG_TYPE							\
-  string|array|								\
-  function(:int(1..1)|string|array)|					\
-  function(object,mapping(string:string):int(1..1)|string|array)
-
-#define LOW_CONTAINER_TYPE						\
-  string|array|								\
-  function(:int(1..1)|string|array)|					\
-  function(object,mapping(string:string),string:int(1..1)|string|array)
-
-#define LOW_ENTITY_TYPE							\
-  string|array|								\
-  function(:int(1..1)|string|array)|					\
-  function(object:int(1..1)|string|array)
-
-  mapping(string:LOW_TAG_TYPE) low_tags;
-  mapping(string:LOW_CONTAINER_TYPE) low_containers;
-  mapping(string:LOW_ENTITY_TYPE) low_entities;
-  //! Passed directly to Parser.HTML when that parser is used. This is
-  //! intended for compatibility only and might eventually be removed.
-  //! Note: Changes in these aren't tracked; changed() must be called.
-
   static void create (string _name, void|array(Tag) _tags)
   //!
   {
@@ -380,72 +358,47 @@ class TagSet
     changed();
   }
 
-  local Tag|array(LOW_TAG_TYPE|LOW_CONTAINER_TYPE) get_local_tag (string name)
-  //! Returns the tag definition for the given name in this tag set.
-  //! The return value is either a Tag object or an array ({low_tag,
-  //! low_container}), where one element always is zero.
+  local Tag get_local_tag (string name)
+  //! Returns the Tag object for the given name in this tag set.
   {
-    if (Tag tag = tags[name]) return tag;
-    else if (LOW_CONTAINER_TYPE cdef = low_containers && low_containers[name])
-      return ({0, cdef});
-    else if (LOW_TAG_TYPE tdef = low_tags && low_tags[name])
-      return ({tdef, 0});
-    else return 0;
+    return tags[name];
   }
 
   array(Tag) get_local_tags()
-  //! Doesn't return the low tag/container definitions.
+  //!
   {
     return values (tags);
   }
 
-  Tag|array(LOW_TAG_TYPE|LOW_CONTAINER_TYPE) get_tag (string name)
-  //! Returns the active tag definition for the given name. The return
-  //! value is the same as for get_local_tag().
+  Tag get_tag (string name)
+  //! Returns the active tag definition for the given name.
   {
-    if (object(Tag)|array(LOW_TAG_TYPE|LOW_CONTAINER_TYPE) def = get_local_tag (name))
+    if (object(Tag) def = get_local_tag (name))
       return def;
     foreach (imported, TagSet tag_set)
       if (object(Tag) tag = [object(Tag)] tag_set->get_tag (name)) return tag;
     return 0;
   }
 
-  Tag|array(LOW_TAG_TYPE|LOW_CONTAINER_TYPE) get_overridden_tag (
-    Tag|LOW_TAG_TYPE|LOW_CONTAINER_TYPE tagdef, void|string name)
+  Tag get_overridden_tag (Tag overrider)
   //! Returns the tag definition that the given one overrides, or zero
-  //! if none. tag is a Tag object or a low tag/container definition.
-  //! In the latter case, the tag name must be given as the second
-  //! argument. The return value is the same as for get_local_tag().
+  //! if none.
   {
     if (!mappingp (overridden_tag_lookup))
       overridden_tag_lookup = set_weak_flag (([]), 1);
-    object(Tag)|array(LOW_TAG_TYPE|LOW_CONTAINER_TYPE) tag;
-    if (zero_type (tag = overridden_tag_lookup[tagdef]))
-      if (objectp (tagdef) && ([object] tagdef)->is_RXML_Tag) {
-	tag = overridden_tag_lookup[tagdef] =
-	  find_overridden_tag (tagdef, [string] ([object] tagdef)->name);
-      }
-      else {
-#ifdef MODULE_DEBUG
-	if (!name) fatal_error ("Need tag name.\n");
-#endif
-	mapping(LOW_TAG_TYPE|LOW_CONTAINER_TYPE:
-		array(LOW_TAG_TYPE|LOW_CONTAINER_TYPE)) ent =
-	  overridden_tag_lookup[name];
-	if (!ent) ent = overridden_tag_lookup[name] = ([]);
-	if (zero_type (tag = ent[tagdef]))
-	  tag = ent[tagdef] = find_overridden_tag (tagdef, name);
-      }
+    Tag tag;
+    if (zero_type (tag = overridden_tag_lookup[overrider]))
+      tag = overridden_tag_lookup[overrider] =
+	find_overridden_tag (overrider);
     return tag;
   }
 
-  array(Tag|array(LOW_TAG_TYPE|LOW_CONTAINER_TYPE)) get_overridden_tags (string name)
+  array(Tag) get_overridden_tags (string name)
   //! Returns all tag definitions for the given name, i.e. including
   //! the overridden ones. A tag to the left overrides one to the
-  //! right. The elements in the returned array are the same as for
-  //! get_local_tag().
+  //! right.
   {
-    if (object(Tag)|array(LOW_TAG_TYPE|LOW_CONTAINER_TYPE) def = get_local_tag (name))
+    if (object(Tag) def = get_local_tag (name))
       return ({def}) + imported->get_overridden_tags (name) * ({});
     else return imported->get_overridden_tags (name) * ({});
   }
@@ -453,10 +406,34 @@ class TagSet
   multiset(string) get_tag_names()
   //!
   {
-    multiset(string) res = (multiset) indices (tags);
-    if (low_tags) res |= (multiset) indices (low_tags);
-    if (low_containers) res |= (multiset) indices (low_containers);
-    return `| (res, @imported->get_tag_names());
+    return `| ((multiset) indices (tags), @imported->get_tag_names());
+  }
+
+  void add_string_entities (mapping(string:string) entities)
+  //! Adds a set of entitity replacements that are used foremost by
+  //! the PXml parser to decode simple entities, like e.g. &amp;. The
+  //! indices are the entity names without & and ;.
+  {
+    if (string_entities) string_entities |= entities;
+    else string_entities = entities + ([]);
+    changed();
+  }
+
+  void clear_string_entities()
+  //!
+  {
+    string_entities = 0;
+    changed();
+  }
+
+  mapping(string:string) get_string_entities()
+  //! Returns the set of entity replacements, including those from
+  //! imported tag sets.
+  {
+    if (string_entities)
+      return `+(@imported->get_string_entities(), string_entities);
+    else
+      return `+(@imported->get_string_entities(), ([]));
   }
 
   mapping(string:Tag) get_plugins (string name)
@@ -515,7 +492,7 @@ class TagSet
     plugins = ([]);
     (notify_funcs -= ({0}))();
     set_weak_flag (notify_funcs, 1);
-    got_local_tags = sizeof (tags) || !!(low_tags || low_containers || low_entities);
+    got_local_tags = sizeof (tags);
   }
 
   // Internals.
@@ -538,13 +515,17 @@ class TagSet
   }
 
   static mapping(string:Tag) tags = ([]);
-  // Private since we want to track changes in this.
+  // Static since we want to track changes in this.
+
+  static mapping(string:string) string_entities;
+  // Used by e.g. PXml to hold normal entities that should be replaced
+  // during parsing.
 
   static TagSet top_tag_set;
   // The imported tag set with the highest priority.
 
   static int got_local_tags;
-  // Nonzero if there are local tags, including low_tags etc.
+  // Nonzero if there are local tags.
 
   static array(function(:void)) notify_funcs = ({});
   // Weak (when nonempty).
@@ -562,31 +543,22 @@ class TagSet
     return funs;
   }
 
-  static mapping(Tag:Tag|array(LOW_TAG_TYPE|LOW_CONTAINER_TYPE))|
-    mapping(string:mapping(LOW_TAG_TYPE|LOW_CONTAINER_TYPE:
-			   Tag|array(LOW_TAG_TYPE|LOW_CONTAINER_TYPE)))
-    overridden_tag_lookup;
+  static mapping(Tag:Tag) overridden_tag_lookup;
 
-  /*static*/ Tag|array(LOW_TAG_TYPE|LOW_CONTAINER_TYPE) find_overridden_tag (
-    Tag|LOW_TAG_TYPE|LOW_CONTAINER_TYPE tagdef, string name)
+  /*static*/ Tag find_overridden_tag (Tag overrider)
   {
-    if (tags[name] == tagdef ||
-	(low_containers && low_containers[name] == tagdef) ||
-	(low_tags && low_tags[name] == tagdef)) {
+    if (tags[overrider->name] == overrider) {
       foreach (imported, TagSet tag_set)
-	if (object(Tag)|array(LOW_TAG_TYPE|LOW_CONTAINER_TYPE) tagdef =
-	    tag_set->get_tag (name)) return tagdef;
+	if (object(Tag) overrider = tag_set->get_tag (overrider->name))
+	  return overrider;
     }
     else {
       int found = 0;
       foreach (imported, TagSet tag_set)
-	if (object(Tag)|array(LOW_TAG_TYPE|LOW_CONTAINER_TYPE) subtag =
-	    tag_set->get_tag (name))
+	if (object(Tag) subtag = tag_set->get_tag (overrider->name))
 	  if (found) return subtag;
-	  else if (arrayp (subtag) ?
-		   subtag[0] == tagdef || subtag[1] == tagdef :
-		   subtag == tagdef)
-	    if ((subtag = tag_set->find_overridden_tag (tagdef, name)))
+	  else if (subtag == overrider)
+	    if ((subtag = tag_set->find_overridden_tag (overrider)))
 	      return subtag;
 	    else found = 1;
     }
@@ -1610,8 +1582,7 @@ class Frame
   //! used, which must have a string value.
   {
     Context ctx = get_context();
-    object(Tag)|array(LOW_TAG_TYPE|LOW_CONTAINER_TYPE) overridden =
-      ctx->tag_set->get_overridden_tag (tag);
+    object(Tag) overridden = ctx->tag_set->get_overridden_tag (tag);
     if (arrayp (overridden))
       fatal_error ("Getting frames for low level tags are currently not implemented.\n");
 
@@ -2316,39 +2287,34 @@ void throw_fatal (mixed err)
 }
 
 Frame make_tag (string name, mapping(string:mixed) args, void|mixed content,
-		void|Tag|LOW_TAG_TYPE|LOW_CONTAINER_TYPE overridden_by)
+		void|Tag overridden_by)
 //! Returns a frame for the specified tag, or 0 if no such tag exists.
 //! The tag definition is looked up in the current context and tag
 //! set. args and content are not parsed or evaluated. If
 //! overridden_by is given, the returned frame will come from the tag
-//! that overridden_by overrides, if there is any.
+//! that overridden_by overrides, if there is any (name is not used in
+//! that case).
 {
   TagSet tag_set = get_context()->tag_set;
-  object(Tag)|array(LOW_TAG_TYPE|LOW_CONTAINER_TYPE) tag =
-    overridden_by ? tag_set->get_overridden_tag (overridden_by, name) :
+  Tag tag = overridden_by ? tag_set->get_overridden_tag (overridden_by) :
     tag_set->get_tag (name);
-  if (!tag) return 0;
-  if (arrayp (tag))
-    fatal_error ("Getting frames for low level tags are currently not implemented.\n");
-  return tag (args, content);
+  return tag && tag (args, content);
 }
 
 Frame make_unparsed_tag (string name, mapping(string:string) args, void|string content,
-			 void|Tag|LOW_TAG_TYPE|LOW_CONTAINER_TYPE overridden_by)
+			 void|Tag overridden_by)
 //! Returns a frame for the specified tag, or 0 if no such tag exists.
 //! The tag definition is looked up in the current context and tag
 //! set. args and content are given unparsed in this variant; they're
 //! parsed when the frame is about to be evaluated. If overridden_by
 //! is given, the returned frame will come from the tag that
-//! overridden_by overrides, if there is any.
+//! overridden_by overrides, if there is any (name is not used in that
+//! case).
 {
   TagSet tag_set = get_context()->tag_set;
-  object(Tag)|array(LOW_TAG_TYPE|LOW_CONTAINER_TYPE) tag =
-    overridden_by ? tag_set->get_overridden_tag (overridden_by, name) :
+  Tag tag = overridden_by ? tag_set->get_overridden_tag (overridden_by) :
     tag_set->get_tag (name);
   if (!tag) return 0;
-  if (arrayp (tag))
-    fatal_error ("Getting frames for low level tags are currently not implemented.\n");
   Frame frame = tag (args, content);
   frame->flags |= FLAG_UNPARSED;
   return frame;

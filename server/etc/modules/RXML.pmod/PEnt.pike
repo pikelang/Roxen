@@ -4,7 +4,7 @@
 //!
 //! Created 2000-01-28 by Martin Stjernholm.
 //!
-//! $Id: PEnt.pike,v 1.14 2000/03/18 03:33:17 mast Exp $
+//! $Id: PEnt.pike,v 1.15 2000/07/05 23:08:59 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
@@ -26,14 +26,7 @@ static void init_entities()
     clear_entities();
     if (not_compat) {
 #endif
-      array(RXML.TagSet) list = ({tag_set});
-      for (int i = 0; i < sizeof (list); i++) {
-	array(RXML.TagSet) sublist = list[i]->imported;
-	if (sizeof (sublist))
-	  list = list[..i] + sublist + list[i + 1..];
-      }
-      for (int i = sizeof (list) - 1; i >= 0; i--)
-	if (list[i]->low_entities) add_entities (list[i]->low_entities);
+      add_entities (tag_set->get_string_entities());
 #ifdef OLD_RXML_COMPAT
     }
 #endif

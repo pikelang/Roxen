@@ -8,7 +8,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: PXml.pike,v 1.46 2000/06/23 16:54:26 mast Exp $
+//! $Id: PXml.pike,v 1.47 2000/07/05 23:08:59 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
@@ -132,10 +132,6 @@ static void create (
     mapping(string:TAG_DEF_TYPE) new_tagdefs = ([]);
 
     if (prefix) {
-      if (mapping(string:TAG_TYPE) m = tset->low_tags)
-	foreach (indices (m), string n) new_tagdefs[prefix + ":" + n] = ({m[n], 0});
-      if (mapping(string:CONTAINER_TYPE) m = tset->low_containers)
-	foreach (indices (m), string n) new_tagdefs[prefix + ":" + n] = ({0, m[n]});
 #ifdef OLD_RXML_COMPAT
       if (not_compat) {
 #endif
@@ -154,12 +150,6 @@ static void create (
 #endif
     }
 
-    if (!tset->prefix_req) {
-      if (mapping(string:TAG_TYPE) m = tset->low_tags)
-	foreach (indices (m), string n) new_tagdefs[n] = ({m[n], 0});
-      if (mapping(string:CONTAINER_TYPE) m = tset->low_containers)
-	foreach (indices (m), string n) new_tagdefs[n] = ({0, m[n]});
-    }
 #ifdef OLD_RXML_COMPAT
     if (not_compat) {
 #endif
@@ -187,15 +177,15 @@ static void create (
       add_tag (name, [TAG_TYPE] tagdef[0]);
       add_container (name, [CONTAINER_TYPE] tagdef[1]);
     }
-
-    if (tset->low_entities && type->quoting_scheme != "xml"
-#ifdef OLD_RXML_COMPAT
-	&& not_compat
-#endif
-       )
-      // Don't decode entities if we're outputting xml-like stuff.
-      add_entities (tset->low_entities);
   }
+
+  if (type->quoting_scheme != "xml"
+#ifdef OLD_RXML_COMPAT
+      && not_compat
+#endif
+     )
+    // Don't decode entities if we're outputting xml-like stuff.
+    add_entities (tag_set->get_string_entities());
 
   if (!type->free_text) {
     mixed_mode (1);
