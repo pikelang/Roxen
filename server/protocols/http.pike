@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.148 1999/08/04 18:59:39 neotron Exp $";
+constant cvs_version = "$Id: http.pike,v 1.149 1999/08/05 11:57:15 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -365,6 +365,12 @@ private int parse_got()
 	DPERROR("HTTP: parse_got(): Request is not complete.");
 	return 0;
       }
+      // Remove the first line (ie the command).
+      // Note: This works since both \r\n and \n end with \n..
+      if (!sscanf(s, "%*s\n%s", s)) {
+	s = "";
+      }
+      // s now contains the unparsed headers.
       break;
 
     case 2:
