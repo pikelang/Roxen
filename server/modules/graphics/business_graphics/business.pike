@@ -10,7 +10,7 @@
  * reference cache shortly.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.63 1998/02/04 16:10:45 per Exp $";
+constant cvs_version = "$Id: business.pike,v 1.64 1998/02/16 15:33:21 hedda Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -410,6 +410,9 @@ string quote(string in)
 string tag_diagram(string tag, mapping m, string contents,
 		   object id, object f, mapping defines)
 {
+  contents=replace(contents, "\r\n", "\n");
+  contents=replace(contents, "\r", "\n");
+
   mapping res=([]);
   res->datacounter=0;
   if(m->help) return register_module()[2];
