@@ -11,7 +11,7 @@ import Parser.XML.Tree;
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_webapp",X,Y)
 // end of the locale related stuff
 
-constant cvs_version = "$Id: webapp.pike,v 2.19 2002/06/28 14:38:17 wellhard Exp $";
+constant cvs_version = "$Id: webapp.pike,v 2.20 2002/06/28 14:44:17 anders Exp $";
 
 constant thread_safe=1;
 constant module_unique = 0;
@@ -1645,7 +1645,15 @@ mixed find_file( string f, RequestID id )
   return Roxen.http_string_answer( status(), "text/html" );
 }
 
-
+// Place holder to be able to find tagdoc.
+class TagServlet 
+{
+  inherit RXML.Tag;
+  constant name = "servlet";
+  class Frame {
+    inherit RXML.Frame;
+  }
+}
 #endif
 
 
