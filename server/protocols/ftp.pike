@@ -1,5 +1,5 @@
 /* Roxen FTP protocol. Written by Pontus Hagland
-string cvs_version = "$Id: ftp.pike,v 1.23 1997/06/09 17:44:00 grubba Exp $";
+string cvs_version = "$Id: ftp.pike,v 1.24 1997/06/10 13:49:59 grubba Exp $";
    (law@lysator.liu.se) and David Hedbor (neotron@infovav.se).
 
    Some of the features: 
@@ -776,6 +776,9 @@ void got_data(mixed fooid, string s)
       else {
 	dataport_addr=sprintf("%d.%d.%d.%d",a,b,c,d);
 	dataport_port=e*256+f;
+	if (pasv_port) {
+	  destruct(pasv_port);
+	}
 	reply("200 PORT command ok ("+dataport_addr+
 	      " port "+dataport_port+")\n");
       }
