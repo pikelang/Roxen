@@ -1,7 +1,7 @@
 // HTTP convenience functions.
 // inherited by roxenlib, and thus by all files inheriting roxenlib.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: http.pike,v 1.49 2000/09/19 09:53:50 jhs Exp $
+// $Id: http.pike,v 1.50 2001/03/22 15:23:11 mast Exp $
 
 //#pragma strict_types
 
@@ -197,9 +197,9 @@ string http_encode_cookie(string f)
 string http_encode_url (string f)
 {
   return replace (f, ({"\000", " ", "\t", "\n", "\r", "%", "'", "\"", "#",
-		       "&", "?", "=", "/", ":"}),
+		       "&", "?", "=", "/", ":", "+"}),
 		  ({"%00", "%20", "%09", "%0a", "%0d", "%25", "%27", "%22", "%23",
-		    "%26", "%3f", "%3d", "%2f", "%3a"}));
+		    "%26", "%3f", "%3d", "%2f", "%3a", "%2b"}));
 }
 
 string http_roxen_config_cookie(string from)
