@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.43 1998/09/26 14:07:13 mast Exp $
+# $Id: Makefile,v 1.44 1998/09/26 14:15:12 mast Exp $
 #
 # Bootstrap Makefile
 #
@@ -57,12 +57,18 @@ configure : configure.in
 	@for d in pike/*/src; do \
 	  (cd $$d; \
 	  echo Entering $$d; \
-	  ./run_autoconfig . 2>&1 | ( grep -v warning || exit 0 ) || exit 1; \
+	  ./run_autoconfig . 2>&1 | ( grep -v warning || : ) || exit 1; \
 	  echo Leaving $$d) \
 	done
-	cd pike && autoconf 2>&1 | ( grep -v warning || exit 0 )
-	cd extern && ../pike/*/src/run_autoconfig . 2>&1 | ( grep -v warning || exit 0 )
-	autoconf 2>&1 | ( grep -v warning || exit 0 )
+	@echo Running autoconf in pike; \
+	cd pike && autoconf 2>&1 | ( grep -v warning || : )
+	@cd extern && ( \
+          echo Entering extern; \
+	  ../pike/*/src/run_autoconfig . 2>&1 | ( grep -v warning || : ); \
+	  echo Leaving extern \
+	)
+	@echo Running autoconf in .; \
+	autoconf 2>&1 | ( grep -v warning || : )
 	@echo
 	@test -f "$(BUILDDIR)"/stamp-h && rm -f "$(BUILDDIR)"/stamp-h || :
 
