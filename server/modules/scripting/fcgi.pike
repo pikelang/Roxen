@@ -3,7 +3,7 @@
 // Support for the FastCGI interface, using an external fast-cgi
 // wrapper. This should be handled internally.
 
-string cvs_version = "$Id: fcgi.pike,v 1.16 1998/06/09 14:12:04 grubba Exp $";
+string cvs_version = "$Id: fcgi.pike,v 1.17 1998/08/10 21:37:50 per Exp $";
 
 #include <module.h>
 inherit "modules/scripting/cgi";
@@ -76,6 +76,7 @@ mixed low_find_file(string f, object id, string path)
 {
   object pipe1, pipe2;
   string path_info;
+  NOCACHE();
   
   if(!id->misc->path_info)
   {

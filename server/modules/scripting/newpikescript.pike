@@ -1,4 +1,4 @@
-constant cvs_version="$Id: newpikescript.pike,v 1.6 1998/05/31 18:33:45 grubba Exp $";
+constant cvs_version="$Id: newpikescript.pike,v 1.7 1998/08/10 21:37:58 per Exp $";
 constant thread_safe=1;
 
 #if !constant(Remote)
@@ -247,6 +247,7 @@ mapping handle_file_extension(object file, string ext, object id)
      (mode & (int)query("noexec-mask")))
     return 0;  // permissions does not match.
 
+  NOCACHE();
 
   // BLOCKING! (but threaded, if we have threads.)
   int uid, gid;

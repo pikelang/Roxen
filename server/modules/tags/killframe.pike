@@ -12,7 +12,7 @@
  * Chris Burgess <chris@ibex.co.nz>
  */
 
-constant cvs_version = "$Id: killframe.pike,v 1.20 1998/08/01 20:28:23 peter Exp $";
+constant cvs_version = "$Id: killframe.pike,v 1.21 1998/08/10 21:39:31 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -45,6 +45,8 @@ mixed register_module()
 
 string tag_killframe( string tag, mapping m, object id )
 {
+  NOCACHE();
+
   if(m->help) return register_module()[2];
   
   if( !id->supports->javascript ) return "";

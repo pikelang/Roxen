@@ -3,7 +3,7 @@
 inherit "module";
 #include <module.h>
 
-constant cvs_version="$Id: auto_gzip.pike,v 1.3 1998/03/11 19:42:36 neotron Exp $";
+constant cvs_version="$Id: auto_gzip.pike,v 1.4 1998/08/10 21:36:47 per Exp $";
 constant thread_safe=1;
 
 mixed *register_module()
@@ -31,6 +31,7 @@ mixed *register_module()
 
 mapping first_try(object id)
 {
+  NOCACHE();
   if(id->supports->autogunzip &&
      (roxen->real_file(id->not_query + ".gz", id)
       && roxen->stat_file(id->not_query + ".gz", id)))

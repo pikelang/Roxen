@@ -1,5 +1,5 @@
 /*
- * $Id: sqltag.pike,v 1.28 1998/07/23 18:46:00 grubba Exp $
+ * $Id: sqltag.pike,v 1.29 1998/08/10 21:39:57 per Exp $
  *
  * A module for Roxen Challenger, which gives the tags
  * <SQLQUERY> and <SQLOUTPUT>.
@@ -7,7 +7,7 @@
  * Henrik Grubbström 1997-01-12
  */
 
-constant cvs_version="$Id: sqltag.pike,v 1.28 1998/07/23 18:46:00 grubba Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.29 1998/08/10 21:39:57 per Exp $";
 constant thread_safe=1;
 #include <module.h>
 
@@ -93,6 +93,8 @@ string sqloutput_tag(string tag_name, mapping args, string contents,
 		     mapping defines, object fd)
 {
   if(args->help) return register_module()[2]; // FIXME
+
+  request_id->misc->cacheable=0;
 
   if (args->query) {
 
@@ -180,6 +182,9 @@ string sqlquery_tag(string tag_name, mapping args,
 		    mapping defines, object fd)
 {
   if(args->help) return register_module()[2]; // FIXME
+
+  request_id->misc->cacheable=0;
+
   if (args->query) {
 
     if (args->parse) {
@@ -267,6 +272,10 @@ string sqltable_tag(string tag_name, mapping args,
   int ascii;
 
   if(args->help) return register_module()[2]; // FIXME
+
+  request_id->misc->cacheable=0;
+
+
   if (args->ascii) {
     // ASCII-mode
     ascii = 1;

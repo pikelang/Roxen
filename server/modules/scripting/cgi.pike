@@ -5,7 +5,7 @@
 // interface</a> (and more, the documented interface does _not_ cover
 // the current implementation in NCSA/Apache)
 
-string cvs_version = "$Id: cgi.pike,v 1.99 1998/07/31 19:30:08 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.100 1998/08/10 21:37:44 per Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -824,6 +824,8 @@ mixed low_find_file(string f, object id, string path)
   string path_info, wd;
   int pid;
 
+  NOCACHE();
+
 #ifdef CGI_DEBUG
   roxen_perror("CGI: find_file(\"" + f + "\")...\n");
 #endif /* CGI_DEBUG */
@@ -1013,7 +1015,6 @@ mapping handle_file_extension(object o, string e, object id)
   mixed toret;
   string path;
   mixed err;
-
 
   if(!QUERY(ex))
     return 0;

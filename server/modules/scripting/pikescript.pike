@@ -8,7 +8,7 @@
 
 // This is an extension module.
 
-constant cvs_version = "$Id: pikescript.pike,v 1.28 1998/07/16 12:21:44 grubba Exp $";
+constant cvs_version = "$Id: pikescript.pike,v 1.29 1998/08/10 21:38:07 per Exp $";
 constant thread_safe=1;
 
 mapping scripts=([]);
@@ -345,6 +345,7 @@ mapping handle_file_extension(object f, string e, object got)
     }
   }
 
+  got->misc->cacheable=0;
   err=call_script(fun, got, f);
   destruct(f);
   if(arrayp(err)) {

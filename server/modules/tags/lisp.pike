@@ -1,5 +1,5 @@
 #define error(X) throw( ({ (X), backtrace() }) )
-constant cvs_version = "$Id: lisp.pike,v 1.9 1998/05/18 22:02:03 per Exp $";
+constant cvs_version = "$Id: lisp.pike,v 1.10 1998/08/10 21:39:38 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -220,6 +220,8 @@ string tag_lisp(string t, mapping m, string c,
 {
   if(m->help)
     return register_module()[2];
+
+//   NOCACHE();
   
   string context = (query("enable_context") && m->context)
     || id->not_query;

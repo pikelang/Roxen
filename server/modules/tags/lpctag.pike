@@ -7,7 +7,7 @@
 //  return "Hello world!\n";
 // </pike>
  
-constant cvs_version = "$Id: lpctag.pike,v 1.16 1998/08/03 10:25:21 grubba Exp $";
+constant cvs_version = "$Id: lpctag.pike,v 1.17 1998/08/10 21:39:46 per Exp $";
 constant thread_safe=1;
 
 inherit "roxenlib";
@@ -133,6 +133,8 @@ string tag_pike(string tag, mapping m, string s, object request_id,
   string res;
   mixed err;
   if(m->help) return register_module()[2];
+
+  request_id->misc->cacheable=0;
 
 #if efun(set_max_eval_time)
   if(err = catch {

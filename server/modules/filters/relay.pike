@@ -7,7 +7,7 @@
 // caching. This module is therefore quite obsolete, really.  But
 // since it is so small, I have left it here.
 
-constant cvs_version = "$Id: relay.pike,v 1.10 1998/03/11 19:42:37 neotron Exp $";
+constant cvs_version = "$Id: relay.pike,v 1.11 1998/08/10 21:37:19 per Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -123,11 +123,13 @@ mapping relay(object fid)
 mapping last_resort(object fid)
 {
   if(QUERY(pri) != "Last")  return 0;
+  fid->misc->cacheable = 0;
   return relay(fid);
 }
 
 mapping first_try(object fid)
 {
   if(QUERY(pri) == "Last") return 0;
+  fid->misc->cacheable = 0;
   return relay(fid);
 }
