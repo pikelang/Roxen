@@ -1,10 +1,9 @@
 // This is (not really) a roxen module.
 inherit "module";
 
-void start() 
+void start(int num, Configuration conf)
 {
-  object configuration = my_configuration();
+  module_dependencies (conf, ({ "piketag" }));
   werror("\n ***** lpctag module outdated. Adding piketag module instead.\n");
-  configuration->add_modules( ({"piketag"}), 0 );
-  call_out( configuration->disable_module, 0.5,  "lpctag#0" );
+  call_out( conf->disable_module, 0.5, "lpctag#0" );
 }

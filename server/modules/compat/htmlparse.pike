@@ -1,11 +1,8 @@
 // This is (not really) a roxen module.
 inherit "module";
 
-void start() 
-{
-  object configuration = my_configuration();
+void start(int num, Configuration conf) {
+  module_dependencies (conf, ({ "rxmltags","rxmlparse","ssi","accessed","compat" }));
   werror("\n ***** HTML parse outdated. Adding other modules instead.\n");
-  configuration->add_modules(({"rxmlparse","rxmltags","ssi",
-                               "accessed","compat"}), 0 );
-  call_out( configuration->disable_module, 0.5,  "htmlparse#0" );
+  call_out( conf->disable_module, 0.5,  "htmlparse#0" );
 }
