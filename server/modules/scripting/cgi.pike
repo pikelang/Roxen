@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.37 1997/09/12 06:14:36 per Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.38 1997/09/14 11:13:02 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -384,8 +384,11 @@ mixed find_file(string f, object id)
 #endif
 
   wd = dirname(f);
-  pipe1=files.file();
-  pipe2=pipe1->pipe();
+  if ((!(pipe1=files.file())) || (!(pipe2=pipe1->pipe()))) {
+    report_error(sprintf("cgi->find_file(\"%s\"): Can't open pipe "
+			 "-- Out of fd's?\n", f));
+    return(0);
+  }
   pipe2->set_blocking(); pipe1->set_blocking();
     
   mixed uid;
