@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.26 2003/01/26 02:25:01 mani Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.27 2004/05/23 14:28:11 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -30,7 +30,7 @@ class TagInsertHref {
       NOCACHE();
     else
       CACHE(60);
-    Protocols.HTTP q=Protocols.HTTP.get_url(args->href);
+    object q=Protocols.HTTP.get_url(args->href);
     if(q && q->status>0 && q->status<400)
       return q->data();
 
@@ -91,7 +91,7 @@ class TagSprintf {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
-      array(string|int|float) in;
+      array(mixed) in;
       if(args->split)
 	in=content/args->split;
       else
