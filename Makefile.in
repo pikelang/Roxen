@@ -393,7 +393,7 @@ copy_dist: $(SRCDIR)/ChangeLog.gz $(SRCDIR)/ChangeLog.rxml.gz
 	echo Cleaning up the copied sources...; \
 	for f in `find $$version/. -type f -name '*~' -print` \
 	  `find $$version/. -type f -name '.#*' -print` \
-	  `find $$version/. -type f -name '#*' -print`; do \
+	  `find $$version/. -type f -name '#*#' -print`; do \
 	  echo $$f; rm $$f || exit 1; \
 	done; \
 	for d in $$version/pike/0.5/tutorial $$version/pike/0.5/about_pike \
