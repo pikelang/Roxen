@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.292 2002/10/02 23:10:26 mast Exp $
+// $Id: module.pmod,v 1.293 2002/10/03 11:49:35 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -4256,17 +4256,14 @@ class Frame
 
 		    else {
 		      subevaler = in_content;
-#ifdef DEBUG
-		      if (!evaler->is_RXML_PCode)
-			fatal_error ("Expected the evaler %O to "
-				     "be a PCode object here.\n", evaler);
-#endif
 
 		      if (flags & FLAG_GET_EVALED_CONTENT) {
+			// Do not pass on a PikeCompile object here since
+			// the result p-code will typically have a
+			// different lifespan than the content p-code.
 			PCode p_code =
 			  this_object()->evaled_content = ctx->evaled_p_code =
-			  PCode (content_type, ctx, subevaler->tag_set, 1,
-				 evaler->p_code_comp);
+			  PCode (content_type, ctx, subevaler->tag_set, 1);
 			if (subevaler->recover_errors)
 			  p_code->recover_errors = 1;
 		      }
