@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.130 2000/06/01 20:12:51 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.131 2000/06/09 12:23:24 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -268,17 +268,26 @@ class TagAppend {
   }
 }
 
-mapping tag_auth_required (string tagname, mapping args, RequestID id)
-{
-  mapping hdrs = Roxen.http_auth_required (args->realm, args->message);
-  if (hdrs->error) _error = hdrs->error;
-  if (hdrs->extra_heads)
-     _extra_heads += hdrs->extra_heads;
-    // We do not need this as long as hdrs only contains strings and numbers
-    //   foreach(indices(hdrs->extra_heads), string tmp)
-    //      Roxen.add_http_header(_extra_heads, tmp, hdrs->extra_heads[tmp]);
-  if (hdrs->text) _rettext = hdrs->text;
-  return hdrs;
+class TagAuthRequired {
+  inherit RXML.Tag;
+  constant name = "auth-required";
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+
+  class Frame {
+    inherit RXML.Frame;
+
+    array do_return(RequestID id) {
+      mapping hdrs = Roxen.http_auth_required (args->realm, args->message);
+      if (hdrs->error) _error = hdrs->error;
+      if (hdrs->extra_heads)
+	_extra_heads += hdrs->extra_heads;
+      // We do not need this as long as hdrs only contains strings and numbers
+      //   foreach(indices(hdrs->extra_heads), string tmp)
+      //      Roxen.add_http_header(_extra_heads, tmp, hdrs->extra_heads[tmp]);
+      if (hdrs->text) _rettext = hdrs->text;
+      return 0;
+    }
+  }
 }
 
 string tag_expire_time(string tag, mapping m, RequestID id)
