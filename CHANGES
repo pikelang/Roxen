@@ -1,6 +1,9 @@
 Changes since Roxen Challenger 1.2.21 Yellow
 -----------------------------------------------
 
+o Added the graphical counter module by Jordi Murgo <jordi@lleida.net>
+  to the distribution.  
+
 o All copyright notices should be updated to Idonex, as well as email
   addresses and more.
 
