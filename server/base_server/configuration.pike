@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.171 1998/11/30 02:31:31 per Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.172 1998/11/30 03:48:44 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -2137,11 +2137,11 @@ void start(int num)
   // First find out if we have any new ports.
   mapping(string:array(string)) new_ports = ([]);
   foreach(query("Ports"), port) {
-    if ((< "ssl", "ssleay" >)[port[1]]) {
+    if ((< "ssl", "ssleay", "ssl3" >)[port[1]]) {
       // Obsolete versions of the SSL protocol.
       report_warning(server_name + ": " + LOCALE->obsolete_ssl(port[1]));
       // Note: Change in-place.
-      port[1] = "ssl3";
+      port[1] = "https";
       // FIXME: Should probably mark node as changed.
     }
     string key = MKPORTKEY(port);
