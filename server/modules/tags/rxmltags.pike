@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.380 2002/07/03 12:41:48 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.381 2002/10/01 22:58:35 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -37,12 +37,12 @@ void start()
   compat_level = (float) my_configuration()->query("compat_level");
 }
 
-int cache_static_in_2_4()
+int cache_static_in_2_5()
 {
   if (compat_level == 0.0) {
     compat_level = (float) my_configuration()->query("compat_level");
   }
-  return compat_level >= 2.4 && RXML.FLAG_IS_CACHE_STATIC;
+  return compat_level >= 2.5 && RXML.FLAG_IS_CACHE_STATIC;
 }
 
 multiset query_provides() {
@@ -1631,6 +1631,7 @@ class TagCrypt {
 class TagFor {
   inherit RXML.Tag;
   constant name = "for";
+  int flags = cache_static_in_2_5();
 
   class Frame {
     inherit RXML.Frame;
@@ -2198,24 +2199,29 @@ class TagHelp {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
-      array tags=map(indices(RXML_CONTEXT->tag_set->get_tag_names()),
-		     lambda(string tag) {
-		       if(tag[..3]=="!--#" || !has_value(tag, "#"))
-			 return tag;
-		       return "";
-		     } ) - ({ "" });
-      tags += map(indices(RXML_CONTEXT->tag_set->get_proc_instr_names()),
-		  lambda(string tag) { return "&lt;?"+tag+"?&gt;"; } );
-      tags = Array.sort_array(tags,
-			      lambda(string a, string b) {
-				if(a[..4]=="&lt;?") a=a[5..];
-				if(b[..4]=="&lt;?") b=b[5..];
-				if(lower_case(a)==lower_case(b)) return a>b;
-				return lower_case(a)>lower_case(b); })-({"\x266a"});
       string help_for = args->for || id->variables->_r_t_h;
       string ret="<h2>Roxen Interactive RXML Help</h2>";
 
       if(!help_for) {
+	array tags=map(indices(RXML_CONTEXT->tag_set->get_tag_names()),
+		       lambda(string tag) {
+			 if (!has_prefix (tag, "_"))
+			   if(tag[..3]=="!--#" || !has_value(tag, "#"))
+			     return tag;
+			 return "";
+		       } ) - ({ "" });
+	tags += map(indices(RXML_CONTEXT->tag_set->get_proc_instr_names()),
+		    lambda(string tag) { return "&lt;?"+tag+"?&gt;"; } );
+	tags = Array.sort_array(tags,
+				lambda(string a, string b) {
+				  if(a[..4]=="&lt;?") a=a[5..];
+				  if(b[..4]=="&lt;?") b=b[5..];
+				  if(lower_case(a)==lower_case(b))
+				    return a < b ? -1 : a > b;
+				  return
+				    lower_case (a) < lower_case (b) ? -1 : 1;
+				})-({"\x266a"});
+
 	string char;
 	ret += "<b>Here is a list of all defined tags. Click on the name to "
 	  "receive more detailed information. All these tags are also availabe "
@@ -2547,8 +2553,9 @@ class UserTagContents
 	  flags |= RXML.FLAG_DONT_RECOVER;
 	if ((upframe = upframe_)) {
 	  // upframe is zero if we're called during preparse.
-	  if (upframe->compiled_content && !upframe->compiled_content->is_stale()) {
-	    content = upframe->compiled_content;
+	  RXML.PCode compiled_content = upframe->compiled_content;
+	  if (compiled_content && !compiled_content->is_stale()) {
+	    content = compiled_content;
 	    // The internal way to flag a compiled but unevaluated
 	    // flag is to set args to a function returning the
 	    // argument mapping. It'd be prettier with a flag for
@@ -2717,8 +2724,9 @@ class UserTagContents
 	mapping(RXML.Frame:array) orig_ctx_hidden = ctx->hidden;
 	ctx->hidden = upframe->saved_hidden;
 
-	if (upframe->compiled_content && !upframe->compiled_content->is_stale())
-	  content = upframe->compiled_content->eval (ctx);
+	RXML.PCode compiled_content = upframe->compiled_content;
+	if (compiled_content && !compiled_content->is_stale())
+	  content = compiled_content->eval (ctx);
 	else if (upframe->compile)
 	  [content, upframe->compiled_content] =
 	    ctx->eval_and_compile (content_type, upframe->content_text);
@@ -2735,7 +2743,17 @@ class UserTagContents
       else
 	content = upframe->content_result;
 
+#if constant (_disable_threads)
+      // If content is a SloppyDOM object, it's not thread safe when
+      // it extends itself lazily, so a lock is necessary. We use the
+      // interpreter lock since it's the cheapest one and since
+      // get_content doesn't block anyway.
+      Thread._Disabled threads_disabled = _disable_threads();
+#endif
       mixed result = get_content (upframe, content);
+#if constant (_disable_threads)
+      threads_disabled = 0;
+#endif
 
       // Note: result_type == content_type (except for the parser).
       return type && type != result_type ?
@@ -3012,6 +3030,18 @@ class TagDefine {
       return 0;
     }
 
+    private array quote_other_entities (Parser.HTML p, string s, void|string scope_name)
+    {
+      // We know that s ends with ";", so it must be
+      // longer than the following prefixes if they match.
+      if (sscanf (s, "&_.%c", int c) && c != '.' ||
+	  (scope_name &&
+	   sscanf (s, "&" + replace (scope_name, "%", "%%") + ".%c", c) &&
+	   c != '.'))
+	return 0;
+      return ({"&:", s[1..]});
+    }
+
     array do_return(RequestID id) {
       string n;
       RXML.Context ctx = RXML_CONTEXT;
@@ -3078,6 +3108,13 @@ class TagDefine {
 	      p->add_entity ("_internal_." + var, "&_.__contents__" + id + ";");
 	      m_delete (ctx->scopes->_internal_, var);
 	    }
+
+	    // Quote all entities except those handled above and those
+	    // in the current scope, to avoid repeated evaluation of
+	    // them in the expansion phase in UserTag. We use the rxml
+	    // special "&:foo;" quoting syntax.
+	    p->_set_entity_callback (quote_other_entities);
+	    if (args->scope) p->set_extra (args->scope);
 	  }
 
 	  content = p->finish (content)->read();
@@ -3494,7 +3531,7 @@ class FrameIf {
 class TagIf {
   inherit RXML.Tag;
   constant name = "if";
-  int flags = RXML.FLAG_SOCKET_TAG | cache_static_in_2_4();
+  int flags = RXML.FLAG_SOCKET_TAG | cache_static_in_2_5();
   array(RXML.Type) result_types = ({RXML.t_any});
   program Frame = FrameIf;
 }
@@ -3502,7 +3539,7 @@ class TagIf {
 class TagElse {
   inherit RXML.Tag;
   constant name = "else";
-  int flags = cache_static_in_2_4();
+  int flags = cache_static_in_2_5();
   array(RXML.Type) result_types = ({RXML.t_any});
   class Frame {
     inherit RXML.Frame;
@@ -3517,7 +3554,7 @@ class TagElse {
 class TagThen {
   inherit RXML.Tag;
   constant name = "then";
-  int flags = cache_static_in_2_4();
+  int flags = cache_static_in_2_5();
   array(RXML.Type) result_types = ({RXML.t_any});
   class Frame {
     inherit RXML.Frame;
@@ -3532,7 +3569,7 @@ class TagThen {
 class TagElseif {
   inherit RXML.Tag;
   constant name = "elseif";
-  int flags = cache_static_in_2_4();
+  int flags = cache_static_in_2_5();
   array(RXML.Type) result_types = ({RXML.t_any});
 
   class Frame {
@@ -3686,7 +3723,7 @@ class TagCond
 class TagEmit {
   inherit RXML.Tag;
   constant name = "emit";
-  int flags = RXML.FLAG_SOCKET_TAG | cache_static_in_2_4();
+  int flags = RXML.FLAG_SOCKET_TAG | cache_static_in_2_5();
   mapping(string:RXML.Type) req_arg_types = ([ "source":RXML.t_text(RXML.PEnt) ]);
   mapping(string:RXML.Type) opt_arg_types = ([ "scope":RXML.t_text(RXML.PEnt),
 					       "maxrows":RXML.t_int(RXML.PEnt),
@@ -5118,7 +5155,12 @@ class TagIWCache {
       object sbobj = id->misc->sbobj;
       int userid = sbobj && sbobj->get_userid();
       args = ([ "shared" : "yes-please",
-		"key"    : "userid:" + userid ]);
+		"key"    : ("userid:" + userid +
+			    "|tmpl:" + (id->misc->iw_template_set || "")) ]);
+
+      if(id->supports->robot)
+	args += ([ "nocache" : "yes" ]);
+      
       return ::do_enter(id);
     }
   }
@@ -5723,6 +5765,9 @@ using the pre tag.
 
  <h1>Cache static tags</h1>
 
+ <note><p>Note that this is only applicable if the compatibility level
+ is set to 2.5 or higher.</p></note>
+
  <p>Some common tags, e.g. <tag>if</tag> and <tag>emit</tag>, are
  \"cache static\". That means that they are cached even though there
  are nested <tag>cache</tag> tag(s). That can be done since they
@@ -5735,13 +5780,13 @@ using the pre tag.
  <tag>cache</tag> or <tag>nocache</tag>. This can give side effects;
  consider this example:</p>
 
- <example>
-&lt;cache&gt;
-  &lt;registered-user&gt;
-    &lt;nocache&gt;Your name is &registered-user.name;&lt;/nocache&gt;
-  &lt;/registered-user&gt;
-&lt;/cache&gt;
-</example>
+<ex-box>
+<cache>
+  <registered-user>
+    <nocache>Your name is &registered-user.name;</nocache>
+  </registered-user>
+</cache>
+</ex-box>
 
  <p>Assume the tag <tag>registered-user</tag> is a custom tag that
  ignores its content whenever the user isn't registered. If it isn't
@@ -5765,8 +5810,8 @@ using the pre tag.
  <ent>page.path</ent>). This is often a bad policy since it's easy for
  a client to generate many cache entries.</p>
 
- <p>There are no cache static tags if the compatibility level is lower
- than 2.4.</p>
+ <p>There are no cache static tags if the compatibility level is 2.4
+ or lower.</p>
 </desc>
 
 <attr name='variable' value='string'>
@@ -6395,6 +6440,9 @@ using the pre tag.
 
 "for":#"<desc type='cont'><p><short>
  Makes it possible to create loops in RXML.</short>
+
+ <note><p>This tag is cache static (see the <tag>cache</tag> tag)
+ if the compatibility level is set to 2.5 or higher.</p></note>
 </p></desc>
 
 <attr name='from' value='number'>
@@ -7528,7 +7576,7 @@ just got zapped?
  touches the page's truth value earlier in the page.</p>
 
  <note><p>This tag is cache static (see the <tag>cache</tag> tag)
- unless the compatibility level is set to 2.2 or earlier.</p></note>
+ if the compatibility level is set to 2.5 or higher.</p></note>
 </desc>",
 
 //----------------------------------------------------------------------
@@ -7538,7 +7586,7 @@ just got zapped?
  previous <tag>if</tag> returned false.</short></p>
 
  <note><p>This tag is cache static (see the <tag>cache</tag> tag)
- unless the compatibility level is set to 2.2 or earlier.</p></note>
+ if the compatibility level is set to 2.5 or higher.</p></note>
 </desc>",
 
 //----------------------------------------------------------------------
@@ -7654,7 +7702,7 @@ just got zapped?
  contained in a SiteBuilder administrated site.</p>
 
  <note><p>This tag is cache static (see the <tag>cache</tag> tag)
- unless the compatibility level is set to 2.2 or earlier.</p></note>
+ if the compatibility level is set to 2.5 or higher.</p></note>
 </desc>
 
 <attr name='not'><p>
@@ -8161,7 +8209,7 @@ just got zapped?
  tags.</p>
 
  <note><p>This tag is cache static (see the <tag>cache</tag> tag)
- unless the compatibility level is set to 2.2 or earlier.</p></note>
+ if the compatibility level is set to 2.5 or higher.</p></note>
 </desc>",
 
 //----------------------------------------------------------------------
@@ -8372,7 +8420,7 @@ just got zapped?
  <tag>emit</tag> operation fails.</p>
 
  <note><p>This tag is cache static (see the <tag>cache</tag> tag)
- unless the compatibility level is set to 2.2 or earlier.</p></note>
+ if the compatibility level is set to 2.5 or higher.</p></note>
 </desc>
 
 <attr name='source' value='plugin' required='required'><p>
