@@ -1,5 +1,5 @@
 /*
- * $Id: problems.pike,v 1.11 1998/02/05 00:59:23 js Exp $
+ * $Id: problems.pike,v 1.12 1999/07/16 20:15:24 neotron Exp $
  */
 
 inherit "wizard";
@@ -201,11 +201,12 @@ string page_3(object id)
 			  "variable 'Change uid and gid to' will not have "
 			  "any effect, but it is set to "+user,id);
     }
-    sscanf(user, "%s:%s", u, g);
+    if(!sscanf(user, "%s:%s", u, g))
+      u = user;
 
 #if constant(getpwnam)
     array pw;
-    if(!(pw = getpwnam(u+"")) && (int)u)
+    if(!(pw = getpwnam(u)) && (int)u)
       pw = getpwuid((int)u);
 
     if(!pw)
