@@ -4,7 +4,7 @@
 
 #ifndef IN_INSTALL
 inherit "newdecode";
-// string cvs_version = "$Id: read_config.pike,v 1.24 1998/09/11 22:15:31 per Exp $";
+// string cvs_version = "$Id: read_config.pike,v 1.25 1999/02/15 23:20:49 per Exp $";
 #else
 import spider;
 # define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
@@ -61,29 +61,29 @@ void save_it(string cl)
 #endif
 
   f = configuration_dir + replace(cl, " ", "_");
-#ifndef THREADS
-  object privs = Privs("Saving config file"); // Change to root user.
-#endif
   mv(f, f+"~");
-  fd = open(f, "wc");
-#if efun(chmod)
-#if efun(geteuid)
-  if(geteuid() != getuid()) chmod(f,0660);
-#endif
-#endif
-#ifndef THREADS
-  privs=0;
-#endif
+  fd = open(f, "wct");
+
   if(!fd)
   {
     error("Creation of configuration file failed ("+f+") "
-#if 0&&efun(strerror)
-	  " ("+strerror()+")"
+#if efun(strerror)
+	  " ("+strerror(errno())+")"
 #endif
 	  "\n");
     return;
   }
-  string data = encode_regions( configs[ cl ] );
+  object config;
+#if constant( roxenp )
+  config = roxenp();
+  foreach(config->configurations||({}), object c)
+    if(c->name == cl)
+    {
+      config = c;
+      break;
+    }
+#endif
+  string data = encode_regions( configs[ cl ], config );
   int num;
   catch(num = fd->write(data));
   if(num != strlen(data))

@@ -1,10 +1,18 @@
-// string cvs_version = "$Id: module_support.pike,v 1.19 1998/11/18 04:53:49 per Exp $";
+// string cvs_version = "$Id: module_support.pike,v 1.20 1999/02/15 23:19:59 per Exp $";
 #include <roxen.h>
 #include <module.h>
 
 /* Set later on to something better in roxen.pike::main() */
 //array (object) configurations;
 mapping (string:mixed *) variables=([]); 
+
+
+string get_doc_for( string region, string variable )
+{
+  if(variables[ variable ])
+    return variables[variable][VAR_NAME]+
+      "\n"+variables[ variable ][ VAR_DOC_STR ];
+}
 
 /* Variable support for the main Roxen "module". Normally this is
  * inherited from module.pike, but this is not possible, or wanted, in

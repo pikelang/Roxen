@@ -7,7 +7,7 @@
 #endif
 #endif
 #ifndef IN_INSTALL
-// string cvs_version = "$Id: newdecode.pike,v 1.7 1998/02/10 18:36:07 per Exp $";
+// string cvs_version = "$Id: newdecode.pike,v 1.8 1999/02/15 23:20:10 per Exp $";
 #endif
 
 #include <roxen.h>
@@ -181,6 +181,7 @@ void parse(string s, mapping mr)
   parse_html(s, ([ ]),  
 	     (["array":decode_array, 
 	      "mapping":decode_mapping,
+	      "comment":"",
 	      "list":decode_list,
 	      "module":decode_module,
 	      "int":decode_int, 
@@ -194,6 +195,7 @@ void new_parse(string s, mapping mr)
   parse_html(s, ([ ]),  
 	     (["a":new_decode_array, 
 	      "map":new_decode_mapping,
+	      "comment":"",
 	      "lst":new_decode_list,
 	      "mod":decode_module,
 	      "int":decode_int, 
@@ -298,8 +300,6 @@ mapping decode_config_file(string s)
    }
 }
 
-
-#if 1
 private string encode_mixed(mixed from)
 {
   if(stringp(from))
@@ -327,36 +327,72 @@ private string encode_mixed(mixed from)
   }
 }
 
-string encode_config_region(mapping m)
+string trim_ws( string indata )
 {
-  string res = "";
-  string v;
-  foreach(indices(m), v)
-    res += " <var name="+sprintf("%-22s", "'"+v+"'>")+encode_mixed(m[v])
-        +" </var>\n";
+  string res="";
+  foreach(indata/"\n", string line)
+  {
+    sscanf(line, "%*[ \t]%s", line);
+    line = reverse(line);
+    sscanf(line, "%*[ \t]%s", line);
+    line = reverse(line);
+    res += line+"\n";
+   }
   return res;
 }
 
-string encode_regions(mapping r)
+string encode_config_region(mapping m, string reg, object c)
+{
+  string res = "";
+  string v;
+  foreach(sort(indices(m)), v)
+  {
+    string doc;
+
+    if(v[0] == '_')
+    {
+      switch(v)
+      {
+       case "_comment":
+       case "_name":
+       case "_seclevels":
+         if(m[v] == "")
+           continue;
+         break;
+       case "_priority":
+         if(m[v] == 5)
+           continue;
+         break;
+       case "_sec_group":
+         if(m[v] == "user")
+           continue;
+         break;
+       case "_seclvl":
+         if(m[v] == 0)
+           continue;
+         break;
+      }
+    }
+
+    if(c && c->get_doc_for)
+      doc = c->get_doc_for( reg, v );
+    if(doc)
+      doc=("\n#   "+trim_ws(replace(sprintf("%*-=s", 74,trim_ws(doc)), "\n", "\n#    ")));
+    else
+      doc = "";
+    res += " <var name='"+v+"'> "+doc+"  "+encode_mixed(m[v])+"</var>\n\n";
+  }
+  return res;
+}
+
+string encode_regions(mapping r, object c)
 {
   string v;
-  string res = "6 <- Do not remove this number!   "
-    "Roxen Challenger save file format>\n\n";
-  foreach(indices(r), v)
-    res += "<region name='"+v+"'>\n" + encode_config_region(r[v]) 
+  string res = "6 <- Do not remove this number!   It's the "
+    "Roxen Challenger save file format identifier -->\n\n";
+  foreach(sort(indices(r)), v)
+    res += "<region name='"+v+"'>\n" + encode_config_region(r[v],v,c)
            + "</region>\n\n";
   return res;
 }
-#else
-string encode_regions(mapping r)
-{
-  mapping mr = copy_value(r);
-  string i, j;
-  foreach(indices(mr), i)
-    foreach(indices(mr[i]), j)
-      if(objectp(mr[i][j]))
-	mr[i][j] = name_of_module( mr[i][j] );
-  return "5"+encode_value(mr);
-}
-#endif
 
