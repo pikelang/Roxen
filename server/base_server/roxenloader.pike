@@ -16,7 +16,7 @@ private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.201 2000/09/23 11:28:11 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.202 2000/09/24 01:48:38 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1454,9 +1454,11 @@ library should be enough.
   add_constant( "Image.Layer", nm_resolv("Image.Layer") );
   add_constant( "Image.lay", nm_resolv("Image.lay") );
   add_constant( "Image.Color", nm_resolv("Image.Color") );
+#if constant(Image.GIF.encode)
   add_constant( "Image.GIF.encode", nm_resolv("Image.GIF.encode") );
   add_constant( "Image.GIF.encode_trans",
                 nm_resolv("Image.GIF.encode_trans") );
+#endif
   add_constant( "Image.Color.Color", nm_resolv("Image.Color.Color") );
   add_constant( "Image", nm_resolv("Image") );
   add_constant( "Locale", nm_resolv("Locale") );
