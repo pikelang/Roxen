@@ -3156,3 +3156,9 @@ Roxen verwaltet.&lt;/p&gt;</t>
 <o>Load of %s failed: Module not found.</o>
 <t></t>
 </str>
+
+<str id="512">
+<new/>
+<o>This does not look like a valid email address.</o>
+<t></t>
+</str>

@@ -2891,3 +2891,8 @@ server must be a MySQL server, nothing else will work.
 <o>Load of %s failed: Module not found.</o>
 <t></t>
 </str>
+
+<str id="512">
+<o>This does not look like a valid email address.</o>
+<t></t>
+</str>
