@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.121 2001/08/01 17:57:05 per Exp $
+// $Id: module.pike,v 1.122 2001/08/09 16:59:56 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -38,7 +38,7 @@ RXML.TagSet module_tag_set;
  * module/configuration.  And the reason for that is that if the
  * messages are logged from subclasses in the module, the DWIM in
  * roxenlib.pike cannot see that they are logged from a module. This
- * solution is not really all that beatiful, but it works. :-)
+ * solution is not really all that beautiful, but it works. :-)
  */
 void report_fatal( mixed ... args )  { predef::report_fatal( @args );  }
 void report_error( mixed ... args )  { predef::report_error( @args );  }
@@ -67,7 +67,7 @@ string module_identifier()
 
 string _sprintf()
 {
-  return sprintf ("RoxenModule(%s)", _module_identifier);
+  return sprintf ("RoxenModule(%s)", _module_identifier || "?");
 }
 
 array register_module()
