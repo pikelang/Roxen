@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.28 1998/02/04 05:17:56 per Exp $ */
+/* $Id: module.pike,v 1.29 1998/02/06 18:31:56 grubba Exp $ */
 
 #include <module.h>
 
@@ -400,7 +400,7 @@ array query_seclevels()
 	  arr[1] = (int)arr[1];
 	  patterns += ({ ({ MOD_ALLOW, IP_with_mask(@arr) }) });
 	} else if ((sizeof(arr = (value/":")) == 2) ||
-		   (sizeof(arr = (value/",")))) {
+		   (sizeof(arr = (value/",")) > 1)) {
 	  // IP:mask or IP,mask
 	  patterns += ({ ({ MOD_ALLOW, IP_with_mask(@arr) }) });
 	} else {
@@ -417,7 +417,7 @@ array query_seclevels()
 	  arr[1] = (int)arr[1];
 	  patterns += ({ ({ MOD_DENY, IP_with_mask(@arr) }) });
 	} else if ((sizeof(arr = (value/":")) == 2) ||
-		   (sizeof(arr = (value/",")))) {
+		   (sizeof(arr = (value/",")) > 1)) {
 	  // IP:mask or IP,mask
 	  patterns += ({ ({ MOD_DENY, IP_with_mask(@arr) }) });
 	} else {
