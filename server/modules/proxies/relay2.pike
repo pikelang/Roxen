@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 2000, Roxen IS.
 #include <module.h>
-constant cvs_version = "$Id: relay2.pike,v 1.15 2000/11/16 14:55:51 peter Exp $";
+constant cvs_version = "$Id: relay2.pike,v 1.16 2000/12/10 04:31:11 per Exp $";
 
 inherit "module";
 constant module_type = MODULE_FIRST|MODULE_LAST;
@@ -37,9 +37,10 @@ class Relay
       switch( lower_case(i) )
       {
        case "connection": /* We do not support keep-alive yet. */
+	 res->Connection = "close";
          break;
        case "host":
-         res[String.capitalize( i )] = host+":"+port;
+         res->Host = host+":"+port;
          break;
        default:
          res[String.capitalize( i )] = from->request_headers[i];
