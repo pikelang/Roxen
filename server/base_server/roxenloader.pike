@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.118 1999/11/29 18:50:55 per Exp $
+ * $Id: roxenloader.pike,v 1.119 1999/12/06 04:55:44 mast Exp $
  *
  * Roxen bootstrap program.
  *
@@ -17,7 +17,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.118 1999/11/29 18:50:55 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.119 1999/12/06 04:55:44 mast Exp $";
 
 #define perror roxen_perror
 
@@ -746,11 +746,7 @@ string parse_html (string data, mapping tags, mapping containers,
   Parser.HTML parser = Parser.HTML();
   parser->add_tags (map ( tags, make_caller,TagCallerNoLine,1) );
   parser->add_containers(map (containers,make_caller,ContainerCallerNoLine,1));
-  parser->_set_tag_callback (
-    lambda (object parser, string str) {
-      parser->feed_insert (str[1..]);
-      return ({str[..0]});
-    });
+  parser->_set_tag_callback (1);
   parser->set_extra (@args);
   return parser->finish (data)->read();
 }
@@ -761,11 +757,7 @@ string parse_html_lines (string data, mapping tags, mapping containers,
   Parser.HTML parser = Parser.HTML();
   parser->add_tags (map ( tags, make_caller, TagCaller,1 ) );
   parser->add_containers(map (containers, make_caller, ContainerCaller,1));
-  parser->_set_tag_callback (
-    lambda (object parser, string str) {
-      parser->feed_insert (str[1..]);
-      return ({str[..0]});
-    });
+  parser->_set_tag_callback (1);
   parser->set_extra (@args);
   return parser->finish (data)->read();
 }

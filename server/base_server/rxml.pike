@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.38 1999/11/29 22:10:30 per Exp $
+ * $Id: rxml.pike,v 1.39 1999/12/06 04:55:44 mast Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -139,11 +139,7 @@ string do_parse(string to_parse, RequestID id,
                          roxenloader.TagCaller ) );
   parser->add_containers (map ( id->misc->_containers, roxenloader.make_caller,
                                 roxenloader.ContainerCaller ));
-  parser->_set_tag_callback (
-    lambda (object parser, string str) {
-      parser->feed_insert( str[1..] );
-      return ({str[..0]});
-    });
+  parser->_set_tag_callback (1);
   id->misc->_parser_obj = parser;
   parser->set_extra( 0, id, file, defines, my_fd );
   to_parse = parser->finish( to_parse )->read();
