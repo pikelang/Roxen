@@ -12,9 +12,18 @@
     <CustomAction Id="CreateConfigInterface" Directory="SERVERDIR"
       ExeCommand='"[SERVERDIR]\pike\bin\pike" bin\create_configif.pike --batch server_name "[SERVER_NAME]" server_url "[SERVER_PROTOCOL]://*:[SERVER_PORT]/" user "[ADM_USER]" password "[ADM_PASS1]" ok y update n'
       Execute="deferred" />
-    <CustomAction Id="CreatePikeLocation" Directory="SERVERDIR"
+    <CustomAction Id="OldCreatePikeLocation" Directory="SERVERDIR"
       ExeCommand='"[SERVERDIR]\pike\bin\pike" -e "write(argv[1]); Stdio.write_file(argv[2], argv[3]);" "Creating pikelocation.txt..." "pikelocation.txt" "[SERVERDIR]\pike\bin\pike"'
       Execute="deferred" />
+    <CustomAction Id="CreatePikeLocation" Script="vbscript"
+      Execute="Deferred">
+      Dim fso, tf, serverdir
+      Set fso = CreateObject("Scripting.FileSystemObject")
+      Set serverdir = Session.Property("SERVERDIR")
+      Set tf = fso.CreateTextFile(serverdir &amp; "\pikelocation,txt", True)
+      tf.WriteLine(serverdir &amp; "\pike\bin\pike") 
+      tf.Close
+    </CustomAction>
     <CustomAction Id="StartBrowser" Property="BROWSER"
       ExeCommand="[SERVER_PROTOCOL]://localhost:[SERVER_PORT]/"
       Execute="deferred" Return="asyncNoWait" />
