@@ -10,7 +10,7 @@ constant module_type = MODULE_LOCATION;
 constant module_name = "Configration Filesystem";
 constant module_doc = "This filesystem serves the configuration interface";
 constant module_unique = 1;
-constant cvs_version = "$Id: config_filesystem.pike,v 1.11 1999/11/19 06:53:53 per Exp $";
+constant cvs_version = "$Id: config_filesystem.pike,v 1.12 1999/11/19 10:09:48 per Exp $";
 
 constant path = "config_interface/";
 
@@ -24,6 +24,12 @@ string template_for( string f, object id )
   while( i-- )
     if( id->conf->stat_file( cd[..i]*"/"+"/template", id ) )
       return cd[..i]*"/"+"/template";
+}
+
+string real_file( mixed f, mixed id )
+{
+  if(stat_file( f, id )) 
+    return path + f;
 }
 
 mixed stat_file( string f, object id )
@@ -49,7 +55,6 @@ mixed find_dir( string f, object id )
 mixed find_file( string f, object id )
 {
   string locale;
-
 
   if( !id->misc->request_charset_decoded )
   {
@@ -95,14 +100,17 @@ mixed find_file( string f, object id )
    case -2: /* directory */
      return -1;
   }
+  id->realfile = path+replace(f,locale,"standard");
   
-  mixed retval = Stdio.File( path+replace(f,locale,"standard"), "r" );
+  mixed retval = Stdio.File( id->realfile, "r" );
 
   if( id->variables["content-type"] )
     return http_file_answer( retval, id->variables["content-type"] );
 
   // add template to all rxml/html pages...
   string type = id->conf->type_from_filename( id->not_query );
+
+  werror( f + " is " + type + "\n");
 
   switch( type )
   {
