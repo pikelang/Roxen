@@ -1,7 +1,7 @@
 #include <roxen.h>
 inherit "http";
 
-// $Id: roxenlib.pike,v 1.132 1999/12/06 16:13:24 grubba Exp $
+// $Id: roxenlib.pike,v 1.133 1999/12/06 18:49:30 grubba Exp $
 // This code has to work both in the roxen object, and in modules.
 #if !efun(roxen)
 #define roxen roxenp()
@@ -1605,6 +1605,12 @@ string|int API_read_file(RequestID id, string file)
         s -= "\r";
         if(!sscanf(s, "%*s\n\n%s", s))
           sscanf(s, "%*s\n%s", s);
+      }
+      if (id->since && a[0]->stat) {
+	array(int) st = a[0]->stat();
+	if (st && (st[3] > id->misc->last_modified)) {
+	  id->misc->last_modified = st[3];
+	}
       }
     }
     if(!s)
