@@ -1,4 +1,4 @@
-/* $Id: ssl3.pike,v 1.21 1997/10/13 14:09:18 grubba Exp $
+/* $Id: ssl3.pike,v 1.22 1997/11/30 12:03:14 nisse Exp $
  *
  * © 1997 Informationsvävarna AB
  *
@@ -30,56 +30,6 @@ mapping parse_args(string options)
 	res[key] = value-"\r";
     }
   return res;
-}
-
-object begin_pem = Regexp("-----BEGIN (.*)----- *$");
-object end_pem = Regexp("-----END (.*)----- *$");
-
-mapping(string:string) parse_pem(string f)
-{
-#ifdef SSL3_DEBUG
-  werror(sprintf("parse_pem: '%s'\n", f));
-#endif
-  if(!f)
-  {
-    report_error("SSL3: No certificate found.\n");
-    return 0;
-  }
-  array(string) lines = f / "\n";
-  string name = 0;
-  int start_line;
-  mapping(string:string) parts = ([ ]);
-
-  for(int i = 0; i < sizeof(lines); i++)
-  {
-    array(string) res;
-    if (res = begin_pem->split(lines[i]))
-    {
-#ifdef SSL3_DEBUG
-      werror(sprintf("Matched start of '%s'\n", res[0]));
-#endif
-      if (name) /* Bad syntax */
-	return 0;
-      name = res[0];
-      start_line = i + 1;
-    }
-    else if (res = end_pem->split(lines[i]))
-    {
-#ifdef SSL3_DEBUG
-      werror(sprintf("Matched end of '%s'\n", res[0]));      
-#endif
-      if (name != res[0]) /* Bad syntax */
-	return 0;
-      parts[name] = MIME.decode_base64(lines[start_line .. i - 1] * "");
-      name = 0;
-    }
-  }
-  if (name) /* Bad syntax */
-    return 0;
-#ifdef SSL3_DEBUG
-  werror(sprintf("pem contents: %O\n", parts));
-#endif
-  return parts;
 }
 
 class roxen_ssl_context {
@@ -129,19 +79,19 @@ array|void real_port(array port, object cfg)
     ({ report_error, throw }) ("ssl3: No 'cert-file' argument!\n");
   }
 
-  mapping(string:string) parts = parse_pem(read_file(options["cert-file"]));
+  mapping(string:string) parts = SSL.pem.parse_pem(read_file(options["cert-file"]));
 
   if (!parts || !(cert = parts["CERTIFICATE"]||parts["X509 CERTIFICATE"])) {
     ({ report_error, throw }) ("ssl3: No certificate found.\n");
   }
 
   if (options["key-file"])
-    parts = parse_pem(read_file(options["key-file"]));
+    parts = SSL.pem.parse_pem(read_file(options["key-file"]));
   
   if (!parts || !(key = parts["RSA PRIVATE KEY"])) {
     ({ report_error, throw }) ("ssl3: Private key not found.\n");
   }
-  array rsa_parms = SSL.asn1.ber_decode(key)->get_asn1()[1];
+  array rsa_parms = Standards.ASN1.decode(key)->get_asn1()[1];
   
   ctx->certificates = ({ cert });
   ctx->rsa = Crypto.rsa();
