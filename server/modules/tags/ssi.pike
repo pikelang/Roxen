@@ -2,11 +2,10 @@
 //
 
 inherit "module";
-inherit "roxenlib";
 #include <module.h>
 
 constant thread_safe=1;
-constant cvs_version = "$Id: ssi.pike,v 1.28 2000/04/15 01:18:19 per Exp $";
+constant cvs_version = "$Id: ssi.pike,v 1.29 2000/04/30 02:58:03 nilsson Exp $";
 
 
 constant module_type = MODULE_PARSER;
@@ -63,7 +62,7 @@ class ScopeSSI {
 		 "gateway_interface", "server_protocol", "request_method",
 		 "auth_type", "http_cookie", "cookie" });
     if(c->id) {
-      ind += indices(build_env_vars(0, c->id, 0));
+      ind += indices(Roxen.build_env_vars(0, c->id, 0));
       if(c->id->misc->ssi_variables) ind += indices(c->id->misc->ssi_variables);
     }
     return ind;
@@ -338,11 +337,11 @@ string get_var(string var, RequestID id)
 
    case "date_local":
     NOCACHE();
-    return strftime(id->misc->ssi_timefmt || "%c", time(1));
+    return Roxen.strftime(id->misc->ssi_timefmt || "%c", time(1));
 
    case "date_gmt":
     NOCACHE();
-    return strftime(id->misc->ssi_timefmt || "%c", time(1) + localtime(time(1))->timezone);
+    return Roxen.strftime(id->misc->ssi_timefmt || "%c", time(1) + localtime(time(1))->timezone);
 
    case "document_name":
     return id->realfile?reverse(id->realfile/"/")[0]:"";
@@ -374,18 +373,18 @@ string get_var(string var, RequestID id)
     return "HTTP/1.0";
 
    case "request_method":
-    return html_encode_string(id->method);
+    return Roxen.html_encode_string(id->method);
 
    case "auth_type":
     return "Basic";
 
    case "http_cookie": case "cookie":
     NOCACHE();
-    return html_encode_string(id->misc->cookies || "");
+    return Roxen.html_encode_string(id->misc->cookies || "");
 
    default:
     var = upper_case(var);
-    mapping myenv = build_env_vars(0, id, 0);
+    mapping myenv = Roxen.build_env_vars(0, id, 0);
     if(myenv[var]) {
       NOCACHE();
       return myenv[var];
@@ -409,7 +408,7 @@ array(string) tag_printenv(string t, mapping m, RequestID id) {
 	    "http_user_agent","http_referer"}), string var)
     res+=var+" = "+get_var(var,id)+"\n";
 
-  mapping myenv =  build_env_vars(0, id, 0);
+  mapping myenv =  Roxen.build_env_vars(0, id, 0);
   foreach(indices(myenv), string var)
     res+=var+" = "+myenv[var]+"\n";
 
@@ -452,7 +451,7 @@ string|array(string) tag_include(string tag, mapping m, RequestID id)
   if(!m->file) m->file=http_decode_string(m->virtual);
 
   m->file=fix_var(m->file, id);
-  string ret=id->conf->try_get_file(fix_relative(m->file,id),id);
+  string ret=id->conf->try_get_file(Roxen.fix_relative(m->file,id),id);
   if(!ret) return ({ id->misc->ssi_errmsg||"No such file ("+m->file+")." });
   return ret;
 }
@@ -486,10 +485,10 @@ array(string) tag_fsize(string tag, mapping m, RequestID id)
   if(tag == "!--#fsize") {
     if(id->misc->ssi_sizefmt=="bytes")
       return ({ (string)s[1] });
-    return ({ sizetostring(s[1]) });
+    return ({ Roxen.sizetostring(s[1]) });
   }
 
-  return ({ strftime(id->misc->ssi_timefmt || "%c", s[3]) });
+  return ({ Roxen.strftime(id->misc->ssi_timefmt || "%c", s[3]) });
 }
 
 string|array(string) tag_exec(string tag, mapping m, RequestID id)
@@ -500,7 +499,7 @@ string|array(string) tag_exec(string tag, mapping m, RequestID id)
     else
       NOCACHE();
     return id->conf->try_get_file
-      (fix_relative( http_decode_string(fix_var(m->cgi,id)) , id),id)||"";
+      (Roxen.fix_relative( http_decode_string(fix_var(m->cgi,id)) , id),id)||"";
   }
 
   if(m->cmd)
@@ -514,8 +513,8 @@ string|array(string) tag_exec(string tag, mapping m, RequestID id)
       NOCACHE();
       return popen(fix_var(m->cmd, id),
 		   getenv()
-		   | build_roxen_env_vars(id)
-		   | build_env_vars(id->not_query, id, 0),
+		   | Roxen.build_roxen_env_vars(id)
+		   | Roxen.build_env_vars(id->not_query, id, 0),
 		   QUERY(execuid) || -2, QUERY(execgid) || -2);
     }
     else

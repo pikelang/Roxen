@@ -1,10 +1,9 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: tablify.pike,v 1.48 2000/04/15 01:18:19 per Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.49 2000/04/30 02:58:03 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
-inherit "roxenlib";
 inherit "state";
 
 constant module_type = MODULE_PARSER;
@@ -207,13 +206,13 @@ string make_table(array subtitles, array table, mapping opt, RequestID id)
 
   m_delete(id->misc, "tmp_colmax");
   if(opt->nice || opt->nicer)
-    return parse_rxml(r,id)+"</table></td></tr>\n</table>\n";
+    return Roxen.parse_rxml(r,id)+"</table></td></tr>\n</table>\n";
 
   m_delete(opt, "cellalign");
   m_delete(opt, "cellvalign");
   m_delete(opt, "fields");
   m_delete(opt, "state");
-  return make_container("table",opt,r);
+  return Roxen.make_container("table",opt,r);
 }
 
 string _fields(string name, mapping arg, string q, mapping m)

@@ -36,13 +36,12 @@
 //
 // where line is numeral, first line==1
 
-constant cvs_version = "$Id: sed.pike,v 1.8 2000/04/06 06:16:06 wing Exp $";
+constant cvs_version = "$Id: sed.pike,v 1.9 2000/04/30 02:58:03 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
 
 inherit "module";
-inherit "roxenlib";
 
 mapping flcache=([]);
    // not_query:(flno: 1=fodled 2=unfolded )
@@ -311,7 +310,7 @@ string container_sed(string tag,mapping m,string cont,object id)
 			       c->data=id->cookie[m->cookie]||"";
 			    else
 			       c->data="";
-			    if (m->rxml) c->data=parse_rxml(c->data,id);
+			    if (m->rxml) c->data=Roxen.parse_rxml(c->data,id);
 			 },
 		"destination":lambda(string tag,mapping m,mapping c,object id)
 			 {
@@ -322,13 +321,13 @@ string container_sed(string tag,mapping m,string cont,object id)
 	      ]),
 	      (["e":lambda(string tag,mapping m,string cont,mapping c,
 			   object id)
-		    { if (m->rxml) c->e+=({parse_rxml(cont,id)});
+		    { if (m->rxml) c->e+=({Roxen.parse_rxml(cont,id)});
 		       else c->e+=({cont}); },
 		"raw":lambda(string tag,mapping m,string cont,mapping c)
 		       { c->data=cont; },
 		"rxml":lambda(string tag,mapping m,string cont,mapping c,
 			      object id)
-		       { c->data=parse_rxml(cont,id); },
+		       { c->data=Roxen.parse_rxml(cont,id); },
 	      ]),c,id);
 
    if (!c->data) return "<!-- sed command missing data -->";

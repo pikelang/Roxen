@@ -3,11 +3,10 @@
 
 #include <module.h>
 inherit "module";
-inherit "roxenlib";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: check_spelling.pike,v 1.10 2000/04/06 10:09:05 kuntri Exp $";
+constant cvs_version = "$Id: check_spelling.pike,v 1.11 2000/04/30 02:58:02 nilsson Exp $";
 
 constant module_type = MODULE_PARSER;
 constant module_name = "Spell checker";
@@ -18,9 +17,9 @@ mapping find_internal(string f, RequestID id)
 {
   switch(f) {
   case "red.gif":
-    return http_string_answer("GIF89a\5\0\5\0\200\0\0\0\0\0\267\0\0,\0\0\0\0\5\0\5\0\0\2\7\204\37i\31\253g\n\0;","image/gif");
+    return Roxen.http_string_answer("GIF89a\5\0\5\0\200\0\0\0\0\0\267\0\0,\0\0\0\0\5\0\5\0\0\2\7\204\37i\31\253g\n\0;","image/gif");
   case "green.gif":
-    return http_string_answer("GIF89a\5\0\5\0\200\0\0\2\2\2\0\267\14,\0\0\0\0\5\0\5\0\0\2\7\204\37i\31\253g\n\0;","image/gif");
+    return Roxen.http_string_answer("GIF89a\5\0\5\0\200\0\0\2\2\2\0\267\14,\0\0\0\0\5\0\5\0\0\2\7\204\37i\31\253g\n\0;","image/gif");
   default:
     return 0;
   }

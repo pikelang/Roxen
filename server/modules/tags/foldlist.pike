@@ -1,13 +1,12 @@
 // This is a roxen module. Copyright © 1999-2000, Roxen IS.
 //
 
-constant cvs_version = "$Id: foldlist.pike,v 1.17 2000/04/15 01:18:19 per Exp $";
+constant cvs_version = "$Id: foldlist.pike,v 1.18 2000/04/30 02:58:03 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
 
 inherit "module";
-inherit "roxenlib";
 inherit "state";
 
 constant module_type = MODULE_PARSER;
@@ -85,7 +84,7 @@ private string tag_ft(string tag, mapping m, string cont, RequestID id, object s
 	       "alt=\"-\" /></a>"+
                parse_html(cont,([]),(["fd":
 				      lambda(string tag, mapping m, string cont) {
-					fl->txt+=parse_rxml(cont,id);
+					fl->txt+=Roxen.parse_rxml(cont,id);
 					return "";
 				      }
 	       ]))+"</dt><dd>"+fl->txt+"</dd>";

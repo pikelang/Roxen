@@ -5,12 +5,11 @@
 // Several modifications by Francesco Chemolli.
 
 
-constant cvs_version = "$Id: obox.pike,v 1.26 2000/04/15 01:18:19 per Exp $";
+constant cvs_version = "$Id: obox.pike,v 1.27 2000/04/30 02:58:03 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
 inherit "module";
-inherit "roxenlib";
 
 TAGDOCUMENTATION
 #ifdef manual

@@ -1,10 +1,9 @@
 // This is a roxen module. Copyright © 1997 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: countdown.pike,v 1.32 2000/04/29 23:57:05 nilsson Exp $";
+constant cvs_version="$Id: countdown.pike,v 1.33 2000/04/30 02:58:02 nilsson Exp $";
 #include <module.h>
 inherit "module";
-inherit "roxenlib";
 
 constant thread_safe=1;
 constant module_type = MODULE_PARSER;
@@ -144,7 +143,8 @@ int find_a_day(string which)
 constant language=roxen->language;
 string show_number(int n, mapping m, RequestID id)
 {
-  return number2string(n, m, language(m->lang||id->misc->defines->pref_language, m->ordered?"ordered":"number", id));
+  return Roxen.number2string(n, m, language(m->lang||id->misc->defines->pref_language,
+					    m->ordered?"ordered":"number", id));
 }
 
 // This function should be fixed to support different languages.
@@ -429,7 +429,7 @@ string tag_countdown(string t, mapping m, object id)
     m_delete(m, tmp);
   }
 
-  when+=time_dequantifier(m);
+  when+=Roxen.time_dequantifier(m);
   int delay = when-unix_now;
   if(m->since) delay = -delay;
 
@@ -440,9 +440,8 @@ string tag_countdown(string t, mapping m, object id)
 
   switch(m->display) {
     case "when":
-    m["unix-time"] = (string)when;
     m_delete(m, "display");
-    return make_tag("date", m);
+    return Roxen.tagtime(when, m, id, language);
 
     case "combined":
     delay-=delay%prec;
@@ -494,8 +493,8 @@ string tag_countdown(string t, mapping m, object id)
   //FIXME: L10N
   if(tprec) return delay/prec+" "+tprec+(delay/prec>1?"s":"");
 
-  m["unix-time"] = (string)when;
+  m_delete(m, "display");
   return "I don't think I understood that, but I think you want to count to "+
-    make_tag("date",m)+" to which it is "+when+" seconds. Write &lt;countdown"
+    Roxen.tagtime(when, m, id, language)+" to which it is "+when+" seconds. Write &lt;countdown"
     " help&gt; to get an idea of what you ougt to write.";
 }
