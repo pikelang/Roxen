@@ -18,7 +18,7 @@ Roxen 2.2+ LDAP directory user database module
 #define ROXEN_HASH_SIGN		"{x-roxen-hash}"
 
 constant cvs_version =
-  "$Id: userdb_ldap.pike,v 1.2 2001/05/24 11:06:15 hop Exp $";
+  "$Id: userdb_ldap.pike,v 1.3 2001/05/24 12:01:41 hop Exp $";
 inherit UserDB;
 inherit "module";
 
@@ -202,21 +202,30 @@ User find_user( string u )
   flt = replace(dir->parse_url(query("CI_dir_server"))->filter||"", "%u%", u);
   pwent = get_entry_dir(u, flt);
 
-  // GUEST or USER access mode
-  if(!access_mode_is_guest() || !access_mode_is_user()) {
-    if(pwent) { 
-      if (query("CI_use_cache"))
-	cache_set("ldapuserdb"+query("CI_dir_server"),u,pwent);
-      return LDAPUser(this_object(), pwent);
-    } else {
+  // ROAMING access mode
+  if(!access_mode_is_roaming()) {
+    string ndn, obasedn;
+    int oscope;
+    if(!pwent || sizeof(pwent)<8 || !sizeof(pwent[7])) {
       werror ("LDAPuserdb: Returning 'user unknown'.\n");
       return 0;
     }
+    ndn = pwent[7];
+    obasedn = dir->set_basedn(ndn);
+    oscope = dir->set_scope(0);
+    pwent = get_entry_dir(u, query("CI_default_attrname_upw"));
+    pwent[7] = ndn;
+    dir->set_basedn(obasedn);
+    dir->set_scope(oscope);
   }
 
-  // ROAMING access mode
-  if(!access_mode_is_roaming()) {
-;
+  if(pwent) { 
+    if (query("CI_use_cache"))
+      cache_set("ldapuserdb"+query("CI_dir_server"),u,pwent);
+    return LDAPUser(this_object(), pwent);
+    } else {
+    werror ("LDAPuserdb: Returning 'user unknown'.\n");
+    return 0;
   }
 
   werror ("LDAPuserdb: Returning 'user unknown'.\n");
@@ -239,6 +248,10 @@ array(string)|int get_entry_dir(string u, string filter) {
     DEBUGLOG ("no entry in directory, returning unknown");
     return 0;
   }
+  if(results->num_entries() > 1) {
+    DEBUGLOG ("found more then one entry in directory, returning unknown");
+    return 0;
+  }
   tmp=results->fetch();
   dirinfo= ({
     u,
@@ -252,7 +265,7 @@ array(string)|int get_entry_dir(string u, string filter) {
     get_attrval(tmp, query("CI_default_attrname_gecos"), query("CI_default_gecos")),
     query("CI_default_addname") ? query("CI_default_home")+u : get_attrval(tmp, query("CI_default_attrname_homedir"), ""),
     get_attrval(tmp, query("CI_default_attrname_shell"), query("CI_default_shell")),
-    get_attrval(tmp, "dn", "")
+    access_mode_is_roaming ? get_attrval(tmp, "dn", "") : get_attrval(tmp, query("CI_owner_attr"), "")
   });
 
     DEBUGLOG(sprintf("Result: %O",dirinfo)-"\n");
