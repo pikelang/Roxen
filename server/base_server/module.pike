@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.200 2004/05/12 16:12:24 mast Exp $
+// $Id: module.pike,v 1.201 2004/05/12 19:56:46 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -276,7 +276,7 @@ void set_status_for_path (string path, RequestID id, int status_code,
 //! response.
 //!
 //! @param path
-//!   Path below the filesystem location to which the status applies.
+//!   Path (below the filesystem location) to which the status applies.
 //!
 //! @param status_code
 //!   The HTTP status code.
@@ -525,7 +525,7 @@ mapping(string:mixed) patch_properties(string path,
       // Unroll and fail any succeeded items.
       int i;
       mapping(string:mixed) answer =
-	Roxen.http_status (Protocols.HTTP.DAV_FAILED_DEP, "Failed dependency.");
+	Roxen.http_status (Protocols.HTTP.DAV_FAILED_DEP);
       for(i = 0; i < sizeof(results); i++) {
 	if (!results[i] || results[i]->error < 300) {
 	  result->add_property("", instructions[i]->property_name,
@@ -897,7 +897,7 @@ DAVLock|LockFlag check_locks(string path,
 //! @[lock_file] if the default lock implementation is to be used.
 //!
 //! @param path
-//!   Normalized path below the filesystem location that the lock
+//!   Normalized path (below the filesystem location) that the lock
 //!   applies to.
 //!
 //! @param lock
@@ -955,7 +955,7 @@ static void register_lock(string path, DAVLock lock, RequestID id)
 //! @expr{"DAV:write"@} locks.
 //!
 //! @param path
-//!   Normalized path below the filesystem location that the lock
+//!   Normalized path (below the filesystem location) that the lock
 //!   applies to.
 //!
 //! @param lock
@@ -975,7 +975,7 @@ mapping(string:mixed) lock_file(string path,
 //! Remove @[lock] that currently is locking the resource at @[path].
 //!
 //! @param path
-//!   Normalized path below the filesystem location that the lock
+//!   Normalized path (below the filesystem location) that the lock
 //!   applies to.
 //!
 //! @param lock
@@ -1012,7 +1012,7 @@ mapping(string:mixed) unlock_file (string path,
 //! that locks are checked as necessary using @[check_locks].
 //!
 //! @param path
-//!   Path below the filesystem location that the lock applies to.
+//!   Path (below the filesystem location) that the lock applies to.
 //!
 //! @param recursive
 //!   If @expr{1@} also check write access recursively under @[path].
@@ -1155,8 +1155,7 @@ mapping(string:mixed)|int(-1..0)|Stdio.File find_file(string path,
 //! Delete the file specified by @[path].
 //!
 //! It's unspecified if it works recursively or not, but if it does
-//! then it has to check DAV locks through @[write_access]
-//! recursively.
+//! then it has to check DAV locks recursively.
 //!
 //! @returns
 //!   Returns a 204 status on success, 0 if the file doesn't exist, or
@@ -1172,14 +1171,20 @@ mapping(string:mixed) delete_file(string path, RequestID id)
   tmp_id->method = "DELETE";
   // FIXME: Logging?
   return find_file(path, tmp_id) ||
-    Roxen.http_status(tmp_id->misc->error_code || 404);
+    tmp_id->misc->error_code && Roxen.http_status (tmp_id->misc->error_code);
 }
 
 //! Delete @[path] recursively.
+//!
+//! The default implementation handles the recursion and calls
+//! @[delete_file] for each file and empty directory.
+//!
 //! @returns
-//!   Returns @expr{0@} (zero) on file not found.
-//!   Returns @[Roxen.http_status(204)] on success.
-//!   Returns other result mappings on failure.
+//!   Returns @expr{0@} (zero) on file not found. Returns
+//!   @[Roxen.http_status(204)] on success. Returns other result
+//!   mappings on failure. That includes an empty mapping in case some
+//!   subparts couldn't be deleted, to signify a 207 Multi-Status
+//!   response using the info in @[id->get_multi_status()].
 mapping(string:mixed) recurse_delete_files(string path,
 					   RequestID id,
 					   void|MultiStatus.Prefixed stat)
@@ -1207,16 +1212,13 @@ mapping(string:mixed) recurse_delete_files(string path,
       foreach(find_dir(path, id) || ({}), string fname) {
 	fname = path + fname;
 	if (Stat sub_stat = stat_file (fname, id)) {
-	  SIMPLE_TRACE_ENTER (this, "Deleting %O recursively", fname);
+	  SIMPLE_TRACE_ENTER (this, "Deleting %O", fname);
 	  if (mapping(string:mixed) sub_res = recurse(fname, sub_stat)) {
 	    // RFC 2518 8.6.2
-	    //   424 (Failed Dependancy) errors SHOULD NOT be in the
-	    //   207 (Multi-Status).
-	    //
 	    //   Additionally 204 (No Content) errors SHOULD NOT be returned
 	    //   in the 207 (Multi-Status). The reason for this prohibition
 	    //   is that 204 (No Content) is the default success code.
-	    if (sub_res->error != 204 && sub_res->error != 424) {
+	    if (sizeof (sub_res) && sub_res->error != 204) {
 	      stat->add_status(fname, sub_res->error, sub_res->rettext);
 	    }
 	    if (sub_res->error >= 300) fail = 1;
@@ -1225,7 +1227,7 @@ mapping(string:mixed) recurse_delete_files(string path,
       }
       if (fail) {
 	SIMPLE_TRACE_LEAVE ("Partial failure");
-	return Roxen.http_status(424);
+	return ([]);
       }
     }
 
@@ -1355,7 +1357,7 @@ mapping(string:mixed) copy_file(string source, string destination,
 {
   SIMPLE_TRACE_ENTER(this, "copy_file(%O, %O, %O, %O, %O)\n",
 		     source, destination, behavior, overwrite, id);
-  TRACE_LEAVE("Not implemented yet.");
+  TRACE_LEAVE("Not implemented.");
   return Roxen.http_status (Protocols.HTTP.HTTP_NOT_IMPL);
 }
 
@@ -1392,13 +1394,10 @@ mapping(string:mixed) recurse_copy_files(string source, string destination, int 
 	copy_collection(source, destination,
 			behavior[loc+source] || behavior[0],
 			overwrite, result, id);
-      if (res && (res->error != 204) && (res->error != 201)) {
-	if (res->error >= 300) {
-	  // RFC 2518 8.8.3 and 8.8.8 (error minimization).
-	  TRACE_LEAVE("Copy of collection failed.");
-	  return res;
-	}
-	result->add_status(destination, res->error, res->rettext);
+      if (res && res->error >= 300) {
+	// RFC 2518 8.8.3 and 8.8.8 (error minimization).
+	TRACE_LEAVE("Copy of collection failed.");
+	return res;
       }
       if (depth <= 0) {
 	TRACE_LEAVE("Non-recursive copy of collection done.");
@@ -1412,8 +1411,7 @@ mapping(string:mixed) recurse_copy_files(string source, string destination, int 
 			   subsrc, subdst, depth);
 	mapping(string:mixed) sub_res = recurse(subsrc, subdst, depth);
 	if (sub_res && (sub_res->error != 204) && (sub_res->error != 201)) {
-	  result->add_status(combine_path_unix(destination, filename),
-			     sub_res->error, sub_res->rettext);
+	  result->add_status(subdst, sub_res->error, sub_res->rettext);
 	}
       }
       TRACE_LEAVE("");
@@ -1427,7 +1425,14 @@ mapping(string:mixed) recurse_copy_files(string source, string destination, int 
     }
   };
 
-  return recurse (source, destination, depth);
+  int start_ms_size = id->multi_status_size();
+  mapping(string:mixed) res = recurse (source, destination, depth);
+  if (res && res->error != 204 && res->error != 201)
+    return res;
+  else if (id->multi_status_size() != start_ms_size)
+    return ([]);
+  else
+    return res;
 }
 
 string real_file(string f, RequestID id){}
