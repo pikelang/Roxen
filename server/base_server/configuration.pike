@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.14 1997/02/18 01:56:05 per Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.15 1997/02/18 02:43:52 per Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -2055,7 +2055,7 @@ int load_module(string module_file)
   {
     string dir;
 
-//    _master->set_inhibit_compile_errors(perror);
+   _master->set_inhibit_compile_errors("");
 
     err = catch { obj = roxen->load_from_dirs(roxen->QUERY(ModuleDirs), module_file); };
 
@@ -2065,7 +2065,7 @@ int load_module(string module_file)
 		   describe_backtrace(err)+"\n");
     }
 
-//    _master->set_inhibit_compile_errors(0);
+    _master->set_inhibit_compile_errors(0);
 
     prog = roxen->last_loaded();
   }

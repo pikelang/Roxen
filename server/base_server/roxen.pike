@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.37 1997/02/18 01:43:05 per Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.38 1997/02/18 02:43:55 per Exp $";
 #define IN_ROXEN
 
 #include <fifo.h>
@@ -1565,6 +1565,7 @@ void scan_module_dir(string d)
 	if (!(err=catch( module_info = lambda ( string file ) {
 	  array foo;
 	  object o;
+	  _master->set_inhibit_compile_errors( "" );
 	  o =  (compile_file(file))();
 #ifdef MODULE_DEBUG
 	  perror(" load ok - ");
@@ -1578,10 +1579,11 @@ void scan_module_dir(string d)
 		      +"</i>", foo[0] });
 	}(path + file))))
 	{
+	  _master->set_inhibit_compile_errors( 0 );
 	  allmodules[ file-("."+extension(file)) ] = module_info;
 	} else {
-	  perror(file+": "+describe_backtrace(err)+
-		 _master->set_inhibit_compile_errors( 1 ));
+	  perror(file+": "+describe_backtrace(err[sizeof(err)-4..])+
+		 _master->set_inhibit_compile_errors( 0 ));
 	}
 #ifdef MODULE_DEBUG
 	perror("\n");
@@ -1599,7 +1601,7 @@ void rescan_modules()
   allmodules=([]);
   foreach(QUERY(ModuleDirs), path)
   {
-    _master->set_inhibit_compile_errors(1);
+    _master->set_inhibit_compile_errors("");
     catch(scan_module_dir( path ));
   }
   if(strlen(_master->errors))

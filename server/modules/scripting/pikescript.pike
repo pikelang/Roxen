@@ -12,7 +12,7 @@ mapping scripts=([]);
 
 inherit "module";
 inherit "roxenlib";
-string cvs_version = "$Id: pikescript.pike,v 1.7 1997/02/13 13:01:12 per Exp $";
+string cvs_version = "$Id: pikescript.pike,v 1.8 1997/02/18 02:43:57 per Exp $";
 #include <module.h>
 
 mixed *register_module()
@@ -163,7 +163,7 @@ mapping handle_file_extension(object f, string e, object got)
   add_constant("setgid", 0);
   add_constant("setuid", 0);
 
-  _master->set_inhibit_compile_errors(1);
+  _master->set_inhibit_compile_errors("");
   err=catch(p=compile_string(file, "Script:"+got->not_query));
   if(strlen(_master->errors)) 
     s=_master->errors + "\n\n" + s;

@@ -8,7 +8,7 @@
 // </pike>
  
 inherit "module";
-string cvs_version = "$Id: lpctag.pike,v 1.6 1997/01/27 00:03:13 per Exp $";
+string cvs_version = "$Id: lpctag.pike,v 1.7 1997/02/18 02:43:57 per Exp $";
 #include <module.h>;
 
 array register_module()
@@ -97,7 +97,7 @@ string tag_pike(string tag, mapping m, string s, object request_id,
   if(err = catch {
     set_max_eval_time(2);
 #endif
-    _master->set_inhibit_compile_errors(1);
+    _master->set_inhibit_compile_errors("");
     if(err=catch {
       s=pre(s)+s+post(s);
       p = compile_string(s, "Pike-tag");
