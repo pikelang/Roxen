@@ -73,7 +73,8 @@ static void init_replicate_db()
 
   // Populate with entries created when the shared table was down.
 
-  Thread.MutexKey key = cache->mutex->lock();
+  Thread.MutexKey key;
+  catch( key = cache->mutex->lock() );
   array have = (array(int))
     cache->db->query( "SELECT id from "+cache->name )->id;
 

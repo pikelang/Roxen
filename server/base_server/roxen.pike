@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.746 2001/09/28 23:50:31 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.747 2001/10/01 15:07:47 per Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -3049,7 +3049,8 @@ class ArgCache
 
 #ifdef THREADS
   Thread.Mutex mutex = Thread.Mutex();
-# define LOCK() mixed __ = mutex->lock()
+  // Allow recursive locks, since it's normal here.
+# define LOCK() mixed __; catch( __ = mutex->lock() )
 #else
 # define LOCK()
 #endif
