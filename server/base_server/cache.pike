@@ -1,4 +1,4 @@
-//string cvs_version = "$Id: cache.pike,v 1.33 2000/01/06 22:33:07 mast Exp $";
+//string cvs_version = "$Id: cache.pike,v 1.34 2000/02/02 04:15:03 per Exp $";
 
 #define LOCALE	roxenp()->locale->get()->config_interface
 #include <roxen.h>
@@ -87,7 +87,7 @@ string status()
 {
   string res, a;
   res = "<table cellpadding=\"3\" cellspacing=\"0\" border=\"0\">"
-      #"<tr bgcolor=\"#f0f0ff\">
+      #"<tr bgcolor=\"&usr.fade3;\">
 <td><cf-locale get=class_></td>
 <td align=\"right\"><cf-locale get=entries></td>
 <td align=\"right\"><cf-locale get=size></td>
@@ -121,7 +121,7 @@ string status()
   {
     if(ct[a])
     {
-      res += ("<tr align=\"right\" bgcolor=\""+(n/3%2?"#f0f0ff":"white")+
+      res += ("<tr align=\"right\" bgcolor=\""+(n/3%2?"&usr.bgcolor;":"&usr.fade1;")+
 	      "\"><td align=\"left\">"+a+"</td><td>"+cb[a]+"</td><td>" +
 	      sprintf("%.1f", ((mem=c[i])/1024.0)) + "</td>");
       res += "<td>"+ch[a]+"</td><td>"+(ct[a]-ch[a])+"</td>";
@@ -137,7 +137,7 @@ string status()
     }
     i++;
   }
-  res += "<tr align=\"right\" bgcolor=\"lightblue\"><td align=\"left\">&nbsp;</td><td>"+
+  res += "<tr align=\"right\" bgcolor=\"&usr.fade3;\"><td align=\"left\">&nbsp;</td><td>"+
     totale+"</td><td>" + sprintf("%.1f", (totalm/1024.0)) + "</td>";
   res += "<td>"+totalh+"</td><td>"+(totalr-totalh)+"</td>";
   if(totalr)
@@ -210,7 +210,7 @@ void cache_clean()
 #if DEBUG_LEVEL > 40
 	CACHE_WERR("DELETED");
 #endif
-#endif	
+#endif
 	m_delete(cache[a], b);
       }
 #ifdef CACHE_DEBUG
@@ -218,7 +218,7 @@ void cache_clean()
       else
 	CACHE_WERR("Ok");
 #endif
-#endif	
+#endif
       if(!sizeof(cache[a]))
       {
 #ifdef CACHE_DEBUG
