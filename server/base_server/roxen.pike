@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.189 1998/04/15 15:37:38 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.190 1998/04/21 19:07:29 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -234,6 +234,7 @@ void handler_thread(int id)
 
 void threaded_handle(function f, mixed ... args)
 {
+  // trace(100);
   handle_queue->write(({f, args }));
 }
 
@@ -805,19 +806,34 @@ public string full_status()
 // to the configuration object. The functions will still be here for
 // compatibility for a while, though.
 
+#ifndef NO_COMPAT
+
 public string *userlist(void|object id)
 {
-  if(id) current_configuration = id->conf;
-  if(current_configuration && current_configuration->auth_module)
-    return current_configuration->auth_module->userlist();
+  object conf;
+
+  if(id) {
+    conf = current_configuration = id->conf;
+  } else {
+    // Hopefully this case never occurs.
+    conf = current_configuration;
+  }
+  if(conf && conf->auth_module)
+    return conf->auth_module->userlist();
   return 0;
 }
 
 public string *user_from_uid(int u, void|object id)
 {
-  if(id) current_configuration = id->conf;
-  if(current_configuration && current_configuration->auth_module)
-    return current_configuration->auth_module->user_from_uid(u);
+  object conf;
+  if(id) {
+    conf = current_configuration = id->conf;
+  } else {
+    // Hopefully this case never occurs.
+    conf = current_configuration;
+  }
+  if(conf && conf->auth_module)
+    return conf->auth_module->user_from_uid(u);
 }
 
 public string last_modified_by(object file, object id)
@@ -833,6 +849,8 @@ public string last_modified_by(object file, object id)
   if(u) return u[0];
   return "A. Nonymous";
 }
+
+#endif /* !NO_COMPAT */
 
 // FIXME 
 private object find_configuration_for(object bar)
@@ -883,6 +901,8 @@ public array|string type_from_filename( string|void file, int|void to )
   }
   return 0;
 }
+
+#ifndef NO_COMPAT
   
 #define COMPAT_ALIAS(X) mixed X(string file, object id){return id->conf->X(file,id);}
 
@@ -892,7 +912,7 @@ COMPAT_ALIAS(access);
 COMPAT_ALIAS(real_file);
 COMPAT_ALIAS(is_file);
 COMPAT_ALIAS(userinfo);
-  
+
 public mapping|int get_file(object id, int|void no_magic)
 {
   return id->conf->get_file(id, no_magic);
@@ -902,6 +922,8 @@ public mixed try_get_file(string s, object id, int|void status, int|void nocache
 {
   return id->conf->try_get_file(s,id,status,nocache);
 }
+
+#endif /* !NO_COMPAT */
 
 int config_ports_changed = 0;
 // Called from the configuration interface.
@@ -2013,7 +2035,6 @@ void scan_module_dir(string d)
 	      MD_PERROR((" compilation failed"));
 	      throw("Compilation failed.\n");
 	    }
-
 	    // Set the module-filename, so that create in the
 	    // new object can get it.
 	    roxen->last_module_name = file;
