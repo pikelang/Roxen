@@ -235,8 +235,9 @@ program Connection = class {
   
   int cache_wanted(object id)
   {
-    if(id && ((id->method == "POST" || id->query && strlen(id->query)) 
-	      || id->auth)) 
+    if(id &&
+       (((id->method == "POST") || (id->query && strlen(id->query)))
+	|| id->auth) || sizeof(id->cookies))
       return 0;
     return 1;
   }

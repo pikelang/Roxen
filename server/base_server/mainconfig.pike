@@ -481,7 +481,9 @@ mixed new_module_copy(object node, string name, object id)
   if(module) if(module->copies) while(module->copies[i])  i++;
   roxen->enable_module(name+"#"+i);
   module = node->config()->modules[name];
-  
+
+  if(!module) return http_string_answer("This module could not be enabled.\n");
+    
   node = node->descend(module->name);
   // Now it is the (probably unbuilt) module main node...
   

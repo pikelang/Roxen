@@ -597,7 +597,7 @@ int load_module(string module_file)
   if(!obj)
   {
 #ifdef MODULE_DEBUG
-    perror("FAILED\n");
+    perror("FAILED (the module was not found)\n");
 #endif
     report_error( "Module load failed ("+module_file+") (not found).\n" );
     return 0;
@@ -608,7 +608,7 @@ int load_module(string module_file)
   if (err)
   {
 #ifdef MODULE_DEBUG
-    perror("FAILED\n");
+    perror("FAILED\n" + describe_backtrace( err ));
 #endif
     report_error( "Module loaded, but register_module() failed (" 
 		 + module_file + ").\n"  +
@@ -650,7 +650,7 @@ int load_module(string module_file)
   if (err != "")
   {
 #ifdef MODULE_DEBUG
-    perror("FAILED\n");
+    perror("FAILED\n"+err);
 #endif
     report_error( "Tried to load module " + module_file + ", but:\n" + err );
     if(obj)

@@ -1517,6 +1517,9 @@ private program __p;
 program last_loaded() { return __p; }
 object load(string s)   // Should perhaps be renamed to 'reload'. 
 {
+#if defined(MODULE_DEBUG) && (DEBUG_LEVEL>20)
+    perror(s+" ");
+#endif
   if(file_size(s+".pike")>0)
     if(__p=compile_file(s+".pike")) return __p();
   if(file_size(s+".lpc")>0)
@@ -2823,7 +2826,7 @@ void scan_module_dir(string d)
       else
       {
 #ifdef MODULE_DEBUG
-	perror("Loading module: "+file+" - ");
+	perror("Loading module: "+(file-("."+extension(file)))+" - ");
 #endif
 	string *module_info;
 	if (!(err=catch( module_info = lambda ( string file ) {
@@ -2848,7 +2851,7 @@ void scan_module_dir(string d)
 #ifdef MODULE_DEBUG
 //	  perror("MODULES: "+module_info[0]+ "\n"+module_info[1]+"\n");
 #endif
-	  allmodules[ file ] = module_info;
+	  allmodules[ file-("."+extension(file)) ] = module_info;
 	} else {
 #ifdef MODULE_DEBUG
 	  perror("\n"+err[0]+_master->set_inhibit_compile_errors( 1 ));

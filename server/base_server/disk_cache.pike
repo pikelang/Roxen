@@ -34,7 +34,7 @@ private program CacheStream = class {
   int new;
   mapping headers = ([]);
   
-  void parse_headers()
+  void load_headers()
   {
     string file;
     string head;
@@ -48,7 +48,7 @@ private program CacheStream = class {
     }
   }
 
-  void prepend_headers()
+  void save_headers()
   {
     string head;
     head = encode_value(headers);
@@ -70,8 +70,7 @@ private program CacheStream = class {
 //   perror("Destroy cache-stream for "+fname+" ("+new+")\n" 
 //	  +(describe_backtrace(backtrace())));
     catch(destruct(file)); // 'file' might be gone
-    if(new)
-      catch(rm(QUERY(cachedir)+fname)); // roxen might be gone
+    if(new) catch(rm(QUERY(cachedir)+fname)); // roxen might be gone
   }
 };
 
@@ -81,12 +80,6 @@ program Cache = class {
   object this = this_object();
   string cd;
   object command_stream = File();
-
-//  void destroy()
-//  {
-//    perror("Destroy cache\n" 
-//	   +(describe_backtrace(backtrace())));
-//  }
 
   string to_send="";
 
@@ -276,7 +269,7 @@ object cache_file(string cl, string entry)
     cf=new_cache_stream(cf, name);
     cf->new = 0;
     
-    cf->parse_headers();
+    cf->load_headers();
 
 //#define CACHE_DEBUG
     
@@ -353,7 +346,7 @@ void default_check_cache_file(object stream)
   {
     int s;
     s=file_size(file);
-    stream->prepend_headers();
+    stream->save_headers();
     mv(file, file+".done");
     cache->accessed( stream->fname+".done", s/QUERY(bytes_per_second) );
     cache->accessed( file+".head", 1024 );
@@ -363,85 +356,38 @@ void default_check_cache_file(object stream)
   destruct(stream);
 }
 
-#define END()   { rm(rfile); if(cachef)destruct(cachef); if(o)destruct(o); return; }
-
 string get_garb_info()
 {
   return "<pre>"+cache->status()+"</pre>";
 }
 
 
+
 /*
  */
+
+inherit "/precompiled/http_parse" : parse;
+#define DELETE_AND_RETURN(){if(cachef){cachef->new=1;destruct(cachef);}return;}
+
+#include <stat.h>
 
 void http_check_cache_file(object cachef)
 {
-//perror("http check cache file ("+cachef->fname+").\n");
-  object o;
-  string file =cachef->fname;
-  int p;
-  string result_heads="", expire, rfile;
-  mapping header = ([]);
+  if(!cachef->file) DELETE_AND_RETURN();
+  string rfile = QUERY(cachedir)+cachef->fname;
+  array (int) stat = cachef->file->stat();
+  /*  soo..  Lets check if this is a file we want to keep. */
+  /*  Initial screening is done in the proxy module. */
+  if(stat[ST_SIZE] <= 0) DELETE_AND_RETURN();
 
-  rfile = QUERY(cachedir)+file;
-  
+  cachef->save_headers();
 
-  if(search(file, "?") != -1) END();
-  o = cachef->file;
-  o->seek(0);
-  result_heads = o->read(12);
-
-  if(!result_heads)   END();
-
-/*
- * Return codes between 200 and 303 are 'cacheable', all others should
- * not be cached. result_heads should be something very similar to
- * HTTP/1.0 XXX Textual Responce Code
- * 0123456789
- * There can be only one space between the protocol and the response
- * code, but the protocol might in future revionsions need more
- * characers (e.g HTTP/10.2)
- *
- * In this case (int)result_heads[9..11] will probably be 0 :-)
- */
-//  perror("Result is: '"+result_heads+"'\n");
-  if(strlen(result_heads) < 12 || !(int)result_heads[9..11]
-     ||((int)result_heads[9..11] > 303))
-    END(); 
-
-  result_heads = lower_case(o->read(200));
-  
-  // find and parse the relevant headers. This most definately needs more work.
-  if((p=search(result_heads, "content-length:")) == -1)
-  {
-    result_heads += lower_case(o->read(400));
-    if((p=search(result_heads, "content-length:")) == -1) 
-      END();
-  }
-  
-  p += 15;
-  if((p=file_size(rfile))<(int)result_heads[p..p+9])
-    END();
-
-  if(search(result_heads, "set-cookie") != -1)
-    END();
-
-  cachef->new=0; // The file will be kept now.
-
-  if(sscanf(result_heads, "%*s\nexpi%*[^:]:%[^\r\n]\n", expire) == 3)
-  {
-    expire -= "\r";
-    expire -= "\t";
-    while(expire[0]==' ') expire=expire[1..];
-    cachef->headers->expire = expire;
-  }
-
-  p = file_size(QUERY(cachedir)+file);
-  cachef->prepend_headers();
   mv(rfile, rfile+".done");
-  cache->accessed( file+".done", p/QUERY(bytes_per_second) );
-  cache->accessed( file+".head", 1024 );
-  cache->check(p+1024);
+
+  cache->accessed( cachef->fname+".done", stat[1]/QUERY(bytes_per_second) );
+  cache->accessed( cachef->fname+".head", stat[1]/QUERY(bytes_per_second) );
+  cache->check( stat[1] );
+
   destruct(cachef);
 }
 

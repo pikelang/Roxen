@@ -34,3 +34,10 @@
 #define S_IWOTH 0002
 #define S_IXOTH 0001
 
+#define ST_MODE  0
+#define ST_SIZE  1
+#define ST_ATIME 2
+#define ST_MTIME 3
+#define ST_CTIME 4
+#define ST_UID   5
+#define ST_GID   6
