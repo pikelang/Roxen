@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.18 2001/11/05 13:36:30 grubba Exp $
+ * $Id: debug_info.pike,v 1.19 2001/11/07 14:00:57 grubba Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -323,9 +323,9 @@ mixed page_0( object id )
   roxen->set_var("__num_clones", bar);
 
   res += "<p><table border='0' cellpadding='0'>\n<tr>\n" +
-    HCELL ("align='left' ", "&usr.fgcolor;", (string)LOCALE(0,"Source")) +
-    HCELL ("align='left' ", "&usr.fgcolor;", (string)LOCALE(0,"Program")) +
-    HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(0,"Clones")) +
+    HCELL ("align='left' ", "&usr.fgcolor;", (string)LOCALE(141,"Source")) +
+    HCELL ("align='left' ", "&usr.fgcolor;", (string)LOCALE(142,"Program")) +
+    HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(143,"Clones")) +
     HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(5,"Change")) +
     "</tr>\n";
   string trim_path( string what )

@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.130 2001/11/07 10:06:45 anders Exp $
+// $Id: site_content.pike,v 1.131 2001/11/07 14:00:58 grubba Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -30,7 +30,7 @@ string describe_exts( RoxenModule m, string func )
 
 string describe_location( RoxenModule m, RequestID id )
 {
-  string mp = m->query_location();
+  string mp = m->query_location && m->query_location();
   return mp ? sprintf("<a target='server_view' href=\"%s%s\">%s</a>",
 		      m->my_configuration()->get_url(), mp[1..], mp) : "";
 }
