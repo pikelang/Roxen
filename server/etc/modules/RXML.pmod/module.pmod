@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.184 2001/06/29 12:45:42 mast Exp $
+// $Id: module.pmod,v 1.185 2001/06/29 15:11:30 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -131,6 +131,33 @@ class RequestID { };
 #define UNWIND_STATE mapping(string|object:mixed|array)
 #define EVAL_ARGS_FUNC function(Context:mapping(string:mixed))
 
+
+// Internal caches and object tracking
+//
+// This must be first so that it happens early in __INIT.
+
+static int tag_set_count = 0;
+
+mapping(int|string:TagSet) garb_local_tag_set_cache()
+{
+  call_out (garb_local_tag_set_cache, 30*60);
+  return local_tag_set_cache = ([]);
+}
+
+mapping(int|string:TagSet) local_tag_set_cache = garb_local_tag_set_cache();
+
+static mapping(string:TagSet) all_tagsets = set_weak_flag(([]), 1);
+
+static mapping(string:program/*(Parser)*/) reg_parsers = ([]);
+// Maps each parser name to the parser program.
+
+static mapping(string:Type) reg_types = ([]);
+// Maps each type name to a type object with the PNone parser.
+
+static mapping(mixed:string) reverse_constants = set_weak_flag (([]), 1);
+
+
+// Interface classes
 
 class Tag
 //! Interface class for the static information about a tag.
@@ -1693,7 +1720,7 @@ class Context
   // Used to record the result of any add_runtime_tag() and
   // remove_runtime_tag() calls since the last time the parsers ran.
 
-  void create (void|TagSet _tag_set, void|RequestID _id)
+  static void create (void|TagSet _tag_set, void|RequestID _id)
   // Normally TagSet.`() should be used instead of this.
   {
     tag_set = _tag_set;
@@ -1796,8 +1823,8 @@ class Backtrace
   string current_var;
   array backtrace;
 
-  void create (void|string _type, void|string _msg, void|Context _context,
-	       void|array _backtrace)
+  static void create (void|string _type, void|string _msg, void|Context _context,
+		      void|array _backtrace)
   {
     type = _type;
     msg = _msg;
@@ -3861,7 +3888,7 @@ final class parse_frame
   int flags = FLAG_UNPARSED;
   mapping(string:mixed) args = ([]);
 
-  void create (Type type, string to_parse)
+  static void create (Type type, string to_parse)
   {
     content_type = type, result_type = type (PNone);
     content = to_parse;
@@ -3884,6 +3911,11 @@ class Parser
 //! Interface class for a syntax parser that scans, parses and
 //! evaluates an input stream. Access to a parser object is assumed to
 //! be done in a thread safe way except where noted.
+//!
+//! The parser program should be registered with
+//! @[RXML.register_parser] at initialization (e.g. in a
+//! @tt{create(}@} function in the module) to enable p-code encoding
+//! with it.
 {
   constant is_RXML_Parser = 1;
   constant thrown_at_unwind = 1;
@@ -4044,6 +4076,12 @@ class Parser
 
   // Interface:
 
+  //! @decl constant string name;
+  //!
+  //! Unique parser name. Required and considered constant.
+  //!
+  //! The name may contain the characters @tt{[0-9a-zA-Z_.-]@}.
+
   Context context;
   //! The context to do evaluation in. It's assumed to never be
   //! modified asynchronously during the time the parser is working on
@@ -4170,6 +4208,23 @@ class Parser
   }
 }
 
+void register_parser (program/*(Parser)*/ parser_prog)
+{
+#ifdef DEBUG
+  if (!stringp (parser_prog->name))
+    error ("Parser %s lacks name.\n",
+	   __builtin.program_defined (parser_prog));
+#endif
+  if (zero_type (reg_parsers[parser_prog->name]))
+    reg_parsers[parser_prog->name] = parser_prog;
+  else if (reg_parsers[parser_prog->name] != parser_prog)
+    error ("Cannot register duplicate parser %O.\n"
+	   "Old parser program is %s,\n"
+	   "New parser program is %s.\n", parser_prog->name,
+	   __builtin.program_defined (reg_parsers[parser_prog->name]),
+	   __builtin.program_defined (parser_prog));
+}
+
 class TagSetParser
 //! Interface class for parsers that evaluates using the tag set. It
 //! provides the evaluation and compilation functionality. The parser
@@ -4266,6 +4321,8 @@ class PNone
   static inherit String.Buffer;
   inherit Parser;
 
+  constant name = "none";
+
   PCode p_code;
 
   int feed (string in)
@@ -4318,9 +4375,6 @@ mixed simple_parse (string in, void|program parser)
 
 // Types:
 
-
-static mapping(string:Type) reg_types = ([]);
-// Maps each type name to a type object with the PNone parser.
 
 class Type
 //! A static type definition. It does type checking and specifies some
@@ -5568,7 +5622,7 @@ class CompiledError
   string msg;
   string current_var;
 
-  void create (Backtrace rxml_bt)
+  static void create (Backtrace rxml_bt)
   {
     if (rxml_bt) {		// Might be zero if we're created by decode().
       type = rxml_bt->type;
@@ -5995,76 +6049,94 @@ class PCode
 
 static class PCodec
 {
-  object objectof(string what)
+  object objectof(string|array what)
   {
-    ENCODE_MSG ("objectof (%O)\n", what);
+    if (stringp (what)) {
+      ENCODE_MSG ("objectof (%O)\n", what);
+      switch (what) {
+	case "nil": return nil;
+	case "utils": return utils;
+	case "xml_tag_parser": return xml_tag_parser;
+      }
 
-    switch (what) {
-      case "nil": return nil;
-      case "utils": return utils;
-      case "xml_tag_parser": return xml_tag_parser;
+      if (sscanf (what, "ts:%s", what)) {
+	if (TagSet tag_set = all_tagsets[what])
+	  return tag_set;
+	error ("Cannot find tag set %O.\n", what);
+      }
+      else if (sscanf (what, "t:%*c%s\n%s", what, string t, string ts)) {
+      }
+      else if(sscanf (what, "mod:%s", what)) {
+	if (object/*(RoxenModule)*/ mod = Roxen->get_module(what))
+	  return mod;
+	error ("Cannot find module %O.\n", what);
+      }
+      else if (sscanf (what, "c:%s", what)) {
+	mixed efun;
+	if (objectp (efun = all_constants()[what]))
+	  return efun;
+	error ("Cannot find global constant object %O.\n", what);
+      }
     }
 
-    if (sscanf (what, "ts:%s", what)) {
-      if (TagSet tag_set = all_tagsets[what])
-	return tag_set;
-      error ("Cannot find tag set %O.\n", what);
-    }
-    else if(sscanf (what, "ty:%s", what)) {
-      if (Type t = reg_types[what])
-	return t;
-      error ("Cannot find type %O.\n", what);
-    }
-    else if (sscanf (what, "t:%*c%s\n%s", what, string t, string ts)) {
-      TagSet tagset;
-      Tag tag;
-      if ((tagset = all_tagsets[ts]) &&
-	  (tag = tagset->get_local_tag(t, what[2]=='p')))
-	return tag;
-      error ("Cannot find %s %O in tag set %O.\n",
-	     what[2] == 'p' ? "processing instruction" : "tag",
-	     t, tagset || ts);
-    }
-    else if(sscanf (what, "mod:%s", what)) {
-      if (object/*(RoxenModule)*/ mod = Roxen->get_module(what))
-	return mod;
-      error ("Cannot find module %O.\n", what);
-    }
-    else if (sscanf (what, "efun:%s", what)) {
-      mixed efun;
-      if (objectp (efun = all_constants()[what]))
-	return efun;
-      error ("Cannot find global constant object %O.\n", what);
+    else if (arrayp (what) && sizeof (what)) {
+      ENCODE_MSG ("objectof (%{%O, %})\n", what);
+      switch (what[0]) {
+	case "tag": {
+	  [string ignored, string ts, int proc_instr, string t] = what;
+	  TagSet tagset;
+	  Tag tag;
+	  if ((tagset = all_tagsets[ts]) &&
+	      (tag = tagset->get_local_tag(t, proc_instr)))
+	    return tag;
+	  error ("Cannot find %s %O in tag set %O.\n",
+		 proc_instr ? "processing instruction" : "tag",
+		 t, tagset || ts);
+	}
+	case "type":
+	  return reg_types[what[1]] (@what[2..]);
+      }
     }
 
     error ("Cannot decode object %O.\n", what);
   }
 
-  function functionof(string what)
+  function functionof(string|array what)
   {
-    ENCODE_MSG ("functionof (%O)\n", what);
+    if (stringp (what)) {
+      ENCODE_MSG ("functionof (%O)\n", what);
+      switch (what) {
+	case "PCode": return PCode;
+	case "VarRef": return VarRef;
+	case "CompiledError": return CompiledError;
+      }
 
-    switch (what) {
-      case "PCode": return PCode;
-      case "VarRef": return VarRef;
-      case "CompiledError": return CompiledError;
+      if (sscanf (what, "p:%s", what)) {
+	if (program/*(Parser)*/ parser_prog = reg_parsers[what])
+	  return parser_prog;
+	error ("Cannot find parser %O.\n", what);
+      }
+      else if (sscanf (what, "c:%s", what)) {
+	mixed efun;
+	if (functionp (efun = all_constants()[what]))
+	  return efun;
+	error ("Cannot find global constant function %O.\n", what);
+      }
     }
 
-    if(sscanf(what, "f:%*c%s\n%s", string t, string ts)) {
-      TagSet tagset;
-      Tag tag;
-      if ((tagset = all_tagsets[ts]) &&
-	  (tag = tagset->get_local_tag(t, what[2]=='p')))
-	return tag->`();
-      error ("Cannot find %s %O in tag set %O.\n",
-	     what[2] == 'p' ? "processing instruction" : "tag",
-	     t, tagset || ts);
-    }
-    else if (sscanf (what, "efun:%s", what)) {
-      mixed efun;
-      if (functionp (efun = all_constants()[what]))
-	return efun;
-      error ("Cannot find global constant function %O.\n", what);
+    else if (arrayp (what)) {
+      ENCODE_MSG ("functionof (%{%O, %})\n", what);
+      if (what[0] == "tag") {
+	[string ignored, string ts, int proc_instr, string t] = what;
+	TagSet tagset;
+	Tag tag;
+	if ((tagset = all_tagsets[ts]) &&
+	    (tag = tagset->get_local_tag(t, proc_instr)))
+	  return tag->`();
+	error ("Cannot find %s %O in tag set %O.\n",
+	       proc_instr ? "processing instruction" : "tag",
+	       t, tagset || ts);
+      }
     }
 
     error ("Cannot decode function %O.\n", what);
@@ -6074,7 +6146,12 @@ static class PCodec
   {
     ENCODE_MSG ("programof (%O)\n", what);
 
-    if (sscanf (what, "efun:%s", what)) {
+    if (sscanf (what, "p:%s", what)) {
+      if (program/*(Parser)*/ parser_prog = reg_parsers[what])
+	return parser_prog;
+      error ("Cannot find parser %O.\n", what);
+    }
+    else if (sscanf (what, "c:%s", what)) {
       mixed efun;
       if (programp (efun = all_constants()[what]))
 	return efun;
@@ -6085,9 +6162,9 @@ static class PCodec
   }
 
 
-  static mapping(program:string) saved_id = ([]); // XXX
+  static mapping(program:string|array) saved_id = ([]); // XXX
 
-  string nameof(mixed what)
+  string|array nameof(mixed what)
   {
     if(objectp(what)) {
       ENCODE_MSG ("nameof (object %O)\n", what);
@@ -6095,22 +6172,22 @@ static class PCodec
 	TagSet tagset;
 	Tag tag;
 	if ((tag = what->tag) && (tagset = tag->tagset) &&
-	    tag->name && tagset->name) {
+	    tag->name && tagset->name)
 	  saved_id[object_program(what)] =
-	    ((tag->flags & FLAG_PROC_INSTR)? "p":"t") + tag->name +
-	    (tag->plugin_name? "#"+tag->plugin_name : "") +
-	    "\n" + tagset->name;
-	}
+	    ({"tag",
+	      tagset->name,
+	      tag->flags & FLAG_PROC_INSTR,
+	      tag->name + (tag->plugin_name? "#"+tag->plugin_name : "")});
 	ENCODE_MSG ("encoding frame %O recursively\n", what);
 	return ([])[0];
       }
       else if (what->is_RXML_Tag) {
 	TagSet tagset;
 	if ((tagset = what->tagset) && what->name && tagset->name)
-	  return "t:" +
-	    ((what->flags & FLAG_PROC_INSTR)? "p":"t") + what->name +
-	    (what->plugin_name? "#"+what->plugin_name : "") +
-	    "\n" + tagset->name;
+	  return ({"tag",
+		   tagset->name,
+		   what->flags & FLAG_PROC_INSTR,
+		   what->name + (what->plugin_name? "#"+what->plugin_name : "")});
 	ENCODE_MSG ("encoding tag %O recursively\n", what);
 	return ([])[0];
       }
@@ -6119,8 +6196,8 @@ static class PCodec
 	  return "ts:" + what->name;
 	error ("Cannot encode unnamed tag set %O.\n", what);
       }
-      else if(what->is_RXML_Type)
-	return "ty:"+what->name;
+      else if (what->is_RXML_Type)
+	return ({"type", what->name, what->parser_prog, @what->parser_args});
       else if(string modname = what->is_module && what->module_identifier())
 	return "mod:"+modname;
       else if(what == nil)
@@ -6146,14 +6223,21 @@ static class PCodec
 	  return "CompiledError";
       }
       if (programp (what)) {
-	if(string id = what->is_RXML_Frame && saved_id[what]) {
+	if(string|array id = what->is_RXML_Frame && saved_id[what]) {
 	  ENCODE_MSG ("encoding reference to frame program %O\n", what);
-	  return "f:"+id;
+	  return id;
 	}
 	else if (what->is_RXML_pike_code) {
 	  ENCODE_MSG ("encoding byte code for %s\n",
 		      __builtin.program_defined (what));
 	  return ([])[0];
+	}
+	else if (what->is_RXML_Parser) {
+#ifdef DEBUG
+	  if (!reg_parsers[what->name])
+	    error ("Cannot encode unregistered parser %O.\n", what->name);
+#endif
+	  return "p:" + what->name;
 	}
 	else if (functionp (what) && what->is_RXML_encodable) {
 	  // If the program also is a function the encoder won't dump
@@ -6172,10 +6256,10 @@ static class PCodec
 
     if (string efun = reverse_constants[what])
       if (all_constants()[efun] == what)
-	return "efun:" + efun;
+	return "c:" + efun;
     if (string efun = search (all_constants(), what)) {
       reverse_constants[efun] = what;
-      return "efun:" + efun;
+      return "c:" + efun;
     }
 
     if (programp (what))
@@ -6381,23 +6465,6 @@ private class Link
 }
 
 
-// Caches and object tracking:
-
-static int tag_set_count = 0;
-
-mapping(int|string:TagSet) garb_local_tag_set_cache()
-{
-  call_out (garb_local_tag_set_cache, 30*60);
-  return local_tag_set_cache = ([]);
-}
-
-mapping(int|string:TagSet) local_tag_set_cache = garb_local_tag_set_cache();
-
-static mapping(string:TagSet) all_tagsets = set_weak_flag(([]), 1);
-
-static mapping(mixed:string) reverse_constants = set_weak_flag (([]), 1);
-
-
 // Various internal kludges:
 
 static Type splice_arg_type;
@@ -6498,13 +6565,22 @@ static program PExpr;
 static program Parser_HTML = master()->resolv ("Parser.HTML");
 static object utils;
 
+void create()
+{
+  register_parser (PNone);
+}
+
 void _fix_module_ref (string name, mixed val)
 {
   mixed err = catch {
     switch (name) {
-      case "PXml": PXml = [program] val; break;
+      case "PXml":
+	PXml = [program] val;
+	register_parser (PXml);
+	break;
       case "PEnt":
 	PEnt = [program] val;
+	register_parser (PEnt);
 	splice_arg_type = t_any_text (PEnt);
 	break;
       case "PExpr": PExpr = [program] val; break;

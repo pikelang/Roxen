@@ -13,7 +13,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: PXml.pike,v 1.59 2001/06/21 02:43:46 mast Exp $
+//! $Id: PXml.pike,v 1.60 2001/06/29 15:11:29 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
@@ -23,6 +23,8 @@ inherit Parser.HTML: low_parser;
 inherit RXML.TagSetParser: TagSetParser;
 
 constant unwind_safe = 1;
+
+constant name = "xml";
 
 #define EmptyTagFunc							\
   function(:int(1..1)|string|array)|					\

@@ -4,13 +4,15 @@
 //!
 //! Created 2000-01-28 by Martin Stjernholm.
 //!
-//! $Id: PEnt.pike,v 1.22 2001/06/20 23:27:24 mast Exp $
+//! $Id: PEnt.pike,v 1.23 2001/06/29 15:11:29 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
 #include <config.h>
 
 inherit RXML.PXml;
+
+constant name = "xml-entity";
 
 // Block these to avoid confusion.
 constant add_tag = 0;
