@@ -1,6 +1,6 @@
 #!NO MODULE
 
-// This file is part of Internet Server. Copyright © 2001, Roxen IS.
+// This file is part of ChiliMoon. Copyright © 2001, Roxen IS.
 static array md_callbacks = ({});
 static mapping md = ([]); // ID3 etc.
 

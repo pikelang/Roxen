@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.382 2002/10/22 00:20:29 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.383 2002/10/22 00:35:56 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -5479,7 +5479,7 @@ constant tagdoc=([
 
 "roxen_automatic_charset_variable":#"<desc type='tag'><p>
  If put inside a form, the right character encoding of the submitted
- form can be guessed by Internet Server. The tag will insert another
+ form can be guessed by ChiliMoon. The tag will insert another
  tag that forces the client to submit the string \"едц\". Since the
  WebServer knows the name and the content of the form variable it can
  select the proper character decoder for the requests variables.
@@ -5587,8 +5587,8 @@ constant tagdoc=([
  <p>The value the variable should have appended.</p>
 
  <ex>
- <set variable='var.ris' value='Roxen'/>
- <append variable='var.ris' value=' Internet Software'/>
+ <set variable='var.cm' value='Chili'/>
+ <append variable='var.cm' value='Moon'/>
  &var.ris;
  </ex>
 </attr>
@@ -7072,12 +7072,12 @@ load.</p>
  given, font tags will be used, otherwise big and small tags will be
  used.</p>
 
-<ex><smallcaps>Internet Server</smallcaps></ex>
+<ex><smallcaps>ChiliMoon</smallcaps></ex>
 </desc>
 
 <attr name='space'>
  <p>Put a space between every character.</p>
-<ex><smallcaps space=''>Internet Server</smallcaps></ex>
+<ex><smallcaps space=''>ChiliMoon</smallcaps></ex>
 </attr>
 
 <attr name='class' value='string'>
@@ -7099,7 +7099,7 @@ load.</p>
 <attr name='small' value='number' default='size-1'>
  <p>Size of the small tags. Only applies when size is specified.</p>
 
- <ex><smallcaps size='6' small='2'>Internet Server</smallcaps></ex>
+ <ex><smallcaps size='6' small='2'>ChiliMoon</smallcaps></ex>
 </attr>",
 
 //----------------------------------------------------------------------
@@ -7241,7 +7241,7 @@ just got zapped?
 
 "emit#fonts":({ #"<desc type='plugin'><p><short>
  Prints available fonts.</short> This plugin makes it easy to list all
- available fonts in Internet Server.
+ available fonts in ChiliMoon.
 </p></desc>
 
 <attr name='type' value='ttf|all'>
@@ -7603,11 +7603,11 @@ just got zapped?
 "help":#"<desc type='tag'><p><short>
  Gives help texts for tags.</short> If given no arguments, it will
  list all available tags. By inserting <tag>help/</tag> in a page, a
- full index of the tags available in that particular Internet Server
+ full index of the tags available in that particular ChiliMoon
  will be presented. If a particular tag is missing from that index, it
  is not available at that moment. Since all tags are available through
  modules, that particular tag's module hasn't been added to the
- Internet Server yet. Ask an administrator to add the module.
+ ChiliMoon yet. Ask an administrator to add the module.
 </p>
 </desc>
 
