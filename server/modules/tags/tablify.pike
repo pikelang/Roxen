@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: tablify.pike,v 1.59 2001/01/25 23:22:34 nilsson Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.60 2001/02/10 22:41:09 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -404,8 +404,8 @@ string simpletag_tablify(string tag, mapping m, string q, RequestID id)
     m->state=StateHandler.Page_state(id);
     m->state->register_consumer((m->name || "tb")+sizeof(rows));
     m->sortcol=(int)m->sortcol;
-    if(id->variables->__state){
-      m->state->uri_decode(id->variables->__state);
+    if(id->real_variables->__state){
+      m->state->uri_decode(id->real_variables->__state[0]);
       m->sortcol=m->state->get()||m->sortcol;
     }
   }

@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1999-2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: foldlist.pike,v 1.26 2001/01/25 23:22:24 nilsson Exp $";
+constant cvs_version = "$Id: foldlist.pike,v 1.27 2001/02/10 22:41:27 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -202,7 +202,7 @@ class TagFoldlist {
       state_id = (args->name || "fl")+":"+id->misc->foldlist_depth+":"+hist;
       StateHandler.Page_state state=StateHandler.Page_state(id);
       state_id = state->register_consumer(state_id);
-      if(id->variables->__state && !state->uri_decode(id->variables->__state))
+      if(id->real_variables->__state && !state->uri_decode(id->real_variables->__state[0]))
 	RXML.run_error("Error in state.");
 
       //Get our real state
