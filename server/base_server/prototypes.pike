@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.113 2004/05/09 17:55:02 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.114 2004/05/10 17:19:42 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1922,8 +1922,9 @@ class RoxenModule
   mapping(string:mixed)|int(-1..0)|Stdio.File find_file(string path,
 							RequestID id);
   mapping(string:mixed) delete_file(string path, RequestID id);
-  int(0..1) recurse_delete_files(string path, MultiStatus.Prefixed result,
-				 RequestID id);
+  mapping(string:mixed) recurse_delete_files(string path,
+					     MultiStatus.Prefixed result,
+					     RequestID id);
 }
 
 class PatchPropertyCommand
