@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.443 2004/05/08 14:41:32 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.444 2004/05/12 15:56:34 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -283,7 +283,7 @@ void send (string|object what, int|void len)
   if(!pipe) setup_pipe();
   if(stringp(what))  {
 #ifdef CONNECTION_DEBUG
-    werror ("HTTP: Send =====================================================\n"
+    werror ("HTTP: Response =================================================\n"
 	    "%s\n",
 	    replace (sprintf ("%O", what),
 		     ({"\\r\\n", "\\n", "\\t"}),
@@ -295,7 +295,7 @@ void send (string|object what, int|void len)
   }
   else {
 #ifdef CONNECTION_DEBUG
-    werror ("HTTP: Send =====================================================\n"
+    werror ("HTTP: Response =================================================\n"
 	    "Stream %O, length %O\n", what, len);
 #else
     REQUEST_WERR(sprintf("HTTP: Pipe stream %O, length %O", what, len));
@@ -955,7 +955,11 @@ void end(int|void keepit)
 
 static void close_cb()
 {
+#ifdef CONNECTION_DEBUG
+  werror ("HTTP: Client close ---------------------------------------------\n");
+#else
   REQUEST_WERR ("HTTP: Got remote close.");
+#endif
 
   CHECK_FD_SAFE_USE;
 
@@ -1260,7 +1264,7 @@ int wants_more()
 void do_log( int|void fsent )
 {
 #ifdef CONNECTION_DEBUG
-  werror ("HTTP: Send done ================================================\n");
+  werror ("HTTP: Response sent ============================================\n");
 #endif
   MARK_FD("HTTP logging"); // fd can be closed here
   TIMER_START(do_log);
@@ -1818,7 +1822,7 @@ void send_result(mapping|void result)
 	if (file->file)
 	  data += file->file->read(file->len);
 #ifdef CONNECTION_DEBUG
-	werror ("HTTP: Send =====================================================\n"
+	werror ("HTTP: Response =================================================\n"
 		"%s\n",
 		replace (sprintf ("%O", data),
 			 ({"\\r\\n", "\\n", "\\t"}),
@@ -1840,7 +1844,7 @@ void send_result(mapping|void result)
       if( strlen( head_string ) < (HTTP_BLOCKING_SIZE_THRESHOLD))
       {
 #ifdef CONNECTION_DEBUG
-	werror ("HTTP: Send =====================================================\n"
+	werror ("HTTP: Response =================================================\n"
 		"%s\n",
 		replace (sprintf ("%O", head_string),
 			 ({"\\r\\n", "\\n", "\\t"}),
@@ -1979,7 +1983,7 @@ int processed;
 void got_data(mixed fooid, string s)
 {
 #ifdef CONNECTION_DEBUG
-  werror ("HTTP: Got ------------------------------------------------------\n"
+  werror ("HTTP: Request --------------------------------------------------\n"
 	  "%s\n",
 	  replace (sprintf ("%O", s),
 		   ({"\\r\\n", "\\n", "\\t"}),
@@ -2055,7 +2059,7 @@ void got_data(mixed fooid, string s)
     }
 
 #ifdef CONNECTION_DEBUG
-    werror ("HTTP: Got request ----------------------------------------------\n");
+    werror ("HTTP: Request received -----------------------------------------\n");
 #endif
 
     if( method == "GET" || method == "HEAD" ) {
