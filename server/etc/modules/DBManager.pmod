@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.50 2001/10/08 15:03:53 per Exp $
+// $Id: DBManager.pmod,v 1.51 2001/10/09 14:56:59 per Exp $
 
 //! Manages database aliases and permissions
 
@@ -777,7 +777,8 @@ void create_db( string name, string path, int is_internal,
   if( sizeof((array)name & ({ '@', ' ', '-', '&', '%', '\t',
 			      '\n', '\r', '\\', '/', '\'', '"',
 			      '(', ')', '*', '+', }) ) )
-    error("Please do not use any of the characters @, -, &, /, \\ or %% in database names.\nAlso avoid whitespace characters\n");
+    error("Please do not use any of the characters @, -, &, /, \\ "
+	  "or %% in database names.\nAlso avoid whitespace characters\n");
   if( has_value( name, "-" ) )
     name = replace( name, "-", "_" );
   if( group )
@@ -900,15 +901,12 @@ static void create()
 {
   mixed err = 
   catch {
-    if( !catch(query("CREATE TABLE db_backups ("
-		     " db varchar(80) not null, "
-		     " tbl varchar(80) not null, "
-		     " directory varchar(255) not null, "
-		     " whn int unsigned not null, "
-		     " INDEX place (db,directory))") ) &&
-	file_stat( "etc/docs.frm" ) )
-      query("INSERT INTO db_backups (db,tbl,directory,whn) "
-	    "VALUES ('docs','docs','"+getcwd()+"/etc','"+time()+"')");
+    query("CREATE TABLE IF NOT EXISTS db_backups ("
+	  " db varchar(80) not null, "
+	  " tbl varchar(80) not null, "
+	  " directory varchar(255) not null, "
+	  " whn int unsigned not null, "
+	  " INDEX place (db,directory))");
        
   query("CREATE TABLE IF NOT EXISTS db_groups ("
 	" db varchar(80) not null, "
@@ -972,16 +970,15 @@ CREATE TABLE db_permissions (
       }, 0 );
   }
 
-  if( !get("docs") )
+	
+  if( file_stat( "etc/docs.frm" ) )
   {
-    if( catch{
-      
+    if( !sizeof(query( "SELECT tbl FROM db_backups WHERE "
+		       "db=%s AND directory=%s",
+		       "docs", getcwd()+"/etc" ) ) )
       query("INSERT INTO db_backups (db,tbl,directory,whn) "
 	    "VALUES ('docs','docs','"+getcwd()+"/etc','"+time()+"')");
-    } )
-      werror("Failed to create docs database backup reference\n");
   }
-    
   
   return;
   };

@@ -18,7 +18,7 @@ LocaleString module_doc =
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.102 2001/10/05 15:17:20 per Exp $";
+  "$Id: config_filesystem.pike,v 1.103 2001/10/09 14:57:20 per Exp $";
 
 constant path = "config_interface/";
 
@@ -344,24 +344,34 @@ void start(int n, Configuration cfg)
 {
   if( cfg )
   {
-    if( !(docs = DBManager.cached_get( "docs", cfg ) ) )
-      if( DBManager.cached_get( "docs" ) )
-        report_warning( "The database 'docs' exists, but this server can "
-                        "not read from it.\n"
-                        "Documentation will be unavailable.\n" );
-      else if( file_stat( getcwd()+"/etc/docs.frm" ) )
+    int crt;
+    if( !(docs = DBManager.get( "docs", cfg ) ) ||
+	((crt=1) && catch( DBManager.get( "docs", cfg )
+			   ->query("SELECT name FROM docs LIMIT 1") )))
+    {
+      if( !crt && DBManager.get( "docs" ) )
+	report_warning( "The database 'docs' exists, but this server can "
+			"not read from it.\n"
+			"Documentation will be unavailable.\n" );
+      else if( file_stat( "etc/docs.frm" ) )
       {
 	// Restore from "backup".
-	report_notice("Creating the 'docs' database.\n");
-	DBManager.create_db( "docs", 0, 1 );
-	DBManager.is_module_db( this_module(), "docs", "All documentation");
-	foreach( roxen->configurations, Configuration c )
-	  DBManager.set_permission( "docs", c, DBManager.READ );
-	DBManager.restore( "docs", getcwd()+"/etc/" );
+	if( !crt )
+	{
+	  report_notice("Creating the 'docs' database.\n");
+	  DBManager.create_db( "docs", 0, 1 );
+	  DBManager.is_module_db( this_module(), "docs", "All documentation");
+	  foreach( roxen->configurations, Configuration c )
+	    DBManager.set_permission( "docs", c, DBManager.READ );
+	}
+	DBManager.restore( "docs", getcwd()+"/etc/", "docs", ({ "docs" }) );
       }
       else
+      {
 	report_warning( "There is no documentation available\n");
-
+	docs = 0;
+      }
+    }
     string am = query( "auth_method" );
 
     foreach( ({ "auth_httpbasic", "auth_httpcookie" }), string s )
