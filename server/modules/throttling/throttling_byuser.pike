@@ -9,7 +9,7 @@
  * fastest-developed module.
  */
 
-constant cvs_version="$Id: throttling_byuser.pike,v 1.1 2000/05/14 16:11:16 kinkie Exp $";
+constant cvs_version="$Id: throttling_byuser.pike,v 1.2 2000/05/15 20:06:41 kinkie Exp $";
 
 #include <module.h>
 inherit "throttlelib";
@@ -39,7 +39,7 @@ constant module_doc  = #"This module will alter a request's bandwidth by user
 name. It will <b>not</b> require any user authentication, which is to be
 requested by other modules. However, if authentication info is present, it
 will be matched against this module's rules";
-constant module_unique=0;
+constant module_unique=1;
 
 array find_rule (mapping res, object id, 
                  array(string) rulenames, mapping rules) {
