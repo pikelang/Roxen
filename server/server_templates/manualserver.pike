@@ -1,5 +1,5 @@
 /*
- * $Id: manualserver.pike,v 1.2 1999/01/26 06:21:40 peter Exp $
+ * $Id: manualserver.pike,v 1.3 1999/08/25 00:39:24 js Exp $
  */
 
 #include <module.h>
@@ -10,7 +10,6 @@ constant desc = "A virtual server with the modules needed for a manuals viewing 
 constant modules = ({
   "obox#0",
   "flik#0",
-  "weblayout#0",
   "tablify#0",
   "business#0",
   "wizard_tag#0",
@@ -19,7 +18,6 @@ constant modules = ({
   "directories#0",
   "configtablist#0",
   "check_spelling#0",
-  "ximg#0",
   "indirect_href#0",
   "fnord#0",
   "contenttypes#0",
