@@ -1,5 +1,5 @@
 constant thread_safe=1;
-constant cvs_version = "$Id: sizer.pike,v 1.6 2001/03/06 11:49:39 jhs Exp $";
+constant cvs_version = "$Id: sizer.pike,v 1.7 2001/03/06 12:00:41 jhs Exp $";
 #include <module.h>
 inherit "module";
 
@@ -188,6 +188,8 @@ string imglink( string img, string fmt, int quality,RequestID id )
   return (query_absolute_internal_location(id)+
 	  Gmp.mpz(img,256)->digits(16)+"!"+fmt+"!"+quality);
 }
+
+constant simpletag_page_size_flags = RXML.FLAG_EMPTY_ELEMENT;
 
 string simpletag_page_size( string name,
 			    mapping args,
