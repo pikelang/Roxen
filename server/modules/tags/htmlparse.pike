@@ -18,7 +18,7 @@
 #define _rettext defines[" _rettext"]
 #define _ok     defines[" _ok"]
 
-constant cvs_version="$Id: htmlparse.pike,v 1.180 1999/07/26 13:16:39 nilsson Exp $";
+constant cvs_version="$Id: htmlparse.pike,v 1.181 1999/08/01 17:30:56 nilsson Exp $";
 constant thread_safe=1;
 
 function call_user_tag, call_user_container;
@@ -1522,17 +1522,31 @@ string tag_quote(string tagname, mapping m)
 
 string tag_ximage(string tagname, mapping m, object id)
 {
-  string img = id->conf->real_file(fix_relative(m->src||"", id), id);
-  if(img && search(img, ".gif")!=-1) {
-    object fd = open(img, "r");
-    if(fd) {
-      int x, y;
-      sscanf(gif_size(fd), "width=%d height=%d", x, y);
-      m->width=x;
-      m->height=y;
+  string tmp="";
+  if(m->src)
+  {
+    string file;
+    if(file=id->conf->real_file(fix_relative(m->src, id), id))
+    {
+      array(int) xysize;
+      if(xysize=Dims.dims()->get(file))
+      {
+	m->width=(string)xysize[0];
+	m->height=(string)xysize[1];
+      }else{
+	tmp+="<!-- Dimensions quering failed -->";
+      }
+    }else{
+      tmp+="<!-- Virtual path failed -->";
     }
+    if(!m->alt) {
+      array src=m->src/"/";
+      string src=src[sizeof(src)-1];
+      m->alt=String.capitalize(replace(src[..sizeof(src)-search(reverse(src),".")-2],"_"," "));
+    }
+    return make_tag("img", m)+tmp;
   }
-  return make_tag("img", m);
+  return "<!-- No src given -->";
 }
 
 mapping pr_sizes = ([]);
