@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "modules/filesystems/filesystem";
 
-constant cvs_version= "$Id: incoming.pike,v 1.11 2000/04/06 13:45:00 mast Exp $";
+constant cvs_version= "$Id: incoming.pike,v 1.12 2000/05/03 08:52:48 mast Exp $";
 
 
 constant module_name = "Incoming filesystem";
@@ -117,9 +117,9 @@ void create()
 
 static mixed not_allowed( object id )
 {
-  id->misc->moreheads = (id->misc->moreheads||([]))|(["allow":"PUT"]);
-  id->misc->error_code = 405;
-  return 0;
+  id->misc->moreheads = (id->misc->moreheads||([]))|(["Allow":"PUT"]);
+  return http_low_answer (
+    405, "<h1>" + id->method + " method not allowed in incoming filesystem.</h1>\n");
 }
 
 
