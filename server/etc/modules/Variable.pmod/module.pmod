@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.74 2002/01/29 15:30:43 mast Exp $
+// $Id: module.pmod,v 1.75 2002/02/26 13:17:18 wellhard Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1058,7 +1058,10 @@ class MultipleChoice
 
   string render_form( RequestID id, void|mapping additional_args )
   {
-    string res = "<select name='"+path()+"'>\n";
+    string autosubmit = "";
+    if(additional_args && additional_args->autosubmit)
+      autosubmit = " autosubmit='autosubmit' onChange='javascript:submit();'";
+    string res = "<select name='"+path()+"'"+autosubmit+">\n";
     string current = _name (query());
     int selected = 0;
     foreach( get_choice_list(), mixed elem )
