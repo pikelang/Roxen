@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.13 1997/02/13 13:00:53 per Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.14 1997/02/18 01:56:05 per Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -1242,9 +1242,9 @@ void start(int num)
     }
     perror("\n");
   };
-  if(err)
+  if(erro)
   {
-    perror("Error while opening ports:\n"+describe_backtrace(erro));
+    perror("Error:\n"+describe_backtrace(erro));
   }
   if(!num && sizeof(query("Ports")))
   {
