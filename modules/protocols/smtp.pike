@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.90 1999/09/27 22:46:56 grubba Exp $
+ * $Id: smtp.pike,v 1.91 1999/09/27 23:39:29 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.90 1999/09/27 22:46:56 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.91 1999/09/27 23:39:29 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -1149,24 +1149,81 @@ static class Smtp_Connection {
 	  string domain;
 	  string user;
 
-	  if (sizeof(a) > 1) {
+	  if (sizeof(a) == 2) {
+	    //  user@domain
 	    domain = a[1];
 	    user = a[0];
-	  } else {
+	  } else if (sizeof(a) == 1) {
+	    // user
 	    user = recipient;
+	  } else {
+	    /* Yikes! Source-routed relaying!
+	     *
+	     * Syntax:
+	     *		@host1,@host2:user@domain
+	     *          `----' `----' `---------'
+	     *           hop1   hop2     hop3
+	     *
+	     * host1 should be an alias for ourselves, but we don't
+	     * enforce this.
+	     *
+	     * RFC 821 3.6 & 4.1.1
+	     *
+	     * "The intent is to discourage all source routing and to
+	     *  abolish explicit source routing for mail delivery within
+	     *  the Internet environment."
+	     *
+	     * RFC 1123 5.2.6
+	     */
+
+	    // Check the syntax.
+	    for(i=1; i < sizeof(a)-3; i++) {
+	      if (a[i][-1] != ',') {
+		conf->log((["error":400]), id);
+		send(501);
+		return;
+	      }
+	    }
+	    if ((a[0] != "") ||
+		(a[-1] == "") ||
+		((i = search(a[-2], ":")) == -1) ||
+		(i == sizeof(a[-2]-1))) {
+	      conf->log((["error":400]), id);
+	      send(501);
+	      return;
+	    }
+
+	    // Wow! Correct syntax!
+
+	    // We attempt to deliver directly to the specified address,
+	    // as recomended by RFC 1123 5.2.6.
+	    domain = a[-1];
+	    user = a[-2][i+1..];
+	    recipient = user + "@" + domain;
 	  }
 
 	  if ((!domain) || (parent->handled_domains[domain])) {
 
 	    // Probably a local address.
 
-	    // Handle %-quoted source-routing.
-	    // eg:
-	    //	<orbs-relaytest%manawatu.co.nz@tifa.idonex.se>
+	    /* Handle %-quoted source-routing.
+	     * eg:
+	     *	<orbs-relaytest%manawatu.co.nz@tifa.idonex.se>
+	     *
+	     * "An embedded source route is sometimes encoded in the
+	     *  'local-part' using '%' as a right-binding routing
+	     *  operator."
+	     * RFC 1123 5.2.16
+	     *
+	     * "This is commonly known as the '%-hack'."
+	     * RFC 1123 5.2.16
+	     */
 	    i = 0;
 	    if (search(user, "%") != -1) {
 	      a = user/"%";
 	      i = sizeof(a)-1;
+
+	      // Loop until we find a domain that isn't local.
 	      while(i && parent->handled_domains[a[i]]) {
 		i--;
 	      }
