@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.65 2001/08/23 05:33:43 nilsson Exp $
+ * $Id: ftp.pike,v 2.66 2001/09/10 16:40:03 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -2649,6 +2649,8 @@ class FTPSession
     master_session->misc->user = user;           // Loophole for new API
     master_session->misc->password = password;  // Otherwise we have to emulate
                                                // the Authentication header
+    // Compatibility...
+    m_delete(master_session->misc, "home");
 
     auth_user = master_session->conf->authenticate(master_session);
 
@@ -2679,7 +2681,7 @@ class FTPSession
     // Authentication successful
 
     if (!port_obj->query_option("named_ftp") ||
-	!check_shell(master_session->misc->shell)) {
+	!check_shell(auth_user->shell())) {
       send(530, ({ "You are not allowed to use named-ftp.",
 		   "Try using anonymous, or check /etc/shells" }));
       conf->log(([ "error":402 ]), master_session);
@@ -2696,18 +2698,20 @@ class FTPSession
       return;
     }
 
-    if (stringp(master_session->misc->home)) {
+    if (stringp(auth_user->homedir())) {
       // Check if it is possible to cd to the users home-directory.
-      if ((master_session->misc->home == "") ||
-	  (master_session->misc->home[-1] != '/')) {
-	master_session->misc->home += "/";
+      string home = auth_user->homedir();
+      if ((home == "") || (home[-1] != '/')) {
+	home += "/";
       }
 
-      array(int)|object st = conf->stat_file(master_session->misc->home,
-					     master_session);
+      // Compatibility...
+      master_session->misc->home = home;
+
+      array(int)|object st = conf->stat_file(home, master_session);
 
       if (st && (st[1] < 0)) {
-	cwd = master_session->misc->home;
+	cwd = home;
       }
     }
     logged_in = 1;
