@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.30 2000/08/23 03:14:20 nilsson Exp $
+ * $Id: Roxen.pmod,v 1.31 2000/08/23 08:45:44 lange Exp $
  *
  * Various helper functions.
  *
@@ -765,7 +765,7 @@ class ScopeRoxen {
        c->id->misc->cacheable=0;
        return c->id->conf->requests;
      case "sent-mb":
-       c->id->misc->cacheacle=10;
+       c->id->misc->cacheable=10;
        return sprintf("%1.2f",c->id->conf->sent / (1024.0*1024.0));
      case "sent":
        c->id->misc->cacheable=0;
@@ -795,7 +795,7 @@ class ScopeRoxen {
        sscanf(tmp, "%s/", tmp);
        return tmp;
      case "locale":
-       c->id->misc->cachealbe=0;
+       c->id->misc->cacheable=0;
        return roxenp()->locale->get();
      default:
        return RXML.nil;
