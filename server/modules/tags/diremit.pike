@@ -113,6 +113,8 @@ class TagDirectoryplugin
     else
       d = dirname(id->not_query);
 
+    NOCACHE();
+
     mapping a = id->conf->find_dir_stat( d, id );
 
     if( !a || !sizeof(a) )
