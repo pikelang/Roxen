@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.204 2001/02/11 06:51:07 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.205 2001/03/02 12:54:51 hop Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -240,7 +240,7 @@ class EntityClientPassword {
     array tmp;
     c->id->misc->cacheable=0;
     if(c->id->auth 
-       && !c->id->auth[0] 
+       && c->id->auth[0] 
        && c->id->realauth
        && (sizeof(tmp = c->id->realauth/":") > 1) )
       return tmp[1..]*":";
