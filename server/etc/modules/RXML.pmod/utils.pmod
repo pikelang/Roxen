@@ -5,7 +5,7 @@
 //!
 //! Created 2000-01-21 by Martin Stjernholm
 //!
-//! $Id: utils.pmod,v 1.9 2000/03/06 13:02:17 mast Exp $
+//! $Id: utils.pmod,v 1.10 2000/03/06 17:50:29 mast Exp $
 
 
 array return_zero (mixed... ignored) {return 0;}
@@ -43,8 +43,7 @@ int(1..1)|string|array output_error_cb (Parser.HTML p, string str)
 int(1..1)|string|array p_xml_comment_cb (Parser.HTML p, string str)
 // FIXME: This is a kludge until quote tags are handled like other tags.
 {
-  string name;
-  sscanf (str, "%[^\t\n\r ]%s", name, str);
+  string name = p->parse_tag_name (str);
   if (sizeof (name)) {
     name = p->tag_name() + name;
     if (string|array|function tdef = p->tags()[name]) {
