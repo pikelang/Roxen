@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.303 2000/04/12 19:42:52 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.304 2000/04/25 22:19:38 jhs Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -2532,7 +2532,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 		   "(from .htaccess"
 		   " or an auth module. The default (used when _no_ "
 		   "entries are present) is 'allow ip=*', allowing"
-		   " everyone to access the module");
+		   " everyone to access the module.");
 
 	me->deflocaledoc("deutsch", "_seclevels",
 			 "Sicherheit: Muster",
@@ -2612,7 +2612,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 		   " character.<p>"
 		   "In username: 'any' stands for any valid account"
 		   " (from .htaccess"
-		   " or an auth module. The default is 'deny ip=*'");
+		   " or an auth module. The default is 'deny ip=*'.");
 
 
         me->deflocaledoc("deutsch", "_seclevels",
@@ -3182,13 +3182,13 @@ void create(string config)
               "Ein Kommentar, der im Konfigurations-Interface "
                "sichtbar ist und als Dokumentation nützlich ist.");
   deflocaledoc("svenska", "comment", "Kommentar",
-	       "En kommentar som syns i konfigurationsinterfacet");
+	       "En kommentar som syns i konfigurationsinterfacet.");
 
   defvar("name", "", "Virtual server name",
 	 TYPE_STRING|VAR_MORE,
 	 "This is the name that will be used in the configuration "
 	 "interface. If this is left empty, the actual name of the "
-	 "virtual server will be used");
+	 "virtual server will be used.");
 
   deflocaledoc("deutsch", "name", "Servername",
 #"Dies ist der Name, der im Konfigurations-Interface für den
@@ -3368,7 +3368,7 @@ $user_id       -- Ett unikt användarid. Tas från kakan RoxenUserID, du
 	 "Logging: No Logging for", TYPE_STRING_LIST|VAR_MORE,
          "Don't log requests from hosts with an IP number which matches any "
 	 "of the patterns in this list. This also affects the access counter "
-	 "log.\n",0, lambda(){ return !query("Log");});
+	 "log.", 0, lambda(){ return !query("Log");});
 
   deflocaledoc("deutsch", "NoLog",
                "Logging: Kein Log für",
@@ -3382,12 +3382,12 @@ Dies hat auch Einfluss auf den Access-Counter.");
 
   defvar("Domain", roxen->get_domain(), "Domain", TYPE_STRING,
 	 "The domainname of the server. The domainname is used "
-	 " to generate default URLs, and to gererate email addresses");
+	 " to generate default URLs, and to gererate email addresses.");
 
   deflocaledoc( "deutsch", "Domain",
                 "DNS-Domain",
 #"Der Domainname des Servers, der für die Generierung der
-Standard-URLs und Email-Adressen verwendet wird");
+Standard-URLs und Email-Adressen verwendet wird.");
   deflocaledoc( "svenska", "Domain",
 		"DNS Domän",
 #"Serverns domännamn. Det av en del RXML styrkoder för att generara
@@ -3397,7 +3397,7 @@ epostadresser, samt för att generera skönskvärdet för serverurl variablen.");
   defvar("MyWorldLocation", "http://"+gethostname()+"/", 
          "Primary Server URL", TYPE_URL,
 	 "This is the main server URL, where your start page is located. "
-         "Please note that you also have to configure the 'URLs' variable");
+         "Please note that you also have to configure the 'URLs' variable.");
 
   deflocaledoc( "deutsch", "MyWorldLocation",
                 "Server-URL",
@@ -3481,7 +3481,7 @@ bytes/sec (the bucket \"fill rate\").",
                 "Bandviddsbegränsning: Servernivå:"
                 " Genomsnittlig tillgänglig bandvidd",
                 "Det här är den genomsnittliga bandvidden som är tillgänglig "
-                "för servern (hastigheten med vilken hinken fylls)");
+                "för servern (hastigheten med vilken hinken fylls).");
 
   defvar("throttle_bucket_depth",1024000,
          "Bandwidth Throttling: Server: Bucket Depth", TYPE_INT,
@@ -3499,7 +3499,7 @@ bandwidth is averaged",0,arent_we_throttling_server);
                 "i hinken. Om det här värdet är lika stort som den "
                 "genomsnittliga tillgängliga bandvidden så tillåts inga "
                 "tillfälliga datapulser när servern har varit inaktiv ett tag"
-                " utan data skickas alltid med max den bandvidden");
+                " utan data skickas alltid med max den bandvidden.");
 
   defvar("throttle_min_grant",1300,
          "Bandwidth Throttling: Server: Minimum Grant", TYPE_INT,
@@ -3531,12 +3531,10 @@ for ethernet)",0,arent_we_throttling_server);
                 " Maximalt antal bytes",
 #"Det här är det maximala antalet bytes som en förbindelse kan få.
 Om det här värdet är lågt så fördelas bandvidden mer jämnt mellan olika
-förbindelser, men om det är för lågt så ökar overeden från IP och TCP.
+förbindelser, men om det är för lågt så ökar overheaden från IP och TCP.
 <p>
-
 Sätt det till ett värde som är aningens lägre än en jämn multipel av
-ditt nätverks MTU (normala ethernetförbindelser har en MTU på 1500)
-" );
+ditt nätverks MTU (normala ethernetförbindelser har en MTU på 1500)." );
 
   defvar("req_throttle", 0,
          "Bandwidth Throttling: Request: Enabled", TYPE_FLAG,
@@ -3629,12 +3627,12 @@ page.
 	       "Mitteilungen: Datei nicht gefunden",
 #"Dieser Text wird angezeigt, wenn eine nicht verfügbare Datei
 aufgerufen wird. '$File' wird ersetzt durch den Dateinamen,
-'$Me' durch die Server-URL");
+'$Me' durch die Server-URL.");
   deflocaledoc("svenska", "ZNoSuchFile",
 	       "Meddelanden: Filen finns inte",
 #"Det här meddelandet returneras om en användare frågar efter en
   resurs som inte finns. '$File' byts ut mot den efterfrågade
-  resursen, och '$Me' med serverns URL");
+  resursen, och '$Me' med serverns URL.");
 
 
   definvisvar( "no_delayed_load", 0, TYPE_FLAG );
