@@ -69,20 +69,18 @@ int main(int argc, array argv)
     } while(!strlen(password) || (password != passwd2));
   } while( strlen( passwd2 = rl->read( "Ok? [y]: " ) ) && passwd2[0]=='n' );
 
-  mapping user =
-  ([
-    "permissions":({"Everything"}),
-    "name":user,
-    "password":crypt( password ),
-    "real_name":"Configuration Interface Default User",
-  ]);
-
-  string ufile=(".config_settings/"+replace(configdir,({ ".", "/" }),({"","-"}))+
-                "/settings/"+user->name+"_uid");
+  string ufile=(configdir+"_configinterface/settings/"+user->name+"_uid");
   mkdirhier( ufile );
-  Stdio.write_file( ufile, encode_value( user ) );
+  Stdio.write_file( ufile,
+string_to_utf8(#"<?XML version=\"1.0\"  encoding=\"UTF-8\"?>
+<map>
+  <str>permissions</str> : <a> <str>Everything</str> </a>
+  <str>real_name</str>   : <str>Configuration Interface Default User</str>
+  <str>password</str>    : <str>"+crypt( password )+ #"
+  <str>name</str>        : <str>"+user+"\n</map>" ));
 
-  if(admin) {
+  if(admin)
+  {
     write("Administrator user \""+user->name+"\" created.");
     return 0;
   }
