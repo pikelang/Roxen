@@ -1,4 +1,4 @@
-# $Id: extensions,v 1.9 1997/06/10 18:48:24 grubba Exp $
+# $Id: extensions,v 1.10 1997/06/10 21:36:04 grubba Exp $
 
 aif	audio/x-aiff
 aifc	audio/x-aiff
@@ -45,6 +45,10 @@ xbm	image/x-xbitmap
 xpm	image/x-xpixmap
 xwd	image/x-xwindowdump
 
+anim3	video/x-anim
+anim5	video/x-anim
+anim7	video/x-anim
+anim8	video/x-anim
 avi	video/x-msvideo
 fli	video/x-fli
 mov	video/quicktime
