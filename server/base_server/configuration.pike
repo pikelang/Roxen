@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.120 1998/04/21 19:06:09 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.121 1998/04/24 08:39:13 per Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -1264,7 +1264,7 @@ mapping|int low_get_file(object id, int|void no_magic)
 #endif
       TRACE_ENTER("Calling find_file()...", 0);
       LOCK(tmp[1]);
-      fid=tmp[1]( file[ strlen(loc) ..] + id->extra_extension, id);
+      fid=tmp[1]( file[ strlen(loc) .. ], id);
       UNLOCK();
       TRACE_LEAVE(sprintf("find_file has returned %O", fid));
       if(fid)
