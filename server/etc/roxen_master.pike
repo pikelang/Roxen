@@ -1,7 +1,7 @@
 /*
  * Roxen master
  */
-string cvs_version = "$Id: roxen_master.pike,v 1.65 1999/12/21 23:49:04 per Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.66 1999/12/27 12:36:16 mast Exp $";
 
 /*
  * name = "Roxen Master";
@@ -109,6 +109,8 @@ inherit "/master";
 
 mapping handled = ([]);
 
+mapping(program:string) program_names = set_weak_flag (([]), 1);
+
 string make_ofilename( string from )
 {
   return "precompiled/"+
@@ -132,7 +134,7 @@ void dump_program( string pname, program what )
 
 int loaded_at( program p )
 {
-  return load_time[ search( programs, p ) ];
+  return load_time[ program_name (p) ];
 } 
 
 // Make low_find_prog() search in precompiled/ for precompiled files.
@@ -166,9 +168,11 @@ program low_findprog(string pname, string ext, object|void handler)
             mixed err = catch 
             {
               load_time[ fname ] = time();
-              return programs[fname]=
+              ret = programs[fname]=
                      decode_value(_static_modules.files()->
                                   Fd(ofile,"r")->read(),Codec());
+	      program_names[ret] = fname;
+	      return ret;
             };
 	    if (handler) {
 	      handler->compile_warning(ofile, 0,
@@ -196,6 +200,7 @@ program low_findprog(string pname, string ext, object|void handler)
       ret=load_module(fname);
 #endif
     }
+    program_names[ret] = fname;
     load_time[fname] = time();
     return programs[fname] = ret;
   }
@@ -281,7 +286,7 @@ int refresh_inherit( program what )
 
 string program_name(program p)
 {
-  return search(programs, p);
+  return program_names[p];
 }
 
 void name_program( program p, string name )
@@ -452,6 +457,7 @@ void create()
     load_time[ f ] = time();
 
   programs["/master"] = object_program(o);
+  program_names[object_program(o)] = "/master";
   objects[ object_program(o) ] = o;
   /* Move the old efuns to the new object. */
 

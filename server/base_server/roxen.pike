@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.373 1999/12/21 16:46:36 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.374 1999/12/27 12:36:12 mast Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -156,17 +156,12 @@ class RequestID
   RequestID clone_me();
 };
 
-mapping old_programs = set_weak_flag( ([]),1 );
-
 string filename( program|object o )
 {
   if( objectp( o ) )
     o = object_program( o );
 
-  string fname = search( master()->programs, o );
-  if( !fname )
-    if( old_programs[ o ] )
-      fname = old_programs[ o ];
+  string fname = master()->program_name (o);
   if( !fname )
     fname = "Unknown Program";
   return fname-(getcwd()+"/");

@@ -1,7 +1,7 @@
 #include <roxen.h>
 inherit "http";
 
-// $Id: roxenlib.pike,v 1.133 1999/12/06 18:49:30 grubba Exp $
+// $Id: roxenlib.pike,v 1.134 1999/12/27 12:36:12 mast Exp $
 // This code has to work both in the roxen object, and in modules.
 #if !efun(roxen)
 #define roxen roxenp()
@@ -856,8 +856,7 @@ mapping proxy_auth_needed(RequestID id)
 
 string program_filename()
 {
-  return roxen->filename(this_object()) ||
-    search(master()->programs, object_program(this_object()));
+  return master()->program_name (this_object());
 }
 
 string program_directory()
