@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version="$Id: htaccess.pike,v 1.85 2001/09/12 15:58:14 grubba Exp $";
+constant cvs_version="$Id: htaccess.pike,v 1.86 2001/09/21 09:51:20 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -315,7 +315,8 @@ mapping parse_and_find_htaccess( RequestID id )
 		  order );
     
     foreach( indices( m ), string s )
-      access[lower_case(s)] = fun;
+      foreach( Unicode.split_words_and_normalize( s ), string q )
+	access[lower_case(Unicode.normalize( s, "C" ))] = fun;
     return "";
   };
 
@@ -512,6 +513,7 @@ constant name = "htaccess";
 class HtUser
 {
   inherit User;
+  constant is_transient = 1;
   static array pwent;
 
 #ifdef HTACCESS_DEBUG
@@ -550,6 +552,8 @@ class HtUser
 class HtGroup
 {
   inherit Group;
+  constant is_transient = 1;
+
   array grent;
   int gid()                { return grent[2]; }
   string name()            { return grent[0]; }
