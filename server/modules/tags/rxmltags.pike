@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.433 2003/06/17 17:15:48 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.434 2003/06/19 09:42:08 jonasw Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2140,7 +2140,7 @@ private int|array internal_tag_select(string t, mapping m, string c, string name
 {
   if(name && m->name!=name) return ({ RXML.t_xml->format_tag(t, m, c) });
 
-  // Split indata into an array with the layout
+  // Split input into an array with the layout
   // ({ "option", option_args, stuff_before_next_option })*n
   // e.g. "fox<OPtioN foo='bar'>gazink</option>" will yield
   // tmp=({ "OPtioN", " foo='bar'", "gazink</option>" }) and
@@ -8700,7 +8700,7 @@ just got zapped?
 </attr>
 
 <attr name='from-scope' value='name'>
- <p>Create a mapping out of a scope and give it as indata to the emit.</p>
+ <p>Create a mapping out of a scope and give it as input to the emit.</p>
 </attr>
 ",
 
