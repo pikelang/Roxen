@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.49 1997/10/13 14:07:47 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.50 1997/10/14 00:20:55 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -487,6 +487,33 @@ class spawn_cgi
   }
 };
 
+// Used to send some data to the CGI-script.
+class sender
+{
+  string to_send;
+  object fd;
+
+  void write_cb()
+  {
+    if (sizeof(to_send)) {
+      int len = fd->write(to_send);
+      to_send = to_send[len..];
+    } else {
+      fd->close();
+    }
+  }
+  void close_cb()
+  {
+    fd->close();
+  }
+  void create(object fd_, string to_send_)
+  {
+    fd = fd_;
+    to_send_ = to_send_;
+    fd->set_nonblocking(0, write_cb, close_cb);
+  }
+};
+
 mixed find_file(string f, object id)
 {
   array tmp2;
@@ -551,7 +578,7 @@ mixed find_file(string f, object id)
 			 QUERY(kill_call_out));
   
   if(id->my_fd && id->data /* && sizeof(id->data) */) {
-    pipe2->write(id->data);
+    sender(pipe2->dup(), id->data);
     id->my_fd->set_id( pipe2 );                       // for put.. post?
     id->my_fd->set_read_callback(cgi->got_some_data); // lets try, atleast..
     id->my_fd->set_nonblocking();
