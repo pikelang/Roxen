@@ -9,19 +9,18 @@ inherit "roxenlib";
 array register_module()
 {
   return ({ MODULE_DIRECTORIES | MODULE_URL | MODULE_PARSER, 
-	    "Language module",
-	    "Handles documents in different languages. "
-	    "<p>Is also a directory module that generates no directory "
-	    "listings. It must be a directory module to work, though it "
-	    "could of course be fixed to make directory listings."
-	    "The module works by using appropriate magic to find out what "
+	      "Language module",
+	      "Handles documents in different languages. "
+	      "<p>Is also a directory module that generates no directory "
+	      "listings. It must be a directory module to work, though it "
+	      "could of course be fixed to make directory listings."
+	      "The module works by using appropriate magic to find out what "
 	      "language the user wants and then finding a file in that "
 	      "language. What language a file is in is specified with an "
 	      "extra extension. index.html.sv would be a file in swedish "
 	      "while index.html.en would be one in english. "
 	      "<p>The module also defines three new tags. "
 	      "<br><b>&lt;language&gt;</b> that tells which language the "
-	      
 	      "current page is in. "
 	      "<br><b>&lt;available_languages&gt;</b> gives a list of other "
 	      "languages the current page is in, with links to them. "
@@ -38,7 +37,7 @@ void create()
 {
   defvar( "default_language", "en", "Default language", TYPE_STRING,
 	 "The default language for this server. Is used when trying to "
-	 "decide which language to send when the user hasnt selected any. "
+	 "decide which language to send when the user hasn't selected any. "
 	 "Also the language for the files with no language-extension." );
 
   defvar( "languages", "en	English\nde	Deutch		en\nsv	Svenska		en",
@@ -55,10 +54,10 @@ void create()
 	 "be used in case the chosen language is unavailable. To find a "
 	 "page with a suitable language the languages is tried as follows. "
 	 "<ol><li>The selected language, stored as a prestate"
-	 "<li>The users agents accept-headers (ok it doesnt do this at the moment)"
+	 "<li>The user agent's accept-headers (ok it doesn't do this at the moment)"
 	 "<li>The selected languages next-languages-codes if any"
 	 "<li>The default language"
-	 "<li>If there were no selected language, the default languages "
+	 "<li>If there were no selected language, the default language's "
 	 "next-language-codes"
 	 "<li>All languages, in the order they appear in this text-field"
 	 "</ol>"
@@ -77,7 +76,7 @@ void create()
 	 "only be used if the page exists in that language."
 	 "<dt>language-code.unavailable.gif"
 	 "<dd>Shown to indicate that the user has selected an language that "
-	 "this page hasnt been translated to."
+	 "this page hasn't been translated to."
 /*	 "<dt>language-code.dir.selected.gif"
 	 "<dd>Shown to indicate that the dir-entry will be shown in that "
 	 "language."
