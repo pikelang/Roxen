@@ -1,4 +1,4 @@
-// string cvs_version = "$Id: module_support.pike,v 1.21 1999/08/06 07:22:23 nilsson Exp $";
+// string cvs_version = "$Id: module_support.pike,v 1.22 1999/08/06 16:44:13 grubba Exp $";
 #include <roxen.h>
 #include <module.h>
 
@@ -104,7 +104,7 @@ public mixed query(void|string var)
     return variables[var][ VAR_VALUE ];
   if(this_object()->current_configuration)
     return this_object()->current_configuration->query(var);
-  report_error("query("+var+"). Unknown variable.\n");
+  error("query("+var+"). Unknown variable.\n");
   return 0;
 }
 
