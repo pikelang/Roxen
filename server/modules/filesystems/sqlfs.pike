@@ -2,7 +2,7 @@
 
 inherit "module";
 
-constant cvs_version= "$Id: sqlfs.pike,v 1.6 2002/11/11 01:52:34 mani Exp $";
+constant cvs_version= "$Id: sqlfs.pike,v 1.7 2004/05/22 18:16:45 _cvs_stephen Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -15,7 +15,7 @@ constant module_doc  = "Access files stored in a SQL database";
 constant module_unique = 0;
 
 string table, charset, path_encoding;
-
+int disabled;
 
 void create()
 {
@@ -59,6 +59,19 @@ void start( )
   table = query("table");
   charset = query("charset");
   path_encoding = query("path_encoding");
+  Sql.Sql sql = get_my_sql();
+  if (!sql) {
+    report_error ("Database %O does not exist - module disabled.\n", query ("db"));
+    disabled = 1;
+  }
+  else if (catch (sql_query ("SELECT name FROM " + table + " LIMIT 1"))) {
+    report_error ("The table %O in database %O does not exist "
+		  "or got no \"name\" column "
+		  "- module disabled.\n", table, query ("db"));
+    disabled = 1;
+  }
+  else
+    disabled = 0;
 }
   
 
@@ -81,6 +94,9 @@ static string decode_path( string p )
 
 static array low_stat_file( string f, RequestID id )
 {
+  if (disabled)
+    return 0;
+
   if( f == "/" )
     return dir_stat;
   if( has_value( f, "%" ) )
@@ -90,6 +106,8 @@ static array low_stat_file( string f, RequestID id )
 #endif
   if( !last_file || last_file->name != f )
   {
+    // FIXME: It's not very efficient to suck in the whole content
+    // here if we only want a stat. :P /mast
     array r = sql_query( "SELECT * FROM "+table+" WHERE name=%s", f );
     if( sizeof( r ) )
     {
@@ -131,11 +149,15 @@ constant dir_stat = ({	0777|S_IFDIR, -1, 10, 10, 10, 0, 0 });
 
 Stat stat_file( string f, RequestID id )
 {
-  return low_stat_file( decode_path( "/"+f ), id )[0];
+  array s = low_stat_file( decode_path( "/"+f ), id );
+  return s && s[0];
 }
 
 int|object find_file(  string f, RequestID id )
 {
+  if (disabled)
+    return 0;
+
   if( !strlen( f ) )
     return -1;
   f = decode_path( "/"+f );
@@ -148,6 +170,9 @@ int|object find_file(  string f, RequestID id )
 
 array(string) find_dir( string f, RequestID id )
 {
+  if (disabled)
+    return 0;
+
   f = decode_path( "/"+f );
 
   if(  f[-1] != '/' )
