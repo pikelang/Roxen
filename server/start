@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.65 1999/04/24 17:52:20 mast Exp $
+# $Id: start,v 1.66 1999/05/25 15:53:28 mast Exp $
 
 cd `dirname $0`
 
@@ -378,21 +378,21 @@ start_roxen() {
 # Now do the stuff
 #
 
+if [ -z "$debug" ] ; then
+  DEBUG="-DMODULE_DEBUG";
+else
+  DEBUG="-DDEBUG -DMODULE_DEBUG"
+fi
+
+if [ "x$debug" = "x-1" ] ; then
+  DEBUG="";
+else :; fi
+
 if [ -z "$once" ] ; then
   if [ $verbose -gt 0 ]; then
     echo $$: Starting the Roxen Challenger World Wide Web server.
   else :; fi
   ./mkdir -p $LOGDIR/debug/
-
-  if [ -z "$debug" ] ; then
-    DEBUG="-DMODULE_DEBUG";
-  else
-    DEBUG="-DDEBUG -DMODULE_DEBUG"
-  fi
-
-  if [ "x$debug" = "x-1" ] ; then
-    DEBUG="";
-  else :; fi
 
   if [ $verbose -gt 0 ]; then
     cat << oo
