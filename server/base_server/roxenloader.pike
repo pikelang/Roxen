@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.323 2002/05/07 14:03:12 jonasw Exp $
+// $Id: roxenloader.pike,v 1.324 2002/05/21 10:07:26 grubba Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.323 2002/05/07 14:03:12 jonasw Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.324 2002/05/21 10:07:26 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -280,11 +280,12 @@ int mkdirhier(string from, int|void mode)
 #if constant(chmod)
       Stdio.Stat stat = file_stat (b + a, 1);
       if (stat && stat[0] & ~mode)
-	// Race here. Not much we can do about it at this point. :\
+	// Race here. Not much we can do about it at this point. :/
 	catch (chmod (b+a, [int]stat[0] & mode));
 #endif
     }
     else mkdir(b+a);
+    werror("mkdir(%O)\n", b+a);
     b+=a+"/";
   }
   if(!r)
@@ -1820,6 +1821,14 @@ void start_mysql()
 #ifdef DEBUG
     report_debug("Mysql data directory does not exist -- copying template\n");
 #endif
+    if (!file_stat(mysqldir)) {
+#ifdef DEBUG
+      report_debug("Creating directory %O\n", mysqldir);
+#endif /* DEBUG */
+      mkdirhier(combine_path(mysqldir, "../"));
+      mkdir(mysqldir, 0750);
+    }
+
     mkdirhier( mysqldir+"/mysql/" );
     Filesystem.System tar = Filesystem.Tar( "etc/mysql-template.tar" );
     foreach( tar->get_dir( "mysql" ), string f )
