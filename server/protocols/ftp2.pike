@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.13 1998/04/29 20:28:41 grubba Exp $
+ * $Id: ftp2.pike,v 1.14 1998/04/29 21:22:11 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -240,8 +240,10 @@ class FileWrapper
 
   void close()
   {
-    f->set_blocking();
-    BACKEND_CLOSE(f);
+    if (f) {
+      f->set_blocking();
+      BACKEND_CLOSE(f);
+    }
   }
 
   void create(object f_)
@@ -1954,7 +1956,13 @@ class FTPSession
       if (Query("anonymous_ftp")) {
 	user = 0;
 	logged_in = -1;
+#if 0
 	send(200, ({ "Anonymous ftp, at your service" }));
+#else /* !0 */
+	// ncftp doesn't like the above answer -- stupid program!
+	send(331, ({ "Anonymous ftp accepted, send "
+		     "your complete e-mail address as password." }));
+#endif /* 0 */
 	conf->log(([ "error":200 ]), master_session);
       } else {
 	send(532, ({ "Anonymous ftp disabled" }));
@@ -1988,6 +1996,9 @@ class FTPSession
     if (!user) {
       if (Query("anonymous_ftp")) {
 	send(230, ({ "Guest login ok, access restrictions apply." }));
+	master_session->method = "LOGIN";
+	master_session->not_query = "Anonymous User:"+args;
+	conf->log(([ "error":200 ]), master_session);
 	logged_in = -1;
       } else {
 	send(503, ({ "Login with USER first." }));
@@ -2416,7 +2427,7 @@ class FTPSession
     session->method = "STAT";
     mapping|array st = stat_file(args, session);
 
-    if (mappingp(st)) {
+    if (!arrayp(st)) {
       send_error("MDTM", args, st, session);
       return;
     }
@@ -2463,7 +2474,7 @@ class FTPSession
     session->method = "STAT";
     mapping|array st = stat_file(args, session);
 
-    if (mappingp(st)) {
+    if (!arrayp(st)) {
       send_error("SIZE", args, st, session);
       return;
     }
