@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.470 2005/04/01 16:10:34 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.471 2005/04/02 14:46:30 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1882,7 +1882,7 @@ void send_result(mapping|void result)
 	    MIME.decode_words_tokenized(string_to_utf8(content));
 	  foreach(tokenized, array(string)|int token) {
 	    if (arrayp(token)) {
-	      string raw = utf8_to_string(token[0])
+	      string raw = utf8_to_string(token[0]);
 	      if (String.width(raw) > 8) {
 		if (token[1]) {
 		  // Should not happen in normal circumstances.
