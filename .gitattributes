@@ -59,7 +59,6 @@ map binary
 /server/config_interface/standard/actions/processstatus.pike foreign_ident
 /server/config_interface/standard/actions/requeststatus.pike foreign_ident
 /server/config_interface/standard/actions/resolv.pike foreign_ident
-/server/config_interface/standard/debug_info.pike foreign_ident
 /server/etc/extensions foreign_ident
 /server/etc/include/config.h foreign_ident
 /server/etc/include/module.h foreign_ident
