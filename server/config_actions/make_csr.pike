@@ -1,11 +1,16 @@
 /*
- * $Id: make_csr.pike,v 1.8 1998/04/22 14:32:19 grubba Exp $
+ * $Id: make_csr.pike,v 1.9 1999/01/31 23:26:59 peter Exp $
  */
 
 inherit "wizard";
 
 import Standards.PKCS;
+#if constant(Standards.ASN1.Types) //0.6 feature
+import Standards.ASN1.Types;
+#else
 import Standards.ASN1.Encode;
+#endif /* constant(Standards.ASN1.Types) */
+
 
 #if 0
 #define WERROR werror
@@ -246,14 +251,18 @@ mixed page_4(object id, object mc)
 			     Certificate.build_distinguished_name(@name),
 			     csr_attrs);
 
+#if 0
+  werror("csr: %s\n", Crypto.string_to_hex(csr->get_der()));
+#endif
+
 #if constant(Tools)
   return "<textarea cols=80 rows=12>"
-    + Tools.PEM.simple_build_pem("CERTIFICATE REQUEST", csr->der())
+    + Tools.PEM.simple_build_pem("CERTIFICATE REQUEST", csr->get_der())
     +"</textarea>";
 #else /* !constant(Tools) */
   /* Backward compatibility */
   return "<textarea cols=80 rows=12>"
-    + SSL.pem.build_pem("CERTIFICATE REQUEST", csr->der())
+    + SSL.pem.build_pem("CERTIFICATE REQUEST", csr->get_der())
     +"</textarea>";
 #endif /* constant(Tools) */
 }
