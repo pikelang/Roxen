@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.61 2000/09/19 12:58:46 per Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.62 2000/09/19 13:11:37 per Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -630,17 +630,17 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
     }
   }
 
-  if( !equal( args->pagebg, args->bg ) )
-  {
-    // FIXME: fix transparency (somewhat)
-    // this version totally destroys the alpha channel of the image,
-    // but that's sort of the intention. The reason is that
-    // the png images are generated without alpha.
-    //
-    // however, it would be nice to have transparency with gif images.
-    return ({ Image.Layer(([ "fill":args->pagebg, ])) }) + button_layers;
-  }
-  return button_layers;
+//   if( !equal( args->pagebg, args->bg ) )
+//   {
+  // FIXME: fix transparency (somewhat)
+  // this version totally destroys the alpha channel of the image,
+  // but that's sort of the intention. The reason is that
+  // the png images are generated without alpha.
+  //
+  // however, it would be nice to have transparency with gif images.
+  return ({ Image.Layer(([ "fill":args->pagebg, ])) }) + button_layers;
+//   }
+//   return button_layers;
 }
 
 
