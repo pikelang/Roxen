@@ -2,11 +2,16 @@
 //
 // Created 2002-02-18 by Marcus Wellhardh.
 //
-// $Id: License.pmod,v 1.20 2002/10/22 08:50:01 jonasw Exp $
+// $Id: License.pmod,v 1.21 2002/11/12 10:49:28 wellhard Exp $
 
 #if constant(roxen)
 #define INSIDE_ROXEN
 #endif
+
+int is_active(string license_dir)
+{
+  return Stdio.is_dir(license_dir);
+}
 
 array(Configuration) get_configurations_for_license(Key key)
 {
