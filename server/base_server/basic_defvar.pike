@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 2000, Roxen IS.
-// $Id: basic_defvar.pike,v 1.12 2000/07/09 17:14:30 grubba Exp $
+// $Id: basic_defvar.pike,v 1.13 2000/07/09 17:18:53 grubba Exp $
 #include <module.h>
 
 mapping (string:Variable.Variable) variables=([]);
@@ -236,7 +236,7 @@ error("Variable type "+(type&VAR_TYPE_MASK)+" with misc no longer supported.\n"
     {
       if( ln[locale] && ld[locale] )
       {
-        if( option_translations[ locale ] )
+        if( option_translations && option_translations[ locale ] )
           vv->deflocaledoc( locale, ln[locale], ld[locale], 
                             option_translations[locale] );
         else
