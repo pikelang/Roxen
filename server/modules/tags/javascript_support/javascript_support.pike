@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.29 2001/04/27 15:48:01 wellhard Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.30 2001/05/04 12:02:44 wellhard Exp $";
 //constant thread_safe=1;
 
 #include <module.h>
@@ -50,6 +50,8 @@ mapping find_internal(string f, object id)
   }
   
   string file = combine_path(__FILE__, "../scripts", (f-".."));
+  if(!file_stat(file))
+    return 0;
   return ([ "data":Stdio.File(file,"r"),
 	    "type":"application/x-javascript" ]);
 }
@@ -186,15 +188,15 @@ JSSupport get_jss(object id)
   return id->misc->javascript_support;
 }
 
-class TagEmitJsLink {
+class TagEmitJsHidePopup {
   inherit RXML.Tag;
   constant name = "emit";
-  constant plugin_name = "js-link";
+  constant plugin_name = "js-hide-popup";
   array get_dataset(mapping args, RequestID id)
   {
     string s = "clearToPopup('"+(id->misc->_popupparent||"none")+"');";
     return ({ ([
-      "close-popup":s,
+      "event":s,
       "args":"onMouseOver=\""+s+"\""
     ]) });
   }
@@ -283,8 +285,7 @@ class TagJsExternal
       string key = Crypto.md5()->update(string_to_utf8(content))->digest();
       if(!externals[key])
 	externals[key] = c_js_quote("", ([]), content);
-      return ({ "<script "+(args->defer?"defer='defer' ":"")+
-		"language=\"javascript\" src=\""+
+      return ({ "<script language=\"javascript\" src=\""+
 		query_internal_location()+"__ex/"+
 		MIME.encode_base64(key)+"\"></script>" });
     }
@@ -376,3 +377,252 @@ mapping query_container_callers()
 	    "js-insert"      : container_js_insert
   ]);
 }
+
+TAGDOCUMENTATION;
+#ifdef manual
+
+constant props_arg =
+#"<p>A javascript PopupProperties object containing properties for the
+  popup. PopupProperties is defined in the <i>Popup.js</i> component and takes
+  two arguments: x, and y offsets from the target event for positioning
+  of the popup at a desired location.</p>
+
+  <p>There are some methods available in the object to set properties:
+
+  <dl>
+    <dt>setHideDelay</dt>
+    <dd>The time in ms it takes before the popup is
+    hidden when the mouse leaves the popup (default is 300 ms).</dd>
+
+    <dt>setParentRightOffset</dt>
+    <dd>The x offset from the parent popups right border. This offset
+    will only be used if the popup has a parent popup i.e. not at the top
+    level. This offset overrides the x_offset.</dd>
+
+    <dt>setParentBottomOffset</dt>
+    <dd>The y offset from the parent popups bottom border. This offset
+    will only be used if the popup has a parent popup i.e. not at the top
+    level. This offset overrides the y_offset.</dd>
+  </dl>
+  </p>";
+
+constant tagdoc = ([
+"js-include":#"<desc>
+  <p><short>Includes a javascript component.</short></p>
+</desc>
+
+<attr name='file' value='component' required='required'>
+ <p>The component to include.</p>
+</attr>",
+
+//----------------------------------------------------------------------
+
+"js-insert":#"<desc>
+  <p><short>Inserts a javascript support string.</short></p>
+</desc>
+
+<attr name='name' value='string' required='required'>
+  <p>The name of the javascript support string to insert.</p>
+</attr>
+
+<attr name='jswrite'>
+  <p>The output will be turned into a javascript tag and written to the
+  page with the document.write funtion. This is usefull for compatibility
+  with browsers that has disabled javascript.</p>
+</attr>",
+
+//----------------------------------------------------------------------
+
+"js-popup":#"<desc cont='cont'>
+  <p><short>Creates a javascript popup.</short>
+  This tag creates a popup of its content and returns a link that
+  activates the popup if the cursor hoovers over the link.</p>
+  
+  <p>This tag generates some javascript support strings that has to be
+  inserted inte the page with the &lt;js-insert&gt; tag. The strings are:
+  <i>div</i> and <i>style</i>.</p>
+
+  <p>The components <tt>CrossPlatform.js</tt> and <tt>Popup.js</tt> must be
+  included with the &lt;js-include&gt;-tagin order to use this tag.</p>
+
+  <p>All arguments exept those given below are also transfered to
+  the link.</p>
+</desc>
+
+<attr name='label' value='string'>
+  <p>The link text. If omitted no link will be returned, useful in
+  combination with the args-variable argument.</p>
+</attr>
+
+<attr name='props' value='javascript object name' default='default_props'>"+
+props_arg+
+#"<p>A small example that uses a props object:
+  <ex type='box'>
+<js-include file='CrossPlatform.js'/>
+<js-include file='Popup.js'/>
+
+<style><js-insert name='style'/></style>
+<js-insert name='div'/>
+
+<script language='javascript'>
+  popup_props = new PopupProperties(15, 0);
+  popup_props.setHideDelay(500);
+</script>
+
+<js-popup props='popup_props' label='popup'>
+  <h1>This is a popup!</h1>
+</js-popup></ex></p>
+</attr>
+
+<attr name='args-variable' value='RXML variable name'>
+  <p>Arguments to the generated anchor tag will be stored in this variable.
+  This argument is useful if the target to the popup should be an image,
+  see the example below.
+  <ex type='box'>
+<js-include file='CrossPlatform.js'/>
+<js-include file='Popup.js'/>
+
+<style><js-insert name='style'/></style>
+<js-insert name='div'/>
+
+<js-popup args-variable='popup-args'>
+  <h1>This is a popup!</h1>
+</js-popup>
+
+<gtext ::='&form.popup-args;'>popup</gtext></ex></p>
+</attr>
+
+<attr name='event' value='javascript event' default='onMouseOver'>
+  <p>The javascript event that should trigger the popup.</p>
+</attr>
+
+<attr name='z-index' value='number' default='1'>
+  <p>The z index for the popup's div tag.</p>
+</attr>",
+
+//----------------------------------------------------------------------
+
+"js-write":#"<desc cont='cont'>
+  <p><short>Converts its content into javascript document.write.</short>
+  The output will be turned into a javascript tag and written to the
+  page with the document.write funtion. This is usefull for compatibility
+  with browsers that has disabled javascript.</p>
+</desc>",
+
+//----------------------------------------------------------------------
+
+"emit#js-hide-popup":({ #"<desc plugin='plugin'>
+  <p><short>Creates a link event to hide popups.</short></p>
+  This plugin can be used in hierachical menues on those links that are not
+  popups i.e. direct links on the same level as other links that leads to
+  a popup.
+  <ex type='box'>
+<js-include file='CrossPlatform.js'/>
+<js-include file='Popup.js'/>
+
+<style><js-insert name='style'/></style>
+<js-insert name='div'/>
+
+<emit source='js-hide-popup'>
+  <a href='index.xml' ::='&_.args;'>Hide</a>
+</emit><br />
+<js-popup label='Show'>
+    ...
+</js-popup></ex>
+</desc>",
+([
+  "&_.args;":#"<desc ent='ent'>
+    <p>The javascript event arguments.</p>
+  </desc>"
+]) }),
+
+//----------------------------------------------------------------------
+
+"emit#js-dynamic-popup":({ #"<desc plugin='plugin'>
+  <p><short>Creates a dynamic load popup.</short>
+  This plugin creates a link to a dynamic loaded popup. The content of
+  the popup will be loaded from the specified url.</p>
+
+  <p>Before this tag can be used a layer with the same name as this popup
+  must be created with the &lt;js-dynamic-popup-div&gt; tag.</p>
+
+  <p>In order to use this tag the components <tt>CrossPlatform.js</tt>,
+  <tt>Popup.js</tt> and <tt>DynamicLoading.js</tt> must be included in
+  the page with the &lt;js-include&gt; tag.</p>
+
+  <p>Note that dynamic loaded layers don't work with Netscape 6 browsers.
+  Please see the comment in the begining of the <tt>DynamicLoading.js</tt>
+  component file for more information.</p>
+</desc>
+
+<attr name='src' value='url' required='required'>
+  <p>The page that should be loaded inte the popup.</p>
+</attr>
+
+<attr name='name' value='string' required='required'>
+  <p>The name of the popup.</p>
+</attr>
+
+<attr name='props' value='javascript object name' default='default_props'>"+
+props_arg+
+#"</attr>
+
+<p>An example that loads index.xml into a popup layer when the link is
+clicked.</p>
+
+<ex type='box'>
+<js-include file='CrossPlatform.js'/>
+<js-include file='Popup.js'/>
+<js-include file='DynamicLoading.js'/>
+
+<js-dynamic-popup-div name='popup'/>
+
+<emit source='js-dynamic-popup' name='popup' src='index.xml'>
+  <a href='javascript:void(0);' onClick='&_.event;'>Show</a>
+</emit></ex>",
+([
+  "&_.event;":#"<desc ent='ent'>
+    <p>The javascript event.</p>
+  </desc>"
+])}),
+
+//----------------------------------------------------------------------
+
+"js-dynamic-popup-div":#"<desc>
+  <p><short>Creates a dynamic popup div/layer tag.</short>
+  This tag creates a div or layer tag depending on the browser used.
+  Use this tag together with the &lt;emit#js-dunamic-popup&gt; tag.</p>
+</desc>
+
+<attr name='name' value='string' required='required'>
+  <p>The name of the div/layer.</p>
+</attr>
+
+<attr name='z-index' value='number' default='1'>
+  <p>The z index for the div/layer.</p>
+</attr>",
+
+//----------------------------------------------------------------------
+
+"js-external":#"<desc cont='cont'>
+  <p><short>Creates an external javascript file of its content.</short>
+  The tag creates an external javascript file containing the content of
+  the tag in javascript document.write fashion. When the browser loads the
+  document the external file will write the contents back to the document.</p>
+
+  <p>This tag can be used to exclude some parts of the document, replacing
+  each with a reference to an external file. By sharing fragments that are
+  identical and occur in several pages, page loading time can be shortened.
+  The gain depends on the cache policy of the browser.</p>
+
+  <p>An important issue is that if the server uses a https port then
+  the browsers won't cache the external files and using this tag will not
+  result in increased performance.</p>
+
+  <p>Note that it is not possible to put a &lt;js-insert&gt; tag inside
+  this tag because that tag uses a filter module to insert its content.
+  Other RXML tags should work, however.</p>
+</desc>",
+
+]);
+#endif
