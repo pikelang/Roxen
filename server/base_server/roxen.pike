@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.804 2002/09/25 18:04:05 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.805 2002/10/01 14:37:17 anders Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -1042,19 +1042,50 @@ void set_port_options( string key, mapping value )
   save( );
 }
 
-Configuration find_configuration_for_url(string url)
-//! Tries to locate a suitable configuration for a given URL,
-//! Default sites and fallbacks are not considered.
+Configuration find_configuration_for_url(object url, void|string url_base)
+//! Tries to to determine if a request for the given url would end up
+//! in this server, and if so returns the corresponding configuration.
 {
   Configuration c;
+  string url_with_port = sprintf("%s://%s:%d%s", url->scheme, url->host,
+				 url->port,
+				 (sizeof(url->path)?url->path:"/"));
   foreach( indices(urls), string u )
   {
     mixed q = urls[u];
-    if( glob( u+"*", url ) )
+    if( glob( u+"*", url_with_port ) )
+    {
       if( (c = q->port->find_configuration_for_url(url, 0, 1 )) )
       {
-	break;
+	if (search(u, "*") != -1 ||
+	    search(u, "?") != -1)
+	{
+	  // Something like "http://*:80/"
+
+	  // Base url
+	  if (url_base)
+	  {
+	    Standards.URI base = Standards.URI(url_base);
+	    if (url->host == base->host &&
+		url->port == base->port &&
+		url->scheme == base->scheme)
+	      break;
+	  }
+
+	  // Confguration location
+	  Standards.URI config = Standards.URI(c->get_url());
+	  if (url->host == config->host &&
+	      url->port == config->port &&
+	      url->scheme == config->scheme)
+  	    break;
+
+	  // Do not match
+	  c = 0;
+	}
+	else
+	  break;
       }
+    }
   }
   return c;
 }
