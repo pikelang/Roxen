@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.180 2000/09/25 06:29:45 per Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.181 2000/10/10 22:02:59 jhs Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1350,6 +1350,13 @@ string simpletag_autoformat(string tag, mapping m, string s, RequestID id)
 
   string p=(m["class"]?"<p class=\""+m["class"]+"\">":"<p>");
 
+  if(!m->nonbsp)
+  {
+    s = replace(s, "\n ", "\n&nbsp;"); // "|\n |"      => "|\n&nbsp;|"
+    s = replace(s, "  ", "&nbsp; ");  //  "|   |"      => "|&nbsp;  |"
+    s = replace(s, "  ", " &nbsp;"); //   "|&nbsp;  |" => "|&nbsp; &nbsp;|"
+  }
+
   if(!m->nobr) {
     s = replace(s, "\n", "<br />\n");
     if(m->p) {
@@ -1857,6 +1864,13 @@ using the pre tag.
 
 <attr name=nobr>
  Do not replace newlines with <tag>br /</tag>:s.
+</attr>
+
+<attr name=nonbsp>
+ Do not turn consecutive spaces into interleaved breakable/nonbreakable spaces.
+ When this attribute is not given, the tag will behave more or less like HTML:s
+ <tag>pre</tag> tag, making whitespace indention work, without the usually
+ unwanted effect of really long lines extending the browser window width.
 </attr>
 
 <attr name=class value=string>
