@@ -1,9 +1,9 @@
 /*
- * $Id: resolv.pike,v 1.3 1998/02/20 12:54:20 mirar Exp $
+ * $Id: resolv.pike,v 1.4 1998/02/20 20:07:28 mirar Exp $
  */
 
 inherit "wizard";
-constant name= "Maintenance//Resolv path...";
+constant name= "Maintenance//Resolve path...";
 constant doc = ("Check which module handles the path you enter in the form");
 
 string module_name(function|object m)
