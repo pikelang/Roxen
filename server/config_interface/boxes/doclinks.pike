@@ -30,10 +30,10 @@ string parse( RequestID id )
       if (list_style)
 	docs +=
 	  "<li style='margin-left: -0.9em; margin-right: 0.9em;'>"+
-	  s+"</li>";
+	  s+"</br></li>\n";
       else
 	docs +=
-	  "<tr><td valign='top'>"+s+"</td></tr>";
+	  "<tr><td valign='top'>"+s+"</td></tr>\n";
     }
   };
   
