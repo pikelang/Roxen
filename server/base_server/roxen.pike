@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.532 2000/08/22 23:30:18 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.533 2000/08/23 16:06:29 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -3720,7 +3720,8 @@ class LogFormat
   void log( function do_write, RequestID id, mapping file );
   static void do_async_write( string host, string data, string ip, function c )
   {
-    c( replace( data, "\4711", host||ip ) );
+    if( c ) 
+      c( replace( data, "\4711", (host||ip) ) );
   }
 }
 
@@ -3807,6 +3808,7 @@ function compile_log_format( string fmt )
   inherit ___LogFormat;
   void log( function callback, object request_id, mapping file )
   {
+     if(!callback) return;
      string data = sprintf( %O %{, %s%} );
 ", format, args );
  
