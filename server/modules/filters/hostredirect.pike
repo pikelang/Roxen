@@ -6,11 +6,9 @@
 // cheap way (IP number wise) to do virtual hosting. Note that this
 // won't work with all clients.
 
-// responsible for the changes to the original version 1.3: Martin Baehr
-mbaehr@iaeste.or.at
+// responsible for the changes to the original version 1.3: Martin Baehr mbaehr@iaeste.or.at
 
-string cvs_version = "$Id: hostredirect.pike,v 1.3mb1.0 1997/01/23
-13:48:02 mb Exp $";
+string cvs_version = "$Id: hostredirect.pike,v 1.5.2.1 1997/02/06 10:44:08 grubba Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -120,10 +118,8 @@ mixed first_try(object id)
   }
   to = patterns[host];
   if(!to) {
-    //    if(patterns["default"])            //since "default" can also
-have a HTTP
-    //  id->not_query = patterns["default"]; //redirect we don't get
-away that easy
+    //    if(patterns["default"])            //since "default" can also have a HTTP
+    //  id->not_query = patterns["default"]; //redirect we don't get away that easy
     return 0;
   }
   if(host=="default")
