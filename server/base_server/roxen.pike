@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.378 1999/12/28 01:42:38 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.379 1999/12/28 02:16:39 nilsson Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -17,6 +17,7 @@ ArgCache argcache;
 #include <module.h>
 #include <variables.h>
 #include <stat.h>
+#include <version.h>
 
 // Inherits
 inherit "global_variables";
@@ -25,7 +26,7 @@ inherit "disk_cache";
 inherit "language";
 inherit "supports";
 
-// --- Debug defins ---
+// --- Debug defines ---
 
 // #define SSL3_DEBUG
 // #define PRIVS_DEBUG
@@ -44,21 +45,8 @@ inherit "supports";
 # define THREAD_WERR(X)
 #endif
 
-/*
- * Version information
- */
-constant __roxen_version__ = "1.4";
-constant __roxen_build__ = "0";
-
-#ifdef __NT__
-string real_version= "Roxen Challenger/"+__roxen_version__+"."+__roxen_build__+" NT";
-#else
-string real_version= "Roxen Challenger/"+__roxen_version__+"."+__roxen_build__;
-#endif
-
 
 // Prototypes for other parts of roxen.
-
 
 class RoxenModule
 {
