@@ -2,7 +2,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: tableborder.pike,v 1.7 2000/07/03 05:14:21 nilsson Exp $";
+constant cvs_version = "$Id: tableborder.pike,v 1.8 2000/07/20 14:50:53 jhs Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FILTER;
 constant module_name = "Table Unveiler";
@@ -52,7 +52,7 @@ mapping filter(mapping result, RequestID id)
   || !id->prestate->tables     // No prestate, no action.
   || result->type!="text/html" // Only parse html.
     )
-    return result;
+    return 0; // Signal that we didn't rewrite the result for good measure.
 
   result->data = recursive_parse(result->data);
   return result;
