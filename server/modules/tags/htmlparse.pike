@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 
 
-string cvs_version = "$Id: htmlparse.pike,v 1.11 1996/12/09 04:31:39 neotron Exp $";
+string cvs_version = "$Id: htmlparse.pike,v 1.12 1996/12/10 23:14:37 neotron Exp $";
 #pragma all_inline 
 
 #include <config.h>
@@ -154,7 +154,7 @@ void start()
       }
 
 
-    if(names_file=open(olf+".names", "r"))
+    if(names_file=open(olf+".names", "wrca"))
     {
       cnum=0;
       tmp=parse_accessed_database(names_file->read(0x7ffffff));

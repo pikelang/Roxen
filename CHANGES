@@ -1,6 +1,9 @@
 Changes since Roxen 1.1 alpha 4
 -----------------------------------------------
 
+o Roxen didn't write entries to 'Accessed.names' file, because this
+  file was opened read-only. Fixed. Thanks to Jordi Murgo.
+
 o Fixed support for <form method=POST enctype=multipart/form-data>.
   It is now decoded just like any form-request (that is, from pike
   you will get id->variables->variable_name variables, with the
