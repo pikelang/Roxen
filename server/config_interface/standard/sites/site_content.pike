@@ -290,7 +290,7 @@ string parse( RequestID id )
      default: /* Status info */
        string res="<br><blockquote><h1>Urls</h1>";
        foreach( conf->query( "URLs" ), string url )
-         res += url+"<br>";
+         res += "<a href='"+url+"'>"+url+"</a><br>";
 
        res+="<h1><cf-locale get=eventlog></h1><insert file=log.pike nocache>";
 
