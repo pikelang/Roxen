@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.415 2003/01/13 17:57:54 anders Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.416 2003/01/14 09:50:19 anders Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -5604,7 +5604,7 @@ constant tagdoc=([
 "roxen-automatic-charset-variable":#"<desc type='tag'><p>
  If put inside a form, the right character encoding of the submitted
  form can be guessed by Roxen WebServer. The tag will insert another
- tag that forces the client to submit the string \"едц#x829f;\". Since the
+ tag that forces the client to submit the string \"едц&#x829f;\". Since the
  WebServer knows the name and the content of the form variable it can
  select the proper character decoder for the requests variables.
 </p>
