@@ -1,6 +1,6 @@
 // -*- pike -*-
 //
-// $Id: roxen.h,v 1.28 2004/04/21 16:02:49 mast Exp $
+// $Id: roxen.h,v 1.29 2004/04/21 16:08:41 mast Exp $
 
 #ifndef _ROXEN_H_
 
@@ -37,7 +37,7 @@ mixed get_locale();
 #ifdef DEBUG
 #define DO_IF_DEBUG(X...) X
 #define ASSERT_IF_DEBUG(TEST, ARGS...) do {				\
-    if (!(TEST)) error ("Assertion failed: " #TEST, ARGS);		\
+    if (!(TEST)) error ("Assertion failed: " #TEST "\n", ARGS);		\
   } while (0)
 #else
 #define DO_IF_DEBUG(X...)
