@@ -1,5 +1,5 @@
 /*
- * $Id: Client.pike,v 1.10 1997/09/14 17:32:59 grubba Exp $
+ * $Id: Client.pike,v 1.11 1998/01/19 21:04:15 mirar Exp $
  */
 
 #define error(X) throw( ({ X, backtrace() }) )
@@ -110,7 +110,7 @@ void create(string|object ip, int port, string cl,
 
   myclass = cl;
 
-  if(!lck) { nolock=1; lock = class{ void lock(){}}(); }
+  if(!lck) { nolock=1; lock = class lambda17{ void lock(){}}(); }
 
   string v = encode_value(([ "add_refs":myclass ]));
 
