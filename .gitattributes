@@ -104,6 +104,7 @@ worldmap binary
 /server/config_interface/actions/openfiles.pike foreign_ident
 /server/config_interface/actions/proc.pike foreign_ident
 /server/config_interface/actions/reloadconfigurations.pike foreign_ident
+/server/config_interface/actions/request_profiling.pike foreign_ident
 /server/config_interface/actions/resolv.pike foreign_ident
 /server/config_interface/actions/restart.pike foreign_ident
 /server/config_interface/actions/ssl_common.pike foreign_ident
