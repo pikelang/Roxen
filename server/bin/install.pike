@@ -1,5 +1,5 @@
 #!bin/pike -m lib/pike/master.pike
-string cvs_version = "$Id: install.pike,v 1.12 1997/05/08 23:51:02 grubba Exp $";
+string cvs_version = "$Id: install.pike,v 1.13 1997/05/09 20:37:17 grubba Exp $";
 
 #include <simulate.h>
 #include <roxen.h>
@@ -356,19 +356,34 @@ void main(int argc, string *argv)
      configuration_dir != "../configurations/")
     configuration_dir_changed = 1;
 
-  write(sprintf("\nUsing %s, port %d...\n\n", host, port));
-  
-  setglobvar("_v",  CONFIGURATION_FILE_LEVEL);
   int have_gmp = 0;
   catch(have_gmp = sizeof(indices(master()->resolv("Gmp"))));
+
+  string prot_prog = "http";
+  string prot_spec = "http://";
+  string prot_extras = "";
+
   if (have_gmp) {
-    setglobvar("ConfigPorts", ({ ({ port, "ssl3", "ANY", "cert-file testca.pem" }) }));
-    setglobvar("ConfigurationURL",  "https://"+host+":"+port+"/");
+    write("[1mUse SSL3 (https://) for the configuration-interface [Y/n][0m? ");
+    tmp = gets() - " ";
+    if (!strlen(tmp) || lower_case(tmp)[0] != 'n') {
+      prot_prog = "ssl3";
+      prot_spec = "https://";
+      prot_extras = "cert-file testca.pem";
+
+      write("Using SSL3 with the demo certificate \"testca.pem\".\n"
+	    "It is recommended that you change the certificate to one of your own.\n");
+    }
   } else {
-    write("No Gmp-module -- using HTTP\n");
-    setglobvar("ConfigPorts", ({ ({ port, "http", "ANY", "" }) }));
-    setglobvar("ConfigurationURL",  "http://"+host+":"+port+"/");
-  }    
+    write("[1mNo Gmp-module -- using http for the configuration-interface[0m.\n");
+  }
+
+  write(sprintf("\nStarting Roxen on %s%s:%d/ ...\n\n",
+		prot_spec, host, port));
+  
+  setglobvar("_v",  CONFIGURATION_FILE_LEVEL);
+  setglobvar("ConfigPorts", ({ ({ port, prot_prog, "ANY", prot_extras }) }));
+  setglobvar("ConfigurationURL",  prot_spec+host+":"+port+"/");
   setglobvar("logdirprefix", log_dir);
 
   write(popen("./start "
@@ -396,16 +411,16 @@ void main(int argc, string *argv)
     client = tmp;
   if(client)
   {
-    if (have_gmp) {
+    if (prot_prog == "ssl3") {
       write("Waiting for SSL3 to initialize...\n");
       sleep(60);
     } else {
       sleep(10);
     }
-    write("Running "+ client +" "+ (have_gmp?"https":"http")+"://"+host+":"+port+"/\n");
+    write("Running "+ client +" "+ prot_spec+host+":"+port+"/\n");
     run((client/" ")[0], @(client/" ")[1..100000], 
-	(have_gmp?"https":"http")+"://"+host+":"+port+"/");
+	prot_spec+host+":"+port+"/");
   } else
-    write("\nTune your favourite browser to "+(have_gmp?"https":"http")+"://"+host+":"+port+"/\n");
+    write("\nTune your favourite browser to "+prot_spec+host+":"+port+"/\n");
 }
 
