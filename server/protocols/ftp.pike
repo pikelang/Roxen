@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.42 2000/09/24 20:38:54 grubba Exp $
+ * $Id: ftp.pike,v 2.43 2000/12/05 22:23:47 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -3520,8 +3520,7 @@ class FTPSession
 
     logout();
 
-    conf->extra_statistics->ftp->sessions--;
-    conf->misc->ftp_users_now--;
+    port_obj->sessions--;
   }
 
   void create(object fd, object c)
@@ -3574,7 +3573,6 @@ void create(object f, object c)
   {
     c->sessions++;
     c->ftp_users++;
-    c->ftp_users_now++;
     FTPSession(f, c);
   }
 }
