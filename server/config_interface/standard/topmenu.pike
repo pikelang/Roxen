@@ -1,21 +1,20 @@
 #include <config_interface.h>
 #include <roxen.h>
 
-//<locale-token project="config_interface">LOCALE</locale-token>
-USE_DEFERRED_LOCALE;
-#define LOCALE(X,Y)	_DEF_LOCALE("config_interface",X,Y)
+//<locale-token project="roxen_config">LOCALE</locale-token>
+#define LOCALE(X,Y)	_STR_LOCALE("roxen_config",X,Y)
 
 constant tablist = "<tablist preparse ::=&usr.toptabs-args;>";
 
 array selections =
 ({
-  ({ LOCALE("cC", "Admin"),   "home",      "",                 0 }),
-  ({ LOCALE("cD", "Sites"),   "sites",     "sites/",           0 }),
-  ({ LOCALE("cE", "Globals"), "globals",   "global_settings/", 0 }),
-  ({ LOCALE("cF", "Ports"),   "ports",     "ports/",           0 }),
-  ({ LOCALE("cG", "Events"),  "event_log", "event_log/",       0 }),
-  ({ LOCALE("cH", "Tasks"),   "actions",   "actions/",   "Tasks" }),
-  ({ LOCALE("cI", "Docs"),    "docs",      "docs/",            0 }),
+  ({ LOCALE(212, "Admin"),   "home",      "",                 0 }),
+  ({ LOCALE(213, "Sites"),   "sites",     "sites/",           0 }),
+  ({ LOCALE(214, "Globals"), "globals",   "global_settings/", 0 }),
+  ({ LOCALE(215, "Ports"),   "ports",     "ports/",           0 }),
+  ({ LOCALE(216, "Events"),  "event_log", "event_log/",       0 }),
+  ({ LOCALE(196, "Tasks"),   "actions",   "actions/",   "Tasks" }),
+  ({ LOCALE(217, "Docs"),    "docs",      "docs/",            0 }),
 });
 
 string parse( RequestID id )

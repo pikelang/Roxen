@@ -1,5 +1,5 @@
 /*
- * $Id: update.pike,v 1.14 2000/06/29 13:24:01 js Exp $
+ * $Id: update.pike,v 1.15 2000/07/21 04:52:48 lange Exp $
  *
  * The Roxen Update Client
  * Copyright © 2000, Roxen IS.
@@ -31,6 +31,16 @@ inherit "roxenlib";
 #include <module.h>
 #include <stat.h>
 #include <config_interface.h>
+
+// --- Locale defines ---
+//<locale-token project="roxen_start">   LOC_S </locale-token>
+//<locale-token project="roxen_config">  LOC_C </locale-token>
+//<locale-token project="roxen_message"> LOC_M </locale-token>
+USE_DEFERRED_LOCALE;
+#define LOC_S(X,Y)	_STR_LOCALE("roxen_start",X,Y)
+#define LOC_C(X,Y)	_DEF_LOCALE("roxen_config",X,Y)
+#define LOC_M(X,Y)	_STR_LOCALE("roxen_message",X,Y)
+
 
 constant module_type = MODULE_PARSER|MODULE_CONFIG;
 constant module_name = "Update client";
@@ -785,10 +795,10 @@ class UpdateInfoFiles
     array(int) delete_packages=decode_ranges(lines[2]);
 
     if(sizeof(new_packages))
-      report_notice("Update: Found new packages: "+
-		    ((array(string))new_packages)*", "+"\n");
+      report_notice(LOC_S(5, "Update: Found new packages: %s\n"),
+		    ((array(string))new_packages)*", ");
     else
-      report_notice("Update: No new packages found.\n");
+      report_notice(LOC_S(6, "Update: No new packages found.\n"));
 
     if(sizeof(delete_packages))
       report_notice("Update: Deleting packages: "+

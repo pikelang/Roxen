@@ -1,3 +1,9 @@
+#include <roxen.h>
+
+//<locale-token project="roxen_config">LOCALE</locale-token>
+#define LOCALE(X,Y)	_STR_LOCALE("roxen_config",X,Y)
+
+
 string module_global_page( RequestID id, Configuration conf )
 {
   return "";
@@ -27,7 +33,7 @@ string parse( RequestID id )
     conf->enable_all_modules();
   id->misc->current_configuration = conf;
   if(id->variables->initial)
-    return "<tab first last selected>&locale.initial_variables;</tab>";
+    return "<tab first last selected>"+LOCALE(400, "Initial Variables")+"</tab>";
   if( sizeof( path ) == 1 )
   {
     string res="";

@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.324 2000/07/17 16:55:47 lange Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.325 2000/07/21 04:55:01 lange Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -21,13 +21,18 @@ mapping profile_map = ([]);
 
 #define CATCH(P,X) do{mixed e;if(e=catch{X;})report_error("While "+P+"\n"+describe_backtrace(e));}while(0)
 
-// Locale support...
-//<locale-token project="config_interface">LOCALE</locale-token>
-//<locale-token project="config_interface">DLOCALE</locale-token>
-#define LOCALE(X,Y)  _STR_LOCALE("config_interface",X,Y)
+// --- Locale defines ---
+//<locale-token project="roxen_start">   LOC_S  </locale-token>
+//<locale-token project="roxen_config">  LOC_C  </locale-token>
+//<locale-token project="roxen_message"> LOC_M  </locale-token>
+//<locale-token project="roxen_config"> DLOCALE </locale-token>
+#define LOC_S(X,Y)  _STR_LOCALE("roxen_start",X,Y)
+#define LOC_C(X,Y)  _STR_LOCALE("roxen_config",X,Y)
+#define LOC_M(X,Y)  _STR_LOCALE("roxen_message",X,Y)
 USE_DEFERRED_LOCALE;
-#define DLOCALE(X,Y) _DEF_LOCALE("config_interface",X,Y)
-#define CALL(X,Y)    _LOCALE_FUN("config_interface",X,Y)
+#define DLOCALE(X,Y) _DEF_LOCALE("roxen_config",X,Y)
+#define CALL(X,Y)    _LOCALE_FUN("roxen_config",X,Y)
+
 
 #ifdef THROTTLING_DEBUG
 #undef THROTTLING_DEBUG
@@ -525,7 +530,7 @@ class LogFile
     {
       remove_call_out( do_open );
       call_out( do_open, 120 ); 
-      report_error(LOCALE("j", "Failed to open logfile ")+fname+" "
+      report_error(LOC_M("", "Failed to open logfile")+" "+fname+" "
 #if constant(strerror)
                    "(" + strerror(errno()) + ")"
 #endif
@@ -719,26 +724,26 @@ public string status()
 		 "<tr align=\"right\"><td><b>%s:</b></td>"
 		 "<td>%8d</td><td>%.2f/%s</td>"
 		 "<td><b>%s:</b></td><td>%.2fMB</td></tr>\n",
-		 LOCALE("k","Sent data"),((float)sent/(1024.0*1024.0)),
-		 (((float)sent)/(1024.0*1024.0)/dt) * 8192.0, LOCALE("m","sec"),
-		 LOCALE("n","Sent headers"),((float)hsent)/(1024.0*1024.0),
-		 LOCALE("o","Number of requests"), requests,
-		 (((float)requests * 60.0)/dt), LOCALE("p","min"),
-		 LOCALE("q","Received data"),((float)received)/(1024.0*1024.0));
+		 LOC_C(2,"Sent data"),((float)sent/(1024.0*1024.0)),
+		 (((float)sent)/(1024.0*1024.0)/dt) * 8192.0, LOC_C(3,"sec"),
+		 LOC_C(4,"Sent headers"),((float)hsent)/(1024.0*1024.0),
+		 LOC_C(5,"Number of requests"), requests,
+		 (((float)requests * 60.0)/dt), LOC_C(6,"min"),
+		 LOC_C(7,"Received data"),((float)received)/(1024.0*1024.0));
 
   if (!zero_type(misc->ftp_users)) {
     res += sprintf("<tr align=\"right\"><td><b>%s:</b></td><td>%8d</td>"
 		   "<td>%.2f/%s</td>"
 		   "<td><b>%s:</b></td><td>%d</td></tr>\n",
-		   LOCALE("r","FTP users (total)"), misc->ftp_users,
-		   (((float)misc->ftp_users*(float)60.0)/dt), LOCALE("p","min"),
-		   LOCALE("s","FTP users (now)"), misc->ftp_users_now);
+		   LOC_C(8,"FTP users (total)"), misc->ftp_users,
+		   (((float)misc->ftp_users*(float)60.0)/dt), LOC_C(6,"min"),
+		   LOC_C(9,"FTP users (now)"), misc->ftp_users_now);
   }
   res += "</table></p>\n\n";
 
   if ((extra_statistics->ftp) && (extra_statistics->ftp->commands)) {
     // FTP statistics.
-    res += "<b>"+LOCALE("t", "FTP statistics") + ":</b><br />\n"
+    res += "<b>"+LOC_C(10, "FTP statistics") + ":</b><br />\n"
       "<ul><table>\n";
     foreach(sort(indices(extra_statistics->ftp->commands)), string cmd) {
       res += CALL("ftp_stat_line", "eng")
@@ -755,7 +760,7 @@ public array(string) userinfo(string u, RequestID|void id)
   if(auth_module) return auth_module->userinfo(u);
   else report_warning(sprintf("userinfo(): %s\n"
 			      "%s\n",
-			      LOCALE("u", "No authorization module"),
+			      LOC_M("", "No authorization module"),
 			      describe_backtrace(backtrace())));
 }
 
@@ -764,7 +769,7 @@ public array(string) userlist(RequestID|void id)
   if(auth_module) return auth_module->userlist();
   else report_warning(sprintf("userlist(): %s\n"
 			      "%s\n",
-			      LOCALE("u", "No authorization module"),
+			      LOC_M("", "No authorization module"),
 			      describe_backtrace(backtrace())));
 }
 
@@ -774,7 +779,7 @@ public array(string) user_from_uid(int u, RequestID|void id)
     return auth_module->user_from_uid(u);
   else report_warning(sprintf("user_from_uid(): %s\n"
 			      "%s\n",
-			      LOCALE("u", "No authorization module"),
+			      LOC_M("", "No authorization module"),
 			      describe_backtrace(backtrace())));
 }
 
@@ -875,7 +880,7 @@ int|mapping check_security(function|object a, RequestID id, void|int slevel)
       case MOD_DENY: // deny ip=...
 
 	if(level[1](id->remoteaddr))
-	  return Roxen.http_low_answer(403, "<h2>"+LOCALE("v","Access forbidden")+"</h2>");
+	  return Roxen.http_low_answer(403, "<h2> Access forbidden </h2>");
 	break;
 
       case MOD_USER: // allow user=...
@@ -928,7 +933,7 @@ int|mapping check_security(function|object a, RequestID id, void|int slevel)
 
   if (err) {
     report_error("check_security(): %s:\n%s\n",
-		 LOCALE("w", "Error during module security check"),
+		 LOC_M("", "Error during module security check"),
 		 describe_backtrace(err));
     return 1;
   }
@@ -974,7 +979,7 @@ void clear_memory_caches()
     if (m && m->clear_memory_caches)
       if (mixed err = catch( m->clear_memory_caches() ))
 	report_error("clear_memory_caches() "+
-		     LOCALE("x", "failed for module %O:\n%s\n"),
+		     LOC_M("", "failed for module %O:\n%s\n"),
 		     otomod[m], describe_backtrace(err));
 }
 
@@ -1866,7 +1871,7 @@ public array open_file(string fname, string mode, RequestID id, void|int interna
     return ({ file->file, file });
   }
   id->not_query = oq;
-  return ({ 0, (["error":501, "data":LOCALE("y","Not implemented") ]) });
+  return ({ 0, (["error":501, "data":"Not implemented." ]) });
 }
 
 
@@ -2248,7 +2253,7 @@ RoxenModule reload_module( string modname )
 
     catch( mi->update_with( nm,0 ) ); // This is sort of nessesary...   
 
-    nm->report_notice(LOCALE("z", "Reloaded %s.\n"), mi->get_name());
+    nm->report_notice(LOC_C(11, "Reloaded %s.\n"), mi->get_name());
     destruct( old_module );
   }
 
@@ -2343,7 +2348,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 #endif
 	string bt=describe_backtrace(err);
 	report_error("enable_module(): " +
-		     LOCALE("A", "Error while initiating module copy of %s%s"),
+		     LOC_M("", "Error while initiating module copy of %s%s"),
 		     moduleinfo->get_name(), (bt ? ":\n"+bt : "\n"));
 #ifdef MODULE_DEBUG
       }
@@ -2372,8 +2377,8 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
     if(module_type != MODULE_CONFIG)
     {
       if (err = catch {
-	me->defvar("_priority", 5, DLOCALE("bH", "Priority"), TYPE_INT_LIST,
-		   DLOCALE("bI", "The priority of the module. 9 is highest and 0 is lowest."
+	me->defvar("_priority", 5, DLOCALE(12, "Priority"), TYPE_INT_LIST,
+		   DLOCALE(13, "The priority of the module. 9 is highest and 0 is lowest."
 		   " Modules with the same priority can be assumed to be "
 		   "called in random order"),
 		   ({0, 1, 2, 3, 4, 5, 6, 7, 8, 9}));
@@ -2384,15 +2389,38 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 
     if(module_type != MODULE_LOGGER && module_type != MODULE_PROVIDER)
     {
+      me->defvar("_sec_group", "user", DLOCALE(14, "Security: Realm"), 
+		 TYPE_STRING,
+		 DLOCALE(15, "The realm to use when requesting password from the "
+			 "client. Usually used as an informative message to the "
+			 "user."));
+      
+      me->defvar("_seclevels", "", DLOCALE(16, "Security: Patterns"), 
+		 TYPE_TEXT_FIELD,
+		 DLOCALE(17, "This is the 'security level=value' list.<br />"
+			 "Each security level can be any or more from this list:"
+			 "<hr noshade=\"noshade\" />"
+			 "allow ip=<i>IP</i>/<i>bits</i><br />"
+			 "allow ip=<i>IP</i>:<i>mask</i><br />"
+			 "allow ip=<i>pattern</i><br />"
+			 "allow user=<i>username</i>,...<br />"
+			 "deny ip=<i>IP</i>/<i>bits</i><br />"
+			 "deny ip=<i>IP</i>:<i>mask</i><br />"
+			 "deny ip=<i>pattern</i><br />"
+			 "<hr noshade=\"noshade\" />"
+			 "In patterns: * matches one or more characters, "
+			 "and ? matches one character."
+			 "<p>In username: 'any' stands for any valid account "
+			 "(from .htaccess"
+			 " or an auth module. The default (used when _no_ "
+			 "entries are present) is 'allow ip=*', allowing"
+			 " everyone to access the module.</p>"));
+
       if(!(module_type & MODULE_PROXY))
       {
-	me->defvar("_sec_group", "user", DLOCALE("bJ", "Security: Realm"), TYPE_STRING,
-		   DLOCALE("bK", "The realm to use when requesting password from the "
-		   "client. Usually used as an informative message to the "
-		   "user."));
-
-	me->defvar("_seclvl",  0, DLOCALE("bL", "Security: Security level"), TYPE_INT,
-		   DLOCALE("bM", "The modules security level is used to determine if a "
+	me->defvar("_seclvl",  0, DLOCALE(18, "Security: Security level"), 
+		   TYPE_INT,
+		   DLOCALE(19, "The modules security level is used to determine if a "
 		   " request should be handled by the module."
 		   "\n<p><h2>Security level vs Trust level</h2>"
 		   " Each module has a configurable <i>security level</i>."
@@ -2425,48 +2453,8 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 		   " \"Filsystem module\" could later be handled by the"
 		   " \"CGI module\".</p>"));
 
-	me->defvar("_seclevels", "", DLOCALE("bN", "Security: Patterns"), TYPE_TEXT_FIELD,
-		   DLOCALE("bP", "This is the 'security level=value' list.<br />"
-		   "Each security level can be any or more from this list:"
-		   "<hr noshade=\"noshade\" />"
-		   "allow ip=<i>IP</i>/<i>bits</i><br />"
-		   "allow ip=<i>IP</i>:<i>mask</i><br />"
-		   "allow ip=<i>pattern</i><br />"
-		   "allow user=<i>username</i>,...<br />"
-		   "deny ip=<i>IP</i>/<i>bits</i><br />"
-		   "deny ip=<i>IP</i>:<i>mask</i><br />"
-		   "deny ip=<i>pattern</i><br />"
-		   "<hr noshade=\"noshade\" />"
-		   "In patterns: * matches one or more characters, "
-		   "and ? matches one character."
-		   "<p>In username: 'any' stands for any valid account "
-		   "(from .htaccess"
-		   " or an auth module. The default (used when _no_ "
-		   "entries are present) is 'allow ip=*', allowing"
-		   " everyone to access the module.</p>"));
       } else {
 	me->definvisvar("_seclvl", -10, TYPE_INT); /* A very low one */
-
-	me->defvar("_sec_group", "user", DLOCALE("bJ", "Security: Realm"), TYPE_STRING,
-		   DLOCALE("bK", "The realm to use when requesting password from the "
-		   "client. Usually used as an informative message to the "
-		   "user."));
-
-	me->defvar("_seclevels", "", DLOCALE("bN", "Security: Patterns"),
-		   TYPE_TEXT_FIELD,
-		   DLOCALE("bQ", "This is the 'security level=value' list.<br />"
-		   "Each security level can be any or more from "
-		   "this list:<br />"
-		   "<hr noshade=\"noshade\" />"
-		   "allow ip=pattern<br />"
-		   "allow user=username,...<br />"
-		   "deny ip=pattern<br />"
-		   "<hr noshade=\"noshade\" />"
-		   "In patterns: * is on or more characters, ? is one "
-		   " character."
-		   "<p>In username: 'any' stands for any valid account"
-		   " (from .htaccess"
-		   " or an auth module. The default is 'deny ip=*'.</p>"));
       }
     }
   } else {
@@ -2516,7 +2504,7 @@ void call_start_callbacks( RoxenModule me,
       report_debug("\bERROR\n");
 #endif
     string bt=describe_backtrace(err);
-    report_error(LOCALE("A", "Error while initiating module copy of %s%s"),
+    report_error(LOC_M("", "Error while initiating module copy of %s%s"),
 			moduleinfo->get_name(), (bt ? ":\n"+bt : "\n"));
     
     /* Clean up some broken references to this module. */
@@ -2540,7 +2528,7 @@ void call_start_callbacks( RoxenModule me,
     if (enable_module_batch_msgs) report_debug("\bERROR\n");
 #endif
     string bt=describe_backtrace(err);
-    report_error(LOCALE("A", "Error while initiating module copy of %s%s"),
+    report_error(LOC_M("", "Error while initiating module copy of %s%s"),
 			moduleinfo->get_name(), (bt ? ":\n"+bt : "\n"));
     pr = 3;
   }
@@ -2572,7 +2560,7 @@ void call_start_callbacks( RoxenModule me,
       if (enable_module_batch_msgs) report_debug("\bERROR\n");
 #endif
     string bt=describe_backtrace(err);
-    report_error(LOCALE("A", "Error while initiating module copy of %s%s"),
+    report_error(LOC_M("", "Error while initiating module copy of %s%s"),
 			moduleinfo->get_name(), (bt ? ":\n"+bt : "\n"));
     }
 
@@ -2592,7 +2580,7 @@ void call_start_callbacks( RoxenModule me,
       if (enable_module_batch_msgs) report_debug("\bERROR\n");
 #endif
     string bt=describe_backtrace(err);
-    report_error(LOCALE("A", "Error while initiating module copy of %s%s"),
+    report_error(LOC_M("", "Error while initiating module copy of %s%s"),
 			moduleinfo->get_name(), (bt ? ":\n"+bt : "\n"));
     }
 
@@ -2690,7 +2678,7 @@ int disable_module( string modname, int|void nodest )
   if(!module)
   {
     report_error("disable_module(): " +
-		 LOCALE("B", "Failed to disable module:\n"
+		 LOC_M("", "Failed to disable module:\n"
 			"No module by that name: \"%s\".\n"), modname);
     return 0;
   }
@@ -2706,7 +2694,7 @@ int disable_module( string modname, int|void nodest )
   if(!me)
   {
     report_error("disable_module(): " +
-		 LOCALE("C", "Failed to disable module \"%s\".\n"),
+		 LOC_M("", "Failed to disable module \"%s\".\n"),
 		 descr);
     return 0;
   }
@@ -2715,7 +2703,7 @@ int disable_module( string modname, int|void nodest )
     if (mixed err = catch (me->stop())) {
       string bt=describe_backtrace(err);
       report_error("disable_module(): " +
-		   LOCALE("D", "Error while disabling module %s%s"),
+		   LOC_M("", "Error while disabling module %s%s"),
 		   descr, (bt ? ":\n"+bt : "\n"));
     }
 
@@ -2925,7 +2913,7 @@ void low_init()
   {
     if( !forcibly_added[ tmp_string ] )
       if(err = catch( enable_module( tmp_string )))
-	report_error(LOCALE("E", "Failed to enable the module %s. Skipping.\n%s"),
+	report_error(LOC_M("", "Failed to enable the module %s. Skipping.\n%s"),
 			    tmp_string, describe_backtrace(err));
   }
   enable_module_batch_msgs = 0;
@@ -2950,29 +2938,29 @@ void low_init()
   after_init_hooks = ({});
 
   inited = 1;
-  report_notice(LOCALE("F", "All modules for %s enabled in %3.1f seconds\n\n"),
-                query_name(),(gethrtime()-start_time)/1000000.0);
+  report_notice(LOC_S(4, "All modules for %s enabled in %3.1f seconds") +
+		"\n\n", query_name(), (gethrtime()-start_time)/1000000.0);
 }
 
 void create(string config)
 {
   name=config;
 
-  defvar("default_server", 0, DLOCALE("bR", "Default site"),
+  defvar("default_server", 0, DLOCALE(20, "Default site"),
 	 TYPE_FLAG,
-	 DLOCALE("bS", "If true, this site will be selected in preference of "
+	 DLOCALE(21, "If true, this site will be selected in preference of "
 	 "other sites when virtual hosting is used and no host "
 	 "header is supplied, or the supplied host header does not "
 	 "match the address of any of the other servers.") );
 
-  defvar("comment", "", DLOCALE("bT", "Virtual server comment"),
+  defvar("comment", "", DLOCALE(22, "Virtual server comment"),
 	 TYPE_TEXT_FIELD|VAR_MORE,
-	 DLOCALE("bU", "This text will be visible in the administration "
+	 DLOCALE(23, "This text will be visible in the administration "
 		 "interface, it can be quite useful to use as a memory helper."));
 
-  defvar("name", "", DLOCALE("bV", "Virtual server name"),
+  defvar("name", "", DLOCALE(24, "Virtual server name"),
 	 TYPE_STRING|VAR_MORE,
-	 DLOCALE("bW", "This is the name that will be used in the configuration "
+	 DLOCALE(25, "This is the name that will be used in the configuration "
 	 "interface. If this is left empty, the actual name of the "
 	 "virtual server will be used."));
 
@@ -2980,9 +2968,9 @@ void create(string config)
 	 "404: $host $referer - [$cern_date] \"$method $resource $protocol\" 404 -\n"
 	 "500: $host $referer ERROR [$cern_date] \"$method $resource $protocol\" 500 -\n"
 	 "*: $host - - [$cern_date] \"$method $resource $protocol\" $response $length",
-	 DLOCALE("bX", "Logging: Format"),
+	 DLOCALE(26, "Logging: Format"),
 	 TYPE_TEXT_FIELD|VAR_MORE,
-	 DLOCALE("bY", "What format to use for logging. The syntax is:\n"
+	 DLOCALE(27, "What format to use for logging. The syntax is:\n"
 	 "<pre>"
 	 "response-code or *: Log format for that response code\n\n"
 	 "Log format is normal characters, or one or more of the "
@@ -3016,13 +3004,13 @@ void create(string config)
 	 "                  by the client, otherwise '0'\n"
 	 "</pre>"), 0, lambda(){ return !query("Log");});
 
-  defvar("Log", 1, DLOCALE("bZ", "Logging: Enabled"), 
-	 TYPE_FLAG, DLOCALE("b0", "Log requests"));
+  defvar("Log", 1, DLOCALE(28, "Logging: Enabled"), 
+	 TYPE_FLAG, DLOCALE(29, "Log requests"));
 
   // FIXME: Mention it is relative to getcwd(). Can not be localized in pike 7.0.
   defvar("LogFile", "$LOGDIR/"+Roxen.short_name(name)+"/Log",
-	 DLOCALE("b1", "Logging: Log file"), TYPE_FILE,
-	 DLOCALE("b2", "The log file. "
+	 DLOCALE(30, "Logging: Log file"), TYPE_FILE,
+	 DLOCALE(31, "The log file. "
 	 ""
 	 "A file name. Some substitutions will be done:"
 	 "<pre>"
@@ -3035,26 +3023,26 @@ void create(string config)
 	 ,0, lambda(){ return !query("Log");});
 
   defvar("NoLog", ({ }),
-	 DLOCALE("b3", "Logging: No Logging for"), TYPE_STRING_LIST|VAR_MORE,
-         DLOCALE("b4", "Don't log requests from hosts with an IP number which "
+	 DLOCALE(32, "Logging: No Logging for"), TYPE_STRING_LIST|VAR_MORE,
+         DLOCALE(33, "Don't log requests from hosts with an IP number which "
 		 "matches any of the patterns in this list. This also affects "
 		 "the access counter log."), 
 	 0, lambda(){ return !query("Log");});
 
-  defvar("Domain", roxen->get_domain(), DLOCALE("b5", "Domain"), TYPE_STRING,
-	 DLOCALE("b6", "The domainname of the server. The domainname is used "
+  defvar("Domain", roxen->get_domain(), DLOCALE(34, "Domain"), TYPE_STRING,
+	 DLOCALE(35, "The domainname of the server. The domainname is used "
 	 "to generate default URLs, and to generate email addresses."));
 
   defvar("MyWorldLocation", "http://"+gethostname()+"/", 
-         DLOCALE("b7", "Primary Server URL"), TYPE_URL,
-	 DLOCALE("b8", "This is the main server URL, where your start page is "
+         DLOCALE(36, "Primary Server URL"), TYPE_URL,
+	 DLOCALE(37, "This is the main server URL, where your start page is "
 		 "located. Please note that you also have to configure the "
 		 "'URLs' variable."));
   
   defvar("URLs", 
          Variable.PortList( ({"http://*/"}), VAR_INITIAL,
-           DLOCALE("b9", "URLs"), 
-	   DLOCALE("ca", "Bind to these URLs. You can use '*' and '?' to perform"
+           DLOCALE(38, "URLs"), 
+	   DLOCALE(39, "Bind to these URLs. You can use '*' and '?' to perform"
 		   " globbing (using any of these will default to binding to "
 		   "all IP-numbers on your machine).  The possible protocols "
 		   "are http, fhttp (a faster version of the normal HTTP "
@@ -3062,9 +3050,9 @@ void create(string config)
 		   "https, ftp, ftps, gopher and tetris.")));
 
   defvar("InternalLoc", "/_internal/",
-	 DLOCALE("cb", "Internal module resource mountpoint"),
+	 DLOCALE(40, "Internal module resource mountpoint"),
          TYPE_LOCATION|VAR_MORE|VAR_DEVELOPER,
-         DLOCALE("cc", "Some modules may want to create links to internal "
+         DLOCALE(41, "Some modules may want to create links to internal "
 		 "resources. This setting configures an internally handled "
 		 "location that can be used for such purposes.  Simply select "
 		 "a location that you are not likely to use for regular "
@@ -3074,8 +3062,8 @@ void create(string config)
   // Throttling-related variables
 
   defvar("throttle", 0,
-         DLOCALE("cd", "Bandwidth Throttling: Server: Enabled"),TYPE_FLAG,
-	 DLOCALE("ce", "If set, per-server bandwidth throttling will be enabled. "
+         DLOCALE(42, "Bandwidth Throttling: Server: Enabled"),TYPE_FLAG,
+	 DLOCALE(43, "If set, per-server bandwidth throttling will be enabled. "
 		 "It will allow you to limit the total available bandwidth for "
 		"this Virtual Server.<br />Bandwidth is assigned using a Token Bucket. "
 		"The principle under which it works is: for each byte we send we use a token. "
@@ -3084,30 +3072,30 @@ void create(string config)
   //TODO: move this explanation somewhere on the website and just put a link.
 
   defvar("throttle_fill_rate", 102400,
-         DLOCALE("cf", "Bandwidth Throttling: Server: Average available bandwidth"),
+         DLOCALE(44, "Bandwidth Throttling: Server: Average available bandwidth"),
          TYPE_INT,
-	 DLOCALE("cg", "This is the average bandwidth available to this Virtual Server in "
+	 DLOCALE(45, "This is the average bandwidth available to this Virtual Server in "
 		"bytes/sec (the bucket \"fill rate\")."),
          0, arent_we_throttling_server);
 
   defvar("throttle_bucket_depth", 1024000,
-         DLOCALE("ch", "Bandwidth Throttling: Server: Bucket Depth"), TYPE_INT,
-	 DLOCALE("ci", "This is the maximum depth of the bucket. After a long enough period "
+         DLOCALE(46, "Bandwidth Throttling: Server: Bucket Depth"), TYPE_INT,
+	 DLOCALE(47, "This is the maximum depth of the bucket. After a long enough period "
 		"of inactivity, a request will get this many unthrottled bytes of data, before "
 		"throttling kicks back in.<br>Set equal to the Fill Rate in order not to allow "
 		"any data bursts. This value determines the length of the time over which the "
 		"bandwidth is averaged."), 0, arent_we_throttling_server);
 
   defvar("throttle_min_grant", 1300,
-         DLOCALE("cj", "Bandwidth Throttling: Server: Minimum Grant"), TYPE_INT,
-	 DLOCALE("ck", "When the bandwidth availability is below this value, connections will "
+         DLOCALE(48, "Bandwidth Throttling: Server: Minimum Grant"), TYPE_INT,
+	 DLOCALE(49, "When the bandwidth availability is below this value, connections will "
 		"be delayed rather than granted minimal amounts of bandwidth. The purpose "
 		"is to avoid sending too small packets (which would increase the IP overhead)."),
          0, arent_we_throttling_server);
 
   defvar("throttle_max_grant", 14900,
-         DLOCALE("cm", "Bandwidth Throttling: Server: Maximum Grant"), TYPE_INT,
-	 DLOCALE("cn", "This is the maximum number of bytes assigned in a single request "
+         DLOCALE(50, "Bandwidth Throttling: Server: Maximum Grant"), TYPE_INT,
+	 DLOCALE(51, "This is the maximum number of bytes assigned in a single request "
 		"to a connection. Keeping this number low will share bandwidth more evenly "
 		"among the pending connections, but keeping it too low will increase IP "
 		"overhead and (marginally) CPU usage. You'll want to set it just a tiny "
@@ -3115,23 +3103,23 @@ void create(string config)
 		"for ethernet)."), 0, arent_we_throttling_server);
 
   defvar("req_throttle", 0,
-         DLOCALE("co", "Bandwidth Throttling: Request: Enabled"), TYPE_FLAG,
-	 DLOCALE("cp", "If set, per-request bandwidth throttling will be enabled.")
+         DLOCALE(52, "Bandwidth Throttling: Request: Enabled"), TYPE_FLAG,
+	 DLOCALE(53, "If set, per-request bandwidth throttling will be enabled.")
          );
 
   defvar("req_throttle_min", 1024,
-         DLOCALE("cq", "Bandwidth Throttling: Request: Minimum guarranteed bandwidth"),
+         DLOCALE(54, "Bandwidth Throttling: Request: Minimum guarranteed bandwidth"),
          TYPE_INT,
-	 DLOCALE("cr", "The maximum bandwidth each connection (in bytes/sec) can use is determined "
+	 DLOCALE(55, "The maximum bandwidth each connection (in bytes/sec) can use is determined "
 		"combining a number of modules. But doing so can lead to too small "
 		"or even negative bandwidths for particularly unlucky requests. This variable "
 		"guarantees a minimum bandwidth for each request."),
          0, arent_we_throttling_request);
 
   defvar("req_throttle_depth_mult", 60.0,
-         DLOCALE("cs", "Bandwidth Throttling: Request: Bucket Depth Multiplier"),
+         DLOCALE(56, "Bandwidth Throttling: Request: Bucket Depth Multiplier"),
          TYPE_FLOAT,
-	 DLOCALE("ct", "The average bandwidth available for each request will be determined by "
+	 DLOCALE(57, "The average bandwidth available for each request will be determined by "
 		"the modules combination. The bucket depth will be determined multiplying "
 		"the rate by this factor."),
          0, arent_we_throttling_request);
@@ -3173,8 +3161,8 @@ page.
 </font>
 </body>
 ",
-	 DLOCALE("cu", "Messages: No such file"),TYPE_TEXT_FIELD,
-	 DLOCALE("cv", "What to return when there is no resource or file "
+	 DLOCALE(58, "Messages: No such file"),TYPE_TEXT_FIELD,
+	 DLOCALE(59, "What to return when there is no resource or file "
 		 "available at a certain location."));
 
   definvisvar( "no_delayed_load", 0, TYPE_FLAG );

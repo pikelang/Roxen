@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.183 2000/07/13 12:55:27 nilsson Exp $
+// $Id: roxenlib.pike,v 1.184 2000/07/21 04:55:02 lange Exp $
 
 //#pragma strict_types
 
@@ -1115,7 +1115,7 @@ string get_modfullname (RoxenModule module)
 }
 
 string roxen_encode( string val, string encoding )
-  //! Quote content in a multitude of ways. Used primarily bu do_output_tag
+  //! Quote content in a multitude of ways. Used primarily by do_output_tag
 {
   switch (encoding) {
    case "none":

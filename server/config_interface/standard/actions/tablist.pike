@@ -1,15 +1,20 @@
+#include <roxen.h>
+
+//<locale-token project="roxen_config"> LOCALE </locale-token>
+#define LOCALE(X,Y)  _STR_LOCALE("roxen_config",X,Y)
+
 array pages =
 ({
-  ({ "status",            "Tasks",               0             }),
-  ({ "maintenance",       "Tasks",               0             }),
+  ({ "status",       "Tasks",  0, LOCALE(228,"Status")            }),
+  ({ "maintenance",  "Tasks",  0, LOCALE(229,"Maintenance")       }),
 #if constant(_Crypto) && constant(Crypto.rsa)
-  ({ ({"SSL"}),           "Tasks",               0             }),
+  ({ ({"SSL"}),       "Tasks", 0, LOCALE(230,"SSL")               }),
 #endif
-/*({ "developer",         "Tasks",               "devel_mode"  }),*/
-  ({ "debug_info",        "Tasks",               0             }),
+/*({ "developer",     "Tasks", "devel_mode"  }),*/
+  ({ "debug_info",    "Tasks", 0, LOCALE(231,"Debug information") }),
 });
 
-string parse(object id)
+string parse( RequestID id )
 {
   string q=id->variables["class"];
   string res="";
@@ -41,11 +46,8 @@ string parse(object id)
 
     string sel = (s(page[0])==q?" selected":"");
 
-    res += "<tab "+ea+"href='?class="+s(page[0])+"'"+sel+" preparse=''>";
-    if( stringp( page[0] ) )
-      res += "&locale."+page[0]+";";
-    else
-      res += page[0][0];
+    res += "<tab "+ea+"href='?class="+s(page[0])+"'"+sel+">";
+    res += page[3];
     res += "</tab>";
     res += tpost;
   }

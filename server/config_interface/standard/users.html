@@ -5,9 +5,8 @@
 <awizard>
 
 <page name="top"><cf-perm perm="Edit Users">
-  <insert file=user_create.pike nocache=""/>
-  <translate id="dA" variable="var.create_txt">Create new user</translate>
-  <translate id="dB" variable="var.delete_txt">Delete old user</translate>
+  <translate id="222" variable="var.create_txt">Create new user</translate>
+  <translate id="223" variable="var.delete_txt">Delete old user</translate>
   <table border="0" cellpadding="5" cellspacing="0"><tr><td>
   <button gbutton_title=" &var.create_txt; "
           gbutton-icon_src="/internal-roxen-next"  gbutton-preparse="1"
@@ -26,20 +25,24 @@
 </page>
 
 <page name="create_user"><cf-perm perm="Edit Users">
-  <translate id="dC" variable="var.create_txt">Create User</translate>
-  <translate id="dD" variable="var.id_txt">User ID</translate>
+  <translate id="224" variable="var.create_txt">Create User</translate>
+  <translate id="225" variable="var.id_txt">User ID</translate>
   <table><tr><td>&var.id_txt;:</td><td><input name="create_user_name" /></td>
   <td><dbutton page="top" gbutton-font="&usr.gbutton-font;" 
-       gbutton_title=" &var.create_txt; "/></td></tr></table>
-  </dbutton>
-  </table>
+       gbutton_title=" &var.create_txt; ">
+  <insert file=user_create.pike nocache=""/></dbutton></td></tr></table>
+  <p>
+  <translate id="202" variable="var.cancel_txt">Cancel</translate>
+  <button gbutton-font="&usr.gbutton-font;" gbutton-preparse="1"
+   gbutton_title=" &var.cancel_txt; " page="top"/>
+  </p>
 </cf-perm>
 </page>
 
 <page name="delete_user"><cf-perm perm="Edit Users">
   <insert file=user_delete.pike nocache=""/>
   <p>
-  <translate id="bC" variable="var.cancel_txt">Cancel</translate>
+  <translate id="202" variable="var.cancel_txt">Cancel</translate>
   <button gbutton-font="&usr.gbutton-font;" gbutton-preparse="1"
    gbutton_title=" &var.cancel_txt; " page="top"/>
   </p>

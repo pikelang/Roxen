@@ -1,9 +1,9 @@
 #include <config.h>
 #include <roxen.h>
 
-//<locale-token project="config_interface">LOCALE</locale-token>
-#define LOCALE(X,Y)	_STR_LOCALE("config_interface",X,Y)
-#define CALL(X,Y)	_LOCALE_FUN("config_interface",X,Y)
+//<locale-token project="roxen_config">LOCALE</locale-token>
+#define LOCALE(X,Y)	_STR_LOCALE("roxen_config",X,Y)
+#define CALL(X,Y)	_LOCALE_FUN("roxen_config",X,Y)
 
 int __lt;
 string describe_time(int t)
@@ -58,8 +58,8 @@ string describe_times(array (int) times)
     } else
       d = t-ot;
   if(every && (times[-1]+d) >= time(1)-10)
-    return (LOCALE("cx", "every") +" "
-	    +describe_interval(d)+" "+LOCALE("cy", "since")+" "+
+    return (LOCALE(207, "every") +" "
+	    +describe_interval(d)+" "+LOCALE(208, "since")+" "+
 	    describe_time(times[0]));
   return String.implode_nicely(map(times[..4], describe_time)+({"..."})+
 			map(times[sizeof(times)-3..], describe_time),
@@ -82,9 +82,9 @@ string describe_error(string err, array (int) times,
 {
   int code, nt;
   string links = "", reference, server;
-  array(string) codetext=({ LOCALE("cz", "Notice"),
-			    LOCALE("cA", "Warning"),
-			    LOCALE("cB", "Error") });
+  array(string) codetext=({ LOCALE(209, "Notice"),
+			    LOCALE(210, "Warning"),
+			    LOCALE(211, "Error") });
 
   if(sizeof(times)==1 && times[0]/60==last_time) nt=1;
   last_time=times[0]/60;

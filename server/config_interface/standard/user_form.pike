@@ -1,7 +1,7 @@
 #include <config_interface.h>
 #include <roxen.h>
-//<locale-token project="config_interface"> LOCALE </locale-token>
-#define LOCALE(X,Y)  _STR_LOCALE("config_interface",X,Y)
+//<locale-token project="roxen_config"> LOCALE </locale-token>
+#define LOCALE(X,Y)  _STR_LOCALE("roxen_config",X,Y)
 
 mapping parse( RequestID id )
 {
@@ -13,8 +13,7 @@ mapping parse( RequestID id )
     nid = nid->misc->orig;
 
   if( !nid->misc->config_user->auth( "Edit Users" ) )
-    return Roxen.http_string_answer(LOCALE("dy", 
-					   "No such luck (permission denied)"),
+    return Roxen.http_string_answer(LOCALE(226, "Permission denied"),
 				    "text/html");
 
   foreach( sort( nid->misc->list_config_users() ), string uid )

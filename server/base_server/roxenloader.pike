@@ -15,7 +15,7 @@ private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.183 2000/07/14 23:52:21 jhs Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.184 2000/07/21 04:55:02 lange Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -499,7 +499,7 @@ void report_debug(string message, mixed ... foo)
 //! Shares argument prototype with <ref>sprintf()</ref>.
 {
   if( sizeof( foo ) )
-    message = sprintf(message, @foo );
+    message = sprintf((string)message, @foo );
   roxen_perror( message );
 }
 
@@ -536,7 +536,7 @@ void report_warning(string message, mixed ... foo)
 //! in the event logs, along with the yellow exclamation mark warning sign.
 //! Shares argument prototype with <ref>sprintf()</ref>.
 {
-  if( sizeof( foo ) ) message = sprintf(message, @foo );
+  if( sizeof( foo ) ) message = sprintf((string)message, @foo );
   nwrite(message,0,2,MC);
 #if efun(syslog)
   if(use_syslog && (loggingfield&LOG_WARNING))
@@ -545,12 +545,12 @@ void report_warning(string message, mixed ... foo)
 #endif
 }
 
-void report_notice(string message, mixed ... foo)
+void report_notice(string|object message, mixed ... foo)
 //! Report a status message of some sort for the server's debug log and event
 //! logs, along with the blue informational notification sign. Shares argument
 //! prototype with <ref>sprintf()</ref>.
 {
-  if( sizeof( foo ) ) message = sprintf(message, @foo );
+  if( sizeof( foo ) ) message = sprintf((string)message, @foo );
   nwrite(message,0,1,MC);
 #if efun(syslog)
   if(use_syslog && (loggingfield&LOG_NOTICE))
@@ -564,7 +564,7 @@ void report_error(string message, mixed ... foo)
 //! in the event logs, along with the red exclamation mark sign. Shares
 //! argument prototype with <ref>sprintf()</ref>.
 {
-  if( sizeof( foo ) ) message = sprintf(message, @foo );
+  if( sizeof( foo ) ) message = sprintf((string)message, @foo );
   nwrite(message,0,3,MC);
 #if efun(syslog)
   if(use_syslog && (loggingfield&LOG_ERR))
@@ -576,7 +576,7 @@ void report_error(string message, mixed ... foo)
 // Print a fatal error message
 void report_fatal(string message, mixed ... foo)
 {
-  if( sizeof( foo ) ) message = sprintf(message, @foo );
+  if( sizeof( foo ) ) message = sprintf((string)message, @foo );
   nwrite(message,0,3,MC);
 #if efun(syslog)
   if(use_syslog && (loggingfield&LOG_EMERG))

@@ -6,17 +6,18 @@
 <subtablist width="100%">
   <st-tabs>
   <if not="" variable="reversed is 1">
-    <tab selected="" href="?"> &locale.normal; </tab>
-    <tab href="?reversed=1"> &locale.reverse; </tab>
+    <tab selected="" href="?"> <translate id="245">Normal</translate> </tab>
+    <tab href="?reversed=1"> <translate id="246">Reversed</translate> </tab>
   </if>
   <else>
-    <tab href="?"> &locale.normal; </tab>
-    <tab selected="" href="?reversed=1"> &locale.reverse; </tab>
+    <tab href="?"> <translate id="245">Normal</translate> </tab>
+    <tab selected="" href="?reversed=1"> <translate id="246">Reversed</translate> </tab>
   </else>
   </st-tabs>
   <st-page>
     <insert file="log.pike" nocache="">
-    <a href="clear_log.pike"><gbutton preparse="">&locale.clear_log;</gbutton></a>
+    <a href="clear_log.pike">
+    <gbutton preparse=""> <translate id="247">Clear Log</translate> </gbutton></a>
   </st-page>
 </subtablist>
 </cv-split>

@@ -1,4 +1,5 @@
 #include <module.h>
+#include <roxen.h>
 static inherit "html";
 
 // Locale macros
@@ -6,11 +7,15 @@ static inline string getloclang() {
   return roxenp()->locale->get();
 }
 
-#if constant(Locale.translate)
-# define LOCALE(X,Y)	([string](mixed)Locale.DeferredLocale("config_interface",getloclang,X,Y))
-#else
-# define LOCALE(X,Y)	([string](mixed)RoxenLocale.DeferredLocale("config_interface",getloclang,X,Y))
-#endif
+//<locale-token project="roxen_config"> LOCALE </locale-token>
+
+#if constant(Locale.DeferredLocale)
+#define LOCALE(X,Y)	\
+  ([string](mixed)Locale.DeferredLocale("roxen_config",getloclang,X,Y))
+#else  /* !Locale.DeferredLocale */
+#define LOCALE(X,Y)	\
+  ([string](mixed)RoxenLocale.DeferredLocale("roxen_config",getloclang,X,Y))
+#endif /* Locale.DeferredLocale */
 
 // Increased for each variable, used to index the mappings below.
 static int unique_vid;
@@ -1022,11 +1027,12 @@ class Flag
   {
     string res = "<select name=\""+path()+"\"> ";
     if(query())
-      res += "<option value=\"1\" selected=\"selected\">"+LOCALE("", "Yes")+"</option>\n"
-	     "<option value=\"0\">"+LOCALE("", "No")+"</option>\n";
-     else
-       res += "<option value=\"1\">"+LOCALE("", "Yes")+"</option>\n"
-              "<option value=\"0\" selected>"+LOCALE("", "No")+"</option>\n";
+      res += "<option value=\"1\" selected=\"selected\">" +
+	LOCALE("yes", "Yes")+ "</option>\n"
+	"<option value=\"0\">" +LOCALE("no", "No")+ "</option>\n";
+    else
+      res += "<option value=\"1\">" +LOCALE("yes", "Yes")+ "</option>\n"
+	"<option value=\"0\" selected>" +LOCALE("no", "No")+ "</option>\n";
     return res+"</select>";
   }
 }

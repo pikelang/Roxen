@@ -6,19 +6,19 @@ inherit "../logutil.pike";
 #include <config.h>
 #include <roxen.h>
 
-//<locale-token project="config_interface">LOCALE</locale-token>
-#define LOCALE(X,Y)	_STR_LOCALE("config_interface",X,Y)
+//<locale-token project="roxen_config">LOCALE</locale-token>
+#define LOCALE(X,Y)	_STR_LOCALE("roxen_config",X,Y)
 
 string module_global_page( RequestID id, string conf )
 {
   if( config_perm("Add Module") )
     return sprintf("<gbutton preparse='' "
                    "href='../../../add_module.pike?config=%s'> "+
-                   LOCALE("cN", "Add Module")+"</gbutton>",
+                   LOCALE(251, "Add Module")+"</gbutton>",
                    Roxen.http_encode_string( conf ) )+
            sprintf("<gbutton preparse='' "
                    "href='../../../drop_module.pike?config=%s'> "+
-                   LOCALE("cP", "Drop Module")+"</gbutton>",
+                   LOCALE(252, "Drop Module")+"</gbutton>",
                    Roxen.http_encode_string( conf ) );
   return "";
 }
@@ -158,7 +158,7 @@ string buttons( Configuration c, string mn, RequestID id )
   if( sizeof( glob( "*.x", indices( id->variables ) ) ) )
   {
     string a = glob( "*.x", indices( id->variables ) )[0]-".x";
-    if( a == LOCALE("cQ", "Reload") )
+    if( a == LOCALE(253, "Reload") )
     {
       object ec = roxenloader.LowErrorContainer(), nm;
 
@@ -179,7 +179,7 @@ string buttons( Configuration c, string mn, RequestID id )
         m_delete(current_compile_errors, mn );
       }
     }
-    else if( a == LOCALE("cR", "Clear Log") )
+    else if( a == LOCALE(247, "Clear Log") )
     {
       array(int) times, left;
       Configuration conf = mod->my_configuration();
@@ -231,16 +231,16 @@ string buttons( Configuration c, string mn, RequestID id )
 		    "</pre></font>" : "" )
     + "<input type=hidden name=section value='" +
     (id->variables->section||"Information") + "'>" +
-    "<submit-gbutton preparse>"+LOCALE("cQ", "Reload")+"</submit-gbutton>"+
+    "<submit-gbutton preparse>"+LOCALE(253, "Reload")+"</submit-gbutton>"+
     (sizeof( mod->error_log ) ?
-     "<submit-gbutton preparse>"+LOCALE("cR", "Clear Log")+"</submit-gbutton>":"");
+     "<submit-gbutton preparse>"+LOCALE(247, "Clear Log")+"</submit-gbutton>":"");
 
   if(mod->query_action_buttons)
     foreach( indices(mod->query_action_buttons("standard")), string title )
       buttons += "<submit-gbutton>"+title+"</submit-gbutton>";
 
   return buttons + "<a href='../../../../drop_module.pike?config="+path[0]+"&drop="+mn+
-    "'><gbutton preparse>"+LOCALE("cP", "Drop Module")+"</gbutton></a>";
+    "'><gbutton preparse>"+LOCALE(252, "Drop Module")+"</gbutton></a>";
 }
 
 string get_eventlog( roxen.ModuleInfo o, RequestID id, int|void no_links )
@@ -258,7 +258,7 @@ string get_eventlog( roxen.ModuleInfo o, RequestID id, int|void no_links )
   for(int i=0;i<sizeof(report);i++)
      report[i] = describe_error(report[i], log[report[i]],
 				id->misc->cf_locale, no_links);
-  return "<h2>"+LOCALE("cG", "Events")+"</h2>" + (report*"");
+  return "<h2>"+LOCALE(216, "Events")+"</h2>" + (report*"");
 }
 
 #define EC(X) niceerror( lambda(){ return (X); } , #X)
@@ -293,7 +293,7 @@ string find_module_doc( string cn, string mn, RequestID id )
 
   string dbuttons;
   if( config_perm( "Add Module" ) )
-    dbuttons = "<h2>"+LOCALE("cS", "Actions")+"</h2>"+buttons( c, mn, id );
+    dbuttons = "<h2>"+LOCALE(196, "Tasks")+"</h2>"+buttons( c, mn, id );
   else
     dbuttons = "";
   Roxen.RoxenModule m = c->find_module( replace(mn,"!","#") );
@@ -307,7 +307,8 @@ string find_module_doc( string cn, string mn, RequestID id )
 
   string homepage = m->module_url;
   if(stringp(homepage) && sscanf(homepage, "%*[A-Za-z0-9+.-]:%*s")==2)
-    homepage = sprintf("<br /><b>Module homepage:</b> <a href=\"%s\">%s</a>",
+    homepage = sprintf("<br /><b>" + LOCALE(254,"Module homepage") +
+		       ":</b> <a href=\"%s\">%s</a>",
 		       homepage, homepage);
   else homepage = "";
 
@@ -325,8 +326,8 @@ string find_module_doc( string cn, string mn, RequestID id )
 		    return mail;
 		  });
     creators = sprintf("<br /><b>Module creator%s:</b> %s",
-		      (sizeof(creators)==1 ? "" : "s"),
-		      String.implode_nicely(creators));
+		       (sizeof(creators)==1 ? "" : "s"),
+		       String.implode_nicely(creators));
   } else creators = "";
 
 #ifdef THREADS
@@ -465,7 +466,7 @@ string parse( RequestID id )
     {
      default: /* Status info */
        string res = "<br />\n<blockquote><h1>" +
- 	 LOCALE("d2","Urls") + "</h1>";
+ 	 LOCALE(38,"URLs") + "</h1>";
        foreach( conf->query( "URLs" ), string url )
        {
 	 if(search(url, "*")==-1)
@@ -478,14 +479,14 @@ string parse( RequestID id )
          else
 	   res += url + " "+port_for(url)+"<br />\n";
        }
-       res+="<h1>"+LOCALE("cG", "Events")+"</h1><insert file='log.pike' nocache='' />";
+       res+="<h1>"+LOCALE(216, "Events")+"</h1><insert file='log.pike' nocache='' />";
 
-       res +="<h1>"+LOCALE("cT", "Request status")+"</h1>";
+       res +="<h1>"+LOCALE(260, "Request status")+"</h1>";
        res += conf->status();
 
        if( id->misc->config_settings->query( "devel_mode" ) )
        {
-         res += "<h1>"+LOCALE("cU", "Inherit tree")+"</h1>";
+         res += "<h1>"+LOCALE(261, "Inherit tree")+"</h1>";
          res += program_info( conf ) + "<dl>" + inherit_tree( conf ) + "</dl>";
        }
        return res+"<br />\n";

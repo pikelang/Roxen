@@ -1,3 +1,4 @@
+#include <roxen.h>
 inherit "wizard";
 constant action = "debug_info";
 
@@ -10,6 +11,9 @@ constant doc =
 constant doc_svenska =
 "Visa information om vilka features och moduler som är tillgängliga "
 "i den pike som den här roxenservern använder.";
+
+//<locale-token project="roxen_config"> LOCALE </locale-token>
+#define LOCALE(X,Y)  _STR_LOCALE("roxen_config",X,Y)
 
 mapping(string:int) modules = ([]);
 
@@ -82,8 +86,7 @@ mixed page_0(object id, object mc)
   if (!sizeof(modules)) {
     find_modules();
   }
-  string res = "<font size=+1>&locale.features;</font>"+
-         "<ul>\n";
+  string res = "<font size=+1>"+ LOCALE(238, "Features") +"</font><ul>\n";
   foreach(({ "dynamic_modules", "threads",
              "_Crypto",
              "CommonLog",
@@ -102,8 +105,7 @@ mixed page_0(object id, object mc)
 				 return(m[s] != 1);
 			       }, modules));
   if (sizeof(disabled)) {
-    res += "<font size=+1>&locale.module_disabled;</font>"+
-        "<ul>\n";
+    res += "<font size=+1>"+LOCALE("dM", "Disabled modules")+"</font><ul>\n";
     res += disabled * " ";
     res += "</ul><br />\n";
   }
@@ -143,22 +145,24 @@ mixed page_1(object id, object mc)
   mapping trans = mkmapping(map(indices(modules),fix_module_name),
                             indices(modules));
 
-  return("<font size=+1>&locale.all_modules;</font><ul>\n"
+  return("<font size=+1>"+LOCALE(239,"All modules")+"</font><ul>\n"
          "<table cellpadding=2 cellspacing=0 border=0>"
-         "<tr><td><b>&locale.name;</b></td>"
-         "<td><b>&locale.state;</b></td>"
+         "<tr><td><b>"+LOCALE(240,"Name")+"</b></td>"
+         "<td><b>"+LOCALE(241,"State")+"</b></td>"
          +map(filter(sort(indices(trans)),no_double_),
              lambda(string s, mapping r) {
                return
                  "<tr><td>"+s+"</td><td>"+
-                 ({"&locale.disabled:none;",
-                   "&locale.na:none;",
-                   "&locale.enabled:none;" })[ r[trans[s]] + 1]+
+                 ({LOCALE(242,"Disabled")+":none;",
+                   LOCALE(243,"N/A")+":none;",
+                   "<font color=&usr.fade4;>"+
+		   LOCALE(244,"Enabled")+
+		   "</font>:none;" })[ r[trans[s]] + 1]+
                  "</td></tr>\n";
              }, modules)*"")+"</table></ul>";
 }
 
-mixed parse(object id)
+mixed parse( RequestID id )
 {
   return page_0(id,0)+page_1(id,0) + "<p><cf-ok>";
 }

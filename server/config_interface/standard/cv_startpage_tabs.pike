@@ -1,18 +1,17 @@
 #include <roxen.h>
 
-//<locale-token project="config_interface">LOCALE</locale-token>
-USE_DEFERRED_LOCALE;
-#define LOCALE(X,Y)	_DEF_LOCALE("config_interface",X,Y)
+//<locale-token project="roxen_config">LOCALE</locale-token>
+#define LOCALE(X,Y)	_STR_LOCALE("roxen_config",X,Y)
 
 array pages =
 ({
-  ({ LOCALE("cJ", "Startpage"),     "",                0,               0             }),
-  ({ LOCALE("cK", "Update"),        "update.html",     0,               0             }),
-  ({ LOCALE("cL", "Your Settings"), "settings.html",   0,               0             }),
-  ({ LOCALE("cM", "Users"),         "users.html",      "Edit Users",    0             }),
+  ({ "home",         "",              0,            0, LOCALE(218, "Startpage")  }),
+  ({ "update",       "update.html",   0,            0, LOCALE(219, "Update")}),
+  ({ "usersettings", "settings.html", 0,            0, LOCALE(220, "Your Settings") }),
+  ({ "users",        "users.html",    "Edit Users", 0, LOCALE(221, "Users")}),
 });
 
-string parse(object id)
+string parse( RequestID id )
 {
   string q="";
   while( id->misc->orig )  id = id->misc->orig;
@@ -41,7 +40,7 @@ string parse(object id)
     if( page == pages[-1] )      ea = "last=30 ";
 
     res += "<tab "+ea+"href='"+page[1]+"'"+((page[1] == q)?" selected='1'":"")+">" +
-      page[0]+"</tab>" + tpost;
+      page[4]+"</tab>" + tpost;
   }
 
   return res;

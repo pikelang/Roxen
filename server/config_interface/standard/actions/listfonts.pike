@@ -1,16 +1,23 @@
 /*
- * $Id: listfonts.pike,v 1.9 2000/05/03 08:50:34 mast Exp $
+ * $Id: listfonts.pike,v 1.10 2000/07/21 04:57:10 lange Exp $
  */
+
+#include <roxen.h>
+
+//<locale-token project="roxen_config"> LOCALE </locale-token>
+#define LOCALE(X,Y)  _STR_LOCALE("roxen_config",X,Y)
 
 constant action = "maintenance";
 constant name= "List Available Fonts";
 constant doc = "List all available fonts";
 
+
 string versions(string font)
 {
   array res=({ });
   array b = available_font_versions(font,32);
-  if (!b || !sizeof(b)) return "<b>Not available.</b>"; // FIXME: locale?
+  if (!b || !sizeof(b)) 
+    return "<b>"+LOCALE("dH","Not available.")+"</b>"; 
   array a = map(b,describe_font_type);
   mapping m = mkmapping(b,a);
   foreach(sort(indices(m)), string t)
@@ -28,14 +35,14 @@ string list_font(string font)
 string page_0(object id)
 {
   string res=("<input type=hidden name=action value=listfonts.pike>"
-              "<input type=hidden name=doit value=indeed>"
-              "<font size=+1>All available fonts</font><p>");
+              "<input type=hidden name=doit value=indeed><font size=+1>" +
+	      LOCALE("dI","All available fonts") + "</font><p>");
   foreach(roxen->fonts->available_fonts(1), string font)
     res+=list_font(font);
-  // FIXME: locale?
-  res += ("<p>Example text: <font size=-1><input name=text size=46 value='"
-          "&locale.font_test_string;'><p>"
-	  "<table width='70%'><tr><td align=left>"
+  res += ("<p>" + LOCALE(236,"Example text") +
+	  "<font size=-1><input name=text size=46 value='" +
+	  LOCALE(237,"Jackdaws love my big sphinx of quartz.") +
+	  "'><p><table width='70%'><tr><td align=left>"
           "<cf-cancel href='?class=maintenance'></td><td align=right>"
 	  "<cf-next></td></tr></table>");
   return res;
@@ -52,7 +59,7 @@ string page_1(object id)
   return res+"<br /></p><p>\n<cf-ok></p>";
 }
 
-mixed parse(object id)
+mixed parse( RequestID id )
 {
   if( id->variables->doit )
     return page_1( id );

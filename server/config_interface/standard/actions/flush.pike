@@ -1,7 +1,8 @@
 /*
- * $Id: flush.pike,v 1.4 2000/05/14 23:44:39 nilsson Exp $
+ * $Id: flush.pike,v 1.5 2000/07/21 04:57:10 lange Exp $
  */
 #include <config_interface.h>
+#include <roxen.h>
 
 constant action = "maintenance";
 
@@ -10,6 +11,9 @@ constant name_svenska= "Töm cacher";
 
 constant doc = ("Flush all memory caches.");
 constant doc_svenska = ("Töm alla minnescacher.");
+
+//<locale-token project="roxen_config"> LOCALE </locale-token>
+#define LOCALE(X,Y)  _STR_LOCALE("roxen_config",X,Y)
 
 mixed doit()
 {
@@ -39,9 +43,9 @@ mixed doit()
   gc();
 }
 
-mixed parse(object id)
+mixed parse( RequestID id )
 {
   doit();
-  return "&locale.all_memory_caches_flushed; "
+  return LOCALE(232,"All memory caches have been flushed.") + 
          "<p><cf-ok>";
 }

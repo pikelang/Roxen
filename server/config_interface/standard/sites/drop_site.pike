@@ -1,21 +1,21 @@
 #include <config_interface.h>
 #include <roxen.h>
 
-//<locale-token project="config_interface">LOCALE</locale-token>
+//<locale-token project="roxen_config">LOCALE</locale-token>
 USE_DEFERRED_LOCALE;
-#define LOCALE(X,Y)	_DEF_LOCALE("config_interface",X,Y)
+#define LOCALE(X,Y)	_DEF_LOCALE("roxen_config",X,Y)
 
 
 string|mapping parse( RequestID id )
 {
   if( !config_perm( "Create Site" ) )
-    return "No permission to do that";
+    return LOCALE(226, "Permission denied");
 
   Configuration cf = roxen->find_configuration( id->variables->site );
 
   if( !cf ) return "No such configuration: "+id->variables->site;
 
-  report_notice(LOCALE("i", "Disabling old configuration %s\n"), cf->name);
+  report_notice(LOCALE(255, "Disabling old configuration %s\n"), cf->name);
 
   string cfname = roxen.configuration_dir + "/" + cf->name;
   mv (cfname, cfname + "~");

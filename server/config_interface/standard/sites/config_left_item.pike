@@ -1,8 +1,8 @@
 #include <config_interface.h>
 #include <roxen.h>
 
-//<locale-token project="config_interface">LOCALE</locale-token>
-#define LOCALE(X,Y)	_STR_LOCALE("config_interface",X,Y)
+//<locale-token project="roxen_config">LOCALE</locale-token>
+#define LOCALE(X,Y)	_STR_LOCALE("roxen_config",X,Y)
 
 string dotdot( RequestID id, int n )
 {
@@ -31,7 +31,7 @@ string selected_item( string q, roxen.Configuration c, RequestID id, string modu
 
   string pre = ("<gbutton frame-image='&usr.left-buttonframe;' href='/"+id->misc->cf_locale+"/sites' "
                 "width='150' bgcolor='&usr.left-buttonbg;' icon_src='&usr.selected-indicator;' "
-                "align_icon='left' preparse=''>"+LOCALE("cD", "Sites")+"</gbutton><br />"
+                "align_icon='left' preparse=''>"+LOCALE(213, "Sites")+"</gbutton><br />"
                 "<gbutton frame-image='&usr.left-buttonframe;' width='150' "+
 		(subsel == "" ?
 		 "bgcolor='&usr.left-selbuttonbg;'" : "bgcolor='&usr.left-buttonbg;'") +
@@ -39,8 +39,8 @@ string selected_item( string q, roxen.Configuration c, RequestID id, string modu
                 " icon_src='&usr.selected-indicator;' align_icon='left'>"+
                 c->query_name()+"</gbutton><br><br>");
 
-  array sub = ({ ({ "settings", LOCALE("cV", "Settings") }),
-		 ({ "modules",  LOCALE("cW", "Modules") }),
+  array sub = ({ ({ "settings", LOCALE(256, "Settings") }),
+		 ({ "modules",  LOCALE(257, "Modules") }),
               });
 //   if( subsel == "modules" )
 //     sub = reverse(sub);
@@ -109,11 +109,11 @@ string selected_item( string q, roxen.Configuration c, RequestID id, string modu
          {
            pre+=sprintf("<br />\n<gbutton frame-image='&usr.left-buttonframe;' width='150' bgcolor='&usr.left-buttonbg;' preparse='' href='"+tmp+
                         "add_module.pike?config=%s'> "
-                        +LOCALE("cX", "Add module")+" </gbutton>",
+                        +LOCALE(258, "Add module")+" </gbutton>",
                         Roxen.http_encode_string( c->name ) )+
                              sprintf("<br />\n<gbutton frame-image='&usr.left-buttonframe;' width='150' bgcolor='&usr.left-buttonbg;' preparse='' href='"+tmp+
                                               "drop_module.pike?config=%s'> "
-                                              +LOCALE("cY", "Drop module")+" </gbutton><br />\n",
+                                              +LOCALE(259, "Drop module")+" </gbutton><br />\n",
                                               Roxen.http_encode_string( c->name ));
          }
 

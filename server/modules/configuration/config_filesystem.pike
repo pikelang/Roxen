@@ -8,14 +8,15 @@
 inherit "module";
 inherit "roxenlib";
 
-//<locale-token project="config_interface">LOCALE</locale-token>
-#define LOCALE(X,Y)	_STR_LOCALE("config_interface",X,Y)
+//<locale-token project="roxen_config">LOCALE</locale-token>
+USE_DEFERRED_LOCALE;
+#define LOCALE(X,Y)	_DEF_LOCALE("roxen_config",X,Y)
 
 constant module_type = MODULE_LOCATION;
 constant module_name = "Configuration Filesystem";
 constant module_doc = "This filesystem serves the administration interface";
 constant module_unique = 1;
-constant cvs_version = "$Id: config_filesystem.pike,v 1.39 2000/07/17 16:55:47 lange Exp $";
+constant cvs_version = "$Id: config_filesystem.pike,v 1.40 2000/07/21 04:52:47 lange Exp $";
 
 constant path = "config_interface/";
 
@@ -102,9 +103,9 @@ mixed find_dir( string f, object id )
   
   if (f == "") {
 #if constant(Locale.list_languages)
-    return Locale.list_languages("config_interface");
+    return Locale.list_languages("roxen_config");
 #else
-    return RoxenLocale.list_languages("config_interface");
+    return RoxenLocale.list_languages("roxen_config");
 #endif
   }
 
@@ -115,9 +116,9 @@ mixed find_dir( string f, object id )
 
   multiset languages;
 #if constant(Locale.list_languages)
-    languages=(multiset)Locale.list_languages("config_interface");
+    languages=(multiset)Locale.list_languages("roxen_config");
 #else
-    languages=(multiset)RoxenLocale.list_languages("config_interface");
+    languages=(multiset)RoxenLocale.list_languages("roxen_config");
 #endif
 
   if (rest || languages[locale]) {
