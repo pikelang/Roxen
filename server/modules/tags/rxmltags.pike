@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.42 2000/01/21 15:19:56 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.43 2000/01/21 16:08:52 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -146,11 +146,11 @@ class Entity_client_name {
   string rxml_var_eval(RXML.Context c) { return c->id->client?c->id->client[0]:""; }
 }
 
-class Entity_client_host {
+class Entity_client_ip {
   string rxml_var_eval(RXML.Context c) { return c->id->remoteaddr; }
 }
 
-mapping client_scope=([ "host":Entity_client_host(),
+mapping client_scope=([ "ip":Entity_client_ip(),
 			"name":Entity_client_name(),
 			"referer":Entity_client_referer(),
 			"referrer":Entity_client_referer()]);
@@ -534,16 +534,6 @@ string tag_date(string q, mapping m, RequestID id)
   return tagtime(t, m, id, language);
 }
 
-RoxenModule _ssi;
-int provides_ssi() {
-  if(_ssi) return 1;
-  if(my_configuration()->get_provider("ssi")) {
-    _ssi=my_configuration()->get_provider("ssi");
-    return 1;
-  }
-  return 0;
-}
-
 string|array(string) tag_insert( string tag, mapping m, RequestID id )
 {
   string n;
@@ -614,9 +604,10 @@ string|array(string) tag_insert( string tag, mapping m, RequestID id )
     return rxml_error(tag, (q ? q->status_desc: "No server response"), id);
   }
 
-  if(m->var && provides_ssi()) {
-    return ({_ssi->get_var(m->var, id)}) ||
-      rxml_error(tag, "SSI variable "+m->var+" not defined.", id);
+  if(m->var) {
+    object|array tagfunc=RXML.get_context()->tag_set->get_tag("!--#echo");
+    if(!tagfunc) return rxml_error(tag, "No SSI module added.", id);
+    return ({ 1, "!--#echo", m});
   }
 
   string ret="Could not fullfill your request.<br>\nArguments:";
