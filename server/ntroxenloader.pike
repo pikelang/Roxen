@@ -1,6 +1,6 @@
 /* This file is executed by Pike to bootstrap Roxen on NT.
  *
- * $Id: ntroxenloader.pike,v 1.7 2001/01/19 12:41:32 per Exp $
+ * $Id: ntroxenloader.pike,v 1.8 2001/06/27 16:20:09 tomas Exp $
  */
 
 string dir;
@@ -115,7 +115,9 @@ int main(int argc, array (string) argv)
 	opt->verbose = 0;
 	break;
     }
-  argv = Getopt.get_args(argv, 0);
+  // Don't complain about unknown options but
+  // remove NULL entries left behind by find_all_options
+  argv -= ({ 0 });
 
   dir = pathcnv (combine_path(getcwd(),__FILE__ + "/.."));
   log_dir = combine_path (dir, "../logs");
