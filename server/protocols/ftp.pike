@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.32 2000/03/16 18:06:11 nilsson Exp $
+ * $Id: ftp.pike,v 2.33 2000/03/20 15:27:45 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -164,7 +164,17 @@ class RequestID2
 	if (!(< "create", "connection", "configuration",
                 "__INIT", "clone_me", "end", "ready_to_receive",
 		"send", "scan_for_query", "send_result", >)[var]) {
-	  o[var] = m_rid[var];
+#ifdef FTP2_DEBUG
+	  if (catch {
+#endif /* FTP2_DEBUG */
+	    o[var] = m_rid[var];
+#ifdef FTP2_DEBUG
+	  }) {
+	    report_error(sprintf("FTP2: "
+				 "Failed to copy variable %s (value:%O)\n",
+				 var, m_rid[var]));
+	  }
+#endif /* FTP2_DEBUG */
 	}
       }
     } else {
