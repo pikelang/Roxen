@@ -686,7 +686,7 @@ b</strlen></rxml>
 
 <test>
 <rxml><emit source="TESTER" sort="-b" filter="a=??x" skiprows="1">&_.c;:</emit></rxml>
-<result>1:2:4:</result>
+<result>2:4:</result>
 </test>
 
 <test>
@@ -712,4 +712,29 @@ b</strlen></rxml>
 <test>
 <rxml><emit source="TESTER" sort="c" filter="a=??x" rowinfo="var.row">&_.c;:</emit>&var.row;</rxml>
 <result>1:2:4:3</result>
+</test>
+
+<test>
+<rxml><emit source="TESTER" test="2" filter="data=?">&_.data;:</emit></rxml>
+<result>a:a:b:c:a:d:e:a:a:a:</result>
+</test>
+
+<test>
+<rxml><emit source="TESTER" test="2" filter="data=?" skiprows="3" maxrows="5">&_.data;:</emit></rxml>
+<result>c:a:d:e:a:</result>
+</test>
+
+<test>
+<rxml><emit source="TESTER" test="2" filter="data=?">&_.data;<delimiter>:</delimiter></emit></rxml>
+<result>a:a:b:c:a:d:e:a:a:a</result>
+</test>
+
+<test>
+<rxml><emit source="TESTER" test="2" filter="data=?" skiprows="3">&_.data;<delimiter>:</delimiter></emit></rxml>
+<result>c:a:d:e:a:a:a</result>
+</test>
+
+<test>
+<rxml><emit source="TESTER" test="2" filter="data=?" skiprows="3" maxrows="5">&_.data;<delimiter>:</delimiter></emit></rxml>
+<result>c:a:d:e:a</result>
 </test>
