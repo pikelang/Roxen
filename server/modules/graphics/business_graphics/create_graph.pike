@@ -35,7 +35,7 @@ mapping(string:mixed) init(mapping(string:mixed) diagram_data)
 {
   float xminvalue=0.0, xmaxvalue=-STORT, yminvalue=0.0, ymaxvalue=-STORT;
 
-  foreach(diagram_data["datapoints"], array(float) d)
+  foreach(diagram_data["data"], array(float) d)
     {
       int j=sizeof(d);
 
@@ -61,9 +61,11 @@ mapping(string:mixed) init(mapping(string:mixed) diagram_data)
 		yminvalue=k;
 	      if (ymaxvalue<(k=d[i]))
 		ymaxvalue=k;
+	      xminvalue=10.0;
+	      xmaxvalue=0.0;
 	    }
 	else
-	  perror("Unknown graph type!");
+	  werror("\""+diagram_data["type"]+"is an unknown graph type!");
     }
   xmaxvalue=max(xmaxvalue, xminvalue+LITET);
   ymaxvalue=max(ymaxvalue, yminvalue+LITET);
@@ -95,6 +97,24 @@ mapping(string:mixed) init(mapping(string:mixed) diagram_data)
   write("Dxmaxvalue:"+diagram_data["xmaxvalue"]+"\n");
   write("Dxminvalue:"+ diagram_data["xminvalue"]+"\n");
 
+  //Ge tomma namn på xnames om namnen inte finns
+  if (diagram_data["type"]=="bars")
+    if (!(diagram_data["xnames"]))
+      diagram_data["xnames"]=allocate(sizeof(diagram_data["data"][0]));
+  
+  //Om xnames finns så sätt xspace.
+  if (diagram_data["xnames"])
+    diagram_data["xspace"]=(diagram_data["xmaxvalue"]-
+			    diagram_data["xminvalue"])
+      /(float)sizeof(diagram_data["xnames"]);
+
+  //Om ynames finns så sätt yspace.
+  if (diagram_data["ynames"])
+    diagram_data["yspace"]=(diagram_data["ymaxvalue"]-
+			    diagram_data["yminvalue"])
+      /(float)sizeof(diagram_data["ynames"]);
+  
+  
   return diagram_data;
 
 };
@@ -281,7 +301,7 @@ mapping set_legend_size(mapping diagram_data)
 
 	  }
       else
-	perror("Graph type unknown!");
+	werror("Graph type unknown!");
       //else FIXME
 
       //Ta reda på hur många kolumner vi kan ha:
@@ -920,7 +940,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
   write("xstart:"+diagram_data["xstart"]+"\nystart"+diagram_data["ystart"]+"\n");
   write("xstop:"+diagram_data["xstop"]+"\nystop"+diagram_data["ystop"]+"\n");
 
-  foreach(diagram_data["datapoints"], array(float) d)
+  foreach(diagram_data["data"], array(float) d)
     {
       for(int i=0; i<sizeof(d); i++)
 	{
@@ -950,7 +970,7 @@ int main(int argc, string *argv)
 		 "textcolor":({0,0,0}),
 		 "subtyp":"",
 		 "orient":"vert",
-		 "datapoints": 
+		 "data": 
 		 ({ ({1.2, 12.3, 4.01, 10.0, 4.3, 12.0 }),
 		    ({1.2, 11.3, -1.5, 11.7,  1.0, 11.5, 1.0, 13.0, 2.0, 16.0  }),
 		    ({1.2, 13.3, 1.5, 10.1 }),
@@ -974,7 +994,7 @@ int main(int argc, string *argv)
 
   ]);
   /*
-  diagram_data["datapoints"]=({({ 
+  diagram_data["data"]=({({ 
      101.858620,
     146.666672,
     101.825584,
