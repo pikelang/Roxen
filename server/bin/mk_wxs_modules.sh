@@ -1,6 +1,6 @@
 #/bin/sh
 #
-# $Id: mk_wxs_modules.sh,v 1.3 2004/11/10 13:12:27 grubba Exp $
+# $Id: mk_wxs_modules.sh,v 1.4 2004/11/10 14:23:34 grubba Exp $
 #
 # Make a set of Windows Installer XML source module files
 # from a typical roxen module layout.
@@ -10,7 +10,7 @@
 
 version="1.0.0"
 
-if [ "$1" = "-v" ] then
+if [ "$1" = "-v" ]; then
   # FIXME: Improve option parsing...
   shift
   version="$1"
