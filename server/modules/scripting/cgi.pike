@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.29 1997/07/31 19:54:09 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.30 1997/08/04 12:59:53 grubba Exp $";
 
 #include <module.h>
 
@@ -23,7 +23,8 @@ import Stdio;
 
 mapping my_build_env_vars(string f, object id, string|void path_info)
 {
-  mapping new = build_env_vars(f,id,path_info);
+  mapping new = build_env_vars(f, id, path_info);
+
   if(QUERY(rawauth) && id->rawauth)
     new["HTTP_AUTHORIZATION"] = (string)id->rawauth;
   if(QUERY(clearpass) && id->realauth)
@@ -552,6 +553,9 @@ mapping last_resort(object id)
     {
       if(strlen(e) && sscanf(id->not_query, "%s."+e+"%s", a, b))
       {
+	if (sizeof(b) && !((<'?','/'>)[b[0]])) {
+	  continue;
+	}
 	fid = id->clone_me();
 	fid->not_query = a+"."+e;
 	fid->misc->path_info = b;
