@@ -7,7 +7,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.28 2004/05/31 23:01:57 _cvs_stephen Exp $";
+constant cvs_version = "$Id: email.pike,v 1.29 2004/10/30 10:15:22 _cvs_dirix Exp $";
 
 constant thread_safe=1;
 
@@ -54,6 +54,10 @@ void create()
          TYPE_STRING,
          "The default subject line will be used if no '<i>subject</i>' "
          "attribute is given to the tag.");
+  defvar ("CI_dateheader",1, "Default: Date Header",
+         TYPE_FLAG|VAR_MORE,
+         "Default add date header as required by RFC  2822."
+         );
   defvar("CI_headers", "", "Default: Additional headers",
          TYPE_TEXT_FIELD,
          "Additional headers (one header '<i>name=value</i>' pair per line) "
@@ -89,7 +93,7 @@ void create()
 object notasciicharset = Regexp("[^\1-\177]");
 array mails = ({}), errs = ({});
 string msglast = "";
-string revision = ("$Revision: 1.28 $"/" ")[1];
+string revision = ("$Revision: 1.29 $"/" ")[1];
 
 class TagEmail {
   inherit RXML.Tag;
@@ -269,7 +273,7 @@ class TagEmail {
     }
   } // TagAttachment
 
-  // This tag set can probably be shared, but I don't know for sure. /mast
+  // This tag set can probably be shared, but I don't know for sure. /mast It can /Marc
   RXML.TagSet internal = RXML.TagSet(this_module(), "email", ({ TagAttachment(), TagMailheader(), TagSignature() }));
 
   class Frame {
@@ -324,6 +328,7 @@ class TagEmail {
       string ccx;
       string bccx;
       string chs = "";
+      mapping date = ([]);
       mixed error;
       mapping headers = ([]);
 
@@ -377,10 +382,13 @@ class TagEmail {
      // Our SMTP.client should remove any BCC header, but it does not parse
      // headers at all so we have to do it here.
      m_delete(headers, "BCC");
-
+      
       subject = args->subject || headers->SUBJECT || query("CI_nosubject");
       fromx = args->from || headers->FROM || query("CI_from");
-
+     if(query("CI_dateheader")){
+      date = (["DATE" : args->date || headers->DATE || Roxen.http_date(predef::time())]);
+     m_delete(headers, "DATE");
+     }
      // converting bare LFs (QMail specials:)
      if(query("CI_qmail_spec"))
        body = Array.map(body / "\r\n",
@@ -432,7 +440,7 @@ class TagEmail {
 			   "content-type" : "multipart/"
 				+(args->alternative?"alternative":"mixed"),
 			   "x-mailer"     : "ChiliMoon email, r"+revision
-			]) + headers,
+			]) +date + headers,
 			({ m }) + id->misc->_email_atts_ );
        };
        m_delete(id->misc,"_email_atts_");
@@ -449,7 +457,7 @@ class TagEmail {
 						chs ),
 			     "content-transfer-encoding" : fenc,
 			     "x-mailer"     : "ChiliMoon email, r"+revision
-			  ]) + headers );
+			  ]) + date + headers );
        };
 
      if (error)
