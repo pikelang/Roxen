@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997-2000, Roxen IS.
 // Makes a tab list like the one in the config interface.
 
-constant cvs_version="$Id: tablist.pike,v 1.41 2000/03/01 11:36:41 kuntri Exp $";
+constant cvs_version="$Id: tablist.pike,v 1.42 2000/03/17 00:31:17 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -102,25 +102,34 @@ string internal_tag_tab(string t, mapping a, string contents, mapping d,
   return 0;
 }
 
-string container_tablist(string t, mapping a, string contents, RequestID id)
-{
-  a->result=({});
-  parse_html(contents, ([]), (["tab":internal_tag_tab]), a, id);
-  if(!sizeof(a->result))
-    return "";
+class TagTablist {
+  inherit RXML.Tag;
+  constant name = "tablist";
+  array(RXML.Type) result_types = ({ RXML.t_any(RXML.PXml) });
 
-  if( a->result[0][0]->selected )
-    add_layers( a->result[0][0], "first selected" );
-  else
-    add_layers( a->result[0][0], "first unselected" );
-  add_layers( a->result[0][0], "first" );
-  if( a->result[-1][0]->selected )
-    add_layers( a->result[-1][0], "last selected" );
-  else
-    add_layers( a->result[-1][0], "last unselected" );
-  add_layers( a->result[-1][0], "last" );
+  class Frame {
+    inherit RXML.Frame;
 
-  return map( a->result, lambda( array q ) {
-                           return make_container( "gbutton",q[0],q[1]);
-                         } )*"";
+    array do_return(RequestID id) {
+      args->result=({});
+      parse_html(content, ([]), (["tab":internal_tag_tab]), args, id);
+      if(!sizeof(args->result))
+	return 0;
+
+      if( args->result[0][0]->selected )
+	add_layers( args->result[0][0], "first selected" );
+      else
+	add_layers( args->result[0][0], "first unselected" );
+      add_layers( args->result[0][0], "first" );
+      if( args->result[-1][0]->selected )
+	add_layers( args->result[-1][0], "last selected" );
+      else
+	add_layers( args->result[-1][0], "last unselected" );
+      add_layers( args->result[-1][0], "last" );
+
+      return ({ map( args->result, lambda( array q ) {
+			       return make_container( "gbutton",q[0],q[1]);
+			     } )*"" });
+    }
+  }
 }
