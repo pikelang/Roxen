@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.151 2000/08/09 13:27:03 mast Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.152 2000/08/12 18:17:39 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -43,7 +43,7 @@ string query_provides() {
   return "modified";
 }
 
-constant permitted = "123456789.xabcdefint\"XABCDEFlo<>=0-*+/%%|()"/"";
+constant permitted = "123456789.xabcdefint\"XABCDEFlo<>=0-*+/%&|()"/"";
 
 string sexpr_eval(string what)
 {
