@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version = "$Id: htaccess.pike,v 1.64 2000/08/28 05:31:54 per Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.65 2000/09/16 17:25:55 per Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -133,7 +133,7 @@ mapping|int parse_htaccess(Stdio.File f, RequestID id, string rht)
   array(int) s;
   array|int in_cache;
   mapping access = ([ ]);
-  cache_key = "htaccess:" + id->conf->name;
+  cache_key = "htaccess:" + id->conf->name + ":" + (id->misc->host||"*");
 
 
   s = (array(int))f->stat();
@@ -366,7 +366,7 @@ int validate_group(multiset grps, array auth, string groupfile, string userfile,
   Stdio.File f;
   array|int in_cache;
 
-  cache_key = "groupfile:" + id->conf->name;
+  cache_key = "groupfile:" + id->conf->name + ":" + (id->misc->host||"*");
 
   if (!groupfile) {
     HT_WERR("!groupfile");
@@ -646,7 +646,8 @@ inline string dot_dot(string from)
 string|int cache_path_of_htaccess(string path, RequestID id)
 {
   string|int f;
-  f = cache_lookup("htaccess_files:"+id->conf->name, path);
+  string cache_key="htaccess_files:"+id->conf->name+":"+(id->misc->host||"*");
+  f = cache_lookup(cache_key, path);
 #ifdef HTACCESS_DEBUG
   if(f==0) {
     HT_WERR("Location of .htaccess file for "+path+" not cached.");
@@ -661,9 +662,11 @@ string|int cache_path_of_htaccess(string path, RequestID id)
 
 void cache_set_path_of_htaccess(string path, string|int htaccess_file, RequestID id)
 {
+  string cache_key = "htaccess_files:" + id->conf->name + ":" + 
+         (id->misc->host||"*");
   HT_WERR("HTACCESS: Setting cached location for "
-		 +path+" to "+htaccess_file);
-  cache_set("htaccess_files:"+id->conf->name, path, htaccess_file);
+          +path+" to "+htaccess_file);
+  cache_set(cache_key, path, htaccess_file);
 }
 
 // This function traverse the virtual filepath to see if there are any
