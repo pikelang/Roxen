@@ -1,9 +1,9 @@
-constant cvs_version="$Id: ximg.pike,v 1.6 1999/09/25 15:06:38 nilsson Exp $";
+constant cvs_version="$Id: ximg.pike,v 1.7 1999/09/25 22:57:20 nilsson Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
 
-thread_safe=1;
+constant thread_safe=1;
 
 array register_module()
 {

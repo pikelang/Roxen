@@ -1,9 +1,9 @@
 #include <module.h>
 inherit "module";
 
-thread_safe=1;
+constant thread_safe=1;
 
-constant cvs_version = "$Id: check_spelling.pike,v 1.4 1999/09/25 15:06:37 nilsson Exp $";
+constant cvs_version = "$Id: check_spelling.pike,v 1.5 1999/09/25 22:57:20 nilsson Exp $";
 
 #define FILE "etc/errordata"
 
