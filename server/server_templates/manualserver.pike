@@ -1,5 +1,5 @@
 /*
- * $Id: manualserver.pike,v 1.3 1999/08/25 00:39:24 js Exp $
+ * $Id: manualserver.pike,v 1.4 1999/09/28 13:52:00 peter Exp $
  */
 
 #include <module.h>
@@ -14,6 +14,7 @@ constant modules = ({
   "business#0",
   "wizard_tag#0",
   "filesystem#0",
+  "filesystem#1",
   "lpctag#0",
   "directories#0",
   "configtablist#0",
@@ -53,6 +54,12 @@ void post(object node)
       if(o2 = o->descend( "searchpath", 1))
       {
 	o2->data[VAR_VALUE] = "manual/unparsed/";
+	o2->change(1);
+      }
+    if(o = o->descend( "1", 1))
+      if(o2 = o->descend( "searchpath", 1))
+      {
+	o2->data[VAR_VALUE] = "manual/pdf/";
 	o2->change(1);
       }
   }
