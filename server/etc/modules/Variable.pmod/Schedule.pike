@@ -42,7 +42,7 @@ inherit "html";
 //!     @endint
 //!   @elem int(0..23) time
 //! @endarray
-array transform_from_form( string what, void|mapping vl )
+array transform_from_form( string what, mapping vl )
 {
   array res = query() + ({});
   if(sizeof(res)!=5)
@@ -65,9 +65,10 @@ private string checked( int pos, int alt )
   return "";
 }
 
-private mapping next_or_same_day(mapping from, int day)
+private mapping next_or_same_day(mapping from, int day, int hour)
 {
-  if(from->wday==day) return from;
+  if(from->wday==day && from->hour<hour)
+    return from;
   return next_day(from, day);
 }
 
@@ -111,22 +112,26 @@ int get_next( int last )
   array vals = query();
   if( !vals[0] )
     return -1;
+
+  // Every n:th hour.
   if( vals[0] == 1 )
     if( !last )
       return time(1);
     else
       return last + 3600 * vals[1];
 
+  // Every n:th day at x.
   mapping m = localtime( last || time(1) );
   m->min = m->sec = 0;
   if( !vals[3] ) {
+    // Every day at x.
     for(int i; i<vals[2]; i++)
       m = next_or_same_time( m, vals[4] );
     return mktime(m);
   }
   for(int i; i<vals[2]; i++)
   {
-    m = next_or_same_time( next_or_same_day( m, vals[3]-1 ),
+    m = next_or_same_time( next_or_same_day( m, vals[3]-1, vals[4] ),
 			   vals[4], 6*24*3600 );
   }
   return mktime(m);
@@ -178,13 +183,13 @@ string render_view( RequestID id, void|mapping additional_args )
     case 2:
       string period = ({
 	LOCALE(484, "Day"),
+	LOCALE(485, "Sunday"),
 	LOCALE(486, "Monday"),
 	LOCALE(487, "Tuesday"),
 	LOCALE(488, "Wednesday"),
 	LOCALE(489, "Thursday"),
 	LOCALE(490, "Friday"),
-	LOCALE(491, "Saturday"),
-	LOCALE(485, "Sunday")
+	LOCALE(491, "Saturday")
       })[query()[3]];
 
       return sprintf(LOCALE(494, "Every %d %s at %02d:00"), res[2], period, res[4]);
