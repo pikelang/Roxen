@@ -5,7 +5,7 @@
 //
 // Henrik Grubbström 1997-01-12
 
-constant cvs_version="$Id: sqltag.pike,v 1.54 2000/03/31 05:20:48 nilsson Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.55 2000/04/04 17:56:50 jhs Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -266,7 +266,8 @@ string query_provides()
 void create()
 {
   defvar("hostname", "localhost", "Default SQL database host",
-	 TYPE_STRING, "Specifies the default host to use for SQL queries.\n"
+	 TYPE_STRING | VAR_INITIAL,
+	 "Specifies the default host to use for SQL queries.\n"
 	 "This argument can also be used to specify which SQL server to "
 	 "use by specifying an \"SQL URL\":<ul>\n"
 	 "<pre>[<i>sqlserver</i>://][[<i>user</i>][:<i>password</i>]@]"
