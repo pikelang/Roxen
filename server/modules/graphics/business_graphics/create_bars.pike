@@ -742,7 +742,7 @@ int main(int argc, string *argv)
 		 "axcolor":({0,0,255}),
 		 "bgcolor":0,//({255,255,255}),
 		 "labelcolor":({0,0,0}),
-		 "datacolors":({({0,255,0}),({255,255,0}), ({0,255,255}), ({255,0,255}) }),
+		 //"datacolors":({({0,255,0}),({255,255,0}), ({0,255,255}), ({255,0,255}) }),
 		 "linewidth":2.2,
 		 "backlinewidth":0,
 		 "xsize":400,
@@ -759,6 +759,7 @@ int main(int argc, string *argv)
 		 "horgrind": 1,
 		 "grindwidth": 0.5,
 		 "backlinecolor":1.0,
+		 "bw":3,
 		 "xnames":({"hej", "olle"})
   ]);
 
