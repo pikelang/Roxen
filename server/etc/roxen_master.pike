@@ -6,7 +6,7 @@ object sql = connect_to_my_mysql( 0, "local" );
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.110 2001/01/29 09:10:41 per Exp $";
+constant cvs_version = "$Id: roxen_master.pike,v 1.111 2001/02/22 23:48:00 per Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -524,10 +524,11 @@ program low_findprog(string pname, string ext, object|void handler)
 #define DUMP_WARNING(fname,err)                                         \
           werror("Failed to decode dumped file for %s: %s",             \
                  trim_file_name (fname), describe_error(err));
+#define DDEBUG( X, Y ) werror( X, Y )
 #else
 #define DUMP_WARNING(f,e)
+#define DDEBUG( X, Y )
 #endif
-
 #define LOAD_DATA( DATA )                                                    \
       do {                                                                   \
         mixed err = catch                                                    \
@@ -550,6 +551,7 @@ program low_findprog(string pname, string ext, object|void handler)
           if(s2[1]>0 && s2[3]>=s[3])
             LOAD_DATA( Stdio.File( ofile,"r")->read() );
 
+      DDEBUG( "Really compile: %O\n", fname );
       if ( mixed e=catch { ret=compile_file(fname); } )
       {
 	// load_time[fname] = time(); not here, no.... reload breaks miserably
