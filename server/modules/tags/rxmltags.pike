@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.37 1999/12/18 14:14:02 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.38 1999/12/27 19:02:59 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -1131,7 +1131,7 @@ array(string) container_trimlines( string tag_name, mapping args,
 
 void container_throw( string t, mapping m, string c, RequestID id)
 {
-  if(!id->misc->catcher_is_ready && c[-1]!="\n")
+  if(!id->misc->catcher_is_ready && c[-1]!='\n')
     c+="\n";
   throw( ({ c, backtrace() }) );
 }

@@ -1,7 +1,7 @@
 #include <roxen.h>
 inherit "http";
 
-// $Id: roxenlib.pike,v 1.134 1999/12/27 12:36:12 mast Exp $
+// $Id: roxenlib.pike,v 1.135 1999/12/27 18:55:53 nilsson Exp $
 // This code has to work both in the roxen object, and in modules.
 #if !efun(roxen)
 #define roxen roxenp()
@@ -623,7 +623,7 @@ static string add_config( string url, array config, multiset prestate )
 {
   if(!sizeof(config)) 
     return url;
-  if(strlen(url)>5 && (url[1] == "(" || url[1] == "<"))
+  if(strlen(url)>5 && (url[1] == '(' || url[1] == '<'))
     return url;
   return "/<" + config * "," + ">" + add_pre_state(url, prestate);
 }
@@ -641,7 +641,7 @@ string msectos(int t)
   return sprintf("%d:%02d h:m", t/3600000, (t%3600000)/60000);
 }
 static Regexp extension_regexp = Regexp(".*\\.([^#~]*)");             
-int|string extension( string f, object|void id) 
+int|string extension( string f, RequestID|void id) 
 {
   string ext, key;
   if(!f || !strlen(f)) return "";
@@ -652,7 +652,7 @@ int|string extension( string f, object|void id)
     else {
       ext = lower_case(split[0]);
       if(ext == "bak" || ext == "old")
-	if(f[-1] == "~" || f[-1] == "#")
+	if(f[-1] == '~' || f[-1] == '#')
 	  ext = extension(f[..strlen(f)-5]);
 	else 
 	  ext = extension(f[..strlen(f)-4]);
@@ -1394,14 +1394,12 @@ string fix_relative( string file, RequestID id )
 {
   string path = id->not_query;
   // +(id->misc->path_info?id->misc->path_info:"");
-//   werror(" Fix relative, path = "+path+"; file = "+file+"; " );
   if(file != "" && file[0] == '/') 
     ;
   else if(file != "" && file[0] == '#') 
     file = path + file;
   else
     file = dirname(path) + "/" +  file;
-//   werror(" res = "+simplify_path(file)+"\n");
   return simplify_path(file);
 }
 

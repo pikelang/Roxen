@@ -3,7 +3,7 @@
  * (C) 1996, 1999 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.243 1999/12/22 01:35:29 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.244 1999/12/27 19:03:34 nilsson Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -1773,7 +1773,7 @@ public array open_file(string fname, string mode, RequestID id)
   object oc = id->conf;
   string oq = id->not_query;
   function funp;
-  mapping file;
+  mapping|int(0..1) file;
 
   id->not_query = fname;
 

@@ -1,7 +1,7 @@
 /*
  * http.pike: HTTP convenience functions.
  * inherited by roxenlib, and thus by all files inheriting roxenlib.
- * $Id: http.pike,v 1.32 1999/12/22 01:35:42 per Exp $
+ * $Id: http.pike,v 1.33 1999/12/27 18:56:12 nilsson Exp $
  */
 
 #include <config.h>
@@ -228,7 +228,7 @@ static string add_pre_state( string url, multiset state )
     error("URL needed for add_pre_state()\n");
   if(!state || !sizeof(state))
     return url;
-  if(strlen(url)>5 && (url[1] == "(" || url[1] == "<"))
+  if(strlen(url)>5 && (url[1] == '(' || url[1] == '<'))
     return url;
   return "/(" + sort(indices(state)) * "," + ")" + url ;
 }

@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.375 1999/12/27 13:12:36 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.376 1999/12/27 18:58:13 nilsson Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -248,7 +248,7 @@ static class Privs
     if(stringp(uid) && (replace(uid,"0123456789"/"",({""})*10)==""))
       uid = (int)uid;
 
-    if(stringp(gid) && (replace(gid, "0123456789"/"", ({"" })*10 == "")))
+    if(stringp(gid) && (replace(gid, "0123456789"/"", ({"" })*10) == ""))
       gid = (int)gid;
 
     if(!stringp(uid))
@@ -462,6 +462,7 @@ private static void really_low_shutdown(int exit_code)
   exit(exit_code);		// Now we die...
 }
 
+
 // Shutdown Roxen
 //  exit_code = 0	True shutdown
 //  exit_code = -1	Restart
@@ -597,6 +598,7 @@ void stop_handler_threads()
     }
     sleep(0.1);
   }
+
 }
 #endif /* THREADS */
 
