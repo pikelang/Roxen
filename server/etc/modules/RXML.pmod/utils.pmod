@@ -5,7 +5,7 @@
 //!
 //! Created 2000-01-21 by Martin Stjernholm
 //!
-//! $Id: utils.pmod,v 1.2 2000/02/11 01:04:01 mast Exp $
+//! $Id: utils.pmod,v 1.3 2000/02/12 21:27:55 mast Exp $
 
 
 array return_zero (mixed... ignored) {return 0;}
@@ -25,7 +25,10 @@ int(1..1)|string|array p_html_entity_cb (Parser.HTML p, string str)
 {
   string entity = p->tag_name();
   if (sizeof (entity)) {
-    if (entity[0] == '#') {
+    if (entity[0] != '#')
+      return p->handle_var (entity);
+    if (p->type->quoting_scheme != "xml") {
+      // Don't decode any normal entities if we're outputting xml-like stuff.
       if (!p->type->free_text) return ({});
       string out;
       if ((<"#x", "#X">)[entity[..1]]) {
@@ -35,7 +38,6 @@ int(1..1)|string|array p_html_entity_cb (Parser.HTML p, string str)
 	if (sscanf (entity, "%*c%d%*c", int c) == 2) out = (string) ({c});
       return out && ({out});
     }
-    return p->handle_var (entity);
   }
   return p->type->free_text ? 0 : ({});
 }

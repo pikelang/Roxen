@@ -4,7 +4,7 @@
 //!
 //! Created 2000-01-28 by Martin Stjernholm.
 //!
-//! $Id: PEnt.pike,v 1.5 2000/02/11 01:09:13 mast Exp $
+//! $Id: PEnt.pike,v 1.6 2000/02/12 21:27:55 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
@@ -26,14 +26,17 @@ static void create (
 {
   _tag_set_parser_create (ctx, type, tag_set);
 
-  array(RXML.TagSet) list = ({tag_set});
-  for (int i = 0; i < sizeof (list); i++) {
-    array(RXML.TagSet) sublist = list[i]->imported;
-    if (sizeof (sublist))
-      list = list[..i] + sublist + list[i + 1..];
+  if (type->quoting_scheme != "xml") {
+    // Don't decode entities if we're outputting xml-like stuff.
+    array(RXML.TagSet) list = ({tag_set});
+    for (int i = 0; i < sizeof (list); i++) {
+      array(RXML.TagSet) sublist = list[i]->imported;
+      if (sizeof (sublist))
+	list = list[..i] + sublist + list[i + 1..];
+    }
+    for (int i = sizeof (list) - 1; i >= 0; i--)
+      if (list[i]->low_entities) add_entities (list[i]->low_entities);
   }
-  for (int i = sizeof (list) - 1; i >= 0; i--)
-    if (list[i]->low_entities) add_entities (list[i]->low_entities);
 
   mixed_mode (!type->free_text);
   ignore_tags (1);

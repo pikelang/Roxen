@@ -5,7 +5,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: PXml.pike,v 1.26 2000/02/11 01:06:13 mast Exp $
+//! $Id: PXml.pike,v 1.27 2000/02/12 21:27:55 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
@@ -128,7 +128,9 @@ static void create (
       add_container (name, [CONTAINER_TYPE] tagdef[1]);
     }
 
-    if (tset->low_entities) add_entities (tset->low_entities);
+    if (tset->low_entities && type->quoting_scheme != "xml")
+      // Don't decode entities if we're outputting xml-like stuff.
+      add_entities (tset->low_entities);
   }
 
   xml_tag_syntax (3);
