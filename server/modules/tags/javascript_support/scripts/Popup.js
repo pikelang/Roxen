@@ -117,7 +117,10 @@ function showPopup(e, name, parent, properties)
   if(popups.length != 0) {
     if(popups[popups.length - 1].name == name) {
       // The correct popup is allredy there.
-      if(popups[popups.length - 1].hide_timer) {
+      if(properties.hide_2nd_click) {
+	clearToPopup(parent);
+      }
+      else if(popups[popups.length - 1].hide_timer) {
 	clearTimeout(popups[popups.length - 1].hide_timer);
 	popups[popups.length - 1].hide_timer = null;
 	popups[popups.length - 1].inside = false;
@@ -162,11 +165,12 @@ function LayerPosition(trigger_pos, parent_popup_pos, properties)
 
 function PopupProperties(hide_delay, ox, oy, pox, poy)
 {
-  this.hide_delay = hide_delay||300;
+  this.hide_delay = hide_delay;
   this.ox = ox;
   this.oy = oy;
   this.pox = pox;
   this.poy = poy;
+  this.hide_2nd_click = 0;
   this.LayerPosition = LayerPosition;
 
   // Modify the offsets
