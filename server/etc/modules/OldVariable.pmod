@@ -1,6 +1,16 @@
 #include <module.h>
-#define LOW_LOCALE (roxenp()->locale->get())
 static inherit "html";
+
+// Locale macros
+static Locale.LocaleObject getlocobj() {
+  return roxenp()->locale->get()->config_interface;
+}
+
+#if constant(Locale.translate)
+# define LOCALE(X,Y)	([string](mixed)Locale.DeferredLocale(getlocobj,X,Y))
+#else
+# define LOCALE(X,Y)	([string](mixed)RoxenLocale.DeferredLocale(getlocobj,X,Y))
+#endif
 
 // Increased for each variable, used to index the mappings below.
 static int unique_vid;
@@ -359,7 +369,7 @@ class Float
 //! Float variable, with optional range checks, and adjustable precision.
 {
   inherit Variable;
-  constant type = "Int";
+  constant type = "Float";
   static float _max, _min;
   static int _prec = 2, mm_set;
 
@@ -552,7 +562,7 @@ class Password
 
   string render_form( RequestID id )
   {
-    return "<input name=\""+path()+"\" type=password size=30>";
+    return "<input name=\""+path()+"\" type=\"password\" size=\"30\">";
   }
 }
 
@@ -840,11 +850,11 @@ class List
     _current_count++;
 
     string res = "<table>\n"
-    "<input type=hidden name='"+prefix+"count' value='"+_current_count+"' />";
+    "<input type='hidden' name='"+prefix+"count' value='"+_current_count+"' />";
 
     foreach( map(query(), transform_to_form), string val )
     {
-      res += "<tr><td><font size=-1>"+ input( prefix+"set."+i, val, width) + "</font></td>";
+      res += "<tr><td><font size='-1'>"+ input( prefix+"set."+i, val, width) + "</font></td>";
 
 #define BUTTON(X,Y) ("<submit-gbutton2 name='"+X+"'>"+Y+"</submit-gbutton2>")
       if( i )
@@ -860,14 +870,14 @@ class List
       else
         res += "<td></td>";
       res += "\n<td>"+
-            BUTTON(prefix+"delete."+i, "&locale.delete;")
+            BUTTON(prefix+"delete."+i, LOCALE("", "Delete") )
           +"</td>";
           "</tr>";
       i++;
     }
     res += 
         "<tr><td colspan='2'>"+
-        BUTTON(prefix+"new", "&locale.new_row;")+
+        BUTTON(prefix+"new", LOCALE("", "New row") )+
         "</td></tr></table>\n";
 
     return res;
@@ -1010,13 +1020,13 @@ class Flag
 
   string render_form( RequestID id )
   {
-    string res = "<select name="+path()+"> ";
+    string res = "<select name=\""+path()+"\"> ";
     if(query())
-      res +=  ("<option value=1 selected>"+LOW_LOCALE->yes+"</option>\n"
-                "<option value=0>"+LOW_LOCALE->no)+"</option>\n";
+      res += "<option value=\"1\" selected=\"selected\">"+LOCALE("", "Yes")+"</option>\n"
+	     "<option value=\"0\">"+LOCALE("", "No")+"</option>\n";
      else
-       res +=  ("<option value=1>"+LOW_LOCALE->yes+"</option>\n"
-                "<option value=0 selected>"+LOW_LOCALE->no)+"</option>\n";
+       res += "<option value=\"1\">"+LOCALE("", "Yes")+"</option>\n"
+              "<option value=\"0\" selected>"+LOCALE("", "No")+"</option>\n";
     return res+"</select>";
   }
 }
