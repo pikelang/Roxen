@@ -1,7 +1,7 @@
 // HTTP convenience functions.
 // inherited by roxenlib, and thus by all files inheriting roxenlib.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: http.pike,v 1.50 2001/03/22 15:23:11 mast Exp $
+// $Id: http.pike,v 1.51 2001/05/16 23:56:34 nilsson Exp $
 
 //#pragma strict_types
 
@@ -231,6 +231,8 @@ mapping http_redirect( string url, RequestID|void id )
 //! the url parameter is just a virtual (possibly relative) path, the
 //! current id object must be supplied to resolve the destination URL.
 {
+  if(!has_value(url, "://") && url[0]!='/')
+    url = fix_relative(url, id);
   if(strlen(url) && url[0] == '/')
   {
     if(id)
@@ -322,4 +324,71 @@ mapping add_http_header(mapping to, string name, string value)
   else
     to[name] = value;
   return to;
+}
+
+
+string fix_relative( string file, RequestID id )
+//! Turns a relative (or already absolute) virtual path into an
+//! absolute virtual path, that is, one rooted at the virtual server's
+//! root directory. The returned path is <ref>simplify_path()</ref>:ed.
+{
+  string path = id->not_query;
+  if( !search( file, "http:" ) )
+    return file;
+
+  [string prefix, file] = win_drive_prefix(file);
+
+  // +(id->misc->path_info?id->misc->path_info:"");
+  if(file != "" && file[0] == '/')
+    ;
+  else if(file != "" && file[0] == '#')
+    file = path + file;
+  else
+    file = dirname(path) + "/" +  file;
+  return simplify_path(prefix + file);
+}
+
+array(string) win_drive_prefix(string path)
+//! Splits path into ({ prefix, path }) array. Prefix is "" for paths on
+//! non-Windows systems or when no proper drive prefix is found.
+{
+#ifdef __NT__
+  string prefix;
+  if (sscanf(path, "\\\\%s%*[\\/]%s", prefix, string path_end) == 3) {
+    return ({ "\\\\" + prefix, "/" + path_end });
+  } else if (sscanf(path, "%1s:%s", prefix, path) == 2) {
+    return ({ prefix + ":", path });
+  }
+#endif
+  return ({ "", path });
+}
+
+string simplify_path(string file)
+//! This one will remove .././ etc. in the path. The returned value
+//! will be a canonic representation of the given path.
+{
+  // Faster for most cases since "//", "./" or "../" rarely exists.
+  if(!strlen(file) || (!has_value(file, "./") && (file[-1] != '.') &&
+		       !has_value (file, "//")))
+    return file;
+
+  int t2,t1;
+
+  [string prefix, file] = win_drive_prefix(file);
+
+  if(file[0] != '/')
+    t2 = 1;
+
+  if(strlen(file) > 1
+     && file[-2]=='/'
+     && ((file[-1] == '/') || (file[-1]=='.'))
+	)
+    t1=1;
+
+  file=combine_path("/", file);
+
+  if(t1) file += "/.";
+  if(t2) return prefix + file[1..];
+
+  return prefix + file;
 }

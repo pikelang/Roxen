@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.202 2001/02/16 15:07:16 mast Exp $
+// $Id: roxenlib.pike,v 1.203 2001/05/16 23:56:34 nilsson Exp $
 
 //#pragma strict_types
 
@@ -745,51 +745,6 @@ static int ipow(int what, int how)
   return (int)pow(what, how);
 }
 
-array(string) win_drive_prefix(string path)
-//! Splits path into ({ prefix, path }) array. Prefix is "" for paths on
-//! non-Windows systems or when no proper drive prefix is found.
-{
-#ifdef __NT__
-  string prefix;
-  if (sscanf(path, "\\\\%s%*[\\/]%s", prefix, string path_end) == 3) {
-    return ({ "\\\\" + prefix, "/" + path_end });
-  } else if (sscanf(path, "%1s:%s", prefix, path) == 2) {
-    return ({ prefix + ":", path });
-  }
-#endif
-  return ({ "", path });
-}
-
-string simplify_path(string file)
-//! This one will remove .././ etc. in the path. The returned value
-//! will be a canonic representation of the given path.
-{
-  // Faster for most cases since "//", "./" or "../" rarely exists.
-  if(!strlen(file) || (!has_value(file, "./") && (file[-1] != '.') &&
-		       !has_value (file, "//")))
-    return file;
-
-  int t2,t1;
-
-  [string prefix, file] = win_drive_prefix(file);
-
-  if(file[0] != '/')
-    t2 = 1;
-
-  if(strlen(file) > 1
-     && file[-2]=='/'
-     && ((file[-1] == '/') || (file[-1]=='.'))
-	)
-    t1=1;
-
-  file=combine_path("/", file);
-
-  if(t1) file += "/.";
-  if(t2) return prefix + file[1..];
-
-  return prefix + file;
-}
-
 string short_date(int timestamp)
 //! Returns a short date string from a time-int
 {
@@ -1469,27 +1424,6 @@ static string do_output_tag( mapping(string:string) args, array(mapping(string:s
 
   id->misc->variables = other_vars;
   return new_contents;
-}
-
-string fix_relative( string file, RequestID id )
-//! Turns a relative (or already absolute) virtual path into an
-//! absolute virtual path, that is, one rooted at the virtual server's
-//! root directory. The returned path is <ref>simplify_path()</ref>:ed.
-{
-  string path = id->not_query;
-  if( !search( file, "http:" ) )
-    return file;
-
-  [string prefix, file] = win_drive_prefix(file);
-
-  // +(id->misc->path_info?id->misc->path_info:"");
-  if(file != "" && file[0] == '/')
-    ;
-  else if(file != "" && file[0] == '#')
-    file = path + file;
-  else
-    file = dirname(path) + "/" +  file;
-  return simplify_path(prefix + file);
 }
 
 Stdio.File open_log_file( string logfile )
