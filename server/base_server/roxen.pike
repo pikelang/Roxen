@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.372 2000/01/08 20:45:27 mast Exp $
+ * $Id: roxen.pike,v 1.373 2000/12/10 18:53:57 nilsson Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -8,7 +8,7 @@
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version = "$Id: roxen.pike,v 1.372 2000/01/08 20:45:27 mast Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.373 2000/12/10 18:53:57 nilsson Exp $";
 
 object backend_thread;
 object argcache;
@@ -2009,8 +2009,8 @@ class ArgCache
   {
     if( is_db )
     {
-      mapping data = db->query(sprintf("select id,contents from %s where lkey='%s'",
-                                       name,long_key[..79]));
+      array(mapping) data = db->query(sprintf("select id,contents from %s where lkey='%s'",
+					      name,long_key[..79]));
       foreach( data, mapping m )
         if( m->contents == long_key )
           return m->id;

@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.93 1999/07/10 21:38:37 peter Exp $
+ * $Id: roxenloader.pike,v 1.94 2000/12/10 18:54:12 nilsson Exp $
  *
  * Roxen bootstrap program.
  *
@@ -15,7 +15,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.93 1999/07/10 21:38:37 peter Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.94 2000/12/10 18:54:12 nilsson Exp $";
 
 // Macro to throw errors
 #define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
@@ -384,7 +384,8 @@ int low_spawne(string s,string *args, mapping|array env, object stdin,
 int spawne(string s,string *args, mapping|array env, object stdin, 
 	   object stdout, object stderr, void|string wd, void|array (int) uid)
 {
-  int pid, *olduid = allocate(2, "int");
+  int pid;
+  array olduid = allocate(2, "int");
 
   int u, g;
   if(uid) { u = uid[0]; g = uid[1]; } else
