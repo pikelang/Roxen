@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.31.2.9 1997/03/20 16:09:01 grubba Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.31.2.10 1997/03/26 20:14:12 grubba Exp $";
 
 #define IN_ROXEN
 #include <module.h>
@@ -1304,7 +1304,7 @@ public array stat_file(string file, object id)
   {
     loc = tmp[0];
     if((file == loc) || ((file+"/")==loc))
-      return ({ 0, -3, 0, 0, 0, 0, 0, 0, 0, 0, 0 });
+      return ({ 0775, -3, 0, 0, 0, 0, 0, 0, 0, 0, 0 });
     if(!search(file, loc)) 
     {
 #ifdef MODULE_LEVEL_SECURITY
