@@ -6,7 +6,7 @@ inherit "roxenlib";
 #include <module.h>
 
 constant thread_safe=1;
-constant cvs_version = "$Id: ssi.pike,v 1.20 2000/02/02 18:09:24 kuntri Exp $";
+constant cvs_version = "$Id: ssi.pike,v 1.21 2000/02/06 20:01:41 nilsson Exp $";
 
 
 constant module_type = MODULE_PARSER;
@@ -43,7 +43,7 @@ void start(int num, Configuration conf) {
   query_tag_set()->prepare_context=set_entities;
 }
 
-class Scope_ssi {
+class ScopeSSI {
   inherit RXML.Scope;
   function get_var;
 
@@ -54,9 +54,22 @@ class Scope_ssi {
   string|int `[] (string var, void|RXML.Context c, void|string scope) {
     return get_var(var, c->id)||"";
   }
+
+  array(string) _indices(void|RXML.Context c) {
+    array ind=({ "sizefmt", "errmsg", "timefmt", "date_local", "date_gmt",
+		 "document_name", "document_uri", "query_string_unescaped",
+		 "last_modified", "server_software", "server_name",
+		 "gateway_interface", "server_protocol", "request_method",
+		 "auth_type", "http_cookie", "cookie" });
+    if(c->id) {
+      ind += indices(build_env_vars(0, c->id, 0));
+      if(c->id->misc->ssi_variables) ind += indices(c->id->misc->ssi_variables);
+    }
+    return ind;
+  }
 }
 
-RXML.Scope scope_ssi=Scope_ssi(get_var);
+RXML.Scope scope_ssi=ScopeSSI(get_var);
 void set_entities(RXML.Context c) {
   c->extend_scope("ssi", scope_ssi);
 }
@@ -366,7 +379,7 @@ string get_var(string var, RequestID id)
 
    default:
     var = upper_case(var);
-    mapping myenv =  build_env_vars(0, id, 0);
+    mapping myenv = build_env_vars(0, id, 0);
     if(myenv[var]) {
       NOCACHE();
       return myenv[var];
