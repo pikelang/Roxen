@@ -3,14 +3,11 @@
 // User database. Reads the system password database and use it to
 // authentificate users.
 
-constant cvs_version = "$Id: userdb.pike,v 1.33 1999/06/15 00:03:44 mast Exp $";
+constant cvs_version = "$Id: userdb.pike,v 1.34 1999/09/05 01:44:09 per Exp $";
 
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
-
-// import Stdio;
-// import Array;
 
 // Fairly weak check of password for portability.
 #define CRYPTWD_CHECK(cryptwd) \
@@ -228,7 +225,7 @@ void read_data()
     setpwent();
     while(tmp = getpwent())
       tmp2 += ({
-	Array.map(tmp, lambda(mixed s) { return (string)s; }) * ":"
+	map(tmp, lambda(mixed s) { return (string)s; }) * ":"
       }); 
     endpwent();
     if (objectp(privs)) {
@@ -429,7 +426,7 @@ string status()
      "of which " + cryptwd_ok + " seems to have valid passwords."
 //     + "<P>The netgroup database has "+sizeof(group)+" entries"
      + "<h3>Failure by host</h3>" +
-     Array.map(indices(failed), lambda(string s) {
+     map(indices(failed), lambda(string s) {
        return roxen->quick_ip_to_host(s) + ": "+failed[s]+"<br>\n";
      }) * "" 
 );
