@@ -295,6 +295,62 @@
   <result>ab</result>
 </test>
 
+<test>
+  <rxml type="string">
+    <define container="foo" scope="s">
+      &s.value;
+      <contents/>
+      &s.value;
+    </define>
+    <emit source="values" values="x" scope="s">
+      &s.value;
+      <foo value="y">&s.value;</foo>
+      &s.value;
+    </emit>
+  </rxml>
+  <result>xyxyx</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <define container="foo">
+      &_.value;
+      <emit source="values" values="z">
+	&_.value;
+	<contents/>
+	&_.value;
+      </emit>
+      &_.value;
+    </define>
+    <emit source="values" values="x">
+      &_.value;
+      <foo value="y">&_.value;</foo>
+      &_.value;
+    </emit>
+  </rxml>
+  <result>xyzxzyx</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <define container="foo" scope="s">
+      &s.value;
+      <emit source="values" values="z" scope="s">
+	&s.value;
+	<contents/>
+	&s.value;
+      </emit>
+      &s.value;
+    </define>
+    <emit source="values" values="x" scope="s">
+      &s.value;
+      <foo value="y">&s.value;</foo>
+      &s.value;
+    </emit>
+  </rxml>
+  <result>xyzxzyx</result>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Type tests</comment>
