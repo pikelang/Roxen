@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.191 2000/04/17 16:39:41 nilsson Exp $
+// $Id: rxml.pike,v 1.192 2000/04/29 20:25:59 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -2315,7 +2315,6 @@ The following features are supported:
 
 <attr name=packageinfo>
  Show a all available packages.
- <ex><use packageinfo=\"\"></ex>
 </attr>
 
 <attr name=package value=name>
