@@ -6,10 +6,10 @@
 <file>../pike_modules/Variable.pmod/Email.pike</file>
 <file>../pike_modules/Variable.pmod/Image.pike</file>
 <file>../pike_modules/Variable.pmod/Mapping.pike</file>
-<file>../pike_modules/Variable.pmod/module.pmod</file>
 <file>../pike_modules/Variable.pmod/Schedule.pike</file>
 <file>../pike_modules/Variable.pmod/Upload.pike</file>
 <file>../pike_modules/Variable.pmod/VerifiedString.pike</file>
+<file>../pike_modules/Variable.pmod/module.pmod</file>
 
 <str id="227">
 <new/>
@@ -157,7 +157,7 @@
 
 <str id="342">
 <new/>
-<o>Warning: The protocol %s is not known by ChiliMoon</o>
+<o>Warning: The protocol %s is not known by roxen</o>
 <t></t>
 </str>
 
