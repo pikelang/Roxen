@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.205 2004/05/13 14:03:28 grubba Exp $
+// $Id: module.pike,v 1.206 2004/05/13 15:39:18 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -1152,18 +1152,17 @@ static mapping(string:mixed)|int(0..1) write_access(string relative_path,
 mapping(string:mixed)|int(-1..0)|Stdio.File find_file(string path,
 						      RequestID id);
 
-//! Delete the file specified by @[path].
-//!
-//! It's unspecified if it works recursively or not, but if it does
-//! then it has to check DAV locks recursively.
+//! Used by the default @[recurse_delete_files] implementation to
+//! delete a file or an empty directory.
 //!
 //! @returns
-//!   Returns a 204 status on success, 0 if the file doesn't exist, or
-//!   an appropriate status mapping for any other error.
+//!   Returns a 2xx series status mapping on success (typically 204 No
+//!   Content). Returns 0 if the file doesn't exist. Returns an
+//!   appropriate status mapping for any other error.
 //!
 //! @note
 //!   The default implementation falls back to @[find_file()].
-mapping(string:mixed) delete_file(string path, RequestID id)
+static mapping(string:mixed) delete_file(string path, RequestID id)
 {
   // Fall back to find_file().
   RequestID tmp_id = id->clone_me();
@@ -1180,11 +1179,12 @@ mapping(string:mixed) delete_file(string path, RequestID id)
 //! @[delete_file] for each file and empty directory.
 //!
 //! @returns
-//!   Returns @expr{0@} (zero) on file not found. Returns
-//!   @[Roxen.http_status(204)] on success. Returns other result
-//!   mappings on failure. That includes an empty mapping in case some
-//!   subparts couldn't be deleted, to signify a 207 Multi-Status
-//!   response using the info in @[id->get_multi_status()].
+//!   Returns a 2xx series status mapping on success (typically 204 No
+//!   Content). Returns 0 if the file doesn't exist. Returns an
+//!   appropriate status mapping for any other error. That includes an
+//!   empty mapping in case some subparts couldn't be deleted, to
+//!   signify a 207 Multi-Status response using the info in
+//!   @[id->get_multi_status()].
 mapping(string:mixed) recurse_delete_files(string path,
 					   RequestID id,
 					   void|MultiStatus.Prefixed stat)
@@ -1238,6 +1238,12 @@ mapping(string:mixed) recurse_delete_files(string path,
   return recurse(path, st) || Roxen.http_status(204);
 }
 
+//! Make a new collection (aka directory) at @[path].
+//!
+//! @returns
+//!   Returns a 2xx series status on success (typically 201 Created).
+//!   Returns @expr{0@} (zero) if there's no directory to create the
+//!   new one in. Returns other result mappings on failure.
 mapping(string:mixed) make_collection(string path, RequestID id)
 {
   // Fall back to find_file().
@@ -1248,6 +1254,21 @@ mapping(string:mixed) make_collection(string path, RequestID id)
   return find_file(path, tmp_id);
 }
 
+//! Copy all properties at @[source] to @[destination].
+//!
+//! @param source
+//!   Source path below the filesystem location.
+//!
+//! @param destination
+//!   Destination path below the filesystem location.
+//!
+//! @param behavior
+//!   Specifies how to copy properties. See the @[PropertyBehavior]
+//!   type for details.
+//!
+//! @returns
+//!   @expr{0@} (zero) in success or an appropriate status mapping for
+//!   any error.
 mapping(string:mixed) copy_properties(string source, string destination,
 				      PropertyBehavior behavior, RequestID id)
 {
@@ -1300,7 +1321,7 @@ mapping(string:mixed) copy_properties(string source, string destination,
 }
 
 //! Used by the default @[recurse_copy_files] to copy a collection
-//! (aka directory).
+//! (aka directory) nonrecursively.
 static mapping(string:mixed) copy_collection(string source,
 					     string destination,
 					     PropertyBehavior behavior,
@@ -1382,10 +1403,31 @@ static mapping(string:mixed) copy_collection(string source,
   return copy_properties(source, destination, behavior, id) || res;
 }
 
-//! Used by the default @[recurse_copy_files] to copy a single file.
-mapping(string:mixed) copy_file(string source, string destination,
-				PropertyBehavior behavior,
-				Overwrite overwrite, RequestID id)
+//! Used by the default @[recurse_copy_files] to copy a single file
+//! along with its properties.
+//!
+//! @param source
+//!   Source path below the filesystem location.
+//!
+//! @param destination
+//!   Destination path below the filesystem location.
+//!
+//! @param behavior
+//!   Specifies how to copy properties. See the @[PropertyBehavior]
+//!   type for details.
+//!
+//! @param overwrite
+//!   Specifies how to handle the situation if the destination already
+//!   exists. See the @[Overwrite] type for details.
+//!
+//! @returns
+//!   Returns a 2xx series status mapping on success (typically 201
+//!   Created if the destination didn't exist before, or 204 No
+//!   Content otherwise). Returns 0 if the source doesn't exist.
+//!   Returns an appropriate status mapping for any other error.
+static mapping(string:mixed) copy_file(string source, string destination,
+				       PropertyBehavior behavior,
+				       Overwrite overwrite, RequestID id)
 {
   SIMPLE_TRACE_ENTER(this, "copy_file(%O, %O, %O, %O, %O)\n",
 		     source, destination, behavior, overwrite, id);
@@ -1393,12 +1435,39 @@ mapping(string:mixed) copy_file(string source, string destination,
   return Roxen.http_status (Protocols.HTTP.HTTP_NOT_IMPL);
 }
 
-mapping(string:mixed) recurse_copy_files(string source, string destination, int depth,
+//! Copy a resource recursively from @[source] to @[destination].
+//!
+//! @param source
+//!   Source path below the filesystem location.
+//!
+//! @param destination
+//!   Destination path below the filesystem location.
+//!
+//! @param behavior
+//!   Specifies how to copy properties. See the @[PropertyBehavior]
+//!   type for details.
+//!
+//! @param overwrite
+//!   Specifies how to handle the situation if the destination already
+//!   exists. See the @[Overwrite] type for details.
+//!
+//! @returns
+//!   Returns a 2xx series status mapping on success (typically 201
+//!   Created if the destination didn't exist before, or 204 No
+//!   Content otherwise). Returns 0 if the source doesn't exist.
+//!   Returns an appropriate status mapping for any other error. That
+//!   includes an empty mapping in case there's a failure on some
+//!   subpart or at the destination, to signify a 207 Multi-Status
+//!   response using the info in @[id->get_multi_status()].
+mapping(string:mixed) recurse_copy_files(string source, string destination,
 					 PropertyBehavior behavior,
 					 Overwrite overwrite, RequestID id)
 {
-  SIMPLE_TRACE_ENTER(this, "recurse_copy_files(%O, %O, %O, %O, %O)\n",
-		     source, destination, depth, behavior, id);
+  SIMPLE_TRACE_ENTER(this, "Recursive copy from %O to %O (%s)",
+		     source, destination,
+		     overwrite == DO_OVERWRITE ? "replace" :
+		     overwrite == NEVER_OVERWRITE ? "no overwrite" :
+		     "overlay");
   string src_tmp = has_suffix(source, "/")?source:(source+"/");
   string dst_tmp = has_suffix(destination, "/")?destination:(destination+"/");
   if ((src_tmp == dst_tmp) ||
@@ -1412,13 +1481,13 @@ mapping(string:mixed) recurse_copy_files(string source, string destination, int 
   MultiStatus.Prefixed result =
     id->get_multi_status()->prefix (id->url_base() + loc[1..]);
 
-  mapping(string:mixed) recurse(string source, string destination, int depth) {
+  mapping(string:mixed) recurse(string source, string destination) {
     // Note: Already got an extra TRACE_ENTER level on entry here.
 
     Stat st = stat_file(source, id);
     if (!st) {
       TRACE_LEAVE("Source not found.");
-      return 0;	/* FIXME: 404? */
+      return 0;
     }
     // FIXME: Check destination?
     if (st->isdir) {
@@ -1429,18 +1498,12 @@ mapping(string:mixed) recurse_copy_files(string source, string destination, int 
 	TRACE_LEAVE("Copy of collection failed.");
 	return res;
       }
-      if (depth <= 0) {
-	TRACE_LEAVE("Non-recursive copy of collection done.");
-	return res;
-      }
-      depth--;
       foreach(find_dir(source, id), string filename) {
 	string subsrc = combine_path_unix(source, filename);
 	string subdst = combine_path_unix(destination, filename);
-	SIMPLE_TRACE_ENTER(this, "Recursive copy from %O to %O, depth %O\n",
-			   subsrc, subdst, depth);
-	mapping(string:mixed) sub_res = recurse(subsrc, subdst, depth);
-	if (sub_res && (sub_res->error != 204) && (sub_res->error != 201)) {
+	SIMPLE_TRACE_ENTER(this, "Copy from %O to %O\n", subsrc, subdst);
+	mapping(string:mixed) sub_res = recurse(subsrc, subdst);
+	if (sub_res && !(<0, 201, 204>)[sub_res->error]) {
 	  result->add_status(subdst, sub_res->error, sub_res->rettext);
 	}
       }
@@ -1453,7 +1516,7 @@ mapping(string:mixed) recurse_copy_files(string source, string destination, int 
   };
 
   int start_ms_size = id->multi_status_size();
-  mapping(string:mixed) res = recurse (source, destination, depth);
+  mapping(string:mixed) res = recurse (source, destination);
   if (res && res->error != 204 && res->error != 201)
     return res;
   else if (id->multi_status_size() != start_ms_size)
@@ -1462,7 +1525,31 @@ mapping(string:mixed) recurse_copy_files(string source, string destination, int 
     return res;
 }
 
-//! Move/rename a single file.
+//! Used by the default @[recurse_move_files] to move a file (and not
+//! a directory) from @[source] to @[destination].
+//!
+//! @param source
+//!   Source path below the filesystem location.
+//!
+//! @param destination
+//!   Destination path below the filesystem location.
+//!
+//! @param behavior
+//!   Specifies how to move properties. See the @[PropertyBehavior]
+//!   type for details.
+//!
+//! @param overwrite
+//!   Specifies how to handle the situation if the destination already
+//!   exists. See the @[Overwrite] type for details.
+//!
+//! @returns
+//!   Returns a 2xx series status mapping on success (typically 201
+//!   Created if the destination didn't exist before, or 204 No
+//!   Content otherwise). Returns 0 if the source doesn't exist.
+//!   Returns an appropriate status mapping for any other error. That
+//!   includes an empty mapping in case there's a failure on some
+//!   subpart or at the destination, to signify a 207 Multi-Status
+//!   response using the info in @[id->get_multi_status()].
 static mapping(string:mixed) move_file(string source, string destination,
 				       PropertyBehavior behavior,
 				       Overwrite overwrite, RequestID id)
@@ -1485,7 +1572,36 @@ static mapping(string:mixed) move_file(string source, string destination,
   return delete_file(source, id);
 }
 
-//! Move/rename a collection (aka directory) and all it's content.
+//! Used by the default @[recurse_move_files] to move a collection
+//! (aka directory) and all its content from @[source] to
+//! @[destination].
+//!
+//! @param source
+//!   Source path below the filesystem location.
+//!
+//! @param destination
+//!   Destination path below the filesystem location.
+//!
+//! @param behavior
+//!   Specifies how to move properties. See the @[PropertyBehavior]
+//!   type for details.
+//!
+//! @param overwrite
+//!   Specifies how to handle the situation if the destination already
+//!   exists. See the @[Overwrite] type for details.
+//!
+//! @returns
+//!   Returns a 2xx series status mapping on success (typically 201
+//!   Created if the destination didn't exist before, or 204 No
+//!   Content otherwise). Returns 0 if the source doesn't exist.
+//!   Returns an appropriate status mapping for any other error. That
+//!   includes an empty mapping in case there's a failure on some
+//!   subpart or at the destination, to signify a 207 Multi-Status
+//!   response using the info in @[id->get_multi_status()].
+//!
+//! @note
+//! The function must be prepared to recurse to check DAV locks
+//! properly.
 static mapping(string:mixed) move_collection(string source, string destination,
 					     PropertyBehavior behavior,
 					     Overwrite overwrite, RequestID id)
@@ -1527,7 +1643,30 @@ static mapping(string:mixed) move_collection(string source, string destination,
   return delete_file(source, id);
 }
 
-//! Move/rename a file or collection (aka directory).
+//! Move a resource from @[source] to @[destination].
+//!
+//! @param source
+//!   Source path below the filesystem location.
+//!
+//! @param destination
+//!   Destination path below the filesystem location.
+//!
+//! @param behavior
+//!   Specifies how to move properties. See the @[PropertyBehavior]
+//!   type for details.
+//!
+//! @param overwrite
+//!   Specifies how to handle the situation if the destination already
+//!   exists. See the @[Overwrite] type for details.
+//!
+//! @returns
+//!   Returns a 2xx series status mapping on success (typically 201
+//!   Created if the destination didn't exist before, or 204 No
+//!   Content otherwise). Returns 0 if the source doesn't exist.
+//!   Returns an appropriate status mapping for any other error. That
+//!   includes an empty mapping in case there's a failure on some
+//!   subpart or at the destination, to signify a 207 Multi-Status
+//!   response using the info in @[id->get_multi_status()].
 mapping(string:mixed) recurse_move_files(string source, string destination,
 					 PropertyBehavior behavior,
 					 Overwrite overwrite, RequestID id)
