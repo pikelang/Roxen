@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.62 2000/09/19 13:11:37 per Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.63 2000/11/10 12:54:20 kuntri Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -45,14 +45,20 @@ mapping tagdocumentation() {
   string doc=compile_string("#define manual\n"+file->read())->gbuttonattr;
   string imagecache=button_cache->documentation();
 
-  return (["gbutton":"<desc cont><short>Creates graphical buttons.</short> </desc>"
+  return ([
+
+"gbutton":#"<desc cont='cont'><p><short>
+ Creates graphical buttons.</short></p>
+</desc>"
 
 	   +doc
 	   +imagecache,
 
-	   "gbutton-url":#"<desc><short>Generates an URI to the button.</short>
-<tag>gbutton-url</tag> takes the same attributes as <tag>gbutton</tag>
-including the image cache attributes.</desc>"
+"gbutton-url":#"<desc cont='cont'><p><short>
+ Generates an URI to the button.</short> <tag>gbutton-url</tag> takes
+ the same attributes as <xref href='gbutton.tag' /> including the
+ image cache attributes.</p>
+</desc>"
 
 	   +doc
 	   +imagecache,
@@ -61,70 +67,72 @@ including the image cache attributes.</desc>"
 
 #ifdef manual
 constant gbuttonattr=#"
-<attr name='pagebgcolor' value='color'>
+<attr name='pagebgcolor' value='color'><p></p>
 
 </attr>
 
-<attr name='bgcolor' value='color'>
- Background color inside and outside button.
+<attr name='bgcolor' value='color'><p>
+ Background color inside and outside button.</p>
 <ex>
 <gbutton bgcolor='lightblue'>Background</gbutton>
 </ex>
 </attr>
 
-<attr name='textcolor' value='color'>
- Button text color
+<attr name='textcolor' value='color'><p>
+ Button text color.</p>
 <ex>
 <gbutton textcolor='#ff6600'>Text</gbutton>
 </ex>
 </attr>
 
-<attr name=frame-image value='path'>
+<attr name=frame-image value='path'><p>
  Use this XCF-image as a frame for the button. The image is required
- to have at least the following layers: background, mask and frame.
- More information on how to create frame images can be found in the
- Roxen documentation; Web Site Creator/Graphical tags section.
+ to have at least the following layers: background, mask and
+ frame.</p>
+
+ <p>More information on how to create frame images can be found in the
+ Roxen documentation; Web Site Creator/Graphical tags section.</p>
 <ex>
 <gbutton frame-image='internal-roxen-tabframe'>foo</gbutton>
 </ex>
 </attr>
 
-<attr name='alt' value='string'>
- Alternative button and alt text.
+<attr name='alt' value='string'><p>
+ Alternative button and alt text.</p>
 </attr>
 
-<attr name='href' value='uri'>
- Button URI.
+<attr name='href' value='uri'><p>
+ Button URI.</p>
 </attr>
 
-<attr name='textstyle' value='normal|condensed'>
- Set to <att>normal</att> or <att>condensed</att> to alter text style.
+<attr name='textstyle' value='normal|condensed'><p>
+ Set to <att>normal</att> or <att>condensed</att> to alter text style.</p>
 </attr>
 
-<attr name='width' value=''>
- Minimum button width.
+<attr name='width' value='number'><p>
+ Minimum button width.</p>
 </attr>
 
-<attr name='align' value='left|center|right'>
+<attr name='align' value='left|center|right'><p>
  Set text alignment. There are some alignment restrictions: when text
  alignment is either <att>left</att> or <att>right</att>, icons must
- also be aligned <att>left</att> or <att>right</att>.
+ also be aligned <att>left</att> or <att>right</att>.</p>
 </attr>
 
-<attr name='state' value='enabled|disabled'>
- Set to <att>enabled</att> or <att>disabled</att> to select button state.
+<attr name='state' value='enabled|disabled'><p>
+ Set to <att>enabled</att> or <att>disabled</att> to select button state.</p>
 </attr>
 
-<attr name='icon-src' value='URI'>
- Fetch the icon from this URI.
+<attr name='icon-src' value='URI'><p>
+ Fetch the icon from this URI.</p>
 </attr>
 
-<attr name='icon-data' value=''>
- Inline icon data.
+<attr name='icon-data' value=''><p>
+ Inline icon data.</p>
 </attr>
 
-<attr name='align-icon' value='left|center-before|center-after|right'>
- Set icon alignment.
+<attr name='align-icon' value='left|center-before|center-after|right'><p>
+ Set icon alignment.</p>
 
 <table>
 <tr><td>left</td><td>Place icon on the left side of the text.</td></tr>
@@ -142,40 +150,40 @@ constant gbuttonattr=#"
 </ex>
 </attr>
 
-<attr name='valign-icon' value='above|middle|below'>
+<attr name='valign-icon' value='above|middle|below'><p>
   Set icon vertical alignment. Requires three horizontal guidelines in the
   frame image. If set to <att>above</att> the icon is placed between the first
   and second guidelines and the text between the second and third ones. If
   set to <att>below</att> the placement is reversed. Default value is
-  <att>middle</att>.
+  <att>middle</att>.</p>
 </attr>
 
-<attr name='font' value='fontname'>
+<attr name='font' value='fontname'><p></p>
 
 </attr>
 
 <attr name='extra-layers' value='[''],[first|last],[selected|unselected],[background|mask|frame|left|right]'>
-
+<p></p>
 </attr>
 
 <attr name='extra-left-layers' value='[''],[first|last],[selected|unselected],[background|mask|frame|left|right]'>
-
+<p></p>
 </attr>
 
 <attr name='extra-right-layers' value='[''],[first|last],[selected|unselected],[background|mask|frame|left|right]'>
-
+<p></p>
 </attr>
 
 <attr name='extra-background-layers' value='[''],[first|last],[selected|unselected],[background|mask|frame|left|right]'>
-
+<p></p>
 </attr>
 
 <attr name='extra-mask-layers' value='[''],[first|last],[selected|unselected],[background|mask|frame|left|right]'>
-
+<p></p>
 </attr>
 
 <attr name='extra-frame-layers' value='[''],[first|last],[selected|unselected],[background|mask|frame|left|right]'>
-
+<p></p>
 <ex>
 <gbutton frame-image='gbutton.xcf' alt='foo'>bu</gbutton>
 </ex>
