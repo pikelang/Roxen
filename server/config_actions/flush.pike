@@ -1,5 +1,5 @@
 /*
- * $Id: flush.pike,v 1.3 1997/08/24 23:07:37 peter Exp $
+ * $Id: flush.pike,v 1.4 1998/01/23 17:26:53 grubba Exp $
  */
 
 inherit "wizard";
@@ -84,7 +84,7 @@ mixed wizard_done(object id, object mc)
   /* Flush the memory cache. */ 
   if(id->variables->memory_cache != "0")
   {
-    info += ({ "the memmory cache" });
+    info += ({ "the memory cache" });
     function_object(cache_set)->cache = ([]);
   }
 
