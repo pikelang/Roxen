@@ -1,4 +1,4 @@
-/* $Id: node.pike,v 1.4 1997/05/31 22:01:23 grubba Exp $ */
+/* $Id: node.pike,v 1.5 1997/08/12 16:58:36 grubba Exp $ */
 int folded=1, type;
 mixed data;
 function describer;
@@ -112,13 +112,13 @@ void dest()
 
   if(prev)  prev->next = next;
   if(next)  next->prev = prev;
-  next=prev=0;
 
   if(up)
   {
     if(up->down == this_object())     up->down = prev||next;
     if(up->current == this_object())  up->current = prev||next;
   }
+  next=prev=0;
   up=down=0;
   destruct();
 }
