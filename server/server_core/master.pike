@@ -5,12 +5,14 @@
 object mm=(object)"/master";
 inherit "/master": master;
 
+constant cvs_version = "$Id: master.pike,v 1.135 2004/04/03 21:53:18 mani Exp $";
+
+#define Stat _static_modules.___files.Stat
+
 mixed sql_query( string q, mixed ... e )
 {
   return connect_to_my_mysql( 0, "local" )->query( q, @e );
 }
-
-constant cvs_version = "$Id: master.pike,v 1.134 2003/01/26 02:10:46 mani Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -604,18 +606,6 @@ int loaded_at( program p )
   return load_time[ program_name (p) ];
 }
 
-// array(string) query_precompiled_names(string fname)
-// {
-//   return ({ make_ofilename(fname) }) + ::query_precompiled_names(fname);
-// }
-
-array master_file_stat(string x) 
-{ 
-  lambda(){}(); // avoid some optimizations
-  mixed y = file_stat( x );
-  return y?(array(int))y:0;
-}
-
 #if constant(_static_modules.Builtin.mutex)
 #define THREADED
 // NOTE: compilation_mutex is inherited from the original master.
@@ -638,11 +628,11 @@ program low_findprog(string pname, string ext, object|void handler)
   fname = unrelocate_module(fname);
 #endif
 
-  array s = master_file_stat( relocate_module(fname) );
-  if(!s || s[1]<0)
+  Stat s = master_file_stat( relocate_module(fname) );
+  if(!s || !s->isreg)
     return 0;
 
-  if( load_time[ fname ] > s[ 3 ] )
+  if( load_time[ fname ] > s->mtime )
     if( !zero_type (ret = programs[fname]) )
       return ret;
 
@@ -689,18 +679,18 @@ program low_findprog(string pname, string ext, object|void handler)
 
     if(sizeof(q=sql_query( "SELECT data,mtime FROM precompiled_files WHERE id=%s",
 			   make_ofilename( fname )))) {
-      if( (int)q[0]->mtime > s[3] ) {
+      if( (int)q[0]->mtime > s->mtime ) {
 	DDEBUG ("Loading dump from sql: %O\n", make_ofilename( fname ));
 	LOAD_DATA( q[0]->data );
       }
       else
 	DDEBUG ("Ignored stale dump in sql, timestamp %d vs %d: %O\n",
-		(int)q[0]->mtime, s[3], make_ofilename( fname ));
+		(int)q[0]->mtime, s->mtime, make_ofilename( fname ));
     }
 
     foreach(query_precompiled_names(fname), string ofile )
-      if(array s2=master_file_stat( ofile ))
-	if(s2[1]>0 && s2[3]>=s[3])
+      if(Stat s2=master_file_stat( ofile ))
+	if(s2->size>0 && s2->mtime>=s->mtime)
 	  LOAD_DATA( Stdio.File( ofile,"r")->read() );
 
     DDEBUG( "Really compile: %O\n", fname );
@@ -804,11 +794,11 @@ int refresh( program p, int|void force )
     return 1;
   }
 
-  array s=master_file_stat( fname );
+  Stat s=master_file_stat( fname );
 
-  if( s && s[1]>=0 )
+  if( s && s->isreg )
   {
-    if( load_time[ fname ] > s[ 3 ] )
+    if( load_time[ fname ] > s->mtime )
       return 0;
   }
   else
