@@ -2,6 +2,7 @@
 <theme-set what=background to=bg.gif themefile />
 <theme-set what=top-bgcolor to=none />
 <theme-set what=toptabs-bgcolor to=none />
+<theme-set what=subtabs-dimtextcolor to=black />
 
 <theme-set what=bgcolor   to=white/>
 <theme-set what=fgcolor   to=black/>
@@ -15,4 +16,10 @@
 
 <theme-set what=logo-html to='<img border=0 src=/internal-roxen-unit width=15 height=1><img border=0 src=&usr.logo;>' />
 
-<theme-set what=body-args to='link=&usr.linkcolor; vlink=&usr.linkcolor; alink=&usr.fade2; bgcolor=&usr.bgcolor; text=&usr.fgcolor background=&usr.background; marginheight=0' />
+<theme-set what=body-args to='
+    link=&usr.linkcolor; 
+    vlink=&usr.linkcolor; 
+    alink=&usr.fade2; 
+    bgcolor=&usr.bgcolor; 
+    text=&usr.fgcolor 
+    background=&usr.background;' />
