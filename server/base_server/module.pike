@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.117 2001/06/30 15:44:04 mast Exp $
+// $Id: module.pike,v 1.118 2001/07/31 07:42:56 per Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -379,13 +379,14 @@ string get_my_table( string|array(string) name,
 //! a string. The cases where the name is not included (the third and
 //! fourth form) is equivalent to the first two cases with the name ""
 //!
-//! If the table does not exist in the datbase, it is created. If it
-//! exists, but it's defenition is different, the table will be
-//! altered with a ALTER TABLE call to conform to the defenition. This
-//! might not work if the database the table resides in is not a MySQL
-//! database (normally it is, but it's possible, using @[set_my_db],
-//! to change this).
+//! If the table does not exist in the datbase, it is created.
 //!
+// If it exists, but it's defenition is different, the table will be
+// altered with a ALTER TABLE call to conform to the defenition. This
+// might not work if the database the table resides in is not a MySQL
+// database (normally it is, but it's possible, using @[set_my_db],
+// to change this).
+//
 //! @note This function may not be called from create
 {
   if( !defenition )
@@ -425,24 +426,22 @@ string get_my_table( string|array(string) name,
     }
     return res;
   }
-
-  
-  // Update defenition if it has changed. For now, always update. 
-  // This might be a tad ineffective if this function is called
-  // often, but mysql at least seems to ignore ALTER TABLE calls
-  // when the defenition has not changed.
-  mixed error = 
-    catch
-    {
-      get_my_sql()->query( "ALTER TABLE "+res+" ("+defenition+")" );
-    };
-  if( error )
-  {
-    if( strlen( name ) )
-      name = " for "+name;
-    report_notice( "Failed to update table defenition"+name+": "+
-		   describe_error( error ) );
-  }
+//   // Update defenition if it has changed. For now, always update. 
+//   // This might be a tad ineffective if this function is called
+//   // often, but mysql at least seems to ignore ALTER TABLE calls
+//   // when the defenition has not changed.
+//   mixed error = 
+//     catch
+//     {
+//       get_my_sql()->query( "ALTER TABLE "+res+" ("+defenition+")" );
+//     };
+//   if( error )
+//   {
+//     if( strlen( name ) )
+//       name = " for "+name;
+//     report_notice( "Failed to update table defenition"+name+": "+
+// 		   describe_error( error ) );
+//   }
   return res;
 }
 
