@@ -13,7 +13,7 @@
  * reference cache shortly.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.44 1997/11/29 22:00:15 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.45 1997/11/29 22:58:10 noring Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -26,6 +26,8 @@ import Image;
 
 #define SEP "\t"
 
+int loaded;
+
 //mixed __foo = trace(0);
 
 mixed *register_module()
@@ -33,7 +35,9 @@ mixed *register_module()
   return ({ 
     MODULE_PARSER|MODULE_LOCATION,
     "Business Graphics",
-    (  "<hr noshade>"
+    (  !loaded?"The Business Graphics tag. This module draws\n"
+       "line charts, pie charts, graphs and bar charts.<p>\n"
+       "&lt;diagram help&gt;&lt;/diagram&gt; gives help.\n":"<hr noshade>"
        "<font size=+1><b>The Business Graphics tag</b></font>\n<br>"
        "Draws different kinds of diagrams.<br>"
        "<p><pre>"
@@ -84,6 +88,11 @@ mixed *register_module()
        "</pre><hr noshade>"
        ), ({}), 1,
     });
+}
+
+void start(int num, object configuration)
+{
+  loaded = 1;
 }
 
 void create()
