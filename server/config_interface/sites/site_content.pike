@@ -421,22 +421,32 @@ string port_for( string url, int settings )
   if(!roxen->urls[url] ) return "";
   Protocol p = roxen->urls[url]->port;
   if(!p) return "<font color='&usr.warncolor;'>Not open</font>";
-  string res =(settings?"<table cellspacing=0 cellpadding=2>":"")+
+  string res =(settings?"<table border=0 cellspacing=0 cellpadding=2>":"")+
 #"
   <set variable='var.port' value='"+Roxen.http_encode_string(p->get_key())+
 "'/><set variable='var.url' value='"+Roxen.http_encode_string(url)+#"'/>
   <emit source='ports' scope='port'>
     <if variable='var.port is &_.port;'>"+
-    (settings?"<tr  bgcolor='&usr.content-titlebg;'><td><font color='&usr.content-titlefg;' size=+1><b>&_.name;</b></font></td><td align=right><cf-save/></td></tr><tr><td colspan='2'>":"")+#"
-      <if not='1' variable='_.warning is '>
+    (settings?
+#"
+   <tr bgcolor='&usr.content-titlebg;'>
+      <td>
+        <font color='&usr.content-titlefg;' size=+1>
+          <b>&_.name;</b>
+	</font>
+      </td>
+    </tr>
+    <tr>
+      <td>":"")+#"
+        <if not='1' variable='_.warning is '>
            <font color='&usr.warncolor;'><b>&_.warning;</b></font>
-      </if>
-      <emit source='port-urls' port='&_.port;'>
-        <if not variable='_.url is &var.url;'>
+        </if>
+        <emit source='port-urls' port='&_.port;'>
+          <if not variable='_.url is &var.url;'>
           "+LOCALE(0,"Shared with ")+
 #"<a href='../&_.conf;/'>&_.confname;</a>
-        </if>
-      </emit>
+          </if>
+        </emit>
       "+(settings?
 #"<cfg-variables nosave='' source='port-variables' port='&port.port;'/>
   <br clear='all' /></td></tr>
@@ -487,12 +497,13 @@ string parse( RequestID id )
 	      "configuration='"+path[0]+"' section='&form.section;'/>";
 
      case "Ports":
-       string res = "<br />\n<blockquote>";
+       string res = "<br />\n<blockquote>"
+	 "<input type=hidden name='section' value='Ports' />";
        foreach( conf->query( "URLs" ), string url )
        {
 	 res += port_for( url, 1 );
        }
-       return res+"</blockquote><br />\n";
+       return res+"</blockquote><cf-save/><br />\n";
        break;
 
      case 0:
