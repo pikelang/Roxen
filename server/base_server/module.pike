@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.81 2000/02/17 08:42:42 per Exp $ */
+/* $Id: module.pike,v 1.82 2000/02/20 11:29:02 mast Exp $ */
 
 #include <module_constants.h>
 #include <module.h>
@@ -386,6 +386,26 @@ string query_location()
   string s;
   catch{s = query("location");};
   return s;
+}
+
+array(string) location_urls()
+// The first is the canonical one built with MyWorldLocation.
+{
+  string loc = query_location();
+  if (!loc) return ({});
+  if(!_my_configuration)
+    error("Please do not call this function from create()!\n");
+  string world_url = _my_configuration->query("MyWorldLocation");
+  if (world_url == "") world_url = 0;
+  array(string) urls = _my_configuration->query("URLs");
+  string hostname = gethostname();
+  for (int i = 0; i < sizeof (urls); i++) {
+    if (world_url && glob (urls[i], world_url)) urls[i] = 0;
+    else if (sizeof (urls[i]/"*") == 2)
+      urls[i] = replace(urls[i], "*", hostname);
+  }
+  if (world_url) urls = ({world_url}) | (urls - ({0}));
+  return map (urls, `+, loc[1..]);
 }
 
 /* By default, provide nothing. */
