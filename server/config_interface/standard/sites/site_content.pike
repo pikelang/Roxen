@@ -1,15 +1,18 @@
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
 #include <module.h>
+#include <config_interface.h>
 
 string module_global_page( RequestID id, string conf )
 {
-  return sprintf("<gbutton preparse href='../../../add_module.pike?config=%s'> "
-                 "&locale.add_module; </gbutton>",
-                 http_encode_string( conf ) )+
-         sprintf("<gbutton preparse href='../../../drop_module.pike?config=%s'> "
-                 "&locale.drop_module; </gbutton>",
-                 http_encode_string( conf ) );
+  if( config_perm("Add Module") )
+    return sprintf("<gbutton preparse href='../../../add_module.pike?config=%s'> "
+                   "&locale.add_module; </gbutton>",
+                   http_encode_string( conf ) )+
+          sprintf("<gbutton preparse href='../../../drop_module.pike?config=%s'> "
+                  "&locale.drop_module; </gbutton>",
+                  http_encode_string( conf ) );
+  return "";
 }
 
 #define translate( X ) _translate( (X), id )
@@ -145,12 +148,6 @@ do                                                                      \
   return res;
 }
 
-// int creation_date = time();
-// int no_reload()
-// {
-//   return creation_date > file_stat( __FILE__ )[ST_MTIME];
-// }
-
 mapping current_compile_errors = ([]);
 string devel_buttons( object c, string mn, object id )
 {
@@ -215,13 +212,13 @@ string devel_buttons( object c, string mn, object id )
           "<font color=red><pre>"+current_compile_errors[ mn ]+
           "</pre></font>" : "" )
          + "<input type=hidden name=section value='" +
-         (id->variables->section||"Information") + "'>"
-         "<submit-gbutton preparse>&locale.reload;</submit-gbutton>"+
+          (id->variables->section||"Information") + "'>" +
+          "<submit-gbutton preparse>&locale.reload;</submit-gbutton>"+
           (sizeof( mod->error_log ) ?
-	  "<submit-gbutton preparse>&locale.clear_log;</submit-gbutton>":
-          "") +
-    "<a href='../../../../drop_module.pike?config="+path[0]+"&drop="+mn+
-    "'><gbutton preparse>&locale.drop_module;</gbutton></a>";
+           "<submit-gbutton preparse>&locale.clear_log;</submit-gbutton>":
+           "") +
+          "<a href='../../../../drop_module.pike?config="+path[0]+"&drop="+mn+
+         "'><gbutton preparse>&locale.drop_module;</gbutton></a>";
 }
 
 string get_eventlog( roxen.ModuleInfo o, RequestID id, int|void no_links )
@@ -250,9 +247,10 @@ string find_module_doc( string cn, string mn, object id )
     return "";
 
   string dbuttons;
-  if( id->misc->config_settings->query( "devel_mode" ) )
+  if( config_setting( "devel_mode" ) && config_perm( "Add Module" ) )
     dbuttons = "<h2>&locale.actions;</h2>"+devel_buttons( c, mn, id );
-
+  else
+    dbuttons = "";
   object m = c->find_module( replace(mn,"!","#") );
 
   if(!m)
@@ -292,7 +290,7 @@ string find_module_doc( string cn, string mn, object id )
                   + translate(m->info()) + "<p>"
                   + translate(m->status()||"") + "<p>"
                   + eventlog +
-                  ( id->misc->config_settings->query( "devel_mode" ) ?
+                  ( config_setting( "devel_mode" ) ?
 		    dbuttons + "<br clear=all>"
 		    "<h2>Developer information</h2>" +
                     "<b>Identifier:</b> " + mi->sname + "<br>"

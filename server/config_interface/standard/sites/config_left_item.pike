@@ -1,4 +1,5 @@
 inherit "roxenlib";
+#include <config_interface.h>
 
 string dotdot( RequestID id, int n )
 {
@@ -93,15 +94,17 @@ string selected_item( string q, roxen.Configuration c, RequestID id, string modu
              pre += ("\n<img src=\"&usr.selected-indicator;\" width=12 height=12>"
 		     "<b>" + replace(data->name, " ", "&nbsp;") + "</b><br>\n");
          }
-	 pre+=sprintf("<br><gbutton frame-image=&usr.left-buttonframe; width=150 bgcolor=&usr.left-buttonbg; preparse href='"+tmp+
-		      "add_module.pike?config=%s'> "
-		      "&locale.add_module; </gbutton>",
-		      http_encode_string( c->name ) )+
-              sprintf("<br><gbutton frame-image=&usr.left-buttonframe; width=150 bgcolor=&usr.left-buttonbg; preparse href='"+tmp+
-		   "drop_module.pike?config=%s'> "
-		   "&locale.drop_module; </gbutton><br>",
-		   http_encode_string( c->name ));
-
+         if( config_perm( "Add Module" ) )
+         {
+           pre+=sprintf("<br><gbutton frame-image=&usr.left-buttonframe; width=150 bgcolor=&usr.left-buttonbg; preparse href='"+tmp+
+                        "add_module.pike?config=%s'> "
+                        "&locale.add_module; </gbutton>",
+                        http_encode_string( c->name ) )+
+                                      sprintf("<br><gbutton frame-image=&usr.left-buttonframe; width=150 bgcolor=&usr.left-buttonbg; preparse href='"+tmp+
+                                              "drop_module.pike?config=%s'> "
+                                              "&locale.drop_module; </gbutton><br>",
+                                              http_encode_string( c->name ));
+         }
 
          break;
       }

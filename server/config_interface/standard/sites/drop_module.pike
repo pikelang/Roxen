@@ -23,6 +23,9 @@ string page_base( RequestID id, string content )
 
 mapping|string parse( RequestID id )
 {
+  if( !config_perm( "Add Module" ) )
+    return "Permission denied";
+
   object c = roxen.find_configuration( id->variables->config );
   if( id->variables->drop )
   {
