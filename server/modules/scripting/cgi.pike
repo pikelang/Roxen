@@ -39,7 +39,7 @@ the headers and the body). Please notify the author of the script of this\n\
 problem.\n"
 
 
-constant cvs_version = "$Id: cgi.pike,v 2.28 1999/08/13 12:20:43 grubba Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.29 1999/09/05 01:44:47 per Exp $";
 
 #ifdef CGI_DEBUG
 #define DWERROR(X)	report_debug(X)
@@ -529,11 +529,11 @@ class NTOpenCommand
   array(string) open(string file, array(string) args)
   {
     array(string) res;
-    res = Array.map(line, replace, repsrc, 
-		    (({file})+args+
-		     (sizeof(args)+1>=sizeof(repsrc)? ({}) :
-		      allocate(sizeof(repsrc)-sizeof(args)-1, "")))
-		    [..sizeof(repsrc)-1]);
+    res = map(line, replace, repsrc, 
+              (({file})+args+
+               (sizeof(args)+1>=sizeof(repsrc)? ({}) :
+                allocate(sizeof(repsrc)-sizeof(args)-1, "")))
+              [..sizeof(repsrc)-1]);
     if(starpos>=0)
       res = res[..starpos-1]+args+res[starpos+1..];
     return res;
@@ -561,9 +561,9 @@ class NTOpenCommand
 	if(i>=0 && sscanf(cmd[i+1..], "%d", t)==1 && t>n)
 	  n=t;
       } while(i>=0);
-      repsrc = Array.map(indices(allocate(n)), lambda(int a) {
-						 return sprintf("%%%d", a+1);
-					       });
+      repsrc = map(indices(allocate(n)), lambda(int a) {
+                                           return sprintf("%%%d", a+1);
+                                         });
     }
     expiry = time(1)+600;
     nt_opencommands[ext]=this_object();
