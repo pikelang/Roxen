@@ -1,5 +1,5 @@
 /*
- * $Id: clientlayer.pike,v 1.38 1999/08/23 23:44:51 marcus Exp $
+ * $Id: clientlayer.pike,v 1.39 1999/08/31 16:35:37 grubba Exp $
  *
  * A module for Roxen AutoMail, which provides functions for
  * clients.
@@ -10,7 +10,7 @@
 #include <module.h>
 inherit "module" : module;
 
-constant cvs_version="$Id: clientlayer.pike,v 1.38 1999/08/23 23:44:51 marcus Exp $";
+constant cvs_version="$Id: clientlayer.pike,v 1.39 1999/08/31 16:35:37 grubba Exp $";
 constant thread_safe=1;
 
 
@@ -717,8 +717,10 @@ class Mailbox
     do 
     {
       foo = fd->read( 8192 );
-      if( f->write( foo ) != strlen(foo) )
+      if( f->write( foo ) != strlen(foo) ) {
+	delete_body(bodyid);
 	error("Failed to write body.\n");
+      }
     } while(strlen(foo) == 8192);
     f->close();
     return low_create_mail( bodyid, headers );
@@ -790,6 +792,54 @@ class User
     return get_customer(id);
   }
   
+  /* Quota stuff */
+
+  int query_quota()
+  {
+    return get_user_quota(id);
+  }
+
+  int query_usage()
+  {
+    return get("quota_usage");
+  }
+
+  void set_usage(int usage)
+  {
+    set("quota_usage", usage);
+  }
+
+  int check_quota(int amount)
+  {
+    int q = query_quota();
+    if (!q) {
+      // No quota at all.
+      return 0;
+    }
+    return(get_usage() + amount <= q);
+  }
+
+  int allocate_quota(int amount)
+  {
+    int u = get_usage() + amount;
+
+    if (u < 0) {
+      // No negative usage...
+      u = 0;
+    }
+
+    set_usage(u);
+
+    return(u <= query_quota());
+  }
+
+  int deallocate_quota(int amount)
+  {
+    return allocate_quota(-amount);
+  }
+
+  /* Mailbox stuff */
+
   array(Mailbox) mailboxes(int|void force)
   {
     if(!force && _mboxes)
@@ -937,6 +987,20 @@ string get_organization(int|string user_id)
     return a[0]->name;
 }
 
+int get_user_quota(int|string user_id)
+{
+  if(stringp(user_id)) {
+    object l = get_ldap();
+    // NOTE: According to the LDAP spec zero quota means unlimited.
+    return l && ((int)((l->get_attrs(user_id, "mailQuota")||({0}))[0]) ||
+		 0x7fffffff);
+  }
+  array a = squery("select quota from users where id='%d'", user_id);
+  if(!sizeof(a))
+    return 0;
+  else
+    return ((int)(a[0]->quota)) || 0x7fffffff;
+}
 
 int get_customer(int|string user_id)
 {
