@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.210 2000/12/11 03:45:32 per Exp $
+// $Id: roxenlib.pike,v 1.211 2000/12/11 04:08:20 nilsson Exp $
 
 //#pragma strict_types
 
@@ -59,8 +59,6 @@ string msectos(int t)
   }
   return sprintf("%d:%02d h:m", t/3600000, (t%3600000)/60000);
 }
-
-
 
 static string http_res_to_string( mapping file, RequestID id )
 {
@@ -392,3 +390,10 @@ static string do_output_tag( mapping(string:string) args, array(mapping(string:s
   return new_contents;
 }
 
+string parse_rxml(string what, RequestID id,
+			 void|Stdio.File file,
+			 void|mapping(string:mixed) defines)
+{
+  if(!objectp(id)) error("No id passed to parse_rxml\n");
+  return id->conf->parse_rxml( what, id, file, defines );
+}
