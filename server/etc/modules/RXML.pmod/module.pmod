@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.183 2001/06/29 00:21:06 mast Exp $
+// $Id: module.pmod,v 1.184 2001/06/29 12:45:42 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -321,9 +321,9 @@ class Tag
       }									\
     _frame = `() (0, nil);						\
     DO_IF_DEBUG(							\
-      if (_args && ([mapping] (mixed) _args)["-debug-tag-"]) {		\
+      if (_args && ([mapping] (mixed) _args)["_debug_"]) {		\
 	_frame->flags |= FLAG_DEBUG;					\
-	m_delete (_args, "-debug-tag-");				\
+	m_delete (_args, "_debug_");					\
       }									\
     );									\
     TAG_DEBUG (_frame, "New frame\n");					\
@@ -4030,7 +4030,7 @@ class Parser
 #endif
 
       }) {
-	if (err->is_RXML_Backtrace) err->current_var = varref;
+	if (objectp (err) && err->is_RXML_Backtrace) err->current_var = varref;
 	context->handle_exception (err, this_object()); // May throw.
 	val = nil;
       }
@@ -5530,7 +5530,7 @@ class VarRef (string scope, string|array(string|int) var, void|string encoding)
       return val;
     };
 
-    if (err->is_RXML_Backtrace) err->current_var = VAR_STRING;
+    if (objectp (err) && err->is_RXML_Backtrace) err->current_var = VAR_STRING;
     ctx->frame_depth--;
     throw (err);
   }
