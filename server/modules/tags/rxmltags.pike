@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.225 2001/04/23 23:56:36 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.226 2001/04/24 23:23:39 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -223,24 +223,28 @@ class TagRoxenACV {
 class TagAppend {
   inherit RXML.Tag;
   constant name = "append";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT;
   mapping(string:RXML.Type) req_arg_types = ([ "variable" : RXML.t_text(RXML.PEnt) ]);
+  mapping(string:RXML.Type) opt_arg_types = ([ "type": RXML.t_type(RXML.PEnt) ]);
+  RXML.Type content_type = RXML.t_any (RXML.PXml);
+  array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
+  int flags;
 
   class Frame {
     inherit RXML.Frame;
 
+    array do_enter (RequestID id)
+    {
+      if (args->value || args->from) flags = RXML.FLAG_EMPTY_ELEMENT;
+      if (args->type) content_type = args->type (RXML.PXml);
+    }
+
     array do_return(RequestID id) {
       mixed value=RXML.user_get_var(args->variable, args->scope);
       if (args->value) {
-	// Append a value to an entity variable.
-	if (value)
-	  value+=args->value;
-	else
-	  value=args->value;
-	RXML.user_set_var(args->variable, value, args->scope);
-	return 0;
+	if(content) parse_error("No content allowed when the value attribute is used.\n");
+	content = args->value;
       }
-      if (args->from) {
+      else if (args->from) {
 	// Append the value of another entity variable.
 	mixed from=RXML.user_get_var(args->from, args->scope);
 	if(!from) parse_error("From variable %O doesn't exist.\n", args->from);
@@ -251,7 +255,13 @@ class TagAppend {
 	RXML.user_set_var(args->variable, value, args->scope);
 	return 0;
       }
-      parse_error("No value specified.\n");
+
+      // Append a value to an entity variable.
+      if (value)
+	value+=content;
+      else
+	value=content;
+      RXML.user_set_var(args->variable, value, args->scope);
     }
   }
 }
@@ -404,17 +414,22 @@ class TagSet {
   mapping(string:RXML.Type) opt_arg_types = ([ "type": RXML.t_type(RXML.PEnt) ]);
   RXML.Type content_type = RXML.t_any (RXML.PXml);
   array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
+  int flags;
 
   class Frame {
     inherit RXML.Frame;
 
     array do_enter (RequestID id)
     {
+      if (args->value || args->expr || args->from) flags = RXML.FLAG_EMPTY_ELEMENT;
       if (args->type) content_type = args->type (RXML.PXml);
     }
 
     array do_return(RequestID id) {
-      if (args->value) content = args->value;
+      if (args->value) {
+	if(content) parse_error("No content allowed when the value attribute is used.\n");
+	content = args->value;
+      }
       else {
 	if (args->expr) {
 	  // Set an entity variable to an evaluated expression.
@@ -4103,7 +4118,7 @@ Kibibits.
 
 //----------------------------------------------------------------------
 
-"append":#"<desc tag='tag'><p><short>
+"append":#"<desc tag='tag' cont='cont'><p><short>
  Appends a value to a variable. The variable attribute and one more is
  required.</short>
 </p></desc>
