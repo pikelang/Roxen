@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.310 1999/07/27 19:04:30 grubba Exp $
+ * $Id: roxen.pike,v 1.311 1999/07/31 18:43:37 js Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.310 1999/07/27 19:04:30 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.311 1999/07/31 18:43:37 js Exp $";
 
 object backend_thread;
 object argcache;
@@ -4009,8 +4009,10 @@ object find_server_for(object id, string host, string|void port)
   return id->conf;
 }
 
-void find_site_for( object id )
+object find_site_for( object id )
 {
   if(id->misc->host) 
-    id->conf = find_server_for(id,@lower_case(id->misc->host)/":");
+    return find_server_for(id,@lower_case(id->misc->host)/":");
+  else
+    return id->conf;
 }

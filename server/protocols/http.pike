@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.146 1999/07/28 21:56:54 neotron Exp $";
+constant cvs_version = "$Id: http.pike,v 1.147 1999/07/31 18:43:52 js Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -1603,7 +1603,7 @@ void got_data(mixed fooid, string s)
   {
 #ifndef DISABLE_VIRTUAL_HOSTING
     // IP-Less support.
-    roxen->find_site_for(this_object());
+    conf=roxen->find_site_for(this_object());
 #endif
     conf->received += strlen(s);
     conf->requests++;
