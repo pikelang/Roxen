@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.506 2000/07/12 16:05:40 lange Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.507 2000/07/14 20:02:48 lange Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -337,10 +337,10 @@ object fonts;
 
 
 // ----------- Locale support ------------
-//<locale-token project="base_server">LOCALE</locale-token>
+//<locale-token project="config_interface">LOCALE</locale-token>
 
-LOCALE_PROJECT(base_server);
-#define LOCALE(X,Y)	_STR_LOCALE(base_server,X,Y)
+LOCALE_PROJECT(config_interface);
+#define LOCALE(X,Y)	_STR_LOCALE(config_interface,X,Y)
 
 string default_locale;
 
@@ -382,10 +382,11 @@ private string verify_locale(string lang) {
     ;
   else
     set=languages[lang];
+
   return set;
 }
 
-void set_locale(void|string lang)
+int set_locale(void|string lang)
   //! Changes the locale of the current thread. If no
   //! argument is given, the default locale if used.
   //! Valid arguments are ISO-639-2 codes, ISO-639-1
@@ -396,7 +397,7 @@ void set_locale(void|string lang)
     if(lang!=default_locale)
       // lang not ok, try default_locale
       set_locale(default_locale);
-    return;
+    return 0;
   }
   
   mapping objects;
@@ -405,8 +406,10 @@ void set_locale(void|string lang)
 #else
   objects=RoxenLocale.get_objects( set );
 #endif
+
   objects->locale=set;
   locale->set(objects);
+  return 1;
 }
 
 
@@ -568,9 +571,11 @@ local static void handler_thread(int id)
       } while(1);
     }) {
       if (h = catch {
-	report_error(/* LOCALE->uncaught_error(*/describe_backtrace(q)/*)*/);
+	report_error(/*LOCALE("", "Uncaught error in handler thread: %s"
+		       "Client will not get any response from Roxen.\n"),*/
+		     describe_backtrace(q));
 	if (q = catch {h = 0;}) {
-	  report_error(LOCALE("", "Uncaught error in handler thread: %s"
+	  report_error(LOCALE("a", "Uncaught error in handler thread: %s"
 			      "Client will not get any response from Roxen.\n"),
 		       describe_backtrace(q));
 	}
@@ -599,11 +604,11 @@ void start_handler_threads()
 {
   if (QUERY(numthreads) <= 1) {
     set( "numthreads", 1 );
-    report_notice("Starting one thread to handle requests.\n");
+    report_notice(LOCALE("b", "Starting one thread to handle requests.\n"));
   } else {
-    report_notice("Starting "+
-                 language_low("en")->number(  QUERY(numthreads) )
-                 +" threads to handle requests.\n");
+    report_notice(LOCALE("c", "Starting %s threads to handle requests.\n"),
+		  language_low("en")->number(  QUERY(numthreads) ));
+
   }
   array(object) new_threads = ({});
   for(; number_of_threads < QUERY(numthreads); number_of_threads++)
@@ -614,7 +619,7 @@ void start_handler_threads()
 }
 
 void stop_handler_threads()
-//! Stop all the handler threads, bug give up if it takes too long.
+//! Stop all the handler threads, but give up if it takes too long.
 {
   int timeout=10;
 #if constant(_reset_dmalloc)
@@ -1733,8 +1738,9 @@ int register_url( string url, object conf )
       m_delete( m[ required_host ], port );
       failures++;
       if (required_host) {
-	report_warning("Binding the port on IP " + required_host +
-		       " failed\n   for URL " + url + "!\n");
+	report_warning(LOCALE("d", "Binding the port on IP %s "
+			      " failed\n   for URL %s!\n"),
+		       url, required_host);
       }
       continue;
     }
@@ -1743,12 +1749,14 @@ int register_url( string url, object conf )
   }
   if (failures == sizeof(required_hosts)) {
     m_delete( urls, url );
-    report_error( "Cannot register URL "+url+"!\n" );
+    report_error(LOCALE("e", "Cannot register URL %s!\n"), url);
     sort_urls();
     return 0;
   }
   sort_urls();
-  report_notice("Registered "+url+" for "+conf->query_name()+"\n");
+  report_notice(LOCALE("f", "Registered %s for %s\n"),
+		url, conf->query_name() );
+
   return 1;
 }
 
@@ -1864,7 +1872,7 @@ private void restore_current_user_id_number()
   report_debug("Restoring unique user ID information. (" + current_user_id_number
 	       + ")\n");
 #ifdef FD_DEBUG
-  mark_fd(current_user_id_file->query_fd(), LOCALE("", "Unique user ID logfile.\n"));
+  mark_fd(current_user_id_file->query_fd(), "Unique user ID logfile.\n");
 #endif
 }
 
@@ -1892,7 +1900,7 @@ public string full_status()
   string res="";
   array foo = ({0.0, 0.0, 0.0, 0.0, 0});
   if(!sizeof(configurations))
-    return LOCALE("a", "<b>No virtual servers enabled</b>\n");
+    return "<b>"+LOCALE("g", "No virtual servers enabled")+"</b>\n";
 
   foreach(configurations, object conf)
   {
@@ -1924,10 +1932,10 @@ public string full_status()
 
   tmp=(int)((foo[4]*600.0)/(uptime+1));
 
-  return(locale->get()->base_server("full_status", real_version, start_time,
-				    days, hrs, min, uptime%60,
-				    foo[1], foo[0] * 8192.0, foo[2],
-				    foo[4], (float)tmp/(float)10, foo[3]));
+  return(locale->get()->config_interface("full_status", real_version, 
+					 start_time, days, hrs, min, uptime%60,
+					 foo[1], foo[0] * 8192.0, foo[2], 
+					 foo[4], (float)tmp/(float)10, foo[3]));
 }
 
 #ifndef __NT__
@@ -2735,10 +2743,8 @@ string decode_charset( string charset, string data )
 void create()
 {
 #if constant(Locale.register_project)
-  Locale.register_project("base_server","translations/%L/base_server.xml");
   Locale.register_project("config_interface","translations/%L/base_server.xml");
 #else
-  RoxenLocale.register_project("base_server","translations/%L/base_server.xml");
   RoxenLocale.register_project("config_interface","translations/%L/base_server.xml");
 #endif
   define_global_variables();
@@ -2894,7 +2900,9 @@ int set_u_and_gid()
 	}
 	setuid(uid);
 	if (getuid() != uid) report_error ("Failed to set uid.\n"), u = 0;
-	if (u) report_notice(locale->get()->base_server("setting_uid_gid_permanently", uid, gid, u, g));
+	if (u) report_notice(locale->get()->
+			     config_interface("setting_uid_gid_permanently", 
+					      uid, gid, u, g));
 #else
 	report_warning ("Setting uid not supported on this system.\n");
 	u = g = 0;
@@ -2913,7 +2921,9 @@ int set_u_and_gid()
 	}
 	seteuid(uid);
 	if (geteuid() != uid) report_error ("Failed to set effective uid.\n"), u = 0;
-	if (u) report_notice(locale->get()->base_server("setting_uid_gid", uid, gid, u, g));
+	if (u) report_notice(locale->get()->
+			     config_interface("setting_uid_gid", 
+					      uid, gid, u, g));
 #else
 	report_warning ("Setting effective uid not supported on this system.\n");
 	u = g = 0;
@@ -2960,7 +2970,7 @@ void reload_all_configurations()
 	conf = enable_configuration(config);
       }) {
 	string bt=describe_backtrace(err);
-	report_error(LOCALE("c", "Error while enabling configuration %s"),
+	report_error(LOCALE("h", "Error while enabling configuration %s"),
 			    config, (bt ? ":\n"+bt : "\n"));
 	continue;
       }
@@ -2971,7 +2981,7 @@ void reload_all_configurations()
       conf->enable_all_modules();
     }) {
       string bt=describe_backtrace(err);
-      report_error(LOCALE("c", "Error while enabling configuration %s"),
+      report_error(LOCALE("h", "Error while enabling configuration %s"),
 			  config, (bt ? ":\n"+bt : "\n" ));
       continue;
     }
@@ -2981,7 +2991,7 @@ void reload_all_configurations()
   foreach(configurations - new_confs, conf)
   {
     modified = 1;
-    report_notice(LOCALE("b", "Disabling old configuration %s\n"), conf->name);
+    report_notice(LOCALE("i", "Disabling old configuration %s\n"), conf->name);
     //    Array.map(values(conf->server_ports), lambda(object o) { destruct(o); });
     conf->stop();
     destruct(conf);
