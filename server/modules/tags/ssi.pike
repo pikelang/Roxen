@@ -170,11 +170,11 @@ string tag_include(string tag, mapping m, object id)
   if(m->virtual) {
     int debug=id->misc->debug;
     id->misc->debug=-1;
-    string ret=id->conf->api_functions()->read_file[0](id, m->virtual);
+    string ret=API_read_file(id, m->virtual)||"";
     id->misc->debug=debug;
     
     if(ret=="" && sizeof(m->virtual)>2 && m->virtual[sizeof(m->virtual)-2..]=="--") {
-      ret=id->conf->api_functions()->read_file[0](id, m->virtual[..sizeof(m->virtual)-3]);
+      ret=API_read_file(id, m->virtual[..sizeof(m->virtual)-3])||"";
     }
 
     if(ret=="")
@@ -279,7 +279,7 @@ string tag_exec(string tag, mapping m, object id)
       CACHE((int)m->cache);
     else
       NOCACHE();
-    return id->conf->api_functions()->read_file[0](id, http_decode_string(m->cgi));
+    return API_read_file(id, http_decode_string(m->cgi))||"";
   }
 
   if(m->cmd)
