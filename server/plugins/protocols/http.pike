@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.401 2004/05/27 16:19:37 _cvs_stephen Exp $";
+constant cvs_version = "$Id: http.pike,v 1.402 2004/05/27 17:16:06 _cvs_stephen Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -686,15 +686,15 @@ private final int parse_got_2( )
        misc[linename] = contents;
        break;
      case "destination":
-       misc["new-uri"] = contents;
        if (mixed err = catch {
-	   misc["new-uri"] = Standards.URI(contents)->path;
+	   contents = http_decode_string (Standards.URI(contents)->path);
 	 }) {
 #ifdef DEBUG
-	 report_debug(sprintf("Destination header contained a bad URI: %O\n"
-			      "%s", contents, describe_error(err)));
+	 report_debug("Destination header contained a bad URI: %O\n"
+			      "%s", contents, describe_error(err));
 #endif /* DEBUG */
        }
+       misc["new-uri"] = VFS.normalize_path (contents);
        break;
     }
   }
