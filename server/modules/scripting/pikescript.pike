@@ -9,7 +9,7 @@
 // This is an extension module.
 
 constant cvs_version=
-"$Id: pikescript.pike,v 1.47 1999/12/02 23:48:30 marcus Exp $";
+"$Id: pikescript.pike,v 1.48 1999/12/06 23:44:17 grubba Exp $";
 
 constant thread_safe=1;
 mapping scripts=([]);
@@ -222,7 +222,7 @@ mapping handle_file_extension(object f, string e, object got)
   if(arrayp(err)) 
   {
     m_delete( scripts, got->not_query );
-    throw( err );
+    throw( err[1] );
   }
   return err;
 }
