@@ -4,7 +4,7 @@
 // another. This can be done using "internal" redirects (much like a
 // symbolic link in unix), or with normal HTTP redirects.
 
-constant cvs_version = "$Id: redirect.pike,v 1.23 2000/03/17 17:08:19 mast Exp $";
+constant cvs_version = "$Id: redirect.pike,v 1.24 2000/03/18 02:55:58 mast Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -18,7 +18,7 @@ void create()
   defvar("fileredirect", "", "Redirect patterns", TYPE_TEXT_FIELD|VAR_INITIAL,
 	 "Redirect one file to another. The syntax is 'regexp to_URL',"
 	 "or 'prefix to_URL', or 'exact file_name to_URL. More patterns "
-	 "can be read from a file by using '#include <filename>' on a line. "
+	 "can be read from a file by using '#include &lt;filename&gt;' on a line. "
 	 "The path is relative to the Roxen server directory in the real "
 	 "filesystem. Other lines beginning with '#' are treated as comments.\n"
 
