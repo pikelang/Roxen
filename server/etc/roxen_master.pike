@@ -10,7 +10,7 @@ mixed sql_query( string q, mixed ... e )
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.126 2002/05/06 15:14:38 mast Exp $";
+constant cvs_version = "$Id: roxen_master.pike,v 1.127 2002/10/15 16:23:40 mast Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -748,10 +748,9 @@ program handle_inherit (string pname, string current_file, object|void handler)
 {
   if (has_prefix (pname, "roxen-module://")) {
     pname = pname[sizeof ("roxen-module://")..];
-    foreach (roxenp()->all_modules(), object modinfo)
-      if (modinfo->sname == pname)
-	if (program ret = cast_to_program (modinfo->filename, current_file, handler))
-	  return ret;
+    if (object modinfo = roxenp()->find_module (pname))
+      if (program ret = cast_to_program (modinfo->filename, current_file, handler))
+	return ret;
     return 0;
   }
   return ::handle_inherit (pname, current_file, handler);
