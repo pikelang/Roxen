@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.147 2000/03/06 14:03:01 mast Exp $
+ * $Id: roxenloader.pike,v 1.148 2000/03/07 02:37:14 nilsson Exp $
  *
  * Roxen bootstrap program.
  *
@@ -18,7 +18,7 @@ private static object new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.147 2000/03/06 14:03:01 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.148 2000/03/07 02:37:14 nilsson Exp $";
 
 int pid = getpid();
 object stderr = Stdio.File("stderr");
@@ -255,9 +255,21 @@ mapping make_mapping(array(string) f)
   return foo;
 }
 
+class _roxen {
+
+  mapping(string:array) variables;
+  string real_version;
+  object LOW_LOCALE;
+  object locale;
+
+  mixed query(string var) { }
+  void store(string a, mapping b, int c, void|object d) { }
+  string version() { }
+}
+
 
 // Roxen itself
-object roxen;
+object(_roxen) roxen;
 
 // The function used to report notices/debug/errors etc.
 function nwrite;
