@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.195 2001/01/31 14:15:28 jhs Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.196 2001/01/31 14:16:35 jhs Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2337,7 +2337,7 @@ using the pre tag.
  <p>Shows a part of the id object. E.g. showid=\"id->request_headers\".</p>
 </attr>
 
-<attr name=debug value=string>
+<attr name=werror value=string>
   <p>When you have access to the server debug log and want your RXML
      page to write some kind of diagnostics message or similar, the
      werror attribute is helpful.</p>
