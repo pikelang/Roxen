@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.357 2004/06/30 16:58:40 mast Exp $
+// $Id: roxenloader.pike,v 1.358 2004/08/18 14:19:00 grubba Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -30,7 +30,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.357 2004/06/30 16:58:40 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.358 2004/08/18 14:19:00 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -956,16 +956,18 @@ class mf
 {
   inherit Stdio.File;
 
-  mixed open(string what, string mode)
+  mixed open(string what, string mode, int|void perm)
   {
     int res;
-    res = ::open(what,mode);
+    res = ::open(what, mode, perm||0666);
     if(res)
     {
       array bt = backtrace();
       string file = bt[-2][0];
       int line = bt[-2][1];
-      mark_fd(query_fd(), file+":"+line+" open(\""+ what+"\", "+mode+")");
+      mark_fd(query_fd(),
+	      sprintf("%s:%d open(%O, %O, 0%03o)",
+		      file, line, what, mode, perm||0666);
     }
     return res;
   }
