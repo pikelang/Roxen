@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.751 2001/11/01 14:31:10 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.752 2001/11/07 13:15:58 grubba Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -1143,7 +1143,8 @@ class Protocol
 //! Implements reference handling, finding Configuration objects
 //! for URLs, and the bind/accept handling.
 {
-  inherit Stdio.Port: port;
+  static Stdio.Port port_obj;
+
   inherit "basic_defvar";
   int bound;
 
@@ -1210,8 +1211,21 @@ class Protocol
     if (!path && sizeof (Array.uniq (values (urls)->path)) == 1)
       path = values (urls)[0]->path;
     sorted_urls -= ({name});
-    if( !--refs )
-      destruct( ); // Close the port.
+    if( !--refs ) {
+      destruct(port_obj);
+      port_obj = 0;
+      //destruct( ); // Close the port.
+    }
+  }
+
+  Stdio.File accept()
+  {
+    return port_obj->accept();
+  }
+
+  string query_address()
+  {
+    return port_obj && port_obj->query_address();
   }
 
   mapping mu;
@@ -1379,8 +1393,8 @@ class Protocol
     if( !requesthandler )
       requesthandler = (program)(rrhf);
 #endif
-    ::create();
-    if(!bind( port, got_connection, ip ))
+    port_obj = Stdio.Port();
+    if(!port_obj->bind( port, got_connection, ip ))
     {
       report_error(LOC_M(6, "Failed to bind %s://%s:%d/ (%s)")+"\n", 
 		   (string)name, (ip||"*"), (int)port, strerror( errno() ));
