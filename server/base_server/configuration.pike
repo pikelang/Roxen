@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.177 1999/05/25 01:40:03 mast Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.178 1999/06/06 20:22:26 peter Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -2130,7 +2130,7 @@ string MKPORTKEY(array(string) p)
 mapping(string:object) server_ports = ([]);
 
 int ports_changed = 1;
-void start(int num)
+void start(int num, void|object conf_id, array|void args)
 {
   // Note: This may be run before uid:gid is changed.
 
@@ -2152,6 +2152,22 @@ void start(int num)
 
   // First find out if we have any new ports.
   mapping(string:array(string)) new_ports = ([]);
+
+  //Make it possible to set variables from start.
+  if(args)
+    foreach(args, string variable)
+    {
+      string name, c, v;
+      if(sscanf(variable, "%s:%s=%s", name, c, v) == 3)
+	if(server_name == name)
+	  if(variables[c])
+	    variables[c][VAR_VALUE]=compile_string(
+					"mixed f(){ return"+v+";}")()->f();
+	  else
+	    perror("Unknown variable: "+c+"\n");
+    }
+
+  perror("Ports: %O\n", query("Ports"));
   foreach(query("Ports"), port) {
     if ((< "ssl", "ssleay" >)[port[1]]) {
       // Obsolete versions of the SSL protocol.

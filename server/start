@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.55 1999/05/22 23:46:47 mast Exp $
+# $Id: start,v 1.56 1999/06/06 20:16:28 peter Exp $
 
 VERSION=202; BETA=.b;
 
@@ -109,6 +109,9 @@ parse_args() {
   ;;
   --recheck-env)
    pass2="$pass2 $1"
+  ;;
+  --variable=*)
+   pass2="$pass2 `echo $1 | sed -e 's/--variable=//'`"
   ;;
   --log-dir=*)
    LOGDIR=`echo $1 | sed -e 's/--log-dir=//'`

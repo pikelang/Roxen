@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.344 1999/05/30 00:53:28 peter Exp $
+ * $Id: roxen.pike,v 1.345 1999/06/06 20:22:26 peter Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -8,7 +8,7 @@
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version = "$Id: roxen.pike,v 1.344 1999/05/30 00:53:28 peter Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.345 1999/06/06 20:22:26 peter Exp $";
 
 object backend_thread;
 object argcache;
@@ -2695,7 +2695,8 @@ private void define_global_variables( int argc, array (string) argv )
     string c, v;
     if(sscanf(argv[p],"%s=%s", c, v) == 2)
       if(variables[c])
-	variables[c][VAR_VALUE]=compat_decode_value(v);
+	  variables[c][VAR_VALUE]=compile_string(
+				      "mixed f(){ return"+v+";}")()->f();
       else
 	perror("Unknown variable: "+c+"\n");
   }
@@ -3365,7 +3366,7 @@ int main(int|void argc, array (string)|void argv)
   foreach(list_all_configurations(), string config)
   {
     array err;
-    if(err=catch { enable_configuration(config)->start();  })
+    if(err=catch { enable_configuration(config)->start(0,0,argv);  })
       perror("Error while loading configuration "+config+":\n"+
 	     describe_backtrace(err)+"\n");
   };
