@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.47 2000/11/02 17:20:08 per Exp $
+ * $Id: Roxen.pmod,v 1.48 2000/11/03 14:48:57 leif Exp $
  *
  * Various helper functions.
  *
@@ -1117,13 +1117,13 @@ class FormScope( mapping variables )
 	    || ((ind < 0) && (-ind > sizeof( var ) )) )
 	  RXML.parse_error( "Array not big enough for index %d.\n", ind );
 	else if( ind < 0 )
-          var[ind] = to;
+          var[ind] = newval;
 	else
-	  var[ind-1] = to;
+	  var[ind-1] = newval;
       else
 	RXML.parse_error( "Cannot index array with %O\n", ind );
       RXML.get_context()->id->variables[name] = ((array(string))var)*"\0";
-      return to;
+      return newval;
     }
 
     mixed `[]( string index )
