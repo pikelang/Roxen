@@ -1,5 +1,5 @@
 /*
- * $Id: clientlayer.pike,v 1.31 1999/01/28 20:01:26 grubba Exp $
+ * $Id: clientlayer.pike,v 1.32 1999/01/28 20:03:36 grubba Exp $
  *
  * A module for Roxen AutoMail, which provides functions for
  * clients.
@@ -10,7 +10,7 @@
 #include <module.h>
 inherit "module" : module;
 
-constant cvs_version="$Id: clientlayer.pike,v 1.31 1999/01/28 20:01:26 grubba Exp $";
+constant cvs_version="$Id: clientlayer.pike,v 1.32 1999/01/28 20:03:36 grubba Exp $";
 constant thread_safe=1;
 
 
@@ -220,7 +220,7 @@ class Common
   final static mixed misc_get(string table, string var)
   {
     // NOTE: var is truncated to 16 chars.
-    var = sql_quote(var[..15];
+    var = sql_quote(var[..15]);
 
     if(!zero_type(cached_misc[var])) return cached_misc[var];
     array(mapping) a;
