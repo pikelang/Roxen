@@ -418,6 +418,14 @@ a&auml; &amp; b  &gt;
 </test>
 
 <test>
+  <rxml
+    ><define container="x"><contents copy-of="*[-1]"/><contents/></define
+    ><x><a>A</a><b>B</b></x
+  ></rxml>
+  <result><b>B</b><a>A</a><b>B</b></result>
+</test>
+
+<test>
   <rxml type="string">
     <define container="x">
       <contents copy-of="*[-1]"/>
@@ -430,7 +438,35 @@ a&auml; &amp; b  &gt;
       <set variable="var.foo" value="second"/>
     </x>
   </rxml>
-  <result>secondfirst</result>
+  <result>secondsecond</result>
+</test>
+
+<test>
+  <rxml
+    ><define container="x"
+      ><contents copy-of="*[-1]"/>&var.foo;<contents copy-of="*[1]"/>&var.foo;</define
+    ><x><set variable="var.foo" value="&var.foo;x"/><first-tag/><last-tag/></x
+  ></rxml>
+  <result><last-tag/>x<first-tag/>x</result>
+</test>
+
+<test>
+  <rxml
+    ><define container="x"
+      ><contents copy-of="*[-1]"/>&var.foo;<contents eval copy-of="*[1]"/>&var.foo;</define
+    ><x><set variable="var.foo" value="&var.foo;x"/><first-tag/><last-tag/></x
+  ></rxml>
+  <result><last-tag/>x<first-tag/>xx</result>
+</test>
+
+<test>
+  <rxml
+    ><define container="x"
+      >&_.contents;&var.foo;</define
+    ><set variable="var.foo" value="x"
+    /><x><set variable="var.foo" value="&var.foo;x"/></x
+  ></rxml>
+  <result>&lt;set variable=&#34;var.foo&#34; value=&#34;&amp;var.foo;x&#34;/&gt;x</result>
 </test>
 
 <test>
@@ -445,7 +481,7 @@ a&auml; &amp; b  &gt;
       <y b="&var.bar;"/>
     </x>
   </rxml>
-  <result>a="up" b="down"</result>
+  <result> a="up" b="down"</result>
 </test>
 
 <test>
@@ -460,7 +496,7 @@ a&auml; &amp; b  &gt;
       <y b="&var.bar;"/>
     </x>
   </rxml>
-  <result>b="down"</result>
+  <result> b="down"</result>
 </test>
 
 <test>
@@ -475,7 +511,7 @@ a&auml; &amp; b  &gt;
       <y b="&var.bar;"/>
     </x>
   </rxml>
-  <result>b="down"</result>
+  <result> b="down"</result>
 </test>
 
 <test>
@@ -486,15 +522,16 @@ a&auml; &amp; b  &gt;
     <emit source="values" values="x">
       <x>
 	<set variable="var.foo">first</set>
-	<set variable="var.foo"
-	  >start<!-- the start --><pp
-	  /><emit source="values" values="1,2" split=",">[&_.value;]</emit
-	  >stop<?foo bar
-	?></set>
+	<set variable="var.foo" type="text/xml">
+	  start <!-- the start -->
+	  <p><emit source="values" values="1,2" split=",">[&_.value;]</emit></p>
+	  stop<?foo bar?>
+	</set>
+	&var.foo:none;
       </x>
     </emit>
   </rxml>
-  <result>start[x]stop</result>
+  <result>[1][2]</result>
 </test>
 
 <test>
@@ -524,7 +561,7 @@ a&auml; &amp; b  &gt;
       <y b="&var.bar;"/>
     </x>
   </rxml>
-  <result>b="down"</result>
+  <result> b="down"</result>
 </test>
 
 <test>
@@ -539,7 +576,7 @@ a&auml; &amp; b  &gt;
       <y b="&var.bar;"/>
     </x>
   </rxml>
-  <result>b="down"</result>
+  <result> b="down"</result>
 </test>
 
 <test>
@@ -551,17 +588,17 @@ a&auml; &amp; b  &gt;
       <y b="3" c="4"/>
     </x>
   </rxml>
-  <result>b="2"</result>
+  <result> b="2"</result>
 </test>
 
 <test>
   <rxml type="string">
     <define container="x" preparse="">
-      [<contents copy-of="*"/>]
+      [<contents copy-of="*/text()"/>]
     </define>
     <x>
-      <set variable="var.foo" value="x"/>
-      &var.foo;|<insert variable="var.foo"/>
+      <a><set variable="var.foo" value="x"/></a>
+      &var.foo;|<b><insert variable="var.foo"/></b>
     </x>
   </rxml>
   <result>[x]</result>
@@ -614,6 +651,70 @@ a&auml; &amp; b  &gt;
     </emit>
   </rxml>
   <result></result>
+</test>
+
+<test>
+  <rxml type="string">
+    <define container="x">
+      <set variable="var.y" expr="&var.init; + 1"/>
+      <contents/>
+      <set variable="var.y" expr="&var.init; + 2"/>
+      <contents eval/>
+    </define>
+    <set variable="var.init" value="4"/>
+    <x>a&var.y;</x>|
+    <x>b&var.y;</x>|
+    <set variable="var.init" value="8"/>
+    <x>a&var.y;</x>|
+    <x>b&var.y;</x>|
+  </rxml>
+  <result>a5a6|b5b6|a9a10|b9b10|</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <define container="x">
+      <set variable="var.y" expr="&var.init; + 1"/>
+      <contents value-of="text()[-1]"/>
+      <set variable="var.y" expr="&var.init; + 2"/>
+      <contents eval value-of="text()[-1]"/>
+    </define>
+    <set variable="var.init" value="4"/>
+    <x><set variable="var.y" value="-&var.y;"/>ignored<!-- -->&var.y;</x>|
+    <x>ignored<!-- -->&var.y;</x>|
+    <set variable="var.init" value="8"/>
+    <x><set variable="var.y" value="-&var.y;"/>ignored<!-- -->&var.y;</x>|
+    <x>ignored<!-- -->&var.y;</x>|
+  </rxml>
+  <result>-5-6|56|-9-10|910|</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <define container="x" scope="x" preparse>
+      <define tag="y-text">y</define>
+      <define container="y" preparse>
+	[<y-text/>:<contents/>][x:<contents scope="x"/>]
+      </define>
+      <define tag="y-text">z</define>
+      <y>y-exp</y>
+    </define>
+    <x>x-exp</x>
+  </rxml>
+  <result>[y:y-exp][x:x-exp]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <define container="x" preparse>
+      <attrib name="foo">z</attrib>
+      <contents value-of="*[1]"/>
+      &_.foo;
+      <contents value-of="@foo"/>
+    </define>
+    <x><y>y</y></x>
+  </rxml>
+  <result>yzz</result>
 </test>
 
 
