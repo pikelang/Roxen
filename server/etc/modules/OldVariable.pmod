@@ -577,6 +577,18 @@ class File
   inherit String;
   constant type = "File";
   constant width = 50;
+
+  string read( )
+  //! Read the file as a string.
+  {
+    return Stdio.read_bytes( query() );
+  }
+
+  array stat()
+  //! Stat the file
+  {
+    return file_stat( query() );
+  }
 }
 
 class Location
@@ -613,7 +625,22 @@ class Directory
        return ({value+" is not a directory", value });
     return ::verify_set( value );
   }
+
+  array stat()
+  //! Stat the directory
+  {
+    return file_stat( query() );
+  }
+
+  array get( )
+  //! Return a listing of all files in the directory
+  {
+    return get_dir( query() );
+  }
 }
+
+
+
 // =====================================================================
 // MultipleChoice (one of many) baseclass
 // =====================================================================
