@@ -42,7 +42,7 @@
 
 .*               basic, tables, jpeginline, font, imagealign,\
 			cookies, push, pull, backgrounds, ssl,\
-			javascript, java, frames, backgrounds
+			javascript, java, frames, backgrounds, autogunzip
 
 mozilla/0\..*	-tables, -backgrounds, -ssl, -frames, -java, -javascript
 mozilla/1.[01].*	-tables, -backgrounds, -ssl, -frames, -java, -javascript

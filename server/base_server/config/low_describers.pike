@@ -12,6 +12,7 @@ string describe_type(int type, mixed flag)
    case TYPE_MODULE:
     return "(Module)";
 
+   case TYPE_CUSTOM:
    case TYPE_TEXT_FIELD:
     return "";
 
@@ -128,6 +129,9 @@ string describe_variable_as_text(array var, int|void verbose)
     object m;
     string name;
     array tmp;
+   case TYPE_CUSTOM:
+    return var[VAR_MISC][0]( var, verbose );
+
    case TYPE_FONT:
     return var[VAR_VALUE];
     
@@ -358,6 +362,10 @@ string describe_variable_low(mixed *var, mixed path, int|void really_short)
   
   switch(var[VAR_TYPE])
   {
+   case TYPE_CUSTOM:
+    res=var[VAR_MISC][1]( var, path );
+    break;
+
    case TYPE_MODULE:
    case TYPE_MODULE_LIST:
     array wanted = ({});

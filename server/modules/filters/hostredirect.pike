@@ -8,7 +8,7 @@
 
 // responsible for the changes to the original version 1.3: Martin Baehr mbaehr@iaeste.or.at
 
-string cvs_version = "$Id: hostredirect.pike,v 1.7 1997/01/29 05:29:25 per Exp $";
+string cvs_version = "$Id: hostredirect.pike,v 1.8 1997/03/26 05:54:11 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -216,8 +216,9 @@ mixed first_try(object id)
       to = to[0..strlen(to)-2];
     if((host != "default") && !path )
       to +=id->not_query;
-    id->not_query = to;
-    //    id->raw_url = to;
+
+    id->not_query = id->scan_for_query( to );
+    id->raw_url = http_encode_string(to);
     //if we internally redirect to the proxy, 
     //the proxy checks the raw_url for the place toget, 
     //so we have to update the raw_url here too, or 

@@ -3,7 +3,9 @@
 // This is a virtual "file-system".
 // It will be located somewhere in the name-space of the server.
 // Also inherited by some of the other filesystems.
-string cvs_version = "$Id: filesystem.pike,v 1.10 1997/02/14 03:42:57 per Exp $";
+
+string cvs_version= "$Id: filesystem.pike,v 1.11 1997/03/26 05:54:10 per Exp $";
+
 #include <module.h>
 #include <stat.h>
 
@@ -67,10 +69,10 @@ void create()
 	 "If set, files ending with '~' or '#' or '.bak' will "+
 	 "be shown in directory listings");
 
-  defvar("put", 1, "Handle the 'PUT' method", TYPE_FLAG,
+  defvar("put", 1, "Handle the PUT method", TYPE_FLAG,
 	 "If set, PUT can be used to upload files to the server.");
 
-  defvar("delete", 0, "Handle the 'DELETE' method", TYPE_FLAG,
+  defvar("delete", 0, "Handle the DELETE method", TYPE_FLAG,
 	 "If set, DELETE can be used to delete files from the "
 	 "server.");
 
@@ -275,50 +277,30 @@ mixed find_file( string f, object id )
   
   case "PUT":
     if(!QUERY(put))
+    {
+      id->misc->error_code = 405;
       return 0;
-    
+    }    
+
     if(QUERY(check_auth) && (!id->auth || !id->auth[0]))
-      return http_auth_required("foo","<h1>Permission to 'PUT' files denied</h1>");
-    
+      return http_auth_required("foo",
+				"<h1>Permission to 'PUT' files denied</h1>");
     puts++;
     
-#if 0
-    perror("PUT "+id->not_query+" ; "+id->misc->len+" bytes for "+
-	   id->misc->gecos+" (uid="+id->misc->uid+"; gid="+id->misc->gid+")\n");
-#endif
-#if efun(geteuid)
-    int ouid, ogid, dosetuid;
-    if(id->misc->uid && !getuid()) // We want to create the files
-	            		    //	with the correct uid/gid.
-    {
-      dosetuid = 1; ouid = geteuid(); ogid = getegid();
-      seteuid(getuid());
-      setegid( (int)id->misc->gid );
-#if efun(initgroups)
-      initgroups( id->auth[1], (int)id->misc->gid );
-#endif
-      seteuid( (int)id->misc->uid );
-    }
-#endif
+    object privs;
+
+    if(id->misc->uid)
+      privs=((program)"privs")("Saving file", id->misc->uid, id->misc->gid );
+
     rm( f );
     mkdirhier( f );
     object to = open(f, "wc");
-#if efun(geteuid)
-    if(dosetuid)
-    {
-      array ou;
-      ou = roxen->user_from_uid( ouid, id );
-      seteuid(0);
-#if efun(initgroups)
-      if(ou) initgroups( ou[0], ogid );
-#endif
-      seteuid( ouid );
-      setegid( ogid );
-    }
-#endif
 
     if(!to)
-      return 0;    
+    {
+      id->misc->error_code = 403;
+      return 0;
+    }
 
     putting[id->my_fd]=id->misc->len;
     if(id->data && strlen(id->data))
@@ -338,14 +320,25 @@ mixed find_file( string f, object id )
 
   case "DELETE":
     if(!QUERY(delete) || size==-1)
+    {
+      id->misc->error_code = 405;
       return 0;
+    }
     if(QUERY(check_auth) && !id->misc->auth_ok)
       return http_low_answer(403, "<h1>Permission to DELETE file denied</h1>");
 
-    deletes++;
     report_error("DELETING the file "+f+"\n");
     accesses++;
-    rm(f);
+
+    if(id->misc->uid)
+      privs=((program)"privs")("Saving file", id->misc->uid, id->misc->gid );
+
+    if(!rm(f))
+    {
+      id->misc->error_code = 405;
+      return 0;
+    }
+    deletes++;
     return http_low_answer(200,(f+" DELETED from the server"));
 
   default:

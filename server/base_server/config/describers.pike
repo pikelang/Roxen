@@ -129,6 +129,12 @@ string describe_module_copy_variables(object node)
   return link("Variables");
 }  
 
+string describe_module_subnode(object node)
+{
+  if(node->folded) return link(node->data[VAR_NAME]);
+  return link(node->data[VAR_NAME])+"<blockquote>"+node->data[VAR_DOC_STR]+"</blockquote>";
+}  
+
 
 #define DOTDOT(node) ("<a href=/(moredocs)"+node->path(1)+"><img border=0 src=/auto/button/lm/More%20Documentation><img border=0 alt=\"\" hspacing=0 vspacing=0 src=/auto/button/rm/%20></a>")
 #define NODOTDOT(node) ("<a href=/(lessdocs)"+node->path(1)+"><img border=0 src=/auto/button/lm/Less%20Documentation><img border=0 alt=\"\" hspacing=0 vspacing=0 src=/auto/button/rm/%20></a>")

@@ -4,7 +4,7 @@ import spider;
 #define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
 
 // Set up the roxen enviornment. Including custom functions like spawne().
-string cvs_version="$Id: roxenloader.pike,v 1.10 1997/03/02 09:52:42 per Exp $";
+string cvs_version="$Id: roxenloader.pike,v 1.11 1997/03/26 05:54:05 per Exp $";
 
 void perror(string format,mixed ... args);
 
@@ -254,6 +254,7 @@ static private void initiate_cache()
   add_constant("cache_set", cache->cache_set);
   add_constant("cache_lookup", cache->cache_lookup);
   add_constant("cache_remove", cache->cache_remove);
+  add_constant("cache_expire", cache->cache_expire);
   add_constant("cache", cache);
   add_constant("capitalize", lambda(string s){return upper_case(s[0..0])+s[1..];});
 }
@@ -309,7 +310,7 @@ void main(mixed ... args)
 
   master()->putenv("PIKE_INCLUDE_PATH", path);
   master()->pike_include_path = path/":";
-  replace_master(mm=(((program)"etc/master.pike")()));
+  replace_master(mm=(((program)"etc/roxen_master.pike")()));
   mm->putenv("PIKE_INCLUDE_PATH", path);
   mm->pike_include_path = path/":";
   mm->pike_library_path = master()->pike_library_path;

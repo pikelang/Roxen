@@ -1,6 +1,6 @@
 inherit "http";
 
-static string _cvs_version = "$Id: roxenlib.pike,v 1.18 1997/03/12 19:38:38 per Exp $";
+static string _cvs_version = "$Id: roxenlib.pike,v 1.19 1997/03/26 05:54:04 per Exp $";
 // This code has to work booth in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -102,10 +102,11 @@ static mapping build_env_vars(string f, object id, string path_info)
     
   if(roxen->quick_ip_to_host(addr) != addr)
     new["REMOTE_HOST"]=roxen->quick_ip_to_host(addr);
-    
-  if(id->my_fd)
-    new["REMOTE_PORT"]=ipaddr(id->my_fd->query_address(),1);
-    
+
+  catch {
+    if(id->my_fd)
+      new["REMOTE_PORT"]=ipaddr(id->my_fd->query_address(),1);
+  };
     
   new["HTTP_USER_AGENT"] = id->client*" "; 
     
@@ -360,7 +361,7 @@ static string parse_rxml(string what, object id,
 }
 
 constant safe_characters = "abcdefghijkklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789åäöÅÄÖ"/"";
-constant empty_strings = map(safe_characters,lambda(){return "";});
+array (string) empty_strings = map(safe_characters,lambda(){return "";});
 
 static int is_safe_string(string in)
 {
@@ -386,6 +387,11 @@ static string make_tag(string s,mapping in)
 {
   string q = make_tag_attributes(in);
   return "<"+s+(strlen(q)?" "+q:"")+">";
+}
+
+static string make_container(string s,mapping in, string contents)
+{
+  return make_tag(s,in)+contents+"</"+s+">";
 }
 
 static string dirname( string file )

@@ -1,5 +1,9 @@
+#if 0
 constant master = master();
 inherit master;
+#else
+inherit "/master";
+#endif
 
 string program_name(program p)
 {

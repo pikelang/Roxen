@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.45 1997/03/12 19:38:34 per Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.46 1997/03/26 05:54:03 per Exp $";
 #define IN_ROXEN
 #ifdef THREADS
 #include <fifo.h>
@@ -567,20 +567,22 @@ void connected_to_roxen_com(object port)
 
 public void update_supports_from_roxen_com()
 {
-  if(QUERY(AutoUpdate))
+  if(QUERY(next_supports_update) <= time())
   {
-    async_connect("roxen.com.", 80, connected_to_roxen_com);
+    if(QUERY(AutoUpdate))
+    {
+      async_connect("roxen.com.", 80, connected_to_roxen_com);
 #ifdef DEBUG
-    perror("Connecting to roxen.com.:80\n");
+      perror("Connecting to roxen.com.:80\n");
 #endif
-  }
-  remove_call_out( update_supports_from_roxen_com );
+    }
+    remove_call_out( update_supports_from_roxen_com );
 
   // Check again in one week.
-  QUERY(next_supports_update)=3600*24*7 + time();
-  store("Variables", variables, 0, 0);
-
-  call_out(update_supports_from_roxen_com, 3600*24*7);
+    QUERY(next_supports_update)=3600*24*7 + time();
+    store("Variables", variables, 0, 0);
+  }
+  call_out(update_supports_from_roxen_com, QUERY(next_supports_update)-time());
 }
 
 // Return a list of 'supports' values for the current connection.
@@ -649,6 +651,7 @@ private void restore_current_user_id_number()
 	 + ")\n");
   mark_fd(current_user_id_file->query_fd(), "Unique user ID logfile.\n");
 }
+
 
 int increase_id()
 {
@@ -1933,8 +1936,6 @@ varargs int main(int argc, array (string) argv)
 
   create_pid_file(QUERY(pidfile));
 
-  restore_current_user_id_number();
-
 #if efun(syslog)
   init_logger();
 #endif
@@ -1944,7 +1945,9 @@ varargs int main(int argc, array (string) argv)
   initiate_languages();
   
   enable_configurations();
-
+#if 0
+  restore_current_user_id_number();
+#endif
 // Rebuild the configuration interface tree if the interface was
 // loaded before the configurations was enabled (a configuration is a
 // virtual server, perhaps the name should be changed internally as

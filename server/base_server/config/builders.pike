@@ -24,39 +24,49 @@ void low_build_variables(object node, mapping from)
 
   for(i=0; i<sizeof(m); i++)
   {
-    if(m[i][VAR_NAME] && m[i][VAR_CONFIGURABLE])
-    {  
-      string base, name;
-      if(m[i][VAR_SHORTNAME][0] == '_')
-      {
-	o=node->descend("Builtins")->descend(m[i][VAR_NAME]);
-	o->changed = 0;
-	o->folded = 1;
-      }
-      else if(sscanf(m[i][VAR_NAME], "%s:%s", base, name) == 2)
-      {
-	sscanf(name, "%*[\t ]%s", name);
-	m[i][VAR_NAME] = name;
-	o=node->descend(base);
-	o->describer = describe_holder;
-	o->data = base;
-	o->changed = 0;
-	o->folded = 1;
-	o=o->descend(name);
-	o->changed = 0;
-	o->folded = 1;
-      } else {
-	o=node->descend(m[i][VAR_NAME]);
-	o->changed = 0;
-	o->folded = 1;
-      }
-      o->type = NODE_MODULE_COPY_VARIABLE;
-      o->saver = save_module_variable;
+    if(m[i][VAR_TYPE] == TYPE_NODE)
+    {
+      o=node->descend(m[i][VAR_NAME]);
+      o->type = NODE_MODULE_COPY_VARIABLES;
+      o->data = m[i];
       o->changed = 0;
       o->folded = 1;
-      o->data = m[i];
-      o->describer = describe_module_variable;
-    }
+      o->describer = describe_module_subnode;
+      low_build_variables(o,o->data[VAR_VALUE]->query());
+    } else
+      if(m[i][VAR_NAME] && m[i][VAR_CONFIGURABLE])
+      {  
+	string base, name;
+	if(m[i][VAR_SHORTNAME][0] == '_')
+	{
+	  o=node->descend("Builtins")->descend(m[i][VAR_NAME]);
+	  o->changed = 0;
+	  o->folded = 1;
+	}
+	else if(sscanf(m[i][VAR_NAME], "%s:%s", base, name) == 2)
+	{
+	  sscanf(name, "%*[\t ]%s", name);
+	  m[i][VAR_NAME] = name;
+	  o=node->descend(base);
+	  o->describer = describe_holder;
+	  o->data = base;
+	  o->changed = 0;
+	  o->folded = 1;
+	  o=o->descend(name);
+	  o->changed = 0;
+	  o->folded = 1;
+	} else {
+	  o=node->descend(m[i][VAR_NAME]);
+	  o->changed = 0;
+	  o->folded = 1;
+	}
+	o->type = NODE_MODULE_COPY_VARIABLE;
+	o->saver = save_module_variable;
+	o->changed = 0;
+	o->folded = 1;
+	o->data = m[i];
+	o->describer = describe_module_variable;
+      }
   }
   if(o=node->descend("Builtins", 1))
   {

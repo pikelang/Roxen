@@ -157,6 +157,7 @@ dxr	application/x-director
 
 # Netscape proxy config files.
 nspc    application/x-ns-proxy-autoconfig
+pac     application/x-ns-proxy-autoconfig
 
 # This is supposed to be just 'gzip' and 'compress', but Netscape barfs..
 Z	STRIP			x-compress

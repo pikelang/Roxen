@@ -69,12 +69,32 @@ varargs int defvar(string var, mixed value, string name, int type,
 
   if (!stringp(name))
     name = var;
+
+  if((search(name, "\"") != -1))
+    error("Please do not use \" in variable names");
   
   if (!stringp(doc_str))
     doc_str = "No documentation";
   
   switch (type & VAR_TYPE_MASK)
   {
+   case TYPE_NODE:
+    if(!arrayp(value))
+      error("TYPE_NODE variables should contain a list of variables to use as "
+	    "subnodes.\n");
+    break;
+   case TYPE_CUSTOM:
+    if(!misc
+       && arrayp(misc)
+       && (sizeof(misc)>=3)
+       && functionp(misc[0])
+       && functionp(misc[1])
+       && functionp(misc[2]))
+      error("When defining a TYPE_CUSTOM variable, the MISC "
+	    "field must be an array of functionpointers: \n"
+	    "({describe,describe_form,set_from_form})\n");
+    break;
+
    case TYPE_TEXT_FIELD:
    case TYPE_FILE:
    case TYPE_STRING:
@@ -215,14 +235,14 @@ void set(string var, mixed value)
     error( "Setting undefined variable.\n" );
   else
     if(variables[var][VAR_TYPE] == TYPE_MODULE && stringp(value))
-      roxen->register_module_load_hook( value, set, var );
+      roxenp()->register_module_load_hook( value, set, var );
     else if(variables[var][VAR_TYPE] == TYPE_MODULE_LIST)
     {
       variables[var][VAR_VALUE]=value;
       if(arrayp(value))
 	foreach(value, value)
 	  if(stringp(value))
-	    roxen->register_module_load_hook(value,set_module_list,var,value);
+	    roxenp()->register_module_load_hook(value,set_module_list,var,value);
     }
     else
       variables[var][VAR_VALUE]=value;
@@ -286,12 +306,36 @@ array query_seclevels()
 	patterns += ({ ({ MOD_DENY, Regexp(value)->match, }) });
 	break;
 
-       case "allowuser":
-	value = replace("(^"+(value/",")*"$)|(^"+"$)","(^any$)","(.*)");
-	if(this->proxy_auth_needed) {
-	  patterns += ({ ({ MOD_PROXY_USER, Regexp(value)->match, }) });
-	} else {
-	  patterns += ({ ({ MOD_USER, Regexp(value)->match, }) });
+      case "allowuser":
+	array(string) users = (value/"," - ({""}));
+	int i;
+	
+	for(i=0; i < sizeof(users); i++) {
+	  if (users[i] == "any") {
+	    if(this->register_module()[0] & MODULE_PROXY) 
+	      patterns += ({ ({ MOD_PROXY_USER, lambda(){ return 1; } }) });
+	    else
+	      patterns += ({ ({ MOD_USER, lambda(){ return 1; } }) });
+	    break;
+	  } else {
+	    users[i & 0x0f] = "(^"+users[i]+"$)";
+	  }
+	  if ((i & 0x0f) == 0x0f) {
+	    value = users[0..0x0f]*"|";
+	    if(this->register_module()[0] & MODULE_PROXY) {
+	      patterns += ({ ({ MOD_PROXY_USER, Regexp(value)->match, }) });
+	    } else {
+	      patterns += ({ ({ MOD_USER, Regexp(value)->match, }) });
+	    }
+	  }
+	}
+	if (i & 0x0f) {
+	  value = users[0..(i-1)&0x0f]*"|";
+	  if(this->register_module()[0] & MODULE_PROXY) {
+	    patterns += ({ ({ MOD_PROXY_USER, Regexp(value)->match, }) });
+	  } else {
+	    patterns += ({ ({ MOD_USER, Regexp(value)->match, }) });
+	  }
 	}
 	break;
       }
@@ -299,7 +343,6 @@ array query_seclevels()
   }
   return patterns;
 }
-
 
 mixed stat_file(string f, object id){}
 mixed find_dir(string f, object id){}

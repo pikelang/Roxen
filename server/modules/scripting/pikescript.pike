@@ -12,7 +12,7 @@ mapping scripts=([]);
 
 inherit "module";
 inherit "roxenlib";
-string cvs_version = "$Id: pikescript.pike,v 1.8 1997/02/18 02:43:57 per Exp $";
+string cvs_version = "$Id: pikescript.pike,v 1.9 1997/03/26 05:54:16 per Exp $";
 #include <module.h>
 
 mixed *register_module()
@@ -103,6 +103,8 @@ array|mapping call_script(function fun, object got, object file)
 
   if(objectp(result))
     return result;
+
+  if(!result) return 0;
 
   return http_string_answer(sprintf("%O", result));
 }

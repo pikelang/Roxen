@@ -1,6 +1,6 @@
 import Array;
 
-string cvs_version = "$Id: cache.pike,v 1.10 1997/02/13 13:00:51 per Exp $";
+string cvs_version = "$Id: cache.pike,v 1.11 1997/03/26 05:54:00 per Exp $";
 
 #include <config.h>
 
@@ -21,6 +21,12 @@ inherit "roxenlib";
 
 mapping cache;
 mapping hits=([]), all=([]);
+
+
+void cache_expire(string in)
+{
+  m_delete(cache, in);
+}
 
 mixed cache_lookup(string in, string what)
 {

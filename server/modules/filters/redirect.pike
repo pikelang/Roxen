@@ -4,7 +4,7 @@
 // another. This can be done using "internal" redirects (much like a
 // symbolik link in unix), or with normal HTTP redirects.
 
-string cvs_version = "$Id: redirect.pike,v 1.6 1997/03/11 01:19:33 per Exp $";
+string cvs_version = "$Id: redirect.pike,v 1.7 1997/03/26 05:54:12 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -176,6 +176,7 @@ mixed first_try(object id)
 	+ ([ "extra_heads":([ "Location":to ]) ]);
   } else {
      id->variables = ([]);
+     id->raw_url = http_encode_string(to);
      id->not_query = id->scan_for_query( to );
   }
 }

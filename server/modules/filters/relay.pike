@@ -7,7 +7,7 @@
 // caching. This module is therefore quite obsolete, really.  But
 // since it is so small, I have left it here.
 
-string cvs_version = "$Id: relay.pike,v 1.5 1996/12/02 04:32:41 per Exp $";
+string cvs_version = "$Id: relay.pike,v 1.6 1997/03/26 05:54:12 per Exp $";
 #include <module.h>
 
 inherit "module";
@@ -79,9 +79,8 @@ void nope(object hmm)
 
 void connected(object to, object id)
 {
-  if(!to) 
-    return nope(id);
-  to->write(replace(id->raw, "\n", "\r\n"));
+  if(!to) return nope(id);
+  to->write(id->raw);
   async_pipe(id->my_fd, to);
   id->do_not_disconnect = 0;
   id->disconnect();

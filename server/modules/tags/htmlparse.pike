@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-string cvs_version = "$Id: htmlparse.pike,v 1.24 1997/03/12 19:41:31 per Exp $";
+string cvs_version = "$Id: htmlparse.pike,v 1.25 1997/03/26 05:54:16 per Exp $";
 #pragma all_inline 
 
 #include <config.h>
@@ -373,9 +373,6 @@ mapping handle_file_extension( object file, string e, object id)
     throw(err);
   }
 
-//  if(id->misc->is_redirected)
-//    to_parse = "<base href="+id->not_query+">\n"+to_parse;
-
   bytes += strlen(to_parse);
 
   file->close();
@@ -708,7 +705,7 @@ string tag_compat_exec(string tag,mapping m,object got,object file,
       if(got->auth && got->auth[0])
 	user=got->auth[1];
       string addr=got->remoteaddr || "Internal";
-      ((program)"privs")("nobody");
+      ((program)"privs")("Executing stuff..", "nobody");
       return popen(m->cmd,
 		   getenv()
 		   | build_roxen_env_vars(got)
@@ -943,7 +940,7 @@ string tag_accessed(string tag,mapping m,object got,object file,
 
   if(m->per)
   {
-    timep=time(1) - database_created(m->file);
+    timep=time(1) - database_created(m->file) + 1;
     
     switch(m->per)
     {
@@ -1023,13 +1020,13 @@ string tag_modified(string tag, mapping m, object got, object file,
   {
     if(!got->conf->auth_module)
       return "<!-- modified by requires an user database! -->\n";
-    m->name = roxen->last_modified_by(file);
+    m->name = roxen->last_modified_by(file,got);
     return tag_user(tag, m, got, file,defines);
   }
 
   if(m->file)
   {
-    m->realfile = roxen->real_file(m->file, got);
+    m->realfile = roxen->real_file(fix_relative(m->file,got), got);
     m_delete(m, "file");
   }
 
@@ -1191,6 +1188,9 @@ string tag_allow(string a, mapping (string:string) m,
     return tag_deny("", m, s, got, file, defines, client);
   }
 
+  if(m->module)
+    TEST(got->conf && got->conf->modules[m->module]);
+  
   if(m->language)
     if(!got->misc["accept-language"])
     {
@@ -1369,17 +1369,13 @@ string tag_aprestate(string tag, mapping m, string q, object got)
   string href, s, *foo, target;
   multiset prestate=(< >);
 
-  target=m->target;
-  m_delete(m, "target");
-
   if(!m->href)
     href=strip_prestate(strip_config(got->raw_url));
   else 
   {
     href=m->href;
     if ((sizeof(foo = href / ":") > 1) && (sizeof(foo[0] / "/") == 1))
-      return sprintf("<a href=\"%s\" %s>%s</a>", href, 
-		     target?"target=\""+target+"\"":"", q);
+      return make_container("a",m,q);
     href=fix_relative(href, got);
     m_delete(m, "href");
   }
@@ -1388,13 +1384,17 @@ string tag_aprestate(string tag, mapping m, string q, object got)
     href="";
 
   foreach(indices(got->prestate) + indices(m), s)
+  {
+    if(m[s]==s) m_delete(m,s);
+
     if(strlen(s) && s[0] == '-')
       prestate[s[1..1000]]=0;
     else
       prestate[s]=1;
-
-  return "<a "+(target?"target=\""+target+"\" ":" ")
-    +"href=\"" + add_pre_state( href, prestate ) + "\">"+q+"</a>";
+  }
+  m->href = href;
+  if(target) m->target=target;
+  return make_container("a",m,q);
 }
 
 string tag_aconfig(string tag, mapping m, string q, object got)
@@ -1415,23 +1415,27 @@ string tag_aconfig(string tag, mapping m, string q, object got)
 
   foreach(indices(m), opt)
   {
-    if(strlen(opt))
-      switch(opt[0])
-      {
-       case '+':
-        m_delete(m, opt);
-        m[opt[1..100]] = opt;
-        continue;
-       case '-':
-        continue;
-       default:
-        opts += " " + opt+"=\""+m[opt]+"\"";
-        continue;
-      }
+    if(m[opt]==opt)
+    {
+      m_delete(m,opt);
+    
+      if(strlen(opt))
+	switch(opt[0])
+	{
+	 case '+':
+	  m_delete(m, opt);
+	  m[opt[1..100]] = opt;
+	  continue;
+	 case '-':
+	  continue;
+	 default:
+	  opts += " " + opt+"=\""+m[opt]+"\"";
+	  continue;
+	}
+    }
   }
-// <a href="/<foo,-bar>/(gazonk,elefant)/hilfe.hmtl">...
-  return "<a"+opts+" href=\""+add_config(href, indices(m), got->prestate)+"\">"
-    + q + "</a>";
+  m->href = add_config(href, indices(m), got->prestate);
+  return make_container("a",m,q);
 }
 
 string add_header(mapping to, string name, string value)
@@ -1559,8 +1563,8 @@ string tag_client(string tag,mapping m, string s,object got,object file)
     isok=!!got->supports[m->support];
 
   if (!(isok && m->or) && m->name)
-    isok=_match(got->client*" ", Array.map(m->name/",", 
-					   lambda(string s){return s+"*";}));
+    isok=_match(got->client*" ",
+		Array.map(m->name/",", lambda(string s){return s+"*";}));
   return (isok^invert)?s:""; 
 }
 

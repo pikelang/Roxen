@@ -25,10 +25,13 @@
 #define TYPE_FLOAT           15
 #define TYPE_PORTS           16
 #define TYPE_MODULE          17
-#define TYPE_MODULE_LIST     18 /* NYI */
-#define TYPE_MULTIPLE_MODULE 18 /* NYI */
+#define TYPE_MODULE_LIST     18 /* somewhat buggy.. */
+#define TYPE_MULTIPLE_MODULE 18 /* somewhat buggy.. */
 
 #define TYPE_FONT            19
+
+#define TYPE_CUSTOM          20
+#define TYPE_NODE            21
 
 
 /* Variable indexes */

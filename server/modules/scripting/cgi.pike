@@ -6,10 +6,10 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.12 1997/03/12 19:41:37 per Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.13 1997/03/26 05:54:15 per Exp $";
 #include <module.h>
 
-binherit "module";
+inherit "module";
 inherit "roxenlib";
 
 import Simulate;
@@ -130,6 +130,10 @@ void create()
 	 " a script, or use Location: headers in a non-nph script.\n"
 	 "<p>More or less always, that is..");
 
+  defvar("wrapper", "bin/cgi", "The wrapper to use",
+	 TYPE_FLAG|VAR_EXPERT,
+	 "This is the pathname of the wrapper to use.\n");
+  
   defvar("runuser", "", "Run scripts as", TYPE_STRING,
 	 "If you start roxen as root, and this variable is set, CGI scripts "
 	 "will be run as this user. You can use either the user name or the "
@@ -140,6 +144,34 @@ void create()
   defvar("user", 1, "Run user scripts as owner", TYPE_FLAG,
 	 "If set, scripts in the home-dirs of users will be run as the "
 	 "user. This override the Run scripts as variable.", 0, uid_was_zero);
+
+  defvar("nice", 1, "Nice value", TYPE_INT,
+	 "The nice level to use when running scripts. "
+	 "20 is nicest, and 0 is the most aggressive available to "
+	 "normal users.");
+  
+  defvar("coresize", 0, "Limits: Core dump size", TYPE_INT,
+	 "The maximum size of a core-dump, in 512 byte blocks."
+	 " -2 is unlimited.");
+
+  defvar("maxtime", 60, "Limits: Maximum CPU time", TYPE_INT_LIST,
+	 "The maximum time the script might run in seconds. -2 is unlimited.",
+	 ({ -2, 10, 30, 60, 120, 240 }));
+
+  defvar("datasize", -2, "Limits: Memory size", TYPE_INT|VAR_EXPERT,
+	 "The maximum size of the memory used, in Kb. -2 is unlimited.");
+
+  defvar("filesize", -2, "Limits: Maximum file size", TYPE_INT|VAR_EXPERT,
+	 "The maximum size of any file created, in 512 byte blocks. -2 "
+	 "is unlimited.");
+
+  defvar("open_files", 16, "Limits: Maximum number of open files",
+	 TYPE_INT_LIST,
+	 "The maximum number of files the script can keep open at any time.",
+	 ({8,16,32,64,128,256,512,1024,2048}));
+
+  defvar("stack", -2, "Limits: Stack size", TYPE_INT|VAR_EXPERT,
+	 "The maximum size of the stack used, in b. -2 is unlimited.");
 
   defvar("extra_env", "", "Extra environment variables", TYPE_TEXT_FIELD,
 	 "Extra variables to be sent to the script, format:<pre>"
@@ -193,6 +225,14 @@ void start(int n, object conf)
   env["SERVER_PROTOCOL"]="HTTP/1.0";
   env["SERVER_URL"]=conf->query("MyWorldLocation");
   env["AUTH_TYPE"]="Basic";
+  env["ROXEN_CGI_NICE_VALUE"] = query("nice");
+  env["ROXEN_CGI_LIMITS"] = ("core_dump_size="+query("coresize")+
+			     ";time_cpu="+query("maxtime")+
+			     ";data_size="+query("datasize")+
+			     ";file_size="+query("filesize")+
+			     ";open_files="+query("open_files")+
+			     ";stack_size="+query("stack"));
+  
   us = ({ "", "" });
 
   foreach(query("extra_env")/"\n", tmp)
@@ -325,7 +365,8 @@ mixed find_file(string f, object id)
     
   if(QUERY(use_wrapper))
   {
-    spawne(getcwd()+"/bin/cgi", ({ f }) +  make_args(id->rest_query), 
+    spawne(combine_path(getcwd()+"/",QUERY(wrapper)),
+	   ({ f }) +  make_args(id->rest_query), 
            build_env_vars(f, id, path_info), 
            pipe1, pipe1, QUERY(err)?pipe1:Stdio.stderr, wd, uid);
   } else {

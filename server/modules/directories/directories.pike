@@ -1,7 +1,7 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
 // A quite complex directory module. Generates macintosh like listings.
-string cvs_version = "$Id: directories.pike,v 1.8 1997/02/13 13:01:07 per Exp $";
+string cvs_version = "$Id: directories.pike,v 1.9 1997/03/26 05:54:09 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -151,6 +151,10 @@ void create()
 	 "<a href=http://roxen.com//>http://roxen.com//</a>"
 	 ". It is _very_ useful for debugging, but some people regard it as a "
 	 "security hole.");
+
+  defvar ("sizes", 25, "Size of the listed filenames", TYPE_INT,
+	  "This is the width (in characters) of the filenames appearing in the directory listings");
+   
   
   defvar("size", 1, "Include file size", TYPE_FLAG,
 	 "If set, include the size of the file in the listing.");
@@ -235,10 +239,9 @@ array|string describe_dir_node_mac(object node)
       break;
       
      default:
-      array tmp;
+      mixed tmp;
       tmp = roxen->type_from_filename(filename, 1);
-      if(!tmp)
-	tmp=({ "Unknown", 0 });
+      if(!tmp) tmp=({ "Unknown", 0 });
       type = tmp[0];
       icon = image_from_type(type);
       if(tmp[1])  type += " " + tmp[1];
@@ -252,9 +255,11 @@ array|string describe_dir_node_mac(object node)
    * o The type of the file
    */
   
-  return ({ "<dt>" , sprintf("%s %-25s</a> %8s %-40s\n", image(icon),
-			     filename[0..24], sizetostring(len), type)
-	      });
+  return
+    ({ "<dt>" ,
+       sprintf("%s %-"+QUERY(sizes)+"s</a> %8s %-40s\n", 
+	       image(icon), filename[0..QUERY(sizes)], sizetostring(len), type)
+     });
   
 }
 
@@ -369,9 +374,10 @@ mapping parse_directory(object id)
       foreach(query("indexfiles")-({""}), file) // Make recursion impossible
       {
 	id->not_query = old_file+file;
-	if(got = roxen->get_file(id))
+	if(got = id->conf->low_get_file(id))
 	  return got;
       }
+      id->not_query=old_file;
     }
   }
 

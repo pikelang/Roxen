@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.18 1997/03/13 01:13:22 kg Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.19 1997/03/26 05:54:01 per Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -182,7 +182,7 @@ class Bignum {
     return ((((float)lsb/1024.0/1024.0)+2048.0)+(msb*4096.0));
   }
 
-  void create(int num, int|void bnum, int|void d)
+  void create(int|void num, int|void bnum, int|void d)
   {
     if(!d)
       lsb = num-0x7ffffffe;
@@ -806,7 +806,7 @@ object _lock(object|function f)
 #define UNLOCK(X)
 #endif
 
-static private mapping|int low_get_file(object id, int|void no_magic)
+mapping|int low_get_file(object id, int|void no_magic)
 {
 #ifdef MODULE_LEVEL_SECURITY
   int slevel;

@@ -1,7 +1,7 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
 
-string cvs_version = "$Id: http.pike,v 1.20 1997/03/02 09:52:44 per Exp $";
+string cvs_version = "$Id: http.pike,v 1.21 1997/03/26 05:54:17 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 inherit "roxenlib";
@@ -386,8 +386,8 @@ private int parse_got(string s)
 	    break;
 
 	   case "referer":
-	     referer = contents/" ";
-	     break;
+	    referer = contents/" ";
+	    break;
 	    
 	   case "extension":
 #ifdef DEBUG
@@ -643,7 +643,9 @@ static void handle_request( )
 
   if(!mappingp(file))
   {
-    if(method != "GET" && method != "HEAD" && method != "POST")
+    if(misc->error_code)
+      file = http_low_answer(misc->error_code, errors[misc->error]);
+    else if(method != "GET" && method != "HEAD" && method != "POST")
       file = http_low_answer(501, "Not implemented.");
     else
       file=http_low_answer(404,
@@ -895,21 +897,47 @@ object clone_me()
   object c,t;
   c=object_program(t=this_object())();
 
-  c->my_fd = 0;
+  c->first = first;
+  
   c->conf = conf;
   c->time = time;
-  c->method = method;
-  c->prot = prot;
-  c->pragma = pragma;
-  c->cookies = cookies;
+  c->raw_url = raw_url;
+// c->do_not_disconnect = do_not_disconnect;  // No use where there is no fd..
+  c->variables = copy_value(variables);
+  c->misc = copy_value(misc);  c->misc->orig = t;
+
   c->prestate = prestate;
   c->supports = supports;
+  c->config = config;
+
   c->remoteaddr = remoteaddr;
+  c->host = host;
+
   c->client = client;
+  c->referer = referer;
+  c->pragma = pragma;
+
+  c->cookies = cookies;
+// file..
+  c->my_fd = 0;
+// pipe..
+  
+  c->prot = prot;
+  c->method = method;
+  
+// realfile virtfile   // Should not be copied.  
+  c->rest_query = rest_query;
+  c->raw = raw;
+  c->query = query;
+  c->not_query = not_query;
+  c->extra_extension = extra_extension;
+  c->data = data;
+  
   c->auth = auth;
-  c->misc = copy_value(misc);
-  c->misc->orig = t;
   c->realauth = realauth;
+  c->rawauth = rawauth;
+  c->since = since;
+
   return c;
 }
 

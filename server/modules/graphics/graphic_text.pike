@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.38 1997/03/11 01:19:34 per Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.39 1997/03/26 05:54:13 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -64,6 +64,9 @@ array register_module()
 	      " xpad=Y%         Increase padding between lines with Y%\n"
 	      " shadow=int,dist Draw a drop-shadow (variable distance/intensity)\n"
 	      " bshadow=dist    Draw a blured drop-shadow (variable distance)\n"
+	      " ghost=dist,blur,col\n"
+	      "                 Do a 'ghost text'. Do NOT use together with "
+	      "                   'shadow'. Magic coloring won't work with it."
 	      " glow=color      Draw a 'glow' outline around the text.\n"
 	      " opaque=0-100%   Draw with more or less opaque text (100%\n"
 	      "                 is default)\n"
@@ -112,7 +115,7 @@ void create()
 	 "tag.");
 
   defvar("location", "/gtext/", "Mountpoint", TYPE_LOCATION,
-	 "The URL-prefix for the anfang characters.");
+	 "The URL-prefix for the graphic characters.");
 
   defvar("cols", 16, "Default number of colors per image", TYPE_INT_LIST,
 	 "The default number of colors to use. 16 seems to be enough. "
@@ -133,7 +136,7 @@ object(font) load_font(string name, string justification, int xs, int ys)
 {
   object fnt = font();
 
-  if(!name) name="";
+  if(!name) name="foo";
   if(sscanf(name, "%*s/%*s") != 2)
     name=QUERY(default_size)+"/"+name;
 
@@ -338,6 +341,15 @@ object (image) make_text_image(mapping args, object font, string text,object id)
     yoffset += dy;
   }
 
+  if(args->ghost)
+  {
+    int howmuch=(int)args->ghost;
+    xsize+=howmuch*2+10;
+    xoffset += 3;
+    ysize+=howmuch*2+10;
+  }
+
+
   if(args->xspacing)
   {
     xoffset += (int)args->xspacing;
@@ -437,6 +449,22 @@ object (image) make_text_image(mapping args, object font, string text,object id)
     background->paste_alpha(image(txsize+border*2,tysize+border*2,
 				  @parse_color(bg)),
 			    255-(alpha*255/100),xoffset-border,yoffset-border);
+  }
+
+  if(args->ghost)
+  { // Francesco..
+    int sdist = (int)args->ghost;
+    int bl=(int)(args->ghost/",")[1];
+    array(int)clr=parse_color((args->ghost/",")[-1]);
+    int j;
+    object base = image(xsize,ysize,@clr)->invert();
+    object ta = text_alpha->copy();
+    for (j=0;j<bl;j++)
+      ta=ta->apply_matrix(({
+	({6,7,7,7,6}),({7,8,8,8,7}),({7,8,8,8,7}),({7,8,8,8,7}),({6,7,7,7,6})
+       }));
+    background->paste_mask(base->invert(),ta,xoffset+sdist,yoffset+sdist);
+    fgcolor=bgcolor;
   }
 
   
@@ -608,9 +636,9 @@ array(int)|string write_text(int _args, string text, int size,
   
 mapping find_file(string f, object rid)
 {
-  string id;
+  int id;
   sscanf(f,"%d/%s", id, f);
-  return http_string_answer(write_text((int)id,f,0,rid), "image/gif");
+  return http_string_answer(write_text(id,f,0,rid), "image/gif");
 }
 
 string quote(string in)
@@ -673,9 +701,8 @@ string magic_image(string url, int xs, int ys, string sn,
   if(!id->supports->images) return alt;
   if(!id->supports->javascript)
     return (!input)?
-      ("<a "+extra_args+"href=\""+url+"\"><img _parsed=1 src="+image_1+" name="+
-       sn+" border=0 alt=\""+alt+"\" ></a>\n"):
-    ("<input type=image "+extra_args+" src="+image_1+" name="+input+">");
+      ("<a "+extra_args+"href=\""+url+"\"><img _parsed=1 src=\""+image_1+"\" name="+sn+" border=0 alt=\""+alt+"\" ></a>\n"):
+    ("<input type=image "+extra_args+" src=\""+image_1+"\" name="+input+">");
 
   return
     ("<script>\n"
@@ -686,7 +713,7 @@ string magic_image(string url, int xs, int ys, string sn,
       (input?"onClick='document.forms[0].submit();' ":"")
       +"onMouseover=\"img_act('"+sn+"',"+sn+"h,'"+(mess||url)+"');\"\n"
       "onMouseout='document.images[\""+sn+"\"].src = "+sn+"l.src;'><img "
-      "_parsed=1 width="+xs+" height="+ys+" src="+image_1+" name="+sn+
+      "_parsed=1 width="+xs+" height="+ys+" src=\""+image_1+"\" name="+sn+
       " border=0 alt=\""+alt+"\" ></a>\n"));
 }
 
@@ -719,7 +746,8 @@ string tag_gtext_id(string t, mapping arg,
   extra_args(arg);        m_delete(arg,"split");
   if(defines->fg && !arg->fg) arg->fg=defines->fg;
   if(defines->bg && !arg->bg) arg->bg=defines->bg;
-  if(!arg->font) arg->font=defines->font||QUERY(default_font);
+//  if(!arg->font) arg->font=defines->font||QUERY(default_font);
+  if(!arg->nfont) arg->nfont=defines->nfont;
 
   int num = find_or_insert( arg );
 
@@ -798,7 +826,12 @@ string tag_graphicstext(string t, mapping arg, string contents,
 
   if(defines->fg && !arg->fg) arg->fg=defines->fg;
   if(defines->bg && !arg->bg) arg->bg=defines->bg;
-  if(!arg->font) arg->font=defines->font||QUERY(default_font);
+//  if(!arg->font) arg->font=defines->font||QUERY(default_font);
+  if(!arg->nfont) arg->nfont=defines->nfont;
+  if(!arg->bold) arg->bold=defines->bold;
+  if(!arg->italic) arg->italic=defines->italic;
+  if(!arg->black) arg->black=defines->black;
+  if(!arg->narrow) arg->narrow=defines->narrow;
 
   if(arg->split)
   {
@@ -828,28 +861,6 @@ string tag_graphicstext(string t, mapping arg, string contents,
   gt=contents;
   rest="";
 
-  if(split)
-  {
-    string word;
-    array res = ({});
-    string pre = query_location()+num+"/";
-
-    if(lp) res+=({ lp });
-    
-    gt=replace(gt, "\n", " ");
-    
-    foreach(gt/" "-({""}), word)
-    {
-      array size = write_text(num,word,1,id);
-      res += ({ "<img _parsed=1 border=0 alt=\""+replace(word,"\"","'")
-		  +"\" src=\'"+pre+quote(word)+"\' width="+
-		  size[0]+" height="+size[1]+" "+ea+">\n"
-		  });
-    }
-    if(lp) res+=({ "</a>" });
-    return res*"";
-  }
-  
   switch(t)
   {
    case "gh1": case "gh2": case "gh3": case "gh4":
@@ -864,6 +875,28 @@ string tag_graphicstext(string t, mapping arg, string contents,
     break;
   }
 
+  if(split)
+  {
+    string word;
+    array res = ({pre});
+    string pre = query_location()+num+"/";
+
+    if(lp) res+=({ lp });
+    
+    gt=replace(gt, "\n", " ");
+    
+    foreach(gt/" "-({""}), word)
+    {
+      array size = write_text(num,word,1,id);
+      res += ({ "<img _parsed=1 border=0 alt=\""+replace(word,"\"","'")
+		  +"\" src=\""+pre+quote(word)+"\" width="+
+		  size[0]+" height="+size[1]+" "+ea+">\n"
+		  });
+    }
+    if(lp) res+=({ "</a>"+post });
+    return res*"";
+  }
+  
   array size = write_text(num,gt,1,id);
 
   if(magic)
@@ -900,8 +933,8 @@ string tag_graphicstext(string t, mapping arg, string contents,
 	    +" align="+(al || defalign)+ea+
 	    " width="+size[0]+" height="+size[1]+">"+rest+post);
   return (pre+(lp?lp:"")+
-	  "<img _parsed=1 border=0  alt=\""+replace(gt,"\"","'")+"\" src="+
-	  query_location()+num+"/"+quote(gt)+" "+ea
+	  "<img _parsed=1 border=0  alt=\""+replace(gt,"\"","'")+"\" src=\""+
+	  query_location()+num+"/"+quote(gt)+"\" "+ea
 	  +" align="+(al || defalign)+
 	  " width="+size[0]+" height="+size[1]+">"+rest+(lp?"</a>":"")+post);
 }

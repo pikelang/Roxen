@@ -2,7 +2,7 @@
 
 // A fast directory module, without support for the fold/unfold stuff
 // in the normal one.
-string cvs_version = "$Id: fastdir.pike,v 1.6 1997/03/11 01:19:29 per Exp $";
+string cvs_version = "$Id: fastdir.pike,v 1.7 1997/03/26 05:54:10 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -161,10 +161,10 @@ mapping parse_directory(object id)
   {
     string file;
     foreach(query("indexfiles"), file)
-      if(roxen->stat_file(file, id))
+      if(roxen->stat_file(f+file, id))
       {
 	id->not_query += file;
-	return roxen->find_file(id);
+	return roxen->get_file(id);
       }
   }
 

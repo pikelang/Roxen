@@ -1,6 +1,6 @@
 // static private inherit "db";
 
-/* $Id: persistent.pike,v 1.15 1997/03/01 12:42:36 per Exp $ */
+/* $Id: persistent.pike,v 1.16 1997/03/26 05:54:03 per Exp $ */
 /*************************************************************,
 * PERSIST. An implementation of persistant objects for Pike.  *
 * Variables and callouts are saved between restarts.          *
@@ -40,13 +40,24 @@ void really_save()
       res += ({ ({ a, b }) });
   }
 //  perror("save ("+ __id +")\n");
+
   if(!file->open(DIR+__id,"wct"))
   {
     mkdirhier(DIR+__id);
     if(!file->open(DIR+__id, "wct"))
       error("Save of object not possible.\n");
   }
-  file->write(encode_value(res));
+  file->write( encode_value(res) );
+  file->close();
+
+  if(!file->open(BACKUPDIR+__id,"wct"))
+  {
+    mkdirhier(BACKUPDIR+__id);
+    if(!file->open(BACKUPDIR+__id, "wct"))
+      error("Save of object not possible.\n");
+  }
+  file->write( encode_value(res) );
+  file->close();
 }
 
 

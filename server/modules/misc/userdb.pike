@@ -3,7 +3,7 @@
 // User database. Reads the system password database and use it to
 // authentificate users.
 
-string cvs_version = "$Id: userdb.pike,v 1.10 1997/02/13 22:25:19 per Exp $";
+string cvs_version = "$Id: userdb.pike,v 1.11 1997/03/26 05:54:15 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -258,7 +258,11 @@ void read_data()
 #endif
 }
 
-void start() { if(!uid2user) (void)read_data(); }
+void start(int i)
+{
+  if(i<2)
+    read_data();
+}
 
 void read_data_if_not_current()
 {
