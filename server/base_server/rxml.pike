@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.199 2000/07/13 15:20:47 kuntri Exp $
+// $Id: rxml.pike,v 1.200 2000/07/13 16:27:06 kuntri Exp $
 
 
 inherit "rxmlhelp";
@@ -2077,7 +2077,7 @@ scope created within the define tag.
 </attr>",
 
 "if":#"<desc cont><short hide>
- If is used to conditionally show its contents.</short><tag><ref
+ <if> is used to conditionally show its contents.</short><tag><ref
  type='tag'>If</ref></tag> is used to conditionally show its contents.
  <tag><ref type='tag'>else</ref></tag>, <tag><ref
  type='tag'>elif</ref></tag> or <tag><ref
