@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.49 2001/05/24 16:40:50 nilsson Exp $
+// $Id: module.pmod,v 1.50 2001/06/13 14:11:19 mast Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -210,7 +210,7 @@ class Variable
     //! Otherwise 0 is returned. 0 is also returned if the variable was
     //! not changed by the set. 1 is returned if the variable was
     //! changed, and -1 is returned if the variable was changed back to
-    //! it's default value.
+    //! its default value.
     //!
     //! If verify_set() threw a string, ([])[0] is returned, that is,
     //! 0 with zero_type set.
