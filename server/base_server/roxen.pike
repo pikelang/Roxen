@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.544 2000/09/09 04:06:06 lange Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.545 2000/09/12 14:05:53 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -25,9 +25,10 @@ ArgCache argcache;
 inherit "global_variables";
 inherit "hosts";
 inherit "disk_cache";
-inherit "language";
+// inherit "language";
 inherit "supports";
 inherit "module_support";
+inherit "config_userdb";
 
 // --- Locale defines ---
 
@@ -52,6 +53,10 @@ inherit "module_support";
 # define THREAD_WERR(X)
 #endif
 
+string query_configuration_dir()
+{
+  return configuration_dir;
+}
 
 string filename( program|object o )
 {
@@ -1950,73 +1955,6 @@ void restart_if_stuck (int force)
 }
 #endif
 
-// Settings used by the various administration interface modules etc.
-class ConfigIFCache
-{
-  string dir;
-  int settings;
-  void create( string name, int|void _settings )
-  {
-    if( settings = _settings )
-      dir = configuration_dir + "_configinterface/" + name + "/";
-    else
-      dir = "../var/"+roxen_version()+"/config_caches/" + name + "/";
-    mkdirhier( dir );
-  }
-
-  mixed set( string name, mixed to )
-  {
-    Stdio.File f;
-    int mode = 0777;
-    if( settings )
-      mode = 0770;
-    if(!(f=open(  dir + replace( name, "/", "-" ), "wct", mode )))
-    {
-      mkdirhier( dir+"/foo" );
-      if(!(f=open(  dir + replace( name, "/", "-" ), "wct", mode )))
-      {
-        report_error("Failed to create administration interface cache file ("+
-                     dir + replace( name, "/", "-" )+") "+
-                     strerror( errno() )+"\n");
-        return to;
-      }
-    }
-    if( settings )
-      f->write(
-#"<?XML version=\"1.0\" encoding=\"UTF-8\"?>
-" + string_to_utf8(encode_mixed( to, this_object() ) ));
-    else
-      f->write( encode_value( to ) );
-    return to;
-  }
-
-  mixed get( string name )
-  {
-    Stdio.File f;
-    mapping q = ([]);
-    f=open( dir + replace( name, "/", "-" ), "r" );
-    if(!f) return 0;
-    if( settings )
-      decode_variable( 0, ([ "name":"res" ]), utf8_to_string(f->read()), q );
-    else
-    {
-      catch{ return decode_value( f->read() ); };
-      return 0;
-    }
-    return q->res;
-  }
-
-  array list()
-  {
-    return r_get_dir( dir );
-  }
-
-  void delete( string name )
-  {
-    r_rm( dir + replace( name, "/", "-" ) );
-  }
-}
-
 
 class ImageCache
 //! The image cache handles the behind-the-scenes caching and
@@ -2807,22 +2745,22 @@ void create()
 
   define_global_variables();
 
-  // Dump some programs (for speed)
+  // This is currently needed to resolve the circular references in
+  // RXML.pmod correctly. :P
   master()->resolv ("RXML.refs");
   master()->resolv ("RXML.PXml");
   master()->resolv ("RXML.PEnt");
 
+  // Dump some programs (for speed)
   dump( "etc/roxen_master.pike" );
   dump( "etc/modules/Dims.pmod" );
-//   dump( "etc/modules/RXML.pmod/module.pmod" );
+  //   dump( "etc/modules/RXML.pmod/module.pmod" );
   foreach(({ "module.pmod","PEnt.pike", "PExpr.pike","PXml.pike",
 	       "refs.pmod","utils.pmod" }), string q )
     dump( "etc/modules/RXML.pmod/"+ q );
   dump( "etc/modules/Roxen.pmod" );
 
-  // This is currently needed to resolve the circular references in
-  // RXML.pmod correctly. :P
-
+  dump( "base_server/config_userdb.pike" );
   dump( "base_server/disk_cache.pike" );
   dump( "base_server/roxen.pike" );
   dump( "base_server/roxenlib.pike" );
@@ -3496,6 +3434,7 @@ int main(int argc, array tmp)
   init_garber();
   initiate_supports();
   initiate_argcache();
+  init_configuserdb();
 
   enable_configurations();
 
@@ -3574,96 +3513,15 @@ string check_variable(string name, mixed value)
   }
 }
 
-mapping config_cache = ([ ]);
-mapping host_accuracy_cache = ([]);
 int is_ip(string s)
 {
   return (sscanf(s,"%*d.%*d.%*d.%*d")==4 && s[-1]>47 && s[-1]<58);
 }
 
-array(RoxenModule) configuration_auth=({});
-mapping configuration_perm=([]);
-
-void fix_configuration_auth()
-{
-  foreach (configurations, object c)
-    if (!c->inited && c->retrieve("EnabledModules", c)["config_userdb#0"])
-      c->enable_all_modules();
-  configuration_auth -= ({0});
-}
-
-void add_permission(string name, string desc)
-{
-  fix_configuration_auth();
-  configuration_perm[ name ]=desc;
-  configuration_auth->add_permission( name, desc );
-}
-
-void remove_configuration_auth(RoxenModule o)
-{
-  configuration_auth-=({o});
-}
-
-void add_configuration_auth(RoxenModule o)
-{
-  if(!o->auth || !functionp(o->auth)) return;
-  configuration_auth|=({o});
-}
-
-string configuration_authenticate(RequestID id, string what, void|int silent)
-{
-  if(!id->realauth)
-    return 0;
-  fix_configuration_auth();
-
-  array auth;
-  RoxenModule o;
-  foreach(configuration_auth, o)
-  {
-    auth=o->auth( ({"",id->realauth}), id, silent);
-    if(auth) break;
-  }
-  if(!auth)
-    return 0;
-  if(!auth[0])
-    return 0;
-  if( o->find_admin_user( auth[1] )->auth( what ) ) {
-    return auth[1];
-  }
-  return 0;
-}
-
-array(object) get_config_users( string uname )
-{
-  fix_configuration_auth();
-  return configuration_auth->find_admin_user( uname );
-}
-
-
-array(string|object) list_config_users(string uname, string|void required_auth)
-{
-  fix_configuration_auth();
-  array users = `+( ({}), configuration_auth->list_admin_users( ) );
-  if( !required_auth )
-    return users;
-
-  array res = ({ });
-  foreach( users, string q )
-  {
-    foreach( get_config_users( q ), object o )
-      if( o->auth( required_auth ) )
-        res += ({ o });
-  }
-  return res;
-}
-
-
 static string _sprintf( )
 {
   return "roxen";
 }
-
-
 
 
 // Support for logging in configurations and modules.

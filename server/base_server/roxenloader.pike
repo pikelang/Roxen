@@ -16,7 +16,7 @@ private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.195 2000/09/05 15:06:33 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.196 2000/09/12 14:05:53 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1432,9 +1432,6 @@ Please install a newer pike version
 #if !constant(Locale.translate)
   add_constant( "RoxenLocale", nm_resolv("RoxenLocale") );
 #endif
-//    add_constant( "Image._decode", Image._decode );
-//    add_constant( "Image.decode_layers", Image.decode_layers );
-
 
   add_constant("RequestID", RequestID );
   add_constant("RoxenModule", RoxenModule );
