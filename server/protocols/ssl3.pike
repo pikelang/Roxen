@@ -1,4 +1,4 @@
-/* $Id: ssl3.pike,v 1.9 1997/08/01 07:48:06 nisse Exp $
+/* $Id: ssl3.pike,v 1.10 1997/08/03 22:53:13 grubba Exp $
  *
  * © 1997 Informationsvävarna AB
  *
@@ -109,7 +109,7 @@ private object get_context(object c)
   return contexts && contexts[c];
 }
 
-array|void real_port(array port)
+array|void real_port(array port, object cfg)
 {
 #ifdef SSL3_DEBUG
   werror("SSL3: real_port()\n");
@@ -117,7 +117,7 @@ array|void real_port(array port)
 #endif
 
   string cert, key;
-  object ctx = new_context(roxen->current_configuration);
+  object ctx = new_context(cfg);
   ctx->port = port[0];
   mapping options = parse_args(port[3]);
 
@@ -489,6 +489,9 @@ class roxen_sslfile {
 
   object raw_file;
   object config;
+
+  constant no_destruct=1; /* Kludge to avoid http.pike destructing us */
+
 #if 0
   int leave_me_alone; /* If this is set, don't let
 		       * the ssl-code shut down the connection. */
