@@ -2,7 +2,7 @@
 // Copyright © 1996 - 2000, Roxen IS.
 
 #include <config.h>
-constant cvs_version = "$Id: old.pike,v 1.7 2000/09/04 10:26:53 per Exp $";
+constant cvs_version = "$Id: old.pike,v 1.8 2001/02/02 06:59:04 nilsson Exp $";
 
 constant name = "Compatibility bitmap fonts";
 constant doc = 
@@ -96,10 +96,28 @@ array has_font( string name, int size )
   return available - ({ "CVS" });
 }
 
+class MyFont {
+  inherit Image.Font;
+
+  void set_x_spacing(int|float delta) {
+    if(intp(delta))
+      ::set_x_spacing( (100.0+delta)/100.0 );
+    else
+      ::set_x_spacing( delta );
+  }
+
+  void set_y_spacing(int|float delta) {
+    if(intp(delta))
+      ::set_y_spacing( (100.0+delta)/100.0 );
+    else
+      ::set_y_spacing( (float)delta );
+  }
+}
+
 Font open( string name, int size, int bold, int italic )
 {
   string f = make_font_name( name, size, bold, italic );
-  Image.Font fn = Image.Font();
+  Image.Font fn = MyFont();
   foreach( roxen->query( "font_dirs"), string dir )
     foreach( ({ size, 32 }), int sz )
     {
