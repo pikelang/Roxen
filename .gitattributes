@@ -34,4 +34,5 @@
 /modules/mail/smtprelay.pike foreign_ident
 /modules/mail/testrcpt.pike foreign_ident
 /modules/protocols/imap.pike foreign_ident
+/modules/protocols/pop3.pike foreign_ident
 /modules/protocols/smtp.pike foreign_ident
