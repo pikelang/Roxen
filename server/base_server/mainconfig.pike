@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.114 1998/11/02 06:53:24 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.115 1998/11/10 10:47:56 mast Exp $";
 //inherit "roxenlib";
 
 inherit "config/draw_things";
@@ -1549,7 +1549,7 @@ mapping configuration_parse(object id)
 	
       case NODE_MODULE_COPY:
 	PUSH("<font size=\"+2\">" +
-	     LOCALE->warn_delete_copy(o->up_data->name) + "\n\n<p></font>");
+	     LOCALE->warn_delete_copy(o->up->data->name) + "\n\n<p></font>");
 	break;
 	
        case NODE_CONFIGURATIONS:
