@@ -78,7 +78,6 @@ urw_itc_avant_garde-demi-r binary
 /server/base_server/wizard.pike foreign_ident
 /server/bin/fixquota.pike foreign_ident
 /server/bin/garbagecollector.pike foreign_ident
-/server/bin/install.pike foreign_ident
 /server/bin/lsquota.pike foreign_ident
 /server/bin/pdbi.pike foreign_ident
 /server/bin/sqladduser.pike foreign_ident
