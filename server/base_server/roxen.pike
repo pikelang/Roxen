@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.417 2000/02/06 11:49:16 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.418 2000/02/08 03:37:15 per Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -2905,9 +2905,14 @@ void enable_configurations_modules()
                    config->name+":\n"+describe_backtrace(err)+"\n");
 }
 
-mapping low_decode_image(string data, void|array tocolor)
+mapping low_decode_image(string data, void|mixed tocolor)
 {
   return Image._decode( data, tocolor );
+}
+
+array(Image.Layer) decode_layers(string data, void|mixed tocolor)
+{
+  return Image.decode_layers( data, tocolor );
 }
 
 mapping low_load_image(string f, RequestID id)
@@ -2935,7 +2940,30 @@ mapping low_load_image(string f, RequestID id)
   return low_decode_image( data );
 }
 
-
+array(Image.Layer) load_layers(string f, RequestID id)
+{
+  string data;
+  Stdio.File file;
+  if(id->misc->_load_image_called < 5)
+  {
+    // We were recursing very badly with the demo module here...
+    id->misc->_load_image_called++;
+    if(!(data=id->conf->try_get_file(f, id)))
+    {
+      file=Stdio.File();
+      if(!file->open(f,"r") || !(data=file->read()))
+        catch
+        {
+          data = Protocols.HTTP.get_url_nice( f )[1];
+        };
+      if( !data )
+	return 0;
+    }
+  }
+  id->misc->_load_image_called = 0;
+  if(!data) return 0;
+  return decode_layers( data );
+}
 
 Image.image load_image(string f, RequestID id)
 {
