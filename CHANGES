@@ -1,4 +1,4 @@
-Changes since Roxen Challenger 1.1 final (pl 1)
+Changes since Roxen Challenger 1.1 
 -----------------------------------------------
 
 o Fix in the host->ip functions. Before Roxen assumed that there were
