@@ -1,4 +1,4 @@
-string cvs_version = "$Id: disk_cache.pike,v 1.28 1997/09/12 06:14:23 per Exp $";
+string cvs_version = "$Id: disk_cache.pike,v 1.29 1997/09/14 17:08:27 grubba Exp $";
 #include <stdio.h>
 #include <module.h>
 #include <simulate.h>
@@ -301,6 +301,7 @@ class Cache {
     object privs = Privs("Starting the garbage collector");
     // start garbagecollector niced as possible to reduce I/O-Load
 
+    // FIXME: Should use spawn_pike() here.
 #if !constant(nice)
     exec("/usr/bin/nice", "-19",
 	 "bin/pike", "-m", "lib/pike/master.pike", "-I", "etc/include",
@@ -317,7 +318,6 @@ class Cache {
     perror("bin/pike: ");real_perror();
 #endif
     exit(0);
-#endif /* 0 */
   }
   
   /*
