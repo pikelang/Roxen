@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
  
-constant cvs_version = "$Id: ip-less_hosts.pike,v 1.23 1998/09/06 07:26:30 hubbe Exp $";
+constant cvs_version = "$Id: ip-less_hosts.pike,v 1.24 1999/06/18 15:15:21 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -188,6 +188,11 @@ object find_server_for(object id, string host)
       }
     }
   }
+
+  // remove the request from the 'host' server
+  old_conf->requests--;
+  // add the request to the 'destination' server
+  id->conf->requests++;
 
   return id->conf;
 }
