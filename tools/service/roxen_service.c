@@ -21,6 +21,8 @@ void check_registry(void);
 TCHAR *log_location = NULL, *pike_location, *server_location;
 TCHAR *key="aaaaaaaa";
 
+int stopping = 0;
+
 VOID ServiceStart (DWORD dwArgc, LPTSTR *lpszArgv)
 {
     HANDLE                  hEvents[2] = {NULL, NULL};
@@ -89,7 +91,7 @@ VOID ServiceStart (DWORD dwArgc, LPTSTR *lpszArgv)
 
     /* Service is now running, perform work until shutdown */
 
-    while(1)
+    while(!stopping)
     {
       if(GetExitCodeProcess( hProcess, &ExitCode ))
       {
@@ -141,18 +143,14 @@ VOID ServiceStop()
 	FILE *f;
 	char tmp[8192];
 
-	strcpy(lpMsgBuf,"ServiceStop()");
-    MessageBox( NULL, lpMsgBuf, "GetLastError", MB_OK|MB_ICONINFORMATION );
-
-  
 	check_registry();
 	strcpy(tmp,log_location);
 	strcat(tmp,"\\");
 	strcat(tmp,key);
-	f=fopen(key,"wcb");
+	f=fopen(tmp,"wb");
 	fprintf(f,"Kilroy was here.");
 	fclose(f);
-
+	stopping=1;
     if ( hServerStopEvent )
         SetEvent(hServerStopEvent);
 }
@@ -241,7 +239,6 @@ void start_roxen(void)
   strcat(cmd, filename);
   strcat(cmd," +");
   strcat(cmd,key);
-
   
   GetStartupInfo(&info);
 /*   info.wShowWindow=SW_HIDE; */
