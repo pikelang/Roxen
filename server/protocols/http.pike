@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.287 2001/02/01 03:16:09 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.288 2001/02/06 12:23:31 js Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -626,6 +626,10 @@ void things_to_do_when_not_sending_from_cache( )
   f = scan_for_query( f );
   f = http_decode_string( f );
 
+  // f is sent to Unix API's that take NUL-terminated strings...
+  if(search(f, "\0") != -1)
+     sscanf(f, "%s\0", f);
+  
   if( strlen( f ) > 5 )
   {
     string a;
