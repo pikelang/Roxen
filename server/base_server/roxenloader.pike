@@ -15,7 +15,7 @@ private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.167 2000/04/12 19:43:06 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.168 2000/04/13 19:03:43 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -600,17 +600,13 @@ object(_roxen) really_load_roxen()
 {
   int start_time = gethrtime();
   report_debug("Loading roxen ... ");
-//   ErrorContainer e = ErrorContainer();
   object(_roxen) res;
-//   new_master->set_inhibit_compile_errors(e);
   mixed err = catch {
-    res =[object(_roxen)]((program)"base_server/roxen")();
+    res =[object(_roxen)]((program)"base_server/roxen.pike")();
   };
-//   new_master->set_inhibit_compile_errors(0);
-//   string q = e->get();
-  if (err) {
+  if (err) 
+  {
     report_debug("ERROR\n");
-    // No idea what eats up the printout from the error thrown below.. /mast
     werror (describe_backtrace (err));
     throw(err);
   }
@@ -636,6 +632,7 @@ void trace_destruct(mixed x)
 // Set up efuns and load Roxen.
 void load_roxen()
 {
+//   new_master->resolv("Roxen");
   add_constant("cd", restricted_cd());
 #ifdef TRACE_DESTRUCT
   add_constant("destruct", trace_destruct);
