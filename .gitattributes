@@ -7,7 +7,11 @@
 *.gif binary
 *.gz binary
 *.ico binary
+/extern/cgi.testsuite/test3.in eol=crlf
+/extern/cgi.testsuite/test4.in -text -crlf
 *.jpg binary
+*.out -text -crlf
+/extern/cgi.testsuite/test3.out eol=crlf
 /server/modules/proxies/gopher.pike -text -crlf
 *.ppm binary
 *.rc eol=crlf
