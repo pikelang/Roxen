@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.13 1998/09/04 17:56:45 grubba Exp $
+ * $Id: smtp.pike,v 1.14 1998/09/04 20:28:41 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.13 1998/09/04 17:56:45 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.14 1998/09/04 20:28:41 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -412,6 +412,22 @@ class Server {
 		  // The message will be approx this size.
 		  // We can reply with 452 (temporary limit, try later)
 		  // or 552 (hard limit).
+		  if (stringp(extensions->SIZE)) {
+		    // FIXME: 32bit wraparound.
+		    int sz = (int)extensions->SIZE;
+
+		    foreach(conf->get_providers("automail_clientlayer")||({}),
+			    object o) {
+		      if (o->check_size) {
+			int r = o->check_size(sz);
+			if (r) {
+			  send(r);
+			  return;
+			}
+		      }
+		    }
+		  }
+
 		  break;
 		case "BODY":
 		  switch(extensions->BODY) {
