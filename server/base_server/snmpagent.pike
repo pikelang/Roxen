@@ -1,5 +1,5 @@
 /*
- * $Id: snmpagent.pike,v 1.2 2001/06/26 23:18:14 hop Exp $
+ * $Id: snmpagent.pike,v 1.3 2001/06/30 21:56:10 hop Exp $
  *
  * The Roxen SNMP agent
  * Copyright © 2001, Roxen IS.
@@ -80,13 +80,13 @@ inherit Roxen;
 int get_null() { return 0; }
 //! External function for MIB object returning nothing
 
-string get_description() { return("Roxen Webserver SNMP agent v"+("$Revision: 1.2 $"/" ")[1]+" (devel. rel.)"); }
+string get_description() { return("Roxen Webserver SNMP agent v"+("$Revision: 1.3 $"/" ")[1]+" (devel. rel.)"); }
 //! External function for MIB object 'system.sysDescr'
 
 string get_sysoid() { return RISMIB_BASE_WEBSERVER; }
 //! External function for MIB object 'system.sysOID'
 
-int get_uptime() { return ((time(1) - roxen->start_time)*1000); }
+int get_uptime() { return ((time(1) - roxen->start_time)*20); }
 //! External function for MIB object 'system.sysUpTime'
 
 string get_syscontact() { return query("snmp_syscontact"); }
@@ -110,6 +110,9 @@ class SNMPagent {
   private int inited;		// flag
   private int snmpinpkts;
   private int snmpoutpkts;
+  private int snmpbadver;
+  private int snmpbadcommnames;
+  private int snmpbadcommuses;
   private mapping events;
   private mixed co;
   private object th;
@@ -117,10 +120,39 @@ class SNMPagent {
 
   int get_snmpinpkts() { return(snmpinpkts); };
   int get_snmpoutpkts() { return(snmpoutpkts); };
+  int get_snmpbadver() { return(snmpbadver); };
+  int get_snmpbadcommnames() { return(snmpbadcommnames); };
+  int get_snmpbadcommuses() { return(snmpbadcommuses); };
 
 class SNMPmib {
+#define MIBTREE_BASE "1.3.6.1"
 
   private mapping(string:array) mibtable;
+
+  public string|int oid_strip (string oid) { // note: this method must be public!
+  //! Removes first four octets from OID string, as internal table works
+  //! on such stripped OIDs.
+    array arr = oid / ".";
+    if (sizeof(arr) < 7)
+      return 0;
+    oid = arr[4..] * ".";
+    return oid;
+  }
+
+  private int|string oid_check(string oid) {
+  //! Checks existence of an managed object in the database
+    if(!(oid = oid_strip(oid))) return 0;
+    return zero_type(mibtable[oid]) ? 0 : oid;
+  }
+
+  int register(string oid, array data) {
+  //! Low level method for registering a new managed object
+    if(!(oid = oid_strip(oid))) return -1; // false => bad OID
+    if(oid_check(oid))
+      return 0; // false => the OID is already registered 
+    mibtable += ([oid: data]); // FIXME: what about type checking of 'data' ?
+    return 1; // ok (registered)
+  }
 
   void create(string|void filename) {
   
@@ -158,32 +190,55 @@ class SNMPmib {
 	  ({ "count", get_snmpinpkts, "2.1.11.2.0" }),
 	// snmp.snmpOutPkts
 	"2.1.11.2.0":
-	  ({ "count", get_snmpoutpkts, 0 }),
+	  ({ "count", get_snmpoutpkts, "2.1.11.3.0" }),
+	// snmp.snmpBadVers
+	"2.1.11.3.0":
+	  ({ "count", get_snmpbadver, "2.1.11.4.0" }),
+	// snmp.snmpInBadCommunityNames
+	"2.1.11.4.0":
+	  ({ "count", get_snmpbadcommnames, "2.1.11.5.0" }),
+	// snmp.snmpInBadCommunityUses
+	"2.1.11.5.0":
+	  ({ "count", get_snmpbadcommuses, 0 }),
 
 	// enterprises.roxenIS.webserver
 	"4.1.8614.1.1":
-	  ({ 0, get_null, "4.1.8614.1.1.1.0" }),
+	  ({ 0, get_null, "4.1.8614.1.1.999.0" }),
 	// HACK!!
-	"4.1.8614.1.1.1.0":
+	"4.1.8614.1.1.999.0":
 	  ({ 0, get_null, 0 })
 	
 	]);
+
+#if 0
+    // external definitions from the file
+    if (stringp(filename)) {
+
+    }
+#endif
 
   } // create
 
   array `[](string oid) {
   //! Returns array
-
-    array arr = oid / ".";
-    if (sizeof(arr) < 7)
+    if (!oid_check(oid)) {
       return 0;
-    oid = arr[4..] * ".";
-    if (zero_type(mibtable[oid]))
-      return 0;
+    }
+    oid = oid_strip(oid);
     return (({mibtable[oid][0], mibtable[oid][1](), mibtable[oid][2]}));
   }
 
-}
+  string|int oid_guess_next(string oid) {
+  //! Tries to guess next OID. Usable to situation when GET_NEXT op
+  //! contains OID without .0
+
+    if(oid_check(oid+".0"))
+      return oid+".1";
+    return 0;
+  }
+
+} // SNMPmib
+
   void create() {
     //disable();
   }
@@ -241,7 +296,7 @@ class SNMPmib {
     snmpinpkts++;
     pdata = fd->decode_asn1_msg(data);
 
-    //SNMPAGENT_MSG(sprintf("Got parsed: %O", pdata));
+    SNMPAGENT_MSG(sprintf("Got parsed: %O", pdata));
 
     if(!mappingp(pdata)) {
       SNMPAGENT_MSG("SNMP message can not be decoded. Silently ommited.");
@@ -254,6 +309,7 @@ class SNMPmib {
 
     // test for correct community string
     if(!chk_access("ro", pdata[msgid])) {
+      snmpbadcommnames++;
       errnum = 5 /*SNMP_ERR_GENERR*/;
       attrname = indices(pdata[msgid]->attribute[0])[0];
       LOG_EVENT("Bad community name", pdata[msgid]);
@@ -265,6 +321,11 @@ class SNMPmib {
       if(!mib)
 	SNMPAGENT_MSG(" MIB table isn't loaded!\n");
       val = mib[attrname];
+      if (!val && op == SNMP_OP_GETNEXT) { // FIXME: move guessing to the MIB object
+	val = mib[attrname+".0"];
+	if(arrayp(val))
+	  val[2] = mib->oid_strip(attrname)+".0";
+      }
       if (val)
 	switch(op) {
 
@@ -275,7 +336,7 @@ class SNMPmib {
 
 	  case SNMP_OP_GETNEXT:
 	    if (val[2]) {
-	      string noid = "1.3.6.1."+val[2];
+	      string noid = MIBTREE_BASE+"."+val[2];
 	      val = mib[noid];
 	      if (val && val[0])
 	        rdata[noid] += val[0..1];
@@ -286,8 +347,8 @@ class SNMPmib {
 
 	    // HACK! For testing purpose only!
 	    // Server restart = 1; server shutdown = 2
-	    if ((attrname == RISMIB_BASE_WEBSERVER+".1.0") && 
-		 chk_access("rw", pdata[msgid])) {
+	    if (attrname == RISMIB_BASE_WEBSERVER+".1.0")
+	      if(chk_access("rw", pdata[msgid])) {
 		setflg = 1;
 		rdata[attrname] += ({ "count", attrval });
 	        rdata["1.3.6.1.2.1.1.3.0"] += ({"tick", get_uptime() });
@@ -296,7 +357,8 @@ class SNMPmib {
 	  	  if (attrval == 1) roxen->restart(0.5);
 	  	  if (attrval == 2) roxen->shutdown(0.5);
 		}
-	    }
+	    } else
+	      snmpbadcommuses++;
 	    break;
 
        } else
@@ -418,6 +480,18 @@ class SNMPmib {
     return rv;
   }
 */
+
+  int add_virtserv(int vs) {
+report_debug(sprintf("snmpagent:DEB: add: %O->%O\n",vs,roxen->configurations[vs]->name));
+
+    return(1);
+  }
+
+  int del_virtserv(int vs) {
+report_debug(sprintf("snmpagent:DEB: del: %O->%O\n",vs,roxen->configurations[vs]->name));
+
+    return(1);
+  }
 
 } // end of SNMPagent object
 

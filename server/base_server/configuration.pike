@@ -3,7 +3,7 @@
 //
 // A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.444 2001/06/30 15:44:04 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.445 2001/06/30 21:56:09 hop Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2865,6 +2865,14 @@ string check_variable(string name, mixed value)
                         query("throttle_min_grant"),
                         query("throttle_max_grant"));
     return 0;
+#ifdef SNMP_AGENT
+  case "snmp_process":
+    if (objectp(roxen->snmpagent)) {
+      int cid = get_config_id();
+      value ? roxen->snmpagent->add_virtserv(cid) : roxen->snmpagent->del_virtserv(cid);
+    }
+    return 0;
+#endif
   }
 }
 
@@ -3497,6 +3505,27 @@ page.
                         query("throttle_min_grant"),
                         query("throttle_max_grant"));
   }
+#ifdef SNMP_AGENT
+  // SNMP stuffs
+  defvar("snmp_process", 0,
+         "SNMP: Enabled",TYPE_FLAG,
+         "If set, per-server objects will be added to the SNMP agent database.",
+          0, snmp_global_disabled);
+  defvar("snmp_community", "public:ro",
+         "SNMP: Community string", TYPE_STRING,
+         "The community string and access level for manipulation on server "
+                " specific objects.",
+         0, snmp_disabled);
+
+  if (query("snmp_process")) {
+    if(objectp(roxen()->snmpagent)) {
+      int servid;
+      servid = roxen()->snmpagent->add_virtserv();
+      // todo: make invisible varibale and set it to this value for future reference
+    } else
+      report_error("SNMPagent: something gets wrong! The main agent is disabled!\n");  }
+#endif
+
 }
 
 static int arent_we_throttling_server () {
@@ -3505,3 +3534,11 @@ static int arent_we_throttling_server () {
 static int arent_we_throttling_request() {
   return !query("req_throttle");
 }
+
+#ifdef SNMP_AGENT
+private static int(0..1) snmp_disabled() {
+  return (!snmp_global_disabled() && !query("snmp_process"));
+}
+private static int(0..1) snmp_global_disabled() { (!objectp(roxen->snmpagent)); }
+#endif
+
