@@ -11,7 +11,6 @@
 
 
 <define tag="package-box">
-  <cv-obox title="&_.title;">
   <rul>
   <update-package-output type="&_.name;">
     <rli>#title# <a href="update.html?details=#id#">[Details...]</a></rli>
@@ -21,10 +20,6 @@
   <if not variable="_&_.name;">
      <p>Currently no packages in this category</p>
   </if>
-  <div align="right">
-    <a href="update.html?category=&_.name;">[More..]</a>
-  </div>
-  </cv-obox>
 </define>
 
 <define container="headline">
@@ -205,8 +200,9 @@ foobar
 </if>
 <if variable="form.yes">
 
-<update-install-package package="&form.install;">
-
+  <update-install-package package="&form.install;"><br>
+  
+  <a href="update.html">[Return]</a>
 </if>
 <else>
 
@@ -222,10 +218,32 @@ foobar
 </table>
 </update-package-output>
 <br/>
-The following files will be installed:<br>
 
-<comment><textarea name=foo rows=12 cols=70></textarea></comment>
-<pre><update-package-contents package="&form.install;" /></pre>
+<if variable="form.show">
+
+  <input type=submit name="hide" value="Hide package contents"><br>
+  <br>
+  <cv-obox title="The following files will be installed:">
+  <table cellpadding="0">
+    <tr>
+      <td nowrap="nowrap"><b>Size</b></td>
+      <td>&nbsp;</td>
+      <td nowrap="nowrap"><b>Path</b></td>
+    </tr>
+    <update-package-contents-output package="&form.install;">
+      <tr>
+  	<td align=right nowrap="nowrap">#size#</td>
+	<td>&nbsp;</td>
+  	<td nowrap="nowrap">#path#</tt></td>
+      </tr>
+    </update-package-contents-output>
+  </table>
+  </cv-obox>  
+</if>
+<else>
+  <input type=submit name="show" value="Show package contents">
+</else> 
+<br>
 <br>
 <b>Do you really want to install this package?</b>
 <br />
