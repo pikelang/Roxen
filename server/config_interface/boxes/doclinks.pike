@@ -1,16 +1,10 @@
-// Locale stuff.
-// <locale-token project="roxen_config"> _ </locale-token>
-
-#include <roxen.h>
-#define _(X,Y)	_DEF_LOCALE("roxen_config",X,Y)
-
 
 constant box      = "small";
 constant box_initial = 1;
 constant box_position = -1;
 
-String box_name = _(363,"Documentation links");
-String box_doc = _(364,"Links to the inline documentation");
+constant box_name = "Documentation links";
+constant box_doc = "Links to the inline documentation";
 
 string parse( RequestID id )
 {
@@ -18,8 +12,8 @@ string parse( RequestID id )
   function exists =
      id->conf->find_module( "config_filesystem#0" )->stat_file;
 
-//    docs += "<a href='"+path("whatsnew.html")+"'>"+
-//      _(390,"Release notes")+"</a><br />";
+//    docs += "<a href='"+path("whatsnew.html")+"'>"
+//      "Release notes</a><br />";
 
   void add_doc_link(string doc_path, string title) {
     if (exists(doc_path))
@@ -34,65 +28,63 @@ string parse( RequestID id )
   foreach( ({ "docs/roxen/3.2/" }), string rpath )
   {
     add_doc_link(rpath + "content_editor_manual_(instant)/index.html",
-		 _(0, "Content Editor (Instant Edition)"));
+		 "Content Editor (Instant Edition)");
 
     add_doc_link(rpath + "content_editor_manual_(advanced)/index.html",
-		 _(0, "Content Editor (Advanced Edition)"));
+		 "Content Editor (Advanced Edition)");
 
     add_doc_link(rpath + "web_developer_manual/index.html",
-		 _(0, "Web Developer"));
+		 "Web Developer");
 
     add_doc_link(rpath + "system_developer_manual/index.html",
-		 _(0, "System Developer"));
+		 "System Developer");
 
     add_doc_link(rpath + "administrator_manual/index.html",
-		 _(0, "Administrator"));
+		 "Administrator");
 
     add_doc_link(rpath + "forms_and_response_module/index.html",
-		 _(0, "Forms And Response Module"));
+		 "Forms And Response Module");
 
     add_doc_link(rpath + "categorization_module/index.html",
-		 _(0, "Categorization Module"));
+		 "Categorization Module");
 
     add_doc_link(rpath + "tutorial/index.html",
-		 _(0, "Tutorials"));
+		 "Tutorials");
   }
 
   foreach( ({ "docs/roxen/2.2/", "docs/roxen/2.1/" }), string rpath )
   {
     add_doc_link(rpath + "creator/index.html",
-		 _(391, "Web Site Creator"));
+		 "Web Site Creator");
 
     add_doc_link(rpath + "administrator/index.html",
-		 _(392, "Administrator Manual"));
+		 "Administrator Manual");
 
     add_doc_link(rpath + "user/index.html",
-		 _(393, "User Manual"));
+		 "User Manual");
 
     if (exists(rpath + "tutorial/rxml/index.html"))
       add_doc_link(rpath + "tutorial/rxml/index.html",
-		   _(394, "RXML Tutorial"));
+		   "RXML Tutorial");
     else if (exists(rpath + "tutorial/rxml_tutorial.html"))
       add_doc_link(rpath + "tutorial/rxml/index.html",
-		   _(394, "RXML Tutorial"));
+		   "RXML Tutorial");
 
     add_doc_link(rpath + "programmer/index.html",
-		 _(393, "Programmer Manual"));
+		 "Programmer Manual");
   }
 
   foreach( ({"docs/pike/7.1/","docs/pike/7.0/" }), string ppath )
   {
     add_doc_link(ppath + "tutorial/index.html",
-		 _(396, "Pike Tutorial"));
+		 "Pike Tutorial");
   }
 
   if( docs == "" )
     docs =
-      "<tr><td>"
-      "<font color='&usr.warncolor;'>" +
-      _(397, "No documentation found at all") + 
-      "</font>"
-      "</td></tr>";
+      "<tr><td><font color='&usr.warncolor;'>"
+      "No documentation found at all"
+      "</font></td></tr>";
   
   docs = "<table>" + docs + "</table>";
   

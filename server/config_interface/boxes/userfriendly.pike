@@ -1,13 +1,13 @@
 // Userfriendly-fetcher
-// $Id: userfriendly.pike,v 1.2 2001/11/23 16:03:47 grubba Exp $
+// $Id: userfriendly.pike,v 1.3 2002/06/14 10:56:26 nilsson Exp $
 
 #include <roxen.h>
 
 constant box="large";
 constant box_initial = 0;
 
-string box_name = "Userfriendly";
-string box_doc  = "The Daily Static from Userfriendly";
+constant box_name = "Userfriendly";
+constant box_doc  = "The Daily Static from Userfriendly";
 
 string parse( RequestID id )
 {
@@ -34,5 +34,5 @@ string parse( RequestID id )
     }
   }
   return("<box type='"+box+"' title='"+box_name+"'>"+contents+"</box>");
-  
+
 }

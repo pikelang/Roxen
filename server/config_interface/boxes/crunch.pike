@@ -1,14 +1,9 @@
-// Locale stuff.
-// <locale-token project="roxen_config"> _ </locale-token>
-
-#include <roxen.h>
-#define _(X,Y)	_DEF_LOCALE("roxen_config",X,Y)
 
 constant box      = "large";
 constant box_initial = 0;
 
-String box_name = _(232,"Crunch activity");
-String box_doc  = _(262,"Recently changed Crunch reports");
+constant box_name = "Crunch activity";
+constant box_doc  = "Recently changed Crunch reports";
 
 class Fetcher
 {

@@ -1,16 +1,11 @@
-// Locale stuff.
-// <locale-token project="roxen_config"> _ </locale-token>
-
-#include <roxen.h>
-#define _(X,Y)	_DEF_LOCALE("roxen_config",X,Y)
 
 constant box      = "large";
 constant box_initial = 1;
 
 constant box_position = -1;
 
-String box_name = _(365,"Welcome message");
-String box_doc  = _(366,"Roxen welcome message and news");
+constant box_name = "Welcome message";
+constant box_doc  = "Roxen welcome message and news";
 
 string parse( RequestID id )
 {

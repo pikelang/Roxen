@@ -1,14 +1,9 @@
-// Locale stuff.
-// <locale-token project="roxen_config"> _ </locale-token>
-
-#include <roxen.h>
-#define _(X,Y)	_DEF_LOCALE("roxen_config",X,Y)
 
 constant box      = "large";
 constant box_initial = 0;
 
-String box_name = _(398,"Todays MegaTokyo comic");
-String box_doc  = _(399,"Todays comic from MegaTokyo");
+constant box_name = "Todays MegaTokyo comic";
+constant box_doc  = "Todays comic from MegaTokyo";
 
 
 /* And here we go. :-) */

@@ -1,11 +1,5 @@
 mapping cache =  ([]);
 
-// Locale stuff.
-// <locale-token project="roxen_config">_</locale-token>
-
-#include <roxen.h>
-#define _(X,Y)	_DEF_LOCALE("roxen_config",X,Y)
-
 class RDF
 {
   constant url = "";
@@ -24,7 +18,7 @@ class RDF
     file = uri->path+(uri->query?"?"+uri->query:"");
     
     if( !(data = get_http_data( host, port, "GET "+file+" HTTP/1.0" ) ) )
-      contents = sprintf((string)_(389,"Fetching data from %s..."), host);
+      contents = sprintf("Fetching data from %s...", host);
     else
     {
       contents = "";
