@@ -8,7 +8,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.43 1998/06/05 00:56:42 neotron Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.44 1998/07/21 16:21:24 js Exp $";
 constant thread_safe=1;
 
 
@@ -207,7 +207,6 @@ array find_dir( string f, object id )
     privs = 0;
     return 0;
   }
-
   privs = 0;
 
   if(!QUERY(dir))

@@ -12,9 +12,9 @@
 
 #include <module.h>
 
-inherit "filesystem";
+inherit "filesystem" : filesystem;
 
-constant cvs_version="$Id: userfs.pike,v 1.36 1998/07/19 21:21:06 grubba Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.37 1998/07/21 16:21:25 js Exp $";
 
 // import Array;
 // import Stdio;
@@ -36,7 +36,7 @@ int hide_pdir()
 
 void create()
 {
-  ::create();
+  filesystem::create();
   killvar("searchpath");
   defvar("searchpath", "NONE", "Search path", TYPE_DIR,
 	 "This is where the module will find the files in the real "+
@@ -99,7 +99,7 @@ multiset banish_reported = (<>);
 
 void start()
 {
-  ::start();
+  filesystem::start();
   // We fix all file names to be absolute before passing them to
   // filesystem.pike
   path="";
@@ -169,25 +169,20 @@ mixed find_file(string f, object got)
 #ifdef USERFS_DEBUG
   roxen_perror(sprintf("USERFS: find_file(%O, X)\n", f));
 #endif /* USERFS_DEBUG */
-
+//  werror("ff: "+f+"\n");
   array a = find_user(f, got);
 
-  if (!a) {
+  if (!strlen(f) || f=="/") {
     return -1;
   }
-
   u = a[0];
   f = a[1];
-  
+  if(!u) return 0;
+
   if(u)
   {
     string *us;
     array st;
-    if((f == "") && (of == "" || of[-1] != '/'))
-    {
-      redirects++;
-      return http_redirect(got->not_query+"/",got);
-    }
     if(!dude_ok[ u ] || f == "")
     {
       us = got->conf->userinfo( u, got );
@@ -202,6 +197,11 @@ mixed find_file(string f, object got)
 	}
 	return 0;
       }
+      if((f == "") && (of == "" || of[-1] != '/'))
+      {
+	redirects++;
+	return http_redirect(got->not_query+"/",got);
+      }
 
       string dir;
 
@@ -213,7 +213,7 @@ mixed find_file(string f, object got)
       dir = replace(dir, "//", "/");
 
       // If public dir does not exist, or is not a directory 
-      st = ::stat_file(dir, got);
+      st = filesystem::stat_file(dir, got);
       if(!st || st[1] != -2) {
 	return 0;	// File not found.
       }
@@ -226,14 +226,14 @@ mixed find_file(string f, object got)
 	us = got->conf->userinfo( u, got );
       }
 
-      st = ::stat_file(f, got);
+      st = filesystem::stat_file(f, got);
 
       if(!st || (st[5] != (int)(us[2])))
         return 0;
     }
     if(QUERY(useuserid))
       got->misc->is_user = f;
-    return ::find_file( f, got );
+    return filesystem::find_file( f, got );
   }
   return 0;
 }
@@ -275,7 +275,7 @@ string real_file( mixed f, mixed id )
       f = QUERY(searchpath) + u + "/" + f;
 
     // Use the inherited stat_file
-    fs = ::stat_file( f,id );
+    fs = filesystem::stat_file( f,id );
     // FIXME: Should probably have a look at this code.
     if (fs && ((fs[1] >= 0) || (fs[1] == -2)))
       return f;
@@ -290,11 +290,11 @@ array find_dir(string f, object got)
 #endif /* USERFS_DEBUG */
 
   array a = find_user(f, got);
-
-  if (!a) {
-    array l;
   
+  if (f=="" || f=="/") {
+    array l;
     l = got->conf->userlist(got);
+//    werror("fd: "+f+" l=%O\n", l);
     if(l) return(l - QUERY(banish_list));
     return 0;
   }
@@ -318,7 +318,7 @@ array find_dir(string f, object got)
     }
     else
       f = QUERY(searchpath) + u + "/" + f;
-    return ::find_dir(f, got);
+    return filesystem::find_dir(f, got);
   }
   return (got->conf->userlist(got) - QUERY(banish_list));
 }
@@ -329,11 +329,13 @@ mixed stat_file( mixed f, mixed id )
   roxen_perror(sprintf("USERFS: stat_file(%O, X)\n", f));
 #endif /* USERFS_DEBUG */
 
+//  werror("sf: "+f+"\n");
+  if(f=="" || f=="/")
+    return ({ 0, -2, 0, 0, 0, 0, 0, 0, 0, 0 });
+
   array a = find_user(f, id);
 
-  if (!a) {
-    return ({ 0, -2, 0, 0, 0, 0, 0, 0, 0, 0 });
-  }
+  if (!a) return 0;
 
   string u = a[0];
   f = a[1];
@@ -353,7 +355,7 @@ mixed stat_file( mixed f, mixed id )
 	f = us[ 5 ] + QUERY(pdir) + f;
     } else
       f = QUERY(searchpath) + u + "/" + f;
-    st = ::stat_file( f,id );
+    st = filesystem::stat_file( f,id );
     if(!st) return 0;
     if(QUERY(own) && (int)us[2] != st[-2]) return 0;
     return st;
