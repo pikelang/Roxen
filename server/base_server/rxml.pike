@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.28 1999/10/08 12:42:16 nilsson Exp $
+ * $Id: rxml.pike,v 1.29 1999/10/16 02:58:37 mast Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -111,8 +111,52 @@ string do_parse(string to_parse, RequestID id, object file, mapping defines,
     id->misc->_containers = copy_value(container_callers[0]);
     id->misc->_ifs = copy_value(real_if_callers);
   }
+
+#ifdef OLD_PARSE_HTML
   to_parse=parse_html_lines(to_parse,id->misc->_tags,id->misc->_containers,
 			    0, id, file, defines, my_fd);
+#else
+  // Hack, hack, gak.. This is temporary.
+  object parser;
+  if (id->misc->_parser_obj)
+    parser = id->misc->_parser_obj->clone (id->misc->_parser_obj);
+  else
+    parser = class {
+      inherit Parser.HTML;
+      object up;
+      void create (object _up) {::create(); up = _up;}
+    }(0);
+  parser->add_tags (map (
+    id->misc->_tags,
+    lambda (function fn)
+    {
+      return lambda (object parser, mapping args, mixed... extra)
+	     {
+	       return fn (parser->tag_name(), args,
+			  parser->at_line(), @extra);
+	     };
+    }));
+  parser->add_containers (map (
+    id->misc->_containers,
+    lambda (function fn)
+    {
+      return lambda (object parser, mapping args, string contents,
+		     mixed... extra)
+	     {
+	       return fn (parser->tag_name(), args, contents,
+			  parser->at_line(), @extra);
+	     };
+    }));
+  parser->_set_tag_callback (
+    lambda (object parser, string str) {
+      parser->feed_insert (str[1..]);
+      return ({str[..0]});
+    });
+  id->misc->_parser_obj = parser;
+  parser->set_extra (0, id, file, defines, my_fd);
+  to_parse = parser->finish (to_parse)->read();
+#endif
+
   for(int i = 1; i<sizeof(tag_callers); i++)
     to_parse=parse_html_lines(to_parse,tag_callers[i], container_callers[i],
 			      i, id, file, defines, my_fd);
@@ -618,6 +662,15 @@ string tag_define(string tag, mapping m, string str, RequestID id,
     id->misc->tags[n] = str;
 #endif
     id->misc->_tags[n] = call_user_tag;
+#ifndef OLD_PARSE_HTML
+    for (object p = id->misc->_parser_obj; p; p = p->up)
+      p->add_tag (
+	n, lambda (object parser, mapping args, mixed... extra)
+	   {
+	     return call_user_tag (parser->tag_name(), args,
+				   parser->at_line(), @extra);
+	   });
+#endif
   }
   else if (m->container) 
   {
@@ -655,6 +708,15 @@ string tag_define(string tag, mapping m, string str, RequestID id,
     id->misc->containers[n] = str;
 #endif
     id->misc->_containers[n] = call_user_container;
+#ifndef OLD_PARSE_HTML
+    for (object p = id->misc->_parser_obj; p; p = p->up)
+      p->add_container (
+	n, lambda (object parser, mapping args, string contents, mixed... extra)
+	   {
+	     return call_user_container (parser->tag_name(), args, contents,
+					 parser->at_line(), @extra);
+	   });
+#endif
   }
   else if (m["if"])
     id->misc->_ifs[ lower_case(m["if"]) ] = UserIf( str );
@@ -677,6 +739,10 @@ string tag_undefine(string tag, mapping m, RequestID id, object file,
   {
     m_delete(id->misc->tags,m->tag);
     m_delete(id->misc->_tags,m->tag);
+#ifndef OLD_PARSE_HTML
+    for (object p = id->misc->_parser_obj; p; p = p->up)
+      p->add_tag (m->tag, 0);
+#endif
   }
   else if (m["if"]) 
     m_delete(id->misc->_ifs,m["if"]);
@@ -684,6 +750,10 @@ string tag_undefine(string tag, mapping m, RequestID id, object file,
   {
     m_delete(id->misc->containers,m->container);
     m_delete(id->misc->_containers,m->container);
+#ifndef OLD_PARSE_HTML
+    for (object p = id->misc->_parser_obj; p; p = p->up)
+      p->add_container (m->container, 0);
+#endif
   }
   else
     return rxml_error(tag, "No tag, variable, if or container specified.", id);
