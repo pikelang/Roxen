@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.25 2002/08/05 13:21:03 nilsson Exp $
+ * $Id: debug_info.pike,v 1.26 2004/05/20 21:45:20 _cvs_stephen Exp $
  */
 #include <stat.h>
 
@@ -224,11 +224,11 @@ mixed page_0( object id )
 
 #define HCELL(thargs, color, text)					\
   ("<th " + thargs + ">"						\
-   "\0240<font color='" + color + "'><b>" + text + "</b></font>\0240"	\
+   "&nbsp;<font color='" + color + "'><b>" + text + "</b></font>&nbsp;"	\
    "</th>")
 #define TCELL(tdargs, color, text)					\
   ("<td " + tdargs + ">"						\
-   "\0240<font color='" + color + "'>" + text + "</font>\0240"		\
+   "&nbsp;<font color='" + color + "'>" + text + "</font>&nbsp;"	\
    "</td>")
 
   res += "<p><table border='0' cellpadding='0'>\n<tr>\n" +
