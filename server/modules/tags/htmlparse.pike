@@ -18,7 +18,7 @@
 #define _rettext defines[" _rettext"]
 #define _ok     defines[" _ok"]
 
-constant cvs_version="$Id: htmlparse.pike,v 1.157 1999/01/16 10:21:34 neotron Exp $";
+constant cvs_version="$Id: htmlparse.pike,v 1.158 1999/01/29 23:56:41 noring Exp $";
 constant thread_safe=1;
 
 function call_user_tag, call_user_container;
@@ -99,7 +99,7 @@ void create(object c)
 	 
   defvar("ac", 1, "Access log", TYPE_FLAG,
 	 "If unset, the &lt;accessed&gt; tag will not work, and no access log "
-	 "will be needed. This will save one file descriptors.");
+	 "will be needed. This will save one file descriptor.");
 
   defvar("max_parse", 100, "Maximum file size", TYPE_INT|VAR_MORE,
 	 "Maximum file size to parse, in Kilo Bytes.");
