@@ -262,6 +262,7 @@ worldmap binary
 /server/modules/tags/translation_mod.pike foreign_ident
 /server/modules/tags/vform.pike foreign_ident
 /server/modules/tags/wizard_tag.pike foreign_ident
+/server/modules/tags/wizz.pike foreign_ident
 /server/modules/throttling/baseline_throttling.pike foreign_ident
 /server/modules/throttling/throttlelib.pike foreign_ident
 /server/modules/throttling/throttletags.pike foreign_ident
