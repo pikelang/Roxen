@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.216 2004/03/25 13:38:14 mast Exp $
+# $Id: start,v 1.217 2004/05/04 15:03:16 grubba Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -529,6 +529,10 @@ if [ ! "X$ROXEN_ARGS" = "X" ]; then
 fi
 
 parse_args "$@"
+
+if [ "$once" = "" ]; then :; else
+  pass="$pass --once=$once"
+fi
 
 # The work has already been done above, but the debug printout is better
 # to have _after_ parse_args (consider --help and --version)
