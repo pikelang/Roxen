@@ -383,13 +383,13 @@ string type_warning( int type, mixed value )
   switch( type )
   {
    case TYPE_DIR:
-     if( !(file_stat( value ) && (file_stat( value )[ ST_SIZE ] == -2 )))
+     if( !(r_file_stat( value ) && (r_file_stat( value )[ ST_SIZE ] == -2 )))
        return value+" is not a directory";
      return "";
    case TYPE_DIR_LIST:
      string warn="";
      foreach( [array(string)]value, string value )
-       if( !(file_stat( value ) && (file_stat( value )[ ST_SIZE ] == -2 )))
+       if( !(r_file_stat( value ) && (r_file_stat( value )[ ST_SIZE ] == -2 )))
          warn += value+" is not a directory<br />";
      return warn;
   }
