@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.31 1998/09/12 21:28:35 grubba Exp $
+ * $Id: smtp.pike,v 1.32 1998/09/13 14:49:47 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.31 1998/09/12 21:28:35 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.32 1998/09/13 14:49:47 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -26,7 +26,7 @@ inherit "module";
  * 	string desc(string addr, object o);
  *	multiset(string) query_domain();
  *	int put(string sender, string user, string domain,
- * 	        object spoolfile, object o);
+ * 	        object spoolfile, string csum, object o);
  *
  * smtp_filter:
  *	int verify_sender(string sender);
@@ -36,7 +36,7 @@ inherit "module";
  *
  * smtp_relay:
  * 	int relay(string sender, string user, string domain,
- * 	          object spoolfile, object o);
+ * 	          object spoolfile, string csum, object o);
  */
 
 static class Mail {
@@ -824,8 +824,6 @@ static class Smtp_Connection {
       data = data[1..];
     }
 
-    current_mail->set_contents(data);
-
     object spool = open_spoolfile();
 
     if (!spool) {
@@ -843,6 +841,10 @@ static class Smtp_Connection {
 			      mktimestamp(current_mail->timestamp));
 
     data = "Received: " + received + "\r\n" + data;
+
+    string csum = Crypto.sha()->update(data)->digest();
+
+    current_mail->set_contents(data);
 
     roxen_perror(sprintf("Received: %O\n", received));
 
@@ -880,21 +882,21 @@ static class Smtp_Connection {
 	  // Primary delivery.
 	  foreach(conf->get_providers("smtp_rcpt")||({}), object o) {
 	    handled |= o->put(current_mail->from, user, domain,
-			      spool, this_object());
+			      spool, csum, this_object());
 	  }
 	}
 	if (!handled) {
 	  // Fallback delivery.
 	  foreach(conf->get_providers("smtp_rcpt")||({}), object o) {
 	    handled |= o->put(current_mail->from, user, 0,
-			      spool, this_object());
+			      spool, csum, this_object());
 	  }
 	}
       } else {
 	// Remote delivery.
 	foreach(conf->get_providers("smtp_relay")||({}), object o) {
 	  handled |= o->relay(current_mail->from, user, domain,
-			      spool, this_object());
+			      spool, csum, this_object());
 	}
       }
       if (handled) {
