@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.42 1997/10/29 14:27:19 per Exp $
+/* $Id: wizard.pike,v 1.43 1997/11/04 01:11:52 neotron Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -18,8 +18,9 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed b)
 
   switch(m->type)
   {
-   default: // String....
-    m->type = "string";
+   default: // String or password field....
+    if(m->type != "password")
+      m->type = "string";
     m_delete(m,"default");
     m->value = current||"";
     if(!m->size)m->size="60,1";
@@ -369,7 +370,6 @@ mapping|string wizard_for(object id,string cancel,mixed ... args)
   mapping s = decompress_state(v->_state);
   foreach(indices(s), string q)
     v[q] = v[q]||s[q];
-
 
   foreach(indices(id->variables), string n)
   {
