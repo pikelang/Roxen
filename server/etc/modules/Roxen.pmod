@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.14 2000/03/25 23:47:31 nilsson Exp $
+ * $Id: Roxen.pmod,v 1.15 2000/03/28 14:46:04 nilsson Exp $
  *
  * Various helper functions.
  *
@@ -862,10 +862,12 @@ string get_world(array(string) urls) {
 	break;
       }
 
-  string protocol, server, path;
+  string protocol, server, path="";
   int port;
   if(sscanf(url, "%s://%s:%d/%s", protocol, server, port, path)!=4 &&
-     sscanf(url, "%s://%s/%s", protocol, server, path)!=3)
+     sscanf(url, "%s://%s:%d", protocol, server, port)!=3 &&
+     sscanf(url, "%s://%s/%s", protocol, server, path)!=3 &&
+     sscanf(url, "%s://%s", protocol, server)!=2 )
     return 0;
 
   if(protocol=="fhttp") protocol="http";
