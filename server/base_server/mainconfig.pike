@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.124 1999/05/15 21:25:07 grubba Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.125 1999/05/18 03:54:10 per Exp $";
 //inherit "roxenlib";
 
 inherit "config/draw_things";
@@ -1188,9 +1188,8 @@ int nunfolded(object o)
 }
 
 
-object module_font = resolve_font("haru 32"); // default font.
-object button_font = resolve_font("haru 32"); // default font.
-mapping(string:object) my_colortable = ([]);
+object module_font = resolve_font("haru 42");
+object button_font = resolve_font("haru 64");
 
 mapping auto_image(string in, object id)
 {
@@ -1265,21 +1264,14 @@ mapping auto_image(string in, object id)
 
   if (!i) return 0;
 
-  object ct;
-
-  if (!(ct=my_colortable[key]))
-     ct=my_colortable[key]=Image.colortable(i,256,4,4,4);
-//		  colortable(4,4,8,
-//			     ({0,0,0}),({255,255,0}),16,
-//			     ({0,0,0}),({170,170,255}),48,
-//			     )
   object o = Stdio.File(encode_filename("roxen-images/"+img_key), "wct"); 
-  e=Image.GIF.encode(i,ct);
+  e = Image.GIF.encode(i);
   i=0;
-  if(o) { o->write(e); o=0; }
-#ifdef DEBUG
-  else {perror("Cannot open file for "+in+"\n");}
-#endif
+  if(o) 
+  {
+    o->write(e);
+    o=0; 
+  }
   return http_string_answer(e,"image/gif");
 }
 
