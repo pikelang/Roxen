@@ -8,7 +8,7 @@
 
 
 #if efun(thread_create)
-//# define THREADS
+# define THREADS
 #endif
 
 
