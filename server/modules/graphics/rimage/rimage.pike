@@ -5,8 +5,6 @@ inherit "module";
 #define DEBUG
 
 
-constant cvs_version = "$Id: rimage.pike,v 1.4 1998/08/11 10:13:53 grubba Exp $";
-
 /*  ------------------------------------------- MODULE GLUE */
 
 void create(object c)
@@ -30,7 +28,7 @@ array register_module()
   return ({ 
     MODULE_LOCATION|MODULE_PARSER,
     "Roxen image manipulation tag",
-    "Layer based image manipulation tag with plugins",
+    "Layer base image manipulation tag with plugins",
     0,1 
   });
 } 
@@ -64,16 +62,31 @@ function plugin_for( string what )
   return plugins[what]->render;
 }
 
-void internal_tag_image( string t, mapping m, int line, object id, mapping this)
+string is_plugin(string what)
 {
-  plugin_for( m->f || m->filter || "solid" )( m, this, t, id, this_object() );
-  if(this[t])
+  if(sscanf(what, "%s.pike", what)==1) return what;
+}
+
+array available_plugins()
+{
+  return Array.map(get_dir(plugin_dir), is_plugin)-({0});
+}
+
+mixed internal_tag_image(string t, mapping m, int line, 
+			 object id, mapping this)
+{
+  string c = m->channel||"image";
+
+  mixed r = plugin_for( t )( m, this, c, id, this_object() );
+
+  if(this[c])
   {
-    if(this[t]->xsize() >= (int)this->width)
-      this->width = this[t]->xsize();
-    if(this[t]->ysize() >= (int)this->height)
-      this->height = this[t]->ysize();
+    if(this[c]->xsize() >= (int)this->width)
+      this->width = this[c]->xsize();
+    if(this[c]->ysize() >= (int)this->height)
+      this->height = this[c]->ysize();
   }
+  if(stringp(r)) return r;
 }
 
 void internal_parse_layer(string t, mapping m, string c, int line,
@@ -97,18 +110,11 @@ void internal_parse_layer(string t, mapping m, string c, int line,
     this->width = (int)res->ysize;
 
   /* generate the image and the mask.. */
-  parse_html_lines( c, ([ "image":internal_tag_image, 
-			  "mask":internal_tag_image ]),
-		    ([ ]), id, this );
+  array q = available_plugins();
+  mapping empty = ([ ]);
+  parse_html_lines( c, mkmapping(q,({internal_tag_image})*sizeof(q)), 
+		    empty, id, this );
   /* done. Post process the images. */
-
-//   if(this->mask)
-//     this->mask=this->mask->copy(-this->xpos,-this->ypos,
-// 				this->width-1,this->height-1);
-//   if(!this->image) return;
-//   this->image=this->image->copy(-this->xpos,-this->ypos, 
-// 				this->width-1, this->height-1);
-
   if(this->image->xsize() > res->xsize)
     res->xsize = this->image->xsize();
   if(this->image->ysize() > res->ysize)

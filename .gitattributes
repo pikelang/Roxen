@@ -188,7 +188,6 @@ urw_itc_avant_garde-demi-r binary
 /server/modules/graphics/counter.pike foreign_ident
 /server/modules/graphics/graphic_text.pike foreign_ident
 /server/modules/graphics/pimage.pike foreign_ident
-/server/modules/graphics/rimage/rimage.pike foreign_ident
 /server/modules/graphics/tablist.pike foreign_ident
 /server/modules/logging/client_logger.pike foreign_ident
 /server/modules/logging/home_logger.pike foreign_ident
