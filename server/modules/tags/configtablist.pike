@@ -1,12 +1,12 @@
 /*
- * $Id: configtablist.pike,v 1.10 1998/03/19 15:33:11 js Exp $
+ * $Id: configtablist.pike,v 1.11 1998/07/10 01:08:11 js Exp $
  *
  * Makes a tab-list like the one in the config-interface.
  *
  * $Author: js $
  */
 
-constant cvs_version="$Id: configtablist.pike,v 1.10 1998/03/19 15:33:11 js Exp $";
+constant cvs_version="$Id: configtablist.pike,v 1.11 1998/07/10 01:08:11 js Exp $";
 constant thread_safe=1;
 
 #define use_contents_cache 0
@@ -153,7 +153,7 @@ mapping find_file(string f, object id)
 #if use_gif_cache
   if(s=gif_cache[f])
   {
-    werror("Configtablist: "+f+" found in cache.\n");
+//    werror("Configtablist: "+f+" found in cache.\n");
     return http_string_answer(s,"image/gif");
   }
 #endif  
