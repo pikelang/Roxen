@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.70 2001/09/22 12:32:46 grubba Exp $
+ * $Id: ftp.pike,v 2.71 2001/10/18 12:24:40 mast Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -1665,7 +1665,7 @@ class FTPSession
     //        until the socket has been connected.
 
     object privs;
-    if(local_port-1 < 1024)
+    if(local_port-1 < 1024 && geteuid())
       privs = Privs("FTP: Opening the data connection on " + local_addr +
 		    ":" + (local_port-1) + ".");
 
