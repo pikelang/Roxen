@@ -1,12 +1,12 @@
 /*
- * $Id: pop3.pike,v 1.23 1999/01/25 21:15:45 grubba Exp $
+ * $Id: pop3.pike,v 1.24 1999/09/16 19:35:41 grubba Exp $
  *
  * POP3 protocols module.
  *
  * Henrik Grubbström 1998-09-27
  */
 
-constant cvs_version = "$Id: pop3.pike,v 1.23 1999/01/25 21:15:45 grubba Exp $";
+constant cvs_version = "$Id: pop3.pike,v 1.24 1999/09/16 19:35:41 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -153,7 +153,7 @@ static class Pop_Session
     if (user) {
       // Get rid of the destructed object marker.
       deleted[0] = 0;
-      indices(deleted)->delete();
+      (indices(deleted) - ({ 0 }))->delete();
     }
     log("QUIT", "", 200);
   }
@@ -185,7 +185,7 @@ static class Pop_Session
       
       object mail = inbox[n-1];
 
-      if (deleted[mail]) {
+      if (!mail || deleted[mail]) {
 	send_error(sprintf("Mail %s is deleted.", args[0]));
 	log("LIST", args[0], 404);
 	return;
@@ -203,7 +203,7 @@ static class Pop_Session
 
     int n;
     for(n = 0; n < sizeof(inbox); n++) {
-      if (!deleted[inbox[n]]) {
+      if (inbox[n] && !deleted[inbox[n]]) {
 	send(sprintf("%d %d\r\n", n+1, inbox[n]->get_size()));
       }
     }
@@ -229,7 +229,7 @@ static class Pop_Session
 
     object mail = inbox[n-1];
 
-    if (deleted[mail]) {
+    if (!mail || deleted[mail]) {
       send_error(sprintf("Mail %d is deleted.", n));
       log("RETR", args[0], 404);
       return;
@@ -266,7 +266,7 @@ static class Pop_Session
 
     object mail = inbox[n-1];
 
-    if (deleted[mail]) {
+    if (!mail || deleted[mail]) {
       send_error(sprintf("message %d already deleted.", n));
       log("DELE", args[0], 404);
       return;
@@ -310,7 +310,7 @@ static class Pop_Session
 
     object mail = inbox[n-1];
 
-    if (deleted[mail]) {
+    if (!mail || deleted[mail]) {
       send_error(sprintf("message %d is deleted.", n));
       log("TOP", args*" ", 404);
       return;
@@ -364,7 +364,7 @@ static class Pop_Session
       }
 
       object mail = inbox[n];
-      if (deleted[mail]) {
+      if (!mail || deleted[mail]) {
 	send_error(sprintf("Message %s is deleted.", args[0]));
 	log("UIDL", args[0], 404);
 	return;
@@ -378,7 +378,7 @@ static class Pop_Session
       int n;
       for(n = 0; n < sizeof(inbox); n++) {
 	object mail = inbox[n];
-	if (!deleted[mail]) {
+	if (mail && !deleted[mail]) {
 	  send(sprintf("%d %s\r\n", n+1, mail->id));
 	}
       }
