@@ -19,6 +19,9 @@ verify: all
 verbose_verify: all
 	@(cd pike/src;$(MAKE) verbose_verify)
 
+new_peep_engine:
+	@(cd pike/src;$(MAKE) new_peep_engine)
+
 check: verify
 
 clean:
