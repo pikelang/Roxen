@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.68 2004/09/21 15:35:27 mast Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.69 2004/10/27 15:02:44 jonasw Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -86,7 +86,12 @@ layers are hidden regardless of their original state.</p>
 "emit#cimg":({ #"<desc type='plugin'><p><short>
  Entitybased version of <xref href='../graphics/cimg.tag' />.</short>
  Takes the same attributes as <tag>cimg</tag>.</p>
-</desc>",
+</desc>
+
+<attr name='nodata' value='yes | no'><p>
+ Controls suppression of <ent>_.data</ent> in the output. Useful for
+ reducing memory consumption in cached emit tags. The default value
+ is 'no'.</p>",
 
 ([
 "&_.type;":#"<desc type='entity'><p>
@@ -356,7 +361,8 @@ class TagCimgplugin
       data = the_cache->data( a, id , 0 );
       res["file-size"] = strlen(data);
       res["file-size-kb"] = strlen(data)/1024;
-      res["data"] = data;
+      if (lower_case(args->nodata || "no") == "no")
+	res["data"] = data;
       res |= the_cache->metadata( a, id, 0 ); // enforce generation
 #ifdef DEBUG_CACHEABLE
       report_debug("%s:%d restored cacheable flags\n", __FILE__, __LINE__);
