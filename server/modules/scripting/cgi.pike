@@ -1,7 +1,7 @@
 // This is a ChiliMoon module. Copyright © 1996 - 2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: cgi.pike,v 2.60 2002/11/11 01:55:36 mani Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.61 2004/05/20 11:00:49 _cvs_stephen Exp $";
 
 #if !defined(__NT__) && !defined(__AmigaOS__)
 # define UNIX 1
@@ -1017,9 +1017,10 @@ void create(Configuration conf)
 	 " service one or more extensions, from anywhere in the "
 	 "namespace."));
 
-  defvar("searchpath", Variable.Directory("NONE/", VAR_INITIAL, "Search path",
-	 "This is where the module will find the CGI scripts in the <b>real</b> "
-	 "file system."));
+  defvar("searchpath", Variable.Directory("/usr/lib/cgi-bin/", VAR_INITIAL,
+         "Search path",
+	 "This is where the module will find the CGI scripts in the "
+	 "<b>real</b> file system."));
 
   defvar("ls", Variable.Flag(0, 0, "Allow listing of cgi-bin directory",
 	 "If set, the users can get a listing of all files in the CGI-bin "
