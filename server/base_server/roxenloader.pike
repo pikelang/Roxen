@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.116 1999/11/24 01:59:31 per Exp $
+ * $Id: roxenloader.pike,v 1.117 1999/11/25 22:00:15 grubba Exp $
  *
  * Roxen bootstrap program.
  *
@@ -22,7 +22,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.116 1999/11/24 01:59:31 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.117 1999/11/25 22:00:15 grubba Exp $";
 
 #define perror roxen_perror
 
@@ -670,7 +670,7 @@ class TagCallerNoLine
     return sprintf( "Tag(%O)", what );
   }
 
-  void call (object parser, mapping args, mixed... extra) 
+  mixed call (object parser, mapping args, mixed... extra) 
   {
     return what (parser->tag_name(), args, @extra);
   }
@@ -687,7 +687,7 @@ class ContainerCallerNoLine
   {
     return sprintf( "Container(%O)", what );
   }
-  void call (object parser, mapping args, string contents, mixed... extra) 
+  mixed call (object parser, mapping args, string contents, mixed... extra) 
   {
     return what (parser->tag_name(), args, contents, @extra);
   }
@@ -704,7 +704,7 @@ class TagCaller
   {
     return sprintf( "Tag(%O)", what );
   }
-  void call (object parser, mapping args, mixed... extra) 
+  mixed call (object parser, mapping args, mixed... extra) 
   {
     return what (parser->tag_name(), args, parser->at_line(), @extra);
   }
@@ -722,7 +722,7 @@ class ContainerCaller
     return sprintf( "Container(%O)", what );
   }
 
-  void call (object parser, mapping args, string contents, mixed... extra) 
+  mixed call (object parser, mapping args, string contents, mixed... extra) 
   {
     return what(parser->tag_name(), args, contents, parser->at_line(), @extra);
   }
