@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.198 2000/02/10 09:18:34 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.199 2000/02/10 10:10:54 per Exp $";
 
 #define MAGIC_ERROR
 
@@ -704,14 +704,6 @@ private int parse_got()
 	      client_var->Fullname=contents;
 	      client = contents/" " - ({ "" });
 	    }
-	    break;
-
-	    /* Some of M$'s non-standard user-agent info */
-	  case "ua-pixels":	/* Screen resolution */
-	  case "ua-color":	/* Color scheme */
-	  case "ua-os":	/* OS-name */
-	  case "ua-cpu":	/* CPU-type */
-// 	    misc[linename - "ua-"] = contents ;
 	    break;
 
 	  case "referer":
