@@ -1,7 +1,7 @@
 #include <module.h>
 #include <stat.h>
 inherit "module";
-constant module_type = MODULE_DIRECTORIES | MODULE_TAG;
+constant module_type = MODULE_TAG;
 constant module_name = "dir and path emit sources";
 constant module_doc = "This module provies the 'dir' and 'path' emit sources.";
 
