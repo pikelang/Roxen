@@ -111,12 +111,12 @@ function loadLayer(e, layer_name, src, properties, parent)
   }
   else
   {
-    if(!file_loader)
+    if(!file_loader || isMacIE50)
       file_loader = new FileLoader(layerLoadHandler);
     
     file_loader.layer_name = layer_name;
-    file_loader.loadDocument(src);
     file_loader.properties = properties;
+    file_loader.loadDocument(src);
   }
   var pos = new properties.LayerPosition(new TriggerCoord(e, 0), 0, properties);
   shiftTo(layer_name, pos.x, pos.y);
