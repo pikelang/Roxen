@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.106 2004/07/09 00:47:05 _cvs_stephen Exp $
+ * $Id: ftp.pike,v 2.107 2004/07/09 00:59:01 _cvs_stephen Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -2038,7 +2038,7 @@ class FTPSession
       int off;
       file->file->set_blocking();
       catch( off = file->tell() );
-      pipe->add_source( file->file, max(off,0),	(file->len>0||-1) );
+      pipe->add_source(file->file, max(off,0),	file->len>0?file->len:-1);
     }
     pipe->start();
     curr_pipe = pipe;
