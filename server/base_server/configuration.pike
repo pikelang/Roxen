@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.21 1997/04/08 23:42:44 marcus Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.22 1997/04/13 23:25:40 peter Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -2004,8 +2004,6 @@ int disable_module( string modname )
 object|string find_module(string name)
 {
   int id;
-  mapping modules;
-  modules = modules;
   sscanf(name, "%s#%d", name, id);
   if(modules[name])
   {
