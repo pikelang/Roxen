@@ -191,6 +191,7 @@ void *shuffle(void *fromto)
      */
     if(towrite > 8192)
     {
+      int pos;
       dbg("File larger than 8Kb, using mmap()\n",0,0);
 
       /* Smaller files get higher priority. This should probably be
@@ -203,8 +204,11 @@ void *shuffle(void *fromto)
       else
 	thr_setprio(2, thr_self());
       
-      if((mmapped = mmap(0, towrite, PROT_READ, MAP_SHARED|MAP_NORESERVE,
-			 fromfd, 0))
+      if((pos=lseek(fromfd, 0L, SEEK_CUR))==-1) {
+	perror("Shuffle: lseek failed");
+	mmapped = 0;
+      } else if((mmapped = mmap(0, towrite, PROT_READ,
+				MAP_SHARED|MAP_NORESERVE, fromfd, 0))
 	 == MAP_FAILED)
       {
 	perror("Shuffle: mmap failed");
@@ -216,7 +220,7 @@ void *shuffle(void *fromto)
 	madvise(mmapped, towrite, MADV_SEQUENTIAL);
 #endif
 	/* This is the actual data moving... All in one line :-) */
-	my_write(tofd, mmapped, towrite);
+	my_write(tofd, mmapped + pos, towrite - pos);
 	munmap(mmapped, towrite);
       }
     }

@@ -12,11 +12,14 @@
  */
 
 #ifndef lint
-static const char rcsid[] = "$Id: fcgiapp.c,v 1.1.1.1 1996/11/11 23:31:41 per Exp $";
+static const char rcsid[] = "$Id: fcgiapp.c,v 1.2 1997/04/09 02:06:04 grubba Exp $";
 #endif /* not lint */
 
+#include <fcgi_config.h>
 #include <stdio.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>

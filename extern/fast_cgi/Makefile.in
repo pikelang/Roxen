@@ -3,13 +3,16 @@
 #
 #  Open Market, Inc.
 #
-#  $Id: Makefile.in,v 1.1.1.1 1996/11/11 23:31:40 per Exp $
+#  $Id: Makefile.in,v 1.2 1997/04/09 02:05:57 grubba Exp $
 #
+
+@SET_MAKE@
+
 SHELL=/bin/sh
 
 all:
-	(cd libfcgi; make all)
-	(cd cgi-fcgi; make all)
+	(cd libfcgi; $(MAKE) all)
+	(cd cgi-fcgi; $(MAKE) all)
 
 reconfig: clean
 	uname -rs >config.uname
@@ -19,7 +22,7 @@ clean:
 	rm -f *.a *.o core.* errs *~ \#* TAGS *.E a.out
 	rm -f *.a *.o core.* errs *~ \#* TAGS *.E a.out
 	rm -f config.cache config.log config.status config.uname
-	(cd libfcgi; make clean)
-	(cd cgi-fcgi; make clean)
+	(cd libfcgi; $(MAKE) clean)
+	(cd cgi-fcgi; $(MAKE) clean)
 
 # ----------------------------------------------------------------------------
