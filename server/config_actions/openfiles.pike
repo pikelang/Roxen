@@ -1,5 +1,5 @@
 /*
- * $Id: openfiles.pike,v 1.3 1998/03/26 07:51:46 per Exp $
+ * $Id: openfiles.pike,v 1.4 1998/07/20 06:24:32 neotron Exp $
  */
 
 inherit "wizard";
@@ -13,7 +13,7 @@ constant more=1;
 #include <stat.h>
 
 // Debug functions.  List _all_ open filedescriptors
-inline static private string checkfd_fix_line(string l)
+inline static private array checkfd_fix_line(string l)
 {
   string *s;
   s=l/",";
@@ -28,20 +28,22 @@ inline static private string checkfd_fix_line(string l)
     int m = (int)("0"+s[0]);
     if(!(S_ISLNK(m)||S_ISREG(m)||S_ISDIR(m)||S_ISCHR(m)||S_ISBLK(m)))
       s[2]="-";
-    return s[0..2]*",";
+    return s[0..2];//*",";
   }
-  return l;
+  return l/",";
 }
-
 
 string page_0()
 {
   return
     ("<h1>Active filedescriptors</h1>\n"+
-     "<br clear=left><hr>\n"+
-     "<table width=100% cellspacing=0 cellpadding=3>\n"+
-     "<tr align=right><td>fd</td><td>type</td><td>mode</td>"+
-     "<td>size</td><td>inode</td></tr>\n"+
+     //     "<br clear=left><hr>\n"+
+     //     "<table width=100% cellspacing=0 cellpadding=3>\n"+
+     //     "<tr align=right><td>fd</td><td>type</td><td>mode</td>"+
+     //     "<td>size</td><td>inode</td></tr>\n"+
+     sprintf("<pre><b>%-5s  %-9s  %-10s   %-10s   %s</b>\n\n",
+	     "fd", "type", "mode", "size", "inode")+
+	     
      (Array.map(get_all_active_fd(),
 	  lambda(int fd) 
 	  {
@@ -50,16 +52,26 @@ string page_0()
 	      mark_fd(fd)||"?";
 #else
 	    "";
+	    
 #endif
-	    return ("<tr align=right><th>"+fd+"</th><td>"+
- 		    replace(checkfd_fix_line(fd_info(fd)),",",
-			    "</td><td>")
-		    +"</td><td align=left>"
-		    +(fdc)+"<br></td></tr>"); 
+	    catch {
+	      array args = checkfd_fix_line(fd_info(fd));
+	      args = (args[0] / ", ") + args[1..];
+	      args[-2] = ( args[-2] / " " - ({""})) * " ";
+	      args[1] = (args[1] - "<tt>") - "</tt>";
+	      //	    werror("%O\n", args);
+	    return sprintf("%-5s  %-9s  %-10s   %-12s  %s\n",
+			   (string)fd,
+			   @args,
+			   fdc);
+	    };
+	    return "Error when making info list...\n";
+		
 	  })*"\n")+
-     "</table>");
+     "</pre>");
 }
 
 int wizard_done(){ return -1; }
 
 mixed handle(object id) { return wizard_for(id,0); }
+
