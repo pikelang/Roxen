@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.13 1997/08/20 10:08:06 per Exp $
+/* $Id: wizard.pike,v 1.14 1997/08/20 10:24:37 per Exp $
  *  name="Wizard generator";
  *  doc="This plugin generats all the nice wizards";
  */
@@ -236,8 +236,9 @@ mapping|string wizard_menu(object id, string dir, string base)
       err = catch {
 	if(act[0]!='#' && act[-1]=='e')
 	{
-	  string rn = get_wizard(act,dir)->name, name;
-	  sscanf(rn, "%*s:%s", name);
+	  string rn = get_wizard(act,dir)->name||act, name;
+	  if(sscanf(rn, "%*s:%s", name) != 2)
+	    name = rn;
 	  acts+=({"<!-- "+rn+" --><dt><font size=\"+2\">"
 		    "<a href=\""+base+"?action="+act+"&unique="+(zonk++)+"\">"+
 		    name+"</a></font><dd>"+(get_wizard(act,dir)->doc||"") });
