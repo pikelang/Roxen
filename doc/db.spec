@@ -1,4 +1,4 @@
-# $Id: db.spec,v 1.21 1998/09/09 23:37:56 js Exp $
+# $Id: db.spec,v 1.22 1998/09/11 20:02:41 wellhard Exp $
 
 drop table messages;
 drop table mail;
@@ -9,7 +9,8 @@ drop table dns;
 drop table template_wizards;
 drop table template_wizards_pages;
 drop table template_vars;
-drop table template_vars_opts;
+drop table template_option_groups;
+drop table template_options;
 drop table template_schemes;
 drop table template_schemes_vars;
 drop table customers_schemes;
@@ -96,6 +97,7 @@ create table dns (
              rr_value		     varchar(255)
      );
 	    
+# AutoWeb
 
 # Template wizards
 create table template_wizards (
@@ -112,23 +114,31 @@ create table template_wizards_pages (
              name                    varchar(64),
              title                   varchar(255),
              wizard_id               int,
-             help		     blob
+             help		     blob,
+             example_html            blob
      );
 
 # Template variables
 create table template_vars (
 	     id                      int auto_increment primary key,
-             name                    varchar(64),
+             name                    varchar(64) not null,
              title		     varchar(255),
-	     page_id                 int,
+	     page_id                 int not null,
              help		     blob,
-	     type		     varchar(8) # font/color/image/int
+	     type		     varchar(8), # font/color/image/select
+             option_group_id         int
+     );
+
+# Template variables option groups
+create table template_option_groups (
+             id                      int auto_increment primary key,
+             name                    varchar(64) not null
      );
 
 # Template variables options
-create table template_vars_opts (
+create table template_options (
              id		             int auto_increment primary key,
-	     variable_id	     int,
+	     option_group_id	     int not null,
              name		     varchar(255),
              value		     blob
      );
