@@ -1,7 +1,7 @@
 // This is a roxen protocol module.
 // Copyright © 2001 - 2004, Roxen IS.
 
-// $Id: prot_https.pike,v 2.7 2004/06/30 16:59:35 mast Exp $
+// $Id: prot_https.pike,v 2.8 2004/07/06 16:32:43 grubba Exp $
 
 // --- Debug defines ---
 
@@ -48,6 +48,12 @@ class fallback_redirect_request
     }
   }
 
+  void timeout()
+  {
+    SSL3_WERR("fallback_redirect_request::timeout()");
+    die();
+  }
+
   void read_callback(mixed ignored, string s)
   {
     SSL3_WERR(sprintf("fallback_redirect_request::read_callback(X, %O)\n", s));
@@ -55,6 +61,7 @@ class fallback_redirect_request
     string name;
     string prefix;
 
+    remove_call_out(timeout);
     if (search(in, "\r\n\r\n") >= 0)
     {
       //      werror("request = '%s'\n", in);
@@ -104,6 +111,23 @@ class fallback_redirect_request
       }
       f->set_read_callback(0);
       f->set_write_callback(write_callback);
+    } else {
+      if (sizeof(in) > 5) {
+	string q = replace(upper_case(in[..10]), "\t", " ");
+	if (!(has_prefix(q, "GET ") ||
+	      has_prefix(q, "HEAD ") ||
+	      has_prefix(q, "OPTIONS ") ||
+	      has_prefix(q, "PUT ") ||
+	      has_prefix(q, "PROPFIND "))) {
+	  // Doesn't look like a HTTP request.
+	  // Bail out.
+	  SSL3_WERR(sprintf("fallback_redirect_request->read_callback():\n"
+			    "Doesn't look like HTTP (method: %O)\n", q));
+	  die();
+	  return;
+	}
+      }
+      call_out(timeout, 30);
     }
   }
 
@@ -131,21 +155,18 @@ class http_fallback
   {
     SSL3_WERR(sprintf("http_fallback(X, %O, %O)", n, data));
     //  trace(1);
-    if (
-#if constant (SSL.sslfile.PACKET_MAX_SIZE)
-      // Old SSL.sslfile which inherits SSL.connection.
-      (my_fd->current_write_state->seq_num == 0)
-#else
-      (my_fd->query_connection()->current_write_state->seq_num == 0)
-#endif
-      && search(lower_case(data), "http"))
+    if (((my_fd->current_write_state||
+	  my_fd->query_connection()->current_write_state)->seq_num == 0) &&
+      search(lower_case(data), "http"))
     {
-#if constant (SSL.sslfile.PACKET_MAX_SIZE)
-      Stdio.File raw_fd = my_fd->socket;
-      my_fd->socket = 0;
-#else
-      Stdio.File raw_fd = my_fd->shutdown();
-#endif
+      
+      Stdio.File raw_fd;
+      if (my_fd->shutdown) {
+	raw_fd = my_fd->shutdown();
+      } else {
+	raw_fd = my_fd->socket;
+	my_fd->socket = 0;
+      }
 
       /* Redirect to a https-url */
       fallback_redirect_request(raw_fd, data,
@@ -153,10 +174,10 @@ class http_fallback
 				my_fd->config->query("MyWorldLocation"),
 				port);
 
-#if constant (SSL.sslfile.PACKET_MAX_SIZE)
-      // Old sslfile contains cyclic references.
-      destruct (my_fd);
-#endif
+      if (!my_fd->shutdown) {
+	// Old sslfile contains cyclic references.
+	destruct(my_fd);
+      }
     }
   }
 
@@ -183,7 +204,7 @@ class http_fallback
 
 SSL.sslfile accept()
 {
-  SSL.sslfile q = ::accept();
+  SSL.sslfile q = [object]::accept();
 
   if (q) {
     http_fallback(q);
