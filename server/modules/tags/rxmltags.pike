@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.36 1999/12/14 04:57:45 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.37 1999/12/18 14:14:02 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -483,6 +483,16 @@ string tag_date(string q, mapping m, RequestID id)
   return tagtime(t, m, id, language);
 }
 
+RoxenModule _ssi;
+int provides_ssi() {
+  if(_ssi) return 1;
+  if(my_configuration()->get_provider("ssi")) {
+    _ssi=my_configuration()->get_provider("ssi");
+    return 1;
+  }
+  return 0;
+}
+
 string|array(string) tag_insert( string tag, mapping m, RequestID id )
 {
   string n;
@@ -551,6 +561,11 @@ string|array(string) tag_insert( string tag, mapping m, RequestID id )
     if(q && q->status>0 && q->status<400)
       return ({ q->data() });
     return rxml_error(tag, (q ? q->status_desc: "No server response"), id);
+  }
+
+  if(m->var && provides_ssi()) {
+    string ret=_ssi->tag_echo("", m, id);
+    if(ret) return ret;
   }
 
   string ret="Could not fullfill your request.<br>\nArguments:";
