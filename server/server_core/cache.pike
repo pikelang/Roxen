@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: cache.pike,v 1.85 2002/10/22 00:06:12 nilsson Exp $
+// $Id: cache.pike,v 1.86 2002/11/02 20:33:05 mani Exp $
 
 // #pragma strict_types
 
@@ -382,15 +382,17 @@ private void setup_tables() {
     ( 0, "local", "session_cache", "Used by the session manager" );
 }
 
-//! Initializes the session handler.
-void init_session_cache() {
+
+// --- Cache initialization ----------
+
+void init()
+{
+  // Initializes the session handler.
   db = (([function(string:function(string:object(Sql.Sql)))]master()->resolv)
 	("DBManager.cached_get"));
   setup_tables();
-}
 
-void init_call_outs()
-{
+  // Init call outs
   roxenp()->background_run(60, cache_clean);
   roxenp()->background_run(SESSION_SHIFT_TIME, session_cache_handler);
 
@@ -399,7 +401,6 @@ void init_call_outs()
 
 void create()
 {
-  add_constant( "cache", this_object() );
   caches = ([ ]);
 
   nongc_cache = ([ ]);

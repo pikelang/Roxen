@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: core.pike,v 1.837 2002/11/02 17:48:07 mani Exp $";
+constant cvs_version="$Id: core.pike,v 1.838 2002/11/02 20:33:05 mani Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -4355,7 +4355,7 @@ int main(array(string) tmp)
   initiate_supports();
   initiate_argcache();
   init_configuserdb();
-  cache.init_session_cache();
+  cache.init();
 
   protocols = build_protocols_mapping();  
 

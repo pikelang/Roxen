@@ -4,7 +4,7 @@
 // ChiliMoon bootstrap program. Sets up the environment,
 // replces the master, adds custom functions and starts core.pike.
 
-// $Id: loader.pike,v 1.360 2002/11/02 17:54:21 mani Exp $
+// $Id: loader.pike,v 1.361 2002/11/02 20:33:05 mani Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ static string    configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: loader.pike,v 1.360 2002/11/02 17:54:21 mani Exp $";
+constant cvs_version="$Id: loader.pike,v 1.361 2002/11/02 20:33:05 mani Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -616,7 +616,7 @@ static private Cache initiate_cache()
   Cache cache;
   cache=((program)"server_core/cache")();
 
-  add_constant("http_decode_string", _Roxen.http_decode_string );
+  add_constant("cache",        cache);
   add_constant("cache_set",    cache->cache_set);
   add_constant("cache_lookup", cache->cache_lookup);
   add_constant("cache_remove", cache->cache_remove);
@@ -2205,7 +2205,8 @@ void do_main( int argc, array(string) argv )
 #endif
   
   DC( "_Roxen.HeaderParser" );
-  
+  add_constant("http_decode_string", _Roxen.http_decode_string );
+
   DC( "Protocols.HTTP" ); DC( "Protocols.HTTP.Query" );
 
   DC( "Calendar.ISO" );   DC( "Calendar.ISO.Second" );
@@ -2299,7 +2300,6 @@ void do_main( int argc, array(string) argv )
   load_core();
 
   int retval = core->main(hider);
-  cache->init_call_outs();
 
   report_debug("-- Total boot time %2.1f seconds ---------------------------\n",
 	       (gethrtime()-start_time)/1000000.0);
