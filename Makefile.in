@@ -15,18 +15,13 @@ LDFLAGS=@LDFLAGS@
 
 PIKEVERSION=@PIKEVERSION@
 
-all:	@MAKE_GMP@ @MAKE_GDBM@ @MAKE_ZLIB@ pike extern sb_cvs
+all:	@MAKE_GMP@ @MAKE_GDBM@ @MAKE_ZLIB@ @MAKE_COM@ pike extern
 
 pike: force
 	@(cd pike/$(PIKEVERSION)/src;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS) @LINKFORSHARED@")
 
 extern: force
 	@(cd extern;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" all)
-
-sb_cvs: force
-	@if test -d commercial_modules/sitebuilder/. ; then \
-	  (cd commercial_modules/sitebuilder;$(MAKE) "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" all) \
-	else :; fi; \
 
 gmp: force
 	-@(cd gmp;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" all)
@@ -36,6 +31,11 @@ gdbm: force
 
 zlib: force
 	-@(cd zlib;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" libz.a)
+
+commercial_modules: force
+	@if test -d commercial_modules/. ; then \
+	  (cd commercial_modules/;$(MAKE) "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" all) \
+	else :; fi; \
 
 force:
 
