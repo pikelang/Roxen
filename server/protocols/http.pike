@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.389 2003/01/07 13:37:38 anders Exp $";
+constant cvs_version = "$Id: http.pike,v 1.390 2003/02/14 17:26:52 wellhard Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1594,9 +1594,9 @@ void send_result(mapping|void result)
 	else
 	  heads["Expires"] = Roxen.http_date( predef::time(1)+misc->cacheable );
 
-	if (!misc->cacheable && !misc->last_modified) {
-	  // Data with immediate expiry is assumed to have been generated
-	  // at the same instant.
+	if (misc->cacheable < INITIAL_CACHEABLE) {
+	  // Data with expiry is assumed to have been generated at the
+	  // same instant.
 	  misc->last_modified = predef::time(1);
 	}
       }
