@@ -1,7 +1,7 @@
 // This is a roxen module. 
 // Copyright © 1996 - 1998, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.94 1998/04/24 08:44:53 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.95 1998/04/30 16:17:32 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -463,10 +463,14 @@ private int parse_got(string s)
 	  case "cookie": /* This header is quite heavily parsed */
 	    string c;
 	    misc->cookies = contents;
-	    foreach(contents/";", c)
+	    if (!sizeof(contents)) {
+	      // Needed for the new Pike 0.6
+	      break;
+	    }
+	    foreach(((contents/";") - ({""})), c)
 	    {
 	      string name, value;
-	      while(c[0]==' ') c=c[1..];
+	      while(sizeof(c) && c[0]==' ') c=c[1..];
 	      if(sscanf(c, "%s=%s", name, value) == 2)
 	      {
 		value=http_decode_string(value);
