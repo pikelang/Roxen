@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.8 2000/03/07 19:28:56 grubba Exp $
+ * $Id: create_configif.pike,v 1.9 2000/03/11 13:16:39 grubba Exp $
  *
  * Create an initial configuration interface server.
  */
@@ -85,8 +85,8 @@ string_to_utf8(#"<?XML version=\"1.0\"  encoding=\"UTF-8\"?>
 <map>
   <str>permissions</str> : <a> <str>Everything</str> </a>
   <str>real_name</str>   : <str>Configuration Interface Default User</str>
-  <str>password</str>    : <str>" + crypt(password) + #"
-  <str>name</str>        : <str>" + user + "\n</map>" ));
+  <str>password</str>    : <str>" + crypt(password) + #"</str>
+  <str>name</str>        : <str>" + user + "</str>\n</map>" ));
 
   if(admin)
   {
