@@ -1,5 +1,5 @@
 /* Roxen WWW-server version 1.0.
-string cvs_version = "$Id: http.pike,v 1.24 1999/02/01 21:10:18 mast Exp $";
+string cvs_version = "$Id: http.pike,v 1.25 1999/02/15 23:19:34 per Exp $";
  * http.pike: HTTP convenience functions.
  * inherited by roxenlib, and thus by all files inheriting roxenlib.
  */
@@ -118,6 +118,9 @@ mapping http_rxml_answer( string rxml, object id,
                           void|object(Stdio.File) file, string|void type )
 {
   rxml = id->conf->parse_rxml(rxml, id, file);
+#ifdef HTTP_DEBUG
+  werror("HTTP: RXML answer ("+(type||"text/html")+")\n");
+#endif  
   return (["data":rxml,
 	   "type":(type||"text/html"),
 	   "stat":id->misc->defines[" _stat"],
@@ -131,13 +134,16 @@ mapping http_rxml_answer( string rxml, object id,
 mapping http_string_answer(string text, string|void type)
 {
 #ifdef HTTP_DEBUG
-  perror("HTTP: String answer ("+(type||"text/html")+")\n");
+  werror("HTTP: String answer ("+(type||"text/html")+")\n");
 #endif  
   return ([ "data":text, "type":(type||"text/html") ]);
 }
 
 mapping http_file_answer(object text, string|void type, void|int len)
 {
+#ifdef HTTP_DEBUG
+  werror("HTTP: file answer ("+(type||"text/html")+")\n");
+#endif  
   return ([ "file":text, "type":(type||"text/html"), "len":len ]);
 }
 
@@ -159,16 +165,9 @@ string cern_http_date(int t)
     c="+";
   }
 
-#if 1
   return(sprintf("%02d/%s/%04d:%02d:%02d:%02d %s%02d00",
 		 lt->mday, months[lt->mon], 1900+lt->year,
 		 lt->hour, lt->min, lt->sec, c, tzh));
-#else
-  string s = ctime(t);
-  
-  return sprintf("%02d/%s/%s:%s %s%02d00", (int)s[8..9], s[4..6], s[20..23], 
-		 s[11..18], c ,tzh);
-#endif /* 1 */
 }
 
 /* Returns a http_date, as specified by the HTTP-protocol standard. 
@@ -180,7 +179,7 @@ string http_date(int t)
 #if constant(gmtime)
   mapping l = gmtime( t );
 #else
-  mapping l = localtime(t);
+  mapping l = localtime( t );
   t += l->timezone - 3600*l->isdst;
   l = localtime(t);
 #endif
