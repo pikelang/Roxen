@@ -1,9 +1,11 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
 //
-// A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.472 2001/08/24 14:45:01 nilsson Exp $";
+// @appears Configuration
+//! A site's main configuration
+
+constant cvs_version = "$Id: configuration.pike,v 1.473 2001/08/24 19:02:08 nilsson Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3085,6 +3087,8 @@ void fix_my_url()
     if (!has_suffix (my_url, "/")) my_url += "/";
 }
 
+//! Returns some URL for accessing the configuration. (Should be
+//! used instead of querying MyWorldLocation directly.)
 string get_url() {return my_url;}
 
 array after_init_hooks = ({});
