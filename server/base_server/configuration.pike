@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.557 2004/04/20 14:07:14 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.558 2004/04/20 14:07:49 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1333,7 +1333,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 //! modules except last and filter type modules are mapped, in order,
 //! and the first one that returns a suitable response is used. If
 //! `no_magic' is set to one, the internal magic roxen images and the
-//! <ref>find_internal()</ref> callbacks will be ignored.
+//! @[find_internal()] callbacks will be ignored.
 //!
 //! The return values 0 (no such file) and -1 (the data is a
 //! directory) are only returned when `no_magic' was set to 1;
