@@ -5,11 +5,18 @@
 //!
 //! Created 2000-01-21 by Martin Stjernholm
 //!
-//! $Id: utils.pmod,v 1.1 2000/01/21 22:31:35 mast Exp $
+//! $Id: utils.pmod,v 1.2 2000/02/11 01:04:01 mast Exp $
 
 
 array return_zero (mixed... ignored) {return 0;}
 array return_empty_array (mixed... ignored) {return ({});}
+
+int(1..1)|string|array unknown_tag_error (Parser.HTML p, string str)
+{
+  RXML.rxml_fatal ("Unknown tag %O. Unknown tags are not "
+		   "allowed in this context.\n", p->tag_name());
+  return ({});
+}
 
 
 // PHtml callbacks.
