@@ -15,7 +15,7 @@ constant STORT = 1.0e40;
 inherit "create_graph.pike";
 inherit "create_bars.pike";
 
-constant cvs_version = "$Id: create_pie.pike,v 1.35 1998/03/05 16:00:26 hedda Exp $";
+constant cvs_version = "$Id: create_pie.pike,v 1.36 1998/03/05 17:08:38 hedda Exp $";
 
 /*
  * name = "BG: Create pies";
@@ -372,7 +372,8 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
 	  piediagram+=tbild;
 	}
 
-      edge_nr=(int)(FI*200.0/PI);
+      //Horizontal lines below
+      edge_nr=(int)(FI*200.0/PI+0.5);
       piediagram->setcolor(0,0,0);
       for(int i=0; i<sizeof(pnumbers); i++)
 	{
