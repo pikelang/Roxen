@@ -1,6 +1,6 @@
 // Protocol support for RFC 2518
 //
-// $Id: webdav.pike,v 1.30 2004/05/13 14:22:14 grubba Exp $
+// $Id: webdav.pike,v 1.31 2004/05/13 15:40:57 mast Exp $
 //
 // 2003-09-17 Henrik Grubbström
 
@@ -9,7 +9,7 @@ inherit "module";
 #include <module.h>
 #include <request_trace.h>
 
-constant cvs_version = "$Id: webdav.pike,v 1.30 2004/05/13 14:22:14 grubba Exp $";
+constant cvs_version = "$Id: webdav.pike,v 1.31 2004/05/13 15:40:57 mast Exp $";
 constant thread_safe = 1;
 constant module_name = "DAV: Protocol support";
 constant module_type = MODULE_FIRST;
@@ -390,7 +390,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
 		   destination = destination[sizeof(loc)..];
 		   mapping(string:mixed) res;
 		   if (id->method == "COPY") {
-		     res = module->recurse_copy_files(source, destination, d,
+		     res = module->recurse_copy_files(source, destination,
 						      behavior, overwrite, id);
 		   } else {
 		     res = module->recurse_move_files(source, destination,
@@ -625,4 +625,3 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
   }
   return ([]);
 }
-
