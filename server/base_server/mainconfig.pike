@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.100 1998/04/07 01:10:33 peter Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.101 1998/04/09 15:07:32 grubba Exp $";
 //inherit "roxenlib";
 
 inherit "config/draw_things";
@@ -279,6 +279,9 @@ mapping verify_changed_ports(object id, object o)
       {
        case "ssl":
 	prt = "https://";
+	break;
+       case "ftp":
+	prt = "ftp://";
 	break;
 	
        default:
@@ -1019,6 +1022,7 @@ mapping (string:string) selected_nodes =
   "Globals":"/Globals",
   "Errors":"/Errors",
   "Actions":"/Actions",
+  "Docs":"/Docs"
 ]);
 
 array tabs = ({
@@ -1026,6 +1030,7 @@ array tabs = ({
   "Globals",
   "Errors",
   "Actions",
+  "Docs",
 });
 
 array tab_names = ({
@@ -1033,6 +1038,7 @@ array tab_names = ({
  "Global Variables",
  "Event Log",
  "Actions",
+ "Manual",
 });
 		
 
@@ -1626,15 +1632,18 @@ mapping configuration_parse(object id)
 	     id->variables[var] : id->variables[srv];
 	   if(srv == "Global Variables")
 	     thenode = find_node("/Globals/Configuration interface/URL");
-	   else
+	   else {
 	     thenode = find_node("/Configurations/"+srv+
-				 "/Global/Server URL");
+				 "/Global/MyWorldLocation");
+	   }
 	   if(thenode) {
 	     thenode->data[VAR_VALUE] = url;
 	     thenode->change(1);
 	     thenode->up->save();
-	   } 
-
+	   } else {
+	     report_debug(sprintf("Attempt to set the Server URL for "
+				  "a non-existent server \"%s\".\n", srv));
+	   }
 	 }
        }
        id->referer = ({ CONFIG_URL + o->path(1) });
