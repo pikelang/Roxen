@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.54 2002/10/15 12:53:38 mast Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.55 2003/10/06 17:23:53 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Roxen self test module";
@@ -777,6 +777,27 @@ class TagEmitTESTER {
 
   array(mapping(string:mixed)) get_dataset(mapping m, RequestID id) {
     switch(m->test) {
+    case "6":
+      return ({(["integer":  17,
+		 "float":    17.0,
+		 "string":   "foo",
+		 "array":    ({1, 2.0, "3"}),
+		 "multiset": (<1, 2.0, "3">),
+		 "mapping":  ([1: "one", 2.0: 2, "3": 3]),
+		 "object":   class {}(),
+		 "program":  class {},
+		 "zero_integer":   0,
+		 "zero_float":     0.0,
+		 "empty_string":   "",
+		 "empty_array":    ({}),
+		 "empty_multiset": (<>),
+		 "empty_mapping":  ([]),
+		 "zero_int_array": ({0}),
+		 "zero_float_array": ({0.0}),
+		 "empty_string_array": ({""}),
+		 "empty_array_array": ({({})}),
+	       ])});
+
     case "5":
       return ({(["v": EntityVVal ("<&>"), "c": EntityCVal ("<&>")])});
 
