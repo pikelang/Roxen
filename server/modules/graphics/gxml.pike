@@ -1,11 +1,11 @@
-// This is a roxen module. Copyright © 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 2001, Roxen IS.
 //
 #include <module.h>
 inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.24 2002/11/17 17:55:45 mani Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.25 2004/05/22 21:55:37 _cvs_stephen Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: GXML tag";
 constant module_doc  = "Provides the tag <tt>&lt;gxml&gt;</tt>.";
@@ -30,18 +30,16 @@ string status() {
   array s=the_cache->status();
   return sprintf( "<b>Images in cache:</b> %d images<br />\n"
 		  "<b>Cache size:</b> %s",
-		 s[0]/2, String.int2size(s[1]));
+		 s[0], String.int2size(s[1]));
 }
 
-mapping(string:LazyImage.LazyImage) images = ([]);
-Image.Layer generate_image( mapping a, string hash, RequestID id )
+Image.Layer generate_image( mapping a, mapping node_tree, RequestID id )
 {
-  array ll;
-  if( !images[ hash ] )
-    error( "Oops! This was not what we expected.\n" );
-
-  ll = m_delete(images,hash)->run( );
-
+  LazyImage.clear_cache();
+  LazyImage.LazyImage image = LazyImage.decode(node_tree);
+  array ll = image->run(0, id);
+  LazyImage.clear_cache();
+  
   mapping e;
   if( a->size )
   {
@@ -61,7 +59,10 @@ Image.Layer generate_image( mapping a, string hash, RequestID id )
     e = LazyImage.layers_extents( ll );
   
   // Crop to the left so that 0,0 is uppmost left corner.
-  return Image.lay( ll, e->x0, e->y0, e->x1, e->y1 );
+  // return Image.lay( ll, e->x0, e->y0, e->x1, e->y1 );
+
+  // Combine layers.
+  return Image.lay( ll );
 }
 
 
@@ -330,12 +331,14 @@ SIMPLE_LI(GreyBlur);
 SIMPLE_LI(Expand);
 SIMPLE_LI(Scale);
 SIMPLE_LI(Shadow);
+SIMPLE_LI(Rotate);
 
 
 SIMPLE_LI(Gamma);
 SIMPLE_LI(Invert);
 SIMPLE_LI(Grey);
 SIMPLE_LI(Color);
+SIMPLE_LI(Clear);
 SIMPLE_LI(MirrorX);
 SIMPLE_LI(Rotate);
 SIMPLE_LI(MirrorY);
@@ -347,11 +350,9 @@ SIMPLE_LI(SelectFrom);
 
 array(string|RXML.Tag) builtin_tags = gxml_find_builtin_tags();
 
-class TagGXML
+static class InternalTagSet
 {
-  inherit RXML.Tag;
-  constant name = "gxml";
-  constant flags = RXML.FLAG_SOCKET_TAG|RXML.FLAG_DONT_REPORT_ERRORS;
+  inherit RXML.TagSet;
 
   static class GXTag
   {
@@ -370,28 +371,60 @@ class TagGXML
     }
   }
 
-  static mapping last_from;
-  static array(RXML.Tag) last_result;
-  static array(RXML.Tag) gxml_make_tags( function get_plugins )
+  static array(RXML.Tag) gxml_make_tags()
   {
-    mapping from = ([]);
-    catch( from = get_plugins() );
+    Configuration conf = my_configuration();
+    if(!conf)
+      // Add moudule can instanciate a roxen module without a configuration.
+      return ({ });
 
-    if( from == last_from )
-      return last_result;
-
-    array(RXML.Tag) result = ({});
-    foreach( indices(from), string tn )
-      result += ({ GXTag( tn, from[tn] ) });
-
-    result += builtin_tags;
-    
-    last_from = from;
-    return last_result = result;
+    mapping from = conf->rxml_tag_set->get_plugins("gxml");
+    return builtin_tags + map (indices (from),
+			       lambda (string tn) {
+				 return GXTag( tn, from[tn] );
+			       });
   }
-  
+
+  static int in_changed = 0;
+
+  void changed()
+  {
+    if (in_changed) return;
+    in_changed = 1;
+    clear();
+    add_tags (gxml_make_tags());
+    in_changed = 0;
+    ::changed();
+  }
+
+  static void create()
+  {
+    ::create (this_module(), "gxml");
+    changed();
+  }
+}
+
+static RXML.TagSet internal_tag_set = InternalTagSet();
+
+class TagGXML
+{
+  inherit RXML.Tag;
+  constant name = "gxml";
+  constant flags = RXML.FLAG_SOCKET_TAG|RXML.FLAG_DONT_REPORT_ERRORS;
 
 #define V(X) ("$["+X+"]")
+  class LayersVars
+  {
+    inherit RXML.Scope;
+    mixed `[] (string var, void|RXML.Context ctx,
+	       void|string scope_name, void|RXML.Type type)
+    {
+      string scope;
+      if (sscanf(scope_name, "%*s.layers.%s", scope) == 2)
+	return V("layers."+scope+"."+var);
+      return this;
+    }
+  }
     mapping make_guides_mapping( string v )
     {
       mapping res = ([]);
@@ -425,24 +458,19 @@ class TagGXML
 	"width":V("layer.w"), "w":V("layer.w"),
 	"height":V("layer.h"),"h":V("layer.h"),
       ]),
+      "layers":LayersVars(),
     ]);
 #undef V
-
-  RXML.TagSet internal;
 
   class Frame 
   {
     inherit RXML.Frame;
     constant scope_name = "gxml";
     mapping vars = gxml_vars;
-    RXML.TagSet additional_tags = internal;
+    RXML.TagSet additional_tags = internal_tag_set;
 
     array do_enter( RequestID id )
     {
-      if (!internal)
-	additional_tags = internal =
-	  RXML.TagSet(this_module(), "gxml",
-		      gxml_make_tags( get_plugins ));
 //       if( id->misc->gxml_stack )
 // 	parse_error("Recursive gxml tags not supported\n" );
       LazyImage.clear_cache();
@@ -470,34 +498,37 @@ class TagGXML
       if( !i )
 	parse_error( "No image\n");
 
-      mapping aa = args;
-      string ind;
-      mapping a2 = aa+([]);
+      mapping my_args = ([
+	"quant":     args->quant,
+	"crop":      args->crop,
+	"format":    args->format,
+	"maxwidth":  args->maxwidth,
+	"maxheight": args->maxheight,
+	"scale":     args->scale,
+	"dither":    args->dither,
+	"gamma":     args->gamma,
+	"size":      args->size,
+	"background":args->background, // Compatibility
+      ]);
+      foreach( glob( "*-*", indices(args)), string n )
+	my_args[n] = args[n];
 
-      m_delete( a2, "src" );
-      m_delete( a2, "align" );
-      m_delete( a2, "border" );
-      aa->src = query_internal_location()+
-	(ind=the_cache->store(({a2,i->hash()}),id));
-
-      a2 = ([]);
-      a2->src = aa->src;
-      if( aa->align )  a2->align = aa->align;
-      if( aa->border ) a2->border = aa->border;
-
-      images[ i->hash() ] = i;
-      the_cache->http_file_answer( ind, id );
-      if( mapping size = the_cache->metadata( ind, id ) )
+      mapping res_args = args - my_args;
+      mapping node_tree = i->encode();
+      // werror("Node tree: %O\n", node_tree);
+      string key = the_cache->store( ({ my_args, node_tree }), id);
+      res_args->src = query_internal_location() + key;
+      int no_draw = !id->misc->generate_images;
+      if( mapping size = the_cache->metadata( key, id, no_draw ) )
       {
-	aa->width = size->xsize;
-	aa->height = size->ysize;
+	res_args->width = size->xsize;
+	res_args->height = size->ysize;
       }
-      m_delete(images,i->hash()); 
 
-      if( !args->url )
-	result = Roxen.make_tag( "img", a2, 1 );
+      if( !args->url ) 
+	result = Roxen.make_tag( "img", res_args, !res_args->noxml );
       else
-	result = a2->src;
+	result = res_args->src;
     }
   }
 }
