@@ -221,6 +221,8 @@ install_only:
 	  cd $(prefix)/roxen/server/manual; \
           tar xf $(SRCDIR)/server/manual/parsed.tar; \
           tar xf $(SRCDIR)/server/manual/unparsed.tar; \
+	  rm $(SRCDIR)/server/manual/parsed.tar; \
+	  rm $(SRCDIR)/server/manual/unparsed.tar; \
 	else :; fi
 	@echo "Roxen installed."
 
