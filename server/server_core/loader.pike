@@ -4,7 +4,7 @@
 // ChiliMoon bootstrap program. Sets up the environment,
 // replces the master, adds custom functions and starts core.pike.
 
-// $Id: loader.pike,v 1.390 2004/06/17 02:50:43 _cvs_stephen Exp $
+// $Id: loader.pike,v 1.391 2004/06/17 10:31:49 _cvs_stephen Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ static string    var_dir = "../var/";
 
 #define werror roxen_werror
 
-constant cvs_version="$Id: loader.pike,v 1.390 2004/06/17 02:50:43 _cvs_stephen Exp $";
+constant cvs_version="$Id: loader.pike,v 1.391 2004/06/17 10:31:49 _cvs_stephen Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1305,7 +1305,7 @@ private Thread.Mutex mt = Thread.Mutex();
 class CSql {
   inherit Sql.Sql;
   string dbname;
-  private /*RequestID*/object id;
+  /*RequestID*/object id;
 
   static void create(string dbn, object|string url,
    void|/*RequestID*/object idr) {
@@ -1317,11 +1317,14 @@ class CSql {
   }
 
   static void destroy() {
-    if(id)
+    if(id) {
 #ifdef DB_DEBUG
       werror("Saving DB to RequestID %O\n", dbname),
 #endif
+      if(id->misc->sqlsession)
+        id->misc->sqlsession->id=0;			    // avoid quarrels
       id->misc->sqlsession=CSql(dbname, master_sql, id);
+    }
     else {
 #ifdef DB_DEBUG
       werror("Saving DB to pool %O %d\n",
