@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.186 1999/08/25 20:31:34 leif Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.187 1999/09/10 22:29:18 mast Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -2580,7 +2580,7 @@ string tag_header(string tag, mapping m, object id, object file,
 string tag_redirect(string tag, mapping m, object id, object file,
 		    mapping defines)
 {
-  if (!m->to) {
+  if (!(m->to && sizeof (m->to))) {
     return("<!-- Redirect requires attribute \"to\". -->");
   }
 
