@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.47 1999/02/09 21:26:36 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.48 1999/02/09 21:26:55 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -808,7 +808,7 @@ class imap_mailbox
 
     /* Make local id's */
     int i;
-    for (i=0; i < sizeof(local_set->items; i++) {
+    for (i=0; i < sizeof(local_set->items); i++) {
       local_set->items[i]++;
     }
 
