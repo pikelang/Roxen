@@ -5,7 +5,7 @@ inherit "module";
 #define MIRRORSERVER_DEBUG
 #endif /* MIRRORSERVER_DEBUG */
 
-constant cvs_version = "$Id: mirrorserver.pike,v 1.16 1999/12/18 14:46:30 nilsson Exp $";
+constant cvs_version = "$Id: mirrorserver.pike,v 1.17 1999/12/20 17:00:17 marcus Exp $";
 
 class MirrorServer {
   import Stdio;
@@ -25,7 +25,7 @@ class MirrorServer {
     
     void create(string fn)
     {
-      q = open(fn,"r");
+      q = predef::open(fn,"r");
     }
   };
 
