@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.9 2001/02/02 12:27:36 per Exp $
+ * $Id: debug_info.pike,v 1.10 2001/04/17 07:53:45 per Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -227,10 +227,10 @@ mixed page_0( object id )
 
   object t = ADT.Table->table(table,
                               ({ "<font color='&usr.fgcolor;'  >"+
-				 LOCALE(3,"Type"), 
-				 LOCALE(4,"Number"),
-                                 LOCALE(5,"Change"), 
-				 "Kb", LOCALE(5,"Change") + "</font>"}),
+				 (string)LOCALE(3,"Type"), 
+				 (string)LOCALE(4,"Number"),
+                                 (string)LOCALE(5,"Change"), 
+				 "Kb", (string)LOCALE(5,"Change") + "</font>"}),
                               ({
                                 0,
                                 ([ "type":"num" ]),
