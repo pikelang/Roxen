@@ -6,7 +6,7 @@
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: english.pike,v 1.11 2000/01/26 00:29:54 nilsson Exp $";
+constant cvs_version = "$Id: english.pike,v 1.12 2000/01/31 16:44:29 nilsson Exp $";
 
 // English is a special case, since it is also the standard language...
 constant _id = ({ "en", "standard", "english" });
@@ -20,29 +20,6 @@ constant months = ({
 constant days = ({
   "Sunday","Monday","Tuesday","Wednesday",
   "Thursday","Friday","Saturday" });
-
-constant languages=([
-  "ca":"catalan",
-  "cs":"czech",
-  "du":"dutch",
-  "fi":"finnish",
-  "fr":"french",
-  "de":"german",
-  "en":"english",
-  "es":"spanish",
-  "hr":"croatian",
-  "hu":"hungarian",
-  "it":"italian",
-  "jp":"japanese",
-  "mi":"maori",
-  "no":"norwegian",
-  "pl":"polish",
-  "pt":"portuguese",
-  "ru":"russian",
-  "si":"slovenian",
-  "sr":"serbian",
-  "sv":"swedish"
-]);
 
 string ordered(int i)
 {
