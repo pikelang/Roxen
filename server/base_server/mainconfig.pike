@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.51 1997/08/12 09:32:32 neotron Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.52 1997/08/12 09:35:06 neotron Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -274,6 +274,7 @@ mapping verify_changed_ports(object id, object o)
 		     "value=\"%s\">\n</pre><p>",
 		     name, name, def);
   }
+  changed_port_servers = ([]);
   return stores(res+"<input type=submit value=\"Continue...\"></form>");
 }
 
