@@ -4,7 +4,7 @@
 // limit of proxy connections/second is somewhere around 70% of normal
 // requests, but there is no real reason for them to take longer.
 
-string cvs_version = "$Id: proxy.pike,v 1.31 1998/04/06 19:08:27 grubba Exp $";
+string cvs_version = "$Id: proxy.pike,v 1.32 1998/06/07 21:12:45 grubba Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -252,6 +252,10 @@ string process_request(object id, int is_remote)
   string url;
   if(!id) return 0;
 
+  /* FIXME:
+   *
+   * The \r\n handling needs to be fixed!
+   */
   string new_raw;
   int delimiter;
   if((delimiter = search(id->raw, "\n\n"))>=0)
