@@ -185,7 +185,11 @@ install_only:
 	  sed <$(SRCDIR)/pike-roxen.in -e 's!#prefix#!$(prefix)!' >$(prefix)/bin/pike-roxen || exit 1; \
 	  chmod a+rx $(prefix)/bin/pike-roxen; \
 	fi
-	@echo Roxen installed.
+	@if test -f commercial_modules/Makefile ; then \
+	  echo "Installing supplied commercial modules..."; \
+	  (cd commercial_modules; $(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" install); \
+	else :; fi
+	@echo "Roxen installed."
 
 install_pike: all
 	@(cd pike/$(PIKEVERSION)/src;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" install)
