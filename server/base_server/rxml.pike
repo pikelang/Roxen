@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.277 2001/02/01 02:54:18 per Exp $
+// $Id: rxml.pike,v 1.278 2001/02/13 19:49:50 mast Exp $
 
 
 inherit "rxmlhelp";
@@ -1083,6 +1083,12 @@ class TagPICData
   class Frame
   {
     inherit RXML.Frame;
+    array do_return (RequestID id)
+    {
+      result_type = RXML.t_text;
+      result = content[1..];
+      return 0;
+    }
   }
 }
 
@@ -2520,8 +2526,10 @@ constant tagdoc=([
 </desc>
 
 <attr name=preparse>
- Parse and execute any RXML inside the comment tag. This is useful to
- do stuff without producing any output in the response.
+ Parse and execute any RXML inside the comment tag. This can be used
+ to do stuff without producing any output in the response. This is a
+ compatibility argument; the recommended way is to use <ref
+ type='tag'><tag>nooutput</tag> instead.
 </attr>",
 
 
@@ -3015,6 +3023,23 @@ Available variables are:",
 
 "noparse":#"<desc cont><short>
  The contents of this container tag won't be RXML parsed.</short>
+</desc>",
+
+"<?noparse": #"<desc pi><short>
+ The content is inserted as-is, without any parsing or
+ quoting.</short> The first whitespace character (i.e. the one
+ directly after the \"noparse\" name) is discarded.
+</desc>",
+
+"<?cdata": #"<desc pi><short>
+ The content is inserted as a literal.</short> I.e. any XML markup
+ characters are encoded with character references. The first
+ whitespace character (i.e. the one directly after the \"cdata\" name)
+ is discarded.
+
+ <p>This processing instruction is just like the &lt;![CDATA[ ]]&gt;
+ directive but parsed by the RXML parser, which can be useful to
+ satisfy browsers that does not handle &lt;![CDATA[ ]]&gt; correctly.
 </desc>",
 
 "number":#"<desc tag><short>
