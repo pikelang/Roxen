@@ -7,7 +7,7 @@
 //  return "Hello world!\n";
 // </pike>
  
-constant cvs_version = "$Id: piketag.pike,v 2.34 2001/09/03 18:38:38 nilsson Exp $";
+constant cvs_version = "$Id: piketag.pike,v 2.35 2001/09/06 12:13:00 mast Exp $";
 constant thread_safe=1;
 
 inherit "module";
@@ -318,7 +318,6 @@ program my_compile_string(string s, object id, int dom, string fn,
       data + SPLIT("}",POSTFN);
   else
     pre += data;
-  werror( "Compiling:\n%s\n\n", R(pre) );
   program p = compile_string( R(pre), fn, compile_handler );
   if (query ("program_cache_limit") > 0)
     program_cache[ s ] = p;
@@ -385,7 +384,6 @@ array parse_magic( string data, RequestID id, int add_md, string filename,
 
      case '#':  
        OCIP(); OCIPUP();
-       werror("preproc: %O", flat[i] );
        if( sscanf( flat[i]->text, "#%*[ \t]inherit%[ \t]%s",
 		   string ws, string fn) == 3 && sizeof (ws))
        {
@@ -491,7 +489,6 @@ string container_pike(string tag, mapping m, string s, RequestID request_id,
   string res;
   mixed err;
 
-  werror("Foo\n");
   request_id->misc->cacheable=0;
 
   object e = ErrorContainer();
