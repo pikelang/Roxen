@@ -1,5 +1,5 @@
 #
-# $Id: Makefile.in,v 1.95 1999/05/07 04:17:03 mast Exp $
+# $Id: Makefile.in,v 1.96 1999/05/13 21:58:45 neotron Exp $
 #
 
 # @configure_input@
@@ -56,8 +56,6 @@ hard: all
 
 depend:
 	-@(cd pike/$(PIKEVERSION)/src;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" depend)
-	@echo "You need to run configure once again."
-	@exit 1
 
 verify: all verify_other
 	@(cd pike/$(PIKEVERSION)/src;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" verify)
