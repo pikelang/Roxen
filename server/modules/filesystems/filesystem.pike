@@ -8,7 +8,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.51 1999/04/21 16:48:05 grubba Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.52 1999/05/05 20:19:59 grubba Exp $";
 constant thread_safe=1;
 
 
@@ -236,49 +236,76 @@ array find_dir( string f, object id )
 
 mapping putting = ([]);
 
-void done_with_put( array(object) id )
+void done_with_put( array(object|string) id_arr )
 {
 //  perror("Done with put.\n");
-  id[0]->close();
-  id[1]->set_blocking();
-  if (putting[id[1]] && (putting[id[1]] != 0x7fffffff)) {
+  object to;
+  object from;
+  object id;
+  string oldf;
+
+  [to, from, id, oldf] = id_arr;
+
+  to->close();
+  from->set_blocking();
+  m_delete(putting, from);
+
+  if (putting[from] && (putting[from] != 0x7fffffff)) {
     // Truncated!
-    id[1]->write("400 Bad Request - Expected more data.\r\n"
-		 "Content-Length: 0\r\n\r\n");
+    id->send_result(http_low_answer(400,
+				    "<h2>Bad Request - "
+				    "Expected more data.</h2>"));
   } else {
-    id[1]->write("HTTP/1.0 200 Transfer Complete.\r\n"
-		 "Content-Length: 0\r\n\r\n");
+    id->send_result(http_low_answer(200, "<h2>Transfer Complete.</h2>"));
   }
-  id[1]->close();
-  m_delete(putting, id[1]);
-  destruct(id[0]);
-  destruct(id[1]);
 }
 
-void got_put_data( array (object) id, string data )
+void got_put_data( array (object|string) id_arr, string data )
 {
 // perror(strlen(data)+" .. ");
-  // Truncate at end.
-  data = data[..putting[id[1]]];
 
-  int bytes = id[0]->write( data );
+  object to;
+  object from;
+  object id;
+  string oldf;
+
+  [to, from, id, oldf] = id_arr;
+
+  // Truncate at end.
+  data = data[..putting[from]];
+
+  if (id->misc->quota_obj &&
+      !id->misc->quota_obj->check_quota(oldf, sizeof(data))) {
+    to->close();
+    from->set_blocking();
+    m_delete(putting, from);
+    id->send_result(http_low_answer(413, "<h2>Out of disk quota.</h2>"));
+    return;
+  }
+
+  int bytes = to->write( data );
   if (bytes < sizeof(data)) {
     // Out of disk!
-    id[0]->close();
-    id[1]->set_blocking();
-    id[1]->write("HTTP/1.0 413 Disk full.\r\n"
-		 "Content-Length: 0\r\n\r\n");
-    id[1]->close();
-    m_delete(putting, id[1]);
-    destruct(id[0]);
-    destruct(id[1]);
+    to->close();
+    from->set_blocking();
+    m_delete(putting, from);
+    id->send_result(http_low_answer(413, "<h2>Disk full.</h2>"));
+    return;
   } else {
-    if (putting[id[1]] != 0x7fffffff) {
-      putting[id[1]] -= bytes;
+    if (id->misc->quota_obj &&
+	!id->misc->quota_obj->allocate(oldf, bytes)) {
+      to->close();
+      from->set_blocking();
+      m_delete(putting, from);
+      id->send_result(http_low_answer(413, "<h2>Out of disk quota.</h2>"));
+      return;
     }
-    if(putting[id[1]] <= 0) {
-      putting[id[1]] = 0;	// Paranoia
-      done_with_put( id );
+    if (putting[from] != 0x7fffffff) {
+      putting[from] -= bytes;
+    }
+    if(putting[from] <= 0) {
+      putting[from] = 0;	// Paranoia
+      done_with_put( id_arr );
     }
   }
 }
@@ -503,7 +530,19 @@ mixed find_file( string f, object id )
       return http_auth_required("foo",
 				"<h1>Permission to 'PUT' files denied</h1>");
     }
+
     puts++;
+
+#ifdef QUOTA_DEBUG
+    report_debug("Checking quota.\n");
+#endif /* QUOTA_DEBUG */
+    if (id->misc->quota_obj &&
+	!id->misc->quota_obj->check_quota(oldf, id->misc->len)) {
+      errors++;
+      report_warning("Creation of " + f + " failed. Out of quota.\n");
+      TRACE_LEAVE("PUT: Out of quota.");
+      return http_low_answer(413, "<h2>Out of quota.</h2>");
+    }
     
     object privs;
 
@@ -527,6 +566,24 @@ mixed find_file( string f, object id )
     rm( f );
     mkdirhier( f );
 
+    if (id->misc->quota_obj) {
+#ifdef QUOTA_DEBUG
+      report_debug("Checking if the file already exists.\n");
+#endif /* QUOTA_DEBUG */
+      if (size > 0) {
+#ifdef QUOTA_DEBUG
+	report_debug("Deallocating " + size + "bytes.\n");
+#endif /* QUOTA_DEBUG */
+	id->misc->quota_obj->deallocate(oldf, size);
+      }
+      if (size) {
+#ifdef QUOTA_DEBUG
+	report_debug("Deleting old file.\n");
+#endif /* QUOTA_DEBUG */
+	rm(f);
+      }
+    }
+
     /* Clear the stat-cache for this file */
     if (stat_cache) {
       cache_set("stat_cache", f, 0);
@@ -547,11 +604,24 @@ mixed find_file( string f, object id )
     // FIXME: Race-condition.
     chmod(f, 0666 & ~(id->misc->umask || 022));
 
-    putting[id->my_fd]=id->misc->len;
+    putting[id->my_fd] = id->misc->len;
     if(id->data && strlen(id->data))
     {
-      putting[id->my_fd] -= strlen(id->data);
-      to->write( id->data );
+      // FIXME: What if sizeof(id->data) > id->misc->len ?
+      if (id->misc->len > 0) {
+	putting[id->my_fd] -= strlen(id->data);
+      }
+      int bytes = to->write( id->data );
+      if (id->misc->quota_obj) {
+#ifdef QUOTA_DEBUG
+	report_debug("Allocating " + bytes + "bytes.\n");
+#endif /* QUOTA_DEBUG */
+	if (!id->misc->quota_obj->allocate(f, bytes)) {
+	  TRACE_LEAVE("PUT: A string");
+	  TRACE_LEAVE("PUT: Out of quota");
+	  return http_low_answer(413, "<h2>Out of quota.</h2>");
+	}
+      }
     }
     if(!putting[id->my_fd]) {
       TRACE_LEAVE("PUT: Just a string");
@@ -562,7 +632,7 @@ mixed find_file( string f, object id )
     if(id->clientprot == "HTTP/1.1") {
       id->my_fd->write("HTTP/1.1 100 Continue\r\n");
     }
-    id->my_fd->set_id( ({ to, id->my_fd }) );
+    id->my_fd->set_id( ({ to, id->my_fd, id, oldf }) );
     id->my_fd->set_nonblocking(got_put_data, 0, done_with_put);
     TRACE_LEAVE("PUT: Pipe in progress");
     TRACE_LEAVE("PUT: Success so far");
@@ -628,6 +698,8 @@ mixed find_file( string f, object id )
    case "MV":
     // This little kluge is used by ftp2 to move files. 
     
+     // FIXME: Support for quota.
+
     if(!QUERY(put))
     {
       id->misc->error_code = 405;
@@ -712,6 +784,8 @@ mixed find_file( string f, object id )
 
   case "MOVE":
     // This little kluge is used by NETSCAPE 4.5
+
+    // FIXME: Support for quota.
      
     if(!QUERY(put))
     {
@@ -856,6 +930,11 @@ mixed find_file( string f, object id )
     }
     privs = 0;
     deletes++;
+
+    if (id->misc->quota_obj) {
+      id->misc->quota_obj->deallocate(oldf, size);
+    }
+
     TRACE_LEAVE("DELETE: Success");
     return http_low_answer(200,(f+" DELETED from the server"));
 
