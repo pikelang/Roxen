@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.170 2004/05/03 19:41:57 mast Exp $
+// $Id: module.pike,v 1.171 2004/05/04 12:35:13 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -581,7 +581,7 @@ static mapping(string:mapping(string:DAVLock)) prefix_locks = ([]);
 //!   a @expr{"/"@}.
 //!
 //! @param recursive
-//!   If @expr{1@} also return all locks under @[path].
+//!   If @expr{1@} also return locks under @[path].
 //!
 //! @param exclude_shared
 //!   If @expr{1@} do not return shared locks that are held by users
@@ -666,21 +666,21 @@ multiset(DAVLock) find_locks(string path,
 //!       Returns the lock owned by the authenticated user that apply
 //!       to @[path]. (It doesn't matter if the @expr{recursive@} flag
 //!       in the lock doesn't match the @[recursive] argument.)
-//!     @type int(-2..1)
+//!     @type int(0..3)
 //!       @int
-//!         @value -2
-//!           Returns @expr{-2@} if there are one or more exclusive
-//!           locks held by other users.
-//!         @value -1
-//!           Returns @expr{-1@} if @[recursive] is set, the
-//!           authenticated user has locks under @[path] (but not on
-//!           @[path] itself), and there are no exclusive locks held
-//!           by other users.
 //!         @value 0
 //!           Returns @expr{0@} if no locks apply.
 //!         @value 1
-//!           Returns @expr{1@} if there are one or more shared locks
-//!           held by other users only.
+//!           Returns @expr{1@} if there only are one or more shared
+//!           locks held by other users.
+//!         @value 2
+//!           Returns @expr{2@} if @[recursive] is set, the
+//!           authenticated user has locks under @[path] (but not on
+//!           @[path] itself), and there are no exclusive locks held
+//!           by other users.
+//!         @value 3
+//!           Returns @expr{3@} if there are one or more exclusive
+//!           locks held by other users.
 //!       @endint
 //!   @endmixed
 //!
@@ -692,9 +692,9 @@ multiset(DAVLock) find_locks(string path,
 //! @note
 //! The default implementation only handles the @expr{"DAV:write"@}
 //! lock type.
-DAVLock|int(-2..1) check_locks(string path,
-			       int(0..1) recursive,
-			       RequestID id)
+DAVLock|int(0..3) check_locks(string path,
+			      int(0..1) recursive,
+			      RequestID id)
 {
   // Common case.
   if (!sizeof(file_locks) && !sizeof(prefix_locks)) return 0;
@@ -711,7 +711,7 @@ DAVLock|int(-2..1) check_locks(string path,
 
   if (mapping(string:DAVLock) locks = file_locks[path]) {
     foreach(locks;; DAVLock lock) {
-      if (lock->lockscope == "DAV:exclusive") return -2;
+      if (lock->lockscope == "DAV:exclusive") return 3;
       shared = 1;
       break;
     }
@@ -725,7 +725,7 @@ DAVLock|int(-2..1) check_locks(string path,
 	// If we've found a shared lock then we won't find an
 	// exclusive one higher up.
 	foreach(locks;; DAVLock lock) {
-	  if (lock->lockscope == "DAV:exclusive") return -2;
+	  if (lock->lockscope == "DAV:exclusive") return 3;
 	  shared = 1;
 	  break;
 	}
@@ -745,14 +745,14 @@ DAVLock|int(-2..1) check_locks(string path,
 	locked_by_auth_user = 1;
       else
 	foreach(locks;; DAVLock lock) {
-	  if (lock->lockscope == "DAV:exclusive") return -2;
+	  if (lock->lockscope == "DAV:exclusive") return 3;
 	  shared = 1;
 	  break;
 	}
     }
   }
 
-  return locked_by_auth_user ? -1 : shared;
+  return locked_by_auth_user ? 2 : shared;
 }
 
 //! Lock the resource at @[path] with the given @[lock]. It's already

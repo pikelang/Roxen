@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.95 2004/05/03 20:29:48 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.96 2004/05/04 12:35:13 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1583,9 +1583,9 @@ class RoxenModule
 			       int(0..1) recursive,
 			       int(0..1) exclude_shared,
 			       RequestID id);
-  DAVLock|int(-2..1) check_locks(string path,
-				 int(0..1) recursive,
-				 RequestID id);
+  DAVLock|int(0..3) check_locks(string path,
+				int(0..1) recursive,
+				RequestID id);
   mapping(string:mixed) lock_file(string path,
 				  DAVLock lock,
 				  RequestID id);
