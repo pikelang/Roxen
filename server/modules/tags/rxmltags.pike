@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.81 2000/02/25 02:23:37 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.82 2000/02/28 20:07:20 grubba Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -447,7 +447,7 @@ private string dec(mapping m, RequestID id)
 
 string|array(string) tag_imgs(string tag, mapping m, RequestID id)
 {
-  string err="";
+  string err;
   if(m->src)
   {
     string file;
@@ -460,10 +460,10 @@ string|array(string) tag_imgs(string tag, mapping m, RequestID id)
 	m->height=(string)xysize[1];
       }
       else
-	err+=" Dimensions quering failed.";
+	err = "Dimensions quering failed.\n";
     }
     else
-      err+=" Virtual path failed";
+      err = "Virtual path failed.\n";
     if(!m->alt) {
       array src=m->src/"/";
       string src=src[sizeof(src)-1];
