@@ -3,7 +3,7 @@
 // This module log the accesses of each user in their home dirs, if
 // they create a file named 'AccessLog' in that directory, and allow
 // write access for roxen.
-constant cvs_version = "$Id: home_logger.pike,v 1.20 1999/08/04 18:54:39 per Exp $";
+constant cvs_version = "$Id: home_logger.pike,v 1.21 2000/02/10 05:46:54 nilsson Exp $";
 constant thread_safe=1;
 
 
@@ -12,15 +12,12 @@ constant thread_safe=1;
 inherit "module";
 inherit "roxenlib";
 
-
-mixed register_module()
-{
-  return ({ MODULE_LOGGER,
-	    "User logger",
-	    ("This module log the accesses of each user in their home dirs, "
-	     "if they create a file named 'AccessLog' (or whatever is configurated in the configuration interface) in that directory, and "
-	     "allow write access for roxen."), ({}), 1 });
-}
+constant module_type = MODULE_LOGGER;
+constant module_name = "User logger";
+constant module_doc  = "This module log the accesses of each user in their home dirs, "
+  "if they create a file named 'AccessLog' (or whatever is configurated "
+  "in the configuration interface) in that directory, and "
+  "allow write access for roxen.";
 
 // Parse the logging format strings.
 private inline string fix_logging(string s)
@@ -306,7 +303,7 @@ class CacheFile {
     d = delay;
     master = m;
     if(num > 1)
-      next = object_program(this_object())( --num, delay, m );
+      next = object_program(this_object())( --num, delay, m, mu );
   }
 
   void destroy()
@@ -423,7 +420,7 @@ mapping cached_homes = ([]);
 
 string home(string of, object id)
 {
-  string l, f;
+  string|int l, f;
   foreach(QUERY(Logs), l)
   {
     if(!search(of, l))
@@ -432,8 +429,10 @@ string home(string of, object id)
 	return (l=cached_homes[l])==-1?0:l;
       f=l;
       l=id->conf->real_file(l+QUERY(AccessLog), id);
-      if(l) cached_homes[f]=l;
-      else cached_homes[f]=-1;
+      if(l)
+	cached_homes[f]=l;
+      else
+	cached_homes[f]=-1;
       return l;
     }
     else if(sscanf(of, l, f))
