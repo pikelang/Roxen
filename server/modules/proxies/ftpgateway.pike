@@ -39,7 +39,7 @@
 // 1.12  may '97
 //       Applied some patches from  Wilhelm Koehler <wk@cs.tu-berlin.de>
 
-string cvs_version = "$Id: ftpgateway.pike,v 1.21 1998/03/26 07:51:48 per Exp $";
+string cvs_version = "$Id: ftpgateway.pike,v 1.22 1998/06/08 14:44:48 grubba Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -1506,7 +1506,7 @@ mixed create_dataport(function acceptfunc)
 {
   int i, ii;
   object dataport;
-  dataport=files.port();
+  dataport=Stdio.Port();
   ii=random(20000)+20000;
   for (i=0; i<500&&ii<65535; i++)
   {
