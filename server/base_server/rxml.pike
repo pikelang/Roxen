@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.224 2000/08/15 01:27:26 mast Exp $
+// $Id: rxml.pike,v 1.225 2000/08/16 02:59:19 per Exp $
 
 
 inherit "rxmlhelp";
@@ -170,7 +170,6 @@ string parse_rxml(string what, RequestID id,
 // to accomplish that.
 {
   id->misc->_rxml_recurse++;
-  id->misc->is_dynamic = 1;
 #ifdef RXML_DEBUG
   werror("parse_rxml( "+strlen(what)+" ) -> ");
   int time = gethrtime();
@@ -1519,7 +1518,7 @@ class IfIs
   int match_in_string( string value, RequestID id )
   {
     string is;
-    if(!cache) CACHE(0);
+    if(!this_object()->cache) NOCACHE();
     sscanf( value, "%s is %s", value, is );
     if(!is) return strlen(value);
     value = lower_case( value );
@@ -1530,7 +1529,7 @@ class IfIs
 
   int match_in_map( string value, RequestID id )
   {
-    if(!cache) CACHE(0);
+    if(!this_object()->cache) NOCACHE();
     array arr=value/" ";
     string|int|float var=source(id, arr[0]);
     if( !var && zero_type( var ) ) return 0;
@@ -1570,7 +1569,7 @@ class IfMatch
 
   int eval( string is, RequestID id ) {
     array|string value=source(id);
-    if(!cache) CACHE(0);
+    if(!this_object()->cache) NOCACHE();
     if(!value) return 0;
     if(arrayp(value)) value=value*" ";
     value = lower_case( value );
