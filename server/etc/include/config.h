@@ -1,5 +1,5 @@
 /* -*- Pike -*-
- * $Id: config.h,v 1.12 1998/03/02 18:29:13 grubba Exp $
+ * $Id: config.h,v 1.13 1998/03/26 07:31:03 neotron Exp $
  *
  * User configurable things not accessible from the normal
  * configuration interface. Not much, but there are some things..  
@@ -72,6 +72,10 @@
 #endif
 #endif
 
+#ifdef DEBUG
+// Make it easier to track what FD's are doing, to be able to find FD leaks.
+#define FD_DEBUG
+#endif
 
 /* Do we want module level deny/allow security (IP-numbers and usernames). 
  * 1% speed loss, as an average. (That is, if your CPU is used to the max.

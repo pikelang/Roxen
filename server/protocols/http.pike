@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.69 1998/03/26 07:16:16 neotron Exp $";
+constant cvs_version = "$Id: http.pike,v 1.70 1998/03/26 07:31:02 neotron Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -17,10 +17,6 @@ private inherit "roxenlib";
 
 #ifdef PROFILE
 int req_time = HRTIME();
-#endif
-
-#if defined(DEBUG) || defined(MODULE_DEBUG)
-#define HTTP_MARK_DEBUG
 #endif
 
 constant decode=roxen->decode;
@@ -571,7 +567,7 @@ void disconnect()
   if(do_not_disconnect) {
     return;
   }
-#ifdef HTTP_MARK_DEBUG
+#ifdef FD_DEBUG
   mark_fd(my_fd->query_fd(), "HTTP disconnected");
 #endif
   destruct();
@@ -605,7 +601,7 @@ void end(string|void s, int|void keepit)
     o->supports = supports;
     o->host = host;
     o->client = client;
-#ifdef HTTP_MARK_DEBUG
+#ifdef FD_DEBUG
     mark_fd(my_fd->query_fd(), "HTTP kept alive");
 #endif
     object fd = my_fd;
@@ -619,7 +615,7 @@ void end(string|void s, int|void keepit)
 
   if(objectp(my_fd))
   {
-#ifdef HTTP_MARK_DEBUG
+#ifdef FD_DEBUG
     mark_fd(my_fd->query_fd(), "HTTP closed");
 #endif
     catch {
@@ -640,7 +636,7 @@ static void do_timeout(mapping foo)
   int elapsed = _time()-time;
   if(elapsed >= 30)
   {
-#ifdef HTTP_MARK_DEBUG
+#ifdef FD_DEBUG
     mark_fd(my_fd->query_fd(), "HTTP timeout");
 #endif
     end("HTTP/1.0 408 Timeout\r\n"
@@ -652,7 +648,7 @@ static void do_timeout(mapping foo)
   } else {
     // premature call_out... *¤#!"
     call_out(do_timeout, 10);
-#ifdef HTTP_MARK_DEBUG
+#ifdef FD_DEBUG
     mark_fd(my_fd->query_fd(), "HTTP premature timeout");
 #endif
   }
@@ -706,7 +702,7 @@ array add_id(array from)
   foreach(from[1], array q)
   catch {
     int id;
-    if(sscanf(Stdio.read_bytes(q[0]), "%*s$Id: http.pike,v 1.69 1998/03/26 07:16:16 neotron Exp $", id) == 4)
+    if(sscanf(Stdio.read_bytes(q[0]), "%*s$Id: http.pike,v 1.70 1998/03/26 07:31:02 neotron Exp $", id) == 4)
       q[0] += "  ("+id+")";
   };
   return from;
@@ -783,7 +779,7 @@ constant errors =
 
 void do_log()
 {
-#ifdef HTTP_MARK_DEBUG
+#ifdef FD_DEBUG
   mark_fd(my_fd->query_fd(), "HTTP logging");
 #endif
   if(conf)
@@ -810,7 +806,7 @@ void handle_request( )
   object thiso=this_object();
 
   remove_call_out(do_timeout);
-#ifdef HTTP_MARK_DEBUG
+#ifdef FD_DEBUG
   mark_fd(my_fd->query_fd(), "HTTP handling request");
 #endif
 
@@ -947,7 +943,7 @@ void handle_request( )
     file->file = 0;
     file->data="";
   }
-#ifdef HTTP_MARK_DEBUG
+#ifdef FD_DEBUG
   mark_fd(my_fd->query_fd(), "HTTP handled");
 #endif
 
@@ -981,7 +977,7 @@ void handle_request( )
     my_fd->close();
     do_log();
   }
-#ifdef HTTP_MARK_DEBUG
+#ifdef FD_DEBUG
   mark_fd(my_fd->query_fd(), "HTTP really handled");
 #endif
 }
@@ -993,7 +989,7 @@ int processed;
 void got_data(mixed fooid, string s)
 {
   int tmp;
-#ifdef HTTP_MARK_DEBUG
+#ifdef FD_DEBUG
   mark_fd(my_fd->query_fd(), "HTTP got data");
 #endif
   remove_call_out(do_timeout);
@@ -1106,7 +1102,7 @@ void clean()
   if(!(my_fd && objectp(my_fd)))
   {
     end();
-#ifdef HTTP_MARK_DEBUG
+#ifdef FD_DEBUG
     mark_fd(my_fd->query_fd(), "HTTP clean up");
 #endif
   }  
