@@ -5,4 +5,6 @@
 #define IP_TO_HOST 'I'
 #endif
 
+#define perror	roxen_perror
+
 #define CONFIGURATION_FILE_LEVEL 6
