@@ -3,7 +3,7 @@ inherit "module";
 #include <module.h>
 #include <config.h>
 
-constant cvs_version = "$Id: awizard.pike,v 1.15 2000/02/10 07:13:28 nilsson Exp $";
+constant cvs_version = "$Id: awizard.pike,v 1.16 2000/02/20 05:34:18 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_PARSER;
 constant module_name = "Advanced wizards";
@@ -45,23 +45,12 @@ mapping lookup( string id )
 class Page
 {
   inherit "wizard"; // For 'html_warn' with friends.
-  mapping my_tags, my_containers;
   int num, id, button_id, line_offset;
   string name;
   string page;        // RXML code for normal page.
   string verify;     // RXML code for verification.
   mapping come_from = ([ ]);
   mapping button_code;
-
-  void init_tags()
-  {
-    my_tags = ([]);
-    my_containers = ([]);
-    foreach(glob("tag_*", indices(this_object())), string i)
-      my_tags[ replace(i-"tag_", "_", "-") ] = this_object()[ i ];
-    foreach(glob("container_*", indices(this_object())), string i)
-      my_containers[ replace(i-"container_","_","-") ] = this_object()[ i ];
-  }
 
   string tag_goto(string t, mapping m,  RequestID id)
   {
@@ -222,7 +211,6 @@ class Page
   {
     button_code = bc;
     button_id = bi;
-    init_tags();
 
     num =  m->num;
     name = m->name;
@@ -238,10 +226,10 @@ class Page
     return wizard_tag_var( tag, args, id );
   }
 
-  string call_cvar(string tag, mapping args, string c, int line, 
-		   mixed foo, RequestID id)
+  string call_cvar(string tag, mapping args, string c, /*int line,
+		   mixed foo,*/ RequestID id)
   {
-    id->misc->line = line;
+    //id->misc->line = line;
     return wizard_tag_var( tag, args, c, id );
   }
 
@@ -249,16 +237,11 @@ class Page
   {
     if(!what) return "";
     id->misc->offset = line_offset;
-    my_tags["var"] = call_var;
-    my_containers["cvar"] = call_cvar;
 
-    foreach(indices(my_tags), string s)
-      id->misc->_tags[ s ] = ({ id->conf->call_tag, my_tags[ s ] });
-
-    foreach(indices(my_containers), string s)
-      id->misc->_containers[ s ] = ({ id->conf->call_container,my_containers[ s ] });
-
-    return parse_rxml(what, id);
+    id->misc->awizard_page = this_object();
+    string res = parse_rxml(what, id);
+    m_delete (id->misc, "awizard_page"); // Assuming wizards can't be nested..
+    return res;
   }
 
   mapping|int can_leave(RequestID id, string eeval)
@@ -479,6 +462,48 @@ void create()
 
 mapping(string:AWizard) wizards = ([]);
 
+#define PROXY_TAG(name)							\
+  array|string tag_ ## name (string t, mapping m, RequestID id)	\
+  {									\
+    if (id->misc->awizard_page)						\
+      return id->misc->awizard_page->tag_ ## name (t, m, id);		\
+    else								\
+      return ({1});							\
+  }
+
+#define PROXY_CONTAINER(name)							\
+  array|string container_ ## name (string t, mapping m, string c, RequestID id)	\
+  {										\
+    if (id->misc->awizard_page)							\
+      return id->misc->awizard_page->container_ ## name (t, m, c, id);		\
+    else									\
+      return ({1});								\
+  }
+
+PROXY_TAG (goto);
+PROXY_TAG (wizard_buttons);
+PROXY_TAG (button);
+PROXY_CONTAINER (dbutton);
+PROXY_CONTAINER (warn);
+PROXY_CONTAINER (notice);
+PROXY_CONTAINER (error);
+
+array|string tag_var(string tag, mapping args, RequestID id)
+{
+  if (id->misc->awizard_page)
+    return id->misc->awizard_page->call_var (tag, args, id);
+  else
+    return ({1});
+}
+
+array|string container_cvar(string tag, mapping args, string c, RequestID id)
+{
+  if (id->misc->awizard_page)
+    return id->misc->awizard_page->call_cvar (tag, args, c, id);
+  else
+    return ({1});
+}
+
 mixed container_awizard(string tagname, mapping arguments, 
                         string contents, RequestID id)
 {
@@ -499,11 +524,6 @@ mixed container_awizard(string tagname, mapping arguments,
     return v+"<return code="+res->error+">";
   }
   return ({res});
-}
-
-mapping query_container_callers()
-{
-  return ([ "awizard" : container_awizard, ]);
 }
 
 // --------------------- Documentation -----------------------
