@@ -1,5 +1,5 @@
 /*
- * $Id: debug_summary.pike,v 1.5 2002/05/15 14:43:32 anders Exp $
+ * $Id: debug_summary.pike,v 1.6 2002/06/05 20:16:40 nilsson Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -44,6 +44,13 @@ string indent(string text, int level)
   return a*"\n";
 }
 
+string decomment(string text) {
+  text -= "\r";
+  while( sscanf(text, "%s#%*s\n%s", string a, string b)==3 )
+    text = a + b;
+  return text;
+}
+
 string describe_var_low(mixed value)
 {
   if(arrayp(value))
@@ -83,9 +90,9 @@ string make_environment_summary()
   res += "\n";
   res += make_headline("Local environment variables");
 #ifdef __NT__
-  res += indent(Stdio.read_file("../local/environment.ini")||"", 1);
+  res += indent(decomment(Stdio.read_file("../local/environment.ini")||""), 1);
 #else
-  res += indent(Stdio.read_file("../local/environment")||"", 1);
+  res += indent(decomment(Stdio.read_file("../local/environment")||""), 1);
 #endif
 
   res += "\n";
