@@ -1,5 +1,5 @@
 /*
- * $Id: restrictedfs.pike,v 1.9 1999/08/12 17:11:15 grubba Exp $
+ * $Id: restrictedfs.pike,v 1.10 1999/08/12 17:13:49 grubba Exp $
  *
  * $Author: grubba $
  *
@@ -13,7 +13,7 @@
 
 inherit "filesystem";
 
-constant cvs_version = "$Id: restrictedfs.pike,v 1.9 1999/08/12 17:11:15 grubba Exp $";
+constant cvs_version = "$Id: restrictedfs.pike,v 1.10 1999/08/12 17:13:49 grubba Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -99,6 +99,7 @@ array find_dir(string f, object id)
 
 string real_file(string f, object id)
 {
+  string home = id->misc->home;
   if (!stringp(home)) {
     // No home-directory
     return(0);
