@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.216 2001/08/09 18:42:02 mast Exp $
+// $Id: module.pmod,v 1.217 2001/08/09 22:43:58 nilsson Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -16,7 +16,7 @@ class RequestID { };
 //! intended to not change in incompatible ways. There are however
 //! some areas where incompatible changes still must be expected:
 //!
-//! @ul
+//! @list
 //!  @item
 //!   The namespace handling will likely change to conform to XML
 //!   namespaces. The currently implemented system is inadequate then
@@ -47,7 +47,7 @@ class RequestID { };
 //!   to say they don't work as documented yet, and the doc should be
 //!   considered as ideas only; it might work differently when it's
 //!   actually implemented.
-//! @endul
+//! @endlist
 //!
 //! @note
 //! The API for parsers, p-code evaluators etc is not part of the
@@ -285,7 +285,7 @@ class Tag
   //! object instead of handling the actual tags of its own. It works
   //! as follows:
   //!
-  //! @list ul
+  //! @list
   //!  @item
   //!   Instead of installing the callbacks for this tag, the parser
   //!   uses another registered "socket" @[Tag] object that got the
@@ -529,7 +529,9 @@ class Tag
     return raw_args;
   }
 
+  //! @ignore
   MARK_OBJECT;
+  //! @endignore
 
   string _sprintf()
   {
@@ -1117,7 +1119,9 @@ class TagSet
     return "RXML.TagSet(" + id_number + ")" + OBJ_COUNT;
   }
 
+  //! @ignore
   MARK_OBJECT_ONLY;
+  //! @endignore
 }
 
 TagSet empty_tag_set;
@@ -1170,10 +1174,10 @@ class Value
   //! is when the value is known to be an arbitrary literal string
   //! (not zero), which is preferably optimized like this:
   //!
-  //! @example
+  //! @code{
   //!   return type && type != RXML.t_text ?
   //!          type->encode (my_string, RXML.t_text) : my_string;
-  //! @endexample
+  //! @}
   //!
   //! Also, by letting the producer know the type context of the value
   //! and handle the type conversion, it's possible for the producer
@@ -1961,7 +1965,9 @@ class Context
   // "reason": string (The reason why the state is unwound. Can
   //    currently be "streaming".)
 
+  //! @ignore
   MARK_OBJECT_ONLY;
+  //! @endignore
 
   string _sprintf() {return "RXML.Context" + OBJ_COUNT;}
 
@@ -3930,7 +3936,9 @@ class Frame
     return new;
   }
 
+  //! @ignore
   MARK_OBJECT;
+  //! @endignore
 
   string _sprintf()
   {
@@ -4019,7 +4027,7 @@ final mixed rxml_index (mixed val, string|int|array(string|int) index,
 //!
 //! The special RXML index rules are:
 //!
-//! @list ul
+//! @list
 //!  @item
 //!   Arrays are indexed with 1 for the first element, or
 //!   alternatively -1 for the last. Indexing an array of size n with
@@ -4219,7 +4227,7 @@ final Frame make_unparsed_tag (string name, mapping(string:string) args,
   return frame;
 }
 
-//! @decl Frame parse_frame (Type type, string to_parse);
+//! @decl class parse_frame (Type type, string to_parse);
 //!
 //! Returns a frame that, when evaluated, parses the given string
 //! according to the type (which typically has a parser set).
@@ -4269,6 +4277,9 @@ class Parser
 //! @[RXML.register_parser] at initialization (e.g. in a
 //! @tt{create(}@} function in the module) to enable p-code encoding
 //! with it.
+//!
+//! write() and write_end() are the functions to use from outside
+//! the parser system, not feed() or finish().
 {
   constant is_RXML_Parser = 1;
   constant thrown_at_unwind = 1;
@@ -4278,9 +4289,6 @@ class Parser
   function(Parser:void) data_callback;
   //! A function to be called when data is likely to be available from
   //! eval(). It's always called when the source stream closes.
-
-  //! write() and write_end() are the functions to use from outside
-  //! the parser system, not feed() or finish().
 
   int write (string in)
   //! Writes some source data to the parser. Returns nonzero if there
@@ -4564,7 +4572,9 @@ class Parser
   // The parent parser if this one is nested. This is only used to
   // register runtime tags.
 
+  //! @ignore
   MARK_OBJECT_ONLY;
+  //! @endignore
 
   string _sprintf()
   {
@@ -5081,7 +5091,7 @@ class Type
 
   constant sequential = 0;
   //! Nonzero if data of this type is sequential, defined as:
-  //! @list ul
+  //! @list
   //!  @item
   //!   One or more data items can be concatenated with `+.
   //!  @item
@@ -5249,10 +5259,10 @@ class Type
   //! @[type_check]. Assuming the same argument names as in the
   //! @[type_check] declaration, use like this:
   //!
-  //! @example
+  //! @code{
   //!   if (value is bogus)
   //!     type_check_error (msg, args, "My error message with %O %O.\n", foo, bar);
-  //! @endexample
+  //! @}
   {
     if (sizeof (args2)) msg2 = sprintf (msg2, @args2);
     if (msg1) {
@@ -5325,7 +5335,9 @@ class Type
   // Cache used for parsers that depend on the tag set.
   /*private*/ mapping(TagSet:PCacheObj) _p_cache;
 
+  //! @ignore
   MARK_OBJECT_ONLY;
+  //! @endignore
 
   string _sprintf() {return "RXML.Type(" + this_object()->name + ")" + OBJ_COUNT;}
 }
@@ -5426,6 +5438,7 @@ TType t_type = TType();
 //!
 //! Supertype: @[RXML.t_any]
 
+//!
 static class TType
 {
   inherit Type;
@@ -5690,6 +5703,7 @@ TString t_string = TString();
 //! @[RXML.t_any_text]; see the note for that type for further
 //! details.
 
+//!
 static class TString
 {
   inherit Type;
@@ -5801,6 +5815,7 @@ static class TText
 TXml t_xml = TXml();
 //! The type for XML and similar markup.
 
+//!
 static class TXml
 {
   inherit TText;
@@ -6058,7 +6073,9 @@ class VarRef (string scope, string|array(string|int) var,
     [scope, var, encoding, want_type] = v;
   }
 
+  //! @ignore
   MARK_OBJECT;
+  //! @endignore
   string _sprintf() {return "RXML.VarRef(" + name() + ")" + OBJ_COUNT;}
 }
 
@@ -6105,7 +6122,9 @@ class VariableChange (static mapping(string:mixed) settings)
   mapping(string:mixed) _encode() {return settings;}
   void _decode (mapping(string:mixed) saved) {settings = saved;}
 
+  //! @ignore
   MARK_OBJECT;
+  //! @endignore
   string _sprintf() {return "RXML.VariableChange" + OBJ_COUNT;}
 }
 
@@ -6147,7 +6166,9 @@ class CompiledError
     [type, msg, current_var] = v;
   }
 
+  //! @ignore
   MARK_OBJECT;
+  //! @endignore
   string _sprintf() {return "RXML.CompiledError" + OBJ_COUNT;}
 }
 
@@ -6314,7 +6335,9 @@ static class PikeCompile
     compile();			// To clean up delayed_resolve_places.
   }
 
+  //! @ignore
   MARK_OBJECT;
+  //! @endignore
 
   string _sprintf() {return "RXML.PikeCompile" + OBJ_COUNT;}
 }
@@ -6776,7 +6799,9 @@ class PCode
     return 1;
   }
 
+  //! @ignore
   MARK_OBJECT;
+  //! @endignore
 
   string _sprintf()
   {
@@ -7355,7 +7380,9 @@ class ScanStream
     return fin;
   }
 
+  //! @ignore
   MARK_OBJECT;
+  //! @endignore
 
   string _sprintf() {return "RXML.ScanStream" + OBJ_COUNT;}
 }
