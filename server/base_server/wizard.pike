@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.90 1999/07/22 17:19:00 nilsson Exp $
+/* $Id: wizard.pike,v 1.91 1999/07/23 04:41:32 nilsson Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -895,16 +895,30 @@ string html_table(array(string) subtitles, array(array(string)) table,
 		  mapping|void opt)
 {
   /* Options:
-   *   bgcolor, titlebgcolor, titlecolor, fgcolor0, fgcolor1, modulo
+   *   bordercolor, titlebgcolor, titlecolor, oddbgcolor, evenbgcolor, modulo
    * Containers:
    *   <fields>[num|text, ...]</fields>
    */
+
+  // RXML <1.4 compatibility stuff
+  if(opt->fgcolor0) {
+    opt->oddbgcolor=opt->fgcolor0;
+    m_delete(opt, "fgcolor0");
+  }
+  if(opt->fgcolor1) {
+    opt->evenbgcolor=opt->fgcolor1;
+    m_delete(opt, "fgcolor1");
+  }
+  if(opt->bgcolor) {
+    opt->bordercolor=opt->bgcolor;
+    m_delete(opt, "bgcolor");
+  }
 
   string r = "";
 
   if(!opt) opt = ([]);
   int m = (int)(opt->modulo?opt->modulo:1);
-  r += ("<table bgcolor=\""+(opt->bgcolor||"#000000")+"\" border=\"0\" "
+  r += ("<table bgcolor=\""+(opt->bordercolor||"#000000")+"\" border=\"0\" "
 	"cellspacing=\"0\" cellpadding=\"1\">\n"
 	"<tr><td>\n");
   r += "<table border=\"0\" cellspacing=\"0\" cellpadding=\"4\">\n";
@@ -928,8 +942,8 @@ string html_table(array(string) subtitles, array(array(string)) table,
   
   for(int i = 0; i < sizeof(table); i++) {
     string tr;
-    r += tr = "<tr bgcolor="+((i/m)%2?opt->fgcolor1||"#ddeeff":
-			      opt->fgcolor0||"#ffffff")+">";
+    r += tr = "<tr bgcolor="+((i/m)%2?opt->evenbgcolor||"#ddeeff":
+			      opt->oddbgcolor||"#ffffff")+">";
     for(int j = 0; j < sizeof(table[i]); j++) {
       mixed s = table[i][j];
       if(arrayp(s))
@@ -974,14 +988,14 @@ string html_table(array(string) subtitles, array(array(string)) table,
 
 string html_notice(string notice, object id)
 {
-  return ("<table><tr><td valign=\"top\"><img \nalt=\"Notice: src=\""+
+  return ("<table><tr><td valign=\"top\"><img \nalt=\"Notice:\" src=\""+
         (id->conf?"/internal-roxen-":"/image/")
         +"err_1.gif\" /></td><td valign=\"top\">"+notice+"</td></tr></table>");
 }
 
 string html_warning(string notice, object id)
 {
-  return ("<table><tr><td valign=\"top\"><img \nalt=Warning: src=\""+
+  return ("<table><tr><td valign=\"top\"><img \nalt=\"Warning:\" src=\""+
         (id->conf?"/internal-roxen-":"/image/")
         +"err_2.gif\" /></td><td valign=\"top\">"+notice+"</td></tr></table>");
 }

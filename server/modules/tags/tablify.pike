@@ -5,7 +5,7 @@
  * made by Per Hedbor
  */
 
-constant cvs_version = "$Id: tablify.pike,v 1.23 1999/07/23 01:35:07 nilsson Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.24 1999/07/23 04:43:16 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -51,7 +51,7 @@ string html_nicer_table(array(string) subtitles, array(array(string)) table,
 			mapping|void opt)
 {
   /* Options:
-   *   bgcolor, titlebgcolor, titlecolor, fgcolor0, fgcolor1, modulo,
+   *   bordercolor, titlebgcolor, titlecolor, oddbgcolor, evenbgcolor, modulo,
    *   font, scale, face, size
    * Containers:
    *   <fields>[num|text, ...]</fields>
@@ -61,7 +61,7 @@ string html_nicer_table(array(string) subtitles, array(array(string)) table,
 
   if(!opt) opt = ([]);
   int m = (int)(opt->modulo?opt->modulo:1);
-  r += ("<table bgcolor=\""+(opt->bgcolor||"#27215b")+"\" border=\"0\" "
+  r += ("<table bgcolor=\""+(opt->bordercolor||"#27215b")+"\" border=\"0\" "
 	"cellspacing=\"0\" cellpadding=\"1\">\n"
 	"<tr><td>\n");
   r += "<table border=\"0\" cellspacing=\"0\" cellpadding=\"2\">\n";
@@ -78,8 +78,8 @@ string html_nicer_table(array(string) subtitles, array(array(string)) table,
   int cols; // FIXME: Used in colspan below. Is never set!
   for(int i = 0; i < sizeof(table); i++) {
     string tr;
-    r += tr = "<tr bgcolor=\""+((i/m)%2?opt->fgcolor1||"#ddeeff":
-			      opt->fgcolor0||"#ffffff")+"\">";
+    r += tr = "<tr bgcolor=\""+((i/m)%2?opt->evenbgcolor||"#ddeeff":
+			      opt->oddbgcolor||"#ffffff")+"\">";
     for(int j = 0; j < sizeof(table[i]); j++) {
       mixed s = table[i][j];
       if(arrayp(s))
@@ -138,15 +138,23 @@ string tag_tablify( string tag, mapping m, string q, object request_id,
   q = reverse(q);
 #endif
 
-  // Not part of RXML 1.4
-  if(tag == "htable") m->nice="nice";
-  
-  if(m->help) return register_module()[2];
-
-  // Not part of RXML 1.4
-  if (m->preprocess || m->parse) {
-    q = parse_rxml(q, request_id, file, defines);
+#if 1
+  // RXML <1.4 compatibility stuff
+  if(m->fgcolor0) {
+    m->oddbgcolor=m->fgcolor0;
+    m_delete(m, "fgcolor0");
   }
+  if(m->fgcolor1) {
+    m->evenbgcolor=m->fgcolor1;
+    m_delete(m, "fgcolor1");
+  }
+  if(m->bgcolor) {
+    m->bordercolor=m->bgcolor;
+    m_delete(m, "bgcolor");
+  }
+#endif
+
+  if(m->help) return register_module()[2];
 
   mapping arg_list = ([]);
   q = parse_html(q, ([]), (["fields":container_fields]), m, arg_list);
@@ -213,7 +221,7 @@ string tag_tablify( string tag, mapping m, string q, object request_id,
 
 mapping query_container_callers()
 {
-  return ([ "tablify" : tag_tablify, "htable" : tag_tablify ]);
+  return ([ "tablify" : tag_tablify ]);
 }
 
 mapping query_tag_callers()
