@@ -1,5 +1,5 @@
 /*
- * $Id: processstatus.pike,v 1.2 2000/02/20 05:33:29 mast Exp $
+ * $Id: processstatus.pike,v 1.3 2000/03/24 13:17:05 grubba Exp $
  */
 
 constant action="status";
@@ -9,7 +9,7 @@ constant doc = ("Shows various information about the roxen process.");
 string describe_global_status()
 {
   return "Server uptime             : "+
-    roxen->msectos((time(1) - roxen->start_time)*1000) +"\n";
+    Roxen.msectos((time(1) - roxen->start_time)*1000) +"\n";
 }
 
 #define MB (1024*1024)
@@ -32,7 +32,7 @@ mixed parse(object id)
 	     "\">Process status</a></font>"+ */
 	  "<pre>"+
 	  describe_global_status()+
-	  "CPU-Time used             : "+roxen->msectos(ru[0]+ru[1])+
+	  "CPU-Time used             : "+Roxen.msectos(ru[0]+ru[1])+
 	  " ("+tmp/10+"."+tmp%10+"%)\n"
 	  +(ru[-2]?(sprintf("Resident set size (RSS)   : %.3f Mb\n",
 			    (float)ru[-2]/(float)MB)):"")
