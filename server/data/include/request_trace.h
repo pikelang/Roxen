@@ -2,7 +2,7 @@
 //
 // Some stuff to do logging of a request through the server.
 //
-// $Id: request_trace.h,v 1.10 2002/03/19 13:27:42 mast Exp $
+// $Id: request_trace.h,v 1.11 2002/10/30 19:42:53 nilsson Exp $
 
 #ifndef REQUEST_TRACE_H
 #define REQUEST_TRACE_H
@@ -10,9 +10,9 @@
 #include <roxen.h>
 #include <module.h>
 
-// Note that TRACE_ENTER and TRACE_LEAVE take html encoded message
-// strings. Messages are preferably a single line, and they should not
-// end with period and/or newline.
+// Note that TRACE_ENTER (but not TRACE_LEAVE) takes html encoded
+// message strings. Messages are preferably a single line, and they
+// should not end with period and/or newline.
 
 #ifdef REQUEST_TRACE
 
@@ -57,10 +57,9 @@
 
 #define SIMPLE_TRACE_LEAVE(MSG...) do {					\
     array _msg_arr_;							\
-    TRACE_LEAVE (Roxen.html_encode_string (				\
-		   (_msg_arr_ = ({MSG}),				\
-		    sizeof (_msg_arr_) > 1 ? sprintf (@_msg_arr_) :	\
-		    (sizeof (_msg_arr_) ? _msg_arr_[0] : ""))));	\
+    TRACE_LEAVE ((_msg_arr_ = ({MSG}),					\
+		  sizeof (_msg_arr_) > 1 ? sprintf (@_msg_arr_) :	\
+		  (sizeof (_msg_arr_) ? _msg_arr_[0] : "")));		\
   } while (0)
 
 // The following variant should be used inside RXML.Frame callbacks
@@ -94,10 +93,9 @@
 #define TAG_TRACE_LEAVE(MSG...) do {					\
     array _msg_arr_;							\
     string _msg_;							\
-    TRACE_LEAVE (Roxen.html_encode_string (				\
-		   (_msg_arr_ = ({MSG}),				\
-		    _msg_ = sizeof (_msg_arr_) > 1 ? sprintf (@_msg_arr_) : \
-		    (sizeof (_msg_arr_) ? _msg_arr_[0] : ""))));	\
+    TRACE_LEAVE ((_msg_arr_ = ({MSG}),					\
+		  _msg_ = sizeof (_msg_arr_) > 1 ? sprintf (@_msg_arr_) : \
+		  (sizeof (_msg_arr_) ? _msg_arr_[0] : "")));		\
     DO_IF_DEBUG (							\
       if (TAG_DEBUG_TEST (flags & RXML.FLAG_DEBUG)) {			\
 	if (!_msg_) {							\
