@@ -118,8 +118,9 @@ class UDPNeigh
     master = m;
     if(!f)
     {
-      if(!master->udp_sock)
+      if(!master->udp_sock) {
 	master->udp_sock = spider.dumUDP();
+      }
 #ifdef NEIGH_DEBUG
       werror("Neighbourhood: Listening to UDP\n");
 #endif
@@ -127,10 +128,13 @@ class UDPNeigh
 #ifdef NEIGH_DEBUG
 	werror("Bind failed.\n");
 #endif
+	master->udp_sock = 0;
+      } else {
+	master->udp_sock->set_nonblocking(read);
       }
-      master->udp_sock->set_nonblocking(read);
-    } else
+    } else {
       nobr=0;
+    }
     port = p; net = f;
   }
 }
