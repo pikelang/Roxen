@@ -9,7 +9,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: cgi.pike,v 1.122 1999/05/13 07:27:12 hubbe Exp $";
+constant cvs_version = "$Id: cgi.pike,v 1.123 1999/05/18 00:08:50 neotron Exp $";
 
 class Shuffle
 {
@@ -699,6 +699,11 @@ mapping handle_file_extension(object o, string e, object id)
 {
   if(!QUERY(ex))
     return 0;
+#ifdef CGI_DEBUG
+  werror("CGI handle_file_extension(%s)\n     server %s\n",
+	 id->not_query, id->conf->query("MyWorldLocation"));
+#endif
+
 #if UNIX
   if(o && !(o->stat()[0]&0111))
     if(QUERY(noexec))
@@ -723,6 +728,10 @@ int|object(Stdio.File)|mapping find_file( string f, object id )
 {
   array stat=stat_file(f,id);
   if(!stat) return 0;
+#ifdef CGI_DEBUG
+  werror("CGI find_file(%s)\n     server %s\n",
+	 id->not_query, id->conf->query("MyWorldLocation"));
+#endif
 #if UNIX
   if(!(stat[0]&0111))
   {
