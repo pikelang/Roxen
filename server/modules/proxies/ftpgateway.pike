@@ -1,3 +1,7 @@
+// ftpgateway.pike
+
+// This module implements an ftp proxy
+
 #include <module.h>
 #include <config.h>
 
@@ -76,10 +80,10 @@ void do_write(string host, string oh, string id, string more)
 
 void log(string file, string more)
 {
-  string host, rest;
+  string user, host, rest;
 
   if(!logfile) return;
-  sscanf(file, "%s:%s", host, rest);
+  sscanf(file, "%s@%s:%s", user, host, rest);
   roxen->ip_to_host(host, do_write, host, rest, more);
 }
 
@@ -135,10 +139,10 @@ void create()
 	 "Logfile", TYPE_FILE,  "Empty the field for no log at all");
   
   defvar("mountpoint", "ftp:/", "Location", TYPE_LOCATION,
-	 "By default, this is http:/. If you set anything else, all "
+	 "By default, this is ftp:/. If you set anything else, all "
 	 "normal WWW-clients will fail. But, other might be useful"
-	 ", like /http/. if you set this location, a link formed like "
-	 " this: &lt;a href=\"/http/\"&lt;my.www.server&gt;/a&gt; will enable"
+	 ", like /ftp/. if you set this location, a link formed like "
+	 " this: &lt;a href=\"/ftp/\"&lt;my.www.server&gt;/a&gt; will enable"
 	 " accesses to local WWW-servers through a firewall.<p>"
 	 "Please consider security, though.");
   
@@ -274,56 +278,82 @@ array is_remote_proxy(string hmm)
 
 mixed|mapping find_file( string f, object id )
 {
-  string host, file, key, user;
+  string host, file, key, user, passw;
   mixed tmp;
   array more;
   int port;
   
   f=id->raw_url[strlen(QUERY(mountpoint))+1 .. 100000];
-#ifdef PROXY_DEBUG
-  perror("FTP PROXY: Request for "+f+"\n");
-#endif
   
-  /***********
-    insert user magic here
-    ************/
-   
-  if(sscanf(f, "%[^:/]:%d/%s", host, port, file) < 2)
+  if(sscanf(f, "%[^/]/%s", host, file) < 2)
   {
-    if(sscanf(f, "%[^/]/%s", host, file) < 2)
-    {
-      if(strstr(f, "/") == -1)
-      {
-	host = f;
-	file="/";
-      } else {
-	report_debug("I cannot find a hostname and a filename in "+f+"\n");
-	return 0; /* This is not a proxy request. */
-      }
-    }
-    port=21; /* Default FTP port. Really! :-) */
+    host = f;
+    file = "";
   }
+
+  if(sscanf(host, "%[^@]@%s", user, host) < 2)
+  {
+    // No user specified
+    user = 0;
+  } else {
+     sscanf(user, "%[^:]:%s", user, passw);
+  }
+
+  if (sscanf(host, "%[^:]:%d", host, port) < 2)
+  {
+     port = 21;
+  }
+     
+#ifdef PROXY_DEBUG
+  werror(sprintf("FTP PROXY: Request for %s\n"
+		 "  file:  %s\n"
+		 "  user:  %s\n"
+		 "  passw: %s\n"
+		 "  host:  %s\n"
+		 "  port:  %d\n", f, file,
+		 (user||"ANON"), (passw||"N/A"), host, port));
+#endif
+     
+   
+  // if(sscanf(f, "%[^:/]:%d/%s", host, port, file) < 2)
+  // {
+  //   if(sscanf(f, "%[^/]/%s", host, file) < 2)
+  //   {
+  // 	 if(strstr(f, "/") == -1)
+  // 	 {
+  // 	   host = f;
+  // 	   file="/";
+  // 	 } else {
+  // 	   report_debug("I cannot find a hostname and a filename in "+f+"\n");
+  // 	   return 0; // This is not a proxy request.
+  // 	 }
+  //   }
+  //   port=21; // Default FTP port. Really! :-)
+  // }
+
   if(tmp = proxy_auth_needed(id))
     return tmp;
 
-  sscanf(host, "%s@%s", user, host);
+  // sscanf(host, "%s@%s", user, host);
   
   if(!file)
     file="/";
   
-  key = host+":"+port+"/"+file;
+  key = (user||"")+"@"+host+":"+port+"/"+file;
   id->do_not_disconnect = 1;  
+
+  // Using a remote proxy?
   if(more = is_remote_proxy(host))
     async_connect(more[0], more[1], connected_to_server,  key, id, 1);
   
 #undef RECOMPILE 
 
 #ifdef RECOMPILE
-  requests[compile_file("lpc/struct/ftp_gateway_request.pike")
-	  (id, this_object(),host,port,file, user)]=1;
+  requests[compile_file("base_server/struct/ftp_gateway_request.pike")
+	  (id, this_object(),host,port,file, user, passw)]=1;
 #else
   requests[((program)"struct/ftp_gateway_request")
-	  (id,this_object(),host,port,file, user)]=1;
+	  (id,this_object(),host,port,file, user, passw)]=1;
 #endif
   return http_pipe_in_progress();
 }	  
@@ -435,8 +465,3 @@ void save_dataport(mixed *m) /* ({portno,object}) */
    }
    else destruct(m[1]);
 }
-
-
-
-
-
