@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.57 2001/04/24 18:44:28 grubba Exp $
+ * $Id: ftp.pike,v 2.58 2001/06/15 17:17:49 jhs Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -91,9 +91,9 @@
 // #define Query(X) conf->variables[X][VAR_VALUE]
 
 #ifdef FTP2_DEBUG
-# define DWRITE(X)	werror(X)
+# define DWRITE(X ...)	werror(X)
 #else
-# define DWRITE(X)
+# define DWRITE(X ...)
 #endif
 
 #if constant(thread_create)
@@ -111,12 +111,12 @@ class RequestID2
 #ifdef FTP2_DEBUG
   static void trace_enter(mixed a, mixed b)
   {
-    write(sprintf("FTP: TRACE_ENTER(%O, %O)\n", a, b));
+    write("FTP: TRACE_ENTER(%O, %O)\n", a, b);
   }
 
   static void trace_leave(mixed a)
   {
-    write(sprintf("FTP: TRACE_LEAVE(%O)\n", a));
+    write("FTP: TRACE_LEAVE(%O)\n", a);
   }
 #endif /* FTP2_DEBUG */
 
@@ -171,9 +171,9 @@ class RequestID2
 	    o[var] = m_rid[var];
 #ifdef FTP2_DEBUG
 	  }) {
-	    report_error(sprintf("FTP2: "
-				 "Failed to copy variable %s (value:%O)\n",
-				 var, m_rid[var]));
+	    report_error("FTP2: "
+			 "Failed to copy variable %s (value:%O)\n",
+			 var, m_rid[var]);
 	  }
 #endif /* FTP2_DEBUG */
 	}
@@ -441,7 +441,7 @@ class PutFileWrapper(static object from_fd,
 
   static mixed my_read_callback(mixed id, string data)
   {
-    DWRITE(sprintf("FTP: PUT: my_read_callback(X, \"%s\")\n", data||""));
+    DWRITE("FTP: PUT: my_read_callback(X, \"%s\")\n", data||"");
     ftpsession->touch_me();
     if(stringp(data))
       recvd += sizeof(data);
@@ -481,7 +481,7 @@ class PutFileWrapper(static object from_fd,
 
   int write(string data)
   {
-    DWRITE(sprintf("FTP: PUT: write(\"%s\")\n", data||""));
+    DWRITE("FTP: PUT: write(\"%s\")\n", data||"");
 
     ftpsession->touch_me();
 
@@ -589,7 +589,7 @@ class LS_L(static RequestID master_session,
 
   string ls_l(string file, array st)
   {
-    DWRITE(sprintf("ls_l(\"%s\")\n", file));
+    DWRITE("ls_l(\"%s\")\n", file);
 
     int mode = st[0] & 007777;
     array(string) perm = "----------"/"";
@@ -711,7 +711,7 @@ class LSFile
   {
     dir = dir || cwd;
 
-    DWRITE(sprintf("FTP: LSFile->list_files(%O, \"%s\"\n", files, dir));
+    DWRITE("FTP: LSFile->list_files(%O, \"%s\"\n", files, dir);
 
     if (!(flags & LS_FLAG_U)) {
       if (flags & LS_FLAG_S) {
@@ -837,15 +837,13 @@ class LSFile
       };
 
       if (err) {
-	report_error(sprintf("FTP: LSFile->list_next_directory(): "
-			     "find_dir_stat(\"%s\") failed:\n"
-			     "%s\n",
-			     long, describe_backtrace(err)));
+	report_error("FTP: LSFile->list_next_directory(): "
+		     "find_dir_stat(\"%s\") failed:\n"
+		     "%s\n", long, describe_backtrace(err));
       }
 
-      DWRITE(sprintf("FTP: LSFile->list_next_directory(): "
-		     "find_dir_stat(\"%s\") => %O\n",
-		     long, dir));
+      DWRITE("FTP: LSFile->list_next_directory(): "
+	     "find_dir_stat(\"%s\") => %O\n", long, dir);
 
       // Put them in the stat cache.
       foreach(indices(dir||({})), string f) {
@@ -937,7 +935,7 @@ class LSFile
 
   string read(int|void n, int|void not_all)
   {
-    DWRITE(sprintf("FTP: LSFile->read(%d, %d)\n", n, not_all));
+    DWRITE("FTP: LSFile->read(%d, %d)\n", n, not_all);
 
     ftpsession->touch_me();
 
@@ -969,8 +967,8 @@ class LSFile
   void create(string cwd_, array(string) argv_, int flags_,
 	      object session_, string output_mode_, object ftpsession_)
   {
-    DWRITE(sprintf("FTP: LSFile(\"%s\", %O, %08x, X, \"%s\")\n",
-		   cwd_, argv_, flags_, output_mode_));
+    DWRITE("FTP: LSFile(\"%s\", %O, %08x, X, \"%s\")\n",
+	   cwd_, argv_, flags_, output_mode_);
 
     ::create(session_, flags_);
 
@@ -1006,8 +1004,8 @@ class LSFile
       }
     }
 
-    DWRITE(sprintf("FTP: LSFile: %d files, %d directories\n",
-		   n_files, dir_stack->ptr));
+    DWRITE("FTP: LSFile: %d files, %d directories\n",
+	   n_files, dir_stack->ptr);
 
     if (n_files) {
       if (n_files < sizeof(files)) {
@@ -1107,7 +1105,7 @@ class TelnetSession {
 	  }
 	} else {
 	  // Error.
-	  DWRITE(sprintf("TELNET: write failed: errno:%d\n", fd->errno()));
+	  DWRITE("TELNET: write failed: errno:%d\n", fd->errno());
 	  BACKEND_CLOSE(fd);
 	}
       } else {
@@ -1144,7 +1142,7 @@ class TelnetSession {
 
   static private void got_oob(mixed ignored, string s)
   {
-    DWRITE(sprintf("TELNET: got_oob(\"%s\")\n", s));
+    DWRITE("TELNET: got_oob(\"%s\")\n", s);
 
     sync = sync || (s == "\377");
     if (cb["URG"]) {
@@ -1155,7 +1153,7 @@ class TelnetSession {
   static private string rest = "";
   static private void got_data(mixed ignored, string s)
   {
-    DWRITE(sprintf("TELNET: got_data(\"%s\")\n", s));
+    DWRITE("TELNET: got_data(\"%s\")\n", s);
 
     if (sizeof(s) && (s[0] == 242)) {
       DWRITE("TELNET: Data Mark\n");
@@ -1182,7 +1180,7 @@ class TelnetSession {
 	  if (sizeof(part)) {
 	    string name = TelnetCodes[part[0]];
 
-	    DWRITE(sprintf("TELNET: Code %s\n", name || "Unknown"));
+	    DWRITE("TELNET: Code %s\n", name || "Unknown");
 
 	    int j;
 	    function fun;
@@ -1250,12 +1248,11 @@ class TelnetSession {
       }
       if (lineno < (sizeof(lines)-1)) {
 	if ((!sync) && read_cb) {
-	  DWRITE(sprintf("TELNET: Calling read_callback(X, \"%s\")\n",
-			       line));
+	  DWRITE("TELNET: Calling read_callback(X, \"%s\")\n", line);
 	  read_cb(id, line);
 	}
       } else {
-	DWRITE(sprintf("TELNET: Partial line is \"%s\"\n", line));
+	DWRITE("TELNET: Partial line is \"%s\"\n", line);
 	rest = line;
       }
     }
@@ -1422,19 +1419,19 @@ class FTPSession
 
     if (to_send->is_empty()) {
 
-      DWRITE(sprintf("FTP2: write_cb(): Empty send queue.\n"));
+      DWRITE("FTP2: write_cb(): Empty send queue.\n");
 
       ::set_write_callback(0);
       if (end_marker) {
-	DWRITE(sprintf("FTP2: write_cb(): Sending EOF.\n"));
+	DWRITE("FTP2: write_cb(): Sending EOF.\n");
 	return(0);	// Mark EOF
       }
-      DWRITE(sprintf("FTP2: write_cb(): Sending \"\"\n"));
+      DWRITE("FTP2: write_cb(): Sending \"\"\n");
       return("");	// Shouldn't happen, but...
     } else {
       string s = to_send->get();
 
-      DWRITE(sprintf("FTP2: write_cb(): Sending \"%s\"\n", s));
+      DWRITE("FTP2: write_cb(): Sending \"%s\"\n", s);
 
       if ((to_send->is_empty()) && (!end_marker)) {
 	::set_write_callback(0);
@@ -1447,7 +1444,7 @@ class FTPSession
 
   void send(int code, array(string) data, int|void enumerate_all)
   {
-    DWRITE(sprintf("FTP2: send(%d, %O)\n", code, data));
+    DWRITE("FTP2: send(%d, %O)\n", code, data);
 
     if (!data || end_marker) {
       end_marker = 1;
@@ -1478,7 +1475,7 @@ class FTPSession
 	to_send->put(s);
       }
     } else {
-      DWRITE(sprintf("FTP2: send(): Nothing to send!\n"));
+      DWRITE("FTP2: send(): Nothing to send!\n");
     }
   }
 
@@ -1537,11 +1534,11 @@ class FTPSession
 					     return(((((line/"#")[0])/"") -
 						     ({" ", "\t"}))*"");
 					   } )-({""})));
-	  DWRITE(sprintf("ftp.pike: allowed_shells:%O\n", allowed_shells));
+	  DWRITE("ftp.pike: allowed_shells: %O\n", allowed_shells);
 	} else {
-	  report_debug(sprintf("ftp.pike: Failed to open shell database (\"%s\")\n",
-			       port_obj->query_option("shells")));
-	  return(0);
+	  report_debug("ftp.pike: Failed to open shell database (%O)\n",
+		       port_obj->query_option("shells"));
+	  return 0;
 	}
       }
       return(allowed_shells[shell]);
@@ -1604,7 +1601,7 @@ class FTPSession
   static private void ftp_async_accept(function(object,mixed ...:void) fun,
 				       mixed ... args)
   {
-    DWRITE(sprintf("FTP: async_accept(%O, %@O)...\n", fun, args));
+    DWRITE("FTP: async_accept(%O, %@O)...\n", fun, args);
     touch_me();
 
     if (sizeof(pasv_accepted)) {
@@ -1623,7 +1620,7 @@ class FTPSession
   static private void ftp_async_connect(function(object,string,mixed ...:void) fun,
 					mixed ... args)
   {
-    DWRITE(sprintf("FTP: async_connect(%O, %@O)...\n", fun, args));
+    DWRITE("FTP: async_connect(%O, %@O)...\n", fun, args);
 
     // More or less copied from socket.pike
 
@@ -1646,14 +1643,13 @@ class FTPSession
     if(!f->open_socket(local_port-1, local_addr))
     {
       privs = 0;
-      DWRITE(sprintf("FTP: socket(%d, %O) failed. Trying with any port.\n",
-			   local_port-1, local_addr));
+      DWRITE("FTP: socket(%d, %O) failed. Trying with any port.\n",
+	     local_port-1, local_addr);
 
       if(!f->open_socket(0, local_addr))
       {
-	DWRITE(sprintf("FTP: socket(0, %O) failed. "
-		       "Trying with any port, any ip.\n",
-		       local_addr));
+	DWRITE("FTP: socket(0, %O) failed. "
+	       "Trying with any port, any ip.\n", local_addr);
 	if (!f->open_socket()) {
 	  DWRITE("FTP: socket() failed. Out of sockets?\n");
 	  fun(0, 0, @args);
@@ -1825,7 +1821,7 @@ class FTPSession
     session->file = file;
 
     if (!file || (file->error && (file->error >= 300))) {
-      DWRITE(sprintf("FTP: open_file(\"%s\") failed: %O\n", fname, file));
+      DWRITE("FTP: open_file(\"%s\") failed: %O\n", fname, file);
       send_error(cmd, fname, file, session);
       return 0;
     }
@@ -1848,7 +1844,7 @@ class FTPSession
   static private void connected_to_send(object fd, string ignored,
 					mapping file, object session)
   {
-    DWRITE(sprintf("FTP: connected_to_send(X, %O, %O, X)\n", ignored, file));
+    DWRITE("FTP: connected_to_send(X, %O, %O, X)\n", ignored, file);
 
     touch_me();
 
@@ -1957,7 +1953,7 @@ class FTPSession
 
   static private void connected_to_receive(object fd, string data, string args)
   {
-    DWRITE(sprintf("FTP: connected_to_receive(X, %O, %O)\n", data, args));
+    DWRITE("FTP: connected_to_receive(X, %O, %O)\n", data, args);
 
     touch_me();
 
@@ -2027,7 +2023,7 @@ class FTPSession
 
   static private void connect_and_send(mapping file, object session)
   {
-    DWRITE(sprintf("FTP: connect_and_send(%O)\n", file));
+    DWRITE("FTP: connect_and_send(%O)\n", file);
 
     if (pasv_port) {
       ftp_async_accept(connected_to_send, file, session);
@@ -2038,7 +2034,7 @@ class FTPSession
 
   static private void connect_and_receive(string arg)
   {
-    DWRITE(sprintf("FTP: connect_and_receive(\"%s\")\n", arg));
+    DWRITE("FTP: connect_and_receive(\"%s\")\n", arg);
 
     if (pasv_port) {
       ftp_async_accept(connected_to_receive, arg);
@@ -2161,7 +2157,7 @@ class FTPSession
 
   static private array(string) glob_expand_command_line(string cmdline)
   {
-    DWRITE(sprintf("glob_expand_command_line(\"%s\")\n", cmdline));
+    DWRITE("glob_expand_command_line(\"%s\")\n", cmdline);
 
     array(string|array(string)) args = split_command_line(cmdline);
 
@@ -2319,7 +2315,7 @@ class FTPSession
 
   static private string ls_help(string ls)
   {
-    return(sprintf("Usage: %s [OPTION]... [FILE]...\n"
+    return sprintf("Usage: %s [OPTION]... [FILE]...\n"
 		   "List information about the FILEs "
 		   "(the current directory by default).\n"
 		   "Sort entries alphabetically if none "
@@ -2336,7 +2332,7 @@ class FTPSession
 			       return(sprintf("  %s  "
 					      "                       %s\n",
 					      entry[0][0], entry[2]));
-			     })));
+			     }));
   }
 
   void call_ls(array(string) argv)
@@ -2421,9 +2417,9 @@ class FTPSession
   string make_MDTM(int t)
   {
     mapping lt = localtime(t);
-    return(sprintf("%04d%02d%02d%02d%02d%02d",
+    return sprintf("%04d%02d%02d%02d%02d%02d",
 		   lt->year + 1900, lt->mon + 1, lt->mday,
-		   lt->hour, lt->min, lt->sec));
+		   lt->hour, lt->min, lt->sec);
   }
 
   string make_MLSD_fact(string f, mapping(string:array) dir, object session)
@@ -2497,7 +2493,7 @@ class FTPSession
 	return 1;
       }
 
-      DWRITE(sprintf("FTP2: Increasing # of sessions for user %O\n", user));
+      DWRITE("FTP2: Increasing # of sessions for user %O\n", user);
       port_obj->ftp_sessions[user]++;
     }
     logged_in = (user != 0) || -1;
@@ -2513,7 +2509,7 @@ class FTPSession
 
     if (session_limit > 0) {
 
-      DWRITE(sprintf("FTP2: Decreasing # of sessions for user %O\n", user));
+      DWRITE("FTP2: Decreasing # of sessions for user %O\n", user);
       if ((--port_obj->ftp_sessions[user]) < 0) {
 	port_obj->ftp_sessions[user] = 0;
       }
@@ -2669,7 +2665,7 @@ class FTPSession
 	  send(230, ({ sprintf("Guest user %s logged in.", u) }));
 	  logged_in = -1;
 	  conf->log(([ "error":200 ]), master_session);
-	  DWRITE(sprintf("FTP: Guest-user: %O\n", master_session->realauth));
+	  DWRITE("FTP: Guest-user: %O\n", master_session->realauth);
 	} else {
 	  send(530, ({
 	    sprintf("Too many anonymous/guest users (%d).",
@@ -3589,7 +3585,7 @@ class FTPSession
 
   static private void got_command(mixed ignored, string line)
   {
-    DWRITE(sprintf("FTP2: got_command(X, \"%s\")\n", line));
+    DWRITE("FTP2: got_command(X, \"%s\")\n", line);
 
     touch_me();
 
@@ -3642,10 +3638,9 @@ class FTPSession
 	if (err = catch {
 	  this_object()["ftp_"+cmd](args);
 	}) {
-	  report_error(sprintf("Internal server error in FTP2\n"
-			       "Handling command \"%s\"\n"
-			       "%s\n",
-			       line, describe_backtrace(err)));
+	  report_error("Internal server error in FTP2\n"
+		       "Handling command %O\n%s\n",
+		       line, describe_backtrace(err));
 	}
       } else {
 	send(502, ({ sprintf("'%s' is not currently supported.", cmd) }));
