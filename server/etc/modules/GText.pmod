@@ -126,6 +126,7 @@ array(Image.Image) make_text_image(
   if( args->encoding )
     text = roxen.decode_charset(args->encoding,text);
   Image.Image text_alpha=font->write(@(text/"\n"));
+  int extend_alpha = 0;
   int xoffset=0, yoffset=0;
 
   if(!text_alpha->xsize() || !text_alpha->ysize())
@@ -222,6 +223,7 @@ array(Image.Image) make_text_image(
 
   if(args->texture)
   {
+    extend_alpha = 1;
     Image.Image t = roxen.load_image(args->texture,id);
     if( t )
     {
@@ -264,6 +266,7 @@ array(Image.Image) make_text_image(
                                @(parse_color(args->background[1..]))))
        && (background_is_color=1))))
   {
+    extend_alpha = 1;
     Image.Image alpha;
     if(args->alpha && (alpha = roxen.load_image(args->alpha,id)) && background_is_color)
     {
@@ -325,6 +328,7 @@ array(Image.Image) make_text_image(
 
   if(args->border)
   {
+    extend_alpha = 1;
     int b = (int)args->border;
     background->setcolor(@parse_color((args->border/",")[-1]));
 
@@ -366,6 +370,7 @@ array(Image.Image) make_text_image(
 
   if(args->bgturbulence)
   {
+    extend_alpha = 1;
     array (float|array(int)) arg=({});
     foreach((args->bgturbulence/";"),  string s)
     {
@@ -376,11 +381,14 @@ array(Image.Image) make_text_image(
     background=background->turbulence(arg);
   }
 
-  if(args->bevel)
+  if(args->bevel) {
+    extend_alpha = 1;
     background = bevel(background,(int)args->bevel,!!args->pressed);
+  }
 
   if(args->textbox) // Draw a text-box on the background.
   {
+    extend_alpha = 1;
     int alpha,border;
     string bg;
     alpha = (int)args->textbox;
@@ -393,6 +401,7 @@ array(Image.Image) make_text_image(
 
   if(args->ghost)
   { // Francesco..
+    extend_alpha = 1;
     array(string) a = (args->ghost/",");
     if (sizeof(a) < 2) {
       // Bad argument.
@@ -413,6 +422,7 @@ array(Image.Image) make_text_image(
 
   if(args->shadow)
   {
+    extend_alpha = 1;
     int sd = ((int)args->shadow+10)*2;
     int sdist = ((int)(args->shadow/",")[-1])+2;
     Image.Image ta = text_alpha->copy();
@@ -424,6 +434,7 @@ array(Image.Image) make_text_image(
 
   if(args->bshadow)
   {
+    extend_alpha = 1;
     int sdist = (int)(args->bshadow)+1;
     int xs,ys;
     xs = text_alpha->xsize()+sdist*2+4;
@@ -440,22 +451,26 @@ array(Image.Image) make_text_image(
 
   if(args->glow)
   {
+    extend_alpha = 1;
     int amnt = (int)(args->glow/",")[-1]+2;
     array (int) blurc = parse_color((args->glow/",")[0]);
     background->paste_alpha_color(blur(text_alpha, amnt),@blurc,
 				  xoffset-amnt, yoffset-amnt);
   }
 
-  if(args->chisel)
+  if(args->chisel) {
+    extend_alpha = 1;
     foreground=text_alpha->apply_matrix(({ ({8,1,0}),
 					   ({1,0,-1}),
 					   ({0,-1,-8}) }),
 					128,128,128, 15 )
       ->color(@fgcolor);
+  }
 
   if(!foreground)  foreground=Image.Image(txsize, tysize, @fgcolor);
   if(args->textscale)
   {
+    extend_alpha = 1;
     string c1="black",c2="black",c3="black",c4="black";
     sscanf(args->textscale, "%s,%s,%s,%s", c1, c2, c3, c4);
     foreground->tuned_box(0,0, txsize,tysize,
@@ -463,28 +478,38 @@ array(Image.Image) make_text_image(
 			      parse_color(c4)}));
   }
   if(args->outline) {
+    extend_alpha = 1;
     outline(background, text_alpha, parse_color((args->outline/",")[0]),
 	    ((int)(args->outline/",")[-1])+1, xoffset, yoffset);
   }
 
   if(args->textbelow)
   {
+    extend_alpha = 1;
     array color = parse_color(args->textbelow);
 
     background->setcolor( @color );
-    int oby = background->ysize();
+    yoffset = background->ysize();
     background = background->copy(0,0,
 				  max(background->xsize()-1,
 				      foreground->xsize()-1),
 				  background->ysize()-1
 				  +foreground->ysize());
-    background->paste_mask( foreground, text_alpha,
-			    (background->xsize()-foreground->xsize())/2,
-			    oby );
-  } else
-    background->paste_mask(foreground, text_alpha, xoffset, yoffset);
+    xoffset = (background->xsize()-foreground->xsize())/2;
+  }
 
+  background->paste_mask(foreground, text_alpha, xoffset, yoffset);
   foreground = 0;
+  text_alpha->setcolor (0, 0, 0);
+  text_alpha = text_alpha->copy (-xoffset, -yoffset,
+				 background->xsize() - xoffset - 1,
+				 background->ysize() - yoffset - 1);
+
+  if (extend_alpha) {
+    Image.Image ext = background->distancesq( @bgcolor );
+    ext->gamma( 8 );
+    text_alpha |= ext;
+  }
 
   if(args->rotate)
   {
