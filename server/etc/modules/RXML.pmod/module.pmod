@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.130 2001/02/11 13:32:48 mast Exp $
+//! $Id: module.pmod,v 1.131 2001/02/11 15:07:44 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -974,29 +974,22 @@ class Context
   //! ".." decoding is done (see parse_user_var).
 #endif
 
-  array(string|int) parse_user_var (string var, void|string scope_name)
+  array(string|int) parse_user_var (string var, void|string|int scope_name)
   //! Parses the var string for scope and/or subindexes according to
-  //! the RXML rules, e.g. "scope.var.1.foo". If scope_name is given,
-  //! it's used as the scope and the var string is only parsed for
-  //! subindexes. If var cannot be split a default scope is chosen as
-  //! appropriate. Returns an array where the first entry is the
-  //! scope, and the remaining entries are the list of indexes.
+  //! the RXML rules, e.g. "scope.var.1.foo". Returns an array where
+  //! the first entry is the scope, and the remaining entries are the
+  //! list of indexes. If scope_name is a string, it's used as the
+  //! scope and the var string is only used for subindexes. A default
+  //! scope is chosen as appropriate if var cannot be split, unless
+  //! scope_name is a nonzero integer in which case it's returned in
+  //! the scope position in the array (useful to detect whether var
+  //! actually was splitted or not).
   //!
   //! A ".." in the var string quotes a literal ".", e.g.
   //! "yow...cons..yet" is separated into "yow." and "cons.yet". Any
   //! subindex that can be parsed as a signed integer is converted to
   //! it. Note that it doesn't happen for the first index, since a
   //! variable in a scope always is a string.
-  //!
-  //! If the var contains a ".." but no "." it is assumed that the
-  //! user wants to create a new entity, e.g. using "&foo..bar;" to
-  //! produce "&foo.bar;" in the output data. In these cases this
-  //! function returns an array with only one element; the unquoted
-  //! entity name, in the example ({ "foo.bar" }). Note that this
-  //! behavior is slightly counter intuitive since e.g.
-  //! <insert variable="foo"/> inserts the value of the variable
-  //! _.foo, while <insert variable="foo..x"/> inserts the text
-  //! "&foo.x;".
   {
 #ifdef OLD_RXML_COMPAT
     if (compatible_scope)
@@ -1017,15 +1010,10 @@ class Context
     else
       splitted = var / ".";
 
-
-    if (scope_name)
+    if (stringp (scope_name))
       splitted = ({scope_name}) + splitted;
-    else if (sizeof (splitted) == 1) { 
-      if(has_value(splitted[0], "."))
-	return splitted;
-      else
-	splitted = ({"_"}) + splitted;
-    }
+    else if (sizeof (splitted) == 1)
+      splitted = ({scope_name || "_"}) + splitted;
 
     for (int i = 2; i < sizeof (splitted); i++)
       if (sscanf (splitted[i], "%d%*c", int d) == 1) splitted[i] = d;
@@ -1064,7 +1052,6 @@ class Context
   {
     if(!var || !sizeof(var)) return ([])[0];
     array(string|int) splitted = parse_user_var (var, scope_name);
-    if(sizeof(splitted)==1) return "&"+splitted[0]+";";
     return get_var (splitted[1..], splitted[0], want_type);
   }
 
@@ -1124,7 +1111,6 @@ class Context
   {
     if(!var || !sizeof(var)) parse_error ("No variable specified.\n");
     array(string|int) splitted = parse_user_var (var, scope_name);
-    if(sizeof(splitted)==1) parse_error ("Not a valid entity (&%O;).\n", var);
     return set_var(splitted[1..], val, splitted[0]);
   }
 
@@ -1174,7 +1160,6 @@ class Context
   {
     if(!var || !sizeof(var)) return;
     array(string|int) splitted = parse_user_var (var, scope_name);
-    if(sizeof(splitted)==1) return;
     delete_var(splitted[1..], splitted[0]);
   }
 
@@ -3341,16 +3326,22 @@ class Parser
   {
     // We're always evaluating here, so context is always set.
     if(varref[0]==':') return type->format_entity (varref[1..]);
-    if (has_value (varref, "."))
+    if (has_value (varref, ".")) {
+      // It's intentional that we split on the first ':' for now, to
+      // allow for future enhancements of this syntax. Scope and
+      // variable names containing ':' are thus not accessible this way.
+      sscanf (varref, "%[^:]:%s", varref, string encoding);
+      array(string|int) splitted = context->parse_user_var (varref, 1);
+      if (splitted[0] == 1)
+	parse_error ("No scope in %O. (Put a ':' first to quote "
+		     "a character reference containing dots.)\n",
+		     encoding ? varref + ":" + encoding : varref);
       if (mixed err = catch {
-	// It's intentional that we split on the first ':' for now, to
-	// allow for future enhancements of this syntax. ':' is thus
-	// not allowed in scope or variable names.
-	sscanf (varref, "%[^:]:%s", varref, string encoding);
 	context->current_var = varref;
 	mixed val;
-	if (zero_type (val = context->user_get_var ( // May throw.
-			 varref, 0, encoding ? t_text : surrounding_type))) {
+	if (zero_type (val = context->get_var ( // May throw.
+			 splitted[1..], splitted[0],
+			 encoding ? t_text : surrounding_type))) {
 	  context->current_var = 0;
 	  return ({});
 	}
@@ -3361,6 +3352,7 @@ class Parser
 	context->handle_exception (err, this_object()); // May throw.
 	return ({});
       }
+    }
     if (!surrounding_type->free_text)
       parse_error ("Unknown variable reference &%s; not allowed in this "
 		   "context.\n", varref);
