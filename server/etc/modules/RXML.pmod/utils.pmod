@@ -5,7 +5,7 @@
 //!
 //! Created 2000-01-21 by Martin Stjernholm
 //!
-//! $Id: utils.pmod,v 1.7 2000/02/15 06:10:11 mast Exp $
+//! $Id: utils.pmod,v 1.8 2000/03/04 19:08:41 mast Exp $
 
 
 array return_zero (mixed... ignored) {return 0;}
@@ -45,7 +45,13 @@ int(1..1)|string|array p_xml_entity_cb (Parser.HTML p, string str)
   string entity = p->tag_name();
   if (sizeof (entity)) {
     if (entity[0] != '#')
-      return p->handle_var (entity);
+      return p->handle_var (entity,
+			    p->html_context() == "splice_arg" ?
+			    // No quoting of splice args. FIXME: Add
+			    // some sort of safeguard against splicing
+			    // in things like "nice><evil stuff='...'"?
+			    RXML.t_text :
+			    p->type);
     if (p->type->quoting_scheme != "xml") {
       // Don't decode any normal entities if we're outputting xml-like stuff.
       if (!p->type->free_text) return ({});
@@ -64,6 +70,13 @@ int(1..1)|string|array p_xml_entity_cb (Parser.HTML p, string str)
 int(1..1)|string|array p_xml_compat_entity_cb (Parser.HTML p, string str)
 {
   string entity = p->tag_name();
-  if (sizeof (entity) && entity[0] != '#') return p->handle_var (entity);
+  if (sizeof (entity) && entity[0] != '#')
+    return p->handle_var (entity,
+			  p->html_context() == "splice_arg" ?
+			  // No quoting of splice args. FIXME: Add
+			  // some sort of safeguard against splicing
+			  // in things like "nice><evil stuff='...'"?
+			  RXML.t_text :
+			  p->type);
   return p->type->free_text ? 0 : ({});
 }
