@@ -1,5 +1,5 @@
 /*
- * $Id: problems.pike,v 1.1 1997/08/21 10:50:35 per Exp $
+ * $Id: problems.pike,v 1.2 1997/08/24 03:57:39 per Exp $
  */
 
 inherit "wizard";
@@ -169,6 +169,7 @@ string page_2(object id)
 #include <config.h>
 string page_3(object id)
 {
+  filter_checkbox_variables(id->variables);
   int errs;
   string res="<font size=+1>Checking Global Variables</font><p>";
 
@@ -239,10 +240,9 @@ string page_3(object id)
 }
 
 
-string page_4(object id)
-{
-  
-}
+//string page_4(object id)
+//{
+//}
 
 
 
@@ -309,11 +309,12 @@ void remove_module(string m)
 }
 
 array actions = ({ });
-string page_5(object id)
+string page_4(object id)
 {
   string res = "<font size=+1>Summary</font><ul>";
   actions=({});
   string tmp="";
+  filter_checkbox_variables(id->variables);
   foreach(indices(id->variables), string v)
   {
     if(sscanf(v,"remove_module_%s", tmp))

@@ -1,4 +1,4 @@
-/* $Id: fonts.pike,v 1.11 1997/08/12 19:45:37 per Exp $ */
+/* $Id: fonts.pike,v 1.12 1997/08/24 03:57:34 per Exp $ */
 
 #include <module.h>
 
@@ -37,7 +37,7 @@ string make_font_name(string name, int size, int bold, int italic)
   if(available[bc+ic]) return base_dir+"/"+bc+ic;
   if(bc=="B") bc="b";
   if(available[bc+ic]) return base_dir+"/"+bc+ic;
-  if(bc=="B") bc="n";
+  if(bc=="b") bc="n";
   if(available[bc+ic]) return base_dir+"/"+bc+ic;
   if(ic=="i") ic="n";
   if(available[bc+ic]) return base_dir+"/"+bc+ic;

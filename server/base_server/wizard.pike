@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.34 1997/08/24 00:50:12 per Exp $
+/* $Id: wizard.pike,v 1.35 1997/08/24 03:57:36 per Exp $
  *  name="Wizard generator";
  *  doc="This plugin generats all the nice wizards";
  */
@@ -440,5 +440,11 @@ string html_border(string what, int|void width, int|void ww)
   return ("<table border=0 cellpadding="+(width+1)+" cellspacing=0 "
 	  "bgcolor=black><tr><td><table border=0 cellpadding="+(ww)+
 	  " cellspacing=0 bgcolor=white><tr><td>"+what+"</tr></td></table>"
-	   "</td></tr></table>");
+          "</td></tr></table>");
+}
+
+void filter_checkbox_variables(mapping v)
+{
+  foreach(indices(v), string s)
+    if(v[s]=="0") m_delete(v,s);
 }
