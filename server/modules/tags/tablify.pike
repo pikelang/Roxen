@@ -1,6 +1,6 @@
 // This is a ChiliMoon module. Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: tablify.pike,v 1.75 2004/05/27 18:28:44 _cvs_stephen Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.76 2004/06/03 20:09:58 mani Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -506,7 +506,8 @@ string simpletag_tablify(string tag, mapping m, string q, RequestID id)
   q = parse_html(q, ([]), (["fields":_fields]), m);
 
   if(m->intable) {
-    q=`-(q,"\n","\r","\t");
+    // FIXME: Replace to something else and replace back after processing?
+    q = replace(q, ([ "\n":" ", "\r":" ", "\t":" " ]) );
     m_delete(m, "rowseparator");
     m_delete(m, "cellseparator");
     if(!m->notitle) m+=(["notitle":1]);
@@ -514,19 +515,20 @@ string simpletag_tablify(string tag, mapping m, string q, RequestID id)
 				      if(arg->border) m->border=arg->border;
 				      if(arg->cellspacing) m->cellspacing=arg->cellspacing;
 				      if(arg->cellpadding) m->cellpadding=arg->cellpadding;
-				      return q;
+				      return String.trim_all_whites(q);
 				    },
 			    "tr":lambda(string name, mapping arg, string q, mapping m) {
-				   return q+"\n";
+				   return String.trim_all_whites(q)+"\n";
 				 },
 			    "td":lambda(string name, mapping arg, string q, mapping m) {
-				   return q+"\t";
+				   return String.trim_all_whites(q)+"\t";
 				 },
 			    "th":lambda(string name, mapping arg, string q, mapping m) {
                                    if(m->notitle && m->notitle==1) m_delete(m, "notitle");
-				   return q+"\t";
+				   return String.trim_all_whites(q)+"\t";
 				 }
     ]), m);
+    q = replace(q, "\t\n", "\n");
   }
 
   sep = m->rowseparator||"\n";
