@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.249 2000/09/26 15:50:35 kuntri Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.250 2000/09/26 16:41:30 kuntri Exp $";
 
 #include <module.h>
 inherit "module";
@@ -363,7 +363,7 @@ opaque=70</gtext>
 </attr>
 
 <attr name=yspacing value=number>
- Sets the verticals pacing.
+ Sets the vertical spacing.
 </attr>";
 
 
