@@ -1,4 +1,4 @@
-// string cvs_version = "$Id: disk_cache.pike,v 1.36 1998/04/17 11:33:28 grubba Exp $";
+// string cvs_version = "$Id: disk_cache.pike,v 1.37 1998/05/07 22:00:24 grubba Exp $";
 #include <module.h>
 #include <stat.h>
 
@@ -303,8 +303,9 @@ class Cache {
 #else /* !constant(Process.create_process) */
     if(!fork())
     {
+      mixed err;
       /* Child */
-      catch {
+      err = catch {
 	lcs->dup2( Stdio.File("stdin") );
 	object privs = Privs("Starting the garbage collector");
 	// start garbagecollector niced as possible to reduce I/O-Load
@@ -327,17 +328,27 @@ class Cache {
 	perror("bin/pike: ");real_perror();
 #endif
       };
+      catch {
+	if (err) {
+	  perror(sprintf("Error when trying to start garbage-collector:\n"
+			 "%s\n", describe_backtrace(err)));
+	}
+      };
       exit(0);
     }
 #endif /* constant(Process.create_process) */
     /* Master */
-    catch
-    {
+    mixed err;
+    err = catch {
       destruct(lcs);
       reinit(basename);
       command_stream->set_id(basename);
       command_stream->set_nonblocking(nil, really_send, do_create);
     };
+    if (err) {
+      report_error(sprintf("Error initiating garbage-collector:\n"
+			   "%s\n", describe_backtrace(err)));
+    }
     return;
   }
   
