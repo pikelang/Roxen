@@ -1,6 +1,6 @@
 // cmdline.cpp: implementation of the CCmdLine class.
 //
-// $Id: cmdline.cpp,v 1.22 2002/10/22 01:25:09 nilsson Exp $
+// $Id: cmdline.cpp,v 1.23 2002/10/23 17:04:22 nilsson Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -1205,11 +1205,11 @@ int CCmdLine::ParseArg(int argc, char *argv[], CCmdLine::tArgType & type)
   // if [ "x$passhelp" = "x1" ] ; then
   //   pass="$pass --version"
   // else
-  //  if [ -f server_core/roxen.pike ]; then
+  //  if [ -f server_core/core.pike ]; then
   //    echo "ChiliMoon `roxen_version`"
   //    exit 0
   //  else
-  //    echo 'server_core/roxen.pike not found!'
+  //    echo 'server_core/core.pike not found!'
   //    exit 1
   //  fi
   // fi

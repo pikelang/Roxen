@@ -1,6 +1,6 @@
 // roxen.cpp: implementation of the CRoxen class.
 //
-// $Id: roxen.cpp,v 1.18 2002/10/22 01:25:28 nilsson Exp $
+// $Id: roxen.cpp,v 1.19 2002/10/23 17:13:48 nilsson Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -68,11 +68,11 @@ void CRoxen::ErrorMsg (int show_last_err, const TCHAR *fmt, ...)
 void CRoxen::PrintVersion()
 {
   /*
-    if [ -f server_core/roxen.pike ]; then
+    if [ -f server_core/core.pike ]; then
       echo "ChiliMoon `roxen_version`"
       exit 0
     else
-      echo 'server_core/roxen.pike not found!'
+      echo 'server_core/core.pike not found!'
       exit 1
     fi
   */
@@ -83,7 +83,7 @@ void CRoxen::PrintVersion()
   build[0]   = '\0';
   rel[0]     = '\0';
 
-  if (GetFileAttributes("server_core/roxen.pike") != -1)
+  if (GetFileAttributes("server_core/core.pike") != -1)
   {
     FILE *f = fopen("data/include/version.h", "rb");
     if (f != NULL)
@@ -150,7 +150,7 @@ void CRoxen::PrintVersion()
   }
   else
   {
-    printf("server_core\\roxen.pike not found!");
+    printf("server_core\\core.pike not found!");
   }
 }
 

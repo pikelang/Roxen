@@ -28,11 +28,11 @@ class Server(string dir,
     Calendar.Day d2, d = get_date_from_cvsid( version_h );
     if( !d )
     {
-      d=get_date_from_cvsid( file( "base_server/roxen.pike" )||"" );
+      d=get_date_from_cvsid( file( "base_server/core.pike" )||"" );
 
-      foreach( ({"base_server/roxen.pike",
+      foreach( ({"base_server/core.pike",
 		 "base_server/configuration.pike",
-		 "base_server/roxenloader.pike",
+		 "base_server/loader.pike",
 		 "start",
 		 "base_server/module.pike" }),
 	       string f )
