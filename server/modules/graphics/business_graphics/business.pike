@@ -16,7 +16,7 @@
  * Prevent less that 100x100 in size.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.15 1997/10/15 03:33:38 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.16 1997/10/15 04:28:40 peter Exp $";
 constant thread_safe=0;
 
 #include <module.h>
@@ -73,7 +73,7 @@ mixed *register_module()
        " lineseparator=  Use the specifyed string as lineseparator intead of tab.\n"
        "</pre>"
        "BUGS:<br><li>background does not work well.<br>"
-       "<br><li>data input is not always what you might expect"
+       "<br><li>"
        ), ({}), 1,
     });
 }
@@ -163,6 +163,7 @@ string itag_data(mapping tag, mapping m, string contents,
 	  foo += ({ (float)gaz });
       }
       bar += ({ foo });
+      foo = ({});
     }
     res->data=bar;
   }
@@ -396,10 +397,8 @@ mapping find_file(string f, object id)
 
   mapping res = decode_value(MIME.decode_base64(f));    
 
-  /*
-    perror("f-#data: %O\n", sizeof(res->data[0]));
-    perror("f-data: %O\n", res->data[0]);
-  */
+  perror("f-#data: %O\n", sizeof(res->data[0]));
+  perror("f-data: %O\n", res->data);
 
   //strap
   res->labels=      ({ res->xstor, res->ystor, res->xunit, res->yunit });
@@ -453,6 +452,7 @@ mapping find_file(string f, object id)
 
 		 "linewidth": res->linewidth,
 		 "tone":      res->tone,
+		 "center":    res->center,
 		 "image":     res->image
   ]);
   
