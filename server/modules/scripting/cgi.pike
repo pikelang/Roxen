@@ -37,7 +37,7 @@ the headers and the body). Please notify the author of the script of this\n\
 problem.\n"
 
 
-constant cvs_version = "$Id: cgi.pike,v 2.18 1999/05/24 23:19:58 neotron Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.19 1999/06/01 16:23:49 grubba Exp $";
 
 #ifdef CGI_DEBUG
 #define DWERROR(X)	report_debug(X)
@@ -127,8 +127,8 @@ array verify_access( RequestID id )
               error("CGI: Bad symlink or device encountered: \"%s\"\n", fname);
           }
         fname += "/";
+	b = a;
       }
-      b = a;
       us = us[5..6];
     } 
     else if(us)
