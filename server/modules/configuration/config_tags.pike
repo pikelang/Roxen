@@ -12,7 +12,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.108 2000/08/28 10:08:37 per Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.109 2000/09/05 08:50:35 per Exp $";
 constant module_type = MODULE_PARSER|MODULE_CONFIG;
 constant module_name = "Administration interface RXML tags";
 
@@ -443,7 +443,7 @@ array get_variable_maps( object mod,
       variables = filter( variables,
                        lambda( mapping q )
                        {
-                         return search( q->rname, m->section )!=-1;
+                         return !search( q->rname, m->section );
                        } );
   }
   sort( variables->name, variables );
