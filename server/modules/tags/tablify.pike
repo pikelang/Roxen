@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
 
-constant cvs_version = "$Id: tablify.pike,v 1.32 1999/08/09 13:00:21 nilsson Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.33 1999/08/10 13:51:35 wellhard Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -200,7 +200,7 @@ string tag_tablify(string tag, mapping m, string q, object id)
   sep = m->cellseparator||"\t";
 
   array title;
-  if((m->nice||m->nicer) && (!m->notitle)) {
+  if((m->nice||m->nicer) && (!m->notitle) && sizeof(rows)) {
     title = rows[0]/sep;
     rows = rows[1..];
   }
