@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
 
-constant cvs_version = "$Id: tablify.pike,v 1.34 1999/08/11 00:51:18 nilsson Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.35 1999/08/11 16:14:27 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -29,7 +29,7 @@ string encode_url(int col, int state, string state_id, object id){
     replace(preview_altered_state(id, state_id, state),({"+","/","="}),({"-","!","*"}));
 }
 
-string html_nice_table(array subtitles, array table, mapping opt, object id)
+string make_table(array subtitles, array table, mapping opt, object id)
 {
   string r = "",type;
 
@@ -46,15 +46,15 @@ string html_nice_table(array subtitles, array table, mapping opt, object id)
     r += "<tr bgcolor=\""+(opt->titlebgcolor||"#112266")+"\">\n";
     foreach(subtitles, string s) {
       col++;
-      r+="<th align=\"left\">"+(opt["interactive-sort"]?"<a href=\""+encode_url(col,opt->is,opt->state_id,id)+"\">":"");
+      r+="<th align=\"left\">"+(opt["interactive-sort"]?"<a href=\""+encode_url(col,opt->sortcol||0,opt->state_id,id)+"\">":"");
       if(opt->nicer)
         r+="<gtext nfont=\""+(opt->font||"lucida")+"\" scale=\""+
 	   (opt->scale||"0.36")+"\" fg=\""+(opt->titlecolor||"white")+"\" bg=\""+
 	   (opt->titlebgcolor||"#112266")+"\""+(opt->noxml?" noxml":"")+">"+s+"</gtext>";
       else
         r+="<font color=\""+(opt->titlecolor||"#ffffff")+"\">"+s+"</font>";
-      r+=(opt["interactive-sort"]?(abs(opt->is)==col?"<img hspace=\"5\" src=\"internal-roxen-sort-"+
-        (opt->is<0?"asc":"desc")+"\" border=\"0\">":"")+
+      r+=(opt["interactive-sort"]?(abs(opt->sortcol||0)==col?"<img hspace=\"5\" src=\"internal-roxen-sort-"+
+        (opt->sortcol<0?"asc":"desc")+"\" border=\"0\">":"")+
         "</a>":"")+"&nbsp;</th>";
     }
     if(col<id->misc->tmp_colmax) r+="<td colspan=\""+(id->misc->tmp_colmax-col)+"\">&nbsp;</td>";
@@ -111,10 +111,8 @@ string html_nice_table(array subtitles, array table, mapping opt, object id)
         r+="<td align=\"right\">"+font+(string)(int)round((float)s)+nofont;
 	break;
 
-#if old_rxml_compat
       case "num":
         type="right";
-#endif
       case "text":
       case "left":
       case "right":
@@ -143,9 +141,9 @@ string html_nice_table(array subtitles, array table, mapping opt, object id)
   return make_container("table",opt,r);
 }
 
-string container_fields(string name, mapping arg, string q, mapping m, mapping arg_list)
+string container_fields(string name, mapping arg, string q, mapping m)
 {
-  arg_list->fields = q/(arg->separator||m->cellseparator||"\t");
+  m->fields = q/(arg->separator||m->cellseparator||"\t");
   return "";
 }
 
@@ -192,8 +190,7 @@ string tag_tablify(string tag, mapping m, string q, object id)
 
   if(m->help) return register_module()[2];
 
-  mapping arg_list = ([]);
-  q = parse_html(q, ([]), (["fields":container_fields]), m, arg_list);
+  q = parse_html(q, ([]), (["fields":container_fields]), m);
 
   sep = m->rowseparator||"\n";
   m_delete(m,"rowseparator");
@@ -216,22 +213,36 @@ string tag_tablify(string tag, mapping m, string q, object id)
 			  return t;
 			}, sep);
 
-  arg_list+=(["is":(int)m->sortcol]);
-  if((int)m->sortcol>0) sort(column(rows,(int)m->sortcol-1),rows);
   if(m["interactive-sort"]) {
     string state_id="";
     state_id = register_state_consumer((m->name || "tb")+sizeof(rows), id);
-    arg_list+=(["is":0,"state_id":state_id]);
+    m->state_id=state_id;
+    m->sortcol=(int)m->sortcol;
     if(id->variables->state){
       decode_state(replace(id->variables->state,({"-","!","*"}),({"+","/","="})), id);
-      arg_list->is=get_state(state_id,id);
+      m->sortcol=get_state(state_id,id)?get_state(state_id,id):m->sortcol;
     }
   }
 
-  if(arg_list->is!=0) {
-    sort(column(rows,abs(arg_list->is)-1),rows);
-    if(arg_list->is<0)
+  if((int)m->sortcol) {
+    int sortcol=abs((int)m->sortcol)-1,num=0;
+    if(m->fields && sortcol+1<sizeof(m->fields)) {
+      switch(m->fields[sortcol]) {
+      case "num":
+      case "int":
+      case "economic-int":
+      case "float":
+      case "economic-float":
+        rows = Array.map(rows, lambda(array a, int c) { return ({ (float)a[c] })+a; }, sortcol);
+        sortcol=0;
+        num=1;
+      }
+    }
+    sort(column(rows,sortcol),rows);
+    if((int)m->sortcol<0)
       rows=reverse(rows);
+    if(num)
+      rows = Array.map(rows, lambda(array a) { return a[1..]; });
   }
 
   if(m->min || m->max) {
@@ -243,7 +254,7 @@ string tag_tablify(string tag, mapping m, string q, object id)
     m_delete(m,"max");
   }
 
-  return html_nice_table(title, rows, arg_list + m, id);
+  return make_table(title, rows, m, id);
 }
 
 mapping query_container_callers()
