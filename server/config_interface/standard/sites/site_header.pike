@@ -1,14 +1,6 @@
 string module_global_page( RequestID id, Configuration conf )
 {
-  switch( id->variables->action )
-  {
-   default:
-     return "";
-   case "add_module":
-     return "";
-   case "delete_module":
-     return "";
-  }
+  
 }
 
 string module_page( RequestID id, string conf, string module )
@@ -39,7 +31,6 @@ string parse( RequestID id )
 
     array pages = 
     ({
-      ({ "event_log", "eventlog", 0, 0 }),
       ({ 0, "status", 0, 0 }),
     });
 
