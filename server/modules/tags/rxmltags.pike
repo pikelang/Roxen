@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.376 2002/06/15 20:08:24 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.377 2002/06/18 16:27:28 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2973,8 +2973,8 @@ class TagDefine {
 
     // Callbacks used by the <attrib> parser. These are intentionally
     // defined outside the scope of do_return to avoid getting dynamic
-    // frames with cyclic references. (Pike ought to be able to
-    // refcount garb this.)
+    // frames with cyclic references. This is only necessary for Pike
+    // 7.2.
 
     private string add_default(Parser.HTML p, mapping m, string c,
 			       mapping defaults, RequestID id)
@@ -3747,7 +3747,7 @@ class TagEmit {
 
   // A slightly modified Array.dwim_sort_func
   // used as emits sort function.
-  static int compare(mixed a0, mixed b0, string v) {
+  static int dwim_compare(mixed a0, mixed b0, string v) {
     RXML.Context ctx;
 
     if(objectp(a0) && a0->rxml_var_eval) {
@@ -3766,10 +3766,10 @@ class TagEmit {
     else
       b0 = (string)b0;
 
-    return compare_iter(a0, b0);
+    return dwim_compare_iter(a0, b0);
   }
 
-  static int compare_iter(string a0,string b0) {
+  static int dwim_compare_iter(string a0,string b0) {
     if (!a0) {
       if (b0)
 	return -1;
@@ -3788,7 +3788,55 @@ class TagEmit {
     if (a1>b1) return 1;
     if (a1<b1) return -1;
     if (a2==b2) return 0;
-    return compare_iter(a2,b2);
+    return dwim_compare_iter(a2,b2);
+  }
+
+  static int strict_compare (mixed a0, mixed b0, string v)
+  // This one does a more strict compare than dwim_compare. It only
+  // tries to convert values from strings to floats or ints if they
+  // are formatted exactly as floats or ints. That since there still
+  // are places where floats and ints are represented as strings (e.g.
+  // in sql query results). Then it compares the values with `<.
+  //
+  // This more closely resembles how 2.1 and earlier compared values.
+  {
+    RXML.Context ctx;
+
+    if(objectp(a0) && a0->rxml_var_eval) {
+      if(!ctx) ctx = RXML_CONTEXT;
+      a0 = a0->rxml_const_eval ? a0->rxml_const_eval(ctx, v, "", RXML.t_text) :
+	a0->rxml_var_eval(ctx, v, "", RXML.t_text);
+    }
+
+    if(objectp(b0) && b0->rxml_var_eval) {
+      if(!ctx) ctx = RXML_CONTEXT;
+      b0 = b0->rxml_const_eval ? b0->rxml_const_eval(ctx, v, "", RXML.t_text) :
+	b0->rxml_var_eval(ctx, v, "", RXML.t_text);
+    }
+
+    if (stringp (a0)) {
+      if (sscanf (a0, "%d%*[ \t]%*c", int i) == 2) a0 = i;
+      else if (sscanf (a0, "%f%*[ \t]%*c", float f) == 2) a0 = f;
+    }
+    if (stringp (b0)) {
+      if (sscanf (b0, "%d%*[ \t]%*c", int i) == 2) b0 = i;
+      else if (sscanf (b0, "%f%*[ \t]%*c", float f) == 2) b0 = f;
+    }
+
+    int res;
+    if (mixed err = catch (res = b0 < a0)) {
+      // Assume we got a "cannot compare different types" error.
+      // Compare the types instead.
+      a0 = sprintf ("%t", a0);
+      b0 = sprintf ("%t", b0);
+      res = b0 < a0;
+    }
+    if (res)
+      return 1;
+    else if (a0 < b0)
+      return -1;
+    else
+      return 0;
   }
 
   class Frame {
@@ -3906,34 +3954,80 @@ class TagEmit {
       if(arrayp(res)) {
 	if(args->sort && !plugin->sort)
 	{
-	  array(string) order = (args->sort - " ")/"," - ({ "" });
-	  res = Array.sort_array( res,
-				  lambda (mapping(string:mixed) m1,
-					  mapping(string:mixed) m2)
-				  {
-				    foreach (order, string field)
-				    {
-				      int(-1..1) tmp;
-				      
-				      if (field[0] == '-')
-					tmp = compare( m2[field[1..]],
-						       m1[field[1..]],
-						       field );
-				      else if (field[0] == '+')
-					tmp = compare( m1[field[1..]],
-						       m2[field[1..]],
-						       field );
-				      else
-					tmp = compare( m1[field], m2[field],
-						       field );
+	  array(string) raw_fields = (args->sort - " ")/"," - ({ "" });
 
-				      if (tmp == 1)
-					return 1;
-				      else if (tmp == -1)
-					return 0;
-				    }
-				    return 0;
-				  } );
+	  class FieldData {
+	    string name;
+	    int order;
+	    function compare;
+	  };
+
+	  array(FieldData) fields = allocate (sizeof (raw_fields));
+
+	  for (int idx = 0; idx < sizeof (raw_fields); idx++) {
+	    string raw_field = raw_fields[idx];
+	    FieldData field = fields[idx] = FieldData();
+	    int i;
+
+	  field_flag_scan:
+	    for (i = 0; i < sizeof (raw_field); i++)
+	      switch (raw_field[i]) {
+		case '-':
+		  if (field->order) break field_flag_scan;
+		  field->order = '-';
+		  break;
+		case '+':
+		  if (field->order) break field_flag_scan;
+		  field->order = '+';
+		  break;
+		case '*':
+		  if (compat_level > 2.2) {
+		    if (field->compare) break field_flag_scan;
+		    field->compare = strict_compare;
+		    break;
+		  }
+		  // Fall through.
+		default:
+		  break field_flag_scan;
+	      }
+	    field->name = raw_field[i..];
+
+	    if (!field->compare) {
+	      if (compat_level > 2.1)
+		field->compare = dwim_compare;
+	      else
+		field->compare = strict_compare;
+	    }
+	  }
+
+	  res = Array.sort_array(
+	    res,
+	    lambda (mapping(string:mixed) m1,
+		    mapping(string:mixed) m2,
+		    array(FieldData) fields)
+	    {
+	      foreach (fields, FieldData field)
+	      {
+		int tmp;
+		switch (field->order) {
+		  case '-':
+		    tmp = field->compare (m2[field->name], m1[field->name],
+					  field->name);
+		    break;
+		  default:
+		  case '+':
+		    tmp = field->compare (m1[field->name], m2[field->name],
+					  field->name);
+		}
+
+		if (tmp == 1)
+		  return 1;
+		else if (tmp == -1)
+		  return 0;
+	      }
+	      return 0;
+	    },
+	    fields);
 	}
 
 	if(filter) {
@@ -4223,10 +4317,7 @@ class IfIs
 
   int(0..1) do_check( string var, array arr, RequestID id) {
     if(sizeof(arr)<2) return !!var;
-    if(!var)
-      // Compatibility kludge to work with the string-only approach
-      // below.
-      return do_check ("", arr, id) || do_check ("0", arr, id);
+    if(!var) var = "";
 
     string is;
 
@@ -4718,8 +4809,8 @@ class TagIfVariable {
   constant plugin_name = "variable";
   constant cache = 1;
   string source(RequestID id, string s) {
-    mixed var=RXML.user_get_var(s);
-    if(!var) return 0;
+    mixed var;
+    if (zero_type (var = RXML.user_get_var(s))) return 0;
     if(arrayp(var)) return var;
     return RXML.t_text->encode (var);
   }
@@ -8272,9 +8363,18 @@ just got zapped?
   Just list the variable names in the scope that the result should
   be sorted on, in prioritized order, e.g. \"lastname,firstname\".
   By adding a \"-\" sign in front of a name, that entry will be
-  sorted in the reversed order. The sort algorithm will treat numbers
-  as complete numbers and not digits in a string, hence \"foo8bar\"
-  will be sorted before \"foo11bar\".</p>
+  sorted in the reversed order.</p>
+
+  <p>The sort algorithm will treat numbers as complete numbers and not
+  digits in a string, hence \"foo8bar\" will be sorted before
+  \"foo11bar\". If a variable name is prefixed by \"*\", then a
+  stricter sort algorithm is used which will compare fields containing
+  floats and integers numerically and all other values as strings,
+  without trying to detecting numbers etc inside them.</p>
+
+  <p>Compatibility notes: In 2.1 compatibility mode the default sort
+  algorithm is the stricter one. In 2.2 compatibility mode the \"*\"
+  flag is disabled.</p>
 </attr>",
 
 	  ([
