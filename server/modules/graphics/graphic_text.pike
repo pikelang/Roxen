@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.61 1997/09/01 14:20:48 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.62 1997/09/03 00:31:42 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -226,10 +226,10 @@ object load_image(string f,object id)
   object img = Image();
 
   if(!(data=roxen->try_get_file(fix_relative(f, id),id)))
-    if(!(file=open(f,"r")) || (!(data=file->read(0x7fffffff))))
+    if(!(file=open(f,"r")) || (!(data=file->read())))
       return 0;
-  
-  if(!img->frompnm(data)/* && !img->fromgif(data)*/) return 0;
+  werror("Read "+strlen(data)+" bytes.\n");
+  if(!img->frompnm(data)) return 0;
   last_image = img; last_image_name = f;
   return img->copy();
 }
@@ -401,6 +401,10 @@ object (Image) make_text_image(mapping args, object font, string text,object id)
 
   if((args->background) && (background = load_image(args->background, id))) {
     background = background;
+    if((float)args->scale >= 0.1)
+      background = background->scale(1.0/(float)args->scale);
+
+
     xsize = background->xsize();
     ysize = background->ysize();
     switch(lower_case(args->talign||"left")) {
@@ -551,12 +555,13 @@ object (Image) make_text_image(mapping args, object font, string text,object id)
 
   background->paste_mask(foreground, text_alpha, xoffset, yoffset);
 
-  foreground = text_alpha = 0;
-
-
   if(args->scale)
     if((float)args->scale <= 2.0)
       background = background->scale((float)args->scale);
+
+
+  foreground = text_alpha = 0;
+
 
   if(args->rotate)
   {
@@ -751,6 +756,7 @@ void restore_cached_args()
       cached_args |= decode_value(data);
     };
   }
+  number = sort(indices(cached_args))[-1]+1;
 }
 
 void save_cached_args()
@@ -789,7 +795,6 @@ int find_or_insert(mapping find)
     if(equal(find, b[i])) {
       return a[i];
     }
-
   cached_args[number]=find;
   remove_call_out(save_cached_args);
   call_out(save_cached_args, 10);
