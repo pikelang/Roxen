@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.99 1998/02/22 19:52:14 per Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.100 1998/02/24 10:54:37 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -1912,6 +1912,9 @@ void start(int num)
 	  err++;
 	} else
 	  open_ports[o]=old;
+	if (privs) {
+	  destruct(privs);	// Paranoia.
+	}
       };
       if(erro) {
 	report_error("Failed to open port "+old[0]+" at "+old[2]+
