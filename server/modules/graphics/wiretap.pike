@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000, Idonex AB.
 //
 
-constant cvs_version="$Id: wiretap.pike,v 1.6 2000/02/09 18:08:04 nilsson Exp $";
+constant cvs_version="$Id: wiretap.pike,v 1.7 2000/02/10 06:32:08 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -15,7 +15,6 @@ constant module_name   = "HTML Color Wiretap";
 constant module_doc    = "Parses HTML tags and tries to determine the text and"
   " background colors all over the page. This information can be used to let image"
   " modules generate images that automatically blend into the page.";
-constant module_unique = 1;
 constant thread_safe   = 1;
 
 void create()
