@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.72 1997/06/11 23:07:19 grubba Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.73 1997/06/12 00:16:22 grubba Exp $";
 #define IN_ROXEN
 #ifdef THREADS
 #include <fifo.h>
@@ -600,9 +600,9 @@ public void update_supports_from_roxen_com()
   {
     if(QUERY(AutoUpdate))
     {
-      async_connect("roxen.com.", 80, connected_to_roxen_com);
+      async_connect("www.roxen.com.", 80, connected_to_roxen_com);
 #ifdef DEBUG
-      perror("Connecting to roxen.com.:80\n");
+      perror("Connecting to www.roxen.com.:80\n");
 #endif
     }
     remove_call_out( update_supports_from_roxen_com );
