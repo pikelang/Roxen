@@ -19,8 +19,7 @@ string dotdot( RequestID id, int n )
 
 #define DOTDOT( X ) dotdot( id, X )
 
-string selected_item( string q, roxen.Configuration c, RequestID id, 
-                      string module )
+string selected_item( string q, Configuration c, RequestID id, string module )
 {
   while ( id->misc->orig )
     id = id->misc->orig;

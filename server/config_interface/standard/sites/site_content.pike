@@ -290,12 +290,12 @@ string find_module_doc( string cn, string mn, RequestID id )
     dbuttons = "<h2>"+LOCALE(196, "Tasks")+"</h2>"+buttons( c, mn, id );
   else
     dbuttons = "";
-  Roxen.RoxenModule m = c->find_module( replace(mn,"!","#") );
+  RoxenModule m = c->find_module( replace(mn,"!","#") );
 
   if(!m)
     return "";
 
-  roxen.ModuleInfo mi = roxen.find_module( (mn/"!")[0] );
+  ModuleInfo mi = roxen.find_module( (mn/"!")[0] );
 
   string eventlog = get_eventlog( m, id );
 
@@ -333,7 +333,7 @@ string find_module_doc( string cn, string mn, RequestID id )
   return replace( "<br /><b><font size='+2'>"
                   + EC(TRANSLATE(m->register_module()[1])) +
                   "</font></b><br />"
-                  + EC(TRANSLATE(m->info())) + "</p><p>"
+                  + EC(TRANSLATE(m->info(id))) + "</p><p>"
                   + EC(TRANSLATE(m->status()||"")) + "</p><p>"
                   + eventlog + dbuttons +
                   ( config_setting( "devel_mode" ) ?
