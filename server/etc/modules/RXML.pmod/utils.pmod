@@ -7,7 +7,7 @@
 //!
 //! Created 2000-01-21 by Martin Stjernholm
 //!
-//! $Id: utils.pmod,v 1.29 2002/04/03 12:02:04 mast Exp $
+//! $Id: utils.pmod,v 1.30 2002/07/16 09:24:11 mast Exp $
 
 constant is_RXML_encodable = 1;
 
@@ -40,7 +40,8 @@ final string format_short (mixed val, void|int length)
     else if (mappingp (val)) {
       res += "([";
       if (sizeof (res) >= length) throw (0);
-      array ind = sort (indices (val));
+      array ind = indices (val);
+      catch (ind = sort (ind));	// sort might fail if there are objects without `< or `>.
       for (int i = 0; i < sizeof (ind);) {
 	format_val (ind[i]);
 	res += ": ";
