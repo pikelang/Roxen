@@ -2,7 +2,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: pathinfo.pike,v 1.22 2004/06/04 08:29:23 _cvs_stephen Exp $";
+constant cvs_version = "$Id: pathinfo.pike,v 1.23 2004/06/06 22:16:26 _cvs_dirix Exp $";
 constant thread_safe = 1;
 
 #ifdef PATHINFO_DEBUG
@@ -57,9 +57,9 @@ mapping|int last_resort(object id)
     PATHINFO_WERR(sprintf("Trying %O...", file));
 
     /* Note: Zapps id->not_query. */
-    array st = id->conf->stat_file(file, id);
+    Stdio.Stat st = id->conf->file_stat(file, id);
     if (st) {
-      if (st[1] >= 0) {
+      if (st->type >= 0) {
         // Found a file!
         id->misc->path_info = query[offsets[probe]..];
         id->not_query = file;
@@ -84,8 +84,8 @@ mapping|int last_resort(object id)
     pi = "/"+reverse( add_path_info )+pi;
     id->misc->path_info = pi;
     PATHINFO_WERR(sprintf("Trying: %O (%O)", query, pi));
-    array st = id->conf->stat_file( query, id );
-    if( st && (st[ ST_SIZE ] > 0))
+    Stdio.Stat st = id->conf->file_stat( query, id );
+    if( st && (st->size > 0))
     {
       id->not_query = query;
       PATHINFO_WERR(sprintf("Found: %O:%O",

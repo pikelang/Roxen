@@ -6,7 +6,7 @@
  * doc = "This is the proxy garbage collector";
  */
 
-string cvs_version = "$Id: garbagecollector.pike,v 1.24 2004/06/04 08:29:16 _cvs_stephen Exp $";
+string cvs_version = "$Id: garbagecollector.pike,v 1.25 2004/06/06 22:16:26 _cvs_dirix Exp $";
 
 //#define DEBUG
 
@@ -335,19 +335,19 @@ void find_all_files_in(string dir, function|void cb)
   string path;
   foreach(get_dir(dir)||({}), path)
   {
-    mixed st = file_stat(dir+path);
+    Stdio.Stat st = file_stat(dir+path);
     if(st)
     {
-      if(st[1] == -2)
+      if(st->type == -2)
       {
 	if((path != "..") && (path!="."))
 	  find_all_files_in(dir+path+"/", cb);
       } else {
 	if(!cb)
 	{
-	  cache_size += FILE_SIZE_TO_BLOCK(st[1]);
+	  cache_size += FILE_SIZE_TO_BLOCK(st->type);
 	  num_files++;
-	  update(dir+path, st[2], st[1]);
+	  update(dir+path, st->atime, st->mtime);
 	} else
 	  cb(dir+path);
       }
@@ -504,7 +504,7 @@ static void got_command(object o, string cmd)
 
 int remove_one_file(string fname, int last_access)
 {
-  mixed s;
+  Stdio.Stat s;
 #ifdef DEBUG
 //  LOGGER("remove one file? "+fname+" --- ");
 #endif

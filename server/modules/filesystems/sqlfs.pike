@@ -2,7 +2,7 @@
 
 inherit "module";
 
-constant cvs_version= "$Id: sqlfs.pike,v 1.8 2004/06/04 08:29:20 _cvs_stephen Exp $";
+constant cvs_version= "$Id: sqlfs.pike,v 1.9 2004/06/06 22:16:26 _cvs_dirix Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -161,9 +161,9 @@ int|object find_file(  string f, RequestID id )
   if( !sizeof( f ) )
     return -1;
   f = decode_path( "/"+f );
-  [array st,mapping d] = low_stat_file( f, id );
+  [Stdio.Stat st,mapping d] = low_stat_file( f, id );
   if( !st )            return 0;
-  if( st[1] == -1 )    return -1;
+  if( st->type == -1 )    return -1;
   id->misc->stat = st;
   return StringFile( d->contents||"" );
 }
