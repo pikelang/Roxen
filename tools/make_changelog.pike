@@ -14,14 +14,21 @@ void find_user(string u)
 
 string mymktime(string from)
 {
+  // NOTE: Doesn't adjust for DST.
   mapping m = ([]);
-  array t = replace(from, ({"/",":","0"}),({" "," ",""}))/" ";
-  m->year = (int)t[0]-1900;
-  m->mon  = (int)t[1]-1;
-  m->mday = (int)t[2];
-  m->hour = (int)t[3];
-  m->min = (int)t[4];
-  m->sec = (int)t[5];
+  array t = replace(from, ({"/",":"}),({" "," "}))/" ";
+  t = Array.map(t,
+		lambda(string s) {
+		  int i;
+		  sscanf(s, "%d", i);
+		  return i;
+		});
+  m->year = t[0]-1900;
+  m->mon  = t[1]-1;
+  m->mday = t[2];
+  m->hour = t[3];
+  m->min = t[4];
+  m->sec = t[5];
 //werror("%O\n", m);
   if(rxml) return "<date unix_time="+mktime(m)+"> ";
   return (ctime(mktime(m))-"\n"+" ");
