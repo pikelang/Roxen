@@ -1,6 +1,6 @@
 #if efun(seteuid)
 #include <module.h>
-string cvs_version = "$Id: privs.pike,v 1.8 1997/04/08 23:41:53 marcus Exp $";
+string cvs_version = "$Id: privs.pike,v 1.9 1997/04/27 21:27:01 grubba Exp $";
 
 int saved_uid;
 int saved_gid;
@@ -18,12 +18,14 @@ static private string dbt(array t)
 
 void create(string reason, int|string|void uid, int|void gid)
 {
+  array u;
+
   if(getuid()) return;
   if(!stringp(uid))
-    array u = getpwuid(uid);
+    u = getpwuid(uid);
   else
   {
-    array u = getpwnam(uid);
+    u = getpwnam(uid);
     if(u) 
       uid = u[2];
   }
