@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.39 1997/05/28 00:42:26 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.40 1997/06/01 22:10:29 grubba Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -1089,7 +1089,7 @@ mapping configuration_parse(object id)
       
       // Re-read a module from disk
       // This is _not_ as easy as it sounds, since quite a lot of
-      // caches and stuff has to be unvalidated..
+      // caches and stuff have to be invalidated..
     case "refresh":
     case "reload":
       object mod;
@@ -1120,6 +1120,7 @@ mapping configuration_parse(object id)
 	_master->set_inhibit_compile_errors(0);
 	return rep;
       }
+      _master->set_inhibit_compile_errors(0);
       object mod;
       if(!o->config()->disable_module(name))error("Failed to disable module.\n");
       if(!(mod=o->config()->enable_module(name)))error("Failed to enable module.\n");
