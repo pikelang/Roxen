@@ -35,6 +35,7 @@ worldmap binary
 /server/base_server/basic_defvar.pike foreign_ident
 /server/base_server/cache.pike foreign_ident
 /server/base_server/configuration.pike foreign_ident
+/server/base_server/dbs.pike foreign_ident
 /server/base_server/disk_cache.pike foreign_ident
 /server/base_server/fastpipe.pike foreign_ident
 /server/base_server/fonts.pike foreign_ident

@@ -1,4 +1,7 @@
 // Symbolic DB handling. 
+//
+// $Id: dbs.pike,v 1.3 2001/01/02 16:57:20 grubba Exp $
+
 Sql.sql db = connect_to_my_mysql( 0, "roxen" );
 function(string,mixed...:array(mapping(string:string))) query = db->query;
 
@@ -54,7 +57,7 @@ static void set_user_permissions( Configuration c, string name, int level )
 array(string) list( void|Configuration c )
 //! List all database aliases.
 //!
-//! If c is specified, only databases the given configuration can
+//! If @[c] is specified, only databases that the given configuration can
 //! access will be visible.
 {
   array(mapping(string:string)) res;
@@ -79,7 +82,7 @@ mapping(string:mapping(string:int)) get_permission_map( )
 //!      ...
 //!    ])
 //!
-//!  Level is as for set_permission.
+//! Level is as for @[set_permission()].
 {
   mapping(string:mapping(string:int)) res = ([]);
 
@@ -193,11 +196,11 @@ static object low_get( string user, string db )
 }
 
 ROWrapper get( string name, void|Configuration c, int|void ro )
-//! Get the database 'name'. If the configuration 'c' is specified,
+//! Get the database @[name]. If the configuration @[c] is specified,
 //! only return the database if the configuration has at least read
 //! access.
 //!
-//! The object returned contains at least the methods query and big_query
+//! The object returned contains at least the methods query() and big_query().
 {
   array(mapping(string:mixed)) res;
   if( c )
@@ -215,7 +218,7 @@ ROWrapper get( string name, void|Configuration c, int|void ro )
 }
 
 void drop_db( string name )
-//! Drop the database 'name'. If the database is internal, the actual
+//! Drop the database @[name]. If the database is internal, the actual
 //! tables will be deleted as well.
 {
   array q = query( "SELECT name,local FROM dbs WHERE name='%s'", name );
@@ -229,10 +232,10 @@ void drop_db( string name )
 void create_db( string name, string path, int is_internal )
 //! Create a new symbolic database alias.
 //!
-//! If is_internal is specified, the database will be automatically
-//! created if it does not exist, and the path argument is ignored.
+//! If @[is_internal] is specified, the database will be automatically
+//! created if it does not exist, and the @[path] argument is ignored.
 //!
-//! If the database 'name' already existed, it will be overwritten.
+//! If the database @[name] already exists, it will be overwritten.
 {
   query( "DELETE FROM dbs WHERE name='%s'", name );
   query( "INSERT INTO dbs values ('%s','%s',%s)",
@@ -243,8 +246,8 @@ void create_db( string name, string path, int is_internal )
 
 
 int set_permission( string name, Configuration c, int level )
-//! Set the permission for the configuration 'c' on the database
-//! 'name' to level.
+//! Set the permission for the configuration @[c] on the database
+//! @[name] to @[level].
 //!
 //! Levels:
 //!  DBManager.NONE:  No access
@@ -255,15 +258,15 @@ int set_permission( string name, Configuration c, int level )
 //!  possible to differentiate between read and write permissions,
 //!  roxen does try to do that anyway by checking the requests and
 //!  disallowing anything but 'select' and 'show' from read only
-//!  databses. Please note that this is not really all that secure.
+//!  databases. Please note that this is not really all that secure.
 //!
-//!  From local (in the mysql used by roxen) databases, the
+//!  From local (in the mysql used by Roxen) databases, the
 //!  permissions are enforced by using different users, and should be
 //!  secure as long as the permission system in mysql is not modified
 //!  directly by the administrator.
 //!
-//!  This function returns 0 if it failed. The only reason for it to
-//!  fail is if there is no database with the specified name.
+//!  This function returns 0 if it fails. The only reason for it to
+//!  fail is if there is no database with the specified @[name].
 {
   array(mapping(string:mixed)) d =
            query("SELECT path,local FROM dbs WHERE name='%s'", name );
