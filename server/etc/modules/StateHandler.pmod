@@ -1,7 +1,7 @@
 // This is the Roxen WebServer state mechanism.
 // Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: StateHandler.pmod,v 1.1 2001/01/21 21:40:37 nilsson Exp $
+// $Id: StateHandler.pmod,v 1.2 2001/01/25 23:21:39 nilsson Exp $
 
 // This file defines a page state mechanism, i.e. a pike 
 // object in which the "objects" on a page can register
@@ -91,9 +91,16 @@ class Page_state {
   }
 
   string use_session(void|string new_session_id) {
-    return id->misc->state->session = new_session_id ||
+    new_session_id = new_session_id ||
       id->misc->state->session ||
       roxenp()->create_unique_id();
+
+    id->misc->state->session = new_session_id;
+
+    id->misc->state->values = (cache.get_session_data(new_session_id)||([])) |
+      id->misc->state->values;
+
+    return new_session_id;
   }
 
   int uri_decode(string from)
@@ -124,9 +131,8 @@ class Page_state {
 
     if(session_id) {
       id->misc->state->session = id->misc->state->session || session_id;
-      if(cache.get_session_data(session_id))
-	id->misc->state->values = (cache.get_session_data(session_id)+([])) |
-	  id->misc->state->values;
+      id->misc->state->values = (cache.get_session_data(session_id)||([])) |
+	id->misc->state->values;
     }
 
     mixed error=catch {
@@ -139,6 +145,7 @@ class Page_state {
     mapping new_state;
     if( catch(new_state=decode_value(from)) )
       return 0;
+    if(!new_state) return 1;
     if(!mappingp(new_state)) return 0;
 
     id->misc->state->values = id->misc->state->values | new_state;
@@ -224,4 +231,11 @@ class Page_state {
     return replace(encode(value,key),({"+","/","="}),({"-","!","_"}));
   }
 
+}
+
+string decode_session_id(string state) {
+  if(!state) return 0;
+  string session_id;
+  sscanf(state, "%s$", session_id);
+  return session_id;
 }
