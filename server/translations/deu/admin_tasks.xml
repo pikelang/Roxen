@@ -920,79 +920,66 @@ ist, kann diese Auswahl die aktuell laufende Version wechseln.</t>
 </str>
 
 <str id="156">
-<new/>
 <o>Active connection</o>
-<t></t>
+<t>Aktive Verbindungen</t>
 </str>
 
 <str id="157">
-<new/>
 <o>All currently active connection</o>
-<t></t>
+<t>Alle derzeit aktiven Verbindungen</t>
 </str>
 
 <str id="158">
-<new/>
 <o>Time</o>
-<t></t>
+<t>Zeit</t>
 </str>
 
 <str id="159">
-<new/>
 <o>Sent (Mib)</o>
-<t></t>
+<t>Versendet (Mib)</t>
 </str>
 
 <str id="160">
-<new/>
 <o>Kibyte/s</o>
-<t></t>
+<t>Kibyte/s</t>
 </str>
 
 <str id="161">
-<new/>
 <o>Total bandwidth</o>
-<t></t>
+<t>Gesamte Bandbreite</t>
 </str>
 
 <str id="162">
-<new/>
 <o>Refresh</o>
-<t></t>
+<t>Neuladen</t>
 </str>
 
 <str id="163">
-<new/>
 <o>Debug Summary</o>
-<t></t>
+<t>Debug-Zusammenfassung</t>
 </str>
 
 <str id="164">
-<new/>
 <o>Shows a text file containing a configuration summary, suitable for support purposes.</o>
-<t></t>
+<t>Anzeige einer Textdatei mit Zusammenfassung der Konfiguration, für Support-Zwecke.</t>
 </str>
 
 <str id="165">
-<new/>
 <o>License status</o>
-<t></t>
+<t>Lizenz-Status</t>
 </str>
 
 <str id="166">
-<new/>
 <o>Show information about the installed licenses and there usage.</o>
-<t></t>
+<t>Zeigt Informationen über die installierten Lizenzen und deren Verwendung</t>
 </str>
 
 <str id="167">
-<new/>
 <o>Upload license</o>
-<t></t>
+<t>Lizenz einspielen</t>
 </str>
 
 <str id="168">
-<new/>
 <o>Upload a new roxen license file.</o>
-<t></t>
+<t>Eine neue Roxen Lizenzdatei einspielen.</t>
 </str>
