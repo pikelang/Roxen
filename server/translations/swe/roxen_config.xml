@@ -22,12 +22,12 @@
 
 <str id="4">
 <o>Sent headers</o>
-<t>Skickade headers</t>
+<t>Skickade headrar</t>
 </str>
 
 <str id="5">
 <o>Number of requests</o>
-<t>Antal anrop</t>
+<t>Antal träffar</t>
 </str>
 
 <str id="6">
@@ -1518,15 +1518,13 @@ processen försvinner efter senast 15 minuter.</t>
 </str>
 
 <str id="237">
-<new/>
 <o>Jackdaws love my big sphinx of quartz.</o>
-<t></t>
+<t>Gud hjälpe W. Zorns mö qvickt få byxa.</t>
 </str>
 
 <str id="238">
-<new/>
 <o>Features</o>
-<t></t>
+<t>Finesser</t>
 </str>
 
 <str id="dM">
@@ -1555,9 +1553,8 @@ processen försvinner efter senast 15 minuter.</t>
 </str>
 
 <str id="243">
-<new/>
 <o>N/A</o>
-<t></t>
+<t>-</t>
 </str>
 
 <str id="244">
@@ -1636,29 +1633,29 @@ string full_status(string real_version, int boot_time,
 		   float rpm, string received_data) {
   return(sprintf("<table>"
 		 "<tr><td><b>Version:</b></td><td colspan=\"2\">%s</td></tr>\n"
-		 "<tr><td><b>Booted on:</b></td><td colspan=\"2\">%s</td></tr>\n"
+		 "<tr><td><b>Startad:</b></td><td colspan=\"2\">%s</td></tr>\n"
 		 "<tr><td><b>Uptime:</b></td>"
-		 "<td colspan=\"2\">%d day%s, %02d:%02d:%02d</td></tr>\n"
+		 "<td colspan=\"2\">%d dag%s, %02d:%02d:%02d</td></tr>\n"
 		 "<tr><td colspan=\"3\">&nbsp;</td></tr>\n"
-		 "<tr><td><b>Sent data:</b></td><td>%s"
+		 "<tr><td><b>Skickad data:</b></td><td>%s"
 		 "</td><td>%.2f Kbit/sec</td></tr><tr>\n"
-		 "<td><b>Sent headers:</b></td><td>%s</td></tr>\n"
+		 "<td><b>Skickade headrar:</b></td><td>%s</td></tr>\n"
 
-		 "<tr><td><b>Number of requests:</b></td>"
+		 "<tr><td><b>Antal träffar:</b></td>"
 		 "<td>%8d</td><td>%.2f/min</td></tr>\n"
-		 "<tr><td><b>Received data:</b></td>"
+		 "<tr><td><b>Mottagen data:</b></td>"
 		 "<td>%s</td></tr>\n"
 		 "</table>",
 		 real_version, ctime(boot_time),
-		 days, (days==1?"":"s"), hrs, min, sec,
+		 days, (days==1?"":"ar"), hrs, min, sec,
 		 sent_data, kbps, sent_headers,
 		 num_requests, rpm, received_data));
 }
 
 string ftp_stat_line(string cmd, int times) {
   return(sprintf("<tr align=\"right\"><td><b>%s</b></td>"
-		 "<td align=\"right\">%d</td><td> time%s</td></tr>\n",
-		 cmd, times, (times == 1)?"":"s"));
+		 "<td align=\"right\">%d</td><td> gång%s</td></tr>\n",
+		 cmd, times, (times == 1)?"":"er"));
 }
 
 </pike>
@@ -1679,9 +1676,8 @@ string ftp_stat_line(string cmd, int times) {
 </str>
 
 <str id="254">
-<new/>
 <o>Module homepage</o>
-<t></t>
+<t>Modulens hemsida</t>
 </str>
 
 <str id="260">
@@ -1697,7 +1693,8 @@ string ftp_stat_line(string cmd, int times) {
 <str id="dt">
 <o>Administrator logged on as %s from %s.
 </o>
-<t>Administratör loggade in som %s från %s.</t>
+<t>Administratör loggade in som %s från %s.
+</t>
 </str>
 
 <str id="262">
