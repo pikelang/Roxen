@@ -1,7 +1,7 @@
 /*
  * Roxen master
  */
-string cvs_version = "$Id: roxen_master.pike,v 1.55 1999/11/24 02:16:49 per Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.56 1999/11/24 02:18:10 per Exp $";
 
 /*
  * name = "Roxen Master";
@@ -70,9 +70,9 @@ mapping resolv_cache = ([]);
 mixed resolv(string a, string b)
 {
   if( resolv_cache[a] )
-    return resolv_cache[a]->value;
+    return resolv_cache[a]->value ? resolv_cache[a]->value : ([])[0];
   resolv_cache[a] = ([ "value":(::resolv(a,b)) ]);
-  return resolv_cache[a]->value;
+  return resolv_cache[a]->value ? resolv_cache[a]->value : ([])[0];
 }
 
 int refresh( program p )
