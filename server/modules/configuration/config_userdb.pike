@@ -26,16 +26,24 @@ class ConfigurationSettings
   inherit "basic_defvar";
   string name, host;
 
+  mapping trim_variables( mapping m )
+  {
+    mapping q = ([]);
+    foreach( indices( m ), string v )  q[v] = m[v][VAR_VALUE];
+    return q;
+  }
+
   void save()
   {
     werror("Saving settings for "+name+"\n");
-    settings->set( name, variables );
+    settings->set( name, trim_variables(variables) );
   }
 
   void create( string _name )
   {
     name = _name;
-    variables = settings->get( name ) || ([]);
+    variables = ([]);
+    mapping vv = settings->get( name );
     defvar( "theme", "default",
             "Theme",  TYPE_THEME, "The theme to use" );
 
@@ -141,6 +149,11 @@ class ConfigurationSettings
 (["svenska":([ "normal":"normal","fast":"snabb","compact":"kompakt","really compact":"kompaktare"]),
  ])
             );
+
+    if( vv )
+      foreach( indices( vv ), string i )
+        if( variables[i] )
+          variables[i][VAR_VALUE] = vv[i];
   }
 }
 
