@@ -1,0 +1,4 @@
+<name>Multiple frontend modules</name>
+<doc>Provides inter-server communication facilities.
+     Right now only the server part is implemented, the frontend
+     modules are not yet done.</doc>
