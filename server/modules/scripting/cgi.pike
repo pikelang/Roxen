@@ -9,7 +9,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: cgi.pike,v 2.15 1999/05/23 23:43:49 grubba Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.16 1999/05/23 23:59:58 grubba Exp $";
 
 #ifdef CGI_DEBUG
 #define DWERROR(X)	report_debug(X)
@@ -176,9 +176,6 @@ class Wrapper
 
     if( nelems < 0 )
       // if nelems == 0, network buffer is full. We still want to continue.
-      // -- Are you sure about this? The usual reason write() returns 0
-      //    is that the client has closed the connection...
-      //    /grubba 1999-05-23
     {
       buffer="";
       done(); 
