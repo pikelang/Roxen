@@ -1,5 +1,7 @@
 #include <module.h>
+#include <variables.h>
 inherit "module";
+
 
 #if constant(PHP4.Interpreter)
 /* Roxen PHP module.
@@ -17,7 +19,7 @@ inherit "module";
 inherit "roxenlib";
 
 
-constant cvs_version = "$Id: php4.pike,v 2.4 2000/03/13 19:03:01 neotron Exp $";
+constant cvs_version = "$Id: php4.pike,v 2.5 2000/04/12 23:05:16 neotron Exp $";
 constant thread_safe = 1;
 
 constant module_type = MODULE_FILE_EXTENSION;
@@ -80,7 +82,7 @@ class PHPScript
       buffer = buffer[nelems..];
       DWERROR(sprintf("Done: %d %d...\n", strlen(buffer), close_when_done));
       if(close_when_done && !strlen(buffer)) {
-        destruct();
+	destruct();
       }
     }
   }
@@ -104,7 +106,7 @@ class PHPScript
   {
     DWERROR(sprintf("PHP:PHPWrapper::send_headers(%d,%O)\n", code, headers));
     string result = "", post="";
-    string code = mid->errors[code||200];
+    string code = errors[code||200];
     int ct_received = 0, sv_received = 0;
     if(headers)
       foreach(indices(headers), string header)
@@ -167,7 +169,16 @@ class PHPScript
     interpreter->run(command, options, this_object(), done);
     return this_object();
   }
-
+  int post_sent;
+  string read_post(int length)
+  {
+    if(!mid->data) return 0;
+    string data = mid->data[post_sent..post_sent+length-1];
+    post_sent += strlen(data);
+    //    werror("%s\n", data);
+    return data;
+  }
+  
   void create( object id )
   {
     DWERROR("PHP:PHPScript()\n");
@@ -182,7 +193,7 @@ class PHPScript
     }
     command = id->realfile;
 
-    environment =(QUERY(env)?getenv():([]));
+    environment =([]);
     environment |= global_env;
     environment |= build_env_vars( id->realfile, id, id->misc->path_info );
     environment |= build_roxen_env_vars(id);
@@ -199,6 +210,15 @@ class PHPScript
       m_delete(environment, "REMOTE_PASSWORD");
     if (id->rawauth)
       environment["AUTH_TYPE"] = (id->rawauth/" ")[0];
+    // Lets populate more!
+    environment["REQUEST_URI"] =  environment["DOCUMENT_URI"];
+    environment["PHP_SELF"]    =  environment["DOCUMENT_URI"];
+
+    // Not part of the "standard" PHP environment apparently...
+    m_delete(environment, "DOCUMENT_URI");
+    
+    if(id->misc->user_document_root)
+      environment["DOCUMENT_ROOT"] = id->misc->user_document_root;
   }
 }
 
@@ -227,10 +247,11 @@ void start(int n, object conf)
   }
 }
 
-mapping handle_file_extension(object o, string e, object id)
+int|mapping handle_file_extension(object o, string e, object id)
 {
   DWERROR("PHP:handle_file_extension()\n");
-  PHPScript( id )->run();
+  roxen->handle(PHPScript(id)->run);
+  DWERROR("PHP:handle_file_extension done\n");
   return http_pipe_in_progress();
 }
 
@@ -245,6 +266,8 @@ array (string) query_file_extensions()
 
 void create(object conf)
 {
+#if 0
+  Done by default by php4...
   defvar("env", 0, "Pass environment variables", TYPE_FLAG,
 	 "If this is set, all environment variables roxen has will be "
          "passed to PHP scripts, not only those defined in the PHP/1.1 standard. "
@@ -256,7 +279,7 @@ void create(object conf)
 	 "echo ''\n"
 	 "env\n"
 	 "</pre>)");
-
+#endif
   defvar("rxml", 0, "Parse RXML in PHP-scripts", TYPE_FLAG,
 	 "If this is set, the output from PHP-scripts handled by this "
          "module will be RXMl parsed. NOTE: No data will be returned to the "
