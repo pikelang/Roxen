@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.28 1999/02/04 20:37:51 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.29 1999/02/04 21:02:33 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -105,34 +105,34 @@ class imap_mail
     return imap_list( ((array) m) * ({ }));
   }
 
-  object make_bodystructure(int extension_data)
+  object make_bodystructure(object msg, int extension_data)
   {
     array a;
 
 #ifdef IMAP_DEBUG
     werror("imap_mail->make_bodystructure(%O, %O)\n",
-	   mkmapping(indices(mail), values(mail)), extension_data);
+	   mkmapping(indices(msg), values(msg)), extension_data);
 #endif /* IMAP_DEBUG */
 
-    if (mail->body_parts)
+    if (msg->body_parts)
     {
-      a = Array.map(mail->body_parts, make_bodystructure, extension_data)
-	+ ({ mail->subtype });
+      a = Array.map(msg->body_parts, make_bodystructure, extension_data)
+	+ ({ msg->subtype });
       if (extension_data)
-	a += ({ mapping_to_list(mail->params),
+	a += ({ mapping_to_list(msg->params),
 		// FIXME: Disposition header described in rfc 1806,
 		// FIXME: Language tag (rfc 1766).
 	});
     } else {
-      string data = mail->getdata() || "";
+      string data = msg->getdata() || "";
 
-      a = ({ mail->type, mail->subtype,
-	     mapping_to_list(mail->params),
+      a = ({ msg->type, msg->subtype,
+	     mapping_to_list(msg->params),
 	     // FIXME: Content id (rfc 2045)
 	     // FIXME: Body description
 	       
 	     // NOTE: The MIME module decodes any transfer encoding
-	     "binary",  // mail->transfer_encoding, 
+	     "binary",  // msg->transfer_encoding, 
 	     imap_number(strlen(data)) });
 	
       // FIXME: Type specific fields, for text/* and message/rfc822 messages
@@ -449,7 +449,8 @@ class imap_mail
       throw( ({ "Internal error", backtrace() }) );
     }
     case "bodystructure": 
-      return response(make_bodystructure(!attr->no_extention_data));
+      return response(make_bodystructure(MIME.Message(mail->body(), 0, 0, 1),
+					 !attr->no_extention_data));
 
     case "envelope": 
       return response(make_envelope(get_headers()));
