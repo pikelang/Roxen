@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997-2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.89 2001/10/12 11:25:43 grubba Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.90 2001/10/12 11:34:29 grubba Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -235,6 +235,8 @@ class TagSQLOutput {
 }
 #endif
 
+inherit "emit_object";
+
 class SqlEmitResponse {
   inherit EmitObject;
   private object sqlres;
@@ -264,7 +266,6 @@ class SqlEmitResponse {
 
 class TagSqlplugin {
   inherit RXML.Tag;
-  inherit "emit_object";
   constant name = "emit";
   constant plugin_name = "sql";
   mapping(string:RXML.Type) req_arg_types = ([ "query":RXML.t_text(RXML.PEnt) ]);
