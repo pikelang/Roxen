@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.109 1998/02/27 05:31:30 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.110 1998/02/27 05:46:07 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -1550,6 +1550,7 @@ void pop_color(string tagname,mapping args,object id,object file,
 		 mapping defines)
 {
   array c = id->misc->colors;
+  if(!c ||!sizeof(c)) return;
   int i;
   tagname = tagname[1..];
 
