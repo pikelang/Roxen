@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.104 1998/05/28 21:59:13 js Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.105 1998/05/29 13:19:12 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -2562,11 +2562,42 @@ array(string) tag_noparse(string t, mapping m, string c)
   return ({ c });
 }
 
+string tag_nooutput(string t, mapping m, string c, object id)
+{
+  parse_rxml(c, id);
+  return "";
+}
+
+string tag_sort(string t, mapping m, string c, object id)
+{
+  if(!m->separator)
+    m->separator = "\n";
+
+  string pre="", post="";
+  array lines = c/m->separator;
+
+  while(lines[0] == "")
+  {
+    pre += m->separator;
+    lines = lines[1..];
+  }
+
+  while(lines[-1] == "")
+  {
+    post += m->separator;
+    lines = lines[..sizeof(lines)-2];
+  }
+
+  return pre + sort(lines)*m->separator + post;
+}
+
 mapping query_container_callers()
 {
   return (["comment":lambda(){ return ""; },
 	   "source":tag_source,
 	   "noparse":tag_noparse,
+	   "nooutput":tag_nooutput,
+	   "sort":tag_sort,
 	   "doc":tag_source2,
 	   "autoformat":tag_autoformat,
 	   "random":tag_random,
