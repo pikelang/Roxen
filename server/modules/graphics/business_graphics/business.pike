@@ -182,7 +182,7 @@ på alla saker du använder i mappingarna.
 
 */
 
-constant cvs_version = "$Id: business.pike,v 1.72 1998/02/23 20:46:13 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.73 1998/02/24 09:56:46 hedda Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -265,6 +265,10 @@ mixed *register_module()
        
        "  <b>horgrid</b>        If present a horizontal grid is drawn\n"
        "  <b>vertgrid</b>       If present a vertical grid is drawn\n"
+       "  <b>xgridspace</b>     The space between two vertical grids in the\n"
+       "                 same unit as the data.\n"
+       "  <b>ygridspace</b>     The space between two horizontal grids in\n"
+       "                 the same unit as the data.\n"
 
        "\n  You can also use the regular &lt;<b>img</b>&gt; arguments. They"
        " will be passed\n  on to the resulting &lt;<b>img</b>&gt; tag.\n\n"
