@@ -12,7 +12,7 @@
  */
 
 #ifndef lint
-static const char rcsid[] = "$Id: cgi-fcgi.c,v 1.4 1997/10/07 22:13:38 grubba Exp $";
+static const char rcsid[] = "$Id: cgi-fcgi.c,v 1.5 1997/11/07 00:08:34 grubba Exp $";
 #endif /* not lint */
 
 #include <stdio.h>
@@ -21,6 +21,10 @@ static const char rcsid[] = "$Id: cgi-fcgi.c,v 1.4 1997/10/07 22:13:38 grubba Ex
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef HAVE_STRINGS_H
+/* Needed for bzero(), which is used by FD_SET et al on AIX. */
+#include <strings.h>
+#endif /* HAVE_STRINGS_H */
 #include <errno.h>
 #include <ctype.h>
 #include <netdb.h>
@@ -882,7 +886,7 @@ static int ParseArgs(int argc, char *argv[],
 			}
 			if((av[ac] = malloc(strlen(tp1)+1)) == NULL) {
 			    fprintf(stderr, "Cannot allocate %d bytes\n",
-				    strlen(tp1)+1);
+				    ((int)strlen(tp1)+1));
 			    exit(-1);
 			}
 			strcpy(av[ac++], tp1);
