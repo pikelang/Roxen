@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.129 2001/11/05 13:34:09 grubba Exp $
+// $Id: Roxen.pmod,v 1.130 2002/02/08 08:36:13 stewa Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2064,39 +2064,64 @@ class _charset_decoder(object cs)
 
 function get_client_charset_decoder( string едц, RequestID|void id )
   //! Returns a decoder for the clients charset, given the clients
-  //! encoding of the string "едц". See the roxen-automatic-charset-variable
-  //! tag.
+  //! encoding of the string "едц&#x829f;".
+  //! See the roxen-automatic-charset-variable tag.
 {
-  switch( (едц/"\0")[0] )
-  {
-   case "edv":
-     report_notice( "Warning: Non 8-bit safe client detected (%s)",
-                    (id?id->client*" ":"unknown client"));
-     return 0;
+  // Netscape seems to send "?" for characters that can't be represented
+  // by the current character set while IE encodes those characters
+  // as entities.
+  string test = replace((едц/"\0")[0],
+			({ "&aring;", "&#229;", "&#xe5;",
+			   "&auml;", "&#228;", "&#xe4;",
+			   "&ouml;", "&#246;", "&#xf6;",
+			   "&#33439;","&#x829f;" }),
+			({ "?", "?", "?",
+			   "?", "?", "?",
+			   "?", "?", "?",
+			   "?", "?" }));
+			
+  switch( test ) {
+  case "edv":
+  case "edv?":
+    report_notice( "Warning: Non 8-bit safe client detected (%s)",
+		   (id?id->client*" ":"unknown client"));
+    return 0;
 
-   case "едц":
-     return 0;
-
-   case "\33-Aедц":
-     id && id->set_output_charset && id->set_output_charset( "iso-2022" );
-     return _charset_decoder(Locale.Charset.decoder("iso-2022-jp"))->decode;
-
-   case "+AOUA5AD2-":
-     id && id->set_output_charset && id->set_output_charset( "utf-7" );
+  case "едц":
+  case "едц?":
+    return 0;
+    
+  case "\33-Aедц":
+  case "\33-A\345\344\366\33$Bgl":
+    id && id->set_output_charset && id->set_output_charset( "iso-2022" );
+    return _charset_decoder(Locale.Charset.decoder("iso-2022-jp"))->decode;
+    
+  case "+AOUA5AD2-":
+  case "+AOUA5AD2gp8-":
+    id && id->set_output_charset && id->set_output_charset( "utf-7" );
      return _charset_decoder(Locale.Charset.decoder("utf-7"))->decode;
+     
+  case "ГҐГ¤Г¶":
+  case "ГҐГ¤":
+  case "ГҐГ¤Г¶\350\212\237":
+    id && id->set_output_charset && id->set_output_charset( "utf-8" );
+    return utf8_to_string;
 
-   case "ГҐГ¤Г¶":
-   case "ГҐГ¤":
-     id && id->set_output_charset && id->set_output_charset( "utf-8" );
-     return utf8_to_string;
-
-   case "\214\212\232":
-     id && id->set_output_charset && id->set_output_charset( "mac" );
-     return _charset_decoder( Locale.Charset.decoder( "mac" ) )->decode;
-
-   case "\0е\0д\0ц":
+  case "\214\212\232":
+  case "\214\212\232?":
+    id && id->set_output_charset && id->set_output_charset( "mac" );
+    return _charset_decoder( Locale.Charset.decoder( "mac" ) )->decode;
+    
+  case "\0е\0д\0ц":
+  case "\0е\0д\0ц\202\237":
      id&&id->set_output_charset&&id->set_output_charset(string_to_unicode);
      return unicode_to_string;
+     
+  case "\344\214":
+  case "???\344\214":
+  case "\217\206H\217\206B\217\206r\344\214": // Netscape sends this (?!)
+    id && id->set_output_charset && id->set_output_charset( "shift_jis" );
+    return _charset_decoder(Locale.Charset.decoder("shift_jis"))->decode;
   }
   report_warning( "Unable to find charset decoder for едц == %O\n",едц);
 }
