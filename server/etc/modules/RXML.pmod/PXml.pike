@@ -5,7 +5,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: PXml.pike,v 1.15 2000/01/14 05:16:18 mast Exp $
+//! $Id: PXml.pike,v 1.16 2000/01/18 18:11:56 mast Exp $
 
 #pragma strict_types
 
@@ -125,12 +125,12 @@ static void create (
 
     if (prefix) {
       if (mapping(string:TAG_TYPE) m = tset->low_tags)
-	foreach (indices (m), string n) new_tagdefs[prefix + n] = ({m[n], 0});
+	foreach (indices (m), string n) new_tagdefs[prefix + ":" + n] = ({m[n], 0});
       if (mapping(string:CONTAINER_TYPE) m = tset->low_containers)
-	foreach (indices (m), string n) new_tagdefs[prefix + n] = ({0, m[n]});
+	foreach (indices (m), string n) new_tagdefs[prefix + ":" + n] = ({0, m[n]});
       foreach (tlist, RXML.Tag tag)
 	if (!(tag->flag & RXML.FLAG_NO_PREFIX))
-	  new_tagdefs[prefix + [string] tag->name] =
+	  new_tagdefs[prefix + ":" + [string] tag->name] =
 	    tag->flags & RXML.FLAG_CONTAINER ?
 	    ({0,
 	      [function(Parser.HTML,mapping(string:string),string:array)]
@@ -141,14 +141,14 @@ static void create (
 	      0});
     }
 
-    if (!tset->prefix_required) {
+    if (!tset->prefix_req) {
       if (mapping(string:TAG_TYPE) m = tset->low_tags)
 	foreach (indices (m), string n) new_tagdefs[n] = ({m[n], 0});
       if (mapping(string:CONTAINER_TYPE) m = tset->low_containers)
 	foreach (indices (m), string n) new_tagdefs[n] = ({0, m[n]});
     }
     foreach (tlist, RXML.Tag tag)
-      if (!tset->prefix_required || tag->flag & RXML.FLAG_NO_PREFIX)
+      if (!tset->prefix_req || tag->flag & RXML.FLAG_NO_PREFIX)
 	new_tagdefs[[string] tag->name] =
 	  tag->flags & RXML.FLAG_CONTAINER ?
 	  ({0,
@@ -250,11 +250,11 @@ local void add_runtime_tag (RXML.Tag tag)
 {
   remove_runtime_tag (tag);
   if (!rt_tag_names) rt_tag_names = ([]);
-  if (!tag_set->prefix_required)
+  if (!tag_set->prefix_req)
     rt_replace_tag (rt_tag_names[tag] = [string] tag->name, tag);
   if (string prefix = tag_set->prefix) {
     rt_tag_names[tag] = prefix + "\0" + [string] tag->name;
-    rt_replace_tag (tag_set->prefix + [string] tag->name, tag);
+    rt_replace_tag (tag_set->prefix + ":" + [string] tag->name, tag);
   }
 }
 
