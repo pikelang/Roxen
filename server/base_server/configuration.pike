@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.27 1997/05/24 19:00:51 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.28 1997/05/25 10:09:41 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -770,6 +770,8 @@ mapping (mixed:function|int) locks = ([]);
 public mapping|int get_file(object id, int|void no_magic);
 
 #ifdef THREADS
+import Thread;
+
 object _lock(object|function f)
 {
   object key;
@@ -778,7 +780,7 @@ object _lock(object|function f)
   {
     if(q!=-1)
     {
-      perror("lock %O\n", f);
+      //perror("lock %O\n", f);
       key=q();
     }
   } else {
@@ -791,12 +793,12 @@ object _lock(object|function f)
       locks[f]=-1;
     else
     {
-      perror("new lock for %O\n", f);
+      //perror("new lock for %O\n", f);
       locks[f]=Mutex()->lock;
     }
     if((q=locks[f]) && q!=-1)
     {
-      perror("lock %O\n", f);
+      //perror("lock %O\n", f);
       key=q();
     }
   }
@@ -804,7 +806,7 @@ object _lock(object|function f)
 }
 
 #define LOCK(X) key=_lock(X)
-#define UNLOCK() do{perror("unlock\n");key=0;}while(0)
+#define UNLOCK() do{/*perror("unlock\n");*/key=0;}while(0)
 #else
 #define LOCK(X)
 #define UNLOCK(X)
