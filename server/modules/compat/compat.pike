@@ -580,6 +580,8 @@ mapping gtext_compat(mapping m, RequestID id) {
     m_delete(m, "font_size");
     old_rxml_warning(id, "gtext attribute font_size","fontsize");
   }
+  if(m->magic && !m["magic-fgcolor"])
+    m->fgcolor=id->misc->defines->fgcolor;
 
   return m;
 }
