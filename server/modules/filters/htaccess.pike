@@ -5,7 +5,7 @@
 
 // import Stdio;
 
-constant cvs_version = "$Id: htaccess.pike,v 1.47 1999/01/24 03:14:08 neotron Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.48 1999/03/23 00:43:03 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -168,7 +168,7 @@ mapping|int parse_htaccess(object f, object id, string rht)
   foreach(htaccess / "\n"-({""}), line) {
     string cmd, rest;
 
-    if(line[0] == "#")
+    if(line[0] == '#')
       continue;
 
     line = (replace(line, "\t", " ") / " " - ({""})) * " ";
