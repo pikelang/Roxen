@@ -8,7 +8,7 @@
 
 // This is an extension module.
 
-constant cvs_version = "$Id: pikescript.pike,v 1.17 1997/09/17 00:44:13 grubba Exp $";
+constant cvs_version = "$Id: pikescript.pike,v 1.18 1997/09/29 21:34:58 grubba Exp $";
 constant thread_safe=1;
 
 mapping scripts=([]);
@@ -144,9 +144,11 @@ array|mapping call_script(function fun, object got, object file)
       privs = Privs("Executing pikescript as non-www user", @us[5..6]);
   }
 
+#ifdef OBSOLETE_SPIDER_COMPAT
   if(sizeof(got->variables))
     foreach(indices(got->variables), s)
       got->variables[s] = replace(got->variables[s], "\000", " ");
+#endif /* OBSOLETE_SPIDER_COMPAT */
   
 #ifdef THREADS
   object key;
