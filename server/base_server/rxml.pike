@@ -5,7 +5,8 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.185 2000/04/05 13:11:30 nilsson Exp $
+// $Id: rxml.pike,v 1.186 2000/04/06 14:59:30 kuntri Exp $
+
 
 inherit "rxmlhelp";
 #include <request_trace.h>
@@ -140,9 +141,7 @@ RXML.TagSet rxml_tag_set = class
 RXML.Type default_content_type = RXML.t_html (RXML.PXml);
 RXML.Type default_arg_type = RXML.t_text (RXML.PEnt);
 
-#ifdef OLD_RXML_COMPAT
 int old_rxml_compat;
-#endif
 
 class BacktraceFrame
 // Only used to get old style tags in the RXML backtraces.
@@ -279,10 +278,7 @@ array|string call_tag(RXML.PXml parser, mapping args, string|function rf)
   };
   ctx->frame = orig_frame;
   ctx->frame_depth--;
-  if (err) {
-    ctx->handle_exception (err, parser);
-    return ({});
-  }
+  if (err) throw (err);
 
   TRACE_LEAVE("");
 
@@ -347,10 +343,7 @@ array(string)|string call_container(RXML.PXml parser, mapping args,
   };
   ctx->frame = orig_frame;
   ctx->frame_depth--;
-  if (err) {
-    ctx->handle_exception (err, parser);
-    return ({});
-  }
+  if (err) throw (err);
 
   TRACE_LEAVE("");
 
@@ -1924,9 +1917,56 @@ constant tagdoc=([
  capitalizes the first letter in the content.
 </attr>",
 
-"cond":#"<desc>
+"cond":({ #"<desc cont>
+ This tag is allmost eqvivalent to the <tag>if</tag>/<tag>else</tag>
+ tag combination. The main diffirence is that the <tag>default</tag>
+ tag may be put whereever you want it within the <tag>cond</tag> tag.
+ This will of course affect the order the content is parsed. The
+ <tag>case</tag> tag is required.</desc>",
 
-</desc>",
+	  (["case":#"<desc cont>
+ This tag takes the argument that is to be tested and if it's true,
+ it's content is executed before exiting the <tag>cond</tag>. If the
+ argument is false the content is skipped and the next <tag>case</tag>
+ tag is parsed.</desc>
+
+<ex type=vert>
+<set variable=\"var.foo\" value=\"17\"/>
+<cond>
+  <case true>&var.foo;<set variable=\"var.foo\" expr=\"&var.foo;+1\"/></case>
+  <default>&var.foo;<set variable=\"var.foo\" expr=\"&var.foo;+2\"/></default>
+</cond>
+&var.foo;
+</ex>",
+
+	    "default":#"<desc cont>
+ The <tag>default</tag> tag is eqvivalent to the <tag>else</tag> tag
+ in an <tag>if</tag> statement. The diffirence between the two is that
+ the <tag>default</tag> may be put anywhere in the <tag>cond</tag>
+ statement. This affects the parseorder of the statement. If the
+ <tag>default</tag> tag is put first in the statement it will allways
+ be executed, then the next <tag>case</tag> tag will be executed and
+ perhaps add to the result the <tag>default</tag> performed.</desc>
+
+<ex type=vert>
+<set variable=\"var.foo\" value=\"17\"/>
+<cond>
+  <default>&var.foo;<set variable=\"var.foo\" expr=\"&var.foo;+2\"/></default>
+  <case true>&var.foo;<set variable=\"var.foo\" expr=\"&var.foo;+1\"/></case>
+</cond>
+&var.foo;
+</ex>
+<br/>
+<ex type=vert>
+<set variable=\"var.foo\" value=\"17\"/>
+<cond>
+  <case false>&var.foo;<set variable=\"var.foo\" expr=\"&var.foo;+1\"/></case>
+  <default>&var.foo;<set variable=\"var.foo\" expr=\"&var.foo;+2\"/></default>
+</cond>
+&var.foo;
+</ex>"
+	    ])
+	  }),
 
 "comment":#"<desc cont>
  The enclosed text will be removed from the document. The difference
