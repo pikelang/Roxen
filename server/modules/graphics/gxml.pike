@@ -8,7 +8,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.3 2001/04/02 12:35:46 per Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.4 2001/04/02 13:45:39 per Exp $";
 constant module_type = MODULE_TAG;
 
 LocaleString module_name = _(0,"Graphics: GXML tag");
@@ -276,6 +276,12 @@ SIMPLE_LI(ReplaceAlpha);
 SIMPLE_LI(SetLayerMode);
 SIMPLE_LI(MoveLayer);
 SIMPLE_LI(NewLayer);
+
+SIMPLE_LI(Crop);
+SIMPLE_LI(Blur);
+SIMPLE_LI(Expand);
+
+
 
 array(string|RXML.Tag) builtin_tags = gxml_find_builtin_tags();
 
