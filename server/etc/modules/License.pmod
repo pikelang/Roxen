@@ -2,7 +2,7 @@
 //
 // Created 2002-02-18 by Marcus Wellhardh.
 //
-// $Id: License.pmod,v 1.11 2002/04/12 16:02:00 wellhard Exp $
+// $Id: License.pmod,v 1.12 2002/04/15 12:35:42 wellhard Exp $
 
 #if constant(roxen)
 #define INSIDE_ROXEN
@@ -22,7 +22,11 @@ array(Configuration) get_configurations_for_license(Key key)
 
 static mapping(string:Key) license_keys = ([]);
 static mapping(string:int) license_keys_time = ([]);
-Key get_license(string license_dir, string filename)
+
+// Returns the key object for the specified filename/directory. If a
+// known error occures an error mapping is returned. The returned key
+// is cached until restart.
+Key|mapping get_license(string license_dir, string filename)
 {
   if(!filename || !Stdio.is_file(Stdio.append_path(license_dir, filename)))
     return 0;
@@ -30,6 +34,17 @@ Key get_license(string license_dir, string filename)
   string path = Stdio.append_path(license_dir, filename);
   if(!license_keys[path] || file_stat(path)->mtime > license_keys_time[path]) {
     Key key = Key(license_dir, filename);
+
+    // Check if the license # has been used in a previously loaded license.
+    foreach(values(license_keys), Key other_key)
+    {
+      if(key->number() == other_key->number()) {
+	return ([ "filename": filename,
+		  "message":  "Can't load license.",
+		  "reason":   ("Same license number as in license "+
+			       other_key->filename()+".") ]);
+      }
+    }
     //werror("new %O.\n", key);
     license_keys[path] = key;
     license_keys_time[path] = time();
@@ -39,14 +54,37 @@ Key get_license(string license_dir, string filename)
   return license_keys[path];
 }
 
-int key_count;
+// Returns an array with all keys in the specified directory. If an
+// error occures during loading a key an error mapping is returned
+// instead of that key.
+array(Key|mapping) get_licenses(string license_dir)
+{
+  array(Key|mapping) licenses = ({});
+  foreach(glob("*.lic", get_dir(license_dir)), string filename)
+  {
+    object(Key)|mapping key;
+    if(mixed err = catch { key = get_license(license_dir, filename); } )
+    {
+      report_debug(describe_backtrace(err));
+      
+      licenses += ({ ([ "filename":  filename,
+			"message":   "Can't load license.",
+			"reason":    describe_error(err) ]) });
+    }
+    else licenses += ({ key });
+  }
+  return licenses;
+}
+
+
+static int key_count;  // How many licenses has been created, used for debug.
 
 class Key
 {
   static mapping content;
   static string license_dir, _filename;
   static mapping warnings;
-  static int key_id;
+  static int key_id;  // This licenses create id, used for debug.
   
   class WarningEntry
   {
@@ -314,10 +352,7 @@ class LicenseVariable
   
   array get_choice_list()
   {
-    array files = ({ 0 }); 
-    if(Stdio.is_dir(license_dir))
-      files += glob("*.lic", get_dir(license_dir));
-    return files;
+    return ({ 0 }) + Array.filter(get_licenses(license_dir), objectp)->filename();
   }
   
   mapping get_translation_table()
@@ -341,7 +376,7 @@ class LicenseVariable
     {
       Key key;
       if(mixed err = catch { key = get_license(license_dir, new_value); }) {
-	werror("License error: %s\n", describe_backtrace(err));
+	report_debug("License error: %s\n", describe_backtrace(err));
 	return ({ sprintf("Error reading license: %O\n  %s", new_value, err[0]),
 		  query() });
       }
