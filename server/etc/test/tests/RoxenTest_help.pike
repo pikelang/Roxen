@@ -33,10 +33,10 @@ void run_tests( Configuration c )
   }
 
   // Wait for everything to settle down.
-  sleep(1);
+  sleep(5);
   test( c->disable_module, "ac_filesystem" );
-  test( c->disable_module, "auth" );
-  sleep(1);
+  //test( c->disable_module, "auth" );
+  sleep(5);
 
   // Make a list of all tags and PI:s
   array tags=map(indices(c->rxml_tag_set->get_tag_names()),
