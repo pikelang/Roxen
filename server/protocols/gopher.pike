@@ -1,5 +1,5 @@
 // This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
-string cvs_version = "$Id: gopher.pike,v 1.6 1998/03/11 19:42:44 neotron Exp $";
+string cvs_version = "$Id: gopher.pike,v 1.7 1998/05/18 21:23:49 grubba Exp $";
 // Gopher protocol module
 
 inherit "protocols/http"; /* For the variables and such.. */
@@ -110,8 +110,10 @@ void got_data(mixed fooid, string s)
   
   if(not_query[-1] == '/')
     file = generate_directory();
-  else if(err = catch(file = roxen->get_file(this_object())))
-    file = internal_error(err);
+  else if(err = catch(file = roxen->get_file(this_object()))) {
+    internal_error(err);
+    file = this_object()->file;
+  }
 
   if(!file)
   {
