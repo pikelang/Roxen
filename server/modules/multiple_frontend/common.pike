@@ -132,9 +132,6 @@ Result False =Result( "bool", 0 );
 
 static mapping(string:function(Command:Result)) _callbacks = ([]);
 
-static string host;
-static int port;
-
 static array(Result) handle_multi_cmd( Command cmd )
 {
   array(Result) res = ({});
@@ -192,7 +189,26 @@ void set_callback( string cmd,
   _callbacks[ cmd ] = cb;
 }
 
-Result|array(Result) do_query( Command ... _command )
+mixed decode_result( Result r )
+{
+  switch( r->cmd )
+  {
+   case "value":
+   case "bool":
+     return r->data;
+   case "error":
+     error( r->data );
+   case "void":
+     return ([])[0];
+   default:
+     werror("Got result of type '%O'\n", r->cmd );
+     return r;
+  }
+}
+
+mixed do_query( string host, 
+                int port, 
+                Command ... _command )
 {
   Stdio.File f = Stdio.File();
   mixed command;
@@ -215,25 +231,45 @@ Result|array(Result) do_query( Command ... _command )
             "User-Agent: Roxen\r\n"
             "Content-length: "+strlen(data)+"\r\n"
             "\r\n"+ data );
-  Result res;
-  res = Result( f->read() );
+  string dd = f->read();
+  sscanf( dd, "%*s\r\n\r\n%s", dd );
+  Result res = Result( dd );
   
-  mixed decode_result( Result r )
-  {
-    switch( r->cmd )
-    {
-     case "value":
-     case "bool":
-       return r->data;
-     case "error":
-       error( r->data );
-     case "void":
-       return ([])[0];
-     default:
-       werror("Got result of type '%O'\n", r->cmd );
-       return r;
-    }
-  };
+  if( res == "multi" )
+    return map( res->data, decode_result );
+  return decode_result( res );
+}
+
+
+
+// FIXME: Do this really NB
+mixed do_nb_query( string host, 
+                   int port, 
+                   Command ... _command )
+{
+  Stdio.File f = Stdio.File();
+  mixed command;
+  if( sizeof( _command ) == 1 )
+    command = _command[0];
+  else
+    command = _command;
+
+  if(!f->connect( host, port ))
+    return 0;
+
+  string data = (objectp(command)?
+                 command->encode():
+                 Command( "multi", command )->encode());
+
+  f->write( "ROXEN_FE_RPC 1 HTTP/1.0\r\n"
+            "Content-type: RoxenFERPC\r\n"
+            "User-Agent: Roxen\r\n"
+            "Content-length: "+strlen(data)+"\r\n"
+            "\r\n"+ data );
+
+  string dd = f->read();
+  sscanf( dd, "%*s\r\n\r\n%s", dd );
+  Result res = Result( dd );
 
   if( res == "multi" )
     return map( res->data, decode_result );
@@ -257,11 +293,6 @@ void set_key( string to )
   crypto->set_encrypt_key( to );
 }
 
-void set_host( string to, int pto )
-{
-  host = to;
-  port = pto;
-}
 
 string encrypt( string what )
 {
