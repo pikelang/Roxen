@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.6 2000/03/24 21:21:48 per Exp $
+ * $Id: resolv.pike,v 1.7 2000/03/26 04:06:28 mast Exp $
  */
 
 inherit "wizard";
@@ -278,6 +278,11 @@ string parse(object id)
       if(c && c->auth_module)
         nid->auth = c->auth_module->auth( nid->auth, nid );
       nid->misc->trace_leave(sprintf("Got auth %O\n", nid->auth));
+    }
+    else {
+      nid->rawauth = 0;
+      nid->realauth = 0;
+      nid->auth = 0;
     }
 
     resolv_handle_request(c, nid);
