@@ -16,7 +16,7 @@
  * Prevent less that 100x100 in size.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.16 1997/10/15 04:28:40 peter Exp $";
+constant cvs_version = "$Id: business.pike,v 1.17 1997/10/15 05:04:06 peter Exp $";
 constant thread_safe=0;
 
 #include <module.h>
@@ -285,9 +285,6 @@ string tag_diagram(string tag, mapping m, string contents,
   res->bg = parse_color(defines->bg || "#e0e0e0");
   res->fg = parse_color(defines->fg || "black");
   
-  if(m->labelsize) res->labelsize = (int)m->labelsize;
-  else res->labelsize=16;
-
   if(m->center) res->center = (int)m->center;
   else res->center = 0;
 
@@ -312,7 +309,10 @@ string tag_diagram(string tag, mapping m, string contents,
   else res->fontsize=32;
 
   if(m->legendfontsize) res->legendfontsize = (int)m->legendfontsize;
-  else res->legendfontsize = 10;
+  else res->legendfontsize = res->fontsize;
+
+  if(m->labelsize) res->labelsize = (int)m->labelsize;
+  else res->labelsize = res->fontsize;
 
   if(m->labelcolor) res->labelcolor = parse_color(m->labelcolor);
   else res->labelcolor=({0,0,0});
@@ -405,13 +405,6 @@ mapping find_file(string f, object id)
   res->xminvalue=   0.1;
   res->yminvalue=   0;
 
-  /*
-  res->data = 	   ({ ({12.2, 10.3, 8.01, 9.0, 5.3, 4.0 }),
-		      ({91.2, 101.3, 91.5, 101.7,  141.0, 181.5}),
-		      ({191.2, 203.3, 241.5, 200.1, 194.3, 195.2 }),
-		      ({93.2, 113.3, 133.5, 143.7, 154.3, 141.2 }) });
-  */
-
   mapping(string:mixed) diagram_data;
 
   array back = res->bg;
@@ -477,7 +470,7 @@ mapping find_file(string f, object id)
     img = graph->create_graph(diagram_data)["image"];
 
   if(res->type == "sumbars")
-    img = bars->create_sumbars(diagram_data)["image"];
+    img = bars->create_bars(diagram_data)["image"];
 
   img = img->map_closest(img->select_colors(254)+({ back }));
 
