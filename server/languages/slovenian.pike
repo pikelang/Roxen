@@ -6,7 +6,7 @@
    Please consult me before modifying slovenian.pike.
 */
 
-string cvs_version = "$Id: slovenian.pike,v 1.4 1997/09/03 18:24:51 grubba Exp $";
+string cvs_version = "$Id: slovenian.pike,v 1.5 1997/09/03 18:55:09 grubba Exp $";
 inline string month(int num)
 {
   return ({ "Januar", "Februar", "Marec", "April", "Maj",
@@ -26,7 +26,7 @@ string number(int num)
    case 3:  return "tri";
    case 4:  return "¹tiri";
    case 5:  return "pet";
-   case 6:  return "sest";
+   case 6:  return "¹est";
    case 7:  return "sedem";
    case 8:  return "osem";
    case 9:  return "devet";
