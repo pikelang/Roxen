@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.46 1999/02/05 20:36:24 grubba Exp $
+# $Id: Makefile,v 1.47 1999/05/06 14:37:26 marcus Exp $
 #
 # Bootstrap Makefile
 #
@@ -169,11 +169,12 @@ dist_clean :
 keep_dbapi:
 	@echo "Keeping DBAPI..."
 	@dirs=`find pike -type d -print|egrep 'Oracle|Odbc'`; \
+	files=`find pike -type f -print|grep '/rsql'`; \
 	if test "x$dirs" = "x"; then \
 	  echo "DBAPI already censored."; \
 	  exit 1; \
 	else \
-	  tar cf dbapi.tar $$dirs; \
+	  tar cf dbapi.tar $$files $$dirs; \
 	fi
 
 censor : censor_crypto censor_dbapi dist_clean
@@ -204,6 +205,11 @@ censor_dbapi :
 	@for d in pike/*/src/. pike/src/.; do \
 	  if test -d $$d ; then \
 	    rm -rf $$d/modules/Oracle $$d/modules/Odbc; \
+	  else : ; fi; \
+	done
+	@for d in pike/*/bin/. pike/bin/. pike/*/lib/modules/Sql.pmod/. pike/lib/modules/Sql.pmod/.; do \
+	  if test -d $$d ; then \
+	    rm -rf $$d/rsql*; \
 	  else : ; fi; \
 	done
 
