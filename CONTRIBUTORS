@@ -1,5 +1,5 @@
-Contributors:
--------------
+Main programmers:
+-----------------
 
 Roxen Core:
 	Per Hedbor and Henrik Grubbström
@@ -34,6 +34,8 @@ Ian Carr-de Avelon	Several valuable suggestions and ideas.
 
 Martin Baer		Fixes to the hostredirect and several other modules.
 
+Stephen R. van den Berg	The Dutch language-module.
+
 Tvns Böker		The German language-module.
 
 Francesco Chemolli	The Postgres and Msql database modules and
@@ -59,8 +61,6 @@ Jordi Murgo		The Spanish language-module.
 Morten Hol Møller	The Norwegian language-module.
 
 Goran Opacic		The Serbian language-module.
-
-Stephen R. van den Berg	The Dutch language-module.
 
 Jason Rumney		The Maaori language-module, and some fixes.
 
