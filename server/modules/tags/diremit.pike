@@ -98,7 +98,7 @@ class TagDirectoryplugin
   constant name = "emit";
   constant plugin_name = "dir";
 
-  array get_internal_dataset(mapping args, RequestID id)
+  array get_dataset(mapping args, RequestID id)
   {
     foreach(tagset->get_overridden_tags("emit#dir"), RXML.Tag t)
       if(t && t->sb_dir)
