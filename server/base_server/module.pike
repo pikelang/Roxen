@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.206 2004/05/13 15:39:18 mast Exp $
+// $Id: module.pike,v 1.207 2004/05/13 15:59:22 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -1221,7 +1221,7 @@ mapping(string:mixed) recurse_delete_files(string path,
 	    if (sizeof (sub_res) && sub_res->error != 204) {
 	      stat->add_status(fname, sub_res->error, sub_res->rettext);
 	    }
-	    if (sub_res->error >= 300) fail = 1;
+	    if (!sizeof (sub_res) || sub_res->error >= 300) fail = 1;
 	  }
 	}
       }
@@ -1320,8 +1320,37 @@ mapping(string:mixed) copy_properties(string source, string destination,
   return res;
 }
 
-//! Used by the default @[recurse_copy_files] to copy a collection
-//! (aka directory) nonrecursively.
+//! Used by the default @[recurse_copy_files] and @[move_collection]
+//! to copy a collection (aka directory) and its properties but not
+//! its contents.
+//!
+//! @param source
+//!   Source path below the filesystem location.
+//!
+//! @param destination
+//!   Destination path below the filesystem location.
+//!
+//! @param behavior
+//!   Specifies how to copy properties. See the @[PropertyBehavior]
+//!   type for details.
+//!
+//! @param overwrite
+//!   Specifies how to handle the situation if the destination already
+//!   exists. See the @[Overwrite] type for details.
+//!
+//! @param result
+//!   A @[MultiStatus.Prefixed] to collect status mappings if some
+//!   subparts fail. It's prefixed with the URL to the filesystem
+//!   location.
+//!
+//! @returns
+//!   Returns a 2xx series status mapping on success (typically 201
+//!   Created if the destination didn't exist before, or 204 No
+//!   Content otherwise). Returns 0 if the source doesn't exist.
+//!   Returns an appropriate status mapping for any other error. That
+//!   includes an empty mapping in case there's a failure on some
+//!   subpart or at the destination, to signify a 207 Multi-Status
+//!   response using the info in @[id->get_multi_status()].
 static mapping(string:mixed) copy_collection(string source,
 					     string destination,
 					     PropertyBehavior behavior,
@@ -1493,7 +1522,7 @@ mapping(string:mixed) recurse_copy_files(string source, string destination,
     if (st->isdir) {
       mapping(string:mixed) res =
 	copy_collection(source, destination, behavior, overwrite, result, id);
-      if (res && res->error >= 300) {
+      if (res && (!sizeof (res) || res->error >= 300)) {
 	// RFC 2518 8.8.3 and 8.8.8 (error minimization).
 	TRACE_LEAVE("Copy of collection failed.");
 	return res;
@@ -1527,6 +1556,10 @@ mapping(string:mixed) recurse_copy_files(string source, string destination,
 
 //! Used by the default @[recurse_move_files] to move a file (and not
 //! a directory) from @[source] to @[destination].
+//!
+//! The default implementation tries to call @[find_file] with the
+//! MOVE method. If that returns 501 Not Implemented then it copies
+//! the file and deletes the source afterwards.
 //!
 //! @param source
 //!   Source path below the filesystem location.
@@ -1575,6 +1608,11 @@ static mapping(string:mixed) move_file(string source, string destination,
 //! Used by the default @[recurse_move_files] to move a collection
 //! (aka directory) and all its content from @[source] to
 //! @[destination].
+//!
+//! The default implementation tries to call @[find_file] with the
+//! MOVE method. If that returns 501 Not Implemented then it copies
+//! the collection, moves each directory entry recursively, and
+//! deletes the source collection afterwards.
 //!
 //! @param source
 //!   Source path below the filesystem location.
@@ -1629,15 +1667,16 @@ static mapping(string:mixed) move_collection(string source, string destination,
     string subdst = combine_path_unix(destination, filename);
     SIMPLE_TRACE_ENTER(this, "Recursive move from %O to %O\n",
 		       subsrc, subdst);
-    mapping(string:mixed) sub_res =
-      recurse_move_files(subsrc, subdst, behavior, overwrite, id);
-    if (sub_res && (sub_res->error != 204) && (sub_res->error != 201)) {
-      result->add_status(subdst, sub_res->error, sub_res->rettext);
-      if (sub_res->error >= 300) {
+    if (mapping(string:mixed) sub_res =
+	recurse_move_files(subsrc, subdst, behavior, overwrite, id)) {
+      if (!(<0, 201, 204>)[sub_res->error]) {
+	result->add_status(subdst, sub_res->error, sub_res->rettext);
+      }
+      if (!sizeof (sub_res) || sub_res->error >= 300) {
 	// Failed to move some content.
 	fail = 1;
       }
-    }  
+    }
   }
   if (fail) return ([]);
   return delete_file(source, id);
