@@ -4,10 +4,33 @@
 #include <module.h>
 inherit "module";
 
+constant cvs_version = "$Id: supports_filter.pike,v 1.4 2000/11/19 04:42:23 nilsson Exp $";
 constant module_name = "Supports filter";
-constant module_doc = ("Filters the result HTML from things the client can not handle, "
-		       "based on its supports values.");
 constant module_type = MODULE_FILTER;
+constant thread_safe = 1;
+constant module_doc =
+#"<p>The supports filter module takes a look at the supports flag at the
+client and then filters the HTML before sending it back to the client,
+removing things that the client can not handle. Which flags the module
+looks for is optional, and can be controlled from the administration
+interface. The following supports flags are available:</p>
+
+<table border='1' cellspacing='0'>
+<tr><th>Support flag</th><th>Affected tags</th><th>Transformed into</th></tr>
+<tr valign='top'><td>bigsmall</td><td>&lt;big&gt;txt&lt;/big&gt;<br />&lt;small&gt;txt&lt;/small&gt;</td>
+  <td>&lt;b&gt;txt&lt;/b&gt;<br />txt</td></tr>
+<tr><td>center</td><td>&lt;center&gt;txt&lt;/center&gt;</td><td>txt</td></tr>
+<tr><td>font</td><td>&lt;font&gt;txt&lt;/font&gt;</td><td>txt</td></tr>
+<tr><td>images</td><td>&lt;img /&gt;</td><td>&nbsp;</td></tr>
+<tr><td>java</td><td>&lt;applet&gt;txt&lt;/applet&gt;</td><td>&nbsp;</td></tr>
+<tr><td>javascript</td><td>&lt;script&gt;txt&lt;/script&gt;</td><td>&nbsp;</td></tr>
+<tr><td>mailto</td><td>&lt;a href=\"mailto: ...\"&gt;txt&lt;/a&gt;</td><td>txt</td></tr>
+<tr valign='top'><td>stylesheets</td><td>&lt;style&gt;txt&lt;/style&gt;<br />&lt;link style=\"text/css\" /&gt;</td>
+  <td>&nbsp;</td></tr>
+</table>
+
+<p>Note: Javascript only removes script tags where the language attribute
+is \"javascript\" or where the src attribute ends in \".js\".</p>";
 
 void create() {
   defvar("bigsmall", 0, "bigsmall", TYPE_FLAG, "Filter out &lt;big&gt; and &lt;small&gt; tags.");
@@ -21,7 +44,7 @@ void create() {
 }
 
 multiset filtered=(<>);
-array all_filters=({
+constant all_filters=({
   "bigsmall",
   "center",
   "font",
@@ -84,6 +107,7 @@ mapping filter(mapping res, RequestID id) {
   }
 
   if(!sizeof(conts) && !sizeof(tags)) return 0;
-  res->data=parse_html(res->data, tags, conts);
+  res->data=Parser.HTML()->add_tags(tags)->
+    add_containers(conts)->finish(res->data)->read();
   return res;
 }
