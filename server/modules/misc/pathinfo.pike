@@ -2,7 +2,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: pathinfo.pike,v 1.11 2000/03/16 18:57:14 nilsson Exp $";
+constant cvs_version = "$Id: pathinfo.pike,v 1.12 2000/03/20 03:05:56 mast Exp $";
 constant thread_safe = 1;
 
 #ifdef PATHINFO_DEBUG
@@ -12,8 +12,13 @@ constant thread_safe = 1;
 #endif
 
 constant module_type = MODULE_LAST;
-constant module_name = "PATH_INFO support";
-constant module_doc  = "Support for PATH_INFO style URLs.";
+constant module_name = "Path info support";
+constant module_doc  = #"\
+Support for \"path info\" style URLs, e.g. URLs that got a path like
+<tt>/index.html/a/b</tt>, where <tt>/index.html</tt> is an existing
+file, but <tt>/index.html/a</tt> and <tt>/index.html/a/b</tt> aren't.
+In this case <tt>/index.html</tt> will be fetched, and the rest,
+<tt>/a/b</tt> is made available in the RXML variable page.pathinfo.";
 
 mapping|int last_resort(object id)
 {
@@ -32,10 +37,7 @@ mapping|int last_resort(object id)
     string add_path_info;
     sscanf( query, "%[^/]/%s", add_path_info, query );
     query = reverse( query );
-    if( strlen( pi ) )
-      pi = "/"+reverse( add_path_info )+pi;
-    else
-      pi = "/"+add_path_info;
+    pi = "/"+reverse( add_path_info )+pi;
     id->misc->path_info = pi;
     PATHINFO_WERR(sprintf("Trying: %O (%O)", query, pi));
     array st = id->conf->stat_file( query, id );
