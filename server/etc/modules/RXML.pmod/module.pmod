@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.17 2000/01/14 05:35:58 mast Exp $
+//! $Id: module.pmod,v 1.18 2000/01/14 06:08:17 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -421,7 +421,7 @@ class Context
 //! so on. The current context can always be retrieved with
 //! get_context().
 //!
-//! Note: Don't keep pointers to this object since that will likely
+//! Note: Don't store pointers to this object since that will likely
 //! introduce circular references. It can be retrieved easily through
 //! get_context() or parser->context.
 {
@@ -434,8 +434,8 @@ class Context
   int type_check;
   //! Whether to do type checking.
 
-  int got_error;
-  //! Nonzero if an RXML error is encountered.
+  int error_count;
+  //! Number of RXML errors that has occurred.
 
   TagSet tag_set;
   //! The current tag set that will be inherited by subparsers.
@@ -587,10 +587,11 @@ class Context
   {
     if (sizeof (args)) msg = sprintf (msg, @args);
     msg = rxml_errmsg_prefix + ": " + msg;
+    if (current_var) msg += " | &" + current_var + ";\n";
     for (Frame f = frame; f; f = f->up) {
-      if (f->tag) msg += "<" + f->tag->name;
+      if (f->tag) msg += " | <" + f->tag->name;
       else if (!f->up) break;
-      else msg += "<(unknown tag)";
+      else msg += " | <(unknown tag)";
       if (f->args)
 	foreach (sort (indices (f->args)), string arg) {
 	  mixed val = f->args[arg];
@@ -609,11 +610,14 @@ class Context
   //! This function gets any exception that is catched during
   //! evaluation. evaluator is the object that catched the error.
   {
-    got_error = 1;
+    error_count++;
     string msg = describe_error (err);
     if (msg[..sizeof (rxml_errmsg_prefix) - 1] == rxml_errmsg_prefix) {
       // An RXML error.
-      while (evaluator->_parent) evaluator = evaluator->_parent;
+      while (evaluator->_parent) {
+	evaluator->error_count++;
+	evaluator = evaluator->_parent;
+      }
       if (id && id->conf)
 	msg = ([function(mixed,Type:string)]
 	       ([object] id->conf)->handle_rxml_error) (err, evaluator->type);
@@ -641,6 +645,9 @@ class Context
     else if (multisetp (val)) return "multiset";
     else return sprintf ("%O", val);
   }
+
+  string current_var;
+  // Used to get the parsed variable into the RXML error backtrace.
 
   Parser new_parser (Type top_level_type)
   // Returns a new parser object to start parsing with this context.
@@ -1461,6 +1468,10 @@ class Parser
 
   //! Services.
 
+  int error_count;
+  //! Number of RXML errors that occurred during evaluation. If this
+  //! is nonzero, the value from eval() shouldn't be trusted.
+
   function(Parser:void) data_callback;
   //! A function to be called when data is likely to be available from
   //! eval(). It's always called when the source stream closes.
@@ -1543,12 +1554,17 @@ class Parser
     array(string) split = varref / ".";
     if (sizeof (split) == 2)
       if (mixed err = catch {
+	context->current_var = varref;
 	mixed val;
-	if (zero_type (val = context->get_var (split[1], split[0]))) // May throw.
+	if (zero_type (val = context->get_var (split[1], split[0]))) { // May throw.
+	  context->current_var = 0;
 	  return ({});
+	}
+	context->current_var = 0;
 	if (type->free_text) val = (string) val;
 	else return val == Void ? ({}) : ({val});
       }) {
+	context->current_var = 0;
 	context->handle_exception (err, this_object()); // May throw.
 	return ({});
       }
@@ -2005,6 +2021,10 @@ class PCode
   constant thrown_at_unwind = 1;
 
   array p_code = ({});
+
+  int error_count;
+  //! Number of RXML errors that occurred during evaluation. If this
+  //! is nonzero, the value from eval() shouldn't be trusted.
 
   mixed eval (Context ctx)
   //! Evaluates the p-code in the given context.
