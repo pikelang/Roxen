@@ -101,7 +101,38 @@ install_only:
 	test -d $(prefix)/roxen/local/nfonts/. || mkdir $(prefix)/roxen/local/nfonts
 	test -d $(prefix)/roxen/server/lib/. || mkdir $(prefix)/roxen/server/lib
 	test -d $(prefix)/roxen/server/lib/pike/. || mkdir $(prefix)/roxen/server/lib/pike
-	cp -r pike/$(PIKEVERSION)/src/lib/* $(prefix)/roxen/server/lib/pike/
+	@for d in `cd $(SRCDIR)/pike/$(PIKEVERSION)/lib; find . -type d -print`; do \
+	  if test -d $(prefix)/roxen/server/lib/pike/$$d; then :; else \
+	    mkdir $(prefix)/roxen/server/lib/pike/$$d || exit 1;\
+	  fi; \
+	done
+	@for d in `cd pike/$(PIKEVERSION)/lib; find . -type d -print`; do \
+	  if test -d $(prefix)/roxen/server/lib/pike/$$d; then :; else \
+	    mkdir $(prefix)/roxen/server/lib/pike/$$d || exit 1;\
+	  fi; \
+	done
+	@for f in `cd $(SRCDIR)/pike/$(PIKEVERSION)/lib; find . -type f -print`; do \
+	  if cmp $(SRCDIR)/pike/$(PIKEVERSION)/lib/$$f $(prefix)/roxen/server/lib/pike/$$f 2>&1 >/dev/null; then :; else \
+	    if test -f $(prefix)/roxen/server/lib/pike/$$f; then \
+	      mv -f $(prefix)/roxen/server/lib/pike/$$f $(prefix)/roxen/server/lib/pike/$$f.old; \
+	    else :; fi; \
+	    if cp -f $(SRCDIR)/pike/$(PIKEVERSION)/lib/$$f $(prefix)/roxen/server/lib/pike/$$f; then :; else \
+	      echo "Failed to copy $$f"; \
+	      exit 1; \
+	    fi; \
+	  fi; \
+	done
+	@for f in `cd pike/$(PIKEVERSION)/src/lib; find . -type f -print`; do \
+	  if cmp pike/$(PIKEVERSION)/src/lib/$$f $(prefix)/roxen/server/lib/pike/$$f 2>&1 >/dev/null; then :; else \
+	    if test -f $(prefix)/roxen/server/lib/pike/$$f; then \
+	      mv -f $(prefix)/roxen/server/lib/pike/$$f $(prefix)/roxen/server/lib/pike/$$f.old; \
+	    else :; fi; \
+	    if cp -f pike/$(PIKEVERSION)/src/lib/$$f $(prefix)/roxen/server/lib/pike/$$f; then :; else \
+	      echo "Failed to copy $$f"; \
+	      exit 1; \
+	    fi; \
+	  fi; \
+	done
 	test -d $(prefix)/roxen/server/include/. || mkdir $(prefix)/roxen/server/include
 	test -d $(prefix)/roxen/server/include/pike/. || mkdir $(prefix)/roxen/server/include/pike
 	for a in $(SRCDIR)/pike/$(PIKEVERSION)/src/*.h ./pike/$(PIKEVERSION)/src/*.h; do $(INSTALL) $$a $(prefix)/roxen/server/include/pike; done
@@ -231,10 +262,10 @@ bump_version: bump_version.stamp
 	@touch bump_version
 
 ChangeLog.gz:
-	pike tools/make_changelog.pike | gzip -9 > ChangeLog.gz
+	cd $(SRCDIR); pike tools/make_changelog.pike | gzip -9 > ChangeLog.gz
 
 ChangeLog.rxml.gz:
-	pike tools/make_changelog.pike --rxml |gzip -9 > ChangeLog.rxml.gz
+	cd $(SRCDIR); pike tools/make_changelog.pike --rxml |gzip -9 > ChangeLog.rxml.gz
 
 
 pre_dist: bump_version weak_cleanup run_autoconf depend
