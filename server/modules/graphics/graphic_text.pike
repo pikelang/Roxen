@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.188 1999/09/05 15:57:20 grubba Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.189 1999/10/04 10:27:10 nilsson Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -10,6 +10,8 @@ inherit "roxenlib";
 #ifndef VAR_MORE
 #define VAR_MORE	0
 #endif /* VAR_MORE */
+
+#define old_rxml_compat 1
 
 array register_module()
 {
@@ -730,12 +732,12 @@ string magic_javascript_header(object id)
 
 string magic_image(string url, int xs, int ys, string sn,
 		   string image_1, string image_2, string alt,
-		   string mess,object id,string input,string extra_args,string lp)
+		   string mess,object id,string input,string extra_args,string lp, string img_extra_args)
 {
   if(!id->supports->images) return (lp?lp:"")+alt+(lp?"</a>":"");
   if(!id->supports->netscape_javascript)
     return (!input)?
-       ("<a "+extra_args+"href=\""+url+"\"><img src=\""+image_1+"\" name="+sn+" border=0 "+
+       ("<a "+extra_args+"href=\""+url+"\"><img src=\""+image_1+"\" name="+sn+" border=0 "+img_extra_args+" "
        "alt=\""+alt+"\"></a>"):
     ("<input type=image "+extra_args+" src=\""+image_1+"\" name="+input+">");
 
@@ -747,7 +749,7 @@ string magic_image(string url, int xs, int ys, string sn,
      ("<a "+extra_args+"href=\""+url+"\" "+
       (input?"onClick='document.forms[0].submit();' ":"")
       +"onMouseover=\"i('"+sn+"',"+sn+"h,'"+(mess||url)+"'); return true;\"\n"
-      "onMouseout=\"top.window.status='';document.images['"+sn+"'].src = "+sn+"l.src;\"><img "
+      "onMouseout=\"top.window.status='';document.images['"+sn+"'].src = "+sn+"l.src;\"><img "+img_extra_args+" "
       "width="+xs+" height="+ys+" src=\""+image_1+"\" name="+sn+
       " border=0 alt=\""+alt+"\" ></a>"));
 }
@@ -953,8 +955,10 @@ string tag_graphicstext(string t, mapping arg, string contents,
 
   switch(t)
   {
+#if old_rxml_compat
    case "gh1": case "gh2": case "gh3": case "gh4":
    case "gh5": case "gh6": case "gh7":
+#endif
    case "gh": pre="<p>"; post="<br>"; defalign="top"; break;
    case "gtext":
     pre="";  post=""; defalign="bottom";
@@ -1030,7 +1034,8 @@ string tag_graphicstext(string t, mapping arg, string contents,
 			       query_internal_location()+num2+gif,
 			       (arg->alt?arg->alt:replace(gt, "\"","'")),
 			       (magic=="magic"?0:magic),
-			       id,input?na||"submit":0,ea,lp),
+			       id,input?na||"submit":0,ea,lp,
+                               " align="+(al || defalign)),
 		   "</script><script>","");
   }
   if(input)
@@ -1158,8 +1163,10 @@ mapping query_container_callers()
 {
   return ([ "anfang":tag_graphicstext,
             "gtext-url":tag_gtext_url, "gh":tag_graphicstext,
+#if old_rxml_compat
 	    "gh1":tag_graphicstext, "gh2":tag_graphicstext,
 	    "gh3":tag_graphicstext, "gh4":tag_graphicstext,
 	    "gh5":tag_graphicstext, "gh6":tag_graphicstext,
+#endif
 	    "gtext":tag_graphicstext, ]);
 }
