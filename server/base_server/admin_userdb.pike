@@ -11,8 +11,8 @@ inherit "language";
 
 string query_configuration_dir();
 
-// Settings used by the various administration interface modules etc.
-class ConfigIFCache
+//! Settings used by the various administration interface modules etc.
+class AdminIFCache
 {
   string dir;
   function db;
@@ -27,7 +27,7 @@ class ConfigIFCache
   {
     if( _settings )
     {
-      dir = query_configuration_dir() + "_configinterface/" + name + "/";
+      dir = query_configuration_dir() + "_admininterface/" + name + "/";
       mkdirhier( dir );
     }
     else
@@ -42,7 +42,7 @@ class ConfigIFCache
       {
 	case "settings":
 	  master()->resolv("DBManager.is_module_table")
-	    (0, "local", name, "Settings for configuration user interface");
+	    (0, "local", name, "Settings for  user interface");
 	  break;
 	case "modules":
 	  master()->resolv("DBManager.is_module_table")
@@ -118,8 +118,8 @@ class ConfigIFCache
 
 
 static mapping settings_cache = ([ ]);
-ConfigIFCache config_settings;
-ConfigIFCache config_settings2;
+AdminIFCache config_settings;
+AdminIFCache config_settings2;
 
 class ConfigurationSettings
 {
@@ -709,8 +709,8 @@ void add_permission( string perm, LocaleString text )
 
 void init_configuserdb()
 {
-  config_settings = ConfigIFCache( "settings",1 );
-  config_settings2 =ConfigIFCache( "settings",0 );
+  config_settings = AdminIFCache( "settings",1 );
+  config_settings2 =AdminIFCache( "settings",0 );
   add_constant( "AdminUser", AdminUser );
   add_permission( "Everything", "All Permissions");
 }
@@ -784,7 +784,7 @@ class UserDBModule
 
   string module_identifier(){ return 0; }
   
-  static class CFUser
+  static class AIUser
   {
     inherit User;
     AdminUser ruser;
@@ -809,13 +809,13 @@ class UserDBModule
 
   array(string) list_users()  { return list_admin_users();  }
 
-  CFUser find_user( string uid )
+  AIUser find_user( string uid )
   {
     AdminUser u = find_admin_user( uid );
-    if( u ) return CFUser( this_object(), u );
+    if( u ) return AIUser( this_object(), u );
   }
 
-  CFUser find_user_from_uid( int id )
+  AIUser find_user_from_uid( int id )
   {
     return 0; // optimize
   }

@@ -1,6 +1,6 @@
 // This file is part of Internet Server.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module_support.pike,v 1.113 2002/06/14 16:05:03 jhs Exp $
+// $Id: module_support.pike,v 1.114 2002/06/24 16:15:43 nilsson Exp $
 
 #define IN_ROXEN
 #include <module_constants.h>
@@ -85,9 +85,9 @@ function|program load( string what, void|int silent )
 //     name
 //     description
 //
-//  This is stored in a ConfigurationIFCache instance.
+//  This is stored in a AdminIFCache instance.
 //
-object module_cache; // Cannot be ConfigurationIFCache, load order problems
+object module_cache; // Cannot be AdminIFCache, load order problems
 
 class BasicModule
 {
@@ -580,7 +580,7 @@ array(ModuleInfo) all_modules()
   if( !modules )
   {
     modules = ([]);
-    module_cache = roxenp()->ConfigIFCache( "modules" ); 
+    module_cache = roxenp()->AdminIFCache( "modules" );
   }
 
   array possible = ({});
@@ -631,7 +631,7 @@ ModuleInfo find_module( string name, int|void noforce )
   if( !modules )
   {
     modules = ([]);
-    module_cache = roxenp()->ConfigIFCache( "modules" ); 
+    module_cache = roxenp()->AdminIFCache( "modules" );
   }
 
   if( modules[ name ] )
