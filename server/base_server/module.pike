@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.177 2004/05/05 13:54:58 grubba Exp $
+// $Id: module.pike,v 1.178 2004/05/05 15:39:47 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -832,20 +832,15 @@ DAVLock|int(0..3) check_locks(string path,
   return locked_by_auth_user ? 2 : shared;
 }
 
-//! Lock the resource at @[path] with the given @[lock]. It's already
-//! checked that no other lock that applies, i.e. a call
-//! @code{check_locks(path,lock->recursive,id)@} would return
-//! @expr{0@} or @expr{1@}.
+//! Register @[lock] on the path @[path] under the assumption that
+//! there is no other lock already that conflicts with this one, i.e.
+//! that @code{check_locks(path,lock->recursive,id)@} would return
+//! @expr{0@} if @expr{lock->lockscope@} is @expr{"DAV:exclusive"@}, or
+//! @expr{0@} or @expr{1@} if @expr{lock->lockscope@} is
+//! @expr{"DAV:shared"@}.
 //!
-//! The implementation must at least support the @expr{"DAV:write"@}
-//! lock type (RFC 2518, section 7). Briefly: An exclusive lock on a
-//! file prohibits other users from changing its content. An exclusive
-//! lock on a file or directory prohibits other users from setting or
-//! deleting any of its properties. An exclusive lock on a directory
-//! prohibits other users from adding or removing files or directories
-//! in it. A shared lock prohibits other users from obtaining an
-//! exclusive lock. A resource that doesn't exist can be locked,
-//! provided the directory it would be in exists.
+//! This function is only provided as a helper to call from
+//! @[lock_file] if the default lock implementation is to be used.
 //!
 //! @param path
 //!   Path below the filesystem location that the lock applies to.
@@ -855,21 +850,15 @@ DAVLock|int(0..3) check_locks(string path,
 //! @param lock
 //!   The lock to register.
 //!
-//! @returns
-//!   Returns @expr{0@} if the lock is successfully installed or a
-//!   status mapping if an error occurred.
-//!
 //! @note
-//! The default implementation supports only @expr{"DAV:write"@}. It
-//! uses @[resource_id] to map paths to unique resources and
-//! @[authenticated_user_id] to tell users apart.
-mapping(string:mixed) lock_file(string path,
-				DAVLock lock,
-				RequestID id)
+//! The default implementation only handles the @expr{"DAV:write"@}
+//! lock type. It uses @[resource_id] to map paths to unique resources
+//! and @[authenticated_user_id] to tell users apart.
+static void register_lock(string path, DAVLock lock, RequestID id)
 {
-  ASSERT_IF_DEBUG (lock->locktype == "DAV:write");
-  TRACE_ENTER(sprintf("lock_file(%O, lock(%O), X).", path, lock->locktoken),
+  TRACE_ENTER(sprintf("register_lock(%O, lock(%O), X).", path, lock->locktoken),
 	      this);
+  ASSERT_IF_DEBUG (lock->locktype == "DAV:write");
   path = resource_id (path, id);
   mixed auth_user = authenticated_user_id (path, id);
   if (lock->recursive) {
@@ -886,6 +875,47 @@ mapping(string:mixed) lock_file(string path,
     }
   }
   TRACE_LEAVE("Ok.");
+}
+
+//! Register @[lock] on the path @[path] under the assumption that
+//! there is no other lock already that conflicts with this one, i.e.
+//! that @code{check_locks(path,lock->recursive,id)@} would return
+//! @expr{0@} if @expr{lock->lockscope@} is @expr{"DAV:exclusive"@}, or
+//! @expr{0@} or @expr{1@} if @expr{lock->lockscope@} is
+//! @expr{"DAV:shared"@}.
+//!
+//! The implementation must at least support the @expr{"DAV:write"@}
+//! lock type (RFC 2518, section 7). Briefly: An exclusive lock on a
+//! file prohibits other users from changing its content. An exclusive
+//! lock on a file or directory prohibits other users from setting or
+//! deleting any of its properties. An exclusive lock on a directory
+//! prohibits other users from adding or removing files or directories
+//! in it. A shared lock prohibits other users from obtaining an
+//! exclusive lock. A resource that doesn't exist can be locked,
+//! provided the directory it would be in exists (relaxed in RFC
+//! 2518Bis (working draft)).
+//!
+//! It's up to @[find_file] et al to actually check that the necessary
+//! locks are held. It can preferably use @[write_access] for that,
+//! which has a default implementation for checking
+//! @expr{"DAV:write"@} locks.
+//!
+//! @param path
+//!   Path below the filesystem location that the lock applies to.
+//!   It's normalized with @[VFS.normalize_path] and always ends with
+//!   a @expr{"/"@}.
+//!
+//! @param lock
+//!   The lock to register.
+//!
+//! @returns
+//!   Returns @expr{0@} if the lock is successfully installed or if
+//!   locking isn't used. Returns a status mapping if an error
+//!   occurred.
+mapping(string:mixed) lock_file(string path,
+				DAVLock lock,
+				RequestID id)
+{
   return 0;
 }
 
@@ -926,30 +956,44 @@ mapping(string:mixed) unlock_file (string path,
 
 //! Check if we may perform a write access to @[path].
 //!
-//! Checks if the current locks match the if-header.
+//! The default implementation checks if the current locks match the
+//! if-header.
 //!
 //! Usually called from @[find_file()].
 //!
 //! @note
 //!   Does not support checking against etags yet.
 //!
+//! @param path
+//!   Path below the filesystem location that the lock applies to.
+//!   It's normalized with @[VFS.normalize_path].
+//!
+//! @param recursive
+//!   If @expr{1@} also check write access recursively under @[path].
+//!
 //! @returns
 //!   Returns @expr{0@} (zero) on success and
 //!   a result mapping on failure.
-mapping(string:mixed) access_path(string path, RequestID id)
+mapping(string:mixed) write_access(string path, int(0..1) recursive, RequestID id)
 {
+  // FIXME: Implement recursive!
+
   if (!sizeof(path) || (path[-1] != '/')) path += "/";
 
   int(0..3)|DAVLock lock = check_locks(path, 0, id);
 
-  if (lock && intp(lock)) return Roxen.http_status(423);
+  if (lock && intp(lock))
+    return Roxen.http_status(Protocols.HTTP.DAV_LOCKED);
+
+  path = query_location() + path; // No need for fancy combine_path stuff here.
 
   mapping(string:array(array(array(string)))) if_data = id->get_if_data();
   array(array(array(string))) condition;
   if (!if_data || !sizeof(condition = if_data[path] || if_data[0])) {
-    if (lock) return Roxen.http_status(423);
+    if (lock) return Roxen.http_status(Protocols.HTTP.DAV_LOCKED);
     return 0;	// No condition and no lock -- Ok.
   }
+  mapping(string:mixed) res;
  next_condition:
   foreach(condition, array(array(string)) sub_cond) {
     int negate;
@@ -959,7 +1003,10 @@ mapping(string:mixed) access_path(string path, RequestID id)
 	negate = !negate;
 	break;
       case "etag":
-	// Not supported yet.
+	// Not supported yet. We ignore this if some other condition
+	// matches.
+	res = Roxen.http_status (Protocols.HTTP.HTTP_NOT_IMPL,
+				 "Etag conditions not supported.");
 	continue next_condition;	// Fail.
       case "lock":
 	if ((lock && lock->locktoken == token[1]) != negate) {
@@ -972,8 +1019,7 @@ mapping(string:mixed) access_path(string path, RequestID id)
     }
     return 0;	// Found matching sub-condition.
   }
-  if (lock) return Roxen.http_status(423);
-  return Roxen.http_status(412);
+  return res || Roxen.http_status(Protocols.HTTP.HTTP_PRECOND_FAILED);
 }
 
 mapping(string:mixed)|int(-1..0)|Stdio.File find_file(string path,
