@@ -3,7 +3,7 @@
 // User database. Reads the system password database and use it to
 // authentificate users.
 
-constant cvs_version = "$Id: userdb.pike,v 1.41 2000/03/22 19:26:37 grubba Exp $";
+constant cvs_version = "$Id: userdb.pike,v 1.42 2000/05/03 07:35:56 mast Exp $";
 
 #include <module.h>
 inherit "module";
@@ -147,7 +147,7 @@ void create()
 	 method_is_file_or_getpwent);
 
 
-  defvar("Swashii", 1, "Turn }{| into едц", TYPE_FLAG|VAR_MORE,
+  defvar("Swashii", 0, "Turn }{| into едц", TYPE_FLAG|VAR_MORE,
 	 "Will make the module turn }{| into едц in the Real Name "+
 	 "field in the userinfo database. This is useful in a european "+
 	 "country, Sweden.");
