@@ -1,7 +1,7 @@
 // This is a roxen protocol module.
 // Copyright © 2001, Roxen IS.
 
-// $Id: prot_https.pike,v 2.6 2002/10/22 00:13:34 nilsson Exp $
+// $Id: prot_https.pike,v 2.7 2002/10/25 20:04:55 nilsson Exp $
 
 // --- Debug defines ---
 
@@ -141,7 +141,6 @@ class http_fallback
 				port);
       destruct(my_fd);
       destruct(this_object());
-      //    my_fd = 0; /* Forget ssl-object */
     }
   }
 
