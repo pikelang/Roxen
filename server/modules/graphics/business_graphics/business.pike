@@ -16,7 +16,7 @@
  * Prevent less that 100x100 in size.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.14 1997/10/15 03:28:17 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.15 1997/10/15 03:33:38 hedda Exp $";
 constant thread_safe=0;
 
 #include <module.h>
@@ -325,14 +325,14 @@ string tag_diagram(string tag, mapping m, string contents,
   if(!m->image)
   {
     if(m->xsize) res->xsize = (int)m->xsize;
-    else return syntax( "You must specify an xsize for the diagram" );
-    if(m->xsize) res->ysize = (int)m->ysize;
-    else return syntax( "You must specify an ysize for the diagram" );
+    else res->xsize = 400;
+    if(m->ysize) res->ysize = (int)m->ysize;
+    else res->ysize = 300;
   }
   else
   {
     if(m->xsize) res->xsize = (int)m->xsize;
-    if(m->xsize) res->ysize = (int)m->ysize;
+    if(m->ysize) res->ysize = (int)m->ysize;
   }
 
   if(m->tone) res->tone = 1;
