@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.102 1997/08/15 20:16:31 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.103 1997/08/18 00:37:47 per Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -1392,8 +1392,8 @@ private void define_global_variables( int argc, array (string) argv )
 
   /// End of cache variables..
   
-  globvar("docurl", "http://www.roxen.com/", "Documentation URL",
-	  TYPE_STRING|VAR_MORE,
+  globvar("docurl2", "http://www.roxen.com/documentation/context.pike?page=",
+	  "Documentation URL", TYPE_STRING|VAR_MORE,
 	 "The URL to prepend to all documentation urls throughout the "
 	 "server. This URL should _not_ end with a '/'.");
 
@@ -1613,7 +1613,7 @@ private void define_global_variables( int argc, array (string) argv )
       else
 	perror("Unknown variable: "+c+"\n");
   }
-  docurl=QUERY(docurl);
+  docurl=QUERY(docurl2);
 }
 
 

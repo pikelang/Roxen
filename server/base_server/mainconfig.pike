@@ -1,6 +1,6 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.71 1997/08/14 20:11:01 thomas Exp $";
-inherit "roxenlib";
+string cvs_version = "$Id: mainconfig.pike,v 1.72 1997/08/18 00:37:45 per Exp $";
+//inherit "roxenlib";
 inherit "config/draw_things";
 
 import Array;
@@ -403,7 +403,11 @@ mixed decode_form_result(string var, int type, object node, mapping allvars)
        op[i][0] = (int)allvars["port_"+i]||op[i][0];
        op[i][1] = allvars["protocol_"+i]||op[i][1];
        op[i][2] = allvars["ip_number_"+i]||op[i][2];
-       op[i][3] = allvars["arguments_"+i]||op[i][3];
+
+       if(allvars["key_"+i] || allvars["cert_"+i])
+	 op[i][3] =
+	   (allvars["key_"+i]?"key-file "+allvars["key_"+i]+"\n":"")+
+	   (allvars["cert_"+i]?"cert-file "+allvars["cert_"+i]+"\n":"");
      } else  // Delete this port.
        op[i]=0;
    }
@@ -884,6 +888,10 @@ mapping initial_configuration(object id)
 {
   object n2;
   string res, error;
+
+  if(id->variables->nope)
+    return std_redirect(root, id);
+    
   
   if(id->prestate->initial && id->variables->pass)
   {
@@ -929,17 +937,19 @@ mapping initial_configuration(object id)
   if(error && strlen(error))
     res += "<blockquote>\n<p><b>"+error+"</b>";
   
-  res += ("<pre>"
-	  "<font size=\"+1\">"
+  res += ("<table border=0 bgcolor=black><tr><td><table cellspacing=0 border=0 cellpadding=3 bgcolor=#e0e0ff>"
+	  "<tr><td colspan=2><center><h1>Please complete this form.</h1></center>"
+	  "</td></tr>"
 	  "<form action=\"/(initial)/Globals/\">"
-	  " User name <input name=user type=string>\n"
-	  "  Password <input name=pass type=password>\n"
-	  "     Again <input name=pass2 type=password>\n"
+	  "<tr><td align=right>User name</td><td><input name=user type=string></td></tr>\n"
+	  "<tr><td align=right>Password</td><td><input name=pass type=password></td></tr>\n"
+	  "<tr><td align=right>Again</td><td><input name=pass2 type=password></td></tr>\n"
 //   Avoid this trap for people who like to shoot themselves in the foot.
 //   /Peter
 //	  "IP-pattern <input name=pattern type=string>\n"
-	  "           <input type=submit value=\"Use these values\">\n"
-	  "</form></font></pre></blockquote>");
+	  "<tr><td align=left><input type=submit value=\" Ok \">\n</td>"
+	  "<td align=right><input type=submit name=nope value=\" Cancel \"></td></tr>\n"
+	  "</form></table></table></blockquote>");
   
   return stores(res);
 }
@@ -1185,8 +1195,9 @@ string status_row(object node)
 {
    return ("<table width=\"100%\" bgcolor=\"#dddddd\" border=0 cellpadding=0"
 	   " cellspacing=0>\n"
-	   "<tr><td valign=middle align=left><a href=\"$docurl\">"
-	   "<img border=0 src=\"/image/roxen-small.gif\" alt=\"Roxen\"></a>"
+	   "<tr><td valign=middle align=left><a href=\"$docurl"+
+	   node->path(1)+"\">"
+	   "<img border=0 src=\"/image/roxen-icon-gray.gif\" alt=\"\"></a>"
 	   "</td>\n<td align=right valign=center>" + describe_node_path(node) +
 	   "</td>\n<td>&nbsp;</td></tr>\n</table><br>");
 }

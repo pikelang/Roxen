@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.33 1997/08/13 14:28:54 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.34 1997/08/18 00:37:56 per Exp $";
 
 #include <module.h>
 
@@ -248,12 +248,12 @@ void start(int n, object conf)
   env["SERVER_URL"]=conf->query("MyWorldLocation");
   env["AUTH_TYPE"]="Basic";
   env["ROXEN_CGI_NICE_LEVEL"] = (string)query("nice");
-  env["ROXEN_CGI_LIMITS"] = ("core_dump_size="+query("coresize")+
-			     ";time_cpu="+query("maxtime")+
-			     ";data_size="+query("datasize")+
-			     ";file_size="+query("filesize")+
-			     ";open_files="+query("open_files")+
-			     ";stack_size="+query("stack"));
+  env["ROXEN_CGI_LIMITS"] = ("core_dump_size:"+query("coresize")+
+			     ";time_cpu:"+query("maxtime")+
+			     ";data_size:"+query("datasize")+
+			     ";file_size:"+query("filesize")+
+			     ";open_files:"+query("open_files")+
+			     ";stack_size:"+query("stack"));
   
   us = ({ "", "" });
 

@@ -3,7 +3,7 @@ import spider;
 #define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
 
 // Set up the roxen environment. Including custom functions like spawne().
-string cvs_version="$Id: roxenloader.pike,v 1.32 1997/08/16 17:11:26 noring Exp $";
+string cvs_version="$Id: roxenloader.pike,v 1.33 1997/08/18 00:37:50 per Exp $";
 
 #define perror roxen_perror
 
@@ -22,7 +22,7 @@ void roxen_perror(string format,mixed ... args)
 }
 
 mapping pwn=([]);
-void pw_name(int uid)
+string pw_name(int uid)
 {
   if(pwn[uid]) return pwn[uid];
   return pwn[uid]=(getpwuid(uid)||((""+uid)/":"))[0];

@@ -1,11 +1,11 @@
-/* $Id: describers.pike,v 1.37 1997/08/13 23:25:51 neotron Exp $ */
+/* $Id: describers.pike,v 1.38 1997/08/18 00:37:51 per Exp $ */
 
 #include <module.h>
 int zonk=time();
 #define link(d) ("<a href=\""+node->path(1)+"?"+(zonk++)+"\">\n"+(d)+"\n</a>\n")
 
 inherit "low_describers";
-inherit "config/low_describers";
+//inherit "config/low_describers";
 
 import Array;
 import String;

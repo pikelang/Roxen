@@ -1,11 +1,12 @@
-/* $Id: low_describers.pike,v 1.10 1997/08/13 23:25:52 neotron Exp $ */
+/* $Id: low_describers.pike,v 1.11 1997/08/18 00:37:52 per Exp $ */
 // These do _not_ use any nodes, instead, they are called from the node
 // describers (which are called from the nodes)
 object this = this_object();
 
 #include <module.h>
 inherit "html";
-#define html_encode roxen->html_encode_string
+inherit "roxenlib";
+
 import String;
 import Array;
 import Stdio;
@@ -66,22 +67,8 @@ string describe_type(int type, mixed flag)
       return
 	("This is a list of ports. "
 	 "<p> The first field for each port is the actual port number, the "
-	 "second is the protocol used and the third is the interface to bind to."
-	 " The text area below is for arguments to the actual protocol, "
-	 " currently only the SSL protocol use them.<p> "
-	 "<p>The 'configure a new port' below all ports will add a new "
-	 "(unconfigured)"
-	 " port, and the 'use these values' button to the right will save <b>"
-	 " all</b> changes made to the ports above.<p>"
-	 "<b>SSL arguments:</b><p>"
-	 "<dl><dt>resident\n"
-	 "<dd>Keep the SSL process in real memory, if possible\n"
-	 "<dt>cert-file FILENAME"
-	 "<dd>Filename of the certificate file, relative to "+getcwd()+". "
-	 "<b>This is needed</b>\n"
-	 "<dt>key-file FILENAME"
-	 "<dd>Filename of the private key file, relative to "+getcwd()+".\n"
-	 "If unspecified, same as cert-file.</dl>");
+	 "second is the protocol used and the third is the interface to bind "
+	 "to.");
     break;
 
    case TYPE_FLAG:
@@ -297,31 +284,48 @@ string all_protocols_as_selection(int id, string sel)
 
 string port_buttons(array port, int id)
 {
-  return ("<table cellspacing=-2 cellpadding=-2>"
-	  "<tr><td><input type=reset value=\"Reset to last entered\"></td></tr>"
-	  "\n<tr><td><font color=red><input type=submit name=delete_"+id
-	  +" value=\"Delete this port\"></font></td></tr>\n"
-/*	  "<tr><td><input type=submit name=ok_"+id
-	  +" value=\"Use these values\"></td></tr>\n"*/
-	  "</table>");
+  return ("<input type=reset value=\"Reset to last entered\"><br>"
+	  "\n<font color=red><input type=submit name=delete_"+id+
+	  " value=\"Delete this port\"></font>");
 }
 
 string encode_one_port(array port, int id)
 {
+  string res;
   /* PortNo, Protocol, IP, options */
-  return "<tr><td colspan=2><hr noshade size=1></td></tr><tr><td><table>\n"
-    "<tr>\n<td><input size=5,1 name=port_"+id+" value="+
-    port[0]+"></td>\n<td>"+all_protocols_as_selection(id, port[1])+
-    "</td>\n<td>"+all_ip_numbers_as_selection(id, port[2])+"</td>\n"
-    "</tr>\n<tr valign=center><td colspan=3>\n"
-    "<textarea cols=30 rows=3 name=arguments_"+id+">"+
-    html_encode(port[3])+"</textarea>\n</td></tr></table></td><td>"+
-    port_buttons(port,id)+"</td></tr>";
+  res= "\n<tr height=100%><td>\n"
+    "<table cellspacing=0 border=0 bgcolor=#e0e0ff>\n"
+    "<tr>\n  <td><input size=5,1 name=port_"+id+" value="+
+    port[0]+"></td>\n    <td>"+all_protocols_as_selection(id, port[1])+
+    "</td>\n    <td>"+all_ip_numbers_as_selection(id, port[2])+"</td>\n"
+    "</tr>\n";
+  if(lower_case(port[1])=="ssl3")
+  {
+    string cf, kf;
+    sscanf(port[3], "%*scert-file %s\n", cf);
+    sscanf(port[3], "%*skey-file %s\n", kf);
+    res += ("<tr><td colspan=3>"
+	    "<table width=100% cellspacing=0  border=0 bgcolor=#f0f0ff>\n"
+	    "<tr width=100%><td colspan=2 width=100%><b>SSL Options</b></td></tr>\n");
+    res += ("<tr><td>Certificate file:</td> <td><input size=30,1 "
+	    "name=cert_"+id+" value=\""+html_encode_string(cf||"")+
+	    "\"></td></tr>\n"
+	    "<tr><td>Key file: (OPTIONAL)</td><td><input size=30,1 "
+	    "name=key_"+id+"  value=\""+html_encode_string(kf||"")+
+	    "\"></td></tr>\n");
+    res += "</table></td></tr>\n";
+  }
+  return res +
+    ("</table></td><td height=100% valign=top>\n"
+     "<table bgcolor=#e0e0ff height=100% cellspacing=0 cellpadding=0 "
+     "border=0>\n"+
+     "<tr height=100%><td height=100%>"+port_buttons(port,id)+"</td></tr>\n"
+     "</table></td></tr>");
 }
 
 string encode_ports(array from)
 {
-  string res = "<table>\n";
+  string res = "<table border=0 cellpadding=1 bgcolor=black cellspacing=1>\n";
   int i;
   if(ip_number_list)
   {
@@ -342,10 +346,11 @@ string encode_ports(array from)
 	res += encode_one_port( from[i], i );
     }
   }
-  res += "<tr><td colspan=4><hr noshade size=1>"
-    "<input type=submit name=ok value=\"Use these values\">"
+  res += "<tr><td colspan=4>\n"
+    "<table width=100% bgcolor=#f0f0ff border=0 cellpadding=0 cellspacing=0><tr><td>\n"+
+    (sizeof(from)?"<input type=submit name=ok value=\"Use these values\">":"")+
     "<input type=submit name=new_port value=\"Configure a new port\">"
-    "</td></tr>";
+    "</tr></table></td></tr>";
   return res+"</table>";
 }
 
@@ -404,7 +409,7 @@ string describe_variable_low(mixed *var, mixed path, int|void really_short)
     
    case TYPE_TEXT_FIELD:
     res="<textarea name="+path+" cols=50 rows=10>"
-      + html_encode(var[VAR_VALUE])
+      + html_encode_string(var[VAR_VALUE])
       + "</textarea><br><input type=submit value=Ok>\n";
     break;
     
