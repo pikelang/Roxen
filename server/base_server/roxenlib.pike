@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.167 2000/04/04 13:47:06 mast Exp $
+// $Id: roxenlib.pike,v 1.168 2000/04/11 04:54:53 per Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -1399,6 +1399,8 @@ static string do_output_tag( mapping args, array (mapping) var_arr, string conte
 string fix_relative( string file, RequestID id )
 {
   string path = id->not_query;
+  if( !search( file, "http:" ) )
+    return file;
   // +(id->misc->path_info?id->misc->path_info:"");
   if(file != "" && file[0] == '/')
     ;
