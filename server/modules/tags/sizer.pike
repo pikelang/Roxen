@@ -1,5 +1,5 @@
 constant thread_safe=1;
-constant cvs_version = "$Id: sizer.pike,v 1.11 2001/03/06 14:00:14 jhs Exp $";
+constant cvs_version = "$Id: sizer.pike,v 1.12 2001/03/06 14:05:31 jhs Exp $";
 #include <module.h>
 inherit "module";
 
@@ -220,8 +220,9 @@ string simpletag_page_size( string name,
     string d = dirname( page );
     if( strlen(f) > 4 && (f[1] == '_') )
     {
-      if( sscanf( f, "/_%*s/cimg%*[^/]/%s", f ) == 3 )
+      string internal = replace(id->conf->query("InternalLoc"), "%", "%%");
 
+      if( sscanf( f, internal + "cimg%*[^/]/%s", f ) == 2 )
       {
 	if( mapping ar = roxen.argcache->lookup( f ) )
 	{
@@ -236,7 +237,7 @@ string simpletag_page_size( string name,
 	  return "Cimg from data"+sz;
 	}
       }
-      else if(sscanf( f, "/_%*s/graphic_text%*[^$]$%s", f ) == 3 )
+      else if(sscanf( f, internal + "graphic_text%*[^$]$%s", f ) == 2 )
       {
 	mapping ar = roxen.argcache->lookup( f );
 	if( ar[""] ) return "Gtext (\""+ar[""]+"\")";
