@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.59 1997/09/01 01:38:58 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.60 1997/09/01 01:44:21 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -162,8 +162,7 @@ object(Font) load_font(string name, string justification, int xs, int ys)
 
   if ((!name)||(name == ""))
   {
-    return get_font("default",(int)args->font_size||32,0,0,
-		    lower_case(args->justification||"left"),
+    return get_font("default",32,0,0,lower_case(justification||"left"),
 		    (float)xs, (float)ys);
   } else if(sscanf(name, "%*s/%*s") != 2) {
     name=QUERY(default_size)+"/"+name;
@@ -175,8 +174,7 @@ object(Font) load_font(string name, string justification, int xs, int ys)
   {
     report_debug("Failed to load the compatibility font "+name+
 		 ", using the default font.\n");
-    return get_font("default",(int)args->font_size||32,0,0,
-		    lower_case(args->justification||"left"),
+    return get_font("default",32,0,0,lower_case(justification||"left"),
 		    (float)xs, (float)ys);
   }
   catch
