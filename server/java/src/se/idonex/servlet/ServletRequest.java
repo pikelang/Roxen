@@ -155,35 +155,38 @@ class ServletRequest implements javax.servlet.http.HttpServletRequest
 
   public Cookie[] getCookies()
   {
-    String cookieh = getHeader("Cookie");
+    Enumeration cookieh = getHeaders("Cookie");
     if(cookieh == null)
       return new Cookie[0];
-    HeaderTokenizer cookiet = new HeaderTokenizer(cookieh);
     Vector cookiev = new Vector();
-    Cookie lastcookie = null;
-    int version=0;
-    while(cookiet.more()) {
-      String name = cookiet.getValue();
-      String val = "";
-      if(cookiet.lookingAt('=')) {
-	cookiet.discard('=');
-	val = cookiet.getValue();
-      }
-      if(cookiet.more())
-	cookiet.discard(cookiet.lookingAt(',')? ',':';');
-      if(name.startsWith("$")) {
-	if(name.equals("$version"))
-	  version = Integer.parseInt(val);
-	else
-	  if(lastcookie != null)
-	    if(name.equals("$domain"))
-	      lastcookie.setDomain(val);
-	    else if(name.equals("$path"))
-	      lastcookie.setPath(val);
-      } else {
-	cookiev.add(lastcookie = new Cookie(name, val));
-	if(version != 0)
-	  lastcookie.setVersion(version);
+    while(cookieh.hasMoreElements()) {
+      HeaderTokenizer cookiet =
+	new HeaderTokenizer((String)cookieh.nextElement());
+      Cookie lastcookie = null;
+      int version=0;
+      while(cookiet.more()) {
+	String name = cookiet.getValue();
+	String val = "";
+	if(cookiet.lookingAt('=')) {
+	  cookiet.discard('=');
+	  val = cookiet.getValue();
+	}
+	if(cookiet.more())
+	  cookiet.discard(cookiet.lookingAt(',')? ',':';');
+	if(name.startsWith("$")) {
+	  if(name.equals("$version"))
+	    version = Integer.parseInt(val);
+	  else
+	    if(lastcookie != null)
+	      if(name.equals("$domain"))
+		lastcookie.setDomain(val);
+	      else if(name.equals("$path"))
+		lastcookie.setPath(val);
+	} else {
+	  cookiev.add(lastcookie = new Cookie(name, val));
+	  if(version != 0)
+	    lastcookie.setVersion(version);
+	}
       }
     }
     return (Cookie[])cookiev.toArray(new Cookie[cookiev.size()]);
@@ -231,10 +234,11 @@ class ServletRequest implements javax.servlet.http.HttpServletRequest
 
   public String getHeader(String hdr)
   {
-    if(headers == null)
+    Enumeration h = getHeaders(hdr);
+    if(h == null)
       return null;
     else
-      return (String)headers.get(hdr.toLowerCase());
+      return (String)h.nextElement();
   }
 
   public int getIntHeader(String hdr) throws NumberFormatException
@@ -377,14 +381,17 @@ class ServletRequest implements javax.servlet.http.HttpServletRequest
 
   public Enumeration getHeaders(String name)
   {
-    // FIXME
     if(headers == null)
       return null;
-    String hdr = (String)headers.get(name.toLowerCase());
+    Object hdr = headers.get(name.toLowerCase());
     if(hdr == null)
       return null;
-    else
-      return new java.util.StringTokenizer(hdr, "\0");
+    else if(hdr instanceof String) {
+      Vector v = new Vector(1);
+      v.add(hdr);
+      return v.elements();
+    } else
+      return ((Vector)hdr).elements();
   }
 
   public String getContextPath()

@@ -20,6 +20,7 @@ static object dictionary_class = FINDCLASS("java/util/Dictionary");
 static object throwable_class = FINDCLASS("java/lang/Throwable");
 static object stringwriter_class = FINDCLASS("java/io/StringWriter");
 static object printwriter_class = FINDCLASS("java/io/PrintWriter");
+static object vector_class = FINDCLASS("java/util/Vector");
 static object new_instance = class_class->get_method("newInstance",
 						     "()Ljava/lang/Object;");
 static object load_class = classloader_class->get_method("loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
@@ -47,6 +48,9 @@ static object printwriter_init = printwriter_class->get_method("<init>", "(Ljava
 static object printwriter_flush = printwriter_class->get_method("flush", "()V");
 static object wrapup_method = response_class->get_method("wrapUp", "()V");
 static object session_context_init = session_context_class->get_method("<init>", "()V");
+static object vector_init = vector_class->get_method("<init>", "()V");
+static object vector_add = vector_class->get_method("add", "(Ljava/lang/Object;)Z");
+
 
 static object natives_bind1, natives_bind2, natives_bind3;
 
@@ -336,7 +340,15 @@ object request(object context, mapping(string:string)|object id,
   object hh = headers_field->get(r);
   if(headers)
     foreach(indices(headers), string h)
-      dic_put(hh, h, headers[h]);
+      if(stringp(headers[h]))
+	dic_put(hh, h, headers[h]);
+      else {
+	object v = vector_class->alloc();
+	vector_init(v);
+	foreach(headers[h], string hx)
+	  vector_add(v, hx);
+	dic_put(hh, h, v);
+      }
   else
     headers_field->put(r, 0);
   check_exception();
