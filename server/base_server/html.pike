@@ -1,4 +1,4 @@
-string cvs_version = "$Id: html.pike,v 1.3 1998/01/21 21:34:18 grubba Exp $";
+//string cvs_version = "$Id: html.pike,v 1.4 1998/02/10 18:36:04 per Exp $";
 #define __replace(X) (X)
 
 string input(string name, string|void val, int|void t)

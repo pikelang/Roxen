@@ -1,11 +1,11 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.93 1998/02/05 01:09:55 grubba Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.94 1998/02/10 18:36:05 per Exp $";
 //inherit "roxenlib";
 
 inherit "config/draw_things";
 
-import Array;
-import Stdio;
+// import Array;
+// import Stdio;
 
 string status_row(object node);
 string display_tabular_header(object node);
@@ -372,7 +372,7 @@ mixed decode_form_result(string var, int type, object node, mapping allvars)
     return node->data[ VAR_MISC ][2]( var, type, node, allvars );
     
   case TYPE_MODULE_LIST:
-    return map(var/"\000", find_module);
+    return Array.map(var/"\000", find_module);
 
   case TYPE_MODULE:
    return find_module(var, node->config());
@@ -423,8 +423,8 @@ mixed decode_form_result(string var, int type, object node, mapping allvars)
 
    case TYPE_DIR_LIST:
     array foo;
-    foo=map((var-" ")/",", lambda(string var, object node) {
-      if (!strlen( var ) || file_size( var ) != -2)
+    foo=Array.map((var-" ")/",", lambda(string var, object node) {
+      if (!strlen( var ) || Stdio.file_size( var ) != -2)
       {
 	if(node->error)	
 	  node->error += ", " +var + " is not a directory";
@@ -490,7 +490,7 @@ mixed decode_form_result(string var, int type, object node, mapping allvars)
     if(node->data[VAR_MISC])
       return (int)var;
     else
-      return map((var-" ")/",", lambda(string s){ 
+      return Array.map((var-" ")/",", lambda(string s){ 
 	return (int)s;
       });
     
@@ -727,7 +727,7 @@ string new_module_form(object id, object node)
   }
   
   a=roxen->allmodules;
-  mods=sort_array(indices(a), lambda(string a, string b, mapping m) { 
+  mods=Array.sort_array(indices(a), lambda(string a, string b, mapping m) { 
     return m[a][0] > m[b][0];
   }, a);
   
@@ -949,7 +949,7 @@ mapping initial_configuration(object id)
   
   res = default_head("Welcome to Roxen Challenger");
 
-  res += read_bytes("etc/welcome.html");
+  res += Stdio.read_bytes("etc/welcome.html");
   if(error && strlen(error))
     res += "<blockquote>\n<p><b>"+error+"</b>";
   
@@ -1301,7 +1301,7 @@ mapping configuration_parse(object id)
     return http_string_answer(default_head("Roxen Challenger")+
 			      status_row(root)+
 			      display_tabular_header(root)+
-			      read_bytes(full_version?"etc/config.html":
+			      Stdio.read_bytes(full_version?"etc/config.html":
 					 "etc/config.int.html"), "text/html");
   }
   
@@ -1497,7 +1497,7 @@ mapping configuration_parse(object id)
 	roxen->remove_configuration(o->data->name);
 
 	if(roxen->configurations[i]->ports_open)
-	  map(values(roxen->configurations[i]->ports_open), destruct);
+	  Array.map(values(roxen->configurations[i]->ports_open), destruct);
 	destruct(roxen->configurations[i]);
 	
 	roxen->configurations = 

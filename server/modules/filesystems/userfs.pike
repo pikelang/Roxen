@@ -14,10 +14,10 @@
 
 inherit "filesystem";
 
-constant cvs_version="$Id: userfs.pike,v 1.17 1998/02/04 16:10:44 per Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.18 1998/02/10 18:36:14 per Exp $";
 
-import Array;
-import Stdio;
+// import Array;
+// import Stdio;
 
 int uid_was_zero()
 {

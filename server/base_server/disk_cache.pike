@@ -1,7 +1,5 @@
-string cvs_version = "$Id: disk_cache.pike,v 1.33 1998/02/04 16:10:38 per Exp $";
-#include <stdio.h>
+// string cvs_version = "$Id: disk_cache.pike,v 1.34 1998/02/10 18:36:02 per Exp $";
 #include <module.h>
-#include <simulate.h>
 #include <stat.h>
 
 
@@ -35,7 +33,7 @@ string file_name(string what)
 
 class CacheStream 
 {
-  import Stdio;
+//   import Stdio;
 
   inherit "socket";
 
@@ -113,7 +111,7 @@ class CacheStream
 
     if(!sscanf(fname, "%s.done", file))
       file = fname;
-    if(head = read_bytes(QUERY(cachedir)+file+".head"))
+    if(head = Stdio.read_bytes(QUERY(cachedir)+file+".head"))
     {
       headers = decode_value(head);
 //      perror(sprintf("Extracted %d bytes of headers from %s (%O)\n",
@@ -223,8 +221,8 @@ class CacheStream
 
 
 class Cache {
-  import Process;
-  import Stdio;
+  //  import Process;
+  //  import Stdio;
 
   object lock = ((program) "lock" )();
   object this = this_object();
@@ -317,7 +315,7 @@ class Cache {
 	nice(q);
 	nice(q);
 #endif
-	exec("bin/pike", "-m", "lib/pike/master.pike", "-I", "etc/include",
+	Process.exec("bin/pike", "-m", "lib/pike/master.pike", "-I", "etc/include",
 	     "-M", "etc/modules", "bin/garbagecollector.pike");
 	perror("Failed to start garbage collector (exec failed)!\n");
 #if efun(real_perror)
@@ -348,9 +346,9 @@ class Cache {
     file = QUERY(cachedir)+"statistics";
     
     command("statistics");
-    while(--i && (file_size(file)<5)) sleep(0);
+    while(--i && (Stdio.file_size(file)<5)) sleep(0);
     if(!i) return "cache statistics timeout";
-    s=read_bytes(file);
+    s=Stdio.read_bytes(file);
     rm(file);
     return s;
   }
@@ -361,7 +359,7 @@ class Cache {
   int check(int howmuch, int|void f)
   {
     command( "check", howmuch );
-    if(f) return (int)("0x"+(read_bytes(QUERY(cachedir)+"size")-" "));
+    if(f) return (int)("0x"+(Stdio.read_bytes(QUERY(cachedir)+"size")-" "));
     return 0;
   }
 }
@@ -391,7 +389,7 @@ public void reinit_garber()
     QUERY(cachedir)+="roxen_cache/";
   
   mkdirhier(QUERY(cachedir)+"logs/oo");
-  if(file_size(QUERY(cachedir)+"logs")>-2)
+  if(Stdio.file_size(QUERY(cachedir)+"logs")>-2)
   {
     report_error("Cache directory ("+QUERY(cachedir)+") cannot be"
 		 " accessed.\nCaching disabled.\n");
@@ -663,7 +661,7 @@ void rmold(string fname)
 {
   int len;
  
-  len = file_size(fname);
+  len = Stdio.file_size(fname);
   if((len>=0) && rm(fname) && (len > 0))
     cache->check(-len);
 }
@@ -788,7 +786,7 @@ void http_check_cache_file(object cachef)
   }
 
   int len;
-  if((len = file_size(cachef->rfiledone)) > 0)
+  if((len = Stdio.file_size(cachef->rfiledone)) > 0)
     cache->check(-len);
 
   if(!cachef->save_headers())

@@ -1,4 +1,4 @@
-string cvs_version = "$Id: cache.pike,v 1.18 1998/02/04 05:17:17 per Exp $";
+//string cvs_version = "$Id: cache.pike,v 1.19 1998/02/10 18:36:00 per Exp $";
 
 #include <config.h>
 

@@ -53,7 +53,6 @@ urw_itc_avant_garde-demi-r binary
 /server/base_server/html.pike foreign_ident
 /server/base_server/http.pike foreign_ident
 /server/base_server/language.pike foreign_ident
-/server/base_server/lock.pike foreign_ident
 /server/base_server/mainconfig.pike foreign_ident
 /server/base_server/module.pike foreign_ident
 /server/base_server/module_support.pike foreign_ident

@@ -4,7 +4,7 @@
 inherit "module";
 inherit "roxenlib";
 
-import Array;
+// import Array;
 
 void create()
 {

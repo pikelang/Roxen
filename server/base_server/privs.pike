@@ -1,6 +1,6 @@
 #if efun(seteuid)
 #include <module.h>
-string cvs_version = "$Id: privs.pike,v 1.32 1998/02/04 16:10:38 per Exp $";
+// string cvs_version = "$Id: privs.pike,v 1.33 1998/02/10 18:36:07 per Exp $";
 
 int saved_uid;
 int saved_gid;

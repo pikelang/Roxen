@@ -3,9 +3,9 @@
 // .htaccess compability by David Hedbor, neotron@infovav.se 
 //   Changed into module by Per Hedbor, per@infovav.se
 
-import Stdio;
+// import Stdio;
 
-constant cvs_version = "$Id: htaccess.pike,v 1.28 1998/02/10 17:20:19 grubba Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.29 1998/02/10 18:36:15 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -336,7 +336,7 @@ int validate_user(int|multiset users, array auth, string userfile, object id)
 
   array st;
 
-  if((!(st = file_stat(userfile))) || (st[1] == -4) || (!(passwd = read_bytes(userfile))))
+  if((!(st = file_stat(userfile))) || (st[1] == -4) || (!(passwd = Stdio.read_bytes(userfile))))
   {
     if (st && (st[1] == -4)) {
       report_error(sprintf("HTACCESS: Userfile \"%s\" is a device!\n"
@@ -727,7 +727,7 @@ mapping htaccess_no_file(object id)
     array st;
 
     if ((st = file_stat(access->nofile)) && (st[1] != -4) &&
-	(file = read_bytes(access->nofile)))
+	(file = Stdio.read_bytes(access->nofile)))
     {
       file = parse_rxml(file, id);
       return http_string_answer( file );
@@ -771,7 +771,7 @@ mapping try_htaccess(object id)
 	  array st;
 
 	  if ((st = file_stat(access->errorfile)) && (st[1] != -4) &&
-	      (file = read_bytes(access->errorfile))) {
+	      (file = Stdio.read_bytes(access->errorfile))) {
 	    file = parse_rxml(file, id);
 	  } else if (st && (st[1] == -4)) {
 	    report_error(sprintf("HTACCESS: Errorfile \"%s\" is a device!\n"
@@ -804,7 +804,7 @@ mapping try_htaccess(object id)
 	  array st;
 
 	  if ((st = file_stat(access->errorfile)) && (st[1] != -4) &&
-	      (file = read_bytes(access->errorfile))) {
+	      (file = Stdio.read_bytes(access->errorfile))) {
 	    file = parse_rxml(file, id);
 	  } else if (st && (st[1] == -4)) {
 	    report_error(sprintf("HTACCESS: Errorfile \"%s\" is a device!\n"

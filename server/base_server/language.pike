@@ -1,9 +1,10 @@
-import String;
+// import String;
+
 /* Language support for numbers and dates. Very simple,
  * really. Look at one of the existing language plugins (not really
  * modules, you see..)
  *
- * $Id: language.pike,v 1.11 1997/10/25 07:58:55 per Exp $
+ * $Id: language.pike,v 1.12 1998/02/10 18:36:04 per Exp $
  * This file is included by roxen.pike. Not very nice to have a
  * cvs_version variable here.
  *
@@ -38,7 +39,7 @@ void initiate_languages()
       string alias;
       object l;
       mixed err;
-      p += capitalize(lang[0..search(lang, ".")-1])+" ";
+      p += String.capitalize(lang[0..search(lang, ".")-1])+" ";
       if (err = catch {
 	l = compile_file("languages/"+lang)();
 	if(tmp=l->aliases()) {

@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-constant cvs_version = "$Id: http.pike,v 1.53 1998/02/05 00:59:26 js Exp $";
+constant cvs_version = "$Id: http.pike,v 1.54 1998/02/10 18:36:21 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -22,6 +22,7 @@ constant find_supports=roxen->find_supports;
 constant version=roxen->version;
 constant handle=roxen->handle;
 constant _query=roxen->query;
+constant thepipe = roxen->pipe;
 import Simulate;
 
 
@@ -32,13 +33,8 @@ private static int wanted_data, have_data;
 object conf;
 
 
-#ifdef REQUEST_DEBUG
-int kept_alive;
-#endif
-
 #include <roxen.h>
 #include <module.h>
-#undef SPEED_MAX
 
 #undef QUERY
 #if constant(cpp)
@@ -88,60 +84,40 @@ array (int|string) auth;
 string rawauth, realauth;
 string since;
 
-#if _DEBUG_HTTP_OBJECTS
-int my_id;
-int my_state;
-#endif
-
 // Parse a HTTP/1.1 HTTP/1.0 or 0.9 request, including form data and
 // state variables.  Return 0 if more is expected, 1 if done, and -1
 // if fatal error.
 
 void end(string|void);
 
-private void setup_pipe(int noend)
+private void setup_pipe()
 {
-#ifndef __NT__
-#if _DEBUG_HTTP_OBJECTS
-  my_state = 6;
-#endif
-  if(!my_fd) {
+  if(!my_fd) 
+  {
     end();
     return;
   }
-  if(!pipe)  pipe=Pipe.pipe();
-//  if(!noend) pipe->set_done_callback(end);
+  if(!pipe) pipe=thepipe();
 #ifdef REQUEST_DEBUG
   perror("REQUEST: Pipe setup.\n");
 #endif
 //  pipe->output(my_fd);
-#endif
 }
 
-void send(string|object what, int|void noend)
+void send(string|object what, int|void len)
 {
-#ifndef __NT__
-#if _DEBUG_HTTP_OBJECTS
-  my_state = 7;
-#endif
   if(!what) return;
-  if(!pipe) setup_pipe(noend);
-
+  if(!pipe) setup_pipe();
+  if(!pipe) return;
 #ifdef REQUEST_DEBUG
   perror("REQUEST: Sending some data\n");
 #endif
   if(stringp(what))  pipe->write(what);
-  else               pipe->input(what);
-#else
-#endif
-  my_fd->write(objectp(what)?what->read():what);
+  else               pipe->input(what,len);
 }
 
 string scan_for_query( string f )
 {
-#if _DEBUG_HTTP_OBJECTS
-  my_state = 8;
-#endif
   if(sscanf(f,"%s?%s", f, query) == 2)
   {
     string v, a, b;
@@ -172,9 +148,6 @@ private int really_set_config(array mod_config)
   string url, m;
   string base;
   base = conf->query("MyWorldLocation")||"/";
-#if _DEBUG_HTTP_OBJECTS
-  my_state = 8;
-#endif
   if(supports->cookies)
   {
 #ifdef REQUEST_DEBUG
@@ -241,10 +214,6 @@ private int really_set_config(array mod_config)
 
 private int parse_got(string s)
 {
-#if _DEBUG_HTTP_OBJECTS
-  if(my_fd) catch{mark_fd(my_fd->query_fd(), "HTTP: Parsing");};
-  my_state = 9;
-#endif
   multiset (string) sup;
   array mod_config;
   mixed f, line;
@@ -254,9 +223,6 @@ private int parse_got(string s)
 //  roxen->httpobjects[my_id] = "Parsed data...";
   real_raw = s;
   s -= "\r"; // I just hate all thoose CR LF.
-  
-  // if(strlen(s) < 3)
-  //   return 0;			// Not finished, I promise.
   
   if((s[-1] != '\n') || (search(s, "HTTP/") >= 0))
     if(search(s, "\n\n") == -1)
@@ -321,24 +287,27 @@ private int parse_got(string s)
   if(!remoteaddr)
   {
     if(my_fd) catch(remoteaddr = ((my_fd->query_address()||"")/" ")[0]);
-    if(!remoteaddr) this_object()->end();
+    if(!remoteaddr) {
+      end();
+      return 0;
+    }
   }
-
-#if 0
-  sscanf(f,"%s;%s", f, range);
-#endif
 
   f = scan_for_query( f );
 //  f = http_decode_string( f );
 
-  if (sscanf(f, "/<%s>%s", a, f))
+  if (sscanf(f, "/<%s>/%s", a, f)==2)
   {
     config_in_url = 1;
     mod_config = (a/",");
+    f = "/"+f;
   }
   
-  if (sscanf(f, "/(%s)%s", a, f) && strlen(a))
+  if ((sscanf(f, "/(%s)/%s", a, f)==2) && strlen(a))
+  {
     prestate = aggregate_multiset(@(a/","-({""})));
+    f = "/"+f;
+  }
   
   not_query = simplify_path(http_decode_string(f));
 
@@ -376,9 +345,6 @@ private int parse_got(string s)
 
 	      if(strlen(data) <= l) // \r are included. 
 	      {
-#if _DEBUG_HTTP_OBJECTS
-		roxen->httpobjects[my_id] = "Parsed data - short post...";
-#endif
 		return 0;
 	      }
 	      data = data[..l];
@@ -536,12 +502,6 @@ private int parse_got(string s)
 	  case "proxy-by":
 	  case "proxy-maintainer":
 	  case "proxy-software":
-#ifdef MORE_HEADERS
-	    if(misc[linename])
-	      misc[linename] += explode(contents-" ", ",");
-	    else
-	      misc[linename] = explode(contents-" ", ",");
-#endif
 	  case "mime-version":
 	    break;
 	    
@@ -590,14 +550,7 @@ private int parse_got(string s)
     raw = tmp2 * "\n"; 
   }
 
-#if _DEBUG_HTTP_OBJECTS
-  my_state = 10;
-  roxen->httpobjects[my_id] = sprintf("%O  -  %O", raw_url, remoteaddr);
-#endif
   if(config_in_url) {
-#if _DEBUG_HTTP_OBJECTS
-    roxen->httpobjects[my_id] = "Configuration request?...";
-#endif
     return really_set_config( mod_config );
   }
   if(!supports->cookies)
@@ -608,9 +561,6 @@ private int parse_got(string s)
        && not_query[0]=='/' && method!="PUT"
        && QUERY(set_cookie))
     {
-#ifdef DEBUG
-      perror("Setting unique ID.\n");
-#endif
       if (!(QUERY(set_cookie_only_once) &&
 	    cache_lookup("hosts_for_cookie",remoteaddr))) {
 	misc->moreheads = ([ "Set-Cookie":http_roxen_id_cookie(), ]);
@@ -618,20 +568,11 @@ private int parse_got(string s)
       if (QUERY(set_cookie_only_once))
 	cache_set("hosts_for_cookie",remoteaddr,1);
     }
-#ifdef DEBUG
-#if DEBUG_LEVEL > 30
-    else
-      perror("Unique ID: "+cookies->RoxenUserID+"\n");
-#endif
-#endif
   return 1;	// Done.
 }
 
 void disconnect()
 {
-#if _DEBUG_HTTP_OBJECTS
-  my_state = 2;
-#endif
     if(do_not_disconnect)
     {
 #ifdef REQUEST_DEBUG
@@ -651,23 +592,16 @@ void disconnect()
 	destruct(file->file);
       }
     }
-#if _DEBUG_HTTP_OBJECTS
-    roxen->httpobjects[my_id] += " - disconnect";  
-#endif
     my_fd = 0;
 //  };
   destruct();
 }
 
-#ifdef KEEP_CONNECTION_ALIVE
-void no_more_keep_connection_alive(mapping foo)
-{
-  if(!pipe || !objectp(my_fd)) end();
-}
-#endif
-
 void end(string|void s)
 {
+#ifdef REQUEST_DEBUG
+    perror("REQUEST: End...\n");
+#endif
 #ifdef PROFILE
   if(conf)
   {
@@ -680,21 +614,6 @@ void end(string|void s)
     if(elapsed > p[2]) p[2]=elapsed;
   }
 #endif
-//   trace(9);
-#if _DEBUG_HTTP_OBJECTS
-  if(my_fd) catch{mark_fd(my_fd->query_fd(), "");};
-  my_state = 1;
-#endif
-//  array err = catch {
-#ifdef REQUEST_DEBUG
-    perror("REQUEST: End...\n");
-#endif
-#ifdef KEEP_CONNECTION_ALIVE
-    remove_call_out(no_more_keep_connection_alive);
-#endif
-#if _DEBUG_HTTP_OBJECTS
-    roxen->httpobjects[my_id] += " - end";  
-#endif
     if(objectp(my_fd))
     {
       my_fd->set_blocking();
@@ -706,11 +625,7 @@ void end(string|void s)
       }
       my_fd = 0;
     }
-//  };
-//  if(err)
-//    roxen_perror("END: %O\n", describe_backtrace(err));
     disconnect();  
-//   trace(0);
 }
 
 static void do_timeout(mapping foo)
@@ -718,12 +633,8 @@ static void do_timeout(mapping foo)
   int elapsed = HRTIME()-req_time;
   if(elapsed > HRSEC(30))
   {
-#if _DEBUG_HTTP_OBJECTS
-    my_state = 10;
-#endif
-  //  perror("Timeout. Closing down...\n");
-#if _DEBUG_HTTP_OBJECTS
-    roxen->httpobjects[my_id] += " - timed out";  
+#ifdef REQUEST_DEBUG
+    perror("Timeout. Closing down...\n");
 #endif
     end("HTTP/1.0 408 Timeout\r\n"
 	"Content-type: text/plain\r\n"
@@ -733,30 +644,10 @@ static void do_timeout(mapping foo)
 	"Please try again.\n");
   } else {
     // premature call_out...
-    werror("got premature call_out to do_timeout. Odd.\n");
     call_out(do_timeout, 10);
   }
 }
 
-
-#ifdef KEEP_CONNECTION_ALIVE
-void got_data(mixed fooid, string s);
-
-void keep_connection_alive()
-{
-  pipe=0;
-  if(my_fd) {
-    my_fd->set_read_callback(got_data);
-    my_fd->set_close_callback(end);
-  }
-/*my_fd->set_write_callback(lambda(){});*/
-
-  if(cache && strlen(cache))
-    got_data(1, "");
-  else
-    call_out(no_more_keep_connection_alive, 100);
-}
-#endif
 
 
 mapping internal_error(array err)
@@ -812,7 +703,7 @@ constant errors =
   ]);
 
 
-void do_log(array id)
+void do_log(array|void id)
 {
   if(conf)
   {
@@ -826,34 +717,20 @@ void do_log(array id)
       conf->log(file, this_object());
     }
   }
-  my_fd=0;
-  pipe=file=0;
-  destruct();
+  end();
+  return;
 }
 
 void handle_request( )
 {
-#if _DEBUG_HTTP_OBJECTS
-  mark_fd(my_fd->query_fd(), "HTTP: Handling");
-  my_state = 15;
-#endif
   mixed *err;
   int tmp;
-#ifdef KEEP_CONNECTION_ALIVE
-  int keep_alive;
-#endif
   function funp;
   mapping heads;
   string head_string;
   object thiso=this_object();
 
-#ifndef SPEED_MAX
-//  perror("Removing timeout call_out...\n");
-#if _DEBUG_HTTP_OBJECTS
-  roxen->httpobjects[my_id] += " - handled";
-#endif
   remove_call_out(do_timeout);
-#endif
 
   if(conf)
   {
@@ -952,24 +829,6 @@ void handle_request( )
 	file->len += strlen(file->data);
     }
     
-#ifdef KEEP_CONNECTION_ALIVE
-#ifdef REQUEST_DEBUG
-    if(kept_alive)
-      perror(sprintf("Connection: Kept alive %d times.\n", kept_alive));
-#endif
-    if(misc->connection && search(misc->connection, "keep-alive") != -1)
-    {
-      if(file->len > 0)
-      {
-	heads->Connection = "keep-alive; timeout=100, maxreq=666";
-	keep_alive=1;
-#ifdef REQUEST_DEBUG
-	kept_alive++;
-#endif
-      }
-    }
-#endif
-
     if(mappingp(file->extra_heads)) {
       heads |= file->extra_heads;
     }
@@ -992,85 +851,15 @@ void handle_request( )
     head_string = (myheads+({"",""}))*"\r\n";
     
     if(conf) conf->hsent+=strlen(head_string||"");
-
-    if(method=="HEAD")
-    {
-      if(conf)conf->log(file, thiso);
-#ifdef KEEP_CONNECTION_ALIVE
-      if(keep_alive)
-      {
-	my_fd->write(head_string);
-	misc->connection = 0;
-	keep_connection_alive();
-      } else
-#endif
-	end(head_string);
-      return;
-    }
-
-#ifdef USE_SHUFFLE
-    if(!file->data &&
-       (file->len<=0 || (file->len > 300000))
-#ifdef KEEP_CONNECTION_ALIVE
-       && !keep_alive
-#endif
-       && objectp(file->file))
-    {
-      if(head_string) my_fd->write(head_string);
-      shuffle( file->file, my_fd );
-      if(conf)conf->log(file, thiso); 
-      my_fd=file->file=file=pipe=0;
-      return;
-    }
-#endif
-    
-    if(file->len < 
-#ifdef THREADS
-       65535
-#else
-       3000
-#endif
-&&
-#ifdef KEEP_CONNECTION_ALIVE
-       !keep_alive &&
-#endif
-       file->len >= 0)
-    {
-      if(file->data) head_string += file->data;
-      if(file->file) 
-      {
-	head_string += file->file->read();
-	destruct(file->file);
-      }
-      
-      if(conf)
-      {
-	file->len = strlen( head_string );
-	conf->log(file, thiso);
-      }
-      end(head_string);
-      return;
-    }
   }
-
   if(head_string) send(head_string);
-  if(file->data)  send(file->data);
-  if(file->file)  send(file->file);
-#ifndef __NT__
-  pipe->output(my_fd);
-  pipe->set_done_callback( do_log, ({ pipe, file }) );
-#endif
-
-#ifdef KEEP_CONNECTION_ALIVE
-  if(keep_alive)
+  if(method != "HEAD")
   {
-    if(my_fd)
-    {
-      misc->connection=0;
-      pipe->set_done_callback(keep_connection_alive);
-    }
-  } 
-#endif
+    if(file->data)  send(file->data, file->len);
+    if(file->file)  send(file->file, file->len);
+  }
+  pipe->set_done_callback( do_log, ({ pipe, file }) );
+  pipe->output(my_fd);
 }
 
 /* We got some data on a socket.
@@ -1080,19 +869,10 @@ void handle_request( )
 void got_data(mixed fooid, string s)
 {
   int tmp;
-#if _DEBUG_HTTP_OBJECTS
-  my_state = 3;
-#endif
 //  perror("Got data.\n");
-#ifndef SPEED_MAX
-//  perror("Removing timeout call_out...\n");
-#if _DEBUG_HTTP_OBJECTS
-  roxen->httpobjects[my_id] = ("Got data - "+remoteaddr +" - "+ctime(_time())) - "\n";
-#endif
   remove_call_out(do_timeout);
   call_out(do_timeout, 30); // Close down if we don't get more data 
                          // within 30 seconds. Should be more than enough.
-#endif
   if(wanted_data)
   {
     if(strlen(s)+have_data < wanted_data)
@@ -1109,9 +889,6 @@ void got_data(mixed fooid, string s)
     s = cache*""; 
     cache = 0;
   }
-#ifdef KEEP_CONNECTION_ALIVE
-  remove_call_out(no_more_keep_connection_alive);
-#endif
   tmp = parse_got(s);
   switch(-tmp)
   { 
@@ -1127,9 +904,6 @@ void got_data(mixed fooid, string s)
     end();
     return;
   }
-#if _DEBUG_HTTP_OBJECTS
-  roxen->httpobjects[my_id] += " - finished getting data.";
-#endif
   if(conf)
   {
     conf->received += strlen(s);
@@ -1140,19 +914,9 @@ void got_data(mixed fooid, string s)
   my_fd->set_read_callback(0); 
   my_fd->set_blocking();
 #ifdef THREADS
-#if 0
-  if(conf)
-#endif
-    roxen->handle(this_object()->handle_request);
-#if 0
-  else // config interface requests get their own threads..
-  {
-    object t = thread_create(handle_request);
-    catch(t->set_name("Config IF"));
-  }
-#endif
+  roxen->handle(this_object()->handle_request);
 #else
-  this_object()->handle_request();
+  handle_request();
 #endif
 }
 
@@ -1162,9 +926,6 @@ void got_data(mixed fooid, string s)
 object clone_me()
 {
   object c,t;
-#if _DEBUG_HTTP_OBJECTS
-  my_state = 4;
-#endif
   c=object_program(t=this_object())();
 
   c->first = first;
@@ -1209,63 +970,27 @@ object clone_me()
   c->realauth = realauth;
   c->rawauth = rawauth;
   c->since = since;
-#if _DEBUG_HTTP_OBJECTS
-  if(!c->my_id)
-    c->my_id = roxen->new_id();  
-  roxen->httpobjects[c->my_id] = roxen->httpobjects[my_id] + " - clone";
-  roxen->httpobjects[my_id] += " - CLONED";
-#endif
   return c;
 }
 
 void clean()
 {
-#if _DEBUG_HTTP_OBJECTS
-  my_state = 4;
-#endif
   if(!(my_fd && objectp(my_fd))) end();
   else if((_time(1) - time) > 4800) end();
 }
 
-#if _DEBUG_HTTP_OBJECTS
-void destroy()
-{
-  if(my_fd) catch{mark_fd(my_fd->query_fd(), "");};
-  roxen->httpobjects->num--;
-  m_delete(roxen->httpobjects, my_id);
-} 
-#endif
-
 void create(object f, object c)
 {
-  
-#if _DEBUG_HTTP_OBJECTS
-  my_state = 5;
-  roxen->httpobjects->num++;
-#endif
   if(f)
   {
-#if _DEBUG_HTTP_OBJECTS
-    if(!my_id)
-      my_id = roxen->new_id();  
-#endif
     my_fd = f;
     my_fd->set_read_callback(got_data);
     my_fd->set_close_callback(end);
-#if _DEBUG_HTTP_OBJECTS
-    if(my_fd) catch(remoteaddr = ((my_fd->query_address()||"")/" ")[0]);
-    roxen->httpobjects[my_id] = ("Created - "+
-				 remoteaddr +" - "+ctime(_time())) - "\n" ;
-#endif
     conf = c;
     mark_fd(my_fd->query_fd(), "HTTP connection");
     
-#ifndef SPEED_MAX
     // No need to wait more than 30 seconds to get more data.
     call_out(do_timeout, 30);
-    // There seems to be a bug where call_outs go missing... which is
-    // now fixed...
-#endif
   }
 }
 

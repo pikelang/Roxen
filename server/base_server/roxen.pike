@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.165 1998/02/05 02:01:02 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.166 1998/02/10 18:36:09 per Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -22,9 +22,23 @@ inherit "socket";
 inherit "disk_cache";
 inherit "language";
 
+#if constant(spider.shuffle)
+#ifdef THREADS
+program pipe = Pipe.pipe;
+#else
+program pipe = (program)"smartpipe";
+#endif
+#else
+program pipe = Pipe.pipe;
+#endif
+
 // This is the real Roxen version. It should be changed before each
 // release
+#ifdef __NT__
+constant real_version = "Roxen Challenger/1.2beta2 NT alpha 1";
+#else
 constant real_version = "Roxen Challenger/1.2beta2";
+#endif
 
 #if _DEBUG_HTTP_OBJECTS
 mapping httpobjects = ([]);
@@ -37,11 +51,6 @@ int new_id(){ return idcount++; }
 #else
 #define MD_PERROR(X)
 #endif /* MODULE_DEBUG */
-
-import Array;
-import spider;
-import String;
-import Stdio;
 
 object roxen=this_object(), current_configuration;
 // int num_connections;
@@ -57,9 +66,8 @@ int shuffle_fd;
 #endif
 
 // A mapping from ports (objects, that is) to an array of information
-// about that port.
-// This will be moved to objects cloned from the configuration object
-// in the future.
+// about that port.  This will hopefully be moved to objects cloned
+// from the configuration object in the future.
 mapping portno=([]);
 
 // decode.pike used to be here.
@@ -1121,7 +1129,7 @@ private string get_domain(int|void l)
 #endif
     if(!s)
     {
-      t = read_bytes("/etc/resolv.conf");
+      t = Stdio.read_bytes("/etc/resolv.conf");
       if(t) 
       {
 	if(!sscanf(t, "domain %s\n", s))
@@ -1820,8 +1828,8 @@ void initiate_configuration_port( int|void first )
   config_ports_changed = 0;
 
 #ifndef THREADS  
-  if(catch(map(configuration_ports, destruct)))
-    catch(map(configuration_ports, do_dest));
+  if(catch(Array.map(configuration_ports, destruct)))
+    catch(Array.map(configuration_ports, do_dest));
   
   catch(do_dest(main_configuration_port));
   
@@ -2182,7 +2190,7 @@ void _shuffle(object from, object to,
   }
 #endif /* send_fd */
   // Fallback, when there is no external shuffler.
-  object p = Pipe.pipe();
+  object p = pipe();
   // p->input(from);
   p->output(to);
   if (to2) {
@@ -2453,7 +2461,7 @@ string checkfd(object|void id)
      "<table width=100% cellspacing=0 cellpadding=0>\n"+
      "<tr align=right><td>fd</td><td>type</td><td>mode</td>"+
      "<td>size</td><td>inode</td></tr>\n"+
-     (map(get_all_active_fd(),
+     (Array.map(get_all_active_fd(),
 	  lambda(int fd) 
 	  {
 	    return ("<tr align=right><th>"+fd+"</th><td>"+

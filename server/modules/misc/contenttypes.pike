@@ -4,13 +4,11 @@
 // mapping. Given the file 'foo.html', it will per default
 // set the contenttype to 'text/html'
 
-constant cvs_version = "$Id: contenttypes.pike,v 1.10 1997/10/20 22:43:48 neotron Exp $";
+constant cvs_version = "$Id: contenttypes.pike,v 1.11 1998/02/10 18:36:18 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
 inherit "module";
-
-import Stdio;
 
 mapping (string:string) extensions=([]), encodings=([]);
 mapping  (string:int) accessed=([]);

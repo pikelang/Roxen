@@ -4,14 +4,13 @@
 // another. This can be done using "internal" redirects (much like a
 // symbolik link in unix), or with normal HTTP redirects.
 
-constant cvs_version = "$Id: redirect.pike,v 1.11 1997/10/03 17:16:50 grubba Exp $";
+constant cvs_version = "$Id: redirect.pike,v 1.12 1998/02/10 18:36:15 per Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
 
-import Array;
 private int redirs = 0;
 
 void create()
@@ -139,13 +138,13 @@ mixed first_try(object id)
 	  
 	  if((foo=split(m)))
 	  {
-	    array bar = map(foo, lambda(string s, mapping f) {
+	    array bar = Array.map(foo, lambda(string s, mapping f) {
 	      return "$"+(f->num++);
 	    }, ([ "num":1 ]));
 	    foo +=({(id->not_query/"/"-({""}))[-1], id->not_query[1..] });
 	    bar +=({ "%f", "%p" });
-	    foo = map(foo, lambda(mixed s) { return (string)s; });
-	    bar = map(bar, lambda(mixed s) { return (string)s; });
+	    foo = Array.map(foo, lambda(mixed s) { return (string)s; });
+	    bar = Array.map(bar, lambda(mixed s) { return (string)s; });
 	    to = replace(redirect_patterns[f], bar, foo);
 	    break;
 	  }

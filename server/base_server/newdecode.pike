@@ -1,4 +1,4 @@
-import Array;
+// import Array;
 
 // The magic below is for the 'install' program
 #ifndef roxenp
@@ -7,7 +7,7 @@ import Array;
 #endif
 #endif
 #ifndef IN_INSTALL
-string cvs_version = "$Id: newdecode.pike,v 1.6 1997/04/05 01:25:35 per Exp $";
+// string cvs_version = "$Id: newdecode.pike,v 1.7 1998/02/10 18:36:07 per Exp $";
 #endif
 
 #include <roxen.h>
@@ -227,10 +227,10 @@ mixed compat_decode_value( string val )
     return replace(val[1 .. strlen(val)-2], "%0A", "\n");
       
   case '{':
-   return map(val[1 .. strlen(val)-2]/"},{", compat_decode_value);
+   return Array.map(val[1 .. strlen(val)-2]/"},{", compat_decode_value);
       
   case '<':
-   return aggregate_multiset(map(val[1 .. strlen(val)-2]/"},{", compat_decode_value));
+   return aggregate_multiset(Array.map(val[1 .. strlen(val)-2]/"},{", compat_decode_value));
 
   default:
     if(search(val,".") != -1)
@@ -310,11 +310,11 @@ private string encode_mixed(mixed from)
   else if(floatp(from))
     return "<flt>"+from+"</flt>";
   else if(arrayp(from))
-    return "\n  <a>\n    "+map(from, encode_mixed)*"\n    "
+    return "\n  <a>\n    "+Array.map(from, encode_mixed)*"\n    "
           +"\n  </a>\n";
   else if(multisetp(from))
     return "\n  <lst>\n    "
-      +map(indices(from),encode_mixed)*"\n    "+"\n  </lst>\n";
+      +Array.map(indices(from),encode_mixed)*"\n    "+"\n  </lst>\n";
   else if(objectp(from)) // Only modules.
     return "<mod>"+name_of_module(from)+"</mod>";
   else if(mappingp(from))

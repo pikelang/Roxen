@@ -1,6 +1,6 @@
 // Color support for roxen. 
 
-string cvs_version = "$Id: color.pike,v 1.12 1997/10/25 05:28:37 per Exp $";
+//string cvs_version = "$Id: color.pike,v 1.13 1998/02/10 18:36:01 per Exp $";
 
 #include <stdio.h>
 

@@ -1,16 +1,10 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.100 1998/02/05 00:59:25 js Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.101 1998/02/10 18:36:17 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
+#include <stat.h>
 inherit "module";
 inherit "roxenlib";
-
-#if efun(_static_modules)
-# define map_array Array.map
-import Image;
-# define Image image
-# define Font  font
-#endif
 
 #ifndef VAR_MORE
 #define VAR_MORE	0
@@ -131,6 +125,13 @@ void create()
 	 "The gtext tag saves images when they are calculated in this "
 	 "directory. We currently do not clean this directory.");
   
+  defvar("cache_age", 48, "Cache max age",
+
+	 TYPE_INT,
+
+	 "If the images in the cache have not been accessed for this "
+	 "number of hours they are removed.");
+  
   defvar("speedy", 0, "Avoid automatic detection of document colors",
 	 TYPE_FLAG|VAR_MORE,
 	 "If this flag is set, the tags 'body', 'tr', 'td', 'font' and 'th' "
@@ -176,9 +177,9 @@ void create()
 
 string query_location() { return query("location"); }
 
-object(Font) load_font(string name, string justification, int xs, int ys)
+object load_font(string name, string justification, int xs, int ys)
 {
-  object fnt = Font();
+  object fnt = Image.font();
 
   if ((!name)||(name == ""))
   {
@@ -219,7 +220,7 @@ array (array(int)) make_matrix(int size)
   array res;
   int i;
   int j;
-  res = map_array(allocate(size), lambda(int s, int size){
+  res = Array.map(allocate(size), lambda(int s, int size){
     return allocate(size); }, size);
 
   for(i=0; i<size; i++)
@@ -243,7 +244,7 @@ object load_image(string f,object id)
   if(last_image_name == f && last_image) return last_image->copy();
   string data;
   object file;
-  object img = Image();
+  object img = Image.image();
 
   if(!(data=roxen->try_get_file(fix_relative(f, id),id)))
     if(!(file=open(f,"r")) || (!(data=file->read())))
@@ -254,7 +255,7 @@ object load_image(string f,object id)
   return img->copy();
 }
 
-object (Image) blur(object img, int amnt)
+object  blur(object img, int amnt)
 {
   img->setcolor(0,0,0);
   img = img->autocrop(amnt, 0,0,0,0, 0,0,0);
@@ -264,7 +265,7 @@ object (Image) blur(object img, int amnt)
   return img;
 }
 
-object (Image) outline(object (Image) on, object (Image) with,
+object  outline(object  on, object  with,
 		       array (int) color, int radie, int x, int y)
 {
   int steps=10;
@@ -281,14 +282,14 @@ array grey = ({ 128,128,128 });
 array black = ({ 0,0,0 });
 
 array wwwb = ({ lgrey,lgrey,grey,black });
-object (Image) bevel(object (Image) in, int width, int|void invert)
+object  bevel(object  in, int width, int|void invert)
 {
   int h=in->ysize();
   int w=in->xsize();
 
-  object corner = Image(width+1,width+1);
-  object corner2 = Image(width+1,width+1);
-  object pix = Image(1,1);
+  object corner = Image.image(width+1,width+1);
+  object corner2 = Image.image(width+1,width+1);
+  object pix = Image.image(1,1);
 
   for(int i=-1; i<=width; i++) {
     corner->line(i,width-i,i,-1, @white);
@@ -298,17 +299,17 @@ object (Image) bevel(object (Image) in, int width, int|void invert)
 
   if(!invert)
   {
-    in->paste_alpha(Image(width,h-width*2,@white), 160, 0, width);
-    in->paste_alpha(Image(width,h-width*2,@black), 128, in->xsize()-width, width);
-    in->paste_alpha(Image(w-width,width,@white), 160, 0, 0);
-    in->paste_alpha(Image(w-width,width,@black), 128, width, in->ysize()-width);
+    in->paste_alpha(Image.image(width,h-width*2,@white), 160, 0, width);
+    in->paste_alpha(Image.image(width,h-width*2,@black), 128, in->xsize()-width, width);
+    in->paste_alpha(Image.image(w-width,width,@white), 160, 0, 0);
+    in->paste_alpha(Image.image(w-width,width,@black), 128, width, in->ysize()-width);
   } else  {
     corner=corner->invert();
     corner2=corner2->invert();
-    in->paste_alpha(Image(width,h-width*2,@black), 160, 0, width);
-    in->paste_alpha(Image(width,h-width*2,@white), 128, in->xsize()-width, width);
-    in->paste_alpha(Image(w-width,width,@black), 160, 0, 0);
-    in->paste_alpha(Image(w-width,width,@white), 128, width, in->ysize()-width);
+    in->paste_alpha(Image.image(width,h-width*2,@black), 160, 0, width);
+    in->paste_alpha(Image.image(width,h-width*2,@white), 128, in->xsize()-width, width);
+    in->paste_alpha(Image.image(w-width,width,@black), 160, 0, 0);
+    in->paste_alpha(Image.image(w-width,width,@white), 128, width, in->ysize()-width);
   }
 
   in->paste_mask(corner, corner->color(95,95,95), in->xsize()-width,-1);
@@ -325,13 +326,13 @@ object (Image) bevel(object (Image) in, int width, int|void invert)
 }
 
 
-object (Image) make_text_image(mapping args, object font, string text,object id)
+object make_text_image(mapping args, object font, string text,object id)
 {
   object text_alpha=font->write(@(text/"\n"));
   int xoffset=0, yoffset=0;
 
   if(!text_alpha->xsize() || !text_alpha->ysize())
-    text_alpha = Image(10,10, 0,0,0);
+    text_alpha = Image.image(10,10, 0,0,0);
   
 //  perror("Making image of '%s', args=%O\n", text, args);
 
@@ -446,7 +447,7 @@ object (Image) make_text_image(mapping args, object font, string text,object id)
     case "left":
     }
   } else
-    background = Image(xsize, ysize, @bgcolor);
+    background = Image.image(xsize, ysize, @bgcolor);
 
   if(args->border)
   {
@@ -502,7 +503,7 @@ object (Image) make_text_image(mapping args, object font, string text,object id)
     string bg;
     sscanf(args->textbox, "%d,%s", alpha, bg);
     sscanf(bg,"%s,%d", bg,border);
-    background->paste_alpha(Image(txsize+border*2,tysize+border*2,
+    background->paste_alpha(Image.image(txsize+border*2,tysize+border*2,
 				  @parse_color(bg)),
 			    255-(alpha*255/100),xoffset-border,yoffset-border);
   }
@@ -542,7 +543,7 @@ object (Image) make_text_image(mapping args, object font, string text,object id)
     int xs,ys;
     xs = text_alpha->xsize()+sdist*2+4;
     ys = text_alpha->ysize()+sdist*2+4;
-    object ta = Image(xs+sdist*2,ys+sdist*2);
+    object ta = Image.image(xs+sdist*2,ys+sdist*2);
     array sc = parse_color(args->scolor||"black");
 
     ta->paste_alpha_color(text_alpha,255,255,255,sdist,sdist);
@@ -568,7 +569,7 @@ object (Image) make_text_image(mapping args, object font, string text,object id)
       ->color(@fgcolor);
   
 
-  if(!foreground)  foreground=Image(txsize, tysize, @fgcolor);
+  if(!foreground)  foreground=Image.image(txsize, tysize, @fgcolor);
   if(args->textscale)
   {
     string c1="black",c2="black",c3="black",c4="black";
@@ -609,6 +610,25 @@ object (Image) make_text_image(mapping args, object font, string text,object id)
 string base_key;
 object mc;
 
+
+array to_clean = ({});
+void clean_cache_dir()
+{
+  if(!sizeof(to_clean))
+    to_clean = get_dir(query("cache_dir"));
+  if(!sizeof(to_clean)) return;
+  int md = file_stat(query("cache_dir")+to_clean[0])[ST_ATIME];
+  
+  if((time() - md) > (query("cache_age")*3600))
+    rm(query("cache_dir")+to_clean[0]);
+  
+  to_clean = to_clean[1..];
+  if(sizeof(to_clean))
+    call_out(clean_cache_dir, 0.1);
+  else
+    call_out(clean_cache_dir, 3600);
+}
+
 void start(int|void val, object|void conf)
 {
   if(conf)
@@ -619,6 +639,8 @@ void start(int|void val, object|void conf)
     chmod( query( "cache_dir" ), 0777 );
 #endif
 #endif
+    remove_call_out(clean_cache_dir);
+    call_out(clean_cache_dir, 10);
     mc = conf;
     base_key = "gtext:"+(conf?conf->name:roxen->current_configuration->name);
   }
@@ -854,7 +876,7 @@ array(int)|string write_text(int _args, string text, int size, object id)
 	sscanf(args->fadein, "%d,%d,%d,%d", amount, steps, delay, initialdelay);
 	if(initialdelay)
 	{
-	  object foo=image(img->xsize(),img->ysize(),@parse_color(args->bg));
+	  object foo=Image.image(img->xsize(),img->ysize(),@parse_color(args->bg));
 	  res += foo->gif_add(0,0,initialdelay);
 	}
 	for(int i = 0; i<(steps-1); i++)
@@ -1061,8 +1083,8 @@ string magic_image(string url, int xs, int ys, string sn,
 
   return
     ("<script>\n"
-     " "+sn+"l = new Image("+xs+", "+ys+");"+sn+"l.src = \""+image_1+"\";\n"
-     " "+sn+"h = new Image("+xs+", "+ys+");"+sn+"h.src = \""+image_2+"\";\n"
+     " "+sn+"l = new Image.image("+xs+", "+ys+");"+sn+"l.src = \""+image_1+"\";\n"
+     " "+sn+"h = new Image.image("+xs+", "+ys+");"+sn+"h.src = \""+image_2+"\";\n"
      "</script>\n"+
      ("<a "+extra_args+"href=\""+url+"\" "+
       (input?"onClick='document.forms[0].submit();' ":"")

@@ -1,5 +1,5 @@
 /*
- * $Id: restrictedfs.pike,v 1.7 1998/02/04 16:10:43 per Exp $
+ * $Id: restrictedfs.pike,v 1.8 1998/02/10 18:36:13 per Exp $
  *
  * $Author: per $
  *
@@ -13,12 +13,12 @@
 
 inherit "filesystem";
 
-constant cvs_version = "$Id: restrictedfs.pike,v 1.7 1998/02/04 16:10:43 per Exp $";
+constant cvs_version = "$Id: restrictedfs.pike,v 1.8 1998/02/10 18:36:13 per Exp $";
 
 #include <module.h>
 #include <roxen.h>
 
-import Array;
+// import Array;
 
 mixed *register_module()
 {
@@ -89,7 +89,7 @@ array find_dir(string f, object id)
       // Not a prefix, or short
       if (home[1..sizeof(f)] == f) {
 	// Short - return the next part of the path.
-	return(filter(({ ".", "..", (home[sizeof(f)+1..]/"/")[0] }),
+	return(Array.filter(({ ".", "..", (home[sizeof(f)+1..]/"/")[0] }),
 		      dir_filter_function));
       }
     }

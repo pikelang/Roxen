@@ -1,10 +1,9 @@
-import spider;
 #define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
 
 program Privs;
 
 // Set up the roxen environment. Including custom functions like spawne().
-constant cvs_version="$Id: roxenloader.pike,v 1.57 1998/02/05 02:01:32 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.58 1998/02/10 18:36:10 per Exp $";
 
 #define perror roxen_perror
 
@@ -55,6 +54,7 @@ void roxen_perror(string format,mixed ... args)
   }
 
   string s;
+  spider;
   if(sizeof(args)) format=sprintf(format,@args);
   if (format=="") return;
   stderr->write(format);

@@ -4,7 +4,7 @@
 // It will be located somewhere in the name-space of the server.
 // Also inherited by some of the other filesystems.
 
-constant cvs_version= "$Id: filesystem.pike,v 1.26 1998/02/04 16:10:42 per Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.27 1998/02/10 18:36:12 per Exp $";
 int thread_safe=1;
 
 
@@ -22,7 +22,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-import Array;
+// import Array;
 
 int redirects, accesses, errors, dirlists;
 int puts, deletes;
@@ -221,7 +221,7 @@ array find_dir( string f, object id )
   if(QUERY(tilde) && QUERY(.files)) /* This is quite a lot faster */
     return dir;
 
-  return filter(dir, dir_filter_function);
+  return Array.filter(dir, dir_filter_function);
 }
 
 

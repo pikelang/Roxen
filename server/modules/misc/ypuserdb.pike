@@ -3,16 +3,16 @@
 // YP User database. Reads the system password database and use it to
 // authentificate users.
 
-constant cvs_version = "$Id: ypuserdb.pike,v 1.6 1997/08/31 03:47:24 peter Exp $";
+constant cvs_version = "$Id: ypuserdb.pike,v 1.7 1998/02/10 18:36:20 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
 
-import Stdio;
-import Array;
-import Yp;
+// import Stdio;
+// import Array;
+// import Yp;
 
 /*
  * Globals
@@ -30,7 +30,7 @@ string status()
 {
   return("<h1>Security info</h1>\n"
 	 "<b>YP-server:</b> " + domain->server("passwd.byname") + "<br>\n"
-	 "<b>YP-domain:</b> " + default_yp_domain() + "<br>\n"
+	 "<b>YP-domain:</b> " + Yp.default_yp_domain() + "<br>\n"
 	 "<p>\n"
 	 "<b>Successful auths:</b> " + (string)succ +
 	 ", " + (string)emptypasswd + " had empty password fields.<br>\n"
@@ -38,7 +38,7 @@ string status()
 	 ", " + (string)nouser + " had the wrong username.<br>\n"
 	 "<p>\n"
 	 "<h3>Failure by host</h3>" +
-	 (map(indices(failed), lambda(string s) {
+	 (Array.map(indices(failed), lambda(string s) {
 	   return roxen->quick_ip_to_host(s) + ": " + failed[s] + "<br>\n";
 	 }) * "") +
 	 "<p>The database has " + sizeof(domain->all("passwd.byname")) +
@@ -126,8 +126,7 @@ array register_module()
 
 void start(int i)
 {
-  if (!domain) {
-    domain = Domain();
-  }
+  if (!domain) 
+    domain = Yp.Domain();
 }
 

@@ -1,13 +1,12 @@
 inherit "http";
 
-static string _cvs_version = "$Id: roxenlib.pike,v 1.46 1998/02/04 07:28:34 mast Exp $";
+// static string _cvs_version = "$Id: roxenlib.pike,v 1.47 1998/02/10 18:36:09 per Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
 #endif
 
 #include <stat.h>
-#include <simulate.h>
 
 #define ipaddr(x,y) (((x)/" ")[y])
 
@@ -741,7 +740,7 @@ static string number2string(int n,mapping m,mixed names)
   }
   if (m->lower) s=lower_case(s);
   if (m->upper) s=upper_case(s);
-  if (m->cap||m->capitalize) s=capitalize(s);
+  if (m->cap||m->capitalize) s=String.capitalize(s);
   return s;
 }
 

@@ -1,6 +1,6 @@
 /* Dummy host_lookup, used when NO_DNS is defined. */
 
-string cvs_version = "$Id: dummy_hosts.pike,v 1.4 1998/02/05 00:59:15 js Exp $";
+//string cvs_version = "$Id: dummy_hosts.pike,v 1.5 1998/02/10 18:36:03 per Exp $";
 void create_host_name_lookup_processes() {}
 
 string quick_host_to_ip(string h) { return h; }

@@ -1,19 +1,18 @@
-import Array;
+// import Array;
 
 #include <module.h>
 
 #ifndef IN_INSTALL
 inherit "newdecode";
-string cvs_version = "$Id: read_config.pike,v 1.19 1998/02/05 00:59:17 js Exp $";
-
+// string cvs_version = "$Id: read_config.pike,v 1.20 1998/02/10 18:36:08 per Exp $";
 #else
 import spider;
 # define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
 # include "newdecode.pike"
 #endif
 
-import Array;
-import Stdio;
+// import Array;
+// import Stdio;
 
 mapping (string:mapping) configs = ([ ]);
 
@@ -158,7 +157,7 @@ array (string) list_all_configurations()
     }
     return ({});
   }
-  return map(filter(fii, lambda(string s){
+  return Array.map(Array.filter(fii, lambda(string s){
     if(s=="CVS" || s=="Global_Variables" || s=="Global Variables"
        || s=="global_variables" || s=="global variables" )
       return 0;

@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.93 1998/02/05 00:59:14 js Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.94 1998/02/10 18:36:02 per Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -11,8 +11,6 @@ mapping profile_map = ([]);
 
 
 inherit "roxenlib";
-
-import Array;
 
 
 function store = roxen->store;
@@ -609,6 +607,7 @@ nomask private inline string extract_user(string from)
 
 public void log(mapping file, object request_id)
 {
+//    _debug(2);
   string a;
   string form;
   function f;
@@ -657,6 +656,7 @@ public void log(mapping file, object request_id)
 		      request_id->remoteaddr, log_function);
   else
     log_function(form);
+//    _debug(0);
 }
 
 // These are here for statistics and debug reasons only.
@@ -900,7 +900,7 @@ mapping (mixed:function|int) locks = ([]);
 public mapping|int get_file(object id, int|void no_magic);
 
 #ifdef THREADS
-import Thread;
+// import Thread;
 
 mapping locked = ([]), thread_safe = ([]);
 
@@ -932,7 +932,7 @@ object _lock(object|function f)
     if (!locks[f])
     {
       // Needed to avoid race-condition.
-      l = Mutex()->lock;
+      l = Thread.Mutex()->lock;
       if (!locks[f]) {
 	locks[f]=l;
       }
@@ -1381,7 +1381,7 @@ public mapping(string:array(mixed)) find_dir_stat(string file, object id)
 	  dir = d | dir;
 	}
       } else if(d = c->find_dir(f, id)) {
-	dir = mkmapping(d, map(d, lambda(string f, string base,
+	dir = mkmapping(d, Array.map(d, lambda(string f, string base,
 					 object c, object id) {
 				    return(c->stat_file(base + f, id));
 				  }, f, c, id)) | dir;
@@ -1603,7 +1603,7 @@ void start(int num)
 		    "Tried:\n"
 		    "Port  Protocol   IP-Number \n"
 		    "---------------------------\n"
-		    + map(query("Ports"), lambda(array p) {
+		    + Array.map(query("Ports"), lambda(array p) {
 		      return sprintf("%5d %-10s %-20s\n", @p);
 		    })*"");
     }
@@ -1913,7 +1913,8 @@ object enable_module( string modname )
     {
       parse_module = me;
       if (_toparse_modules) {
-	map(_toparse_modules, lambda(object o, object me, mapping module) {
+	Array.map(_toparse_modules, lambda(object o, object me, mapping module)
+				    {
 	  array err;
 	  if (err = catch{me->add_parse_module(o);}) {
 	    report_error("Error while initiating module copy of " +

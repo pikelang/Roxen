@@ -1,4 +1,4 @@
-string cvs_version = "$Id: module_support.pike,v 1.14 1998/01/21 21:34:21 grubba Exp $";
+// string cvs_version = "$Id: module_support.pike,v 1.15 1998/02/10 18:36:06 per Exp $";
 #include <roxen.h>
 #include <module.h>
 
