@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.54 1999/11/17 23:23:48 per Exp $ */
+/* $Id: module.pike,v 1.55 1999/11/21 04:01:52 nilsson Exp $ */
 #include <module.h>
 #include <request_trace.h>
 
@@ -682,4 +682,14 @@ mapping query_if_callers()
     if(functionp( this_object()[q] ))
       m[replace(q[3..], "_", "-")] = this_object()[q];
   return m;
+}
+
+mixed get_commented_value(string path, int start, int stop)
+{
+  object file=Stdio.File();
+  if(!file->open(path,"r")) return 0;
+  string junk,in,comment;
+  in=file->read();
+  if(sscanf(in,"%s/*%s*/%s",junk,comment,junk)!=3) return 0;
+  return compile_string( "mixed f(){ return "+comment+"; }" )()->f();
 }

@@ -5,7 +5,7 @@
 // by this module.
 //
 
-constant cvs_version="$Id: accessed.pike,v 1.9 1999/10/20 18:03:33 nilsson Exp $";
+constant cvs_version="$Id: accessed.pike,v 1.10 1999/11/21 04:02:38 nilsson Exp $";
 constant thread_safe=1;
 
 constant language = roxen->language;
@@ -44,6 +44,106 @@ void create(object c)
 	 TYPE_FLAG|VAR_MORE,
 	 "If set, the accessed database will be closed if it is not used for "
 	 "8 seconds");
+}
+
+mapping TAGDOCUMENTATION;
+mapping tagdocumentation() {
+  if(TAGDOCUMENTATION) return TAGDOCUMENTATION;
+  int start=__LINE__;
+  /*
+ ([ "accessed":#"<desc>Generates an access counter that shows how many
+ times the page has been accessed. A file, AccessedDB, in the logs directory is used to
+ store the number of accesses to each page. By default the access count is
+ only kept for files that actually contain an accessed-tag,
+ but can also be configured to count all files of a certain type.</desc>
+
+<attr name=add value=number>
+ Increments the number of accesses with this number instead of one,
+ each time the page is accessed.</attr>
+
+<attr name=addreal>
+ Prints the real number of accesses as an HTML comment. Useful if you
+ use the cheat attribute and still want to keep track of the
+ real number of accesses.</attr>
+
+<attr name=case value=upper,lower,capitalize>
+ Sets the result to upper case, lower case or with the first letter capitalized.
+</attr>
+
+<attr name=cheat value=number>
+ Adds this number of accesses to the actual number of accesses before
+ printing the result. If your page has been accessed 72 times and you
+ add &lt;accessed cheat=100&gt; the result will be 172.</attr>
+  
+<attr name=database>
+ Works like the since attribute, but counts from the day the first entry in the entire accessed database was made.
+</attr>
+
+<attr name=factor value=percent>
+ Multiplies the actual number of accesses by the factor. E.g. <accessed factor=50>
+ displays half the actual value.
+</attr>
+
+<attr name=file value=filename>
+ Shows the number of times the page filename has been
+ accessed instead of how many times the current page has been accessed.
+ If the filename does not begin with \"/\", it is assumed to be a URL
+ relative to the directory containing the page with the
+ accessed tag. Note, that you have to type in the full name
+ of the file. If there is a file named tmp/index.html, you cannot
+ shorten the name to tmp/, even if you've set Challenger up to use
+ index.html as a default page. The filename refers to the
+ virtual filesystem.
+
+ One limitation is that you cannot reference a file that does not
+ have its own &lt;accessed&gt; tag. You can use &lt:accessed
+ silent&gt; on a page if you want it to be possible to count accesses
+ to it, but don't want an access counter to show on the page itself.
+</attr>
+
+<attr name=lang value=langcodes>
+ Will print the result as words in the chosen language if used together
+ with type=string. Available languages are <langcodes>.
+  
+<attr name=per value=second,minute,hour,day,week,month,year>
+ Shows the number of accesses per unit of time.
+</attr>
+
+<attr name=prec value=number>
+ Rounds the number of accesses to this number of significant digits. If
+ prec=2 show 12000 instead of 12148.
+</attr>
+
+<attr name=reset>
+ Resets the counter. This should probably only be done under very
+ special conditions, maybe within an &lt;if&gt; statement.
+
+ This can be used together with the file argument, but it is limited
+ to files in the current- and sub-directories.
+</attr>
+  
+<attr name=silent>
+ Print nothing. The access count will be updated but not printed. This
+ option is useful because the access count is normally only kept for
+ pages with actual &lt;access&gt; on them. &lt;accessed
+ file=filename&gt; can then be used to get the access count for the
+ page with the silent counter.
+</attr>
+
+<attr name=since>
+ Inserts the date that the access count started. The language will
+ depend on the lang tag, default is English. All normal date
+ related attributes can be used. See the &lt;date&gt; tag.
+</attr>
+
+<attr type=number,string,roman,iso,discordian,stardate,mcdonalds,linus,ordered>
+ Specifies how the count are to be presented. Some of these are only
+ useful together with the since attribute.</attr>"])
+  */
+  int stop=__LINE__;
+  TAGDOCUMENTATION=get_commented_value(__FILE__,start,stop);
+  if(!mappingp(TAGDOCUMENTATION)) TAGDOCUMENTATION=0;
+  return TAGDOCUMENTATION;
 }
 
 static string olf; // Used to avoid reparsing of the accessed index file...
