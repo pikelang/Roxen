@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.136 2004/05/25 18:56:52 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.137 2004/05/25 19:11:29 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -738,7 +738,7 @@ class CacheKey
   //! @note
   //! Take care to avoid cyclic refs when the activation callback is
   //! registered. This object should e.g. not be among @[args], and
-  //! @[cb] should not be a lambda that contain a reference to this
+  //! @[cb] should not be a lambda that contains references to this
   //! object.
   {
     // Relying on the interpreter lock here.
