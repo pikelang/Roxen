@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 1998, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.181 2000/01/03 00:07:18 nilsson Exp $";
+constant cvs_version = "$Id: http.pike,v 1.182 2000/01/03 01:25:31 nilsson Exp $";
 
 #define MAGIC_ERROR
 
@@ -1359,7 +1359,7 @@ void send_result(mapping|void result)
 	  if(since)
 	  {
 	    /* ({ time, len }) */
-	    array(int) since_info = parse_since(since);
+	    array(int) since_info = roxen->parse_since(since);
 	    if ((since_info[0] >= misc->last_modified) &&
 		(since_info[0] + misc->cacheable >= predef::time(1)) &&
 		((since_info[1] == -1) || (since_info[1] == file->len)))
