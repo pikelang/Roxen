@@ -1,4 +1,4 @@
-// string cvs_version = "$Id: module_support.pike,v 1.27 1999/10/06 23:07:52 grubba Exp $";
+// string cvs_version = "$Id: module_support.pike,v 1.28 1999/10/11 14:09:28 per Exp $";
 #include <roxen.h>
 #include <module.h>
 #include <stat.h>
@@ -300,6 +300,18 @@ class Module
       if( name[ roxenp()->locale->get()->name ] )
         return name[ roxenp()->locale->get()->name ];
       return name[ "standard" ];
+    }
+  }
+
+  string get_description()
+  {
+    if( stringp( description ) )
+      return name;
+    if( mappingp( description ) )
+    {
+      if( description[ roxenp()->locale->get()->name ] )
+        return description[ roxenp()->locale->get()->name ];
+      return description[ "standard" ];
     }
   }
 
