@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.299 2001/02/01 03:16:11 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.300 2001/02/01 08:36:04 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -754,80 +754,44 @@ private int parse_got( string new_data )
   }
   string trailer, trailer_trailer;
 
-  switch(sscanf(line+" ", "%s %s %s %s %s",
-                method, f, clientprot, trailer, trailer_trailer))
+  array sl = line / " ";
+  switch( sizeof( sl ) )
   {
-   case 5:
-     if (trailer_trailer != "") {
-       // Get rid of the extra space from the sscanf above.
-       trailer += " " + trailer_trailer[..sizeof(trailer_trailer)-2];
-     }
-     /* FALL_THROUGH */
-   case 4:
-     // Got extra spaces in the URI.
-     // All the extra stuff is now in the trailer.
+    default:
+      sl = ({ sl[0], sl[1..sizeof(sl)-2], sl[-1] });
 
-     // Get rid of the extra space from the sscanf above.
-     trailer = trailer[..sizeof(trailer) - 2];
-     f += " " + clientprot;
-
-     // Find the last space delimiter.
-     int end;
-     if (!(end = (search(reverse(trailer), " ") + 1))) {
-       // Just one space in the URI.
-       clientprot = trailer;
-     } else {
-       f += " " + trailer[..sizeof(trailer) - (end + 1)];
-       clientprot = trailer[sizeof(trailer) - end ..];
-     }
-     /* FALL_THROUGH */
-   case 3:
-     // >= HTTP/1.0
-
-     prot = clientprot;
-     // method = upper_case(p1);
-     if(!(< "HTTP/1.0", "HTTP/1.1" >)[prot]) {
-       // We're nice here and assume HTTP even if the protocol
-       // is something very weird.
-       prot = "HTTP/1.1";
-     }
-     // Do we have all the headers?
-//      if ((end = search(raw[last..], "\r\n\r\n")) == -1) {
-//        // No, we still need more data.
-//        REQUEST_WERR("HTTP: parse_got(): Request is still not complete.");
-//        last = max(strlen(raw) - 5, 0);
-//        return 0;
-//      }
-//      end += last;
-//      last = 0;
-//      data = raw[end+4..];
-//      s = raw[sizeof(line)+2..end-1];
-     // s now contains the unparsed headers.
-     break;
-
-   case 2:
-     // HTTP/0.9
-     clientprot = prot = "HTTP/0.9";
-     if(method != "PING")
-       method = "GET"; // 0.9 only supports get.
-     s = data = ""; // no headers or extra data...
-     break;
-
-   case 1:
-     // PING...
-     if(method == "PING")
-       break;
-     // only PING is valid here.
-     return 1;
-
-   default:
-     // Too many or too few entries ->  Hum.
-     return 1;
-  }
-  if(method == "PING") 
-  {
-    my_fd->write("PONG\r\n");
-    return 2;
+    case 3: /* HTTP/1.0 */
+      method = sl[0];
+      f = sl[1];
+      clientprot = sl[2];
+      prot = clientprot;
+      if(!(< "HTTP/1.0", "HTTP/1.1" >)[prot])
+      {
+	// We're nice here and assume HTTP even if the protocol
+	// is something very weird.
+	prot = "HTTP/1.1";
+      }
+      break;
+      
+    case 2:     // HTTP/0.9
+    case 1:     // PING
+      method = sl[0];
+      f = sl[-1];
+      if( sizeof( sl ) == 1 )
+	sscanf( method, "%s%*[\r\n]", method );
+	
+      clientprot = prot = "HTTP/0.9";
+      if(method != "PING")
+	method = "GET"; // 0.9 only supports get.
+      else
+      {
+	my_fd->write("PONG\r\n");
+	return 2;
+      }
+      s = data = ""; // no headers or extra data...
+      sscanf( f, "%s%*[\r\n]", f );
+      misc->cacheable = 0;
+      break;
   }
   REQUEST_WERR(sprintf("***** req line: %O", line));
   REQUEST_WERR(sprintf("***** headers:  %O", request_headers));
@@ -1558,7 +1522,6 @@ void send_result(mapping|void result)
   string head_string="";
   if (result)
     file = result;
-
 #ifdef PROFILE
   float elapsed = SECHR(HRTIME()-req_time);
   string nid =
@@ -1578,6 +1541,7 @@ void send_result(mapping|void result)
 
   REQUEST_WERR(sprintf("HTTP: send_result(%O)", file));
 
+  if( prot == "HTTP/0.9" )  misc->cacheable = 0;
 
   if(!leftovers) 
     leftovers = data||"";
@@ -1767,7 +1731,8 @@ void send_result(mapping|void result)
       // No data for these two...
     {
 #ifdef RAM_CACHE
-      if( (misc->cacheable > 0) && (file->data || file->file) )
+      if( (misc->cacheable > 0) && (file->data || file->file) &&
+	  prot != "HTTP/0.9" )
       {
         if( file->len>0 && // known length.
 	    ((file->len + strlen( head_string )) < 
@@ -1954,7 +1919,7 @@ void got_data(mixed fooid, string s)
     end();
     return;
   }
-  if( method == "GET" )
+  if( method == "GET"  )
     misc->cacheable = INITIAL_CACHEABLE; // FIXME: Make configurable.
 
   TIMER("charset");
@@ -2017,7 +1982,9 @@ void got_data(mixed fooid, string s)
   remove_call_out(do_timeout);
 #ifdef RAM_CACHE
   array cv;
-  if( misc->cacheable && (cv = conf->datacache->get( raw_url )) )
+  if( prot != "HTTP/0.9" &&
+      misc->cacheable &&
+      (cv = conf->datacache->get( raw_url )) )
   {
     if( !cv[1]->key )
       conf->datacache->expire_entry( raw_url );
