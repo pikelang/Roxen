@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.25 2002/09/03 15:59:03 mast Exp $
+ * $Id: resolv.pike,v 1.26 2003/06/16 12:54:09 mast Exp $
  */
 inherit "wizard";
 inherit "../logutil";
@@ -228,6 +228,9 @@ string parse( RequestID id )
     "<cf-ok/><cf-cancel href='?class=&form.class;'/>\n";
 
   roxen.InternalRequestID nid = roxen.InternalRequestID();
+  nid->client = id->client;
+  nid->client_var = id->client_var + ([]);
+  nid->supports = id->supports;
 
   if( id->variables->path )
   {
