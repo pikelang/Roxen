@@ -34,7 +34,8 @@ void run_tests( Configuration c )
 
   // Wait for everything to settle down.
   sleep(1);
-  test( c->disable_module, "ac_filesystem" );
+  if(c->modules->ac_filesystem)
+    test( c->disable_module, "ac_filesystem" );
   test( c->disable_module, "auth" );
   sleep(1);
 
