@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.440 2004/04/21 13:11:10 noring Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.441 2004/04/22 16:47:50 anders Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1023,8 +1023,23 @@ class TagInsertFile {
     string result;
     if(args->nocache) // try_get_file never uses the cache any more.
       CACHE(0);      // Should we really enforce CACHE(0) here?
-    
+
+    // Save current language state, and add the wanted language first
+    // in the list.
+    array old_lang, old_qualities;
+    object pl;
+    if (args->language && (pl = id->misc->pref_languages)) {
+      old_lang = pl->get_languages();
+      old_qualities = pl->get_qualities();
+      pl->set_sorted( ({ args->language }) + old_lang );
+    }
+
     result=id->conf->try_get_file(var, id);
+
+    // Restore previous language state.
+    if (args->langauge && pl) {
+      pl->set_sorted(old_lang, old_qualities);
+    }
 
     if( !result )
       RXML.run_error("No such file ("+Roxen.fix_relative( var, id )+").\n");
@@ -6908,6 +6923,11 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
  <p>The virtual path to the file to be inserted.</p>
 
  <ex-box><eval><insert file='html_header.inc'/></eval></ex-box>
+</attr>
+
+<attr name='language' value='string'>
+  <p>Optionally add this language at the top of the list of
+     preferred languages.</p>
 </attr>",
 
 //----------------------------------------------------------------------
