@@ -6,7 +6,7 @@ inherit "roxenlib";
 inherit Regexp : regexp;
 
 constant cvs_version = 
-"$Id: mailtags.pike,v 1.17 1998/09/24 19:00:59 per Exp $";
+"$Id: mailtags.pike,v 1.18 1998/09/27 16:53:46 grubba Exp $";
 
 constant thread_safe = 1;
 
@@ -1799,7 +1799,7 @@ string container_mail_a( string tag, mapping args, string c, object id )
   string link="?";
   
   foreach(sort(indices(q)), string v)
-    if(q[v] != "0")
+    if(q[v] && (q[v] != "0"))
       link += v+"="+http_encode_url( q[v] )+"&";
   q = ([ "href":fix_relative(link[ .. strlen(link)-2 ], id) ]);
   if(tag == "gtext")
