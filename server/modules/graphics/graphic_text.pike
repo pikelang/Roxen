@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.85 1997/10/02 14:08:07 peter Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.86 1997/10/03 21:46:39 js Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -766,14 +766,13 @@ array(int)|string write_text(int _args, string text, int size,
 	sscanf(args->fadein, "%d,%d,%d,%d", amount, steps, delay, initialdelay);
 	if(initialdelay)
 	{
-	  object foo=image(img->xsize(),img->ysize(),0,0,0);
+	  object foo=image(img->xsize(),img->ysize(),@parse_color(args->bg));
 	  res += foo->gif_add(0,0,initialdelay);
 	}
-	for(int i = 0; i<steps; i++)
+	for(int i = 0; i<(steps-1); i++)
 	{
 	  object foo=img->clone();
 	  foo = foo->apply_matrix(make_matrix(( (int)((steps-i)*amount))));
-	  werror((string)i);
 	  res += foo->gif_add(0,0,delay);
 	}
 	res+= img->gif_add(0,0,delay);
