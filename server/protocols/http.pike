@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-string cvs_version = "$Id: http.pike,v 1.7 1996/12/08 10:33:27 neotron Exp $";
+string cvs_version = "$Id: http.pike,v 1.8 1996/12/10 06:47:37 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 inherit "roxenlib";
@@ -12,7 +12,9 @@ function decode = roxen->decode;
 
 
 function _time=time;
-private string cache;
+private static array(string) cache;
+private static int wanted_data, have_data;
+
 object conf;
 
 
@@ -264,32 +266,80 @@ private int parse_got(string s)
 	{
 	  switch (linename)
 	  {
-	  case "content-length":	
+	   case "content-length":	
 	    misc->len = (int)(contents-" ");
 	    
 	    if(method == "POST")
 	    {
 	      int l = (int)(contents-" ")-1; /* Length - 1 */
+	      wanted_data=l;
+	      have_data=strlen(data);
 	      if(strlen(data) <= l) // \r are included.
-		 return 0;
-	       data = data[..l];
-	       string v;
-	       if(l < 200000)
-	       {
-		 foreach(replace(data-"\n", "+", " ")/"&", v)
-		   if(sscanf(v, "%s=%s", a, b) == 2)
-		   {
-		     a = http_decode_string( a );
-		     b = http_decode_string( b );
+		return 0;
+	      data = data[..l];
+	      switch(lower_case(((misc["content-type"]||"")/";")[0]-" "))
+	      {
+	       default: // Normal form data.
+		string v;
+		if(l < 200000)
+		{
+		  foreach(replace(data-"\n", "+", " ")/"&", v)
+		    if(sscanf(v, "%s=%s", a, b) == 2)
+		    {
+		      a = http_decode_string( a );
+		      b = http_decode_string( b );
 		     
-		     if(variables[ a ])
-		       variables[ a ] +=  "\0" + b;
-		     else
-		       variables[ a ] = b;
-		   }
-	       }
-	     }
-	     break;
+		      if(variables[ a ])
+			variables[ a ] +=  "\0" + b;
+		      else
+			variables[ a ] = b;
+		    }
+		}
+		break;
+
+	       case "multipart/form-data":
+		string boundary;
+//		perror("Multipart/form-data post detected\n");
+		sscanf(misc["content-type"], "%*sboundary=%s",boundary);
+		foreach((data/("--"+boundary))-({"--",""}), contents)
+		{
+		  string pre, metainfo,post;
+		  if(sscanf(contents,
+			    "%[\r\n]%*[Cc]ontent-%*[dD]isposition:%[^\r\n]%[\r\n]%s",
+			    pre,metainfo,post,contents)>4)
+		  {
+		    mapping info=([]);
+		    if(!strlen(contents))
+		      continue;
+		    while(contents[-1]=='-')
+		      contents=contents[..strlen(contents)-2];
+		    if(contents[-1]=='\r')contents=contents[..strlen(contents)-2];
+		    if(contents[-1]=='\n')contents=contents[..strlen(contents)-2];
+		    if(contents[-1]=='\r')contents=contents[..strlen(contents)-2];
+		    foreach(metainfo/";", v)
+		    {
+		      sscanf(v, "%*[ \t]%s", v); v=reverse(v);
+		      sscanf(v, "%*[ \t]%s", v); v=reverse(v);
+		      if(lower_case(v)!="form-data")
+		      {
+			string var, value;
+			if(sscanf(v, "%s=\"%s\"", var, value))
+			  info[lower_case(var)]=value;
+		      }
+		    }
+		    if(info->filename)
+		    {
+		      variables[info->name]=contents;
+		      variables[info->name+".filename"]=info->filename;
+		    } else {
+		      variables[info->name]=contents;
+		    }
+		  }
+		}
+		break;
+	      }
+	    }
+	    break;
 	  
 	   case "authorization":
 	    string *y;
@@ -516,12 +566,6 @@ void got_data(mixed fooid, string s);
 
 void keep_connection_alive()
 {
-  object fd, p;
-  string c;
-  fd = my_fd;
-  c = cache;
-  my_fd = fd;
-  cache = c;
   pipe=0;
   my_fd->set_nonblocking(got_data, lambda() { }, end);
   if(cache && strlen(cache))
@@ -552,6 +596,17 @@ mapping internal_error(array err)
 
 void got_data(mixed fooid, string s)
 {
+  if(wanted_data)
+  {
+    if(strlen(s)+have_data < wanted_data)
+    {
+      cache += ({ s });
+      have_data += strlen(s);
+      return;
+    }
+  }
+
+
   mixed *err;
   int tmp, keep_alive;
   function funp;
@@ -563,24 +618,26 @@ void got_data(mixed fooid, string s)
  * and the cloning of this object.
  */
   end("FOO!!!\n");
-  /* On a SS4: 47 requests/sec, or 20msec/request. This is socket overhead to
-   * 99.9% or so.
+  /* On a SS4: 97 requests/sec, or 10msec/request. This is socket overhead to
+   * 99.9% or so
    */
 
   return;
 #endif
 
 
-#ifdef HIT_ME
-  perror("Got data: "+s+"\n");
-#endif
 
+//  perror(s);
+
+
+//perror("Got "+strlen(s)+" bytes\n");
+  
   if(!s || (!strlen(s) && fooid != 1))
     return;
   
   if(cache) 
   {
-    s = cache + s; 
+    s = cache*"" + s; 
     cache = 0;
   }
   remove_call_out(no_more_keep_connection_alive);
@@ -588,7 +645,7 @@ void got_data(mixed fooid, string s)
   switch(-tmp)
   { 
    case 0:
-    cache = s;		// More on the way.
+    cache = ({ s });		// More on the way.
     return; 
     
    case 1:
@@ -603,7 +660,7 @@ void got_data(mixed fooid, string s)
   }
   my_fd->set_blocking();
   
-  sscanf(s-"\r", "%s\n\n%s", s, cache);
+//  sscanf(s-"\r", "%s\n\n%s", s, cache);
 
 #ifndef SPEED_MAX
   remove_call_out(timeout);
