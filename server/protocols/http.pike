@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.419 2004/01/19 16:27:13 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.420 2004/02/03 10:20:10 anders Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1498,8 +1498,9 @@ void send_result(mapping|void result)
 		       prot, method, file, misc));
 
 #ifdef DEBUG_CACHEABLE
-  report_debug("<=== Request for %s returned cacheable %d.\n", raw_url,
-	       misc->cacheable);
+  report_debug("<=== Request for %s returned cacheable %d (proto cache %s).\n",
+	       raw_url, misc->cacheable,
+	       misc->no_proto_cache ? "disabled" : "enabled");
 #endif
 
   if( prot == "HTTP/0.9" )  misc->no_proto_cache = 1;
