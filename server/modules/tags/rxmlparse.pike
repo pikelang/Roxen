@@ -15,7 +15,7 @@
 #define _rettext _context_misc[" _rettext"]
 #define _ok _context_misc[" _ok"]
 
-constant cvs_version = "$Id: rxmlparse.pike,v 1.71 2002/04/22 20:39:55 mast Exp $";
+constant cvs_version = "$Id: rxmlparse.pike,v 1.72 2002/10/02 00:03:18 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -287,13 +287,13 @@ string api_relative(RequestID id, string path)
 string api_set(RequestID id, string what, string to, void|string scope)
 {
   RXML.get_context()->user_set_var(what, to, scope);
-  return ([])[0];
+  return UNDEFINED;
 }
 
 string api_define(RequestID id, string what, string to)
 {
   _context_misc[what]=to;
-  return ([])[0];
+  return UNDEFINED;
 }
 
 string api_query_define(RequestID id, string what)
