@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.38 2000/09/13 19:17:05 grubba Exp $
+ * $Id: ftp.pike,v 2.39 2000/09/18 13:43:49 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -186,6 +186,7 @@ class RequestID2
       misc = ([]);
       cookies = ([]);
       throttle = ([]);
+      client_var = ([]);
       request_headers = ([]);
 
       prestate = (<>);
