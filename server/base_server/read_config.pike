@@ -4,7 +4,7 @@
 
 #ifndef IN_INSTALL
 inherit "newdecode";
-// string cvs_version = "$Id: read_config.pike,v 1.21 1998/05/06 22:17:10 per Exp $";
+// string cvs_version = "$Id: read_config.pike,v 1.22 1998/05/07 22:07:51 grubba Exp $";
 #else
 import spider;
 # define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
@@ -146,7 +146,9 @@ private static void read_it(string cl)
   object privs = Privs("Reading config file"); // Change to root user.
 #endif
 
-  catch {
+  mixed err;
+
+  err = catch {
     fd = open(configuration_dir + replace(cl, " ", "_"), "r");
 
     if(!fd)
@@ -165,6 +167,10 @@ private static void read_it(string cl)
       destruct(fd);
     }
   };
+  if (err) {
+    report_error(sprintf("Failed to read configuration file for %O\n"
+			 "%s\n", cl, describe_backtrace(err)));
+  }
 }
 
 
