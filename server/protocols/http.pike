@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.99 1998/05/12 18:11:14 js Exp $";
+constant cvs_version = "$Id: http.pike,v 1.100 1998/05/17 23:43:44 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -923,77 +923,17 @@ string handle_error_file_request(array err, int eid)
   return format_backtrace(bt,eid)+"<hr noshade><pre>"+data+"</pre>";
 }
 
-void handle_request( )
+// Send the result.
+void send_result(mapping|void result)
 {
-  mixed *err;
+  array err;
   int tmp;
-  function funp;
   mapping heads;
   string head_string;
-  object thiso=this_object();
+  object thiso = this_object();
 
-
-#ifdef MAGIC_ERROR
-  if(prestate->old_error)
-  {
-    array err = get_error(variables->error);
-    if(err)
-    {
-      if(prestate->plain)
-      {
-	file = ([
-	  "type":"text/html",
-	  "data":generate_bugreport( err ),
-	]);
-      } else {
-	
-	if(prestate->find_file)
-        {
-	  if(!realauth)
-	    file = http_auth_required("admin");
-	  else
-	  {
-	    array auth = (realauth+":")/":";
-	    if((auth[0] != roxen->query("ConfigurationUser"))
-	       || !crypt(auth[1], roxen->query("ConfigurationPassword")))
-	      file = http_auth_required("admin");
-	    else
-	      file = ([
-		"type":"text/html",
-		"data":handle_error_file_request( err, (int)variables->error ),
-	      ]);
-	  }
-	}
-      }
-    }
-  }
-#endif
-
-
-  remove_call_out(do_timeout);
-  MARK_FD("HTTP handling request");
-  if(!file && conf)
-  {
-//  perror("Handle request, got conf.\n");
-    object oc = conf;
-    foreach(conf->first_modules(), funp) 
-    {
-      if(file = funp( thiso)) break;
-      if(conf != oc) {
-	handle_request();
-	return;
-      }
-    }    
-    if(!file) err=catch(file = conf->get_file(thiso));
-
-    if(err) internal_error(err);
-
-    if(!mappingp(file))
-      foreach(conf->last_modules(), funp) if(file = funp(thiso)) break;
-  } else if(!file &&
-	    (err=catch(file = roxen->configuration_parse( thiso )))) {
-    if(err==-1) return;
-    internal_error(err);
+  if (result) {
+    file = result;
   }
 
   if(!mappingp(file))
@@ -1002,15 +942,16 @@ void handle_request( )
       file = http_low_answer(misc->error_code, errors[misc->error]);
     else if(method != "GET" && method != "HEAD" && method != "POST")
       file = http_low_answer(501, "Not implemented.");
-    else
-      if(err = catch {
-	file=http_low_answer(404,
-			     replace(parse_rxml(conf->query("ZNoSuchFile"),
-						thiso),
-				     ({"$File", "$Me"}), 
-				     ({not_query,
-				       conf->query("MyWorldLocation")}))); })
-	internal_error(err);
+    else if(err = catch {
+      file=http_low_answer(404,
+			   replace(parse_rxml(conf->query("ZNoSuchFile"),
+					      thiso),
+				   ({"$File", "$Me"}), 
+				   ({not_query,
+				     conf->query("MyWorldLocation")})));
+    }) {
+      internal_error(err);
+    }
   } else {
     if((file->file == -1) || file->leave_me) 
     {
@@ -1144,6 +1085,80 @@ void handle_request( )
   }
 }
 
+
+// Execute the request
+void handle_request( )
+{
+  mixed *err;
+  function funp;
+  object thiso=this_object();
+
+#ifdef MAGIC_ERROR
+  if(prestate->old_error)
+  {
+    array err = get_error(variables->error);
+    if(err)
+    {
+      if(prestate->plain)
+      {
+	file = ([
+	  "type":"text/html",
+	  "data":generate_bugreport( err ),
+	]);
+      } else {
+	
+	if(prestate->find_file)
+        {
+	  if(!realauth)
+	    file = http_auth_required("admin");
+	  else
+	  {
+	    array auth = (realauth+":")/":";
+	    if((auth[0] != roxen->query("ConfigurationUser"))
+	       || !crypt(auth[1], roxen->query("ConfigurationPassword")))
+	      file = http_auth_required("admin");
+	    else
+	      file = ([
+		"type":"text/html",
+		"data":handle_error_file_request( err, (int)variables->error ),
+	      ]);
+	  }
+	}
+      }
+    }
+  }
+#endif /* MAGIC_ERROR */
+
+
+  remove_call_out(do_timeout);
+  MARK_FD("HTTP handling request");
+  if(!file && conf)
+  {
+//  perror("Handle request, got conf.\n");
+    object oc = conf;
+    foreach(conf->first_modules(), funp) 
+    {
+      if(file = funp( thiso)) break;
+      if(conf != oc) {
+	handle_request();
+	return;
+      }
+    }    
+    if(!file) err=catch(file = conf->get_file(thiso));
+
+    if(err) internal_error(err);
+
+    if(!mappingp(file))
+      foreach(conf->last_modules(), funp) if(file = funp(thiso)) break;
+  } else if(!file &&
+	    (err=catch(file = roxen->configuration_parse( thiso )))) {
+    if(err==-1) return;
+    internal_error(err);
+  }
+
+  send_result();
+}
+
 /* We got some data on a socket.
  * ================================================= 
  */
@@ -1176,8 +1191,9 @@ void got_data(mixed fooid, string s)
 
   switch(-tmp)
   { 
-   case 0:
-    cache = ({ s });		// More on the way.
+  case 0:
+    if(this_object()) 
+      cache = ({ s });		// More on the way.
     return;
     
    case 1:
