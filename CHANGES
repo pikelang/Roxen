@@ -1,7 +1,7 @@
 Changes since Roxen 2.1.115
 -----------------------------------------------
 
-o Added built in unicode font. Changed the default font to said font.
+o Added builtin unicode font. Changed the default font to said font.
 
 o GIF support disabled per default to make Unisys happy.
 
@@ -158,6 +158,7 @@ o HTTP protocol module
     req/second. The cache can be configured on the Settings page for
     each Site.
 
+o The fhttp protocol module is deprecated.
 
 
 Those are the main changes. Naturally, there has been lots of bug fixes
