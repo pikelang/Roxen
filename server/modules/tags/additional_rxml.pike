@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.23 2004/06/30 16:59:23 mast Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.24 2004/08/31 11:47:19 grubba Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -16,6 +16,10 @@ void create() {
          "If set, it will be possible to use <tt>&lt;insert href&gt;</tt> to "
 	 "insert pages from another web server. Note that the thread will be "
 	 "blocked while it fetches the web page.");
+  defvar("recursion_limit", 5, "Maximum recursion depth for <insert href>",
+	 TYPE_INT|VAR_MORE,
+	 "Maxumum number of nested <insert href>'s allowed. "
+	 "May be set to zero to disable the limit.");
 }
 
 class TagInsertHref {
@@ -26,11 +30,21 @@ class TagInsertHref {
   string get_data(string var, mapping args, RequestID id) {
     if(!query("insert_href")) RXML.run_error("Insert href is not allowed.");
 
+    int recursion_depth = (int)id->request_headers["x-roxen-recursion-depth"];
+
+    if (query("recursion_limit") &&
+	(recursion_depth >= query("recursion_limit")))
+      RXML.run_error("Too deep insert href recursion.");
+
+    recursion_depth++;
+
     if(args->nocache)
       NOCACHE();
     else
       CACHE(60);
-    Protocols.HTTP q=Protocols.HTTP.get_url(args->href);
+    Protocols.HTTP q=Protocols.HTTP.get_url(args->href, 0,
+					    ([ "X-Roxen-Recursion-Depth":
+					       (string)recursion_depth ]));
     if(q && q->status>0 && q->status<400)
       return q->data();
 
