@@ -1,6 +1,6 @@
 // roxen.cpp: implementation of the CRoxen class.
 //
-// $Id: roxen.cpp,v 1.13 2002/02/05 15:26:48 tomas Exp $
+// $Id: roxen.cpp,v 1.14 2002/02/06 17:24:37 tomas Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -62,12 +62,6 @@ void CRoxen::ErrorMsg (int show_last_err, const TCHAR *fmt, ...)
   buf[4097] = 0;
 
   _Module.LogEvent("%s", buf);
-/*
-  if (console_mode)
-    _ftprintf (stderr, "%s\n", buf);
-  else
-    AddToMessageLog (buf);
-*/
 }
 
 
@@ -191,9 +185,6 @@ std::string CRoxen::FindPike(BOOL setEnv)
 
   if (p=strtok(pikeloc, "\n"))
   {
-    //*p=0;
-    //pathlen = p - pikeloc;
-    //p++;
     pathlen=strlen(p);
   }
   else
@@ -241,7 +232,6 @@ std::string CRoxen::FindJvm()
   static int m_initDone = 0;
 
   if (!(fd = fopen ("java/jvmlocation.txt", "r"))) {
-    //ErrorMsg (1, TEXT("Failed to open %s\\java\\jvmlocation.txt"), cwd);
     return DEFAULT_PIKE_JRE_JVMDLL;
   }
   if (!(len = fread (jvmloc, 1, sizeof(jvmloc)-1, fd))) {
@@ -277,10 +267,40 @@ std::string CRoxen::FindJvm()
 }
 
 
+void CRoxen::SetEnvFromIni()
+{
+  char inifile[2048];
+  char envNames[2048];
+  char envValue[2048];
+  int len;
+  char *p;
+  
+  GetCurrentDirectory(sizeof(inifile), inifile);
+  strcat(inifile, "/../local/environment.ini");
+
+  len = GetPrivateProfileString("Environment", NULL, "", envNames, sizeof(envNames), inifile);
+  if (len > 2 && len < sizeof(envNames))
+  {
+    p = envNames;
+    while (*p)
+    {
+      len = GetPrivateProfileString("Environment", p, "", envValue, sizeof(envValue), inifile);
+      if (len > 2 && len < sizeof(envValue))
+      {
+        printf("setting %s=%s\n", p, envValue);
+
+        SetEnvironmentVariable(p, envValue);
+      }
+      while(*p++);
+    }
+  }
+
+}
+
+
 int stracat(char *out, char **arr)
 {
   char *p = out;
-  //int count = 0;
   int i = 0;
   while (arr[i] != NULL)
   {
@@ -356,14 +376,11 @@ int CRoxen::Start(int first_time)
 {
   STARTUPINFO info;
   PROCESS_INFORMATION proc;
-//  char pikeloc[_MAX_PATH];
   TCHAR cmd[4000];
-//  TCHAR *cmdline;
   CCmdLine & cmdline = _Module.GetCmdLine();
   void *env=NULL;
   int i;
   int ret;
-  
   
   //pike loc
   std::string pikeloc = FindPike(TRUE);
@@ -416,6 +433,8 @@ int CRoxen::Start(int first_time)
     }
     else
       SetEnvironmentVariable(TEXT("PIKE_JRE_JVMDLL"), NULL);
+
+    SetEnvFromIni();
   }
   
   // seed the random number generator
@@ -426,42 +445,6 @@ int CRoxen::Start(int first_time)
   key[sizeof (key) - 1] = 0;
   
 
-/*
-#define CONSOLEARG "-console"
-#define CONSOLEARGLEN (sizeof (CONSOLEARG) - sizeof (""))
-#define ONCEARG "-once"
-#define ONCEARGLEN (sizeof (ONCEARG) - sizeof (""))
-  cmdline = GetCommandLine();
-  if (*cmdline == '"') {
-    for (cmdline++; *cmdline && *cmdline != '"'; cmdline++) {}
-    if (*cmdline == '"') cmdline++;
-  }
-  else
-    for (; *cmdline && !isspace (*cmdline); cmdline++) {}
-    for (; *cmdline && isspace (*cmdline); cmdline++) {}
-    if (!_tcsncmp (cmdline, TEXT(CONSOLEARG), CONSOLEARGLEN) &&
-      (!cmdline[CONSOLEARGLEN] || isspace (cmdline[CONSOLEARGLEN]))) {
-      cmdline += CONSOLEARGLEN;
-      for (; *cmdline && isspace (*cmdline); cmdline++) {}
-    }
-    else if (!_tcsncmp (cmdline, TEXT(ONCEARG), ONCEARGLEN) &&
-      (!cmdline[ONCEARGLEN] || isspace (cmdline[ONCEARGLEN]))) {
-      cmdline += ONCEARGLEN;
-      for (; *cmdline && isspace (*cmdline); cmdline++) {}
-    }
-*/
-
-  /*
-  _sntprintf (cmd, sizeof (cmd), TEXT("\"%hs\" -DRUN_SELF_TEST ntroxenloader.pike +../logs/%hs.run "
-  "--config-dir=../var/test_config --remove-dumped %s%s"),
-  pikeloc, key, console_mode ? TEXT("") : TEXT("-silent "), cmdline);
-  */
-/*
-  _sntprintf (cmd, sizeof (cmd), TEXT("\"%hs\" -DTHREADS ntroxenloader.pike +../logs/%hs.run %s%s"),
-    pikeloc.c_str(), key, console_mode ? TEXT("") : TEXT("-silent "), cmdline);
-  cmd[sizeof (cmd) - 1] = 0;
-*/
-  
   // Create the pike command line
   CreatePikeCmd(cmd, pikeloc, cmdline, key);
 

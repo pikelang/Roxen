@@ -1,6 +1,6 @@
 // cmdline.h: interface for the CCmdLine class.
 //
-// $Id: cmdline.h,v 1.10 2001/11/14 16:29:49 tomas Exp $
+// $Id: cmdline.h,v 1.11 2002/02/06 17:24:36 tomas Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -69,6 +69,7 @@ public:
 
   BOOL Parse(int argc, char *argv[]);
   BOOL Parse(char *cmdline);
+  void ParseFinish();
 
   void PrintHelp();
 
@@ -102,7 +103,6 @@ protected:
 private:
   void SplitCmdline(_TSCHAR *cmdstart, _TSCHAR **argv, _TSCHAR *args, int *numargs, int *numchars);
   int ParseArg(int argc, char *argv[], CCmdLine::tArgType & type);
-  //tArgType GetArgType(char *argv[]);
   BOOL Match(char *s, char *pattern, char *delim, char **value);
 
 
@@ -112,6 +112,7 @@ private:
   CArgList m_saRoxenArgs;
 
   BOOL m_bPreloaded;
+  BOOL m_bParseFinished;
 
   BOOL m_bInstall;
   BOOL m_bRegister;

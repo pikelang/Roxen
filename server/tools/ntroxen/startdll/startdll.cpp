@@ -1,6 +1,6 @@
 // startdll.cpp : Implementation of WinMain
 //
-// $Id: startdll.cpp,v 1.10 2001/11/14 16:29:50 tomas Exp $
+// $Id: startdll.cpp,v 1.11 2002/02/06 17:24:37 tomas Exp $
 //
 
 
@@ -121,9 +121,6 @@ inline HRESULT CServiceModule::UnregisterServer()
 
 inline void CServiceModule::Init(_ATL_OBJMAP_ENTRY* p, HINSTANCE h, UINT nServiceNameID, UINT nServiceDescID, const GUID* plibid)
 {
-    //HINSTANCE hInstApp = GetModuleHandle(NULL);
-
-    //CComModule::Init(p, hInstApp, plibid);
     CComModule::Init(p, hInstance, plibid);
 
     m_bService = TRUE;
@@ -328,41 +325,6 @@ inline void CServiceModule::Start()
     }
     if (m_bService == FALSE)
     {
-/*
-        int i;
-        int hCrt;
-        FILE *hf;
-        
-        AllocConsole();
-
-        // stdin
-        hCrt = _open_osfhandle(
-            (long) GetStdHandle(STD_INPUT_HANDLE),
-            _O_TEXT
-            );
-        hf = _fdopen( hCrt, "r" );
-        *stdin = *hf;
-        i = setvbuf( stdin, NULL, _IONBF, 0 ); 
-        
-        // stdout
-        hCrt = _open_osfhandle(
-            (long) GetStdHandle(STD_OUTPUT_HANDLE),
-            _O_TEXT
-            );
-        hf = _fdopen( hCrt, "w" );
-        *stdout = *hf;
-        i = setvbuf( stdout, NULL, _IONBF, 0 ); 
-        
-        // stderr
-        hCrt = _open_osfhandle(
-            (long) GetStdHandle(STD_ERROR_HANDLE),
-            _O_TEXT
-            );
-        hf = _fdopen( hCrt, "w" );
-        *stderr = *hf;
-        i = setvbuf( stderr, NULL, _IONBF, 0 ); 
-*/
-        
         // Add our ctrl-c and ctrl-break handling routine
         SetConsoleCtrlHandler( _ControlHandler, TRUE );
 
@@ -376,13 +338,6 @@ inline void CServiceModule::Start()
 
 inline void CServiceModule::ServiceMain(DWORD dwArgc, LPTSTR* lpszArgv)
 {
-/*
-    for (int i=0; i<dwArgc; i++)
-    {
-        LogEvent("ServiceMain::argv[%d] = '%s'", i, lpszArgv[i]);
-    }
-*/
-
     m_Cmdline.Parse(dwArgc, lpszArgv);
 
     // Register the control request handler
@@ -402,8 +357,7 @@ inline void CServiceModule::ServiceMain(DWORD dwArgc, LPTSTR* lpszArgv)
     // When the Run function returns, the service has stopped.
     Run();
 
-    //if (!m_pendingLaunch)
-      SetServiceStatus(SERVICE_STOPPED);
+    SetServiceStatus(SERVICE_STOPPED);
 
     LogEvent(_T("Service stopped"));
 }
@@ -548,7 +502,7 @@ void CServiceModule::MsgLoopCallback(int index)
 
   DWORD exitcode = 0;
   GetExitCodeProcess(m_roxen->GetProcess(), &exitcode);
-//  if (m_once)
+
   if (m_Cmdline.IsOnce())
     Stop(FALSE);
   else if (exitcode == STILL_ACTIVE)
@@ -567,12 +521,6 @@ void CServiceModule::MsgLoopCallback(int index)
     LogEvent("Changing Roxen WebServer version. Restarting...");
     
     // restart the new version of the server!!
-/*
-    if (m_bService)
-      LaunchBootStrap(launchLaunch);
-    else
-*/
-    //LaunchBootStrap(launchMark);
     SetRestartFlag(TRUE);
 
     Stop(FALSE);
@@ -595,54 +543,6 @@ void CServiceModule::MsgLoopCallback(int index)
   }
 }
 
-
-//////////////////////////////////////////////////////////////////////////////////////////////
-// Start the bootstrap program that will optionally unregister us and register and
-// start the new server version
-/*
-void CServiceModule::LaunchBootStrap(ELaunchType type)
-{
-  char * args[] = {
-    "..\\start1st.exe",
-      NULL,
-  };
-
-
-  switch (type)
-  {
-  case launchMark:
-    LogEvent("LaunchBootStrap: launchMark");
-    m_pendingLaunch = TRUE;
-    break;
-
-  case launchIfPending:
-    LogEvent("LaunchBootStrap: launchIfPending");
-    if (m_pendingLaunch)
-      if (_execv(args[0], args) < 0)
-      {
-        LogEvent("%s (%d)", errno < _sys_nerr ? _sys_errlist[errno] : "", errno);
-      }
-      break;
-
-  case launchLaunch:
-    LogEvent("LaunchBootStrap: launchLaunch");
-
-//    if (_spawnv(_P_NOWAIT, args[0], args) < 0)
-//    {
-//      LogEvent("%s (%d)", errno < _sys_nerr ? _sys_errlist[errno] : "", errno);
-//    }
-
-    // force a restart of the service
-    MessageBox(0, "aborting service!", "startdll.dll", MB_SERVICE_NOTIFICATION);
-    ExitProcess(1);
-    break;
-  default:
-    LogEvent("LaunchBootStrap: default");
-    break;
-  }
-
-}
-*/
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 // Do the actual work. The service will exit when this function returns
@@ -721,14 +621,6 @@ extern "C"
 __declspec( dllexport )
 int __cdecl roxenMain(int argc, _TCHAR **argv, int * restart, char * szServiceName)
 {
-/*
-    for (int i=0; i<argc; i++)
-    {
-        _Module.LogEvent("_tmain::argv[%d] = '%s'", i, argv[i]);
-    }
-*/
-
-
     LPTSTR lpCmdLine = GetCommandLine(); //this line necessary for _ATL_MIN_CRT
 
 #else
@@ -738,73 +630,55 @@ extern "C" int WINAPI _tWinMain(HINSTANCE hInstance,
     HINSTANCE /*hPrevInstance*/, LPTSTR lpCmdLine, int /*nShowCmd*/)
 {
     lpCmdLine = GetCommandLine(); //this line necessary for _ATL_MIN_CRT
-    
-    //_Module.LogEvent("_tWinMain::lpCmdLine = '%s'", lpCmdLine);
 
 #else /* _CONSOLE */
 
 extern "C" int __cdecl _tmain(int argc, _TCHAR **argv, _TCHAR **envp)
 {
-/*
-    for (int i=0; i<argc; i++)
-    {
-        _Module.LogEvent("_tmain::argv[%d] = '%s'", i, argv[i]);
-    }
-*/
-
     HINSTANCE hInstance = GetModuleHandle(0);
 
     LPTSTR lpCmdLine = GetCommandLine(); //this line necessary for _ATL_MIN_CRT
 #endif // _WINDOWS
 #endif // BUILD_DLL
+
     _Module.Init(ObjectMap, hInstance, IDS_SERVICENAME, IDS_SERVICEDESC, &LIBID_STARTDLLLib);
     _Module.m_bService = TRUE;
 
-//// debug
-//    SetEnvironmentVariable("ROXEN_ARGS", "--without-threads -DYYY");
-//// end debug
+    CCmdLine & cmdline = _Module.GetCmdLine(FALSE);
+    
+    char inifile[2048];
+    char iniArgs[2048];
+    int iLen;
+    iniArgs[0] = 'x'; // Fake som dummy program name
+    iniArgs[1] = ' ';
 
-    CCmdLine & cmdline = _Module.GetCmdLine();
+    GetCurrentDirectory(sizeof(inifile), inifile);
+    strcat(inifile, "/../local/environment.ini");
+    iLen = GetPrivateProfileString("Parameters", "default", "", iniArgs+2, sizeof(iniArgs)-2, inifile);
+    if (iLen > 0 && iLen < sizeof(iniArgs)-2)
+      cmdline.Parse(iniArgs);
+
+
     char envArgs[2048];
-    // Fake som dummy program name
-    envArgs[0] = 'x';
-    envArgs[1] = ' ';
     int len;
+    envArgs[0] = 'x'; // Fake som dummy program name
+    envArgs[1] = ' ';
     if ((len=GetEnvironmentVariable("ROXEN_ARGS", envArgs+2, sizeof(envArgs)-2)) > 0 && len < sizeof(envArgs)-2)
-    {
       cmdline.Parse(envArgs);
-    }
+
 
     cmdline.Parse(argc, argv);
     
 
     // The work has already been done above, but the debug printout is better
     // to have _after_ parse_args (consider --help and --version)
+    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (iLen > 0 && iLen < sizeof(iniArgs)-2 && cmdline.GetVerbose() > 0)
+      cmdline.OutputLineFmt(hOut, "Used .B%sB. from .Blocal/environment.iniB..", iniArgs+2);
+
     if (len > 0 && len < sizeof(envArgs)-2 && cmdline.GetVerbose() > 0)
-    {
-      HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
       cmdline.OutputLineFmt(hOut, "Used .B%sB. from .BROXEN_ARGSB..", envArgs+2);
-    }
-/*
-    TCHAR szTokens[] = _T("-/");
 
-    LPCTSTR lpszToken = FindOneOf(lpCmdLine, szTokens);
-    while (lpszToken != NULL)
-    {
-        if (lstrcmpi(lpszToken, _T("UnregServer"))==0)
-            return _Module.UnregisterServer();
-
-        // Register as Local Server
-        if (lstrcmpi(lpszToken, _T("RegServer"))==0)
-            return _Module.RegisterServer(TRUE, FALSE);
-        
-        // Register as Service
-        if (lstrcmpi(lpszToken, _T("Service"))==0)
-            return _Module.RegisterServer(TRUE, TRUE);
-        
-        lpszToken = FindOneOf(lpszToken, szTokens);
-    }
-*/
     if (cmdline.IsHelp())
     {
       cmdline.PrintHelp();
@@ -827,8 +701,6 @@ extern "C" int __cdecl _tmain(int argc, _TCHAR **argv, _TCHAR **envp)
     if (cmdline.IsRemove())
       return _Module.UnregisterServer();
 
-//    m_once = cmdline.IsOnce();
-
     // Are we Service or Local Server
     CRegKey keyAppID;
     LONG lRes = keyAppID.Open(HKEY_CLASSES_ROOT, _T("AppID"), KEY_READ);
@@ -850,10 +722,6 @@ extern "C" int __cdecl _tmain(int argc, _TCHAR **argv, _TCHAR **envp)
 
     _Module.Start();
 
-/*
-    // exec the start1st.exe program if a delayed start was requested
-    restart = _Module.LaunchBootStrap(CServiceModule::launchIfPending);
-*/
     // Signal to the dll loader to perform a restart if requested in the _Module
     *restart = _Module.GetRestartFlag();
     if (_Module.m_bService)

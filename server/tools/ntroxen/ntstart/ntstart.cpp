@@ -132,6 +132,9 @@ BOOL GetServerDir(char * path, int maxlen)
     return TRUE;
   }
 
+  //restore current directory
+  _chdir(cwd);
+
   // Fallback to "server" 
   strcpy(path, "server");
   return TRUE;

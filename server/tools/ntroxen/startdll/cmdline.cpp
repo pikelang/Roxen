@@ -1,6 +1,6 @@
 // cmdline.cpp: implementation of the CCmdLine class.
 //
-// $Id: cmdline.cpp,v 1.16 2001/11/14 16:29:49 tomas Exp $
+// $Id: cmdline.cpp,v 1.17 2002/02/06 17:24:36 tomas Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -212,7 +212,8 @@ CCmdLine::CCmdLine()
 : m_SelfTestDir("etc\\test"), m_LogDir("..\\logs"),
   m_ConfigDir("..\\configurations")
 {
-  m_bPreloaded  = FALSE;
+  m_bPreloaded      = FALSE;
+  m_bParseFinished  = FALSE;
 
   m_bInstall    = FALSE;
   m_bRemove     = FALSE;
@@ -1301,6 +1302,60 @@ int CCmdLine::ParseArg(int argc, char *argv[], CCmdLine::tArgType & type)
 }
 
 
+
+void CCmdLine::ParseFinish()
+{
+  // Take care of some special argument handling
+
+  //case "x$debug" in
+  //  "x")
+  //    DEBUG="-DMODULE_DEBUG "
+  //    ARGS="$ARGS -w"
+  //    ;;
+  //  "x-1")
+  //    DEBUG=""
+  //    ;;
+  //  "x1")
+  //    DEBUG="-DDEBUG -DMODULE_DEBUG"
+  //    ARGS="$ARGS -w"
+  //    ;;
+  //esac
+
+  if (m_bParseFinished)
+    return;
+
+  // This must be before CheckVersionChange
+  m_bParseFinished = TRUE;
+
+  if (m_iDebug == 0)
+  {
+    m_saPikeDefines.AddIfNew("-DMODULE_DEBUG");
+    m_saPikeArgs.AddIfNew("-w");
+  }
+  else if (m_iDebug == -1)
+  {
+  }
+  else if (m_iDebug == 1)
+  {
+    m_saPikeDefines.AddIfNew("-DDEBUG");
+    m_saPikeDefines.AddIfNew("-DMODULE_DEBUG");
+    m_saPikeArgs.AddIfNew("-w");
+  }
+
+  // This must be after anything that changes the PikeDefines
+  if (m_bCheckVersion)
+  {
+    if (CRoxen::CheckVersionChange())
+    {
+      m_saRoxenArgs.AddIfNew("--remove-dumped");
+      HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+      if (m_iVerbose >= 1)
+        OutputLine(hOut, "          : Removing old precompiled files (defines or pike version changed)");
+    }
+  }
+}
+
+
 BOOL CCmdLine::Parse(char * cmdline)
 {
   int numargs;
@@ -1471,47 +1526,6 @@ BOOL CCmdLine::Parse(int argc, char *argv[])
     i += numParsed;
   }
 
-
-  // Take care of some special argument handling
-
-  //case "x$debug" in
-  //  "x")
-  //    DEBUG="-DMODULE_DEBUG "
-  //    ARGS="$ARGS -w"
-  //    ;;
-  //  "x-1")
-  //    DEBUG=""
-  //    ;;
-  //  "x1")
-  //    DEBUG="-DDEBUG -DMODULE_DEBUG"
-  //    ARGS="$ARGS -w"
-  //    ;;
-  //esac
-  if (m_iDebug == 0)
-  {
-    m_saPikeDefines.AddIfNew("-DMODULE_DEBUG");
-    m_saPikeArgs.AddIfNew("-w");
-  }
-  else if (m_iDebug == -1)
-  {
-  }
-  else if (m_iDebug == 1)
-  {
-    m_saPikeDefines.AddIfNew("-DDEBUG");
-    m_saPikeDefines.AddIfNew("-DMODULE_DEBUG");
-    m_saPikeArgs.AddIfNew("-w");
-  }
-
-  if (m_bCheckVersion)
-  {
-    if (CRoxen::CheckVersionChange())
-    {
-      m_saRoxenArgs.AddIfNew("--remove-dumped");
-      HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-      if (m_iVerbose >= 1)
-        OutputLine(hOut, "          : Removing old precompiled files (defines or pike version changed)");
-    }
-  }
 
   return ret;
 }
