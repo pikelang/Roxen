@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.123 2000/05/09 11:23:51 kuntri Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.124 2000/05/12 20:48:52 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -632,11 +632,11 @@ string|array(string) tag_insert( string tag, mapping m, RequestID id )
       n=id->conf->try_get_file(Roxen.fix_relative(m->file,id),id);
       if(!n) RXML.run_error("No such file ("+m->file+").\n");
       id->pragma["no-cache"] = nocache;
-      return n;
+      return m->quote!="html"?n:({ Roxen.html_encode_string(n) });
     }
     n=id->conf->try_get_file(Roxen.fix_relative(m->file,id),id);
     if(!n) RXML.run_error("No such file ("+m->file+").\n");
-    return n;
+    return m->quote!="html"?n:({ Roxen.html_encode_string(n) });
   }
 
   if(m->href && query("insert_href")) {
@@ -647,6 +647,7 @@ string|array(string) tag_insert( string tag, mapping m, RequestID id )
     Protocols.HTTP q=Protocols.HTTP.get_url(m->href);
     if(q && q->status>0 && q->status<400)
       return ({ q->data() });
+      return ({ m->quote!="html"?q->data():Roxen.html_encode_string(q->data()) });
     RXML.run_error(q ? q->status_desc + "\n": "No server response\n");
   }
 
@@ -1050,7 +1051,7 @@ class TagDoc {
     inherit RXML.Frame;
 
     array do_enter(RequestID id) {
-      if(args->quote) content_type = RXML.t_same;
+      if(args->preparse) content_type = RXML.t_same(RXML.PXml);
       return 0;
     }
 

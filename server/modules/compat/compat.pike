@@ -281,11 +281,13 @@ string|array tag_insert(string tag,mapping m,RequestID id)
       id->pragma["no-cache"] = nocache;
       m_delete(m, "nocache");
       m_delete(m, "file");
-      return do_replace(n, m, id);
+      n=do_replace(n, m, id);
+      return m->quote!="html"?n:({ Roxen.http_encode_string(n) });
     }
     n=id->conf->try_get_file(fix_relative(m->file,id),id);
     if(!n) RXML.run_error("No such file ("+m->file+").\n");
-    return do_replace(n, m-(["file":""]), id);
+    n=do_replace(n, m-(["file":""]), id);
+    return m.>quote!="html"?n:({ Roxen.http_encode_string(n) });
   }
 
   return ({1});
