@@ -1,5 +1,5 @@
 /*
- * $Id: snmpagent.pike,v 1.19 2001/09/13 13:54:01 hop Exp $
+ * $Id: snmpagent.pike,v 1.20 2001/11/16 16:07:50 nilsson Exp $
  *
  * The Roxen SNMP agent
  * Copyright © 2001, Roxen IS.
@@ -177,8 +177,6 @@ class SNMPagent {
   array get_virtserv() { return OBJ_COUNT(sizeof(vsdb)); }
 
   int get_uptime() { return (time(1) - roxen->start_time)*100; }
-
-//! External function for MIB object 'system.sysContact'
 
   void create() {
     vsdb = ([]);
@@ -780,7 +778,7 @@ class SubMIBManager {
 
 //! External function for MIB object 'system.sysDescr'
 array get_description() {
-  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.19 $"/" ")[1]+" (devel. rel.)");
+  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.20 $"/" ")[1]+" (devel. rel.)");
 }
 
 //! External function for MIB object 'system.sysOID'
