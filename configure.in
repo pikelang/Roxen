@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.59 1998/12/09 22:35:26 grubba Exp $
+# $Id: configure.in,v 1.60 1998/12/09 22:36:46 grubba Exp $
 #
 
 prefix=$PWD
@@ -641,11 +641,11 @@ fi
 # Platform
 #
 
-MAKE_COM=""
-AC_SUBST(MAKE_COM)
+MAKE_PLATFORM=""
+AC_SUBST(MAKE_PLATFORM)
 if test -d $srcdir/platform/.; then
   echo Enabling platform...
-  MAKE_COM=platform
+  MAKE_PLATFORM=platform
   roxen_lib_subdirs="$roxen_lib_subdirs platform"
 else :; fi
 
