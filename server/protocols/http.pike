@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.235 2000/08/29 13:27:29 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.236 2000/10/02 20:57:04 per Exp $";
 
 #define MAGIC_ERROR
 
@@ -1774,17 +1774,17 @@ void send_result(mapping|void result)
   if(method != "HEAD" && file->error != 304)
     // No data for these two...
   {
-    if(my_fd->query_fd && my_fd->query_fd() >= 0 &&
-       file->len > 0 && file->len < 2000)
-    {
-      // Ordinary connection, and a short file.
-      // Just do a blocking write().
-      my_fd->write(head_string+
-                   (file->file?file->file->read(file->len):
-                    (file->data[..file->len-1])));
-      do_log();
-      return;
-    }
+//     if(my_fd->query_fd && my_fd->query_fd() >= 0 &&
+//        file->len > 0 && file->len < 2000)
+//     {
+//       // Ordinary connection, and a short file.
+//       // Just do a blocking write().
+//       my_fd->write(head_string+
+//                    (file->file?file->file->read(file->len):
+//                     (file->data[..file->len-1])));
+//       do_log();
+//       return;
+//     }
     if(head_string)
       send(head_string);
     if(file->data && strlen(file->data))
@@ -1794,15 +1794,14 @@ void send_result(mapping|void result)
   } else {
     if(head_string)
     {
-      if(my_fd->query_fd && my_fd->query_fd() >= 0 &&
-         file->len > 0 && file->len < 2000)
-      {
-        // Ordinary connection, and a short file.
-        // Just do a blocking write().
-        my_fd->write( head_string );
-        do_log( );
-        return;
-      }
+//       if(my_fd->query_fd && my_fd->query_fd() >= 0)
+//       {
+//         // Ordinary connection, and a short file.
+//         // Just do a blocking write().
+//         my_fd->write( head_string );
+//         do_log( );
+//         return;
+//       }
       send(head_string);
     }
     file->len = 1; // Keep those alive, please...
