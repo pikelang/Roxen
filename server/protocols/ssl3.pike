@@ -1,4 +1,4 @@
-/* $Id: ssl3.pike,v 1.17 1997/10/05 03:18:12 per Exp $
+/* $Id: ssl3.pike,v 1.18 1997/10/10 13:20:46 grubba Exp $
  *
  * © 1997 Informationsvävarna AB
  *
@@ -171,7 +171,7 @@ string get_data()
 
   if(to_send->file)
   {
-    s = to_send->file->read(CHUNK);
+    s = to_send->file->read(CHUNK, 1);
     if(s && strlen(s))
       return s;
     to_send->file = 0;
