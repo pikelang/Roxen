@@ -1,11 +1,12 @@
 /* */
 
-string cvs_version = "$Id: dutch.pike,v 1.3 1997/01/09 14:39:03 grubba Exp $";
+constant cvs_version="$Id: dutch.pike,v 1.4 1997/08/08 15:15:45 grubba Exp $";
+
 inline string month(int num)
 {
-  return ({ "Januari", "Februari", "Maart", "April", "Mei",
-	    "Juni", "Juli", "Augustus", "September", "Oktober",
-	    "November", "December" })[ num - 1 ];
+  return ({ "januari", "februari", "maart", "april", "mei",
+	    "juni", "juli", "augustus", "september", "oktober",
+	    "november", "december" })[ num - 1 ];
 }
 
 string ordered(int i)
@@ -101,11 +102,11 @@ string number(int num)
 
 string day(int num)
 {
-  return ({ "Zondag","Maandag","Dinsdag","Woensdag",
-	    "Donderdag","Vrijdag","Zaterdag" }) [ num -1 ];
+  return ({ "zondag", "maandag", "dinsdag", "woensdag",
+	    "donderdag", "vrijdag", "zaterdag" }) [ num -1 ];
 }
 
 array aliases()
 {
-  return ({ "du", "ned", "dutch" });
+  return ({ "du", "nl", "ned", "dutch" });
 }
