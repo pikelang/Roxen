@@ -4,7 +4,7 @@
 // ChiliMoon bootstrap program. Sets up the environment,
 // replces the master, adds custom functions and starts core.pike.
 
-// $Id: loader.pike,v 1.362 2002/11/04 20:25:37 mani Exp $
+// $Id: loader.pike,v 1.363 2002/11/14 23:39:53 mani Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -29,7 +29,7 @@ static string    var_dir = "../var/";
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: loader.pike,v 1.362 2002/11/04 20:25:37 mani Exp $";
+constant cvs_version="$Id: loader.pike,v 1.363 2002/11/14 23:39:53 mani Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -987,7 +987,6 @@ constant mf = Stdio.File;
 
 static string release;
 static string dist_version;
-static string roxen_product_name;
 
 string roxen_version()
 //! @appears roxen_version
@@ -1222,8 +1221,6 @@ int main(int argc, array(string) argv)
     dist_version = (replace(dist_version, "\r", "\n") / "\n")[0];
   else
     dist_version = "unknown";
-
-    roxen_product_name="ChiliMoon";
 
   // The default (internally managed) mysql path
   string defpath =
@@ -2091,7 +2088,7 @@ void do_main( int argc, array(string) argv )
   add_constant("roxen_version", roxen_version);
   add_constant("roxen_dist_version", dist_version);
   add_constant("roxen_release", release || roxen_release);
-  add_constant("roxen_product_name", roxen_product_name);
+  add_constant("roxen_product_name", "ChiliMoon");
   add_constant("lopen",         lopen);
   add_constant("report_notice", report_notice);
   add_constant("report_debug",  report_debug);
