@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.66 1998/12/05 20:26:09 grubba Exp $
+ * $Id: smtp.pike,v 1.67 1998/12/06 22:04:22 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.66 1998/12/05 20:26:09 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.67 1998/12/06 22:04:22 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -258,7 +258,7 @@ static class Smtp_Connection {
 #endif /* SMTP_DEBUG */
 
     if (!remotename && parent->query_polite() &&
-	(!(< "EHLO", "HELO" >)[cmd])) {
+	(!(< "QUIT", "EHLO", "HELO" >)[cmd])) {
       // Client is required to be polite.
       report_warning(sprintf("SMTP: Got command %O %O before EHLO or HELO "
 			     "from %s@%s [%s]\n",
