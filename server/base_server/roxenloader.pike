@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.136 2000/01/25 04:03:17 per Exp $
+ * $Id: roxenloader.pike,v 1.137 2000/02/02 18:12:29 mast Exp $
  *
  * Roxen bootstrap program.
  *
@@ -19,7 +19,7 @@ private static object new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.136 2000/01/25 04:03:17 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.137 2000/02/02 18:12:29 mast Exp $";
 
 int pid = getpid();
 object stderr = Stdio.File("stderr");
@@ -1147,6 +1147,12 @@ Please install a newer pike version
   add_constant( "ST_CTIME", ST_CTIME );
   add_constant( "ST_SIZE",  ST_SIZE );
 
+  // It's currently tricky to test for Image.TTF correctly with a
+  // preprocessor directive, so let's add a constant for it.
+#if constant (Image.TTF)
+  if (sizeof (indices (Image.TTF)))
+    add_constant ("has_Image_TTF", 1);
+#endif
 
   if( search( argv, "--long-error-file-names" ) != -1 )
   {

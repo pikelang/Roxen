@@ -1,4 +1,4 @@
-/* $Id: fonts.pike,v 1.41 2000/02/02 17:47:23 per Exp $ */
+/* $Id: fonts.pike,v 1.42 2000/02/02 18:12:29 mast Exp $ */
 
 #include <module.h>
 
@@ -59,7 +59,7 @@ array available_font_versions(string name, int size)
 {
   string base_dir, dir;
   array available;
-#if constant(Image.TTF)
+#if constant(has_Image_TTF)
   int ttffound;
   int ttffontschanged;
 
@@ -179,7 +179,7 @@ string make_font_name(string name, int size, int bold, int italic)
   return 0;
 }
 
-#if constant(Image.TTF)
+#if constant(has_Image_TTF)
 class TTFWrapper
 {
   int size;
@@ -248,7 +248,7 @@ object get_font(string f, int size, int bold, int italic,
 
   err = catch {
     name=make_font_name(f,size,bold,italic);
-#if constant(Image.TTF)
+#if constant(has_Image_TTF)
     if(ttf_font_names_cache[ lower_case(f) ])
     {
       f = lower_case(f);
@@ -372,7 +372,7 @@ object resolve_font(string f, string|void justification)
 array available_fonts( )
 {
   array res = ({});
-#if constant(Image.TTF)
+#if constant(has_Image_TTF)
   // Populate the TTF font cache.
   available_font_versions( "No, there is no such font as this",32 );
 #endif
@@ -404,7 +404,7 @@ void create()
   add_constant("resolve_font", resolve_font);
   add_constant("available_fonts", available_fonts);
 
-#if constant(Image.TTF)
+#if constant(has_Image_TTF)
   catch {
     ttf_font_names_cache =
       decode_value(Stdio.read_bytes(".ttffontcache"));
