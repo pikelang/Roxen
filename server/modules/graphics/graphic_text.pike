@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.145 1998/08/20 07:39:28 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.146 1998/08/26 14:34:14 wellhard Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -885,6 +885,12 @@ array(int)|string write_text(int _args, string text, int size, object id)
       if(!data)
 	data = load_font(args->font, lower_case(args->talign||"left"),
 			 (int)args->xpad,(int)args->ypad);
+    }
+    else if(args->afont)
+    {
+#if efun(resolve_font)
+      data = resolve_font(args->afont);
+#endif
     } else {
       int bold, italic;
       if(args->bold) bold=1;
@@ -1148,7 +1154,7 @@ int find_or_insert(mapping find)
 
   array a=indices(f2),b=values(f2);
   sort(a,b);
-  q = a*""+b*"";
+  q = a*""+Array.map(b, lambda(mixed x) { return (string)x; })*"";
 
   if(res = cached_args[ q ])
     return res;
