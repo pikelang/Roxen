@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.72 2002/02/11 13:24:22 grubba Exp $
+ * $Id: ftp.pike,v 2.73 2002/02/12 09:36:40 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -2960,7 +2960,7 @@ class FTPSession
 	return;
       }
     }
-    send(227, ({ sprintf("Entering Passive Mode. %s,%d,%d",
+    send(227, ({ sprintf("Entering Passive Mode. (%s,%d,%d)",
 			 replace(local_addr, ".", ","),
 			 (port>>8), (port&0xff)) }));
   }
