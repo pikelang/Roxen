@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: vform.pike,v 1.19 2001/02/10 22:43:55 nilsson Exp $";
+constant cvs_version = "$Id: vform.pike,v 1.20 2001/02/11 04:47:29 nilsson Exp $";
 constant thread_safe = 1;
 
 constant module_type = MODULE_TAG;
@@ -133,12 +133,12 @@ class VInputFrame {
     }
 
     var->set_path( args->name );
-    if(!id->variables["__clear"] && id->variables[args->name] &&
-       !(args->optional && id->variables[args->name]=="") ) 
+    if(!id->real_variables["__clear"] && id->real_variables[args->name] &&
+       !(args->optional && id->real_variables[args->name][0]=="") ) 
     {
       if(args->trim) 
-        id->variables[args->name] 
-           = String.trim_all_whites(id->variables[args->name]);
+        id->real_variables[args->name][0]
+           = String.trim_all_whites(id->real_variables[args->name][0]);
       var->set_from_form( id );
     }
 
@@ -158,10 +158,10 @@ class VInputFrame {
     if(args["fail-if-failed"] && id->misc->vform_failed[args["fail-if-failed"]])
       ok=1;
 
-    if( (!id->variables[args->name] && !id->misc->vform_objects[args->name]) ||
+    if( (!id->real_variables[args->name] && !id->misc->vform_objects[args->name]) ||
        (args["ignore-if-false"] && !id->misc->vform_ok) ||
-       id->variables["__reload"] ||
-       id->variables["__clear"] ||
+       id->real_variables["__reload"] ||
+       id->real_variables["__clear"] ||
        (args["ignore-if-failed"] && id->misc->vform_failed[args["ignore-if-failed"]]) ||
        (args["ignore-if-verified"] && id->misc->vform_verified[args["ignore-if-verified"]]) ) {
       ok=0;
@@ -279,7 +279,7 @@ class TagVForm {
 
       array do_return(RequestID id) {
 	int ok=1;
-	if(args->not && id->variables[args->name]==args->not) ok=0;
+	if(args->not && id->real_variables[args->name][0]==args->not) ok=0;
 	
 	m_delete(args, "not");
 	if(ok) {
@@ -411,12 +411,17 @@ class TagVForm {
       id->misc->vform_verified=(<>);
       id->misc->vform_failed=(<>);
       id->misc->vform_xml = !args->noxml;
+
       state = StateHandler.Page_state(id);
       state->register_consumer("vform");
-      state->use_session( StateHandler.decode_session_id(id->variables->__state) );
-      if(id->variables->__state)
-	state->decode(id->variables->__state);
+      if(id->real_variables->__state) {
+	state->use_session( StateHandler.decode_session_id(id->real_variables->__state[0]) );
+	state->decode(id->real_variables->__state[0]);
+      }
+      else
+	state->use_session();
       id->misc->vform_objects = state->get() || ([]);
+
       return 0;
     }
 
