@@ -1,7 +1,7 @@
 // HTTP convenience functions.
 // inherited by roxenlib, and thus by all files inheriting roxenlib.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: http.pike,v 1.51 2001/05/16 23:56:34 nilsson Exp $
+// $Id: http.pike,v 1.52 2001/10/31 14:54:22 grubba Exp $
 
 //#pragma strict_types
 
@@ -231,7 +231,9 @@ mapping http_redirect( string url, RequestID|void id )
 //! the url parameter is just a virtual (possibly relative) path, the
 //! current id object must be supplied to resolve the destination URL.
 {
-  if(!has_value(url, "://") && url[0]!='/')
+  if(!url)
+    url = "";
+  if(!has_value(url, "://") && (!strlen(url) || url[0]!='/'))
     url = fix_relative(url, id);
   if(strlen(url) && url[0] == '/')
   {
