@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.279 2001/02/18 21:42:21 nilsson Exp $
+// $Id: rxml.pike,v 1.280 2001/02/18 23:37:20 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -1477,8 +1477,12 @@ class TagEmit {
     inherit RXML.Tag;
     constant name = "delimiter";
 
-    // FIXME: Add lookahead here.
-    static int(0..1) more_rows(array res, mapping filter) {
+    static int(0..1) more_rows(array|object res, mapping filter) {
+      if(objectp(res)) {
+	while(res->peek() && should_filter(res->peek(), filter))
+	  res->skip_row();
+	return !!res->peek();
+      }
       if(!sizeof(res)) return 0;
       foreach(res[RXML.get_var("real-counter")..], mapping v) {
 	if(!should_filter(v, filter))
@@ -1538,12 +1542,15 @@ class TagEmit {
     string scope_name;
     mapping vars;
 
-    array outer_rows;
+    // These variables are used to store id->misc-variables
+    // that otherwise would be overwritten when emits are
+    // nested.
+    array(mapping(string:mixed))|object outer_rows;
     mapping outer_filter;
     mapping outer_args;
 
     object plugin;
-    array(mapping(string:mixed))|function res;
+    array(mapping(string:mixed))|object res;
     mapping filter;
 
     array do_enter(RequestID id) {
@@ -1560,15 +1567,15 @@ class TagEmit {
       if(plugin->maxrows && args->maxrows)
 	m_delete(args, "maxrows");
 
-      if(functionp(res)) {
-	// FIXME: API (function/object)
-	do_iterate=function_iterate;
+      if(objectp(res)) {
+	do_iterate = object_iterate;
+
 	if(args->skiprows) {
-	  args->skiprow = (int)args->skiprows;
-	  while(args->skiprows--)
-	    res(args, id);
+	  int loop = (int)args->skiprows;
+	  while(loop--)
+	    res->skip_row();
 	}
-	LAST_IF_TRUE = 1;
+
 	return 0;
       }
 
@@ -1662,8 +1669,6 @@ class TagEmit {
 			      max(sizeof(res)-(int)args->maxrows, 0): 0);
 
 	  if(args->maxrows) res=res[..(int)args->maxrows-1];
-
-	  if(args->rowinfo) RXML.user_set_var(args->rowinfo, sizeof(res));
 	  if(args["do-once"] && sizeof(res)==0) res=({ ([]) });
 
 	  do_iterate = array_iterate;
@@ -1675,11 +1680,6 @@ class TagEmit {
 	id->misc->emit_rows = res;
 	id->misc->emit_filter = filter;
 	id->misc->emit_args = args;
-
-	if(sizeof(res))
-	  LAST_IF_TRUE = 1;
-	else
-	  LAST_IF_TRUE = 0;
 
 	return 0;
       }
@@ -1695,11 +1695,11 @@ class TagEmit {
 
     function do_iterate;
 
-    int(0..1) function_iterate(RequestID id) {
+    int(0..1) object_iterate(RequestID id) {
       int counter = vars->counter;
       if(args->maxrows && counter == (int)args->maxrows)
 	return do_once_more();
-      while(should_filter(vars=res(args, id), filter));
+      while(should_filter(vars=res->get_row(), filter));
       vars->counter = counter++;
       return mappingp(vars) || do_once_more();
     }
@@ -1738,12 +1738,23 @@ class TagEmit {
       id->misc->emit_filter = outer_filter;
       id->misc->emit_args = outer_args;
 
+      int rounds = vars->counter - !!args["do-once"];
+      if(args->rowinfo)
+	RXML.user_set_var(args->rowinfo, rounds);
+      LAST_IF_TRUE = !!rounds;
+
       if(args->filter && args->remainderinfo) {
 	int rem;
-	if(vars["real-counter"] < sizeof(res))
-	  for(int i=vars["real-counter"]; i<sizeof(res); i++)
-	    if(!should_filter(res[i], filter))
+	if(arrayp(res)) {
+	  foreach(res[vars["real-counter"]+1..], mapping v)
+	    if(!should_filter(v, filter))
 	      rem++;
+	} else {
+	  mapping v;
+	  while( v=res->get_row() )
+	    if(!should_filter(v, filter))
+	      rem++;
+	}
 	RXML.user_set_var(args->remainderinfo, rem);
       }
       return 0;
