@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: html_wash.pike,v 1.31 2004/06/06 11:04:00 _cvs_stephen Exp $";
+constant cvs_version = "$Id: html_wash.pike,v 1.32 2004/08/19 20:16:15 _cvs_stenitzer Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: HTML washer";
@@ -89,6 +89,13 @@ class TagWashHtml
       ({ "&lt;", "&gt;", "&amp;", "<",   ">" }));
   }
 
+  string removehtml(string s)
+  {
+    Parser.HTML p=Parser.HTML()->_set_tag_callback("");
+    return p->finish(s)->read();
+  };
+
+
   string linkify(string s)
   {
     string fix_link(string l)
@@ -144,6 +151,9 @@ class TagWashHtml
       if(args["unlinkify"])
 	result = unlinkify(result);
 
+      if(args["remove-html"])
+        result = removehtml(result);
+
       if(!args["keep-all"])
 	result = filter_body(result,
 			     parse_arg_array(args["keep-tags"]),
@@ -170,6 +180,7 @@ class TagWashHtml
                        "unparagraphify":RXML.t_text(RXML.PXml),
                        "linkify":RXML.t_text(RXML.PXml),
                        "unlinkify":RXML.t_text(RXML.PXml),
+                       "remove-html":RXML.t_text(RXML.PXml),
 		       "close-tags":RXML.t_text(RXML.PXml) ]);
 
     link_regexp =
@@ -233,6 +244,19 @@ constant tagdoc=([
 </wash-html>
 </ex>
 </attr>
+
+<attr name='remove-html'><p>
+ Removes all html elements.</p>
+
+<ex><wash-html remove-html='remove-html'>
+  Some text, <i>italic</i>, <b>bold</b>,
+  <i><b>bold italic</b></i>.
+
+  <hr />A little image:<imgs src='/$/next' />.
+</wash-html>
+</ex>
+</attr>
+
 
 <attr name='linkify'><p>
  Makes text that looks like it might be useful as a link, e g
