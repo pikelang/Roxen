@@ -1,8 +1,8 @@
-/* $Id: proxyauth.pike,v 1.4 1997/05/31 22:01:15 grubba Exp $ */
+/* $Id: proxyauth.pike,v 1.5 1999/11/29 22:09:41 per Exp $ */
 
 inherit "http";
 
-mapping proxy_auth_needed(object id)
+mapping proxy_auth_needed(RequestID id)
 {
   mixed res = id->conf->check_security(proxy_auth_needed, id);
   if(res)

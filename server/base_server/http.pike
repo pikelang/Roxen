@@ -1,5 +1,5 @@
 /* Roxen WWW-server version 1.0.
-string cvs_version = "$Id: http.pike,v 1.29 1999/10/11 14:09:01 per Exp $";
+string cvs_version = "$Id: http.pike,v 1.30 1999/11/29 22:08:38 per Exp $";
  * http.pike: HTTP convenience functions.
  * inherited by roxenlib, and thus by all files inheriting roxenlib.
  */
@@ -8,13 +8,15 @@ string cvs_version = "$Id: http.pike,v 1.29 1999/10/11 14:09:01 per Exp $";
 
 #if !efun(roxen)
 #define roxen roxenp()
+class RequestID {};
 #endif
 
 string http_date(int t);
 
 #include <variables.h>
 
-string http_res_to_string( mapping file, object id )
+
+string http_res_to_string( mapping file, RequestID id )
 {
   mapping heads=
     ([
@@ -114,8 +116,9 @@ mapping http_pipe_in_progress()
  * easiest way to do it if you don't want to worry about the internal
  * roxen structures.  
  */
-mapping http_rxml_answer( string rxml, object id, 
-                          void|object(Stdio.File) file, string|void type )
+mapping http_rxml_answer( string rxml, RequestID id, 
+                          void|Stdio.File file, 
+                          void|string type )
 {
   rxml = id->conf->parse_rxml(rxml, id, file);
 #ifdef HTTP_DEBUG
@@ -139,7 +142,7 @@ mapping http_string_answer(string text, string|void type)
   return ([ "data":text, "type":(type||"text/html") ]);
 }
 
-mapping http_file_answer(object text, string|void type, void|int len)
+mapping http_file_answer(Stdio.File text, string|void type, void|int len)
 {
 #ifdef HTTP_DEBUG
   werror("HTTP: file answer ("+(type||"text/html")+")\n");
@@ -234,7 +237,7 @@ static string add_pre_state( string url, multiset state )
 }
 
 /* Simply returns a http-redirect message to the specified URL.  */
-mapping http_redirect( string url, object|void id )
+mapping http_redirect( string url, RequestID|void id )
 {
   if(url[0] == '/')
   {
@@ -267,7 +270,7 @@ mapping http_redirect( string url, object|void id )
     + ([ "extra_heads":([ "Location":http_encode_string( url ) ]) ]);
 }
 
-mapping http_stream(object from)
+mapping http_stream(Stdio.File from)
 {
   return ([ "raw":1, "file":from, "len":-1, ]);
 }

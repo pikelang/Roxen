@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.102 1999/11/28 21:39:53 mast Exp $
+/* $Id: wizard.pike,v 1.103 1999/11/29 22:11:42 per Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -19,7 +19,7 @@
 
    Any of these may be a function that returns the value:
 
-   lambda (object id, string page, mixed ... args);
+   lambda (RequestID id, string page, mixed ... args);
 
    id:		Request id.
    page:	The entry in wizard_automaton.
@@ -27,20 +27,20 @@
 
    Other callbacks:
 
-   o  string|mapping page_foo (object id, mixed ... args);
+   o  string|mapping page_foo (RequestID id, mixed ... args);
 
       The function that produces page "foo". May return 0 to cause a
       redirect to the next page (or the previous one if the user
       pressed previous to enter it). Goes to the done page if there
       isn't any such page.
 
-   o  int verify_foo (object id, mixed ... args);
+   o  int verify_foo (RequestID id, mixed ... args);
 
       A verify function that's run when the user presses next or ok in
       page "foo". Returns 0 if it's ok to leave the page, anything
       else re-runs the page function to redisplay the page.
 
-   o  string|mapping wizard_done (object id, mixed ... args);
+   o  string|mapping wizard_done (RequestID id, mixed ... args);
 
       The function for the done page, from which it's not possible to
       return to the other wizard pages. May return 0 to skip the page.
@@ -86,7 +86,7 @@ string loc_encode(string val, void|mapping args, void|string def)
 
 string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
 {
-  object id;
+  RequestID id;
   if(n=="cvar") // Container. Default value in 'a', id in 'b'.
   {
     id = b;
@@ -420,7 +420,7 @@ string compress_state(mapping state)
   return MIME.encode_base64( from );
 }
 
-string parse_wizard_help(string t, mapping m, string contents, object id,
+string parse_wizard_help(string t, mapping m, string contents, RequestID id,
 			 mapping v)
 {
   v->help=1;
@@ -457,7 +457,7 @@ int num_pages(string wiz_name)
 #define PREVIOUS Q((this_object()->previous_label?this_object()->previous_label:"<- Previous"))
 #define COMPLETED Q((this_object()->completed_label?this_object()->completed_label:"Completed"))
 
-string parse_wizard_page(string form, object id, string wiz_name, void|string page_name)
+string parse_wizard_page(string form, RequestID id, string wiz_name, void|string page_name)
 {
   mapping(string:array) automaton = this_object()->wizard_automaton;
   int max_page = !automaton && num_pages(wiz_name)-1;
@@ -543,7 +543,7 @@ string parse_wizard_page(string form, object id, string wiz_name, void|string pa
 
 #define PAGE(X)  ((string)(((int)v->_page)+(X)))
 
-mapping|string wizard_for(object id,string cancel,mixed ... args)
+mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
 {
   string data;
   int offset = 1;
@@ -783,7 +783,7 @@ object get_wizard(string act, string dir, mixed ... args)
 }
 
 int zonk=time();
-mapping get_actions(object id, string base,string dir, array args)
+mapping get_actions(RequestID id, string base,string dir, array args)
 {
   mapping acts = ([  ]);
   if(id->pragma["no-cache"]) wizards=([]);
@@ -832,7 +832,7 @@ string act_describe_submenues(array menues, string base,string sel)
 }
 
 string focused_wizard_menu;
-mixed wizard_menu(object id, string dir, string base, mixed ... args)
+mixed wizard_menu(RequestID id, string dir, string base, mixed ... args)
 {
   mapping acts;
   if(id->pragma["no-cache"]) wizards=([]);
@@ -1004,21 +1004,21 @@ string html_table(array(string) subtitles, array(array(string)) table,
 }
 
 
-string html_notice(string notice, object id)
+string html_notice(string notice, RequestID id)
 {
   return ("<table><tr><td valign=\"top\"><img \nalt=\"Notice:\" src=\""+
         (id->conf?"/internal-roxen-":"/image/")
         +"err_1.gif\" /></td><td valign=\"top\">"+notice+"</td></tr></table>");
 }
 
-string html_warning(string notice, object id)
+string html_warning(string notice, RequestID id)
 {
   return ("<table><tr><td valign=\"top\"><img \nalt=\"Warning:\" src=\""+
         (id->conf?"/internal-roxen-":"/image/")
         +"err_2.gif\" /></td><td valign=\"top\">"+notice+"</td></tr></table>");
 }
 
-string html_error(string notice, object id)
+string html_error(string notice, RequestID id)
 {
   return ("<table><tr><td valign=\"top\"><img \nalt=\"Error:\" src=\""+
         (id->conf?"/internal-roxen-":"/image/")

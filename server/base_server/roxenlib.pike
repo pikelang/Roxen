@@ -1,10 +1,12 @@
 #include <roxen.h>
 inherit "http";
 
-// $Id: roxenlib.pike,v 1.129 1999/11/29 21:39:27 neotron Exp $
+// $Id: roxenlib.pike,v 1.130 1999/11/29 22:10:20 per Exp $
 // This code has to work both in the roxen object, and in modules.
 #if !efun(roxen)
 #define roxen roxenp()
+class RequestID {};
+class RoxenModule {};
 #endif
 
 #include <stat.h>
@@ -12,7 +14,7 @@ inherit "http";
 #define ipaddr(x,y) (((x)/" ")[y])
 #define old_rxml_compat 1
 
-string gif_size(object gif)
+string gif_size(Stdio.File gif)
 {
   array xy=Dims.dims()->get(gif);
   return "width="+xy[0]+" height="+xy[1];
@@ -26,7 +28,7 @@ static string extract_query(string from)
   return "";
 }
 
-static mapping build_env_vars(string f, object id, string path_info)
+static mapping build_env_vars(string f, RequestID id, string path_info)
 {
   string addr=id->remoteaddr || "Internal";
   mixed tmp;
@@ -187,7 +189,7 @@ static mapping build_env_vars(string f, object id, string path_info)
   return new;
 }
 
-static mapping build_roxen_env_vars(object id)
+static mapping build_roxen_env_vars(RequestID id)
 {
   mapping new = ([]);
   mixed tmp;
@@ -372,8 +374,8 @@ string strip_prestate(string from)
 #define _extra_heads defines[" _extra_heads"]
 #define _rettext defines[" _rettext"]
 
-static string parse_rxml(string what, object id,
-			 void|object file, 
+static string parse_rxml(string what, RequestID id,
+			 void|Stdio.File file, 
 			 void|mapping defines)
 {
   if(!objectp(id)) error("No id passed to parse_rxml\n");
@@ -600,7 +602,7 @@ string msectos(int t)
   } 
   return sprintf("%d:%02d h:m", t/3600000, (t%3600000)/60000);
 }
-static object extension_regexp = Regexp(".*\\.([^#~]*)");             
+static Regexp extension_regexp = Regexp(".*\\.([^#~]*)");             
 int|string extension( string f, object|void id) 
 {
   string ext, key;
@@ -634,31 +636,7 @@ static int backup_extension( string f )
 
 /* ================================================= */
 /* Arguments: Anything Returns: Memory usage of the argument.  */
-int get_size(mixed x)
-{
-  if(mappingp(x))
-    return 8 + 8 + get_size(indices(x)) + get_size(values(x));
-  else if(stringp(x))
-    return strlen(x)+8;
-  else if(arrayp(x))
-  {
-    mixed f;
-    int i;
-    foreach(x, f)
-      i += get_size(f);
-    return 8 + i;    // (refcount + pointer) + arraysize..
-  } else if(multisetp(x)) {
-    mixed f;
-    int i;
-    foreach(indices(x), f)
-      i += get_size(f);
-    return 8 + i;    // (refcount + pointer) + arraysize..
-  } else if(objectp(x) || functionp(x)) {
-    return 8 + 16; // (refcount + pointer) + object struct.
-    // Should consider size of global variables / refcount 
-  }
-  return 20; // Ints and floats are 8 bytes, refcount and float/int.
-}
+function get_size = cache.get_size;
 
 
 static int ipow(int what, int how)
@@ -823,7 +801,7 @@ static string sizetostring( int size )
   return sprintf("%.1f %s", s, PREFIX[ size ]);
 }
 
-mapping proxy_auth_needed(object id)
+mapping proxy_auth_needed(RequestID id)
 {
   mixed res = id->conf->check_security(proxy_auth_needed, id);
   if(res)
@@ -1009,7 +987,7 @@ string strftime(string fmt, int t)
   return(a*"");
 }
 
-object get_module (string modname)
+RoxenModule get_module (string modname)
 // Resolves a string as returned by get_modname to a module object if
 // one exists.
 {
@@ -1029,7 +1007,7 @@ object get_module (string modname)
   return 0;
 }
 
-string get_modname (object module)
+string get_modname (RoxenModule module)
 // Returns a string uniquely identifying the given module on the form
 // `<config name>/<module short name>#<copy>', where `<copy>' is 0 for
 // modules with no copies.
@@ -1047,7 +1025,7 @@ string get_modname (object module)
 
 // This determines the full module name in approximately the same way
 // as the config UI.
-string get_modfullname (object module)
+string get_modfullname (RoxenModule module)
 {
   if (module) {
     string name = 0;
@@ -1063,7 +1041,7 @@ string get_modfullname (object module)
 // always does the appropriate rxml parsing; the output from it should
 // not be parsed again.
 string do_output_tag( mapping args, array (mapping) var_arr, string contents,
-		      object id )
+		      RequestID id )
 {
   string quote = args->quote || "#";
   mapping other_vars = id->misc->variables;
@@ -1375,7 +1353,7 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
   return new_contents;
 }
 
-string fix_relative( string file, object id )
+string fix_relative( string file, RequestID id )
 {
   string path = id->not_query;
   // +(id->misc->path_info?id->misc->path_info:"");
@@ -1403,7 +1381,7 @@ Stdio.File open_log_file( string logfile )
                        (string)(m->year),(string)m->hour,}));
   if(strlen(logfile))
   {
-    object lf=Stdio.File( logfile, "wac");
+    Stdio.File lf=Stdio.File( logfile, "wac");
     if(!lf) 
     {
       mkdirhier(logfile);
@@ -1428,7 +1406,7 @@ string trim( string what )
   return what;
 }
 
-string|int tagtime(int t, mapping m, object id, object language)
+string|int tagtime(int t, mapping m, RequestID id, object language)
 {
   string s;
   mixed eris;
@@ -1568,7 +1546,7 @@ string|int tagtime(int t, mapping m, object id, object language)
 #endif
 }
 
-string|int API_read_file(object id, string file)
+string|int API_read_file(RequestID id, string file)
 {
   string s, f = fix_relative(file, id);
   id = id->clone_me();
@@ -1625,7 +1603,7 @@ class _charset_decoder
   }
 }
 
-function get_client_charset_decoder( string едц, object|void id )
+function get_client_charset_decoder( string едц, RequestID|void id )
 {
   switch( едц )
   {

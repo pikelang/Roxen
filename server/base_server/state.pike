@@ -1,17 +1,17 @@
 // This is Roxen state mechanism. Copyright © 1999, Idonex AB.
 //
-// $Id: state.pike,v 1.9 1999/11/24 15:33:43 nilsson Exp $
+// $Id: state.pike,v 1.10 1999/11/29 22:10:54 per Exp $
 
 #define CHKSPACE "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz+/"
 
 class Page_state {
 
-  object id;
+  RequestID id;
   int use_checksum=1;
   string stateid="";
 
   // Initialize the state object
-  void create(object in) {
+  void create(RequestID in) {
     id=in;
     if(!id->misc->state)
       id->misc+=(["state":(["keys":(<>),"values":([])])]);

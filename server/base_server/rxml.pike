@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.37 1999/11/24 01:59:04 per Exp $
+ * $Id: rxml.pike,v 1.38 1999/11/29 22:10:30 per Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -13,13 +13,13 @@ inherit "roxenlib";
 array (mapping) tag_callers, container_callers;
 mapping (string:mapping(int:function)) real_tag_callers,real_container_callers;
 mapping (string:function) real_if_callers;
-array (object) parse_modules = ({  });
+array (RoxenModule) parse_modules = ({  });
 string date_doc=#string "../modules/tags/doc/date_doc";
 
 #define TRACE_ENTER(A,B) do{if(id->misc->trace_enter)id->misc->trace_enter((A),(B));}while(0)
 #define TRACE_LEAVE(A) do{if(id->misc->trace_leave)id->misc->trace_leave((A));}while(0)
 
-string rxml_error(string tag, string error, object id) {
+string rxml_error(string tag, string error, RequestID id) {
   return (id->misc->debug?sprintf("(%s: %s)",capitalize(tag),error):"")+"<false>";
 }
 
@@ -38,7 +38,7 @@ string handle_help(string file, string tag, mapping args)
 }
 
 array|string call_tag(string tag, mapping args, int line, int i,
-		      RequestID id, object file, mapping defines,
+		      RequestID id, Stdio.File file, mapping defines,
 		      object client)
 {
   string|function rf = real_tag_callers[tag][i];
@@ -68,7 +68,7 @@ array|string call_tag(string tag, mapping args, int line, int i,
 
 array(string)|string 
 call_container(string tag, mapping args, string contents, int line,
-	       int i, RequestID id, object file, mapping defines, 
+	       int i, RequestID id, Stdio.File file, mapping defines, 
                object client)
 {
   id->misc->line = (string)line;
@@ -103,8 +103,9 @@ call_container(string tag, mapping args, string contents, int line,
 }
 
 
-string do_parse(string to_parse, RequestID id, object file, mapping defines,
-		object my_fd)
+string do_parse(string to_parse, RequestID id, 
+                Stdio.File file, mapping defines,
+		Stdio.File my_fd)
 {
   if(!id->misc->_tags)
   {
@@ -153,8 +154,6 @@ string do_parse(string to_parse, RequestID id, object file, mapping defines,
   for(int i = 1; i<sizeof(tag_callers); i++)
     to_parse=parse_html_lines(to_parse,tag_callers[i], container_callers[i],
 			      i, id, file, defines, my_fd);
-//   werror( "%O; %O\n", _refs(parser), _refs(this_object() ) );
-//   destruct( parser );
   return to_parse;
 }
 
@@ -232,14 +231,14 @@ void build_callers()
   sort_lists();
 }
 
-void add_parse_module(object o)
+void add_parse_module(RoxenModule o)
 {
   parse_modules |= ({o});
   remove_call_out(build_callers);
   call_out(build_callers,0);
 }
 
-void remove_parse_module(object o)
+void remove_parse_module(RoxenModule o)
 {
   parse_modules -= ({o});
   remove_call_out(build_callers);
@@ -344,7 +343,7 @@ void sort_lists()
 #define _ok     defines[" _ok"]
 
 string parse_rxml(string what, RequestID id, 
-		  void|object file,
+		  void|Stdio.File file,
 		  void|mapping defines )
 {
   id->misc->_rxml_recurse++;
@@ -422,7 +421,7 @@ string tag_help(string t, mapping args, RequestID id)
 }
 
 
-string tag_list_tags( string t, mapping args, RequestID id, object f )
+string tag_list_tags( string t, mapping args, RequestID id, Stdio.File f )
 {
   int verbose;
   string res="";
@@ -502,7 +501,7 @@ string read_package( string p )
 }
 
 
-string use_file_doc( string f, string data, RequestID nid, object id )
+string use_file_doc( string f, string data, RequestID nid, Stdio.File id )
 {
   string res="";
   catch 
@@ -549,7 +548,7 @@ string|array tag_use(string tag, mapping m, string c, RequestID id)
   mapping res = ([]);
 
 #define SETUP_NID()                             \
-    object nid = id->clone_me();                \
+    RequestID nid = id->clone_me();             \
     nid->misc->tags = 0;                        \
     nid->misc->containers = 0;                  \
     nid->misc->defines = ([]);                  \
@@ -621,7 +620,7 @@ string|array tag_use(string tag, mapping m, string c, RequestID id)
 }
 
 string tag_define(string tag, mapping m, string str, RequestID id, 
-                  object file, mapping defines)
+                  Stdio.File file, mapping defines)
 { 
   if(m->variable)
     id->variables[m->variable] = str;
@@ -657,7 +656,7 @@ string tag_define(string tag, mapping m, string str, RequestID id,
 #endif
 
     str=parse_html(str,([]),(["attrib":
-      lambda(string tag, mapping m, string cont, mapping c, object id) {
+      lambda(string tag, mapping m, string cont, mapping c, RequestID id) {
         id->misc->defaults[n][m->attrib]=parse_rxml(cont,id);
         return "";
       }
@@ -698,7 +697,7 @@ string tag_define(string tag, mapping m, string str, RequestID id,
 #endif
 
     str=parse_html(str,([]),(["attrib":
-      lambda(string tag, mapping m, string cont, mapping c, object id) {
+      lambda(string tag, mapping m, string cont, mapping c, RequestID id) {
         id->misc->defaults[n][m->attrib]=parse_rxml(cont,id);
         return "";
       }
@@ -724,8 +723,8 @@ string tag_define(string tag, mapping m, string str, RequestID id,
   return ""; 
 }
 
-string tag_undefine(string tag, mapping m, RequestID id, object file,
-		    mapping defines)
+string tag_undefine(string tag, mapping m, RequestID id, 
+                    Stdio.File file, mapping defines)
 { 
   if(m->variable)
     m_delete(id->variables,m->variable);
@@ -777,7 +776,7 @@ class Tracer
   mapping et2 = ([]);
 #endif
 
-  string module_name(function|object m)
+  string module_name(function|RoxenModule m)
   {
     if(!m)return "";
     if(functionp(m)) m = function_object(m);
@@ -789,7 +788,7 @@ class Tracer
     return "Internal RXML tag";
   }
 
-  void trace_enter_ol(string type, function|object module)
+  void trace_enter_ol(string type, function|RoxenModule module)
   {
     level++; 
 
@@ -833,57 +832,13 @@ class Tracer
   }
 }
 
-class SumTracer
-{
-  inherit Tracer;
-#if 0
-  mapping levels = ([]);
-  mapping sum = ([]);
-  void trace_enter_ol(string type, function|object module)
-  {
-    resolv="";
-    ::trace_enter_ol();
-    levels[level] = type+" "+module;
-  }
-
-  void trace_leave_ol(string mess)
-  {
-    string t = levels[level--];
-#if efun(gethrtime)
-    int delay = gethrtime()-et[type+" "+module_name(module)];
-#endif
-#if efun(gethrvtime)
-    int delay2 = +gethrvtime()-et2[t];
-#endif
-    t+=html_encode_string(mess);
-    if( sum[ t ] ) {
-      sum[ t ][ 0 ] += delay;
-#if efun(gethrvtime)
-      sum[ t ][ 1 ] += delay2;
-#endif
-    } else {
-      sum[ t ] = ({ delay, 
-#if efun(gethrvtime)
-		    delay2 
-#endif
-      });
-    }
-  }
-
-  string res()
-  {
-    foreach(indices());
-  }
-#endif
-}
-
 array(string) tag_trace(string t, mapping args, string c , RequestID id)
 {
   NOCACHE();
-  object t;
-  if(args->summary)
-    t = SumTracer();
-  else
+  Tracer t;
+//   if(args->summary)
+//     t = SumTracer();
+//   else
     t = Tracer();
   function a = id->misc->trace_enter;
   function b = id->misc->trace_leave;
@@ -1247,7 +1202,7 @@ string simple_parse_users_file(string file, string u)
   }
 }
 
-int match_user(array u, string user, string f, int wwwfile, object id)
+int match_user(array u, string user, string f, int wwwfile, RequestID id)
 {
   string s, pass;
   if(u[1]!=user) 
@@ -1270,7 +1225,7 @@ multiset simple_parse_group_file(string file, string g)
  return res;
 }
 
-int group_member(array auth, string group, string groupfile, object id)
+int group_member(array auth, string group, string groupfile, RequestID id)
 {
   if(!auth)
     return 0; // No auth sent
