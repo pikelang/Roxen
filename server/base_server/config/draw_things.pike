@@ -1,15 +1,14 @@
 #include <module.h>
 import Image;
 
-constant Image = image;
-string cvs_verison = "$Id: draw_things.pike,v 1.27 1997/11/07 06:04:35 mirar Exp $";
+string cvs_verison = "$Id: draw_things.pike,v 1.28 1998/01/19 18:36:40 mirar Exp $";
 
 
-object (Image) load_image(string f)
+object (Image.image) load_image(string f)
 {
   object file = files.file();
   string data;
-  object img = image();
+  object img = Image.image();
 
 //  werror("Loading "+f+"\n");
 
@@ -34,7 +33,7 @@ object (Image) load_image(string f)
   if(X){knappar->paste(X,cxp,0);cxp+=X->xsize();first_icon=0;}\
   if(strlen(Y)) {\
     object f = font->write(Y)->scale(0.45);\
-    knappar->paste_mask(Image(f->xsize(),f->ysize()),f,cxp-f->xsize()-4,-1);\
+    knappar->paste_mask(Image.image(f->xsize(),f->ysize()),f,cxp-f->xsize()-4,-1);\
    }\
  }while(0)
 
@@ -54,8 +53,8 @@ object (Image) load_image(string f)
 
 object (Image) draw_module_header(string name, int type, object font)
 {
-  object result = Image(1000,48);
-  object knappar = Image(1000,48);
+  object result = Image.image(1000,48);
+  object knappar = Image.image(1000,48);
   object text;
   int cxp = 0, first_icon;
   text = font->write(name);
@@ -131,13 +130,13 @@ object (Image) draw_module_header(string name, int type, object font)
 #define hG 0xa0
 #define hB 0xff
 
-object (Image) draw_config_button(string name, object font, int lm, int rm)
+object (Image.image) draw_config_button(string name, object font, int lm, int rm)
 {
-  if(!strlen(name)) return Image(1,15, dR,dG,dB);
+  if(!strlen(name)) return Image.image(1,15, dR,dG,dB);
 
   object txt = font->write(name)->scale(0.48);
   int w = txt->xsize();
-  object ruta = Image(w + (rm?40:20), 20, bR,bG,bB);
+  object ruta = Image.image(w + (rm?40:20), 20, bR,bG,bB);
 
   if (lm) {
     // Left-most
@@ -156,14 +155,14 @@ object (Image) draw_config_button(string name, object font, int lm, int rm)
   return ruta->scale(0,15);
 }
 
-object (Image) draw_unselected_button(string name, object font)
+object (Image.image) draw_unselected_button(string name, object font)
 {
-  if(!strlen(name)) return Image(1,15, R,G,B);
+  if(!strlen(name)) return Image.image(1,15, R,G,B);
 
   object txt = font->write(name)->scale(0.48);
-  object ruta = Image(txt->xsize()+40, 20, bR, bG, bB), s;
-  object linje = Image(2,30, hR,hG,hB);
-  object linje_mask = Image(2,30, 128,128,128);
+  object ruta = Image.image(txt->xsize()+40, 20, bR, bG, bB), s;
+  object linje = Image.image(2,30, hR,hG,hB);
+  object linje_mask = Image.image(2,30, 128,128,128);
 
   linje_mask=linje_mask->setcolor(0,0,0)->rotate(-25)->copy(0,3,29,28);
   
@@ -183,14 +182,14 @@ object (Image) draw_unselected_button(string name, object font)
   return ruta->scale(0,TABSIZE);
 }
 
-object (Image) draw_selected_button(string name, object font)
+object (Image.image) draw_selected_button(string name, object font)
 {
-  if(!strlen(name)) return Image(1,15, R,G,B);
+  if(!strlen(name)) return Image.image(1,15, R,G,B);
 
   object txt = font->write(name)->scale(0.48);
-  object ruta = Image(txt->xsize()+40, 20, bsR, bsG, bsB), s;
-  object linje = Image(2,30, hR,hG,hB);
-  object linje_mask = Image(2,30, 128,128,128);
+  object ruta = Image.image(txt->xsize()+40, 20, bsR, bsG, bsB), s;
+  object linje = Image.image(2,30, hR,hG,hB);
+  object linje_mask = Image.image(2,30, 128,128,128);
 
   linje_mask=linje_mask->setcolor(0,0,0)->rotate(-25)->copy(0,3,29,28);
   
@@ -213,7 +212,7 @@ object (Image) draw_selected_button(string name, object font)
 
 object pil(int c)
 {
-  object f=Image(50,50,dR,dG,dB);
+  object f=Image.image(50,50,dR,dG,dB);
   f->setcolor(c?200:bR,c?0:bG,c?0:bB);
   for(int i=1; i<25; i++)
     f->line(25-i,i,25+i,i);
@@ -232,7 +231,7 @@ object draw_fold(int c)
 
 object draw_back(int c)
 {
-  object f=Image(50,50,dR,dG,dB);
+  object f=Image.image(50,50,dR,dG,dB);
   f->setcolor(0,0,100);
   for(int i=1; i<25; i++)
     f->line(25-i,i,25+i,i);
