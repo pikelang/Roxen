@@ -99,6 +99,12 @@ class Scope_usr
 
      case "toptabs-args":
        res = "frame-image="+QALIAS("toptabs-frame");
+       res += " bgcolor="+QALIAS("toptabs-bgcolor" );
+       res += " font="+QALIAS("toptabs-font" );
+       res += " dimcolor="+QALIAS("toptabs-dimcolor" );
+       res += " textcolor="+QALIAS("toptabs-textcolor" );
+       res += " dimtextcolor="+QALIAS("toptabs-dimtextcolor" );
+       res += " selcolor="+QALIAS("toptabs-selcolor" );
        if( stringp( q = ALIAS("toptabs-extraargs" ) ) )
          res += " "+q;
        return res;
