@@ -7,7 +7,7 @@
 //  return "Hello world!\n";
 // </pike>
  
-constant cvs_version = "$Id: piketag.pike,v 2.14 2000/08/10 22:45:52 mast Exp $";
+constant cvs_version = "$Id: piketag.pike,v 2.15 2000/08/10 23:29:57 per Exp $";
 constant thread_safe=1;
 
 
@@ -314,7 +314,10 @@ array parse_magic( string data, RequestID id, int add_md, string filename )
      case '.':
        OCIP(); OCIPUP();
        if( flat[i] == "." ) 
-         flat[i]->text = "->"; 
+       {
+         flat[i]->text = "[";
+         flat[i+1]->text = "\"" + flat[++i]->text + "\"]";
+       }
        break;
 
      case '/':
