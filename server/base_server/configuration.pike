@@ -1,6 +1,6 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.390 2000/11/02 16:47:11 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.391 2000/11/06 22:10:54 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3001,11 +3001,62 @@ static void create(string config)
 		"the rate by this factor."),
          0, arent_we_throttling_request);
 
-  defvar("ZNoSuchFile", #"
+
+  defvar("404-files", ({ "404.inc" }),
+	 DLOCALE("", "No such file message override files"),
+	 TYPE_STRING_LIST|VAR_PUBLIC,
+	 DLOCALE("",
+		 "If no file match a given resource all directories above the"
+		 " wanted file is searched for one of the files in this list."
+		 "<p>\n"
+		 "As an example, if the file /foo/bar/not_there.html is "
+		 "wanted, and this list contains the default value of 404.inc,"
+		 " these files will be searched for, in this order:</p><br /> "
+		 " /foo/bar/404.inc, /foo/404.inc and /404.inc." ) );
+		 
+
+
+  class NoSuchFileOverride
+  {
+    // compatibility with old config-files.
+    inherit Variable.Variable;
+
+    int check_visibility( RequestID id, int more_mode,
+			  int expert_mode, int devel_mode,
+			  int initial, int|void variable_in_cfif )
+    {
+      return 0;
+    }
+
+    void set( string newval )
+    {
+      if( search(newval,"emit source=values") == -1 )
+	variables[ "404-message" ]->set( newval );
+    }
+
+    void create()
+    {
+      ::create(
+#"<nooutput><emit source=values scope=ef variable='modvar.site.404-files'>
+   <set variable='var.base' value=''/>
+   <emit source='path'>
+     <append variable='var.base' value='/&_.name;'/>
+     <set variable='var.404' value='&var.base;/&ef.value;'/>
+     <if exists='&var.404;'>
+       <set variable='var.errfile' from='var.404'/>
+     </if>
+   </emit>
+</emit>
+</nooutput><if variable='var.errfile'><eval><insert file='&var.errfile;'/></eval></if><else><eval>&modvar.site.404-message:none;</eval></else>", 0, 0, 0 );
+    }
+  };
+  
+  defvar("ZNoSuchFile", NoSuchFileOverride() );
+
+  defvar("404-message", #"
 <html><head>
 <title>404 - Page not found</title>
 </head>
-
 <body alink=\"#000000\" bgcolor=\"#ffffff\" bottommargin=\"0\" leftmargin=\"0\" link=\"#ce5c00\" marginheight=\"2\" marginwidth=\"0\" rightmargin=\"0\" text=\"#333333\" topmargin=\"2\" vlink=\"#ce5c00\">
 
 <if nserious=''><set variable='var.404' value='-sorry' /></if>
@@ -3041,7 +3092,8 @@ page.
 </font>
 </body>
 ",
-	 DLOCALE(58, "No such file message"),TYPE_TEXT_FIELD,
+	 DLOCALE(58, "No such file message"),
+	 TYPE_TEXT_FIELD|VAR_PUBLIC,
 	 DLOCALE(59, "What to return when there is no resource or file "
 		 "available at a certain location."));
 
