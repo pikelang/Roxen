@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.656 2001/03/28 19:35:15 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.657 2001/04/17 07:21:38 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread.
 Thread.Thread backend_thread;
@@ -1625,21 +1625,25 @@ int register_url( string url, Configuration conf )
   if( !strlen( path ) )
     path = 0;
 
-  if( urls[ url ] && urls[ url ]->conf )
+  if( urls[ url ]  )
   {
-    if( urls[ url ]->conf != conf )
+    if( !urls[ url ]->port )
+      m_delete( urls, url );
+    else if(  urls[ url ]->conf )
     {
-      report_error(LOC_M(20, "Cannot register URL %s, "
-			    "already registered by %s!")+"\n",
-		   url, urls[ url ]->conf->name);
-      return 0;
+      if( urls[ url ]->conf != conf )
+      {
+	report_error(LOC_M(20,
+			   "Cannot register URL %s, "
+			   "already registered by %s!")+"\n",
+		     url, urls[ url ]->conf->name);
+	return 0;
+      }
+      urls[ url ]->port->ref(url, urls[url]);
+      return 1;
     }
-    urls[ url ]->port->ref(url, urls[url]);
-    return 1;
-  } 
-  else if( urls[ url ] ) 
-  {
-    urls[ url ]->port->unref( url );
+    else
+      urls[ url ]->port->unref( url );
   }
 
   Protocol prot;
@@ -3779,6 +3783,7 @@ constant formats =
   ({ "bin-response","%2c",  "(int)(file->error || 200)",0 }),
   ({ "length",      "%d",   "(int)file->len",0 }),
   ({ "bin-length",  "%4c",  "(int)file->len",0 }),
+  ({ "vhost",       "%s",   "(request_id->misc->host||\"-\")", 0 }),
   ({ "referer",     "%s",    
      "sizeof(request_id->referer||({}))?request_id->referer[0]:\"-\"", 0 }),
   ({ "user_agent",  "%s",    
