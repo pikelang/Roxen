@@ -166,7 +166,7 @@ multiset(string) find_supports(string from, void|multiset existing_sup)
 // Return a list of 'supports' variables for the current connection.
 mapping(string:string) find_client_var(string from, void|mapping existing_cv)
 {
-  if(!existing_cv) extisting_cv=([]);
+  if(!existing_cv) existing_cv=([]);
   if(!strlen(from) || from == "unknown")
     return default_client_var+existing_cv;
 
