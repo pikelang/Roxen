@@ -134,8 +134,10 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
     }
   else
     {
-      
-
+      xc=diagram_data["xsize"]/2;
+      yc=diagram_data["ysize"]/2-diagram_data["3Ddepth"];
+      yr=min(xc-xmaxtext-ymaxtext-1-diagram_data["3Ddepth"], yc-2*ymaxtext-1);
+      xr=min(xc-xmaxtext-ymaxtext-1, yc+diagram_data["3Ddepth"]-2*ymaxtext-1);
     }
   float w=diagram_data["linewidth"];
   //Initiate the piediagram!
@@ -242,14 +244,14 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
 	({a,a,b,b}))->scale(imxsize, imysize);
 	//400ms
 	*/
-      int imxsize=diagram_data["xsize"];
-      int imysize=diagram_data["ysize"]+diagram_data["legendsize"];
+      int imxsize=piediagram->xsize(); //diagram_data["xsize"];
+      int imysize=piediagram->ysize(); //diagram_data["ysize"]+diagram_data["legendsize"];
 
       if(tone)
 	{
 	  
 	  
-	  tbild=image(64, imysize, 255, 255, 255)->
+	  tbild=image(imxsize, imysize, 255, 255, 255)->
 	    tuned_box(0, 0 , 1, imysize,
 		      ({a,a,b,b}));
 	  tbild=tbild->paste(tbild->copy(0,0,0, imysize), 1, 0);
@@ -261,8 +263,7 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
 	    tbild=tbild->paste(tbild->copy(0,0,31, imysize), 32, 0);
       
 	  if (imxsize>64)
-	    tbild=image(imxsize, imysize, 255, 255, 255)->
-	      paste(tbild->copy(0,0,63, imysize), 0, 0)->
+	    tbild->
 	      paste(tbild->copy(0,0,63, imysize), 64, 0);
 	  if (imxsize>128)
 	    tbild=tbild->paste(tbild->copy(0,0,128, imysize), 128, 0);
@@ -300,19 +301,29 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
 	  arr3[j++]=arr5[i];
 	}
 
+      array(float) arr6=arr3+arr2[200..601];
 
-      below=image(diagram_data["xsize"],imysize , 0, 0, 0)->setcolor(255,255,255)->
-	polygone(arr3+arr2[200..601]);
+      float plusx=ceil(2-arr2[600]);
+      float plusy=ceil(2-arr2[601]);
+      for(int i=0; i<sizeof(arr6); )
+	{
+	  arr6[i++]+=plusx;
+	  arr6[i++]+=plusy;
+	}
+      imxsize=(int)(ceil(arr2[200]+4-arr2[600]));
+      imysize=(int)(diagram_data["3Ddepth"]+ceil(arr2[401]+4-arr2[601]));
+      below=image(imxsize, imysize, 0, 0, 0)->
+	setcolor(255,255,255)->
+	polygone(arr6);
       
       b=({155,155,155});
-      a=({0,0,0});
+      a=({100,100,100});
       
       object tbild;
-
-      tbild=image(diagram_data["xsize"],imysize , 255, 255, 255)
-	->tuned_box(0,0, diagram_data["xsize"]/2, 1,
+      tbild=image(imxsize,imysize , 255, 255, 255)
+	->tuned_box(0,0, imxsize/2, 1,
 		  ({a,b,a,b}))
-	->tuned_box(imxsize/2, 0, imxsize, 1,
+	->tuned_box(imxsize/2, 0,imxsize , 1,
 		    ({b,a,b,a}));
       tbild=tbild->paste(tbild->copy(0,0,imxsize, 0),0, 1);
       
@@ -331,7 +342,14 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
       if (tbild->ysize()>512)
 	tbild=tbild->paste(tbild->copy(0,0,imxsize, 511),0, 512);
       
-      piediagram=piediagram->paste_mask(below&tbild, below);
+      write("tbild->xsize()"+tbild->xsize()+"\n");
+      write("tbild->ysize()"+tbild->ysize()+"\n");
+      write("below->xsize()"+below->xsize()+"\n");
+      write("below->ysize()"+below->ysize()+"\n");
+
+
+      //piediagram=
+      piediagram->paste_mask(tbild, below, -(int)ceil(plusx), -(int)ceil(plusy) );
       
       
       
@@ -427,9 +445,9 @@ int main(int argc, string *argv)
 		 "bgcolor":({255,255,255}),
 		 "labelcolor":({0,0,0}),
 		 "datacolors":({({0,255,0}),({255,255,0}), ({0,255,255}), ({255,0,255}),({0,255,0}),({255,255,0})  }),
-		 "linewidth":0, //2.2,
-		 "xsize":400,
-		 "ysize":200,
+		 "linewidth":2.2,
+		 "xsize":300,
+		 "ysize":300,
 		 "xnames":({"jan", "feb", "mar", "apr", "maj", "jun", "jul", "aug", "sep"
 		 }),
 		 "fontsize":16,
@@ -439,8 +457,9 @@ int main(int argc, string *argv)
 		 "labelsize":12,
 		 "xminvalue":0.1,
 		 "yminvalue":0,
-		 "3Ddepth":20,
-		 "drawtype": "3D"
+		 "3Ddepth":30,
+		 "drawtype": "3D",
+		 "tone":1
 
   ]);
   /*
