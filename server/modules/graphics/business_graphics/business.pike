@@ -17,7 +17,7 @@
  * Prevent less that 100x100 in size.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.19 1997/10/15 11:46:33 peter Exp $";
+constant cvs_version = "$Id: business.pike,v 1.20 1997/10/15 12:28:42 peter Exp $";
 constant thread_safe=0;
 
 #include <module.h>
@@ -150,7 +150,7 @@ string itag_data(mapping tag, mapping m, string contents,
   if(m->lineseparator)
     linesep=m->lineseparator;
 
-  if( !m->form || m->form == "db" || m->form == "straight" )
+  if( !m->form || m->form == "straight" )
   {
     contents = contents - " ";
     array lines = filter( contents/linesep, sizeof );
