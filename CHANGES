@@ -1,10 +1,14 @@
 Changes since Roxen Challenger 1.2.87 Yellow
 -----------------------------------------------
 
-o Added missing tag <scope>.
+o Added the <scope> tag.
 
-o Fixed variable scope in roxenlib quote function. Hopefully with less
-  breakage this time.
+o Modified the scope for <formoutput>. Should fix problems introduced
+  in 1.2.87.
+
+o Fixed bug in Postgres module. Thanks to Francesco Chemolli.
+
+o Fixed bug in SQLuserdb.
 
 
 Changes since Roxen Challenger 1.2.77 Yellow
