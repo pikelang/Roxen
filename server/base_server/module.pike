@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.139 2003/06/17 11:58:34 grubba Exp $
+// $Id: module.pike,v 1.140 2003/06/17 12:41:55 grubba Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -351,9 +351,9 @@ string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
     return iso8601_date_time(st->mtime);
   case "DAV:resourcetype":	// 13.9
     if (st->isdir) {
-      return ({ Parser.XML.Tree.Node(Parser.XML.Tree.XML_ELEMENT,
-				     "DAV:collection", ([]), 0,
-				     "DAV:collection") });	// 12.2
+      return ({
+	Parser.XML.Tree.ElementNode("DAV:collection", ([])),	// 12.2
+      });
     }
     return "";
   case "http://apache.org/dav/props/executable":
