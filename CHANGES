@@ -1,3 +1,10 @@
+Changes since Roxen 2.0.34
+-----------------------------------------------
+
+o Fixed problem with parts of Roxen that didn't work without 128-bit
+  crypto.
+
+
 Changes since Roxen 2.0.30
 -----------------------------------------------
 
