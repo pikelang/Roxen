@@ -4,7 +4,7 @@
 // another. This can be done using "internal" redirects (much like a
 // symbolic link in unix), or with normal HTTP redirects.
 
-constant cvs_version = "$Id: redirect.pike,v 1.22 2000/03/17 16:58:50 mast Exp $";
+constant cvs_version = "$Id: redirect.pike,v 1.23 2000/03/17 17:08:19 mast Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -164,7 +164,7 @@ mixed first_try(object id)
 	  array bar = Array.map(foo, lambda(string s, mapping f) {
 				       return "$"+(f->num++);
 				     }, ([ "num":1 ]));
-	  foo +=({(id->not_query/"/"-({""})+({""}))[-1], id->not_query[1..] });
+	  foo +=({(({""}) + (id->not_query/"/" - ({""})))[-1], id->not_query[1..] });
 	  bar +=({ "%f", "%p" });
 	  to = replace(redirect_to[i], (array(string)) bar, (array(string)) foo);
 	  break;
