@@ -13,7 +13,7 @@ for each char:
   len bytes data
 </pre>
 All integers are NBO<p>
-There is a small program included in bin (createcif.pike) that 
+There is a small program included in bin (create_cif.pike) that 
 creates a cif font from an imagedir or imagetar font</p>";
 
 class StringFile
