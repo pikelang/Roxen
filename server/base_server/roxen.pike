@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.820 2002/09/26 22:26:13 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.821 2002/10/01 22:19:53 nilsson Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -478,6 +478,7 @@ class Queue
 //! read function.
 {
   inherit Thread.Condition : r_cond;
+  static Thread.Mutex mutex = Thread.Mutex();
   array buffer=allocate(8);
   int r_ptr, w_ptr;
   
@@ -488,15 +489,17 @@ class Queue
   
   mixed read()
   {
-    while(!(w_ptr - r_ptr)) r_cond::wait();
+    object key = mutex->lock();
+    while(!(w_ptr - r_ptr)) r_cond::wait(key);
     mixed tmp = buffer[r_ptr];
     buffer[r_ptr++] = 0;	// Throw away any references.
+    key = 0;
     return tmp;
   }
 
   mixed tryread()
   {
-    if (!(w_ptr - r_ptr)) return ([])[0];
+    if (!(w_ptr - r_ptr)) return UNDEFINED;
     mixed tmp = buffer[r_ptr];
     buffer[r_ptr++] = 0;	// Throw away any references.
     return tmp;
@@ -585,7 +588,12 @@ local static void handler_thread(int id)
 	  num_hold_messages--;
 	  THREAD_WERR("Handle thread [" + id + "] put on hold");
 	  threads_on_hold++;
-	  if (Thread.Condition cond = hold_wakeup_cond) cond->wait();
+	  if (Thread.Condition cond = hold_wakeup_cond){
+	    object mutex = Thread.Mutex();
+	    object silly = mutex->lock();
+	    cond->wait(silly);
+	    silly = 0;
+	  }
 	  threads_on_hold--;
 	  THREAD_WERR("Handle thread [" + id + "] released");
 	}
