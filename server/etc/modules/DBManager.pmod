@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.42 2001/09/06 15:36:57 per Exp $
+// $Id: DBManager.pmod,v 1.43 2001/09/21 09:53:39 per Exp $
 
 //! Manages database aliases and permissions
 
@@ -165,6 +165,8 @@ private
   mapping(string:mapping(string:string)) sql_url_cache = ([]);
   Sql.Sql low_get( string user, string db )
   {
+    if( !user )
+      return 0;
     mixed res;
     mapping(string:mixed) d = sql_url_cache[ db ];
     if( !d )
