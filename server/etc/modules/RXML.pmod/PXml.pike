@@ -3,7 +3,7 @@
 //! Parses tags and entities. Entities on the form &scope.variable;
 //! are replaced by variable references.
 //!
-//! $Id: PXml.pike,v 1.9 2000/01/08 03:42:41 mast Exp $
+//! $Id: PXml.pike,v 1.10 2000/01/08 03:44:57 mast Exp $
 
 #pragma strict_types
 
@@ -395,3 +395,5 @@ array(TAG_TYPE|CONTAINER_TYPE) get_overridden_low_tag (
   }
   return 0;
 }
+
+string _sprintf() {return "RXML.PHtml";}
