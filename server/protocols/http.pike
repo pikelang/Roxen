@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.193 2000/01/28 13:46:08 nilsson Exp $";
+constant cvs_version = "$Id: http.pike,v 1.194 2000/01/30 21:19:30 per Exp $";
 
 #define MAGIC_ERROR
 
@@ -271,7 +271,7 @@ string scan_for_query( string f )
       {
 	a = http_decode_string(replace(a, "+", " "));
 	b = http_decode_string(replace(b, "+", " "));
-	
+
 	if(variables[ a ])
 	  variables[ a ] +=  "\0" + b;
 	else
@@ -651,7 +651,7 @@ private int parse_got()
 		    {
 		      a = http_decode_string( a );
 		      b = http_decode_string( b );
-		
+
 		      if(variables[ a ])
 			variables[ a ] +=  "\0" + b;
 		      else
@@ -683,11 +683,11 @@ private int parse_got()
 	      }
 	    }
 	    break;
-	
+
 	  case "authorization":
 	    rawauth = contents;
 	    break;
-	
+
 	  case "proxy-authorization":
 	    array y;
 	    y = contents / " ";
@@ -696,7 +696,7 @@ private int parse_got()
 	    y[1] = decode(y[1]);
 	    misc->proxyauth=y;
 	    break;
-	
+
 	  case "pragma":
 	    pragma|=aggregate_multiset(@replace(contents, " ", "")/ ",");
 	    break;
@@ -721,7 +721,7 @@ private int parse_got()
 	  case "referer":
 	    referer = contents/" ";
 	    break;
-	
+
 	  case "extension":
 #ifdef DEBUG
           werror("Client extension: "+contents+"\n");
@@ -732,7 +732,7 @@ private int parse_got()
 	      // Only care about "byte" ranges.
 	      misc->range = contents[6..];
 	    break;
-	
+
 	  case "range":
 	    contents = lower_case(contents-" ");
 	    if(!misc->range && !search(contents, "bytes"))
@@ -742,7 +742,7 @@ private int parse_got()
 	      // Duh!!!
 	      misc->range = contents[6..];
 	    break;
-	
+
 	  case "connection":
 	  case "content-type":
 	    misc[linename] = lower_case(contents);
@@ -821,14 +821,14 @@ private int parse_got()
 	  case "forwarded":
 	  case "new-uri":
 	    misc[linename]=contents;
-	    break;	
+	    break;
 
 	  case "proxy-by":
 	  case "proxy-maintainer":
 	  case "proxy-software":
 	  case "mime-version":
 	    break;
-	
+
 	  case "if-modified-since":
 	    since=contents;
 	    break;
@@ -1140,7 +1140,7 @@ void internal_error(array err)
     err2 = catch {
       array(string) bt = (describe_backtrace(err)/"\n") - ({""});
       file = http_low_answer(500, format_backtrace(bt, store_error(err)));
-    };	
+    };
     if(err2) {
       werror("Internal server error in internal_error():\n" +
 	     describe_backtrace(err2)+"\n while processing \n"+
@@ -1469,7 +1469,7 @@ void send_result(mapping|void result)
 
 	if(prot != "HTTP/0.9") {
 	  heads["Last-Modified"] = http_date(misc->last_modified);
-	
+
 	  if(since)
 	  {
 	    /* ({ time, len }) */
@@ -1514,13 +1514,11 @@ void send_result(mapping|void result)
       if(file->expires)
 	heads->Expires = http_date(file->expires);
 
-      if(mappingp(file->extra_heads)) {
+      if(mappingp(file->extra_heads))
 	heads |= file->extra_heads;
-      }
 
-      if(mappingp(misc->moreheads)) {
+      if(mappingp(misc->moreheads))
 	heads |= misc->moreheads;
-      }
 
       if(misc->range && file->len && objectp(file->file) && !file->data &&
 	 file->error == 200 && (method == "GET" || method == "HEAD"))
@@ -1571,15 +1569,13 @@ void send_result(mapping|void result)
       }
 
       head_string = prot+" "+(file->rettext||errors[file->error])+"\r\n";
-      array tmp_head = ({});
+
       foreach(indices(heads), h)
 	if(arrayp(heads[h]))
 	  foreach(heads[h], tmp)
-	    tmp_head += ({ `+(h, ": ", tmp) });
+	    head_string += h+": "+tmp+"\r\n";
 	else
-	  tmp_head += ({ `+(h, ": ", heads[h]) });
-      if(sizeof(tmp_head))
-	head_string += tmp_head * "\r\n" + "\r\n";
+          head_string += h+": "+heads[h]+"\r\n";
 
       if(file->len > -1)
 	head_string += "Content-Length: "+ file->len +"\r\n";
@@ -1880,11 +1876,13 @@ void chain(object f, object c, string le)
   my_fd = f;
   port_obj = c;
   do_not_disconnect=-1;
+
   MARK_FD("Kept alive");
   if(strlen(le))
     // More to handle already.
     got_data(0,le);
-  else {
+  else
+  {
     // If no pipelined data is available, call out...
     call_out(do_timeout, 150);
     time = _time(1);
@@ -1897,10 +1895,13 @@ void chain(object f, object c, string le)
       do_not_disconnect=0;
       disconnect();
     }
-  } else {
+  }
+  else
+  {
     if(do_not_disconnect == -1)
       do_not_disconnect = 0;
-    if(!processed) {
+    if(!processed)
+    {
       f->set_close_callback(end);
       f->set_read_callback(got_data);
     }
