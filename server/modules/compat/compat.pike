@@ -778,7 +778,7 @@ class TagIfsuccessful {
   inherit RXML.Tag;
   constant name = "if";
   constant plugin_name = "successful";
-  int `() (string u, RequestID id) {
+  int eval(string u, RequestID id) {
     return id->misc->defines[" _ok"];
   }
 }
@@ -787,7 +787,7 @@ class TagIffailed {
   inherit RXML.Tag;
   constant name = "if";
   constant plugin_name = "failed";
-  int `() (string u, RequestID id) {
+  int eval(string u, RequestID id) {
     return !id->misc->defines[" _ok"];
   }
 }
