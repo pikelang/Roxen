@@ -19,9 +19,9 @@
 #include <stropts.h>
 #endif
 #include <poll.h>
-#else
-#include <sys/time.h>
 #endif
+
+#include <sys/time.h>
 
 #ifndef HAVE_PIPE
 #include <sys/socket.h>
