@@ -70,6 +70,7 @@ urw_itc_avant_garde-demi-r binary
 /server/base_server/wizard.pike foreign_ident
 /server/bin/garbagecollector.pike foreign_ident
 /server/bin/install.pike foreign_ident
+/server/config_actions/cachestatus.pike foreign_ident
 /server/config_actions/changepass.pike foreign_ident
 /server/config_actions/clearlog.pike foreign_ident
 /server/config_actions/debuginformation.pike foreign_ident
