@@ -6,7 +6,7 @@ inherit "roxenlib";
 inherit Regexp : regexp;
 
 constant cvs_version = 
-"$Id: mailtags.pike,v 1.27 1999/02/05 10:52:32 js Exp $";
+"$Id: mailtags.pike,v 1.28 2000/12/13 08:12:44 per Exp $";
 
 constant thread_safe = 1;
 
@@ -785,7 +785,8 @@ string tag_send_mail_by_id( string t, mapping args, object id )
   m = MIME.Message(tag_mail_body("",args,id));
 
   string from = tag_mail_userinfo("",(["email":1]),id);
-  multiset to = (mkmultiset( ((m->headers->cc||"") / ",")-({""})) |
+  multiset to = (mkmultiset( ((m->headers->bcc||"")/ ",")-({""})) |
+                 mkmultiset( ((m->headers->cc||"") / ",")-({""})) |
 		 mkmultiset( ((m->headers->to||"") / ",")-({""})) );
   m_delete(m->headers, "bcc");
 
