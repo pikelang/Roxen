@@ -366,6 +366,14 @@ string get_var_form( string s, object var, object mod, object id,
                               !!(int)id->variables->initial ) )
     return 0;
 
+  string tmp;
+  if( mod->check_variable &&
+      (tmp = mod->check_variable( s, var->query() ) ))
+    pre += 
+        "<font size='+1' color='&usr.warncolor;'><pre>"
+        + html_encode_string( tmp )
+        + "</pre></font>";
+  
   if( !view_mode )
     return pre + var->render_form( id );
   return pre + var->render_view( id );
@@ -422,12 +430,19 @@ mapping get_variable_section( string s, object mod, object id )
   return 0;
 }
 
-array get_variable_maps( object mod, mapping m, object id, int fnset )
+array get_variable_maps( object mod, 
+                         mapping m, 
+                         RequestID id, 
+                         int fnset )
 {
   while( id->misc->orig )
     id = id->misc->orig;
-  array variables = map( indices(mod->variables),get_variable_map,mod,id,
+  array variables = map( indices(mod->query()),
+                         get_variable_map,
+                         mod,
+                         id,
                          fnset );
+
   variables = filter( variables,
                       lambda( mapping q ) {
                         return q->form && strlen(q->sname);
