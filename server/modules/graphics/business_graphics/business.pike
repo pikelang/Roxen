@@ -13,7 +13,7 @@
  * 
  */
 
-constant cvs_version = "$Id: business.pike,v 1.28 1997/10/17 18:49:47 peter Exp $";
+constant cvs_version = "$Id: business.pike,v 1.29 1997/10/17 20:01:31 peter Exp $";
 constant thread_safe=0;
 
 #include <module.h>
@@ -376,13 +376,16 @@ string tag_diagram(string tag, mapping m, string contents,
       m->width  = (string)query("maxwidth");
     if((int)m->width < 100)
       m->width  = "100";
-  }
+  } else if(!m->image)
+    m->width = "350";
+
   if(m->height) {  
     if((int)m->hight > query("maxheight"))
       m->height = (string)query("maxheight");
     if((int)m->hight < 100)
       m->height = "100";
-  }
+  } else if(!m->image)
+    m->height = "250";
 
   if(!m->image)
   {
