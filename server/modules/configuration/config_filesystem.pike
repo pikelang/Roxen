@@ -12,7 +12,7 @@ constant module_type = MODULE_LOCATION;
 constant module_name = "Configuration Filesystem";
 constant module_doc = "This filesystem serves the administration interface";
 constant module_unique = 1;
-constant cvs_version = "$Id: config_filesystem.pike,v 1.33 2000/04/05 22:36:11 js Exp $";
+constant cvs_version = "$Id: config_filesystem.pike,v 1.34 2000/04/13 19:04:56 per Exp $";
 
 constant path = "config_interface/";
 
@@ -48,9 +48,11 @@ array(string|array) low_stat_file(string locale, string f, object id)
     if (locale == "standard")
       locale = roxen->default_locale->latin1_name;
     string p;
-    ret = file_stat(p = path+locale+"/"+f);
+    if( strlen( f ) )
+      f = "/"+f;
+    ret = file_stat(p = path+locale+f);
     if (!ret && (locale != "standard")) 
-      ret = file_stat(p = path+"standard/"+f);
+      ret = file_stat(p = path+"standard"+f);
     if( ret )
       return ({ p, ret });
   }
@@ -147,6 +149,10 @@ mixed find_file( string f, object id )
 
   id->misc->cf_locale = locale;
 
+#ifdef __NT__
+  if(strlen(rest) && rest[-1]=='/') 
+    rest = rest[..strlen(rest)-2];
+#endif
   array(string|array) stat_info = low_stat_file( locale, rest, id );
   if( !stat_info ) // No such luck...
     return 0;
