@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.164 1999/02/12 00:31:44 grubba Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.165 1999/02/15 23:28:34 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -216,8 +216,8 @@ object blur(object img, int amnt)
   return img;
 }
 
-object  outline(object  on, object  with,
-		       array (int) color, int radie, int x, int y)
+object outline(object  on, object  with,
+               array (int) color, int radie, int x, int y)
 {
   int steps=10;
   for(int j=0; j<=steps; j++)
@@ -734,8 +734,6 @@ object number_lock = Threads.Mutex();
 
 mapping find_cached_args(int num);
 
-
-
 constant nbsp = iso88591["&nbsp;"];
 
 constant replace_from = indices( iso88591 )+ ({"&ss;","&lt;","&gt;","&amp",});
@@ -745,7 +743,14 @@ constant replace_to   = values( iso88591 ) + ({ nbsp, "<", ">", "&", });
 
 #define CACHE_SIZE 2048
 
-#define FNAME(a,b) (query("cache_dir")+sprintf("%x",hash(reverse(a[6..])))+sprintf("%x",hash(b))+sprintf("%x",hash(reverse(b-" ")))+sprintf("%x",hash(b[12..])))
+string FNAME(string a,string b) 
+{
+  string base=query("cache_dir");
+  base += (cvs_version/" ")[2]-".";
+  base += sprintf("-%x%x-", hash(a),hash(b));
+  base += sprintf("%x%x", hash(b+a),hash(reverse(b)+reverse(a)));
+  return base;
+}
 
 array get_cache_file(string a, string b)
 {
@@ -772,13 +777,13 @@ void store_cache_file(string a, string b, array data)
 
 array(int)|string write_text(int _args, string text, int size, object id)
 {
-  string key = base_key+_args;
+  string key = base_key+(cvs_version/" ")[2]+_args;
   array err;
   string orig_text = text;
   mixed data;
   mapping args = find_cached_args(_args) || ([]);
 
-  if(data = cache_lookup(key, text))
+  if(data=cache_lookup(key, text))
   {
     if(args->nocache) // Remove from cache. Very useful for access counters
       cache_remove(key, text);
@@ -967,7 +972,6 @@ array find_dir(string f, object rid)
   return ({"Example"});
 }
 
-  
 mapping find_file(string f, object rid)
 {
   int id;
@@ -1026,7 +1030,7 @@ string quote(string in)
   return url_cache[in]=option;
 }
 
-#define ARGHASH query("cache_dir")+"ARGS_"+hash(mc->name)
+#define ARGHASH query("cache_dir")+hash((cvs_version/" ")[2])+"ARGS_"+hash(mc->name)
 
 int last_argstat;
 
@@ -1090,8 +1094,6 @@ mapping find_cached_args(int num)
   return 0;
 }
 
-
-
 int find_or_insert(mapping find)
 {
   mapping f2 = copy_value(find);
@@ -1106,7 +1108,7 @@ int find_or_insert(mapping find)
 
   array a=indices(f2),b=values(f2);
   sort(a,b);
-  q = a*""+Array.map(b, lambda(mixed x) { return (string)x; })*"";
+  q = a*""+((array(string))b)*"";
 
   if(res = cached_args[ q ])
     return res;
@@ -1338,7 +1340,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
   string na = arg->name, al=arg->align;
   m_delete(arg, "name"); m_delete(arg, "align");
 
-  // Now the 'args' mapping is modified enough..
+  // Now the 'arg' mapping is modified enough..
   int num = find_or_insert( arg );
 
   gt=contents;
