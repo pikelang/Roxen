@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 
 
-string cvs_version = "$Id: htmlparse.pike,v 1.19 1997/01/25 20:45:13 grubba Exp $";
+string cvs_version = "$Id: htmlparse.pike,v 1.19.2.1 1997/02/19 00:23:12 grubba Exp $";
 #pragma all_inline 
 
 #include <config.h>
@@ -120,11 +120,13 @@ static mixed db_file_callout_id;
 inline void open_db_file()
 {
   if(objectp(database)) return;
-  if(!database || QUERY(close_db))
+  if(!database)
   {
     if(db_file_callout_id) remove_call_out(db_file_callout_id);
     database=open(QUERY(Accesslog)+".db", "wrc");
-    db_file_callout_id = call_out(destruct, 9, database);
+    if (QUERY(close_db)) {
+      db_file_callout_id = call_out(destruct, 9, database);
+    }
   }
 }
 
