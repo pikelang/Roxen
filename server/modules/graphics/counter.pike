@@ -1,4 +1,4 @@
-// $Id: counter.pike,v 1.20 1998/08/07 09:20:38 neotron Exp $
+// $Id: counter.pike,v 1.21 1998/10/31 08:25:39 neotron Exp $
 // 
 // Roxen Graphic Counter Module	by Jordi Murgo <jordi@lleida.net>
 // Modifications  1 OCT 1997 by Bill Welliver <hww3@riverweb.com>
@@ -23,6 +23,9 @@
 // -----------------------------------------------------------------------
 //
 // $Log: counter.pike,v $
+// Revision 1.20  1998/08/07 09:20:38  neotron
+// Added bordercolor documentation.
+//
 // Revision 1.18  1998/04/17 01:58:39  grubba
 // Now uses id->conf->X instead of roxen->X where possible.
 //
@@ -115,7 +118,7 @@
 // Initial revision
 //
 
-string cvs_version = "$Id: counter.pike,v 1.20 1998/08/07 09:20:38 neotron Exp $";
+string cvs_version = "$Id: counter.pike,v 1.21 1998/10/31 08:25:39 neotron Exp $";
 
 string copyright = ("<BR>Copyright 1997 "
 		    "<a href=http://savage.apostols.org/>Jordi Murgo</A> and "
@@ -396,8 +399,7 @@ mapping find_file_ppm( string f, object id )
 
 
   if(!arrayp(digits)) {
-    if( user != "1" && id->conf->userlist(id) &&
-	(us=id->conf->userinfo(user, id)) )
+    if( user != "1" && !catch(us = id->conf->userinfo(user, id)) && us)
       dir = us[5] + (us[5][-1]!='/'?"/":"") + query("userpath");
     else
       dir = query("ppmpath"); 
@@ -501,7 +503,7 @@ string tag_counter( string tagname, mapping args, object id )
   if( args->version )
     return cvs_version;
   if( args->revision )
-    return "$Revision: 1.20 $" - "$" - " " - "Revision:";
+    return "$Revision: 1.21 $" - "$" - " " - "Revision:";
 
   //
   // bypass compatible accessed attributes
