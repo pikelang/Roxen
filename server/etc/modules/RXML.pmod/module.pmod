@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.32 2000/01/25 14:09:32 wellhard Exp $
+//! $Id: module.pmod,v 1.33 2000/01/25 16:44:10 nilsson Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -473,9 +473,6 @@ class Context
   //! Nonzero if tag_set is a copy local to this context. A local tag
   //! set that imports the old tag set is created whenever need be.
 
-// Needed for RXML backward compatibility.
-#define DEFAULT_SCOPE "form"
-
   array parse_user_var (string var, void|string scope_name)
   //! Tries to decide what variable and scope to use. Handles
   //! cases where the variable also containes the scope,
@@ -484,11 +481,10 @@ class Context
     if(!var || !sizeof(var)) return ([])[0];
     array splitted=var/".";
     if(sizeof(splitted)>2) return ([])[0];
-    if(!scope_name)
-      if(sizeof(splitted)==2)
-	scope_name=splitted[0];
-      else
-	scope_name=DEFAULT_SCOPE;
+    if(sizeof(splitted)==2)
+      scope_name=splitted[0];
+    else
+      scope_name = scope_name || "_";
     return ({ scope_name, splitted[-1] });
   }
 
@@ -520,11 +516,10 @@ class Context
     if(!var || !sizeof(var)) return ([])[0];
     array splitted=var/".";
     if(sizeof(splitted)>2) return ([])[0];
-    if(!scope_name)
-      if(sizeof(splitted)==2)
-	scope_name=splitted[0];
-      else
-	scope_name=DEFAULT_SCOPE;
+    if(sizeof(splitted)==2)
+      scope_name=splitted[0];
+    else
+      scope_name = scope_name || "_";
     return get_var(splitted[-1], scope_name);
   }
 
@@ -548,11 +543,10 @@ class Context
     if(!var || !sizeof(var)) return ([])[0];
     array splitted=var/".";
     if(sizeof(splitted)>2) return ([])[0];
-    if(!scope_name)
-      if(sizeof(splitted)==2)
-	scope_name=splitted[0];
-      else
-	scope_name=DEFAULT_SCOPE;
+    if(sizeof(splitted)==2)
+      scope_name=splitted[0];
+    else
+      scope_name = scope_name || "_";
     return set_var(splitted[-1], val, scope_name);
   }
 
@@ -576,11 +570,10 @@ class Context
     if(!var || !sizeof(var)) return ([])[0];
     array splitted=var/".";
     if(sizeof(splitted)>2) return ([])[0];
-    if(!scope_name)
-      if(sizeof(splitted)==2)
-	scope_name=splitted[0];
-      else
-	scope_name=DEFAULT_SCOPE;
+    if(sizeof(splitted)==2)
+      scope_name=splitted[0];
+    else
+      scope_name = scope_name || "_";
     return delete_var(splitted[-1], scope_name);
   }
 
