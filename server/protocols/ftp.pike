@@ -1,19 +1,25 @@
-/* Roxen FTP protocol. Written by Pontus Hagland
-string cvs_version = "$Id: ftp.pike,v 1.24 1997/06/10 13:49:59 grubba Exp $";
-   (law@lysator.liu.se) and David Hedbor (neotron@infovav.se).
-
-   Some of the features: 
-
-      * All files are parsed the same way as if they were fetched via WWW.
-
-      * If someone login with a non anonymous name, normal
-      authentification is done. This means that you for example can
-      use .htaccess files to limit access to different directories.
-
-      * You can have 'user ftp directories'. Just add a user database
-      and a user filesystem. Notice that _normal_ non-anonymous ftp
-      should not be used, due to security reasons. */
-
+/* Roxen FTP protocol.
+ *
+ * $Id: ftp.pike,v 1.25 1997/06/10 18:17:36 grubba Exp $
+ *
+ * Written by:
+ *	Pontus Hagland <law@lysator.liu.se>,
+ *	David Hedbor <neotron@infovav.se>,
+ *	Henrik Grubbström <grubba@infovav.se> and
+ *	Marcus Comstedt <marcus@infovav.se>
+ *
+ * Some of the features: 
+ *
+ *	* All files are parsed the same way as if they were fetched via WWW.
+ *
+ *	* If someone logs in with a non-anonymous name, normal
+ *	authentification is done. This means that you for example can
+ *	use .htaccess files to limit access to different directories.
+ *
+ *	* You can have 'user ftp directories'. Just add a user database
+ *	and a user filesystem. Notice that _normal_ non-anonymous ftp
+ *	should not be used, due to security reasons.
+ */
 
 inherit "http"; /* For the variables and such.. (Per) */ 
 inherit "roxenlib";
