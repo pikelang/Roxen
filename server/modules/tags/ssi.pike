@@ -6,17 +6,12 @@ inherit "roxenlib";
 #include <module.h>
 
 constant thread_safe=1;
-constant cvs_version = "$Id: ssi.pike,v 1.18 2000/01/03 15:50:49 nilsson Exp $";
+constant cvs_version = "$Id: ssi.pike,v 1.19 2000/01/21 16:24:04 nilsson Exp $";
 
-array register_module()
-{
-  return ({
-    MODULE_PARSER | MODULE_PROVIDER,
-    "SSI support module",
-    "Adds support for SSI tags.",
-    0,1
-  });
-}
+
+constant module_type = MODULE_PARSER;
+constant module_name = "SSI support module";
+constant module_doc  = "Adds support for SSI tags.";
 
 void create() {
 
@@ -43,12 +38,27 @@ void create() {
 	 "commands with.");
 }
 
-string query_provides() {
-  return "ssi";
-}
-
 void start(int num, Configuration conf) {
   module_dependencies (conf, ({ "rxmltags" }));
+  query_tag_set()->prepare_context=set_entities;
+}
+
+class Scope_ssi {
+  inherit RXML.Scope;
+  function get_var;
+
+  void create(function _get_var) {
+    get_var=_get_var;
+  }
+
+  string|int `[] (string var, void|RXML.Context c, void|string scope) {
+    return get_var(var, c->id)||"";
+  }
+}
+
+RXML.Scope scope_ssi=Scope_ssi(get_var);
+void set_entities(RXML.Context c) {
+  c->extend_scope("ssi", scope_ssi);
 }
 
 TAGDOCUMENTATION;
