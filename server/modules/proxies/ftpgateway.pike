@@ -39,7 +39,7 @@
 // 1.12  may '97
 //       Applied some patches from  Wilhelm Koehler <wk@cs.tu-berlin.de>
 
-string cvs_version = "$Id: ftpgateway.pike,v 1.26 1998/11/18 04:54:23 per Exp $";
+string cvs_version = "$Id: ftpgateway.pike,v 1.27 1999/05/10 15:20:53 grubba Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -1376,7 +1376,8 @@ mixed|mapping find_file( string f, object id )
   int port;
   
   f=id->raw_url[strlen(QUERY(mountpoint)) .. ];
-  while(f[0]=='/') f=f[1..];
+  while(sizeof(f) && f[0]=='/')
+    f=f[1..];
 
   if(search(f, "/") == -1)
     return http_redirect(f+"/");
