@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.8 2000/12/30 10:11:30 nilsson Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.9 2001/01/29 22:39:48 per Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Roxen self test module";
@@ -190,7 +190,13 @@ void run_pike_tests(object test, string path) {
   if(!test)
     return;
   if(test->run_tests)
-    catch( test->run_tests(conf) );
+    catch
+    {
+      int tsts, fail;
+      [tsts,fail] = test->run_tests(conf);
+      tests+=tsts;
+      fails+=fail;
+    };
 }
 
 
@@ -200,16 +206,13 @@ void find_tests(string path) {
   report_debug("Looking for tests in %s\n",path);
   foreach(get_dir(path), string file)
     if(file!="CVS" && file_stat(path+file)[1]==-2)
-      find_tests(path+file+"/");
+      find_tests( path + file + "/" );
     else if(file[-1]!='~' && glob("RoxenTest_*", file)) {
       report_debug("\nFound test file %s\n",path+file);
       if(glob("*.xml",file))
 	run_xml_tests(Stdio.read_file(path+file));
-      /*
       if(glob("*.pike",file))
-	catch( run_pike_tests
-	       ( compile_string(Stdio.read_file(path+file))(), path+file ) );
-      */
+	run_pike_tests( compile_file(path+file)(), path+file );
     }
 }
 
@@ -223,7 +226,7 @@ void do_tests() {
 
   if(die) return;
   die=1;
-  find_tests("modules/");
+  find_tests("etc/roxen_test/tests/");
   report_debug("\n\nDid a grand total of %d tests, %d failed.\n", tests, fails);
 
   roxen->shutdown(1.0);
