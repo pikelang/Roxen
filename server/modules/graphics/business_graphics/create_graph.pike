@@ -321,13 +321,22 @@ mapping set_legend_size(mapping diagram_data)
 							 }), 
 							 1, 1)[0]);
 	    else
+	      {
+		write("\nboxelibox\n\n");
 	      plupps[i]->box(1,
 			     1,
 			     plupps[i]->xsize()-2,
 			     plupps[i]->ysize()-2
 			     
 			     );
-	    
+	      /* plupps[i]->setcolor(0,0,0);
+	      	      draw(plupps[i], 0.5, 
+		   ({1.01, 1 //FIXME
+		     ,plupps[i]->xsize()-2.01 , 1, //FIXME
+		     plupps[i]->xsize()-2.0, plupps[i]->ysize()-2  //FIXME
+		     ,1 , plupps[i]->ysize()-2 //FIXME
+		     }));*/ 
+	      }
 	  }
       else
 	throw( ({"\""+diagram_data["type"]+"\" is an unknown graph type!\n",
@@ -353,6 +362,23 @@ mapping set_legend_size(mapping diagram_data)
 						   diagram_data["image"]->ysize()-diagram_data["legend_size"]
 						   
 						   );
+	  diagram_data["image"]->setcolor(0,0,0);
+	  draw( diagram_data["image"], 0.5, 
+	       ({(i%columnnr)*b+0.01, (i/columnnr)*diagram_data["legendfontsize"]+
+						   diagram_data["image"]->ysize()-diagram_data["legend_size"]+1 //FIXME
+		 ,(i%columnnr)*b+plupps[i]->xsize()-0.99 ,  (i/columnnr)*diagram_data["legendfontsize"]+
+						   diagram_data["image"]->ysize()-diagram_data["legend_size"]+1, //FIXME
+		 (i%columnnr)*b+plupps[i]->xsize()-1.0,  (i/columnnr)*diagram_data["legendfontsize"]+
+						   diagram_data["image"]->ysize()-diagram_data["legend_size"]+plupps[i]->ysize()-1  //FIXME
+		 ,(i%columnnr)*b+1 ,  (i/columnnr)*diagram_data["legendfontsize"]+
+						   diagram_data["image"]->ysize()-diagram_data["legend_size"]+plupps[i]->ysize()-1 //FIXME
+
+		 ,(i%columnnr)*b+0.01, (i/columnnr)*diagram_data["legendfontsize"]+
+						   diagram_data["image"]->ysize()-diagram_data["legend_size"]+1 //FIXME
+
+	       })); 
+	
+
 	  diagram_data["image"]->paste_alpha_color(texts[i], 
 						   @(diagram_data["textcolor"]), 
 						   (i%columnnr)*b+1+diagram_data["legendfontsize"],
