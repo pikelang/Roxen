@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.327 2000/07/26 15:14:35 jhs Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.328 2000/07/26 16:31:54 jhs Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -175,12 +175,12 @@ private mapping (string:string) log_format = ([]);
 // A list of priority objects
 private array (Priority) pri = allocate_pris();
 
-// All enabled modules in this virtual server.
-// The format is "module":{ "copies":([ num:instance, ... ]) }
 public mapping modules = ([]);
+//! All enabled modules in this virtual server.
+//! The format is "module":{ "copies":([ num:instance, ... ]) }
 
-// A mapping from objects to module names
 public mapping (RoxenModule:string) otomod = ([]);
+//! A mapping from the module objects to module names
 
 
 // Caches to speed up the handling of the module search.
