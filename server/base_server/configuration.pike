@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.105 1998/02/28 14:43:25 js Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.106 1998/02/28 17:46:30 mast Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -2178,6 +2178,13 @@ object enable_module( string modname )
 	       "the module really does.");
 
     me->setvars(retrieve(modname + "#" + id, this));
+
+    if(module->copies)
+      module->copies[(int)id] = me;
+    else
+      module->enabled = me;
+
+    otomod[ me ] = modname;
       
     mixed err;
     if((me->start) && (err = catch{
@@ -2293,15 +2300,8 @@ object enable_module( string modname )
       pri[pr]->first_modules += ({ me });
     }
 
-    if(module->copies)
-      module->copies[(int)id] = me;
-    else
-      module->enabled = me;
-
     hooks_for(module->sname+"#"+id, me);
       
-
-    otomod[ me ] = modname;
     enabled_modules=retrieve("EnabledModules", this);
 
     if(!enabled_modules[modname+"#"+id])
