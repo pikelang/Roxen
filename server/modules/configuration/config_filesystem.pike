@@ -7,10 +7,10 @@ inherit "module";
 inherit "roxenlib";
 
 constant module_type = MODULE_LOCATION;
-constant module_name = "Configration Filesystem";
+constant module_name = "Configuration Filesystem";
 constant module_doc = "This filesystem serves the configuration interface";
 constant module_unique = 1;
-constant cvs_version = "$Id: config_filesystem.pike,v 1.13 1999/11/19 16:38:17 per Exp $";
+constant cvs_version = "$Id: config_filesystem.pike,v 1.14 1999/11/23 06:37:53 mast Exp $";
 
 constant path = "config_interface/";
 
