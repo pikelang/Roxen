@@ -202,13 +202,13 @@ install_only:
 	  echo "Installing supplied Roxen Platform parts..."; \
 	  (cd platform; $(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" install); \
 	else :; fi
-	@if test -d $(SRCDIR)/server/manual ; then \
-	  echo "Installing manual..."; \
-	  cd $(prefix)/roxen/server/manual; \
-          tar xf $(SRCDIR)/server/manual/parsed.tar; \
-          tar xf $(SRCDIR)/server/manual/unparsed.tar; \
-	  rm parsed.tar; \
-	  rm unparsed.tar; \
+	@if test -f $(SRCDIR)/server/manual/parsed.tar ; then \
+	  echo "Installing parsed manual..."; \
+	  (cd $(prefix)/roxen/server/manual; tar xf $(SRCDIR)/server/manual/parsed.tar; rm parsed.tar); \
+	else :; fi
+	@if test -f $(SRCDIR)/server/manual/unparsed.tar ; then \
+	  echo "Installing unparsed manual..."; \
+	  (cd $(prefix)/roxen/server/manual; tar xf $(SRCDIR)/server/manual/unparsed.tar; rm unparsed.tar); \
 	else :; fi
 	@echo "Roxen installed."
 
