@@ -1,5 +1,5 @@
 /*
- * $Id: listfonts.pike,v 1.20 2001/11/14 13:38:06 grubba Exp $
+ * $Id: listfonts.pike,v 1.21 2002/04/18 16:02:23 anders Exp $
  */
 
 #include <roxen.h>
@@ -78,7 +78,7 @@ string page_0(RequestID id)
 	  "<font size=-1><input name=text size=46 value='" +
 	  LOCALE(237,"Jackdaws love my big sphinx of quartz.") +
 	  "'></p><p><table width='70%'><tr><td align='left'>"
-          "<cf-cancel href='?class=maintenance'/></td><td align='right'>"
+          "<cf-cancel href='?class=status'/></td><td align='right'>"
 	  "<cf-next/></td></tr></table></p>");
   return res;
 }
