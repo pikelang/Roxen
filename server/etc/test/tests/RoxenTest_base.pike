@@ -110,13 +110,15 @@ array(int) run_tests( Configuration c )
 {
   // Test (some) public APIs in the 'roxen' and 'roxenloader' objects.
 
+
+
   // Should we really test this? I don't know, but for now (as long as
   // both functions exists) verify that they return the same value...
-  
-  do_test( 0, roxen.query_configuration_dir );
-  do_test( 0, roxenloader.query_configuration_dir );
-  do_test( check_is( roxen.query_configuration_dir() ),
-	   roxenloader.query_configuration_dir );
+  test( roxen.query_configuration_dir );
+  test( roxenloader.query_configuration_dir );
+  test_equal( roxen.query_configuration_dir(),
+	      roxenloader.query_configuration_dir );
+
 
 
 
@@ -127,8 +129,7 @@ array(int) run_tests( Configuration c )
   Stdio.File fd5 = Stdio.File(), fd6 = fd5->pipe();
   
   Process.Process p =
-    do_test( check_true,
-	     spawn_pike,
+    test_true(spawn_pike,
 	     ({combine_path( __FILE__,"../echo.pike" )}),
 	     getcwd(),
 	     fd, fd3, fd5 );
@@ -140,39 +141,38 @@ array(int) run_tests( Configuration c )
   fd2->write( "Testing testing\n" );
   fd2->close();fd6->close();
 
-  string data  = do_test( 0, fd4->read );
-  do_test( 0, fd4->close );
-  do_test( 0, p->wait );
-  do_test( check_is( data ), pass, "Testing testing\n" );
+  string data  = test( fd4->read );
+  test( fd4->close );
+  test( p->wait );
+  test_equal( data,  pass, "Testing testing\n" );
 
+  test_error( cd, "/tmp/" );
 
-  do_test( check_error, cd, "/tmp/" );
-
-  do_test( 0, roxenloader.dump, __FILE__, object_program( this_object() ) );
-  do_test( 0, roxen.dump, __FILE__, object_program( this_object() ) );
+  test( roxenloader.dump, __FILE__, object_program( this_object() ) );
+  test( roxen.dump, __FILE__, object_program( this_object() ) );
   
   // Test globally added functions that are added from roxen and
   // roxenloader.
 
-  do_test( check_is( roxen ), roxenp );
+  test_equal( roxen, roxenp );
   
 #ifndef __NT__
   // Note: Assumes writable /tmp, won't work on NT
-  do_test( check_true, mkdirhier, "/tmp/foo/bar/gazonk" );
-  do_test( check_false,file_stat, "/tmp/foo/bar/gazonk" );
+  test_true( mkdirhier, "/tmp/foo/bar/gazonk" );
+  test_false( file_stat, "/tmp/foo/bar/gazonk" );
 
-  do_test( check_true, mkdirhier, "/tmp/foo/bar/gazonk/" );
-  do_test( check_true, file_stat, "/tmp/foo/bar/gazonk" );
+  test_true( mkdirhier, "/tmp/foo/bar/gazonk/" );
+  test_true( file_stat, "/tmp/foo/bar/gazonk" );
   rm( "/tmp/foo/bar/gazonk" ); rm( "/tmp/foo/bar" ); rm( "/tmp/foo" );
 
   if( getuid() )
     report_notice( "   Not running as root, skipping Privs tests\n" );
   else
   {
-    object key = do_test( 0, Privs, "Testing", "nobody" );
-    do_test( check_true, getuid );
+    object key = test( Privs, "Testing", "nobody" );
+    test_true( getuid );
     key = 0;
-    do_test( check_false, getuid );
+    test_false( getuid );
   }
 #endif
 
@@ -210,7 +210,7 @@ array(int) run_tests( Configuration c )
   ]);
 
   function format1 = 
-    do_test( check_true, roxen.compile_log_format,
+    test_true( roxen.compile_log_format,
 	    ({
 	      "$ip_number",  "$bin-ip_number",  "$cern_date",  "$bin-date",
 	      "$method",     "$resource",  "$full_resource", "$protocol",
@@ -223,14 +223,15 @@ array(int) run_tests( Configuration c )
   void do_log( string what ) {  logged = what/"\23417";  };
   
   time();
-  do_test( 0, format1, do_log, http_id, fake_response );
+  test( format1, do_log, http_id, fake_response );
 
-  do_test( 0, verify_logged_data, logged, 0 );
+  test( verify_logged_data, logged, 0 );
 
 
-  do_test( 0, format1, do_log, minimum_id, fake_response );
+  test( format1, do_log, minimum_id, fake_response );
 
-  do_test( 0, verify_logged_data, logged, 1 );
+  test( verify_logged_data, logged, 1 );
+
   
   return ({ current_test, tests_failed });
 }
