@@ -1,5 +1,5 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
-// $Id: flik.pike,v 1.3.2.1 1997/02/13 23:30:17 grubba Exp $
+// $Id: flik.pike,v 1.3.2.2 1997/02/14 03:41:17 grubba Exp $
 
 // Adds the <fl>, <ft> and <fd> tags. This makes it easy to 
 // build a folder list or an outline. Example:
@@ -16,7 +16,7 @@
 
 // made by Pontus Hagland <law@infovav.se> december -96
 
-string cvs_version = "$Id: flik.pike,v 1.3.2.1 1997/02/13 23:30:17 grubba Exp $";
+string cvs_version = "$Id: flik.pike,v 1.3.2.2 1997/02/14 03:41:17 grubba Exp $";
 #include <module.h>
 
 inherit "module";
@@ -85,9 +85,6 @@ string encode_url(object id,
 string tag_fl_postparse( string tag, mapping m, string cont, object id,
 			 object file, mapping defines, object client )
 {
-   perror(id->not_query+": "+
-	  id->misc->fl+", "+
-	  id->variables->fl+" -> ");
    if (!id->variables->fl)
      id->misc->fl=id->variables->fl=id->misc->fl||(flno++);
    else if (!id->misc->fl)
@@ -102,14 +99,6 @@ string tag_fl_postparse( string tag, mapping m, string cont, object id,
    flcache[id->not_query]->gc-=({id->variables->fl});
    if (!flcache[id->not_query][id->variables->fl])
       flcache[id->not_query][id->variables->fl]=([]);
-
-   perror(id->misc->fl+", "
-	  +id->variables->fl+": "
-	  +m->id+":"+flcache[id->not_query][id->variables->fl][m->id]
-	  +" but "
-	  +((string)(id->variables["flc"+m->id]||"no"))
-	  +"\n");
-
 
    if (id->variables["flc"+m->id])
    {
