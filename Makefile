@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.36 1998/04/03 13:31:41 grubba Exp $
+# $Id: Makefile,v 1.37 1998/04/07 20:36:58 grubba Exp $
 #
 # Bootstrap Makefile
 #
@@ -160,8 +160,8 @@ keep_dbapi:
 	@echo "Keeping DBAPI..."
 	@dirs=`find pike -type d -print|egrep 'Oracle|Odbc'`; \
 	if test "x$dirs" = "x"; then \
-	  echo "DBAPI already censored.";
-	  exit 1;
+	  echo "DBAPI already censored."; \
+	  exit 1; \
 	else \
 	  tar cf dbapi.tar $dirs; \
 	fi
