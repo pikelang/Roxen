@@ -1,5 +1,5 @@
 /*
- * $Id: upgrade.pike,v 1.2 1997/08/19 05:41:03 per Exp $
+ * $Id: upgrade.pike,v 1.3 1997/08/19 05:54:42 per Exp $
  */
 
 inherit "roxenlib";
@@ -326,7 +326,7 @@ string handle_components(object id, object rpc)
     "<form>\n"
     "<input type=hidden name=how value=3>"
     "<input type=hidden name=action value="+id->variables->action+">\n"
-    "<table cellpadding=2 cellspacing=0 border=0><tr bgcolor=lightblue><td colspan=3><b>"
+    "<table cellpadding=2 cellspacing=0 border=0><tr bgcolor=lightblue><td colspan=4><b>"
     "Components that have a newer version available. <br>"
     "Select the box to add the component to the list of components to "
     "be updated</b></td></tr>\n"
@@ -343,8 +343,8 @@ string handle_components(object id, object rpc)
       num++;
       res += ("<tr bgcolor=#f0f0ff><td><b><font size=+1><input type=checkbox name=M_"+s+"> "+
 	      rm[s]->name+"</font></b></td><td><b><font size=+1>"+
-	      rm[s]->filename+"</font></b></td><td><b><font size=+1>"+
-	      rm[s]->version+"</font></b></td><td></tr><tr><td colspan=3><font size=-1>"+
+	      rm[s]->fname+"</font></b></td><td><b><font size=+1>"+
+	      rm[s]->version+"</font></b></td><td><b><font size=+1>"+
 	      (comps[s]->version||"New")+"</font></b></td><td></tr><tr><td colspan=3><font size=-1>"+
 	      rm[s]->doc+"</font><br><p><br></td></tr>\n");
       }
