@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.667 2001/05/16 13:20:19 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.668 2001/05/17 22:33:26 nilsson Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -2719,7 +2719,7 @@ class ImageCache
     meta_cache = ([]);
     db = master()->resolv( "DBManager.get" )( "local" );
     if( !db )
-      report_fatal("No 'shared' database!\n");
+      report_fatal("No 'local' database!\n");
     catch(setup_tables());
   }
 
