@@ -1,3 +1,3 @@
 Det går inte att ångra den här handlingen. Om du trycker på en av
 knapparna ovan kommer den sitens konfiguration att tas bort från
-roxen.
+Roxen.
