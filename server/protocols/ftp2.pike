@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.49 1998/05/24 00:35:58 grubba Exp $
+ * $Id: ftp2.pike,v 1.50 1998/05/25 19:21:26 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -1715,7 +1715,7 @@ class FTPSession
       break;
     }
     pipe->set_done_callback(send_done_callback, ({ fd, session }) );
-    session->file = file;
+    master_session->file = session->file = file;
     if(stringp(file->data)) {
       pipe->write(file->data);
     }
@@ -1778,6 +1778,7 @@ class FTPSession
 	session->conf->log(session->file, session);
 	return;
       }
+      master_session->file = session->file;
     } else {
       // Error message has already been sent.
       if (fd) {
@@ -2996,6 +2997,14 @@ class FTPSession
 	// Recomended by RFC 1123 4.1.3.2
 	send(421, ({ "Connection timed out." }));
 	send(0,0);
+	if (master_session->file) {
+	  if (objectp(master_session->file->file)) {
+	    destruct(master_session->file);
+	  }
+	  if (objectp(master_session->file->pipe)) {
+	    destruct(master_session->file->pipe);
+	  }
+	}
 	master_session->method = "QUIT";
 	master_session->not_query = user || "Anonymous";
 	master_session->conf->log(([ "error":408 ]), master_session);
