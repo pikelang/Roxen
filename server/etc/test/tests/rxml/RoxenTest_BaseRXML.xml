@@ -1200,13 +1200,13 @@ b</strlen></rxml>
 </test>
 
 <test>
-<rxml><emit source="TESTER" sort="c" filter="a=basun" rowinfo="var.row" do-once="1">&_.c;:</emit>&var.row;</rxml>
-<result>:0</result>
+<rxml><emit source="TESTER" sort="c" filter="a=basun" rowinfo="var.row" do-once="1">&_.counter;,&_.c;:</emit>&var.row;</rxml>
+<result>1,:0</result>
 </test>
 
 <test>
-<rxml><emit source="OTESTER" sort="c" filter="a=basun" rowinfo="var.row" do-once="1">&_.c;:</emit>&var.row;</rxml>
-<result>:0</result>
+<rxml><emit source="OTESTER" sort="c" filter="a=basun" rowinfo="var.row" do-once="1">&_.counter;,&_.c;:</emit>&var.row;</rxml>
+<result>1,:0</result>
 </test>
 
 <test>
