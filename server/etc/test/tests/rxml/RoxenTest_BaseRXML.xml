@@ -969,16 +969,6 @@ b</strlen></rxml>
 </test>
 
 <test>
-<rxml><emit source="values" values="a,b,c" split="," skiprows="-0">&_.value;</emit></rxml>
-<result></result>
-</test>
-
-<test>
-<rxml><emit source="OTESTER" skiprows="-0">&_.c;</emit></rxml>
-<result></result>
-</test>
-
-<test>
 <rxml><emit source="values" values="a,b,c" split="," skiprows="-2">&_.value;</emit></rxml>
 <result>bc</result>
 </test>
