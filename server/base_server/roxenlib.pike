@@ -1,7 +1,7 @@
 #include <roxen.h>
 inherit "http";
 
-// $Id: roxenlib.pike,v 1.108 1999/07/15 16:59:28 neotron Exp $
+// $Id: roxenlib.pike,v 1.109 1999/07/15 19:16:18 grubba Exp $
 // This code has to work both in the roxen object, and in modules.
 #if !efun(roxen)
 #define roxen roxenp()
@@ -682,7 +682,7 @@ static string simplify_path(string file)
   int t2,t1;
 
   // Faster for most cases since "./" and "../" rarely exists.
-  if(!strlen(file) || search(file, "./") == -1)
+  if(!strlen(file) || ((search(file, "./") == -1) && (file[-1] != '.')))
     return file;
 
   if(file[0] != '/')
