@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.46 1999/02/09 21:10:47 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.47 1999/02/09 21:26:36 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -784,12 +784,8 @@ class imap_mailbox
       } else if (item == "*") {
 	// Matches all UID's
 	local_set->items = values(uid_lookup);
-	sort(local_set->items);
 
-#ifdef IMAP_DEBUG
-	werror("uid_to_local() => %O\n", local_set->items);
-#endif /* IMAP_DEBUG */
-	return(local_set);
+	break;
       } else if (arrayp(item)) {
 	if (item[1] == "*") {
 	  // No upper limit.
@@ -809,6 +805,12 @@ class imap_mailbox
     }
 
     sort(local_set->items);
+
+    /* Make local id's */
+    int i;
+    for (i=0; i < sizeof(local_set->items; i++) {
+      local_set->items[i]++;
+    }
 
 #ifdef IMAP_DEBUG
     werror("uid_to_local() => %O\n", local_set->items);
