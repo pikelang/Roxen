@@ -2,6 +2,8 @@
 
 //#define DEBUG
 
+string version = "$Id: garbagecollector.pike,v 1.2 1996/11/15 04:26:43 per Exp $";
+
 #define MAX_LOG_SIZE 512
 
 string lp;
@@ -178,7 +180,7 @@ void find_all_files_and_log_it()
   perror(sprintf("Found %d files, in total %.2fMb data\n",
 		 num_files, (float)BLOCK_TO_KB(cache_size)/1024.0));
   remove_call_out(find_all_files_and_log_it);
-  call_out(find_all_files_and_log_it, cache_size/2+3000);
+  call_out(find_all_files_and_log_it, (BLOCK_TO_KB(cache_size)/5)+7200);
 }
 
 
@@ -305,13 +307,13 @@ mapping stat_cache = ([]);
 
 
 
-void cleandirs()
+void cleandirs()  // Not really needed when using the 'hash' method.
 {
-  object null = new(File);
-  null->open("/dev/null", "rw");
-  spawn("find . -type d | xargs rmdir", null, null, null);
-  remove_call_out(cleandirs);
-  call_out(cleandirs, cache_size+3600);
+//  object null = new(File);
+//  null->open("/dev/null", "rw");
+//  spawn("find . -type d | xargs rmdir", null, null, null);
+//  remove_call_out(cleandirs);
+//  call_out(cleandirs, (cache_size+3)*3600);
 }
 
 
@@ -429,10 +431,10 @@ void create(string cdir, string logfiles, int cng, int mcs)
       lf = logfiles;
       cleandirs();
       create_cache(logfiles);
-      find_all_files_and_log_it();
+//    find_all_files_and_log_it();
     }
     check(0); // Open the 'size' file and, perhaps, do a garbage collect.
-    perror("Garbage collector on-line, waiting for commands.\n");
+    perror("Garbage collector ("+version+") on-line, waiting for commands.\n");
     perror("Current cache size: "
            +((float)BLOCK_TO_KB(cache_size)/(1024.0))+" MB\n");
   }

@@ -25,3 +25,4 @@
 /extern/fast_cgi/libfcgi/fcgi_stdio.c foreign_ident
 /extern/fast_cgi/libfcgi/fcgiapp.c foreign_ident
 /extern/fast_cgi/libfcgi/strerror.c foreign_ident
+/server/bin/garbagecollector.pike foreign_ident
