@@ -15,5 +15,11 @@ String box_doc  = _(366,"Roxen welcome message and news");
 string parse( RequestID id )
 {
   // Ok. I am lazy. This could be optimized. :-)
-  return "<eval><insert file=\"welcome.txt\" /></eval>";
+  return #"
+<table><tr>
+  <td><img src='/internal-roxen-unit' width='50'/></td>
+  <td><eval><insert file=\"welcome.txt\" /></eval></td>
+  <td><img src='/internal-roxen-unit' width='50'/></td>
+</tr></table>
+";
 }
