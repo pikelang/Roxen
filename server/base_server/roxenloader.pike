@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.83 1999/03/27 19:13:31 grubba Exp $
+ * $Id: roxenloader.pike,v 1.84 1999/03/27 22:17:20 grubba Exp $
  *
  * Roxen bootstrap program.
  *
@@ -20,13 +20,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.83 1999/03/27 19:13:31 grubba Exp $";
-
-// Macro to throw errors
-#define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
-
-// The privs.pike program
-program Privs;
+constant cvs_version="$Id: roxenloader.pike,v 1.84 1999/03/27 22:17:20 grubba Exp $";
 
 #define perror roxen_perror
 private static int perror_status_reported=0;
@@ -400,25 +394,6 @@ static private void initiate_cache()
   add_constant("capitalize", lambda(string s){return upper_case(s[0..0])+s[1..];});
 }
 
-// privs.pike placeholder during bootstrap.
-class myprivs
-{
-  program privs;
-  object master;
-    
-  void create(object m)
-  {
-    master = m;
-  }
-
-  object `()(mixed ... args)
-  {
-    if(!privs) privs = master->Privs;
-    if(!privs) return 0;
-    return privs(@args);
-  }
-}
-
 // Don't allow cd() unless we are in a forked child.
 class restricted_cd
 {
@@ -486,24 +461,8 @@ void load_roxen()
   add_constant("gethostname", lambda() { return "localhost"; });
 #endif
   
-  // Attempt to resolv cross-references...
-#ifndef __NT__
-  if(!getuid())
-#endif
-    add_constant("Privs", myprivs(this_object()));
-#ifndef __NT__
-  else  // No need, we are not running as root.
-    add_constant("Privs", (Privs=empty_class));
   roxen = really_load_roxen();
-  if(!getuid())
-  {
-    add_constant("roxen_pid", getpid());
-    Privs = ((program)"privs");
-    add_constant("Privs", Privs);
-  }
-#else
-  roxen = really_load_roxen();
-#endif
+
   perror("Roxen version "+roxen->cvs_version+"\n"
 	 "Roxen release "+roxen->real_version+"\n"
 #ifdef __NT__
