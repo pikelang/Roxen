@@ -1,9 +1,8 @@
-/* This is a Roxen(r) module. Copyright (c) Idonex 1997.
- * Released under GPL
- * made by Per Hedbor
- */
+// This is a roxen module. Copyright © 1997-2000, Roxen IS.
+// Released under GPL
+// made by Per Hedbor
 
-constant cvs_version = "$Id: wizard_tag.pike,v 1.24 2000/02/14 14:22:38 wellhard Exp $";
+constant cvs_version = "$Id: wizard_tag.pike,v 1.25 2000/02/24 05:20:11 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -26,7 +25,7 @@ string internal_page(string t, mapping args, string contents, int l, int ol,
 		     mapping f, RequestID id)
 {
   mapping m = ([ "verify":({ }) ]);
-  
+
   f->pages += ({ ({
     parse_html_lines(contents, ([]), ([ "verify":internal_verify ]), l, m),
     ol + l, m->verify }) });
@@ -64,7 +63,7 @@ string tag_wizard(string t, mapping args, string contents, object id,
     pike += sprintf("# "+id->misc->line+" %O\n",
 		    id->not_query);
     pike += sprintf("  string "+replace(replace(a,"-","_"),({"(",")","+",">"}),
-					({"","","",""}))+ 
+					({"","","",""}))+
 		    " = %O;\n", args[a]);
   }
 
@@ -83,7 +82,7 @@ string tag_wizard(string t, mapping args, string contents, object id,
   parse_html_lines(contents,
 		   ([]),
 		   ([ "page":internal_page,
-		      "done":internal_done ]), 
+		      "done":internal_done ]),
 		   (int)id->misc->line, f, id);
   if (f->done && !args->ok) {
     pike += sprintf("mixed wizard_done(object id)\n"
@@ -105,18 +104,18 @@ string tag_wizard(string t, mapping args, string contents, object id,
 	      "  int c;\n"
 	      "  string s = \"\";\n"
 	      "  id->misc->__wizard_error__ = ([ ]);\n";
-      foreach(q[2], array v) 
+      foreach(q[2], array v)
 	pike += sprintf("  s = parse_rxml(%O, id);\n"
 			"  if(id->misc->defines[\" _ok\"]) {\n"
 			"    id->misc->__wizard_error__->id_%d = s;\n"
 			"    c++;\n"
 			"  }\n", v[0], v[2]);
-      
+
       pike += "  if(c)\n"
 	      "    return 1;\n"
 	      "}\n";
     }
-      
+
     p++;
   }
   //werror("Wiz: %s\n", pike);

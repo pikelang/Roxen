@@ -1,8 +1,8 @@
-// This is a roxen module. Copyright © 1996 - 2000, Idonex AB.
+// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 
-// Adds the <fl>, <ft> and <fd> tags. This makes it easy to 
+// Adds the <fl>, <ft> and <fd> tags. This makes it easy to
 // build a folder list or an outline. Example:
-// 
+//
 //               <fl>
 //                 <ft>ho
 //                  <fd>heyhepp
@@ -13,9 +13,9 @@
 // the fl-list can be nestled
 // ie <ft>...<fd>...</fd></ft> with implicit end tags
 
-// made by Pontus Hagland <law@idonex.se> december -96
+// made by Pontus Hagland december -96
 
-constant cvs_version = "$Id: flik.pike,v 1.4 2000/02/12 15:44:26 nilsson Exp $";
+constant cvs_version = "$Id: flik.pike,v 1.5 2000/02/24 05:27:10 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -23,7 +23,7 @@ constant thread_safe=1;
 inherit "module";
 inherit "roxenlib";
 
-mapping flcache=([]); 
+mapping flcache=([]);
    // not_query:(flno: 1=fodled 2=unfolded )
 int flno=1;
 
@@ -44,10 +44,10 @@ void gc()
    {
       if (equal(({"gc"}),indices(flcache[m])))
 	 m_delete(flcache,m);
-      else 
+      else
       {
 	 foreach (flcache[m]->gc,n)
-	    m_delete(flcache[m],n); 
+	    m_delete(flcache[m],n);
 	 k+=sizeof(indices(flcache[m]));
 	 flcache[m]->gc=indices(flcache[m])-({"gc"});
       }
@@ -58,7 +58,7 @@ void gc()
 constant module_type = MODULE_PARSER;
 constant module_name = "Old Folding List Tag";
 constant module_doc  = "<h2>Deprecated</h2>"
-  "This is the older version of \"Folding list tag\". " 
+  "This is the older version of \"Folding list tag\". "
   "Adds the &lt;fl&gt;, &lt;ft&gt; and &lt;fd&gt; tags."
   " This makes it easy to build a folder list or an outline. "
   "Example:<pre>"
@@ -69,7 +69,7 @@ constant module_doc  = "<h2>Deprecated</h2>"
   "   &lt;fd&gt;no more\n"
   "&lt;/fl&gt;</pre>";
 
-string encode_url(object id, 
+string encode_url(object id,
 		  int flno,
 		  int dest)
 {
@@ -106,7 +106,7 @@ string tag_fl_postparse( string tag, mapping m, string cont, object id,
    {
       if (m->unfolded)
 	 flcache[id->not_query][id->variables->fl][m->id]=2;
-      else 
+      else
 	 flcache[id->not_query][id->variables->fl][m->id]=1;
    }
 
@@ -145,7 +145,7 @@ void old_rxml_warning(RequestID id, string no, string yes) {
   rxml_warning_cache->old_rxml_warning(id, no, yes);
 }
 
-string tag_fl( string tag, mapping arg, string cont, 
+string tag_fl( string tag, mapping arg, string cont,
 	       object ma, string id, mapping defines)
 {
    mapping m=(["ld":"","t":"","cont":"","count":0]);
@@ -209,7 +209,7 @@ string recurse_parse_ftfd(string cont,mapping m,string id)
 		  },
 		  "fl":tag_fl]),m,id);
 }
-			 
+
 mapping query_container_callers()
 {
   return ([ "fl" : tag_fl,

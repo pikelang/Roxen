@@ -1,11 +1,11 @@
-// The outlined box module
+// The outlined box module, Copyright © 1996 - 2000, Roxen IS.
 //
 // Fredrik Noring et al
 //
 // Several modifications by Francesco Chemolli.
 
 
-constant cvs_version = "$Id: obox.pike,v 1.21 2000/02/10 07:13:28 nilsson Exp $";
+constant cvs_version = "$Id: obox.pike,v 1.22 2000/02/24 05:20:11 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -199,7 +199,7 @@ string container_obox(string name, mapping args,
 		      string contents, object request_id)
 {
   string s;
-  
+
   // Set the defaults...
   args->outlinecolor = args->outlinecolor || "#000000";
   args->style = args->style || "groupbox";
@@ -209,8 +209,8 @@ string container_obox(string name, mapping args,
 
   s = "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\"" +
     (args->align?" align=\""+args->align+"\"":"") +
-    (args->width ? " width=" + args->width : "") + 
-    (args->hspace ? " hspace=" + args->hspace : "") + 
+    (args->width ? " width=" + args->width : "") +
+    (args->hspace ? " hspace=" + args->hspace : "") +
     (args->vspace ? " vspace=" + args->vspace : "") +  ">\n" +
     title(args) +
     "<tr" +
@@ -228,12 +228,12 @@ string container_obox(string name, mapping args,
       s += "<font color=\""+args->textcolor+"\">" + contents + "</font>";
     else
       s += contents;
-      
+
     s += "</td></tr></table>\n"
       "</td><td bgcolor=\"" + args->outlinecolor + "\">" +
       img_placeholder(args) + "</td></tr>\n" +
       horiz_line(args) + "</table>\n";
-  
+
   return s;
 }
 
@@ -244,7 +244,7 @@ constant module_name =
       "svenska":"Ramlåda",
     ]);
 constant module_doc =
-    ([ 
+    ([
       "standard":
       "This is a container tag making outlined boxes.",
       "svenska":

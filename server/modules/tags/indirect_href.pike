@@ -1,12 +1,11 @@
-/* This is a Roxen module. Copyright © 1996-1999 Idonex AB.
- *
- * This module makes it possible to write symbolic names instead of
- * absoulte hrefs.
- *
- * made by Mattias Wingstedt <peter@idonex.se> -96
- */
+// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
+//
+// This module makes it possible to write symbolic names instead of
+// absoulte hrefs.
+//
+// made by Mattias Wingstedt
 
-constant cvs_version = "$Id: indirect_href.pike,v 1.11 2000/02/10 07:13:28 nilsson Exp $";
+constant cvs_version = "$Id: indirect_href.pike,v 1.12 2000/02/24 05:20:10 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
 
@@ -18,14 +17,13 @@ string tagname;
 
 void create()
 {
-  defvar( "hrefs", "", "Indirect hrefs", TYPE_TEXT_FIELD, 
+  defvar( "hrefs", "", "Indirect hrefs", TYPE_TEXT_FIELD,
 	  "Syntax:<br>\n"
 	  "[name] = [URL]\n" );
 
-
   //This pollutes namespace and makes the life hard on the manual writers.
   //Thus it's turned of for normal users.
-  defvar( "tagname", "ai", "Tagname", TYPE_STRING|VAR_EXPERT,  
+  defvar( "tagname", "ai", "Tagname", TYPE_STRING|VAR_EXPERT,
 	  "Name of the tag\n"
 	  "&lt;tag name=[name]&gt;foo&lt;/tag&gt; will be replaced with\n"
 	  "&lt;a href=[URL]&gt;foo&lt;/a&gt;"
@@ -44,8 +42,7 @@ constant module_doc  =
   "once. It also allows the special case 'name=random'. If this "
   "is used, a random link will be selected from the database. "
   "Example:<pre>"
-  "   roxen=http://www.roxen.com/\n"
-  "   idonex=http://www.idonex.se/</pre>";
+  "   roxen=http://www.roxen.com/</pre>";
 
 // Dynamic tagname, hence dynamic documentation.
 mapping tagdocumentation() {

@@ -1,10 +1,13 @@
+// This is a roxen module. Copyright © 2000, Roxen IS.
+//
+
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: check_spelling.pike,v 1.7 2000/02/22 16:37:04 stewa Exp $";
+constant cvs_version = "$Id: check_spelling.pike,v 1.8 2000/02/24 05:20:10 nilsson Exp $";
 
 constant module_type = MODULE_PARSER;
 constant module_name = "Spell Checker";
@@ -83,10 +86,10 @@ string do_spell(string q, mapping args, string content,RequestID id)
   if(args->report||query("report")=="popup") {
     if(!sizeof(result))
       return "<img src=\""+query_internal_location()+"green.gif\">"+content;
-    
+
     if(!id->misc->__checkspelling) {
       id->misc->__checkspelling=1;
-      
+
       ret+=#"<script language=\"javascript\">
 var spellcheckpopup='';
 var isNav4 = false;
@@ -126,7 +129,7 @@ function showPopup(popupid,e) {
     getObj(popupid).visibility=\"visible\";
     document.captureEvents(Event.MOUSEMOVE);
     document.onMouseMove = checkPopupCoord;
-  } else { 
+  } else {
     getObj(popupid).style.visibility=\"visible\";
     document.onmousemove = checkPopupCoord;
   }
@@ -156,22 +159,22 @@ function checkPopupCoord(e)
       document.releaseEvents(Event.MOUSEMOVE);
     } else {
       p.style.visibility=\"hidden\";
-      document.onMouseMove = 0; 
+      document.onMouseMove = 0;
      }
     }
  }
 </script>";
-  
+
     }
 
 
     string popupid="spellreport"+sprintf("%02x",id->misc->__checkspelling);
-    
+
     ret+="<style>#"+popupid+" {position:absolute; left:0; top:0; visibility:hidden}</style>";
     ret+="<div id=\""+popupid+"\">"+render_table(result)+"</div>";
 
     ret+= "<a href=\"\" onMouseOver='if(isNav4) showPopup(\""+popupid+"\",event);else showPopup(\""+popupid+"\");'><img border=0 src=\""+query_internal_location()+"red.gif\"></a>"+content;
-    
+
     id->misc->__checkspelling++;
     return ret;
   }
@@ -201,7 +204,7 @@ class TagSpell {
 
 array spellcheck(array(string) words,string dict) {
   array res=({ });
-  
+
   object file1=Stdio.File();
   object file2=file1->pipe();
   object file3=Stdio.File();
@@ -219,7 +222,7 @@ array spellcheck(array(string) words,string dict) {
   file3->close();
 
   array ispell_data=spell_res/"\n";
-    
+
   if(sizeof(ispell_data)>1) {
     int i,row=0,pos=0,pos2;
     string word,suggestions;

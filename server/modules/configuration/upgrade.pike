@@ -1,7 +1,8 @@
 /*
- * $Id: upgrade.pike,v 1.16 2000/02/23 16:18:50 js Exp $
+ * $Id: upgrade.pike,v 1.17 2000/02/24 05:34:17 nilsson Exp $
  *
  * The Roxen Upgrade Client
+ * Copyright © 2000, Roxen IS.
  *
  * Johan Schön, Peter Bortas
  * January-February 2000
@@ -107,7 +108,7 @@ string tag_upgrade_sidemenu(string t, mapping m, RequestID id)
 {
   string ret =
     "<gbutton width=150 bgcolor=&usr.fade1;>Update List</gbutton><br><br>";
-  
+
   foreach(menu, array entry)
   {
     ret += "<gbutton width=150 ";
@@ -121,7 +122,7 @@ string tag_upgrade_sidemenu(string t, mapping m, RequestID id)
     ret += "icon_align=left preparse href=\"upgrade.html?category="+
       entry[1]+"\">"+entry[0]+"</gbutton><br>";
   }
- 
+
   return ret;
 }
 
@@ -136,7 +137,7 @@ string container_upgrade_package_output(string t, mapping m, string c, RequestID
     packages=sort(packages);
     if(m->reverse)
       packages=reverse(packages);
-    
+
     foreach(packages, string pkg)
     {
       mapping p=pkginfo[pkg];
@@ -176,7 +177,7 @@ string tag_upgrade_package_is_downloaded(string t, mapping m, RequestID id)
 
   if(completely_downloaded(((int)m->package)))
     id->variables[m->variable]="1";
-  return "";  
+  return "";
 }
 
 string container_upgrade_download_progress_output(string t, mapping m,
@@ -184,7 +185,7 @@ string container_upgrade_download_progress_output(string t, mapping m,
 {
   array(int) packages=sort(indices(package_downloads));
   array res=({ });
-  
+
   foreach(packages, int package)
   {
     mapping pkg=pkginfo[(string)package];
@@ -232,13 +233,13 @@ string|void unpack_file(Stdio.File from, string to)
 
   string block;
   Stdio.File f;
-  
+
   mixed err=catch
   {
     if(catch(f=Stdio.File(prefix+to,"wc")))
       throw(sprintf("Could not open %s for writing.",
 		    prefix+to));
-    
+
     do {
       block = from->read(8192);
       if (!block)
@@ -259,7 +260,7 @@ string|void unpack_file(Stdio.File from, string to)
   rm(prefix+to+"~");
   return "Wrote "+prefix+to+".";
 }
-  
+
 array(string) low_unpack_tarfile(Filesystem.Tar fs, string dir, mapping errors)
 {
   array(string) res=({ });
@@ -357,7 +358,7 @@ string encode_ranges(array(int) a)
       last=a[i];
       continue;
     }
-    
+
     if(a[i]==last+1)
     {
       last=a[i];
@@ -365,7 +366,7 @@ string encode_ranges(array(int) a)
 	s+="-";
       continue;
     }
-    
+
     if(s[-1]=='-')
       s+=(string)last;
 
@@ -424,7 +425,7 @@ void start_package_download(int num)
 class GetPackage
 {
   int num;
-  
+
   inherit Protocols.HTTP.Query;
 
   float percent_done()
@@ -434,7 +435,7 @@ class GetPackage
       return 0.0;
     return (float)downloaded_bytes() / (float)b;
   }
-  
+
   void request_ok(object httpquery, int _num)
   {
     // FIXME: rewrite this to use a file object and stream to disk?
@@ -459,7 +460,7 @@ class GetPackage
     f->close();
     catch(m_delete(package_downloads, num));
   }
-  
+
   void request_fail(object httpquery, int num)
   {
     report_error("Upgrade: Failed to connect to upgrade server to fetch "
@@ -486,12 +487,12 @@ class GetInfoFile
     if(sizeof(t) && t[0]!='/')
       res[t]=c;
   }
-  
+
   void request_ok(object httpquery, int num)
   {
     spider;
     mapping res=([]);
-    
+
     if(httpquery->status!=200)
     {
       report_error("Upgrade: Wrong answer from server for package %d.\n",num);
@@ -500,18 +501,18 @@ class GetInfoFile
 
     parse_html_lines(httpquery->data(),
 		     ([]),
-		     (["id" : get_containers, 
-		       "title": get_containers, 
-		       "description": get_containers, 
-		       "organization": get_containers, 
-		       "license": get_containers, 
-		       "author-email": get_containers, 
-		       "author-name": get_containers, 
-		       "package-type": get_containers, 
-		       "issued-date": get_containers, 
-		       "roxen-low": get_containers, 
-		       "roxen-high": get_containers, 
-		       "crypto": get_containers ]),		     
+		     (["id" : get_containers,
+		       "title": get_containers,
+		       "description": get_containers,
+		       "organization": get_containers,
+		       "license": get_containers,
+		       "author-email": get_containers,
+		       "author-name": get_containers,
+		       "package-type": get_containers,
+		       "issued-date": get_containers,
+		       "roxen-low": get_containers,
+		       "roxen-high": get_containers,
+		       "crypto": get_containers ]),		
 		     res);
     res->size=(int)httpquery->headers->pkgsize;
     werror("%O\n",res);
@@ -544,7 +545,7 @@ class UpdateInfoFiles
   void request_ok(object httpquery)
   {
     string s=httpquery->data();
-    
+
     array lines=s/"\n";
     if(httpquery->status!=200 || lines[0]!="upgrade" || sizeof(lines)<3)
     {
@@ -600,7 +601,7 @@ class UpdateInfoFiles
   {
     remove_call_out(do_request);
   }
-  
+
   void create()
   {
     set_callbacks(request_ok, request_fail);

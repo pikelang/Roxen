@@ -1,6 +1,9 @@
+// This is a roxen module. Copyright © 1998 - 2000, Roxen IS.
+//
+
 #if constant(Languages)
 #define error(X) throw( ({ (X), backtrace() }) )
-constant cvs_version = "$Id: lisp.pike,v 1.15 2000/02/10 07:13:28 nilsson Exp $";
+constant cvs_version = "$Id: lisp.pike,v 1.16 2000/02/24 05:20:11 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -15,8 +18,8 @@ constant module_doc  = "This module defines a new tag, "
 void create()
 {
   defvar("max-eval-time", 10000, "Max eval time", TYPE_INT);
-  
-  defvar("bootcode", "(begin)", 
+
+  defvar("bootcode", "(begin)",
 	 "Lisp code executed to initialize the top-level environments.",
 	 TYPE_TEXT);
 
@@ -42,11 +45,11 @@ class RoxenId
 
   object lisp_env;
   int limit;
-  
+
   object roxen_id;
   mapping defines;
   string lisp_result;
-    
+
   int limit_apply()
     {
       if (!limit)
@@ -56,9 +59,9 @@ class RoxenId
     }
 
   object query_binding(object symbol) { return lisp_env->query_binding(symbol); }
-  
+
   object copy() { return lisp_env->copy(); }
-  
+
   object extend(object symbol, object value)
     {
       return lisp_env->extend(symbol, value);
@@ -80,19 +83,19 @@ class RoxenId
 class API_Function
 {
   import Languages.PLIS;
-  
+
   inherit LObject;
   function fun;
   array types;
-  
+
   string print(int display) { return sprintf("API_Function %O", fun); }
 
   object to_lisp(mixed o)
     {
-      if(stringp(o)) 
+      if(stringp(o))
 	return String( o );
 
-      if(intp(o) && !zero_type(o)) 
+      if(intp(o) && !zero_type(o))
 	return Number(o);
 
       if(arrayp(o) || multisetp(o))
@@ -117,14 +120,14 @@ class API_Function
   object apply(object arglist, object env, object globals)
     {
       object id;
-      
+
       if (!globals->roxen_id)
 	return 0;
 
       array args = ({ });
       int i = 0;
       int opt;
-      
+
       while(arglist != Lempty)
       {
 	if (i == sizeof(types))
@@ -161,7 +164,7 @@ class API_Function
 
       return to_lisp(fun(globals->roxen_id, @args));
     }
-  
+
   void create(array a)
     {
       [ fun, types ] = a;
@@ -186,7 +189,7 @@ void init_environment(object e, object conf)
 {
   init_specials(e);
   init_functions(e);
-  
+
   init_roxen_functions(e, conf);
   default_boot_code->eval(e, e);
   boot_code->eval(e,e);
@@ -194,7 +197,7 @@ void init_environment(object e, object conf)
 
 object find_environment(string f, object conf)
 {
-  if(environments[f]) 
+  if(environments[f])
   {
     return environments[f];
   }
@@ -214,11 +217,11 @@ object lisp_compile(string s)
   return o;
 }
 
-string tag_lisp(string t, mapping m, string c, 
+string tag_lisp(string t, mapping m, string c,
 		object id, object f, mapping defines)
 {
 //   NOCACHE();
-  
+
   string context = (query("enable_context") && m->context)
     || id->not_query;
   object e = find_environment(context, id->conf);
@@ -228,7 +231,7 @@ string tag_lisp(string t, mapping m, string c,
   object lisp = lisp_compile(c);
   if (!lisp)
     return "<!-- syntax error in lisp code -->\n";
-  
+
   object globals = RoxenId(e, id, defines);
 
   globals->limit = query("max-eval-time");
@@ -348,7 +351,7 @@ object f_write(object arglist, object env, object globals)
 {
   if (!globals->lisp_result)
     return 0;
-  
+
   int len = 0;
 
   while(arglist != Lempty)
@@ -366,7 +369,7 @@ object f_format(object arglist, object env, object globals)
 {
   string f = arglist->car->value;
   array args=({});
-  while( !(arglist = arglist->cdr)->is_nil)  
+  while( !(arglist = arglist->cdr)->is_nil)
   {
     if(objectp(arglist->car->value))
       args+=({(int)arglist->car->value});
@@ -402,7 +405,7 @@ void init_roxen_functions(object environment, object conf)
   environment->extend(make_symbol("r-get-int"), Builtin(f_getint));
   environment->extend(make_symbol("write"), Builtin(f_write));
   environment->extend(make_symbol("display"), Builtin(f_display));
-  
+
   // environment->extend(make_symbol("line-break"), Builtin(f_line_break));
   // environment->extend(make_symbol("read"), Builtin(f_read));
   // environment->extend(make_symbol("print"), Builtin(f_print));
@@ -416,7 +419,7 @@ void init_roxen_functions(object environment, object conf)
   // environment->extend(make_symbol("setcdr!"), Builtin(f_setcdr));
   // environment->extend(make_symbol("cons"), Builtin(f_cons));
   // environment->extend(make_symbol("list"), Builtin(f_list));
-  
+
   mapping m = conf->api_functions();
   foreach(indices(m), string f)
     environment->extend(make_symbol("r-" + replace(f, "_", "-")),

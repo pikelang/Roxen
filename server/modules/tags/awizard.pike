@@ -1,9 +1,12 @@
+// This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
+//
+
 inherit "module";
 #include <request_trace.h>
 #include <module.h>
 #include <config.h>
 
-constant cvs_version = "$Id: awizard.pike,v 1.16 2000/02/20 05:34:18 mast Exp $";
+constant cvs_version = "$Id: awizard.pike,v 1.17 2000/02/24 05:20:10 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_PARSER;
 constant module_name = "Advanced wizards";
@@ -97,7 +100,7 @@ class Page
       if(!id->misc->prev_possible)
         return "";
       args->name  = "goto_prev_page/"+m->id;
-    } else 
+    } else
       args->name = "goto_current_page/"+m->id;
     if(m->image || m->gbutton_title || m["gbutton_title"] )
     {
@@ -143,9 +146,9 @@ class Page
       if(!id->misc->prev_possible)
         return "";
       args->name  = "goto_prev_page/"+m->id;
-    } else 
+    } else
       args->name = "goto_current_page/"+m->id;
-    if(m->image || m->gbutton_title || m["gbutton-title"]) 
+    if(m->image || m->gbutton_title || m["gbutton-title"])
     {
       if(!m->gbutton_title)
       {
@@ -178,7 +181,7 @@ class Page
     return html_notice( c, id );
   }
 
-  string container_error(string t, mapping m, string c, RequestID id) 
+  string container_error(string t, mapping m, string c, RequestID id)
   {
     id->variables->error_message = c;
     return c;
@@ -255,8 +258,8 @@ class Page
   string generate( RequestID id, string header, string footer )
   {
     string contents = eval((come_from[id->last_page]||"")
-			   + header 
-                           + page 
+			   + header
+                           + page
                            + footer, id);
     id->variables->error_message=0;
     return contents;
@@ -288,14 +291,14 @@ class AWizard
 
   string internal_tag_include(string t, mapping args, int l, RequestID id)
   {
-    if(args->define) 
+    if(args->define)
       return id->misc->defines[args->define]||"";
     string q = id->conf->try_get_file(fix_relative(args->file, id), id);
     return q;
   }
 
   mapping button_code;
-  string internal_tag_page(string t, mapping args, string c, int l, 
+  string internal_tag_page(string t, mapping args, string c, int l,
                            RequestID id)
   {
     args->num = last_page;
@@ -320,7 +323,7 @@ class AWizard
       pages_by_name = ([]);
       footer=header="";
 
-      parse_html_lines(parse_html_lines(contents, 
+      parse_html_lines(parse_html_lines(contents,
                                         ([
                                           "include":internal_tag_include,
                                         ]),
@@ -328,13 +331,13 @@ class AWizard
                                           "comment":lambda(){ return ""; },
                                         ]),id),
                        ([]),
-                       ([ 
+                       ([
                          "page":internal_tag_page,
                          "header":internal_tag_header,
-                         "footer":internal_tag_footer, 
+                         "footer":internal_tag_footer,
                        ]),id );
       int off = sizeof(header/"\n")-1;
-      foreach(pages, object p) 
+      foreach(pages, object p)
 	p->line_offset -= off;
     }
   }
@@ -369,12 +372,12 @@ class AWizard
     id->misc->next_possible = ((int)v->_page_num) < (sizeof(pages)-1);
     id->misc->prev_possible = ((int)v->_page_num) > 0;
     id->misc->_awizard_object = this_object();
-    foreach(glob("goto_*", indices(v)), string q)  
+    foreach(glob("goto_*", indices(v)), string q)
     {
       goto = q;
       m_delete(v, q);
     }
-    
+
     if(goto)
     {
       mapping er;
@@ -392,7 +395,7 @@ class AWizard
       if(mappingp(er) && !er->page)
 	error = er;
       else if(mappingp(er) && er->page)
-	new_page = (pages_by_name[ error->page ] && 
+	new_page = (pages_by_name[ error->page ] &&
 		    pages_by_name[ error->page ]->num)+1;
       else if(sscanf(goto, "goto_next_page/%d",id->misc->button_id))
 	new_page = ((int)v->_page_num)+2;
@@ -423,8 +426,8 @@ class AWizard
        (int)v->_page_num < 0)
       return "No such page";
     page = pages[ (int)v->_page_num ];
-    
-    if(!error) 
+
+    if(!error)
     {
       contents = page->generate( id, header, footer );
       error = id->misc->return_me;
@@ -504,7 +507,7 @@ array|string container_cvar(string tag, mapping args, string c, RequestID id)
     return ({1});
 }
 
-mixed container_awizard(string tagname, mapping arguments, 
+mixed container_awizard(string tagname, mapping arguments,
                         string contents, RequestID id)
 {
   mixed res;
@@ -516,7 +519,7 @@ mixed container_awizard(string tagname, mapping arguments,
 
   res = wizards[ id->not_query ]->handle( id );
 
-  if(mappingp(res)) 
+  if(mappingp(res))
   {
     string v = "";
     foreach(indices(res->extra_heads), string i)

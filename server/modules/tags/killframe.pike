@@ -1,18 +1,18 @@
-/* This is a roxen module. Copyright © 1997-1999, Idonex AB.
+/* This is a roxen module. Copyright © 1997-1999, Roxen IS.
  *
  * Adds some java script that will prevent others from putting
  * your page in a frame.
  *
  * Will also remove occuranses of "indexfiles" from the end of the URL.
  *
- * made by Peter Bortas <peter@idonex.se> Januari -97
+ * made by Peter Bortas <peter@roxen.com> Januari -97
  *
  * Thanks for suggestions and bugreports:
  * Barry Treahy <treahy@allianceelec.com>
  * Chris Burgess <chris@ibex.co.nz>
  */
 
-constant cvs_version = "$Id: killframe.pike,v 1.26 2000/02/10 07:13:28 nilsson Exp $";
+constant cvs_version = "$Id: killframe.pike,v 1.27 2000/02/24 05:20:10 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>

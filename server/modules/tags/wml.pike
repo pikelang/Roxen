@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1999-2000, Idonex AB.
+// This is a roxen module. Copyright © 1999-2000, Roxen IS.
 //
 
 //---------------- Module registration ----------------------
@@ -9,7 +9,7 @@ inherit "module";
 inherit "roxenlib";
 
 constant thread_safe = 1;
-constant cvs_version = "$Id: wml.pike,v 1.5 2000/02/19 02:18:53 nilsson Exp $";
+constant cvs_version = "$Id: wml.pike,v 1.6 2000/02/24 05:20:11 nilsson Exp $";
 
 constant module_type = MODULE_PARSER;
 constant module_name = "WAP WML module.";
@@ -199,7 +199,7 @@ class wap_1_0 {
       if(t=="table") return "";
       if(t=="p") return make_tag("BR",m+(["/":"/"]));
       if(t=="postfield") return "";
-      if(t=="setvar") t=="VAR";      
+      if(t=="setvar") t=="VAR";
       return make_tag(upper_case(t),m);
     case "":
       if(c!="") return c;

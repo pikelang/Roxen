@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1996 - 2000, Idonex AB.
+// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
 #define _stat id->misc->defines[" _stat"]
@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.79 2000/02/24 04:41:27 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.80 2000/02/24 05:20:11 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -1366,7 +1366,7 @@ array(string)|string container_recursive_output (string tagname, mapping args,
 
 //I'll donate a Star Wars insiders guide to the
 //first one to figure out what this number means,
-//and how it was calculated. nilsson@idonex.se
+//and how it was calculated. nilsson@roxen.com
 #define MAGIC_EXIT 4921325
 
 string tag_leave(string tag, mapping m, RequestID id)

@@ -1,9 +1,9 @@
-// This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
-// by Mirar <mirar@idonex.se>
+// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
+// by Mirar <mirar@roxen.com>
 
 // Adds the <sed> tag, to emulate a subset of sed operations in rxml
-// 
-// <sed [suppress] [lines] [chars] [split=<linesplit>] 
+//
+// <sed [suppress] [lines] [chars] [split=<linesplit>]
 //      [append] [prepend]>
 // <e [rxml]>edit command</e>
 // <raw>raw, unparsed data</raw>
@@ -23,20 +23,20 @@
 // G                  - insert hold space
 // H                  - append current space to hold space
 // P                  - print current data
-// a<string>          - insert 
+// a<string>          - insert
 // c<string>          - change current space
 // d                  - delete current space
-// h                  - copy current space to hold space 
+// h                  - copy current space to hold space
 // i<string>          - print string
 // l                  - print current space
 // p                  - print first line in data
 // q                  - quit evaluating
 // s/regexp/with/x    - replace
 // y/chars/chars/     - replace chars
-// 
+//
 // where line is numeral, first line==1
 
-constant cvs_version = "$Id: sed.pike,v 1.5 2000/02/10 07:13:28 nilsson Exp $";
+constant cvs_version = "$Id: sed.pike,v 1.6 2000/02/24 05:20:11 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -44,7 +44,7 @@ constant thread_safe=1;
 inherit "module";
 inherit "roxenlib";
 
-mapping flcache=([]); 
+mapping flcache=([]);
    // not_query:(flno: 1=fodled 2=unfolded )
 int flno=1;
 
@@ -76,7 +76,7 @@ array sedreplace(string s,object re,string with,
       else
 	 w=a[0];
    }
-   
+
    string t=
       replace(with,whatin[..sizeof(a)-first+lastmod-1],
 	      a[first..sizeof(a)+lastmod-1]);
@@ -86,11 +86,11 @@ array sedreplace(string s,object re,string with,
    s=(w||"")+t;
    if (flags["g"])
    {
-      if (lastmod) 
+      if (lastmod)
       {
 	 array wa;
 	 wa=sedreplace(a[-1],re,with,whatin,first,lastmod,flags);
-	 if (wa) 
+	 if (wa)
 	 {
 	    pr+=wa[0];
 	    s+=wa[1];
@@ -113,7 +113,7 @@ array scan_for_linenumber(string cmd,
    string what;
    object re;
 
-   while (cmd!="" && (cmd[0]>='0' && cmd[0]<='9') 
+   while (cmd!="" && (cmd[0]>='0' && cmd[0]<='9')
 	  || cmd[0]=='/' || cmd[0]=='+' || cmd[0]=='-')
    {
       if (cmd[0]>='0' && cmd[0]<='9')
@@ -124,12 +124,12 @@ array scan_for_linenumber(string cmd,
       else if (cmd[0]=='+')
       {
 	 sscanf(cmd,"+%d%s",x,cmd);
-	 n+=x; 
+	 n+=x;
       }
       else if (cmd[0]=='-')
       {
 	 sscanf(cmd,"-%d%s",x,cmd);
-	 n-=x; 
+	 n-=x;
       }
       else if (sscanf(cmd,"/%s/%s",what,cmd)==2)
       {
@@ -157,37 +157,37 @@ array execute_sed(array(string) e,array(string) in,int suppress)
    object re;
    array a1,a2;
 
-   start=0; 
+   start=0;
    stop=sizeof(in)-1;
 
    foreach (e, string cmd)
    {
       a1=scan_for_linenumber(cmd,in,start);
-      start=a1[0]; 
+      start=a1[0];
       cmd=a1[1];
 
       if (cmd[0..1]==",$") { cmd=cmd[2..]; stop=sizeof(in)-1; }
       else if (sscanf(cmd,",%s",cmd))
       {
 	 a1=scan_for_linenumber(cmd,in,start);
-	 stop=a1[0]; 
+	 stop=a1[0];
 	 cmd=a1[1];
       }
 
       if (stop>sizeof(in)-1) stop=sizeof(in)-1;
       if (start<0) start=0;
-      
+
       if (cmd=="") continue;
       switch (cmd[0])
       {
 	 case 's':
-	    div=cmd[1..1]; 
+	    div=cmd[1..1];
 	    if (div=="%") div="%%";
 	    inflags="";
 	    if (sscanf(cmd,"%*c"+div+"%s"+div+"%s"+div+"%s",
 		       what,with,inflags)<3) continue;
 	    flags=aggregate_multiset(@(inflags/""));
-	    
+	
 	    int first=0,lastmod=0;
 	    if (what!="") // fix the regexp for working split
 	    {
@@ -209,11 +209,11 @@ array execute_sed(array(string) e,array(string) in,int suppress)
 	       }
 	       start++;
 	    }
-	    
+	
 	    break;
 
 	 case 'y':
-	    div=cmd[1..1]; 
+	    div=cmd[1..1];
 	    if (div=="%") div="%%";
 	    inflags="";
 	    if (sscanf(cmd,"%*c"+div+"%s"+div+"%s"+div+"%s",
@@ -223,7 +223,7 @@ array execute_sed(array(string) e,array(string) in,int suppress)
 	       what=what[0..strlen(with)-1];
 	       with=with[0..strlen(what)-1];
 	    }
-	    
+	
 	    a1=what/"",a2=with/"";
 
 	    while (start<=stop)
@@ -243,12 +243,12 @@ array execute_sed(array(string) e,array(string) in,int suppress)
 	    if (stop>=start) stop++;
 	    break;
 
-	 case 'c': // change 
+	 case 'c': // change
 	    in=in[..start-1]+({cmd[1..]})+in[stop+1..];
 	    stop=start;
 	    break;
 
-	 case 'd': // delete 
+	 case 'd': // delete
 	    in=in[..start-1]+in[stop+1..];
 	    stop=start;
 	    break;
@@ -265,7 +265,7 @@ array execute_sed(array(string) e,array(string) in,int suppress)
 	 case 'H': // appending copy
 	    hold+=in[start..stop];
 	    break;
-	    
+	
 	 case 'i': // print text
 	    print+=({cmd[1..]});
 	    break;
@@ -285,7 +285,7 @@ array execute_sed(array(string) e,array(string) in,int suppress)
 	 case 'q': // quit
 	    if (!suppress) return print+in;
 	    return print;
-   
+
 	 default:
 	    // error? just ignore for now
       }
@@ -298,10 +298,10 @@ string container_sed(string tag,mapping m,string cont,object id)
 {
    mapping c=(["e":({})]);
    string|array d;
-   
+
    parse_html(cont,
 	      (["source":lambda(string tag,mapping m,mapping c,object id)
-			 { 
+			 {
 			    if (m->variable)
 			       c->data=id->variables[m->variable]||"";
 			    else if (m->cookie)
@@ -311,7 +311,7 @@ string container_sed(string tag,mapping m,string cont,object id)
 			    if (m->rxml) c->data=parse_rxml(c->data,id);
 			 },
 		"destination":lambda(string tag,mapping m,mapping c,object id)
-			 { 
+			 {
 			    if (m->variable) c->destvar=m->variable;
 			    else if (m->cookie) c->destcookie=m->cookie;
 			    else c->nodest=1;
@@ -329,19 +329,19 @@ string container_sed(string tag,mapping m,string cont,object id)
 	      ]),c,id);
 
    if (!c->data) return "<!-- sed command missing data -->";
-   
+
    d=c->data;
 
    if (m->split) d/=m->split;
-   else if (m->lines) d/="\n"; 
-   else if (m->chars) d/=""; 
+   else if (m->lines) d/="\n";
+   else if (m->chars) d/="";
    else d=({c->data});
 
    d=execute_sed(c->e,d,!!(m->suppress||m["-n"]));
 
    if (m->split) d*=m->split;
-   else if (m->lines) d*="\n"; 
-   else if (m->chars) d*=""; 
+   else if (m->lines) d*="\n";
+   else if (m->chars) d*="";
    else d=d*"";
 
    if (c->destvar)
@@ -358,6 +358,6 @@ string container_sed(string tag,mapping m,string cont,object id)
    }
    else if (!c->nodest)
       return d;
-   
+
    return "";
 }

@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 2000, Idonex AB.
+// This is a roxen module. Copyright © 2000, Roxen IS.
 //
 
 inherit "module";
@@ -6,7 +6,7 @@ inherit "roxenlib";
 #include <module.h>
 
 constant thread_safe=1;
-constant cvs_version = "$Id: ssi.pike,v 1.21 2000/02/06 20:01:41 nilsson Exp $";
+constant cvs_version = "$Id: ssi.pike,v 1.22 2000/02/24 05:20:11 nilsson Exp $";
 
 
 constant module_type = MODULE_PARSER;
@@ -98,7 +98,7 @@ constant tagdoc=([
 
 "!--#echo":#"
 <desc tag>
- Prints a variable from the server or request. 
+ Prints a variable from the server or request.
 
  <p>Some of the most useful ones are \"http referrer\" (the page
  which contained the link to the current page), \"last modified\"
