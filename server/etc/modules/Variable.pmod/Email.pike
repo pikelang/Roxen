@@ -36,7 +36,7 @@ array(string) verify_set( string new_value ) {
     return ({ LOCALE(314,"The email address domain contains forbidden characters."), new_value });
 
   sscanf(lower_case(user),
-	 "%*[-abcdefghijklmnopqrstuvwxyz0123456789._]%s", tmp); // More characters?
+	 "%*[-abcdefghijklmnopqrstuvwxyz0123456789._+]%s", tmp); // More characters?
   if(sizeof(tmp))
     return ({ LOCALE(315,"The email address user contains forbidden characters."), new_value });
 
