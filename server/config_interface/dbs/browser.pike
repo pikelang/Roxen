@@ -9,11 +9,11 @@ int image_id = time() ^ gethrtime();
 
 string is_image( string x )
 {
-  if( !search( x, "GIF" ) )
+  if( has_prefix( x, "GIF" ) )
     return "gif";
   if( has_value( x, "JFIF" ) )
     return "jpeg";
-  if( !search( x, "\x89PNG" ) )
+  if( has_prefix( x, "\x89PNG" ) )
     return "png";
 }
 
@@ -278,23 +278,25 @@ mapping|string parse( RequestID id )
 	    column++;
 	  }
 	  res += "</tr>";
-      
+
 	  while( array q = big_q->fetch_row() )
 	  {
 	    res += "<tr>";
 	    for( int i = 0; i<sizeof(q); i++ )
-	      if( /* image_columns[i] ||*/ is_image( q[i] ) )
+	      if( !q[i] )
+		res += "<td><i>NULL</i></td>";
+	      else if( is_image( q[i] ) )
 		res +=
 		  "<td><img src='browser.pike?image="+store_image( q[i] )+
 		  "' /></td>";
 	      else if( is_encode_value( q[i] ) )
-		res +=
-		  "<td>"+format_decode_value(q[i]) +"</td>";
+		res += "<td>"+ format_decode_value(q[i]) +"</td>";
 	      else if( right_columns[i] )
 		res += "<td align=right>"+ Roxen.html_encode_string(q[i]) +
 		  "</td>";
 	      else
 		res += "<td>"+ Roxen.html_encode_string(q[i]) +"</td>";
+	    res += "</tr>\n";
 	  }
 	}
       };
