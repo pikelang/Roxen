@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.62 1998/01/21 00:44:51 peter Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.63 1998/01/21 14:04:36 grubba Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -1162,10 +1162,14 @@ string tag_version() { return roxen->version(); }
 
 string tag_clientname(string tag, mapping m, object got)
 {
-  if(m->full) 
-    return got->client * " ";
-  else 
-    return got->client[0];
+  if (sizeof(got->client)) {
+    if(m->full) 
+      return got->client * " ";
+    else 
+      return got->client[0];
+  } else {
+    return "";
+  } 
 }
 
 string tag_signature(string tag, mapping m, object got, object file,
