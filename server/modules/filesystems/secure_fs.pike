@@ -5,18 +5,18 @@
 
 // Mk II changes by Henrik P Johnson <hpj@globecom.net>.
 
-constant cvs_version = "$Id: secure_fs.pike,v 1.26 2001/01/29 05:54:42 per Exp $";
+constant cvs_version = "$Id: secure_fs.pike,v 1.27 2001/05/16 07:31:57 per Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
-inherit "filesystem";
+inherit "modules/filesystems/filesystem";
 
 //<locale-token project="mod_secure_fs">_</locale-token>
 #define _(X,Y)	_DEF_LOCALE("mod_secure_fs",X,Y)
 // end of the locale related stuff
 
 constant module_type = MODULE_LOCATION;
-LocaleString module_name = _(1,"Secure file system");
+LocaleString module_name = _(1,"File systems: Secure file system");
 LocaleString module_doc  = 
 _(2,
  "This is a file system module that allows for more fine-grained control\n"
