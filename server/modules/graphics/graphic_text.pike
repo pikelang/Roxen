@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.72 1997/09/12 21:17:50 js Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.73 1997/09/17 00:44:09 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -11,6 +11,10 @@ import Image;
 # define Image image
 # define Font  font
 #endif
+
+#if !efun(Privs)
+constant Privs=((program)"privs");
+#endif /* !efun(Privs) */
 
 array register_module()
 {

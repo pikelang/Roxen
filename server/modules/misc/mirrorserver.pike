@@ -3,6 +3,10 @@ import RoxenRPC;
 inherit "module";
 object rpc;
 
+#if !constant(Privs)
+constant Privs=((program)"privs");
+#endif /* !constant(Privs) */
+
 class MirrorServer {
   import Stdio;
   string base;

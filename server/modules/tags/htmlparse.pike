@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.45 1997/09/16 01:35:10 per Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.46 1997/09/17 00:44:14 grubba Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -26,6 +26,10 @@ inherit "roxenlib";
 import String;
 import Array;
 import Stdio;
+
+#if !constant(Privs)
+constant Privs=((program)"privs");
+#endif /* !constant(Privs) */
 
 constant language = roxen->language;
 

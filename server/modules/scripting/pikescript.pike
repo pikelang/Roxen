@@ -8,7 +8,7 @@
 
 // This is an extension module.
 
-constant cvs_version = "$Id: pikescript.pike,v 1.16 1997/09/16 22:58:19 grubba Exp $";
+constant cvs_version = "$Id: pikescript.pike,v 1.17 1997/09/17 00:44:13 grubba Exp $";
 constant thread_safe=1;
 
 mapping scripts=([]);
@@ -20,6 +20,10 @@ inherit "roxenlib";
 #if constant(_static_modules) && efun(thread_create)
 constant Mutex=__builtin.mutex;
 #endif /* _static_modules */
+
+#if !constant(Privs)
+constant Privs=((program)"privs");
+#endif /* !constant(Privs) */
 
 mixed *register_module()
 {

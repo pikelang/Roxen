@@ -4,7 +4,7 @@
 // It will be located somewhere in the name-space of the server.
 // Also inherited by some of the other filesystems.
 
-string cvs_version= "$Id: filesystem.pike,v 1.22 1997/09/12 06:14:31 per Exp $";
+string cvs_version= "$Id: filesystem.pike,v 1.23 1997/09/17 00:44:08 grubba Exp $";
 int thread_safe=1;
 
 
@@ -17,6 +17,10 @@ int thread_safe=1;
 #  define FILESYSTEM_DEBUG
 # endif
 #endif
+
+#if !constant(Privs)
+constant Privs=((program)"privs");
+#endif /* !constant(Privs) */
 
 inherit "module";
 inherit "roxenlib";

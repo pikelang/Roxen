@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.39 1997/09/15 04:50:11 neotron Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.40 1997/09/17 00:44:12 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -21,6 +21,10 @@ static array runuser;
 
 import String;
 import Stdio;
+
+#if !constant(Privs)
+constant Privs=((program)"privs");
+#endif /* !constant(Privs) */
 
 mapping my_build_env_vars(string f, object id, string|void path_info)
 {
