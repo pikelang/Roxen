@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.92 1998/04/03 19:14:16 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.93 1998/04/13 04:36:17 neotron Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -419,13 +419,12 @@ private int parse_got(string s)
 	    break;
 
 	    /* Some of M$'s non-standard user-agent info */
-	  case "ua-pixels":	/* Screen resolution */
-	  case "ua-color":	/* Color scheme */
-	  case "ua-os":		/* OS-name */
-	  case "ua-cpu":	/* CPU-type */
-	    /* None of the above are interresting or useful for us */
-	    /* IGNORED */
-	    break;
+	   case "ua-pixels":	/* Screen resolution */
+	   case "ua-color":	/* Color scheme */
+	   case "ua-os":	/* OS-name */
+	   case "ua-cpu":	/* CPU-type */
+	    misc[linename - "ua-"] = contents ;
+	   break;
 
 	  case "referer":
 	    referer = contents/" ";
