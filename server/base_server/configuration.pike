@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.325 2000/07/21 04:55:01 lange Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.326 2000/07/23 15:16:28 nilsson Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -513,7 +513,7 @@ class LogFile
       return;
     }
     string ff = fname;
-    mapping m = localtime(time());
+    mapping m = localtime(time(1));
     m->year += 1900;	/* Adjust for years being counted since 1900 */
     m->mon++;		/* Adjust for months being counted 0-11 */
     if(m->mon < 10) m->mon = "0"+m->mon;
