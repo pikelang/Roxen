@@ -8,7 +8,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.42 1998/06/04 21:09:45 neotron Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.43 1998/06/05 00:56:42 neotron Exp $";
 constant thread_safe=1;
 
 
@@ -483,7 +483,7 @@ mixed find_file( string f, object id )
       cache_set("stat_cache", f, 0);
     }
 
-    object to = open(f, "wc");
+    object to = open(f, "wct");
     
     privs = 0;
 
