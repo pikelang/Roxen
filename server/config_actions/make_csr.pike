@@ -1,5 +1,5 @@
 /*
- * $Id: make_csr.pike,v 1.2 1997/12/16 18:37:06 grubba Exp $
+ * $Id: make_csr.pike,v 1.3 1997/12/17 01:00:25 grubba Exp $
  */
 
 inherit "wizard";
@@ -19,6 +19,12 @@ constant doc = ("To use an RSA key with your server, you must have a certificate
 		"for it. You request a certificate by sending a Certificate "
 		"Signing Request to a Certificate Authority, for example Thawte "
 		"or VeriSign.");
+
+#if !constant(Crypto.rsa)
+
+constant action_disabled = 1;
+
+#else /* constant(Crypto.rsa) */
 
 mixed page_0(object id, object mc)
 {
@@ -233,3 +239,5 @@ mixed wizard_done(object id, object mc)
 }
 
 mixed handle(object id) { return wizard_for(id,0); }
+
+#endif /* constant(Crypto.rsa) */
