@@ -18,7 +18,7 @@ PIKEVERSION=@PIKEVERSION@
 # Used to avoid make compatibility problems.
 BIN_TRUE=":"
 
-all:	strip_manual @MAKE_GMP@ @MAKE_GDBM@ @MAKE_ZLIB@ @MAKE_PLATFORM@ pike extern
+all:	@MAKE_GMP@ @MAKE_GDBM@ @MAKE_ZLIB@ @MAKE_PLATFORM@ pike extern
 	-@$(BIN_TRUE)
 
 strip_manual: force
@@ -210,9 +210,17 @@ install_only:
 	  sed <$(SRCDIR)/pike-roxen.in -e 's!#prefix#!$(prefix)!' >$(prefix)/bin/pike-roxen || exit 1; \
 	  chmod a+rx $(prefix)/bin/pike-roxen; \
 	fi
+#FIXME: Isn't this nessisary? This dir is moved, so does it still work?
 	@if test -f platform/Makefile ; then \
 	  echo "Installing supplied Roxen Platform parts..."; \
 	  (cd platform; $(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" install); \
+	else :; fi
+	@if test -d $(SRCDIR)/server/manual ; then \
+	  echo "Installing manual..."; \
+	  mkdir $(prefix)/server/manual; \
+	  cd $(prefix)/server/manual; \
+          tar xf $(SRCDIR)/server/manual/parsed.tar; \
+          tar xf $(SRCDIR)/server/manual/unparsed.tar; \
 	else :; fi
 	@echo "Roxen installed."
 
