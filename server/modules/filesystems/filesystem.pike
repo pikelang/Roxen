@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.130 2004/05/09 17:59:37 grubba Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.131 2004/05/10 08:22:19 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -1430,7 +1430,7 @@ mixed find_file( string f, RequestID id )
 
   default:
     id->misc->error_code = 501;
-    TRACE_LEAVE("Not supported");
+    SIMPLE_TRACE_LEAVE("%s: Not supported", id->method);
     return 0;
   }
   TRACE_LEAVE("Not reached");
