@@ -5,7 +5,7 @@ inherit "module";
 #include <module.h>
 
 constant thread_safe=1;
-constant cvs_version = "$Id: ssi.pike,v 1.30 2000/06/23 16:58:40 mast Exp $";
+constant cvs_version = "$Id: ssi.pike,v 1.31 2000/07/02 16:59:40 nilsson Exp $";
 
 
 constant module_type = MODULE_PARSER;
@@ -59,8 +59,8 @@ class ScopeSSI {
     array ind=({ "sizefmt", "errmsg", "timefmt", "date_local", "date_gmt",
 		 "document_name", "document_uri", "query_string_unescaped",
 		 "last_modified", "server_software", "server_name",
-		 "gateway_interface", "server_protocol", "request_method",
-		 "auth_type", "http_cookie", "cookie" });
+		 "gateway_interface", "server_protocol", "auth_type",
+		 "http_cookie", "cookie" });
     if(c->id) {
       ind += indices(Roxen.build_env_vars(0, c->id, 0));
       if(c->id->misc->ssi_variables) ind += indices(c->id->misc->ssi_variables);
@@ -115,41 +115,43 @@ constant tagdoc=([
 </attr>
 
 <attr name=var value='document name'>
- Name of the current document (= page)
+ Name of the current document (= page). RXML counterpart: &amp;page.self;
  <ex type=vert><!--#echo var=\"document name\" --></ex>
 </attr>
 
 <attr name=var value='document uri'>
- URI (URL) to the current page.
+ URI (URL) to the current page. RXML counterpart: &amp;page.url;
  <ex type=vert><!--#echo var=\"document uri\" --></ex>
 </attr>
 
 <attr name=var value='date local'>
  Time and date, in current time zone.
+ RXML counterpart: &lt;date strftime=\"%c\"/&gt;
 </attr>
 
 <attr name=var value='date gmt'>
  Time and date, GMT time zone.
+ RXML counterpart: &lt;date timezone=\"GMT\" strftime=\"%c\"/&gt;
 </attr>
 
 <attr name=var value='last modified'>
- Last time this document was modified.
+ Last time this document was modified. RXML counterpart: &lt;modified/&gt;
 </attr>
 
 <attr name=var value='server software'>
- The web server software
+ The web server software. RXML counterpart: &amp;roxen.version;
 </attr>
 
 <attr name=var value='server name'>
- The web server name
+ The web server name. RXML counterpart: &amp;roxen.domain;
 </attr>
 
 <attr name=var value='remote host'>
- Name of client machine
+ Name of client machine. RXML counterpart: &amp;client.host;
 </attr>
 
 <attr name=var value='remote addr'>
- Numeric IP address of client machine
+ Numeric IP address of client machine. RXML counterpart: &amp;client.ip;
 </attr>
 
 <attr name=var value='auth type'>
@@ -161,7 +163,7 @@ constant tagdoc=([
 </attr>
 
 <attr name=var value='http referrer'>
- URL of the referring page
+ URL of the referring page. RXML counterpart: &amp;client.referrer;
 </attr>
 
 <attr name=var value='gateway interface'>
@@ -183,7 +185,7 @@ constant tagdoc=([
 </attr>
 
 <attr name=var value='http user agent'>
- The user agent string.
+ The user agent string. RXML counterpart: &amp;client.Fullname;
 </attr>
 
 <attr name=var value='path translated'>
@@ -359,8 +361,7 @@ string get_var(string var, RequestID id)
     return roxen->version();
 
    case "server_name":
-    string tmp;
-    tmp=id->conf->query("MyWorldLocation");
+    string tmp=id->conf->query("MyWorldLocation");
     sscanf(tmp, "%*s//%s", tmp);
     sscanf(tmp, "%s:", tmp);
     sscanf(tmp, "%s/", tmp);
@@ -371,9 +372,6 @@ string get_var(string var, RequestID id)
 
    case "server_protocol":
     return "HTTP/1.0";
-
-   case "request_method":
-    return Roxen.html_encode_string(id->method);
 
    case "auth_type":
     return "Basic";
