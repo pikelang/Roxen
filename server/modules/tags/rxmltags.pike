@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.432 2004/06/09 00:17:41 _cvs_stephen Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.433 2004/07/11 16:35:53 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -342,6 +342,9 @@ class TagHeader {
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
   mapping(string:RXML.Type) req_arg_types = ([ "name": RXML.t_text(RXML.PEnt),
 					       "value": RXML.t_text(RXML.PEnt) ]);
+  mapping(string:RXML.Type) opt_arg_types = ([
+    "override": RXML.t_text(RXML.PEnt),
+  ]);
 
   class Frame {
     inherit RXML.Frame;
@@ -358,7 +361,7 @@ class TagHeader {
       } else if(args->name=="URI")
 	args->value = "<" + args->value + ">";
 
-      if(args->name == "Content-Type")
+      if(args->override)
         id->set_response_header(args->name, args->value);
       else
         id->add_response_header(args->name, args->value);
@@ -3382,6 +3385,10 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
 
 <attr name='value' value='string'>
  <p>The value of the header.</p>
+</attr>
+
+<attr name='override'>
+ <p>Delete all other instances of this field before adding it.</p>
 </attr>",
 
 //----------------------------------------------------------------------
