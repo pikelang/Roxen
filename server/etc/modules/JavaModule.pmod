@@ -95,6 +95,7 @@ static object dv_type = defvar_class->get_field("type", "I");
 static object _errno = response_class->get_field("errno", "I");
 static object _len = response_class->get_field("len", "J");
 static object _type = response_class->get_field("type", "Ljava/lang/String;");
+static object _extra_heads = response_class->get_field("extraHeads", "Ljava/util/Map;");
 static object _data = response2_class->get_field("data", "Ljava/lang/String;");
 static object _file = response3_class->get_field("file", "Ljava/io/Reader;");
 
@@ -313,6 +314,9 @@ class ModuleWrapper
     check_exception();
     if((n = _len->get(r)))
       rr->len = n;
+    check_exception();
+    if((s = _extra_heads->get(r)))
+      rr->extra_heads = valify(s);
     check_exception();
     if(r->is_instance_of(response2_class) &&
        (s = _data->get(r))) {
