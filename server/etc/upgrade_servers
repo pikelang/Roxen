@@ -1,5 +1,8 @@
 #
-# $Id: upgrade_servers,v 1.2 1997/09/17 01:58:24 grubba Exp $
+# $Id: upgrade_servers,v 1.3 1997/09/17 02:17:02 grubba Exp $
+#
+# name = "Upgrade Servers";
+# doc = "File containing known upgrade servers.";
 #
 
 # Main Infovav server
