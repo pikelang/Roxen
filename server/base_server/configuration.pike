@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.359 2000/09/01 14:10:45 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.360 2000/09/04 08:34:05 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -2771,12 +2771,13 @@ class DataCache
   static void clear_some_cache()
   {
     array q = indices( cache );
-    for( int i = 0; i<sizeof( cache)/10; i++ )
+    if(!sizeof(q))
     {
-      string ent = q[random(sizeof(q))];
-      current_size -= strlen( cache[ent][0] );
-      m_delete( cache, q[random(sizeof(q))] );
+      current_size=0;
+      return;
     }
+    for( int i = 0; i<sizeof( q )/10; i++ )
+      expire_entry( q[random(sizeof(q))] );
   }
 
   void expire_entry( string url )
@@ -2790,13 +2791,13 @@ class DataCache
 
   void set( string url, string data, mapping meta, int expire )
   {
-//     if( strlen( data ) > max_file_size ) // checked in conf
-//       return 0;
+    if( strlen( data ) > max_size ) return;
     call_out( expire_entry, expire, url );
-    while( (strlen( data ) + current_size) > max_size )
-      clear_some_cache();
     current_size += strlen( data );
     cache[url] = ({ data, meta });
+    int n;
+    while( (current_size > max_size) && (n++<10))
+      clear_some_cache();
   }
   
   array(string|mapping(string:mixed)) get( string url )
@@ -2813,7 +2814,10 @@ class DataCache
   {
     max_size = query( "data_cache_size" ) * 1024;
     max_file_size = query( "data_cache_file_max_size" ) * 1024;
-    while( current_size > max_size )
+    if( max_size < max_file_size )
+      max_size += max_file_size;
+    int n;
+    while( (current_size > max_size) && (n++<10))
       clear_some_cache();
   }
 
