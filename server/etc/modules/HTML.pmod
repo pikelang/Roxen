@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 2001, Roxen IS.
 //
-// $Id: HTML.pmod,v 1.4 2001/09/25 15:26:01 nilsson Exp $
+// $Id: HTML.pmod,v 1.5 2001/11/16 16:07:21 nilsson Exp $
 
 //! Functions that helps generating HTML. All functions generates
 //! HTML that is XHTML compliant as well as backwards compatible
@@ -170,10 +170,11 @@ class OBox {
 
   //! @decl void set_extra_args( mapping(string:string) extra_args )
   //! The argument in the mapping will be added to all created table cells.
-  //!
+
   //! @decl void set_extra_args( array(mapping(string:string)) extra_args )
   //! The argument in the mappings will be added to the cell in the
   //! cooresponding column of the table.
+
   void set_extra_args( mapping(string:string)|array(mapping(string:string)) _args) {
     if(mappingp(_args)) {
       if(!_args->bgcolor) _args->bgcolor = cell_color;
