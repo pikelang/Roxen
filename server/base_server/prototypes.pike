@@ -4,7 +4,7 @@
 #include <stat.h>
 #include <config.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.33 2001/08/23 18:40:14 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.34 2001/08/23 18:54:53 mast Exp $";
 
 class Variable
 {
@@ -218,7 +218,6 @@ class Configuration
   RoxenModule get_provider(string provides);
   array(mixed) map_providers(string provides, string fun, mixed ... args);
   mixed call_provider(string provides, string fun, mixed ... args);
-  RoxenModule get_module (string modname);
   array(function) file_extension_modules(string ext);
   array(function) url_modules();
   mapping api_functions(void|RequestID id);

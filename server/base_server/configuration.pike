@@ -3,7 +3,7 @@
 //
 // A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.469 2001/08/23 18:40:14 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.470 2001/08/23 18:54:53 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -520,18 +520,6 @@ mixed call_provider(string provides, string fun, mixed ... args)
       }
     }
   }
-}
-
-RoxenModule get_module (string modname)
-//! Resolves a string as returned by @[RoxenModule.module_local_id] to
-//! a module object in this configuration, if one exists.
-{
-  string mname;
-  int mid = 0;
-  sscanf (modname, "%s#%d", mname, mid);
-  if (mapping moddata = modules[mname])
-    return moddata->copies[mid];
-  return 0;
 }
 
 array (function) file_extension_modules(string ext)
@@ -3037,7 +3025,8 @@ int disable_module( string modname, int|void nodest )
 RoxenModule find_module(string name)
 //! Return the module corresponding to the name (eg "rxmlparse",
 //! "rxmlparse#0" or "filesystem#1") or zero, if there was no such
-//! module.
+//! module. The string is on the same format as the one returned by
+//! @[RoxenModule.module_local_id].
 {
   int id;
   sscanf(name, "%s#%d", name, id);
