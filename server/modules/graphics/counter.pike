@@ -1,8 +1,8 @@
-// $Id: counter.pike,v 1.26 1999/02/27 00:13:21 marcus Exp $
-// 
+//
 // Roxen Graphic Counter Module	by Jordi Murgo <jordi@lleida.net>
 // Modifications  1 OCT 1997 by Bill Welliver <hww3@riverweb.com>
 // Optimizations 22 FEB 1998 by David Hedbor <david@hedbor.org>
+// Optimizations 11 DEC 1999 by Martin Nilsson <nilsson@idonex.se>
 //
 // -----------------------------------------------------------------------
 //
@@ -22,142 +22,39 @@
 //
 // -----------------------------------------------------------------------
 //
-// $Log: counter.pike,v $
-// Revision 1.25  1999/01/15 12:35:01  neotron
-// Changed (int)"0x..." to sscanf(..., "%x", ...) since the first
-// construction doesn't work in Pike 0.7. Might have missed some
-// places. Also fixed the "width=1" default on oboxes.
-//
-// Revision 1.24  1999/01/07 08:09:20  neotron
-// Removed duplicate return.
-//
-// Revision 1.23  1998/12/17 22:59:46  neotron
-// Applied patch by Jan Legenhausen.
-//
-// Revision 1.22  1998/11/18 04:54:14  per
-// Better locale support, moved parse_rxml to the configuration object, started workd on the new configuration interface
-//
-// Revision 1.21  1998/10/31 08:23:26  neotron
-// Fixed a bug which appears when the userlist is missing.
-//
-// Revision 1.20  1998/08/07 09:20:38  neotron
-// Added bordercolor documentation.
-//
-// Revision 1.18  1998/04/17 01:58:39  grubba
-// Now uses id->conf->X instead of roxen->X where possible.
-//
-// Revision 1.17  1998/03/23 08:20:57  neotron
-// o Added new module type, MODULE_PROVIDER. This is a module type which
-//   enables other modules, scripts or protocols to call it very
-//   simply. Function needed in the module:
-//   "string|array|multiset query_provides()" - Return the name of the
-//   data this module provides. One existing example is "counter"
-//   (which is the graphical counter module).
-//
-//   Functions available to other modules:
-//    object conf->get_provider(string for);
-//      Get the first (highest priority) provider for "for".
-//    array (object) conf->get_providers(string for);
-//      Dito, but return all matching modules.
-//    void map_providers(string for, string fun, mixed ... args);
-//      Run the function "fun" in all modules providing "for", with the
-//      optional arguments "args".
-//    mixed call_provider(string for, string fun, mixed ... args);
-//      Run the function "fun" in all modules providing "for", with the
-//      optional arguments "args" until a positive response
-//      (!zero). Return the result. This is the main way of calling
-//      functions in provider modules from other places.
-//
-// o Added new tag - echo. It's usable with one of the following syntaxes:
-//   <echo var='Remote Host'> <echo remote_host>  <insert remote_host>
-//   Case doesn't matter and in the first syntax, ' ' and '_' are
-//   interchangable. The available variables are identical to the SSI
-//   <!--#echo var="..." -->
-//
-// Revision 1.16  1998/03/18 19:51:20  neotron
-// Added Jordi's nicer ppm-fontlist.
-//
-// Revision 1.15  1998/03/18 19:30:31  neotron
-// - Now handles counter numbers larger than MAXINT.
-// - Adds ".gif" to the URL, being nice to browsers. :-)
-// - Fixes incorrect lengths.
-//
-// Revision 1.14  1998/03/18 18:50:44  neotron
-// Fixed a bunch of bugs. Before, the first time a font was used, it turned out
-// as 012345, due to an error in the colormap making...
-//
-// Revision 1.13  1998/03/17 23:35:55  neotron
-// Changed counter default dir, and added default ppm fonts (a).
-//
-// Revision 1.12  1998/03/17 23:11:33  neotron
-// Added thread safe constant.
-//
-// Revision 1.11  1998/02/23 01:00:33  neotron
-// Some minor fixes, which makes it possible to compile the module...
-//
-// Revision  1.10 1998/02/22 02:38:01 neotron
-// Optimized using new Image.GIF / Image.colortable code. Also did
-// other optimizations, resulting int a very slight speed
-// increase. The Image.GIF optimization results in 2.5 (normal fonts)
-// to 7.5 times faster image generation.
-//
-// Revision  1.9 1997/10/01 14:24:56 hww3
-// Added support for Roxen 1.2
-// Support for nfont fonts.
-//
-// Revision 1.8  1997/01/13 18:19:12  jordi
-// Added gif support for digits, but it is not usable because internal
-// problems in Image()->from_gif() library.
-// Fixed some bugs in rotate.
-// Now paints correctly backgroud and foreground in standard fonts.
-// Addeded support for users own digits.
-//
-// Revision 1.7  1997/01/11 21:43:28  jordi
-// <counter revision> now returns "x.x" correctly
-//
-// Revision 1.6  1997/01/11 21:36:11  jordi
-// Bypass compatible attributes to <accessed tag>
-// GNU disclamer.
-//
-// Revision 1.5  1997/01/10 19:33:36  jordi
-// Bugfix in Cool Font List
-//
-// Revision 1.4  1997/01/10 18:16:18  jordi
-// Size in standard an cool fonts are equivalents.
-//
-// Revision 1.3  1997/01/10 16:01:50  jordi
-// size=x align=x rotate=x border=x implemented.
-//
-// Revision 1.2  1997/01/09 19:36:59  jordi
-// Implemented PPM support.
-//
-// Revision 1.1  1997/01/07 16:30:21  jordi
-// Initial revision
-//
 
-string cvs_version = "$Id: counter.pike,v 1.26 1999/02/27 00:13:21 marcus Exp $";
+constant cvs_version = "$Id: counter.pike,v 1.27 1999/12/11 20:37:31 nilsson Exp $";
 
-string copyright = ("<BR>Copyright 1997 "
-		    "<a href=http://savage.apostols.org/>Jordi Murgo</A> and "
+constant copyright = ("<br>Copyright 1997-1999 "
+		    "<a href=http://savage.apostols.org/>Jordi Murgo</a> and "
 		    "<a href=http://www.lleida.net/>"
-		    "Lleida Networks Serveis Telematics, S.L.</A> Roxen 1.2 "
+		    "Lleida Networks Serveis Telematics, S.L.</a> Roxen 1.2 "
 		    "support by <a href=http://www.riverweb.com/~hww3>"
 		    "Bill Welliver</a>. Heavily optimized by <a href="
 		    "http://david.hedbor.org/>David Hedbor</a>.");
 
 #include <module.h>
-#include <array.h>
 inherit "module";
 inherit "roxenlib";
 
-import Image;
 constant thread_safe = 1;
 
 #define MAX( a, b )	( (a>b)?a:b )
 
-//
-// ROXEN Config-Interface
-//
+
+// --------------------- Module Definition ----------------------
+
+void start( int num, Configuration conf )
+{
+  module_dependencies (conf, ({ "accessed" }));
+}
+
+array register_module()
+{
+  return ({ MODULE_PARSER | MODULE_PROVIDER, "Graphical Counter",
+    "Generates graphical counters.", 0, 1 });
+}
+
 void create()
 {
   defvar("ppmpath", "etc/digits/", "PPM GIF Digits Path", TYPE_DIR,
@@ -167,30 +64,22 @@ void create()
 	 "Where are users PPM/GIF files (Ex: 'html/digits/')<BR>Note: Relative to users $HOME" );
 
   defvar("ppm", "a", "Default PPM GIF-Digit style", TYPE_STRING,
-	 "Default PPM/GIF-Digits style for counters (Ex: 'a')"); 
+	 "Default PPM/GIF-Digits style for counters (Ex: 'a')");
 }
 
-//
-// Module Definition
-//
-array register_module()
-{
-  return ({ 
-    MODULE_PARSER | MODULE_PROVIDER,
-    "Graphical Counter", 
-    "This is the Graphic &lt;Counter&gt; Module.<br><p>"
-	"\n<p><pre>"
-	"&lt;counter\n"
-    "         border=...                 | like &lt;IMG BORDER=...\n"  
+TAGDOCUMENTATION;
+#ifdef manual
+constant tagdoc=(["counter":"","counter_url":""]);
+/*
+    "         border=...                 | like &lt;IMG BORDER=...\n"
     "         bordercolor=...            | Changes the color of the border, if\n"
-    "                                    | the border is enabled.\n"  
+    "                                    | the border is enabled.\n"
     "         align=[left|center|right]  | like &lt;IMG ALIGN=...\n"
     "         width=...                  | like &lt;IMG WIDTH=...\n"
     "         height=...                 | like &lt;IMG HEIGHT=...\n"
-    "\n" 
     "         cheat=xxx                  | Add xxx to the actual number of accesses.\n"
     "         factor=...                 | Modify the number of accesses by factor/100, \n"
-    "                                    | that is, factor=200 means 5 accesses will\n" 
+    "                                    | that is, factor=200 means 5 accesses will\n"
     "                                    | be seen as 10.\n"
     "         file=xx                    | Show the number of times the file xxx has \n"
     "                                    | been accessed instead of current page.\n"
@@ -201,61 +90,55 @@ array register_module()
     "                                    | in the case of no file, the current\n"
     "                                    | document. \n"
     "         reset                      | Reset the counter.\n"
-    "         per=[second|minute|        | Access average per unit of time.\n" 
+    "         per=[second|minute|        | Access average per unit of time.\n"
     "         hour|day|week|month]       | \n"
     "         size=[1..10]               | 2.5=half, 5=normal, 10=double\n"
-    "         len=[1..10]                | Number of Digits (1=no leading zeroes)\n" 
+    "         len=[1..10]                | Number of Digits (1=no leading zeroes)\n"
     "         rotate=[-360..360]         | Rotation Angle \n"
-    "         fg=#rrggbb                 | Foreground Filter\n" 
+    "         fg=#rrggbb                 | Foreground Filter\n"
     "         bg=#rrggbb                 | Bakground Color\n"
     "         trans                      | make Background transparent\n"
     "         user=\"user\"                | Search 'stylename' in user directory\n"
-    "\n"
     "         style=\"stylename\"          | Cool PPM font name (default style=a)\n"
     "         nfont=\"fontname\" &gt;          | Standard NFONT name\n</pre>",
-    0,
-    1,	// Allow only a copy per server.
-    });
-}
+*/
+#endif
 
 //
 // This module provides "counter", and can easily be found with the
 // provider functions in configuration.pike.
 //
-string query_provides() { return "counter"; } 
+string query_provides() { return "counter"; }
 
 //
 //  Show a selectable Font list
 //
 mapping fontlist(string bg, string fg, int scale)
 {
-  string out;
   array  fnts;
-  int    i;
-  scale=scale/5;	
-  out =
-    "<HTML><HEAD><TITLE>Available Counter Fonts</TITLE></HEAD>"
-    "<BODY BGCOLOR=#ffffff TEXT=#000000>\n"
-    "<H2>Available Graphic Counter Fonts</H2><HR>"+
-    cvs_version + "<BR>" + copyright + "<HR>";
-		 
+  scale=scale/5;
+  string out =
+    "<html><head><title>Available Counter Fonts</title></head>"
+    "<body bgcolor=\"#ffffff\" text=\"#000000\">\n"
+    "<h2>Available Graphic Counter Fonts</h2><hr>"+
+    cvs_version + "<br>" + copyright + "<hr>";
+
   catch( fnts=sort(roxen->available_fonts(1)) );
   if( fnts ) {
-    out += "<B>Available Fonts:</B><MENU>";
-    for( i=0; i<sizeof(fnts); i++ ) {
-      out += "<A HREF='" + query_internal_location();
-      out += "0/" + bg + "/" ;
-      out += fg +"/0/1/" + (string)scale + "/0/";
-      out += http_encode_string(fnts[i]) + "/1234567890.gif'>";
-      out += fnts[i] + "</A><BR>\n";
+    out += "<b>Available Fonts:</b><menu>";
+    for(int i=0; i<sizeof(fnts); i++ ) {
+      out += "<a href='" + query_internal_location()+
+             "0/" + bg + "/" + fg +"/0/1/" + (string)scale +
+             "/0/" + http_encode_string(fnts[i]) +
+             "/1234567890.gif'>" + fnts[i] + "</a><br>\n";
     }
-    out += "</DL>";
+    out += "</dl>";
   } else {
     out += "Sorry, No Available Fonts";
   }
-  
-  out += "<HR>" + copyright + "</BODY></HTML>";
-  
+
+  out += "<hr>" + copyright + "</body></html>";
+
   return http_string_answer( out );
 }
 
@@ -264,70 +147,69 @@ mapping fontlist(string bg, string fg, int scale)
 //
 mapping ppmlist(string font, string user, string dir)
 {
-  string out;
   array  fnts;
-  int    i;
-  out =
-    "<HTML><HEAD><TITLE>Cool PPM/GIF Font not Found</TITLE></HEAD>"
-    "<BODY BGCOLOR=#ffffff TEXT=#000000>\n"
-    "<H2>Cool PPM Font '"+font+"' not found!!</H2><HR>"+
-    cvs_version + "<BR>" + copyright + "<HR>";
+  string out =
+    "<html><head><title>Cool PPM/GIF Font not Found</title></head>"
+    "<body bgcolor=\"#ffffff\" text=\"#000000\">\n"
+    "<h2>Cool PPM Font '"+font+"' not found!!</h2><hr>"+
+    cvs_version + "<br>" + copyright + "<hr>";
 
-  catch( fnts=sort_array(get_dir( dir ) - ({".",".."})) );
+  catch( fnts=sort(get_dir( dir ) - ({".",".."})) );
   if( fnts ) {
-    out += "<B>Available Digits:</B><DL>";
+    out += "<b>Available Digits:</b><dl>";
     string initial="";
     int totfonts=0;
-    for( i=0; i<sizeof(fnts); i++ ) {
+    for(int i=0; i<sizeof(fnts); i++ ) {
       if( initial != fnts[i][0..0] ) {
 	initial = fnts[i][0..0];
-	out += "<DT><FONT SIZE=+1><B> ["+ initial +"]</B></FONT>\n<DD>";
+	out += "<dt><font size=+1><b> ["+ initial +"]</b></font>\n<dd>";
       }
       out +=
-	"<A HREF='" +query_internal_location()+ user + "/n/n/0/0/5/0/"+ http_encode_string(fnts[i]) +
-	"/1234567890.gif'>" + fnts[i] + "</A> \n";
+	"<a href='" +query_internal_location()+ user + "/n/n/0/0/5/0/"+ http_encode_string(fnts[i]) +
+	"/1234567890.gif'>" + fnts[i] + "</a> \n";
       totfonts++;
     }
-    out += "</DL>Total Digit Styles : " + totfonts;
+    out += "</dl>Total Digit Styles : " + totfonts;
   } else {
     out += "Sorry, No Available Digits";
   }
 
-  out+= "<HR>" + copyright + "</BODY></HTML>";
-	
+  out+= "<hr>" + copyright + "</body></html>";
+
   return http_string_answer( out );
 }
+
 //
 // Generation of Standard Font Counters
 //
-mapping find_file_font( string f, object id )
+mapping find_file_font( string f, RequestID id )
 {
   string fontname, fg, bg, counter;
   int len, trans, type, rot;
   float scale;
 
-  if(sscanf(f, "%d/%s/%s/%d/%d/%f/%d/%s/%s.%*s", 
-	    type, bg, fg, trans, len, scale, rot,  
+  if(sscanf(f, "%d/%s/%s/%d/%d/%f/%d/%s/%s.%*s",
+	    type, bg, fg, trans, len, scale, rot,
 	    fontname, counter) != 10 )
     return 0;
 
   if(fontname=="ListAllFonts")
     return fontlist(bg,fg,(int)(scale*5.0));
-  
+
   scale /= 5;
   if( scale > 2.0 )
     scale = 2.0;
-  
-  object fnt;
+
+  Image.Font fnt;
   fnt=get_font(fontname, 32 ,0, 0, "left", 0, 0);
 
   if(!fnt)
     return fontlist(bg,fg,(int)(scale*5.0));
   while(strlen(counter) < len)
     counter = "0" + counter;
-  
-  object txt  = fnt->write(counter);
-  object img  = image(txt->xsize(), txt->ysize(), @parse_color(bg));
+
+  Image.Image txt  = fnt->write(counter);
+  Image.Image img  = Image.image(txt->xsize(), txt->ysize(), @parse_color(bg));
 
   if(scale != 1)
     if(rot)
@@ -340,88 +222,78 @@ mapping find_file_font( string f, object id )
 							      @parse_color(bg));
   else
     img = img->paste_alpha_color( txt, @parse_color(fg) );
-  
-#if constant(Image.GIF)
-  // Use the newer, faster encoding if available.
+
   string key = bg+":"+fg;
 
   // Making the color table is slow. Therefor we cache it.
-  object ct = cache_lookup("counter_coltables", key);
+  Image.Colortable ct = cache_lookup("counter_coltables", key);
   if(!ct) {
-    ct = colortable(img, 32)->cubicles(20,20,20);
+    ct = Image.colortable(img, 32)->cubicles(20,20,20);
     cache_set("counter_coltables", key, ct);
   }
-  
+
   if(trans)
-    return http_string_answer(GIF.encode_trans(img, ct, @parse_color(bg)), 
+    return http_string_answer(Image.GIF.encode_trans(img, ct, @parse_color(bg)),
 			      "image/gif");
   else
-    return http_string_answer(GIF.encode(img, ct),"image/gif");
-#else
-  return http_string_answer(img->togif( @(trans?parse_color(bg):({})) ),
-			    "image/gif" );
-#endif
+    return http_string_answer(Image.GIF.encode(img, ct),"image/gif");
 }
 
 //
 // Generation of Cool PPM/GIF Counters
 //
-mapping find_file_ppm( string f, object id )
+mapping find_file_ppm( string f, RequestID id )
 {
   string fontname, fg, bg, user;
   int len, trans, rot;
   string counter;
-  object digit, result;
+  Image.Image digit, img;
   float scale;
   string buff, dir, *us;
   array (string)strcounter;
-  if(sscanf(f, "%s/%s/%s/%d/%d/%f/%d/%s/%s.%*s", 
+  if(sscanf(f, "%s/%s/%s/%d/%d/%f/%d/%s/%s.%*s",
 	    user, bg, fg, trans, len, scale, rot, fontname, counter) != 10 )
     return 0;
 
   scale /= 5;
   if( scale > 2.0 )
     scale = 2.0;
-  
+
   strcounter = counter / "";
   while(sizeof(strcounter) < len)
     strcounter = ({0}) + strcounter;
-    
+
   int numdigits = sizeof(strcounter);
   int currx;
 
   array digits = cache_lookup("counter_digits", fontname);
   // Retrieve digits from cache. Load em, if it fails.
 
-
   if(!arrayp(digits)) {
     if( user != "1" && !catch(us = id->conf->userinfo(user, id)) && us)
       dir = us[5] + (us[5][-1]!='/'?"/":"") + query("userpath");
     else
-      dir = query("ppmpath"); 
+      dir = query("ppmpath");
 
     digits = allocate(10);
-    object digit;
     for(int dn = 0; dn < 10; dn++ )
     {
       buff = Stdio.read_bytes(dir + fontname+"/"+dn+".ppm" );// Try .ppm
-      if (!buff 
-	  || catch( digit = PNM.decode( buff ))
+      if (!buff
+	  || catch( digit = Image.PNM.decode( buff ))
 	  || !digit)
       {
-#if constant(Image.GIF) && constant(Image.GIF.decode)
 	buff = Stdio.read_bytes( dir + fontname+"/"+dn+".gif" ); // Try .gif
 	if(!buff)
 	  return ppmlist( fontname, user, dir );	// Failed !!
 	mixed err;
-	if(catch( digit = GIF.decode( buff )))
+	if(catch( digit = Image.GIF.decode( buff )))
 	  // Failed to decode GIF.
 	  return ppmlist( fontname, user, dir );
-#endif
 	if(!digit)
 	  return ppmlist( fontname, user, dir );
       }
-      
+
       digits[dn] = digit;
     }
     cache_set("counter_digits", fontname,  digits);
@@ -430,55 +302,48 @@ mapping find_file_ppm( string f, object id )
   if (fontname=="ListAllStyles")
 	return ppmlist( fontname, user, dir );
 
-  
-
-result = image(digits[0]->xsize()*2 * numdigits,
+  img = Image.image(digits[0]->xsize()*2 * numdigits,
 		 digits[0]->ysize(), @parse_color(bg));
   for( int dn=0; dn < numdigits; dn++ )
   {
     int c = (int)strcounter[dn];
-    result = result->paste(digits[c], currx, 0);
+    img = img->paste(digits[c], currx, 0);
     currx += digits[c]->xsize();
-  }	  
-  // Apply Color Filter 	
-  //
-  result = result->copy(0,0,currx-1,result->ysize()-1);
+  }
+
+  // Apply Color Filte
+  img = img->copy(0,0,currx-1,img->ysize()-1);
   if(fg != "n" )
-    result = result->color( @parse_color(fg) );
+    img = img->color( @parse_color(fg) );
   if(scale != 1)
-    result = result->scale(scale);
+    img = img->scale(scale);
   if(rot)
-    result = result->rotate(rot, @parse_color(bg));
-#if constant(Image.GIF)  
-  object ct = cache_lookup("counter_coltables", fontname);
+    img = img->rotate(rot, @parse_color(bg));
+
+  Image.Colortable ct = cache_lookup("counter_coltables", fontname);
   if(!ct) {
     // Make a suitable color table for this ppm-font. We need all digits
     // loaded, as some fonts have completely different colors.
-    object data;
     int x;
-    data = image(digits[0]->xsize()*2 * numdigits,
+    Image.Image data = Image.image(digits[0]->xsize()*2 * numdigits,
 		       digits[0]->ysize());
     for( int dn = 0; dn < 10; dn++ ) {
       data = data->paste(digits[dn], x, 0);
       x += digits[dn]->xsize();
     }
-    ct = colortable(data->copy(0,0,x-1,data->ysize()-1), 64)
+    ct = Image.colortable(data->copy(0,0,x-1,data->ysize()-1), 64)
       ->cubicles(20,20,20);
     cache_set("counter_coltables", fontname, ct);
   }
-  
+
   if(trans)
-    return http_string_answer(GIF.encode_trans(result, ct, @parse_color(bg)), 
+    return http_string_answer(Image.GIF.encode_trans(img, ct, @parse_color(bg)), 
 			      "image/gif");
   else
-    return http_string_answer(GIF.encode(result, ct),"image/gif");
-#else
-  return http_string_answer(result->togif(@(trans?parse_color(bg):({}))),
-			    "image/gif");
-#endif
+    return http_string_answer(Image.GIF.encode(img, ct),"image/gif");
 }
 
-mapping find_internal( string f, object id )
+mapping find_internal( string f, RequestID id )
 {
   if(f[0..1] == "0/")
     return find_file_font( f, id );	// Umm, standard Font
@@ -486,97 +351,71 @@ mapping find_internal( string f, object id )
     return find_file_ppm( f, id ); // Otherwise PPM/GIF 
 }
 
-string tag_counter( string tagname, mapping args, object id )
+constant cargs=({"bgcolor","fgcolor","trans","rotate","nfont","style","len","size"});
+constant aargs=({"add","addreal","case","cheat","database","factor","file","lang",
+                 "per","prec","reset","since","type"});
+
+string tag_counter( string tagname, mapping args, RequestID id )
 {
-  string accessed;
-  string pre, url, post;
+  string pre="", url, post="";
 
-  //
-  // Version Identification ( automagically updated by RCS ) 
-  //
-  if( args->version )
-    return cvs_version;
-  if( args->revision )
-    return "$Revision: 1.26 $" - "$" - " " - "Revision:";
-
-  //
-  // bypass compatible accessed attributes
-  // 
-  accessed="<accessed"
-    + (args->cheat?" cheat="+args->cheat:"")
-    + (args->factor?" factor="+args->factor:"")
-    + (args->file?" file="+args->file:"")
-    + (args->prec?" prec="+args->prec:"")
-    + (args->precision?" precision="+args->precision:"")
-    + (args->add?" add="+args->add:"")
-    + (args->reset?" reset":"")
-    + (args->per?" per="+args->per:"")
-    + ">";
-
-  pre = "<IMG SRC=\"";
   url = query_internal_location();
-  int len;
-  if(!args->len)
-    len = 6;
-  else if((int)args->len > 10 )
+  int len=(int)args->len;
+  if(len > 10)
     len = 10;
-  else if((int)args->len < 1)
+  else if(len < 1)
     len = 1;
-  else
-    len = (int)args->len;
-  
+
   if( args->nfont ) {
-	
+
     //
     // Standard Font ..
     //
-    url+= "0/" 
-      + (args->bg?(args->bg-"#"):"000000") + "/"
-      + (args->fg?(args->fg-"#"):"ffffff") + "/"
+    url+= "0/"
+      + (args->bgcolor?(args->bg-"#"):"000000") + "/"
+      + (args->fgcolor?(args->fg-"#"):"ffffff") + "/"
       + (args->trans?"1":"0") + "/"
-      + (string)len + "/" 
-      + (args->size?args->size:"5") + "/" 
-      + (args->rotate?args->rotate:"0") + "/" 
+      + (string)len + "/"
+      + (args->size?args->size:"5") + "/"
+      + (args->rotate?args->rotate:"0") + "/"
       + args->nfont;
 
   } else {
-	
+
     //
     // Cool PPM fonts ( default )
     //
-    url+= (args->user?args->user:"1") + "/" 
-      + (args->bg?(args->bg-"#"):"n") + "/"	
-      + (args->fg?(args->fg-"#"):"n") + "/"
+    url+= (args->user?args->user:"1") + "/"
+      + (args->bgcolor?(args->bg-"#"):"n") + "/"
+      + (args->fgcolor?(args->fg-"#"):"n") + "/"
       + (args->trans?"1":"0") + "/"
-      + (string)len + "/" 
+      + (string)len + "/"
       + (args->size?args->size:"5") + "/"
-      + (args->rotate?args->rotate:"0") + "/" 
+      + (args->rotate?args->rotate:"0") + "/"
       + (args->style?args->style:query("ppm"));
   }
 
   //
   // Common Part ( /<accessed> and IMG Attributes )
   //
+
+  string accessed=parse_rxml(make_tag("accessed",args), id);
+
   url +=  "/" + accessed +".gif";
 
-  post =  "\" "  
-    + (args->border?"border="+args->border+" ":"")
-    + (args->align?"align="+args->align+" ":"")
-    + (args->height?"height="+args->height+" ":"")
-    + (args->width?"width="+args->width+" ":"")
-    + "alt=\"" + accessed + "\">";
+  foreach(cargs+aargs, string tmp)
+    m_delete(args,tmp);
+  if(!args->lat) args->alt=accessed;
+  args->src=url;
+
   if(args->bordercolor)
   {
-    pre = "<font color="+args->bordercolor+">" + pre;
-    post += "</font>";
+    pre = "<font color="+args->bordercolor+">";
+    post = "</font>";
   }
-  if( tagname == "counter_url" )
-    if( args->parsed )
-      return  parse_rxml(url,id);
-    else
-      return url;
-  else
-    return pre + url + post;	// <IMG SRC="url" ...>
+  if( tagname == "counter_url" ) return url;
+
+  return pre + make_tag("img",args) + post;	// <IMG SRC="url" ...>
 }
 
 mapping query_tag_callers()
