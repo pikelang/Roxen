@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.474 2000/04/03 14:55:32 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.475 2000/04/04 16:47:38 per Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -1875,9 +1875,10 @@ void restart_if_stuck (int force)
 class ConfigIFCache
 {
   string dir;
-  void create( string name, int|void settings )
+  int settings;
+  void create( string name, int|void _settings )
   {
-    if( settings )
+    if( settings = _settings )
       dir = configuration_dir + "_configinterface/" + name + "/";
     else
       dir = "../var/"+roxen_version()+"/config_caches/" + name + "/";
@@ -1898,9 +1899,12 @@ class ConfigIFCache
         return to;
       }
     }
-    f->write(
+    if( settings )
+      f->write(
 #"<?XML version=\"1.0\" encoding=\"UTF-8\"?>
 " + string_to_utf8(encode_mixed( to, this_object() ) ));
+    else
+      f->write( encode_value( to ) );
     return to;
   }
 
@@ -1910,7 +1914,13 @@ class ConfigIFCache
     mapping q = ([]);
     f=open( dir + replace( name, "/", "-" ), "r" );
     if(!f) return 0;
-    decode_variable( 0, ([ "name":"res" ]), utf8_to_string(f->read()), q );
+    if( settings )
+      decode_variable( 0, ([ "name":"res" ]), utf8_to_string(f->read()), q );
+    else
+    {
+      catch{ return decode_value( f->read() ); };
+      return 0;
+    }
     return q->res;
   }
 
