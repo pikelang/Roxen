@@ -4,8 +4,8 @@ Roxen 1.2 - source version
 Copyright 
 ---------
 
-Roxen is Copyright © Informationsvävarna AB, 1994 - 1996
-Pike is Copyright © to Fredrik Hübinette, 1994 - 1996
+Roxen is Copyright © Idonex AB, 1994 - 1997
+Pike is Copyright © to Fredrik Hübinette, 1994 - 1997
 
 This software is distributed under GPL, see the file COPYING for
 more details.
@@ -22,74 +22,28 @@ The directories
 
 extern/   	A few programs used by Roxen or it's scripts.
 		 o fast_cgi -- The CGI/Fast CGI gateway, rewritten
-		   somewhat for Roxen.
+		   	       somewhat for Roxen.
 		 o cgi      -- The roxen/CGI filter.
-		 o roxen_hostname -- Used by roxen to asynchronously
- 		   lookup hostnames.
-		 o shuffle  -- Program for Solaris 2.4 or better,
-		   improves performance for large files.
-		 o ssl -- External SSL-->Roxen gateway. Used because
- 		   SSLeay does not support non-blocking I/O very well.
 
 tools/ 		Misc tools.
                  o htpasswd source, used to make password files for .htaccess
 		 o backlog_bumper -- for Solaris 2.4 and up.
 		 o xdumpfont -- dumps an X font to a Roxen font
-		 o init.d_roxen -- /etc/init.d script. Stop does
-		   not work as of now.
+		 o init.d_roxen -- /etc/init.d script starting point.
+		   Stop does not work correctly.
 
 server/         The pike objects, all modules and other misc source that is
 		the core of the Roxen software.
                 Important subdirs:
 		o base_server  -- Core server sources
-		o languages    -- Language modules.
+		o languages    -- Language modules
 		o protocols    -- Protocol modules
 		o modules      -- Roxen core modules, in subdirs
-		  o directories - Directory parsing modules
-		  o examples   -- Example modules, for coders.
-		  o filesystems - Filesystem modules, interfaces
-		  	          between the "real" filesystem
-				  and the virtual one in Roxen.
-	          o filters    -- Filter modules, modifies a result
-				  one way or the other. Currently
-				  redirects and security modules.
-		  o graphics   -- Modules that draw graphics in one
-		    		  way or the other.
-		  o logging    -- Modules that log requests to files.
-		  o proxies    -- Proxies, mostly for firewall sites.
-		  o misc       -- The mandatory "misc" directory
-		  o scripting  -- CGI/FastCGI/Pike scripting
-		  o tags       -- RXML parsing modules
-		o more_modules -- Some other modules, to unusual to be
-			          present in the default module list.
-		o fonts        -- Fonts used to render text by the
-				  image module in pike, used by Roxen
-				  in the <gtext> tag.
 	        o etc          -- Misc. files
-				
-
-tools/ 		A tool that will dump the Accessed database in a
-		somewhat more readable format, htpasswd source, used
-		to make password files for .htaccess and
-		backlog_bumper for Solaris 2.4 and up.
-                (read the file for more information about what it is).
-		and a configuration file decoder and encoder.
-
-		o xdumpfont    -- A tool to dump X-fonts in the format 
-				  used by the Pike image module.
-
-
-server/ 	The Pike objects and other misc. source that is the
-		core of the Roxen software.
+		o config_actions - Plugins for the configuration interface
+		o server_templates Server template files for the 'add a new
+				   virtual server' action in the 
+ 				   configuration interface.
 
 pike/	  	The source to the language used (Pike, object
 		oriented C-like language). Written by Fredrik
-		Hübinette, hubbe@infovav.se
-
-		Important subdirs:
-		o src/		     -- The source
-		o doc/		     -- Documentation
-		o src/modules/*/doc/ -- Module specific documentation
-		
-
-
