@@ -5,7 +5,9 @@
 #include <roxen.h>
 #define _(X,Y)	_DEF_LOCALE("roxen_config",X,Y)
 
-constant box      = "small";
+constant box      = "large";
+constant box_initial = 0;
+
 String box_name = _(232,"Crunch activity");
 String box_doc  = _(262,"Recently changed Crunch reports");
 
@@ -15,7 +17,7 @@ class Fetcher
   string crunch_date( int t )
   {
     mapping l = localtime(t);
-    return (1900+l->year)+""+(l->mon+1)+""+(l->mday);
+    return (1900+l->year)+""+sprintf("%02d%02d",(l->mon+1),(l->mday));
   }
 
   void done( Protocols.HTTP.Query q )
@@ -33,10 +35,10 @@ class Fetcher
   void create()
   {
     call_out( Fetcher, 3600 );
+    string url = "/crunch/changed.xml?date="+crunch_date( time()-24*60*60*7 );
     query = Protocols.HTTP.Query( )->set_callbacks( done, fail );
     query->async_request( "community.roxen.com", 80,
-			  "GET /crunch/changed.xml?date="+
-			  crunch_date( time()-24*60*60*10 )+" HTTP/1.0",
+			  "GET "+url+" HTTP/1.0",
 			  ([ "Host":"community.roxen.com:80" ]) );
   }
 }

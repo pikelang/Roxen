@@ -12,7 +12,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.128 2000/12/12 13:52:04 per Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.129 2000/12/13 04:23:49 per Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Administration interface RXML tags";
 
@@ -390,7 +390,7 @@ mapping get_variable_map( string s, object mod, object id, int noset )
     res->rname = (string)var->name();
     res->id = var->_id;
     res->changed = !var->is_defaulted();
-    res->cid = res->changed*10000000+res->id;
+    res->cid = res->changed*-10000000+res->id;
     res->name = (res->rname/":")[-1];
     res->cname = (!res->changed)+res->name;
     res->doc = config_setting2("docs")?(string)var->doc():"";
@@ -558,6 +558,63 @@ mapping get_url_map( string u, mapping ub )
       "conf":replace(ub[u]->conf->name, " ", "-" ),
       "confname":ub[u]->conf->query_name(),
     ]);
+}
+
+class TagCFBoxes
+{
+  inherit RXML.Tag;
+  constant name = "cf-boxes";
+
+  class Frame
+  {
+    inherit RXML.Frame;
+    static mapping(string:object) boxes = ([]);
+
+    static object compile_box( string box )
+    {
+      if( boxes[box] )
+      {
+        master()->refresh( object_program( boxes[box] ), 1 );
+        destruct( boxes[box] );
+      }
+      return boxes[box]=(object)("config_interface/standard/boxes/"+box);
+    }
+
+    static object get_box( string box )
+    {
+      object bx = boxes[ box ];
+      if( !bx  || (master()->refresh_inherit( object_program( bx ) ) > 0 ) )
+        return compile_box( box );
+      return bx;
+    }
+
+    array sort_boxes( array what )
+    {
+      mapping pos = ([]);
+      array res = ({});
+      foreach( what, string q )
+      {
+        object box = get_box( q );
+        if( box )
+          pos[ box->box_position ] += ({ q });
+      }
+      foreach( sort(indices(pos)), int p )
+        res += pos[p];
+      return res;
+    }
+
+    array do_return( RequestID id )
+    {
+      string left="";
+      string right="";
+      foreach( sort_boxes(config_setting( "left_boxes" )), string f )
+        left+=get_box( f )->parse( id )+"<br />";
+      foreach( sort_boxes(config_setting( "right_boxes" )), string f )
+        right+=get_box( f )->parse( id )+"<br />";
+      result="<table><tr valign=top><td>"+left+"</td><td>"+
+                         right+"</td></tr></table>";
+    }
+  }
 }
 
 class TagConfigSettingsplugin

@@ -9,32 +9,3 @@
 
 
 <a href="whatsnew.html"><h2>What's new?</h2></a>
-
-<h2>Manuals:</h2>
-<set variable="var.rpath" value="docs/roxen/&roxen.base-version;/" />
-<set variable="var.ppath" value="docs/pike/7.1/" />
-<blockquote>
-<font size="+1"><b>
-<if exists="&var.rpath;creator/index.html">
-  <li> <a href="&var.rpath;creator/">Web Site Creator Manual</a> </li>
-</if>
-<if exists="&var.rpath;administrator/index.html">
-  <li> <a href="&var.rpath;administrator/">Administrator Manual</a> </li>
-</if>
-<if exists="&var.rpath;user/index.html">
- <li> <a href="&var.rpath;user/">User Manual</a> </li>
-</if>
-<if exists="&var.rpath;tutorial/rxml/index.html">
- <li> <a href="&var.rpath;tutorial/rxml/index.html">RXML Tutorial</a> </li>
-</if><else>
-<if exists="&var.rpath;rxml_tutorial/index.html">
- <li> <a href="&var.rpath;rxml_tutorial/">RXML Tutorial</a> </li>
-</if></else>
-<if exists="&var.rpath;programmer/index.html">
- <li> <a href="&var.rpath;programmer/">Programmer Manual</a> </li>
-</if>
-<if exists="&var.ppath;tutorial/index.html">
- <li> <a href="&var.ppath;tutorial/">Pike Tutorial</a> </li>
-</if>
-</b></font>
-</blockquote>

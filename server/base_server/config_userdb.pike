@@ -156,6 +156,96 @@ class ConfigurationSettings
           variables[i]->low_set( vv[i] );
   }
 
+  class BoxVariable
+  {
+    inherit Variable.Variable;
+    constant type = "ContentBoxes";
+    static string box_type;
+
+#define BDIR "config_interface/standard/boxes/"
+    static mapping bdata = ([]);
+    array possible( )
+    {
+      foreach( glob("*.pike", get_dir( BDIR ) ), string f )
+      {
+        catch
+        {
+          object box = (object)(BDIR+f);
+          if( box->box && box->box == box_type )
+            bdata[ (f/".")[0] ] = ([ "name":box->box_name,
+                                     "doc":box->box_doc,
+                                     "initial":box->box_initial ]);
+        };
+      }
+      array i = indices( bdata );
+      array b = map( i, lambda( string q ){ return (string)bdata[q]->name; } );
+      sort( b, i );
+      return i;
+    }
+
+    static void create( LocaleString name, LocaleString doc,
+                        string _type, int|void flags  )
+    {
+      box_type = _type;
+      _initial = ({});
+      foreach( sort( possible() ), string q )
+        if( bdata[q]->initial  )
+          _initial += ({ q });
+      __name = name;
+      __doc = doc;
+      set_flags( flags );
+    }
+
+    static string short_describe_box( string box )
+    {
+      if( !bdata[box] )  possible();
+      if( !bdata[box] )
+        return sprintf((string)LOCALE(0,"Unknown box %s"),box);
+      return (string)bdata[box]->name;
+    }
+
+    string render_view( RequestID id )
+    {
+      return map(map( query(), short_describe_box ),Roxen.html_encode_string)
+             *" <br />";
+    }
+
+    void set_from_form( RequestID id )
+    {
+      mapping vl = get_form_vars( id );
+      if( vl[""] )
+      {
+        array ok = ({});
+        foreach( indices( vl ), string v )
+          if( bdata[v[1..]] )
+            ok+= ({v[1..]});
+        set( sort( ok ) );
+      }
+    }
+
+    static string describe_box( string b, string ea )
+    {
+      mapping bd = bdata[b];
+      if( bd )
+        return "<dt><input type='checkbox'"+ea+" name='"+path()+"."+b+"'> <b>"+
+               bd->name+"</b></dt><dd>"+bd->doc+"</dd>";
+      return "";
+    }
+    
+    string render_form( RequestID id, void|mapping additional_args )
+    {
+      multiset has = (multiset)query();
+      string res = ("<input type=hidden name='"+
+                    path()+"' value='Go, Gadget, go!' />");
+      foreach( possible(), string b )
+        if( has[b] )
+          res += describe_box( b, " checked=''" )+"\n";
+        else
+          res += describe_box( b, "" )+"\n";
+      return "<dl>"+res+"</dl>";
+    }
+  }
+
   static void create( string _name )
   {
     name = _name;
@@ -168,9 +258,19 @@ class ConfigurationSettings
       return 1;
     };
 
+    defvar( "left_boxes",
+            BoxVariable( LOCALE(0,"Large Content Boxes"),
+                         LOCALE(0,"Content boxes on the Startpage"),
+                         "large" ) );
+
+    defvar( "right_boxes",
+            BoxVariable( LOCALE(0,"Small Content Boxes"),
+                         LOCALE(0,"Content boxes on the Startpage"),
+                         "small" ) );
+
     defvar( "theme", ThemeVariable( "default", 0,
-                                    "Theme",
-                                    "The theme to use" ) );
+                                    LOCALE(0,"Theme"),
+                                    LOCALE(0,"The theme to use") ) );
     defvar( "configlistmode", 0,
             LOCALE(278, "Compact site list" ),
             TYPE_FLAG,
