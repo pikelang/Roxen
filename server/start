@@ -147,7 +147,7 @@ oo
   
   echo "Server restart at `date`"
   rotate $LOGDIR/debug/$FILES
-  start_roxen
+  start_roxen 2>>$LOGDIR/debug/$FILES.1 1>&2
   if [ -z "$noshutdown" ] ; then 
     if [ -f "$sdfile" ] ; then
 
