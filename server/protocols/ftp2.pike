@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.15 1998/04/30 14:47:25 grubba Exp $
+ * $Id: ftp2.pike,v 1.16 1998/04/30 16:00:21 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -304,7 +304,7 @@ class PutFileWrapper
     if(how != "w" && !done) {
       ftpsession->send(response_code, ({ response }));
       done = 1;
-      session->received += recvd;
+      session->conf->received += recvd;
       session->file->len = recvd;
       session->conf->log(session->file, session);
       session->file = 0;
