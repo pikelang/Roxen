@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: roxenlib.pike,v 1.217 2002/10/22 00:06:12 nilsson Exp $
+// $Id: roxenlib.pike,v 1.218 2003/01/21 23:46:26 mani Exp $
 
 //#pragma strict_types
 
@@ -67,7 +67,7 @@ static string http_res_to_string( mapping file, RequestID id )
   mapping(string:string|array(string)) heads=
     ([
       "Content-type":[string]file["type"],
-      "Server":replace(roxen->version(), " ", "·"),
+      "Server":replace(core.version(), " ", "·"),
       "Date":http_date([int]id->time)
       ]);
 

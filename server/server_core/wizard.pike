@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2001, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.146 2002/11/07 15:54:02 mani Exp $
+// $Id: wizard.pike,v 1.147 2003/01/21 23:46:26 mani Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -322,7 +322,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
    case "font":
      m->type = "select";
      m->lines = "20";
-     m->choices = roxen.fonts->available_fonts() * ",";
+     m->choices = core.fonts->available_fonts() * ",";
      if(id->conf && id->conf->modules["graphic_text"] && !m->noexample)
        res = ("<input type=\"submit\" value=\"" + LOCALE(47, "Example") + "\"><br />"+
 	      ((current&&strlen(current))?

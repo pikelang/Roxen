@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: newdecode.pike,v 1.34 2002/11/02 17:57:39 mani Exp $
+// $Id: newdecode.pike,v 1.35 2003/01/21 23:46:26 mani Exp $
 
 // The magic below is for the 'install' program
 #ifndef roxenp
@@ -264,7 +264,7 @@ string encode_regions(mapping r, Configuration c)
 {
   string v;
   string res = (xml_header + "\n\n");
-  int comments = all_constants()->roxen->query ("config_file_comments");
+  int comments = roxenp()->query ("config_file_comments");
   foreach(r->EnabledModules ?
 	  ({"EnabledModules"}) + sort(indices(r) - ({"EnabledModules"})) :
 	  sort(indices(r)), v)

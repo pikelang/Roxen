@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.549 2003/01/19 18:33:01 mani Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.550 2003/01/21 23:46:26 mani Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -200,7 +200,7 @@ mapping(RequestID:mapping) connection_get( )
 }
 
 // It's nice to have the name when the rest of __INIT executes.
-string name = roxen->bootstrap_info->get();
+string name = core->bootstrap_info->get();
 
 // Trivial cache (actually, it's more or less identical to the 200+
 // lines of C in HTTPLoop. But it does not have to bother with the
@@ -290,16 +290,16 @@ class DataCache
 }
 
 #include "rxml.pike";
-constant    store = roxen.store;
-constant    retrieve = roxen.retrieve;
-constant    remove = roxen.remove;
+constant    store = core.store;
+constant    retrieve = core.retrieve;
+constant    remove = core.remove;
 
 int config_id;
 int get_config_id() 
 {
   if(config_id) return config_id;
-  for(int i=sizeof(roxen->configurations); i;)
-    if(roxen->configurations[--i]->name==name) return config_id=i;
+  for(int i=sizeof(core->configurations); i;)
+    if(core->configurations[--i]->name==name) return config_id=i;
 }
 
 string get_doc_for( string region, string variable )
@@ -382,7 +382,7 @@ private array (RoxenModule) auth_module_cache, userdb_module_cache;
 void unregister_urls()
 {
   foreach( registered_urls + failed_urls, string url )
-    roxen.unregister_url(url, this_object());
+    core.unregister_url(url, this_object());
   registered_urls = ({});
 }
 
@@ -412,9 +412,9 @@ void stop (void|int asynch)
 {
 
 #ifdef SNMP_AGENT
-  if(query("snmp_process") && objectp(roxen->snmpagent)) {
-    roxen->snmpagent->vs_stop_trap(get_config_id());
-    roxen->snmpagent->del_virtserv(get_config_id());
+  if(query("snmp_process") && objectp(core->snmpagent)) {
+    core->snmpagent->vs_stop_trap(get_config_id());
+    core->snmpagent->del_virtserv(get_config_id());
   }
 #endif
 
@@ -425,12 +425,12 @@ void stop (void|int asynch)
 
   if (types_module) {
     num_modules++;
-    roxen.handle (safe_stop_module, types_module, "type module");
+    core.handle (safe_stop_module, types_module, "type module");
     allmods[types_module] = 0;
   }
   if (dir_module) {
     num_modules++;
-    roxen.handle (safe_stop_module, dir_module, "directory module");
+    core.handle (safe_stop_module, dir_module, "directory module");
     allmods[dir_module] = 0;
   }
   for(int i=0; i<10; i++)
@@ -439,7 +439,7 @@ void stop (void|int asynch)
       foreach(MODS, RoxenModule m)					\
         if (allmods[m]) {						\
 	  num_modules++;						\
-	  roxen.handle (safe_stop_module, m, DESC);			\
+	  core.handle (safe_stop_module, m, DESC);			\
 	  allmods[m] = 0;						\
 	}
       STOP_MODULES (p->url_modules, "url module");
@@ -705,7 +705,7 @@ array(UserDB) user_databases()
 	tmp += ({ ({ mo->query( "_priority" ), mo }) });
 
   sort( tmp );
-//   tmp += ({ ({ 0, roxen->admin_userdb_module }) });
+//   tmp += ({ ({ 0, core->admin_userdb_module }) });
   return userdb_module_cache = reverse(column(tmp,1));
 }
 
@@ -792,7 +792,7 @@ void init_log_file()
   {
     string logfile = query("LogFile");
     if(strlen(logfile))
-      log_function = roxen.LogFile( logfile )->write;
+      log_function = core.LogFile( logfile )->write;
   }
 }
 
@@ -829,7 +829,7 @@ void log(mapping file, RequestID request_id)
     form = log_format[0];
   if(!form) return;
 
-  roxen.run_log_format( form, log_function, request_id, file );
+  core.run_log_format( form, log_function, request_id, file );
 }
 
 array(string) userinfo(string u, RequestID|void id)
@@ -1725,7 +1725,7 @@ mixed handle_request( RequestID id  )
   }
   TIMER_END(handle_request);
   REQUEST_WERR("handle_request(): Done");
-  MERGE_TIMERS(roxen);
+  MERGE_TIMERS(core);
   return file;
 }
 
@@ -2444,14 +2444,14 @@ void start(int num)
   foreach( (registered_urls-query("URLs"))+failed_urls, string url )
   {
     registered_urls -= ({ url });
-    roxen.unregister_url(url, this_object());
+    core.unregister_url(url, this_object());
   }
 
   failed_urls = ({ });
 
   foreach( (query( "URLs" )-registered_urls), string url )
   {
-    if( roxen.register_url( url, this_object() ) )
+    if( core.register_url( url, this_object() ) )
       registered_urls += ({ url });
     else
       failed_urls += ({ url });
@@ -2486,8 +2486,8 @@ void start(int num)
   }
 
 #ifdef SNMP_AGENT
-  if(query("snmp_process") && objectp(roxen->snmpagent))
-      roxen->snmpagent->add_virtserv(get_config_id());
+  if(query("snmp_process") && objectp(core->snmpagent))
+      core->snmpagent->add_virtserv(get_config_id());
 #endif
 
 }
@@ -2562,9 +2562,9 @@ int save_one( RoxenModule o )
 RoxenModule reload_module( string modname )
 {
   RoxenModule old_module = find_module( modname );
-  ModuleInfo mi = roxen.find_module( (modname/"#")[0] );
+  ModuleInfo mi = core.find_module( (modname/"#")[0] );
 
-  roxen->bootstrap_info->set (({this_object(), modname }));
+  core->bootstrap_info->set (({this_object(), modname }));
 
   if( !old_module ) return 0;
 
@@ -2633,7 +2633,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
     while( modules[ modname ] && modules[ modname ][ id ] )
       id++;
 
-  roxen->bootstrap_info->set (({this_object(), modname + "#" + id}));
+  core->bootstrap_info->set (({this_object(), modname + "#" + id}));
 
 #ifdef MODULE_DEBUG
   int start_time = gethrtime();
@@ -2641,14 +2641,14 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 
   if( !moduleinfo )
   {
-    moduleinfo = roxen->find_module( modname );
+    moduleinfo = core->find_module( modname );
 
     if (!moduleinfo)
     {
       report_warning("Failed to load %s. The module probably "
                      "doesn't exist in the module path.\n", modname);
       got_no_delayed_load = -1;
-      roxen->bootstrap_info->set (0);
+      core->bootstrap_info->set (0);
       return 0;
     }
   }
@@ -2683,7 +2683,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
       }
 #endif
       got_no_delayed_load = -1;
-      roxen->bootstrap_info->set (0);
+      core->bootstrap_info->set (0);
       return module[id];
     }
   }
@@ -2716,7 +2716,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 		    "called in random order"),
 		   ({0, 1, 2, 3, 4, 5, 6, 7, 8, 9}));
       }) {
-	roxen->bootstrap_info->set (0);
+	core->bootstrap_info->set (0);
 	throw(err);
       }
     }
@@ -2858,7 +2858,7 @@ request should be handled by the module.
   if( me->no_delayed_load && got_no_delayed_load >= 0 )
     got_no_delayed_load = 1;
 
-  roxen->bootstrap_info->set (0);
+  core->bootstrap_info->set (0);
   return me;
 }
 
@@ -3029,9 +3029,9 @@ string check_variable(string name, mixed value)
 //      return 0;
 #ifdef SNMP_AGENT
   case "snmp_process":
-    if (objectp(roxen->snmpagent)) {
+    if (objectp(core->snmpagent)) {
       int cid = get_config_id();
-      value ? roxen->snmpagent->add_virtserv(cid) : roxen->snmpagent->del_virtserv(cid);
+      value ? core->snmpagent->add_virtserv(cid) : core->snmpagent->del_virtserv(cid);
     }
     return 0;
 #endif
@@ -3113,7 +3113,7 @@ int disable_module( string modname, int|void nodest )
 
   if( datacache ) datacache->flush();
 
-  ModuleInfo moduleinfo =  roxen.find_module( modname );
+  ModuleInfo moduleinfo =  core.find_module( modname );
   mapping module = modules[ modname ];
   string descr = moduleinfo->get_name() + (id ? " copy " + (id + 1) : "");
 
@@ -3331,8 +3331,8 @@ void low_init(void|int modules_already_enabled)
 
 #ifdef SNMP_AGENT
   // Start trap after real virt.serv. loading
-  if(query("snmp_process") && objectp(roxen->snmpagent))
-    roxen->snmpagent->vs_start_trap(get_config_id());
+  if(query("snmp_process") && objectp(core->snmpagent))
+    core->snmpagent->vs_start_trap(get_config_id());
 #endif
 
 }
@@ -3343,7 +3343,7 @@ static void create()
 {
   if (!name) error ("Configuration name not set through bootstrap_info.\n");
 //   int st = gethrtime();
-  roxen.add_permission( "Site:"+name, "Site: "+name );
+  core.add_permission( "Site:"+name, "Site: "+name );
 
   // for now only these two. In the future there might be more variables.
   defvar( "data_cache_size", 16384, "Cache:Cache size",
@@ -3374,7 +3374,7 @@ static void create()
 	  "site will be used."));
 
   defvar("compat_level", Variable.StringChoice (
-	   "", roxen.compat_levels, VAR_NO_DEFAULT,
+	   "", core.compat_levels, VAR_NO_DEFAULT,
 	   "Compatibility level",
 	   ("<p>The compatibility level is used by different modules to select "
 	    "the right behavior to remain compatible with earlier Roxen "
@@ -3388,7 +3388,7 @@ static void create()
 	    "test the site carefully afterwards. A reload of the whole "
 	    "server configuration is required to propagate the change properly "
 	    "to all modules.</p>")));
-  set ("compat_level", roxen.__roxen_version__);
+  set ("compat_level", core.__roxen_version__);
   // Note to developers: This setting can be accessed through
   // id->conf->query("compat_level") or similar, but observe that that
   // call is not entirely cheap. It's therefore advisable to put it in
@@ -3472,7 +3472,7 @@ $cache-status   -- A comma separated list of words (containing no
 	  "the access counter log."),
 	 0, lambda(){ return !query("Log");});
 
-  defvar("Domain", roxen.get_domain(), "Domain",
+  defvar("Domain", core.get_domain(), "Domain",
 	 TYPE_STRING|VAR_PUBLIC|VAR_NO_DEFAULT,
 	 ("The domain name of the server. The domain name is used "
 	  "to generate default URLs, and to generate email addresses."));
@@ -3679,9 +3679,9 @@ td {font: 12px Helvetica, Arial; font-weight: bold}
 	 0, snmp_disabled);
 
   if (query("snmp_process")) {
-    if(objectp(roxen()->snmpagent)) {
+    if(objectp(core->snmpagent)) {
       int servid;
-      servid = roxen()->snmpagent->add_virtserv(get_config_id());
+      servid = core->snmpagent->add_virtserv(get_config_id());
       // todo: make invisible varibale and set it to this value for future reference
       // (support for per-reload persistence of server index?)
     } else
@@ -3715,7 +3715,7 @@ private static int(0..1) snmp_disabled() {
   return (!snmp_global_disabled() && !query("snmp_process"));
 }
 private static int(0..1) snmp_global_disabled() {
-  return (!objectp(roxen->snmpagent));
+  return (!objectp(core->snmpagent));
 }
 #endif
 

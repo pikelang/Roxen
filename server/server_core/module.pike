@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.136 2003/01/21 23:28:41 mani Exp $
+// $Id: module.pike,v 1.137 2003/01/21 23:46:26 mani Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -22,7 +22,7 @@ private Configuration _my_configuration;
 private string _module_local_identifier;
 private string _module_identifier =
   lambda() {
-    mixed init_info = roxen->bootstrap_info->get();
+    mixed init_info = core->bootstrap_info->get();
     if (arrayp (init_info)) {
       [_my_configuration, _module_local_identifier] = init_info;
       return _my_configuration->name + "/" + _module_local_identifier;
@@ -135,7 +135,7 @@ int module_dependencies(Configuration configuration,
 
 string file_name_and_stuff()
 {
-  return ("<b>Loaded from:</b> "+(roxen->filename(this_object()))+"<br>"+
+  return ("<b>Loaded from:</b> "+(core.filename(this_object()))+"<br>"+
 	  (this_object()->cvs_version?
            "<b>CVS Version: </b>"+
            fix_cvs(this_object()->cvs_version)+"\n":""));
@@ -195,7 +195,7 @@ ModuleInfo my_moduleinfo( )
 //! Returns the associated @[ModuleInfo] object
 {
   string f = sname();
-  if( f ) return roxen.find_module( (f/"#")[0] );
+  if( f ) return core.find_module( (f/"#")[0] );
 }
 
 void save_me()
@@ -261,7 +261,7 @@ function(RequestID:int|mapping) query_seclevels()
 {
   if(catch(query("_seclevels")) || (query("_seclevels") == 0))
     return 0;
-  return roxen.compile_security_pattern(query("_seclevels"),this_object());
+  return core.compile_security_pattern(query("_seclevels"),this_object());
 }
 
 Stat stat_file(string f, RequestID id){}

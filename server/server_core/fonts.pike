@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: fonts.pike,v 1.89 2003/01/21 23:28:40 mani Exp $
+// $Id: fonts.pike,v 1.90 2003/01/21 23:46:26 mani Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -193,10 +193,10 @@ Font get_font(string f, int size, int bold, int italic,
   f = lower_case( f );
   Font fnt = get_font_2 (f, size, bold, italic);
   if (!fnt) {
-    fnt = get_font_2 (roxen->query ("default_font"), size, bold, italic);
+    fnt = get_font_2 (core.query ("default_font"), size, bold, italic);
     if (!fnt) {
       report_error("Failed to load the default font (%O)\n",
-		   roxen->query("default_font"));
+		   core.query("default_font"));
       return 0;
     }
   }
@@ -223,7 +223,7 @@ Font resolve_font(string f, string|void justification)
   float xspace=0.0;
   string a,b;
   if( !f )
-    f = roxen->query("default_font");
+    f = core.query("default_font");
   f = lower_case( f );
   if(sscanf(f, "%s bold%s", a,b)==2)
   {
@@ -330,13 +330,13 @@ static string verify_font_2 (string font, int size)
 string verify_font(string font, void|int size)
 {
   if(!font)
-    return verify_font(roxen->query("default_font"), size||32);
+    return verify_font(core.query("default_font"), size||32);
 
   font = lower_case( font );
 
   if(size) {
     if (string f = verify_font_2 (font, size)) return f;
-    return verify_font_2 (roxen->query ("default_font"), size);
+    return verify_font_2 (core.query ("default_font"), size);
   }
 
   // Note that we'll never get here if size != 0. I suspect the
@@ -382,7 +382,7 @@ static void create()
 {
   int h = gethrtime();
   // Must have this _before_ the add_contant()s
-  roxen.dump( "server_core/fonts.pike", object_program(this_object()) );
+  core.dump( "server_core/fonts.pike", object_program(this_object()) );
   add_constant( "FontHandler", FontHandler );
   add_constant( "Font", Font );
   add_constant("get_font", get_font);
@@ -398,7 +398,7 @@ static void create()
       if(has_suffix(fh, ".pike"))
       {
         FontHandler f = ((program)( roxen_path( "plugins/font_handlers/"+fh ) ))( );
-        roxen.dump( roxen_path( "plugins/font_handlers/"+fh ) );
+        core.dump( roxen_path( "plugins/font_handlers/"+fh ) );
         if( f->name && f->open )
         {
           report_debug("    "+f->name+" ("+(f->scalable?"scalable":"bitmap")+")\n");

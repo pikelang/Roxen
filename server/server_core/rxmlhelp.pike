@@ -32,12 +32,14 @@ string mktable(array table) {
 string available_languages(object id) {
   string pl;
   if(id && id->misc->pref_languages && (pl=id->misc->pref_languages->get_language()))
-    if(!has_value(roxen->list_languages(),pl)) pl="eng";
+    if(!has_value(core.list_languages(),pl)) pl="eng";
   else
     pl="eng";
-  mapping languages=roxen->language_low(pl)->languages;
-  return mktable( map(sort(indices(languages) & roxen->list_languages()),
-		      lambda(string code) { return ({ code, languages[code] }); } ));
+  mapping languages=core.language_low(pl)->languages;
+  return mktable( map(sort(indices(languages) & core.list_languages()),
+		      lambda(string code) {
+			return ({ code, languages[code] });
+		      } ));
 }
 
 // --------------------- Help layout functions --------------------
@@ -211,7 +213,7 @@ static string format_doc(string|mapping doc, string name, void|object id)
     if(id && id->misc->pref_languages) {
       foreach(id->misc->pref_languages->get_languages()+({"en"}), string code)
       {
-	object lang=roxen->language_low(code);
+	object lang=core.language_low(code);
 	if(lang) {
 	  array lang_id=lang->id();
 	  if(doc[lang_id[2]]) {
