@@ -5,7 +5,7 @@ import spider;
 program Privs;
 
 // Set up the roxen environment. Including custom functions like spawne().
-constant cvs_version="$Id: roxenloader.pike,v 1.48 1997/12/04 21:12:28 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.49 1997/12/15 01:39:45 per Exp $";
 
 #define perror roxen_perror
 
@@ -405,10 +405,16 @@ class restricted_cd
 void load_roxen()
 {
   add_constant("cd", restricted_cd());
-  add_constant("Privs", myprivs(this_object()));
+  if(!getuid())
+    add_constant("Privs", myprivs(this_object()));
+  else  // No need, we are not running as root.
+    add_constant("Privs", (Privs=class{}));
   roxen = ((program)"roxen")();
-  Privs = ((program)"privs");
-  add_constant("Privs", Privs);
+  if(!getuid())
+  {
+    Privs = ((program)"privs");
+    add_constant("Privs", Privs);
+  }
   perror("Roxen version "+roxen->cvs_version+"\n"
 	 "Roxen release "+roxen->real_version+"\n");
   nwrite = roxen->nwrite;
