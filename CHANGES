@@ -1,3 +1,41 @@
+Changes since Roxen Challenger 1.2 beta 1
+-----------------------------------------------
+
+o New version-numbering scheme. This version of Roxen is called 1.2.21 or
+  1.2(21) where 21 is the build-number. Hopefully this is less confusing
+  than the old schemes.
+
+o Supports both Pike 0.5 and Pike 0.6.
+
+o Now has support for having several versions of Pike in the distribution.
+
+o Several memory-leaks in Pike have been fixed.
+
+o The CGI-wrapper is now somewhat more paranoid.
+
+o Fixed several obscure bugs that gcc-2.8.0 detected.
+
+o Added version-information to lots of files.
+
+o Experimental keep-alive support added.
+
+o Cleaned up the start-script
+
+o Several performance optimizations.
+
+o Improved thread-handling.
+
+o New file-shuffling code.
+
+o Added support for request-tracing.
+
+o Wizard-generator improved.
+
+o Lots of fixes to Business-Graphics.
+
+o Several minor bugs fixed.
+
+
 Changes since Roxen Challenger 1.2 alpha 15
 -----------------------------------------------
 
