@@ -124,19 +124,40 @@ int get_next( int last )
     else
       return last + 3600 * vals[1];
 
-  // Every n:th day at x.
   mapping m = localtime( last || time(1) );
   m->min = m->sec = 0;
   if( !vals[3] ) {
-    // Every day at x.
-    for(int i; i<vals[2]; i++)
-      m = next_or_same_time( m, vals[4] );
-    return mktime(m);
+    // Every n:th day at x.
+    if (!last)
+    {
+      for(int i; i<vals[2]; i++)
+	m = next_or_same_time( m, vals[4] );
+      return mktime(m);
+    }
+    else
+    {
+      for(int i; i<vals[2]; i++)
+	m = next_time( m, vals[4] );
+      return mktime(m);
+    }
   }
-  for(int i; i<vals[2]; i++)
+
+  // Every x-day at y.
+  if (!last)
   {
-    m = next_or_same_time( next_or_same_day( m, vals[3]-1, vals[4] ),
-			   vals[4], 6*24*3600 );
+    for(int i; i<vals[2]; i++)
+    {
+      m = next_or_same_time( next_or_same_day( m, vals[3]-1, vals[4]+1 ),
+			     vals[4], 6*24*3600 );
+    }
+  }
+  else
+  {
+    for(int i; i<vals[2]; i++)
+    {
+      m = next_or_same_time( next_or_same_day( m, vals[3]-1, vals[4] ),
+			     vals[4], 6*24*3600 );
+    }
   }
   return mktime(m);
 }
