@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.258 2001/07/19 23:33:37 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.259 2001/07/20 06:38:50 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -273,8 +273,8 @@ class TagAppend {
     array do_return(RequestID id) {
       mixed value=RXML.user_get_var(args->variable, args->scope);
       if (args->value) {
-	if(content) parse_error("No content allowed when the value attribute is used.\n");
 	content = args->value;
+	if (args->type) content = args->type->encode (content);
       }
       else if (args->from) {
 	// Append the value of another entity variable.
@@ -1206,42 +1206,69 @@ array(string) container_catch( string tag, mapping m, string c, RequestID id )
 class TagCache {
   inherit RXML.Tag;
   constant name = "cache";
-  RXML.Type content_type = RXML.t_same;
+  constant flags = RXML.FLAG_GET_RAW_CONTENT|RXML.FLAG_GET_EVALED_CONTENT;
 
   class Frame {
     inherit RXML.Frame;
 
-    array do_return(RequestID id) {
+    int do_iterate;
+    RXML.PCode evaled_content;
+    string content_hash, key;
 
+    array do_enter (RequestID id)
+    {
       if( args["not-post-method"] && id->method == "POST" ) {
-	result_type = result_type (RXML.PXml);
-	return ({ content });
+	do_iterate = 1;
+	key = 0;
+	return 0;
       }
 
-      string key="";
       if(!args->nohash) {
-	object md5 = Crypto.md5();
+	Crypto.md5 md5 = Crypto.md5();
+	if (!content_hash) content_hash = md5->update (content)->digest();
+
 	string form_vars;
 	if(id->method == "POST")
 	  form_vars = encode_value_canonic(id->real_variables);
 	else
 	  form_vars = id->query;
-	md5->update(content + id->not_query + form_vars +
-		    id->conf->query("MyWorldLocation"));
-	key=md5->digest();
+
+	key = content_hash +
+	  md5->update(id->not_query + form_vars +
+		      id->conf->query("MyWorldLocation"))->digest();
       }
+      else key = "";
+
       if(args->key)
 	key += args->key;
 
-      if( !(args["flush-on-no-cache"] && id->pragma["no-cache"]) )
-	result = cache_lookup("tag_cache", key);
-
-      if(!result) {
-	result = Roxen.parse_rxml(content, id);
-	cache_set("tag_cache", key, result, Roxen.time_dequantifier(args));
+      if( !(args["flush-on-no-cache"] && id->pragma["no-cache"]) ) {
+	if ((evaled_content = cache_lookup("tag_cache", key)))
+	  if (evaled_content->is_stale()) {
+	    cache_remove ("tag_cache", key);
+	    evaled_content = 0;
+	  }
+	  else {
+	    do_iterate = -1;
+	    key = 0;
+	    return ({evaled_content});
+	  }
       }
+
+      do_iterate = 1;
       return 0;
     }
+
+    array do_return()
+    {
+      if (key)
+	cache_set("tag_cache", key, evaled_content, Roxen.time_dequantifier(args));
+      result += content;
+      return 0;
+    }
+
+    array save() {return ({content_hash});}
+    void restore (array saved) {[content_hash] = saved;}
   }
 }
 
@@ -3360,8 +3387,7 @@ class UserIf
 {
   constant name = "if";
   string plugin_name;
-  string rxml_code;
-  RXML.PCode rxml_p_code = 0;
+  string|RXML.RenewablePCode rxml_code;
 
   void create(string pname, string code) {
     plugin_name = pname;
@@ -3375,15 +3401,11 @@ class UserIf
     TRACE_ENTER("user defined if argument "+plugin_name, UserIf);
     otruth = _ok;
     _ok = -2;
-  eval: {
-      if (rxml_p_code) {
-	tmp = rxml_p_code->eval (RXML_CONTEXT);
-	if (stringp (tmp)) break eval;
-	// Recompile if the p-code was stale.
-      }
-      [tmp, rxml_p_code] =
-	RXML_CONTEXT->eval_and_compile (RXML.t_html (RXML.PXml), rxml_code);
-    }
+    if (objectp (rxml_code))
+      tmp = rxml_code->eval (RXML_CONTEXT);
+    else
+      [tmp, rxml_code] =
+	RXML_CONTEXT->eval_and_compile (RXML.t_html (RXML.PXml), rxml_code, 1);
     res = _ok;
     _ok = otruth;
 
