@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.70 2000/02/24 04:06:15 nilsson Exp $
+//! $Id: module.pmod,v 1.71 2000/03/03 03:31:38 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -2141,7 +2141,7 @@ class Parser
   {
     int res;
     ENTER_CONTEXT (context);
-    mixed err = catch {
+    if (mixed err = catch {
       if (context && context->unwind_state && context->unwind_state->top) {
 #ifdef MODULE_DEBUG
 	if (context->unwind_state->top != this_object())
@@ -2153,20 +2153,24 @@ class Parser
       }
       if (feed (in)) res = 1; // Might unwind.
       if (res && data_callback) data_callback (this_object());
-    };
-    LEAVE_CONTEXT();
-    if (err)
+    })
       if (objectp (err) && ([object] err)->thrown_at_unwind) {
 #ifdef DEBUG
-	if (err != this_object())
+	if (err != this_object()) {
+	  LEAVE_CONTEXT();
 	  fatal_error ("Internal error: Unexpected unwind object catched.\n");
+	}
 #endif
 	if (!context->unwind_state) context->unwind_state = ([]);
 	context->unwind_state->top = err;
       }
       else if (context)
 	context->handle_exception (err, this_object()); // Will rethrow unknown errors.
-      else throw_fatal (err);
+      else {
+	LEAVE_CONTEXT();
+	throw_fatal (err);
+      }
+    LEAVE_CONTEXT();
     return res;
   }
 
@@ -2176,7 +2180,7 @@ class Parser
   {
     int res;
     ENTER_CONTEXT (context);
-    mixed err = catch {
+    if (mixed err = catch {
       if (context && context->unwind_state && context->unwind_state->top) {
 #ifdef MODULE_DEBUG
 	if (context->unwind_state->top != this_object())
@@ -2188,20 +2192,24 @@ class Parser
       }
       finish (in); // Might unwind.
       if (data_callback) data_callback (this_object());
-    };
-    LEAVE_CONTEXT();
-    if (err)
+    })
       if (objectp (err) && ([object] err)->thrown_at_unwind) {
 #ifdef DEBUG
-	if (err != this_object())
+	if (err != this_object()) {
+	  LEAVE_CONTEXT();
 	  fatal_error ("Internal error: Unexpected unwind object catched.\n");
+	}
 #endif
 	if (!context->unwind_state) context->unwind_state = ([]);
 	context->unwind_state->top = err;
       }
       else if (context)
 	context->handle_exception (err, this_object()); // Will rethrow unknown errors.
-      else throw_fatal (err);
+      else {
+	LEAVE_CONTEXT();
+	throw_fatal (err);
+      }
+    LEAVE_CONTEXT();
   }
 
   array handle_var (string varref)
