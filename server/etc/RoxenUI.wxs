@@ -15,12 +15,21 @@
     <CustomAction Id="CreatePikeLocation" Directory="SERVERDIR"
       ExeCommand='"[SERVERDIR]\pike\bin\pike" -e "Stdio.write_file(argv[1], argv[2]);" "pikelocation.txt" "[SERVERDIR]\pike\bin\pike"'
       Execute="commit" />
-    <CustomAction Id="InstallRoxenService" Directory="SERVERDIR"
+    <CustomAction Id="InstallRoxenService" Directory="TARGETDIR"
       ExeCommand='"[TARGETDIR]\ntstart" --install'
       Execute="commit" />
-    <CustomAction Id="RemoveRoxenService" Directory="SERVERDIR"
+    <CustomAction Id="RemoveRoxenService" Directory="TARGETDIR"
       ExeCommand='"[TARGETDIR]\ntstart" --remove'
       Execute="commit" />
+    <CustomAction Id="StartServer" Directory="TARGETDIR"
+      ExeCommand='net start RoxenService'
+      Execute="commit" />
+    <CustomAction Id="StopServer" Directory="TARGETDIR"
+      ExeCommand='net stop RoxenService'
+      Execute="commit" />
+    <CustomAction Id="StartBrowser" Property="BROWSER"
+      ExeCommand="[SERVER_PROTOCOL]://localhost:[SERVER_PORT]/"
+      Execute="commit" Return="asyncNoWait" />
     <UI>
       <Property Id="ErrorDialog"><![CDATA[ErrorDialog]]></Property>
       <Property Id="DefaultUIFont"><![CDATA[VsdDefaultUIFont.524F4245_5254_5341_4C45_534153783400]]></Property>
@@ -396,6 +405,7 @@ Click "Close" to exit.</Text>
         <Control Id="CloseButton" Type="PushButton" X="300" Y="261" Width="66" Height="18" Default="yes" Cancel="yes">
           <Text>{\VSI_MS_Sans_Serif13.0_0_0}&amp;Close</Text>
           <Publish Event="EndDialog" Value="Return"><![CDATA[1]]></Publish>
+	  <Publish Event="DoAction" Value="StartBrowser">REMOVE&lt;&gt;""</Publish>
         </Control>
         <Control Id="CancelButton" Type="PushButton" X="156" Y="261" Width="66" Height="18" Disabled="yes">
           <Text>{\VSI_MS_Sans_Serif13.0_0_0}Cancel</Text>
@@ -1134,6 +1144,7 @@ Click "Next" to start the installation.</Text>
     <Property Id="VSDNETMSG"><![CDATA[This setup requires the .NET Framework version [1].  Please install the .NET Framework and run this setup again.]]></Property>
     <Property Id="VSDINVALIDURLMSG"><![CDATA[The specified path '[2]' is unavailable. The Internet Information Server might not be running or the path exists and is redirected to another machine. Please check the status of this virtual directory in the Internet Services Manager.]]></Property>
     <Property Id="NEWERPRODUCTFOUND" Secure="yes" />
+    <Property Id="BROWSER">explorer</Property>
     <AdminExecuteSequence>
       <Custom Action="DIRCA_TARGETDIR" Before="CostInitialize"><![CDATA[TARGETDIR=""]]></Custom>
     </AdminExecuteSequence>
@@ -1149,6 +1160,8 @@ Click "Next" to start the installation.</Text>
       <Custom Action="CreatePikeLocation" After="CreateConfigInterface">REMOVE=""</Custom>
       <Custom Action="RemoveRoxenService" After="CreatePikeLocation">REMOVE&lt;&gt;""</Custom>
       <Custom Action="InstallRoxenService" After="RemoveRoxenService">REMOVE=""</Custom>
+      <Custom Action="StopServer" After="InstallRoxenService">REMOVE&lt;&gt;""</Custom>
+      <Custom Action="StartServer" After="StopServer">REMOVE=""</Custom>
     </InstallExecuteSequence>
     <Binary Id="DefSplashBitmap" src="Splash.bmp" />
     <Binary Id="DefBannerBitmap" src="Banner.bmp" />
