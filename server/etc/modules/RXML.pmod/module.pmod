@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.163 2001/06/09 02:39:44 nilsson Exp $
+// $Id: module.pmod,v 1.164 2001/06/11 19:12:19 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -2276,15 +2276,7 @@ class Frame
       if (flags & FLAG_PROC_INSTR) {
 	if (!content) {
 	  CHECK_RAW_TEXT;
-	  if (mixed err = catch {
-	    Parser_HTML()->add_quote_tag (
-	      "?",
-	      lambda (object p, string c) {
-		sscanf (c, "%*[^ \t\n\r]%s", content);
-		throw (0);
-	      },
-	      "?")->finish (this->raw_tag_text);
-	  }) throw (err);
+	  content = t_xml->parse_tag (this->raw_tag_text)[2];
 #ifdef DEBUG
 	  if (!stringp (content))
 	    fatal_error ("Failed to parse PI tag content for <?%s?> from %O.\n",
@@ -2292,25 +2284,10 @@ class Frame
 #endif
 	}
       }
-
       else if (!args || !content && !(flags & FLAG_EMPTY_ELEMENT)) {
 	CHECK_RAW_TEXT;
-	if (mixed err = catch {
-	  Parser_HTML()->_set_tag_callback (
-	    lambda (object p, string s) {
-	      if (!args) args = p->tag_args();
-	      if (content || flags & FLAG_EMPTY_ELEMENT) throw (0);
-	      else {
-		p->_set_tag_callback (0);
-		p->add_container (p->tag_name(),
-				  lambda (object p, mapping a, string c) {
-				    content = c;
-				    throw (0);
-				  });
-		return 1;
-	      }
-	    })->finish (this->raw_tag_text);
-	}) throw (err);
+	string ignored;
+	[ignored, args, content] = t_xml->parse_tag (this->raw_tag_text);
 #ifdef DEBUG
 	if (!mappingp (args))
 	  fatal_error ("Failed to parse tag args for <%s> from %O.\n",
@@ -2320,76 +2297,57 @@ class Frame
 		       tag->name, this->raw_tag_text);
 #endif
       }
-
       frame = overridden (args, content || "");
       frame->flags |= FLAG_UNPARSED;
       return frame;
     }
 
     else {
-      // Format a new tag, as like the original as possible. FIXME:
-      // When it's reformatted, the prefix (if any) won't stick, but
-      // it will when it isn't.
+      CHECK_RAW_TEXT;
+      // Format a new tag, as like the original as possible.
 
       if (flags & FLAG_PROC_INSTR) {
-	if (content)
-	  return result_type->format_tag (tag, 0, content);
-	else {
-	  CHECK_RAW_TEXT;
-	  return this->raw_tag_text;
+	if (content) {
+	  string name;
+	  [name, args, content] = t_xml->parse_tag (this->raw_tag_text);
+	  return result_type->format_tag (name, 0, content, tag->flags);
 	}
+	else
+	  return this->raw_tag_text;
       }
 
       else {
-	if (args && (content || flags & FLAG_EMPTY_ELEMENT))
-	  return result_type->format_tag (tag, args, content);
-	else {
-	  CHECK_RAW_TEXT;
-
-	  string s;
+	string s;
 #ifdef MODULE_DEBUG
-	  if (mixed err = catch {
+	if (mixed err = catch {
 #endif
-	    s = t_xml (PEnt)->eval (this->raw_tag_text,
-				    get_context(), empty_tag_set);
+	  s = t_xml (PXml)->eval (this->raw_tag_text,
+				  get_context(), empty_tag_set);
 #ifdef MODULE_DEBUG
-	  }) {
-	    if (objectp (err) && ([object] err)->thrown_at_unwind)
-	      fatal_error ("Can't save parser state when evaluating arguments.\n");
-	    throw_fatal (err);
-	  }
-#endif
-	  if (!args && !content) return s;
-
-	  if (mixed err = catch {
-	    Parser_HTML()->_set_tag_callback (
-	      lambda (object p, string s) {
-		if (!args) args = p->tag_args();
-		if (content || flags & FLAG_EMPTY_ELEMENT) throw (0);
-		else {
-		  p->_set_tag_callback (0);
-		  p->add_container (p->tag_name(),
-				    lambda (object p, mapping a, string c) {
-				      content = c;
-				      throw (0);
-				    });
-		  return 1;
-		}
-	      })->finish (this->raw_tag_text);
-	  }) throw (err);
-#ifdef DEBUG
-	  if (!mappingp (args))
-	    fatal_error ("Failed to parse tag args for <%s> from %O.\n",
-			 tag->name, this->raw_tag_text);
-	  if (!stringp (content))
-	    fatal_error ("Failed to parse tag content for <%s> from %O.\n",
-			 tag->name, this->raw_tag_text);
-#endif
-	  return result_type->format_tag (tag, args, content);
+	}) {
+	  if (objectp (err) && ([object] err)->thrown_at_unwind)
+	    fatal_error ("Can't save parser state when evaluating arguments.\n");
+	  throw_fatal (err);
 	}
+#endif
+	if (!args && !content) return s;
+
+	[string name, mapping(string:string) parsed_args,
+	 string parsed_content] = t_xml->parse_tag (this->raw_tag_text);
+#ifdef DEBUG
+	if (!mappingp (parsed_args))
+	  fatal_error ("Failed to parse tag args for <%s> from %O.\n",
+		       tag->name, this->raw_tag_text);
+	if (!stringp (parsed_content))
+	  fatal_error ("Failed to parse tag content for <%s> from %O.\n",
+		       tag->name, this->raw_tag_text);
+#endif
+	if (!args) args = parsed_args;
+	if (!content) content = parsed_content;
+	return result_type->format_tag (tag, args, content);
       }
-    }
 #undef CHECK_RAW_TEXT
+    }
   }
 
   //(!) Internals:
@@ -2733,9 +2691,7 @@ class Frame
 	    // Note: Approximate code duplication in _eval_args and Tag.eval_args().
 
 	    string splice_arg = raw_args["::"];
-	    if (splice_arg && type->entity_syntax)
-	      // Note: Not really accurate to look at entity_syntax here.
-	      m_delete (raw_args, "::");
+	    if (splice_arg) m_delete (raw_args, "::");
 	    else splice_arg = 0;
 	    mapping(string:Type) splice_req_types;
 
@@ -2756,6 +2712,7 @@ class Frame
 	    String.Buffer fn_text = String.Buffer();
 
 	    if (splice_arg) {
+	      // Note: This assumes an XML-like parser.
 	      Parser p = splice_arg_type->get_pcode_parser (ctx, 0, 0);
 	      THIS_TAG_DEBUG ("Evaluating splice argument %s\n",
 			      utils->format_short (splice_arg));
@@ -2772,32 +2729,16 @@ class Frame
 		throw_fatal (err);
 	      }
 #endif
-	      string expr =
-		sprintf ("%s (context, %s->parse_tag_args ((%s) || \"\"), %s)",
+	      fn_text->add (
+		sprintf ("return %s (context, "
+			 "RXML.xml_tag_parser->parse_tag_args ((%s) || \"\"), %s) + ([\n",
 			 comp->bind (_eval_args),
-			 comp->bind (xml_splice_arg_parser),
 			 p->p_code->_compile_text (comp),
-			 comp->bind (splice_req_types));
+			 comp->bind (splice_req_types)));
 	      p->p_code = 0;
 	      splice_arg_type->give_back (p);
-	      args = _eval_args (
-		ctx, xml_splice_arg_parser->parse_tag_args (splice_arg || ""),
-		splice_req_types);
-
-	      if (!zero_type (this->raw_tag_text)) {
-//  		expr = sprintf (
-//  		  "mapping(string:string) args = %s;\n"
-//  		  "%s->raw_tag_text = %s->format_tag ("
-//  		  "%s, args, %s, %d | RXML.FLAG_RAW_ARGS);\n"
-//  		  "return args;",
-//  		  expr, comp->bind (this), comp->bind (type),
-//  		  comp->bind (tag->name), comp->bind (content), flags);
-//  		frame->raw_tag_text =
-//  		  t_xml->format_tag (tagname, args, content, flags | FLAG_RAW_ARGS);
-	      }
-	      fn_text->add ("return ");
-	      fn_text->add (expr);
-	      fn_text->add (" + ([\n");
+	      args = _eval_args (ctx, xml_tag_parser->parse_tag_args (splice_arg || ""),
+				 splice_req_types);
 	    }
 	    else {
 	      args = raw_args;
@@ -5093,6 +5034,54 @@ static class TXml
   string capitalize (string val)
     {return capitalizer->clone()->finish (val)->read();}
 
+  array(string|mapping(string:string)) parse_tag (string tag_text)
+  //! Parses the first tag in @[tag_text] and returns an array where
+  //! the first element is the name of the tag, the second its
+  //! argument mapping, and the third the content. The second argument
+  //! is zero iff it's a processing instruction. The third argument is
+  //! zero iff the tag is on the empty element form (i.e. ending with
+  //! '/>').
+  {
+    array(string|mapping(string:string)) res = 0;
+    if (mixed err = catch {
+      if (sizeof (tag_text) >= 2 && tag_text[1] == '?') // A processing instruction.
+	xml_tag_parser->clone()->add_quote_tag (
+	  "?",
+	  lambda (object p, string content) {
+	    string name;
+	    sscanf (content, "%[^ \t\n\r]%s", name, content);
+	    res = name && content && ({name, 0, content});
+	    throw (0);
+	  },
+	  "?")->finish (tag_text);
+      else
+	xml_tag_parser->clone()->_set_tag_callback (
+	  lambda (object p, string s) {
+	    if (s == tag_text) {
+	      res = p->tag();
+	      res[2] = "";
+	      throw (0);
+	    }
+	    else {
+	      p->_set_tag_callback (0);
+	      p->add_tag (p->tag_name(),
+			  lambda (object p, mapping a) {
+			    res = p->tag();
+			    res[2] = 0;
+			    throw (0);
+			  });
+	      p->add_container (p->tag_name(),
+				lambda (object p, mapping a, string c) {
+				  res = ({p->tag_name(), a, c});
+				  throw (0);
+				});
+	      return 1;
+	    }
+	  })->finish (tag_text);
+    }) throw (err);
+    return res;
+  }
+
   string format_tag (string|Tag tag, void|mapping(string:string) args,
 		     void|string content, void|int flags)
   //! Returns a formatted XML tag. The flags argument contains a flag
@@ -5633,14 +5622,16 @@ mapping(int|string:TagSet) local_tag_set_cache = garb_local_tag_set_cache();
 
 static Type splice_arg_type;
 
+object/*(Parser.HTML)*/ xml_tag_parser;
 static object/*(Parser.HTML)*/
-  xml_splice_arg_parser, charref_decode_parser, lowercaser, uppercaser, capitalizer;
+  charref_decode_parser, lowercaser, uppercaser, capitalizer;
 
 static void init_parsers()
 {
   object/*(Parser.HTML)*/ p = Parser_HTML();
+  p->xml_tag_syntax (3);
   p->match_tag (0);
-  xml_splice_arg_parser = p;
+  xml_tag_parser = p;
 
   // Pretty similar to PEnt..
   p = Parser_HTML();
