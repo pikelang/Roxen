@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.33 1999/11/22 00:13:52 grubba Exp $
+ * $Id: rxml.pike,v 1.34 1999/11/22 00:17:42 grubba Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -1243,7 +1243,7 @@ int match_user(array u, string user, string f, int wwwfile, object id)
     s=Stdio.read_bytes(f);
   else
     s=id->conf->try_get_file(fix_relative(f,id), id);
-  return (pass=simple_parse_users_file(s, u[1]) &&
+  return ((pass=simple_parse_users_file(s, u[1])) &&
           (u[0] || match_passwd(u[2], pass)));
 }
 
