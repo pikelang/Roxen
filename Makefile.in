@@ -196,26 +196,27 @@ weak_cleanup:
 	  echo $$f; rm $$f || exit 1; \
 	done
 
-bump_version:
-	@(cd $(SRCDIR); \
-	  echo Updating sources...; \
-	  if cvs -q update -dA|egrep '^[CM?]'; then exit 1; else : ; fi; \
-	)
+bump_version: bump_version.stamp
+	@touch bump_version.stamp
 	@if test -f $(SRCDIR)/server/base_server/roxen.pike.new; then \
 	  echo Deleting old $(SRCDIR)/server/base_server/roxen.pike.new...; \
 	  rm $(SRCDIR)/server/base_server/roxen.pike.new || exit 1; \
 	else : ; fi
+	@(cd $(SRCDIR); \
+	  echo Updating sources...; \
+	  if cvs -q update -dA|egrep '^[CM?]'; then exit 1; else : ; fi; \
+	)
 	@(cd $(SRCDIR)/server/base_server; \
 	  echo Bumping version...; \
 	  build=`sed <roxen.pike -e'/__roxen_build__/s/[^0-9]*//gp' -ed|head -1`; \
 	  newbuild=`echo $$build 1+p|dc`; \
-	  sed <roxen.pike -e'/__roxen_build__/s/$$build/$$newbuild/' >roxen.pike.new; \
+	  sed <roxen.pike -e"/__roxen_build__/s/$$build/$$newbuild/" >roxen.pike.new; \
 	  checkbuild=`sed <roxen.pike.new -e'/__roxen_build__/s/[^0-9]*//gp' -ed|head -1`; \
 	  if test "x$$newbuild" = "x$$checkbuild"; then \
 	    mv -f roxen.pike.new roxen.pike || exit 1; \
 	    echo "Successfull bump to build $$newbuild."; \
 	  else \
-	    echo "Version bump failed: $$newbuild \!= $$checkbuild."; \
+	    echo "Version bump failed: $$newbuild != $$checkbuild."; \
 	    exit 1; \
 	  fi; \
 	  version=`sed <roxen.pike -e'/__roxen_version__/s/[^.0-9]*//gp' -ed|head -1`; \
@@ -227,6 +228,7 @@ bump_version:
 	  echo Tagging...; \
 	  cvs tag `cat VERSION | tr 'A-Z.' 'a-z_'`||exit 1; \
 	)
+	@touch bump_version
 
 pre_dist: bump_version weak_cleanup run_autoconf depend
 	@(cd pike; $(MAKE) pre_dist)
