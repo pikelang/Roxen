@@ -1,7 +1,5 @@
 #include <module.h>
 #define LOW_LOCALE (roxenp()->locale->get())
-#define LC LOW_LOCALE
-
 static inherit "html";
 
 // Increased for each variable, used to index the mappings below.
@@ -12,25 +10,27 @@ static int unique_vid;
 // quite a respectable amount of memory, the cost is speed. But not
 // all that great a percentage of speed.
 static mapping(int:mixed)  changed_values = ([]);
+static mapping(int:function(object:void)) changed_callbacks = ([]);
 static mapping(int:int)    all_flags      = ([]);
 static mapping(int:string) all_warnings   = ([]);
 static mapping(int:function(RequestID,object:int))
                            invisibility_callbacks = set_weak_flag( ([]), 1 );
 
 class Variable
-//. The basic variable type in Roxen. All other variable types should
-//. inherit this class. 
+//! The basic variable type in Roxen. All other variable types should
+//! inherit this class.
 {
-  constant type = "Basic";
-  //. Mostly used for debug
-
   constant is_variable = 1;
+
+  constant type = "Basic";
+  //! Mostly used for debug (sprintf( "%O", variable_obj ) uses it)
 
   static int _id = unique_vid++;
   // used for indexing the mappings.
 
   static mixed _initial; // default value
   static string _path;   // used for forms
+  static string  __name, __doc;
 
   void destroy()
   {
@@ -43,31 +43,31 @@ class Variable
   }
 
   string get_warnings()
-    //. Returns the current warnings, if any.
+    //! Returns the current warnings, if any.
   {
     return all_warnings[ _id ];
   }
 
   int get_flags() 
-    //. Returns the 'flags' field for this variable.
-    //. Flags is a bitwise or of one or more of 
-    //. 
-    //. VAR_EXPERT         Only for experts 
-    //. VAR_MORE           Only visible when more-mode is on (default on)
-    //. VAR_DEVELOPER      Only visible when devel-mode is on (default on)
-    //. VAR_INITIAL        Should be configured initially.
+    //! Returns the 'flags' field for this variable.
+    //! Flags is a bitwise or of one or more of 
+    //! 
+    //! VAR_EXPERT         Only for experts 
+    //! VAR_MORE           Only visible when more-mode is on (default on)
+    //! VAR_DEVELOPER      Only visible when devel-mode is on (default on)
+    //! VAR_INITIAL        Should be configured initially.
   {
     return all_flags[_id];
   }
 
   void set_flags( int flags )
-    //. Set the flags for this variable.
-    //. Flags is a bitwise or of one or more of 
-    //. 
-    //. VAR_EXPERT         Only for experts 
-    //. VAR_MORE           Only visible when more-mode is on (default on)
-    //. VAR_DEVELOPER      Only visible when devel-mode is on (default on)
-    //. VAR_INITIAL        Should be configured initially.
+    //! Set the flags for this variable.
+    //! Flags is a bitwise or of one or more of 
+    //! 
+    //! VAR_EXPERT         Only for experts 
+    //! VAR_MORE           Only visible when more-mode is on (default on)
+    //! VAR_DEVELOPER      Only visible when devel-mode is on (default on)
+    //! VAR_INITIAL        Should be configured initially.
   {
     if(!flags )
       m_delete( all_flags, _id );
@@ -80,10 +80,10 @@ class Variable
                         int expert_mode,
                         int devel_mode,
                         int initial )
-    //. Return 1 if this variable should be visible in the
-    //. configuration interface. The default implementation check the
-    //. 'flags' field, and the invisibility callback, if any. See
-    //. get_flags, set_flags and set_invisibibility_check_callback
+    //! Return 1 if this variable should be visible in the
+    //! configuration interface. The default implementation check the
+    //! 'flags' field, and the invisibility callback, if any. See
+    //! get_flags, set_flags and set_invisibibility_check_callback
   {
     int flags = get_flags();
     function cb;
@@ -98,10 +98,10 @@ class Variable
   }
 
   void set_invisibility_check_callback( function(RequestID,Variable:int) cb )
-    //. If the function passed as argument returns 1, the variable
-    //. will not be visible in the configuration interface.
-    //.
-    //. Pass 0 to remove the invisibility callback.
+    //! If the function passed as argument returns 1, the variable
+    //! will not be visible in the configuration interface.
+    //!
+    //! Pass 0 to remove the invisibility callback.
   {
     if( functionp( cb ) )
       invisibility_callbacks[ _id ] = cb;
@@ -109,64 +109,84 @@ class Variable
       m_delete( invisibility_callbacks, _id );
   }
 
+  function(Variable:void) get_changed_callback( )
+    //! Return the callback set with set_changed_callback
+  {
+    return changed_callbacks[ _id ];
+  }
+
+  void set_changed_callback( function(Variable:void) cb )
+    //! The function passed as an argument will be called 
+    //! when the variable value is changed.
+    //! 
+    //! Pass 0 to remove the callback.
+  {
+    if( functionp( cb ) )
+      changed_callbacks[ _id ] = cb;
+    else
+      m_delete( changed_callbacks, _id );
+  }
+
   function(RequestID,Variable:int) get_invisibility_check_callback() 
-    //. Return the current invisibility check callback
+    //! Return the current invisibility check callback
   {
     return invisibility_callbacks[_id];
   }
 
   string doc(  )
-    //. Return the documentation for this variable (locale dependant).
-    //. 
-    //. The default implementation queries the locale object in roxen
-    //. to get the documentation.
+    //! Return the documentation for this variable (locale dependant).
+    //! 
+    //! The default implementation queries the locale object in roxen
+    //! to get the documentation.
   {
-    return LOW_LOCALE->module_doc_string( _id, 1 );
+    return __doc || "";
   }
   
   string name(  )
-    //. Return the name of this variable (locale dependant).
-    //. 
-    //. The default implementation queries the locale object in roxen
-    //. to get the documentation.
+    //! Return the name of this variable (locale dependant).
+    //! 
+    //! The default implementation queries the locale object in roxen
+    //! to get the documentation.
   {
-    return LOW_LOCALE->module_doc_string( _id, 0 );
+    return __name || "unnamed "+_id;
   } 
 
   string type_hint(  )
-    //. Return the type hint for this variable.
-    //. Type hints are generic documentation for this variable type, 
-    //. and is the same for all instances of the type.
+    //! Return the type hint for this variable.
+    //! Type hints are generic documentation for this variable type, 
+    //! and is the same for all instances of the type.
   {
   }
 
   mixed default_value()
-    //. The default (initial) value for this variable.
+    //! The default (initial) value for this variable.
   {
     return _initial;
   }
 
+  void set_warning( string to )
+    //! Set the warning shown in the configuration interface
+  { 
+    if( to && strlen(to) )
+      all_warnings[ _id ] = to; 
+    else
+      m_delete( all_warnings, _id );
+  }
+
   int set( mixed to )
-    //. Set the variable to a new value. 
-    //. If this function returns true, the set was successful. 
-    //. Otherwise 0 is returned. 0 is also returned if the variable was
-    //. not changed by the set. 1 is returned if the variable was
-    //. changed, and -1 is returned if the variable was changed back to
-    //. it's default value.
-    //.
-    //. If verify_set() threw a string, ([])[0] is returned, that is,
-    //. 0 with zero_type set.
-    //.
-    //. If verify_set() threw an exception, the exception is thrown.
+    //! Set the variable to a new value. 
+    //! If this function returns true, the set was successful. 
+    //! Otherwise 0 is returned. 0 is also returned if the variable was
+    //! not changed by the set. 1 is returned if the variable was
+    //! changed, and -1 is returned if the variable was changed back to
+    //! it's default value.
+    //!
+    //! If verify_set() threw a string, ([])[0] is returned, that is,
+    //! 0 with zero_type set.
+    //!
+    //! If verify_set() threw an exception, the exception is thrown.
   {
     string err, e2;
-    void set_warning( string to )
-    { 
-      if( to && strlen(to) )
-        all_warnings[ _id ] = to; 
-      else
-        m_delete( all_warnings, _id );
-    };
     if( e2 = catch( [err,to] = verify_set( to )) )
     {
       if( stringp( e2 ) )
@@ -181,10 +201,10 @@ class Variable
   }
 
   int low_set( mixed to )
-    //. Forced set. No checking is done whatsoever.
-    //. 1 is returned if the variable was changed, -1 is returned if
-    //. the variable was changed back to it's default value and 0
-    //. otherwise.
+    //! Forced set. No checking is done whatsoever.
+    //! 1 is returned if the variable was changed, -1 is returned if
+    //! the variable was changed back to it's default value and 0
+    //! otherwise.
   {
     if( equal( to, query() ) )
       return 0;
@@ -192,17 +212,21 @@ class Variable
     if( !equal(to, default_value() ) )
     {
       changed_values[ _id ] = to;
+      if( get_changed_callback() )
+        catch( get_changed_callback()( this_object() ) );
       return 1;
     }
     else
     {
       m_delete( changed_values, _id );
+      if( get_changed_callback() )
+        catch( get_changed_callback()( this_object() ) );
       return -1;
     }
   }
 
   mixed query()
-    //. Returns the current value for this variable.
+    //! Returns the current value for this variable.
   {
     mixed v;
     if( !zero_type( v = changed_values[ _id ] ) )
@@ -211,27 +235,27 @@ class Variable
   }
   
   int is_defaulted()
-    //. Return true if this variable is set to it's default value.
+    //! Return true if this variable is set to it's default value.
   {
     return zero_type( changed_values[ _id ] ) || 
            equal(changed_values[ _id ], default_value());
   }
 
   array(string|mixed) verify_set( mixed new_value )
-    //. Return ({ error, new_value }) for the variable, or throw a string.
-    //. 
-    //. If error != 0, it should contain a warning or error message.
-    //. If new_value is modified, it will be used instead of the 
-    //. supplied value.
-    //.
-    //. If a string is thrown, it will be used as a error message from
-    //. set, and the variable will not be changed.
+    //! Return ({ error, new_value }) for the variable, or throw a string.
+    //! 
+    //! If error != 0, it should contain a warning or error message.
+    //! If new_value is modified, it will be used instead of the 
+    //! supplied value.
+    //!
+    //! If a string is thrown, it will be used as a error message from
+    //! set, and the variable will not be changed.
   {
     return ({ 0, new_value });
   }
 
   mapping(string:string) get_form_vars( RequestID id )
-    //. Return all form variables preficed with path().
+    //! Return all form variables preficed with path().
   {
     string p = path();
     array names = glob( p+"*", indices(id->variables) );
@@ -242,19 +266,19 @@ class Variable
   }
 
   mixed transform_from_form( string what )
-    //. Given a form value, return what should be set.
-    //. Used by the default set_from_form implementation.
+    //! Given a form value, return what should be set.
+    //! Used by the default set_from_form implementation.
   {
     return what;
   }
   
   void set_from_form( RequestID id )
-    //. Set this variable from the form variable in id->Variables,
-    //. if any are available. The default implementation simply sets
-    //. the variable to the string in the form variables.
-    //.
-    //. Other side effects: Might create warnings to be shown to the 
-    //. user (see get_warnings)
+    //! Set this variable from the form variable in id->Variables,
+    //! if any are available. The default implementation simply sets
+    //! the variable to the string in the form variables.
+    //!
+    //! Other side effects: Might create warnings to be shown to the 
+    //! user (see get_warnings)
   {
     mapping val;
     if( sizeof( val = get_form_vars(id)) && val[""] && 
@@ -263,36 +287,36 @@ class Variable
   }
   
   string path()
-    //. A unique identifier for this variable. 
-    //. Should be used to prefix form variable names.
-    //. 
-    //. Unless this variable was created by defvar(), the path is set
-    //. by the configuration interface the first time the variable is
-    //. to be shown in a form. This function can thus return 0. If it
-    //. does, and you still have to show the form, call set_path( )
-    //. with a unique string.
+    //! A unique identifier for this variable. 
+    //! Should be used to prefix form variable names.
+    //! 
+    //! Unless this variable was created by defvar(), the path is set
+    //! by the configuration interface the first time the variable is
+    //! to be shown in a form. This function can thus return 0. If it
+    //! does, and you still have to show the form, call set_path( )
+    //! with a unique string.
   {
     return _path;
   }
 
   void set_path( string to )
-    //. Set the path. Not normally called from user-level code.
-    //. 
-    //. This function must be called at least once before render_form
-    //. can be called (at least if more than one variable is to be 
-    //. shown on the same page). This is normally done by the 
-    //. configuration interface.
+    //! Set the path. Not normally called from user-level code.
+    //! 
+    //! This function must be called at least once before render_form
+    //! can be called (at least if more than one variable is to be 
+    //! shown on the same page). This is normally done by the 
+    //! configuration interface.
   {
     _path = to;
   }
 
   string render_form( RequestID id );
-    //. Return a (HTML) form to change this variable. The name of all <input>
-    //. or similar variables should be prefixed with the value returned
-    //. from the path() function.
+    //! Return a (HTML) form to change this variable. The name of all <input>
+    //! or similar variables should be prefixed with the value returned
+    //! from the path() function.
 
   string render_view( RequestID id )
-    //. Return a 'view only' version of this variable.
+    //! Return a 'view only' version of this variable.
   {
     return Roxen.html_encode_string( (string)query() );
   }
@@ -305,44 +329,23 @@ class Variable
                       query() );
   }
 
-
-  int deflocaledoc( string locale, string name, string doc,
-                    mapping|void choices )
-    //. Define the documentation (name and built-in runtime documentation) 
-    //. for the specified locale.
-    //. 
-    //. Returns 1 if the locale exists, 0 otherwise.
-    //. 
-    //. The choices mapping is a mapping from value to the displayed
-    //. option title. You can pass 0 to avoid translation.
-  {
-    catch {
-      RoxenLocale[locale]->
-        register_module_doc(_id, name,doc,choices);
-      return 1;
-    };
-    return 0;
-  }
-
-
   static void create(mixed default_value,int flags,
                      string std_name,string std_doc)
-    //. Constructor. 
-    //. Flags is a bitwise or of one or more of 
-    //. 
-    //. VAR_EXPERT         Only for experts 
-    //. VAR_MORE           Only visible when more-mode is on (default on)
-    //. VAR_DEVELOPER      Only visible when devel-mode is on (default on)
-    //. VAR_INITIAL        Should be configured initially.
-    //. 
-    //. The std_name and std_doc is the name and documentation string
-    //. for the default locale (always english)
-    //. 
-    //. Use deflocaledoc to define translations.
+    //! Constructor. 
+    //! Flags is a bitwise or of one or more of 
+    //! 
+    //! VAR_EXPERT         Only for experts 
+    //! VAR_MORE           Only visible when more-mode is on (default on)
+    //! VAR_DEVELOPER      Only visible when devel-mode is on (default on)
+    //! VAR_INITIAL        Should be configured initially.
+    //! 
+    //! The std_name and std_doc is the name and documentation string
+    //! for the default locale (always english)
   {
-    _initial = default_value;
     set_flags( flags );
-    deflocaledoc( "standard", std_name, std_doc, 0 );
+    _initial = default_value;
+    __name = std_name;
+    __doc = std_doc;
   }
 }
 
@@ -354,7 +357,7 @@ class Variable
 // =====================================================================
 
 class Float
-//. Float variable, with optional range checks, and adjustable precision.
+//! Float variable, with optional range checks, and adjustable precision.
 {
   inherit Variable;
   constant type = "Int";
@@ -369,8 +372,8 @@ class Float
   }
 
   void set_range(float minimum, float maximum )
-    //. Set the range of the variable, if minimum and maximum are both
-    //. 0.0 (the default), the range check is removed.
+    //! Set the range of the variable, if minimum and maximum are both
+    //! 0.0 (the default), the range check is removed.
   {
     if( minimum == maximum )
       mm_set = 0;
@@ -381,9 +384,9 @@ class Float
   }
 
   void set_precision( int prec )
-    //. Set the number of _decimals_ shown to the user.
-    //. If prec is 3, and the float is 1, 1.000 will be shown.
-    //. Default is 2.
+    //! Set the number of _decimals_ shown to the user.
+    //! If prec is 3, and the float is 1, 1.000 will be shown.
+    //! Default is 2.
   {
     _prec = prec;
   }
@@ -434,15 +437,15 @@ class Float
 // =====================================================================
 
 class Int
-//. Integer variable, with optional range checks
+//! Integer variable, with optional range checks
 {
   inherit Variable;
   constant type = "Int";
   static int _max, _min, mm_set;
 
   void set_range(int minimum, int maximum )
-    //. Set the range of the variable, if minimum and maximum are both
-    //. 0 (the default), the range check is removed.
+    //! Set the range of the variable, if minimum and maximum are both
+    //! 0 (the default), the range check is removed.
   {
     if( minimum == maximum )
       mm_set = 0;
@@ -491,12 +494,12 @@ class Int
 // =====================================================================
 
 class String
-//. String variable
+//! String variable
 {
   inherit Variable;
   constant type = "String";
   constant width = 40;
-  //. The width of the input field. Used by overriding classes.
+  //! The width of the input field. Used by overriding classes.
   string render_form( RequestID id )
   {
     return input(path(), (string)query(), width);
@@ -507,14 +510,14 @@ class String
 // Text
 // =====================================================================
 class Text
-//. Text (multi-line string) variable
+//! Text (multi-line string) variable
 {
   inherit String;
   constant type = "Text";
   constant cols = 60;
-  //. The width of the textarea
+  //! The width of the textarea
   constant rows = 10;
-  //. The height of the textarea
+  //! The height of the textarea
   string render_form( RequestID id )
   {
     return "<textarea cols='"+cols+"' rows='"+rows+"' name='"+path()+"'>"
@@ -529,7 +532,7 @@ class Text
 // Password
 // =====================================================================
 class Password
-//. Password variable (uses crypt)
+//! Password variable (uses crypt)
 {
   inherit String;
   constant width = 20;
@@ -555,7 +558,7 @@ class Password
 }
 
 class File
-//. A filename
+//! A filename
 {
   inherit String;
   constant type = "File";
@@ -563,7 +566,7 @@ class File
 }
 
 class Location
-//. A location in the virtual filesystem
+//! A location in the virtual filesystem
 {
   inherit String;
   constant type = "Location";
@@ -571,7 +574,7 @@ class Location
 }
 
 class URL
-//. A URL.
+//! A URL.
 {
   inherit String;
   constant type = "URL";
@@ -584,7 +587,7 @@ class URL
 }
 
 class Directory
-//. A Directory.
+//! A Directory.
 {
   inherit String;
   constant type = "Directory";
@@ -602,37 +605,40 @@ class Directory
 // =====================================================================
 
 class MultipleChoice
-//. Base class for multiple-choice (one of many) variables.
+//! Base class for multiple-choice (one of many) variables.
 {
   inherit Variable;
   static array _list = ({});
 
   void set_choice_list( array to )
-    //. Set the list of choices.
+    //! Set the list of choices.
   {
     _list = to;
   }
 
   array get_choice_list( )
-    //. Get the list of choices. Used by this class as well.
-    //. You can overload this function if you want a dynamic list.
+    //! Get the list of choices. Used by this class as well.
+    //! You can overload this function if you want a dynamic list.
   {
     return _list;
   }
 
   static string _name( mixed what )
-    //. Get the name used as value for an element gotten from the
-    //. get_choice_list() function.
+    //! Get the name used as value for an element gotten from the
+    //! get_choice_list() function.
   {
-    return  (string)what;
+    return (string)what;
+  }
+
+  mapping(string:string) translation_table()
+  {
   }
 
   static string _title( mixed what )
-    //. Get the title used as description (shown to the user) for an
-    //. element gotten from the get_choice_list() function.
+    //! Get the title used as description (shown to the user) for an
+    //! element gotten from the get_choice_list() function.
   {
-    mapping tr = LOW_LOCALE->module_doc_string( _id, 2 );
-    if( tr )
+    if( mapping tr = translation_table() )
       return tr[ what ] || (string)what;
     return (string)what;
   }
@@ -652,22 +658,20 @@ class MultipleChoice
   }
   static void create( mixed default_value, array choices,
                       int _flags, string std_name, string std_doc )
-    //. Constructor. 
-    //.
-    //. Choices is the list of possible choices, can be set with 
-    //. set_choice_list at any time.
-    //. 
-    //. Flags is a bitwise or of one or more of 
-    //. 
-    //. VAR_EXPERT         Only for experts 
-    //. VAR_MORE           Only visible when more-mode is on (default on)
-    //. VAR_DEVELOPER      Only visible when devel-mode is on (default on)
-    //. VAR_INITIAL        Should be configured initially.
-    //. 
-    //. The std_name and std_doc is the name and documentation string
-    //. for the default locale (always english)
-    //. 
-    //. Use deflocaledoc to define translations.
+    //! Constructor. 
+    //!
+    //! Choices is the list of possible choices, can be set with 
+    //! set_choice_list at any time.
+    //! 
+    //! Flags is a bitwise or of one or more of 
+    //! 
+    //! VAR_EXPERT         Only for experts 
+    //! VAR_MORE           Only visible when more-mode is on (default on)
+    //! VAR_DEVELOPER      Only visible when devel-mode is on (default on)
+    //! VAR_INITIAL        Should be configured initially.
+    //! 
+    //! The std_name and std_doc is the name and documentation string
+    //! for the default locale (always english)
   {
     ::create( default_value, _flags, std_name, std_doc );
     set_choice_list( choices );
@@ -680,7 +684,7 @@ class MultipleChoice
 // =====================================================================
 
 class StringChoice
-//. Select one of many strings.
+//! Select one of many strings.
 {
   inherit MultipleChoice;
   constant type = "StringChoice";
@@ -688,7 +692,7 @@ class StringChoice
 
 
 class IntChoice
-//. Select one of many integers.
+//! Select one of many integers.
 {
   inherit MultipleChoice;
   constant type = "IntChoice";
@@ -699,16 +703,16 @@ class IntChoice
 }
 
 class FloatChoice
-//. Select one of many floating point (real) numbers.
+//! Select one of many floating point (real) numbers.
 {
   inherit MultipleChoice;
   constant type = "FloatChoice";
   static int _prec = 3;
 
   void set_precision( int prec )
-    //. Set the number of _decimals_ shown to the user.
-    //. If prec is 3, and the float is 1, 1.000 will be shown.
-    //. Default is 2.
+    //! Set the number of _decimals_ shown to the user.
+    //! If prec is 3, and the float is 1, 1.000 will be shown.
+    //! Default is 2.
   {
     _prec = prec;
   }
@@ -729,7 +733,7 @@ class FloatChoice
 }
 
 class FontChoice
-//. Select a font from the list of available fonts
+//! Select a font from the list of available fonts
 {
   inherit StringChoice;
   constant type = "FontChoice";
@@ -742,20 +746,18 @@ class FontChoice
   }
   static void create(mixed default_value,int flags,
                      string std_name,string std_doc)
-    //. Constructor. 
-    //. Flags is a bitwise or of one or more of 
-    //. 
-    //. VAR_EXPERT         Only for experts 
-    //. VAR_MORE           Only visible when more-mode is on (default on)
-    //. VAR_DEVELOPER      Only visible when devel-mode is on (default on)
-    //. VAR_INITIAL        Should be configured initially.
-    //. 
-    //. The std_name and std_doc is the name and documentation string
-    //. for the default locale (always english)
-    //. 
-    //. Use deflocaledoc to define translations.
+    //! Constructor. 
+    //! Flags is a bitwise or of one or more of 
+    //! 
+    //! VAR_EXPERT         Only for experts 
+    //! VAR_MORE           Only visible when more-mode is on (default on)
+    //! VAR_DEVELOPER      Only visible when devel-mode is on (default on)
+    //! VAR_INITIAL        Should be configured initially.
+    //! 
+    //! The std_name and std_doc is the name and documentation string
+    //! for the default locale (always english)
   {
-    ::create( default_value,0, flags,std_name, std_doc );
+    ::create( default_value, 0, flags,std_name, std_doc );
   }
 }
 
@@ -764,15 +766,15 @@ class FontChoice
 // List baseclass
 // =====================================================================
 class List
-//. Many of one type types
+//! Many of one type types
 {
   inherit String;
   constant type="List";
   constant width = 40;
 
   string transform_to_form( mixed what )
-    //. Override this function to do the value->form mapping for
-    //. indivindial elements in the array.
+    //! Override this function to do the value->form mapping for
+    //! indivindial elements in the array.
   {
     return (string)what;
   }
@@ -878,7 +880,7 @@ class List
 // List subclasses
 // =====================================================================
 class DirectoryList
-//. A list of directories
+//! A list of directories
 {
   inherit List;
   constant type="DirectoryList";
@@ -896,14 +898,14 @@ class DirectoryList
 }
 
 class StringList
-//. A list of strings
+//! A list of strings
 {
   inherit List;
   constant type="StringList";
 }
 
 class IntList
-//. A list of integers
+//! A list of integers
 {
   inherit List;
   constant type="IntList";
@@ -914,7 +916,7 @@ class IntList
 }
 
 class FloatList
-//. A list of floating point numbers
+//! A list of floating point numbers
 {
   inherit List;
   constant type="DirectorYList";
@@ -923,9 +925,9 @@ class FloatList
   static int _prec = 3;
 
   void set_precision( int prec )
-    //. Set the number of _decimals_ shown to the user.
-    //. If prec is 3, and the float is 1, 1.000 will be shown.
-    //. Default is 2.
+    //! Set the number of _decimals_ shown to the user.
+    //! If prec is 3, and the float is 1, 1.000 will be shown.
+    //! Default is 2.
   {
     _prec = prec;
   }
@@ -938,7 +940,7 @@ class FloatList
 }
 
 class URLList
-//. A list of URLs
+//! A list of URLs
 {
   inherit List;
   constant type="UrlList";
@@ -961,7 +963,7 @@ class URLList
 }
 
 class PortList
-//. A list of Port URLs
+//! A list of Port URLs
 {
   inherit List;
   constant type="PortList";
@@ -985,7 +987,7 @@ class PortList
 
 
 class FileList
-//. A list of filenames.
+//! A list of filenames.
 {
   inherit List;
   constant type="FileList";
@@ -997,7 +999,7 @@ class FileList
 // =====================================================================
 
 class Flag
-//. A on/off toggle.
+//! A on/off toggle.
 {
   inherit Variable;
   constant type = "Flag";
@@ -1027,7 +1029,7 @@ class Flag
 // Utility functions used in multiple variable classes above
 // =================================================================
 
-static array(string) verify_port( string port, int nofhttp )
+array(string) verify_port( string port, int nofhttp )
 {
   string warning="";
   if( (int)port )

@@ -1,26 +1,32 @@
 // This file is part of Roxen Webserver.
 // Copyright © 2000, Roxen IS.
-// $Id: basic_defvar.pike,v 1.13 2000/07/09 17:18:53 grubba Exp $
+// $Id: basic_defvar.pike,v 1.14 2000/07/09 18:18:58 per Exp $
+// (string:Variable.Variable) 
+mapping(string:Variable.Variable)  variables=([]);
+//! Please do not modify this list directly, instead use 
+//! defvar, killvar, getvar, query and set
+
 #include <module.h>
 
-mapping (string:Variable.Variable) variables=([]);
-//. Please do not modify this list directly, instead use 
-//. defvar, killvar, query and set
+Variable.Variable getvar( string name )
+//! Return the variable object associated with the specified variable
+{
+  return variables[name];
+}
 
 int deflocaledoc( string locale, string variable,
 		   string name, string doc, mapping|void translate )
-//. Equivalent to variables[variable]->deflocaledoc( loc,name, doc, translate )
-//. This is a compatibility function, and as such is deprecated.
-//. But it will be supported for the forseeable function.
+//! Equivalent to variables[variable]->deflocaledoc( loc,name, doc, translate )
+//! This is a compatibility function, and as such is deprecated.
+//! But it will be supported for the forseeable function.
 {
-  if( !variables[variable] )
-    error( variable+" is not a defined variable\n" );
-  return variables[variable]->deflocaledoc( locale, name, doc, translate );
+  werror("Warning: [%O:%O:%O] deflocaledoc is deprecated. Ignored.\n",
+         this_object(), locale, variable );
 }
 
 
 void set(string var, mixed value)
-//. Set the variable 'var' to the specified value.
+//! Set the variable 'var' to the specified value.
 {
   if(!variables[var]) 
     report_error( "Setting undefined variable: "+var+".\n" );
@@ -29,7 +35,7 @@ void set(string var, mixed value)
 }
 
 int killvar(string var)
-//. Undefine the variable 'var'.
+//! Undefine the variable 'var'.
 {
   if(!variables[var]) report_error("Killing undefined variable: "+var+".\n");
   m_delete(variables, var);
@@ -38,10 +44,10 @@ int killvar(string var)
 
 
 void setvars( mapping (string:mixed) vars )
-//. Set the variables from the mapping, which should be on the form
-//. ([ "variable name":value, ... ]). 
-//. Used by roxen internals, not all that useful for the module
-//. programmer.
+//! Set the variables from the mapping, which should be on the form
+//! ([ "variable name":value, ... ]). 
+//! Used by roxen internals, not all that useful for the module
+//! programmer.
 {
 //   werror("setvars: %O\n", vars );
   string v;
@@ -53,14 +59,14 @@ void setvars( mapping (string:mixed) vars )
 /*
 
 Variable.Variable defvar( string sname, Variable.Variable variable )
-//. Define 'sname' to be 'variable',
+//! Define 'sname' to be 'variable',
 
 Variable.Variable defvar( string sname, mixed value, string name, 
                           int type, string doc, array|void misc,
                           int|function not_in_config  )
-//. Define a new variable named sname, with the options specified in the list.
-//. This is a compatibility version of the function, and as such is deprecated.
-//. But it will be supported for the forseeable function.
+//! Define a new variable named sname, with the options specified in the list.
+//! This is a compatibility version of the function, and as such is deprecated.
+//! But it will be supported for the forseeable function.
 
 */
 
@@ -76,20 +82,24 @@ Variable.Variable defvar(string var, mixed value,
                          int|function|void not_in_config,
                          mapping|void option_translations)
 {
-  mapping ln, ld;
+  mapping ln;
   if( objectp( value ) && value->is_variable )
     return (variables[var] = value);
 
   if( mappingp( name ) )
   {
+    werror("Warning: [%O:%O] name/doc as mapping is deprecated. Ignored.\n",
+           this_object(), var );
     ln = name;
-    name = name->standard;
+    name = name->standard || name->english;
   }
 
   if( mappingp( doc_str ) )
   {
-    ld = doc_str;
-    doc_str = doc_str->standard;
+    if( !ln )
+      werror("Warning: [%O:%O] doc as mapping is deprecated. Ignored.\n",
+             this_object(), var );
+    doc_str = doc_str->standard || doc_str->english;
   }
 
   Variable.Variable vv;
@@ -230,27 +240,27 @@ error("Variable type "+(type&VAR_TYPE_MASK)+" with misc no longer supported.\n"
                                                 Variable.Variable i )
                                          { return 1; } );
     
-  if( ln && ld )
-  {
-    foreach( indices( ln ), string locale )
-    {
-      if( ln[locale] && ld[locale] )
-      {
-        if( option_translations && option_translations[ locale ] )
-          vv->deflocaledoc( locale, ln[locale], ld[locale], 
-                            option_translations[locale] );
-        else
-          vv->deflocaledoc( locale, ln[locale], ld[locale] );
-      }
-    }
-  }
+//   if( ln && ld )
+//   {
+//     foreach( indices( ln ), string locale )
+//     {
+//       if( ln[locale] && ld[locale] )
+//       {
+//         if( option_translations && option_translations[ locale ] )
+//           vv->deflocaledoc( locale, ln[locale], ld[locale], 
+//                             option_translations[locale] );
+//         else
+//           vv->deflocaledoc( locale, ln[locale], ld[locale] );
+//       }
+//     }
+//   }
 
   return (variables[var] = vv);
 }
 
 mixed query(string|void var, int|void ok)
-//. Query the variable 'var'. If 'ok' is true, it is not an error if the 
-//. specified variable does not exist.
+//! Query the variable 'var'. If 'ok' is true, it is not an error if the 
+//! specified variable does not exist.
 {
   if(var) 
   {
@@ -264,8 +274,8 @@ mixed query(string|void var, int|void ok)
 }
 
 void definvisvar(string name, int value, int type, array|void misc)
-//. Convenience function, define an invisible variable, this variable
-//. will be saved, but it won't be visible in the administration interface.
+//! Convenience function, define an invisible variable, this variable
+//! will be saved, but it won't be visible in the administration interface.
 {
   defvar(name, value, "", type, "", misc, lambda(){return 1;} );
 }
