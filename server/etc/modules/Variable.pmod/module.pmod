@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.18 2000/09/19 12:28:50 per Exp $
+// $Id: module.pmod,v 1.19 2000/09/20 22:24:16 per Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1175,15 +1175,6 @@ static array(string) verify_port( string port, int nofhttp )
     warning += "Added / to the end of "+port+"\n";
     path = "/";
   }
-  int pno;
-  if( sscanf( host, "%s:%d", host, pno ) == 2)
-    if( roxenp()->protocols[ lower_case( protocol ) ] 
-        && (pno == roxenp()->protocols[ lower_case( protocol ) ]->default_port ))
-        warning += "Removed the "
-                "default port number ("+pno+") from "+port+"\n";
-    else
-      host = host+":"+pno;
-
   if( nofhttp && protocol == "fhttp" )
   {
     warning += "Changed " + protocol + " to http\n";
@@ -1209,6 +1200,15 @@ static array(string) verify_port( string port, int nofhttp )
     }
 #endif
   }
+  int pno;
+  if( sscanf( host, "%s:%d", host, pno ) == 2)
+    if( roxenp()->protocols[ lower_case( protocol ) ] 
+        && (pno == roxenp()->protocols[ lower_case( protocol ) ]->default_port ))
+        warning += "Removed the "
+                "default port number ("+pno+") from "+port+"\n";
+    else
+      host = host+":"+pno;
+
 
   port = protocol+"://"+host+path;
 
