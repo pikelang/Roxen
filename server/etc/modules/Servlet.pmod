@@ -68,13 +68,13 @@ static void check_exception()
 {
   object e = jvm->exception_occurred();
   if(e) {
+    jvm->exception_clear();
     object sw = stringwriter_class->alloc();
     stringwriter_init(sw);
     object pw = printwriter_class->alloc();
     printwriter_init(pw, sw);
     throwable_printstacktrace(e, pw);
     printwriter_flush(pw);
-    jvm->exception_clear();
     array bt = backtrace();
     throw(({(string)sw, bt[..sizeof(bt)-2]}));
   }
