@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.17 2000/09/19 10:34:38 per Exp $
+// $Id: module.pmod,v 1.18 2000/09/19 12:28:50 per Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -351,7 +351,9 @@ class Variable
   string render_view( RequestID id )
     //! Return a 'view only' version of this variable.
   {
-    return Roxen.html_encode_string( (string)query() );
+    mixed v = query();
+    if( arrayp(v) ) v = map(v,lambda(mixed v){return(string)v;})*", " ;
+    return Roxen.html_encode_string( (string)v );
   }
   
   static string _sprintf( int i )
