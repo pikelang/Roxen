@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: tablify.pike,v 1.44 2000/03/01 00:01:57 nilsson Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.45 2000/03/17 00:50:01 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -120,7 +120,7 @@ string make_table(array subtitles, array table, mapping opt, RequestID id)
       r+="<th align=\"left\">"+(opt["interactive-sort"]?"<a href=\""+encode_url(col,opt->sortcol||0,opt->state,id)+"\">":"");
       if(opt->nicer)
         r+="<gtext nfont=\""+(opt->font||"lucida")+"\" scale=\""+
-	   (opt->scale||"0.36")+"\" fgcolor=\""+(opt->titlecolor||"white")+"\" bgcolor=\""+
+	   (opt->scale||"0.4")+"\" fgcolor=\""+(opt->titlecolor||"white")+"\" bgcolor=\""+
 	   (opt->titlebgcolor||"#112266")+"\""+(opt->noxml?" noxml":"")+">"+s+"</gtext>";
       else if(opt->nice)
         r+="<font color=\""+(opt->titlecolor||"#ffffff")+"\">"+s+"</font>";
@@ -161,7 +161,7 @@ string make_table(array subtitles, array table, mapping opt, RequestID id)
 
         //The right way<tm> is to preparse the whole column and find the longest string of
         //decimals and use that to calculate the maximum width of the decimal cell, insted
-        //of just saying widht=30, which easily produces an ugly result.
+        //of just saying width=30, which easily produces an ugly result.
         r+="<td align=\"right\"><table border=\"0\" cellpadding=\"0\" cellspacing=\"0\"><tr><td align=\"right\">"+
           font+a[0]+nofont+"</td><td>"+font+"."+nofont+"</td><td align=\"left\" width=\"30\">"+font+
           (sizeof(a)>1?a[1]:"0")+nofont;
@@ -206,7 +206,7 @@ string make_table(array subtitles, array table, mapping opt, RequestID id)
 
   m_delete(id->misc, "tmp_colmax");
   if(opt->nice || opt->nicer)
-    return r+"</table></td></tr>\n</table>\n";
+    return parse_rxml(r,id)+"</table></td></tr>\n</table>\n";
 
   m_delete(opt, "cellalign");
   m_delete(opt, "cellvalign");
@@ -221,7 +221,7 @@ string _fields(string name, mapping arg, string q, mapping m)
   return "";
 }
 
-string container_tablify(string tag, mapping m, string q, RequestID id)
+string simpletag_tablify(string tag, mapping m, string q, RequestID id)
 {
   array rows, res;
   string sep;

@@ -3,7 +3,7 @@
 
 #if constant(Languages)
 #define error(X) throw( ({ (X), backtrace() }) )
-constant cvs_version = "$Id: lisp.pike,v 1.16 2000/02/24 05:20:11 nilsson Exp $";
+constant cvs_version = "$Id: lisp.pike,v 1.17 2000/03/17 00:54:52 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -217,7 +217,7 @@ object lisp_compile(string s)
   return o;
 }
 
-string tag_lisp(string t, mapping m, string c,
+string simpletag_lisp(string t, mapping m, string c,
 		object id, object f, mapping defines)
 {
 //   NOCACHE();
@@ -240,13 +240,6 @@ string tag_lisp(string t, mapping m, string c,
   if (m->once)
     e->once_done = 1;
   return globals->lisp_result;
-}
-
-mapping query_tag_callers() { return ([]); }
-
-mapping query_container_callers()
-{
-  return ([ "lisp":tag_lisp, ]);
 }
 
 #if 0
