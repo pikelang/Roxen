@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: html_wash.pike,v 1.12 2000/09/14 19:06:18 wellhard Exp $";
+constant cvs_version = "$Id: html_wash.pike,v 1.13 2000/09/15 09:17:51 kuntri Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "HTML washer";
@@ -186,76 +186,78 @@ constant tagdoc=([
 </desc>
 
 <attr name='keep-all'>
- Leave all contained tags intact. Overrides the value of
- keep-tags and keep-containers. Is usefull together with the
- atributes <atr>unparagraphify</atr> and <atr>unlink</atr>.
+ Leave all tags containing info intact. Overrides the value of
+ keep-tags and keep-containers. This attribute is useful together with
+ the attributes <att>unparagraphify</att> and <att>unlink</att>.
 
 <ex type='vert'>
 <wash-html keep-all=''>
   Some text, <i>italic</i>, <b>bold</b>, <i><b>bold italic</b></i>.
 
   <hr>A litle image:<img src='/internal-roxen-next'>.
-</wash-html></ex>
-
+</wash-html>
+</ex>
 </attr>
 
 <attr name='keep-tags' value='list'>
- Comma-separated array of empty element &lt;tags/&gt; not to filter out.
- Quote all other empty element tags e.i. transform &lt;, &gt; and &amp; to
- &amp;lt;, &amp;gt; and &amp;amp;.
+
+ Comma-separated array of empty element <tag>tags/</tag> not to
+ filter. Quote all other empty element tags e.i. transform \"&lt;\",
+ \"&gt;\" and \"&amp;\" to \"&amp;lt;\", \"&amp;gt;\" and
+ \"&amp;amp;\".
 
 <ex type='vert'>
 <wash-html keep-tags='hr'>
   Some text, <i>italic</i>, <b>bold</b>, <i><b>bold italic</b></i>.
 
   <hr>A litle image:<img src='/internal-roxen-next'>.
-</wash-html></ex>
-
+</wash-html>
+</ex>
 </attr>
 
 <attr name='keep-containers' value='list'>
- Comma-separated array of &lt;container&gt;...&lt/&gt; tags not to filter out.
- Quote all other container tags e.i. transform &lt;, &gt; and &amp; to
- &amp;lt;, &amp;gt; and &amp;amp;.
+ Comma-separated array of <tag>container</tag>...<tag>/</tag> tags not
+ to filter. Quote all other container tags e.i. transform \"&lt;\",
+ \"&gt;\" and \"&amp;\" to \"&amp;lt;\", \"&amp;gt;\" and
+ \"&amp;amp;\".
 
 <ex type='vert'>
 <wash-html keep-containers='b'>
   Some text, <i>italic</i>, <b>bold</b>, <i><b>bold italic</b></i>.
 
   <hr>A litle image:<img src='/internal-roxen-next'>.
-</wash-html></ex>
-
+</wash-html>
+</ex>
 </attr>
 
 <attr name='linkify'>
- Makes text that looks like a link, e g http://www.roxen.com/, into a link.
- Text that starts with \"http://\", \"https://\", \"ftp://\", \"www.\" or
- \"http.\" will be converted to a clickable link with the text as the link
- label.
+ Makes text that looks like it might be useful as a link, e g
+ http://www.roxen.com/, into a link. Text that starts with
+ \"http://\", \"https://\", \"ftp://\", \"www.\" or \"http.\" will be
+ converted to a clickable link with the text as the link label.
 
 <ex type='vert'>
 <wash-html linkify='' keep-containers='a' keep-tags='br'>
-  <a href=\"http://docs.roxen.com\">Documentation at Roxen IS</a><br />
+  <a href=\"http://docs.roxen.com\">Documentation for Roxen products</a><br />
   http://pike.roxen.com<br />
   www.roxen.com
-</wash-html></ex>
-
+</wash-html>
+</ex>
 </attr>
 
 <attr name='unlinkify'>
- Undo a linkify-convertion. Only links that has the same label as address will
- be converted to plain text.
+ Undo a linkify-conversion. Only the links that has the same label as
+ address will be converted to plain text.
 
 <ex type='vert'>
 <wash-html unlinkify='' keep-tags='br' keep-containers='a'>
   <a href=\"http://www.roxen.com\">http://www.roxen.com</a><br />
   <a href=\"http://www.roxen.com\">Roxen IS</a>
-</wash-html></ex>
-
+</wash-html>
+</ex>
 </attr>
 
 <attr name='paragraphify'>
-
  If more than one newline exists between two text elements, this
  attribute automatically makes the next text element into a paragraph.
 
@@ -265,8 +267,8 @@ A Paragraph
 
 An other paragraph.
 And some more text to the same paragraph.
-</wash-html></ex>
-
+</wash-html>
+</ex>
 </attr>
 
 <attr name='unparagraphify'>
@@ -278,11 +280,13 @@ And some more text to the same paragraph.
 
 <p>An other paragraph.
 And some more text to the same paragraph.</p>
-</wash-html></pre></ex>
+</wash-html></pre>
+</ex>
+ The <tag>pre</tag> is only used in the example for layout-purposes.
 </attr>
 
 <attr name='close-tags'>
- Terminate all tags with an ending slash. 
+ Terminate all tags with an ending slash, making them XML-compliant.
 </attr>",
 
     ]);
