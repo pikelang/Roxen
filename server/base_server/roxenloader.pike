@@ -3,7 +3,7 @@
 program Privs;
 
 // Set up the roxen environment. Including custom functions like spawne().
-constant cvs_version="$Id: roxenloader.pike,v 1.72 1998/05/28 17:44:07 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.73 1998/06/13 18:38:38 grubba Exp $";
 
 #define perror roxen_perror
 
@@ -44,12 +44,13 @@ void roxen_perror(string format,mixed ... args)
   int t = time();
 
   if (perror_status_reported < t) {
-    stderr->write("[1mRoxen is alive! pid: "+pid+"   ppid: "+getppid()+
+    stderr->write("[1mRoxen is alive!\n"
+		  "   Time: "+ctime(t)+
+		  "   pid: "+pid+"   ppid: "+getppid()+
 #if efun(geteuid)
 		  (geteuid()!=getuid()?"   euid: "+pw_name(geteuid()):"")+
 #endif
-		  "   uid: "+pw_name(getuid())+
-		  "    Time: "+(ctime(t)/" ")[-2]+"[0m\n");
+		  "   uid: "+pw_name(getuid())+"[0m\n");
     perror_status_reported = t + 60;	// 60s delay.
   }
 
