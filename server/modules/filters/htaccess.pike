@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version = "$Id: htaccess.pike,v 1.61 2000/05/17 17:41:46 nilsson Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.62 2000/06/20 20:05:15 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #ifdef HTACCESS_DEBUG
 # include <request_trace.h>
-# define HT_WERR(X) werror("HTACCESS: %s\n",X);
+# define HT_WERR(X) werror("HTACCESS: %s\n",X)
 #else
 # define TRACE_ENTER(A,B)
 # define TRACE_LEAVE(A)
@@ -196,7 +196,7 @@ mapping|int parse_htaccess(Stdio.File f, RequestID id, string rht)
       HT_WERR("Unsupported command in "+cache_key+": "+ cmd);
     }
     HT_WERR(sprintf("Result of .htaccess file parsing -> %O\n",
-			   access));
+		    access));
   }
   cache_set(cache_key, rht, ({s[3], access}));
   return access;
@@ -216,13 +216,13 @@ int allowed(multiset allow, string hname, string ip, int def)
     {
       ok = 1;
       HT_WERR("IP/hostname access deny/allow exact match:\n"
-	      "("+s+" -> "+ip+" || "+hname")");
+	      "("+s+" -> "+ip+" || "+hname+")");
     }
     if(!ok && (int)s && (ip/".")[0] == s)
     {
       ok = 1;
       HT_WERR("IP/hostname access deny/allow ip match:\n"
-	      "("+s+" -> "+ip+" || "+hname")");
+	      "("+s+" -> "+ip+" || "+hname+")");
     }
     if(!ok)
     {
@@ -246,7 +246,7 @@ int allowed(multiset allow, string hname, string ip, int def)
       if(ok) {
 	HT_WERR("IP/hostname access deny/allow hostname/"
 		"domain match:\n"
-		"("+s+" -> "+ip+" || "+hname")");
+		"("+s+" -> "+ip+" || "+hname+")");
       }
 #endif
 
@@ -270,7 +270,7 @@ int allowed(multiset allow, string hname, string ip, int def)
 #ifdef HTACCESS_DEBUG
       if(ok) {
 	HT_WERR("IP/hostname access deny/allow ip-number match:\n"
-		"("+s+" -> "+ip+" || "+hname")");
+		"("+s+" -> "+ip+" || "+hname+")");
       }
 #endif
 
@@ -649,12 +649,13 @@ string|int cache_path_of_htaccess(string path, RequestID id)
   string|int f;
   f = cache_lookup("htaccess_files:"+id->conf->name, path);
 #ifdef HTACCESS_DEBUG
-  if(f==0)
+  if(f==0) {
     HT_WERR("Location of .htaccess file for "+path+" not cached.");
-  else if(f==-1)
+  } else if(f==-1) {
     HT_WERR("Non-existant .htaccess file cached: "+path);
-  else if(f)
+  } else if(f) {
     HT_WERR("Existant .htaccess file cached: "+path);
+  }
 #endif
   return f;
 }
@@ -730,6 +731,105 @@ array rec_find_htaccess_file(RequestID id, string vpath)
   return 0;
 }
 
+array new_find_htaccess_file(RequestID id, string vpath)
+{
+  HT_WERR(sprintf("new_find_htaccess_file(X, %O)\n", vpath));
+
+  if (vpath == "") return 0;
+
+  string|int path;
+
+  int use_cache;
+  if (use_cache = (!id->pragma["no-cache"])) {
+    if (path = cache_path_of_htaccess(vpath, id)) {
+      HT_WERR(sprintf("Cached: path = %O\n", path));
+
+      array st;
+
+      if (stringp(path) && (st = file_stat(path)) && (st[1] != -4)) {
+	Stdio.File f = open(path, "r");
+	if(f) {
+	  return ({ path, f });
+	}
+	// Invalid cache entry. Invalidate the cache path.
+	use_cache = 0;
+      } else {
+	if (st && (st[1] == -4)) {
+	  report_error(sprintf("HTACCESS: The htaccess-file in \"%s\" is a device!\n"
+			       "vpath: \"%s\"\n"
+			       "query: \"%s\"\n", path, vpath, id->query + ""));
+	  return 0;
+	}
+	if(QUERY(cache_all))
+	  return 0;
+      }
+    }
+  }
+  // Not found in cache...
+
+  array(string) segments = vpath/"/";
+  string subvpath = "";
+
+  path = -1;
+
+  foreach(segments, string segment) {
+    subvpath += segment + "/";
+
+    HT_WERR(sprintf("Trying vpath %O\n", subvpath));
+
+    string|int p;
+
+    if (use_cache && (p = cache_path_of_htaccess(subvpath, id))) {
+      HT_WERR(sprintf("Cached: path = %O\n", p));
+      if (stringp(p) || !stringp(path)) {
+	path = p;
+	continue;
+      }
+    }
+
+    if (!(p = id->conf->real_file(subvpath, id))) {
+      // No use checking any deeper.
+      HT_WERR("Not found.\n");
+      break;
+    }
+    string fname = p + query("file");
+    array st;
+    if(st = file_stat(fname)) {
+      HT_WERR(sprintf("Found htaccess-file: %O\n", fname));
+      if (st[1] >= 0) {
+	path = fname;
+      } else {
+	report_error(sprintf("HTACCESS: The htaccess-file \"%s\" is not a regular file!\n"
+			     "vpath: \"%s\"\n"
+			     "query: \"%s\"\n", fname, vpath, id->query + ""));
+      }
+    }
+    if (stringp(path)) {
+      cache_set_path_of_htaccess(subvpath, path, id);
+    } else if (QUERY(cache_all)) {
+      cache_set_path_of_htaccess(subvpath, -1, id);
+    }
+  }
+
+  if (stringp(path)) {
+    HT_WERR(sprintf("Result htaccess-file: %O\n", path));
+
+    array st;
+    if ((st = file_stat(path)) && (st[1] >= 0)) {
+      Stdio.File f = open(path, "r");
+      if (f)
+	return ({ path, f });
+      report_error(sprintf("HTACCESS: Unable to open \"%s\"!\n", path));
+    } else {
+      report_error(sprintf("HTACCESS: The htaccess-file \"%s\" is not a regular file!\n"
+			   "vpath: \"%s\"\n"
+			   "query: \"%s\"\n", path, vpath, id->query + ""));
+    }
+  }
+  HT_WERR("No htaccess-file.\n");
+  return 0;
+}
+
 array find_htaccess_file(RequestID id)
 {
   string vpath;
@@ -743,7 +843,7 @@ array find_htaccess_file(RequestID id)
 
   if(vpath[-1] == '/') vpath += "gazonk";
 
-  return rec_find_htaccess_file( id, dot_dot(vpath) );
+  return new_find_htaccess_file( id, dot_dot(vpath) );
 }
 
 mapping htaccess_no_file(RequestID id)
