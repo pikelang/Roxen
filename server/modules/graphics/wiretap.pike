@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: wiretap.pike,v 1.12 2000/03/21 21:47:05 nilsson Exp $";
+constant cvs_version="$Id: wiretap.pike,v 1.13 2000/03/27 17:28:51 marcus Exp $";
 
 #include <module.h>
 inherit "module";
@@ -81,6 +81,8 @@ array(int|string) tag_body(string t, mapping args, RequestID id)
   } else {
     FIX(bgcolor,"#ffffff","bgcolor");
   }
+
+  id->misc->wiretap_stack = ({});
 
   if(changed && QUERY(colormode))
     return ({1, "body", args });
