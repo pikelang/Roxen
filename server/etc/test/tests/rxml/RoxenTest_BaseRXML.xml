@@ -221,7 +221,27 @@
 
 <test>
 <rxml><define tag="x"> <attrib name="y"> </attrib> a&_.y; </define><x trimwhites="1"/></rxml>
-<result> a  </result>
+<result>  a  </result>
+</test>
+
+<test>
+<rxml><define tag="x"><!-- foo --><attrib name="y">y</attrib><?x?><attrib name="z">z</attrib>&_.y;&_.z;</define><x/></rxml>
+<result><!-- foo --><?x?><attrib name="z">z</attrib>y</result>
+</test>
+
+<test>
+<rxml><define tag="x"> <attrib name="y">y</attrib>x<attrib name="z">z</attrib>&_.y;&_.z;</define><x/></rxml>
+<result> x<attrib name="z">z</attrib>y</result>
+</test>
+
+<test>
+<rxml><define tag="x"><attrib name="y">y</attrib><![CDATA[]]><attrib name="z">z</attrib>&_.y;&_.z;</define><x/></rxml>
+<result><![CDATA[]]><attrib name="z">z</attrib>y</result>
+</test>
+
+<test>
+<rxml><define tag="x"><attrib name="y">y</attrib>&_.y;<attrib name="z">z</attrib>&_.y;&_.z;</define><x/></rxml>
+<result>y<attrib name="z">z</attrib>y</result>
 </test>
 
 <test>
@@ -250,15 +270,58 @@
 </test>
 
 <test>
-<rxml><define tag="x"> 		
-	<attrib name="y">1</attrib> <![CDATA[</attrib>]]> <attrib name="z">2</attrib> &_.y;:&_.z;</define><x/></rxml>
-<result> </attrib> <attrib name="z">2</attrib> 1:</result>
+<rxml><define tag="x"><attrib name="y">1</attrib> <![CDATA[</attrib>]]> <attrib name="z">2</attrib> &_.y;:&_.z;</define><x/></rxml>
+<result> <![CDATA[</attrib>]]> <attrib name="z">2</attrib> 1:</result>
 </test>
 
 <test>
 <rxml><define tag="x"><attrib name="y">hej</attrib><maketag type="tag" name="&_.y;">
 <attrib name="foo">bar</attrib></maketag></define><x/></rxml>
 <result><hej foo="bar" /></result>
+</test>
+
+<test>
+  <rxml type="string">
+    <emit source="values" values="1,2" split=",">
+      <if variable="_.value = 1">
+	<define tag="t">a</define>
+      </if>
+      <else>
+	<define tag="t">b</define>
+      </else>
+      <t/>
+    </emit>
+  </rxml>
+  <result>ab</result>
+</test>
+
+
+<!-- ............................................................ -->
+<comment>Type tests</comment>
+
+<test>
+  <rxml type="any"><case case="upper"> a </case></rxml>
+  <result>A</result>
+</test>
+
+<test>
+  <rxml type="scalar"><case case="upper"> a </case></rxml>
+  <result>A</result>
+</test>
+
+<test>
+  <rxml type="string">|<case case="upper"> a </case>|</rxml>
+  <result>|A|</result>
+</test>
+
+<test>
+  <rxml type="text/*">|<case case="upper"> a </case>|</rxml>
+  <result>| A |</result>
+</test>
+
+<test>
+  <rxml type="text/html">|<case case="upper"> a </case>|</rxml>
+  <result>| A |</result>
 </test>
 
 
@@ -1826,9 +1889,11 @@ cd</rxml>
 </test>
 
 <test>
-<add what="define" name="fgcolor" value="#000000"/>
-<rxml>&page.fgcolor;</rxml>
-<result>#000000</result>
+  <rxml type="string">
+    <define name="fgcolor">#000000</define>
+    &page.fgcolor;
+  </rxml>
+  <result>#000000</result>
 </test>
 
 <test>
@@ -1837,9 +1902,11 @@ cd</rxml>
 </test>
 
 <test>
-<add what="define" name="bgcolor" value="#ffffff"/>
-<rxml>&page.bgcolor;</rxml>
-<result>#ffffff</result>
+  <rxml type="string">
+    <define name="bgcolor">#ffffff</define>
+    &page.bgcolor;
+  </rxml>
+  <result>#ffffff</result>
 </test>
 
 <test>
@@ -1848,9 +1915,11 @@ cd</rxml>
 </test>
 
 <test>
-<add what="define" name="theme_bgcolor" value="#ffffaa"/>
-<rxml>&page.theme-bgcolor;</rxml>
-<result>#ffffaa</result>
+  <rxml type="string">
+    <define name="theme_bgcolor">#ffffaa</define>
+    &page.theme-bgcolor;
+  </rxml>
+  <result>#ffffaa</result>
 </test>
 
 <test>
@@ -1859,9 +1928,11 @@ cd</rxml>
 </test>
 
 <test>
-<add what="define" name="theme_fgcolor" value="#ff8c00"/>
-<rxml>&page.theme-fgcolor;</rxml>
-<result>#ff8c00</result>
+  <rxml type="string">
+    <define name="theme_fgcolor">#ff8c00</define>
+    &page.theme-fgcolor;
+  </rxml>
+  <result>#ff8c00</result>
 </test>
 
 <test>
@@ -1870,9 +1941,11 @@ cd</rxml>
 </test>
 
 <test>
-<add what="define" name="theme_language" value="swe"/>
-<rxml>&page.theme-language;</rxml>
-<result>swe</result>
+  <rxml type="string">
+    <define name="theme_language">swe</define>
+    &page.theme-language;
+  </rxml>
+  <result>swe</result>
 </test>
 
 <test>
