@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.305 2004/05/20 22:54:07 _cvs_stephen Exp $
+// $Id: module.pmod,v 1.306 2004/05/20 22:56:04 _cvs_stephen Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -6658,7 +6658,7 @@ class TString
     if (arrayp(val) && name=="text/*")
       val = val*"\0";
     mixed err = catch {return (string) val;};
-    parse_error ("Canknot convert %s to %s: %s",
+    parse_error ("Cannot convert %s to %s: %s",
 		 format_short (val), name, describe_error (err));
   }
 
