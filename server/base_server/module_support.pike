@@ -1,4 +1,4 @@
-// string cvs_version = "$Id: module_support.pike,v 1.47 1999/12/22 00:12:47 per Exp $";
+// string cvs_version = "$Id: module_support.pike,v 1.48 1999/12/27 13:12:36 mast Exp $";
 #include <roxen.h>
 #include <module.h>
 #include <stat.h>
@@ -209,7 +209,7 @@ function|program load( string what )
 //
 object module_cache;
 
-class Module
+class ModuleInfo
 {
   string sname;
   string filename;
@@ -428,7 +428,7 @@ string extension( string from )
   return from||"";
 }
 
-mapping(string:Module) modules;
+mapping(string:ModuleInfo) modules;
 array rec_find_all_modules( string dir )
 {
   array modules = ({});
@@ -457,7 +457,7 @@ array rec_find_all_modules( string dir )
   return modules;
 }
 
-array(Module) all_modules()
+array(ModuleInfo) all_modules()
 {
   array possible = ({});
   foreach( roxenp()->query( "ModuleDirs" ), string dir )
@@ -466,12 +466,12 @@ array(Module) all_modules()
   foreach( possible, string p )
     modules[ p ] = find_module( p );
 
-  array(Module) tmp = values( modules ) - ({ 0 });
+  array(ModuleInfo) tmp = values( modules ) - ({ 0 });
   sort( tmp->get_name(), tmp );
   return tmp;
 }
   
-Module find_module( string name )
+ModuleInfo find_module( string name )
 {
   if( !modules )
   {
@@ -482,7 +482,7 @@ Module find_module( string name )
   if( modules[ name ] )
     return modules[ name ];
 
-  modules[ name ] = Module( name );
+  modules[ name ] = ModuleInfo( name );
 
   if( !modules[ name ]->check() )
     m_delete( modules, name );

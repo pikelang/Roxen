@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.374 1999/12/27 12:36:12 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.375 1999/12/27 13:12:36 mast Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -2418,7 +2418,7 @@ void create()
 
   add_constant( "RequestID", RequestID);
   add_constant( "RoxenModule", RoxenModule);
-  add_constant( "ModuleInfo", Module );
+  add_constant( "ModuleInfo", ModuleInfo );
 
   add_constant( "load",    load);
   add_constant( "Roxen.set_locale", set_locale );
