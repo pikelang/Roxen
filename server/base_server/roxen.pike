@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.745 2001/09/28 11:57:37 tomas Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.746 2001/09/28 23:50:31 nilsson Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -2062,7 +2062,8 @@ private int unique_id_counter;
 string create_unique_id()
 {
   object md5 = Crypto.md5();
-  md5->update(query("server_salt") + (unique_id_counter++) + time(1));
+  md5->update(query("server_salt") + start_time + "|" +
+	      (unique_id_counter++) + "|" + time(1));
   return Crypto.string_to_hex(md5->digest());
 }
 
@@ -3298,10 +3299,10 @@ void create()
 {
   // Register localization projects
 #define __REG_PROJ Locale.register_project
-  __REG_PROJ("roxen_start",   "translations/%L/roxen_start.xml");
-  __REG_PROJ("roxen_config",  "translations/%L/roxen_config.xml");
-  __REG_PROJ("roxen_message", "translations/%L/roxen_message.xml");
-  __REG_PROJ("admin_tasks",   "translations/%L/admin_tasks.xml");
+  __REG_PROJ("roxen_""start",   "translations/%L/roxen_start.xml");
+  __REG_PROJ("roxen_""config",  "translations/%L/roxen_config.xml");
+  __REG_PROJ("roxen_""message", "translations/%L/roxen_message.xml");
+  __REG_PROJ("admin_""tasks",   "translations/%L/admin_tasks.xml");
   Locale.set_default_project_path("translations/%L/%P.xml");
 #undef __REG_PROJ
 
