@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.41 1997/10/25 05:28:41 per Exp $
+/* $Id: wizard.pike,v 1.42 1997/10/29 14:27:19 per Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -54,7 +54,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed b)
    case "text":
     m_delete(m,"type");
     m_delete(m,"default");
-    m->value = current||"";
+    m_delete(m, "value");
     if(!m->rows)m->rows="6";
     if(!m->cols)m->cols="40";
     return make_container("textarea", m, html_encode_string(current||""));
@@ -178,7 +178,10 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed b)
      m_delete(m2, "options");
      return make_container("select", m2, Array.map(m->choices/",",
 						   lambda(string s, string c) {
-        return "<option"+(s==c?" selected":"")+">"+html_encode_string(s)+"\n";
+        string t;
+        if(sscanf(s, "%s:%s", s, t) != 2)
+	  t = s;
+        return "<option value='"+s+"' "+(s==c?" selected":"")+">"+html_encode_string(t)+"\n";
      },current)*"");
 
 
@@ -192,8 +195,11 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed b)
     m_delete(m2, "options");
     m2->multiple="1";
     return make_container("select", m2, Array.map(m->choices/",",
-						 lambda(string s, array c) {
-      return "<option"+(search(c,s)!=-1?" selected":"")+">"+s+"\n";
+				 lambda(string s, array c) {
+      string t;
+      if(sscanf(s, "%s:%s", s, t) != 2)
+        t = s;
+      return "<option value='"+s+"' "+(search(c,s)!=-1?"selected":"")+">"+html_encode_string(t)+"\n";
     },(current||"")/"\0")*"");
   }
 }
