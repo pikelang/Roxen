@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.122 2003/06/26 15:59:22 anders Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.123 2003/12/23 12:14:24 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -394,7 +394,7 @@ static MultiStatus recursive_rm(string real_dir, string relative_dir,
       TRACE_LEAVE("File not found.");
       continue;
     }
-    if (stat->isdir()) {
+    if (stat->isdir) {
       result = recursive_rm(real_fname, relative_fname, id, result);
     }
 
@@ -436,15 +436,16 @@ static MultiStatus recursive_rm(string real_dir, string relative_dir,
 
 mapping putting = ([]);
 
-void done_with_put( array(object|string) id_arr )
+void done_with_put( array(object|string|int) id_arr )
 {
 //  werror("Done with put.\n");
   object to;
   object from;
   object id;
   string oldf;
+  int size;
 
-  [to, from, id, oldf] = id_arr;
+  [to, from, id, oldf, size] = id_arr;
 
   FILESYSTEM_WERR(sprintf("done_with_put(%O)\n"
 			  "from: %O\n",
@@ -460,11 +461,12 @@ void done_with_put( array(object|string) id_arr )
 				    "<h2>Bad Request - "
 				    "Expected more data.</h2>"));
   } else {
-    id->send_result(http_low_answer(200, "<h2>Transfer Complete.</h2>"));
+    id->send_result(http_low_answer((size < 0)?201:200,
+				    "<h2>Transfer Complete.</h2>"));
   }
 }
 
-void got_put_data( array (object|string) id_arr, string data )
+void got_put_data( array(object|string|int) id_arr, string data )
 {
 // werror(strlen(data)+" .. ");
 
@@ -472,8 +474,9 @@ void got_put_data( array (object|string) id_arr, string data )
   object from;
   object id;
   string oldf;
+  int size;
 
-  [to, from, id, oldf] = id_arr;
+  [to, from, id, oldf, size] = id_arr;
 
   // Truncate at end.
   data = data[..putting[from]];
@@ -762,6 +765,7 @@ mixed find_file( string f, RequestID id )
     }
 
     int code = mkdir(f);
+    int err_code = errno();
     privs = 0;
 
     TRACE_ENTER(sprintf("%s: Accepted", id->method), 0);
@@ -778,7 +782,19 @@ mixed find_file( string f, RequestID id )
       TRACE_LEAVE(sprintf("%s: Failed", id->method));
       TRACE_LEAVE("Failure");
       if (id->method == "MKCOL") {
-	return http_low_answer(507, "Failed.");
+	if (err_code ==
+#if constant(system.ENOENT)
+	    system.ENOENT
+#elif constant(System.ENOENT)
+	    System.ENOENT
+#else
+	    2
+#endif
+	    ) {
+	  return http_low_answer(409, "Missing intermediate.");
+	} else {
+	  return http_low_answer(507, "Failed.");
+	}
       }
       return 0;
     }
@@ -881,13 +897,17 @@ mixed find_file( string f, RequestID id )
     if(!putting[id->my_fd]) {
       TRACE_LEAVE("PUT: Just a string");
       TRACE_LEAVE("Put: Success");
-      return Roxen.http_string_answer("Ok");
+      if (size < 0) {
+	return Roxen.http_low_answer(201, "Created.");
+      } else {
+	return Roxen.http_string_answer("Ok");
+      }
     }
 
     if(id->clientprot == "HTTP/1.1") {
       id->my_fd->write("HTTP/1.1 100 Continue\r\n");
     }
-    id->my_fd->set_id( ({ to, id->my_fd, id, URI }) );
+    id->my_fd->set_id( ({ to, id->my_fd, id, URI, size }) );
     id->my_fd->set_nonblocking(got_put_data, 0, done_with_put);
     TRACE_LEAVE("PUT: Pipe in progress");
     TRACE_LEAVE("PUT: Success so far");
@@ -1131,10 +1151,15 @@ mixed find_file( string f, RequestID id )
 
 
   case "DELETE":
-    if(!query("delete") || size==-1)
+    if(!query("delete"))
     {
       id->misc->error_code = 405;
       TRACE_LEAVE("DELETE: Disabled");
+      return 0;
+    }
+    if (size==-1) {
+      id->misc->error_code = 404;
+      TRACE_LEAVE("DELETE: Not found");
       return 0;
     }
 
@@ -1157,8 +1182,8 @@ mixed find_file( string f, RequestID id )
     }
 
     if ((size < 0) &&
-	!([ "infinity":0x7fffffff, 0:0x7fffffff ])
-	[String.trim_whites(id->request_headers->depth)]) {
+	(String.trim_whites(id->request_headers->depth||"infinity") !=
+	 "infinity")) {
       // RFC 2518 8.6.2:
       //   The DELETE method on a collection MUST act as if a "Depth: infinity"
       //   header was used on it.
