@@ -1,5 +1,5 @@
 /*
- * $Id: make_csr.pike,v 1.10 1999/04/24 17:55:37 mast Exp $
+ * $Id: make_csr.pike,v 1.11 1999/05/13 23:15:26 mast Exp $
  */
 
 inherit "wizard";
@@ -219,12 +219,14 @@ mixed page_4(object id, object mc)
   }
 
   array name = ({ });
-  foreach( ({ "countryName", "stateOrProvinceName",
+  if (attrs->countryName)
+    name += ({(["countryName": asn1_printable_string (attrs->countryName)])});
+  foreach( ({ "stateOrProvinceName",
 	      "localityName", "organizationName",
 	      "organizationUnitName", "commonName" }), attr)
   {
     if (attrs[attr])
-      name += ({ ([ attr : asn1_printable_string(attrs[attr]) ]) });
+      name += ({ ([ attr : asn1_T61_string(attrs[attr]) ]) });
   }
 
   mapping csr_attrs = ([]);
