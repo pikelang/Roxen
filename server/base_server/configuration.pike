@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.67 1997/08/27 00:49:33 marcus Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.68 1997/08/28 20:13:01 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -206,6 +206,7 @@ class Bignum {
 int requests;
 // Protocol specific statistics.
 mapping(string:mixed) extra_statistics = ([]);
+mapping(string:mixed) misc = ([]);	// Even more statistics.
 
 object sent=Bignum();     // Sent data
 object hsent=Bignum();    // Sent headers
@@ -638,7 +639,7 @@ public string status()
 		"</td><td>%.2f Kbit/sec</td>",
 		sent->mb(),tmp * 8192.0);
   
-  res += sprintf("<td><b>Sent headers:</b></td><td>%.2fMB</td></tr>",
+  res += sprintf("<td><b>Sent headers:</b></td><td>%.2fMB</td></tr>\n",
 		 hsent->mb());
   
   tmp=(((float)requests*(float)600)/
@@ -646,8 +647,18 @@ public string status()
 
   res += sprintf("<tr align=right><td><b>Number of requests:</b></td>"
 		 "<td>%8d</td><td>%.2f/min</td>"
-		 "<td><b>Received data:</b></td><td>%.2fMB</td></tr>",
+		 "<td><b>Received data:</b></td><td>%.2fMB</td></tr>\n",
 		 requests, (float)tmp/(float)10, received->mb());
+
+  if (!zero_type(misc->ftp_users)) {
+    tmp = (((float)misc->ftp_users*(float)600)/
+	   (float)((time(1)-roxen->start_time)+1));
+
+    res += sprintf("<tr align=right><td><b>FTP users (total):</b></td>"
+		   "<td>%8d</td><td>%.2f/min</td>"
+		   "<td><b>FTP users (now):</b></td><td>%d</td></tr>\n",
+		   misc->ftp_users, (float)tmp/(float)10, misc->ftp_users_now);
+  }
   res += "</table>";
 
   if ((extra_statistics->ftp) && (extra_statistics->ftp->commands)) {
