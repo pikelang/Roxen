@@ -7,7 +7,7 @@
 //!
 //! Created 2000-01-21 by Martin Stjernholm
 //!
-//! $Id: utils.pmod,v 1.23 2001/06/09 00:33:25 mast Exp $
+//! $Id: utils.pmod,v 1.24 2001/06/18 15:19:44 mast Exp $
 
 constant short_format_length = 40;
 
@@ -24,8 +24,8 @@ final string format_short (mixed val)
       else res += "({", end = "})";
       if (sizeof (res) >= short_format_length) throw (0);
       for (int i = 0; i < sizeof (val);) {
-	res += format_val (val[i]);
-	if (++i < sizeof (val) - 1) res += ", ";
+	format_val (val[i]);
+	if (++i < sizeof (val)) res += ", ";
 	if (sizeof (res) >= short_format_length) throw (0);
       }
       res += end;
@@ -35,10 +35,10 @@ final string format_short (mixed val)
       if (sizeof (res) >= short_format_length) throw (0);
       array ind = sort (indices (val));
       for (int i = 0; i < sizeof (ind);) {
-	res += format_val (ind[i]) + ": ";
+	format_val (ind[i]) + ": ";
 	if (sizeof (res) >= short_format_length) throw (0);
-	res += format_val (val[ind[i]]);
-	if (++i < sizeof (ind) - 1) res += ", ";
+	format_val (val[ind[i]]);
+	if (++i < sizeof (ind)) res += ", ";
 	if (sizeof (res) >= short_format_length) throw (0);
       }
       res += "])";
@@ -188,7 +188,7 @@ final int(1..1)|string|array p_xml_entity_cb (object/*(RXML.PXml)*/ p, string st
 	  // No quoting of splice args. FIXME: Add some sort of
 	  // safeguard against splicing in things like "nice><evil
 	  // stuff='...'"?
-	  p->html_context() == "splice_arg" ? RXML.t_string : type);
+	  p->html_context() == "splice_arg" ? RXML.t_any_text : type);
 	if (value != RXML.nil) {
 	  if (type->free_text && !p->p_code) return ({value});
 	  p->add_value (value);
@@ -216,7 +216,7 @@ final int(1..1)|string|array p_xml_compat_entity_cb (object/*(RMXL.PXml)*/ p, st
 	// No quoting of splice args. FIXME: Add some sort of
 	// safeguard against splicing in things like "nice><evil
 	// stuff='...'"?
-	p->html_context() == "splice_arg" ? RXML.t_string : type);
+	p->html_context() == "splice_arg" ? RXML.t_any_text : type);
       if (value != RXML.nil) {
 	if (type->free_text && !p->p_code) return ({value});
 	p->add_value (value);
