@@ -9,7 +9,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: cgi.pike,v 1.128 1999/06/02 23:12:44 grubba Exp $";
+constant cvs_version = "$Id: cgi.pike,v 1.129 1999/06/09 18:25:12 neotron Exp $";
 
 class Shuffle
 {
@@ -445,8 +445,9 @@ class CGIWrapper
   {
     if(strlen(headers))
     {
-      output( headers );
-      headers="";
+      string tmphead = headers;
+      headers = "";
+      output( tmphead );
     }
     ::done();
   }
