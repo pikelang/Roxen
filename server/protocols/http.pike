@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.337 2001/09/28 21:01:42 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.338 2001/10/02 12:20:31 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -113,7 +113,7 @@ string method;
 
 string realfile, virtfile;
 string rest_query="";
-string raw;
+string raw="";
 string query;
 string not_query;
 string extra_extension = ""; // special hack for the language module
@@ -726,46 +726,28 @@ int last;
 private int parse_got( string new_data )
 {
   TIMER_START(parse_got);
-  multiset (string) sup;
-  string a, b, s="", linename, contents;
-
   if( !method )
   {
     array res;
-    while( strlen( new_data ) )
-    {
-      string q;
-      if( strlen( new_data ) > 4192 )    
-        q = new_data[..4191];
-      else
-      {
-        q = new_data;
-        new_data = "";
-      }
-      if( catch { res = hpf( q ); } ) return 1;
-      if( res && strlen( new_data = new_data[4192..] ) )
-      {
-        res[0] += new_data;
-        break;
-      }
-    }
+    if( catch( res = hpf( new_data ) ) )
+      return 1;
     if( !res )
     {
       TIMER_END(parse_got);
-      return 0; // Not enough data;
+      return 0; // Not enough data
     }
-    /* 
-       now in res:
-       leftovers/data
-       first line
-       headers 
-    */
     data = res[0];
     line = res[1];
     request_headers = res[2];
   }
-  string trailer, trailer_trailer;
+  return parse_got_2();
+}
 
+private final int parse_got_2( )
+{
+  string trailer, trailer_trailer;
+  multiset (string) sup;
+  string a, b, s="", linename, contents;
   array(string) sl = line / " ";
   switch( sizeof( sl ) )
   {
@@ -1958,7 +1940,6 @@ void got_data(mixed fooid, string s)
     data += s;
     if(strlen(s) + have_data < wanted_data)
     {
-      //      cache += ({ s });
       have_data += strlen(s);
       REQUEST_WERR("HTTP: We want more data.");
       return;
@@ -1966,220 +1947,216 @@ void got_data(mixed fooid, string s)
   }
 
   if (mixed err = catch {
-  int tmp;
+    MARK_FD("HTTP got data");
+    raw += s;
 
-  MARK_FD("HTTP got data");
-  if(!raw) raw = s; else raw += s;
-
-
-  // The port has been closed, but old (probably keep-alive)
-  // connections remain.  Close those connections.
-  if( !port_obj ) 
-  {
-    catch  // paranoia
+    // The port has been closed, but old (probably keep-alive)
+    // connections remain.  Close those connections.
+    if( !port_obj ) 
     {
-      my_fd->set_blocking();
-      my_fd->close();
-      destruct( my_fd );
-      destruct( );
-    };
-    return;
-  }
+      catch  // paranoia
+      {
+	my_fd->set_blocking();
+	my_fd->close();
+	destruct( my_fd );
+	destruct( );
+      };
+      return;
+    }
 
-  if(strlen(raw)) 
-    tmp = parse_got( s );
+    switch( parse_got( s ) )
+    {
+      case 0:
+	REQUEST_WERR("HTTP: Request needs more data.");
+	return;
 
-  switch(tmp)
-  {
-   case 0:
-    REQUEST_WERR("HTTP: Request needs more data.");
-    return;
+      case 1:
+	REQUEST_WERR("HTTP: Stupid Client Error");
+	my_fd->write((prot||"HTTP/1.0")+" 500 Illegal request\r\n"
+		     "Content-Length: 0\r\n"+
+		     "Date: "+Roxen.http_date(predef::time())+"\r\n"
+		     "\r\n");
+	end();
+	return;			// Stupid request.
+    
+      case 2:
+	REQUEST_WERR("HTTP: Done");
+	end();
+	return;
+    }
 
-   case 1:
-    REQUEST_WERR("HTTP: Stupid Client Error");
-    my_fd->write((prot||"HTTP/1.0")+" 500 Stupid Client Error\r\n"
-              "Content-Length: 0\r\n\r\n");
-    end();
-    return;			// Stupid request.
+    if( method == "GET"  )
+      misc->cacheable = INITIAL_CACHEABLE; // FIXME: Make configurable.
 
-   case 2:
-    REQUEST_WERR("HTTP: Done");
-    end();
-    return;
-  }
-  if( method == "GET"  )
-    misc->cacheable = INITIAL_CACHEABLE; // FIXME: Make configurable.
+    TIMER_START(find_conf);
+    string path;
+    if( !conf || !(path = port_obj->path ) 
+	|| (sizeof( path ) 
+	    && raw_url[..sizeof(path) - 1] != path) )
 
-  TIMER_START(find_conf);
-  string path;
-  if( !conf || !(path = port_obj->path ) 
-      || (sizeof( path ) 
-          && raw_url[..sizeof(path) - 1] != path) )
-
-  {
-    // FIXME: port_obj->name & port_obj->default_port are constant
-    // consider caching them?
-    conf = 
+    {
+      // FIXME: port_obj->name & port_obj->default_port are constant
+      // consider caching them?
+      conf = 
          port_obj->find_configuration_for_url(port_obj->name + "://" +
                                              (misc->host||"*") +
                                              (search(misc->host||"", ":")<0?
                                              (":"+port_obj->port):"") +
                                               raw_url,
                                               this_object());
-  }
-  else if( strlen(path) )
-    adjust_for_config_path( path );
-
-  TIMER_END(find_conf);
-
-  if (rawauth)
-  {
-    /* Need to authenticate with the configuration */
-    misc->cacheable = 0;
-    array(string) y = rawauth / " ";
-    realauth = 0;
-    auth = 0;
-    if (sizeof(y) >= 2)
-    {
-      y[1] = MIME.decode_base64(y[1]);
-      realauth = y[1];
     }
-  }
+    else if( strlen(path) )
+      adjust_for_config_path( path );
 
+    TIMER_END(find_conf);
 
-  if( misc->proxyauth )
-  {
-    /* Need to authenticate with the configuration */
-    misc->cacheable = 0;
-    if (sizeof(misc->proxyauth) >= 2)
+    if (rawauth)
     {
-      //    misc->proxyauth[1] = MIME.decode_base64(misc->proxyauth[1]);
-      if (conf->auth_module)
-        misc->proxyauth
-          = conf->auth_module->auth(misc->proxyauth,this_object() );
+      /* Need to authenticate with the configuration */
+      misc->cacheable = 0;
+      array(string) y = rawauth / " ";
+      realauth = 0;
+      auth = 0;
+      if (sizeof(y) >= 2)
+      {
+	y[1] = MIME.decode_base64(y[1]);
+	realauth = y[1];
+      }
     }
-  }
 
-  conf->received += strlen(s);
-  conf->requests++;
-  my_fd->set_close_callback(0);
-  my_fd->set_read_callback(0);
-  processed=1;
 
-  remove_call_out(do_timeout);
+    if( misc->proxyauth )
+    {
+      /* Need to authenticate with the configuration */
+      misc->cacheable = 0;
+      if (sizeof(misc->proxyauth) >= 2)
+      {
+	//    misc->proxyauth[1] = MIME.decode_base64(misc->proxyauth[1]);
+	if (conf->auth_module)
+	  misc->proxyauth
+	    = conf->auth_module->auth(misc->proxyauth,this_object() );
+      }
+    }
+
+    conf->received += strlen(s);
+    conf->requests++;
+    my_fd->set_close_callback(0);
+    my_fd->set_read_callback(0);
+    processed=1;
+
+    remove_call_out(do_timeout);
 #ifdef RAM_CACHE
-  TIMER_START(cache_lookup);
-  array cv;
-  if( prot != "HTTP/0.9" &&
-      misc->cacheable    &&
-      !since             &&
-      (cv = conf->datacache->get( raw_url )) )
-  {
-    MY_TRACE_ENTER (sprintf ("Found %O in ram cache - checking entry", raw_url), 0);
-    if( !cv[1]->key ) {
-      MY_TRACE_LEAVE ("Entry invalid due to zero key");
-      conf->datacache->expire_entry( raw_url );
-    }
-    else 
+    TIMER_START(cache_lookup);
+    array cv;
+    if( prot != "HTTP/0.9" &&
+	misc->cacheable    &&
+	!since             &&
+	(cv = conf->datacache->get( raw_url )) )
     {
-      int can_cache = 1;
-      if(!leftovers) 
-        leftovers = data||"";
-    
-      string d = cv[ 0 ];
-      file = cv[1];
-
-      if( sizeof(file->callbacks) )
-      {
-        if( mixed e = catch 
-        {
-          foreach( file->callbacks, function f ) {
-	    MY_TRACE_ENTER (sprintf ("Checking with %s",
-				     master()->describe_function (f)), 0);
-            if( !f(this_object(), cv[1]->key ) )
-            {
-	      MY_TRACE_LEAVE ("Entry invalid according to callback");
-	      MY_TRACE_LEAVE ("");
-              can_cache = 0;
-              break;
-            }
-	    MY_TRACE_LEAVE ("");
-	  }
-        } )
-        {
-          INTERNAL_ERROR( e );
-	  TIMER_END(cache_lookup);
-          send_result();
-          return;
-        }
-      }
-      if( !cv[1]->key )
-      {
+      MY_TRACE_ENTER (sprintf ("Found %O in ram cache - checking entry", raw_url), 0);
+      if( !cv[1]->key ) {
 	MY_TRACE_LEAVE ("Entry invalid due to zero key");
-        conf->datacache->expire_entry( raw_url );
-        can_cache = 0;
+	conf->datacache->expire_entry( raw_url );
       }
-      if( can_cache )
+      else 
       {
-#ifndef RAM_CACHE_ASUME_STATIC_CONTENT
-        Stat st;
-        if( !file->rf || !file->mtime || 
-            ((st = file_stat( file->rf )) && st->mtime == file->mtime ))
-#endif
-        {
-          string fix_date( string headers )
-          {
-            string a, b;
-            if( sscanf( headers, "%sDate: %*s\n%s", a, b ) == 3 )
-              return a+"Date: "+Roxen.http_date( predef::time(1) ) +"\r\n"+b;
-            return headers;
-          };
-
-	  MY_TRACE_LEAVE ("Using entry from ram cache");
-          conf->hsent += strlen(file->hs);
-	  cache_status["protcache"] = 1;
-          if( strlen( d ) < 4000 )
-          {
+	int can_cache = 1;
+	if(!leftovers) 
+	  leftovers = data||"";
+	
+	string d = cv[ 0 ];
+	file = cv[1];
+	
+	if( sizeof(file->callbacks) )
+	{
+	  if( mixed e = catch 
+	  {
+	    foreach( file->callbacks, function f ) {
+	      MY_TRACE_ENTER (sprintf ("Checking with %s",
+				       master()->describe_function (f)), 0);
+	      if( !f(this_object(), cv[1]->key ) )
+	      {
+		MY_TRACE_LEAVE ("Entry invalid according to callback");
+		MY_TRACE_LEAVE ("");
+		can_cache = 0;
+		break;
+	      }
+	      MY_TRACE_LEAVE ("");
+	    }
+	  } )
+	  {
+	    INTERNAL_ERROR( e );
 	    TIMER_END(cache_lookup);
-	    do_log( my_fd->write( fix_date(file->hs)+d ) );
-          } 
-          else 
-          {
-	    TIMER_END(cache_lookup);
-            send( fix_date(file->hs)+d );
-            start_sender( );
-          }
-          return;
-        }
+	    send_result();
+	    return;
+	  }
+	}
+	if( !cv[1]->key )
+	{
+	  MY_TRACE_LEAVE ("Entry invalid due to zero key");
+	  conf->datacache->expire_entry( raw_url );
+	  can_cache = 0;
+	}
+	if( can_cache )
+	{
 #ifndef RAM_CACHE_ASUME_STATIC_CONTENT
-	else
-	  MY_TRACE_LEAVE (
-	    sprintf ("Entry out of date (disk: %s, cache: mtime %d)",
-		     st ? "mtime " + st->mtime : "gone", file->mtime));
+	  Stat st;
+	  if( !file->rf || !file->mtime || 
+	      ((st = file_stat( file->rf )) && st->mtime == file->mtime ))
 #endif
-      } else
-        misc->cacheable = 0; // Never cache in this case.
-      file = 0;
+	  {
+	    string fix_date( string headers )
+	    {
+	      string a, b;
+	      if( sscanf( headers, "%sDate: %*s\n%s", a, b ) == 3 )
+		return a+"Date: "+Roxen.http_date( predef::time(1) ) +"\r\n"+b;
+	      return headers;
+	    };
+	    
+	    MY_TRACE_LEAVE ("Using entry from ram cache");
+	    conf->hsent += strlen(file->hs);
+	    cache_status["protcache"] = 1;
+	    if( strlen( d ) < 4000 )
+	    {
+	      TIMER_END(cache_lookup);
+	      do_log( my_fd->write( fix_date(file->hs)+d ) );
+	    } 
+	    else 
+	    {
+	      TIMER_END(cache_lookup);
+	      send( fix_date(file->hs)+d );
+	      start_sender( );
+	    }
+	    return;
+	  }
+#ifndef RAM_CACHE_ASUME_STATIC_CONTENT
+	  else
+	    MY_TRACE_LEAVE (
+	      sprintf ("Entry out of date (disk: %s, cache: mtime %d)",
+		       st ? "mtime " + st->mtime : "gone", file->mtime));
+#endif
+	} else
+	  misc->cacheable = 0; // Never cache in this case.
+	file = 0;
+      }
     }
-  }
-  TIMER_END(cache_lookup);
+    TIMER_END(cache_lookup);
 #endif	// RAM_CACHE
-  TIMER_START(parse_request);
-  things_to_do_when_not_sending_from_cache( );
-  TIMER_END(parse_request);
-  REQUEST_WERR("HTTP: Calling roxen.handle().");
+    TIMER_START(parse_request);
+    things_to_do_when_not_sending_from_cache( );
+    TIMER_END(parse_request);
+    REQUEST_WERR("HTTP: Calling roxen.handle().");
 
 #ifdef THREADS
-  roxen.handle(handle_request);
+    roxen.handle(handle_request);
 #else
-  handle_request();
+    handle_request();
 #endif
   })
   {
     report_error("Internal server error: " + describe_backtrace(err));
     my_fd->set_blocking();
     my_fd->close();
-    destruct( my_fd );
     disconnect();
   }
 }
@@ -2249,10 +2226,8 @@ void clean()
 
 static void create(object f, object c, object cc)
 {
-// trace(1);
   if(f)
   {
-//     f->set_blocking();
     MARK_FD("HTTP connection");
     f->set_read_callback(got_data);
     f->set_close_callback(end);
@@ -2261,8 +2236,6 @@ static void create(object f, object c, object cc)
     if( cc ) conf = cc;
     time = predef::time(1);
     call_out(do_timeout, 90);
-//     string q = f->read( 8192, 1 );
-//     if( q ) got_data( 0, q );
   }
   root_id = this_object();
 }
