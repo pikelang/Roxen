@@ -1,7 +1,12 @@
 // This is a roxen module. 
 // Copyright © 1996 - 1998, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.95 1998/04/30 16:17:32 grubba Exp $";
+#define MAGIC_ERROR
+
+#ifdef MAGIC_ERROR
+inherit "highlight_pike";
+#endif
+constant cvs_version = "$Id: http.pike,v 1.96 1998/05/06 22:18:33 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -670,7 +675,29 @@ void add_id(array to)
       q[0]+=get_id(q[0]);
 }
 
-string format_backtrace(array bt)
+string link_to(string what, int eid, int qq)
+{
+  int line;
+  string file, fun;
+  sscanf(what, "%s(%*s in line %d in %s", fun, line, file);
+  if(file && fun && line)
+  {
+    sscanf(file, "%s (", file);
+    if(file[0]!='/') file = combine_path(getcwd(), file);
+//     werror("link to the function "+fun+" in the file "+
+// 	   file+" line "+line+"\n");
+    return ("<a href=\"/(old_error,find_file)/error?"+
+	    "file="+http_encode_string(file)+"&"
+	    "fun="+http_encode_string(fun)+"&"
+	    "off="+qq+"&"
+	    "error="+eid+"&"
+	    "line="+line+"#here\">");
+  }
+  return "<a>";
+}
+
+
+string format_backtrace(array bt, int eid)
 {
   // first entry is always the error, 
   // second is the actual function, 
@@ -683,7 +710,8 @@ string format_backtrace(array bt)
 		"<body bgcolor=white text=black link=darkblue vlink=darkblue>"
 		"<table width=\"100%\" border=0 cellpadding=0 cellspacing=0>"
 		"<tr><td valign=bottom align=left><img border=0 "
-		"src=\"/internal-roxen-roxen-icon-gray\" alt=\"\"></td>"
+		"src=\""+(conf?"/internal-roxen-":"/img/")+
+		"roxen-icon-gray.gif\" alt=\"\"></td>"
 		"<td>&nbsp;</td><td width=100% height=39>"
 		"<table cellpadding=0 cellspacing=0 width=100% border=0>"
 		"<td width=\"100%\" align=right valigh=center height=28>"
@@ -691,15 +719,16 @@ string format_backtrace(array bt)
 		"</b></td></tr><tr width=\"100%\"><td bgcolor=\"#003366\" "
 		"align=right height=12 width=\"100%\"><font color=white "
 		"size=-2>Internal Server Error&nbsp;&nbsp;</font></td>"
-		"</tr></table></td></tr></table>");
+		"</tr></table></td></tr></table>"
+		"<p>\n\n"
+		"<font size=+2 color=darkred>"
+		"<img alt=\"\" hspace=10 align=left src="+
+		(conf?"/internal-roxen-":"/img/") +"manual-warning.gif>"
+		+bt[0]+"</font><br>\n"
+		"The error occured while calling <b>"+bt[1]+"</b><p>\n"
+		+(reason?reason+"<p>":"")
+		+"<br><h3><br>Complete Backtrace:</h3>\n\n<ol>");
 
-  res += ("<p>\n\n"
-	  "<font size=+2 color=darkred>"
-	  "<img alt=\"\" hspace=10 align=left src=/internal-roxen-manual-warning>"
-	  +bt[0]+"</font><br>\n"
-	  "The error occured while calling <b>"+bt[1]+"</b><p>\n"
-	  +(reason?reason+"<p>":"")
-	  +"<br><h3><br>Complete Backtrace:</h3>\n\n<ol>");
   int q = sizeof(bt)-1;
   foreach(bt[1..], string line)
   {
@@ -707,13 +736,15 @@ string format_backtrace(array bt)
     if(sscanf(html_encode_string(line), "%s(%s) in %s", fun, args, where) == 3)
     {
       sscanf(where, "%*s in %s", fo);
-      line += get_id(fo);
-      res += ("<li value="+(q--)+"> "+(line-(getcwd()+"/"))+"<p>\n");
+      line += get_id( fo );
+      res += ("<li value="+(q--)+"> "+
+	      (replace(line, fo, link_to(line,eid,sizeof(bt)-q-1)+fo+"</a>")
+	       -(getcwd()+"/"))+"<p>\n");
     } else
-      res += "<li value="+(q--)+"> <b><font color=darkgreen>"+line+"</font></b><p>\n";
+      res += "<li value="+(q--)+"> <b><font color=darkgreen>"+
+	line+"</font></b><p>\n";
   }
-  res += ("</ul><p><b><a href=\"/(plain)"+http_encode_string(not_query)+
-	  (query?"?"+http_encode_string(query):"")+"\">"+
+  res += ("</ul><p><b><a href=\"/(old_error,plain)/error?error="+eid+"\">"
 	  "Generate text-only version of this error message, for bug reports"+
 	  "</a></b>");
   return res+"</body>";
@@ -730,25 +761,42 @@ string generate_bugreport(array from)
 	  "\n\nRequest data:\n"+raw));
 }
 
+int store_error(array err)
+{
+  mapping e = roxen->query_var("errors");
+  if(!e) roxen->set_var("errors", ([]));
+  e = roxen->query_var("errors"); /* threads... */
+  
+  int id = ++e[0];
+  if(id>1024) id = 1;
+  e[id] = err;
+  return id;
+}
+
+array get_error(string eid)
+{
+  mapping e = roxen->query_var("errors");
+  if(e) return e[(int)eid];
+  return 0;
+}
+
+
 void internal_error(array err)
 {
   array err2;
-  if(QUERY(show_internals)) {
+  if(QUERY(show_internals)) 
+  {
     err2 = catch { 
-      if(prestate->plain) 
-      {
-	file =  http_low_answer(500,generate_bugreport(err));
-	return;
-      }
       array(string) bt = (describe_backtrace(err)/"\n") - ({""});
-      file = http_low_answer(500, format_backtrace(bt));
+      file = http_low_answer(500, format_backtrace(bt, store_error(err)));
     };	
     if(err2) {
       werror("Internal server error in internal_error():\n" +
+	     describe_backtrace(err2)+"\n while processing \n"+
 	     describe_backtrace(err));
       file = http_low_answer(500, "<h1>Error: The server failed to "
 			     "fulfill your query, due to an "
-			     "internal error.</h1>");
+			     "internal error in the internal error routine.</h1>");
     }
   } else {
     file = http_low_answer(500, "<h1>Error: The server failed to "
@@ -829,6 +877,51 @@ void timer(int start)
   call_out(timer, 30, start);
 }
 #endif
+
+string handle_error_file_request(array err, int eid)
+{
+//   return "file request for "+variables->file+"; line="+variables->line;
+  string data = Stdio.read_bytes(variables->file);
+  array(string) bt = (describe_backtrace(err)/"\n") - ({""});
+  string down;
+
+  if((int)variables->off-1 >= 1)
+    down = link_to( bt[(int)variables->off-1],eid, (int)variables->off-1);
+  else
+    down = "<a>";
+  if(data)
+  {
+    int off = 49;
+    array (string) lines = data/"\n";
+    int start = (int)variables->line-50;
+    if(start < 0)
+    {
+      off += start;
+      start = 0;
+    }
+    int end = (int)variables->line+50;
+    lines=highlight_pike("foo", ([ "nopre":1 ]), lines[start..end]*"\n")/"\n";
+
+//     foreach(bt, string b)
+//     {
+//       int line;
+//       string file, fun;
+//       sscanf(what, "%s(%*s in line %d in %s", fun, line, file);
+//       if(file && fun && line) sscanf(file, "%s (", file);
+//       if((file == variables->file) && 
+// 	 (fun == variables->fun) && 
+// 	 (line == variables->line))
+//     }
+
+    if(sizeof(lines)>off)
+      lines[off]=("<font size=+2><b>"+down+lines[off]+"</a></b></font></a>");
+    lines[max(off-20,0)] = "<a name=here>"+lines[max(off-20,0)]+"</a>";
+    data = lines*"\n";
+  }
+  
+  return format_backtrace(bt,eid)+"<hr noshade><pre>"+data+"</pre>";
+}
+
 void handle_request( )
 {
   mixed *err;
@@ -838,10 +931,47 @@ void handle_request( )
   string head_string;
   object thiso=this_object();
 
+
+#ifdef MAGIC_ERROR
+  if(prestate->old_error)
+  {
+    array err = get_error(variables->error);
+    if(err)
+    {
+      if(prestate->plain)
+      {
+	file = ([
+	  "type":"text/html",
+	  "data":generate_bugreport( err ),
+	]);
+      } else {
+	
+	if(prestate->find_file)
+        {
+	  if(!realauth)
+	    file = http_auth_required("admin");
+	  else
+	  {
+	    array auth = (realauth+":")/":";
+	    if((auth[0] != roxen->query("ConfigurationUser"))
+	       || !crypt(auth[1], roxen->query("ConfigurationPassword")))
+	      file = http_auth_required("admin");
+	    else
+	      file = ([
+		"type":"text/html",
+		"data":handle_error_file_request( err, (int)variables->error ),
+	      ]);
+	  }
+	}
+      }
+    }
+  }
+#endif
+
+
   remove_call_out(do_timeout);
   MARK_FD("HTTP handling request");
-
-  if(conf)
+  if(!file && conf)
   {
 //  perror("Handle request, got conf.\n");
     object oc = conf;
@@ -859,7 +989,8 @@ void handle_request( )
 
     if(!mappingp(file))
       foreach(conf->last_modules(), funp) if(file = funp(thiso)) break;
-  } else if(err=catch(file = roxen->configuration_parse( thiso ))) {
+  } else if(!file &&
+	    (err=catch(file = roxen->configuration_parse( thiso )))) {
     if(err==-1) return;
     internal_error(err);
   }
