@@ -18,21 +18,29 @@ string attr_cont(string t, mapping m, string c)
 string attr_vals(string v)
 {
   if(search(v,",")!=-1) return "{"+(v/",")*", "+"}";
-  if(v=="langcodes") return "<a href=\"?show=langcodes\">language code</a>";
+  //FIXME Use real config url
+  if(v=="langcodes") return "<a href=\"/help/langcodes.pike\">language code</a>";
   return v;
 }
 
-mapping helptags=(["desc":desc_cont, "attr":attr_cont]);
+string do_parse_doc(string|mapping doc, string name) {
+  if(mappingp(doc)) doc=doc->standard;
+  return parse_html(doc, ([]), ([
+    "desc":desc_cont,
+    "attr":attr_cont
+  ]), name);
+}
 
 string parse_doc(mapping doc) {
   string ret="";
+  if(!mappingp(doc)) return "";
   foreach(indices(doc), string tmp) {
     if(arrayp(doc[tmp])) {
-      ret+=parse_html(doc[tmp][0], ([]), helptags, tmp);
+      ret+=do_parse_doc(doc[tmp][0], tmp);
       ret+="<dl><dd>"+parse_doc(doc[tmp][1])+"</dd></dl>";
     }
     else
-      ret+=parse_html(doc[tmp] ,([]), helptags, tmp);
+      ret+=do_parse_doc(doc[tmp], tmp);
   }
   return ret;
 }
