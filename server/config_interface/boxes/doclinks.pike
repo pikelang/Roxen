@@ -21,7 +21,9 @@ string parse( RequestID id )
 
 //    docs += "<a href='"+path("whatsnew.html")+"'>"+
 //      _(390,"Release notes")+"</a><br />";
-  
+
+  docs += "<font size=-1>";
+
   foreach( ({ "docs/roxen/3.2/" }), string rpath )
   {
     if( exists(  rpath + "content_editor_manual_(instant)/index.html" ) )
@@ -89,6 +91,8 @@ string parse( RequestID id )
   if( docs == "" )
     docs="<font color='&usr.warncolor;'>"+
       _(397,"No documentation found at all")+"</font>";
+
+  docs += "</font>";
 
   return "<box type='"+box+"' title='"+box_name+"'>"+docs+"</box>";
 }
