@@ -177,7 +177,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
   if (((float)diagram_data["yminvalue"]>-LITET)&&
       ((float)diagram_data["yminvalue"]<LITET))
     diagram_data["yminvalue"]=0.0;
-  
+
   if (diagram_data["yminvalue"]<0)
     {
       //placera ut x-axeln.
@@ -756,7 +756,7 @@ int main(int argc, string *argv)
 		     ({91.2, 101.3, 91.5, 101.7,  141.0, 181.5}),
 		    ({191.2, 203.3, 241.5, 200.1, 194.3 }),
 		    ({191.2, 203.3, 241.5, 200.1, 194.3 }),
-		    ({93.2, -413.3, 133.5, 143.7, 154.3, 400, 133}) }),
+		    ({93.2, -413.3, 133.5, 143.7, 154.3, 100, 133}) }),
 		 "axcolor":({0,0,255}),
 		 "bgcolor":0,//({255,255,255}),
 		 "labelcolor":0, //({0,0,0}),

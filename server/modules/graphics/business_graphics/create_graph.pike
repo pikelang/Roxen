@@ -291,16 +291,18 @@ mapping(string:mixed) init(mapping(string:mixed) diagram_data)
 	else
 	  if ((diagram_data["type"]=="bars")||
 	      (diagram_data["type"]=="pie"))
-	    for(int i; i<j; i++)
-	      {
-		float k; 
-		if (yminvalue>(k=d[i]))
-		  yminvalue=k;
-		if (ymaxvalue<(k))
-		  ymaxvalue=k;
-		xminvalue=0.0;
-		xmaxvalue=10.0;
-	      }
+	    {
+	      for(int i; i<j; i++)
+		{
+		  float k; 
+		  if (yminvalue>(k=d[i]))
+		    yminvalue=k;
+		  if (ymaxvalue<(k))
+		    ymaxvalue=k;
+		}
+	      xminvalue=0.0;
+	      xmaxvalue=10.0;
+	    }
 	  else
 	    throw( ({"\""+diagram_data["type"]+"\" is an unknown graph type!\n",
 		     backtrace()}));
@@ -1418,22 +1420,23 @@ int main(int argc, string *argv)
 		 ({ ({1.2, 12.3, 4.01, 10.0, 4.3, 12.0 }),
 		    ({1.2, 11.3, -15, 11.7,  1.0, 11.5, 1.0, 13.0, 40.0, 4.0  }),
 		    ({1.2, 13.3, 1.5, 10.1 }),
+		    ({10.2, 13.3, 1.5, 10.1 }),
 		    ({3.2, 13.3, 3.5, 13.7} )}),
-		 "fontsize":42,
+		 "fontsize":12,
 		 "axcolor":({0,0,0}),
 		 "bgcolor":0,//({255,255,255}),
 		 "labelcolor":({0,0,0}),
 		 "datacolors":0,//({({0,255,0}),({255,255,0}), ({0,255,255}), ({255,0,255}) }),
-		 "linewidth":2.2,
+		 "linewidth":3.2,
 		 "xsize":300,
 		 "ysize":200,
-		 "labels":({"j", "", "xenhet super maga ultra futur", "yenhet fghfg fgh fgh fgh fgh fghj  fghf gh fgh fgh fgh   gfhfgh fghfgh"}),
-		 "legendfontsize":2,
-		 "legend_texts":({"streck 1", "j", "foo", "bar gazonk foobar illalutta!" 
+		 "labels":({"j", "", "xenhet super maga ultra futur", "yenhet fghfg fgh fgh fgh fgh fghj  fghf gh fgh fgh fgh   gfhfgh fghfgh", "do"}),
+		 "legendfontsize":12,
+		 "legend_texts":({"streck 1", "j", "foo", "bar gazonk foobar illalutta!", "hgh" 
 }),
 		 "labelsize":12,
 		 "xminvalue":0.0,
-		 "yminvalue":1,
+		 "yminvalue":0,
 		 "vertgrind": 1,
 		 "grindwidth": 0.5
 
