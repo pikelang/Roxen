@@ -220,6 +220,9 @@ Foo is off
 <p> 
 Choosing Yes in the form will turn on the variable 'foo' while no will turn it off.
 <p>
+match='string[ is pattern]'<br>
+Works like cookie and variable, but compares a literal string. This is useful e.g. in output tags such as {formoutput}.
+<p>
 config=configuration <br>
 If you have set a user's configuration through the use of one or several {aconf +/-configuration} you can use this conditional to check it. It works like pre-states but is instead saved on the client side through the use of cookies. 
 Modifiers

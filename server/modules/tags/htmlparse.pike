@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.117 1998/07/16 19:32:58 peter Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.118 1998/07/16 20:05:28 mast Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -1696,6 +1696,11 @@ string tag_allow(string a, mapping (string:string) m,
   IS_TEST(cookie, got->cookies);
   IS_TEST(defined, defines);
 
+  if (m->match) {
+    string a, b;
+    if(sscanf(m->match, "%s is %s", a, b)==2)
+      TEST(_match(a, b/","));
+  }
 
   if(m->accept)
     if(!got->misc->accept)
