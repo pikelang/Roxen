@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.9 2000/03/11 13:16:39 grubba Exp $
+ * $Id: create_configif.pike,v 1.10 2000/03/22 15:07:14 js Exp $
  *
  * Create an initial configuration interface server.
  */
@@ -78,6 +78,44 @@ int main(int argc, array argv)
     } while(!strlen(password) || (password != passwd2));
   } while( strlen( passwd2 = rl->read( "Ok? [y]: " ) ) && passwd2[0]=='n' );
 
+
+  string community_user, community_password, proxy_host="", proxy_port="80";
+  string community_userpassword="";
+  int use_update_system=0;
+  
+  write("Roxen 2.0 has a built-in update system. If enabled it will periodically\n");
+  write("contact update servers over the Internet. Do you want to enable this?\n");
+
+  if(!(strlen( passwd2 = rl->read( "Ok? [y]: " ) ) && passwd2[0]=='n' ))
+  {
+    use_update_system=1;
+    write("If you have a registered user identity at Roxen Community\n");
+    write("(http://community.roxen.com), you may be able to access\n");
+    write("additional material through the update system.\n");
+    write("Press enter to skip this.\n");
+    community_user=rl->read("Roxen Community Identity (your e-mail): ");
+    do
+    {
+      rl->get_input_controller()->dumb=1;
+      community_password = rl->read( "Roxen Community Password: ");
+      passwd2 = rl->read( "Roxen Community Password (again): ");
+      rl->get_input_controller()->dumb=0;
+      write("\n");
+      community_userpassword=community_user+":"+community_password;
+    } while(!strlen(community_password) || (community_password != passwd2));
+
+      if((strlen( passwd2 = rl->read("Do you want to access the update "
+				      "server through an HTTP proxy? [n]: "))
+	   && passwd2[0]!='n' ))
+      {
+	proxy_host=rl->read("Proxy host: ");
+	if(sizeof(proxy_host))
+	  proxy_port=rl->read("Proxy port: [80]");
+	if(!sizeof(proxy_port))
+	  proxy_port="80";
+      }
+  }
+
   string ufile=(configdir+"_configinterface/settings/" + user + "_uid");
   mkdirhier( ufile );
   Stdio.write_file(ufile,
@@ -109,6 +147,13 @@ replace(
   <var name='trusted'><int>1</int></var>
 </region>
 
+<region name='update#0'>
+  <var name='do_external_updates'> <int>$USE_UPDATE_SYSTEM$</int> </var>
+  <var name='proxyport'>         <int>$PROXY_PORT$</int> </var>
+  <var name='proxyserver'>       <str>$PROXY_HOST</str> </var>
+  <var name='userpassword'>      <str>$COMMUNITY_USERPASSWORD$</str> </var>
+</region>
+
 <region name='spider#0'>
   <var name='Domain'> <str></str> </var>
   <var name='MyWorldLocation'><str></str></var>
@@ -122,8 +167,10 @@ replace(
     <str>$NAME$</str>
   </var>
 </region>",
- ({ "$NAME$", "$URL$" }),
- ({ name, port }) ));
+ ({ "$NAME$", "$URL$", "$USE_UPDATE_SYSTEM$","$PROXY_PORT$",
+    "$PROXY_HOST", "$COMMUNITY_USERPASSWORD$" }),
+ ({ name, port, (string)use_update_system, proxy_port,
+    proxy_host, community_userpassword }) ));
   write("Configuration interface created\n");
 
 }
