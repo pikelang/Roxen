@@ -1,5 +1,5 @@
 /* 
- * $Id: sqltag.pike,v 1.35 1999/06/11 13:50:45 mast Exp $
+ * $Id: sqltag.pike,v 1.36 1999/07/01 12:40:35 wellhard Exp $
  *
  * A module for Roxen Challenger, which gives the tags
  * <SQLQUERY> and <SQLOUTPUT>.
@@ -7,7 +7,7 @@
  * Henrik Grubbström 1997-01-12
  */
 
-constant cvs_version="$Id: sqltag.pike,v 1.35 1999/06/11 13:50:45 mast Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.36 1999/07/01 12:40:35 wellhard Exp $";
 constant thread_safe=1;
 #include <module.h>
 
@@ -171,7 +171,7 @@ mixed sqloutput_tag(string tag_name, mapping args, string contents,
     } else if (result && sizeof(result))
     {
       res = ({do_output_tag( args, result, contents, request_id )});
-      id->misc->defines[" _ok"] = 1; // The effect of <true>, since res isn't parsed.
+      request_id->misc->defines[" _ok"] = 1; // The effect of <true>, since res isn't parsed.
 
       if( args["rowinfo"] )
              request_id->variables[args->rowinfo]=sizeof(result);
