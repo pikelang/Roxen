@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.64 2000/10/17 22:15:55 mast Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.65 2000/11/17 15:56:30 anders Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -655,11 +655,11 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
   // this version totally destroys the alpha channel of the image,
   // but that's sort of the intention. The reason is that
   // the png images are generated without alpha.
-  //
-  // however, it would be nice to have transparency with gif images.
-  return ({ Image.Layer(([ "fill":args->pagebg, ])) }) + button_layers;
+  if (args->format == "png")
+    return ({ Image.Layer(([ "fill":args->pagebg, ])) }) + button_layers;
+  else
+    return button_layers;
 //   }
-//   return button_layers;
 }
 
 
@@ -722,6 +722,10 @@ class ButtonFrame {
       "extra_background_layers":args["extra-background-layers"],
       "extra_mask_layers":args["extra-mask-layers"],
       "extra_frame_layers":args["extra-frame-layers"],
+      "scale":args["scale"],
+      "format":args["format"],
+      "gamma":args["gamma"],
+      "crop":args["crop"],
     ]);
 
     new_args->quant = args->quant || 128;
