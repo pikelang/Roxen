@@ -7,7 +7,7 @@
 //  return "Hello world!\n";
 // </pike>
  
-constant cvs_version = "$Id: lpctag.pike,v 1.14 1998/07/16 17:00:05 mast Exp $";
+constant cvs_version = "$Id: lpctag.pike,v 1.15 1998/08/03 10:09:58 grubba Exp $";
 constant thread_safe=1;
 
 inherit "roxenlib";
@@ -81,8 +81,9 @@ inline private nomask string functions()
     "inherit \"roxenlib\";\n"
     "\n"
     "array data = ({});\n\n"
-    "void output(mixed ... args) {\n"
+    "int output(mixed ... args) {\n"
     "if(sizeof(args) > 1) data += ({ sprintf(@args) }); else data += args;\n"
+    "return 0;\n"
     "}\n\n"
     "string flush() {\n"
     "  string r;\n"
