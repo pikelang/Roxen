@@ -1,6 +1,6 @@
 // Some debug tools.
 //
-// $Id: Debug.pmod,v 1.1 2000/03/18 02:53:26 mast Exp $
+// $Id: Debug.pmod,v 1.2 2001/07/11 12:00:43 mast Exp $
 
 
 // Helper to locate leaking objects. Use a line like this to mark a
@@ -45,6 +45,11 @@ class ObjectMarker
 	else werror ("destroy ** %s\n", id);
       if (--object_markers[id] <= 0) m_delete (object_markers, id);
     }
+  }
+
+  string _sprintf()
+  {
+    return "Debug.ObjectMarker(" + id + ")";
   }
 }
 
