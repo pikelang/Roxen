@@ -39,8 +39,9 @@ easy: all
 hard: all
 
 depend:
-	@(cd pike/$(PIKEVERSION)/src;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" depend)
-	echo "You need to run configure once again."
+	-@(cd pike/$(PIKEVERSION)/src;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" depend)
+	@echo "You need to run configure once again."
+	@exit 1
 
 verify: all verify_other
 	@(cd pike/$(PIKEVERSION)/src;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" verify)
@@ -283,17 +284,17 @@ bump_version: bump_version.stamp
 	)
 	@touch bump_version
 
-ChangeLog.gz:
+$(SRCDIR)/ChangeLog.gz:
 	cd $(SRCDIR); pike tools/make_changelog.pike | gzip -9 > ChangeLog.gz
 
-ChangeLog.rxml.gz:
+$(SRCDIR)/ChangeLog.rxml.gz:
 	cd $(SRCDIR); pike tools/make_changelog.pike --rxml |gzip -9 > ChangeLog.rxml.gz
 
 
-pre_dist: bump_version weak_cleanup run_autoconfig depend
+pre_dist: bump_version weak_cleanup depend run_autoconfig
 	@(cd pike; $(MAKE) pre_dist)
 
-dist: ChangeLog.gz ChangeLog.rxml.gz
+dist: $(SRCDIR)/ChangeLog.gz $(SRCDIR)/ChangeLog.rxml.gz
 	@if test -f $(SRCDIR)/VERSION; then :; else \
 	  echo 'You need to make pre_dist first!'; \
 	  exit 1; \
