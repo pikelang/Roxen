@@ -1,7 +1,7 @@
 // This is a ChiliMoon module. Copyright © 1997-2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.110 2004/06/19 15:47:35 _cvs_dirix Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.111 2004/06/19 22:17:20 _cvs_stephen Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -40,6 +40,10 @@ constant tagdoc=([
  be used.</p>
 </attr>
 
+<attr name='module' value='module name'><p>
+ Use the database requested by the named module.</p>
+</attr>
+
 <attr name='query' value='SQL statement'><p>
  The actual SQL-statement.</p>
 </attr>
@@ -61,6 +65,10 @@ constant tagdoc=([
  href='../../administrator_manual/installing/databases.xml'><module>SQL
  Databases</module></xref> module. If omitted the default
  database will be used.</p>
+</attr>
+
+<attr name='module' value='module name'><p>
+ Use the database requested by the named module.</p>
 </attr>
 
 <attr name='query' value='SQL statement'><p>
@@ -100,6 +108,10 @@ inserting large datas. Oracle, for instance, limits the query to 4000 bytes.
  database will be used.</p>
 </attr>
 
+<attr name='module' value='module name'><p>
+ Use the database requested by the named module.</p>
+</attr>
+
 <attr name='query' value='SQL statement'><p>
  The actual SQL-statement.</p>
 </attr>
@@ -137,10 +149,7 @@ array|object do_sql_query(mapping args, RequestID id,
 {
   string host;
   if(args->host)
-//FIXME check if this also works for <EMIT>
-  host=args->host, args->host="SECRET";
-  else if(args->db)			  // NGSERVER: drop support for db= ?
-    host=args->db, args->db="SECRET";
+    host=args->host, args->host="SECRET";
   else
     host=default_db;
 
@@ -161,8 +170,7 @@ array|object do_sql_query(mapping args, RequestID id,
     }
   }
 
-  if( args->module )	   // NGSERVER: drop support for module= ?
-  {
+  if(args->module) {
     RoxenModule module=id->conf->find_module(replace(args->module,"!","#"));
     if( !module )
       RXML.run_error( "Cannot find the module" + args->module );
@@ -268,15 +276,15 @@ class TagSqlplugin {
   mapping(string:RXML.Type) req_arg_types = ([ "query":RXML.t_text(RXML.PEnt) ]);
   mapping(string:RXML.Type) opt_arg_types = ([
     "host":RXML.t_text(RXML.PEnt),
-    "db":RXML.t_text(RXML.PEnt),
+    "module":RXML.t_text(RXML.PEnt),
     "prefetch":RXML.t_text(RXML.PEnt),
   ]);
 
-  object get_dataset(mapping m, RequestID id) {
+  object get_dataset(mapping args, RequestID id) {
     // Haven't verified that the NOCACHE here is actually needed, but
     // in the worst case it's just unnecessary.
     NOCACHE();
-    return SqlEmitResponse(do_sql_query(m+([]), id, !args->prefetch));
+    return SqlEmitResponse(do_sql_query(args, id, !args->prefetch));
   }
 }
 
@@ -287,7 +295,7 @@ class TagSQLQuery {
   mapping(string:RXML.Type) req_arg_types = ([ "query":RXML.t_text(RXML.PEnt) ]);
   mapping(string:RXML.Type) opt_arg_types = ([
     "host":RXML.t_text(RXML.PEnt),
-    "db":RXML.t_text(RXML.PEnt),
+    "module":RXML.t_text(RXML.PEnt),
     "mysql-insert-id":RXML.t_text(RXML.PEnt), // t_var
   ]);
 
@@ -324,7 +332,7 @@ class TagSQLTable {
   mapping(string:RXML.Type) req_arg_types = ([ "query":RXML.t_text(RXML.PEnt) ]);
   mapping(string:RXML.Type) opt_arg_types = ([
     "host":RXML.t_text(RXML.PEnt),
-    "db":RXML.t_text(RXML.PEnt),
+    "module":RXML.t_text(RXML.PEnt),
     "ascii":RXML.t_text(RXML.PEnt), // t_bool
     "nullvalue":RXML.t_text(RXML.PEnt),
   ]);
@@ -367,9 +375,8 @@ class TagSQLTable {
 
 	if (!ascii)
 	  ret=Roxen.make_container("table",
-				   args-(["host":"","database":"","user":"",
-					  "password":"","query":"","db":"",
-					  "nullvalue":"","dbobj":""]), ret);
+				   args-(<"host","query","module",
+					  "ascii","nullvalue">), ret);
 
 	id->misc->defines[" _ok"] = 1;
 	result=ret;
