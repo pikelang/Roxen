@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.271 2002/05/15 22:10:34 mast Exp $
+// $Id: module.pmod,v 1.272 2002/06/11 14:34:38 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -2403,7 +2403,7 @@ final Context get_context() {return [object(Context)] RXML_CONTEXT;}
 
 #if defined (MODULE_DEBUG) && constant (thread_create)
 
-// Got races in this debug check, but looks like we have to live with that. :\
+// Got races in this debug check, but looks like we have to live with that. :/
 
 #define ENTER_CONTEXT(ctx)						\
   Context __old_ctx = RXML_CONTEXT;					\
@@ -2747,12 +2747,26 @@ class Frame
   //! @decl optional string raw_tag_text;
   //!
   //! If this variable exists, it gets the raw text representation of
-  //! the tag, if there is any. Note that it's after parsing of any
-  //! splice argument.
+  //! the tag, if there is any. Note that it's after the parsing of
+  //! any splice argument.
   //!
   //! @note
   //! This variable is assumed to be static, i.e. its value doesn't
   //! depend on any information that's known only at runtime.
+
+  //! @decl optional object check_security_object;
+  //!
+  //! If this is defined, it specifies an object to use for the module
+  //! level security check. The default is to use @[tag] if it's set,
+  //! else this object.
+  //!
+  //! Setting this is useful for short lived tags and tagless frames
+  //! since the security system caches references to these objects,
+  //! which otherwise would cause them to be lying around until the
+  //! next gc round.
+  //!
+  //! @note
+  //! This is used only if the define MODULE_LEVEL_SECURITY exists.
 
   //! @decl optional array do_enter (RequestID id);
   //! @decl optional array do_process (RequestID id, void|mixed piece);
@@ -3713,7 +3727,8 @@ class Frame
 	    if (!(flags & FLAG_CUSTOM_TRACE))
 	      TRACE_ENTER("tag &lt;" + tag->name + "&gt;", tag);
 #ifdef MODULE_LEVEL_SECURITY
-	    if (id->conf->check_security (tag, id, id->misc->seclevel)) {
+	    if (id->conf->check_security (this_object()->check_security_object || tag ||
+					  this_object(), id, id->misc->seclevel)) {
 	      if (flags & FLAG_CUSTOM_TRACE)
 		TRACE_ENTER("tag &lt;" + tag->name + "&gt;", tag);
 	      THIS_TAG_TOP_DEBUG ("Access denied - exiting\n");
@@ -6643,8 +6658,8 @@ static class PikeCompile
 	// Don't want to encode the cloning of RoxenDebug.ObjectMarker
 	// in the __INIT that is dumped, since that debug might not be
 	// wanted when the dump is decoded.
-	"mapping|object __object_marker = ",
-	bind (RoxenDebug.ObjectMarker ("object(compiled RXML code)")), ";\n"
+	"mapping|object __object_marker = " +
+	bind (RoxenDebug.ObjectMarker ("object(compiled RXML code)")) + ";\n"
 #else
 	LITERAL (MARK_OBJECT) ";\n"
 #endif
