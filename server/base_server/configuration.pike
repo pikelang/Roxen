@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.372 2000/09/19 00:04:34 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.373 2000/09/19 09:24:47 jonasw Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -2438,7 +2438,8 @@ void call_low_start_callbacks( RoxenModule me,
   }
 
   if(module_type & MODULE_DIRECTORIES)
-    dir_module = me;
+    if (me->parse_directory)
+      dir_module = me;
 
   if(module_type & MODULE_LOCATION)
     pri[pr]->location_modules += ({ me });
