@@ -1087,6 +1087,32 @@ a&auml; &amp; b  &gt;
   <result>10101</result>
 </test>
 
+<test>
+  <rxml type="string">
+    <emit source="TESTER" test="6">
+      <if variable="_.integer">1</if><else>0</else>
+      <if variable="_.float">1</if><else>0</else>
+      <if variable="_.string">1</if><else>0</else>
+      <if variable="_.array">1</if><else>0</else>
+      <if variable="_.multiset">1</if><else>0</else>
+      <if variable="_.mapping">1</if><else>0</else>
+      <if variable="_.object">1</if><else>0</else>
+      <if variable="_.program">1</if><else>0</else>
+      <if variable="_.zero_integer">1</if><else>0</else>
+      <if variable="_.zero_float">1</if><else>0</else>
+      <if variable="_.empty_string">1</if><else>0</else>
+      <if variable="_.empty_array">1</if><else>0</else>
+      <if variable="_.empty_multiset">1</if><else>0</else>
+      <if variable="_.empty_mapping">1</if><else>0</else>
+      <if variable="_.zero_int_array">1</if><else>0</else>
+      <if variable="_.zero_float_array">1</if><else>0</else>
+      <if variable="_.empty_string_array">1</if><else>0</else>
+      <if variable="_.empty_array_array">1</if><else>0</else>
+    </emit>
+  </rxml>
+  <result>111111111110111110</result>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Sort</comment>
