@@ -71,6 +71,7 @@ urw_itc_avant_garde-demi-r binary
 /server/modules/directories/fastdir.pike foreign_ident
 /server/modules/directories/indexfiles.pike foreign_ident
 /server/modules/examples/fnord.pike foreign_ident
+/server/modules/filesystems/cvsfs.pike foreign_ident
 /server/modules/filesystems/filesystem.pike foreign_ident
 /server/modules/filesystems/secure_fs.pike foreign_ident
 /server/modules/filesystems/userfs.pike foreign_ident
