@@ -3,7 +3,7 @@
  * (C) 1996 - 2000 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.262 2000/02/16 15:36:56 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.263 2000/02/16 16:04:59 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -2085,13 +2085,13 @@ void start(int num)
   }
 }
 
-// Save this configuration. If all is included, save all configuration
-// global variables as well, otherwise only all module variables.
 void save_me()
 {
   save_one( 0 );
 }
 
+// Save this configuration. If all is included, save all configuration
+// global variables as well, otherwise only all module variables.
 void save(int|void all)
 {
   if(all)
@@ -2230,7 +2230,8 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
 
   if(module[id] && module[id] != me)
   {
-    module[id]->stop();
+    if( module[id]->stop )
+      module[id]->stop();
 //     if( err = catch( disable_module( modname+"#"+id ) ) )
 //       report_error(LOCALE->error_disabling_module(moduleinfo->get_name(),
 //                                                   describe_backtrace(err)));
@@ -2604,6 +2605,8 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
   if (enable_module_batch_msgs)
     report_debug("\bOK %6.1fms\n", (gethrtime()-start_time)/1000.0);
 #endif
+  if( me->no_delayed_load )
+    set( "no_delayed_load", 1 );
   return me;
 }
 
@@ -2846,10 +2849,14 @@ mixed add_init_hook( mixed what )
 
 void enable_all_modules()
 {
-  ready_to_receive_requests( );
+  int q = query( "no_delayed_load" );
+  set( "no_delayed_load", 0 );
+  low_init( );
+  if( q != query( "no_delayed_load" ) )
+    save_one( 0 );
 }
 
-void ready_to_receive_requests()
+void low_init()
 {
   if( inited )
     return; // already done
@@ -3258,6 +3265,7 @@ multiplicera detta värde med den här faktorn.");
   resursen, och '$Me' med serverns URL");
 
 
+  definvisvar( "no_delayed_load", 0, TYPE_FLAG );
 
   setvars(retrieve("spider#0", this_object()));
 
