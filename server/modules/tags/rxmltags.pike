@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.289 2001/08/30 12:03:21 jhs Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.290 2001/08/30 22:04:09 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -3802,18 +3802,37 @@ class TagIfDate {
   int eval(string date, RequestID id, mapping m) {
     CACHE(60); // One minute accuracy is probably good enough...
     int a, b;
-    mapping c;
-    c=localtime(time(1));
-    b=(int)sprintf("%02d%02d%02d", c->year, c->mon + 1, c->mday);
-    a=(int)replace(date,"-","");
-    if(a > 999999) a -= 19000000;
-    else if(a < 901201) a += 10000000;
-    if(m->inclusive || !(m->before || m->after) && a==b)
+    mapping t = ([]);
+
+    date = replace(date, "-", "");
+    if(sizeof(date)!=8 && sizeof(date)!=6)
+      RXML.run_error("If date attriibute doesn't conform to YYYYMMDD syntax.");
+    if(sscanf(date, "%04d%02d%02d", t->year, t->mon, t->mday)==3)
+      t->year-=1900;
+    else if(sscanf(date, "%02d%02d%02d", t->year, t->mon, t->mday)!=3)
+      RXML.run_error("If date attribute doesn't conform to YYYYMMDD syntax.");
+
+    if(t->year>70) {
+      t->mon--;
+      a = mktime(t);
+    }
+
+    t = localtime(time(1));
+    m_delete(t, "hour");
+    m_delete(t, "min");
+    m_delete(t, "sec");
+    b = mktime(t);
+
+    if( (m->inclusive || !(m->before || m->after)) && a==b)
       return 1;
+
     if(m->before && a>b)
       return 1;
-    else if(m->after && a<b)
+
+    if(m->after && a<b)
       return 1;
+
+    return 0;
   }
 }
 
