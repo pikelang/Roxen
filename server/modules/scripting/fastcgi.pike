@@ -1,7 +1,6 @@
-// This is a roxen module. Copyright © 2000, Roxen IS.
 inherit "cgi.pike": normalcgi;
 
-constant cvs_version = "$Id: fastcgi.pike,v 2.4 2000/03/16 18:34:41 nilsson Exp $";
+constant cvs_version = "$Id: fastcgi.pike,v 2.5 2000/04/26 15:44:00 per Exp $";
 
 #include <roxen.h>
 #include <module.h>
@@ -289,7 +288,13 @@ class Packet
 
   string encode()
   {
-    int paddinglen = strlen(data)&8;
+//    int paddinglen = strlen(data)&8;
+
+    int dLen = strlen(data);
+    int eLen = (dLen + 7) & (0xFFFF - 7); // align to an 8-byte boundary
+    int paddinglen = eLen - dLen;
+    werror(sprintf("\nPADDING: %d\n", paddinglen));
+
     return sprintf( "%c%c%2c%2c%c\0%s%s",1,type,requestid,strlen(data),paddinglen
                     ,data, "X"*paddinglen);
   }
@@ -512,7 +517,19 @@ string encode_param( string p )
   if( strlen( p ) < 127 )
     return sprintf("%c%s", strlen(p), p );
   p = sprintf( "%4c%s", strlen(p), p );
-  p[0] &= 128;
+  p[0] |= 128;
+}
+
+string encode_param_length(string p)
+{
+  if( strlen( p ) < 128 )	
+    return sprintf("%c", strlen(p));
+  else
+  {
+    p = sprintf( "%4c", strlen( p ) );
+    p[0] |= 128;
+    return p;
+  }
 }
 
 class Params
@@ -522,10 +539,11 @@ class Params
   constant name = "Params";
 
   void write_mapping( mapping m )
-  {
+  {   
     string data = "";
     foreach( indices( m ), string i )
-      data += encode_param( (string)i ) + encode_param( m[i] );
+      data += encode_param_length((string)i) + 
+              encode_param_length(m[i]) + i + m[i];
     write( data );
   }
 }
@@ -570,15 +588,6 @@ Packet packet_abort_request( int requestid )
 {
   return Packet( FCGI_ABORT_REQUEST, requestid, "" );
 }
-
-#if 0
-/* client -> server */
-Packet packet_end_request( int requestid, int appstatus, int protstats )
-{
-  return Packet( FCGI_END_REQUEST, requestid,
-                 sprintf("%4c%c\0\0\0", appstatus, protstatus ) );
-}
-#endif
 
 class FCGIRun
 {
@@ -664,7 +673,7 @@ class FCGIRun
                                                FCGI_RESPONDER,
                                                FCGI_KEEP_CONN ) );
     params->write_mapping( c->environment );
-    params->close();
+    params->close();    
   }
 }
 
@@ -980,6 +989,3 @@ void create(Configuration conf)
 
   killvar("cgi_tag");
 }
-
-void query_tag_callers()       { }
-void query_container_callers() { }
