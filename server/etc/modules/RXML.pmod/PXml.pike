@@ -3,7 +3,7 @@
 //! Parses tags and entities. Entities on the form &scope.variable;
 //! are replaced by variable references.
 //!
-//! $Id: PXml.pike,v 1.8 2000/01/07 04:54:33 mast Exp $
+//! $Id: PXml.pike,v 1.9 2000/01/08 03:42:41 mast Exp $
 
 #pragma strict_types
 
@@ -29,15 +29,6 @@ inherit Parser.HTML : low_parser;
 #define ENTITY_TYPE							\
   string|array|								\
   function(void|Parser.HTML:int(1..1)|string|array)
-
-static class TagDef
-{
-  TAG_TYPE tdef;
-  CONTAINER_TYPE cdef;
-  RXML.Tag tag;
-  void create (TAG_TYPE _tdef, CONTAINER_TYPE _cdef, void|RXML.Tag _tag)
-    {tdef = _tdef, cdef = _cdef, tag = _tag;}
-}
 
 #ifdef TAGMAP_COMPAT
 constant tagmap_compat = 1;
@@ -147,13 +138,14 @@ this_program clone (RXML.Context ctx, RXML.Type type, RXML.TagSet tag_set)
   return clone;
 }
 
-static void create (RXML.Context ctx, RXML.Type type, RXML.TagSet tag_set,
-		    void|mapping(string:array(TagDef)) orig_overridden,
+static void create (
+  RXML.Context ctx, RXML.Type type, RXML.TagSet tag_set,
+  void|mapping(string:array(array(TAG_TYPE|CONTAINER_TYPE))) orig_overridden,
 #ifdef TAGMAP_COMPAT
-		    void|mapping(string:TAG_TYPE) orig_tagmap_tags,
-		    void|mapping(string:CONTAINER_TYPE) orig_tagmap_containers,
+  void|mapping(string:TAG_TYPE) orig_tagmap_tags,
+  void|mapping(string:CONTAINER_TYPE) orig_tagmap_containers,
 #endif
-		   )
+)
 {
   TagSetParser::create (ctx, type, tag_set);
 
@@ -184,7 +176,7 @@ static void create (RXML.Context ctx, RXML.Type type, RXML.TagSet tag_set,
 
   array(RXML.TagSet) list = ({tag_set});
   array(string) plist = ({tag_set->prefix});
-  mapping(string:TagDef) tagdefs = ([]);
+  mapping(string:array(TAG_TYPE|CONTAINER_TYPE)) tagdefs = ([]);
 
   for (int i = 0; i < sizeof (list); i++) {
     array(RXML.TagSet) sublist = list[i]->imported;
@@ -199,53 +191,49 @@ static void create (RXML.Context ctx, RXML.Type type, RXML.TagSet tag_set,
     string prefix = plist[i];
 
     array(RXML.Tag) tlist = tset->get_local_tags();
-    mapping(string:TagDef) new_tagdefs = ([]);
+    mapping(string:array(TAG_TYPE|CONTAINER_TYPE)) new_tagdefs = ([]);
 
     if (prefix) {
       if (mapping(string:TAG_TYPE) m = tset->low_tags)
-	foreach (indices (m), string n) new_tagdefs[prefix + n] = TagDef (m[n], 0);
+	foreach (indices (m), string n) new_tagdefs[prefix + n] = ({m[n], 0});
       if (mapping(string:CONTAINER_TYPE) m = tset->low_containers)
-	foreach (indices (m), string n) new_tagdefs[prefix + n] = TagDef (0, m[n]);
+	foreach (indices (m), string n) new_tagdefs[prefix + n] = ({0, m[n]});
       foreach (tlist, RXML.Tag tag)
 	new_tagdefs[prefix + [string] tag->name] =
 	  tag->flags & RXML.FLAG_CONTAINER ?
-	  TagDef (0,
-		  [function(Parser.HTML,mapping(string:string),string:array)]
-		  tag->_handle_tag,
-		  tag) :
-	  TagDef (({[function(Parser.HTML,mapping(string:string):array)]
-		    tag->_handle_tag,
-		    0}),	// Necessary as long as we use set_extra().
-		  0,
-		  tag);
+	  ({0,
+	    [function(Parser.HTML,mapping(string:string),string:array)]
+	    tag->_handle_tag}) :
+	  ({({[function(Parser.HTML,mapping(string:string):array)]
+	      tag->_handle_tag,
+	      0}),		// Necessary as long as we use set_extra().
+	    0});
     }
 
     if (!tset->prefix_required) {
       if (mapping(string:TAG_TYPE) m = tset->low_tags)
-	foreach (indices (m), string n) new_tagdefs[n] = TagDef (m[n], 0);
+	foreach (indices (m), string n) new_tagdefs[n] = ({m[n], 0});
       if (mapping(string:CONTAINER_TYPE) m = tset->low_containers)
-	foreach (indices (m), string n) new_tagdefs[n] = TagDef (0, m[n]);
+	foreach (indices (m), string n) new_tagdefs[n] = ({0, m[n]});
       foreach (tlist, RXML.Tag tag)
 	new_tagdefs[[string] tag->name] =
 	  tag->flags & RXML.FLAG_CONTAINER ?
-	  TagDef (0,
-		  [function(Parser.HTML,mapping(string:string),string:array)]
-		  tag->_handle_tag,
-		  tag) :
-	  TagDef (({[function(Parser.HTML,mapping(string:string):array)]
-		    tag->_handle_tag,
-		    0}),	// Necessary as long as we use set_extra().
-		  0,
-		  tag);
+	  ({0,
+	    [function(Parser.HTML,mapping(string:string),string:array)]
+	    tag->_handle_tag}) :
+	  ({({[function(Parser.HTML,mapping(string:string):array)]
+	      tag->_handle_tag,
+	      0}),		// Necessary as long as we use set_extra().
+	    0});
     }
 
     foreach (indices (new_tagdefs), string name) {
-      if (TagDef tagdef = tagdefs[name])
+      if (array(TAG_TYPE|CONTAINER_TYPE) tagdef = tagdefs[name])
 	if (overridden[name]) overridden[name] += ({tagdef});
 	else overridden[name] = ({tagdef});
-      TagDef tagdef = tagdefs[name] = new_tagdefs[name];
-      add_tag (name, tagdef->tdef);
-      add_container (name, tagdef->cdef);
+      array(TAG_TYPE|CONTAINER_TYPE) tagdef = tagdefs[name] = new_tagdefs[name];
+      add_tag (name, [TAG_TYPE] tagdef[0]);
+      add_container (name, [CONTAINER_TYPE] tagdef[1]);
     }
 
     if (tset->low_entities) add_entities (tset->low_entities);
@@ -303,13 +291,14 @@ int parse_entities (int flag)
 
 // Runtime tags.
 
-static mapping(string:TagDef) rt_replacements;
+static mapping(string:array(TAG_TYPE|CONTAINER_TYPE)) rt_replacements;
 
 local static void rt_replace_tag (string name, RXML.Tag tag)
 {
   if (!rt_replacements) rt_replacements = ([]);
   if (!rt_replacements[name])
-    TagDef tag_def = rt_replacements[name] = TagDef (tags()[name], containers()[name]);
+    array(TAG_TYPE|CONTAINER_TYPE) tag_def =
+      rt_replacements[name] = ({tags()[name], containers()[name]});
   if (tag)
     if (tag->flags & RXML.FLAG_CONTAINER) {
       add_tag (name, 0);
@@ -331,9 +320,9 @@ local static void rt_replace_tag (string name, RXML.Tag tag)
 
 local static void rt_restore_tag (string name)
 {
-  if (TagDef tag_def = rt_replacements && rt_replacements[name]) {
-    add_tag (name, tag_def->tdef);
-    add_container (name, tag_def->cdef);
+  if (array(TAG_TYPE|CONTAINER_TYPE) tag_def = rt_replacements && rt_replacements[name]) {
+    add_tag (name, [TAG_TYPE] tag_def[0]);
+    add_container (name, [CONTAINER_TYPE] tag_def[1]);
     m_delete (rt_replacements, name);
   }
 }
@@ -379,74 +368,30 @@ local void remove_runtime_tag (string|RXML.Tag tag)
 
 // Traversing overridden tag definitions.
 
-static mapping(string:array(TagDef)) overridden;
+static mapping(string:array(array(TAG_TYPE|CONTAINER_TYPE))) overridden;
 // Contains all tags with overridden definitions. Indexed on the
-// effective tag names. The values are arrays of TagDefs, with the
-// closest to top last. Shared between clones.
+// effective tag names. The values are arrays of ({tag_definition,
+// container_definition}) tuples, with the closest to top last. Shared
+// between clones.
 
-static class OverrideData
+array(TAG_TYPE|CONTAINER_TYPE) get_overridden_low_tag (
+  string name, TAG_TYPE|CONTAINER_TYPE overrider)
+//! Returns the tag definition that is overridden by the given
+//! overrider tag definition on the given tag name. The returned
+//! values is ({tag_definition, container_definition}), and one of
+//! them is always zero.
 {
-  string name;
-  TagDef orig_def;
-  array(TagDef) or_list;
-  int pos;
-}
-static OverrideData or_data;
-
-static array|int(1..1)|string or_tag_cb (
-  Parser.HTML this, mapping(string:string) args, void|string content)
-{
-#ifdef DEBUG
-  if (!or_data)
-    error ("Internal error: Got no override data in override callback.\n");
-  if (tag_name() != or_data->name)
-    error ("Internal error: Reparsed tag changed name from %O to %O.\n",
-	   or_data->name, tag_name());
-#endif
-  string name = or_data->name;
-
-  add_tag (name, or_data->orig_def->tdef);
-  add_container (name, or_data->orig_def->cdef);
-
-  if (or_data->pos != at_char()) {
-    // FIXME: at_char() doesn't always do what we want here.
-    or_data = 0;
-    return 1;
+  if (array(array(TAG_TYPE|CONTAINER_TYPE)) tagdefs = overridden[name]) {
+    if (array(TAG_TYPE|CONTAINER_TYPE) rt_tagdef =
+	rt_replacements && rt_replacements[name])
+      tagdefs += ({rt_tagdef});
+    TAG_TYPE tdef = tags()[name];
+    CONTAINER_TYPE cdef = containers()[name];
+    for (int i = sizeof (tagdefs) - 1; i >= 0; i--) {
+      if (overrider == tdef || overrider == cdef)
+	return tagdefs[i];
+      [tdef, cdef] = tagdefs[i];
+    }
   }
-
-  TagDef tagdef = or_data->or_list[-1];
-  int or_list_len = sizeof (or_data->or_list);
-  array|int(1..1)|string res = tagdef->tdef ?
-    tagdef->tdef (this, args) : tagdef->cdef (this, args, content);
-  if (or_data && sizeof (or_data->or_list) == or_list_len) or_data = 0;
-  return res;
+  return 0;
 }
-
-local static void fix_or_cbs()
-{
-  string name = or_data->name;
-  add_tag (name, 0);
-  add_container (name, 0);
-  if (TagDef tagdef = sizeof (or_data->or_list) && or_data->or_list[-1])
-    if (tagdef->tdef) add_tag (name, or_tag_cb);
-    else if (tagdef->cdef) add_container (name, or_tag_cb);
-}
-
-void ignore_tag (void|RXML.Tag tag)
-{
-  string name = tag_name();
-  if (or_data && or_data->name == name && or_data->pos == at_char())
-    or_data->or_list = or_data->or_list[..sizeof (or_data->or_list) - 2];
-  else {
-    or_data = OverrideData();
-    or_data->name = name;
-    or_data->orig_def = TagDef (tags()[name], containers()[name], tag);
-    or_data->or_list = overridden[name] || ({});
-    if (rt_replacements && rt_replacements[name])
-      or_data->or_list += ({rt_replacements[name]});
-    or_data->pos = at_char();
-  }
-  fix_or_cbs();
-}
-
-string _sprintf() {return "RXML.PHtml";}
