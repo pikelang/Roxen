@@ -1,5 +1,5 @@
 /*
- * $Id: make_selfsigned_dsa.pike,v 1.7 2004/06/16 10:01:10 grubba Exp $
+ * $Id: make_selfsigned_dsa.pike,v 1.8 2004/06/16 14:23:34 grubba Exp $
  */
 
 #if constant(_Crypto) && constant(Crypto.dsa)
@@ -77,13 +77,14 @@ mixed verify_0(object id, object mc)
       + ".";
     return 1;
   }
-  destruct(file);
+  file->close();
 
-  if (!file_stat(id->variables->key_file))
+  if (!(file = lopen(id->variables->key_file, "r")))
   {
     id->variables->_error = "File not found.";
     return 1;
   }
+  file->close();
   return 0;
 }
 
