@@ -1,6 +1,6 @@
 #include <config.h>
 #include <stat.h>
-constant cvs_version = "$Id: imagedir.pike,v 1.1 2000/09/04 05:09:13 per Exp $";
+constant cvs_version = "$Id: imagedir.pike,v 1.2 2000/09/04 05:22:01 per Exp $";
 
 constant name = "Image directory fonts";
 constant doc = ("Handles a directory with images (in almost any format), each "
@@ -9,13 +9,17 @@ constant doc = ("Handles a directory with images (in almost any format), each "
 
 inherit FontHandler;
 
+static mapping nullchar = ([ "image":Image.Image(1,1),
+                             "alpha":Image.Image(1,1) ]);
+static mapping spacechar = ([ "image":Image.Image(10,1),
+                              "alpha":Image.Image(10,1) ]);
+static mapping smallspacechar = ([ "image":Image.Image(2,1),
+                                   "alpha":Image.Image(2,1) ]);
 class myFont
 {
   inherit Font;
   static string path;
   static int size, rsize;
-  static mapping nullchar = ([ "image":Image.Image(1,1),
-                                "alpha":Image.Image(1,1) ]);
   static array files;
 
 
@@ -33,6 +37,7 @@ class myFont
 
   static mapping(string:Image.Image) load_char( string c )
   {
+    if( c[0] == 0x120 ) return smallspacechar;
     if(!files)
       files = get_dir( path ) - ({ "fontname" });
 
@@ -40,6 +45,7 @@ class myFont
     foreach( possible, string pf )
       if( mapping r = Image._load( path+pf ) )
         return r;
+    if( c == " " ) return spacechar;
     return nullchar;
   }
   mapping(string:mapping(string:Image.Image)) char_cache = ([]);
