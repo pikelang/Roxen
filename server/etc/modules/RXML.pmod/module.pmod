@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.85 2000/03/20 07:27:12 mast Exp $
+//! $Id: module.pmod,v 1.86 2000/03/23 19:52:42 grubba Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -2568,7 +2568,7 @@ class Type
   Type clone()
   //! Returns a copy of the type.
   {
-    Type newtype = object_program (this_object())();
+    Type newtype = object_program ((object(this_program)) this_object())();
     newtype->_parser_prog = _parser_prog;
     newtype->_parser_args = _parser_args;
     newtype->_t_obj_cache = _t_obj_cache;
