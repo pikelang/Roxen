@@ -1,7 +1,7 @@
 #include <stat.h>
 #include <config.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.11 2001/01/29 09:04:30 per Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.12 2001/01/29 22:40:23 per Exp $";
 
 class Variable
 {
@@ -675,7 +675,7 @@ class Group( UserDB database )
 {
   string name();
   //! The group name
-  array(User) members()
+  array(string) members()
   //! All users that are members of this group. The default
   //! implementation loops over all users handled by the user database
   //! and looks for users with the same gid as this group.
@@ -685,7 +685,7 @@ class Group( UserDB database )
     int id = gid();
     foreach( database->list_users(), string u )
       if( (uid = database->find_user( u )) && (uid->gid() == id) )
-	res += ({ uid });
+	res += ({ u });
     return res;
   }
   
@@ -724,7 +724,7 @@ class User( UserDB database )
   string crypted_password() { return "x"; }
   //! Used by compat_userinfo(). The default implementation returns "x"
 
-  array(Group) groups()
+  array(string) groups()
   //! Return all groups this user is a member in. The default
   //! implementation returns ({})
   {
