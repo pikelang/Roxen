@@ -8,19 +8,17 @@
 // See fnord.pike for more information of what this tag does.
 
 // This variable is shown in the configinterface as the version of the module.
-constant cvs_version = "$Id: newstyle_fnord.pike,v 1.6 2000/07/17 12:23:56 nilsson Exp $";
+constant cvs_version = "$Id: newstyle_fnord.pike,v 1.7 2000/08/01 15:56:12 jhs Exp $";
 
 // Tell Roxen that this module is threadsafe.
 constant thread_safe=1;
 
-// Include and inherit code that is needed in every module.
-#include <module.h>
+// Inherit code that is needed in every module.
 inherit "module";
 
 
 // Define the fnord tag class. It must begin with "Tag".
 class TagFnord {
-
   inherit RXML.Tag;
 
   // This constant tells the parser that the tag should be called "fnord".
@@ -74,6 +72,9 @@ constant module_doc  = "Adds an extra container tag, &lt;fnord&gt; that's suppos
 
 // Last, but not least, we want a documentation that can be integrated in the
 // online manual. The mapping tagdoc maps from container names to it's description.
+
+// Include this is if you use the TAGDOC system.
+#include <module.h>
 
 TAGDOCUMENTATION;
 #ifdef manual
