@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.295 2000/04/03 16:15:41 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.296 2000/04/05 07:04:17 nilsson Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -3549,25 +3549,43 @@ de adderade bandvidsbegränsningsmodulerna. Hinkstorleken bestäms genom att
 multiplicera detta värde med den här faktorn.");
 
 
-  defvar("ZNoSuchFile", "<title>Sorry. I cannot find this resource</title>\n"
-	 "<body bgcolor='#ffffff' text='#000000' alink='#ff0000' "
-	 "vlink='#00007f' link='#0000ff'>\n"
-	 "<h2 align=center><configimage src=roxen.gif alt=\"File not found\">\n"
-	 "<p><hr noshade>"
-	 "\n<i>Sorry</i></h2>\n"
-	 "<br clear>\n<font size=\"+2\">The resource requested "
-	 "<i>&page.self;</i>\n"
-         "cannot be found.<p>\n\nIf you feel that this is a "
-	 "configuration error, please contact "
-	 "the administrators or the author of the\n"
-	 "<if referrer>"
-	 "<a href=\"<referrer>\">referring</a>"
-	 "</if>\n"
-	 "<else>referring</else>\n"
-	 "page."
-	 "<p>\n</font>\n"
-	 "<hr noshade>"
-	 "</body>\n",
+  defvar("ZNoSuchFile", #"
+<html><head>
+<title>404 - Page not found</title>
+</head>
+
+<body alink=\"#000000\" bgcolor=\"#ffffff\" bottommargin=\"0\" leftmargin=\"0\" link=\"#ce5c00\" marginheight=\"2\" marginwidth=\"0\" rightmargin=\"0\" text=\"#333333\" topmargin=\"2\" vlink=\"#ce5c00\">
+
+<table width=\"100%\"  border=\"0\" cellspacing=\"0\" cellpadding=\"0\">
+  <tr>
+    <td><img src=\"/internal-roxen-page-not-found\" border=\"0\" alt=\"Page not found\" hspace=\"2\" /></td>
+    <td>&nbsp;</td>
+    <td align=\"right\"><b>&roxen.version;</b></td>
+  </tr>
+  <tr>
+    <td width=\"100%\" height=\"21\" colspan=\"3\" background=\"/internal-roxen-tile\"><img src=\"/internal-roxen-unit\" alt=\"\" /></td>
+  </tr>
+</table>
+
+<font face=\"lucida,helvetica,arial\">
+<h2>&nbsp;Unable to retrieve &page.virtfile;.</h2>
+<br /><br />
+<blockquote>
+
+If you feel that this is a configuration error,
+please contact the administrators or the author
+of the
+<if referrer>
+<a href=\"&client.referrer;\">referring</a>
+</if><else>
+referring
+</else>
+page.
+
+</blockquote>
+</font>
+</body>
+",
 	 "Messages: No such file",TYPE_TEXT_FIELD,
 	 "What to return when there is no resource or file available "
 	 "at a certain location.");
