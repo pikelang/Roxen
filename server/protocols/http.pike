@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.62 1998/03/16 19:42:45 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.63 1998/03/18 16:56:34 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -640,17 +640,17 @@ static void do_timeout(mapping foo)
 
 mapping internal_error(array err)
 {
-  if(QUERY(show_internals))
+  if(QUERY(show_internals)) {
     array(string) bt = (describe_backtrace(err)/"\n") - ({""});
     file = http_low_answer(500,
 			   sprintf("<h1>Error: Internal server error.</h1>"
 				   "<pre><font size=+1>%s</font></pre>"
 				   "&lt;backtrace&gt;<ol><li>%s</ol>\n",
 				   bt[..1]*"\n", bt[2..]*"<li>"));
-  else
+  } else {
     file = http_low_answer(500, "<h1>Error: The server failed to "
 			   "fulfill your query.</h1>");
-  
+  }
   
   report_error("Internal server error: " +
 	       describe_backtrace(err) + "\n");
