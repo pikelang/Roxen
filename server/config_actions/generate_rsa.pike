@@ -1,5 +1,5 @@
 /*
- * $Id: generate_rsa.pike,v 1.7 1998/04/22 14:34:54 grubba Exp $
+ * $Id: generate_rsa.pike,v 1.8 1999/03/09 15:16:14 nisse Exp $
  */
 
 inherit "wizard";
@@ -98,7 +98,7 @@ mixed verify_0(object id, object mc)
 #if constant(Tools)
   string key = Tools.PEM.simple_build_pem
     ("RSA PRIVATE KEY",
-     Standards.PKCS.RSA.rsa_private_key(rsa));
+     Standards.PKCS.RSA.private_key(rsa));
 #else /* !constant(Tools) */
   /* Backward compatibility */
   string key = SSL.pem.build_pem("RSA PRIVATE KEY",
