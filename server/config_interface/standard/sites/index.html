@@ -16,7 +16,7 @@
 <br />
 <if variable="usr.configlistmode is 1">
 <if variable='form.goto_site'>
-<if not variable='form.goto_site is '>
+<if not="1" variable='form.goto_site is '>
   <redirect to='site.html/&form.goto_site;/' />
 </if>
 </if>
@@ -28,7 +28,7 @@ Select site<br />
   </emit>
  </select>
 <br />
-<input type=submit value=" Go " />
+<input type="submit" value=" Go " />
 </if>
 
 <else>
@@ -46,12 +46,11 @@ Select site<br />
 <cv-split>
   <subtablist><st-page>
   <cf-perm perm="Create Site">
-     <gbutton href='new_site.html' preparse='' 
+     <gbutton href='new_site.html'
               icon_src='/internal-roxen-next' 
               align_icon='right' 
               hspace='5' vspace='5'><translate id="248">Create new site</translate></gbutton>
      <gbutton href='drop_site.html' 
-              preparse=''
               icon_src='/internal-roxen-next' 
               align_icon='right' 
               hspace='5' vspace='5'><translate id="249">Drop old site</translate></gbutton>

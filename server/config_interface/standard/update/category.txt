@@ -5,13 +5,13 @@
     <cset variable="var._&pkg.name;">foo</cset>
   </update-package>
   </rul>
-  <if not variable="var._&_.name;">
+  <if not="1" variable="var._&_.name;">
      <p>Currently no packages in this category</p>
   </if>
 </define>
 
 <if variable="form.category">
-  <if not variable="form.category is ">
+  <if not="1" variable="form.category is ">
     <package-box name="&form.category;" title="Foo" />
   </if>
 </if>

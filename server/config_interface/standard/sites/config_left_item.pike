@@ -32,7 +32,7 @@ string selected_item( string q, Configuration c, RequestID id, string module )
   string pre = 
          ("<gbutton frame-image='&usr.left-buttonframe;' href='/"+id->misc->cf_locale+"/sites/' "
           "width='150' bgcolor='&usr.left-buttonbg;' icon_src='&usr.selected-indicator;' "
-          "align_icon='left' preparse=''>"+LOCALE(213, "Sites")+"</gbutton><br />"
+          "align_icon='left'>"+LOCALE(213, "Sites")+"</gbutton><br />"
           "<gbutton frame-image='&usr.left-buttonframe;' width='150' "+
           (subsel == "" ?
            "bgcolor='&usr.left-selbuttonbg;'" : "bgcolor='&usr.left-buttonbg;'") +
@@ -57,7 +57,7 @@ string selected_item( string q, Configuration c, RequestID id, string module )
     {
 //       pre += ("<gbutton frame-image='&usr.left-buttonframe;' "
 //               "icon_src='&usr.selected-indicator;' align_icon='left' "
-//               "width='150' preparse='' bgcolor='&usr.left-selbuttonbg;'"
+//               "width='150' bgcolor='&usr.left-selbuttonbg;'"
 //               " href='"+(noendslash(DOTDOT(3)+q[0]))+"/'>"
 //               +q[1]+"</gbutton><br />\n");
 
@@ -97,16 +97,16 @@ string selected_item( string q, Configuration c, RequestID id, string module )
          }
          sort( variables->name, variables );
 
-	 pre += "<table cellspacing=0 cellpadding=0>\n";
+	 pre += "<table cellspacing='0' cellpadding='0'>\n";
 
          foreach( variables, mapping data )
          {
            if( data->sname != module )
-             pre += ("\n<tr><td valign=top><img src=\"&usr.item-indicator;\" width=12 height=12></td>"
+             pre += ("\n<tr><td valign='top'><img src=\"&usr.item-indicator;\" width='12' height='12' /></td>"
 		     "<td><a href=\""+qurl+data->sname+
                      "/\">"+Roxen.html_encode_string(data->name)+"</a></td></tr>\n");
            else
-             pre += ("\n<tr><td valign=top><img src=\"&usr.selected-indicator;\" width=12 height=12></td>"
+             pre += ("\n<tr><td valign='top'><img src=\"&usr.selected-indicator;\" width='12' height='12' /></td>"
 		     "<td><b>" + Roxen.html_encode_string(data->name) + "</b></td></tr>\n");
          }
 
@@ -124,14 +124,14 @@ string selected_item( string q, Configuration c, RequestID id, string module )
 	    config_perm( "Add Module" ) )
          {
            pre+=sprintf("<br />\n<gbutton frame-image='&usr.left-buttonframe;' "
-                        "width='150' bgcolor='&usr.left-buttonbg;' preparse='' "
+                        "width='150' bgcolor='&usr.left-buttonbg;' "
                         "href='"+tmp+
                         "add_module.pike?config=%s'> "
                         +LOCALE(258, "Add module")+" </gbutton>",
                         Roxen.http_encode_string( c->name ) )+
                              sprintf("<br />\n<gbutton frame-image='&usr.left"
                                      "-buttonframe;' width='150' bgcolor='&usr."
-                                     "left-buttonbg;' preparse='' href='"+tmp+
+                                     "left-buttonbg;' href='"+tmp+
                                      "drop_module.pike?config=%s'> "
                                      +LOCALE(259, "Drop module")+
                                      " </gbutton><br />\n",
@@ -141,7 +141,7 @@ string selected_item( string q, Configuration c, RequestID id, string module )
       }
       pre += "\n";
     } else
-      pre += ("<gbutton frame-image='&usr.left-buttonframe;' preparse='' "
+      pre += ("<gbutton frame-image='&usr.left-buttonframe;' "
               "bgcolor='&usr.left-buttonbg;' width='150' "
               "href='"+noendslash(DOTDOT(3)+q[0])+"/'>"
               +q[1]+"</gbutton><br />");

@@ -48,7 +48,7 @@
   <update-show-backtrace/>
 
   <eval>
-    <if not variable="form.page"><insert file="update/index.txt" /></if>
+    <if not="1" variable="form.page"><insert file="update/index.txt" /></if>
     <else><insert file="update/&form.page;.txt" /></if>
   </eval>
 </cv-startpage>

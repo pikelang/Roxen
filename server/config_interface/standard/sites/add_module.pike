@@ -70,7 +70,7 @@ string page_base( RequestID id, string content )
                   "<subtablist width='100%%'>"
                   "<st-tabs></st-tabs>"
                   "<st-page>"
-                  "<if not variable='form.initial'>"
+                  "<if not='1' variable='form.initial'>"
                   "<gbutton href='add_module.pike?config=&form.config:http;"
                   "&reload_module_list=yes' > %s </gbutton> "
                   "<gbutton href='site.html/&form.config;'> %s </gbutton>"
@@ -176,12 +176,12 @@ string pafeaw( string errors, string warnings )
       if( !header_added++ )
         da_string += 
                   "<p><a name='errors_and_warnings'><br />"
-                  "<font size=+2><b><font color='&usr.warncolor;'>"
+                  "<font size='+2'><b><font color='&usr.warncolor;'>"
                   "Compile errors and warnings</font></b><br />"
                   "<table width=100% cellpadding='3' cellspacing='0' border='0'>";
 
       da_string += "<tr><td></td>"
-                "<td colspan='3'  bgcolor='&usr.content-titlebg;'>"
+                "<td colspan='3' bgcolor='&usr.content-titlebg;'>"
                 + "<b><font color='&usr.content-titlefg;' size='+1'>"
                 + module_name_from_file(module)+"</font></b></td>"
                 + "<td align='right' bgcolor='&usr.content-titlebg;'>"
@@ -191,11 +191,11 @@ string pafeaw( string errors, string warnings )
 
       foreach( res, array e )
         da_string += 
-                  "<tr valign=top><td></td><td><img src=/internal-roxen-unit width=30 height=1 />"
-                  "</td><td align=right>"
-                  "<tt>"+e[1]+":</tt></td><td align=right><tt>"+
+                  "<tr valign='top'><td></td><td><img src='/internal-roxen-unit' width='30' height='1' />"
+                  "</td><td align='right'>"
+                  "<tt>"+e[1]+":</tt></td><td align='right'><tt>"+
                   he(e[2])+":</tt></td><td><tt>"+hc(e[3])+"</tt></td></tr>\n";
-      da_string += "<tr valign=top><td colspan='5'>&nbsp;</td><td></td></tr>\n";
+      da_string += "<tr valign='top'><td colspan='5'>&nbsp;</td><td></td></tr>\n";
 
     }
   }
@@ -295,10 +295,10 @@ return sprintf(
        <form method='post' action='add_module.pike'>
          <input type='hidden' name='module_to_add' value='%s'>
          <input type='hidden' name='config' value='&form.config;'>
-         <submit-gbutton preparse=''>%s</submit-gbutton>
+         <submit-gbutton preparse='1'>%s</submit-gbutton>
        </form>
      </td>
-     <td valign=top>
+     <td valign='top'>
         %s
        <p>
          %s
@@ -330,11 +330,11 @@ array(int|string) class_visible_normal( string c, string d, RequestID id )
 
   if( id->variables->unfolded == c ) {
     header+=("<a name="+Roxen.http_encode_string(c)+
-	     "></a><gbutton preparse='' dim=''> "+LOCALE(267, "View")+" </gbutton>");
+	     "></a><gbutton dim='1'> "+LOCALE(267, "View")+" </gbutton>");
     x=1;
   }
   else
-    header+=("<gbutton preparse='' "
+    header+=("<gbutton "
 	     "href='add_module.pike?config=&form.config;"
 	     "&unfolded="+Roxen.http_encode_string(c)+
 	     "#"+Roxen.http_encode_string(c)+"' > "+
@@ -399,13 +399,13 @@ array(int|string) class_visible_faster( string c, string d, RequestID id )
 
   if( id->variables->unfolded == c ) {
     header+=("<a name="+Roxen.http_encode_string(c)+
-	     "></a><gbutton preparse='' dim=''> "+LOCALE(267, "View")+" </gbutton>"
+	     "></a><gbutton dim='1'> "+LOCALE(267, "View")+" </gbutton>"
 	     "<tr><td><submit-gbutton> "+LOCALE(251, "Add Module")+
 	     " </submit-gbutton></td></tr>");
     x=1;
   }
   else
-    header+=("<gbutton preparse='' "
+    header+=("<gbutton "
 	     "href='add_module.pike?config=&form.config;"
 	     "&unfolded="+Roxen.http_encode_string(c)+
 	     "#"+Roxen.http_encode_string(c)+"' > "+
@@ -547,7 +547,7 @@ array initial_form( RequestID id, Configuration conf, array modules )
         res += "<tr><td colspan='3'><h2>"
         +LOCALE(1,"Initial variables for ")+
             Roxen.html_encode_string(mi->get_name())+"</h2></td></tr>"
-        "<emit source=module-variables configuration=\""+conf->name+"\""
+        "<emit source='module-variables' configuration=\""+conf->name+"\""
         " module=\""+mod+#"\">
  <tr><td width='50'></td><td width=20%><b>&_.name;</b></td><td><eval>&_.form:none;</eval></td></tr>
  <tr><td></td><td colspan=2>&_.doc:none;<p>&_.type_hint;</td></tr>
@@ -590,11 +590,11 @@ mixed do_it_pass_2( array modules, Configuration conf,
   }
   return page_base(id,"<table>"+
                    map( modules, lambda( string q ) {
-                                   return "<input type=hidden "
+                                   return "<input type='hidden' "
                                           "name='module_to_add' "
                                           "value='"+q+"' />";
                                  } )*"\n" 
-                   +"<input type=hidden name=config "
+                   +"<input type='hidden' name='config' "
                    "value='"+conf->name+"' />"+cf_form+"</table><p><cf-ok />");
 }
 

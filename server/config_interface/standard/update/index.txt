@@ -10,7 +10,7 @@
     <set variable="var._&cat.name;" value='foo'/>
   </update-package>
   </rul>
-  <if not variable="var._&_.name;">
+  <if not="1" variable="var._&_.name;">
      &nbsp; Currently no packages in this category.<br />
   </if>
   <else>

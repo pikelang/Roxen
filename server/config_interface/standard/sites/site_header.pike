@@ -39,7 +39,7 @@ string parse( RequestID id )
   {
    case "settings":
      return 
-#"<emit source='config-variables-sections' add-status=1
+#"<emit source='config-variables-sections' add-status='1'
   configuration='"+path[0]+#"'>
    <tab ::='&_.first; &_.last; &_.selected;'
         href='?section=&_.section;'>&_.sectionname;</tab>

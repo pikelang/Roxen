@@ -10,18 +10,16 @@
     <table border="0" cellpadding="5" cellspacing="0"><tr><td>
 
     <gbutton href='users.html?page=create_user'
-             icon_src="/internal-roxen-next"  preparse="1"
-             font="&usr.gbutton-font;"
-             width="200"
+             icon_src="/internal-roxen-next"
+             font="&usr.gbutton-font;" width="200"
              align_icon="right">&var.create_txt;</gbutton>
      <br />
      <gbutton href='users.html?page=delete_user'
-              icon_src="/internal-roxen-next"  preparse="1"
-	      font="&usr.gbutton-font;"
-              width="200"
+              icon_src="/internal-roxen-next"
+	      font="&usr.gbutton-font;" width="200"
               align_icon="right">&var.delete_txt;</gbutton>
 
-     <insert file=user_form.pike nocache="" />
+     <insert file=user_form.pike nocache="1" />
     </td></tr></table>
   </cf-perm>
 </if>
@@ -40,14 +38,14 @@
     </p>
   </if>
   <else>
-    <insert file='user_create.pike' nocache="" />
+    <insert file='user_create.pike' nocache="1" />
     <redirect to='users.html?netscape=needs_this_to_do_the_redirect' />
   </else>
 </cf-perm></if>
 
 <if variable='form.page is delete_user'>
   <cf-perm perm="Edit Users">
-  <insert file=user_delete.pike nocache=""/>
+  <insert file=user_delete.pike nocache="1"/>
   <p>
   <translate id="202" variable="var.cancel_txt">Cancel</translate>
   <gbutton href=users.html font="&usr.gbutton-font;">&var.cancel_txt;</gbutton>

@@ -506,7 +506,7 @@ string parse( RequestID id )
 
 
 
-       res+="<h1>"+LOCALE(216, "Events")+"</h1><insert file='log.pike' nocache='' />";
+       res+="<h1>"+LOCALE(216, "Events")+"</h1><insert file='log.pike' nocache='1' />";
        return res+"<br />\n";
     }
   } else

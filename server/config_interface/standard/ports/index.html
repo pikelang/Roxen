@@ -2,27 +2,27 @@
 
 <content>
 <cv-split>
-<subtablist width=100%>
+<subtablist width="100%">
  <st-tabs>
  </st-tabs>
  <st-page>
   <table>
-   <input type=hidden name=port value='&form.port;'>
+   <input type="hidden" name="port" value='&form.port;'>
    <emit source='ports' scope='port'>
-    <tr><td bgcolor="&usr.content-titlebg;" colspan=2>
-      <table border=0 cellpadding=0 cellspacing=0>
-      <tr width=100%>
-       <td width=100%>
-    <font color=&usr.content-titlefg;><if variable="form.port is &_.port;"><img src=&usr.selected-indicator;></if><else>&nbsp;</else>&nbsp;<a href='?port=&_.port;'><b><font size=+2>&_.name;</font></a></font>
+    <tr><td bgcolor="&usr.content-titlebg;" colspan="2">
+      <table border="0" cellpadding="0" cellspacing="0">
+      <tr width="100%">
+       <td width="100%">
+    <font color="&usr.content-titlefg;"><if variable="form.port is &_.port;"><img src="&usr.selected-indicator;" /></if><else>&nbsp;</else>&nbsp;<a href='?port=&_.port;'><b><font size="+2">&_.name;</font></a></font>
        </td>
-        <td align=right>
+        <td align="right">
     <if variable="form.port is &_.port;"><cf-save></if>
         </td>
       </tr>
-    <if not variable="_.warning is "><tr><td colspan=2><font color='&usr.warncolor;'><b>&_.warning;</b></font></td></tr></if>
+    <if not="1" variable="_.warning is "><tr><td colspan="2"><font color='&usr.warncolor;'><b>&_.warning;</b></font></td></tr></if>
      </table>
       <tr>
-        <td colspan=2>
+        <td colspan="2">
           <table>
           <emit source='port-urls' port="&port.port;">
            <tr>
@@ -35,7 +35,7 @@
       </tr>
     <if variable="form.port is &port.port;">
        <emit source='port-variables' port="&port.port;">
-       <tr><td width=30%><b>&_.name;</b></td><td>&_.form:none;</td></tr>
+       <tr><td width="30%"><b>&_.name;</b></td><td>&_.form:none;</td></tr>
         <tr><td></td><td>&_.doc:none;<p>&_.type_hint;</td></tr>
        </emit><br />
      </if>

@@ -10,7 +10,7 @@
 <define variable='var.common'>
 <font color='&usr.warncolor;'>&var.error;<br /></font>
   <b><translate id="269">Site name:</translate></b> 
-   <input name=name value="&form.name;" /><br />
+   <input name="name" value="&form.name;" /><br />
   <blockquote>
     <translate id="270">
 The name of the configuration must contain characters
@@ -29,19 +29,19 @@ as the name of its log file directory.
 <translate id="271" variable="var.template_txt">with template</translate>
 
 <submit-gbutton2 width='230' align_icon='right' icon_src='/internal-roxen-next'
-name=new_with_template>&var.create_txt; &var.template_txt;</submit-gbutton2>
+name="new_with_template">&var.create_txt; &var.template_txt;</submit-gbutton2>
 <br />
 <submit-gbutton2 width='230' align_icon='right' icon_src='/internal-roxen-next'
-name=new>&var.create_txt;</submit-gbutton2>
+name="new">&var.create_txt;</submit-gbutton2>
 <br />
 <cf-cancel/>
 </define>
 
 <if variable="form.name">
-  <define variable=var.error preparse><insert file='verify_site_name.pike' nocache='' /></define>
-   <if not variable='var.error is error'>
+  <define variable="var.error" preparse="1"><insert file='verify_site_name.pike' nocache='1' /></define>
+   <if not="1" variable='var.error is error'>
      <if variable='form.new_with_template..x'>
-        <cset variable=form.name><insert file='encode_form_name.pike'></cset>
+        <define variable="form.name" preparse="1"><insert file='encode_form_name.pike' /></define>
         <redirect to='create_site_with_template.pike?name=&form.name:http;'/>
      </if>
      <if variable='form.new..x'>
@@ -54,8 +54,8 @@ name=new>&var.create_txt;</submit-gbutton2>
      <true/>
    </if>
 </if>
-<if variable='var.error is error'><cset variable=var.error><translate id="296">Illegal site name</translate></cset><set variable=var.go value='1'></if>
-<if not variable='form.name'><set variable=var.go value='1'></if>
+<if variable='var.error is error'><define variable="var.error" preparse="1"><translate id="296">Illegal site name</translate></define><set variable="var.go" value='1' /></if>
+<if not="1" variable='form.name'><set variable="var.go" value='1' /></if>
 <if variable='var.go'>
    <eval>&var.common:none;</eval>
 </if>

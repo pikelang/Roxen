@@ -14,9 +14,9 @@ string page_base( RequestID id, string content )
 {
   return sprintf( "<use file=/standard/template />\n"
                   "<tmpl title=''>"
-                  "<topmenu base='&cf.num-dotdots;' selected=sites />\n"
+                  "<topmenu base='&cf.num-dotdots;' selected='sites' />\n"
                   "<content><cv-split>"
-                  "<subtablist width=100%%>"
+                  "<subtablist width='100%%'>"
                   "<st-tabs></st-tabs>"
                   "<st-page>"
                   "\n%s\n"
@@ -44,9 +44,9 @@ mapping|string parse( RequestID id )
   {
     object m = roxen.find_module( (q/"#")[0] );
     int c = (int)((q/"#")[-1]);
-    res += ("<p><gbutton preparse href='drop_module.pike?config=&form.config;&"
+    res += ("<p><gbutton href='drop_module.pike?config=&form.config;&"
             "drop="+replace(q,"#","!")+"'> "+LOCALE(252, "Drop Module")+
-            " </gbutton>"+"&nbsp; <font size=+2>&nbsp;"+m->get_name()+"</font> "+(c?" #"+(c+1):"")+"</p>" );
+            " </gbutton>"+"&nbsp; <font size='+2'>&nbsp;"+m->get_name()+"</font> "+(c?" #"+(c+1):"")+"</p>" );
   }
   return page_base( id, res );
 }

@@ -5,8 +5,8 @@ constant base = #"
 <tmpl>
 <topmenu base='../' selected='sites'/>
 <content><cv-split><subtablist><st-page>
- <input type='hidden' name='name' value='&form.name;'>
- <input type='hidden' name='site_template' value='&form.site_template;'>
+ <input type='hidden' name='name' value='&form.name;' />
+ <input type='hidden' name='site_template' value='&form.site_template;' />
  %s
 </st-page></subtablist></cv-split></content></tmpl>
 ";
@@ -88,12 +88,12 @@ string|mapping parse( RequestID id )
 
         sts += ({({ name,
                     "<cset variable='var.url'>"
-                    "<gbutton-url width=400 "
-                    "             icon_src=/internal-roxen-next "
-                    "             align_icon=right>"
+                    "<gbutton-url width='400' "
+                    "             icon_src='/internal-roxen-next' "
+                    "             align_icon='right'>"
                     + Roxen.html_encode_string(name) +
                     "</gbutton-url></cset>"
-                    "<input border='0' type='image' src='&var.url;' name='"+st+"'>\n"
+                    "<input border='0' type='image' src='&var.url;' name='"+st+"' />\n"
                     "<blockquote>"+doc+"</blockquote>" })});
       }
     };

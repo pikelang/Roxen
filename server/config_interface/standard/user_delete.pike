@@ -21,7 +21,7 @@ mixed parse( RequestID id )
     object u = id->misc->get_config_user( uid );
     if( u == id->misc->config_user )
       res += ("<gbutton font='&usr.gbutton-font;' "
-	      "dim='1' width='300' preparse='1'> " +
+	      "dim='1' width='300'> " +
 	      LOCALE(227, "Delete") +" "+ u->real_name+" ("+uid+") "
 	      "</gbutton><br />");
     else
