@@ -1,6 +1,6 @@
 #include <module.h>
 
-string cvs_verison = "$Id: draw_things.pike,v 1.39 1999/04/23 17:55:23 per Exp $";
+string cvs_verison = "$Id: draw_things.pike,v 1.40 1999/05/14 00:56:15 neotron Exp $";
 
 Image.image load_image(string f)
 {
@@ -29,7 +29,7 @@ Image.image load_image(string f)
   /*if(!first_icon){knappar->paste(pad,cxp,0);cxp+=pad->xsize();}*/\
   if(X){knappar->paste(X,cxp,0);cxp+=X->xsize();first_icon=0;}\
   if(strlen(Y)) {\
-    object f=font->write(Y)->scale(0.5)->scale(0.5);\
+    object f=font->write(Y)->scale(0.5);\
     knappar->paste_mask(Image.image(f->xsize(),f->ysize()),f,cxp-f->xsize()-4,-1);\
     knappar->paste_mask(Image.image(f->xsize(),f->ysize()),f,cxp-f->xsize()-4,-1);\
    }\
@@ -131,7 +131,7 @@ Image.image draw_config_button(string name, object font, int lm, int rm)
 {
   if(!strlen(name)) return Image.image(1,20, dR,dG,dB);
 
-  object txt = font->write(name)->scale(0.5)->scale(0.5);
+  object txt = font->write(name)->scale(0.5);
   int w = txt->xsize();
   object ruta = Image.image(w + (rm?40:20), 20, bR,bG,bB);
 
