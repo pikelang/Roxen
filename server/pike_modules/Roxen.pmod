@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.159 2002/11/17 05:50:38 mani Exp $
+// $Id: Roxen.pmod,v 1.160 2002/11/19 07:02:22 mani Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -1504,7 +1504,7 @@ string number2string(int n, mapping m, array|function names)
        s=([array(string)]names)[n];
      break;
   case "roman":
-    s=int2roman(n);
+    s = String.int2roman(n);
     break;
   default:
     return (string)n;
