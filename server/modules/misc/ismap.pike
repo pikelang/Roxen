@@ -3,7 +3,7 @@
 // ISMAP image map support. Quite over-complex, really.  An example is
 // the support for index images, and chromatic distances.
 
-constant cvs_version = "$Id: ismap.pike,v 1.20 2004/06/30 16:59:16 mast Exp $";
+constant cvs_version = "$Id: ismap.pike,v 1.21 2004/10/11 19:06:01 mast Exp $";
 
 #include <module.h>
 inherit "module";
@@ -566,8 +566,8 @@ mapping|string handle_file_extension(Stdio.File file, string ext, RequestID id)
     if(sscanf(" "+map_file_name+" ", "%s$%[a-zA-Z_]%s",pre, varname, rest)==3)
     {
       map_file_name = (pre + 
-		       Roxen.http_encode_string(id->variables[varname]
-					  ||id->state[varname]||"")
+		       Roxen.http_encode_invalids(id->variables[varname]
+						  ||id->state[varname]||"")
 		       + rest) - " ";
     }
     if((strlen(map_file_name)>6 && 
@@ -584,5 +584,3 @@ string status()
 {
   return ("Mapfile requests: "+req+"\n<br />");
 }
-
-

@@ -112,7 +112,7 @@ mapping|string parse( RequestID id )
 	if( find_dbs )
 	  RXML.user_set_var( "var.go-on",
 			     sprintf("<redirect to='import_dbs.pike?group=%s'/>",
-				     Roxen.http_encode_string(c_name(id->variables->name,id))));
+				     Roxen.http_encode_url(c_name(id->variables->name,id))));
 	else
 	  RXML.user_set_var( "var.go-on", "<redirect to=''/>" );
 	return "";

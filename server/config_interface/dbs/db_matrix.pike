@@ -140,8 +140,8 @@ string|mapping parse( RequestID id )
 		     "<gtext  fontsize=13"+\
 		     " alt='"+((p[conf]==DBManager.P)?T:"-")+"'"\
 		     ">"+((p[conf]==DBManager.P)?(DBManager.P!=DBManager.NONE?"&nbsp;":"")+T:(DBManager.P!=DBManager.NONE?"&nbsp;-":"-"))+"</gtext>"\
-		     +(view_mode?"":"</a>"), Roxen.http_encode_string(conf),\
-		     Roxen.http_encode_string(db))
+		     +(view_mode?"":"</a>"), Roxen.http_encode_url(conf),\
+		     Roxen.http_encode_url(db))
 
       PERM(NONE,_(431,"N"),"none");
       PERM(READ,_(432,"R"),"read");

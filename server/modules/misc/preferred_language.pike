@@ -5,7 +5,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: preferred_language.pike,v 1.27 2004/06/30 16:59:16 mast Exp $";
+constant cvs_version = "$Id: preferred_language.pike,v 1.28 2004/10/11 19:06:01 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST | MODULE_TAG;
 constant module_name = "Preferred Language Analyzer";
@@ -140,11 +140,12 @@ as language settings.";
       if( !id->misc->do_not_goto )
       {
         id->misc->moreheads = ([
-          "Location":Roxen.http_encode_string(id->raw_url+"?random="+
-                                              random(4949494)+
-                                              "&section="+
-                                              id->variables->section+
-                                              "#"+path()),
+	  "Location":
+	  id->raw_url+"?random="+
+	  random(4949494)+
+	  "&section="+
+	  Roxen.http_encode_url (id->variables->section) +
+	  "#" + Roxen.http_encode_url (path()),
         ]);
         if( id->misc->defines )
           id->misc->defines[ " _error" ] = 302;

@@ -15,7 +15,7 @@
 
 // made by Pontus Hagland december -96
 
-constant cvs_version = "$Id: flik.pike,v 1.7 2004/06/30 16:58:51 mast Exp $";
+constant cvs_version = "$Id: flik.pike,v 1.8 2004/10/11 19:05:54 mast Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -77,8 +77,8 @@ string encode_url(object id,
     +"&flc"+flno+"="+dest;
   foreach(indices(id->variables), string var)
     if(var != "fl" && var[..2] != "flc" && stringp(id->variables[var]))
-      url += sprintf("&%s=%s", http_encode_string(var),
-		     http_encode_string(id->variables[var]));
+      url += sprintf("&%s=%s", http_encode_url(var),
+		     http_encode_url(id->variables[var]));
   return url+"#fl_"+flno;
 }
 

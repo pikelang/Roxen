@@ -5,7 +5,7 @@
 
 // Mk II changes by Henrik P Johnson <hpj@globecom.net>.
 
-constant cvs_version = "$Id: secure_fs.pike,v 1.29 2004/06/30 16:58:51 mast Exp $";
+constant cvs_version = "$Id: secure_fs.pike,v 1.30 2004/10/11 19:05:54 mast Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -243,7 +243,7 @@ mixed find_file(string f, object id)
   if (!id->misc->moreheads) id->misc->moreheads = ([]);
   id->misc->moreheads["Set-Cookie"] =
     "httpauth="+
-    Roxen.http_encode_string(sprintf("%s:%s:%d", user||"", pass||"", time(1)))+
+    Roxen.http_encode_cookie(sprintf("%s:%s:%d", user||"", pass||"", time(1)))+
     "; path=/";
   return tmp2;
 }

@@ -1,5 +1,5 @@
 /*
- * $Id: make_site_template.pike,v 1.8 2004/02/03 12:04:31 anders Exp $
+ * $Id: make_site_template.pike,v 1.9 2004/10/11 19:05:44 mast Exp $
  *
  * Make a site-template from a virtual server configuration.
  *
@@ -65,7 +65,7 @@ string parse(RequestID id)
 		   LOCALE(147, "Select configuration to base the template on."),
 		   map(roxen.configurations->name,
 		       lambda(string n) {
-			 return ({ Roxen.http_encode_string(n),
+			 return ({ Roxen.http_encode_url(n),
 				   Roxen.html_encode_string(n) });
 		       }));
   } else {
@@ -81,8 +81,8 @@ string parse(RequestID id)
 
       res += sprintf("<p>Filename (.pike will be added): "
 		     "<input type='text' name='fname' value='%s'></p>\n",
-		     Roxen.http_encode_string(lower_case(replace(conf_name,
-								 " ", "_"))));
+		     Roxen.http_encode_url(lower_case(replace(conf_name,
+							      " ", "_"))));
 
       res += "<cf-ok/> <cf-cancel href='./?class="+action+"'/>";
     } else {
@@ -90,7 +90,7 @@ string parse(RequestID id)
       //
       // Create the site template.
       res += sprintf("<input type=hidden name='fname' value='%s' />\n",
-		     Roxen.http_encode_string(id->variables->fname));
+		     Roxen.html_encode_string(id->variables->fname));
 
       conf->enable_all_modules();
 

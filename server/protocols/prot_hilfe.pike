@@ -128,7 +128,7 @@ class Connection
 
     this_program set_path( string f )
     {
-      raw_url = Roxen.http_encode_string( f );
+      raw_url = Roxen.http_encode_invalids( f );
       if( strlen( f ) > 5 )
       {
 	string a;

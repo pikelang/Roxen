@@ -351,11 +351,15 @@ string|array tag_insert(string tag,mapping m,RequestID id)
       m_delete(m, "nocache");
       m_delete(m, "file");
       n=do_replace(n, m, id);
+      // Should probably be html_encode_string below, but, well..
+      // compat is compat. :P /mast
       return m->quote!="html"?n:({ Roxen.http_encode_string(n) });
     }
     n=id->conf->try_get_file(fix_relative(m->file,id),id);
     if(!n) RXML.run_error("No such file ("+m->file+").\n");
     n=do_replace(n, m-(["file":""]), id);
+    // Should probably be html_encode_string below, but, well.. compat
+    // is compat. :P /mast
     return m->quote!="html"?n:({ Roxen.http_encode_string(n) });
   }
 

@@ -7,7 +7,7 @@
 
 // responsible for the changes to the original version 1.3: Martin Baehr mbaehr@iaeste.or.at
 
-constant cvs_version = "$Id: hostredirect.pike,v 1.26 2004/06/30 16:59:01 mast Exp $";
+constant cvs_version = "$Id: hostredirect.pike,v 1.27 2004/10/11 19:05:57 mast Exp $";
 constant thread_safe=1;
 
 inherit "module";
@@ -175,7 +175,7 @@ int|mapping first_try(RequestID id)
       to +=id->not_query;
 
     id->not_query = id->scan_for_query( to );
-    id->raw_url = Roxen.http_encode_string(to);
+    id->raw_url = Roxen.http_encode_invalids(to);
     //if we internally redirect to the proxy,
     //the proxy checks the raw_url for the place toget,
     //so we have to update the raw_url here too, or

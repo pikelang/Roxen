@@ -75,7 +75,7 @@ string selected_item( string q, Configuration c, RequestID id,
 
   string url = id->not_query + id->misc->path_info;
   string pre_site_url="";
-  string quoted_url = Roxen.http_encode_string( url );
+  string quoted_url = Roxen.http_encode_invalids( url );
   if( has_value( quoted_url, "!" )  )
     quoted_url += "../"*(sizeof(quoted_url/"!")-1);
 
@@ -197,7 +197,9 @@ string selected_item( string q, Configuration c, RequestID id,
 	    "    onMouseOver='p_popup_on(this);' "
 	    "    onMouseOut='p_popup_off(this);' "
 	    "    onClick=\"window.location='" +
-	    (quoted_url + Roxen.http_encode_string(real_group_name) + "!0/" +
+	    // Should it be http_encode_url below? I've no idea what
+	    // real_group_name contains. /mast
+	    (quoted_url + Roxen.http_encode_invalids(real_group_name) + "!0/" +
 	     data->sname + "/") + "'\">"
 	    "<td>" +
 	    replace(Roxen.html_encode_string(data->name), " ", "&nbsp;") +
@@ -217,7 +219,9 @@ string selected_item( string q, Configuration c, RequestID id,
             "    onMouseOver='p_on(this);' "
 	    "    onMouseOut='p_off(this);' "
             "    onClick=\"window.location='" +
-            (quoted_url + Roxen.http_encode_string(real_group_name) + "!0/" +
+	    // Should it be http_encode_url below? I've no idea what
+	    // real_group_name contains. /mast
+	    (quoted_url + Roxen.http_encode_invalids(real_group_name) + "!0/" +
              ((module&&strlen(module)) ? module + "/" : "")) + "';\">";
       }
       else
@@ -232,13 +236,17 @@ string selected_item( string q, Configuration c, RequestID id,
 	  "    onMouseOut='p_off(this);' "
           +(do_js ? "::='&form.popup-args;'" :
             "onClick=\"window.location='" +
-            (quoted_url + Roxen.http_encode_string(real_group_name) + "!0/" +
+	    // Should it be http_encode_url below? I've no idea what
+	    // real_group_name contains. /mast
+	    (quoted_url + Roxen.http_encode_invalids(real_group_name) + "!0/" +
              ((module&&strlen(module)) ? module + "/" : "")) + "';\"") +
 	  ">";
       if( !do_js )
         pre +=
           "<a href='" +
-          (quoted_url + Roxen.http_encode_string(real_group_name) + "!0/" +
+	  // Should it be http_encode_url below? I've no idea what
+	  // real_group_name contains. /mast
+	  (quoted_url + Roxen.http_encode_invalids(real_group_name) + "!0/" +
            ((module&&strlen(module)) ? module + "/" : "")) + "'>" +
           Roxen.html_encode_string(group_name) + "&nbsp;"
           "("+sizeof(gd[1])+")</a>";
@@ -285,10 +293,12 @@ string selected_item( string q, Configuration c, RequestID id,
 	      "<li class='module-list-item' "
 	      "    onMouseOver='p_on(this);' onMouseOut='p_off(this);' "
 	      "    onClick=\"window.location='" +
-	      (quoted_url + Roxen.http_encode_string(real_group_name) + "!0/" +
+	      // Should it be http_encode_url below? I've no idea what
+	      // real_group_name contains. /mast
+	      (quoted_url + Roxen.http_encode_invalids(real_group_name) + "!0/" +
 	       data->sname + "/") + "'; return false;\">"
 	      "<a href='" +
-	      (quoted_url + Roxen.http_encode_string(real_group_name) + "!0/" +
+	      (quoted_url + Roxen.http_encode_invalids(real_group_name) + "!0/" +
 	       data->sname + "/") + "'>" +
 	      Roxen.html_encode_string(data->name) +
 	      "</a>" +
@@ -303,11 +313,13 @@ string selected_item( string q, Configuration c, RequestID id,
 	      "<td width='100%' class='module-sub-list-item' "
 	      "onMouseOver='p_on_sub(this);' onMouseOut='p_off_sub(this);' "
 	      "onClick=\"window.location='" +
-	      (quoted_url + Roxen.http_encode_string(real_group_name) + "!0/" +
+	      // Should it be http_encode_url below? I've no idea what
+	      // real_group_name contains. /mast
+	      (quoted_url + Roxen.http_encode_invalids(real_group_name) + "!0/" +
 	       data->sname+"/") + "'; return false;\">"
 	      "<a href='" +
 	      (quoted_url +
-	       Roxen.http_encode_string(group_name) + "!0/"+data->sname +
+	       Roxen.http_encode_invalids(group_name) + "!0/"+data->sname +
 	      "/'") + ">" +
 	      Roxen.html_encode_string(data->name) +
 	      "</a>" +
@@ -381,20 +393,19 @@ string selected_item( string q, Configuration c, RequestID id,
   {
     pre+=sprintf("<gbutton frame-image='&usr.left-buttonframe;' "
 		 "width='&usr.left-buttonwidth;' bgcolor='&usr.left-buttonbg;' "
-		 "href='"+pre_site_url+
-		 "add_module.pike?config=%s'> "
-		 +LOCALE(258, "Add module")+" </gbutton>",
-		 Roxen.http_encode_string( c->name ) )+
+		 "href='%sadd_module.pike?config=%s'> %s </gbutton>",
+		 pre_site_url,
+		 Roxen.http_encode_url( c->name ),
+		 LOCALE(258, "Add module"))+
       sprintf("<br />\n"
 	      "<img src='/internal-roxen-unit' width=1 height=1/><br />"
 	      "<gbutton frame-image='&usr.left-buttonframe;' "
 	      "width='&usr.left-buttonwidth;' "
 	      "bgcolor='&usr.left-buttonbg;' "
-	      "href='"+pre_site_url+
-	      "drop_module.pike?config=%s'> "
-	      +LOCALE(259, "Drop module")+
-	      " </gbutton><br />\n",
-	      Roxen.http_encode_string( c->name ));
+	      "href='%sdrop_module.pike?config=%s'> %s </gbutton><br />\n",
+	      pre_site_url,
+	      Roxen.http_encode_url( c->name ),
+	      LOCALE(259, "Drop module"));
   }
   return pre;
 }

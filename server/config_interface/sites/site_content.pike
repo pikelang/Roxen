@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.140 2004/06/13 11:17:43 anders Exp $
+// $Id: site_content.pike,v 1.141 2004/10/11 19:05:50 mast Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -444,8 +444,8 @@ string port_for( string url, int settings )
   if(!p) return "<font color='&usr.warncolor;'>Not open</font>";
   string res =
 #"
-  <set variable='var.port' value='"+Roxen.http_encode_string(p->get_key())+
-"'/><set variable='var.url' value='"+Roxen.http_encode_string(url)+#"'/>
+  <set variable='var.port' value='"+Roxen.html_encode_string(p->get_key())+
+"'/><set variable='var.url' value='"+Roxen.html_encode_string(url)+#"'/>
   <emit source='ports' scope='port'>
     <if variable='var.port is &_.port;'>"+
     (settings?

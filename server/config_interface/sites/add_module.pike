@@ -374,19 +374,19 @@ array(int|string) class_visible_normal( string c, string d, int size,
                    "bgcolor='&usr.content-titlebg;'><tr><td>");
 
   if( id->variables->unfolded == c ) {
-    header+=("<a name="+Roxen.http_encode_string(c)+
-	     "></a><gbutton "
+    header+=("<a name='"+Roxen.html_encode_string(c)+
+	     "'></a><gbutton "
 	     "href='add_module.pike?config=&form.config;"
-	     "#"+Roxen.http_encode_string(c)+"' > "+
+	     "#"+Roxen.http_encode_url(c)+"' > "+
 	     LOCALE(168, "Hide")+" </gbutton>");
     x=1;
   }
   else
-    header+=("<a name="+Roxen.http_encode_string(c)+
-	     "></a><gbutton "
+    header+=("<a name='"+Roxen.html_encode_string(c)+
+	     "'></a><gbutton "
 	     "href='add_module.pike?config=&form.config;"
-	     "&unfolded="+Roxen.http_encode_string(c)+
-	     "#"+Roxen.http_encode_string(c)+"' > "+
+	     "&unfolded="+Roxen.http_encode_url(c)+
+	     "#"+Roxen.http_encode_url(c)+"' > "+
 	     LOCALE(267, "View")+" </gbutton>");
 
   header+=("</td><td width='100%'>"
@@ -452,18 +452,18 @@ array(int|string) class_visible_faster( string c, string d, int size,
                    "<tr><td>");
 
   if( id->variables->unfolded == c ) {
-    header+=("<a name="+Roxen.http_encode_string(c)+
-	     "></a><gbutton dim='1'> "+LOCALE(267, "View")+" </gbutton>"
+    header+=("<a name='"+Roxen.html_encode_string(c)+
+	     "'></a><gbutton dim='1'> "+LOCALE(267, "View")+" </gbutton>"
 	     "<tr><td><submit-gbutton> "+LOCALE(251, "Add Module")+
 	     " </submit-gbutton></td></tr>");
     x=1;
   }
   else
-    header+=("<a name="+Roxen.http_encode_string(c)+
-	     "></a><gbutton "
+    header+=("<a name='"+Roxen.html_encode_string(c)+
+	     "'></a><gbutton "
 	     "href='add_module.pike?config=&form.config;"
-	     "&unfolded="+Roxen.http_encode_string(c)+
-	     "#"+Roxen.http_encode_string(c)+"' > "+
+	     "&unfolded="+Roxen.http_encode_url(c)+
+	     "#"+Roxen.http_encode_url(c)+"' > "+
 	     LOCALE(267, "View")+" </gbutton>");
 
   header+=("</td><td width='100%'>"
@@ -495,8 +495,8 @@ array(int|string) class_visible_compact( string c, string d, int size,
   if(first++)
     res = "</select><br /><submit-gbutton> "+LOCALE(251, "Add Module")+
       " </submit-gbutton> ";
-  res += "<p><a name="+Roxen.http_encode_string(c)+
-    "></a><font size='+2'>"+c+"</font><br />"+d+"<p>"
+  res += "<p><a name='"+Roxen.html_encode_string(c)+
+    "'></a><font size='+2'>"+c+"</font><br />"+d+"<p>"
     "<select size='"+size+"' multiple name='module_to_add' class='add-module-select'>";
   return ({ 1, res });
 }

@@ -606,7 +606,7 @@ mapping|string parse( RequestID id )
 
       if( c && m )
 	mn =  "<a href='../sites/site.html/"+
-	  Roxen.http_encode_string(mi->conf)+"/n!n/"+
+	  Roxen.http_encode_url(mi->conf)+"/n!n/"+
 	  replace(mi->module,"#","!")+"/"+
 	  "'>"+i->get_name()+"</a> in "+c->query_name();
       else if( i )
@@ -652,7 +652,7 @@ mapping|string parse( RequestID id )
   res += table_module_info( "" );
   
   res +="<br /><a href='edit_group.pike?group="+
-    Roxen.http_encode_string(DBManager.db_group( id->variables->db ))+"'>"+
+    Roxen.http_encode_url(DBManager.db_group( id->variables->db ))+"'>"+
     sprintf( (string)
 	     _(506,"Member of the %s database group"),
 	     DBManager.get_group( DBManager.db_group( id->variables->db ) )
@@ -686,7 +686,7 @@ mapping|string parse( RequestID id )
     res += "<tr>\n";
     res += "<td> <cimg src='&usr.table-small;' max-height='12'/> </td>\n";
     res += "<td> <a href='browser.pike?sort=&form.sort:http;&"
-      "db=&form.db:http;&table="+Roxen.http_encode_string(table)+"'>"+
+      "db=&form.db:http;&table="+Roxen.http_encode_url(table)+"'>"+
       table+"</a> </td>";
 
     

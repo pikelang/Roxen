@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.185 2004/06/30 16:58:53 mast Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.186 2004/10/11 19:05:56 mast Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -427,7 +427,7 @@ string diff_url( RequestID id, object mod, Variable.Variable var )
 			     cfs->query_location()[1..])+
 		"diff.pike":
 		cfs->query_location()+"diff.pike");
-  return base+"?variable="+Roxen.http_encode_string(var->path());
+  return base+"?variable="+Roxen.http_encode_url(var->path());
 }
 
 mapping get_variable_map( string s, object mod, RequestID id, int noset )

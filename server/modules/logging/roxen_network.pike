@@ -8,7 +8,7 @@ inherit "module";
 
 // ---------------- Module registration stuff ----------------
 
-constant cvs_version = "$Id: roxen_network.pike,v 1.13 2004/06/30 16:59:14 mast Exp $";
+constant cvs_version = "$Id: roxen_network.pike,v 1.14 2004/10/11 19:05:59 mast Exp $";
 constant module_type = MODULE_ZERO;
 constant thread_safe = 1;
 constant module_name = "Roxen Network module";
@@ -112,7 +112,7 @@ class Poster
     query->async_request( "community.roxen.com", 80,
 			  "POST /register/roxen_network.html HTTP/1.0",
 			  ([ "Host":"community.roxen.com:80" ]),
-			  "data=" + Roxen.http_encode_string(mk_pkg()) );
+			  "data=" + Roxen.http_encode_invalids(mk_pkg()) );
   }
   
   void create( function _mk_pkg )

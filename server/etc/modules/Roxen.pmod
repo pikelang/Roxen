@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.190 2004/10/11 18:44:45 mast Exp $
+// $Id: Roxen.pmod,v 1.191 2004/10/11 19:05:52 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2051,7 +2051,7 @@ string roxen_encode( string val, string encoding )
      return val;
 
    case "http":
-     return http_encode_string (val);
+     return http_encode_invalids (val);
 
    case "cookie":
      return http_encode_cookie (val);

@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.584 2004/08/27 15:17:39 anders Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.585 2004/10/11 19:05:38 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1881,7 +1881,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 
 	// Keep query (if any).
 	// FIXME: Should probably keep config <foo>
-	string new_query = Roxen.http_encode_string(id->not_query) + "/" +
+	string new_query = Roxen.http_encode_invalids(id->not_query) + "/" +
 	  (id->query?("?"+id->query):"");
 	new_query=Roxen.add_pre_state(new_query, id->prestate);
 

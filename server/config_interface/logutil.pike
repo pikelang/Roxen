@@ -124,8 +124,8 @@ array(string) get_conf_url_to_module(string|RoxenModule m, string|void lang)
 	url_confname = conf->name;
 
   return ({ sprintf("/sites/site.html/%s/-!-/%s/?section=Information",
-		   Roxen.http_encode_string(url_confname),
-		   Roxen.http_encode_string(url_modname)),
+		   Roxen.http_encode_url(url_confname),
+		   Roxen.http_encode_url(url_modname)),
 	    Roxen.get_modfullname(module) });
 }
 
@@ -142,7 +142,7 @@ array(string) get_conf_url_to_virtual_server(string|Configuration conf,
     url_confname = conf->name;
 
   return ({ sprintf("/sites/site.html/%s/", 
-		    Roxen.http_encode_string(url_confname)), conf->query_name() });
+		    Roxen.http_encode_url(url_confname)), conf->query_name() });
 }
 
 
