@@ -15,7 +15,7 @@ inherit "module";
 
 #include <roxen.h>
 
-constant cvs_version = "$Id: php4.pike,v 2.12 2000/11/23 05:12:18 per Exp $";
+constant cvs_version = "$Id: php4.pike,v 2.13 2001/02/16 19:52:57 grubba Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FILE_EXTENSION;
 
@@ -76,7 +76,7 @@ class PHPScript
     if( err || nelems < 0 )
     // if nelems == 0, network buffer is full. We still want to continue.
     {
-      buffer="";
+      buffer="";	// Is this a good idea?
       close_when_done = -1;
     }
     else // caudium/php has "else if(nelems>0)"
@@ -109,7 +109,7 @@ class PHPScript
   {
     DWERROR(sprintf("PHP:PHPWrapper::send_headers(%d,%O)\n", code, headers));
     string result = "", post="";
-    string code = errors[code||200];
+    string return_code = errors[code||200];
     int ct_received = 0, sv_received = 0;
     if(headers)
       foreach(indices(headers), string header)
@@ -126,7 +126,7 @@ class PHPScript
 	  switch(lower_case( header ))
 	  {
 	  case "status":
-	    code = realvalue;
+	    return_code = realvalue;
 	    break;
 
 	  case "content-type":
@@ -140,7 +140,7 @@ class PHPScript
 	    break;
 
 	  case "location":
-	    code = "302 Redirection";
+	    return_code = "302 Redirection";
 	    result += header+": "+realvalue+"\r\n";
 	    break;
 
@@ -154,7 +154,7 @@ class PHPScript
       result += "Server: "+roxen.version()+"/PHP4\r\n";
     if(!ct_received)
       result += "Content-Type: text/html\r\n";
-    write("HTTP/1.0 "+code+"\r\n"+result+"\r\n");
+    write("HTTP/1.0 "+return_code+"\r\n"+result+"\r\n");
   }
 
   PHPScript run()
@@ -167,7 +167,9 @@ class PHPScript
     if(!query("rxml"))
     {
       mid->my_fd->set_blocking();
-      options->my_fd = mid->my_fd;
+      if (object_program(mid->my_fd) <= Stdio.File) {
+        options->my_fd = mid->my_fd;
+      }
     }
 
     mid->my_fd->set_close_callback(done);
@@ -255,7 +257,8 @@ void start(int n, Configuration conf)
 int|mapping handle_file_extension(Stdio.File o, string e, RequestID id)
 {
   DWERROR("PHP:handle_file_extension()\n");
-  roxen->handle(PHPScript(id)->run);
+  id->do_not_disconnect = 1;
+  call_out(roxen->handle, 0, PHPScript(id)->run);
   DWERROR("PHP:handle_file_extension done\n");
   return Roxen.http_pipe_in_progress();
 }
@@ -268,7 +271,8 @@ constant dont_dump_program = 1;
 string status()
 {
   return 
-#"<font color='&usr.warncolor;'>PHP4 is not available in this roxen.<br /><br />
+#"<font color='&usr.warncolor;'>PHP4 is not available in this Roxen.<br />
+<br />
   To get php4:
   <ol>
     <li> Check php4 out from CVS or download the release from
@@ -277,7 +281,7 @@ string status()
          See <a target='new' href='http://www.php.net/version4/cvs.php'>the PHP4 CVS instructions</a></li>
     <li> Configure php4 with --with-roxen="+(getcwd()-"server")+#"</li>
     <li> Make and install php4</li>
-    <li> Restart roxen</li>
+    <li> Restart Roxen</li>
   </ol></font>";
 }
 
