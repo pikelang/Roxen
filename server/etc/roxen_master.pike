@@ -2,7 +2,7 @@
  * Roxen master
  */
 
-string cvs_version = "$Id: roxen_master.pike,v 1.36 1997/05/31 19:19:45 grubba Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.37 1997/06/11 00:00:35 marcus Exp $";
 
 object stdout, stdin;
 mapping names=([]);
@@ -191,23 +191,23 @@ array cvs_get_dir(string name)
   return 0;
 }
 
-mixed cvs_file_stat(string name)
+mixed cvs_file_stat(string name, int|void nolink)
 {
   name = getenv("CVSROOT") + "/" + name;
 //werror("CVS file stat "+name+"\n");
-  return file_stat(name + ",v") || file_stat(name);
+  return file_stat(name + ",v", nolink) || file_stat(name, nolink);
 }
 
 #endif /* CVS_FILESYSTEM */
 
-array r_file_stat(string f)
+array r_file_stat(string f, int|void nolink)
 {
 //werror("file stat "+f+"\n");
 #ifdef CVS_FILESYSTEM
   if(sscanf(f, "/cvs:%s", f)||sscanf(f, "/cvs;%s", f))
-    return cvs_file_stat(f);
+    return cvs_file_stat(f, nolink);
 #endif /* CVS_FILESYSTEM */
-  return file_stat(f);
+  return file_stat(f, nolink);
 }
 
 array r_get_dir(string f)
