@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.47 1997/11/23 08:23:17 mirar Exp $
+/* $Id: wizard.pike,v 1.48 1998/02/15 00:13:56 noring Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -504,37 +504,86 @@ mixed wizard_menu(object id, string dir, string base, mixed ... args)
 
 /*** Additional Action Functions ***/
 
-string html_table(array(string) subtitles, array(array(string)) table)
+string format_numeric(string s, string|void sep)
 {
+  sep = reverse(sep||"&nbsp;");
+  array(string) as = s/" ";
+  string t = "";
+  string s = reverse(as[0]);
+  while(sizeof(s)) {
+    if(sizeof(s) > 3)
+      t += s[0..2]+sep;
+    else
+      t += s;
+    s = s[3..];
+  }
+  return (({reverse(t)})+as[1..])*" "; 
+}
+
+string html_table(array(string) subtitles, array(array(string)) table,
+		  mapping|void opt)
+{
+  /* Options:
+   *   bgcolor, titlebgcolor, titlecolor, fgcolor0, fgcolor1, modulo
+   * Containers:
+   *   <fields>[num|text, ...]</fields>
+   */
+
   string r = "";
 
-  r += ("<table bgcolor=black border=0 cellspacing=0 cellpadding=1>\n"
+  if(!opt) opt = ([]);
+  int m = (int)(opt->modulo?opt->modulo:1);
+  r += ("<table bgcolor="+(opt->bgcolor||"black")+" border=0 "
+	"cellspacing=0 cellpadding=1>\n"
 	"<tr><td>\n");
   r += "<table border=0 cellspacing=0 cellpadding=4>\n";
-  r += "<tr bgcolor=#113377>\n";
+  r += "<tr bgcolor="+(opt->titlebgcolor||"#113377")+">\n";
   int cols;
   foreach(subtitles, mixed s)
   {
     if(stringp(s))
     {
-      r+="<th nowrap align=left><font color=#ffffff>"+s+" &nbsp; </font></th>";
+      r+=("<th nowrap align=left><font color="+
+	  (opt->titlecolor||"#ffffff")+">"+s+" &nbsp; </font></th>");
       cols++;
     } else {
-      r+="</tr><tr bgcolor=#113377><th nowrap align=left colspan="+cols+">"
-	"<font color=#ffffff>"+s[0]+" &nbsp; </font></th>";
+      r+=("</tr><tr bgcolor="+(opt->titlebgcolor||"#113377")+">"
+	  "<th nowrap align=left colspan="+cols+">"
+	  "<font color="+(opt->titlecolor||"#ffffff")+">"+s[0]+
+	  " &nbsp; </font></th>");
     }
   }      
   r += "</tr>";
-
-
+  
   for(int i = 0; i < sizeof(table); i++) {
-    r += "<tr bgcolor="+(i%2?"#ddeeff":"#ffffff")+">";
-    foreach(table[i], mixed s)
+    string tr;
+    r += tr = "<tr bgcolor="+((i/m)%2?opt->fgcolor1||"#ddeeff":
+			      opt->fgcolor0||"#ffffff")+">";
+    for(int j = 0; j < sizeof(table[i]); j++) {
+      mixed s = table[i][j];
       if(arrayp(s))
-	r += "</tr><tr bgcolor="+(i%2?"#ddeeff":"#ffffff")+
-	  "><td colspan="+cols+">"+s[0]+" &nbsp;</td>";
-      else
-	r += "<td nowrap>"+s+"&nbsp;&nbsp;</td>";
+	r += "</tr>"+tr+"><td colspan="+cols+">"+s[0]+" &nbsp;</td>";
+      else {
+	string type = "text";
+	if(arrayp(opt->fields) && j < sizeof(opt->fields))
+	  type = opt->fields[j];
+	switch(type) {
+	case "num":
+	  array a = s/".";
+	  r += "<td nowrap align=right>";
+	  if(sizeof(a) > 1) {
+	    r += (format_numeric(a[0])+"."+
+		  reverse(format_numeric(reverse(a[1]), ";psbn&")));
+	  } else
+	    r += format_numeric(s, "&nbsp;");
+	  break;
+	case "text":
+	default:
+	  r += "<td nowrap>"+s;
+	}
+	r += "&nbsp;&nbsp;</td>";
+      }
+    }
     r += "</tr>\n";
   }
   r += "</table></td></tr>\n";
