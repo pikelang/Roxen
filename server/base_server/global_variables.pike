@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: global_variables.pike,v 1.68 2001/04/14 15:57:34 grubba Exp $
+// $Id: global_variables.pike,v 1.69 2001/05/16 01:15:58 nilsson Exp $
 
 /*
 #pragma strict_types
@@ -86,13 +86,13 @@ void set_up_ftp_variables( Protocol o )
           "Users with shells that does not figure in this list will not "
           "be allowed to log in.") );
 
-  defvar( "passive_port_min", 0, LOCALE(0, "Passive port minimum"),
+  defvar( "passive_port_min", 0, LOCALE(257, "Passive port minimum"),
 	  TYPE_INT,
-	  LOCALE(0, "Minimum port number to use in the PASV/EPSV response."));
+	  LOCALE(320, "Minimum port number to use in the PASV/EPSV response."));
 
-  defvar( "passive_port_max", 65535, LOCALE(0, "Passive port maximum"),
+  defvar( "passive_port_max", 65535, LOCALE(321, "Passive port maximum"),
 	  TYPE_INT,
-	  LOCALE(0, "Maximum port number to use in the PASV/EPSV response."));
+	  LOCALE(322, "Maximum port number to use in the PASV/EPSV response."));
 }
 
 

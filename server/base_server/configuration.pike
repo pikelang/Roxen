@@ -1,6 +1,6 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.430 2001/05/14 04:30:46 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.431 2001/05/16 01:15:41 nilsson Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2495,7 +2495,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
       
       me->defvar("_seclevels", "", DLOCALE(16, "Security: Patterns"), 
 		 TYPE_TEXT_FIELD,
-		 DLOCALE(0,
+		 DLOCALE(245,
 			 "The syntax is:\n"
 			 " \n<dl>"
 			 "  <dt><b>userdb</b> <i>userdatabase module</i></dt>\n"
@@ -3149,7 +3149,7 @@ static void create(string config)
 
   defvar("compat_level", Variable.StringChoice (
 	   "", roxen.compat_levels, 0,
-	   DLOCALE(0, "Compatibility level"),
+	   DLOCALE(246, "Compatibility level"),
 	   DLOCALE(0, "")));
   set ("compat_level", roxen.__roxen_version__);
 

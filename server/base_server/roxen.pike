@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.664 2001/05/07 02:48:35 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.665 2001/05/16 01:16:17 nilsson Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -4040,7 +4040,7 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
       else if( line == "all" )
 	code += "  userdb_module = 0;\n";
       else if( !m->my_configuration()->find_user_database( line ) )
-	m->report_notice( LOC_M( 0,"Syntax error in security patterns: "
+	m->report_notice( LOC_M( 58,"Syntax error in security patterns: "
 				 "Cannot find the user database '"+
 				 line+"'\n" ));
       else
@@ -4055,7 +4055,7 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
       if( line == "all" )
 	code += "  authmethod = id->conf;\n";
       else if( !m->my_configuration()->find_auth_module( line ) )
-	m->report_notice( LOC_M( 0,"Syntax error in security patterns: "
+	m->report_notice( LOC_M( 59,"Syntax error in security patterns: "
 				 "Cannot find the auth method '"+
 				 line+"'\n" ));
       else
@@ -4070,7 +4070,7 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
       code += sprintf( "  realm = %O;\n", line );
     }
     else
-      m->report_notice( LOC_M( 0,"Syntax error in security patterns: "
+      m->report_notice( LOC_M( 60,"Syntax error in security patterns: "
 			       "Expected 'allow' or 'deny'\n" ));
     shorted = sscanf( line, "%s return", line );
 
