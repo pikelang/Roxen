@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.46 1997/09/17 00:44:14 grubba Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.47 1997/09/29 22:07:54 grubba Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -125,6 +125,12 @@ void create()
 	 TYPE_FLAG|VAR_MORE,
 	 "If set, the accessed database will be closed if it is not used for "
 	 "8 seconds");
+
+  defvar("compat_if", 0, "Compatibility with old &lt;if&gt;",
+	 TYPE_FLAG|VAR_MORE,
+	 "If set the &lt;if&gt;-tag will work in compatibility mode.\n"
+	 "This affects the behaviour when used together with the &lt;else&gt;-"
+	 "tag.\n");
 }
 
 static string olf; // Used to avoid reparsing of the accessed index file...
@@ -1220,7 +1226,7 @@ string tag_deny(string a,  mapping b, string c, object d, object e,
 
 
 #define TEST(X)\
-do { if(X) if(m->or) return s; else ok=1; else if(!m->or) return ""; } while(0)
+do { if(X) if(m->or) {if (QUERY(compat_if)) return "<true>"+s; else return s+"<true>";} else ok=1; else if(!m->or) return "<false>"; } while(0)
 
 #define IS_TEST(X, Y) do                		\
 {							\
@@ -1256,10 +1262,10 @@ string tag_allow(string a, mapping (string:string) m,
     if(!got->misc["accept-language"])
     {
       if(!m->or)
-	return "";
+	return "<false>";
     } else {
       TEST(_match(lower_case(got->misc["accept-language"]*" "),
-		    lower_case(m->language)/","));
+		  lower_case(m->language)/","));
     }
 
   if(m->filename)
@@ -1274,7 +1280,7 @@ string tag_allow(string a, mapping (string:string) m,
     if(!got->misc->accept)
     {
       if(!m->or)
-	return "";
+	return "<false>";
     } else {
       TEST(glob("*"+m->accept+"*",got->misc->accept*" "));
     }
@@ -1285,20 +1291,26 @@ string tag_allow(string a, mapping (string:string) m,
     {
       if(m->referer == "referer")
       {
-	if(m->or)
-	  return s;
-	else
+	if(m->or) {
+	  if (QUERY(compat_if)) 
+	    return "<true>" + s;
+	  else
+	    return s + "<true>";
+	} else
 	  ok=1;
       } else if (_match(got->referer*"", m->referer/",")) {
-	if(m->or)
-	  return s;
-	else
+	if(m->or) {
+	  if (QUERY(compat_if))
+	    return "<true>" + s;
+	  else
+	    return s + "<true>";
+	} else
 	  ok=1;
       } else if(!m->or) {
-	return "";
+	return "<false>";
       }
     } else if(!m->or) {
-      return "";
+      return "<false>";
     }
   }
 
@@ -1397,7 +1409,7 @@ string tag_allow(string a, mapping (string:string) m,
 	TEST(got->auth && got->auth[0] && search(m->user/",", got->auth[1])
 	     != -1);
 
-  return ok?s:"";
+  return ok?(QUERY(compat_if)?"<true>"+s:s+"<true>"):"<false>";
 }
 
 string tag_configurl()
@@ -1557,7 +1569,7 @@ string tag_prestate(string tag, mapping m, string q, object got)
 	ok=1;
     } else {
       if(not)
-	if(or) 
+	if(or)
 	  return q;
 	else
 	  ok=1;
@@ -1567,17 +1579,38 @@ string tag_prestate(string tag, mapping m, string q, object got)
   return ok?q:"";
 }
 
+string tag_false(string tag, mapping m, object got, object file,
+		 mapping defines, object client)
+{
+  _ok = 0;
+  return "";
+}
+
+string tag_true(string tag, mapping m, object got, object file,
+		mapping defines, object client)
+{
+  _ok = 1;
+  return "";
+}
 
 string tag_if(string tag, mapping m, string s, object got, object file,
 	      mapping defines, object client)
 {
   string res, a, b;
-  res=tag_allow(tag, m, s, got, file, defines, client);
-  _ok = strlen(res);
   if(sscanf(s, "%s<otherwise>%s", a, b) == 2)
   {
-    if(_ok) return a;
-    else   return b;
+    // compat_if mode?
+    if (QUERY(compat_if)) {
+      res=tag_allow(tag, m, a, got, file, defines, client);
+      if (res == "<false>") {
+	return b;
+      }
+    } else {
+      res=tag_allow(tag, m, a, got, file, defines, client) +
+	"<else>" + b + "</else>";
+    }
+  } else {
+    res=tag_allow(tag, m, s, got, file, defines, client);
   }
   return res;
 }
@@ -1590,9 +1623,14 @@ string tag_deny(string tag, mapping m, string s, object got, object file,
     m->not = 0;
     return tag_if(tag, m, s, got, file, defines, client);
   }
-  if(tag_if(tag,m,s,got,file,defines,client) == s)
-    return "";
-  return s;
+  if(tag_if(tag,m,s,got,file,defines,client) == "<false>") {
+    if (QUERY(compat_if)) {
+      return "<true>"+s;
+    } else {
+      return s+"<true>";
+    }
+  }
+  return "<false>";
 }
 
 
@@ -1799,6 +1837,8 @@ mapping query_tag_callers()
 	    "signature":tag_signature,
 	    "user":tag_user,
  	    "quote":tag_quote,
+	    "true":tag_true,	// Used internally
+	    "false":tag_false,	// by <if> and <else>
 	    "!--#echo":tag_compat_echo,           /* These commands are */
 	    "!--#exec":tag_compat_exec,           /* NCSA/Apache Server */
 	    "!--#flastmod":tag_compat_fsize,      /* Side includes.     */
