@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.3 1999/12/19 00:56:35 mast Exp $
+//! $Id: module.pmod,v 1.4 1999/12/27 15:29:04 grubba Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -1687,7 +1687,7 @@ static class VoidType
   mixed `+ (mixed... vals) {return sizeof (vals) ? predef::`+ (@vals) : this_object();}
   mixed ``+ (mixed val) {return val;}
   int `!() {return 1;}
-  string _sprintf (string flag) {return flag == "O" && "Void";}
+  string _sprintf (int flag) {return (flag == 'O') && "Void";}
 };
 VoidType Void = VoidType();
 //! An object representing the void value. Works as initializer for
