@@ -17,7 +17,7 @@ string module_global_page( RequestID id, string conf )
 
 #define translate( X ) _translate( (X), id )
 
-string _translate( mixed what, object id )
+string _translate( mixed what, RequestID id )
 {
   if( mappingp( what ) )
     if( what[ id->misc->cf_locale ] )
@@ -27,12 +27,12 @@ string _translate( mixed what, object id )
   return what;
 }
 
-string describe_exts( object m, string func )
+string describe_exts( RoxenModule m, string func )
 {
   return String.implode_nicely( m[func]() );
 }
 
-string describe_location( object m, RequestID id )
+string describe_location( RoxenModule m, RequestID id )
 {
   Configuration conf = m->my_configuration();
   string url = conf->query("MyWorldLocation"),
@@ -60,7 +60,7 @@ string simplified_make_container( string tagname, mapping args, string c )
   return make_tag(tagname, args)+make_tag("/...",args);
 }
 
-string describe_tags( object m, int q )
+string describe_tags( RoxenModule m, int q )
 {
   multiset tags=(multiset)indices(m->query_tag_callers());
   multiset conts=(multiset)indices(m->query_container_callers());
@@ -101,7 +101,7 @@ string describe_tags( object m, int q )
 						      simplified_make_container, ([]), "")));
 }
 
-string describe_provides( object m, int q )
+string describe_provides( RoxenModule m, int q )
 {
   array(string)|multiset(string)|string provides = m->query_provides();
   if (multisetp(provides))
@@ -111,7 +111,7 @@ string describe_provides( object m, int q )
   return provides;
 }
 
-string describe_type( object m, int t, RequestID id )
+string describe_type( RoxenModule m, int t, RequestID id )
 {
   string res = "";
 
@@ -149,9 +149,9 @@ do                                                                      \
 }
 
 mapping current_compile_errors = ([]);
-string devel_buttons( object c, string mn, object id )
+string devel_buttons( Configuration c, string mn, RequestID id )
 {
-  object mod = c->find_module( replace( mn,"!","#" ) );
+  RoxenModule mod = c->find_module( replace( mn,"!","#" ) );
   if( sizeof( glob( "*.x", indices( id->variables ) ) ) )
   {
     string a = glob( "*.x", indices( id->variables ) )[0]-".x";
@@ -239,9 +239,9 @@ string get_eventlog( roxen.ModuleInfo o, RequestID id, int|void no_links )
   return "<h2>&locale.eventlog;</h2>" + (report*"");
 }
 
-string find_module_doc( string cn, string mn, object id )
+string find_module_doc( string cn, string mn, RequestID id )
 {
-  object c = roxen.find_configuration( cn );
+  Configuration c = roxen.find_configuration( cn );
 
   if(!c)
     return "";
@@ -251,7 +251,7 @@ string find_module_doc( string cn, string mn, object id )
     dbuttons = "<h2>&locale.actions;</h2>"+devel_buttons( c, mn, id );
   else
     dbuttons = "";
-  object m = c->find_module( replace(mn,"!","#") );
+  RoxenModule m = c->find_module( replace(mn,"!","#") );
 
   if(!m)
     return "";
@@ -284,6 +284,9 @@ string find_module_doc( string cn, string mn, object id )
 		      String.implode_nicely(creators));
   } else creators = "";
 
+  mapping accesses = c[m->thread_safe ? "thread_safe" : "locked"];
+  int my_accesses = accesses[m];
+
   return replace( "<br><b><font size=+2>"
                   + translate(m->register_module()[1]) +
                   "</font></b><br>"
@@ -295,6 +298,9 @@ string find_module_doc( string cn, string mn, object id )
 		    "<h2>Developer information</h2>" +
                     "<b>Identifier:</b> " + mi->sname + "<br>"
 		    "<b>Thread safe:</b> " + (m->thread_safe ? "Yes" : "No") +
+		    " <small>(<a href='../../../../../actions/?action"
+		    "=locks.pike&class=status'>more info</a>)</small><br>"
+		    "<b>Number of accesses:</b> " + my_accesses +
                     "<br><br><table border=0 cellspacing=0 cellpadding=0>"
 		    "<tr><td valign=top><b>Type:</b> </td><td "
                     "valign=top>" + describe_type( m, mi->type, id ) +
