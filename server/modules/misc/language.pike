@@ -1,7 +1,7 @@
 #include <module.h>
 inherit "modules/directories/directories";
 
-string cvs_version = "$Id: language.pike,v 1.23 1999/12/28 15:20:17 grubba Exp $";
+string cvs_version = "$Id: language.pike,v 1.24 1999/12/29 23:51:03 nilsson Exp $";
 constant thread_safe=1;
 
 #if DEBUG_LEVEL > 20
@@ -133,7 +133,7 @@ multiset (string) language_list;
 string default_language, flag_dir;
 int textonly;
 
-void start(int n, Configuration c)
+void start()
 {
   string tmp;
   array (string) tmpl;
@@ -155,7 +155,7 @@ void start(int n, Configuration c)
   default_language = query( "default_language" );
   textonly = query( "textonly" );
 
-  ::start(n, c);
+  ::start();
 }
 
 multiset (string) find_files( string url, RequestID id )
