@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.157 2000/08/16 03:01:32 per Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.158 2000/08/16 11:31:06 wellhard Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -843,21 +843,6 @@ class TagInsertFile {
   }
 
   string get_data(string var, mapping args, RequestID id) {
-    if(args["sb-search"] && id->misc->wa)
-    {
-      object vcfile = 
-	id->misc->wa->
-	locate_file(var, id->misc->vcobj,
-		    id->misc->sb->
-		    find_content_type_from_filename(var), id);
-      if(vcfile)
-      {
-	string name = vcfile->abspath(id);
-	if(!mappingp(name))
-	  args->file = "/" + name;
-      }
-    }
-
     string result;
     if(args->nocache) {
       int nocache=id->pragma["no-cache"];
