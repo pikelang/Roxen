@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version="$Id: vform.pike,v 1.11 2000/09/14 17:51:49 nilsson Exp $";
+constant cvs_version="$Id: vform.pike,v 1.12 2000/09/17 18:23:24 nilsson Exp $";
 constant thread_safe=1;
 
 constant module_type = MODULE_TAG;
@@ -27,7 +27,6 @@ class VInputFrame {
   mapping vars;
 
   object var;
-  string warn;
 
   array do_enter(RequestID id) {
     scope_name=args->scope||"vinput";
@@ -79,6 +78,7 @@ class VInputFrame {
       break;
     case "email":
       var=Variable.Email(args->value||"");
+      if(args["disable-domain-check"]) var->disable_domain_check();
       break;
     case "date":
       var=Variable.Date(args->value||"");
@@ -109,8 +109,7 @@ class VInputFrame {
        !(args->optional && id->variables[args->name]=="") ) {
       mixed new_value=id->variables[args->name];
       if(args->trim) new_value=String.trim_whites(new_value);
-      [warn, new_value]=var->verify_set(var->transform_from_form(new_value));
-      var->set(new_value);
+      var->set(var->transform_from_form(new_value));
     }
     var->set_path(args->name);
 
@@ -119,12 +118,12 @@ class VInputFrame {
       if(!ARGS[arg]) new_args[arg]=args[arg];
 
     vars=([ "input":var->render_form(id, new_args) ]);
-    if(warn) vars->warning=warn;
+    if(var->get_warnings()) vars->warning=var->get_warnings();
     return 0;
   }
 
   array do_return(RequestID id) {
-    int ok=!warn;
+    int ok=!var->get_warnings();
     int show_err=1;
     if(args["fail-if-failed"] && id->misc->vform_failed[args["fail-if-failed"]])
       ok=1;
@@ -148,9 +147,10 @@ class VInputFrame {
     id->misc->vform_failed[args->name]=1;
     if(show_err)
       failed_result(id);
-    else
-      // Clear args->warning here?
+    else {
+      m_delete(args, "warning");
       verified_result(id);
+    }
     id->misc->vform_ok = 0;
     return 0;
   }
@@ -470,6 +470,10 @@ true if the complete form so far is verified, otherwise only if the named field 
 <attr name=equal value=string>
   Verify that the variable is equal to a given string. Pretty useless...
   Only available when using the type string or text.
+</attr>
+<attr name=disable-domain-check>
+  Only available when using the email type. When set the email domain will not
+  be checked against a DNS to verify that it does exists.
 </attr>
 <attr name=mode value=before|after|complex>
   Select how to treat the contents of the vinput container. Before puts the contents before the
