@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.35 1999/12/14 01:37:41 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.36 1999/12/14 04:57:45 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -32,12 +32,16 @@ void start()
 
 array register_module()
 {
-  return ({ MODULE_PARSER,
+  return ({ MODULE_PARSER | MODULE_PROVIDER,
 	    "RXML 1.4 tags",
 	    ("This module adds a lot of RXML tags."), 0, 1 });
 }
 
-TAGDOCUMENTATION
+string query_provides() {
+  return "modified";
+}
+
+TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=(["roxen-automatic-charset-variable":"<desc tag></desc>",
 "append":"<desc tag></desc>",
