@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.818 2003/01/15 16:38:16 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.819 2003/01/16 14:06:22 mast Exp $";
 
 //! @appears roxen
 //!
@@ -2432,7 +2432,7 @@ class ImageCache
 	y1 = (int)(args["y-size"]||args["height"]);
 
       array xguides, yguides;
-      void sort_guides()
+      function sort_guides = lambda()
       {
 	xguides = ({}); yguides = ({});
 	if( guides )
@@ -2499,16 +2499,17 @@ class ImageCache
 	    y1 -= y0;
 	}
       }
+      sort_guides = 0;		// To avoid garbage.
 
 #define SCALEI 1
 #define SCALEF 2
 #define SCALEA 4
 #define CROP   8
 
-      void do_scale_and_crop( int x0, int y0,
-			      int x1, int y1,
-			      int|float w,  int|float h,
-			      int type )
+      function do_scale_and_crop = lambda ( int x0, int y0,
+					    int x1, int y1,
+					    int|float w,  int|float h,
+					    int type )
       {
 	if( (type & CROP) && x1 && y1 
 	    && ((x1 != reply->xsize()) ||  (y1 != reply->ysize())
@@ -2612,6 +2613,7 @@ class ImageCache
       }
       else
 	do_scale_and_crop( x0, y0, x1, y1, 0, 0, CROP );
+      do_scale_and_crop = 0;	// To avoid garbage.
 
       if( args["span-width"] || args["span-height"] )
       {
@@ -3120,7 +3122,7 @@ class ImageCache
   //! will be called like <pi>callback( @@data, id )</pi>.
   {
     string ci, user;
-    void update_args( mapping a )
+    function update_args = lambda ( mapping a )
     {
       if (!a->format)
 	//  Make implicit format choice explicit
@@ -3149,6 +3151,7 @@ class ImageCache
       ci = map( map( data, tomapp ), argcache->store )*"$";
     } else
       ci = data;
+    update_args = 0;		// To avoid garbage.
 
     if( zero_type( uid_cache[ ci ] ) )
     {
