@@ -2,6 +2,7 @@
 // Copyright (c) 1999-2000 Idonex AB
 //
 
+#include <module_constants.h>
 #include <module.h>
 inherit "socket";
 

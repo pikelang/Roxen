@@ -1,4 +1,4 @@
-// string cvs_version = "$Id: read_config.pike,v 1.30 1999/12/28 01:08:12 nilsson Exp $";
+// string cvs_version = "$Id: read_config.pike,v 1.31 2000/02/16 07:08:16 per Exp $";
 
 #include <module.h>
 
@@ -8,6 +8,8 @@ inherit "newdecode";
 import spider;
 # include "newdecode.pike"
 #endif
+
+#include <module_constants.h>
 
 mapping (string:mapping) configs = ([ ]);
 mapping (string:array(int)) config_stat_cache = ([]);
@@ -135,7 +137,7 @@ void fix_config(mixed c)
 array config_is_modified(string cl)
 {
   array st = file_stat(configuration_dir + replace(cl, " ", "_"));
-  
+
   if(st)
     if(!config_stat_cache[cl])
       return st;
@@ -158,7 +160,7 @@ private static void read_it(string cl)
       fd = open(configuration_dir + cl, "r");
       if(fd) rm(configuration_dir + cl);
     }
-  
+
     if(!fd) {
       configs[cl] = ([ ]);
       m_delete(config_stat_cache, cl);
@@ -177,7 +179,7 @@ private static void read_it(string cl)
 }
 
 
-void remove( string reg , object current_configuration) 
+void remove( string reg , object current_configuration)
 {
   string cl;
 #ifndef IN_INSTALL
@@ -223,7 +225,7 @@ void store( string reg, mapping vars, int q, object current_configuration )
     cl=current_configuration->name;
 #endif
   read_it(cl);
-  
+
   if(q)
     configs[cl][reg] = copy_value(vars);
   else
@@ -233,7 +235,7 @@ void store( string reg, mapping vars, int q, object current_configuration )
     foreach(indices(vars), var)
       m[copy_value(var)] = copy_value( vars[ var ][ VAR_VALUE ] );
     configs[cl][reg] = m;
-  }    
+  }
   save_it(cl);
 }
 
@@ -249,7 +251,7 @@ mapping retrieve(string reg, object current_configuration)
   else
     cl=current_configuration->name;
 #endif
-  
+
   read_it(cl);
 
   return configs[cl][reg] || ([ ]);

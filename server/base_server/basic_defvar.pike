@@ -1,4 +1,4 @@
-#include <module.h>
+#include <module_constants.h>
 mapping variables = ([ ]);
 local mapping locs = ([]);
 

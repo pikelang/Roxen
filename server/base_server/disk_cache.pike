@@ -1,5 +1,5 @@
-// string cvs_version = "$Id: disk_cache.pike,v 1.43 1999/12/27 23:08:50 nilsson Exp $";
-#include <module.h>
+// string cvs_version = "$Id: disk_cache.pike,v 1.44 2000/02/16 07:08:16 per Exp $";
+#include <module_constants.h>
 #include <stat.h>
 
 // Still experimental

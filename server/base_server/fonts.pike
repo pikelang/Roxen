@@ -1,5 +1,6 @@
-/* $Id: fonts.pike,v 1.43 2000/02/10 10:10:03 per Exp $ */
+/* $Id: fonts.pike,v 1.44 2000/02/16 07:08:37 per Exp $ */
 
+#include <module_constants.h>
 #include <module.h>
 
 constant Font = Image.font;

@@ -1,6 +1,6 @@
-// string cvs_version = "$Id: module_support.pike,v 1.54 2000/02/14 09:20:09 per Exp $";
+// string cvs_version = "$Id: module_support.pike,v 1.55 2000/02/16 07:08:16 per Exp $";
 #include <roxen.h>
-#include <module.h>
+#include <module_constants.h>
 #include <stat.h>
 
 /* Set later on to something better in roxen.pike::main() */
