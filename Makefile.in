@@ -110,6 +110,7 @@ install_pike: all
 
 localinstall: all
 	cp pike/src/pike $(SRCDIR)/server/bin/
+	-@rm -f $(SRCDIR)/server/bin/roxen
 	ln $(SRCDIR)/server/bin/pike $(SRCDIR)/server/bin/roxen
 	(cd extern; $(MAKE) localinstall)
 
