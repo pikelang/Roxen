@@ -1220,7 +1220,7 @@ class Scale
 	if( i )
 	  i = i->scale( width, height );
 	if( a )
-	  a = i->scale( width, height );
+	  a = a->scale( width, height );
 	l->set_image( i, a );
       }
     }
