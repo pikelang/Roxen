@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.13 1996/12/10 03:53:35 per Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.14 1996/12/10 03:57:38 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -8,13 +8,14 @@ array register_module()
 {
   return ({ MODULE_LOCATION | MODULE_PARSER,
 	      "Graphics text",
-	      "Makes a few new tags:<p>"
+	      "Makes a few new tags, which render text to gifs "
+	      "using the image module in pike. \n<p>"
 	      "<b>&lt;gh1&gt;</b> to <b>&lt;gh6&gt;:</b> Headers<br>\n"
 	      "<b>&lt;gh&gt;:</b> Header<br>\n"
 	      "<b>&lt;gtext&gt;:</b> Graphical text<br>\n"
 	      "<b>&lt;anfang&gt;:</b> Make the first character to a graphical one. Not all that usefull, really.<br>\n"
-	      "\n"
-	      "Common arguments:\n <pre>"
+	      "<br>\n"
+	      "<b>Common arguments:</b>\n <pre>"
 	      " bg=#rrggbb      Use this background, default taken from the\n"
 	      "                 &lt;body&gt; tag, if any\n"
 	      " fg=#rrggbb      Use this foreground, default taken from the\n"
@@ -65,7 +66,7 @@ array register_module()
 	      "                 Apply a turbulence filter, and use this as the\n"
 	      "                 background.\n"
 	      "\n"
-	      "Arguments passed on the the <a> tag (if href is specified):\n "
+	      "<b>Arguments passed on the the &lt;a&gt; tag (if href is specified):</b>\n "
 	      " target=...\n"
 	      " onClick=...\n"
 	      "</pre>\n",
