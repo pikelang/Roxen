@@ -25,83 +25,71 @@ string add_image(mapping args)
   return key;
 }
 
-mapping get_image_format(string filename)
+mapping get_image_format(string key)
 {
-  if(sscanf(filename,"%s.%*s", string key)>1)
-    return image_format_f[key];
-  else
-    return 0;
-}
-
-inline string ns_color(array (int) col)
-{
-  if(!arrayp(col)||sizeof(col)!=3)
-    return "#000000";
-  return sprintf("#%02x%02x%02x", col[0],col[1],col[2]);
+  return image_format_f[key];
 }
 
 string tag_blob(string tag_name, mapping args, object request_id,
 		object file, mapping defines)
 {
-  string r="";
-  string usage="Usage: &lt;blob corner=\"number\"" +
-    "size=\"number\"bg=\"#rrggbb\" fg=\"#rrggbb\"&gt;";
-  int corner=0;
-  if(args["corner"])
-    if(sscanf(args["corner"], "%d", corner)<1)
-      return r+= usage;
-	
-  args["corner_i"]=corner;
-  int size=10;
+  string r = "";
+
+  int size = 10;
   if(args["size"])
-    if(sscanf(args["size"], "%d", size)<1)
-      return r+=usage;
+    sscanf(args["size"], "%d", size);
 
   string key=add_image(args);
   args["src"] = query("mountpoint") + key + ".gif";
-  args+=(["width":args["size"], "height":args["size"]]); 
-  args-=(["size":1, "corner":1, "corner_i":1, "bg":1, "fg":1]);
+  args += ([ "width":(string)size, "height":(string)size ]); 
+  args -= ([ "size":1, "corner":1, "bg":1, "fg":1 ]);
   return make_tag("img", args);
   
 }
 
-object(Image) blob_image(int size, array bg, array fg, int corner)
+object(Image) blob_image(int size, array bg, array fg, string corner)
 {
   int alias = 2;
-  int x=0, y=0;
-  object img=Image.image(size*alias, size*alias, @bg);
+  int x = 0, y = 0;
   switch(corner) {
-  case 0: x=0;            y=0;            break;
-  case 1: x=size*alias-1; y=0;            break;
-  case 2: x=size*alias-1; y=size*alias-1; break;
-  case 3: x=0;            y=size*alias-1; break;
+  case "0": x = 0;              y = 0;              break;
+  case "1": x = size*alias - 1; y = 0;              break;
+  case "2": x = size*alias - 1; y = size*alias - 1; break;
+  case "3": x = 0;              y = size*alias - 1; break;
+  default:  x = 0;              y = 0;              break;
   }
-  img=img->circle(x, y, size*alias, size*alias, @fg);
-  object mask=img->select_from(x, y, 1);
-  img=img->paste_alpha_color(mask, @fg);
+
+  object img = Image.image(size*alias, size*alias, @bg)->
+	       circle(x, y, size*alias, size*alias, @fg);
+
+  // Fill the cirkle with a solid color.
+  img=img->paste_alpha_color(img->select_from(x, y, 1), @fg);
+
   return img->scale((float)1/(float)alias);;
 }
 
 mapping find_file(string f, object request_id)
 {
-  mapping args = get_image_format(f);
-  if(args) {
-    object image = blob_image((int)args["size"],
-				       parse_color(args["bg"]),
-				       parse_color(args["fg"]),
-				       args["corner_i"]);
-    string i;
-    if(args->transparent) {
-      i = Image.GIF.encode_trans(image, @parse_color(args->transparent));
+  mapping m;
+  string key = ((f||"")/".")[0];
+  mapping args = get_image_format(key);
+  if(args)
+    if(m = cache_lookup("blob", key))
+      return m;
+    else {
+      object image = blob_image((int)args["size"], parse_color(args["bg"]),
+				parse_color(args["fg"]), args["corner"]);
+      string trans = args->transparent;
+      m=http_string_answer(trans?
+			   Image.GIF.encode_trans(image, @parse_color(trans)):
+			   Image.GIF.encode(image), "image/gif");
+      cache_set("blob", key, m);
+      return m;
     }
-    else i = Image.GIF.encode(image);
-    return http_string_answer(i, "image/gif");
-  }
   object font=get_font("default",32,0,0, lower_case("left"),
 		       (float)(int)0, (float)(int)0);
-  
   object image=font->write("Please reload this page!");
-  return http_string_answer(image->togif(), "image/gif");
+  return http_string_answer(Image.GIF.encode(image), "image/gif");
 }
 
 void create()
