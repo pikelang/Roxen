@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.62 1998/08/26 19:20:20 grubba Exp $
+ * $Id: ftp2.pike,v 1.63 1998/10/06 20:58:53 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -501,8 +501,10 @@ class LS_L
     }
   
     mapping lt = localtime(st[-4]);
-    if (flags & LS_FLAG_n) {
-      st[-2] = name_from_uid(st[-2]);
+    if (!(flags & LS_FLAG_n)) {
+      if (!stringp(st[-2])) {
+	st[-2] = name_from_uid(st[-2]);
+      }
     }
 
     if (flags & LS_FLAG_G) {
