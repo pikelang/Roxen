@@ -1,4 +1,4 @@
-// $Id: roxenlib.pike,v 1.149 2000/02/05 03:40:35 mast Exp $
+// $Id: roxenlib.pike,v 1.150 2000/02/12 17:49:11 nilsson Exp $
 
 #include <roxen.h>
 inherit "http";
@@ -623,7 +623,7 @@ static string make_tag_attributes(mapping in)
     if(a=="/" && in[a]=="/")
       sl=1;
     else
-      res+=a+"=\""+replace((string)in[a],"\"","&#34;")+"\" ";
+      res+=a+"=\""+html_encode_string((string)in[a])+"\" ";
   }
   if(sl) return res+"/";
   return res[..sizeof(res)-2];
