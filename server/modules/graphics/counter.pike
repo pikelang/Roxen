@@ -23,7 +23,7 @@
 // -----------------------------------------------------------------------
 //
 
-constant cvs_version = "$Id: counter.pike,v 1.27 1999/12/11 20:37:31 nilsson Exp $";
+constant cvs_version = "$Id: counter.pike,v 1.28 1999/12/11 21:04:20 nilsson Exp $";
 
 constant copyright = ("<br>Copyright 1997-1999 "
 		    "<a href=http://savage.apostols.org/>Jordi Murgo</a> and "
@@ -38,8 +38,6 @@ inherit "module";
 inherit "roxenlib";
 
 constant thread_safe = 1;
-
-#define MAX( a, b )	( (a>b)?a:b )
 
 
 // --------------------- Module Definition ----------------------
@@ -372,8 +370,8 @@ string tag_counter( string tagname, mapping args, RequestID id )
     // Standard Font ..
     //
     url+= "0/"
-      + (args->bgcolor?(args->bg-"#"):"000000") + "/"
-      + (args->fgcolor?(args->fg-"#"):"ffffff") + "/"
+      + (args->bgcolor?(args->bgcolor-"#"):"000000") + "/"
+      + (args->fgcolor?(args->fgcolor-"#"):"ffffff") + "/"
       + (args->trans?"1":"0") + "/"
       + (string)len + "/"
       + (args->size?args->size:"5") + "/"
@@ -386,8 +384,8 @@ string tag_counter( string tagname, mapping args, RequestID id )
     // Cool PPM fonts ( default )
     //
     url+= (args->user?args->user:"1") + "/"
-      + (args->bgcolor?(args->bg-"#"):"n") + "/"
-      + (args->fgcolor?(args->fg-"#"):"n") + "/"
+      + (args->bgcolor?(args->bgcolor-"#"):"n") + "/"
+      + (args->fgcolor?(args->fgcolor-"#"):"n") + "/"
       + (args->trans?"1":"0") + "/"
       + (string)len + "/"
       + (args->size?args->size:"5") + "/"
