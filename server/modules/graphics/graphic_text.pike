@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.275 2001/08/23 21:20:59 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.276 2001/08/30 12:20:33 jhs Exp $";
 
 #include <module.h>
 inherit "module";
@@ -69,7 +69,7 @@ constant gtextargs=#"
 
 <attr name='bevel' value='width'><p>
  Draws a bevel-box around the text.</p>
- <ex type=vert>
+ <ex>
 <gtext bevel=\"2\">Ok</gtext>
  </ex>
 </attr>
@@ -81,7 +81,7 @@ constant gtextargs=#"
 
  <p>If you set the background color, it is probably best to add the
  notrans attribute as well.</p>
- <ex type=vert>
+ <ex>
 <gtext notrans=\"\" bgcolor=\"pink\">Pink</gtext>
 <gtext notrans=\"\" bgcolor=\"#ff0000\">Red</gtext>
 <gtext notrans=\"\" bgcolor=\"%50,0,100,0\">%50,0,100,0</gtext>
@@ -95,7 +95,7 @@ constant gtextargs=#"
 <attr name='bold'><p>
  Use a bold version of the font, if available. Can not be used
  together with the black or light attributes.</p>
-<ex type=hor>
+<ex>
 <gtext font='lucida'>Aa3</gtext><br />
 <gtext font='lucida' bold=''>Aa3</gtext><br />
 <gtext font='lucida' italic=''>Aa3</gtext><br />
@@ -122,7 +122,7 @@ constant gtextargs=#"
  does not currently place the shadow directly below the text. Using
  negative values for distance is possible, but you might have to add
  'spacing'.</p>
- <ex type=vert>
+ <ex>
 <gtext scale=\"0.8\" fgcolor=\"#FF6600\"
 bshadow=\"1\">&lt;gtext bshadow=1&gt;</gtext>
 <br /><gtext scale=\"0.8\" fgcolor=\"#FF6600\"
@@ -132,7 +132,7 @@ bshadow=\"2\">&lt;gtext bshadow=2&gt;</gtext>
 
 <attr name='chisel'><p>
  Make the text look like it has been cut into the background.</p>
- <ex type=vert>
+ <ex>
 <gtext font=\"lucida\" bold=\"\" chisel=\"\" talign=\"center\" tile=\"\"
 opaque=\"70\" fgcolor=\"gold\" bevel=\"2\"
 background=\"/internal-roxen-squares\"> Chisel opaque=\"70\"</gtext>
@@ -153,7 +153,7 @@ background=\"/internal-roxen-squares\"> Chisel opaque=\"70\"</gtext>
 
 <attr name='fgcolor' value='color'><p>
  Sets the text color.</p>
- <ex type=vert>
+ <ex>
 <gtext fgcolor=\"#0080FF\">#0080FF</gtext>
  </ex>
 </attr>
@@ -182,14 +182,14 @@ background=\"/internal-roxen-squares\"> Chisel opaque=\"70\"</gtext>
 <attr name='ghost' value='dist,blur,color'><p>
  Apply a ghost effect. Cannot be used together with shadow or magic
  coloring.</p>
- <ex type='vert'><gtext spacing=\"2\" crop=\"\" ghost=\"1,1,red\">ghost=1,1,red</gtext></ex>
+ <ex><gtext spacing=\"2\" crop=\"\" ghost=\"1,1,red\">ghost=1,1,red</gtext></ex>
 </attr>
 
 <attr name='glow' value='color'><p>
  Apply a 'glow' filter to the image. Quite a CPU eater. Looks much
  better on a dark background, where a real 'glow' effect can be
  achieved.</p>
- <ex type=vert>
+ <ex>
 <gtext glow=\"red\">&lt;gtext glow=red&gt;</gtext>
  </ex>
 </attr>
@@ -211,7 +211,7 @@ background=\"/internal-roxen-squares\"> Chisel opaque=\"70\"</gtext>
 <attr name='notrans'><p>
  Do not make the background transparent. Useful when making 'boxes' of
  color around the text.</p>
- <ex type=vert>
+ <ex>
 <gtext bgcolor=\"red\">&lt;gtext bgcolor=red&gt;</gtext><br />
 <gtext bgcolor=\"red\" notrans=\"\">&lt;gtext
 bgcolor=red notrans&gt;</gtext>
@@ -226,7 +226,7 @@ bgcolor=red notrans&gt;</gtext>
  Sets the 'opaque' value of the color used to draw the text. Default
  is 100%. In the example below, notice how the text color mixes with
  the two background colors.</p>
- <ex type=vert>
+ <ex>
 <gtext scale=\"0.6\" textbox=\"100,pink,-11\" bgcolor=\"lightblue\"
 notrans=\"\" opaque=\"40\" fgcolor=\"black\"
 >&lt;Demonstration of opaque text&gt;</gtext>
@@ -236,7 +236,7 @@ notrans=\"\" opaque=\"40\" fgcolor=\"black\"
 <attr name='outline' value='color,extra-radius'><p>
  Draw an outline around the text. Quite useful when combined with
  textscale.</p>
- <ex type=vert>
+ <ex>
 <gtext xspacing=\"4\" quant=\"128\" textscale=\"red,red,yellow,yellow\"
 outline=\"black,1\"
 >black, 2 pixels</gtext>
@@ -256,7 +256,7 @@ outline=\"black,1\"
  is quite useless. It is advisable to use powers of 2 to optimize the
  palette allocation.</p>
 
- <ex type=vert>
+ <ex>
 <gtext quant=\"2\">A</gtext>
 <gtext quant=\"6\">A</gtext>
 <gtext quant=\"20\">A</gtext>
@@ -274,7 +274,7 @@ outline=\"black,1\"
 
 <attr name='scale' value='number'><p>
  Sets the scale of the image. Larger than 1.0 is enlargement.</p>
- <ex type=vert>
+ <ex>
 <gtext scale=\"1.0\">&lt;gtext scale=1.0&gt;</gtext>
 <gtext scale=\"0.5\">&lt;gtext scale=0.5&gt;</gtext>
  </ex>
@@ -292,7 +292,7 @@ outline=\"black,1\"
  Draw a blured black drop-shadow behind the text. Using 0 as distance
  does not currently place the shadow directly below the text. Using negative
  values for distance is possible,</p>
- <ex type=vert><gtext scale=\"0.8\" fgcolor=\"blue\"
+ <ex><gtext scale=\"0.8\" fgcolor=\"blue\"
 shadow=\"40,0\">&lt;gtext shadow=40,0&gt;</gtext>
 <br /><gtext scale=\"0.8\" fgcolor=\"blue\"
 shadow=\"40,2\">&lt;gtext shadow=40,2&gt;</gtext></ex>
@@ -313,7 +313,7 @@ shadow=\"40,2\">&lt;gtext shadow=40,2&gt;</gtext></ex>
 <attr name='textbelow' value='color'><p>
  Place the text centered in a box of the given color below the image
  area. Useful together with background to make captions for images.</p>
- <ex type=vert>
+ <ex>
 <img src=\"/internal-roxen-roxen\" /> &nbsp;
 <gtext scale=\"0.5\" background=\"/internal-roxen-roxen\"
 textbelow=\"#c0c0c0\">Roxen</gtext>
@@ -329,7 +329,7 @@ textbelow=\"#c0c0c0\">Roxen</gtext>
  respectively, upper left, lower left, upper right and lower right.
  It is probably a good idea to increase the 'quant' value when
  using this argument.</p>
- <ex type=vert>
+ <ex>
 <gtext quant=\"128\" textscale=\"blue,white,red,darkgreen\"
 >Blue, white,
 red, darkgreen</gtext>
@@ -338,7 +338,7 @@ red, darkgreen</gtext>
 
 <attr name='texture' value='path'><p>
  Uses the specified images as a field texture.</p>
-<ex type=hor>
+<ex>
 <gtext font=\"\" fontsize=\"100\"
 texture=\"/internal-roxen-squares\">A</gtext>
 </ex>
@@ -356,7 +356,7 @@ texture=\"/internal-roxen-squares\">A</gtext>
  will not have any effect at all. This depends on the type of the font
  and the font implementation.</p>
 
-<ex type='vert'>
+<ex>
 <gtext font=\"niquel\">HELLO ROXEN</gtext><br />
 <gtext xpad=\"4\" font=\"niquel\">HELLO ROXEN</gtext><br />
 <gtext xpad=\"50%\" font=\"niquel\">HELLO ROXEN</gtext><br />
@@ -390,7 +390,7 @@ constant tagdoc=([
  Creates an anfang in the beginning of a text.</short> This tag takes
  the same attributes as <xref href='gtext.tag' />.</p>
 
- <ex type=vert>
+ <ex>
  <anfang crop=\"\">This is a beginning<br />
  of a very short text,<br />
  and here it ends.
@@ -436,7 +436,7 @@ constant tagdoc=([
  default the alt attribute will be set to the contents of the
  <tag>gtext</tag> tag.</p>
 
- <ex type=vert>
+ <ex>
   <gtext fgcolor=\"blue\" alt=\"Hello!\">Welcome!</gtext>
  </ex>
 </attr>
@@ -444,7 +444,7 @@ constant tagdoc=([
 <attr name='border' value='width,color'><p>
  Draws a border around the text of the specified width and color.</p>
 
- <ex type=vert>
+ <ex>
 <gtext fgcolor=\"blue\" border=\"2,red\">Red border</gtext>
  </ex>
 </attr>
@@ -460,7 +460,7 @@ constant tagdoc=([
  will highlight the image when the mouse is moved over it. The message
  is shown in the browser's status bar.</p>
 
- <ex type=vert>
+ <ex>
 <gtext href=\"http://www.roxen.com\" magic=\"Roxen\">www.roxen.com</gtext>
  </ex>
 </attr>
@@ -469,7 +469,7 @@ constant tagdoc=([
  Same as for any <tag>gtext</tag> attribute, except for the
  highlighted image.</p>
 
-<ex type=vert><gtext fgcolor=\"blue\" magic=\"\"
+<ex><gtext fgcolor=\"blue\" magic=\"\"
 magic-glow=\"red\" magic-fg=\"white\">Mouse me!</gtext></ex>
 </attr>
 
@@ -482,7 +482,7 @@ magic-glow=\"red\" magic-fg=\"white\">Mouse me!</gtext></ex>
  writing a large text, and word wrap at the edges of the display is
  desired.</p>
 
-<ex type='vert'>
+<ex>
  <gtext scale='0.4' split='split'>
  Useful if you are writing a large text, and word wrap at the edges
  of the display is desired.
@@ -494,7 +494,7 @@ magic-glow=\"red\" magic-fg=\"white\">Mouse me!</gtext></ex>
  wraping functionality of this example cannot be shown as the size of
  the browser window is determined by the largest example box. </p>
 
- <ex type='vert'><gtext scale=\"0.4\" split=\"\">One image per character.</gtext></ex>
+ <ex><gtext scale=\"0.4\" split=\"\">One image per character.</gtext></ex>
 </attr>
 
 <attr name='submit'><p>
