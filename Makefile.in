@@ -365,6 +365,17 @@ dist: $(SRCDIR)/ChangeLog.gz $(SRCDIR)/ChangeLog.rxml.gz
 	      mv "$f.fix" "$f"; \
 	  else :; fi; \
 	done; \
+	echo "Altering some CVS files to point to developer.roxen.com..."; \
+	for f in `find $$version/ -type d -name CVS -print`; do \
+	  if egrep '^//*cvs//*roxen_src' "$f/Repository" 2>&1 >/dev/null; \
+	  then \
+	    echo "Altering $f..."; \
+	    sed -e 's/^\/\/*cvs\/\/*roxen_src/\/cvs\/roxen/' <"$f/Repository" \
+	      >"$f/Repository.new" && \
+	      mv "$f/Repository.new" "$f/Repository"; \
+	    echo "anonymous@developer.roxen.com:/cvs" >"$f/Root"; \
+	  else :; fi; \
+	done; \
 	echo Determining if this is a 0.5, 0.6 or dual distribution...; \
 	if test -d $$version/pike/0.5/. ; then \
 	  if test -d $$version/pike/0.6/. ; then \
