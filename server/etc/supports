@@ -60,7 +60,9 @@ mozilla/3.*		tablecolor
 mozilla/4.*		stylesheets
 
 # BLAM BLAM BLAM BLAM
-.*compatible.*msie		   -push, -java, -javascript
+.*compatible.*msie              -push, -javascript
+.*compatible.*msie.2            -java
+.*compatible.*msie.3            stylesheets
 # }
 
 
