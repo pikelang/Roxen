@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.156 2001/05/17 08:38:06 wellhard Exp $
+// $Id: module.pmod,v 1.157 2001/05/17 22:00:32 nilsson Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -4876,7 +4876,7 @@ static class TXml
     else tagname = tag;
 
     if (flags & FLAG_PROC_INSTR)
-      return "<?" + tagname + " " + content + "?>";
+      return "<?" + tagname + (content?" "+content:"") + "?>";
 
     string res = "<" + tagname;
 
