@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.346 1999/06/07 00:08:11 mast Exp $
+ * $Id: roxen.pike,v 1.347 1999/06/07 22:24:28 marcus Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -8,7 +8,7 @@
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version = "$Id: roxen.pike,v 1.346 1999/06/07 00:08:11 mast Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.347 1999/06/07 22:24:28 marcus Exp $";
 
 object backend_thread;
 object argcache;
@@ -54,7 +54,7 @@ void _exit(int n)
 // This is the real Roxen version. It should be changed before each
 // release
 constant __roxen_version__ = "1.3";
-constant __roxen_build__ = "111";
+constant __roxen_build__ = "112";
 
 #ifdef __NT__
 constant real_version = "Roxen Challenger/"+__roxen_version__+"."+__roxen_build__+" NT";
