@@ -406,8 +406,8 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 		  barsdiagram->setcolor(@(diagram_data["datacolors"][farg]));
   
 		  barsdiagram->polygone(
-					({x-barw+0.01+dnr, y //FIXME
-					  , x+barw+0.01+dnr, y, //FIXME
+					({x-barw+0.02+dnr, y //FIXME
+					  , x+barw+0.02+dnr, y, //FIXME
 					  x+barw+dnr, diagram_data["ysize"]-ypos_for_xaxis
 					  , x-barw+dnr,diagram_data["ysize"]- ypos_for_xaxis
 					})); 
@@ -418,7 +418,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 			 x+barw+dnr, diagram_data["ysize"]-ypos_for_xaxis
 			 , x-barw+dnr,diagram_data["ysize"]- ypos_for_xaxis,
 			 x-barw+0.01+dnr, y //FIXME
-		       })); 
+			 }));
 		}
 	      dnr+=barw*2.0;
 	    }   
@@ -514,24 +514,6 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	}
   
   //Rita pilen på xaxeln
-  /*  barsdiagram->
-    polygone(make_polygon_from_line(diagram_data["linewidth"], 
-				    ({
-				      diagram_data["xsize"]-
-				      diagram_data["linewidth"]-
-				      (float)si/2.0-labelx/2, 
-				      diagram_data["ysize"]-ypos_for_xaxis-
-				      (float)si/2.0,
-				      diagram_data["xsize"]-
-				      diagram_data["linewidth"]-labelx/2, 
-				      diagram_data["ysize"]-ypos_for_xaxis,
-				      diagram_data["xsize"]-
-				      diagram_data["linewidth"]-
-				      (float)si/2.0-labelx/2, 
-				      diagram_data["ysize"]-ypos_for_xaxis+
-				      (float)si/2.0
-				    }), 
-				    1, 1)[0]);*/
 
   //Rita yaxeln
   if ((diagram_data["yminvalue"]<=LITET)&&
@@ -580,35 +562,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
       }
     else
       if (diagram_data["yminvalue"]>LITET)
-	{/*
-	  write("\n\n"+sprintf("%O",make_polygon_from_line(diagram_data["linewidth"], 
-					    ({
-					      xpos_for_yaxis,
-					      diagram_data["ysize"]-diagram_data["linewidth"],
-
-					      xpos_for_yaxis,
-					      diagram_data["ysize"]-ypos_for_xaxis-
-					      si/3.0,
-					      
-					      xpos_for_yaxis-si/2.0,
-					      diagram_data["ysize"]-ypos_for_xaxis-
-					      si/1.5,
-					    
-					      xpos_for_yaxis+si/2.0,
-					      diagram_data["ysize"]-ypos_for_xaxis-
-					      si,
-					      
-					      xpos_for_yaxis,
-					      diagram_data["ysize"]-ypos_for_xaxis-
-					      si*4.0/3.0,
-					    
-					      xpos_for_yaxis+0.0001, //FIXME!
-					      diagram_data["linewidth"]+
-					      diagram_data["labelsize"]
-					      
-					    }), 
-					    1, 1)[0])+
-					    "\n\n");*/
+	{
 	  barsdiagram->
 	    polygone(make_polygon_from_line(diagram_data["linewidth"], 
 					    ({
@@ -677,21 +631,6 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 					  diagram_data["xnamesimg"][i]->xsize()/2), 
 			       (int)floor(diagram_data["ysize"]-ypos_for_xaxis+
 					  si/2.0));
-      /*   barsdiagram->
-	polygone(make_polygon_from_line(diagram_data["linewidth"], 
-					({
-					  ((diagram_data["values_for_xnames"][i]-
-					    diagram_data["xminvalue"])
-					   *xmore+xstart),
-					  diagram_data["ysize"]-ypos_for_xaxis+
-					   si/4,
-					  ((diagram_data["values_for_xnames"][i]-
-					    diagram_data["xminvalue"])
-					   *xmore+xstart),
-					  diagram_data["ysize"]-ypos_for_xaxis-
-					   si/4
-					}), 
-					1, 1)[0]);*/
     }
 
   //Placera ut texten på Y-axeln
@@ -797,8 +736,8 @@ int main(int argc, string *argv)
 		 "data": 
 		 ({ ({12.2, 10.3, 8.01, 9.0, 5.3, 4.0 }),
 		     ({91.2, 101.3, 91.5, 101.7,  141.0, 181.5}),
-		    ({191.2, 203.3, 241.5, 200.1, 194.3, 195.2, 10 }),
-		    ({93.2, 113.3, 133.5, 143.7, 154.3 }) }),
+		    ({191.2, 203.3, 241.5, 200.1, 194.3, 195.2 }),
+		    ({93.2, 113.3, 133.5, 143.7, 154.3, 400}) }),
 		 "fontsize":32,
 		 "axcolor":({0,0,255}),
 		 "bgcolor":0,//({255,255,255}),
@@ -811,7 +750,7 @@ int main(int argc, string *argv)
 		 "xnames":({"jan", "feb", "mar", "apr", "maj"//, "jun"
 }),
 		 "fontsize":16,
-		 "labels":0,({"xstor", "ystor", "xenhet", "yenhet"}),
+		 "labels":0,//({"xstor", "ystor", "xenhet", "yenhet"}),
 		 "legendfontsize":20,
 		 "legend_texts":({"Roxen", "Netscape", "Apache", "Microsoft" }),
 		 "labelsize":12,
@@ -829,8 +768,8 @@ int main(int argc, string *argv)
 
 
   object o=Stdio.File();
-  o->open("test.gif", "wtc");
-  o->write(create_bars(diagram_data)["image"]->togif());
+  o->open("test.ppm", "wtc");
+  o->write(create_bars(diagram_data)["image"]->toppm());
   o->close();
 
 };
