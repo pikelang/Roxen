@@ -59,3 +59,19 @@ string tag_cimg( string t, mapping args, RequestID id )
   }
   return make_tag( "img", args );
 }
+
+string tag_cimg_url( string t, mapping args, RequestID id )
+{
+  mapping a = 
+  ([  
+    "src":fix_relative( args->src, id ),  "quant":args->quant,
+    "format":args->format, "maxwidth":args->maxwidth,
+    "maxheight":args->maxheight, "scale":args->scale,
+    "dither":args->dither,
+  ]);
+
+  foreach( glob( "*-*", indices(args)), string n )
+    a[n] = args[n];
+
+  return query_internal_location()+the_cache->store( a );
+}
