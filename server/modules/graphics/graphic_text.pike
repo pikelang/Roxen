@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.40 1997/04/05 01:26:10 per Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.41 1997/04/09 01:09:33 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -159,7 +159,7 @@ object(font) load_font(string name, string justification, int xs, int ys)
 
   if(!fnt->load( name ))
   {
-    perror("Failed to load the font "+name+", using the default font.\n");
+      report_error("Failed to load the font "+name+", using the default font.\n");
     if(!fnt->load("fonts/"+QUERY(default_size) +"/"+ QUERY(default_font)))
       error("Failed to load the default font\n");
   }
@@ -203,7 +203,7 @@ string fix_relative(string file, object id)
 
 object last_image;      // Cache the last image for a while.
 string last_image_name;
-object (image) load_image(string f,object id)
+object load_image(string f,object id)
 {
   if(last_image_name==f) return last_image;
   string data;
@@ -222,7 +222,7 @@ object (image) load_image(string f,object id)
   return img->copy();
 }
 
-object (image) blur(object (image) img, int amnt)
+object (image) blur(object img, int amnt)
 {
   img->setcolor(0,0,0);
   img = img->autocrop(amnt, 0,0,0,0, 0,0,0);
@@ -295,7 +295,7 @@ object (image) bevel(object (image) in, int width, int|void invert)
 
 object (image) make_text_image(mapping args, object font, string text,object id)
 {
-  object (image) text_alpha=font->write(@(text/"\n"));
+  object text_alpha=font->write(@(text/"\n"));
   int xoffset=0, yoffset=0;
 
   if(!text_alpha->xsize() || !text_alpha->ysize())
@@ -510,9 +510,10 @@ object (image) make_text_image(mapping args, object font, string text,object id)
   }
   
   if(args->chisel)
-    foreground=text_alpha->apply_matrix( ({ ({8,1,0}),
-					    ({1,0,-1}),
-					      ({0,-1,-8}) }), 128,128,128, 15 )
+    foreground=text_alpha->apply_matrix(({ ({8,1,0}),
+					   ({1,0,-1}),
+					   ({0,-1,-8}) }),
+					128,128,128, 15 )
       ->color(@fgcolor);
   
 
@@ -555,11 +556,15 @@ object (image) make_text_image(mapping args, object font, string text,object id)
 
 string base_key = "gtext:"+roxen->current_configuration->name;
 
-//void print_colors(array from)
-//{
-//  for(int i=0; i<sizeof(from); i++)
-//    perror("%d: %s\n", i, color_name(from[i]));
-//}
+#ifdef QUANT_DEBUG
+void print_colors(array from)
+{
+#if efun(color_name)
+  for(int i=0; i<sizeof(from); i++)
+    perror("%d: %s\n", i, color_name(from[i]));
+#endif
+}
+#endif
 
 int number=(time(1)/10) % 1000, _start=time(1)/10 % 1000;
 
@@ -614,11 +619,9 @@ array(int)|string write_text(int _args, string text, int size,
   }
 
   // Fonts and such are now initialized.
-
   img = make_text_image(args,data,text,id);
 
   // Now we have the image in 'img', or nothing.
-
   if(!img) return 0;
   
   int q = (int)args->quant||(args->background||args->texture?250:QUERY(cols));
@@ -626,13 +629,16 @@ array(int)|string write_text(int _args, string text, int size,
   if(q>255) q=255;
   if(q<3) q=3;
 
-  // Quantify
+// Quantify
   if(!args->fs)
   {
-//  print_colors(img->select_colors(q-1)+({parse_color(args->bg)}));
+#ifdef QUANT_DEBUG
+    print_colors(img->select_colors(q-1)+({parse_color(args->bg)}));
+#endif
     img = img->map_closest(img->select_colors(q-1)+({parse_color(args->bg)}));
   }
-  // place in cache.
+
+// place in cache, as a gif image. 
   if(args->fs)
     data=({ img->togif_fs(@(args->notrans?({}):parse_color(args->bg))),
 	    ({img->xsize(),img->ysize()})});
@@ -841,7 +847,6 @@ string tag_graphicstext(string t, mapping arg, string contents,
 
   if(defines->fg && !arg->fg) arg->fg=defines->fg;
   if(defines->bg && !arg->bg) arg->bg=defines->bg;
-//  if(!arg->font) arg->font=defines->font||QUERY(default_font);
 #if efun(get_font)
   if(!arg->nfont) arg->nfont=defines->nfont;
 #endif
