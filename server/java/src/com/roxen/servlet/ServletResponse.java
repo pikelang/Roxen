@@ -1,4 +1,4 @@
-package com.chilimoon.servlet;
+package com.roxen.servlet;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.Cookie;
@@ -260,7 +260,7 @@ class ServletResponse implements javax.servlet.http.HttpServletResponse
 
   public void setDateHeader(String name, long date)
   {
-    setHeader(name, ChiliMoonServletContext.dateformat.format(new Date(date)));
+    setHeader(name, RoxenServletContext.dateformat.format(new Date(date)));
   }
 
   public void sendError(int sc, String msg) throws IOException
@@ -379,7 +379,7 @@ class ServletResponse implements javax.servlet.http.HttpServletResponse
 
   public void addDateHeader(String name, long date)
   {
-    addHeader(name, ChiliMoonServletContext.dateformat.format(new Date(date)));
+    addHeader(name, RoxenServletContext.dateformat.format(new Date(date)));
   }
 
   public void addIntHeader(String name, int value)

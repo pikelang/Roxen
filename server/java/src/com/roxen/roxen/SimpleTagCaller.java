@@ -1,9 +1,9 @@
 /*
- * $Id: SimpleTagCaller.java,v 1.7 2004/05/30 23:18:39 _cvs_dirix Exp $
+ * $Id: SimpleTagCaller.java,v 1.8 2004/05/31 11:45:00 _cvs_dirix Exp $
  *
  */
 
-package com.chilimoon.chilimoon;
+package com.roxen.roxen;
 
 import java.util.Map;
 
@@ -56,7 +56,7 @@ public interface SimpleTagCaller {
   /** Write a lot of debug during the execution of the tag, showing what
    *  type conversions are done, what callbacks are being called etc.
    *  Note that DEBUG must be defined for the debug printouts to be
-   *  compiled in (normally enabled with the --debug flag to ChiliMoon).
+   *  compiled in (normally enabled with the --debug flag to Roxen).
    */
   public static final int FLAG_DEBUG = 0x40000000;
 
@@ -86,6 +86,6 @@ public interface SimpleTagCaller {
    * @return           the result of handling the tag
    */
   public String tagCalled(String tag, Map args, String contents,
-			  ChiliMoonRequest id, Frame frame);
+			  RoxenRequest id, Frame frame);
 
 }
