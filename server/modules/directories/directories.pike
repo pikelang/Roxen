@@ -1,505 +1,326 @@
-/* This is a roxen module. Copyright © 1996 - 1998, Idonex AB, (c) Idonex AB 1998
- * A quite complex directory module. Generates macintosh like listings.
- */
+// This is a Roxen module. Copyright © 1996 - 1999, Idonex AB
+//
+// Directory listings mark 2
+//
+// Henrik Grubbström 1997-02-13
+// Martin Nilsson 1999-12-27
+//
+// TODO:
+// Filter out body statements and replace them with tables to simulate
+// the correct background and fontcolors.
+//
+// Make sure links work _inside_ unfolded dokuments.
 
-string cvs_version = "$Id: directories.pike,v 1.31 1999/12/18 14:36:13 nilsson Exp $";
-int thread_safe=1;   /* Probably. Check _root */
+constant cvs_version = "$Id: directories.pike,v 1.32 1999/12/27 23:26:22 nilsson Exp $";
+constant thread_safe=1;
 
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
 
-/************** Generic module stuff ***************/
-int nocache;
-
-
-class Dirnode
+int DIRLISTING;
+array README;
+string OUT_FORM;
+void start( int num, Configuration conf )
 {
-  string prefix;
-  int finished, nocache=time();
-  array stat;
-  inherit "base_server/struct/node";
+  DIRLISTING=query("dirlisting");
+  README=query("readme");
+  OUT_FORM="<img border=\"0\" src=\"%s\" alt=\"\"> "
+    "<a href=\"%s\">%-40s</a>"+
+    (query("size")?"   %11s":"%.0s")+
+    (query("date")=="Don't show dates"?"   %s":"%.0s")+
+    "   %s\n";
 
-#define configurl(f) ("/internal-roxen-"+f)
-#define image(f) ("<img border=0 src="+(f)+" alt=\"\">")
-
-  void create(string|void pseudoroot)
-  {
-    prefix = (pseudoroot||"");
-    // ::create();
-  }
-
-  inline string configimage(string f) 
-  { 
-    return image(configurl(f)); 
-  }
-
-  inline string linkname(string a,string b) 
-  { 
-    return ("<a name="+(b)+">"+(a)+"</a>"); 
-  }
-
-  inline string link(string a,string b) 
-  { 
-    return ("<a href=\""+(b)+"\">"+(a)+"</a>"); 
-  }
-
-  inline string blink(string a,string b) 
-  { 
-    return ("<a href="+(b+"?"+(nocache++))+">"+(a)+"</a>"); 
-  }
-
-  // string path(int i)
-  // {
-  //   return prefix + ::path(i);
-  // }
-
-  object descend(string what, int nook)
-  {
-    object o = ::descend(what, nook);
-    // This is too much work. prefix only needs to be set when the new
-    // node is created.
-    if (o)
-      o->prefix = prefix;
-    return o;
-  }
-
-  string mk_prestate(multiset p)
-  {
-    if (sizeof(p)) {
-      return("("+(indices(p)*",")+")");
-    }
-    return("");
-  }
-
-  string show_me(string s, string root, object id)
-  {
-    string name = prefix + path(1), lname;
-    lname = name/*[strlen(root)..]*/;
-    if(!stat) return "";
-    if(stat[1]>-1) return "   "+link(s, name);
-    if(stat[1]<0) lname+="/";
-    multiset m = id->prestate - (< "unfold", "fold" >);
-    if (id->supports->robot) {
-      return linkname(link(s, lname), name);
-    } else if(folded) {
-      return linkname(link(configimage("unfold"), "/" +
-			   mk_prestate(m + (<"diract","unfold">)) +
-			   name+"?"+(nocache++)) + blink(s, lname), name);
-    } else {
-      return linkname(link(configimage("fold"), "/" +
-			   mk_prestate(m + (<"diract","fold">)) +
-			   name+"?"+(nocache++)) + blink(s, name), name);
-    }
-  }
-
-  mixed dcallout;
-  string describe(object id, int i, string|void foo)
-  {
-    string res="";
-    object node,prevnode;
-    mixed tmp;
-    string root;
-
-    if(dcallout) remove_call_out(dcallout);
-    dcallout = call_out(dest, 60);
-
-    if(i)
-      root = path(1);
-    else
-      root = foo;
-
-    if(describer)
-      tmp = describer(this_object(), id);
-#ifdef NODE_DEBUG
-    else
-      werror("No describer in node "+path(1)+"\n");
-#endif
-    if(!tmp) return "";
-
-    if(!i)
-      res += tmp[0] +  show_me(tmp[1], root, id);
-    else if(up) 
-      res += link("Previous Directory", up->path(1));
-
-    if(!folded)
-    {
-      res += "<dd>";
-      if(!i)
-	res += "<dl>";
-      node = down;
-      while(node)
-      {
-	if(!objectp(node))	// ERROR!
-	{
-	  if(objectp(prevnode))
-	    prevnode->next=0;
-	  node=0;
-	  break;
-	}
-	prevnode = node;
-	node = node->next;
-	res += prevnode->describe(id,0,root);
-      }
-      if(!i)
-	res += "</dl>";
-    }
-    return res;
-  }
-};
+}
 
 array register_module()
 {
-  return ({ MODULE_DIRECTORIES, 
-	    "Directory parsing module",
-	    "This is the default directory parsing module. "
-	      "This one pretty prints a list of files, with "
-	      "macintosh like fold and unfold buttons next to each "
-	      "directory.", 
-	    ({ }), 
-	    1
-	    });
+  return ({ MODULE_DIRECTORIES | MODULE_PARSER,
+	    "Enhanced directory listings",
+	    "This module is an experimental directory parsing module. "
+	    "It pretty prints a list of files much like the ordinary "
+	    "directory parsing module. "
+	    "The difference is that this one uses the flik-module "
+	    "for the fold/unfolding, and uses relative URL's.",
+	      0, 1 });
 }
 
 void create()
 {
   defvar("indexfiles", ({ "index.html", "Main.html", "welcome.html",
-			  "index.cgi", "index.lpc","index.pike" }),
+			  "index.cgi", "index.lpc", "index.pike" }),
 	 "Index files", TYPE_STRING_LIST,
 	 "If one of these files is present in a directory, it will "
 	 "be returned instead of the directory listing.");
 
-  defvar("readme", 1, "Include readme files", TYPE_FLAG|VAR_MORE,
-	 "If set, include readme files in directory listings");
-  
+  defvar("dirlisting", 1, "Enable directory listings", TYPE_FLAG,
+	 "If set, a directory listing is generated if there is "
+	 "no index file for the directory.<br>\n"
+	 "If disabled, a file not found error will be generated "
+	 "instead.<br>\n");
+
+  defvar("readme", ({ "README.html", "README" }),
+	 "Include readme files", TYPE_STRING_LIST,
+	 "Include one of these readme files in directory listings",
+	 0, !DIRLISTING);
+
+  defvar("override", 0, "Allow directory index file overrides", TYPE_FLAG,
+	 "If this variable is set, you can get a listing of all files "
+	 "in a directory by appending '.' or '/' to the directory name, like "
+	 "this: <a href=http://www.roxen.com//>http://www.roxen.com//</a>"
+	 ". It is _very_ useful for debugging, but some people regard it as a "
+	 "security hole.",
+	 0, !DIRLISTING);
+
+  defvar("size", 1, "Include file size", TYPE_FLAG,
+	 "If set, include the size of the file in the listing.",
+	 0, !DIRLISTING);
+
+  defvar("spartan", 0, "Spartan listings.", TYPE_FLAG,
+	 "Show minimalistic file listings.",
+	 0, !DIRLISTING);
+
   defvar("date", "Don't show dates", "Dates", TYPE_MULTIPLE_STRING,
 	 "Select whether to include the last modification date in directory "
 	 "listings, and if so, on what format. `ISO dates' gives dates "
          "like 1999-11-26, while `Text dates' gives dates like `Fri Nov 26, "
          "1999'.",
-         ({ "Don't show dates", "Show ISO dates", "Show text dates" })
-        );
-#if 0
-  defvar("user", 0, "Include file user", TYPE_FLAG,
-	 "If set, include the last user who modified the file in "
-	 "directory listings. This requires a user database module.");
-#endif
-
-  defvar("override", 0, "Allow directory index file overrides", TYPE_FLAG,
-	 "If this variable is set, you can get a listing of all files "
-	 "in a directory by appending '.' or '/' to the directory name, like"
-	 " this: <a href=http://www.roxen.com//>http://www.roxen.com//</a>"
-	 ". It is _very_ useful for debugging, but some people regard it as a"
-	 " security hole.");
-
-  defvar ("sizes", 25, "Size of the listed filenames", TYPE_INT|VAR_MORE,
-	  "This is the width (in characters) of the filenames appearing"
-	  " in the directory listings");
-   
-  
-  defvar("size", 1, "Include file size", TYPE_FLAG|VAR_MORE,
-	 "If set, include the size of the file in the listing.");
+         ({ "Don't show dates", "Show ISO dates", "Show text dates" }),
+	 !DIRLISTING);
 }
 
-
-function global_describer, head, foot;
-
-void start(int n, object c)
+string container_arel(string t, mapping m, string contents, RequestID id)
 {
-  global_describer = this_object()["describe_dir_node_" "mac"];
-  head = this_object()["head_dir_"  "mac"];
-  foot = this_object()["foot_dir_"  "mac"];
+  if (id->misc->rel_base)
+    m->href = id->misc->rel_base+m->href;
+
+  return make_container("a", m, contents);
 }
 
-/*  Module specific stuff */
-
-object _root;
-object root(object id, int nocache)
+string tag_directory_insert(string t, mapping m, RequestID id)
 {
-  if(nocache) {
-    catch{_root->dest();};
-    _root = 0;
+  if(!m->file) return rxml_error(t, "File not specified.", id);
+  if(m->dir) {
+    string old_base=id->misc->rel_base||"";
+    id->misc->rel_base=old_base+m->file;
+    string ret=describe_directory(m->file, id);
+    id->misc->rel_base=old_base;
+    return ret;
+  }
+  Stdio.File f;
+  if(f=open(fix_relative(m->file, id), "r")) {
+    string s=f->read();
+    if(s && m->quote=="none") return s;
+    if(s) return html_encode_string(s);
   }
 
-  if (!_root)
-  {
-    string r;
-    // Find the root of this server. This is usually /, but in some
-    // abnormal cases the Server Location is set to an URL with a
-    // trailing directory.
-    if (sscanf(my_configuration()->QUERY(MyWorldLocation),
-	       "%*s//%*s/%s/", r) == 3)
-    {
-      r = "/"+r;
-      // werror("This is an abnormal MyWorldLocation: %s\n"
-      // 	"Prefix: %s\n",
-      // 	my_configuration()->QUERY(MyWorldLocation), r);
-    }
-    else
-      r = "";
-    
-    _root=Dirnode(r);
-  }
-  return _root;
+  return rxml_error(t, "Couldn't open file \""+m->file+"\".", id);
 }
 
-
-string find_readme(object node, object id)
+string find_readme(string d, RequestID id)
 {
-  string rm, f;
-  object n;
-  foreach(({ "README.html", "README"}), f)
-    if(n=node->descend(f,1))
-    {
-      rm=id->conf->try_get_file(n->path(), id);
-      if(rm) if(f[-1] == 'l')
-	return "<hr noshade>"+rm;
-      else
-	return "<pre><hr noshade>"+
-	  replace(rm, ({"<",">","&"}), ({"&lt;","&gt;","&amp;"}))+"</pre>";
+  foreach(query("readme"), string f) {
+    string readme = id->conf->try_get_file(d+f, id);
+
+    if (readme) {
+      if (id->conf->type_from_filename(f)!="text/html") {
+	readme = "<pre>" + html_encode_string(readme) +"</pre>";
+      }
+      return "<hr noshade>"+readme;
     }
+  }
   return "";
 }
 
-string head_dir_mac(object node, object id)
+string spartan_directory(string d, RequestID id)
 {
-  string rm="";
-  
-  if(QUERY(readme)) rm=find_readme(node,id);
-  
-  return ("<title>"+node->path()+"</title>"
-	  "<h1>Directory listing of "+node->path()+"</h1>\n<p>"+rm
-	  +"<pre>\n<dl compact><hr noshade>");
+  array(string) path = d/"/" - ({ "","." });
+  d = "/"+path*"/" + "/";
+  array(string) dir = id->conf->find_dir(d, id)||({});
+  if (sizeof(dir)) dir = sort(dir);
+
+  return sprintf("<html><head><title>Directory listing of %s</title></head>\n"
+		 "<body><h1>Directory listing of %s</h1>\n"
+		 "<pre>%s</pre></body</html>\n",
+		 d, d,
+		 Array.map(sort(dir),
+			   lambda(string f, string d, object r, RequestID id)
+			   {
+			     array stats = r->stat_file(d+f, id);
+			     if(stats && stats[1]<0)
+			       return "<a href=\""+f+"/.\">"+f+"/</a>";
+			     else
+			       return "<a href=\""+f+"\">"+f+"</a>";
+			   }, d, id->conf, id)*"\n"+"</pre></body></html>\n");
 }
 
-string foot_dir_mac()
+string describe_directory(string d, RequestID id)
 {
-  return "</dl><hr noshade></pre>";
-}
+  array(string) path = d/"/" - ({ "","." });
+  d = "/"+path*"/" + "/";
+  array(string) dir = id->conf->find_dir(d, id)||({});
+  if (sizeof(dir)) dir = sort(dir);
 
-#define TYPE_MP  "    Module location"
-#define TYPE_DIR "    Directory"
-object gid;
-array|string describe_dir_node_mac(object node, object id)
-{
-  string type, filename, icon, path;
-  int len;
-  
-  filename = node->data;
-  path = node->path(0);
-  
-  if(node->stat = id->conf->stat_file( path, id ))
+  string result="";
+  int level=id->misc->dir_no_head++;
+  if(!level)
   {
-    switch(-(len=node->stat[1]))
-    {
-     case 3:
-      type = TYPE_MP;
-      icon = "internal-gopher-menu";
-      filename += "/";
-      break;
+    result = "<html><head><title>Directory listing of "+d+"</title></head>\n"
+	     "<body><debug on>\n<h1>Directory listing of "+d+"</h1>\n<p>";
 
-     case 2:
-      type = TYPE_DIR;
-      filename += "/";
-      icon = "internal-gopher-menu";
-      break;
-      
-     default:
-      mixed tmp;
-      tmp = id->conf->type_from_filename(filename, 1);
-      if(!tmp) tmp=({ "Unknown", 0 });
-      type = tmp[0];
-      icon = image_from_type(type);
-      if(tmp[1])  type += " " + tmp[1];
-    }
-  } else {
-    node->dest();
-    return 0;
-  }  
-  /* Now we have
-   * o The name of the file
-   * o The icon to use
-   * o The type of the file
-   */
-  
-  string line =
-     sprintf("%s %-"+QUERY(sizes)+"s</a> ",
-                image(icon),
-                filename[0..QUERY(sizes)-1]);
-
-  if (QUERY(size))
-  { if (len >= 1024*9999) line += sprintf("%5d Mbytes", len/(1024*1024));
-    else if (len >= 9999) line += sprintf("%5d Kbytes", len/1024);
-    else if (len >= 0   ) line += sprintf("%5d bytes ", len);
-                     else line += "            ";
+    if(sizeof(README))
+      result += find_readme(d, id);
+    result += "<hr noshade><pre>\n";
   }
 
-  switch (QUERY(date))
-  { case "Show text dates":
-      string ct = ctime(node->stat[3]);
-      if (node->stat[3] != 0) line += " " + ct[0..9] + "," + ct[19..23] + " ";
-                         else line += "                 ";
-      break;
-    case "Show ISO dates":
-      mapping lt = localtime(node->stat[3]);
-      if (node->stat[3] != 0)
-           line += sprintf(" %04d-%02d-%02d",
-                                1900+lt->year, 1+lt->mon, lt->mday);
-        else line += "           ";
+  if(id->misc->foldlist_exists) result += "<foldlist folded>\n";
+
+  foreach(sort(dir), string file) {
+    array stats = id->conf->stat_file(d + file, id);
+    string type = "Unknown";
+    string icon;
+    int len = 0;
+    string mtime = "";
+    if(stats) {
+      len=stats[1];
+      mtime=ctime(stats[3]);
+      mtime=mtime[0..sizeof(mtime)-2];
+    }
+
+    switch(-len) {
+    case 3:
+    case 2:
+      type = ({ 0,0,"Directory","Module location" })[-stats[1]];
+
+      /* Directory or module */
+      file += "/";
+      icon = "internal-gopher-menu";
+
       break;
     default:
-      // Don't show dates.
+      array tmp = id->conf->type_from_filename(file,1);
+      if (tmp) type = tmp[0];
+      icon = image_from_type(type);
+      if (tmp && tmp[1]) type += " " + tmp[1];
+
       break;
-  }
-  
-  return  ({ "<dt>" ,  line + " " + type + "\n"  });
-}
-
-object create_node(string f, object id, int nocache)
-{
-  object my_node, node;
-  array (string) path = f/"/" - ({ "" }), dir;
-  string tmp, file;
-  
-  path -= ({ "." });
-  f=replace(f, ({ "./", "/.",  }), ({ "", "" }));
-  
-  my_node = root(id,nocache);
-  
-  foreach(path, tmp) 
-    my_node = my_node->descend(tmp);
-  
-  if(!strlen(f) || (f[-1] != '/')) f += "/";
-  dir = id->conf->find_dir(f, id);
-  
-  if(sizeof(path))
-    my_node->data = path[-1];
-  else
-    my_node->data = "";
-  
-  my_node->stat = id->conf->stat_file(f, id);
-  my_node->finished=1;
-  my_node->describer = global_describer;
-  
-  if(!dir)    return my_node;
-  
-  foreach(sort((array)dir), file)
-  {
-    node = my_node->descend(file);
-    node->data = file;
-    node->stat = id->conf->stat_file(f + file, id);
-    if(node->stat && node->stat[1] >= 0) node->finished=1;
-    node->describer = global_describer;
-  }
-  return my_node;
-}
-
-object find_finished_node(string f, object id)
-{
-  object my_node;
-  array (string) path;
-  string tmp;
-
-  f=replace(f, ({ "./", "/.",  }), ({ "", "" }));
-
-  path = f/"/"-({"", "."});
-  my_node = root(id,0);
-
-  
-  foreach(path, tmp) 
-    if(!(my_node = my_node->descend(tmp, 1)))
-      return 0;
-  
-  if(!my_node->finished)
-    return 0;
-  
-  return my_node;
-}
-
-
-mapping standard_redirect(object o, object id)
-{
-  string loc, l2;
-  
-  if(!o) o=root(id,0);
-  
-  if(sizeof(id->referer))
-    loc=((((((id->referer*" ")/"#")[0])/"?")[0])+"#"+o->path(1));
-  else
-    if(o->up)
-      loc = o->up->path(1) + ".?" + (nocache++) + "#" + o->path(1);
-    else
-      return http_redirect("/.", id);
-  return http_redirect(loc,id);
-}
-
-mapping parse_directory(object id)
-{
-  object node;
-  string f;
-  mixed tmp;
-  f=id->not_query;
-
-// If this prestate is set, do some folding/unfolding.
-  if(!id->prestate->diract) 
-  { 
-    string new_query = http_encode_string(id->not_query) + "/" +
-      (id->query?("?" + id->query):"");
-    if(strlen(f) > 1) // I check the last two characters.
-    {
-      if(!((f[-1] == '/') || ( (f[-1] == '.') && (f[-2] == '/') )))
-	return http_redirect(new_query, id);
-    } else {
-      if(f != "/" )
-	return http_redirect(new_query, id);
     }
-      
-    /* If the pathname ends with '.', and the 'override' variable
-     * is set, a directory listing should be sent instead of the
-     * indexfile.
-     */
-    if(!(f[-1]=='.' && QUERY(override))) /* Handle indexfiles */
-    {
-      string file, old_file;
-      mapping got;
-      old_file = id->not_query;
-      if(old_file[-1]=='.') old_file = old_file[..strlen(old_file)-2];
-      foreach(query("indexfiles")-({""}), file) // Make recursion impossible
-      {
-	id->not_query = old_file+file;
-	if(got = id->conf->low_get_file(id))
-	  return got;
+    if(id->misc->foldlist_exists) result+="<ft>";
+    result += sprintf(OUT_FORM, icon, id->misc->rel_base+file, file,
+		      sizetostring(len), mtime, type);
+
+    array(string) split_type = type/"/";
+    string extras = "No support for this file type.";
+
+    switch(split_type[0]) {
+    case "text":
+      if (sizeof(split_type) > 1) {
+	switch(split_type[1]) {
+	case "html":
+	  extras = "</pre>\n<directory-insert quote=none file=\""+d+file+"\"><pre>";
+	  break;
+	case "plain":
+          extras = "<directory-insert file=\""+d+file+"\">";
+	  break;
+	}
       }
-      id->not_query=old_file;
+      break;
+    case "application":
+      if (sizeof(split_type) > 1) {
+	switch(split_type[1]) {
+	case "x-include-file":
+	case "x-c-code":
+	  extras = "<directory-insert file=\""+d+file+"\">";
+	  break;
+	}
+      }
+      break;
+    case "image":
+      extras = "<img src=\""+ replace( d, "//", "/" ) + file +"\" border=\"0\">";
+      break;
+    case "Directory":
+    case "Module location":
+      extras = "<directory-insert nocache file=\""+d+file+"\" dir>";
+      break;
+    case "Unknown":
+      switch(lower_case(file)) {
+      case ".cvsignore":
+      case "configure":
+      case "configure.in":
+      case "bugs":
+      case "copying":
+      case "copyright":
+      case "changelog":
+      case "disclaimer":
+      case "makefile":
+      case "makefile.in":
+      case "readme":
+	extras = "<directory-insert file=\""+d+file+"\">";
+	break;
+      }
+      break;
     }
+    if(id->misc->foldlist_exists) result += "<fd>"+extras+"</fd></ft>\n";
+  }
+  if(id->misc->foldlist_exists) result += "</foldlist>\n";
+  if (!level) {
+    result +="</pre></body></html>\n";
   }
 
-  if(id->pragma["no-cache"] || !(node = find_finished_node(f,id)))
-    node = create_node(f, id, id->pragma["no-cache"]);
-  
-  if(id->prestate->fold)
-  {
-    node->folded = 1;
-    id->prestate->diract=0; // Remove the prestates before sending the redirect.
-    id->prestate->fold=0;
-    return standard_redirect(node, id);
-  }
-  
-  if(id->prestate->unfold)
-  {
-    node->folded=0;
-    id->prestate->diract=0;  // Remove the prestates before sending the redirect.
-    id->prestate->unfold=0;
-    return standard_redirect(node, id);
-  }
-
-  if(id->prestate->diract) return 0; // This should not happend
-  
-  f=node->folded;node->folded=0;gid=id;
-  tmp=http_string_answer(head(node,id)+node->describe(id,1)+foot(node,id));
-  gid=0;if(node)node->folded = f;
-  
-  return tmp;
+  return result;
 }
 
+string|mapping parse_directory(RequestID id)
+{
+  string f = id->not_query;
 
+  // First fix the URL
+  //
+  // It must end with "/" or "/."
+
+  if(strlen(f) > 1)
+  {
+    if(!((f[-1] == '/') ||
+	 (QUERY(override) && (f[-1] == '.') && (f[-2] == '/'))))
+      return http_redirect(id->not_query+"/", id);
+  } else {
+    if(f != "/" )
+      return http_redirect(id->not_query+"/", id);
+  }
+
+  // If the pathname ends with '.', and the 'override' variable
+  // is set, a directory listing should be sent instead of the
+  // indexfile.
+
+  if(f[-1] == '/') /* Handle indexfiles */
+  {
+    string file;
+    foreach(query("indexfiles") - ({""}), file) {
+      if(id->conf->stat_file(f+file, id))
+      {
+	id->not_query = f + file;
+	mapping got = id->conf->get_file(id);
+	if (got) {
+	  return(got);
+	}
+      }
+    }
+    // Restore the old query.
+    id->not_query = f;
+  }
+
+  if (!DIRLISTING) {
+    return 0;
+  }
+
+  if (f[-1] != '.') {
+    f += ".";
+  }
+
+  if(query("spartan") || id->prestate->spartan_directory)
+    return http_string_answer(spartan_directory(f,id));
+
+  id->misc->foldlist_exists=search(indices(id->conf->modules),"foldlist")!=-1;
+  id->misc->rel_base="";
+  return http_string_answer(parse_rxml(describe_directory(f, id), id));
+}
