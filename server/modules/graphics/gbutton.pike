@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.70 2001/03/28 09:50:08 kuntri Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.71 2001/03/30 11:14:36 jhs Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -38,6 +38,17 @@ constant module_name = "GButton";
 constant module_doc  = 
 "Provides the <tt>&lt;gbutton&gt;</tt> tag that is used to draw graphical "
 "buttons.";
+
+void create()
+{
+  defvar("ext", Variable.Flag(0, VAR_MORE,
+			      "Append format to generated images",
+			      "Append the image format (.gif, .png, "
+			      ".jpg, etc) to the generated images. "
+			      "This is not necessary, but might seem "
+			      "nicer, especially to people who try "
+			      "to mirror your site."));
+}
 
 mapping tagdocumentation() {
   Stdio.File file=Stdio.File();
@@ -605,9 +616,10 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
 //   }
 }
 
-
 mapping find_internal(string f, RequestID id)
 {
+  if(strlen(f)>4 && query("ext") && f[-4]=='.') // Remove .ext
+    f = f[..strlen(f)-5];
   return button_cache->http_file_answer(f, id);
 }
 
@@ -615,13 +627,13 @@ mapping find_internal(string f, RequestID id)
 class ButtonFrame {
   inherit RXML.Frame;
 
-  array mk_url(RequestID id) 
+  array mk_url(RequestID id)
   {
     string fi = (args["frame-image"] ||
 		 id->misc->defines["gbutton-frame-image"]);
     if( fi )
       fi = Roxen.fix_relative( fi, id );
-    
+
     //  Harmonize some attribute names to RXML standards...
     args->icon_src = args["icon-src"] || args->icon_src;
     args->icon_data = args["icon-data"] || args->icon_data;
@@ -630,7 +642,7 @@ class ButtonFrame {
     m_delete(args, "icon-src");
     m_delete(args, "icon-data");
     m_delete(args, "align-icon");
-    
+
     mapping new_args = ([
       "pagebg" :parse_color(args->pagebgcolor ||
 			    id->misc->defines->theme_bgcolor ||
@@ -706,6 +718,9 @@ class ButtonFrame {
     string img_src =
       query_absolute_internal_location(id) +
       button_cache->store( ({ new_args, content }), id);
+
+    if(query("ext"))
+      img_src += "." + (new_args->format || "gif");
 
     return ({ img_src, new_args });
   }
