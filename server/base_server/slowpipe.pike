@@ -10,11 +10,11 @@
 // on demand might be very interesting to save memory and increase
 // performance. We'll see.
 
-constant cvs_version="$Id: slowpipe.pike,v 1.10 2001/06/17 20:07:10 nilsson Exp $";
+constant cvs_version="$Id: slowpipe.pike,v 1.11 2002/03/20 18:45:10 per-bash Exp $";
 
 #ifdef THROTTLING_DEBUG
 #undef THROTTLING_DEBUG
-#define THROTTLING_DEBUG(X) report_debug("slowpipe: "+X+"\n")
+#define THROTTLING_DEBUG(X) if(file_len>0x6fffffff)report_debug("slowpipe: "+X+"\n")
 #else
 #define THROTTLING_DEBUG(X)
 #endif
@@ -52,8 +52,9 @@ void output (Stdio.File fd) {
   last_write=writing_starttime=time(1);
   bucket=initial_bucket; //need to initialize it here, or ftp
                          //will cause problems with long-lived sessions..
-  fd->set_nonblocking(0,write_some,0);
+  outfd->set_nonblocking(0,write_some,0);
   call_out(check_for_closing,10);
+  call_out( write_some, 0.1 );
 }
 
 //add a fileobject to the write-queue
@@ -66,6 +67,7 @@ void input (Stdio.File what, int len) {
   else
     file_len = len;
   fd_in = what;
+  fd_in->set_nonblocking();
 //   tosend+=what->read(len);
 }
 
@@ -101,23 +103,41 @@ void assign_throttler(void|object throttler_object) {
 private void write_some () {
   int towrite;
   //have we finished?
-
   if( !strlen(tosend) )
   {
     if( fd_in )
     {
       catch(tosend = fd_in->read( min( file_len, 32768 ) ));
-      file_len -= strlen( tosend );
-      if( (file_len <= 0) || (strlen( tosend ) == 0) )
+      if( !tosend || !strlen(tosend) )
+      {
+	tosend = "";
+	THROTTLING_DEBUG("read: errno: "+fd_in->errno()+"\n");
+	if( fd_in->errno() == 11 )
+	{
+	  remove_call_out( write_some );
+	  call_out( write_some, 0.01 );
+	}
+	else
+	{
+	  catch(fd_in->close());
+	  fd_in = 0;
+	  finish();
+	}
+	return;
+      }
+      else
+	file_len -= strlen( tosend );
+      if( (file_len <= 0)  )
       {
 	catch(fd_in->close());
 	fd_in = 0;
       }
-      write_some();
+    }
+    else
+    {
+      finish();
       return;
     }
-    finish();
-    return;
   }
   THROTTLING_DEBUG("write_some: still "+strlen(tosend)+" bytes to be sent");
 
