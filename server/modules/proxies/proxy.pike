@@ -4,9 +4,12 @@
 // limit of proxy connections/second is somewhere around 70% of normal
 // requests, but there is no real reason for them to take longer.
 
-string cvs_version = "$Id: proxy.pike,v 1.33 1998/06/09 14:27:17 grubba Exp $";
+string cvs_version = "$Id: proxy.pike,v 1.34 1999/03/05 02:05:47 grubba Exp $";
+constant thread_safe = 1;
+
 #include <module.h>
 #include <config.h>
+#include <stat.h>
 
 #if DEBUG_LEVEL > 21
 # ifndef PROXY_DEBUG
@@ -23,7 +26,8 @@ Content-type: text/html\r\n\
 <hr>\
 <font size=+2><i>"+X+"</i></font>\
 <hr>\
-<font size=-2><a href=http://www.roxen.com/>Roxen Challenger</a></font>"
+<font size=-2><a href=http://www.roxen.com/>Roxen Challenger</a>\
+ at <a href="+id->conf->query("MyWorldLocation")+">"+id->conf->query("MyWorldLocation")+"</a></font>"
 
 import Stdio;
 import Array;
@@ -38,11 +42,23 @@ inherit "roxenlib";
 program filep = Stdio.File;
 
 mapping (object:string) requests = ([ ]);
+mapping retcodes = ([ "cache":([]), "new":([]) ]);
+
+#ifdef THREADS
+object mutex  = Thread.Mutex();
+#define RETCODE_NEW(X) {object key = mutex?mutex->lock():0;retcodes->new[X]++;key=0;}
+#define RETCODE_CACHE(X) {object key = mutex?mutex->lock():0;retcodes->cache[X]++;key=0;}
+#else
+#define RETCODE_NEW(X) retcodes->new[X]++;
+#define RETCODE_CACHE(X) retcodes->cache[X]++;
+#endif
 object logfile;
 
 function nf=lambda(){};
 
 void init_proxies();
+
+void do_timeout();
 
 function (string:int) no_cache_for;
 
@@ -51,6 +67,7 @@ void start()
   string pos;
   pos=QUERY(mountpoint);
   init_proxies();
+  do_timeout();
   if(strlen(pos)>2 && (pos[-1] == pos[-2]) && pos[-1] == '/')
     set("mountpoint", pos[0..strlen(pos)-2]); // Evil me..
 
@@ -145,6 +162,29 @@ void init_proxies()
   }
 }
 
+void do_timeout(int|void timeout)
+{
+  if(!query("browser_timeout")&&!query("server_timeout"))
+    return;
+  if(!timeout){
+    if(!query("server_continue"))
+      timeout=300;
+    if(query("browser_timeout"))
+      timeout=min(timeout,(int)query("browser_timeout"));
+    if(query("server_timeout"))
+      timeout=min(timeout,(int)query("server_timeout"));
+    if(!timeout)
+      return;
+//#ifdef PROXY_DEBUG
+    report_debug("PROXY: checking requests every "+timeout+"seconds\n");
+//#endif
+  }
+  gc();
+  foreach(indices(requests), object foo)
+    if(objectp(foo))
+      foo->check_timed_out();
+  call_out(do_timeout, timeout, timeout);
+}
 string check_variable(string name, mixed value)
 {
   if(name == "Proxies")
@@ -184,6 +224,24 @@ void create()
 	 "This is a list of regular expressions. URLs that match "
 	 "any entry in this list will not be cached at all.");
 
+  defvar("reload_from_cache", 0, "Handle reloads from diskcache", TYPE_FLAG|VAR_MORE,
+	 "This option disables the no-cache pragma and reloads will be done "
+	 "from the proxy's diskcache. "
+	 "Note that with this option set there is no way the client can "
+	 "initiate a reload from the original server to the diskcache of "
+	 "this proxy. "
+	 "Thus documents will be cached forever unless expired (via an expire "
+	 "header). "
+	 "Please consider this option only if you have installed other means "
+	 "to force reload of pages.");
+
+  defvar("modified_from_cache", 0, "Handle if-modified-since from diskcache", TYPE_FLAG|VAR_MORE,
+	 "With this option set if-modified-since requests will be checked "
+	 "against the proxy's diskcache. "
+	 "This can be a major improvement to proxy response times if there are "
+	 "many clients with local cache and uptodate checks set to every time. "
+	 "Set to \"No\" if requests should go to the original server. ");
+
   defvar("cache_cookies", 0, "Cache pages with cookies", TYPE_FLAG|VAR_MORE,
 	 "If this option is set, documents with cookies will be cached. "
 	 "As such pages might be dynamically made depending on the values of "
@@ -217,8 +275,39 @@ void create()
 	 "www.lycos.com:[0-9]*/       bin/proxyfilterdemo lycos\n"
 	 "www.lycos.com:[0-9]*/.*html bin/proxyfilterdemo lycos\n"
 	 "</pre>"
-	 "Please note that this <b>must<b> be "
+	 "Please note that this <b>must</b> be "
 	 "<a href=$configurl/regexp.html>Regular Expressions</a>.");
+
+  defvar("browser_timeout", 86400, "Connection To Browser Timeout",
+         TYPE_INT|VAR_MORE,
+	 "Time in seconds after which a browser connection will "
+	 "be terminated. Set to zero if you do not want timeout checks.");
+
+  defvar("server_timeout", 86400, "Connection To Server Timeout",
+         TYPE_INT|VAR_MORE,
+	 "Time in seconds after which a server connection will "
+	 "be terminated. Set to zero if you do not want timeout checks.");
+
+  defvar("server_idle_timeout", 3600, "Connection To Server Idle Timeout",
+         TYPE_INT|VAR_MORE,
+	 "Time in seconds after which an idle caching server connection will "
+	 "be terminated. Set to zero if you do not want idle timeout checks.");
+
+  defvar("server_continue", 1, "Continue Server Connection",
+         TYPE_FLAG|VAR_MORE,
+	 "If this option is set a caching server connection will be continued "
+	 "even if the requesting browser connection vanished. "
+	 "If a high loaded proxy regularly runs out of sockets unsetting this "
+	 "option might help a bit.");
+
+  defvar("additional_output", 0, "Allow additional output",
+         TYPE_FLAG|VAR_MORE,
+	 "If this option is set a caching server connection will be used "
+	 "for additional requests to the same URL. "
+	 "Note that this might be a problem with broken or frozen server "
+	 "connections. "
+	 "It should probably only used together with \"Timeout Server "
+	 "Connection\" set to an appropriate value.");
 }
 
 mixed *register_module()
@@ -241,7 +330,7 @@ string status()
     res += "<hr><h1>Current connections</h1><p>";
     foreach( indices(requests), foo )
       if(objectp(foo))
-	res += requests[foo] + ": " + foo->status() + "\n";
+       res += requests[foo] + ": " + foo->status() + "\n";
   }
   res += "<hr>";
  return ("<pre><font size=+1>"+res+"</font></pre>");
@@ -273,27 +362,29 @@ string process_request(object id, int is_remote)
 		 url, new_raw);
 }
 
+int cache_wanted(object id)
+{
+  if(!id || (((id->method == "POST") || (id->query && strlen(id->query)))
+             || id->auth
+             || (!query("cache_cookies") && sizeof(id->cookies))
+             || no_cache_for(id->not_query)))
+    return 0;
+  return 1;
+}
+
 class Connection {
   import Array;
 
   object cache, pipe, proxy, from;
+  int connect_time;
   array ids;
   string name;
   array my_clients = ({ });
+  int cached_retcode;
 
   void log(string what) 
   {
-    proxy->log(name, what);
-  }
-  
-  int cache_wanted(object id)
-  {
-    if(!id || (((id->method == "POST") || (id->query && strlen(id->query)))
-	       || id->auth
-	       || (!proxy->query("cache_cookies") && sizeof(id->cookies))
-	       || proxy->no_cache_for(id->not_query)))
-      return 0;
-    return 1;
+    catch(proxy->log(name, what));
   }
   
   string hostname(string s)
@@ -302,55 +393,172 @@ class Connection {
   }
 
   int new;
-  array stat;
   
-  void my_pipe_done(object cache)
+  void my_pipe_done()
   {
     object id;
     array b;
-    int received, i;
-    
-    if(cache)
-    {
+    int received, sent;
+    catch{
+      sent = pipe->bytes_sent();
+    };
+
+    if(cache){
       if(catch {
-	b = cache->file->stat();
-	received = 1;
+	received = cache->file->stat()[ST_SIZE];
       }) {
 	cache->file = 0;
       }
       if(cache->done_callback) {
 	cache->done_callback(cache);
       }
-    } else if(from) {
-      if (catch(b=from->stat()) && stat) {
-	// Used cached stat info.
-	b = stat;
-      }
-      destruct(from);
     }
-    
-    if(b) 
-      log(b[1]+" "+ (new?"New ":"Cache ") + 
-	  map(my_clients,hostname)*",");
-    else  
-      log("- " + (new?"New ":"Cache ") + 
-	  map(my_clients, hostname)*",");
-    
+
+    string result = sent?sent+" ":"- ";
+    if(cache){
+      result += "New"+" "+cache->headers[" returncode"];
+      RETCODE_NEW(cache->headers[" returncode"]);
+    } else if(new){
+      result += "New -";
+      RETCODE_NEW("?");
+    } else {
+      result += "Cache "+cached_retcode;
+      RETCODE_CACHE(cached_retcode);
+    }
+    log(result + " " + map(my_clients,hostname)*",");
+
+    if(cache)
+
     if(ids) 
       foreach(ids, id) 
 	if(id)
 	{
-	  if(b) id->conf->sent += b[1];
+	  if(b) id->conf->sent += sent;
 	  if(received) {
-	    id->conf->received += b[1];
+	    id->conf->received += received;
 	    received = 0;
 	  }
 	  id->end();
-	} 
+	}
     destruct();
   }
 
-  void assign(object s, string f, object i, int no_cache, object prox)
+  void check_timed_out()
+  {
+    string ret;
+    int has_server=1, has_browser=0;
+    if(!from||catch(ret=from->query_address())||!ret){
+      //report_debug("PROXY: no server connection: "+name+"\n");
+      has_server=0;
+    }
+    /*
+    if(!objectp(pipe)){
+      report_debug("PROXY: no server pipe: "+name+"\n");
+      destruct();
+      return;
+    }
+    */
+    if(query("server_timeout")&&connect_time>0&&
+       (time()-connect_time)>(int)query("server_timeout")){
+      report_debug("PROXY: server connection timed out ("+
+                   (time()-connect_time)+"s): "+name+"\n");
+      if(from)destruct(from);
+      return;
+    }
+    foreach(ids, object id){
+      if(!objectp(id))
+	continue;
+/*
+      if(catch(ret=id->my_fd->query_address())||!ret){
+	report_debug("PROXY: no browser connection : "+name+"\n");
+	if(id)
+          id->end();
+        continue;
+      }
+ */
+      if(query("browser_timeout")&&
+	 (time()-id->time)>(int)query("browser_timeout")){
+	report_debug("PROXY: browser connection timed out ("+
+                     (time()-id->time)+"s): "+name+"\n");
+	if(id)
+	  id->end( "Proxy Connection timed out.\n" );
+
+        continue;
+      }
+      has_browser = 1;
+    }
+    if(!has_browser){
+      if(!has_server){
+        report_debug("PROXY: no browser/server connections: "+name+"\n");
+        destruct();
+        return;
+      }
+      if(new&&!cache){
+        report_debug("PROXY: no browser/cache connections: "+name+"\n");
+	if(from)
+	  destruct(from);
+        return;
+      }
+      if(!query("server_continue")){
+        report_debug("PROXY: no browser connections: "+name+"\n");
+        if(from)
+          destruct(from);
+        return;
+      }
+    }
+  }
+
+  void continue_server_connection(void|int timeout)
+  {
+    if(!timeout){
+      timeout = 30;
+      return;
+    }
+    if(query("server_continue") || !query("server_idle_timeout"))
+      return;
+    if(!from||!from->query_address()||!objectp(pipe))
+      return;
+    int ok_to_terminate;
+    if(query("server_idle_timeout") && cache &&
+       (time()-cache->file->stat()[ST_MTIME])>(int)query("server_idle_timeout"))
+      ok_to_terminate=1;
+
+    if(!ok_to_terminate)
+      foreach(ids, object id){
+#ifdef PROXY_DEBUG
+        if(id)
+	  report_debug("id "+roxen->quick_ip_to_host(id->remoteaddr)+"\n");
+        if(id && id->my_fd)
+	  report_debug("id->my_fd "+roxen->quick_ip_to_host(id->remoteaddr)+"\n");
+        if(id && id->my_fd && id->my_fd->query_address())
+	  report_debug("id->query "+roxen->quick_ip_to_host(id->remoteaddr)+"\n");
+#endif
+        if(!id || !id->my_fd || !id->my_fd->query_address()){
+	  ok_to_terminate=2;
+	  break;
+        }
+      }
+    if(!ok_to_terminate){
+      call_out(continue_server_connection, timeout);
+      return;
+    }
+//#ifdef PROXY_DEBUG
+    if(ok_to_terminate==1)
+      report_debug("PROXY: server connection is "+
+		   (time()-cache->file->stat()[ST_MTIME])+"s idle for "+
+		   name+"\n");
+    if(ok_to_terminate==2)
+      report_debug("PROXY: server connection not present for "+name+"\n");
+//#endif
+    if(objectp(pipe)){
+      pipe->finish();
+//#ifdef PROXY_DEBUG
+      report_debug("PROXY: server connection pipe finished for "+name+"\n");
+//#endif
+    }
+  }
+
+  void assign(object s, string f, object i, int no_cache)
   {
     new = !no_cache;
 
@@ -360,82 +568,126 @@ class Connection {
       return; 
     }
 
+    connect_time = time();
     from = s;
-    //    proxy = previous_object(); 
-    // Sometimes this was roxen, which caused.. problems. =)
-    proxy = prox;
     name = f;
     my_clients = ({ i->remoteaddr });
     ids = ({ i });
 
-    /* The convenience function (shuffle) is used to do the actual
-     * transport. The callback has to be used to log the size of
-     * new incoming connections.
-     */
-    if(!no_cache && (!i || cache_wanted(i)))
-    {
-      if(cache = roxen->create_cache_file("http", f))
-      {
-	cache->done_callback = roxen->http_check_cache_file;
-	/* For fresh incoming cachefiles we have two pipe outputs
-	 * where the order in which they are given to the fallback
-	 * pipe->output in the global shuffle function is relevant.
-	 */
-	roxen->shuffle(s, cache->file, i->my_fd,
-		       lambda(){my_pipe_done(cache);});
+    if(!no_cache && (!i || proxy->cache_wanted(i))){
+      if(cache = roxen->create_cache_file("http", f)){
+        cache->done_callback = roxen->http_check_cache_file;
+        pipe = roxen->shuffle(s, cache->file, i->my_fd,
+			      lambda(){my_pipe_done();});
+        continue_server_connection();
 	return;
       }
     }
-    /* If the fallback is used in the global shuffle function with cached
-     * files the actual file is closed when my_pipe_done is reached.
-     * With the following stat workaround the size can be logged.
-     */
-    if(!new){
-      stat = s->stat();
-    }
-    roxen->shuffle(s, i->my_fd, 0, lambda(){my_pipe_done(0);});
+    pipe = roxen->shuffle(s, i->my_fd, 0, lambda(){my_pipe_done();});
   }
-    
-  int send_to(object o, object b)
-  {
-    string s;
-    if(!objectp(pipe))
-      return 0;
-    if(catch((s=o->query_address()))||!s)
-    {
-      b->end("Aj.\n");
-      return 0;
-    } else {
-      pipe->output(o);
-      my_clients += ({ (s / " ")[0] });
-      ids += ({ b });
-      return 1;
-    }
-  }
-    
+
   string status()
   {
     return "Sending to "+map(my_clients, hostname)*",";
   }
-  
-  void end()
+
+  void destroy()
   {
-    object id;
-    foreach(ids, id) 
-      if(id) 
-	id->end( "Connection Interrupted.\n" );
-    destruct();
+    if(cache)
+      remove_call_out(continue_server_connection);
+
+    if(from)
+      destruct(from);
+
+    if(ids)
+      foreach(ids, object id)
+	if(id){
+	  id->end( "Connection Interrupted.\n" );
+#ifdef PROXY_DEBUG
+          report_debug("PROXY: connection interrupted ("+name+")\n");
+#endif
+	}
+
+    if(cache)
+      destruct(cache);
   }
 };
 
-void connected_to_server(object o, string file, object id, int is_remote,
+private void cache_connect(string host, int port, string cl,
+                                 string entry, function callback,
+                                 mixed ... args)
+{
+  object cache;
+#ifdef PROXY_DEBUG
+  report_debug("PROXY: cache_connect requested to "+host+":"+port+"\n");
+#endif
+  cache = roxen->cache_file(cl, entry);
+  if(cache)
+  {
+    object f;
+    f=cache->file;
+    return callback(f, cache, @args);
+  }
+  async_connect(host, port, callback, 0, @args);
+}
+
+constant MONTHS= (["jan":0, "feb":1, "mar":2, "apr":3, "may":4, "jun":5,
+		   "jul":6, "aug":7, "sep":8, "oct":9, "nov":10, "dec":11,]);
+
+private int convert_time(string a)
+{
+  int day, year, month, hour, minute, second, i;
+  string m, tz;
+  if((i=sscanf(a, "%d%*[ -]%s%*[ -]%d %d:%d:%d %s", day, m, year, hour, minute, second, tz))!=9){
+//#ifdef PROXY_DEBUG
+    report_debug("PROXY: time format not handled: "+a+", matched="+i+"\n");
+//#endif
+    return -1;
+  }
+  if(year>1900)
+    year -= 1900;
+  month=MONTHS[lower_case(m)];
+  if(tz != "GMT"){
+//#ifdef PROXY_DEBUG
+    report_debug("PROXY: timezone ("+tz+") not handled\n");
+//#endif
+    return -1;
+  }
+  if (catch(i=mktime(second, minute, hour, day, month, year, 0, 0))){
+#ifdef PROXY_DEBUG
+    report_debug("PROXY: mktime could not convert: "+a+"("+second+","+minute
+		 +","+hour+","+day+","+ month+","+year+","+0+","+0+")\n");
+#endif
+    return -1;
+  }
+  return i;
+}
+
+int newer(string modified, string since)
+{
+ int modified_t, since_t;
+
+ sscanf(since, "%*s, %s; %*s", since);
+ sscanf(modified, "%*s, %s", modified);
+ if(((modified_t=convert_time(modified))<0)||
+    ((since_t=convert_time(since))<0)||
+    modified_t>since_t)
+   return 1;
+ return 0;
+}
+
+void connected_to_server(object o, object cache, string file, object id, int is_remote,
 			 string filter)
 {
+  id->do_not_disconnect = 0;
+
   object new_request;
   if(!id)
   {
     if(o)
       destruct(o);
+    if(cache)
+      destruct(cache);
     return;
   }
     
@@ -444,8 +696,12 @@ void connected_to_server(object o, string file, object id, int is_remote,
     switch(o)
     {
      default:
+      log(file, "UnknownHost 500 "+roxen->quick_ip_to_host(id->remoteaddr));
       id->end(CONNECTION_REFUSED("Unknown host "+(id->misc->proxyhost || "")));
+      RETCODE_NEW(500)
     }
+    if(cache)
+      destruct(cache);
     return;
   }
 
@@ -454,6 +710,7 @@ void connected_to_server(object o, string file, object id, int is_remote,
 #endif
 
   new_request=Connection();
+  new_request->proxy = this_object();
 
   if(o->query_address())
   {
@@ -478,29 +735,52 @@ void connected_to_server(object o, string file, object id, int is_remote,
       destruct(q);
       o=f;
     }
-    new_request->assign(o, file, id, 0, this_object());
+    new_request->assign(o, file, id, 0);
 
 // What is the last test for???? /Per
-  } else if(!objectp(o) || !o->stat() || (o->stat()[1] == -4)) { 
-    id->end(CONNECTION_REFUSED("Connection refused by remote host."));
+  } else if(!objectp(o) || !o->stat() || (o->stat()[ST_SIZE] == -4)) { 
+    if(is_remote){
+      log(file, "New 500 "+roxen->quick_ip_to_host(id->remoteaddr));
+      id->end(CONNECTION_REFUSED("Connection refused by remote proxy."));
+      RETCODE_NEW(500)
+    } else {
+      log(file, "New 500 "+roxen->quick_ip_to_host(id->remoteaddr));
+      id->end(CONNECTION_REFUSED("Connection refused by remote host."));
+      RETCODE_NEW(500)
+    }
+    destruct(new_request);
+    if(objectp(o))
+      destruct(o);
     return;
   } else {
-    if(id->since)
+    if(query("modified_from_cache") && id->since &&
+       cache->headers["last-modified"] &&
+       !newer(cache->headers["last-modified"], id->since))
     {
-      if(is_modified(id->since, ((array(int))o->stat())[3]))
-      {
-	id->end("HTTP/1.0 304 Not Modified\r\n\r\n");
-	destruct(new_request);
-	return;
-      }
+      // FIX ME: this should not be necessary /wk
+      id->do_not_disconnect = 1;
+
+      id->end("HTTP/1.0 304 Not Modified\r\n\r\n");
+      log(file, "- Cache 304 "+roxen->quick_ip_to_host(id->remoteaddr));
+      RETCODE_CACHE(304)
+      destruct(new_request);
+      destruct(cache);
+      destruct(o);
+      return;
     }
-    new_request->assign(o, file, id, 1, this_object());
+    new_request->cached_retcode = cache->headers[" returncode"];
+    cache->file = 0; // do _not_ close the actual file when returning...
+    destruct(cache);
+
+    new_request->assign(o, file, id, 1);
   }
-  if(objectp(new_request)) 
+  if(objectp(new_request)){
+#ifdef THREADS
+    object key = mutex?mutex->lock():0;
+#endif
     requests[new_request] = file;
+  }
 }
-
-
 
 array is_remote_proxy(string hmm)
 {
@@ -540,7 +820,9 @@ mapping find_file( string f, object id )
 	host=f;
 	file="";
       } else {
+#ifdef PROXY_DEBUG
 	report_debug("I cannot find a hostname and a filename in "+f+"\n");
+#endif
 	return 0; /* This is not a proxy request. */
       }
     }
@@ -554,25 +836,49 @@ mapping find_file( string f, object id )
 
   if(!file) file="";
 
-  if(filter = is_filter(key = host+":"+port+"/"+file))
+  if(filter = is_filter(key = host+":"+port+"/"+file)){
+#ifdef PROXY_DEBUG
     perror("Proxy: Filter is "+filter+"\n");
+#endif
+  }
 
-//  perror("key = "+key+"\n");
+  id->do_not_disconnect = 1;
 
-  id->do_not_disconnect = 1;  
-  if(id->pragma["no-cache"] || id->method != "GET")
-  {
+  if((id->pragma["no-cache"] && !query("reload_from_cache")) ||
+     !cache_wanted(id) ||
+     (id->method != "GET" && id->method != "HEAD") ) {
     if(more = is_remote_proxy(host))
-      async_connect(more[0], more[1], connected_to_server,  key, id, 1,
+      async_connect(more[0], more[1], connected_to_server, 0, key, id, 1,
 		    filter);
     else
-      async_connect(host, port, connected_to_server,  key, id, 0, filter);
+      async_connect(host, port, connected_to_server, 0, key, id, 0, filter);
   } else {
+    object request;
+    if(query("additional_output") && !id->since && !filter &&
+       sizeof(requests) && (request=search(requests, key)) &&
+       request->pipe && request->cache){
+      id->do_not_disconnect = 0;
+      request->pipe->output(id->my_fd, request->cache->headers->head_size);
+      { // lock this range
+#ifdef THREADS
+        object range = mutex?mutex->lock():0;
+#endif
+        request->ids += ({ id });
+        request->my_clients += ({ id->remoteaddr });
+      }
+//#ifdef PROXY_DEBUG
+      report_debug("PROXY: another request for "+key+" from "+
+	     roxen->quick_ip_to_host(id->remoteaddr)+"\n");
+//#endif
+
+      return http_pipe_in_progress();
+    }
+
     if(more = is_remote_proxy(host))
-      async_cache_connect(more[0], more[1], "http", key, connected_to_server,
+      cache_connect(more[0], more[1], "http", key, connected_to_server,
 			  key, id, 1, filter);
     else
-      async_cache_connect(host, port, "http", key, connected_to_server,
+      cache_connect(host, port, "http", key, connected_to_server,
 			  key, id, 0, filter);
   }
   return http_pipe_in_progress();
