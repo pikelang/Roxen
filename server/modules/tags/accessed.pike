@@ -5,7 +5,7 @@
 // by this module.
 //
 
-constant cvs_version="$Id: accessed.pike,v 1.18 2000/01/31 16:50:44 nilsson Exp $";
+constant cvs_version="$Id: accessed.pike,v 1.19 2000/02/02 20:42:30 per Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -31,9 +31,9 @@ string status()
 
 void create(Configuration c)
 {
-  defvar("Accesslog", 
+  defvar("Accesslog",
 	 GLOBVAR(logdirprefix)+
-	 short_name(c?c->name:".")+"/Accessed", 
+	 short_name(c?c->name:".")+"/Accessed",
 	 "Access log file", TYPE_FILE|VAR_MORE,
 	 "In this file all accesses to files using the &lt;accessed&gt;"
 	 " tag will be logged.");
@@ -77,7 +77,7 @@ constant tagdoc=([ "accessed":#"<desc tag>Generates an access counter that shows
  Adds this number of accesses to the actual number of accesses before
  printing the result. If your page has been accessed 72 times and you
  add &lt;accessed cheat=100&gt; the result will be 172.</attr>
-  
+
 <attr name=database>
  Works like the since attribute, but counts from the day the first entry in the entire accessed database was made.
 </attr>
@@ -94,7 +94,7 @@ constant tagdoc=([ "accessed":#"<desc tag>Generates an access counter that shows
  relative to the directory containing the page with the
  accessed tag. Note, that you have to type in the full name
  of the file. If there is a file named tmp/index.html, you cannot
- shorten the name to tmp/, even if you've set Challenger up to use
+ shorten the name to tmp/, even if you've set Roxen up to use
  index.html as a default page. The filename refers to the
  virtual filesystem.
 
@@ -111,7 +111,7 @@ constant tagdoc=([ "accessed":#"<desc tag>Generates an access counter that shows
  <ex><accessed type=string></ex>
  <ex><accessed type=string lang=sv></ex>
 </attr>
-  
+
 <attr name=per value=second,minute,hour,day,week,month,year>
  Shows the number of accesses per unit of time.
 
@@ -130,7 +130,7 @@ constant tagdoc=([ "accessed":#"<desc tag>Generates an access counter that shows
  This can be used together with the file argument, but it is limited
  to files in the current- and sub-directories.
 </attr>
-  
+
 <attr name=silent>
  Print nothing. The access count will be updated but not printed. This
  option is useful because the access count is normally only kept for
@@ -280,7 +280,7 @@ int query_num(string file, int count)
   mixed key = open_db_file();
 
   // if(lock) lock->aquire();
-  
+
   if(!(p=fton[file]))
   {
     if(!cnum)
@@ -301,15 +301,15 @@ int query_num(string file, int count)
   if(database->seek(p*8) > -1)
   {
     sscanf(database->read(4), "%4c", n);
-    if (count) 
-    { 
-      n+=count; 
+    if (count)
+    {
+      n+=count;
       database->seek(p*8);
-      database->write(sprintf("%4c", n)); 
+      database->write(sprintf("%4c", n));
     }
     //lock->free();
     return n;
-  } 
+  }
   //lock->free();
   return 0;
 }
@@ -340,7 +340,7 @@ string tag_accessed(string tag, mapping m, RequestID id)
   if(m->file)
   {
     m->file = fix_relative(m->file, id);
-    if(m->add) 
+    if(m->add)
       counts = query_num(m->file, (int)m->add||1);
     else
       counts = query_num(m->file, 0);
@@ -348,17 +348,17 @@ string tag_accessed(string tag, mapping m, RequestID id)
   } else {
     if(_match(id->remoteaddr, id->conf->query("NoLog")))
       counts = query_num(id->not_query, 0);
-    else if(id->misc->accessed != "1") 
+    else if(id->misc->accessed != "1")
     {
       counts = query_num(id->not_query, (int)m->add||1);
       id->misc->accessed = "1";
     } else {
       counts = query_num(id->not_query, (int)m->add||0);
     }
-      
+
     m->file=id->not_query;
   }
-  
+
   if(m->reset)
   {
     // FIXME: There are a few cases where users can avoid this.
@@ -378,7 +378,7 @@ string tag_accessed(string tag, mapping m, RequestID id)
   if(m->silent)
     return "";
 
-  if(m->since) 
+  if(m->since)
   {
     if(m->database)
       return tagtime(database_created(0),m,id,roxen->language);
@@ -395,7 +395,7 @@ string tag_accessed(string tag, mapping m, RequestID id)
   if(m->per)
   {
     timep=time(1) - database_created(m->file) + 1;
-    
+
     switch(m->per)
     {
      case "second":
@@ -446,7 +446,7 @@ string tag_accessed(string tag, mapping m, RequestID id)
     res="More than "+roxen->language("eng", "number")(counts*ipow(10, q))
         + " served.";
     break;
-    
+
    case "linus":
     res=counts+" since "+ctime(database_created(0));
     break;
@@ -460,7 +460,7 @@ string tag_accessed(string tag, mapping m, RequestID id)
     res=number2string(counts,m,language(m->lang||id->misc->defines->theme_language, "number"));
   }
   return res+(m->addreal?real:"");
-}                  
+}
 
 int api_query_num(RequestID id, string f, int|void i)
 {

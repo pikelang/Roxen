@@ -1,11 +1,11 @@
 /*
- * The Roxen Challenger main program.
+ * The Roxen main program.
  *
  * Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.406 2000/02/02 19:40:15 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.407 2000/02/02 20:39:46 per Exp $";
 
 object backend_thread;
 ArgCache argcache;

@@ -110,6 +110,7 @@
         <contents>
       </roxen-config>
     </form>
+<div align=right><font size=-1>&roxen.version; using &roxen.pike-version;</font></div>
   </body>
 </define>
 

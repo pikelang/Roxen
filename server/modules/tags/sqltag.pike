@@ -1,11 +1,11 @@
 // This is a roxen module. Copyright © 1997-1999, Idonex AB.
 //
-// A module for Roxen Challenger, which gives the tags
+// A module for Roxen, which gives the tags
 // <sqltable>, <sqlquery> and <sqloutput>.
 //
 // Henrik Grubbström 1997-01-12
 
-constant cvs_version="$Id: sqltag.pike,v 1.42 2000/01/11 19:14:16 mast Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.43 2000/02/02 20:42:30 per Exp $";
 constant thread_safe=1;
 #include <module.h>
 

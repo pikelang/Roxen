@@ -1,7 +1,7 @@
 /*
- * $Id: rxml.pike,v 1.92 2000/01/31 16:39:22 nilsson Exp $
+ * $Id: rxml.pike,v 1.93 2000/02/02 20:39:57 per Exp $
  *
- * The Roxen Challenger RXML Parser.
+ * The Roxen RXML Parser.
  *
  * Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
  */

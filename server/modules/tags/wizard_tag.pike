@@ -1,9 +1,9 @@
-/* This is a Roxen Challenger(r) module. Copyright (c) Idonex 1997.
+/* This is a Roxen(r) module. Copyright (c) Idonex 1997.
  * Released under GPL
  * made by Per Hedbor
  */
 
-constant cvs_version = "$Id: wizard_tag.pike,v 1.19 1999/05/20 03:26:23 neotron Exp $";
+constant cvs_version = "$Id: wizard_tag.pike,v 1.20 2000/02/02 20:42:30 per Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";

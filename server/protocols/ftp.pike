@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.25 2000/02/02 20:08:32 grubba Exp $
+ * $Id: ftp.pike,v 2.26 2000/02/02 20:42:53 per Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -3074,7 +3074,7 @@ class FTPSession
 
   void ftp_SYST(string args)
   {
-    send(215, ({ "UNIX Type: L8: Roxen Challenger Information Server"}));
+    send(215, ({ "UNIX Type: L8: Roxen Information Server"}));
   }
 
   void ftp_CLNT(string args)

@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.88 2000/01/27 18:21:23 grubba Exp $
+# $Id: start,v 1.89 2000/02/02 20:39:31 per Exp $
 
 pre="`echo \" $$             \" | sed -e 's/\(.........\)\(.*\)/\1/g'` :"
 
@@ -175,7 +175,7 @@ parse_args() {
     if [ -f base_server/roxen.pike ]; then
       VERSION="`sed <base_server/roxen.pike -e'/__roxen_version__/s/[^0-9]*\([0-9][0-9]*\.[0-9][0-9]*\)[^0-9]*/\1/p' -ed | head -1`"
       BUILD="`sed <base_server/roxen.pike -e'/__roxen_build__/s/[^0-9]*\([0-9][0-9]*\)[^0-9]*/\1/p' -ed | head -1`"
-      echo "Roxen Challenger $VERSION.$BUILD"
+      echo "Roxen $VERSION.$BUILD"
       exit 0
     else
       echo 'base_server/roxen.pike not found!'
@@ -209,7 +209,7 @@ the default arguments.
 
       .B--with-threadsB.:             If threads are available, use them.
 
-      .B--without-threadsB.:          Even if threads are enabled by default, 
+      .B--without-threadsB.:          Even if threads are enabled by default,
                                   disable them.
 
       .B--with-profileB.:             Store runtime profiling information on
@@ -219,16 +219,16 @@ the default arguments.
 				  This will enable a new 'action' in the
 				  configuration interface
 
-      .B--with-file-profileB.:        Like .B--with-profileB., but save information 
+      .B--with-file-profileB.:        Like .B--with-profileB., but save information
                                   for each and every file.
 
-      .B--with-keep-aliveB.:          Enable keep alive in the HTTP 
-			          protocol module. This is the default. 
-                                  Some clients might have problems 
+      .B--with-keep-aliveB.:          Enable keep alive in the HTTP
+			          protocol module. This is the default.
+                                  Some clients might have problems
                                   with keep-alive.
 
-      .B--without-keep-aliveB.:       Disable keep alive in the HTTP 
-			          protocol module. Some clients might have 
+      .B--without-keep-aliveB.:       Disable keep alive in the HTTP
+			          protocol module. Some clients might have
 				  problems with keep-alive.
 
       .B--onceB.:                     Run the server only once, in the foreground.
@@ -237,38 +237,38 @@ the default arguments.
       .B--gdbB.:                      Run the server in gdb. Implies .B--onceB..
 
       .B--programB.:                  Start a different program with the roxen
-				  Pike. As an example, 
-                                  .B./start --program bin/install.pikeB. will 
-				  start the installation program normally 
+				  Pike. As an example,
+                                  .B./start --program bin/install.pikeB. will
+				  start the installation program normally
                                   started with .B./installB.
 
       .B--with-debugB.:               Enable debug
 
       .B--without-debugB.:            Disable all debug
-	
+
       .B--with-fd-debugB.:            Enable FD debug.
 
       .B--with-dump-debugB.:          Enable dump debug.
 
       .B--trussB.:                    (Solaris only). Run the server under
-				  truss, shows .BallB. system calls. This is 
-				  extremely noisy, and is not intented for 
+				  truss, shows .BallB. system calls. This is
+				  extremely noisy, and is not intented for
 				  anything but debug.
 
       .B--truss-cB.:                  (Solaris only). Run the server under
 				  truss -c, shows times for all system calls
-                                  on exit. This is not intented for anything 
+                                  on exit. This is not intented for anything
                                   but debug. Slows the server down.
 
       .B--pid-file=<file>B.:          Store the roxen and startscript pids in this
 				  file. Defaults to .B/tmp/roxen_$UIDB.
-         
+
   .BArguments passed to pike:B.
 
        .B-DDEFINEB.:                  Define the symbol .BDEFINEB..
 
        .B-d<level>B.:                 Set the runtime Pike debug to level.
-				  This only works if Pike is compiled 
+				  This only works if Pike is compiled
 				  with debug.
 
        .B-rtB.:                       Enable runtime typechecking.
@@ -278,7 +278,7 @@ the default arguments.
 				  Enabled when starting roxen with --debug
 
        .B-rTB.:                       Enable strict types.
-				  Same as adding #pragma strict-types 
+				  Same as adding #pragma strict-types
 				  to all files.
 
 				  This enables more strict
@@ -306,14 +306,14 @@ the default arguments.
 
        .B-tB.:                        Turn on Pike level tracing.
 
-       .B-t<level>B.:                 Turn on more Pike tracing. This only 
+       .B-t<level>B.:                 Turn on more Pike tracing. This only
 				  works if Pike is compiled with debug.
 
        .B-wB.:                        Turn on Pike warnings.
 
   .BEnvironment variables:B.
 
-     .BLANGB.:                        Used to determine the default locale 
+     .BLANGB.:                        Used to determine the default locale
                                   in the configuration interface and logs.
      .BROXEN_CONFIGDIRB.:             Same as .B--config-dir=... B.
      .BROXEN_PID_FILEB.:              Same as .B--pid-file=... B.
@@ -452,12 +452,12 @@ rotate () {
 }
 
 start_roxen() {
-  if [ "x$DIR" != "x../configurations/" ] ; then 
+  if [ "x$DIR" != "x../configurations/" ] ; then
     args="$DEFINES $ARGS $program --config-dir=$DIR $pass"
   else
     args="$DEFINES $ARGS $program $pass"
   fi
-  if [ x$cd_to != x ] ; then 
+  if [ x$cd_to != x ] ; then
     cd $cd_to
   fi
   if [ "x$gdb" = "xno" ]; then
@@ -482,7 +482,7 @@ start_roxen() {
 PIKEVERSION=`$pike --version 2>&1`
 
 
-if [ "$program" = "base_server/roxenloader.pike" ] ; then 
+if [ "$program" = "base_server/roxenloader.pike" ] ; then
   if [ "`cat $old_roxen_defines 2>/dev/null`" != "$PIKEVERSION $DEFINES" ] ; then
     remove_old_dot_o_files "DEFINES changed"
   fi
@@ -491,7 +491,7 @@ fi
 
 if [ -z "$once" ] ; then
   if [ $verbose -gt 0 ]; then
-    echo "$pre" Starting the Roxen Challenger World Wide Web server.
+    echo "$pre" Starting the Roxen World Wide Web server.
   else :; fi
   ./mkdir -p $LOGDIR/debug/
 
