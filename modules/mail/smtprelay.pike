@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 1.1 1998/09/14 00:17:22 grubba Exp $
+ * $Id: smtprelay.pike,v 1.2 1998/09/14 19:53:30 grubba Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RELAY_DEBUG
 
-constant cvs_version = "$Id: smtprelay.pike,v 1.1 1998/09/14 00:17:22 grubba Exp $";
+constant cvs_version = "$Id: smtprelay.pike,v 1.2 1998/09/14 19:53:30 grubba Exp $";
 
 /*
  * Some globals
@@ -47,6 +47,9 @@ void create()
 
   defvar("sqlurl", "mysql://auto:site@kopparorm/autosite", "Database URL",
 	 TYPE_STRING, "");
+
+  defvar("postmaster", "postmaster@"+gethostname(), "Postmaster address",
+	 TYPE_STRING, "Email address of the postmaster.");
 }
 
 array(string)|multiset(string)|string query_provides()
@@ -69,6 +72,33 @@ void start(int i, object c)
 /*
  * Helper functions
  */
+
+constant weekdays = ({ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" });
+constant months = ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+		     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" });
+
+static string mktimestamp(int t)
+{
+  mapping lt = localtime(t);
+    
+  string tz = "GMT";
+  int off;
+  
+  if (off = -lt->timezone) {
+    tz = sprintf("GMT%+d", off/3600);
+  }
+  if (lt->isdst) {
+    tz += "DST";
+    off += 3600;
+  }
+  
+  off /= 60;
+  
+  return(sprintf("%s, %02d %s %04d %02d:%02d:%02d %+03d%02d (%s)",
+		 weekdays[lt->wday], lt->mday, months[lt->mon],
+		 1900 + lt->year, lt->hour, lt->min, lt->sec,
+		 off/60, off%60, tz));
+}
 
 static string get_addr(string addr)
 {
@@ -102,6 +132,8 @@ static string get_addr(string addr)
 class MailSender
 {
   private static inherit "socket.pike";
+
+  static object parent;
 
   static mapping message;
   static array(string) servers;
@@ -177,6 +209,16 @@ class MailSender
     send(sprintf("RCPT TO:%s@%s\r\n", message->user, message->domain));
   }
 
+  static void bad_address(string code, array(string) text)
+  {
+    // Permanently bad address.
+    result = -2;
+
+    parent->bounce(message, code, text);
+
+    send("QUIT\r\n");
+  }
+
   static void send_body()
   {
     string m = mail->read(0x7fffffff);
@@ -226,7 +268,7 @@ class MailSender
     ([ "250":send_mail_from, "":send_helo ]),
     ([ "250":send_rcpt_to, ]),
     ([ "250":send_mail_from, ]),
-    ([ "25":"DATA", ]),
+    ([ "25":"DATA", "55":bad_address, ]),
     ([ "354":send_body, ]),
     ([ "250":send_ok, ]),
     ([]),
@@ -370,11 +412,13 @@ class MailSender
     connect_and_send();
   }
 
-  void create(object d, mapping(string:string) m, string dir, function cb)
+  void create(object d, mapping(string:string) m, string dir,
+	      function cb, object p)
   {
     dns = d;
     message = m;
     send_done = cb;
+    parent = p;
 
     string fname = combine_path(dir, m->mailid);
 
@@ -398,20 +442,33 @@ class MailSender
 static void mail_sent(int res, mapping message)
 {
   if (res) {
-    if (res > 0) {
+    switch(res) {
+    case 1:
       report_notice(sprintf("SMTP: Mail %O sent successfully!\n",
 			    message->mailid));
-    } else {
+      break;
+    case -1:
       report_error(sprintf("SMTP: Failed to open %O!\n",
 			   message->mailid));
-
+      
       return;	// FIXME: Should we remove it from the queue or not?
+    case -2:
+      report_error(sprintf("SMTP: Permanently bad address %s@%s\n",
+			   message->user, message->domain));
+      break;
     }
 
 #ifdef THREADS
     mixed key = queue_mutex->lock();
 #endif /* THREADS */
     sql->query(sprintf("DELETE FROM send_q WHERE id=%s", message->id));
+
+    array a = sql->query(sprintf("SELECT id FROM send_q WHERE mailid='%s'",
+				 sql->quote(message->mailid)));
+
+    if (!a || !sizeof(a)) {
+      rm(combine_path(QUERY(spooldir), message->mailid));
+    }
   } else {
     report_notice(sprintf("SMTP: Sending of %O failed!\n",
 			  message->mailid));
@@ -449,7 +506,126 @@ static void send_mail()
 		       "SET send_at = %d, times = %d WHERE id = %s",
 		       time() + 60*60, ((int)mm->times) + 1, mm->id));
     // Send the message.
-    MailSender(dns, mm, QUERY(spooldir), mail_sent);
+    MailSender(dns, mm, QUERY(spooldir), mail_sent, this_object());
+  }
+}
+
+/*
+ * Used to bounce error messages
+ */
+
+void bounce(mapping msg, string code, array(string) text)
+{
+  // FIXME: Generate a bounce.
+
+  roxen_perror(sprintf("SMTP: bounce(%O, %O, %O)\n", msg, code, text));
+
+  if (sizeof(msg->sender)) {
+    // Send a bounce.
+
+    // Create a bounce message.
+
+    object f = Stdio.File();
+    string oldheaders = "";
+    if (f->open(combine_path(QUERY(spooldir), msg->mailid), "r")) {
+      int i;
+      int j;
+      string s;
+      while((s = f->read(8192)) && (s != "")) {
+	oldheaders += s;
+	if (i = search(oldheaders, "\r\n\r\n", j)) {
+	  oldheaders = oldheaders[..i+1];
+	  break;
+	}
+	j = sizeof(oldheaders) - 4;
+      }
+      f->close();
+    }
+
+    string body = sprintf("Message to %s@%s from %s bounced (code %s):\r\n"
+			  "Mailid:%s\r\n"
+			  "Description:\r\n"
+			  "%s\r\n",
+			  msg->user, msg->domain, msg->sender, code,
+			  msg->mailid,
+			  text*"\r\n");
+    string message = (string)
+      MIME.Message(body,
+		   ([ "Subject":"Delivery failure",
+		      "X-Mailer":roxen->version(),
+		      "MIME-Version":"1.0",
+		      "From":QUERY(postmaster),
+		      "To":msg->sender,
+		      "Date":mktimestamp(time()),
+		      "Content-Type":"multipart/report; "
+		      "report-type=delivery-status",
+		   ]),
+		   ({
+		     MIME.Message(body,
+				  ([ "MIME-Version":"1.0",
+				     "Content-Type":
+				     "text/plain; "
+				     "charset=iso-8859-1",
+				  ])),
+		     MIME.Message(oldheaders,
+				  ([ "MIME-Version":"1.0",
+				     "Content-Type":
+				     "text/rfc822-headers" ])),
+		   }));
+
+    string csum = replace(MIME.encode_base64(Crypto.sha()->update(message)->
+					     digest()), "/", ".");
+    // Queue mail for sending.
+
+    // NOTE: We assume that an SHA checksum will never occur twice.
+
+    string fname = combine_path(QUERY(spooldir), csum);
+
+#ifdef THREADS
+    mixed key = queue_mutex->lock();
+#endif /* THREADS */
+
+    if (!file_stat(fname)) {
+      object spoolfile = Stdio.File();
+      if (!spoolfile->open(fname, "cwxa")) {
+	report_error(sprintf("SMTPRelay: Failed to open spoolfile %O!\n",
+			     fname));
+	return;
+      }
+
+      if (spoolfile->write(message) != sizeof(message)) {
+	report_error(sprintf("SMTPRelay: Failed to write spoolfile %O!\n",
+			     fname));
+
+	rm(fname);
+
+	return;
+      }
+      spoolfile->close();
+    }
+  
+    array(string) a = msg->sender/"@";
+
+    string user = a[0];
+    string domain = (sizeof(a)>1)?(a[-1]):"localhost";
+
+    sql->query(sprintf("INSERT INTO send_q "
+		       "(sender, user, domain, mailid, send_at) "
+		       "VALUES('<>', '%s', '%s', '%s', 0)",
+		       sql->quote(user), sql->quote(domain),
+		       sql->quote(csum)));
+
+#ifdef THREADS
+    if (key) {
+      destruct(key);
+    }
+#endif /* THREADS */
+
+    // Send mailid asynchronously.
+
+    call_out(send_mail, 10);
+  } else {
+    roxen_perror("A bounce which bounced!\n");
   }
 }
 
