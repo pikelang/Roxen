@@ -52,7 +52,7 @@ string page_0()
 		      "Last Reboot","Version", /*({"Server info"})*/}),
 		    Array.map(sn, lambda(string s) {
      mapping ns = neighborhood[s];
-     int vanished = (time() - ns->rec_time) > 60;
+     int vanished = (time() - ns->rec_time) > 300;
      int re=ns->seq_reboots;
      string ER="",RE="";
      if(vanished) {
@@ -69,7 +69,9 @@ string page_0()
 	       RE+roxen->language("en","date")(ns->last_reboot)+ER,
 	       RE+sv(ns->version)+ER
      });
-    }));
+    })) + "<p>A red line indicates that the server is constantly restarting. "
+	  "A orange line indicates that the server is not sending any "
+	  "information about presence anymore.";
 }
 
 mixed handle(object id)
