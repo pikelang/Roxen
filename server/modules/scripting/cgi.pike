@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version = "$Id: cgi.pike,v 2.52 2000/12/11 04:14:41 per Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.53 2001/01/11 14:07:05 grubba Exp $";
 
 #if !defined(__NT__) && !defined(__AmigaOS__)
 # define UNIX 1
@@ -859,7 +859,7 @@ void start(int n, Configuration conf)
 {
   DWERR("start()");
 
-  searchpath = query("searchpath");
+  searchpath = combine_path(getcwd(), query("searchpath"));
   handle_ext = query("ex");
 #if UNIX
   noexec = query("noexec");
