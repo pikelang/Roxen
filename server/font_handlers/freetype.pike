@@ -92,20 +92,24 @@ class FTFont
   {
     Image.Image res;
     int xp, ys;
+    if( !strlen( text ) )
+      text = " ";
     array(int) tx = (array(int))text;
     array chars = map( tx, do_write_char );
     int i;
 
     for( i = 0; i<sizeof( chars ); i++ )
       if( !chars[i] )
-	tx[i] = 0;
+	tx[ i ] = 0;
       else if( !tx[i] )
-	tx[i] = 20;
+	tx[ i ] = 20;
 
     tx  -= ({ 0 });
     chars  -= ({ 0 });
-
     
+    if( !sizeof( chars ) )
+      return Image.Image(1,1);
+
     int oc;
     array kerning = ({});
     foreach( tx, int c  )
@@ -121,10 +125,10 @@ class FTFont
 
     for(int i = 0; i<sizeof(chars)-1; i++ )
       w += (int)(chars[i]->advance*x_spacing + kerning[i+1]);
+
     w += (int)(chars[-1]->img->xsize()+chars[-1]->x);
-
     ys = chars[0]->height;
-
+			   
     res = Image.Image( w, ys );
 
     if( x_spacing < 0 )
