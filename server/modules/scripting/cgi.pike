@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.34 1997/08/18 00:37:56 per Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.35 1997/08/23 12:01:57 grubba Exp $";
 
 #include <module.h>
 
@@ -413,6 +413,7 @@ mixed find_file(string f, object id)
        * This should be done at least before the change of directory
        */
       string oldwd = getcwd() + "/";
+      destruct(pipe2);
       pipe1->dup2(files.file("stdin"));
       pipe1->dup2(files.file("stdout"));
       if(QUERY(err))
