@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.36 1998/05/15 21:24:12 neotron Exp $
+ * $Id: ftp2.pike,v 1.37 1998/05/16 00:52:04 neotron Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -1126,7 +1126,7 @@ class FTPSession
     // Informational commands
     "SYST":"(Get type of operating system)",
     "STAT":"<sp> path-name (Status for file)",
-    "CLNT":"<sp> Client name (specify client name)",
+    "CLNT":"<sp> <client-name> <sp> <client-version> [<sp> <optional platform info>]"
     "HELP":"[ <sp> <string> ] (Give help)",
 
     // Miscellaneous commands
