@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.191 1999/11/28 16:44:52 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.192 1999/11/30 14:45:18 nilsson Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -6,10 +6,6 @@ constant thread_safe=1;
 #include <stat.h>
 inherit "module";
 inherit "roxenlib";
-
-#ifndef VAR_MORE
-#define VAR_MORE	0
-#endif /* VAR_MORE */
 
 
 // ------------------- Module registration ---------------------
@@ -959,12 +955,6 @@ array(string) tag_gh(string t, mapping m, string c, RequestID id) {
   int i;
   if(sscanf(t, "%s%d", t, i)==2 && i>1)
     m->scale = (string)(1.0 / ((float)i*0.6));
-  for(i=2; i<10; i++)
-    if(m[(string)i])
-    {
-      m->scale = (string)(1.0 / ((float)i*0.6));
-      break;
-    }
   if(!m->valign) m->valign="top";
  return ({ "<p>"+tag_graphicstext("",m,c,id)+"<br>" });
 }
