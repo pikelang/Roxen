@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.10 1998/09/03 00:35:18 grubba Exp $
+ * $Id: smtp.pike,v 1.11 1998/09/03 17:03:55 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.10 1998/09/03 00:35:18 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.11 1998/09/03 17:03:55 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -318,6 +318,47 @@ class Server {
       }
 
       send(250, sort(result));
+    }
+
+    void smtp_VRFY(string mail, string args)
+    {
+      if (!sizeof(args)) {
+	send(501, "Expected argument");
+	return;
+      }
+
+      array a = do_parse_address(args);
+
+      array descs = Array.filter(conf->get_providers("smtp_rcpt")||({}),
+				 lambda(object o) { return(o->desc); });
+
+      array expns = Array.filter(conf->get_providers("smtp_rcpt")||({}),
+				 lambda(object o) { return(o->expn); });
+
+      int i;
+      for(i=0; i < sizeof(a); i++) {
+	string s = 0;
+	foreach(descs, object o) {
+	  if (s = o->desc(a[i])) {
+	    break;
+	  }
+	}
+	if (!s) {
+	  foreach(expns, object o) {
+	    if (o->expn(a[i])) {
+	      s = "<" + a[i] + ">";
+	      break;
+	    }
+	  }
+	  if (!s) {
+	    send(550, sprintf("%s... User unknown", a[i]));
+	    return;
+	  }
+	}
+	a[i] = s;
+      }
+
+      send(250, sort(a));
     }
 
     string sender = "";
