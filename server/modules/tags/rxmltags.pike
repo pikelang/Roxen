@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.179 2000/10/12 13:15:37 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.180 2000/10/13 13:29:10 kuntri Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2385,10 +2385,9 @@ Display the time from another timezone.
 
 <attr name=value value=string>
  The value of the header.
-</attr>
 
- For more information about HTTP headers please steer your browser to chapter 14, 'Header field definitions' in <a href='http://community.roxen.com/developers/idocs/rfc/rfc2616.html'> RFC 2616</a> at Roxen Community.",
-
+ For more information about HTTP headers please steer your browser to chapter 14, 'Header field definitions' in <a href='http://community.roxen.com/developers/idocs/rfc/rfc2616.html'>RFC 2616</a> at Roxen Community.
+</attr>",
 
 "imgs":#"<desc tag><short>
  Generates a image tag with proper dimensions.</short>
@@ -2467,7 +2466,6 @@ possible to hide variables so that they are not listed with this tag.
 
 <attr name=scopes value=full|plain>
  Sets how the output should be formatted.
-</attr>
 
  <ex>
    <insert scopes='plain'/>
@@ -2959,12 +2957,9 @@ Sets a variable.</short>
  </ex>
 </attr>",
 
-"throw":#"<desc cont><short hide>
- Throws a text to be catched by <catch>.</short> Throws a text to be
- catched by <tag>catch</tag>. Throws an exception, with the enclosed
- text as the error message. This tag has a close relation to
- <tag>catch</tag>. The RXML parsing will stop at the <tag>throw</tag>
- tag. </desc>",
+"throw":#"<desc cont><short>
+ Throws a text to be caught by the <tag>catch</tag>.</short> Throws an exception, with the enclosed text as the error message. This tag has a close relation to <tag>catch</tag>. The RXML parsing will stop at the <tag>throw</tag> tag.
+</desc>",
 
 "trimlines":#"<desc cont><short>
  Removes all empty lines from the contents.</short>
