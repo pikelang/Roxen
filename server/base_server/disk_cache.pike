@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: disk_cache.pike,v 1.51 2000/08/17 01:16:30 per Exp $
+// $Id: disk_cache.pike,v 1.52 2000/08/17 14:37:29 per Exp $
 
 #include <module_constants.h>
 #include <stat.h>
@@ -278,16 +278,24 @@ class Cache {
     cd = basename;
     lcs = command_stream->pipe();
 
-    // FIXME: Should use spawn_pike() here.
-    object proc = Process.create_process(({
-      "./start", "--once", "--program", "bin/garbagecollector.pike"
-      }), ([
-	"stdin":lcs,
-	"nice":19,
-	"uid":0,
-	"gid":0,
-      ]));
+    // FIXME: Should probably use spawn_pike() here.
+    mixed err;
+    object proc;
+    catch {
+      proc = Process.create_process(({
+        "./start", "--once", "--program", "bin/garbagecollector.pike"
+      }), (["stdin":lcs, "nice":19, "uid":0, "gid":0, ]));
+    } && ( err = catch {
+      proc = Process.create_process(({
+        "./start", "--once", "--program", "bin/garbagecollector.pike"
+      }), (["stdin":lcs,"nice":19, ]));
+    });
 
+    if( err )
+    {
+      report_error("Failed to enable disk-cache system\n%s\n", err[0] );
+      return;
+    }
     /* Master */
     mixed err;
     err = catch {
