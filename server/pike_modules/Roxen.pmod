@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.155 2002/11/14 21:43:22 agehall Exp $
+// $Id: Roxen.pmod,v 1.156 2002/11/14 22:30:27 agehall Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -3011,7 +3011,7 @@ class ScopePage {
 					      c->misc[" _stat"][1]:-4, type);
       case "self": return ENCODE_RXML_TEXT( (c->id->not_query/"/")[-1], type);
       case "ssl-strength":
-	c->id->misc->cacheable = 0;
+	NOCACHE(c->id);
 	if (!c->id->my_fd || !c->id->my_fd->session) return ENCODE_RXML_INT(0, type);
 	return ENCODE_RXML_INT(c->id->my_fd->session->cipher_spec->key_bits, type);
       case "dir":
