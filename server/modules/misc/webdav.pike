@@ -1,6 +1,6 @@
 // Protocol support for RFC 2518
 //
-// $Id: webdav.pike,v 1.27 2004/05/10 21:39:21 mast Exp $
+// $Id: webdav.pike,v 1.28 2004/05/13 12:33:11 mast Exp $
 //
 // 2003-09-17 Henrik Grubbström
 
@@ -9,7 +9,7 @@ inherit "module";
 #include <module.h>
 #include <request_trace.h>
 
-constant cvs_version = "$Id: webdav.pike,v 1.27 2004/05/10 21:39:21 mast Exp $";
+constant cvs_version = "$Id: webdav.pike,v 1.28 2004/05/13 12:33:11 mast Exp $";
 constant thread_safe = 1;
 constant module_name = "DAV: Protocol support";
 constant module_type = MODULE_FIRST;
@@ -352,14 +352,18 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
     }
     extras = ({ id->misc["new-uri"],
 		propertybehavior,
-		id->request_headers->overwrite?
-		(lower_case(id->request_headers->overwrite)=="t"?1:-1):0,
+		// RFC 2518 9.6: If the overwrite header is not
+		// included in a COPY or MOVE request then the
+		// resource [sic] MUST treat the request as if it has
+		// an overwrite header of value "T".
+		!id->request_headers->overwrite ||
+		id->request_headers->overwrite=="T",
     });
     
     recur_func = lambda(string source, string loc, int d, RoxenModule module,
 			RequestID id, string destination,
 			mapping(string:int(-1..1)) behavior,
-			int(-1..1) overwrite) {
+			Overwrite overwrite) {
 		   if (!has_prefix(destination, loc)) {
 		     // FIXME: Destination in other filesystem.
 		     return 0;

@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.137 2004/05/12 21:21:56 mast Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.138 2004/05/13 12:33:34 mast Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -1264,11 +1264,10 @@ mixed find_file( string f, RequestID id )
     if (size != -1) {
       // Destination exists.
 
-      Overwrite overwrite =
-	id->request_headers->overwrite?
-	(lower_case(id->request_headers->overwrite) == "t"?
-	 DO_OVERWRITE:NEVER_OVERWRITE):MAYBE_OVERWRITE;
-      if (overwrite == NEVER_OVERWRITE) {
+      int(0..1) overwrite =
+	!id->request_headers->overwrite ||
+	id->request_headers->overwrite == "T";
+      if (!overwrite) {
 	privs = 0;
 	TRACE_LEAVE("MOVE disallowed (overwrite header:F).");
 	return Roxen.http_status(412);
@@ -1281,7 +1280,7 @@ mixed find_file( string f, RequestID id )
 	return 0;
       }
       
-      if ((overwrite == DO_OVERWRITE) || (size > -1)) {
+      if (overwrite || (size > -1)) {
 	mapping(string:mixed) res =
 	  recurse_delete_files(new_uri, id);
 	if (res && (!sizeof (res) || res->error >= 300)) {
