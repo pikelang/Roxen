@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.231 2000/08/28 06:52:40 per Exp $
+// $Id: rxml.pike,v 1.232 2000/08/28 13:23:15 mast Exp $
 
 
 inherit "rxmlhelp";
@@ -425,9 +425,9 @@ void add_parse_module (RoxenModule mod)
 			    }));
 
   if (search (rxml_tag_set->imported, tag_set) < 0) {
+    remove_call_out (rxml_tag_set->sort_on_priority);
     rxml_tag_set->modules += ({mod});
     rxml_tag_set->imported += ({tag_set});
-    remove_call_out (rxml_tag_set->sort_on_priority);
     call_out (rxml_tag_set->sort_on_priority, 0);
   }
 }
