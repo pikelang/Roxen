@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.91 1999/09/27 23:39:29 grubba Exp $
+ * $Id: smtp.pike,v 1.92 1999/09/28 01:28:07 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.91 1999/09/27 23:39:29 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.92 1999/09/28 01:28:07 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -744,6 +744,8 @@ static class Smtp_Connection {
     if (!sizeof(a) || a[0] == "<>") {
       // Empty return address == bounce message.
       if (connection_class > 0) {
+	// FIXME: This zapps the connection_class variable
+	//        for the duration of the connection!
 	connection_class = 0;
       }
       conf->log(([ "error":202 ]), id);
@@ -1179,6 +1181,7 @@ static class Smtp_Connection {
 	    // Check the syntax.
 	    for(i=1; i < sizeof(a)-3; i++) {
 	      if (a[i][-1] != ',') {
+		// Syntax error.
 		conf->log((["error":400]), id);
 		send(501);
 		return;
@@ -1188,6 +1191,7 @@ static class Smtp_Connection {
 		(a[-1] == "") ||
 		((i = search(a[-2], ":")) == -1) ||
 		(i == sizeof(a[-2]-1))) {
+	      // Syntax error.
 	      conf->log((["error":400]), id);
 	      send(501);
 	      return;
@@ -1195,7 +1199,8 @@ static class Smtp_Connection {
 
 	    // Wow! Correct syntax!
 
-	    // We attempt to deliver directly to the specified address,
+	    // We ignore the source-route, and instead attempt to deliver
+	    // directly to the specified address,
 	    // as recomended by RFC 1123 5.2.6.
 	    domain = a[-1];
 	    user = a[-2][i+1..];
