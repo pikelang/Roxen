@@ -46,6 +46,22 @@ void define_global_variables( int argc, array (string) argv )
 {
   int p;
 
+  globvar("port_options", ([]), "Ports: Options", VAR_EXPERT|TYPE_CUSTOM,
+	  "Mapping with options and defaults for all ports.<br>\n"
+	  "Structure:<br>\n"
+	  "<dl><pre>\n"
+	  "([\n"
+	  "  \"\" : ([ string : mixed ]), // Global defaults\n"
+	  "  \"prot\" : ([\n"
+	  "    \"\" : ([ string : mixed ]), // Defaults for prot://\n"
+	  "    \"ip\" : ([\n"
+	  "      \"\" : ([ string : mixed ]), // Defaults for prot://ip/\n"
+	  "      port : ([ string : mixed ]), // Options for prot://ip:port/\n"
+	  "    ]),\n"
+	  "  ]),\n"
+	  "])\n"
+	  "</pre></dl>\n");
+
   globvar("set_cookie", 0, "Logging: Set unique user id cookies", TYPE_FLAG,
 	  #"If set to Yes, all users of your server whose clients support 
 cookies will get a unique 'user-id-cookie', this can then be 
