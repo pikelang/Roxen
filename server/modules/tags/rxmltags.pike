@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.180 2000/10/13 13:29:10 kuntri Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.181 2000/10/17 17:54:01 per Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -219,7 +219,7 @@ class EntityClientUser {
   inherit RXML.Value;
   string rxml_const_eval(RXML.Context c) {
     c->id->misc->cacheable=0;
-    return c->id->rawauth&&(c->id->rawauth/":")[0];
+    return c->id->realauth&&(c->id->realauth/":")[0];
   }
 }
 
@@ -230,8 +230,8 @@ class EntityClientPassword {
     c->id->misc->cacheable=0;
     return (c->id->auth 
 	    && !c->id->auth[0] 
-	    && c->id->rawauth
-	    && (sizeof(tmp = c->id->rawauth/":") > 1) 
+	    && c->id->realauth
+	    && (sizeof(tmp = c->id->realauth/":") > 1) 
 	    && tmp[1]);
   }
 }
