@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2001, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.149 2004/04/06 21:07:05 mani Exp $
+// $Id: wizard.pike,v 1.150 2004/05/22 16:36:43 _cvs_stephen Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -118,7 +118,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
       m->type = "text";
     m_delete(m,"default");
     m->value = loc_encode(current||m->value||"", m, "none");
-    if(!m->size)m->size="60,1";
+    if(!m->size)m->size="60";
     m_delete(m,"quote");
     return make_tag("input", m);
 
@@ -127,11 +127,10 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
     if(!id->variables[n]) id->variables[n]=current;
 
     m->type = "text";
-    if(!m->size)m->size="60,1";
+    if(!m->size)m->size="60";
     m_delete(m,"default");
-    foreach( (current||"")/"\0", string v)
+    foreach((current||"")/"\0"-({""}), string v)
     {
-      if(v=="") continue;
       res+="<tr><td>"+loc_encode(v, m, "html")+"</td><td><font size=\"-2\">";
       m->name="_delete_"+n+":"+v;
       m->value = " " + LOCALE(16, "Remove") + " ";
@@ -178,7 +177,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
     m->type = "number";
     m_delete(m,"default");
     m->value = (string)((int)current);
-    if(!m->size)m->size="8,1";
+    if(!m->size)m->size="8";
     return make_tag("input", m);
 
    case "float":
@@ -319,6 +318,110 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
       "</td></tr>\n"
       "</table>\n");
 
+   case "color-js":
+     //  Note: This code requires ColorSelector.js
+     if (string color_input = id->variables[m->name])
+       current = color_input;
+     a = parse_color(current || "black");
+     [h, s, v] = rgb_to_hsv(@a);
+     current = upper_case(sprintf("#%02x%02x%02x", a[0], a[1], a[2]));
+     id->variables[m->name] = current;
+     
+     string output =
+       "<script language='javascript'>\n"
+       "  var PREFIX_h = " + h + ";\n"
+       "  var PREFIX_s = " + s + ";\n"
+       "  var PREFIX_v = " + v + ";\n"
+       "  function PREFIX_colsel_click(event, in_bar, in_cross)\n"
+       "  {\n"
+       "    var hsv = colsel_click(event, \"PREFIX_\", PREFIX_h,\n"
+       "                           PREFIX_s, PREFIX_v, in_bar, in_cross);\n"
+       "    PREFIX_h = hsv[0];\n"
+       "    PREFIX_s = hsv[1];\n"
+       "    PREFIX_v = hsv[2];\n"
+       "  }\n"
+       "  function PREFIX_colsel_type(value, update_field)\n"
+       "  {\n"
+       "    var hsv = colsel_type(\"PREFIX_\", value, update_field);\n"
+       "    PREFIX_h = hsv[0];\n"
+       "    PREFIX_s = hsv[1];\n"
+       "    PREFIX_v = hsv[2];\n"
+       "  }\n"
+       "</script>"
+       "<js-popup args-variable='__popup' event='onClick' props='color_props'>"
+       "  <img src='/internal-roxen-colsel-mark-x' id='PREFIX_mark_x'"
+       "       onClick='PREFIX_colsel_click(event, 0, \"x\"); return false;'"
+       "       style='position: absolute;"
+       "              cursor:   crosshair;"
+       "              left:     " + (5 + (int) (h / 2)) + ";"
+       "              top:      5;"
+       "              z-index:  2'>"
+       "  <img src='/internal-roxen-colsel-mark-y' id='PREFIX_mark_y'"
+       "       onClick='PREFIX_colsel_click(event, 0, \"y\"); return false;'"
+       "       style='position: absolute;"
+       "              cursor:   crosshair;"
+       "              left:     5;"
+       "              top:      " + (5 + (int) ((255 - v) / 2)) + ";"
+       "              z-index:  2'>"
+       "  <img src='/internal-roxen-colsel-mark-y-small'"
+       "       id='PREFIX_mark_y_small'"
+       "       style='position: absolute;"
+       "              cursor:   pointer;"
+       "              left:     143;"
+       "              top:      " + (5 + (int) ((255 - s) / 2)) + ";"
+       "              z-index:  2'>"
+       "  <table border='0' cellspacing='0' cellpadding='4' bgcolor='#ffffff'"
+       "         style='border-top:    1px solid #888888;"
+       "                border-left:   1px solid #888888;"
+       "                border-bottom: 2px solid #888888;"
+       "                border-right:  2px solid #888888'>"
+       "    <tr>"
+       "      <td style='border-right: 1px solid #888888'"
+       "        ><img src='/internal-roxen-colsel-small'"
+       "             width='128' height='128' style='cursor: crosshair'"
+       "             onClick='PREFIX_colsel_click(event, 0); return false;'"
+       "        /></td>"
+       "      <td><img id='PREFIX_colorbar' width='16' height='128'"
+       " src='/internal-roxen-colorbar-small:" + h + "," + v + ",-1'"
+       "               style='cursor: pointer'"
+       "               onClick='PREFIX_colsel_click(event, 1); return false;'"
+       "        /></td>"
+       "    </tr><tr>"
+       "      <td colspan='2' style='border-top: 1px solid #888888'"
+       "        ><img src='/internal-roxen-pixel-000000'"
+       "              width='76' height='10' style='cursor: pointer'"
+       "              onClick='PREFIX_colsel_type(\"#000000\", 1);' "
+       "        /><img src='/internal-roxen-pixel-ffffff'"
+       "               width='76' height='10' style='cursor: pointer'"
+       "               onClick='PREFIX_colsel_type(\"#FFFFFF\", 1);' "
+       "        /></td>"
+       "    </tr>"
+       "  </table>"
+       "</js-popup>"
+       "<table border='0' cellspacing='0' cellpadding='2'>"
+       "<tr>"
+       "  <td>"
+       "    <input type='text' size='10' value='" + current + "' id='PREFIX_color_input' "
+       "           name='" + m->name + "' onChange='PREFIX_colsel_type(this.value, 1);' />"
+       "  </td>"
+       "  <td>"
+       "    <table border='0' cellspacing='0' cellpadding='0' background='#ffffff'>"
+       "      <tr>"
+       "      	<td style='background: " + current + "; border: 1px solid #888888' "
+       "      	    id='PREFIX_preview'"
+       "      	  ><img src='/internal-roxen-colsel-arrow'"
+       "                width='49' height='16' border='0'"
+       "      	        style='border: 4px solid #ffffff; cursor: pointer'"
+       "                ::='&form.__popup;'"
+       "        ></td>"
+       "      </tr>"
+       "    </table>"
+       "  </td>"
+       "</tr>"
+       "</table>";
+     string clean_name = replace(m->name, "-", "_");
+     return replace(output, "PREFIX", clean_name);
+
    case "font":
      m->type = "select";
      m->lines = "20";
@@ -422,7 +525,11 @@ string compress_state(mapping state)
   state = copy_value(state);
   m_delete(state,"_state");
   m_delete(state,"next_page");
+  m_delete(state,"next_page.x");
+  m_delete(state,"next_page.y");
   m_delete(state,"prev_page");
+  m_delete(state,"prev_page.x");
+  m_delete(state,"prev_page.y");
   m_delete(state,"help");
   m_delete(state,"action");
   m_delete(state,"unique");
@@ -439,7 +546,7 @@ string compress_state(mapping state)
   return MIME.encode_base64( from );
 }
 
-string parse_wizard_help(string|Parser t, mapping m, string contents,
+string parse_wizard_help(string|Parser.HTML t, mapping m, string contents,
 			 RequestID id, void|mapping v)
 {
   if(v)
@@ -595,7 +702,7 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
 			       && id->real_variables->_state[0]);
 #endif
 
-  if(id->real_variables->cancel)
+  if(id->real_variables->cancel || id->real_variables["cancel.x"])
      return http_redirect((s->cancel_url&&s->cancel_url[0])
 			  || cancel || id->not_query,
 			  @(id->conf?({id}):({})));
@@ -611,7 +718,9 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
   mapping(string:array) automaton = this->wizard_automaton;
   function dispatcher;
   string oldpage, page_name;
-  if (automaton && (!v->_page || v->next_page || v->prev_page || v->ok)) {
+  if (automaton && (!v->_page || v->next_page || v["next_page.x"] ||
+		    v->prev_page || v["prev_page.x"] ||
+		    v->ok || v["ok.x"])) {
     if (!v->_page && automaton->start) v->_page = "start";
     oldpage = v->_page;
     if (v->_page) {
@@ -629,14 +738,20 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
 	DEBUGMSG ("Wizard: Internal redirect to page " + redirect + "\n");
 	// Redirect takes precedence over the user choice.
 	m_delete (v, "next_page");
+	m_delete (v, "next_page.x");
+	m_delete (v, "next_page.y");
 	m_delete (v, "prev_page");
+	m_delete (v, "prev_page.x");
+	m_delete (v, "prev_page.y");
 	m_delete (v, "ok");
+	m_delete (v, "ok.x");
+	m_delete (v, "ok.y");
 	v->_page = redirect;
       }
     }
   }
 
-  if(v->next_page)
+  if(v->next_page || v["next_page.x"])
   {
     function c=this["verify_"+v->_page];
     int fail = 0;
@@ -650,13 +765,13 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
       DEBUGMSG ("Wizard: Going to next page\n");
     }
   }
-  else if(v->prev_page)
+  else if(v->prev_page || v["prev_page.x"])
   {
     v->_page = automaton ? v->_prev : PAGE(-1);
     DEBUGMSG ("Wizard: Going to previous page\n");
     offset=-1;
   }
-  else if(v->ok)
+  else if(v->ok || v["ok.x"])
   {
     function c=this["verify_"+v->_page];
     int fail = 0;
