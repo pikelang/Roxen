@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.573 2004/05/14 16:30:42 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.574 2004/05/14 16:36:01 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1454,6 +1454,10 @@ mapping(string:mixed) unlock_file(string path, DAVLock lock, RequestID id)
 //! @param lockscope
 //!   Scope of lock either @expr{"DAV:exclusive"@} or
 //!   @expr{"DAV:shared"@}.
+//!
+//! @param expiry_delta
+//!   Idle time in seconds before the lock expires. @expr{0@} (zero)
+//!   means no expiry.
 //!
 //! @returns
 //!   Returns a result mapping on failure,
