@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997-2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.92 2001/10/12 23:24:45 nilsson Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.93 2001/10/25 14:58:51 grubba Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -255,6 +255,14 @@ class SqlEmitResponse {
       sqlres = 0;
       return 0;
     }
+    val = map(val, lambda(mixed x) {
+		     if (x) return x;
+		     // Might be a dbnull object.
+		     // Transform NULLString to "".
+		     if ((x != 0) && (x->type)) return x->type;
+		     // Let other null objects become 0.
+		     return 0;
+		   });
     return mkmapping(cols, val);
   }
 
@@ -361,7 +369,7 @@ class TagSQLTable {
 	  else {
 	    ret += "<tr>";
 	    foreach(row, mixed value)
-	      ret += "<td>" + (!value?nullvalue:(string)value) + "</td>";
+	      ret += "<td>" + (string)(value || nullvalue) + "</td>";
 	    ret += "</tr>\n";
 	  }
 	}
