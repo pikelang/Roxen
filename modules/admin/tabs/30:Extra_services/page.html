@@ -22,6 +22,9 @@
       <autosite-intraseek-launch id=¤customer¤>
     </sqloutput>
   </if>
+  <if variable="disable is Intraseek">
+     <autosite-intraseek-delete id=¤customer¤>
+  </if>
 
   <sqloutput quote='£' query="select feature from features_list order by feature">
     <obox title='£feature£'>

@@ -1,12 +1,12 @@
 /*
- * $Id: intraseek_helper.pike,v 1.5 1998/09/21 15:44:57 js Exp $
+ * $Id: intraseek_helper.pike,v 1.6 1998/09/22 23:38:23 js Exp $
  *
  * AutoSeek, Intraseek helper module
  *
  * Johan Schön 1998-09-08
  */
 
-constant cvs_version = "$Id: intraseek_helper.pike,v 1.5 1998/09/21 15:44:57 js Exp $";
+constant cvs_version = "$Id: intraseek_helper.pike,v 1.6 1998/09/22 23:38:23 js Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -55,6 +55,7 @@ string tag_create(string tag_name, mapping args, object id)
 
   o->profile_handler->create_profile(args->id, data);
   o->profile_handler->save_profiles(o->query("profilespath"));
+  o->build_active_databases_list();
 
   return "Intraseek profile created.";
 }
@@ -67,6 +68,7 @@ string tag_delete(string tag_name, mapping args, object id)
     return "Intraseek not present.";
   o->profile_handler->remove_profile(args->id);
   o->profile_handler->save_profiles(o->query("profilespath"));
+  o->build_active_databases_list();
   return "Intraseek profile deleted.";
 }
 
@@ -84,6 +86,7 @@ string tag_launch(string tag_name, mapping args, object id)
 
 string tag_search(string tag_name, mapping args, object id)
 {
+  werror("id: %O\n",id->misc->customer_id);
   if(!sizeof(id->conf->get_provider("sql")->sql_object(id)->
 	     query("select feature from features where customer_id="+
 		   id->variables->customer_id+" and feature='Intraseek'")))

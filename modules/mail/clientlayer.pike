@@ -1,5 +1,5 @@
 /*
- * $Id: clientlayer.pike,v 1.18 1998/09/20 00:50:06 per Exp $
+ * $Id: clientlayer.pike,v 1.19 1998/09/22 23:38:30 js Exp $
  *
  * A module for Roxen AutoMail, which provides functions for
  * clients.
@@ -10,7 +10,7 @@
 #include <module.h>
 inherit "module" : module;
 
-constant cvs_version="$Id: clientlayer.pike,v 1.18 1998/09/20 00:50:06 per Exp $";
+constant cvs_version="$Id: clientlayer.pike,v 1.19 1998/09/22 23:38:30 js Exp $";
 constant thread_safe=1;
 
 
@@ -683,7 +683,11 @@ string get_user_realname(int user_id)
 int find_user( string username_at_host )
 {
   catch {
-    [string user, string domain]=get_addr(lower_case(username_at_host))/"@";
+    string user,domain;
+    if(search(username_at_host,"@")!=-1)
+      [user,domain]=get_addr(lower_case(username_at_host))/"@";
+    else if(search(username_at_host,"*")!=-1)
+      [user,domain]=get_addr(lower_case(username_at_host))/"*";
     int customer_id;
     array a = squery("select customer_id from dns where domain='%s' "
 		     " group by customer_id", domain);

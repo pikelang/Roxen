@@ -1,5 +1,5 @@
 // Roxen AutoMail POP3 Server
-// $Id: pop3.pike,v 1.2 1998/09/22 18:09:24 leif Exp $
+// $Id: pop3.pike,v 1.3 1998/09/22 23:38:31 js Exp $
 // Leif Stensson, September 1998.
 
 #include <module.h>
@@ -139,7 +139,9 @@ void retrieve_mail(mixed id, int msgno, int lines)
       mixed s;
       id->clientport->write("+OK Mail data follows.\r\n");
       while ((s = f->gets()) != 0)
-      { if (stringp(s) && sizeof(s) > 0 && s[0] == ".")
+      {
+	s+="\n";
+	if (stringp(s) && sizeof(s) > 0 && s[0] == ".")
                id->clientport->write(".");
         id->clientport->write(s);
         if (sizeof(s) < 2 || s[sizeof(s)-2..] != "\r\n")
@@ -147,8 +149,10 @@ void retrieve_mail(mixed id, int msgno, int lines)
         if (s == "\n" || s == "\r\n" || s == "") break;
       }
       while ((s = f->gets()) != 0 && (--lines != -1))
-      { if (stringp(s) && sizeof(s) > 0 && s[0] == ".")
-               id->clientport->write(".");
+      {
+	s+="\n";
+	if (stringp(s) && sizeof(s) > 0 && s[0] == ".")
+	  id->clientport->write(".");
         id->clientport->write(s);
         if (sizeof(s) < 2 || s[sizeof(s)-2..] != "\r\n")
             id->clientport->write("\r\n");
@@ -200,6 +204,7 @@ void client_read_callback(mixed id, string data)
     switch (upper_case(cmd[0..3]))
     {
       case "USER":
+       werror(cmd);
         if (id->state != "AUTHORIZATION")
         { id->clientport->write("-ERR Not allowed.\r\n");
           break;
