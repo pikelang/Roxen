@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.17 1996/12/04 09:40:04 per Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.18 1996/12/05 08:46:53 neotron Exp $";
 #define IN_ROXEN
 #include <module.h>
 #include <variables.h>
@@ -655,6 +655,8 @@ private void write_to_log( string host, string rest, string oh, function fun )
 {
   int s;
   if(!host) host=oh;
+  if(!stringp(host))
+    host = "error:no_host";
   if(fun) fun(replace(rest, "$host", host));
 }
 
