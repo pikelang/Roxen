@@ -1,5 +1,5 @@
 /*
- * $Id: debuginformation.pike,v 1.4 1997/10/09 13:26:49 grubba Exp $
+ * $Id: debuginformation.pike,v 1.5 1997/10/09 15:02:36 grubba Exp $
  */
 
 inherit "wizard";
@@ -13,6 +13,9 @@ constant more=1;
 #if efun(_memory_usage)
 mapping last_usage = ([]);
 #endif
+
+constant colors = ({ "#f0f0ff", "white" });
+
 mixed page_0(object id, object mc)
 {
   string res="";
@@ -130,16 +133,19 @@ mixed page_0(object id, object mc)
 #if efun(get_profiling_info)
   first += "<p><br><p> Only functions that have been called more than "
     "ten times are listed.<p>";
-  res += "<table border=0 cellspacing=0 cellpadding=2 width=50%>\n"
+  res += "<table border=0 cellspacing=0 cellpadding=2 width=100%>\n"
     "<tr bgcolor=lightblue><th align=left colspan=2>Program</th>"
     "<th>&nbsp;</th><th align=right>Times cloned</th></tr>\n"
     "<tr bgcolor=lightblue><th>&nbsp;</th><th align=left>Function</th>"
     "<th>&nbsp;</th><th align=right>Times called</th></tr>\n";
   mapping programs = master()->programs;
+  int color = 1;
   foreach(sort(indices(programs)), string prog) {
     string tf = "";
     array(int|mapping(string:array(int))) arr =
       get_profiling_info(programs[prog]);
+
+    int start_color = color ^ 1;
 
     foreach(indices(arr[1]), string symbol) {
       arr[1][symbol] = arr[1][symbol][0];
@@ -151,22 +157,17 @@ mixed page_0(object id, object mc)
     foreach(reverse(funs), string fun) {
       if(arr[1][fun] > 10)
       {
-	if ((line % 6)<3) {
-	  tf += sprintf("<tr bgcolor=#f0f0ff><td>&nbsp;</td><td>%s()</td>"
-			 "<td>&nbsp;</td><td align=right>%d</td></tr>\n",
-			 html_encode_string(fun), arr[1][fun]); 
-	} else {
-	  tf += sprintf("<tr bgcolor=white><td>&nbsp;</td><td>%s()</td>"
-			 "<td>&nbsp;</td><td align=right>%d</td></tr>\n",
-			 html_encode_string(fun), arr[1][fun]); 
-	}
+	color ^= !(line % 3);
+	tf += sprintf("<tr bgcolor=%s><td>&nbsp;</td><td>%s()</td>"
+		      "<td>&nbsp;</td><td align=right>%d</td></tr>\n",
+		      colors[color], html_encode_string(fun), arr[1][fun]); 
 	line++;
       }
     }
     if(line && strlen(tf))
-      res+=sprintf("<tr bgcolor=#f0f0ff><td colspan=2><b>%s</b></td>"
+      res+=sprintf("<tr bgcolor=%s><td colspan=2><b>%s</b></td>"
 		   "<td>&nbsp</td><td align=right><b>%d</b></td></tr>\n",
-		   html_encode_string(prog), arr[0]) + tf;
+		   colors[start_color], html_encode_string(prog), arr[0]) + tf;
   }
   res += "</table>\n";
   first += html_border( res, 0, 5 );
