@@ -2,7 +2,7 @@
 //
 // Created 2002-02-18 by Marcus Wellhardh.
 //
-// $Id: License.pmod,v 1.14 2002/04/15 16:02:13 wellhard Exp $
+// $Id: License.pmod,v 1.15 2002/04/22 16:45:29 wellhard Exp $
 
 #if constant(roxen)
 #define INSIDE_ROXEN
@@ -216,6 +216,8 @@ class Key
   
   string created()      { return content->created; }
   string creator()      { return content->creator; }
+  string license_version()   { return content->license_version; }
+  string comment()      { return content->comment; }
   string filename()     { return _filename; }
   
   int is_module_unlocked(string m, string|void mode)
