@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.31 2000/01/23 06:20:31 nilsson Exp $
+//! $Id: module.pmod,v 1.32 2000/01/25 14:09:32 wellhard Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -801,13 +801,15 @@ class Context
   void leave_scope (Frame frame)
   {
     if (string scope_name = [string] frame->scope_name)
-      if (hidden[frame]) {
-	scopes[scope_name] = hidden[frame];
+      if (has_index (hidden, frame)) {
+	if (!(scopes[scope_name] = hidden[frame]))
+	  m_delete (scopes, scope_name);
 	m_delete (hidden, frame);
       }
     SCOPE_TYPE vars;
-    if (hidden[vars = [SCOPE_TYPE] frame->vars]) {
-      scopes["_"] = hidden[vars];
+    if (has_index (hidden, vars = [SCOPE_TYPE] frame->vars)) {
+      if (!(scopes["_"] = hidden[vars]))
+	m_delete (scopes, "_");
       m_delete (hidden, vars);
     }
   }
