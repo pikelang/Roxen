@@ -12,6 +12,7 @@
 *.out -text -crlf
 /extern/cgi.testsuite/test3.out eol=crlf
 /server/modules/proxies/gopher.pike -text -crlf
+*.png binary
 *.ppm binary
 *.rc eol=crlf
 bi binary
