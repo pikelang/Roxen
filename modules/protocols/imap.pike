@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.20 1999/02/03 20:22:04 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.21 1999/02/03 20:25:23 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -705,7 +705,7 @@ class imap_mailbox
 		       attrs));
 
 #ifdef IMAP_DEBUG
-    werror(describe_backtrace(({ "Backtrace:", backtrace() })));
+    werror(describe_backtrace(({ "Backtrace:\n", backtrace() })));
     werror("=> res: %O\n", res);
 #endif /* IMAP_DEBUG */
       
@@ -835,7 +835,7 @@ class backend
 	      array(mapping) fetch_attrs)
   {
     return session->mailbox->fetch(message_set, fetch_attrs)
-      + session->mailbox->update();
+      + (session->mailbox->update() || ({}));
   }
 }
 
