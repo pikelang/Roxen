@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.254 2001/10/29 14:58:27 mast Exp $
+// $Id: module.pmod,v 1.255 2001/11/14 15:33:15 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -1865,7 +1865,7 @@ class Context
   //! should therefore be used whenever a tag that doesn't use
   //! @[RXML.FLAG_DONT_CACHE_RESULT] sets a value in @[misc] to be
   //! used by some other tag or variable later in the evaluation. In
-  //! other situations it's perfectly alright to access @[misc]
+  //! other situations it's perfectly all right to access @[misc]
   //! directly.
   //!
   //! @note
@@ -1873,6 +1873,13 @@ class Context
   //! cache. That means that you probably don't want to change them
   //! destructively, or else those changes can have propagated
   //! "backwards" when the cached p-code is used.
+  //!
+  //! @note
+  //! For compatibility reasons, changes of the _ok flag
+  //! (@tt{@[misc][" _ok"]@}) are detected and saved automatically.
+  //! Thus it is not necessary to call @[set_misc] to change it. This
+  //! is a special case and does not apply to any other entry in
+  //! @[misc].
   {
     if (value == nil) m_delete (misc, index);
     else misc[index] = value;
@@ -6762,6 +6769,10 @@ class PCode
   {
     if (flags & COLLECT_RESULTS) {
       PCODE_MSG ("adding result value %s\n", format_short (evaled_value));
+      if (ctx->misc[" _ok"] != ctx->misc[" _prev_ok"])
+	// Special case: Poll for changes of the _ok flag, to avoid
+	// widespread compatibility issues with the existing tags.
+	ctx->set_misc (" _ok", ctx->misc[" _ok"]);
       mapping var_chg = ctx->misc->variable_changes;
       if (length + (sizeof (var_chg) ? 2 : 1) > sizeof (exec))
 	exec += allocate (sizeof (exec));
@@ -6790,10 +6801,13 @@ class PCode
   void add_frame (Context ctx, Frame frame, mixed evaled_value,
 		  void|array frame_state)
   {
-  add_frame:
-    {
+  add_frame: {
     add_evaled_value:
       if (flags & COLLECT_RESULTS) {
+	if (ctx->misc[" _ok"] != ctx->misc[" _prev_ok"])
+	  // Special case: Poll for changes of the _ok flag, to avoid
+	  // widespread compatibility issues with the existing tags.
+	  ctx->set_misc (" _ok", ctx->misc[" _ok"]);
 	mapping var_chg = ctx->misc->variable_changes;
 	ctx->misc->variable_changes = ([]);
 	if (frame->flags & FLAG_DONT_CACHE_RESULT)
@@ -7109,6 +7123,11 @@ class PCode
       sprintf ("RXML.PCode(%O)%s", type, OBJ_COUNT);
   }
 
+  constant P_CODE_VERSION = 1;
+  // Version spec encoded with the p-code, so that we can detect and
+  // reject incompatible p-code dumps even when the encoded format
+  // hasn't changed in an obvious way.
+
   mixed _encode()
   {
     if (length != sizeof (exec)) exec = exec[..length - 1];
@@ -7127,13 +7146,15 @@ class PCode
     }
     flags |= FULLY_RESOLVED;
 
-    return ({tag_set, tag_set && tag_set->get_hash(),
+    return ({P_CODE_VERSION, tag_set, tag_set && tag_set->get_hash(),
 	     type, recover_errors, encode_p_code});
   }
 
   void _decode(array v, int check_hash)
   {
-    [tag_set, string tag_set_hash, type, recover_errors, exec] = v;
+    [int version, tag_set, string tag_set_hash, type, recover_errors, exec] = v;
+    if (version != P_CODE_VERSION)
+      error ("P-code is stale; it was made with an incompatible version.\n");
     length = sizeof (exec);
     if (tag_set) {
       if (check_hash && tag_set->get_hash() != tag_set_hash)
