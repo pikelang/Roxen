@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: global_variables.pike,v 1.98 2002/10/24 02:22:34 nilsson Exp $
+// $Id: global_variables.pike,v 1.99 2002/10/26 00:08:21 nilsson Exp $
 
 // NGSERVER: Move protocol settings to their own files.
 
@@ -59,7 +59,7 @@ void set_up_ftp_variables( Protocol o )
 
   defvar( "FTPWelcome",
           "              +------------------------------------------------\n"
-          "              +--      Welcome to the Roxen FTP server      ---\n"
+          "              +--    Welcome to the ChiliMoon FTP server    ---\n"
           "              +------------------------------------------------\n",
 	  "Welcome text", TYPE_TEXT,
           "The text shown to the user on connect." );
@@ -129,7 +129,7 @@ void set_up_http_variables( Protocol o )
 
   defvar("set_cookie_only_once", 1, "Logging: Set ID cookies only once",
 	 TYPE_FLAG,
-	 ("If set to Yes, Roxen will attempt to set unique browser "
+	 ("If set to Yes, ChiliMoon will attempt to set unique browser "
 	  "ID cookies only upon receiving the first request (and "
 	  "again after some minutes). Thus, if the user doesn't allow "
 	  "the cookie to be set, she won't be bothered with "
@@ -233,7 +233,7 @@ void define_global_variables(  )
 	   "<p>This is useful if you want to know if downloads were successful "
 	   "(the user has the complete file downloaded). The drawback is that "
 	   "bandwidth statistics on the log file will be incorrect. The "
-	   "statistics in Roxen will still be correct.</p>"));
+	   "statistics in ChiliMoon will still be correct.</p>"));
 
   defvar("default_font", "bastard", "Default font",
 	 TYPE_FONT,
@@ -307,11 +307,11 @@ void define_global_variables(  )
 	  "be removed first."),
 	  0, cache_disabled_p);
 
-  defvar("cachedir", "/tmp/roxen_cache/",
+  defvar("cachedir", "/tmp/chilimoon_cache/",
 	 "Cache: Proxy Disk Cache Base Cache Dir",
 	 TYPE_DIR,
 	 ("This is the base directory where cached files will "
-	  "reside. To avoid mishaps, 'roxen_cache/' is always "
+	  "reside. To avoid mishaps, 'chilimoon_cache/' is always "
 	  "appended to this variable."),
 	 0, cache_disabled_p);
 
@@ -361,11 +361,11 @@ void define_global_variables(  )
 	 "Identify, Use default identification string",
 	 TYPE_FLAG|VAR_MORE,
 	 ("Setting this variable to No will display the "
-	  "\"Identify as\" node where you can state what Roxen "
+	  "\"Identify as\" node where you can state what ChiliMoon "
 	  "should call itself when talking to clients.<br />"
 	  "It is possible to disable this so that you can enter an "
 	  "identification-string that does not include the actual "
-	  "version of Roxen, as recommended by the HTTP/1.0 and "
+	  "version of ChiliMoon, as recommended by the HTTP/1.0 and "
 	  "HTTP/1.1 RFCs:"
 	  "<p><blockquote><i>"
 	  "Note: Revealing the specific software version of the server "
@@ -377,25 +377,25 @@ void define_global_variables(  )
   
   defvar("ident", replace(real_version," ","·"), "Identify, Identify as",
 	 TYPE_STRING /* |VAR_MORE */,
-	 "Enter the name that Roxen should use when talking to clients. ",
+	 "Enter the name that ChiliMoon should use when talking to clients. ",
 	 0, ident_disabled_p);
   
   defvar("User", "", "Change uid and gid to",
 	 TYPE_STRING,
 	 #"\
-When Roxen is run as root, to be able to open port 80 for listening,
+When ChiliMoon is run as root, to be able to open port 80 for listening,
 change to this user-id and group-id when the port has been opened. If
 you specify a symbolic username, the default group of that user will
 be used. The syntax is user[:group].
 
 <p>A server restart is necessary for a change of this variable to take
 effect. Note that it also can lead to file permission errors if the
-Roxen process no longer can read files it previously has written.
+ChiliMoon process no longer can read files it previously has written.
 The start script attempts to fix this for the standard file locations.</p>");
 
   defvar("permanent_uid", 0, "Change uid and gid permanently",
 	 TYPE_FLAG,
-	 ("If this variable is set, Roxen will set it's uid and gid "
+	 ("If this variable is set, ChiliMoon will set it's uid and gid "
 	  "permanently. This disables the 'exec script as user' features "
 	  "for CGI, and also 'access files as user' in the filesystems, but "
 	  "it gives better security."));
@@ -403,9 +403,9 @@ The start script attempts to fix this for the standard file locations.</p>");
   defvar("ModuleDirs", ({ "../local/modules/", "modules/" }),
 	 "Module directories",
 	 TYPE_DIR_LIST,
-	 ("This is a list of directories where Roxen should look "
+	 ("This is a list of directories where ChiliMoon should look "
 	  "for modules. Can be relative paths, from the "
-	  "directory you started Roxen. "
+	  "directory you started ChiliMoon. "
 	  "The directories are searched in order for modules."));
 
   defvar("Supports",
@@ -413,7 +413,7 @@ The start script attempts to fix this for the standard file locations.</p>");
                         VAR_MORE, "Client supports regexps",
                         ("What do the different clients support?\n<br />"
 			 "The default information is normally fetched from the file "
-			 "server/data/supports in your Roxen directory.") ) )
+			 "server/data/supports in your ChiliMoon directory.") ) )
     -> add_changed_callback( lambda(Variable.Text s) {
                                roxenp()->initiate_supports();
                                cache.cache_expire("supports");
@@ -463,10 +463,10 @@ The start script attempts to fix this for the standard file locations.</p>");
 	 ({ "Fatal", "Errors",  "Warnings", "Debug", "All" }),
 	 syslog_disabled);
 
-  defvar("LogNA", "Roxen", "Logging: Log as",
+  defvar("LogNA", "ChiliMoon", "Logging: Log as",
 	 TYPE_STRING,
 	 ("When syslog is used, this will be the identification "
-	  "of the Roxen daemon. The entered value will be appended to "
+	  "of the ChiliMoon daemon. The entered value will be appended to "
 	  "all logs."),
 	 0, syslog_disabled);
 #endif // efun(syslog)
@@ -474,8 +474,8 @@ The start script attempts to fix this for the standard file locations.</p>");
 #ifdef THREADS
   defvar("numthreads", 5, "Number of threads to run",
 	 TYPE_INT,
-	 ("The number of simultaneous threads Roxen will use.\n"
-	  "<p>Please note that even if this is one, Roxen will still "
+	 ("The number of simultaneous threads ChiliMoon will use.\n"
+	  "<p>Please note that even if this is one, ChiliMoon will still "
 	  "be able to serve multiple requests, using a select loop based "
 	  "system.\n"
 	  "<i>This is quite useful if you have more than one CPU in "
@@ -505,7 +505,6 @@ The start script attempts to fix this for the standard file locations.</p>");
 	 lambda() {return !query("abs_engage");});
 #endif // __NT__
 
-  // Keep for now...
   defvar("locale",
 	 Variable.Language("Standard", ({ "Standard" }) +
 			   Locale.list_languages("roxen_""config"),
@@ -541,8 +540,8 @@ The start script attempts to fix this for the standard file locations.</p>");
   
   defvar("suicide_engage", 0, "Auto Restart: Enable Automatic Restart",
 	 TYPE_FLAG|VAR_MORE,
-	 ("If set, Roxen will automatically restart after a "
-	  "configurable number of days. Since Roxen uses a monolith, "
+	 ("If set, ChiliMoon will automatically restart after a "
+	  "configurable number of days. Since ChiliMoon uses a monolith, "
 	  "non-forking server model the process tends to grow in size "
 	  "over time. This is mainly due to heap fragmentation but "
 	  "may also sometimes be because of memory leaks.")
@@ -570,11 +569,11 @@ The start script attempts to fix this for the standard file locations.</p>");
 
   defvar("replicate", 0, "Enable replication system",
 	 TYPE_FLAG,
-	 ("If enabled, Roxen will enable various replication systems "
+	 ("If enabled, ChiliMoon will enable various replication systems "
 	  "needed to set up multiple frontend systems. You will need "
 	  "a database named 'replicate' that recides in a shared mysql "
 	  "server for this to work. Also, all servers has to have this "
-	  "flag set. Roxen must be restarted before changes to this "
+	  "flag set. ChiliMoon must be restarted before changes to this "
 	  "variable takes effect." ) );
   
   defvar("config_file_comments", 0, "Commented config files",
@@ -588,7 +587,7 @@ The start script attempts to fix this for the standard file locations.</p>");
   // SNMP stuffs
   defvar("snmp_agent", 0, "SNMP: Enable SNMP agent",
 	 TYPE_FLAG|VAR_MORE,
-	 "If set, the Roxen SNMP agent will be anabled.");
+	 "If set, the ChiliMoon SNMP agent will be anabled.");
 
   defvar("snmp_community", ({"public:ro"}), "SNMP: Community string",
          TYPE_STRING_LIST,
@@ -655,7 +654,7 @@ void restore_global_variables()
 static mapping(string:mixed) __vars = ([ ]);
 
 // These two should be documented somewhere. They are to be used to
-// set global, but non-persistent, variables in Roxen.
+// set global, but non-persistent, variables in ChiliMoon.
 mixed set_var(string var, mixed to)
 {
   return __vars[var] = to;
