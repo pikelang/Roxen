@@ -32,6 +32,15 @@ umask 022
 #
 # pidfile=$configdir/_roxen_pid
 
+# Xauthority for CMS Instant
+#
+# If the forms and respons module in CMS Instant is enabled roxen has
+# to connect to the X server during start. Two examples are provided,
+# for linux/gdm and solaris/dtlogin.
+#
+# export XAUTHORITY=/var/gdm/:0.Xauth
+# export XAUTHORITY=`/bin/ls -1t /var/dt/A:0-* | /bin/head -1`
+
 ### You should not _have_ to change anything below here...
 
 # chkconfig: - 90 20
