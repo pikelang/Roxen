@@ -108,7 +108,7 @@ string parse( RequestID id )
         "<tr><td bgcolor='"+ct+"'>"
         "<nobr>"
         +(ii?"<a href='browser.pike?db="+db+"'>":"")+
-        "<cimg border='0' "
+        "<cimg border='0' format='gif'"
         "      src='/internal-roxen-database_small' alt='' max-height='12'/>"
         "  <gtext border='0' scale='0.4'>"+db+"</gtext> &nbsp;"
         +(ii?"</a>":"")+
