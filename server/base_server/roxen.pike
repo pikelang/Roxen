@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.627 2001/02/05 11:50:06 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.628 2001/02/05 14:43:46 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -2396,6 +2396,10 @@ class ArgCache
     if( q = cache[ data ] )
       return q[ CACHE_SKEY ];
 
+    LOCK();
+    if( q = cache[ data ] )
+      return q[ CACHE_SKEY ];
+
     if( sizeof( cache ) >= CACHE_SIZE )
     {
       array i = indices(cache);
@@ -2412,7 +2416,6 @@ class ArgCache
       }
     }
 
-    LOCK();
     string id = create_key( data );
     cache[ data ] = ({ 0, 0 });
     cache[ data ][ CACHE_VALUE ] = copy_value( args );
@@ -2426,22 +2429,20 @@ class ArgCache
   //! may be supplied to get an error message stating the browser name
   //! in the event of the key not being present any more in the cache.
   {
-    if(cache[id] && cache[ cache[id] ] )
-      return cache[cache[id]][CACHE_VALUE];
+    mixed v ;
+    if( (v=cache[id]) && (v=cache[ v ]) )
+      return v[CACHE_VALUE];
 
     string q = read_args( id );
 
     if(!q) error("Requesting unknown key\n");
 
     mixed data = decode_value(q);
-#if 1
-    if( arrayp( data ) )
+
+    if( !mapingp( data ) )
       data = mkmapping( data[0],data[1] );
-#endif
      
-    cache[ q ] = ({0,0});
-    cache[ q ][ CACHE_VALUE ] = data;
-    cache[ q ][ CACHE_SKEY ] = id;
+    cache[ q ] = ({data,id});
     cache[ id ] = q;
     return data;
   }
