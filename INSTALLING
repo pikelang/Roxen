@@ -60,7 +60,7 @@
      cd <dir>/server.
 
      (Where <dir> is /usr/local/roxen following 4a, or
-      <wanted_base_path_for_roxen> if you used 4b.)
+      <wanted_base_path_for_roxen>/roxen if you used 4b.)
 
   6. Start the install script by typing ./install.
 
