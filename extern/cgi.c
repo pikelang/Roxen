@@ -1,5 +1,5 @@
 /*
- * $Id: cgi.c,v 1.24 1998/04/11 13:57:02 grubba Exp $
+ * $Id: cgi.c,v 1.25 1998/04/15 15:59:35 grubba Exp $
  *
  * CGI-wrapper for Roxen.
  *
@@ -377,7 +377,7 @@ char *is_end_of_headers(char *s, int len)
 
 int parse_and_send_headers(char *header_end)
 {
-  char *error, *pointer;
+  char *error, *pointer = NULL;
   if(headers)
   {
     if(((error=strstr(headers, "status:")) || 
@@ -400,7 +400,7 @@ int parse_and_send_headers(char *header_end)
       send_data("HTTP/1.0 ", 9);
       send_data(error, tmp - error);
       send_data("\r\n", 2);
-      /*  send_data(headers, pointer-headers);*/
+      /*  send_data(headers, hpointer-headers);*/
       send_data(tmp+skip, hpointer-(tmp+skip-headers));
       free(headers);
       return 1;
@@ -524,7 +524,7 @@ int main(int argc, char **argv)
     if(!raw)
     {
       char *header_end;
-      if(header_end = is_end_of_headers(foo, re)) 
+      if((header_end = is_end_of_headers(foo, re)))
 	raw = parse_and_send_headers(header_end);
     } else 
       send_data(bar, re);
