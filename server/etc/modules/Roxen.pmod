@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.174 2004/05/05 21:19:22 mast Exp $
+// $Id: Roxen.pmod,v 1.175 2004/05/12 17:41:18 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -3806,6 +3806,10 @@ static string trace_msg (RequestID id, string msg, string name)
 
 void trace_enter (RequestID id, string msg, object|function thing)
 {
+  // Necessary since requests can finish and be destructed
+  // asynchronously.
+  if (!id) return;
+
   if (!id->misc->trace_level) {
     id->misc->trace_id_prefix = ({"%%", "##", "§§", "**", "@@", "$$", "¤¤"})[
       all_constants()->id_trace_level_rotate_counter++ % 7];
@@ -3844,6 +3848,10 @@ void trace_enter (RequestID id, string msg, object|function thing)
 
 void trace_leave (RequestID id, string desc)
 {
+  // Necessary since requests can finish and be destructed
+  // asynchronously.
+  if (!id) return;
+
   if (id->misc->trace_level) id->misc->trace_level--;
 
   if (sizeof (desc)) trace_msg (id, desc, "");
