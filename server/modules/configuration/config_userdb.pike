@@ -24,7 +24,7 @@ class ConfigurationSettings
   string name, host;
 
   mapping locs = ([]);
-  void deflocaledoc( string locale, string variable, 
+  void deflocaledoc( string locale, string variable,
                      string name, string doc, mapping|void translate)
   {
     if(!locs[locale] )
@@ -66,7 +66,7 @@ class ConfigurationSettings
     if( variables[ what ] )
       return variables[what][VAR_VALUE];
   }
-  
+
   void save()
   {
     werror("Saving settings for "+name+"\n");
@@ -92,7 +92,7 @@ class ConfigurationSettings
             ([
               "english":"Show advanced configuration options",
               "svenska":"Visa avancerade val",
-            ]), 
+            ]),
             ([ "english":"Show all possible configuration options, not only "
                "the ones that are most often changed.",
                "svenska":"Visa alla konfigureringsval, inte bara de som "
@@ -104,7 +104,7 @@ class ConfigurationSettings
               "english":"Show developer options and actions",
               "svenska":"Visa utvecklingsval och funktioner",
             ]),
-            ([ 
+            ([
               "english":"Show settings and actions that are not normaly "
               "useful for non-developer users. If you develop your own "
               "roxen modules, this option is for you",
@@ -120,7 +120,7 @@ void get_context( string ident, string host, object id )
   if( settings_cache[ ident ] )
     id->misc->config_settings = settings_cache[ ident ];
   else
-    id->misc->config_settings = settings_cache[ ident ] 
+    id->misc->config_settings = settings_cache[ ident ]
                               = ConfigurationSettings( ident );
   id->misc->config_settings->host = host;
 }
@@ -155,7 +155,7 @@ void create()
                   ([
                     "svenska":"Läsa inställingar",
                   ]));
-  add_permission( "Edit Users", 
+  add_permission( "Edit Users",
                   ([
                     "svenska":"Editera användare",
                   ]) );
@@ -199,22 +199,22 @@ class User
   string real_name;
   string password;
   multiset permissions = (<>);
-  
+
   string form( RequestID id )
   {
     string varpath = "config_user_"+name+"_";
     string error = "";
     // Sort is needed (see c_password and password interdepencencies)
-    foreach( sort(glob( varpath+"*", indices(id->variables) )), 
+    foreach( sort(glob( varpath+"*", indices(id->variables) )),
              string v )
     {
       string rp = v;
       sscanf( v, varpath+"%s", v );
-      switch( v ) 
+      switch( v )
       {
        case "name": break;
-       case "real_name": 
-         real_name = id->variables[rp]; 
+       case "real_name":
+         real_name = id->variables[rp];
          save();
          break;
        case "c_password":
@@ -222,8 +222,8 @@ class User
            password = id->variables[rp];
          break;
 
-       case "password":  
-         if( strlen( id->variables[rp] ) && 
+       case "password":
+         if( strlen( id->variables[rp] ) &&
              (id->variables[rp+"2"] == id->variables[rp]) )
            password = crypt( id->variables[rp] );
          else
@@ -352,7 +352,7 @@ void delete_admin_user( string s )
 
 array(string) list_admin_users()
 {
-  return map( glob( "*_uid", settings->list() ), 
+  return map( glob( "*_uid", settings->list() ),
               lambda( string q ) {
                 sscanf( q, "%s_uid", q );
                 return q;
@@ -404,6 +404,16 @@ array auth( array auth, RequestID id )
   }
   report_notice( "Failed login attempt %s from %s\n", u, host);
   return ({ 0, u, p });
+}
+
+void start()
+{
+  roxen->add_configuration_auth( this_object() );
+}
+
+void stop()
+{
+  roxen->remove_configuration_auth( this_object() );
 }
 
 void first_try( RequestID id )

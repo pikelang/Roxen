@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.393 2000/01/20 18:13:25 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.394 2000/01/21 12:11:38 per Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -1002,7 +1002,7 @@ class SSLProtocol
       }
 
       SSL3_WERR(sprintf("Using DSA key."));
-	
+
       dsa->use_random(r);
       ctx->dsa = dsa;
       /* Use default DH parameters */
@@ -3129,26 +3129,63 @@ array(int) parse_since(string date)
 
 array configuration_auth=({});
 mapping configuration_perm=([]);
-void add_permission(string name, mapping desc) {
-  configuration_perm[name]=desc;
-  foreach(configuration_auth, RoxenModule o)
-    o->add_permission(name, desc);
+
+void add_permission(string name, mapping desc)
+{
+  configuration_perm[ name ]=desc;
+  configuration_auth->add_permission( name, desc );
 }
-void add_configuration_auth(RoxenModule o) {
+
+void remove_configuration_auth(RoxenModule o)
+{
   configuration_auth-=({o});
-  configuration_auth+=({o});
 }
-string configuration_authenticate(RequestID id, string what) {
-  if(!id->realauth) return 0;
+
+void add_configuration_auth(RoxenModule o)
+{
+  configuration_auth|=({o});
+}
+
+string configuration_authenticate(RequestID id, string what)
+{
+  if(!id->realauth)
+    return 0;
+
   array auth;
   RoxenModule o;
-  foreach(configuration_auth, o) {
+  foreach(configuration_auth, o)
+  {
     auth=o->auth( ({"",id->realauth}), id);
     if(auth) break;
   }
-  if(!auth) return 0;
-  if(!auth[0]) return 0;
-  if(o->find_admin_user( auth[1] )->auth(what))
+  if(!auth)
+    return 0;
+  if(!auth[0])
+    return 0;
+  if( o->find_admin_user( auth[1] )->auth( what ) )
     return auth[1];
   return 0;
+}
+
+array(object) get_config_users( string uname )
+{
+  return configuration_auth->find_admin_user( uname );
+}
+
+
+array(string|object)
+  list_config_users( string uname, string|void required_auth )
+{
+  array users = `+( ({}), configuration_auth->list_admin_users( ) );
+  if( !required_auth )
+    return users;
+
+  array res = ({ });
+  foreach( users, string q )
+  {
+    foreach( get_config_users( q ), object o )
+      if( o->auth( required_auth ) )
+        res += ({ o });
+  }
+  return res;
 }
