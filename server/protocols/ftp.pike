@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.21 1999/12/27 14:33:33 nilsson Exp $
+ * $Id: ftp.pike,v 2.22 1999/12/27 14:41:34 nilsson Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -431,7 +431,7 @@ class PutFileWrapper
 
   static mixed my_read_callback(mixed id, string data)
   {
-    DWRITE(sprintf("FTP: PUT: my_read_callback(X, \"%s\")\n", data||""));   
+    DWRITE(sprintf("FTP: PUT: my_read_callback(X, \"%s\")\n", data||""));
     ftpsession->touch_me();
     if(stringp(data))
       recvd += sizeof(data);
@@ -512,7 +512,7 @@ class PutFileWrapper
   {
     return from_fd->query_address(loc);
   }
-  
+
   void create(object fd_, object session_, object ftpsession_)
   {
     from_fd = fd_;
@@ -570,7 +570,7 @@ class LS_L
 
   static constant months = ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
 			      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" });
-  
+
   static string name_from_uid(int uid)
   {
     string|array(string) user = master_session->conf->auth_module &&
@@ -591,17 +591,17 @@ class LS_L
 
     int mode = st[0] & 007777;
     array(string) perm = "----------"/"";
-  
+
     if (st[1] < 0) {
       perm[0] = "d";
     }
-  
+
     foreach(decode_mode, array(string|int) info) {
       if ((mode & info[0]) == info[1]) {
 	perm[info[2]] = info[3];
       }
     }
-  
+
     mapping lt = localtime(st[3]);
 
     // NOTE: SiteBuilder may set st[5] and st[6] to strings.
@@ -782,7 +782,7 @@ class LSFile
 	total += blocks;
 	if (flags & LS_FLAG_s) {
 	  res += sprintf("%7d ", blocks);
-	}	      
+	}	
 	if (flags & LS_FLAG_b) {
 	  short = quote_non_print(short);
 	}
@@ -970,7 +970,7 @@ class LSFile
       // EBCDIC
       conv = Locale.Charset.encoder("EBCDIC-US", "");
     }
-    
+
     array(string) files = allocate(sizeof(argv));
     int n_files;
 
@@ -980,9 +980,9 @@ class LSFile
       string long = fix_path(short);
       array st = stat_file(long, session);
       if (st && st != -1) {
-	if ((< -2, -3 >)[st[1]] && 
+	if ((< -2, -3 >)[st[1]] &&
 	    (!(flags & LS_FLAG_d))) {
-	  // Directory 
+	  // Directory
 	  dir_stack->push(short);
 	} else {
 	  files[n_files++] = short;
@@ -1339,7 +1339,7 @@ class FTPSession
     // Miscellaneous commands
     "SITE":"<sp> <string> (Site parameters)",	// Has separate help
     "NOOP":"(No operation)",
-    
+
     // Old "Experimental commands"
     // These are in RFC 775
     // Required by RFC 1123 4.1.3.1
@@ -1380,7 +1380,7 @@ class FTPSession
     "UMASK":"<sp> mode",
     "PRESTATE":"<sp> prestate",
   ]);
-  
+
   static private constant modes = ([
     "A":"ASCII",
     "E":"EBCDIC",
@@ -1628,7 +1628,7 @@ class FTPSession
       privs = 0;
       DWRITE(sprintf("FTP: socket(%d, %O) failed. Trying with any port.\n",
 			   local_port-1, local_addr));
-      
+
       if(!f->open_socket(0, local_addr))
       {
 	DWRITE(sprintf("FTP: socket(0, %O) failed. "
@@ -1775,7 +1775,7 @@ class FTPSession
     array|mapping file;
 
     file = stat_file(fname, session);
-    
+
     if (arrayp(file)) {
       array st = file;
       file = 0;
@@ -1849,7 +1849,7 @@ class FTPSession
     }
     else
     {
-      send(425, ({ "Can't build data connect: Connection refused." })); 
+      send(425, ({ "Can't build data connect: Connection refused." }));
       return;
     }
     switch(file->mode) {
@@ -1894,7 +1894,7 @@ class FTPSession
 #ifndef DISABLE_FTP_THROTTLING
     mapping throttle=session->throttle||([]);
     object pipe;
-    if ( conf && 
+    if ( conf &&
          ((throttle->doit && conf->query("req_throttle")) ||
           conf->throttler
           ) ) {
@@ -1919,7 +1919,7 @@ class FTPSession
 #else
     object pipe=((program)"fastpipe")();
 #endif
-    
+
     pipe->set_done_callback(send_done_callback, ({ fd, session }) );
     master_session->file = session->file = file;
     if(stringp(file->data)) {
@@ -2335,7 +2335,7 @@ class FTPSession
       send(550, (argv[0] + ": " + err[0])/"\n");
       return;
     }
-      
+
     if (sizeof(argv) == 1) {
       argv += ({ "./" });
     }
@@ -2518,7 +2518,7 @@ class FTPSession
 	  DWRITE(sprintf("FTP2: Increasing # of sessions for user %O\n",user));
 	  port_obj->ftp_sessions[user]--;
 
-	  user = 0;	  
+	  user = 0;	
 	  return;
 	}
 	
@@ -2605,7 +2605,7 @@ class FTPSession
 
       array(int) st = conf->stat_file(master_session->misc->home,
 				      master_session);
-      
+
       master_session->auth = auth;
 
       if (st && (st[1] < 0)) {
@@ -2613,7 +2613,7 @@ class FTPSession
       }
     }
     logged_in = 1;
-    send(230, ({ sprintf("User %s logged in.", user) })); 
+    send(230, ({ sprintf("User %s logged in.", user) }));
     conf->log(([ "error":202 ]), master_session);
   }
 
@@ -2720,7 +2720,7 @@ class FTPSession
   {
     int a, b, c, d, e, f;
 
-    if (sscanf(args||"", "%d,%d,%d,%d,%d,%d", a, b, c, d, e, f)<6) 
+    if (sscanf(args||"", "%d,%d,%d,%d,%d,%d", a, b, c, d, e, f)<6)
       send(501, ({ "I don't understand your parameters" }));
     else {
       dataport_addr = sprintf("%d.%d.%d.%d", a, b, c, d);
@@ -2838,7 +2838,7 @@ class FTPSession
     restart_point = (int)args;
     send(350, ({ "'REST' ok" }));
   }
-  
+
   void ftp_ABOR(string args)
   {
     if (curr_pipe) {
@@ -2864,18 +2864,18 @@ class FTPSession
   /*
    * Handling of file moving
    */
-  
+
   static private string rename_from; // rename from
-  
+
   void ftp_RNFR(string args)
   {
     if (!expect_argument("RNFR", args)) {
       return;
     }
     args = fix_path(args);
-    
+
     object session = RequestID2(master_session);
-    
+
     session->method = "STAT";
 
     if (stat_file(args, session)) {
@@ -2896,9 +2896,9 @@ class FTPSession
       return;
     }
     args = fix_path(args);
-    
+
     object session = RequestID2(master_session);
-    
+
     session->method = "MV";
     session->misc->move_from = rename_from;
     session->not_query = args;
@@ -2909,7 +2909,7 @@ class FTPSession
     rename_from = 0;
   }
 
-    
+
   void ftp_NLST(string args)
   {
     // ftp_MLST(args); return;
@@ -2948,7 +2948,7 @@ class FTPSession
   void ftp_MLSD(string args)
   {
     args = fix_path(args || ".");
-    
+
     object session = RequestID2(master_session);
 
     session->method = "DIR";
@@ -3047,7 +3047,7 @@ class FTPSession
     session->method = "MKDIR";
     session->data = 0;
     session->misc->len = 0;
-    
+
     if (open_file(args, session, "MKD")) {
       send(257, ({ sprintf("\"%s\" created.", args) }));
       session->conf->log(([ "error":200 ]), session);
@@ -3237,7 +3237,7 @@ class FTPSession
 			   args*" ") }));
       return;
     }
-    
+
     int mode;
     foreach(args[0] / "", string m)
       // We do this loop, instead of using a sscanf or cast to be able
@@ -3260,7 +3260,7 @@ class FTPSession
 
     string fname = fix_path(args[1..]*" ");
     object session = RequestID2(master_session);
-    
+
     session->method = "CHMOD";
     session->misc->mode = mode;
     session->not_query = fname;
@@ -3270,7 +3270,7 @@ class FTPSession
       session->conf->log(([ "error":200 ]), session);
     }
   }
-  
+
   void ftp_SITE_UMASK(array(string) args)
   {
     if (sizeof(args) < 1) {
@@ -3278,7 +3278,7 @@ class FTPSession
 			   args*" ") }));
       return;
     }
-    
+
     int mode;
     foreach(args[0] / "", string m)
       // We do this loop, instead of using a sscanf or cast to be able

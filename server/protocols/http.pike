@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright � 1996 - 1998, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.178 1999/12/27 14:33:35 nilsson Exp $";
+constant cvs_version = "$Id: http.pike,v 1.179 1999/12/27 14:41:36 nilsson Exp $";
 
 #define MAGIC_ERROR
 
@@ -145,7 +145,7 @@ void decode_charset_encoding( function decoder )
     rawauth = decoder( rawauth );
     realauth = decoder( realauth );
   }
-  if( since ) 
+  if( since )
     since = decoder( since );
 
   decode_map( variables, decoder );
@@ -204,7 +204,7 @@ private void setup_pipe()
                    (int)(throttle->rate*conf->query("req_throttle_depth_mult")),
                    0);
   }
-  if (conf && conf->throttler) { 
+  if (conf && conf->throttler) {
     pipe->assign_throttler(conf->throttler);
   }
 }
@@ -278,7 +278,7 @@ private int really_set_config(array mod_config)
 	  config[m[1..]]=0;
 	else
 	  config[m]=1;
-      
+
     if(sscanf(replace(raw_url,({"%3c","%3e","%3C","%3E" }),
 		      ({"<",">","<",">"})),"/<%*s>/%s",url)!=2)
       url = "/";
@@ -303,8 +303,8 @@ private int really_set_config(array mod_config)
 	  prestate[m[1..]]=0;
 	else
 	  prestate[m]=1;
-      
-    if (sscanf(replace(raw_url, ({ "%3c", "%3e", "%3C", "%3E" }), 
+
+    if (sscanf(replace(raw_url, ({ "%3c", "%3e", "%3C", "%3E" }),
 		       ({ "<", ">", "<", ">" })),   "/<%*s>/%s", url) == 2) {
       url = "/" + url;
     }
@@ -340,20 +340,20 @@ private int parse_got()
   int config_in_url;
 
   REQUEST_WERR(sprintf("HTTP: parse_got(%O)", raw));
-  if (!method) {  // Haven't parsed the first line yet.  
+  if (!method) {  // Haven't parsed the first line yet.
     // We check for \n only if \r\n fails, since Netscape 4.5 sends
-    // just a \n when doing a proxy-request. 
+    // just a \n when doing a proxy-request.
     // example line:
     //   "CONNECT mikabran:443 HTTP/1.0\n"
     //   "User-Agent: Mozilla/4.5 [en] (X11; U; Linux 2.0.35 i586)"
     // Die Netscape, die! *grumble*
     // Luckily the solution below shouldn't ever cause any slowdowns
-    
+
     if (!sscanf(raw, "%s\r\n%s", line, s) &&
 	!sscanf(raw, "%s\n%s", line, s)) {
       // Not enough data. Unless the client writes one byte at a time,
       // this should never happen, really.
-      
+
       REQUEST_WERR(sprintf("HTTP: parse_got(%O): Not enough data.", raw));
       return 0;
     }
@@ -361,7 +361,7 @@ private int parse_got()
     {
       // Incorrect request actually - min possible (HTTP/0.9) is "GET /"
       // but need to support PING of course!
-      
+
       REQUEST_WERR(sprintf("HTTP: parse_got(%O): Malformed request.", raw));
       return 1;
     }
@@ -430,11 +430,11 @@ private int parse_got()
 
     case 1:
       // PING...
-      if(method == "PING") 
+      if(method == "PING")
 	break;
       // only PING is valid here.
       return 1;
-      
+
     default:
       // Too many or too few entries ->  Hum.
       return 1;
@@ -449,10 +449,10 @@ private int parse_got()
     }
   }
   if(method == "PING") {
-    my_fd->write("PONG\r\n"); 
+    my_fd->write("PONG\r\n");
     return 2;
   }
-  
+
   raw_url    = f;
   time       = _time(1);
   // if(!data) data = "";
@@ -462,7 +462,7 @@ private int parse_got()
   {
     if(my_fd) {
       remoteaddr = my_fd->query_address();
-      if(remoteaddr) 
+      if(remoteaddr)
       	sscanf(remoteaddr, "%s %*s", remoteaddr);
     }
     if(!remoteaddr) {
@@ -473,7 +473,7 @@ private int parse_got()
   }
 
   REQUEST_WERR(sprintf("After Remote Addr:%O", f));
-  
+
   f = scan_for_query( f );
 
   REQUEST_WERR(sprintf("After query scan:%O", f));
@@ -488,7 +488,7 @@ private int parse_got()
   }
 
   REQUEST_WERR(sprintf("After cookie scan:%O", f));
-  
+
   if (prf == "(" && (sscanf(f, "/(%s)/%s", a, f)==2) && strlen(a))
   {
     prestate = aggregate_multiset(@(a/","-({""})));
@@ -496,7 +496,7 @@ private int parse_got()
   }
 
   REQUEST_WERR(sprintf("After prestate scan:%O", f));
-  
+
   not_query = simplify_path(f);
 
   REQUEST_WERR(sprintf("After simplify_path == not_query:%O", not_query));
@@ -505,13 +505,13 @@ private int parse_got()
 
   if(sizeof(s)) {
     //    sscanf(s, "%s\r\n\r\n%s", s, data);
-    //     s = replace(s, "\n\t", ", ") - "\r"; 
+    //     s = replace(s, "\n\t", ", ") - "\r";
     //     Handle rfc822 continuation lines and strip \r
     foreach(s/"\r\n" - ({""}), line)
     {
       //      REQUEST_WERR(sprintf("Header :%s", line));
       //      linename=contents=0;
-      
+
       if(sscanf(line, "%s:%*[ \t]%s", linename, contents) == 3)
       {
       	REQUEST_WERR(sprintf("Header-sscanf :%s", linename));
@@ -533,7 +533,7 @@ private int parse_got()
 	      wanted_data=l;
 	      have_data=strlen(data);
 
-	      if(strlen(data) < l) 
+	      if(strlen(data) < l)
               {
 		REQUEST_WERR("HTTP: parse_request(): More data needed in POST.");
 		return 0;
@@ -554,7 +554,7 @@ private int parse_got()
 		    {
 		      a = http_decode_string( a );
 		      b = http_decode_string( b );
-		     
+		
 		      if(variables[ a ])
 			variables[ a ] +=  "\0" + b;
 		      else
@@ -586,11 +586,11 @@ private int parse_got()
 	      }
 	    }
 	    break;
-	  
+	
 	  case "authorization":
 	    rawauth = contents;
 	    break;
-	  
+	
 	  case "proxy-authorization":
 	    array y;
 	    y = contents / " ";
@@ -599,7 +599,7 @@ private int parse_got()
 	    y[1] = decode(y[1]);
 	    misc->proxyauth=y;
 	    break;
-	  
+	
 	  case "pragma":
 	    pragma|=aggregate_multiset(@replace(contents, " ", "")/ ",");
 	    break;
@@ -623,18 +623,18 @@ private int parse_got()
 	  case "referer":
 	    referer = contents/" ";
 	    break;
-	    
+	
 	  case "extension":
 #ifdef DEBUG
           werror("Client extension: "+contents+"\n");
 #endif
 	  case "request-range":
 	    contents = lower_case(contents-" ");
-	    if(!search(contents, "bytes")) 
+	    if(!search(contents, "bytes"))
 	      // Only care about "byte" ranges.
 	      misc->range = contents[6..];
 	    break;
-	    
+	
 	  case "range":
 	    contents = lower_case(contents-" ");
 	    if(!misc->range && !search(contents, "bytes"))
@@ -644,7 +644,7 @@ private int parse_got()
 	      // Duh!!!
 	      misc->range = contents[6..];
 	    break;
-	      
+	
 	  case "connection":
 	  case "content-type":
 	    misc[linename] = lower_case(contents);
@@ -713,14 +713,14 @@ private int parse_got()
 	  case "forwarded":
 	  case "new-uri":
 	    misc[linename]=contents;
-	    break;	    
+	    break;	
 
 	  case "proxy-by":
 	  case "proxy-maintainer":
 	  case "proxy-software":
 	  case "mime-version":
 	    break;
-	    
+	
 	  case "if-modified-since":
 	    since=contents;
 	    break;
@@ -731,16 +731,16 @@ private int parse_got()
   }
 
   REQUEST_WERR("HTTP: parse_got(): after header scan");
-#ifndef DISABLE_SUPPORTS    
+#ifndef DISABLE_SUPPORTS
   if(!client) {
     client = ({ "unknown" });
     supports = find_supports("", supports); // This makes it somewhat faster.
-  } else 
+  } else
     supports = find_supports(lower_case(client*" "), supports);
 
   // MSIE 5.0 sends all requests UTF8-encoded.
   if (supports->requests_are_utf8_encoded) {
-    catch 
+    catch
     {
       if( !variables->magic_roxen_automatic_charset_variable )
         variables->magic_roxen_automatic_charset_variable = "åäö";
@@ -755,12 +755,12 @@ private int parse_got()
   if(misc->proxyauth) {
     // The Proxy-authorization header should be removed... So there.
     mixed tmp1,tmp2;
-    
+
     foreach(tmp2 = (raw / "\n"), tmp1) {
       if(!search(lower_case(tmp1), "proxy-authorization:"))
 	tmp2 -= ({tmp1});
     }
-    raw = tmp2 * "\n"; 
+    raw = tmp2 * "\n";
   }
   if(config_in_url) {
     REQUEST_WERR("HTTP: parse_got(): config_in_url");
@@ -853,7 +853,7 @@ void end(string|void s, int|void keepit)
     };
     my_fd = 0;
   }
-  disconnect();  
+  disconnect();
 }
 
 static void do_timeout()
@@ -922,11 +922,11 @@ string link_to(string what, int eid, int qq)
 
 string format_backtrace(array bt, int eid)
 {
-  // first entry is always the error, 
-  // second is the actual function, 
+  // first entry is always the error,
+  // second is the actual function,
   // rest is backtrace.
   //   bt = map( bt, html_encode_string );
-  bt = map( bt, lambda( string q ){ 
+  bt = map( bt, lambda( string q ){
                   return highlight_pike("foo", ([ "nopre":1 ]), q);
                 } );
   string reason = roxen.diagnose_error( bt );
@@ -1005,7 +1005,7 @@ int store_error(array err)
   mapping e = roxen.query_var("errors");
   if(!e) roxen.set_var("errors", ([]));
   e = roxen.query_var("errors"); /* threads... */
-  
+
   int id = ++e[0];
   if(id>1024) id = 1;
   e[id] = ({err,raw_url,censor(raw)});
@@ -1023,9 +1023,9 @@ array get_error(string eid)
 void internal_error(array err)
 {
   array err2;
-  if(QUERY(show_internals)) 
+  if(QUERY(show_internals))
   {
-    err2 = catch { 
+    err2 = catch {
       array(string) bt = (describe_backtrace(err)/"\n") - ({""});
       file = http_low_answer(500, format_backtrace(bt, store_error(err)));
     };	
@@ -1058,7 +1058,7 @@ constant errors =
   203:"203 Provisional Information",
   204:"204 No Content",
   206:"206 Partial Content", // Byte ranges
-  
+
   300:"300 Moved",
   301:"301 Permanent Relocation",
   302:"302 Temporary Relocation",
@@ -1081,7 +1081,7 @@ constant errors =
   501:"501 Not Implemented",
   502:"502 Gateway Timeout",
   503:"503 Service unavailable",
-  
+
   ]);
 
 
@@ -1114,7 +1114,7 @@ void timer(int start)
 		    stringp(pipe->current_input) ?
 		    strlen(pipe->current_input) : -1,
 		    pipe->last_called,
-		    _time(1) - start, 
+		    _time(1) - start,
 		    not_query));
   } else {
     MARK_FD("HTTP piping, but no pipe for "+not_query);
@@ -1152,7 +1152,7 @@ string handle_error_file_request(array err, int eid)
     lines[max(off-20,0)] = "<a name=here>"+lines[max(off-20,0)]+"</a>";
     data = lines*"\n";
   }
-  
+
   return format_backtrace(bt,eid)+"<hr noshade><pre>"+data+"</pre>";
 }
 
@@ -1239,7 +1239,7 @@ class MultiRangeWrapper
       // no more ranges remain.
       separator = 2;
       out += "\r\n--" BOUND "--\r\n";
-    }  
+    }
     if(strlen(out) > total)
     {
       // Oops. too much data again. Write and store. Write and store.
@@ -1248,7 +1248,7 @@ class MultiRangeWrapper
     }
     return out ; // We are finally done.
   }
-  
+
   mixed `->(string what)
   {
     switch(what) {
@@ -1260,7 +1260,7 @@ class MultiRangeWrapper
 
      case "query_fd":
       return lambda() { return -1; };
-      
+
      default:
       return file[what];
     }
@@ -1279,16 +1279,16 @@ array parse_range_header(int len)
       // End of file request
       r1 = (len - (int)range[1..]);
       if(r1 < 0) {
-	// Entire file requested here. 
+	// Entire file requested here.
 	r1 = 0;
       }
-      ranges += ({ ({ len - (int)range[1..], len-1 }) }); 
+      ranges += ({ ({ len - (int)range[1..], len-1 }) });
     } else if(range[-1] == '-') {
       // Rest of file request
       r1 = (int)range;
       if(r1 >= len)
 	// Range beginning is after EOF.
-	continue; 
+	continue;
       ranges += ({ ({ r1, len-1 }) });
     } else if(sscanf(range, "%d-%d", r1, r2)==2) {
       // Standard range
@@ -1298,13 +1298,13 @@ array parse_range_header(int len)
 	  continue;
 	ranges += ({ ({ r1, r2 < len ? r2 : len -1  }) });
       }
-      else 
+      else
 	// A syntatically incorrect range should make the server
 	// ignore the header. Really.
 	return 0;
     } else
       // Invalid syntax again...
-      return 0; 
+      return 0;
   }
   return ranges;
 }
@@ -1329,7 +1329,7 @@ void send_result(mapping|void result)
   }
 
   REQUEST_WERR(sprintf("HTTP: send_result(%O)", file));
-  
+
   if(!mappingp(file))
   {
     if(misc->error_code)
@@ -1338,14 +1338,14 @@ void send_result(mapping|void result)
       file=http_low_answer(404,
 			   replace(parse_rxml(conf->query("ZNoSuchFile"),
                                               this_object()),
-				   ({"$File", "$Me"}), 
+				   ({"$File", "$Me"}),
 				   ({not_query,
 				     conf->query("MyWorldLocation")})));
     }) {
       internal_error(err);
     }
   } else {
-    if((file->file == -1) || file->leave_me) 
+    if((file->file == -1) || file->leave_me)
     {
       if(do_not_disconnect) {
 	file = 0;
@@ -1360,7 +1360,7 @@ void send_result(mapping|void result)
     if(file->type == "raw")  file->raw = 1;
     else if(!file->type)     file->type="text/plain";
   }
-  
+
   if(!file->raw)
   {
     heads = ([]);
@@ -1374,14 +1374,14 @@ void send_result(mapping|void result)
       {
 	if(file->file && !file->len)
 	  file->len = fstat[1];
-    
+
 	if (fstat[3] > misc->last_modified) {
 	  misc->last_modified = fstat[3];
 	}
 
 	if(prot != "HTTP/0.9") {
 	  heads["Last-Modified"] = http_date(misc->last_modified);
-	  
+	
 	  if(since)
 	  {
 	    /* ({ time, len }) */
@@ -1398,7 +1398,7 @@ void send_result(mapping|void result)
 	  }
 	}
       }
-      if(stringp(file->data)) 
+      if(stringp(file->data))
 	file->len += strlen(file->data);
     }
     if(prot != "HTTP/0.9") {
@@ -1419,10 +1419,10 @@ void send_result(mapping|void result)
 
       if(file->encoding)
 	heads["Content-Encoding"] = file->encoding;
-    
-      if(!file->error) 
+
+      if(!file->error)
 	file->error=200;
-    
+
       if(file->expires)
 	heads->Expires = http_date(file->expires);
 
@@ -1443,10 +1443,10 @@ void send_result(mapping|void result)
       {
 	// split the range header. If no valid ranges are found, ignore it.
 	// If one is found, send that range. If many are found we need to
-	// use a wrapper and send a multi-part message. 
+	// use a wrapper and send a multi-part message.
 	array ranges = parse_range_header(file->len);
 	if(ranges) // No incorrect syntax...
-	{ 
+	{
 	  if(sizeof(ranges)) // And we have valid ranges as well.
 	  {
 	    file->error = 206; // 206 Partial Content
@@ -1481,7 +1481,7 @@ void send_result(mapping|void result)
 	  }
 	}
       }
-    
+
       head_string = prot+" "+(file->rettext||errors[file->error])+"\r\n";
       array tmp_head = ({});
       foreach(indices(heads), h)
@@ -1492,11 +1492,11 @@ void send_result(mapping|void result)
 	  tmp_head += ({ `+(h, ": ", heads[h]) });
       if(sizeof(tmp_head))
 	head_string += tmp_head * "\r\n" + "\r\n";
-    
-      if(file->len > -1) 
+
+      if(file->len > -1)
 	head_string += "Content-Length: "+ file->len +"\r\n";
       head_string += "\r\n";
-    
+
       if(conf) conf->hsent += strlen(head_string);
     }
   }
@@ -1528,7 +1528,7 @@ void send_result(mapping|void result)
   {
     if(file->data && strlen(file->data))
       send(file->data, file->len);
-    if(file->file)  
+    if(file->file)
       send(file->file, file->len);
   } else
     file->len = 1; // Keep those alive, please...
@@ -1570,7 +1570,7 @@ void handle_request( )
 	    else
 	      file = ([
 		"type":"text/html",
-		"data":handle_error_file_request( err[0], 
+		"data":handle_error_file_request( err[0],
 						  (int)variables->error ),
 	      ]);
 	  }
@@ -1592,22 +1592,22 @@ void handle_request( )
 }
 
 /* We got some data on a socket.
- * ================================================= 
+ * =================================================
  */
 int processed;
 void got_data(mixed fooid, string s)
 {
   int tmp;
-  
+
   MARK_FD("HTTP got data");
   remove_call_out(do_timeout);
-  call_out(do_timeout, 30); // Close down if we don't get more data 
+  call_out(do_timeout, 30); // Close down if we don't get more data
                          // within 30 seconds. Should be more than enough.
   time = _time(1); // Check is made towards this to make sure the object
   		  // is not killed prematurely.
   if(!raw)
     raw = s;
-  else 
+  else
     raw += s;
   if(wanted_data)
   {
@@ -1620,24 +1620,24 @@ void got_data(mixed fooid, string s)
       return;
     }
   }
-  
-  
+
+
   // If the request starts with newlines, it's a broken request. Really!
   //  sscanf(s, "%*[\n\r]%s", s);
   if(strlen(raw)) tmp = parse_got();
   switch(tmp)
-  { 
+  {
    case 0:
-    //    if(this_object()) 
+    //    if(this_object())
     //      cache = ({ s });		// More on the way.
     REQUEST_WERR("HTTP: Request needs more data.");
     return;
-    
+
    case 1:
     REQUEST_WERR("HTTP: Stupid Client Error");
     end((prot||"HTTP/1.0")+" 500 Stupid Client Error\r\nContent-Length: 0\r\n\r\n");
     return;			// Stupid request.
-    
+
    case 2:
     REQUEST_WERR("HTTP: Done");
     end();
@@ -1664,30 +1664,30 @@ void got_data(mixed fooid, string s)
     conf = port_obj->urls[port_obj->sorted_urls[0]]->conf;
   }
 
-  if (rawauth) 
+  if (rawauth)
   {
     /* Need to authenticate with the configuration */
     array(string) y = rawauth / " ";
     realauth = 0;
     auth = 0;
-    if (sizeof(y) >= 2) 
+    if (sizeof(y) >= 2)
     {
       y[1] = MIME.decode_base64(y[1]);
       realauth = y[1];
-      if (conf->auth_module) 
+      if (conf->auth_module)
         y = conf->auth_module->auth(y, this_object());
       auth = y;
     }
   }
 
 
-  if( misc->proxyauth ) 
+  if( misc->proxyauth )
   {
     /* Need to authenticate with the configuration */
-    if (sizeof(misc->proxyauth) >= 2) 
+    if (sizeof(misc->proxyauth) >= 2)
     {
       //    misc->proxyauth[1] = MIME.decode_base64(misc->proxyauth[1]);
-      if (conf->auth_module) 
+      if (conf->auth_module)
         misc->proxyauth
           = conf->auth_module->auth(misc->proxyauth,this_object() );
     }
@@ -1698,13 +1698,13 @@ void got_data(mixed fooid, string s)
 
   REQUEST_WERR("HTTP: Calling roxen.handle().");
 
-  my_fd->set_close_callback(0); 
-  my_fd->set_read_callback(0); 
+  my_fd->set_close_callback(0);
+  my_fd->set_read_callback(0);
   processed=1;
   roxen.handle(this_object()->handle_request);
 }
 
-/* Get a somewhat identical copy of this object, used when doing 
+/* Get a somewhat identical copy of this object, used when doing
  * 'simulated' requests. */
 
 object clone_me()
@@ -1737,8 +1737,8 @@ object clone_me()
   c->prot = prot;
   c->clientprot = clientprot;
   c->method = method;
-  
-// realfile virtfile   // Should not be copied.  
+
+// realfile virtfile   // Should not be copied.
   c->rest_query = rest_query;
   c->raw = raw;
   c->query = query;
@@ -1757,7 +1757,7 @@ void clean()
 {
   if(!(my_fd && objectp(my_fd)))
     end();
-  else if((_time(1) - time) > 4800) 
+  else if((_time(1) - time) > 4800)
     end();
 }
 
@@ -1798,7 +1798,7 @@ void chain(object f, object c, string le)
       disconnect();
     }
   } else {
-    if(do_not_disconnect == -1) 
+    if(do_not_disconnect == -1)
       do_not_disconnect = 0;
     if(!processed) {
       f->set_close_callback(end);

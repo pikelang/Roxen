@@ -48,7 +48,7 @@ mixed `->(string a)
      o->_fd = orig::`->("my_fd");
      return o;
    case "_nono": return _nono;
-   default: 
+   default:
      if(_modified[a]) return _modified[a];
      if(!_nono) return orig::`->(a);
   }
@@ -78,22 +78,22 @@ void send_result(mapping|void result)
   {
     if(misc->error_code)
       file = http_low_answer( misc->error_code, errors[misc->erorr_code] );
-    else if(this_object()->method != "GET" && 
-            this_object()->method != "HEAD" && 
+    else if(this_object()->method != "GET" &&
+            this_object()->method != "HEAD" &&
             this_object()->method != "POST")
       file = http_low_answer(501, "Not implemented.");
     else if(err = catch {
       file=http_low_answer(404,
                            replace(parse_rxml(conf->query("ZNoSuchFile"),
                                               thiso),
-                                   ({"$File", "$Me"}), 
+                                   ({"$File", "$Me"}),
                                    ({this_object()->not_query,
                                      conf->query("MyWorldLocation")})));
     }) {
       internal_error(err);
     }
   } else {
-    if((file->file == -1) || file->leave_me) 
+    if((file->file == -1) || file->leave_me)
     {
       FWWW_WERR("file->file == -1 or file->leave_me.");
       if(_modified->do_not_disconnect) {
@@ -106,7 +106,7 @@ void send_result(mapping|void result)
     }
     if(!file->type)     file->type="text/plain";
   }
-  
+
   if(!file->raw)
   {
     string h;
@@ -115,14 +115,14 @@ void send_result(mapping|void result)
         "Content-type":file["type"],
         "Server":replace(version(), " ", "·"),
         // 	"Date":http_date(this_object()->time)
-      ]);    
+      ]);
 
     if(file->encoding)
       heads["Content-Encoding"] = file->encoding;
-    
-    if(!file->error) 
+
+    if(!file->error)
       file->error=200;
-    
+
     if(file->expires)
       heads->Expires = http_date(file->expires);
 
@@ -155,12 +155,12 @@ void send_result(mapping|void result)
         file->len += strlen(file->data);
     }
 
-    if(mappingp(file->extra_heads)) 
+    if(mappingp(file->extra_heads))
       heads |= file->extra_heads;
 
-    if(mappingp(misc->moreheads)) 
+    if(mappingp(misc->moreheads))
       heads |= misc->moreheads;
-    
+
     array myheads = ({this_object()->prot+" "+
                       (file->rettext||errors[file->error])});
     foreach(indices(heads), h)
@@ -231,7 +231,7 @@ void handle_request( object port_obj )
   function funp;
   object thiso=this_object();
 
-  if (misc->host) 
+  if (misc->host)
   {
     conf =
          port_obj->find_configuration_for_url(port_obj->name + "://" +
@@ -305,7 +305,7 @@ void handle_request( object port_obj )
 //       else
 //         file = ([
 //           "type":"text/html",
-//           "data":handle_error_file_request( err[0], 
+//           "data":handle_error_file_request( err[0],
 //                                             (int)variables->error ),
 //         ]);
 //     }
@@ -315,7 +315,7 @@ void handle_request( object port_obj )
       }
     }
   }
-  
+
   mixed e ;
   if( e = catch(file = conf->handle_request( this_object() )) )
     internal_error( e );

@@ -1,5 +1,5 @@
 // This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
-constant cvs_version = "$Id: gopher.pike,v 1.12 1999/12/27 14:33:34 nilsson Exp $";
+constant cvs_version = "$Id: gopher.pike,v 1.13 1999/12/27 14:41:35 nilsson Exp $";
 // Gopher protocol module
 
 #ifdef GOPHER_DEBUG
@@ -43,7 +43,7 @@ static private string encode_direntry(string file, string host, int port)
 
   /* Format: <type><title>[tab]<filename>[tab]<server>[tab]<port> */
 
-  if(file[-1] == '/') { 
+  if(file[-1] == '/') {
     type="1";
     title = (file/"/")[-2];
   } else  if(type == "text/html") {
@@ -125,7 +125,7 @@ void got_data(mixed fooid, string s)
 					      this_object());
 
   conf->received += strlen(s);
-  
+
   foreach(conf->first_modules(), function funp) {
     if (file = funp(this_object())) break;
   }
@@ -155,7 +155,7 @@ void got_data(mixed fooid, string s)
     if(file->file)   file->len += file->file->stat()[1];
   }
   if(file->len > 0) conf->sent+=file->len;
-  
+
   conf->log(file, this_object());
 
   if(file->data) send(file->data);
