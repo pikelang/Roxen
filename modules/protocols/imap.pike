@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.72 1999/02/18 21:25:23 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.73 1999/02/18 21:54:32 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -677,24 +677,37 @@ class imap_mailbox
       
     if (make_new_uids)
     {
+      // Order according to message_id
+      sort((array(int))a->message_id, a);
+
       /* Assign new uids to all mail */
-      foreach(old, object mail)
+      foreach(a, object mail)
 	mail->set(UID, alloc_uid());
-    } 
-    /* Assign uids to new mail */
-    foreach(new, object mail)
-      mail->set(UID, alloc_uid());
+    } else {
+      /* NOTE: The new mail come before the old mail. */
+      /* Extract the new mail */
+      array(object) new = a[..i-1];
+      array(object) old = a[i..];
+
+      // Order according to message_id
+      sort((array(int))new->message_id, new);
+      
+      /* Assign uids to new mail */
+      foreach(new, object mail)
+	mail->set(UID, alloc_uid());
+
+      a = old + new;
+    }
     
     /* Create imap_mail objects */
     int index = 1;
 
-    for(i = 0; i<sizeof(old); i++)
-      old[i] = imap_mail(old[i], 0, index++);
+    array(object) res = allocate(sizeof(a));
 
-    for(i = 0; i<sizeof(new); i++)
-      new[i] = imap_mail(new[i], 0, index++);
+    for(i = 0; i<sizeof(a); i++)
+      res[i] = imap_mail(a[i], 0, index++);
 
-    return old + new;
+    return res;
   }
   
   array update()
