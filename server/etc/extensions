@@ -1,4 +1,4 @@
-# $Id: extensions,v 1.53 2004/12/13 09:41:27 grubba Exp $
+# $Id: extensions,v 1.54 2005/03/24 12:19:48 grubba Exp $
 #
 # ---- Extension database ----
 # The database used by the content typ module to map from extension to mime-type
@@ -716,6 +716,7 @@ texi	application/x-texinfo
 texinfo	application/x-texinfo
 tgz	application/unix-tar	x-gzip
 tmv	application/x-Parable-Thing
+torrent	application/x-bittorrent
 tr	application/x-troff
 tsp	application/dsptype
 txi	application/x-texinfo
