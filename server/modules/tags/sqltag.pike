@@ -1,5 +1,5 @@
 /*
- * $Id: sqltag.pike,v 1.26 1998/07/22 16:11:33 noring Exp $
+ * $Id: sqltag.pike,v 1.27 1998/07/23 18:41:58 grubba Exp $
  *
  * A module for Roxen Challenger, which gives the tags
  * <SQLQUERY> and <SQLOUTPUT>.
@@ -7,7 +7,7 @@
  * Henrik Grubbström 1997-01-12
  */
 
-constant cvs_version="$Id: sqltag.pike,v 1.26 1998/07/22 16:11:33 noring Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.27 1998/07/23 18:41:58 grubba Exp $";
 constant thread_safe=1;
 #include <module.h>
 
@@ -140,6 +140,10 @@ string sqloutput_tag(string tag_name, mapping args, string contents,
     }
     if (error) {
       if (!args->quiet) {
+	if (args->log_error && QUERY(log_error)) {
+	  report_error(sprintf("SQLTAG: Couldn't connect to SQL-server:\n"
+			       "%s\n", describe_backtrace(error)));
+	}
 	contents = ("<h3>Couldn't connect to SQL-server</h1><br>\n" +
 		    html_encode_string(error[0]) + "<false>");
       } else {
@@ -147,6 +151,11 @@ string sqloutput_tag(string tag_name, mapping args, string contents,
       }
     } else if (error = catch(result = con->query(args->query))) {
       if (!args->quiet) {
+	if (args->log_error && QUERY(log_error)) {
+	  report_error(sprintf("SQLTAG: Query %O failed:\n"
+			       "%s\n",
+			       args->query, describe_backtrace(error)));
+	}
 	contents = ("<h3>Query \"" + html_encode_string(args->query)
 		    + "\" failed: " + html_encode_string(con->error()) 
 		    + "</h1>\n<false>");
@@ -217,6 +226,10 @@ string sqlquery_tag(string tag_name, mapping args,
     }
     if (error) {
       if (!args->quiet) {
+	if (args->log_error && QUERY(log_error)) {
+	  report_error(sprintf("SQLTAG: Couldn't connect to SQL-server:\n"
+			       "%s\n", describe_backtrace(error)));
+	}
 	return("<h3>Couldn't connect to SQL-server</h1><br>\n" +
 	       html_encode_string(error[0])+"<false>");
       } else {
@@ -224,6 +237,11 @@ string sqlquery_tag(string tag_name, mapping args,
       }
     } else if (error = catch(res = con->query(args->query))) {
       if (!args->quiet) {
+	if (args->log_error && QUERY(log_error)) {
+	  report_error(sprintf("SQLTAG: Query %O failed:\n"
+			       "%s\n",
+			       args->query, describe_backtrace(error)));
+	}
 	return("<h3>Query \"" + html_encode_string(args->query)+"\" failed: "
 	       + html_encode_string(con->error()) + "</h1>\n<false>");
       } else {
@@ -301,6 +319,10 @@ string sqltable_tag(string tag_name, mapping args,
     }
     if (error) {
       if (!args->quiet) {
+	if (args->log_error && QUERY(log_error)) {
+	  report_error(sprintf("SQLTAG: Couldn't connect to SQL-server:\n"
+			       "%s\n", describe_backtrace(error)));
+	}
 	return("<h3>Couldn't connect to SQL-server</h1><br>\n" +
 	       html_encode_string(error[0])+"<false>");
       } else {
@@ -308,6 +330,11 @@ string sqltable_tag(string tag_name, mapping args,
       }
     } else if (error = catch(result = con->big_query(args->query))) {
       if (!args->quiet) {
+	if (args->log_error && QUERY(log_error)) {
+	  report_error(sprintf("SQLTAG: Query %O failed:\n"
+			       "%s\n",
+			       args->query, describe_backtrace(error)));
+	}
 	return ("<h3>Query \"" + html_encode_string(args->query) +
 	        "\" failed: " + html_encode_string(con->error()) + "</h1>\n" +
 	        "<false>");
@@ -456,6 +483,11 @@ void create()
 	 "Valid values for \"sqlserver\" depend on which "
 	 "sql-servers your pike has support for, but the following "
 	 "might exist: msql, mysql, odbc, oracle, postgres.\n");
+
+  defvar("log_error", 0, "Enable the \"log_error\" attribute",
+	 TYPE_FLAG|VAR_MORE, "Enables the attribute \"log_error\" "
+	 "which causes errors to be logged to the event-log.\n");
+
 #ifdef SQL_TAG_COMPAT
   defvar("database", "", "Default SQL-database (deprecated)",
 	 TYPE_STRING|VAR_MORE,
