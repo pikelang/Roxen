@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1997 - 2001, Roxen IS.
 
-string cvs_version="$Id: pimage.pike,v 1.30 2002/10/22 00:26:22 nilsson Exp $";
+string cvs_version="$Id: pimage.pike,v 1.31 2004/05/16 23:21:19 mani Exp $";
 
 #include <module.h>
 inherit "module";
@@ -361,12 +361,12 @@ class Constructors
 
   object Roxen( )
   {
-    return load( "roxen-images/roxen.png" );
+    return load( "data/images/roxen.png" );
   }
 
   object Dial( )
   {
-    return load( "roxen-images/urtavla.png" );
+    return load( "data/images/urtavla.png" );
   }
 
   object PImage(int xs, int ys, mixed bgc)
