@@ -6,7 +6,7 @@ inherit "roxenlib";
 inherit Regexp : regexp;
 
 constant cvs_version = 
-"$Id: mailtags.pike,v 1.12 1998/09/16 18:53:23 per Exp $";
+"$Id: mailtags.pike,v 1.13 1998/09/18 14:08:50 per Exp $";
 
 constant thread_safe = 1;
 
@@ -56,6 +56,8 @@ void create()
 	 " resourcefull user could read all mail.",
 	 ({ "high", "mail", "low"}));
 
+  defvar("location", "/mailextras/", "Location", TYPE_LOCATION|VAR_MORE, "");
+
   regexp::create("^(.*)((http://|https://|ftp:/|news:|wais://|mailto:"
 		 "|telnet:)[^ \n\t\012\014\"<>|\\\\]*[^ \n\t\012\014"
 		 "\"<>|\\\\.,(){}?'`*])");
@@ -63,7 +65,8 @@ void create()
 
 array register_module()
 {
-  return ({ MODULE_PARSER|MODULE_PROVIDER, "Automail HTML client",
+  return ({ MODULE_PARSER|MODULE_PROVIDER|MODULE_LOCATION,
+	    "Automail HTML client",
 	    "This module adds quite a few new tags for Automail email "
 	    "handling. This module talks to the AutoMail client layer module",
 	    0,1 });
@@ -109,7 +112,46 @@ void start(int q, roxen.Configuration c)
     secure=0;
 }
 
+mapping find_file(string f, object id)
+{
+  array path = f/"/";
+  switch(path[0])
+  {
+   case "scroll":
+     return ([ "type":"image/gif", 
+	       "data":Image.GIF.encode(Image.image(1,50, 192,192,192)->
+				       paste(Image.image(1,(int)path[1]),
+					     0,(int)path[2]))
+     ]); 
+
+   case "scroll_up":
+     return ([ "type":"image/gif", "data":scroll_up ]);
+
+   case "scroll_down":
+     return ([ "type":"image/gif", "data":scroll_down ]);
+  }
+}
+
 /* Utility functions ---------------------------------------------- */
+
+
+
+string get_date( string from )
+{
+  mapping h = extended_headers(([ "date":from ]));
+  return h->reldate-" ago";
+}
+
+Image.image arrow(int flip)
+{
+  Image.image o = Image.image(15,15,192,192,192);
+  o->setcolor( 0,0,0 );
+  o->polyfill(({ 7.5,0,15,15,0,15,7.5,0 }));
+  return flip?o->mirrory():o;
+}
+
+string scroll_down = Image.GIF.encode(arrow(1));
+string scroll_up = Image.GIF.encode(arrow(0));
 
 // For multipart/alternative
 static int type_score( MIME.Message m )
@@ -376,16 +418,6 @@ static mapping common_callers( string prefix )
   return tags;
 }
 
-static string verify_ownership( Mail mailid, object id )
-{
-  if(!secure) return 0;
-  if(mailid->user != UID) 
-  {
-    id->realauth = 0;
-    return login( id );
-  }
-}
-
 static int num_unread(Mailbox from)
 {
 //   int res;
@@ -448,6 +480,14 @@ string login(object id)
 
 /* Tag functions --------------------------------------------------- */
 
+string tag_mail_userinfo( string tag, mapping args, object id )
+{
+  if(!UID) return "";
+  if(args->email)
+    return (id->realauth/":")[0];
+  return UID->query_name();
+}
+
 // <delete-mail mail=id>
 // Please note that this function only removes a reference from the
 // mail, if it is referenced by e.g. other clients, or is present in
@@ -455,10 +495,8 @@ string login(object id)
 
 string tag_delete_mail(string tag, mapping args, object id)
 {
-  string res;
+  if(!UID) return "";
   Mail mid = clientlayer->get_cache_obj( clientlayer->Mail, args->mail );
-  if(res = login(id))
-    return res;
   if(mid && mid->user == UID )
     mid->mailbox->remove_mail( mid );
   return "";
@@ -467,13 +505,8 @@ string tag_delete_mail(string tag, mapping args, object id)
 // <mail-body mail=id>
 string tag_mail_body(string tag, mapping args, object id)
 {
-  string res;
-  if(res = login(id))
-    return res;
-
+  if(!UID) return "";
   Mail mail = clientlayer->get_cache_obj( clientlayer->Mail, args->mail );
-  if(res = login(id))
-    return res;
   if(mail && mail->user == UID )
     return mail->body( );
 }
@@ -482,11 +515,11 @@ string tag_mail_body(string tag, mapping args, object id)
 //  .. page ...
 // </mail-verify-login>
 
-string container_mail_verify_login(string tag, mapping args, 
-				   string contents, object id)
+string container_mail_verify_login(string tag, mapping args, string
+				   contents, object id)
 {
-  string q = login(id);
-  if(q) return q;
+  if(string res = login(id))
+    return res;
   return contents;
 }
 
@@ -497,9 +530,7 @@ string container_list_mailboxes(string tag, mapping args, string contents,
 				object id)
 {
   string res;
-  if(res = login(id))
-    return res;
-
+  if(!UID) return "";
   UID->get_incoming();
 //   UID->get_drafts();
 
@@ -510,6 +541,8 @@ string container_list_mailboxes(string tag, mapping args, string contents,
       "name":m->name,
       "id":m->id,
     ]) });
+
+  sort(vars->name, vars);
 
   if(!args->quick)
   {
@@ -531,9 +564,8 @@ string tag_mail_next( string tag, mapping args, object id )
   int i;
   int start;
 
-  if(string res = login(id))
-    return res;
-
+  if(!UID) return "";
+  
   foreach( UID->mailboxes(), Mailbox m )
     if(m->id == (int)id->variables->mailbox_id )
     {
@@ -593,7 +625,7 @@ string tag_mail_next( string tag, mapping args, object id )
     start = 0;
 
   id->variables->index = (string)start;
-  if(sizeof(mail))
+  if(sizeof(mail)>start)
     return mail[ start ]->id;
   return "NOPE";
 }
@@ -605,7 +637,10 @@ string tag_mail_make_hidden( string tag, mapping args, object id )
 
   q->i = (string)time() + (string)gethrtime();
   m_delete(q, "qm");   m_delete(q, "col"); m_delete(q, "gtextid");
-  m_delete(q, "mailbox_id"); m_delete(q, "mail_match");
+  m_delete(q, "mailbox_id"); m_delete(q, "mail_match"); 
+  m_delete(q, "gtextid"); m_delete(q, "gtextid&selected;"); 
+  m_delete(q, "gtextidselected"); 
+//   werror("current: %O\n", q);
   foreach( indices(q), string v )
   {
     mapping w = ([ "type":"hidden" ]);
@@ -618,9 +653,7 @@ string tag_mail_make_hidden( string tag, mapping args, object id )
 
 string tag_process_move_actions( string tag, mapping args, object id )
 {
-  if(string res = login(id)) 
-    return res;
-
+  if(!UID) return "";
   foreach( glob("move_mail_to_*.x", indices(id->variables)), string v)
   {
     string mbox;
@@ -650,9 +683,7 @@ string tag_process_move_actions( string tag, mapping args, object id )
 
 string tag_process_user_buttons( string tag, mapping args, object id )
 {
-  if(string res = login(id)) 
-    return res;
-
+  if(!UID) return "";
   array b = UID->get( "html_buttons" );
 
   if(!b) return "";
@@ -674,9 +705,7 @@ string tag_process_user_buttons( string tag, mapping args, object id )
 // <user-buttons type=type>
 string tag_user_buttons( string tag, mapping args, object id )
 {
-  if(string res = login(id)) 
-    return res;
-
+  if(!UID) return "";
   // A button is:
   //    ({ /* one button... */
   //      "title",
@@ -709,7 +738,7 @@ string tag_user_buttons( string tag, mapping args, object id )
   string res = "";
   if(!b)
     return "";
-  werror("%O\n", b);
+//   werror("%O\n", b);
   for(int i = 0; i<sizeof(b); i++)
     if( b[i][ 1 ][ args->type ] )
     {
@@ -744,16 +773,57 @@ static int filter_mail_list( Mail m, object id )
 }
 
 
-#define MAIL_PER_PAGE 20
+string trim_from( string from )
+{
+  string q;
+  from = replace(from , "\\\"", "''");
+  if(sscanf(from, "%*s\"%s\"%*s", q)==3) return q;
+  if(sscanf(from, "\"%s\"<%*s@%*s>", q)) return q;
+  if(sscanf(from, "%s<%*s@%*s>", q)) return q;
+  if(sscanf(from, "(\"%s\")%*s@%*s", q)) return q;
+  if(sscanf(from, "(%s)%*s@%*s", q)) return q;
+  if(sscanf(from, "%*s@%*s(\"%s\")", q)==3) return q;
+  if(sscanf(from, "%*s@%*s(%s)", q)==3) return q;
+  return from;
+}
+
+string trim_subject( string from )
+{
+  string a,b;
+  string ofrom = from;
+  if(from == "0") from = "No subject";
+  if(sscanf(from, "%s[%*s]%s", a, b)==3)
+  {
+    from = a+b;
+    if(!strlen(from-" "))
+      from = ofrom;
+  }
+  return from[..40];
+}
+
+string tag_mail_scrollbar( string tag, mapping args, object id )
+{
+  float len = (float)args->num;
+  float start = ((int)args->start)/len;
+  float page = ((int)args->page)/len;
+  
+  return ("<input border=0 type=image name=scroll_up width=15 height=15 src="+
+	  query_location()+"scroll_up><br>"+
+	  "<input border=0 type=image name=scroll_goto height=300 width=15 src="+
+	  query_location()+"scroll/"+(int)(page*50)+"/"+(int)(start*50)+
+	  "><br>"
+	  "<input border=0 type=image name=scroll_down width=15 height=15 src="+
+	  query_location()+"scroll_down><br>");
+}
+
+#define MAIL_PER_PAGE 12
 // <list-mail-quick mailbox=id>
 array(string) tag_list_mail_quick( string tag, mapping args, object id )
 {
   string res;
   Mailbox mbox;
 
-  if(res = login(id))
-    return ({res});
-
+  if(!UID) return ({});
   foreach( UID->mailboxes(), Mailbox m )
     if(m->id == (int)args->mailbox )
     {
@@ -773,10 +843,10 @@ array(string) tag_list_mail_quick( string tag, mapping args, object id )
   
   foreach(sort(indices(q)), string v)
     if(q[v] != "0")
-      link += v+"="+http_encode_url( q[v] )+"&";
+      link += v+"="+http_encode_url( (string)q[v] )+"&";
   q = ([ "href":fix_relative(link[ .. strlen(link)-2 ], id) ]);
 
-  link = "<td><font size=-1><HIGHLIGHT>"+make_tag("a", q);
+  link = "<td><HIGHLIGHT>"+make_tag("a", q);
 
   string bg;
   int q;
@@ -784,53 +854,68 @@ array(string) tag_list_mail_quick( string tag, mapping args, object id )
   string pre="";
   string post="";
 
-  mail = Array.filter(mail, filter_mail_list, id);
+  mail = reverse(Array.filter(mail, filter_mail_list, id));
   if(sizeof(mail) > MAIL_PER_PAGE)
   {
-    int start = (int)id->variables->mail_list_start;
+    int start;
+    if(id->misc->mail_goto_rel)
+    {
+//       werror("mgr\n");
+      start=(int)(sizeof(mail)*id->misc->mail_goto_rel/100.0-MAIL_PER_PAGE/2);
+    }
+    else
+      start = (int)id->variables->mail_list_start;
+
     if(start > sizeof(mail)-MAIL_PER_PAGE)
       start = sizeof(mail)-MAIL_PER_PAGE;
+
     if(start < 0)
       start = 0;
     mapping m = ([]);
-    if(start > 0)
-    {
-      m->mail_list_start = (string) (start - MAIL_PER_PAGE);
-      pre = ("<tr><td bgcolor=#ddeeff colspan=2>"+
-	     container_mail_a( "gtext", m,"Older messages",id)+
-	     "</td></tr>");
-    }
-    if(start < sizeof(mail)-MAIL_PER_PAGE)
-    {
-      m->mail_list_start = (string) (start + MAIL_PER_PAGE);
-      post = ("<tr><td bgcolor=#ddeeff colspan=2>"+
-	      container_mail_a( "gtext", m,"Newer messages",id)+
-	      "	</td></tr>");
-    }
+    pre = ("<td rowspan="+MAIL_PER_PAGE+">"+
+	   "<mail-scrollbar start="+start+" page="+MAIL_PER_PAGE+
+	   " num="+sizeof(mail)+"></td>");
     mail = mail[ start .. start+MAIL_PER_PAGE-1 ];
+    id->variables->mail_list_start = (string)start;
   }
-
+  multiset flagged = mkmultiset((id->variables->flagged||"")/",");
+  int first_line;
+  string extra;
   foreach(mail, Mail m)
   {
-    string f = replace(link,({"HIGHLIGHT","#id#"}),({
-      m->flags()->read?"i":"b",m->id}));
+    string f = replace(link,({"<HIGHLIGHT>","#id#"}),({
+      m->flags()->read?"":"<b>",m->id}));
     mapping h = m->decoded_headers();
     if(h->subject && h->from)
     {
-      if(q++%2)
-	bg = " bgcolor=#ffeedd";
+      if(first_line++)
+	extra="";
       else
-	bg = "";
-      res += `+("<tr"+bg+">",
+	extra = pre;
+
+      res += `+("<tr bgcolor=#ffeedd>",
+		"<td align=right>",
+		m->flags()->read?"":"<new-mail-flag>",
+		"<font size=-1><input type=checkbox name=mail_"+m->id,
+		flagged[ m ]?"checked></font></td>":"></td>",
 		f,
-		html_encode_string(h->subject),
+		html_encode_string(trim_subject(h->subject)),
 		"</td>",
 		f,
-		html_encode_string(h->from),
-		"</td></tr>\n");
+		html_encode_string(trim_from(h->from)),
+		"</td>",
+		f,
+		"<nobr>"+get_date( h->date )+"</nobr>",
+		"</td>",
+		extra,
+		"</tr>\n");
     }
   }
-  return ({ pre+res+post });
+  return ({ res });
+}
+string tag_new_mail_flag( string tag, mapping args, object id )
+{
+  return "<img src=new.gif>"; // FIXME
 }
 
 string tag_process_mail_actions( string tag, mapping args, object id )
@@ -839,6 +924,10 @@ string tag_process_mail_actions( string tag, mapping args, object id )
   {
     switch(v-".x")
     {
+     case "list_boxes":
+       m_delete(id->variables, "mail_id");
+       m_delete(id->variables, "mailbox_id");
+       break;
      case "list_unread":
        m_delete(id->variables, "mail_id");
        m_delete(id->variables, "listall");
@@ -850,7 +939,7 @@ string tag_process_mail_actions( string tag, mapping args, object id )
      case "list_match":
        m_delete(id->variables, "mail_id");
        break;
-     case "list_clear":
+     case "list_clear_match":
        m_delete(id->variables, "mail_id");
        m_delete(id->variables, "mail_match");
        break;
@@ -863,13 +952,37 @@ string tag_process_mail_actions( string tag, mapping args, object id )
       tag_delete_mail( "delete", ([ "mail":id->variables->mail_id ]), id );
 
     if(id->variables["next.x"])
+    {
+//       werror("next "+id->variables->mail_id+" = ");
       id->variables->mail_id = tag_mail_next(tag,([]),id);
+//       werror(id->variables->mail_id+"\n");
+    }
     else if(id->variables["previous.x"])
       id->variables->mail_id = tag_mail_next(tag,(["previous":"1"]),id);
   }
 
-  foreach(glob("*.x", indices(id->varibales)), string v)
+  if(id->variables["scroll_down.x"])
   {
+    m_delete(id->variables, "scroll_down.x");
+    m_delete(id->variables, "scroll_down.y");
+    id->variables->mail_list_start
+      =(string)((int)id->variables->mail_list_start+MAIL_PER_PAGE);
+  } else if(id->variables["scroll_up.x"]) {
+    m_delete(id->variables, "scroll_up.x");
+    m_delete(id->variables, "scroll_up.y");
+    id->variables->mail_list_start
+      =(string)((int)id->variables->mail_list_start-MAIL_PER_PAGE);
+    if((int)id->variables->mail_list_start < 0)
+      id->variables->mail_list_start = 0;
+  } else if(id->variables["scroll_goto.x"]) {
+    id->misc->mail_goto_rel=((int)id->variables["scroll_goto.y"])/3;
+    m_delete(id->variables, "scroll_goto.x");
+    m_delete(id->variables, "scroll_goto.y");
+  }
+
+  foreach(glob("*.x", indices(id->variables)), string v)
+  {
+//     werror("var: " + v + "\n");
     m_delete(id->variables, v);
     m_delete(id->variables, replace(v, ".x", ".y"));
   }
@@ -887,9 +1000,7 @@ string container_list_mail( string tag, mapping args, string contents,
   int start = (int)args->start;
   int num = (int)args->num;
 
-  if(res = login(id))
-    return res;
-
+  if(!UID) return "";
   foreach( UID->mailboxes(), Mailbox m )
     if(m->id == (int)args->mailbox )
     {
@@ -920,6 +1031,8 @@ string container_mail_a( string tag, mapping args, string c, object id )
   q->i = (string)time() + (string)gethrtime();
   m_delete(q, "fg");   m_delete(q, "bg");
   m_delete(q, "font"); m_delete(q, "link");
+  m_delete(q, "gtextid"); m_delete(q, "gtextid&selected;"); 
+  m_delete(q, "gtextidselected"); 
   string link="?";
   
   foreach(sort(indices(q)), string v)
@@ -940,8 +1053,7 @@ string container_mail_a( string tag, mapping args, string c, object id )
 string tag_amail_user_variable( string tag, mapping args, object id )
 {
   mixed res;
-  if(res = login(id))
-    return res;
+  if(!UID) return "";
   if( args->set )
     return UID->set( "amhc_"+args->variable, args->set );
   else
@@ -958,6 +1070,10 @@ string last_mail;
 string tag_mail_body_part( string tag, mapping args, object id )
 {
   MIME.Message m;
+
+  if(mixed q = login( id )) 
+    return q;
+
   if(args->mail == last_mail)
     m = last_mail_mime;
   else
@@ -973,8 +1089,6 @@ string tag_mail_body_part( string tag, mapping args, object id )
   } else {
     mixed res;
     object p;
-    if(res = login(id))
-      return res;
     foreach( (array(int))(args->part / "/" - ({""})), int p )
     {
       if(m->body_parts&& sizeof(m->body_parts) > p )
@@ -1223,8 +1337,7 @@ string tag_debug_import_mail_from_dir( string tag, mapping args,
 {
   if(!debug) return "Debug is not enabled!\n";
 
-  if(mixed q = login( id )) 
-    return q;
+  if(!UID) return "";
   Mailbox incoming = UID->get_incoming();
 
   string res = "Importing from "+args->dir+"<p>\n";
@@ -1261,10 +1374,7 @@ string container_get_mail( string tag, mapping args,
   Mail mid = clientlayer->get_cache_obj( clientlayer->Mail, args->mail );
 
   if(!mid) return "Unknown mail!\n";
-  
-  if(res = login(id))
-    return res;
-
+  if(!UID) return "";
   mid->set_flag( "read" );
 
   if(mid && mid->user == UID)
