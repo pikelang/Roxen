@@ -8,7 +8,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: PXml.pike,v 1.42 2000/03/18 03:33:17 mast Exp $
+//! $Id: PXml.pike,v 1.43 2000/03/25 01:50:51 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
@@ -273,8 +273,8 @@ static mapping(string:TAG_DEF_TYPE) rt_replacements;
 
 local void add_runtime_tag (RXML.Tag tag)
 {
-  remove_runtime_tag (tag);
   if (!rt_replacements) rt_replacements = ([]);
+  else remove_runtime_tag (tag);
   string name = tag->name;
 
   if (!tag_set->prefix_req) {
