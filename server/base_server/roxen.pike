@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.713 2001/08/23 23:24:13 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.714 2001/08/24 13:19:30 mast Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -3278,16 +3278,6 @@ void create()
 
   define_global_variables();
 
-#ifndef __NT__
-  if(!getuid())
-    add_constant("Privs", Privs);
-  else
-#endif /* !__NT__ */
-    add_constant("Privs", class {
-      void create(string reason, int|string|void uid, int|string|void gid) {}
-    });
-
-
   // for module encoding stuff
 
   add_constant( "CFUserDBModule",config_userdb_module );
@@ -3299,21 +3289,6 @@ void create()
   //add_constant( "roxen.decode_charset", decode_charset);
 
 //   add_constant( "DBManager", ((object)"base_server/dbs.pike") );
-
-  DDUMP( "etc/modules/DBManager.pmod");
-  DDUMP( "base_server/roxenlib.pike");
-  DDUMP( "base_server/html.pike");
-  DDUMP( "etc/modules/Dims.pmod");
-  DDUMP( "config_interface/boxes/Box.pmod" );
-  add_constant( "RoxenModule", RoxenModule);
-  add_constant( "ModuleInfo", ModuleInfo );
-
-  add_constant( "load",    load);
-  add_constant( "Roxen.set_locale", set_locale );
-  add_constant( "Roxen.get_locale", get_locale );
-
-  add_constant( "roxen.locale", locale );
-  //add_constant( "roxen.ImageCache", ImageCache );
 
   // This is currently needed to resolve the circular references in
   // RXML.pmod correctly. :P
@@ -3340,6 +3315,31 @@ void create()
   dump( "base_server/supports.pike" );
   dump( "base_server/hosts.pike");
   dump( "base_server/language.pike");
+
+#ifndef __NT__
+  if(!getuid())
+    add_constant("Privs", Privs);
+  else
+#endif /* !__NT__ */
+    add_constant("Privs", class {
+      void create(string reason, int|string|void uid, int|string|void gid) {}
+    });
+
+
+  DDUMP( "etc/modules/DBManager.pmod");
+  DDUMP( "base_server/roxenlib.pike");
+  DDUMP( "base_server/html.pike");
+  DDUMP( "etc/modules/Dims.pmod");
+  DDUMP( "config_interface/boxes/Box.pmod" );
+  add_constant( "RoxenModule", RoxenModule);
+  add_constant( "ModuleInfo", ModuleInfo );
+
+  add_constant( "load",    load);
+  add_constant( "Roxen.set_locale", set_locale );
+  add_constant( "Roxen.get_locale", get_locale );
+
+  add_constant( "roxen.locale", locale );
+  //add_constant( "roxen.ImageCache", ImageCache );
 
 //int s = gethrtime();
   _configuration = (program)"configuration";
