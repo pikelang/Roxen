@@ -22,11 +22,12 @@ void check_fpath( string d )
       {
         if( sizeof( dl ) > 112 )
         {
-          write( "     Skipping "+d+", add it manually if you want it\n");
-          write( "       Please note that huge font-dirs can add to roxens boot-time\n");
+          write( "     Skipping "+d+". Add it manually if you want it.\n");
+          write( "     Please note that huge font-dirs can add to roxens "
+		 "boot-time.\n");
           return;
         }
-        write("     Usable font found in "+d+"\n");
+	write("      Usable font found in '"+d+"'.\n");
         font_dirs += ({ d });
         return;
       }
@@ -47,8 +48,7 @@ void run(object env)
       if( search( path, ":unscaled" ) == -1 
           && (search( path, "locale/" ) == -1 ||
               search( path, "UTF-8" ) != -1 ) )
-        check_fpath( path );
-    write("  Done. %d directories found.\n", sizeof( font_dirs ) );
+        check_fpath( path ); 
     env->append( "RX_FONTPATH", (font_dirs*",") );
   }
 }
