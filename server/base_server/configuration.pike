@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.56 1997/08/15 02:03:03 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.57 1997/08/15 02:05:45 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -396,20 +396,14 @@ array (function) first_modules(object id)
     {
       object *d, p;
       if(d=pri[i]->first_modules) {
-	perror("d: %O\n", d);
 	foreach(d, p) {
-	  perror("Trying %O... ", p);
 	  if(p->first_try) {
-	    perror("OK, adding %O\n", p->first_try);
 	    first_module_cache += ({ p->first_try });
-	  } else {
-	    perror("No first_try function!\n");
 	  }
 	}
       }
     }
   }
-  perror("first_modules() returns: %O\n", first_module_cache);
 
   return first_module_cache;
 }
@@ -916,7 +910,6 @@ mapping|int low_get_file(object id, int|void no_magic)
 
 #ifdef URL_MODULES
   // Map URL-modules
-  perror("url_modules: %O\n", url_modules(id));
   foreach(url_modules(id), funp)
   {
     LOCK(funp);
@@ -1094,7 +1087,6 @@ public array find_dir(string file, object id)
 
 #ifdef URL_MODULES
   // Map URL-modules
-  perror("url_modules: %O\n", url_modules(id));
   foreach(url_modules(id), function funp)
   {
     string of = id->not_query;
@@ -1166,7 +1158,6 @@ public array stat_file(string file, object id)
 
 #ifdef URL_MODULES
   // Map URL-modules
-  perror("url_modules: %O\n", url_modules(id));
   foreach(url_modules(id), function funp)
   {
     string of = id->not_query;
@@ -1760,7 +1751,6 @@ object enable_module( string modname )
       pri[pr]->filter_modules += ({ me });
 
     if(module->type & MODULE_FIRST) {
-      perror("MODULE_FIRST added: %O\n", me);
       pri[pr]->first_modules += ({ me });
     }
 
@@ -2192,7 +2182,6 @@ int disable_module( string modname )
       pri[pr]->filter_modules -= ({ me });
 
   if( module->type & MODULE_FIRST ) {
-    perror("Removing MODULE_FIRST: %O\n", me);
     for(pr=0; pr<10; pr++)
       pri[pr]->first_modules -= ({ me });
   }
