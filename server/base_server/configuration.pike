@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.281 2000/03/20 00:59:38 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.282 2000/03/20 03:22:03 mast Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -2084,6 +2084,8 @@ int|string try_get_file(string s, RequestID id,
   fake_id->not_query=s;
 
   if(!(m = get_file(fake_id,0,!not_internal))) {
+    // Might be a PATH_INFO type URL.
+    m_delete (fake_id->misc, "path_info");
     array a = open_file( s, "r", fake_id );
     if(a && a[0]) {
       m = a[1];
