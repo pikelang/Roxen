@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.12 1997/08/30 23:00:56 grubba Exp $
+# $Id: configure.in,v 1.13 1997/08/30 23:07:12 grubba Exp $
 #
 
 prefix=$PWD
@@ -68,6 +68,29 @@ then
 It is probably best to delete ./config.cache before proceeding])
 fi
 
+#
+# NOTE: These tests must be before AC_PROG_CC
+# since AC_PROG_CC sets CFLAGS by itself.
+#
+
+if test "x${CFLAGS-}" = "x" ; then
+  cflags_is_set=no
+else
+  cflags_is_set=yes
+fi
+
+if test "x${CPPFLAGS-}" = "x" ; then
+  cppflags_is_set=no
+else
+  cppflags_is_set=yes
+fi
+
+if test "x${LDFLAGS-}" = "x" ; then
+  ldflags_is_set=no
+else
+  ldflags_is_set=yes
+fi
+
 roxen_cv_prog_CC="$CC"
 
 AC_PROG_CC
@@ -120,24 +143,6 @@ esac
 
 
 # Set some of the compiler flags.
-
-if test "x${CFLAGS-}" = "x" ; then
-  cflags_is_set=no
-else
-  cflags_is_set=yes
-fi
-
-if test "x${CPPFLAGS-}" = "x" ; then
-  cppflags_is_set=no
-else
-  cppflags_is_set=yes
-fi
-
-if test "x${LDFLAGS-}" = "x" ; then
-  ldflags_is_set=no
-else
-  ldflags_is_set=yes
-fi
 
 for ac_site_file in $CONFIG_SITE; do
   if test -r "$ac_site_file"; then
