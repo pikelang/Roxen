@@ -67,9 +67,9 @@ function showPopup(name, parent, ox, oy, e)
   clearToPopup(parent);
   
   var popup = getObject(name);
-  //alert(popup.innerHTML);
   var p_x = getTargetX(e);
   var p_y = getTargetY(e);
+  
   var p_h = getObjectHeight(name);
   var p_w = getObjectWidth(name);
   var c_h = getClientHeight();
@@ -78,9 +78,14 @@ function showPopup(name, parent, ox, oy, e)
   var s_t = getScrollTop();
 
   // If netscape add the parent offset.
-  if(parent != "none" && isNav4) {
-    p_x += getObjectLeft(parent);
-    p_y += getObjectTop(parent);
+  if(isNav4) {
+    if(parent == "none" && getObject("menu")) {
+      p_x += getObjectLeft("menu");
+      p_y += getObjectTop("menu");
+    } else if(parent != "none") {
+      p_x += getObjectLeft(parent);
+      p_y += getObjectTop(parent);
+    }
   }
   
   // Offset the popup to a better place.
@@ -94,11 +99,11 @@ function showPopup(name, parent, ox, oy, e)
   
   //alert("px:"+p_x+" pw:"+p_w+" sl:"+s_l+" cw"+c_w);
   // If the popup is placed outside the screen move it inside.
-  if(p_x + p_w > s_l + c_w)
-    p_x = s_l + c_w - p_w;
-  
-  if(p_y + p_h > s_t + c_h)
-    p_y = s_t + c_h - p_h;
+//  if(p_x + p_w > s_l + c_w)
+//    p_x = s_l + c_w - p_w;
+//  
+//  if(p_y + p_h > s_t + c_h)
+//    p_y = s_t + c_h - p_h;
 
   //alert("D, "+p_x);
   popups[popups.length] = new popup_coord(name, parent,

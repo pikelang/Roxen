@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.3 1999/11/26 11:28:49 wellhard Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.4 1999/12/07 16:47:35 wellhard Exp $";
 //constant thread_safe=1;
 
 #include <module.h>
@@ -89,6 +89,14 @@ void add_to_insert(string name, string content, object id)
   id->misc->javascript[name] += content;
 }
 
+string container_js_link(string name, mapping args,
+			 string contents, object id)
+{
+  if(id->misc->_popupparent)
+    args->onMouseOver = "clearToPopup('"+id->misc->_popupparent+"')";
+  return make_container_unquoted("a", args, contents);
+}
+
 string container_js_popup(string name, mapping args,
 			  string contents, object id)
 {
@@ -123,7 +131,7 @@ string container_js_popup(string name, mapping args,
 		     "', '"+popupparent+"', "+args->ox+", "+args->oy;
   
   string event = "onMouseOver";
-  if(lower_case(args->event) == "onclick")
+  if(lower_case(args->event||"") == "onclick")
     event = "onClick";
   
   largs[event] = "if(isNav4) { "+showpopup+", event); } "
@@ -134,7 +142,7 @@ string container_js_popup(string name, mapping args,
 		".onMouseOut = hidePopup;\n", id);
   add_to_insert("style", "#"+popupname+" {position:absolute; "
 		"left:0; top:0; visibility:hidden; width:1; z-index:"+
-		id->misc->_popuplevel+"}\n", id);
+		(id->misc->_popuplevel+1)+"}\n", id);
   string old_pparent = id->misc->_popupparent;
   id->misc->_popupparent = popupname;
   id->misc->_popuplevel++;
@@ -200,13 +208,24 @@ string tag_js_dragdrop_body(string name, mapping args, object id)
   return make_tag("body", args);
 }
 
-mixed int_container_head(string name, mapping args, string contents,
-			  object id)
-{
-  return ({ make_container(name, args, contents+
-			   "\n<script language='javascript1.2'><!--\n"+
-			   id->misc->javascript+"//--></script>") });
-}
+//string container_js_stay_on_top(string name, mapping args, string contents,
+//				  object id)
+//{
+//  add_to_insert("style", "#stay_on_top"+id->misc->_stay_on_top+
+//		  " {position:absolute; "
+//		  "left:0; top:0; visibility:hidden; width:1; z-index:0}\n",
+//		  id);
+//  id->misc->_stay_on_top++;
+//  return "";
+//}
+
+//mixed int_container_head(string name, mapping args, string contents,
+//			    object id)
+//{
+//  return ({ make_container(name, args, contents+
+//			     "\n<script language='javascript1.2'><!--\n"+
+//			     id->misc->javascript+"//--></script>") });
+//}
 
 mixed int_tag_js_insert(string name, mapping args, object id, mapping m)
 {
@@ -232,9 +251,9 @@ mixed filter( mapping response, object id)
     response->data = parse_html(response->data,
 				([ "js-insert":int_tag_js_insert ]),
 				([]), id, m);
-    if(!m->done)
-      response->data = parse_html(response->data, ([]),
-				  ([ "head": int_container_head ]), id);
+    //if(!m->done)
+    //  response->data = parse_html(response->data, ([]),
+    //				  ([ "head": int_container_head ]), id);
     
     response->data = parse_html(response->data, ([]),
 				([ "js-post-write":container_js_write ]), id);
@@ -244,9 +263,12 @@ mixed filter( mapping response, object id)
 
 mapping query_container_callers()
 {
-  return ([ "js-write"    : container_js_write,
-	    "js-popup"    : container_js_popup,
-	    "js-dragdrop" : container_js_dragdrop ]);
+  return ([ "js-write"       : container_js_write,
+	    "js-popup"       : container_js_popup,
+	    "js-dragdrop"    : container_js_dragdrop,
+	    "js-link"        : container_js_link,
+            // "js-stay-on-top" : container_js_stay_on_top
+  ]);
 }
 
 mapping query_tag_callers()
