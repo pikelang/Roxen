@@ -1,5 +1,5 @@
 /*
- * $Id: faxrcpt.pike,v 1.3 1998/09/28 03:55:27 js Exp $
+ * $Id: faxrcpt.pike,v 1.4 1998/09/28 04:52:01 js Exp $
  *
  * A LysKOM FAX module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RCPT_DEBUG
 
-constant cvs_version = "$Id: faxrcpt.pike,v 1.3 1998/09/28 03:55:27 js Exp $";
+constant cvs_version = "$Id: faxrcpt.pike,v 1.4 1998/09/28 04:52:01 js Exp $";
 
 /*
  * Roxen glue
@@ -145,9 +145,9 @@ string get_real_body(string body)
 string fontify_mail(mapping headers, string body)
 {
   string s=helvetica_14_bold+"New mail\n\n";
-  s+=times_12_bold+"From: "+times_12+headers->from+"\n";
-  s+=times_12_bold+"To: "+times_12+headers->to+"\n";
-  s+=times_12_bold+"Date: "+times_12+headers->date+"\n";
+  s+=times_12_bold+"From: "+times_12+(headers->from||"Unknown")+"\n";
+  s+=times_12_bold+"To: "+times_12+(headers->to||"Unknown")+"\n";
+  s+=times_12_bold+"Date: "+times_12+(headers->date||"Unknown")+"\n";
   s+=times_12_bold+"Subject: "+times_12+headers->subject+"\n\n";
   s+=courier_10;
   if(sizeof(body/"\n")>query("lineslimit"))

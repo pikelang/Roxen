@@ -1,5 +1,5 @@
 /*
- * $Id: forms_mailer.pike,v 1.2 1998/09/28 04:45:38 js Exp $
+ * $Id: forms_mailer.pike,v 1.3 1998/09/28 04:52:00 js Exp $
  *
  * AutoSite Forms Mailer module
  *
@@ -7,7 +7,7 @@
  * Partly based on code made by <mirar@mirar.org>
  */
 
-constant cvs_version = "$Id: forms_mailer.pike,v 1.2 1998/09/28 04:45:38 js Exp $";
+constant cvs_version = "$Id: forms_mailer.pike,v 1.3 1998/09/28 04:52:00 js Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -57,12 +57,22 @@ string fill_in_textarea(string tag,mapping args,string cont,mapping vars)
   return "··indent··"+replace(cont,"\n","·\\n·")+"··/indent··";
 }
 
+string empty(string tag,mapping args,string cont)
+{
+  return "";
+}
 string fill_in_form(string data,mapping vars)
 {
   data = parse_html(data,
 		    (["input":fill_in_input,
-		      "": lambda(string tag,mapping args,string cont)
-			  { return ""; } ]),
+		      "table":empty,"/table":empty,
+		      "tr":empty,"/tr":empty,
+		      "td":empty,"/td":empty,
+		      "font":empty,"/font":empty,
+		      "b":empty,"/b":empty,
+		      "i":empty,"/i":empty,
+		      "img":empty
+		    ]),
 		    (["textarea":fill_in_textarea,
 		      "form":lambda(string tag,mapping args,string cont) 
 			     { return cont; }]),
