@@ -13,7 +13,7 @@
  * or should have been shipped along with the module.
  */
 
-string cvs_version="$Id: SQLuserdb.pike,v 1.6 1999/02/17 22:47:46 grubba Exp $";
+string cvs_version="$Id: SQLuserdb.pike,v 1.7 1999/05/31 22:19:31 js Exp $";
 
 //#define SQLAUTHDEBUG
 
@@ -122,7 +122,13 @@ void create()
 	  lambda(){return !QUERY(closedb);}
 	  );
 
-  defvar ("defaultuid", geteuid(), "Defaults: User ID", TYPE_INT,
+  defvar ("defaultuid",
+#if efun(geteuid)
+	  geteuid()
+#else
+	  0
+#endif	  
+	  , "Defaults: User ID", TYPE_INT,
 		"Some modules require an user ID to work correctly. "
 	  "This is the user ID which will be returned to such "
 	  "requests if the information is not supplied by the database."

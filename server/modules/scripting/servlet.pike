@@ -1,10 +1,12 @@
 #include <module.h>
 
-string cvs_version = "$Id: servlet.pike,v 1.2 1999/04/30 11:29:05 js Exp $";
+string cvs_version = "$Id: servlet.pike,v 1.3 1999/05/31 22:19:32 js Exp $";
 int thread_safe=1;
 
 inherit "module";
 static inherit "http";
+
+#if constant(Java)
 
 object servlet;
 
@@ -113,3 +115,4 @@ mixed find_file( string f, object id )
   return http_pipe_in_progress();
 }
 
+#endif
