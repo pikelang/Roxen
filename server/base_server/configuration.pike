@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.65 1997/08/25 17:18:17 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.66 1997/08/25 23:18:01 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -1092,6 +1092,9 @@ public array find_dir(string file, object id)
     file = "/" + file;
 
 #ifdef URL_MODULES
+#ifdef THREADS
+  object key;
+#endif
   // Map URL-modules
   foreach(url_modules(id), function funp)
   {
@@ -1163,6 +1166,9 @@ public array stat_file(string file, object id)
   file=replace(file, "//", "/"); // "//" is really "/" here...
 
 #ifdef URL_MODULES
+#ifdef THREADS
+  object key;
+#endif
   // Map URL-modules
   foreach(url_modules(id), function funp)
   {
