@@ -893,7 +893,42 @@ b</strlen></rxml>
 <result></result>
 </test>
 
-<comment>Missing test: if date</comment>
+<test>
+<rxml><set variable="var.date"><date strftime="%Y%m%d"/></set><if date="&var.date;"
+ after="1">X</if>Y</rxml>
+<result>Y</result>
+</test>
+
+<test>
+<rxml><set variable="var.date"><date strftime="%Y%m%d"/></set><if date="&var.date;"
+ after="1" inclusive="1">X</if>Y</rxml>
+<result>XY</result>
+</test>
+
+<test>
+<rxml><set variable="var.date"><date strftime="%Y%m%d"/></set><if date="&var.date;"
+ before="1">X</if>Y</rxml>
+<result>Y</result>
+</test>
+
+<test>
+<rxml><set variable="var.date"><date strftime="%Y%m%d"/></set><if date="&var.date;"
+ before="1" inclusive="1">X</if>Y</rxml>
+<result>XY</result>
+</test>
+
+<test>
+<rxml><set variable="var.date"><date strftime="%Y%m%d" days="-1"/></set><if date="&var.date;"
+ after="1">X</if>Y</rxml>
+<result>XY</result>
+</test>
+
+<test>
+<rxml><set variable="var.date"><date strftime="%Y%m%d" days="1"/></set><if date="&var.date;"
+ before="1">X</if>Y</rxml>
+<result>XY</result>
+</test>
+
 <comment>Missing test: if time</comment>
 <comment>Missing test: if user</comment>
 <comment>Missing test: if group</comment>
@@ -1143,8 +1178,8 @@ b</strlen></rxml>
 </test>
 
 <test>
-<rxml><emit source="TESTER" test="3" sort="data">&_.data;:</emit></rxml>
-<result>:3:a:</result>
+<rxml><emit source="TESTER" test="3" sort="data"><set variable="x">1</set>&_.data;:</emit></rxml>
+<result>:0:a:</result>
 </test>
 
 <test>
@@ -1345,22 +1380,22 @@ b</strlen></rxml>
 </test>
 
 <test>
-<rxml><emit source="TESTER" test="3">&_.data;&_.data;,</emit></rxml>
+<rxml><emit source="TESTER" test="3"><set variable="x">1</set>&_.data;&_.data;,</emit></rxml>
 <result>aa,,01,</result>
 </test>
 
 <test><!-- make sure the emit source is resetted -->
-<rxml><emit source="TESTER" test="3">&_.data;&_.data;,</emit></rxml>
+<rxml><emit source="TESTER" test="3"><set variable="x">1</set>&_.data;&_.data;,</emit></rxml>
 <result>aa,,01,</result>
 </test>
 
 <test>
-<rxml><emit source="OTESTER" test="3">&_.data;&_.data;,</emit></rxml>
+<rxml><emit source="OTESTER" test="3"><set variable="x">1</set>&_.data;&_.data;,</emit></rxml>
 <result>aa,,01,</result>
 </test>
 
 <test><!-- make sure the emit source is resetted -->
-<rxml><emit source="OTESTER" test="3">&_.data;&_.data;,</emit></rxml>
+<rxml><emit source="OTESTER" test="3"><set variable="x">1</set>&_.data;&_.data;,</emit></rxml>
 <result>aa,,01,</result>
 </test>
 
