@@ -1,9 +1,9 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.31 2000/03/10 17:57:24 grubba Exp $
+ * $Id: ftp.pike,v 2.32 2000/03/16 18:06:11 nilsson Exp $
  *
- * Henrik Grubbström <grubba@idonex.se>
+ * Henrik Grubbström <grubba@roxen.com>
  */
 
 /*

@@ -5,9 +5,9 @@
  * package.
  *
  * Script originally provided by Mike Knott <mknott@cybermedia-inc.com>
- * Minor modifications by Leif Stensson <leif@idonex.se>
+ * Minor modifications by Leif Stensson <leif@roxen.com>
  *
- * $Id: addfp98.pike,v 1.1 1999/08/13 18:26:22 wellhard Exp $
+ * $Id: addfp98.pike,v 1.2 2000/03/16 18:08:33 nilsson Exp $
  */
 
 #!/usr/local/bin/pike

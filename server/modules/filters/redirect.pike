@@ -4,7 +4,7 @@
 // another. This can be done using "internal" redirects (much like a
 // symbolic link in unix), or with normal HTTP redirects.
 
-constant cvs_version = "$Id: redirect.pike,v 1.20 2000/03/09 14:49:46 mast Exp $";
+constant cvs_version = "$Id: redirect.pike,v 1.21 2000/03/16 17:58:26 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -24,7 +24,7 @@ void create()
 
 	 "<p>Some examples:'"
 	 "<pre>"
-         "/from/.*      http://to.idonex.se/to/%f\n"
+         "/from/.*      http://to.roxen.com/to/%f\n"
          ".*\\.cgi       http://cgi.foo.bar/cgi-bin/%p\n"
 	 "/thb/.*       %u/thb_gone.html\n"
 	 "/roxen/       http://www.roxen.com/\n"
