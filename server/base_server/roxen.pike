@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.420 2000/02/09 01:07:25 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.421 2000/02/10 04:16:44 nilsson Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -2517,6 +2517,7 @@ void create()
   dump( "base_server/hosts.pike");
   dump( "base_server/language.pike");
   dump( "base_server/configuration.pike" );
+  dump( "base_server/rxmlhelp.pike" );
 
 #ifndef __NT__
   if(!getuid())
