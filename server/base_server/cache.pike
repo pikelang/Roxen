@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: cache.pike,v 1.67 2001/04/19 13:54:09 jonasw Exp $
+// $Id: cache.pike,v 1.68 2001/04/21 21:15:00 nilsson Exp $
 
 #pragma strict_types
 
@@ -326,6 +326,14 @@ private void session_cache_destruct() {
 	}
   }
   report_notice("Session cache synchronized\n");
+}
+
+//! Removes a session from the session cache and session database.
+void clear_session(string id) {
+  m_delete(session_persistence, id);
+  foreach(session_buckets, mapping bucket)
+    m_delete(bucket, id);
+  db->query("DELETE FROM session_cache WHERE id=%s", id);
 }
 
 //! Returns the data associated with the session @[id].
