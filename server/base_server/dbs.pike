@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: dbs.pike,v 1.3 2001/01/02 16:57:20 grubba Exp $
+// $Id: dbs.pike,v 1.4 2001/01/08 16:07:21 per Exp $
 
 Sql.sql db = connect_to_my_mysql( 0, "roxen" );
 function(string,mixed...:array(mapping(string:string))) query = db->query;
@@ -111,7 +111,7 @@ mapping(string:mapping(string:int)) get_permission_map( )
   return res;
 }
 
-class ROWrapper( Sql.sql sql )
+static class ROWrapper( Sql.sql sql )
 {
   static int pe;
   array(mapping(string:mixed)) query( string query, mixed ... args )
@@ -235,9 +235,10 @@ void create_db( string name, string path, int is_internal )
 //! If @[is_internal] is specified, the database will be automatically
 //! created if it does not exist, and the @[path] argument is ignored.
 //!
-//! If the database @[name] already exists, it will be overwritten.
+//! If the database @[name] already exists, an error will be thrown
 {
-  query( "DELETE FROM dbs WHERE name='%s'", name );
+  if( get( name ) )
+    error("The database "+name+" already exists\n");
   query( "INSERT INTO dbs values ('%s','%s',%s)",
          name, (is_internal?name:path), (is_internal?"1":"0") );
   if( is_internal )
