@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.116 1998/04/03 17:13:30 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.117 1998/04/03 17:20:15 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -3123,6 +3123,7 @@ void create(string config)
 	 "$bin-response  -- The response code sent as a binary short number\n"
 	 "$length        -- The length of the data section of the reply\n"
        "$bin-length    -- Same, but as an 32 bit iteger in network byteorder\n"
+	 "$request-time  -- The time the request took (seconds)\n"
 	 "$referer       -- the header 'referer' from the request, or '-'.\n"
       "$user_agent    -- the header 'User-Agent' from the request, or '-'.\n\n"
 	 "$user          -- the name of the auth user used, if any\n"
