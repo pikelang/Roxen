@@ -1,7 +1,7 @@
 /*
- * $Id: snmpagent.pike,v 1.24 2002/10/27 19:58:46 nilsson Exp $
+ * $Id: snmpagent.pike,v 1.25 2002/11/04 20:46:36 mani Exp $
  *
- * The Roxen SNMP agent
+ * The ChiliMoon SNMP agent
  * Copyright © 2001, Honza Petrous, hop@unibase.cz
  *
  * Author: Honza Petrous
@@ -762,7 +762,7 @@ class SubMIBManager {
 
 //! External function for MIB object 'system.sysDescr'
 array get_description() {
-  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.24 $"/" ")[1]+" (devel. rel.)");
+  return OBJ_STR("ChiliMoon SNMP agent v"+("$Revision: 1.25 $"/" ")[1]+" (devel. rel.)");
 }
 
 //! External function for MIB object 'system.sysOID'
