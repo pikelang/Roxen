@@ -1,6 +1,13 @@
 TODO list for AutoSite
 
-	
+* Fixa en modul som laddar in samtliga moduler i "roxen_setup"-filen
+  samt konfigurerar dem.
+
+* Ta bort "Database URL"-fältet från "AuoMail Database API Module" och
+  "AutoSite DNS Administration Module". Det räcker med urlen som finns
+  konfigurerad i "SQL-module"-modulen.
+
+
 WebAdmin
 --------
 * Template Editor
