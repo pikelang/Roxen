@@ -3,7 +3,7 @@
 //
 // The ChiliMoon RXML Parser. See also the RXML Pike modules.
 //
-// $Id: rxml.pike,v 1.330 2003/01/19 18:33:02 mani Exp $
+// $Id: rxml.pike,v 1.331 2004/04/03 16:11:13 mani Exp $
 
 
 inherit "rxmlhelp";
@@ -62,12 +62,14 @@ RXML.TagSet rxml_tag_set = class
 
   void create (object rxml_object)
   {
+    prepare_context = _prepare_context;
+    eval_finish = _eval_finish;
     ::create (rxml_object, "rxml_tag_set");
     imported = ({Roxen.entities_tag_set});
     modules = ({rxml_object});
   }
 
-  void prepare_context (RXML.Context ctx)
+  static void _prepare_context (RXML.Context ctx)
   {
     RequestID id = ctx->id;
     mapping misc = ctx->misc;
@@ -120,7 +122,7 @@ RXML.TagSet rxml_tag_set = class
     if(id->misc->stat) misc[" _stat"] = id->misc->stat;
   }
 
-  void eval_finish (RXML.Context ctx)
+  static void _eval_finish (RXML.Context ctx)
   {
     RequestID id = ctx->id;
     mapping misc = ctx->misc;

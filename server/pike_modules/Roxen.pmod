@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.163 2004/01/25 18:27:57 norrby Exp $
+// $Id: Roxen.pmod,v 1.164 2004/04/03 16:11:53 mani Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -3277,7 +3277,7 @@ RXML.TagSet entities_tag_set = class
 {
   inherit RXML.TagSet;
 
-  void prepare_context (RXML.Context c) {
+  static void _prepare_context (RXML.Context c) {
     c->misc->scope_roxen=([]);
     c->add_scope("roxen",scope_roxen);
     c->misc->scope_page=([]);
@@ -3292,6 +3292,7 @@ RXML.TagSet entities_tag_set = class
 
   void create()
   {
+    prepare_context = _prepare_context;
     ::create (0, "entities_tag_set");
     // Note: No string entities are replaced when the result type for
     // the parser is t_xml or t_html.
