@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.23 1997/09/16 01:56:51 grubba Exp $
+# $Id: configure.in,v 1.24 1997/09/17 05:16:10 grubba Exp $
 #
 
 prefix=$PWD
@@ -299,11 +299,15 @@ else
     AC_TRY_COMPILE([int foo(int bar);],[],[],
     [
       OLD_CC="${CC-cc}"
+      OLD_CFLAGS="$CFLAGS"
       if test "$CC" = "$BINDIR/smartlink cc" -a -x /usr/bin/cc ; then
         CC="$BINDIR/smartlink /usr/bin/cc"
       fi
-      CC="$CC -Aa -D_HPUX_SOURCE +Olibcalls"
-      AC_TRY_COMPILE([int foo(int bar);],[],[],[CC="$OLD_CC"])
+      CFLAGS="-Aa -D_HPUX_SOURCE +Olibcalls $CFLAGS"
+      AC_TRY_COMPILE([int foo(int bar);],[],[],[
+        CC="$OLD_CC"
+	CFLAGS="$OLD_CFLAGS"
+      ])
     ])
   fi
 fi
