@@ -5,7 +5,7 @@
 
 // import Stdio;
 
-constant cvs_version = "$Id: htaccess.pike,v 1.49 1999/07/27 14:16:41 grubba Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.50 1999/10/04 15:00:15 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -15,13 +15,11 @@ inherit "roxenlib";
 
 #define SERIOUS
 //#define HTACCESS_DEBUG
-
 #ifdef HTACCESS_DEBUG
-#define TRACE_ENTER(A,B) do{if(id->misc->trace_enter)id->misc->trace_enter((A),(B));}while(0)
-#define TRACE_LEAVE(A) do{if(id->misc->trace_leave)id->misc->trace_leave((A));}while(0)
+# include <request_trace.h>
 #else /* !HTACCESS_DEBUG */
-#define TRACE_ENTER(A,B)
-#define TRACE_LEAVE(A)
+# define TRACE_ENTER(A,B)
+# define TRACE_LEAVE(A)
 #endif /* HTACCESS_DEBUG */
 
 array *register_module()
