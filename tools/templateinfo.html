@@ -22,6 +22,9 @@
   <insert name="Color" title="Edit navigation colors"
           help="help" category="nav">
 
+  <insert name="Image" title="Edit navigation images"
+          help="help" category="nav">
+
   <insert name="Test" title="Test some wizard types"
           help="help" category="nav">
     
@@ -117,6 +120,13 @@
           type="color" help="Navigation color3"
 	  _wizard_name="Color" _wizard_category="nav">
 
+
+  <!--  Image  -->
+  <insert name="nav_bg_img" title="Navigation background image"
+          type="select" help="Navigation background image"
+	  _wizard_name="Image" _wizard_category="nav">
+	  
+	  
   <!--  Test variabler  -->
   <insert name="password" title="password"
           type="password" help=""
@@ -181,6 +191,15 @@
   <insert name="Nav 2" value="nav2.ntmpl" _variable_name="nav_name">
   <insert name="Nav 3" value="nav3.ntmpl" _variable_name="nav_name">
 
+  <!--  Navigation files  -->
+  <insert name="bg 1" value="bg1.pnm" _variable_name="nav_bg_img">
+  <insert name="bg 2" value="bg2.pnm" _variable_name="nav_bg_img">
+  <insert name="bg 3" value="bg3.pnm" _variable_name="nav_bg_img">
+  <insert name="bg 4" value="bg4.pnm" _variable_name="nav_bg_img">
+  <insert name="bg 5" value="bg5.pnm" _variable_name="nav_bg_img">
+  <insert name="bg 6" value="bg6.pnm" _variable_name="nav_bg_img">
+
+  <!--  Test options-->
   <insert name="foo"    value="" _variable_name="select">
   <insert name="bar"    value="" _variable_name="select">
   <insert name="gazonk" value="" _variable_name="select">

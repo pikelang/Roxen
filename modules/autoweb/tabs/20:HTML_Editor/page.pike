@@ -1,4 +1,5 @@
 inherit "roxenlib";
+inherit "wizard";
 
 object wa;
 
@@ -37,21 +38,20 @@ string|mapping navigate(object id, string f, string base_url)
   // werror("Real file: %O\n", real_path(id, f));
   
   string res="";
-
-  res += "<b>"+f+"</b><br>";
+  
   if(f[-1]!='/') // it's a file
   {
     array br = ({ });
     int t;
     object file = Stdio.File(real_path(id, f), "r");
 
-    if (!objectp(file))
+    if(!objectp(file))
       return "File not found or permission denied.\n";
 
-    mapping md = wa->get_md(id,f);
+    mapping md = wa->get_md(id, f);
     br += ({ ({ "View",  f+" target=_autosite_show_real" }) });
-    if ((md->content_type=="text/html") ||
-	(md->content_type=="text/html"))
+    werror("%O\n", md);
+    if(md->content_type=="text/html")
       br += ({ ({ "Edit File", (["filename":f ]) }) });
     br += ({ ({ "Edit Metadata", ([ "path":f ]) }),
 	     ({ "Download File", ([ "path": base_url+"dl"+f ]) }),
@@ -60,14 +60,34 @@ string|mapping navigate(object id, string f, string base_url)
     wanted_buttons=br;
 
     // Show info about the file;
-    // res += "<b>"+f+"</b>";
+    res += "<img src='"+
+	   wa->content_types[md->content_type||"autosite/unknown"]->img+
+	   "'>&nbsp;&nbsp;";
+    res += "<b>"+f+"</b><br>\n";
+
+    mapping md = wa->get_md(id, f);
+    array md_order = ({ "title", "content_type", "template",
+			"keywords", "description" });
+    mapping md_variables = ([ "title":"Title", "content_type":"Type",
+			      "template":"Template", "keywords":"Keywords",
+			      "description":"Description" ]);
+    array rows = ({ });
+    foreach(md_order, string variable) {
+      if(md_variables[variable]&&md[variable])
+	rows += ({ ({ "<b>"+md_variables[variable]+"</b>",
+		      (variable=="content_type"?
+		       wa->content_types[md[variable]]->name:
+		       md[variable]) }) });
+    }
+    res += html_table( ({ "Metadata", "Value" }), rows);
   }
   else  // it's a directory
   {
-    wanted_buttons=
-      ({ ({ "Create File", ([ "path": f ]) }),
-	 ({ "Upload File", ([ "path": f ]) }) });
-
+    res += "<b>"+f+"</b><br>";
+    wanted_buttons =
+    ({ ({ "Create File", ([ "path": f ]) }),
+       ({ "Upload File", ([ "path": f ]) }) });
+    
     // Show the directory
     array files = ({ });
     array dirs = ({ });
@@ -75,10 +95,12 @@ string|mapping navigate(object id, string f, string base_url)
     // Scan directory for files and directories.
     foreach(get_dir(real_path(id, f)), string file) {
       array f_stat = file_stat(real_path(id, f+file));
-      if(f_stat&&(sizeof(f_stat)>0)&&f_stat[1]==-2)
-	dirs += ({ file });
-      else 
-	files += ({ file });
+      if((sscanf(file, "%*s.md") == 0)&&(file!="templates")) {
+	if(f_stat&&(sizeof(f_stat)>0)&&f_stat[1]==-2)
+	  dirs += ({ file });
+	else 
+	  files += ({ file });
+      }
     }
 
     // Display directories.
@@ -89,7 +111,12 @@ string|mapping navigate(object id, string f, string base_url)
     
     // Display files.
     foreach(sort(files), string item) {
-      res += "<img src=\"internal-gopher-unknown\">&nbsp;&nbsp;";
+      mapping md = wa->get_md(id, f+item);
+      string img = "internal-gopher-unknown";
+      if(md)
+	img = wa->content_types[md->content_type||
+			       "autosite/unknown"]->img;
+      res += "<img src='"+img+"'>&nbsp;&nbsp;";
       res += "<a href=\""+base_url+"go"+f+item+"\">"+item+"</a><br>\n";
     }
   }
@@ -116,8 +143,6 @@ string|mapping handle(string sub, object id)
   case "go":
     break;
   case "dl":
-    return dl(id, resource);
-  case "view":
     return dl(id, resource);
   default:
     return "What?";

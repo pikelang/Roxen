@@ -1,12 +1,12 @@
 /*
- * $Id: webadm.pike,v 1.6 1998/07/28 20:35:37 wellhard Exp $
+ * $Id: webadm.pike,v 1.7 1998/07/29 19:26:58 wellhard Exp $
  *
  * AutoWeb administration interface
  *
  * Johan Schön, Marcus Wellhardh 1998-07-23
  */
 
-constant cvs_version = "$Id: webadm.pike,v 1.6 1998/07/28 20:35:37 wellhard Exp $";
+constant cvs_version = "$Id: webadm.pike,v 1.7 1998/07/29 19:26:58 wellhard Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -155,7 +155,19 @@ string update_template(string tag_name, mapping args, object id)
   
   // Replace placeholders with customer spesific preferences  
   foreach(variables, mapping variable) {
-    template = replace(template, "$$"+variable->name+"$$", variable->value);
+    string from = "$$"+variable->name+"$$";
+    string to = variable->value;
+    if(variable->type == "select") {
+      array options =
+	db->query("Select * from template_vars_opts where "
+		  "name='"+variable->value+"'");
+      if(sizeof(options))
+	to = options[0]->value;
+    }
+    if(variable->type == "font")
+      to = replace(to, " ", "_");
+    
+    template = replace(template, from, to);
   }
   
   // Save new template
@@ -169,12 +181,28 @@ string update_template(string tag_name, mapping args, object id)
   return "<b>Template updated</b>";
 }
 
+string tag_as_meta(string tag_name, mapping args, object id)
+{
+  if(!args->var)
+    return "";
+
+  mapping md = get_md(id, id->not_query);
+  if(!md)
+    return "";
+
+  string value = md[args->var];
+  if(!value)
+    return "";
+
+  return value;
+}
 
 mapping query_tag_callers()
 {
   return ([ "autosite-webadm-update" : tag_update,
             "autosite-webadm-customername" : customer_name,
-	    "autosite-webadm-update-template" : update_template
+	    "autosite-webadm-update-template" : update_template,
+	    "as-meta" : tag_as_meta
   ]);
 }
 
@@ -275,6 +303,7 @@ mixed find_file(string f, object id)
 
 void start(int q, object conf)
 {
+  init_content_types();
   templatesdir = combine_path(roxen->filename(this)+"/", "../")+"templates/";
   tabsdir = combine_path(roxen->filename(this)+"/", "../")+"tabs/";
   tabs = mkmapping(get_dir(tabsdir)-({".", "..", ".no_modules", "CVS"}),
@@ -309,16 +338,7 @@ void create()
 }
 
 
-
-// Tab functions
-
-mapping get_md(object id, string f)
-{
-  mapping md = ([ ]);
-  if(sscanf(f, "%*s.html")>0)
-    md += ([ "content_type":"text/html" ]);
-  return md;
-}
+// Wizard functions
 
 string real_path(object id, string filename)
 {
@@ -343,3 +363,129 @@ int save_file(object id, string f, string s)
   file->close;
   return 1;
 }
+
+
+// Metadata functions
+
+string container_md(string tag, mapping args, string contents, mapping md)
+{
+  if(args->variable)
+    md[args->variable] = contents;
+}
+
+mapping read_md_file(object id, string f)
+{
+  string file_name = real_path(id, f+".md");
+  string s = Stdio.read_bytes(file_name);
+  if(!s) {
+    werror("File %s does not exist.", file_name);
+    return 0;
+  }
+  
+  mapping md = ([]);
+  parse_html(s, ([ ]), ([ "md":container_md ]), md);
+  return md;
+}
+
+int save_md_file(object id, string f, mapping md)
+{
+  object file = Stdio.File(real_path(id, f+".md"), "cwt");
+  if(!file)
+    return 0;
+  
+  string s = "";
+  foreach(sort(indices(md)), string variable)
+    s += "<md variable=\""+variable+"\">"+md[variable]+"</md>\n";
+  file->write(s);
+  return 1;
+}
+
+mapping get_md(object id, string f)
+{
+  mapping md_default =  ([ "content_type":"autosite/unknown",
+			   "title":"Unknown",
+			   "template":"default.tmpl",
+			   "keywords":"",
+			   "description":""]);
+  string file_name = real_path(id, f);
+  if(!file_stat(file_name)) {
+    werror("File %s does not exist", file_name);
+    return 0;
+  }
+  
+  mapping md = read_md_file(id, f);
+  if(!md)
+    md = md_default;
+  
+  werror("md_file: %O, md: \n%O\n", file_name, md);
+  return md;
+}
+
+// Content type functions
+
+mapping content_types;
+mapping name_to_type;
+
+void init_content_types()
+{
+  mapping default_content_types =
+  ([ "text/html" :
+     ([ "name" : "HTML",
+	"handler" : "html",
+	"downloadp" : 1,
+	"parsep" : 1,
+	"extensions" : (< "html", "htm" >),
+	"img" : "internal-gopher-text" ]),
+     
+     "text/plain" :
+     ([ "name" : "Raw text",
+	"handler" : "text",
+	"downloadp" : 1,
+	"extensions" : (< "txt" >),
+	"img" : "internal-gopher-text" ]),
+     
+     "image/gif" :
+     ([ "name" : "GIF Image",
+	"handler" : "image",
+	"downloadp" : 1,
+	"extensions" : (< "gif" >),
+	"img" : "internal-gopher-image" ]),
+     
+     "image/jpeg" :
+     ([ "name" : "JPEG Image",
+	"handler" : "image",
+	"downloadp" : 1,
+	"extensions" : (< "jpg", "jpeg" >),
+	"img" : "internal-gopher-image" ]),
+     
+     "autosite/unknown" :
+     ([ "name" : "Unknown",
+	"handler" : "default",
+	"downloadp" : 1,
+	"extensions" : (< >),
+	"img" : "internal-gopher-unknown" ]),
+     
+     "autosite/menu" :
+     ([ "name" : "Menu",
+	"handler" : "menu",
+	"downloadp" : 0,
+	"extensions" : (< "menu" >),
+	"internalp" : 1,
+	"img" : "internal-gopher-unknown" ]),
+     
+     "autosite/template" :
+     ([ "name" : "Template",
+	"handler" : "template",
+	"downloadp" : 1,
+	"extensions" : (< "tmpl" >),
+	"internalp" : 1,
+	"img" : "internal-gopher-unknown" ]),
+     
+  ]);
+  
+  content_types = default_content_types;
+  name_to_type = ([ ]);
+  foreach (indices( content_types ), string ct)
+    name_to_type[ content_types[ ct ]->name ] = ct;
+}
+
