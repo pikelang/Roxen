@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.96 1998/05/06 22:18:33 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.97 1998/05/11 21:57:43 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -738,7 +738,8 @@ string format_backtrace(array bt, int eid)
       sscanf(where, "%*s in %s", fo);
       line += get_id( fo );
       res += ("<li value="+(q--)+"> "+
-	      (replace(line, fo, link_to(line,eid,sizeof(bt)-q-1)+fo+"</a>")
+	      (replace(line, (string)fo,
+		       link_to(line,eid,sizeof(bt)-q-1)+fo+"</a>")
 	       -(getcwd()+"/"))+"<p>\n");
     } else
       res += "<li value="+(q--)+"> <b><font color=darkgreen>"+
