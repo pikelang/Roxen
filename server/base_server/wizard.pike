@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.79 1998/11/22 01:09:33 marcus Exp $
+/* $Id: wizard.pike,v 1.80 1998/11/28 14:31:22 noring Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -80,7 +80,8 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed b)
     string res;
     m_delete(m,"default");
     if (!m->value) m->value="on";
-    if (current && current != "0" && mkmultiset(current/"\0")[m->value])
+    if (current && current != "0" &&
+	(current == "1"||mkmultiset(current/"\0")[m->value]))
       m->checked="checked";
     res=make_tag("input",m);
     m->type="hidden";
