@@ -22,8 +22,7 @@ string parse( RequestID id )
     contents = replace( data, ({ "/articles/",
 				 "cellspacing=\"0\"",
 				 "cellpadding=\"0\"",
-				 "size=2",
 			      }),
-			({"http://community.roxen.com/articles/","","",""}));
+			({"http://community.roxen.com/articles/","",""}));
   return ("<box type='"+box+"' title='"+box_name+"'>"+contents+"</box>");
 }
