@@ -1,7 +1,7 @@
 // Wizard generator
 // This file generats all the nice wizards
 // Copyright © 1997 - 2000, Roxen IS.
-// $Id: wizard.pike,v 1.125 2001/01/17 16:25:59 anders Exp $
+// $Id: wizard.pike,v 1.126 2001/01/17 16:26:01 anders Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
