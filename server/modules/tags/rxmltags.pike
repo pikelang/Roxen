@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.212 2001/03/13 19:32:03 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.213 2001/03/13 19:46:46 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -152,7 +152,7 @@ mapping(string:object) page_scope=([
 class EntityClientTM {
   inherit RXML.Value;
   mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
-    c->id->misc->cacheable=0; // FIXME: Needed?
+    c->id->misc->cacheable=0;
     if(c->id->supports->trade) return ENCODE_RXML_XML("&trade;", type);
     if(c->id->supports->supsub) return ENCODE_RXML_XML("<sup>TM</sup>", type);
     return ENCODE_RXML_XML("&lt;TM&gt;", type);
@@ -617,9 +617,7 @@ class TagImgs {
 	if(!args->alt) {
 	  string src=(args->src/"/")[-1];
 	  sscanf(src, "internal-roxen-%s", src);
-	  args->alt=Roxen.html_encode_string
-	    (String.capitalize(replace(src[..sizeof(src)-search(reverse(src), ".")-2],
-				       "_"," ")) );
+	  args->alt=String.capitalize(replace(src[..sizeof(src)-search(reverse(src), ".")-2], "_"," "));
 	}
 
 	int xml=!m_delete(args, "noxml");
