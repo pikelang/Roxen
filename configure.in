@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.64 1999/04/14 14:21:04 grubba Exp $
+# $Id: configure.in,v 1.65 1999/05/07 04:17:04 mast Exp $
 #
 
 prefix=$PWD
@@ -738,6 +738,6 @@ else :; fi
 
 export CPPFLAGS LDFLAGS
 
-AC_CONFIG_SUBDIRS($roxen_lib_subdirs extern pike)
+AC_CONFIG_SUBDIRS($roxen_lib_subdirs extern tools pike)
 AC_OUTPUT(Makefile, echo ${PIKEVERSION} >stamp-h)
 

@@ -1,0 +1,36 @@
+# $Id: Makefile.in,v 1.1 1999/05/07 04:17:07 mast Exp $
+
+VPATH=@srcdir@
+prefix=@prefix@
+SRCDIR=@srcdir@
+
+CC=@CC@
+CFLAGS=@CFLAGS@
+LIBS=@LIBS@
+
+all: htpasswd 
+
+htpasswd: $(SRCDIR)/htpasswd.c
+	-$(CC) $(CFLAGS) -o htpasswd $(SRCDIR)/htpasswd.c $(LIBS)
+
+install: htpasswd
+	-$(RM) $(prefix)/roxen/server/bin/htpasswd
+	-/bin/cp htpasswd $(prefix)/roxen/server/bin/
+
+localinstall: htpasswd
+	-$(RM) $(SRCDIR)/../server/bin/htpasswd
+	-/bin/cp htpasswd $(SRCDIR)/../server/bin/
+
+clean:
+	$(RM) htpasswd
+
+spotless: clean
+	-$(RM) config.*
+
+distribute: spotless
+	-$(RM) Makefile
+
+Makefile: $(SRCDIR)/Makefile.in config.status
+	CONFIG_FILES=Makefile CONFIG_HEADERS="" ./config.status
+	@echo "Run make again"
+	@exit 1
