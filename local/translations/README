@@ -52,15 +52,29 @@ HOWTO:
       Note: The directory for the language specified in <baselang> must
             exist before the next step.
 
-  4)  Now you can actually generate the translation template files:
+  4)  Now you can actually generate the translation template files.
+      On Unix, Linux and MacOS X, you simply run make:
 
 	make
 
-  5)  To make an initial translation, copy the translation template file
-      eng/myproject.xml to the appropriate language catalog.
+      On NT you will have to invoke the extractor by hand:
+
+        ../../ntstart --silent-start --program -x extract_locale --config="%PWD%/myproject.xml" --wipe --sync
+
+  5)  To make an initial translation, create an empty translation file
+      for that language or copy the default language file, and rerun
+      the command in step 4.
+      On Unix, Linux and MacOS X:
 
 	mkdir ger
-	cp eng/myproject.xml ger
+	touch ger/myproject.xml
+	make
+
+      On NT:
+
+	mkdir ger
+	copy eng/myproject.xml ger
+        ../../ntstart --silent-start --program -x extract_locale --config="%PWD%/myproject.xml" --wipe --sync
 
       Note: Language catalogs are named according to ISO 639-2/T. To get
             a list valid of ISO 639-2/T codes you can execute:
@@ -68,4 +82,7 @@ HOWTO:
 	../../start --silent-start --program \
 	  -e 'write("%O", Standards.ISO639_2.list_languages_t());'
 
-$Id: README,v 1.1 2005/03/22 19:18:24 grubba Exp $
+  6)  To update the translation files, simply rerun the command in step 4.
+      Strings that need to be translated will be marked with <new/>.
+
+$Id: README,v 1.2 2005/03/22 19:36:42 grubba Exp $
