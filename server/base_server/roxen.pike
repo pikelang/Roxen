@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.345 1999/11/06 08:24:49 per Exp $
+ * $Id: roxen.pike,v 1.346 1999/11/11 05:23:46 mast Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.345 1999/11/06 08:24:49 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.346 1999/11/11 05:23:46 mast Exp $";
 
 object backend_thread;
 object argcache;
@@ -2106,10 +2106,14 @@ void create()
   add_constant( "color_name",  Colors.color_name  );
   add_constant( "colors",      Colors             );
   add_constant( "roxen.fonts", (fonts = (object)"fonts.pike") );
+  if ((file_stat("base_server/configuration.pike.o")||(<>))[ST_MTIME] <
+      file_stat("base_server/configuration.pike")[ST_MTIME] ||
+      // This since configuration.pike #includes rxml.pike.
+      (file_stat("base_server/configuration.pike.o")||(<>))[ST_MTIME] <
+      file_stat("base_server/rxml.pike")[ST_MTIME])
+    rm ("base_server/configuration.pike.o");
   Configuration = (program)"configuration";
-  if(!file_stat( "base_server/configuration.pike.o" ) ||
-     file_stat("base_server/configuration.pike.o")[ST_MTIME] <
-     file_stat("base_server/configuration.pike")[ST_MTIME])
+  if(!file_stat( "base_server/configuration.pike.o" ))
   {
     Stdio.write_file( "base_server/configuration.pike.o", 
                       encode_value( Configuration, Codec( Configuration ) ) );
