@@ -1,4 +1,4 @@
-// $Id: module.h,v 1.27 1999/11/27 12:09:28 per Exp $
+// $Id: module.h,v 1.28 1999/12/07 12:09:30 nilsson Exp $
 #ifndef ROXEN_MODULE_H
 #define ROXEN_MODULE_H
 
@@ -112,4 +112,5 @@
 
 #define CACHE(seconds) id->misc->cacheable=min(id->misc->cacheable,seconds)
 #define NOCACHE() id->misc->cacheable=0
+#define TAGDOCUMENTATION mapping tagdocumentation(){return get_value_from_file(__FILE__,"tagdoc","#define manual\n");}
 #endif
