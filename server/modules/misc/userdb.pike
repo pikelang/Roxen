@@ -3,7 +3,7 @@
 // User database. Reads the system password database and use it to
 // authentificate users.
 
-constant cvs_version = "$Id: userdb.pike,v 1.44 2000/07/17 19:18:39 jhs Exp $";
+constant cvs_version = "$Id: userdb.pike,v 1.45 2000/08/17 00:39:12 per Exp $";
 
 inherit "module";
 #include <module.h>
@@ -36,9 +36,11 @@ void try_find_user(string|int u)
   {
 #if efun(getpwuid) && efun(getpwnam)
   case "getpwent":
-    if(intp(u)) uid = getpwuid(u);
-    else        uid = getpwnam(u);
-    break;
+    if(intp(u)) 
+      uid = getpwuid(u);
+    else        
+      uid = getpwnam(u);
+
     if(uid)
     {
       if(users[uid[0]])
@@ -51,6 +53,7 @@ void try_find_user(string|int u)
       }
     }
 #endif
+    break;
 
   case "file":
     if(!equal(file_stat(query("file")), fstat))
@@ -218,21 +221,18 @@ void read_data()
   case "getpwent":
 #if efun(getpwent)
     // This could be a _lot_ faster.
-    tmp2 = ({ });
 #if efun(geteuid)
-    if(getuid() != geteuid()) privs = Privs("Reading password database");
+    if(getuid() != geteuid()) 
+      privs = Privs("Reading password database");
 #endif
     setpwent();
     while(tmp = getpwent())
-      tmp2 += ({
-	map(tmp, lambda(mixed s) { return (string)s; }) * ":"
-      });
+      data += map(tmp, lambda(mixed s) { return (string)s; }) * ":" + "\n"
     endpwent();
     if (objectp(privs)) {
       destruct(privs);
     }
     privs = 0;
-    data = tmp2 * "\n";
     break;
 #endif
 
