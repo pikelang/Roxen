@@ -1,4 +1,4 @@
-# $Id: extensions,v 1.12 1997/06/11 20:59:29 grubba Exp $
+# $Id: extensions,v 1.13 1997/06/25 16:45:08 grubba Exp $
 
 aif	audio/x-aiff
 aifc	audio/x-aiff
@@ -91,6 +91,7 @@ bin	application/octet-stream
 cdf	application/x-netcdf
 cdr	application/x-coreldraw
 cdrw    application/x-coreldraw
+chat	application/x-chat
 class	application/x-java-vm
 com	application/octet-stream
 cpio	application/x-cpio
