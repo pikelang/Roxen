@@ -1,6 +1,6 @@
 // This module implements an ftp proxy
 
-string cvs_version = "$Id: ftpgateway.pike,v 1.30 1999/12/28 05:05:12 nilsson Exp $";
+string cvs_version = "$Id: ftpgateway.pike,v 1.31 1999/12/28 05:18:08 nilsson Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -40,7 +40,7 @@ Content-type: text/html\r\n\
 <hr>\
 <font size=-2><a href=http://www.roxen.com/>"+roxen->version()+"</a></font>"
 
-#define INFOSTRING "<font size=-2><a href=http://www.roxen.com/>"+roxen->version()+"</a> FTP Gateway $Revision: 1.30 $ / <i>law@idonex.se</i></font>"
+#define INFOSTRING "<font size=-2><a href=http://www.roxen.com/>"+roxen->version()+"</a> FTP Gateway $Revision: 1.31 $ / <i>law@idonex.se</i></font>"
 
 #define _ERROR_MESSAGE(XXXX) ("HTTP/1.0 500 FTP gateway error\r\nContent-type: text/html\r\n\r\n<title>Ftp gateway error</title>\n<h2>FTP Gateway failed:</h2><hr><font size=+1>"XXXX"</font><hr>"+INFOSTRING)
 
@@ -451,8 +451,8 @@ class Request {
 
   string parse_directory()
   {
-    string res,s,r,t;
-    string *path;
+    string s,r,t,*path;
+    string|int res;
     /* check if known format */
     if (effect=="raw"||buffer=="")
     {
