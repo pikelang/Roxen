@@ -25,11 +25,11 @@ string mktable(array table) {
 }
 
 string available_languages(object id) {
-  string pl="en";
-  if(id->misc->pref_languages && sizeof(id->misc->pref_languages)) {
-    pl=id->misc->pref_languages[0];
+  string pl;
+  if(id->misc->pref_languages && (pl=id->misc->pref_languages->get_language()))
     if(!roxen->languages[pl]) pl="en";
-  }
+  else
+    pl="en";
   mapping languages=roxen->languages[pl]->languages;
   return mktable( Array.map(indices(languages), lambda(string code) { return ({ code, languages[code] }); } ));
 }
@@ -83,21 +83,25 @@ private string ex_cont(string t, mapping m, string c, string rt, void|object id)
 private string format_doc(string|mapping doc, string name, void|object id) {
   if(mappingp(doc)) {
     if(id && id->misc->pref_languages) {
-      object lang=roxen->languages[id->misc->pref_languages[0]];
-      array lang_id;
-      if(lang) {
-	lang_id=lang->id();
-	if(doc[lang_id[2]])
-	  doc=doc[lang_id[2]];
-	else if(doc[lang_id[1]])
-	  doc=doc[lang_id[1]];
+      foreach(id->misc->pref_languages->get_languages()+({"en"}), string code) {
+	object lang=roxen->languages[code];
+	if(lang) {
+	  array lang_id=lang->id();
+	  if(doc[lang_id[2]]) {
+	    doc=doc[lang_id[2]];
+	    break;
+	  }
+	  if(doc[lang_id[1]]) {
+	    doc=doc[lang_id[1]];
+	    break;
+	  }
+	}
       }
-      else
-	doc=doc["standard"];
     }
     else
       doc=doc->standard;
   }
+
   return parse_html(doc, ([]), ([
     "desc":desc_cont,
     "attr":attr_cont,

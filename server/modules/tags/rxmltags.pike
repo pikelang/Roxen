@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.53 2000/01/27 01:57:21 kuntri Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.54 2000/01/28 13:50:07 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -1070,18 +1070,16 @@ class Entity_client_accept_languages {
 class Entity_client_language {
   string rxml_var_eval(RXML.Context c) {
     c->id->misc->cacheable=0;
-    array languages=c->id->misc->pref_languages;
-    if(!languages || !sizeof(languages)) return "";
-    return languages[0];
+    if(!c->id->misc->pref_languages) return "";
+    return c->id->misc->pref_languages->get_language() || "";
   }
 }
 
 class Entity_client_languages {
   string rxml_var_eval(RXML.Context c) {
     c->id->misc->cacheable=0;
-    array languages=c->id->misc->pref_languages;
-    if(!languages || !sizeof(languages)) return "";
-    return languages*", ";
+    if(!c->id->misc->pref_languages) return "";
+    return c->id->misc->pref_languages->get_languages()*", ";
   }
 }
 

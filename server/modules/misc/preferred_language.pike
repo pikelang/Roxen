@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: preferred_language.pike,v 1.1 2000/01/23 07:59:07 nilsson Exp $";
+constant cvs_version = "$Id: preferred_language.pike,v 1.2 2000/01/28 13:51:15 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST;
 constant module_name = "Preferred Language Analyzer";
@@ -22,17 +22,26 @@ void start() {
 }
 
 RequestID first_try(RequestID id) {
-  array config = indices(id->config);
-  array pre = indices(id->prestate);
+  array(string) config = indices(id->config);
+  array(string) pre = indices(id->prestate);
+  pre=pre-(pre-languages);
+  config=config-(config-languages);
+
+  array(float) qualities=({1.4})*sizeof(pre)+({1.2})*sizeof(config);
+
   array lang = pre-(pre-languages) +
-    config-(config-languages) +
-    (id->misc->pref_languages|| ({}) );
+    config-(config-languages);
+
+  if(id->misc->pref_languages) {
+    lang+=id->misc->pref_languages->get_languages();
+    qualities+=id->misc->pref_languages->get_qualities();
+  }
 
   if(query("propagate") && sizeof(lang)) {
     if(!id->misc->defines) id->misc->defines=([]);
     id->misc->defines->theme_language=lang[0];
   }
 
-  id->misc->pref_languages=lang;
+  id->misc->pref_languages->set_sorted(lang, qualities);
   return id;
 }
