@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.82 2000/02/28 20:07:20 grubba Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.83 2000/02/29 20:07:44 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -130,15 +130,6 @@ class EntityClientName {
   }
 }
 
-class EntityClientFullName {
-  inherit RXML.Value;
-  string rxml_const_eval(RXML.Context c) {
-    c->id->misc->cacheable=0;
-    array client=c->id->client;
-    return client && client*" ";
-  }
-}
-
 class EntityClientIP {
   inherit RXML.Value;
   string rxml_const_eval(RXML.Context c) {
@@ -185,7 +176,6 @@ class EntityClientLanguages {
 
 mapping client_scope=([ "ip":EntityClientIP(),
 			"name":EntityClientName(),
-			"full-name":EntityClientFullName(),
 			"referrer":EntityClientReferrer(),
 			"accept-language":EntityClientAcceptLanguage(),
 			"accept-languages":EntityClientAcceptLanguages(),
@@ -433,7 +423,7 @@ private string inc(mapping m, RequestID id)
 {
   RXML.Context context=RXML.get_context();
   array entity=context->parse_user_var(m->variable, m->scope);
-  if(!context->exist_scope(entity[0])) return "Scope "+entity[0]+" does not exist.\n";
+  if(!context->exist_scope(entity[0])) RXML.run_error("Scope "+entity[0]+" does not exist.\n");
   int val=(int)m->value||1;
   context->user_set_var(m->variable, (int)context->user_get_var(m->variable, m->scope)+val, m->scope);
   return 0;
@@ -447,7 +437,6 @@ private string dec(mapping m, RequestID id)
 
 string|array(string) tag_imgs(string tag, mapping m, RequestID id)
 {
-  string err;
   if(m->src)
   {
     string file;
@@ -459,17 +448,18 @@ string|array(string) tag_imgs(string tag, mapping m, RequestID id)
 	m->width=(string)xysize[0];
 	m->height=(string)xysize[1];
       }
-      else
-	err = "Dimensions quering failed.\n";
+      else if(!m->quiet)
+	RXML.run_error("Dimensions quering failed.\n");
     }
-    else
-      err = "Virtual path failed.\n";
+    else if(!m->quiet)
+      RXML.run_error("Virtual path failed.\n");
+
     if(!m->alt) {
       array src=m->src/"/";
       string src=src[sizeof(src)-1];
       m->alt=String.capitalize(replace(src[..sizeof(src)-search(reverse(src),".")-2],"_"," "));
     }
-    if(err && !m->quiet) RXML.run_error(err);
+
     return ({ make_tag("img", m) });
   }
   RXML.parse_error("No src given.\n");
@@ -486,6 +476,7 @@ array(string) tag_roxen(string tagname, mapping m, RequestID id)
   m->height = (["small":"35","medium":"60","large":"90"])[size];
   if(!m->alt) m->alt="Powered by Roxen";
   if(!m->border) m->border="0";
+  if(!m->noxml) m["/"]="/";
   return ({ "<a href=\"http://www.roxen.com/\">"+make_tag("img", m)+"</a>" });
 }
 
@@ -633,11 +624,7 @@ string|array(string) tag_insert( string tag, mapping m, RequestID id )
     return ({ 1, "!--#echo", m});
   }
 
-  string ret="Could not fullfill your request.\nArguments:\n";
-  foreach(indices(m), string tmp)
-    ret+=tmp+" : "+m[tmp]+"\n";
-
-  RXML.parse_error(ret);
+  RXML.parse_error("No correct insert attribute given.\n");
 }
 
 string tag_return(string tag, mapping m, RequestID id)
@@ -770,7 +757,7 @@ string|array(string) tag_user(string tag, mapping m, RequestID id, Stdio.File fi
   if(m->email && !m->realname)
   {
     if(m->link && !m->nolink)
-      return ({ sprintf("<a href=\"mailto:%s@%s@\">%s@%s</a>",
+      return ({ sprintf("<a href=\"mailto:%s@%s\">%s@%s</a>",
 			b, dom, b, dom)
 	      });
     return ({ b + "@" + dom });
