@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.152 2000/03/09 14:43:18 mast Exp $
+ * $Id: roxenloader.pike,v 1.153 2000/03/12 07:40:03 per Exp $
  *
  * Roxen bootstrap program.
  *
@@ -18,7 +18,7 @@ private static object new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.152 2000/03/09 14:43:18 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.153 2000/03/12 07:40:03 per Exp $";
 
 int pid = getpid();
 object stderr = Stdio.File("stderr");
@@ -992,6 +992,7 @@ Please install a newer pike version
     add_program_path(p);
   }
   add_module_path( "etc/modules" );
+  add_module_path( "../local/pike_modules" );
 
 #ifdef INTERNAL_ERROR_DEBUG
   add_constant("throw", paranoia_throw);
