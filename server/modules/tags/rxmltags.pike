@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.183 2000/10/20 12:45:20 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.184 2000/10/26 14:03:02 kuntri Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2172,7 +2172,7 @@ Display the time from another timezone.
 
 <attr name=case value=upper|lower|capitalize>
  Changes the case of the output to upper, lower or capitalize.
-<ex><date date='' lang='<ent>client.language</ent>' case='upper'/></ex>
+<ex><date date='' lang='&client.language;' case='upper'/></ex>
 </attr>
 
 <attr name=prec value=number>
@@ -2236,7 +2236,7 @@ Display the time from another timezone.
 </attr>
 
 <ex type='box'>
- <default name='my-select' value='<ent>form.preset</ent>'>
+ <default name='my-select' value='&form.preset;'>
     <select name='my-select'>
       <option value='1'>First</option>
       <option value='2'>Second</option>

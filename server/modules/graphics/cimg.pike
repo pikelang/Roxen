@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.31 2000/09/19 21:47:20 kuntri Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.32 2000/10/26 14:04:33 kuntri Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -42,7 +42,7 @@ resize, crop and in other ways transform images.</desc>
  variables.
 <ex type='box'>
 <emit source='sql' query='select imagedata from images where id=37'>
-<cimg data='<ent>sql.imagedata</ent>'/>
+<cimg data='&sql.imagedata;'/>
 </emit>
 </ex>
 </attr>",
@@ -64,7 +64,7 @@ tag is to insert image-URI's into various places, e.g. a submit-box.
  variables.
 <ex type='box'>
 <emit source='sql' query='select imagedata from images where id=37'>
-<cimg data='<ent>sql.imagedata</ent>'/>
+<cimg data='&sql.imagedata;'/>
 </emit>
 </ex>
 </attr>",
