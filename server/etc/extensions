@@ -1,4 +1,4 @@
-# $Id: extensions,v 1.13 1997/06/25 16:45:08 grubba Exp $
+# $Id: extensions,v 1.14 1997/08/06 03:21:21 grubba Exp $
 
 aif	audio/x-aiff
 aifc	audio/x-aiff
@@ -73,6 +73,7 @@ rtx	text/richtext
 rxml	text/roxencode
 sgm     text/x-sgml
 sgml    text/x-sgml
+shtml	text/html
 spider  text/spidercode 
 spml	text/spinnercode
 spml    text/spidercode 
