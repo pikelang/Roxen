@@ -1,4 +1,4 @@
-string cvs_version="$Id: pimage.pike,v 1.13 1999/02/27 00:01:55 marcus Exp $";
+string cvs_version="$Id: pimage.pike,v 1.14 1999/04/20 22:45:00 marcus Exp $";
 
 #include <module.h>
 inherit "module";
@@ -6,7 +6,6 @@ inherit "roxenlib";
 
 class Constructors
 {
-  inherit Image;
   class Animation
   {
     object img, my_fd;
@@ -311,7 +310,7 @@ class Constructors
   object Text(string font, string text, mixed fg, mixed bg)
   {
     object m = get_font(font, 32, 0, 0, 0, 0, 0, 0)->write(text);
-    return myimage(bg(),image(m->xsize(),m->ysize(),@bg)
+    return myimage(bg(),Image.image(m->xsize(),m->ysize(),@bg)
 		   ->paste_alpha_color(m,@to_color(fg)));
   }
 
@@ -326,7 +325,7 @@ class Constructors
 	q = g->inflate()->inflate(q);
       };
     }
-    return myimage(bg(),image()->fromppm(q));
+    return myimage(bg(),Image.image()->fromppm(q));
   }
 
   object Roxen( )
@@ -341,7 +340,7 @@ class Constructors
   
   object PImage(int xs, int ys, mixed bgc)
   {
-    return myimage(bg(),image(xs,ys,@to_color(bgc)));
+    return myimage(bg(),Image.image(xs,ys,@to_color(bgc)));
   }
   
 }
