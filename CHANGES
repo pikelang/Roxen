@@ -7,9 +7,15 @@ o Fixed handling of magic-* in gtext.
 
 o Fixed problem with SSL requests getting cut short on NT.
 
+o Fixed various minor problems in the admin interface.
+
+o Improved <vform>.
+
 o Added check for broken JVM thread implementation on Linux.
 
 o Extended Java module support.
+
+o Lots of documentation improvements and fixes.
 
 
 Changes since Roxen 2.1.135
