@@ -122,21 +122,23 @@ class ConfigurationSettings
             ([
               "english":
 #"<pre>
-  normal  - Show module name and documentation with images
-  fast    - Like verbose, but no type images
-  compact - Only show the names of modules, and allow addition/deletion
-            of multiple modules at once
+          normal - Show module name and documentation with images.
+            fast - Like verbose, but no type images.
+         compact - Only show the names of modules, and allow addition/deletion
+                   of multiple modules at once.
+  really compact - Like compact, but no module classes.
 </pre>
 ",
               "svenska":
 #"<pre>
-   normal  - Visa modulnamnet, dokumentationen och typbilder
-   snabb   - Som den normal, men inga typbilder
-   kompakt - Visa bara namnet, och tillåt adderande av flera moduler
-             på samma gång
+       normal - Visa modulnamnet, dokumentationen och typbilder.
+        snabb - Som normal, men inga typbilder.
+      kompakt - Visa bara namnet, och tillåt adderande av flera moduler
+                på samma gång.
+   kompaktare - Som kompakt, men utan modulkategorier.
 " ]),
-({ "normal","fast","compact"}),
-(["svenska":([ "normal":"normal","fast":"snabb","compact":"kompakt"]),
+({ "normal","fast","compact","really compact"}),
+(["svenska":([ "normal":"normal","fast":"snabb","compact":"kompakt","really compact":"kompaktare"]),
  ])
             );
   }

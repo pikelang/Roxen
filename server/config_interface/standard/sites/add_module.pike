@@ -217,6 +217,49 @@ string page_compact( RequestID id )
                    );
 }
 
+string page_really_compact( RequestID id )
+{
+  first=0;
+  string desc, err;
+
+
+  object conf = roxen.find_configuration( id->variables->config );
+  object ec = roxenloader.LowErrorContainer();
+  master()->set_inhibit_compile_errors( ec );
+
+  array mods;
+  roxenloader.push_compile_error_handler( ec );
+  mods = roxen->all_modules();
+  roxenloader.pop_compile_error_handler();
+
+  string res = "";
+
+  mixed r;
+  if( (r = class_visible_compact( "Add module", "Select one or several modules to add.", id )) && r[0] ) {
+    res += r[1];
+    foreach(mods, object q) {
+      if( q->get_description() == "Undocumented" &&
+	  q->type == 0 )
+	continue;
+      object b = module_nomore(q->sname, q, conf);
+      res += describe_module_compact( q, b );
+    }
+  } else
+    res += r[1];
+
+  master()->set_inhibit_compile_errors( 0 );
+  desc=res;
+  err=ec->get();
+
+  return page_base(id,
+                   "<form action=\"add_module.pike\" method=\"post\">"
+                   "<input type=\"hidden\" name=\"config\" value=\"&form.config;\" />"+
+                   desc+"</select><br /><submit-gbutton> "
+                   "&locale.add_module; </submit-gbutton><br /><pre>"
+                   +html_encode_string(err)+"</pre></form>",
+                   );
+}
+
 mixed do_it( RequestID id )
 {
   object conf = roxen.find_configuration( id->variables->config );
@@ -242,5 +285,5 @@ mixed parse( RequestID id )
   if( id->variables->module_to_add )
     return do_it( id );
 
-  return this_object()["page_"+config_setting( "addmodulemethod" )]( id );
+  return this_object()["page_"+replace(config_setting( "addmodulemethod" )," ","_")]( id );
 }
