@@ -10,7 +10,7 @@
 // the correct background and font colors.
 //
 // Make sure links work _inside_ unfolded documents.
-constant cvs_version = "$Id: directories.pike,v 1.58 2000/05/14 15:56:01 per Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.59 2000/05/14 15:58:38 per Exp $";
 
 constant thread_safe=1;
 
@@ -150,8 +150,11 @@ string spartan_directory(string d, RequestID id)
   array(string) path = d/"/" - ({ "","." });
   d = "/"+path*"/" + "/";
   array(string) dir = id->conf->find_dir(d, id)||({});
-  if (sizeof(dir)) 
-    dir = Array.sort_array((dir, Array.dwim_sort_func);
+ 
+
+  /* FIXME: Perhaps make func. customizable? */
+ if (sizeof(dir)) 
+    dir = Array.sort_array(dir, Array.dwim_sort_func);
 
   return sprintf("<html><head><title>Directory listing of %s</title></head>\n"
 		 "<body><h1>Directory listing of %s</h1>\n"
@@ -175,7 +178,7 @@ string describe_directory(string d, RequestID id)
   if(d=="//") d="/";
   array(string) dir = id->conf->find_dir(d, id)||({});
   if (sizeof(dir)) 
-    dir = Array.sort_array((dir, Array.dwim_sort_func);
+    dir = Array.sort_array(dir, Array.dwim_sort_func);
 
   string result="";
   int toplevel=!id->misc->dir_no_head++;
