@@ -695,3 +695,80 @@ c</result>
 <rxml><date unix-time='87654321' type='iso'/></rxml>
 <result>1972-10-11T13:25:21</result>
 </test>
+
+
+<comment>HTTP tests</comment>
+These only tests that the tags does not produce a backtrace, for now.
+<test>
+<rxml><set-cookie name="huu" /></rxml>
+</test>
+
+<test>
+<rxml><redirect to="http://www.foo.bar" add="huu" drop="hoo" /></rxml>
+</test>
+
+<test>
+<rxml><header name=SDMI value=boo.com /></rxml>
+</test>
+
+<test>
+<rxml><auth-required realm='test' message='hello'/></rxml>
+</test>
+
+<test>
+<rxml><header name='URI' value='balubas'/></rxml>
+</test>
+
+<test>
+<rxml><header name='WWW-Authenticate' value='zork'/></rxml>
+</test>
+
+<test>
+<rxml><expire-time years="1" /></rxml>
+</test>
+
+<test>
+<rxml><expire-time now="1" /></rxml>
+</test>
+
+
+<comment>Prestate links</comment>
+<test>
+<add what="prestate" name="x"/>
+<rxml><apre drop="x" class="q">x</apre></rxml>
+<result><a class="q" href="/index.html">x</a></result>
+</test>
+
+<test>
+<rxml><apre drop="x" class="q">x</apre></rxml>
+<result><a class="q" href="/index.html">x</a></result>
+</test>
+
+<!test>
+<rxml><apre add="y" href=/(x)/g.html>x</apre></rxml>
+<result><a href="/(x,y)/g.html">x</a></result>
+</!test>
+
+<test>
+<add what="prestate" name="x"/>
+<rxml><apre add="a" drop="x">x</apre></rxml>
+<result><a href="/(a)/index.html">x</a></result>
+</test>
+
+<test>
+<add what="prestate" name="x"/>
+<rxml><apre add="y" href="/g.html">x</apre></rxml>
+<result><a href="/(x,y)/g.html">x</a></result>
+</test>
+
+<test>
+<add what="prestate" name="x"/>
+<rxml><apre add="y">x</apre></rxml>
+<result><a href="/(x,y)/index.html">x</a></result>
+</test>
+
+<test>
+<add what="prestate" name="x"/>
+<rxml><apre add="a,b">x</apre></rxml>
+<result><a href="/(a,b,x)/index.html">x</a></result>
+</test>
