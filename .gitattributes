@@ -133,7 +133,6 @@ map binary
 /server/modules/compat/ximg.pike foreign_ident
 /server/modules/configuration/config_filesystem.pike foreign_ident
 /server/modules/directories/directories.pike foreign_ident
-/server/modules/directories/fastdir.pike foreign_ident
 /server/modules/directories/indexfiles.pike foreign_ident
 /server/modules/examples/fnord.pike foreign_ident
 /server/modules/examples/newstyle_fnord.pike foreign_ident
