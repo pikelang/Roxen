@@ -1,4 +1,4 @@
-/* $Id: low_describers.pike,v 1.24 1998/03/23 08:20:55 neotron Exp $ */
+/* $Id: low_describers.pike,v 1.25 1998/06/09 12:13:56 grubba Exp $ */
 // These do _not_ use any nodes, instead, they are called from the node
 // describers (which are called from the nodes)
 object this = this_object();
@@ -260,15 +260,27 @@ void init_ip_list()
 
 string all_ip_numbers_as_selection(int id, string sel)
 {
-  if(ip_number_list && sizeof(ip_number_list))
-    return ("<select name=ip_number_"+id+">\n"
-	    + (map(ip_number_list, lambda(string s, string q) {
-  	        return "  <option"+(q==s?" selected":"")+">"+s+"\n";
-   	       }, sel)*"")
-	    + "</select>\nOther IP-number: <input type=string name=other_"
-            + id+" value=\""+sel+"\">\n");
-  else
+  if(ip_number_list && sizeof(ip_number_list)) {
+    string extra = "";
+    int i;
+    for (i = 0; i < sizeof(ip_number_list); i++) {
+      if (ip_number_list[i] == sel)
+	break;
+    }
+    if (i == sizeof(ip_number_list))
+      extra = "  <option selected>"+sel+"\n";
+
+    return ("<select name=ip_number_"+id+">\n" +
+	    extra +
+	    (map(ip_number_list,
+		 lambda(string s, string q) {
+		   return "  <option"+(q==s?" selected":"")+">"+s+"\n";
+		 }, sel)*"") +
+	    "</select>\nOther IP-number: <input type=string name=other_" +
+            id + " value=\""+sel+"\">\n");
+  } else {
     return "<input type=string name=ip_number_"+id+" value='"+sel+"'>\n";
+  }
 }
 
 array protocols()
