@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.23 1999/08/16 18:56:40 wellhard Exp $
+ * $Id: rxml.pike,v 1.24 1999/08/19 23:45:53 per Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -219,21 +219,29 @@ string call_user_tag(string tag, mapping args, int line, mixed foo, RequestID id
   return r;
 }
 
-string call_user_container(string tag, mapping args, string contents, int line,
+array|string 
+     call_user_container(string tag, mapping args, string contents, int line,
 			 mixed foo, RequestID id)
 {
   if(!id->misc->defaults[tag] && id->misc->defaults[""])
     tag = "";
   id->misc->line = line;
   args = id->misc->defaults[tag]|args;
-  if(args->preparse && 
-     (args->preparse=="preparse" || (int)args->preparse))
+  if( args->preparse )
   {
     if( id->misc->do_not_recurse_for_ever_please++ > 10000 )
       error("Too deep Recursion.\n");
     contents = parse_rxml(contents, id);
     id->misc->do_not_recurse_for_ever_please--;
   }
+  if(args->trimwhites) 
+  {
+    sscanf(contents, "%*[ \t\n\r]%s", contents);
+    contents = reverse(contents);
+    sscanf(contents, "%*[ \t\n\r]%s", contents);
+    contents = reverse(contents);
+  }
+
   TRACE_ENTER("user defined container &lt;"+tag+"&gt", call_user_container);
   id->misc->do_not_recurse_for_ever_please++;
   array replace_from = ({"#args#", "<contents>"})+
@@ -244,6 +252,7 @@ string call_user_container(string tag, mapping args, string contents, int line,
 		      values(args));
   string r = replace(id->misc->containers[ tag ], replace_from, replace_to);
   TRACE_LEAVE("");
+  if( args->noparse ) return ({ r });
   return r;
 }
 
@@ -422,8 +431,8 @@ string tag_line( string t, mapping args, RequestID id)
 
 string tag_number(string t, mapping args)
 {
-  return roxen->language(args->language||args->lang, 
-			 args->type||"number")( (int)args->num );
+  return roxen.language(args->language||args->lang, 
+                        args->type||"number")( (int)args->num );
 }
 
 array(string) list_packages()
@@ -1103,7 +1112,7 @@ class IfMatch
 
 int if_date( string date, RequestID id, mapping m )
 {
-  CACHE(60);
+  CACHE(60); // One minute accuracy is probably good enough...
   int a, b;
   mapping c;
   c=localtime(time(1));
@@ -1121,7 +1130,7 @@ int if_date( string date, RequestID id, mapping m )
 
 int if_time( string ti, RequestID id, mapping m )
 {
-  CACHE(time(1)%60);
+  CACHE(time(1)%60); // minute resolution...
 
   int tok, a, b, d;
   mapping c;
@@ -1209,9 +1218,9 @@ int group_member(array auth, string group, string groupfile, object id)
 
 int if_user( string u, RequestID id, mapping m )
 {
-  NOCACHE();
   if(!id->auth)
     return 0;
+  NOCACHE();
   if(u == "any")
     if(m->file)
       return match_user(id->auth,id->auth[1],m->file,!!m->wwwfile, id);
@@ -1227,6 +1236,8 @@ int if_user( string u, RequestID id, mapping m )
 
 int if_group( string u, RequestID id, mapping m)
 {
+  if( !id->auth )
+    return 0;
   NOCACHE();
   return ((m->groupfile && sizeof(m->groupfile)) 
           && group_member(id->auth, m->group, m->groupfile, id));
@@ -1234,7 +1245,7 @@ int if_group( string u, RequestID id, mapping m)
 
 int if_exists( string u, RequestID id, mapping m)
 {
-  CACHE(10); 
+  CACHE(5);
   return id->conf->is_file(fix_relative(m->exists,id), id);
 }
 
