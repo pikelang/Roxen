@@ -1,4 +1,8 @@
-constant cvs_version = "$Id: old.pike,v 1.1 2000/09/03 02:33:01 per Exp $";
+// This file is part of Roxen WebServer.
+// Copyright © 1996 - 2000, Roxen IS.
+
+#include <config.h>
+constant cvs_version = "$Id: old.pike,v 1.2 2000/09/03 16:45:56 nilsson Exp $";
 
 constant name = "Compatibility bitmap fonts";
 constant doc = "Compatibility (bitmapped) fonts for Roxen 1.3 and earlier.";
@@ -35,10 +39,9 @@ array available_fonts()
   return res;
 }
 
-mapping font_information( string fnt )
+array(mapping) font_information( string fnt )
 {
-  int styles;
-  string path_found;
+  array font_infos=({});
   foreach(roxen->query("font_dirs"), string dir)
   {
     dir+="32/";
@@ -50,16 +53,21 @@ mapping font_information( string fnt )
                string style)
         if(has_value(d, style)) 
         {
-          path_found = dir+fnt;
-          styles++;
+	  mapping font_info = ([ "name":fnt,
+				 "path":dir+fnt,
+				 "styles":styles,
+				 "format":"bitmap dump" ]);
+	  switch(style[0]) {
+	  case 'l': font_info->name+="light"; break;
+	  case 'b': font_info->name+="bold"; break;
+	  case 'B': font_info->name+="black"; break;
+	  }
+	  if(style[1]=='i') font_info->name+="italic";
+	  font_infos+=({ font_info });
         }
     }
   }
-  if(!styles) return 0;
-  return ([ "name":fnt,
-             "path":path_found,
-             "styles":styles,
-             "ttf":"no" ]);
+  return font_infos;
 }
 
 string fix_name( string what )
