@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.50 1998/09/19 13:19:58 grubba Exp $
+# $Id: start,v 1.51 1999/02/07 16:51:10 peter Exp $
 
 VERSION=202; BETA=.b;
 
@@ -96,13 +96,17 @@ parse_args() {
 # Used by the 'install' script
   --truss)
      pike="truss $pike"
-   ;;
+  ;;
   --log-dir=*)
    LOGDIR=`echo $1 | sed -e 's/--log-dir=//'`
   ;;
   --config-dir=*)
    DIR=`echo $1 | sed -e 's/--config-dir=//'`
    FILES=`echo $1 | sed -e's/--config-dir=//' -e's/\.//g' -e's./..g' -e 's.-..g'`
+  ;;
+  --pid-file=*)
+   ROXEN_PID_FILE=`echo $1 | sed -e 's/--pid-file=//'`
+   export ROXEN_PID_FILE
   ;;
   '--debug'|'--with-debug'|'--enable-debug')
     debug=1
@@ -204,7 +208,7 @@ the default arguments.
 				  anything but debug.
 
       .B--pid-file=<file>B.:          Store the roxen and startscript pids in this
-				  file. Defaults to .B/tmp/roxen_$UIDB.
+				  file. Defaults to .B/tmp/roxen_\$UIDB.
          
   .BArguments passed to pike:B.
 

@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.287 1999/02/04 01:40:24 peter Exp $
+ * $Id: roxen.pike,v 1.288 1999/02/07 16:51:30 peter Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -8,7 +8,7 @@
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version = "$Id: roxen.pike,v 1.287 1999/02/04 01:40:24 peter Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.288 1999/02/07 16:51:30 peter Exp $";
 
 
 // Some headerfiles
@@ -2551,7 +2551,6 @@ int main(int|void argc, array (string)|void argv)
 
   startpid = getppid();
   roxenpid = getpid();
-  create_pid_file(find_arg(argv, "p", "pid-file", "ROXEN_PID_FILE"));
 
   // Dangerous...
   if(tmp = find_arg(argv, "r", "root")) fix_root(tmp);
@@ -2566,7 +2565,8 @@ int main(int|void argc, array (string)|void argv)
   neighborhood = (object)"neighborhood";
 #endif /* ENABLE_NEIGHBOURHOOD */
   
-  create_pid_file(QUERY(pidfile));
+  create_pid_file(find_arg(argv, "p", "pid-file", "ROXEN_PID_FILE")
+		  || QUERY(pidfile));
 
 #if efun(syslog)
   init_logger();
