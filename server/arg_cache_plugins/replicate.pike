@@ -213,12 +213,15 @@ array(int) decode_id( string data )
     string sec = servers[server]->secret;
     if( array id = server_secret_decode( data, sec ) )
     {
-      id[0] = get_and_store_data_from_server( servers[server], id[0] );
+      Thread.MutexKey key;
+      catch ( key = cache->mutex->lock() );
 
+      id[0] = get_and_store_data_from_server( servers[server], id[0] );
       id[1] = get_and_store_data_from_server( servers[server], id[1] );
 
       if( off == -1 )
 	return 0;
+
 #ifdef REPLICATE_DEBUG
       werror("Found in remote cache. Server is %O\n", server );
 #endif
