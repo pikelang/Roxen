@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.20 2001/08/09 15:02:47 per Exp $
+// $Id: DBManager.pmod,v 1.21 2001/08/10 12:09:00 per Exp $
 //! @module DBManager
 //! Manages database aliases and permissions
 #include <roxen.h>
@@ -37,33 +37,25 @@ private
     return lower_case(sprintf("%s%4x", n[..6],(hash( n )&65535) ));
   }
 
-
   void clear_sql_caches()
   {
 #ifdef THREADS
+    sql_cache_size = 0;
     foreach( values( sql_cache ), mapping q )
       foreach( values( q ), Sql.Sql s )
+#else
+    foreach( values( sql_cache ), object s )
+#endif
       {
 	if( s->master_sql )
 	  destruct( s->master_sql );
 	destruct( s );
       }
-    sql_cache_size = 0;
-#else
-    foreach( values( sql_cache ), object s )
-    {
-      if( s->master_sql )
-	destruct( s->master_sql );
-      destruct( s );
-    }
-#endif
     sql_cache = ([]);
+
     // No need to forcefully close the connection cache entries,
     // since they are the same as the sql_cache entries.
     connection_cache = ([]);
-#ifdef THREADS
-    connection_cache_size = 0;
-#endif
     clear_connect_to_my_mysql_cache();
     gc( );
   }
@@ -177,15 +169,18 @@ private
 
   Sql.Sql low_get( string user, string db )
   {
+    mixed res;
     array(mapping(string:mixed)) d =
-                query("SELECT path,local FROM dbs WHERE name=%s", db );
+      query("SELECT path,local FROM dbs WHERE name=%s", db );
 
     if( !sizeof( d ) )
       return 0;
 
     if( (int)d[0]["local"] )
-      return connect_to_my_mysql( user, db );
-
+    {
+      res= connect_to_my_mysql( user, db );
+      return res;
+    }
     // Otherwise it's a tad more complex...  
     if( user[strlen(user)-2..] == "ro" )
       // Avoid type-warnings and errors.
@@ -197,7 +192,6 @@ private
 
     return sql_cache_get( d[0]->path );
   }
-
 };
 
 
@@ -214,8 +208,10 @@ static int sql_cache_size = 0;
 Sql.Sql sql_cache_get(string what)
 {
   mapping m = sql_cache[ this_thread() ] || ([]);
+
   if( m[ what ] )
     return m[ what ];
+
   sql_cache_size++;
   if( sql_cache_size > 30 )
   {
@@ -408,7 +404,6 @@ Sql.Sql get( string name, void|Configuration c, int|void ro )
 // Bad luck. :-)
 static mapping(Thread.Thread:mapping(string:Sql.Sql))
   connection_cache = ([]);
-static int connection_cache_size = 0;
 
 Sql.Sql cached_get( string name, void|Configuration c, void|int ro )
 //! Identical to get(), but the authentication verification and
@@ -431,7 +426,6 @@ Sql.Sql cached_get( string name, void|Configuration c, void|int ro )
   if( res )
   {
     cm[key]=res;
-    connection_cache_size++;
     connection_cache[ this_thread() ] = cm;
   }
   return res;

@@ -22,28 +22,28 @@ string parse( RequestID id )
 
   foreach( ({ "docs/roxen/2.2/", "docs/roxen/2.1/" }), string rpath )
   {
-  if( exists( "standard/" + rpath + "creator/index.html" ) )
+  if( exists(  rpath + "creator/index.html" ) )
     docs += "<a href='"+path(rpath+"creator/")+"'>Web Site Creator</a><br />";
 
-  if( exists( "standard/" + rpath + "administrator/index.html" ) )
+  if( exists( rpath + "administrator/index.html" ) )
     docs += "<a href='"+path(rpath+ "administrator/")+"'>Administrator Manual</a><br />";
 
-  if( exists( "standard/" + rpath + "user/index.html" ) )
+  if( exists( rpath + "user/index.html" ) )
     docs += "<a href='"+path(rpath+ "user/")+"'>User Manual</a><br />";
 
-  if( exists( "standard/" + rpath + "tutorial/rxml/index.html" ) )
+  if( exists( rpath + "tutorial/rxml/index.html" ) )
     docs += "<a href='"+path(rpath+ "tutorial/rxml/")+"'>RXML Tutorial</a><br />";
 
-  else if( exists( "standard/" + rpath + "rxml_tutorial/index.html" ) )
+  else if( exists( rpath + "rxml_tutorial/index.html" ) )
     docs += "<a href='"+path(rpath+ "rxml_tutorial/")+"'>RXML Tutorial</a><br />";
 
-  if( exists( "standard/"+rpath+"programmer/index.html") )
+  if( exists( rpath+"programmer/index.html") )
     docs += "<a href='"+path(rpath+ "programmer/")+"'>Programmer Manual</a><br />";
   }
 
   foreach( ({"docs/pike/7.1/","docs/pike/7.0/" }), string ppath )
   {
-  if( exists( "standard/"+ppath+"tutorial/index.html") )
+  if( exists( ppath+"tutorial/index.html") )
     docs += "<a href='"+path(ppath+ "tutorial/")+"'>Pike Tutorial</a><br />";
 
   if( docs == "" )

@@ -26,7 +26,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.272 2001/08/10 11:28:45 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.273 2001/08/10 12:08:59 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -62,7 +62,7 @@ class MyMysql( Sql.Sql real, mixed ro, string name )
 {
   mixed `!( )
   {
-    return !!real;
+    return !real;
   }
 
   mixed `[]( string what )
