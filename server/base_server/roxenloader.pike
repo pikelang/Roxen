@@ -15,7 +15,7 @@ private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.189 2000/08/12 06:14:47 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.190 2000/08/14 15:07:31 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -248,6 +248,10 @@ class RequestID
 //! sequence</ref>.
 {
   object conf; // Really Configuration, but that's sort of recursive.
+
+  object/*Protocol*/ port_obj;
+  //! The port object this request came from.
+
   int time;
   //! Time of the request, standard unix time (seconds since the epoch; 1970).
   string raw_url;
