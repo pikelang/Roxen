@@ -4,7 +4,7 @@
 // another. This can be done using "internal" redirects (much like a
 // symbolic link in unix), or with normal HTTP redirects.
 
-constant cvs_version = "$Id: redirect.pike,v 1.21 2000/03/16 17:58:26 nilsson Exp $";
+constant cvs_version = "$Id: redirect.pike,v 1.22 2000/03/17 16:58:50 mast Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -128,55 +128,49 @@ mixed first_try(object id)
   if(id->misc->is_redirected)
     return 0;
 
-  if(catch {
-    string m;
-    int ok;
-    m = id->not_query;
-    if(id->query)
-       if(sscanf(id->raw, "%*s?%[^\n\r ]", tmp))
-	  m += "?"+tmp;
+  string m;
+  int ok;
+  m = id->not_query;
+  if(id->query)
+    if(sscanf(id->raw, "%*s?%[^\n\r ]", tmp))
+      m += "?"+tmp;
 
-    foreach(indices(exact_patterns), f)
+  foreach(indices(exact_patterns), f)
+  {
+    if(m == f)
     {
-      if(m == f)
-      {
-	to = exact_patterns[f];
-	ok=1;
-	break;	
-      }
+      to = exact_patterns[f];
+      ok=1;
+      break;	
     }
-    if(!ok)
-      for (int i = 0; i < sizeof (redirect_from); i++) {
-	string f = redirect_from[i];
-	if(!search(m, f))
-	{
-	  to = redirect_to[i] + m[strlen(f)..];
-	  sscanf(to, "%s?", to);
-	  break;
-	} else if(search(f, "*")!=-1) {
-	  array foo;
-	  function split;
-	  if(f[0] != '^')
-	    split = Regexp("^"+f)->split;
-	  else
-	    split = Regexp(f)->split;
+  }
+  if(!ok)
+    for (int i = 0; i < sizeof (redirect_from); i++) {
+      string f = redirect_from[i];
+      if(!search(m, f))
+      {
+	to = redirect_to[i] + m[strlen(f)..];
+	sscanf(to, "%s?", to);
+	break;
+      } else if(search(f, "*")!=-1) {
+	array foo;
+	function split;
+	if(f[0] != '^') f = "^" + f;
+	if(catch (split = Regexp(f)->split))
+	  report_error("REDIRECT: Compile error in regular expression. ("+f+")\n");
 	
-	  if((foo=split(m)))
-	  {
-	    array bar = Array.map(foo, lambda(string s, mapping f) {
-	      return "$"+(f->num++);
-	    }, ([ "num":1 ]));
-	    foo +=({(id->not_query/"/"-({""}))[-1], id->not_query[1..] });
-	    bar +=({ "%f", "%p" });
-	    foo = Array.map(foo, lambda(mixed s) { return (string)s; });
-	    bar = Array.map(bar, lambda(mixed s) { return (string)s; });
-	    to = replace(redirect_to[i], bar, foo);
-	    break;
-	  }
+	if((foo=split(m)))
+	{
+	  array bar = Array.map(foo, lambda(string s, mapping f) {
+				       return "$"+(f->num++);
+				     }, ([ "num":1 ]));
+	  foo +=({(id->not_query/"/"-({""})+({""}))[-1], id->not_query[1..] });
+	  bar +=({ "%f", "%p" });
+	  to = replace(redirect_to[i], (array(string)) bar, (array(string)) foo);
+	  break;
 	}
       }
-  })
-    report_error("REDIRECT: Compile error in regular expression. ("+f+")\n");
+    }
 
   if(!to)
     return 0;
@@ -194,14 +188,14 @@ mixed first_try(object id)
       (to[3]==':' || to[4]==':' ||
        to[5]==':' || to[6]==':')))
   {
-     to=replace(to, ({ "\000", " " }), ({"%00", "%20" }));
+    to=replace(to, ({ "\000", " " }), ({"%00", "%20" }));
 
-     return http_low_answer( 302, "")
-	+ ([ "extra_heads":([ "Location":to ]) ]);
+    return http_low_answer( 302, "")
+      + ([ "extra_heads":([ "Location":to ]) ]);
   } else {
-     id->variables = ([]);
-     id->raw_url = http_encode_string(to);
-     id->not_query = id->scan_for_query( to );
+    id->variables = ([]);
+    id->raw_url = http_encode_string(to);
+    id->not_query = id->scan_for_query( to );
   }
 }
 
