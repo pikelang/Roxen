@@ -1,11 +1,11 @@
-/* This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
+/* This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
  *
  * Converts tab and newline separated lists to tables.
  * 
  * made by Per Hedbor
  */
 
-constant cvs_version = "$Id: tablify.pike,v 1.22 1999/05/20 03:21:26 neotron Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.23 1999/07/23 01:35:07 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -61,29 +61,29 @@ string html_nicer_table(array(string) subtitles, array(array(string)) table,
 
   if(!opt) opt = ([]);
   int m = (int)(opt->modulo?opt->modulo:1);
-  r += ("<table bgcolor="+(opt->bgcolor||"#27215b")+" border=0 "
-	"cellspacing=0 cellpadding=1>\n"
+  r += ("<table bgcolor=\""+(opt->bgcolor||"#27215b")+"\" border=\"0\" "
+	"cellspacing=\"0\" cellpadding=\"1\">\n"
 	"<tr><td>\n");
-  r += "<table border=0 cellspacing=0 cellpadding=2>\n";
+  r += "<table border=\"0\" cellspacing=\"0\" cellpadding=\"2\">\n";
   if (subtitles) {
-    r += "<tr bgcolor="+(opt->titlebgcolor||"#27215b")+">\n";
+    r += "<tr bgcolor=\""+(opt->titlebgcolor||"#27215b")+"\">\n";
     foreach(subtitles, mixed s)
       r+=
-	"<td align=left><gtext nfont="+(opt->font||"lucida")+" scale="+
-	(opt->scale||"0.36")+" fg="+(opt->titlecolor||"white")+" bg="+
-	(opt->titlebgcolor||"#27215b")+">"+s+"</gtext></td>";
+	"<td align=\"left\"><gtext nfont=\""+(opt->font||"lucida")+"\" scale=\""+
+	(opt->scale||"0.36")+"\" fg=\""+(opt->titlecolor||"white")+"\" bg=\""+
+	(opt->titlebgcolor||"#27215b")+"\">"+s+"</gtext></td>";
     r += "</tr>";
   }
   
   int cols; // FIXME: Used in colspan below. Is never set!
   for(int i = 0; i < sizeof(table); i++) {
     string tr;
-    r += tr = "<tr bgcolor="+((i/m)%2?opt->fgcolor1||"#ddeeff":
-			      opt->fgcolor0||"#ffffff")+">";
+    r += tr = "<tr bgcolor=\""+((i/m)%2?opt->fgcolor1||"#ddeeff":
+			      opt->fgcolor0||"#ffffff")+"\">";
     for(int j = 0; j < sizeof(table[i]); j++) {
       mixed s = table[i][j];
       if(arrayp(s))
-	r += "</tr>"+tr+"<td colspan="+cols+">"+s[0]+" &nbsp;</td>";
+	r += "</tr>"+tr+"<td colspan=\""+cols+"\">"+s[0]+" &nbsp;</td>";
       else {
 	string type = "text";
 	if(arrayp(opt->fields) && j < sizeof(opt->fields))
@@ -91,7 +91,7 @@ string html_nicer_table(array(string) subtitles, array(array(string)) table,
 	switch(type) {
 	case "num":
 	  array a = s/".";
-	  r += "<td align=right><font color="+(opt->fgcolor||"black")+" size="+(opt->size||"2")+" face=\""+
+	  r += "<td align=\"right\"><font color=\""+(opt->fgcolor||"#000000")+"\" size=\""+(opt->size||"2")+"\" face=\""+
 	    (opt->face||"helvetica,arial")+"\">";
 	  if(sizeof(a) > 1) {
 	    r += (format_numeric(a[0])+"."+
@@ -101,7 +101,7 @@ string html_nicer_table(array(string) subtitles, array(array(string)) table,
 	  break;
 	case "text":
 	default:
-	  r += "<td><font color="+(opt->fgcolor||"black")+" size="+(opt->size||"2")+" face=\""+
+	  r += "<td><font color=\""+(opt->fgcolor||"#000000")+"\" size=\""+(opt->size||"2")+"\" face=\""+
 	    (opt->face||"helvetica,arial")+"\">"+s;
 	}
 	r += "&nbsp;&nbsp;</font></td>";
@@ -110,7 +110,7 @@ string html_nicer_table(array(string) subtitles, array(array(string)) table,
     r += "</tr>\n";
   }
   r += "</table></td></tr>\n";
-  r += "</table><br>\n";
+  r += "</table>"+(opt->noxml?"<br>":"<br />")+"\n";
   return r;
 }
 
@@ -138,10 +138,12 @@ string tag_tablify( string tag, mapping m, string q, object request_id,
   q = reverse(q);
 #endif
 
+  // Not part of RXML 1.4
   if(tag == "htable") m->nice="nice";
   
   if(m->help) return register_module()[2];
 
+  // Not part of RXML 1.4
   if (m->preprocess || m->parse) {
     q = parse_rxml(q, request_id, file, defines);
   }
@@ -163,7 +165,7 @@ string tag_tablify( string tag, mapping m, string q, object request_id,
 
   if(m->cellalign)
   {
-    td = "<td align="+m->cellalign+">";
+    td = "<td align=\""+m->cellalign+"\">";
     m->cellalign = 0;
   } else
     td="<td>";
@@ -201,7 +203,7 @@ string tag_tablify( string tag, mapping m, string q, object request_id,
   table += ">";
   if(m->rowalign)
   {
-    td = "<tr align="+m->rowalign+">";
+    td = "<tr align=\""+m->rowalign+"\">";
     m->rowalign=0;
   } else
     td="<tr>";
