@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.203 2000/02/14 10:19:09 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.204 2000/02/14 10:22:01 per Exp $";
 
 #define MAGIC_ERROR
 
@@ -145,7 +145,7 @@ static array(string) output_encode( string what )
   }
   else
   {
-    if( String.width( what ) > 1 )
+    if( String.width( what ) > 8 )
     {
       charset = "UTF-8";
       what = string_to_utf8( what );
@@ -1526,8 +1526,6 @@ void send_result(mapping|void result)
 	  }
 	}
       }
-      if(stringp(file->data))
-	file->len += strlen(file->data);
     }
     if(prot != "HTTP/0.9") {
       string h, charset;
@@ -1539,6 +1537,8 @@ void send_result(mapping|void result)
           charset = "; charset="+charset;
         else
           charset="";
+        if(stringp(file->data))
+          file->len += strlen(file->data);
       }
 
       heads |= ([
