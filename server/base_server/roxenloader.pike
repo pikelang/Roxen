@@ -22,7 +22,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.249 2001/03/26 11:31:47 karman Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.250 2001/03/29 02:49:46 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1435,7 +1435,7 @@ int dump( string file, program|void p )
     if( q = catch( new_master->dump_program( file, p ) ) )
     {
 #ifdef DUMP_DEBUG
-      report_debug("** Cannot encode "+file+": "+describe_backtrace(q)+"\n");
+      report_debug("** Cannot encode "+file+": "+describe_error(q)+"\n");
 #else
       array parts = replace(file, "//", "/") / "/";
       if (sizeof(parts) > 3) parts = parts[sizeof(parts)-3..];
@@ -1593,11 +1593,6 @@ Please install a newer version of Pike.
   }
 
 
-  // Load prototypes (after the master is replaces, thus making it
-  // possible to dump them to a .o file (in the mysql))
-  object prototypes = (object)"base_server/prototypes.pike";
-  dump( "base_server/prototypes.pike", object_program( prototypes ) );
-  
 #if constant( Gz.inflate )
   add_constant("grbz",lambda(string d){return Gz.inflate()->inflate(d);});
 #else
@@ -1664,77 +1659,93 @@ library should be enough.
   // These are here to allow dumping of roxen.pike to a .o file.
   report_debug("Loading pike modules ... ");
 
-  function  nm_resolv = new_master->resolv;
-  int t = gethrtime();
+#define DC(X) add_dump_constant( X,nm_resolv(X) )
+  mixed nm_resolv(string x )
+  {
+    catch {
+      return new_master->resolv( x );
+    };
+    return ([])[0];
+  };
   
-  add_constant( "Regexp", nm_resolv("Regexp") );
-//   add_constant( "Stdio.File", nm_resolv("Stdio.File") );
-  add_constant( "Stdio.UDP", nm_resolv("Stdio.UDP") );
-  add_constant( "Stdio.Port", nm_resolv("Stdio.Port") );
-  add_constant( "Stdio.read_bytes", nm_resolv("Stdio.read_bytes") );
-  add_constant( "Stdio.read_file", nm_resolv("Stdio.read_file") );
-  add_constant( "Stdio.sendfile", nm_resolv("Stdio.sendfile") );
-  add_constant( "Stdio.stderr", nm_resolv("Stdio.stderr") );
-  add_constant( "Stdio.stderr", nm_resolv("Stdio.stderr") );
-  add_constant( "Stdio.stdin", nm_resolv("Stdio.stdin") );
-  add_constant( "Stdio.stdin", nm_resolv("Stdio.stdin") );
-  add_constant( "Stdio.stdout", nm_resolv("Stdio.stdout") );
-  add_constant( "Stdio.stdout", nm_resolv("Stdio.stdout") );
-  add_constant( "Stdio.write_file", nm_resolv("Stdio.write_file") );
-#if constant(thread_create)
-  add_constant( "Thread.Mutex", nm_resolv("Thread.Mutex") );
-  add_constant( "Thread.Condition", nm_resolv("Thread.Condition") );
-  add_constant( "Thread.Queue", nm_resolv("Thread.Queue") );
-#endif
+  function add_dump_constant = new_master->add_dump_constant;
+  int t = gethrtime();
 
-#if constant(SSL) && constant(SSL.sslfile)
-  add_constant("SSL.sslfile", nm_resolv("SSL.sslfile") );
-  add_constant("SSL.context", nm_resolv("SSL.context") );
-  add_constant("Tools.PEM.pem_msg", nm_resolv("Tools.PEM.pem_msg") );
-  add_constant("Crypto.randomness.reasonably_random",
-               nm_resolv("Crypto.randomness.reasonably_random") );
-  add_constant("Standards.PKCS.RSA.parse_private_key",
-               nm_resolv("Standards.PKCS.RSA.parse_private_key"));
-  add_constant("Crypto.rsa", Crypto.rsa );
-  add_constant( "Tools.X509.decode_certificate",
-                nm_resolv("Tools.X509.decode_certificate") );
-  add_constant( "Standards.PKCS.DSA.parse_private_key",
-                nm_resolv("Standards.PKCS.DSA.parse_private_key") );
-  add_constant( "SSL.cipher.dh_parameters",
-                nm_resolv("SSL.cipher.dh_parameters") );
-#endif
+  DC( "Stdio.Stat" );
 
-#if constant(HTTPLoop.prog)
-  add_constant( "HTTPLoop.prog", nm_resolv("HTTPLoop.prog") );
-  add_constant( "HTTPLoop.Loop", nm_resolv("HTTPLoop.Loop") );
-#endif
+  DC( "Thread.Locale" );
+  DC( "Thread.Locale" );
+  
+  DC( "Regexp" );
+
+  DC( "Pipe.pipe" );
+
+  
+  foreach( ({ "ANY", "XCF", "PSD", "PNG",  "BMP",  "TGA", "PCX",
+	      "XBM", "XPM", "TIFF", "ILBM", "PS", "PVR", "GIF",
+	      "JPEG", "XWD", "PNM", "RAS",  "DSI", "TIM", "HRZ",
+	      "AVS", "WBF", "WBMP", "XFace" }),
+	   string x )
+    DC("Image."+x);
+
+  DC( "Stdio.File" );  DC( "Stdio.UDP" );  DC( "Stdio.Port" );
+
+  DC( "Stdio.read_bytes" );  DC( "Stdio.read_file" );
+  DC( "Stdio.write_file" );
+
+  DC( "Stdio.sendfile" );
+
+  DC( "Stdio.stderr" );  DC( "Stdio.stdin" );  DC( "Stdio.stdout" );
+
+  DC( "Thread.Mutex" );  DC( "Thread.Condition" );  DC( "Thread.Queue" );
+
+  DC( "Parser.HTML" );
+
+  if( DC("SSL.sslfile" ) )
+  {
+    DC( "SSL.context" );
+    DC( "Tools.PEM.pem_msg" );
+    DC( "Crypto.randomness.reasonably_random" );
+    DC( "Standards.PKCS.RSA.parse_private_key");
+    DC( "Crypto.rsa" );
+    DC( "Tools.X509.decode_certificate" );
+    DC( "Standards.PKCS.DSA.parse_private_key" );
+    DC( "SSL.cipher.dh_parameters" );
+  }
+
+  if( DC( "HTTPLoop.prog" ) )
+    DC( "HTTPLoop.Loop" );
+
+  if( DC( "Image.FreeType" ) )
+    DC( "Image.FreeType.Face" );
+  
+  DC( "Process.create_process" );
+  DC( "MIME.Message" );
+  DC( "MIME.encode_base64" );
+  DC( "MIME.decode_base64" );
+
+  DC( "Image.Image" );  DC( "Image.Font" );  DC( "Image.Colortable" );
+  DC( "Image.Layer" );  DC( "Image.lay" );   DC( "Image.Color" );
+  DC( "Image.Color.Color" );
+
+  if( DC("Image.GIF.encode") )
+    DC( "Image.GIF.encode_trans" );
+
+  DC( "Image" );  DC( "Locale" );  DC( "Locale.Charset" );
+
+  report_debug("Done [%.1fms]\n", (gethrtime()-t)/1000.0);
 
   add_constant( "hsv_to_rgb",  nm_resolv("Colors.hsv_to_rgb")  );
   add_constant( "rgb_to_hsv",  nm_resolv("Colors.rgb_to_hsv")  );
   add_constant( "parse_color", nm_resolv("Colors.parse_color") );
   add_constant( "color_name",  nm_resolv("Colors.color_name")  );
   add_constant( "colors",      nm_resolv("Colors")             );
-  add_constant( "Process.create_process",
-                nm_resolv("Process.create_process") );
-  add_constant( "MIME.Message", nm_resolv("MIME.Message") );
-  add_constant( "MIME.encode_base64", nm_resolv("MIME.encode_base64") );
-  add_constant( "MIME.decode_base64", nm_resolv("MIME.decode_base64") );
-  add_constant( "Image.Image", nm_resolv("Image.Image") );
-  add_constant( "Image.Font", nm_resolv("Image.Font") );
-  add_constant( "Image.Colortable", nm_resolv("Image.Colortable") );
-  add_constant( "Image.Layer", nm_resolv("Image.Layer") );
-  add_constant( "Image.lay", nm_resolv("Image.lay") );
-  add_constant( "Image.Color", nm_resolv("Image.Color") );
-#if constant(Image.GIF.encode)
-  add_constant( "Image.GIF.encode", nm_resolv("Image.GIF.encode") );
-  add_constant( "Image.GIF.encode_trans",
-                nm_resolv("Image.GIF.encode_trans") );
-#endif
-  add_constant( "Image.Color.Color", nm_resolv("Image.Color.Color") );
-  add_constant( "Image", nm_resolv("Image") );
-  add_constant( "Locale", nm_resolv("Locale") );
-  add_constant( "Locale.Charset", nm_resolv("Locale.Charset") );
 
+  // Load prototypes (after the master is replaces, thus making it
+  // possible to dump them to a .o file (in the mysql))
+  object prototypes = (object)"base_server/prototypes.pike";
+  dump( "base_server/prototypes.pike", object_program( prototypes ) );
+  
   add_constant("Protocol",      prototypes->Protocol );
   add_constant("Configuration", prototypes->Configuration );
   add_constant("StringFile",    prototypes->StringFile );
@@ -1750,7 +1761,6 @@ library should be enough.
   add_constant("User",       prototypes->User );
   add_constant("Group",      prototypes->Group );
   
-  report_debug("Done [%.1fms]\n", (gethrtime()-t)/1000.0);
 
   initiate_cache();
   load_roxen();
