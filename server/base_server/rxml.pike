@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.220 2000/08/12 04:49:41 mast Exp $
+// $Id: rxml.pike,v 1.221 2000/08/12 06:15:14 per Exp $
 
 
 inherit "rxmlhelp";
@@ -170,6 +170,7 @@ string parse_rxml(string what, RequestID id,
 // to accomplish that.
 {
   id->misc->_rxml_recurse++;
+  id->misc->is_dynamic = 1;
 #ifdef RXML_DEBUG
   werror("parse_rxml( "+strlen(what)+" ) -> ");
   int time = gethrtime();
