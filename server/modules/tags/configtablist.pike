@@ -1,12 +1,12 @@
 /*
- * $Id: configtablist.pike,v 1.14 1999/07/24 21:56:21 nilsson Exp $
+ * $Id: configtablist.pike,v 1.15 1999/07/25 01:23:40 nilsson Exp $
  *
  * Makes a tab-list like the one in the config-interface.
  *
  * $Author: nilsson $
  */
 
-constant cvs_version="$Id: configtablist.pike,v 1.14 1999/07/24 21:56:21 nilsson Exp $";
+constant cvs_version="$Id: configtablist.pike,v 1.15 1999/07/25 01:23:40 nilsson Exp $";
 constant thread_safe=1;
 
 #define old_rxml_compat 1
@@ -50,7 +50,11 @@ array register_module()
 	      "\"_/\" + text + \"\\_\").</td></tr>\n"
 	      "<tr><td><b>border</b></td><td>Border for the image (default: "
 	      "0).</td></tr>\n"
-	      "</table></ul>\n", 0, 1 }));
+              "<tr><td><b>noxml</b></td><td>Images will not be terminated with a slash "
+              "if this attribute is provided</td></tr>\n"
+	      "</table></ul>\n"
+              "<br>The bgcolor and noxml attribute can also be given in the tablist tag as "
+              "global attributes. Using bgcolor in a tab tag will overide the global setting.", 0, 1 }));
 }
 
 void create()
