@@ -956,7 +956,7 @@ array get_variable_maps( object mod, mapping m, object id )
       variables = filter( variables,
                        lambda( mapping q )
                        {
-                         return search( q->rname, m->section )!=-1;
+                         return search( q->rname, m->section+":" )!=-1;
                        } );
   }
   sort( variables->name, variables );
