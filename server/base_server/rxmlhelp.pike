@@ -4,6 +4,9 @@
 // RXML Help by Martin Nilsson
 //
 
+// inherited by configuration.pike
+#define parse_rxml this_object()->parse_rxml
+
 #ifdef RXMLHELP_DEBUG
 # define RXMLHELP_WERR(X) report_debug("RXML help: %s\n", X);
 #else
@@ -46,8 +49,9 @@ static string desc_cont(string t, mapping m, string c, string rt)
   if(m->tag) dt=sprintf("&lt;%s/&gt;", rt);
   if(m->cont) dt=(m->tag?dt+" and ":"")+sprintf("&lt;%s&gt;&lt;/%s&gt;", rt, rt);
   if(m->plugin) {
-    sscanf(dt,"%*s#%s",dt);
-    dt="plugin "+dt;
+    string a;
+    sscanf(dt,"%s#%s",a,dt);
+    dt=a+" plugin "+dt;
   }
   if(m->ent) dt=rt;
   if(m->scope) dt=rt[..sizeof(rt)-2]+" ... ;";
@@ -98,9 +102,10 @@ static string ex_cont(string t, mapping m, string c, string rt, void|object id)
   if(!id) return "";
 
   string parsed=
-    id->conf->parse_rxml(m->type!="hr"?
-			 "<colorscope bgcolor="+TDBG+">"+c+"</colorscope>":
-			 c, id);
+    parse_rxml(m->type!="hr"?
+	       "<colorscope bgcolor="+TDBG+">"+c+"</colorscope>":
+	       c, id);
+  
   switch(m->type) {
   case "hr":
     return quoted+"<hr />"+parsed;
@@ -255,9 +260,14 @@ mapping call_tagdocumentation(RoxenModule o) {
 
 static int generation;
 multiset undocumented_tags=(<>);
-string find_tag_doc(string name, void|object id) {
+string find_tag_doc(string name, void|object id, int|void no_undoc) {
   RXMLHELP_WERR("Help for tag "+name+" requested.");
-  RXML.TagSet tag_set=RXML.get_context()->tag_set;
+  object old_ctx = RXML.get_context();
+  id = id->clone_me();
+  id->conf = this_object();
+  parse_rxml( "", id );
+  RXML.TagSet tag_set=this_object()->rxml_tag_set;
+  
   string doc;
   int new_gen=tag_set->generation;
 
@@ -279,7 +289,12 @@ string find_tag_doc(string name, void|object id) {
   else
     tags=tag_set->get_overridden_tags(name);
 
-  if(!sizeof(tags)) return "<h4>That tag ("+name+") is not defined</h4>";
+  if(!sizeof(tags))
+  {
+    RXML.set_context( old_ctx );
+    return no_undoc ? "" : "<h4>That tag ("+name+") is not defined</h4>";
+  }
+
   string plugindoc="";
 
   foreach(tags, array|object|function tag) {
@@ -320,7 +335,9 @@ string find_tag_doc(string name, void|object id) {
 
     mapping tagdoc=call_tagdocumentation(tag);
     if(!tagdoc || !tagdoc[name]) continue;
-    return parse_doc(tagdoc[name], name, id)+plugindoc;
+    string res = parse_doc(tagdoc[name], name, id)+plugindoc;
+    RXML.set_context( old_ctx );
+    return res;
   }
 
   undocumented_tags[name]=1;
@@ -328,7 +345,9 @@ string find_tag_doc(string name, void|object id) {
     sscanf(name,"%*s#%s", name);
     name="plugin "+name;
   }
-  return "<h4>No documentation available for \""+name+"\".</h4>\n";
+  RXML.set_context( old_ctx );
+  return (no_undoc ? "" : 
+	  "<h4>No documentation available for \""+name+"\".</h4>\n");
 }
 
 string find_module_doc( string cn, string mn, RequestID id )

@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.119 2001/08/05 20:09:43 nilsson Exp $
+// $Id: site_content.pike,v 1.120 2001/08/10 13:34:40 per Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -333,9 +333,10 @@ string find_module_doc( string cn, string mn, RequestID id )
   int my_accesses = accesses[m];
 #endif
 
-  return replace( "<br /><b><font size='+2'>"
-                  + Roxen.html_encode_string(EC(TRANSLATE(m->register_module()[1]))) +
-                  "</font></b><br />"
+  return
+    replace( "<br /><b><font size='+2'>" +
+	     Roxen.html_encode_string(EC(TRANSLATE(m->register_module()[1])))
+	     + "</font></b><br />"
                   + EC(TRANSLATE(m->info(id))) + "</p><p>"
                   + EC(TRANSLATE(m->status()||"")) + "</p><p>"
                   + eventlog + dbuttons +
@@ -388,10 +389,10 @@ string find_module_documentation( string conf, string mn, RequestID id )
     RXML.TagSet tags=m->query_tag_set();
     if(!tags) return "";
     foreach(sort(indices(tags->get_tag_names())), string name)
-      full_doc += "<p>"+c->find_tag_doc( name, id )+"</p>";
+      full_doc += "<p>"+c->find_tag_doc( name, id, 1 )+"</p>";
   }
 
-  return full_doc;
+  return "<br />"+full_doc;
 }
 
 string module_page( RequestID id, string conf, string module )
