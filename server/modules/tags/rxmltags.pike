@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.346 2002/02/14 15:05:19 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.347 2002/02/14 16:04:31 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2386,24 +2386,29 @@ class UserTagContents
   class Frame
   {
     inherit RXML.Frame;
-    constant is_user_tag_contents = 1;
+    constant is_user_tag_contents_tag = 1;
+
+    string scope;
     array exec;
     string select_path;
+    mapping(string:string) save_args;
 
     local RXML.Frame get_upframe()
     {
       RXML.Frame upframe = up;
       int nest = 1;
       for (; upframe; upframe = upframe->up)
-	if (upframe->is_user_tag) {
-	  if (!--nest) return upframe;
+	if (upframe->is_contents_nest_tag) {
+	  if ((!scope || upframe->scope_name == scope) && !--nest)
+	    return upframe;
 	}
 	else
-	  if (upframe->is_user_tag_contents) nest++;
+	  if (upframe->is_user_tag_contents_tag &&
+	      (!scope || upframe->scope == scope)) nest++;
       parse_error ("No associated defined tag to get contents from.\n");
     }
 
-    string|RXML.PCode get_content (RXML.Frame upframe)
+    local string|RXML.PCode get_content (RXML.Frame upframe, mapping(string:string) args)
     {
       if (string expr = args["copy-of"] || args["value-of"]) {
 	if (args["copy-of"] && args["value-of"])
@@ -2501,41 +2506,64 @@ class UserTagContents
 
     array do_return()
     {
+      scope = args->scope;
       RXML.Frame upframe = get_upframe();
-      RXML.Context ctx = RXML_CONTEXT;
-      array ret;
 
-      if (ctx->scopes == upframe->saved_scopes)
-	ret = ({get_content (upframe)});
+      if (upframe->is_define_tag) {
+	// If upframe is a <define> tag and not the user tag then
+	// we're being preparsed. Output an entity on the form
+	// &_.__contents__n; and register a magic entity value for the
+	// corresponding __contents__n variable which will do the
+	// evaluation in the postparse fill-in pass. This way it works
+	// if the preparsing makes a <contents> tag end up in an
+	// attribute value.
+	if (mapping(string:RXML.Value) ctags = upframe->preparsed_contents_tags) {
+	  string var = "__contents__" + ++upframe->last_contents_id;
+	  save_args = args;	// args is zeroed after do_return, so save it elsewhere.
+	  ctags[var] = this_object();
+	  return ({"&_." + var + ";"});
+	}
+	else
+	  parse_error ("This tag is currently only supported in "
+		       "<define tag='...'> and <define container='...'>.\n");
+      }
+
       else {
-	// This is poking in the internals; there ought to be some
-	// sort of interface here.
-	ret = ({get_content (upframe),
-		lambda (mapping(string:mixed) old_scopes,
-			mapping(RXML.Frame:array) old_hidden)
-		{
-		  // Wrap this in a lambda to avoid getting all the
-		  // locals in do_return in the dynamic frame.
-		  return lambda()
-			 {
-			   RXML_CONTEXT->scopes = old_scopes;
-			   RXML_CONTEXT->hidden = old_hidden;
-			   return RXML.nil;
-			 };
-		} (ctx->scopes, ctx->hidden)});
-	ctx->scopes = upframe->saved_scopes;
-	ctx->hidden = upframe->saved_hidden;
-      }
+	RXML.Context ctx = RXML_CONTEXT;
+	array ret;
 
-      if (upframe->compile) {
-	flags |= RXML.FLAG_COMPILE_RESULT;
-	exec = stringp (ret[0]) && ret;
+	if (ctx->scopes == upframe->saved_scopes)
+	  ret = ({get_content (upframe, args)});
+	else {
+	  // This is poking in the internals; there ought to be some
+	  // sort of interface here.
+	  ret = ({get_content (upframe, args),
+		  lambda (mapping(string:mixed) old_scopes,
+			  mapping(RXML.Frame:array) old_hidden)
+		  {
+		    // Wrap this in a lambda to avoid getting all the
+		    // locals in do_return in the dynamic frame.
+		    return lambda()
+			   {
+			     RXML_CONTEXT->scopes = old_scopes;
+			     RXML_CONTEXT->hidden = old_hidden;
+			     return RXML.nil;
+			   };
+		  } (ctx->scopes, ctx->hidden)});
+	  ctx->scopes = upframe->saved_scopes;
+	  ctx->hidden = upframe->saved_hidden;
+	}
+
+	if (upframe->compile) {
+	  flags |= RXML.FLAG_COMPILE_RESULT;
+	  exec = stringp (ret[0]) && ret;
+	}
+	return ret;
       }
-      return ret;
     }
 
     // The frame might be used as a variable value if preparsing is in
-    // use (see DefineContents below).
+    // use (see the is_define_tag stuff in do_return).
     mixed rxml_var_eval (RXML.Context ctx, string var, string scope_name,
 			 void|RXML.Type type)
     {
@@ -2544,7 +2572,7 @@ class UserTagContents
       if (!upframe || !upframe->is_user_tag)
 	error ("Expected current frame to be UserTag, but it's %O.\n", upframe);
 #endif
-      string|RXML.PCode value = get_content (upframe);
+      string|RXML.PCode value = get_content (upframe, save_args);
       string res;
       if (objectp (value))
 	res = value->eval (ctx);
@@ -2571,23 +2599,20 @@ class UserTagContents
       return 0;
     }
 
-    // Can be dumped if we're inserted into
+    // Can be dumped if we're preparsed and inserted into
     // UserTag.Frame.preparsed_contents_tags. All we need to know is
-    // in the argument mapping then.
-    mapping _encode() {return args;}
+    // in the saved argument mapping then.
+    mapping _encode() {return save_args;}
     void _decode (mixed data)
     {
       if (!mappingp (data)) error ("Invalid dump of UserTagContents.Frame.\n");
-      args = data;
+      save_args = data;
     }
   }
 }
 
-RXML.Tag user_tag_contents = UserTagContents();
-
-// Can get problems with destructed parents if this tag set is shared.
 RXML.TagSet user_tag_contents_tag_set =
-  RXML.TagSet (this_module(), "/rxmltags/user_tag", ({user_tag_contents}));
+  RXML.shared_tag_set (0, "/rxmltags/user_tag", ({UserTagContents()}));
 
 class UserTag {
   inherit RXML.Tag;
@@ -2632,6 +2657,7 @@ class UserTag {
     int do_iterate;
 
     constant is_user_tag = 1;
+    constant is_contents_nest_tag = 1;
     string|SloppyDOM.Document content_text;
     string|RXML.PCode user_tag_contents;
     mapping(string:string|RXML.PCode) user_tag_subcontents;
@@ -2760,56 +2786,6 @@ class IdentityVars
 };
 IdentityVars identity_vars = IdentityVars();
 
-// This is the <contents> tag used inside <define> when it's
-// preparsed. It outputs entities on the form &_.__contents__n; and
-// registers magic entity values for the corresponding __contents__n
-// variable. This way it works if the preparsing makes a <contents>
-// tag end up in an attribute value.
-class DefineContents
-{
-  inherit RXML.Tag;
-  constant name = "contents";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT;
-  array(RXML.Type) result_types = ({RXML.t_xml});
-  program Frame = DefineContentsFrame;
-}
-
-class DefineContentsFrame
-{
-  inherit RXML.Frame;
-  constant is_define_contents = 1;
-
-  local RXML.Frame get_upframe()
-  {
-    RXML.Frame upframe = up;
-    int nest = 1;
-    for (; upframe; upframe = upframe->up)
-      if (upframe->is_define_tag) {
-	if (!--nest) return upframe;
-      }
-      else
-	if (upframe->is_define_contents) nest++;
-    parse_error ("No associated define tag to get contents from.\n");
-  }
-
-  array do_return()
-  {
-    RXML.Frame upframe = get_upframe();
-    if (mapping(string:RXML.Value) ctags = upframe->preparsed_contents_tags) {
-      string var = "__contents__" + ++upframe->last_contents_id;
-      ctags[var] = user_tag_contents (args, content);
-      return ({"&_." + var + ";"});
-    }
-    else
-      parse_error ("This tag is currently only supported in "
-		   "<define tag='...'> and <define container='...'>.\n");
-  }
-}
-
-// Can get problems with destructed parents if this tag set is shared.
-RXML.TagSet define_contents_tag_set =
-  RXML.TagSet (this_module(), "/rxmltags/define", ({DefineContents()}));
-
 class TagDefine {
   inherit RXML.Tag;
   constant name = "define";
@@ -2822,6 +2798,7 @@ class TagDefine {
     RXML.TagSet additional_tags;
 
     constant is_define_tag = 1;
+    constant is_contents_nest_tag = 1;
     array(string|RXML.PCode) def;
     int last_contents_id;
     mapping(string:RXML.Value) preparsed_contents_tags;
@@ -2855,7 +2832,7 @@ class TagDefine {
 	      // or perhaps fix postparse fill-in even for variables,
 	      // if plugins, etc.
 	      vars = ([]);
-	    additional_tags = define_contents_tag_set;
+	    additional_tags = user_tag_contents_tag_set;
 	    scope_name = args->scope;
 	  }
 	}
@@ -7001,6 +6978,11 @@ just got zapped?
  Selects the whole or some part of the contents of the container,
  evaluates it, and inserts the result.
 </p></desc>
+
+<attr name='scope' value='scope'><p>
+ Associate this <tag>contents</tag> tag with the innermost
+ <tag>define</tag> container with the given scope. The default is to
+ associate it with the innermost <tag>define</tag>.</p>
 
 <attr name='copy-of' value='expression'><p>
  Selects a part of the content node tree to copy. As opposed to the
