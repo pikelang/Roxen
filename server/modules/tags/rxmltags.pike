@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.139 2000/07/10 17:57:43 jhs Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.140 2000/07/13 15:57:14 kuntri Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -2120,7 +2120,8 @@ This cascading style sheet (CSS) definition will be applied on the pre element.
 <attr name=value value=string>
  The value of the header.
 </attr>
- See the Appendix for a list of HTTP headers.",
+
+ More information about HTTP headers please steer your browser to chapter 14, 'Header field definitions' in <a href='http://community.roxen.com/developers/idocs/rfc/rfc2616.html'> RFC 2616</a> at Roxen Community.",
 
 "imgs":#"<desc tag><short>
  Generates a image tag with proper dimensions.</short>
@@ -2157,6 +2158,12 @@ This cascading style sheet (CSS) definition will be applied on the pre element.
 
 <attr name=variables>
  Inserts a variable listing. Presently, only the argument 'full' is available.
+
+<ex>
+<pre>
+<insert variables='full' scope='roxen'/>
+</pre>
+</ex>
 </attr>
 
 <attr name=scopes>
@@ -2164,9 +2171,11 @@ This cascading style sheet (CSS) definition will be applied on the pre element.
 
 <ex>
 <pre>
-<insert variables='full' scope='roxen'/>
+<insert scopes=''/>
 </pre>
 </ex>
+
+
 </attr>
 
 <attr name=file value=string>
@@ -2703,11 +2712,11 @@ Communicating?
 <ex type='box'><user name='foo' realname=''/></ex>
 </attr>",
 
-"if#expr":#"<desc plugin>
- Evaluates expressions. The following characters may be used: \"1, 2,
- 3, 4, 5, 6, 7, 8, 9, x, a, b, c, d, e, f, i, n, t, \, X. A, B, C, D, E,
- F, l, o, &lt;, &gt;, =, 0, -, +, /, %, &, |, (, ) and .\".
-</desc>",
+"if#expr":#"<desc plugin><short>
+ Evaluates expressions.</short> It is not possible to use regexp's.
+ The following characters may be used: \"1, 2, 3, 4, 5, 6, 7, 8, 9, x,
+ a, b, c, d, e, f, i, n, t, \, X. A, B, C, D, E, F, l, o, &lt;, &gt;,
+ =, 0, -, +, /, %, &, |, (, ) and .\". </desc>",
 
     ]);
 #endif
