@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.289 1999/05/25 10:53:05 peter Exp $
+ * $Id: roxen.pike,v 1.290 1999/05/26 14:20:00 grubba Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.289 1999/05/25 10:53:05 peter Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.290 1999/05/26 14:20:00 grubba Exp $";
 
 object backend_thread;
 object argcache;
@@ -1055,13 +1055,9 @@ void done_with_roxen_com()
 //     object privs=Privs(LOCALE->replacing_supports());
 // #endif
     mv("etc/supports", "etc/supports~");
-    Stdio.write_file("etc/supports", new);
+    Stdio.write_file("etc/supports", new, 0660);
     old = Stdio.read_bytes( "etc/supports" );
-// #if efun(chmod)
-// #if efun(geteuid)
-//     if(geteuid() != getuid()) chmod("etc/supports",0660);
-// #endif
-// #endif
+
     if(old != new)
     {
       perror("FAILED to update the supports file.\n");
