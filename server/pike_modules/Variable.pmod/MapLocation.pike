@@ -4,7 +4,7 @@ inherit Variable.Variable;
 
 constant type = "MapLocation";
 
-roxen.ImageCache cache;
+core.ImageCache cache;
 //! This is the image cache used for the maps.
 
 static int width = 500;
@@ -157,18 +157,18 @@ void create(array default_value, function(void:string) _internal_location,
 	    void|int flags, void|LocaleString std_name,
 	    void|LocaleString std_doc) {
   internal_location = _internal_location;
-  cache = roxen.ImageCache( "atlas", generate_image );
+  cache = core.ImageCache( "atlas", generate_image );
   ::create(default_value, flags, std_name, std_doc);
 }
 
-Image generate_image(mapping state, RequestID id)
+Image.Image generate_image(mapping state, RequestID id)
 {
   if(!state)
     return 0;
 
   Map.Earth m = Map.Earth();
 
-  Image img = m->image(state->width, state->height, state);
+  Image.Image img = m->image(state->width, state->height, state);
 
   return img;
 }
