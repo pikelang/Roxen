@@ -5,9 +5,8 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.174 2000/03/18 02:58:06 mast Exp $
+// $Id: rxml.pike,v 1.175 2000/03/19 16:55:18 nilsson Exp $
 
-inherit "roxenlib";
 inherit "rxmlhelp";
 #include <request_trace.h>
 #include <config.h>
@@ -20,6 +19,7 @@ inherit "rxmlhelp";
 #define _rettext defines[" _rettext"]
 #define _ok     defines[" _ok"]
 
+class RequestID { }
 
 // ----------------------- Error handling -------------------------
 
@@ -43,7 +43,7 @@ string handle_run_error (RXML.Backtrace err, RXML.Type type)
 #endif
   if (type->subtype_of (RXML.t_html) || type->subtype_of (RXML.t_xml))
     return "<br clear=\"all\" />\n<pre>" +
-      html_encode_string (describe_error (err)) + "</pre>\n";
+      Roxen.html_encode_string (describe_error (err)) + "</pre>\n";
   else return describe_error (err);
 }
 
@@ -67,7 +67,7 @@ string handle_parse_error (RXML.Backtrace err, RXML.Type type)
 #endif
   if (type->subtype_of (RXML.t_html) || type->subtype_of (RXML.t_xml))
     return "<br clear=\"all\" />\n<pre>" +
-      html_encode_string (describe_error (err)) + "</pre>\n";
+      Roxen.html_encode_string (describe_error (err)) + "</pre>\n";
   else return describe_error (err);
 }
 
@@ -220,9 +220,9 @@ array|string call_overridden (array call_to, RXML.PXml parser,
       result = cdef (parser, call_to[2] || args, call_to[3] || content);
   else				// Nothing is overridden.
     if (sizeof (call_to) == 3)
-      result = ({make_tag (call_to[1] || name, call_to[2] || args)});
+      result = ({Roxen.make_tag (call_to[1] || name, call_to[2] || args)});
     else if (sizeof (call_to) == 4)
-      result = ({make_container (call_to[1] || name, call_to[2] || args,
+      result = ({Roxen.make_container (call_to[1] || name, call_to[2] || args,
 				 call_to[3] || content)});
 
   m_delete (id->misc, "__tag_overrider_def");
@@ -290,7 +290,7 @@ array|string call_tag(RXML.PXml parser, mapping args, string|function rf)
   if (arrayp (result) && sizeof (result) && result[0] == 1)
     return call_overridden (result, parser, tag, args, 0, id);
 
-  return result || ({make_tag (tag, args)});
+  return result || ({Roxen.make_tag (tag, args)});
 }
 
 array(string)|string call_container(RXML.PXml parser, mapping args,
@@ -358,7 +358,7 @@ array(string)|string call_container(RXML.PXml parser, mapping args,
   if (arrayp (result) && sizeof (result) && result[0] == 1)
     return call_overridden (result, parser, tag, args, contents, id);
 
-  return result || ({make_container (tag, args, contents)});
+  return result || ({Roxen.make_container (tag, args, contents)});
 }
 
 int do_parse_depth;
@@ -567,7 +567,7 @@ class TagHelp {
 	      tag_links += ({ tag });
 	    else
 	      tag_links += ({ sprintf("<a href=\"%s?_r_t_h=%s\">%s</a>\n",
-				      id->not_query, http_encode_url(tag), tag) });
+				      id->not_query, Roxen.http_encode_url(tag), tag) });
 	}
 
 	result=ret+"<h3>"+upper_case(char)+"</h3>\n<p>"+String.implode_nicely(tag_links)+"</p>";
@@ -686,7 +686,7 @@ class TagUse {
 
 	string file;
 	if(args->file)
-	  file = try_get_file( fix_relative(args->file, id), id );
+	  file = try_get_file( Roxen.fix_relative(args->file, id), id );
 	else
 	  file = read_package( args->package );
 
@@ -780,12 +780,12 @@ class UserTag {
       if(old_rxml_compat) {
 	array replace_from, replace_to;
 	if (flags & RXML.FLAG_EMPTY_ELEMENT) {
-	  replace_from = map(indices(nargs),make_entity)+({"#args#"});
-	  replace_to = values(nargs)+({ make_tag_attributes(nargs)[1..] });
+	  replace_from = map(indices(nargs),Roxen.make_entity)+({"#args#"});
+	  replace_to = values(nargs)+({ Roxen.make_tag_attributes(nargs)[1..] });
 	}
 	else {
-	  replace_from = map(indices(nargs),make_entity)+({"#args#", "<contents>"});
-	  replace_to = values(nargs)+({ make_tag_attributes(nargs)[1..], content });
+	  replace_from = map(indices(nargs),Roxen.make_entity)+({"#args#", "<contents>"});
+	  replace_to = values(nargs)+({ Roxen.make_tag_attributes(nargs)[1..], content });
 	}
 	string c2;
 	c2 = replace(c, replace_from, replace_to);
@@ -796,8 +796,8 @@ class UserTag {
       }
 #endif
 
-      vars->args = make_tag_attributes(nargs)[1..];
-      vars["rest-args"] = make_tag_attributes(args - defaults)[1..];
+      vars->args = Roxen.make_tag_attributes(nargs)[1..];
+      vars["rest-args"] = Roxen.make_tag_attributes(args - defaults)[1..];
       user_tag_contents = vars->contents = content;
       return ({ c });
     }
@@ -988,7 +988,7 @@ class Tracer
 #if efun(gethrvtime)
 	       " (CPU = "+sprintf("%.2f)", delay2/1000000.0)+
 #endif /* efun(gethrvtime) */
-	       "<br>"+html_encode_string(desc)+efont)+"<p>";
+	       "<br />"+Roxen.html_encode_string(desc)+efont)+"<p>";
 
   }
 
@@ -1609,7 +1609,7 @@ class TagIfUser {
     if(!wwwfile)
       s=Stdio.read_bytes(f);
     else
-      s=id->conf->try_get_file(fix_relative(f,id), id);
+      s=id->conf->try_get_file(Roxen.fix_relative(f,id), id);
     return ((pass=simple_parse_users_file(s, u[1])) &&
 	    (u[0] || match_passwd(u[2], pass)));
   }
@@ -1651,7 +1651,7 @@ class TagIfGroup {
     catch { s = Stdio.read_bytes(groupfile); };
 
     if (!s)
-      s = id->conf->try_get_file( fix_relative( groupfile, id), id );
+      s = id->conf->try_get_file( Roxen.fix_relative( groupfile, id), id );
 
     if (!s) return 0;
 
@@ -1678,7 +1678,7 @@ class TagIfExists {
 
   int eval(string u, RequestID id) {
     CACHE(5);
-    return id->conf->is_file(fix_relative(u, id), id);
+    return id->conf->is_file(Roxen.fix_relative(u, id), id);
   }
 }
 
@@ -1858,7 +1858,7 @@ mapping tagdocumentation() {
 
 private int format_support(string t, mapping m, string c, mapping doc) {
   string key=(["flags":"if#supports","vars":"if#clientvar"])[t];
-  c=html_encode_string(c)-"#! ";
+  c=Roxen.html_encode_string(c)-"#! ";
   c=(Array.map(c/"\n", lambda(string row) {
 			 if(sscanf(row, "%*s - %*s")!=2) return "";
 			 return "<li>"+row+"</li>";

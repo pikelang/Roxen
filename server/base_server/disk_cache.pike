@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: disk_cache.pike,v 1.45 2000/02/20 17:41:33 nilsson Exp $
+// $Id: disk_cache.pike,v 1.46 2000/03/19 16:55:39 nilsson Exp $
 
 #include <module_constants.h>
 #include <stat.h>
@@ -15,7 +15,6 @@
 # define CACHE_WERR(X)
 #endif
 
-inherit "roxenlib";
 object this = this_object();
 
 #undef QUERY
@@ -554,7 +553,7 @@ object cache_file(string cl, string entry)
 
   if(cf->headers["expires"])
   {
-    if(!is_modified(cf->headers["expires"], time()))
+    if(!Roxen.is_modified(cf->headers["expires"], time()))
     {
       CACHE_WERR("refresh(expired): " + name + "(" + entry +
 		 "), " + age(stat[ST_CTIME]) +
@@ -566,7 +565,7 @@ object cache_file(string cl, string entry)
   else if(cf->headers["last-modified"])
   {
     if(QUERY(cache_check_last_modified) &&
-       is_modified(cf->headers["last-modified"],
+       Roxen.is_modified(cf->headers["last-modified"],
 		   stat[ST_CTIME] - time() + stat[ST_CTIME]))
     {
       CACHE_WERR("refresh(last-modified): " + name + "(" + entry +
@@ -733,7 +732,7 @@ void http_check_cache_file(object cachef)
   if(cachef->headers[" returncode"] == 304) {
     array fstat = file_stat(cachef->rfiledone);
     if(fstat && cachef->headers["last-modified"]) {
-      if(is_modified(cachef->headers["last-modified"], fstat[ST_CTIME])) {
+      if(Roxen.is_modified(cachef->headers["last-modified"], fstat[ST_CTIME])) {
         rmold(cachef->rfiledone);
 #ifdef CACHE_DEBUG
         CACHE_WERR(cachef->rfiledone+"("+cachef->headers->name+"): "+
@@ -779,7 +778,7 @@ void http_check_cache_file(object cachef)
       stat[ST_SIZE] - cachef->headers->headers_size;
 
   if(cachef->headers["expires"]&&
-     !is_modified(cachef->headers["expires"], time())) {
+     !Roxen.is_modified(cachef->headers["expires"], time())) {
     CACHE_WERR(cachef->rfile + "(" + cachef->headers->name +
 	       "): already expired " + cachef->headers["expires"]);
     DELETE_AND_RETURN();
