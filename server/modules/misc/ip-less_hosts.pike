@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
  
-constant cvs_version = "$Id: ip-less_hosts.pike,v 1.6 1997/08/31 03:47:22 peter Exp $";
+constant cvs_version = "$Id: ip-less_hosts.pike,v 1.7 1998/01/07 15:33:22 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -27,7 +27,7 @@ object find_server_for(object id, string host)
   if(config_cache[host]) return id->conf=config_cache[host];
   array possible = ({});
   foreach(roxen->configurations, object s)
-    if(search(s->query("MyWorldLocation"), host)+1)
+    if(search(lower_case(s->query("MyWorldLocation")), host)+1)
       possible += ({ s });
   return id->conf=config_cache[host]=
     (sizeof(possible)?
