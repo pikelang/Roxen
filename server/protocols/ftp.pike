@@ -1,5 +1,5 @@
 /* Roxen FTP protocol. Written by Pontus Hagland
-string cvs_version = "$Id: ftp.pike,v 1.4.2.10 1997/03/26 14:11:23 grubba Exp $";
+string cvs_version = "$Id: ftp.pike,v 1.4.2.11 1997/03/27 01:46:00 grubba Exp $";
    (law@lysator.liu.se) and David Hedbor (neotron@infovav.se).
 
    Some of the features: 
@@ -241,8 +241,62 @@ void connected_to_send(object fd,mapping file)
 inherit "socket";
 void connect_and_send(mapping file)
 {
-//  my_fd->set_blocking();
+#if 0
+  //  my_fd->set_blocking();
   async_connect(dataport_addr,dataport_port, connected_to_send, file);
+#else
+  // More or less copied from socket.pike
+  
+  object(files.file) f = files.file();
+
+  object privs = (object)"privs";
+
+  // FIXME: Should really use ftp_port - 1
+  if(!f->open_socket(20))
+  {
+#ifdef FTP_DEBUG
+    perror("ftp: socket(20) failed. Trying with any port.\n");
+#endif
+    if (!f->open_socket()) {
+#ifdef FTP_DEBUG
+      perror("ftp: socket() failed. Out of sockets?\n");
+#endif
+      connected_to_send(0, file);
+      destruct(f);
+      return;
+    }
+  }
+  privs = 0;
+
+  f->set_nonblocking(0, lambda(array args) {
+#ifdef SOCKET_DEBUG
+    perror("SOCKETS: async_connect ok.\n");
+#endif
+    args[2]->set_id(0);
+    args[0](args[2], @args[1]);
+  }, lambda(array args) {
+#ifdef FTP_DEBUG
+    perror("ftp: connect_and_send failed\n");
+#endif
+    args[2]->set_id(0);
+    destruct(args[2]);
+    args[0](0, @args[1]);
+  });
+  f->set_id( ({ connected_to_send, ({ file }), f }) );
+
+  mark_fd(f->query_fd(),
+	  "ftp communication: -> "+dataport_addr+":"+dataport_port);
+
+  if(catch(f->connect(dataport_addr, dataport_port))) // Illegal format...
+  {
+#ifdef FTP_DEBUG
+    perror("ftp: Illegal internet address in connect in async comm.\n");
+#endif
+    connected_to_send(0, file);
+    destruct(f);
+    return;
+  }
+#endif /* 0 */
 }
 
 varargs int|string list_file(string arg, int srt, int short, int column, 
