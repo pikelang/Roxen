@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: config_userdb.pike,v 1.51 2000/08/28 12:22:01 mast Exp $
+// $Id: config_userdb.pike,v 1.52 2000/09/07 18:25:58 mast Exp $
 
 inherit "module";
 #include <config_interface.h>
@@ -16,7 +16,7 @@ USE_DEFERRED_LOCALE;
 constant module_type   = MODULE_AUTH | MODULE_FIRST;
 constant module_name   = "Configuration UserDB";
 constant module_doc    = "This user database keeps the configuration users "
-                         "passwords and other settings";
+                         "passwords and other settings.";
 constant module_unique = 1;
 constant thread_safe   = 1;
 
@@ -385,7 +385,7 @@ array(string) list_admin_users()
               } );
 }
 
-array auth( array auth_, RequestID id )
+array auth( array auth_, RequestID id, void|int silent )
 {
   array auth = auth_;
   auth_ = ({ auth[0], "CENSORED:PASSWORD" });
@@ -418,7 +418,8 @@ array auth( array auth_, RequestID id )
   {
     if( !crypt( p, admin_users[ u ]->password ) )
     {
-      report_notice( "Failed login attempt %s from %s\n", u, host);
+      if (!silent)
+	report_notice( "Failed login attempt %s from %s\n", u, host);
       return ({ 0, u, p });
     }
     id->variables->config_user_uid = u;
@@ -432,7 +433,8 @@ array auth( array auth_, RequestID id )
     id->misc->config_user = admin_users[ u ];
     return ({ 1, u, 0 });
   }
-  report_notice( "Failed login attempt %s from %s\n", u, host);
+  if (!silent)
+    report_notice( "Failed login attempt %s from %s\n", u, host);
   return ({ 0, u, p });
 }
 
