@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.110 1999/03/12 22:53:39 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.111 1999/03/12 23:07:52 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -302,17 +302,18 @@ class imap_mail
       return 0;
     }
 
-    return imap_list(Array.map(tokens,
-			       lambda(array(string|int) token) {
-				 mapping(string:string) addr =
-				   parse_address(token);
-				 return addr && imap_list( ({
-				   addr->name,
-				   0,
-				   addr->mailbox,
-				   addr->domain
-				 }) );
-			       }));
+    return
+      imap_list(Array.map(tokens,
+			  lambda(array(string|int) token) {
+			    mapping(string:string) addr =
+			      parse_address(token);
+			    return addr && imap_list( ({
+			      addr->name && string_to_imap(addr->name),
+			      0,
+			      addr->mailbox && string_to_imap(addr->mailbox),
+			      addr->domain && string_to_imap(addr->domain),
+			    }) );
+			  }));
   }
 
   string first_header(array|string v)
