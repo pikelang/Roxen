@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.129 2001/10/05 15:08:01 per Exp $
+// $Id: site_content.pike,v 1.130 2001/11/07 10:06:45 anders Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -332,7 +332,7 @@ string find_module_doc( string cn, string mn, RequestID id )
     replace( "<br /><b><font size='+2'>" +
 	     Roxen.html_encode_string(EC(TRANSLATE(m->register_module()[1])))
 	     + "</font></b><br />"
-                  + EC(TRANSLATE(m->info(id))) + "</p><p>"
+                  + EC(TRANSLATE(m->info(id)||"")) + "</p><p>"
                   + EC(TRANSLATE(m->status()||"")) + "</p><p>"
                   + eventlog + dbuttons +
                   ( config_setting( "devel_mode" ) ?
