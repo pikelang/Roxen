@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.123 2000/05/25 15:57:08 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.124 2000/05/28 01:40:17 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -611,7 +611,7 @@ string tag_date(string q, mapping m, RequestID id)
   if(!(m->brief || m->time || m->date))
     m->full=1;
 
-  if(m->part=="second" || m->part=="beat")
+  if(m->part=="second" || m->part=="beat" || m->strftime)
     NOCACHE();
   else
     CACHE(60); // One minute is good enough.
@@ -1854,6 +1854,48 @@ Pike-script or Roxen module.
 <tr><td><i>part=week</i></td><td>Display the number of the current week.<ex ><date part='week' type='number'/></ex></td></tr>
 <tr><td><i>part=seconds</i></td><td>Display the total number of seconds this year. <ex ><date part='seconds' type='number'/></ex></td></tr>
 </table>
+</attr>
+
+<attr name=strftime value=string>
+ If this attribute is given to date, it will format the result according to the argument string.
+ <table>
+ <tr><td>%%</td><td>Percent character</td></tr>
+ <tr><td>%a</td><td>Abbreviated weekday name, e.g. \"Mon\"</td></tr>
+ <tr><td>%A</td><td>Weekday name</td></tr>
+ <tr><td>%b</td><td>Abbreviated month name, e.g. \"Jan\"</td></tr>
+ <tr><td>%B</td><td>Month name</td></tr>
+ <tr><td>%c</td><td>Date and time, e.g. \"%a %b %d  %H:%M:%S %Y\"</td></tr>
+ <tr><td>%C</td><td>Century number, zero padded to two charachters.</td></tr>
+ <tr><td>%d</td><td>Day of month (1-31), zero padded to two characters.</td></tr>
+ <tr><td>%D</td><td>Date as \"%m/%d/%y\"</td></tr>
+ <tr><td>%e</td><td>Day of month (1-31), space padded to two characters.</td></tr>
+ <tr><td>%H</td><td>Hour (24 hour clock, 0-23), zero padded to two characters.</td></tr>
+ <tr><td>%h</td><td>See %b</td></tr>
+ <tr><td>%I</td><td>Hour (12 hour clock, 1-12), zero padded to two charcters.</td></tr>
+ <tr><td>%j</td><td>Day numer of year (1-366), zero padded to three characters.</td></tr>
+ <tr><td>%k</td><td>Hour (24 hour clock, 0-23), space padded to two characters.</td></tr>
+ <tr><td>%l</td><td>Hour (12 hour clock, 1-12), space padded to two characters.</td></tr>
+ <tr><td>%m</td><td>Month number (1-12), zero padded to two characters.</td></tr>
+ <tr><td>%M</td><td>Minute (0-59), zero padded to two characters.</td></tr>
+ <tr><td>%n</td><td>Newline</td></tr>
+ <tr><td>%p</td><td>\"a.m.\" or \"p.m.\"</td></tr>
+ <tr><td>%r</td><td>Time in 12 hour clock format with %p</td></tr>
+ <tr><td>%R</td><td>Time as \"%H:%M\"</td></tr>
+ <tr><td>%S</td><td>Seconds (0-61), zero padded to two characters.</td></tr>
+ <tr><td>%t</td><td>Tab</td></tr>
+ <tr><td>%T</td><td>Time as \"%H:%M:%S\"</td></tr>
+ <tr><td>%u</td><td>Weekday as a decimal number (1-7), 1 is Sunday.</td></tr>
+ <tr><td>%U</td><td>Week number of year as a decimal number (0-53), with sunday as the first day of week 1,
+    zero padded to two characters.</td></tr>
+ <tr><td>%V</td><td>ISO week number of the year as a decimal number (1-53), zero padded to two characters.</td></tr>
+ <tr><td>%w</td><td>Weekday as a decimal number (0-6), 0 is Sunday.</td></tr>
+ <tr><td>%W</td><td>Week number of year as a decimal number (0-53), with sunday as the first day of week 1,
+    zero padded to two characters.</td></tr>
+ <tr><td>%x</td><td>Date as \"%a %b %d %Y\"</td></tr>
+ <tr><td>%X</td><td>See %T</td></tr>
+ <tr><td>%y</td><td>Year (0-99), zero padded to two characters.</td></tr>
+ <tr><td>%Y</td><td>Year (0-9999), zero padded to four characters.</td></tr>
+ </table>
 </attr>
 
 <attr name=lang value=langcode>
