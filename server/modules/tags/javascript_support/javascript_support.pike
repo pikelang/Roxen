@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.40 2001/09/03 18:47:46 nilsson Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.41 2001/09/13 15:36:59 wellhard Exp $";
 
 #include <module.h>
 inherit "module";
@@ -79,39 +79,53 @@ void register_callback(string token, function(string,string,object:string) cb)
   callbacks[token] = cb;
 }
 
-
+// Rewrote the JSSupport/JSInsert objects to work with p-code. All
+// data must be stored with mapping/array types in RXML_CONTEXT->misc
+// to be able to encode and decode p-code frames. /Wellhardh
 class JSInsert
 {
   static private string name;
   static private mapping(string:string) args;
-  static private string content;
+  static private array content; // Must be a reference type.
 
   void add(string s)
   {
-    content += s;
+    content[0] += s;
   }
 
   string get()
   {
-    return content;
+    return content[0];
   }
   
   string _sprintf(int i, mapping(string:int)|void m)
   {
-    return sprintf("JSInsert: %s, %O", name, args);
+    return sprintf("JSInsert: %O, %O, %O", name, args, content[0]);
   }
 
-  void create(string _name, mapping(string:string) _args)
+  void create(string|mapping data, mapping(string:string)|void _args)
   {
-    name = _name;
+    if(mappingp(data)) {
+      name = data->name;
+      args = data->args;
+      content = data->content;
+      return;
+    }
+
+    name = data;
     args = _args;
-    content = "";
+    content = ({ "" });
+  }
+
+  mapping encode()
+  {
+    return ([ "name":name, "args":args, "content":content ]);
   }
 }
 
 class JSSupport
 {
-  static private mapping(string:JSInsert) inserts;
+  static private mapping(string:mapping) inserts;
   static private mapping(string:int) keys;
 
   string get_unique_id(string name)
@@ -122,7 +136,7 @@ class JSSupport
   void create_insert(string name, string tag_name,
 		     mapping(string:string) args)
   {
-    inserts[name] = JSInsert(tag_name, args);
+    inserts[name] = JSInsert(tag_name, args)->encode();
   }
 
   JSInsert get_insert(string name)
@@ -130,18 +144,26 @@ class JSSupport
     if(!inserts[name])
       create_insert(name, 0, 0);
     
-    return inserts[name];
+    return JSInsert(inserts[name]);
   }
   
   string _sprintf(int i, mapping(string:int)|void m)
   {
-    return sprintf("JSSupport: %d, %O", filter, inserts);
+    return sprintf("JSSupport: %O", inserts);
   }
 
-  void create()
+  void create(mapping|void jssupport)
   {
-    inserts = ([ ]);
-    keys = ([ ]);
+    if(!jssupport)
+      jssupport = ([ ]);
+
+    inserts = jssupport->inserts = jssupport->inserts || ([ ]);
+    keys = jssupport->keys = jssupport->keys || ([ ]);
+  }
+
+  mapping encode()
+  {
+    return ([ "inserts": inserts, "keys": keys ]);
   }
 }
 
@@ -189,14 +211,26 @@ string make_container_unquoted(string name, mapping args, string contents)
 
 int jssp(RequestID id)
 {
-  return !!id->misc->javascript_support;
+  return !!(RXML_CONTEXT? RXML_CONTEXT->misc->javascript_support:
+	    id->misc->defines && id->misc->defines->javascript_support);
 }
 
 JSSupport get_jss(RequestID id)
 {
-  if(!id->misc->javascript_support)
-    id->misc->javascript_support = JSSupport();
-  return id->misc->javascript_support;
+  // The p-code codec can not handle objects so we have to store mapping
+  // structures.
+  mapping jssupport =
+    (RXML_CONTEXT? RXML_CONTEXT->misc->javascript_support:
+     id->misc->defines->javascript_support);
+  
+  if(!jssupport) {
+    jssupport = JSSupport()->encode();
+    if(RXML_CONTEXT)
+      RXML_CONTEXT->set_misc("javascript_support", jssupport);
+  }
+  
+  //werror("get_jss: %O\n", jssupport);
+  return JSSupport(jssupport);
 }
 
 class TagEmitJsHidePopup {
@@ -666,6 +700,12 @@ clicked.</p>
   <p>Note that it is not possible to put a <tag>js-insert</tag> tag inside
   this tag because that tag uses a filter module to insert its content.
   Other RXML tags should work, however.</p>
+
+  <p>Note that this tag is not compatible with serverside persistent caching
+  because the generated external file is only stored in the servers memory. A
+  restart of the server will clear the information about the external files
+  but the referenses to them do still exists in pages that are cached
+  persistent.</p>
 </desc>",
 
 ]);
