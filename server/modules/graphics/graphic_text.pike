@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2004, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.295 2004/06/30 16:59:04 mast Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.296 2004/08/09 15:30:53 grubba Exp $";
 
 #include <module.h>
 inherit "module";
@@ -881,8 +881,13 @@ private mapping mk_gtext_arg(mapping arg, RequestID id)
    foreach(filearg, string tmp)
      if(arg[tmp]) 
      {
-       p[tmp]=Roxen.fix_relative(arg[tmp],id);
-       m_delete(arg,tmp);
+       if(tmp[0..5]!="magic-") {
+	 p[tmp]=Roxen.fix_relative(arg[tmp],id);
+	 m_delete(arg,tmp);
+       } else {
+	 // The magic-* attributes will be removed later.
+	 arg[tmp]=Roxen.fix_relative(arg[tmp],id);
+       }
      }
 
 //   if(arg->border && (search(arg->border,",")!=-1))
