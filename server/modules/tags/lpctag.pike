@@ -7,7 +7,7 @@
 //  return "Hello world!\n";
 // </pike>
  
-constant cvs_version = "$Id: lpctag.pike,v 1.9 1997/09/16 22:58:46 grubba Exp $";
+constant cvs_version = "$Id: lpctag.pike,v 1.10 1997/09/17 19:14:08 grubba Exp $";
 constant thread_safe=1;
 
 inherit "module";
@@ -58,11 +58,6 @@ inline private nomask string functions()
     "  data = ({});\n"
     "  return r;\n"
     "}\n"
-    "constant cd=0;\n"
-    "constant seteuid=0;\n"
-    "constant setegid=0;\n"
-    "constant setuid=0;\n"
-    "constant seteuid=0;\n"
     "#0 \"piketag\"\n"
     ;
     
