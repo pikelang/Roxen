@@ -2,7 +2,7 @@
 
 # Perl helper script for Roxen Webserver. By Leif Stensson.
 #
-# $Id: perlhelper,v 1.1 2000/08/01 14:26:43 leif Exp $
+# $Id: perlhelper,v 1.2 2000/12/18 13:49:27 leif Exp $
 
 package Roxen::Internal;
  
@@ -364,7 +364,7 @@ tie(*STDOUT, 'Roxen::TieStdio');
   while (1)
   { $Roxen::Request::req_state = 0;
     alarm 60; # One minute.
-    $cmdin->sysread($cmd, 1) == 1 or die "perhelper $$/MLR: exiting.\n";
+    $cmdin->sysread($cmd, 1) == 1 or die "perlhelper $$/MLR: exiting.\n";
     diag "[$cmd]";
     if ($cmd eq "E")
     { $var = Getdata(1); $data = Getdata(3);
