@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.52 2001/03/13 14:50:22 grubba Exp $
+ * $Id: ftp.pike,v 2.53 2001/03/13 14:50:45 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -2929,7 +2929,7 @@ class FTPSession
 	epsv_only = 1;
 	send(200, ({ "Entering EPSV ALL mode." }));
       } else {
-	// FIXME: No support for IPv6 or ALL yet.
+	// FIXME: No support for IPv6 yet.
 	send(522, ({ "Network protocol not supported, use (1)" }));
       }
       return;
