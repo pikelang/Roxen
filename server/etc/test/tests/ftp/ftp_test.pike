@@ -1,4 +1,4 @@
-// $Id: ftp_test.pike,v 1.2 2001/10/09 12:43:17 grubba Exp $
+// $Id: ftp_test.pike,v 1.3 2001/10/09 13:55:12 grubba Exp $
 //
 // Tests of the ftp protocol module.
 //
@@ -149,85 +149,6 @@ void bad_code(string code, string lines)
   exit(BADCODE);
 }
 
-// State machine.
-
-void send_user(string code, string lines)
-{
-  send("USER ftp");
-  got_code = ({ ({ "331", send_pass }),
-		({ "230", send_help }) });
-}
-
-void send_pass(string code, string lines)
-{
-  send("PASS roxentest@*");
-  got_code = ({ ({ "230", send_help }) });
-}
-
-void send_help(string code, string lines)
-{
-  send("HELP");
-  got_code = ({ ({ "214", send_feat }) });
-}
-
-void send_feat(string code, string lines)
-{
-  send("FEAT");
-  got_code = ({ ({ "211", send_stat }) });
-}
-
-void send_stat(string code, string lines)
-{
-  send("STAT");
-  got_code = ({ ({ "211", send_stat_root }) });
-}
-
-void send_stat_root(string code, string lines)
-{
-  send("STAT /");
-  got_code = ({ ({ "213", send_mlst_root }) });
-}
-
-void send_mlst_root(string code, string lines)
-{
-  send("MLST /");
-  got_code = ({ ({ "250", send_active_list }) });
-}
-
-void send_active_list(string code, string lines)
-{
-  do_active_read("LIST", got_active_list);
-}
-
-string active_list;
-
-void got_active_list(string list)
-{
-  // werror("got_active_list(%O)\n", list);
-  active_list = list;
-  send_passive_list();
-}
-
-void send_passive_list()
-{
-  do_passive_read("LIST", got_passive_list);
-}
-
-void got_passive_list(string list)
-{
-  if (list != active_list) {
-    werror("Active and passive LIST differ:\n"
-	   "Active LIST:\n"
-	   "%s\n"
-	   "Passive LIST:\n"
-	   "%s\n",
-	   active_list,
-	   list);
-    exit(BADDATA);
-  }
-  send_quit("200", "");
-}
-
 class do_active_read
 {
   object port;
@@ -346,6 +267,123 @@ class do_passive_read
     }
     ::send_cmd(code, lines);
   }
+}
+
+// State machine.
+
+void send_user(string code, string lines)
+{
+  send("USER ftp");
+  got_code = ({ ({ "331", send_pass }),
+		({ "230", send_help }) });
+}
+
+void send_pass(string code, string lines)
+{
+  send("PASS roxentest@*");
+  got_code = ({ ({ "230", send_help }) });
+}
+
+void send_help(string code, string lines)
+{
+  send("HELP");
+  got_code = ({ ({ "214", send_feat }) });
+}
+
+void send_feat(string code, string lines)
+{
+  send("FEAT");
+  got_code = ({ ({ "211", send_stat }) });
+}
+
+void send_stat(string code, string lines)
+{
+  send("STAT");
+  got_code = ({ ({ "211", send_stat_root }) });
+}
+
+void send_stat_root(string code, string lines)
+{
+  send("STAT /");
+  got_code = ({ ({ "213", send_mlst_root }) });
+}
+
+void send_mlst_root(string code, string lines)
+{
+  send("MLST /");
+  got_code = ({ ({ "250", send_active_list }) });
+}
+
+void send_active_list(string code, string lines)
+{
+  do_active_read("LIST", got_active_list);
+}
+
+string active_list;
+
+void got_active_list(string list)
+{
+  // werror("got_active_list(%O)\n", list);
+  active_list = list;
+  send_passive_list();
+}
+
+void send_passive_list()
+{
+  do_passive_read("LIST", got_passive_list);
+}
+
+void got_passive_list(string list)
+{
+  if (list != active_list) {
+    werror("Active and passive LIST differ:\n"
+	   "Active LIST:\n"
+	   "%s\n"
+	   "Passive LIST:\n"
+	   "%s\n",
+	   active_list,
+	   list);
+    exit(BADDATA);
+  }
+  send_type_i();
+}
+
+void send_type_i()
+{
+  send("TYPE I");
+  got_code = ({ ({ "200", send_active_retr_10k }) });
+}
+
+void send_active_retr_10k()
+{
+  do_active_read("RETR 10k.raw", got_active_10k);
+}
+
+void got_active_10k(string raw_10k)
+{
+  if (raw_10k != ("\0"*10240)) {
+    werror("Failed to retrieve (active) 10k.\n"
+	   "len: %d\n",
+	   sizeof(raw_10k));
+    exit(BADDATA);
+  }
+  send_passive_retr_10k();
+}
+
+void send_passive_retr_10k()
+{
+  do_passive_read("RETR 10k.raw", got_passive_10k);
+}
+
+void got_passive_10k(string raw_10k)
+{
+  if (raw_10k != ("\0"*10240)) {
+    werror("Failed to retrieve (passive) 10k.\n"
+	   "len: %d\n",
+	   sizeof(raw_10k));
+    exit(BADDATA);
+  }
+  send_quit("200", "");
 }
 
 void send_quit(string code, string lines)
