@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.50 1997/10/20 14:45:35 wing Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.51 1997/10/24 00:23:43 peter Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -1886,7 +1886,8 @@ string tag_source(string tag,mapping m, string s,object got,object file)
 {
   string sep;
   sep=m["separator"]||"";
-  sep="<hr><h2>"+sep+"</h2><hr>";
+  if(!m->nohr)
+    sep="<hr><h2>"+sep+"</h2><hr>";
   return ("<pre>"+replace(s, ({"<",">","&"}),({"&lt;","&gt","&amp"}))
 	  +"</pre>"+sep+s);
 }
