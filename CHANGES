@@ -1,3 +1,104 @@
+Changes since Roxen Challenger 1.2 alpha 4
+-----------------------------------------------
+
+o Root execution of CGI scripts disabled.
+
+o Shuffle disabled for all OS's except Solaris 2.x on sparc.
+
+o Logfiles now opened as root.
+
+o Some patches to disk_cache.pike.
+
+o Some patches for those who are brave enough to run with THREADS enabled.
+
+o Some new extensions.
+
+o Applied some patches by Wilhelm Köhler.
+
+o Some patches to language.pike.
+
+o Replaced all remaining instances of roxen->query with id->conf->query.
+
+o proxy.pike now uses the global shuffle function.
+
+o Cleaned up some of the prestate handling code.
+
+
+Changes since Roxen Challenger 1.2 alpha 3
+-----------------------------------------------
+
+o Now uses Pike 0.5b7.
+
+o make install now saves the last 2 versions of the server.
+
+o color.pike now has support for the HSV color-space.
+
+o Some patches to disk_cache.pike.
+
+o Applied some patches by Wilhelm Köhler.
+
+o Roxen now returns time in GMT
+
+o http module fd-leak work-around.
+
+o Extensions .{c,cc,h} now are subtypes of text instead of application.
+
+o Intraseek added to set of robots.
+
+o italian.pike updated by Francesco Chemolli.
+
+o The user filesystem nolonger hangs if the public directory is a file.
+
+o Some patches to ismap.pike.
+
+o Fixes to language.pike.
+
+o Patched ftpgateway.pike.
+
+o Patched proxy.pike.
+
+o Pikescripts can now use #include.
+
+o Added handling of exec bit on HTML-files.
+
+o Some nicer error-messages from the SSL3-module.
+
+
+Changes since Roxen Challenger 1.2 alpha 2
+-----------------------------------------------
+
+o Fixes to module-level security.
+
+o Enabled some debug output from the host-name lookup module.
+
+o Added some support for OS's lacking effective user/group.
+
+o New functions program_filename and program_directory in roxenlib.pike.
+
+o New global function spawn_pike in roxenloader.pike.
+
+o Patches to hostredirect.pike, ismap.pike, proxy.pike.
+
+o Applied patches by Wilhelm Köhler.
+
+o Security patch to cgi.pike.
+
+
+Changes since Roxen Challenger 1.2 alpha 1
+-----------------------------------------------
+
+o Patch for cgi.c to enable compilation on FreeBSD.
+
+o Removed several C++ //-style comments.
+
+o roxen->shuffle now works on OS's without send_fd.
+
+o Install script now queries if you want SSL3 or not.
+
+o Install script now doesn't install SSL3 if you don't have GMP.
+
+o Minor fix to graphic_text.pike.
+
 
 Changes since Roxen Challenger 1.1.1 alpha 6
 -----------------------------------------------
@@ -11,9 +112,20 @@ o Support for SSLv3 added.
   A version of Roxen without the crypto-module will be made available
   on demand.
 
-o Fixed the install-script.
-
 o The install-script now uses ssl3 for the configuration port.
+
+o Added support for setting the cpu-limit and nice-level for CGI-scripts.
+
+o Some patches to shuffle.
+
+o Some patches to ssl.
+
+o Some patches to fcgi.
+
+o Several functions have moved from roxen->X to id->conf->X to allow for
+  threads.
+
+o Fixed the install-script.
 
 o Should now start the garbage-collector correctly when started from a
   standard installation.
