@@ -1,5 +1,5 @@
 /*
- * $Id: problems.pike,v 1.14 1999/05/30 22:43:57 per Exp $
+ * $Id: problems.pike,v 1.15 1999/07/16 18:00:09 grubba Exp $
  */
 
 inherit "wizard";
@@ -167,9 +167,15 @@ string page_3(object id)
     sscanf(user, "%s:%s", u, g);
 
 #if constant(getpwnam)
+    object privs = Privs("Looking up passwd entries.");
     array pw;
     if(!(pw = getpwnam(u+"")) && (int)u)
       pw = getpwuid((int)u);
+
+    if (privs) {
+      destruct(privs);
+      privs = 0;
+    }
 
     if(!pw)
       res += html_warning(LOCALE()->problem_reallynouser(user)+
