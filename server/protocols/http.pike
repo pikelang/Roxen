@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.340 2001/10/09 11:29:05 wellhard Exp $";
+constant cvs_version = "$Id: http.pike,v 1.341 2001/10/09 12:26:44 wellhard Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -467,12 +467,13 @@ private void really_set_config(array mod_config)
 
   void do_send_reply( string what, string url ) {
     url = url_base() + url[1..];
+    my_fd->set_blocking();
     my_fd->write( prot + " 302 Roxen config coming up\r\n"+
                   (what?what+"\r\n":"")+"Location: "+url+"\r\n"
                   "Connection: close\r\nDate: "+
                   Roxen.http_date(predef::time(1))+
                   "\r\nContent-Type: text/html\r\n"
-                  "Content-Length: 0\r\n\r\n" );
+                  "Content-Length: 1\r\n\r\nx" );
     my_fd->close();
     my_fd = 0;
     end();
@@ -578,7 +579,7 @@ class CacheKey {
 #endif
 }
 
-void things_to_do_when_not_sending_from_cache( )
+int things_to_do_when_not_sending_from_cache( )
 {
 #ifdef OLD_RXML_CONFIG
   array mod_config;
@@ -707,7 +708,7 @@ void things_to_do_when_not_sending_from_cache( )
   if(config_in_url) {
     REQUEST_WERR("HTTP: parse_got(): config_in_url");
     really_set_config( mod_config );
-    return;
+    return 1;
   }
 #endif
   if(!supports->cookies)
@@ -2165,7 +2166,8 @@ void got_data(mixed fooid, string s)
     TIMER_END(cache_lookup);
 #endif	// RAM_CACHE
     TIMER_START(parse_request);
-    things_to_do_when_not_sending_from_cache( );
+    if( things_to_do_when_not_sending_from_cache( ) )
+      return;
     TIMER_END(parse_request);
     REQUEST_WERR("HTTP: Calling roxen.handle().");
 
