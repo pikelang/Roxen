@@ -1,5 +1,5 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
-string cvs_version = "$Id: gopher.pike,v 1.3 1996/12/01 19:18:02 per Exp $";
+string cvs_version = "$Id: gopher.pike,v 1.4 1997/01/29 04:59:44 per Exp $";
 // Gopher protocol module
 
 inherit "protocols/http"; /* For the variables and such.. */
@@ -165,9 +165,12 @@ void got_data(mixed fooid, string s)
   end("!Not reached!");
 }
 
-void assign(object f, object c)
+void create(object f, object c)
 {
-  ::assign(f, c);
-  my_fd->set_nonblocking(got_data, lambda(){}, end);
+  if(f)
+  {
+    ::create(f, c);
+    my_fd->set_nonblocking(got_data, lambda(){}, end);
+  }
 }
 

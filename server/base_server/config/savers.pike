@@ -1,19 +1,7 @@
 #include <confignode.h>
 #include <module.h>
 
-object find_module(string s)
-{
-  int i;
-  mixed tmp;
-  sscanf(s, "%s#%d", s, i);
-  if(tmp=roxen->current_configuration->modules[s])
-    if(tmp->copies)
-      return tmp->copies[i];
-    else
-      return tmp->enabled;
-}
-
-string module_short_name(object m)
+string module_short_name(object m, object cf)
 {
   string sn;
   mapping mod;
@@ -21,8 +9,8 @@ string module_short_name(object m)
   if(!objectp(m))
     error("module_short_name on non object.\n");
 
-  sn=roxen->current_configuration->otomod[ m ];
-  mod=roxen->current_configuration->modules[ sn ];
+  sn=cf->otomod[ m ];
+  mod=cf->modules[ sn ];
 
   if(!mod) error("No such module!\n");
 
@@ -51,8 +39,6 @@ void save_module_variable(object o)
   
   module = o;
 
-  roxen->current_configuration = o->config(); 
-
   while(!is_module(module))
     module = module->up;
 
@@ -63,24 +49,23 @@ void save_module_variable(object o)
     module->data->set(o->data[VAR_SHORTNAME], o->data[VAR_VALUE]);
   else if(mappingp(module->data) && module->data->master)
     module->data->master->set(o->data[VAR_SHORTNAME], o->data[VAR_VALUE]);
+  else if(o->config())
+    o->config()->set(o->data[VAR_SHORTNAME], o->data[VAR_VALUE]);
   else
     roxen->set(o->data[VAR_SHORTNAME], o->data[VAR_VALUE]);
+      
   if(o->changed) o->change(-o->changed);
 }
 
 
 void save_global_variables(object o)
 {
-  roxen->current_configuration=0;
-  roxen->store("Variables", roxen->variables, 0);
-
-  /*  destruct(roxen->main_configuration_port);*/
+  roxen->store("Variables", roxen->variables, 0, 0);
   roxen->initiate_configuration_port();
   roxen->set_u_and_gid();
   init_logger();
   roxen->initiate_supports();
   roxen->reinit_garber();
-
   if(o->changed) o->change(-o->changed);
 }
 
@@ -89,45 +74,36 @@ void save_module_master_copy(object o)
   string s;
   object n;
   
-  roxen->current_configuration=o->config(); // Needed in store later on. 
-  
-  roxen->store(s=o->data->sname+"#0", o->data->master->query(), 0);
+  roxen->store(s=o->data->sname+"#0", o->data->master->query(), 0, o->config());
   o->data->master->start(2);
-
-  roxen->misc_cache = ([]);
   o->config()->unvalidate_cache();
-
   if(o->changed) o->change(-o->changed);
 }
 
 void save_configuration_global_variables(object o)
 {
-  roxen->current_configuration=o->config();
-  roxen->store("spider#0", 
-	       roxen->current_configuration->variables, 0);
+  roxen->store("spider#0", o->config()->variables, 0, o->config());
   if(o->changed) o->change(-o->changed);
-  roxen->start(2);
+  o->config()->start(2);
 }
 
 void save_configuration(object o)
 {
-  roxen->current_configuration=o->config();
   if(o->changed) o->change(-o->changed);
-  roxen->start(2);
+//o->config()->start(2);
 }
 
 void save_module_copy(object o)
 {
   string s;
-  roxen->current_configuration=o->config();
-  s=module_short_name(o->data);
+  object cf;
+  s=module_short_name(o->data, cf=o->config());
 
   if(!s) error("Fop fip.\n");
 
-  roxen->misc_cache = ([]);
-  roxen->current_configuration->unvalidate_cache();
+  cf->unvalidate_cache();
   
-  roxen->store(s, o->data->query(), 0);
+  roxen->store(s, o->data->query(), 0, cf);
   if(o->data->start) o->data->start(2);
   if(o->changed) o->change(-o->changed);
 }

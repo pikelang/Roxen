@@ -162,14 +162,14 @@ void build_global_variables(object node)
 
 void build_configuration(object node)
 {
+  object cf;
   string res;
   array (mapping) modules;
   int i;
-
+  cf = node->data;
 #ifdef CONFIG_DEBUG
   perror("build_configuration("+node->data->name+")\n");
 #endif
-  roxen->current_configuration = node->data;
   
   object o;
   
@@ -182,13 +182,13 @@ void build_configuration(object node)
 
   o=node->descend("Status");
   o->type = NODE_MODULE_COPY_STATUS;
-  o->data = roxen->status;
+  o->data = cf->status;
   o->describer = describe_module_copy_status;
   build_module_copy_status( o );
 
   o=node->descend("Global");
-  roxen->current_configuration = o->config();
-  o->data = roxen->query();
+/*  roxen->current_configuration = o->config();*/
+  o->data = cf->query();
   o->describer = describe_configuration_global_variables;
   o->type = NODE_CONFIG_GLOBAL_VARIABLES;
   o->saver = save_configuration_global_variables;

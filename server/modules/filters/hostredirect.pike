@@ -6,8 +6,7 @@
 // cheap way (IP number wise) to do virtual hosting. Note that this
 // won't work with all clients.
 
-// responsible for the changes to the original version 1.3: Martin Baehr
-mbaehr@iaeste.or.at
+// responsible for the changes to the original version 1.3: Martin Baehr mbaehr@iaeste.or.at
 
 string cvs_version = "$Id: hostredirect.pike,v 1.3mb1.0 1997/01/23
 13:48:02 mb Exp $";
@@ -120,10 +119,10 @@ mixed first_try(object id)
   }
   to = patterns[host];
   if(!to) {
-    //    if(patterns["default"])            //since "default" can also
-have a HTTP
-    //  id->not_query = patterns["default"]; //redirect we don't get
-away that easy
+    //    if(patterns["default"])
+    //since "default" can also have a HTTP
+    //  id->not_query = patterns["default"];
+    //redirect we don't get away that easy
     return 0;
   }
   if(host=="default")
@@ -218,10 +217,11 @@ away that easy
     if((host != "default") && !path )
       to +=id->not_query;
     id->not_query = to;
-    //    id->raw_url = to; //if we internally redirect to the proxy, 
-                      //the proxy checks the raw_url for the place toget, 
-                      //so we have to update the raw_url here too, or 
-                      //we need to patch the proxy-module
+    //    id->raw_url = to;
+    //if we internally redirect to the proxy, 
+    //the proxy checks the raw_url for the place toget, 
+    //so we have to update the raw_url here too, or 
+    //we need to patch the proxy-module
     return 0;
   }
 }

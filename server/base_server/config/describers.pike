@@ -1,6 +1,6 @@
 #include <module.h>
 
-int zonk;
+int zonk=time();
 #define link(d) ("<a href=\""+node->path(1)+"?"+(zonk++)+"\">\n"+(d)+"\n</a>\n")
 
 inherit "config/low_describers";
@@ -102,10 +102,7 @@ string describe_module_copy_status(object node)
 {
   string q;
 
-  roxen->current_configuration = node->config();
-
-  if(node->data)
-    q=node->data();
+  if(node->data) q=node->data();
 
   if(!q || !strlen(q)) return 0;
 
@@ -297,7 +294,7 @@ string describe_global_debug(object node)
   res+="<p><br><p>";
   res += ("<table  border=0 cellspacing=0 cellpadding=2 width=50%>"
 	  "<tr align=left bgcolor=#000060><th  colspan=2>List of all "
-	  "programs with more than five clones:</th></tr>"
+	  "programs with more than two clones:</th></tr>"
 	  "<tr align=left bgcolor=darkblue>"
 	  "<th>Program name</th><th align=right>Clones</th></tr>");
   foo = _dump_obj_table();
@@ -309,14 +306,14 @@ string describe_global_debug(object node)
   for(i = 0; i < sizeof(foo); i++) {
     string s = foo[i][0];
     if(search(s,"base_server/mainconfig.pike")!=-1) s="ConfigNode";
-    if(search(s,"base_server/configuration.pike")!=-1) s="Bignum or ConfPriObject";
-    if(!search(s,"")) s="Precompiled object";
+    if(search(s,"base_server/configuration.pike")!=-1) s="Bignum";
+    if(sscanf(s,"/precompiled/%s",s)) s=capitalize(s);
     allobj[s]++;
   }
   foreach(sort_array(indices(allobj),lambda(string a, string b, mapping allobj) {
     return allobj[a] < allobj[b];
   }, allobj), s) {
-    if((search(s, "Destructed?") == -1) && allobj[s]>5)
+    if((search(s, "Destructed?") == -1) && allobj[s]>2)
     {
       res += sprintf("<tr bgcolor=black><td><b>%s</b></td>"
 		     "<td align=right><b>%d</b></td></tr>\n",

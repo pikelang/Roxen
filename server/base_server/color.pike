@@ -1,6 +1,6 @@
 // Color support for roxen. 
 
-string cvs_version = "$Id: color.pike,v 1.2 1997/01/26 23:45:40 per Exp $";
+string cvs_version = "$Id: color.pike,v 1.3 1997/01/29 04:59:32 per Exp $";
 
 mapping (string:array(int)) colors = ([]);
 
@@ -58,8 +58,10 @@ string color_name(array (int) from)
 
 void create()
 {
-  if(catch(colors = decode_value(read_bytes("etc/rgb.dat"))))
-    perror("Color subsystem: Failed to read RGB data from etc/rgb.dat.\n");
+  array err;
+  if(err=catch(colors = decode_value(read_bytes("etc/rgb.dat"))))
+    perror("Color subsystem: Failed to read RGB data from etc/rgb.dat.\n"+
+	   err[0]);
   add_constant("parse_color", parse_color);
   add_constant("color_name", color_name);
 }

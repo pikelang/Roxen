@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 
 
-string cvs_version = "$Id: htmlparse.pike,v 1.20 1997/01/27 01:31:21 per Exp $";
+string cvs_version = "$Id: htmlparse.pike,v 1.21 1997/01/29 04:59:43 per Exp $";
 #pragma all_inline 
 
 #include <config.h>
@@ -303,7 +303,10 @@ mapping handle_file_extension( object file, string e, object id)
 
   _error=200;
   _extra_heads=([ ]);
-  _stat=file->stat();
+  if(id->misc->stat)
+    _stat=id->misc->stat;
+  else
+    _stat=file->stat();
 
   if(_stat[1] > (QUERY(max_parse)*1024))
   {
@@ -887,7 +890,7 @@ string tag_accessed(string tag,mapping m,object got,object file,
   return res+(m->addreal?real:"");
 }                  
 
-string tag_user(string a, mapping b, object foo, object file);
+string tag_user(string a, mapping b, object foo, object file,mapping defines);
 
 string tag_modified(string tag, mapping m, object got, object file,
 		    mapping defines)
@@ -900,7 +903,7 @@ string tag_modified(string tag, mapping m, object got, object file,
     if(!got->conf->auth_module)
       return "<!-- modified by requires an user database! -->\n";
     m->name = roxen->last_modified_by(file);
-    return tag_user(tag, m, got, file);
+    return tag_user(tag, m, got, file,defines);
   }
 
   if(m->file)
@@ -918,7 +921,7 @@ string tag_modified(string tag, mapping m, object got, object file,
     {
       m->name = roxen->last_modified_by(f, got);
       destruct(f);
-      return tag_user(tag, m, got, file);
+      return tag_user(tag, m, got, file,defines);
     }
     return "A. Nonymous.";
   }
@@ -945,15 +948,17 @@ string tag_clientname(string tag, mapping m, object got)
     return got->client[0];
 }
 
-string tag_signature(string tag, mapping m, object got, object file)
+string tag_signature(string tag, mapping m, object got, object file,
+		     mapping defines)
 {
   string w;
   if(!(w=m->user || m->name))
     return "";
-  return "<right><address>"+tag_user(tag, m, got, file)+"</address></right>";
+  return "<right><address>"+tag_user(tag, m, got, file,defines)
+    +"</address></right>";
 }
 
-string tag_user(string tag, mapping m, object got, object file)
+string tag_user(string tag, mapping m, object got, object file,mapping defines)
 {
   string *u;
   string b, dom;
@@ -962,7 +967,7 @@ string tag_user(string tag, mapping m, object got, object file)
     return "<!-- user requires an user database! -->\n";
 
   if (!(b=m->name)) {
-    return(tag_modified("modified", m | ([ "by":"by" ]), got, file));
+    return(tag_modified("modified", m | ([ "by":"by" ]), got, file,defines));
   }
 
   b=m->name;
@@ -1475,11 +1480,12 @@ string tag_header(string tag, mapping m, object got, object file,
   if(!(m->value && m->name))
     return "<!-- Header requires booth a name and a value. -->";
 
-  add_header(extra_heads, m->name, m->value);
+  add_header(_extra_heads, m->name, m->value);
   return "";
 }
 
-string tag_expire_time(string tag, mapping m, object got, object file)
+string tag_expire_time(string tag, mapping m, object got, object file,
+		       mapping defines)
 {
   int t=time();
   if (m->hours) t+=((int)(m->hours))*3600;
@@ -1489,7 +1495,7 @@ string tag_expire_time(string tag, mapping m, object got, object file)
   if (m->weeks) t+=((int)(m->hours))*(24*3600*7);
   if (m->months) t+=((int)(m->hours))*(24*3600*30+37800); /* 30.46d */
   if (m->years) t+=((int)(m->hours))*(3600*(24*365+6));   /* 365.25d */
-  add_header(extra_heads, "Expires", http_date(t));
+  add_header(_extra_heads, "Expires", http_date(t));
   return "";
 }
 

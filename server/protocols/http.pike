@@ -1,12 +1,20 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-string cvs_version = "$Id: http.pike,v 1.10 1996/12/15 12:35:45 per Exp $";
+
+string cvs_version = "$Id: http.pike,v 1.11 1997/01/29 04:59:45 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 inherit "roxenlib";
 int first;
 
-function decode = roxen->decode;
+constant shuffle=roxen->shuffle;
+constant decode=roxen->decode;
+constant find_supports=roxen->find_supports;
+constant version=roxen->version;
+constant errors=roxen->errors;
+constant handle=roxen->handle;
+constant _query=roxen->query;
+//constant This = object_program(this_object());
 
 #define SPEED_MAX
 
@@ -26,7 +34,7 @@ int kept_alive;
 #include <module.h>
 
 #undef QUERY
-#define QUERY(X) roxen->variables->X[VAR_VALUE]
+#define QUERY(X) _query("X")
 
 int time;
 string raw_url;
@@ -127,9 +135,7 @@ private int really_set_config(array mod_config)
 {
   string url, m;
   string base;
-  base = roxen->query("MyWorldLocation")||"/";
-  my_fd->set_blocking();
-  roxen->current_configuration = conf;
+  base = conf->query("MyWorldLocation")||"/";
 
   if(supports->cookies)
   {
@@ -171,7 +177,7 @@ private int really_set_config(array mod_config)
     sscanf(replace(url, ({ "%28", "%29" }), ({ "(", ")" })),"/(%*s)/%s", url);
 
     my_fd->write(prot+" 302 Config In Prestate!\r\n"
-		 +"\r\nLocation: "+roxen->query("MyWorldLocation")+
+		 +"\r\nLocation: "+conf->query("MyWorldLocation")+
 		 add_pre_state(url, aggregate_multiset(@prestate))+"\r\n"
 		 +"Content-Type: text/html\r\n"
 		 +"Content-Length: 0\r\n\r\n");
@@ -458,7 +464,7 @@ private int parse_got(string s)
 	    break;
 	    
 	   case "if-modified-since":
-	    if(QUERY(IfModified))
+//	    if(QUERY(IfModified))
 	      since=contents;
 	    break;
 
@@ -476,7 +482,7 @@ private int parse_got(string s)
       }
     } 
   }
-  supports = roxen->find_supports(lower_case(client*" "));
+  supports = find_supports(lower_case(client*" "));
   
   if(misc->proxyauth) {
     // The Proxy-authorization header should be removed... So there.
@@ -530,31 +536,28 @@ void disconnect()
     destruct(file->file);
   if(objectp(pipe) && pipe != previous_object()) 
     destruct(pipe);
-  --roxen->num_connections;
-#ifdef REQUEST_DEBUG
-  perror(sprintf("Request: Current number of open connections: %d\n", 
-		 roxen->num_connections));
-#endif
   my_fd = 0;
-  destruct(this_object());
+  destruct();
 }
 
+#ifdef KEEP_CONNECTION_ALIVE
 void no_more_keep_connection_alive(mapping foo)
 {
   if(!pipe || !objectp(my_fd)) end();
 }
-
+#endif
 
 void end(string|void s)
 {
 #ifdef REQUEST_DEBUG
   perror("REQUEST: End...\n");
 #endif
+#ifdef KEEP_CONNECTION_ALIVE
   remove_call_out(no_more_keep_connection_alive);
+#endif
   if(objectp(my_fd))
   {
-    if(s)
-      my_fd->write(s);
+    if(s) my_fd->write(s);
     destruct(my_fd);
   }
   disconnect();
@@ -566,6 +569,7 @@ static void timeout(mapping foo)
 }
 
 
+#ifdef KEEP_CONNECTION_ALIVE
 void got_data(mixed fooid, string s);
 
 void keep_connection_alive()
@@ -577,6 +581,7 @@ void keep_connection_alive()
   else
     call_out(no_more_keep_connection_alive, 100);
 }
+#endif
 
 
 mapping internal_error(array err)
@@ -599,133 +604,57 @@ int wants_more()
   return !!cache;
 }
 
-/* We got some data on a socket.
- * ================================================= 
- */
-
-void got_data(mixed fooid, string s)
+static void handle_request( )
 {
-  if(wanted_data)
-  {
-    if(strlen(s)+have_data < wanted_data)
-    {
-      cache += ({ s });
-      have_data += strlen(s);
-      return;
-    }
-  }
-
-
   mixed *err;
   int tmp, keep_alive;
   function funp;
   mapping heads;
   string head_string, tmp2, tmp3;
-
-#ifdef DUMB_TEST
-/* Speedometer, to check how long the connect() and accept() calls take,
- * and the cloning of this object.
- */
-  end("FOO!!!\n");
-  /* On a SS4: 97 requests/sec, or 10msec/request. This is socket overhead to
-   * 99.9% or so
-   */
-
-  return;
-#endif
-
-
-
-//  perror(s);
-
-
-//perror("Got "+strlen(s)+" bytes\n");
-  
-  if(!s || (!strlen(s) && fooid != 1))
-    return;
-  
-  if(cache) 
-  {
-    s = cache*"" + s; 
-    cache = 0;
-  }
-  remove_call_out(no_more_keep_connection_alive);
-  tmp = parse_got(s);
-  switch(-tmp)
-  { 
-   case 0:
-    cache = ({ s });		// More on the way.
-    return; 
-    
-   case 1:
-    my_fd->write(prot+" 500 Stupid Client Error\r\n"	
-		 "Content-Length: 0\r\n\r\n");
-    end();
-    return;			// Stupid request.
-    
-   case 2:
-     end();
-    return;
-  }
-  my_fd->set_blocking();
-  
-//  sscanf(s-"\r", "%s\n\n%s", s, cache);
-
+  object thiso=this_object();
 #ifndef SPEED_MAX
   remove_call_out(timeout);
 #endif
-
+  
   if(conf)
   {
-    roxen->current_configuration = conf;
-    conf->received += strlen(s);
-    conf->requests++;
+//  perror("Handle request, got conf.\n");
+    foreach(conf->first_modules(), funp) if(file = funp( thiso)) break;
     
-    foreach(conf->first_modules(), funp) if(file = funp( this_object())) break;
-    
-    if(!file) err=catch(file = roxen->get_file(this_object()));
+    if(!file) err=catch(file = conf->get_file(thiso));
 
     if(err) internal_error(err);
     
     if(!mappingp(file))
-      foreach(conf->last_modules(), funp) if(file = funp(this_object())) break;
-    
-#ifdef API_COMPAT
-    if(mappingp(file))
-      if(file["string"])
-	file->data = file["string"]; // Compatibility...
-#endif
-    } else if(err=catch(file = roxen->configuration_parse( this_object() ))) {
-      if(err==-1) return;
-      internal_error(err);
-    }
+      foreach(conf->last_modules(), funp) if(file = funp(thiso)) break;
+  } else if(err=catch(file = roxen->configuration_parse( thiso ))) {
+    if(err==-1) return;
+    internal_error(err);
+  }
 
   if(!mappingp(file))
   {
     if(method != "GET" && method != "HEAD" && method != "POST")
       file = http_low_answer(501, "Not implemented.");
     else
+      file=http_low_answer(404,
+			   replace(parse_rxml(conf->query("ZNoSuchFile"),
+					      thiso),
+				   ({"$File", "$Me"}), 
+				   ({not_query,
+				       conf->query("MyWorldLocation")})));
+  } else {
+    if((file->file == -1) || file->leave_me) 
     {
-      
-      s = replace(parse_rxml(roxen->query("ZNoSuchFile"), this_object()),
-		  ({"$File", "$Me"}), 
-		  ({ not_query, roxen->query("MyWorldLocation")	}));
-      file=http_low_answer(404, s);
+      if(!file->stay) disconnect();
+      return;
     }
+
+    if(file->type == "raw")
+      file->raw = 1;
+    else if(!file->type)
+      file->type="text/plain";
   }
-  
-  if((file->file == -1) || file->leave_me) 
-  {
-    if(!file->stay)
-      disconnect();
-    return;
-  }  
-
-  if(file->type == "raw")
-    file->raw = 1;
-  else if(!file->type)        
-    file->type="text/plain"; 
-
   
   if(!file->raw && prot != "HTTP/0.9")
   {
@@ -733,8 +662,8 @@ void got_data(mixed fooid, string s)
     heads=
       ([
 	"Content-type":file["type"],
-	"Server":roxen->version(),
-	"Date":http_date(time)
+	"Server":version(),
+        "Date":http_date(time)
 	]);
     
     if(file->encoding)
@@ -749,7 +678,7 @@ void got_data(mixed fooid, string s)
     if(!file->len)
     {
       if(objectp(file->file))
-	if(!file->stat) 
+	if(!file->stat && !(file->stat=misc->stat))
 	  file->stat = (int *)file->file->stat();
       array fstat;
       if(arrayp(fstat = file->stat))
@@ -797,105 +726,150 @@ void got_data(mixed fooid, string s)
     if(mappingp(misc->moreheads))
       heads |= misc->moreheads;
     
-    head_string = prot+" "+(file->rettext||roxen->errors[file->error])+"\r\n";
+    array myheads = ({prot+" "+(file->rettext||errors[file->error])});
     foreach(indices(heads), h)
       if(arrayp(heads[h]))
 	foreach(heads[h], tmp)
-	  head_string +=  sum(h, ": ", tmp, "\r\n");
+	  myheads += ({ sum(h,": ", tmp)});
       else
-	head_string +=  sum(h, ": ", heads[h], "\r\n");
+	myheads +=  ({ sum(h, ": ", heads[h])});
     
 
     if(file->len > -1)
-      head_string += "Content-length: " + file->len + "\r\n";
-    head_string += "\r\n";
-
-    if(conf)
-    {
-      conf->sent+=(file->len>0 ? file->len : 1000);
-//      trace(8);
-      conf->hsent+=strlen(head_string||"");
-//      trace(0);
-    }
+      myheads += ({"Content-length: " + file->len });
+    head_string = (myheads+({"",""}))*"\r\n";
     
+    if(conf)conf->hsent+=strlen(head_string||"");
     if(method=="HEAD")
     {
-      roxen->log(file, this_object());
+      if(conf)conf->log(file, thiso);
       if(keep_alive)
       {
 	my_fd->write(head_string);
 	misc->connection = 0;
+#ifdef KEEP_CONNECTION_ALIVE
 	keep_connection_alive();
+#endif
       } else {
 	end(head_string);
       }
       return;
     }
 
-    if(!keep_alive && file->len < 3000 && file->len >= 0)
-    {
-      if(file->data) head_string += file->data;
-      if(file->file) 
-      {
-	head_string += file->file->read(3000);
-	roxen->current_configuration = 0;
-	destruct(file->file);
-      }
-      file->len=strlen(head_string);
-      roxen->log(file, this_object());
-      end(head_string);
-      return;
-    }
-  }
-  
-#if efun(send_fd)
-  if((file->len<=0 || (file->len > 10000))
-     && !keep_alive && roxen->shuffle_fd && objectp(file->file)
-     && (!file->data || strlen(file->data) < 2000))
-  {
-    my_fd->set_blocking();
-    file->file->set_blocking();
+    if(conf)
+      conf->sent+=(file->len>0 ? file->len : 1000);
     
-    if(file->data)  head_string += file->data;
-    if(head_string) my_fd->write(head_string);
-    if(send_fd(roxen->shuffle_fd, file->file->query_fd())
-       && send_fd(roxen->shuffle_fd, my_fd->query_fd()))
+    if((file->len<=0 || (file->len > 10000))
+       && !keep_alive && objectp(file->file))
     {
-      roxen->log(file, this_object());
-      roxen->current_configuration = 0;
-      end();
+      if(file->data)  head_string += file->data;
+      if(head_string)
+      {
+	my_fd->write(head_string);
+	head_string=0;
+      }
+      shuffle( file->file, my_fd );
+      if(conf)conf->log(file, thiso); 
+      my_fd=file->file=file=pipe=0;
       return;
-    } else {
-      report_error("Failed to send fd to shuffler process.\n");
-      roxen->init_shuffler();
     }
+  
+  if(!keep_alive && file->len < 3000 && file->len >= 0)
+  {
+//    perror("fo\n");
+    if(file->data) head_string += file->data;
+    if(file->file) 
+    {
+      head_string += file->file->read(file->len);
+      destruct(file->file);
+    }
+    file->len=strlen(head_string);
+    if(conf) conf->log(file, thiso);
+    end(head_string);
+//      perror("end\n");
+    return;
   }
-#endif
-
+  }
+// perror("Last case...\n");
   if(head_string) send(head_string);
   if(file->data)  send(file->data);
   if(file->file)  send(file->file);
   pipe->output(my_fd);
-
-  if(file->len > 65535)
-    my_fd->set_buffer(65535, "w"); // Max is really 65535.
-  else
-    pipe->start();		// I give small files higher priority.
   
-  roxen->log(file, this_object());
+  if(conf) conf->log(file, thiso);
 
 #ifdef KEEP_CONNECTION_ALIVE
   if(keep_alive)
   {
     if(my_fd)
     {
-      misc->connection = 0;
+      misc->connection=0;
       pipe->set_done_callback(keep_connection_alive);
     }
-  } 
+  } else 
 #endif
-  file = 0;
-  roxen->current_configuration = 0;
+    my_fd=0;
+  pipe=file=0;
+}
+
+/* We got some data on a socket.
+ * ================================================= 
+ */
+
+void got_data(mixed fooid, string s)
+{
+  int tmp;
+//  perror("Got data.\n");
+#ifndef SPEED_MAX
+  remove_call_out(timeout);
+#endif
+  if(wanted_data)
+  {
+    if(strlen(s)+have_data < wanted_data)
+    {
+      cache += ({ s });
+      have_data += strlen(s);
+      return;
+    }
+  }
+  
+  if(cache) 
+  {
+    cache += ({ s });
+    s = cache*""; 
+    cache = 0;
+  }
+#ifdef KEEP_CONNECTION_ALIVE
+  remove_call_out(no_more_keep_connection_alive);
+#endif
+  tmp = parse_got(s);
+  switch(-tmp)
+  { 
+   case 0:
+    cache = ({ s });		// More on the way.
+    return;
+    
+   case 1:
+    end(prot+" 500 Stupid Client Error\r\nContent-Length: 0\r\n\r\n");
+    return;			// Stupid request.
+    
+   case 2:
+    end();
+    return;
+  }
+#ifdef THREADS
+  my_fd->set_blocking();
+#endif
+  if(conf)
+  {
+    conf->received += strlen(s);
+    conf->requests++;
+  }
+#ifdef THREADS
+  handle(handle_request);
+#else
+  handle_request();
+#endif
 }
 
 /* Get a somewhat identical copy of this object, used when doing 
@@ -903,8 +877,8 @@ void got_data(mixed fooid, string s)
 
 object clone_me()
 {
-  object c;
-  c=object_program(this_object())();
+  object c,t;
+  c=object_program(t=this_object())();
 
   c->my_fd = 0;
   c->conf = conf;
@@ -919,7 +893,7 @@ object clone_me()
   c->client = client;
   c->auth = auth;
   c->misc = copy_value(misc);
-  c->misc->orig = this_object();
+  c->misc->orig = t;
   c->realauth = realauth;
   return c;
 }
@@ -930,21 +904,18 @@ void clean()
   else if((_time(1) - time) > 4800) end();
 }
 
-void assign(object f, object c)
+void create(object f, object c)
 {
-  ++roxen->num_connections;
-#ifdef REQUEST_DEBUG
-  perror(sprintf("REQUEST: Current number of open connections: %d\n", 
-		 roxen->num_connections));
-#endif
-  my_fd = f;
-  my_fd->set_id(0);
-  my_fd->set_nonblocking(got_data, lambda(){}, end);
-  conf = c;
-  mark_fd(my_fd->query_fd(), "HTTP connection");
-  
+  if(f)
+  {
+    my_fd = f;
+    my_fd->set_id(0);
+    my_fd->set_nonblocking(got_data, lambda(){}, end);
+    conf = c;
+    mark_fd(my_fd->query_fd(), "HTTP connection");
+    
 #ifndef SPEED_MAX
-  call_out(timeout, 60);
+    call_out(timeout, 60);
 #endif
+  }
 }
-

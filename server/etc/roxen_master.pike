@@ -11,7 +11,7 @@
 
 string describe_backtrace(mixed *trace);
 
-string cvs_version = "$Id: roxen_master.pike,v 1.17 1997/01/27 21:03:43 grubba Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.18 1997/01/29 04:59:39 per Exp $";
 string pike_library_path;
 object stdout, stdin;
 mapping names=([]);
@@ -177,8 +177,10 @@ object findmodule(string fullname)
     if(stat[1]==-2) return dirnode(fullname);
   }
   program p;
-  if(p=(program)(fullname+".pmod"))
-    return (object)(fullname+".pmod");
+  catch {
+    if(p=(program)(fullname+".pmod"))
+      return (object)(fullname+".pmod");
+  };
   return UNDEFINED;
 }
 

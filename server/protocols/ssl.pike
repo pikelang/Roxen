@@ -1,6 +1,6 @@
 // This is a roxen protocol module. (c) Informationsvävarna AB 1996.
 
-string cvs_version = "$Id: ssl.pike,v 1.4 1996/12/01 19:18:03 per Exp $";
+string cvs_version = "$Id: ssl.pike,v 1.5 1997/01/29 04:59:45 per Exp $";
 // Support for SSL, using an external process. Work is in progress for
 // native SSL support.
 
@@ -125,17 +125,20 @@ array real_port(array port)
 }
 
 
-void assign(object f, object c)
+void create(object f, object c)
 {
-#ifdef SSL_DEBUG
-  perror("SSL: Assign..\n");
-#endif
-  if((f->query_address()/"0")[0] != "127.") // Test for 127.0
+  if(f)
   {
 #ifdef SSL_DEBUG
-    perror("SSL: Odd address..\n");
+    perror("SSL: Assign..\n");
 #endif
-    end("!");
+    if((f->query_address()/"0")[0] != "127.") // Test for 127.0
+    {
+#ifdef SSL_DEBUG
+      perror("SSL: Odd address..\n");
+#endif
+      end("!");
+    }
+    ::create(f, c);
   }
-  ::assign(f, c);
 }

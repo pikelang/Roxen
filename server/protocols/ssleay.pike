@@ -138,17 +138,20 @@ array|void real_port(array port)
   werror(sprintf("real_port: %O\n", port));
 }
 
-void assign(object f, object conf)
+void create(object f, object conf)
 {
-  object ctx;
-  array port;
+  if(f)
+  {
+    object ctx;
+    array port;
   
-  werror(sprintf("%O\n", indices(conf)));
-  werror(sprintf("port_open: %O\n", conf->port_open));
-  werror(sprintf("open_ports: %O\n", conf->open_ports));
-  if (sizeof(conf->open_ports) != 1)
-    report_error("ssleay->assign bug: Only one ssleay port supported\n");
-  port = values(conf->open_ports)[0];
-  ctx = get_context(port[2], port[0]);
-  http::assign(SSL_decode(ctx)->decode(f, this_object()), conf);
+    werror(sprintf("%O\n", indices(conf)));
+    werror(sprintf("port_open: %O\n", conf->port_open));
+    werror(sprintf("open_ports: %O\n", conf->open_ports));
+    if (sizeof(conf->open_ports) != 1)
+      report_error("ssleay->assign bug: Only one ssleay port supported\n");
+    port = values(conf->open_ports)[0];
+    ctx = get_context(port[2], port[0]);
+    http::create(SSL_decode(ctx)->decode(f, this_object()), conf);
+  }
 }

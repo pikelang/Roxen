@@ -3,8 +3,9 @@
 // This is a virtual "file-system".
 // It will be located somewhere in the name-space of the server.
 // Also inherited by some of the other filesystems.
-string cvs_version = "$Id: filesystem.pike,v 1.7 1997/01/26 23:56:47 per Exp $";
+string cvs_version = "$Id: filesystem.pike,v 1.8 1997/01/29 04:59:40 per Exp $";
 #include <module.h>
+#include <stat.h>
 
 #if DEBUG_LEVEL > 20
 # ifndef FILESYSTEM_DEBUG
@@ -76,6 +77,11 @@ void create()
 	 "Only allow authenticated users to use methods other than "
 	 "GET and POST. If unset, this filesystem will be a _very_ "
 	 "public one (anyone can edit files located on it)");
+
+  defvar("stat_cache", 1, "Cache the results of stat(2)",
+	 TYPE_FLAG,
+	 "This can speed up the retrieval of files up to 60/70% if you"
+	 " use NFS, but it does use some memory.");
 }
 
 
@@ -91,10 +97,12 @@ mixed *register_module()
 }
 
 string path;
+int stat_cache;
 
 void start()
 {
   path = QUERY(searchpath);
+  stat_cache = QUERY(stat_cache);
 #ifdef FILESYSTEM_DEBUG
   perror("FILESYSTEM: Online at "+QUERY(mountpoint)+" (path="+path+")\n");
 #endif
@@ -108,7 +116,14 @@ string query_location()
 
 mixed stat_file( mixed f, mixed id )
 {
-  return file_stat(path + f); /* No security currently in this function */
+  if(!stat_cache)
+    return file_stat(path + f); /* No security currently in this function */
+  array fs;
+  if(!id->pragma["no-cache"]&&(fs=cache_lookup("stat_cache",path+f)))
+    return fs;
+  fs = file_stat(path+f);
+  cache_set("stat_cache",path+f,fs);
+  return fs;
 }
 
 string real_file( mixed f, mixed id )
@@ -126,7 +141,6 @@ int dir_filter_function(string f)
   return 1;
 }
 
-
 array find_dir( string f, object id )
 {
   mixed ret;
@@ -142,7 +156,6 @@ array find_dir( string f, object id )
       errors++;
       return 0;
     }
-
 
   // Access to this dir is not allowed.
   if(sizeof(dir & ({".nodiraccess",".www_not_browsable",".nodir_access"})))
@@ -183,6 +196,25 @@ void got_put_data( array (object) id, string data )
     done_with_put( id );
 }
 
+int _file_size(string X,object id)
+{
+  array fs;
+  if(!id->pragma["no-cache"]&&(fs=cache_lookup("stat_cache",(X))))
+  {
+    id->misc->stat = fs;
+    return fs[ST_SIZE];
+  }
+  if(fs = file_stat(X))
+  {
+    id->misc->stat = fs;
+    cache_set("stat_cache",(X),fs);
+    return fs[ST_SIZE];
+  }
+  return -1;
+}
+
+#define FILE_SIZE(X) (stat_cache?_file_size((X),id):file_size(X))
+
 mixed find_file( string f, object id )
 {
   object o;
@@ -191,8 +223,7 @@ mixed find_file( string f, object id )
 #ifdef FILESYSTEM_DEBUG
   perror("FILESYSTEM: Request for "+f+"\n");
 #endif
-
-  size = file_size( f = path + f );
+  size = FILE_SIZE( f = path + f );
 
   switch(id->method)
   {

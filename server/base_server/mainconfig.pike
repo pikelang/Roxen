@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.29 1996/12/13 00:41:16 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.30 1997/01/29 04:59:34 per Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -28,7 +28,7 @@ class Node {
   mixed original;
   int changed, moredocs;
 
-  int bar=previous_object()->bar;
+  int bar=time();
   function saver = lambda(object o) { if(o->changed) o->change(-o->changed); };
   
   string|array error;
@@ -157,7 +157,6 @@ object find_node(string l)
   if(!sizeof(tmp)) return root;
   for(o=root; sizeof(tmp) && (o=o->descend(tmp[0],1)); tmp=tmp[1..1000]);
   if(!o) return 0;
-  roxen->current_configuration = o->config();
   return o;
 }
 
@@ -175,13 +174,8 @@ mapping save_it(object id, object o)
 {
   id->referer = ({ CONFIG_URL + o->path(1) });
   root->save();
-  if(roxen->do_fork_it())
-  {
-    roxen->update_supports_from_roxen_com();
-    roxen->initiate_configuration_port( 0 );
-  }
-  else
-    throw(-1);
+  roxen->update_supports_from_roxen_com();
+  roxen->initiate_configuration_port( 0 );
 }
 
 mapping stores( string s )
@@ -200,7 +194,7 @@ mapping stores( string s )
       ]);
 }
 
-object find_module(string name)
+object find_module(string name, object in)
 {
   mapping mod;
   object o;
@@ -214,7 +208,7 @@ object find_module(string name)
     perror("Modulename not in short form: "+name+"\n");
 #endif
 #endif
-    foreach(values(roxen->current_configuration->modules), mod)
+    foreach(values(in->modules), mod)
     {
       if(mod->copies)
       {
@@ -232,7 +226,7 @@ object find_module(string name)
     perror("Modulename in short form: "+name+"#"+i+"\n");
 #endif
 #endif
-    modules = roxen->current_configuration->modules;
+    modules = in->modules;
     if(modules[name])
     {
       if(modules[name]->copies)
@@ -253,7 +247,7 @@ mixed decode_form_result(string var, int type, object node, mapping allvars)
     return map_array(var/"\000", find_module);
 
   case TYPE_MODULE:
-    return find_module(var);
+   return find_module(var, node->config());
 
   case TYPE_PORTS:  
    /*
@@ -461,11 +455,11 @@ mixed new_module_copy(object node, string name, object id)
   }
   
   if(module) if(module->copies) while(module->copies[i])  i++;
-  roxen->enable_module(name+"#"+i);
-  module = node->config()->modules[name];
+  orig = node->config()->enable_module(name+"#"+i);
 
-  if(!module) return http_string_answer("This module could not be enabled.\n");
+  if(!orig) return http_string_answer("This module could not be enabled.\n");
     
+  module = node->config()->modules[name];
   node = node->descend(module->name);
   // Now it is the (probably unbuilt) module main node...
   
@@ -493,7 +487,6 @@ mixed new_module_copy(object node, string name, object id)
 
 mixed new_module_copy_copy(object node, object id)
 {
-  roxen->current_configuration = node->config();
   return new_module_copy(node, node->data->sname, id);
 }
 
@@ -508,7 +501,9 @@ string new_module_form(object id, object node)
   if(!roxen->allmodules || sizeof(id->pragma))
   {
    perror("CONFIG: Rescanning modules.\n");
+   roxen->current_configuration = node->config();
    roxen->rescan_modules();
+   roxen->current_configuration = 0;
    perror("CONFIG: Done.\n");
   }
   
@@ -589,38 +584,38 @@ int low_enable_configuration(string name, string type)
     switch(lower_case((type/" ")[0]))
     {
      default: /* Minimal configuration */
-       roxen->enable_configuration(name);
+       o=roxen->enable_configuration(name);
       break;
       
      case "standard":
-      roxen->enable_configuration(name);
-      roxen->enable_module("cgi#0");
-      roxen->enable_module("contenttypes#0");
-      roxen->enable_module("ismap#0");
-      roxen->enable_module("pikescript#0");
-      roxen->enable_module("htmlparse#0");
-      roxen->enable_module("directories#0");
-      roxen->enable_module("userdb#0");
-      roxen->enable_module("userfs#0"); // I _think_ we want this.
-      roxen->enable_module("filesystem#0");
+      o = roxen->enable_configuration(name);
+      o->enable_module("cgi#0");
+      o->enable_module("contenttypes#0");
+      o->enable_module("ismap#0");
+      o->enable_module("pikescript#0");
+      o->enable_module("htmlparse#0");
+      o->enable_module("directories#0");
+      o->enable_module("userdb#0");
+      o->enable_module("userfs#0"); // I _think_ we want this.
+      o->enable_module("filesystem#0");
       break;
       
      case "ipp":
-      roxen->enable_configuration(name);
-      roxen->enable_module("contenttypes#0");
-      roxen->enable_module("ismap#0");
-      roxen->enable_module("htmlparse#0");
-      roxen->enable_module("directories#0");
-      roxen->enable_module("filesystem#0");
+      o=roxen->enable_configuration(name);
+      o->enable_module("contenttypes#0");
+      o->enable_module("ismap#0");
+      o->enable_module("htmlparse#0");
+      o->enable_module("directories#0");
+      o->enable_module("filesystem#0");
       break;
       
      case "proxy":
-      roxen->enable_configuration(name);
-      roxen->enable_module("proxy#0");
-      roxen->enable_module("gopher#0");
-      roxen->enable_module("ftpgateway#0");
-      roxen->enable_module("contenttypes#0");
-      roxen->enable_module("wais#0");
+      o=roxen->enable_configuration(name);
+      o->enable_module("proxy#0");
+      o->enable_module("gopher#0");
+      o->enable_module("ftpgateway#0");
+      o->enable_module("contenttypes#0");
+      o->enable_module("wais#0");
       break;
       
      case "copy":
@@ -1073,11 +1068,11 @@ mapping configuration_parse(object id)
       mod = module_of(o);
       if(!mod || mod==roxen)
 	error("This module cannot be updated.\n");
-      name = module_short_name(mod);
+      name = module_short_name(mod, o->config());
       if(!name)
 	error("This module cannot be updated");
       sscanf(name, "%s#%*s", modname);
-      roxen->current_configuration = o->config();
+
       if(!(cmod = o->config()->modules[ modname ]))
  	error("This module cannot be updated");
       
@@ -1085,7 +1080,7 @@ mapping configuration_parse(object id)
       cache_remove("modules", modname);
       _master->set_inhibit_compile_errors(1);
       
-      if(!roxen->load_module(modname))
+      if(!o->config()->load_module(modname))
       {
 	mapping rep;
 	rep = http_string_answer("The reload of this module failed.\n"
@@ -1095,11 +1090,11 @@ mapping configuration_parse(object id)
 	return rep;
       }
       object mod;
-      if(!roxen->disable_module(name)) error("Failed to disable module.\n");
-      if(!(mod=roxen->enable_module(name)))error("Failed to enable module.\n");
+      if(!o->config()->disable_module(name))error("Failed to disable module.\n");
+      if(!(mod=o->config()->enable_module(name)))error("Failed to enable module.\n");
       
       o->clear();
-      roxen->fork_it();
+//    roxen->fork_it();
       
       if(mappingp(o->data))
       {
@@ -1217,10 +1212,10 @@ mapping configuration_parse(object id)
 	string name;
 	object n;
 	
-	name = module_short_name(o->data);
-	roxen->disable_module(name);
+	name = module_short_name(o->data, o->config());
+	o->conf()->disable_module(name);
 	// Remove the suitable part of the configuration file.
-	roxen->remove(name);
+	roxen->remove(name, o->conf());
 	o->change(-o->changed);
 	n=o->up;
 	o->dest();
@@ -1267,16 +1262,16 @@ mapping configuration_parse(object id)
 	    i=sizeof(a);
 	    while(i--) 
 	    {
-	      roxen->disable_module(name+"#"+a[i]);
-	      roxen->remove(name+"#"+a[i]);
+	      o->config()->disable_module(name+"#"+a[i]);
+	      roxen->remove(name+"#"+a[i], o->config());
 	    }
 	  } else if(o->data->master) {
 	    name=o->config()->otomod[o->data->enabled];
 	  } 
 	} else if(o->data->enabled) {
 	  name=o->config()->otomod[o->data->enabled];
-	  roxen->disable_module(name+"#0");
-	  roxen->remove(name+"#0");
+	  o->config()->disable_module(name+"#0");
+	  roxen->remove(name+"#0", o->config());
 	}
 	o->change(-o->changed);
 	o->dest();

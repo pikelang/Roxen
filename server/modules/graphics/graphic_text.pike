@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.23 1997/01/27 00:00:20 per Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.24 1997/01/29 04:59:41 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -432,8 +432,8 @@ object (Image) make_text_image(mapping args, object font, string text)
   
   if(args->chisel)
     foreground=text_alpha->apply_matrix( ({ ({8,1,0}),
-					   ({1,0,-1}),
-					   ({0,-1,-8}) }), 128,128,128, 15 )
+					    ({1,0,-1}),
+					      ({0,-1,-8}) }), 128,128,128, 15 )
       ->color(@fgcolor);
   
 

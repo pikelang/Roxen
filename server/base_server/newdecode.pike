@@ -6,7 +6,7 @@
 #endif
 #endif
 #ifndef IN_INSTALL
-string cvs_version = "$Id: newdecode.pike,v 1.3 1996/12/02 14:05:37 per Exp $";
+string cvs_version = "$Id: newdecode.pike,v 1.4 1997/01/29 04:59:35 per Exp $";
 #endif
 
 void parse(string s, mapping mr);
@@ -265,6 +265,7 @@ private mapping compat_parse(string s)
 
 mapping decode_config_file(string s)
 {
+//  werror(sprintf("Decoding \n%s\n",s));
   mapping res = ([ ]);
   if(!sizeof(s)) return res; // Empty file..
   switch(s[0])
@@ -285,7 +286,10 @@ mapping decode_config_file(string s)
    case '6': // Newer ((somewhat)readable) format. Can encode everything, _and_
              // a mere human can edit it.
     
+//    trace(1);
     parse_html(s, ([]), ([ "region":new_decode_config_region ]), res);
+//    trace(0);
+//    werror(sprintf("Decoded value is: %O\n", res));
     return res;
    }
 }

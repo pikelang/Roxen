@@ -66,7 +66,7 @@ void create()
       }
       buffer[w_ptr]=v;
       w_ptr++;
-      r_cond::signal();
+      r_cond::broadcast();
     }
   });
 }

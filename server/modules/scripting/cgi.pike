@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.9 1997/01/07 03:35:10 neotron Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.10 1997/01/29 04:59:42 per Exp $";
 #include <module.h>
 
 inherit "module";
@@ -55,8 +55,8 @@ void create()
 	 "VAR_variable_name: Parsed form variable (like CGI parse)<br>"
 	 "QUERY_variable_name: Parsed form variable<br>"
 	 "VARIABLES: A space separated list of all form variables<br>"
-	 "STATE_variable_name: Parsed state<br>"
-	 "STATES: A space separated list of all states");
+	 "PRESTATE_name: True if the prestate is present<br>"
+	 "PRESTATES: A space separated list of all states");
 
   defvar("mountpoint", "/cgi-bin/", "CGI-bin path", TYPE_LOCATION, 
 	 "This is where the module will be inserted in the "
@@ -167,18 +167,20 @@ string check_variable(string name, string value)
 
 static string path;
 
-void start()
+void start(int n, object conf)
 {
   string tmp;
   array us;
   path = query("searchpath");
-
-  if(roxen->userlist() && (us = roxen->userinfo( QUERY(runuser) )))
+#if efun(getpwnam)
+  if(us = getpwnam(  QUERY(runuser) ))
     runuser = ({ (int)us[2], (int)us[3] });
-  else if((int)QUERY(runuser))
+  else
+#endif
+    if((int)QUERY(runuser))
     runuser = ({ (int)QUERY(runuser), (int)QUERY(runuser) });
 
-  tmp=roxen->query("MyWorldLocation");
+  tmp=conf->query("MyWorldLocation");
   sscanf(tmp, "%*s//%s", tmp);
   sscanf(tmp, "%s:", tmp);
   sscanf(tmp, "%s/", tmp);
@@ -187,7 +189,7 @@ void start()
   env["SERVER_SOFTWARE"]=roxen->version();
   env["GATEWAY_INTERFACE"]="CGI/1.1";
   env["SERVER_PROTOCOL"]="HTTP/1.0";
-  env["SERVER_URL"]=roxen->query("MyWorldLocation");
+  env["SERVER_URL"]=conf->query("MyWorldLocation");
   env["AUTH_TYPE"]="Basic";
   us = ({ "", "" });
 

@@ -1,6 +1,6 @@
 /* Bugs by: Per */
 
-string cvs_version = "$Id: swedish.pike,v 1.5 1997/01/28 12:05:28 per Exp $";
+string cvs_version = "$Id: swedish.pike,v 1.6 1997/01/29 04:59:40 per Exp $";
 string month(int num)
 {
   return ({ "januari", "februari", "mars", "april", "maj",
@@ -92,15 +92,15 @@ string _number(int num)
    case 21..29: case 31..39: case 41..49: 
    case 51..59: case 61..69: case 71..79: 
    case 81..89: case 91..99:
-     return number((num/10)*10)+number(num%10);
-   case 100..999: return number(num/100)+"hundra"+number(num%100);
+    return _number((num/10)*10)+_number(num%10);
+   case 100..999: return _number(num/100)+"hundra"+_number(num%100);
    case 1000..1999:
-    return number(num/1000)+"usen"+number(num%1000);
-   case 2000..999999: return number(num/1000)+"tusen"+number(num%1000);
+    return _number(num/1000)+"usen"+_number(num%1000);
+   case 2000..999999: return _number(num/1000)+"tusen"+_number(num%1000);
    case 1000000..1999999: 
-    return "en miljon"+number(num%1000000);
+    return "en miljon"+_number(num%1000000);
    case 2000000..999999999: 
-     return number(num/1000000)+"miljoner"+number(num%1000000);
+     return _number(num/1000000)+"miljoner"+_number(num%1000000);
    default:
     return "många";
   }

@@ -1,6 +1,6 @@
 mapping proxy_auth_needed(object id)
 {
-  mixed res = roxen->check_security(proxy_auth_needed, id);
+  mixed res = id->conf->check_security(proxy_auth_needed, id);
   if(res)
   {
     if(res==1) // Nope...

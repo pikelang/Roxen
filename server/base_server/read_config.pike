@@ -2,7 +2,7 @@
 
 #ifndef IN_INSTALL
 inherit "newdecode";
-string cvs_version = "$Id: read_config.pike,v 1.6 1996/12/06 23:01:17 per Exp $";
+string cvs_version = "$Id: read_config.pike,v 1.7 1997/01/29 04:59:36 per Exp $";
 #else
 # include "base_server/newdecode.pike"
 #endif
@@ -147,16 +147,16 @@ private static void read_it(string cl)
 }
 
 
-void remove( string reg ) 
+void remove( string reg , object current_configuration) 
 {
   string cl;
 #ifndef IN_INSTALL
-  if(!roxenp()->current_configuration)
+  if(!current_configuration)
 #endif
     cl="Global Variables";
 #ifndef IN_INSTALL
   else
-    cl=roxenp()->current_configuration->name;
+    cl=current_configuration->name;
 #endif
   read_it(cl);
 
@@ -182,17 +182,17 @@ void remove_configuration( string name )
   }
 }
 
-void store( string reg, mapping vars, int q )
+void store( string reg, mapping vars, int q, object current_configuration )
 {
   string cl;
   mapping m;
 #ifndef IN_INSTALL
-  if(!roxenp()->current_configuration)
+  if(!current_configuration)
 #endif
     cl="Global Variables";
 #ifndef IN_INSTALL
   else
-    cl=roxenp()->current_configuration->name;
+    cl=current_configuration->name;
 #endif
   read_it(cl);
 
@@ -210,16 +210,16 @@ void store( string reg, mapping vars, int q )
 }
 
 
-mapping retrieve(string reg)
+mapping retrieve(string reg, object current_configuration)
 {
   string cl;
 #ifndef IN_INSTALL
-  if(!roxenp()->current_configuration)
+  if(!current_configuration)
 #endif
     cl="Global Variables";
 #ifndef IN_INSTALL
   else
-    cl=roxenp()->current_configuration->name;
+    cl=current_configuration->name;
 #endif
   
   read_it(cl);

@@ -7,8 +7,8 @@
 #define _ROXEN_CONFIG_H_
 
 
-#if efun(thread_create) && efun(Queue)
-//#define THREADS
+#if efun(thread_create)
+//# define THREADS
 #endif
 
 

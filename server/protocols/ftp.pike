@@ -1,5 +1,5 @@
 /* Roxen FTP protocol. Written by Pontus Hagland
-string cvs_version = "$Id: ftp.pike,v 1.4 1996/12/16 22:11:39 neotron Exp $";
+string cvs_version = "$Id: ftp.pike,v 1.5 1997/01/29 04:59:44 per Exp $";
    (law@lysator.liu.se) and David Hedbor (neotron@infovav.se).
 
    Some of the features: 
@@ -53,7 +53,6 @@ void disconnect()
 {
   if(objectp(pipe) && pipe != previous_object()) 
     destruct(pipe);
-  --roxen->num_connections;
   my_fd = 0;
   destruct(this_object());
 }
@@ -655,21 +654,23 @@ void got_data(mixed fooid, string s)
   }
 }
 
-void assign(object f, object c)
+void create(object f, object c)
 {
-  string fi;
-  ++roxen->num_connections;
-  conf = c;
-  my_fd = f;
-  my_fd->set_id(0);
-  my_fd->set_nonblocking(got_data, lambda(){}, end);
-  not_query = "/welcome.msg";
-  call_out(end, 3600);
-  
-  if((fi = roxen->try_get_file("/welcome.msg", this_object())) ||
-     (fi = roxen->try_get_file("/.message", this_object())))
-    reply(reply_enumerate(fi, "220"));
-  else
-    reply(reply_enumerate(Query("FTPWelcome"),"220"));
+  if(f)
+  {
+    string fi;
+    conf = c;
+    my_fd = f;
+    my_fd->set_id(0);
+    my_fd->set_nonblocking(got_data, lambda(){}, end);
+    not_query = "/welcome.msg";
+    call_out(end, 3600);
+    
+    if((fi = roxen->try_get_file("/welcome.msg", this_object())) ||
+       (fi = roxen->try_get_file("/.message", this_object())))
+      reply(reply_enumerate(fi, "220"));
+    else
+      reply(reply_enumerate(Query("FTPWelcome"),"220"));
+  }
 }
 
