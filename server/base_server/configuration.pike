@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.110 1998/03/11 19:42:33 neotron Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.111 1998/03/20 03:34:09 per Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -2034,7 +2034,6 @@ object enable_module( string modname )
   string id;
   mapping module;
   mapping enabled_modules;
-
   roxen->current_configuration = this_object();
   modname = replace(modname, ".lpc#","#");
   
@@ -2047,6 +2046,7 @@ object enable_module( string modname )
     module = modules[ modname ];
   }
 
+  int start_time = gethrtime();
   if( module )
   {
     object me;
@@ -2055,7 +2055,7 @@ object enable_module( string modname )
     array err;
 
 #ifdef MODULE_DEBUG
-    perror("Modules: Enabling "+module->name+" # "+id+" ... ");
+    perror("Enabling "+module->name+" # "+id+" ... ");
 #endif
 
     if(module->copies)
@@ -2095,7 +2095,7 @@ object enable_module( string modname )
     }
 
 #ifdef MODULE_DEBUG
-    perror("Initializing ");
+    //    perror("Initializing ");
 #endif
     if (module->type & (MODULE_LOCATION | MODULE_EXTENSION |
 			MODULE_FILE_EXTENSION | MODULE_LOGGER |
@@ -2318,10 +2318,14 @@ object enable_module( string modname )
       enabled_modules[modname+"#"+id] = 1;
       store( "EnabledModules", enabled_modules, 1, this);
     }
-#ifdef MODULE_DEBUG
-    perror(" Done.\n");
-#endif 
     invalidate_cache();
+#ifdef MODULE_DEBUG
+#if efun(gethrtime)
+  perror(" Done (%3.3f seconds).\n", (gethrtime()-start_time)/1000000.0);
+#else
+  perror(" Done.\n");
+#endif
+#endif
     return me;
   }
   return 0;
@@ -2492,8 +2496,8 @@ int disable_module( string modname )
 
   if(!module) 
   {
-    report_error("Modules: Failed to disable module\n"
-		 "Modules: No module by that name: \""+modname+"\".\n");
+    report_error("Failed to disable module\n"
+		 "No module by that name: \""+modname+"\".\n");
     return 0;
   }
 
@@ -2513,14 +2517,14 @@ int disable_module( string modname )
 
   if(!me)
   {
-    report_error("Modules: Failed to Disable "+module->name+" # "+id+"\n");
+    report_error("Failed to Disable "+module->name+" # "+id+"\n");
     return 0;
   }
 
   if(me->stop) me->stop();
 
 #ifdef MODULE_DEBUG
-  perror("Modules: Disabling "+module->name+" # "+id+"\n");
+  perror("Disabling "+module->name+" # "+id+"\n");
 #endif
 
   if(module["type"] & MODULE_EXTENSION 
@@ -2648,11 +2652,13 @@ int load_module(string module_file)
   mapping loaded_modules;
   object obj;
   program prog;
-
+#if efun(gethrtime)
+  int start_time = gethrtime();
+#endif
   // It is not thread-safe to use this.
   roxen->current_configuration = this_object();
 #ifdef MODULE_DEBUG
-  perror("Modules: Loading " + module_file + "... ");
+  perror("\nLoading " + module_file + "... ");
 #endif
 
   if(prog=cache_lookup("modules", module_file)) {
@@ -2669,7 +2675,7 @@ int load_module(string module_file)
 				  this_object());
     };
 
-    string errors = _master->errors;
+    string errors = (string)_master->errors;
 
     _master->set_inhibit_compile_errors(0);
 
@@ -2774,7 +2780,11 @@ int load_module(string module_file)
   tmpp->sname=module_file;
       
 #ifdef MODULE_DEBUG
-  perror(" Done ("+search(_master->programs,prog)+").\n");
+#if efun(gethrtime)
+  perror(" Done (%3.3f seconds).\n", (gethrtime()-start_time)/1000000.0);
+#else
+  perror(" Done.\n");
+#endif
 #endif
   cache_set("modules", module_file, modules[module_file]["program"]);
 // ??  invalidate_cache();
@@ -2910,6 +2920,9 @@ private string get_my_url()
 
 void enable_all_modules()
 {
+#if efun(gethrtime)
+  int start_time = gethrtime();
+#endif
   array modules_to_process=sort(indices(retrieve("EnabledModules",this)));
   string tmp_string;
   perror("\nEnabling all modules for "+query_name()+"... \n");
@@ -2928,6 +2941,10 @@ void enable_all_modules()
 #endif
 	);
   roxen->current_configuration = 0;
+#if efun(gethrtime)
+  perror("\nAll modules for %s enabled in %4.3f seconds\n\n", query_name(),
+	 (gethrtime()-start_time)/1000000.0);
+#endif
 }
 
 void create(string config)
