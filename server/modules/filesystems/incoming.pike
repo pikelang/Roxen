@@ -3,7 +3,7 @@
 
 inherit "modules/filesystems/filesystem";
 
-constant cvs_version= "$Id: incoming.pike,v 1.3 1998/04/06 19:01:42 grubba Exp $";
+constant cvs_version= "$Id: incoming.pike,v 1.4 1998/07/25 04:20:44 neotron Exp $";
 
 
 static class decaying_file {
@@ -170,3 +170,4 @@ mixed find_file( string f, object id )
   report_error("Not reached..\n");
   return 0;
 }
+ 

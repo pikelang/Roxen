@@ -4,7 +4,7 @@
 
 #ifndef IN_INSTALL
 inherit "newdecode";
-// string cvs_version = "$Id: read_config.pike,v 1.22 1998/05/07 22:07:51 grubba Exp $";
+// string cvs_version = "$Id: read_config.pike,v 1.23 1998/07/25 04:20:43 neotron Exp $";
 #else
 import spider;
 # define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
@@ -15,7 +15,7 @@ import spider;
 // import Stdio;
 
 mapping (string:mapping) configs = ([ ]);
-
+mapping (string:array(int)) config_stat_cache = ([]);
 string configuration_dir; // Set by Roxen.
 
 mapping copy_configuration(string from, string to)
@@ -94,6 +94,7 @@ void save_it(string cl)
 #endif
 	  "\n");
   }
+  config_stat_cache[cl] = fd->stat();
   catch(fd->close("w"));
   destruct(fd);
 }
@@ -136,7 +137,18 @@ void fix_config(mixed c)
     else if (multisetp(l)) perror("Warning; illegal value of config\n");
   }
 }
-
+array config_is_modified(string cl)
+{
+  array st = file_stat(configuration_dir + replace(cl, " ", "_"));
+  
+  if(st)
+    if(!config_stat_cache[cl])
+      return st;
+    else
+      foreach( ({ 1, 3, 5, 6 }), int i)
+	if(st[i] != config_stat_cache[cl][i])
+	  return st;
+}
 private static void read_it(string cl)
 {
   if(configs[cl]) return;
@@ -147,21 +159,20 @@ private static void read_it(string cl)
 #endif
 
   mixed err;
-
   err = catch {
     fd = open(configuration_dir + replace(cl, " ", "_"), "r");
-
     if(!fd)
     {
       fd = open(configuration_dir + cl, "r");
       if(fd) rm(configuration_dir + cl);
     }
   
-    if(!fd)
+    if(!fd) {
       configs[cl] = ([ ]);
-    else
-    {
+      m_delete(config_stat_cache, cl);
+      } else {
       configs[cl] = decode_config_file( fd->read( 0x7fffffff ));
+      config_stat_cache[cl] = fd->stat();
       fd->close("rw");
       fix_config(configs[cl]);
       destruct(fd);
@@ -224,7 +235,7 @@ void store( string reg, mapping vars, int q, object current_configuration )
     cl=current_configuration->name;
 #endif
   read_it(cl);
-
+  
   if(q)
     configs[cl][reg] = copy_value(vars);
   else

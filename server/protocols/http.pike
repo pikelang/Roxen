@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.108 1998/07/14 21:41:33 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.109 1998/07/25 04:20:45 neotron Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -1316,7 +1316,7 @@ void create(object f, object c)
 {
   if(f)
   {
-    f->set_blocking();
+    f->set_nonblocking();
     my_fd = f;
     conf = c;
     MARK_FD("HTTP connection");

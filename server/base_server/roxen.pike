@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.225 1998/07/23 19:02:15 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.226 1998/07/25 04:20:43 neotron Exp $";
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
@@ -1412,6 +1412,93 @@ private void update_global_vars(int from)
   report_debug(report);
 }
 
+void reload_all_configurations()
+{
+  object conf;
+  array (object) new_confs = ({});
+  mapping config_cache = ([]);
+  //  werror(sprintf("%O\n", roxen->config_stat_cache));
+  int modified;
+
+  report_notice("Reloading configuration files from disk\n");
+  roxen->configs = ([]);
+  roxen->setvars(roxen->retrieve("Variables", 0));
+  roxen->initiate_configuration_port( 0 );
+
+  foreach(roxen->list_all_configurations(), string config)
+  {
+    array err, st;
+    foreach(roxen->configurations, conf)
+    {
+      if(lower_case(conf->name) == lower_case(config))
+      {
+	break;
+      } else
+	conf = 0;
+    }
+    if(!(st = roxen->config_is_modified(config))) {
+      if(conf) {
+	config_cache[config] = roxen->config_stat_cache[config];
+	new_confs += ({ conf });
+      }
+      continue;
+    }
+    modified = 1;
+    config_cache[config] = st;
+    if(conf) {
+      // Closing ports...
+      if (conf->server_ports) {
+	// Roxen 1.2.26 or later
+	Array.map(values(conf->server_ports), conf->do_dest);
+      } else {
+	Array.map(indices(conf->open_ports), conf->do_dest);
+      }
+      conf->stop();
+      conf->invalidate_cache();
+      conf->modules = ([]);
+      conf->create(conf->name);
+    } else {
+      if(err = catch
+      {
+	conf = roxen->enable_configuration(config);
+      }) {
+	report_error("Error while enabling configuration "+config+":\n"+
+		     describe_backtrace(err)+"\n");
+	continue;
+      }
+    }
+    if(err = catch
+    {
+      conf->start();
+      conf->enable_all_modules();
+    }) {
+      report_error("Error while enabling configuration "+config+":\n"+
+		   describe_backtrace(err)+"\n");
+      continue;
+    }
+    new_confs += ({ conf });
+  }
+    
+  foreach(roxen->configurations - new_confs, conf)
+  {
+    modified = 1;
+    report_notice("Disabling old configuration "+conf->name+"\n");
+    if (conf->server_ports) {
+      // Roxen 1.2.26 or later
+      Array.map(values(conf->server_ports), conf->do_dest);
+    } else {
+      Array.map(indices(conf->open_ports), conf->do_dest);
+    }
+    conf->stop();
+    destruct(conf);
+  }
+  if(modified) {
+    roxen->configurations = new_confs;
+    roxen->config_stat_cache = config_cache;
+    roxen->unload_configuration_interface();
+  }
+}
+
 object enable_configuration(string name)
 {
   object cf = Configuration(name);
@@ -2510,9 +2597,10 @@ int main(int|void argc, array (string)|void argv)
 #endif /* THREADS */
 
   // Signals which cause a restart (exitcode != 0)
-  foreach( ({ "SIGUSR1", "SIGUSR2", "SIGHUP", "SIGINT" }), string sig) {
+  foreach( ({ "SIGUSR1", "SIGUSR2", "SIGINT" }), string sig) {
     catch { signal(signum(sig), exit_when_done); };
   }
+  catch { signal(signum("SIGHUP"), reload_all_configurations); };
   // Signals which cause a shutdown (exitcode == 0)
   foreach( ({ "SIGQUIT" }), string sig) {
     catch { signal(signum(sig), kill_me); };
