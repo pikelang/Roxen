@@ -7,7 +7,7 @@
 //  return "Hello world!\n";
 // </pike>
  
-constant cvs_version = "$Id: piketag.pike,v 2.8 2000/08/09 02:33:09 per Exp $";
+constant cvs_version = "$Id: piketag.pike,v 2.9 2000/08/09 03:05:15 per Exp $";
 constant thread_safe=1;
 
 inherit "module";
@@ -114,19 +114,21 @@ string functions(string page, int line)
 }
 
 // Preamble
-string pre(string what, object id)
+string pre(array fl, object id)
 {
-  if(search(what, " parse(") != -1)
-    return functions(id->not_query, id->misc->line);
-    return functions(id->not_query, id->misc->line) +
-           "string|int parse(RequestID id) { ";
+  foreach( fl, object token )
+    if( token == "parse" )
+      return functions(id->not_query, id->misc->line);
+  return functions(id->not_query, id->misc->line) +
+         "string|int parse(RequestID id) { ";
 }
 
 // Will be added at the end...
-string post(string what) 
+string post(array fl) 
 {
-  if(search(what, " parse(") != -1)
-    return "";
+  foreach( fl, object token )
+    if( token == "parse" )
+      return "";
   return "}";
 }
 
@@ -148,17 +150,24 @@ string simpletag_pike(string tag, mapping m, string s,RequestID request_id )
 
   request_id->misc->cacheable=0;
 
+  array flat=Parser.C.hide_whitespaces(Parser.C.tokenize(Parser.C.split(s)));
+
   object e = ErrorContainer();
   master()->set_inhibit_compile_errors(e);
   if(err=catch 
   {
-    s = pre(s,request_id)+s+post(s);
+    for( int i = 0; i<sizeof( flat ); i++ )
+      if( flat[i] == "." && flat[++i] != "." )
+        flat[i-1]->text = "->";
+
+    s = pre(flat,request_id)+Parser.C.simple_reconstitute( flat )+post(flat);
     p = program_cache[s];
 
     if (!p) 
     {
       // Not in the program cache.
       object key = Roxen.add_scope_constants();
+
       p = compile_string(s, "Pike-tag("+request_id->not_query+":"+
                          request_id->misc->line+")");
       destruct( key );
