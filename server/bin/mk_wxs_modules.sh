@@ -1,6 +1,6 @@
 #/bin/sh
 #
-# $Id: mk_wxs_modules.sh,v 1.4 2004/11/10 14:23:34 grubba Exp $
+# $Id: mk_wxs_modules.sh,v 1.5 2004/11/14 13:19:00 grubba Exp $
 #
 # Make a set of Windows Installer XML source module files
 # from a typical roxen module layout.
@@ -62,21 +62,21 @@ done
 if [ "$server_dirs" = "" ]; then :; else
   echo server_dirs: $server_dirs
 
-  $PIKE -x make_wxs -v$version -m "Roxen Internet Software" -i Foo \
-    $server_dirs >"$base"_server.wxs || \
-    ( cat "$base"_server.wxs >&2; exit 1)
+  eval "$PIKE" -x make_wxs -v$version -m '"Roxen Internet Software"' -i Foo \
+    "$server_dirs" >"$base"_server.wxs || \
+    ( cat "$base"_server.wxs >&2; exit 1) || exit 1
 
-  sprsh candle -nologo "$base"_server.wxs
-  sprsh light -nologo "$base"_server.wixobj
+  sprsh candle -nologo "$base"_server.wxs -out "$base"_server.wixobj || exit 1
+  sprsh light -nologo "$base"_server.wixobj -o "$base"_server.msm || exit 1
 fi
 
 if [ "$root_files" = "" ]; then :; else
   echo root_files: $root_files
 
-  $PIKE -x make_wxs -v$version -m "Roxen Internet Software" -i Foo \
-    $root_files >"$base"_root.wxs || \
-    ( cat "$base"_root.wxs >&2; exit 1)
+  eval "$PIKE" -x make_wxs -v$version -m '"Roxen Internet Software"' -i Foo \
+    "$root_files" >"$base"_root.wxs || \
+    ( cat "$base"_root.wxs >&2; exit 1) || exit 1
 
-  sprsh candle -nologo "$base"_root.wxs
-  sprsh light -nologo "$base"_root.wixobj
+  sprsh candle -nologo "$base"_root.wxs -out "$base"_root.wixobj || exit 1
+  sprsh light -nologo "$base"_root.wixobj -o "$base"_root.msm || exit 1
 fi
