@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.284 2000/03/20 03:47:08 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.285 2000/03/20 04:08:19 nilsson Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -2072,7 +2072,7 @@ int|string try_get_file(string s, RequestID id,
       s + "\0" +
       id->request_headers->cookie + "\0" +
       id->request_headers["user-agent"];
-    if(res = cache_lookup("file:"+id->conf->name, cache_key))
+    if(res = cache_lookup("file:"+name, cache_key))
       return res;
   }
 
@@ -2131,7 +2131,7 @@ int|string try_get_file(string s, RequestID id,
       sscanf(res, "%*s\n%s", res);
   }
   if (cache_key)
-    cache_set("file:"+id->conf->name, cache_key, res);
+    cache_set("file:"+name, cache_key, res);
   return res;
 }
 
