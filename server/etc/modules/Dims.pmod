@@ -1,4 +1,4 @@
-//   $Id: Dims.pmod,v 1.4 1998/02/19 17:14:27 js Exp $
+//   $Id: Dims.pmod,v 1.5 1998/02/21 22:26:21 js Exp $
 //
 //   Imagedimensionreadermodule for Pike.
 //   Created by Johan Schön, <js@idonex.se>.
@@ -109,7 +109,7 @@ class dims
   
   array get_JPEG()
   {
-    werror("Dims.dims - get_JPEG \n");
+//    werror("Dims.dims - get_JPEG \n");
     int marker;
     /* Expect SOI at start of file */
     if (first_marker() != M_SOI)
@@ -118,7 +118,7 @@ class dims
     /* Scan miscellaneous markers until we reach SOS. */
     for (;;)
     {
-      werror("Dims.dims - next_marker \n");
+//      werror("Dims.dims - next_marker \n");
       marker = next_marker();
       switch (marker) {
        case M_SOF0:		/* Baseline */
@@ -213,7 +213,7 @@ class dims
       else
 	return 0;
     };
-    werror("Dims.dims - catch \n");
+//    werror("Dims.dims - catch \n");
     return 0;
   }
 }
