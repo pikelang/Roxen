@@ -1,15 +1,15 @@
 /*
- * $Id: flush.pike,v 1.2 2000/02/13 16:27:51 per Exp $
+ * $Id: flush.pike,v 1.3 2000/03/23 00:40:09 mast Exp $
  */
 #include <config_interface.h>
 
 constant action = "maintenance";
 
 constant name= "Flush caches";
-constant name_svenska= "Töm cachear";
+constant name_svenska= "Töm cacher";
 
-constant doc = ("Flush all memory caches");
-constant doc_svenska = ("Töm alla minnescacher");
+constant doc = ("Flush all memory caches.");
+constant doc_svenska = ("Töm alla minnescacher.");
 
 mixed doit()
 {
@@ -43,5 +43,5 @@ mixed parse(object id)
 {
   doit();
   return "&locale.all_memory_caches_flushed; "
-         "<p><submit-gbutton> &locale.ok; </submit-gbutton>";
+         "<p><cf-ok>";
 }
