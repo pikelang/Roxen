@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
 
 #include <module.h>
-constant cvs_version = "$Id: relay2.pike,v 1.26 2002/04/20 10:50:31 jhs Exp $";
+constant cvs_version = "$Id: relay2.pike,v 1.27 2002/04/20 10:57:22 jhs Exp $";
 
 inherit "module";
 constant module_type = MODULE_FIRST|MODULE_LAST;
@@ -459,7 +459,7 @@ void start( int i, Configuration c )
          case "extension":
            tokens = tokens[1..];
            tokens[1] += "\\1."+tokens[0]+"\\2";
-           tokens[0] = "([^?]*)\\."+
+           tokens[0] = "^([^?]*)\\."+
                      replace(tokens[0],
                              ({"*", ".", "?" }),
                              ({ "\\*", "\\.", "\\?" }) )
