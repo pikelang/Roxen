@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.150 2000/08/07 20:59:11 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.151 2000/08/10 15:40:56 kuntri Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -2940,10 +2940,56 @@ Sets a variable.</short>
 </attr>",
 
 "if#expr":#"<desc plugin><short>
- Evaluates expressions.</short> It is not possible to use regexp's.
- The following characters may be used: \"1, 2, 3, 4, 5, 6, 7, 8, 9, x,
- a, b, c, d, e, f, i, n, t, \, X. A, B, C, D, E, F, l, o, &lt;, &gt;,
- =, 0, -, +, *, /, %, &, |, (, ) and .\". Expr is an <i>Eval</i> plugin.
+
+ This plugin evaluates expressions.</short> The arithmetic operators
+ are \"+, - and /\". The last main operator is \"%\"(per cent). The
+ allowed relationship operators are \"&lt;. &gt;, ==, &lt;= and
+ &gt;=\".
+
+ <p>All integers(characters 0 to 9) may be used together with
+ \".\" to create floating point expressions.</p>
+
+ <p>
+ <ex type='box'>
+   Hexadecimal expression: (0xff / 5) + 3
+ </ex>
+ To be able to evaluate hexadecimal expressions the characters \"a
+ to f and A to F\" may be used.</p>
+
+ <p>
+ <ex type='box'>
+   Integer conversion: ((int) 3.14)
+   Floating point conversion: ((float) 100 / 7)
+ </ex>
+
+ Conversion between int and float may be done through the operators
+ \"(int)\" and \"(float)\". The operators \"&\"(bitwise and),
+ \"|\"((pipe)bitwise or), \"&&\"(logical and) and \"||\"((double
+ pipe)logical or) may also be used in expressions. To set
+ prioritizations within expressions the characters \"( and )\" are
+ included. General prioritization rules are:
+
+ <list type='ol'>
+ <item>(int), (float)</item>
+ <item>*, /, %</item>
+ <item>+, -</item>
+ <item>&lt;, &gt;, &lt;=, &gt;=\</item>
+ <item>==</item>
+ <item>&, |</item>
+ <item>&&, ||</item>
+ </list></p>
+
+ <p>
+ <ex type='box'>
+   Octal expression: 045
+ </ex>
+ <ex type='box'>
+   Calculator expression: 3.14e10 / 3
+ </ex>
+ Expressions containing octal numbers may be used. It is also
+ possible to evaluate calculator expressions.</p>
+
+ <p>Expr is an <i>Eval</i> plugin.</p>
 </desc>
 <attr name='expr' value='expression'>
  Choose what expression to test.
