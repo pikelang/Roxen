@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.104 1999/11/04 15:54:04 grubba Exp $
+ * $Id: roxenloader.pike,v 1.105 1999/11/04 16:44:59 grubba Exp $
  *
  * Roxen bootstrap program.
  *
@@ -20,7 +20,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.104 1999/11/04 15:54:04 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.105 1999/11/04 16:44:59 grubba Exp $";
 
 #define perror roxen_perror
 
@@ -899,6 +899,7 @@ int main(int argc, array argv)
   add_constant("open_db", open_db);
   add_constant("ErrorContainer", class 
   {
+    string d;
     string errors="";
     string get()
     {
@@ -906,8 +907,10 @@ int main(int argc, array argv)
     }
     void got_error(string file, int line, string err)
     {
-       string e = sprintf("%s:%d\t%s\n", file-getcwd(), line, err);
-      errors += e;
+      if (file[..sizeof(d)-1] == d) {
+	file = file[d..];
+      }
+      errors += sprintf("%s:%d\t%s\n", file, line, err);
     }
     void handle_error(string file, int line, string err)
     {
@@ -916,6 +919,13 @@ int main(int argc, array argv)
     void handle_warning(string file, int line, string err)
     {
       got_error(file, line, "Warning: " + err);
+    }
+    void create()
+    {
+      d = getcwd();
+      if (sizeof(d) && (d[-1] != '/') && (d[-1] != '\\')) {
+	d += "/";
+      }
     }
   });
   add_constant("spawne",spawne);
