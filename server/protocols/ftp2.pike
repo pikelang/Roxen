@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.10 1998/04/29 15:46:37 grubba Exp $
+ * $Id: ftp2.pike,v 1.11 1998/04/29 20:05:34 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -98,9 +98,9 @@
 #endif /* FTP2_DEBUG */
 
 #if constant(thread_create)
-#define BACKEND_CLOSE(FD)	do { call_out(FD->close, 0); FD = 0; } while(0)
+#define BACKEND_CLOSE(FD)	do { FD->set_blocking(); call_out(FD->close, 0); FD = 0; } while(0)
 #else /* !constant(thread_create) */
-#define BACKEND_CLOSE(FD)	do { FD->close(); FD = 0; } while(0)
+#define BACKEND_CLOSE(FD)	do { FD->set_blocking(); FD->close(); FD = 0; } while(0)
 #endif /* constant(thread_create) */
 
 class RequestID
