@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.3 1996/12/04 06:06:34 per Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.4 1996/12/06 10:55:43 neotron Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -170,8 +170,8 @@ object (Image) bevel(object (Image) in, int width)
 
   in->paste_alpha(Image(width,h-width*2,@white), 160, 0, width);
   in->paste_alpha(Image(width,h-width*2,@black), 128, in->xsize()-width, width);
-  in->paste_alpha(Image(w-width*2,width,@white), 160, 0, 0);
-  in->paste_alpha(Image(w-width*2,width,@black), 128, width, in->ysize()-width);
+  in->paste_alpha(Image(w-width,width,@white), 160, 0, 0);
+  in->paste_alpha(Image(w-width,width,@black), 128, width, in->ysize()-width);
 
   object corner = Image(width+1,width+1);
   for(int i=-1; i<=width; i++) corner->line(i,width-i,i,-1, 200,200,200);
