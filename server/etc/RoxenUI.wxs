@@ -1170,7 +1170,7 @@ Click "Next" to start the installation.</Text>
       <InstallServices Sequence="5800">VersionNT AND INSTALL_SERVICE="1"</InstallServices>
       <StartServices Sequence="5900">VersionNT AND INSTALL_SERVICE="1" AND START_SERVER="1"</StartServices>
       <Custom Action="SetRemoveOldService" After="InstallFiles">REMOVE="" AND INSTALL_SERVICE="1"</Custom>
-      <Custom Action="RemoveOldService" After="SetRemoveOldService">REMOVE="" AND_INSTALL_SERVICE="1"</Custom>
+      <Custom Action="RemoveOldService" After="SetRemoveOldService">REMOVE="" AND INSTALL_SERVICE="1"</Custom>
       <Custom Action="SetCreateConfigInterface" Sequence="5100">REMOVE=""</Custom>
       <Custom Action="CreateConfigInterface" After="SetCreateConfigInterface">REMOVE=""</Custom>
       <Custom Action="SetCreatePikeLocation" After="CreateConfigInterface">REMOVE=""</Custom>
