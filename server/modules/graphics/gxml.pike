@@ -8,7 +8,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.9 2001/04/03 15:54:40 per Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.10 2001/04/08 23:09:26 per Exp $";
 constant module_type = MODULE_TAG;
 
 LocaleString module_name = _(0,"Graphics: GXML tag");
@@ -46,10 +46,27 @@ Image.Layer generate_image( mapping a, string hash, RequestID id )
     error( "Oops! This was not what we expected.\n" );
 
   ll = m_delete(images,hash)->run( );
-  mapping e = LazyImage.layers_extents( ll );
 
+  mapping e;
+  if( a->size )
+  {
+    string gl;
+    if( sscanf( a->size, "layers(%s)", gl ) )
+      e = LazyImage.layers_extents( LazyImage.find_layers( gl, ll ) );
+    else if( sscanf( a->size, "layers-id(%s)", gl ) )
+      e = LazyImage.layers_extents( LazyImage.find_layers_id( gl, ll ) );
+    else
+    {
+      e = ([]);
+      if( sscanf( a->size, "(%d,%d)-(%d,%d)", e->x, e->y, e->x1, e->y1 ) != 4)
+	if( sscanf( a->size, "%d,%d", e->x1, e->y1 ) != 2)
+	  e = LazyImage.layers_extents( ll );;
+    }
+  } else
+    e = LazyImage.layers_extents( ll );
+  
   // Crop to the left so that 0,0 is uppmost left corner.
-  return Image.lay( ll, 0, 0, e->x1, e->y1 );
+  return Image.lay( ll, e->x0, e->y0, e->x1, e->y1 );
 }
 
 
