@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.131 1999/12/20 11:46:46 nilsson Exp $
+ * $Id: roxenloader.pike,v 1.132 1999/12/21 16:47:02 per Exp $
  *
  * Roxen bootstrap program.
  *
@@ -19,7 +19,7 @@ private static object new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.131 1999/12/20 11:46:46 nilsson Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.132 1999/12/21 16:47:02 per Exp $";
 
 int pid = getpid();
 object stderr = Stdio.File("stderr");
@@ -1044,6 +1044,8 @@ void paranoia_throw(mixed err)
 // Roxen bootstrap code.
 int main(int argc, array argv)
 {
+  mixed err = 
+  catch{
 #ifdef NOT_INSTALLED
 report_debug(
 #"
@@ -1127,11 +1129,24 @@ Please install a newer pike version
   add_constant( "ST_CTIME", ST_CTIME );
   add_constant( "ST_SIZE",  ST_SIZE );
 
+  
+  if( search( argv, "--long-error-file-names" ) != -1 )
+  {
+    argv -= ({ "--long-error-file-names" });
+    argc = sizeof(argv);
+    new_master->long_file_names = 1;
+    new_master->putenv("LONG_PIKE_ERRORS", "yup");
+  }
+
   initiate_cache();
   load_roxen();
+
   int retval = roxen->main(argc,argv);
   report_debug("\n-- Total boot time %2.1f seconds ---------------------------\n",
 	       (gethrtime()-start_time)/1000000.0);
   write_current_time();
   return(retval);
+  };
+  array q = (array)err;
+  throw( ({ q[0], q[1][2..] }) );
 }

@@ -1,7 +1,7 @@
 /*
  * Roxen master
  */
-string cvs_version = "$Id: roxen_master.pike,v 1.63 1999/12/09 01:51:24 grubba Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.64 1999/12/21 16:47:24 per Exp $";
 
 /*
  * name = "Roxen Master";
@@ -350,6 +350,7 @@ string stupid_describe(mixed m, int maxlen)
 
 
 constant bt_max_string_len = 99999999;
+int long_file_names;
 
 string describe_backtrace(mixed trace, void|int linewidth)
 {
@@ -393,7 +394,10 @@ string describe_backtrace(mixed trace, void|int linewidth)
 	  string pos;
 	  if(sizeof(tmp)>=2 && stringp(tmp[0]) && intp(tmp[1]))
 	  {
-	    pos=trim_file_name(tmp[0])+":"+tmp[1];
+            if( !long_file_names )
+              pos=trim_file_name(tmp[0])+":"+tmp[1];
+            else
+              pos=tmp[0]+":"+tmp[1];
 	  }else{
 	    mixed desc="Unknown program";
 	    if(sizeof(tmp)>=3 && functionp(tmp[2]))
