@@ -128,6 +128,7 @@ string fix_module_name( string what )
 mapping has;
 int no_double_(string what )
 {
+  if(what == "") return 0;
   has[what]++;
   if( what[0] == '_' && has[what[1..]] )
     return 0;
