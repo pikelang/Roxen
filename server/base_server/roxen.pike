@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.605 2001/01/03 05:59:52 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.606 2001/01/04 08:48:57 nilsson Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -1619,11 +1619,10 @@ class ImageCache
   mapping meta_cache = ([]);
 
   string documentation(void|string tag_n_args) {
-    Stdio.File doc_file;
-    if(!(doc_file=Stdio.File("base_server/image_cache.xml"))) return "";
-    string doc=doc_file->read();
+    string doc = Stdio.read_file("base_server/image_cache.xml");
+    if(!doc) return "";
     if(!tag_n_args)
-      return Parser.HTML()->add_container("ex", "")->feed(doc)->read();
+      return Parser.HTML()->add_container("ex", "")->finish(doc)->read();
     return replace(doc, "###", tag_n_args);
   }
 
@@ -1934,52 +1933,43 @@ class ImageCache
       data = reply->data;
       if( !meta || !data )
         error("Invalid reply mapping.\n"
-              "Should be ([ \"meta\": ([metadata]), \"data\":\"data\" ])\n");
+              "Expected ([ \"meta\": ([metadata]), \"data\":\"data\" ])\n"
+	      "Got %O\n", reply);
     }
     // Avoid throwing and error if the same image is rendered twice.
-    catch(store_meta( name, meta ));
-    catch(store_data( name, data ));
+    catch(store_data( name, data, meta ));
   }
 
-
-  static void store_meta( string id, mapping meta )
-  {
-    meta_cache_insert( id, meta );
-    string data = encode_value( meta );
-    db->query( "INSERT INTO "+name+"_meta VALUES ('"+id+"', '"+
-               db->quote( data )+"')" );
-  }
-
-  static void store_data( string id, string data )
+  static void store_data( string id, string data, mapping meta )
   {
     if(!stringp(data)) return;
+    meta_cache_insert( id, meta );
+    string meta_data = encode_value( meta );
 
     db->query( "INSERT INTO "+name+"_data VALUES ('"+id+"', '"+
-               db->quote(data)+"')" );
+               db->quote(meta_data) + "','" + db->quote(data)+"')" );
     db->query( "INSERT INTO "+name+" VALUES ('"+id+"', "+strlen(data)+
 	       ", UNIX_TIMESTAMP(), UNIX_TIMESTAMP())" );
   }
 
   static mapping restore_meta( string id )
   {
-    Stdio.File f;
     if( meta_cache[ id ] )
       return meta_cache[ id ];
 
-    array(mapping(string:string)) q = db->query("SELECT data FROM %s_meta WHERE id='%s'",
+    array(mapping(string:string)) q = db->query("SELECT meta FROM %s_data WHERE id='%s'",
 					       name, id);
     db->query("UPDATE "+name+" SET atime=UNIX_TIMESTAMP() WHERE id='"+id+"'" );
 
     if(!sizeof(q))
       return 0;
-    string s = q[0]->data;
+    string s = q[0]->meta;
     mapping m;
     if (catch (m = decode_value (s)))
     {
       report_error( "Corrupt data in cache-entry "+id+".\n" );
       db->query( "DELETE FROM "+name+" WHERE id='"+id+"'" );
       db->query( "DELETE FROM "+name+"_data WHERE id='"+id+"'" );
-      db->query( "DELETE FROM "+name+"_meta WHERE id='"+id+"'" );
       return 0;
     }
     return meta_cache_insert( id, m );
@@ -1996,7 +1986,6 @@ class ImageCache
     {
       db->query( "DELETE FROM "+name );
       db->query( "DELETE FROM "+name+"_data" );
-      db->query( "DELETE FROM "+name+"_meta" );
       return;
     }
 
@@ -2009,7 +1998,6 @@ class ImageCache
 
       db->query( "DELETE FROM "+name+     " WHERE id in ('"+list+"')" );
       db->query( "DELETE FROM "+name+"_data WHERE id in ('"+list+"')" );
-      db->query( "DELETE FROM "+name+"_meta WHERE id in ('"+list+"')" );
     }
 
     catch
@@ -2018,9 +2006,11 @@ class ImageCache
       // them, really, but it might be nice not to throw an error, at
       // least.
       db->query( "OPTIMIZE TABLE "+name+"_data" );
-      db->query( "OPTIMIZE TABLE "+name+"_meta" );
       db->query( "OPTIMIZE TABLE "+name );
     };
+
+    data_cache = ([]);
+    meta_cache = ([]);
   }
 
   array(int) status(int|void age)
@@ -2050,24 +2040,37 @@ class ImageCache
   static mapping restore( string id )
   {
     mixed f;
+    mapping m;
 
-    if( data_cache[ id ] )
+    if( data_cache[ id ] ) {
       f = data_cache[ id ];
+      m = restore_meta( id );
+
+      if(!m)
+	return 0;
+    }
     else
     {
       array(mapping(string:string)) q =
-	db->query( "SELECT data FROM %s_data WHERE id='%s'",
+	db->query( "SELECT data,meta FROM %s_data WHERE id='%s'",
 		   name, id );
-      if( sizeof(q) )
+      if( sizeof(q) ) {
         f = q[0]->data;
+	if( catch( m = decode_value(q[0]->meta) ) ) {
+	  report_error( "Corrupt data in cache-entry "+id+".\n" );
+	  db->query( "DELETE FROM "+name+" WHERE id='"+id+"'" );
+	  db->query( "DELETE FROM "+name+"_data WHERE id='"+id+"'" );
+	  return 0;
+	}
+      }
       else
         return 0;
+
+      if(m)
+	db->query("UPDATE "+name+" SET atime=UNIX_TIMESTAMP() WHERE id='"+id+"'" );
+      else
+	return 0;
     }
-
-    mapping m = restore_meta( id );
-
-    if(!m)
-      return 0;
 
     return Roxen.http_string_answer( f, m->type||("image/gif") );
   }
@@ -2193,10 +2196,7 @@ class ImageCache
 
       db->query("CREATE TABLE "+name+"_data ("
                 "id CHAR(64) NOT NULL PRIMARY KEY, "
-                "data MEDIUMBLOB NOT NULL DEFAULT '')");
-
-      db->query("CREATE TABLE "+name+"_meta ("
-                "id CHAR(64) NOT NULL PRIMARY KEY, "
+		"meta MEDIUMBLOB NOT NULL DEFAULT '',"
                 "data MEDIUMBLOB NOT NULL DEFAULT '')");
     }
   }
