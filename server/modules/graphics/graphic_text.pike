@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.215 2000/03/16 03:01:23 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.216 2000/03/18 19:04:11 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -665,14 +665,11 @@ constant textarg=({"afont",
 		   "bold",
 		   "bshadow",
 		   "chisel",
-		   "crop",
 		   "encoding",
 		   "fadein",
 		   "fgcolor",
-		   "fs",
 		   "font",
 		   "font-size",
-                   "format",
 		   "ghost",
 		   "glow",
 		   "italic",
@@ -685,7 +682,6 @@ constant textarg=({"afont",
 		   "opaque",
 		   "outline",
 		   "pressed",
-		   "quant",
 		   "rescale",
 		   "rotate",
 		   "scale",
@@ -706,14 +702,24 @@ constant textarg=({"afont",
 		   "ypad",
 		   "ysize",
 		   "yspacing"
+
+ /* generic argcache arguments */
+		   "crop",
+                   "format",
+		   "quant",
+                   "dither",
+		   "fs",
+                   "*-*",
+                   "gamma",
+
 });
 
 constant theme=({"fgcolor","bgcolor","font"});
 
 constant hreffilter=(["split":1,"magic":1,"noxml":1,"alt":1]);
 
-mapping mk_gtext_arg(mapping arg, RequestID id) {
-
+mapping mk_gtext_arg(mapping arg, RequestID id) 
+{
   mapping p=([]); //Picture rendering arguments.
 
   m_delete(arg,"src");
@@ -731,10 +737,12 @@ mapping mk_gtext_arg(mapping arg, RequestID id) {
     m_delete(arg,"border");
   }
 
+  array i = indices( arg );
   foreach(textarg, string tmp)
-    if(arg[tmp]) {
-      p[tmp]=arg[tmp],id;
-      m_delete(arg,tmp);
+    foreach( glob( tmp, i ), string a )
+    {
+      p[a]=arg[a]; // ,id
+      m_delete(arg,a);
     }
 
   foreach(theme, string tmp)
@@ -744,11 +752,11 @@ mapping mk_gtext_arg(mapping arg, RequestID id) {
   if(!p->fgcolor) p->fgcolor="#000000";
   if(!p->bgcolor) p->bgcolor="#ffffff";
 
-  if(id->misc->defines->nfont && !p->nfont) p->nfont=id->misc->gtext_nfont;
-  if(id->misc->defines->afont && !p->afont) p->afont=id->misc->gtext_afont;
-  if(id->misc->defines->bold && !p->bold) p->bold=id->misc->gtext_bold;
+  if(id->misc->defines->nfont && !p->nfont)   p->nfont=id->misc->gtext_nfont;
+  if(id->misc->defines->afont && !p->afont)   p->afont=id->misc->gtext_afont;
+  if(id->misc->defines->bold && !p->bold)     p->bold=id->misc->gtext_bold;
   if(id->misc->defines->italic && !p->italic) p->italic=id->misc->gtext_italic;
-  if(id->misc->defines->black && !p->black) p->black=id->misc->gtext_black;
+  if(id->misc->defines->black && !p->black)   p->black=id->misc->gtext_black;
   if(id->misc->defines->narrow && !p->narrow) p->narrow=id->misc->gtext_narrow;
 
   return p;
