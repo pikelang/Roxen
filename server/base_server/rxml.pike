@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.80 2000/01/25 16:48:56 mast Exp $
+ * $Id: rxml.pike,v 1.81 2000/01/25 17:29:25 nilsson Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -104,7 +104,7 @@ class Scope_roxen {
 
   array(string) _indices() {
     return ({"uptime", "uptime-days", "uptime-hours", "uptime-minutes",
-	     "hits-per-minite", "hits", "sent-mb", "sent",
+	     "hits-per-minute", "hits", "sent-mb", "sent",
              "sent-per-minute", "sent-kbit-per-second",
               "pike-version", "version", "time", "server"});
   }
