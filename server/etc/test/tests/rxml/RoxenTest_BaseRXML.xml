@@ -1341,6 +1341,31 @@ b</strlen></rxml>
 <result>312</result>
 </test>
 
+<test>
+<rxml><emit source="STESTER">&_.c;</emit></rxml>
+<result>1234</result>
+</test>
+
+<test>
+<rxml><emit source="STESTER" skiprows="2">&_.c;</emit></rxml>
+<result>1234</result>
+</test>
+
+<test>
+<rxml><emit source="STESTER" maxrows="2">&_.c;</emit></rxml>
+<result>1234</result>
+</test>
+
+<test>
+<rxml><emit source="STESTER" sort="d">&_.c;</emit></rxml>
+<result>1234</result>
+</test>
+
+<test>
+<rxml><emit source="STESTER" sort="d" skiprows="2" maxrows="1">&_.c;</emit></rxml>
+<result>1234</result>
+</test>
+
 
 <comment>Missing test: values emit plugin</comment>
 
