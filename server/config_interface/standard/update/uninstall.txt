@@ -1,7 +1,6 @@
 Installed packages:
 <rul>
-<update-package-output installed>
-  <rli>#title# <a href="update.html?page=details&details=#id#">[Details...]</a></rli>
-  <cset variable="var._&_.name;">foo</cset>
-</update-package-output>
+<update-package installed>
+  <rli>&_.title; <a href="update.html?page=details&details=&_.id;">[Details...]</a></rli>
+</update-package>
 </rul>

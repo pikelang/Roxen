@@ -2,10 +2,10 @@
   <tr valign="top">
     <td align="right"><b>&_.title;:</b></td>
     <if match="&_.type; is pre">
-      <td><pre>#&_.name;#</pre></td>
+      <td><pre><insert variable="pkg.&_.name;" /></pre></td>
     </if>
     <else>
-      <td>#&_.name;#</td>
+      <td><insert variable="pkg.&_.name;" /></td>
     </else>
   </tr>
 </define>
@@ -15,10 +15,12 @@
     <redirect to="/standard/update.html?bar" />
   </if>
 
-<update-package-output package="&form.details;">
-<headline>#title#</headline>
-</update-package-output>
-<update-package-output preparse package="&form.details;">
+<update-package package="&form.details;">
+  <table bgcolor="&usr.obox-titlebg;" width="100%">
+    <tr><td><font size="+1" color="&usr.obox-titlefg;"><b>&_.title;</b></font></td></tr>
+  </table>
+</update-package>
+<update-package package="&form.details;" scope="pkg">
 <table>
   <item title="Description" name="description" type="pre" />
   <item title="Size" name="size" />
@@ -27,7 +29,7 @@
   <item title="License" name="license" />
   <item title="Date" name="date" />
 </table>
-</update-package-output>
+</update-package>
 
 <update-package-is-downloaded package="&form.details;"
    variable="downloaded" installed_variable="installed" />

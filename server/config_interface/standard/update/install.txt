@@ -1,11 +1,11 @@
-<define tag=item>
-  <tr valign=top>
+<define tag="item">
+  <tr valign="top">
     <td align="right"><b>&_.title;:</b></td>
-    <if match="&_.type; is pre">
-      <td><pre>#&_.name;#</pre></td>
+    <if variable="_.type == pre">
+      <td><pre><insert variable="pkg.&_.name;" /></pre></td>
     </if>
     <else>
-      <td>#&_.name;#</td>
+      <td><insert variable="pkg.&_.name;" /></td>
     </else>
   </tr>
 </define>
@@ -24,7 +24,7 @@ foobar
 
 <h1>Install package</h1>
 
-<update-package-output preparse package="&form.install;">
+<update-package package="&form.install;" scope="pkg">
 <table>
   <item title="Description" name="description" type="pre" />
   <item title="Organization" name="organization" />
@@ -32,8 +32,8 @@ foobar
   <item title="License" name="license" />
   <item title="Date" name="date" />
 </table>
-</update-package-output>
-<br/>
+</update-package>
+<br />
 
 <if variable="form.show">
 

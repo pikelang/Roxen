@@ -1,9 +1,9 @@
-<define tag="package-box">
+<define tag="package-box" scope="pkg">
   <rul>
-  <update-package-output type="&_.name;">
-    <rli>#title# <a href="update.html?page=details&details=#id#">[Details...]</a></rli>
-    <cset variable="var._&_.name;">foo</cset>
-  </update-package-output>
+  <update-package type="&_.name;">
+    <rli>&_.title; <a href="update.html?page=details&details=&_.id;">[Details...]</a></rli>
+    <cset variable="var._&pkg.name;">foo</cset>
+  </update-package>
   </rul>
   <if not variable="var._&_.name;">
      <p>Currently no packages in this category</p>

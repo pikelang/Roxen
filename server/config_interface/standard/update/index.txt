@@ -1,14 +1,14 @@
 
-<define tag="cat-list">
+<define tag="cat-list" scope="cat">
   <br />
   <table bgcolor="&usr.obox-titlebg;" width="100%">
     <tr><td><font size="+1" color="&usr.obox-titlefg;"><b>&_.title;</b></font></td></tr>
   </table>
   <rul>
-  <update-package-output type="&_.name;" limit="5">
-    <rli>#title# <a href="update.html?page=details&details=#id#">[Details...]</a></rli>
-    <set variable="var._&_.name;" value='foo'/>
-  </update-package-output>
+  <update-package type="&_.name;" limit="5">
+    <rli>&_.title; <a href="update.html?page=details&details=&_.id;">[Details...]</a></rli>
+    <set variable="var._&cat.name;" value='foo'/>
+  </update-package>
   </rul>
   <if not variable="var._&_.name;">
      &nbsp; Currently no packages in this category.<br />
@@ -54,14 +54,14 @@ This information was last synchronized with the main server &update.last_updated
 	<td nowrap="nowrap"><b>Size</b></td>
 	<td nowrap="nowrap"><b>Downloaded</b></td>
      </tr>
-     <update-download-progress-output>
+     <update-download-progress>
      <tr>
-       <td nowrap="nowrap">#title#
-         <a href="update.html?details=#id#">[Details...]</a></td>
-       <td nowrap="nowrap">#size# kB</td>
-       <td nowrap="nowrap">#progress#%</td>
+       <td nowrap="nowrap">&_.title:
+         <a href="update.html?details=&_.id;">[Details...]</a></td>
+       <td nowrap="nowrap">&_.size;</td>
+       <td nowrap="nowrap">&_.progress;%</td>
      </tr>
-     </update-download-progress-output>
+     </update-download-progress>
     </table>
   </cv-obox>
 </td>
@@ -73,16 +73,16 @@ This information was last synchronized with the main server &update.last_updated
 	<td nowrap="nowrap"><b>Size</b></td>
 	<td nowrap="nowrap"></td>
       </tr>
-      <update-downloaded-packages-output>
+      <update-downloaded-packages>
       <tr>
-        <td nowrap="nowrap">#title#
-          <a href="update.html?details=#id#">[Details...]</a></td>
-        <td nowrap="nowrap">#size# kB</td>
+        <td nowrap="nowrap">&_.title;
+          <a href="update.html?details=&_.id;">[Details...]</a></td>
+        <td nowrap="nowrap">&_.size;</td>
         <td nowrap="nowrap">
-          <a href="update.html?install=#id#">[Install...]</a>
+          <a href="update.html?install=&_.id;">[Install...]</a>
         </td>
       </tr>
-      </update-downloaded-packages-output>
+      </update-downloaded-packages>
     </table>
   </cv-obox>
 </td></tr></table>  
