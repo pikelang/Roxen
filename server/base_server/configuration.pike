@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.310 2000/05/26 22:22:10 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.311 2000/06/19 12:44:51 grubba Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -1634,7 +1634,11 @@ public array(string) find_dir(string file, RequestID id, void|int(0..1) verbose)
       TRACE_ENTER(LOCALE->location_module(loc), tmp[1]);
       loc=loc[strlen(file)..];
       sscanf(loc, "%s/", loc);
-      dir += ({ loc });
+      if (dir) {
+	dir |= ({ loc });
+      } else {
+	dir = ({ loc });
+      }
       TRACE_LEAVE(LOCALE->added_module_mountpoint());
     }
   }
