@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.528 2000/08/21 12:01:10 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.529 2000/08/22 22:05:21 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -658,8 +658,8 @@ class Protocol
   void unref(string name)
   //! Remove a ref for the URL 'name'
   {
-    if(!urls[name]) // only unref once
-      return;
+//     if(!urls[name]) // only unref once
+//       return;
     m_delete(path, urls[name]->conf );
     m_delete(urls, name);
     if( sizeof( path ) < 3 && path[0] )
@@ -1569,6 +1569,25 @@ array(string) find_ips_for( string what )
 void unregister_url( string url )
 {
   url = lower_case( url );
+  string host, path, protocol;
+  int port;
+  if (!sizeof (url - " " - "\t")) return;
+
+  url = replace( url, "/ANY", "/*" );
+  url = replace( url, "/any", "/*" );
+
+  sscanf( url, "%[^:]://%[^/]%s", protocol, host, path );
+  if (!host || !stringp(host))
+    return;
+
+  sscanf(host, "%[^:]:%d", host, port);
+
+  if( !port )
+  {
+    port = protocols[ protocol ]->default_port;
+    url = protocol+"://"+host+":"+port+path;
+  }
+
   report_debug("Unregister "+url+"\n");
 
   if( urls[ url ] && urls[ url ]->port )
@@ -1629,7 +1648,7 @@ int register_url( string url, object/*(Configuration)*/ conf )
   if( !strlen( path ) )
     path = 0;
 
-  if( urls[ url ] )
+  if( urls[ url ] && urls[ url ]->conf )
   {
     if( urls[ url ]->conf != conf )
     {
@@ -1640,6 +1659,10 @@ int register_url( string url, object/*(Configuration)*/ conf )
     }
     urls[ url ]->port->ref(url, urls[url]);
     return 1;
+  } 
+  else if( urls[ url ] ) 
+  {
+    urls[ url ]->port->unref( url );
   }
 
   Protocol prot;
@@ -3099,15 +3122,15 @@ object/*(Configuration)*/ enable_configuration(string name)
 #endif
   object cf = Configuration( name );
   configurations += ({ cf });
-  config_lookup[name] = cf;
+  fix_config_lookup();
   return cf;
 }
 
 void disable_configuration (string name)
 {
-  if (object conf = config_lookup[name]) {
+  if (object conf = config_lookup[ name ]) {
     configurations -= ({conf});
-    m_delete (config_lookup, name);
+    fix_config_lookup();
   }
 }
 
