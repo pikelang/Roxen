@@ -13,7 +13,7 @@ constant module_doc  = "This filesystem serves the administration interface";
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.114 2002/06/15 20:46:32 nilsson Exp $";
+  "$Id: config_filesystem.pike,v 1.115 2002/06/15 21:04:40 nilsson Exp $";
 
 constant path = "admin_interface/";
 
@@ -343,7 +343,7 @@ void start(int n, Configuration cfg)
   if( cfg )
   {
     if (cfg->query ("compat_level") != roxen.__roxen_version__)
-      // The config interface always runs with the current compatibility level.
+      // The admin interface always runs with the current compatibility level.
       cfg->set ("compat_level", roxen.__roxen_version__);
 
     mixed err;
@@ -457,7 +457,7 @@ void create()
   defvar( "auth_method", "auth_httpbasic",
 	  "Authentication method",
 	  TYPE_STRING_LIST,
-	  "The method to use to authenticate configuration interface users.",
+	  "The method to use to authenticate administration interface users.",
 	  ([
 	    "auth_httpbasic":"HTTP Basic passwords",
 	    "auth_httpcookie":"HTTP Cookies",

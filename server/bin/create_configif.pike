@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.42 2002/06/14 16:05:04 jhs Exp $
+ * $Id: create_configif.pike,v 1.43 2002/06/15 21:07:03 nilsson Exp $
  *
  * Create an initial administration interface server.
  */
@@ -96,13 +96,13 @@ int main(int argc, array argv)
 Creates and initializes a Internet Server configuration
 interface. Arguments:
 
- -d dir   The location of the configuration interface.
+ -d dir   The location of the configuration files.
           Defaults to \"../configurations\".
  -a       Only create a new administration user.
           Useful when the administration password is
           lost.
  --help   Displays this text.
- --batch  Create a configuration interface in batch mode.
+ --batch  Create a administration interface in batch mode.
           The --batch argument should be followed by a
           list of value pairs, each pair representing the
           name of a question field and the value to be
@@ -200,7 +200,7 @@ Example of a batch installation:
                break;
              default:
                write("\n   Only http and https are supported for the "
-                     "configuration interface.\n");
+                     "administration interface.\n");
                break;
             }
           }
@@ -220,7 +220,7 @@ Example of a batch installation:
              break;
            default:
              write("\n   Only http and https are supported for the "
-                   "configuration interface.\n\n");
+                   "administration interface.\n\n");
              break;
           }
         }

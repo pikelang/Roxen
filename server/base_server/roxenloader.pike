@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.336 2002/06/15 16:22:00 nilsson Exp $
+// $Id: roxenloader.pike,v 1.337 2002/06/15 21:03:54 nilsson Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.336 2002/06/15 16:22:00 nilsson Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.337 2002/06/15 21:03:54 nilsson Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -992,7 +992,7 @@ string roxen_version()
 //!     variable LOCALDIR.
 //!   @value "$LOGDIR"
 //!     The log directory of the webserver. Normally "../logs",
-//!     but it can be changed in the configuration interface under
+//!     but it can be changed in the administration interface under
 //!     global settings.
 //!   @value "$VARDIR"
 //!     The webservers var directory. Normally "../var", but it can
@@ -1657,8 +1657,8 @@ void low_start_mysql( string datadir,
 		     "set-variable = net_buffer_length=8K\n"
 #ifndef UNSAFE_MYSQL
 		     "local-infile = 0\n"
-#endif
 		     "skip-innodb\n"
+#endif
 		     "skip-name-resolve\n"
 		     "bind-address = "+env->MYSQL_HOST+"\n");
 

@@ -348,13 +348,13 @@ class ConfigurationSettings
     defvar( "form-font-size", -1, "Form font size",
 	    TYPE_INT_LIST,
 	    "The fontsize of the variables in the "
-	    "configuration interface",
+	    "administration interface",
 	    ({ -2, -1, 0, 1, 2, }) );
 
     defvar( "docs-font-size", -1, "Documentation font size",
 	    TYPE_INT_LIST,
 	    "The fontsize of the documentation in the "
-	    "configuration interface",
+	    "administration interface",
 	    ({ -2, -1, 0, 1, 2, }) );
 
     defvar( "modulelistmode", "uf",

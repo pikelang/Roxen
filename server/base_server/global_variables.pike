@@ -1,6 +1,6 @@
 // This file is part of Internet Server.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: global_variables.pike,v 1.93 2002/06/14 16:05:03 jhs Exp $
+// $Id: global_variables.pike,v 1.94 2002/06/15 21:03:54 nilsson Exp $
 
 // NGSERVER: Move protocol settings to their own files.
 
@@ -47,7 +47,7 @@ void set_up_hilfe_variables( Protocol o )
   defvar( "require_auth", 1,
 	  "Require user with the 'hilfe' permission", TYPE_FLAG,
 	  ("If yes, require a user with the hilfe permission "
-	   "set, otherwise, any configuration interface user will "
+	   "set, otherwise, any administration interface user will "
 	   "be allowed, even one with only the view settings permission." ) );
 }
 
@@ -600,7 +600,7 @@ The start script attempts to fix this for the standard file locations.</p>");
   defvar("snmp_hostport", snmp_get_cif_domain(), "SNMP: IP address and port",
          TYPE_STRING,
          "Agent listening IP adress and port. Format: [[host]:port] "
-         "If host isn't set then the IP address of the config interface "
+         "If host isn't set then the IP address of the administration interface "
 	 "will be used.",
 	 0, snmp_disabled);
 

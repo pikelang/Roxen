@@ -7,7 +7,7 @@
 
 #pragma strict_types
 
-constant cvs_version = "$Id: indirect_href.pike,v 1.33 2002/01/17 22:37:53 nilsson Exp $";
+constant cvs_version = "$Id: indirect_href.pike,v 1.34 2002/06/15 21:04:40 nilsson Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -91,7 +91,7 @@ constant tagdoc=([
  Makes it possible to use a database of links.</short> Each link is referred
  to by a symbolic name instead of the URL.</p>
 
- <p>The database is updated through the configuration interface. The
+ <p>The database is updated through the administration interface. The
  tag is available through the <i>Indirect href</i>
  module.</p></desc>
 

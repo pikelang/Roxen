@@ -3,11 +3,11 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: sqldb.pike,v 1.4 2001/07/01 17:01:03 nilsson Exp $";
+constant cvs_version = "$Id: sqldb.pike,v 1.5 2002/06/15 21:04:40 nilsson Exp $";
 constant module_type = MODULE_ZERO;
 constant module_name = "DEPRECATED: SQL databases";
 constant module_doc  =
-"Use the DBs tab in the configuration interface instead. This module is"
+"Use the DBs tab in the administration interface instead. This module is"
 " only kept for compatibility with old configurations.";
 
 void create()

@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.78 2002/06/07 09:16:50 nilsson Exp $
+// $Id: module.pmod,v 1.79 2002/06/15 21:04:51 nilsson Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -205,7 +205,7 @@ class Variable
   //! Generate a html diff of the difference between the current
   //! value and the default value.
   //!
-  //! This method is used by the configuration interface.
+  //! This method is used by the administration interface.
   //!
   //! The argument @[render] is used to select the operation mode.
   //!
@@ -275,12 +275,12 @@ class Variable
                         int initial,
                         int|void variable_in_cfif )
     //! Return 1 if this variable should be visible in the
-    //! configuration interface. The default implementation check the
+    //! administration interface. The default implementation check the
     //! 'flags' field, and the invisibility callback, if any. See
     //! get_flags, set_flags and set_invisibibility_check_callback
     //!
     //! If variable_in_cfif is true, the variable is in a module
-    //! that is added to the configuration interface itself.
+    //! that is added to the administration interface itself.
   {
     int flags = get_flags();
     function cb;
@@ -298,7 +298,7 @@ class Variable
 
   void set_invisibility_check_callback( function(RequestID,Variable:int) cb )
     //! If the function passed as argument returns 1, the variable
-    //! will not be visible in the configuration interface.
+    //! will not be visible in the administration interface.
     //!
     //! Pass 0 to remove the invisibility callback.
   {
@@ -377,7 +377,7 @@ class Variable
   }
 
   void set_warning( string to )
-    //! Set the warning shown in the configuration interface
+    //! Set the warning shown in the administration interface
   { 
     if( to && strlen(to) )
       all_warnings[ _id ] = to; 
@@ -543,7 +543,7 @@ class Variable
     //! Should be used to prefix form variable names.
     //! 
     //! Unless this variable was created by defvar(), the path is set
-    //! by the configuration interface the first time the variable is
+    //! by the administration interface the first time the variable is
     //! to be shown in a form. This function can thus return 0. If it
     //! does, and you still have to show the form, call set_path( )
     //! with a unique string.
@@ -557,7 +557,7 @@ class Variable
     //! This function must be called at least once before render_form
     //! can be called (at least if more than one variable is to be 
     //! shown on the same page). This is normally done by the 
-    //! configuration interface.
+    //! administration interface.
   {
     m_delete( all_variables, _path );
     _path = to;

@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.55 2002/06/05 10:18:18 nilsson Exp $
+// $Id: DBManager.pmod,v 1.56 2002/06/15 21:04:51 nilsson Exp $
 
 //! Manages database aliases and permissions
 
@@ -963,7 +963,7 @@ void is_module_table( RoxenModule module, string db, string table,
 		   string|void comment )
 //! Tell the system that the table 'table' in the database 'db'
 //! belongs to the module 'module'. The comment is optional, and will
-//! be shown in the configuration interface if present.
+//! be shown in the administration interface if present.
 {
   string mn = module ? module->sname(): "";
   string cn = module ? module->my_configuration()->name : "";

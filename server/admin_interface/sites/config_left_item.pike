@@ -205,7 +205,7 @@ string selected_item( string q, Configuration c, RequestID id,
   pre += "</table>\n";
 
   // Do not allow easy addition and removal of modules to and
-  // from the configuration interface server. Most of the time
+  // from the administration interface server. Most of the time
   // it's a really bad idea.  Basically, protect the user. :-)
   if(
 #ifndef YES_I_KNOW_WHAT_I_AM_DOING

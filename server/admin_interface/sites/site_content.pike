@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.136 2002/06/15 20:24:02 nilsson Exp $
+// $Id: site_content.pike,v 1.137 2002/06/15 21:04:25 nilsson Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -202,7 +202,7 @@ string buttons( Configuration c, string mn, RequestID id )
          "<input type=hidden name=section value='" +
          (section||"Status") + "'>";
 
-  // Do not allow reloading of modules _in_ the configuration interface.
+  // Do not allow reloading of modules _in_ the administration interface.
   // It's not really all that good an idea, I promise.
 #ifndef YES_I_KNOW_WHAT_I_AM_DOING
   if( c != id->conf )
@@ -217,7 +217,7 @@ string buttons( Configuration c, string mn, RequestID id )
     foreach( indices(mod->query_action_buttons("standard")), string title )
       buttons += "<submit-gbutton>"+title+"</submit-gbutton>";
 
-  // Nor is it a good idea to drop configuration interface modules.
+  // Nor is it a good idea to drop administration interface modules.
   // It tends to make things rather unstable.
 #ifndef YES_I_KNOW_WHAT_I_AM_DOING
   if( c != id->conf )

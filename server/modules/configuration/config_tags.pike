@@ -10,7 +10,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.180 2002/06/15 20:46:32 nilsson Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.181 2002/06/15 21:04:40 nilsson Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -398,7 +398,7 @@ string diff_url( RequestID id, object mod, Variable.Variable var )
   RoxenModule cfs = id->conf->find_module( "config_filesystem#0" );
 
   // There is one occasion when there is no id->port_obj: When the
-  // port for the configuration interface is changed.
+  // port for the administration interface is changed.
   string base =(id->port_obj ? 
 		combine_path((id->port_obj->path||"/"),
 			     cfs->query_location()[1..])+
@@ -501,10 +501,10 @@ array get_variable_maps( object mod,
                       } );
 
 
-  // This is true when we are looking at configuration interface
+  // This is true when we are looking at administration interface
   // modules.  All variables starting with '_' are related to security
   // and priority.  Letting the user mess around with these settings
-  // in the configuration interface is highly risky, since it's
+  // in the administration interface is highly risky, since it's
   // trivial to lock oneself out from the interface.
   if( id->conf == get_conf(mod) )
     variables = filter( variables,
@@ -563,7 +563,7 @@ array get_variable_sections( object mod, mapping m, RequestID id )
   mapping w = ([]);
   array vm = indices(mod->query());
   // Also filter the sections when looking at the settings for a module 
-  // in the configuration interface.
+  // in the administration interface.
   if( get_conf(mod) == id->conf )
     vm = filter( vm, lambda( mixed q ) { 
                        return stringp(q)&&strlen(q)&&(q[0]!='_');

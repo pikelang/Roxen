@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.524 2002/06/14 16:05:03 jhs Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.525 2002/06/15 21:03:54 nilsson Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -178,7 +178,7 @@ void connection_add( RequestID id, mapping data )
 //!
 //! You are not in any way forced to use this method from your
 //! protocol module. The information is only used for debug purposes
-//! in the configuration interface.
+//! in the administration interface.
 //!
 //! You have to keep a reference to the mapping on your own, none is
 //! kept by the configuration object.

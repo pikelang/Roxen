@@ -18,7 +18,7 @@ Roxen 2.2+ LDAP directory user database module
 #define ROXEN_HASH_SIGN		"{x-roxen-hash}"
 
 constant cvs_version =
-  "$Id: userdb_ldap.pike,v 1.14 2002/06/14 00:08:58 nilsson Exp $";
+  "$Id: userdb_ldap.pike,v 1.15 2002/06/15 21:04:40 nilsson Exp $";
 inherit UserDB;
 inherit "module";
 
@@ -497,7 +497,7 @@ int connect_dir() {
 	}
 	else
 	    werror("LDAPuserdb: unknown reason\n");
-	werror ("LDAPuserdb: check the values in the configuration interface, and "
+	werror ("LDAPuserdb: check the values in the administration interface, and "
 		"that the user\n\trunning the server has adequate permissions "
 		"to the server\n");
 	dir=0;

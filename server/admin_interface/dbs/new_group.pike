@@ -55,7 +55,7 @@ server must be a MySQL server, nothing else will work.
    <td valign='top' colspan='2' width='100%'>
 
         <i>The name of the database group. This is what is
-	   shown in the configuration interface</i>
+	   shown in the administraion interface</i>
    </td>
  </tr>
   <tr>
