@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.9 2000/04/05 23:40:18 per Exp $
+ * $Id: resolv.pike,v 1.10 2000/06/29 21:58:01 mast Exp $
  */
 
 inherit "wizard";
@@ -19,11 +19,15 @@ string link_configuration(Configuration c)
   return link(@get_conf_url_to_virtual_server(c,"standard")); 
 }
 
-string module_name(function|RoxenModule m)
+string module_name(function|RoxenModule|RXML.Tag m)
 {
   if(!m)
     return "";
   if(functionp(m)) m = function_object(m);
+  if (!m->is_module)		// Might be an RXML.Tag.
+    if (RoxenModule mm = function_object (object_program (m)))
+      m = mm;
+  if (!m->is_module) return "";
 
   string name;
   mixed error=catch{
