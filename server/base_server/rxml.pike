@@ -3,7 +3,7 @@
 //
 // The Roxen RXML Parser. See also the RXML Pike modules.
 //
-// $Id: rxml.pike,v 1.302 2001/06/18 15:27:57 mast Exp $
+// $Id: rxml.pike,v 1.303 2001/06/22 01:06:59 marcus Exp $
 
 
 inherit "rxmlhelp";
@@ -66,7 +66,7 @@ RXML.TagSet rxml_tag_set = class
 		if (sscanf (cname, "Configuration(%s", cname) == 1 &&
 		    sizeof (cname) && cname[-1] == ')')
 		  cname = cname[..sizeof (cname) - 2];
-		name = sprintf ("rxml_tag_set,%s", cname);
+		set_name(sprintf ("rxml_tag_set,%s", cname));
 	      }, 0);
 
     imported = ({Roxen.entities_tag_set});
