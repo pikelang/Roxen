@@ -674,6 +674,25 @@ mapping|string parse( RequestID id )
     return res+ "</table></td></tr>";
   };
 
+  string format_number(int n)
+  {
+    return (string)n / -3.0 * " "; // doesn't handle negative numbers well
+  };
+
+  string format_size(int bytes)
+  {
+    if(!bytes)
+      return "";
+    foreach(({ _(0, "B"), _(375,"KiB"), _(0, "MiB"),
+	       _(0, "GiB"), _(0, "TiB") }), string unit)
+    {
+      if(bytes < 1024)
+	return format_number(bytes) + " " + unit;
+      bytes /= 1024;
+    }
+    return format_number(bytes) + " " + _(0, "EiB");
+  };
+
   void add_table_info( string table, mapping tbi )
   {
     string res = "";
@@ -683,14 +702,12 @@ mapping|string parse( RequestID id )
       "db=&form.db:http;&table="+Roxen.http_encode_string(table)+"'>"+
       table+"</a> </td>";
 
-    
+
     if( tbi )
       res += "<td align=right> <font size=-1>"+
-	tbi->rows+" "+_(374,"rows")+"</font></td><td align=right>"
-	"<font size=-1>"+
-	(( (int)tbi->data_length+(int)tbi->index_length) ? 	
-	 ( (int)tbi->data_length+(int)tbi->index_length)/1024+_(375,"KiB"):
-	 "")+
+	format_number(tbi->rows)+" "+_(374,"rows")+
+	"</font></td><td align=right><font size=-1>"+
+	format_size((int)tbi->data_length+(int)tbi->index_length)+
 	"</font></td>";
 
     if( id->variables->table == table )
