@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: read_config.pike,v 1.55 2001/02/02 13:04:02 per Exp $
+// $Id: read_config.pike,v 1.56 2001/02/22 17:51:02 mast Exp $
 
 #include <module.h>
 
@@ -57,7 +57,7 @@ void save_it(string cl, mapping data)
 void really_save_it( string cl, mapping data )
 {
   Stdio.File fd;
-  string f;
+  string f, new;
   m_delete( call_outs, cl );
 
 #ifdef DEBUG_CONFIG
@@ -65,10 +65,11 @@ void really_save_it( string cl, mapping data )
 #endif
 
   f = configuration_dir + replace(cl, " ", "_");
-  fd = open(f+".new", "wct");
+  new = f + ".new~";
+  fd = open(new, "wct");
 
   if(!fd)
-    error("Creation of configuration file failed ("+f+") "
+    error("Creation of new config file ("+new+") failed"
 	  " ("+strerror(errno())+")"
 	  "\n");
 
@@ -88,44 +89,56 @@ void really_save_it( string cl, mapping data )
     int num = fd->write( data );
 
     if(num != strlen(data))
-      error("Failed to write all data to configuration file ("+f+") "
+      error("Failed to write all data to new config file ("+new+")"
             " ("+strerror(fd->errno())+")"
             "\n");
 
-    destruct(fd);
+    fd->close();
 
-    fd = open( f+".new", "r" );
+    fd = open( new, "r" );
     config_stat_cache[cl] = fd->stat();
     
     if(!fd)
-      error("Failed to open new config file for reading\n" );
-    
-    if( fd->read() != data )
+      error("Failed to open new config file (" + new + ") for reading"
+	    " (" + strerror (errno()) + ")\n" );
+
+    string read_data = fd->read();
+    if (!read_data)
+      error ("Failed to read new config file (" + new + ")"
+	     " (" + strerror (fd->errno()) + ")\n");
+    if( read_data != data )
       error("Config file differs from expected result");
     fd->close();
-    destruct( fd );
 
     if( file_stat(f+"~") && !mv(f+"~", f+"~2~") )
       rm( f+"~" ); // no error needed here, really...
 
     if( file_stat(f) && !mv(f, f+"~") )
-      error("Failed to move current config file to backup file\n");
+      error("Failed to move current config file (" + f + ") "
+	    "to backup file (" + f + "~)"
+	    " (" + strerror (errno()) + ")\n");
 
-    if( !mv(f+".new", f) )
+    if( !mv(new, f) )
     {
+      string msg = "Failed to move new config file (" + new + ") "
+	"to current file (" + f + ")"
+	" (" + strerror (errno()) + ")\n";
       if( !mv( f+"~", f ) )
-        error("Failed to move new config file to current file\n"
-              "Failed to restore backup file!\n");
-      error("Failed to move new config file to current file\n");
+        error(msg + "Failed to move back backup file (" + f + "~)"
+	      " (" + strerror (errno()) + ")!\n");
+      error(msg);
     }
     return;
   };
   if( !file_stat( f ) ) // Oups. Gone.
   {
-    mv( f+"~", f );
+    if (!mv( f+"~", f ))
+      werror ("Failed to move back backup file (" + f + "~)"
+	      " (" + strerror (errno()) + ")!\n");
     Stdio.cp( f+"~2~", f+"~" );
   }
-  rm( f+".new");
+  catch (fd->close());		// Can't remove open files on NT.
+  rm( new);
   throw( err );
 }
 
