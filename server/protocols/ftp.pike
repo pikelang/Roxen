@@ -1,5 +1,5 @@
 /* Roxen FTP protocol. Written by Pontus Hagland
-string cvs_version = "$Id: ftp.pike,v 1.14 1997/04/29 00:03:55 grubba Exp $";
+string cvs_version = "$Id: ftp.pike,v 1.15 1997/04/29 00:25:10 grubba Exp $";
    (law@lysator.liu.se) and David Hedbor (neotron@infovav.se).
 
    Some of the features: 
@@ -479,7 +479,7 @@ varargs int|string list_file(string arg, int srt, int short, int column,
       filename += "/";
     array (string) dir, parsed = ({});
     string s;
-    mapping tsort = ([]);
+    array tsort = ({});
 
     not_query = arg = filename;
     dir = roxen->find_dir(filename, this_object()) || ({});
@@ -501,19 +501,23 @@ varargs int|string list_file(string arg, int srt, int short, int column,
 	 && st[1] < 0)
 	s += "/";
       if(!short) {
-	if(st || (st = roxen->stat_file(filename+s, this_object())))
+	if(st || (st = roxen->stat_file(filename+s, this_object()))) {
+	  parsed += ({ file_ls(st, s) });
 	  if(srt)
-	    tsort += ([ (time - st[-4]) : file_ls(st, s) ]);
-	  else
-	    parsed += ({ file_ls(st, s) });
-      } else 
-	parsed += ({ s });
+	    tsort += ({ (time - st[-4]) });
+	}
+      } else {
+	if (st || (st = roxen->stat_file(filename+s, this_object()))) {
+	  parsed += ({ s });
+	  if (srt)
+	    tsort += ({ (time - st[-4]) });
+	}
+      }
     }
-    if(srt) {
-      parsed = values(tsort);
-      sort(indices(tsort), parsed);
-      tmp=parsed*"";
-    } else if(!short) {
+    if (srt) {
+      sort(tsort, parsed);
+    }
+    if(!short) {
       tmp=parsed*"";
     } else {
       if(column) {
