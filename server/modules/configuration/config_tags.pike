@@ -31,6 +31,7 @@ class Scope_usr
   inherit RXML.Scope;
 
 #define ALIAS( X ) `[](X,c,scope)
+#define QALIAS( X ) (`[](X,c,scope)?"\""+roxen_encode(`[](X,c,scope), "html")+"\"":0)
   mixed `[]  (string var, void|RXML.Context c, void|string scope)
   {
     object id = c->id;
@@ -43,19 +44,94 @@ class Scope_usr
 
     switch( var )
     {
+      string q, res;
+      /* composite */
+
+     case "logo-html":
+       return "<img border=0 src="+QALIAS("logo")+">";
+
+     case "toptabs-args":
+       res = "frame-image="+QALIAS("toptabs-frame");
+       if( stringp( q = ALIAS("toptabs-extraargs" ) ) )
+         res += " "+q;
+       return res;
+
+     case "subtabs-args":
+       res ="frame-image="+QALIAS("subtabs-frame")+
+           " bgcolor="+QALIAS("subtabs-bgcolor")+
+           " font="+QALIAS("subtabs-font")+
+           " textcolor="+QALIAS("subtabs-dimtextcolor")+
+           " dimcolor="+QALIAS("subtabs-dimcolor")+
+           " seltextcolor="+QALIAS("subtabs-seltextcolor")+
+           " selcolor="+QALIAS("subtabs-selcolor");
+       if( stringp( q = ALIAS("subtabs-extraargs" ) ) )
+         res += " "+q;
+       return res;
+
+     case "body-args":
+       res = "link="+QALIAS("linkcolor")+" vlink="+QALIAS("linkcolor")+
+             " alink="+QALIAS("fade2")+" bgcolor="+QALIAS("bgcolor")+
+             " text="+QALIAS("fgcolor");
+       res += (" topmargin=0 leftmargin=0 marginwidth=0 marginheight=0 "
+               "bottommargin=0 rightmargin=0 margin=0");
+       if( stringp(q = QALIAS( "background" )) && strlen( q ) )
+         res += " background="+q;
+       return res;
+
+     case "top-tableargs":
+       if( ALIAS("top-bgcolor") != "none" )
+         res = "bgcolor="+QALIAS("top-bgcolor");
+       else
+         res="";
+       if( stringp(q = QALIAS( "top-background" )) && strlen( q ) )
+         res += " background="+q;
+       return res;
+
+     case "toptabs-tableargs":
+       string res = "";
+       if( ALIAS("toptabs-bgcolor") != "none" )
+         res = "bgcolor="+QALIAS("toptabs-bgcolor");
+       if( stringp(q = QALIAS( "toptabs-background" )) && strlen( q ) )
+         res += " background="+q;
+       if( stringp(q = QALIAS( "toptabs-align" )) && strlen( q ) )
+         res += " align="+q;
+       else
+         res += " align=left";
+       return res;
+
+     case "subtabs-tableargs":
+       res = "valign=bottom bgcolor="+QALIAS("subtabs-bgcolor");
+       if( stringp(q = QALIAS( "subtabs-background" )) && strlen( q ) )
+         res += " background="+q;
+       if( stringp(q = QALIAS( "subtabs-align" )) && strlen( q ) )
+         res += " align="+q;
+       else
+         res += " align=left";
+       return res;
+
+     case "left-tableargs":
+       string res = "valign=top width=150";
+       if( stringp(q = QALIAS( "left-background" )) && strlen( q ) )
+         res += " background="+q;
+       return res;
+
+     case "content-tableargs":
+       string res = " width='100%' valign=top";
+       if( stringp(q = QALIAS( "content-background" )) && strlen( q ) )
+         res += " background="+q;
+       return res;
+
+
       /* standalone, nothing is based on these. */
+     case "content-toptableargs": return "";
      case "left-image":           return "/internal-roxen-unit";
      case "selected-indicator":   return "/internal-roxen-next";
      case "logo":                 return "/internal-roxen-roxen";
      case "err-1":                return "/internal-roxen-err_1";
      case "err-2":                return "/internal-roxen-err_2";
      case "err-3":                return "/internal-roxen-err_3";
-     case "background-top":       return "";
-     case "background-toptabs":   return "";
-     case "background-leftside":  return "";
-     case "background-content":   return "";
-     case "background":           return "";
      case "obox-titlefont":       return "helvetica,arial";
+     case "obox-border":          return "black";
 
 
       /* 1-st level */
@@ -161,15 +237,15 @@ class Scope_usr
 
 RXML.Scope usr_scope=Scope_usr();
 
-void set_entities(RXML.Context c) {
+void set_entities(RXML.Context c)
+{
   c->extend_scope("usr", usr_scope);
 }
 
 string internal_topmenu_tag_item(string t, mapping m,
 				 mapping c, RequestID id)
 {
-  if( m->perm  &&
-      (!id->misc->config_user || !CU_AUTH( m->perm )))
+  if( m->perm  && !CU_AUTH( m->perm ))
     return "";
   c->them += ({ m });
   return "";
@@ -211,77 +287,17 @@ string internal_c_topmenu(string t, mapping m, string d, mapping c, RequestID id
   return "";
 }
 
-string i_lmenu_tag_item(string t, mapping m, string d, mapping c, RequestID id)
-{
-  mapping a = ([]);
-  mixed items = (["them":({})]);
-  if( m->perm  &&
-     (!id->misc->config_user || !CU_AUTH( m->perm )))
-    return "";
-  parse_html( d, a, (["item":i_lmenu_tag_item]), items, id );
-  m->items = items->them;
-  c->them += ({ m });
-  return "";
-}
-
-string submit_gtxt( string name, mapping gta, string cnts, object id )
-{
-  return "\n<cset preparse variable=___gtext>"+
-         make_container( "gtext-url",gta,cnts)+"</cset>"
-         "<formoutput quote=½>"+
-         make_tag( "input",
-                   ([ "name":name,
-                      "type":"image",
-                      "src":"½___gtext:quote=none½",
-                      "border":"0",
-                   ]) )+
-         "</formoutput>\n";
-}
-
 constant nbsp = iso88591["&nbsp;"];
 string internal_c_middle(string t, mapping m, string d, mapping c,RequestID id)
 {
-  c->middle = (d);
+  c->middle = d;
   return "";
 }
 
 string internal_c_content(string t, mapping m, string d, mapping c, RequestID id)
 {
-  // parse <var> with friends here...
   c->content = d;
   return "";
-}
-
-string indent(string what, int how)
-{
-  return " "*how + replace(what, "\n", ("\n" + " "*how));
-}
-
-string table(string data, string|void aa)
-{
-  if(!aa)
-    aa = "";
-  else
-    aa=" "+aa;
-  return "<table border=0 cellpadding=0 cellspacing=0 "+aa+">\n"+data+"\n</table>\n";
-}
-
-string tr(string data, string|void aa)
-{
-  if(!aa)
-    aa = "";
-  else
-    aa=" "+aa;
-  return "<tr"+aa+">"+data+"</tr>\n";
-}
-
-string td(string data, string|void aa)
-{
-  if(!aa)
-    aa = "";
-  else
-    aa=" "+aa;
-  return "<td"+aa+">"+data+"</td>\n";
 }
 
 string container_roxen_config(string t, mapping m, string data, RequestID id)
@@ -309,18 +325,15 @@ string container_roxen_config(string t, mapping m, string data, RequestID id)
 //   c->title =
   string page =  #"
   <table width=100% cellpadding=0 cellspacing=0 border=0
-         bgcolor=&usr.top-bgcolor;>
-    <tr bgcolor=&usr.top-bgcolor;>
-       <td rowspan=2><a href=http://www.roxen.com/>
-         <img border=0 src=&usr.logo;></a></td>
-       <td align=center>
-         <font size=+1 color=&usr.top-fgcolor;><cf-locale get=administration_interface></font>
-       </td>
-       <td bgcolor=&usr.top-bgcolor; align=center valign=top>"+c->middle+#"</td>
+         ::=&usr.top-tableargs:none;>
+    <tr>
+       <td ><a href=http://www.roxen.com/>
+         &usr.logo-html:none;</a></td>
+       <td align=right valign=top>"+c->middle+#"</td>
     </tr>
     <tr>
-      <td colspan=2 bgcolor=&usr.toptabs-bgcolor; align=left
-          width=100% valign=bottom>"+c->top+#"</td>
+      <td colspan=2 ::=&usr.toptabs-tableargs:none;
+          width=100% valign=bottom><img src=/internal-roxen-unit width=50 height=1>"+c->top+#"</td>
     </tr>
   </table>
 ";
@@ -341,8 +354,7 @@ string get_var_doc( string s, object mod, int n, object id )
 
 string theme_name( string theme )
 {
-  catch
-  {
+  catch {
     return trim(Stdio.read_bytes("config_interface/standard/themes/"+
                                  theme+"/name"));
   };
@@ -351,8 +363,7 @@ string theme_name( string theme )
 
 array(string) all_themes( )
 {
-  return (get_dir( "config_interface/standard/themes/" )-
-         ({"CVS","README"}));
+  return (get_dir( "config_interface/standard/themes/" )-({"CVS","README"}));
 }
 
 string get_var_value( string s, object mod, object id )
@@ -483,12 +494,6 @@ string set_variable( string v, object in, mixed to, object id )
      } else {
        if( var[VAR_TYPE]  == TYPE_INT_LIST )
          val = (int)val;
-//        mapping translate =
-//                LOW_LOCALE->module_doc_string(in, v, 2);
-//       if(!translate)
-// 	translate = mkmapping(var[ VAR_MISC ],var[ VAR_MISC ]);
-//       if( mixed tmp = search( translate, val ) )
-//         val = tmp;
      }
      break;
 
@@ -688,8 +693,6 @@ string get_var_form( string s, object mod, object id )
     break;
 
   }
-
-
 }
 
 string get_var_type( string s, object mod, object id )
