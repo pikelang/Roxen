@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.8 2000/12/15 15:58:37 jhs Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.9 2000/12/18 11:17:56 jhs Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Additional RXML tags";
@@ -285,26 +285,26 @@ description.</desc>
 <sprintf format='#%02x%02x%02x' split=','>250,0,33</sprintf>
 </ex></attr>",
 
-  "emit#known-langs":#"<desc cont='cont'><p><short>
- Outputs all languages partially supported by roxen,
- (for example for the number tag).</short></p>
+  "emit#known-langs":({ #"<desc plugin='plugin'><p><short>
+ Outputs all languages partially supported by roxen for writing
+ numbers, weekdays et c (for example for the number and date tags).
+</short></p></desc>
 
- <ex><emit source='known-langs' sort='englishname'>
+ <ex type='vert'><emit source='known-langs' sort='englishname'>
   4711 in &_.englishname;: <number lang='&_.id;' num='4711'/><br />
-</emit></ex>
-
- <attr name='_.id'>
-   <p>Prints the ISO 639-2 id of the language.</p>
- </attr>
-
- <attr name='_.name'>
-   <p>The name of the language in the language itself.</p>
- </attr>
-
- <attr name='_.englishname'>
-   <p>The name of the language in English.</p>
- </attr>
+</emit></ex>",
+			([
+			  "&_.id;":#"<desc ent='ent'>
+ <p>Prints the three-character ISO 639-2 id of the language, for
+ example \"eng\" for english and \"deu\" for german.</p>
 </desc>",
-
+			  "&_.name;":#"<desc ent='ent'>
+ <p>The name of the language in the language itself, for example
+ \"français\" for french.</p>
+</desc>",
+			  "&_.englishname;":#"<desc ent='ent'><p>
+ <p>The name of the language in English.</p>
+</desc>",
+			]) }),
 ]);
 #endif
