@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.470 2000/03/28 20:58:43 jhs Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.471 2000/03/30 13:50:49 nilsson Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -3319,6 +3319,7 @@ void remove_configuration_auth(RoxenModule o)
 
 void add_configuration_auth(RoxenModule o)
 {
+  if(!o->auth || !functionp(o->auth)) return;
   configuration_auth|=({o});
 }
 
@@ -3335,7 +3336,6 @@ string configuration_authenticate(RequestID id, string what)
   RoxenModule o;
   foreach(configuration_auth, o)
   {
-    if(!o->auth || !functionp(o->auth)) continue;
     auth=o->auth( ({"",id->realauth}), id);
     if(auth) break;
   }
