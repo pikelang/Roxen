@@ -1,7 +1,7 @@
 // Wizard generator
 // This file generats all the nice wizards
 // Copyright © 1997 - 2000, Roxen IS.
-// $Id: wizard.pike,v 1.134 2001/04/24 09:05:03 jonasw Exp $
+// $Id: wizard.pike,v 1.135 2001/05/07 09:30:11 jonasw Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -327,7 +327,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
 	       "<gtext nfont=\""+current+"\">" + LOCALE(48, "Example Text") + "</gtext><br />"
 	       :""));
      m_delete(m, "noexample");
-     return make_tag("var", m)+res;
+     return wizard_tag_var("var", m, id) + res;
 
    case "toggle":
     m_delete(m,"default");
