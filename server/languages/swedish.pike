@@ -6,8 +6,8 @@
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: swedish.pike,v 1.11 2000/01/17 21:03:20 nilsson Exp $";
-constant _id = ({ "sv", "swedish" });
+constant cvs_version = "$Id: swedish.pike,v 1.12 2000/01/25 00:03:59 nilsson Exp $";
+constant _id = ({ "sv", "svenska" });
 constant _aliases = ({ "sv", "se", "sve", "swe", "swedish", "svenska" });
 
 constant months = ({
@@ -22,7 +22,7 @@ constant days = ({
 constant languages=([
   "ca":"katalanska",
   "cs":"tjeckiska",
-  "du":"nederldndska",
+  "du":"nederländska",
   "fi":"finska",
   "fr":"franska",
   "de":"tyska",
