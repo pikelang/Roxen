@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2001, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.150 2004/06/01 09:59:07 jonasw Exp $
+// $Id: wizard.pike,v 1.151 2004/06/25 12:58:32 jonasw Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -171,6 +171,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
     res=make_tag("input",m);
     m->type="hidden";   //  Yes, this hidden var is needed! Cleared boxes may
     m->value="0";       //  otherwise revert to their initial set state.
+    m_delete(m, "id");  //  Can't have the same ID twice
     return res+make_tag("input", m);
 
    case "int":
