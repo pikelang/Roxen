@@ -10,7 +10,7 @@
 #define old_rxml_compat 1
 #define old_rxml_warning id->conf->api_functions()->old_rxml_warning[0]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.7 1999/09/17 21:55:29 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.8 1999/09/24 18:17:33 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -576,13 +576,14 @@ string tag_insert(string tag,mapping m,object id)
   }
 
   if(m->href && query("insert_href")) {
-    if(m->nocache) id->pragma["no-cache"] = 1;
-    mixed error=catch {
-      n=(string)Protocols.HTTP.get_url_data(m->href);
-    };
-    if(arrayp(error)) return rxml_error(tag, error[0], id);
-    if(n=="0") return rxml_error(tag, "Page could not be fetched.", id);
-    return n;
+    if(m->nocache)
+      NOCACHE();
+    else
+      CACHE(60);
+    object q=Protocols.HTTP.get_url(m->href);
+    if(q && q->status>0 && q->status<400)
+      return q->data();
+    return rxml_error(tag,(q?q->status_desc:0)||"No server respons",id);
   }
 
   string ret="Could not fullfill your request.<br>\nArguments:";
