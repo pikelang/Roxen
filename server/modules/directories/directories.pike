@@ -10,7 +10,7 @@
 //  o More stuff in the emit variables
 //
 
-constant cvs_version = "$Id: directories.pike,v 1.70 2000/07/26 16:29:03 kuntri Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.71 2000/08/15 01:26:31 mast Exp $";
 constant thread_safe = 1;
 
 #include <stat.h>
@@ -37,7 +37,7 @@ void create()
 // "Include one of these readme files, if present, in directory listings");
 
   defvar("override", 0, "Allow directory index file overrides", 
-         TYPE_FLAG|VAR_INITIAL,
+         TYPE_FLAG,
 	 "If this variable is set, you can get a listing of all files "
 	 "in a directory by appending '.' to the directory name. It is "
 	 "<em>very</em> useful for debugging, but some people regard "
