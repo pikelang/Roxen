@@ -158,8 +158,13 @@ function loadLayer(e, layer_name, src, properties, parent)
   else if(popups.length)
     popups.length--;
 
-  if(isNav4)
-  {
+  var pos = new properties.LayerPosition(new TriggerCoord(e, 0), 0,
+					 properties);
+  if(!properties.stay_put)
+    shiftTo(layer_name, pos.x, pos.y);
+  
+  //  Dinosaur browsers
+  if(isNav4) {
     var l = getObject(layer_name);
     if(!l)
       alert("Unknown layer '"+layer_name+"'.");
@@ -167,19 +172,60 @@ function loadLayer(e, layer_name, src, properties, parent)
     l.onload = layerLoadHandler;
     l.src = src;
     l.properties = properties;
-  } else {
-    if(!file_loader || isMacIE50)
-      file_loader = new FileLoader(layerLoadHandler);
-    
-    file_loader.layer_name = layer_name;
-    file_loader.properties = properties;
-    if (isSafari)
-      file_loader.loadSafariDocument(src);
-    else
-      file_loader.loadDocument(src);
+    return retFromEvent(false);
   }
-  var pos = new properties.LayerPosition(new TriggerCoord(e, 0), 0, properties);
-  if(!properties.stay_put)
-    shiftTo(layer_name, pos.x, pos.y);
+
+  //  Modern DOM-based guys
+  if (window.XMLHttpRequest || window.ActiveXObject) {
+    var req;
+    if (window.XMLHttpRequest) {
+      //  Use XMLHttpRequest which is implemented in Safari and Mozilla/Firefox
+      req = new XMLHttpRequest();
+    } else {
+      //  Use ActiveX version for MSIE
+      try {
+	req = new ActiveXObject("Msxml2.XMLHTTP");
+      } catch (e) {
+	try {
+	  req = new ActiveXObject("Microsoft.XMLHTTP");
+	} catch (e) {
+	  req = false;
+	}
+      }
+    }
+    if (req) {
+      //  Define notification function
+      req.onreadystatechange = function() {
+	if (req.readyState == 4)
+	  if (req.status == 200) {
+	    var o = getObject(layer_name);
+	    o.innerHTML = req.responseText;
+	    boundPopup(layer_name);
+	    addPopup(layer_name, properties);
+	    captureMouseEvent(popupMove);
+	    show(layer_name);
+	  }
+      }
+
+      //  Send async request
+      req.open("GET", src, true);
+      req.send(null);
+      return retFromEvent(false);
+    } else
+      //  Fallback to FileLoader
+      ;
+  }
+  
+  //  Old implementation
+  if(!file_loader || isMacIE50)
+    file_loader = new FileLoader(layerLoadHandler);
+  
+  file_loader.layer_name = layer_name;
+  file_loader.properties = properties;
+  if (isSafari)
+    file_loader.loadSafariDocument(src);
+  else
+    file_loader.loadDocument(src);
+
   return retFromEvent(false);
 }
