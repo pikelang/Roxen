@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.260 2001/11/23 13:59:52 mast Exp $
+// $Id: module.pmod,v 1.261 2001/11/23 20:55:35 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -2178,6 +2178,11 @@ class Context
   //	between Frame._exec_array() and Frame._eval().)
   // "reason": string (The reason why the state is unwound. Can
   //    currently be "streaming".)
+
+  mapping id_defines;
+  // Ugly kludge: The old id->misc->defines is stored here if it's
+  // overridden by the misc mapping above. See
+  // rxml_tag_set->prepare_context.
 
   //! @ignore
   MARK_OBJECT_ONLY;
