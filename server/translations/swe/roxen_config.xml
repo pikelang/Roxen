@@ -814,7 +814,7 @@ variabeln är satt, men fler filer kan sparas</t>
 
 <str id="116">
 <o>Cache: Proxy Disk Cache Refreshes on Last-Modified</o>
-<t>Cache: Proxydiskcachen kontrollerar värdet av Last-Modifed headern</t>
+<t>Cache: Proxydiskcachen beror på Last-Modifed headern</t>
 </str>
 
 <str id="117">
@@ -838,7 +838,7 @@ här variabeln till noll kommer de inte att sparas alls.</t>
 
 <str id="120">
 <o>Cache: Proxy Disk Cache Garbage collector logfile</o>
-<t>Cache: Proxydiskcacheloggfil</t>
+<t>Cache: Proxydiskcachens loggfil</t>
 </str>
 
 <str id="121">
@@ -1153,7 +1153,7 @@ levererar samma site.</t>
 
 <str id="168">
 <o>Cache: Argument Cache Directory</o>
-<t>Cache: Argumentcacheebibliotek</t>
+<t>Cache: Argumentcachens bibliotek</t>
 </str>
 
 <str id="169">
@@ -1639,193 +1639,161 @@ tecknen / och \ får inte användas.
 </str>
 
 <str id="274">
-<new/>
 <o>Data Cache:Cache size</o>
-<t></t>
+<t>Datacache:Cachestorlek</t>
 </str>
 
 <str id="275">
-<new/>
 <o>The size of the data cache used to speed up requests for commonly requested files, in KBytes</o>
-<t></t>
+<t>Storleken på datacachen, i kilobytes, som används för att snabba upp förfrågningar av ofta hämtade filer.</t>
 </str>
 
 <str id="276">
-<new/>
 <o>Data Cache:Max file size</o>
-<t></t>
+<t>Datacache:Max filstorlek</t>
 </str>
 
 <str id="277">
-<new/>
 <o>The maximum size of a file that is to be considered for the cache</o>
-<t></t>
+<t>De maximala storleken för filer som ska lagras i datacachen</t>
 </str>
 
 <str id="278">
-<new/>
 <o>Compact site list</o>
-<t></t>
+<t>Kompakt sajtlista</t>
 </str>
 
 <str id="279">
-<new/>
 <o>If true, the list list will be presented in a compact format suitable for servers with many sites.</o>
-<t></t>
+<t>Om ja så kommer listan över sajter att presenteras i ettt kompaktare format. Lämpligt för servrar med många sajter.</t>
 </str>
 
 <str id="280">
-<new/>
 <o>normal</o>
-<t></t>
+<t>normal</t>
 </str>
 
 <str id="281">
-<new/>
 <o>Show module name and documentation with images.</o>
-<t></t>
+<t>Visa modulnamn och dokumentation med bilder.</t>
 </str>
 
 <str id="282">
-<new/>
 <o>fast</o>
-<t></t>
+<t>snabb</t>
 </str>
 
 <str id="283">
-<new/>
 <o>Like normal, but no type images.</o>
-<t></t>
+<t>Som normal, men utan typ-bilder.</t>
 </str>
 
 <str id="284">
-<new/>
 <o>faster</o>
-<t></t>
+<t>snabbare</t>
 </str>
 
 <str id="285">
-<new/>
 <o>Like normal, but allows selecting multiple modules at once.</o>
-<t></t>
+<t>Som normal, men tillåter val av flera moduler samtidigt.</t>
 </str>
 
 <str id="286">
-<new/>
 <o>compact</o>
-<t></t>
+<t>kompakt</t>
 </str>
 
 <str id="287">
-<new/>
 <o>Only show the names of modules, and allow addition/deletion of multiple modules at once.</o>
-<t></t>
+<t>Visar bara namnen på modulerna. Tillåter val av flera moduler samtidigt.</t>
 </str>
 
 <str id="288">
-<new/>
 <o>really compact</o>
-<t></t>
+<t>väldigt kompakt</t>
 </str>
 
 <str id="289">
-<new/>
 <o>Like compact, but no module classes.</o>
-<t></t>
+<t>Som kompakt, men utan modulkategorier.</t>
 </str>
 
 <str id="290">
-<new/>
 <o>Module event log for '%s' cleared by %s (%s) from %s</o>
-<t></t>
+<t>Modulloggen för '%s' rensad av %s (%s) från %s</t>
 </str>
 
 <str id="291">
-<new/>
 <o>handled by</o>
-<t></t>
+<t>hanteras av</t>
 </str>
 
 <str id="292">
-<new/>
 <o>Cache status</o>
-<t></t>
+<t>Cachestatus</t>
 </str>
 
 <str id="293">
-<new/>
 <o>Hits</o>
-<t></t>
+<t>Träffar</t>
 </str>
 
 <str id="294">
-<new/>
 <o>Misses</o>
-<t></t>
+<t>Missar</t>
 </str>
 
 <str id="295">
-<new/>
 <o>Entries</o>
-<t></t>
+<t>Poster</t>
 </str>
 
 <str id="296">
-<new/>
 <o>Illegal site name</o>
-<t></t>
+<t>Ogiltigt sajtnamn</t>
 </str>
 
 <str id="297">
-<new/>
 <o>New row</o>
-<t></t>
+<t>Ny rad</t>
 </str>
 
 <str id="yes">
-<new/>
 <o>Yes</o>
-<t></t>
+<t>Ja</t>
 </str>
 
 <str id="no">
-<new/>
 <o>No</o>
-<t></t>
+<t>Nej</t>
 </str>
 
 <str id="298">
-<new/>
 <o>Event log cleared by %s from %s</o>
-<t></t>
+<t>Loggen rensad av %s från %s</t>
 </str>
 
 <str id="299">
-<new/>
 <o>Information</o>
-<t></t>
+<t>Information</t>
 </str>
 
 <str id="300">
-<new/>
 <o>This port was requested, but binding it failed.</o>
-<t></t>
+<t>Den här porten efterfrågades, men kunde inte bindas.</t>
 </str>
 
 <str id="301">
-<new/>
 <o>Not open</o>
-<t></t>
+<t>Inte öppen</t>
 </str>
 
 <str id="1">
-<new/>
 <o>Initial variables for </o>
-<t></t>
+<t>Begynnelseinställningar för</t>
 </str>
 
 <str id="190">
-<new/>
 <o>Initial variables for the site</o>
-<t></t>
+<t>Begynnelseinställningar för sajten</t>
 </str>
