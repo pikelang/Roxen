@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.122 1998/07/21 15:28:25 per Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.123 1998/07/21 17:51:42 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -409,6 +409,7 @@ string call_container(string tag, mapping args, string contents, int line,
   if(args->help && Stdio.file_size("modules/tags/doc/"+tag) > 0)
     return handle_help("modules/tags/doc/"+tag, tag, args)+contents;
   if(stringp(rf)) return rf;
+  if(args->preparse) contents = parse_rxml(contents, id);
   TRACE_ENTER("container (&lt;"+tag+"&gt on line "+line+")", rf);
 #ifdef MODULE_LEVEL_SECURITY
   if(id->conf->check_security(rf, id, id->misc->seclevel))
@@ -465,6 +466,9 @@ string call_user_container(string tag, mapping args, string contents, int line,
   id->misc->line = line;
   args = id->misc->defaults[tag]|args;
   if(!id->misc->up_args) id->misc->up_args = ([]);
+  if(args->preparse && 
+     (args->preparse=="preparse" || (int)args->preparse))
+    contents = parse_rxml(contents, id);
   array replace_from = ({"#args#", "<contents>"})+
     Array.map(indices(args)+indices(id->misc->up_args),
 	      lambda(string q){return "&"+q+";";});
