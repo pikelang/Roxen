@@ -1,14 +1,12 @@
+SRCDIR=@srcdir@
+VPATH=@srcdir@
+prefix=@prefix@
+
 @SET_MAKE@
 
-CFLAGS=@CFLAGS@
-WARN=@WARN@
-OPTIMIZE=@OPTIMIZE@
+pre_dist:
+	-rm -rf $(SRCDIR)/*/about_pike $(SRCDIR)/*/doc $(SRCDIR)/0.5/tutorial
+	@for d in [0-9]*; do \
+	  (cd $$d; $(MAKE) new_peep_engine); \
+	done
 
-all:
-	(cd src; $(MAKE))
-
-clean:
-	(cd src; $(MAKE) clean)
-
-spotless:
-	(cd src; $(MAKE) spotless)
