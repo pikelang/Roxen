@@ -2,7 +2,7 @@
 //
 // Created 2002-02-18 by Marcus Wellhardh.
 //
-// $Id: License.pmod,v 1.8 2002/03/07 16:45:27 wellhard Exp $
+// $Id: License.pmod,v 1.9 2002/03/12 12:00:23 jonasw Exp $
 
 #if constant(roxen)
 #define INSIDE_ROXEN
@@ -324,7 +324,7 @@ class LicenseVariable
 		  query() });
       }
       
-      string url = configuration->get_url();
+      string url = configuration && configuration->get_url();
       string hostname = url && sizeof(url) && Standards.URI(url)->host;
       if(string err = key->verify(configuration, time(), hostname))
 	return ({ err, query() });
