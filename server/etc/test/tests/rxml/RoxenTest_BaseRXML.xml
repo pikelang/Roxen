@@ -836,8 +836,38 @@ b</strlen></rxml>
 </test>
 
 <test>
+<rxml><if exists="/internal-roxen-roxen">yes</if></rxml>
+<result>yes</result>
+</test>
+
+<test>
+<rxml><if exists="internal-roxen-unit">yes</if></rxml>
+<result>yes</result>
+</test>
+
+<test>
+<rxml><if exists="/internal-gopher-image">yes</if></rxml>
+<result>yes</result>
+</test>
+
+<test>
 <rxml><if exists="/does_not_exist">yes</if></rxml>
 <result></result>
+</test>
+
+<test>
+<rxml><if exists="/hidden.inv">yes</if></rxml>
+<result></result>
+</test>
+
+<test>
+<rxml><if internal-exists="/index.html">yes</if></rxml>
+<result>yes</result>
+</test>
+
+<test>
+<rxml><if internal-exists="/hidden.inv">yes</if></rxml>
+<result>yes</result>
 </test>
 
 <test>
