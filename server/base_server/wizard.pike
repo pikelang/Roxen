@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.108 2000/01/17 11:50:37 jonasw Exp $
+/* $Id: wizard.pike,v 1.109 2000/01/19 08:08:14 mast Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -396,8 +396,9 @@ mapping decompress_state(string from)
     object gz = Gz;
     if(sizeof(indices(gz)))
       from = gz->inflate()->inflate(from);
+    return decode_value(from);
   };
-  return decode_value(from);
+  return ([]);
 }
 
 
