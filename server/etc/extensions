@@ -1,4 +1,4 @@
-# $Id: extensions,v 1.33 1999/01/05 16:51:25 marcus Exp $
+# $Id: extensions,v 1.34 1999/01/13 03:28:13 neotron Exp $
 # name="Extension database";
 # doc="The database used to map from extension to mime-type (example: *.gif to image/gif)";
 #
@@ -61,6 +61,8 @@ anim3	video/x-anim
 anim5	video/x-anim
 anim7	video/x-anim
 anim8	video/x-anim
+asf	video/x-ms-asf
+asx	video/x-ms-asf
 avi	video/x-msvideo
 fli	video/x-fli
 mov	video/quicktime
