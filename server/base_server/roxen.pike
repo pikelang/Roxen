@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.15 1996/12/04 01:53:54 per Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.16 1996/12/04 06:06:32 per Exp $";
 #define IN_ROXEN
 #include <module.h>
 #include <variables.h>
@@ -788,6 +788,11 @@ public string status()
 
   if(!current_configuration)
     return ("No current_configuration. No configurations enabled?\n");
+
+  if(!current_configuration->sent
+     ||!current_configuration->received
+     ||!current_configuration->hsent)
+    return "Fatal error in status(): Bignum object gone.\n";
 
   tmp = (int)(current_configuration->sent->mb()/(float)(time(1)-start_time+1)*
 	      QUERY(copies));

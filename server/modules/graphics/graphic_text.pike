@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.2 1996/12/04 01:53:55 per Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.3 1996/12/04 06:06:34 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -44,7 +44,7 @@ array register_module()
 	      " bevel=int       Draw a bevel box (width is the argument)\n"
 	      " textbox=al,#col Use 'al' as opaque value to draw a box below\n"
 	      "                 the text with the specified color.\n"
-	      " shadow=int      Draw a drop-shadow (variable distance)\n"
+	      " shadow=int,dist Draw a drop-shadow (variable distance/intensity)\n"
 	      " fuzz=#col       The 'shine' effect used in the 'magic'\n"
 	      "                 highlightning\n"
 	      " opaque=0-100%   Draw with more or less opaque text (100%\n"
@@ -165,23 +165,20 @@ constant black = ({ 0,0,0 });
 constant wwwb = ({ lgrey,lgrey,grey,black });
 object (Image) bevel(object (Image) in, int width)
 {
-  object vedge_white = Image(width, in->ysize()-width*2, 255,255,255);
-  object vedge_black = Image(width, in->ysize()-width, 0,0,0);
-  object hedge_white = Image(in->xsize()-width, width, 255,255,255);
-  object hedge_black = Image(in->xsize()-width, width, 0,0,0);
+  int h=in->ysize();
+  int w=in->xsize();
+
+  in->paste_alpha(Image(width,h-width*2,@white), 160, 0, width);
+  in->paste_alpha(Image(width,h-width*2,@black), 128, in->xsize()-width, width);
+  in->paste_alpha(Image(w-width*2,width,@white), 160, 0, 0);
+  in->paste_alpha(Image(w-width*2,width,@black), 128, width, in->ysize()-width);
+
   object corner = Image(width+1,width+1);
-
-  for(int i=-1; i<=width; i++)
-    corner->line(i,width-i,i,-1, 200,200,200);
-
-  in->paste_alpha(vedge_white, 160, 0, width);
-  in->paste_alpha(vedge_black, 128, in->xsize()-width, width);
-  in->paste_alpha(hedge_white, 160, 0, 0);
-  in->paste_alpha(hedge_black, 128, width, in->ysize()-width);
+  for(int i=-1; i<=width; i++) corner->line(i,width-i,i,-1, 200,200,200);
   in->paste_alpha(corner, 128, in->xsize()-width,0);
   in->paste_alpha(corner, 128, -1, in->ysize()-width);
-  vedge_white=vedge_black=hedge_white=hedge_black=0;
-
+  corner=0;
+  
   return in;
 }
 
@@ -222,6 +219,12 @@ object (Image) make_text_image(mapping args, object font, string text)
     ysize += ((int)args->yspacing)*2;
   }
 
+  if(args->shadow)
+  {
+    xsize+=((int)(args->shadow/",")[-1])+2;
+    ysize+=((int)(args->shadow/",")[-1])+2;
+  }
+
   if(args->xspacing)
   {
     xoffset += (int)args->xspacing;
@@ -243,28 +246,40 @@ object (Image) make_text_image(mapping args, object font, string text)
   object background,foreground;
 
 
-  if(args->background) background = load_image(args->background);
   if(args->texture)    foreground = load_image(args->texture);
 
-  if(!background)      background = Image(xsize, ysize, @bgcolor);
-  if(!foreground)      foreground = Image(xsize, ysize, @fgcolor);
-
-  xsize = background->xsize();
-  ysize = background->ysize();
+  if(args->background)
+  {
+    background = load_image(args->background);
+    xsize = background->xsize();
+    ysize = background->ysize();
+  } else
+    background = Image(xsize, ysize, @bgcolor);
 
   if(args->bevel) background = bevel(background, (int)args->bevel);
 
   if(args->textbox) // Draw a text-box on the background.
   {
-    int alpha;
+    int alpha,border;
     string bg;
     sscanf(args->textbox, "%d,%s", alpha, bg);
-    background->paste_alpha(Image(txsize,tysize, @parse_color(bg)),
-			    255-(alpha*255/100), xoffset,yoffset);
+    sscanf(bg,"%s,%d", bg,border);
+    background->paste_alpha(Image(txsize+border,tysize+border,@parse_color(bg)),
+			    255-(alpha*255/100), xoffset, yoffset);
   }
 
-  background->paste_mask(foreground, text_alpha, xoffset, yoffset);
+  if(args->shadow)
+  {
+    int sd = ((int)args->shadow+10)*2;
+    int sdist = ((int)(args->shadow/",")[-1])+2;
+    object ta = text_alpha->copy();
+    ta = ta->color(256-sd,256-sd,256-sd);
+    background->paste_mask(Image(txsize,tysize),ta,xoffset+sdist, yoffset+sdist);
+  }
 
+  if(!foreground)  foreground=Image(xsize, ysize, @fgcolor);
+
+  background->paste_mask(foreground, text_alpha, xoffset, yoffset);
 
   foreground = text_alpha = 0;
 
@@ -283,8 +298,7 @@ object (Image) make_text_image(mapping args, object font, string text)
     background = background->rotate((float)args->rotate);
   }
 
-  if(args->crop)
-    background = background->autocrop();
+  if(args->crop) background = background->autocrop();
   
   return background;
 }
