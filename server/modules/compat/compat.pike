@@ -596,6 +596,7 @@ mapping gtext_compat(mapping m, RequestID id) {
     if(m[(string)i])
     {
       m->scale = (string)(1.0 / ((float)i*0.6));
+      old_rxml_warning(id, LOCALE(65, "<gtext> attribute")+" "+i,"scale='" + m->scale + "'");
       m_delete(m,(string)i);
     }
   if(m->fg) {
