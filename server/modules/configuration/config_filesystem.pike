@@ -12,7 +12,7 @@ constant module_type = MODULE_LOCATION;
 constant module_name = "Configuration Filesystem";
 constant module_doc = "This filesystem serves the configuration interface";
 constant module_unique = 1;
-constant cvs_version = "$Id: config_filesystem.pike,v 1.30 2000/03/14 02:20:00 per Exp $";
+constant cvs_version = "$Id: config_filesystem.pike,v 1.31 2000/03/14 21:04:07 js Exp $";
 
 constant path = "config_interface/";
 
@@ -217,7 +217,7 @@ mixed find_file( string f, object id )
        roxen.set_locale( "standard" );
   }
 
-  foreach( glob( "cf_goto_*", indices( id->variables )  ), string q )
+  foreach( glob( "cf_goto_*", indices( id->variables ) - ({ 0 }) ), string q )
     if( sscanf( q, "cf_goto_%s.x", q ) )
     {
       while( id->misc->orig ) id = id->misc->orig;
@@ -240,7 +240,7 @@ void start(int n, Configuration cfg)
       "awizard",      "config_tags", "config_userdb","contenttypes",
       "indexfiles",   "gbutton",     "wiretap",       "graphic_text",
       "obox",         "pathinfo",     "pikescript",
-      "rxmlparse",    "rxmltags",    "tablist",      "upgrade"
+      "rxmlparse",    "rxmltags",    "tablist",      "update"
     }));
     catch {
 //       charset_encoder = Locale.Charset.encoder(QUERY(encoding), "?");
