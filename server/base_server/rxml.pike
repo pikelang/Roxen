@@ -39,7 +39,7 @@ array|string call_tag(string tag, mapping args, int line, int i,
 
   TRACE_ENTER("tag &lt;" + tag + "&gt;", rf);
 #ifdef MODULE_LEVEL_SECURITY
-  if(id->conf->check_security(rf, id, id->misc->seclevel))
+  if(check_security(rf, id, id->misc->seclevel))
   {
     TRACE_LEAVE("Access denied");
     return 0;
@@ -74,7 +74,7 @@ call_container(string tag, mapping args, string contents, int line,
     contents = reverse(contents);
   }
 #ifdef MODULE_LEVEL_SECURITY
-  if(id->conf->check_security(rf, id, id->misc->seclevel))
+  if(check_security(rf, id, id->misc->seclevel))
   {
     TRACE_LEAVE("Access denied");
     return 0;
@@ -455,13 +455,13 @@ string tag_use(string tag, mapping m, object id)
     return "<use help>";
   
   if(id->pragma["no-cache"] || 
-     !(res = cache_lookup("macrofiles:"+ id->conf->name ,
+     !(res = cache_lookup("macrofiles:"+ name ,
 			  (m->file || m->package))))
   {
     res = ([]);
     string foo;
     if(m->file)
-      foo = nid->conf->try_get_file( fix_relative(m->file,nid), nid );
+      foo = try_get_file( fix_relative(m->file,nid), nid );
     else 
       foo=Stdio.read_bytes("../rxml_packages/"+combine_path("/",m->package));
       
@@ -482,7 +482,7 @@ string tag_use(string tag, mapping m, object id)
     res->defines = nid->misc->defines||([]);
     res->defaults = nid->misc->defaults||([]);
     m_delete(res->defines, "line");
-    cache_set("macrofiles:"+ id->conf->name, (m->file || m->package), res);
+    cache_set("macrofiles:"+ name, (m->file || m->package), res);
   }
 
   if(!id->misc->tags)
