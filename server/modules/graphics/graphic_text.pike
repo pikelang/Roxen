@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.129 1998/06/09 08:16:43 peter Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.130 1998/06/09 10:57:21 peter Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -21,109 +21,12 @@ static private string doc()
 array register_module()
 {
   return ({ MODULE_LOCATION | MODULE_PARSER,
-	      "Graphics text",
-	      ("Generates graphical texts.<p>"
-	       "See <tt>&lt;gtext help&gt;&lt;/gtext&gt;</tt> for "
-	       "more information.\n<p>"+doc()),
-#if 0
-	      "Defines a few new containers, which all render text to gifs "
-	      "using the image module in pike.\n<p>"
-	      "<b>&lt;gh1&gt;</b> to <b>&lt;gh6&gt;:</b> Headers<br>\n"
-	      "<b>&lt;gh&gt;:</b> Header<br>\n"
-	      "<b>&lt;gtext&gt;:</b> Graphical text<br>\n"
-	      "<b>&lt;anfang&gt;:</b> Make the first character a "
-	      "graphical one. Not all that useful, really.<br>\n"
-	      "<br>\n"
-	      "<b>Common arguments:</b>\n <pre>"
-	      " verbatim        Do not try to be typographically correct\n"
-	      " bg=color        Use this background, default taken from the\n"
-	      "                 &lt;body&gt; tag, if any\n"
-	      " fg=color        Use this foreground, default taken from the\n"
-	      "                 &lt;body&gt; tag, if any\n"
-	      " nfont=fnt       Use this font. The fonts can be found in the\n"
-	      "                 directory specified in the configuration\n"
-	      "                 interface.\n"
-	      "                 If no font is specified, the one from the\n"
-	      "                 define 'nfont' is used, or if there is no\n"
-	      "                 define, the default font will be used.\n"
-	      " bold            Try to find a bold version of the font.\n"
-	      " italic          Try to find an italic version of the font.\n"
-	      " black           Try to find a black (heavy) version of the font.\n"
-	      " light           Try to find a light version of the font.\n"
-	      " scale=float     Scale to this font, mostly useful in the &lt;gtext&gt;\n"
-	      "                 tag, will not work at all in the &lt;gh[number]&gt;\n"
-	      "                 tags.\n"
-	      " 2 3 4 5 6       Short for scale=1.0/([number]*0.6)\n"
-	      " notrans         Do _not_ make the background color transparent\n"
-	      " split           Make each word into a separate gif image\n"
-	      " split=char      Split the string also at CHAR\n"
-	      " href=url        Link the image to the specified URL\n"
-	      "                 The 'link' color of the document will be\n"
-	      "                 used as the default foreground of the text\n"
-	      " alt=message     Sets the 'alt' attribute.\n"
-	      "                 Use alt=\"\" if no alternate message is wanted.\n"
-	      " quant=cols      Use this number of colors\n"
-	      " magic[=message] Modifier to href, more flashy links\n"
-	      "                 Does <b>not</b> work with 'split'\n"
-	      " magicbg=bg      As background, but for the 'magic' image\n"
-	      " magic_X         same as X, where X is any other argument,\n"
-	      "                 but for the 'magic' image.\n"
-	      " fuzz[=color]    Apply the 'glow' effect to the result\n"
- 	      " fs              Use floyd-steinberg dithering\n"
-	      " border=int,col. Draw an border (width is the first argument\n"
-	      "                 in the specified color\n"
-	      " spacing=int     Add this amount of spacing around the text\n"
-	      " xspacing=int    like spacing, but only horizontal\n"
-	      " yspacing=int    like spacing, but only vertical\n"
-	      " size=int,int    Use this (absolute) size\n"
-	      " xsize=int       Use this (absolute) size\n"
-	      " ysize=int       Use this (absolute) size\n"
-	      " bevel=int       Draw a bevel box (width is the argument)\n"
-	      " pressed         Invert the \"direction\" of the bevel box\n"
-	      " talign=dir      Justify the text to the left, right, or center\n"
-	      " textbox=al,col. Use 'al' as opaque value to draw a box below\n"
-	      "                 the text with the specified color.\n"
-	      " xpad=X%         Increase padding between characters with X%\n"
-	      " xpad=Y%         Increase padding between lines with Y%\n"
-	      " shadow=int,dist Draw a drop-shadow (variable distance/intensity)\n"
-	      " bshadow=dist    Draw a blured drop-shadow (variable distance)\n"
-	      " scolor=color    Use this color as the shadow color.\n"
-	      " ghost=dist,blur,col\n"
-	      "                 Do a 'ghost text'. Do NOT use together with\n"
-	      "                 'shadow'. Magic coloring won't work with it.\n"
-	      " glow=color      Draw a 'glow' outline around the text.\n"
-	      " opaque=0-100%   Draw with more or less opaque text (100%\n"
-	      "                 is default)\n"
-	      " rotate=ang(deg.)Rotate the finished image\n"
-	      " background=file Use the specifed file as a background\n"
-	      "                 Supported file-formats: gif and ppm, jpeg if\n"
-	      "                 the jpeg library was available when roxen was\n"
-	      "                 compiled\n"
-	      " texture=file    Use the specified file as text texture\n"
-	      " tile            Tile the background and foreground images\n"
-	      "                 if they are smaller than the actual image\n"
-	      " mirrortile      same as above, but mirror around x and y axis\n"
-	      "                 for odd frames, creating seamless textures\n"
-	      " turbulence=args args is: frequency,color;freq,col;freq,col\n"
-	      "                 Apply a turbulence filter, and use this as the\n"
-	      "                 background.\n"
-	      " maxlen=arg      The maximum length of the rendered text will be\n"
-	      "                 the specified argument. The default is 300, this\n"
-	      "                 is used to safeguard against mistakes like\n"
-	      "                 &lt;gh1&gt;&lt;/gh&gt;, which would otherwise\n"
-	      "                 parse the whole document.\n"
-	      " help            Display this text\n"
-	      " scroll=width,steps,delay  Make a horrible scrolltext\n"
-	      " fadein=blur,steps,delay,initialdelay  Make a (somewhat less) horrible fadein\n"
-	      "\n"
-	      "<b>Arguments passed on the the &lt;a&gt; tag (if href is specified):</b>\n "
-	      " target=...\n"
-	      " onClick=...\n"
-	      "</pre>\n",
-#endif
-	      0,
-	      1,
-	      });
+	    "Graphics text",
+	    "Generates graphical texts.<p>"
+	    "See <tt>&lt;gtext help&gt;&lt;/gtext&gt;</tt> for "
+	    "more information.\n<p>"+doc(),
+	    0, 1
+         });
 }
 
 
