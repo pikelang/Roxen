@@ -11,13 +11,12 @@
  *
  * Idag:
  * Skriv dok och skriv ut åt PetNo.
- * Se till att sumbars får jämnstora arrayer.
  *
  * Senare:
  * Prevent less that 100x100 in size.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.20 1997/10/15 12:28:42 peter Exp $";
+constant cvs_version = "$Id: business.pike,v 1.21 1997/10/15 15:25:48 peter Exp $";
 constant thread_safe=0;
 
 #include <module.h>
@@ -150,7 +149,7 @@ string itag_data(mapping tag, mapping m, string contents,
   if(m->lineseparator)
     linesep=m->lineseparator;
 
-  if( !m->form || m->form == "straight" )
+  if( !m->form || m->form == "db" || m->form == "straight" )
   {
     contents = contents - " ";
     array lines = filter( contents/linesep, sizeof );
@@ -165,24 +164,23 @@ string itag_data(mapping tag, mapping m, string contents,
 	foreach( item, string gaz )
 	  foo += ({ (float)gaz });
       }
-      if (sizeof(bar)>maxsize)
-	maxsize=sizeof(bar);
+      if (sizeof(foo)>maxsize)
+	maxsize=sizeof(foo);
       bar += ({ foo });
       foo = ({});
     }
 
-    //FIXME Här har Hedda hackat och fört in buggar
     if (m->form == "db")
-      {
-	for(int i=0; i<sizeof(bar); i++)
-	  if (sizeof(bar[i])<maxsize)
-	    bar+=allocate(maxsize-sizeof(bar[i]));
-	
-	array bar2=allocate(sizeof(bar));
-	for(int i=0; i<sizeof(bar); i++)
-	  bar2[i]=column(bar, i);
-	res->data=bar2;
-      }
+    {
+      for(int i=0; i<sizeof(bar); i++)
+	if (sizeof(bar[i])<maxsize)
+	  bar[i]+=allocate(maxsize-sizeof(bar[i]));
+      
+      array bar2=allocate(maxsize);
+      for(int i=0; i<maxsize; i++)
+	bar2[i]=column(bar, i);
+      res->data=bar2;
+    }
     else
       res->data=bar;
   }
@@ -219,6 +217,18 @@ string syntax( string error )
   return "<hr noshade><h3>Syntax error</h3>"
     + error
     + "<hr noshade>";
+}
+
+mapping url_cache = ([]);
+string quote(string in)
+{
+  object g;
+  string res;
+
+  g=Gz;
+  res=MIME.encode_base64(g->deflate()->deflate(in));
+
+  return res;
 }
 
 string tag_diagram(string tag, mapping m, string contents,
@@ -310,7 +320,6 @@ string tag_diagram(string tag, mapping m, string contents,
   if(m["3d"])
   {
     res->drawtype = "3D";
-    //    perror("'"+m["3d"]+"'\n");
     if( lower_case(m["3d"])!="3d" )
       res->dimensionsdepth = (int)m["3d"];    
     else
@@ -348,9 +357,7 @@ string tag_diagram(string tag, mapping m, string contents,
     else res->xsize = 400;
     if(m->ysize) res->ysize = (int)m->ysize;
     else res->ysize = 300;
-  }
-  else
-  {
+  } else {
     if(m->xsize) res->xsize = (int)m->xsize;
     if(m->ysize) res->ysize = (int)m->ysize;
   }
@@ -365,7 +372,7 @@ string tag_diagram(string tag, mapping m, string contents,
   if(!res->ynames)
     if(res->yname) res->ynames = ({ res->yname });
     else res->ynames = 0;
-      
+
   m_delete( m, "ysize" );
   m_delete( m, "xsize" );
   m_delete( m, "size" );
@@ -375,7 +382,7 @@ string tag_diagram(string tag, mapping m, string contents,
   m_delete( m, "fontsize" );
   m_delete( m, "tone" );
 
-  m->src = query("location") + MIME.encode_base64(encode_value(res)) + ".gif";
+  m->src = query("location") + quote(encode_value(res)) + ".gif";
 
   return(make_tag("img", m));
 }
@@ -414,15 +421,19 @@ mapping find_file(string f, object id)
   if (f[sizeof(f)-4..] == ".gif")
     f = f[..sizeof(f)-5];
 
-  mapping res = decode_value(MIME.decode_base64(f));    
+  if (sizeof(f))
+  {
+    object g;
+    g = Gz;
+    catch(f = g->inflate()->inflate(MIME.decode_base64(f)));
+  }
+  
+  mapping res = decode_value(f);    
 
-  perror("f-#data: %O\n", sizeof(res->data[0]));
-  perror("f-data: %O\n", res->data);
+  // perror("f-#data: %O\n", sizeof(res->data[0]));
+  // perror("f-data: %O\n", res->data);
 
-  //strap
   res->labels=      ({ res->xstor, res->ystor, res->xunit, res->yunit });
-  res->xminvalue=   0.1;
-  res->yminvalue=   0;
 
   mapping(string:mixed) diagram_data;
 
@@ -435,6 +446,12 @@ mapping find_file(string f, object id)
     res->image = PPM(res->image, id);
   }
 
+  if(res->xstart > res->xstop)
+    res->xstart = 0;
+
+  if(res->ystart > res->ystop)
+    res->ystart = 0;
+
   diagram_data=(["type":      res->type,
 		 "subtype":   res->subtype,
 		 "drawtype":  res->dimensions,
@@ -445,14 +462,16 @@ mapping find_file(string f, object id)
 		 "bgcolor":   res->bg,
 		 "orient":    res->orientation,
 
+		 "xminvalue": (float)res->xstart,
+		 "xmaxvalue": (float)res->xstop,
+		 "yminvalue": (float)res->ystart,
+		 "ymaxvalue": (float)res->ystop,
+
 		 "data":      res->data,
 		 "datacolors":res->colors,
 		 "fontsize":  res->fontsize,
 		 "xnames":    res->xnames,
 		 "ynames":    res->ynames,
-
-		 "xminvalue": res->xminvalue,
-		 "yminvalue": res->yminvalue,
 
 		 "axcolor":   res->axiscolor,
 
@@ -465,17 +484,20 @@ mapping find_file(string f, object id)
 		 "linewidth": res->linewidth,
 		 "tone":      res->tone,
 		 "center":    res->center,
-		 "image":     res->image
+		 "image":     res->image,
+
+		 "sw":       res->sw
   ]);
-  
 
   object(Image.image) img;
 
+  /*
   perror( res->orientation +"  " );
   perror( res->type +"  " );
   perror( res->subtype +"\n" );
+  */
 
-  /* Säkerhetshål!! */
+  /* Check this */
   if(res->image)
     diagram_data["image"] = PPM(res->image, id);
 
@@ -492,9 +514,6 @@ mapping find_file(string f, object id)
     img = bars->create_bars(diagram_data)["image"];
 
   img = img->map_closest(img->select_colors(254)+({ back }));
-
-  //  perror("%O\n", res->xnames);
-  perror("\n");
 
   return http_string_answer(img->togif(@back), "image/gif");  
 }
