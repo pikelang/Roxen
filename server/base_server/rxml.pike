@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.156 2000/03/03 11:03:15 nilsson Exp $
+// $Id: rxml.pike,v 1.157 2000/03/04 22:18:06 mast Exp $
 
 inherit "roxenlib";
 inherit "rxmlhelp";
@@ -329,6 +329,9 @@ array|string call_overridden (array call_to, RXML.PXml parser,
 			      string content, RequestID id)
 {
   mixed tdef, cdef;
+#ifdef OLD_RXML_COMPAT
+  if (parse_html_compat) name = lower_case (name);
+#endif
 
   if (sizeof (call_to) > 1 && call_to[1] && call_to[1] != name) // Another tag.
     if (sizeof (call_to) == 3) tdef = parser->tags()[call_to[1]];
@@ -377,6 +380,7 @@ array|string call_tag(RXML.PXml parser, mapping args, string|function rf)
   RXML.Context ctx = parser->context;
   RequestID id = ctx->id;
   string tag = parser->tag_name();
+  werror ("call_tag %s\n", tag);
   id->misc->line = (string)parser->at_line();
 
   if(args->help)
@@ -439,6 +443,7 @@ array(string)|string call_container(RXML.PXml parser, mapping args,
   RXML.Context ctx = parser->context;
   RequestID id = ctx->id;
   string tag = parser->tag_name();
+  werror ("call_container %s\n", tag);
   id->misc->line = (string)parser->at_line();
 
   if(args->help)
