@@ -1,5 +1,5 @@
 constant OK         =   0;
-
+// 1 is compilation failed from pike.
 constant BADHEADERS =   2;
 constant BADDATA    =   3;
 constant NOCONN     =   4;
@@ -9,7 +9,7 @@ constant BADCODE    =   6;
 constant NODATE     =   7;
 constant BADLENGTH  =   8;
 constant BADMODIFIED=   9;
-
+// 10 is error-in-execution from pike.
 constant HEADERS    =  11;
 constant DATA       =  12;
 constant CONN       =  13;
