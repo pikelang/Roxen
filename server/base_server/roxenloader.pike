@@ -22,7 +22,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.238 2001/01/31 07:33:00 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.239 2001/01/31 09:34:38 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1104,6 +1104,79 @@ static void do_tailf( int loop, string f )
   } while( loop );
 }
 
+void low_start_mysql( string datadir,
+		      string basedir,
+		      string uid )
+{
+  string bindir = basedir+"libexec/";
+  if( !file_stat( bindir+"mysqld" ) )
+  {
+    bindir = basedir+"bin/";
+    if( !file_stat( bindir+"mysqld" ) )
+    {
+      bindir = basedir+"sbin/";
+      if( !file_stat( bindir+"mysqld" ) )
+      {
+	report_debug( "\nNo mysql found in "+basedir+"!\n" );
+	exit( 1 );
+      }
+    }
+  }
+  string pid_file = datadir + "/mysql_pid";
+  string err_log  = datadir + "/error_log";
+
+  mapping env = getenv();
+  env->MYSQL_UNIX_PORT = datadir+"/socket";
+#ifndef __NT__
+  env->MYSQL_TCP_PORT  = "0";
+#endif
+
+  array args = ({ 
+		  "--socket="+datadir+"/socket",
+#ifndef __NT__
+		  "--skip-networking",
+#endif
+		  "--skip-locking",
+		  "--set-variable","max_allowed_packet=16777215",
+		  "--set-variable","net_buffer_length=8192",
+		  "--basedir="+basedir,
+		  "--datadir="+datadir,
+		  "--pid-file="+pid_file,
+	       });
+
+#ifndef __NT__
+  if( uid == "root" )
+    args += ({ "--user="+uid });
+#endif
+  
+  string binary = "bin/roxen_mysql";
+  rm( binary );
+#if constant(hardlink)
+  if( catch(hardlink( bindir+"mysqld", "bin/roxen_mysql" )) )
+#endif
+    if( !Stdio.cp( bindir+"mysqld", "bin/roxen_mysql" ) ||
+	catch(chmod( "bin/roxen_mysql", 0500 )) )
+      binary = bindir+"mysqld";
+
+  args = ({ binary }) + args;
+
+  Stdio.File  devnull
+#ifndef __NT__
+    = Stdio.File( "/dev/null", "w" )
+#endif
+    ;
+  Stdio.File errlog = Stdio.File( err_log, "wct" );
+
+  Process.create_process( args,
+			  ([
+			    "environment":env,
+			    "stdin":devnull,
+			    "stdout":errlog,
+			    "stderr":errlog
+			  ]) );
+}
+
+
 int mysql_path_is_remote;
 void start_mysql()
 {
@@ -1200,16 +1273,13 @@ void start_mysql()
 
   rm( mysqldir+"/error_log"  );
 
-  Process.Process p = 
-  Process.create_process( ({"bin/start_mysql",
-                            mysqldir,
-                            query_mysql_dir(),
+  low_start_mysql( mysqldir,query_mysql_dir(),
 #if constant(getpwuid)
-			    getpwuid(getuid())[ 0 ]
-#else /* Should be ignored by the start_mysql script */
-			    "Administrator"
+		   getpwuid(getuid())[ 0 ]
+#else /* Ignored by the start_mysql script */
+		0
 #endif
-			  }) );
+		 );
 
   int repeat;
   while( 1 )
