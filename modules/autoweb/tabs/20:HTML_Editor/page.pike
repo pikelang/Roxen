@@ -160,7 +160,7 @@ string|mapping navigate(object id, string f, string base_url)
       res += "<tr><td>"+href+id->misc->icons->tag(img)+"</a></td>";
       res += "<td>"+href+"<tt>"+html_encode_string(item)+"</tt></a></td>";
       res += "<td>";
-      if(md->title)
+      if(md->title && md->content_type=="text/html")
 	res += html_encode_string(md->title);
       res += "</td></tr>\n";
       
