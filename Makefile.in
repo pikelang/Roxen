@@ -187,7 +187,7 @@ distribute:	spotless
 	@(cd extern; $(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" distribute)
 
 run_autoconf:
-	@(cd $(SRCDIR); pike/$(PIKEVERSION)/src/run_autoconf
+	@(cd $(SRCDIR); pike/$(PIKEVERSION)/src/run_autoconf .)
 
 weak_cleanup:
 	@for f in `find $(SRCDIR) -type f -name '*~' -print` \
