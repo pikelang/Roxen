@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.18 2000/07/02 16:52:36 nilsson Exp $
+ * $Id: Roxen.pmod,v 1.19 2000/07/02 17:52:16 grubba Exp $
  *
  * Various helper functions.
  *
@@ -26,7 +26,7 @@ class QuotaDB
 {
 #if constant(create_thread)
   object(Thread.Mutex) lock = Thread.Mutex();
-#define LOCK()		mixed key__; catch { _key = lock->lock(); }
+#define LOCK()		mixed key__; catch { key__ = lock->lock(); }
 #define UNLOCK()	do { if (key__) destruct(key__); } while(0)
 #else /* !constant(create_thread) */
 #define LOCK()
