@@ -10,7 +10,7 @@
 #define old_rxml_compat 1
 #define old_rxml_warning id->conf->api_functions()->old_rxml_warning[0]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.1 1999/08/13 19:11:13 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.2 1999/08/16 11:00:25 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -118,13 +118,7 @@ string tag_expire_time(string tag, mapping m, object id)
   int t=time();
   if(!m->now)
   {
-    if (m->hours) t+=((int)(m->hours))*3600;
-    if (m->minutes) t+=((int)(m->minutes))*60;
-    if (m->seconds) t+=((int)(m->seconds));
-    if (m->days) t+=((int)(m->days))*(24*3600);
-    if (m->weeks) t+=((int)(m->weeks))*(24*3600*7);
-    if (m->months) t+=((int)(m->months))*(24*3600*30+37800); /* 30.46d */
-    if (m->years) t+=((int)(m->years))*(3600*(24*365+6));   /* 365.25d */
+    t+=id->conf->api_functions()->time_quantifier[0](id, m);
     CACHE(max(t-time(),0));
   } else {
     NOCACHE();
@@ -487,6 +481,14 @@ string tag_date(string q, mapping m, object id)
   return id->conf->api_functions()->tag_time_wrapper[0](id, t, m);
 }
 
+#if old_rxml_compat
+inline string do_replace(string s, mapping m, object id)
+{
+  return replace(s, indices(m), values(m));
+  old_rxml_warning(id, "replace (A=B) in in insert tag","the replace tag");
+}
+#endif
+
 string tag_insert(string tag,mapping m,object id)
 {
   if(m->help)
@@ -498,12 +500,21 @@ string tag_insert(string tag,mapping m,object id)
   // Not part of RXML 1.4
   if(n=m->define || m->name) {
     old_rxml_warning(id, "define or name attribute in insert tag","only variables");
-    return id->misc->defines[n]||rxml_error(tag, "No such define ("+n+").",id);
+    m_delete(m, "define");
+    m_delete(m, "name");
+    return do_replace(id->misc->defines[n]||rxml_error(tag, "No such define ("+n+").",id), m, id);
   }
 #endif
 
   if (n=m->variable)
+#if old_rxml_compat
+    {
+      m_delete(m, "variable");
+      return do_replace(id->variables[n]||rxml_error(tag, "No such variable ("+n+").",id), m, id);
+    }
+#else
     return id->variables[n]||rxml_error(tag, "No such variable ("+n+").",id);
+#endif
 
 #if old_rxml_compat
   if(m->variables && m->variables!="variables") {
@@ -529,7 +540,12 @@ string tag_insert(string tag,mapping m,object id)
 
   if (n=m->cookie) {
     NOCACHE();
+#if old_rxml_compat
+    m_delete(m, "cookie");
+    return do_replace(id->cookies[n]||rxml_error(tag, "No such cookie ("+n+").", id), m, id);
+#else
     return id->cookies[n]||rxml_error(tag, "No such cookie ("+n+").", id);
+#endif
   }
 
   if (m->file) 
@@ -539,10 +555,20 @@ string tag_insert(string tag,mapping m,object id)
       id->pragma["no-cache"] = 1;
       string ret=id->conf->api_functions()->read_file[0](id, m->file);
       id->pragma["no-cache"] = nocache;
+#if old_rxml_compat
+      m_delete(m, "nocache");
+      m_delete(m, "file");
+      return do_replace(ret, m, id);
+#else
       return ret;
+#endif
     }
+#if old_rxml_compat
+    m_delete(m, "file");
+    return do_replace(id->conf->api_functions()->read_file[0](id, m->file), m, id);
+#else
     return id->conf->api_functions()->read_file[0](id, m->file);
-
+#endif
   }
 
   if(m->href && query("insert_href")) {
@@ -585,15 +611,7 @@ string tag_set_cookie(string tag, mapping m, object id)
   if(m->persistent)
     t=(3600*(24*365*2));
   else
-  {
-    if (m->hours)   t+=((int)(m->hours))*3600;
-    if (m->minutes) t+=((int)(m->minutes))*60;
-    if (m->seconds) t+=((int)(m->seconds));
-    if (m->days)    t+=((int)(m->days))*(24*3600);
-    if (m->weeks)   t+=((int)(m->weeks))*(24*3600*7);
-    if (m->months)  t+=((int)(m->months))*(24*3600*30+37800); /* 30.46d */
-    if (m->years)   t+=((int)(m->years))*(3600*(24*365+6));   /* 365.25d */
-  }
+    t=id->conf->api_functions()->time_quantifier[0](id, m);
 
   if(t) cookies += "; expires="+http_date(t+time());
 
@@ -783,7 +801,9 @@ string tag_autoformat(string tag, mapping m, string s, object id)
     s = replace(s, "\n", "<br>\n");
     if(m->p) {
       if(search(s, "<br>\n<br>\n")!=-1) s="<p>"+s;
-      s = "<p>"+replace(s, "<br>\n<br>\n", "\n</p><p>\n");
+      s = replace(s, "<br>\n<br>\n", "\n</p><p>\n");
+      if(sizeof(s)>3 && s[0..2]!="<p>" && s[0..2]!="<p ")
+        s="<p>"+s;
       if(s[..sizeof(s)-4]=="<p>")
         return s[..sizeof(s)-4];
       else
@@ -794,7 +814,9 @@ string tag_autoformat(string tag, mapping m, string s, object id)
 
   if(m->p) {
     if(search(s, "\n\n")!=-1) s="<p>"+s;
-      s = "<p>"+replace(s, "\n\n", "\n</p><p>\n");
+      s = replace(s, "\n\n", "\n</p><p>\n");
+      if(sizeof(s)>3 && s[0..2]!="<p>" && s[0..2]!="<p ")
+        s="<p>"+s;
       if(s[..sizeof(s)-4]=="<p>")
         return s[..sizeof(s)-4];
       else
