@@ -1,7 +1,9 @@
-constant cvs_version="$Id: countdown.pike,v 1.14 1999/08/26 18:04:05 nilsson Exp $";
+constant cvs_version="$Id: countdown.pike,v 1.15 1999/09/25 15:06:37 nilsson Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
+
+thread_safe=1;
 
 #define old_rxml_compat 1
 

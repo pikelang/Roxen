@@ -2,6 +2,8 @@ inherit "module";
 inherit "roxenlib";
 #include <module.h>
 
+thread_safe=1;
+
 array register_module()
 {
   return ({
