@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.62 1997/08/13 03:35:27 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.63 1997/08/13 04:17:41 neotron Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -581,7 +581,7 @@ string new_configuration_form()
 	  "configuration of the server. <p>The types are:<dl>"+
 	  configuration_docs() +
 	  "<dt><b>Copy of ...</b>:\n"
-	  "<dd>Make an exact copy of the mentined virtual server.\n"
+	  "<dd>Make an exact copy of the mentioned virtual server.\n"
 	  "You should change at least the listen ports.    <p>"
 	  "This can be very useful, since you can make 'template' virtual "
 	  "servers (servers without any open ports), that you can copy later "
