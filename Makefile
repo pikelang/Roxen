@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.26 1998/03/04 14:32:01 mast Exp $
+# $Id: Makefile,v 1.27 1998/03/05 22:58:06 grubba Exp $
 #
 # Bootstrap Makefile
 #
@@ -160,7 +160,7 @@ censor_crypto :
 	@for d in pike/*/src/modules/_Crypto/. pike/src/modules/_Crypto/.; do \
 	  if test -d $$d ; then \
 	    echo "Lobotomizing in $$d..."; \
-	    (cd $$d; ./.build_lobotomized_crypto); \
+	    (cd $$d; ./.build_lobotomized_crypto) || exit 1; \
 	  else : ; fi; \
 	done
 
