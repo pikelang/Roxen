@@ -227,7 +227,6 @@ string devel_buttons( object c, string mn, object id )
 string get_eventlog( roxen.ModuleInfo o, RequestID id, int|void no_links )
 {
   mapping log = o->error_log;
-  werror ("%O\n", log);
   if(!sizeof(log)) return "";
 
   array report = indices(log), r2;
