@@ -23,7 +23,7 @@ theme-set what=leftside-padwidth    to=160 />
 
 <theme-set what=fade2     to="#dee2eb"/>
 
-<theme-set what=next     to=next2.gif themefile />
+<theme-set what=next     to=next.png themefile />
 <theme-set what=selected-indicator    to=sel2.gif themefile />
 
 <theme-set what=left-buttonbg     to='white'/>
