@@ -375,6 +375,40 @@ string get_var_value( string s, object mod, object id )
   }
 }
 
+string get_world(array(string) urls) {
+  if(!sizeof(urls)) return 0;
+
+  string url=urls[0];
+  foreach( ({"http:","fhttp:","https:","ftp:"}), string p)
+    foreach(urls, string u)
+      if(u[0..sizeof(p)-1]==p) {
+	url=u;
+	break;
+      }
+
+  string protocol, server, path;
+  int port;
+  if(sscanf(url, "%s://%s:%d/%s", protocol, server, port, path)!=4 &&
+     sscanf(url, "%s://%s/%s", protocol, server, path)!=3)
+    return 0;
+
+  if(protocol=="fhttp") protocol="http";
+
+  array hosts=({ gethostname() }), dns;
+  catch(dns=Protocols.DNS.client()->gethostbyname(hosts[0]));
+  if(dns && sizeof(dns))
+    hosts+=dns[2]+dns[1];
+
+  foreach(hosts, string host)
+    if(glob(server, host)) {
+      server=host;
+      break;
+    }
+
+  if(port) return sprintf("%s://%s:%d/%s", protocol, server, port, path);
+  return sprintf("%s://%s/%s", protocol, server, path);
+}
+
 string set_variable( string v, object in, mixed to, object id )
 {
   array var = in->variables[ v ];
@@ -469,7 +503,7 @@ string set_variable( string v, object in, mixed to, object id )
        val = 0;
      break;
    default:
-     werror("Unknown variable type ["+var[ VAR_TYPE ]+"]\n");
+     report_debug("Unknown variable type ["+var[ VAR_TYPE ]+"]\n");
      return "";
   }
 
@@ -482,6 +516,15 @@ string set_variable( string v, object in, mixed to, object id )
 
   if( equal( var[ VAR_VALUE ], val ) )
     return "";
+
+  if( v=="MyWorldLocation" && in->is_configuration && val=="" )
+    return "";
+
+  if( v=="URLs" && in->is_configuration ) {
+    string world = in->variables->MyWorldLocation[ VAR_VALUE ];
+    if( !world || !sizeof(world) )
+      in->set( "MyWorldLocation", get_world(val)||"" );
+  }
 
   if( in->set )
     in->set( v, val );
