@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: read_config.pike,v 1.41 2000/08/16 18:42:32 per Exp $
+// $Id: read_config.pike,v 1.42 2000/08/19 02:04:16 per Exp $
 
 #include <module.h>
 
@@ -211,7 +211,10 @@ void store( string reg, mapping vars, int q, object current_configuration )
   mapping data = read_it(cl);
 
   if(q)
-    data[ reg ] |= vars;
+    if( data[reg] )
+      data[ reg ] |= vars;
+    else
+      data[ reg ] = vars;
   else
   {
     mixed var;
@@ -221,7 +224,12 @@ void store( string reg, mapping vars, int q, object current_configuration )
     if(!sizeof( m ))
       m_delete( data, reg );
     else 
-      data[reg] |= m;
+    {
+      if( data[reg] )
+        data[reg] |= m;
+      else
+        data[reg] = m;
+    }
   }
   last_read = cl;
   last_data = data+([]);
