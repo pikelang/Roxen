@@ -1,7 +1,7 @@
 /*
  * Roxen master
  */
-string cvs_version = "$Id: roxen_master.pike,v 1.89 2000/04/06 16:08:50 leif Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.90 2000/04/10 21:17:12 mast Exp $";
 
 /*
  * name = "Roxen Master";
@@ -209,13 +209,9 @@ program low_findprog(string pname, string ext, object|void handler)
   // FIXME: The catch is needed, since we might be called in
   // a context when threads are disabled.
   // (compile() disables threads).
-  mixed err = catch {
+  catch {
     key=compilation_mutex->lock(2);
   };
-  if (err) {
-    werror(sprintf("low_findprog: Caught spurious error:\n"
-		   "%s\n", describe_backtrace(err)));
-  }
 #endif
 
   if( !handler ) handler = get_inhibit_compile_errors();
