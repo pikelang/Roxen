@@ -3,7 +3,7 @@
  * (C) 1996, 1999 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.230 1999/11/23 15:13:31 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.231 1999/11/24 01:58:12 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -2192,6 +2192,12 @@ void reload_module( string modname )
     enable_module( modname, old_module );
 }
 
+class ModuleCopies
+{
+  mapping copies = ([]);
+  string _sprintf( ) { return "ModuleCopies()"; }
+}
+
 object enable_module( string modname, object|void me )
 {
   int id;
@@ -2227,7 +2233,7 @@ object enable_module( string modname, object|void me )
   module = modules[ module ];
 
   if(!module)
-    modules[ modname ] = module = class{ mapping copies = ([]); }();
+    modules[ modname ] = module = ModuleCopies();
 
   if( !me )
   {
