@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2001, Roxen IS.
 
 constant cvs_version =
-  "$Id: userdb_system.pike,v 1.9 2002/10/18 14:53:24 anders Exp $";
+  "$Id: userdb_system.pike,v 1.10 2004/01/15 13:23:41 anders Exp $";
 #ifndef __NT__
 inherit UserDB;
 #endif
@@ -186,7 +186,7 @@ array(string) list_groups( )
   }
   endgrent();
   full_group_list = res;
-  call_out( lambda(){ full_group_list = 0; cached_groups=0; }, 60 );
+  call_out( lambda(){ full_group_list = 0; cached_groups=([]); }, 60 );
   return res->name();
 }
 #else
