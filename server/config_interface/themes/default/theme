@@ -39,7 +39,7 @@
 <theme-set what=top-fgcolor		to="&var.fg;" />
 <theme-set what=toptabs-dimtextcolor	to="&var.tab-dim-text;" />
 <theme-set what=toptabs-seltextcolor	to="&var.tab-text;" />
-<theme-set what=toptabs-bgcolor		to="&var.vab-bg;" />
+<theme-set what=toptabs-bgcolor		to="&var.dark-bg;" />
 <theme-set what=toptabs-selcolor	to="&var.page-bg;" />
 <theme-set what=toptabs-frame		to="tabframe.xcf" themefile />
 <theme-set what=top-tableargs
