@@ -7,11 +7,25 @@ BETA=1
 DIR=../configurations/
 LOGDIR=../logs/
 FILES="default"
-if [ -d ../pike/lib/modules ]; then
-  DEFINES=-M../pike/lib/modules
+
+# Pike default Master-program
+if [ -f ../pike/src/lib/master.pike ]; then
+  DEFINES="$DEFINES -m ../pike/src/lib/master.pike"
 fi
+
+# Extra module-path
 if [ -d etc/modules ]; then
-  DEFINES=$DEFINES -Metc/modules
+  DEFINES="$DEFINES -M etc/modules"
+fi
+
+# Extra include-path
+if [ -d etc/include ]; then
+  DEFINES="$DEFINES -I etc/include"
+fi
+
+# Extra include-path (2)
+if [ -d base_server ]; then
+  DEFINES="$DEFINES -I base_server"
 fi
 
 pike=pike
