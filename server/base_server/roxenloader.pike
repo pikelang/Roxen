@@ -26,7 +26,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.290 2001/09/06 12:27:50 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.291 2001/09/06 13:17:10 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1269,7 +1269,7 @@ class MySQLKey
 #endif
     if( !--sql_active_list[name] )
       m_delete( sql_active_list, name );
-    sql_free_list[ name ] += ({ real });
+    sql_free_list[ name ] = ({ real }) + (sql_free_list[ name ]||({}));
     if( `+( 0, @map(values( sql_free_list ),sizeof ) ) > 20 )
     {
 #ifdef DB_DEBUG
