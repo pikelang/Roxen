@@ -29,7 +29,7 @@ void create()
          "logged in the event log, enabeling you to upgrade those RXML tags.");
 }
 
-constant relevant=(<"rxmltags","graphic_text","tablify","countdown","counter">);
+constant relevant=(<"rxmltags","graphic_text","tablify","countdown","counter","ssi">);
 multiset enabled;
 void start (int when, Configuration conf)
 {
@@ -61,9 +61,9 @@ void old_rxml_warning(RequestID id, string problem, string solution)
 
 string status() {
   string ret="";
-  ret+="<b>RXML Warnings:</b> "+warnings+"<br>\n"
+  ret+="<b>RXML Warnings:</b> "+warnings+"<br />\n"
     "<b>Support enabled for:</b> "+
-    String.implode_nicely(indices(enabled), ",")+"<br>\n";
+    String.implode_nicely(indices(enabled))+"<br />\n";
   return ret;
 }
 
@@ -690,8 +690,8 @@ mapping query_tag_callers() {
   if(enabled->countdown) active->countdown=tag_countdown;
   if(enabled->counter) active->counter=tag_counter;
   if(enabled->graphic_text) active["gtext-id"]=tag_gtext_id;
+  if(enabled->ssi) active->echo=tag_echo;
   if(enabled->rxmltags) active+=([
-    "echo":tag_echo,
     "insert":tag_insert,
     "date":tag_date,
     "pr":tag_pr,
