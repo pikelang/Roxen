@@ -10,10 +10,10 @@ mapping scripts=([]);
 
 inherit "module";
 inherit "roxenlib";
-string cvs_version = "$Id: pikescript.pike,v 1.6.2.2 1997/03/02 19:28:27 grubba Exp $";
+string cvs_version = "$Id: pikescript.pike,v 1.6.2.3 1997/03/02 20:46:02 grubba Exp $";
 #include <module.h>
 
-#if constant(_static_modules)
+#if constant(_static_modules) && efun(thread_create)
 constant Mutex=__builtin.mutex;
 #endif /* _static_modules */
 
