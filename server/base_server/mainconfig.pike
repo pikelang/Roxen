@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.9 1996/12/02 14:27:15 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.10 1996/12/02 14:36:47 per Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -899,7 +899,7 @@ mapping auto_image(string in, object id)
       r = http_string_answer(draw_module_header(roxen->allmodules[value][0],
 						roxen->allmodules[value][2],
 						module_font)
-			     ->togif(16), "image/gif");
+			     ->togif(64), "image/gif");
     })
       perror("While drawing auto-image: \n"+describe_backtrace(e)+"\n");
     cache_set("module_images", key, r);
