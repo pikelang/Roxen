@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.247 2000/08/16 18:55:29 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.248 2000/08/16 22:53:28 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 #define RAM_CACHE
@@ -1790,7 +1790,17 @@ void send_result(mapping|void result)
         }
         head_string = prot+" "+(file->rettext||errors[file->error])+"\r\n";
         if( file->len > 0 )  heads["Content-Length"] = (string)file->len;
-        if( file->len <= 0 ) misc->connection = "close";
+
+        // Some browsers, e.g. Netscape 4.7, doesn't trust a zero
+        // content length when using keep-alive. So let's force a
+        // close in that case.
+        if( file->error/100 == 2 
+            && file->len <= 0 )
+        {
+          heads->Connection = "close";
+          misc->connection = "close";
+        }
+
 #if constant( Roxen.make_http_headers )
         head_string += Roxen.make_http_headers( heads );
 #else
