@@ -7,7 +7,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: session_tag.pike,v 1.4 2001/04/26 13:48:01 nilsson Exp $";
+constant cvs_version = "$Id: session_tag.pike,v 1.5 2001/05/16 11:30:38 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Session tag module";
@@ -23,15 +23,25 @@ class EntityClientSession {
     multiset prestates = filter(c->id->prestate,
 				lambda(string in) {
 				  return has_prefix(in, "RoxenUserID="); } );
+
+    // If there is both a cookie and a prestate, then we're in the process of
+    // deciding session variable vehicle, and should thus return nothing.
     if(c->id->cookies->RoxenUserID && sizeof(prestates))
       return RXML.nil;
+
+    // If there is a UserID cookie, use that as our session identifier.
     if(c->id->cookies->RoxenUserID)
       return ENCODE_RXML_TEXT(c->id->cookies->RoxenUserID, type);
+
+    // If there is a RoxenUserID-prefixed prestate, use the first such
+    // prestate as session identifier.
     if(sizeof(prestates)) {
       string session = indices(prestates)[0][12..];
       if(sizeof(session))
 	return ENCODE_RXML_TEXT(session, type);
     }
+
+    // Otherwise return nothing.
     return RXML.nil;
   }
 }
@@ -157,11 +167,14 @@ Could e.g. be a name, an IP adress or a cookie.</p></attr>
 persist on the server side. Values over 900 means that the session variables will be stored in a
 disk based database when they have not been used within 900 seconds.</p></attr>
 
-<attr name='force-db'>If used, the session variables will be immediatly written to the database.
+<attr name='force-db'><p>If used, the session variables will be immediatly written to the database.
 Normally, e.g. when not defined, session variables are only moved to the database when they have
 not been used for a while (given that they still have \"time to live\", as determined by the life
 attribute). This will increase the integrity of the session, since the variables will survive a
-server reboot, but it will also decrease performance somewhat.</attr>
+server reboot, but it will also decrease performance somewhat.</p></attr>
+
+<attr name='scope' value='name' default='session'><p>The name of the scope that is created inside
+the session tag.</p></attr>
 ",
 
   // ------------------------------------------------------------
