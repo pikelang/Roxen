@@ -255,7 +255,7 @@ array(string) tag_date(string q, mapping m, RequestID id)
   else
     CACHE(60); // One minute is good enough.
 
-  return ({tagtime(t, m, id, language)});
+  return ({tagtime(t, m, id)});
 }
 
 inline string do_replace(string s, mapping m, RequestID id)

@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.186 2004/05/24 10:14:04 mani Exp $
+// $Id: Roxen.pmod,v 1.187 2004/05/24 14:02:29 _cvs_stephen Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -1632,7 +1632,8 @@ string html_encode_tag_value(LocaleString str)
 			({"&amp;", "&quot;", "&lt;"})) + "\"";
 }
 
-string strftime(string fmt, int t, void|string lang)
+string strftime(string fmt, int t,
+		void|string lang, void|RequestID id)
 //! Encodes the time `t' according to the format string `fmt'.
 {
   if(!sizeof(fmt)) return "";
@@ -1987,7 +1988,7 @@ string tagtime(int t, mapping(string:string) m, RequestID id)
   if(m->lang) lang=m->lang;
 
   if(m->strftime)
-    return strftime(m->strftime, t, lang);
+    return strftime(m->strftime, t, lang, id);
 
   if (m->part)
   {
