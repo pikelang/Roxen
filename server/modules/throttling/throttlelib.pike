@@ -7,7 +7,7 @@
  * rules-based modules.
  */
 
-constant cvs_version="$Id: throttlelib.pike,v 1.8 2000/05/20 16:38:59 kinkie Exp $";
+constant cvs_version="$Id: throttlelib.pike,v 1.9 2000/05/22 17:29:50 kinkie Exp $";
 
 #include <module.h>
 inherit "module";
@@ -41,10 +41,7 @@ string|void update_rules(string new_rules) {
   THROTTLING_DEBUG("updating rules");
   mapping my_rules=([]);
   array(string) my_rulenames=({});
-#ifndef IF_ONLY_COULD_CHANGE_RULES
   array(string) errors=({}); //contains the lines where parse errors occurred
-  int error=0;
-#endif
   string line, cmd;
   array(string) lines, words;
 
@@ -73,10 +70,8 @@ string|void update_rules(string new_rules) {
       THROTTLING_DEBUG("can't parse");
 #ifdef IF_ONLY_COULD_CHANGE_RULES
       lines[lineno]="#(can't parse) "+line;
-      error=1;
-#else
-      errors+=({(string)(lineno+1)});
 #endif
+      errors+=({(string)(lineno+1)});
       continue;
     }
     
@@ -88,20 +83,16 @@ string|void update_rules(string new_rules) {
       THROTTLING_DEBUG("command not understood");
 #ifdef IF_ONLY_COULD_CHANGE_RULES
       lines[lineno]="#(command not understood) "+line;
-      error=1;
-#else
-      errors+=({(string)(lineno+1)});
 #endif
+      errors+=({(string)(lineno+1)});
       continue;
     }
     if (!((<"+","-","*","/","=","!">)[cmd])) {
       THROTTLING_DEBUG("unknown command");
 #ifdef IF_ONLY_COULD_CHANGE_RULES
       lines[lineno]="#(unknown command) "+line;
-      error=1;
-#else
-      errors+=({(string)(lineno+1)});
 #endif
+      errors+=({(string)(lineno+1)});
       continue;
     }
     if (cmd=="!" || sizeof(words)>2 ) {
@@ -112,29 +103,27 @@ string|void update_rules(string new_rules) {
         THROTTLING_DEBUG("unknown keyword \""+words[2]+"\"");
 #ifdef IF_ONLY_COULD_CHANGE_RULES
         lines[lineno]="#(unknown keyword \""+words[2]+"\") "+line;
-        error=1;
-#else
-        errors+=({(string)(lineno+1)});
 #endif
+        errors+=({(string)(lineno+1)});
         continue;
       }
     }
     my_rules[words[0]]=({cmd,val,fix});
     my_rulenames+=({words[0]});
   }
-#ifdef IF_ONLY_COULD_CHANGE_RULES
-  if (error) {
-    THROTTLING_DEBUG("****ERRORS!****");
-    set("rules",lines*"\n");
-  }
-#else
   if (sizeof(errors)) {
+#ifdef IF_ONLY_COULD_CHANGE_RULES
+    set("rules",lines*"\n");
+#endif
     THROTTLING_DEBUG("Errors in lines "+(errors*", "));
     return "Error"+(sizeof(errors)>1?"s":"") +
       "while parsing line"+(sizeof(errors)>1?"s ":" ")+
-      String.implode_nicely(errors);
-  }
+      String.implode_nicely(errors)
+#ifdef IF_ONLY_COULD_CHANGE_RULES
+      +". Please click on the 'settings' tab this page to  lines."
 #endif
+      ;
+  }
   THROTTLING_DEBUG(sprintf("rules are:\n%O\n",rules));
   // this guarrantees atomicity in rules setting
   rules=my_rules;
