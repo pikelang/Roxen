@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.50 1998/06/09 17:18:57 grubba Exp $
+# $Id: configure.in,v 1.51 1998/06/10 17:14:31 grubba Exp $
 #
 
 prefix=$PWD
@@ -88,6 +88,16 @@ PIKEVERSION=$pike_version
 export PIKEVERSION
 
 AC_SUBST(PIKEVERSION)
+
+AC_MSG_CHECKING(if Pike $pike_version is in this distribution)
+if test -d "$srcdir/pike/$pike_version/." ; then
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(No -- Try another version of Pike)
+  echo Avaliable versions are:
+  (cd "$srcdir/pike"; ls -d 0.*)
+  exit 1
+fi
 
 
 
