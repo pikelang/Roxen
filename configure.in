@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.16 1997/08/31 22:58:06 grubba Exp $
+# $Id: configure.in,v 1.17 1997/08/31 23:03:32 grubba Exp $
 #
 
 prefix=$PWD
@@ -221,6 +221,7 @@ if test $cflags_is_set = no; then
 ### Optimize for different SUN machines. If there is no working 'uname'
 ### no extra optimization will be done, but nothing should break either.
   AC_SYS_COMPILER_FLAG(-ffast-math,ffast-math)
+  AC_SYS_COMPILER_FLAG(-O2,o2)
   AC_SYS_OS_COMPILER_FLAG(AIX,-mprototype,mprototype)
   AC_SYS_CPU_COMPILER_FLAG(sun4c,-msparclite,sparclite)
   AC_SYS_CPU_COMPILER_FLAG(sun4m,-mv8,microsparc)
