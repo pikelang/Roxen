@@ -376,10 +376,29 @@ string get_var_value( string s, object mod, object id )
   }
 }
 
+string type_warning( int type, mixed value )
+{
+  switch( type )
+  {
+   case TYPE_DIR:
+     if( !(file_stat( value ) && (file_stat( value )[ ST_SIZE ] == -2 )))
+       return value+" is not a directory";
+     return "";
+   case TYPE_DIR_LIST:
+     string warn="";
+     foreach( [array(string)]value, string value )
+       if( !(file_stat( value ) && (file_stat( value )[ ST_SIZE ] == -2 )))
+         warn += value+" is not a directory<br />";
+     return warn;
+  }
+  return "";
+}
+                 
+
 string set_variable( string v, object in, mixed to, object id )
 {
   array var = in->variables[ v ];
-  string warning ="";
+  string warning = "";
   mixed val = to;
 
   if( in == roxen )
@@ -405,10 +424,9 @@ string set_variable( string v, object in, mixed to, object id )
      break;
 
    case TYPE_DIR:
-     if(!strlen(val)) val = "./";
-     if( !(file_stat( val ) && (file_stat( val )[ ST_SIZE ] == -2 )))
-       warning = "<font color='&usr.warncolor;'>"+val+" is not a directory</font><br>";
-     if( val[-1] != '/' )
+     if(!strlen(val)) 
+       val = "./";
+     else if( val[-1] != '/' )
        val += "/";
      break;
 
@@ -450,13 +468,8 @@ string set_variable( string v, object in, mixed to, object id )
          val = (array(int))val;
        else if( var[ VAR_TYPE ] == TYPE_DIR_LIST )
          foreach( val, string d )
-         {
-           if( !(file_stat( d ) && (file_stat( d )[ ST_SIZE ] == -2 )))
-             warning += "<font color='&usr.warncolor;'>"+d+
-                     " is not a directory</font><br />";
            if( d[-1] != '/' )
              val = replace( val, d, d+"/" );
-         }
      } else {
        if( var[VAR_TYPE]  == TYPE_INT_LIST )
          val = (int)val;
@@ -474,15 +487,15 @@ string set_variable( string v, object in, mixed to, object id )
      return "";
   }
 
-  if (in->check_variable) {
+  if (in->check_variable) 
+  {
     string err = in->check_variable(v, val);
-    if (err) {
+    if (err) 
       warning += "<font color='&usr.warncolor;'>"+err+"</font><br />";
-    }
   }
 
   if( equal( var[ VAR_VALUE ], val ) )
-    return "";
+    return warning;
 
   
   string verify_port( string port, int nofhttp )
@@ -599,10 +612,17 @@ string get_var_form( string s, object mod, object id )
 
   if( id->variables[ path ] )
     pre = set_variable( s, mod, id->variables[ path ], id );
-
+  
+  
   array var = mod->variables[ s ];
+
   if( !var_configurable( var,id ) )
     return 0;
+
+
+  string warn =  type_warning( var[ VAR_TYPE ], var[ VAR_VALUE ] );
+  if( strlen( warn ) )
+    pre += "<font size='+1' color='&usr.warncolor;'>"+warn+"</font><br />";
 
   switch(var[VAR_TYPE])
   {
@@ -636,7 +656,7 @@ string get_var_form( string s, object mod, object id )
        if( strlen( f ) )
        {
          res += "<option"+((f == replace(var[VAR_VALUE],"_"," "))?
-                           " selected":"")+">"+f+"\n";
+                           " selected":"")+">"+f+"</option>\n";
        }
      }
      return res+ "</select>";
@@ -647,7 +667,7 @@ string get_var_form( string s, object mod, object id )
    case TYPE_LOCATION:
      if( view_mode )
        return "<b>"+html_encode_string(var[VAR_VALUE])+"</b>";
-     return pre+input(path, html_encode_string(var[VAR_VALUE]), 30);
+     return pre+input(path, var[VAR_VALUE], 30);
 
    case TYPE_FLOAT:
      if( view_mode )
@@ -666,9 +686,9 @@ string get_var_form( string s, object mod, object id )
      foreach( a, string q )
      {
        if( q == var[VAR_VALUE] )
-         tmp += "<option selected value='"+q+"'>"+theme_name(q);
+         tmp += "<option selected value='"+q+"'>"+theme_name(q)+"</option>\n";
        else
-         tmp += "<option value='"+q+"'>"+theme_name(q);
+         tmp += "<option value='"+q+"'>"+theme_name(q)+"</option>\n";
      }
      return pre+tmp+"</select>";
 
@@ -698,12 +718,12 @@ string get_var_form( string s, object mod, object id )
 	  tmp+=("  <option value=\""+
 		replace((string)misc[i],"\"","&quote;")
 		+ "\" selected> "+
-		(translate[misc[i]] || misc[i])+" ");
+		(translate[misc[i]] || misc[i])+" ")+"</option>\n";
         }
  	else
 	  tmp+=("  <option value=\""+
 		replace((string)misc[i],"\"","&quote;")+ "\"> "+
-		(translate[misc[i]] || misc[i])+" ");
+		(translate[misc[i]] || misc[i])+" ")+"</option>\n";
       }
       if (!found) {		// To avoid user confusion.
 	if( view_mode )
@@ -712,7 +732,7 @@ string get_var_form( string s, object mod, object id )
 	tmp+=("  <option value=\""+
 	      replace((string)var[VAR_VALUE],"\"","&quote;")
 	      + "\" selected> "+
-	      (translate[var[VAR_VALUE]] || var[VAR_VALUE])+" ");
+	      (translate[var[VAR_VALUE]] || var[VAR_VALUE])+" ")+"</option>\n";
       }
       return pre+tmp+"</select>";
     }
@@ -726,14 +746,13 @@ string get_var_form( string s, object mod, object id )
       return "<b>"+(var[VAR_VALUE]?LOW_LOCALE->yes:LOW_LOCALE->no)+"</b>";
      string res = "<select name="+path+"> ";
      if(var[VAR_VALUE])
-       res +=  ("<option value=Yes selected>"+LOW_LOCALE->yes+
-                "<option value=No>"+LOW_LOCALE->no);
+       res +=  ("<option value=Yes selected>"+LOW_LOCALE->yes+"</option>\n"
+                "<option value=No>"+LOW_LOCALE->no)+"</option>\n";
      else
-       res +=  ("<option value=Yes>"+LOW_LOCALE->yes+
-                "<option value=No selected>"+LOW_LOCALE->no);
+       res +=  ("<option value=Yes>"+LOW_LOCALE->yes+"</option>\n"
+                "<option value=No selected>"+LOW_LOCALE->no)+"</option>\n";
      return pre+res + "</select>";
     break;
-
   }
 }
 
