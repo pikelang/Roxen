@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.40 2000/01/14 12:57:02 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.41 2000/01/18 12:05:40 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -17,6 +17,10 @@ inherit "module";
 inherit "roxenlib";
 
 // ---------------- Module registration stuff ----------------
+
+constant module_type = MODULE_PARSER | MODULE_PROVIDER;
+constant module_name = "RXML 1.4 tags";
+constant module_doc  = "This module adds a lot of RXML tags.";
 
 void create()
 {
@@ -28,13 +32,7 @@ void create()
 void start()
 {
   add_api_function("query_modified", api_query_modified, ({ "string", }));
-}
-
-array register_module()
-{
-  return ({ MODULE_PARSER | MODULE_PROVIDER,
-	    "RXML 1.4 tags",
-	    ("This module adds a lot of RXML tags."), 0, 1 });
+  query_tag_set()->prepare_context=set_entities;
 }
 
 string query_provides() {
@@ -109,6 +107,57 @@ string sexpr_eval(string what)
   array q = what/"";
   what = "mixed foo(){ return "+(q-(q-permitted))*""+";}";
   return (string)compile_string( what )()->foo();
+}
+
+
+// ----------------- Entities ----------------------
+
+class Entity_page_realfile {
+  string rxml_var_eval(RXML.Context c) { return c->id->realfile||""; }
+}
+
+class Entity_page_vfs {
+  string rxml_var_eval(RXML.Context c) { return c->id->virtfile||""; }
+}
+
+class Entity_page_uri {
+  string rxml_var_eval(RXML.Context c) { return c->id->raw_url; }
+}
+
+class Entity_page_truth {
+  int rxml_var_eval(RXML.Context c) { return c->id->misc->defines[" _ok"]; }
+}
+
+class Entity_page_language {
+  string rxml_var_eval(RXML.Context c) { return c->id->misc->defines?c->id->misc->defines->language || "":""; }
+}
+
+mapping page_scope=(["realfile":Entity_page_realfile(),
+		     "vfs":Entity_page_vfs(),
+		     "uri":Entity_page_uri(),
+		     "truth":Entity_page_truth(),
+		     "language":Entity_page_language() ]);
+
+class Entity_client_name {
+  string rxml_var_eval(RXML.Context c) { return c->id->client?c->id->client[0]:""; }
+}
+
+class Entity_client_fullname {
+  string rxml_var_eval(RXML.Context c) { return c->id->client?c->id->client*" ":""; }
+}
+
+class Entity_client_referer {
+  string rxml_var_eval(RXML.Context c) { return c->id->referer?c->id->referer[0]:""; }
+}
+
+mapping client_scope=(["name":Entity_client_name(),
+		       "fullname":Entity_client_fullname(),
+		       "referer":Entity_client_referer(),
+		       "referrer":Entity_client_referer()]);
+
+void set_entities(RXML.Context c) {
+  c->add_scope("page", page_scope);
+  c->add_scope("client", client_scope);
 }
 
 
