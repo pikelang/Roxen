@@ -1,9 +1,34 @@
 #define LOCALE	roxenp()->locale->get()->config_interface
-//string cvs_version = "$Id: cache.pike,v 1.25 1999/09/06 12:58:52 per Exp $";
+//string cvs_version = "$Id: cache.pike,v 1.26 1999/09/06 13:39:24 per Exp $";
 #include <roxen.h>
 #include <config.h>
 
-inherit "roxenlib";
+static int get_size(mixed x)
+{
+  if(mappingp(x))
+    return 8 + 8 + get_size(indices(x)) + get_size(values(x));
+  else if(stringp(x))
+    return strlen(x)+8;
+  else if(arrayp(x))
+  {
+    mixed f;
+    int i;
+    foreach(x, f)
+      i += get_size(f);
+    return 8 + i;    // (refcount + pointer) + arraysize..
+  } else if(multisetp(x)) {
+    mixed f;
+    int i;
+    foreach(indices(x), f)
+      i += get_size(f);
+    return 8 + i;    // (refcount + pointer) + arraysize..
+  } else if(objectp(x) || functionp(x)) {
+    return 8 + 16; // (refcount + pointer) + object struct.
+    // Should consider size of global variables / refcount 
+  }
+  return 20; // Ints and floats are 8 bytes, refcount and float/int.
+}
+
 
 #define TIMESTAMP 0
 #define DATA 1
@@ -211,6 +236,7 @@ void create()
   perror("CACHE: Now online.\n");
 #endif
   cache=([  ]);
-  add_constant("cache", this_object() );
+  add_constant( "cache", this_object() );
+  add_constant( "Cache", this_object() );
   call_out(cache_clean, CACHE_TIME_OUT);
 }
