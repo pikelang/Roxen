@@ -4,7 +4,7 @@
 // another. This can be done using "internal" redirects (much like a
 // symbolik link in unix), or with normal HTTP redirects.
 
-constant cvs_version = "$Id: redirect.pike,v 1.16 2000/03/01 16:57:27 nilsson Exp $";
+constant cvs_version = "$Id: redirect.pike,v 1.17 2000/03/09 13:46:46 mast Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -15,15 +15,20 @@ private int redirs = 0;
 
 void create()
 {
-  defvar("fileredirect", "", "Redirect patterns", TYPE_TEXT_FIELD,
+  defvar("fileredirect", "", "Redirect patterns", TYPE_TEXT_FIELD|VAR_INITIAL,
 	 "Redirect one file to another. The syntax is 'regexp to_URL',"
-	 "or 'prefix to_URL', or 'exact file_name to_URL<p>Some examples:'"
+	 "or 'prefix to_URL', or 'exact file_name to_URL. More patterns "
+	 "can be read from a file by using '#include <filename>' on a line. "
+	 "The path is relative to the Roxen server directory in the real "
+	 "filesystem. Other lines beginning with '#' are treated as comments.\n"
+
+	 "<p>Some examples:'"
 	 "<pre>"
          "/from/.*      http://to.idonex.se/to/%f\n"
          ".*\\.cgi       http://cgi.foo.bar/cgi-bin/%p\n"
 	 "/thb/.*       %u/thb_gone.html\n"
-	 "/roxen/     http://www.roxen.com/\n"
-	 "exact / /main/index.html\n"
+	 "/roxen/       http://www.roxen.com/\n"
+	 "exact /       /main/index.html\n"
 	 "</pre>"
 
 	 "A %f in the 'to' field will be replaced with the filename of "
@@ -36,7 +41,6 @@ void create()
 	 "must match _exactly_. This is equivalent to entering ^FILE$, but "
 	 "faster. "
 
-
 	 "<p>You can use '(' and ')' in the regular expression to "
 	 "separate parts of the from-pattern when using regular expressions."
 	 " The parts can then be insterted into the 'to' string with "
@@ -48,40 +52,59 @@ void create()
 	 "If the to file isn't an URL, the redirect will always be handled "
 	 "internally, so add %u to generate an actual redirect.<p>"
 	 ""
-	 "<b>Note:</b> "
+	 "<b>Note 1:</b> "
 	 "For speed reasons: If the from pattern does _not_ contain"
 	 "any '*' characters, it will not be treated like an regular"
 	 "expression, instead it will be treated as a prefix that must "
-	 "match exactly." );
+	 "match exactly."
+
+	 "<p><b>Note 2:</b> "
+	 "Included files are not rechecked for changes automatically. You "
+	 "have to reload the module to do that." );
 }
 
+array redirect_indices, exact_indices;
 mapping redirect_patterns = ([]);
 mapping exact_patterns = ([]);
 
-void start()
+void parse_redirect_string(string what)
 {
-  array a;
-  string s;
-  redirect_patterns = ([]);
-  exact_patterns = ([]);
-  foreach(replace(QUERY(fileredirect), "\t", " ")/"\n", s)
+  foreach(replace(what, "\t", " ")/"\n", string s)
   {
-    a = s/" " - ({""});
-    if(sizeof(a)>=2)
-    {
-      if(a[0]=="exact" && sizeof(a)>=3)
-	exact_patterns[a[1]] = a[2];
+    if (sscanf (s, "#include %*[ ]<%s>", string file) == 2) {
+      if(string contents=Stdio.read_bytes(file))
+	parse_redirect_string(contents);
       else
+	report_error("Cannot read redirect patterns from "+file+"\n");
+    }
+    else if (s[..0] != "#") {
+      array(string) a = s/" " - ({""});
+      if(sizeof(a)>=3 && a[0]=="exact")
+	exact_patterns[a[1]] = a[2];
+      else if (sizeof(a)==2)
 	redirect_patterns[a[0]] = a[1];
+      else if (sizeof (a))
+	report_error ("Invalid redirect pattern %O\n", a[0]);
     }
   }
 }
 
+void start()
+{
+  redirect_patterns = ([]);
+  exact_patterns = ([]);
+
+  parse_redirect_string(QUERY(fileredirect));
+  redirect_indices = indices (redirect_patterns);
+  exact_indices = indices (exact_patterns);
+}
+
 constant module_type = MODULE_FIRST;
 constant module_name = "Redirect Module v2.0";
-constant module_desc = "The redirect module. Redirects requests from one filename to "
+constant module_doc  = "The redirect module. Redirects requests from one filename to "
   "another. This can be done using \"internal\" redirects (much"
   " like a symbolik link in unix), or with normal HTTP redirects.";
+constant module_unique = 0;
 
 string status()
 {
@@ -108,7 +131,7 @@ mixed first_try(object id)
        if(sscanf(id->raw, "%*s?%[^\n\r ]", tmp))
 	  m += "?"+tmp;
 
-    foreach(indices(exact_patterns), f)
+    foreach(exact_indices, f)
     {
       if(m == f)
       {
@@ -118,7 +141,7 @@ mixed first_try(object id)
       }
     }
     if(!ok)
-      foreach(indices(redirect_patterns), f)
+      foreach(redirect_indices, f)
 	if(!search(m, f))
 	{
 	  to = redirect_patterns[f] + m[strlen(f)..];
