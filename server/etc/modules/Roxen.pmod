@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.118 2001/08/27 18:51:27 mast Exp $
+// $Id: Roxen.pmod,v 1.119 2001/08/28 18:10:00 per Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2718,16 +2718,19 @@ class SRestore
   }
 }
 
-SRestore add_scope_constants( string|void name )
+SRestore add_scope_constants( string|void name, function|void add_constant )
 {
   SRestore res = SRestore();
   mapping ac = all_constants();
+  if(!add_constant)
+    add_constant = predef::add_constant;
   if(!name) name = "";
   if( RXML.get_context() )
   {
     foreach( RXML.get_context()->list_scopes()|({"_"}), string scope )
     {
-      res->osc[ name+scope ] = ac[ name+scope ];
+      if( add_constant == predef::add_constant )
+	res->osc[ name+scope ] = ac[ name+scope ];
       add_constant( name+scope, EScope( scope ) );
     }
   }

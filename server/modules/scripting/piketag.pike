@@ -7,7 +7,7 @@
 //  return "Hello world!\n";
 // </pike>
  
-constant cvs_version = "$Id: piketag.pike,v 2.31 2001/03/08 14:35:44 per Exp $";
+constant cvs_version = "$Id: piketag.pike,v 2.32 2001/08/28 18:09:43 per Exp $";
 constant thread_safe=1;
 
 inherit "module";
@@ -190,7 +190,7 @@ class HProtos
 
 #define R(X) Parser.Pike.reconstitute_with_line_numbers(X)
 
-array helpers()
+array helpers(function add_constant)
 {
   add_constant( "__ps_magic_helpers", Helpers );
   add_constant( "__ps_magic_protos", HProtos );
@@ -215,10 +215,9 @@ string simple_pi_tag_pike( string tag, mapping m, string s,RequestID id  )
   id->misc->cacheable=0;
 
   object e = ErrorContainer();
-  master()->set_inhibit_compile_errors(e);
   if(err=catch 
   {
-    p = my_compile_string( s,id,1,"pike-tag("+id->not_query+")" );
+    p = my_compile_string( s,id,1,"pike-tag("+id->not_query+")",e );
     if (sizeof(program_cache) > query("program_cache_limit")) 
     {
       array a = indices(program_cache);
@@ -231,8 +230,8 @@ string simple_pi_tag_pike( string tag, mapping m, string s,RequestID id  )
   })
   {
     master()->set_inhibit_compile_errors(0);
-    if (e->get())
-      RXML.parse_error ("Error compiling Pike code:\n%s", e->get());
+    if (e->get() && strlen(e->get()))
+      RXML.parse_error ("Error while compiling Pike code:\n%s", e->get());
     else throw (err);
   }
   master()->set_inhibit_compile_errors(0);
@@ -262,13 +261,37 @@ string read_roxen_file( string what, object id )
          ->read()[0]; 
 }
 
-program my_compile_string(string s, object id, int dom, string fn)
+program my_compile_string(string s, object id, int dom, string fn,
+			  ErrorContainer e)
 {
   if( program_cache[ s ] )
     return program_cache[ s ];
 
-  object key = Roxen.add_scope_constants();
-  [array ip, array data] = parse_magic(s,id,dom,fn);
+  object compile_handler = class( ErrorContainer e )
+  {
+    mapping constants = all_constants()+([]);
+    void add_constant( string x, mixed v )
+    {
+      constants[x] = v;
+    }
+    mapping(string:mixed) get_default_module()
+    {
+      return constants;
+    }
+    mixed resolv(string id, void|string fn, void|string ch)
+    {
+      return constants[id] || master()->resolv( id, fn, ch );
+    }
+    void compile_error(string a, int b, string c)   {
+      e->compile_error( a, b, c );
+    }
+    void compile_warning(string a, int b, string c) {
+      e->compile_warning( a, b, c );
+    }
+  }(e);
+
+  object key = Roxen.add_scope_constants( 0, compile_handler->add_constant );
+  [array ip, array data] = parse_magic(s,id,dom,fn,e);
 
   int cnt;
 
@@ -276,14 +299,17 @@ program my_compile_string(string s, object id, int dom, string fn)
   if( !id->misc->__added_helpers_in_tree && !sizeof(ip))
   {
     id->misc->__added_helpers_in_tree=1;
-    pre = helpers();
+    pre = helpers(compile_handler->add_constant);
   } 
   else
+  {
+    helpers(compile_handler->add_constant);
     pre = helper_prototypes();
+  }
 
   foreach( ip, program ipc )
   {
-    add_constant( "____ih_"+cnt, ipc );
+    compile_handler->add_constant( "____ih_"+cnt, ipc );
     pre += SPLIT("inherit ____ih_"+cnt++ + ";\n",PREFN);
   }
 
@@ -292,24 +318,23 @@ program my_compile_string(string s, object id, int dom, string fn)
       data + SPLIT("}",POSTFN);
   else
     pre += data;
-  program p = compile_string(R(pre), fn);
+  werror( "Compiling:\n%s\n\n", R(pre) );
+  program p = compile_string( R(pre), fn, compile_handler );
   if (query ("program_cache_limit") > 0)
     program_cache[ s ] = p;
 
   cnt=0;
-  foreach( ip, program ipc ) add_constant( "____ih_"+cnt++, 0 );
-  destruct( key );
   return p;
 }
 
-program handle_inherit( string what, RequestID id )
+program handle_inherit( string what, RequestID id, ErrorContainer e )
 {
-  array err;
   // ouch ouch ouch.
-  return my_compile_string( read_roxen_file( what, id ),id,0,what);
+  return my_compile_string( read_roxen_file( what, id ),id,0,what,e);
 }
 
-array parse_magic( string data, RequestID id, int add_md, string filename )
+array parse_magic( string data, RequestID id, int add_md, string filename,
+		   ErrorContainer e )
 {
   array flat=SPLIT(data,filename);
   object cip, cipup;
@@ -328,40 +353,51 @@ array parse_magic( string data, RequestID id, int add_md, string filename )
        break;
 
      case '/':
-        if( flat[i]->text[2..2] == "X" )
-        {
-	  if (flat[i]->text[1] == '*')
-	    flat[i]->text = flat[i]->text[..sizeof (flat[i]->text) - 3];
-          OCIPUP();
-          CIP( cip );
-        }
-        else if( flat[i]->text[2..2] == "O" )
-        {
-	  if (flat[i]->text[1] == '*')
-	    flat[i]->text = flat[i]->text[..sizeof (flat[i]->text) - 3];
-          OCIP();
-          CIP( cipup );
-        } 
-        else 
-        {
-          OCIPUP();
-          OCIP();
-        }
-        break;
+       if( strlen(flat[i]->text)>2 &&
+	   (flat[i]->text[1]=='/' || flat[i]->text[1]=='*') )
+       {
+	 if( flat[i]->text[2] == 'X' )
+	 {
+	   if (flat[i]->text[1] == '*')
+	     flat[i]->text = flat[i]->text[..sizeof (flat[i]->text) - 3];
+	   OCIPUP();
+	   CIP( cip );
+	 }
+	 else if( flat[i]->text[2] == 'O' )
+	 {
+	   if (flat[i]->text[1] == '*')
+	     flat[i]->text = flat[i]->text[..sizeof (flat[i]->text) - 3];
+	   OCIP();
+	   CIP( cipup );
+	 }
+	 else 
+	 {
+	   OCIPUP();
+	   OCIP();
+	 }
+       }
+       else 
+       {
+	 OCIPUP();
+	 OCIP();
+       }
+       break;
 
      case '#':  
        OCIP(); OCIPUP();
+       werror("preproc: %O", flat[i] );
        if( sscanf( flat[i]->text, "#%*[ \t]inherit%[ \t]%s",
 		   string ws, string fn) == 3 && sizeof (ws))
        {
-         inherits += ({ handle_inherit( PS(fn), id ) });
+	 flat[i]->text="";
+         inherits += ({ handle_inherit( PS(fn), id, e ) });
        }
        else if( sscanf( flat[i]->text, "#%*[ \t]include%[ \t]%s",
 			string ws, string fn) == 3 && sizeof (ws))
        {
          sscanf( fn, "%*s<%s>", fn );
          sscanf( fn, "%*s\"%s\"", fn );
-         [array ih,flat[i]] = parse_magic(read_roxen_file(fn,id), id, 0, fn);
+         [array ih,flat[i]] = parse_magic(read_roxen_file(fn,id), id, 0, fn,e);
          inherits += ih;
        }
        break;
@@ -448,11 +484,14 @@ string post(string what)
 string container_pike(string tag, mapping m, string s, RequestID request_id,
                       object file, mapping defs)
 {
+  // COMPATIBILITY CODE, DO NOT CHANGE SEMANTICS
+
   program p;
   object o;
   string res;
   mixed err;
 
+  werror("Foo\n");
   request_id->misc->cacheable=0;
 
   object e = ErrorContainer();
@@ -482,9 +521,10 @@ string container_pike(string tag, mapping m, string s, RequestID request_id,
   })
   {
     master()->set_inhibit_compile_errors(0);
-    if (e->get())
+    if (e->get() && strlen(e->get()))
     {
-      RXML.parse_error ("Error compiling Pike code:\n%s", e->get());
+      RXML.parse_error ("Error while compiling Pike code:\n%s",
+			Roxen.html_encode_string( e->get()) );
     }
     else 
       throw (err);
