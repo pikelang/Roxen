@@ -52,6 +52,13 @@ o The http-protocol module now handles multipart/form-data correctly.
 
 o tools/init.d_roxen now supports HP-UX's init.d-system.
 
+o Added option to disable anonymous ftp.
+
+o Bug with never dieing cgi-scripts fixed.
+
+o The start-script now waits 5 seconds before restarting Roxen. This
+  is to keep it from taking 100% CPU if Roxen fails to load.
+
 
 Changes since Roxen Challenger 1.2 alpha 8
 -----------------------------------------------
