@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.75 1998/11/09 18:28:00 marcus Exp $
+/* $Id: wizard.pike,v 1.76 1998/11/09 22:01:03 marcus Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -382,7 +382,9 @@ string parse_wizard_page(string form, object id, string wiz_name)
   int page = ((int)id->variables->_page);
   mapping foo = ([]);
   // Cannot easily be inlined below, believe me... Side-effects.
-  form = parse_html(form,([ "var":wizard_tag_var, ]),
+  form = parse_html(form,(id->misc->extra_wizard_tags||([]))+
+		    ([ "var":wizard_tag_var, ]),
+		    (id->misc->extra_wizard_container||([]))+
 		    ([ "cvar":wizard_tag_var, 
 		       "help":parse_wizard_help]), id, foo );
   
