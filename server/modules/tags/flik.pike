@@ -1,5 +1,5 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
-// $Id: flik.pike,v 1.1 1996/12/11 12:02:13 law Exp $
+// $Id: flik.pike,v 1.2 1996/12/11 13:22:23 law Exp $
 
 // Adds the <fl>, <ft> and <fd> tags. This makes it easy to 
 // build a folder list or an outline. Example:
@@ -16,7 +16,7 @@
 
 // made by Pontus Hagland <law@infovav.se> december -96
 
-string cvs_version = "$Id: flik.pike,v 1.1 1996/12/11 12:02:13 law Exp $";
+string cvs_version = "$Id: flik.pike,v 1.2 1996/12/11 13:22:23 law Exp $";
 #include <module.h>
 
 inherit "module";
@@ -26,18 +26,42 @@ mapping flcache=([]);
    // not_query:(flno: 1=fodled 2=unfolded )
 int flno=1;
 
+#define GC_LOOP_TIME QUERY(gc_time)
 void create()
 {
+   defvar("gc_time", 300, "GC time", TYPE_INT,
+	 "Time between gc loop. (It doesn't run when nothing to garb, anyway.)");
+
+}
+
+
+void gc()
+{
+   mixed m,n;
+   int k=0;
+   foreach (indices(flcache),m)
+   {
+      if (equal(({"gc"}),indices(flcache[m])))
+	 m_delete(flcache,m);
+      else 
+      {
+	 foreach (flcache[m]->gc,n)
+	    m_delete(flcache[m],n); 
+	 k+=sizeof(indices(flcache[m]));
+	 flcache[m]->gc=indices(flcache[m])-({"gc"});
+      }
+   }
+   if (k) call_out(gc,GC_LOOP_TIME);
 }
 
 array (mixed) register_module()
 {
-  return ({ MODULE_PARSER, "fliklist", 
+  return ({ MODULE_PARSER, "Folder list tag", 
 	      "Adds the &lt;fl&gt;, &lt;ft&gt; and &lt;fd&gt; tags."
 	       " This makes it easy to build a folder list or an outline. "
 	       "Example:<pre>"
-	       "&lt;fl&gt;\n"
-	       "  &lt;ft&gt;ho\n"
+	       "&lt;fl unfolded&gt;\n"
+	       "  &lt;ft folded&gt;ho\n"
 	       "   &lt;fd&gt;heyhepp\n"
 	       "  &lt;ft&gt;alakazot\n"
 	       "   &lt;fd&gt;no more\n"
@@ -63,13 +87,17 @@ string tag_fl_postparse( string tag, mapping m, string cont, object id,
    if (!id->variables->fl)
       id->variables->fl=flno++;
    if (!flcache[id->not_query])
-      flcache[id->not_query]=([]);
+   {
+      if (-1==find_call_out(gc))
+	 call_out(gc,GC_LOOP_TIME);
+      flcache[id->not_query]=(["gc":({})]);
+   }
+   flcache[id->not_query]->gc-=({id->variables->fl});
    if (!flcache[id->not_query][id->variables->fl])
       flcache[id->not_query][id->variables->fl]=([]);
 
    if (id->variables["flc"+m->id])
    {
-      perror("change #"+m->id+" to "+(int)id->variables["flc"+m->id]+"\n");
       flcache[id->not_query][id->variables->fl][m->id]=
 	 (int)id->variables["flc"+m->id];
    }
