@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.243 2000/09/18 21:02:13 kuntri Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.244 2000/09/19 06:45:48 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -18,7 +18,7 @@ constant thread_safe   = 1;
 
 void create()
 {
-  defvar("colorparse", 1, "Parse tags for document colors", 
+  defvar("colorparse", 0, "Parse tags for document colors", 
          TYPE_FLAG|VAR_NOT_CFIF,
 	 "If set, it will use the <i>HTML color wiretrap</i> module to parse "
 	 "figure out the document colors by parsing tags that set colors. "
