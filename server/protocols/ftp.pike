@@ -1,5 +1,5 @@
 /* Roxen FTP protocol. Written by Pontus Hagland
-string cvs_version = "$Id: ftp.pike,v 1.4.2.9 1997/03/13 22:04:05 grubba Exp $";
+string cvs_version = "$Id: ftp.pike,v 1.4.2.10 1997/03/26 14:11:23 grubba Exp $";
    (law@lysator.liu.se) and David Hedbor (neotron@infovav.se).
 
    Some of the features: 
@@ -262,15 +262,13 @@ varargs int|string list_file(string arg, int srt, int short, int column,
 
   this_object()->not_query = filename;
   st = roxen->stat_file(filename, this_object());
-  if(!st)
-  {
+  if(!st) {
     roxen->log(([ "error": 404, "len": -1 ]), this_object());
     return 0;
   }
   int sent;
   string tmp;
-  if(directory || st[1] > -2)
-  { 
+  if(directory || st[1] > -2) { 
     if(st[1] == -2 && arg[-1] != '/')
       arg += "/";
     if(short)
@@ -287,55 +285,48 @@ varargs int|string list_file(string arg, int srt, int short, int column,
     mapping tsort = ([]);
 
     not_query = arg = filename;
-    if(dir = roxen->find_dir(filename, this_object()))
-    {
-      if(!srt)
-	sort(dir);
-      if(filename[-1] != '/')
-	filename += "/";
-      if(strlen(filename) != 1)
-	dir = ({".."}) + dir;
-      foreach(dir, s)
-      {
-	st = 0;
-	if (((!all_mode) && (s[0]=='.')) ||
-	    ((all_mode == 1) && (s - "." == ""))) {
-	  continue;
-	}
-	if(F && (st = roxen->stat_file(filename+s, this_object())) 
-	   && st[1] < 0)
-	  s += "/";
-	if(!short)
-	{
-	  if(st || (st = roxen->stat_file(filename+s, this_object())))
-	    if(srt)
-	      tsort += ([ (time - st[-4]) : file_ls(st, s) ]);
-	    else
-	      parsed += ({ file_ls(st, s) });
-	} else 
-	  parsed += ({ s });
-      }
-      if(srt)
-      {
-	parsed = values(tsort);
-	sort(indices(tsort), parsed);
-	tmp=parsed*"";
-      } else if(!short) {
-	tmp=parsed*"";
-      } else {
-	if(column)
-	{
-	  tmp=replace(sprintf("%-#79s\n", parsed*" \n"), "\n", "\r\n");
-	}
-	else
-	  tmp=parsed*"\r\n"+"\r\n";
-      }
-      roxen->log(([ "error": 200, "len": strlen(tmp) ]), this_object());
-      return tmp;
-    } else {
-      roxen->log(([ "error": 403, "len": -1 ]), this_object());
-      return -1;
+    dir = roxen->find_dir(filename, this_object()) || ({});
+
+    if(!srt)
+      sort(dir);
+    if(filename[-1] != '/')
+      filename += "/";
+    if(strlen(filename) != 1) {
+      dir = ({".."}) + dir;
     }
+    foreach(dir, s) {
+      st = 0;
+      if (((!all_mode) && (s[0]=='.')) ||
+	  ((all_mode == 1) && (s - "." == ""))) {
+	continue;
+      }
+      if(F && (st = roxen->stat_file(filename+s, this_object())) 
+	 && st[1] < 0)
+	s += "/";
+      if(!short) {
+	if(st || (st = roxen->stat_file(filename+s, this_object())))
+	  if(srt)
+	    tsort += ([ (time - st[-4]) : file_ls(st, s) ]);
+	  else
+	    parsed += ({ file_ls(st, s) });
+      } else 
+	parsed += ({ s });
+    }
+    if(srt) {
+      parsed = values(tsort);
+      sort(indices(tsort), parsed);
+      tmp=parsed*"";
+    } else if(!short) {
+      tmp=parsed*"";
+    } else {
+      if(column) {
+	tmp=replace(sprintf("%-#79s\n", parsed*" \n"), "\n", "\r\n");
+      }
+      else
+	tmp=parsed*"\r\n"+"\r\n";
+    }
+    roxen->log(([ "error": 200, "len": strlen(tmp) ]), this_object());
+    return tmp;
   }
 }
 
