@@ -38,6 +38,7 @@ something else happened
 Below are the possible attributes to this tag. There are a lot of them and they have been divided into Conditionals (the de facto checks) and Modifiers (slight change in behavior of the checks).
 <p>
 Conditionals
+<p>
 accept=type1[,type2,...] <br>
 The type refers to content-type, e.g. image/jpeg or text/html. The values can contain * (for several arbitrary characters) and ? (for any simple character). Every client tells the server what it thinks it can deal with so this is one way of ensuring that nothing is sent that the browser can't handle. 
 <p>
@@ -222,6 +223,14 @@ Choosing Yes in the form will turn on the variable 'foo' while no will turn it o
 <p>
 match='string[ is pattern]'<br>
 Works like cookie and variable, but compares a literal string. This is useful e.g. in output tags such as {formoutput}.
+<p>
+successful<br>
+True if the previous tag (or container) was successful. Put more technically, true when when previous tag evaluated to the {true} tag. This works with e.g. the {sqlquery} tag, which evaluates to {true} if no error occurred.
+<p>
+failed<br>
+True if the previous tag failed; the opposite of the successful conditional above. {if failed}...{/if} is actually identical to {else}...{/else}, with the exception that you can't put another {else}...{/else} after an {else} container. Canonical example:<br>
+{sqlquery query="insert into foo values (17)"}<br>
+{if failed}Couldn't insert.{/if}{else}Insert ok.{/else}
 <p>
 config=configuration <br>
 If you have set a user's configuration through the use of one or several {aconf +/-configuration} you can use this conditional to check it. It works like pre-states but is instead saved on the client side through the use of cookies. 

@@ -1,0 +1,40 @@
+<kbd>{recursive-output [inside=<i>string,...</i>} [outside=<i>string,...</i>] [multisep=<i>string</i>] [limit=<i>n</i>]}<br>
+...<br>
+{recurse}<br>
+...<br>
+{/recursive-output}</kbd>
+
+<p>This container provides a way to implement recursive output, which
+is mainly useful when you want to create arbitrarily nested trees from
+some external data, e.g. an SQL database. Put simply, the {recurse}
+tag is replaced by everything inside and including the
+{recursive-output} container. Although simple in theory, it tends to
+get a little bit messy in practice.
+
+<p>To make it work you have to pay some attention to the parsing order
+of the involved tags. After the {recursive-output} container have
+replace every {recurse} with itself, the whole thing is parsed again.
+Therefore, to make it terminate, you must always put the {recurse}
+inside a conditional container (typically an {if}) that does not
+preparse its contents.
+
+<p>So far so good, but you'll almost always want to use some sort of
+output container, e.g. {formoutput} or {sqloutput}, together with this
+tag, which makes it slightly more complex due to the necessary
+treatment of the quote characters. Since the contents of
+{recursive-output} is expanded two levels at any time, each level
+needs its own set of quotes. To accomplish this, {recursive-output}
+can rotate two quote sets which are specified by the `inside' and
+`outside' arguments. Each time a {recurse} is replaced, every string
+in the `inside' set is replaced by the string in the corresponding
+position in the `outside' set, then the two sets trade places. Thus,
+you should put all quote characters you use inside {recursive-output}
+in the `inside' set and some other characters that doesn't clash with
+anything in the `outside' set. You might also have to quote the quote
+characters when writing these sets, which is done by doubling them.
+
+<p>If `multisep' is given, its value is used as the separator between
+the strings in the two sets. It defaults to ','.
+
+<p>The `limit' argument specifies the maximum nesting depth. As a
+safeguard it defaults to 100.

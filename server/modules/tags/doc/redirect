@@ -1,2 +1,9 @@
-{redirect [to=...] [text=...]}:
-Adds a HTTP redirect header and return-code.
+<kbd>{redirect [to=...] [text=...] [+state -state ...]}</kbd>
+
+<p>Adds an HTTP redirect header and return code.
+
+<p>Arguments prefixed with '+' or '-' are treated as prestate toggles,
+which are added or removed, respectively, from the current set of
+prestates in the URL in the redirect header (see also {apre}). Note
+that this only works when the to=... URL is absolute, i.e. begins with
+a '/', otherwise these state toggles have no effect.
