@@ -5,7 +5,7 @@ inherit "module";
 #include <module.h>
 
 constant thread_safe=1;
-constant cvs_version = "$Id: ssi.pike,v 1.38 2000/11/09 18:19:14 kuntri Exp $";
+constant cvs_version = "$Id: ssi.pike,v 1.39 2001/01/11 00:59:47 mast Exp $";
 
 
 constant module_type = MODULE_TAG;
@@ -530,13 +530,35 @@ mapping query_simpletag_callers()
   int flags = RXML.FLAG_EMPTY_ELEMENT|RXML.FLAG_COMPAT_PARSE;
   return ([
     "!--#echo": ({flags, simpletag_echo}),
+    "!--#Echo": ({flags, simpletag_echo}),
+    "!--#ECHO": ({flags, simpletag_echo}),
     "!--#exec": ({flags, simpletag_exec}),
+    "!--#Exec": ({flags, simpletag_exec}),
+    "!--#EXEC": ({flags, simpletag_exec}),
     "!--#flastmod": ({flags, simpletag_fsize}),
+    "!--#Flastmod": ({flags, simpletag_fsize}),
+    "!--#FLastMod": ({flags, simpletag_fsize}),
+    "!--#FLASTMOD": ({flags, simpletag_fsize}),
     "!--#fsize": ({flags, simpletag_fsize}),
+    "!--#Fsize": ({flags, simpletag_fsize}),
+    "!--#FSize": ({flags, simpletag_fsize}),
+    "!--#FSIZE": ({flags, simpletag_fsize}),
     "!--#set": ({flags, simpletag_set}),
+    "!--#Set": ({flags, simpletag_set}),
+    "!--#SET": ({flags, simpletag_set}),
     "!--#include": ({flags, simpletag_include}),
+    "!--#Include": ({flags, simpletag_include}),
+    "!--#INCLUDE": ({flags, simpletag_include}),
     "!--#config": ({flags, simpletag_config}),
+    "!--#Config": ({flags, simpletag_config}),
+    "!--#CONFIG": ({flags, simpletag_config}),
     "!--#printenv": ({flags, simpletag_printenv}),
-    "!--#printenv--": ({flags, simpletag_printenv})
+    "!--#Printenv": ({flags, simpletag_printenv}),
+    "!--#PrintEnv": ({flags, simpletag_printenv}),
+    "!--#PRINTENV": ({flags, simpletag_printenv}),
+    "!--#printenv--": ({flags, simpletag_printenv}),
+    "!--#Printenv--": ({flags, simpletag_printenv}),
+    "!--#PrintEnv--": ({flags, simpletag_printenv}),
+    "!--#PRINTENV--": ({flags, simpletag_printenv}),
   ]);
 }
