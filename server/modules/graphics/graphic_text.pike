@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.120 1998/03/27 23:29:48 neotron Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.121 1998/03/29 00:14:16 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -1524,7 +1524,7 @@ string|array (string) tag_body(string t, mapping args, object id, object file,
 
 #define FIX(Y,Z,X) do{if(!args->Y || args->Y==""){if(cols){defines->X=Z;args->Y=Z;changed=1;}}else{defines->X=args->Y;if(args->Y[0]!='#'){args->Y=ns_color(parse_color(args->Y));changed=1;}}}while(0)
 
-  if(!search(id->client*"","Mosaic"))
+  if(!search((id->client||({}))*"","Mosaic"))
   {
     FIX(bgcolor,"#bfbfbf",bg);
     FIX(text,   "#000000",fg);
