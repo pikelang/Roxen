@@ -1,4 +1,4 @@
-## $Id: supports,v 1.32 1997/06/02 01:26:38 grubba Exp $
+## $Id: supports,v 1.33 1997/06/21 14:18:59 marcus Exp $
 
 ######################################################################
 ## -+*				WARNING				*+- ##
@@ -162,17 +162,18 @@ cern.*linemode.*           nothing
 #section ibrowse {
 # Amiga MUIbrowser
 .*			basic, center, pnginline, imageinline,\
-                        backgrounds, bigsmall, center, division,\
+                        backgrounds, bigsmall, center, divisions,\
                         font, fontcolor, imagealign, images,\
                         jpeginline, pjpeginline, pnginline,\
-                        supsub, tables
-.*1.11			frames
+                        tables
+.*1.11.*		frames
+.*1.12.*		frames, pull
 # }
 
 #section amiga-aweb {
 # Amigabrowser <http://www.xs4all.nl/~yrozijn/aweb/>
 .*			basic, center, pnginline, imageinline,\
-                        backgrounds, bigsmall, center, division,\
+                        backgrounds, bigsmall, center, divisions,\
                         font, fontcolor, imagealign, images,\
                         jpeginline, pjpeginline, pnginline,\
                         supsub
