@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-constant cvs_version = "$Id: http.pike,v 1.54 1998/02/10 18:36:21 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.55 1998/02/19 05:21:06 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -573,27 +573,24 @@ private int parse_got(string s)
 
 void disconnect()
 {
-    if(do_not_disconnect)
-    {
+  if(do_not_disconnect)
+  {
 #ifdef REQUEST_DEBUG
-      perror("REQUEST: Not disconnecting...\n");
+    perror("REQUEST: Not disconnecting...\n");
 #endif
-      return;
-    } 
+    return;
+  } 
 #ifdef REQUEST_DEBUG
-    perror("REQUEST: Disconnecting...\n");
+  perror("REQUEST: Disconnecting...\n");
 #endif
-    if(mappingp(file) && objectp(file->file)) {
-      if (file->file->no_destruct) {
-	// sslfile, or similar.
-	// object will be closed on return.
-	file->file = 0;
-      } else {
-	destruct(file->file);
-      }
-    }
-    my_fd = 0;
-//  };
+  if(mappingp(file) && objectp(file->file)) 
+    if (file->file->no_destruct) 
+      file->file = 0;
+      // sslfile, or similar. object will be closed on return.
+    else
+      destruct(file->file);
+
+  my_fd = 0;
   destruct();
 }
 
@@ -614,18 +611,18 @@ void end(string|void s)
     if(elapsed > p[2]) p[2]=elapsed;
   }
 #endif
-    if(objectp(my_fd))
+  if(objectp(my_fd))
+  {
+    my_fd->set_blocking();
+    if(s) my_fd->write(s);
+    if (!my_fd->no_destruct) 
     {
-      my_fd->set_blocking();
-      if(s) my_fd->write(s);
-      if (!my_fd->no_destruct) 
-      {
-	my_fd->close();
-	destruct(my_fd);
-      }
-      my_fd = 0;
+      my_fd->close();
+      destruct(my_fd);
     }
-    disconnect();  
+    my_fd = 0;
+  }
+  disconnect();  
 }
 
 static void do_timeout(mapping foo)

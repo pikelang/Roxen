@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.94 1998/02/10 18:36:02 per Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.95 1998/02/19 05:21:01 per Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -158,13 +158,23 @@ array (object) allocate_pris()
 }
 
 class Bignum {
-//object this = this_object();
-// constant This = object_program(this_object());
-#if efun(Mpz) && 0	// FIXME: Need #if module(Gmp.mpz)
-  inherit Gmp.mpz;
+#if constant(Gmp.mpz) // Perfect. :-)
+  object gmp = Gmp.mpz();
   float mb()
   {
-    return (float)this_object()/(1024.0*1024.0);
+    return (float)(gmp/1024)/1024.0;
+  }
+
+  object `+(int i)
+  {
+    gmp = gmp+i;
+    return this_object();
+  }
+
+  object `-(int i)
+  {
+    gmp = gmp-i;
+    return this_object();
   }
 #else
   int msb;
@@ -1303,6 +1313,99 @@ public array stat_file(string file, object id)
     }
   }
 }
+
+class StringFile
+{
+  string data;
+  int offset;
+
+  string read(int nbytes)
+  {
+    string d = data[offset..offset+nbytes];
+    offset += strlen(d);
+    return d;
+  }
+
+  void write(mixed ... args)
+  {
+    throw( ({ "File not open for write", backtrace() }) );
+  }
+
+  void seek(int to)
+  {
+    offset = to;
+  }
+
+  void create(string d)
+  {
+    data = d;
+  }
+}
+
+
+// this is not as trivial as it sounds. Consider gtext. :-)
+public array open_file(string fname, string mode, object id)
+{
+  object oc = id->conf;
+  string oq = id->not_query;
+  function funp;
+  mapping file;
+  foreach(oc->first_modules(), funp)
+    if(file = funp( id )) 
+      break;
+    else if(id->conf != oc) 
+    {
+      id->not_query = fname;
+      return open_file(fname, mode,id);
+    }
+  fname = id->not_query;
+
+  if(search(mode, "R")!=-1) //  raw (as in not parsed..)
+  {
+    string f;
+    mode -= "R";
+    if(f = real_file(fname, id))
+      return ({ open(f, mode), ([]) });
+  }
+
+  if(mode=="r")
+  {
+    if(!file)
+    {
+      file = oc->get_file( id );
+      if(!file)
+	foreach(oc->last_modules(), funp) if(file = funp( id )) 
+	  break;
+    }
+
+    if(!mappingp(file))
+    {
+      if(id->misc->error_code)
+	file = http_low_answer(id->misc->error_code,
+			       id->errors[id->misc->error]);
+      else if(id->method != "GET" && id->method != "HEAD" && id->method != "POST")
+	file = http_low_answer(501, "Not implemented.");
+      else
+	file=http_low_answer(404,replace(parse_rxml(query("ZNoSuchFile"),id),
+					 ({"$File", "$Me"}), 
+					 ({fname,query("MyWorldLocation")})));
+
+      id->not_query = oq;
+      return ({ 0, file });
+    }
+
+    if(file->data) 
+    {
+      file->file = StringFile(file->data);
+      m_delete(file, "data");
+    }
+    id->not_query = oq;
+    return ({ file->file, file });
+  }
+  id->not_query = oq;
+  return ({ 0,(["error":501,"data":"Not implemented"]) });
+}
+
 
 public mapping(string:array(mixed)) find_dir_stat(string file, object id)
 {

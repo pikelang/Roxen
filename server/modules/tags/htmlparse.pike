@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.79 1998/02/15 14:10:53 wing Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.80 1998/02/19 05:21:06 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -1225,6 +1225,7 @@ string tag_modified(string tag, mapping m, object got, object file,
     return tag_modified(tag, m, got, file, defines);
   }
   if(!s) s = _stat;
+  if(!s) s = roxen->stat_file( got->not_query, got );
   return s ? tagtime(s[3], m) : "Error: Cannot stat file";
 }
 

@@ -1,5 +1,5 @@
 /*
- * $Id: flush.pike,v 1.4 1998/01/23 17:26:53 grubba Exp $
+ * $Id: flush.pike,v 1.5 1998/02/19 05:21:03 per Exp $
  */
 
 inherit "wizard";
@@ -28,6 +28,10 @@ mixed page_0(object id, object mc)
 	  "<var default=1 name=other_cache type=checkbox> Directory caches<br>\n"
 	  "<help><blockquote>"
 	  "Force a flush of all directory module caches."
+	  "</blockquote></help>"
+	  "<var default=0 name=gtext_cache type=checkbox> Graphical text caches<br>\n"
+	  "<help><blockquote>"
+	  "Force a flush of the graphical text cache."
 	  "</blockquote></help>");
 }
 
@@ -42,6 +46,7 @@ mixed page_1(object id, object mc)
     if(id->variables->memory_cache != "0") ret += "The memory cache<br>";    
     if(id->variables->dir_cache != "0")    ret += "The directory cache<br>";
     if(id->variables->module_cache != "0") ret += "The module cache<br>";
+    if(id->variables->gtext_cache != "0") ret += "The graphical text cache<br>";
   } else
     ret += "No items selected!";
 
@@ -86,6 +91,23 @@ mixed wizard_done(object id, object mc)
   {
     info += ({ "the memory cache" });
     function_object(cache_set)->cache = ([]);
+  }
+
+  /* Flush the gtext cache. */ 
+  if(id->variables->gtext_cache != "0")
+  {
+    info += ({ "the graphical text cache" });
+    foreach(roxen->configurations, object c)
+    {
+      if(c->modules["graphic_text"] && 
+	 (c=c->modules["graphic_text"]->enabled))
+      {
+	catch{
+	  foreach(get_dir(c->query("cache_dir")), string d)
+	    rm(c->query("cache_dir")+d);
+	};
+      }
+    }
   }
 
   /* Flush the dir cache. */ 

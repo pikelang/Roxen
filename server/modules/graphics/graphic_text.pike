@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.101 1998/02/10 18:36:17 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.102 1998/02/19 05:21:04 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -84,7 +84,14 @@ array register_module()
 	      "                 is default)\n"
 	      " rotate=ang(deg.)Rotate the finished image\n"
 	      " background=file Use the specifed file as a background\n"
+	      "                 Supported file-formats: gif and ppm, jpeg if\n"
+	      "                 the jpeg library was available when roxen was\n"
+	      "                 compiled\n"
 	      " texture=file    Use the specified file as text texture\n"
+	      " tile            Tile the background and foreground images\n"
+	      "                 if they are smaller than the actual image\n"
+	      " mirrortile      same as above, but mirror around x and y axis\n"
+	      "                 for odd frames, creating seamless textures\n"
 	      " turbulence=args args is: frequency,color;freq,col;freq,col\n"
 	      "                 Apply a turbulence filter, and use this as the\n"
 	      "                 background.\n"
@@ -244,13 +251,25 @@ object load_image(string f,object id)
   if(last_image_name == f && last_image) return last_image->copy();
   string data;
   object file;
-  object img = Image.image();
+  object img
+#if !constant(Image.PNM)
+  =Image.image()
+#endif
+    ;
 
+  
   if(!(data=roxen->try_get_file(fix_relative(f, id),id)))
     if(!(file=open(f,"r")) || (!(data=file->read())))
       return 0;
 //werror("Read "+strlen(data)+" bytes.\n");
+#if constant(Image.PNM)
+  catch { if(!img) img = Image.PNM.decode( data ); };
+  catch { if(!img) img = Image.GIF.decode( data ); };
+  catch { if(!img) img = Image.JPEG.decode( data ); };
+#else
   if (catch { if(!img->frompnm(data)) return 0;}) return 0;
+#endif
+  if(!img) return 0;
   last_image = img; last_image_name = f;
   return img->copy();
 }
@@ -426,13 +445,69 @@ object make_text_image(mapping args, object font, string text,object id)
   object background,foreground;
 
 
-  if(args->texture)    foreground = load_image(args->texture,id);
+  if(args->texture) {
+    foreground = load_image(args->texture,id);
+    if(args->tile)
+    {
+      object b2 = Image.image(xsize,ysize);
+      for(int x=0; x<xsize; x+=foreground->xsize())
+	for(int y=0; y<ysize; y+=foreground->ysize())
+	  b2->paste(foreground, x, y);
+      foreground = b2;
+    } else if(args->mirrortile) {
+      object b2 = Image.image(xsize,ysize);
+      object b3 = Image.image(foreground->xsize()*2,foreground->ysize()*2);
+      b3->paste(foreground,0,0);
+      b3->paste(foreground->mirrorx(),foreground->xsize(),0);
+      b3->paste(foreground->mirrory(),0,foreground->ysize());
+      b3->paste(foreground->mirrorx()->mirrory(),foreground->xsize(),
+		foreground->ysize());
+      foreground = b3;
+      for(int x=0; x<xsize; x+=foreground->xsize())
+      {
+	for(int y=0; y<ysize; y+=foreground->ysize())
+	  if(y%2)
+	    b2->paste(foreground->mirrory(), x, y);
+	  else
+	    b2->paste(foreground, x, y);
+	foreground = foreground->mirrorx();
+      }
+      foreground = b2;
+    }
+  }
 
   if((args->background) && (background = load_image(args->background, id))) {
     background = background;
     if((float)args->scale >= 0.1)
       background = background->scale(1.0/(float)args->scale);
 
+    if(args->tile)
+    {
+      object b2 = Image.image(xsize,ysize);
+      for(int x=0; x<xsize; x+=background->xsize())
+	for(int y=0; y<ysize; y+=background->ysize())
+	  b2->paste(background, x, y);
+      background = b2;
+    } else if(args->mirrortile) {
+      object b2 = Image.image(xsize,ysize);
+      object b3 = Image.image(background->xsize()*2,background->ysize()*2);
+      b3->paste(background,0,0);
+      b3->paste(background->mirrorx(),background->xsize(),0);
+      b3->paste(background->mirrory(),0,background->ysize());
+      b3->paste(background->mirrorx()->mirrory(),background->xsize(),
+		background->ysize());
+      background = b3;
+      for(int x=0; x<xsize; x+=background->xsize())
+      {
+	for(int y=0; y<ysize; y+=background->ysize())
+	  if(y%2)
+	    b2->paste(background->mirrory(), x, y);
+	  else
+	    b2->paste(background, x, y);
+	background = background->mirrorx();
+      }
+      background = b2;
+    }
 
     xsize = background->xsize();
     ysize = background->ysize();
@@ -1060,7 +1135,7 @@ string magic_javascript_header(object id)
   if(!id->supports->netscape_javascript || !id->supports->images) return "";
   return
     ("\n<script>\n"
-     "function img_act(ri,hi,txt)\n"
+     "function i(ri,hi,txt)\n"
      "{\n"
      "  document.images[ri].src = hi.src;\n"
      "  setTimeout(\"top.window.status = '\"+txt+\"'\", 100);\n"
@@ -1083,12 +1158,12 @@ string magic_image(string url, int xs, int ys, string sn,
 
   return
     ("<script>\n"
-     " "+sn+"l = new Image.image("+xs+", "+ys+");"+sn+"l.src = \""+image_1+"\";\n"
-     " "+sn+"h = new Image.image("+xs+", "+ys+");"+sn+"h.src = \""+image_2+"\";\n"
+     " "+sn+"l = new Image("+xs+", "+ys+");"+sn+"l.src = \""+image_1+"\";\n"
+     " "+sn+"h = new Image("+xs+", "+ys+");"+sn+"h.src = \""+image_2+"\";\n"
      "</script>\n"+
      ("<a "+extra_args+"href=\""+url+"\" "+
       (input?"onClick='document.forms[0].submit();' ":"")
-      +"onMouseover=\"img_act('"+sn+"',"+sn+"h,'"+(mess||url)+"'); return true;\"\n"
+      +"onMouseover=\"i('"+sn+"',"+sn+"h,'"+(mess||url)+"'); return true;\"\n"
       "onMouseout='document.images[\""+sn+"\"].src = "+sn+"l.src;'><img "
       "_parsed=1 width="+xs+" height="+ys+" src=\""+image_1+"\" name="+sn+
       " border=0 alt=\""+alt+"\" ></a>\n"));
@@ -1406,13 +1481,14 @@ string tag_graphicstext(string t, mapping arg, string contents,
     if(!defines->magic_java) res = magic_javascript_header(id);
     defines->magic_java="yes";
 
-    return res +
-      magic_image(url||"", size[0], size[1], "i"+(defines->mi++),
-		  query_location()+num+"/"+quote(gt)+gif,
-		  query_location()+num2+"/"+quote(gt)+gif,
-		  (arg->alt?arg->alt:replace(gt, "\"","'")),
-		  (magic=="magic"?0:magic),
-		  id,input?na||"submit":0,ea);
+    return replace(res +
+		   magic_image(url||"", size[0], size[1], "i"+(defines->mi++),
+			       query_location()+num+"/"+quote(gt)+gif,
+			       query_location()+num2+"/"+quote(gt)+gif,
+			       (arg->alt?arg->alt:replace(gt, "\"","'")),
+			       (magic=="magic"?0:magic),
+			       id,input?na||"submit":0,ea),
+		   "</script>\n<script>","");
   }
   if(input)
     return (pre+"<input type=image name=\""+na+"\" border=0 alt=\""+

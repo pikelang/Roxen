@@ -1,70 +1,3 @@
-/*
- * 
-
-With smartpipe:
-
-Solaris 2.6, Ultra 1/170E (with 512Mb ram, roxen is using 8Mb..)
-
-7 handle threads, 1Kb raw data file (from local filesystem), 40 clients:
-
-Actual test time.. 60 seconds
-Total requests.... 6514 (108 requests/sec)
-Total failed...... 0 (0 requests/sec)
-Total bytes....... 7999192 (133319 bytes/sec)
-
-Min Tx: 0.0178
-Max Tx: 3.5778
-
-
-7 handle threads, 4Kb raw data file (from local filesystem), 40 clients:
-
-Actual test time.. 60 seconds
-Total requests.... 6359 (105 requests/sec)
-Total failed...... 0 (0 requests/sec)
-Total bytes....... 27343700 (455728 bytes/sec)
-
-Min Tx: 0.0199
-Max Tx: 3.6241
-
-
-7 handle threads, 40Kb raw data file (from local filesystem), 40 clients:
-
-
-
-7 handle threads, 1m raw data file (from local filesystem), 40 clients:
-
-Actual test time.. 60 seconds
-Total requests.... 568 (9 requests/sec)
-Total failed...... 0 (0 requests/sec)
-Total bytes....... 595708744 (9 928 479 bytes/sec) (guess our bandwith.. :-))
-
-Min Tx: 0.4968
-Max Tx: 1.5233
-
-
-
-
-
-
-
-Without smartpipe:
-
-7 handle threads, 1Kb raw data file (from local filesystem), 40 clients:
-
-Actual test time.. 62 seconds
-Total requests.... 6632 (106 requests/sec)
-Total failed...... 0 (0 requests/sec)
-Total bytes....... 8144096 (131356 bytes/sec)
-
-
-7 handle threads, 4Kb raw data file (from local filesystem), 40 clients:
-
-
-
-
- */
-
-
 /* A somewhat more optimized Pipe.pipe... */
 
 array to_send = ({});
@@ -84,17 +17,19 @@ int bytes_sent()
 
 void next_input();
 
-// int mid = gethrtime();
 void finish()
 {
-//werror(sprintf("fin %x\n", mid));
   if(outfd)
   {
     outfd->set_blocking();
     outfd = 0;
     write_out = 0;
-    if(done_callback) done_callback(id);
   }
+  if(done_callback) done_callback(id);
+  current_input = 0;
+  id = 0;
+  write_out = done_callback = 0;
+  to_send = 0;
 }
 
 void write_more()

@@ -8,7 +8,7 @@
 
 // This is an extension module.
 
-constant cvs_version = "$Id: pikescript.pike,v 1.20 1998/02/04 16:10:49 per Exp $";
+constant cvs_version = "$Id: pikescript.pike,v 1.21 1998/02/19 05:21:05 per Exp $";
 constant thread_safe=1;
 
 mapping scripts=([]);
@@ -25,10 +25,10 @@ mixed *register_module()
 {
   return ({ 
     MODULE_FILE_EXTENSION,
-      "Pike script support", 
-      "Support for user Pike-scripts, like CGI, but handled internally in the"
-      " server, and thus much faster, but blocking, and less secure.\n"
-      "NOTE: This module should not be enabled if you allow anonymous PUT!<br>\n"
+    "Pike script support", 
+    "Support for user Pike-scripts, like CGI, but handled internally in the"
+    " server, and thus much faster, but blocking, and less secure.\n"
+    "NOTE: This module should not be enabled if you allow anonymous PUT!<br>\n"
     "NOTE: Enabling this module is the same thing as letting your users run programs with the same right as the server!"
     });
 }
@@ -61,6 +61,18 @@ void create()
 	"where the script to be executed resides. ", 0, fork_exec_p);
   
   defvar("user", 1, "Fork execution: Run user scripts as owner", TYPE_FLAG,
+	 "If set, scripts in the home-dirs of users will be run as the "
+	 "user. This overrides the Run scripts as variable.", 0, fork_exec_p);
+
+  defvar("exec-mask", "0777", 
+	 "Exec mask: Always run scripts matching this permission mask", 
+	 TYPE_STRING|VAR_MORE,
+	 "If set, scripts in the home-dirs of users will be run as the "
+	 "user. This overrides the Run scripts as variable.", 0, fork_exec_p);
+
+  defvar("noexec-mask", "0000", 
+	 "Exec mask: Never run scripts matching this permission mask", 
+	 TYPE_STRING|VAR_MORE,
 	 "If set, scripts in the home-dirs of users will be run as the "
 	 "user. This overrides the Run scripts as variable.", 0, fork_exec_p);
 
