@@ -7,16 +7,78 @@ string real_version;
 // The following three functions are used to hide variables when they
 // are not used. This makes the user-interface clearer and quite a lot
 // less clobbered.
-int cache_disabled_p() { return !QUERY(cache);         }
-int syslog_disabled()  { return QUERY(LogA)!="syslog"; }
+
+private int cache_disabled_p() { return !QUERY(cache);         }
+private int syslog_disabled()  { return QUERY(LogA)!="syslog"; }
 private int ident_disabled_p() { return QUERY(default_ident); }
+
+// Get the current domain. This is not as easy as one could think.
+string get_domain(int|void l)
+{
+  array f;
+  string t, s;
+
+//  ConfigurationURL is set by the 'install' script.
+  if(!(!l && sscanf(QUERY(ConfigurationURL), "http://%s:%*s", s)))
+  {
+#if constant(gethostbyname) && constant(gethostname)
+    f = gethostbyname(gethostname()); // First try..
+    if(f)
+      foreach(f, f) if (arrayp(f)) { 
+	foreach(f, t) if(search(t, ".") != -1 && !(int)t)
+	  if(!s || strlen(s) < strlen(t))
+	    s=t;
+      }
+#endif
+    if(!s)
+    {
+      // FIXME: NT support.
+
+      t = Stdio.read_bytes("/etc/resolv.conf");
+      if(t) 
+      {
+	if(!sscanf(t, "domain %s\n", s))
+	  if(!sscanf(t, "search %s%*[ \t\n]", s))
+	    s="nowhere";
+      } else {
+	s="nowhere";
+      }
+      s = "host."+s;
+    }
+  }
+  sscanf(s, "%*s.%s", s);
+  if(s && strlen(s))
+  {
+    if(s[-1] == '.') s=s[..strlen(s)-2];
+    if(s[0] == '.') s=s[1..];
+  } else {
+    s="unknown"; 
+  }
+  return s;
+}
+
+
+// This is the most likely URL for a virtual server. Again, this
+// should move into the actual 'configuration' object. It is not all
+// that nice to have all this code lying around in here.
+
+string get_my_url()
+{
+  string s;
+#if constant(gethostname)
+  s = (gethostname()/".")[0] + "." + query("Domain");
+#else
+  s = "localhost";
+#endif
+  s -= "\n";
+  return "http://" + s + "/";
+}
 
 string docurl;
 
 void define_global_variables( int argc, array (string) argv )
 {
   int p;
-
 
   globvar("set_cookie", 0, "Set unique user id cookies", TYPE_FLAG,
 	  #"If set to Yes, all users of your server whose clients support 
@@ -101,10 +163,6 @@ grafisk text utan att ange ett typsnitt, så används det här typsnittet.");
 
   deflocaledoc( "svenska", "logdirprefix", "Loggningsmappprefix",
 		"Alla nya loggar som skapas får det här prefixet.");
-  
-  // Cache variables. The actual code recides in the file
-  // 'disk_cache.pike'
-
   
   globvar("cache", 0, "Proxy disk cache: Enabled", TYPE_FLAG,
 	  "If set to Yes, caching will be enabled.");
@@ -614,8 +672,9 @@ anlending.");
   globvar("locale", "standard", "Language", TYPE_STRING_LIST,
 	  "Locale, used to localise all messages in roxen.\n"
 #"Standard means using the default locale, which varies according to the 
-value of the 'LANG' environment variable.", sort(indices(Locale.Roxen) -
-						 ({ "Modules" })));
+value of the 'LANG' environment variable.", 
+          sort(indices(master()->resolv("Locale")["Roxen"]) 
+               - ({ "Modules" })));
   deflocaledoc("svenska", "locale", "Språk",
 	       "Den här variablen anger vilket språk roxen ska använda. "
 	       "'standard' betyder att språket sätts automatiskt från "
@@ -717,3 +776,80 @@ så här ofta. Tiden är angiven i dagar");
 
 }
 
+
+static mapping __vars = ([ ]);
+
+// These two should be documented somewhere. They are to be used to
+// set global, but non-persistent, variables in Roxen. By using
+// these functions modules can "communicate" with one-another. This is
+// not really possible otherwise.
+mixed set_var(string var, mixed to)
+{
+  return __vars[var] = to;
+}
+
+mixed query_var(string var)
+{
+  return __vars[var];
+}
+
+
+// return the URL of the configuration interface. This is not as easy
+// as it sounds, unless the administrator has entered it somewhere.
+
+public string config_url()
+{
+  if(strlen(QUERY(ConfigurationURL)-" "))
+    return QUERY(ConfigurationURL)-" ";
+
+  array ports = QUERY(ConfigPorts), port, tmp;
+
+  if(!sizeof(ports)) return "CONFIG";
+
+  int p;
+  string prot;
+  string host;
+
+  foreach(ports, tmp)
+    if(tmp[1][0..2]=="ssl") 
+    {
+      port=tmp; 
+      break;
+    }
+
+  if(!port)
+    foreach(ports, tmp)
+      if(tmp[1]=="http") 
+      {
+	port=tmp; 
+	break;
+      }
+
+  if(!port) port=ports[0];
+
+  if(port[2] == "ANY")
+//  host = quick_ip_to_host( port[2] );
+// else
+  {
+#if efun(gethostname)
+    host = gethostname();
+#else
+    host = "127.0.0.1";
+#endif
+  }
+
+  switch(port[1][..2]) {
+  case "ssl":
+    prot = "https";
+    break;
+  case "ftp":
+    prot = "ftp";
+    break;
+  default:
+    prot = port[1];
+    break;
+  }
+  p = port[0];
+
+  return (prot+"://"+host+":"+p+"/");
+}
