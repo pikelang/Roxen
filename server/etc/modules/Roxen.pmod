@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.82 2001/03/29 01:54:03 nilsson Exp $
+// $Id: Roxen.pmod,v 1.83 2001/04/17 08:00:31 per Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -3040,7 +3040,7 @@ void remove_cookie( RequestID id,
 //! Sends a Set-Cookie header with an expire time of 00:00 1/1 1970.
 //! The domain and path arguments are optional.
 {
-  set_cookie( id, name, value, -time(1), domain, path );
+  set_cookie( id, name, value, -time(1)+1, domain, path );
 }
 
 void add_cache_stat_callback( RequestID id, string file, int mtime )
