@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.236 2000/10/02 20:57:04 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.237 2001/02/01 03:16:21 per Exp $";
 
 #define MAGIC_ERROR
 
@@ -1610,7 +1610,7 @@ void send_result(mapping|void result)
 	if(!file->stat && !(file->stat=misc->stat))
 	  file->stat = (array(int))file->file->stat();
       array fstat;
-      if(arrayp(fstat = file->stat))
+      if( fstat = file->stat )
       {
 	if(file->file && !file->len)
 	  file->len = fstat[1];
