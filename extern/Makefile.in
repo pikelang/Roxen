@@ -120,7 +120,7 @@ clean:
 	@(cd fast_cgi; $(MAKE) clean "CFLAGSUP=$(CFLAGS)" "LDFLAGS=$(LDFLAGS)" "CC=$(CC)")
 
 spotless: clean
-	@rm -f config.* stamp-h
+	@rm -f config.* stamp-h $(SRCDIR)/config.h.in $(SRCDIR)/stamp-h.in
 
 distribute: spotless
 	@rm -f Makefile
