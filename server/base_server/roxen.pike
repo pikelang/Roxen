@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.644 2001/03/08 14:35:40 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.645 2001/03/08 15:34:46 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread.
 Thread.Thread backend_thread;
@@ -3846,7 +3846,6 @@ function compile_log_format( string fmt )
   return compiled_formats[ fmt ] = compile_string( code )()->log;
 }
 
-
 array security_checks = ({
   "ip=%s:%s",2,({
     lambda( string a, string b ){
@@ -3867,10 +3866,11 @@ array security_checks = ({
     "  if( (Roxen.ip_to_int( id->remoteaddr ) & %[1]d) == %[0]d ) ",
   }),
   "ip=%s",1,({
-    "  if( glob( %[0]O, id->remoteaddr ) ) ",
+    "  if( sizeof(filter(%[0]O/\",\",lambda(string q){\n"
+    "            return glob(q,id->remoteaddr);\n"
+    "           })) )"
   }),
-  "user=%s",1,({
-    1,
+  "user=%s",1,({ 1,
     lambda( string x ) {
       return ({sprintf("(< %{%O, %}>)", x/"," )});
     },
@@ -3878,8 +3878,7 @@ array security_checks = ({
     "      && ((%[0]s->any) || (%[0]s[user->name()])) ) ",
     (<  "  User user" >),
   }),
-  "group=%s",1,({
-    1,
+  "group=%s",1,({ 1,
     lambda( string x ) {
       return ({sprintf("(< %{%O, %}>)", x/"," )});
     },
@@ -3888,11 +3887,37 @@ array security_checks = ({
     (<"  User user" >),
   }),
   "dns=%s",1,({
+    "  if(!dns && \n"
+    "     ((dns=roxen.quick_ip_to_host(id->remoteaddr))!=id->remoteaddr))\n"
+    "    if( (id->misc->delayed+=0.1) < 1.0 )\n"
+    "      return http_try_again_later( 0.1 );\n"
+    "  if( sizeof(filter(%[0]O/\",\",lambda(string q){return glob(q,dns);})) )",
+    (< "  string dns" >),
   }),
   "time=%d:%d-%d:%d",4,({
+    (< "  mapping l = localtime(time(1))" >),
+    (< "  int th = l->hour, tm = l->min" >),
+    " if( ((th >= %[0]d) && (tm >= %[1]d)) &&\n"
+    "     ((th <= %[2]d) && (tm <= %[3]d)) )",
+  }),
+  "day=%s",1,({
+    lambda( string q ) {
+      multiset res = (<>);
+      foreach( q/",", string w ) if( (int)w )
+	  res[((int)w % 7)] = 1;
+	else
+	  res[ (["monday":1,"thuesday":2,"wednesday":3,"thursday":4,"friday":5,
+		 "saturday":6,"sunday":0,"mon":1, "thu":2, "wed":3, "thu":4,
+		 "fri":5, "sat":6, "sun":0, ])[ lower_case(w) ] ] = 1;
+      return ({sprintf("(< %{%O, %}>)", (array)res)});
+    },
+    (< "  mapping l = localtime(time(1))" >),
+    " if( %[0]s[l->wday] )"
   }),
 });
 
+#define DENY  0
+#define ALLOW 1
 
 function(RequestID:mapping|int) compile_security_pattern( string pattern,
 							  RoxenModule m )
@@ -3928,13 +3953,11 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 //. 'deny' match.
 {
   string code = "";
-  multiset variables = (< "  object userdb_module",
-			  "  object authmethod = id->conf",
-			  "  string realm = \"User\"",
-			  "  int|mapping fail">);
+  array variables = ({ "  object userdb_module",
+		       "  object authmethod = id->conf",
+		       "  string realm = \"User\"",
+		       "  int|mapping fail" });
   int shorted, patterns, cmd;
-#define DENY  0
-#define ALLOW 1
 
   foreach( pattern / "\n", string line )
   {
@@ -4005,7 +4028,11 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 	  if( functionp( instr ) )
 	    args = instr( @args );
 	  else if( multisetp( instr ) )
-	    variables |= instr;
+	  {
+	    foreach( (array)instr, string v )
+	      if( !has_value( variables, v ) )
+		variables += ({ v });
+	  }
 	  else if( intp( instr ) )
 	    thr = instr;
 	  else if( stringp( instr ) )
@@ -4045,19 +4072,10 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
       }
     }
   }
-  if( !patterns )
-    return 0;
-
-  code =
-    "int|mapping f( RequestID id )\n"
-    "{\n" + sort( indices( variables ) )*";\n" + ";\n"
-    "" +  code + "  return fail;\n}\n";
-    
-  werror( "Da Code:\n%s\n", code );
-
-  return compile_string( code )()->f;
-#undef DENY
-#undef ALLOW
+  if( !patterns )  return 0;
+  return compile_string( "int|mapping f( RequestID id )\n"
+			 "{\n" +variables *";\n" + ";\n"
+			 "" +  code + "  return fail;\n}\n" )()->f;
 }
 
 
