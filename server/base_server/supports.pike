@@ -1,12 +1,11 @@
 // Handles supports
 // Copyright © 1999 - 2000, Roxen IS.
-// $Id: supports.pike,v 1.20 2000/07/04 03:46:00 per Exp $
+// $Id: supports.pike,v 1.21 2000/08/01 00:27:10 nilsson Exp $
 
 #include <module_constants.h>
 #include <module.h>
 inherit "socket";
 
-#define LOCALE	([object(RoxenLocale.standard)]roxenp()->LOW_LOCALE)->base_server
 // The db for the nice '<if supports=..>' tag.
 private mapping (string:array (array (object|multiset))) supports;
 private multiset(string) default_supports;
@@ -49,7 +48,7 @@ private void parse_supports_string(string what, string current_section,
       if(sscanf(line, "#include <%s>", file))
       {
 	if(catch(line=lopen(file,"r")->read()))
-	  report_error(LOCALE->supports_bad_include(file));
+	  report_error("Supports: Cannot include file "+file+"\n");
 	else
 	  parse_supports_string(line, current_section, defines);
       }
@@ -103,7 +102,7 @@ private void parse_supports_string(string what, string current_section,
 	  supports[current_section]
 	    += ({ ({ Regexp(sups[0])->match }) + split_supports(sups[1..]) });
 	})
-	  report_error(LOCALE->supports_bad_regexp(describe_backtrace(err)));
+	  report_error("Failed to parse supports regexp:\n%s\n", describe_backtrace(err));
       }
     }
   }
