@@ -1,13 +1,11 @@
 /*
- * $Id: roxen.pike,v 1.371 1999/12/19 16:06:11 nilsson Exp $
- *
  * The Roxen Challenger main program.
  *
  * Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.371 1999/12/19 16:06:11 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.372 1999/12/20 11:44:43 nilsson Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -27,7 +25,25 @@ inherit "disk_cache";
 inherit "language";
 inherit "supports";
 
+// --- Debug defins ---
+
 // #define SSL3_DEBUG
+// #define PRIVS_DEBUG
+// #define THREAD_DEBUG
+// #define FD_DEBUG
+// #define DUMP_DEBUG
+
+#ifdef SSL3_DEBUG
+# define SSL3WERROR(X) werror("SSL3: "+X+"\n")
+#else
+# define SSL3WERROR(X)
+#endif
+
+#ifdef THREAD_DEBUG
+# define THREAD_WERROR(X) werror("Thread: "+X+"\n")
+#else
+# define THREAD_WERROR(X)
+#endif
 
 /*
  * Version information
@@ -63,8 +79,8 @@ class RoxenModule
               int|function|void not_in_config);
   void definvisvar(string name, int value, int type, array|void misc);
 
-  void deflocaledoc( string locale, string variable, 
-                     string name, string doc, 
+  void deflocaledoc( string locale, string variable,
+                     string name, string doc,
                      mapping|void translate );
   int killvar(string var);
   string check_variable( string s, mixed value );
@@ -87,12 +103,12 @@ class RoxenModule
   mapping query_tag_callers();
   mapping query_container_callers();
   mapping query_if_callers();
-  
+
   string info(object conf);
   string comment();
 }
 
-class RequestID 
+class RequestID
 {
   object conf; // Really Configuration, but that's sort of recursive.
   int time;
@@ -114,7 +130,7 @@ class RequestID
   string prot;
   string clientprot;
   string method;
-  
+
   string realfile;
   string virtfile;
   string rest_query;
@@ -168,7 +184,7 @@ Thread.Mutex euid_egid_lock = Thread.Mutex();
  */
 int privs_level;
 
-static class Privs 
+static class Privs
 {
 #if efun(seteuid)
 
@@ -242,21 +258,21 @@ static class Privs
 
     if(!stringp(uid))
       u = getpwuid(uid);
-    else 
+    else
     {
       u = getpwnam(uid);
-      if(u) 
+      if(u)
 	uid = u[2];
     }
 
-    if(u && !gid) 
+    if(u && !gid)
       gid = u[3];
-  
-    if(!u) 
+
+    if(!u)
     {
-      if (uid && (uid != "root")) 
+      if (uid && (uid != "root"))
       {
-	if (intp(uid) && (uid >= 60000)) 
+	if (intp(uid) && (uid >= 60000))
         {
 	  report_warning(sprintf("Privs: User %d is not in the password database.\n"
 				 "Assuming nobody.\n", uid));
@@ -300,14 +316,14 @@ static class Privs
 	 * HPUX's libc also insists on filling numeric fields it doesn't like
 	 * with the value 60001!
 	 */
-	perror("Privs: WARNING: Assuming nobody-group.\n"
+	report_debug("Privs: WARNING: Assuming nobody-group.\n"
 	       "Trying some alternatives...\n");
 	// Assume we want the nobody group, and try a couple of alternatives
 	foreach(({ 60001, 65534, -2 }), gid2) {
-	  perror("%d... ", gid2);
+	  report_debug("%d... ", gid2);
 	  if (initgroups(u[0], gid2) >= 0) {
 	    if ((err = setegid(new_gid = gid2)) >= 0) {
-	      perror("Success!\n");
+	      report_debug("Success!\n");
 	      break;
 	    }
 	  }
@@ -315,10 +331,10 @@ static class Privs
       }
 #endif /* HPUX_KLUDGE */
       if (err < 0) {
-	perror("Privs: Failed\n");
+	report_debug("Privs: Failed\n");
 	throw(({ sprintf("Failed to set EGID to %d\n", gid), backtrace() }));
       }
-      perror("Privs: WARNING: Set egid to %d instead of %d.\n",
+      report_debug("Privs: WARNING: Set egid to %d instead of %d.\n",
 	     gid2, gid);
       gid = gid2;
     }
@@ -371,20 +387,20 @@ static class Privs
 
     if(getuid()) return;
 
-#ifdef DEBUG
+#ifdef PRIVS_DEBUG
     int uid = geteuid();
     if (uid != new_uid) {
-      report_warning(sprintf("Privs: UID #%d differs from expected #%d\n"
-			     "%s\n",
-			     uid, new_uid, describe_backtrace(backtrace())));
+      werror("Privs: UID #%d differs from expected #%d\n"
+	     "%s\n",
+	     uid, new_uid, describe_backtrace(backtrace()));
     }
     int gid = getegid();
     if (gid != new_gid) {
-      report_warning(sprintf("Privs: GID #%d differs from expected #%d\n"
-			     "%s\n",
-			     gid, new_gid, describe_backtrace(backtrace())));
+      werror("Privs: GID #%d differs from expected #%d\n"
+	     "%s\n",
+	     gid, new_gid, describe_backtrace(backtrace()));
     }
-#endif /* DEBUG */
+#endif /* PRIVS_DEBUG */
 
     seteuid(0);
     array u = getpwuid(saved_uid);
@@ -409,12 +425,6 @@ static object PRIVS(string r, int|string|void u, int|string|void g)
   return Privs(r, u, g);
 }
 
-#ifdef MODULE_DEBUG
-#define MD_PERROR(X)	roxen_perror X;
-#else
-#define MD_PERROR(X)
-#endif /* MODULE_DEBUG */
-
 #ifndef THREADS
 class container
 {
@@ -436,7 +446,7 @@ object fonts;
 #if constant( thread_local )
 object locale = thread_local();
 #else
-object locale = container(); 
+object locale = container();
 #endif /* THREADS */
 
 #define LOCALE	LOW_LOCALE->base_server
@@ -462,14 +472,14 @@ private static void really_low_shutdown(int exit_code)
 //  exit_code = -1	Restart
 private static void low_shutdown(int exit_code)
 {
-  catch 
+  catch
   {
     configurations->stop();
     int pid;
     if (exit_code) {
-      roxen_perror("Restarting Roxen.\n");
+      report_debug("Restarting Roxen.\n");
     } else {
-      roxen_perror("Shutting down Roxen.\n");
+      report_debug("Shutting down Roxen.\n");
       // exit(0);
     }
   };
@@ -479,13 +489,13 @@ private static void low_shutdown(int exit_code)
 // Perhaps somewhat misnamed, really...  This function will close all
 // listen ports and then quit.  The 'start' script should then start a
 // new copy of roxen automatically.
-void restart(float|void i)  
-{ 
-  call_out(low_shutdown, i, -1); 
-} 
-void shutdown(float|void i) 
-{ 
-  call_out(low_shutdown, i, 0); 
+void restart(float|void i)
+{
+  call_out(low_shutdown, i, -1);
+}
+void shutdown(float|void i)
+{
+  call_out(low_shutdown, i, 0);
 }
 
 /*
@@ -508,15 +518,12 @@ function handle = threaded_handle;
  * THREADS code starts here
  */
 #ifdef THREADS
-// #define THREAD_DEBUG
 
 object do_thread_create(string id, function f, mixed ... args)
 {
   object t = thread_create(f, @args);
   catch(t->set_name( id ));
-#ifdef THREAD_DEBUG
-  roxen_perror(id+" started\n");
-#endif
+  THREAD_WERROR(id+" started");
   return t;
 }
 
@@ -534,20 +541,16 @@ void handler_thread(int id)
   {
     if(q=catch {
       do {
-#ifdef THREAD_DEBUG
-	werror("Handle thread ["+id+"] waiting for next event\n");
-#endif /* THREAD_DEBUG */
+	THREAD_WERROR("Handle thread ["+id+"] waiting for next event");
 	if((h=handle_queue->read()) && h[0]) {
-#ifdef THREAD_DEBUG
-	  werror(sprintf("Handle thread [%O] calling %O(@%O)...\n",
-			 id, h[0], h[1..]));
-#endif /* THREAD_DEBUG */
+	  THREAD_WERROR(sprintf("Handle thread [%O] calling %O(@%O)...",
+				id, h[0], h[1..]));
 	  SET_LOCALE(default_locale);
 	  h[0](@h[1]);
 	  h=0;
 	} else if(!h) {
 	  // Roxen is shutting down.
-	  werror("Handle thread ["+id+"] stopped\n");
+	  report_debug("Handle thread ["+id+"] stopped\n");
 	  thread_reap_cnt--;
 	  return;
 	}
@@ -586,7 +589,7 @@ void start_handler_threads()
 void stop_handler_threads()
 {
   int timeout=10;
-  roxen_perror("Stopping all request handler threads.\n");
+  report_debug("Stopping all request handler threads.\n");
   while(number_of_threads>0) {
     number_of_threads--;
     handle_queue->write(0);
@@ -594,7 +597,7 @@ void stop_handler_threads()
   }
   while(thread_reap_cnt) {
     if(--timeout<=0) {
-      roxen_perror("Giving up waiting on threads!\n");
+      report_debug("Giving up waiting on threads!\n");
       return;
     }
     sleep(0.1);
@@ -602,35 +605,31 @@ void stop_handler_threads()
 }
 #endif /* THREADS */
 
-class fallback_redirect_request 
+class fallback_redirect_request
 {
   string in = "";
   string out;
   string default_prefix;
   int port;
-  object f;
+  Stdio.File f;
 
   void die()
   {
-#ifdef SSL3_DEBUG
-    roxen_perror(sprintf("SSL3:fallback_redirect_request::die()\n"));
-#endif /* SSL3_DEBUG */
+    SSL3WERROR(sprintf("fallback_redirect_request::die()"));
 #if 0
     /* Close the file, DAMMIT */
-    object dummy = Stdio.File();
+    Stdio.File dummy = Stdio.File();
     if (dummy->open("/dev/null", "rw"))
       dummy->dup2(f);
-#endif    
+#endif
     f->close();
     destruct(f);
     destruct(this_object());
   }
-  
+
   void write_callback(object id)
   {
-#ifdef SSL3_DEBUG
-    roxen_perror(sprintf("SSL3:fallback_redirect_request::write_callback()\n"));
-#endif /* SSL3_DEBUG */
+    SSL3WERROR(sprintf("fallback_redirect_request::write_callback()"));
     int written = id->write(out);
     if (written <= 0)
       die();
@@ -641,16 +640,14 @@ class fallback_redirect_request
 
   void read_callback(object id, string s)
   {
-#ifdef SSL3_DEBUG
-    roxen_perror(sprintf("SSL3:fallback_redirect_request::read_callback(X, \"%s\")\n", s));
-#endif /* SSL3_DEBUG */
+    SSL3WERROR(sprintf("fallback_redirect_request::read_callback(X, \"%s\")\n", s));
     in += s;
     string name;
     string prefix;
 
     if (search(in, "\r\n\r\n") >= 0)
     {
-//      werror(sprintf("request = '%s'\n", in));
+//      werror("request = '%s'\n", in);
       array(string) lines = in / "\r\n";
       array(string) req = replace(lines[0], "\t", " ") / " ";
       if (sizeof(req) < 2)
@@ -699,12 +696,10 @@ class fallback_redirect_request
       f->set_write_callback(write_callback);
     }
   }
-  
+
   void create(object socket, string s, string l, int p)
   {
-#ifdef SSL3_DEBUG
-    roxen_perror(sprintf("SSL3:fallback_redirect_request(X, \"%s\", \"%s\", %d)\n", s, l||"CONFIG PORT", p));
-#endif /* SSL3_DEBUG */
+    SSL3WERROR(sprintf("fallback_redirect_request(X, \"%s\", \"%s\", %d)", s, l||"CONFIG PORT", p));
     f = socket;
     default_prefix = l;
     port = p;
@@ -842,14 +837,14 @@ class Protocol
     ip = i;
 
     ::create();
-    if(!bind( port, got_connection, ip )) 
+    if(!bind( port, got_connection, ip ))
     {
-      report_error("Failed to bind %s://%s:%d/ (%s)\n", (string)name, 
+      report_error("Failed to bind %s://%s:%d/ (%s)\n", (string)name,
                    (ip||"*"), (int)port, strerror( errno() ));
       destruct();
     }
   }
-  
+
   string _sprintf( )
   {
     return "Protocol("+name+"://"+ip+":"+port+")";
@@ -924,7 +919,7 @@ class SSLProtocol
       destruct(privs);
 
     if (!f) {
-      report_error("ssl3: Reading cert-file failed!\n");
+      report_error("SSL3: Reading cert-file failed!\n");
       destruct();
       return;
     }
@@ -934,17 +929,17 @@ class SSLProtocol
       ||msg->parts["X509 CERTIFICATE"];
 
     string cert;
-  
+
     if (!part || !(cert = part->decoded_body())) {
       report_error("ssl3: No certificate found.\n");
       destruct();
       return;
     }
-  
+
     if (query_option("ssl_key_file"))
     {
       if (!f2) {
-	report_error("ssl3: Reading key-file failed!\n");
+	report_error("SSL3: Reading key-file failed!\n");
 	destruct();
 	return;
       }
@@ -953,38 +948,34 @@ class SSLProtocol
 
     function r = Crypto.randomness.reasonably_random()->read;
 
-#ifdef SSL3_DEBUG
-    werror(sprintf("ssl3: key file contains: %O\n", indices(msg->parts)));
-#endif
+    SSL3WERROR(sprintf("key file contains: %O", indices(msg->parts)));
 
     if (part = msg->parts["RSA PRIVATE KEY"])
     {
       string key;
 
       if (!(key = part->decoded_body())) {
-	report_error("ssl3: Private rsa key not valid (PEM).\n");
+	report_error("SSL3: Private rsa key not valid (PEM).\n");
 	destruct();
 	return;
       }
-      
+
       object rsa = Standards.PKCS.RSA.parse_private_key(key);
       if (!rsa) {
-	report_error("ssl3: Private rsa key not valid (DER).\n");
+	report_error("SSL3: Private rsa key not valid (DER).\n");
 	destruct();
 	return;
       }
 
       ctx->rsa = rsa;
-    
-#ifdef SSL3_DEBUG
-      report_debug(sprintf("ssl3: RSA key size: %d bits\n", rsa->rsa_size()));
-#endif
-    
+
+      SSL3WERROR(sprintf("RSA key size: %d bits", rsa->rsa_size()));
+
       if (rsa->rsa_size() > 512)
       {
 	/* Too large for export */
 	ctx->short_rsa = Crypto.rsa()->generate_key(512, r);
-      
+
 	// ctx->long_rsa = Crypto.rsa()->generate_key(rsa->rsa_size(), r);
       }
       ctx->rsa_mode();
@@ -1010,7 +1001,7 @@ class SSLProtocol
 	destruct();
 	return;
       }
-      
+
       object dsa = Standards.PKCS.DSA.parse_private_key(key);
       if (!dsa) {
 	report_error("ssl3: Private dsa key not valid (DER).\n");
@@ -1018,9 +1009,7 @@ class SSLProtocol
 	return;
       }
 
-#ifdef SSL3_DEBUG
-      report_debug(sprintf("ssl3: Using DSA key.\n"));
-#endif
+      SSL3WERROR(sprintf("Using DSA key."));
 	
       dsa->use_random(r);
       ctx->dsa = dsa;
@@ -1091,7 +1080,7 @@ class FHTTP
 
     o->cmf = 100*1024;
     o->cmp = 100*1024;
-  
+
     //   werror("%O\n", o->variables);
     if(o->method == "POST" && strlen(o->data))
     {
@@ -1100,13 +1089,13 @@ class FHTTP
       {
        default: // Normal form data, handled in the C part.
          break;
-       
+
        case "multipart/form-data":
          object messg = MIME.Message(o->data, o->misc);
          mapping misc = o->misc;
-         foreach(messg->body_parts, object part) 
+         foreach(messg->body_parts, object part)
          {
-           if(part->disp_params->filename) 
+           if(part->disp_params->filename)
            {
              vars[part->disp_params->name]=part->getdata();
              vars[part->disp_params->name+".filename"]=
@@ -1152,7 +1141,7 @@ class FHTTP
       o->cookies = ([]);
       o->config = (<>);
     }
-  
+
     if(contents = o->misc->accept)
       o->misc->accept = contents/",";
 
@@ -1241,7 +1230,7 @@ class FHTTP
   {
     requesthandler = (program)"protocols/fhttp.pike";
 
-    if (query_option("do_not_bind")) 
+    if (query_option("do_not_bind"))
     {
       // This is useful if you run two Roxen processes,
       // that both handle an URL which has two IPs, and
@@ -1265,7 +1254,7 @@ class FHTTP
       return;
     }
 
-    l = HTTPLoop.Loop( portobj, requesthandler, 
+    l = HTTPLoop.Loop( portobj, requesthandler,
                        handle_request, 0,
                        (query_option("ram_cache")||20)*1024*1024,
                        dolog, (query_option("read_timeout")||120) );
@@ -1301,9 +1290,7 @@ class HTTPS
 
     void ssl_alert_callback(object alert, object|int n, string data)
     {
-#ifdef SSL3_DEBUG
-      roxen_perror(sprintf("SSL3:http_fallback(X, %O, \"%s\")\n", n, data));
-#endif /* SSL3_DEBUG */
+      SSL3WERROR(sprintf("http_fallback(X, %O, \"%s\")", n, data));
       //  trace(1);
 #if 0
       werror(sprintf("ssl3->http_fallback: alert(%d, %d)\n"
@@ -1321,7 +1308,7 @@ class HTTPS
 	//    my_fd->set_close_callback(0);
 	//    my_fd->leave_me_alone = 1;
 	fallback_redirect_request(raw_fd, data,
-				  my_fd->config && 
+				  my_fd->config &&
 				  my_fd->config->query("MyWorldLocation"),
 				  port);
 	destruct(my_fd);
@@ -1332,9 +1319,7 @@ class HTTPS
 
     void ssl_accept_callback(object id)
     {
-#ifdef SSL3_DEBUG
-      roxen_perror(sprintf("SSL3:ssl_accept_callback(X)\n"));
-#endif /* SSL3_DEBUG */
+      SSL3WERROR(sprintf("ssl_accept_callback(X)"));
       id->set_alert_callback(0); /* Forget about http_fallback */
       my_fd = 0;          /* Not needed any more */
     }
@@ -1347,7 +1332,7 @@ class HTTPS
       fd->set_accept_callback(ssl_accept_callback);
     }
   }
-    
+
   object accept()
   {
     object q = ::accept();
@@ -1474,7 +1459,7 @@ array(string) find_ips_for( string what )
     return Array.uniq(res[1]);
 }
 
-void unregister_url( string url ) 
+void unregister_url( string url )
 {
   report_debug("Unregister "+url+"\n");
   if( urls[ url ] && urls[ url ]->port )
@@ -1515,7 +1500,7 @@ int register_url( string url, object conf )
     if( urls[ url ]->conf != conf )
     {
       report_error( "Cannot register URL "+url+
-                    ", already registerd by " + 
+                    ", already registerd by " +
                     urls[ url ]->conf->name + "!\n" );
       return 0;
     }
@@ -1528,7 +1513,7 @@ int register_url( string url, object conf )
   if( !( prot = protocols[ protocol ] ) )
   {
     report_error( "Cannot register URL "+url+
-                  ", cannot find the protocol " + 
+                  ", cannot find the protocol " +
                   protocol + "!\n" );
     return 0;
   }
@@ -1541,14 +1526,14 @@ int register_url( string url, object conf )
   /*  if( !prot->supports_ipless )*/
     required_hosts = find_ips_for( host );
 
-  if (!required_hosts) 
+  if (!required_hosts)
     required_hosts = ({ 0 });	// ANY
 
 
   mapping m;
   if( !( m = open_ports[ protocol ] ) )
     m = open_ports[ protocol ] = ([]);
-    
+
   urls[ url ] = ([ "conf":conf, "path":path ]);
   sorted_urls += ({ url });
 
@@ -1614,7 +1599,7 @@ int add_new_configuration(string name, string type)
 mapping(string:array(int)) error_log=([]);
 
 // Write a string to the configuration interface error log and to stderr.
-void nwrite(string s, int|void perr, int|void type, 
+void nwrite(string s, int|void perr, int|void type,
             int|void mod, int|void conf)
 {
   if (!error_log[type+","+s])
@@ -1635,8 +1620,8 @@ void nwrite(string s, int|void perr, int|void type,
     conf->error_log[type+","+s] += ({time()});
   }
 
-  if(type >= 1) 
-    werror( s );
+  if(type >= 1)
+    report_debug( s );
 }
 
 // When was Roxen started?
@@ -1648,13 +1633,13 @@ string version()
   return QUERY(default_ident)?real_version:QUERY(ident);
 }
 
-public void log(mapping file, object request_id)
+public void log(mapping file, RequestID request_id)
 {
-  if(!request_id->conf) return; 
+  if(!request_id->conf) return;
   request_id->conf->log(file, request_id);
 }
 
-// Support for unique user id's 
+// Support for unique user id's
 private object current_user_id_file;
 private int current_user_id_number, current_user_id_file_last_mod;
 
@@ -1666,11 +1651,11 @@ private void restore_current_user_id_number()
   {
     call_out(restore_current_user_id_number, 2);
     return;
-  } 
+  }
   current_user_id_number = (int)current_user_id_file->read(100);
   current_user_id_file_last_mod = current_user_id_file->stat()[2];
-  perror("Restoring unique user ID information. (" + current_user_id_number 
-	 + ")\n");
+  report_debug("Restoring unique user ID information. (" + current_user_id_number
+	       + ")\n");
 #ifdef FD_DEBUG
   mark_fd(current_user_id_file->query_fd(), LOCALE->unique_uid_logfile());
 #endif
@@ -1687,7 +1672,7 @@ int increase_id()
   if(current_user_id_file->stat()[2] != current_user_id_file_last_mod)
     restore_current_user_id_number();
   current_user_id_number++;
-  //perror("New unique id: "+current_user_id_number+"\n");
+  //werror("New unique id: "+current_user_id_number+"\n");
   current_user_id_file->seek(0);
   current_user_id_file->write((string)current_user_id_number);
   current_user_id_file_last_mod = current_user_id_file->stat()[2];
@@ -1701,7 +1686,7 @@ public string full_status()
   array foo = ({0.0, 0.0, 0.0, 0.0, 0});
   if(!sizeof(configurations))
     return LOCALE->no_servers_enabled();
-  
+
   foreach(configurations, object conf)
   {
     if(!conf->sent
@@ -1719,7 +1704,7 @@ public string full_status()
   {
     // FIXME: LOCALE?
 
-    if(foo[tmp] < 1024.0)     
+    if(foo[tmp] < 1024.0)
       foo[tmp] = sprintf("%.2f MB", foo[tmp]);
     else
       foo[tmp] = sprintf("%.2f GB", foo[tmp]/1024.0);
@@ -1742,35 +1727,35 @@ public string full_status()
 
 static int abs_started;
 
-void restart_if_stuck (int force) 
+void restart_if_stuck (int force)
 {
   remove_call_out(restart_if_stuck);
   if (!(QUERY(abs_engage) || force))
     return;
-  if(!abs_started) 
+  if(!abs_started)
   {
     abs_started = 1;
-    roxen_perror("Anti-Block System Enabled.\n");
+    report_debug("Anti-Block System Enabled.\n");
   }
   call_out (restart_if_stuck,10);
   signal(signum("SIGALRM"),
 	 lambda( int n ) {
-	   werror(sprintf("**** %s: ABS engaged!\n"
-			  "Trying to dump backlog: \n",
-			  ctime(time()) - "\n"));
+	   report_debug("**** %s: ABS engaged!\n"
+			"Trying to dump backlog: \n",
+			ctime(time()) - "\n");
 	   catch {
 	     // Catch for paranoia reasons.
 	     describe_all_threads();
 	   };
-	   werror(sprintf("**** %s: ABS exiting roxen!\n\n",
-			  ctime(time())));
+	   report_debug("**** %s: ABS exiting roxen!\n\n",
+			ctime(time()));
 	   _exit(1); 	// It might now quit correctly otherwise, if it's
 	   //  locked up
 	 });
   alarm (60*QUERY(abs_timeout)+10);
 }
 
-void post_create () 
+void post_create ()
 {
   if (QUERY(abs_engage))
     call_out (restart_if_stuck,10);
@@ -1807,7 +1792,7 @@ class ConfigIFCache
     f->write( encode_value( to ) );
     return to;
   }
-  
+
   mixed get( string name )
   {
     Stdio.File f = Stdio.File();
@@ -1841,7 +1826,7 @@ class ImageCache
   {
     return meta_cache[i] = what;
   }
-  
+
   static string data_cache_insert( string i, string what )
   {
     return data_cache[i] = what;
@@ -1872,7 +1857,7 @@ class ImageCache
       Image.Colortable ct;
       Image.Color.Color bgcolor;
       object alpha;
-      int true_alpha; 
+      int true_alpha;
 
       if( args->fs  || dither == "fs" )
 	dither = "floyd_steinberg";
@@ -1880,7 +1865,7 @@ class ImageCache
       if(  dither == "random" )
 	dither = "random_dither";
 
-      if( format == "jpg" ) 
+      if( format == "jpg" )
         format = "jpeg";
 
       if(mappingp(reply))
@@ -1888,7 +1873,7 @@ class ImageCache
         alpha = reply->alpha;
         reply = reply->img;
       }
-      
+
       if( args->gamma )
         reply = reply->gamma( (float)args->gamma );
 
@@ -1908,7 +1893,7 @@ class ImageCache
           ov = 255;
         if( alpha )
         {
-          object i = Image.image( reply->xsize(), reply->ysize(), ov,ov,ov );
+          Image.image i = Image.image( reply->xsize(), reply->ysize(), ov,ov,ov );
           i = i->paste_alpha( alpha, ov );
           alpha = i;
         }
@@ -1935,7 +1920,7 @@ class ImageCache
         }
       }
 
-      if( args->maxwidth || args->maxheight || 
+      if( args->maxwidth || args->maxheight ||
           args["max-width"] || args["max-height"])
       {
         int x = (int)args->maxwidth||(int)args["max-width"];
@@ -1974,7 +1959,7 @@ class ImageCache
             ct->ordered();
       }
 
-      if(!Image[upper_case( format )] 
+      if(!Image[upper_case( format )]
          || !Image[upper_case( format )]->encode )
         error("Image format "+format+" unknown\n");
 
@@ -1993,7 +1978,7 @@ class ImageCache
        case "gif":
          if( alpha && true_alpha )
          {
-           object bw=Image.Colortable( ({ ({ 0,0,0 }), ({ 255,255,255 }) }) );
+           Image.Colortable bw=Image.Colortable( ({ ({ 0,0,0 }), ({ 255,255,255 }) }) );
            bw->floyd_steinberg();
            alpha = bw->map( alpha );
          }
@@ -2010,19 +1995,19 @@ class ImageCache
          if( ct ) enc_args->palette = ct;
          m_delete( enc_args, "colortable" );
          if( !enc_args->alpha )  m_delete( enc_args, "alpha" );
-         
+
        default:
         data = Image[upper_case( format )]->encode( reply, enc_args );
       }
 
-      meta = 
-      ([ 
+      meta =
+      ([
         "xsize":reply->xsize(),
         "ysize":reply->ysize(),
         "type":"image/"+format,
       ]);
     }
-    else if( mappingp(reply) ) 
+    else if( mappingp(reply) )
     {
       meta = reply->meta;
       data = reply->data;
@@ -2081,14 +2066,14 @@ class ImageCache
     mapping m;
     if( data_cache[ id ] )
       f = data_cache[ id ];
-    else 
+    else
       f = Stdio.File( );
 
     if(!f->open(dir+id+".d", "r" ))
       return 0;
 
     m = restore_meta( id );
-    
+
     if(!m)
       return 0;
 
@@ -2115,8 +2100,8 @@ class ImageCache
     return res->data;
   }
 
-  mapping http_file_answer( string|mapping data, 
-                            RequestID id, 
+  mapping http_file_answer( string|mapping data,
+                            RequestID id,
                             int|void nodraw )
   {
     string na = store( data,id );
@@ -2200,7 +2185,7 @@ class ArgCache
   static Thread.Mutex mutex = Thread.Mutex();
 # define LOCK() object __key = mutex->lock()
 #else
-# define LOCK() 
+# define LOCK()
 #endif
 
   static mapping (string:mixed) cache = ([ ]);
@@ -2216,8 +2201,8 @@ class ArgCache
         throw("Failed to create table in database\n");
   }
 
-  void create( string _name, 
-               string _path, 
+  void create( string _name,
+               string _path,
                int _is_db )
   {
     name = _name;
@@ -2235,7 +2220,7 @@ class ArgCache
         path += "/";
       path += replace(name, "/", "_")+"/";
       mkdirhier( path + "/tmp" );
-      object test = Stdio.File();
+      Stdio.File test = Stdio.File();
       if (!test->open (path + "/.testfile", "wc"))
 	error ("Can't create files in the argument cache directory " + path + "\n");
       else {
@@ -2275,7 +2260,7 @@ class ArgCache
           return m->id;
 
       db->query( sprintf("insert into %s (contents,lkey,atime) values "
-                         "('%s','%s','%d')", 
+                         "('%s','%s','%d')",
                          name, long_key, long_key[..79], time() ));
       return create_key( long_key );
     } else {
@@ -2291,7 +2276,7 @@ class ArgCache
         if( strlen(short_key) >= strlen(_key) )
           short_key += "."; // Not very likely...
       }
-      object f = Stdio.File( path + short_key, "wct" );
+      Stdio.File f = Stdio.File( path + short_key, "wct" );
       f->write( long_key );
       return short_key;
     }
@@ -2301,7 +2286,7 @@ class ArgCache
   int key_exists( string key )
   {
     LOCK();
-    if( !is_db ) 
+    if( !is_db )
       return !!file_stat( path+key );
     return !!read_args( key );
   }
@@ -2404,7 +2389,7 @@ void create()
 
   add_constant( "MIME.encode_base64", MIME.encode_base64 );
   add_constant( "MIME.decode_base64", MIME.decode_base64 );
-  
+
   add_constant( "Image", Image );
   add_constant( "Image.Image", Image.Image );
   add_constant( "Image.Font", Image.Font );
@@ -2441,7 +2426,7 @@ void create()
   add_constant( "Roxen.locale", locale );
   add_constant( "Locale.Roxen", Locale.Roxen );
   add_constant( "Locale.Roxen.standard", Locale.Roxen.standard );
-  add_constant( "Locale.Roxen.standard.register_module_doc", 
+  add_constant( "Locale.Roxen.standard.register_module_doc",
                  Locale.Roxen.standard.register_module_doc );
   add_constant( "roxen.ImageCache", ImageCache );
   // compatibility
@@ -2477,7 +2462,7 @@ int set_u_and_gid()
   string u, g;
   int uid, gid;
   array pw;
-  
+
   u=QUERY(User);
   sscanf(u, "%s:%s", u, g);
   if(strlen(u))
@@ -2644,7 +2629,7 @@ void reload_all_configurations()
     }
     new_confs += ({ conf });
   }
-    
+
   foreach(configurations - new_confs, conf)
   {
     modified = 1;
@@ -2701,9 +2686,9 @@ mapping low_decode_image(string data, void|array tocolor)
   Image.image i, a;
   string format;
   if(!data)
-    return 0; 
+    return 0;
 
-#if constant(Image.GIF._decode)  
+#if constant(Image.GIF._decode)
   // Use the low-level decode function to get the alpha channel.
   catch
   {
@@ -2885,12 +2870,12 @@ mapping low_decode_image(string data, void|array tocolor)
     };
 #endif
 
-  if(!i) // No image could be decoded at all. 
+  if(!i) // No image could be decoded at all.
     return 0;
 
   if( tocolor && i && a )
   {
-    object o = Image.image( i->xsize(), i->ysize(), @tocolor );
+    Image.image o = Image.image( i->xsize(), i->ysize(), @tocolor );
     o->paste_mask( i,a );
     i = o;
   }
@@ -2902,11 +2887,11 @@ mapping low_decode_image(string data, void|array tocolor)
   ]);
 }
 
-mapping low_load_image(string f,object id)
+mapping low_load_image(string f, RequestID id)
 {
   string data;
-  object file, img;
-  if(id->misc->_load_image_called < 5) 
+  Stdio.File file;
+  if(id->misc->_load_image_called < 5)
   {
     // We were recursing very badly with the demo module here...
     id->misc->_load_image_called++;
@@ -2924,7 +2909,7 @@ mapping low_load_image(string f,object id)
 
 
 
-object load_image(string f,object id)
+Image.image load_image(string f, RequestID id)
 {
   mapping q = low_load_image( f, id );
   if( q ) return q->img;
@@ -2940,19 +2925,19 @@ private void fix_root(string to)
 #ifndef __NT__
   if(getuid())
   {
-    perror("It is impossible to chroot() if the server is not run as root.\n");
+    report_debug("It is impossible to chroot() if the server is not run as root.\n");
     return;
   }
 
   if(!chroot(to))
   {
-    perror("Roxen: Cannot chroot to "+to+": ");
+    report_debug("Roxen: Cannot chroot to "+to+": ");
 #if efun(real_perror)
     real_perror();
 #endif
     return;
   }
-  perror("Root is now "+to+".\n");
+  report_debug("Root is now "+to+".\n");
 #endif
 }
 
@@ -2960,12 +2945,12 @@ void create_pid_file(string where)
 {
 #ifndef __NT__
   if(!where) return;
-  where = replace(where, ({ "$pid", "$uid" }), 
+  where = replace(where, ({ "$pid", "$uid" }),
 		  ({ (string)getpid(), (string)getuid() }));
 
   rm(where);
   if(catch(Stdio.write_file(where, sprintf("%d\n%d", getpid(), getppid()))))
-    perror("I cannot create the pid file ("+where+").\n");
+    report_debug("I cannot create the pid file ("+where+").\n");
 #endif
 }
 
@@ -3002,22 +2987,20 @@ static private int _recurse;
 // FIXME: Ought to use the shutdown code.
 void exit_when_done()
 {
-  object o;
-  int i;
-  roxen_perror("Interrupt request received. Exiting,\n");
+  report_debug("Interrupt request received. Exiting,\n");
   die_die_die=1;
 
   if(++_recurse > 4)
   {
-    roxen_perror("Exiting roxen (spurious signals received).\n");
+    report_debug("Exiting roxen (spurious signals received).\n");
     configurations->stop();
 #ifdef THREADS
     stop_handler_threads();
 #endif /* THREADS */
     exit(-1);	// Restart.
   }
-  
-  roxen_perror("Exiting roxen.\n");
+
+  report_debug("Exiting roxen.\n");
   configurations->stop();
 #ifdef THREADS
   stop_handler_threads();
@@ -3027,7 +3010,7 @@ void exit_when_done()
 
 void exit_it()
 {
-  perror("Recursive signals.\n");
+  report_debug("Recursive signals.\n");
   exit(-1);	// Restart.
 }
 
@@ -3049,13 +3032,13 @@ void describe_all_threads()
   all_backtraces = ({ backtrace() });
 #endif /* constant(all_threads) */
 
-  werror("Describing all threads:\n");
+  report_debug("Describing all threads:\n");
   int i;
   for(i=0; i < sizeof(all_backtraces); i++) {
-    werror(sprintf("Thread %d:\n"
-		   "%s\n",
-		   i+1,
-		   describe_backtrace(all_backtraces[i])));
+    report_debug("Thread %d:\n"
+		 "%s\n",
+		 i+1,
+		 describe_backtrace(all_backtraces[i]));
   }
 }
 
@@ -3064,14 +3047,14 @@ void dump( string file )
 {
   if( file[0] != '/' )
     file = getcwd() +"/"+ file;
-                   
+
   program p = master()->programs[ replace(file, "//", "/" ) ];
   array q;
 
   if(!p)
   {
 #ifdef DUMP_DEBUG
-    report_debug(file+" not loaded, and thus cannot be dumped.\n");
+    werror(file+" not loaded, and thus cannot be dumped.\n");
 #endif
     return;
   }
@@ -3084,12 +3067,12 @@ void dump( string file )
       report_debug("** Cannot encode "+file+": "+describe_backtrace(q)+"\n");
 #ifdef DUMP_DEBUG
     else
-      report_debug( file+" dumped successfully to "+file+".o\n" );
+      werror( file+" dumped successfully to "+file+".o\n" );
 #endif
   }
 #ifdef DUMP_DEBUG
   else
-      report_debug(file+" already dumped (and up to date)\n");
+      werror(file+" already dumped (and up to date)\n");
 #endif
 }
 
@@ -3101,7 +3084,7 @@ int main(int argc, array argv)
   slowpipe = ((program)"slowpipe");
   fastpipe = ((program)"fastpipe");
 
-  
+
   call_out( lambda() {
               dump( "protocols/http.pike");
               dump( "protocols/ftp.pike");
@@ -3132,7 +3115,7 @@ int main(int argc, array argv)
   SET_LOCALE(default_locale);
   initiate_languages();
   mixed tmp;
-  
+
   mark_fd(0, "Stdin");
   mark_fd(1, "Stdout");
   mark_fd(2, "Stderr");
@@ -3170,7 +3153,7 @@ int main(int argc, array argv)
   create_pid_file(Getopt.find_option(argv, "p", "pid-file", "ROXEN_PID_FILE")
 		  || QUERY(pidfile));
 
-  roxen_perror("Initiating argument cache ... ");
+  report_debug("Initiating argument cache ... ");
 
   int id;
   string cp = QUERY(argument_cache_dir), na = "args";
@@ -3186,15 +3169,15 @@ int main(int argc, array argv)
   {
     report_error( "Failed to initialize the global argument cache:\n"
                   + (describe_backtrace( e )/"\n")[0]+"\n");
-    werror( describe_backtrace( e ) );
+    report_debug( describe_backtrace( e ) );
   }
-  roxen_perror( "\n" );
+  report_debug( "\n" );
 
   enable_configurations_modules();
-  
+
   call_out(update_supports_from_roxen_com,
 	   QUERY(next_supports_update)-time());
-  
+
 #ifdef THREADS
   start_handler_threads();
   catch( this_thread()->set_name("Backend") );
@@ -3237,12 +3220,12 @@ string check_variable(string name, mixed value)
    case "abs_engage":
     if (value)
       restart_if_stuck(1);
-    else 
+    else
       remove_call_out(restart_if_stuck);
     break;
 
    case "suicide_engage":
-    if (value) 
+    if (value)
       call_out(restart,60*60*24*QUERY(suicide_timeout));
     else
       remove_call_out(restart);
