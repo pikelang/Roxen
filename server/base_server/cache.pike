@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: cache.pike,v 1.69 2001/04/23 00:30:05 nilsson Exp $
+// $Id: cache.pike,v 1.70 2001/05/17 22:31:27 nilsson Exp $
 
 #pragma strict_types
 
@@ -385,8 +385,9 @@ void init_session_cache() {
   db = (([function(string:function(string:object(Sql.Sql)))]master()->resolv)
 	("DBManager.get"))("local");
   if( !db )
-    report_fatal("No 'shared' database!\n");
-  setup_tables();
+    report_fatal("No 'local' database!\n");
+  else
+    setup_tables();
 }
 
 void create()
