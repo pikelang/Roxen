@@ -174,11 +174,18 @@ array possible_permissions = ({ });
 
 mapping permission_translations = ([ ]);
 
-void add_permission( string perm, string text )
+void add_permission( string perm, string|mapping text )
 {
+  if( mappingp( text ) )
+  {
+    report_warning("Unsupported to call add_permission with a mapping.\n"
+                   "Use a LOCALE() string instead\n%s\n", 
+                   describe_backtrace( backtrace( ) ) );
+    text = [string](text->standard || (values( text )[ 0 ]));
+  }
   possible_permissions -= ({ perm });
   possible_permissions += ({ perm });
-  permission_translations[ perm ] = text;
+  permission_translations[ perm ] = [string]text;
 }
 
 void create()
@@ -302,7 +309,8 @@ class User
         string s = Roxen.parse_rxml( "<gbutton-url "+(dim?"dim":"")+
 				     "    icon_src=/standard/img/unselected.gif "
 				     "    font=&usr.font; "
-				     "    width=180>"+permission_translations[ perm ]+
+				     "    width=180>"+
+                                     permission_translations[ perm ]+
 				     "</gbutton-url>", id );
         form += sprintf( "<input border=0 type=image name='PPPadd_%s'"
                          " src='%s'>\n", perm, s );
