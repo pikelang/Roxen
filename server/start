@@ -114,6 +114,7 @@ EOF
    ;;
   *)
     pass="$pass $1"
+   ;;
   esac
   shift
  done
