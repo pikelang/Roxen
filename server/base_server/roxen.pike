@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.445 2000/03/01 20:19:46 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.446 2000/03/03 22:53:51 grubba Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -1851,8 +1851,21 @@ class ConfigIFCache
   mixed get( string name )
   {
     Stdio.File f = Stdio.File();
-    if(!f->open(  dir + replace( name, "/", "-" ), "r" ))
+    if(!f->open( dir + replace( name, "/", "-" ), "r" )) {
+      // Try falling back to the Roxen 2.0.11 file (Roxen 2.0b1)...
+      if (!f->open( ".configuration_settings/" +
+		    replace(configuration_dir-".", "/", "-") +
+		    "/" + (dir/"_configinterface/")[-1] +
+		    replace(name, "/", "-"), "r")) {
+	return 0;
+      }
+      report_warning("Using Roxen 2.0.11-style configuration file...\n");
+      catch {
+	return decode_value(f->read());
+      };
+      report_error("Roxen 2.0.11-style fallback failed.\n");
       return 0;
+    }
     mapping q = ([]);
     decode_variable( 0, ([ "name":"res" ]), utf8_to_string(f->read()), q );
     return q->res;
