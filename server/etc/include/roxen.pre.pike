@@ -114,9 +114,25 @@ int spawne(string s,string *args, mapping|array env, object stdin,
   exit(0); 
 }
 
+private static int perror_last_was_newline=1;
+
+void perror(string format,mixed ... args)
+{
+   string s;
+   int lwn;
+   s=((args==({}))?format:sprintf(format,@args));
+   if (s=="") return;
+   if ( (lwn = s[-1]=="\n") )
+      s=s[0..strlen(s)-2];
+   werror((perror_last_was_newline?getpid()+": ":"")
+	  +replace(s,"\n","\n"+getpid()+": ")
+          +(lwn?"\n":""));
+   perror_last_was_newline=lwn;
+}
+
 void create()
 {
    add_constant("spawne",spawne);
-   add_constant("perror",werror);
+   add_constant("perror",perror);
    add_constant("popen",popen);
 }
