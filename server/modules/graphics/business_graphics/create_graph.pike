@@ -14,7 +14,7 @@ constant STORTLITET = 1.0e-30;
 constant STORT = 1.0e40;
 #define VOIDSYMBOL "\n"
 
-constant cvs_version = "$Id: create_graph.pike,v 1.97 1998/03/02 16:06:29 hedda Exp $";
+constant cvs_version = "$Id: create_graph.pike,v 1.98 1998/03/06 21:57:45 hedda Exp $";
 
 /*
  * name = "BG: Create graphs";
@@ -671,7 +671,7 @@ mapping draw_grid(mapping diagram_data, int|float xpos_for_yaxis,
       }
 
   //Placera ut horgriden
-  s=sizeof(diagram_data["ynamesimg"]);
+  s=sizeof(diagram_data["values_for_ynames"]);
   if ((diagram_data["horgrid"])
       && (gw>LITET))
     for(int i=0; i<s; i++)

@@ -14,7 +14,7 @@ constant STORT = 1.0e40;
 
 inherit "create_graph.pike";
 
-constant cvs_version = "$Id: create_bars.pike,v 1.63 1998/03/02 19:56:20 hedda Exp $";
+constant cvs_version = "$Id: create_bars.pike,v 1.64 1998/03/06 21:57:42 hedda Exp $";
 
 /*
  * name = "BG: Create bars";
@@ -734,7 +734,8 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
     }
 
   //Placera ut texten på Y-axeln
-  s=sizeof(diagram_data["ynamesimg"]);
+  s=min(sizeof(diagram_data["ynamesimg"]), 
+	sizeof(diagram_data["values_for_ynames"]));
   for(int i=0; i<s; i++)
     if ((diagram_data["values_for_ynames"][i]<=diagram_data["ymaxvalue"])&&
 	(diagram_data["values_for_ynames"][i]>=diagram_data["yminvalue"]))
