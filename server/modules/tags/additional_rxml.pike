@@ -6,7 +6,7 @@ inherit "module";
 
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.26 2004/08/31 12:14:18 grubba Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.27 2004/08/31 12:41:08 grubba Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -18,7 +18,7 @@ void create() {
          "If set, it will be possible to use <tt>&lt;insert href&gt;</tt> to "
 	 "insert pages from another web server. Note that the thread will be "
 	 "blocked while it fetches the web page.");
-  defvar("recursion_limit", 5, "Maximum recursion depth for <insert href>",
+  defvar("recursion_limit", 2, "Maximum recursion depth for <insert href>",
 	 TYPE_INT|VAR_MORE,
 	 "Maxumum number of nested <tt>&lt;insert href&gt;</tt>'s allowed. "
 	 "May be set to zero to disable the limit.");
@@ -216,7 +216,7 @@ class TagInsertHref {
     _ok = 0;
 
     if(!args->silent)
-      RXML.run_error(q ? q->status_desc + "\n": "No server response\n");
+      RXML.run_error((q && q->status_desc) || "No server response");
     return "";
   }
 }
