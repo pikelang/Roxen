@@ -1,0 +1,77 @@
+<!-- -*- pike -*-  -->
+<pike>
+string parse( RequestID id )
+{
+  if(! id->misc->config_user->auth( "Edit Users" ) )
+    return "No such luck (permission denied)";
+  foreach( sort( id->misc->list_config_users() ), string u )
+  {
+    object u  = id->misc->get_config_user( u );
+    u->form( id );
+  }
+  return "";
+}
+</pike>
+
+<left-menu title="<cf-locale get=welcome>">
+ <item href="" title='<cf-locale get=home>' >
+   <item perm="View Settings" 
+         href="debug_info.html" 
+         title='<cf-locale get=debug_info>'></item>
+   <item href="settings.html"  
+         title='<cf-locale get=settings>'></item>
+   <item perm="Edit Users" selected
+         href="users.html"  
+         title='<cf-locale get=users>'></item>
+   <item perm="Restart" 
+         href="restart.html" 
+         title='<cf-locale get=restart>'></item>
+   <item perm="Shutdown" 
+         href="shutdown.html" 
+         title='<cf-locale get=shutdown>'></item>
+ </item>
+</left-menu>
+
+<!-- */ -->
+<content>
+<awizard>
+
+<page name=top>
+  <button title=" Edit Users " page=edit_users>
+  <button title=" Create new user " page=create_user>
+</page>
+ 
+<page name=create_user>
+<pre>
+User ID:  <input name=user_name>
+<dbutton page=top title=" Create User ">
+<pike>
+  if( !strlen(id->variables->user_name) ) 
+    return "<error>Too short user name</error>";
+  id->misc->create_new_config_user(   id->variables->user_name );
+</pike>
+</dbutton>
+</page>
+
+<page name=edit_users>
+<button title=" Back " page=top>
+<pike>
+string parse( RequestID id )
+{
+  string res="";
+  if(! id->misc->config_user->auth( "Edit Users" ) )
+    return "No such luck (permission denied)";
+
+  foreach( sort( id->misc->list_config_users() ), string uid )
+  {
+    object u  = id->misc->get_config_user( uid );
+    res += "<table width=100%><tr><td bgcolor=white><font size=+2>"+uid
+            +"</font></td></tr></table>";
+    res += u->form( id );
+  }
+  return res;
+}
+</pike>
+</page>
+</awizard>
+</content>

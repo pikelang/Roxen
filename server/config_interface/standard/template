@@ -2,13 +2,16 @@
 
 <define tag=topmenu default_base="" default_selected=home>
   <top-menu>
-    <item title="<cf-locale get=sites>" href="&base;sites/" 
+    <item perm="View Settings"
+          title="<cf-locale get=sites>" href="&base;sites/" 
       <if match="&selected; is sites"> selected</if> />
-    <item title="<cf-locale get=eventlog>" href="&base;event_log/" 
+    <item perm="View Settings"
+          title="<cf-locale get=eventlog>" href="&base;event_log/" 
           <if match="&selected; is event_log"> selected</if> />
-    <item title="<cf-locale get=globals>" href="&base;global_settings/" 
+    <item perm="View Settings"
+          title="<cf-locale get=globals>" href="&base;global_settings/" 
           <if match="&selected; is globals"> selected</if> />
-    <item title="<cf-locale get=actions>" href="&base;actions/"
+    <item perm="Actions" title="<cf-locale get=actions>" href="&base;actions/"
           <if match="&selected; is actions"> selected</if>  />
     <item title="<cf-locale get=home>" href="&base;" 
           <if match="&selected; is home"> selected</if> />

@@ -2,10 +2,20 @@
 
 <left-menu title="<cf-locale get=welcome>">
  <item href="" title='<cf-locale get=home>' selected>
-   <item href="debug_info.html" title='<cf-locale get=debug_info>'></item>
-   <item href="settings.html"  title='<cf-locale get=settings>'></item>
-   <item href="restart.html" title='<cf-locale get=restart>'></item>
-   <item href="shutdown.html" title='<cf-locale get=shutdown>'></item>
+   <item perm="View Settings" 
+         href="debug_info.html" 
+         title='<cf-locale get=debug_info>'></item>
+   <item href="settings.html"  
+         title='<cf-locale get=settings>'></item>
+   <item perm="Edit Users" 
+         href="users.html"  
+         title='<cf-locale get=users>'></item>
+   <item perm="Restart" 
+         href="restart.html" 
+         title='<cf-locale get=restart>'></item>
+   <item perm="Shutdown" 
+         href="shutdown.html" 
+         title='<cf-locale get=shutdown>'></item>
  </item>
 </left-menu>
 

@@ -28,6 +28,9 @@ object module_nomore(string name, object modinfo, object conf)
 
 string parse(object id )
 {
+  if( !id->misc->config_user->auth( "Add Module" ) )
+    return "No such luck, dude, permission denied";
+
   object conf = id->misc->current_configuration;
   array mods = roxen->all_modules();
   string res = 

@@ -6,6 +6,7 @@ inherit "roxenlib";
 #include <stat.h>
 
 #define LOCALE	LOW_LOCALE->config_interface
+#define CU_AUTH id->misc->config_user->auth
 
 constant module_type = MODULE_PARSER|MODULE_CONFIG;
 constant module_name = "Configuration interface RXML tags";
@@ -13,7 +14,11 @@ constant module_name = "Configuration interface RXML tags";
 string internal_topmenu_tag_item(string t, mapping m, 
 				 mapping c, RequestID id)
 {
+  if( m->perm  && 
+      (!id->misc->config_user || !CU_AUTH( m->perm )))
+    return "";
   c->them += ({ m });
+  return "";
 }
 
 string internal_c_topmenu(string t, mapping m, string d, mapping c, RequestID id)
@@ -66,6 +71,9 @@ string i_lmenu_tag_item(string t, mapping m, string d, mapping c, RequestID id)
 {
   mapping a = ([]);
   mixed items = (["them":({})]);
+  if( m->perm  && 
+     (!id->misc->config_user || !CU_AUTH( m->perm )))
+    return "";
   parse_html( d, a, (["item":i_lmenu_tag_item]), items, id );
   m->items = items->them;
   c->them += ({ m });
@@ -349,6 +357,19 @@ string set_variable( string v, object in, mixed to, object id )
   array var = in->variables[ v ];
   string warning ="";
   mixed val = to;
+
+  if( in == roxen )
+  {
+    if( !CU_AUTH( "Edit Global Variables" ) )
+      return "";
+  } else if( in->register_module ) {
+    if( !CU_AUTH( "Edit Module Variables" ) )
+      return "";
+  } else if( in->find_module && in->Priority ) {
+    if( !CU_AUTH( "Edit Site Variables" ) )
+      return "";
+  }
+
   switch(var[VAR_TYPE])
   {
    case TYPE_FLOAT:
@@ -462,6 +483,20 @@ string set_variable( string v, object in, mixed to, object id )
 string get_var_form( string s, object mod, object id )
 {
   string path = "";
+  int view_mode;
+
+  if( mod == roxen )
+  {
+    if( !CU_AUTH( "Edit Global Variables" ) )
+      view_mode = 1;
+  } else if( mod->register_module ) {
+    if( !CU_AUTH( "Edit Module Variables" ) )
+      view_mode = 1;
+  } else if( mod->find_module && mod->Priority ) {
+    if( !CU_AUTH( "Edit Site Variables" ) )
+      view_mode = 1;
+  }
+
   if( mod->my_configuration )
     path = (mod->my_configuration()->name + "/"+
             replace(mod->my_configuration()->otomod[ mod ], "#", "!")+
@@ -487,15 +522,22 @@ string get_var_form( string s, object mod, object id )
      return pre + var[VAR_MISC][1]( var, path );
      break;
    case TYPE_TEXT_FIELD:
+     if( view_mode )
+       return "<b><tt>"+replace(html_encode_string(var[VAR_VALUE]||""),
+                            "\n", "<br")+"</tt></b>";
      return pre + "<textarea name=\""+path+"\" cols=50 rows=10>"
             + html_encode_string(var[VAR_VALUE]||"")
             + "</textarea>";
      break;
    case TYPE_PASSWORD:
+     if( view_mode )
+       return "<b>Password</b>";
      return pre + "<input name=\""+path+"\" type=password size=30,1>";
     break;
     
    case TYPE_FONT:
+     if( view_mode )
+       return "<b>"+html_encode_string(var[VAR_VALUE])+"</b>";
      array select_from;
      select_from=sort( available_fonts() );
      string res= pre + "<select name="+path+">";
@@ -515,12 +557,18 @@ string get_var_form( string s, object mod, object id )
    case TYPE_FILE:
    case TYPE_DIR:
    case TYPE_LOCATION:
+     if( view_mode )
+       return "<b>"+html_encode_string(var[VAR_VALUE])+"</b>";
      return input(path, var[VAR_VALUE], 30);
 
    case TYPE_FLOAT:
+     if( view_mode )
+       return "<b>"+var[VAR_VALUE]+"</b>";
      return input(path, sprintf( "%.3f", var[VAR_VALUE]), 10);
 
    case TYPE_INT:
+     if( view_mode )
+       return "<b>"+var[VAR_VALUE]+"</b>";
      return input(path, var[VAR_VALUE], 10);
 
    case TYPE_DIR_LIST:
@@ -542,10 +590,14 @@ string get_var_form( string s, object mod, object id )
       for(i=0; i<sizeof(misc); i++)
       {
 	if(misc[i]==var[VAR_VALUE])
+        {
+          if( view_mode )
+            return "<b>"+html_encode_string((string)translate[misc[i]])+"</b>";
 	  tmp+=("  <option value=\""+
 		replace((string)misc[i],"\"","&quote;")
 		+ "\" selected> "+
 		translate[misc[i]]+" ");
+        }
  	else
 	  tmp+=("  <option value=\""+
 		replace((string)misc[i],"\"","&quote;")+ "\"> "+
@@ -553,10 +605,14 @@ string get_var_form( string s, object mod, object id )
       }
       return tmp+"</select>";
     }
+    if( view_mode )
+      return "<b><tt>"+html_encode_string((((array(string))var[VAR_VALUE])*","))+"</tt></b>";;
     return input( path, ((array(string))var[VAR_VALUE])*", ", 60 );
 
 
    case TYPE_FLAG:
+    if( view_mode )
+      return "<b>"+(var[VAR_VALUE]?LOW_LOCALE->yes:LOW_LOCALE->no)+"</b>";
      string res = "<select name="+path+"> ";
      if(var[VAR_VALUE])
        res +=  ("<option value=Yes selected>"+LOW_LOCALE->yes+
@@ -894,4 +950,11 @@ string tag_cf_locale( string t, mapping m, object id )
   if( functionp( val ) )
     return val( );
   return val;
+}
+
+string container_cf_perm( string t, mapping m, string c, RequestID id )
+{
+  if( !id->misc->config_user )
+    return "";
+  return CU_AUTH( m->perm ) ? c : "";
 }
