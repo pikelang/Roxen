@@ -1,5 +1,5 @@
 /* This is a Roxen module. Copyright © 1996 - 1998, Idonex AB
- * $Id: directories2.pike,v 1.12 1998/11/05 00:48:56 peter Exp $
+ * $Id: directories2.pike,v 1.13 1999/01/14 00:43:57 grubba Exp $
  *
  * Directory listings mark 2
  *
@@ -12,7 +12,7 @@
  * Make sure links work _inside_ unfolded dokuments.
  */
 
-constant cvs_version = "$Id: directories2.pike,v 1.12 1998/11/05 00:48:56 peter Exp $";
+constant cvs_version = "$Id: directories2.pike,v 1.13 1999/01/14 00:43:57 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -308,7 +308,9 @@ string|mapping parse_directory(object id)
   if (!(((sizeof(f) > 1) && ((f[-1] == '/') ||
 			     ((f[-2] == '/') && (f[-1] == '.')))) ||
 	(f == "/"))) {
-    return(http_redirect(f + "/", id));
+    string new_query = http_encode_string(f) + "/" +
+      (id->query?("?" + id->query):"");
+    return(http_redirect(new_query, id));
   }
   /* If the pathname ends with '.', and the 'override' variable
    * is set, a directory listing should be sent instead of the
