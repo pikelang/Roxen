@@ -5,13 +5,13 @@
 //
 // made by Mattias Wingstedt
 
-constant cvs_version = "$Id: indirect_href.pike,v 1.19 2000/04/16 15:46:58 nilsson Exp $";
+#pragma strict_types
+
+constant cvs_version = "$Id: indirect_href.pike,v 1.20 2000/04/19 14:45:25 nilsson Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
 inherit "module";
-
-mapping hrefs;
 
 void create()
 {
@@ -29,15 +29,16 @@ constant module_type = MODULE_PARSER;
 constant module_name = "Indirect href";
 //constant module_unique = 0;
 constant module_doc  =
-#"Indirect href. Adds a new tag <tt>&lt;ai name=&gt;</tt> that works like 
-<tt>&lt;a href=&gt;</tt> but uses a symbolic name instead of a URL. The 
+#"Indirect href. Adds a new tag <tt>&lt;ai&nbsp;name=\"\"&gt;&lt;/ai&gt;</tt> that works like 
+<tt>&lt;a&nbsp;href=\"\"&gt;&lt;/a&gt;</tt> but uses a symbolic name instead of a URL. The 
 symbolic name is translated to a proper URL and the tag rewritten to a 
-proper &lt;a href=&gt; tag. The translation between symbolic names and 
+proper <tt>&lt;a&nbsp;href=\"\"&gt;&lt;/a&gt;</tt> tag. The translation between symbolic names and 
 URLs is stored in a module variable. The advantage of this module is that 
 each URL will only be stored in one place and it becomes very easy to 
 change it, no matter how many links use it. As an extra bonus the name 
 <tt>random</tt> will be replaces by a random URL from the list.";
 
+mapping(string:string) hrefs;
 
 void start()
 {
@@ -45,7 +46,7 @@ void start()
   string variable, value;
 
   hrefs = ([ ]);
-  if (lines = (query( "hrefs" )-" "-"\t") /"\n")
+  if (lines = ([string]query( "hrefs" )-" "-"\t") /"\n")
     foreach (lines, string line)
       if (sscanf( line, "%s=%s", variable, value ) >= 2)
 	hrefs[ variable ] = value;
@@ -54,10 +55,11 @@ void start()
 class TagAI {
   inherit RXML.Tag;
   string name;
+  mapping(string:RXML.Type) req_arg_types = (["name":RXML.t_text]);
 
   void create() {
     if(variables->tagname)
-      name = query("tagname");
+      name = [string]query("tagname");
     else
       name = "ai";
   }
@@ -76,7 +78,7 @@ class TagAI {
 	args->href=hrefs[args->name];
       m_delete(args, "name");
 
-      result = Roxen.make_container("a", args, content);
+      result = Roxen.make_container("a", [mapping(string:string)]args, [string]content);
       return 0;
     }
   }
@@ -90,7 +92,7 @@ constant tagdoc=([
  to by a symbolic name instead of the URL.
 
  <p>The database is updated through the configuration interface. The
- tag is available through the <module>Indirect href</module>
+ tag is available through the <ref type=module>Indirect href</ref>
  module.</p></desc>
 
  <attr name='name' value='string' required>
