@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.304 2003/01/13 17:57:56 mast Exp $
+// $Id: module.pmod,v 1.305 2003/01/15 21:23:40 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -1246,9 +1246,10 @@ class TagSet
   {
     return "RXML.TagSet(" +
       // No, the owner isn't written unambiguously; we try to be brief here.
-      (owner && (owner->is_module ?
-		 owner->module_local_id() :
-		 owner->name)) + "," + tag_set_component_names() + ")" + OBJ_COUNT;
+      (string) (owner && (owner->is_module ?
+			  owner->module_local_id() :
+			  owner->name)) +
+      "," + tag_set_component_names() + ")" + OBJ_COUNT;
     //return "RXML.TagSet(" + id_number + ")" + OBJ_COUNT;
   }
 
