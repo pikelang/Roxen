@@ -1,6 +1,6 @@
 #include <module.h>
 
-string cvs_verison = "$Id: draw_things.pike,v 1.12 1996/12/05 16:02:00 per Exp $";
+string cvs_verison = "$Id: draw_things.pike,v 1.13 1996/12/06 04:19:13 neotron Exp $";
 
 
 object (Image) load_image(string f)
@@ -121,7 +121,7 @@ object (Image) draw_config_button(string name, object font, int lm, int rm)
 {
   if(!strlen(name)) return Image(1,15,dR, dG, dB);
 
-  object txt = font->write(name)->scale(0.5);
+  object txt = font->write(name)->scale(0.48);
   object ruta = Image(txt->xsize()+25, 20, bR, bG, bB);
   object linje = Image(2,30, rm?0:bhR,rm?0:bhG,rm?0:bhB);
 
@@ -148,7 +148,7 @@ object (Image) draw_unselected_button(string name, object font)
 {
   if(!strlen(name)) return Image(1,15, R,G,B);
 
-  object txt = font->write(name)->scale(0.5);
+  object txt = font->write(name)->scale(0.48);
   object ruta = Image(txt->xsize()+40, 20, R, G, B), s;
   object linje = Image(2,30, hR,hG,hB);
   object linje_mask = Image(2,30, 128,128,128);
@@ -173,7 +173,7 @@ object (Image) draw_selected_button(string name, object font)
 {
   if(!strlen(name)) return Image(1,15, dR, dG, dB);
 
-  object txt = font->write(name)->scale(0.5);
+  object txt = font->write(name)->scale(0.48);
   object ruta = Image(txt->xsize()+40, 20, dR, dG, dB), s;
   object linje = Image(2,30, hR,hG,hB);
   object linje_mask = Image(2,30, 128,128,128);
