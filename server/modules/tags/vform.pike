@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version="$Id: vform.pike,v 1.13 2000/10/17 21:01:33 per Exp $";
+constant cvs_version="$Id: vform.pike,v 1.14 2000/11/07 23:58:33 nilsson Exp $";
 constant thread_safe=1;
 
 constant module_type = MODULE_TAG;
@@ -375,9 +375,10 @@ class TagVForm {
       id->misc->defines[" _ok"] = id->misc->vform_ok;
       m_delete(id->misc, "vform_ok");
 
-      if(!sizeof(id->misc->vform_failed) &&
+      if(args["hide-if-verified"] &&
+	 !sizeof(id->misc->vform_failed) &&
 	 sizeof(id->misc->vform_verified) &&
-	 args["hide-if-verified"]) {
+	 id->misc->defines[" _ok"] ) {
 	m_delete(id->misc, "vform_verified");
 	m_delete(id->misc, "vform_failed");
 	return 0;
