@@ -285,18 +285,21 @@ array query_seclevels()
   string sl, sec;
   array patterns=({ });
 
-  if(catch(query("_seclevels")))
+  if(catch(query("_seclevels"))) {
     return patterns;
+  }
   
   foreach(replace(query("_seclevels"),({" ","\t","\\\n"}),({"","",""}))/"\n",sl)
   {
     if(!strlen(sl) || sl[0]=='#')
       continue;
+
+    // sl = lower_case(sl);	// Lower case?	/grubba
     string type, value;
     if(sscanf(sl, "%s=%s", type, value)==2)
     {
       value = replace(value, ({ "?", ".", "*" }), ({ ".", "\.", ".*" }));
-      switch(type)
+      switch(lower_case(type))
       {
       case "allowip":
 	patterns += ({ ({ MOD_ALLOW, Regexp(value)->match, }) });
@@ -311,7 +314,7 @@ array query_seclevels()
 	int i;
 	
 	for(i=0; i < sizeof(users); i++) {
-	  if (users[i] == "any") {
+	  if (lower_case(users[i]) == "any") {
 	    if(this->register_module()[0] & MODULE_PROXY) 
 	      patterns += ({ ({ MOD_PROXY_USER, lambda(){ return 1; } }) });
 	    else
@@ -338,7 +341,12 @@ array query_seclevels()
 	  }
 	}
 	break;
+      default:
+	perror("Unknown Security:Patterns directive\n");
+	break;
       }
+    } else {
+      perror("Unknown Security:Patterns directive\n");
     }
   }
   return patterns;
