@@ -1,43 +1,3 @@
-class StringFile( string data, mixed|void _st )
-{
-  int offset;
-
-  string _sprintf(int t)
-  {
-    return "StringFile("+sizeof(data)+","+offset+")";
-  }
-
-  string read(int nbytes)
-  {
-    if(!nbytes)
-    {
-      offset = sizeof(data);
-      return data;
-    }
-    string d = data[offset..offset+nbytes-1];
-    offset += sizeof(d);
-    return d;
-  }
-
-  Stat stat()
-  {
-    if( _st ) return _st;
-    Stdio.Stat st = Stdio.Stat();
-    st->size = sizeof(data);
-    st->mtime=st->atime=st->ctime=time();
-    return st;
-  }
-
-  void write(mixed ... args)
-  {
-    error( "File not open for write\n" );
-  }
-
-  void seek(int to)
-  {
-    offset = to;
-  }
-}
 class CIF
 {
   Stdio.File fd;
@@ -86,7 +46,7 @@ class CIF
     if( fname == "fontname" )
     {
       fd->seek( 4 );
-      return StringFile( fd->read( 64 )-"\0" );
+      return Stdio.FakeFile( fd->read( 64 )-"\0" );
     }
 
     int wc;
@@ -104,8 +64,8 @@ class CIF
     {
       fd->seek( offsets[ wc ] );
       if( wc <= 0x7fffffff ) // Normal character
-        return StringFile( prefix+fd->read( getint() ) );
-      return StringFile( fd->read( getint() ) );
+        return Stdio.FakeFile( prefix+fd->read( getint() ) );
+      return Stdio.FakeFile( fd->read( getint() ) );
     }
     return 0;
   }

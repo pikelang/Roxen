@@ -19,43 +19,6 @@ All integers are NBO<p>
 There is a small program included in bin (create_cif.pike) that 
 creates a cif font from an imagedir or imagetar font</p>";
 
-class StringFile
-{
-  string data;
-  int offset;
-
-  string _sprintf(int t) {
-    return t=='O' && sprintf("%O(%d,%d)", this_program, sizeof(data), offset);
-  }
-
-  string read(int nbytes)
-  {
-    if(!nbytes)
-    {
-      offset = sizeof(data);
-      return data;
-    }
-    string d = data[offset..offset+nbytes-1];
-    offset += sizeof(d);
-    return d;
-  }
-
-  void write(mixed ... args)
-  {
-    error( "File not open for write\n" );
-  }
-
-  void seek(int to)
-  {
-    offset = to;
-  }
-
-  void create(string d)
-  {
-    data = d;
-  }
-}
-
 class CIF
 {
   Stdio.File fd;
@@ -107,7 +70,7 @@ class CIF
     if( fname == "fontname" )
     {
       fd->seek( 4 );
-      return StringFile( fd->read( 64 )-"\0" );
+      return Stdio.FakeFile( fd->read( 64 )-"\0" );
     }
 //     werror("open "+fname+"\n");
     int wc;
@@ -122,8 +85,8 @@ class CIF
     {
       fd->seek( offsets[ wc ] );
       if( wc <= 0x7fffffff ) // Normal character
-        return StringFile( prefix+fd->read( getint() ) );
-      return StringFile( fd->read( getint() ) );
+        return Stdio.FakeFile( prefix+fd->read( getint() ) );
+      return Stdio.FakeFile( fd->read( getint() ) );
     }
     return 0;
   }

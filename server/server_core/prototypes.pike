@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 2001, Roxen IS.
-// $Id: prototypes.pike,v 1.79 2004/07/12 12:19:05 _cvs_stephen Exp $
+// $Id: prototypes.pike,v 1.80 2004/07/17 23:01:38 _cvs_stephen Exp $
 
 #include <stat.h>
 #include <config.h>
@@ -19,7 +19,7 @@
 object Roxen;
 
 multiset(string) globals = (<
-  "Protocol", "Configuration", "StringFile", "RequestID",
+  "Protocol", "Configuration", "RequestID",
   "RoxenModule", "ModuleInfo", "ModuleCopies", "FakedVariables",
   "AuthModule", "UserDB", "User", "Group", "PrefLanguages", "DAVLock",
   "MultiStatus", "Overwrite", "PropertyBehavior", "PatchPropertyCommand",
@@ -82,47 +82,6 @@ class BasicDefvar
                   mapping|void option_translations);
   mixed query(string|void var, int|void ok);
   void definvisvar(string name, mixed value, int type, array|void misc);
-}
-
-// FIXME: Replace with Stdio.FakeFile
-class StringFile( string data, mixed|void _st )
-{
-  int offset;
-
-  string _sprintf(int t) {
-    return t=='O' && sprintf("%O(%d,%d)", this_program, sizeof(data), offset);
-  }
-
-  string read(int nbytes)
-  {
-    if(!nbytes)
-    {
-      offset = sizeof(data);
-      return data;
-    }
-    string d = data[offset..offset+nbytes-1];
-    offset += sizeof(d);
-    return d;
-  }
-
-  Stat stat()
-  {
-    if( _st ) return _st;
-    Stdio.Stat st=Stdio.Stat();
-    st->size=sizeof(data);
-    st->mtime=st->atime=st->ctime=time();
-    return st;
-  }
-
-  void write(mixed ... args)
-  {
-    error( "File not open for write\n" );
-  }
-
-  void seek(int to)
-  {
-    offset = to;
-  }
 }
 
 class ModuleInfo

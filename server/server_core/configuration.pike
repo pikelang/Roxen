@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.575 2004/07/17 14:25:37 _cvs_stephen Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.576 2004/07/17 23:01:38 _cvs_stephen Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2343,11 +2343,11 @@ array open_file(string fname, string mode, RequestID id, void|int internal_get,
 
   if( file->data )
   {
-    file->file = StringFile(file->data);
+    file->file = Stdio.FakeFile(file->data);
     m_delete(file, "data");
   }
   id->not_query = oq;
-  return ({ file->file || StringFile(""), file });
+  return ({ file->file || Stdio.FakeFile(""), file });
 }
 
 

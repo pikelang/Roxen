@@ -2,7 +2,7 @@
 
 inherit "module";
 
-constant cvs_version= "$Id: sqlfs.pike,v 1.11 2004/07/12 12:19:04 _cvs_stephen Exp $";
+constant cvs_version= "$Id: sqlfs.pike,v 1.12 2004/07/17 23:01:37 _cvs_stephen Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -169,7 +169,7 @@ int|object find_file(  string f, RequestID id )
   if( !st )            return 0;
   if( st->type=="unknown" )    return -1;
   id->misc->stat = st;
-  return StringFile( d->contents||"" );
+  return Stdio.FakeFile( d->contents||"" );
 }
 
 array(string) find_dir( string f, RequestID id )

@@ -2,7 +2,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: tarfs.pike,v 1.13 2004/06/05 15:19:44 _cvs_dirix Exp $";
+constant cvs_version = "$Id: tarfs.pike,v 1.14 2004/07/17 23:01:37 _cvs_stephen Exp $";
 
 // The Filesystem.Tar module is not threadsafe.
 constant thread_safe = 0;
@@ -83,6 +83,6 @@ mixed find_file( string f, RequestID id )
   object s = tar->stat( f );
   if( !s ) return 0;
   if( s->isdir() ) return -1;
-  return StringFile( tar->open( f, "r" )->read(), 
+  return Stdio.FakeFile( tar->open( f, "r" )->read(), 
 		     stat_file( f, id ));
 }
