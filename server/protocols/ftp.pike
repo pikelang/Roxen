@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.90 2004/02/24 15:49:47 mast Exp $
+ * $Id: ftp.pike,v 2.91 2004/02/24 16:36:29 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -173,7 +173,12 @@ class RequestID2
   {
 #ifdef FTP_REQUESTID_DEBUG
     _num = ++__num[0];
-    report_debug("REQUESTID: New request id #%d.\n", _num);
+    if (m_rid) {
+      report_debug("REQUESTID: New request id #%d (CHILD to #%d).\n",
+		   _num, m_rid->_num);
+    } else {
+      report_debug("REQUESTID: New request id #%d (MASTER).\n", _num);
+    }
 #else
     DWRITE("REQUESTID: New request id.\n");
 #endif
@@ -711,13 +716,12 @@ class LSFile
   {
     array|object st = stat_cache[long];
     if (zero_type(st)) {
-      if (!session) {
-	session = RequestID2(master_session);
-	session->method = "DIR";
-      }
+      session = RequestID2(session || master_session);
+      session->method = "DIR";
       long = replace(long, "//", "/");
       st = session->conf->stat_file(long, session);
       stat_cache[long] = st;
+      destruct(session);
     }
     return st;
   }
@@ -881,6 +885,8 @@ class LSFile
       err = catch {
 	dir = session->conf->find_dir_stat(long, session);
       };
+
+      destruct(session);
 
       if (err) {
 	report_error("FTP: LSFile->list_next_directory(): "
@@ -1048,6 +1054,7 @@ class LSFile
 	output(short + ": not found\n");
 	session->conf->log(([ "error":404 ]), session);
       }
+      destruct(session);
     }
 
     DWRITE("FTP: LSFile: %d files, %d directories\n",
@@ -1063,6 +1070,7 @@ class LSFile
       session->not_query = Array.map(files, fix_path) * " ";
       session->method = "LIST";
       session->conf->log(([ "error":200, "len":sizeof(s) ]), session);
+      destruct(session);
     }
     if (dir_stack->ptr) {
       name_directories = dir_stack->ptr &&
@@ -1796,7 +1804,7 @@ class FTPSession
       session->conf->log(session->file, session);
       session->file = 0;
     }
-
+    destruct(session);
     send(226, ({ "Transfer complete." }));
   }
 
@@ -1805,11 +1813,8 @@ class FTPSession
   {
     mapping file;
 
-    if (!session) {
-      session = RequestID2(master_session);
-      session->method = "STAT";
-    }
-
+    session = RequestID2(session || master_session);
+    session->method = "STAT";
     session->not_query = fname;
 
     foreach(conf->first_modules(), function funp) {
@@ -1820,9 +1825,10 @@ class FTPSession
 
     if (!file) {
       fname = replace(fname, "//", "/");
-      return(conf->stat_file(fname, session));
+      file = conf->stat_file(fname, session);
     }
-    return(file);
+    destruct(session);
+    return file;
   }
 
   static private int expect_argument(string cmd, string args)
@@ -1959,6 +1965,7 @@ class FTPSession
     else
     {
       send(425, ({ "Can't build data connect: Connection refused." }));
+      destruct(session);
       return;
     }
     switch(file->mode) {
@@ -2096,6 +2103,7 @@ class FTPSession
 	  break;
 	}
 	session->conf->log(session->file, session);
+	destruct(session);
 	return;
       }
       master_session->file = session->file;
@@ -2104,6 +2112,7 @@ class FTPSession
       if (fd) {
 	BACKEND_CLOSE(fd);
       }
+      destruct(session);
     }
   }
 
@@ -2295,6 +2304,7 @@ class FTPSession
                   }
                 }
               }
+	      destruct(id);
             }
             matches = new_matches;
           } else {
@@ -2327,8 +2337,10 @@ class FTPSession
 				   object id = RequestID2(m_id);
 				   id->method = "LIST";
 				   id->not_query = combine_path(cwd, short);
-				   return(id->conf->stat_file(id->not_query,
-							      id));
+				   mapping res =
+				     id->conf->stat_file(id->not_query, id);
+				   destruct(id);
+				   return res;
 				 }, cwd, master_session);
           if (sizeof(matches)) {
             args[index] = matches;
@@ -2807,6 +2819,7 @@ class FTPSession
       object session = RequestID2(master_session);
       session->method = "STAT";
       array(int)|object st = conf->stat_file(home, session);
+      destruct(session);
 
       if (st && (st[1] < 0)) {
 	cwd = home;
@@ -2839,12 +2852,14 @@ class FTPSession
       send(550, ({ sprintf("%s: No such file or directory, or access denied.",
 			   ncwd) }));
       session->conf->log(session->file || ([ "error":404 ]), session);
+      destruct(session);
       return;
     }
 
     if (!(< -2, -3 >)[st[1]]) {
       send(504, ({ sprintf("%s: Not a directory.", ncwd) }));
       session->conf->log(([ "error":400 ]), session);
+      destruct(session);
       return;
     }
 
@@ -2885,6 +2900,7 @@ class FTPSession
     session->method = "CWD";	// Restore it again.
     send(250, reply);
     session->conf->log(([ "error":200, "len":sizeof(reply*"\n") ]), session);
+    destruct(session);
   }
 
   void ftp_XCWD(string args)
@@ -3170,6 +3186,7 @@ class FTPSession
 	    restart_point = 0;
 	    send(550, ({ "'RETR': Error restoring restart point." }));
 	    discard_data_connection();
+	    destruct(session);
 	    return;
 	  }
 	  restart_point = 0;
@@ -3178,8 +3195,10 @@ class FTPSession
 
       connect_and_send(session->file, session);
     }
-    else
+    else {
       discard_data_connection();
+      destruct(session);
+    }
   }
 
   void ftp_STOR(string args)
@@ -3247,6 +3266,7 @@ class FTPSession
     } else {
       send(550, ({ sprintf("%s: no such file or permission denied.",args) }) );
     }
+    destruct(session);
   }
 
   void ftp_RNTO(string args)
@@ -3270,6 +3290,7 @@ class FTPSession
       session->conf->log(([ "error":200 ]), session);
     }
     rename_from = 0;
+    destruct(session);
   }
 
 
@@ -3306,6 +3327,7 @@ class FTPSession
     } else {
       send_error("MLST", args, session->file, session);
     }
+    destruct(session);
   }
 
   void ftp_MLSD(string args)
@@ -3333,6 +3355,7 @@ class FTPSession
       send_error("MLSD", args, session->file, session);
       discard_data_connection();
     }
+    destruct(session);
   }
 
   void ftp_DELE(string args)
@@ -3352,8 +3375,8 @@ class FTPSession
     if (open_file(args, session, "DELE")) {
       send(250, ({ sprintf("%s deleted.", args) }));
       session->conf->log(([ "error":200 ]), session);
-      return;
     }
+    destruct(session);
   }
 
   void ftp_RMD(string args)
@@ -3374,6 +3397,7 @@ class FTPSession
 
     if (!st) {
       send_error("RMD", args, session->file, session);
+      destruct(session);
       return;
     } else if (st[1] != -2) {
       if (st[1] == -3) {
@@ -3383,14 +3407,15 @@ class FTPSession
 	send(504, ({ sprintf("%s is not a directory.", args) }));
 	session->conf->log(([ "error":405 ]), session);
       }
+      destruct(session);
       return;
     }
 
     if (open_file(args, session, "RMD")) {
       send(250, ({ sprintf("%s deleted.", args) }));
       session->conf->log(([ "error":200 ]), session);
-      return;
     }
+    destruct(session);
   }
 
   void ftp_XRMD(string args)
@@ -3415,8 +3440,8 @@ class FTPSession
     if (open_file(args, session, "MKD")) {
       send(257, ({ sprintf("\"%s\" created.", args) }));
       session->conf->log(([ "error":200 ]), session);
-      return;
     }
+    destruct(session);
   }
 
   void ftp_XMKD(string args)
@@ -3469,9 +3494,10 @@ class FTPSession
 
     if (!arrayp(st) && !objectp(st)) {
       send_error("MDTM", args, st, session);
-      return;
+    } else {
+      send(213, ({ make_MDTM(st[3]) }));
     }
-    send(213, ({ make_MDTM(st[3]) }));
+    destruct(session);
   }
 
   void ftp_SIZE(string args)
@@ -3487,15 +3513,17 @@ class FTPSession
 
     if (!arrayp(st) && !objectp(st)) {
       send_error("SIZE", args, st, session);
+      destruct(session);
       return;
     }
     int size = st[1];
     if (size < 0) {
       send_error("SIZE", args, ([ "error":405, ]), session);
-      return;
       // size = 512;
+    } else {
+      send(213, ({ (string)size }));
     }
-    send(213, ({ (string)size }));
+    destruct(session);
   }
 
   void ftp_STAT(string args)
@@ -3544,14 +3572,14 @@ class FTPSession
 
     if (!arrayp(st) && !objectp(st)) {
       send_error("STAT", long, st, session);
-      return;
+    } else {
+      string s = LS_L(master_session)->ls_l(args, st);
+
+      send(213, sprintf("status of \"%s\":\n"
+			"%s"
+			"End of Status", args, s)/"\n");
     }
-
-    string s = LS_L(master_session)->ls_l(args, st);
-
-    send(213, sprintf("status of \"%s\":\n"
-		      "%s"
-		      "End of Status", args, s)/"\n");
+    destruct(session);
   }
 
   void ftp_NOOP(string args)
@@ -3663,6 +3691,7 @@ class FTPSession
 			   fname, mode) }));
       session->conf->log(([ "error":200 ]), session);
     }
+    destruct(session);
   }
 
   void ftp_SITE_UMASK(array(string) args)
@@ -3852,6 +3881,9 @@ class FTPSession
     logout();
 
     port_obj->sessions--;
+    if (master_session) {
+      destruct(master_session);
+    }
   }
 
   void create(object fd, object c)
