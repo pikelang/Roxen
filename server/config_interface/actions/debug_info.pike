@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.30 2003/09/04 14:28:10 anders Exp $
+ * $Id: debug_info.pike,v 1.31 2003/10/19 17:00:12 mast Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -346,12 +346,7 @@ mixed page_0( object id )
 
     string objstr = String.common_prefix (objs)[..30];
     if (!(<"", "object">)[objstr]) {
-      int next = 0;
-      sscanf (objstr, "%*[^]`'\")}({[]%c", next);
       if (sizeof (objstr) < max (@map (objs, sizeof))) objstr += "...";
-      if (int c = (['(': ')', '[': ']', '{': '}'])[next])
-	if (objstr[-1] != c)
-	  objstr += (string) ({c});
     }
     else objstr = "";
 
