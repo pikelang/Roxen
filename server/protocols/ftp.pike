@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 1.99 1999/05/01 18:18:55 grubba Exp $
+ * $Id: ftp.pike,v 1.100 1999/05/01 19:01:01 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -296,6 +296,36 @@ class BinaryWrapper
 }
 
 // EBCDIC Wrappers here.
+
+class ToEBCDICWrapper
+{
+  inherit FileWrapper;
+
+  int converted;
+
+  static object converter = Locale.Charset.encoder("EBCDIC-US", "");
+
+  static string convert(string s)
+  {
+    converted += sizeof(s);
+    return(converter->feed(s)->drain());
+  }
+}
+
+class FromEBCDICWrapper
+{
+  inherit FileWrapper;
+
+  int converted;
+
+  static object converter = Locale.Charset.decoder("EBCDIC-US");
+
+  static string convert(string s)
+  {
+    converted += sizeof(s);
+    return(converter->feed(s)->drain());
+  }
+}
 
 
 class PutFileWrapper
@@ -1739,8 +1769,17 @@ class FTPSession
       break;
     case "E":
       // EBCDIC handling here.
-      roxen_perror("FTP: EBCDIC not yet supported.\n");
-      send(504, ({ "EBCDIC not supported." }));
+      if (file->data) {
+	object conv = Locale.Charset.encoder("EBCDIC-US", "");
+	file->data = conv->feed(file->data)->drain();
+      }
+      if(objectp(file->file) && file->file->set_nonblocking)
+      {
+	// The list_stream object doesn't support nonblocking I/O,
+	// but converts to ASCII anyway, so we don't have to do
+	// anything about it.
+	file->file = ToEBCDICWrapper(file->file, this_object());
+      }
       break;
     default:
       // "I" and "L"
@@ -1782,7 +1821,7 @@ class FTPSession
       fd = FromAsciiWrapper(fd, this_object());
       break;
     case "E":
-      send(504, ({ "EBCDIC mode not supported." }));
+      fd = FromEBCDICWrapper(fd, this_object());
       return;
     default:	// "I" and "L"
       // Binary, no need to do anything.
