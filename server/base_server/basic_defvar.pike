@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 2000, Roxen IS.
-// $Id: basic_defvar.pike,v 1.17 2000/08/17 16:49:32 lange Exp $
+// $Id: basic_defvar.pike,v 1.18 2000/10/12 22:39:16 nilsson Exp $
 // (string:Variable.Variable) 
 mapping(string:Variable.Variable)  variables=([]);
 //! Please do not modify this list directly, instead use 
@@ -273,7 +273,7 @@ mixed query(string|void var, int|void ok)
   return variables;
 }
 
-void definvisvar(string name, int value, int type, array|void misc)
+void definvisvar(string name, mixed value, int type, array|void misc)
 //! Convenience function, define an invisible variable, this variable
 //! will be saved, but it won't be visible in the administration interface.
 {
