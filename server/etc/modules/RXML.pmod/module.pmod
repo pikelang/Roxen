@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.149 2001/04/19 12:08:27 jhs Exp $
+// $Id: module.pmod,v 1.150 2001/04/24 00:44:08 nilsson Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -721,6 +721,20 @@ class TagSet
     got_local_tags = sizeof (tags) || (proc_instrs && sizeof (proc_instrs));
   }
 
+  function(Backtrace,Type:string) handle_run_error =
+    lambda (Backtrace err, Type type)
+    //! Formats the run error backtrace.
+    {
+      return describe_error(err);
+    };
+
+  function(Backtrace,Type:string) handle_parse_error =
+    lambda (Backtrace err, Type type)
+    //! Formats the parse error backtrace.
+    {
+      return describe_error(err);
+    };
+
   //(!) Internals:
 
   void do_notify (function(:void) func)
@@ -1380,9 +1394,9 @@ class Context
 	  msg = err->type == "help" ? err->msg :
 	    (err->type == "run" ?
 	     ([function(Backtrace,Type:string)]
-	      ([object] id->conf)->handle_run_error) :
+	      tag_set->handle_run_error) :
 	     ([function(Backtrace,Type:string)]
-	      ([object] id->conf)->handle_parse_error)
+	      tag_set->handle_parse_error)
 	    ) ([object(Backtrace)] err, evaluator->type);
 	else
 	  msg = err->msg;
