@@ -1392,6 +1392,44 @@ class Scale
   };
 }
 
+class Rotate
+//! Rotate cpecified number of degrees
+{
+  inherit LazyImage;
+  constant operation_name = "rotate";
+  constant destructive    = (<"image","alpha","meta">);
+  static {
+    Layers process( Layers layers )
+    {
+      Layers victims = layers;
+      if( args->layers )
+	victims = find_layers( args->layers, layers );
+      else if( args["layers-id"] )
+	victims = find_layers( args["layers-id"], layers );
+
+      float r = (float)args->degrees;
+      foreach( victims, Image.Layer l )
+      {
+	Image.Image i = l->image(), a = l->alpha();
+	if( i )
+	  i = i->rotate( r );
+	if( a )
+	  a = a->rotate( r );
+	l->set_image( i, a );
+      }
+      return layers;
+    }
+
+    Arguments check_args( Arguments args )
+    {
+      if( !args->degrees )
+	RXML.parse_error( "Required argument 'degrees' missing.\n" );
+      if( !parent )
+	RXML.parse_error( "rotate cannot be the toplevel node\n" );
+      return args;
+    }
+  };
+}
 
 class GreyBlur
 //! About three times faster version of blur, but only blurs greyscale

@@ -8,7 +8,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.28 2004/02/12 16:26:01 wellhard Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.29 2004/02/20 17:48:54 anders Exp $";
 constant module_type = MODULE_TAG;
 
 LocaleString module_name = _(1,"Graphics: GXML tag");
@@ -335,6 +335,7 @@ SIMPLE_LI(GreyBlur);
 SIMPLE_LI(Expand);
 SIMPLE_LI(Scale);
 SIMPLE_LI(Shadow);
+SIMPLE_LI(Rotate);
 
 
 SIMPLE_LI(Gamma);
