@@ -223,7 +223,7 @@ class FTFont
     face = r; size = s;
 
     if( (fn2 = replace( fn, ".pfa", ".afm" )) != fn && r_file_stat( fn2 ) )
-      catch(face->attach_file( replace( fn, ".pfa", ".afm" ) ));
+      catch(face->attach_file( fn2 ));
 
     
     if(r_file_stat(fn+".properties"))
