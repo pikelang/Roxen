@@ -4,7 +4,7 @@
 #include <stat.h>
 #include <config.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.34 2001/08/23 18:54:53 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.35 2001/08/24 19:02:43 nilsson Exp $";
 
 class Variable
 {
@@ -145,8 +145,7 @@ class ModuleCopies
   string _sprintf( ) { return "ModuleCopies("+sizeof(copies)+")"; }
 }
 
-//!
-class Configuration 
+class Configuration
 {
   inherit BasicDefvar;
   constant is_configuration = 1;
@@ -211,8 +210,6 @@ class Configuration
   string type_from_filename( string file, int|void to, string|void myext );
 
   string get_url();
-  //! Returns some URL for accessing the configuration. (Should be
-  //! used instead of querying MyWorldLocation directly.)
 
   array (RoxenModule) get_providers(string provides);
   RoxenModule get_provider(string provides);
@@ -295,7 +292,7 @@ class Configuration
   }
 }
 
-//!
+//! @appears Protocol
 class Protocol 
 {
   inherit BasicDefvar;
@@ -427,6 +424,7 @@ class FakedVariables( mapping real_variables )
 }
 
 class RequestID
+//! @appears RequestID
 //! The request information object contains all request-local information and
 //! server as the vessel for most forms of intercommunication between modules,
 //! scripts, RXML and so on. It gets passed round to almost all API callbacks
@@ -789,6 +787,7 @@ class _roxen
 }
 
 class AuthModule
+//! @appears AuthModule
 //! The interface an authentication module must implement
 {
   inherit RoxenModule;
@@ -835,7 +834,7 @@ static void init_user_sql(string table)
   user_sql_inited[ table ] = 1;
 }
 
-//!
+//! @appears Group
 class Group( UserDB database )
 {
   string name();
@@ -859,7 +858,7 @@ class Group( UserDB database )
   //! A numerical GID, or -1 if not applicable
 }
 
-//!
+//! @appears User
 class User( UserDB database )
 {
   static string table;
@@ -1009,6 +1008,7 @@ class User( UserDB database )
 }
 
 class UserDB
+//! @appears UserDB
 //! The interface a UserDB module must implement.
 {
   inherit RoxenModule;
