@@ -1,4 +1,4 @@
-// string cvs_version = "$Id: module_support.pike,v 1.37 1999/11/24 01:58:41 per Exp $";
+// string cvs_version = "$Id: module_support.pike,v 1.38 1999/11/24 02:07:41 per Exp $";
 #include <roxen.h>
 #include <module.h>
 #include <stat.h>
@@ -245,16 +245,13 @@ program my_compile_file(string file)
 
   if( !p )
   {
-    if(q)
-    {
-      report_error(sprintf("Failed to compile module %O:\n"
-			   "%s", file, q));
-    }
-    throw( "Compilation failed\n"); 
+    report_error("Failed to compile module %s:\n%s", file, q);
+    throw( "" ); 
   }
-  if (q && sizeof(q)) {
-//     report_debug(sprintf("Warnings during compilation of module %O:\n"
-// 			 "%s", file, q));
+  if ( q && sizeof(q) )
+  {
+    report_debug(sprintf("Warnings during compilation of module %O:\n"
+			 "%s", file, q));
   }
   if( !file_stat( ofile ) ||
       file_stat(ofile)[ST_MTIME] <
@@ -280,10 +277,10 @@ program my_compile_file(string file)
 
 function|program load( string what )
 {
-#if constant( compile_module )
+#if constant( load_module )
   if( search( what, ".so" ) == strlen(what)-3 )
   {
-    object mod = compile_module( what );
+    object mod = load_module( what );
     if( !mod->instance )
       report_error("The module "+what+" does not have a 'instance' method\n");
     return mod->instance;
