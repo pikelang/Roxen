@@ -244,11 +244,6 @@ class Connection
 
     void got_data( string d )
     {
-      if( String.trim_all_whites(d) == "quit" )
-      {
-	begone( );
-	return;
-      }
       add_input_line( d );
       write( state->finishedp() ? "> " : ">> " );
       user->settings->set("hilfe_history",
@@ -256,10 +251,21 @@ class Connection
       user->settings->save();
     }
 
+    class CommandExit {
+      inherit Tools.Hilfe.Command;
+      string help() { return "Exit Hilfe."; }
+
+      void exec() {
+	begone();
+      }
+    }
+
     void create()
     {
       ::create();
       write = lambda(string ... in) { rl->readline->write(sprintf(@in)); };
+      commands->exit = CommandExit();
+      commands->quit = commands->exit;
       constants["RequestID"] = myRequestID;
       constants["conf"] = my_conf;
       constants["port"] = my_port_obj;
