@@ -1,5 +1,5 @@
 /*
- * $Id: snmpagent.pike,v 1.23 2002/10/01 23:39:07 nilsson Exp $
+ * $Id: snmpagent.pike,v 1.24 2002/10/27 19:58:46 nilsson Exp $
  *
  * The Roxen SNMP agent
  * Copyright © 2001, Honza Petrous, hop@unibase.cz
@@ -129,22 +129,6 @@ inherit Roxen;
 #define RISMIB_BASE_WEBSERVER_TRAP_VSCONF	RISMIB_BASE_WEBSERVER_TRAPVS+".4"
 
 #define LOG_EVENT(txt, pkt) log_event(txt, pkt)
-
-#if !efunc(Array.oid_sort_func)
-int oid_sort_func(string a0,string b0) {
-    string a2="",b2="";
-    int a1, b1;
-    sscanf(a0,"%d.%s",a1,a2);
-    sscanf(b0,"%d.%s",b1,b2);
-    if (a1>b1) return 1;
-    if (a1<b1) return 0;
-    if (a2==b2) return 0;
-    return oid_sort_func(a2,b2);
-}
-#define OID_SORT_FUNC	oid_sort_func
-#else
-#define OID_SORT_FUNC	Array.oid_sort_func
-#endif
 
 
 //!
@@ -673,7 +657,7 @@ class SubMIBManager {
   array|int getnext(string oid, mapping|void pkt) {
 
     //array(string) idxnums = Array.sort(indices(submibtab));
-    array idxnums = Array.sort_array(indices(submibtab), OID_SORT_FUNC);
+    array idxnums = Array.sort_array(indices(submibtab), Array.oid_sort_func);
     int idx;
     string soid, manoid;
     array s;
@@ -720,8 +704,8 @@ class SubMIBManager {
     SNMPAGENT_MSG(name+": trying nearest manager");
     // OK, we have to find nearest oid manager
     //idxnums = Array.sort(indices(subtreeman));
-    idxnums = Array.sort_array(indices(subtreeman), OID_SORT_FUNC);
-    idx = Array.search_array(idxnums, OID_SORT_FUNC, soid);
+    idxnums = Array.sort_array(indices(subtreeman), Array.oid_sort_func);
+    idx = Array.search_array(idxnums, Array.oid_sort_func, soid);
     if(idx >= 0) {
       manoid = idxnums[idx];
       SNMPAGENT_MSG(sprintf("found nearest manager: %s(%O)",
@@ -778,7 +762,7 @@ class SubMIBManager {
 
 //! External function for MIB object 'system.sysDescr'
 array get_description() {
-  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.23 $"/" ")[1]+" (devel. rel.)");
+  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.24 $"/" ")[1]+" (devel. rel.)");
 }
 
 //! External function for MIB object 'system.sysOID'
