@@ -1,6 +1,6 @@
 // startdll.cpp : Implementation of WinMain
 //
-// $Id: startdll.cpp,v 1.15 2002/10/31 15:36:46 tomas Exp $
+// $Id: startdll.cpp,v 1.16 2004/06/07 17:07:24 grubba Exp $
 //
 
 
@@ -69,9 +69,10 @@ inline HRESULT CServiceModule::RegisterServer(BOOL bRegTypeLib, BOOL bService)
     if (FAILED(hr))
         return hr;
 
-    // Remove any previous service since it may point to
-    // the incorrect file
-    Uninstall();
+    if (!bService) {
+      // Uninstall any previous service, since we won't run in service mode.
+      Uninstall();
+    }
 
     // Add service entries
     UpdateRegistryFromResource(IDR_Startdll, TRUE);
@@ -168,9 +169,6 @@ BOOL CServiceModule::IsInstalled()
 
 inline BOOL CServiceModule::Install()
 {
-    if (IsInstalled())
-        return TRUE;
-
     SC_HANDLE hSCM = ::OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
     if (hSCM == NULL)
     {
@@ -182,12 +180,25 @@ inline BOOL CServiceModule::Install()
     TCHAR szFilePath[_MAX_PATH];
     ::GetModuleFileName(NULL, szFilePath, _MAX_PATH);
 
-    SC_HANDLE hService = ::CreateService(
-        hSCM, m_szServiceName, m_szServiceName,
-        SERVICE_ALL_ACCESS, SERVICE_WIN32_OWN_PROCESS,
-        SERVICE_AUTO_START, SERVICE_ERROR_NORMAL,
-        szFilePath, NULL, NULL, _T("RPCSS\0"), NULL, NULL);
-
+    SC_HANDLE hService = ::OpenService(hSCM, m_szServiceName, SERVICE_CHANGE_CONFIG);
+    if (hService) {
+      // Update a previously installed entry.
+      if (!::ChangeServiceConfig(hSCM, SERVICE_WIN32_OWN_PROCESS,
+          SERVICE_AUTO_START, SERVICE_ERROR_NORMAL,
+          szFilePath, NULL, NULL, _T("RPCSS\0"), NULL, NULL,
+          m_szServiceName)) {
+	::CloseServiceHandle(hService);
+	::CloseServiceHandle(hSCM);
+        MessageBox(NULL, _T("Couldn't change service"), m_szServiceName, MB_OK);
+        return FALSE;
+      }
+    } else {
+      SC_HANDLE hService = ::CreateService(
+          hSCM, m_szServiceName, m_szServiceName,
+          SERVICE_ALL_ACCESS, SERVICE_WIN32_OWN_PROCESS,
+          SERVICE_AUTO_START, SERVICE_ERROR_NORMAL,
+          szFilePath, NULL, NULL, _T("RPCSS\0"), NULL, NULL);
+    }
     if (hService == NULL)
     {
         ::CloseServiceHandle(hSCM);
@@ -708,7 +719,7 @@ extern "C" int __cdecl _tmain(int argc, _TCHAR **argv, _TCHAR **envp)
 
     if (cmdline.IsInstall())
       return _Module.RegisterServer(TRUE, TRUE);
-	else if (cmdline.IsRegister())
+    else if (cmdline.IsRegister())
       return _Module.RegisterServer(TRUE, FALSE);
 
     if (cmdline.IsRemove())
@@ -752,6 +763,11 @@ extern "C" int __cdecl _tmain(int argc, _TCHAR **argv, _TCHAR **envp)
     // When we get here, the service has been stopped
     return _Module.m_status.dwWin32ExitCode;
 }
+
+#if 0 // Balancing...
+}
+}
+#endif /* 0 */
 
 #ifdef BUILD_DLL
 ///////////////
