@@ -10,6 +10,7 @@ constant modules = ({
   "contenttypes",
   "directories",
   "graphic_text",
+  "url_rectifier",
   "obox",
   "compat",
   "gbutton",

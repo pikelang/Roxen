@@ -12,6 +12,7 @@ constant modules = ({
   "gbutton",
   "graphic_text",
   "obox",
+  "url_rectifier",
 //"pikescript",
   "rxmlparse",
   "rxmltags",
