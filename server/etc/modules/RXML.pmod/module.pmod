@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.316 2003/08/26 15:43:56 mast Exp $
+// $Id: module.pmod,v 1.317 2003/10/13 13:11:05 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -7096,6 +7096,50 @@ class VariableChange (/*static*/ mapping settings)
     settings += later_chg->settings;
   }
 
+  void eval_rxml_consts (Context ctx)
+  // This is used to evaluate constant RXML.Value objects before the
+  // p-code is saved so that we don't try to encode the objects
+  // themselves.
+  {
+    foreach (indices (settings), mixed encoded_var)
+      if (stringp (encoded_var)) {
+	mixed var = decode_value (encoded_var);
+
+	if (arrayp (var) && stringp (var[0]))
+	  if (sizeof (var) == 1) {
+	    if (SCOPE_TYPE vars = settings[encoded_var])
+	      foreach (indices (vars), string name) {
+		mixed val = vars[name];
+		if (objectp (val) && val->rxml_const_eval) {
+#ifdef DEBUG
+		  if (TAG_DEBUG_TEST (ctx->frame))
+		    TAG_DEBUG (ctx->frame,
+			       "    Evaluating constant rxml value in scope %s: "
+			       "%s: %s\n", replace (var[0], ".", ".."),
+			       replace (name, ".", ".."), format_short (val));
+#endif
+		  vars[name] = val->rxml_const_eval (ctx, name, var[0]);
+		}
+	      }
+	  }
+
+	  else {
+	    mixed val = settings[encoded_var];
+	    if (objectp (val) && val->rxml_const_eval) {
+#ifdef DEBUG
+	      if (TAG_DEBUG_TEST (ctx->frame))
+		TAG_DEBUG (ctx->frame,
+			   "    Evaluating constant rxml value: %s: %s\n",
+			   map ((array(string)) var, replace, ".", "..") * ".",
+			   format_short (val));
+#endif
+	      settings[encoded_var] =
+		val->rxml_const_eval (ctx, var[-1], var[..sizeof (var) - 2] * ".");
+	    }
+	  }
+      }
+  }
+
   mapping(string:mixed) _encode() {return settings;}
   void _decode (mapping(string:mixed) saved) {settings = saved;}
 
@@ -7651,7 +7695,7 @@ class PCode
   // This is inherited by nested PCode instances to make the
   // compilation units larger.
 
-  static void process_recorded_changes (array rec_chgs)
+  static void process_recorded_changes (array rec_chgs, Context ctx)
   // This processes ctx->misc->recorded_changes, which is used to
   // record things besides the frames that need to added to result
   // collecting p-code. The format of ctx->misc->recorded_changes
@@ -7681,7 +7725,9 @@ class PCode
 	// A variable changes mapping.
 	if (sizeof (rec_chgs[pos])) {
 	  PCODE_MSG ("adding variable changes %s\n", format_short (rec_chgs[pos]));
-	  exec[length++] = VariableChange (rec_chgs[pos]);
+	  VariableChange var_chg = VariableChange (rec_chgs[pos]);
+	  var_chg->eval_rxml_consts (ctx);
+	  exec[length++] = var_chg;
 	}
 	pos++;
       }
@@ -7711,7 +7757,7 @@ class PCode
       EXPAND_EXEC (1 + sizeof (rec_chgs));
       exec[length++] = evaled_value;
       if (!equal (rec_chgs, ({([])}))) {
-	process_recorded_changes (rec_chgs);
+	process_recorded_changes (rec_chgs, ctx);
 	ctx->misc->recorded_changes = ({([])});
       }
     }
@@ -7772,7 +7818,7 @@ class PCode
 	    EXPAND_EXEC (1 + sizeof (rec_chgs));
 	    exec[length++] = evaled_value;
 	    if (!equal (rec_chgs, ({([])})))
-	      process_recorded_changes (rec_chgs);
+	      process_recorded_changes (rec_chgs, ctx);
 	    break add_frame;
 	  }
 	}
@@ -7846,7 +7892,7 @@ class PCode
       ctx->misc->recorded_changes = ({([])});
       if (sizeof (rec_chgs)) {
 	EXPAND_EXEC (sizeof (rec_chgs));
-	process_recorded_changes (rec_chgs);
+	process_recorded_changes (rec_chgs, ctx);
       }
 
       if (!(flags & CTX_ALREADY_GOT_VC))
