@@ -24,7 +24,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.51 2000/06/05 14:59:18 jonasw Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.52 2000/07/21 12:41:40 kuntri Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -133,6 +133,7 @@ constant gbuttonattr=#"
 <tr><td>center-before</td><td>Center the icon before the text.Requires the <att>align='center'</att> attribute.</td></tr>
 <tr><td>center-after</td><td>Center the icon after the text. Requires the <att>align='center'</att> attribute.</td></tr>
 <tr><td>right</td><td>Place icon on the right side of the text.</td></tr>
+</table>
 
 <ex>
 <gbutton width='150' align-icon='center-before' icon-src='internal-roxen-help'>Roxen 2.0</gbutton>
