@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.62 2000/09/19 13:11:37 per Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.63 2000/10/17 21:01:40 per Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -286,8 +286,9 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
   {
     foreach( layers||({}), object l )
     {
-      if(!l->get_misc_value( "name" ) ) // Hm.
+      if(!l->get_misc_value( "name" ) ) // Hm. Probably PSD
         continue;
+
       ll[lower_case(l->get_misc_value( "name" ))] = l;
       switch( lower_case(l->get_misc_value( "name" )) )
       {
@@ -303,11 +304,19 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
 
   //  otherwise load default images
   if ( !frame )
-    set_image( roxen.load_layers("/internal-roxen-gbutton", id) );
+  {
+    catch {
+      set_image(Image.XCF.decode_layers(Stdio.read_file("roxen-images/gbutton.xcf")));
+    };
+    if( !frame )
+      error("Failed to load default frame image (roxen-images/gbutton.xcf)."
+            " Aborting\n");
+  }
 
 
   // Translate frame image to 0,0 (left layers are most likely to the
   // left of the frame image)
+    
 
   int x0 = frame->xoffset();
   int y0 = frame->yoffset();
