@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.203 2000/07/03 13:58:55 mast Exp $
+// $Id: rxml.pike,v 1.204 2000/07/05 13:50:46 wellhard Exp $
 
 
 inherit "rxmlhelp";
@@ -1446,7 +1446,34 @@ class TagEmit {
   constant name = "emit";
   constant flags = RXML.FLAG_SOCKET_TAG;
   mapping(string:RXML.Type) req_arg_types = (["source":RXML.t_text]);
-
+  
+  private int compare( string a, string b )
+    //! This method needs lot of work... but so do the rest of the system too
+    //! RXML needs types
+  {
+    if (!a)
+      if (b)
+	return -1;
+      else
+	return 0;
+    else if (!b)
+      return 1;
+    else if ((string)(int)a == a && (string)(int)b == b)
+      if ((int )a > (int )b)
+	return 1;
+      else if ((int )a < (int )b)
+	return -1;
+      else
+	return 0;
+    else
+      if (a > b)
+	return 1;
+      else if (a < b)
+	return -1;
+      else
+	return 0;
+  }
+  
   class Frame {
     inherit RXML.Frame;
     string scope_name;
@@ -1461,6 +1488,36 @@ class TagEmit {
       scope_name=args->scope||args->source;
       res=plugin->get_dataset(args, id);
       if(arrayp(res)) {
+	if(args->sort)
+	{
+	  array(string) order = (args->sort - " ")/"," - ({ "" });
+	  res = Array.sort_array( res,
+				  lambda (mapping(string:string) m1,
+					  mapping(string:string) m2)
+				  {
+				    int tmp;
+				    
+				    foreach (order, string field)
+				    {
+				      int tmp;
+				      
+				      if (field[0] == '-')
+					tmp = compare( m2[field[1..]],
+						       m1[field[1..]] );
+				      else if (field[0] == '+')
+					tmp = compare( m1[field[1..]],
+						       m2[field[1..]] );
+				      else
+					tmp = compare( m1[field], m2[field] );
+				      if (tmp == 1)
+					return 1;
+				      else if (tmp == -1)
+					return 0;
+				    }
+				    return 0;
+				  } );
+	}
+	
 	if(!plugin->skiprows && args->skiprows) {
 	  if(args->skiprows[0]=='-') args->skiprows=sizeof(res)-(int)args->skiprows-1;
 	  res=res[(int)args->skiprows..];
