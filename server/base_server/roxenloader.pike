@@ -4,7 +4,7 @@ import spider;
 #define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
 
 // Set up the roxen enviornment. Including custom functions like spawne().
-string cvs_version="$Id: roxenloader.pike,v 1.8 1997/02/18 01:43:06 per Exp $";
+string cvs_version="$Id: roxenloader.pike,v 1.9 1997/02/18 02:19:27 nisse Exp $";
 
 void perror(string format,mixed ... args);
 
@@ -294,7 +294,7 @@ void mkdirhier(string from)
   }
 }
 
-void make_path(string ... from)
+string make_path(string ... from)
 {
   return Array.map(from, lambda(string a, string b){
     return combine_path(b,a);
@@ -304,13 +304,14 @@ void make_path(string ... from)
 void main(mixed ... args)
 {
   object mm;
+  string path = make_path("base_server", "etc/include", ".");
   perror("Roxen loader version "+cvs_version+"\n");
-  replace_master(mm=(object)"../etc/master");
 
+  master()->putenv("PIKE_INCLUDE_PATH", path);
+  replace_master(mm=(object)"etc/master");
+  mm->putenv("PIKE_INCLUDE_PATH", path);
+  
   mm->pike_library_path = master()->pike_library_path;
-  mm->putenv("PIKE_INCLUDE_PATH",
-	     make_path("base_server/","etc/include/", ""));
-
 
   add_constant("error", lambda(string s){error(s);});
 
