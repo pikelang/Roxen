@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.63 2000/02/16 16:21:42 mast Exp $
+//! $Id: module.pmod,v 1.64 2000/02/16 19:10:45 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -1724,6 +1724,7 @@ class Frame
       if (content_type == t_same)
 	content_type = result_type (content_type->_parser_prog);
     }
+    if (raw_content) content = content_type->empty_value;
 
     mixed err = catch {
       switch (eval_state) {
@@ -2440,8 +2441,7 @@ class Type
   //!	 atomic elements.
 
   //!mixed empty_value;
-  //! The empty value for sequential data types, i.e. what eval ("")
-  //! would produce.
+  //! The empty value, i.e. what eval ("") would produce.
 
   //!mixed free_text;
   //! Nonzero if the type keeps the free text between parsed tokens,
