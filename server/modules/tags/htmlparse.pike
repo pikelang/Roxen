@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.171 1999/05/09 07:10:50 neotron Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.172 1999/05/09 07:14:49 neotron Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -2826,7 +2826,7 @@ string tag_cache(string tag, mapping args, string contents, object id)
   string parsed = cache_lookup("tag_cache", key);
   if(!parsed) {
     parsed = parse_rxml(contents, id);
-    cache_set("tag_cache", key, contents);
+    cache_set("tag_cache", key, parsed);
   }
   return parsed;
 #undef HASH
