@@ -1,7 +1,7 @@
 // This is a ChiliMoon module. Copyright © 1996 - 2001, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.295 2002/11/16 10:41:32 agehall Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.296 2002/11/16 10:46:17 agehall Exp $";
 
 #include <module.h>
 inherit "module";
@@ -880,7 +880,7 @@ private mapping mk_gtext_arg(mapping arg, RequestID id)
 
   foreach(arg & filearg; string index; string value) {
     p[index]=Roxen.fix_relative(value,id);
-    m_delete(arg,tmp);
+    m_delete(arg,index);
   }
 
   array i = indices( arg );
