@@ -397,22 +397,24 @@ mixed do_it( RequestID id )
 	  if (sizeof (split) == 2 && split[0] == mod && m->variables[split[1]]) {
 	    roxen.change_configurable (m->variables[split[1]], VAR_INITIAL, VAR_INITIAL);
 	    got_initial = 1;
+	    initial_modules += ({ last_module });
 	  }
 	}
       }
-      else if (!got_initial)
+      else
 	foreach (indices (m->variables), string var)
-	  if (roxen.query_configurable (m->variables[var], VAR_INITIAL))
+	  if (roxen.query_configurable (m->variables[var], VAR_INITIAL)) {
 	    got_initial = 1;
+	    initial_modules += ({ last_module });
+	  }
     }
     else last_module = "";
-    if(got_initial) initial_modules += ({ last_module });
   }
 
   if( strlen( last_module ) )
     if (got_initial)
       return http_redirect( site_url( id, id->variables->config )+
-			    "modules/?initial=1&mod="+initial_modules*",", id );
+			    "modules/?initial=1&mod="+Array.uniq(initial_modules)*",", id );
     else
       return http_redirect( site_url( id, id->variables->config )+
 			    "modules/"+last_module+"/", id );
