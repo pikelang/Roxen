@@ -10,7 +10,7 @@
 #define old_rxml_compat 1
 #define old_rxml_warning id->conf->api_functions()->old_rxml_warning[0]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.3 1999/08/16 17:37:08 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.4 1999/08/17 14:50:40 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -761,13 +761,13 @@ string tag_maketag(string tag, mapping m, string cont, object id) {
   id->misc+=(["maketag_args":(!m->noxml&&m->type=="tag"?(["/":"/"]):([]))]);
   cont=replace(parse_html(cont,([]),(["attrib":
     lambda(string tag, mapping m, string cont, mapping c, object id) {
-      id->misc->maketag_args+=([m->attrib:parse_rxml(cont,id)]);
+      id->misc->maketag_args+=([m->name:parse_rxml(cont,id)]);
       return "";
     }
   ]),([]),id), ({"\"","<",">"}), ({"'","&lt;","&gt;"}));
-  if(m->type=="tag")
-    return make_tag(m->name,id->misc->maketag_args);
-  return make_container(m->name, id->misc->maketag_args, cont);
+  if(m->type=="container")
+    return make_container(m->name, id->misc->maketag_args, cont);
+  return make_tag(m->name,id->misc->maketag_args);
 }
 
 string tag_doc(string tag, mapping m, string s)
