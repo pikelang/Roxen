@@ -1,4 +1,4 @@
-/* $Id: describers.pike,v 1.29 1997/08/12 06:32:10 per Exp $ */
+/* $Id: describers.pike,v 1.30 1997/08/12 08:59:58 per Exp $ */
 
 #include <module.h>
 int zonk=time();
@@ -48,7 +48,7 @@ string describe_builtin_variables(object node)
 
 string describe_time(int t)
 {
-  return roxen->language("en","date")(t);
+  return capitalize(roxen->language("en","date")(t));
 }
 
 string describe_interval(int i)

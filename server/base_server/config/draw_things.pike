@@ -2,7 +2,7 @@
 import Image;
 
 constant Image = image;
-string cvs_verison = "$Id: draw_things.pike,v 1.20 1997/08/12 06:32:12 per Exp $";
+string cvs_verison = "$Id: draw_things.pike,v 1.21 1997/08/12 09:00:00 per Exp $";
 
 
 object (Image) load_image(string f)
@@ -23,45 +23,43 @@ object (Image) load_image(string f)
     return 0;
 
   if(img->frompnm(data))
-    return img->modify_by_intensity(0,1,0,
-				    ({0,0,20}),({0,1,40}),({0,2,60}),
-				    ({0,8,80}),({0,16,100}),({0,32,120}),
-				    ({0,64,140}),({0,128,160}),({8,128,160}),
-				    ({16,128,180}),({32,168,200}),({64,188,220}),
-				    ({128,208,240}),({200,228,256}));
-
+    return img->scale(0,48);
 //  werror("Failed to parse image file.\n");
   
   return 0;
 }
 
 #define PASTE(X,Y) do{\
-  if(X){knappar->paste(X,cxp,0);cxp+=X->xsize();}\
+  if(!first_icon){knappar->paste(pad,cxp,0);cxp+=pad->xsize();}\
+  if(X){knappar->paste(X,cxp,0);cxp+=X->xsize();first_icon=0;}\
   if(strlen(Y)) {\
     object f = font->write(Y)->scale(0.45);\
     knappar->paste_mask(Image(f->xsize(),f->ysize()),f,cxp-f->xsize()-4,-1);\
-  }}while(0)
+   }\
+ }while(0)
 
-object first_filter = load_image("1stfilt.ppm");
-object last_filter = load_image("lastfilt.ppm");
-object last = load_image("last.ppm");
-object first = load_image("first.ppm");
-object dir = load_image("dir.ppm");
-object location = load_image("find.ppm");
-object extension = load_image("extension.ppm");
-object logger = load_image("log.ppm");
-object proxy = load_image("proxy.ppm");
-object security = load_image("security.ppm");
-object tag = load_image("tag.ppm");
+#define first_filter  load_image("1stfilt.ppm")
+#define last_filter   load_image("lastfilt.ppm")
+#define last          load_image("last.ppm")
+#define first         load_image("first.ppm")
+#define dir           load_image("dir.ppm")
+#define location      load_image("find.ppm")
+#define extension     load_image("extension.ppm")
+#define logger        load_image("log.ppm")
+#define proxy         load_image("proxy.ppm")
+#define security      load_image("security.ppm")
+#define tag           load_image("tag.ppm")
+#define fade          load_image("fade.ppm")
+#define pad           load_image("padding.ppm")
 
 object (Image) draw_module_header(string name, int type, object font)
 {
   object result = Image(1000,48);
   object knappar = Image(1000,48);
   object text;
-  int cxp = 0;
-  text = font->write(name)->color(255,255,0);
-  
+  int cxp = 0, first_icon;
+  text = font->write(name);
+  first_icon=1;PASTE(fade,"");first_icon=1;
   if((type&MODULE_AUTH)||(type&MODULE_SECURITY)) PASTE(security,"");
   if(type&MODULE_FIRST) PASTE(first,"First");
   if(type&MODULE_URL) PASTE(first_filter,"Filter");
@@ -78,8 +76,8 @@ object (Image) draw_module_header(string name, int type, object font)
   knappar = knappar->autocrop();
 
   result->paste(knappar,result->xsize()-knappar->xsize(),0);
-  result->line(0,0,1000,0,255,255,0);
-  result->paste(text,6,3);
+//result->line(0,0,1000,0,255,255,0);
+  result->paste_alpha_color(text, 255,255,0, 6,3);
   knappar = 0;
   text=0;
 

@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.47 1997/08/12 06:31:59 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.48 1997/08/12 08:59:55 per Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -527,7 +527,10 @@ string new_module_form(object id, object node)
   }, a);
   
   res = ({default_head("Add a module")+"\n\n"+
-  "<table><tr><td>&nbsp<td><h2>Select a module to add from the list below</h2>" });
+	  status_row(node)+
+	  display_tabular_header(node)+
+	  "<table><tr><td>&nbsp<td><h2>Select a module to add"
+	  " from the list below, click on it's header to add it.</h2>" });
   
   foreach(mods, q)
   {
@@ -992,7 +995,7 @@ mapping auto_image(string in, object id)
   if(i)
   {
     object o = open("roxen-images/"+img_key,"wct"); 
-   e=i->map_closest(i->select_colors(62)+({trans}))->togif(@trans);
+    e=i->togif();
     i=0;
     if(o) { o->write(e); o=0; }
 #ifdef DEBUG
@@ -1119,6 +1122,7 @@ mapping configuration_parse(object id)
     // _above_ them. This is supposed to be some nice introductory
     // text about the configuration interface...
     return http_string_answer(default_head("Roxen Challenger")+
+			      status_row(root)+
 			      display_tabular_header(root)+
 			      read_bytes("etc/config.html"),"text/html");
   }
@@ -1251,7 +1255,9 @@ mapping configuration_parse(object id)
        * the node */
 
     case "delete":	
-     PUSH(default_head("Roxen Configuration"));
+     PUSH(default_head("Roxen Configuration")+
+	  status_row(o)+
+	  display_tabular_header(o))
 //     PUSH("<hr noshade>");
       
       switch(o->type)
@@ -1519,11 +1525,6 @@ mapping configuration_parse(object id)
 //  else if(nfoldedr(o))
 //    BUTTON(unfoldall, "Unfold all", left);
 
-  if(!more_mode)
-    BUTTON(morevars, "More settings", left);
-  else
-    BUTTON(nomorevars, "Less settings", left);
-    
   if(!lm)
   {
     PUSH("<img border=0 alt=\"\" hspacing=0 vspacing=0 src=/auto/button/rm/%20>");
@@ -1531,6 +1532,11 @@ mapping configuration_parse(object id)
     lm=1;
   }
 
+  if(!more_mode)
+    BUTTON(morevars, "More settings", left);
+  else
+    BUTTON(nomorevars, "Less settings", left);
+    
   if((o->changed||root->changed))
   {
     BUTTON(save, "Save", left);
