@@ -133,27 +133,27 @@ static object mutex=Thread.Mutex();
 #endif
 
 
-static void check_exception()
+static void check_exception(object|void e)
 {
-  object e = jvm->exception_occurred();
-  if(e) {
-    array bt = backtrace();
-    if(e->is_instance_of(backtrace_class)) {
-      object btto = bt_get_type(e);
-      object msgo = throwable_get_message(e);
-      jvm->exception_clear();
-      throw(RXML.Backtrace(btto && (string)btto, msgo && (string)msgo,
-			   0, bt[..sizeof(bt)-2]));
-    } else {
-      object sw = stringwriter_class->alloc();
-      stringwriter_init->call_nonvirtual(sw);
-      object pw = printwriter_class->alloc();
-      printwriter_init->call_nonvirtual(pw, sw);
-      throwable_printstacktrace(e, pw);
-      printwriter_flush(pw);
-      jvm->exception_clear();
-      throw(({(string)sw, bt[..sizeof(bt)-2]}));
-    }
+  if(!e) {
+    if(!(e = jvm->exception_occurred()))
+      return;
+    jvm->exception_clear();
+  }
+  array bt = backtrace();
+  if(e->is_instance_of(backtrace_class)) {
+    object btto = bt_get_type(e);
+    object msgo = throwable_get_message(e);
+    throw(RXML.Backtrace(btto && (string)btto, msgo && (string)msgo,
+			 0, bt[..sizeof(bt)-2]));
+  } else {
+    object sw = stringwriter_class->alloc();
+    stringwriter_init->call_nonvirtual(sw);
+    object pw = printwriter_class->alloc();
+    printwriter_init->call_nonvirtual(pw, sw);
+    throwable_printstacktrace(e, pw);
+    printwriter_flush(pw);
+    throw(({(string)sw, bt[..sizeof(bt)-2]}));
   }
 }
 
@@ -574,14 +574,13 @@ class ModuleWrapper
         string modname = get_module_name(path);
         object e = jvm->exception_occurred();
         if (e) {
+	  jvm->exception_clear();
           if (e->is_instance_of(filenotfound_class)) {
-            jvm->exception_clear();
             error("Unable to find JAR file");
           } else if (e->is_instance_of(ioexception_class)) {
-            jvm->exception_clear();
             error("Unable to read JAR file");
           } else {
-            check_exception();
+            check_exception(e);
           }
         } else if (!modname) {
           error("Unable to find class name within JAR");
