@@ -10,7 +10,7 @@ mixed sql_query( string q, mixed ... e )
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.132 2003/02/04 14:34:16 grubba Exp $";
+constant cvs_version = "$Id: roxen_master.pike,v 1.133 2003/02/04 14:36:14 grubba Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -401,7 +401,8 @@ class MyCodec
 			Program.defined (object_program (function_object (x))) || "?",
 			function_object (x));
     else if (programp (x))
-      DUMP_DEBUG_ENTER ("nameof (program %s)\n", Program.defined (x));
+      DUMP_DEBUG_ENTER ("nameof (program %s)\n",
+			Program.defined (x) || "?");
     else
       DUMP_DEBUG_ENTER ("nameof (%O)\n", x);
 #else /* __VERSION__ >= 7.4 */
