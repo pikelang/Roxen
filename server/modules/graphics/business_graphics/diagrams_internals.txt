@@ -23,10 +23,16 @@ diagram_data
 string type;
 //Är lika med "graph", "bars", "sumbars", "pie";
 
-string subtyp;
-//för "bars" kan den vara "line"(vågräta linjer), "bars", "dot", "linear", 
-//"quadratic", "cubic" (Fixa stavningen!)
+string subtype;
+//Är alltid "line" för graph-er. Tänkbara för bars är "line", "dot", "box"  
+//Är "pie" för tårtor?
 
+//Följande gäller för bars-line och graph-diagram
+string drawtype;
+ "level"; //Om !=0 så är bars-diagrammet bara vågräta streck 
+ "linear"; //Om !=0 så är bars/graph-diagrammet linjärt spline (default)
+ "quadratic"; //Om !=0 så är bars/graph-diagrammet kvadratiskt spline
+ "cubic";//Om !=0 så är bars/graph-diagrammet kubiskt spline 
 
 array(array(float)) data; 
 //Innehåller för graph 
