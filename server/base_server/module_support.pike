@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module_support.pike,v 1.112 2002/06/27 21:31:32 mast Exp $
+// $Id: module_support.pike,v 1.113 2002/08/05 15:13:11 tomas Exp $
 
 #define IN_ROXEN
 #include <roxen.h>
@@ -15,7 +15,7 @@ int dump( string file, program|void p );
 program my_compile_file(string file, void|int silent)
 {
   if( file[0] != '/' )
-    file = replace(getcwd()+"/"+file, "//", "/");
+    file = combine_path(getcwd(), file);
 
   program p;
 
