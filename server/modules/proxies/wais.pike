@@ -4,7 +4,7 @@
 // seem that I have forgotten who wrote it.
 
 
-string cvs_version = "$Id: wais.pike,v 1.15 1999/12/20 13:07:10 nilsson Exp $";
+string cvs_version = "$Id: wais.pike,v 1.16 1999/12/28 04:37:03 nilsson Exp $";
 
 #include <config.h>
 
@@ -24,15 +24,15 @@ string cvs_version = "$Id: wais.pike,v 1.15 1999/12/20 13:07:10 nilsson Exp $";
 
 #ifdef WAIS_DEBUG_2
 # define WAIS_DEBUG
-# define WAIS_WERROR_2(X) werror("WAIS: "+X+"\n");
+# define WAIS_WERR_2(X) werror("WAIS: "+X+"\n");
 #else
-# define WAIS_WERROR_2(X)
+# define WAIS_WERR_2(X)
 #endif
 
 #ifdef WAIS_DEBUG
-# define WAIS_WERROR(X) werror("WAIS: "+X+"\n");
+# define WAIS_WERR(X) werror("WAIS: "+X+"\n");
 #else
-# define WAIS_WERROR(X)
+# define WAIS_WERR(X)
 #endif
 
 
@@ -304,25 +304,25 @@ string trim_junk(string headline)
   int length;
   int i,j;
 
-  WAIS_WERROR_2("trim_junk1("+debug_print_string(headline));
+  WAIS_WERR_2("trim_junk1("+debug_print_string(headline));
 
   headline = replace(headline, ({ "\033(", "\033)"}) , ({"",""}));
 
-  WAIS_WERROR_2("trim_junk2("+debug_print_string(headline));
+  WAIS_WERR_2("trim_junk2("+debug_print_string(headline));
 
   while((i=search(headline,"\033"))!=-1)
     headline=headline[0..i]+headline[i+4..];
 
-  WAIS_WERROR_2("trim_junk3("+debug_print_string(headline));
+  WAIS_WERR_2("trim_junk3("+debug_print_string(headline));
 
   while(strlen(headline)>0 && headline[0]==' ')
     headline=headline[1..];
 
-  WAIS_WERROR_2("trim_junk4("+debug_print_string(headline));
+  WAIS_WERR_2("trim_junk4("+debug_print_string(headline));
 
 /*  headline=headline/"\n";
 
- WAIS_WERROR("trim_junk5("+debug_print_string(headline));
+ WAIS_WERR("trim_junk5("+debug_print_string(headline));
 */
 
   return headline;
@@ -548,7 +548,7 @@ string generate_retrieval_apdu(string docid, string doctype, string database)
 
   nbuf+=writeString(query,DT_Query);
 
-  WAIS_WERROR_2("generate_retrieval_apdu got:\n"+nbuf);
+  WAIS_WERR_2("generate_retrieval_apdu got:\n"+nbuf);
   return nbuf;
 }
 
@@ -568,7 +568,7 @@ string WWW_from_archie(string file)
   int i,q;
   string res;
 
- WAIS_WERROR("archie id (to become WWW id): "+file);
+ WAIS_WERR("archie id (to become WWW id): "+file);
 
   for(i=0; i<strlen(file) && file[i]>' '; i++)
     ;
@@ -579,7 +579,7 @@ string WWW_from_archie(string file)
   else
     res="file://"+file[0..i];
 
-  WAIS_WERROR("archie id (to become WWW id) result: "+res);
+  WAIS_WERR("archie id (to become WWW id) result: "+res);
 
   return res;
 }
@@ -600,17 +600,17 @@ string WAIS_from_WWW (string docname)
   string z,t2;
   int len,type,tmp,i,j;
 
-  WAIS_WERROR_2("WWW id (to become WAIS id): "+debug_print_string(docname));
+  WAIS_WERR_2("WWW id (to become WAIS id): "+debug_print_string(docname));
 
   z="";
   while(strlen(docname)>0) {
     if(sscanf(docname,"%d=%s;",type,t2)!=2) {
       if(sscanf(docname,"%d=",type)!=1) {
-	WAIS_WERROR("cannot parse record"+docname);
+	WAIS_WERR("cannot parse record"+docname);
 	return 0;
       }
       if(strlen(docname[search(docname,"=")+1..])>0) {
-	WAIS_WERROR("cannot parse record"+docname+" (second choice)");
+	WAIS_WERR("cannot parse record"+docname+" (second choice)");
 	return 0;
       }
       t2=sprintf("%c",0);
@@ -632,7 +632,7 @@ string WAIS_from_WWW (string docname)
     }
     z+=t2;
 
-    WAIS_WERROR(sprintf("found record %d, len %d, content %s\n",type,strlen(t2),t2));
+    WAIS_WERR(sprintf("found record %d, len %d, content %s\n",type,strlen(t2),t2));
   }
 
   return z;
@@ -653,13 +653,13 @@ string WWW_from_WAIS(string docid)
   if(!docid)
     return 0;
 
-  WAIS_WERROR_2("WAIS id (to become WWW id): "+debug_print_string(docid));
+  WAIS_WERR_2("WAIS id (to become WWW id): "+debug_print_string(docid));
 
   out="";
   for(in=0;in<sizeof(docid); ) {
     out+=sprintf("%d",(int)docid[in]);  /* record put type */
 
-    WAIS_WERROR(sprintf("found record type %d",(int)docid[in]));
+    WAIS_WERR(sprintf("found record type %d",(int)docid[in]));
 
     out+="=";
     in+=1;
@@ -670,14 +670,14 @@ string WWW_from_WAIS(string docid)
       l = l + docid[in];
       in+=1;
     }
-    WAIS_WERROR(sprintf("found record len %d\n",l));
+    WAIS_WERR(sprintf("found record len %d\n",l));
 
     out += replace(docid[in..in+l-1], ({ "\000", " ", "%" }),
 		   ({"%00", "%20", "%25" }))+";";
     in+=l;
   }
 
-  WAIS_WERROR("translated in "+out);
+  WAIS_WERR("translated in "+out);
   return out;
 }
 
@@ -748,7 +748,7 @@ string display_search_response(mapping response,string database,
   int archie,k;
   mapping info;
 
-  WAIS_WERROR("Displaying search response");
+  WAIS_WERR("Displaying search response");
 
   out=sprintf("Index %s contains the following %d item%s relevant to '%s'.\n",
 	      database,response->NumberOfRecordsReturned,
@@ -766,7 +766,7 @@ string display_search_response(mapping response,string database,
   info = response->DatabaseDiagnosticRecords;
 
   if (sizeof(info->Diagnostics)>0) {
-    WAIS_WERROR("showing diags");
+    WAIS_WERR("showing diags");
 
     out+=showDiags(info->Diagnostics);
   }
@@ -776,7 +776,7 @@ string display_search_response(mapping response,string database,
       mapping head;
       string headline,docid,docname;
 
-      WAIS_WERROR("showing header "+sprintf("%d (%d)",k,sizeof(info->DocHeaders)));
+      WAIS_WERR("showing header "+sprintf("%d (%d)",k,sizeof(info->DocHeaders)));
 
       head=info->DocHeaders[k];
 
@@ -815,7 +815,7 @@ string display_search_response(mapping response,string database,
 				       ({"%00", "%20", "%25" }));
 	      }
 	    }
-	    WAIS_WERROR("Types_array `"+types_array+"'");
+	    WAIS_WERR("Types_array `"+types_array+"'");
 	  } else
 	    types_array+="TEXT";
 
@@ -995,7 +995,7 @@ mapping readSearchResponseInfo(string buf)
       buf = skipCompressedInteger(buf);
       seedWordsUsed = buf[0..val];
       buf=buf[val..];
-      WAIS_WERROR("got DT_SeedWordsUsed: "+seedWordsUsed);
+      WAIS_WERR("got DT_SeedWordsUsed: "+seedWordsUsed);
       break;
     case DT_DatabaseDiagnosticRecords:
       int len;
@@ -1018,7 +1018,7 @@ mapping readSearchResponseInfo(string buf)
 	buf = buf[2..];
       }
       diags += ({ ([ "DIAG" : diag, "ADDINFO" : addinfo, "SURROGATE" : surrogate ]) });
-      WAIS_WERROR("got DT_DatabaseDiagnosticRecords: "+diag+" "+surrogate);
+      WAIS_WERR("got DT_DatabaseDiagnosticRecords: "+diag+" "+surrogate);
       break;
     case DT_DocumentHeaderGroup:
       int versionNumber,score,bestMatch,docLength,lines;
@@ -1029,7 +1029,7 @@ mapping readSearchResponseInfo(string buf)
 
       /* readWAISDocumentHeader */
 
-      WAIS_WERROR("got DT_DocumentHeaderGroup");
+      WAIS_WERR("got DT_DocumentHeaderGroup");
       versionNumber = UNUSED;
       score = UNUSED;
       bestMatch = UNUSED;
@@ -1052,7 +1052,7 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  docID = buf1[0..val-1];
 	  buf1=buf1[val..];
-	  WAIS_WERROR_2("got DT_DocumentID: "+debug_print_string(docID));
+	  WAIS_WERR_2("got DT_DocumentID: "+debug_print_string(docID));
 	  break;
 	case DT_VersionNumber:
 	  buf1 = skipCompressedInteger(buf1);
@@ -1060,7 +1060,7 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  versionNumber = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..];
-	  WAIS_WERROR("got DT_VersionNumber: "+sprintf("%d",versionNumber));
+	  WAIS_WERR("got DT_VersionNumber: "+sprintf("%d",versionNumber));
 	  break;
 	case DT_Score:
 	  buf1 = skipCompressedInteger(buf1);
@@ -1068,7 +1068,7 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  score = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..];
-	  WAIS_WERROR("got DT_Score: "+sprintf("%d",score));
+	  WAIS_WERR("got DT_Score: "+sprintf("%d",score));
 	  break;
 	case DT_BestMatch:
 	  buf1 = skipCompressedInteger(buf1);
@@ -1076,7 +1076,7 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  bestMatch = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..];
-	  WAIS_WERROR("got DT_BestMatch: "+sprintf("%d",bestMatch));
+	  WAIS_WERR("got DT_BestMatch: "+sprintf("%d",bestMatch));
 	  break;
 	case DT_DocumentLength:
 	  buf1 = skipCompressedInteger(buf1);
@@ -1084,7 +1084,7 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  docLength = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..];
-	  WAIS_WERROR("got DT_DocumentLength: "+sprintf("%d",docLength));
+	  WAIS_WERR("got DT_DocumentLength: "+sprintf("%d",docLength));
 	  break;
 	case DT_Lines:
 	  buf1 = skipCompressedInteger(buf1);
@@ -1092,13 +1092,13 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  lines = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..];
-	  WAIS_WERROR("got DT_Lines: "+sprintf("%d",lines));
+	  WAIS_WERR("got DT_Lines: "+sprintf("%d",lines));
 	  break;
 
 	case DT_TYPE_BLOCK:
 	  int size;
 
-	  WAIS_WERROR("got DT_TYPE_BLOCK:");
+	  WAIS_WERR("got DT_TYPE_BLOCK:");
 
 	  buf1 = skipCompressedInteger(buf1);
 	  size = readCompressedInteger(buf1);
@@ -1111,7 +1111,7 @@ mapping readSearchResponseInfo(string buf)
 	    size -= sizeCompressedInteger(buf1);
 	    buf1 = skipCompressedInteger(buf1);
 	    types  += ({ buf1[0..val-1] });
-	    WAIS_WERROR("got DT_TYPE_BLOCK, type: "+buf1[0..val-1]+sprintf(" size is %d, val is %d",size,val));
+	    WAIS_WERR("got DT_TYPE_BLOCK, type: "+buf1[0..val-1]+sprintf(" size is %d, val is %d",size,val));
 	    buf1=buf1[val..];
 	    size -= val;
 	  }
@@ -1122,7 +1122,7 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  source = buf1[0..val-1];
 	  buf1=buf1[val..];
-	  WAIS_WERROR("got DT_Source: "+source);
+	  WAIS_WERR("got DT_Source: "+source);
 	  break;
 	case DT_Date:
 	  buf1 = skipCompressedInteger(buf1);
@@ -1130,7 +1130,7 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  date = buf1[0..val-1];
 	  buf1=buf1[val..];
-	  WAIS_WERROR("got DT_Date: "+date);
+	  WAIS_WERR("got DT_Date: "+date);
 	  break;
 	case DT_Headline:
 	  buf1 = skipCompressedInteger(buf1);
@@ -1138,7 +1138,7 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  headline = buf1[0..val-1];
 	  buf1=buf1[val..];
-	  WAIS_WERROR("got DT_Headline: "+headline);
+	  WAIS_WERR("got DT_Headline: "+headline);
 	  break;
 	case DT_OriginCity:
 	  buf1 = skipCompressedInteger(buf1);
@@ -1146,15 +1146,15 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  originCity = buf1[0..val-1];
 	  buf1=buf1[val..];
-	  WAIS_WERROR("got DT_OriginCity: "+originCity);
+	  WAIS_WERR("got DT_OriginCity: "+originCity);
 	  break;
 	default:
-	  WAIS_WERROR("got default (ARRRGGGH)");
+	  WAIS_WERR("got default (ARRRGGGH)");
 	  return 0;
 	  break;
 	}
       }
-      WAIS_WERROR("end DT_DocumentHeaderGroup");
+      WAIS_WERR("end DT_DocumentHeaderGroup");
       docHeaders += ({ (["versionNumber" : versionNumber,
 			 "score" : score,
 			 "bestMatch" : bestMatch,
@@ -1171,7 +1171,7 @@ mapping readSearchResponseInfo(string buf)
       string docID,buf1;
       int versionNumber,score,bestMatch,docLength,lines;
 
-      WAIS_WERROR("got DT_DocumentShortHeaderGroup");
+      WAIS_WERR("got DT_DocumentShortHeaderGroup");
 
       versionNumber = UNUSED;
       score = UNUSED;
@@ -1195,7 +1195,7 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  docID = buf1[0..val-1];
 	  buf1=buf1[val..];
-	  WAIS_WERROR("got DT_DocumentID: "+docID);
+	  WAIS_WERR("got DT_DocumentID: "+docID);
 	  break;
 	case DT_VersionNumber:
 	  buf1 = skipCompressedInteger(buf1);
@@ -1203,7 +1203,7 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  versionNumber = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..];
-	  WAIS_WERROR("got DT_VersionNumber: "+sprintf("%d",versionNumber));
+	  WAIS_WERR("got DT_VersionNumber: "+sprintf("%d",versionNumber));
 	  break;
 	case DT_Score:
 	  buf1 = skipCompressedInteger(buf1);
@@ -1211,7 +1211,7 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  score = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..];
-	  WAIS_WERROR("got DT_Score: "+sprintf("%d",score));
+	  WAIS_WERR("got DT_Score: "+sprintf("%d",score));
 	  break;
 	case DT_BestMatch:
 	  buf1 = skipCompressedInteger(buf1);
@@ -1219,7 +1219,7 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  bestMatch = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..];
-	  WAIS_WERROR("got DT_BestMatch: "+sprintf("%d",bestMatch));
+	  WAIS_WERR("got DT_BestMatch: "+sprintf("%d",bestMatch));
 	  break;
 	case DT_DocumentLength:
 	  buf1 = skipCompressedInteger(buf1);
@@ -1227,7 +1227,7 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  docLength = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..];
-	  WAIS_WERROR("got DT_DocumentLength: "+sprintf("%d",docLength));
+	  WAIS_WERR("got DT_DocumentLength: "+sprintf("%d",docLength));
 	  break;
 	case DT_Lines:
 	  buf1 = skipCompressedInteger(buf1);
@@ -1235,15 +1235,15 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  lines = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..];
-	  WAIS_WERROR("got DT_Lines: "+sprintf("%d",lines));
+	  WAIS_WERR("got DT_Lines: "+sprintf("%d",lines));
 	  break;
 	default:
-	  WAIS_WERROR("got default 2 (ARRRGGGH)");
+	  WAIS_WERR("got default 2 (ARRRGGGH)");
 	  return 0;
 	  break;
 	}
       }
-      WAIS_WERROR("end DT_DocumentShortHeaderGroup");
+      WAIS_WERR("end DT_DocumentShortHeaderGroup");
       shortHeaders += ({ (["versionNumber" : versionNumber,
 			   "score" : score,
 			   "bestMatch" : bestMatch,
@@ -1259,7 +1259,7 @@ mapping readSearchResponseInfo(string buf)
 
       /* readWAISDocumentHeader */
 
-      WAIS_WERROR("got DT_DocumentLongHeaderGroup");
+      WAIS_WERR("got DT_DocumentLongHeaderGroup");
       versionNumber = UNUSED;
       score = UNUSED;
       bestMatch = UNUSED;
@@ -1282,7 +1282,7 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  docID = buf1[0..val-1];
 	  buf1=buf1[val..];
-	  WAIS_WERROR("got DT_DocumentID: "+docID);
+	  WAIS_WERR("got DT_DocumentID: "+docID);
 	  break;
 	case DT_VersionNumber:
 	  buf1 = skipCompressedInteger(buf1);
@@ -1290,7 +1290,7 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  versionNumber = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..];
-	  WAIS_WERROR("got DT_VersionNumber: "+sprintf("%d",versionNumber));
+	  WAIS_WERR("got DT_VersionNumber: "+sprintf("%d",versionNumber));
 	  break;
 	case DT_Score:
 	  buf1 = skipCompressedInteger(buf1);
@@ -1298,7 +1298,7 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  score = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..];
-	  WAIS_WERROR("got DT_Score: "+sprintf("%d",score));
+	  WAIS_WERR("got DT_Score: "+sprintf("%d",score));
 	  break;
 	case DT_BestMatch:
 	  buf1 = skipCompressedInteger(buf1);
@@ -1306,7 +1306,7 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  bestMatch = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..];
-	  WAIS_WERROR("got DT_BestMatch: "+sprintf("%d",bestMatch));
+	  WAIS_WERR("got DT_BestMatch: "+sprintf("%d",bestMatch));
 	  break;
 	case DT_DocumentLength:
 	  buf1 = skipCompressedInteger(buf1);
@@ -1314,7 +1314,7 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  docLength = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..];
-	  WAIS_WERROR("got DT_DocumentLength: "+sprintf("%d",docLength));
+	  WAIS_WERR("got DT_DocumentLength: "+sprintf("%d",docLength));
 	  break;
 	case DT_Lines:
 	  buf1 = skipCompressedInteger(buf1);
@@ -1322,13 +1322,13 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  lines = readBinaryInteger(val,buf1);
 	  buf1 = buf1[val..];
-	  WAIS_WERROR("got DT_Lines: "+sprintf("%d",lines));
+	  WAIS_WERR("got DT_Lines: "+sprintf("%d",lines));
 	  break;
 
 	case DT_TYPE_BLOCK:
 	  int size;
 
-	  WAIS_WERROR("got DT_TYPE_BLOCK: ");
+	  WAIS_WERR("got DT_TYPE_BLOCK: ");
 
 	  buf1 = skipCompressedInteger(buf1);
 	  size = readCompressedInteger(buf1);
@@ -1339,7 +1339,7 @@ mapping readSearchResponseInfo(string buf)
 	    size -= sizeCompressedInteger(buf1);
 	    buf1 = skipCompressedInteger(buf1);
 	    types  += buf1[0..val];
-	    WAIS_WERROR("got DT_TYPE_BLOCK, type: "+buf1[0..val]);
+	    WAIS_WERR("got DT_TYPE_BLOCK, type: "+buf1[0..val]);
 	    buf1=buf1[val..];
 	    size -= val;
 	  }
@@ -1350,7 +1350,7 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  source = buf1[0..val];
 	  buf1=buf1[val..];
-	  WAIS_WERROR("got DT_Source: "+source);
+	  WAIS_WERR("got DT_Source: "+source);
 	  break;
 	case DT_Date:
 	  buf1 = skipCompressedInteger(buf1);
@@ -1358,7 +1358,7 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  date = buf1[0..val];
 	  buf1=buf1[val..];
-	  WAIS_WERROR("got DT_Date: "+date);
+	  WAIS_WERR("got DT_Date: "+date);
 	  break;
 	case DT_Headline:
 	  buf1 = skipCompressedInteger(buf1);
@@ -1366,7 +1366,7 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  headline = buf1[0..val];
 	  buf1=buf1[val..];
-	  WAIS_WERROR("got DT_Headline: "+headline);
+	  WAIS_WERR("got DT_Headline: "+headline);
 	  break;
         case DT_OriginCity:
 	  buf1 = skipCompressedInteger(buf1);
@@ -1374,7 +1374,7 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  originCity = buf1[0..val];
 	  buf1=buf1[val..];
-	  WAIS_WERROR("got DT_OriginCity: "+originCity);
+	  WAIS_WERR("got DT_OriginCity: "+originCity);
 	  break;
 	case DT_StockCodes:
 	  buf1 = skipCompressedInteger(buf1);
@@ -1382,7 +1382,7 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  stockCodes = buf1[0..val];
 	  buf1=buf1[val..];
-	  WAIS_WERROR("got DT_StockCodes: "+stockCodes);
+	  WAIS_WERR("got DT_StockCodes: "+stockCodes);
 	  break;
 	case DT_CompanyCodes:
 	  buf1 = skipCompressedInteger(buf1);
@@ -1390,7 +1390,7 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  companyCodes = buf1[0..val];
 	  buf1=buf1[val..];
-	  WAIS_WERROR("got DT_CompanyCodes: "+companyCodes);
+	  WAIS_WERR("got DT_CompanyCodes: "+companyCodes);
 	  break;
 	case DT_IndustryCodes:
 	  buf1 = skipCompressedInteger(buf1);
@@ -1398,15 +1398,15 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  industryCodes = buf1[0..val];
 	  buf1=buf1[val..];
-	  WAIS_WERROR("got DT_IndustryCodes: "+industryCodes);
+	  WAIS_WERR("got DT_IndustryCodes: "+industryCodes);
 	  break;
 	default:
-	  WAIS_WERROR("got default 3 (ARRRGGGH)");
+	  WAIS_WERR("got default 3 (ARRRGGGH)");
 	  return 0;
 	  break;
 	}
       }
-      WAIS_WERROR("end DT_DocumentLongHeaderGroup");
+      WAIS_WERR("end DT_DocumentLongHeaderGroup");
       longHeaders += ({ (["versionNumber" : versionNumber,
 			  "score" : score,
 			  "bestMatch" : bestMatch,
@@ -1434,7 +1434,7 @@ mapping readSearchResponseInfo(string buf)
       buf1=buf[0..size-1];
       buf=buf[size..];
 
-      WAIS_WERROR_2("got DT_DocumentTextGroup ("+debug_print_string(buf1)+")");
+      WAIS_WERR_2("got DT_DocumentTextGroup ("+debug_print_string(buf1)+")");
 
       while (strlen(buf1)>0) {
 	switch (readCompressedInteger(buf1)) {
@@ -1444,7 +1444,7 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  docID = buf1[0..val-1];
 	  buf1=buf1[val..];
-	  WAIS_WERROR_2("got DT_DocumentID: "+debug_print_string(docID));
+	  WAIS_WERR_2("got DT_DocumentID: "+debug_print_string(docID));
 	  break;
 	case DT_VersionNumber:
 	  buf1 = skipCompressedInteger(buf1);
@@ -1452,7 +1452,7 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  versionNumber = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..];
-	  WAIS_WERROR("got DT_VersionNumber: "+sprintf("%d",versionNumber));
+	  WAIS_WERR("got DT_VersionNumber: "+sprintf("%d",versionNumber));
 	  break;
 	case DT_DocumentText:
 	  buf1 = skipCompressedInteger(buf1);
@@ -1460,10 +1460,10 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  documentText = buf1[0..val];
 	  buf1=buf1[val..];
-	  WAIS_WERROR("got DT_DocumentText: "+documentText);
+	  WAIS_WERR("got DT_DocumentText: "+documentText);
 	  break;
 	default:
-	  WAIS_WERROR("got default 4 (ARRRGGGH)");
+	  WAIS_WERR("got default 4 (ARRRGGGH)");
 	  return 0;
 	  break;
 	}
@@ -1479,7 +1479,7 @@ mapping readSearchResponseInfo(string buf)
 
       /* readWAISDocumentHeader */
 
-      WAIS_WERROR("got DT_DocumentHeadlineGroup");
+      WAIS_WERR("got DT_DocumentHeadlineGroup");
       versionNumber = UNUSED;
 
       /* readUserInfoHeader */
@@ -1498,7 +1498,7 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  docID = buf1[0..val-1];
 	  buf1=buf1[val..];
-	  WAIS_WERROR("got DT_DocumentID: "+docID);
+	  WAIS_WERR("got DT_DocumentID: "+docID);
 	  break;
 	case DT_VersionNumber:
 	  buf1 = skipCompressedInteger(buf1);
@@ -1506,7 +1506,7 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  versionNumber = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..];
-	  WAIS_WERROR("got DT_VersionNumber: "+sprintf("%d",versionNumber));
+	  WAIS_WERR("got DT_VersionNumber: "+sprintf("%d",versionNumber));
 	  break;
 	case DT_Source:
 	  buf1 = skipCompressedInteger(buf1);
@@ -1514,7 +1514,7 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  source = buf1[0..val];
 	  buf1=buf1[val..];
-	  WAIS_WERROR("got DT_Source: "+source);
+	  WAIS_WERR("got DT_Source: "+source);
 	  break;
 	case DT_Date:
 	  buf1 = skipCompressedInteger(buf1);
@@ -1522,7 +1522,7 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  date = buf1[0..val];
 	  buf1=buf1[val..];
-	  WAIS_WERROR("got DT_Date: "+date);
+	  WAIS_WERR("got DT_Date: "+date);
 	  break;
 	case DT_Headline:
 	  buf1 = skipCompressedInteger(buf1);
@@ -1530,7 +1530,7 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  headline = buf1[0..val];
 	  buf1=buf1[val..];
-	  WAIS_WERROR("got DT_Headline: "+headline);
+	  WAIS_WERR("got DT_Headline: "+headline);
 	  break;
         case DT_OriginCity:
 	  buf1 = skipCompressedInteger(buf1);
@@ -1538,15 +1538,15 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  originCity = buf1[0..val];
 	  buf1=buf1[val..];
-	  WAIS_WERROR("got DT_OriginCity: "+originCity);
+	  WAIS_WERR("got DT_OriginCity: "+originCity);
 	  break;
 	default:
-	  WAIS_WERROR("got default 3 (ARRRGGGH)");
+	  WAIS_WERR("got default 3 (ARRRGGGH)");
 	  return 0;
 	  break;
 	}
       }
-      WAIS_WERROR("end DT_DocumentHeadlineGroup");
+      WAIS_WERR("end DT_DocumentHeadlineGroup");
       headlines += ({ (["versionNumber" : versionNumber,
 			"docID" : docID,
 			"source" : source,
@@ -1560,7 +1560,7 @@ mapping readSearchResponseInfo(string buf)
 
       /* readWAISDocumentHeader */
 
-      WAIS_WERROR("got DT_DocumentCodeGroup");
+      WAIS_WERR("got DT_DocumentCodeGroup");
       versionNumber = UNUSED;
 
       /* readUserInfoHeader */
@@ -1579,7 +1579,7 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  docID = buf1[0..val-1];
 	  buf1=buf1[val..];
-	  WAIS_WERROR("got DT_DocumentID: "+docID);
+	  WAIS_WERR("got DT_DocumentID: "+docID);
 	  break;
 	case DT_VersionNumber:
 	  buf1 = skipCompressedInteger(buf1);
@@ -1587,7 +1587,7 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  versionNumber = readBinaryInteger(val,buf1);
 	  buf1=buf1[val..];
-	  WAIS_WERROR("got DT_VersionNumber: "+sprintf("%d",versionNumber));
+	  WAIS_WERR("got DT_VersionNumber: "+sprintf("%d",versionNumber));
 	  break;
 	case DT_StockCodes:
 	  buf1 = skipCompressedInteger(buf1);
@@ -1595,7 +1595,7 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  stockCodes = buf1[0..val];
 	  buf1=buf1[val..];
-	  WAIS_WERROR("got DT_StockCodes: "+stockCodes);
+	  WAIS_WERR("got DT_StockCodes: "+stockCodes);
 	  break;
 	case DT_CompanyCodes:
 	  buf1 = skipCompressedInteger(buf1);
@@ -1603,7 +1603,7 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  companyCodes = buf1[0..val];
 	  buf1=buf1[val..];
-	  WAIS_WERROR("got DT_CompanyCodes: "+companyCodes);
+	  WAIS_WERR("got DT_CompanyCodes: "+companyCodes);
 	  break;
 	case DT_IndustryCodes:
 	  buf1 = skipCompressedInteger(buf1);
@@ -1611,15 +1611,15 @@ mapping readSearchResponseInfo(string buf)
 	  buf1 = skipCompressedInteger(buf1);
 	  industryCodes = buf1[0..val];
 	  buf1=buf1[val..];
-	  WAIS_WERROR("got DT_IndustryCodes: "+industryCodes);
+	  WAIS_WERR("got DT_IndustryCodes: "+industryCodes);
 	  break;
 	default:
-	  WAIS_WERROR("got default 4 (ARRRGGGH)");
+	  WAIS_WERR("got default 4 (ARRRGGGH)");
 	  return 0;
 	  break;
 	}
       }
-      WAIS_WERROR("end DT_DocumentCodesGroup");
+      WAIS_WERR("end DT_DocumentCodesGroup");
       codes += ({ (["versionNumber" : versionNumber,
 		    "docID" : docID,
 		    "stockCodes" : stockCodes,
@@ -1627,7 +1627,7 @@ mapping readSearchResponseInfo(string buf)
 		    "industryCodes" : industryCodes ]) });
       break;
     default:
-      WAIS_WERROR("got default 5 (ARRRGGGH)");
+      WAIS_WERR("got default 5 (ARRRGGGH)");
       break;
     }
   }
@@ -1675,7 +1675,7 @@ mapping readSearchResponseAPDU(string buf)
   nextPos = readBinaryInteger(3,buf);
   buf=buf[3..];
 
-  WAIS_WERROR(sprintf("WAIS: Got response %d,%d,%d,%d,%d,%d.\n",size,pduType,
+  WAIS_WERR(sprintf("WAIS: Got response %d,%d,%d,%d,%d,%d.\n",size,pduType,
 		      result,count,recordsReturned,nextPos));
 
   resultStatus = presentStatus = UNUSED;
@@ -1691,7 +1691,7 @@ mapping readSearchResponseAPDU(string buf)
       buf = skipCompressedInteger(buf);
       resultStatus = readBinaryInteger(val,buf);
       buf=buf[val..];
-      WAIS_WERROR("got DT_ResultSetStatus: "+sprintf("%d",resultStatus));
+      WAIS_WERR("got DT_ResultSetStatus: "+sprintf("%d",resultStatus));
       break;
     case DT_PresentStatus:
       buf = skipCompressedInteger(buf);
@@ -1699,7 +1699,7 @@ mapping readSearchResponseAPDU(string buf)
       buf = skipCompressedInteger(buf);
       presentStatus = readBinaryInteger(val,buf);
       buf=buf[val..];
-      WAIS_WERROR("got DT_PresentStatus: "+sprintf("%d",presentStatus));
+      WAIS_WERR("got DT_PresentStatus: "+sprintf("%d",presentStatus));
       break;
     case DT_ReferenceID:
       buf = skipCompressedInteger(buf);
@@ -1707,7 +1707,7 @@ mapping readSearchResponseAPDU(string buf)
       buf = skipCompressedInteger(buf);
       refID = buf[0..val];
       buf=buf[val..];
-      WAIS_WERROR("got DT_ReferenceID: "+refID);
+      WAIS_WERR("got DT_ReferenceID: "+refID);
       break;
     default:
       return 0;
@@ -1768,7 +1768,7 @@ void done_fetch_data(array in)
     return;
   }
 
-  WAIS_WERROR_2("WAIS: Got all fetch data ("+
+  WAIS_WERR_2("WAIS: Got all fetch data ("+
 		debug_print_string(in[0][HEADER_LENGTH..])+").\n");
 
   /* Parse the result which came back into memory. */
@@ -1815,7 +1815,7 @@ void got_fetch_data(array i, string s)
 {
   int q,t;
 
-  WAIS_WERROR("Got some fetch data.");
+  WAIS_WERR("Got some fetch data.");
   i[0] += s;
 
   switch(i[1]) {
@@ -1824,7 +1824,7 @@ void got_fetch_data(array i, string s)
     if((q=search(i[0],"0"))==-1)
       return;
 
-    WAIS_WERROR("Got first 0.");
+    WAIS_WERR("Got first 0.");
 
     if(q>0)
       i[0]=i[0][q..];
@@ -1835,13 +1835,13 @@ void got_fetch_data(array i, string s)
     if(sizeof(i[0])<HEADER_LENGTH)
       return;
 
-    WAIS_WERROR("Got header ("+i[0][0..24]+", len is "+i[0][0..9]+").");
+    WAIS_WERR("Got header ("+i[0][0..24]+", len is "+i[0][0..9]+").");
 
     for(t=0;i[0][t]=='0';t++)
       ;
 
     if(sscanf(i[0][t..10],"%dz",q)!=1) {
-      WAIS_WERROR("message header error.");
+      WAIS_WERR("message header error.");
       destruct(i[3]);
       destruct(i[4]);
       return;
@@ -1855,7 +1855,7 @@ void got_fetch_data(array i, string s)
 
     if(sizeof(i[0])>=i[2]+HEADER_LENGTH) {
 
-      WAIS_WERROR(sprintf("got all fetch datas (%d on %d).\n",sizeof(i[0]),
+      WAIS_WERR(sprintf("got all fetch datas (%d on %d).\n",sizeof(i[0]),
 			  i[2]));
       i[1]=3;
       done_fetch_data(i);
@@ -1892,7 +1892,7 @@ void done_search_data(array in)
     return;
   }
 
-  WAIS_WERROR_2("Got all search data ("+
+  WAIS_WERR_2("Got all search data ("+
 		debug_print_string(in[0][HEADER_LENGTH..])+").");
 
   /* Parse the result which came back into memory. */
@@ -1909,7 +1909,7 @@ void got_search_data(array i, string s)
 {
   int q,t;
 
-  WAIS_WERROR("Got some search data.");
+  WAIS_WERR("Got some search data.");
   i[0] += s;
 
   switch(i[1]) {
@@ -1918,7 +1918,7 @@ void got_search_data(array i, string s)
     if((q=search(i[0],"0"))==-1)
       return;
 
-    WAIS_WERROR("Got first 0.");
+    WAIS_WERR("Got first 0.");
 
     if(q>0)
       i[0]=i[0][q..];
@@ -1929,13 +1929,13 @@ void got_search_data(array i, string s)
     if(sizeof(i[0])<HEADER_LENGTH)
       return;
 
-    WAIS_WERROR("Got header ("+i[0][0..24]+", len is "+i[0][0..9]+").");
+    WAIS_WERR("Got header ("+i[0][0..24]+", len is "+i[0][0..9]+").");
 
     for(t=0;i[0][t]=='0';t++)
       ;
 
     if(sscanf(i[0][t..10],"%dz",q)!=1) {
-      WAIS_WERROR("message header error.");
+      WAIS_WERR("message header error.");
       destruct(i[3]);
       destruct(i[4]);
       return;
@@ -1949,7 +1949,7 @@ void got_search_data(array i, string s)
 
     if(strlen(i[0])>=i[2]+HEADER_LENGTH) {
 
-      WAIS_WERROR("got all search datas.");
+      WAIS_WERR("got all search datas.");
       i[1]=3;
       done_search_data(i);
     }
@@ -1965,7 +1965,7 @@ void connected(object ok, string file, object send_to, string key)
   int doclen,i;
   string reqmsg,header;
 
-  WAIS_WERROR("Connected");
+  WAIS_WERR("Connected");
 
   if(!send_to)
   {
@@ -2014,7 +2014,7 @@ void connected(object ok, string file, object send_to, string key)
       database=file;
   }
 
-  WAIS_WERROR("request is:\nkey "+key+"\ndatabase "+database+"\ndoctype "+
+  WAIS_WERR("request is:\nkey "+key+"\ndatabase "+database+"\ndoctype "+
 	      doctype+"\ndoclength "+sprintf("%d",doclen)+"\ndocname "+docname);
 
   basetitle=database;
@@ -2025,7 +2025,7 @@ void connected(object ok, string file, object send_to, string key)
  */
 
   if(key && strlen(key)==0) {		/* I N D E X */
-    WAIS_WERROR("Index");
+    WAIS_WERR("Index");
 
     send_to->my_fd->write("HTTP/1.0 200 Yo! Wais data comming soon to a "
 			  "screen near you\nContent-Type: text/html\n\n"
@@ -2036,7 +2036,7 @@ void connected(object ok, string file, object send_to, string key)
     destruct(send_to);
   } else if (key) {					/* S E A R C H */
 
-    WAIS_WERROR("Search");
+    WAIS_WERR("Search");
 
     replace(key,({"+"}),({" "}));
 
@@ -2056,7 +2056,7 @@ void connected(object ok, string file, object send_to, string key)
     header += "0";
     header += reqmsg;
 
-    WAIS_WERROR_2("about to send message ("+debug_print_string(header)+")");
+    WAIS_WERR_2("about to send message ("+debug_print_string(header)+")");
 
     /* Write out message. Read back header. */
 
@@ -2075,7 +2075,7 @@ void connected(object ok, string file, object send_to, string key)
     int bin;
     string docid;
 
-    WAIS_WERROR("Fetch... Retrieve document `"+docname+
+    WAIS_WERR("Fetch... Retrieve document `"+docname+
 		"'\n............ type `"+doctype+
 		sprintf("' length %d\n", doclen));
 
@@ -2121,9 +2121,9 @@ void connected(object ok, string file, object send_to, string key)
     header += "0";
     header += reqmsg;
 
-    WAIS_WERROR_2("about to send message ("+debug_print_string(header)+")");
+    WAIS_WERR_2("about to send message ("+debug_print_string(header)+")");
 
-    WAIS_WERROR(sprintf("requesting document type %s, binary %d)",format,bin));
+    WAIS_WERR(sprintf("requesting document type %s, binary %d)",format,bin));
 
     /* Write out message. Read back header. */
 
@@ -2143,7 +2143,7 @@ mapping find_file(string fi, object id)
   mixed tmp;
   string h, f;
   int p;
-  WAIS_WERROR("find_file("+fi+")");
+  WAIS_WERR("find_file("+fi+")");
 
   sscanf(fi, "%[^/]/%s", h, f);
   if(!f)
@@ -2153,7 +2153,7 @@ mapping find_file(string fi, object id)
   if(!p)
     p=210;
 
-  WAIS_WERROR("host = "+h+"\nfile = "+f+"\nport = "+p);
+  WAIS_WERR("host = "+h+"\nfile = "+f+"\nport = "+p);
 
   if(tmp = proxy_auth_needed(id))
     return tmp;
