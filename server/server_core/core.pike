@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: core.pike,v 1.830 2002/10/24 19:24:38 nilsson Exp $";
+constant cvs_version="$Id: core.pike,v 1.831 2002/10/25 20:05:57 nilsson Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -357,6 +357,9 @@ static class Privs
 #else /* efun(seteuid) */
   void create(string reason, int|string|void uid, int|string|void gid){}
 #endif /* efun(seteuid) */
+
+  string _sprintf() { return sprintf("Privs( {%O:%O}->{%O,%O} )",
+				     saved_uid, saved_gid, new_uid, new_gid); }
 }
 
 /* Used by read_config.pike, since there seems to be problems with
@@ -526,6 +529,8 @@ class Queue
     buffer[w_ptr++]=v;
     r_cond::signal();
   }
+
+  string _sprintf() { return "Queue("+size()+")"; }
 }
 
 // // This is easier than when there are no threads.
@@ -866,6 +871,8 @@ function async_sig_start( function f, int really )
         call_out( really_call, 0, args );
       }
     }
+
+    string _sprintf() { return sprintf("SignalAsyncVerifier(%O)",f); }
   };
   // call_out is not really useful here, since we probably want to run
   // the signal handler immediately, not whenever the backend thread
@@ -1203,7 +1210,7 @@ class InternalRequestID
 
   static string _sprintf()
   {
-    return sprintf("RequestID(conf=%O; not_query=%O)", conf, not_query );
+    return sprintf("InternalRequestID(conf=%O; not_query=%O)", conf, not_query );
   }
 
   static void create()
@@ -1570,6 +1577,8 @@ class SSLProtocol
     {
       sslfile = SSL.sslfile(q, ctx);
     }
+
+    string _sprintf() { return sprintf("destruct_protected_sslfile(%O)",sslfile); }
   }
 
   Stdio.File accept()
@@ -1758,6 +1767,7 @@ mapping(string:Protocol) build_protocols_mapping()
       if(!real) realize();
       return predef::`->(real, x);
     }
+    string _sprintf() { return sprintf("lazy_load(%O,%O)", prog, name); }
   };
 #endif
   foreach( glob( "prot_*.pike", get_dir("plugins/protocols") ), string s )
@@ -3226,6 +3236,8 @@ class ImageCache
     // Always remove entries that are older than one week.
     call_out( do_cleanup, 10 );
   }
+
+  string _sprintf() { return sprintf("ImageCache(%O,%O)", name, draw_function); }
 }
 
 
@@ -3613,6 +3625,8 @@ class ArgCache
     QUERY("UPDATE "+name+" SET atime='"+time(1)+"' WHERE id="+i[0]);
     QUERY("UPDATE "+name+" SET atime='"+time(1)+"' WHERE id="+i[1]);
   }
+
+  string _sprintf() { return sprintf("ArgCache(%O)", name); }
 }
 
 mapping cached_decoders = ([]);
@@ -4534,7 +4548,7 @@ int is_ip(string s)
 
 static string _sprintf( )
 {
-  return "roxen";
+  return "roxen()";
 }
 
 function(string:Sql.Sql) dbm_cached_get;
@@ -4564,6 +4578,8 @@ class LogFormat
     if( c ) 
       c( replace( data, "\4711", (host||ip) ) );
   }
+
+  string _sprintf() { return "LogFormat()"; }
 }
 
 static mapping(string:function) compiled_formats = ([ ]);
@@ -5143,5 +5159,6 @@ class LogFile(string fname)
     write_buf += ({what});
     return strlen(what); 
   }
-}
 
+  string _sprintf() { return sprintf("LogFile(%O)", fname); }
+}

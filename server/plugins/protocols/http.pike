@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.387 2002/10/24 00:17:43 nilsson Exp $";
+constant cvs_version = "$Id: http.pike,v 1.388 2002/10/25 20:04:37 nilsson Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -123,6 +123,7 @@ class AuthEmulator
   {
     return !realauth;
   }
+  string _sprintf() { return "AuthEmulator"; }
 }
 
 AuthEmulator auth;
@@ -483,6 +484,8 @@ class PrefLanguages {
     subtags=reverse(u);
     sorted=1;
   }
+
+  string _sprintf() { return sprintf("PrefLanguages(%O)", languages); }
 }
 
 class CacheKey {
@@ -1427,6 +1430,8 @@ class MultiRangeWrapper
       return file[what];
     }
   }
+
+  string _sprintf() { return "MultiRangeWrapper"; }
 }
 
 
