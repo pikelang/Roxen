@@ -1,32 +1,33 @@
 #define LOCALE	roxenp()->locale->get()->config_interface
-//string cvs_version = "$Id: cache.pike,v 1.27 1999/11/29 18:49:48 per Exp $";
+//string cvs_version = "$Id: cache.pike,v 1.28 1999/11/29 22:05:49 per Exp $";
 #include <roxen.h>
 #include <config.h>
 
-static int get_size(mixed x)
+constant svalsize = 4*4; // if pointers are 4 bytes..
+int get_size(mixed x)
 {
   if(mappingp(x))
-    return 8 + 8 + get_size(indices(x)) + get_size(values(x));
+    return svalsize + 64 + get_size(indices(x)) + get_size(values(x));
   else if(stringp(x))
-    return strlen(x)+8;
+    return strlen(x)+svalsize;
   else if(arrayp(x))
   {
     mixed f;
     int i;
     foreach(x, f)
       i += get_size(f);
-    return 8 + i;    // (refcount + pointer) + arraysize..
+    return svalsize + 4 + i;    // (base) + arraysize
   } else if(multisetp(x)) {
     mixed f;
     int i;
     foreach(indices(x), f)
       i += get_size(f);
-    return 8 + i;    // (refcount + pointer) + arraysize..
+    return svalsize + i;    // (base) + arraysize
   } else if(objectp(x) || functionp(x)) {
-    return 8 + 16; // (refcount + pointer) + object struct.
-    // Should consider size of global variables / refcount 
+    return svalsize + 128; // (base) + object struct + some extra.
+    // _Should_ consider size of global variables / refcount 
   }
-  return 20; // Ints and floats are 8 bytes, refcount and float/int.
+  return svalsize; // base
 }
 
 
@@ -49,7 +50,7 @@ mapping cache;
 mapping hits=([]), all=([]);
 
 #ifdef THREADS
-object cleaning_lock = Thread.Mutex();
+Thread.Mutex cleaning_lock = Thread.Mutex();
 #endif /* THREADS */
 
 void cache_expire(string in)
