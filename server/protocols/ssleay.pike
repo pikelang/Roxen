@@ -12,9 +12,10 @@ inherit "protocols/http" : http;
 
 class SSL_decode
 {
-  inherit "/precompiled/file" : http;
+  inherit "/precompiled/file" : pipe;
   inherit "/precompiled/ssleay_connection" : ssl;
 
+  object http;
   object https;
   string buffer = "";
 
@@ -31,13 +32,17 @@ class SSL_decode
     if (ssl::accept() > 0)
       while (1)
 	{
+	  werror("SSL_decode: read loop\n");
 	  string data = ssl::read(BUFFER_SIZE);
 	  if (!stringp(data))
 	    break;
 	  werror(sprintf("SSL_decode: read '%s'\n", data));
-	  if (http::write(data) != strlen(data))
+	  if (!strlen(data))
+	    break;
+	  if (pipe::write(data) != strlen(data))
 	    break;
 	}
+    werror("SSL_decode: recieved request\n");
     https->close("r");
   }
 
@@ -46,7 +51,7 @@ class SSL_decode
     werror("output thread\n");
     while (1)
       {
-	string data = http::read(BUFFER_SIZE, 1);
+	string data = pipe::read(BUFFER_SIZE);
 	werror(sprintf("SSL_decode: writing '%s'\n", data));
 	if (!strlen(data))
 	  break;
@@ -56,10 +61,11 @@ class SSL_decode
     die();
   }
 	  
-  object decode(object f)
+  object decode(object f, object protocol)
   {
-    object res = http::pipe();
+    object res = pipe::pipe();
 
+    http = protocol;
     https = f;
 #if 0
     werror(sprintf("ctx: %O\n", ctx));
@@ -68,11 +74,10 @@ class SSL_decode
     ssl::set_fd(https->query_fd());
     
     https->set_blocking();
-    http::set_blocking();
+    pipe::set_blocking();
 
     thread_create(handle_input);
     thread_create(handle_output);
-
     return res;
   }
 }
@@ -145,5 +150,5 @@ void assign(object f, object conf)
     report_error("ssleay->assign bug: Only one ssleay port supported\n");
   port = values(conf->open_ports)[0];
   ctx = get_context(port[2], port[0]);
-  http::assign(SSL_decode(ctx)->decode(f), conf);
+  http::assign(SSL_decode(ctx)->decode(f, this_object()), conf);
 }
