@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.16 1998/08/25 20:05:52 grubba Exp $
+ * $Id: resolv.pike,v 1.17 1998/10/01 23:37:12 grubba Exp $
  */
 
 inherit "wizard";
@@ -88,6 +88,52 @@ void trace_leave_table(string desc)
 	     "Time: "+sprintf("%.5f",delay/1000000.0)+
 #endif
 	     "<br>"+html_encode_string(desc)+efont)+"</td></tr>";
+}
+
+void resolv_handle_request(object c, object nid)
+{
+  int again;
+  mixed file;
+  function funp;
+  do
+  {
+    again=0;
+    foreach(c->first_modules(), funp)
+    {
+      nid->misc->trace_enter("First module", funp);
+      if(file = funp( nid ))
+      {
+	nid->misc->trace_leave("Returns data");
+	break;
+      }
+      if(nid->conf != c)
+      {
+	c = nid->conf;
+	nid->misc->trace_leave("Request transfered to the virtual server "+c->query_name());
+	again=1;
+	break;
+      }
+    }
+  } while(again);
+  if(!c->get_file(nid))
+  {
+    foreach(c->last_modules(), funp) 
+    {
+      nid->misc->trace_enter("Last try module", funp);
+      if(file = funp(nid)) {
+	if (file == 1) {
+	  nid->misc->trace_enter("Returned recurse", 0);
+	  resolv_handle_request(c, nid);
+	  nid->misc->trace_leave("Recurse done");
+	  nid->misc->trace_leave("Last try done");
+	  return;
+	}
+	nid->misc->trace_leave("Returns data");
+	break;
+      } else
+	nid->misc->trace_leave("");
+    }
+  }
 }
 
 string page_0(object id)
@@ -183,41 +229,7 @@ string page_0(object id)
 	  nid->auth = c->auth_module->auth( nid->auth, nid );
     }
 
-    int again;
-    mixed file;
-    function funp;
-    do
-    {
-      again=0;
-      foreach(c->first_modules(), funp)
-      {
-	nid->misc->trace_enter("First module", funp);
-	if(file = funp( nid ))
-	{
-	  nid->misc->trace_leave("Returns data");
-	  break;
-	}
-	if(nid->conf != c)
-	{
-	  c = nid->conf;
-	  nid->misc->trace_leave("Request transfered to the virtual server "+c->query_name());
-	  again=1;
-	  break;
-	}
-      }
-    } while(again);
-    if(!c->get_file(nid))
-    {
-      foreach(c->last_modules(), funp) 
-      {
-	nid->misc->trace_enter("Last try module", funp);
-	if(file = funp(nid)) {
-	  nid->misc->trace_leave("Returns data");
-	  break;
-	} else
-	  nid->misc->trace_leave("");
-      }
-    }
+    resolv_handle_request(c, nid);
     while(level>0) nid->misc->trace_leave("");
     if((int)id->variables->table)
       resolv += "</table>";

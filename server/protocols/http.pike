@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.116 1998/09/15 22:35:10 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.117 1998/10/01 23:37:39 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -1208,8 +1208,16 @@ void handle_request( )
 
     if(err) internal_error(err);
 
-    if(!mappingp(file))
-      foreach(conf->last_modules(), funp) if(file = funp(thiso)) break;
+    if(!mappingp(file)) {
+      mixed ret;
+      foreach(conf->last_modules(), funp) if(ret = funp(thiso)) break;
+      if (ret == 1) {
+	// Recurse.
+	handle_request();
+	return;
+      }
+      file = ret;
+    }
   } else if(!file &&
 	    (err=catch(file = roxen->configuration_parse( thiso )))) {
     if(err==-1) return;
