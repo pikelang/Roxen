@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.825 2003/03/05 15:51:50 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.826 2003/03/26 15:27:04 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -4794,10 +4794,12 @@ function compile_log_format( string fmt )
 // This array contains the compilation information for the different
 // security checks for e.g. htaccess. The layout of the top array is
 // triplet of sscanf string that the security command should match,
-// the number of arugments that it takes and an array with the actual
+// the number of arguments that it takes and an array with the actual
 // compilation information.
 //
-// ({ command_sscanf_string, number_of_arguments, actual_tests })*n
+// ({ command_sscanf_string, number_of_arguments, actual_tests,
+//    state_symbol_string,
+// })
 // 
 
 // In the tests array the following types has the following meaning:
@@ -4815,7 +4817,7 @@ function compile_log_format( string fmt )
 //   Strings in a multiset will be added before the string above.
 //   should typically be used for variable declarations.
 // int
-//   Signals that a authentication request should be sent to the user
+//   Signals that an authentication request should be sent to the user
 //   upon failure.
 // 
 // 
@@ -4826,81 +4828,82 @@ function compile_log_format( string fmt )
 // to do that for checks that use the authentication module API, since
 // then it's up to the user database and authentication modules to ensure
 // that nothing is overcached in that case.
-array security_checks = ({
-  "ip=%s:%s",2,({
+array(array(string|int|array)) security_checks = ({
+  ({ "ip=%s:%s",2,({
     lambda( string a, string b ){
       int net  = Roxen.ip_to_int( a );
       int mask = Roxen.ip_to_int( b );
       net &= mask;
       return ({ net, sprintf("%c",mask)[0] });
     },
-    " NO_PROTO_CACHE();\n"
-    "  if( (Roxen.ip_to_int( id->remoteaddr ) & %[1]d) == %[0]d ) ",
-  }),
-  "ip=%s/%d",2,({
+    "    if ((Roxen.ip_to_int(id->remoteaddr) & %[1]d) == %[0]d)",
+    (<"  NO_PROTO_CACHE()" >),
+  }), "ip" }),
+  ({ "ip=%s/%d",2,({
     lambda( string a, int b ){
       int net  = Roxen.ip_to_int( a );
       int mask = ((~0<<(32-b))&0xffffffff);
       net &= mask;
       return ({ net, sprintf("%c",mask)[0] });
     },
-    " NO_PROTO_CACHE();\n"
-    "  if( (Roxen.ip_to_int( id->remoteaddr ) & %[1]d) == %[0]d ) ",
-  }),
-  "ip=%s",1,({
-    " NO_PROTO_CACHE();\n"
-    "  if( sizeof(filter(%[0]O/\",\",lambda(string q){\n"
-    "            return glob(q,id->remoteaddr);\n"
-    "           })) )"
-  }),
-  "user=%s",1,({ 1,
+    "    if ((Roxen.ip_to_int(id->remoteaddr) & %[1]d) == %[0]d) ",
+    (<"  NO_PROTO_CACHE()" >),
+  }), "ip", }),
+  ({ "ip=%s",1,({
+    "    if (sizeof(filter(%[0]O/\",\",\n"
+    "                      lambda(string q){\n"
+    "                        return glob(q,id->remoteaddr);\n"
+    "                      })))",
+    (<"  NO_PROTO_CACHE()" >),
+  }), "ip", }),
+  ({ "user=%s",1,({ 1,
     lambda( string x ) {
       return ({sprintf("(< %{%O, %}>)", x/"," )});
     },
 
+    "    if ((user || (user = authmethod->authenticate(id, userdb_module)))\n"
+    "         && ((%[0]s->any) || (%[0]s[user->name()]))) ",
+    (<"  User user" >),
    // No need to NOCACHE () here, since it's up to the
    // auth-modules to do that.
-    "  if( (user || (user = authmethod->authenticate( id, userdb_module )))\n"
-    "      && ((%[0]s->any) || (%[0]s[user->name()])) ) ",
-    (<  "  User user" >),
-  }),
-  "group=%s",1,({ 1,
+  }), "user", }),
+  ({ "group=%s",1,({ 1,
     lambda( string x ) {
       return ({sprintf("(< %{%O, %}>)", x/"," )});
     },
+    "    if ((user || (user = authmethod->authenticate(id, userdb_module)))\n"
+    "        && ((%[0]s->any) || sizeof(mkmultiset(user->groups())&%[0]s)))",
+    (<"  User user" >),
    // No need to NOCACHE () here, since it's up to the
    // auth-modules to do that.
-    "  if( (user || (user = authmethod->authenticate( id, userdb_module )))\n"
-    "      && ((%[0]s->any) || sizeof(mkmultiset(user->groups())&%[0]s)))",
-    (<"  User user" >),
-  }),
-  "dns=%s",1,({
-    "NO_PROTO_CACHE();"
-    "  if(!dns && \n"
-    "     ((dns=roxen.quick_ip_to_host(id->remoteaddr))!=id->remoteaddr))\n"
-    "    if( (id->misc->delayed+=0.1) < 1.0 )\n"
-    "      return Roxen.http_try_again( 0.1 );\n"
-    "  if( sizeof(filter(%[0]O/\",\",lambda(string q){return glob(q,dns);})) )",
+  }), "group", }),
+  ({ "dns=%s",1,({
+    "    if(!dns && \n"
+    "       ((dns=roxen.quick_ip_to_host(id->remoteaddr))!=id->remoteaddr))\n"
+    "      if( (id->misc->delayed+=0.1) < 1.0 )\n"
+    "        return Roxen.http_try_again( 0.1 );\n"
+    "    if (sizeof(filter(%[0]O/\",\",\n"
+    "                      lambda(string q){return glob(q,dns);})))",
     (< "  string dns" >),
-  }),
-  "time=%d:%d-%d:%d",4,({
+    (<"  NO_PROTO_CACHE()" >),
+  }), "ip", }),
+  ({ "time=%d:%d-%d:%d",4,({
     (< "  mapping l = localtime(time(1))" >),
     (< "  int th = l->hour, tm = l->min" >),
     // No need to NOCACHE() here, does not depend on client.
-    " if( ((th >= %[0]d) && (tm >= %[1]d)) &&\n"
-    "     ((th <= %[2]d) && (tm <= %[3]d)) )",
-  }),
-  "referer=%s", 1, ({
+    "    if (((th >= %[0]d) && (tm >= %[1]d)) &&\n"
+    "        ((th <= %[2]d) && (tm <= %[3]d)))",
+  }), "time", }),
+  ({ "referer=%s", 1, ({
     (<
       "  string referer = sizeof(id->referer||({}))?"
       "id->referer[0]:\"\"; "
     >),
-    "  NO_PROTO_CACHE();"
-    "  if( sizeof(filter(%[0]O/\",\",lambda(string q){\n"
-    "            return glob(q,referer);\n"
-    "           })) )"
-  }),
-  "day=%s",1,({
+    "    if( sizeof(filter(%[0]O/\",\",\n"
+    "                      lambda(string q){return glob(q,referer);})))",
+    (<"  NO_PROTO_CACHE()" >),
+  }), "referer", }),
+  ({ "day=%s",1,({
     lambda( string q ) {
       multiset res = (<>);
       foreach( q/",", string w ) if( (int)w )
@@ -4913,19 +4916,19 @@ array security_checks = ({
     },
     (< "  mapping l = localtime(time(1))" >),
     // No need to NOCACHE() here, does not depend on client.
-    " if( %[0]s[l->wday] )"
-  }),
-  "accept_language=%s",1,({
-    "  NO_PROTO_CACHE(); "
-    "  if( has_value(id->misc->pref_languages->get_languages(), %O))"
-  }),
-  "luck=%d%%",1,({
+    "    if (%[0]s[l->wday])"
+  }), "day", }),
+  ({ "accept_language=%s",1,({
+    "    if (has_value(id->misc->pref_languages->get_languages(), %O))",
+    (<"  NO_PROTO_CACHE()" >),
+  }), "language", }),
+  ({ "luck=%d%%",1,({
     lambda(int luck) { return ({ 100-luck }); },
     // Not really any need to NOCACHE() here, since it does not depend
     // on client. However, it's supposed to be totally random.
-    " NOCACHE();"
-    " if( random(100)<%d )",
-  }),
+    "    if( random(100)<%d )",
+    (<"  NOCACHE()" >),
+  }), "luck", }),
 });
 
 #define DENY  0
@@ -5002,7 +5005,8 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
   array variables = ({ "  object userdb_module",
 		       "  object authmethod = id->conf",
 		       "  string realm = \"User\"",
-		       "  int|mapping fail" });
+		       "  mapping(string:int|mapping) state = ([])",
+  });
   int shorted, patterns, cmd;
 
   foreach( pattern / "\n", string line )
@@ -5020,16 +5024,16 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
     {
       line = String.trim_all_whites( line );
       if( line == "config_userdb" )
-	code += "  userdb_module = roxen.config_userdb_module;\n";
+	code += "    userdb_module = roxen.config_userdb_module;\n";
       else if( line == "all" )
-	code += "  userdb_module = 0;\n";
+	code += "    userdb_module = 0;\n";
       else if( !m->my_configuration()->find_user_database( line ) )
 	m->report_notice( LOC_M( 58,"Syntax error in security patterns: "
 				 "Cannot find the user database '%s'")+"'\n",
 			line);
       else
 	code +=
-	  sprintf("  userdb_module = id->conf->find_user_database( %O );\n",
+	  sprintf("    userdb_module = id->conf->find_user_database( %O );\n",
 		  line);
       continue;
     } 
@@ -5037,14 +5041,14 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
     {
       line = String.trim_all_whites( line );
       if( line == "all" )
-	code += "  authmethod = id->conf;\n";
+	code += "    authmethod = id->conf;\n";
       else if( !m->my_configuration()->find_auth_module( line ) )
 	m->report_notice( LOC_M( 59,"Syntax error in security patterns: "
 				 "Cannot find the auth method '%s'")+"\n",
 			  line);
       else
 	code +=
-	  sprintf("  authmethod = id->conf->find_auth_module( %O );\n",
+	  sprintf("    authmethod = id->conf->find_auth_module( %O );\n",
 		  line);
       continue;
     }
@@ -5059,17 +5063,15 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
     shorted = sscanf( line, "%s return", line );
 
 
-    for( int i = 0; i<sizeof(  security_checks ); i+=3 )
+    foreach(security_checks, array(string|int|array) check)
     {
-      string check = security_checks[i];
       array args;      
-      if( sizeof( args = array_sscanf( line, check ) )
-	  == security_checks[i+1] )
+      if (sizeof(args = array_sscanf(line, check[0])) == check[1])
       {
 	patterns++;
-	int thr;
+	string thr_code = "1";
 	// run instructions.
-	foreach( security_checks[ i+2 ], mixed instr )
+	foreach(check[2], mixed instr )
 	{
 	  if( functionp( instr ) )
 	    args = instr( @args );
@@ -5080,37 +5082,25 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 		variables += ({ v });
 	  }
 	  else if( intp( instr ) )
-	    thr = instr;
+	    thr_code = "authmethod->authenticate_throw( id, realm )";
 	  else if( stringp( instr ) )
 	  {
 	    code += sprintf( instr, @args )+"\n";
 	    if( cmd == DENY )
 	    {
-	      if( thr )
-		code += "    return authmethod->authenticate_throw( id, realm );\n";
-	      else
-		code += "    return 1;\n";
+	      code += "      return " + thr_code + ";\n";
 	    }
 	    else
 	    {
-	      if( shorted )
-	      {
-		code += "    return fail;\n";
-		code += "  else\n";
-		if( thr )
-		  code += "    return authmethod->authenticate_throw( id, realm );\n";
-		else
-		  code += "    return fail || 1;\n";
-	      }
-	      else
-	      {
-		code += "    ;\n";
-		code += "  else\n";
-		if( thr )
-		  code += "    fail=authmethod->authenticate_throw( id, realm );\n";
-		else
-		  code += "    if( !fail ) fail=1;\n";
-	      }
+	      code += sprintf("    {\n"
+			      "      state->%s = 0;\n" +
+			      (shorted?"      break;\n":"") +
+			      "    } else if (zero_type(state->%s)) {\n"
+			      "      state->%s = %s;\n"
+			      "    }\n",
+			      check[3],
+			      check[3],
+			      check[3], thr_code);
 	    }
 	  }
 	}
@@ -5119,20 +5109,32 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
     }
   }
   if( !patterns )  return 0;
+  code = ("  do {\n" +
+	  code +
+	  "  } while(0);\n");
   code = ("#include <module.h>\n"
 	  "int|mapping f( RequestID id )\n"
-	  "{\n" +variables *";\n" + ";\n" +
+	  "{\n" +
+	  (variables * ";\n") +
+	  ";\n" +
 #if defined(SECURITY_PATTERN_DEBUG) || defined(HTACCESS_DEBUG)
 	  sprintf("  report_debug(\"Verifying against pattern:\\n\"\n"
 		  "%{               \"  \" %O \"\\n\"\n%}"
 		  "               \"...\\n\");\n"
 		  "%s"
-		  "  report_debug(sprintf(\"  Result: %%O\\n\", fail));\n",
+		  "  report_debug(sprintf(\"  Result: %%O\\n\",\n"
+		  "                       state));\n",
 		  pattern/"\n", code) +
 #else /* !SECURITY_PATTERN_DEBUG && !HTACCESS_DEBUG */
 	  code +
 #endif /* SECURITY_PATTERN_DEBUG || HTACCESS_DEBUG */
-	  "  return fail;\n}\n" );
+	  "  int fail;\n"
+	  "  foreach(state; string field; int|mapping value) {\n"
+	  "    if (mappingp(value)) return value;\n"
+	  "    fail = fail || value;\n"
+	  "  }\n"
+	  "  return fail;\n"
+	  "}\n");
 #if defined(SECURITY_PATTERN_DEBUG) || defined(HTACCESS_DEBUG)
   report_debug(sprintf("Compiling security pattern:\n"
 		       "%{    %s\n%}\n"
