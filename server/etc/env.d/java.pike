@@ -90,5 +90,5 @@ void run(object env)
 
   //  Only add _JAVA_OPTIONS if user hasn't got it already
   if (!env->get("_JAVA_OPTIONS"))
-    env->set("_JAVA_OPTIONS", "\"-Xmx256m\" \"-Xrs\"");
+    env->set("_JAVA_OPTIONS", "\"-Xmx256m -Xrs\"");
 }
