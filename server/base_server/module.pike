@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.193 2004/05/10 19:09:03 mast Exp $
+// $Id: module.pike,v 1.194 2004/05/10 19:11:50 grubba Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -1024,12 +1024,14 @@ mapping(string:mixed) unlock_file (string path,
 //!   should in the last case do the operation on this level if
 //!   possible and then handle each member in the directory
 //!   recursively with @[write_access] etc.
-mapping(string:mixed)|int(0..1) write_access(string path, int(0..1) recursive,
+mapping(string:mixed)|int(0..1) write_access(string relative_path,
+					     int(0..1) recursive,
 					     RequestID id)
 {
-  SIMPLE_TRACE_ENTER(this, "write_access(%O, %O, X)", path, recursive);
+  SIMPLE_TRACE_ENTER(this, "write_access(%O, %O, X)",
+		     relative_path, recursive);
 
-  int/*LockFlag*/|DAVLock lock = check_locks(path, recursive, id);
+  int/*LockFlag*/|DAVLock lock = check_locks(relative_path, recursive, id);
 
   int(0..1) got_sublocks;
   if (lock && intp(lock)) {
@@ -1044,6 +1046,7 @@ mapping(string:mixed)|int(0..1) write_access(string path, int(0..1) recursive,
       got_sublocks = 1;
   }
 
+  string path = relative_path;
   if (!has_suffix (path, "/")) path += "/"; // get_if_data always adds a "/".
   path = query_location() + path; // No need for fancy combine_path stuff here.
 
@@ -1059,6 +1062,8 @@ mapping(string:mixed)|int(0..1) write_access(string path, int(0..1) recursive,
     return got_sublocks;	// No condition and no lock -- Ok.
   }
 
+  string|int(-1..0) etag;
+
   mapping(string:mixed) res =
     lock && Roxen.http_status(Protocols.HTTP.DAV_LOCKED);
  next_condition:
@@ -1073,12 +1078,27 @@ mapping(string:mixed)|int(0..1) write_access(string path, int(0..1) recursive,
 	negate = !negate;
 	break;
       case "etag":
-	// Not supported yet. We ignore this if some other condition
-	// matches.
-	res = Roxen.http_status (Protocols.HTTP.HTTP_NOT_IMPL,
-				 "Etag conditions not supported.");
-	TRACE_LEAVE("Conditional etag not supported.");
-	continue next_condition;	// Fail.
+	if (!etag) {
+	  // Get the etag for this resource (if any).
+	  // FIXME: We only support straight strings as etag properties.
+	  if (!stringp(etag = query_property(relative_path,
+					     "DAV:getetag", id))) {
+	    etag = -1;
+	  }
+	}
+	if (etag != token[1]) {
+	  // No etag available for this resource, or mismatch.
+	  if (!negate) {
+	    TRACE_LEAVE("Etag mismatch.");
+	    continue next_condition;
+	  }
+	} else if (negate) {
+	  // Etag match with negated expression.
+	  TRACE_LEAVE("Matched negated etag.");
+	  continue next_condition;
+	}
+	negate = 0;
+	break;
       case "key":
 	// The user has specified a key, so don't fail with DAV_LOCKED.
 	if (res && res->error == Protocols.HTTP.DAV_LOCKED) {
