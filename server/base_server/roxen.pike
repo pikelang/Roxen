@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.682 2001/06/30 15:44:05 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.683 2001/07/09 22:51:27 nilsson Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -4025,6 +4025,31 @@ function compile_log_format( string fmt )
   return compiled_formats[ fmt ] = compile_string( code )()->log;
 }
 
+// This array contains the compilation information for the different
+// security checks for e.g. htaccess. The layout of the top array is
+// triplet of sscanf string that the security command should match,
+// the number of arugments that it takes and an array with the actual
+// compilation information.
+//
+// ({ command_sscanf_string, number_of_arguments, actual_tests })*n
+//
+// In the tests array the following types has the following meaning:
+// function
+//   The function will be run during compilation. It gets the values
+//   aquired though sscanf-ing the command as input and should return
+//   an array with corresponding data.
+// string
+//   The string will be compiled into the actual test code. It is
+//   first modified as
+//   str = sprintf(str, @args)
+//   where args are the arguments from the command after it has been
+//   processed by the provided function, if any.
+// multiset
+//   Strings in a multiset will be added before the string above.
+//   should typically be used for variable declarations.
+// int
+//   Signals that a authentication request should be sent to the user
+//   upon failure.
 array security_checks = ({
   "ip=%s:%s",2,({
     lambda( string a, string b ){
@@ -4080,8 +4105,8 @@ array security_checks = ({
     "     ((th <= %[2]d) && (tm <= %[3]d)) )",
   }),
   "referer=%s", 1, ({
-    (< "  string referer = sizeof(request_id->referer||({}))?"
-       "request_id->referer[0]:\"\"; " >),
+    (< "  string referer = sizeof(id->referer||({}))?"
+       "id->referer[0]:\"\"; " >),
     "  if( sizeof(filter(%[0]O/\",\",lambda(string q){\n"
     "            return glob(q,referer);\n"
     "           })) )"
@@ -4099,6 +4124,13 @@ array security_checks = ({
     },
     (< "  mapping l = localtime(time(1))" >),
     " if( %[0]s[l->wday] )"
+  }),
+  "accept_language=%s",1,({
+    "  if( has_value(id->misc->pref_languages->get_languages(), %O))"
+  }),
+  "luck=%d%%",1,({
+    lambda(int luck) { return ({ 100-luck }); },
+    " if( random(100)<%d )",
   }),
 });
 
@@ -4132,8 +4164,14 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 //!  CMD time=<start>-<stop>   [return]
 //!       times in HH:mm format
 //!
-//!  CMD referer=pattern      [return]
+//!  CMD referer=pattern       [return]
 //!       Check the referer header.
+//!
+//!  CMD accept_langauge=language  [return]
+//!
+//!  CMD luck=entry_chance%    [return]
+//!       Defines the minimum level of luck required. All attempts
+//!       gets accepted at 0%, and no attempts gets accepted at 100%.
 //!
 //!  pattern is a glob pattern.
 //!
