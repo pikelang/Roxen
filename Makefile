@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.9 1997/10/05 04:39:01 grubba Exp $
+# $Id: Makefile,v 1.10 1997/10/06 00:03:37 grubba Exp $
 #
 # Bootstrap Makefile
 #
@@ -42,6 +42,9 @@ all : configure
 	cd build/$$os && \
 	(test -f stamp-h || CONFIG_SITE=x $$srcdir/configure --prefix=$(prefix)) && \
 	$(MAKE);
+	@echo
+	@echo Roxen successfully compiled.
+	@echo
 
 configure : configure.in
 	@echo Rebuilding the configure-scripts...
@@ -56,6 +59,12 @@ install : all
 	echo; \
 	cd build/$$os && \
 	$(MAKE) install;
+	@echo
+	@echo Roxen successfully installed.
+	@echo
+	@echo Starting the install program...
+	@echo
+	@cd $(prefix)/roxen/server; ./install
 
 install_all :
 	@os=`uname -srm|sed -e 's/ /-/g'|tr '[A-Z]' '[a-z]'|tr '/' '_'`; \
@@ -64,6 +73,12 @@ install_all :
 	echo; \
 	cd build/$$os && \
 	$(MAKE) install_all;
+	@echo
+	@echo Roxen and Pike successfully installed.
+	@echo
+	@echo Starting the install program...
+	@echo
+	@cd $(prefix)/roxen/server; ./install
 
 install_pike :
 	@os=`uname -srm|sed -e 's/ /-/g'|tr '[A-Z]' '[a-z]'|tr '/' '_'`; \
@@ -72,6 +87,9 @@ install_pike :
 	echo; \
 	cd build/$$os && \
 	$(MAKE) install_pike;
+	@echo
+	@echo Pike successfully installed.
+	@echo
 
 verify:
 	@os=`uname -srm|sed -e 's/ /-/g'|tr '[A-Z]' '[a-z]'|tr '/' '_'`; \
@@ -80,6 +98,9 @@ verify:
 	echo; \
 	cd build/$$os && \
 	$(MAKE) verify;
+	@echo
+	@echo Verify OK.
+	@echo
 
 verbose_verify:
 	@os=`uname -srm|sed -e 's/ /-/g'|tr '[A-Z]' '[a-z]'|tr '/' '_'`; \
@@ -88,6 +109,9 @@ verbose_verify:
 	echo; \
 	cd build/$$os && \
 	$(MAKE) verbose_verify;
+	@echo
+	@echo Verify OK.
+	@echo
 
 check : verify
 
