@@ -8,7 +8,7 @@
 
 // This is an extension module.
 
-constant cvs_version = "$Id: pikescript.pike,v 1.36 1999/10/06 22:30:48 grubba Exp $";
+constant cvs_version = "$Id: pikescript.pike,v 1.37 1999/10/08 17:21:53 per Exp $";
 constant thread_safe=1;
 
 mapping scripts=([]);
@@ -113,10 +113,13 @@ mapping locks = ([]);
 
 void my_error(array err, string|void a, string|void b)
 {
-  err[0] = ("<font size=+1>"+(b||"Error while executing code in pike script")
-	    + "</font><br><p>" +(err[0]||"") + (a||"")
-	    + "<br><p>The pike Script will be reloaded automatically.\n");
-  throw(err);
+//   if( !arrayp( err ) )
+//     err = (array)err;
+//   err[0] = ("<font size=+1>"+(b||"Error while executing code in pike script")
+// 	    + "</font><br><p>" +(err[0]||"") + (a||"")
+// 	    + "<br><p>The pike Script will be reloaded automatically.\n");
+//   throw(err);
+  throw( err );
 }
 
 array|mapping call_script(function fun, object got, object file)
@@ -337,15 +340,12 @@ mapping handle_file_extension(object f, string e, object got)
 #endif
     add_constant("cd", ban[5]);
 
-    if(err) {
-      destruct(f);
+    if(err) 
       my_error(err, got->not_query+":\n"+(s?s+"\n\n":"\n"), 
 	       "Error while compiling pike script:<br>\n\n");
-    }
-    if(!p) {
-      destruct(f);
+
+    if(!p) 
       return http_string_answer("<h1>While compiling pike script</h1>\n"+s);
-    }
 
 #if constant(__builtin.security)
     luser_creds->apply(p);
@@ -354,16 +354,13 @@ mapping handle_file_extension(object f, string e, object got)
     o=p();
     if (!functionp(fun = scripts[got->not_query]=o->parse)) {
       /* Should not happen */
-      destruct(f);
       return http_string_answer("<h1>No string parse(object id) function in pike-script</h1>\n");
     }
   }
 
   got->misc->cacheable=0;
   err=call_script(fun, got, f);
-  destruct(f);
   if(arrayp(err)) {
-    destruct(function_object(fun));
     scripts[got->not_query] = 0;
     my_error(err[1]); // Will interrupt here.
   }
