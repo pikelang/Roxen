@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997-2000, Roxen IS.
 // Makes a tab list like the one in the config interface.
 
-constant cvs_version="$Id: tablist.pike,v 1.42 2000/03/17 00:31:17 nilsson Exp $";
+constant cvs_version="$Id: tablist.pike,v 1.43 2000/03/24 20:46:51 jonasw Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -63,8 +63,8 @@ string internal_tag_tab(string t, mapping a, string contents, mapping d,
   else
     //  We need an absolute path or else gbutton will "fix" this according
     //  to the path in the request...
-    fimage = getcwd() + "/roxen-images/tabframe.xcf";
-
+    fimage = "/internal-roxen-tabframe";
+  
   mapping gbutton_args = d|a;
 
   gbutton_args["frame-image"] = fimage;
