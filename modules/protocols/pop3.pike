@@ -1,12 +1,12 @@
 /*
- * $Id: pop3.pike,v 1.11 1998/09/28 00:59:51 grubba Exp $
+ * $Id: pop3.pike,v 1.12 1998/09/28 01:03:40 grubba Exp $
  *
  * POP3 protocols module.
  *
  * Henrik Grubbström 1998-09-27
  */
 
-constant cvs_version = "$Id: pop3.pike,v 1.11 1998/09/28 00:59:51 grubba Exp $";
+constant cvs_version = "$Id: pop3.pike,v 1.12 1998/09/28 01:03:40 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -100,7 +100,7 @@ static class Pop_Session
 
     array(object) mail = mbox->mail() - indices(deleted);
     int num = sizeof(mail);
-    int sz = `+(@(mail->get_size()));
+    int sz = `+(0, @(mail->get_size()));
     send_ok(sprintf("%d %d", num, sz));
   }
 
@@ -110,7 +110,7 @@ static class Pop_Session
     array(object) mail = mbox->mail() - indices(deleted);
     int num = sizeof(mail);
     
-    int sz = `+(@(mail->get_size()));
+    int sz = `+(0, @(mail->get_size()));
     send_ok(sprintf("%d messages (%d octets)", num, sz));
     foreach(mail, object m) {
       send(sprintf("%s %d\r\n", m->id, m->get_size()));
@@ -182,7 +182,7 @@ static class Pop_Session
     array(object) mail = mbox->mail();
 
     int num = sizeof(mail);
-    int sz = `+(@(mail->get_size()));
+    int sz = `+(0, @(mail->get_size()));
     send_ok(sprintf("maildrop has %d messages (%d octets)", num, sz));
   }
 
