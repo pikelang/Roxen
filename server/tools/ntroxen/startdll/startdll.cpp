@@ -1,6 +1,6 @@
 // startdll.cpp : Implementation of WinMain
 //
-// $Id: startdll.cpp,v 1.8 2001/09/28 12:02:50 tomas Exp $
+// $Id: startdll.cpp,v 1.9 2001/10/19 09:43:49 tomas Exp $
 //
 
 
@@ -23,6 +23,7 @@
 
 #include "cmdline.h"
 #include "enumproc.h"
+#include "roxenmsg.h"
 
 #define BUILD_DLL
 
@@ -211,6 +212,24 @@ inline BOOL CServiceModule::Install()
 
     ::CloseServiceHandle(hService);
     ::CloseServiceHandle(hSCM);
+
+    // Register an event source
+    LONG lRes;
+    CRegKey keyEventApp;
+    lRes = keyEventApp.Open(HKEY_LOCAL_MACHINE,
+      "SYSTEM\\CurrentControlSet\\Services\\EventLog\\Application", KEY_READ);
+    if (lRes != ERROR_SUCCESS)
+        return FALSE;
+
+    CRegKey keyEventRoxen;
+    lRes = keyEventRoxen.Create(keyEventApp, m_szServiceName);
+    if (lRes != ERROR_SUCCESS)
+        return FALSE;
+
+    ::GetModuleFileName(hInstance, szFilePath, _MAX_PATH);
+    keyEventRoxen.SetValue(szFilePath, "EventMessageFile");
+    keyEventRoxen.SetValue(EVENTLOG_INFORMATION_TYPE, "TypesSupported");
+
     return TRUE;
 }
 
@@ -218,6 +237,15 @@ inline BOOL CServiceModule::Uninstall()
 {
     if (!IsInstalled())
         return TRUE;
+
+    LONG lRes;
+    CRegKey keyEventApp;
+    lRes = keyEventApp.Open(HKEY_LOCAL_MACHINE,
+      "SYSTEM\\CurrentControlSet\\Services\\EventLog\\Application", KEY_READ);
+    if (lRes == ERROR_SUCCESS)
+    {
+      keyEventApp.DeleteSubKey(m_szServiceName);
+    }
 
     SC_HANDLE hSCM = ::OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
 
@@ -273,7 +301,7 @@ void CServiceModule::LogEvent(LPCTSTR pFormat, ...)
         if (hEventSource != NULL)
         {
             /* Write to event log. */
-            ReportEvent(hEventSource, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, (LPCTSTR*) &lpszStrings[0], NULL);
+            ReportEvent(hEventSource, EVENTLOG_INFORMATION_TYPE, 0, MSG_GENERIC, NULL, 1, 0, (LPCTSTR*) &lpszStrings[0], NULL);
             DeregisterEventSource(hEventSource);
         }
     }
@@ -404,15 +432,31 @@ inline void CServiceModule::Handler(DWORD dwOpcode)
 //  Handled console control events
 BOOL CServiceModule::ControlHandler( DWORD dwCtrlType )
 {
+
+  char *ctrlEvent[7] = {
+      "CTRL_C_EVENT",       // 0
+      "CTRL_BREAK_EVENT",   // 1
+      "CTRL_CLOSE_EVENT",   // 2
+      "CTRL_3",             // 3 is reserved!
+      "CTRL_4",             // 4 is reserved!
+      "CTRL_LOGOFF_EVENT",  // 5
+      "CTRL_SHUTDOWN_EVENT" // 6
+  };
+
     switch( dwCtrlType )
     {
 	case CTRL_BREAK_EVENT:  // Ignore Ctrl+Break (may be used by pike)
+        //printf("%s received\n", ctrlEvent[dwCtrlType]);
         return TRUE;
 
-	case CTRL_C_EVENT:      // use Ctrl+C or Ctrl+Break to simulate
-                            // SERVICE_CONTROL_STOP in debug mode
+    case CTRL_C_EVENT:      // use Ctrl+C or 'Close Window' button to simulate
+    case CTRL_CLOSE_EVENT:  // SERVICE_CONTROL_STOP in debug mode
+    case CTRL_LOGOFF_EVENT:
+        //printf("%s received\n", ctrlEvent[dwCtrlType]);
         Stop(TRUE);
 	    return TRUE;
+    default:
+        printf("Unknown CTRL event %d received\n", dwCtrlType);
     }
     return FALSE;
 }

@@ -21,6 +21,7 @@
 *.jar binary
 *.jpeg binary
 *.jpg binary
+*.mc eol=crlf
 /server/modules/proxies/gopher.pike -text -crlf
 *.png binary
 *.raw binary

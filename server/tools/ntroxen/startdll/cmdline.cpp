@@ -1,6 +1,6 @@
 // cmdline.cpp: implementation of the CCmdLine class.
 //
-// $Id: cmdline.cpp,v 1.12 2001/10/08 13:53:52 tomas Exp $
+// $Id: cmdline.cpp,v 1.13 2001/10/19 09:43:48 tomas Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -223,7 +223,11 @@ CCmdLine::CCmdLine()
   m_bMsdev      = FALSE;
   m_bCheckVersion = TRUE;
 
-  m_iVerbose    = 1;
+  if (_Module.m_bService)
+    m_iVerbose    = 0;
+  else
+    m_iVerbose    = 1;
+
   m_iDebug      = -1;
 
 }
