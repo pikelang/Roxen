@@ -3,7 +3,7 @@
 // This is a virtual "file-system".
 // It will be located somewhere in the name-space of the server.
 // Also inherited by some of the other filesystems.
-string cvs_version = "$Id: filesystem.pike,v 1.8 1997/01/29 04:59:40 per Exp $";
+string cvs_version = "$Id: filesystem.pike,v 1.9 1997/01/29 18:54:19 kg Exp $";
 #include <module.h>
 #include <stat.h>
 
@@ -72,7 +72,7 @@ void create()
 	 "If set, DELETE can be used to delete files from the "
 	 "server.");
 
-  defvar("check_auth", 1, "Require authentification for modification",
+  defvar("check_auth", 1, "Require authentication for modification",
 	 TYPE_FLAG,
 	 "Only allow authenticated users to use methods other than "
 	 "GET and POST. If unset, this filesystem will be a _very_ "
