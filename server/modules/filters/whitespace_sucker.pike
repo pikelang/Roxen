@@ -2,11 +2,17 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: whitespace_sucker.pike,v 1.2 2000/12/11 02:35:03 nilsson Exp $";
+constant cvs_version = "$Id: whitespace_sucker.pike,v 1.3 2001/04/08 21:18:19 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FILTER;
 constant module_name = "Whitespace Sucker";
 constant module_doc  = "Sucks the useless guts away from of your pages.";
+
+void create() {
+
+  defvar("comment", Variable.Flag(0, 0, "Strip HTML comments",
+				  "Removes all &lt;!-- --&gt; type of comments") );
+}
 
 int gain;
 
@@ -49,6 +55,7 @@ mapping filter(mapping result, RequestID id)
 			     if(!sizeof(args)) return ({ "<pre>"+c+"</pre>" });
 			     return ({ Roxen.make_container("pre", args, c) });
 			   })
+    ->add_quote_tag("!--", query("comment")&&"", "--")
     ->_set_data_callback( remove_consecutive_whitespace )
     ->finish( result->data )
     ->read();
