@@ -213,10 +213,14 @@ install_only:
 	  sed <$(SRCDIR)/pike-roxen.in -e 's!#prefix#!$(prefix)!' >$(prefix)/bin/pike-roxen || exit 1; \
 	  chmod a+rx $(prefix)/bin/pike-roxen; \
 	fi
-#FIXME: Isn't this nessisary? This dir is moved, so does it still work?
+#FIXME: Isn't this necessary? This dir is moved, so does it still work?
 	@if test -f platform/Makefile ; then \
 	  echo "Installing supplied Roxen Platform parts..."; \
-	  (cd platform; $(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" install); \
+	  ( \
+	    cd platform; \
+	    $(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" install && \
+	      $(MAKE) "prefix=$(prefix)" clean \
+	  ); \
 	else :; fi
 	@if test -f $(SRCDIR)/server/manual/parsed.tar ; then \
 	  echo "Installing parsed manual..."; \
