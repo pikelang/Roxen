@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.29 2000/01/23 02:36:13 nilsson Exp $
+//! $Id: module.pmod,v 1.30 2000/01/23 02:59:20 nilsson Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -581,7 +581,7 @@ class Context
 	scope_name=splitted[0];
       else
 	scope_name=DEFAULT_SCOPE;
-    return set_var(splitted[-1], scope_name);
+    return delete_var(splitted[-1], scope_name);
   }
 
   array(string) list_var (void|string scope_name)
