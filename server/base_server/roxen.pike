@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.614 2001/01/29 09:05:44 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.615 2001/01/29 09:10:01 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -2698,6 +2698,10 @@ void reload_all_configurations()
 		     config, (bt ? ":\n"+bt : "\n"));
 	continue;
       }
+      function sp = master()->resolv("DBManager.set_permission");
+      catch(sp( "docs",   conf,  1 )); // the docs db can be non-existant
+      sp( "shared", conf,  2 );
+      sp( "local",  conf,  2 );
     }
     if(err = catch
     {

@@ -16,6 +16,9 @@ string parse( RequestID id )
 
   string name = decode_site_name(id->variables->name);
   object conf = roxen.enable_configuration( name );
+  catch(DBManager.set_permission( "docs",   conf,  DBManager.READ ));
+  DBManager.set_permission( "shared", conf,  DBManager.WRITE );
+  DBManager.set_permission( "local",  conf,  DBManager.WRITE );
   conf->save( 1 );
   return "ok";
 }
