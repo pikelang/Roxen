@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.263 1999/03/29 17:05:49 grubba Exp $
+ * $Id: roxen.pike,v 1.264 1999/04/07 18:48:13 peter Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.263 1999/03/29 17:05:49 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.264 1999/04/07 18:48:13 peter Exp $";
 
 // Some headerfiles
 #define IN_ROXEN
@@ -2867,7 +2867,6 @@ int main(int|void argc, array (string)|void argv)
 
   startpid = getppid();
   roxenpid = getpid();
-  create_pid_file(Getopt.find_option(argv, "p", "pid-file", "ROXEN_PID_FILE"));
 
   // Dangerous...
   if(tmp = Getopt.find_option(argv, "r", "root")) fix_root(tmp);
@@ -2878,6 +2877,8 @@ int main(int|void argc, array (string)|void argv)
   roxen_perror("Restart initiated at "+ctime(time())); 
 
   define_global_variables(argc, argv);
+  create_pid_file(Getopt.find_option(argv, "p", "pid-file", "ROXEN_PID_FILE")
+		  || QUERY(pidfile));
   object o;
   if(QUERY(locale) != "standard" && (o = Locale.Roxen[QUERY(locale)]))
   {
@@ -2886,8 +2887,6 @@ int main(int|void argc, array (string)|void argv)
   }
   report_notice(LOCALE->starting_roxen());
   
-  create_pid_file(QUERY(pidfile));
-
 #if efun(syslog)
   init_logger();
 #endif
