@@ -2,7 +2,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: pathinfo.pike,v 1.17 2001/09/03 18:31:05 nilsson Exp $";
+constant cvs_version = "$Id: pathinfo.pike,v 1.18 2004/04/19 16:45:47 mast Exp $";
 constant thread_safe = 1;
 
 #ifdef PATHINFO_DEBUG
@@ -25,11 +25,17 @@ In this case <tt>/index.html</tt> will be fetched, and the rest,
 mapping|int last_resort(object id)
 {
   PATHINFO_WERR(sprintf("Checking %O...", id->not_query));
+
+#if 0
+  // This kind of recursion detection doesn't work with internal
+  // redirects. We leave it to the generic loop prevention in
+  // handle_request et al.
   if (id->misc->path_info) {
     // Already been here...
     PATHINFO_WERR(sprintf("Been here, done that."));
     return 0;
   }
+#endif
 
   string query = id->not_query;
 #ifndef PATHINFO_LINEAR
