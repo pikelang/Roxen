@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.195 2000/06/09 13:37:42 kuntri Exp $
+// $Id: rxml.pike,v 1.196 2000/06/20 15:40:40 kuntri Exp $
 
 
 inherit "rxmlhelp";
@@ -2314,6 +2314,13 @@ The following features are supported:
 
 <attr name=variable value=name>
  Undefines this variable.
+
+<ex>
+<define variable='var.hepp'>hopp</define>
+ &var.hepp;
+<undefine variable='var.hepp'/>
+ &var.hepp;
+</ex>
 </attr>
 
 <attr name=tag value=name>
