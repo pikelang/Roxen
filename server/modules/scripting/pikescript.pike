@@ -8,7 +8,7 @@
 
 // This is an extension module.
 
-constant cvs_version = "$Id: pikescript.pike,v 1.24 1998/03/20 03:37:36 per Exp $";
+constant cvs_version = "$Id: pikescript.pike,v 1.25 1998/05/06 22:18:09 per Exp $";
 constant thread_safe=1;
 
 mapping scripts=([]);
@@ -115,6 +115,7 @@ array|mapping call_script(function fun, object got, object file)
     return 0;
   string|array (int) uid, olduid, us;
 
+#if efun(fork)
   if(QUERY(fork_exec)) {
     if(fork())
       return ([ "leave_me":1 ]);
@@ -148,7 +149,9 @@ array|mapping call_script(function fun, object got, object file)
     if (QUERY(scriptdir) && got->realfile)
       cd(dirname(got->realfile));
 
-  } else {
+  } else 
+#endif
+  {
 #ifndef THREADS
     if(got->misc->is_user && (us = file_stat(got->misc->is_user)))
       privs = Privs("Executing pikescript as non-www user", @us[5..6]);
@@ -185,6 +188,7 @@ array|mapping call_script(function fun, object got, object file)
 
   if(privs) destruct(privs);
 
+#if efun(fork)
   if (QUERY(fork_exec)) {
     if (err = catch {
       if (err) {
@@ -209,7 +213,7 @@ array|mapping call_script(function fun, object got, object file)
     }
     exit(0);
   }
-  
+#endif
   if(err)
     return ({ -1, err });
 
@@ -269,18 +273,22 @@ mapping handle_file_extension(object f, string e, object got)
     file = cpp(file);
 #endif
     array (function) ban = allocate(6, "function");
+#ifndef __NT__
+#if efun(setegid)
     ban[0] = setegid;
-    ban[1] = setgid;
     ban[2] = seteuid;
+#endif
+    ban[1] = setgid;
     ban[3] = setuid;
     //ban[4] = spawne;
-    ban[5] = cd;
 
     add_constant("setegid", 0);
     add_constant("seteuid", 0);
     add_constant("setgid", 0);
     add_constant("setuid", 0);
     //add_constant("spawne", 0);
+#endif
+    ban[5] = cd;
     add_constant("cd", 0);
 
     _master->set_inhibit_compile_errors("");
@@ -289,11 +297,15 @@ mapping handle_file_extension(object f, string e, object got)
       s=_master->errors + "\n\n" + s;
     _master->set_inhibit_compile_errors(0);
 
+#ifndef __NT__
+#if efun(setegid)
     add_constant("setegid", ban[0]);
-    add_constant("setgid", ban[1]);
     add_constant("seteuid", ban[2]);
+#endif
+    add_constant("setgid", ban[1]);
     add_constant("setuid", ban[3]);
     //add_constant("spawne", ban[4]);
+#endif
     add_constant("cd", ban[5]);
 
     if(err) {
@@ -341,6 +353,7 @@ string status()
 
 }
 
+#if efun(fork)
 void start()
 {
   if(QUERY(fork_exec))
@@ -350,5 +363,5 @@ void start()
     else
       runuser = ({ (int)QUERY(runuser), 60001 });
   }
-
 }
+#endif
