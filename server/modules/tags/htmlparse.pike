@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.132 1998/08/20 07:41:02 per Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.133 1998/08/21 16:50:35 peter Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -911,25 +911,29 @@ string tag_use(string tag, mapping m, object id)
   if(m->packageinfo)
   {
     string res ="<dl>";
-    foreach(get_dir("../rxml_packages"), string f)
-      catch 
-      {
-	string doc = "";
-	string data = Stdio.read_bytes("../rxml_packages/"+f);
-	sscanf(data, "%*sdoc=\"%s\"", doc);
-	parse_rxml(data, nid);
-	res += "<dt><b>"+f+"</b><dd>"+doc+"<br>";
-	array tags = indices(nid->misc->tags||({}));
-	array containers = indices(nid->misc->containers||({}));
-	if(sizeof(tags))
-	  res += "defines the following tag"+
-	    (sizeof(tags)!=1?"s":"") +": "+
-	    String.implode_nicely( sort(tags) )+"<br>";
-	if(sizeof(containers))
-	  res += "defines the following container"+
-	    (sizeof(tags)!=1?"s":"") +": "+
-	    String.implode_nicely( sort(containers) )+"<br>";
-      };
+    array dirs = get_dir("../rxml_packages");
+    if(dirs)
+      foreach(dirs, string f)
+	catch 
+	{
+	  string doc = "";
+	  string data = Stdio.read_bytes("../rxml_packages/"+f);
+	  sscanf(data, "%*sdoc=\"%s\"", doc);
+	  parse_rxml(data, nid);
+	  res += "<dt><b>"+f+"</b><dd>"+doc+"<br>";
+	  array tags = indices(nid->misc->tags||({}));
+	  array containers = indices(nid->misc->containers||({}));
+	  if(sizeof(tags))
+	    res += "defines the following tag"+
+	      (sizeof(tags)!=1?"s":"") +": "+
+	      String.implode_nicely( sort(tags) )+"<br>";
+	  if(sizeof(containers))
+	    res += "defines the following container"+
+	      (sizeof(tags)!=1?"s":"") +": "+
+	      String.implode_nicely( sort(containers) )+"<br>";
+	};
+    else
+      return "No package directory installed.";
     return res+"</dl>";
   }
 
