@@ -1,4 +1,4 @@
-// $Id: roxenlib.pike,v 1.136 2000/01/02 01:23:21 nilsson Exp $
+// $Id: roxenlib.pike,v 1.137 2000/01/03 01:29:03 nilsson Exp $
 
 #include <roxen.h>
 inherit "http";
@@ -13,7 +13,7 @@ class RoxenModule {};
 #include <stat.h>
 
 #define ipaddr(x,y) (((x)/" ")[y])
-#define old_rxml_compat 1
+#define old_rxml_compat
 
 string gif_size(Stdio.File gif)
 {
@@ -286,11 +286,6 @@ static string decode_mode(int m)
   return s;
 }
 
-constant MONTHS=(["Jan":0, "Feb":1, "Mar":2, "Apr":3, "May":4, "Jun":5,
-	         "Jul":6, "Aug":7, "Sep":8, "Oct":9, "Nov":10, "Dec":11,
-		 "jan":0, "feb":1, "mar":2, "apr":3, "may":4, "jun":5,
-	         "jul":6, "aug":7, "sep":8, "oct":9, "nov":10, "dec":11,]);
-
 static int _match(string w, array (string) a)
 {
   string q;
@@ -301,92 +296,12 @@ static int _match(string w, array (string) a)
       return 1;
 }
 
-static array(int) parse_since(string date)
-{
-  int t;
-  int length = -1;
-
-#if constant(mktime)
-  string extra;
-  sscanf(lower_case(date), "%*s, %s; %s", date, extra);
-  if(extra)
-    sscanf(extra, "length=%d", length);
-
-  int day, year, month, hour, minute, second, length;
-  string m;
-  if(search(date, "-") != -1)
-  {
-    sscanf(date, "%d-%s-%d %d:%d:%d", day, m, year, hour, minute, second);
-    year += 1900;
-    month=MONTHS[m];
-  } else   if(search(date, ",") == 3) {
-    sscanf(date, "%*s, %d %s %d %d:%d:%d", day, m, year, hour, minute, second);
-    if(year < 1900) year += 1900;
-    month=MONTHS[m];
-  } else if(!(int)date) {
-    sscanf(date, "%*[^ ] %s %d %d:%d:%d %d", m, day, hour, minute, second, year);
-    month=MONTHS[m];
-  } else {
-    sscanf(date, "%d %s %d %d:%d:%d", day, m, year, hour, minute, second);
-    month=MONTHS[m];
-    if(year < 1900) year += 1900;
-  }
-  catch {
-    t = mktime(second, minute, hour, day, month, year-1900, -1, 0);
-  };
-#endif /* constant(mktime) */
-  return ({ t, length });
-}
-
-/* OBSOLETED by parse_since() above */
+// OBSOLETED by parse_since()
 static int is_modified(string a, int t, void|int len)
 {
-  mapping t1;
-  int day, year, month, hour, minute, second, length;
-  string m, extra;
-  if(!a)
-    return 1;
-  t1=gmtime(t);
-   // Expects 't' as returned from time(), not UTC.
-  sscanf(lower_case(a), "%*s, %s; %s", a, extra);
-  if(extra && sscanf(extra, "length=%d", length) && len && length != len)
-    return 0;
-
-  if(search(a, "-") != -1)
-  {
-    sscanf(a, "%d-%s-%d %d:%d:%d", day, m, year, hour, minute, second);
-    year += 1900;
-    month=MONTHS[m];
-  } else   if(search(a, ",") == 3) {
-    sscanf(a, "%*s, %d %s %d %d:%d:%d", day, m, year, hour, minute, second);
-    if(year < 1900) year += 1900;
-    month=MONTHS[m];
-  } else if(!(int)a) {
-    sscanf(a, "%*[^ ] %s %d %d:%d:%d %d", m, day, hour, minute, second, year);
-    month=MONTHS[m];
-  } else {
-    sscanf(a, "%d %s %d %d:%d:%d", day, m, year, hour, minute, second);
-    month=MONTHS[m];
-    if(year < 1900) year += 1900;
-  }
-
-  if(year < (t1["year"]+1900))
-    return 0;
-  else if(year == (t1["year"]+1900))
-    if(month < (t1["mon"]))
-      return 0;
-    else if(month == (t1["mon"]))
-      if(day < (t1["mday"]))
-	return 0;
-      else if(day == (t1["mday"]))	
-	if(hour < (t1["hour"]))
-	  return 0;
-	else if(hour == (t1["hour"]))
-	  if(minute < (t1["min"]))
-	    return 0;
-	  else if(minute == (t1["min"]))
-	    if(second < (t1["sec"]))
-	      return 0;
+  array vals=roxen->parse_since(a);
+  if(len && len!=vals[1]) return 0;
+  if(vals[0]<t) return 0;
   return 1;
 }
 
@@ -532,19 +447,22 @@ static int is_safe_string(string in)
 
 static string make_tag_attributes(mapping in)
 {
-  array a=(array(string))indices(in), b=(array(string))values(in);
-  int sl=-1;
-  sort(a,b);
-  for(int i=0; i<sizeof(a); i++)
-    if(a[i]=="/" && b[i]=="/")
-      sl=i;
+  if(!in || !sizeof(in)) return "";
+  int sl=0;
+  string res="";
+#ifdef MODULE_DEBUG
+  array s=sort(indices(in));
+  foreach(s, string a) {
+#else
+  foreach(indices(in), string a) {
+#endif
+    if(a=="/" && in[a]=="/")
+      sl=1;
     else
-      a[i]+="=\""+html_encode_string( b[i] )+"\"";
-  if(sl>=0 && sl<sizeof(a)-1) {
-    a[sl]=a[sizeof(a)-1];
-    a[sizeof(a)-1]="/";
+      res+=a+"=\""+replace((string)in[a],"\"","&#34;")+"\" ";
   }
-  return a*" ";
+  if(sl) return res+"/";
+  return res[..sizeof(res)-2];
 }
 
 static string make_tag(string s,mapping in)
@@ -553,17 +471,9 @@ static string make_tag(string s,mapping in)
   return "<"+s+(strlen(q)?" "+q:"")+">";
 }
 
-static string make_empty_elem_tag(string s,mapping in)
-{
-  // Creates an XML empty-element tag
-  string q = make_tag_attributes(in);
-  if(in["/"]!="/")
-    q=(strlen(q)?q+" /":"/");
-  return "<"+s+" "+q+">";
-}
-
 static string make_container(string s,mapping in, string contents)
 {
+  m_delete(in, "/");
   return make_tag(s,in)+contents+"</"+s+">";
 }
 
@@ -706,7 +616,7 @@ int httpdate_to_time(string date)
    string month;
    if(sscanf(date,"%*s, %d %s %d %d:%d:%d GMT",mday,month,year,hour,min,sec)==6)
      return mktime((["year":year-1900,
-		     "mon":MONTHS[lower_case(month)],
+		     "mon":roxen->months[lower_case(month)],
 		     "mday":mday,
 		     "hour":hour,
 		     "min":min,
@@ -760,7 +670,7 @@ static string number2string(int n,mapping m,mixed names)
     case "capitalize": return capitalize(s);
   }
 
-#if old_rxml_compat
+#ifdef old_rxml_compat
   if (m->lower) return lower_case(s);
   if (m->upper) return upper_case(s);
   if (m->cap||m->capitalize) return capitalize(s);
@@ -773,7 +683,7 @@ static string image_from_type( string t )
 {
   if(t)
   {
-    sscanf(t, "%s/%*s", t);
+    sscanf(t, "%s/", t);
     switch(t)
     {
      case "audio":
@@ -793,9 +703,8 @@ static string image_from_type( string t )
 #define  PREFIX ({ "bytes", "kB", "MB", "GB", "TB", "HB" })
 static string sizetostring( int size )
 {
+  if(size<0) return "--------";
   float s = (float)size;
-  if(size<0)
-    return "--------";
   size=0;
 
   while( s > 1024.0 )
@@ -855,140 +764,126 @@ string strftime(string fmt, int t)
 {
   mapping lt = localtime(t);
   array a = fmt/"%";
-  int i;
-  for (i=1; i < sizeof(a); i++) {
-    if (!sizeof(a[i])) {
-      a[i] = "%";
-      i++;
+  string res = "";
+
+  foreach(a, string key) {
+    if (key=="") {
+      key = "%";
       continue;
     }
-    string res = "";
-    switch(a[i][0]) {
+    switch(key) {
     case 'a':	// Abbreviated weekday name
-      res = ({ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" })[lt->wday];
+      res += ({ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" })[lt->wday];
       break;
     case 'A':	// Weekday name
-      res = ({ "Sunday", "Monday", "Tuesday", "Wednesday",
-	       "Thursday", "Friday", "Saturday" })[lt->wday];
+      res += ({ "Sunday", "Monday", "Tuesday", "Wednesday",
+		"Thursday", "Friday", "Saturday" })[lt->wday];
       break;
     case 'b':	// Abbreviated month name
     case 'h':	// Abbreviated month name
-      res = ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-	       "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" })[lt->mon];
+      res += ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+		"Jul", "Aug", "Sep", "Oct", "Nov", "Dec" })[lt->mon];
       break;
     case 'B':	// Month name
-      res = ({ "January", "February", "March", "April", "May", "June",
-	       "July", "August", "September", "October", "November", "December" })[lt->mon];
+      res += ({ "January", "February", "March", "April", "May", "June",
+		"July", "August", "September", "October", "November", "December" })[lt->mon];
       break;
     case 'c':	// Date and time
-      res = strftime(sprintf("%%a %%b %02d  %02d:%02d:%02d %04d",
-			     lt->mday, lt->hour, lt->min, lt->sec, 1900 + lt->year), t);
+      res += strftime(sprintf("%%a %%b %02d  %02d:%02d:%02d %04d",
+			      lt->mday, lt->hour, lt->min, lt->sec, 1900 + lt->year), t);
       break;
     case 'C':	// Century number; 0-prefix
-      res = sprintf("%02d", 19 + lt->year/100);
+      res += sprintf("%02d", 19 + lt->year/100);
       break;
     case 'd':	// Day of month [1,31]; 0-prefix
-      res = sprintf("%02d", lt->mday);
+      res += sprintf("%02d", lt->mday);
       break;
     case 'D':	// Date as %m/%d/%y
-      res = strftime("%m/%d/%y", t);
+      res += strftime("%m/%d/%y", t);
       break;
     case 'e':	// Day of month [1,31]; space-prefix
-      res = sprintf("%2d", lt->mday);
+      res += sprintf("%2d", lt->mday);
       break;
     case 'H':	// Hour (24-hour clock) [0,23]; 0-prefix
-      res = sprintf("%02d", lt->hour);
+      res += sprintf("%02d", lt->hour);
       break;
     case 'I':	// Hour (12-hour clock) [1,12]; 0-prefix
-      res = sprintf("%02d", 1 + (lt->hour + 11)%12);
+      res += sprintf("%02d", 1 + (lt->hour + 11)%12);
       break;
     case 'j':	// Day number of year [1,366]; 0-prefix
-      res = sprintf("%03d", lt->yday);
+      res += sprintf("%03d", lt->yday);
       break;
     case 'k':	// Hour (24-hour clock) [0,23]; space-prefix
-      res = sprintf("%2d", lt->hour);
+      res += sprintf("%2d", lt->hour);
       break;
     case 'l':	// Hour (12-hour clock) [1,12]; space-prefix
-      res = sprintf("%2d", 1 + (lt->hour + 11)%12);
+      res += sprintf("%2d", 1 + (lt->hour + 11)%12);
       break;
     case 'm':	// Month number [1,12]; 0-prefix
-      res = sprintf("%02d", lt->mon + 1);
+      res += sprintf("%02d", lt->mon + 1);
       break;
     case 'M':	// Minute [00,59]
-      res = sprintf("%02d", lt->min);
+      res += sprintf("%02d", lt->min);
       break;
     case 'n':	// Newline
-      res = "\n";
+      res += "\n";
       break;
     case 'p':	// a.m. or p.m.
-      if (lt->hour < 12) {
-	res = "a.m.";
-      } else {
-	res = "p.m.";
-      }
+      res += lt->hour<12 ? "a.m." : "p.m.";
       break;
     case 'r':	// Time in 12-hour clock format with %p
-      res = strftime("%l:%M %p", t);
+      res += strftime("%l:%M %p", t);
       break;
     case 'R':	// Time as %H:%M
-      res = sprintf("%02d:%02d", lt->hour, lt->min);
+      res += sprintf("%02d:%02d", lt->hour, lt->min);
       break;
     case 'S':	// Seconds [00,61]
-      res = sprintf("%02", lt->sec);
+      res += sprintf("%02", lt->sec);
       break;
     case 't':	// Tab
-      res = "\t";
+      res += "\t";
       break;
     case 'T':	// Time as %H:%M:%S
-      res = sprintf("%02d:%02d:%02d", lt->hour, lt->min, lt->sec);
+      res += sprintf("%02d:%02d:%02d", lt->hour, lt->min, lt->sec);
       break;
     case 'u':	// Weekday as a decimal number [1,7], Sunday == 1
-      res = sprintf("%d", lt->wday + 1);
+      res += sprintf("%d", lt->wday + 1);
       break;
     case 'w':	// Weekday as a decimal number [0,6], Sunday == 0
-      res = sprintf("%d", lt->wday);
+      res += sprintf("%d", lt->wday);
       break;
     case 'x':	// Date
-      res = strftime("%a %b %d %Y", t);
+      res += strftime("%a %b %d %Y", t);
       break;
     case 'X':	// Time
-      res = sprintf("%02d:%02d:%02d", lt->hour, lt->min, lt->sec);
+      res += sprintf("%02d:%02d:%02d", lt->hour, lt->min, lt->sec);
       break;
     case 'y':	// Year [00,99]
-      // FIXME: Does this handle negative years.
-      res = sprintf("%02d", lt->year % 100);
+      res += sprintf("%02d", lt->year % 100);
       break;
     case 'Y':	// Year [0000.9999]
-      res = sprintf("%04d", 1900 + lt->year);
+      res += sprintf("%04d", 1900 + lt->year);
       break;
 
-    case 'U':	/* FIXME: Week number of year as a decimal number [00,53],
-		 * with Sunday as the first day of week 1
-		 */
+    case 'U':	// Week number of year as a decimal number [00,53],
+		// with Sunday as the first day of week 1
+      res += (string)((lt->yday-1+lt->wday)/7);
       break;
-    case 'V':	/* Week number of the year as a decimal number [01,53],
-		 * with  Monday  as  the first day of the week.  If the
-		 * week containing 1 January has four or more  days  in
-		 * the  new  year, then it is considered week 1; other-
-		 * wise, it is week 53 of the previous  year,  and  the
-		 * next week is week 1
-		 */
+    case 'V':	// ISO week number of the year as a decimal number [01,53].
+#if constant(Calendar.ISO)
+      res +=  (string)Calendar.ISO.Second(t)->minute()->hour()->day()->week()->number();
+#endif
       break;
-    case 'W':	/* FIXME: Week number of year as a decimal number [00,53],
-		 * with Monday as the first day of week 1
-		 */
+    case 'W':	// Week number of year as a decimal number [00,53],
+		// with Monday as the first day of week 1
+      res += (string)((lt->yday+(5+lt->wday)%7)/7);
       break;
     case 'Z':	/* FIXME: Time zone name or abbreviation, or no bytes if
 		 * no time zone information exists
 		 */
-      break;
-    default:
-      // FIXME: Some kind of error indication?
-      break;
     }
-    a[i] = res + a[i][1..];
   }
-  return(a*"");
+  return res;
 }
 
 RoxenModule get_module (string modname)
@@ -1437,19 +1332,6 @@ string|int tagtime(int t, mapping m, RequestID id, object language)
      case "week":
       return number2string(Calendar.ISO.Second(t)->minute()->hour()->day()->week()->number(),m,
                            language(m->lang, sp||"number"));
-#endif
-     case "day":
-     case "wday":
-      return number2string(localtime(t)->wday+1,m,
-			   language(m->lang, sp||"day"));
-     case "date":
-     case "mday":
-      return number2string(localtime(t)->mday,m,
-			   language(m->lang, sp||"number"));
-     case "hour":
-      return number2string(localtime(t)->hour,m,
-			   language(m->lang, sp||"number"));
-
      case "beat":
        //FIXME This should be done inside Calendar.
        mapping lt=Calendar.ISO.datetime(t,1);
@@ -1464,6 +1346,19 @@ string|int tagtime(int t, mapping m, RequestID id, object language)
        if(!sp) return sprintf("@%03d",(int)beats);
        return number2string((int)beats,m,
                             language(m->lang, sp||"number"));
+#endif
+     case "day":
+     case "wday":
+      return number2string(localtime(t)->wday+1,m,
+			   language(m->lang, sp||"day"));
+     case "date":
+     case "mday":
+      return number2string(localtime(t)->mday,m,
+			   language(m->lang, sp||"number"));
+     case "hour":
+      return number2string(localtime(t)->hour,m,
+			   language(m->lang, sp||"number"));
+
      case "min":  // Not part of RXML 1.4
      case "minute":
       return number2string(localtime(t)->min,m,
@@ -1527,7 +1422,7 @@ string|int tagtime(int t, mapping m, RequestID id, object language)
     case "capitalize": return capitalize(s);
     }
 
-#if old_rxml_compat
+#ifdef old_rxml_compat
   // Not part of RXML 1.4
   if (m->upper) {
     s=upper_case(s);
