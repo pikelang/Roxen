@@ -489,47 +489,6 @@ mapping|string parse( RequestID id )
   }
 
 
-  if( id->variables->table )
-    res += "<input type=hidden name='table' value='&form.table:http;' />\n";
-
-  res +=
-    "<br />"
-    "<table cellspacing=0 cellpadding=0 border=0 width=100%><tr><td>"
-    "<colorscope bgcolor='&usr.content-bg;' text='&usr.fgcolor;'>"
-    "<cimg border='0' format='gif' src='&usr.database-small;' alt='' "
-    "max-height='20'/></td><td>"
-    "<gtext fontsize='20'>"+id->variables->db+
-    "</gtext></colorscope></td></tr>"
-    "<tr><td></td><td>";
-  
-  if( !url )
-    res += "<b>Internal database</b>";
-  else
-    res += "<b>"+url+"</b>";
-
-  res += "</td></tr><tr><td></td><td>";
-
-  res += "<table>";
-
-  array table_data = ({});
-  int sort_ok;
-  string deep_table_info( string table )
-  {
-    string res = "<tr><td></td><td colspan='3'><table>";
-    array data = db->query( "describe "+table );
-    foreach( data, mapping r )
-    {
-//       if( search( lower_case(r->Type), "blob" ) == -1 )
-      res += "<tr>\n";
-      res += "<td><font size=-1><b>"+r->Field+"</b></font></td>\n";
-      res += "<td><font size=-1>"+r->Type+"</font></td>\n";
-      res += "<td><font size=-1>"+(strlen(r->Key)?_(373,"Key"):"")+"</font></td>\n";
-      res += "<td><font size=-1>"+r->Extra+"</font></td>\n";
-      res += "</tr>\n";
-    }
-    return res+ "</table></td></tr>";
-  };
-
   string table_module_info( string table )
   {
     mapping mi = DBManager.module_table_info( id->variables->db, table );
@@ -569,6 +528,49 @@ mapping|string parse( RequestID id )
     return res+mi->comment;
   };
 
+
+  if( id->variables->table )
+    res += "<input type=hidden name='table' value='&form.table:http;' />\n";
+
+  res +=
+    "<br />"
+    "<table cellspacing=0 cellpadding=0 border=0 width=100%><tr><td>"
+    "<colorscope bgcolor='&usr.content-bg;' text='&usr.fgcolor;'>"
+    "<cimg border='0' format='gif' src='&usr.database-small;' alt='' "
+    "max-height='20'/></td><td>"
+    "<gtext fontsize='20'>"+id->variables->db+
+    "</gtext></colorscope></td></tr>"
+    "<tr><td></td><td>";
+  
+  if( !url )
+    res += "<b>Internal database</b>";
+  else
+    res += "<b>"+url+"</b>";
+
+  res += "</td></tr><tr><td></td><td>";
+
+  res += table_module_info( "" );
+  
+  res += "<table>";
+
+  array table_data = ({});
+  int sort_ok;
+  string deep_table_info( string table )
+  {
+    string res = "<tr><td></td><td colspan='3'><table>";
+    array data = db->query( "describe "+table );
+    foreach( data, mapping r )
+    {
+//       if( search( lower_case(r->Type), "blob" ) == -1 )
+      res += "<tr>\n";
+      res += "<td><font size=-1><b>"+r->Field+"</b></font></td>\n";
+      res += "<td><font size=-1>"+r->Type+"</font></td>\n";
+      res += "<td><font size=-1>"+(strlen(r->Key)?_(373,"Key"):"")+"</font></td>\n";
+      res += "<td><font size=-1>"+r->Extra+"</font></td>\n";
+      res += "</tr>\n";
+    }
+    return res+ "</table></td></tr>";
+  };
   void add_table_info( string table, mapping tbi )
   {
     string res = "";
