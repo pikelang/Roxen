@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.793 2002/04/25 14:36:08 anders Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.794 2002/05/06 15:14:17 mast Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -3564,6 +3564,8 @@ void create()
 	     "refs.pmod","utils.pmod" }), string q )
     dump( "etc/modules/RXML.pmod/"+ q );
   dump( "etc/modules/RXML.pmod/module.pmod" );
+  master()->add_dump_constant ("RXML.empty_tag_set",
+			       master()->resolv ("RXML.empty_tag_set"));
   // Already loaded. No delayed dump possible.
   dump( "etc/roxen_master.pike" );
   dump( "etc/modules/Roxen.pmod" );
@@ -4257,9 +4259,7 @@ int main(int argc, array tmp)
   argv -= ({ 0 });
   argc = sizeof(argv);
 
-  add_constant( "roxen.fonts",
-                (fonts = ((program)"base_server/fonts.pike")()) );
-
+  fonts = ((program)"base_server/fonts.pike")();
 
   DDUMP( "languages/abstract.pike" );
   initiate_languages(query("locale"));
@@ -4314,7 +4314,7 @@ int main(int argc, array tmp)
   else
     foreach( configurations, Configuration c )
       if( c->query( "no_delayed_load" ) )
-        c->enable_all_modules();
+	c->enable_all_modules();
 #endif // RUN_SELF_TEST
 
 #ifdef THREADS

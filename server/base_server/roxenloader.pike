@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.321 2002/04/08 15:37:47 js Exp $
+// $Id: roxenloader.pike,v 1.322 2002/05/06 15:14:18 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.321 2002/04/08 15:37:47 js Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.322 2002/05/06 15:14:18 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1204,7 +1204,7 @@ Roxen 2.4 should be run with Pike 7.2.
     );
     mysql_path_is_remote = 1;
   }
-    
+
   nwrite = lambda(mixed ... ){};
   call_out( do_main_wrapper, 0, argc, argv );
   // Get rid of the _main and main() backtrace elements..
@@ -2167,6 +2167,7 @@ library should be enough.
   DC("Thread.Condition"); DC("thread_create");
   DC( "Thread.Queue" );
   DC("Sql");  DC("Sql.mysql");
+  DC ("String.Buffer");
 
 
 #if constant(Oracle.oracle)
@@ -2204,6 +2205,7 @@ library should be enough.
   DC( "Image.Image" );  DC( "Image.Font" );  DC( "Image.Colortable" );
   DC( "Image.Layer" );  DC( "Image.lay" );   DC( "Image.Color" );
   DC( "Image.Color.Color" );DC("Image._PSD" ); DC("Image._XCF" );
+  DC ("Image.Color.black");
   DC( "Image._XPM" );  DC( "Image" );  
   if( DC("Image.GIF.encode") )
     DC( "Image.GIF.encode_trans" );
@@ -2272,9 +2274,10 @@ library should be enough.
   add_constant("UserDB",     prototypes->UserDB );
   add_constant("User",       prototypes->User );
   add_constant("Group",      prototypes->Group );
-  
+
   object cache = initiate_cache();
   load_roxen();
+
   int retval = roxen->main(argc,hider);
   cache->init_call_outs();
 
