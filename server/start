@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.28 1998/03/01 15:49:47 per Exp $
+# $Id: start,v 1.29 1998/03/20 03:51:53 per Exp $
 
 VERSION=201; BETA=.a;
 
@@ -8,6 +8,7 @@ VERSION=201; BETA=.a;
 DIR=../configurations/
 LOGDIR=../logs/
 FILES="default"
+program=base_server/roxenloader.pike
 
 # Enable threads (if available) on Solaris.
 # Most other OS's have thread bugs that cause them or Roxen to crash.
@@ -72,7 +73,7 @@ rotate () {
 }
 
 start_roxen() {
- args="-DROXEN $DEBUG $DEFINES $pass base_server/roxenloader.pike --config-dir=$DIR"
+ args="-DROXEN $DEBUG $DEFINES $pass $program --config-dir=$DIR"
  echo Executing $pike $args $@
  $pike $args $@
 }
@@ -111,6 +112,10 @@ parse_args() {
   ;;
   '--once')
     once=1
+  ;;
+  '--program')
+    program="$2"
+    shift
   ;;
   '--version')
     echo Roxen Challenger 1.`expr $VERSION / 100`$BETA`expr $VERSION % 100`
