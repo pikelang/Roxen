@@ -26,7 +26,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.287 2001/09/06 11:07:00 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.288 2001/09/06 11:40:00 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1211,23 +1211,49 @@ mapping sql_active_list = ([ ]);
 
 #ifdef DB_DEBUG
 static int sql_keynum;
-
 mapping(int:string) my_mysql_last_user = ([]);
 #endif /* DB_DEBUG */
 
-class MySQLKey( object real, string name )
+#ifdef DEBUG
+mapping(object:object) my_mysql_in_use = ([]);
+#endif
+
+class MySQLKey
 {
+  object real;
+  string name;
+
+#ifdef DEBUG
+  object tt = this_thread();
+#endif
 #ifdef DB_DEBUG
   static int num = sql_keynum++;
-  static string bt = my_mysql_last_user[num] = describe_backtrace(backtrace());
-#endif /* DB_DEBUG */
-
-  void destroy()
+#endif
+  static void create( object _real, string _name )
   {
+    real = _real;
+    name = _name;
+
+#ifdef DB_DEBUG
+    bt=(my_mysql_last_user[num] = describe_backtrace(backtrace()));
+#endif /* DB_DEBUG */
+#ifdef DEBUG
+    my_mysql_in_use[ real ] = tt;
+#endif
+  }
+  
+  static void destroy()
+  {
+    mixed key = sq_cache_lock();
 #ifdef DB_DEBUG
     werror("%O:%d added to free list\n", name, num );
-
     m_delete(my_mysql_last_user, num);
+#endif
+#ifdef DEBUG
+    my_mysql_in_use[ real ] = roxen ? roxen->backend_thread : this_thread();
+    if( sql_free_list[ name ] &&
+	has_value( sql_free_list[ name ], real ) )
+      error("%O already in free list!\n", this_object() );
 #endif
     if( !--sql_active_list[name] )
       m_delete( sql_active_list, name );
@@ -1241,17 +1267,42 @@ class MySQLKey( object real, string name )
     }
   }
 
-  mixed `[]( string what )
+  static mixed `[]( string what )
   {
-    return `->(what);
+    return `->( what );
   }
   
-  mixed `->(string what )
+  static mixed `->(string what )
   {
+#ifdef DEBUG
+    if( my_mysql_in_use[ real ] != this_thread() )
+    {
+      if( tt == my_mysql_in_use[ real ] )
+      {
+	tt = my_mysql_in_use[ real ] = this_thread();
+      }
+      else
+      {
+	werror("Current thread: %O\n", this_thread() );
+	werror("Create thread: %O\n", tt );
+	werror("Other thread: %O\n",  my_mysql_in_use[ real ]);
+	error("Error: SQL object %O tagged as created from another thread:\n%s\n\n"
+#ifdef DB_DEBUG
+	      "This object created from:\n%s\n\n\n"
+#endif
+	      ,name,
+	      describe_backtrace( my_mysql_in_use[ real ]->backtrace() )
+#ifdef DB_DEBUG
+	      ,bt
+#endif
+	     );
+      }
+    }
+#endif
     return real[what];
   }
 
-  string _sprintf(int type)
+  static string _sprintf(int type)
   {
 #ifdef DB_DEBUG
     if (type == 'd') return (string)num;
@@ -1300,6 +1351,7 @@ mixed connect_to_my_mysql( string|int ro, void|string db )
   mixed key = sq_cache_lock();  
   string i = db+":"+(intp(ro)?(ro&&"ro")||"rw":ro);
   mixed res = sq_cache_get(i)||sq_cache_set(i,low_connect_to_my_mysql( ro, db ));
+  // Fool the optimizer so that key is not released prematurely
   if( res )
     return res;
 }
