@@ -5,7 +5,7 @@
 // Several modifications by Francesco Chemolli.
 
 
-constant cvs_version = "$Id: obox.pike,v 1.24 2000/03/21 21:10:10 nilsson Exp $";
+constant cvs_version = "$Id: obox.pike,v 1.25 2000/04/06 06:16:06 wing Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -245,7 +245,8 @@ constant module_name =
 constant module_doc =
     ([
       "standard":
-      "This is a container tag making outlined boxes.",
+      "This module provides the <tt>&lt;obox&gt;</tt> tag that draws outlined "
+      "boxes.",
       "svenska":
       "<tt>&lt;obox&gt;&lt;/obox&gt;</tt> är en tag som ramar "
       "in det som står i den.",

@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.109 2000/04/05 13:10:15 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.110 2000/04/06 06:16:06 wing Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -20,13 +20,16 @@ inherit "module";
 
 constant module_type = MODULE_PARSER | MODULE_PROVIDER;
 constant module_name = "RXML 2.0 tags";
-constant module_doc  = "This module adds a lot of RXML tags.";
+constant module_doc  = "This module provides the common RXML tags.";
 
 void create()
 {
   defvar("insert_href",0,"Allow <insert href>",
 	 TYPE_FLAG|VAR_MORE,
-         "Should the usage of &lt;insert href&gt; be allowed?");
+         "If set, it will be possible to use <tt>&lt;insert href&gt;</tt> to "
+	 "insert pages from another web server. This could use a some "
+	 "resources, especially when used to insert pages from a slow web "
+	 "server.");
 }
 
 void start()

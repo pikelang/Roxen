@@ -6,20 +6,21 @@ inherit "roxenlib";
 #include <module.h>
 
 constant thread_safe=1;
-constant cvs_version = "$Id: ssi.pike,v 1.26 2000/03/25 02:28:56 nilsson Exp $";
+constant cvs_version = "$Id: ssi.pike,v 1.27 2000/04/06 06:16:06 wing Exp $";
 
 
 constant module_type = MODULE_PARSER;
-constant module_name = "SSI support module";
-constant module_doc  = "Adds support for SSI tags.";
+constant module_name = "SSI support";
+constant module_doc  = 
+#"Provides support for the SSI standard tags.";
 
 void create() {
 
   defvar("exec", 0, "Execute command",
 	 TYPE_FLAG,
-	 "If set Roxen will accept NCSA / Apache &lt;!--#exec cmd=\"XXX\" --&gt;. "
-	 "Note that this will allow your users to execute arbitrary "
-	 "commands.");
+	 "If set, it will be possible to use the "
+	 "&lt;!--#exec cmd=\"XXX\" --&gt; tag to execute arbitrary commands "
+	 "from any web page." );
 
 #if constant(getpwnam)
   array nobody = getpwnam("nobody") || ({ "nobody", "x", 65534, 65534 });
@@ -29,13 +30,13 @@ void create() {
 
   defvar("execuid", nobody[2] || 65534, "Execute command uid",
 	 TYPE_INT,
-	 "UID to run NCSA / Apache &lt;!--#exec cmd=\"XXX\" --&gt; "
-	 "commands with.");
+	 "UID to run the &lt;!--#exec cmd=\"XXX\" --&gt; "
+	 "commands as.");
 
   defvar("execgid", nobody[3] || 65534, "Execute command gid",
 	 TYPE_INT,
-	 "GID to run NCSA / Apache &lt;!--#exec cmd=\"XXX\" --&gt; "
-	 "commands with.");
+	 "GID to run the &lt;!--#exec cmd=\"XXX\" --&gt; "
+	 "commands as.");
 }
 
 void start(int num, Configuration conf) {

@@ -5,7 +5,7 @@
 // by this module.
 //
 
-constant cvs_version="$Id: accessed.pike,v 1.28 2000/04/05 13:09:56 nilsson Exp $";
+constant cvs_version="$Id: accessed.pike,v 1.29 2000/04/06 06:16:05 wing Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -21,8 +21,9 @@ Stdio.File database, names_file;
 
 constant module_type = MODULE_PARSER | MODULE_LOGGER;
 constant module_name = "Accessed counter";
-constant module_doc  ="This module provides an accessed counter, both through the &lt;accessed&gt; tag and "
-  "filewise.";
+constant module_doc  =
+"This module provides accessed counters, through the "
+<tt>&lt;accessed&gt;</tt> tag and the <tt>&amp;page.accessed;</tt> entity.";
 
 string status()
 {
@@ -32,20 +33,22 @@ string status()
 void create(Configuration c)
 {
   defvar("Accesslog","$LOGDIR/"+short_name(c?c->name:".")+"/Accessed",
-	 "Access log file", TYPE_FILE|VAR_MORE,
-	 "In this file all accesses to files using the &lt;accessed&gt;"
-	 " tag will be logged.");
+	 "Access database file", TYPE_FILE|VAR_MORE,
+	 "This file will be used to keep the database of file accesses.");
 
   defvar("extcount", ({  }), "Extensions to access count",
           TYPE_STRING_LIST,
-         "Always access count all files ending with these extensions. "
-	 "Note: This module must be reloaded for a change here to take "
-	 "effect.");
+         "Always count accesses to files ending with these extensions. "
+	 "By default only accessed to files that actually contain a "
+	 "<tt>&lt;accessed&gt;</tt> tag or the <tt>&amp;page.accessed;</tt> "
+	 "entity will be counted. "
+	 "<p>Note: This module must be reloaded before a change of this "
+	 "setting takes effect.");
 
-  defvar("close_db", 1, "Close the database if it is not used",
+  defvar("close_db", 1, "Close the database if inactive",
 	 TYPE_FLAG|VAR_MORE,
 	 "If set, the accessed database will be closed if it is not used for "
-	 "8 seconds");
+	 "8 seconds. This saves resourses on servers with many sites.");
 }
 
 TAGDOCUMENTATION

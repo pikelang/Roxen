@@ -5,7 +5,7 @@
 //
 // made by Mattias Wingstedt
 
-constant cvs_version = "$Id: indirect_href.pike,v 1.14 2000/03/17 00:51:00 nilsson Exp $";
+constant cvs_version = "$Id: indirect_href.pike,v 1.15 2000/04/06 06:16:06 wing Exp $";
 constant thread_safe=1;
 #include <module.h>
 
@@ -18,31 +18,30 @@ string tagname;
 void create()
 {
   defvar( "hrefs", "", "Indirect hrefs", TYPE_TEXT_FIELD,
-	  "Syntax:<br>\n"
+	  "The URL database with the syntax:<br>\n"
 	  "[name] = [URL]\n" );
 
   //This pollutes namespace and makes the life hard on the manual writers.
   //Thus it's turned of for normal users.
-  defvar( "tagname", "ai", "Tagname", TYPE_STRING|VAR_EXPERT,
-	  "Name of the tag\n"
-	  "&lt;tag name=[name]&gt;foo&lt;/tag&gt; will be replaced with\n"
-	  "&lt;a href=[URL]&gt;foo&lt;/a&gt;"
-	  "if the name is changed, the module has to be reloaded for the "
-	  "namechange to take effect)" );
+  //  defvar( "tagname", "ai", "Tagname", TYPE_STRING|VAR_EXPERT,
+  //	  "Name of the tag\n"
+  //	  "&lt;tag name=[name]&gt;foo&lt;/tag&gt; will be replaced with\n"
+  //	  "&lt;a href=[URL]&gt;foo&lt;/a&gt;"
+  //	  "if the name is changed, the module has to be reloaded for the "
+  //	  "namechange to take effect)" );
 }
 
 constant module_type = MODULE_PARSER;
 constant module_name = "Indirect href";
 constant module_doc  =
-  "Indirect href. Adds a new container <tt>&lt;ai&gt;</tt>"
-  ", with a single argument, "
-  "name=string. It then uses the name to index a database of "
-  "URLs, and inserts a &lt;a href=...&gt; tag instead. This can "
-  "be very useful, since you can move all links to a document at "
-  "once. It also allows the special case 'name=random'. If this "
-  "is used, a random link will be selected from the database. "
-  "Example:<pre>"
-  "   roxen=http://www.roxen.com/</pre>";
+#"Indirect href. Adds a new tag <tt>&lt;ai name=&gt;</tt> that works like "
+<tt>&lt;a href=&gt;</tt> but uses a symbolic name instead of a URL. The "
+"symbolic name is translated to a proper URL and the tag rewritten to a "
+"proper &lt;a href=&gt; tag. The translation between symbolic names and "
+"URLs is stored in a module variable. The advantage of this module is that "
+"each URL will only be stored in one place and it becomes very easy to "
+"change it, no matter how many links use it. As an extra bonus the name "
+"<tt>random</tt> will be replaces by a random URL from the list.";
 
 // Dynamic tagname, hence dynamic documentation.
 mapping tagdocumentation() {
@@ -60,7 +59,7 @@ void start()
     foreach (lines, string line)
       if (sscanf( line, "%s=%s", variable, value ) >= 2)
 	hrefs[ variable ] = value;
-  tagname = query( "tagname" );
+  tagname = "ai";//query( "tagname" );
 }
 
 string newa(string tag, mapping m, string q)

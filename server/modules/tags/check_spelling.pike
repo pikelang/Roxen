@@ -7,15 +7,12 @@ inherit "roxenlib";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: check_spelling.pike,v 1.8 2000/02/24 05:20:10 nilsson Exp $";
+constant cvs_version = "$Id: check_spelling.pike,v 1.9 2000/04/06 06:16:06 wing Exp $";
 
 constant module_type = MODULE_PARSER;
-constant module_name = "Spell Checker";
-constant module_doc  = "Checks for  misspellings inside "
-                       "the &lt;spell&gt; tag.<p>"
-                       " &lt;spell [help] [dictionary=dictionary] [prestate=prestate] [report=popup/table]&gt;text to "
-                       "spellcheck&lt;/spell&gt;";
-
+constant module_name = "Spell checker";
+constant module_doc = 
+#"Checks for misspelled words inside the <tt>&lt;spell&gt;</tt> tag.";
 
 mapping find_internal(string f, RequestID id)
 {
@@ -32,13 +29,13 @@ mapping find_internal(string f, RequestID id)
 void create() {
   defvar("spellchecker","/usr/bin/ispell",
 	 "Spell checker", TYPE_STRING,
-         "Spell checker executable.");
+         "Spell checker program to use.");
 
   defvar("dictionary", "american", "Defualt dictionary",TYPE_STRING,
-         "Dictionary used when not specified.");
+         "The default dictionary used, when not specified in the tag.");
 
   defvar("report", "popup", "Defualt report type",TYPE_STRING_LIST,
-         "Report type used when not specified.",
+         "The default report type used, when not specified in the tag.",
          ({ "popup","table" }) );
 
   defvar("prestate", "", "Prestate",TYPE_STRING,

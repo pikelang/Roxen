@@ -12,7 +12,7 @@
  * Chris Burgess <chris@ibex.co.nz>
  */
 
-constant cvs_version = "$Id: killframe.pike,v 1.28 2000/03/09 09:05:18 mast Exp $";
+constant cvs_version = "$Id: killframe.pike,v 1.29 2000/04/06 06:16:06 wing Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -20,18 +20,18 @@ inherit "module";
 
 void create()
 {
-  defvar( "killindex", 1, "Kill trailing 'indexfiles'?", TYPE_FLAG,
-	  "When set, the killframe module will remove occurrences of "
-	  "'indexfiles' (as set in the active directory module) from "
-	  "the end of the URL, leaving only a slash." );
+  defvar( "killindex", 1, "Remove index files from the URL", TYPE_FLAG,
+	  "If set, the module will remove occurrences of any index file from "
+	  "the end of the URL, leaving only a slash. The index file "
+	  "definition is taken from the active directory module." );
 }
 
 constant module_type = MODULE_PARSER;
-constant module_name = "Killframe tag";
+constant module_name = "Kill frame";
 constant module_doc  = "This module defines a the tag &lt;killframe&gt; that "
-  "adds some java script that will prevent others "
-  "from putting your page in a frame. It can "
-  "also strip any occurrences of 'indexfiles' "
+  "adds some JavaScript that will prevent others "
+  "from putting the page in a frame. It can "
+  "also strip any occurrences of index files, like <tt>index.html</tt>, "
   "from the end of the URL.";
 
 TAGDOCUMENTATION

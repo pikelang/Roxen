@@ -15,7 +15,7 @@
 #define _rettext _defines[" _rettext"]
 #define _ok _defines[" _ok"]
 
-constant cvs_version="$Id: rxmlparse.pike,v 1.46 2000/03/20 02:00:36 nilsson Exp $";
+constant cvs_version="$Id: rxmlparse.pike,v 1.47 2000/04/06 06:16:06 wing Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -29,11 +29,17 @@ inherit "module";
 
 constant module_type = MODULE_FILE_EXTENSION | MODULE_PROVIDER;
 constant module_name = "RXML 2.0 parser";
-constant module_doc  = "This module handles rxml parsing of HTML pages. It is recommended to also "
-  "add the \"RXML 2.0 tags\" module so that this modules gets some tags to parse. "
-  "Some bare bones logic tags are already provided by this module (case, cond, "
-  "comment, define, elif, else, elseif, emit, eval, false, help, if, "
-  "nooutput, noparse, number, strlen, then, trace, true, undefine and use).";
+constant module_doc  = 
+#"This module handles RXML parsing of pages. Other modules can provide 
+additional tags that will be parsed. Most common RXML tags is provided by
+the <i>RXML 2.0 tags</i> module. This module provide some fundamental tags; 
+<tt>&lt;case&gt;</tt>, <tt>&lt;cond&gt;</tt>, <tt>&lt;comment&gt;</tt>, 
+<tt>&lt;define&gt;</tt>, <tt>&lt;elif&gt;</tt>, <tt>&lt;else&gt;</tt>, 
+<tt>&lt;elseif&gt;</tt>, <tt>&lt;emit&gt;</tt>, <tt>&lt;eval&gt;</tt>, 
+<tt>&lt;false&gt;</tt>, <tt>&lt;help&gt;</tt>, <tt>&lt;if&gt;</tt>, 
+<tt>&lt;nooutput&gt;</tt>, <tt>&lt;noparse&gt;</tt>, <tt>&lt;number&gt;</tt>, 
+<tt>&lt;strlen&gt;</tt>, <tt>&lt;then&gt;</tt>, <tt>&lt;trace&gt;</tt>, 
+<tt>&lt;true&gt;</tt>, <tt>&lt;undefine&gt;</tt> and <tt>&lt;use&gt;</tt>.";
 
 string status()
 {
@@ -43,20 +49,20 @@ string status()
 void create()
 {
   defvar("toparse", ({ "html", "htm", "rxml" }), "Extensions to parse",
-	 TYPE_STRING_LIST, "Parse all files ending with these extensions. "
-	 "Note: This module must be reloaded for a change here to take "
-	 "effect.");
+	 TYPE_STRING_LIST, "Files with these extensions will be parsed. "
+	 "Note: This module must be reloaded before a change to this "
+	 "setting take effect.");
 
-  defvar("require_exec", 0, "Require exec bit on files for parsing",
+  defvar("require_exec", 0, "Require exec bit to parse",
 	 TYPE_FLAG|VAR_MORE,
-	 "If set, files has to have the execute bit (any of them) set "
-	 "in order for them to be parsed by this module. The exec bit "
-	 "is the one that is set by 'chmod +x filename'");
+	 "If set, files has to have a execute bit (any of them) set "
+	 "to be parsed. The exec bit is the one set by "
+	 "<tt>chmod +x filename</tt>");
 
   defvar("parse_exec", 1, "Parse files with exec bit",
 	 TYPE_FLAG|VAR_MORE,
-	 "If set, files with the exec bit set will be parsed. If not set, "
-	 "and the 'Require exec bit on files for parsing' flag is set, no "
+	 "If set, files with the exec bit set will be parsed. If not set "
+	 "and the <i>Require exec bit to parse</i> option is set, no "
 	 "parsing will occur.");
 
   defvar("logerrorsp", 0, "RXML Errors:Log RXML parse errors", TYPE_FLAG,
@@ -66,12 +72,14 @@ void create()
 	 "If set, all RXML run errors will be logged in the debug log.");
 
   defvar("quietp", 0, "RXML Errors:Quiet RXML parse errors", TYPE_FLAG,
-	 "If set, RXML parse errors will not be shown unless debug has been turned "
-	 "on with &lt;debug on&gt; or with the (debug) prestate.");
+	 "If set, RXML parse errors will not be shown in a page unless "
+	 "debug has been turned on with <tt>&lt;debug on&gt;</tt> or with "
+	 "the <i>debug</i> prestate.");
 
   defvar("quietr", 1, "RXML Errors:Quiet RXML run errors", TYPE_FLAG,
-	 "If set, RXML run errors will not be shown unless debug has been turned "
-	 "on with &lt;debug on&gt; or with the (debug) prestate.");
+	 "If set, RXML run errors will not be shown in a page unless "
+	 "debug has been turned on with <tt>&lt;debug on&gt;</tt> or with "
+	 "the <i>debug</i> prestate.");
 }
 
 
