@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.44 1997/08/29 07:19:41 grubba Exp $
+ * $Id: ftp.pike,v 1.45 1997/08/29 14:16:56 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -21,6 +21,12 @@
  *	should not be used, due to security reasons.
  */
 
+/* TODO
+ *
+ * ls -R	Some mirror-scripts use this (or rather "ls -lRat").
+ * REST		Restart session (need to find RFC).
+ */
+
 inherit "http"; /* For the variables and such.. (Per) */ 
 inherit "roxenlib";
 
@@ -29,8 +35,6 @@ inherit "roxenlib";
 #include <stat.h>
 
 import Array;
-
-// #define BROKEN_MDTM
 
 #define perror	roxen_perror
 
@@ -849,9 +853,7 @@ mapping(string:string) cmd_help = ([
   "cwd":"[ <sp> directory-name ]",
   "type":"<sp> [ A | E | I | L ]",
   "port":"<sp> b0, b1, b2, b3, b4",
-#ifdef BROKEN_MDTM
   "mdtm":"<sp> file-name",
-#endif /* BROKEN_MDTM */
   "nlst":"[ <sp> path-name ]",
   "list":"[ <sp> path-name ]",
   "rein":"(reinitialize)",
@@ -1217,7 +1219,6 @@ void got_data(mixed fooid, string s)
 	reply(dirlist);
       reply("211 End of Status\n");
       break;
-#ifdef BROKEN_MDTM
     case "mdtm":
       // Count this as a request
       conf->requests++;
@@ -1238,15 +1239,14 @@ void got_data(mixed fooid, string s)
 	if(f = funp( this_object())) break;
       array st = roxen->stat_file(fname, this_object());
       if (st) {
-	int t = st[3];
-	//213 yyyymmddhhmmss
-	// FIXME: Need conversion to the above format!
-	reply("213 "+t+"\n");
+	mapping m = localtime(st[3]);
+	reply(sprintf("213 %04d%02d%02d%02d%02d%02d\n",
+		      1900 + m->year, 1 + m->mon, m->mday,
+		      m->hour, m->min, m->sec));
       } else {
 	reply("550 "+fname+": No such file or directory.\n");
       }
       break;
-#endif /* BROKEN_MDTM */
     case "size":
       // Count this a request
       conf->requests++;
