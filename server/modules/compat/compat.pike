@@ -33,7 +33,7 @@ string query_provides() {
   return "oldRXMLwarning";
 }
 
-void old_rxml_warning(object id, string problem, string solution)
+void old_rxml_warning(RequestID id, string problem, string solution)
 {
   if(query("logold"))
     report_warning("Old RXML in "+(id->query||id->not_query)+
@@ -325,18 +325,6 @@ string container_source(string tag, mapping m, string s, RequestID id)
     +"</pre>"+sep+s);
 }
 
-//FIXME: I have serious doubts about this one...
-string|int tag_configimage(string tag, mapping m, RequestID id)
-{
-  for(int i=1; i<4; i++)
-    if(m->src=="err_"+i) {
-      m->src="err"+i;
-      old_rxml_warning(id, "err_"+i+" argument in configimage tag","err"+i);
-      return make_tag("configimage",m);
-    }
-  return 0;
-}
-
 string|int tag_countdown(string tag, mapping m, string c, RequestID id)
 {
   if(!m->min && !m->sec && !m->age && m->prec!="min" &&
@@ -487,10 +475,23 @@ mapping|int gtext_compat(mapping m, RequestID id) {
   return m;
 }
 
+string|int tag_counter(string t, mapping m, RequestID id) {
+  if(!m->fg && !m->bg) return 0;
+  if(m->fg) {
+    m->fgcolor=m->fg;
+    m_delete(m,"fg");
+  }
+  if(m->bg) {
+    m->bgcolor=m->bg;
+    m_delete(m,"bg");
+  }
+  return make_tag(t,m);
+}
+
 mapping query_tag_callers() {
   return (["echo":tag_echo,
 	   "countdown":tag_countdown,
-	   "configimage":tag_configimage,
+	   "counter":tag_counter,
 	   "insert":tag_insert,
 	   "date":tag_date,
 	   "pr":tag_pr,
