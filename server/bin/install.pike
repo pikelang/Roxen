@@ -5,10 +5,12 @@
  * doc = "Main part of the installscript that is run upon installation of roxen";
  */
 
-string cvs_version = "$Id: install.pike,v 1.24 1997/10/15 14:28:38 grubba Exp $";
+string cvs_version = "$Id: install.pike,v 1.25 1997/11/06 20:18:49 grubba Exp $";
 
 #include <simulate.h>
 #include <roxen.h>
+
+#define DEBUG
 
 string version = "1.0";
 
@@ -38,6 +40,9 @@ object|void open(string filename, string mode, int|void perm)
   object o;
   o=File();
   if(o->open(filename, mode, perm || 0666)) {
+#ifdef DEBUG
+    perror("Opened fd "+o->query_fd()+"\n");
+#endif /* DEBUG */
     return o;
   }
   destruct(o);
@@ -280,10 +285,13 @@ void main(int argc, string *argv)
   string host, client, log_dir, domain;
   mixed tmp;
   int port, configuration_dir_changed, logdir_changed;
+  string prot_prog = "http";
+  string prot_spec = "http://";
+  string prot_extras = "";
+
   add_constant("roxen", this_object());
   add_constant("perror", roxen_perror);
   add_constant("roxen_perror", roxen_perror);
-
 
   if(find_arg(argv, "?", "help"))
   {
@@ -310,8 +318,8 @@ void main(int argc, string *argv)
 				     "log-directory", }),
 		     ({ "ROXEN_CONFIGDIR", "CONFIGURATIONS" }),
 		     "../logs/");
-  write(popen("clear"));
 
+  write(popen("clear"));
   host=gethostname();
   domain = get_domain();
   if(search(host, domain) == -1)
@@ -350,6 +358,7 @@ void main(int argc, string *argv)
       write("That port number is already used or invalid. ");
     write("Choose another one.\n");
   }
+
   while(1)
   {
     write("[1mConfigurations Directory [ "+configuration_dir+" ][0m: ");
@@ -382,10 +391,6 @@ void main(int argc, string *argv)
   catch(have_gmp = sizeof(indices(master()->resolv("Gmp"))));
   int have_crypto = 0;
   catch(have_crypto = sizeof(indices(master()->resolv("_Crypto"))));
-
-  string prot_prog = "http";
-  string prot_spec = "http://";
-  string prot_extras = "";
 
   if (have_gmp && have_crypto) {
     write("[1mUse SSL3 (https://) for the configuration-interface [Y/n][0m? ");

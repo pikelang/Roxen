@@ -46,7 +46,8 @@ o Several warnings when compiling fcgi fixed.
 
 o THREADS disabled on all OS's except Solaris.
 
-o Neighbourhood disabled by default.
+o Neighbourhood disabled by default. Define ENABLE_NEIGHBOURHOOD to enable it
+  again.
 
 o pike/src/modules/Pipe/pipe.c reverted to version 1.11 due to problems
   with 1.12 and later.
