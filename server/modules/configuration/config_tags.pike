@@ -351,6 +351,8 @@ string set_variable( string v, object in, mixed to, object id )
    case TYPE_DIR:
      if( !(file_stat( val ) && (file_stat( val )[ ST_SIZE ] == -2 )))
        warning = "<font color=darkred>"+val+" is not a directory</font>";
+     if( val[-1] != '/' )
+       val += "/";
      break;
 
    case TYPE_PASSWORD:
@@ -386,9 +388,13 @@ string set_variable( string v, object in, mixed to, object id )
          val = (array(int))val;
        else if( var[ VAR_TYPE ] == TYPE_DIR_LIST )
          foreach( val, string d )
+         {
            if( !(file_stat( d ) && (file_stat( d )[ ST_SIZE ] == -2 )))
              warning += "<font color=darkred>"+d+
                      " is not a directory</font><br>";
+           if( d[-1] != '/' )
+             val = replace( val, d, d+"/" );
+         }
      } else {
        if( var[VAR_TYPE]  == TYPE_INT_LIST )
          val = (int)val;
@@ -614,13 +620,11 @@ string get_var_type( string s, object mod, object id )
    case TYPE_PORTS:
    case TYPE_FLAG:
    case TYPE_COLOR:
+   case TYPE_FONT:
      break;
 
    case TYPE_MODULE:
     return LOCALE->module_hint();
-
-   case TYPE_FONT:
-    return LOCALE->font_hint();
 
    case TYPE_LOCATION:
     return LOCALE->location_hint();
