@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.17 1997/04/12 08:01:45 neotron Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.18 1997/04/12 08:03:33 neotron Exp $";
 
 #include <module.h>
 
@@ -208,6 +208,8 @@ void start(int n, object conf)
 {
   string tmp;
   array us;
+  if(!conf) // When reloading, no conf is sent.
+    return; 
   path = query("searchpath");
 #if efun(getpwnam)
   if(us = getpwnam(  QUERY(runuser) ))
