@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.28 1999/10/20 17:50:51 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.29 1999/11/17 22:34:17 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -104,11 +104,12 @@ string|array(string) tag_clientname(string tag, mapping m, RequestID id)
 {
   NOCACHE();
   string client="";
-  if (sizeof(id->client))
+  if (sizeof(id->client)) {
     if(m->full)
       client=id->client * " ";
     else
       client=id->client[0];
+  }
 
   return m->quote=="none"?client:({ html_encode_string(client) });
 }
@@ -380,9 +381,7 @@ string tag_fsize(string tag, mapping args, RequestID id)
 {
   catch {
     array s = id->conf->stat_file( fix_relative( args->file, id ), id );
-    if (s && (s[1]>= 0)) {
-      return (string)s[1];
-    }
+    if (s && (s[1]>= 0)) return (string)s[1];
   };
   if(string s=id->conf->try_get_file(fix_relative(args->file, id), id ) )
     return (string)strlen(s);
@@ -398,9 +397,8 @@ array(string) tag_configimage(string f, mapping m, RequestID id)
     if(m->src=="err2") m->src="err_2";
     if(m->src=="err3") m->src="err_3";
 
-    if (m->src[sizeof(m->src)-4..] == ".gif") {
+    if (m->src[sizeof(m->src)-4..] == ".gif")
       m->src = m->src[..sizeof(m->src)-5];
-    }
     m->src = "/internal-roxen-" + m->src;
   }
 
@@ -442,20 +440,17 @@ string|array(string) tag_insert( string tag, mapping m, RequestID id )
 
   if(n = m->variables) {
     if(m->variables!="variables")
-    {
       return ({ html_encode_string(Array.map(indices(id->variables),
 			lambda(string s, mapping m)
 			{ return sprintf("%s=%O\n", s, m[s]); },
 					   id->variables) * "\n")
 	    });
-    }
     return ({ String.implode_nicely(indices(id->variables)) });
   }
 
   if(n = m->other) {
-    if(stringp(id->misc[n]) || intp(id->misc[n])) {
+    if(stringp(id->misc[n]) || intp(id->misc[n]))
       return m->quote=="none"?(string)id->misc[n]:({ html_encode_string((string)id->misc[n]) });
-    }
     return rxml_error(tag, "No such other variable ("+n+").", id);
   }
 
@@ -605,11 +600,11 @@ string tag_modified(string tag, mapping m, object id, object file)
   CACHE(10);
   if(!s) s = _stat;
   if(!s) s = id->conf->stat_file( id->not_query, id );
-  if(s)
+  if(s) {
     if(m->ssi)
       return strftime(id->misc->defines->timefmt || "%c", s[3]);
-    else
-      return tagtime(s[3], m, id, language);
+    return tagtime(s[3], m, id, language);
+  }
 
   return rxml_error(tag, "Couldn't stat file.", id);
 }
@@ -622,9 +617,8 @@ string|array(string) tag_user(string tag, mapping m, object id, object file)
   if(!id->conf->auth_module)
     return rxml_error(tag, "Requires a user database.", id);
 
-  if (!(b=m->name)) {
+  if (!(b=m->name))
     return(tag_modified("modified", m | ([ "by":"by" ]), id, file));
-  }
 
   b=m->name;
 
@@ -690,8 +684,7 @@ array(string) container_catch( string tag, mapping m, string c, RequestID id )
     id->misc->catcher_is_ready++;
   array e = catch(r=parse_rxml(c, id));
   id->misc->catcher_is_ready--;
-  if(e)
-    return e[0];
+  if(e) return e[0];
   return ({r});
 }
 
@@ -720,10 +713,8 @@ array(string) container_cache(string tag, mapping args,
 string|array(string) container_crypt( string s, mapping m,
                                       string c, RequestID id )
 {
-  if(m->compare)
-    return crypt(c,m->compare)?"<true>":"<false>";
-  else
-    return ({ crypt(c) });
+  if(m->compare) return crypt(c,m->compare)?"<true>":"<false>";
+  return ({ crypt(c) });
 }
 
 string container_for(string t, mapping args, string c, RequestID id)
@@ -1005,9 +996,8 @@ string container_smallcaps(string t, mapping m, string s)
     m_delete(m, "small");
     ret=smallcapsstr("font","font", m+bm, m+sm);
   }
-  else {
+  else
     ret=smallcapsstr("big","small", m+bm, m+sm);
-  }
 
   for(int i=0; i<strlen(s); i++)
     if(s[i]=='<') {
@@ -1031,10 +1021,8 @@ string container_smallcaps(string t, mapping m, string s)
 string container_random(string tag, mapping m, string s)
 {
   mixed q;
-  if(!(q=m->separator || m->sep))
-    return (q=s/"\n")[random(sizeof(q))];
-  else
-    return (q=s/q)[random(sizeof(q))];
+  if(!(q=m->separator || m->sep)) return (q=s/"\n")[random(sizeof(q))];
+  return (q=s/q)[random(sizeof(q))];
 }
 
 array(string) container_formoutput(string tag_name, mapping args,
@@ -1075,104 +1063,52 @@ void container_throw( string t, mapping m, string c, RequestID id)
   throw( ({ c, backtrace() }) );
 }
 
-// Internal method for the default tag
-private mixed internal_tag_input( string tag_name, mapping args, string name,
-                                  multiset (string) value )
+// Internal methods for the default tag
+private int|array internal_tag_input(string t, mapping m, string name, multiset(string) value)
 {
-  if (name && args->name != name)
-    return 0;
-  if (args->type == "checkbox" || args->type == "radio")
-    if (args->value)
-      if (value[ args->value ])
-	if (args->checked)
-	  return 0;
-        else
-          args->checked = "checked";
-      else
-	if (args->checked)
-	  m_delete( args, "checked" );
-	else
-	  return 0;
-    else
-      if (value[ "on" ])
-	if (args->checked)
-	  return 0;
-	else
-	  args->checked = "checked";
-      else
-	if (args->checked)
-	  m_delete( args, "checked" );
-	else
-	  return 0;
-  else
-    return 0;
-  return ({ make_tag( tag_name, args ) });
+  if (name && m->name!=name) return 0;
+  if (m->type!="checkbox" && m->type!="radio") return 0;
+  if (value[m->value||"on"]) {
+    if (m->checked) return 0;
+    m->checked = "checked";
+  }
+  else {
+    if (!m->checked) return 0;
+    m_delete(m, "checked" );
+  }
+
+  return ({ make_tag(t, m) });
+}
+private int|array internal_tag_select(string t, mapping m, string c, string name, multiset(string) value)
+{
+  array(string) tmp;
+  int i;
+
+  if (m->name==name || !name)
+    c=parse_html(c, (["option":lambda(string t, mapping m, multiset(string) value) {
+				 if (value[m->value]) {
+				   if (m->selected)
+				     return 0;
+				   else
+				     m->selected = "selected";
+				 }
+				 return ({ make_tag(t, m) });
+			       }]), ([]), value);
+
+  return ({ make_container(t, m, c) });
 }
 
-// Internal method for the default tag
-private mixed internal_tag_option( string tag_name, mapping args,
-                                   string contents, multiset(string) value )
+array(string) container_default( string t, mapping m, string c, RequestID id)
 {
-  if (args->value)
-    if (value[ args->value ])
-      if (args->selected)
-	return 0;
-      else
-	args->selected = "selected";
-    else
-      return 0;
-  else
-    if (value[ trim( contents ) ])
-      if (args->selected)
-	return 0;
-      else
-	args->selected = "selected";
-    else
-      return 0;
-  return ({ make_container( tag_name, args, contents ) });
-}
+  multiset value=(<>);
+  if(m->value) value=mkmultiset((m->value||"")/(m->separator||","));
+  if(m->variable) value+=mkmultiset(({id->variables[m->variable]}));
+  c = parse_rxml(c, id );
+  if(value==(<>)) return ({c});
 
-// Internal method for the default tag
-private mixed internal_tag_select( string tag_name, mapping args, 
-                                   string contents, string name,
-                                   multiset (string) value )
-{
-  array (string) tmp;
-  int c;
-
-  if (name && args->name != name)
-    return 0;
-  tmp = contents / "<option";
-  for (c=1; c < sizeof( tmp ); c++)
-    if (sizeof( tmp[c] / "</option>" ) == 1)
-      tmp[c] += "</option>";
-  contents = tmp * "<option";
-  mapping m = ([ "option" : internal_tag_option ]);
-  contents = parse_html( contents, ([ ]), m, value );
-  return ({ make_container( tag_name, args, contents ) });
-}
-
-// The default tag is used to give default values to forms elements,
-// without any fuss.
-array(string) container_default( string tag_name, mapping args,
-                                 string contents, RequestID id)
-{
-  string separator = args->separator || "\000";
-
-  contents = parse_rxml( contents, id );
-  if (args->value)
-    return ({parse_html( contents, ([ "input" : internal_tag_input ]),
-			 ([ "select" : internal_tag_select ]),
-			 args->name, mkmultiset( args->value
-						 / separator ) )});
-  else if (args->variable && id->variables[ args->variable ])
-    return ({parse_html( contents, ([ "input" : internal_tag_input ]),
-			 ([ "select" : internal_tag_select ]),
-			 args->name,
-			 mkmultiset( id->variables[ args->variable ]
-				     / separator ) )});
-  else
-    return ({ contents });
+  return ({ parse_html(c, (["input":internal_tag_input]),
+		       (["select":internal_tag_select]),
+		       m->name, value) });
 }
 
 string container_sort(string t, mapping m, string c, RequestID id)
