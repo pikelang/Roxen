@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.52 2002/11/19 15:52:09 anders Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.53 2003/01/09 10:21:21 wellhard Exp $";
 
 #include <module.h>
 #include <request_trace.h>
@@ -290,6 +290,9 @@ string container_js_popup(string name, mapping args, string contents, object id)
   if(args["args-variable"])
     id->variables[args["args-variable"]] = make_args_unquoted(largs);
 
+  if(args["event-variable"])
+    id->variables[args["event-variable"]] = largs[event];
+
   if(!args->label)
     return "";
   
@@ -574,7 +577,7 @@ props_arg+
 </js-popup></ex-box>
 </attr>
 
-<attr name='args-variable' value='RXML variable name'>
+<attr name='args-variable' value='RXML form variable name'>
   <p>Arguments to the generated anchor tag will be stored in this variable.
   This argument is useful if the target to the popup should be an image,
   see the example below.</p>
@@ -590,6 +593,28 @@ props_arg+
 </js-popup>
 
 <gtext ::='&form.popup-args;'>popup</gtext>
+</ex-box>
+</attr>
+
+<attr name='event-variable' value='RXML form variable name'>
+  <p>Javascript trigger code will be stored in this variable.
+  This argument is useful if multiple actions should be perormed
+  in the same event. For example rase the popup and change the
+  css-class of the link.</p>
+  <ex-box>
+<js-include file='CrossPlatform.js'/>
+<js-include file='Popup.js'/>
+
+<style><js-insert name='style'/></style>
+<js-insert name='div'/>
+
+<js-popup event-variable='popup-event'>
+  <h1>This is a popup!</h1>
+</js-popup>
+
+<a href=\"#\" class=\"link\"
+   onMouseOver=\"this.className='hover-link'; &form.popup-event;\"
+   onMouseOut=\"this.className='link'\">popup</a>
 </ex-box>
 </attr>
 
