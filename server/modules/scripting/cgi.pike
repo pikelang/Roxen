@@ -9,7 +9,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: cgi.pike,v 1.119 1999/04/30 21:36:06 neotron Exp $";
+constant cvs_version = "$Id: cgi.pike,v 1.120 1999/05/02 19:52:52 neotron Exp $";
 
 class Shuffle
 {
@@ -689,9 +689,16 @@ mapping handle_file_extension(object o, string e, object id)
 {
   if(!QUERY(ex))
     return 0;
-#if UNIX
-  if(QUERY(noexec) && o && !(o->stat()[0]&0111))
-    return 0;
+#ifdef UNIX
+  if(o && !(o->stat()[0]&0111))
+    if(QUERY(noexec))
+      return 0;
+    else
+      return http_low_answer(500, "<title>CGI - File Not Executable</title>"
+			     "<h1>CGI Error - File Not Executable</h1> <b>"
+			     "The script you tried to run is not executable."
+			     "Please contact the server administrator about "
+			     "this problem.</b>");
 #endif
   return http_stream( CGIScript( id )->run()->get_fd() );
 }
@@ -706,17 +713,22 @@ int|object(Stdio.File)|mapping find_file( string f, object id )
 {
   array stat=stat_file(f,id);
   if(!stat) return 0;
-#if UNIX
+#ifdef UNIX
   if(!(stat[0]&0111))
   {
     if(QUERY(noexec))
-      return Stdio.File(f, "r");
+      return Stdio.File(real_file(f, id), "r");
     report_notice( "CGI: "+real_file(f,id)+" is not executable\n");
-    return 0;
+    return http_low_answer(500, "<title>CGI Error - Script Not Executable</title>"
+			   "<h1>CGI Error - Script Not Executable</h1> <b>"
+			   "The script you tried to run is not executable. "
+			   "Please contact the server administrator about "
+			   "this problem.</b>");
   }
-#endif  
+#endif
+
   if(stat[1] < 0)
-    if(QUERY(ls))
+    if(!QUERY(ls))
       return http_low_answer(403, "<title>CGI Directory Listing "
 			     "Disabled</title><h1>Listing of CGI directories "
 			     "is disabled.</h1>");
@@ -854,9 +866,11 @@ void create(object conf)
 #endif // __NT__
   
 #if UNIX
-  defvar("noexec", 1, "Ignore non-executable files", TYPE_FLAG,
+  defvar("noexec", 1, "Treat non-executable files as ordinary files",
+	 TYPE_FLAG,
 	 "If this flag is set, non-executable files will be returned "
-	 "as normal files to the client.");
+	 "as normal files to the client. Otherwise an error message "
+	 "will be returned.");
 
   defvar("warn_root_cgi", 1, "Warn for CGIs executing as root", TYPE_FLAG,
 	 "If this flag is set, a warning will be issued to the event and "
