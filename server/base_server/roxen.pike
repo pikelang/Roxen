@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.126 1997/09/07 10:33:30 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.127 1997/09/09 03:44:44 neotron Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -2239,8 +2239,7 @@ varargs int main(int argc, array (string) argv)
     configuration_dir += "/";
 
 
-  startpid = (int)find_arg(argv, "s", ({ "start-script-pid" }),
-			   ({ "ROXEN_START_SCRIPT_PID"}));
+  startpid = getppid();
   
   create_pid_file(find_arg(argv, "p", "pid-file", "ROXEN_PID_FILE"));
 
