@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.560 2004/05/24 01:42:40 _cvs_stephen Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.561 2004/05/27 16:19:38 _cvs_stephen Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -654,7 +654,7 @@ static mixed strip_fork_information(RequestID id)
 {
   array a = id->not_query/"::";
   //  FIX: Must not subtract ":" chars since it breaks proper URL:s,
-  //  e.g. "/internal-roxen-colorbar:x,y,z" and several others.
+  //  e.g. "/%01/colorbar:x,y,z" and several others.
   //  id->not_query = a[0]-":";
   id->not_query = a[0];
   id->misc->fork_information = a[1..];
@@ -1010,27 +1010,6 @@ string last_modified_by(Stdio.File file, RequestID id)
   u=user_from_uid(uid, id);
   if(u) return u[0];
   return "A. Nonymous";
-}
-
-
-
-
-// Some clients does _not_ handle the magic 'internal-gopher-...'.
-// So, lets do it here instead.
-private mapping internal_gopher_image(string from)
-{
-  sscanf(from, "%s.gif", from);
-  sscanf(from, "%s.jpg", from);
-  from -= ".";
-  // Disallow "internal-gopher-..", it won't really do much harm, but a list of
-  // all files in '..' might be retrieved (that is, the actual directory
-  // file was sent to the browser)
-  Stdio.File f = lopen("data/images/dir/"+from+".gif","r");
-  if (f) 
-    return (["file":f, "type":"image/gif", "stat":f->stat(),]);
-  else
-    return 0;
-  // File not found.
 }
 
 #ifdef MODULE_LEVEL_SECURITY
@@ -1606,19 +1585,14 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 
   if(!no_magic)
   {
-    // NGSERVER: Remove the /internal-foo-bar and use only /%01/bar
     TIMER_START(internal_magic);
 #ifndef NO_INTERNAL_HACK
     // Find internal-foo-bar images
-    // min length == 17 (/internal-roxen-?..)
+    // min length == 17 (/%01/?..)
     // This will save some time indeed.
-    string type;
-    if(sizeof(file) > 17 &&
-       sscanf(file, "/internal-%s-%[^/]", type, loc) == 2
-     || sizeof(file)>3 && file[1]==1 && sscanf(file, "/\1/%s", loc)==1 && (type="roxen") ) {
-      switch(type) {
-       case "roxen":
-	//  Mark all /internal-roxen-* as cacheable even though the user might be
+    if(sizeof(file) > 3 && file[1]==1
+       && has_prefix(file,"/\1/") && (loc=file[3..])) {
+	//  Mark all /%01/* as cacheable even though the user might be
 	//  authenticated (which normally disables protocol-level caching).
 	RAISE_CACHE(60 * 60 * 24 * 365);  //  1 year
 	PROTO_CACHE();
@@ -1643,12 +1617,6 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 	}
 	TIMER_END(internal_magic);
 	return internal_roxen_image(loc, id);
-
-       case "gopher":
-	TRACE_LEAVE("Magic internal gopher image");
-	TIMER_END(internal_magic);
-	return internal_gopher_image(loc);
-      }
     }
 #endif
 
@@ -2814,16 +2782,12 @@ int(0..1) is_file(string virt_path, RequestID id, int(0..1)|void internal)
   if(stat_file(virt_path, id) || virt_path=="/%01/unit")
     return 1;
   string f = (virt_path/"/")[-1];
-  if( has_prefix(virt_path, "/%01/") ||
-      sscanf(f, "internal-roxen-%s", f) ) {
+  if(has_prefix(virt_path, "/%01/")) {
     if(internal_roxen_image(f, id) ||
        has_prefix(f, "pixel-"))
       return 1;
     return 0;
   }
-  if( sscanf(f, "internal-gopher-%s", f) &&
-      internal_gopher_image(f) )
-    return 1;
   return 0;
 }
 
@@ -4049,7 +4013,7 @@ td {font: 12px Helvetica, Arial; font-weight: bold}
 <table width='99%' height='99%'>
 <tr height='10%'></tr>
 <tr height='65%'><td align='center'>
-<img src='/%01/chili-large-black' width='151' height='169' alt='ChiliMoon' title='ChiliMoon' />
+<imgs src='/%01/chili-large-black' width='151' height='169' alt='ChiliMoon' title='ChiliMoon' />
 <table><tr><td><h1>Requested file not found</h1>
 <emit source='path'>
 <if exists='&_.path;/'><a href='&_.path;'>&_.name;</a> </if>

@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.27 2002/10/23 22:29:53 nilsson Exp $
+ * $Id: resolv.pike,v 1.28 2004/05/27 16:19:32 _cvs_stephen Exp $
  */
 inherit "wizard";
 inherit "../logutil";
@@ -132,7 +132,7 @@ void trace_enter_table(string type, function|object module)
   if(level>2) {efont="</font>";font="<font size='-1'>";}
   resolv += ("<tr>"
 	     +(level>1?("<td width='1' bgcolor='blue'>"
-			"<img src=\"/image/unit.gif\" alt=\"|\"/></td>") :"")
+			"<imgs src=\"/image/unit.gif\" alt=\"|\"/></td>") :"")
 	     +"<td width='100%'>"+font+type+" "+module_name(module)+
 	     "<table width='100%' border='0' cellspacing='10' "
 	     "cellpadding='0'>");

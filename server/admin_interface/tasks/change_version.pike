@@ -123,7 +123,7 @@ string parse( RequestID id )
 
     warn += f->cannot_change_back;
     res += f->version+"</td><td>"+
-      (f->cannot_change_back?"<img alt='#' src='&usr.err-2;' />":"")+
+      (f->cannot_change_back?"<imgs alt='#' src='&usr.err-2;' />":"")+
       "</td><td>"+d->set_language( roxen.get_locale()+"_UNICODE" )
       ->format_ext_ymd() + "</td>"
       "<td>"+nice_relative_date( diff )+"</td>"
@@ -134,7 +134,7 @@ string parse( RequestID id )
 
   if( warn )
     res += "<table><tr><td valign='top'>"
-      "<img src='&usr.err-2;' alt='#' /></td>\n"
+      "<imgs src='&usr.err-2;' alt='#' /></td>\n"
       "<td>"+
       sprintf("If you change to one these roxen versions, you will not be "
 	      "able to change back from the administration interface, you will "
@@ -147,7 +147,7 @@ string parse( RequestID id )
       +"</td></tr></table>";
 	      
   res += "<table><tr><td valign='top'>"
-    "<img src='&usr.err-2;' alt='#' /></td>\n"
+    "<imgs src='&usr.err-2;' alt='#' /></td>\n"
     "<td>Note that you will have to start the new server manually because you "
     "may have to answer a few questions for the new environment file.</td>\n"
     "</tr></table>\n";

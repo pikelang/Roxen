@@ -1,6 +1,6 @@
 <theme-set what='logo' to='coffee.jpg' themefile=''/>
 
-<theme-set what='logo-html' to='<img border="0" src="&usr.logo;" alt="" />'/>
+<theme-set what='logo-html' to='<imgs border="0" src="&usr.logo;" alt="" />'/>
 
 <theme-set what=top-bgcolor      to=#ffee88 />
 <theme-set what=toptabs-bgcolor  to=#000000 />

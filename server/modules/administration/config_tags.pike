@@ -11,7 +11,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.192 2004/05/25 00:09:02 _cvs_stephen Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.193 2004/05/27 16:19:35 _cvs_stephen Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -115,7 +115,7 @@ class Scope_usr
      case "leftside-padheight": return ENCODE_RXML_INT(1, type);
      case "favicon": return ENCODE_RXML_TEXT("favicon.png", type);
      case "logo-html":
-       return ENCODE_RXML_XML("<img border=\"0\" src="+QALIAS("logo")+" />", type);
+       return ENCODE_RXML_XML("<imgs border=\"0\" src="+QALIAS("logo")+" />", type);
 
      case "toptabs-args":
        res = "frame-image="+QALIAS("toptabs-frame");
@@ -217,7 +217,7 @@ class Scope_usr
      case "err-2":                return ENCODE_RXML_TEXT("/%01/err_2", type);
      case "err-3":                return ENCODE_RXML_TEXT("/%01/err_3", type);
      case "obox-titlefont":       return ENCODE_RXML_TEXT("helvetica,arial", type);
-     case "padlock":              return ENCODE_RXML_TEXT("/internal-roxen-padlock", type);
+     case "padlock":              return ENCODE_RXML_TEXT("/%01/padlock", type);
      case "obox-titlestyle":      return ENCODE_RXML_TEXT("", type);
      case "obox-border":          return ENCODE_RXML_TEXT("black", type);
      case "content-frame":        return ENCODE_RXML_TEXT("", type);

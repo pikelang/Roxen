@@ -559,7 +559,7 @@ mapping|string parse( RequestID id )
 		qres += "<td align=right>"+format_float((float)q[i])+"</td>";
 	      else if( is_image( q[i] ) )
 		qres +=
-		  "<td><img src='browser.pike?image="+store_image( q[i] )+
+		  "<td><imgs src='browser.pike?image="+store_image( q[i] )+
 		  "' /></td>";
 	      else if( is_encode_value( q[i] ) )
 		qres += "<td>"+ format_decode_value(q[i]) +"</td>";
@@ -731,7 +731,7 @@ mapping|string parse( RequestID id )
       table_data = reverse( table_data );
       break;
   }
-#define SEL(X,Y) ((id->variables->sort==X||(Y&&!id->variables->sort))?"<img src='&usr.selected-indicator;' border=0 alt='&gt;' />":"")
+#define SEL(X,Y) ((id->variables->sort==X||(Y&&!id->variables->sort))?"<imgs src='&usr.selected-indicator;' border=0 alt='&gt;' />":"")
 
   if( sort_ok )
   {

@@ -1,5 +1,5 @@
 <!-- -*- html -*- -->
-<!-- $Id: template,v 1.124 2004/05/24 23:22:46 _cvs_stephen Exp $ -->
+<!-- $Id: template,v 1.125 2004/05/27 16:19:29 _cvs_stephen Exp $ -->
 
 <define tag='cfg-variables'>
   <set variable='form.__redirect' value='1' />
@@ -14,7 +14,7 @@
   <table cellspacing="0" cellpadding="4">
     <eval><emit ::='&_.args;'>
       <cf-render-variable/>
-      <tr><td><img src="/%01/unit" width="1" height="10"/></td></tr>
+      <tr><td><imgs src="/%01/unit" width="1" height="10"/></td></tr>
     </emit></eval>
   </table>
   <if not variable='_.nosave'><cf-save/></if>
@@ -55,15 +55,15 @@
        <else>
 	 <set variable="var.leftside-padwidth" value="0"/>
        </else>
-       <img src="/%01/unit" width="&var.leftside-padwidth;" height="&usr.leftside-padheight;" alt="" align="center" /><br />
+       <imgs src="/%01/unit" width="&var.leftside-padwidth;" height="&usr.leftside-padheight;" alt="" align="center" /><br />
        &var.left-content:none;&var.leftimage:none;
      </td>
      <if variable="usr.split2-width is ?*">
-       <td ::="&usr.split2-tableargs:none;"><img height="1" src="/%01/unit" width="&usr.split2-width;"></td>
+       <td ::="&usr.split2-tableargs:none;"><imgs height="1" src="/%01/unit" width="&usr.split2-width;" /></td>
      </if>
-     <td ::="&usr.split-tableargs:none;"><img height="1" src="/%01/unit" width="1"></td>
+     <td ::="&usr.split-tableargs:none;"><imgs height="1" src="/%01/unit" width="1" /></td>
      <if variable="usr.split2-width is ?*">
-       <td ::="&usr.split2-tableargs:none;"><img height="1" src="/%01/unit" width="&usr.split2-width;"></td>
+       <td ::="&usr.split2-tableargs:none;"><imgs height="1" src="/%01/unit" width="&usr.split2-width;" /></td>
      </if>
      <td ::="&usr.content-tableargs:none;">
        <contents/>
@@ -94,7 +94,7 @@
       </if>
       <else>
         <td ::="&usr.subtabs-tableargs:none;">
-        <img src="/%01/unit" width="1" height="&usr.leftside-padheight;" />
+        <imgs src="/%01/unit" width="1" height="&usr.leftside-padheight;" />
 	</td>
       </else>
     </tr>
@@ -115,19 +115,19 @@
   <define variable="var.url" preparse="1"><gbutton-url preparse="">&link-gbutton.contents;</gbutton-url></define>
   <if variable='_.href'>
     <if variable='_.target'>
-      <a href='&_.href;' target='&_.target:none;'><img align="&_.align;" src="&var.url;" border="0" /></a>
+      <a href='&_.href;' target='&_.target:none;'><imgs align="&_.align;" src="&var.url;" border="0" /></a>
     </if><else>
-      <a href='&_.href;'><img align="&_.align;" src="&var.url;" border="0" /></a>
+      <a href='&_.href;'><imgs align="&_.align;" src="&var.url;" border="0" /></a>
     </else>
   </if><else>
-    <img align="&_.align;" src="&var.url;" border="0" />
+    <imgs align="&_.align;" src="&var.url;" border="0" />
   </else>
 </define>
 
 <define container="disabled-gbutton" scope="disabled-gbutton">
 <attrib name="align">center</attrib>
   <define variable="var.url" preparse="1"><gbutton-url ::='&disabled-gbutton.args;' frame-image="&usr.gbutton-disabled-frame-image;" state="disabled" preparse="">&disabled-gbutton.contents;</gbutton-url></define>
-   <img align="&_.align;" src="&var.url;" border="0" />
+   <imgs align="&_.align;" src="&var.url;" border="0" />
 </define>
 
 <define container="submit-gbutton" scope="submit-gbutton">
@@ -160,7 +160,7 @@
 <define container="tmpl">
 <gauge variable='var.time-spent' resultonly='yes'><nooutput>
   <eval><insert file="/themes/&usr.theme;/theme"/></eval>
-  <define preparse="1" variable="var.leftimage"><img src="&usr.left-image;" alt="" /></define>
+  <define preparse="1" variable="var.leftimage"><imgs src="&usr.left-image;" alt="" /></define>
   <define preparse="1" name="tab-frame-image">&usr.tab-frame-image;</define>
   <define preparse="1" name="tab-font-size">&usr.tab-font-size;</define>
   <define preparse="1" name="gbutton-frame-image">&usr.gbutton-frame-image;</define>
@@ -189,13 +189,13 @@
                   >User</gbutton><br />
               <font color="&usr.top-fgcolor;">&usr.user-name;</font>
      </td>
-     <td width='0%'><img src='/%01/unit' width='20'></td>
+     <td width='0%'><imgs src='/%01/unit' width='20' /></td>
    </tr>
    <tr>
-     <td colspan="3" ::="&usr.toptabs-tableargs:none;" width="100%" valign="bottom"><img src="/%01/unit" width="&usr.toptabs-padwidth;" height="1" alt="" />&var._top_content:none;</td>
+     <td colspan="3" ::="&usr.toptabs-tableargs:none;" width="100%" valign="bottom"><imgs src="/%01/unit" width="&usr.toptabs-padwidth;" height="1" alt="" />&var._top_content:none;</td>
    </tr>
   </table>
-  <img src="/%01/unit" width="1" height="10" alt="" /><br />
+  <imgs src="/%01/unit" width="1" height="10" alt="" /><br />
 
   <table cellpadding="10" width="100%"><tr><td>
 

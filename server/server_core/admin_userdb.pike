@@ -609,7 +609,7 @@ class AdminUser
           set_src + #"' /></td></tr>
   </table>
   </td>
-  <td><img src='/%01/unit' height='5' /><br />\n\n";
+  <td><imgs src='/%01/unit' height='5' /><br />\n\n";
 
     int is_me = this == id->misc->config_user;
 
@@ -634,7 +634,7 @@ class AdminUser
 	    permission_translations[ perm ]+
 	    "</gbutton-url>", id );
 	if( noclick )
-	  form += sprintf("<img src='%s' />\n", s);
+	  form += sprintf("<imgs src='%s' />\n", s);
 	else
 	  form += sprintf( "<input border='0' type='image' name='PPPremove_%s'"
 			   " src='%s' />\n", perm, s );

@@ -2,30 +2,30 @@
 <comment>Config image</comment>
 <test>
 <rxml><configimage src="unit"/></rxml>
-<result><img alt="unit" border="0" src="/internal-roxen-unit" /></result>
+<result><img alt="unit" border="0" src="/%01/unit" /></result>
 </test>
 
 <test>
 <rxml><configimage src="unit" noxml=''/></rxml>
-<result><img alt="unit" border="0" src="/internal-roxen-unit"></result>
+<result><img alt="unit" border="0" src="/%01/unit"></result>
 </test>
 
 <test>
 <rxml><configimage alt=x border=1 src=fold class=a /></rxml>
-<result><img alt="x" border="1" class="a" src="/internal-roxen-fold" /></result>
+<result><img alt="x" border="1" class="a" src="/%01/fold" /></result>
 </test>
 
 
 <!-- ............................................................ -->
 <comment>Imgs</comment>
 <test>
-<rxml><imgs src="/internal-roxen-unit"/></rxml>
-<result><img alt="Unit" height="1" src="/internal-roxen-unit" width="1" /></result>
+<rxml><imgs src="/%01/unit"/></rxml>
+<result><img alt="Unit" height="1" src="/%01/unit" width="1" /></result>
 </test>
 
 <test>
-<rxml><imgs src="/internal-roxen-unit" noxml=''/></rxml>
-<result><img alt="Unit" height="1" src="/internal-roxen-unit" width="1"></result>
+<rxml><imgs src="/%01/unit" noxml=''/></rxml>
+<result><img alt="Unit" height="1" src="/%01/unit" width="1"></result>
 </test>
 
 

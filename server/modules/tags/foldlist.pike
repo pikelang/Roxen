@@ -1,7 +1,7 @@
 // This is a ChiliMoon module. Copyright © 1999 - 2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: foldlist.pike,v 1.35 2004/05/23 01:56:19 _cvs_stephen Exp $";
+constant cvs_version = "$Id: foldlist.pike,v 1.36 2004/05/27 16:19:36 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -29,11 +29,11 @@ constant tagdoc=([
 </attr>
 
 <attr name='foldedsrc'><p>
- The image to use for folded items. The default is '/internal-roxen-unfold'.</p>
+ The image to use for folded items. The default is '/%01/unfold'.</p>
 </attr>
 
 <attr name='unfoldedsrc'><p>
- The image to use for unfolded items. The default is '/internal-roxen-fold'.</p>
+ The image to use for unfolded items. The default is '/%01/fold'.</p>
 </attr>",
 
 ([ "ft":({#"<desc type='cont'><p>
@@ -236,8 +236,8 @@ class TagFoldlist {
 			   "def":def,
 			   "cnt":0,
 			   "hist":hist,
-			   "fsrc":args->foldedsrc||"/internal-roxen-unfold",
-			   "ufsrc":args->unfoldedsrc||"/internal-roxen-fold"
+			   "fsrc":args->foldedsrc||"/%01/unfold",
+			   "ufsrc":args->unfoldedsrc||"/%01/fold"
       ]);
       return 0;
     }

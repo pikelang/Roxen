@@ -197,7 +197,7 @@ string pafeaw( string errors, string warnings)
 
       foreach( res, array e )
         da_string += 
-                  "<tr valign='top'><td></td><td><img src='/%01/unit' width='30' height='1' alt='' />"
+                  "<tr valign='top'><td></td><td><imgs src='/%01/unit' width='30' height='1' alt='' />"
                   "</td><td align='right'>"
                   "<tt>"+e[1]+":</tt></td><td align='right'><tt>"+
                   he(e[2])+":</tt></td><td><tt>"+hc(e[3])+"</tt></td></tr>\n";
@@ -599,7 +599,7 @@ array initial_form( RequestID id, Configuration conf, array modules )
  <td width='150' valign='top' colspan='2'><b>&_.name;</b></td>
  <td valign='top'><eval>&_.form:none;</eval></td></tr>
  <tr>
-<td width='30'><img src='/%01/unit' width=50 height=1 alt='' /></td>
+<td width='30'><imgs src='/%01/unit' width=50 height=1 alt='' /></td>
   <td colspan=2>&_.doc:none;</td></tr>
 </emit>";
         break;

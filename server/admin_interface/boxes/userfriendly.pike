@@ -1,5 +1,5 @@
 // Userfriendly-fetcher
-// $Id: userfriendly.pike,v 1.3 2002/06/14 10:56:26 nilsson Exp $
+// $Id: userfriendly.pike,v 1.4 2004/05/27 16:19:30 _cvs_stephen Exp $
 
 #include <roxen.h>
 
@@ -27,7 +27,7 @@ string parse( RequestID id )
     if (img) {
       contents = 
 	"<a href='http://www.userfriendly.org/static/'>"
-	"<center><img src='"+img+"' /></center></a>";
+	"<center><imgs src='"+img+"' /></center></a>";
     } else {
       // Probably offline.
       contents = data;

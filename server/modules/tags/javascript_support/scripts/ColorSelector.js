@@ -1,5 +1,5 @@
 //  Color selector scripts. Used by <var type="color"> in WebServer wizards.
-//  $Id: ColorSelector.js,v 1.1 2004/05/23 21:24:44 mani Exp $
+//  $Id: ColorSelector.js,v 1.2 2004/05/27 16:19:37 _cvs_stephen Exp $
 
 
 //  Known HTML color names
@@ -214,7 +214,7 @@ function colsel_update(prefix, h, s, v, update_field, force_color)
     
   var bar_img = getObject(prefix + "colorbar");
   if (bar_img) {
-    var bar_url = "/internal-roxen-colorbar-small:" + h + "," + v + ",-1";
+    var bar_url = "/%01/colorbar-small:" + h + "," + v + ",-1";
     bar_img.src = bar_url;
   }
 

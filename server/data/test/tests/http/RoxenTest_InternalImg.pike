@@ -25,13 +25,10 @@ function run( string url, string ... more  )
 	 };
 }
 
-#define ir(X) "/internal-roxen-"+X
-#define ig(X) "/internal-gopher-"+X
+#define ir(X) "/%01/"+X
 
 #define test_r_c( X,Y ) atest( ir(X), run(ir(X), Y), simple_check )
 #define test_r( X ) atest( ir(X), run(ir(X)), simple_check )
-#define test_g_c( X,Y ) atest( ig(X), run(ig(X), Y), simple_check )
-#define test_g( X ) atest( ig(X), run(ig(X)), simple_check )
 
 void setup( )
 {
@@ -39,14 +36,6 @@ void setup( )
   test_r_c( "colsel", "7o7msa9m802m7e4ia09vhebgqf" );
   test_r_c( "colsel-small", "3lf70uo7cmqqhour7kfqsoe7p4" );
   test_r_c( "squares", "7t969it672etl25fkdcf3uap00" );
-
-  test_g( "binary" );
-  test_g( "image" );
-  test_g( "menu" );
-  test_g( "movie" );
-  test_g( "sound" );
-  test_g( "text" );
-  test_g( "unknown" );
 
   test_r( "help" );
   test_r( "pike" );

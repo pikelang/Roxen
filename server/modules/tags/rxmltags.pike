@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.418 2004/05/24 22:06:15 _cvs_dirix Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.419 2004/05/27 16:19:36 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -640,7 +640,8 @@ class TagImgs {
     array do_return(RequestID id) {
       string|object file=id->conf->real_file(Roxen.fix_relative(args->src, id), id);
       if(!file) {
-	file=id->conf->try_get_file(args->src,id);
+	file=id->conf->try_get_file(
+	 has_prefix(args->src,"/%01/")?"/\1/"+args->src[5..]:args->src,id);
 	if(file) file = Stdio.FakeFile(file);
       }
 
@@ -658,7 +659,6 @@ class TagImgs {
 
       if(!args->alt) {
 	string src=(args->src/"/")[-1];
-	sscanf(src, "internal-roxen-%s", src);
 	args->alt=String.capitalize(replace(src[..sizeof(src)-search(reverse(src), ".")-2], "_"," "));
       }
 
@@ -809,7 +809,7 @@ class TagConfigImage {
 	args->src = args->src[..sizeof(args->src)-5];
 
       args->alt = args->alt || args->src;
-      args->src = "/internal-roxen-" + args->src;
+      args->src = "/%01/" + args->src;
       args->border = args->border || "0";
 
       int xml=!m_delete(args, "noxml");
@@ -8167,7 +8167,7 @@ the respective attributes below for further information.</p></desc>
  Returns true if the named page is viewable.</short> A nonviewable page
  is e.g. a file that matches the internal files patterns in the filesystem module.
  If the path does not begin with /, it is assumed to be a URL relative to the directory
- containing the page with the <tag>if</tag>-statement. 'Magic' files like /internal-roxen-unit
+ containing the page with the <tag>if</tag>-statement. 'Magic' files like /%01/unit
  will evaluate as true. This is a <i>State</i> plugin.</p>
 </desc>
 
@@ -8181,7 +8181,7 @@ the respective attributes below for further information.</p></desc>
  is nonviewable, e.g. matches the internal files patterns in the filesystem module,
  it will still be detected by this if plugin. If the path does not begin with /, it
  is assumed to be a URL relative to the directory containing the page with the if statement.
- 'Magic' files like /internal-roxen-unit will evaluate as true.
+ 'Magic' files like /%01/unit will evaluate as true.
  This is a <i>State</i> plugin.</p></desc>
 
 <attr name='internal-exists' value='path' required='1'>

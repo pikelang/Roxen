@@ -5,7 +5,7 @@
 // Several modifications by Francesco Chemolli.
 
 
-constant cvs_version = "$Id: obox.pike,v 1.40 2002/10/22 00:19:14 nilsson Exp $";
+constant cvs_version = "$Id: obox.pike,v 1.41 2004/05/27 16:19:36 _cvs_stephen Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -17,7 +17,7 @@ constant module_doc  =
   ("This module provides the <tt>&lt;obox&gt;</tt> tag that "
    "draws outlined boxes.");
 
-constant unit_gif = "/internal-roxen-unit";
+constant unit_gif = "/%01/unit";
 
 static string img_placeholder (mapping args)
 {

@@ -45,16 +45,16 @@ Stand alone settings (no other settings are based on these):
   content-extratableargs
 
 
-  next                          /internal-roxen-next
-  selected-indicator   		/internal-roxen-next
-  err-1                		/internal-roxen-err_1
-  err-2                		/internal-roxen-err_2
-  err-3                		/internal-roxen-err_3
-  left-image           		/internal-roxen-unit
-  logo                 		/internal-roxen-roxen
-  database-small                /internal-roxen-database_small
-  table-small                   /internal-roxen-table_small
-  item-indicator                /internal-roxen-dot
+  next                          /%01/next
+  selected-indicator   		/%01/next
+  err-1                		/%01/err_1
+  err-2                		/%01/err_2
+  err-3                		/%01/err_3
+  left-image           		/%01/unit
+  logo                 		/%01/roxen
+  database-small                /%01/database_small
+  table-small                   /%01/table_small
+  item-indicator                /%01/dot
   --------------------------------------------------------
 
 Base settings:
@@ -65,8 +65,8 @@ Base settings:
   fgcolor              user
   bgcolor              user
   font                 user
-  tab-frame-image      /internal-roxen-tabframe
-  gbutton-frame-image  /internal-roxen-gbutton
+  tab-frame-image      /%01/tabframe
+  gbutton-frame-image  /%01/gbutton
   --------------------------------------------------------
 
 
@@ -130,7 +130,7 @@ Overriding these is not really recommended, but possible.
 
 setting		   default value
 ----------------------------------------------------------------------------
-logo-html          <img border=0 src=&usr.logo;>
+logo-html          <imgs border=0 src="&usr.logo;" />
 
 toptabs-args       frame-image=&usr.toptabs-frame; &usr.toptab-extraargs;
 

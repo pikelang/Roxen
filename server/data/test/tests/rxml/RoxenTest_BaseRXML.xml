@@ -1382,11 +1382,6 @@ b</strlen></rxml>
 </test>
 
 <test>
-<rxml><if exists="/internal-gopher-image">yes</if></rxml>
-<result>yes</result>
-</test>
-
-<test>
 <rxml><if exists="/does_not_exist">yes</if></rxml>
 <result></result>
 </test>

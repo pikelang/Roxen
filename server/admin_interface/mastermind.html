@@ -60,13 +60,13 @@ function send() {
 
 <table border="0" bgcolor="&usr.content-bg;" cellspacing="0" cellpadding="4" width="500">
 <tr><td colspan="3"><gtext href="&page.self;" font="yikes!" hspace="20" vspace="4" fontsize="24">Mastermind</gtext></td></tr>
-<tr valign="bottom" align="right" ><td>Make your guess <img src="&usr.next;"/></td><td align="center">
+<tr valign="bottom" align="right" ><td>Make your guess <imgs src="&usr.next;"/></td><td align="center">
 <table border="0" cellspacing="0" cellpadding="1">
 <tr><td></td><td></td><td></td><td></td><td></td><td></td> <td width="10"></td> <td></tr></tr>
 
 <?comment draw the previous guesses ?>
 <if variable="form.turn > 0">
-<define tag="square"><td><img src="/%01/pixel-&_.color;" width="20" height="20" border="0" /></td></define>
+<define tag="square"><td><imgs src="/%01/pixel-&_.color;" width="20" height="20" border="0" /></td></define>
 <set variable="var.qs" split="">&var.q;</set>
 <for variable="var.i" from="1" to="&form.turn;">
   <tr>
@@ -97,10 +97,10 @@ function send() {
   <td></td>
   <td><font style="font-size: 4px">
     <for variable="var.j" from="1" to="&var.gold;">
-      <img src="/%01/pixel-green" width="5" height="5" hspace="1" vspace="1" border="1"/>
+      <imgs src="/%01/pixel-green" width="5" height="5" hspace="1" vspace="1" border="1"/>
     </for><br />
     <for variable="var.j" from="1" to="&var.silver;">
-      <img src="/%01/pixel-yellow" width="5" height="5" hspace="1" vspace="1" border="1"/>
+      <imgs src="/%01/pixel-yellow" width="5" height="5" hspace="1" vspace="1" border="1"/>
     </for>
   </font></td></tr>
 </for>
@@ -115,7 +115,7 @@ function send() {
 <else>
 <tr><for variable="var.i" from="1" to="6">
   <td><a href="javascript:shiftColor(&var.i;)">
-  <img src="/%01/pixel-grey" width="20" height="20" border="0" name="&var.i;" /></a></td>
+  <imgs src="/%01/pixel-grey" width="20" height="20" border="0" name="&var.i;" /></a></td>
 </for><td></td><td>&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;</td></tr>
 </else>
 

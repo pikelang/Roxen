@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
 
 constant thread_safe=1;
-constant cvs_version = "$Id: sizer.pike,v 1.25 2004/05/23 02:55:03 mani Exp $";
+constant cvs_version = "$Id: sizer.pike,v 1.26 2004/05/27 16:19:36 _cvs_stephen Exp $";
 #include <request_trace.h>
 #include <module.h>
 inherit "module";
@@ -23,11 +23,11 @@ constant module_doc  =
 
 #include <variables.h>
 
-#define NOTE(X) ("<tr><td valign='top'><img src='/internal-roxen-err_1'></td>\n"\
+#define NOTE(X) ("<tr><td valign='top'><img src='/%01/err_1'></td>\n"\
 		"<td><font color='black' size='-1'>" + (X) +"</font></td></tr>")
-#define WARN(X) ("<tr><td valign='top'><img src='/internal-roxen-err_2'></td>\n"\
+#define WARN(X) ("<tr><td valign='top'><img src='/%01/err_2'></td>\n"\
 		 "<td><font color='black' size='-1'>" + (X) +"</font></td></tr>")
-#define ERR(X) ("<tr><td valign='top'><img src='/internal-roxen-err_3'></td>\n"\
+#define ERR(X) ("<tr><td valign='top'><img src='/%01/err_3'></td>\n"\
 		 "<td><font color='black' size='-1'>" + (X) +"</font></td></tr>")
 
 class Combo( string file, RequestID id )
