@@ -1,3 +1,22 @@
+Changes since Roxen Challenger 1.2.48 Yellow
+-----------------------------------------------
+
+o GDBM package removed from the distribution.
+
+o Updated documentation.
+
+o Lots of new internal documentation added for RXML tags and containers.
+
+o Fixed recursion bug in <insert> when trying to insert empty files in
+  combination with use of PATH_INFO
+
+o Fixed the bug that ate POST's when using SSL.
+
+o DOCUMENT_URI now handled correctly.
+
+o Borderwidth is no longer configurable in the language module.
+
+
 Changes since Roxen Challenger 1.2.47 Yellow
 -----------------------------------------------
 
