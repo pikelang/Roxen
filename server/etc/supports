@@ -1,4 +1,4 @@
-## $Id: supports,v 1.67 1999/11/11 11:38:06 nilsson Exp $
+## $Id: supports,v 1.68 1999/11/16 14:56:36 grubba Exp $
 # name="Supports database";
 # doc="The database used to determine what different user-agents (browsers) support.";
 #
@@ -154,6 +154,7 @@ mozilla/[5-9].*		pnginline
 .*compatible.*msie.[3-9]	activex, tableimages
 # MSIE3 stylesheets are broken
 .*compatible.*msie.[4-9]	stylesheets, javascript1.2
+.*compatible.*msie.5\.0		requests_are_utf8_encoded
 # }
 
 
@@ -391,7 +392,6 @@ nokia.7110.*	wml1.1, wbmp0
 .*minder.*	html, robot, *robot=url-minder
 # }
 
-
 #section webcrawler {
 .*		html, robot, *robot=webcrawler
 # }
@@ -407,7 +407,6 @@ nokia.7110.*	wml1.1, wbmp0
 #section yahoo {
 .*		html, robot, *robot=yahoo, yahoo
 # }
-
 
 .*robot.*	html, robot, unknown
 
