@@ -1,6 +1,6 @@
 // This file is part of Internet Server.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: cache.pike,v 1.80 2002/06/14 16:05:03 jhs Exp $
+// $Id: cache.pike,v 1.81 2002/06/19 23:40:38 nilsson Exp $
 
 // #pragma strict_types
 
@@ -16,8 +16,6 @@
 #define DATA 1
 // A timeout telling when the data is no longer valid.
 #define TIMEOUT 2
-// The size of the entry, in byts.
-#define SIZE 3
 
 #undef CACHE_WERR
 #ifdef CACHE_DEBUG
@@ -34,75 +32,75 @@
 #endif
 
 // The actual cache along with some statistics mappings.
-static mapping(string:mapping(string:array)) cache;
+static mapping(string:mapping(string:array)) caches;
 static mapping(string:int) hits=([]), all=([]);
 
-void flush_memory_cache (void|string in) {
-  if (in) {
-    m_delete (cache, in);
-    m_delete (hits, in);
-    m_delete (all, in);
+// NGSERVER: Remove the possibility to specify cache.
+void flush_memory_cache (void|string cache) {
+  if (cache) {
+    m_delete (caches, cache);
+    m_delete (hits, cache);
+    m_delete (all, cache);
   }
   else {
-    cache=([]);
-    hits=([]);
-    all=([]);
+    caches = ([]);
+    hits = ([]);
+    all = ([]);
   }
 }
 
-constant svalsize = 4*4;
-
+// NGSERVER: Remove this method. It does the same as cache_remove(in)
 // Expire a whole cache
-void cache_expire(string in)
+void cache_expire(string cache)
 {
-  CACHE_WERR(sprintf("cache_expire(\"%s\")", in));
-  m_delete(cache, in);
+  CACHE_WERR(sprintf("cache_expire(\"%s\")", cache));
+  m_delete(caches, cache);
 }
 
-// Lookup an entry in a cache
-mixed cache_lookup(string in, mixed what)
+//! Lookup an entry in a cache
+mixed cache_lookup(string cache, mixed key)
 {
-  CACHE_WERR(sprintf("cache_lookup(\"%s\",\"%s\")  ->  ", in, what));
-  all[in]++;
+  CACHE_WERR(sprintf("cache_lookup(\"%s\",\"%s\")  ->  ", cache, key));
+  all[cache]++;
   int t=time(1);
   // Does the entry exist at all?
-  if(array entry = (cache[in] && cache[in][what]) )
+  if(array entry = (caches[cache] && caches[cache][key]) )
     // Is it time outed?
     if (entry[TIMEOUT] && entry[TIMEOUT] < t) {
-      m_delete (cache[in], what);
+      m_delete (caches[cache], key);
       CACHE_WERR("Timed out");
     }
     else {
       // Update the timestamp and hits counter and return the value.
-      cache[in][what][TIMESTAMP]=t;
+      caches[cache][key][TIMESTAMP]=t;
       CACHE_WERR("Hit");
-      hits[in]++;
+      hits[cache]++;
       return entry[DATA];
     }
   else CACHE_WERR("Miss");
-  return ([])[0];
+  return UNDEFINED;
 }
 
 // Return all indices used by a given cache or indices of available caches
-array(string) cache_indices(string|void in)
+array(string) cache_indices(string|void cache)
 {
-  if (in)
-    return (cache[in] && indices(cache[in])) || ({ });
+  if (cache)
+    return (caches[cache] && indices(caches[cache])) || ({ });
   else
-    return indices(cache);
+    return indices(caches);
 }
 
 // Return some fancy cache statistics.
 mapping(string:array(int)) status()
 {
   mapping(string:array(int)) ret = ([ ]);
-  foreach(indices(cache), string name) {
+  foreach(caches; string name; mapping cache) {
     //  We only show names up to the first ":" if present. This lets us
     //  group entries together in the status table.
     string show_name = (name / ":")[0];
     int size = -1;
-    catch( size = sizeof(encode_value(cache[name])) );
-    array(int) entry = ({ sizeof(cache[name]),
+    catch( size = sizeof(encode_value(cache)) );
+    array(int) entry = ({ sizeof(cache),
 			  hits[name],
 			  all[name],
 			  size });
@@ -117,34 +115,38 @@ mapping(string:array(int)) status()
 
 // Remove an entry from the cache. Removes the entire cache if no
 // entry key is given.
-void cache_remove(string in, mixed what)
+void cache_remove(string cache, void|mixed key)
 {
-  CACHE_WERR(sprintf("cache_remove(\"%s\",\"%O\")", in, what));
-  if(!what)
-    m_delete(cache, in);
+  CACHE_WERR(sprintf("cache_remove(\"%s\",\"%O\")", cache, key));
+  if(!cache) {
+    m_delete(caches, cache);
+    m_delete(hits, cache);
+    m_delete(all, cache);
+  }
   else
-    if(cache[in])
-      m_delete(cache[in], what);
+    if(caches[cache])
+      m_delete(caches[cache], key);
 }
 
 // Add an entry to a cache
-mixed cache_set(string in, mixed what, mixed to, int|void tm)
+mixed cache_set(string cache, mixed key, mixed val, int|void tm)
 {
 #if MORE_CACHE_DEBUG
   CACHE_WERR(sprintf("cache_set(\"%s\", \"%s\", %O)\n",
-		     in, what, to));
+		     cache, key, val));
 #else
   CACHE_WERR(sprintf("cache_set(\"%s\", \"%s\", %t)\n",
-		     in, what, to));
+		     cache, key, val));
 #endif
   int t=time(1);
-  if(!cache[in])
-    cache[in]=([ ]);
-  cache[in][what] = allocate(ENTRY_SIZE);
-  cache[in][what][DATA] = to;
-  if(tm) cache[in][what][TIMEOUT] = t + tm;
-  cache[in][what][TIMESTAMP] = t;
-  return to;
+  if(!caches[cache])
+    caches[cache] = ([ ]);
+  array entry = allocate(ENTRY_SIZE);
+  entry[DATA] = val;
+  if(tm) entry[TIMEOUT] = t + tm;
+  entry[TIMESTAMP] = t;
+  caches[cache][key] = entry;
+  return val;
 }
 
 // Clean the cache.
@@ -153,46 +155,38 @@ void cache_clean()
   int gc_time=[int](([function(string:mixed)]roxenp()->query)("mem_cache_gc"));
   string a, b;
   array c;
+  mapping(string:array) cache;
   int t=time(1);
   CACHE_WERR("cache_clean()");
-  foreach(indices(cache), a)
+  foreach(caches; a; cache)
   {
     MORE_CACHE_WERR("  Class  " + a);
-    foreach(indices(cache[a]), b)
+    foreach(cache; b; c)
     {
       MORE_CACHE_WERR("     " + b + " ");
-      c = cache[a][b];
 #ifdef DEBUG
       if(!intp(c[TIMESTAMP]))
 	error("     Illegal timestamp in cache ("+a+":"+b+")\n");
 #endif
       if(c[TIMEOUT] && c[TIMEOUT] < t) {
 	MORE_CACHE_WERR("     DELETED (explicit timeout)");
-	m_delete(cache[a], b);
+	m_delete(cache, b);
       }
       else {
-	if(!c[SIZE]) {
-	  c[SIZE]=(sizeof(encode_value(b)) + sizeof(encode_value(c[DATA])) +
-		   5*svalsize + 4)/100;
-	  // (Entry size + cache overhead) / arbitrary factor
-          MORE_CACHE_WERR("     Cache entry size percieved as " +
-			  ([int]c[SIZE]*100) + " bytes\n");
-	}
-	if(c[TIMESTAMP]+1 < t && c[TIMESTAMP] + gc_time -
-	   c[SIZE] < t)
+	if(c[TIMESTAMP]+1 < t && c[TIMESTAMP] + gc_time)
 	  {
 	    MORE_CACHE_WERR("     DELETED");
-	    m_delete(cache[a], b);
+	    m_delete(cache, b);
 	  }
 #ifdef MORE_CACHE_DEBUG
 	else
 	  CACHE_WERR("Ok");
 #endif
       }
-      if(!sizeof(cache[a]))
+      if(!sizeof(cache))
       {
 	MORE_CACHE_WERR("  Class DELETED.");
-	m_delete(cache, a);
+	m_delete(caches, a);
       }
     }
   }
@@ -400,7 +394,7 @@ void init_call_outs()
 void create()
 {
   add_constant( "cache", this_object() );
-  cache = ([ ]);
+  caches = ([ ]);
 
   nongc_cache = ([ ]);
 
