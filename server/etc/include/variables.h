@@ -1,8 +1,8 @@
 // -*- Pike -*-
-// $Id: variables.h,v 1.8 2000/01/03 00:09:49 nilsson Exp $
+// $Id: variables.h,v 1.9 2000/01/03 23:24:18 grubba Exp $
 // Fallback-resources, don't change here.
 
-private static constant errors=
+static constant errors=
 ([
   100:"100 Continue",
   101:"101 Switching Protocols",
