@@ -1,5 +1,5 @@
 constant cvs_version =
-  "$Id: auth_httpbasic.pike,v 1.2 2001/01/19 18:34:45 per Exp $";
+  "$Id: auth_httpbasic.pike,v 1.3 2001/01/29 05:02:02 nilsson Exp $";
 inherit AuthModule;
 inherit "module";
 
@@ -11,10 +11,10 @@ constant name = "basic";
 #include <module.h>
 
 LocaleString module_name_locale =
-  _(0,"Password authentication");
+  _(1,"Password authentication");
 
 LocaleString module_doc_locale =
-  _(0,"Authenticate users using basic username/password authentication.");
+  _(2,"Authenticate users using basic username/password authentication.");
 
 static array(string) parse_auth_header( mixed header )
 {

@@ -12,12 +12,12 @@ inherit "module";
 #define LOCALE(X,Y)	_DEF_LOCALE("roxen_config",X,Y)
 
 constant module_type = MODULE_LOCATION;
-LocaleString module_name_locale = LOCALE(0,"Configuration Filesystem");
+LocaleString module_name_locale = LOCALE(165,"Configuration Filesystem");
 LocaleString module_doc_locale =
-  LOCALE(0,"This filesystem serves the administration interface");
+  LOCALE(166,"This filesystem serves the administration interface");
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.71 2001/01/28 05:45:57 per Exp $";
+  "$Id: config_filesystem.pike,v 1.72 2001/01/29 05:01:01 nilsson Exp $";
 
 constant path = "config_interface/";
 
@@ -156,7 +156,7 @@ mixed find_file( string f, object id )
     else
     {
       if( id->conf->realauth )
-	report_notice(LOCALE(0,"Failed login attempt from %s")+"\n",host);
+	report_notice(LOCALE(167,"Failed login attempt from %s")+"\n",host);
       return id->conf->authenticate_throw( id, "Roxen configuration",
 					   roxen.config_userdb_module );
     }

@@ -1,5 +1,5 @@
 constant cvs_version =
-  "$Id: userdb_system.pike,v 1.1 2001/01/19 21:19:38 per Exp $";
+  "$Id: userdb_system.pike,v 1.2 2001/01/29 05:02:03 nilsson Exp $";
 inherit UserDB;
 inherit "module";
 
@@ -11,10 +11,10 @@ constant name = "system";
 #include <module.h>
 
 LocaleString module_name_locale =
-  _(0,"System user database");
+  _(1,"System user database");
 
 LocaleString module_doc_locale =
-  _(0,"The system user and group database");
+  _(2,"The system user and group database");
 
 
 

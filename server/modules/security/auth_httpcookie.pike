@@ -1,5 +1,5 @@
 constant cvs_version =
-  "$Id: auth_httpcookie.pike,v 1.2 2001/01/19 18:34:45 per Exp $";
+  "$Id: auth_httpcookie.pike,v 1.3 2001/01/29 05:02:02 nilsson Exp $";
 inherit AuthModule;
 inherit "module";
 
@@ -13,10 +13,10 @@ constant name = "cookie";
 #include <module.h>
 
 LocaleString module_name_locale =
-  _(0,"HTTP Cookie authentication");
+  _(1,"HTTP Cookie authentication");
 
 LocaleString module_doc_locale =
-  _(0,"Authenticate users using a cookie.");
+  _(2,"Authenticate users using a cookie.");
 
 static User low_authenticate( RequestID id,
 			      string user, string password,
@@ -153,5 +153,5 @@ static void create()
   Password: PWINPUT<br />
            <input type=submit value=' Ok ' />
 </form></body>",0,
-   _(0,"User form"),_(0,"The user/password request form shown to the user"))); 
+   _(3,"User form"),_(4,"The user/password request form shown to the user"))); 
 }
