@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.28 1997/08/22 19:25:41 per Exp $
+/* $Id: wizard.pike,v 1.29 1997/08/22 19:32:47 per Exp $
  *  name="Wizard generator";
  *  doc="This plugin generats all the nice wizards";
  */
@@ -61,8 +61,7 @@ string wizard_tag_var(string n, mapping m, object id)
     m_delete(m,"default");
     m_delete(m, m->name);
     m_delete(id->variables, m->name);
-    if(search(lower_case(current||""),"on")+1) current="1";
-    if((int)current) m->checked="checked";
+    if(current && current!="0") m->checked="checked";
     res=make_tag("input", m);
     m->type="hidden";
     m->value="0";
