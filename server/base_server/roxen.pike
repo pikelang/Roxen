@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.780 2002/02/22 09:16:44 wellhard Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.781 2002/02/27 17:25:23 mast Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -3640,7 +3640,7 @@ int set_u_and_gid (void|int from_handler_thread)
     if(getuid())
     {
       if (!from_handler_thread)
-	report_error(LOC_M(24, "It is only possible to change uid and gid "
+	report_error(LOC_M(24, "It is possible to change uid and gid only "
 			   "if the server is running as root.")+"\n");
     } else {
 #ifdef TEST_EUID_CHANGE
