@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.42 2000/03/24 17:34:53 per Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.43 2000/04/04 20:21:55 marcus Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -112,6 +112,8 @@ Image.Layer stretch_layer( Image.Layer o, int x1, int x2, int w )
   m->set_offset( x1,0 );
   r->set_offset( w-r->xsize(),0 );
   o = Image.lay( ({ l, m, r }) );
+  o->set_mode( oo->mode() );
+  o->set_alpha_value( oo->alpha_value() );
   return o;
 }
 
@@ -328,6 +330,11 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
   if (mask != frame)
     mask = stretch_layer( mask, left, right, req_width );
 
+  array(Image.Layer) button_layers = ({
+     Image.Layer( Image.Image(req_width, frame->ysize(), args->bg),
+                  mask->alpha()),
+  });
+
   if( background )
   {
     if( !background->alpha() )
@@ -338,17 +345,9 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
     if( args->dim )
       background->set_alpha_value( 0.3 );
     background = stretch_layer( background, left, right, req_width );
+    button_layers += ({ background });
   }
-
-
-  array(Image.Layer) button_layers = ({
-     Image.Layer( Image.Image(req_width, frame->ysize(), args->bg),
-                  mask->alpha()),
-//     Image.Layer( ([ "fill":args->bg,
-//                     "alpha":mask->alpha()->threshold(200),
-//     ]) ),
-    frame,
-  });
+  button_layers += ({ frame });
 
   frame->set_mode( "value" );
 
@@ -370,10 +369,6 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
                                           ({ dim_high, dim_high, dim_high })),
                      frame->alpha());
   }
-
-  // if there is a background, draw it.
-  if( background )
-    button_layers += ({ background });
 
   //  Draw icon.
   if (icon)
@@ -403,8 +398,10 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
   {
     array q = map(args->extra_layers/",",
                   lambda(string q) { return ll[q]; } )-({0});
-    if( sizeof( q ) )
+    if( sizeof( q ) > 1)
       button_layers += ({stretch_layer(Image.lay(q),left,right,req_width)});
+    else if( sizeof( q ) )
+      button_layers += ({ stretch_layer( q[0], left, right, req_width ) });
   }
 
 
