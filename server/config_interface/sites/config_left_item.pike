@@ -141,7 +141,7 @@ string selected_item( string q, Configuration c, RequestID id,
 	    " href=\""+quoted_url+Roxen.http_encode_string(group_name)+
 	    "!0/"+((module&&strlen(module))?module+"/":"")
 	    +"\">"+Roxen.html_encode_string(group_name)+
-	    ": ("+sizeof(gd[1])+" ) ...</a>\n";
+	    ": ("+sizeof(gd[1])+") ...</a>\n";
       }
       else
       {
@@ -197,8 +197,6 @@ string selected_item( string q, Configuration c, RequestID id,
 	pre += "</td>\n</tr></table></td>\n</tr>\n</table>";
 	pre += "\n</js-popup>\n";
       }
-      else
-	pre += "("+sizeof(gd[1])+") ...";
       pre += "</font></td></tr>";
     }
     if( fin )
