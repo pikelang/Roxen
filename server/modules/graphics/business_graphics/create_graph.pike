@@ -61,6 +61,11 @@ mapping(string:mixed) setinitcolors(mapping(string:mixed) diagram_data)
     if (sizeof(fo)>diagram_data["datasize"])
       diagram_data["datasize"]=sizeof(fo);
   
+  if (diagram_data["type"]=="sumbars")
+    for(int i; i<sizeof(diagram_data["data"]); i++)
+      diagram_data["data"][i]=diagram_data["data"][i]+
+	allocate(diagram_data["datasize"]-sizeof(diagram_data["data"]));
+
 
   object piediagram=diagram_data["image"];
   
@@ -166,6 +171,7 @@ mapping(string:mixed) init(mapping(string:mixed) diagram_data)
 {
   float xminvalue=0.0, xmaxvalue=-STORT, yminvalue=0.0, ymaxvalue=-STORT;
 
+
   //Oulinecolors
   if ((diagram_data["backdatacolors"]==0)&&
       (diagram_data["backlinewidth"]))
@@ -236,7 +242,7 @@ mapping(string:mixed) init(mapping(string:mixed) diagram_data)
 	  
 	}
       else
-	for(int i; i<j; i++)
+	for(int i=0; i<diagram_data["datasize"]; i++)
 	  {
 	    if (yminvalue>(k=`+(@column(diagram_data["data"], i))))
 	      yminvalue=k;
@@ -246,7 +252,6 @@ mapping(string:mixed) init(mapping(string:mixed) diagram_data)
       xminvalue=0.0;
       xmaxvalue=10.0;
       
-
     }
   else
     foreach(diagram_data["data"], array(float) d)
@@ -334,7 +339,6 @@ mapping(string:mixed) init(mapping(string:mixed) diagram_data)
   if (diagram_data["labelsize"]>diagram_data["ysize"]/5)
     diagram_data["labelsize"]=diagram_data["ysize"]/5;
 
-  
   return diagram_data;
 
 };
@@ -725,7 +729,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 
   //No uneven data
 
-  for(i=0; i<sizeof(diagram_data["data"]); i++)
+  for(int i=0; i<sizeof(diagram_data["data"]); i++)
     if (sizeof(diagram_data["data"][i])%2)
       diagram_data["data"][i]=diagram_data["data"][i][..sizeof(diagram_data["data"][i])-2];
   

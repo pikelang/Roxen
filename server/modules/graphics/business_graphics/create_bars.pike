@@ -736,15 +736,15 @@ int main(int argc, string *argv)
   //write("\nRitar axlarna. Filen sparad som test.ppm\n");
 
   mapping(string:mixed) diagram_data;
-  diagram_data=(["type":"bars",
+  diagram_data=(["type":"sumbars",
 		 "textcolor":({0,255,0}),
 		 "subtype":"box",
 		 "orient":"hor",
 		 "data": 
-		 ({ ({12.2, 10.3, 8.01, 9.0, 5.3, 4.0 }),
+		 ({ ({12.2, 10.3, 8.01, 9.0, 5.3, 4 }),
 		     ({91.2, 101.3, 91.5, 101.7,  141.0, 181.5}),
-		    ({191.2, 203.3, 241.5, 200.1, 194.3, 195.2 }),
-		    ({93.2, 113.3, 133.5, 143.7, 154.3, 400}) }),
+		    ({191.2, 203.3, 241.5, 200.1, 194.3 }),
+		    ({93.2, 113.3, 133.5, 143.7, 154.3, 400, 133}) }),
 		 "axcolor":({0,0,255}),
 		 "bgcolor":0,//({255,255,255}),
 		 "labelcolor":({0,0,0}),
