@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.57 2003/01/20 09:59:33 grubba Exp $
+// $Id: DBManager.pmod,v 1.58 2003/04/01 19:18:25 anders Exp $
 
 //! Manages database aliases and permissions
 
@@ -741,7 +741,7 @@ array(string|array(mapping)) backup( string dbname, string directory )
 
 
 void rename_db( string oname, string nname )
-//! Rename a database. Pleae note that the actual data (in the case of
+//! Rename a database. Please note that the actual data (in the case of
 //! internal database) is not copied. The old database is deleted,
 //! however. For external databases, only the metadata is modified, no
 //! attempt is made to alter the external database.
