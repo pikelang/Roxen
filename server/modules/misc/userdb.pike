@@ -3,7 +3,7 @@
 // User database. Reads the system password database and use it to
 // authentificate users.
 
-string cvs_version = "$Id: userdb.pike,v 1.7 1996/12/06 23:01:23 per Exp $";
+string cvs_version = "$Id: userdb.pike,v 1.8 1996/12/30 23:51:16 neotron Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -69,12 +69,18 @@ string user_from_uid(int u)
 
 int method_is_not_file()
 {
-  return QUERY(method) != "file";
+  return !(QUERY(method) == "file" || QUERY(method) == "shadow");
+}
+
+int method_is_not_shadow()
+{
+  return QUERY(method) != "shadow";
 }
 
 int method_is_file_or_getpwent()
 {
-  return (QUERY(method) == "file") || (QUERY(method)=="getpwent");
+  return (QUERY(method) == "file") || (QUERY(method)=="getpwent") || 
+    (QUERY(method) == "shadow");
 }
 
 void create()
@@ -84,31 +90,35 @@ void create()
 	 "This file will be used if method is set to file.", 0, 
 	 method_is_not_file);
 
+  defvar("shadowfile", "/etc/shadow", "Password database shadow file",
+	 TYPE_FILE,
+	 "This file will be used if method is set to shadow.", 0, 
+	 method_is_not_shadow);
+
 #if efun(getpwent)
-  defvar("method", "getpwent", "Password database request method",
+  defvar("method", "file", "Password database request method",
 	 TYPE_STRING_LIST, 
 	 "What method to use to maintain the passwd database. "
 	 "'getpwent' is by far the slowest of the methods, but it "
-	 "should work on all systems, and it will work with /etc/shadow (if "
-	 "roxen is allowed to read it.). It will also enable an automatic "
+	 "should work on all systems. It will also enable an automatic "
 	 "passwd information updating process. Every 10 seconds the "
 	 "information about one user from the password database will be "
 	 "updated. There will also be call performed if a user is not in the "
 	 "in-memory copy of the passwd database."
 	 " The other methods are "
-	 "ypcat, on Solaris 2.x systems niscat, none and file"
+	 "ypcat, on Solaris 2.x systems niscat, file, shadow and none"
 	 ". If none is selected, all auth requests will succeed, "
 	 "regardless of user name and password.",
 
-	 ({ "ypcat", "file", "niscat", "getpwent", "none" }));
+	 ({ "ypcat", "file", "shadow", "niscat", "getpwent", "none" }));
 #else
   defvar("method", "file", "Password database request method",
 	 TYPE_STRING_LIST, 
-	 "What method to use to maintain the passwd database. Typically "+
-	 "ypcat, on Solaris 2.x systems niscat, and sometimes file"+
+	 "What method to use to maintain the passwd database. The methods are "+
+	 "ypcat, on Solaris 2.x systems niscat, file, shadow and none"+
 	 ". If none is selected, all auth requests will succeed, "+
 	 "regardless of user name and password.",
-	 ({ "ypcat", "file", "niscat", "none" }));
+	 ({ "ypcat", "file", "shadow", "niscat", "none" }));
 #endif
 
   defvar("args", "", "Password command arguments",
@@ -160,7 +170,7 @@ void slow_update()
 void read_data()
 {
   string data, *entry, u, *tmp, *tmp2;
-  int foo;
+  int foo, i;
   int original_data = 1; // Did we inherit this user list from another
                         //  user-database module?
   int saved_uid;
@@ -187,11 +197,35 @@ void read_data()
      data = tmp2 * "\n";
      break;
 #endif
+
    case "file":
-     fstat = file_stat(query("file"));
-     data=read_bytes(query("file"));
-     last_password_read = time();
-     break;
+    fstat = file_stat(query("file"));
+    data=read_bytes(query("file"));
+    last_password_read = time();
+    break;
+    
+   case "shadow":
+    string shadow;
+    array pw, sh, a, b;
+    mapping sh = ([]);
+    fstat = file_stat(query("file"));
+    data=read_bytes(query("file"));
+    shadow = read_bytes(query("shadowfile"));
+    if(data && shadow)
+    {
+      foreach(shadow / "\n", shadow) {
+	if(sizeof(a = shadow / ":") > 2)
+	  sh[a[0]] = a[1];
+      }
+      pw = data / "\n";
+      for(i = 0; i < sizeof(pw); i++) {
+	if(sizeof(a = pw[i] / ":") && sh[a[0]])
+	  pw[i] = `+(a[0..0],({sh[a[0]]}),a[2..])*":";
+      }
+    }
+    data = pw*"\n";
+    last_password_read = time();
+    break;
 
    case "niscat":
     data=popen("niscat "+query("args")+" passwd.org_dir");
@@ -226,24 +260,24 @@ void read_data()
 #endif
 }
 
-void start() { (void)read_data(); }
+void start() { if(!uid2user) (void)read_data(); }
 
 void read_data_if_not_current()
 {
-  if (query("method") == "file")
-    {
-      string filename=query("file");
-      array|int status=file_stat(filename);
-      int mtime;
-
-      if (arrayp(status))
-       mtime = status[3];
-      else
-       return;
-      
-      if (mtime > last_password_read)
-       read_data();
-    }
+  if (query("method") == "file" || query("method") == "shadow")
+  {
+    string filename=query("file");
+    array|int status=file_stat(filename);
+    int mtime;
+    
+    if (arrayp(status))
+      mtime = status[3];
+    else
+      return;
+    
+    if (mtime > last_password_read)
+      read_data();
+  }
 }
 
 int succ, fail, nouser;
