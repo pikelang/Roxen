@@ -102,15 +102,12 @@ change_owner( ) {
  done
 }
 
-# NGSERVER: Remove the roxen lines.
 find_pike() {
  pike="`fullpath pike`"
  if [ -x bin/pike ] ; then pike="$chilidir/bin/pike"; fi
  if [ -x bin/chilimoon ] ; then pike="$chilidir/bin/chilimoon"; fi
- if [ -x bin/roxen ] ; then  pike="$chilidir/bin/roxen"; fi
  if [ -x "$LOCALDIR/bin/pike" ] ; then pike="$LOCALDIR/bin/pike"; fi
  if [ -x "$LOCALDIR/bin/chilimoon" ] ; then pike="$LOCALDIR/bin/chilimoon"; fi
- if [ -x "$LOCALDIR/bin/roxen" ] ; then pike="$LOCALDIR/bin/roxen"; fi
  if [ "x$PIKE" = "x" ]; then :; else
    if [ -x "$PIKE" ]; then 
      pike="$PIKE"

@@ -15,7 +15,7 @@
 #define _rettext _context_misc[" _rettext"]
 #define _ok _context_misc[" _ok"]
 
-constant cvs_version = "$Id: rxmlparse.pike,v 1.76 2004/05/31 23:01:57 _cvs_stephen Exp $";
+constant cvs_version = "$Id: rxmlparse.pike,v 1.77 2004/05/31 23:54:07 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 #include <config.h>
@@ -139,6 +139,8 @@ mapping handle_file_extension(Stdio.File file, string e, RequestID id)
      break;
   }
 
+  // NGSERVER: this rxmlprefix construct needs to be replaced by a proper
+  //  preinitialisation of the parser
   if(id->misc->rxmlprefix)
   {
     data = id->misc->rxmlprefix+data;
