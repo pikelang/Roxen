@@ -4,7 +4,7 @@
  * doc = "Handles the conversion of numbers and dates to English. You have to restart the server for updates to take effect.";
  */
 
-string cvs_version = "$Id: english.pike,v 1.4 1997/08/19 06:38:11 per Exp $";
+string cvs_version = "$Id: english.pike,v 1.5 1998/03/18 23:33:16 grubba Exp $";
 inline string month(int num)
 {
   return ({ "January", "February", "March", "April", "May",
@@ -109,7 +109,13 @@ string number(int num)
    case 51..59: case 61..69: case 71..79: 
    case 81..89: case 91..99: case 41..49: 
      return number((num/10)*10)+number(num%10);
-   case 100..999: return number(num/100)+" hundred "+number(num%100);
+   case 100: case 200: case 300: case 400: case 500:
+   case 600: case 700: case 800: case 900:
+     return number(num/100)+" hundred";
+   case 101..199: case 201..299: case 301..399: case 401..499:
+   case 501..599: case 601..699: case 701..799: case 801..899:
+   case 901..999:
+     return number(num/100)+" hundred and "+number(num%100);
    case 1000..999999: return number(num/1000)+" thousand "+number(num%1000);
    case 1000000..999999999: 
      return number(num/1000000)+" million "+number(num%1000000);
