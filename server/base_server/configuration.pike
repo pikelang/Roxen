@@ -3,7 +3,7 @@
  * (C) 1996, 1999 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.239 1999/12/09 06:12:49 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.240 1999/12/11 20:44:06 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -718,10 +718,12 @@ public string status()
   float dt = (float)(time(1) - roxen->start_time + 1);
 
   res = "<table>";
-  res += LOCALE->config_status(sent/(1024.0*1024.0), 
-                               (sent/(1024.0*1024.0)/dt) * 8192.0,
-			       hsent/(1024.0*1024.0), requests,
-			       (((float)requests * 60.0)/dt), received/(1024.0*1024.0));
+  res += LOCALE->config_status(((float)sent/(1024.0*1024.0)), 
+                               (((float)sent)/(1024.0*1024.0)/dt) * 8192.0,
+			       ((float)hsent)/(1024.0*1024.0), 
+                                requests,
+                                (((float)requests * 60.0)/dt), 
+                                ((float)received)/(1024.0*1024.0));
 
   if (!zero_type(misc->ftp_users)) {
     res += LOCALE->ftp_status(misc->ftp_users,
