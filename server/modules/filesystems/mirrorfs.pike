@@ -1,4 +1,5 @@
 import RoxenRPC;
+#include <roxen.h>
 #include <module.h>
 inherit "filesystem";
 
