@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.252 2001/07/09 04:08:09 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.253 2001/07/09 23:23:05 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -492,8 +492,8 @@ class TagSet {
       }
 
       // Set an entity variable to a value.
-      if(args->split && stringp(content))
-	RXML.user_set_var(args->variable, content/args->split, args->scope);
+      if(args->split && content)
+	RXML.user_set_var(args->variable, (string)content/args->split, args->scope);
       else
 	RXML.user_set_var(args->variable, content, args->scope);
       return 0;
