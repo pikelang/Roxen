@@ -7,7 +7,9 @@ o The CGI module now uses the PATH_INFO module to do PATH_INFO handling.
 
 o Added option to disable the user listing in the userfs module.
 
-o New config action: Thread backtrace.
+o Added new tag: <undefine>.
+
+o Added config action: Thread backtrace.
 
 o Usefull comments added to some files in base_server  :-)
 
