@@ -2,7 +2,12 @@
 <table width=100% bgcolor=#ffeedd border=0 cellspacing=0 cellpadding=2>
 <tr bgcolor=black><td><font color=white>Mailbox</td><td align=right><font color=white>Mail</td><td align=right><font color=white>Unread</td></tr>
 <list-mailboxes>
-  <tr><td><mail-a mailbox_id=#id#><case capitalize>#name#</case></a></td><td align=right>#mail#</td><td align=right>#unread#</td></tr>
+  <tr><td>
+<if not match="#mail# is 0">
+<mail-a mailbox_id=#id#><case capitalize>#name#</case></a>
+</if>
+<else><case capitalize>#name#</case></else></td>
+<td align=right>#mail#</td><td align=right>#unread#</td></tr>
 </list-mailboxes>
 </table></tr></td>
 </table>
@@ -10,6 +15,9 @@
 
 <gh2>Actions</gh2>
 <blockquote>
+<mailbox-has-mail box=deleted>
+ <gtext scale=0.5 href='delete_mailbox.pike?mbox=deleted&_page=1'>Empty 'Deleted' mailbox</gtext><br>
+</mailbox-has-mail>
  <gtext scale=0.5 href=edit.html>Send an email</gtext><br>
  <gtext scale=0.5 href=new_mailbox.pike>Create a new mailbox</gtext><br>
  <gtext scale=0.5 href=delete_mailbox.pike>Delete a mailbox</gtext><br>
@@ -18,10 +26,10 @@
 <gh2>Preferences</gh2>
   
 <blockquote>
-  <gtext scale=0.5 href=edit_options.html magic="Email options">Email options</gtext><br>
+  <gtext scale=0.5 href=edit_options.html>Email options</gtext><br>
 <br>
 <blockquote><i>Configure your name, email address and signature.</i></blockquote>
-  <gtext scale=0.5 href=edit_buttons.html magic="Edit buttons">Edit buttons</gtext><br>
+  <gtext scale=0.5 href=edit_buttons.html>Edit buttons</gtext><br>
 <blockquote><i>This options is for advanced users only.</i></blockquote>
 </blockquote>
 
