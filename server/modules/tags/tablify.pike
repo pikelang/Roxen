@@ -5,7 +5,7 @@
  * made by Per Hedbor
  */
 
-constant cvs_version = "$Id: tablify.pike,v 1.19 1998/07/18 23:01:12 js Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.20 1998/10/26 04:15:33 neotron Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -89,7 +89,7 @@ string html_nicer_table(array(string) subtitles, array(array(string)) table,
 	switch(type) {
 	case "num":
 	  array a = s/".";
-	  r += "<td align=right><font size="+(opt->size||"2")+" face=\""+
+	  r += "<td align=right><font color="+(opt->fgcolor||"black")+" size="+(opt->size||"2")+" face=\""+
 	    (opt->face||"helvetica,arial")+"\">";
 	  if(sizeof(a) > 1) {
 	    r += (format_numeric(a[0])+"."+
@@ -99,7 +99,7 @@ string html_nicer_table(array(string) subtitles, array(array(string)) table,
 	  break;
 	case "text":
 	default:
-	  r += "<td><font size="+(opt->size||"2")+" face=\""+
+	  r += "<td><font color="+(opt->fgcolor||"black")+" size="+(opt->size||"2")+" face=\""+
 	    (opt->face||"helvetica,arial")+"\">"+s;
 	}
 	r += "&nbsp;&nbsp;</font></td>";
