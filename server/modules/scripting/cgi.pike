@@ -37,7 +37,7 @@ the headers and the body). Please notify the author of the script of this\n\
 problem.\n"
 
 
-constant cvs_version = "$Id: cgi.pike,v 2.21 1999/06/09 18:31:23 neotron Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.22 1999/07/07 20:24:25 grubba Exp $";
 
 #ifdef CGI_DEBUG
 #define DWERROR(X)	report_debug(X)
@@ -719,7 +719,9 @@ class CGIScript
     } else {
       m_delete(environment, "REMOTE_PASSWORD");
     }
-    environment["AUTH_TYPE"] = "Basic";
+    if (id->rawauth) {
+      environment["AUTH_TYPE"] = (id->rawauth/" ")[0];
+    }
 
     if(environment->INDEX)
       arguments = environment->INDEX/"+";
