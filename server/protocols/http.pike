@@ -1,18 +1,16 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-constant cvs_version = "$Id: http.pike,v 1.44 1997/09/19 13:26:25 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.45 1997/10/05 03:18:01 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
 int first;
 
-//constant shuffle=roxen->shuffle;
 constant decode=roxen->decode;
 constant find_supports=roxen->find_supports;
 constant version=roxen->version;
 constant handle=roxen->handle;
 constant _query=roxen->query;
-//constant This = object_program(this_object());
 import Simulate;
 
 
@@ -1078,7 +1076,10 @@ void got_data(mixed fooid, string s)
   my_fd->set_read_callback(0); 
   my_fd->set_blocking();
 #ifdef THREADS
-  roxen->handle(this_object()->handle_request);
+  if(conf)
+    roxen->handle(this_object()->handle_request);
+  else // config interface requests get their own threads..
+    thread_create(handle_request);
 #else
   this_object()->handle_request();
 #endif

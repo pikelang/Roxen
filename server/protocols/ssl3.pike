@@ -1,4 +1,4 @@
-/* $Id: ssl3.pike,v 1.16 1997/08/25 17:23:38 grubba Exp $
+/* $Id: ssl3.pike,v 1.17 1997/10/05 03:18:12 per Exp $
  *
  * © 1997 Informationsvävarna AB
  *
@@ -283,8 +283,6 @@ void handle_request( )
   } else {
     if((file->file == -1) || file->leave_me) 
     {
-//    perror("Leave me...\n");
-//      if(!file->stay) { destruct(thiso); }
       my_fd = file = 0;
       return;
     }
