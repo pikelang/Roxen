@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.278 2001/08/22 21:26:53 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.279 2001/08/23 16:42:47 per Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -907,6 +907,31 @@ class TagInsertScopes {
     }
     return String.implode_nicely(sort(context->list_scopes()));
   }
+}
+
+class TagInsertLocate {
+  inherit RXML.Tag;
+  constant name= "insert";
+  constant plugin_name = "locate";
+
+  RXML.Type get_type( mapping args )
+  {
+    if (args->quote=="html")
+      return RXML.t_text;
+    return RXML.t_xml;
+  }
+
+  string get_data(string var, mapping args, RequestID id)
+  {
+    array(string) result;
+    
+    result = VFS.find_above_read( id->not_query, var, id );
+
+    if( !result )
+      RXML.run_error("Cannot locate any file named "+var+".\n");
+
+    return result[1];
+  }  
 }
 
 class TagInsertFile {
@@ -2249,8 +2274,15 @@ class TagUse {
 	filename = Roxen.fix_relative(args->file, id);
 	name = id->conf->get_config_id() + "|" + filename;
       }
+      else if( args->locate )
+      {
+	filename = VFS.find_above( id->not_query, args->locate, id, "locate" );
+	name = id->conf->get_config_id() + "|" + filename;
+      }
       else
+      {
 	name = "|" + args->package;
+      }
       RXML.Context ctx = RXML_CONTEXT;
 
       if(args->info || id->pragma["no-cache"] ||
