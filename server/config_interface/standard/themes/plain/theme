@@ -1,20 +1,5 @@
-<theme-set what='logo' to='coffee.jpg' themefile=''/>
+<theme-set what='can-change-colors' to='1' int=''/>
 
-<theme-set what='logo-html' to='<img border="0" src="&usr.logo;" />'/>
+<theme-set what='logo' to='internal-roxen-roxen-small' themefile=''/>
 
-<theme-set what=top-bgcolor to=black />
-<theme-set what=toptabs-bgcolor to=black />
-
-<theme-set what=subtabs-dimtextcolor to=black />
-
-<theme-set what=bgcolor   to=#ffffc9/>
-<theme-set what=fgcolor   to=#000000/>
-<theme-set what=linkcolor to=#ff8c00/>
-
-<theme-set what=fade1     to=#ffee88/>
-<theme-set what=fade2     to=#999999/>
-<theme-set what=fade3     to=#ffffff/>
-<theme-set what=fade4     to=#ffffff/>
-
-<theme-set what=tab-frame-image     to=tabframe.xcf themefile />
-<theme-set what=gbutton-frame-image to=gbutton.xcf  themefile />
+<theme-set what='logo-html' to='<img hspace=15 border=0 src=&usr.logo;>'/>
