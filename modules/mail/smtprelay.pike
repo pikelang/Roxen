@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 2.1 1999/10/18 14:38:31 grubba Exp $
+ * $Id: smtprelay.pike,v 2.2 1999/10/18 16:50:08 grubba Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RELAY_DEBUG
 
-constant cvs_version = "$Id: smtprelay.pike,v 2.1 1999/10/18 14:38:31 grubba Exp $";
+constant cvs_version = "$Id: smtprelay.pike,v 2.2 1999/10/18 16:50:08 grubba Exp $";
 
 /*
  * Some globals
@@ -220,7 +220,7 @@ int async_connect_not_self(string host, int port,
 #ifdef SOCKET_DEBUG
   roxen_perror("SOCKETS: async_connect requested to "+host+":"+port+"\n");
 #endif
-  roxen->host_to_ip(host, async_connect_got_host_name, port, callback, @args);
+  roxen->host_to_ip(host, async_connect_got_hostname, port, callback, @args);
 }
 
 class SMTP_Reader
@@ -328,12 +328,12 @@ class SMTP_Reader
 
   static void async_get_code(function(string, array(string):void) cb)
   {
-    got_code = cb;
+    _got_code = cb;
 
     if (con) {
       con->set_nonblocking(got_data, 0, con_closed);
     } else {
-      call_out(con_closed, 0);
+      call_out(call_callback, 0);
     }
   }
 
@@ -379,7 +379,7 @@ class SMTP_Reader
   {
     last_command = command;
 
-    got_code = cb;
+    _got_code = cb;
 
     if (con) {
       send_buffer += command + "\r\n";
@@ -387,7 +387,7 @@ class SMTP_Reader
       con->set_nonblocking(0, write_data, 0);
     } else {
       // Connection closed.
-      call_callback();
+      call_out(call_callback, 0);
     }
   }
 }
@@ -400,7 +400,7 @@ constant SEND_DNS_UNKNOWN = -3;
 
 class MailSender
 {
-  inherit SMTPReader;
+  inherit SMTP_Reader;
 
   static mapping message;
   static array(string) servers;
@@ -535,8 +535,8 @@ class MailSender
     case "250":
       // MAIL FROM: OK.
       send_command(sprintf("RCPT TO:<%s@%s>",
-			   message->user, message->domain,
-			   got_rcpt_to_reply));
+			   message->user, message->domain),
+		   got_rcpt_to_reply);
       break;
     default:
       if (code[0] == '5') {
@@ -629,6 +629,9 @@ class MailSender
 
   static void got_connection(int|object c)
   {
+    message->sent += sent_bytes;
+    sent_bytes = 0;
+
     if (intp(c)) {
       switch(c) {
       case ACON_REFUSED:
@@ -656,14 +659,14 @@ class MailSender
 	  message->status = "5.1.2";
 	  bounce(message, "550",
 		 sprintf("DNS lookup failed for SMTP server %s",
-			 mesage->remote_mta)/"\n",
+			 message->remote_mta)/"\n",
 		 "");
 	  send_done(SEND_DNS_UNKNOWN, message);
 	  return;
 	}
 	bounce(message, "550",
 	       sprintf("DNS lookup failed for SMTP server %s",
-		       mesage->remote_mta)/"\n",
+		       message->remote_mta)/"\n",
 	       "");
 	// Try the next server.
 	connect_and_send();
@@ -679,13 +682,13 @@ class MailSender
 
     con = c;
 
-    async_get_code(send_ehlo);
+    async_get_code(got_con_reply);
   }
 
   static void connect_and_send()
   {
     // Try the next SMTP server.
-    int server = servercouint++;
+    int server = servercount++;
 
     if (server >= sizeof(servers)) {
       // Failure.
@@ -725,7 +728,7 @@ class MailSender
     mail = Stdio.File();
     if (!(mail->open(fname, "r"))) {
       report_error(sprintf("Failed to open spoolfile %O\n", fname));
-      call_out(cb, 0, PERMANENT_SEND_FAIL, m);
+      call_out(cb, 0, SEND_OPEN_FAIL, m);
       return;
     }
 
@@ -759,23 +762,23 @@ static void mail_sent(int res, mapping message)
   ]);
   if (res) {
     switch(res) {
-    case 1:
+    case SEND_OK:
       conf->log(([ "error":200, "len":message->sent ]), id);
       report_notice(sprintf("SMTP: Mail %O sent successfully!\n",
 			    message->mailid));
       break;
-    case -1:
+    case SEND_OPEN_FAIL:
       conf->log(([ "error":404 ]), id);
       report_error(sprintf("SMTP: Failed to open %O!\n",
 			   message->mailid));
       
       return;	// FIXME: Should we remove it from the queue or not?
-    case -2:
+    case SEND_ADDR_FAIL:
       conf->log(([ "error":410 ]), id);
       report_error(sprintf("SMTP: Permanently bad address %s@%s\n",
 			   message->user, message->domain));
       break;
-    case -3:
+    case SEND_DNS_UNKNOWN:
       conf->log(([ "error":503 ]), id);
       report_error(sprintf("SMTP: Unknown SMTP server %s for domain %s\n",
 			   message->remote_mta, message->domain));
@@ -1029,7 +1032,7 @@ void bounce(mapping msg, string code, array(string) text, string last_command,
 	MIME.Message(oldmessage, ([
 	  "MIME-Version":"1.0",
 	  "Content-Type":
-	  only_headers?"message/rfc822-headers":"message/rfc822",
+	  (only_headers?"message/rfc822-headers":"message/rfc822"),
 	])),
       }));
     send_message("", (< msg->sender >), message);
