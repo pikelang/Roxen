@@ -113,6 +113,11 @@ class TagDirectoryplugin
     else
       d = dirname(id->not_query);
 
+    // FIXME: We could be smarter here and add a stat callback on the
+    // directory, but it's a bit of work to find out where it comes
+    // from.
+    NOCACHE();
+
     mapping a = id->conf->find_dir_stat( d, id );
 
     if( !a || !sizeof(a) )
