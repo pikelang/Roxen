@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.25 1998/09/12 13:40:39 grubba Exp $
+ * $Id: smtp.pike,v 1.26 1998/09/12 14:38:50 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.25 1998/09/12 13:40:39 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.26 1998/09/12 14:38:50 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -391,6 +391,21 @@ static class Smtp_Connection {
 
   multiset(string) handled_domains = (<>);
 
+  static void update_domains()
+  {
+    if (!handled_domains || (!sizeof(handled_domains))) {
+      // Update the table of locally handled domains.
+      multiset(string) domains = (<>);
+      foreach(conf->get_providers("smtp_rcpt")||({}), object o) {
+	if (o->query_domain) {
+	  domains |= o->query_domain();
+	}
+      }
+
+      handled_domains = domains;
+    }
+  }
+
   void smtp_EXPN(string mail, string args)
   {
     if (!sizeof(args)) {
@@ -405,17 +420,7 @@ static class Smtp_Connection {
     array rcpts = Array.filter(conf->get_providers("smtp_rcpt")||({}),
 			       lambda(object o) { return(o->desc); });
 
-    if (!handled_domains || (!sizeof(handled_domains))) {
-      // Update the table of locally handled domains.
-      multiset(string) domains = (<>);
-      foreach(conf->get_providers("smtp_rcpt")||({}), object o) {
-	if (o->query_domain) {
-	  domains |= o->query_domain();
-	}
-      }
-
-      handled_domains = domains;
-    }
+    update_domains();
 
     foreach(indices(m), string addr) {
       array a = addr/"@";
@@ -460,6 +465,38 @@ static class Smtp_Connection {
     send(250, sort(result));
   }
 
+  static string low_desc(string addr)
+  {
+    string user;
+    string domain;
+
+    roxen_perror("SMTP: low_desc(%O)\n", addr);
+
+    array arr = addr/"@";
+    if (sizeof(arr) > 1) {
+      user = arr[..sizeof(arr)-2]*"@";
+      domain = arr[-1];
+    } else {
+      user = addr;
+      domain = 0;
+    }
+    array descs = Array.filter(conf->get_providers("smtp_rcpt")||({}),
+			       lambda(object o) { return(o->desc); });
+
+    foreach(descs, object o) {
+      string s;
+
+      if (domain) {
+	if (s = o->desc(addr, this_object())) {
+	  return(s);
+	}
+      }
+      if (s = o->desc(user, this_object())) {
+	return(s);
+      }
+    }
+  }
+
   void smtp_VRFY(string mail, string args)
   {
     if (!sizeof(args)) {
@@ -469,41 +506,71 @@ static class Smtp_Connection {
 
     array a = do_parse_address(args);
 
-    array descs = Array.filter(conf->get_providers("smtp_rcpt")||({}),
-			       lambda(object o) { return(o->desc); });
-
     array expns = Array.filter(conf->get_providers("smtp_rcpt")||({}),
 			       lambda(object o) { return(o->expn); });
     
+    update_domains();
+
     int i;
     for(i=0; i < sizeof(a); i++) {
       string s = 0;
-      foreach(descs, object o) {
-	if (s = o->desc(a[i], this_object())) {
-	  break;
-	}
+
+      string user;
+      string domain;
+
+      array arr = a[i]/"@";
+      if (sizeof(arr) > 1) {
+	user = arr[..sizeof(arr)-2]*"@";
+	domain = arr[-1];
+      } else {
+	user = a[i];
+	domain = 0;
       }
-      if (!s) {
-	foreach(expns, object o) {
-	  string|multiset m;
-	  if (m = o->expn(a[i], this_object())) {
-	    if (stringp(m)) {
-	      a[i] = m;
-	      foreach(descs, object o) {
-		if (s = o->desc(a[i], this_object())) {
-		  break;
+
+      if (domain && !handled_domains[domain]) {
+	// External address.
+	s = "";
+      } else {
+
+	s = low_desc(a[i]);
+
+	if (!s) {
+	  if (domain) {
+	    foreach(expns, object o) {
+	      string|multiset m;
+	      if (m = o->expn(a[i], this_object())) {
+		if (stringp(m)) {
+		  a[i] = m;
+
+		  s = low_desc(a[i]);
 		}
+		if (!s) {
+		  s = "";
+		}
+		break;
 	      }
 	    }
-	    if (!s) {
-	      s = "";
-	    }
-	    break;
 	  }
 	}
 	if (!s) {
-	  send(550, sprintf("%s... User unknown", a[i]));
-	  return;
+	  foreach(expns, object o) {
+	    string|multiset m;
+	    if (m = o->expn(user, this_object())) {
+	      if (stringp(m)) {
+		a[i] = m;
+
+		s = low_desc(a[i]);
+	      }
+	      if (!s) {
+		s = "";
+	      }
+	      break;
+	    }
+	  }
+	  if (!s) {
+	    send(550, sprintf("%s... User unknown", a[i]));
+	    return;
+	  }
 	}
       }
       if (sizeof(s)) {
@@ -617,15 +684,7 @@ static class Smtp_Connection {
 	    }
 	  }
 
-	  // Update the table of locally handled domains.
-	  multiset(string) domains = (<>);
-	  foreach(conf->get_providers("smtp_rcpt")||({}), object o) {
-	    if (o->query_domain) {
-	      domains |= o->query_domain();
-	    }
-	  }
-
-	  handled_domains = domains;
+	  update_domains();
 
 	  send(250);
 	  return;
