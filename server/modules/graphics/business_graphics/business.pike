@@ -12,7 +12,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: business.pike,v 1.133 2000/09/10 16:39:16 nilsson Exp $";
+constant cvs_version = "$Id: business.pike,v 1.134 2000/09/13 18:29:38 jonasw Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Business graphics";
@@ -585,7 +585,11 @@ string container_diagram(string tag, mapping m, string contents,
   if(m->neng) res->neng=1;
 
   res->quant          = (int)m->quant || (m->tonedbox?128:32);
-  res->format         = (int)m->format || "gif";
+#if constant(Image.GIF) && constant(Image.GIF.encode)
+  res->format         = m->format || "gif";
+#else
+  res->format         = m->format || "jpg";
+#endif
   res->encoding       = m->encoding || "iso-8859-1";
   res->fontsize       = (int)m->fontsize || 16;
   res->legendfontsize = (int)m->legendfontsize || res->fontsize;
