@@ -6,7 +6,7 @@
  * in October 1997
  */
 
-constant cvs_version = "$Id: business.pike,v 1.101 1998/04/26 13:36:37 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.102 1998/04/26 18:06:41 hedda Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -207,6 +207,10 @@ string itag_xaxis(string tag, mapping m, mapping res)
   int l=query("maxstringlength")-1;
   if(m->font)
     res->xaxisfont=m->font;
+  else
+    if(m->nfont)
+      res->xaxisfont=m->nfont;
+
   if(m->name) res->xname = m->name[..l];  
   if(m->start) 
     if (lower_case(m->start[0..2])=="min")
@@ -231,6 +235,9 @@ string itag_yaxis(string tag, mapping m, mapping res)
   int l=query("maxstringlength")-1;
   if(m->font)
     res->yaxisfont=m->font;
+  else
+    if(m->nfont)
+      res->yaxisfont=m->nfont;
 
   if(m->name) res->yname = m->name[..l];
   if(m->start) 
@@ -274,6 +281,9 @@ string itag_names(string tag, mapping m, string contents,
     {
       if(m->font)
 	res->xnamesfont=m->font;
+      else
+	if(m->nfont)
+	  res->xnamesfont=m->nfont;
       foo=res->xnames = contents/sep;
       if(m->orient) 
 	if (m->orient[0..3] == "vert")
@@ -286,6 +296,9 @@ string itag_names(string tag, mapping m, string contents,
 	foo=res->ynames = contents/sep;
         if(m->font)
 	  res->ynamesfont=m->font;
+	else
+	  if(m->nfont)
+	    res->ynamesfont=m->nfont;
       }
   }
   else
@@ -510,6 +523,9 @@ string itag_legendtext(mapping tag, mapping m, string contents,
 
   if(m->font)
     res->legendfont=m->font;
+  else
+    if(m->nfont)
+      res->legendfont=m->nfont;
 
   res->legend_texts = contents/sep;
 
@@ -615,6 +631,9 @@ string tag_diagram(string tag, mapping m, string contents,
 
   if(m->font)
     res->font=m->font;
+  else
+    if(m->nfont)
+      res->font=m->nfont;
   if(m->namefont)
     res->namefont=m->namefont;
 
