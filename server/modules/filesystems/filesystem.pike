@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version = "$Id: filesystem.pike,v 1.122 2004/05/22 11:05:45 _cvs_stephen Exp $";
+constant cvs_version = "$Id: filesystem.pike,v 1.123 2004/05/22 11:08:54 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -758,6 +758,13 @@ mixed find_file( string f, RequestID id )
   FILESYSTEM_WERR("Request for \""+f+"\"" +
 		  (id->misc->internal_get ? " (internal)" : ""));
 
+  string cmethod;
+  switch(cmethod=id->method)
+   { case "PUT":case "DELETE":case "MKDIR":  // Hack to support processing
+       if(!query("put"))		     // these using RXML
+          cmethod="POST";
+   }
+    
   /* only used for the quota system, thus rather unessesary to do for
      each request....
   */
@@ -805,7 +812,7 @@ mixed find_file( string f, RequestID id )
    * 	/grubba 1998-08-26
    */
 
-  switch(id->method)
+  switch(cmethod)
   {
   case "GET":
   case "HEAD":
