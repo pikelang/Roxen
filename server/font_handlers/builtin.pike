@@ -1,6 +1,6 @@
 #include <config.h>
 inherit "ttf";
-constant cvs_version = "$Id: builtin.pike,v 1.4 2000/09/21 03:57:44 per Exp $";
+constant cvs_version = "$Id: builtin.pike,v 1.5 2000/09/26 23:14:37 per Exp $";
 
 constant name = "Builtin fonts";
 constant doc =  "Fonts included in pike (and roxen)";
@@ -17,7 +17,7 @@ array(mapping) font_information( string fnt )
   switch( replace(lower_case(fnt)," ","_")-"_" )
   {
    case "roxenbuiltin":
-#if constant(__rbf)
+#if constant(__rbf) && constant(grbf)
      return ({
               ([
                 "name":"roxen builtin",
@@ -64,9 +64,9 @@ Font open( string name, int size, int bold, int italic )
 #ifdef THREADS
      object lock = lock->lock();
 #endif
-#if constant(__rbf)
+#if constant(__rbf) && constant(grbf)
      if( !roxenbuiltin )
-       roxenbuiltin = grbf();
+       catch(roxenbuiltin = grbf());
      if( roxenbuiltin )
        return TTFWrapper( roxenbuiltin(), size, "-" );
 #endif
