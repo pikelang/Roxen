@@ -1,3 +1,68 @@
+Changes since Roxen Challenger 1.2.29 Red
+-----------------------------------------------
+
+o Added check for libm, since Raphsosy doesn't have libm.
+
+o Added kluge to support clients based on SSLeay 0.9.
+
+o Fixed problem sending plain files with SSL3.
+
+o Pike 0.5 SQL API has been updated to Pike 0.6 level.
+
+o Fixed OLD select() bug in the backend (both Pike 0.5 and 0.6).
+
+o Improved procfs test for Pike 0.5.
+
+o LARGEFILE64 support now compiles on HPUX/gcc.
+
+o Removed some C++-style comments (is there any flag to gcc to
+  disable support for C++-style comments?).
+
+o Fixed bug with compiling Pike 0.5 on OS's without support for
+  dynamic loading.
+
+o Fixed a few minor 8bit string bugs.
+
+o Fixed bug in file->stat().
+
+o Improved ASN.1 support in Pike 0.6.
+
+o Improved test for threads on FreeBSD.
+
+o A few scope-bugs in Pike 0.6 have been fixed.
+
+o Fixed minor leak in Image.PNG.
+
+o Fixed leak in parse_html_lines().
+
+o Fixed bug in test for existance of passwd.pw_gecos.
+
+o Fixed bug in start-script when run with stupid /bin/sh's (Raphsody).
+
+o Improved statistics output in "Actions"/"Status"/"Access / request status".
+
+o Fixed bug with opening of primary configuration port.
+
+o The CGI variable QUERY_STRING could sometimes be terminated with a \r.
+
+o The "Roxen is alive!" message is now split over serveral lines for
+  readability reasons.
+
+o Fixed bug in the profiling information presentation wizard.
+
+o Added a few more MIME types.
+
+o dutch.pike rewritten by Stephen R. van den Berg <srb@cuci.nl>.
+
+o htaccess.pike now knows about the methods used by ftp2.pike.
+
+o Business Graphics updated.
+
+o Fixed filewrapper bug in ftp2.pike.
+
+o Fixed user session counter in ftp2.pike.
+
+
 Changes since Roxen Challenger 1.2.28 Yellow
 -----------------------------------------------
 
