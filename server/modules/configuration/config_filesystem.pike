@@ -12,12 +12,13 @@ inherit "module";
 #define LOCALE(X,Y)	_DEF_LOCALE("roxen_config",X,Y)
 
 constant module_type = MODULE_LOCATION;
-LocaleString module_name_locale = LOCALE(165,"Configuration Filesystem");
-LocaleString module_doc_locale =
+LocaleString module_name = LOCALE(165,"Configuration Filesystem");
+LocaleString module_doc =
   LOCALE(166,"This filesystem serves the administration interface");
+
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.72 2001/01/29 05:01:01 nilsson Exp $";
+  "$Id: config_filesystem.pike,v 1.73 2001/01/29 05:43:53 per Exp $";
 
 constant path = "config_interface/";
 
@@ -95,14 +96,49 @@ array(int)|Stat stat_file( string f, object id )
 {
 //   while( strlen( f ) && (f[0] == '/' ))
 //     f = f[1..];
+#if 0
+#ifdef CFFS_DEBUG
+  int depth = 1;
+  RequestID nid = id;
+  while( nid->misc->orig )
+  {
+    depth++;
+    nid = nid->misc->orig;
+  }
+  string db_indent = ("   "*(depth-1));
+  werror(db_indent+"sf: "+f+"\n"+
+	 db_indent+"  path_info="+id->misc->path_info+"\n"+
+	 db_indent+"  iget="+id->misc->internal_get+", depth="+depth+
+	 ", iter="+(id->misc->reqno++)+"\n");
+#endif
+#endif
   if (f == "")
+  {
+#if 0
+#ifdef CFFS_DEBUG
+    werror( db_indent+"Returning stat of "+path+"\n");
+#endif
+#endif
     return file_stat(path);
+  }
 
   if( docs && sscanf( f, "docs/%s", f ) )
     if( mapping rf = get_docfile( f ) )
+    {
+#if 0
+#ifdef CFFS_DEBUG
+      werror( db_indent+"was docfile\n");
+#endif
+#endif
       return ({ 0555, strlen(rf->contents), time(), 0, 0, 0, 0 });
+    }
 
   array(string|Stat) ret = low_stat_file(f, id);
+#if 0
+#ifdef CFFS_DEBUG
+  werror( db_indent+(ret?"Found":"Not found")+"\n");
+#endif
+#endif
   return ret && ret[1];
 }
 
@@ -119,8 +155,22 @@ mixed find_dir( string f, object id )
 
 mapping logged_in = ([]);
 int last_cache_clear_time;
-mixed find_file( string f, object id )
+mixed find_file( string f, RequestID id )
 {
+#ifdef CFFS_DEBUG
+  int depth = 1;
+  RequestID nid = id;
+  while( nid->misc->orig )
+  {
+    depth++;
+    nid = nid->misc->orig;
+  }
+  string db_indent = ("   "*(depth-1));
+  werror(db_indent+"ff: "+f+"\n"+
+	 db_indent+"  path_info="+id->misc->path_info+"\n"+
+	 db_indent+"  iget="+id->misc->internal_get+", depth="+depth+
+	 ", iter="+(id->misc->reqno++)+"\n");
+#endif
   int is_docs;
   User user;
   string locale = "standard";
@@ -152,11 +202,16 @@ mixed find_file( string f, object id )
 		      +"\n", user->name(), host+" ("+id->remoteaddr+")" );
       logged_in[ user->name()+host ] = time(1);
       roxen.adminrequest_get_context( user->name(), host, id );
+#ifdef CFFS_DEBUG
+      werror( db_indent+"  uid="+user->name()+"\n" );
+#endif
     }
     else
     {
-      if( id->conf->realauth )
-	report_notice(LOCALE(167,"Failed login attempt from %s")+"\n",host);
+#ifdef CFFS_DEBUG
+      werror( db_indent+"Returning login fail\n" );
+#endif
+      report_notice(LOCALE(0,"Login attempt from %s")+"\n",host);
       return id->conf->authenticate_throw( id, "Roxen configuration",
 					   roxen.config_userdb_module );
     }
@@ -222,6 +277,9 @@ mixed find_file( string f, object id )
     if( mapping m = get_docfile( f ) )
     {
       is_docs = 1;
+#ifdef CFFS_DEBUG
+      werror( db_indent+"Documentation, getting from SQL\n" );
+#endif
       string data = m->contents;
       m = 0;
       if( type == "text/html" )
@@ -237,37 +295,75 @@ mixed find_file( string f, object id )
                            retval;
       } else
         retval = data;
-    }
+    } else
+#ifdef CFFS_DEBUG
+      werror( db_indent+"Was documentation, but no such file\n" )
+#endif
+	;
   }
   else
   {
     array(string|array) stat_info = low_stat_file( f, id );
     if( !stat_info ) // No such luck...
+    {
+#ifdef CFFS_DEBUG
+      werror( db_indent+"Returning no such file\n" );
+#endif
       return 0;
+    }
     [string realfile, array stat] = stat_info;
     switch( stat[ ST_SIZE ] )
     {
      case -1:  case -3: case -4:
+#ifdef CFFS_DEBUG
+      werror( db_indent+"device or special, returning no such file\n" );
+#endif
        return 0; /* Not suitable (device or no file) */
      case -2: /* directory */
+#ifdef CFFS_DEBUG
+      werror( db_indent+"directory, returning dir indicator\n" );
+#endif
        return -1;
-     default:
-       if (f[-1] == '/')
-         return 0;	/* Let the PATH_INFO module handle it */
+//      default:
+//        if (f[-1] == '/')
+//        {
+// #ifdef CFFS_DEBUG
+// 	 werror( db_indent+"No such file, waiting for pathinfo\n" );
+// #endif
+//          return 0;	/* Let the PATH_INFO module handle it */
+//        }
     }
     id->realfile = realfile;
     retval = Stdio.File( realfile, "r" );
     if( id->misc->internal_get )
+    {
+#ifdef CFFS_DEBUG
+      if( retval )
+	werror( db_indent+"normal file, internal get, quick (unparsed) return\n" );
+      else
+	werror( db_indent+"Was normal file, but open failed (internal get, quick (unparsed) return)\n" );
+#endif
       return retval;
+    }
   }
 
 #ifdef DEBUG
   if( id->variables["content-type"] )
+  {
+#ifdef CFFS_DEBUG
+    werror( db_indent+"normal file, forced type, quick return\n" );
+#endif
     return Roxen.http_file_answer( retval, id->variables["content-type"] );
+  }
 #endif
   
   if( !retval )
+  {
+#ifdef CFFS_DEBUG
+    werror( db_indent+"file exists, but open failed\n" );
+#endif
     return 0;
+  }
 
   if( type  == "text/html" )
   {
@@ -310,6 +406,10 @@ mixed find_file( string f, object id )
     retval->stat = 0;
     retval->len = strlen( retval->data );
   }
+#ifdef CFFS_DEBUG
+  werror( db_indent+"returning "+
+	  (stringp( retval )?"parsed data":"normal file")+"\n" );
+#endif
   if( stringp( retval ) )
     retval = Roxen.http_string_answer( retval, type );
   return retval;
@@ -322,11 +422,9 @@ void start(int n, Configuration cfg)
     if( !(docs = DBManager.get( "docs", cfg ) ) )
     {
       if( DBManager.get( "docs" ) )
-      {
         report_warning( "The database 'docs' exists, but this server can "
                         "not read from it.\n"
                         "Documentation will be unavailable.\n" );
-      }
       else
       {
         Filesystem.System T;
@@ -367,6 +465,15 @@ void start(int n, Configuration cfg)
       "pikescript",  "translation_mod", "rxmlparse",       "rxmltags",
       "tablist",     "update",          "cimg",            "auth_httpbasic"
     }));
+    RoxenModule m = cfg->find_module( "wiretap#0" );
+    if( m )
+    {
+      m->set( "colorparsing", ({}) );
+      m->set( "colormode", 0 );
+      m->save();
+    }
+    else 
+      report_warning( "Failed to enable the wiretap module" );
   }
   call_out( zap_old_modules, 0 );
 }
