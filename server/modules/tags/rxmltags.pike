@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.384 2002/06/27 21:22:00 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.385 2002/06/28 14:08:42 anders Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -5707,7 +5707,7 @@ using the pre tag.
  memory on the server simply by making many requests with random
  variables.</p></note>
 
- <h3>Shared caches</h3>
+ <h1>Shared caches</h1>
 
  <p>The cache can be shared between all <tag>cache</tag> tags with
  identical content, which is typically useful in <tag>cache</tag> tags
@@ -5743,7 +5743,7 @@ using the pre tag.
  documentation for details about how to control RXML p-code
  caching.</p></note>
 
- <h3>Cache static tags</h3>
+ <h1>Cache static tags</h1>
 
  <p>Some common tags, e.g. <tag>if</tag> and <tag>emit</tag>, are
  \"cache static\". That means that they are cached even though there
@@ -5757,13 +5757,13 @@ using the pre tag.
  <tag>cache</tag> or <tag>nocache</tag>. This can give side effects;
  consider this example:</p>
 
- <p><pre>
-   &lt;cache&gt;
-     &lt;registered-user&gt;
-       &lt;nocache&gt;Your name is &registered-user.name;&lt;/nocache&gt;
-     &lt;/registered-user&gt;
-   &lt;/cache&gt;
- </pre></p>
+ <example>
+&lt;cache&gt;
+  &lt;registered-user&gt;
+    &lt;nocache&gt;Your name is &registered-user.name;&lt;/nocache&gt;
+  &lt;/registered-user&gt;
+&lt;/cache&gt;
+</example>
 
  <p>Assume the tag <tag>registered-user</tag> is a custom tag that
  ignores its content whenever the user isn't registered. If it isn't
@@ -5779,7 +5779,7 @@ using the pre tag.
  <p>Because of this, it's important to know whether a tag is cache
  static or not, and it's noted in the doc for all such tags.</p>
 
- <h3>Compatibility</h3>
+ <h1>Compatibility</h1>
 
  <p>If the compatibility level of the site is lower than 2.2 and there
  is no \"variable\" or \"profile\" attribute, the cache depends on the
