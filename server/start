@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.211 2003/12/03 10:57:04 grubba Exp $
+# $Id: start,v 1.212 2003/12/03 12:16:31 grubba Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -652,17 +652,20 @@ cleanup_pid_file() {
   [ -z "$pidfile" ] || rm $pidfile
 }
 
+# NOTE: The following function needs to be reentrant.
 signal_exit() {
   dp "Start script terminating."
   trap "" 2 15
-  if [ "x$ROXEN_PID" != "x" ]; then
+  if [ "x$ROXEN_PID" != "x" ] && \
+     kill -0 $ROXEN_PID 2>/dev/null; then
     kill $ROXEN_PID 2>/dev/null && wait $ROXEN_PID 2>/dev/null
     dp "Roxen WebServer shutdown."
+    # FIXME: Consider exiting here.
   fi
   if [ "x$keep_mysql" = "x" ] ; then
     if [ -f $DIR/_mysql/mysql_pid ] ; then
+      mysql_pid="`cat $DIR/_mysql/mysql_pid 2>/dev/null`"
       dp_no_nl "Shutting down MySQL."
-      mysql_pid=`cat $DIR/_mysql/mysql_pid`
       kill "$mysql_pid" 2>/dev/null
       # Give mysql 5 minutes to shut down.
       timer=""
@@ -684,8 +687,8 @@ signal_exit() {
         dp "Shutting down MySQL the hard way."
         kill -9 "$mysql_pid" 2>/dev/null
       fi
-      if [ -f "$DIR/_mysql/mysql_pid" -a \
-	   "$mysql_pid" = "`cat $DIR/_mysql/mysql_pid`" ]; then
+      if [ -f "$DIR/_mysql/mysql_pid" ] && \
+	 [ "$mysql_pid" = "`cat $DIR/_mysql/mysql_pid`" ]; then
         rm -f "$DIR/_mysql/mysql_pid" 2>/dev/null
       fi
     fi
