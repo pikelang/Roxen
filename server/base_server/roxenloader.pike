@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.155 2000/03/13 06:18:02 per Exp $
+ * $Id: roxenloader.pike,v 1.156 2000/03/13 22:08:19 nilsson Exp $
  *
  * Roxen bootstrap program.
  *
@@ -16,14 +16,14 @@
 //	master() efun when used in this file will return the old
 //	master and not the new one.
 //
-private static object new_master;
+private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.155 2000/03/13 06:18:02 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.156 2000/03/13 22:08:19 nilsson Exp $";
 
 int pid = getpid();
-object stderr = Stdio.File("stderr");
+Stdio.File stderr = Stdio.File("stderr");
 
 mapping(int:string) pwn=([]);
 string pw_name(int uid)
@@ -263,14 +263,14 @@ class _roxen {
   object locale;
   int start_time;
 
-  function(string:mixed) query;
-  function(string, mapping, int, object:void) store;
-  function(string, object:mapping(string:mixed)) retrieve;
-  function(string, object:void) remove;
-  function(void:string) version;
-  function(string:void) dump;
-  function(string, int|void, int|void, void|mixed ...:void) nwrite;
-  function(int, array(string):int) main;
+  mixed  query(string);
+  void   store(string, mapping, int, object);
+  mapping(string:mixed) retrieve(string, object);
+  void   remove(string, object);
+  string version();
+  void   dump(string);
+  void   nwrite(string, int|void, int|void, void|mixed ...);
+  int    main(int, array(string));
 }
 
 
@@ -349,16 +349,16 @@ void report_debug(string message, mixed ... foo)
 }
 
 
-array(object) find_module_and_conf_for_log( array q )
+array(object) find_module_and_conf_for_log( array(array) q )
 {
   object conf, mod;
   for( int i = 0; i<sizeof( q ); i++ )
   {
-    object o = function_object( q[i][2] );
+    object o = function_object( [function]q[i][2] );
     if( o->is_module ) {
       if( !mod ) mod = o;
       if (!conf && functionp (mod->my_configuration))
-	conf = [object]mod->my_configuration();
+	conf = ([function(void:object)]mod->my_configuration)();
     }
     if( o->is_configuration ) {
       if( !conf ) conf = o;
@@ -423,11 +423,9 @@ void report_fatal(string message, mixed ... foo)
 // Pipe open
 string popen(string s, void|mapping env, int|void uid, int|void gid)
 {
-  object p;
-  object f;
+  Stdio.File f = Stdio.File();
+  Stdio.File p = f->pipe(Stdio.PROP_IPC);
 
-  f = Stdio.File();
-  p = f->pipe(Stdio.PROP_IPC);
   if(!p)
     error("Popen failed. (couldn't create pipe)\n");
 
@@ -511,8 +509,13 @@ static private void initiate_cache()
   add_constant("cache_expire", cache->cache_expire);
 }
 
-array(object) compile_error_handlers = ({});
-void push_compile_error_handler( object q )
+class _error_handler {
+  void compile_error(string,int,string);
+  void compile_warning(string,int,string);
+}
+
+array(_error_handler) compile_error_handlers = ({});
+void push_compile_error_handler( _error_handler q )
 {
   compile_error_handlers = ({q})+compile_error_handlers;
 }
@@ -597,10 +600,6 @@ class restricted_cd
   }
 }
 
-// Place holder.
-class empty_class {
-};
-
 // Fallback efuns.
 #if !constant(getuid)
 int getuid(){ return 17; }
@@ -622,7 +621,7 @@ object(_roxen) really_load_roxen()
   object(_roxen) res;
 //   new_master->set_inhibit_compile_errors(e);
   mixed err = catch {
-    res =((program)"roxen")();
+    res =[object(_roxen)]((program)"roxen")();
   };
 //   new_master->set_inhibit_compile_errors(0);
 //   string q = e->get();
@@ -845,7 +844,7 @@ string roxen_path( string filename )
                       ({"$VARDIR/"+roxen_version(), 
                         "../local"}) );
   if( roxen && roxen->variables->logdirprefix ) 
-    filename = replace( filename, "$LOGDIR", roxen->query("logdirprefix") );
+    filename = replace( filename, "$LOGDIR", [string]roxen->query("logdirprefix") );
   else
     if( search( filename, "$LOGDIR" ) != -1 )
       roxen_perror("Warning: mkdirhier with $LOGDIR before variable is available\n");
@@ -877,7 +876,11 @@ array(int) file_stat( string filename, int|void slinks )
 
 object|void open(string filename, string mode, int|void perm)
 {
-  object o;
+#ifdef FD_DEBUG
+  mf o;
+#else
+  Stdio.File o;
+#endif
   o=mf();
   filename = roxen_path( filename );
   if(!(o->open(filename, mode, perm||0666))) {
@@ -927,8 +930,10 @@ void write_current_time()
     call_out( write_current_time, 10 );
     return;
   }
-  int t = [int]time();
-  report_debug("\n** "+roxen->strftime("%Y-%m-%d %H:%M", t )+
+  int t = [int]time(1);
+  mapping lt = localtime(t);
+  report_debug("\n** "+sprintf("%02d-%02d-%02d %02d:%02d", lt->year+1900,
+			       lt->mon+1, lt->mday, lt->hour, lt->min)+
                "   pid: "+pid+"   ppid: "+getppid()+
 #if efun(geteuid)
 	       (geteuid()!=getuid()?"   euid: "+pw_name(geteuid()):"")+
@@ -978,7 +983,7 @@ void do_main_wrapper(int argc, array(string) argv)
 
 void do_main( int argc, array(string) argv )
 {
-  array hider = argv;
+  array(string) hider = argv;
   argv = 0;
 
   if( (-1&0xffffffff) < 0 )
@@ -1068,7 +1073,7 @@ Please install a newer pike version
   add_constant( "ST_SIZE",  ST_SIZE );
 
   if (err = catch {
-    replace_master(new_master=(((program)"etc/roxen_master.pike")()));
+    replace_master(new_master=[object(__builtin.__master)](((program)"etc/roxen_master.pike")()));
   }) {
     report_error(sprintf("Initialization of Roxen's master failed:\n"
 			 "%s\n", describe_backtrace(err)));
@@ -1111,7 +1116,8 @@ Please install a newer pike version
 
   // These are here to allow dumping of roxen.pike to a .o file.
   report_debug("Loading pike modules ... ");
-  function(string:function) nm_resolv = new_master->resolv;
+  function(string, string|void:function) nm_resolv =
+    [function(string, string|void:function)]new_master->resolv;
 
   int t = gethrtime();
   add_constant( "Regexp", nm_resolv("Regexp") );
