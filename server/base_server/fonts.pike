@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: fonts.pike,v 1.73 2001/07/08 16:58:58 nilsson Exp $
+// $Id: fonts.pike,v 1.74 2001/07/09 14:09:39 nilsson Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -262,9 +262,8 @@ Font resolve_font(string f, string|void justification)
     f = q[..sizeof(q)-2]*" ";
   }
 
-  Font fn = get_font(f, size, bold, italic,
-		     justification||"left",xspace, 0.0);
-  return fn;
+  return get_font(f, size, bold, italic,
+		  justification||"left",xspace, 0.0);
 }
 
 //! Returns the real name of the resolved font.
