@@ -1,6 +1,6 @@
 #include <module.h>
 mapping variables = ([ ]);
-mapping locs = ([]);
+local mapping locs = ([]);
 
 void deflocaledoc( string locale, string variable,
                    string name, string doc, mapping|void translate)
@@ -16,30 +16,48 @@ void deflocaledoc( string locale, string variable,
 
 void set( string what, mixed to  )
 {
-  variables[ what ][ VAR_VALUE ] = to;
-  remove_call_out( save );
-  call_out( save, 0.1 );
+  if( variables[ what ] )
+    variables[ what ][ VAR_VALUE ] = to;
+  else
+    report_error("set("+what+"): Unknown variable, only have %s.\n",
+                 String.implode_nicely( sort(indices( variables ) ) ));
 }
 
-void defvar( string v, mixed val, int type,
-             string|mapping q, string|mapping d,
+void killvar(string name)
+{
+  m_delete(variables, name);
+}
+
+int setvars( mapping (string:mixed) vars )
+{
+  string v;
+  foreach( indices( vars ), v )
+    if(variables[v])
+      variables[v][ VAR_VALUE ] = vars[ v ];
+  return 1;
+}
+
+void defvar( string v, mixed val,
+             string|mapping q, int type, string|mapping d,
              array|void misc, mapping|void translate )
 {
-  if( stringp( q ) )
-    q = ([ "standard":q ]);
-  if( stringp( d ) )
-    d = ([ "standard":d ]);
+  if( stringp( q ) )   q = ([ "standard":q ]);
+  if( stringp( d ) )   d = ([ "standard":d ]);
+
+  if( translate && !mappingp( translate ) )
+    translate = 0;
 
   if( !variables[v] )
   {
     variables[v]                     = allocate( VAR_SIZE );
     variables[v][ VAR_VALUE ]        = val;
+    variables[v][ VAR_SHORTNAME ]    = v;
   }
   variables[v][ VAR_TYPE ]         = type & VAR_TYPE_MASK;
   variables[v][ VAR_DOC_STR ]      = d->english;
   variables[v][ VAR_NAME ]         = q->english;
   variables[v][ VAR_MISC ]         = misc;
-  type &= (VAR_EXPERT | VAR_MORE);
+  type &= (VAR_EXPERT | VAR_MORE | VAR_INITIAL | VAR_DEVELOPER);
   variables[v][ VAR_CONFIGURABLE ] = type?type:1;
   foreach( indices( q ), string l )
     deflocaledoc( l, v, q[l], d[l], (translate?translate[l]:0));
@@ -49,6 +67,7 @@ mixed query( string what )
 {
   if( variables[ what ] )
     return variables[what][VAR_VALUE];
+  return ([])[0];
 }
 
 void save();
