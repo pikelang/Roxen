@@ -2,17 +2,10 @@
 <locale version="1.0"/>
 <project>roxen_config</project>
 <language>deu</language>
-<file>../base_server/config_userdb.pike</file>
-<file>../base_server/configuration.pike</file>
-<file>../base_server/global_variables.pike</file>
-<file>../base_server/module_support.pike</file>
-<file>../config_interface/actions/index.html</file>
 <file>../config_interface/boxes/Box.pmod</file>
-<file>../config_interface/boxes/articles.pike</file>
 <file>../config_interface/boxes/crunch.pike</file>
 <file>../config_interface/boxes/doclinks.pike</file>
 <file>../config_interface/boxes/megatokyo.pike</file>
-<file>../config_interface/boxes/ris_news.pike</file>
 <file>../config_interface/boxes/server_status.pike</file>
 <file>../config_interface/boxes/welcome.pike</file>
 <file>../config_interface/cv_startpage_tabs.pike</file>
@@ -44,25 +37,26 @@
 <file>../config_interface/sites/index.html</file>
 <file>../config_interface/sites/log.pike</file>
 <file>../config_interface/sites/new_site.html</file>
-<file>../config_interface/sites/site.html</file>
 <file>../config_interface/sites/site_content.pike</file>
 <file>../config_interface/sites/site_header.pike</file>
+<file>../config_interface/sites/site.html</file>
 <file>../config_interface/statusinfo.pike</file>
+<file>../config_interface/tasks/index.html</file>
 <file>../config_interface/template</file>
 <file>../config_interface/topmenu.pike</file>
 <file>../config_interface/user_delete.pike</file>
 <file>../config_interface/user_form.pike</file>
 <file>../config_interface/users.html</file>
-<file>../etc/modules/Variable.pmod/Date.pike</file>
-<file>../etc/modules/Variable.pmod/Email.pike</file>
-<file>../etc/modules/Variable.pmod/Image.pike</file>
-<file>../etc/modules/Variable.pmod/Mapping.pike</file>
-<file>../etc/modules/Variable.pmod/Schedule.pike</file>
-<file>../etc/modules/Variable.pmod/Upload.pike</file>
-<file>../etc/modules/Variable.pmod/VerifiedString.pike</file>
-<file>../etc/modules/Variable.pmod/module.pmod</file>
 <file>../modules/configuration/config_filesystem.pike</file>
 <file>../modules/configuration/config_tags.pike</file>
+<file>../pike_modules/Variable.pmod/Date.pike</file>
+<file>../pike_modules/Variable.pmod/Email.pike</file>
+<file>../pike_modules/Variable.pmod/Image.pike</file>
+<file>../pike_modules/Variable.pmod/Mapping.pike</file>
+<file>../pike_modules/Variable.pmod/module.pmod</file>
+<file>../pike_modules/Variable.pmod/Schedule.pike</file>
+<file>../pike_modules/Variable.pmod/Upload.pike</file>
+<file>../pike_modules/Variable.pmod/VerifiedString.pike</file>
 <file>../site_templates/common.pike</file>
 
 <str id="2">
@@ -95,937 +89,7 @@
 <t>FTP-Statistik:</t>
 </str>
 
-<str id="11">
-<o>Reloaded %s.</o>
-<t>%s erneut geladen.</t>
-</str>
 
-<str id="12">
-<o>Priority</o>
-<t>Priorität</t>
-</str>
-
-<str id="13">
-<o>The priority of the module. 9 is highest and 0 is lowest. Modules with the same priority can be assumed to be called in random order</o>
-<t>Die Priorität des Moduls. 9 ist die Höchste, 0 die Niedrigste. Module mit gleicher Priorität werden in zufälliger Reihenfolge aufgerufen.</t>
-</str>
-
-<str id="16">
-<o>Security: Patterns</o>
-<t>Sicherheit: Muster</t>
-</str>
-
-<str id="18">
-<o>Security: Security level</o>
-<t>Sicherheit: Sicherheitsstufe</t>
-</str>
-
-<str id="20">
-<o>Default site</o>
-<t>Standard-Website</t>
-</str>
-
-<str id="21">
-<o>If true, this site will be selected in preference of other sites when virtual hosting is used and no host header is supplied, or the supplied host header does not match the address of any of the other servers.</o>
-<t>Bei Aktivierung wird diese Website verwendet, falls virtuelle Websites existieren, aber der Client per HTTP-Protokoll keine oder keine gültige Website auswählt (kein "host header").</t>
-</str>
-
-<str id="22">
-<o>Site comment</o>
-<t>Kommentar zur Website</t>
-</str>
-
-<str id="23">
-<o>This text will be visible in the administration interface, it can be quite useful to use as a memory helper.</o>
-<t>Dieser Kommentar wird im Konfigurations-Menü angezeigt und dient der Dokumentation.</t>
-</str>
-
-<str id="24">
-<o>Site name</o>
-<t>Name der Web-Site</t>
-</str>
-
-<str id="25">
-<o>This is the name that will be used in the administration interface. If this is left empty, the actual name of the site will be used.</o>
-<t>Dieser ausführliche Name wird im Konfigurations-Menü für den
-  virtuellen Server benutzt. Wird dieses Feld leer gelassen,
-  wird der interne kurze Name des virtuellen Servers benutzt.</t>
-</str>
-
-<str id="26">
-<o>Logging: Format</o>
-<t>Protokollierung: Format</t>
-</str>
-
-<str id="27">
-<o>What format to use for logging. The syntax is:
-&lt;pre&gt;response-code or *: Log format for that response code
-
-Log format is normal characters, or one or more of the variables below:
-
-\n \t \r       -- As in C, newline, tab and linefeed
-$char(int)     -- Insert the (1 byte) character specified by the integer.
-$wchar(int)    -- Insert the (2 byte) word specified by the integer.
-$int(int)      -- Insert the (4 byte) word specified by the integer.
-$^             -- Supress newline at the end of the logentry
-$host          -- The remote host name, or ip number.
-$vhost         -- The Host request-header sent by the client, or - if none
-$ip_number     -- The remote ip number.
-$bin-ip_number -- The remote host id as a binary integer number.
-$cern_date     -- Cern Common Log file format date.
-$bin-date      -- Time, but as an 32 bit integer in network byteorder
-$method        -- Request method
-$resource      -- Resource identifier
-$full_resource -- Full requested resource, including any query fields
-$protocol      -- The protocol used (normally HTTP/1.0)
-$response      -- The response code sent
-$bin-response  -- The response code sent as a binary short number
-$length        -- The length of the data section of the reply
-$bin-length    -- Same, but as an 32 bit integer in network byteorder
-$request-time  -- The time the request took (seconds)
-$referer       -- the header 'referer' from the request, or '-'.
-$user_agent    -- the header 'User-Agent' from the request, or '-'.
-
-$user          -- the name of the auth user used, if any
-$user_id       -- A unique user ID, if cookies are supported,
-                  by the client, otherwise '0'
-$cache-status  -- A comma separated list of words (containing no
-                  whitespace) that describes which cache(s) the page
-                  was delivered from:
-                  protcache -- The low-level cache in the HTTP
-                               protocol module.
-                  xsltcache -- The XSLT cache.
-                  pcoderam  -- RXML parse tree RAM cache.
-                  pcodedisk -- RXML parse tree persistent cache.
-                  cachetag  -- No RXML &amp;lt;cache&amp;gt; tag misses.
-                  nocache   -- No hit in any known cache.
-&lt;/pre&gt;</o>
-<t>Welches Format für die Protokolldateien benutzt werden soll.
-&lt;pre&gt;
-Antwort-Code oder *: Loggingformat für diesen Antwort-Code (z.B 404)
-
-Das Loggingformat ist normaler Text, in den folgende
-Variabeln eingesetzt werden können.
-
-\\n \\t \\r    -- Newline, Tab oder Linefeed-Zeichen (wie in C)
-$char(int)     -- Fügt das 8Bit-Zeichen ein, das dem Integerwert entspricht.
-$wchar(int)    -- Fügt das 16Bit-Zeichen ein, das dem Integerwert entspricht.
-$int(int)      -- Fügt das 32Bit-Word ein, das dem Integerwert entspricht.
-$^             -- Unterdrückt das Newline-Zeichen am Ende des Eintrages.
-$host          -- Hostname oder IP-Adresse des Webbrowsers.
-$vhost         -- Der Host Request-Header vom Webbrowser, oder -
-$ip_number     -- IP-Adresse des Webbrowsers.
-$bin-ip_number -- IP-Adresse des Webbrowsers in 32Bit-Dezimaldarstellung.
-$cern_date     -- Uhrzeit und Datum im CERN-Format.
-$bin-date      -- Zeit als 32Bit-Integer-Darstellung (Sekunden seit 1.1.1970).
-$method        -- Anfrage-Methode (GET, POST, usw.)
-$resource      -- Angeforderte Datei.
-$protocol      -- Verwendetes Protokoll (normalerweise HTTP/1.0 oder HTTP/1.1)
-$response      -- Der verschichte Antwort-Code
-$bin-response  -- Der verschickte Antwort-Code in 32Bit-Dezimaldarstellung
-$length        -- Die Größe der verschickten Daten
-$bin-length    -- Die Größe der verschickten Daten in 32Bit-Dezimaldarstellung
-$request-time  -- Verstrichene Zeit in Sekunden, die die Anfrage benötigt hat
-$referer       -- Die 'referer'-Information aus der Anfrage, oder '-'
-$user_agent    -- Die 'user-agent'-Information aus der Anfrage, oder '-'
-
-$user          -- Der Name des angemeldeten Benutzers, sofern vorhanden
-$user_id       -- Die eindeutige Benutzerkennung, sofern Cookies vom
-                  Browser unterstützt wurden, ansonsten '0'.
-$cache-status  -- Eine Komma-separierte Liste von Worten (ohne
-                  Leerzeichen), die die Caches ausgeben, aus der
-                  die Seite ausgeliefert wurde:
-                  protcache -- Der low-level-Cache des HTTP-Moduls.
-                  xsltcache -- Der XSLT-Cache.
-                  pcoderam  -- RXML Parse-Baum, RAM-Cache.
-                  pcodedisk -- RXML Parse-Baum, persistenter Cache.
-                  cachetag  -- Kein RXML &amp;lt;cache&amp;gt; Tag fehlt.
-                  nocache   -- Kein Cache-Treffer.
-&lt;/pre&gt;</t>
-</str>
-
-<str id="28">
-<o>Logging: Enabled</o>
-<t>Protokollierung: Aktiviert</t>
-</str>
-
-<str id="29">
-<o>Log requests</o>
-<t>Protokolliere Zugriffe</t>
-</str>
-
-<str id="30">
-<o>Logging: Log file</o>
-<t>Protokollierung: Zugriffe auf Dateien</t>
-</str>
-
-<str id="31">
-<o>The log file. &lt;pre&gt;%y    Year  (e.g. '1997')
-%m    Month (e.g. '08')
-%d    Date  (e.g. '10' for the tenth)
-%h    Hour  (e.g. '00')
-%H    Hostname
-&lt;/pre&gt;</o>
-<t>Der Name der Protokolldatei. Folgende Ersetzungen werden vorgenommen:
-&lt;pre&gt;
-%y    Jahr     (z.B. '1997')
-%m    Monat    (z.B. '08')
-%d    Tag      (z.B. '10' für den 10. des Monats)
-%h    Stunden  (z.B. '00')
-&lt;/pre&gt;</t>
-</str>
-
-<str id="32">
-<o>Logging: No Logging for</o>
-<t>Protokollierung: Keine Protokollierung für</t>
-</str>
-
-<str id="33">
-<o>Don't log requests from hosts with an IP number which matches any of the patterns in this list. This also affects the access counter log.</o>
-<t>Keine Protokollierung für Host, deren IP-Adresse auf Muster in dieser Liste passt. Dies hat auch Einfluss auf den Access-Counter.</t>
-</str>
-
-<str id="34">
-<o>Domain</o>
-<t>Domäne</t>
-</str>
-
-<str id="35">
-<o>The domain name of the server. The domain name is used to generate default URLs, and to generate email addresses.</o>
-<t>Der Domänenname des Servers. Dieser Name wird für die Generierung der
-Standard-URLs und E-Mail-Adressen verwendet.</t>
-</str>
-
-<str id="36">
-<o>Ports: Primary Server URL</o>
-<t>Ports: Primäre Server-URL</t>
-</str>
-
-<str id="37">
-<o>This is the main server URL, where your start page is located. This
-setting is for instance used as fallback to generate absolute URLs to
-the server, but in most circumstances the URLs sent by the clients are
-used. A URL is deduced from the first entry in 'URLs' if this is left
-blank.
-
-&lt;p&gt;Note that setting this doesn't make the server accessible; you must
-also set 'URLs'.</o>
-<t>Dies ist die URL des primären Servers, auf dem die Startseite abgelegt ist.
-Bitte konfigurieren Sie auch die Variable 'URLs'. Diese Einstellung
-ist z.B. als Absicherung, um absolute URLs zu erzeugen.  Meistens werden
-aber die URLs, die der Browser schickt, benutzt.  Eine URL wird abgeleitet
-vom ersten Eintrag in 'URLs', wenn diese Einstellung leer bleibt.
-</t>
-</str>
-
-<str id="38">
-<o>Ports: URLs</o>
-<t>Ports: URLs</t>
-</str>
-
-<str id="40">
-<o>Internal module resource mountpoint</o>
-<t>Interner Montagepunkt für das Modul</t>
-</str>
-
-<str id="41">
-<o>Some modules may want to create links to internal resources. This setting configures an internally handled location that can be used for such purposes.  Simply select a location that you are not likely to use for regular resources.</o>
-<t>Einige Module erzeugen Links auf interne Ressourcen. Diese Einstellung
-bestimmt eine intern verwendete Position im virtuellen Dateisystem für
-solche Zwecke.  Es sollte ein Wert eingetragen werden, der auch zukünftig
-nicht durch andere Ressourcen benutzt wird.</t>
-</str>
-
-<str id="42">
-<o>Throttling: Server; Enabled</o>
-<t>Drosselung: Server, aktiviert</t>
-</str>
-
-<str id="43">
-<o>If set, per-server bandwidth throttling will be enabled. It will allow you to limit the total available bandwidth for this site.&lt;br /&gt;Bandwidth is assigned using a Token Bucket. The principle under which it works is: for each byte we send we use a token. Tokens are added to a repository at a constant rate. When there's not enough, we can't transmit. When there's too many, they "spill" and are lost.</o>
-<t>Bei Aktivierung wird pro Server eine Drosselung der Bandbreite vorgenommen.
-Dadurch kann man die zur Verfügung stehende Bandbreite für diesen
-virtuellen Server begrenzen.&lt;br&gt;</t>
-</str>
-
-<str id="44">
-<o>Throttling: Server; Average available bandwidth</o>
-<t>Drosselung: Server, durchschnittlich verfügbare Bandbreite</t>
-</str>
-
-<str id="45">
-<o>This is the average bandwidth available to this site in bytes/sec (the bucket "fill rate").</o>
-<t>Dies ist die durchschnittliche Bandbreite in Byte/Sekunde, die für diesen virtuellen Server zur Verfügung steht.</t>
-</str>
-
-<str id="46">
-<o>Throttling: Server; Bucket Depth</o>
-<t>Drosselung: Server, "Bucket Depth"</t>
-</str>
-
-<str id="47">
-<o>This is the maximum depth of the bucket. After a long enough period of inactivity, a request will get this many unthrottled bytes of data, before throttling kicks back in.&lt;br&gt;Set equal to the Fill Rate in order not to allow any data bursts. This value determines the length of the time over which the bandwidth is averaged.</o>
-<t>Dies ist die maximale </t>
-</str>
-
-<str id="48">
-<o>Throttling: Server; Minimum Grant</o>
-<t>Drosselung: Server, minimale Zuteilung</t>
-</str>
-
-<str id="49">
-<o>When the bandwidth availability is below this value, connections will be delayed rather than granted minimal amounts of bandwidth. The purpose is to avoid sending too small packets (which would increase the IP overhead).</o>
-<t>Sinkt die Bandbreite aufgrund zu vieler Verbindungen unter diesen Wert, dann werden neue Verbindungen herausgezögert. So sollen zu kleine IP-Pakete verhindert werden, bei denen die Nutzlast unter den Faktor 1 sinkt (mehr Verwaltungsinformation als Nutzlast).</t>
-</str>
-
-<str id="50">
-<o>Throttling: Server; Maximum Grant</o>
-<t>Drosselung: Server, maximale Zuteilung</t>
-</str>
-
-<str id="51">
-<o>This is the maximum number of bytes assigned in a single request to a connection. Keeping this number low will share bandwidth more evenly among the pending connections, but keeping it too low will increase IP overhead and (marginally) CPU usage. You'll want to set it just a tiny bit lower than any integer multiple of your network's MTU (typically 1500 for ethernet).</o>
-<t>Maximale Anzahl von Bytes, die einer. Niedrige Werte sorgen für eine gleichmässige Zuteilung von Bandbreite zu den Verbindungen, senken aber die Nutzlast und erhöhen marginal die CPU-Belastung. Der empfohlene Wert ist XXX</t>
-</str>
-
-<str id="52">
-<o>Throttling: Request; Enabled</o>
-<t>Drosselung: Zugriff, aktiviert</t>
-</str>
-
-<str id="53">
-<o>If set, per-request bandwidth throttling will be enabled.</o>
-<t>Bei Aktivierung wird eine Bandbreiten-Drosselung pro Zugriff eingeschaltet.</t>
-</str>
-
-<str id="54">
-<o>Throttling: Request; Minimum guarranteed bandwidth</o>
-<t>Drosselung: Zugriff, mininale garanierte Bandbreite</t>
-</str>
-
-<str id="55">
-<o>The maximum bandwidth each connection (in bytes/sec) can use is determined combining a number of modules. But doing so can lead to too small or even negative bandwidths for particularly unlucky requests. This variable guarantees a minimum bandwidth for each request.</o>
-<t>XXX</t>
-</str>
-
-<str id="56">
-<o>Throttling: Request; Bucket Depth Multiplier</o>
-<t>Drosselung: Zugriff, XXX</t>
-</str>
-
-<str id="57">
-<o>The average bandwidth available for each request will be determined by the modules combination. The bucket depth will be determined multiplying the rate by this factor.</o>
-<t>XXX</t>
-</str>
-
-<str id="58">
-<o>No such file message</o>
-<t>Text für 404-Fehlermeldung</t>
-</str>
-
-<str id="59">
-<o>What to return when there is no resource or file available at a certain location.</o>
-<t>Dieser Text wird angezeigt, wenn eine nicht verfügbare Datei
-aufgerufen wird. '$File' wird ersetzt durch den Dateinamen,
-'$Me' durch die Server-URL.</t>
-</str>
-
-<str id="60">
-<o>Welcome text</o>
-<t>Willkommens-Text</t>
-</str>
-
-<str id="61">
-<o>The text shown to the user on connect</o>
-<t>Dieser Text wird dem Anwender zu Beginn der Verbindung angezeigt</t>
-</str>
-
-<str id="62">
-<o>User session limit</o>
-<t>Verbindungs-Begrenzung</t>
-</str>
-
-<str id="63">
-<o>The maximum number of times a user can connect at once. 0 means unlimited.</o>
-<t>Die maximale Anzahl von gleichzeitigen Verbindung desselben Kontos. 0 bedeutet unbegrenzt.</t>
-</str>
-
-<str id="64">
-<o>Allow named ftp</o>
-<t>Erlaube Nicht-anonymes FTP </t>
-</str>
-
-<str id="65">
-<o>If yes, non-anonymous users can connect</o>
-<t>Bei Aktivierung können Anwender mit anderen Konten als dem anonymen eine Verbindung herstellen.</t>
-</str>
-
-<str id="66">
-<o>Allow login with incorrect password/user</o>
-<t>Erlaube Anmeldung mit falschem Kennwort oder Konto</t>
-</str>
-
-<str id="67">
-<o>If yes, users can connect with the wrong password and/or username. This is useful since things like .htaccess files can later on authenticate the user.</o>
-<t>Bei Aktivierung können Anwender trotz fehlgeschlagener Anmeldung eine Verbindung herstellen. Diese Einstellung ist nützlich in Fällen, bei denen Anwender im Verlaufe der Sitzung sowieso eine Anmeldung</t>
-</str>
-
-<str id="68">
-<o>Allow anonymous ftp</o>
-<t>Erlaube anonymes FTP</t>
-</str>
-
-<str id="69">
-<o>If yes, anonymous users is allowed to connect.</o>
-<t>Bei Aktivierung werden anonyme FTP-Verbindungen zugelassen.</t>
-</str>
-
-<str id="70">
-<o>Shell database</o>
-<t>Liste der Shells</t>
-</str>
-
-<str id="71">
-<o>If this string is set to anything but the empty string, it should point to a file containing a list of valid shells. Users with shells that does not figure in this list will not be allowed to log in.</o>
-<t>Unter Unix ist jedem Benutzer-Konto ist eine Shell zugewiesen und diese Shell muss in der angegebenen Datei verzeichnet sein, damit sich der Anwender anmelden kann.. Falls das Feld leer gelassen wird, ist die Funktion inaktiv.</t>
-</str>
-
-<str id="72">
-<o>Show internal errors</o>
-<t>Zeige interne Fehler</t>
-</str>
-
-<str id="73">
-<o>Show 'Internal server error' messages to the user. This is very useful if you are debugging your own modules or writing Pike scripts.</o>
-<t>Dem Anwender interne Server-Fehler zeigen? Diese Funktion ist bei der Entwicklung und bei der Fehlersuche in eigenen Modulen oder Pike-Scripten nützlich.</t>
-</str>
-
-<str id="74">
-<o>Logging: Set unique browser id cookies</o>
-<t>Protokollierung: Setze eindeutige Browser-ID-Cookies</t>
-</str>
-
-<str id="75">
-<o>If set to Yes, all clients that accepts cookies will get a unique 'user-id-cookie', which can then be used in the log and in scripts to track individual users.</o>
-<t>Bei Aktivierung wird allen Clients, die Cookies unterstützen, ein eindeutiger Cookie 'user-id-cookie' gesetzt. Der Cookie kann in Scripten oder in der Protokolldatei zur Verfolgung einzelner Benutzer verwendet werden.</t>
-</str>
-
-<str id="76">
-<o>Logging: Set ID cookies only once</o>
-<t>Protokollierung: Setze User-ID-Cookie nur einmal</t>
-</str>
-
-<str id="77">
-<o>If set to Yes, Roxen will attempt to set unique browser ID cookies only upon receiving the first request (and again after some minutes). Thus, if the user doesn't allow the cookie to be set, she won't be bothered with multiple requests.</o>
-<t>Bei Aktivierung wird dem Client des Besuchers nur beim ersten Kontakt ein eindeutiger User-ID-Cookie geschickt. Sollte der Anwender in seiner Browser-Voreinstellung Cookies ablehnen, dann wird mit dieser Einstellung verhindert, dass der Anwender ständig auf die Cookies hingewiesen wird.</t>
-</str>
-
-<str id="86">
-<o>SSL certificate file</o>
-<t>Datei mit SSL-Zertifikat</t>
-</str>
-
-<str id="87">
-<o>The SSL certificate file to use. The path is relative to %s</o>
-<t>Der Name der Datei mit dem SSL-Zertifikat im PEM-Format. Der Pfad ist relativ zu %s</t>
-</str>
-
-<str id="88">
-<o>SSL key file</o>
-<t>Datei mit SSL-Schlüssel</t>
-</str>
-
-<str id="89">
-<o>The SSL key file to use. The path is relative to %s, you do not have to specify a key file, leave this field empty to use the certificate file only</o>
-<t>Der Name der Datei mit dem SSL-Schlüssel. Der Pfad ist relativ zu %s. Der Schlüssel kann auch in der obigen Zertifikats-Datei mit angegeben werden; dann muss dieses Feld leer bleiben.</t>
-</str>
-
-<str id="90">
-<o>Logging: Log entire file length in restored connections</o>
-<t>Protokollierung: Vollständige Dateilänge bei wieder aufgenommenen Verbindungen</t>
-</str>
-
-<str id="91">
-<o>If this toggle is enabled log entries for restored connections will log the amount of sent data plus the restoration location. Ie if a user has downloaded 100 bytes of a file already, and makes a Range request fetching the remaining 900 bytes, the log entry will log it as if the entire 1000 bytes were downloaded. &lt;p&gt;This is useful if you want to know if downloads were successful (the user has the complete file downloaded). The drawback is that bandwidth statistics on the log file will be incorrect. The statistics in Roxen will still be correct.</o>
-<t>Bei wieder aufgenommenen Verbindungen werden die übertragenen Daten sowie die bisher verschickten Daten verzeichnet.  Wenn ein Benutzer bereits 100 Byte einer Datei geladen hat, und in einem späteren Download die fehlenden 900 Byte überträgt, werden im Logfile die gesamten 1000 Byte verzeichnet.&lt;p&gt;Dies ist nützlich, um erfolgreiche Downloads zu erkennen.</t>
-</str>
-
-<str id="92">
-<o>Default font</o>
-<t>Standard-Schriftart</t>
-</str>
-
-<str id="93">
-<o>The default font to use when modules request a font.</o>
-<t>Die voreingestellte Schriftart für die Verwendung durch Module.</t>
-</str>
-
-<str id="94">
-<o>Font directories</o>
-<t>Ordner mit Schriftarten</t>
-</str>
-
-<str id="95">
-<o>This is where the fonts are located.</o>
-<t>Pfadname des Orders mit den Schriftarten.</t>
-</str>
-
-<str id="96">
-<o>Logging: Log directory prefix</o>
-<t>Protokollierung: XXX</t>
-</str>
-
-<str id="97">
-<o>This is the default file path that will be prepended to the log file path in all the default modules and the site.</o>
-<t>Alle Logdateien werden unterhalb dieses Verzeichnisses abgelegt.</t>
-</str>
-
-<str id="98">
-<o>Cache: Proxy Disk Cache Enabled</o>
-<t>Cache: Proxy Plattencache aktivieren</t>
-</str>
-
-<str id="99">
-<o>If set to Yes, caching will be enabled.</o>
-<t>Der Proxy-Festplatten-Cache wird benutzt.</t>
-</str>
-
-<str id="100">
-<o>Cache: Proxy Disk Cache Clean size</o>
-<t>Cache: Proxy Plattencache, Reinigungsgröße</t>
-</str>
-
-<str id="101">
-<o>Minimum number of Megabytes removed when a garbage collect is done.</o>
-<t>Wird der Cache geleert, werden mindestens soviel Megabyte entfernt.</t>
-</str>
-
-<str id="102">
-<o>Cache: Proxy Disk Cache Minimum available free space and inodes (in %)</o>
-<t>Cache: Proxy Plattencache, minimaler freier Platz und Inodes (in %)</t>
-</str>
-
-<str id="103">
-<o>If less than this amount of disk space or inodes (in %) is left, the cache will remove a few files. This check may work half-hearted if the diskcache is spread over several filesystems.</o>
-<t>Bei Unterschreiten dieses Wertes (in %) werden einige Dateien aus dem Cache entfernt.</t>
-</str>
-
-<str id="104">
-<o>Cache: Proxy Disk Cache Size</o>
-<t>Cache: Proxy Plattencache-Größe</t>
-</str>
-
-<str id="105">
-<o>How many MB may the cache grow to before a garbage collect is done?</o>
-<t>Maximale Größe des Proxy-Caches auf der Festplatte, in MB.</t>
-</str>
-
-<str id="106">
-<o>Cache: Proxy Disk Cache Maximum number of files</o>
-<t>Cache: Proxy Plattencache, maximale Dateienanzahl</t>
-</str>
-
-<str id="107">
-<o>How many cache files (inodes) may be on disk before a garbage collect is done ? May be left zero to disable this check.</o>
-<t>Wie viele Dateien dürfen im Cache sein, bevor eine Reinigung (Garbage Collection) stattfindet. Durch Setzen auf Null wird diese Abfrage ignoriert.</t>
-</str>
-
-<str id="108">
-<o>Cache: Proxy Disk Cache bytes per second</o>
-<t>Cache: Proxy Plattencache, Bytes pro Sekunde</t>
-</str>
-
-<str id="109">
-<o>How file size should be treated during garbage collect. Each X bytes counts as a second, so that larger files will be removed first.</o>
-<t>Wie wichtig ist die Dateigröße beim Reinigen des Caches? Jedes Byte entspricht einem gewissen Dateialter in Sekunden. Größere Dateien werden also eher entfernt.</t>
-</str>
-
-<str id="110">
-<o>Cache: Proxy Disk Cache Base Cache Dir</o>
-<t>Cache: Proxy Plattencache, Basis-Cache-Verzeichnis</t>
-</str>
-
-<str id="111">
-<o>This is the base directory where cached files will reside. To avoid mishaps, 'roxen_cache/' is always prepended to this variable.</o>
-<t>In diesem Verzeichnis werden die Cache-Dateien abgelegt. Um Pannen zu vermeiden, wird 'roxen_cache' an diesen Wert angehängt.</t>
-</str>
-
-<str id="112">
-<o>Cache: Proxy Disk Cache Number of hash directories</o>
-<t>Cache: Proxy Plattencache, Anzahl der Hash-Verzeichnisse</t>
-</str>
-
-<str id="113">
-<o>This is the number of directories to hash the contents of the disk cache into.  Changing this value currently invalidates the whole cache, since the cache cannot find the old files.  In the future, the cache will be recalculated when this value is changed.</o>
-<t>Dies ist die Anzahl an Verzeichnissen, auf die die Cache-Dateien verteilt werden.  Das Ändern dieses Wertes macht den bisherigen Proxy-Cache ungültig.</t>
-</str>
-
-<str id="114">
-<o>Cache: Proxy Disk Cache Keep without Content-Length</o>
-<t>Cache: Proxy Plattencache, Ohne Content-Length speichern</t>
-</str>
-
-<str id="115">
-<o>Keep files without Content-Length header information in the cache?</o>
-<t>Sollen Dateien ohne Content-Length im Cache behalten werden?</t>
-</str>
-
-<str id="116">
-<o>Cache: Proxy Disk Cache Refreshes on Last-Modified</o>
-<t>Cache: Proxy Plattencache, aktualisieren bei Last-Modified</t>
-</str>
-
-<str id="117">
-<o>If set, refreshes files without Expire header information when they have reached double the age they had when they got cached. This may be useful for some regularly updated docs as online newspapers.</o>
-<t>Der Cache wird anhand der Last-Modified-Information Dateien aus dem Cache
-entfernen, sofern kein Expire-Header vorhanden ist.  Die Dateien verbleiben
-im Cache, bis sie ihr Alter verdoppelt haben.</t>
-</str>
-
-<str id="118">
-<o>Cache: Proxy Disk Cache Last resort (in days)</o>
-<t>Cache: Proxy Plattencache, Verweildauer (in Tagen)</t>
-</str>
-
-<str id="119">
-<o>How many days shall files without Expires and without Last-Modified header information be kept?</o>
-<t>Wieviel Tage sollen Dateien ohne Expire- und Last-Modifier-Informationen im Cache verbleiben?</t>
-</str>
-
-<str id="120">
-<o>Cache: Proxy Disk Cache Garbage collector logfile</o>
-<t>Cache: Proxy Plattencache, Garbage Collector Logdatei</t>
-</str>
-
-<str id="121">
-<o>Information about garbage collector runs, removed and refreshed files, cache and disk status goes here.</o>
-<t>Informationen über Aktivitäten der Garbage Collection: gelöschte und aktualisierte Dateien, Cache- und Festplatten-Status werden vermerkt.</t>
-</str>
-
-<str id="124">
-<o>Identify, Use default identification string</o>
-<t>Identität, Verwendung der Standard-Identifikation</t>
-</str>
-
-<str id="125">
-<o>Setting this variable to No will display the "Identify as" node where you can state what Roxen should call itself when talking to clients.&lt;br /&gt;It is possible to disable this so that you can enter an identification-string that does not include the actual version of Roxen, as recommended by the HTTP/1.0 and HTTP/1.1 RFCs:&lt;p&gt;&lt;blockquote&gt;&lt;i&gt;Note: Revealing the specific software version of the server may allow the server machine to become more vulnerable to attacks against software that is known to contain security holes. Server implementors are encouraged to make this field a configurable option.&lt;/i&gt;&lt;/blockquote&gt;&lt;/p&gt;</o>
-<t>Bei Nein, kann eine andere Identität als der Standardwert eingetragen werden.</t>
-</str>
-
-<str id="126">
-<o>Identify, Identify as</o>
-<t>Identität, Identifizieren als</t>
-</str>
-
-<str id="127">
-<o>Enter the name that Roxen should use when talking to clients. </o>
-<t>Hier kann der Namen eingegeben werden, mit dem Roxen sich zu erkennen gibt, wenn ein Client Anfragen stellt.</t>
-</str>
-
-<str id="128">
-<o>Change uid and gid to</o>
-<t>uid und gid wechseln auf</t>
-</str>
-
-<str id="129">
-<o>When Roxen is run as root, to be able to open port 80 for listening,
-change to this user-id and group-id when the port has been opened. If
-you specify a symbolic username, the default group of that user will
-be used. The syntax is user[:group].
-
-&lt;p&gt;A server restart is necessary for a change of this variable to take
-effect. Note that it also can lead to file permission errors if the
-Roxen process no longer can read files it previously has written,
-although the start script fixes this for the standard file locations.</o>
-<t>Wenn Roxen unter der root-Kennung läuft, um den Port 80 
-öffnen zu können, wird die User-ID und die Group-ID auf diesen Wert
-gesetzt, nachdem der Port geöffnet wurde. Wenn ein Benutzername (z.B. 'www')
-verwendet wird, wird die Standardgruppe dieses Benutzers verwendet.
-Die Syntax ist user[:group].
-
-&lt;p&gt;Ein Neustart des Servers ist notwendig, damit die Änderungen
-an dieser Variablen wirksam werden. Achten Sie darauf, dass dies zu
-Zugriffsproblemen bei Dateien führen kann, die der Roxen-Prozess
-vorher geschrieben hat, und nun nicht mehr lesen kann.  Das start-Script
-versucht jedoch, dies für die Standard-Dateien zu beheben.</t>
-</str>
-
-<str id="130">
-<o>Change uid and gid permanently</o>
-<t>uid und gid permanent wechseln</t>
-</str>
-
-<str id="131">
-<o>If this variable is set, Roxen will set it's uid and gid permanently. This disables the 'exec script as user' features for CGI, and also 'access files as user' in the filesystems, but it gives better security.</o>
-<t>Wenn diese Variable gesetzt ist, wird Roxen seine UID und GID permanent
-auf die eingestellten Werte wechseln.  Dadurch können CGI-Scripte nicht
-mehr unter der Kennung anderer Benutzer ausgeführt werden. Allerdings
-erhöht sich so die Sicherheit des Servers.</t>
-</str>
-
-<str id="132">
-<o>Module directories</o>
-<t>Modul-Verzeichnisse</t>
-</str>
-
-<str id="133">
-<o>This is a list of directories where Roxen should look for modules. Can be relative paths, from the directory you started Roxen. The directories are searched in order for modules.</o>
-<t>Eine Liste von Verzeichnissen, in denen Roxen nach Modulen
-suchen wird. Dies können relative Pfade sein.
-Die Verzeichnisse werden in der eingegeben Reihenfolge nach Modulen
-durchsucht.</t>
-</str>
-
-<str id="134">
-<o>Client supports regexps</o>
-<t>Browser-Unterstützung, reguläre Ausdrücke </t>
-</str>
-
-<str id="135">
-<o>What do the different clients support?
-&lt;br /&gt;The default information is normally fetched from the file server/etc/supports in your Roxen directory.</o>
-<t>Welche unterschiedlichen Möglichkeiten werden durch die verschiedenen
-Webbrowser unterstützt. Die Standard-Informationen werden aus der
-Datei server/etc/supports im Roxen-Verzeichnis entnommen.</t>
-</str>
-
-<str id="136">
-<o>Logging: Audit trail</o>
-<t>Logging: Auditprotokollierung</t>
-</str>
-
-<str id="137">
-<o>If Audit trail is set to Yes, all changes of uid will be logged in the Event log.</o>
-<t>Wenn auf Ja gesetzt, werden sämtliche Wechsel von Benutzerkennungen
-im Ereignis-Log verzeichnet.</t>
-</str>
-
-<str id="138">
-<o>Logging: Debug log method</o>
-<t>Logging: Debug-Protokollmethode</t>
-</str>
-
-<str id="139">
-<o>What method to use for the debug log, default is file, but syslog is also available. When using file, the output is really sent to stdout and stderr, but this is handled by the start script.</o>
-<t>Welche Methode soll für das Logging benutzt werden. Standard ist Datei,
-aber Syslog ist ebenfalls möglich.</t>
-</str>
-
-<str id="140">
-<o>Logging: Log PID</o>
-<t>Logging: PID protokollieren</t>
-</str>
-
-<str id="141">
-<o>If set, the PID will be included in the syslog.</o>
-<t>Soll Roxen die eigene PID ins Syslog schreiben?</t>
-</str>
-
-<str id="142">
-<o>Logging: Log to system console</o>
-<t>Logging: Auf Systemkonsole protokollieren</t>
-</str>
-
-<str id="143">
-<o>If set and syslog is used, the error/debug message will be printed to the system console as well as to the system log.</o>
-<t>Soll Roxen auf die Konsole schreiben?  Fehler- und Debug-Meldungen werden sowohl auf die Konsole als auch in das Syslog geschrieben.</t>
-</str>
-
-<str id="144">
-<o>Logging: Syslog type</o>
-<t>Logging: Syslog-Typ</t>
-</str>
-
-<str id="145">
-<o>When using SYSLOG, which log type should be used.</o>
-<t>Wenn Syslog verwendet wird, welcher Typ soll benutzt werden?</t>
-</str>
-
-<str id="146">
-<o>Logging: Log what to syslog</o>
-<t>Logging: Was an Syslog protokollieren</t>
-</str>
-
-<str id="147">
-<o>When syslog is used, how much should be sent to it?&lt;br /&gt;&lt;hr /&gt;Fatal:    Only messages about fatal errors&lt;br /&gt;Errors:   Only error or fatal messages&lt;br /&gt;Warning:  Warning messages as well&lt;br /&gt;Debug:    Debug messager as well&lt;br /&gt;All:      Everything&lt;br /&gt;</o>
-<t>Wenn Syslog verwendet wird, welche Informationen sollen festgehalten werden?&lt;br /&gt;&lt;hr /&gt;Fatal:    Nur Mitteilungen über fatale Fehler&lt;br /&gt;
-          Errors:   Nur Fehler und fatale Mitteilungen&lt;br /&gt;
-          Warning:  wie oben, jedoch auch Warnungen&lt;br /&gt;
-          Debug:    wie oben, jedoch auch Hinweise&lt;br /&gt;
-          All:      Alles&lt;br /&gt;
-</t>
-</str>
-
-<str id="148">
-<o>Logging: Log as</o>
-<t>Logging: Protokollieren als</t>
-</str>
-
-<str id="149">
-<o>When syslog is used, this will be the identification of the Roxen daemon. The entered value will be appended to all logs.</o>
-<t>Wenn Syslog benutzt wird, wird dieser Wert als Identifikation in allen
-Logs angehängt.</t>
-</str>
-
-<str id="150">
-<o>Number of threads to run</o>
-<t>Anzahl zu startender Threads</t>
-</str>
-
-<str id="151">
-<o>The number of simultaneous threads Roxen will use.
-&lt;p&gt;Please note that even if this is one, Roxen will still be able to serve multiple requests, using a select loop based system.
-&lt;i&gt;This is quite useful if you have more than one CPU in your machine, or if you have a lot of slow NFS accesses.&lt;/i&gt;&lt;/p&gt;&lt;p&gt;Do not increase this over 20 unless you have a very good reason to do so.&lt;/p&gt;</o>
-<t>Die Anzahl an parallelen Threads, mit denen Roxen arbeiten wird.
-&lt;p&gt;Hinweis: Auch wenn nur ein Thread eingestellt wird, können mehrere
-Zugriffe gleichzeitig bearbeitet werden.
-&lt;i&gt;Dies ist nützlich für Mehrprozessor-Systeme oder Systeme mit langsamen NFS-Zugriffen.&lt;/i&gt;&lt;/p&gt;&lt;p&gt;Setzen Sie diesen Wert nicht auf mehr als 20, ausser Sie haben einen sehr guten Grund dazu.&lt;/p&gt;</t>
-</str>
-
-<str id="154">
-<o>Auto Restart: Enable Anti-Block-System</o>
-<t>Auto Restart: Anti-Block-System aktivieren</t>
-</str>
-
-<str id="155">
-<o>If set, the anti-block-system will be enabled. This will restart the server after a configurable number of minutes if it locks up. If you are running in a single threaded environment heavy calculations will also halt the server. In multi-threaded mode bugs such as eternal loops will not cause the server to reboot, since only one thread is blocked. In general there is no harm in having this option enabled. </o>
-<t>Das Anti-Block-System wird aktiviert, dies startet den Server nach einer
-einstellbaren Zahl von Minuten neu, wenn ein Thread blockiert ist.  Bei
-mehr als einem Thread wird der gesamte Server nicht komplett angehalten,
-sondern nur der blockierte Thread.  Im allgemeinen hat diese Option keine
-Nachteile.</t>
-</str>
-
-<str id="156">
-<o>Auto Restart: ABS Timeout</o>
-<t>Auto Restart: ABS Timeout</t>
-</str>
-
-<str id="157">
-<o>If the server is unable to accept connection for this many minutes, it will be restarted. You need to find a balance: if set too low, the server will be restarted even if it's doing legal things (like generating many images), if set too high you might get a long downtime if the server for some reason locks up.</o>
-<t>Wenn der Server soviele Minuten nicht in der Lage ist, Anfragen
-zu beantworten, wird er neu gestartet.  Zu beachten ist, daß
-bei komplexen Berechnungen es durchaus normal ist, wenn eine
-Anfrage eine Weile benötigt.</t>
-</str>
-
-<str id="158">
-<o>Default language</o>
-<t>Standard-Sprache</t>
-</str>
-
-<str id="159">
-<o>Locale, used to localize all messages in Roxen. Standard means using the default locale, which varies according to the value of the 'LANG' environment variable.</o>
-<t>Die Sprache, in der alle Roxen-Meldungen ausgeben werden.
-'standard' ist abhängig von der LANG Umgebungsvariable.</t>
-</str>
-
-<str id="160">
-<o>Auto Restart: Enable Automatic Restart</o>
-<t>Auto Restart: Automatischer Neustart aktivieren</t>
-</str>
-
-<str id="161">
-<o>If set, Roxen will automatically restart after a configurable number of days. Since Roxen uses a monolith, non-forking server model the process tends to grow in size over time. This is mainly due to heap fragmentation but also because of memory leaks.</o>
-<t>Wenn gesetzt, wird Roxen automatisch nach einer bestimmten Anzahl von
-Tagen neugestartet. Hin und wieder wächst der Roxen-Prozess im Laufe der
-Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
-</str>
-
-<str id="170">
-<o>Cache: Memory Cache Garbage Collect Interval</o>
-<t>Cache: Speichercache, Gargabe Collection Intervall</t>
-</str>
-
-<str id="171">
-<o>The number of seconds between every garbage collect (removal of old content) from the memory cache. The memory cache is used for various tasks like remembering what supports flags matches what client.</o>
-<t>Wieviele Sekunden sollen zwischen zwei Ausführungen einer Garbage Collection im Speicher-Cache liegen? Der Speicher-Cache enthält u.a. die Supports-Daten.</t>
-</str>
-
-<str id="172">
-<o>Commented config files</o>
-<t>Kommentierte Konfigurationsdateien</t>
-</str>
-
-<str id="173">
-<o>Save the variable documentation strings as comments in the configuration files. Only useful if you read or edit the config files directly.</o>
-<t>Die Dokumentationsvariablen als Kommentare in die Konfigurationsdateien speichern. Nur nützlich, wenn die Konfigurationsdateien direkt gelesen oder bearbeitet werden.</t>
-</str>
-
-<str id="174">
-<o>Show documentation</o>
-<t>Zeige Dokumentation</t>
-</str>
-
-<str id="175">
-<o>Show the variable documentation.</o>
-<t>Zeige Dokumentationsvariablen</t>
-</str>
-
-<str id="176">
-<o>Show advanced configuration options</o>
-<t>Zeige fortgeschrittenen Konfigurationsoptionen</t>
-</str>
-
-<str id="177">
-<o>Show all possible configuration options, not only the ones that are most often changed.</o>
-<t>Alle möglichen Konfigurationsoptionen zeigen, nicht nur die am meisten benötigten.</t>
-</str>
-
-<str id="180">
-<o>Show developer options and actions</o>
-<t>Zeige Entwickleroptionen und -aktionen</t>
-</str>
-
-<str id="181">
-<o>Show settings and actions that are not normaly useful for non-developer users. If you develop your own Roxen modules, this option is for you.</o>
-<t>Zeige Einstellungen und Aktionen, die normalerweise nicht nützlich sind für nicht-Entwickler. Wenn Sie eigene Roxen-Module entwickeln, ist diese Option richtig für Sie.</t>
-</str>
-
-<str id="182">
-<o>Background color</o>
-<t>Hintergrundfarbe</t>
-</str>
-
-<str id="183">
-<o>Administration interface background color.</o>
-<t>Hintergrundfarbe Administrations-Interface.</t>
-</str>
-
-<str id="184">
-<o>Text color</o>
-<t>Textfarbe</t>
-</str>
-
-<str id="185">
-<o>Administration interface text color.</o>
-<t>Textfarbe Administrations-Interface.</t>
-</str>
-
-<str id="186">
-<o>Link color</o>
-<t>Linkfarbe</t>
-</str>
-
-<str id="187">
-<o>Font</o>
-<t>Schriftart</t>
-</str>
-
-<str id="188">
-<o>Administration interface font.</o>
-<t>Schriftart Administrations-Interface.</t>
-</str>
-
-<str id="189">
-<o>Add/Delete module page type</o>
-<t>Seitentyp Modul hinzufügen/löschen</t>
-</str>
-
-<str id="191">
-<o>All Permissions</o>
-<t>Alle Berechtigungen</t>
-</str>
 
 <str id="192">
 <o>View Settings</o>
@@ -1272,61 +336,6 @@ Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 <t>Wählen Sie ein oder mehrere Module aus.</t>
 </str>
 
-<str id="274">
-<o>Cache:Cache size</o>
-<t>Cache: Cache-Größe</t>
-</str>
-
-<str id="275">
-<o>The size of the data cache used to speed up requests for commonly requested files, in KBytes</o>
-<t>Die Größe des Daten-Caches, die zur Beschleunigung von Anfragen auf häufig abgerufene Dateien benutzt wird. In KBytes</t>
-</str>
-
-<str id="276">
-<o>Cache:Max file size</o>
-<t>Cache: maximale Dateigroße</t>
-</str>
-
-<str id="277">
-<o>The maximum size of a file that is to be considered for the cache</o>
-<t>Die maximale Dateigröße, die für den Cache verwendet werden soll</t>
-</str>
-
-<str id="278">
-<o>Compact site list</o>
-<t>Kompakte Site-Liste</t>
-</str>
-
-<str id="279">
-<o>If true, the list of sites will be presented in a compact format suitable for servers with many sites.</o>
-<t>Wenn ja, die Site-Liste wird in einem kompakten Format angezeigt, brauchbar für Server mit vielen Sites.</t>
-</str>
-
-<str id="280">
-<o>normal</o>
-<t>normal</t>
-</str>
-
-<str id="282">
-<o>fast</o>
-<t>schnell</t>
-</str>
-
-<str id="284">
-<o>faster</o>
-<t>schneller</t>
-</str>
-
-<str id="286">
-<o>compact</o>
-<t>kompakt</t>
-</str>
-
-<str id="288">
-<o>really compact</o>
-<t>sehr kompakt</t>
-</str>
-
 <str id="290">
 <o>Module event log for '%s' cleared by %s (%s) from %s</o>
 <t>Modulereignisprotokoll für '%s' gelöscht durch %s (%s) von %s</t>
@@ -1387,16 +396,6 @@ Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 <t>Initiale Variablen für die Site</t>
 </str>
 
-<str id="229">
-<o>Page charset</o>
-<t>Seiten-Zeichensatz</t>
-</str>
-
-<str id="230">
-<o>The charset to use when rendering configuration interface pages.</o>
-<t>Der Zeichensatz, der für das Konifgurations-Interface benutzt wird.</t>
-</str>
-
 <str id="234">
 <o>Requests</o>
 <t>Anfragen</t>
@@ -1407,121 +406,9 @@ Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 <t>Sind Sie sicher, dass sie die Site %s deaktivieren wollen?</t>
 </str>
 
-<str id="236">
-<o>Default variable sort order</o>
-<t>Standard-Sortierreihenfolge für Variablen</t>
-</str>
-
-<str id="237">
-<o>The default order variables are sorted in</o>
-<t>Die Standard-Sortierreihenfolge für Variablen</t>
-</str>
-
-<str id="238">
-<o>alphabetical</o>
-<t>alphabetisch</t>
-</str>
-
-<str id="239">
-<o>as defined</o>
-<t>wie definiert</t>
-</str>
-
-<str id="240">
-<o>alphabetical, changed first</o>
-<t>alphabetisch, geänderte zuerst</t>
-</str>
-
-<str id="241">
-<o>as defined, changed first</o>
-<t>wie definiert, geänderte zuerst</t>
-</str>
-
-<str id="242">
-<o>Changed variables are highlighted</o>
-<t>Geänderte Variablen sind hervorgehoben</t>
-</str>
-
-<str id="243">
-<o>How to highlight variables that does not have their default value</o>
-<t>Wie sollen die Variablen hervorgehoben werden, die nicht ihren Standardwert haben</t>
-</str>
-
-<str id="244">
-<o>Not at all</o>
-<t>Überhaupt nicht</t>
-</str>
-
-<str id="268">
-<o>Different background color</o>
-<t>Unterschiedliche Hintergrundfarbe</t>
-</str>
-
-<str id="302">
-<o>Add a header</o>
-<t>Eine Zeile hinzufügen</t>
-</str>
-
-<str id="303">
-<o>Group Tasks</o>
-<t>Aufgaben zusammenfassen</t>
-</str>
-
-<str id="304">
-<o>If true, tasks are grouped acording to type, otherwise all tasks will be listed on one page</o>
-<t>Wenn ja, werden Aufgaben nach Typ in Gruppen zusammengefasst, ansonsten werden alle Aufgaben auf einer Seite aufgelistet</t>
-</str>
-
-<str id="305">
-<o>The modules security level is used to determine if a  request should be handled by the module.
-&lt;p&gt;&lt;h2&gt;Security level vs Trust level&lt;/h2&gt; Each module has a configurable &lt;i&gt;security level&lt;/i&gt;. Each request has an assigned trust level. Higher &lt;i&gt;trust levels&lt;/i&gt; grants access to modules with higher &lt;i&gt;security levels&lt;/i&gt;.
-&lt;p&gt;&lt;h2&gt;Definitions&lt;/h2&gt;&lt;ul&gt; &lt;li&gt;A requests initial Trust level is infinitely high.&lt;/li&gt; &lt;li&gt; A request will only be handled by a module if its     &lt;i&gt;trust level&lt;/i&gt; is higher or equal to the     &lt;i&gt;security level&lt;/i&gt; of the module.&lt;/li&gt; &lt;li&gt; Each time the request is handled by a module the     &lt;i&gt;trust level&lt;/i&gt; of the module will be set to the      lower of its &lt;i&gt;trust level&lt;/i&gt; and the modules     &lt;i&gt;security level&lt;/i&gt;, &lt;i&gt;unless&lt;/i&gt; the security         level of the module is 0, which is a special         case and means that no change should be made.&lt;/li&gt; &lt;/ul&gt;&lt;/p&gt;
-&lt;p&gt;&lt;h2&gt;Example&lt;/h2&gt; Modules:&lt;ul&gt; &lt;li&gt;  User filesystem, &lt;i&gt;security level&lt;/i&gt; 1&lt;/li&gt; &lt;li&gt;  Filesystem module, &lt;i&gt;security level&lt;/i&gt; 3&lt;/li&gt; &lt;li&gt;  CGI module, &lt;i&gt;security level&lt;/i&gt; 2&lt;/li&gt; &lt;/ul&gt;&lt;/p&gt;
-&lt;p&gt;A request handled by "User filesystem" is assigned a &lt;i&gt;trust level&lt;/i&gt; of one after the &lt;i&gt;security level&lt;/i&gt; of that module. That request can then not be handled by the "CGI module" since that module has a higher &lt;i&gt;security level&lt;/i&gt; than the requests trust level.&lt;/p&gt;
-&lt;p&gt;On the other hand, a request handled by the the "Filsystem module" could later be handled by the "CGI module".&lt;/p&gt;</o>
-<t>Das Sicherheitslevel-Modul bestimmt, welches Modul eine Anfrage behandelt.
-&lt;p&gt;&lt;h2&gt;Sicherheit contra Vertrauen&lt;/h2&gt; Jedes Modul hat einen einstellbaren &lt;i&gt;Sicherheitslevel&lt;/i&gt;. Jede Anfrage besitzt einen Vertrauenspegel. Höhere &lt;i&gt;Vertrauenspegel&lt;/i&gt; gewähren Zugriffe auf Module mit höhrerem &lt;i&gt;Sicherheitslevel&lt;/i&gt;.
-&lt;p&gt;&lt;h2&gt;Definitionen&lt;/h2&gt;&lt;ul&gt; &lt;li&gt;Der Vertrauenspegel einer Anfrage ist zu Beginn unendlich hoch.&lt;/li&gt; &lt;li&gt; Eine Anfrage wird durch ein Modul nur dann behandelt, wenn sein &lt;i&gt;Vertrauenspegel&lt;/i&gt; höher oder gleich dem &lt;i&gt;Sicherheitslevel&lt;/i&gt; des Moduls ist.&lt;/li&gt; &lt;li&gt; Bei jeder Behandlung eines Zugriffs durch ein Modul wird der &lt;i&gt;Vertrauenspegel&lt;/i&gt; des Moduls auf den kleineren Wert von &lt;i&gt;Vertrauenspegel&lt;/i&gt; und dem &lt;i&gt;Sicherheitslevel&lt;/i&gt; des Moduls gesetzt, &lt;i&gt;ausser&lt;/i&gt; der Sicherheitslevel des Moduls ist 0, was bedeutet, das keine Änderung vorgenommen werden soll.&lt;/li&gt; &lt;/ul&gt;&lt;/p&gt;
-&lt;p&gt;&lt;h2&gt;Beispiele&lt;/h2&gt; Module:&lt;ul&gt; &lt;li&gt;  User filesystem, &lt;i&gt;Sicherheitslevel&lt;/i&gt; 1&lt;/li&gt; &lt;li&gt;  Filesystem module, &lt;i&gt;Sicherheitslevel&lt;/i&gt; 3&lt;/li&gt; &lt;li&gt;  CGI module, &lt;i&gt;Sicherheitslevel&lt;/i&gt; 2&lt;/li&gt; &lt;/ul&gt;&lt;/p&gt;
-&lt;p&gt;Einer Anfrage, die durch das "User filesystem" behandelt wird, wird ein &lt;i&gt;Vertrauenspegel&lt;/i&gt; nach einem der &lt;i&gt;Sicherheitslevel&lt;/i&gt; deses Moduls zugewiesen. Diese Anfrage kann dann nicht mehr durch das "CGI-Modul" behandelt werden, da dieses Modul einen höhreren &lt;i&gt;Sicherheitslevel&lt;/i&gt; als der Vertrauenspegel der Anfrage hat.&lt;/p&gt;
-&lt;p&gt;Ansonsten kann die Anfrage durch das "Dateisystem-Modul" und später durch das "CGI-Modul" behandelt werden.&lt;/p&gt;</t>
-</str>
-
-<str id="306">
-<o>Site</o>
-<t>Site</t>
-</str>
-
-<str id="307">
-<o>No such file message override files</o>
-<t>Text für 404-Fehlermeldung anstatt Dateien</t>
-</str>
-
-<str id="308">
-<o>If no file match a given resource all directories above the wanted file is searched for one of the files in this list.&lt;p&gt;
-As an example, if the file /foo/bar/not_there.html is wanted, and this list contains the default value of 404.inc, these files will be searched for, in this order:&lt;/p&gt;&lt;br /&gt;  /foo/bar/404.inc, /foo/404.inc and /404.inc.</o>
-<t>Wenn keine Datei für eine Anfrage vorliegt, wird in allen übergeordneten Verzeichnissen nach eine dieser Dateien durchsucht.&lt;p&gt;
-Wird zum Beispiel die Datei /foo/bar/nicht_vorhanden.html angefordert und in dieser Liste steht der Standardwert 404.inc, wird in folgender Reihenfolge gesucht: &lt;/p&gt;&lt;br /&gt; /foo/bar/404.inc, /foo/404.inc und /404.inc.</t>
-</str>
-
-<str id="309">
-<o>Require user with the 'hilfe' permission</o>
-<t>Benötige Benutzer mit der 'hilfe'-Berechtigung</t>
-</str>
-
-<str id="310">
-<o>If yes, require a user with the hilfe permission set, otherwise, any configuration interface user will work,  even one with only the view settings permission</o>
-<t>Wenn ja, wird ein Benutzer mit der 'hilfe'-Berechtigung benötigt. Ansonsten reicht jeder Benutzer, auch solche mit nur-Lese-Berechtigung</t>
-</str>
-
 <str id="311">
 <o>Site event log for '%s' cleared by %s (%s) from %s</o>
 <t>Eventprotokoll für '%s' gelöscht durch %s (%s) von %s</t>
-</str>
-
-<str id="312">
-<o>Could not interpret the date</o>
-<t>Datum kann nicht interpretiert werden</t>
 </str>
 
 <str id="313">
@@ -1654,81 +541,9 @@ Wird zum Beispiel die Datei /foo/bar/nicht_vorhanden.html angefordert und in die
 <t>Kein Bild gesetzt</t>
 </str>
 
-<str id="349">
-<o>Update Client</o>
-<t>Update-Client</t>
-</str>
-
-<str id="350">
-<o>Load of %s (%s) failed</o>
-<t>Laden von %s (%s) fehlgeschlagen</t>
-</str>
-
-<str id="351">
-<o>The module %s (%s) could not be loaded.</o>
-<t>Das Modul %s (%s) konnte nicht geladen werden.</t>
-</str>
-
-<str id="352">
-<o>Found trailing data after the date. </o>
-<t>Zusätzliche Daten nach dem Datum gefunden. </t>
-</str>
-
-<str id="353">
-<o>Month must be at least 1. </o>
-<t>Monat muss mindestens 1 sein. </t>
-</str>
-
-<str id="354">
-<o>Month must be 12 or less. </o>
-<t>Monat muss 12 oder kleiner sein. </t>
-</str>
-
-<str id="355">
-<o>Day must be at least 1.</o>
-<t>Tag muss mindestens 1 sein.</t>
-</str>
-
-<str id="356">
-<o>%s does not appear to be a valid date.</o>
-<t>%s ist kein gültiges Datum</t>
-</str>
-
-<str id="357">
-<o>Day must be %d or less.</o>
-<t>Tag muss %d oder kleiner sein.</t>
-</str>
-
-<str id="5">
-<o>Interface language</o>
-<t>Interface-Sprache</t>
-</str>
-
-<str id="19">
-<o>Select the Administration interface language.</o>
-<t>Wählen Sie die Sprache für das Administrations-Interface aus.</t>
-</str>
-
 <str id="152">
 <o>%O is not an integer</o>
 <t>%O ist kein Integer</t>
-</str>
-
-<str id="153">
-<o>&lt;dl&gt;
-&lt;dt&gt;normal&lt;/dt&gt;&lt;dd&gt;Show module name and documentation with images.&lt;/dd&gt;
-&lt;dt&gt;fast&lt;/dt&gt;&lt;dd&gt;Like normal, but no type images.&lt;/dd&gt;
-&lt;dt&gt;faster&lt;/dt&gt;&lt;dd&gt;Like normal, but allows selecting multiple modules at once.&lt;/dd&gt;
-&lt;dt&gt;compact&lt;/dt&gt;&lt;dd&gt;Only show the names of modules, and allow addition/deletion of multiple modules at once.&lt;/dd&gt;
-&lt;dt&gt;really compact&lt;/dt&gt;&lt;dd&gt;Like compact, but no module classes.&lt;/dd&gt;
-&lt;/dl&gt;</o>
-<t>&lt;dl&gt;
-&lt;dt&gt;normal&lt;/dt&gt;&lt;dd&gt;Zeigt Modulnamen und Dokumentation mit Bildern an.&lt;/dd&gt;
-&lt;dt&gt;schnell&lt;/dt&gt;&lt;dd&gt;Wie normal, aber ohne Bilder.&lt;/dd&gt;
-&lt;dt&gt;schneller&lt;/dt&gt;&lt;dd&gt;Wie normal, aber erlaubt mehrfache Auswahl von Modulen auf einmal.&lt;/dd&gt;
-&lt;dt&gt;kompakt&lt;/dt&gt;&lt;dd&gt;Zeigt nur die Modulnamen und gestattet das Hinzufügen und Entfernen von mehreren Modulen gleichzeitig.&lt;/dd&gt;
-&lt;dt&gt;sehr kompakt&lt;/dt&gt;&lt;dd&gt;Wie kompakt, aber ohne Modulklassen.&lt;/dd&gt;
-&lt;/dl&gt;</t>
 </str>
 
 <str id="222">
@@ -1786,16 +601,6 @@ as the name of its log file directory.
 <t>Illegaler Sitename</t>
 </str>
 
-<str id="195">
-<o>Community articles</o>
-<t>Community-Artikel</t>
-</str>
-
-<str id="231">
-<o>Most recently published community articles</o>
-<t>Die zuletzt veröffentlichten Community-Artikel</t>
-</str>
-
 <str id="232">
 <o>Crunch activity</o>
 <t>Crunch-Aktivität</t>
@@ -1804,46 +609,6 @@ as the name of its log file directory.
 <str id="262">
 <o>Recently changed Crunch reports</o>
 <t>Kürzlich geänderte Crunch-Reports</t>
-</str>
-
-<str id="263">
-<o>News from www.roxen.com</o>
-<t>News von www.roxen.com</t>
-</str>
-
-<str id="281">
-<o>The news headlines from www.roxen.com</o>
-<t>Die Schlagzeilen von www.roxen.com</t>
-</str>
-
-<str id="283">
-<o>Unknown box %s</o>
-<t>Unbekannte Box %s</t>
-</str>
-
-<str id="285">
-<o>Large Content Boxes</o>
-<t>Grosse Content-Boxen</t>
-</str>
-
-<str id="287">
-<o>Content boxes on the Startpage</o>
-<t>Content-Boxen auf der Startseite</t>
-</str>
-
-<str id="289">
-<o>Small Content Boxes</o>
-<t>Kleine Content-Boxen</t>
-</str>
-
-<str id="327">
-<o>Theme</o>
-<t>Thema</t>
-</str>
-
-<str id="343">
-<o>The theme to use</o>
-<t>Das zu benutzende Thema</t>
 </str>
 
 <str id="358">
@@ -1916,16 +681,6 @@ as the name of its log file directory.
 <t>MySQL-Status</t>
 </str>
 
-<str id="8">
-<o>Server secret</o>
-<t>Server-Geheimnis</t>
-</str>
-
-<str id="9">
-<o>The server secret is a string used in some cryptographic functions, such as calculating unique, non-guessable session id's. Change this value into something that is hard to guess, unless you are satisfied with what your computers random generator has produced</o>
-<t>Das Server-Geheimnis ist eine Zeichenkette, die in einigen kryptographischen Funktionen verwendet wird, um u.a. eindeutige und nicht-ratbare Session-Identifikatoren zu erzeugen. Ändern Sie diesen Wert in etwas hart zu erratendes, sofern Sie nicht mit dem bereits zufällig erzeugten Wert zufrieden sind.</t>
-</str>
-
 <str id="164">
 <o>Databases</o>
 <t>Datenbanken</t>
@@ -1949,36 +704,6 @@ as the name of its log file directory.
 <str id="169">
 <o>Login attempt from %s</o>
 <t>Login-Versuch von %s</t>
-</str>
-
-<str id="167">
-<o>Form font size</o>
-<t>Schriftgröße Formulare</t>
-</str>
-
-<str id="178">
-<o>The fontsize of the variables in the configuration interface</o>
-<t>Die Schriftgröße der Variablen im Konfigurations-Interface</t>
-</str>
-
-<str id="179">
-<o>Documentation font size</o>
-<t>Schriftgröße Dokumentation</t>
-</str>
-
-<str id="193">
-<o>The fontsize of the documentation in the configuration interface</o>
-<t>Die Schriftgröße der Dokumentation im Konfigurations-Interface</t>
-</str>
-
-<str id="205">
-<o>Minimum allowed bitrate</o>
-<t>Minimal erlaubte Bitrate</t>
-</str>
-
-<str id="215">
-<o>The minimum allowed bitrate, in bits/second. If the  client is slower than this set bitrate, it will be disconnected (after a timeout). Setting this higher than 14000 is not recommended if you have modem users.</o>
-<t>Die minimal erlaubte Bitrate, in Bits/Sekunde. Wenn der Browser langsamer ist als diese Rate, wird seine Verbindung nach einem Timeout gelöst.  Bei Modem-Benutzern ist es nicht empfohlen, diesen Wert auf 14000 oder höher zu setzen.</t>
 </str>
 
 <str id="233">
@@ -2036,124 +761,9 @@ as the name of its log file directory.
 <t>Dokumentation</t>
 </str>
 
-<str id="245">
-<o>The syntax is:
- 
-&lt;dl&gt;  &lt;dt&gt;&lt;b&gt;userdb&lt;/b&gt; &lt;i&gt;userdatabase module&lt;/i&gt;&lt;/dt&gt;
-  &lt;dd&gt; Select a non-default userdatabase module. The default is to  search all modules. The userdatabase module config_userdb is always  present, and contains the configuration users&lt;/dd&gt;
-&lt;dt&gt;&lt;b&gt;authmethod&lt;/b&gt; &lt;i&gt;authentication module&lt;/i&gt;&lt;/dt&gt;
-&lt;dd&gt;Select a non-default authentication method.&lt;/dd&gt;&lt;dt&gt;&lt;b&gt;realm&lt;/b&gt; &lt;i&gt;realm name&lt;/i&gt;&lt;/dt&gt;
-&lt;dd&gt;The realm is used when user authentication info is requested&lt;/dd&gt;&lt;/dl&gt;
-  Below, CMD is one of 'allow' and 'deny'
- &lt;dl&gt;
-  &lt;dt&gt;CMD &lt;b&gt;ip&lt;/b&gt;=&lt;i&gt;ip/bits&lt;/i&gt;  [return]&lt;br /&gt;
-  CMD &lt;b&gt;ip&lt;/b&gt;=&lt;i&gt;ip:mask&lt;/i&gt;  [return] &lt;br /&gt;
-  CMD &lt;b&gt;ip&lt;/b&gt;=&lt;i&gt;pattern[,pattern,...]&lt;/i&gt;  [return] &lt;br /&gt;&lt;/dt&gt;
-  &lt;dd&gt;Match the remote IP-address.&lt;/dd&gt;
- 
-  &lt;dt&gt;CMD &lt;b&gt;user&lt;/b&gt;=&lt;i&gt;name[,name,...]&lt;/i&gt;  [return]&lt;/dt&gt;
-  &lt;dd&gt;Requires a authenticated user. If the user name 'any' is used, any valid user will be OK. Otherwise, one of the listed users are required.&lt;/dd&gt;  &lt;dt&gt;CMD &lt;b&gt;group&lt;/b&gt;=&lt;i&gt;name[,name,...]&lt;/i&gt; [return]&lt;/dt&gt;
-&lt;dd&gt;Requires a authenticated user with a group. If the group name  'any' is used, any valid group will be OK. Otherwise, one of the listed groups are required.&lt;/dd&gt;
- 
-&lt;dt&gt;CMD &lt;b&gt;dns&lt;/b&gt;=&lt;i&gt;pattern[,pattern,...]&lt;/i&gt;           [return]&lt;/dt&gt;
-&lt;dd&gt;Require one of the specified DNS domain-names&lt;/dd&gt; 
-&lt;dt&gt;CMD &lt;b&gt;time&lt;/b&gt;=&lt;i&gt;HH:mm-HH:mm&lt;/i&gt;   [return]&lt;/dt&gt;
-&lt;dd&gt;Only allow access to the module from the first time to the  second each day. Both times should be specified in 24-hour  HH:mm format.&lt;/dd&gt;
-&lt;dt&gt;CMD &lt;b&gt;day&lt;/b&gt;=&lt;i&gt;day[,day,...]&lt;/i&gt; [return]&lt;/dt&gt;
-&lt;dd&gt;Only allow access during certain days. Day is either a numerical     value (monday=1, sunday=7) or a string (monday, thuesday etc)&lt;/dd&gt;&lt;/dl&gt;&lt;p&gt;
-  pattern is always a glob pattern (* = any characters, ? = any character).
-&lt;/p&gt;&lt;p&gt;
-  return means that reaching this command results in immediate
-  return, only useful for 'allow'.&lt;/p&gt;
- 
- &lt;p&gt;'deny' always implies a return, no futher testing is done if a
- 'deny' match.&lt;/p&gt;
-</o>
-<t>Die Syntax ist:
- 
-&lt;dl&gt;  &lt;dt&gt;&lt;b&gt;userdb&lt;/b&gt; &lt;i&gt;userdatabase module&lt;/i&gt;&lt;/dt&gt;
-  &lt;dd&gt; Wählt ein bestimmtes userdatabase-Modul aus. Das Standardverhalten ist, sämtliche Module zu durchsuchen.  Das userdatabase-Modul des Konfigurations-Interfaces ist immer präsent und enthält die Benutzer des Konfigurations-Interfaces&lt;/dd&gt;
-&lt;dt&gt;&lt;b&gt;authmethod&lt;/b&gt; &lt;i&gt;authentication module&lt;/i&gt;&lt;/dt&gt;
-&lt;dd&gt;Wählt eine bestimmte Authentikations-Methode.&lt;/dd&gt;&lt;dt&gt;&lt;b&gt;realm&lt;/b&gt; &lt;i&gt;realm name&lt;/i&gt;&lt;/dt&gt;
-&lt;dd&gt;Der Realm, der bei einer Benutzer-Authentikation verwendet wird&lt;/dd&gt;&lt;/dl&gt;
-  Im Folgenden ist CMD entweder 'allow' oder 'deny'
- &lt;dl&gt;
-  &lt;dt&gt;CMD &lt;b&gt;ip&lt;/b&gt;=&lt;i&gt;ip/bits&lt;/i&gt;  [return]&lt;br /&gt;
-  CMD &lt;b&gt;ip&lt;/b&gt;=&lt;i&gt;ip:mask&lt;/i&gt;  [return] &lt;br /&gt;
-  CMD &lt;b&gt;ip&lt;/b&gt;=&lt;i&gt;pattern[,pattern,...]&lt;/i&gt;  [return] &lt;br /&gt;&lt;/dt&gt;
-  &lt;dd&gt;Überprüfung auf IP-Adresse des Webbrowsers.&lt;/dd&gt;
- 
-  &lt;dt&gt;CMD &lt;b&gt;user&lt;/b&gt;=&lt;i&gt;name[,name,...]&lt;/i&gt;  [return]&lt;/dt&gt;
-  &lt;dd&gt;Ein Benutzer wird verlangt. Wird 'any' benutzt, ist jeder Benutzer berechtigt. Ansonsten ist einer der gelisteten Benutzernamen notwendig.&lt;/dd&gt;  &lt;dt&gt;CMD &lt;b&gt;group&lt;/b&gt;=&lt;i&gt;name[,name,...]&lt;/i&gt; [return]&lt;/dt&gt;
-&lt;dd&gt;Eine Benutzergruppe wird verlangt.  Wird 'any' benutzt, ist jede Gruppe berechtigt. Ansonsten ist eine der gelisteten Benutzergruppen notwendig.&lt;/dd&gt;
- 
-&lt;dt&gt;CMD &lt;b&gt;dns&lt;/b&gt;=&lt;i&gt;pattern[,pattern,...]&lt;/i&gt;           [return]&lt;/dt&gt;
-&lt;dd&gt;Einer der angegebenen DNS Domainnamen ist erforderlich&lt;/dd&gt; 
-&lt;dt&gt;CMD &lt;b&gt;time&lt;/b&gt;=&lt;i&gt;HH:mm-HH:mm&lt;/i&gt;   [return]&lt;/dt&gt;
-&lt;dd&gt;Nur Zugriffe innerhalb des angegebenen Zeitintervalls sind zulässig. Beide Zeiten sollten im 24-Stunden Format HH:mm angegeben werden.&lt;/dd&gt;
-&lt;dt&gt;CMD &lt;b&gt;day&lt;/b&gt;=&lt;i&gt;day[,day,...]&lt;/i&gt; [return]&lt;/dt&gt;
-&lt;dd&gt;Nur Zugriffe an bestimmten Tagen sind zulässig. Der Tag wird als Zahl (Montag=1, Sonntag=7) angegeben.&lt;/dd&gt;&lt;/dl&gt;&lt;p&gt;
-  pattern ist immer ein Muster (* = jede Zeichenkette, ? = jedes einzelne Zeichen).
-&lt;/p&gt;&lt;p&gt;
-  return bedeutet, daß bei diesem Kommando sofort das Ergebnis zurückgegeben wird.  Dies ist nur sinnvoll bei 'allow'..&lt;/p&gt;
- 
- &lt;p&gt;'deny' bedeutet immer ein sofortige Rückgabe, kein weiteren Überprüfungen finden statt.&lt;/p&gt;
-</t>
-</str>
-
-<str id="246">
-<o>Compatibility level</o>
-<t>Kompatibilitätsstufe</t>
-</str>
-
-<str id="257">
-<o>Passive port minimum</o>
-<t>Passiver Port, Minimum</t>
-</str>
-
-<str id="320">
-<o>Minimum port number to use in the PASV/EPSV response.</o>
-<t>Minimale Portnummer für PASV/EPSV Antworten</t>
-</str>
-
-<str id="321">
-<o>Passive port maximum</o>
-<t>Passiver Port, Maximum</t>
-</str>
-
-<str id="322">
-<o>Maximum port number to use in the PASV/EPSV response.</o>
-<t>Maximale Portnummer für PASV/EPSV Anworten</t>
-</str>
-
 <str id="323">
 <o>Shared with </o>
 <t>Geteilt mit</t>
-</str>
-
-<str id="14">
-<o>Module list mode</o>
-<t>Modulliste Modus</t>
-</str>
-
-<str id="15">
-<o>The module list mode. One of &lt;dl&gt;&lt;dt&gt;Folded&lt;/dt&gt;&lt;dd&gt;Modules in the same group are folded&lt;/dd&gt;&lt;dt&gt;UnFolded&lt;/dt&gt;&lt;dd&gt;Like the 'old' Roxen 2.1 list&lt;/dd&gt;&lt;dt&gt;JavaScript Popup&lt;/dt&gt;&lt;dd&gt;Like Folded, but when you move the mouse over a folded group, a menu with the folded modules will popup&lt;/dd&gt;&lt;/dl&gt;</o>
-<t>Der Modullisten Modus. Kann sein: &lt;dl&gt;&lt;dt&gt;Zusammengefaltet&lt;/dt&gt;&lt;dd&gt;Module derselben Gruppe sind zusammengefaltet&lt;/dd&gt;&lt;dt&gt;Nicht zusammengefaltet&lt;/dt&gt;&lt;dd&gt;Wie die 'alte' Roxen 2.1 Liste&lt;/dd&gt;&lt;dt&gt;JavaScript Popup&lt;/dt&gt;&lt;dd&gt;Wie Zusammengefaltet, aber ein Menu mit den untergeordneten Modulen erscheint, wenn man mit der Maus drüberfährt&lt;/dd&gt;&lt;/dl&gt;</t>
-</str>
-
-<str id="17">
-<o>Folded with javascript popup</o>
-<t>Zusammengefaltet mit Javascript Popup</t>
-</str>
-
-<str id="122">
-<o>Folded</o>
-<t>Zusammengefaltet</t>
-</str>
-
-<str id="123">
-<o>Unfolded (old style)</o>
-<t>Nicht zusammengefaltet (Herkömmliches Verhalten)</t>
 </str>
 
 <str id="219">
@@ -2176,47 +786,9 @@ as the name of its log file directory.
 <t>HTTP Cookies</t>
 </str>
 
-<str id="384">
-<o>Warning: The theme %s  no longer exists, using default.
-</o>
-<t>Warnung: Das Theme %s existiert nicht mehr, das Default-Theme wird benutzt.</t>
-</str>
-
-<str id="385">
-<o>Reload failed</o>
-<t>Neuladen fehlgeschlagen</t>
-</str>
-
-<str id="386">
-<o>The compatibility level is used by different modules to select the right behavior to remain compatible with earlier Roxen versions. When a server configuration is created, this variable is set to the latest version. After that it's never changed automatically, thereby ensuring that server configurations migrated from earlier Roxen versions is kept at the right compatibility level.
-&lt;p&gt;
-This variable may be changed manually, but it's advisable to test the site carefully afterwards. A reload of the whole server configuration is required to propagate the change properly to all modules.</o>
-<t>Der Kompatibilitäts-Level wird von einigen Modulen benutzt, um das korrekte Verhalten zu wählen, um mit früheren Roxen-Version kompatibel zu bleiben. Wenn eine Server-Konfiguration erstellt wird, wird diese Variable auf die aktuelle Version gesetzt. Danach wird sie niemals automatisch geändert, um zu gewährleisten, dass Server-Konfigurationen, die von früheren Roxen-Versionen migriert werden, auf dem richtigen Kompatibilitäts-Level zu halten.</t>
-</str>
-
-<str id="387">
-<o>Auto Restart: Schedule</o>
-<t>Auto Restart: Ablaufplan</t>
-</str>
-
-<str id="388">
-<o>Automatically restart the server according to this schedule.</o>
-<t>Der Server wird automatisch gemäß des Ablaufplanes neu gestartet.</t>
-</str>
-
-<str id="999">
-<o>SNMP: Enable SNMP agent</o>
-<t>SNMP: Aktiviere SNMP Agent</t>
-</str>
-
 <str id="389">
 <o>Fetching data from %s...</o>
 <t>Beziehe Daten von %s...</t>
-</str>
-
-<str id="390">
-<o>Release notes</o>
-<t>Veröffentlichungshinweise</t>
 </str>
 
 <str id="391">
@@ -2262,11 +834,6 @@ This variable may be changed manually, but it's advisable to test the site caref
 <str id="399">
 <o>Todays comic from MegaTokyo</o>
 <t>MegaTokyo-Comic von heute</t>
-</str>
-
-<str id="400">
-<o>Update</o>
-<t>Aktualisierung</t>
 </str>
 
 <str id="401">
@@ -2839,26 +1406,6 @@ Roxen verwaltet.&lt;/p&gt;</t>
 <t>Zeichenkette %O am Ende der ganzen Zahl gefunden.</t>
 </str>
 
-<str id="85">
-<o>Default module tab</o>
-<t>Standard-Modulreiter</t>
-</str>
-
-<str id="162">
-<o>The tab that will be selected by default when you select a module.</o>
-<t>Der Reiter, der ausgewählt wird, wenn ein Modul ausgesucht wird.</t>
-</str>
-
-<str id="163">
-<o>Enable replication system</o>
-<t>Aktiviere Replikationssystem</t>
-</str>
-
-<str id="337">
-<o>If enabled, Roxen will enable various replication systems needed to set up multiple frontend systems. You will need a database named 'replicate' that recides in a shared mysql server for this to work. Also, all servers has to have this flag set. Roxen must be restarted before changes to this variable takes effect </o>
-<t>Wenn aktiviert, wird Roxen einige Replikationsysteme aktivieren, um mehrere Frontends aufzusetzen. Sie benötigen eine Datenbank namens 'replicate' in einem verteilten Mysql Server. Ferner müssen alle Server diese Option gesetzt haben. Bevor dieser Wert übernommen wird, muss Roxen neu gestartet werden.</t>
-</str>
-
 <str id="361">
 <o>Are you sure you want to delete the database %s and the data?</o>
 <t>Sind Sie sicher, dass Sie die Datenbank %s und die Daten löschen wollen?</t>
@@ -2914,11 +1461,6 @@ Roxen verwaltet.&lt;/p&gt;</t>
 <t>Felder in %s Datenbanken können nicht gelistet werden</t>
 </str>
 
-<str id="373">
-<o>Bind to these URLs. You can use '*' and '?' to perform globbing (using any of these will default to binding to all IP-numbers on your machine).  If you specify a IP# in the field it will take precedence over the hostname.</o>
-<t>Diese URLs binden. Man kann '*' und '?' benutzen, um mehrere IP-Adressen des Rechners zu benutzen. Wenn eine IP Nummer in diesem Feld angegeben wird, hat diese Vorrang vor Hostnamen.</t>
-</str>
-
 <str id="508">
 <o>Ports</o>
 <t>Ports</t>
@@ -2932,4 +1474,58 @@ Roxen verwaltet.&lt;/p&gt;</t>
 <str id="510">
 <o>Bind this port: </o>
 <t>Diesen Port binden: </t>
+</str>
+
+<str id="1000">
+<new/>
+<o>Content Editor (Instant Edition)</o>
+<t></t>
+</str>
+
+<str id="1001">
+<new/>
+<o>Content Editor (Advanced Edition)</o>
+<t></t>
+</str>
+
+<str id="1002">
+<new/>
+<o>Web Developer</o>
+<t></t>
+</str>
+
+<str id="1003">
+<new/>
+<o>System Developer</o>
+<t></t>
+</str>
+
+<str id="1004">
+<new/>
+<o>Administrator</o>
+<t></t>
+</str>
+
+<str id="1005">
+<new/>
+<o>Forms And Response Module</o>
+<t></t>
+</str>
+
+<str id="1006">
+<new/>
+<o>Categorization Module</o>
+<t></t>
+</str>
+
+<str id="1007">
+<new/>
+<o>Tutorials</o>
+<t></t>
+</str>
+
+<str id="1008">
+<new/>
+<o>Refresh</o>
+<t></t>
 </str>

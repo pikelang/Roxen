@@ -5,294 +5,73 @@
 <file>../modules/filesystems/filesystem.pike</file>
 <file>../modules/filesystems/sqlfs.pike</file>
 
-
-
-<str id="2">
-<o>This is the basic file system module that makes it possible to mount a directory structure in the virtual file system of your site.</o>
+<str id="63">
+<o>Bad Request - Expected more data.</o>
 <t></t>
 </str>
 
-<str id="3">
-<o>Accesses to this filesystem</o>
+<str id="64">
+<o>Transfer Complete.</o>
 <t></t>
 </str>
 
-<str id="4">
-<o>Redirects</o>
+<str id="65">
+<o>Out of disk quota.</o>
 <t></t>
 </str>
 
-<str id="5">
-<o>Normal files</o>
+<str id="66">
+<o>Disk full.</o>
 <t></t>
 </str>
 
-<str id="6">
-<o>No file accesses)</o>
+<str id="67">
+<o>File exists, but access forbidden by user.</o>
 <t></t>
 </str>
 
-<str id="7">
-<o>PUTs</o>
+<str id="68">
+<o>Permission to 'MKDIR' denied.</o>
 <t></t>
 </str>
 
-<str id="8">
-<o>MKDIRs</o>
+<str id="69">
+<o>Permission denied.</o>
 <t></t>
 </str>
 
-<str id="9">
-<o>Moved files</o>
+<str id="70">
+<o>Ok</o>
 <t></t>
 </str>
 
-<str id="10">
-<o>CHMODs</o>
+<str id="71">
+<o>Permission to 'PUT' files denied.</o>
 <t></t>
 </str>
 
-<str id="11">
-<o>Deletes</o>
+<str id="73">
+<o>Permission to 'CHMOD' files denied.</o>
 <t></t>
 </str>
 
-<str id="12">
-<o>Permission denied</o>
+<str id="74">
+<o>Permission to 'MV' files denied.</o>
 <t></t>
 </str>
 
-<str id="13">
-<o>not counting .htaccess</o>
+<str id="75">
+<o>Permission to 'MOVE' files denied.</o>
 <t></t>
 </str>
 
-<str id="14">
-<o>Directories</o>
+<str id="76">
+<o>Permission to DELETE file denied.</o>
 <t></t>
 </str>
 
-<str id="15">
-<o>Mount point</o>
-<t></t>
-</str>
-
-<str id="16">
-<o>Where the module will be mounted in the site's virtual file system.</o>
-<t></t>
-</str>
-
-<str id="17">
-<o>Search path</o>
-<t></t>
-</str>
-
-<str id="18">
-<o>The directory that contains the files.</o>
-<t></t>
-</str>
-
-<str id="19">
-<o>Show hidden files</o>
-<t></t>
-</str>
-
-<str id="20">
-<o>If set, hidden files, ie files that begin with a '.', will be shown in directory listings.</o>
-<t></t>
-</str>
-
-<str id="21">
-<o>Enable directory listings per default</o>
-<t></t>
-</str>
-
-<str id="22">
-<o>If set, it will be possible to get a directory listings from directories in this file system. It is possible to force a directory to never be browsable by putting a &lt;tt&gt;.www_not_browsable&lt;/tt&gt; or a &lt;tt&gt;.nodiraccess&lt;/tt&gt; file in it. Similarly it is possible to let a directory be browsable, even if the file system is not, by putting a &lt;tt&gt;.www_browsable&lt;/tt&gt; file in it.
-</o>
-<t></t>
-</str>
-
-<str id="23">
-<o>List prevention files</o>
-<t></t>
-</str>
-
-<str id="24">
-<o>All directories containing any of these files will not be browsable.</o>
-<t></t>
-</str>
-
-<str id="25">
-<o>Show backup files</o>
-<t></t>
-</str>
-
-<str id="26">
-<o>If set, files ending with '~', '#' or '.bak' will be shown in directory listings</o>
-<t></t>
-</str>
-
-<str id="27">
-<o>Handle the PUT method</o>
-<t></t>
-</str>
-
-<str id="28">
-<o>If set, it will be possible to upload files with the HTTP method PUT, or through FTP.</o>
-<t></t>
-</str>
-
-<str id="29">
-<o>Handle the DELETE method</o>
-<t></t>
-</str>
-
-<str id="30">
-<o>If set, it will be possible to delete files with the HTTP method DELETE, or through FTP.</o>
-<t></t>
-</str>
-
-<str id="31">
-<o>Require authentication for modification</o>
-<t></t>
-</str>
-
-<str id="32">
-<o>Only allow users authenticated by a authentication module to use methods that can modify the files, such as PUT or DELETE. If this is not set the file system will be a &lt;b&gt;very&lt;/b&gt; public one since anyone will be able to edit files.</o>
-<t></t>
-</str>
-
-<str id="33">
-<o>Cache the results of stat(2)</o>
-<t></t>
-</str>
-
-<str id="34">
-<o>A performace option that can speed up retrieval of files from NFS with up to 50%. In turn it uses some memory and the file system will not notice that files have changed unless it gets a pragma no-cache request (produced e.g. by Alt-Ctrl-Reload in Netscape). Therefore this option should not be used on file systems that change a lot.</o>
-<t></t>
-</str>
-
-<str id="35">
-<o>Access files as the logged in user</o>
-<t></t>
-</str>
-
-<str id="36">
-<o>If set, the module will access files as the authenticated user. This assumes that a authentication module which imports the users from the operating systems, such as the &lt;i&gt;User database&lt;/i&gt; module is used. This option is very useful for named FTP sites, but it will have severe performance impacts since all threads will be locked for each access.</o>
-<t></t>
-</str>
-
-<str id="37">
-<o>Forbid access to symlinks</o>
-<t></t>
-</str>
-
-<str id="38">
-<o>It set, the file system will not follow symbolic links. This option can lower performace by a lot.</o>
-<t></t>
-</str>
-
-<str id="39">
-<o>File contents charset</o>
-<t></t>
-</str>
-
-<str id="40">
-<o>The charset of the contents of the files on this file system. This variable makes it possible for Roxen to use any text file, no matter what charset it is written in. If necessary, Roxen will convert the file to Unicode before processing the file.</o>
-<t></t>
-</str>
-
-<str id="41">
-<o>Filename charset</o>
-<t></t>
-</str>
-
-<str id="42">
-<o>The charset of the file names of the files on this file system. Unlike the &lt;i&gt;File contents charset&lt;/i&gt; variable, this might not work for all charsets simply because not all browsers support anything except ISO-8859-1 in URLs.</o>
-<t></t>
-</str>
-
-<str id="43">
-<o>Internal files</o>
-<t></t>
-</str>
-
-<str id="44">
-<o>A list of glob patterns that matches files which should be considered internal. Internal files cannot be requested directly from a browser, won't show up in directory listings and can never be uploaded, moved or deleted by a browser.They can only be accessed internally, e.g. with the RXML tags &lt;tt&gt;&amp;lt;insert&amp;gt;&lt;/tt&gt; and &lt;tt&gt;&amp;lt;use&amp;gt;&lt;/tt&gt;.</o>
-<t></t>
-</str>
-
-<str id="45">
-<o>Open of %s failed. Permission denied.
-</o>
-<t></t>
-</str>
-
-<str id="46">
-<o>Creation of %s failed. Permission denied.
-</o>
-<t></t>
-</str>
-
-<str id="47">
-<o>Creation of %s failed. Out of quota.
-</o>
-<t></t>
-</str>
-
-<str id="48">
-<o>Deletion of %s failed. Permission denied.
-</o>
-<t></t>
-</str>
-
-<str id="49">
-<o>DELETING the file %s.
-</o>
-<t></t>
-</str>
-
-<str id="50">
-<o>%s from %s</o>
-<t></t>
-</str>
-
-<str id="51">
-<o>File systems: Normal File system</o>
-<t></t>
-</str>
-
-<str id="1">
-<o>Path verification of %s failed.
-</o>
-<t></t>
-</str>
-
-<str id="52">
-<o>Path verification of %O failed:
-%O is not a prefix of %O
-</o>
-<t></t>
-</str>
-
-<str id="53">
-<o>Authentication database to use</o>
-<t></t>
-</str>
-
-<str id="54">
-<o>The User database module to use when authenticating users for the access file as the logged in user feature.</o>
-<t></t>
-</str>
-
-<str id="55">
-<o>Access files as the logged in user forces login</o>
-<t></t>
-</str>
-
-<str id="56">
-<o>If true, a user will have to be logged in to access files in this filesystem</o>
+<str id="%s DELETED from the server.">
+<o></o>
 <t></t>
 </str>
 
@@ -303,6 +82,16 @@
 
 <str id="58">
 <o>Access files stored in a SQL database</o>
+<t></t>
+</str>
+
+<str id="15">
+<o>Mount point</o>
+<t></t>
+</str>
+
+<str id="16">
+<o>Where the module will be mounted in the site's virtual file system.</o>
 <t></t>
 </str>
 
@@ -323,5 +112,25 @@
 
 <str id="62">
 <o>The table that cotains the files. The table should contain at least the columns 'name' and 'contents'. Optionally you can also have the fields 'mtime', 'uid' and 'gid'.</o>
+<t></t>
+</str>
+
+<str id="39">
+<o>File contents charset</o>
+<t></t>
+</str>
+
+<str id="40">
+<o>The charset of the contents of the files on this file system. This variable makes it possible for Roxen to use any text file, no matter what charset it is written in. If necessary, Roxen will convert the file to Unicode before processing the file.</o>
+<t></t>
+</str>
+
+<str id="41">
+<o>Filename charset</o>
+<t></t>
+</str>
+
+<str id="42">
+<o>The charset of the file names of the files on this file system. Unlike the &lt;i&gt;File contents charset&lt;/i&gt; variable, this might not work for all charsets simply because not all browsers support anything except ISO-8859-1 in URLs.</o>
 <t></t>
 </str>

@@ -1,5 +1,5 @@
 # configurable stuff
-EXTRACT=/home/per/src/Pike/7.2/bin/extract.pike
+EXTRACT=/home/nilsson/Pike/7.3/bin/extract.pike
 PIKE=pike
 
 # do not alter

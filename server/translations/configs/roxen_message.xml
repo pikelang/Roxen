@@ -5,8 +5,6 @@
 <baselang>eng</baselang>
 <xmlpath>../translations/%L/roxen_message.xml</xmlpath>
 
-  <file>../base_server/configuration.pike</file>
-  <file>../base_server/roxen.pike</file>
   <file>../base_server/wizard.pike</file>
   <file>../protocols/prot_hilfe.pike</file>
 </project>

@@ -5,19 +5,10 @@
 <baselang>eng</baselang>
 <xmlpath>../translations/%L/roxen_config.xml</xmlpath>
 
-<!-- The rest of the files in this dir in the project 'admin_tasks' -->
-
-  <file>../base_server/config_userdb.pike</file>
-  <file>../base_server/configuration.pike</file>
-  <file>../base_server/global_variables.pike</file>
-  <file>../base_server/module_support.pike</file>
-  <file>../config_interface/actions/index.html</file>
   <file>../config_interface/boxes/Box.pmod</file>
-  <file>../config_interface/boxes/articles.pike</file>
   <file>../config_interface/boxes/crunch.pike</file>
   <file>../config_interface/boxes/doclinks.pike</file>
   <file>../config_interface/boxes/megatokyo.pike</file>
-  <file>../config_interface/boxes/ris_news.pike</file>
   <file>../config_interface/boxes/server_status.pike</file>
   <file>../config_interface/boxes/welcome.pike</file>
   <file>../config_interface/cv_startpage_tabs.pike</file>
@@ -49,24 +40,25 @@
   <file>../config_interface/sites/index.html</file>
   <file>../config_interface/sites/log.pike</file>
   <file>../config_interface/sites/new_site.html</file>
-  <file>../config_interface/sites/site.html</file>
   <file>../config_interface/sites/site_content.pike</file>
   <file>../config_interface/sites/site_header.pike</file>
+  <file>../config_interface/sites/site.html</file>
   <file>../config_interface/statusinfo.pike</file>
+  <file>../config_interface/tasks/index.html</file>
   <file>../config_interface/template</file>
   <file>../config_interface/topmenu.pike</file>
   <file>../config_interface/user_delete.pike</file>
   <file>../config_interface/user_form.pike</file>
   <file>../config_interface/users.html</file>
-  <file>../etc/modules/Variable.pmod/Date.pike</file>
-  <file>../etc/modules/Variable.pmod/Email.pike</file>
-  <file>../etc/modules/Variable.pmod/Image.pike</file>
-  <file>../etc/modules/Variable.pmod/Mapping.pike</file>
-  <file>../etc/modules/Variable.pmod/Schedule.pike</file>
-  <file>../etc/modules/Variable.pmod/Upload.pike</file>
-  <file>../etc/modules/Variable.pmod/VerifiedString.pike</file>
-  <file>../etc/modules/Variable.pmod/module.pmod</file>
   <file>../modules/configuration/config_filesystem.pike</file>
   <file>../modules/configuration/config_tags.pike</file>
+  <file>../pike_modules/Variable.pmod/Date.pike</file>
+  <file>../pike_modules/Variable.pmod/Email.pike</file>
+  <file>../pike_modules/Variable.pmod/Image.pike</file>
+  <file>../pike_modules/Variable.pmod/Mapping.pike</file>
+  <file>../pike_modules/Variable.pmod/module.pmod</file>
+  <file>../pike_modules/Variable.pmod/Schedule.pike</file>
+  <file>../pike_modules/Variable.pmod/Upload.pike</file>
+  <file>../pike_modules/Variable.pmod/VerifiedString.pike</file>
   <file>../site_templates/common.pike</file>
 </project>
