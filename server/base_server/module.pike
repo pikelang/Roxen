@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.149 2004/03/01 15:43:20 mast Exp $
+// $Id: module.pike,v 1.150 2004/03/01 15:48:35 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -807,15 +807,11 @@ void patch_properties(string path, array(PatchPropertyCommand) instructions,
     results = instructions->execute(path, this_object(), id);
   };
   if (err) {
-    report_debug("patch_properties() failed:\n"
-		 "%s\n",
-		 describe_backtrace(err));
-    mapping(string:mixed) answer =
-      Roxen.http_low_answer(500, "Internal Server Error.");
     foreach(instructions, PatchPropertyCommand instr) {
       result->add_property(path, instr->property_name, answer);
     }
     patch_property_unroll(path, id);
+    throw (err);
   } else {
     int any_failed;
     foreach(results, mapping(string:mixed) answer) {
