@@ -1,5 +1,5 @@
 /*
- * $Id: pike_profiling.pike,v 1.3 2004/05/20 21:06:49 grubba Exp $
+ * $Id: pike_profiling.pike,v 1.4 2004/05/21 11:18:52 grubba Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -21,35 +21,16 @@ int no_reload()
 }
 
 #if efun(get_profiling_info)
-string remove_cwd(string from)
-{
-  string s = from-(getcwd()+"/");
-  sscanf( s, "%*s/modules/%s", s );
-  s = replace( s, ".pmod/", "." );
-  s = replace( s, ".pmod", "" );
-  s = replace( s, ".pike", "" );
-  s = replace( s, ".so", "" );
-  s = replace( s, "Luke/", "Luke." );
-  return s;
-}
-
-array (program) all_modules()
-{
-  return values(master()->programs);
-}
-
-string program_name(program|object what)
-{
-  string p;
-  if(p = master()->program_name(what)) return remove_cwd(p);
-  return "?";
-}
-
+program first_program = this_program;
 mapping get_prof()
 {
+  program prog;
+  while (programp(prog = _prev(first_program))) {
+    first_program = prog;
+  }
   mapping res = ([]);
-  foreach(all_modules(), program prog) {
-    res[program_name(prog)] = prog && get_profiling_info( prog );
+  for (prog = first_program; programp(prog); prog = _next(prog)) {
+    res[master()->describe_module(prog)] = get_profiling_info(prog);
   }
   return res;
 }
@@ -57,20 +38,20 @@ mapping get_prof()
 array get_prof_info(string|void foo)
 {
   array res = ({});
-  mapping as_functions = ([]);
-  mapping tmp = get_prof();
+  mapping(string:array(int)) as_functions = ([]);
+  mapping(string:array(int|mapping(string:array(int)))) tmp = get_prof();
   foreach(indices(tmp), string c)
   {
-    mapping g = tmp[c][1];
+    mapping(string:array(int)) g = tmp[c][1];
+    c = (c/"/")[-1];
     foreach(indices(g), string f)
     {
-      if(g[f][2])
+      if(g[f][2])	// Total time.
       {
-        c = replace( c, "base_server/", "roxen." );
-        c = (c/"/")[-1];
-        string fn = c+"."+f;
-        if(  (!foo || !sizeof(foo) || glob(foo,c+"."+f)) )
+        string fn = c+f;
+        if( (!foo || !sizeof(foo) || glob(foo, fn)) )
         {
+#if 0
           switch( f )
           {
            case "cast":
@@ -90,6 +71,7 @@ array get_prof_info(string|void foo)
              fn = c+"[]";
              break;
           }
+#endif /* 0 */
           if( !as_functions[fn] )
             as_functions[fn] = ({ g[f][2],g[f][0],g[f][1] });
           else
@@ -103,19 +85,21 @@ array get_prof_info(string|void foo)
     }
   }
   array q = indices(as_functions);
-  sort(column(values(as_functions), 2), q);	// Sort after total time.
-  foreach(q, string i) if(as_functions[i][0])
-    res += ({({i,
-	       sprintf("%d",as_functions[i][1]),	// Calls
+  array b = values(as_functions);
+  sort(column(b, 1), b, q);	// Secondary sort after self time.
+  sort(column(b, 2), b, q);	// Primary sort after total time.
+  for (int i = 0; i < sizeof(q); i++) {
+    res += ({({q[i],
+	       sprintf("%d",b[i][1]),	// Calls
                sprintf("%8d",				// Time
-                       as_functions[i][0]),
+                       b[i][0]),
                sprintf("%8d",				// +Children
-                       as_functions[i][2]),
+                       b[i][2]),
 	       sprintf("%7.3f",				// Average
-		       ((float)as_functions[i][0])/as_functions[i][1]),
+		       ((float)b[i][0])/b[i][1]),
 	       sprintf("%7.3f",				// +Children
-                       ((float)as_functions[i][2])/as_functions[i][1])})});
-  sort((array(float))column(res,3),res);
+                       ((float)b[i][2])/b[i][1])})});
+  }
   return reverse(res);
 }
 
