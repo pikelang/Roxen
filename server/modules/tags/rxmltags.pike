@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.436 2003/11/13 17:17:52 wellhard Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.437 2004/01/30 17:40:22 anders Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -4702,7 +4702,7 @@ class TagIfTime {
 	return 1;
       return 0;
     }
-    else if(m->inclusive || !(m->before || m->after) && a==b)
+    else if( (m->inclusive || !(m->before || m->after)) && a==b )
       return 1;
     if(m->before && a>b)
       return 1;
