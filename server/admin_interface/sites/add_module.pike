@@ -526,11 +526,7 @@ string page_really_compact( RequestID id )
   mods = roxen->all_modules();
   loader.pop_compile_error_handler();
 
-  sort(map(mods->get_name(), lambda(string in) {
-			       in = lower_case((string)in);
-			       //sscanf(in, "%*s: %s", in);
-			       return in;
-			     }), mods);
+  sort(map(mods->get_name(), lower_case), mods);
   string res = "";
 
   mixed r;
