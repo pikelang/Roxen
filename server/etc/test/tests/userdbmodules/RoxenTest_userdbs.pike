@@ -120,6 +120,10 @@ void verify_compat_user_from_uid( Configuration c, array list )
 
 void run_tests( Configuration c )
 {
+#ifdef __NT__
+  return; // This module does not work on NT.
+#endif
+
   RoxenModule m;
 
   test( roxen.enable_configuration, "usertestconfig" );
