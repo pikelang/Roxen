@@ -11,7 +11,7 @@ import Parser.XML.Tree;
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_webapp",X,Y)
 // end of the locale related stuff
 
-constant cvs_version = "$Id: webapp.pike,v 2.2 2002/01/21 16:49:53 tomas Exp $";
+constant cvs_version = "$Id: webapp.pike,v 2.3 2002/01/23 15:00:15 tomas Exp $";
 
 constant thread_safe=1;
 constant module_unique = 0;
@@ -75,118 +75,6 @@ static mapping http_low_answer(int errno, string data, string|void desc)
   }
 
   return res;
-}
-
-
-// NOTE: base is modified destructably!
-static private array(string) my_combine_path_array(array(string) base, string part)
-{
-  if ((part == ".") || (part == "")) {
-    if ((part == "") && (!sizeof(base))) {
-      return(({""}));
-    } else {
-      return(base);
-    }
-  } else if ((part == "..") && sizeof(base) &&
-             (base[-1] != "..") && (base[-1] != "")) {
-    base[-1] = part;
-    return(base);
-  } else {
-    return(base + ({ part }));
-  }
-}
-
-static private array(string) glob_expand(string glob_path)
-{
-#ifdef __NT__
-  glob_path = replace( glob_path, "\\", "/" );
-#endif
-  WEBAPP_WERR(sprintf("glob_expand(%s)",glob_path));
-  string|array(string) ret_path = glob_path;
-
-  // FIXME: Does not check if "*" or "?" was quoted!
-  if (replace(ret_path, ({"*", "?"}), ({ "", "" })) != ret_path) {
-
-    // Globs in the file-name.
-
-    array(string|array(string)) matches = ({ ({ }) });
-    multiset(string) paths; // Used to filter out duplicates.
-    int i;
-    //foreach(my_combine_path("", path)/"/", string part) {
-    foreach(ret_path/"/", string part) {
-      paths = (<>);
-      if (replace(part, ({"*", "?"}), ({ "", "" })) != part) {
-        // Got a glob.
-        array(array(string)) new_matches = ({});
-        foreach(matches, array(string) path) {
-          array(string) dir;
-          dir = Filesystem.System()->get_dir(combine_path("", path*"/"));
-          if (dir && sizeof(dir)) {
-            dir = glob(part, dir);
-            if ((< '*', '?' >)[part[0]]) {
-              // Glob-expanding does not expand to files starting with '.'
-              dir = Array.filter(dir, lambda(string f) {
-                                        return (sizeof(f) && (f[0] != '.'));
-                                      });
-            }
-            foreach(sort(dir), string f) {
-              array(string) arr = my_combine_path_array(path, f);
-              string p = arr*"/";
-              if (!paths[p]) {
-                paths[p] = 1;
-                new_matches += ({ arr });
-              }
-            }
-          }
-        }
-        matches = new_matches;
-      } else {
-        // No glob
-        // Just add the part. Modify matches in-place.
-        for(i=0; i<sizeof(matches); i++) {
-          matches[i] = my_combine_path_array(matches[i], part);
-          string path = matches[i]*"/";
-          if (paths[path]) {
-            matches[i] = 0;
-          } else {
-            paths[path] = 1;
-          }
-        }
-        matches -= ({ 0 });
-      }
-      if (!sizeof(matches)) {
-        break;
-      }
-    }
-    if (sizeof(matches)) {
-      // Array => string
-      for (i=0; i < sizeof(matches); i++) {
-        matches[i] *= "/";
-      }
-      // Filter out non-existing or forbiden files/directories
-      /*
-      matches = Array.filter(matches,
-                             lambda(string short, string cwd,
-                                    object m_id) {
-                               object id = RequestID2(m_id);
-                               id->method = "LIST";
-                               id->not_query = combine_path(cwd, short);
-                               return(id->conf->stat_file(id->not_query,
-                                                          id));
-                             }, cwd, master_session);
-      */
-      if (sizeof(matches)) {
-        ret_path = matches;
-      }
-    }
-  }
-  if (stringp(ret_path)) {
-    // No glob
-    //ret_path = ({ my_combine_path("", ret_path) });
-    ret_path = ({ combine_path("", ret_path) });
-  }
-
-  return ret_path;
 }
 
 void stop()
@@ -556,7 +444,12 @@ string status()
 
 string query_name()
 {
-  return sprintf(LOCALE(11, "WAR loaded from %s"), query("warname"));
+  string name = query("warname");
+  if (sizeof(name) > 20) {
+    return sprintf(LOCALE(0,"WAR loaded from %s...%s"),
+		   name[..7], name[sizeof(name)-8..]);
+  }
+  return sprintf(LOCALE(11, "WAR loaded from %s"), name);
 }
 
 class RXMLParseWrapper
@@ -796,6 +689,117 @@ mixed find_file( string f, RequestID id )
 #endif
 
 
+// NOTE: base is modified destructably!
+static private array(string) my_combine_path_array(array(string) base, string part)
+{
+  if ((part == ".") || (part == "")) {
+    if ((part == "") && (!sizeof(base))) {
+      return(({""}));
+    } else {
+      return(base);
+    }
+  } else if ((part == "..") && sizeof(base) &&
+             (base[-1] != "..") && (base[-1] != "")) {
+    base[-1] = part;
+    return(base);
+  } else {
+    return(base + ({ part }));
+  }
+}
+
+static private array(string) glob_expand(string glob_path)
+{
+#ifdef __NT__
+  glob_path = replace( glob_path, "\\", "/" );
+#endif
+  WEBAPP_WERR(sprintf("glob_expand(%s)",glob_path));
+  string|array(string) ret_path = glob_path;
+
+  // FIXME: Does not check if "*" or "?" was quoted!
+  if (replace(ret_path, ({"*", "?"}), ({ "", "" })) != ret_path) {
+
+    // Globs in the file-name.
+
+    array(string|array(string)) matches = ({ ({ }) });
+    multiset(string) paths; // Used to filter out duplicates.
+    int i;
+    //foreach(my_combine_path("", path)/"/", string part) {
+    foreach(ret_path/"/", string part) {
+      paths = (<>);
+      if (replace(part, ({"*", "?"}), ({ "", "" })) != part) {
+        // Got a glob.
+        array(array(string)) new_matches = ({});
+        foreach(matches, array(string) path) {
+          array(string) dir;
+          dir = Filesystem.System()->get_dir(combine_path("", path*"/"));
+          if (dir && sizeof(dir)) {
+            dir = glob(part, dir);
+            if ((< '*', '?' >)[part[0]]) {
+              // Glob-expanding does not expand to files starting with '.'
+              dir = Array.filter(dir, lambda(string f) {
+                                        return (sizeof(f) && (f[0] != '.'));
+                                      });
+            }
+            foreach(sort(dir), string f) {
+              array(string) arr = my_combine_path_array(path, f);
+              string p = arr*"/";
+              if (!paths[p]) {
+                paths[p] = 1;
+                new_matches += ({ arr });
+              }
+            }
+          }
+        }
+        matches = new_matches;
+      } else {
+        // No glob
+        // Just add the part. Modify matches in-place.
+        for(i=0; i<sizeof(matches); i++) {
+          matches[i] = my_combine_path_array(matches[i], part);
+          string path = matches[i]*"/";
+          if (paths[path]) {
+            matches[i] = 0;
+          } else {
+            paths[path] = 1;
+          }
+        }
+        matches -= ({ 0 });
+      }
+      if (!sizeof(matches)) {
+        break;
+      }
+    }
+    if (sizeof(matches)) {
+      // Array => string
+      for (i=0; i < sizeof(matches); i++) {
+        matches[i] *= "/";
+      }
+      // Filter out non-existing or forbiden files/directories
+      /*
+      matches = Array.filter(matches,
+                             lambda(string short, string cwd,
+                                    object m_id) {
+                               object id = RequestID2(m_id);
+                               id->method = "LIST";
+                               id->not_query = combine_path(cwd, short);
+                               return(id->conf->stat_file(id->not_query,
+                                                          id));
+                             }, cwd, master_session);
+      */
+      if (sizeof(matches)) {
+        ret_path = matches;
+      }
+    }
+  }
+  if (stringp(ret_path)) {
+    // No glob
+    //ret_path = ({ my_combine_path("", ret_path) });
+    ret_path = ({ combine_path("", ret_path) });
+  }
+
+  return ret_path;
+}
+
 class ClassPathList
 {
   inherit Variable.FileList;
@@ -807,7 +811,6 @@ class ClassPathList
     string warn = "";
     foreach( value-({""}), string value ) {
       array(string) value_exp = glob_expand(value);
-      werror("value_exp: %O\n", value_exp);
       if (sizeof(value_exp) > 0)
         foreach(value_exp, string val2) {
           Stat s = r_file_stat( val2 );
@@ -914,7 +917,7 @@ void create()
                                "support classes.") ) );
 
   defvar("parameters", "", LOCALE(22, "Parameters"), TYPE_TEXT,
-	 LOCALE(23, "Parameters for the servlet on the form "
+	 LOCALE(23, "Parameters for all servlets on the form "
                 "<tt><i>name</i>=<i>value</i></tt>, one per line.") );
 
   defvar("anyservlet", 0, LOCALE(24, "Access any servlet"), TYPE_FLAG|VAR_MORE,
