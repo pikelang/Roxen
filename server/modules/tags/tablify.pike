@@ -5,10 +5,11 @@
  * made by Per Hedbor
  */
 
-constant cvs_version = "$Id: tablify.pike,v 1.5 1997/08/31 02:49:28 peter Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.6 1997/11/14 06:52:00 per Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
+inherit "wizard";
 
 mixed *register_module()
 {
@@ -31,7 +32,7 @@ mixed *register_module()
 string tag_tablify( string tag, mapping m, string q, mapping request_id )
 {
   array rows, res;
-  string sep, td, table;
+  string sep, td, color, table;
   int i;
 
   if(sep = m->rowseparator)
@@ -52,6 +53,13 @@ string tag_tablify( string tag, mapping m, string q, mapping request_id )
     m->cellalign = 0;
   } else
     td="<td>";
+
+  if(m->nice)
+  {
+    array title = rows[0]/sep;
+    rows = Array.map(rows[1..],lambda(string r, string s){ return r/s; }, sep);
+    return html_table(title, rows);
+  }
 
   for(i=0; i<sizeof(rows); i++)
     rows[i] = td + (rows[i]/sep) * ("</td>"+td) + "</td>";
@@ -76,3 +84,70 @@ mapping query_container_callers()
 {
   return ([ "tablify" : tag_tablify ]);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
