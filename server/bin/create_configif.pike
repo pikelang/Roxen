@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.39 2003/10/24 11:53:21 anders Exp $
+ * $Id: create_configif.pike,v 1.40 2004/09/14 08:57:34 noring Exp $
  *
  * Create an initial administration interface server.
  */
@@ -117,21 +117,11 @@ interface. Arguments:
       ok             Disable user confirmation of the
                      above information with the value
                      pair \"ok y\".
-      update         Enable update system (y/n).
-      community_user The name of the community user that
-                     should be used when downloading
-                     updates.
-      community_password  The password for the above
-                     community user.
-      community_proxy  Use proxy when connecting to the
-                     community site.
-      proxy_host     The proxy host.
-      proxy_port     The proxy port.
 
 Example of a batch installation:
 
  ./create_configinterface --help server_name Admin server_url
- http://*:8080/ ok y user admin update n
+ http://*:8080/ ok y user admin
 
 ");
     return 0;
@@ -265,59 +255,6 @@ Example of a batch installation:
 
   if( !admin )
   {
-    string community_user, community_password, proxy_host="", proxy_port="80";
-    string community_userpassword="";
-    int use_update_system=0;
-  
-    if(!batch->update) {
-      write("\n   Roxen has a built-in update system. If enabled it will periodically\n");
-      write("   contact update servers at Roxen Internet Software over the Internet.\n\n");
-    }
-    if(!(strlen( passwd2 = read_string(rl, "Do you want to enable this [Y/n]?", "", batch->update ) ) && passwd2[0]=='n' ))
-    {
-      use_update_system=1;
-      if(!batch->community_user) {
-	write("\n   If you have a registered user identity at Roxen Community\n");
-	write("   (http://community.roxen.com), you may be able to access additional\n");
-	write("   material through the update system.\n\n");
-	write("   Press enter to skip this.\n\n");
-      }
-      community_user=read_string(rl, "Roxen Community identity (your e-mail):",
-				 0, batch->community_user);
-      if(sizeof(community_user))
-      {
-        do
-        {
-	  if(passwd2 && community_password)
-	    write("\n   Please type a password with one or more characters. "
-		  "You will\n   be asked to type the password twice for "
-		  "verification.\n\n");
-          rl->get_input_controller()->dumb=1;
-          community_password = read_string(rl, "Roxen Community password:", 0,
-					   batch->community_password);
-          passwd2 = read_string(rl, "Roxen Community password (again):", 0,
-				batch->community_password);
-          rl->get_input_controller()->dumb=0;
-	  if(batch->community_password)
-	    m_delete(batch, "community_password");
-	  else
-	    write("\n");
-          community_userpassword=community_user+":"+community_password;
-        } while(!strlen(community_password) || (community_password != passwd2));
-      }
-      
-      if((strlen( passwd2 = read_string(rl, "Do you want to access the update "
-					"server through an HTTP proxy [y/N]?",
-					"", batch->community_proxy))
-	  && lower_case(passwd2[0..0])!="n" ))
-      {
-	proxy_host=read_string(rl, "Proxy host:", 0, batch->proxy_host);
-	if(sizeof(proxy_host))
-	  proxy_port=read_string(rl, "Proxy port:", "80", batch->proxy_port);
-	if(!sizeof(proxy_port))
-	  proxy_port="80";
-      }
-    }
     mkdirhier( configdir );
     string server_version = Stdio.read_file("VERSION");
     if(server_version)
@@ -338,13 +275,6 @@ Example of a batch installation:
 
 <region name='graphic_text#0'>
   <var name='colorparse'>        <int>1</int> </var>
-</region>
-
-<region name='update#0'>
-  <var name='do_external_updates'> <int>$USE_UPDATE_SYSTEM$</int> </var>
-  <var name='proxyport'>         <int>$PROXY_PORT$</int> </var>
-  <var name='proxyserver'>       <str>$PROXY_HOST</str> </var>
-  <var name='userpassword'>      <str>$COMMUNITY_USERPASSWORD$</str> </var>
 </region>
 
 <region name='contenttypes#0'>
@@ -376,10 +306,8 @@ ent text/html
     <str>$NAME$</str>
   </var>
 </region>",
- ({ "$NAME$", "$URL$", "$USE_UPDATE_SYSTEM$","$PROXY_PORT$",
-    "$PROXY_HOST", "$COMMUNITY_USERPASSWORD$" }),
- ({ name, port, (string)use_update_system, proxy_port,
-    proxy_host, community_userpassword }) ));
+ ({ "$NAME$", "$URL$" }),
+ ({ name, port }) ));
     write("\n   Administration interface created.\n");
   }
 
