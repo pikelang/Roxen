@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.93 1998/05/08 00:29:11 grubba Exp $
+ * $Id: ftp.pike,v 1.94 1998/05/08 00:36:56 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -1388,7 +1388,8 @@ void handle_data(string s, mixed key)
     // requests.
     // IT DOES!	/grubba
     mapping new_misc = ([]);
-    foreach(({ "uid","gid","gecos","home","shell" }), string s) {
+    foreach(({ "trace_enter", "trace_leave",
+	       "uid", "gid", "gecos", "home", "shell" }), string s) {
       if (misc[s]) {
 	new_misc[s] = misc[s];
       }
@@ -1431,6 +1432,7 @@ void handle_data(string s, mixed key)
       auth = 0;
       stat_cache = roxen->query_var(conf->name + ":ftp:stat_cache") || ([]);
       cwd = "/";
+      misc = ([]);
       if(!arg || arg == "ftp" || arg == "anonymous") {
 	if (Query("anonymous_ftp")) {
 	  reply("230 Anonymous ftp, at your service\n");
