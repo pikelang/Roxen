@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.715 2001/08/24 17:35:49 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.716 2001/08/27 13:26:34 per Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -2093,14 +2093,14 @@ class ImageCache
 //! interesting image conversion/manipulation functions as well.
 {
 #define QUERY(X,Y...) get_db()->query(X,Y)
-
   function(void:Sql.Sql) get_db;
   string name;
   string dir;
   function draw_function;
   mapping meta_cache = ([]);
 
-  string documentation(void|string tag_n_args) {
+  string documentation(void|string tag_n_args)
+  {
     string doc = Stdio.read_file("base_server/image_cache.xml");
     if(!doc) return "";
     if(!tag_n_args)
@@ -2111,7 +2111,11 @@ class ImageCache
 
   static mapping meta_cache_insert( string i, mapping what )
   {
-    call_out( meta_cache_insert, 400, i, 0 );
+#ifdef ARG_CACHE_DEBUG
+    werror("MD insert for %O: %O\n", i, what );
+#endif
+    if( sizeof( meta_cache ) > 1000 )
+      meta_cache = ([ ]);
     if( what )
       return meta_cache[i] = what;
     else
@@ -2129,6 +2133,9 @@ class ImageCache
 
   static void draw( string name, RequestID id )
   {
+#ifdef ARG_CACHE_DEBUG
+    werror("draw %O\n", name );
+#endif
     mixed args = Array.map( Array.map( name/"$", argcache->lookup,
 				       id->client ), frommapp);
 
@@ -2617,6 +2624,9 @@ class ImageCache
               "Expected ([ \"meta\": ([metadata]), \"data\":\"data\" ])\n"
 	      "Got %O\n", reply);
     }
+#ifdef ARG_CACHE_DEBUG
+    werror("draw %O done\n", name );
+#endif
     // Avoid throwing and error if the same image is rendered twice.
     catch(store_data( name, data, meta ));
   }
@@ -2624,10 +2634,27 @@ class ImageCache
   static void store_data( string id, string data, mapping meta )
   {
     if(!stringp(data)) return;
+#ifdef ARG_CACHE_DEBUG
+    werror("store %O (%d bytes)\n", id, strlen(data) );
+#endif
     meta_cache_insert( id, meta );
     string meta_data = encode_value( meta );
-    QUERY( "UPDATE "+name+" SET size=%d, atime=%d, meta=%s, data=%s WHERE id=%s",
-	   strlen(data), time(1), meta_data, data, id );
+    if( catch {
+      QUERY( "UPDATE "+name+" SET size=%d, atime=%d, meta=%s, "
+	     "data=%s WHERE id=%s",
+	     strlen(data)+strlen(meta_data), time(1), meta_data, data, id );
+#ifdef ARG_CACHE_DEBUG
+      werror("updated entry for %O, existed before\n", id );
+#endif
+    } )
+    {
+#ifdef ARG_CACHE_DEBUG
+      werror("new entry for %O\n", id );
+#endif
+      QUERY("INSERT INTO "+name+
+	    " (id,size,atime,meta,data) VALUES (%s,%d,%d,%s,%s)",
+	    id, strlen(data)+strlen(meta_data), time(1), meta_data, data );
+    }
   }
 
   static mapping restore_meta( string id, RequestID rid )
@@ -2635,7 +2662,11 @@ class ImageCache
     if( meta_cache[ id ] )
       return meta_cache[ id ];
 
-    array(mapping(string:string)) q = QUERY("SELECT meta FROM "+name+" WHERE id=%s", id );
+#ifdef ARG_CACHE_DEBUG
+      werror("restore meta %O\n", id );
+#endif
+    array(mapping(string:string)) q =
+      QUERY("SELECT meta FROM "+name+" WHERE id=%s", id );
 
     if(!sizeof(q))
       return 0;
@@ -2655,7 +2686,7 @@ class ImageCache
 
   void flush(int|void age)
   //! Flush the cache. If an age (an integer as returned by
-  //! <pi>time()</pi>) is provided, only images with their latest access before
+  //! @[time()]) is provided, only images with their latest access before
   //! that time are flushed.
   {
     int num;
@@ -2750,22 +2781,21 @@ class ImageCache
 	return rid->conf->authenticate_throw(rid, "User");
     }
 
-
     if( rst_cache[ id ] )
       return rst_cache[ id ] + ([]);
 
-    q = QUERY( "SELECT data FROM "+name+" WHERE id=%s",id);
+#ifdef ARG_CACHE_DEBUG
+      werror("restore %O\n", id );
+#endif
+    q = QUERY( "SELECT meta,data FROM "+name+" WHERE id=%s",id);
     if( sizeof(q) )
     {
       if( sizeof(q[0]->data) )
       {
+	// Case 1: We have cache entry and image.
 	string f = q[0]->data;
-
-	// restore_meta caches. Thus, it's faster calling it than doing
-	// decode_value each time here (the metadata can be extracted in
-	// the query above).
-
-	mapping m = restore_meta( id, rid );
+	mapping m;
+	catch( m = decode_value( q[0]->meta ) );
 	if( !m ) return 0;
 
 	m = Roxen.http_string_answer( f, m->type||("image/gif") );
@@ -2777,15 +2807,21 @@ class ImageCache
 	  rst_cache = ([ "id":m ]);
 	return rst_cache[ id ] + ([]);
       }
+      // Case 2: We have cache entry, but no data.
+      return 0;
     }
     else
     {
+      // Case 3: No cache entry. Create one
       User u = rid->conf->authenticate(rid);
       string uid = "";
       if( u ) uid = u->name();
-      QUERY("INSERT INTO "+name+
-	    " (id,uid,atime) VALUES (%s,%s,UNIX_TIMESTAMP())",
-	    id, uid );
+      // Might have been insterted from elsewhere.
+      catch {
+	QUERY("INSERT INTO "+name+
+	      " (id,uid,atime) VALUES (%s,%s,UNIX_TIMESTAMP())",
+	      id, uid );
+      };
     }
     
     return 0;
@@ -2794,48 +2830,38 @@ class ImageCache
 
   string data( array|string|mapping args, RequestID id, int|void nodraw )
   //! Returns the actual raw image data of the image rendered from the
-  //! `data' instructions.
+  //! @[args] instructions.
   //!
-  //! A non-zero `nodraw' parameter means an image not already in the
+  //! A non-zero @[nodraw] parameter means an image not already in the
   //! cache will not be rendered on the fly, but instead return zero.
   {
-    string na = store( args, id );
-    mixed res;
-
-    if(!( res = restore( na,id )) )
-    {
-      if(nodraw) return 0;
-      draw( na, id );
-      res = restore( na,id );
-    }
-
-    if( !res || (res->error && res->error/100 != 2) )
-      return 0;
-
-    if( res->data )
-      return res->data;
-    return res->file->read();
+    mapping res = http_file_answer( args, id, nodraw );
+    return res && res->data;
   }
 
   mapping http_file_answer( array|string|mapping data,
                             RequestID id,
                             int|void nodraw )
-  //! Returns a <ref>result mapping</ref> like one generated by
-  //! <ref>Roxen.http_file_answer()</ref> but for the image file
+  //! Returns a @[result mapping] like one generated by
+  //! @[Roxen.http_file_answer()] but for the image file
   //! rendered from the `data' instructions.
   //!
-  //! Like <ref>metadata</ref>, a non-zero `nodraw' parameter means an
+  //! Like @[metadata], a non-zero @[nodraw]parameter means an
   //! image not already in the cache will not be rendered on the fly,
   //! but instead zero will be returned (this will be seen as a 'File
   //! not found' error)
   {
     string na = store( data,id );
     mixed res;
+#ifdef ARG_CACHE_DEBUG
+      werror("data %O\n", na );
+#endif
     if(! (res=restore( na,id )) )
     {
       if(nodraw) return 0;
       draw( na, id );
-      res = restore( na,id );
+      if( !(res = restore( na,id )) )
+	error("Draw callback did not generate any data\n");
     }
     id->misc->cacheable = INITIAL_CACHEABLE;
     return res;
@@ -2845,19 +2871,23 @@ class ImageCache
 		    RequestID id,
 		    int|void nodraw )
   //! Returns a mapping of image metadata for an image generated from
-  //! the data given (as sent to <ref>store()</ref>). If a non-zero
-  //! `nodraw' parameter is given and the image was not in the cache,
+  //! the data given (as sent to @[store()]). If a non-zero
+  //! @[nodraw] parameter is given and the image was not in the cache,
   //! it will not be rendered on the fly to get the correct data.
   {
     string na = store( data,id );
-    if(!restore_meta( na,id ))
+    mapping res;
+#ifdef ARG_CACHE_DEBUG
+      werror("meta %O\n", na );
+#endif
+    if(! (res = restore_meta( na,id )) )
     {
       if(nodraw)
         return 0;
       draw( na, id );
       return restore_meta( na,id );
     }
-    return restore_meta( na,id );
+    return res;
   }
 
   mapping tomapp( mixed what )
@@ -2902,12 +2932,12 @@ class ImageCache
     } else
       ci = data;
 
-    if( user && !uid_cache[ ci ] )
+    if( zero_type( uid_cache[ ci ] ) )
     {
       uid_cache[ci] = user;
       if( catch(QUERY( "UPDATE "+name+" SET uid=%s WHERE id=%s", user, ci )) )
 	QUERY("INSERT INTO "+name+" (id,uid,atime) VALUES (%s,%s,%d)",
-	      ci, user, time(1) );
+	      ci, user||"", time(1) );
     }
     return ci;
   }
