@@ -12,7 +12,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: business.pike,v 1.127 2000/04/15 00:42:59 nilsson Exp $";
+constant cvs_version = "$Id: business.pike,v 1.128 2000/05/11 10:16:07 per Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_PARSER|MODULE_LOCATION;
 constant module_name = "Business graphics";
@@ -439,7 +439,7 @@ constant _shuffle_args =
 constant shuffle_args = mkmapping( _shuffle_args, _shuffle_args );
 
 string container_diagram(string tag, mapping m, string contents,
-		   object id, object f, mapping defines)
+		   object id, object f)
 {
   int l=query("maxstringlength")-1;
   contents=replace(contents, "\r\n", "\n");
@@ -480,7 +480,7 @@ string container_diagram(string tag, mapping m, string contents,
     if (m->namecolor)
       res->namecolor=parse_color(m->namecolor);
     else
-      res->namecolor=parse_color(defines->fg);
+      res->namecolor=parse_color(id->misc->defines->fg);
   }
 
   res->voidsep = m->voidseparator || m->voidsep;
@@ -570,8 +570,8 @@ string container_diagram(string tag, mapping m, string contents,
   if ( !res->data || !sizeof(res->data))
     return syntax("No data for the diagram");
 
-  res->bg = parse_color(m->bgcolor || defines->bg || "white");
-  res->fg = parse_color(m->textcolor || defines->fg || "black");
+  res->bg = parse_color(m->bgcolor || id->misc->defines->bg || "white");
+  res->fg = parse_color(m->textcolor || id->misc->defines->fg || "black");
 
   if(m->center) res->center = (int)m->center;
   if(m->eng) res->eng=1;
@@ -583,9 +583,9 @@ string container_diagram(string tag, mapping m, string contents,
   res->legendfontsize = (int)m->legendfontsize || res->fontsize;
   res->labelsize      = (int)m->labelsize || res->fontsize;
 
-  if(m->labelcolor) res->labelcolor=parse_color(m->labelcolor || defines->fg);
-  res->axcolor   = parse_color(m->axcolor || defines->fg);
-  res->gridcolor = parse_color(m->gridcolor || defines->fg);
+  if(m->labelcolor) res->labelcolor=parse_color(m->labelcolor || id->misc->defines->fg);
+  res->axcolor   = parse_color(m->axcolor || id->misc->defines->fg);
+  res->gridcolor = parse_color(m->gridcolor || id->misc->defines->fg);
   res->linewidth = m->linewidth || "2.2";
   res->axwidth   = m->axwidth || "2.2";
 
