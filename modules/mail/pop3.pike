@@ -1,5 +1,5 @@
 // Roxen AutoMail POP3 Server
-// $Id: pop3.pike,v 1.3 1998/09/22 23:38:31 js Exp $
+// $Id: pop3.pike,v 1.4 1998/09/23 18:07:01 leif Exp $
 // Leif Stensson, September 1998.
 
 #include <module.h>
@@ -42,7 +42,7 @@ void create ()
 }
 
 array register_module()
-{ return ({ 0, "POP3 Server Module", "", 0, 1 });
+{ return ({ 0, "AutoMail POP3 Server Module", "", 0, 1 });
 }
 
 string status()
@@ -86,12 +86,12 @@ void init_transaction_state(mapping id)
 //    id->clientport->write("*Inbox ID: " + id->mailbox_id + "\r\n");
     mapping maildrop0 = clientlayer->list_mail(id->mailbox_id);
 //    id->clientport->write("*Maildrop items: " + sizeof(maildrop0) + "\r\n");
-    foreach (indices(maildrop0), mixed refno)
+    foreach (indices(maildrop0), mixed i)
     {
-//      id->clientport->write("*Mail: " + refno + "\n");
-//      id->clientport->write("*  Message-ID: " + maildrop0[refno] + "\r\n");
+//      id->clientport->write("*Mail: " + i + "\n");
+//      id->clientport->write("*  Message-ID: " + maildrop0[i] + "\r\n");
 
-      mixed mail = clientlayer->get_mail(maildrop0[refno]);
+      mixed mail = clientlayer->get_mail(maildrop0[i]);
 
 //      id->clientport->write("*  Did get_mail()\r\n");
 
@@ -103,23 +103,27 @@ void init_transaction_state(mapping id)
         Stdio.File f = clientlayer->load_body_get_obj(mail->body_id);
         int size = 0;
         if (f)
-        { string sz;
-          while ((sz = f->read(1000)) && sz != "")
-          { size += sizeof(sz);
-//            id->clientport->write(sz);
-          }
+        {
+//          string sz;
+//          while ((sz = f->read(1000)) && sz != "")
+//          { size += sizeof(sz);
+//              id->clientport->write(sz);
+//          }
+          f->seek(-1); f->read();
+          size = f->tell();
           destruct(f); 
         }
 //        id->clientport->write(" Size: " + size + "\r\n");
         id->maildrop +=
             ({ ([ "size":     size,
                   "deleted":  0,
-                  "refno":    refno,
+                  "refno":    mail->id,
+                  "index":    i,
                   "body_id":  mail->body_id,
                   "headers":  mail->headers,
                   "sender":   mail->sender,
                   "subject":  mail->subject,
-                  "in-date":  mail->incoming_date,
+                  "in_date":  mail->incoming_date,
                ])
             });
       }
@@ -139,10 +143,9 @@ void retrieve_mail(mixed id, int msgno, int lines)
       mixed s;
       id->clientport->write("+OK Mail data follows.\r\n");
       while ((s = f->gets()) != 0)
-      {
-	s+="\n";
-	if (stringp(s) && sizeof(s) > 0 && s[0] == ".")
-               id->clientport->write(".");
+      { s += "\n";
+        if (stringp(s) && sizeof(s) > 0 && s[0] == ".")
+            id->clientport->write(".");
         id->clientport->write(s);
         if (sizeof(s) < 2 || s[sizeof(s)-2..] != "\r\n")
             id->clientport->write("\r\n");
@@ -150,9 +153,9 @@ void retrieve_mail(mixed id, int msgno, int lines)
       }
       while ((s = f->gets()) != 0 && (--lines != -1))
       {
-	s+="\n";
+        s+="\n";
 	if (stringp(s) && sizeof(s) > 0 && s[0] == ".")
-	  id->clientport->write(".");
+            id->clientport->write(".");
         id->clientport->write(s);
         if (sizeof(s) < 2 || s[sizeof(s)-2..] != "\r\n")
             id->clientport->write("\r\n");
@@ -302,6 +305,33 @@ void client_read_callback(mixed id, string data)
             id->clientport->write(".\r\n");
             break;
           }
+        }
+        id->clientport->write("-ERR Failed.\r\n");
+        break;
+
+      case "UIDL":
+        if (id->state == "TRANSACTION")
+        { int msgno; mapping m;
+          if (sscanf(cmd[5..], "%d", msgno) == 1)
+          { if (msgno > 0 && msgno < sizeof(id->maildrop) &&
+                ! id->maildrop[msgno]->deleted)
+            { m = id->maildrop[msgno];
+               id->clientport->write("+OK " + msgno + " " +
+                     m->refno + "x" + m->in_date + "\r\n");
+            }
+            else
+               id->clientport->write("+ERR No such mail.\r\n");
+            break;
+          }
+          id->clientport->write("+OK UIDL listing follows.\r\n");
+          for(msgno = 1; msgno < sizeof(id->maildrop); ++msgno)
+          { mapping m = id->maildrop[msgno];
+            if (!m->deleted)
+               id->clientport->write(msgno + " " +
+                     m->refno + "x" + m->in_date + "\r\n");
+          }
+          id->clientport->write(".\r\n");
+          break;
         }
         id->clientport->write("-ERR Failed.\r\n");
         break;
