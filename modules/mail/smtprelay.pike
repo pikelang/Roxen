@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 2.5 1999/10/26 14:55:10 grubba Exp $
+ * $Id: smtprelay.pike,v 2.6 1999/10/26 14:57:33 grubba Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RELAY_DEBUG
 
-constant cvs_version = "$Id: smtprelay.pike,v 2.5 1999/10/26 14:55:10 grubba Exp $";
+constant cvs_version = "$Id: smtprelay.pike,v 2.6 1999/10/26 14:57:33 grubba Exp $";
 
 /*
  * Some globals
@@ -520,7 +520,7 @@ class MailSender
 
   static void got_rcpt_to_reply(string code, array(string) text)
   {
-    switch(code[..1]) {
+    switch((code || "00")[..1]) {
     case "25":
       // RCPT TO: OK.
       send_command("DATA", got_data_reply);
@@ -546,7 +546,7 @@ class MailSender
 		   got_rcpt_to_reply);
       break;
     default:
-      if (code[0] == '5') {
+      if (code && (code[0] == '5')) {
 	// The sender isn't allowed to send messages to this server.
 	send_bounce_and_stop(code, text);
       } else {
