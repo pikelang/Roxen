@@ -14,7 +14,7 @@ constant STORTLITET = 1.0e-30;
 constant STORT = 1.0e40;
 #define VOIDSYMBOL "\n"
 
-constant cvs_version = "$Id: create_graph.pike,v 1.98 1998/03/06 21:57:45 hedda Exp $";
+constant cvs_version = "$Id: create_graph.pike,v 1.99 1998/03/08 16:46:44 hedda Exp $";
 
 /*
  * name = "BG: Create graphs";
@@ -648,28 +648,50 @@ mapping draw_grid(mapping diagram_data, int|float xpos_for_yaxis,
   float gw=(float)diagram_data["gridwidth"];
   if ((diagram_data["vertgrid"])&&
       (gw>LITET))
-    for(int i=0; i<s; i++)
-      if ((diagram_data["values_for_xnames"][i]>diagram_data["xminvalue"])&&
-	  (diagram_data["values_for_xnames"][i]<diagram_data["xmaxvalue"]))
-      {
-	graph->
-	  polygone(make_polygon_from_line(
-		     gw,
-		     ({
-		       ((diagram_data["values_for_xnames"][i]
-			 - diagram_data["xminvalue"])
-			* xmore+xstart),
-		       diagram_data["ysize"]-ystart,
-		       
-		       ((diagram_data["values_for_xnames"][i]
-			 - diagram_data["xminvalue"])
-			* xmore+xstart),
-		       diagram_data["ysize"]
-		       - diagram_data["ystop"]
-		     }), 
-		     1, 1)[0]);
-      }
+    {
+      mixed vfx=diagram_data["values_for_xnames"];
+      float ystop=(float)(diagram_data["ysize"]-diagram_data["ystop"]);
+      float ystart=(float)(diagram_data["ysize"]-ystart);
+      float gw2=gw/2.0;
+      float xmin=(float)diagram_data["xminvalue"];
+      float xmax=(float)diagram_data["xmaxvalue"];
+      for(int i=0; i<s; i++)
+	if ((vfx[i]>xmin)&&
+	    (vfx[i]<xmax))
+	  {
+	    float temp;
+	    graph->
+	      polygone(({ 
+		(temp=(vfx[i]- diagram_data["xminvalue"])* xmore+xstart)-gw2,
+		ystart,
+		
+		temp+gw2,
+		ystart,
 
+		temp+gw2,
+		ystop,
+
+		temp-gw2,
+		  ystop}));
+	    /*
+	    make_polygon_from_line(
+					      gw,
+					      ({
+						((diagram_data["values_for_xnames"][i]
+						  - diagram_data["xminvalue"])
+						 * xmore+xstart),
+						diagram_data["ysize"]-ystart,
+						
+						((diagram_data["values_for_xnames"][i]
+						  - diagram_data["xminvalue"])
+						 * xmore+xstart),
+						diagram_data["ysize"]
+						- diagram_data["ystop"]
+					      }), 
+					      1, 1)[0]);
+	    */
+      }
+    }
   //Placera ut horgriden
   s=sizeof(diagram_data["values_for_ynames"]);
   if ((diagram_data["horgrid"])
