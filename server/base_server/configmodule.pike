@@ -12,7 +12,7 @@ class LeftTree
   void add(string where, LeftTree what )
   {
     string fp;
-    if(sscanf(where, "%s!%s", fp, where) == 2)
+    if(sscanf(where, "%s/%s", fp, where) == 2)
     {
       if(sub[ fp ])
 	sub[ fp ]->add( where, what );
@@ -111,7 +111,8 @@ LeftTree config_litem( LeftTree state, string current_node,
   LeftTree this = LeftTree( path, title );
   if(!state) state = LeftTree();
   state->add( path, this );
-  this->selected =  (current_node == path);
+  sscanf( current_node, "%s:%*s", current_node );
+  this->selected = (current_node == path);
   return state;
 }
 
