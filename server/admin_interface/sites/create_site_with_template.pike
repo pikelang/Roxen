@@ -88,7 +88,7 @@ string|mapping parse( RequestID id )
 		   "value='"+get_site_template(id)+"' />\n", q);
   }
 
-  ErrorContainer e = ErrorContainer( );
+  loader.ErrorContainer e = loader.ErrorContainer( );
   master()->set_inhibit_compile_errors( e );
   string res = "";
   array sts = ({});
@@ -166,6 +166,8 @@ string|mapping parse( RequestID id )
     }
     res += q[2] + "\n\n\n";
   }
+
+  res += "<cf-cancel href='./'/>\n";
 
 
   if( strlen( e->get() ) ) {
