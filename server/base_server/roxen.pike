@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.877 2004/06/30 16:58:39 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.878 2004/08/18 17:01:31 mast Exp $";
 
 //! @appears roxen
 //!
@@ -1615,47 +1615,11 @@ class SSLProtocol
   // SSL context
   SSL.context ctx;
 
-  class destruct_protected_sslfile
-  {
-    SSL.sslfile sslfile;
-
-    mixed `[](string s)
-    {
-      return sslfile[s];
-    }
-
-    mixed `[]=(string s, mixed val)
-    {
-      return sslfile[s] = val;
-    }
-
-    mixed `->(string s)
-    {
-      return sslfile[s];
-    }
-
-    mixed `->=(string s, mixed val)
-    {
-      return sslfile[s] = val;
-    }
-
-    void destroy()
-    {
-      if (sslfile)
-	sslfile->close();
-    }
-
-    void create(object q)
-    {
-      sslfile = SSL.sslfile(q, ctx);
-    }
-  }
-
-  Stdio.File accept()
+  RoxenSSLFile accept()
   {
     Stdio.File q = ::accept();
     if (q)
-      return [object(Stdio.File)](object)destruct_protected_sslfile(q);
+      return RoxenSSLFile (q, ctx);
     return 0;
   }
 
