@@ -1,5 +1,5 @@
 /*
- * $Id: snmpagent.pike,v 1.9 2001/08/17 00:01:11 hop Exp $
+ * $Id: snmpagent.pike,v 1.10 2001/08/17 01:20:16 hop Exp $
  *
  * The Roxen SNMP agent
  * Copyright © 2001, Roxen IS.
@@ -89,30 +89,32 @@ inherit Roxen;
 
 //! The starting part of OID of every object will have, so we stripp it out
 //! before making index from OID to the MIB DB
-#define MIBTREE_BASE			"1.3.6.1"
+#define MIBTREE_BASE				"1.3.6.1"
 
-#define RISMIB_BASE_ADD			"4.1.8614"
+#define RISMIB_BASE_ADD				"4.1.8614"
 // enterprises.roxenis
-#define RISMIB_BASE			MIBTREE_BASE+"."+RISMIB_BASE_ADD
-#define RISMIB_BASE_WEBSERVER_ADD	"1.1"
+#define RISMIB_BASE				MIBTREE_BASE+"."+RISMIB_BASE_ADD
+#define RISMIB_BASE_WEBSERVER_ADD		"1.1"
 // enterprises.roxenis.app.roxen
-#define RISMIB_BASE_WEBSERVER		RISMIB_BASE+"."+RISMIB_BASE_WEBSERVER_ADD
+#define RISMIB_BASE_WEBSERVER			RISMIB_BASE+"."+RISMIB_BASE_WEBSERVER_ADD
 // enterprises.roxenis.app.roxen.global
-#define RISMIB_BASE_WEBSERVER_GLOBAL	RISMIB_BASE_WEBSERVER+".1"
+#define RISMIB_BASE_WEBSERVER_GLOBAL		RISMIB_BASE_WEBSERVER+".1"
 // enterprises.roxenis.app.roxen.global.vs
-#define RISMIB_BASE_WEBSERVER_GLOBAL_VS	RISMIB_BASE_WEBSERVER_GLOBAL+".1"
+#define RISMIB_BASE_WEBSERVER_GLOBAL_VS		RISMIB_BASE_WEBSERVER_GLOBAL+".1"
+// enterprises.roxenis.app.roxen.global.restart
+#define RISMIB_BASE_WEBSERVER_GLOBAL_BOOT	RISMIB_BASE_WEBSERVER_GLOBAL+".2"
 // enterprises.roxenis.app.roxen.vs
-#define RISMIB_BASE_WEBSERVER_VS	RISMIB_BASE_WEBSERVER+".2"
+#define RISMIB_BASE_WEBSERVER_VS		RISMIB_BASE_WEBSERVER+".2"
 // enterprises.roxenis.app.roxen.vs.name
-#define RISMIB_BASE_WEBSERVER_VS_NAME	RISMIB_BASE_WEBSERVER_VS+".1"
+#define RISMIB_BASE_WEBSERVER_VS_NAME		RISMIB_BASE_WEBSERVER_VS+".1"
 // enterprises.roxenis.app.roxen.vs.sentdata
-#define RISMIB_BASE_WEBSERVER_VS_SDATA	RISMIB_BASE_WEBSERVER_VS+".2"
+#define RISMIB_BASE_WEBSERVER_VS_SDATA		RISMIB_BASE_WEBSERVER_VS+".2"
 // enterprises.roxenis.app.roxen.vs.senthdrs
-#define RISMIB_BASE_WEBSERVER_VS_SHDRS	RISMIB_BASE_WEBSERVER_VS+".3"
+#define RISMIB_BASE_WEBSERVER_VS_SHDRS		RISMIB_BASE_WEBSERVER_VS+".3"
 // enterprises.roxenis.app.roxen.vs.recvdata
-#define RISMIB_BASE_WEBSERVER_VS_RDATA	RISMIB_BASE_WEBSERVER_VS+".4"
+#define RISMIB_BASE_WEBSERVER_VS_RDATA		RISMIB_BASE_WEBSERVER_VS+".4"
 // enterprises.roxenis.app.roxen.vs.requests
-#define RISMIB_BASE_WEBSERVER_VS_REQS	RISMIB_BASE_WEBSERVER_VS+".5"
+#define RISMIB_BASE_WEBSERVER_VS_REQS		RISMIB_BASE_WEBSERVER_VS+".5"
 
 #define LOG_EVENT(txt, pkt) log_event(txt, pkt)
 
@@ -161,6 +163,7 @@ class SNMPagent {
       // enterprises.roxenis.*
       mib->register(SubMIBRoxenVS(this_object()));
       mib->register(SubMIBRoxenVSName(this_object()));
+      mib->register(SubMIBRoxenBoot(this_object()));
     }
     if (!status())
       start();
@@ -193,7 +196,7 @@ class SNMPagent {
   }
 
   //! Check access aginst snmp_community array.
-  private int chk_access(string level /*, string attrname*/, mapping pkt) {
+  int chk_access(string level /*, string attrname*/, mapping pkt) {
 
     return
       (search(query("snmp_community"), pkt->community+":"+level) > -1) ||
@@ -258,7 +261,7 @@ class SNMPagent {
 		if(arrayp(val) && sizeof(val))
 		  setflg = val[0];
 		//rdata[attrname] += ({ "int", attrval });
-		rdata["1.3.6.1.2.1.1.3.0"] += ({"tick", get_uptime() });
+		rdata["1.3.6.1.2.1.1.3.0"] += get_uptime();
 		if (arrayp(val) && stringp(val[1]))
 		  report_warning(val[1]);
 		break;
@@ -406,7 +409,6 @@ class SNMPagent {
     if(zero_type(vsdb[vsid])) {
       report_debug(sprintf("SNMPagent: added server %O(#%d)\n",
 		           roxen->configurations[vsid]->name, vsid));
-//report_debug(sprintf("snmpagent:DEB: %O\n",mkmapping(indices(roxen->configurations[vsid]), values(roxen->configurations[vsid]))));
 	  vsdb += ([vsid: roxen->configurations[vsid]]);
      }
 
@@ -617,6 +619,25 @@ class SubMIBManager {
   //! Tries to do SET operation.
   array set(string oid, mixed val, mapping|void pkt) {
 
+    string soid;
+
+    SNMPAGENT_MSG(sprintf("SET(%s): %O = %O", name, oid, val));
+    soid = oid_strip(oid);
+
+    // hmm, now we have to try some of the registered managers
+    array s = soid/".";
+    for(int cnt = sizeof(s)-1; cnt>0; cnt--) {
+      SNMPAGENT_MSG(sprintf("finding manager for tree %O", s[..cnt]*"."));
+      if(subtreeman[s[..cnt]*"."]) {
+	// good, subtree manager exists
+	string manoid = s[..cnt]*".";
+        SNMPAGENT_MSG(sprintf("found subtree manager: %s(%O)",
+				subtreeman[manoid]->name, manoid));
+	return subtreeman[manoid]->set(oid, val, pkt);
+      }
+    }
+
+    SNMPAGENT_MSG("Not found any suitable manager");
     return ({ 0, 0});
   }
 
@@ -638,7 +659,7 @@ class SubMIBManager {
 
 //! External function for MIB object 'system.sysDescr'
 array get_description() {
-  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.9 $"/" ")[1]+" (devel. rel.)");
+  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.10 $"/" ")[1]+" (devel. rel.)");
 }
 
 //! External function for MIB object 'system.sysOID'
@@ -967,6 +988,50 @@ class SubMIBRoxenVSName {
   }
 
 }
+
+
+class SubMIBRoxenBoot {
+
+  inherit SubMIBManager;
+
+  constant name = "enterprises.roxenis.app.roxen.global.boot";
+  constant tree = RISMIB_BASE_WEBSERVER_GLOBAL_BOOT - (MIBTREE_BASE+".");
+
+  object agent;
+  
+  void create(object agentp) {
+    agent = agentp;
+    submibtab = ([ ]);
+  }
+
+  // HACK! For testing purpose only!
+  // Server restart = 1; server shutdown = 2
+  array set(string oid, mixed val, mapping|void pkt) {
+
+    string soid, vname;
+    int setflg = 0;
+    array rval, arroid;
+
+    SNMPAGENT_MSG(sprintf("SET(%s): %O = %O", name, oid, val));
+    soid = oid_strip(oid);
+
+    if(soid != tree + ".0")
+      return ({});
+
+    if(agent->chk_access("rw", pkt)) {
+      SNMPAGENT_MSG(sprintf("%O=%O - access granted", name, val));
+      setflg = 1;
+      if(val == 1 || val == 2) {
+	report_warning("SNMPagent: Initiated " + ((val==1)?"restart":"shutdown") + " from snmp://" + pkt->community + "@" + pkt->ip + "/\n");
+	if (val == 1) roxen->restart(0.5);
+	if (val == 2) roxen->shutdown(0.5);
+      }
+    }
+    return ({ setflg, "" });
+  }
+
+}
+
 
 SNMPagent snmpagent;
 //! Global SNMPagent object
