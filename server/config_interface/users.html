@@ -45,7 +45,7 @@
 
 <if variable='form.page is delete_user'>
   <cf-perm perm="Edit Users">
-  <insert file=user_delete.pike nocache="1"/>
+  <eval><insert file=user_delete.pike nocache="1"/></eval>
   <p>
   <translate id="202" variable="var.cancel_txt">Cancel</translate>
   <gbutton href=users.html font="&usr.gbutton-font;">&var.cancel_txt;</gbutton>
