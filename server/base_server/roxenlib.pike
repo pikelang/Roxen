@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: roxenlib.pike,v 1.214 2001/08/23 20:14:50 nilsson Exp $
+// $Id: roxenlib.pike,v 1.215 2002/12/02 15:49:36 grubba Exp $
 
 //#pragma strict_types
 
@@ -12,8 +12,8 @@
 inherit Roxen;
 
 //! The old Roxen standard library. Everything defined in this class,
-//! i.e. not the inherited, are to be considered deprecated. The
-//! inherited functions is available directly from @[Roxen] instead.
+//! i.e. not the inherited, is to be considered deprecated. The
+//! inherited functions are available directly from @[Roxen] instead.
 
 #define roxen roxenp()
 
@@ -45,22 +45,21 @@ mapping proxy_auth_needed(RequestID id)
   return 0;
 }
 
-//! Figures out the filename of the file in which the program
-//! in which this functions i declare. Please use __FILE__
-//! instead if possible.
+//! Figures out the filename of the file which defines the program
+//! for this object. Please use __FILE__ instead if possible.
 string program_filename()
 {
   return master()->program_name(this_object())||"";
 }
 
-//! Returns the directory part of @[program_filename].
+//! Returns the directory part of @[program_filename()].
 string program_directory()
 {
   array(string) p = program_filename()/"/";
   return (sizeof(p)>1? p[..sizeof(p)-2]*"/" : getcwd());
 }
 
-//! Creats a HTTP response string from the internal
+//! Creates an HTTP response string from the internal
 //! file representation mapping @[file].
 static string http_res_to_string( mapping file, RequestID id )
 {
@@ -127,7 +126,7 @@ static string http_res_to_string( mapping file, RequestID id )
 }
 
 //! Returns the dimensions of the file @[gif] as
-//! a string like "width=17 height=42". Use
+//! a string like @tt{"width=17 height=42"@}. Use
 //! @[Dims] instead.
 static string gif_size(Stdio.File gif)
 {
@@ -142,6 +141,9 @@ static int ipow(int x, int y)
 }
 
 //! Compares @[a] with @[b].
+//!
+//! If both @[a] & @[b] contain only digits, they will be compared
+//! as integers, and otherwise as strings.
 //!
 //! @returns
 //!   @int
@@ -183,9 +185,10 @@ static string do_output_tag( mapping(string:string) args,
 //! Method for use by tags that replace variables in their content,
 //! like formoutput, sqloutput and others.
 //!
-//! NOTE: This function is obsolete. This kind of functionality is now
-//! provided intrinsicly by the new RXML parser framework, in a way
-//! that avoids many of the problems that stems from this function.
+//! @obsolete
+//!   This function is obsolete. This kind of functionality is now
+//!   provided intrinsicly by the new RXML parser framework, in a way
+//!   that avoids many of the problems that stems from this function.
 {
   string quote = args->quote || "#";
   mapping(string:string) other_vars = [mapping(string:string)]id->misc->variables;
@@ -404,7 +407,7 @@ static string do_output_tag( mapping(string:string) args,
   return new_contents;
 }
 
-//! Works as @[Roxen.parse_rxml], but also takes the optional
+//! Works like @[Roxen.parse_rxml()], but also takes the optional
 //! arguments @[file] and @[defines].
 string parse_rxml(string what, RequestID id,
 			 void|Stdio.File file,
