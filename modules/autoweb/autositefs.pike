@@ -6,7 +6,7 @@ inherit "roxenlib";
 inherit "modules/filesystems/filesystem.pike" : filesystem;
 
 #define DB_ALIAS "autosite"
-constant cvs_version="$Id: autositefs.pike,v 1.26 1998/09/30 15:45:05 wellhard Exp $";
+constant cvs_version="$Id: autositefs.pike,v 1.27 1998/09/30 23:00:34 js Exp $";
 
 mapping host_to_id;
 multiset(int) hidden_sites;
@@ -142,7 +142,7 @@ mixed find_file(string f, object id)
   mixed res = filesystem::find_file(file, id);
   if(objectp(res)) {
     mapping md = .AutoWeb.MetaData(id, "/"+f)->get();
-   // werror("File: %O, md: %O", f, md);
+    id->misc->md = md;
     if(md->content_type=="text/html") {
       string d = res->read( );
       if((md->template)&&(md->template!="No"))

@@ -32,7 +32,7 @@
     <autosite-fs-update>
   </if>
   
-  <sqloutput quote='£' query="select feature from features_list order by feature">
+  <sqloutput quote='£' query="select description,feature from features_list order by feature">
     <obox title='£feature£'>
     Status:
     <if variable=£feature£>
@@ -54,7 +54,7 @@
     <td>
     <if variable=£feature£>
       <gtext xspacing=12 yspacing=3 notrans nfont=helvetica scale=0.35 bold
-    	xsize=200 bevel=5 talign=center fg=#606060 bg=#a0a0a0>Enable</gtext>
+    	xsize=200 bevel=5 talign=center fg=#606060 bg=#a0a0a0>Enable</gtext><br>
        <gtext xspacing=12 yspacing=3 notrans nfont=helvetica scale=0.35 bold
         xsize=200 bevel=5 talign=center fg=#ffffff bg=#113377
 	magic_fg=#000000 magic_bg=#88ccaa magic href='./?disable=£feature£'>Disable</gtext>
@@ -62,10 +62,13 @@
     <else>
       <gtext xspacing=12 yspacing=3 notrans nfont=helvetica scale=0.35 bold
         xsize=200 bevel=5 talign=center fg=#ffffff bg=#113377
-	magic_fg=#000000 magic_bg=#88ccaa magic href='./?enable=£feature£'>Enable</gtext>
+	magic_fg=#000000 magic_bg=#88ccaa magic href='./?enable=£feature£'>Enable</gtext><br>
       <gtext xspacing=12 yspacing=3 notrans nfont=helvetica scale=0.35 bold
     	xsize=200 bevel=5 talign=center fg=#606060 bg=#a0a0a0>Disable</gtext>
     </else>
+    </td><td>
+    <br>
+    £description£
     </td></tr></table>
     </obox>
   </sqloutput>

@@ -1,4 +1,4 @@
-# $Id: db.spec,v 1.37 1998/09/29 16:15:43 wellhard Exp $
+ $Id: db.spec,v 1.38 1998/09/30 23:00:30 js Exp $
 
 drop table mail_misc;
 drop table user_misc;
@@ -154,7 +154,8 @@ create table features (
      );
   
 create table features_list (
-             feature                 varchar(64)
+             feature                 varchar(64),
+	     description	     varchar(255)
      );
   
 
@@ -262,3 +263,12 @@ CREATE TABLE customers_schemes_vars (
              FOREIGN KEY (scheme_id)
                REFERENCES customers_schemes (id) 
      );
+
+
+
+insert into features_list values('Hidden Site','Makes the site password protected.');
+insert into features_list values('Intraseek','Enables the Intraseek search engine. Use <search> on a page to get a search form.');
+insert into features_list values('Forms Mailer','Enables the forms mailer module. (See separate documentation.');
+insert into features_list values('LogView','Enables the advanced LogView log analyzer.');
+insert into features_list values('Simple LogView','Enables the simple LogView log analyzer.');
+insert into features_list values('Template Editor','Enables the template editor for the customer.');

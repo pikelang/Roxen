@@ -6,7 +6,7 @@ int visible(object id)
 {
   if(id->misc->autoweb_backdoor)
     return 1;
-  if(sizeof(id->conf->get_provider("sql")->sql_object(id)->
+  if(sizeof(id->conf->get_provider("sql")->sql_object("autosite")->
     query("select feature from features where feature='Template Editor' and"
 	  " customer_id='"+id->misc->customer_id+"'")))
     return 1;

@@ -1,12 +1,12 @@
 /*
- * $Id: webadm.pike,v 1.34 1998/09/30 17:04:34 wellhard Exp $
+ * $Id: webadm.pike,v 1.35 1998/09/30 23:00:35 js Exp $
  *
  * AutoWeb administration interface
  *
  * Johan Schön, Marcus Wellhardh 1998-07-23
  */
 
-constant cvs_version = "$Id: webadm.pike,v 1.34 1998/09/30 17:04:34 wellhard Exp $";
+constant cvs_version = "$Id: webadm.pike,v 1.35 1998/09/30 23:00:35 js Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -235,7 +235,11 @@ string tag_as_meta(string tag_name, mapping args, object id)
   if(!args->var)
     return "";
 
-  mapping md = MetaData(id, id->not_query)->get();
+  mapping md;
+  if(mappingp(id->misc->md))
+    md = id->misc->md;
+  else
+    md = MetaData(id, id->not_query)->get();
   if(!md)
     return "";
 
@@ -301,7 +305,10 @@ string validate_admin(object id)
     if((id->misc->customer_id) &&
        (user == query("admin_user")) &&
        (crypt(key, query("admin_pass"))))
+    {
+      id->misc->autoweb_backdoor=1;
       return "admin";
+    }
   };
   return 0;
 }

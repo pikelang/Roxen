@@ -1,5 +1,5 @@
 /*
- * $Id: automailrcpt.pike,v 1.6 1998/09/21 15:44:55 js Exp $
+ * $Id: automailrcpt.pike,v 1.7 1998/09/30 23:00:40 js Exp $
  *
  * A RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RCPT_DEBUG
 
-constant cvs_version = "$Id: automailrcpt.pike,v 1.6 1998/09/21 15:44:55 js Exp $";
+constant cvs_version = "$Id: automailrcpt.pike,v 1.7 1998/09/30 23:00:40 js Exp $";
 
 /*
  * Roxen glue
@@ -168,9 +168,7 @@ string query_automail_name()
 
 array(array(string)) query_automail_variables()
 {
-  return ({ ({ "Phone number", "phone_number" }),
-	    ({ "SMS number", "sms_number" })
-	    });
+  return ({ });
 }
 
 
