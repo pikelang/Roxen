@@ -679,6 +679,13 @@ array tag_set_max_cache(string t, mapping m, RequestID id) {
   return ({1});
 }
 
+array(string) container_formoutput(string tag_name, mapping args,
+                                   string contents, RequestID id)
+{
+  old_rxml_warning(id, "formoutput tag", "entities");
+  return ({ do_output_tag( args, ({ id->variables }), contents, id ) });
+}
+
 
 // --------------- Register tags, containers and if-callers ---------------
 
@@ -707,6 +714,7 @@ mapping query_tag_callers() {
     "vfs":tag_vfs,
     "set-max-cache":tag_set_max_cache,
     "configurl":"",
+    "formoutput":container_formoutput,
     "accept-language":tag_accept_language
   ]);
   return active;
