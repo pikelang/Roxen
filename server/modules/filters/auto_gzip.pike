@@ -1,9 +1,8 @@
 // This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
 
 inherit "module";
-#include <module.h>
 
-constant cvs_version = "$Id: auto_gzip.pike,v 1.7 2000/02/10 04:54:17 nilsson Exp $";
+constant cvs_version = "$Id: auto_gzip.pike,v 1.8 2000/02/16 07:16:54 per Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST;
 constant module_name = "Automatic sending of compressed files";

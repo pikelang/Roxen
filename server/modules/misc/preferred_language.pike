@@ -1,10 +1,8 @@
 // This is a roxen module. Copyright © 2000, Idonex AB.
 //
-
-#include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: preferred_language.pike,v 1.5 2000/02/15 16:17:01 nilsson Exp $";
+constant cvs_version = "$Id: preferred_language.pike,v 1.6 2000/02/16 07:15:51 per Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST | MODULE_PARSER;
 constant module_name = "Preferred Language Analyzer";

@@ -1,11 +1,9 @@
 // This is a roxen module. Copyright © 1996 - 2000, Idonex AB.
 //
-
-#include <module.h>
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: language.pike,v 1.25 2000/01/12 08:56:39 nilsson Exp $";
+constant cvs_version = "$Id: language.pike,v 1.26 2000/02/16 07:15:51 per Exp $";
 constant thread_safe=1;
 
 #if DEBUG_LEVEL > 20
@@ -181,7 +179,7 @@ mixed remap_url( RequestID id, string url )
 
     id->misc->in_language=0;
     return http_redirect( redirect_url );
-  }		
+  }
   found_languages_orig = find_files( url, id );
   found_languages = copy_value( found_languages_orig );
   if (sizeof( found_languages_orig ) == 0)
@@ -333,7 +331,7 @@ string tag_available_languages( string tag, mapping m, RequestID id )
 	".available.gif alt=\"" +
 	id->misc[ "language_data" ][ available_languages[c] ][0] +
 	"\" " + "border=0" + ">";
-	
+
     if (query( "configp" ))
       result += "</aconf>\n";
     else
@@ -350,4 +348,3 @@ mapping query_tag_callers() {
 	   "language":tag_language
   ]);
 }
-

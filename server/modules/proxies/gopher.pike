@@ -2,7 +2,7 @@
 
 // Gopher proxy module.
 
-constant cvs_version = "$Id: gopher.pike,v 1.19 2000/02/08 22:10:00 nilsson Exp $";
+constant cvs_version = "$Id: gopher.pike,v 1.20 2000/02/16 07:16:38 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -29,7 +29,6 @@ inherit "module";
 inherit "socket";
 inherit "roxenlib";
 
-#include <module.h>
 #include <proxyauth.pike>
 
 constant module_type = MODULE_LOCATION|MODULE_PROXY;
@@ -107,47 +106,47 @@ void done_dir_data(array in)
        case '0': /* File */
 	dirl[i] = ({ "internal-gopher-text", "gopher://"+URL, a[0] });
 	break;
-	
+
        case '1': /* Dir  */
 	dirl[i] = ({ "internal-gopher-menu", "gopher://"+URL, a[0] });
 	break;
-	
+
        case '2': /* Phonebook */
 	dirl[i] = ({ "internal-gopher-index", "gopher://"+URL, a[0] });
 	break;
-	
+
        case '3': /* Error? */
 	dirl[i] = ({ "internal-gopher-binary", "gopher://"+URL, a[0] });
 	break;
-	
+
        case '4': /* BinHex */
        case '5': /* Dos binary */
        case '6': /* Unix UUENCODED file */
        case '9': /* Binary */
 	dirl[i] = ({ "internal-gopher-binary", "gopher://"+URL, a[0] });
 	break;
-	
+
        case '7': /* Search */
 	dirl[i] = ({ "internal-gopher-index", "gopher://"+URL, a[0] });
 	break;
-	
+
        case '8':
 	dirl[i] = ({ "internal-gopher-telnet", "telnet://"+URL, a[0] });
 	break;
-	
+
        case 'T':
 	dirl[i] = ({ "internal-gopher-telnet", "tn3270://"+URL, a[0] });
 	break;
-	
+
        case '+':
 	dirl[i] = ({ "internal-gopher-menu", "gopher://"+URL, a[0] });
 	break;
-	
+
        case 'I':
        case 'g':
 	dirl[i] = ({ "internal-gopher-image", "gopher://"+URL, a[0] });
 	break;
-	
+
        default:  /* Who knows.. */
 	if(stringp(a[0] && strlen((string)a[0])))
 	   dirl[i] = ({ "internal-gopher-unknown", "gopher://"+URL, a[0] });

@@ -1,4 +1,4 @@
-constant cvs_version="$Id: newpikescript.pike,v 1.13 2000/02/12 15:54:28 nilsson Exp $";
+constant cvs_version="$Id: newpikescript.pike,v 1.14 2000/02/16 07:16:42 per Exp $";
 constant thread_safe=1;
 
 #if !constant(Remote)
@@ -15,7 +15,6 @@ array register_module()
 #if constant(roxen)
 // Ok. This is a roxen module, then...
 #include <config.h>
-#include <module.h>
 inherit "module";
 inherit "roxenlib";
 
@@ -43,12 +42,12 @@ void create()
 	 "\"pattern: uid[/gid]\"<br>STAT means 'use file owner uid/gid',"
 	 " otherwise the specified uid is used.");
 
-  defvar("exec-mask", "0777", 
-	 "Exec mask: Always run scripts matching this permission mask", 
+  defvar("exec-mask", "0777",
+	 "Exec mask: Always run scripts matching this permission mask",
 	 TYPE_STRING|VAR_MORE,	 "");
 
-  defvar("noexec-mask", "0000", 
-	 "Exec mask: Never run scripts matching this permission mask", 
+  defvar("noexec-mask", "0000",
+	 "Exec mask: Never run scripts matching this permission mask",
 	 TYPE_STRING|VAR_MORE, "");
 }
 
@@ -68,7 +67,7 @@ object server_for(int uid, int gid)
       string host, key;
       int port;
       sscanf(data, "%s %d\n%s", host, port, key);
-      catch 
+      catch
       {
 	return servers_for[uid]=Remote.Client(host,port)->get( key );
       };
@@ -79,7 +78,7 @@ object server_for(int uid, int gid)
   report_debug("Failed to connect to old pike-script server.\n");
   rm(SERVERDIR+uid);
   // So. Now we have to start a new server....
-  object pid = 
+  object pid =
     Process.create_process(({"./start","--once","--program",
 			     "modules/scripting/newpikescript.pike" }),
 			   ([
@@ -131,7 +130,7 @@ class FakedRoxen
       FAKE(config_url);
       FAKE(query);
       FAKE(available_fonts);
-      
+
       FAKE(quick_host_to_ip);
       FAKE(quick_ip_to_host);
       FAKE(blocking_ip_to_host);
@@ -141,7 +140,7 @@ class FakedRoxen
       FAKE(languages);
       FAKE(language);
     }
-  } 
+  }
 }
 
 array uid_patterns = ({});
@@ -163,7 +162,7 @@ void start()
 	uid = reverse(uid);sscanf(uid, "%*[ \t]%s", uid);
 	if(lower_case(uid) == "stat")
 	  uid_patterns += ({ patt, 0 });
-	else 
+	else
 	{
 	  mixed gid;
 	  sscanf(uid, "%s/%s", uid, gid);
@@ -206,7 +205,7 @@ array(int) find_uid(string file, string isuser, RequestID id)
 
   foreach(uid_patterns, array p)
     if(glob(p[0], file))
-      if(p[1]) 
+      if(p[1])
 	return p[1];
       else
 	if(catch{ // if stat failes, skip to next...
@@ -378,7 +377,7 @@ array trim_errormessage(array emsg)
   return ({ emsg[0], res[3..] });
 }
 
-mixed _call_pikescript(string file, object roxen, mapping id, 
+mixed _call_pikescript(string file, object roxen, mapping id,
 		       object|void done)
 {
   eventlog("Call script "+file);
@@ -388,7 +387,7 @@ mixed _call_pikescript(string file, object roxen, mapping id,
   array err;
   err = catch {
     mixed res=get_pikescript( file, id  )->parse( id );
-    if(done) 
+    if(done)
     {
       done->async( res );
       return 0;
@@ -437,7 +436,7 @@ string in_file, basedir;
 
 void perhaps_die()
 {
-  if(Stdio.read_bytes(basedir+SERVERDIR+getuid()) != in_file)   
+  if(Stdio.read_bytes(basedir+SERVERDIR+getuid()) != in_file)
   {
     eventlog("Old pike script server PID "+
 	   getpid()+" exiting (new available?)");
@@ -495,7 +494,7 @@ int main()
 
   // ok.. Now write the location to the correct file.
   // pwd is the 'server' directory.
-  
+
   string sd = basedir+SERVERDIR;
   mkdir(sd[..strlen(sd)-2]);
   catch(chmod(sd[..strlen(sd)-2], 07777));

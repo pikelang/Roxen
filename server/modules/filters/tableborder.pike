@@ -1,8 +1,7 @@
-#include <module.h>
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: tableborder.pike,v 1.4 2000/02/10 05:17:40 nilsson Exp $";
+constant cvs_version = "$Id: tableborder.pike,v 1.5 2000/02/16 07:16:54 per Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FILTER;
 constant module_name = "Table Unveiler";

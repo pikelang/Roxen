@@ -1,4 +1,3 @@
-#include <module.h>
 inherit "module";
 inherit "roxenlib";
 constant module_type = MODULE_FIRST|MODULE_LAST;

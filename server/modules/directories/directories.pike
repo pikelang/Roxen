@@ -11,7 +11,7 @@
 //
 // Make sure links work _inside_ unfolded documents.
 
-string cvs_version = "$Id: directories.pike,v 1.47 2000/02/10 04:22:21 nilsson Exp $";
+string cvs_version = "$Id: directories.pike,v 1.48 2000/02/16 07:17:15 per Exp $";
 constant thread_safe=1;
 
 //#define DIRECTORIES_DEBUG
@@ -21,7 +21,6 @@ constant thread_safe=1;
 # define DIRS_WERR(X)
 #endif
 
-#include <module.h>
 inherit "module";
 inherit "roxenlib";
 

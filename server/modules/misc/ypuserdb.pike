@@ -3,10 +3,9 @@
 // YP User database. Reads the system password database and use it to
 // authentificate users.
 
-constant cvs_version = "$Id: ypuserdb.pike,v 1.12 2000/02/10 06:44:08 nilsson Exp $";
+constant cvs_version = "$Id: ypuserdb.pike,v 1.13 2000/02/16 07:15:51 per Exp $";
 constant thread_safe=1;
 
-#include <module.h>
 inherit "module";
 inherit "roxenlib";
 
@@ -122,7 +121,7 @@ constant module_doc  = "Experimental module for authorization using "
 
 void start(int i)
 {
-  if (!domain) 
+  if (!domain)
     domain = Yp.Domain();
 }
 

@@ -1,18 +1,16 @@
-// $Id: demo.pike,v 1.11 2000/02/10 06:44:08 nilsson Exp $
+// $Id: demo.pike,v 1.12 2000/02/16 07:15:33 per Exp $
 //
 // (c) 1998 Idonex AB
-#include <module.h>
-
 inherit "module";
 inherit "roxenlib";
 
 // import Array;
 
-constant cvs_version = "$Id: demo.pike,v 1.11 2000/02/10 06:44:08 nilsson Exp $";
+constant cvs_version = "$Id: demo.pike,v 1.12 2000/02/16 07:15:33 per Exp $";
 
 void create()
 {
-  defvar("location", "/demo/", "Mount point", TYPE_LOCATION, 
+  defvar("location", "/demo/", "Mount point", TYPE_LOCATION,
 	 "This is where the module will be inserted in the "+
 	 "namespace of your server.");
 }

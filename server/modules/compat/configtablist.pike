@@ -1,9 +1,8 @@
 // Config tablist look-a-like module. Copyright © 1999, Idonex AB.
 //
 
-constant cvs_version="$Id: configtablist.pike,v 1.8 2000/02/12 15:44:11 nilsson Exp $";
+constant cvs_version="$Id: configtablist.pike,v 1.9 2000/02/16 07:16:30 per Exp $";
 
-#include <module.h>
 inherit "module";
 inherit "roxenlib";
 

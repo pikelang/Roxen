@@ -3,13 +3,9 @@
  *
  * Henrik Grubbström 1998-10-01
  */
-
-#include <module.h>
-#include <stat.h>
-
 inherit "module";
 
-constant cvs_version = "$Id: pathinfo.pike,v 1.9 2000/02/10 06:44:08 nilsson Exp $";
+constant cvs_version = "$Id: pathinfo.pike,v 1.10 2000/02/16 07:15:51 per Exp $";
 constant thread_safe = 1;
 
 // #define PATHINFO_DEBUG

@@ -1,11 +1,10 @@
-#include <module.h>
 inherit "module";
 
 #ifndef MIRRORSERVER_DEBUG
 #define MIRRORSERVER_DEBUG
 #endif /* MIRRORSERVER_DEBUG */
 
-constant cvs_version = "$Id: mirrorserver.pike,v 1.18 2000/02/10 06:44:08 nilsson Exp $";
+constant cvs_version = "$Id: mirrorserver.pike,v 1.19 2000/02/16 07:15:51 per Exp $";
 
 class MirrorServer {
   import Stdio;
@@ -22,7 +21,7 @@ class MirrorServer {
     {
       return q->read(len);
     }
-    
+
     void create(string fn)
     {
       q = predef::open(fn,"r");
@@ -39,14 +38,14 @@ class MirrorServer {
       b = b[len..];
       return q;
     }
-    
+
     void create(string fn)
     {
       b=fn;
     }
   };
 
-  
+
   object open_file(string url)
   {
     url = replace(base+url,"//","/");
@@ -54,7 +53,7 @@ class MirrorServer {
     if(foo) return MyFile(foo);
     return MyStringFile(fid->conf->try_get_file(url, fid));
   }
-  
+
   string get_file(string url)
   {
     url = replace(base+url,"//","/");

@@ -1,5 +1,4 @@
-constant cvs_version="$Id: ximg.pike,v 1.5 2000/02/12 15:44:39 nilsson Exp $";
-#include <module.h>
+constant cvs_version="$Id: ximg.pike,v 1.6 2000/02/16 07:16:30 per Exp $";
 inherit "module";
 inherit "roxenlib";
 

@@ -1,8 +1,7 @@
-constant cvs_version="$Id: mirrorfs.pike,v 1.15 2000/02/12 15:52:40 nilsson Exp $";
+constant cvs_version="$Id: mirrorfs.pike,v 1.16 2000/02/16 07:16:02 per Exp $";
 constant thread_safe=1;
 
 #include <roxen.h>
-#include <module.h>
 #include <stat.h>
 inherit "filesystem";
 

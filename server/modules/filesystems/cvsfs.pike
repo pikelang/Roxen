@@ -5,10 +5,9 @@
  * Written by Niels Möller 1997
  */
 
-constant cvs_version = "$Id: cvsfs.pike,v 1.21 2000/02/10 04:40:34 nilsson Exp $";
+constant cvs_version = "$Id: cvsfs.pike,v 1.22 2000/02/16 07:16:02 per Exp $";
 constant thread_safe=1;
 
-#include <module.h>
 #include <roxen.h>
 
 inherit "module";
@@ -58,8 +57,8 @@ object|array run_cvs(string prog, string dir, int with_stderr, string ...args)
   int id;
   object|array result;
 
-  // werror(sprintf("run_cvs: %s %s\n", prog, args * " ")); 
-  
+  // werror(sprintf("run_cvs: %s %s\n", prog, args * " "));
+
   stdin->open("/dev/null", "r");
   if (with_stderr)
     result = ({ stdout->pipe(), stderr->pipe() });
@@ -98,7 +97,7 @@ string handle_cvs_comments_etc(string data)
     }
   return data;
 }
-      	   
+
 string lookup_cvs_module(string prog, string root, string module)
 {
   /* cvs checkout -c is not eightbit clean. argh! */
@@ -107,7 +106,7 @@ string lookup_cvs_module(string prog, string root, string module)
 
   if (! (prog && root && module))
     return 0;
-  
+
   /* werror(sprintf("lookup_cvs_module: prog = %O, root = %O, module=%O\n",
      prog, root, module));
      */
@@ -117,15 +116,15 @@ string lookup_cvs_module(string prog, string root, string module)
 
   // werror("Reading from cvs\n");
   mods = f->read(1000000);
-  
+
   if (!strlen(mods))
     return 0;
   // werror("cvsmodules: " + mods + "\n");
   string mods = handle_cvs_comments_etc(mods);
   // werror("cvsmodules: " + mods + "\n");
-  
+
   array mod = parse_modules_file(mods)[module];
-  
+
   if (!mod)
     return 0;
   // werror(sprintf("Module: %O\n", mod));
@@ -197,7 +196,7 @@ string find_cvs_dir(string path)
     if (! (name && strlen(name) ))
       return "Module not found in CVS";
     if (!file_stat(query("cvsroot") + name))
-      return "No such subdirectory"; 
+      return "No such subdirectory";
     cvs_module_path = combine_path(name, subpath);
   } else {
     if (!file_stat(combine_path(query("cvsroot"), subpath)))
@@ -268,7 +267,7 @@ string|void check_variable(string name, string value)
     return 0;
   }
 }
-  
+
 void start()
 {
   if (!cvs_initialized)
@@ -345,7 +344,7 @@ object|mapping|int find_file(string name, object id)
 	is_text = 1;
       } else if (stringp(prestates->diff) &&
 		 stringp(prestates->revision)) {
-	
+
 	extra_args += ({ "-r"+prestates->diff });
 
 	f = run_cvs(rcsdiff_program, 0, 0,
@@ -405,5 +404,3 @@ array find_dir(string name, object id)
     }
   return 0;
 }
-	  
-  

@@ -1,9 +1,7 @@
 #include <module.h>
-
-
 inherit "modules/filesystems/filesystem";
 
-constant cvs_version= "$Id: incoming.pike,v 1.6 1999/10/06 00:08:45 grubba Exp $";
+constant cvs_version= "$Id: incoming.pike,v 1.7 2000/02/16 07:16:02 per Exp $";
 
 
 constant module_name = "Incoming filesystem";
@@ -106,7 +104,7 @@ void create()
 	 "Scrambled downloads: Unscrambled header length",TYPE_INT,
 	 "Number of bytes to be sent without any bitrot at all.", 0,
 	 lambda(){ return !QUERY(bitrot); });
-	 
+
   defvar("bitrot_percent", 3,
 	 "Scrambled downloads: Percent of bits to rot", TYPE_INT,
 	 "Selects the percentage of the file that will receive bitrot", 0,
@@ -168,4 +166,3 @@ mixed find_file( string f, object id )
   report_error("Not reached..\n");
   return 0;
 }
- 

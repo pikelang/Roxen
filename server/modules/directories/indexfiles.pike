@@ -4,10 +4,9 @@
  * generate any directory listings, instead only using index files.
  */
 
-constant cvs_version = "$Id: indexfiles.pike,v 1.11 2000/02/10 04:28:23 nilsson Exp $";
+constant cvs_version = "$Id: indexfiles.pike,v 1.12 2000/02/16 07:17:15 per Exp $";
 constant thread_safe=1;
 
-#include <module.h>
 inherit "module";
 inherit "roxenlib";
 
