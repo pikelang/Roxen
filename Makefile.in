@@ -473,7 +473,7 @@ tar_dist:
 	cp unparsed_pro.tar $$version/server/manual/unparsed.tar || exit 1; \
 	cp parsed_pro.tar $$version/server/manual/parsed.tar || exit 1; \
 	echo "Building full Pro distribution..."; \
-	tar cf - $$version | gzip -9 >$$version-$$type-pro-full.tar.gz; \
+	tar cf - $$version | gzip -9 >$$version-$$type-pro.tar.gz; \
 	if (cd $$version; make keep_dbapi || exit 1); then \
 	  mv $$version/dbapi.tar . || exit 1; \
 	else :; fi; \
@@ -503,7 +503,7 @@ tar_dist:
 	cp parsed_pro.tar $$version/server/manual/parsed.tar || exit 1; \
 	echo "Building lobotomized Pro distribution..."; \
 	tar cf - $$version | gzip -9 >$$version-$$type-pro-int.tar.gz; \
-	(mkdir 40bit-nda; cd 40bit-nda; gzip -cd < ../$$version-$$type-pro-full.tar.gz | tar xf -; cd $$version; make censor_strong_crypto || exit 1); \
+	(mkdir 40bit-nda; cd 40bit-nda; gzip -cd < ../$$version-$$type-pro.tar.gz | tar xf -; cd $$version; make censor_strong_crypto || exit 1); \
 	echo "Building 40bit Pro distribution..."; \
 	(cd 40bit-nda; tar cf - $$version | gzip -9 >../$$version-$$type-pro-40bit.tar.gz || exit 1); \
 	rm -rf 40bit-nda; \
