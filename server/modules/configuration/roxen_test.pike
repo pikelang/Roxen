@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.3 2000/11/12 00:07:19 nilsson Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.4 2000/11/12 01:16:57 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_ZERO;
 constant module_name = "Roxen self test module";
@@ -40,6 +40,7 @@ RequestID get_id() {
   id->raw_url="/index.html";
   id->method="GET";
   id->remoteaddr="127.0.0.1";
+  NOCACHE();
   return id;
 }
 
@@ -88,12 +89,39 @@ void xml_test(string t, mapping m, string c) {
 
   ltests++;
   tests++;
+
   string rxml,w_res,a_res;
+  RequestID id = get_id();
   Parser.HTML()->add_containers( ([ "rxml" : lambda(string t, mapping m, string c) { rxml=c; },
-				    "result" : lambda(string t, mapping m, string c) { w_res=c; }
+				    "result" : lambda(string t, mapping m, string c) { w_res=c; },
+  ]) )->add_tags( ([ "add" : lambda(string t, mapping m, string c) {
+			     switch(m->what) {
+			     default:
+			       report_error("Could not <add> %O; unknown variable.\n", m->what);
+			       break;
+			     case "prestate":
+			       id->prestate[m->name] = 1;
+			       break;
+			     case "variable":
+			       id->variables[m->name] = m->value || m->name;
+			       break;
+			     case "cookies":
+			       id->cookies[m->name] = m->value || "";
+			       break;
+			     case "supports":
+			       id->supports[m->name] = 1;
+			       break;
+			     case "config":
+			       id->config[m->name] = 1;
+			       break;
+			     case "client_var":
+			       id->client_var[m->name] = m->value || "";
+			       break;
+			     }
+			   },
   ]) )->finish(c);
 
-  mixed err = catch( a_res = Roxen.parse_rxml( rxml, get_id() ));
+  mixed err = catch( a_res = Roxen.parse_rxml( rxml, id ));
   if(err) {
     fails++;
     lfails++;
@@ -105,7 +133,7 @@ void xml_test(string t, mapping m, string c) {
   if(!m["no-canon"])
     a_res = canon_html(a_res);
 
-  if(a_res != w_res) {
+  if(w_res && a_res != w_res) {
     fails++;
     lfails++;
     report_error(" Test \"%s\"\n Failed (%O != %O)\n", rxml, a_res, w_res);
@@ -126,8 +154,8 @@ void run_xml_tests(string data) {
 				    "test" : xml_test,
 				    "comment": xml_comment,
   ]) )->finish(data);
-  report_debug("Did %d tests, failes on %d tests.\n", ltests, lfails);
   if(ltests<sizeof(data/"</test>")-1) report_warning("Possibly XML error in testsuite.\n");
+  report_debug("Did %d tests, failed on %d.\n", ltests, lfails);
 }
 
 
@@ -139,7 +167,7 @@ void find_tests(string path) {
     if(file!="CVS" && file_stat(path+file)[1]==-2)
       find_tests(path+file+"/");
     else if(file[-1]!='~' && glob("RoxenTest_*", file)) {
-      report_debug("Found test file %s\n",path+file);
+      report_debug("\nFound test file %s\n",path+file);
       if(glob("*.xml",file))
 	run_xml_tests(Stdio.read_file(path+file));
     }
