@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.55 2001/03/13 19:50:41 mast Exp $
+ * $Id: ftp.pike,v 2.56 2001/04/14 15:58:56 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -2901,6 +2901,8 @@ class FTPSession
   void ftp_PASV(string args)
   {
     // Required by RFC 1123 4.1.2.6
+    int min;
+    int max;
 
     if (epsv_only) {
       send(530, ({ "'PASV': Method not allowed in EPSV ALL mode." }));
@@ -2909,11 +2911,30 @@ class FTPSession
 
     if(pasv_port)
       destruct(pasv_port);
+
     pasv_port = Stdio.Port(0, pasv_accept_callback, local_addr);
     /* FIXME: Hmm, getting the address from an anonymous port seems not
      * to work on NT...
      */
     int port=(int)((pasv_port->query_address()/" ")[1]);
+
+    min = port_obj->query_option("passive_port_min");
+    max = port_obj->query_option("passive_port_max");
+    if ((port < min) || (port > max)) {
+      if (max > 65535) max = 65535;
+      if (min < 0) min = 0;
+      for (port = min; port <= max; port++) {
+	if (pasv_port->bind(port, pasv_accept_callback, local_addr)) {
+	  break;
+	}
+      }
+      if (port > max) {
+	destruct(pasv_port);
+	pasv_port = 0;
+	send(452, ({ "Requested action aborted: Out of ports." }));
+	return;
+      }
+    }
     send(227, ({ sprintf("Entering Passive Mode. %s,%d,%d",
 			 replace(local_addr, ".", ","),
 			 (port>>8), (port&0xff)) }));
@@ -2941,6 +2962,24 @@ class FTPSession
      * to work on NT...
      */
     int port=(int)((pasv_port->query_address()/" ")[1]);
+
+    min = port_obj->query_option("passive_port_min");
+    max = port_obj->query_option("passive_port_max");
+    if ((port < min) || (port > max)) {
+      if (max > 65535) max = 65535;
+      if (min < 0) min = 0;
+      for (port = min; port <= max; port++) {
+	if (pasv_port->bind(port, pasv_accept_callback, local_addr)) {
+	  break;
+	}
+      }
+      if (port > max) {
+	destruct(pasv_port);
+	pasv_port = 0;
+	send(452, ({ "Requested action aborted: Out of ports." }));
+	return;
+      }
+    }
     send(229, ({ sprintf("Entering Extended Passive Mode (|%d|%s|%d|)",
 			 1, local_addr, port) }));
   }
