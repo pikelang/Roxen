@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.31.2.7 1997/03/13 01:19:37 kg Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.31.2.8 1997/03/17 10:02:52 grubba Exp $";
 
 #define IN_ROXEN
 #include <module.h>
@@ -737,7 +737,7 @@ public void log(mapping file, object request_id)
 		   (string)request_id->prot,
 		   (string)(file->error||200),
 		   unsigned_short_to_bin(file->error||200),
-		   (string)(file->len>=0?file->len:"?"),
+		   (string)(file->len>=0?file->len:"-"),
 		   unsigned_to_bin(file->len),
 		   (string)
 		   (sizeof(request_id->referer)?request_id->referer[0]:"-"),
