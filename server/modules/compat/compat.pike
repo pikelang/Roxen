@@ -68,109 +68,6 @@ string status() {
 }
 
 
-// ----------------------- Documentation --------------------------
-
-TAGDOCUMENTATION;
-#ifdef manual
-constant tagdoc=([
-"clientname":#"<desc tag>
- Returns the name of the client. No required attributes.
-</desc>
-
-<attr name=full>
- View the full User Agent string.
-</attr>
-
-<attr name=quote value=html,none>
- Quotes the clientname. Default is 'html'.
-</attr>",
-
-"file":#"<desc tag>
- Prints the path part of the URL used to get this page.
-</desc>
-
-<attr name=quote value=html,none>
- How the filename is quoted. Default is 'html'.
-</attr>
-
-<attr name=raw>
- Prints the full path part, including the query part with form
- variables.
-</attr>",
-
-"realfile":#"<desc tag>
-
- Prints the path to the file containing the page in the computers file
- system, rather than Roxen Webserver's virtual file system, or unknown if
- it is impossible to determine.
-</desc>",
-
-"referer":#"<desc tag>
- Inserts the URL the visitor came from.
-</desc>
-
-<attr name=alt>
- Text to write if no referrer is given.
-</attr>
-
-<attr name=quote value=html,none>
- How the referrer should be quoted. Default is 'html'.
-</attr>",
-
-"referrer":#"<desc tag>
- Inserts the URL the visitor came from.
-</desc>
-
-<attr name=alt>
- Text to write if no referrer is given.
-</attr>
-
-<attr name=quote value=html,none>
- How the referrer should be quoted. Default is 'html'.
-</attr>",
-
-"refferrer":#"<desc tag>
- Inserts the URL the visitor came from.
-</desc>
-
-<attr name=alt>
- Text to write if no referrer is given.
-</attr>
-
-<attr name=quote value=html,none>
- How the referrer should be quoted. Default is 'html'.
-</attr>",
-
-"vfs":#"<desc tag>
- Prints the mountpoint of the filesystem module that handles the page,
- or unknown if it could not be determined. This is useful for creating
- pages or applications that are to be placed anywhere on a site, but
- for some reason have to use absolute paths.
-</desc>",
-
-"accept-language":#"<desc tag>
- Returns the language code of the language the user prefers, as
- specified by the first language in the accept-language header.
-
- <p>If no accept-language is sent by the users browser None will be
- returned.</p>
-</desc>
-
-<attr name=end value=character>
-
-</attr>
-
-<attr name=full>
- Returns all languages the user has specified, as a comma separated list.
-</attr>
-
-<attr name=start value=character>
-
-</attr>",
-]);
-#endif
-
-
 // --------------------------- Tags and containers ------------------------------
 
 string container_preparse( string tag_name, mapping args, string contents,
@@ -769,11 +666,13 @@ array(string) container_cset(string tag, mapping m, string c, RequestID id) {
 }
 
 array container_elif(string t, mapping m, string c, RequestID id) {
+  old_rxml_warning(id, "elif tag", "elseif tag");
   return ({ 1, "elseif", m, c });
 }
 
 array tag_set_max_cache(string t, mapping m, RequestID id) {
   if(m->time) {
+    old_rxml_warning(id, "set-max-cache attribute time", "the time notation in <date>");
     id->misc->cacheable = (int)m->time;
     return ({""});
   }
