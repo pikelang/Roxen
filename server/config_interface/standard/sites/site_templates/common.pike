@@ -7,18 +7,25 @@ constant modules = ({});
 
 string verify_url( string port )
 {
-  if( (int)port ) port = "http://*:"+port+"/";
+  if( (int)port ) 
+    port = "http://*:"+port+"/";
 
   string protocol, host, path;
 
   if(sscanf( port, "%[^:]://%[^/]%s", protocol, host, path ) != 3)
     ;
-  else if( path == "" )
-    port += "/";
-
-  if( protocol != lower_case( protocol ) )
+  else
+  {
+    int pno;
+    if( sscanf( host, "%s:%d", host, pno ) == 2)
+    {
+      if( pno != roxen->protocols[ lower_case( protocol ) ]->default_port )
+        host = host+":"+pno;
+    }
+    if( !strlen(path) )
+      path = "/";
     port = lower_case( protocol )+"://"+host+path;
-
+  }
   return port;
 }
 
@@ -34,7 +41,7 @@ mixed parse( RequestID id )
     id->misc->new_configuration->set( "MyWorldLocation", Roxen.get_world( ({ id->variables->url }) ) || "" );
     return "<done/>";
   }
-  return "<b>URL</b>: <input size=50 name=url value='http://*:80/'>"
+  return "<b>URL</b>: <input size=50 name=url value='http://*/'>"
          "<br />"
          "<submit-gbutton> &locale.ok; </submit-gbutton>";
 }

@@ -14,7 +14,8 @@ constant base = #"
 
 string decode_site_name( string what )
 {
-  if( (int)what ) return (string)((array(int))(what/","-({""})));
+  if( (int)what && (search(what, ",") != -1))
+    return (string)((array(int))(what/","-({""})));
   return what;
 }
 
@@ -32,7 +33,6 @@ mixed parse( RequestID id )
     error("No permission, dude!\n"); // This should not happen, really.
   if( !id->variables->name )
     error("No name for the site!\n"); // This should not happen either.
-
 
   id->variables->name = decode_site_name( id->variables->name );
 
