@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.103 1998/02/28 10:50:50 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.104 1998/02/28 14:11:54 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -1427,9 +1427,9 @@ public array find_dir(string file, object id)
 	TRACE_LEAVE("");
     } else if((search(loc, file)==0) && (loc[strlen(file)-1]=='/') &&
 	      (loc[0]==loc[-1]) && (loc[-1]=='/') &&
-	      (sizeof(function_object(tmp[1])->find_dir("", id) || ({})))) {
+	      (function_object(tmp)->stat_file(".", id))) {
       /* loc == file + "/" + subpath + "/"
-       * and find_dir() returns a non-empty directory.
+       * and stat_file(".") returns non-zero.
        */
       TRACE_LEAVE("Added module mountpoint");
       loc=loc[strlen(file)..];
