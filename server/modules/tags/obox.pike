@@ -5,7 +5,7 @@
 // Several modifications by Francesco Chemolli.
 
 
-constant cvs_version = "$Id: obox.pike,v 1.27 2000/05/05 10:55:26 kuntri Exp $";
+constant cvs_version = "$Id: obox.pike,v 1.28 2000/06/29 16:11:49 kuntri Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -63,7 +63,7 @@ constant tagdoc=(["obox":([
  Color of the text inside the box.
 </attr>
 
-<att name=title value=string>
+<attr name=title value=string>
  Sets the title of the obox.
 </attr>
 
