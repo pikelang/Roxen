@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.521 2002/06/12 22:28:48 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.522 2002/06/13 13:34:00 nilsson Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -16,10 +16,8 @@ constant cvs_version = "$Id: configuration.pike,v 1.521 2002/06/12 22:28:48 nils
 
 // --- Locale defines ---
 //<locale-token project="roxen_config">  LOC_C  </locale-token>
-//<locale-token project="roxen_message"> LOC_M  </locale-token>
 //<locale-token project="roxen_config"> DLOCALE </locale-token>
 #define LOC_C(X,Y)  _STR_LOCALE("roxen_config",X,Y)
-#define LOC_M(X,Y)  _STR_LOCALE("roxen_message",X,Y)
 #define DLOCALE(X,Y) _DEF_LOCALE("roxen_config",X,Y)
 
 #ifdef THROTTLING_DEBUG
@@ -1072,8 +1070,7 @@ int|mapping check_security(function|RoxenModule a, RequestID id,
   else
     return 0; // Ok if there are no patterns.
 
-  report_error("check_security(): %s:\n%s\n",
-	       LOC_M(39, "Error during module security check"),
+  report_error("check_security(): Error during module security check:\n%s\n",
 	       describe_backtrace(err));
 
   return 1;
@@ -1104,8 +1101,7 @@ void clear_memory_caches()
   foreach(indices(otomod), RoxenModule m)
     if (m && m->clear_memory_caches)
       if (mixed err = catch( m->clear_memory_caches() ))
-	report_error("clear_memory_caches() "+
-		     LOC_M(40, "failed for module %O:\n%s\n"),
+	report_error("clear_memory_caches() failed for module %O:\n%s\n",
 		     otomod[m], describe_backtrace(err));
 }
 
@@ -2631,8 +2627,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
       if (err != "") {
 #endif
 	string bt=describe_backtrace(err);
-	report_error("enable_module(): " +
-		     LOC_M(41, "Error while initiating module copy of %s%s"),
+	report_error("enable_module(): Error while initiating module copy of %s%s",
 		     moduleinfo->get_name(), (bt ? ":\n"+bt : "\n"));
 #ifdef MODULE_DEBUG
       }
@@ -2648,8 +2643,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
     if( module[id]->stop ) {
       if (err = catch( module[id]->stop() )) {
 	string bt=describe_backtrace(err);
-	report_error("disable_module(): " +
-		     LOC_M(44, "Error while disabling module %s%s"),
+	report_error("disable_module(): Error while disabling module %s%s",
 		     descr, (bt ? ":\n"+bt : "\n"));
       }
     }
@@ -2838,8 +2832,8 @@ void call_start_callbacks( RoxenModule me,
       report_debug("\bERROR\n");
 #endif
     string bt=describe_backtrace(err);
-    report_error(LOC_M(41, "Error while initiating module copy of %s%s"),
-			moduleinfo->get_name(), (bt ? ":\n"+bt : "\n"));
+    report_error("Error while initiating module copy of %s%s",
+		 moduleinfo->get_name(), (bt ? ":\n"+bt : "\n"));
     got_no_delayed_load = -1;
   }
   if( inited && me->ready_to_receive_requests )
@@ -2870,8 +2864,8 @@ void call_low_start_callbacks( RoxenModule me,
     if (enable_module_batch_msgs) report_debug("\bERROR\n");
 #endif
     string bt=describe_backtrace(err);
-    report_error(LOC_M(41, "Error while initiating module copy of %s%s"),
-			moduleinfo->get_name(), (bt ? ":\n"+bt : "\n"));
+    report_error("Error while initiating module copy of %s%s",
+		 moduleinfo->get_name(), (bt ? ":\n"+bt : "\n"));
     pr = 3;
   }
 
@@ -2902,7 +2896,7 @@ void call_low_start_callbacks( RoxenModule me,
       if (enable_module_batch_msgs) report_debug("\bERROR\n");
 #endif
       string bt=describe_backtrace(err);
-      report_error(LOC_M(41, "Error while initiating module copy of %s%s"),
+      report_error("Error while initiating module copy of %s%s",
 		   moduleinfo->get_name(), (bt ? ":\n"+bt : "\n"));
       got_no_delayed_load = -1;
     }
@@ -2923,7 +2917,7 @@ void call_low_start_callbacks( RoxenModule me,
       if (enable_module_batch_msgs) report_debug("\bERROR\n");
 #endif
       string bt=describe_backtrace(err);
-      report_error(LOC_M(41, "Error while initiating module copy of %s%s"),
+      report_error("Error while initiating module copy of %s%s",
 		   moduleinfo->get_name(), (bt ? ":\n"+bt : "\n"));
       got_no_delayed_load = -1;
     }
@@ -3075,9 +3069,8 @@ int disable_module( string modname, int|void nodest )
 
   if(!module)
   {
-    report_error("disable_module(): " +
-		 LOC_M(42, "Failed to disable module:\n"
-			"No module by that name: \"%s\".\n"), modname);
+    report_error("disable_module(): Failed to disable module:\n"
+		 "No module by that name: %O.\n", modname);
     return 0;
   }
 
@@ -3091,17 +3084,14 @@ int disable_module( string modname, int|void nodest )
 
   if(!me)
   {
-    report_error("disable_module(): " +
-		 LOC_M(43, "Failed to disable module \"%s\".\n"),
-		 descr);
+    report_error("disable_module(): Failed to disable module %O.\n", descr);
     return 0;
   }
 
   if(me->stop)
     if (mixed err = catch (me->stop())) {
       string bt=describe_backtrace(err);
-      report_error("disable_module(): " +
-		   LOC_M(44, "Error while disabling module %s%s"),
+      report_error("disable_module(): Error while disabling module %s%s",
 		   descr, (bt ? ":\n"+bt : "\n"));
     }
 
@@ -3256,8 +3246,8 @@ void low_init(void|int modules_already_enabled)
       if( !forcibly_added[ tmp_string ] )
 	if(err = catch( enable_module( tmp_string )))
 	{
-	  report_error(LOC_M(45, "Failed to enable the module %s. Skipping.")
-		       +"\n%s\n", tmp_string, describe_backtrace(err));
+	  report_error("Failed to enable the module %s. Skipping.\n%s\n",
+		       tmp_string, describe_backtrace(err));
 	  got_no_delayed_load = -1;
 	}
     }
