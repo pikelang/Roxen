@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.179 2004/05/05 21:17:56 mast Exp $
+// $Id: module.pike,v 1.180 2004/05/06 15:32:55 grubba Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -935,10 +935,12 @@ mapping(string:mixed) unlock_file (string path,
   path = resource_id (path, id);
   DAVLock removed_lock;
   if (lock->recursive) {
-    removed_lock = m_delete (prefix_locks[path], auth_user);
-    if (!sizeof (prefix_locks[path])) m_delete (prefix_locks, path);
+    if (prefix_locks[path]) {
+      removed_lock = m_delete(prefix_locks[path], auth_user);
+      if (!sizeof(prefix_locks[path])) m_delete(prefix_locks, path);
+    }
   }
-  else {
+  else if (file_locks[path]) {
     removed_lock = m_delete (file_locks[path], auth_user);
     if (!sizeof (file_locks[path])) m_delete (file_locks, path);
   }
