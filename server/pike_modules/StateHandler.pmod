@@ -1,7 +1,7 @@
 // This is the ChiliMoon state mechanism.
 // Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: StateHandler.pmod,v 1.13 2004/01/25 18:27:57 norrby Exp $
+// $Id: StateHandler.pmod,v 1.14 2004/05/16 01:49:47 mani Exp $
 
 #ifdef STATE_HANDLER_DEBUG
 # define STATE_WERR(X) werror("State: "+X+"\n")
@@ -278,7 +278,9 @@ class Page_state {
     }
     else other_vars = "";
 
-    return id->url_base() + id->not_query[1..] +
+    // Use a relative url. It's shorter and doesn't give problems when
+    // result p-code is replicated.
+    return (id->not_query / "/")[-1] +
       "?" + (var || "__state") + "=" + uri_encode (value, key) + other_vars;
   }
 }

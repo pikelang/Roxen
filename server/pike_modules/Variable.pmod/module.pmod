@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.83 2004/04/04 14:52:57 mani Exp $
+// $Id: module.pmod,v 1.84 2004/05/16 01:44:50 mani Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -228,11 +228,13 @@ class Variable
 
   void destroy()
   {
-    // clean up...
-    m_delete( all_flags, _id );
-    m_delete( all_warnings, _id );
-    m_delete( invisibility_callbacks, _id );
-    m_delete( changed_values, _id );
+    if(global::this) {
+      // clean up...
+      m_delete( all_flags, _id );
+      m_delete( all_warnings, _id );
+      m_delete( invisibility_callbacks, _id );
+      m_delete( changed_values, _id );
+    }
   }
 
   string get_warnings()
@@ -1331,7 +1333,7 @@ class List
   int(0..1) set_from_form(RequestID id)
   {
     int rn, do_goto;
-    array l = query();
+    array l = copy_value(query());
     mapping vl = get_form_vars(id);
     // first do the assign...
     if( (int)vl[".count"] != _current_count )
@@ -1410,7 +1412,12 @@ class List
 	query = "";
       else
 	query += "&";
-      query += "random="+random(4949494)+(section?"&section="+section:"");
+      //  The URL will get a fragment identifier below and since some
+      //  broken browsers (MSIE) incorrectly includes the fragment in
+      //  the last variable value we'll place section before random.
+      query +=
+	(section ? ("section=" + section + "&") : "") +
+	"random=" + random(4949494);
 
       nid->misc->moreheads =
 	([
@@ -1446,18 +1453,19 @@ class List
 	+ "</font></td>\n";
 #define BUTTON(X,Y) ("<submit-gbutton2 name='"+X+"'>"+Y+"</submit-gbutton2>")
 #define REORDER(X,Y) ("<submit-gbutton2 name='"+X+"' icon-src='"+Y+"'></submit-gbutton2>")
+#define DIMBUTTON(X) ("<disabled-gbutton icon-src='"+X+"'></disabled-gbutton>")
       if( i )
         res += "\n<td>"+
             REORDER(prefix+"up."+i, "/internal-roxen-up")+
             "</td>";
       else
-        res += "\n<td></td>";
+        res += "\n<td>"+DIMBUTTON("/internal-roxen-up")+"</td>";
       if( i != sizeof( query())- 1 )
         res += "\n<td>"+
             REORDER(prefix+"down."+i, "/internal-roxen-down")
             +"</td>";
       else
-        res += "\n<td></td>";
+        res += "\n<td>"+DIMBUTTON("/internal-roxen-down")+"</td>";
       res += "\n<td>"+
             BUTTON(prefix+"delete."+i, LOCALE(227, "Delete") )
           +"</td>";
@@ -1593,12 +1601,12 @@ class PortList
     }
     res += "</select>";
 
-    res += "://<input type=text name='"+prefix+"host' value='"+
+    res += "://<input type='text' name='"+prefix+"host' value='"+
            Roxen.html_encode_string(split->host)+"' />";
-    res += ":<input type=text size=6 name='"+prefix+"port' value='"+
+    res += ":<input type='text' size='5' name='"+prefix+"port' value='"+
              split->port+"' />";
 
-    res += "/<input type=text name='"+prefix+"path' value='"+
+    res += "/<input type='text' name='"+prefix+"path' value='"+
       Roxen.html_encode_string(split->path[1..])+"' /><br />";
     mapping opts = ([]);
     string a,b;
@@ -1607,7 +1615,7 @@ class PortList
       sscanf( x, "%s=%s", a, b );
       opts[a]=b;
     }
-    res += "IP#: <input size=15 type=text name='"+prefix+"ip' value='"+
+    res += "IP#: <input size='15' type='text' name='"+prefix+"ip' value='"+
       Roxen.html_encode_string(opts->ip||"")+"' /> ";
     res += LOCALE(510,"Bind this port: ");
     res += "<select name='"+prefix+"nobind'>";
