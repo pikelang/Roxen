@@ -924,8 +924,13 @@ class ReplaceAlpha
       if( args->color )
       {
 	Image.Color c = translate_color( args->color );
-	foreach( victims, Image.Layer l )
-	  l->set_image( l->image(), l->image()->copy()->clear( c ) );
+	foreach( victims, Image.Layer l ) {
+	  if (l->image()) {
+	    l->set_image( l->image(), l->image()->copy()->clear( c ) );
+	  } else {
+	    l->set_image(0, 0);
+	  }
+	}
       }
 
       return layers;
@@ -1175,6 +1180,7 @@ class Crop
 	  l->set_offset( 0, 0 );
 	}
       }
+      return layers;
     }
 
     Arguments check_args( Arguments args )
@@ -1223,6 +1229,7 @@ class Scale
 	  a = a->scale( width, height );
 	l->set_image( i, a );
       }
+      return layers;
     }
 
     Arguments check_args( Arguments args )
