@@ -47,7 +47,7 @@ string parse( RequestID id )
   foreach( sort(indices( connections ) ), string c )
   {
     if (connections[c]) {
-      array(string) t = c/":";
+      array(string) t = c/":"+({""});
       res += "<tr><td>"+Roxen.html_encode_string(replace(t[0],";",":"))+"</td><td>"+
 	Roxen.html_encode_string(t[1])+"</td><td align=right>"+
 	connections[c]+"</td></tr>\n";
@@ -75,7 +75,7 @@ string parse( RequestID id )
   total = 0;
   foreach( sort(indices( connections ) ), string c )
   {
-    array(string) t = c/":";
+    array(string) t = c/":"+({""});
     res += "<tr><td>"+Roxen.html_encode_string(replace(t[0],";",":"))+"</td><td>"+
       Roxen.html_encode_string(t[1])+"</td><td align=right>"+
       connections[c]+"</td></tr>\n";
