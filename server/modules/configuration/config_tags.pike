@@ -358,6 +358,7 @@ string get_var_value( string s, object mod, object id )
 
    case TYPE_DIR_LIST:
    case TYPE_STRING_LIST:
+   case TYPE_URL_LIST:
    case TYPE_INT_LIST:
      if(var[VAR_MISC])
      {
@@ -378,10 +379,93 @@ string get_var_value( string s, object mod, object id )
   }
 }
 
+array(string) verify_port( string port, int nofhttp, int|void nomod )
+{
+  string warning="";
+  if( (int)port )
+  {
+    if( !nomod )
+      warning += "<font color='&usr.warncolor;'>Asuming http://*:"+
+              port+"/ for "+port+"</font><br />";
+    port = "http://*:"+port+"/";
+  }
+  string protocol, host, path;
+  if(!strlen( port ) )
+    return ({ port, "<font color='&usr.warncolor;'>Empty URL field</font>" });
+
+  if(sscanf( port, "%[^:]://%[^/]%s", protocol, host, path ) != 3)
+    return ({port,"<font color='&usr.warncolor;'>"+port
+             +" does not conform to URL syntax</font><br />" });
+  
+  if( path == "" )
+  {
+    if( nomod )
+      warning += "<font color='&usr.warncolor;'>There should be a / at the "
+              "end of "+port+"</font><br />";
+    else
+      warning += "<font color='&usr.warncolor;'>Added / to the end of "+port+
+              "</font><br />";
+    host += "/";
+  }
+  int pno;
+  if( sscanf( host, "%s:%d", host, pno ) == 2)
+  {
+    if( roxen->protocols[ lower_case( protocol ) ] 
+        && (pno == roxen->protocols[ lower_case( protocol ) ]->default_port ))
+    {
+      if( nomod )
+        warning += "<font color='&usr.warncolor;'>It is not nessesary, "
+                "and seldom desireable, to specify the default port "
+                "number explicitly.</font>";
+      else
+        warning += "<font color='&usr.warncolor;'>Removed the "
+                "default port number ("+pno+") from "+port+"</font>";
+    }
+    else
+      host = host+":"+pno;
+  }
+  if( nofhttp && protocol == "fhttp" )
+  {
+    if( nomod )
+      warning+="<font color='&usr.warncolor;'>fhttp is not valid here</font>";
+    else
+      warning += "<font color='&usr.warncolor;'>Changed "+
+              protocol+" to http</font><br />";
+    protocol = "http";
+  }
+  if( protocol != lower_case( protocol ) )
+  {
+    if( nomod )
+      warning += "<font color='&usr.warncolor;'>"+protocol+" should be "+
+              lower_case( protocol )+"</font><br />";  
+    else
+      warning += "<font color='&usr.warncolor;'>Changed "+protocol+" to "+
+              lower_case( protocol )+"</font><br />";  
+  }
+  port = lower_case( protocol )+"://"+host+path;
+  if( !roxen->protocols[ lower_case( protocol ) ] )
+    warning += "<font color='&usr.warncolor;'>Warning: The protocol "+
+            lower_case(protocol)+" is unknown</font><br />";
+  return ({port,warning});
+}
+
 string type_warning( int type, mixed value )
 {
   switch( type )
   {
+   case TYPE_URL:
+     return verify_port( value, 0, 1 )[1];
+
+   case TYPE_URL_LIST:
+     if( arrayp( value ) )
+     {
+       string warn="";
+       foreach( [array(string)]value, string value )
+         warn += verify_port( value, 0, 1 )[1];
+     } else
+       return verify_port( value, 0, 1 )[1];
+     return warn;
+
    case TYPE_DIR:
      if( !(r_file_stat( value ) && (r_file_stat( value )[ ST_SIZE ] == -2 )))
        return value+" is not a directory";
@@ -396,7 +480,6 @@ string type_warning( int type, mixed value )
   return "";
 }
                  
-
 string set_variable( string v, object in, mixed to, object id )
 {
   array var = in->variables[ v ];
@@ -443,6 +526,7 @@ string set_variable( string v, object in, mixed to, object id )
    case TYPE_STRING:
    case TYPE_FILE:
    case TYPE_LOCATION:
+   case TYPE_URL:
      break;
 
    case TYPE_FONT:
@@ -453,6 +537,7 @@ string set_variable( string v, object in, mixed to, object id )
    case TYPE_THEME:
      break;
 
+   case TYPE_URL_LIST:
    case TYPE_DIR_LIST:
    case TYPE_STRING_LIST:
    case TYPE_INT_LIST:
@@ -468,6 +553,14 @@ string set_variable( string v, object in, mixed to, object id )
          val[i] = String.trim_whites( val[i] );
        if( var[ VAR_TYPE ] == TYPE_INT_LIST )
          val = (array(int))val;
+       else if( var[ VAR_TYPE ] == TYPE_URL_LIST )
+         foreach( val, string port )
+         {
+           string op = port, q;
+           [port,q] = verify_port( port, 0, 0 );
+           warning+=q;
+           val = replace( val, op, port );
+         }
        else if( var[ VAR_TYPE ] == TYPE_DIR_LIST )
          foreach( val, string d )
            if( d[-1] != '/' )
@@ -499,63 +592,19 @@ string set_variable( string v, object in, mixed to, object id )
   if( equal( var[ VAR_VALUE ], val ) )
     return warning;
 
-  
-  string verify_port( string port, int nofhttp )
-  {
-    if( (int)port )
-    {
-      warning += "<font color='&usr.warncolor;'>Asuming http://*:"+
-              port+"/ for "+port+"</font><br />";
-      port = "http://*:"+port+"/";
-    }
-    string protocol, host, path;
-
-    if(sscanf( port, "%[^:]://%[^/]%s", protocol, host, path ) != 3)
-      warning += "<font color='&usr.warncolor;'>"+port+" does not conform to URL syntax</font><br />";
-    else if( path == "" )
-    {
-      warning += "<font color='&usr.warncolor;'>Added / to the end of "+port+
-              "</font><br />";
-      port += "/";
-    }
-    if( nofhttp && protocol == "fhttp" )
-    {
-      warning += "<font color='&usr.warncolor;'>Changed "+protocol+" to http</font><br />";
-      protocol = "http";
-      port = lower_case( protocol )+"://"+host+path;
-    }
-    if( protocol != lower_case( protocol ) )
-    {
-      warning += "<font color='&usr.warncolor;'>Changed "+protocol+" to "+
-              lower_case( protocol )+"</font><br />";  
-      port = lower_case( protocol )+"://"+host+path;
-    }
-    if( !roxen->protocols[ lower_case( protocol ) ] )
-      warning += "<font color='&usr.warncolor;'>Warning: The protocol "+
-              lower_case(protocol)+" is unknown</font><br />";
-    return port;
-  };
-
-
   if( v=="MyWorldLocation" && in->is_configuration )
   {
     if( val == "" )
       return "";
-    val = verify_port( val, 1 );
+    [val,warning] = verify_port( val, 1 );
   }
-
-
+  
   if( v=="URLs" && in->is_configuration ) 
   {
-    foreach( val, string port )
-    {
-      string op = port;
-      port = verify_port( port, 0 );
-      val = replace( val, op, port );
-    }
-    string world = in->variables->MyWorldLocation[ VAR_VALUE ];
+    string world = in->query("MyWorldLocation");
     if( !world || !sizeof(world) )
-      in->set( "MyWorldLocation", Roxen.get_world(val)||"" );
+      in->set( "MyWorldLocation", 
+               verify_port((Roxen.get_world(val)||""),1)[0]);
   }
 
   if( in->set )
@@ -664,6 +713,7 @@ string get_var_form( string s, object mod, object id )
      return res+ "</select>";
 
    case TYPE_STRING:
+   case TYPE_URL:
    case TYPE_FILE:
    case TYPE_DIR:
    case TYPE_LOCATION:
@@ -696,6 +746,7 @@ string get_var_form( string s, object mod, object id )
 
    case TYPE_DIR_LIST:
    case TYPE_STRING_LIST:
+   case TYPE_URL_LIST:
    case TYPE_INT_LIST:
     if(var[VAR_MISC])
     {
@@ -766,6 +817,7 @@ string get_var_type( string s, object mod, object id )
    case TYPE_CUSTOM:
    case TYPE_TEXT_FIELD:
    case TYPE_STRING:
+   case TYPE_URL:
    case TYPE_FLAG:
    case TYPE_FONT:
      break;
@@ -788,6 +840,7 @@ string get_var_type( string s, object mod, object id )
    case TYPE_INT:
     return LOCALE->int_hint();
 
+   case TYPE_URL_LIST:
    case TYPE_STRING_LIST:
     if(!flag)
       return LOCALE->stringlist_hint();
