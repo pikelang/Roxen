@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: core.pike,v 1.864 2004/05/23 02:35:27 _cvs_stephen Exp $";
+constant cvs_version="$Id: core.pike,v 1.865 2004/05/23 03:07:37 mani Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -3810,6 +3810,9 @@ string decode_charset( string charset, string data )
 
 void create()
 {
+  if (all_constants()["core"])
+    error("Duplicate core object!\n");
+
   // Register localization projects
 #define __REG_PROJ Locale.register_project
   __REG_PROJ("roxen_""config",  "translations/%L/roxen_config.xml");
@@ -3818,15 +3821,6 @@ void create()
 #undef __REG_PROJ
 
   define_global_variables();
-
-  // for module encoding stuff
-
-  //add_constant( "ArgCache", ArgCache );
-  //add_constant( "roxen.load_image", load_image );
-
-  if (all_constants()["core"]) {
-    error("Duplicate core object!\n");
-  }
 
   // simplify dumped strings.
   add_constant( "roxen", this); // NGSERVER Remove this
@@ -3872,8 +3866,6 @@ void create()
     });
 
 
-  DDUMP( "server_core/roxenlib.pike");
-  DDUMP( "pike_modules/Dims.pmod");
   DDUMP( "admin_interface/boxes/Box.pmod" );
   dump( "server_core/html.pike");
 
@@ -3885,8 +3877,8 @@ void create()
   add_constant( "Roxen.set_locale", set_locale );
   add_constant( "Roxen.get_locale", get_locale );
 
-  add_constant( "roxen.locale", locale );
-  //add_constant( "roxen.ImageCache", ImageCache );
+  add_constant( "core.locale",  locale );
+  add_constant( "roxen.locale", locale ); // NGSERVER
 
 //int s = gethrtime();
   _configuration = (program)"configuration";
