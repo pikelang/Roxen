@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.186 2001/06/30 15:47:09 mast Exp $
+// $Id: module.pmod,v 1.187 2001/06/30 16:00:00 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -553,7 +553,7 @@ class TagSet
     id_number = ++tag_set_count;
     if (_name) {
       if (zero_type (all_tagsets[_name]) ||
-	  (gc() && zero_type (all_tagsets[_name])))
+	  (all_tagsets[_name] && gc() && zero_type (all_tagsets[_name])))
 	// Have to try to gc here to remove the old tag set object in
 	// case the only ref left to it is through all_tagsets.
 	all_tagsets[name = _name] = this_object();
