@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.27 1997/10/03 10:57:07 grubba Exp $
+# $Id: configure.in,v 1.28 1997/10/03 23:39:44 grubba Exp $
 #
 
 prefix=$PWD
@@ -130,10 +130,18 @@ AC_MSG_RESULT($roxen_cv_sys_os)
 
 case "$roxen_cv_sys_os" in
   SCO*)
-     case "$CC" in
+     case "$CFLAGS" in
        *-belf*) ;;
        *)
-          CC="$CC -belf"
+	  echo "Adding -belf option to CFLAGS."
+          CFLAGS="$CFLAGS -belf"
+       ;;
+     esac
+     case "$LDFLAGS" in
+       *-belf*) ;;
+       *)
+	  echo "Adding -belf option to LDFLAGS."
+          LDFLAGS="$LDFLAGS -belf"
        ;;
      esac
   ;;
