@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.144 1999/08/30 22:16:31 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.145 1999/09/04 11:11:11 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -1071,6 +1071,8 @@ class backend
 
   object conf;
 
+  static string remote_addr;
+
   void create(object c)
   {
     conf = c;
@@ -1082,9 +1084,11 @@ class backend
 
   void connected(object|mapping(string:mixed) session, object con)
   {
+    remote_addr = (con->query_address()/" ")[0];
+
     session->log_id = ([
       "prot":"IMAP4",
-      "remoteaddr":(con->query_address()/" ")[0],
+      "remoteaddr":remote_addr,
       "cookies":([]),
     ]);
   }
@@ -1116,7 +1120,10 @@ class backend
 #ifdef IMAP_DEBUG
     werror("imap.pike: login: %O\n", name);
 #endif
-    return session->user = clientlayer->get_user(name, passwd);
+
+    if (session->user = clientlayer->get_user(name, passwd)) {
+      con_class[remote_addr] = time() + QUERY(con_time);
+    }
   }
   
   array(string|object) update(object|mapping(string:mixed) session)
@@ -1443,11 +1450,35 @@ class backend
   }
 }
 
+/*
+ * SMTP_FILTER interface
+ */
+
+mapping(string:int) con_class = ([]);
+
+int classify_connection(string remoteip, int remoteport, string remotehost)
+{
+  if (con_class[remoteip] < time()) {
+    m_delete(con_class, remoteip);
+    return(0);
+  }
+  return(query("con_class"));
+}
+
+/*
+ * Roxen module interface
+ */
+
 array(mixed) register_module()
 {
-  return ({ 0,
+  return ({ MODULE_PROVIDER,
 	    "IMAP protocol",
 	    "IMAP interface to the mail system." });
+}
+
+array(string)|multiset(string)|string query_provides()
+{
+  return(< "imap_protocol", "smtp_filter" >);
 }
 
 #if 0
@@ -1466,6 +1497,11 @@ void create()
   defvar("timeout", 600, "Max idle time.", TYPE_INT,
 	 "Clients who are inactive this long are logged out automatically.\n");
   defvar("debug", 0, "Debug", TYPE_FLAG, "Enable IMAP debug output.\n");
+
+  defvar("con_class", 100, "SMTP: Connection class", TYPE_INT | VAR_MORE,
+	 "Connection class for the SMTP server.");
+  defvar("con_time", 24*60*60, "SMTP: Connection time", TYPE_INT | VAR_MORE,
+	 "Time the connection class is valid.");
 }
 
 #undef PORT
