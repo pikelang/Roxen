@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.84 1997/07/18 05:54:48 per Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.85 1997/07/20 01:22:02 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -19,6 +19,10 @@ inherit "hosts";
 inherit "socket";
 inherit "disk_cache";
 inherit "language";
+
+// This is the real Roxen version. It should be changed before each
+// release
+constant real_version = "Roxen Challenger/1.2alpha7"; 
 
 #if _DEBUG_HTTP_OBJECTS
 mapping httpobjects = ([]);
@@ -49,10 +53,6 @@ mapping allmodules, somemodules=([]);
 #if efun(send_fd)
 int shuffle_fd;
 #endif
-
-// This is the real Roxen version. It should be changed before each
-// release
-string real_version = "Roxen Challenger/1.2alpha7"; 
 
 // A mapping from ports (objects, that is) to an array of information
 // about that port.
