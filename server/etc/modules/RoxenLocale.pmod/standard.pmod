@@ -1,5 +1,5 @@
 /*
- * $Id: standard.pmod,v 1.3 2000/03/07 22:47:40 mast Exp $
+ * $Id: standard.pmod,v 1.4 2000/03/14 00:27:12 mast Exp $
  *
  * Roxen locale support -- Default language (English)
  *
@@ -343,6 +343,9 @@ object(_config_actions) config_actions = _config_actions();
 
 class _config_interface
 {
+  // Kludge since config_tags.pike only looks in this class.
+  inherit _config_actions;
+
   // config/low_describers.pike
   string module_hint() {
     return "(Module)";
