@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.202 2002/10/23 16:22:51 nilsson Exp $
+# $Id: start,v 1.203 2002/10/24 00:29:41 nilsson Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -830,7 +830,7 @@ if [ -z "$once" ] ; then
 	  # Clean shutdown.
 	  dp "ChiliMoon shutdown."
 	  signal_exit
-	  # Note reached, but...
+	  # Not reached, but...
 	  exit 0
 	fi
 	if [ "$exitcode" -lt "0" ] ; then
@@ -846,6 +846,13 @@ if [ -z "$once" ] ; then
            dp 'Failed to spawn start script. -- Permission problem?'
            exit 1
            ;;
+	 50)
+	   dp "Failed to open any port. Shutdown."
+	   keep_mysql=1
+	   signal_exit
+	   # Not reached, but...
+	   exit 50
+	   ;;
          *)
            dp "ChiliMoon down with code $exitcode."
            ;;
