@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.34 1997/10/05 19:40:41 grubba Exp $
+# $Id: configure.in,v 1.35 1997/10/05 19:41:55 grubba Exp $
 #
 
 prefix=$PWD
@@ -256,8 +256,10 @@ if test $cflags_is_set = no; then
   AC_SYS_OS_COMPILER_FLAG(HP-UX,+Odataprefetch,plus_Odataprefetch)
   AC_SYS_OS_COMPILER_FLAG(HP-UX,+Ofailsafe,plus_Ofailsafe)
   AC_SYS_OS_COMPILER_FLAG(HP-UX,+O3,plus_O3)
-  # Ignore warnings 530 and 414 if you turn this on.
-  # AC_SYS_OS_COMPILER_FLAG(HP-UX,+w1,plus_w1)
+  if test x$ac_with_fullwarn = xyes ; then
+    # Ignore warnings 530 and 414 if you turn this on.
+    AC_SYS_OS_COMPILER_FLAG(HP-UX,+w1,plus_w1)
+  fi
 
   # OSF/1
   AC_SYS_OS_COMPILER_FLAG(OSF1,-fast,fast)
