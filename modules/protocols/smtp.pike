@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.74 1999/08/30 22:09:01 grubba Exp $
+ * $Id: smtp.pike,v 1.75 1999/08/31 12:40:09 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.74 1999/08/30 22:09:01 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.75 1999/08/31 12:40:09 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -1496,12 +1496,24 @@ array(int|string) send_mail(string data, object|mapping mail, object|void smtp)
       }
     }
     id->not_query = sprintf("From:%s;To:%s;%s", mail->from, addr, fname);
-    if (handled) {
-      expanded[addr] = 0;
-      any_handled = 1;
 
-      // Mail accepted for delivery.
-      conf->log(([ "error":200, "len":sizeof(data)]), id);
+    if (handled) {
+      any_handled |= handled;
+
+      if (handled == 0x01) {
+	// Mail accepted OK.
+	expanded[addr] = 0;
+      }
+
+      if (handled & 0x01) {
+	// Mail accepted for delivery.
+
+	conf->log(([ "error":200, "len":sizeof(data)]), id);
+      }
+      if (handled & 0x02) {
+	// Mail quota exceeded.
+	conf->log(([ "error":413, "len":sizeof(data)]), id);
+      }
     } else {
       // Mail not accepted.
       conf->log(([ "error":400, "len":sizeof(data)]), id);
@@ -1518,6 +1530,12 @@ array(int|string) send_mail(string data, object|mapping mail, object|void smtp)
 
   if (sizeof(expanded)) {
     // Partial success.
+
+    if (handled == 0x02) {
+      // Out of quota.
+      return(({ 552 }));
+    }
+
     roxen_perror(sprintf("The following recipients were unavailable:\n"
 			 "%s\n", String.implode_nicely(indices(expanded))));
 
