@@ -14,7 +14,7 @@ string parse( RequestID id )
 {
   string q="";
   while( id->misc->orig )  id = id->misc->orig;
-  sscanf( id->not_query, "/%*s/%s", q );
+  sscanf( id->not_query, "/%s", q );
   if( q == "index.html" )
     q = "";
   if( q == "whatsnew.html" )

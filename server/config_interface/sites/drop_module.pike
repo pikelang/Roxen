@@ -7,7 +7,7 @@
 
 string site_url( RequestID id, string site )
 {
-  return "/"+id->misc->cf_locale+"/sites/site.html/"+site+"/";
+  return "/sites/site.html/"+site+"/";
 }
 
 string page_base( RequestID id, string content )

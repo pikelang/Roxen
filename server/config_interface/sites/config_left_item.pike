@@ -30,7 +30,7 @@ string selected_item( string q, Configuration c, RequestID id, string module )
   sscanf( id->misc->path_info, "/"+q+"/%[^/]", subsel );
 
   string pre = 
-         ("<gbutton frame-image='&usr.left-buttonframe;' href='/"+id->misc->cf_locale+"/sites/' "
+         ("<gbutton frame-image='&usr.left-buttonframe;' href='/sites/' "
           "width='&usr.left-buttonwidth;' bgcolor='&usr.left-buttonbg;' icon_src='&usr.selected-indicator;' "
           "align_icon='left'>"+LOCALE(213, "Sites")+"</gbutton><br />"
           "<gbutton frame-image='&usr.left-buttonframe;' width='&usr.left-buttonwidth;' "+

@@ -95,7 +95,7 @@
 <define container="cv-startpage">
   <cv-split>
     <subtablist>
-      <st-tabs><insert file="/standard/cv_startpage_tabs.pike" nocache="1"/></st-tabs>
+      <st-tabs><insert file="/cv_startpage_tabs.pike" nocache="1"/></st-tabs>
       <st-page><contents/></st-page>
     </subtablist>
    </cv-split>
@@ -147,7 +147,7 @@
 <define tag="topmenu">
  <attrib name="base"></attrib>
  <attrib name="selected">home</attrib>
- <define variable="var._top_content" preparse="1"><insert file="/standard/topmenu.pike" nocache="1"/></define>
+ <define variable="var._top_content" preparse="1"><insert file="/topmenu.pike" nocache="1"/></define>
 </define>
 
 <define container="submit-gbutton">
@@ -180,7 +180,7 @@
 </head>
 <gauge variable='var.time-spent' resultonly='yes'>
 <nooutput>
-  <eval><insert file="/standard/themes/&usr.theme;/theme" nocache="1" /></eval>
+  <eval><insert file="/themes/&usr.theme;/theme" nocache="1" /></eval>
   <define preparse="1" variable="var.leftimage"><img src="&usr.left-image;" alt="" /></define>
   <define preparse="1" name="tab-frame-image">&usr.tab-frame-image;</define>
   <define preparse="1" name="tab-font-size">&usr.tab-font-size;</define>
@@ -198,28 +198,10 @@
       <td><a href="http://www.roxen.com/">&usr.logo-html:none;</a></td>
       <td align="right" valign="top">
         <table>
-         <cf-userwants option=translations>
-          <tr><td align="right">
-           <gtext font="&usr.font;"
-                  fgcolor="&usr.top-fgcolor;" scale="0.45"
-                  hspace="3"><translate id="205">Language</translate>:</gtext>
-           </td>
-           <td>
-             <font color="&usr.fgcolor;">
-              <emit source="locales">
-                <a href="&_.path;"
-                  ><img src="/internal-roxen-flag-&_.name;&_.-selected;.gif"
-                       alt="&_.latin1-name;" border="0" height="16"
-                /></a>
-              </emit>
-             </font>
-           </td>
-          </tr>
-         </cf-userwants>
          <tr>
            <td align="right">
              <font color="&usr.top-fgcolor;">
-              <gbutton href="/standard/change_user.pike?uid=&usr.user-uid;"
+              <gbutton href="/change_user.pike?uid=&usr.user-uid;"
                   align="right" textcolor="&usr.top-fgcolor;"
                   width="70"> <translate id="206">User</translate>: </gbutton>
             </td>

@@ -7,7 +7,6 @@
 #include <roxen.h>
 
 inherit "module";
-inherit "roxenlib";
 
 //<locale-token project="roxen_config">LOCALE</locale-token>
 #define LOCALE(X,Y)	_DEF_LOCALE("roxen_config",X,Y)
@@ -18,67 +17,65 @@ LocaleString module_doc_locale =
   LOCALE(0,"This filesystem serves the administration interface");
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.70 2001/01/19 18:34:45 per Exp $";
+  "$Id: config_filesystem.pike,v 1.71 2001/01/28 05:45:57 per Exp $";
 
 constant path = "config_interface/";
 
 object charset_decoder;
 Sql.Sql docs;
 
+// NOTE: If we ever want to support more than one template, this
+// optimization has to be removed, or at least changed to index on the
+// directory of f.
+string ctmpl; 
 string template_for( string f, object id )
 {
+  if( ctmpl ) return ctmpl;
   string current_dir = query_location()+dirname(f+"foo")+"/";
   array cd = current_dir / "/";
   int i = sizeof(cd);
   while( i-- )
     if( id->conf->stat_file( cd[..i]*"/"+"/template", id ) )
-      return cd[..i]*"/"+"/template";
+      return ctmpl = (cd[..i]*"/"+"/template");
 }
 
-// Try finding the locale-specific file first.
 // Returns ({ realfile, statinfo }).
-array(string|Stat) low_stat_file(string locale, string f, object id)
+mapping stat_cache = ([]);
+array(string|Stat) low_stat_file(string f, object id)
 {
+  if( stat_cache[ f ] )
+    return stat_cache[ f ];
+#ifdef __NT__
+  string of = f;
+  while(strlen(f) && f[-1]=='/') 
+    f = f[..strlen(f)-2];
+#else
+#define of f
+#endif
+
   foreach( ({ "../local/"+path, path }), string path )
   {
     Stat ret;
-    if (!f) 
-    {
-      mixed r2 = low_stat_file(locale, "", id);
-
-      if (r2) return r2;
-      // Support stuff like /template  =>  /standard/template
-      f = locale;
-      locale = "standard";
-    }
-    if (locale == "standard")
-      locale = roxen.locale->get();
     string p;
-    if( strlen( f ) )
-      f = "/"+f;
-    ret = file_stat(p = path+locale+f);
-    if (!ret && (locale != "standard")) 
-      ret = file_stat(p = path+"standard"+f);
+    ret = file_stat( p = path+f );
     if( ret )
-      return ({ p, ret });
+        return stat_cache[of] = ({ p, ret });
   }
+#ifndef __NT__
+#undef of
+#endif
 }
 
 string real_file( mixed f, mixed id )
 {
-  while( strlen( f ) && (f[0] == '/' ))
-    f = f[1..];
+//   while( strlen( f ) && (f[0] == '/' ))
+//     f = f[1..];
 
-  if (f == "") return path;
-
-  string locale;
-  string rest;
-
-  sscanf(f, "%[^/]/%s", locale, rest);
-
-  if( docs && rest && (sscanf( rest, "docs/%s", rest ) ))
+  if (f == "")
+    return path;
+  if( docs && sscanf( f, "docs/%s", f ) )
     return 0;
-  array(string|array) stat_info = low_stat_file(locale, rest, id);
+  array(string|array) stat_info = low_stat_file(f, id);
   return stat_info && stat_info[0];
 }
 
@@ -96,89 +93,73 @@ mapping get_docfile( string f )
 
 array(int)|Stat stat_file( string f, object id )
 {
-  while( strlen( f ) && (f[0] == '/' ))
-    f = f[1..];
+//   while( strlen( f ) && (f[0] == '/' ))
+//     f = f[1..];
+  if (f == "")
+    return file_stat(path);
 
-  if (f == "") return file_stat(path);
+  if( docs && sscanf( f, "docs/%s", f ) )
+    if( mapping rf = get_docfile( f ) )
+      return ({ 0555, strlen(rf->contents), time(), 0, 0, 0, 0 });
 
-  string locale;
-  string rest;
-
-  sscanf(f, "%[^/]/%s", locale, rest);
-
-  if( docs && rest && (sscanf( rest, "docs/%s", rest ) ))
-    if( mapping f = get_docfile( rest ) )
-      return ({ 0555, strlen(f->contents), time(), 0, 0, 0, 0 });
-
-  array(string|Stat) ret = low_stat_file(locale, rest, id);
-  return ret && (ret[1]);
+  array(string|Stat) ret = low_stat_file(f, id);
+  return ret && ret[1];
 }
 
-constant base ="<use file='%s' /><tmpl title='%s'>%s</tmpl>";
+constant base ="<use file='%s'/><tmpl title='%s'>%s</tmpl>";
 
 mixed find_dir( string f, object id )
 {
-  while( strlen( f ) && (f[0] == '/' ))
-    f = f[1..];
-  
-  if (f == "")
-    return Locale.list_languages("roxen_config");
-
-  string locale;
-  string rest;
-
-  sscanf(f, "%[^/]/%s", locale, rest);
-
-  multiset languages;
-    languages=(multiset)Locale.list_languages("roxen_config");
-
-  if (rest || languages[locale]) {
-    return get_dir(path + "standard/" + (rest || ""));
-  }
-  return get_dir(path + "standard/" + locale);
+//   while( strlen( f ) && (f[0] == '/' ))
+//     f = f[1..];
+  // FIXME: Add support for getdir in the doc directories (must query
+  // mysql)
+  return get_dir(path + f );
 }
 
 mapping logged_in = ([]);
-
+int last_cache_clear_time;
 mixed find_file( string f, object id )
 {
   int is_docs;
   User user;
+  string locale = "standard";
 
-  string host;
-  if( array h = gethostbyaddr( id->remoteaddr ) )
-    host = h[0];
-  else
-    host = id->remoteaddr;
+  if( (time(1) - last_cache_clear_time) > 4 )
+  {
+    last_cache_clear_time = time(1);
+    stat_cache = ([]);
+  }
 
-  if( user = id->conf->authenticate( id, roxen.config_userdb_module ) )
-  {
-    if( !id->misc->cf_theme )
-      id->misc->cf_theme = ([]);
-    id->misc->cf_theme["user-uid"] = user->name();
-    id->misc->cf_theme["user-name"] = user->real_name();
-    id->misc->remote_config_host = host;
-    id->misc->config_user = user->ruser;
-    if( (time(1) - logged_in[ user->name()+host ]) > 1800 )
-      report_notice(LOCALE("dt", "Administrator logged on as %s from %s.")
-		    +"\n", user->name(), host+" ("+id->remoteaddr+")" );
-    logged_in[ user->name()+host ] = time(1);
-    roxen.adminrequest_get_context( user->name(), host, id );
-  }
-  else if( !id->misc->internal_get )
-  {
-    report_notice(LOCALE(0,"Failed login attempt from %s")+"\n",host);
-    return id->conf->authenticate_throw( id, "Roxen configuration",
-					 roxen.config_userdb_module );
-  }
-  
   if( !id->misc->internal_get )
   {
-    if( (f == "") && !id->misc->pathinfo )
-      return http_redirect(fix_relative( "/"+config_setting("locale")+"/",
-					 id ), id );
-    if( search(f, "/" ) == -1 )
-      return http_redirect(fix_relative( "/"+f+"/", id ), id );
+    string host;
+    if( array h = gethostbyaddr( id->remoteaddr ) )
+      host = h[0];
+    else
+      host = id->remoteaddr;
+
+    if( user = id->conf->authenticate( id, roxen.config_userdb_module ) )
+    {
+      if( !id->misc->cf_theme )
+	id->misc->cf_theme = ([]);
+      id->misc->cf_theme["user-uid"] = user->name();
+      id->misc->cf_theme["user-name"] = user->real_name();
+      id->misc->remote_config_host = host;
+      id->misc->config_user = user->ruser;
+      if( (time(1) - logged_in[ user->name()+host ]) > 1800 )
+	report_notice(LOCALE("dt", "Administrator logged on as %s from %s.")
+		      +"\n", user->name(), host+" ("+id->remoteaddr+")" );
+      logged_in[ user->name()+host ] = time(1);
+      roxen.adminrequest_get_context( user->name(), host, id );
+    }
+    else
+    {
+      if( id->conf->realauth )
+	report_notice(LOCALE(0,"Failed login attempt from %s")+"\n",host);
+      return id->conf->authenticate_throw( id, "Roxen configuration",
+					   roxen.config_userdb_module );
+    }
 
     string encoding = config_setting( "charset" );
     if( encoding != "utf-8" )
@@ -186,7 +167,6 @@ mixed find_file( string f, object id )
     else
       charset_decoder = 0;
     id->set_output_charset( encoding );
-
     id->since = 0;
     catch 
     {
@@ -219,14 +199,10 @@ mixed find_file( string f, object id )
     };
   }
 
-  while( strlen( f ) && (f[0] == '/' ))
-    f = f[1..];
-
-  string locale, df, rest, type="";
+  string type="";
   mixed retval;
-
-  sscanf(f, "%[^/]/%s", locale, rest);
-
+  catch( locale = (id->misc->language || config_setting( "locale" )) ); 
+  
   if( !id->misc->internal_get )
   {
     id->misc->cf_locale = locale;
@@ -241,24 +217,23 @@ mixed find_file( string f, object id )
       type = id->conf->type_from_filename( id->not_query );
   }
 
-  if( docs && rest && (sscanf( rest, "docs/%s", rest ) ))
+  if( docs && (sscanf( f, "docs/%s", f ) ))
   {
-    if( mapping f = get_docfile( rest ) )
+    if( mapping m = get_docfile( f ) )
     {
       is_docs = 1;
-      string data = f->contents;
-      f = 0;
+      string data = m->contents;
+      m = 0;
       if( type == "text/html" )
       {
         string title;
         sscanf( data, "%*s<title>%s</title>", title );
         sscanf( data, "%*s<br clear=\"all\">%s", data );
         sscanf( data, "%s</body>", data );
-        retval = "<topmenu selected='docs' base='"+
-               query_location()+locale+"/'/>"
+        retval = "<topmenu selected='docs' base='"+query_location()+"/'/>"
                "<content>"+data+"</content>";
         if( title )
-          retval="<title>: Docs "+html_encode_string(title)+"</title>" +
+          retval="<title>: Docs "+Roxen.html_encode_string(title)+"</title>" +
                            retval;
       } else
         retval = data;
@@ -266,11 +241,7 @@ mixed find_file( string f, object id )
   }
   else
   {
-#ifdef __NT__
-    if(strlen(rest) && rest[-1]=='/') 
-      rest = rest[..strlen(rest)-2];
-#endif
-    array(string|array) stat_info = low_stat_file( locale, rest, id );
+    array(string|array) stat_info = low_stat_file( f, id );
     if( !stat_info ) // No such luck...
       return 0;
     [string realfile, array stat] = stat_info;
@@ -290,12 +261,11 @@ mixed find_file( string f, object id )
       return retval;
   }
 
+#ifdef DEBUG
   if( id->variables["content-type"] )
-    return http_file_answer( retval, id->variables["content-type"] );
-
-  if( locale != "standard" ) 
-    roxen.set_locale( locale );
-
+    return Roxen.http_file_answer( retval, id->variables["content-type"] );
+#endif
+  
   if( !retval )
     return 0;
 
@@ -310,8 +280,7 @@ mixed find_file( string f, object id )
     if( 3 == sscanf( data, "%s<title>%s</title>%s", pre, title, data ) )
       data = pre+data;
 
-    string tmpl = (template_for(locale+"/"+f,id) ||
-                   template_for("standard/"+f,id));
+    string tmpl = template_for(f,id);
 
     if(tmpl)
       data = sprintf(base,tmpl,title,data);
@@ -324,8 +293,15 @@ mixed find_file( string f, object id )
       id->misc->defines = ([]);
     id->misc->defines[" _stat"] = id->misc->stat;
      
-    retval = http_rxml_answer( data, id );
-
+    if( locale != "standard" ) 
+      roxen.set_locale( locale );
+    mixed error;
+    error = catch( retval = Roxen.http_rxml_answer( data, id ) );
+    if( locale != "standard" )
+      roxen.set_locale( "standard" );
+    if( error )
+      throw( error );
+    
     if(!is_docs)
     {
       NOCACHE();
@@ -333,12 +309,9 @@ mixed find_file( string f, object id )
     }
     retval->stat = 0;
     retval->len = strlen( retval->data );
-    if( locale != "standard" ) 
-      roxen.set_locale( "standard" );
   }
   if( stringp( retval ) )
-    retval = http_string_answer( retval, type );
-
+    retval = Roxen.http_string_answer( retval, type );
   return retval;
 }
 
@@ -414,7 +387,6 @@ void create()
 
 
   roxen.add_permission( "View Settings", LOCALE(192, "View Settings"));
-  roxen.add_permission( "Edit Users",    LOCALE(193, "Edit Users"));
   roxen.add_permission( "Update",    LOCALE(349, "Update Client"));
   roxen.add_permission( "Edit Global Variables",
 			LOCALE(194, "Edit Global Variables"));
