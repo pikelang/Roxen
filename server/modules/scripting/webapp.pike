@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
+// This is a roxen module. Copyright © 1999 - 2002, Roxen IS.
 
 //inherit "module";
 inherit "roxen-module://filesystem";
@@ -11,7 +11,7 @@ import Parser.XML.Tree;
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_webapp",X,Y)
 // end of the locale related stuff
 
-constant cvs_version = "$Id: webapp.pike,v 2.9 2002/03/04 13:50:00 mast Exp $";
+constant cvs_version = "$Id: webapp.pike,v 2.10 2002/03/06 11:25:10 tomas Exp $";
 
 constant thread_safe=1;
 constant module_unique = 0;
@@ -413,10 +413,11 @@ void start(int x, Configuration conf)
                             return combine_path(warname, "WEB-INF/lib", jar);
                           } );
   }
-  //  codebase += query("codebase")-({""});
   codebase += map(query("codebase")-({""}), lambda (string arg) {
                                               return glob_expand(arg);
                                             } )*({ });
+
+
   WEBAPP_WERR(sprintf("codebase:\n%O", codebase));
 
   mixed exc2 = catch {
@@ -438,7 +439,9 @@ void start(int x, Configuration conf)
     // Sort the url patterns into different categories for easier lookup
     // later on
     foreach ( indices(url_to_servlet), string url) {
-      servlets[url_to_servlet[url]]->url = url;
+      servlets[url_to_servlet[url]]->url =
+        (servlets[url_to_servlet[url]]->url || ({ }) ) + ({ url });
+
       if (url == "/")
         servletmaps["default"][url] = url_to_servlet[url];
       else if (url[..1] == "*.")
@@ -514,7 +517,7 @@ string status()
 
             if (servlets[serv]->url) {
               ret += "<td nowrap>";
-              ret += servlets[serv]->url;
+              ret += (servlets[serv]->url*",");
               ret += "</td>";
               ret += "<td nowrap>";
               ret += servlets[serv]["servlet-class"];
@@ -627,6 +630,9 @@ class BaseWrapper
 
   int write(string data)
   {
+    if (!data)
+      return 0;
+
     if (first) {
       array(string) headers;
       int hend;
@@ -697,11 +703,15 @@ class BaseWrapper
     WRAP_WERR(sprintf("flush called:"));
     while (sizeof(header) > 0) {
       len = _file->write(header);
+      if (len < 0)
+        return;
       //WRAP_WERR(sprintf("flushed %d:\n'%s'", len,header));
       header=header[len..];
     }
     while (sizeof(_data) > 0) {
       len = _file->write(_data);
+      if (len < 0)
+        return;
       //WRAP_WERR(sprintf("flushed %d:\n'%s'", len,_data));
       _data=_data[len..];
     } 
@@ -794,6 +804,9 @@ class RXMLParseWrapper
   mapping get_result()
   {
     WRAP_WERR("RXML get_result called");
+    Roxen.add_http_header(headermap, "Cache-control",
+                          "no-cache");
+    _id->misc->cacheable = 0;
     set_id_headers();
     mapping res = Roxen.http_rxml_answer(get_data(1), _id);
 //     WRAP_WERR(sprintf("_id->misc=%O",
@@ -895,7 +908,7 @@ mapping(string:string|mapping|Servlet.servlet) match_anyservlet(string f, Reques
                 ret = ([ ]);
                 ret["servlet-class"] = classname;
                 ret["servlet-name"] = classname;
-                ret["url"] = fa[..2]*"/";
+                ret["url"] = ({ fa[..2]*"/" });
                 servlets[ret["servlet-name"]] = ret;
 
                 servletmaps["any"][classname] = classname;
