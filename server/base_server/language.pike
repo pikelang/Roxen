@@ -2,12 +2,12 @@
  * really. Look at one of the existing language plugins (not really
  * modules, you see..)
  *
- * $Id: language.pike,v 1.23 2000/02/15 14:13:08 nilsson Exp $
+ * $Id: language.pike,v 1.24 2000/02/16 11:05:12 per Exp $
  * This file is included by roxen.pike. Not very nice to have a
  * cvs_version variable here.
  *
  * WARNING:
- * If the environment variable 'ROXEN_LANG' is set, it is used as the default 
+ * If the environment variable 'ROXEN_LANG' is set, it is used as the default
  * language.
  */
 
@@ -33,7 +33,7 @@ void initiate_languages()
     if (err = catch {
       object l = (object)("languages/"+lang);
       roxenp()->dump( "languages/"+lang );
-      if(tmp=l->aliases()) 
+      if(tmp=l->aliases())
 	foreach(tmp, string alias)
 	  languages[alias] = l;
     }) {
@@ -41,7 +41,7 @@ void initiate_languages()
 			   lang, describe_backtrace(err)));
     }
   }
-  
+
   report_debug( "Done [%4.2fms]\n", (gethrtime()-start)/1000.0 );
 }
 
@@ -56,21 +56,21 @@ private string nil()
 string default_language = getenv("ROXEN_LANG")||"en";
 
 /* Return a pointer to an language-specific conversion function. */
-public function language(string what, string func)
+public function language(string what, string func, object|void id)
 {
 #ifdef LANGUAGE_DEBUG
   werror("Function: " + func + " in "+ what+"\n");
 #endif
-  if(!languages[what])
-    if(!languages[default_language])
-      if(!languages->en)
-	return nil;
-      else
-	return languages->en[func];
-    else
-      return languages[default_language][func];
+  object l;
+  if( id && id->set_output_charset && (l=languages[what]) && l->charset )
+    id->set_output_charset( l->charset, 2 );
 
-  return languages[what][func] || nil;
+  if(!l)
+    if(!(l=languages[default_language]))
+      if(!(l=languages->en))
+	return languages->en[func];
+
+  return l[func] || nil;
 }
 
 array list_languages() {

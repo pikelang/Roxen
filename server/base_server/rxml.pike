@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.132 2000/02/15 15:56:39 nilsson Exp $
+ * $Id: rxml.pike,v 1.133 2000/02/16 11:05:13 per Exp $
  *
  * The Roxen RXML Parser. See also the RXML Pike module.
  *
@@ -673,8 +673,9 @@ class TagNumber {
   class Frame {
     inherit RXML.Frame;
     array do_return(RequestID id) {
-      result=roxen.language(args->lang||args->language||id->misc->defines->theme_language,
-			    args->type||"number")( (int)args->num );
+      result=roxen.language(args->lang||args->language||
+                            id->misc->defines->theme_language,
+			    args->type||"number",id)( (int)args->num );
     }
   }
 }
