@@ -1,6 +1,6 @@
 // This file is part of Internet Server.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module_support.pike,v 1.117 2002/07/05 11:21:57 per Exp $
+// $Id: module_support.pike,v 1.118 2002/07/05 12:06:49 nilsson Exp $
 
 #define IN_ROXEN
 #include <module_constants.h>
@@ -316,25 +316,11 @@ class ModuleInfo( string sname, string filename )
     return 0;
   }
 
+  // NGSERVER: No localized module variables. Remove this function.
   static mixed encode_string( mixed what )
   {
     if( objectp( what ) && what->get_identifier ) // locale string.
-    {
-      array t = what->get_identifier();
-      t[1] = 0;
-      return t;
-    }
-    return what;
-  }
-
-  static LocaleString decode_string( mixed what )
-  {
-    if( arrayp( what ) )
-//      {
-      return what[0];
-//        what[1] = get_locale;
-//        return Locale.DeferredLocale( @what );
-//      }
+      return (string)what;
     return what;
   }
 
@@ -476,8 +462,8 @@ class ModuleInfo( string sname, string filename )
           {
             type = data->type;
             multiple_copies = data->multiple_copies;
-            name = decode_string( data->name );
-            description = decode_string( data->description );
+            name = data->name;
+            description = data->description;
 	    locked = data->locked;
             return 1;
           }
