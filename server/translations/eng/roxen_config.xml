@@ -1804,3 +1804,8 @@ As an example, if the file /foo/bar/not_there.html is wanted, and this list cont
 <o>Select the Administration interface language.</o>
 <t></t>
 </str>
+
+<str id="152">
+<o>%O is not an integer</o>
+<t></t>
+</str>

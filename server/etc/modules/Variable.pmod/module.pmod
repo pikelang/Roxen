@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.38 2000/11/27 10:31:01 per Exp $
+// $Id: module.pmod,v 1.39 2000/11/27 11:44:34 nilsson Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -506,7 +506,7 @@ class Int
   {
     string warn;
     if(!intp( new_value ) )
-      return ({ sprintf(LOCALE(0,"%O is not an integer"),new_value),
+      return ({ sprintf(LOCALE(152,"%O is not an integer"),new_value),
 		query() });
     if( new_value > _max && _max > _min )
     {

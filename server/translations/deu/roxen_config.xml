@@ -2154,3 +2154,9 @@ As an example, if the file /foo/bar/not_there.html is wanted, and this list cont
                    "behandelt werden, da dieses eine höhere &lt;i&gt;Sicherheitsebene&lt;/i&gt; hat als die Vertrauensebene des Requests.\n&lt;p&gt;Ein Request der vom \"Filsystem module\" behandelt wurde kann andererseits später vom \"CGI module\
                    "behandelt werden.</t>
 </str>
+
+<str id="152">
+<new/>
+<o>%O is not an integer</o>
+<t></t>
+</str>

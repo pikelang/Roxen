@@ -2112,3 +2112,9 @@ requestens &lt;i&gt;pålitlighetsnivå&lt;/i&gt;.&lt;p&gt;
 hanteras av &lt;i&gt;Filsystem&lt;/i&gt; modulen 
 skickas vidare till &lt;i&gt;CGI modulen&lt;/i&gt;.</t>
 </str>
+
+<str id="152">
+<new/>
+<o>%O is not an integer</o>
+<t></t>
+</str>
