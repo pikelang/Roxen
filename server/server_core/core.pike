@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: core.pike,v 1.835 2002/10/30 19:36:55 nilsson Exp $";
+constant cvs_version="$Id: core.pike,v 1.836 2002/10/30 19:40:01 nilsson Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -1090,7 +1090,7 @@ Configuration find_configuration_for_url(object url, void|string url_base)
     mixed q = urls[u];
     if( glob( u+"*", url_with_port ) )
     {
-      if( (c = q->port->find_configuration_for_url(url, 0, 1 )) )
+      if( (c = q->port->find_configuration_for_url((string)url, 0, 1 )) )
       {
 	if (search(u, "*") != -1 ||
 	    search(u, "?") != -1)
@@ -4453,14 +4453,15 @@ void check_commit_suicide()
   if (query("suicide_engage")) {
     int next = getvar("suicide_schedule")
       ->get_next( query("last_suicide") );
-    if (next >= 0 && next <= time(1)) {
-      report_notice("Auto Restart triggered.\n");
-      set( "last_suicide", time(1) );
-      save( );
-      restart();
-    } else {
-      call_out(check_commit_suicide, next - time(1));
-    }
+    if (next >= 0)
+      if (next <= time(1)) {
+	report_notice("Auto Restart triggered.\n");
+	set( "last_suicide", time(1) );
+	save( );
+	restart();
+      } else {
+	call_out(check_commit_suicide, next - time(1));
+      }
   }
 }
 
