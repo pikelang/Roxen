@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: cache.pike,v 1.47 2000/04/18 21:20:57 nilsson Exp $
+// $Id: cache.pike,v 1.48 2000/04/19 14:43:27 nilsson Exp $
 
 #pragma strict_types
 
@@ -76,7 +76,7 @@ mixed cache_lookup(string in, string what)
 {
   CACHE_WERR(sprintf("cache_lookup(\"%s\",\"%s\")  ->  ", in, what));
   all[in]++;
-  int t=time(1);
+  int t=[int]time(1);
   if(array entry = (cache[in] && cache[in][what]) )
     if (entry[TIMEOUT] && entry[TIMEOUT] < t) {
       m_delete (cache[in], what);
@@ -177,7 +177,7 @@ mixed cache_set(string in, string what, mixed to, int|void tm)
   CACHE_WERR(sprintf("cache_set(\"%s\", \"%s\", %t)\n",
 		     in, what, to));
 #endif
-  int t=time(1);
+  int t=[int]time(1);
   if(!cache[in])
     cache[in]=([ ]);
   cache[in][what] = allocate(ENTRY_SIZE);
