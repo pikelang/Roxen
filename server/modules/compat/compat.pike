@@ -276,9 +276,9 @@ string|array tag_insert(string tag,mapping m,RequestID id)
 
   if(n = m->variable)
   {
-    if(zero_type(RXML.get_context()->user_get_var(n, m->scope)))
+    string var;
+    if(zero_type(var=RXML.get_context()->user_get_var(n, m->scope, RXML.t_text)))
       RXML.run_error("No such variable ("+n+").\n");
-    string var=(string)RXML.get_context()->user_get_var(n, m->scope);
     m_delete(m, "variable");
     return m->quote=="none"?do_replace(var, m-(["quote":""]), id):
       ({ html_encode_string(do_replace(var, m-(["quote":""]), id)) });
