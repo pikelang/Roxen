@@ -3,7 +3,6 @@
 *.bat eol=crlf
 *.gif binary
 *.gz binary
-*.ico binary
 *.jpg binary
 /server/modules/proxies/gopher.pike -text -crlf
 *.ppm binary
