@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.371 2002/06/14 16:05:05 jhs Exp $";
+constant cvs_version = "$Id: http.pike,v 1.372 2002/06/28 23:14:03 nilsson Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1652,12 +1652,16 @@ void send_result(mapping|void result)
 	{
 	  /* ({ time, len }) */
 	  array(int) since_info = Roxen.parse_since( since );
-// 	    werror("since: %{%O, %}\n"
-// 		   "lm:    %O\n",
-// 		   since_info,
-// 		   misc->last_modified );
+//   	    werror("since: %{%O, %}\n"
+//   		   "lm:    %O\n"
+//  		   "cacheable: %O\n",
+//   		   since_info,
+//   		   misc->last_modified,
+//  		   misc->cacheable);
 	  if ( ((since_info[0] >= misc->last_modified) && 
 		((since_info[1] == -1) || (since_info[1] == file->len)))
+	       // never say 'not modified' if not cacheable at all.
+	       && (misc->cacheable != 0)
 		 // actually ok, or...
 // 		 || ((misc->cacheable>0) 
 // 		     && (since_info[0] + misc->cacheable<= predef::time(1))
