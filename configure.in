@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.36 1997/10/07 01:22:02 grubba Exp $
+# $Id: configure.in,v 1.37 1997/10/07 11:46:38 grubba Exp $
 #
 
 prefix=$PWD
@@ -320,9 +320,14 @@ esac
 fi
 
 if test "$GCC" = "yes"; then
-  if test $cflags_is_set = no; then
-    AC_SYS_COMPILER_FLAG(-pipe, pipe)
-  fi
+# Disabled since -pipe causes gcc to hang on some systems
+# (gcc-2.7.2 on Slackware Linux 3.2 when compiling assembler files).
+# Thanks to Michael Finken <finken@nentec.de> for pointing it out.
+#	/grubba 1997-10-07
+#   if test $cflags_is_set = no; then
+#     AC_SYS_COMPILER_FLAG(-pipe, pipe)
+#   fi
+    :
 else
 #
 # Special hack for HP-UX stupid cc
