@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.254 2000/09/26 15:50:50 kuntri Exp $
+// $Id: rxml.pike,v 1.255 2000/10/13 13:32:04 kuntri Exp $
 
 
 inherit "rxmlhelp";
@@ -2150,7 +2150,7 @@ constant tagdoc=([
 
 "&page;":"<desc scope><short>This scope contains information specific to this page.</short></desc>",
 
-"&form;":#"<desc scope><short hide>
+"&form;":#"<desc scope><short hide='hide'>
  This scope contains form variables.</short>This scope contains the
  form variables, i.e. the answers to HTML forms sent by the client.
  There are no predefined entities for this scope.
@@ -2160,7 +2160,7 @@ constant tagdoc=([
 "&cookie;":#"<desc scope><short>
  This scope contains the cookies sent by the client.</short> Adding,
  deleting or changing in this scope updates the clients cookies. There
- are no predefined entities for this scope.</short>
+ are no predefined entities for this scope.
 </desc>",
 
 "&var;":#"<desc scope><short>
@@ -2182,7 +2182,7 @@ constant tagdoc=([
 <ex><case capitalize=''>captalize</case></ex>
 </attr>",
 
-"cond":({ #"<desc cont><short hide>This tag makes a boolean test on a specified list of cases.</short>
+"cond":({ #"<desc cont><short hide='hide'>This tag makes a boolean test on a specified list of cases.</short>
  This tag is almost eqvivalent to the <tag>if</tag>/<tag>else</tag>
  tag combination. The main diffirence is that the <tag>default</tag>
  tag may be put whereever you want it within the <tag>cond</tag> tag.
@@ -2263,10 +2263,18 @@ constant tagdoc=([
 
 "<?comment":#"<desc pi><short>
  Processing instruction tag for comments.</short> This tag is similar
- to the RXML <ref type='tag'><tag>comment</tag> tag but should be used
+ to the RXML <tag>comment</tag> tag but should be used
  when commenting arbitrary text that doesn't contain '?&gt;'.
 </desc>",
 
+
+// <cset> is deprecated. This information is to be put in a special
+// 'deprecated' chapter in the manual, due to many persons asking
+// about its whereabouts.
+"cset":#"<desc tag><short>
+ Deprecated in favor of <tag>define variable</tag></short> Deprecated
+ in Roxen 2.0.
+</desc>",
 
 "define":({ #"<desc cont><short>
  Defines variables, tags, containers and if-callers.</short> One, and only one,
@@ -2330,28 +2338,27 @@ scope created within the define tag.
 
 }),
 
-"else":#"<desc cont><short hide>
- Show the contents if the previous <if> tag didn't, or if there was a
- <false> tag above.</short>Show the contents if the previous <tag><ref
- type='tag'>if</ref></tag> tag didn't, or if there was a <tag><ref
- type='tag'>false</ref></tag> tag above. The result is undefined if
- there has been no <tag><ref type='tag'>if</ref></tag>, <tag><ref
- type='tag'>true</ref></tag> or <tag><ref type='tag'>false</ref></tag>
- tag above.</desc>",
+"else":#"<desc cont><short hide='hide'>
+ Show the contents if the previous <tag>if</tag> tag didn't, or if
+ there was a <tag>false</tag> tag above.</short>Show the contents if the
+ previous <tag>if</tag> tag didn't, or if there was a <tag>false</tag>
+ tag above. The result is undefined if there has been no
+ <tag>if</tag>, <tag>true</tag> or <tag>false</tag> tag above.
+</desc>",
 
-"elseif":#"<desc cont><short hide>
- Same as the <if> tag, but it will only evaluate if the previous <if>
- tag returned false.</short>Same as the <tag><ref
- type='tag'>if</ref></tag>, but it will only evaluate if the previous
- <tag><ref type='tag'>if</ref></tag> tag returned false. </desc>",
+"elseif":#"<desc cont><short hide='hide'>
+ Same as the <tag>if</tag> tag, but it will only evaluate if the
+ previous <tag>if</tag> tag returned false.</short>Same as the <tag>if</tag>,
+ but it will only evaluate if the previous <tag>if</tag> tag returned
+ false.
+</desc>",
 
-"false":#"<desc tag><short hide>
- Internal tag used to set the return value of <if> tags.
- </short>Internal tag used to set the return value of <tag><ref
- type='tag'>if</ref></tag> tags. It will ensure that the next
- <tag><ref type='tag'>else</ref></tag> tag will show its contents. It
- can be useful if you are writing your own <tag><ref
- type='tag'>if</ref></tag> lookalike tag. </desc>",
+"false":#"<desc tag><short hide='hide'>
+ Internal tag used to set the return value of <tag>if</tag> tags.
+ </short>Internal tag used to set the return value of <tag>if</tag>
+ tags. It will ensure that the next <tag>else</tag> tag will show its
+ contents. It can be useful if you are writing your own <tag>if</tag>
+ lookalike tag. </desc>",
 
 "help":#"<desc tag><short>
  Gives help texts for tags.</short> If given no arguments, it will
@@ -2368,13 +2375,11 @@ scope created within the define tag.
 <ex type='vert'><help for='roxen'/></ex>
 </attr>",
 
-"if":#"<desc cont><short hide>
- <if> is used to conditionally show its contents.</short><tag><ref
- type='tag'>If</ref></tag> is used to conditionally show its contents.
- <tag><ref type='tag'>else</ref></tag>, <tag><ref
- type='tag'>elif</ref></tag> or <tag><ref
- type='tag'>elseif</ref></tag> can be used to suggest alternative
- content.
+"if":#"<desc cont><short hide='hide'>
+ <tag>if</tag> is used to conditionally show its contents.</short>The
+ <tag>if</tag> tag is used to conditionally show its contents.
+ <tag>else</tag>, <tag>elif</tag> or <tag>elseif</tag> can be used to
+ suggest alternative content.
 
  <p>It is possible to use glob patterns in almost all attributes,
  where * means match zero or more characters while ? matches one
@@ -2382,7 +2387,7 @@ scope created within the define tag.
  trainfork or tfo. It is not possible to use regexp's together
  with any of the if-plugins.</p>
 
- <p>The <ref type='tag'>if</ref> tag itself is useless without its
+ <p>The if tag itself is useless without its
  plugins. Its main functionality is to provide a framework for the
  plugins.</p>
 
@@ -2477,7 +2482,7 @@ scope created within the define tag.
 
 "if#true":#"<desc plugin><short>
  This will always be true if the truth value is set to be
- true.</short> Equivalent with <tag><ref type=cont>then</ref></tag>.
+ true.</short> Equivalent with <tag>then</tag>.
  True is a <i>State</i> plugin.
 </desc>
 <attr name='true' required>
@@ -2486,7 +2491,7 @@ scope created within the define tag.
 
 "if#false":#"<desc plugin><short>
  This will always be true if the truth value is set to be
- false.</short> Equivalent with <tag><ref type='tag'>else</ref></tag>.
+ false.</short> Equivalent with <tag>else</tag>.
  False is a <i>State</i> plugin.
 </desc>
 <attr name='false' required>
@@ -2509,8 +2514,8 @@ scope created within the define tag.
 </attr>",
 
 "if#config":#"<desc plugin><short>
- Has the config been set by use of the <tag><ref
- type='tag'>aconf</ref></tag> tag?</short> Config is a <i>State</i> plugin.
+ Has the config been set by use of the <tag>aconf</tag> tag?</short>
+ Config is a <i>State</i> plugin.
 </desc>
 <attr name='config' value='name' required>
 </attr>",
@@ -2558,10 +2563,11 @@ scope created within the define tag.
  </ex>
 </attr>",
 
-"if#defined":#"<desc plugin><short hide>
- Tests if a certain RXML define is defined by use of the <define> tag.
- </short> Tests if a certain RXML define is defined by use of the
- <tag>define</tag> tag.Defined is a <i>State</i> plugin.
+"if#defined":#"<desc plugin><short hide='hide'>
+ Tests if a certain RXML define is defined by use of the
+ <tag>define</tag> tag. </short> Tests if a certain RXML define is
+ defined by use of the <tag>define</tag> tag. Defined is a
+ <i>State</i> plugin.
 </desc>
 <attr name='defined' value='define' required>
  Choose what define to test.
@@ -2578,12 +2584,36 @@ scope created within the define tag.
 </attr>
 ",
 
+
+// If eval is deprecated. This information is to be put in a special
+// 'deprecated' chapter in the manual, due to many persons asking
+// about its whereabouts.
+
+"if#eval":#"<desc plugin><short>
+
+ Deprecated due to non-XML compliancy.</short> The XML standard says
+ that attribute-values are not allowed to contain any markup. The
+ <tag>if eval</tag> tag was deprecated in Roxen 2.0.
+
+ <ex typ='box'>
+
+ <!-- If eval statement -->
+ <if eval=\"<foo>\">x</if>
+
+ <!-- Compatible statement -->
+ <define variable=\"var.foo\" preparse=\"preparse\"><foo/></define>
+ <if sizeof=\"var.foo\">x</if>
+ </ex>
+ A similar but more XML compliant construct is a combination of
+ <tag>define variable</tag> and an apropriate <tag>if</tag> plugin.
+</desc>",
+
+
 "if#exists":#"<desc plugin><short>
  Returns true if the file path exists.</short> If path does not begin
  with /, it is assumed to be a URL relative to the directory
- containing the page with the <tag><ref
- type='tag'>if</ref></tag>-statement. Exists is a <i>Utils</i>
- plugin.
+ containing the page with the <tag>if</tag>-statement. Exists is a
+ <i>Utils</i> plugin.
 </desc>
 <attr name='exists' value='path' required>
  Choose what path to test.
@@ -2793,13 +2823,12 @@ Available variables are:",
  the contents are parsed by the RXML parser.</short>
 </desc>",
 
-"true":#"<desc tag><short hide>
- An internal tag used to set the return value of <if> tags. </short>An
- internal tag used to set the return value of <tag><ref
- type='tag'>if</ref></tag> tags. It will ensure that the next
- <tag><ref type='tag'>else</ref></tag> tag will not show its contents.
- It can be useful if you are writing your own
- <tag><ref type='tag'>if</ref></tag> lookalike tag.
+"true":#"<desc tag><short hide='hide'>
+ An internal tag used to set the return value of <tag>if</tag> tags.
+ </short>An internal tag used to set the return value of <tag>if</tag>
+ tags. It will ensure that the next <tag>else</tag> tag will not show
+ its contents. It can be useful if you are writing your own
+ <tag>if</tag> lookalike tag.
 </desc>",
 
 "undefine":#"<desc tag><short>
@@ -2850,8 +2879,8 @@ Available variables are:",
  with an HTTP request. This makes it possible to use Pike script
  results and other dynamic documents. Note, however, that the results
  of the parsing are heavily cached for performance reasons. If you do
- not want this cache, use <tag><ref type='tag'>insert file=...
- nocache</ref></tag> instead.</p>
+ not want this cache, use <tag>insert file=...
+ nocache</tag> instead.</p>
 </attr>
 
 <attr name=info>
