@@ -26,7 +26,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.283 2001/09/03 20:43:53 marcus Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.284 2001/09/04 18:12:27 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1536,6 +1536,7 @@ void start_mysql()
       if (mixed err = catch
       {
 	db->query( "DELETE FROM local.precompiled_files" );
+	db->query( "DELETE FROM local.compiled_formats" );
       }) {
 #ifdef MYSQL_CONNECT_DEBUG
 	werror ("Error removing dumped files: %s", describe_error (err));
