@@ -1,7 +1,7 @@
 #include <module.h>
 inherit "modules/directories/directories";
 
-string cvs_version = "$Id: language.pike,v 1.13 1997/10/03 17:16:52 grubba Exp $";
+string cvs_version = "$Id: language.pike,v 1.14 1997/10/03 18:56:13 grubba Exp $";
 /* Is threadsafe. Probably. */
 
 
@@ -109,6 +109,9 @@ void create()
   defvar( "textonly", 0, "Text only", TYPE_FLAG,
 	  "If set the tags type argument will default to txt instead of img" );
   
+  defvar( "borderwidth", 0, "Border width", TYPE_INT,
+	  "The width of the border around selectable flags." );
+
   ::create();
 }
 
@@ -127,6 +130,7 @@ array (string) language_order = ({ });
 multiset (string) language_list;
 string default_language, flag_dir;
 int textonly;
+int borderwidth;
 
 mixed fnord(mixed what) { return what; }
 
@@ -152,6 +156,7 @@ void start()
     language_data[ tmp ][ LANGUAGE_DATA_NEXT_LANGUAGE ] &= indices( language_list );
   default_language = query( "default_language" );
   textonly = query( "textonly" );
+  borderwidth = query( "borderwidth" );
   
   ::start();
 }
@@ -358,10 +363,11 @@ string tag_available_languages( string tag, mapping m, object id )
     if (m[ "type" ] == "txt" || textonly && m[ "type" ] != "img")
       result += ""+id->misc[ "language_data" ][ available_languages[c] ][0];
     else
-      result += "<img src=" + query( "flag_dir" ) + available_languages[c]
-            + ".available.gif alt=\""
-  	    + id->misc[ "language_data" ][ available_languages[c] ][0]
-            + "\">";
+      result += "<img src=" + query( "flag_dir" ) + available_languages[c] +
+	".available.gif alt=\"" +
+	id->misc[ "language_data" ][ available_languages[c] ][0] +
+	"\" " + sprintf("border=%d", borderwidth) + ">";
+	
     if (query( "configp" ))
       result += "</aconf>\n";
     else
