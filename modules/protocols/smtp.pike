@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.81 1999/09/14 14:45:04 grubba Exp $
+ * $Id: smtp.pike,v 1.82 1999/09/14 17:59:50 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.81 1999/09/14 14:45:04 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.82 1999/09/14 17:59:50 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -34,6 +34,7 @@ inherit "module";
  *	string|multiset(string) expn(string addr, object o);
  * 	string desc(string addr, object o);
  *	multiset(string) query_domain();
+ *	string domain_from_ip(string user, string ip, object o);
  *	int put(string sender, string user, string domain,
  * 	        object spoolfile, string csum, object o);
  *
@@ -934,6 +935,17 @@ static class Smtp_Connection {
 
 	  if ((!domain) || (parent->handled_domains[domain])) {
 	    // Local address.
+
+	    if (!domain) {
+	      // Try to find a domain from the localip.
+	      foreach(conf->get_providers("smtp_rcpt")||({}), object o) {
+		if (functionp(o->domain_from_ip) &&
+		    domain = o->domain_from_ip(user, localip, this_object())) {
+		  recipient = user + "@" + domain;
+		  break;
+		} 
+	      }
+	    }
 
 	    if (domain) {
 	      // Full address check.
