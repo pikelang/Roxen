@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.84 2000/07/04 10:00:34 nilsson Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.85 2000/08/13 04:03:07 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -164,25 +164,34 @@ void create()
 	 "<tt>&lt;insert&gt;</tt> and <tt>&lt;use&gt;</tt>.");
 }
 
-string path;
-int stat_cache;
+string path, mountpoint, charset, path_encoding;
+int stat_cache, dotfiles, access_as_user, no_symlinks, tilde;
+array(string) internal_files;
 
 void start()
 {
+  tilde = QUERY(tilde);
+  charset = QUERY(charset);
+  path_encoding = QUERY(path_encoding);
+  no_symlinks = QUERY(no_symlinks);
+  access_as_user = QUERY(access_as_user);
+  dotfiles = QUERY(.files);
   path = QUERY(searchpath);
+  mountpoint = QUERY(mountpoint);
   stat_cache = QUERY(stat_cache);
+  internal_files = QUERY(internal_files);
   FILESYSTEM_WERR("Online at "+QUERY(mountpoint)+" (path="+path+")");
   cache_expire("stat_cache");
 }
 
 string query_location()
 {
-  return QUERY(mountpoint);
+  return mountpoint;
 }
 
 
 #define FILTER_INTERNAL_FILE(f, id) \
-  (!id->misc->internal_get && sizeof (filter (QUERY (internal_files), glob, (f/"/")[-1])))
+  (!id->misc->internal_get && sizeof (filter (internal_files, glob, (f/"/")[-1])))
 
 mixed stat_file( string f, RequestID id )
 {
@@ -198,33 +207,28 @@ mixed stat_file( string f, RequestID id )
     return fs[0];
 
   object privs;
-  if (((int)id->misc->uid) && ((int)id->misc->gid) &&
-      (QUERY(access_as_user))) {
+  if (access_as_user && ((int)id->misc->uid) && ((int)id->misc->gid))
     // NB: Root-access is prevented.
     privs=Privs("Statting file", (int)id->misc->uid, (int)id->misc->gid );
-  }
 
   /* No security currently in this function */
   fs = file_stat(decode_path(path + f));
   privs = 0;
-  if(!stat_cache)
-    return fs;
+  if(!stat_cache) return fs;
   cache_set("stat_cache", path+f, ({fs}));
   return fs;
 }
 
 string real_file( string f, RequestID id )
 {
-  if(this_object()->stat_file( f, id ))
-/* This filesystem might be inherited by other filesystem, therefore
-   'this'  */
+  if(stat_file( f, id ))
     return path + f;
 }
 
 int dir_filter_function(string f, RequestID id)
 {
-  if(f[0]=='.' && !QUERY(.files))           return 0;
-  if(!QUERY(tilde) && Roxen.backup_extension(f))  return 0;
+  if(f[0]=='.' && !dotfiles)           return 0;
+  if(!tilde && Roxen.backup_extension(f))  return 0;
   return 1;
 }
 
@@ -241,11 +245,9 @@ array find_dir( string f, RequestID id )
 
   object privs;
 
-  if (((int)id->misc->uid) && ((int)id->misc->gid) &&
-      (QUERY(access_as_user))) {
+  if (((int)id->misc->uid) && ((int)id->misc->gid) && access_as_user )
     // NB: Root-access is prevented.
     privs=Privs("Getting dir", (int)id->misc->uid, (int)id->misc->gid );
-  }
 
   if(!(dir = get_dir( decode_path(path + f) ))) {
     privs = 0;
@@ -271,14 +273,14 @@ array find_dir( string f, RequestID id )
   dirlists++;
 
   // Pass _all_ files, hide none.
-  if(QUERY(tilde) && QUERY(.files) &&
-     (!sizeof (QUERY (internal_files)) || id->misc->internal_get))
+  if(tilde && dotfiles &&
+     (!sizeof( internal_files ) || id->misc->internal_get))
     return dir;
 
   dir = Array.filter(dir, dir_filter_function, id);
 
   if (!id->misc->internal_get)
-    foreach (QUERY (internal_files), string globstr)
+    foreach (internal_files, string globstr)
       dir -= glob (globstr, dir);
 
   return dir;
@@ -369,8 +371,8 @@ void got_put_data( array (object|string) id_arr, string data )
 
 string decode_path( string p )
 {
-  if( query( "path_encoding" ) != "iso-8859-1" )
-    p = Locale.Charset.encoder( QUERY( path_encoding ) )->feed( p )->drain();
+  if( path_encoding != "iso-8859-1" )
+    p = Locale.Charset.encoder( path_encoding )->feed( p )->drain();
 #ifndef __NT__
   if( String.width( p ) != 8 )
     p = string_to_utf8( p );
@@ -382,22 +384,23 @@ string decode_path( string p )
 int _file_size(string X,object id)
 {
   array fs;
-  if(!id->pragma["no-cache"]&&(fs=cache_lookup("stat_cache",(X))))
+  if( stat_cache )
   {
-    id->misc->stat = fs[0];
-    return fs[0]?fs[0][ST_SIZE]:-1;
+    if(!id->pragma["no-cache"]&&(fs=cache_lookup("stat_cache",(X))))
+    {
+      id->misc->stat = fs[0];
+      return fs[0]?fs[0][ST_SIZE]:-1;
+    }
   }
   if(fs = file_stat(decode_path(X)))
   {
     id->misc->stat = fs;
-    cache_set("stat_cache",(X),({fs}));
+    if( stat_cache ) cache_set("stat_cache",(X),({fs}));
     return fs[ST_SIZE];
-  } else
+  } else if( stat_cache )
     cache_set("stat_cache",(X),({0}));
   return -1;
 }
-
-#define FILE_SIZE(X) (stat_cache?_file_size((X),id):Stdio.file_size(decode_path(X)))
 
 int contains_symlinks(string root, string path)
 {
@@ -427,15 +430,17 @@ mixed find_file( string f, RequestID id )
   FILESYSTEM_WERR("Request for \""+f+"\"" +
 		  (id->misc->internal_get ? " (internal)" : ""));
 
-  string mountpoint = QUERY(mountpoint);
-
-  string uri = combine_path(mountpoint + "/" + f, ".");
+  /* only used for the quota system, thus rather unessesary to do for
+     each request....
+  */
+#define uri combine_path(mountpoint + "/" + f, ".")
 
   f = path + f;
+
 #ifdef __NT__
   if(f[-1]=='/') f = f[..strlen(f)-2];
 #endif
-  size = FILE_SIZE( f );
+  size = _file_size( f, id );
 
   /*
    * FIXME: Should probably move path-info extraction here.
@@ -461,44 +466,20 @@ mixed find_file( string f, RequestID id )
       return -1; /* Is dir */
 
     default:
-      if(f[ -1 ] == '/') /* Trying to access file with '/' appended */
-      {
-	/* Neotron was here. I changed this to always return 0 since
-	 * CGI-scripts with path info = / won't work otherwise. If
-	 * someone accesses a file with "/" appended, a 404 no such
-	 * file isn't that weird. Both Apache and Netscape return the
-	 * accessed page, resulting in incorrect links from that page.
-	 *
-	 * FIXME: The proper way to do this would probably be to set path info
-	 *   here, and have the redirect be done by the extension modules,
-	 *   or by the protocol module if there isn't any extension module.
-	 *	/grubba 1998-08-26
-	 */
+      if( f[ -1 ] == '/' ) /* Trying to access file with '/' appended */
 	return 0;
-	/* Do not try redirect on top level directory */
-	if(sizeof(id->not_query) < 2)
-	  return 0;
-	redirects++;
 
-	// Note: Keep the query part.
-	/* FIXME: Should probably keep prestates etc too.
-	 *	/grubba 1999-01-14
-	 */
-	string new_query =
-	  Roxen.http_encode_string(id->not_query[..sizeof(id->not_query)-2]) +
-	  (id->query?("?" + id->query):"");
-	TRACE_LEAVE("Redirecting to \"" + new_query + "\"");
-	return Roxen.http_redirect(new_query, id);
-      }
-
-      if(!id->misc->internal_get) {
-	if (!QUERY(.files)
+      if(!id->misc->internal_get) 
+      {
+	if (!dotfiles
 	    && sizeof (tmp = (id->not_query/"/")[-1])
-	    && tmp[0] == '.') {
+	    && tmp[0] == '.') 
+        {
 	  TRACE_LEAVE("Is .-file");
 	  return 0;
 	}
-	if (FILTER_INTERNAL_FILE (f, id)) {
+	if (FILTER_INTERNAL_FILE (f, id)) 
+        {
 	  TRACE_LEAVE ("Is internal file");
 	  return 0;
 	}
@@ -507,15 +488,17 @@ mixed find_file( string f, RequestID id )
       TRACE_ENTER("Opening file \"" + f + "\"", 0);
 
       object privs;
-      if (((int)id->misc->uid) && ((int)id->misc->gid) &&
-	  (QUERY(access_as_user))) {
+      if (access_as_user &&
+          ((int)id->misc->uid) && ((int)id->misc->gid))
 	// NB: Root-access is prevented.
 	privs=Privs("Getting file", (int)id->misc->uid, (int)id->misc->gid );
-      }
-      o = open( decode_path(f), "r" );
+
+      o = Stdio.File( );
+      f = decode_path( f );
+      if(!o->open(f, "r" )) o = 0;
       privs = 0;
 
-      if(!o || (QUERY(no_symlinks) && (contains_symlinks(path, oldf))))
+      if(!o || (no_symlinks && (contains_symlinks(path, oldf))))
       {
 	errors++;
 	report_error("Open of " + f + " failed. Permission denied.\n");
@@ -530,9 +513,12 @@ mixed find_file( string f, RequestID id )
       TRACE_LEAVE("");
       accesses++;
       TRACE_LEAVE("Normal return");
-      if( id->misc->set_output_charset )
-        id->misc->set_output_charset( query("charset"), 2 );
-      id->misc->input_charset = query("charset");
+      if( charset != "iso-8859-1" )
+      {
+        if( id->misc->set_output_charset )
+          id->misc->set_output_charset( charset, 2 );
+        id->misc->input_charset = charset;
+      }
       return o;
     }
     break;
@@ -900,7 +886,7 @@ mixed find_file( string f, RequestID id )
       return 0;
     }
 
-    size = FILE_SIZE(moveto);
+    size = _file_size(moveto,id);
 
     if(!QUERY(delete) && size != -1)
     {
@@ -1023,6 +1009,5 @@ mixed find_file( string f, RequestID id )
 
 string query_name()
 {
-  return sprintf("<i>%s</i> mounted on <i>%s</i>", query("searchpath"),
-		 query("mountpoint"));
+  return sprintf("<i>%s</i> mounted on <i>%s</i>", path,mountpoint);
 }
