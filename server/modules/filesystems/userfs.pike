@@ -14,7 +14,7 @@
 
 inherit "filesystem" : filesystem;
 
-constant cvs_version="$Id: userfs.pike,v 1.37 1998/07/21 16:21:25 js Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.38 1998/07/22 16:58:52 grubba Exp $";
 
 // import Array;
 // import Stdio;
@@ -137,7 +137,9 @@ static array(string) find_user(string f, object id)
       }
     }
   } else {
-    if((<"","/", ".">)[f]) return 0;
+    if((<"", "/", ".">)[f])
+      return 0;
+
     switch(sscanf(f, "%*[/]%s/%s", u, f)) {
     case 1:
       sscanf(f, "%*[/]%s", u);
@@ -169,15 +171,14 @@ mixed find_file(string f, object got)
 #ifdef USERFS_DEBUG
   roxen_perror(sprintf("USERFS: find_file(%O, X)\n", f));
 #endif /* USERFS_DEBUG */
-//  werror("ff: "+f+"\n");
+
   array a = find_user(f, got);
 
-  if (!strlen(f) || f=="/") {
+  if (!a) {
     return -1;
   }
   u = a[0];
   f = a[1];
-  if(!u) return 0;
 
   if(u)
   {
@@ -291,10 +292,10 @@ array find_dir(string f, object got)
 
   array a = find_user(f, got);
   
-  if (f=="" || f=="/") {
+  if (!a) {
     array l;
     l = got->conf->userlist(got);
-//    werror("fd: "+f+" l=%O\n", l);
+
     if(l) return(l - QUERY(banish_list));
     return 0;
   }
@@ -329,13 +330,11 @@ mixed stat_file( mixed f, mixed id )
   roxen_perror(sprintf("USERFS: stat_file(%O, X)\n", f));
 #endif /* USERFS_DEBUG */
 
-//  werror("sf: "+f+"\n");
-  if(f=="" || f=="/")
-    return ({ 0, -2, 0, 0, 0, 0, 0, 0, 0, 0 });
-
   array a = find_user(f, id);
 
-  if (!a) return 0;
+  if (!a) {
+    return ({ 0, -2, 0, 0, 0, 0, 0, 0, 0, 0 });
+  }
 
   string u = a[0];
   f = a[1];
