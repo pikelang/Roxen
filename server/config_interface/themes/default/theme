@@ -29,9 +29,9 @@
 
 <theme-set what=content-bg to="#f7f8fc" />
 
-<theme-set what=fade1     to="#eff3fc"/>
+<theme-set what=fade1     to="#edeff4"/>
 <theme-set what=fade2     to="#dee2eb"/>
-<theme-set what=fade3     to="#b3c1dd"/>
+<theme-set what=fade3     to="#d3d8e5"/>
 <theme-set what=fade4     to="#222222"/>
 
 <theme-set what=next     to=next.png themefile />
