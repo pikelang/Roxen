@@ -123,8 +123,9 @@ array(string) get_conf_url_to_module(string|RoxenModule m, string|void lang)
   string url_modname = replace(conf->otomod[module], "#", "!"),
 	url_confname = conf->name;
 
-  return ({ sprintf("/%s/sites/site.html/%s/%s/",
-		    lang || "standard", url_confname, url_modname),
+  return ({ sprintf("/sites/site.html/%s/-!-/%s/?section=Information",
+		   Roxen.http_encode_string(url_confname),
+		   Roxen.http_encode_string(url_modname)),
 	    Roxen.get_modfullname(module) });
 }
 
@@ -140,6 +141,8 @@ array(string) get_conf_url_to_virtual_server(string|Configuration conf,
   else
     url_confname = conf->name;
 
-  return ({ sprintf("/%s/sites/site.html/%s/", lang || "standard",
-		    url_confname), conf->query_name() });
+  return ({ sprintf("/sites/site.html/%s/", 
+		    Roxen.http_encode_string(url_confname)), conf->query_name() });
 }
+
+
