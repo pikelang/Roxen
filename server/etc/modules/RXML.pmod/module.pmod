@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.204 2001/07/16 03:12:46 mast Exp $
+// $Id: module.pmod,v 1.205 2001/07/16 21:33:21 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -2228,8 +2228,7 @@ constant FLAG_COMPILE_RESULT	= 0x00010000;
 //! Any evaluation done in the exec arrays that the frame callbacks
 //! returns is also compiled to p-code, and the exec array is
 //! destructively changed to contain the p-code. This affects strings
-//! if the result type has a parser and any unparsed frames (see
-//! @[make_unparsed_tag]).
+//! if the result type has a parser.
 
 class Frame
 //! A tag instance. A new frame is normally created for every parsed
@@ -2803,17 +2802,22 @@ class Frame
 	      piece = elem;
 	    }
 	    else {
-	      if ((ctx->make_p_code = flags & FLAG_COMPILE_RESULT))
-		ctx->init_make_p_code();
-	      subparser = result_type->get_parser (ctx, ctx->tag_set, evaler,
-						   ctx->make_p_code);
-	      if (evaler->recover_errors && !(flags & FLAG_DONT_RECOVER)) {
-		subparser->recover_errors = 1;
-		if (PCode p_code = subparser->p_code) p_code->recover_errors = 1;
+	      {
+		PCode p_code = 0;
+		if ((ctx->make_p_code = flags & FLAG_COMPILE_RESULT)) {
+		  ctx->init_make_p_code();
+		  p_code = RenewablePCode (0);
+		  p_code->source = [string] elem;
+		}
+		subparser = result_type->get_parser (ctx, ctx->tag_set, evaler, p_code);
+		if (evaler->recover_errors && !(flags & FLAG_DONT_RECOVER)) {
+		  subparser->recover_errors = 1;
+		  if (p_code) p_code->recover_errors = 1;
+		}
+		THIS_TAG_DEBUG ("Exec[%d]: Parsing%s string %s with %O\n", i,
+				p_code ? " and compiling" : "",
+				utils->format_short (elem), subparser);
 	      }
-	      THIS_TAG_DEBUG ("Exec[%d]: Parsing%s string %s with %O\n", i,
-			      subparser->p_code ? " and compiling" : "",
-			      utils->format_short (elem), subparser);
 	      subparser->finish ([string] elem); // Might unwind.
 	      piece = subparser->eval(); // Might unwind.
 	      if (PCode p_code = subparser->p_code) {
@@ -2848,20 +2852,14 @@ class Frame
 	      // Can't count on that sprintf ("%t", ...) on an object
 	      // returns "object".
 	      if (([object] elem)->is_RXML_Frame) {
-		if ((ctx->make_p_code = flags & FLAG_COMPILE_RESULT))
-		  ctx->init_make_p_code();
-		THIS_TAG_DEBUG ("Exec[%d]: Evaluating%s frame %O\n", i,
-				ctx->make_p_code ? " and compiling" : "",
-				elem);
+		if (orig_make_p_code)
+		  // FIXME: Should p-code this if FLAG_COMPILE_RESULT
+		  // is set, but then we have to solve the thread
+		  // safety and staleness check issues.
+		  ctx->make_p_code = 0;
+		THIS_TAG_DEBUG ("Exec[%d]: Evaluating frame %O\n", i, elem);
 		piece = ([object(Frame)] elem)->_eval (
 		  ctx, evaler, result_type); // Might unwind.
-		if (ctx->make_p_code) {
-		  // Could perhaps collect adjacent PCode objects here.
-		  PCode p_code = PCode (result_type, ctx->tag_set);
-		  p_code->add_frame ([object(Frame)] elem, ctx);
-		  p_code->finish();
-		  exec[i] = p_code;
-		}
 		([object(Frame)] elem)->up = 0;	// Break potential cyclic reference.
 		break;
 	      }
@@ -6177,7 +6175,7 @@ class PCode
       p_code = p_code[..length - 1];
   }
 
-  mixed _eval (Context context)
+  mixed _eval (Context ctx)
   //! Like @[eval], but assumes the given context is current. Mostly
   //! for internal use.
   {
@@ -6187,10 +6185,9 @@ class PCode
 
     if (tag_set && tag_set->generation != generation) throw (StalePCode());
 
-    if (context && context->unwind_state) {
-      object ignored;
-      [ignored, pos, parts, ppos] = m_delete (context->unwind_state, this_object());
-    }
+    if (ctx->unwind_state)
+      [object ignored, pos, parts, ppos] =
+	m_delete (ctx->unwind_state, this_object());
     else parts = allocate (length);
 
     while (1) {			// Loops only if errors are catched.
@@ -6215,7 +6212,7 @@ class PCode
 		frame->_restore (p_code[pos + 2]);			\
 	      }								\
 	      item = frame->_eval (					\
-		context, this_object(), type); /* Might unwind. */	\
+		ctx, this_object(), type); /* Might unwind. */		\
 	      if (!p_code[pos + 1]) {					\
 		RESET_FRAME (frame);					\
 		/* Race here, but it doesn't matter much. */		\
@@ -6224,10 +6221,10 @@ class PCode
 	      pos += 2;							\
 	    }								\
 	    else if (item->is_RXML_p_code_entry)			\
-	      item = item->get (context); /* Might unwind. */		\
+	      item = item->get (ctx); /* Might unwind. */		\
 	  if (item != nil)						\
 	    parts[ppos++] = item;					\
-	  if (string errmsgs = m_delete (context->misc, this_object()))	\
+	  if (string errmsgs = m_delete (ctx->misc, this_object()))	\
 	    parts[ppos++] = errmsgs;					\
 	} while (0)
 
@@ -6239,16 +6236,16 @@ class PCode
 	    if (stringp (frame->args))
 	      if (stringp (frame_state[0]))
 		frame->args = frame_state[0] =
-		  context->p_code_comp->resolve (frame_state[0]);
+		  ctx->p_code_comp->resolve (frame_state[0]);
 	      else
 		frame->args = frame_state[0];
 	  }, {
 	    array frame_state = p_code[pos + 2];
 	    if (stringp (frame_state[0]))
-	      frame_state[0] = context->p_code_comp->resolve (frame_state[0]);
+	      frame_state[0] = ctx->p_code_comp->resolve (frame_state[0]);
 	  });
 
-	context->eval_finish();
+	ctx->eval_finish();
 
 	if (!ppos)
 	  return type->sequential ? type->empty_value : nil;
@@ -6261,12 +6258,12 @@ class PCode
 
       })
 	if (objectp (err) && ([object] err)->thrown_at_unwind) {
-	  context->unwind_state[this_object()] = ({err, pos, parts, ppos});
+	  ctx->unwind_state[this_object()] = ({err, pos, parts, ppos});
 	  throw (this_object());
 	}
 	else {
-	  context->handle_exception (err, this_object()); // May throw.
-	  string msgs = m_delete (context->misc, this_object());
+	  ctx->handle_exception (err, this_object()); // May throw.
+	  string msgs = m_delete (ctx->misc, this_object());
 	  if (pos >= length)
 	    return msgs || nil;
 	  else {
@@ -6289,8 +6286,9 @@ class PCode
   //! value of this @[PCode] object, assuming the current context is
   //! in a variable named @tt{ctx@} and the parent evaluator in
   //! @tt{evaler@}. It also assumes there's a mixed variable called
-  //! @tt{tmp@} for temporary use. No code to handle exception
-  //! unwinding and rewinding is added. Mostly for internal use.
+  //! @tt{tmp@} for temporary use. No code is added to handle
+  //! exception unwinding and rewinding or checks for staleness.
+  //! Mostly for internal use.
   {
     if (!length)
       return type->sequential ? comp->bind (type->empty_value) : "RXML.nil";
@@ -6399,6 +6397,71 @@ class PCode
 	pos += 2;
       }
     }
+  }
+}
+
+class RenewablePCode
+//! A variant of @[PCode] that also contains the source data, so it
+//! can automatically recover if the p-code becomes stale.
+{
+  inherit PCode;
+
+  string source;
+  //! The source code or frame used to generate the p-code.
+
+
+  // Internals:
+
+  mixed _eval (Context ctx)
+  {
+    Parser parser = 0;
+
+    if (ctx->unwind_state)
+      [parser] = m_delete (ctx->unwind_state, this_object());
+    else {
+      mixed err = catch {
+	return ::_eval (ctx);
+      };
+      if (!objectp (err) || !err->is_RXML_StalePCode)
+	throw (err);
+    }
+
+    mixed res;
+    if (mixed err = catch {
+      if (!parser) {
+	ctx->init_make_p_code();
+	parser = type->get_parser (ctx, tag_set, 0, this_object());
+	parser->finish (source); // Might unwind.
+      }
+      else parser->finish();	// Might unwind.
+      res = parser->eval();	// Might undwind.
+    })
+      if (objectp (err) && err->thrown_at_unwind) {
+	ctx->unwind_state[this_object()] = ({parser});
+	throw (this_object());
+      }
+      else throw (err);
+
+    type->give_back (parser, tag_set);
+    return res;
+  }
+
+  array _encode()
+  {
+    return ({::_encode(), source});
+  }
+
+  void _decode (array encoded)
+  {
+    ::_decode (encoded[0]);
+    source = encoded[1];
+  }
+
+  string _sprintf()
+  {
+    return tag_set ?
+      sprintf ("RXML.RenewablePCode(%O,%O)%s", type, tag_set, OBJ_COUNT) :
+      sprintf ("RXML.RenewablePCode(%O)%s", type, OBJ_COUNT);
   }
 }
 
