@@ -5,7 +5,7 @@ inherit "module";
 #include <module.h>
 
 constant thread_safe=1;
-constant cvs_version = "$Id: ssi.pike,v 1.39 2001/01/11 00:59:47 mast Exp $";
+constant cvs_version = "$Id: ssi.pike,v 1.40 2001/03/12 08:47:46 kuntri Exp $";
 
 
 constant module_type = MODULE_TAG;
@@ -242,7 +242,7 @@ constant tagdoc=([
  This tag prints the last modification date of the specified
  file.</short> This tag prints the last modification date of the
  specified file, subject to timefmt format specification used in the
- <ref type=tag>!--#config</ref> SSI tag. </p></desc>
+ <xref href='config.tag' /> SSI tag. </p></desc>
 
 <attr name='file' value='path'><p>
  Path to the file.</p>
