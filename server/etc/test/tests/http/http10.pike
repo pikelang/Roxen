@@ -3,7 +3,8 @@ inherit "http_common";
 void main(int argc, array argv)
 {
   string  sep = "\r\n";
-  int     psize = 100000;
+  int     psize = 100000, hlen;
+  int fail;
   if( argc < 4 )
     exit( BADARG );
 
@@ -22,14 +23,46 @@ void main(int argc, array argv)
       case 4:
 	psize = 10;
 	break;
+
+      case 5:
+	hlen = 1024;
+	break;
+      case 6:
+	hlen = 10240;
+	break;
+      case 7:
+	hlen = 102400;
+	break;
+
+      case 8:
+	hlen = 1024;
+	sep = "\n";
+	break;
+      case 9:
+	hlen = 10240;
+	sep = "\n";
+	break;
+      case 10:
+	sep = "\n";
+	hlen = 102400;
+	break;
+      case 11:
+	sep = "\n";
+	hlen = 1024000;
+	fail=1;
+	break;
     }
   }
 
   Stdio.File f = connect(  argv[1] );
-
+  string extra_headers="";
+  while( strlen( extra_headers )+100 < hlen )
+    extra_headers += "Extra-Headers: Filler"+sep;
+  
   write_fragmented( f,
 		    "GET "+argv[2]+" HTTP/1.0"+sep+
 		    "Connection: close"+sep+
+		    extra_headers+
 		    "User-Agent: Roxen Testscript"+sep+sep,
 		    psize );
 
@@ -40,8 +73,8 @@ void main(int argc, array argv)
     exit( BADHEADERS );
 
   verify_headers( q[0], strlen(q[1]), "HTTP/1.0",
-		  (argv[2] != "/nofile" ? 200 : 404),
-		  (argv[2][strlen(argv[2])-3..]=="raw"));
+		  (fail?500:(argv[2] != "/nofile" ? 200 : 404)),
+		  !fail && (argv[2][strlen(argv[2])-3..]=="raw"));
 
   if( (int)argv[3] )
     if( q[1] != ("\0" * (int)argv[3]) )
