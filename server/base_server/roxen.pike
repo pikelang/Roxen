@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.722 2001/08/31 11:18:29 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.723 2001/09/02 16:10:45 mast Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -572,6 +572,7 @@ local static void handler_thread(int id)
   {
     if(q=catch {
       do {
+//  	if (!busy_threads) werror ("GC: %d\n", gc());
 	THREAD_WERR("Handle thread ["+id+"] waiting for next event");
 	if(arrayp(h=handle_queue->read()) && h[0]) {
 	  THREAD_WERR(sprintf("Handle thread [%O] calling %O(%{%O, %})",
@@ -4267,8 +4268,10 @@ function compile_log_format( string fmt )
       return compiled_formats[fmt] =
 	decode_value( tmp[0]->enc, master()->MyCodec() )()->log;
     };
-    report_debug("Decoding of dumped log-format failed.\n%s\n",
+#ifdef DEBUG
+    report_debug("Decoding of dumped log format failed:\n%s",
 		 describe_backtrace(err));
+#endif
   }
   array parts = fmt/"$";
   string format = parts[0];
@@ -4544,8 +4547,10 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
     mixed err = catch {
       return decode_value( tmp[0]->enc, master()->MyCodec() )()->log;
     };
-    report_debug("Decoding of dumped log-format failed.\n%s\n",
+#ifdef DEBUG
+    report_debug("Decoding of dumped log format failed:\n%s",
 		 describe_backtrace(err));
+#endif
   }
   
 
