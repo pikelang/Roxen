@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: cgi.pike,v 2.60 2003/05/05 13:25:05 anders Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.61 2003/10/21 11:00:06 grubba Exp $";
 
 #if !defined(__NT__) && !defined(__AmigaOS__)
 # define UNIX 1
@@ -308,7 +308,10 @@ class Wrapper
     done_cb = _done_cb;
     tofdremote = Stdio.File( );
     tofd = tofdremote->pipe( ); // Stdio.PROP_NONBLOCK
-    fromfd->set_nonblocking( read_callback, 0, close_callback );
+
+    if (!tofd) {
+      error("Failed to create pipe. errno: %s\n", strerror(errno()));
+    }
 
 #ifdef CGI_DEBUG
     function read_cb = class
@@ -326,7 +329,15 @@ class Wrapper
 #else /* !CGI_DEBUG */
     function read_cb = lambda(){};
 #endif /* CGI_DEBUG */
+    /* NOTE: Thread-race:
+     *       close_callback may get called directly,
+     *       in which case both fds will get closed.
+     */
+    /* FIXME: What if the other end of tofd does a shutdown(3N)
+     *        on the backward direction?
+     */
     tofd->set_nonblocking( read_cb, write_callback, destroy );
+    fromfd->set_nonblocking( read_callback, 0, close_callback );
   }
 
 
