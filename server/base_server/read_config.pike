@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: read_config.pike,v 1.60 2001/09/03 18:04:26 per Exp $
+// $Id: read_config.pike,v 1.61 2002/01/14 13:48:51 grubba Exp $
 
 #include <module.h>
 
@@ -259,18 +259,30 @@ void store( string reg, mapping vars, int q,
 
   mapping old_reg = data[ reg ];
 
+  mapping(function(:void):int(1..1)) savers = ([]);
+
   if(q)
     data[ reg ] = m = vars;
   else
   {
     mixed var;
     m = ([ ]);
-    foreach(indices(vars), var)
-      m[ var ] = vars[ var ]->query();
+    foreach(indices(vars), var) {
+      if (vars[var]->save) {
+	// Support for special save callbacks.
+	savers[vars[var]->save] = 1;
+      } else {
+	m[ var ] = vars[ var ]->query();
+      }
+    }
     data[ reg ] = m;
     if(!sizeof( m ))
       m_delete( data, reg );
   }
+
+  // Call any potential special save callbacks.
+  indices(savers)();
+
   if( equal( old_reg, m ) )
     return;
   last_read = 0; last_data = 0;
