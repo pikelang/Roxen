@@ -37,11 +37,12 @@ static void create(string path, string abs_path, RequestID id)
   ASSERT_IF_DEBUG(has_prefix(abs_path, "/") && has_suffix(abs_path, path));
 }
 
+//! @decl static void destroy();
+//!
 //! Destruction callback.
 //!
 //! Note that this function must unroll any uncommitted
 //! property changes.
-static void destroy();
 
 //! Return an @[Stdio.Stat] object for the resource. Its main use is
 //! to tell collections (i.e. directories) from non-collections.
