@@ -977,10 +977,10 @@ class DirectoryList
         warn += vi+" is not a directory\n";
       if( strlen(vi) && vi[-1] != '/' )
         value = replace( value, vi, vi+"/" );
-#ifdef __NT__
-      value = replace( value, vl, replace( vl, "\\", "/" ) );
-#endif
     }
+#ifdef __NT__
+      value = map( value, replace, "\\", "/" );
+#endif
     if( strlen( warn ) )
       return ({ warn, value });
     
