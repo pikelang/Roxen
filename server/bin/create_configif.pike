@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.33 2001/03/23 14:35:07 noring Exp $
+ * $Id: create_configif.pike,v 1.34 2001/08/31 09:11:37 noring Exp $
  *
  * Create an initial administration interface server.
  */
@@ -106,6 +106,9 @@ int main(int argc, array argv)
 	  search( Stdio.read_file( configdir+"/"+cf ), 
                   "'config_filesystem#0'" ) != -1 )
       {
+	string server_version = Stdio.read_file("VERSION");
+	if(server_version)
+	  Stdio.write_file(configdir+"/server_version","server-"+server_version);
         werror("   There is already an administration interface present in "
                "this\n   server. A new one will not be created.\n");
         if(!admin++) exit( 0 );
@@ -267,7 +270,7 @@ int main(int argc, array argv)
     mkdirhier( configdir );
     string server_version = Stdio.read_file("VERSION");
     if(server_version)
-      Stdio.write_file(configdir+"server_version", "server-"+server_version);
+      Stdio.write_file(configdir+"/server_version", "server-"+server_version);
     Stdio.write_file( configdir+replace( name, " ", "_" ),
                       replace(
 #"
