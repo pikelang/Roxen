@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.410 2002/12/10 18:43:36 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.411 2002/12/17 12:37:45 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2576,6 +2576,8 @@ class UserTagContents
   {
     inherit RXML.Frame;
     int do_iterate;
+    string scope_name;
+    mapping vars;
 
     RXML.Frame upframe;
 
@@ -2701,18 +2703,38 @@ class UserTagContents
     array do_enter()
     {
       if (!upframe->got_content_result || args->eval) {
-	do_iterate = 1;
+	RXML.Context ctx = RXML_CONTEXT;
+
+	// FIXME: Handling in got_content_result of <contents> tags
+	// with different export-scope.
+	if (string export = args["export-scope"]) {
+	  if (!(vars = ctx->get_scope (export)))
+	    parse_error ("There's no scope %O to export.\n", export);
+	  if (objectp (vars))
+	    vars = mkmapping (indices (vars), values (vars));
+	  else
+	    vars += ([]);
+
+	  if (string export_name = args["export-scope-name"])
+	    scope_name = export_name;
+	  else
+	    scope_name = upframe->args->scope || upframe->tag->name;
+	  if (scope_name == "") scope_name = 0;
+	}
+
 	// Switch to the set of scopes that were defined at entry of
 	// the UserTag frame, to get static variable binding in the
 	// content. This is poking in the internals; there ought to be
 	// some sort of interface here.
-	RXML.Context ctx = RXML_CONTEXT;
 	orig_ctx_scopes = ctx->scopes, ctx->scopes = upframe->saved_scopes;
 	orig_ctx_hidden = ctx->hidden, ctx->hidden = upframe->saved_hidden;
+
+	do_iterate = 1;
       }
       else
 	// Already have the result of the content evaluation.
 	do_iterate = -1;
+
       return 0;
     }
 
@@ -7155,10 +7177,8 @@ load.</p>
  <p>The value the cookie will be set to.</p>
 </attr>
 
-<attr name='path' value='string' default=\"/\"><p>
- The path in which the cookie should be available. Use path=\"\" to remove
- the path argument from the sent cookie, thus making the cookie valid only
- for the present directory and below.</p>
+<attr name='path' value='string' default=\"\"><p>
+ The path in which the cookie should be available.</p>
 </attr>
 ",
 
