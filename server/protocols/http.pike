@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.311 2001/05/08 04:03:13 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.312 2001/05/08 07:34:25 anders Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -867,6 +867,7 @@ private int parse_got( string new_data )
        misc[linename] = lower_case(contents);
        break;
     }
+  }
   if(misc->len && method == "POST")
   {
     if(!data) data="";
