@@ -47,7 +47,7 @@ void broadcast()
 			  });
 			})
 		      ])));
-  call_out(broadcast,30);
+  call_out(broadcast,2*60);
 }
 
 void create()
