@@ -2,7 +2,7 @@
 //
 // Originally by Leif Stensson <leif@roxen.com>, June/July 2000.
 //
-// $Id: ExtScript.pmod,v 1.14 2001/07/18 14:07:12 leif Exp $
+// $Id: ExtScript.pmod,v 1.15 2001/08/03 13:59:08 leif Exp $
 
 // 
 
@@ -188,8 +188,8 @@ class Handler
       diag("(L1)");
 
       mapping opts = ([ "fds":({pipe_other}) ]);
-#if constant(system.getpid)
-      if (system.getpid() == 0)
+#if constant(system.getuid)
+      if (system.getuid() == 0)
       { if (settings->set_uid > 0)
           opts["uid"] = settings->set_uid;
         if (settings->set_gid > 0)
