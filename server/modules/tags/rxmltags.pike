@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.487 2005/04/06 18:42:19 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.488 2005/04/06 19:14:22 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1363,7 +1363,7 @@ class TagCharset
     array do_return( RequestID id )
     {
       if( args->in && catch {
-	content=Locale.Charset.decoder( args->in )->feed( content )->drain();
+	content=Locale.Charset.decoder( args->in )->feed( content || "" )->drain();
       })
 	RXML.run_error("Illegal charset, or unable to decode data: %s\n",
 		       args->in );
