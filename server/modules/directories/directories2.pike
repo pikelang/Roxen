@@ -11,7 +11,7 @@
  * Make sure links work _inside_ unfolded dokuments.
  */
 
-constant cvs_version = "$Id: directories2.pike,v 1.15 1999/12/09 11:01:34 nilsson Exp $";
+constant cvs_version = "$Id: directories2.pike,v 1.16 1999/12/14 01:56:44 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -20,9 +20,9 @@ inherit "roxenlib";
 
 import Array;
 
-void start( int num, object conf )
+void start( int num, Configuration conf )
 {
-  module_dependencies (conf, ({ "foldlist", "rxmlparse" }));
+  module_dependencies (conf, ({ "foldlist", "rxmltags" }));
 }
 
 array register_module()
@@ -36,7 +36,7 @@ array register_module()
 	      "for the fold/unfolding, and uses relative URL's with "
 	      "the help of some new tags: "
 	      "&lt;rel&gt;, &lt;arel&gt; and &lt;insert-quoted&gt;.",
-	      ({ }), 1 });
+	      0, 1 });
 }
 
 TAGDOCUMENTATION
@@ -160,7 +160,7 @@ string describe_directory(string d, RequestID id)
 		   "<body><h1>Directory listing of %s</h1>\n"
 		   "<pre>%s</pre></body</html>\n",
 		   d, d,
-		   map(sort(dir), lambda(string f, string d, object r, RequestID id) {
+		   map(sort(dir), lambda(string f, string d, roxen r, RequestID id) {
 		     array stats = r->stat_file(d+f, id);
 		     if (stats && stats[1]<0) {
 		       return("<a href=\""+f+"/.\">"+f+"/</a>");
