@@ -6,7 +6,7 @@ inherit "roxenlib";
 import Thread;
 
 // AutoSite DNS Update 
-// $Id: AutoDNS.pike,v 1.12 1998/07/22 13:51:00 leif Exp $
+// $Id: AutoDNS.pike,v 1.13 1998/09/27 15:51:06 wellhard Exp $
 // Leif Stensson & Johan Schön, July 1998.
 
 string host_ip_no;
@@ -24,7 +24,7 @@ void create()
          ZONEDIR, TYPE_STRING,
          "The name of the directory where to put the zone subfiles.");
 
-  defvar(DBURL, "mysql://auto:site@kopparorm.idonex.se/autosite",
+  defvar(DBURL, "mysql://auto:site@tifa.idonex.se/autosite",
          DBURL, TYPE_STRING,
          "The SQL database URL.");
 
@@ -167,7 +167,7 @@ void do_update()
                   ";;;\n"
                   ";;; Automatically generated from the DOMAINS table\n"
                   ";;; in the AutoSite DNS database.\n");
-      file->write("@   IN    SOA  kopparorm.idonex.se. hostmaster.idonex.se. (");
+      file->write("@   IN    SOA  tifa.idonex.se. hostmaster.idonex.se. (");
       file->write("\n                    " + time() + " ;; Serial"
                   "\n                    " + query_timeunit(ZREFRESH, 2000) +
                                                  "    ;; Refresh"
@@ -176,7 +176,7 @@ void do_update()
                   "\n                    " + query_timeunit(ZEXPIRE, 500000) +
                                                  "  ;; Expire"
                   "\n                    " + ttl + " )    ;; Minimum TTL\n"
-                  "              IN NS  kopparorm.idonex.se.\n\n");
+                  "              IN NS  tifa.idonex.se.\n\n");
 
       while (row = domain_info->fetch_row())
       { string rr_owner = row[0];
