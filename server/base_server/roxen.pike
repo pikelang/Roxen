@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.737 2001/09/11 14:30:47 hop Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.738 2001/09/12 15:57:33 grubba Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -3890,8 +3890,13 @@ void initiate_argcache()
   report_debug( "Initiating argument cache ... \b");
   if( mixed e = catch( argcache = ArgCache("arguments") ) )
   {
-    report_fatal( "Failed to initialize the global argument cache:\n"
-                  + (describe_backtrace( e )/"\n")[0]+"\n");
+    report_fatal( "Failed to initialize the global argument cache:\n" +
+#ifdef DEBUG
+		  describe_backtrace(e) +
+#else /* !DEBUG */
+		  describe_error(e) +
+#endif /* DEBUG */
+		  "\n");
     exit(1);
   }
   add_constant( "roxen.argcache", argcache );
@@ -4416,7 +4421,7 @@ array security_checks = ({
     "  if(!dns && \n"
     "     ((dns=roxen.quick_ip_to_host(id->remoteaddr))!=id->remoteaddr))\n"
     "    if( (id->misc->delayed+=0.1) < 1.0 )\n"
-    "      return http_try_again_later( 0.1 );\n"
+    "      return Roxen.http_try_again( 0.1 );\n"
     "  if( sizeof(filter(%[0]O/\",\",lambda(string q){return glob(q,dns);})) )",
     (< "  string dns" >),
   }),
@@ -4661,7 +4666,7 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 	  "int|mapping f( RequestID id )\n"
 	  "{\n" +variables *";\n" + ";\n" +
 #if defined(SECURITY_PATTERN_DEBUG) || defined(HTACCESS_DEBUG)
-	  sprintf("  report_debug(\"Verifying against pattern:\\n\""
+	  sprintf("  report_debug(\"Verifying against pattern:\\n\"\n"
 		  "%{               \"  \" %O \"\\n\"\n%}"
 		  "               \"...\\n\");\n"
 		  "%s"
@@ -4672,14 +4677,14 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 #endif /* SECURITY_PATTERN_DEBUG || HTACCESS_DEBUG */
 	  "  return fail;\n}\n" );
 #if defined(SECURITY_PATTERN_DEBUG) || defined(HTACCESS_DEBUG)
-   report_debug(sprintf("Compiling security pattern:\n"
-			"%{    %s\n%}\n"
-			"Code:\n"
-			"%{    %s\n%}\n",
-			pattern/"\n",
-			code/"\n"));
+  report_debug(sprintf("Compiling security pattern:\n"
+		       "%{    %s\n%}\n"
+		       "Code:\n"
+		       "%{    %s\n%}\n",
+		       pattern/"\n",
+		       code/"\n"));
 #endif /* SECURITY_PATTERN_DEBUG || HTACCESS_DEBUG */
-   mixed res = compile_string( code );
+  mixed res = compile_string( code );
    
   dbm_cached_get( "local" )
     ->query("DELETE FROM compiled_formats WHERE md5=%s", kmd5 );
