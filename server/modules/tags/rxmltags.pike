@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.464 2004/06/21 12:43:45 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.465 2004/07/13 16:53:51 jonasw Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -897,13 +897,18 @@ class TagDate {
       if(!(args->brief || args->time || args->date))
 	args->full=1;
 
-      if((<"year", "month", "week", "day", "wday", "date", "mday",
-	   "hour", "min", "minute", "yday">)[args->part] ||
-	 (args->type == "iso" && args->date))
-	CACHE(60);
-      else
-	NOCACHE();
-
+      int cache_time;
+      if (args->cache) {
+        cache_time = (int) args->cache;
+      } else if((<"year", "month", "week", "day", "wday", "date", "mday",
+                  "hour", "min", "minute", "yday">)[args->part] ||
+		  (args->type == "iso" && args->date)) {
+        cache_time = 60;
+      } else {
+        cache_time = 0;
+      }
+      CACHE(cache_time);
+      
       result = Roxen.tagtime(t, args, id, language);
       return 0;
     }
