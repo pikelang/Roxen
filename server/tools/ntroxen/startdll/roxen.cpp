@@ -1,6 +1,6 @@
 // roxen.cpp: implementation of the CRoxen class.
 //
-// $Id: roxen.cpp,v 1.24 2004/06/04 08:29:33 _cvs_stephen Exp $
+// $Id: roxen.cpp,v 1.25 2004/06/04 09:44:22 _cvs_stephen Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -210,7 +210,7 @@ std::string CRoxen::FindPike(BOOL setEnv)
 
   if (p=strtok(pikeloc, "\n"))
   {
-    pathlen=sizeof(p);
+    pathlen=strlen(p);
   }
   else
     pathlen = len;
@@ -230,7 +230,7 @@ std::string CRoxen::FindPike(BOOL setEnv)
     if (p=strtok(NULL, "\n"))
     {
       while (isspace(*p)) p++;
-      for (i = sizeof(p) - 1; i && isspace (p[i]); i--) {}
+      for (i = strlen(p) - 1; i && isspace (p[i]); i--) {}
       p[i+1] = 0;
       SetEnvironmentVariable("PIKE_MASTER", p);
     }
@@ -273,7 +273,7 @@ std::string CRoxen::FindJvm()
 
   if (p=strtok(jvmloc, "\n"))
   {
-    pathlen=sizeof(p);
+    pathlen=strlen(p);
   }
   else
     pathlen = len;

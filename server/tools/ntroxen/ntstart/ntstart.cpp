@@ -224,7 +224,7 @@ int main(int argc, char* argv[])
     // Create the path to the DLL
     strncpy(dllpath, serverdir, MAX_PATH);
     dllpath[MAX_PATH-1] = '\0';
-    int pathlen = sizeof(dllpath);
+    int pathlen = strlen(dllpath);
     if (pathlen > 0 && dllpath[pathlen-1] != '\\')
       strcat(dllpath, "\\");
     strcat(dllpath, DLLNAME);
@@ -263,7 +263,7 @@ int main(int argc, char* argv[])
     if (restart)
     {
       DEBUG_MSG1(FALSE, "Restarting ...");
-      if (sizeof(szServiceName) > 0)
+      if (strlen(szServiceName) > 0)
       {
         DEBUG_MSG1(FALSE, "Service %s", szServiceName);
         Sleep(500);
