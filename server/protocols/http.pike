@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.254 2000/08/22 19:17:43 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.255 2000/08/27 14:52:12 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1999,7 +1999,8 @@ void got_data(mixed fooid, string s)
   TIMER("charset");
 
   string path;
-  if( !conf || !(path = port_obj->path[ conf ] ) )
+  if( !conf || !(path = port_obj->path ) ||
+      (sizeof (path) && not_query[..sizeof (path) - 1] != path) )
   {
     // FIXME: port_obj->name & port_obj->default_port are constant
     // consider caching them?
