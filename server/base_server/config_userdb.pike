@@ -7,13 +7,8 @@ inherit "language";
 
 #define IN_ROXEN
 #include <config_interface.h>
-#include <roxen.h>
 #include <module.h>
 
-//<locale-token project="roxen_config"> LOCALE </locale-token>
-//<locale-token project="roxen_config"> SLOCALE </locale-token>
-#define LOCALE(X,Y)	_DEF_LOCALE("roxen_config",X,Y)
-#define SLOCALE(X,Y)	_STR_LOCALE("roxen_config",X,Y)
 string query_configuration_dir();
 
 // Settings used by the various administration interface modules etc.
@@ -161,8 +156,7 @@ class ConfigurationSettings
       // Support disappearing themes.
       if( has_value( all_themes(), nv ) )
 	return ::set( nv );
-      report_warning((string)LOCALE(384, "Warning: The theme %s "
-			    " no longer exists, using default.\n"),nv);
+      report_warning("Warning: The theme %s no longer exists, using default.\n", nv);
       return ::set( "default" );
     }
     
@@ -279,7 +273,7 @@ class ConfigurationSettings
     {
       if( !bdata[box] )  possible();
       if( !bdata[box] )
-        return sprintf((string)LOCALE(283,"Unknown box %s"),box);
+        return sprintf("Unknown box %s", box);
       return (string)bdata[box]->name;
     }
 
@@ -338,68 +332,68 @@ class ConfigurationSettings
     };
 
     defvar( "left_boxes",
-            BoxVariable( LOCALE(285,"Large Content Boxes"),
-                         LOCALE(287,"Content boxes on the Startpage"),
+            BoxVariable( "Large Content Boxes",
+                         "Content boxes on the Startpage",
                          "large" ) );
 
     defvar( "right_boxes",
-            BoxVariable( LOCALE(289,"Small Content Boxes"),
-                         LOCALE(287,"Content boxes on the Startpage"),
+            BoxVariable( "Small Content Boxes",
+                         "Content boxes on the Startpage",
                          "small" ) );
 
     defvar( "theme", ThemeVariable( "default", 0,
-                                    LOCALE(327,"Theme"),
-                                    LOCALE(343,"The theme to use") ) );
+                                    "Theme",
+                                    "The theme to use" ) );
 
-    defvar( "form-font-size", -1, LOCALE(167,"Form font size"),
+    defvar( "form-font-size", -1, "Form font size",
 	    TYPE_INT_LIST,
-	    LOCALE(178,"The fontsize of the variables in the "
-		   "configuration interface"),
+	    "The fontsize of the variables in the "
+	    "configuration interface",
 	    ({ -2, -1, 0, 1, 2, }) );
 
-    defvar( "docs-font-size", -1, LOCALE(179,"Documentation font size"),
+    defvar( "docs-font-size", -1, "Documentation font size",
 	    TYPE_INT_LIST,
-	    LOCALE(193,"The fontsize of the documentation in the "
-		   "configuration interface"),
+	    "The fontsize of the documentation in the "
+	    "configuration interface",
 	    ({ -2, -1, 0, 1, 2, }) );
 
     defvar( "modulelistmode", "uf",
-	    LOCALE(14,"Module list mode"),
+	    "Module list mode",
 	    TYPE_STRING_LIST,
-	    LOCALE(15,"The module list mode. One of "
-		   "<dl>"
-		   "<dt>Folded</dt><dd>Modules in the same group are folded</dd>"
-		   "<dt>UnFolded</dt><dd>Like the 'old' Roxen 2.1 list</dd>"
-		   "<dt>JavaScript Popup</dt><dd>Like Folded, but when you "
-		   "move the mouse over a folded group, a menu with the folded "
-		   "modules will popup</dd></dl>"),
+	    "The module list mode. One of "
+	    "<dl>"
+	    "<dt>Folded</dt><dd>Modules in the same group are folded</dd>"
+	    "<dt>UnFolded</dt><dd>Like the 'old' Roxen 2.1 list</dd>"
+	    "<dt>JavaScript Popup</dt><dd>Like Folded, but when you "
+	    "move the mouse over a folded group, a menu with the folded "
+	    "modules will popup</dd></dl>",
 	    ([
-	      "js": LOCALE(17,"Folded with javascript popup"),
-	      "fl": LOCALE(122,"Folded"),
-	      "uf": LOCALE(123,"Unfolded (old style)"),
+	      "js": "Folded with javascript popup",
+	      "fl": "Folded",
+	      "uf": "Unfolded (old style)",
 	    ]) );
 
     defvar( "moduletab", "Status",
-	    LOCALE(85,"Default module tab"),
+	    "Default module tab",
 	    TYPE_STRING_LIST,
-	    LOCALE(162,"The tab that will be selected by default when you "
-		   "select a module."),
+	    "The tab that will be selected by default when you "
+	    "select a module.",
 	    ([
-	      "Status":LOCALE(228,"Status"),
-	      "Settings":LOCALE(256,"Settings"),
+	      "Status":"Status",
+	      "Settings":"Settings",
 	    ]) );
 
     defvar( "configlistmode", 0,
-            LOCALE(278, "Compact site list" ),
+            "Compact site list",
             TYPE_FLAG,
-            LOCALE(279, "If true, the list of sites will be presented in a "
-                    "compact format suitable for servers with many sites." ));
+            "If true, the list of sites will be presented in a "
+	    "compact format suitable for servers with many sites." );
 
     defvar( "charset", "utf-8", 
-            LOCALE(229,"Page charset"),
+            "Page charset",
             TYPE_STRING_LIST,
-            LOCALE(230,"The charset to use when rendering configuration "
-                   "interface pages."),
+            "The charset to use when rendering configuration "
+	    "interface pages.",
             ({
               "utf-8",
               "iso-2022-jp",
@@ -416,95 +410,95 @@ class ConfigurationSettings
             }));
 
     defvar( "sortorder", "as defined",
-	    LOCALE(236, "Default variable sort order"), TYPE_STRING_LIST,
-	    LOCALE(237, "The default order variables are sorted in" ),
+	    "Default variable sort order", TYPE_STRING_LIST,
+	    "The default order variables are sorted in",
 	    ([
-	      "alphabetical" : LOCALE(238,"alphabetical"),
-	      "as defined"   : LOCALE(239,"as defined"),
-	      "changed/alphabetical" : LOCALE(240,"alphabetical, changed first"),
-	      "changed/as defined"   : LOCALE(241,"as defined, changed first"),
+	      "alphabetical" : "alphabetical",
+	      "as defined"   : "as defined",
+	      "changed/alphabetical" : "alphabetical, changed first",
+	      "changed/as defined"   : "as defined, changed first",
 	    ]) );
 
     defvar( "changemark", "color",
-	    LOCALE(242, "Changed variables are highlighted"),
+	    "Changed variables are highlighted",
 	    TYPE_STRING_LIST,
-	    LOCALE(243, "How to highlight variables that does not have "
-		   "their default value" ),
+	    "How to highlight variables that does not have "
+	    "their default value",
 	    ([
-	      "not"   :LOCALE(244, "Not at all"),
-	      "color" :LOCALE(268, "Different background color"),
-	      "header":LOCALE(302, "Add a header")
+	      "not"   : "Not at all",
+	      "color" : "Different background color",
+	      "header": "Add a header",
 	    ]) );
 
-    defvar( "docs", 1, LOCALE(174, "Show documentation"),
-            TYPE_FLAG, LOCALE(175, "Show the variable documentation."));
+    defvar( "docs", 1, "Show documentation",
+            TYPE_FLAG, "Show the variable documentation.");
 
-    defvar( "more_mode", 1, LOCALE(176, "Show advanced configuration options"),
+    defvar( "more_mode", 1, "Show advanced configuration options",
 	    TYPE_FLAG, 
-	    LOCALE(177, "Show all possible configuration options, not only "
-		   "the ones that are most often changed."));
+	    "Show all possible configuration options, not only "
+	    "the ones that are most often changed.");
 
-//     defvar( "translations", 0, LOCALE(178, "Show all translations"),
+//     defvar( "translations", 0, "Show all translations",
 //             TYPE_FLAG, 
-// 	    LOCALE(179, "Show the language selection flags. All translations "
+// 	    "Show the language selection flags. All translations "
 // 		   "will be listed, more or less completed."));
 
-  defvar("locale",
-	 Variable.Language("Standard", ({ "Standard" }) +
-			   Locale.list_languages("roxen_config"),
-			   0, LOCALE(5, "Interface language"), 
-			   LOCALE(19, "Select the Administration interface "
-				  "language.")))
-    ->set_changed_callback( lambda(Variable.Variable s) {
-			      roxenp()->set_locale();
-			    } );
+//  defvar("locale",
+//	   Variable.Language("Standard", ({ "Standard" }) +
+//			     Locale.list_languages("roxen_config"),
+//			     0, LOCALE(5, "Interface language"), 
+//			     LOCALE(19, "Select the Administration interface "
+//				    "language.")))
+//    ->set_changed_callback( lambda(Variable.Variable s) {
+//				roxenp()->set_locale();
+//			      } );
 
 
-    defvar( "devel_mode", 1, LOCALE(180, "Show developer options and tasks"),
-	    TYPE_FLAG, 
-	    LOCALE(181, "Show settings and tasks that are not normaly "
-		   "useful for non-developer users. If you develop your own "
-		   "Roxen modules, this option is for you."));
+    defvar( "devel_mode", 1, "Show developer options and tasks",
+	    TYPE_FLAG,
+	    "Show settings and tasks that are not normaly "
+	    "useful for non-developer users. If you develop your own "
+	    "Roxen modules, this option is for you.");
 
-    defvar( "bgcolor", "white", LOCALE(182, "Background color"),
-	    TYPE_STRING, 
-	    LOCALE(183, "Administration interface background color."))
-            ->set_invisibility_check_callback( theme_can_change_colors );
+    defvar( "bgcolor", "white", "Background color",
+	    TYPE_STRING,
+	    "Administration interface background color.")
+      ->set_invisibility_check_callback( theme_can_change_colors );
 
-    defvar( "fgcolor", "black", LOCALE(184, "Text color"),
-	    TYPE_STRING, LOCALE(185, "Administration interface text color."))
-            ->set_invisibility_check_callback( theme_can_change_colors );
+    defvar( "fgcolor", "black", "Text color",
+	    TYPE_STRING, "Administration interface text color.")
+      ->set_invisibility_check_callback( theme_can_change_colors );
 
-    defvar( "linkcolor", "darkblue", LOCALE(186, "Link color"),
-	    TYPE_STRING, LOCALE(185, "Administration interface text color."))
-            ->set_invisibility_check_callback( theme_can_change_colors );
+    defvar( "linkcolor", "darkblue", "Link color",
+	    TYPE_STRING, "Administration interface text color.")
+      ->set_invisibility_check_callback( theme_can_change_colors );
 
-    defvar( "font", "roxen builtin", LOCALE(187, "Font"),
-	    TYPE_FONT, LOCALE(188, "Administration interface font."));
+    defvar( "font", "roxen builtin", "Font",
+	    TYPE_FONT, "Administration interface font.");
 
-    defvar( "group_tasks", 1, LOCALE(303,"Group Tasks"),
-	    TYPE_FLAG, LOCALE( 304, "If true, tasks are grouped acording to "
-			       "type, otherwise all tasks will be listed on "
-			       "one page") );
+    defvar( "group_tasks", 1, "Group Tasks",
+	    TYPE_FLAG, "If true, tasks are grouped acording to "
+	    "type, otherwise all tasks will be listed on "
+	    "one page" );
 
     defvar( "addmodulemethod", "normal", 
-	    LOCALE(189, "Add/Delete module page type"),
+	    "Add/Delete module page type",
             TYPE_STRING_LIST, 
-	    LOCALE(153, "<dl>\n<dt>normal</dt><dd>"
-		   "Show module name and documentation with images."
-		   "</dd>\n<dt>fast</dt><dd>"
-		   "Like normal, but no type images."
-		   "</dd>\n<dt>faster</dt><dd>"
-		   "Like normal, but allows selecting multiple modules "
-		    "at once."
-		   "</dd>\n<dt>compact</dt><dd>"
-		   "Only show the names of modules, and allow "
-		   "addition/deletion of multiple modules at once."
-		   "</dd>\n<dt>really compact</dt><dd>"
-		   "Like compact, but no module classes.</dd>\n</dl>"),
-	    ([ "normal":LOCALE(280, "normal"), "fast":LOCALE(282, "fast"),
-	       "faster":LOCALE(284, "faster"), "compact":LOCALE(286, "compact"),
-	       "really compact":LOCALE(288, "really compact")  ]));
+	    "<dl>\n<dt>normal</dt><dd>"
+	    "Show module name and documentation with images."
+	    "</dd>\n<dt>fast</dt><dd>"
+	    "Like normal, but no type images."
+	    "</dd>\n<dt>faster</dt><dd>"
+	    "Like normal, but allows selecting multiple modules "
+	    "at once."
+	    "</dd>\n<dt>compact</dt><dd>"
+	    "Only show the names of modules, and allow "
+	    "addition/deletion of multiple modules at once."
+	    "</dd>\n<dt>really compact</dt><dd>"
+	    "Like compact, but no module classes.</dd>\n</dl>",
+	    ([ "normal":"normal", "fast":"fast",
+	       "faster":"faster", "compact":"compact",
+	       "really compact":"really compact"  ]) );
 
     restore( );
   }
@@ -589,7 +583,7 @@ class AdminUser
       }
       m_delete( id->variables, rp );
     }
-    string set_src =  Roxen.parse_rxml( "<gbutton-url width=120 talign=center font=&usr.font; preparse> "+SLOCALE("bA", "Save")+
+    string set_src =  Roxen.parse_rxml( "<gbutton-url width=120 talign=center font=&usr.font; preparse> Save"
 					" </gbutton-url>", id );
     string form = error+
 #"
@@ -718,7 +712,7 @@ void init_configuserdb()
   config_settings = ConfigIFCache( "settings",1 );
   config_settings2 =ConfigIFCache( "settings",0 );
   add_constant( "AdminUser", AdminUser );
-  add_permission( "Everything", LOCALE(191, "All Permissions"));
+  add_permission( "Everything", "All Permissions");
 }
 
 // cache
