@@ -1,4 +1,4 @@
-// $Id: roxenlib.pike,v 1.151 2000/02/13 16:28:32 per Exp $
+// $Id: roxenlib.pike,v 1.152 2000/02/14 09:20:49 per Exp $
 
 #include <roxen.h>
 inherit "http";
@@ -1698,15 +1698,19 @@ function get_client_charset_decoder( string едц, RequestID|void id )
      return 0;
 
    case "\33-Aедц":
+     id && id->set_output_charset && id->set_output_charset( "iso-2022" );
      return _charset_decoder(Locale.Charset.decoder("iso-2022-jp"))->decode;
 
    case "ГҐГ¤Г¶":
+     id && id->set_output_charset && id->set_output_charset( "utf-8" );
      return utf8_to_string;
 
    case "\214\212\232":
+     id && id->set_output_charset && id->set_output_charset( "mac" );
      return _charset_decoder( Locale.Charset.decoder( "mac" ) )->decode;
 
    case "\0е\0д\0ц":
+     id&&id->set_output_charset&&id->set_output_charset(string_to_unicode);
      return unicode_to_string;
   }
   report_warning( "Unable to find charset decoder for едц == "+едц+"\n" );
