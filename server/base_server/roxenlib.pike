@@ -1,7 +1,7 @@
 #include <roxen.h>
 inherit "http";
 
-// $Id: roxenlib.pike,v 1.98 1999/05/08 00:51:31 per Exp $
+// $Id: roxenlib.pike,v 1.99 1999/05/19 07:09:29 peter Exp $
 // This code has to work both in the roxen object, and in modules.
 #if !efun(roxen)
 #define roxen roxenp()
@@ -1070,8 +1070,9 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 		      object id )
 {
   string quote = args->quote || "#";
-  object my_id = id->clone_me();
+  mapping other_vars;
   string new_contents = "", unparsed_contents = "";
+  int first;
 
   // multi_separator must default to \000 since one sometimes need to
   // pass multivalues through several output tags, and it's a bit
@@ -1094,6 +1095,68 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 	html_encode_string (contents) + "</pre><b>]</b>\n";
   }
 
+  if (args->sort)
+  {
+    array order;
+
+    order = args->sort / "," - ({ "" });
+    var_arr = Array.sort_array( var_arr,
+				lambda (mapping m1, mapping m2, array order)
+				{
+				  int tmp;
+				     
+				  foreach (order, string field)
+				  if (field[0] == '-')
+				    if (tmp = (m1[field[1..]]
+					       < m2[field[1..]]))
+				      return tmp;
+				    else
+				      ;
+				  else if (field[0] == '+')
+				    if (tmp = (m1[field[1..]]
+					       > m2[field[1..]]))
+				      return tmp;
+				    else
+				      ;
+				  else
+				    if (tmp = (m1[field]
+					       > m2[field]))
+				      return tmp;
+				  return 0;
+				}, order );
+  }
+
+  if (args->range)
+  {
+    int begin, end;
+    string b, e;
+    
+
+    sscanf( args->range, "%s..%s", b, e );
+    if (!b || b == "")
+      begin = 0;
+    else
+      begin = (int )b;
+    if (!e || e == "")
+      end = -1;
+    else
+      end = (int )e;
+
+    if (begin < 0)
+      begin += sizeof( var_arr );
+    if (end < 0)
+      end += sizeof( var_arr );
+    if (begin > end)
+      return "";
+    if (begin < 0)
+      if (end < 0)
+	return "";
+      else
+	begin = 0;
+    var_arr = var_arr[begin..end];
+  }
+
+  first = 1;
   foreach (var_arr, mapping vars)
   {
     if (args->set)
@@ -1111,10 +1174,8 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 	id->variables[var] = val;
       }
 
-    if (my_id->misc->variables)
-      my_id->misc->variables += vars;
-    else
-      my_id->misc->variables = vars;
+    other_vars = id->misc->variables;
+    id->misc->variables = vars;
 
     if (!args->replace || lower_case( args->replace ) != "no")
     {
@@ -1132,10 +1193,8 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 	  mixed val = vars[var];
 	  array(string) encodings = ({});
 	  string multisep = multi_separator;
-	  int pad = (int) args->pad;
 	  string zero = args->zero || "";
 	  string empty = args->empty || "";
-	  string align = args->align || "right";
 
 	  foreach(options[1..], string option) {
 	    array (string) foo = option / "=";
@@ -1147,12 +1206,6 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 		break;
 	      case "zero":
 		zero = optval;
-		break;
-	      case "pad":
-		pad = (int) optval;
-		break;
-	      case "align":
-		align = optval;
 		break;
 	      case "multisep":
 	      case "multi_separator":
@@ -1190,15 +1243,6 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 	    else
 	      val = replace ((string) val, "\000", multisep);
 	    if (!sizeof (val)) val = empty;
-	  }
-
-	  if (pad) {
-	    if(align=="left")
-	      align="-";
-	    else if(align=="center")
-	      align="|";
-	    else align="";
-	    val=sprintf("%!" + align + pad + "s",val);
 	  }
 
 	  if (!sizeof (encodings))
@@ -1304,12 +1348,16 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 	  exploded[c] = val;
 	}
 
+      if (first)
+	first = 0;
+      else if (args->delimiter)
+	new_contents += args->delimiter;
       new_contents += args->preprocess ? exploded * "" :
-	parse_rxml (exploded * "", my_id);
+	parse_rxml (exploded * "", id);
       if (args["debug-output"]) unparsed_contents += exploded * "";
     }
     else {
-      new_contents += args->preprocess ? contents : parse_rxml (contents, my_id);
+      new_contents += args->preprocess ? contents : parse_rxml (contents, id);
       if (args["debug-output"]) unparsed_contents += contents;
     }
   }
@@ -1327,6 +1375,7 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 	"</pre><b>]</b>\n";
   }
 
+  id->misc->variables = other_vars;
   return new_contents;
 }
 
