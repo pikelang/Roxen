@@ -1,4 +1,4 @@
-# $Id: extensions,v 1.26 1997/12/16 16:03:40 peter Exp $
+# $Id: extensions,v 1.27 1998/01/08 16:18:50 grubba Exp $
 # name="Extension database";
 # doc="The database used to map from extension to mime-type (example: *.gif to image/gif)";
 #
@@ -172,6 +172,10 @@ vmf 	application/vocaltec-media-file
 wpc     application/wpc 
 xls	application/vnd.ms-excel
 zip	application/zip
+
+# This one hasn't been registred with IANA yet, but is added anyway.
+# LivePicture PhotoVista RealSpace
+ivr	i-world/i-vrml
 
 wrl	x-world/x-vrml
 wrml    x-world/x-vrml
