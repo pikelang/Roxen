@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.326 2002/08/20 16:28:36 anders Exp $
+// $Id: roxenloader.pike,v 1.327 2003/03/05 13:50:43 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -13,6 +13,7 @@
 
 #include <stat.h>
 #include <config.h>
+#include <roxen.h>
 //
 // NOTE:
 //	This file uses replace_master(). This implies that the
@@ -28,7 +29,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.326 2002/08/20 16:28:36 anders Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.327 2003/03/05 13:50:43 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1553,6 +1554,10 @@ static mixed low_connect_to_my_mysql( string|int ro, void|string db )
 static mapping tailf_info = ([]);
 static void do_tailf( int loop, string f )
 {
+  if (loop)
+    // Necessary to set this on Linux if we run as a new thread.
+    enable_coredumps (1);
+
   string mysqlify( string what )
   {
     string res = "";

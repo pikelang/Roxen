@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.804 2003/01/16 14:06:18 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.805 2003/03/05 13:50:43 mast Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -283,6 +283,7 @@ static class Privs
     }
     if(getgid()!=gid) setgid(gid||getgid());
     seteuid(new_uid = uid);
+    enable_coredumps(1);
 #endif /* HAVE_EFFECTIVE_USER */
   }
 
@@ -356,6 +357,7 @@ static class Privs
     }
     setegid(saved_gid);
     seteuid(saved_uid);
+    enable_coredumps(1);
 #endif /* HAVE_EFFECTIVE_USER */
   }
 #else /* efun(seteuid) */
@@ -1616,7 +1618,11 @@ class SSLProtocol
 	dsa->use_random(r);
 	ctx->dsa = dsa;
 	/* Use default DH parameters */
+#if constant(SSL.Cipher)
+	ctx->dh_params = SSL.Cipher.DHParameters();
+#else
 	ctx->dh_params = SSL.cipher.dh_parameters();
+#endif
 
 	ctx->dhe_dss_mode();
 
@@ -3670,6 +3676,7 @@ int set_u_and_gid (void|int from_handler_thread)
 #ifdef TEST_EUID_CHANGE
     werror ("euid change effective in handler thread.\n");
 #endif
+    enable_coredumps (1);
     return 1;
   }
 
@@ -3799,6 +3806,8 @@ int set_u_and_gid (void|int from_handler_thread)
 	u = g = 0;
 #endif
       }
+
+      enable_coredumps(1);
 
 #ifdef THREADS
       // Paranoia.
