@@ -202,6 +202,7 @@ nn binary
 /server/modules/tags/tablify.pike foreign_ident
 /server/modules/tags/tablist.pike foreign_ident
 /server/modules/tags/wizard_tag.pike foreign_ident
+/server/modules/tags/wml.pike foreign_ident
 /server/modules/throttling/baseline_throttling.pike foreign_ident
 /server/modules/throttling/throttlelib.pike foreign_ident
 /server/modules/throttling/throttletags.pike foreign_ident
