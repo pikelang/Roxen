@@ -155,7 +155,7 @@ string parse( RequestID id )
   res += "<table><tr><td valign='top'>"
     "<img src='&usr.err-2;' alt='#' /></td>\n"
     "<td>"+
-    _(0,"Note that the server will be automatically restarted with "
+    _(154,"Note that the server will be automatically restarted with "
       "the new version.")+
     "</td>\n"
     "</tr></table>\n";

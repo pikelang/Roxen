@@ -34,28 +34,28 @@ string parse( RequestID id )
   foreach( ({ "docs/roxen/3.2/" }), string rpath )
   {
     add_doc_link(rpath + "content_editor_manual_(instant)/index.html",
-		 _(0, "Content Editor (Instant Edition)"));
+		 _(512, "Content Editor (Instant Edition)"));
 
     add_doc_link(rpath + "content_editor_manual_(advanced)/index.html",
-		 _(0, "Content Editor (Advanced Edition)"));
+		 _(513, "Content Editor (Advanced Edition)"));
 
     add_doc_link(rpath + "web_developer_manual/index.html",
-		 _(0, "Web Developer"));
+		 _(514, "Web Developer"));
 
     add_doc_link(rpath + "system_developer_manual/index.html",
-		 _(0, "System Developer"));
+		 _(515, "System Developer"));
 
     add_doc_link(rpath + "administrator_manual/index.html",
-		 _(0, "Administrator"));
+		 _(516, "Administrator"));
 
     add_doc_link(rpath + "forms_and_response_module/index.html",
-		 _(0, "Forms And Response Module"));
+		 _(517, "Forms And Response Module"));
 
     add_doc_link(rpath + "categorization_module/index.html",
-		 _(0, "Categorization Module"));
+		 _(518, "Categorization Module"));
 
     add_doc_link(rpath + "tutorial/index.html",
-		 _(0, "Tutorials"));
+		 _(519, "Tutorials"));
   }
 
   foreach( ({ "docs/roxen/2.2/", "docs/roxen/2.1/" }), string rpath )
@@ -77,7 +77,7 @@ string parse( RequestID id )
 		   _(394, "RXML Tutorial"));
 
     add_doc_link(rpath + "programmer/index.html",
-		 _(393, "Programmer Manual"));
+		 _(395, "Programmer Manual"));
   }
 
   foreach( ({"docs/pike/7.1/","docs/pike/7.0/" }), string ppath )

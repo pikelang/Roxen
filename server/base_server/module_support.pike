@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module_support.pike,v 1.110 2002/04/17 14:24:44 wellhard Exp $
+// $Id: module_support.pike,v 1.111 2002/06/05 10:50:48 anders Exp $
 
 #define IN_ROXEN
 #include <roxen.h>
@@ -264,7 +264,7 @@ class ModuleInfo( string sname, string filename )
     array register_module()
     {
       string locked_desc =
-	LOCALE(0," The module is locked and not part of the license. "
+	LOCALE(511," The module is locked and not part of the license. "
 	       "To enable this module please select a valid license "
 	       "and restart the server.");
       return ({
