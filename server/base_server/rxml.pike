@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.176 2000/03/20 07:08:58 mast Exp $
+// $Id: rxml.pike,v 1.177 2000/03/22 15:11:49 nilsson Exp $
 
 inherit "rxmlhelp";
 #include <request_trace.h>
@@ -1901,7 +1901,7 @@ constant tagdoc=([
  Alters the case of the contents.
 </desc>
 
-<attr name=case value=upper,lower,capitalize>
+<attr name=case value=upper|lower|capitalize>
  Changes all characters to upper or lower case letters, or
  capitalizes the first letter in the content.
 </attr>",
@@ -2193,13 +2193,9 @@ The following features are supported:
  Print this number.
 </attr>
 
-<attr name=language value=ca, es_CA, hr, cs, nl, en, fi, fr, de, hu,
-it, jp, mi, no, pt, ru, sr, si, es, sv>
- The language to use. Available languages are ca, es_CA (Catala), hr
- (Croatian), cs (Czech), nl (Dutch), en (English), fi (Finnish), fr
- (French), de (German), hu (Hungarian), it (Italian), jp (Japanese),
- mi (Maori), no (Norwegian), pt (Portuguese), ru (Russian), sr
- (Serbian), si (Slovenian), es (Spanish) and sv (Swedish).
+<attr name=language value=langcodes>
+ The language to use.
+ <lang/>
 </attr>
 
 <attr name=type value=number,ordered>
@@ -2207,9 +2203,7 @@ it, jp, mi, no, pt, ru, sr, si, es, sv>
 </attr>",
 
 "strlen":#"<desc cont>
- Returns the length of the contents. Strlen can be used with
- <tag><ref type=tag>if eval=...</ref></tag> to test the length
- of variables.
+ Returns the length of the contents.
 </desc>",
 
 "then":#"<desc cont>
