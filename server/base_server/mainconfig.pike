@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.69 1997/08/13 22:29:29 grubba Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.70 1997/08/14 15:59:50 grubba Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -172,7 +172,16 @@ void create()
   call_out(init_ip_list, 0);
 }
 
+// Note stringification of ACTION and ALIGN
+#if 0
 #define BUTTON(ACTION,TEXT,ALIGN) do{PUSH("<a href=\"/(ACTION)"+(o?o->path(1):"/")+"?"+(bar++)+"\"><img border=0 hspacing=0 vspacing=0 src=\"/auto/button/"+(lm?"lm/":"")+replace(TEXT," ","%20")+"\" alt=\""+(lm?"/ ":" ")+TEXT+" /\""+(("ALIGN"-" ")=="left"?"":" align="+("ALIGN"-" "))+"></a>");lm=0;}while(0)
+#else
+
+#define BUTTON(ACTION,TEXT,ALIGN) do{buttons += ({({"<a href=\"/(ACTION)"+(o?o->path(1):"/")+"?"+(bar++)+"\"><img border=0 hspacing=0 vspacing=0 src=\"/auto/button/"+(lm?"lm/":""),replace(TEXT," ","%20")+"\" alt=\""+(lm?"/ ":" ")+TEXT+" /\""+(("ALIGN"-" ")=="left"?"":" align="+("ALIGN"-" "))+"></a>"})});lm=0;}while(0)
+#define PUSH_BUTTONS(CLEAR) do{if(sizeof(buttons)){buttons[-1][0]+="rm/";res+=`+(@buttons);if(CLEAR){PUSH("<br clear=all>");}}lm=1;buttons=({});}while(0)
+
+#endif /* 0 */
+
 
 string default_head(string h, string|void save)
 {
@@ -774,6 +783,7 @@ int low_enable_configuration(string name, string type)
   object node;
   object o, o2, confnode;
   array(string) arr = replace(type,"."," ")/" ";
+  object template;
 
   if(check_config_name(name)) return 0;
   
@@ -791,7 +801,7 @@ int low_enable_configuration(string name, string type)
       roxen->enable_configuration(name);
     }
   } else
-    get_template(type)->enable(roxen->enable_configuration(name));
+    (template = get_template(type))->enable(roxen->enable_configuration(name));
 
   confnode = root->descend("Configurations");
   node=confnode->descend(name);
@@ -804,8 +814,8 @@ int low_enable_configuration(string name, string type)
   node->folded=0;
   node->change(1);
   
-  if(get_template(type)->post)
-    get_template(type)->post(node);
+  if(template && template->post)
+    template->post(node);
   
   if(o = node->descend( "Global", 1 )) {
     o->folded = 0;
@@ -1641,6 +1651,7 @@ mapping configuration_parse(object id)
   PUSH("<p><br clear=all>&nbsp;\n");
 
   int lm=1;
+  array(mixed) buttons = ({});
   
   if(o->type == NODE_CONFIGURATIONS)
     BUTTON(newconfig, "New virtual server", left);
@@ -1677,13 +1688,7 @@ mapping configuration_parse(object id)
 //  else if(nfoldedr(o))
 //    BUTTON(unfoldall, "Unfold all", left);
 
-  if(!lm)
-  {
-    PUSH("<img border=0 alt=\"\" hspacing=0 vspacing=0"
-	 " src=\"/auto/button/rm/%20\">");
-    PUSH("<br clear=all>");
-    lm=1;
-  }
+  PUSH_BUTTONS(1);
 
   if(!more_mode)
     BUTTON(morevars, "More options", left);
@@ -1695,7 +1700,8 @@ mapping configuration_parse(object id)
 //  BUTTON(restart, "Restart", left);
 //  BUTTON(shutdown,"Shutdown", left);
 
-  PUSH("<img border=0 alt=\"\" hspacing=0 vspacing=0 src=\"/auto/button/rm/%20\">");
+  PUSH_BUTTONS(0);
+
 //  PUSH("<br clear=all>");
 //  PUSH("<p align=right><font size=-1 color=blue><a href=\"$docurl\"><font color=blue>"+roxen->real_version +"</font></a></font></p>");
 //  PUSH("</table>");
