@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.273 2001/08/13 16:00:36 mast Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.274 2001/08/23 01:49:13 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -351,9 +351,9 @@ texture=\"/internal-roxen-squares\">A</gtext>
  and the font implementation.</p>
 
 <ex type='vert'>
-<gtext font=\"niquel\">&lt;gtext xpad=-30%&gt;</gtext><br />
-<gtext xpad=\"4\" font=\"niquel\">&lt;gtext xpad=-10%&gt;</gtext><br />
-<gtext xpad=\"50%\" font=\"niquel\">&lt;gtext&gt;</gtext><br />
+<gtext font=\"niquel\">HELLO ROXEN</gtext><br />
+<gtext xpad=\"4\" font=\"niquel\">HELLO ROXEN</gtext><br />
+<gtext xpad=\"50%\" font=\"niquel\">HELLO ROXEN</gtext><br />
 </ex>
 </attr>
 
