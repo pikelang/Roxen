@@ -386,8 +386,8 @@ mapping get_variable_map( string s, object mod, object id, int noset )
   return 
   ([
     "sname":s,
-    "rname": var->name(),
-    "doc":  (config_setting2( "docs" )?var->doc():""),
+    "rname": (string)var->name(),
+    "doc":  (config_setting2( "docs" )?(string)var->doc():""),
     "name": (var->name()/":")[-1],
     "value":var->query(),
     "type": var->type,
@@ -412,7 +412,7 @@ mapping get_variable_section( string s, object mod, object id )
   if( !var_configurable( var,id ) )
     return 0;
 
-  s = var->name();
+  s = (string)var->name();
   if( !s ) return 0;
 
   if( sscanf( s, "%s:%*s", s ) )
