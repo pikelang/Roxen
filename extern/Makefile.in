@@ -9,7 +9,6 @@ VPATH=@srcdir@
 
 @SET_MAKE@
 
-HAVE_SSL=@ssl@
 HAVE_SHUFFLE=@shuffle@
 
 OTHERFLAGS=@CFLAGS@
@@ -17,9 +16,9 @@ OTHERFLAGS=@CFLAGS@
 CFLAGS=-g @DEFS@ $(PREFLAGS) $(OTHERFLAGS)
 PREFLAGS=-I. -I$(SRCDIR) -I$(SRCDIR)/../.. -I../..
 
-all: roxen_hostname cgi $(HAVE_SSL) $(HAVE_SHUFFLE) fcgi
+all: roxen_hostname cgi $(HAVE_SHUFFLE) fcgi
 
-pure: purerecgi pureshuffle roxen_hostname puressl
+pure: purerecgi pureshuffle roxen_hostname
 
 no: 
 none:
@@ -30,21 +29,10 @@ none-localinstall:
 -localinstall:
 -install:
 
-yes: ssl
-yes-install: ssl-install
-yes-localinstall: ssl-localinstall
-
 fcgi: 
 	(cd fast_cgi; $(MAKE))
 	cp fast_cgi/cgi-fcgi/cgi-fcgi fcgi
 	@(strip fcgi || echo)
-
-ssl:	ssl.c Makefile
-	$(CC) $(CFLAGS) -L/usr/local/ssl/lib -I/usr/local/ssl/include/ $(ARGS) -o ssl $(SRCDIR)/ssl.c -lssl -lcrypto $(LIBS)
-	@(strip ssl || echo)
-
-puressl: ssl.o	Makefile
-	purify $(CC) -L/usr/local/ssl/lib -I/usr/local/ssl/include/ $(ARGS) -o puressl ssl.o -lssl -lcrypto $(LIBS)
 
 roxen_hostname: roxen_hostname.o Makefile
 	$(CC) $(ARGS) -o roxen_hostname roxen_hostname.o $(LIBS)
@@ -71,15 +59,7 @@ shuffle-localinstall: shuffle
 	-/bin/rm -f $(SRCDIR)/../server/bin/shuffle
 	/bin/cp shuffle $(SRCDIR)/../server/bin
 
-ssl-install:	ssl
-	-/bin/rm -f $(prefix)/roxen/server/bin/ssl
-	/bin/cp ssl $(prefix)/roxen/server/bin
-
-ssl-localinstall:	ssl
-	-/bin/rm -f $(SRCDIR)/../server/bin/ssl
-	/bin/cp ssl $(SRCDIR)/../server/bin
-
-install: roxen_hostname fcgi cgi $(HAVE_SSL)-install $(HAVE_SHUFFLE)-install
+install: roxen_hostname fcgi cgi $(HAVE_SHUFFLE)-install
 	@for f in roxen_hostname fcgi cgi; do \
 		echo Installing $$f...; \
 		/bin/rm -f $(prefix)/roxen/server/bin/$$f; \
@@ -88,7 +68,7 @@ install: roxen_hostname fcgi cgi $(HAVE_SSL)-install $(HAVE_SHUFFLE)-install
 	done
 	@echo Done.
 
-localinstall: fcgi roxen_hostname cgi $(HAVE_SSL)-localinstall $(HAVE_SHUFFLE)-localinstall
+localinstall: fcgi roxen_hostname cgi $(HAVE_SHUFFLE)-localinstall
 	@for f in fcgi roxen_hostname cgi; do \
 		echo Installing $$f...; \
 		/bin/rm -f $(SRCDIR)/../server/bin/$$f; \
@@ -101,7 +81,7 @@ localinstall: fcgi roxen_hostname cgi $(HAVE_SSL)-localinstall $(HAVE_SHUFFLE)-l
 	$(CC) -c -I. -I$(SRCDIR) $(CFLAGS) $<
 
 clean: 
-	@rm -f roxen_hostname cgi shuffle fcgi ssl *.o  core
+	@rm -f roxen_hostname cgi shuffle fcgi *.o  core
 	@(cd fast_cgi; $(MAKE) clean)
 
 spotless: clean

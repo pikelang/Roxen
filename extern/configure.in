@@ -100,22 +100,6 @@ AC_C_CONST
 AC_TYPE_SIZE_T
 AC_TYPE_SIGNAL
 
-AC_MSG_CHECKING(SSL availability)
-
-AC_CACHE_VAL(lpc_cv_ssl,
-[
-  if test -d /usr/local/ssl ; then
-    lpc_cv_ssl="yes"
-  else
-    lpc_cv_ssl="no"
-  fi
-])
-
-ssl=$lpc_cv_ssl
-AC_SUBST(ssl)
-
-AC_MSG_RESULT($lpc_cv_ssl)
-
 AC_PATH_PROG(uname_prog,uname,no)
 
 AC_MSG_CHECKING(Data shuffler)

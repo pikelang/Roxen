@@ -1,6 +1,15 @@
 Changes since Roxen Challenger 1.2 alpha 8
 -----------------------------------------------
 
+o Colors in the configuration interface changed to the official
+  Infovav User Interface Colors. Some other changes to the layout as well.
+
+o Changed the name of the 'Error Log' to 'Event Log', since that is a
+  more apropriate name. Also fixed it's layout.
+
+o Added a new tag: <pr>. Use <pr help> to get some help.
+  Basicaly it just adds an 'Powered By Roxen' logo.
+
 
 Changes since Roxen Challenger 1.2 alpha 7
 -----------------------------------------------
@@ -65,6 +74,14 @@ o Added support for some more HTTP-proxy-headers.
 
 Changes since Roxen Challenger 1.2 alpha 6
 -----------------------------------------------
+
+o New modules: Mirror Filesystem and Mirror Server.  Add a mirror
+  server to the server you want to mirror, and a Mirror Filesystem in
+  all mirrors. The searchpath of the Mirror Filesystem is used as a
+  cache.  It is not a good idea to use the same cache-directory with
+  multiple mirror filesystems. There is a mirror for www.roxen.com at
+  skuld:2000. The mirror filesystem does not mirror the needed
+  modules, though.
 
 o Added option to create FTP servers.
 
