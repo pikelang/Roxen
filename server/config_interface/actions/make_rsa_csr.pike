@@ -1,5 +1,5 @@
 /*
- * $Id: make_rsa_csr.pike,v 1.7 2001/12/14 15:37:42 grubba Exp $
+ * $Id: make_rsa_csr.pike,v 1.8 2002/01/17 01:51:03 nilsson Exp $
  */
 
 #if constant(_Crypto) && constant(Crypto.rsa)
@@ -177,7 +177,7 @@ mapping wizard_done( object id )
   privs = 0;
   if (!file || file->write(id->variables->csr) != sizeof(id->variables->csr)) {
     return http_string_answer(sprintf("<p>" +
-				      LOCALE(0, "Failed to write CSR to %s.")+
+				      LOCALE(297, "Failed to write CSR to %s.")+
 				      "</p>\n<p><cf-cancel href='?class=&form.class;'/></p>\n",
 				      fname));
   }
