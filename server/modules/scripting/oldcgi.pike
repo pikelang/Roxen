@@ -77,9 +77,6 @@ mapping my_build_env_vars(string f, object id, string|void path_info)
 {
   mapping new = build_env_vars(f, id, path_info);
 
-  if(QUERY(Enhancements))
-    new |= build_roxen_env_vars(id);
-
   if(id->misc->ssi_env)
     new |= id->misc->ssi_env;
 
@@ -121,14 +118,6 @@ int run_as_user_enabled()
 
 void create(object c)
 {
-  defvar("Enhancements", 1, "Roxen CGI Enhancements", TYPE_FLAG|VAR_MORE,
-	 "If defined, Roxen will export a few extra varaibles, namely "
-	 "VAR_variable_name: Parsed form variable (like CGI parse)<br>"
-	 "QUERY_variable_name: Parsed form variable<br>"
-	 "VARIABLES: A space separated list of all form variables<br>"
-	 "PRESTATE_name: True if the prestate is present<br>"
-	 "PRESTATES: A space separated list of all states");
-
   defvar("mountpoint", "/cgi-bin/", "CGI-bin path", TYPE_LOCATION, 
 	 "This is where the module will be inserted in the "
 	 "namespace of your server. The module will, per default, also"
@@ -1281,7 +1270,7 @@ mapping handle_file_extension(object o, string e, object id)
     // This is done by setting the cgi-bin dir to the path of the 
     // script, and then calling the location dependant code.
     //
-    // This isn't thread-safe (discovered by Wilhelm Köhler), so send
+    // This isn't thread-safe (discovered by Wilhelm Khler), so send
     // the path to be used directly to find_file() instead.
     destruct( o );
     o = 0;

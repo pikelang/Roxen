@@ -4,7 +4,7 @@
 // defaults and a new variable, to make it possible to use Frontpage
 // with Roxen when using virtual hosting.
 
-constant cvs_version = "$Id: fpscript.pike,v 1.9 2000/03/16 18:34:41 nilsson Exp $";
+constant cvs_version = "$Id: fpscript.pike,v 1.10 2000/12/10 02:39:48 per Exp $";
 
 #include <module.h>
 inherit "modules/scripting/oldcgi.pike";
@@ -51,11 +51,6 @@ void create(object c)
 
   killvar("ex");
   killvar("ext");
-
-  // We don't need these, and they might confuse poor Frontpage. Might
-  // as well disable completely.
-  killvar("Enhancements");
-  variables->Enhancements = allocate(8);
 }
 
 constant module_type = MODULE_LOCATION;
