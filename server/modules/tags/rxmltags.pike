@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.107 2000/03/28 20:58:44 jhs Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.108 2000/03/30 17:25:11 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -1476,7 +1476,8 @@ documentation for that module.</desc>",
 "&page.self;":"<desc ent>The name of this file.</desc>",
 
 "roxen_automatic_charset_variable":#"<desc tag>
- Internal Roxen tag. Not yet documented.
+ If put inside a form, the right character encoding of the submitted form can be guessed
+ by Roxen Webserver.
 </desc>",
 
 "aconf":#"<desc cont><short>
@@ -1509,7 +1510,7 @@ documentation for that module.</desc>",
  required.</short>
 </desc>
 
-<attr name=variable value=string>
+<attr name=variable value=string required>
  The name of the variable.
 </attr>
 
@@ -1523,6 +1524,11 @@ documentation for that module.</desc>",
 
 "apre":#"<desc cont><short>
  Creates a link that can modify prestates.</short>
+ Prestate options are simple
+ toggles, and are added to the URL of the page. Use <tag>if</tag>
+ prestate=...<tag>/if</tag> to test for the presence of a prestate.
+ <tag>apre</tag> works just like the <tag>a href=...</tag> container,
+ but if no \"href\" attribute is specified, the current page is used.
 </desc>
 
 <attr name=href value=uri>
@@ -1541,13 +1547,7 @@ documentation for that module.</desc>",
 
 <attr name=class value=string>
  This CSS class definition will apply to the a-element.
-</attr>
-
- Adds or removes a prestate option. Prestate options are simple
- toggles, and are added to the URL of the page. Use <tag>if</tag>
- prestate=...<tag>/if</tag> to test for the presence of a prestate.
- <tag>apre</tag> works just like the <tag>a href=...</tag> container,
- but if no \"href\" attribute is specified, the current page is used.",
+</attr>",
 
 "auth-required":#"<desc tag><short>
  Adds an HTTP auth required header and return code (401), that will
@@ -1641,12 +1641,12 @@ documentation for that module.</desc>",
  The name of the picture to show.
 </attr>
 
-<attr name=border value=number>
- The image border when used as a link. Default is 0.
+<attr name=border value=number default=0>
+ The image border when used as a link.
 </attr>
 
-<attr name=alt value=string>
- The picture description. Default is the src string.
+<attr name=alt value=string default='The src string'>
+ The picture description.
 </attr>
 
 <attr name=class value=string>
@@ -1668,7 +1668,6 @@ documentation for that module.</desc>",
  How the content should be quoted before assigned to the variable. Default is html.
 </attr>
 ",
-
 
 "crypt":#"<desc cont><short>
  Encrypts the contents as a Unix style password.</short> Useful when
@@ -1755,7 +1754,7 @@ documentation for that module.</desc>",
  ordered applies when the part attribute is used.
 </attr>
 
-<attr name=lang value=language_code>
+<attr name=lang value=langcode>
  Defines in what language the a string will be presented in.
  Available languages:
  <lang/>
@@ -1791,15 +1790,15 @@ documentation for that module.</desc>",
 </attr>",
 
 "dec":#"<desc tag><short>
- Subtracts 1 from a variable.</short> Attribute variable is required.
+ Subtracts 1 from a variable.</short>
 </desc>
 
-<attr name=variable value=string>
+<attr name=variable value=string required>
  The variable to be decremented.
 </attr>
 
-<attr name=value value=number>
- The value to be subtracted, if not 1.
+<attr name=value value=number default=1>
+ The value to be subtracted.
 </attr>",
 
 "default":#"<desc cont><short hide>
@@ -1956,34 +1955,32 @@ documentation for that module.</desc>",
  See the Appendix for a list of HTTP headers.",
 
 "imgs":#"<desc tag><short>
- Generates a image tag with proper dimensions.</short> Attribute src
- is required.
+ Generates a image tag with proper dimensions.</short>
 </desc>
 
-<attr name=src value=string>
+<attr name=src value=string required>
  The name of the file that should be shown.
 </attr>
 
 <attr name=alt value=string>
- Description of the image. Default is the image file name.
+ Description of the image.
 </attr>
  All other attributes will be inherited by the generated img tag.",
 
 "inc":#"<desc tag><short>
- Adds 1 to a variable.</short> Attribute variable is required.
+ Adds 1 to a variable.</short>
 </desc>
 
-<attr name=variable value=string>
+<attr name=variable value=string required>
  The variable to be incremented.
 </attr>
 
-<attr name=value value=number>
- The value to be added, if not 1.
+<attr name=value value=number default=1>
+ The value to be added.
 </attr>",
 
 "insert":#"<desc tag><short>
  Inserts a file, variable or other object into a webpage.</short>
- One attribute is required.
 </desc>
 
 <attr name=variable value=string>
@@ -2013,10 +2010,10 @@ documentation for that module.</desc>",
 
 "maketag":#"<desc cont><short hide>Makes it possible to create tags.</short>
  This tag creates tags. The contents of the container will be put into
- the contents of the produced container. Requires the name attribute.
+ the contents of the produced container.
 </desc>
 
-<attr name=name value=string>
+<attr name=name value=string required>
  The name of the tag.
 </attr>
 
@@ -2024,8 +2021,8 @@ documentation for that module.</desc>",
  Tags should not be terminated with a trailing slash.
 </attr>
 
-<attr name=type value=tag|container>
- What kind of tag should be produced. Default is tag.
+<attr name=type value=tag|container default=tag>
+ What kind of tag should be produced.
 </attr>
  Inside the maketag container the container attrib is defined. It is
  used to add attributes to the produced tag. It has the required
@@ -2149,11 +2146,10 @@ Note that removing a cookie won't take effect until the next page
 load.",
 
 "replace":#"<desc cont><short>
- Replaces strings in the contents with other strings.</short> Requires
- the from attribute.
+ Replaces strings in the contents with other strings.</short>
 </desc>
 
-<attr name=from value=string>
+<attr name=from value=string required>
  String or list of strings that should be replaced.
 </attr>
 
@@ -2162,14 +2158,14 @@ load.",
  empty string.
 </attr>
 
-<attr name=separator value=string>
+<attr name=separator value=string default=','>
  Defines what string should seperate the strings in the from and to
- attributes. Default is \",\".
+ attributes.
 </attr>
 
-<attr name=type value=word|words>
+<attr name=type value=word|words default=word>
  Word means that a single string should be replaced. Words that from
- and to are lists. Default is word.
+ and to are lists.
 </attr>",
 
 "return":#"<desc tag><short>
@@ -2186,20 +2182,20 @@ load.",
  Returns a nice Roxen logo.</short>
 </desc>
 
-<attr name=size value=small|medium|large>
- Defines the size of the image. Default is small.
+<attr name=size value=small|medium|large default=small>
+ Defines the size of the image.
 </attr>
 
-<attr name=color value=black|white>
- Defines the color of the image. Default is blue.
+<attr name=color value=black|white default=white>
+ Defines the color of the image.
 </attr>
 
-<attr name=alt value=string>
- The image description. Default is \"Powered by Roxen\".
+<attr name=alt value=string default='\"Powered by Roxen\"'>
+ The image description.
 </attr>
 
-<attr name=border value=number>
- The image border. Default is 0.
+<attr name=border value=number default=0>
+ The image border.
 </attr>
 
 <attr name=class value=string>
@@ -2223,10 +2219,10 @@ load.",
 </attr>",
 
 "set":#"<desc tag><short>
-Sets a variable.</short> The variable attribute is required.
+Sets a variable.</short>
 </desc>
 
-<attr name=variable value=string>
+<attr name=variable value=string required>
  The name of the variable.
 </attr>
 
@@ -2378,13 +2374,12 @@ Sets a variable.</short> The variable attribute is required.
  Use font tags, and this number as big size.
 </attr>
 
-<attr name=small value=number>
- Size of the small tags. Only applies when size is specified. Default
- is size-1.
+<attr name=small value=number default=size-1>
+ Size of the small tags. Only applies when size is specified.
 </attr>",
 
 "sort":#"<desc cont><short>
- Sorts the contents.</short> No attributes required.
+ Sorts the contents.</short>
 </desc>
 
 <attr name=separator value=string>
@@ -2408,11 +2403,10 @@ Sets a variable.</short> The variable attribute is required.
 
 "unset":#"
 <desc tag><short>
- Unsets a variable, i.e. removes it.</short> The variable attribute is
- required.
+ Unsets a variable, i.e. removes it.</short>
 </desc>
 
-<attr name=variable value=string>
+<attr name=variable value=string required>
  The name of the variable.
 </attr>",
 
