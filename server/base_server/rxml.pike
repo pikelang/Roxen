@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.270 2000/12/30 10:13:51 nilsson Exp $
+// $Id: rxml.pike,v 1.271 2000/12/30 10:31:58 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -3091,11 +3091,21 @@ Available variables are:",
 </attr>",
 
 "use":#"<desc cont><short>
- Reads tags, container tags and defines from a file or package.
+ Reads tag definitions, user defined if plugins and variables from a file or package and
+ includes into the current page. Note that the file itself is not inserted into the page.
+ This only affects the environment in which the page is parsed. The benefit is that the
+ package file needs only be parsed once, and the compiled versions of the user defined tags
+ can then be used, thus saving time. It is also a fairly good way of creating templates
+ for your website. Just define your own tags for constructions that appears frequently and
+ save both space and time. Since the tag definitions are cached in memory, make sure that
+ the file is not dependent on anything dynamic, such as form variables or client settings,
+ at the compile time. Also note that the use tag only lets you define variables in the form
+ and var scope in advance. Variables with the same name will be overwritten when the use tag
+ is parsed.
 </short></desc>
 
 <attr name=packageinfo>
- Show a all available packages.
+ Show a list of all available packages.
 </attr>
 
 <attr name=package value=name>
@@ -3110,16 +3120,13 @@ Available variables are:",
  with an HTTP request. This makes it possible to use Pike script
  results and other dynamic documents. Note, however, that the results
  of the parsing are heavily cached for performance reasons. If you do
- not want this cache, use <tag><ref type='tag'>insert file=...
- nocache</ref></tag> instead.</p>
+ not want this cache, use <tag><ref type='tag'>insert file="..."
+ nocache="1"</ref></tag> instead.</p>
 </attr>
 
 <attr name=info>
  Show a list of all defined tags/containers and if arguments in the file
-</attr>
- The <tag>use</tag> tag is much faster than the
- <tag>insert</tag>, since the parsed definitions
- is cached.",
+</attr>",
 
 "eval":#"<desc cont><short>
  Postparses its content.</short> Useful when an entity contains
