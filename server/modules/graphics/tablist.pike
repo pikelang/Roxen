@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997-2000, Roxen IS.
 // Makes a tab list like the one in the config interface.
 
-constant cvs_version="$Id: tablist.pike,v 1.54 2001/06/28 20:25:41 mast Exp $";
+constant cvs_version="$Id: tablist.pike,v 1.55 2001/07/25 10:10:47 jhs Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -46,17 +46,10 @@ name=\"fgcolor\"&gt;</xref>, declared prior to the <tag>tablist</tag>
 tag, will be sent as an extra argument to <tag>gbutton</tag>.
 </p>
 
-<h1> Ett bra exempel här</h1>
-
-<ex type='vert'>
-
-<tablist>
-<tab selected='selected'>About</tab>
-<tab>Info</tab>
-<tab>Browse</tab>
-</tablist>
-</ex>
-
+<ex type='vert'><tablist>
+<tab selected='selected'>Information</tab>
+<tab>Settings</tab>
+</tablist></ex>
 </desc>
 
 <attr name='frame-image' value='' default='/internal-roxen-tabframe'>
@@ -226,11 +219,11 @@ its <i>function</i>.</p>
 <row><c><p>\"\"</p></c><c><p>\"\"</p></c><c><p>\"\"</p></c></row>
 <row><c><p>first</p></c><c><p>selected</p></c><c><p>background</p></c></row>
 <row><c><p>last</p></c><c><p>unselected</p></c><c><p>mask</p></c></row>
-<row><c><p>&nbsp;</p></c><c><p> &nbsp;</p></c><c><p>frame</p></c></row>
-<row><c><p> &nbsp;</p></c><c><p> &nbsp;</p></c><c><p>left</p></c></row>
-<row><c><p> &nbsp;</p></c><c><p> &nbsp;</p></c><c><p>right</p></c></row>
-<row><c><p> &nbsp;</p></c><c><p> &nbsp;</p></c><c><p>above</p></c></row>
-<row><c><p> &nbsp;</p></c><c><p> &nbsp;</p></c><c><p>below</p></c></row>
+<row><c><p>&nbsp;</p></c><c><p>&nbsp;</p></c><c><p>frame</p></c></row>
+<row><c><p>&nbsp;</p></c><c><p>&nbsp;</p></c><c><p>left</p></c></row>
+<row><c><p>&nbsp;</p></c><c><p>&nbsp;</p></c><c><p>right</p></c></row>
+<row><c><p>&nbsp;</p></c><c><p>&nbsp;</p></c><c><p>above</p></c></row>
+<row><c><p>&nbsp;</p></c><c><p>&nbsp;</p></c><c><p>below</p></c></row>
 </xtable>
 
 <p>These three layertypes can be combined into all possible
@@ -246,8 +239,7 @@ in between the two, given that the tab has been marked as
 exists at least one layer of the type \"background\" or \"frame\". If
 all \"mask\"-layers are left out, the mask will primary be the
 framelayer and secondly the backgroundlayer, if the framelayer is not
-available.</p>"
-])
+available.</p>" ])
 			    })
 		]);
 
