@@ -249,6 +249,7 @@ nn binary
 /server/modules/throttling/throttlelib.pike foreign_ident
 /server/modules/throttling/throttletags.pike foreign_ident
 /server/modules/throttling/throttling_byaddress.pike foreign_ident
+/server/modules/throttling/throttling_byhostname.pike foreign_ident
 /server/modules/throttling/throttling_bytype.pike foreign_ident
 /server/modules/throttling/throttling_byuser.pike foreign_ident
 /server/more_modules/bofh.pike foreign_ident
