@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.88 2001/05/16 20:52:28 nilsson Exp $
+// $Id: Roxen.pmod,v 1.89 2001/05/16 20:56:19 nilsson Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -334,7 +334,7 @@ mapping http_redirect( string url, RequestID|void id, multiset|void prestates )
 //! If no prestates are provided, the current prestates in the request id
 //! object will be added to the url.
 {
-  if(!has_prefix(url, "://") && url[0]!='/')
+  if(!has_value(url, "://") && url[0]!='/')
     url = fix_relative(url, id);
   if(strlen(url) && url[0]=='/')
   {
