@@ -1,5 +1,5 @@
 /*
- * $Id: openfiles.pike,v 1.5 2001/08/24 16:07:15 grubba Exp $
+ * $Id: openfiles.pike,v 1.6 2001/08/24 16:09:13 grubba Exp $
  */
 inherit "wizard";
 
@@ -69,6 +69,9 @@ string parse( RequestID id )
 		details = "1 byte";
 	      } else {
 		details = sprintf("%d bytes", stat->size);
+	      }
+	      if (stat->ino) {
+		details += sprintf(", inode: %d", stat->ino);
 	      }
 	    } else if (stat->issock) {
 	      string remote_port = f->query_address();
