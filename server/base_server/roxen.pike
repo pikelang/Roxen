@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.808 2002/10/14 11:50:07 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.809 2002/10/23 19:17:03 mast Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -523,7 +523,11 @@ class Queue
   
   mixed read()
   {
-    while(!(w_ptr - r_ptr)) r_cond::wait();
+    while(!(w_ptr - r_ptr))
+      // Make a MutexKey for wait() to please 7.3. This will of course
+      // not fix the race, but we ignore that. See the discussion
+      // above.
+      r_cond::wait (Thread.Mutex()->lock());
     mixed tmp = buffer[r_ptr];
     buffer[r_ptr++] = 0;	// Throw away any references.
     return tmp;
@@ -620,7 +624,11 @@ local static void handler_thread(int id)
 	  num_hold_messages--;
 	  THREAD_WERR("Handle thread [" + id + "] put on hold");
 	  threads_on_hold++;
-	  if (Thread.Condition cond = hold_wakeup_cond) cond->wait();
+	  if (Thread.Condition cond = hold_wakeup_cond)
+	    // Make a MutexKey for wait() to please 7.3. This will of
+	    // course not fix the race, but we ignore that. See the
+	    // comment at the declaration of hold_wakeup_cond.
+	    cond->wait (Thread.Mutex()->lock());
 	  threads_on_hold--;
 	  THREAD_WERR("Handle thread [" + id + "] released");
 	}
