@@ -1,6 +1,6 @@
 inherit "cgi.pike": normalcgi;
 
-constant cvs_version = "$Id: fastcgi.pike,v 2.1 2000/01/25 07:23:04 per Exp $";
+constant cvs_version = "$Id: fastcgi.pike,v 2.2 2000/01/25 10:47:00 per Exp $";
 
 #include <roxen.h>
 #include <module.h>
@@ -18,7 +18,7 @@ constant module_doc  =
 
 class FCGIChannel
 {
-  private static
+  static
   {
     Stdio.File fd;
     array request_ids = allocate(65536);
@@ -26,6 +26,8 @@ class FCGIChannel
     string buffer;
 
     function default_cb;
+    function close_callback;
+
 
     void got_data( string f )
     {
@@ -42,7 +44,7 @@ class FCGIChannel
         }
         else
         {
-          werror( "%O", p );
+          werror( "-> %O", p );
           if( request_ids[p->requestid] )
             request_ids[p->requestid]( p );
           else if( default_cb )
@@ -54,36 +56,48 @@ class FCGIChannel
 #if constant( thread_create )
     void read_thread()
     {
-      while( (string s = fd->read( 1024, 1 )) && strlen(s) )
+      string s;
+      while( (s = fd->read( 1024, 1 ) ) && strlen(s) )
         got_data( s );
-      fd->close();
-      destruct();
+      catch(fd->close());
+      end_cb();
     }
 
-    Threads.Condition cond = Threads.Condition();
+    Thread.Condition cond = Thread.Condition();
     string wbuffer = "";
     void write_thread()
     {
-      while( 1 )
+      int ok=1;
+      catch
       {
-        int written;
-        cond->wait();
-        while( strlen(wbuffer) )
+        while( 1 )
         {
-          written = fd->write( wbuffer );
-          if( written == 0 && (fd->errno() != System.EAGAIN) )
-            break;
-          wbuffer = wbuffer[written..];
+          int written;
+          while( strlen(wbuffer) )
+            if( fd )
+            {
+              written = fd->write( wbuffer );
+              if( written <= 0 )
+              {
+                break;
+                ok=0;
+              }
+              wbuffer = wbuffer[written..];
+            } else
+              ok=0;
+          if(!ok) break;
+          cond->wait();
         }
-        if( !written )
-          break;
-      }
-      fd->close();
-      destruct();
+      };
+      catch(fd->close());
+      end_cb();
     }
 
-    void setup_channels()
+    void do_setup_channels()
     {
+      werror("Setting up read/write/close callbacks for FD\n");
+      fd->set_id( 0 );
+      fd->set_blocking();
       thread_create( read_thread );
       thread_create( write_thread );
     }
@@ -117,28 +131,40 @@ class FCGIChannel
       got_data( d );
     }
 
-    function close_callback;
+    void do_setup_channels()
+    {
+      werror("Setting up read/write/close callbacks for FD\n");
+      fd->set_id( 0 );
+      fd->set_read_callback( read_cb );
+      fd->set_write_callback( write_cb );
+      fd->set_close_callback( end_cb );
+    }
+#endif
 
     void end_cb()
     {
-      if( close_callback )
-        close_callback( this_object() );
-      fd->close();
-      destruct();
+      if( fd )
+      {
+        if( close_callback )
+          close_callback( this_object() );
+        catch(fd->close());
+        foreach( values( stream )-({0}), mapping q )
+          foreach( values( q ), mapping q )
+            catch( function_object(q->cb)->close() );
+        fd = 0;
+      }
     }
+  } /* end of static */
 
-    void setup_channels()
-    {
-      set_read_callback( read_cb );
-      set_write_callback( write_cb );
-      set_close_callback( end_cb );
-    }
-#endif
-  } /* end of private static */
 
+  void setup_channels()
+  {
+    do_setup_channels();
+  }
 
   void send_packet( Packet p )
   {
+    werror( "<- %O\n", p );
     write( (string)p );
   }
 
@@ -160,7 +186,7 @@ class FCGIChannel
 
   int get_requestid( function f )
   {
-    for( int i = 0; i<sizeof( request_ids ); i++ )
+    for( int i = 1; i<sizeof( request_ids ); i++ )
       if(!request_ids[i] )
       {
         request_ids[i] = f;
@@ -187,36 +213,30 @@ class FCGIChannel
   void create( Stdio.File f )
   {
     fd = f;
-    setup_channels();
+//     setup_channels();
   }
 }
 
 class Packet
 {
-  private static
+  static
   {
     int readyp;
     string leftovers;
+  } /* end of static */
 
-    mixed _cast( string to )
-    {
-      if( to == "string" )
-        return encode();
-    }
 
-    string _sprintf( int c )
-    {
-      switch( c )
-      {
-       case 'O':
-         return sprintf("Packet(%d,%d,%d,%O)",type,
-                        requestid,contentlength,data);
-       case 's':
-         return encode();
-      }
-    }
-  } /* end of private static */
+  mixed cast( string to )
+  {
+    if( to == "string" )
+      return encode();
+  }
 
+  string _sprintf( int c )
+  {
+    return sprintf("Packet(%d,%d,%d,%O)",type,
+                   requestid,contentlength,data);
+  }
 
   int version;
   int type;
@@ -248,7 +268,7 @@ class Packet
         return;
       sscanf( s, "%c%c%2c%2c%c%*c%s",
               version, type, requestid, contentlength, paddinglen,
-              /* reserved */, leftovers );
+              /* reserved, */leftovers );
       if( strlen( leftovers ) < contentlength + paddinglen )
         return;
 
@@ -273,33 +293,64 @@ class Stream
 
   int writer, closed;
 
-  private static
+  static
   {
     int reqid;
     FCGIChannel fd;
     string buffer = "";
-    function read_callback, close_callback;
+    function read_callback, close_callback, close_callback_2;
     mixed fid;
+  }
+
+  string _sprintf( )
+  {
+    return sprintf("FCGI.Stream(%s,%d)", name, reqid);
   }
 
   void destroy()
   {
-    fd->unregister_stream( id, reqid );
+    if( fd )
+      fd->unregister_stream( id, reqid );
   }
 
   void close()
   {
     if( closed ) return;
-    closed = 1;
+
+    werror( name+ " closed\n" );
     if( writer )
       write( "" );
     else
-      fd->send_packet( packet_abort_request( reqid ) );
+      catch(fd->send_packet( packet_abort_request( reqid ) ));
+    catch {
+      if( close_callback )
+        close_callback( fid );
+    };
+    catch
+    {
+      if( close_callback_2 )
+        close_callback_2( fid );
+    };
+    closed = 1;
   }
 
   string read( int nbytes, int noblock )
   {
-    if( !noblock )
+    werror(" Reading "+nbytes+", "+noblock+" from "+name+"\n" );
+    if(!nbytes)
+    {
+      if( noblock )
+      {
+        string b = buffer;
+        buffer="";
+        return b;
+      }
+      while( !closed ) sleep( 0.1 );
+      string b = buffer;
+      buffer=0;
+      return b;
+    }
+    if( !closed && !noblock )
     {
 #if constant( thread_create )
       while( !closed && (strlen( buffer ) < nbytes) ) /* assume MT */
@@ -319,10 +370,10 @@ class Stream
     if( closed )
       error("Stream closed\n");
     if( strlen( data ) < 65535 )
-      fd->send_packet( Packet( id, requestid, data ) );
+      fd->send_packet( Packet( id, reqid, data ) );
     else
       foreach( data / 8192, string d )
-        fd->send_packet( Packet( id, requestid, d ) );
+        fd->send_packet( Packet( id, reqid, d ) );
     return strlen(data);
   }
 
@@ -339,6 +390,8 @@ class Stream
       closed = 1;
       if( close_callback )
         close_callback( fid );
+      if( close_callback_2 )
+        close_callback_2( fid );
       return;
     }
     buffer += d;
@@ -355,6 +408,24 @@ class Stream
     read_callback = f;
     if( strlen( buffer ) )
       do_read_callback();
+  }
+
+  void set_nonblocking( function a, function n, function w )
+  {
+    set_close_callback( w );
+    set_read_callback( a );
+    /* It is already rather nonblocking.. */
+  }
+
+  void set_second_close_callback(function q)
+  {
+    close_callback_2 = q;
+  }
+
+  void set_blocking()
+  {
+    set_close_callback( 0 );
+    set_read_callback( 0 );
   }
 
   void set_id( mixed to )
@@ -428,7 +499,6 @@ class Stderr
 #define FCGI_RESPONDER  1
 #define FCGI_AUTHORIZER 2
 #define FCGI_FILTER     3
-
 #define FCGI_KEEP_CONN  1
 
 #define FCGI_BEGIN_REQUEST       1
@@ -441,7 +511,6 @@ class Stderr
 #define FCGI_DATA                8
 #define FCGI_GET_VALUES          9
 #define FCGI_GET_VALUES_RESULT  10
-
 
 #define FCGI_REQUEST_COMPLETE 0
 #define FCGI_CANT_MPX_CONN    1
@@ -480,7 +549,7 @@ Packet packet_end_request( int requestid, int appstatus, int protstats )
 class FCGIRun
 {
   int rid;
-
+  int is_done;
   RequestID id;
   FCGIChannel parent;
 
@@ -489,20 +558,34 @@ class FCGIRun
 
   function done_callback;
 
+  class FakePID
+  {
+    int status()
+    {
+      return is_done;
+    }
+  }
+
+  FakePID fake_pid()
+  {
+    return FakePID();
+  }
+
+  void done()
+  {
+    parent->free_requestid( rid );
+    if( done_callback )
+      done_callback( this_object() );
+    is_done = 1;
+  }
+
   void handle_packet( Packet p )
   {
     /* stdout / stderr routed to the above streams.. */
     if( p->type == FCGI_END_REQUEST )
-    {
-      parent->free_requestid( rid );
-      if( done_callback )
-        done_callback( this_object() );
-      destruct();
-    }
+      done();
     else
-    {
       werror(" Unexpected packet: %O\n", p );
-    }
   }
 
   void set_done_callback( function to )
@@ -515,26 +598,27 @@ class FCGIRun
     Params params;
     me = c;
     rid = p->get_requestid( handle_packet );
+    parent = p;
     /* Now _this_ is rather ugly... */
-    if( mri == -1 )
+    if( rid == -1 )
     {
       werror("Warning: FCGI out of request IDs for script\n");
       call_out( create, 1, i, p );
       return;
     }
 
+
     stdin  =  Stdin( p, rid, 1);
     stdout = Stdout( p, rid, 0);
     stderr = Stderr( p, rid, 0);
     params = Params( p, rid, 1);
 
+    stdout->set_second_close_callback( done );
+
     parent->send_packet( packet_begin_request( rid,
                                                FCGI_RESPONDER,
                                                FCGI_KEEP_CONN ) );
-
-
     params->write_mapping( c->environment );
-
     params->close();
   }
 }
@@ -545,30 +629,57 @@ class FCGIRun
 
 class FCGI
 {
-  private static
+  static
   {
     Stdio.Port socket;
     array all_pids = ({});
     mapping options = ([]);
-    mapping options = ([ ]);
     array argv;
-    FCGIChannel channels = ({});
+    array(FCGIChannel) channels = ({});
     int current_conns;
+
+    void do_connect( object fd, mixed|void q )
+    {
+#if constant(thread_create)
+      werror(" Connecting...\n" );
+      while( fd->connect( "localhost",(int)(socket->query_address()/" ")[1]) )
+      {
+        werror(" Connection failed...\n" );
+        sleep( 0.1 );
+      }
+      q();
+#else
+      werror(" Connecting...\n" );
+      fd->connect( "localhost",(int)(socket->query_address()/" ")[1]);
+#endif
+    }
 
     FCGIChannel new_channel( )
     {
-      while( current_conns > (options->MAX_CONNS*sizeof(all_pids)) )
+      while( current_conns >= (options->MAX_CONNS*sizeof(all_pids)) )
         start_new_script();
       current_conns++;
       Stdio.File fd = Stdio.File();
-      ch = FCGIChannel( fd );
-      if( !fd->connect( "localhost", (int)(socket->query_address()/" ")[1] ) )
-        return 0;
+      fd->open_socket();
+      FCGIChannel ch = FCGIChannel( fd );
+#if constant(thread_create)
+      fd->set_blocking();
+      thread_create( do_connect,  fd, ch->setup_channels );
+#else
+      fd->set_nonblocking( 0,
+                           ch->setup_channels,
+                           do_connect );
+      fd->set_id( fd );
+      do_connect( fd );
+#endif
       channels += ({ ch });
-      ch->set_close_callback( lambda(object c) {
+      ch->set_close_callback( lambda(object c)
+                              {
+                                werror( "script %s closed\n", argv*" " );
                                 channels -= ({ c });
                                 current_conns--;
                               });
+      return ch;
     }
 
     void reaperman()
@@ -581,7 +692,8 @@ class FCGI
 
     void start_new_script( )
     {
-      all_pids += ({ create_process( argv, options ) });
+      werror( "script %s starting\n", argv*" " );
+      all_pids += ({ Process.create_process( argv, options ) });
     }
 
     string values_cache = "";
@@ -590,6 +702,7 @@ class FCGI
       while( strlen( values_cache ) )
       {
         string index, value;
+        int len;
         sscanf( values_cache, "%2c%s", len, values_cache );
         index = values_cache[..len-1];
         values_cache = values_cache[len..];
@@ -634,7 +747,6 @@ class FCGI
               ([
                 "stdin":socket,
                 "cwd":dirname( s->command ),
-                "env":s->environment,
                 "noinitgroups":1,
               ]);
 
@@ -648,7 +760,7 @@ class FCGI
           // Some OS's (HPUX) have negative uids in /etc/passwd,
           // but don't like them in setuid() et al.
           // Remap them to the old 16bit uids.
-          options->uid = 0xffff & uid;
+          options->uid = 0xffff & s->uid;
 
           if (options->uid <= 10)
           {
@@ -656,7 +768,7 @@ class FCGI
             options->uid = 65534;
           }
         }
-        if (gid >= 0)
+        if (s->gid >= 0)
         {
           options->gid = s->gid;
         } else {
@@ -673,7 +785,7 @@ class FCGI
         }
         options->setgroups = s->extra_gids;
         if( !s->uid && QUERY(warn_root_cgi) )
-          report_warning( "FCGI: Running "+command+" as root (as per request)" );
+          report_warning( "FCGI: Running "+s->command+" as root (as per request)" );
       }
       if(QUERY(nice))
       {
@@ -684,31 +796,39 @@ class FCGI
         options->rlimit = s->limits;
 #endif
 
-      all_pids = ({create_proces( argv, options )});
+      start_new_script();
 
       options->MPXS_CONNS = 0;
       options->MAX_REQS = 1;
       options->MAX_CONNS = 1; /* sensible (for a stupid script) defaults */
 
       FCGIChannel c = stream();
+      if(!c)
+        error( "Impossible!\n");
       c->set_default_callback( maintenance_packet );
-      c->send_packet( packet_get_values("FCGI_MAX_CONNS","FCGI_MAX_REQS","FCGI_MPXS_CONNS") );
+      c->send_packet( packet_get_values("FCGI_MAX_CONNS",
+                                        "FCGI_MAX_REQS",
+                                        "FCGI_MPXS_CONNS") );
     }
-  } /* end of private static */
+  } /* end of  static */
 
 
   FCGIChannel stream()
   {
-    foreach( channels,  FCGIChannel ch )
-    {
-      if( options->MPXS_CONNS )
-      {
-        if( ch->number_of_reqids()  < options->MAX_REQS )
-          return ch;
-      }
-      else if( !ch->number_of_reqids() )
-        return ch;
-    }
+    //    Not needed right now, since libfcgi with
+    //    friends does _not_ support this anyway.
+    //    Sad, but true.
+    //
+    //     foreach( channels,  FCGIChannel ch )
+    //     {
+    //       if( ch && options->MPXS_CONNS )
+    //       {
+    //         if( ch->number_of_reqids()  < options->MAX_REQS )
+    //           return ch;
+    //       }
+    //       else if( !ch->number_of_reqids() )
+    //         return ch;
+    //     }
     return new_channel();
   }
 }
@@ -718,37 +838,78 @@ FCGIRun do_fcgiscript( CGIScript f )
 {
   if( fcgis[ f->command ] )
     return FCGIRun( f->mid, fcgis[ f->command ]->stream(), f );
-  return fcgis[ f->command ] = FCGI( f );
+  fcgis[ f->command ] = FCGI( f );
+  return do_fcgiscript( f );
 }
 
 
 class CGIScript
 {
-  inherit normalcgi:CGIScript;
+  inherit normalcgi::CGIScript;
 
   int ready;
-  FCGIRun run;
+  FCGIRun fcgi;
   Stdio.File stdin;
   Stdio.File stdout;
 
+  Stdio.File get_fd()
+  {
+    // Send input to script..
+    if( tosend )
+      stdin->write( tosend );
+    stdin->close();
+    stdin=0;
+
+    // And then read the output.
+    if(!blocking)
+    {
+      Stdio.File fd = stdout;
+      fd = CGIWrapper( fd,mid,kill_script )->get_fd();
+      if( QUERY(rxml) )
+        fd = RXMLWrapper( fd,mid,kill_script )->get_fd();
+      stdout = 0;
+      call_out( check_pid, 0.1 );
+      return fd;
+    }
+    //
+    // Blocking (<insert file=foo.cgi> and <!--#exec cgi=..>)
+    // Quick'n'dirty version.
+    //
+    // This will not be parsed. At all. And why is this not a problem?
+    //   o <insert file=...> dicards all headers.
+    //   o <insert file=...> does RXML parsing on it's own (automatically)
+    //   o The user probably does not want the .cgi rxml-parsed twice,
+    //     even though that's the correct solution to the problem (and rather
+    //     easy to add, as well)
+    //
+    remove_call_out( kill_script );
+    return stdout;
+  }
+
   void perhaps_set_ready( )
   {
-    if( !run->stdin )
+    if( !fcgi->stdin )
     {
       call_out( perhaps_set_ready, 1 );
       return;
     }
     ready = 1;
-    stdin = run->stdin;
-    stdout= run->stdout;
-    pid = run->parent->pid;
+    stdin = fcgi->stdin;
+    stdout= fcgi->stdout;
+    pid   = fcgi->fake_pid();
+  }
+
+  void done()
+  {
+    ;
   }
 
   CGIScript run()
   {
-    run = do_fcgiscript( this_object() );
-    run->set_done_callback( done );
+    fcgi = do_fcgiscript( this_object() );
+    fcgi->set_done_callback( done );
     perhaps_set_ready( );
+    return this_object( );
   }
 }
 
