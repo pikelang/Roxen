@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.73 2001/03/30 17:06:54 kuntri Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.74 2001/03/30 17:12:01 kuntri Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -101,7 +101,7 @@ constant gbuttonattr=#"
  to have at least the following layers: background, mask and
  frame.</p>
 
-<!--
+<?comment
 Non working example.
 
  <p>More information on how to create frame images can be found in the
@@ -110,7 +110,7 @@ Non working example.
 <ex type='vert'>
 <gbutton frame-image='/internal-roxen-tab_frame'>foo</gbutton>
 </ex>
--->
+?>
 
 </attr>
 
