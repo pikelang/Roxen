@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.66 1999/05/25 15:53:28 mast Exp $
+# $Id: start,v 1.67 1999/05/25 20:45:46 grubba Exp $
 
 cd `dirname $0`
 
@@ -46,6 +46,7 @@ if uname | grep 'SunOS' >/dev/null 2>&1; then
   fi
 fi
 
+gdb=no
 
 ## Parse all arguments.
 ## GNU-style, long options only, except for -D, simply passed on.
@@ -333,8 +334,6 @@ if uname | grep 'HP-UX' >/dev/null 2>&1; then
   else :; fi
   DEFINES="$DEFINES -DHPUX_KLUDGE"
 fi
-
-gdb=no
 
 ####### END PIKE OPTIONS
 
