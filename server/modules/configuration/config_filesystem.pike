@@ -8,11 +8,17 @@
 inherit "module";
 inherit "roxenlib";
 
+#if constant(Locale.translate)
+# define LOCALE(X,Y)   Locale.translate(roxen.locale->get()->config_interface, X, Y)
+#else
+# define LOCALE(X,Y)   RoxenLocale.translate(roxen.locale->get()->config_interface, X, Y)
+#endif
+
 constant module_type = MODULE_LOCATION;
 constant module_name = "Configuration Filesystem";
 constant module_doc = "This filesystem serves the administration interface";
 constant module_unique = 1;
-constant cvs_version = "$Id: config_filesystem.pike,v 1.34 2000/04/13 19:04:56 per Exp $";
+constant cvs_version = "$Id: config_filesystem.pike,v 1.35 2000/07/09 16:11:32 nilsson Exp $";
 
 constant path = "config_interface/";
 
@@ -45,8 +51,9 @@ array(string|array) low_stat_file(string locale, string f, object id)
       f = locale;
       locale = "standard";
     }
-    if (locale == "standard")
-      locale = roxen->default_locale->latin1_name;
+    //DEBUG
+    //    if (locale == "standard")
+    //  locale = roxen->default_locale->latin1_name;
     string p;
     if( strlen( f ) )
       f = "/"+f;
@@ -96,17 +103,19 @@ mixed find_dir( string f, object id )
 {
   while( strlen( f ) && (f[0] == '/' ))
     f = f[1..];
-
-  if (f == "") return indices(RoxenLocale) - ({ "Modules" });
+  //DEBUG
+ if(f == "") return ({});
+  //  if (f == "") return indices(RoxenLocale) - ({ "Modules" });
 
   string locale;
   string rest;
 
   sscanf(f, "%[^/]/%s", locale, rest);
 
-  if (rest || RoxenLocale[locale]) {
-    return get_dir(path + "standard/" + (rest || ""));
-  }
+  //DEBUG
+  //  if (rest || RoxenLocale[locale]) {
+  //  return get_dir(path + "standard/" + (rest || ""));
+  //}
   return get_dir(path + "standard/" + locale);
 }
 

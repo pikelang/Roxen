@@ -8,7 +8,11 @@ inherit "roxenlib";
 #include <roxen.h>
 #include <module.h>
 
-#define LOCALE	LOW_LOCALE->config_interface
+#if constant(Locale.translate)
+# define LOCALE(X,Y)   Locale.translate(roxen.locale->get()->config_interface, X, Y)
+#else
+# define LOCALE(X,Y)   RoxenLocale.translate(roxen.locale->get()->config_interface, X, Y)
+#endif
 
 constant module_type   = MODULE_AUTH | MODULE_FIRST;
 constant module_name   = "Configuration UserDB";
@@ -548,8 +552,8 @@ void first_try( RequestID id )
   else
     host = id->remoteaddr;
   if( (time() - logged_in[ u+host ]) > 1800 )
-    report_notice(LOW_LOCALE->config_interface->
-                  admin_logged_on( u, host+" ("+id->remoteaddr+")" ));
+    report_notice(LOCALE("", "Administrator logged on as %s from %s.\n"),
+		  u, host+" ("+id->remoteaddr+")" );
 
   logged_in[ u+host ] = time();
   get_context( u, host, id );

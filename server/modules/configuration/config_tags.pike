@@ -8,7 +8,13 @@ inherit "roxenlib";
 #include <config_interface.h>
 #include <config.h>
 
-#define LOCALE	LOW_LOCALE->config_interface
+
+#if constant(Locale.translate)
+# define LOCALE(X,Y)   Locale.translate(roxen.locale->get()->config_interface, X, Y)
+#else
+# define LOCALE(X,Y)   RoxenLocale.translate(roxen.locale->get()->config_interface, X, Y)
+#endif
+
 #define CU_AUTH id->misc->config_user->auth
 
 constant module_type = MODULE_PARSER|MODULE_CONFIG;
@@ -42,8 +48,10 @@ class Scope_locale
   mixed `[]  (string var, void|RXML.Context c, void|string scope)
   {
     function(void:string)|string val;
-    if( !(val = LOCALE[ var ]) )
-      val = LOW_LOCALE[ var ];
+    // DEBUG
+    val = LOCALE(var,var);
+    //    if( !(val = LOCALE[ var ]) )
+    //      val = LOW_LOCALE[ var ];
 
     if(!val)
       return "Unknown locale field: "+var;
@@ -503,7 +511,10 @@ string container_configif_output(string t, mapping m, string c, object id)
      break;
 
    case "locales":
-     object rl = RoxenLocale;
+     //DEBUG
+     //object rl = RoxenLocale;
+     // FIXME How to get list of languages?
+     mapping rl = ([]);
      variables = map( sort(indices(rl) - ({ "Modules", "standard" })),
                       lambda( string l )
                       {
