@@ -1,7 +1,7 @@
 // HTTP convenience functions.
 // inherited by roxenlib, and thus by all files inheriting roxenlib.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: http.pike,v 1.37 2000/03/17 17:47:06 nilsson Exp $
+// $Id: http.pike,v 1.38 2000/03/19 16:39:22 nilsson Exp $
 
 //#pragma strict_types
 
@@ -202,7 +202,7 @@ string http_roxen_id_cookie()
 		 roxen->increase_id());
 }
 
-static string add_pre_state( string url, multiset state )
+string add_pre_state( string url, multiset state )
 {
   if(!url)
     error("URL needed for add_pre_state()\n");
@@ -268,7 +268,7 @@ mapping http_proxy_auth_required(string realm, void|string message)
     + ([ "extra_heads":([ "Proxy-Authenticate":"basic realm=\""+realm+"\"",]),]);
 }
 
-static string add_http_header(mapping to, string name, string value)
+string add_http_header(mapping to, string name, string value)
 {
   if(to[name])
     if(arrayp(to[name]))
