@@ -1,8 +1,6 @@
 #include <module.h>
-import Image;
 
-string cvs_verison = "$Id: draw_things.pike,v 1.28 1998/01/19 18:36:40 mirar Exp $";
-
+string cvs_verison = "$Id: draw_things.pike,v 1.29 1998/01/20 16:35:30 grubba Exp $";
 
 object (Image.image) load_image(string f)
 {
@@ -21,7 +19,7 @@ object (Image.image) load_image(string f)
   if(!(data=file->read(0x7fffffff)))
     return 0;
 
-  if(img=PNM.decode(data))
+  if(img=Image.PNM.decode(data))
     return img->scale(0,48);
 //  werror("Failed to parse image file.\n");
   
@@ -51,7 +49,7 @@ object (Image.image) load_image(string f)
 #define fade          load_image("fade.ppm")
 #define pad           load_image("padding.ppm")
 
-object (Image) draw_module_header(string name, int type, object font)
+object (Image.image) draw_module_header(string name, int type, object font)
 {
   object result = Image.image(1000,48);
   object knappar = Image.image(1000,48);
