@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.296 1999/06/11 01:11:50 peter Exp $
+ * $Id: roxen.pike,v 1.297 1999/06/19 23:41:14 grubba Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.296 1999/06/11 01:11:50 peter Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.297 1999/06/19 23:41:14 grubba Exp $";
 
 object backend_thread;
 object argcache;
@@ -3183,7 +3183,7 @@ anlending.");
 
 
   globvar("locale", "standard", "Language", TYPE_STRING_LIST,
-	  "Locale, used to localise all messages in roxen"
+	  "Locale, used to localise all messages in roxen.\n"
 #"Standard means using the default locale, which varies according to the 
 value of the 'LANG' environment variable.", sort(indices(Locale.Roxen) -
 						 ({ "Modules" })));
