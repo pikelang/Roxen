@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.49 1998/09/19 18:31:24 grubba Exp $
+ * $Id: smtp.pike,v 1.50 1998/09/19 18:42:24 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.49 1998/09/19 18:31:24 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.50 1998/09/19 18:42:24 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -614,7 +614,8 @@ static class Smtp_Connection {
 		    return;
 		  }
 
-		  if (fss->bfree <= (sz / (fss->blocksize || 512))) {
+		  if (fss->bfree * parent->query_size_factor() <=
+		      (sz / (fss->blocksize || 512))) {
 		    if (fss->blocks <= (sz / (fss->blocksize || 512))) {
 		      send(552, "Mail too large.");
 		    } else {
@@ -1070,6 +1071,11 @@ string query_spooldir()
   return(QUERY(spooldir));
 }
 
+int query_size_factor()
+{
+  return(((float)(QUERY(size_factor)))/100.0);
+}
+
 multiset do_expn(multiset in, object|void smtp)
 {
 #ifdef SMTP_DEBUG
@@ -1320,6 +1326,9 @@ void create()
   defvar("timeout", 10*60, "Timeout", TYPE_INT | VAR_MORE,
 	 "Idle time before connection is closed (seconds).<br>\n"
 	 "Zero or negative to disable timeouts.");
+
+  defvar("size_factor", 50, "Size percentage", TYPE_INT | VAR_MORE,
+	 "Percentage of the free disk space a single mail may take.");
 }
 
 void start(int i, object c)
