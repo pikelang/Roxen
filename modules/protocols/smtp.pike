@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.19 1998/09/10 17:32:08 grubba Exp $
+ * $Id: smtp.pike,v 1.20 1998/09/10 21:08:20 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.19 1998/09/10 17:32:08 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.20 1998/09/10 21:08:20 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -587,6 +587,7 @@ class Server {
 	  roxen_perror(sprintf("SMTP: RCPT:%O\n", recipient));
 #endif /* SMTP_DEBUG */
 	  if (sizeof(recipient)) {
+	    recipient = lower_case(recipient);
 	    foreach(conf->get_providers("smtp_filter")||({}), object o) {
 	      // roxen_perror("Got SMTP filter\n");
 	      if (functionp(o->verify_recipient) &&
@@ -601,19 +602,57 @@ class Server {
 	      }
 	    }
 
-	    int recipient_ok = 0;
+	    array a = recipient/"@";
+	    string domain;
+	    string user;
 
-	    foreach(conf->get_providers("smtp_rcpt")||({}), object o) {
-	      if (functionp(o->expn) &&
-		  o->expn(recipient, this_object())) {
-		recipient_ok = 1;
-		break;
+	    if (sizeof(a) > 1) {
+	      domain = a[-1];
+	      user = a[..sizeof(a)-2]*"@";
+	    } else {
+	      user = recipient;
+	    }
+
+	    int recipient_ok;
+
+	    if ((!domain) || (handled_domains[domain])) {
+	      // Local address.
+
+	      if (domain) {
+		// Full address check.
+		foreach(conf->get_providers("smtp_rcpt")||({}), object o) {
+		  if (functionp(o->expn) &&
+		      o->expn(recipient, this_object())) {
+		    recipient_ok = 1;
+		    break;
+		  }
+		  if (functionp(o->desc) &&
+		      o->desc(recipient, this_object())) {
+		    recipient_ok = 1;
+		    break;
+		  }
+		}
 	      }
-	      if (functionp(o->desc) &&
-		  o->desc(recipient, this_object())) {
-		recipient_ok = 1;
-		break;
+	      if (!recipient_ok) {
+		// Check if we have a default handler for this user.
+		foreach(conf->get_providers("smtp_rcpt")||({}), object o) {
+		  if (functionp(o->expn) &&
+		      o->expn(user, this_object())) {
+		    recipient_ok = 1;
+		    break;
+		  }
+		  if (functionp(o->desc) &&
+		      o->desc(user, this_object())) {
+		    recipient_ok = 1;
+		    break;
+		  }
+		}
 	      }
+	    } else {
+	      // Remote address.
+
+	      // FIXME: Some relay tests are necessary here.
+	      recipient_ok = 1;
 	    }
 
 	    if (!recipient_ok) {

@@ -1,5 +1,5 @@
 /*
- * $Id: testrcpt.pike,v 1.4 1998/09/09 23:37:29 js Exp $
+ * $Id: testrcpt.pike,v 1.5 1998/09/10 21:08:03 grubba Exp $
  *
  * A skeleton test RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RCPT_DEBUG
 
-constant cvs_version = "$Id: testrcpt.pike,v 1.4 1998/09/09 23:37:29 js Exp $";
+constant cvs_version = "$Id: testrcpt.pike,v 1.5 1998/09/10 21:08:03 grubba Exp $";
 
 /*
  * Roxen glue
@@ -71,18 +71,22 @@ static string get_addr(string addr)
  * Some tables
  */
 
-mapping(string:multiset(string)|string) expn_tab = ([
+static mapping(string:multiset(string)|string) expn_tab = ([
   "grubba":(<"grubba@grubba.org">),
   "developers":(<"grubba", "zino", "js", "gurka">),
   "zino":"peter@bortas.org",
   "js":"js@idonex.se",
 ]);
 
-mapping(string:string) desc_tab = ([
+static mapping(string:string) desc_tab = ([
   "grubba@grubba.org":"Henrik Grubbström",
   "peter@bortas.org":"Peter Bortas",
   "js@idonex.se":"Johan Schön",
 ]);
+
+static multiset(string) handled_domains = (<
+  "grubba.org", "bortas.org", "idonex.se",
+>);
 
 /*
  * SMTP_RCPT callbacks
@@ -97,7 +101,7 @@ string|multiset(string) expn(string addr, object o)
   return(expn_tab[a]);
 }
 
-string desc(string addr)
+string desc(string addr, object o)
 {
   roxen_perror("RCPT: desc(%O)\n", addr);
 
@@ -109,11 +113,17 @@ string desc(string addr)
   return(0);
 }
 
-void put(multiset(string) recipients, string mailid)
+int put(string sender, string user, string domain, string mailid, object o)
 {
+  roxen_perror("RCPT: put(%O, %O, %O, %O, X)\n",
+	       sender, user, domain, mailid);
+  return 0;
 }
 
-
+multiset(string) query_domain()
+{
+  return handled_domains;
+}
 
 // AutoMail Admin callbacks
 
