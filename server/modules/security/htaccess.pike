@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version="$Id: htaccess.pike,v 1.77 2001/06/13 13:45:04 per Exp $";
+constant cvs_version="$Id: htaccess.pike,v 1.78 2001/08/20 15:15:19 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -43,6 +43,8 @@ constant module_doc  = "Almost complete support for NCSA/Apache "
   "require ip ip:mask\n"
   "require time hh:mm-hh:mm\n"
   "require day day[,day...]   (day either english day name or number (1=monday)\n"
+  "require accept_language language\n"
+  "require luck percent%\n"
   "deny ip ip/bits[,ip/bits]\n"
   "deny ip ip:mask[,ip:mask]\n"
   "deny ip pattern\n"
@@ -52,6 +54,8 @@ constant module_doc  = "Almost complete support for NCSA/Apache "
   "deny day day[,day...]\n"
   "deny time HH:MM-HH:MM\n"
   "deny referer pattern\n</pre>"
+  "deny accept_language language\n"
+  "deny luck percent%\n"
   "<li> All methods used by HTTP, and also the methods used by FTP, "
   "can be used to specify when the &lt;Limit&gt; tag will take effect.</ul>"
   ;
