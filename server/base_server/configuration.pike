@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.123 1998/04/27 11:55:50 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.124 1998/04/27 23:50:13 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -243,7 +243,7 @@ private object *_toparse_modules = ({});
 // entirely by log-modules in the future, since this would be much
 // cleaner.
 
-private function log_function;
+function log_function;
 
 // The logging format used. This will probably move the the above
 // mentioned module in the future.
