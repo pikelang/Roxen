@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.408 2002/11/15 09:41:43 jonasw Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.409 2002/12/03 11:38:18 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -7726,24 +7726,43 @@ just got zapped?
 //----------------------------------------------------------------------
 
 "if":#"<desc type='cont'><p><short>
- <tag>if</tag> is used to conditionally show its contents.</short>The
- <tag>if</tag> tag is used to conditionally show its contents. <xref
- href='else.tag'/> or <xref href='elseif.tag' /> can be used to
- suggest alternative content.</p>
+ The <tag>if</tag> tag is used to conditionally include its
+ contents.</short> <xref href='else.tag'/> or <xref
+ href='elseif.tag'/> can be used afterwards to include alternative
+ content if the test is false.</p>
 
- <p>It is possible to use glob patterns in almost all attributes,
- where * means match zero or more characters while ? matches one
- character. * Thus t*f?? will match trainfoo as well as * tfoo but not
- trainfork or tfo. It is not possible to use regexp's together
- with any of the if-plugins.</p>
+ <p>The tag itself is useless without its plugins. Its main
+ functionality is to provide a framework for the plugins. It is
+ mandatory to add a plugin as one attribute. The other attributes
+ provided are and, or and not, used for combining different plugins
+ with logical operations.</p>
 
- <p>The tag itself is useless without its
- plugins. Its main functionality is to provide a framework for the
- plugins.</p>
+ <p>Note: Since XML mandates that tag attributes must be unique, it's
+ not possible to use the same plugin more than once with a logical
+ operator. E.g. this will not work:</p>
 
- <p>It is mandatory to add a plugin as one attribute. The other
- attributes provided are and, or and not, used for combining plugins
- or logical negation.</p>
+ <ex-box><if variable='var.x' and='' variable='var.y'>
+   This does not work.
+ </if></ex-box>
+
+ <p>You have to use more than one tag in such cases. The example above
+ can be rewritten like this to work:</p>
+
+ <ex-box><if variable='var.x'>
+   <if variable='var.y'>
+     This works.
+   </if>
+ </if></ex-box>
+
+ <p>The If plugins are sorted according to their function into five
+ categories: Eval, Match, State, Utils and SiteBuilder.</p>
+
+ <h1>Eval plugins</h1>
+
+ <p>The Eval category is the one corresponding to the regular tests made
+ in programming languages, and perhaps the most used. They evaluate
+ expressions containing variables, entities, strings etc and are a sort
+ of multi-use plugins.</p>
 
  <ex-box><if variable='var.foo > 0' and='' match='var.bar is No'>
     ...
@@ -7755,20 +7774,39 @@ just got zapped?
   &var.foo; is greater than 0
 </else></ex-box>
 
- <p>Operators valid in attribute expressions are: '=', '==', 'is', '!=',
- '&lt;' and '&gt;'.</p>
+ <p>The tests are made up either of a single operand or two operands
+ separated by an operator surrounded by single spaces. The value of
+ the single or left hand operand is determined by the If plugin.</p>
 
- <p>The If plugins are sorted according to their function into five
- categories: Eval, Match, State, Utils and SiteBuilder.</p>
+ <p>If there is only a single operand then the test is successful if
+ it has a value different from the integer 0. I.e. all string values,
+ including the empty string \"\" and the string \"0\", make the test
+ succeed.</p>
 
- <p>The Eval category is the one corresponding to the regular tests made
- in programming languages, and perhaps the most used. They evaluate
- expressions containing variables, entities, strings etc and are a sort
- of multi-use plugins. All If-tag operators and global patterns are
- allowed.</p>
+ <p>If there is an operator then the right hand is treated as a
+ literal value (with some exceptions described below). Valid operators
+ are \"=\", \"==\", \"is\", \"!=\", \"&lt;\" and \"&gt;\".</p>
 
  <ex><set variable='var.x' value='6'/>
 <if variable='var.x > 5'>More than one hand</if></ex>
+
+ <p>The three operators \"=\", \"==\" and \"is\" all test for
+ equality. They can furthermore do pattern matching with the right
+ operand. If it doesn't match the left one directly then it's
+ interpreted as a glob pattern with \"*\" and \"?\". If it still
+ doesn't match then it's splitted on \",\" and each part is tried as a
+ glob pattern to see if any one matches.</p>
+
+ <p>In a glob pattern, \"*\" means match zero or more arbitrary
+ characters, and \"?\" means match exactly one arbitrary character.
+ Thus \"t*f??\" will match \"trainfoo\" as well as \"tfoo\" but not
+ \"trainfork\" or \"tfo\". It is not possible to use regexps together
+ with any of the if-plugins.</p>
+
+ <ex><set variable='var.name' value='Sesame'/>
+<if variable='var.name is e*,*e'>\"&var.name;\" begins or ends with an 'e'.</if></ex>
+
+ <h1>Match plugins</h1>
 
  <p>The Match category contains plugins that match contents of
  something, e.g. an IP package header, with arguments given to the
@@ -7776,6 +7814,8 @@ just got zapped?
 
  <ex>Your domain <if ip='130.236.*'> is </if>
 <else> isn't </else> liu.se.</ex>
+
+ <h1>State plugins</h1>
 
  <p>State plugins check which of the possible states something is in,
  e.g. if a flag is set or not, if something is supported or not, if
@@ -7788,6 +7828,8 @@ just got zapped?
   </if>
   <else>doesn't support Javascript</else>.
  </ex>
+
+ <h1>Utils plugins</h1>
 
  <p>Utils are additonal plugins specialized for certain tests, e.g.
  date and time tests.</p>
@@ -7803,6 +7845,8 @@ just got zapped?
    Somewhere between 9 to 5.
   </else>
  </ex-box>
+
+ <h1>SiteBuilder plugins</h1>
 
  <p>SiteBuilder plugins requires a Roxen Platform SiteBuilder
  installed to work. They are adding test capabilities to web pages
@@ -7829,7 +7873,7 @@ just got zapped?
 "if#true":#"<desc type='plugin'><p><short>
  This will always be true if the truth value is set to be
  true.</short> Equivalent with <xref href='then.tag' />.
- True is a <i>State</i> plugin.
+ This is a <i>State</i> plugin.
 </p></desc>
 
 <attr name='true' required='required'><p>
@@ -7841,7 +7885,7 @@ just got zapped?
 "if#false":#"<desc type='plugin'><p><short>
  This will always be true if the truth value is set to be
  false.</short> Equivalent with <xref href='else.tag' />.
- False is a <i>State</i> plugin.</p>
+ This is a <i>State</i> plugin.</p>
 </desc>
 
 <attr name='false' required='required'><p>
@@ -7852,9 +7896,9 @@ just got zapped?
 
 "if#module":#"<desc type='plugin'><p><short>
  Returns true if the selected module is enabled in the current
- server. This is useful when you are developing RXML applications
+ server.</short> This is useful when you are developing RXML applications
  that you plan to move to other servers, to ensure that all required
- modules are added.</short></p>
+ modules are added. This is a <i>State</i> plugin.</p>
 </desc>
 
 <attr name='module' value='name'><p>
@@ -7868,7 +7912,7 @@ just got zapped?
  Returns true if the browser accepts certain content types as specified
  by it's Accept-header, for example image/jpeg or text/html.</short> If
  browser states that it accepts */* that is not taken in to account as
- this is always untrue. Accept is a <i>Match</i> plugin.
+ this is always untrue. This is a <i>Match</i> plugin.
 </p></desc>
 
 <attr name='accept' value='type1[,type2,...]' required='required'>
@@ -7878,7 +7922,7 @@ just got zapped?
 
 "if#config":#"<desc type='plugin'><p><short>
  Has the config been set by use of the <xref href='../protocol/aconf.tag'
- /> tag?</short> Config is a <i>State</i> plugin.</p>
+ /> tag?</short> This is a <i>State</i> plugin.</p>
 </desc>
 
 <attr name='config' value='name' required='required'>
@@ -7888,7 +7932,7 @@ just got zapped?
 
 "if#cookie":#"<desc type='plugin'><p><short>
  Does the cookie exist and if a value is given, does it contain that
- value?</short> Cookie is an <i>Eval</i> plugin.
+ value?</short> This is an <i>Eval</i> plugin.
 </p></desc>
 <attr name='cookie' value='name[ is value]' required='required'>
 </attr>",
@@ -7896,7 +7940,7 @@ just got zapped?
 //----------------------------------------------------------------------
 
 "if#client":#"<desc type='plugin'><p><short>
- Compares the user agent string with a pattern.</short> Client is an
+ Compares the user agent string with a pattern.</short> This is a
  <i>Match</i> plugin.
 </p></desc>
 <attr name='client' value='' required='required'>
@@ -7906,7 +7950,7 @@ just got zapped?
 
 "if#date":#"<desc type='plugin'><p><short>
  Is the date yyyymmdd?</short> The attributes before, after and
- inclusive modifies the behavior. Date is a <i>Utils</i> plugin.
+ inclusive modifies the behavior. This is a <i>Utils</i> plugin.
 </p></desc>
 <attr name='date' value='yyyymmdd' required='required'><p>
  Choose what date to test.</p>
@@ -7937,8 +7981,8 @@ just got zapped?
 
 "if#defined":#"<desc type='plugin'><p><short>
  Tests if a certain RXML define is defined by use of the <xref
- href='../variable/define.tag' /> tag.</short> Defined is a
- <i>State</i> plugin. </p>
+ href='../variable/define.tag' /> tag, and in that case tests its
+ value.</short> This is an <i>Eval</i> plugin. </p>
 </desc>
 
 <attr name='defined' value='define' required='required'><p>
@@ -7951,7 +7995,7 @@ just got zapped?
  Does the user's computer's DNS name match any of the
  patterns?</short> Note that domain names are resolved asynchronously,
  and that the first time someone accesses a page, the domain name will
- probably not have been resolved. Domain is a <i>Match</i> plugin.
+ probably not have been resolved. This is a <i>Match</i> plugin.
 </p></desc>
 
 <attr name='domain' value='pattern1[,pattern2,...]' required='required'><p>
@@ -7978,15 +8022,15 @@ just got zapped?
 <if sizeof=\"var.foo\">x</if></ex-box>
 
  <p>A similar but more XML compliant construct is a combination of
- <tag>define variable</tag> and an apropriate <tag>if</tag> plugin.
+ <tag>set variable</tag> and an apropriate <tag>if</tag> plugin.
 </p></desc>",
 
 "if#exists":#"<desc type='plugin'><p><short>
- Returns true if the named page is viewable.</short> A non viewable page
+ Returns true if the named page is viewable.</short> A nonviewable page
  is e.g. a file that matches the internal files patterns in the filesystem module.
  If the path does not begin with /, it is assumed to be a URL relative to the directory
  containing the page with the <tag>if</tag>-statement. 'Magic' files like /internal-roxen-unit
- will evaluate as true.</p>
+ will evaluate as true. This is a <i>State</i> plugin.</p>
 </desc>
 
 <attr name='exists' value='path' required='1'>
@@ -7996,10 +8040,11 @@ just got zapped?
 
 "if#internal-exists":#"<desc type='plugin'><p><short>
  Returns true if the named page exists.</short> If the page at the given path
- is non-viewable, e.g. matches the internal files patterns in the filesystem module,
+ is nonviewable, e.g. matches the internal files patterns in the filesystem module,
  it will still be detected by this if plugin. If the path does not begin with /, it
  is assumed to be a URL relative to the directory containing the page with the if statement.
- 'Magic' files like /internal-roxen-unit will evaluate as true.</p></desc>
+ 'Magic' files like /internal-roxen-unit will evaluate as true.
+ This is a <i>State</i> plugin.</p></desc>
 
 <attr name='internal-exists' value='path' required='1'>
  <p>Choose what path in the virtual filesystem to test.</p>
@@ -8009,7 +8054,7 @@ just got zapped?
 
 "if#group":#"<desc type='plugin'><p><short>
  Checks if the current user is a member of the group according
- the groupfile.</short> Group is a <i>Utils</i> plugin.
+ the groupfile.</short> This is a <i>Utils</i> plugin.
 </p></desc>
 <attr name='group' value='name' required='required'><p>
  Choose what group to test.</p>
@@ -8022,10 +8067,9 @@ just got zapped?
 //----------------------------------------------------------------------
 
 "if#ip":#"<desc type='plugin'><p><short>
-
  Does the users computers IP address match any of the
  patterns?</short> This plugin replaces the Host plugin of earlier
- RXML versions. Ip is a <i>Match</i> plugin.
+ RXML versions. This is a <i>Match</i> plugin.
 </p></desc>
 <attr name='ip' value='pattern1[,pattern2,...]' required='required'><p>
  Choose what IP-adress pattern to test.</p>
@@ -8036,7 +8080,7 @@ just got zapped?
 
 "if#language":#"<desc type='plugin'><p><short>
  Does the client prefer one of the languages listed, as specified by the
- Accept-Language header?</short> Language is a <i>Match</i> plugin.
+ Accept-Language header?</short> This is a <i>Match</i> plugin.
 </p></desc>
 
 <attr name='language' value='language1[,language2,...]' required='required'><p>
@@ -8049,7 +8093,7 @@ just got zapped?
 "if#match":#"<desc type='plugin'><p><short>
  Evaluates patterns.</short> More information can be found in the
  <xref href='../../tutorial/if_tags/plugins.xml'>If tags
- tutorial</xref>. Match is an <i>Eval</i> plugin. </p></desc>
+ tutorial</xref>. Match is an <i>Eval</i> plugin.</p></desc>
 
 <attr name='match' value='pattern' required='required'><p>
  Choose what pattern to test. The pattern could be any expression.
@@ -8090,13 +8134,13 @@ just got zapped?
 //----------------------------------------------------------------------
 
 "if#Match":#"<desc type='plugin'><p><short>
- Case sensitive version of the match plugin</short></p>
+ Case sensitive version of the <tag>if match</tag> plugin.</short></p>
 </desc>",
 
 //----------------------------------------------------------------------
 
 "if#pragma":#"<desc type='plugin'><p><short>
- Compares the HTTP header pragma with a string.</short> Pragma is a
+ Compares the HTTP header pragma with a string.</short> This is a
  <i>State</i> plugin.
 </p></desc>
 
@@ -8114,7 +8158,7 @@ just got zapped?
 
 "if#prestate":#"<desc type='plugin'><p><short>
  Are all of the specified prestate options present in the URL?</short>
- Prestate is a <i>State</i> plugin.
+ This is a <i>State</i> plugin.
 </p></desc>
 <attr name='prestate' value='option1[,option2,...]' required='required'><p>
  Choose what prestate to test.</p>
@@ -8124,7 +8168,7 @@ just got zapped?
 //----------------------------------------------------------------------
 
 "if#referrer":#"<desc type='plugin'><p><short>
- Does the referrer header match any of the patterns?</short> Referrer
+ Does the referrer header match any of the patterns?</short> This
  is a <i>Match</i> plugin.
 </p></desc>
 <attr name='referrer' value='pattern1[,pattern2,...]' required='required'><p>
@@ -8137,7 +8181,7 @@ just got zapped?
 // The list of support flags is extracted from the supports database and
 // concatenated to this entry.
 "if#supports":#"<desc type='plugin'><p><short>
- Does the browser support this feature?</short> Supports is a
+ Does the browser support this feature?</short> This is a
  <i>State</i> plugin.
 </p></desc>
 
@@ -8151,7 +8195,7 @@ just got zapped?
 
 "if#time":#"<desc type='plugin'><p><short>
  Is the time hhmm, hh:mm, yyyy-mm-dd or yyyy-mm-ddThh:mm?</short> The attributes before, after,
- inclusive and until modifies the behavior. Time is a <i>Utils</i> plugin.
+ inclusive and until modifies the behavior. This is a <i>Utils</i> plugin.
 </p></desc>
 <attr name='time' value='hhmm|yyyy-mm-dd|yyyy-mm-ddThh:mm' required='required'><p>
  Choose what time to test.</p>
@@ -8186,7 +8230,7 @@ just got zapped?
 
 "if#user":#"<desc type='plugin'><p><short>
  Has the user been authenticated as one of these users?</short> If any
- is given as argument, any authenticated user will do. User is a
+ is given as argument, any authenticated user will do. This is a
  <i>Utils</i> plugin.
 </p></desc>
 
@@ -8198,8 +8242,8 @@ just got zapped?
 //----------------------------------------------------------------------
 
 "if#variable":#"<desc type='plugin'><p><short>
- Does the variable exist and, optionally, does it's content match the
- pattern?</short> Variable is an <i>Eval</i> plugin.
+ Does the variable exist and, optionally, does its content match the
+ pattern?</short> This is an <i>Eval</i> plugin.
 </p></desc>
 
 <attr name='variable' value='name[ operator pattern]' required='required'><p>
@@ -8210,7 +8254,7 @@ just got zapped?
 //----------------------------------------------------------------------
 
 "if#Variable":#"<desc type='plugin'><p><short>
- Case sensitive version of the variable plugin</short></p>
+ Case sensitive version of the <tag>if variable</tag> plugin.</short></p>
 </desc>",
 
 //----------------------------------------------------------------------
@@ -8218,21 +8262,21 @@ just got zapped?
 // The list of support flags is extracted from the supports database and
 // concatenated to this entry.
 "if#clientvar":#"<desc type='plugin'><p><short>
- Evaluates expressions with client specific values.</short> Clientvar
+ Evaluates expressions with client specific values.</short> This
  is an <i>Eval</i> plugin.
 </p></desc>
 
 <attr name='clientvar' value='variable [is value]' required='required'><p>
  Choose which variable to evaluate against. Valid operators are '=',
  '==', 'is', '!=', '&lt;' and '&gt;'.</p>
-</attr>
-
-<p>Available variables are:</p>",
+</attr>",
+// <p>Available variables are:</p>
 
 //----------------------------------------------------------------------
 
 "if#sizeof":#"<desc type='plugin'><p><short>
- Compares the size of a variable with a number.</short></p>
+ Compares the size of a variable with a number.</short>
+ This is an <i>Eval</i> plugin.</p>
 
 <ex>
 <set variable=\"var.x\" value=\"hello\"/>
