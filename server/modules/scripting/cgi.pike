@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.15 1997/04/11 14:24:03 per Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.16 1997/04/12 07:55:52 neotron Exp $";
 
 #include <module.h>
 
@@ -21,10 +21,10 @@ static array runuser;
 import String;
 import Stdio;
 
-mapping build_env_vars(string f, object id, string|void path_info)
+mapping my_build_env_vars(string f, object id, string|void path_info)
 {
   
-  mapping new = ::build_env_vars(f,id,path_info);
+  mapping new = build_env_vars(f,id,path_info);
   if(QUERY(rawauth) && id->rawauth)
     new["HTTP_AUTHORIZATION"] = id->rawauth;
   if(QUERY(clearpass) && id->realauth)
@@ -231,7 +231,7 @@ void start(int n, object conf)
   env["SERVER_PROTOCOL"]="HTTP/1.0";
   env["SERVER_URL"]=conf->query("MyWorldLocation");
   env["AUTH_TYPE"]="Basic";
-  env["ROXEN_CGI_NICE_VALUE"] = query("nice");
+  env["ROXEN_CGI_NICE_VALUE"] = (string)query("nice");
   env["ROXEN_CGI_LIMITS"] = ("core_dump_size="+query("coresize")+
 			     ";time_cpu="+query("maxtime")+
 			     ";data_size="+query("datasize")+
@@ -371,20 +371,22 @@ mixed find_file(string f, object id)
 
   if(!fork())
   {
-    catch {
+    mixed err = catch {
+      string oldwd = getcwd() + "/";
       cd(wd);
-      pipe1->dup2(file("stdin"));
-      pipe1->dup2(file("stdout"));
+      pipe1->dup2(files.file("stdin"));
+      pipe1->dup2(files.file("stdout"));
       if(QUERY(err))
-	pipe1->dup2(file("stderr"));
+	pipe1->dup2(files.file("stderr"));
       catch(((program)"privs")("CGI script", uid));
       if(QUERY(use_wrapper))
-	exece(combine_path(getcwd()+"/", QUERY(wrapper)),
+	exece(combine_path(oldwd, QUERY(wrapper)),
 	      ({f})+make_args(id->rest_query), 
-	      build_env_vars(f, id, path_info));
-      exece(f, make_args(id->rest_query), build_env_vars(f, id, path_info));
+	      my_build_env_vars(f, id, path_info));
+      exece(f, make_args(id->rest_query), my_build_env_vars(f, id, path_info));
     };
-    roxen_perror("CGI: Exec failed!\n");
+    roxen_perror("CGI: Exec failed!\n%O\n",
+		 describe_backtrace((array)err));
     exit(0);
   }
   destruct(pipe1);
