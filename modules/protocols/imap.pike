@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.67 1999/02/18 20:42:00 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.68 1999/02/18 20:45:21 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -75,6 +75,7 @@ class imap_mail
       ([ "read" : "\\Seen",
 	 "answered" : "\\Answered",
 	 "deleted" : "\\Deleted",
+	 "flagged" : "\Flagged",
 	 "draft" : "\\Draft" ]) [flag];
       if (imap_flag)
 	res[imap_flag] = 1;
@@ -94,6 +95,7 @@ class imap_mail
 	"\\Seen" : "read",
 	"\\Answered" : "answered",
 	"\\Deleted" : "deleted",
+	"\\Flagged" : "flagged",
 	"\\Draft" : "draft",
       ])[f] || (sizeof(f) && (f[0] != '/') && ("IMAP:" + f));
 
@@ -113,6 +115,7 @@ class imap_mail
 	"\\Seen" : "read",
 	"\\Answered" : "answered",
 	"\\Deleted" : "deleted",
+	"\\Flagged" : "flagged",
 	"\\Draft" : "draft",
       ])[f] || (sizeof(f) && (f[0] != '/') && ("IMAP:" + f));
 
