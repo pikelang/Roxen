@@ -1,10 +1,7 @@
 int current_test, tests_failed;
 int verbose;
 
-void create( int vb )
-{
-  verbose = vb;
-}
+void create( int vb ) { verbose = vb; }
 
 
 string describe_arglist( array args )
