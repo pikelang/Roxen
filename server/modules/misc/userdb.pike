@@ -3,7 +3,7 @@
 // User database. Reads the system password database and use it to
 // authentificate users.
 
-constant cvs_version = "$Id: userdb.pike,v 1.28 1998/04/29 00:10:34 grubba Exp $";
+constant cvs_version = "$Id: userdb.pike,v 1.29 1998/05/17 20:13:19 neotron Exp $";
 
 #include <module.h>
 inherit "module";
@@ -303,6 +303,14 @@ void read_data()
   if(QUERY(method) == "getpwent" && (original_data))
     slow_update();
 #endif
+
+  // We do need to continue calling out.. Duh.
+  int delta = QUERY(update);
+  if (delta > 0) {
+    last_password_read=time(1);
+    remove_call_out(read_data);
+    call_out(read_data, delta*60);
+  }
 }
 
 void start(int i)
