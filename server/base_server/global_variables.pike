@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: global_variables.pike,v 1.85 2001/09/28 23:47:27 nilsson Exp $
+// $Id: global_variables.pike,v 1.86 2002/01/11 11:39:47 grubba Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -87,8 +87,8 @@ void set_up_ftp_variables( Protocol o )
   defvar( "shells", "",  LOCALE(70, "Shell database"), 
 	  TYPE_FILE,
           LOCALE(71, "If this string is set to anything but the empty string, "
-          "it should point to a file containing a list of valid shells. "
-          "Users with shells that does not figure in this list will not "
+          "it should specify a file containing a list of valid shells. "
+          "Users with shells that are not in this list will not "
           "be allowed to log in.") );
 
   defvar( "passive_port_min", 0, LOCALE(257, "Passive port minimum"),
