@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.126 1999/06/01 11:56:04 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.127 1999/07/02 20:32:35 neotron Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -488,6 +488,14 @@ private int parse_got(string s)
 #ifdef DEBUG
 	    perror("Client extension: "+contents+"\n");
 #endif
+	   case "range":
+	    if(GLOBVAR(EnableRangeHandling)) {
+	      contents = lower_case(contents-" ");
+	      if(!search(contents, "bytes"))
+		// Only care about "byte" ranges.
+		misc->range = contents[6..];
+	    }
+	    break;
 	    
 	   case "connection":
 	    contents = lower_case(contents);
@@ -873,6 +881,7 @@ constant errors =
   202:"202 Accepted",
   203:"203 Provisional Information",
   204:"204 No Content",
+  206:"206 Partial Content", // Byte ranges
   
   300:"300 Moved",
   301:"301 Permanent Relocation",
@@ -890,6 +899,7 @@ constant errors =
   408:"408 Request timeout",
   409:"409 Conflict",
   410:"410 This document is no more. It has gone to meet it's creator. It is gone. It will not be coming back. Give up. I promise. There is no such file or directory.",
+  416:"416 Requested range not satisfiable",
   
   500:"500 Internal Server Error.",
   501:"501 Not Implemented",
@@ -909,6 +919,7 @@ void do_log()
     if(conf)
     {
       if(file->len > 0) conf->sent+=file->len;
+      file->len += misc->_log_cheat_addition;
       conf->log(file, this_object());
     }
   }
@@ -980,6 +991,171 @@ string handle_error_file_request(array err, int eid)
   return format_backtrace(bt,eid)+"<hr noshade><pre>"+data+"</pre>";
 }
 
+
+// The wrapper for multiple ranges (send a multipart/byteranges reply).
+#define BOUND "Byte_Me_Now_Roxen"
+
+class MultiRangeWrapper
+{
+  object file;
+  function rcb;
+  int current_pos, len, separator, is_single_range;
+  array ranges;
+  array range_info = ({});
+  string type;
+  string stored_data = "";
+  void create(mapping _file, mapping heads, array _ranges)
+  {
+    file = _file->file;
+    len = _file->len;
+    ranges = _ranges;
+    int clen;
+    if(sizeof(ranges) == 1) {
+      is_single_range = 1;
+      clen = 1+ ranges[0][1] - ranges[0][0];
+      range_info = ({ ({ clen }) });
+    } else {
+      foreach(indices(heads), string h)
+      {
+	if(lower_case(h) == "content-type") {
+	  type = heads[h];
+	  m_delete(heads, h);
+	}
+      }
+      heads["Content-Type"] = "multipart/byteranges; boundary=" BOUND;
+      foreach(ranges, array range) {
+	int rlen = 1+ range[1] - range[0];
+	string sep =  sprintf("\r\n--%s\r\nContent-Type: %O\r\n"
+			      "Content-Range: bytes %d-%d/%d\r\n\r\n",
+			      BOUND, type, @range, len);
+	clen += rlen + strlen(sep);
+	range_info += ({ ({ rlen, sep }) });
+      }
+      clen += strlen(BOUND) + 8; // End boundary length.
+    }
+    _file->len = clen;
+  }
+
+  string read(mixed ... args)
+  {
+    string out = stored_data;
+    int rlen, num_bytes, total;
+    if(sizeof(args))
+      num_bytes = args[0];
+    else
+      num_bytes = 0xeffffff;
+    //    werror(sprintf("Want to read %d bytes\n", num_bytes));
+    total = num_bytes;
+    num_bytes -= strlen(out);
+    foreach(ranges, array range)
+    {
+      rlen = range_info[0][0] - current_pos;
+      if(separator != 1) {
+	// New range, write new separator.
+	write("Initiating new range %d -> %d.\n", @range);
+	if(!is_single_range) {
+	  out += range_info[0][1];
+	  num_bytes -= strlen(range_info[0][1]);
+	}
+	file->seek(range[0]);
+	separator = 1;
+      }
+      if(num_bytes > 0) {
+	if(rlen <= num_bytes)
+	  // Entire range fits.
+	{
+	  out += file->read(rlen);
+	  num_bytes -= rlen;
+	  current_pos = separator = 0;
+	  ranges = ranges[1..]; // One range done.
+	  range_info = range_info[1..];
+	} else {
+	  out += file->read(num_bytes);
+	  current_pos += num_bytes;
+	  num_bytes = 0;
+	}
+      }
+      if(strlen(out) > total)
+      {
+	// Oops. too much data. Send amount asked for and save
+	// the rest.
+	stored_data = out[total..];
+	//	werror(sprintf("Returning %d bytes in loop.\n", strlen(out[..total-1])));
+	return out[..total-1];
+      }
+    }
+    if(!is_single_range && separator != 2) {
+      // End boundary. Only write once.
+      separator = 2;
+      out += "\r\n--" BOUND "--\r\n";
+    }  
+    if(strlen(out) > total)
+    {
+      // Oops. too much data again. Write and store. Write and store.
+      stored_data = out[total..];
+      //      werror(sprintf("Returning %d bytes outside loop.\n", strlen(out[..total-1])));
+      return out[..total-1];
+    }
+    stored_data = ""; // Very important. Ia.
+    //    werror(sprintf("Returning last %d bytes.\n", strlen(out[..total-1])));
+    return out ; // We are finally done.
+  }
+  
+  mixed `->(string what) {
+    switch(what) {
+     case "read":
+      return read;
+
+     case "set_nonblocking":
+      return 0;
+
+     default:
+      return file[what];
+    }
+  }
+}
+
+
+// Parse the range header itno multiple ranges.
+array parse_range_header(int len)
+{
+  array ranges = ({});
+  foreach(misc->range / ",", string range)
+  {
+    int r1, r2;
+    if(range[0] == '-' ) {
+      // End of file request
+      r1 = (len - (int)range[1..]);
+      if(r1 < 0) {
+	// Entire file requested here. 
+	r1 = 0;
+      }
+      ranges += ({ ({ len - (int)range[1..], len-1 }) }); 
+    } else if(range[-1] == '-') {
+      // Rest of file request
+      r1 = (int)range;
+      if(r1 >= len)
+	// Range beginning is after EOF.
+	continue; 
+      ranges += ({ ({ r1, len-1 }) });
+    } else if(sscanf(range, "%d-%d", r1, r2)==2) {
+      // Standard range
+      if(r1 <= r2) {
+	if(r1 >= len)
+	  // Range beginning is after EOF.
+	  continue;
+	ranges += ({ ({ r1, r2 < len ? r2 : len -1  }) });
+      }
+      else 
+	// A syntatically incorrect range should make the server
+	// ignore the header. Really.
+	return 0;
+    } else
+      // Invalid syntax again...
+      return 0; 
+  }
+  return ranges;
+}
 
 // Send the result.
 void send_result(mapping|void result)
@@ -1080,6 +1256,53 @@ void send_result(mapping|void result)
 
     if(mappingp(misc->moreheads)) {
       heads |= misc->moreheads;
+    }
+
+    if(misc->range && file->len && objectp(file->file) && !file->data &&
+       file->error == 200 && (method == "GET" || method == "HEAD"))
+      // Plain and simple file and a Range header. Let's play.
+      // Also we only bother with 200-requests. Anything else should be
+      // nicely and completely ignored. Also this is only used for GET and
+      // HEAD requests.
+    {
+      // split the range header. If no valid ranges are found, ignore it.
+      // If one is found, send that range. If many are found we need to
+      // use a wrapper and send a multi-part message. 
+      array ranges = parse_range_header(file->len);
+      if(ranges) // No incorrect syntax...
+      { 
+	if(sizeof(ranges)) // And we have valid ranges as well.
+	{
+	  file->error = 206; // 206 Partial Content
+	  if(sizeof(ranges) == 1)
+	  {
+	    heads["Content-Range"] = sprintf("bytes %d-%d/%d",
+					     @ranges[0], file->len);
+	    if(ranges[0][1] == (file->len - 1) &&
+	       GLOBVAR(RestoreConnLogFull))
+	      // Log continuations (ie REST in FTP), 'range XXX-'
+	      // using the entire length of the file, not just the
+	      // "sent" part. Ie add the "start" byte location when logging
+	      misc->_log_cheat_addition = ranges[0][0];
+	    file->file = MultiRangeWrapper(file, heads, ranges);
+	  } else {
+	    // Multiple ranges. Multipart reply and stuff needed.
+	    // We do this by replacing the file object with a wrapper.
+	    // Nice and handy.
+	    file->file = MultiRangeWrapper(file, heads, ranges);
+	  }
+	} else {
+	  // Got the header, but the specified ranges was out of bounds.
+	  // Reply with a 416 Requested Range not satisfiable.
+	  file->error = 416;
+	  heads["Content-Range"] = "*/"+file->len;
+	  if(method == "GET") {
+	    file->data = "The requested byte range is out-of-bounds. Sorry.";
+	    file->len = strlen(file->data);
+	    file->file = 0;
+	  }
+	}
+      }
     }
     
     array myheads = ({prot+" "+(file->rettext||errors[file->error])});

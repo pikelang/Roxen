@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.351 1999/06/23 23:54:24 peter Exp $
+ * $Id: roxen.pike,v 1.352 1999/07/02 20:32:35 neotron Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -8,7 +8,7 @@
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version = "$Id: roxen.pike,v 1.351 1999/06/23 23:54:24 peter Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.352 1999/07/02 20:32:35 neotron Exp $";
 
 object backend_thread;
 object argcache;
@@ -1575,6 +1575,7 @@ public string config_url()
   
 int cache_disabled_p() { return !QUERY(cache);         }
 int syslog_disabled()  { return QUERY(LogA)!="syslog"; }
+int range_disabled_p() { return !QUERY(EnableRangeHandling);  }
 private int ident_disabled_p() { return QUERY(default_ident); }
 
 class ImageCache
@@ -2310,7 +2311,27 @@ private void define_global_variables( int argc, array (string) argv )
 	  "This is very useful if you are debugging your own modules "
 	  "or writing Pike scripts.");
   
-  
+ 
+  globvar("RestoreConnLogFull", 0,
+	  "Range: Log entire file length in restored connections",
+	  TYPE_TOGGLE,
+	  "If this toggle is enabled log entries for restored connections "
+	  "will log the amount of sent data plus the restoration location. "
+	  "Ie if a user has downloaded 100 bytes of a file already, and makes "
+	  "a Range request fetching the remaining 900 bytes, the log entry "
+	  "will log it as if the entire 1000 bytes were downloaded. "
+	  "<p>This is useful if you want to know if downloads were successful "
+	  "(the user has the complete file downloaded). The drawback is that "
+	  "bandwidth statistics on the log file will be incorrect. The "
+	  "statistics in Roxen will continue being correct.", 0,
+	  range_disabled_p); 
+
+  globvar("EnableRangeHandling", 0, "Range: Enable range handling",
+	  TYPE_TOGGLE,
+	  "Enable handling of the range headers. This allows browsers to "
+	  "download partial files. Mostly used to continue interrupted "
+	  "connections");	
+
   // Hidden variables (compatibility ones, or internal or too
   // dangerous
   /*  globvar("BS", 0, "Configuration interface: Compact layout",*/
