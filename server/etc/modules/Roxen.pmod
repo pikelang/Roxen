@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.13 2000/03/20 07:29:16 mast Exp $
+ * $Id: Roxen.pmod,v 1.14 2000/03/25 23:47:31 nilsson Exp $
  *
  * Various helper functions.
  *
@@ -670,7 +670,6 @@ class ScopeRoxen {
      case "time":
        return time(1);
      case "server":
-       //FIXME: This does not always work!
        return c->id->conf->query("MyWorldLocation");
     }
     :: `[] (var, c, scope);
@@ -843,4 +842,45 @@ int is_modified(string a, int t, void|int len)
 int httpdate_to_time(string date)
 {
   return parse_since(date)[0]||-1;
+}
+
+string get_server_url(object c) {
+  string url=c->query("MyWorldLocation");
+  if(stringp(url) && sizeof(url)) return url;
+  array(string) urls=c->query("URLs");
+  return get_world(urls);
+}
+
+string get_world(array(string) urls) {
+  if(!sizeof(urls)) return 0;
+
+  string url=urls[0];
+  foreach( ({"http:","fhttp:","https:","ftp:"}), string p)
+    foreach(urls, string u)
+      if(u[0..sizeof(p)-1]==p) {
+	url=u;
+	break;
+      }
+
+  string protocol, server, path;
+  int port;
+  if(sscanf(url, "%s://%s:%d/%s", protocol, server, port, path)!=4 &&
+     sscanf(url, "%s://%s/%s", protocol, server, path)!=3)
+    return 0;
+
+  if(protocol=="fhttp") protocol="http";
+
+  array hosts=({ gethostname() }), dns;
+  catch(dns=Protocols.DNS.client()->gethostbyname(hosts[0]));
+  if(dns && sizeof(dns))
+    hosts+=dns[2]+dns[1];
+
+  foreach(hosts, string host)
+    if(glob(server, host)) {
+      server=host;
+      break;
+    }
+
+  if(port) return sprintf("%s://%s:%d/%s", protocol, server, port, path);
+  return sprintf("%s://%s/%s", protocol, server, path);
 }
