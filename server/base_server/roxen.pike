@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.324 1999/09/05 02:20:33 per Exp $
+ * $Id: roxen.pike,v 1.325 1999/09/05 15:49:11 grubba Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.324 1999/09/05 02:20:33 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.325 1999/09/05 15:49:11 grubba Exp $";
 
 object backend_thread;
 object argcache;
@@ -1088,6 +1088,8 @@ array compile_module( string file )
   object o;
   program p;
 
+  MD_PERROR(("Compiling " + file + "...\n"));
+
   if (catch(p = my_compile_file(file)) || (!p)) {
     MD_PERROR((" compilation failed"));
     throw("MODULE: Compilation failed.\n");
@@ -1759,6 +1761,7 @@ class ArgCache
 mapping cached_decoders = ([]);
 string decode_charset( string charset, string data )
 {
+  // FIXME: This code is probably not thread-safe!
   if( charset == "iso-8859-1" ) return data;
   if( !cached_decoders[ charset ] )
     cached_decoders[ charset ] = Locale.Charset.decoder( charset );
@@ -2866,7 +2869,7 @@ int main(int argc, array argv)
 #endif /* THREADS */
 
   // Signals which cause a restart (exitcode != 0)
-  foreach( ({ "SIGINT","SIGTERM" }), string sig) {
+  foreach( ({ "SIGINT", "SIGTERM" }), string sig) {
     catch { signal(signum(sig), exit_when_done); };
   }
   catch { signal(signum("SIGHUP"), reload_all_configurations); };
