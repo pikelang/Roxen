@@ -8,7 +8,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.57 1999/10/04 15:11:55 per Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.58 1999/12/07 22:36:09 mast Exp $";
 constant thread_safe=1;
 
 
@@ -109,7 +109,7 @@ void create()
 	 "GET and POST. If unset, this filesystem will be a _very_ "
 	 "public one (anyone can edit files located on it)");
 
-  defvar("stat_cache", 1, "Cache the results of stat(2)",
+  defvar("stat_cache", 0, "Cache the results of stat(2)",
 	 TYPE_FLAG|VAR_MORE,
 	 "This can speed up the retrieval of files up to 60/70% if you"
 	 " use NFS, but it does use some memory.");
