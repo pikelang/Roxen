@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.19 2000/04/05 16:41:05 js Exp $
+ * $Id: create_configif.pike,v 1.20 2000/04/09 13:04:24 grubba Exp $
  *
  * Create an initial administration interface server.
  */
@@ -213,6 +213,9 @@ int main(int argc, array argv)
 #include %3cetc/extensions%3e
 tag text/html
 xml text/html
+rad text/html
+ent text/html
+
 </str></var>
 </region>
 
