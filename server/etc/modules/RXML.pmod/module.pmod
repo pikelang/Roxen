@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.168 2001/06/19 00:24:21 mast Exp $
+// $Id: module.pmod,v 1.169 2001/06/20 23:27:24 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -68,7 +68,6 @@ class RequestID { };
 #define MAGIC_HELP_ARG
 // #define OBJ_COUNT_DEBUG
 // #define RXML_VERBOSE
-// #define PROFILE_PARSER
 
 
 #ifdef RXML_OBJ_DEBUG
@@ -95,32 +94,6 @@ class RequestID { };
 #  define OBJ_COUNT (__object_marker ? "[" + __object_marker->count + "]" : "")
 #else
 #  define OBJ_COUNT ""
-#endif
-
-#ifdef PROFILE_PARSER
-
-#define PROFILE_ENTER(ctx, what) do {					\
-  ctx->profile[what] -= gethrtime();					\
-  /* if (what == "rxml internal") trace (1); */				\
-} while (0)
-
-#define PROFILE_LEAVE(ctx, what) do {					\
-  /* if (what == "rxml internal") trace (0); */				\
-  ctx->profile[what] += gethrtime();					\
-} while (0)
-
-#define PROFILE_SWITCH(ctx, from, to) do {				\
-  /* if (from == "rxml internal") trace (0); */				\
-  int now = gethrtime();						\
-  ctx->profile[from] += now;						\
-  ctx->profile[to] -= now;						\
-  /* if (to == "rxml internal") trace (1); */				\
-} while (0)
-
-#else
-#  define PROFILE_ENTER(ctx, what) do ; while (0)
-#  define PROFILE_LEAVE(ctx, what) do ; while (0)
-#  define PROFILE_SWITCH(ctx, from, to) do ; while (0)
 #endif
 
 #ifdef RXML_VERBOSE
@@ -358,8 +331,9 @@ class Tag
 
 #define EVAL_FRAME(_frame, _ctx, _parser, _type, _args, _content, _res)	\
   eval_frame: do {							\
+    EVAL_ARGS_FUNC argfunc = 0;						\
+									\
     mixed err = catch {							\
-      EVAL_ARGS_FUNC argfunc;						\
       if (!_frame->args)						\
 	argfunc = _frame->_prepare (_ctx, _type, _args);		\
       _res = _frame->_eval (_ctx, _parser, _type, _content || "");	\
@@ -369,6 +343,14 @@ class Tag
       }									\
       break eval_frame;							\
     };									\
+									\
+    if (_parser->p_code) {						\
+      /* Make an unparsed frame in the p-code if the evaluation		\
+       * fails. */							\
+      _frame->flags |= FLAG_UNPARSED;					\
+      _frame->args = _args, _frame->content = _content || "";		\
+      _parser->p_code->add (_frame);					\
+    }									\
 									\
     if (objectp (err) && ([object] err)->thrown_at_unwind) {		\
       UNWIND_STATE ustate = _ctx->unwind_state;				\
@@ -414,8 +396,7 @@ class Tag
 				 void|string content)
   {
     Type type = parser->type;
-    if (type->handle_literals) parser->handle_literal();
-    else if (parser->p_code) parser->p_code_literal();
+    parser->drain_output();
 
     Context ctx = parser->context;
 
@@ -428,18 +409,14 @@ class Tag
     mixed result;
     EVAL_FRAME (frame, ctx, parser, type, args, content, result);
 
-    if (result != nil) {
-      if (type->free_text && !parser->p_code) return ({result});
-      parser->add_value (result);
-    }
+    if (result != nil) parser->add_value (result);
     return ({});
   }
 
   final array _p_xml_handle_pi_tag (object/*(PXml)*/ parser, string content)
   {
     Type type = parser->type;
-    if (type->handle_literals) parser->handle_literal();
-    else if (parser->p_code) parser->p_code_literal();
+    parser->drain_output();
 
     sscanf (content, "%[ \t\n\r]%s", string ws, string rest);
     if (ws == "" && rest != "") {
@@ -461,10 +438,7 @@ class Tag
     mixed result;
     EVAL_FRAME (frame, ctx, parser, type, 0, content, result);
 
-    if (result != nil) {
-      if (type->free_text && !parser->p_code) return ({result});
-      parser->add_value (result);
-    }
+    if (result != nil) parser->add_value (result);
     return ({});
   }
 
@@ -794,8 +768,6 @@ class TagSet
   final Parser `() (Type top_level_type, void|RequestID id, void|int make_p_code)
   //! For compatibility. Use @[get_parser] instead.
   {
-    // Temporary measure to catch places to update.
-    werror ("Old RXML.TagSet.`() used:\n" + describe_backtrace (backtrace()));
     return get_parser (top_level_type, id, make_p_code);
   }
 
@@ -1187,10 +1159,6 @@ class Context
   //! set.
 #endif
 
-#ifdef PROFILE_PARSER
-  mapping(string:int) profile = ([]);
-#endif
-
   array(string|int) parse_user_var (string var, void|string|int scope_name)
   //! Parses the var string for scope and/or subindexes according to
   //! the RXML rules, e.g. @tt{"scope.var.1.foo"@}. Returns an array
@@ -1551,7 +1519,7 @@ class Context
     return unwind_state && unwind_state->reason == "streaming";
   }
 
-  void handle_exception (mixed err, PCode|Parser evaluator)
+  void handle_exception (mixed err, PCode|Parser evaluator, void|int compile_error)
   //! This function gets any exception that is catched during
   //! evaluation. evaluator is the object that catched the error.
   {
@@ -1574,8 +1542,11 @@ class Context
 	}
 	else
 	  msg = err->msg;
-	if (evaluator->report_error (msg))
+	if (evaluator->report_error (msg)) {
+	  if (compile_error && evaluator->p_code)
+	    evaluator->p_code->add (CompiledError (err));
 	  return;
+	}
       }
       throw (err);
     }
@@ -1597,7 +1568,7 @@ class Context
     Frame prev_top_frame = frame;
     frame = 0;
     mixed err = catch {
-      Parser parser = type->get_pcode_parser (this_object(), tag_set);
+      Parser parser = type->get_parser (this_object(), tag_set, 0, 1);
       parser->write_end (to_parse);
       res = parser->eval();
       p_code = parser->p_code;
@@ -1610,9 +1581,6 @@ class Context
 
   //(!) Internals:
 
-  string current_var;
-  // Used to get the parsed variable into the RXML error backtrace.
-
   final Parser new_parser (Type top_level_type, void|int make_p_code)
   // Returns a new parser object to start parsing with this context.
   // Normally TagSet.`() should be used instead of this.
@@ -1620,13 +1588,12 @@ class Context
 #ifdef MODULE_DEBUG
     if (in_use || frame) fatal_error ("Context already in use.\n");
 #endif
-    return make_p_code ?
-      top_level_type->get_pcode_parser (this_object(), tag_set) :
-      top_level_type->get_parser (this_object(), tag_set);
+    return top_level_type->get_parser (this_object(), tag_set, 0, make_p_code);
   }
 
 #ifdef DEBUG
   private int eval_finished = 0;
+  private mixed foo;
 #endif
 
   final void eval_finish()
@@ -1634,8 +1601,9 @@ class Context
   {
     if (!frame_depth && tag_set) {
 #ifdef DEBUG
-      if (eval_finished) fatal_error ("Context already finished.\n");
+      if (eval_finished) fatal_error ("Context already finished.\n" + foo);
       eval_finished = 1;
+      foo = describe_backtrace (backtrace());
 #endif
       tag_set->call_eval_finish_funs (this_object());
     }
@@ -1805,10 +1773,8 @@ class Backtrace
   {
     type = _type;
     msg = _msg;
-    if (context = _context || RXML_CONTEXT) {
+    if (context = _context || RXML_CONTEXT)
       frame = context->frame;
-      current_var = context->current_var;
-    }
     if (_backtrace) backtrace = _backtrace;
     else {
       backtrace = predef::backtrace();
@@ -1820,33 +1786,34 @@ class Backtrace
   //! Returns a formatted RXML frame backtrace.
   {
     String.Buffer txt = String.Buffer();
-    txt->add (no_msg ? "" : "RXML" + (type ? " " + type : "") + " error");
+    function(string:void) add = txt->add;
+    add (no_msg ? "" : "RXML" + (type ? " " + type : "") + " error");
     if (context) {
-      if (!no_msg) txt->add (": " + (msg || "(no error message)\n"));
-      if (current_var) txt->add (" | &" + current_var + ";\n");
+      if (!no_msg) add (": " + (msg || "(no error message)\n"));
+      if (current_var) add (" | &" + current_var + ";\n");
       for (Frame f = frame; f; f = f->up) {
 	string name;
 	if (f->tag) name = f->tag->name;
 	else if (!f->up) break;
 	else name = "(unknown)";
 	if (f->flags & FLAG_PROC_INSTR)
-	  txt->add (" | <?" + name + "?>\n");
+	  add (" | <?" + name + "?>\n");
 	else {
-	  txt->add (" | <" + name);
+	  add (" | <" + name);
 	  if (mappingp (f->args))
 	    foreach (sort (indices (f->args)), string arg) {
 	      mixed val = f->args[arg];
-	      txt->add (" " + arg + "=");
-	      if (arrayp (val)) txt->add (map (val, error_print_val) * ",");
-	      else txt->add (error_print_val (val));
+	      add (" " + arg + "=");
+	      if (arrayp (val)) add (map (val, error_print_val) * ",");
+	      else add (error_print_val (val));
 	    }
-	  else txt->add (" (no argmap)");
-	  txt->add (">\n");
+	  else add (" (no argmap)");
+	  add (">\n");
 	}
       }
     }
     else
-      if (!no_msg) txt->add (" (no context): " + (msg || "(no error message)\n"));
+      if (!no_msg) add (" (no context): " + (msg || "(no error message)\n"));
     return txt->get();
   }
 
@@ -1900,11 +1867,9 @@ final Context get_context() {return [object(Context)] RXML_CONTEXT;}
     if (ctx->in_use && ctx->in_use != this_thread())			\
       fatal_error ("Attempt to use context asynchronously.\n");		\
     ctx->in_use = this_thread();					\
-  }									\
-  PROFILE_ENTER (ctx, "rxml internal");
+  }
 
 #define LEAVE_CONTEXT()							\
-  PROFILE_LEAVE (RXML_CONTEXT, "rxml internal");			\
   if (Context ctx = RXML_CONTEXT)					\
     if (__old_ctx != ctx) ctx->in_use = 0;				\
   SET_RXML_CONTEXT (__old_ctx);
@@ -1913,11 +1878,9 @@ final Context get_context() {return [object(Context)] RXML_CONTEXT;}
 
 #define ENTER_CONTEXT(ctx)						\
   Context __old_ctx = RXML_CONTEXT;					\
-  SET_RXML_CONTEXT (ctx);						\
-  PROFILE_ENTER (ctx, "rxml internal");
+  SET_RXML_CONTEXT (ctx);
 
 #define LEAVE_CONTEXT()							\
-  PROFILE_LEAVE (RXML_CONTEXT, "rxml internal");			\
   SET_RXML_CONTEXT (__old_ctx);
 
 #endif
@@ -2697,11 +2660,9 @@ class Frame
 #define LOW_CALL_CALLBACK(res, cb, args...)				\
   do {									\
     THIS_TAG_DEBUG ("Calling " #cb "\n");				\
-    PROFILE_SWITCH (ctx, "rxml internal", "tag:" + tag->name);		\
     COND_PROF_ENTER(tag,tag->name,"tag");				\
     res = (cb) (args); /* Might unwind. */				\
     COND_PROF_LEAVE(tag,tag->name,"tag");				\
-    PROFILE_SWITCH (ctx, "tag:" + tag->name, "rxml internal");		\
   } while (0)
 
 #define EXEC_CALLBACK(ctx, evaler, exec, cb, args...)			\
@@ -2808,11 +2769,9 @@ class Frame
 #endif
 	up = ctx->frame;
       ctx->frame = this;	// Push the frame to get proper backtraces.
-      if (ctx->frame_depth++ >= ctx->max_frame_depth) {
-	ctx->frame_depth--;
+      if (ctx->frame_depth++ >= ctx->max_frame_depth)
 	_run_error ("Too deep recursion -- exceeding %d nested tags.\n",
 		    ctx->max_frame_depth);
-      }
 
       EVAL_ARGS_FUNC func;
 
@@ -2855,7 +2814,7 @@ class Frame
 
 	    if (splice_arg) {
 	      // Note: This assumes an XML-like parser.
-	      Parser p = splice_arg_type->get_pcode_parser (ctx, 0, 0);
+	      Parser p = splice_arg_type->get_parser (ctx, 0, 0, 1);
 	      THIS_TAG_DEBUG ("Evaluating splice argument %s\n",
 			      utils->format_short (splice_arg));
 #ifdef MODULE_DEBUG
@@ -2877,7 +2836,6 @@ class Frame
 			 comp->bind (_eval_args),
 			 p->p_code->_compile_text (comp),
 			 comp->bind (splice_req_types)));
-	      p->p_code = 0;
 	      splice_arg_type->give_back (p);
 	      args = _eval_args (ctx, xml_tag_parser->parse_tag_args (splice_arg || ""),
 				 splice_req_types);
@@ -2893,7 +2851,7 @@ class Frame
 	      foreach (indices (raw_args), string arg) {
 		Type t = atypes[arg] || tag->def_arg_type;
 		if (t->parser_prog != PNone) {
-		  Parser parser = t->get_pcode_parser (ctx, 0, 0);
+		  Parser parser = t->get_parser (ctx, 0, 0, 1);
 		  THIS_TAG_DEBUG ("Evaluating argument value %s with %O\n",
 				  utils->format_short (raw_args[arg]), parser);
 		  parser->finish (raw_args[arg]); // Should not unwind.
@@ -2903,7 +2861,6 @@ class Frame
 				  utils->format_short (args[arg]));
 		  fn_text->add (sprintf ("%O: %s,\n", arg,
 					 parser->p_code->_compile_text (comp)));
-		  parser->p_code = 0;
 		  t->give_back (parser);
 		}
 		else {
@@ -3051,6 +3008,11 @@ class Frame
 #endif
 #undef PRE_INIT_ERROR
 
+    // Known punt: Sometimes _prepare is run below, which increases
+    // this too. So frame_depth might be off by one sometimes, but
+    // it's not worth the bother.
+    ctx->frame_depth++;
+
     mixed conv_result = nil;	// Result converted to the expected type.
     mixed err1 = 0;
 
@@ -3063,7 +3025,6 @@ class Frame
 	    fatal_error ("Can't feed new content when resuming parse.\n");
 #endif
 	  ctx->frame = this;
-	  ctx->frame_depth++;
 	  object ignored;
 	  [ignored, eval_state, in_args, in_content, iter,
 	   subevaler, piece, exec, orig_tag_set, ctx->new_runtime_tags
@@ -3089,18 +3050,7 @@ class Frame
 #endif
 	  }
 
-	  if (in_content) {
-	    THIS_TAG_TOP_DEBUG ("Evaluating\n");
-	    ctx->frame = this;
-	    ctx->frame_depth++;
-	    if (functionp (args)) {
-	      THIS_TAG_DEBUG ("Evaluating compiled arguments\n");
-	      in_args = args;
-	      args = in_args (ctx);
-	    }
-	    content = nil;
-	  }
-	  else if (flags & FLAG_UNPARSED) {
+	  if (flags & FLAG_UNPARSED) {
 #ifdef DEBUG
 	    if (args && !mappingp (args))
 	      fatal_error ("args is not a mapping in unparsed frame.\n");
@@ -3110,15 +3060,23 @@ class Frame
 	    THIS_TAG_TOP_DEBUG ("Evaluating unparsed\n");
 	    in_args = _prepare (ctx, type, args);
 	    ctx->frame = this;
-	    ctx->frame_depth++;
 	    in_content = content;
 	    content = nil;
 	    flags &= ~FLAG_UNPARSED;
 	  }
+	  else if (in_content) {
+	    THIS_TAG_TOP_DEBUG ("Evaluating\n");
+	    ctx->frame = this;
+	    if (functionp (args)) {
+	      THIS_TAG_DEBUG ("Evaluating compiled arguments\n");
+	      in_args = args;
+	      args = in_args (ctx);
+	    }
+	    content = nil;
+	  }
 	  else {
 	    _prepare (ctx, type, 0);
 	    ctx->frame = this;
-	    ctx->frame_depth++;
 	    THIS_TAG_TOP_DEBUG ("Evaluating with constant arguments and content.\n");
 	  }
 
@@ -3232,15 +3190,15 @@ class Frame
 		      parse_error ("This tag doesn't handle content.\n");
 		    else {	// The nested content is not yet parsed.
 		      if (this->local_tags) {
-			subevaler = content_type->get_pcode_parser (
-			  ctx, [object(TagSet)] this->local_tags, evaler);
+			subevaler = content_type->get_parser (
+			  ctx, [object(TagSet)] this->local_tags, evaler, 1);
 			subevaler->_local_tag_set = 1;
 			THIS_TAG_DEBUG ("Iter[%d]: Parsing and evaluating content %s "
 					"with %O from local_tags\n", debug_iter,
 					utils->format_short (in_content), subevaler);
 		      }
 		      else {
-			subevaler = content_type->get_pcode_parser (ctx, 0, evaler);
+			subevaler = content_type->get_parser (ctx, 0, evaler, 1);
 #ifdef DEBUG
 			if (content_type->parser_prog != PNone)
 			  THIS_TAG_DEBUG ("Iter[%d]: Parsing and evaluating content %s "
@@ -3248,8 +3206,10 @@ class Frame
 					  utils->format_short (in_content), subevaler);
 #endif
 		      }
-		      if (evaler->recover_errors && !(flags & FLAG_DONT_RECOVER))
+		      if (evaler->recover_errors && !(flags & FLAG_DONT_RECOVER)) {
 			subevaler->recover_errors = 1;
+			subevaler->p_code->recover_errors = 1;
+		      }
 		      subevaler->finish (in_content); // Might unwind.
 		      (in_content = subevaler->p_code)->finish();
 		      finished = 1;
@@ -3895,71 +3855,74 @@ class Parser
 	throw_fatal (err);
       }
     LEAVE_CONTEXT();
-#ifdef PROFILE_PARSER
-    werror ("Profile for %s: %O\n", context->id->not_query, context->profile);
-#endif
   }
 
   mixed handle_var (TagSetParser|PCode evaler, string varref, Type want_type)
   // Parses and evaluates a possible variable reference, with the
   // appropriate error handling.
   {
-    if (mixed err = catch {
-      // It's intentional that we split on the first ':' for now, to
-      // allow for future enhancements of this syntax. Scope and
-      // variable names containing ':' are thus not accessible this way.
-      sscanf (varref, "%[^:]:%s", varref, string encoding);
-      context->current_var = varref;
-      context->frame_depth++;
+    string encoding;
+    array(string|int) splitted;
+    mixed val;
 
-      array(string|int) splitted = context->parse_user_var (varref, 1);
-      if (splitted[0] == 1)
-	parse_error (
-	  "No scope in variable reference.\n"
-	  "(Use ':' in front to quote a character reference containing dots.)\n");
+    // It's intentional that we split on the first ':' for now, to
+    // allow for future enhancements of this syntax. Scope and
+    // variable names containing ':' are thus not accessible this way.
+    sscanf (varref, "%[^:]:%s", varref, encoding);
+    context->frame_depth++;
+
+    splitted = context->parse_user_var (varref, 1);
+    if (splitted[0] == 1) {
+      Backtrace err =
+	catch (parse_error ("No scope in variable reference.\n"
+			    "(Use ':' in front to quote a "
+			    "character reference containing dots.)\n"));
+      err->current_var = varref;
+      context->handle_exception (err, this_object(), 1);
+      val = nil;
+    }
+
+    else {
+      if (mixed err = catch {
 #ifdef DEBUG
-      if (context->frame)
-	TAG_DEBUG (context->frame, "    Looking up variable %s in context of type %s\n",
-		   splitted * ".", (encoding ? t_any_text : want_type)->name);
+	if (context->frame)
+	  TAG_DEBUG (context->frame, "    Looking up variable %s in context of type %s\n",
+		     splitted * ".", (encoding ? t_any_text : want_type)->name);
 #endif
 
-      mixed val;
-      PROFILE_SWITCH (context, "rxml internal", "var:" + varref);
-      COND_PROF_ENTER(mixed id=context->id,varref,"entity");
-      if (zero_type (val = context->get_var ( // May throw.
-		       splitted[1..], splitted[0],
-		       encoding ? t_any_text : want_type)))
+	COND_PROF_ENTER(mixed id=context->id,varref,"entity");
+	if (zero_type (val = context->get_var ( // May throw.
+			 splitted[1..], splitted[0],
+			 encoding ? t_any_text : want_type)))
+	  val = nil;
+	COND_PROF_LEAVE(mixed id=context->id,varref,"entity");
+
+	if (encoding) {
+	  if (!(val = Roxen->roxen_encode (val + "", encoding)))
+	    parse_error ("Unknown encoding %O.\n", encoding);
+#ifdef DEBUG
+	  if (context->frame)
+	    TAG_DEBUG (context->frame, "    Got value %s after conversion "
+		       "with encoding %s\n", utils->format_short (val), encoding);
+#endif
+	}
+#ifdef DEBUG
+	else
+	  if (context->frame)
+	    TAG_DEBUG (context->frame, "    Got value %s\n", utils->format_short (val));
+#endif
+
+      }) {
+	if (err->is_RXML_Backtrace) err->current_var = varref;
+	context->handle_exception (err, this_object()); // May throw.
 	val = nil;
-      COND_PROF_LEAVE(mixed id=context->id,varref,"entity");
-      PROFILE_SWITCH (context, "var:" + varref, "rxml internal");
-
-      if (encoding) {
-	if (!(val = Roxen->roxen_encode (val + "", encoding)))
-	  parse_error ("Unknown encoding %O.\n", encoding);
-#ifdef DEBUG
-	if (context->frame)
-	  TAG_DEBUG (context->frame, "    Got value %s after conversion "
-		     "with encoding %s\n", utils->format_short (val), encoding);
-#endif
       }
-#ifdef DEBUG
-      else
-	if (context->frame)
-	  TAG_DEBUG (context->frame, "    Got value %s\n", utils->format_short (val));
-#endif
 
-      context->current_var = 0;
-      context->frame_depth--;
       if (evaler->p_code)
 	evaler->p_code->add (VarRef (splitted[0], splitted[1..], encoding));
-      return val;
-
-    }) {
-      context->current_var = 0;
-      context->frame_depth--;
-      context->handle_exception (err, this_object()); // May throw.
-      return nil;
     }
+    context->frame_depth--;
+    return val;
   }
 
   //(!) Interface:
@@ -4027,7 +3990,7 @@ class Parser
   //! The implementation must call @[context->eval_finish] after all
   //! other evaluation is done and the input stream is finished.
 
-  optional void reset (Context ctx, Type type, mixed... args);
+  optional void reset (Context ctx, Type type, PCode p_code, mixed... args);
   //! Define to support reuse of a parser object. It'll be called
   //! instead of making a new object for a new stream. It keeps the
   //! static configuration, i.e. the type (and tag set when used in
@@ -4036,29 +3999,30 @@ class Parser
   //! @[TagSetParser] objects. It should call @[initialize] with the
   //! given context and type to reset this base class properly.
 
-  optional Parser clone (Context ctx, Type type, mixed... args);
+  optional Parser clone (Context ctx, Type type, PCode p_code, mixed... args);
   //! Define to create new parser objects by cloning instead of
   //! creating from scratch. It returns a new instance of this parser
   //! with the same static configuration, i.e. the type (and tag set
   //! when used in TagSetParser).
 
-  static void create (Context ctx, Type type, mixed... args)
+  static void create (Context ctx, Type type, PCode p_code, mixed... args)
   //! Should (at least) call @[initialize] with the given context and
   //! type.
   {
-    initialize (ctx, type);
+    initialize (ctx, type, p_code);
 #ifdef RXML_OBJ_DEBUG
     __object_marker->create (this_object());
 #endif
   }
 
-  static void initialize (Context ctx, Type _type)
+  static void initialize (Context ctx, Type _type, PCode _p_code)
   //! Does the required initialization for this base class. Use from
   //! @[create] and @[reset] (when it's defined) to initialize or
   //! reset the parser object properly.
   {
     context = ctx;
     type = _type;
+    p_code = _p_code;
   }
 
   string current_input() {return 0;}
@@ -4122,21 +4086,23 @@ class TagSetParser
 
   //! In addition to the type, the tag set is part of the static
   //! configuration.
-  optional void reset (Context ctx, Type type, TagSet tag_set, mixed... args);
-  optional Parser clone (Context ctx, Type type, TagSet tag_set, mixed... args);
-  static void create (Context ctx, Type type, TagSet tag_set, mixed... args)
+  optional void reset (Context ctx, Type type, PCode p_code,
+		       TagSet tag_set, mixed... args);
+  optional Parser clone (Context ctx, Type type, PCode p_code,
+			 TagSet tag_set, mixed... args);
+  static void create (Context ctx, Type type, PCode p_code,
+		      TagSet tag_set, mixed... args)
   {
-    initialize (ctx, type, tag_set);
+    initialize (ctx, type, p_code, tag_set);
 #ifdef RXML_OBJ_DEBUG
     __object_marker->create (this_object());
 #endif
   }
 
-  static void initialize (Context ctx, Type type, TagSet _tag_set)
+  static void initialize (Context ctx, Type type, PCode p_code, TagSet _tag_set)
   {
-    ::initialize (ctx, type);
+    ::initialize (ctx, type, p_code);
     tag_set = _tag_set;
-    p_code = 0;
   }
 
   mixed read();
@@ -4180,37 +4146,44 @@ class TagSetParser
 class PNone
 //! The identity parser. It only returns its input.
 {
+  static inherit String.Buffer;
   inherit Parser;
-
-  static string data = "";
-  static int evalpos = 0;
 
   PCode p_code;
 
   int feed (string in)
   {
-    data += in;
+    add (in);
     return 1;
   }
 
   void finish (void|string in)
   {
-    if (in) data += in;
-    if (p_code) p_code->add (data);
+    if (in) add (in);
+    if (p_code) {
+      string data = get();
+      p_code->add (data);
+      add (data);
+    }
   }
 
   string eval()
   {
-    string res = data[evalpos..];
-    evalpos = sizeof (data);
-    return res;
+    return get();
   }
 
-  void reset (Context ctx)
+  void reset (Context ctx, Type type, PCode p_code)
   {
-    context = ctx;
-    data = "";
-    evalpos = 0;
+    initialize (ctx, type, p_code);
+    get();
+  }
+
+  static void create (Context ctx, Type type, PCode p_code)
+  {
+    initialize (ctx, type, p_code);
+#ifdef RXML_OBJ_DEBUG
+    __object_marker->create (this_object());
+#endif
   }
 
   string _sprintf() {return "RXML.PNone" + OBJ_COUNT;}
@@ -4334,10 +4307,13 @@ class Type
   }
 
   inline final Parser get_parser (Context ctx, void|TagSet tag_set,
-				  void|Parser parent)
-  //! Returns a parser instance initialized with the given context.
+				  void|Parser parent, void|int make_p_code)
+  //! Returns a parser instance initialized with the given context. If
+  //! @[make_p_code] is nonzero, the parser will be initialized with a
+  //! new @[PCode] object.
   {
     Parser p;
+    PCode p_code = make_p_code && PCode (this_object(), tag_set);
     if (_p_cache) {		// It's a tag set parser.
       TagSet tset = tag_set || ctx->tag_set;
 
@@ -4346,7 +4322,7 @@ class Type
 	  parent->clone && parent->type->name == this_object()->name) {
 	// There are runtime tags. Try to clone the parent parser if
 	// all conditions are met.
-	p = parent->clone (ctx, this_object(), tset, @parser_args);
+	p = parent->clone (ctx, this_object(), p_code, tset, @parser_args);
 	p->_parent = parent;
 	return p;
       }
@@ -4358,7 +4334,7 @@ class Type
 	  pco->free_parser = p->_next_free;
 	  // ^^^ Using interpreter lock to here.
 	  p->data_callback = 0;
-	  p->reset (ctx, this_object(), tset, @parser_args);
+	  p->reset (ctx, this_object(), p_code, tset, @parser_args);
 #ifdef RXML_OBJ_DEBUG
 	  p->__object_marker->create (p);
 #endif
@@ -4367,15 +4343,18 @@ class Type
 	else
 	  // ^^^ Using interpreter lock to here.
 	  if (pco->clone_parser)
-	    p = pco->clone_parser->clone (ctx, this_object(), tset, @parser_args);
-	  else if ((p = parser_prog (ctx, this_object(), tset, @parser_args))->clone) {
+	    p = pco->clone_parser->clone (
+	      ctx, this_object(), p_code, tset, @parser_args);
+	  else if ((p = parser_prog (
+		      ctx, this_object(), p_code, tset, @parser_args))->clone) {
 	    // pco->clone_parser might already be initialized here due
 	    // to race, but that doesn't matter.
-	    p->context = 0;	// Don't leave the context in the clone master.
+	    p->context = p->p_code = 0; // Don't leave this stuff in the clone master.
 #ifdef RXML_OBJ_DEBUG
 	    p->__object_marker->create (p);
 #endif
-	    p = (pco->clone_parser = p)->clone (ctx, this_object(), tset, @parser_args);
+	    p = (pco->clone_parser = p)->clone (
+	      ctx, this_object(), p_code, tset, @parser_args);
 	  }
       }
 
@@ -4384,14 +4363,16 @@ class Type
 	pco = PCacheObj();
 	pco->tag_set_gen = tset->generation;
 	_p_cache[tset] = pco;	// Might replace an object due to race, but that's ok.
-	if ((p = parser_prog (ctx, this_object(), tset, @parser_args))->clone) {
+	if ((p = parser_prog (
+	       ctx, this_object(), p_code, tset, @parser_args))->clone) {
 	  // pco->clone_parser might already be initialized here due
 	  // to race, but that doesn't matter.
-	  p->context = 0;	// Don't leave the context in the clone master.
+	  p->context = p->p_code = 0; // Don't leave this stuff in the clone master.
 #ifdef RXML_OBJ_DEBUG
 	  p->__object_marker->create (p);
 #endif
-	  p = (pco->clone_parser = p)->clone (ctx, this_object(), tset, @parser_args);
+	  p = (pco->clone_parser = p)->clone (
+	    ctx, this_object(), p_code, tset, @parser_args);
 	}
       }
 
@@ -4405,7 +4386,7 @@ class Type
 	// Relying on interpreter lock here.
 	free_parser = p->_next_free;
 	p->data_callback = 0;
-	p->reset (ctx, this_object(), @parser_args);
+	p->reset (ctx, this_object(), p_code, @parser_args);
 #ifdef RXML_OBJ_DEBUG
 	p->__object_marker->create (p);
 #endif
@@ -4413,30 +4394,20 @@ class Type
 
       else if (clone_parser)
 	// Relying on interpreter lock here.
-	p = clone_parser->clone (ctx, this_object(), @parser_args);
+	p = clone_parser->clone (ctx, this_object(), p_code, @parser_args);
 
-      else if ((p = parser_prog (ctx, this_object(), @parser_args))->clone) {
+      else if ((p = parser_prog (ctx, this_object(), p_code, @parser_args))->clone) {
 	// clone_parser might already be initialized here due to race,
 	// but that doesn't matter.
-	p->context = 0;		// Don't leave the context in the clone master.
+	  p->context = p->p_code = 0; // Don't leave this stuff in the clone master.
 #ifdef RXML_OBJ_DEBUG
 	p->__object_marker->create (p);
 #endif
-	p = (clone_parser = p)->clone (ctx, this_object(), @parser_args);
+	p = (clone_parser = p)->clone (ctx, this_object(), p_code, @parser_args);
       }
     }
 
     p->_parent = parent;
-    return p;
-  }
-
-  Parser get_pcode_parser (Context ctx, void|TagSet tag_set, void|Parser|PCode parent)
-  //! Like @[get_parser], but also initializes a PCode object in the
-  //! returned parser.
-  {
-    if (_p_cache && !tag_set) tag_set = ctx->tag_set;
-    Parser p = get_parser (ctx, tag_set, parent);
-    p->p_code = PCode (this_object(), tag_set, p->recover_errors);
     return p;
   }
 
@@ -4450,9 +4421,9 @@ class Type
       error ("Giving back parser to wrong type.\n");
 #endif
     if (parser->reset) {
-      parser->context = parser->recover_errors = parser->_parent = 0;
+      parser->context = parser->p_code = parser->recover_errors = parser->_parent = 0;
 #ifdef RXML_OBJ_DEBUG
-      parser->__object_marker->create (p);
+      parser->__object_marker->create (parser);
 #endif
       if (_p_cache) {
 	if (PCacheObj pco = _p_cache[tag_set]) {
@@ -5324,32 +5295,33 @@ static class TXml
     }
 
     String.Buffer res = String.Buffer();
-    res->add ("<");
-    res->add (tagname);
+    function(string:void) add = res->add;
+    add ("<");
+    add (tagname);
 
     if (args)
       if (flags & FLAG_RAW_ARGS)
 	foreach (indices (args), string arg) {
-	  res->add (" "), res->add (arg), res->add ("=\"");
-	  res->add (replace (args[arg], "\"", "\"'\"'\""));
-	  res->add ("\"");
+	  add (" "), add (arg), add ("=\"");
+	  add (replace (args[arg], "\"", "\"'\"'\""));
+	  add ("\"");
 	}
       else
 	foreach (indices (args), string arg) {
-	  res->add (" "), res->add (arg), res->add ("=");
-	  res->add (Roxen->html_encode_tag_value (args[arg]));
+	  add (" "), add (arg), add ("=");
+	  add (Roxen->html_encode_tag_value (args[arg]));
 	}
 
     if (content) {
-      res->add (">"), res->add (content);
-      res->add ("</"), res->add (tagname), res->add (">");
+      add (">"), add (content);
+      add ("</"), add (tagname), add (">");
     }
     else
       if (flags & FLAG_COMPAT_PARSE)
-	if (flags & FLAG_EMPTY_ELEMENT) res->add (">");
-	else res->add ("></"), res->add (tagname), res->add (">");
+	if (flags & FLAG_EMPTY_ELEMENT) add (">");
+	else add ("></"), add (tagname), add (">");
       else
-	res->add (" />");
+	add (" />");
 
     return res->get();
   }
@@ -5391,37 +5363,56 @@ class VarRef (string scope, string|array(string|int) var, void|string encoding)
 //! A helper for representing variable reference tokens.
 {
   constant is_RXML_VarRef = 1;
+  constant is_RXML_p_code_entry = 1;
+
+#define VAR_STRING ((({scope}) + (arrayp (var) ? \
+				  (array(string)) var : ({(string) var}))) * ".")
 
   mixed get (Context ctx, void|Type want_type)
   {
-#ifdef DEBUG
-    if (ctx->frame)
-      TAG_DEBUG (ctx->frame, "    Looking up variable %s.%s in context of type %s\n",
-		 scope, arrayp (var) ? var * "." : var,
-		 (encoding ? t_any_text : want_type)->name);
-#endif
+    ctx->frame_depth++;
 
-    if (encoding) {
-      string val = ctx->get_var (var, scope, t_any_text);
-      if (!(val = Roxen->roxen_encode (val + "", encoding)))
-	parse_error ("Unknown encoding %O.\n", encoding);
+    mixed err = catch {
 #ifdef DEBUG
       if (ctx->frame)
-	TAG_DEBUG (ctx->frame, "    Got value %s after conversion "
-		   "with encoding %s\n", utils->format_short (val), encoding);
+	TAG_DEBUG (ctx->frame, "    Looking up variable %s.%s in context of type %s\n",
+		   scope, arrayp (var) ? var * "." : var,
+		   (encoding ? t_any_text : want_type)->name);
 #endif
-      return val;
-    }
-
-    else {
       mixed val;
-      if (zero_type (val = ctx->get_var (var, scope, want_type))) val = nil;
+      string varref;
+
+      if (encoding) {
+	COND_PROF_ENTER(mixed id=ctx->id,(varref = VAR_STRING),"entity");
+	val = ctx->get_var (var, scope, t_any_text);
+	COND_PROF_LEAVE(mixed id=ctx->id,varref,"entity");
+	if (!(val = Roxen->roxen_encode (val + "", encoding)))
+	  parse_error ("Unknown encoding %O.\n", encoding);
 #ifdef DEBUG
-      if (ctx->frame)
-	TAG_DEBUG (ctx->frame, "    Got value %s\n", utils->format_short (val));
+	if (ctx->frame)
+	  TAG_DEBUG (ctx->frame, "    Got value %s after conversion "
+		     "with encoding %s\n", utils->format_short (val), encoding);
 #endif
+      }
+
+      else {
+	COND_PROF_ENTER(mixed id=ctx->id,(varref = VAR_STRING),"entity");
+	if (zero_type (val = ctx->get_var (var, scope, want_type)))
+	  val = nil;
+	COND_PROF_LEAVE(mixed id=ctx->id,varref,"entity");
+#ifdef DEBUG
+	if (ctx->frame)
+	  TAG_DEBUG (ctx->frame, "    Got value %s\n", utils->format_short (val));
+#endif
+      }
+
+      ctx->frame_depth--;
       return val;
-    }
+    };
+
+    if (err->is_RXML_Backtrace) err->current_var = VAR_STRING;
+    ctx->frame_depth--;
+    throw (err);
   }
 
   mixed set (Context ctx, mixed val) {return ctx->set_var (var, val, scope);}
@@ -5432,6 +5423,32 @@ class VarRef (string scope, string|array(string|int) var, void|string encoding)
 
   MARK_OBJECT;
   string _sprintf() {return "RXML.VarRef(" + name() + ")" + OBJ_COUNT;}
+}
+
+class CompiledError
+//! A compiled-in error. Used when the parser handles an error, to get
+//! the same behavior in the p-code.
+{
+  constant is_RXML_ParseError = 1;
+  constant is_RXML_p_code_entry = 1;
+
+  string type;
+  string msg;
+  string current_var;
+
+  void create (Backtrace rxml_bt)
+  {
+    type = rxml_bt->type;
+    msg = rxml_bt->msg;
+    current_var = rxml_bt->current_var;
+  }
+
+  mixed get (Context ctx, void|Type want_type)
+  {
+    Backtrace bt = Backtrace (type, msg, ctx, backtrace());
+    bt->current_var = current_var;
+    throw (bt);
+  }
 }
 
 class PikeCompile
@@ -5586,7 +5603,7 @@ class PCode
   // Returns a compiled function for doing the evaluation. The
   // function will receive a context to do the evaluation in.
 
-  static void create (Type _type, void|TagSet _tag_set, void|int recover_errors)
+  static void create (Type _type, void|TagSet _tag_set)
   {
     type = _type, tag_set = _tag_set;
   }
@@ -5618,46 +5635,62 @@ class PCode
     array parts;
     int ppos = 0;
 
-    if (mixed err = catch {
-      if (context && context->unwind_state) {
-	object ignored;
-	[ignored, pos, parts, ppos] = m_delete (context->unwind_state, this_object());
-      }
-      else parts = allocate (length);
+    if (context && context->unwind_state) {
+      object ignored;
+      [ignored, pos, parts, ppos] = m_delete (context->unwind_state, this_object());
+    }
+    else parts = allocate (length);
 
-      for (; pos < length; pos++) {
-	mixed item = p_code[pos];
-	if (objectp (item))
-	  if (item->is_RXML_Frame) {
-	    item = item->_eval (
-	      context, this_object(), type, item->content); // Might unwind.
-	    if (errmsgs) item += errmsgs, errmsgs = 0;
-	  }
-	  else if (item->is_RXML_VarRef) {
-	    item = item->get (context, type); // Might unwind.
-	    if (errmsgs) item += errmsgs, errmsgs = 0;
-	  }
-	if (item != nil)
-	  parts[ppos++] = item;
-      }
+    while (1) {			// Loops only if errors are catched.
+      if (mixed err = catch {
+	for (; pos < length; pos++) {
+	  mixed item = p_code[pos];
+	  if (objectp (item))
+	    if (item->is_RXML_Frame) {
+	      item = item->_eval (
+		context, this_object(), type, item->content); // Might unwind.
+	    }
+	    else if (item->is_RXML_p_code_entry) {
+	      item = item->get (context, type); // Might unwind.
+	    }
+	  if (item != nil)
+	    parts[ppos++] = item;
+	  if (errmsgs)
+	    parts[ppos++] = errmsgs, errmsgs = 0;
+	}
 
-      context->eval_finish();
+	context->eval_finish();
 
-      if (!ppos)
-	return type->sequential ? type->empty_value : nil;
-      else
-	if (type->sequential)
-	  return `+ (type->empty_value, @parts[..ppos - 1]);
+	if (!ppos)
+	  return type->sequential ? type->empty_value : nil;
 	else
-	  if (ppos != 1) return utils->get_non_nil (type, @parts[..ppos - 1]);
-	  else return parts[0];
+	  if (type->sequential)
+	    return `+ (type->empty_value, @parts[..ppos - 1]);
+	  else
+	    if (ppos != 1) return utils->get_non_nil (type, @parts[..ppos - 1]);
+	    else return parts[0];
 
-    })
-      if (objectp (err) && ([object] err)->thrown_at_unwind) {
-	context->unwind_state[this_object()] = ({err, pos, parts, ppos});
-	throw (this_object());
-      }
-      else throw_fatal (err);
+      })
+	if (objectp (err) && ([object] err)->thrown_at_unwind) {
+	  context->unwind_state[this_object()] = ({err, pos, parts, ppos});
+	  throw (this_object());
+	}
+	else {
+	  context->handle_exception (err, this_object()); // May throw.
+	  string msgs = errmsgs;
+	  errmsgs = 0;
+	  if (pos >= length)
+	    return msgs || nil;
+	  else {
+	    if (msgs) parts[ppos++] = msgs;
+	    pos++;
+	    continue;
+	  }
+	}
+
+      error ("Should not get here.\n");
+    }
+    error ("Should not get here.\n");
   }
 
   string _compile_text (PikeCompile comp)

@@ -13,7 +13,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: PXml.pike,v 1.57 2001/06/18 15:20:13 mast Exp $
+//! $Id: PXml.pike,v 1.58 2001/06/20 23:27:24 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
@@ -76,22 +76,32 @@ static void set_quote_tag_cbs (QuoteTagDef unknown_pi_tag_cb, QuoteTagDef cdata_
   add_quote_tag ("![CDATA[", cdata_cb, "]]");
 }
 
-this_program clone (RXML.Context ctx, RXML.Type type, RXML.TagSet tag_set)
+this_program clone (RXML.Context ctx, RXML.Type type, RXML.PCode p_code,
+		    RXML.TagSet tag_set)
 {
 #ifdef OLD_RXML_COMPAT
   int new_not_compat = !(ctx && ctx->id && ctx->id->conf->old_rxml_compat);
-  if (new_not_compat != not_compat) return this_program (ctx, type, tag_set);
+  if (new_not_compat != not_compat) return this_program (ctx, type, p_code, tag_set);
 #endif
   return [object(this_program)] low_parser::clone (
-    ctx, type, tag_set, rt_replacements || 1, rt_pi_replacements);
+    ctx, type, p_code, tag_set, rt_replacements || 1, rt_pi_replacements);
 }
 
 #ifdef OLD_RXML_COMPAT
 static int not_compat = 1;
 #endif
 
+// Decide some alternative behaviors at initialization.
+static int alternative;
+static constant FREE_TEXT = 2;
+static constant FREE_TEXT_P_CODE = 3;
+static constant LITERALS = 4;
+static constant LITERALS_P_CODE = 5;
+static constant NO_LITERALS = 6;
+static constant NO_LITERALS_P_CODE = 7;
+
 static void create (
-  RXML.Context ctx, RXML.Type type, RXML.TagSet tag_set,
+  RXML.Context ctx, RXML.Type type, RXML.PCode p_code, RXML.TagSet tag_set,
   void|int|mapping(string:TagDef) orig_rt_replacements,
   void|mapping(string:QuoteTagDef) orig_rt_pi_replacements
 )
@@ -100,7 +110,14 @@ static void create (
   not_compat = !(ctx && ctx->id && ctx->id->conf->old_rxml_compat);
 #endif
 
-  initialize (ctx, type, tag_set);
+  if (type->free_text)
+    alternative = FREE_TEXT;
+  else {
+    _set_tag_callback (.utils.unknown_tag_error);
+    alternative = type->handle_literals ? LITERALS : NO_LITERALS;
+  }
+
+  initialize (ctx, type, p_code, tag_set);
 
   if (orig_rt_replacements) {	// We're cloned.
     if (mappingp (orig_rt_replacements))
@@ -207,11 +224,6 @@ static void create (
     // Don't decode normal entities if we're outputting xml-like stuff.
     add_entities (tag_set->get_string_entities());
 
-  if (!type->free_text) {
-    _set_tag_callback (.utils.unknown_tag_error);
-    if (!type->handle_literals)
-      _set_data_callback (.utils.free_text_error);
-  }
   lazy_entity_end (1);
   match_tag (0);
   splice_arg ("::");
@@ -241,18 +253,29 @@ static void create (
 #endif
 }
 
-static void initialize (RXML.Context ctx, RXML.Type type, RXML.TagSet tag_set)
+static void initialize (RXML.Context ctx, RXML.Type type,
+			RXML.PCode p_code, RXML.TagSet tag_set)
 {
-  TagSetParser::initialize (ctx, type, tag_set);
-  value = type->sequential ? type->empty_value : RXML.nil;
+  TagSetParser::initialize (ctx, type, p_code, tag_set);
+
+  if (type->sequential)
+//      if (type->empty_value == "")
+//        value = String.Buffer();
+//      else
+      value = type->empty_value;
+  else
+    value = RXML.nil;
+
+  if (p_code) alternative |= 1;
+  else alternative &= ~1;
 }
 
 static mixed value;
 
-/*static*/ void add_value (mixed val)
+void add_value (mixed val)
 {
   if (type->sequential)
-    value += val;
+    value = value + (value = 0, val); // Keep one ref to value.
   else {
     if (value != RXML.nil)
       RXML.parse_error (
@@ -262,39 +285,78 @@ static mixed value;
   }
 }
 
-/*static*/ final inline void handle_literal()
+void drain_output()
 {
-  string literal = String.trim_all_whites (low_parser::read());
-  mixed v;
-  if (sizeof (literal)) {
-    if (type->sequential)
-      value += v = type->encode (literal);
-    else {
-      if (value != RXML.nil)
-	RXML.parse_error (
-	  "Cannot append another value %s to non-sequential type %s.\n",
-	  .utils.format_short (literal), type->name);
-      value = v = type->encode (literal);
+  switch (alternative) {
+    case FREE_TEXT: {
+      value = value + (value = 0, low_parser::read()); // Keep one ref to value.
+      break;
     }
-    if (p_code) p_code->add (v);
-  }
-}
 
-/*static*/ void p_code_literal()
-{
-  string literal = low_parser::read();
-  if (sizeof (literal)) {
-    value += literal;
-    p_code->add (literal);
+    case FREE_TEXT_P_CODE: {
+      string literal = low_parser::read();
+      value = value + (value = 0, literal); // Keep one ref to value.
+      if (sizeof (literal)) p_code->add (literal);
+      break;
+    }
+
+    case LITERALS:
+    case LITERALS_P_CODE:
+      if (mixed err = catch {
+	string literal = String.trim_all_whites (low_parser::read());
+	if (sizeof (literal)) {
+	  mixed newval;
+	  if (type->sequential)
+	    value = value + (value = 0, newval = type->encode (literal));
+	  else {
+	    if (value != RXML.nil)
+	      RXML.parse_error (
+		"Cannot append another value %s to non-sequential type %s.\n",
+		.utils.format_short (literal), type->name);
+	    value = newval = type->encode (literal);
+	  }
+	  if (p_code) p_code->add (newval);
+	}
+      }) context->handle_exception (err, this_object(), 1);
+      break;
+
+    case NO_LITERALS:
+    case NO_LITERALS_P_CODE: {
+      string literal = low_parser::read();
+      sscanf (literal, "%[ \t\n\r]", string ws);
+      if (literal != ws)
+	context->handle_exception (
+	  catch (RXML.parse_error (
+		   "Free text %s is not allowed in context of type %s.\n",
+		   .utils.format_short (literal), type->name)), this_object(), 1);
+      break;
+    }
+
+    default:
+      error ("Bogus alternative %d\n", alternative);
   }
 }
 
 mixed read()
 {
-  return !p_code && type->free_text ? low_parser::read() : value;
+  if (objectp (value) && object_program (value) == String.Buffer)
+    return value->get();
+  else {
+    mixed val = value;
+    value = RXML.nil;
+    return val;
+  }
 }
 
-/*static*/ string errmsgs;
+static string errmsgs;
+
+int output_errors()
+{
+  if (errmsgs) {
+    value = value + (value = 0, errmsgs); // Keep one ref to value.
+    errmsgs = 0;
+  }
+}
 
 int report_error (string msg)
 {
@@ -302,22 +364,20 @@ int report_error (string msg)
   else errmsgs = msg;
   if (low_parser::context() != "data")
     _set_data_callback (.utils.output_error_cb);
-  else {
-    // FIXME: This will get sucked into the p-code.
-    low_parser::write_out (errmsgs), errmsgs = 0;
-  }
+  else output_errors();
   return 1;
 }
 
-mixed feed (string in) {return low_parser::feed (in);}
+mixed feed (string in)
+{
+  return low_parser::feed (in);
+}
+
 void finish (void|string in)
 {
   low_parser::finish (in);
-  if (type->handle_literals) handle_literal();
-  else {
-    if (errmsgs) low_parser::write_out (errmsgs), errmsgs = 0;
-    if (p_code) p_code_literal();
-  }
+  drain_output();
+  output_errors();
   context->eval_finish();
 }
 
