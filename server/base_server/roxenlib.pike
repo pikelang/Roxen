@@ -1,6 +1,6 @@
 inherit "http";
 
-// static string _cvs_version = "$Id: roxenlib.pike,v 1.107 1999/06/22 12:47:03 wellhard Exp $";
+// static string _cvs_version = "$Id: roxenlib.pike,v 1.108 1999/07/08 12:03:24 mast Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -1039,7 +1039,14 @@ private string remove_leading_trailing_ws( string str )
 // RXML needs types
 private int compare( string a, string b )
 {
-  if ((string)(int)a == a && (string)(int)b == b)
+  if (!a)
+    if (b)
+      return -1;
+    else
+      return 0;
+  else if (!b)
+    return 1;
+  else if ((string)(int)a == a && (string)(int)b == b)
     if ((int )a > (int )b)
       return 1;
     else if ((int )a < (int )b)
