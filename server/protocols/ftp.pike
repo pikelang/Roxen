@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.42 1997/08/28 18:57:31 grubba Exp $
+ * $Id: ftp.pike,v 1.43 1997/08/28 20:13:30 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -1339,12 +1339,24 @@ void got_data(mixed fooid, string s)
   }
 }
 
+int is_connection;
+
+void destroy()
+{
+  if (is_connection) {
+    conf->misc->ftp_users_now--;
+  }
+}
+
 void create(object f, object c)
 {
   if(f)
   {
     string fi;
     conf = c;
+    is_connection=1;
+    conf->misc->ftp_users++;
+    conf->misc->ftp_users_now++;
     cmd_fd = f;
     cmd_fd->set_id(0);
 
