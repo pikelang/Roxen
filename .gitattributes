@@ -72,7 +72,6 @@ urw_itc_avant_garde-demi-r binary
 /server/base_server/neighborhood.pike foreign_ident
 /server/base_server/newdecode.pike foreign_ident
 /server/base_server/persistent.pike foreign_ident
-/server/base_server/privs.pike foreign_ident
 /server/base_server/proxyauth.pike foreign_ident
 /server/base_server/read_config.pike foreign_ident
 /server/base_server/restorable.pike foreign_ident
