@@ -1,14 +1,12 @@
-/* This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
- *
- * Index files only module, a directory module that will not try to
- * generate any directory listings, instead only using index files.
- */
+// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: indexfiles.pike,v 1.13 2000/02/24 05:37:03 nilsson Exp $";
-constant thread_safe=1;
+// Index files only module, a directory module that will not try to
+// generate any directory listings, instead only using index files.
+
+constant cvs_version = "$Id: indexfiles.pike,v 1.14 2000/05/01 05:29:35 nilsson Exp $";
+constant thread_safe = 1;
 
 inherit "module";
-inherit "roxenlib";
 
 //************** Generic module stuff ***************
 
@@ -23,8 +21,7 @@ constant module_doc  = "Index files only module, a directory module that will no
 
 void create()
 {
-  defvar("indexfiles", ({ "index.html", "index.xml", "Main.html",
-			  "welcome.html" }),
+  defvar("indexfiles", ({ "index.xml", "index.html" }),
 	 "Index files", TYPE_STRING_LIST,
 	 "If one of these files is present in a directory, it will "
 	 "be returned instead of 'no such file'.");
@@ -33,25 +30,25 @@ void create()
 // The only important function in this file...
 // Given a request ID, try to find a matching index file.
 // If one is found, return it, if not, simply return "no such file" (0)
-mapping parse_directory(object id)
+mapping parse_directory(RequestID id)
 {
   // Redirect to an url with a '/' at the end, to make relative links
   // work as expected.
-  if(id->not_query[-1] != '/') {
-    string new_query = http_encode_string(id->not_query) + "/" +
-      (id->query?("?" + id->query):"");
-    return http_redirect(new_query, id);
+  string f = id->not_query;
+  if(strlen(f) > 1)
+  {
+    if(f[-1]!='/') return Roxen.http_redirect(f+"/", id);
+    if(f[-1]=='/' && has_value(f, "//"))
+      return Roxen.http_redirect("/"+(f/"/"-({""}))*"/"+"/", id);
   }
 
-  string oq = id->not_query;
-  string file;
-  foreach(query("indexfiles"), file)
+  foreach(query("indexfiles"), string file)
   {
     mapping result;
-    id->not_query = oq+file;
+    id->not_query = f+file;
     if(result=id->conf->get_file(id))
       return result; // File found, return it.
   }
-  id->not_query = oq;
+  id->not_query = f;
   return 0;
 }
