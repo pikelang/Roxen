@@ -1,10 +1,9 @@
 array pages = 
 ({
-  ({ "welcome",    "",                0,               0             }),
-  ({ "debug_info", "debug_info.html", "View Settings", "devel_mode"  }),
-  ({ "users",      "users.html",      "Edit Users",    0             }),
-  ({ "restart",    "restart.html",    "Restart",       0             }),
-  ({ "settings",   "settings.html",   0,               0             }),
+  ({ "welcome",     "",                0,               0             }),
+  ({ "usersettings","settings.html",   0,               0             }),
+  ({ "users",       "users.html",      "Edit Users",    0             }),
+  ({ "debug_info",  "debug_info.html", "View Settings", "devel_mode"  }),
 });
 
 string parse(object id)
@@ -31,7 +30,7 @@ string parse(object id)
 
     string ea="";
     if( page == pages[0] )       ea = "first ";
-    if( page == pages[-1] )      ea = "last ";
+    if( page == pages[-1] )      ea = "last=30 ";
     
     res += "<tab "+ea+"href='"+page[1]+"'"+((page[1] == q)?" selected":"")+">";
     res += "<cf-locale get="+page[0]+">";
