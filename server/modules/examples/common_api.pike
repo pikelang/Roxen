@@ -11,7 +11,7 @@ inherit "module";
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_common_api",X,Y)
 // end of the locale related stuff
 
-constant cvs_version="$Id: common_api.pike,v 1.8 2001/09/03 18:05:10 nilsson Exp $";
+constant cvs_version="$Id: common_api.pike,v 1.9 2002/06/05 10:12:33 nilsson Exp $";
 //! This string (filtered to remove some ugly cvs id markup) shows up in
 //! the roxen administration interface when handling module parameters in
 //! developer mode (configured under "User Settings" below the Admin tab).
@@ -26,7 +26,7 @@ LocaleString module_name = LOCALE(1,"Tamaroxchi");
 //! module in the most brief add module view mode.
 
 constant module_type = MODULE_ZERO;
-//! Module type (see server/etc/include/module.h). May be bitwise ored
+//! Module type (see server/data/include/module.h). May be bitwise ored
 //! (|) for hybrid modules. Hybrid modules must implement the required
 //! API functions for all of the module types they are hybrids of.
 

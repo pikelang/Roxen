@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: global_variables.pike,v 1.88 2002/04/24 11:46:50 mast Exp $
+// $Id: global_variables.pike,v 1.89 2002/06/05 10:09:43 nilsson Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -414,11 +414,11 @@ The start script attempts to fix this for the standard file locations.</p>"));
 		"The directories are searched in order for modules."));
 
   defvar("Supports",
-         Variable.Text( "#include <etc/supports>\n",
+         Variable.Text( "#include <data/supports>\n",
                         VAR_MORE, LOCALE(134, "Client supports regexps"),
                         LOCALE(135, "What do the different clients support?\n<br />"
                                "The default information is normally fetched from the file "
-                               "server/etc/supports in your Roxen directory.") ) )
+                               "server/data/supports in your Roxen directory.") ) )
     -> add_changed_callback( lambda(Variable.Text s) {
                                roxenp()->initiate_supports();
                                cache.cache_expire("supports");

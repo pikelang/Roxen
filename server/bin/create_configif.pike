@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.40 2002/06/03 20:36:11 per Exp $
+ * $Id: create_configif.pike,v 1.41 2002/06/05 10:14:23 nilsson Exp $
  *
  * Create an initial administration interface server.
  */
@@ -284,7 +284,7 @@ Example of a batch installation:
 # Feel free to add to this, but do it after the #include line if
 # you want to override any defaults
 
-#include %3cetc/extensions%3e
+#include %3cdata/extensions%3e
 tag text/html
 xml text/html
 rad text/html

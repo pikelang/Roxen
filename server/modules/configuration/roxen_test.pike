@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.52 2001/11/21 13:19:10 mast Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.53 2002/06/05 10:12:07 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Roxen self test module";
@@ -66,7 +66,7 @@ string query_provides()
 
 void create()
 {
-  defvar("selftestdir", "etc/test", "Self test directory", 
+  defvar("selftestdir", "data/test", "Self test directory",
          TYPE_STRING);
 }
 

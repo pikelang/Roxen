@@ -60,7 +60,7 @@ inherit "module";
 
 #include <module.h>
 
-string version = "$Id: randomtext.pike,v 1.7 2001/09/03 18:31:05 nilsson Exp $";
+string version = "$Id: randomtext.pike,v 1.8 2002/06/05 10:13:17 nilsson Exp $";
 
 constant module_type = MODULE_TAG;
 constant module_name = "Random Text";
@@ -80,7 +80,7 @@ string searchpath;
 
 void create()
 {
-  defvar("searchpath", "etc/randomtext", "Rules File Search Path", TYPE_DIR,
+  defvar("searchpath", "data/randomtext", "Rules File Search Path", TYPE_DIR,
     "This is the location in the real file system where the random "
     "text module will look for rule files.");
 

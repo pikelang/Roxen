@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 2000 - 2001, Roxen IS.
-// $Id: basic_defvar.pike,v 1.29 2001/08/23 18:04:01 nilsson Exp $
+// $Id: basic_defvar.pike,v 1.30 2002/06/05 10:08:52 nilsson Exp $
 
 mapping(string:Variable.Variable)  variables=([]);
 //! Please do not modify this list directly, instead use 
@@ -148,7 +148,7 @@ Variable.Variable defvar(string var, mixed value,
    case TYPE_DIR_LIST:
      if( arrayp( misc ) )
 error("Variable type "+(type&VAR_TYPE_MASK)+" with misc no longer supported.\n"
-      "Define a custom variable type (see etc/modules/Variable.pmod)\n");
+      "Define a custom variable type (see pike_modules/Variable.pmod)\n");
      else
        vv = Variable.DirectoryList( value, 
                                     type&~VAR_TYPE_MASK,
@@ -159,7 +159,7 @@ error("Variable type "+(type&VAR_TYPE_MASK)+" with misc no longer supported.\n"
      if( arrayp( misc ) )
      {
 error("Variable type "+(type&VAR_TYPE_MASK)+" with misc no longer supported.\n"
-      "Define a custom variable type (see etc/modules/Variable.pmod)\n");
+      "Define a custom variable type (see pike_modules/Variable.pmod)\n");
      }
       else
        vv = Variable.FileList( value, 
@@ -211,7 +211,7 @@ error("Variable type "+(type&VAR_TYPE_MASK)+" with misc no longer supported.\n"
      break;
    default:
      error("Variable type "+(type&VAR_TYPE_MASK)+" no longer supported.\n"
-           "Define a custom variable type (see etc/modules/Variable.pmod)\n");
+           "Define a custom variable type (see pike_modules/Variable.pmod)\n");
      
   }
 

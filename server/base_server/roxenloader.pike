@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.328 2002/06/05 00:22:25 nilsson Exp $
+// $Id: roxenloader.pike,v 1.329 2002/06/05 10:11:09 nilsson Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.328 2002/06/05 00:22:25 nilsson Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.329 2002/06/05 10:11:09 nilsson Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -967,7 +967,7 @@ class mf
 constant mf = Stdio.File;
 #endif
 
-#include "../etc/include/version.h"
+#include "../data/include/version.h"
 
 static string release;
 static string dist_version;
@@ -1818,7 +1818,7 @@ void start_mysql()
     }
 
     mkdirhier( mysqldir+"/mysql/" );
-    Filesystem.System tar = Filesystem.Tar( "etc/mysql-template.tar" );
+    Filesystem.System tar = Filesystem.Tar( "data/mysql-template.tar" );
     foreach( tar->get_dir( "mysql" ), string f )
     {
 #ifdef DEBUG
@@ -2077,7 +2077,7 @@ and rebuild Pike from scratch.
 
   if (err = catch {
     if(master()->relocate_module) add_constant("PIKE_MODULE_RELOC", 1);
-    replace_master(new_master=[object(__builtin.__master)](((program)"etc/roxen_master.pike")()));
+    replace_master(new_master=[object(__builtin.__master)](((program)"data/roxen_master.pike")()));
   }) {
     werror("Initialization of Roxen's master failed:\n"
 	   "%s\n", describe_backtrace(err));

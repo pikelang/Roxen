@@ -8,7 +8,7 @@
  *    various other external stuff happy.
  */
  
-string cvs_version = "$Id: buildenv.pike,v 1.7 2002/02/14 15:20:30 wellhard Exp $";
+string cvs_version = "$Id: buildenv.pike,v 1.8 2002/06/05 10:14:23 nilsson Exp $";
 
 class Environment
 {
@@ -154,7 +154,7 @@ class Environment
 
 void config_env(object(Environment) env)
 {
-  string dir = "etc/env.d";
+  string dir = "data/env.d";
   program p;
   object eo;
 

@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.54 2002/02/11 13:24:10 wellhard Exp $
+// $Id: DBManager.pmod,v 1.55 2002/06/05 10:18:18 nilsson Exp $
 
 //! Manages database aliases and permissions
 
@@ -1059,7 +1059,7 @@ CREATE TABLE db_permissions (
   }
 
 	
-  if( file_stat( "etc/docs.frm" ) )
+  if( file_stat( "data/docs.frm" ) )
   {
     if( !sizeof(query( "SELECT tbl FROM db_backups WHERE "
 		       "db=%s AND directory=%s",

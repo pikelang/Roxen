@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.372 2002/05/23 14:42:31 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.373 2002/06/05 10:13:55 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -4930,7 +4930,7 @@ mapping tagdocumentation() {
   if(!file->open(__FILE__,"r")) return 0;
   mapping doc=compile_string("#define manual\n"+file->read())->tagdoc;
   file->close();
-  if(!file->open("etc/supports","r")) return doc;
+  if(!file->open("data/supports","r")) return doc;
 
   Parser.HTML()->
     add_container("flags", format_support)->

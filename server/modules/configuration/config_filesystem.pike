@@ -18,7 +18,7 @@ LocaleString module_doc =
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.109 2002/06/03 22:29:55 nilsson Exp $";
+  "$Id: config_filesystem.pike,v 1.110 2002/06/05 10:11:51 nilsson Exp $";
 
 constant path = "config_interface/";
 
@@ -360,7 +360,7 @@ void start(int n, Configuration cfg)
 	report_warning( "The database 'docs' exists, but this server can "
 			"not read from it.\n"
 			"Documentation will be unavailable.\n" );
-      else if( file_stat( "etc/docs.frm" ) )
+      else if( file_stat( "data/docs.frm" ) )
       {
 	// Restore from "backup".
 	if( !crt )
@@ -371,7 +371,7 @@ void start(int n, Configuration cfg)
 	  foreach( roxen->configurations, Configuration c )
 	    DBManager.set_permission( "docs", c, DBManager.READ );
 	}
-	DBManager.restore( "docs", getcwd()+"/etc/", "docs", ({ "docs" }) );
+	DBManager.restore( "docs", getcwd()+"/data/", "docs", ({ "docs" }) );
 	docs = DBManager.get( "docs", cfg );
       }
       else

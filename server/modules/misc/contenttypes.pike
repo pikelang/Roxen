@@ -7,7 +7,7 @@
 inherit "module";
 #include <module.h>
 
-constant cvs_version = "$Id: contenttypes.pike,v 1.23 2001/09/03 18:31:03 nilsson Exp $";
+constant cvs_version = "$Id: contenttypes.pike,v 1.24 2002/06/05 10:12:52 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TYPES;
 constant module_name = "Content types";
@@ -23,7 +23,7 @@ void create()
 # Feel free to add to this, but do it after the #include
 # line if you want to override any defaults
 
-#include <etc/extensions>", VAR_NOT_CFIF, "Extensions",
+#include <data/extensions>", VAR_NOT_CFIF, "Extensions",
 #"This is file extension to content type mapping. The format is as
 follows: <table><tr><th>extension</th><th>type</th><th>encoding</th></tr>
 <tr><td>gif</td><td>image/gif</td></tr>

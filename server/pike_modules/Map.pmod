@@ -309,7 +309,7 @@ class Legend {
 }
 
 static private mapping map_of_the_earth =
-            decode_value(Stdio.read_bytes("etc/maps/worldmap"));
+            decode_value(Stdio.read_bytes("data/maps/worldmap"));
 
 class Earth {
   static string state_region;
