@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.159 2001/05/16 09:49:27 per Exp $
+# $Id: start,v 1.160 2001/05/17 01:20:52 mast Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -238,7 +238,7 @@ parse_args() {
     once=1
     shift
   ;;
-  --debug-without=*|-r*|-d*|-t*|-l*|-w*|-a*)
+  --debug-without=*|-r*|-d*|-t*|-l*|-w*|-a*|-p*)
     # Argument passed along to Pike.
     ARGS="$ARGS $1"
   ;;
@@ -410,6 +410,8 @@ the default arguments.
        .B-dtB.:                       Turn off tail recursion optimization.
 
        .B-tB.:                        Turn on Pike level tracing.
+
+       .B-pB.:                        Turn on Pike profiling.
 
        .B-t<level>B.:                 Turn on more Pike tracing. This only
 				  works if Pike is compiled with debug
