@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: read_config.pike,v 1.33 2000/03/01 19:04:55 per Exp $
+// $Id: read_config.pike,v 1.34 2000/03/07 02:39:38 nilsson Exp $
 
 #include <module.h>
 
@@ -242,7 +242,7 @@ void store( string reg, mapping vars, int q, object current_configuration )
 }
 
 
-mapping retrieve(string reg, object current_configuration)
+mapping(string:mixed) retrieve(string reg, object current_configuration)
 {
   string cl;
 #ifndef IN_INSTALL
