@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.256 2001/07/11 14:55:28 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.257 2001/07/12 21:59:32 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -3358,7 +3358,8 @@ class UserIf
 {
   constant name = "if";
   string plugin_name;
-  string|RXML.PCode rxml_code;
+  string rxml_code;
+  RXML.PCode rxml_p_code = 0;
 
   void create(string pname, string code) {
     plugin_name = pname;
@@ -3372,11 +3373,15 @@ class UserIf
     TRACE_ENTER("user defined if argument "+plugin_name, UserIf);
     otruth = _ok;
     _ok = -2;
-    if (stringp (rxml_code))
-      [tmp, rxml_code] =
+  eval: {
+      if (rxml_p_code) {
+	tmp = rxml_p_code->eval (RXML_CONTEXT);
+	if (stringp (tmp)) break eval;
+	// Recompile if the p-code was stale.
+      }
+      [tmp, rxml_p_code] =
 	RXML_CONTEXT->eval_and_compile (RXML.t_html (RXML.PXml), rxml_code);
-    else
-      tmp = rxml_code->eval (RXML_CONTEXT);
+    }
     res = _ok;
     _ok = otruth;
 
