@@ -1,4 +1,4 @@
-// $Id: module.h,v 1.35 2000/03/28 15:00:46 nilsson Exp $
+// $Id: module.h,v 1.36 2000/04/14 23:36:31 nilsson Exp $
 #ifndef ROXEN_MODULE_H
 
 #define ROXEN_MODULE_H
@@ -20,6 +20,6 @@
 #define TAGDOCUMENTATION mapping tagdocumentation(){return get_value_from_file(__FILE__,"tagdoc","#define manual\n");}
 
 #define ROXEN_MAJOR_VERSION 2
-#define ROXEN_MINOR_VERSION 0
+#define ROXEN_MINOR_VERSION 1
 
 #endif
