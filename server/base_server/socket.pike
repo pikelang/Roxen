@@ -1,5 +1,5 @@
 // This code has to work both in 'roxen.pike' and all modules
-string cvs_version = "$Id: socket.pike,v 1.7 1997/05/27 23:38:17 grubba Exp $";
+string _cvs_version = "$Id: socket.pike,v 1.8 1997/09/14 18:07:12 grubba Exp $";
 
 #if !efun(roxen)
 #define roxen roxenp()
