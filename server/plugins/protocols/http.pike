@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.396 2004/04/04 14:24:53 mani Exp $";
+constant cvs_version = "$Id: http.pike,v 1.397 2004/05/20 22:09:19 _cvs_stephen Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -68,6 +68,7 @@ private static String.Buffer data_buffer;
   do {RequestID id = this; TRACE_LEAVE (A);} while (0)
 
 mapping(string:array) real_variables = ([]);
+mapping(string:array) stash_body_parts = ([]);
 mapping(string:mixed)|FakedVariables variables = FakedVariables( real_variables );
 
 mapping (string:mixed)  misc            =
@@ -824,6 +825,7 @@ private final int parse_got_2( )
 	      real_variables[part->disp_params->name+".mimetype"] +=
 		({ part->headers["content-type"] });
 	  }
+	  stash_body_parts = real_variables + ([ ]);
 	}
 	break;
       }

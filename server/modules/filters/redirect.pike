@@ -4,7 +4,7 @@
 // another. This can be done using "internal" redirects (much like a
 // symbolic link in unix), or with normal HTTP redirects.
 
-constant cvs_version = "$Id: redirect.pike,v 1.38 2004/05/20 22:01:24 _cvs_stephen Exp $";
+constant cvs_version = "$Id: redirect.pike,v 1.39 2004/05/20 22:09:19 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 inherit "module";
@@ -201,7 +201,7 @@ mixed first_try(object id)
     return Roxen.http_low_answer( 302, "")
       + ([ "extra_heads":([ "Location":to ]) ]);
   } else {
-    id->variables = FakedVariables(id->real_variables = ([]));
+    id->variables = FakedVariables(id->real_variables = id->stash_body_parts);
     id->raw_url = Roxen.http_encode_string(to);
     id->not_query = id->scan_for_query( to );
   }
