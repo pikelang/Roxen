@@ -103,29 +103,29 @@ string|array tag_echo(string tag, mapping m, object id)
     return ({ "HTTP/1.0" });
       
    case "request_method":
-    return ({ id->method });
+    return ({ html_encode_string(id->method) });
 
    case "auth_type":
     return ({ "Basic" });
       
    case "http_cookie": case "cookie":
     NOCACHE();
-    return ({ id->misc->cookies || "" });
+    return ({ html_encode_string(id->misc->cookies || "") });
 
    case "http_accept":
     NOCACHE();
-    return ({ id->misc->accept && sizeof(id->misc->accept)? 
-	    id->misc->accept*", ": "None" });
+    return ({ html_encode_string(id->misc->accept && sizeof(id->misc->accept)?
+				 id->misc->accept*", ": "None") });
       
    case "http_user_agent":
     NOCACHE();
-    return ({ id->client && sizeof(id->client)? 
-      id->client*" " : "Unknown" });
+    return ({ html_encode_string(id->client && sizeof(id->client)? 
+				 id->client*" " : "Unknown") });
       
    case "http_referer":
     NOCACHE();
-    return ({ id->referer && sizeof(id->referer) ? 
-      id->referer*", ": "Unknown" });
+    return ({ html_encode_string(id->referer && sizeof(id->referer) ? 
+				 id->referer*", ": "Unknown") });
       
    default:
     m->var = upper_case(m->var);
