@@ -1,11 +1,11 @@
-          Installing Roxen Challenger 1.1 - the Source distribution
-          +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+          Installing Roxen Challenger 1.1.1 - the Source distribution
+          +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   0. Make sure you have a working C-compiler for your machine.
 
   1. Make a build directory (e.g. mkdir build), and cd to it.
 
-  2. Mount the Roxen 1.1 CD somewhere in your filesystem (e.g.
+  2. Mount the Roxen 1.1.1 CD somewhere in your filesystem (e.g.
      volcheck).
 
   3. Type

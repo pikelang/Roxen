@@ -1,5 +1,5 @@
-          Installing Roxen Challenger 1.1 - the Source distribution
-          +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+          Installing Roxen Challenger 1.1.1 - the Source distribution
+          +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   1. Get the source server package.
 
@@ -19,7 +19,7 @@
      (where "Roxen-archive-name" is the name of the Roxen archive
      file.).
 
-  3. Type "cd Roxen_1.1" to change to the new directory. This directory
+  3. Type "cd Roxen_1.1.1" to change to the new directory. This directory
      should contain at the very least four directories: 
      server (Roxen server source), pike (the Pike intepreter), 
      extern (misc. programs used by Roxen) and tools (misc tools). See
@@ -54,8 +54,8 @@
 ----------------------------------------------------------------------------
 Example installation session:
 
-bash$ tar xzf Roxen_1.1.tar.gz
-bash$ cd Roxen_1.1
+bash$ tar xzf Roxen_1.1.1.tar.gz
+bash$ cd Roxen_1.1.1
 bash$ mkdir solaris
 bash$ cd solaris
 bash$ ../configure --prefix=/usr/www

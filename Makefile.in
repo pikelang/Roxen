@@ -3,6 +3,8 @@ SRCDIR=@srcdir@
 VPATH=@srcdir@
 prefix=@prefix@
 
+@SET_MAKE@
+
 all:	extern pike
 	@(cd extern;$(MAKE) all;cd ..)
 	@(cd pike/src;$(MAKE);cd ..)
@@ -19,6 +21,9 @@ install: all
 	@rm -rf	$(prefix)/roxen/server/CVS $(prefix)/roxen/server/*/CVS\
 		$(prefix)/roxen/server/*/*/CVS
 	cp pike/src/pike $(prefix)/roxen/server/bin
+	test -d $(prefix)/roxen/server/lib || mkdir $(prefix)/roxen/server/lib
+	test -d $(prefix)/roxen/server/lib/pike || mkdir $(prefix)/roxen/server/lib/pike
+	cp -r pike/src/lib/* $(prefix)/roxen/server/lib/pike/
 	-@$(SRCDIR)/mkdir -p $(prefix)/roxen/logs
 	-@$(SRCDIR)/mkdir -p $(prefix)/roxen/configurations
 	@(cd extern;$(MAKE) install;cd ../)

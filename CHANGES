@@ -1,4 +1,63 @@
 
+Changes since Roxen Challenger 1.1.1 alpha 6
+-----------------------------------------------
+
+o etc/master.pike has been renamed to etc/roxen_master to avoid
+  name conflicts.
+
+o Applied a patch for the disk cache by Wilhelm Köhler (Thanks!)
+
+o Fixed the install-script.
+
+o Should now start the garbage-collector correctly when started from a
+  standard installation.
+
+o Fixed most of the bugs in the ticket-database.
+
+o Fixed several small bugs here and there.
+
+o Support for SSLv3 added.
+  NOTE: People in the US may not use this module since it violates patents
+	held by RSA Inc.
+	People in France may not download nor use this module due to
+	legislation. A version of Roxen without the crypto-module will
+	be made available on demand.
+
+
+Changes since Roxen Challenger 1.1.1 alpha 5
+-----------------------------------------------
+
+o Now uses Pike 0.5b4
+
+o Shrunk the roxen-master.
+
+o The FTP-protocol module now supports named FTP. This is implemented by
+  mounting / on / and having "allow user=any" in "Security: Patterns".
+  One interesting feature is that users using named FTP can still see
+  the anonymous tree.
+
+o Added support for MODULE_FIRST modules to the FTP-protocol module. This
+  allows for using .htaccess-files to restrict access to certain directories.
+
+o Install-script updated.
+
+o Now sets --prefix to . for the Pike-tree.
+
+Changes since Roxen Challenger 1.1.1 alpha 2
+-----------------------------------------------
+
+o Now uses replace_master().
+
+o proxy_auth_needed() has moved to roxenlib.
+
+o Many files updated to Pike 0.5b2.
+
+o Startscript now inserts the value of the environment variable DEFINES
+  into commandline.
+
+o /precompiled/* no longer supported; use the new module-system instead.
+
+
 Changes since Roxen Challenger 1.1 
 -----------------------------------------------
 
