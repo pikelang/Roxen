@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.29 1997/07/19 23:24:27 grubba Exp $
+ * $Id: ftp.pike,v 1.30 1997/08/03 22:50:04 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -567,6 +567,7 @@ int open_file(string arg, int|void noport)
   {
     if(file && file->file)
       destruct(file->file);
+    file=0;
     foreach(conf->first_modules(), function funp)
       if(file = funp( this_object())) break;
     if (!file) {
