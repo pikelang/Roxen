@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.519 2002/06/06 11:35:02 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.520 2002/06/11 09:59:11 nilsson Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1032,7 +1032,7 @@ private mapping internal_gopher_image(string from)
 private static int nest = 0;
 
 #ifdef MODULE_LEVEL_SECURITY
-private mapping misc_cache=([]);
+private mapping misc_cache = set_weak_flag( ([]), 1 );
 
 int|mapping check_security(function|RoxenModule a, RequestID id,
 			   void|int slevel)
