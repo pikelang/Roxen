@@ -1,5 +1,5 @@
 /*
- * $Id: listfonts.pike,v 1.26 2004/05/29 00:32:05 _cvs_stephen Exp $
+ * $Id: listfonts.pike,v 1.27 2004/05/29 00:52:38 _cvs_stephen Exp $
  */
 
 constant task = "status";
@@ -60,7 +60,7 @@ string page_0(RequestID id)
 {
   array q = roxen.fonts.get_font_information();
   info = mkmapping( q->name, q );
-  string res=("<input type='hidden' name='action' value='listfonts.pike'/>"
+  string res=("<input type='hidden' name='task' value='listfonts.pike'/>"
               "<input type='hidden' name='doit' value='indeed'/>\n"
               "<font size='+1'><b>Available font loaders</b></font><p>"+
               font_loaders()+"<font size='+1'><b>"

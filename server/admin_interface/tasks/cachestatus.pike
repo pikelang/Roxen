@@ -122,6 +122,6 @@ string parse( RequestID id )
     "<br clear='all' />\n";
 
   return res +
-     "<input type=hidden name=action value='cachestatus.pike' />"
+     "<input type=hidden name=task value='cachestatus.pike' />"
     "<p><cf-ok-button href='./'/> <cf-refresh/></p>";
 }

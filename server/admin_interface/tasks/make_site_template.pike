@@ -1,5 +1,5 @@
 /*
- * $Id: make_site_template.pike,v 1.10 2004/05/29 00:32:05 _cvs_stephen Exp $
+ * $Id: make_site_template.pike,v 1.11 2004/05/29 00:52:38 _cvs_stephen Exp $
  *
  * Make a site-template from a virtual server configuration.
  *
@@ -77,7 +77,7 @@ string parse(RequestID id)
 		     Roxen.http_encode_string(lower_case(replace(conf_name,
 								 " ", "_"))));
 
-      res += "<cf-ok/> <cf-cancel href='./?class="+action+"'/>";
+      res += "<cf-ok/> <cf-cancel href='./?class="+task+"'/>";
     } else {
       // Page 3
       //
@@ -213,7 +213,7 @@ string parse(RequestID id)
   if (!conf) {
     // Only on first page.
     res += "<br clear='all'>"
-      "<cf-cancel href='./?class="+action+"'/>";
+      "<cf-cancel href='./?class="+task+"'/>";
   }
 
   return res;

@@ -91,7 +91,7 @@ string parse( RequestID id )
       res += "</table>\n</box-frame>\n<br clear='all' />";
     }
   }
-  res += "<input type=hidden name=action value='connections.pike' />"
+  res += "<input type=hidden name=task value='connections.pike' />"
     "<br />"
     "<cf-ok-button href='./'/> <cf-refresh/>";
   return res;

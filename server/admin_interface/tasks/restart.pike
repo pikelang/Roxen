@@ -1,5 +1,5 @@
 /*
- * $Id: restart.pike,v 1.18 2004/05/29 00:32:05 _cvs_stephen Exp $
+ * $Id: restart.pike,v 1.19 2004/05/29 00:52:38 _cvs_stephen Exp $
  */
 
 #include <admin_interface.h>
@@ -18,7 +18,7 @@ mixed parse( RequestID id )
      {
        roxen->restart(0.5);
        return res +
-	 "<input type='hidden' name='action' value='restart.pike' />"
+	 "<input type='hidden' name='task' value='restart.pike' />"
 	 "<font color='&usr.warncolor;'><h1>Restart</h1></font>"
 	 "ChiliMoon will restart automatically.\n\n<p><i>"
 	 "You might see the old process for a while in the process table "
@@ -47,7 +47,7 @@ mixed parse( RequestID id )
 #"<blockquote><br />
 
  <cf-perm perm='Restart'>
-   <gbutton href='?what=restart&action=restart.pike&class=maintenance' 
+   <gbutton href='?what=restart&task=restart.pike&class=maintenance' 
             width=250 icon_src=&usr.err-2;> Restart </gbutton>
  </cf-perm>
 
@@ -58,7 +58,7 @@ mixed parse( RequestID id )
 <br /><br />
 
 <cf-perm perm='Shutdown'>
-  <gbutton href='?what=shutdown&action=restart.pike&class=maintenance' 
+  <gbutton href='?what=shutdown&task=restart.pike&class=maintenance' 
            width=250  icon_src=&usr.err-3;> Shutdown </gbutton>
 </cf-perm>
 

@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.27 2004/05/28 18:42:54 _cvs_stephen Exp $
+ * $Id: debug_info.pike,v 1.28 2004/05/29 00:52:38 _cvs_stephen Exp $
  */
 #include <stat.h>
 
@@ -332,7 +332,7 @@ mixed parse( RequestID id )
     "Pike memory usage information"+
     "</b></font>"
     "<p />"
-    "<input type='hidden' name='action' value='debug_info.pike' />\n"
+    "<input type='hidden' name='task' value='debug_info.pike' />\n"
     "<p><submit-gbutton name='refresh'> "
     "Refresh "// <cf-refresh> doesn't submit.
     "</submit-gbutton>\n"

@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.30 2004/05/29 00:32:05 _cvs_stephen Exp $
+ * $Id: resolv.pike,v 1.31 2004/05/29 00:52:38 _cvs_stephen Exp $
  */
 inherit "wizard";
 inherit "../logutil";
@@ -229,8 +229,8 @@ string parse( RequestID id )
 
   if( id->variables->path )
   {
-    nid->set_url (id->variables->path);
-    if(!nid->conf) {
+    mixed err = catch(nid->set_url (id->variables->path));
+    if(err || !nid->conf) {
       res += "<p><font color='red'>There is no configuration "
 	"available that matches this URL.</font></p>";
       return res;
