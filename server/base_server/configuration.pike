@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.100 1998/02/24 10:54:37 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.101 1998/02/24 22:27:24 per Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -288,8 +288,8 @@ public string type_from_filename( string file, int|void to )
   if(!types_fun)
     return to?({ "application/octet-stream", 0 }):"application/octet-stream";
 
-  while(file[-1] == '/') 
-    file = file[0..strlen(file)-2]; // Security patch? 
+//   while(file[-1] == '/') 
+//     file = file[0..strlen(file)-2]; // Security patch? 
   
   if(tmp = types_fun(ext))
   {
