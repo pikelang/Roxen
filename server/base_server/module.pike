@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.184 2004/05/07 20:43:57 mast Exp $
+// $Id: module.pike,v 1.185 2004/05/07 21:58:29 grubba Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -1058,8 +1058,9 @@ mapping(string:mixed)|int(0..1) write_access(string path, int(0..1) recursive,
  next_condition:
   foreach(condition, array(array(string)) sub_cond) {
     SIMPLE_TRACE_ENTER(this,
-		       "Trying condition ( %{%{%x:%O%} %})...", sub_cond);
+		       "Trying condition ( %{%s:%O %})...", sub_cond);
     int negate;
+    DAVLock locked = lock;
     foreach(sub_cond, array(string) token) {
       switch(token[0]) {
       case "not":
@@ -1072,20 +1073,31 @@ mapping(string:mixed)|int(0..1) write_access(string path, int(0..1) recursive,
 				 "Etag conditions not supported.");
 	TRACE_LEAVE("Conditional etag not supported.");
 	continue next_condition;	// Fail.
-      case "lock":
-	if ((lock && lock->locktoken == token[1]) != negate) {
+      case "key":
+	if (negate) {
+	  if (lock && lock->locktoken == token[1]) {
+	    TRACE_LEAVE("Matched negated lock.");
+	    continue next_condition;	// Fail.
+	  }
+	} else if (!lock || lock->locktoken != token[1]) {
 	  // Lock mismatch.
 	  TRACE_LEAVE("Lock mismatch.");
 	  continue next_condition;	// Fail.
+	} else {
+	  locked = 0;
 	}
 	negate = 0;
 	break;
       }
     }
-    TRACE_LEAVE("Found match.");
-    SIMPLE_TRACE_LEAVE("Ok%s.",
-		       got_sublocks ? " (this level only)" : "");
-    return got_sublocks;	// Found matching sub-condition.
+    if (!locked) {
+      TRACE_LEAVE("Found match.");
+      SIMPLE_TRACE_LEAVE("Ok%s.",
+			 got_sublocks ? " (this level only)" : "");
+      return got_sublocks;	// Found matching sub-condition.
+    }
+    SIMPLE_TRACE_LEAVE("Conditional ok, but still locked (locktoken: %O).",
+		       lock->locktoken);
   }
 
   TRACE_LEAVE("Failed.");
