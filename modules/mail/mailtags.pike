@@ -1,12 +1,15 @@
+/* This is -*- pike -*- code */
 /* Standard roxen module header -------------------------------- */
+
 #include <module.h>
 inherit "module";
-constant cvs_version = "$Id: mailtags.pike,v 1.2 1998/09/01 01:23:32 per Exp $";
-constant thread_sage = 1;
+constant cvs_version = 
+"$Id: mailtags.pike,v 1.3 1998/09/01 03:09:20 per Exp $";
+
+constant thread_safe = 1;
 
 
 /* Some defines to cheer up our day ---------------------------- */
-
 
 #define UID id->misc->_automail_user
 
@@ -27,7 +30,7 @@ class  ClientLayer
   int authentificate_user(string username, string passwordcleartext);
 
   int create_mailbox(int user, string mailbox);
-  int delete_mailbox(int mailbox_id);n
+  int delete_mailbox(int mailbox_id);
   int rename_mailbox(int mailbox_id, string newmailbox);
   string get_mailbox_name(int mailbox_id);
   mapping(string:int) list_mailboxes(int user);
@@ -45,13 +48,166 @@ class  ClientLayer
 }
 
 
+/* Client layer wrapper layer ------------------------------------- */
+
+static mapping (program:mapping(int:object)) object_cache = ([]);
+
+object get_cache_obj( program type, int id )
+{
+  if(!object_cache[ type ])
+    return 0;
+  if(object_cache[ type ][ id ])
+    return object_cache[ type ][ id ];
+}
+
+object get_any_obj(int id, program type, mixed ... moreargs)
+{
+  if(!object_cache[ type ])
+    object_cache[ type ] = ([]);
+  if(object_cache[ type ][ id ])
+  {
+    object_cache[ type ][ id ]->create(id, @moreargs);
+    return object_cache[ type ][ id ];
+  }
+  return object_cache[ type ][ id ] = type(id,@moreargs);
+}
+
+class Mail
+{
+  int id;
+  object user;
+  array(object) _mboxes;
+  string name;
+
+  static mapping _headers;
+  static multiset _flags;
+
+  string body()
+  {
+    if(!_headers)headers();
+    return clientlayer->load_body( (int)_headers->body_id );
+  }
+
+  mapping headers(int force)
+  {
+    mapping h = clientlayer->get_mail_headers( id );
+    if(!_headers || force)
+      return _headers = parse_headers(h[ HEAD_CID ]) | h;
+    return _headers;
+  }
+
+  multiset flags(int force)
+  {
+    if(!_flags || force)
+      return _flags = clientlayer->get_flags( id );
+  }
+
+  void set_flag(string name)
+  {
+    _flags = 0;
+    clientlayer->set_flag( id, name );
+  }
+
+  void clear_flag(string name)
+  {
+    _flags = 0;
+    clientlayer->delete_flag( id, name );
+  }
+
+
+
+  void create(int i, object m)
+  {
+    id = i;
+    if(_mboxes)
+      _mboxes |= ({ m });
+    else
+      _mboxes = ({ m });
+    user = m->user;
+  }
+}
+
+class Mailbox
+{
+  int id;
+  object user;
+  string name;
+
+  int rename(string to)
+  {
+    name=0;
+    clientlayer->rename_mailbox( id, to );
+  }
+  
+  void delete()
+  {
+    clientlayer->delete_mailbox( id );
+    destruct(this_object());
+  }
+  
+  string query_name(int force)
+  {
+    if(force) name=0;
+    return name||(name=clientlayer->get_mailbox_name( id ));
+  }
+
+  array(Mail) mails()
+  {
+    return Array.map(clientlayer->list_mail( id ), get_any_obj, 
+		     Mail, this_object());
+  }
+
+
+
+  void create(int i, object u, string n)
+  {
+    id = i;
+    user = u;
+    name = n;
+  }
+}
+
+class User
+{
+  int id;
+
+  string cast(string to)
+  {
+    if(to != "int") 
+      error("Cannot cast to "+to+"\n");
+    return (string)id;
+  }
+
+  array(Mailbox) mailboxes()
+  {
+    mapping m = clientlayer->list_mailboxes(id);
+    array a = values(m), b = indices(m);
+    for(int i=0; i<sizeof(f); i++)
+      a[i] = get_any_obj( a[i], Mailbox, this_object(), b[i] );
+    return a;
+  }
+
+  Mailbox create_mailbox( string name )
+  {
+    return Mailbox( clientlayer->create_mailbox( id, name ), 
+		    get_any_obj, Mailbox, this_object(), name );
+  }
+
+
+
+  void create(int _id)
+  {
+p    id = _id;
+  }
+}
+
 
 /* Globals ---------------------------------------------------------*/
 
 static ClientLayer clientlayer;
 static MIME.Message mymesg = MIME.Message();
 static roxen.Configuration conf;
-static int debug;
+static int debug, secure;
 
 /* Roxen module glue ---------------------------------------------- */
 /* These functions are arranged in calling order. ----------------- */
@@ -61,11 +217,21 @@ void create()
   defvar("debug", 0, "Debug", TYPE_FLAG, 
 	 "If this flag is set, debugging output might be added for some tags. "
 	 "Also, more sanity checks will be done");
+
+  defvar("security_level", "high", "Security level", TYPE_STRING_LIST|VAR_MORE,
+	 "The level of security verification to do.<p>"
+	 "high:  All checks. It should be impossible to read mails"
+	 " that is not yours, same goes for list of mails etc.<p>"
+	 "mails: Only the ownership of mails will be checked.<p>"
+	 "low: Only checks that will not generate extra CVS queries"
+	 " will be done. This saves CPU, but the cost is high. A smart and"
+	 " resourcefull user could read all mails.",
+	 ({ "high", "mails", "low"}));
 }
 
 array register_module()
 {
-  return ({ MODULE_PARSER, "Automail HTML client",
+  return ({ MODULE_PARSER|MODULE_PROVIDER, "Automail HTML client",
 	    "This module adds quite a few new tags for Automail email "
 	    "handling. This module talks to the AutoMail client layer module",
 	    0,1 });
@@ -81,36 +247,38 @@ void query_container_callers()
   return common_callers(  "container_" );
 }
 
+string query_provides()
+{
+  return "automail_htmlmail";
+}
+
+
 void start(int q, roxen.Configuration c)
 {
   array err;
-  if(c)
-  {
-    if( err = catch {
-      require_module( "clientlayer" );
-      conf = c;
-      clientlayer = conf->get_providers( "automail_clientlayer" );
-    })
-      report_error("AutoMail HTML Client init failed!\n" + 
-		   describe_backtrace( err ) );
-    debug = query("debug");
-    
-    if(debug)
-      report_notice("AutoMail HTML Client added to the '"+c->query_name()+
-		    "' configuration.\n");
-  }
+  if(!c)
+    return;
+
+  if( err = catch {
+    module_dependencies( c, ({ "clientlayer" }) );
+    clientlayer = conf->get_providers( "automail_clientlayer" )[ 0 ];
+  })
+    report_error("AutoMail HTML Client init failed!\n" + 
+		 describe_backtrace( err ) );
+  debug = query("debug");
+  
+  if(debug)
+    report_notice("AutoMail HTML Client added to the '"+c->query_name()+
+		  "' configuration.\n");
+  if(query("security_level") == "high")
+    secure=2;
+  else if(query("security_level") == "mails")
+    secure=1;
+  else
+    secure=0;
 }
 
 /* Utility functions ---------------------------------------------- */
-
-static string verify_ownership( int mailid, object id )
-{
-  // FIXME
-  /*
-    if()
-    return "Not really, no";
-   */
-}
 
 static mapping common_callers( string prefix )
 {
@@ -120,6 +288,21 @@ static mapping common_callers( string prefix )
 
   DEBUG(( "Tags for %s is %s\n",+prefix,implode_nicely(sort(indices(tags)))));
   return tags;
+}
+
+static string verify_ownership( Mail mailid, object id )
+{
+  // FIXME!
+  if(!secure) return 0;
+}
+
+static int num_unread(array(Mail) from)
+{
+  int res;
+  foreach(from, Mail m)
+    if(!m->flags()->read)
+      res++;
+  return res;
 }
 
 static mapping parse_headers( string foo )
@@ -135,54 +318,39 @@ static mapping make_flagmapping(multiset from)
 		    ({"set"})*sizeof(from));
 }
 
-static string login(object id)
+
+string login(object id)
 {
   int id;
   string force = ("<return code=304>"
 		  "<header name=WWW-Authenticate "
-                  "        value='realm=automail'>");
+                  "        value='realm=e-mail'>");
 
-  if(zero_type(UID))
+  if(!UID)
   {
     if(!id->realauth) return force;
     id = clientlayer->authenticate_user( @(id->realauth/":") );
     if(!id) return force;
-    UID = id;
+    UID = User( id );
   }
-}
-
-static int num_unread(array from)
-{
-  int res;
-  foreach(from, int f)
-    if(!clientlayer->get_flags( f )->read)
-      res++;
-  return res;
-}
-
-static int verify_mailbox( int mbox, object id )
-{
-  return zero_type(search( clientlayer->list_mailboxes( UID ), mbox ));
 }
 
 
 /* Tag functions --------------------------------------------------- */
 
-// <delete-mail mail=id [force]>
-//   Force is rather dangerous, since it might leave dangling references 
-//   to the mail.
+// <delete-mail mail=id>
+// Please note that this function only removes a reference from the
+// mail, if it is referenced by e.g. other clients, or is present in
+// more than one mailbox, the mail will not be deleted.
 
 string tag_delete_mail(string tag, mapping args, object id)
 {
   string res;
+  Mail mid = get_cache_obj( Mail, (int)args->mail );
   if(res = login(id))
     return res;
-
-  if(res = verify_ownership( (int)args->mail, id ))
-    return res;
-
-  clientlayer->delete_mail( (int)args->mail );
-  return "";
+  if(mail && mail->user == UID )
+    mid->delete();
 }
 
 // <mail-body mail=id>
@@ -192,10 +360,11 @@ string tag_mail_body(string tag, mapping args, object id)
   if(res = login(id))
     return res;
 
-  if(res = verify_ownership( (int)args->mail, id ))
+  Mail mail = get_cache_obj( Mail, (int)args->mail );
+  if(res = login(id))
     return res;
-
-  return clientlayer->load_body( args->mail );
+  if(mail && mail->user == UID )
+    return mail->body( );
 }
 
 // <list-mailboxes>
@@ -207,23 +376,22 @@ string container_list_mailboxes(string tag, mapping args, string contents,
   string res;
   if(res = login(id))
     return res;
+
   
-  mapping mboxes = clientlayer->list_mailboxes( UID );
   array(mapping) vars = ({});
-  foreach(sort(indices(mboxes)), string s)
-  {
+  foreach(UID->mailboxes(), Mailbox m)
     vars += ({ ([
-      "name":s,
-      "id":mboxes[id],
+      "_mb":m,
+      "name":m->name,
+      "id":m->id,
     ]) });
-  }
+
   if(!args->quick)
   {
     foreach(vars, mapping v)
     {
-      array (int) mails = clientlayer->list_mails( v->id );
-      v->mails = sizeof(mails);
-      v->unread = num_unread( mails );
+      v->mails = sizeof(v->_mb->mails());
+      v->unread = num_unread( v->_mb->mails() );
       v->read = v->mails - v->unread;
     }
   }
@@ -237,21 +405,23 @@ string container_list_mails( string tag, mapping args, string contents,
 			     object id )
 {
   string res;
+  Mailbox mbox;
   if(res = login(id))
     return res;
 
-  if(verify_mailbox( (int)args->mailbox, id )) 
+  foreach( UID->mailboxes(), Mailbox m )
+    if(m->id == (int)args->mailbox )
+    {
+      mbox = m;
+      break;
+    }
+
+  if(!mbox)
     return "Invalid mailbox id";
   
-  array (int) mails = clientlayer->list_mails( (int)args->mailbox );
-
   array variables = ({ });
-  foreach(mails, int m)
-    variables += 
-    ({ 
-      parse_headers( clientlayer->get_mail_headers( m ) )
-      | make_flagmapping( clientlayer->get_flags( m ) )
-    });
+  foreach(mbox->mails(), Mail m)
+    variables += ({ m->headers() | make_flagmapping( m->flags() ) });
   return do_output_tag( args, variables, contents, id );
 }
 
@@ -364,25 +534,24 @@ string container_mail_body_parts( string tag, mapping args, string contents,
   return res;
 }
 
-/* <get-mail mail=id>
- *  #subject# #from# #body# etc.
- * </get-mail>
- * NOTE: Body contains the headers. See <mail-body-parts>
- */
-string container_get_mail( string tag, mapping args, string contents, 
-			   object id )
+// <get-mail mail=id>
+//   #subject# #from# #body# etc.
+// </get-mail>
+// NOTE: Body contains the headers. See <mail-body-parts>
+string container_get_mail( string tag, mapping args, 
+			   string contents, object id )
 {
   string res;
+  Mail mid = get_cache_obj( Mail, (int)args->mail );
+
   if(res = login(id))
     return res;
-  
-  if(res = verify_ownership( (int)args->mail, id ))
-    return res;
 
-  mapping vars = 
-    (parse_headers(clientlayer->get_mail_headers((int)args->mail))|
-     make_flagmapping(clientlayer->get_flags( m ))|
-     ([ "body":tag_mail_body( tag, args, id ) ]));
-
-  return do_output_tag( args, ({vars}), contents, id );
+  if(mid && mid->user == UID)
+    return do_output_tag( args,({(mid->headers()
+				  |make_flagmapping(mid->flags())
+				  |([ "body":mid->body() ])
+				  |args)}),
+			  contents, id );
+  return "Permission denied.";
 }
