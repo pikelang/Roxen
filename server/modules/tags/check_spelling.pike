@@ -6,13 +6,18 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: check_spelling.pike,v 1.23 2004/08/06 14:04:50 noring Exp $";
+constant cvs_version = "$Id: check_spelling.pike,v 1.24 2004/08/10 11:29:54 noring Exp $";
 
-constant module_type = MODULE_TAG;
+constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Tags: Spell checker";
 constant module_doc = 
 #"Checks for misspelled words using the <tt>&lt;emit#spellcheck&gt;</tt> or
 <tt>&lt;spell&gt;</tt> tags.";
+
+array(string) query_provides()
+{
+  return ({ "spellchecker" });
+}
 
 mapping find_internal(string f, RequestID id)
 {
