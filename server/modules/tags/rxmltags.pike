@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.477 2005/01/27 10:31:58 anders Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.478 2005/02/01 13:25:57 stewa Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -5347,6 +5347,17 @@ class TagEmitSources {
   }
 }
 
+class TagEmitScopes {
+  inherit RXML.Tag;
+  constant name="emit";
+  constant plugin_name="scopes";
+
+  array(mapping(string:string)) get_dataset(mapping m, RequestID id) {
+    return Array.map( RXML_CONTEXT->list_scopes(),
+		      lambda(string scope) { return (["scope":scope]); } );
+  }
+}
+
 class TagPathplugin
 {
   inherit RXML.Tag;
@@ -9014,6 +9025,14 @@ the respective attributes below for further information.</p></desc>
 </p></desc>",
   ([ "&_.source;":#"<desc type='entity'><p>
   The name of the source.</p></desc>" ]) }),
+
+//----------------------------------------------------------------------
+
+"emit#scopes":({ #"<desc type='plugin'><p><short>
+ Provides a list of all available RXML scopes.</short>
+</p></desc>",
+  ([ "&_.scope;":#"<desc type='entity'><p>
+  The name of the scope.</p></desc>" ]) }),
 
 //----------------------------------------------------------------------
 
