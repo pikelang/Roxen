@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: cache.pike,v 1.53 2000/08/01 00:26:00 nilsson Exp $
+// $Id: cache.pike,v 1.54 2000/08/14 12:51:28 jonasw Exp $
 
 #pragma strict_types
 
@@ -115,13 +115,20 @@ mixed cache_lookup(string in, string what)
 // Return some fancy cache statistics.
 mapping(string:array(int)) status()
 {
-  mapping(string:array(int)) ret=([]);
-  foreach(indices(cache), string n) {
-    ret[n]=({ sizeof(cache[n]),
-	      hits[n],
-	      all[n],
-	      get_size(cache[n]),
-    });
+  mapping(string:array(int)) ret = ([ ]);
+  foreach(indices(cache), string name) {
+    //  We only show names up to the first ":" if present. This lets us
+    //  group entries together in the status table.
+    string show_name = (name / ":")[0];
+    array entry = ({ sizeof(cache[name]),
+		     hits[name],
+		     all[name],
+		     get_size(cache[name]) });
+    if (!zero_type(ret[show_name]))
+      for (int idx = 0; idx < 3; idx++)
+	ret[show_name][idx] += entry[idx];
+    else
+      ret[show_name] = entry;
   }
   return ret;
 }
