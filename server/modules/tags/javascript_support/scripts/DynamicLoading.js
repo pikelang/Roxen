@@ -75,9 +75,8 @@ FileLoader.prototype.loadSafariDocument = function(url)
   this.document = null;
   this.doclen = -1;
   var ifr = document.getElementById(this.frameName);
-  //  The following code breaks Safari 1.2.
-  //  if (ifr.contentDocument.body)
-  //  	ifr.contentDocument.body = 0;
+  if (ifr.contentDocument.body)
+    ifr.contentDocument.body.innerHTML = "";
   ifr.contentDocument.location.replace(url);
   if (!FileLoader.interval)
     FileLoader.interval = setInterval("checkSafariLoad()", 250);
@@ -99,8 +98,10 @@ function checkSafariLoad()
 	//  Since we don't know for sure when the new document has finished
 	//  loading (nope, adding an onLoad handler dynamically doesn't work)
 	//  we'll poll until the document length stabilizes.
+	//
+	//  FIXME: Doesn't handle popups which are zero bytes long.
 	var newlen = ifr.contentDocument.body.innerHTML.length;
-	if (newlen != fl.doclen) {
+	if (!newlen || (newlen != fl.doclen)) {
 	  //  Not yet loaded
 	  fl.doclen = newlen;
 	  allLoaded = false;
