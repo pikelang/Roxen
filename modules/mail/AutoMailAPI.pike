@@ -21,14 +21,16 @@ array register_module()
 { return ({ 0, "AutoMail DBAPI Module", "", 0, 1 });
 }
 
-int new_mail(string from, string maildata)
+int new_mail(string from, string header, string contents)
 { if (!database) return -1;
 
   // Note: this is not nice if maildata contains bad characters,
   // or is very large. A better way of doing this is desirable.
-  database->big_query("INSERT sender,contents INTO messages VALUES (:from,:data)",
+  database->big_query("INSERT sender,header,contents INTO messages "
+                    + "VALUES (:from,:header,:contents)",
                       ([ "from": from,
-                         "data": maildata
+                         "header": header,
+                         "contents": contents
                        ])
                  );
   // Extract the mail ID number.
