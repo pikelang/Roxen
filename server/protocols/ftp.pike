@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.91 2004/02/24 16:36:29 grubba Exp $
+ * $Id: ftp.pike,v 2.92 2004/03/03 16:26:34 mast Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -436,7 +436,7 @@ class FromEBCDICWrapper
 class PutFileWrapper
 {
   static int response_code = 226;
-  static string response = "Stored.";
+  static array(string) response = ({"Stored."});
   static string gotdata = "";
   static int closed, recvd;
   static function other_read_callback;
@@ -468,7 +468,7 @@ class PutFileWrapper
     DWRITE("FTP: PUT: close()\n");
     ftpsession->touch_me();
     if(how != "w" && !closed) {
-      ftpsession->send(response_code, ({ response }));
+      ftpsession->send(response_code, response);
       closed = 1;
       session->conf->received += recvd;
       session->file->len = recvd;
@@ -551,7 +551,7 @@ class PutFileWrapper
         else
           code = 550;
 	response_code = code;
-        response = msg;
+	response = ({msg});
       }
       gotdata = gotdata[n+1..];
     }
@@ -567,7 +567,10 @@ class PutFileWrapper
     }
 
     // Cut away the code.
-    response = ((result->rettext || errors[result->error])/" ")[1..] * " ";
+    if (result->rettext)
+      response = result->rettext / "\n";
+    else
+      response = ({errors[result->error] || ""});
     gotdata = result->data || "";
 
     close();
