@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.111 1999/03/12 23:07:52 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.112 1999/03/12 23:17:08 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -347,7 +347,10 @@ class imap_mail
       h->cc && address_list_to_imap(first_header(h->cc)),
       h->bcc && address_list_to_imap(first_header(h->bcc)),
       string_to_imap(first_header(h["in-reply-to"])),
-      string_to_imap(first_header(h["message-id"]))
+      /*
+       * Pine doesn't understand quoted "'s...
+       */
+      string_to_imap(replace(first_header(h["message-id"])), "\"", ""),
     });
 
     werror(sprintf("make_envelope(): arr: %O\n", a));
