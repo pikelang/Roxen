@@ -1,6 +1,6 @@
 // Protocol support for RFC 2518
 //
-// $Id: webdav.pike,v 1.26 2004/05/10 18:40:32 grubba Exp $
+// $Id: webdav.pike,v 1.27 2004/05/10 21:39:21 mast Exp $
 //
 // 2003-09-17 Henrik Grubbström
 
@@ -9,7 +9,7 @@ inherit "module";
 #include <module.h>
 #include <request_trace.h>
 
-constant cvs_version = "$Id: webdav.pike,v 1.26 2004/05/10 18:40:32 grubba Exp $";
+constant cvs_version = "$Id: webdav.pike,v 1.27 2004/05/10 21:39:21 mast Exp $";
 constant thread_safe = 1;
 constant module_name = "DAV: Protocol support";
 constant module_type = MODULE_FIRST;
@@ -160,7 +160,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
   //   RoxenModule module
   //   RequestID id
   //   mixed ... extras
-  function(string,string,int,RoxenModule,MultiStatus.Prefixed,RequestID,
+  function(string,string,int,RoxenModule,RequestID,
 	   mixed ...:mapping(string:mixed)) recur_func;
   array(mixed) extras = ({});
 
@@ -357,8 +357,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
     });
     
     recur_func = lambda(string source, string loc, int d, RoxenModule module,
-			MultiStatus.Prefixed stat, RequestID id,
-			string destination,
+			RequestID id, string destination,
 			mapping(string:int(-1..1)) behavior,
 			int(-1..1) overwrite) {
 		   if (!has_prefix(destination, loc)) {
@@ -369,7 +368,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
 		   destination = destination[sizeof(loc)..];
 		   mapping res =
 		     module->recurse_copy_files(source, destination, d,
-						behavior, overwrite, stat, id);
+						behavior, overwrite, id);
 		   if (res && ((res->error == 201) || (res->error == 204))) {
 		     empty_result = res;
 		     return 0;
@@ -380,8 +379,8 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
     break;
   case "DELETE":
     recur_func = lambda(string path, string ignored, int d, RoxenModule module,
-			MultiStatus.Prefixed stat, RequestID id) {
-		   mapping res = module->recurse_delete_files(path, stat, id);
+			RequestID id) {
+		   mapping res = module->recurse_delete_files(path, id);
 		   if (res && res->error < 300) {
 		     // Succeed in deleting some file(s).
 		     empty_result = res;
@@ -415,11 +414,10 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
 	    return Roxen.http_status(400, "Bad DAV request (23.3.2.1).");
 	  }
 	  recur_func = lambda(string path, string ignored, int d,
-			      RoxenModule module,
-			      MultiStatus.Prefixed stat, RequestID id) {
+			      RoxenModule module, RequestID id) {
 			 module->recurse_find_properties(path,
 							 "DAV:propname",
-							 d, stat, id);
+							 d, id);
 			 return 0;
 		       };
 	  break;
@@ -429,12 +427,11 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
 	    return Roxen.http_status(400, "Bad DAV request (23.3.2.1).");
 	  }
 	  recur_func = lambda(string path, string ignored, int d,
-			      RoxenModule module,
-			      MultiStatus.Prefixed stat, RequestID id,
+			      RoxenModule module, RequestID id,
 			      multiset(string)|void filt) {
 			 module->recurse_find_properties(path,
 							 "DAV:allprop",
-							 d, stat, id,
+							 d, id,
 							 filt);
 			 return 0;
 		       };
@@ -445,12 +442,11 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
 	    return Roxen.http_status(400, "Bad DAV request (23.3.2.1).");
 	  }
 	  recur_func = lambda(string path, string ignored, int d,
-			      RoxenModule module,
-			      MultiStatus.Prefixed stat, RequestID id,
+			      RoxenModule module, RequestID id,
 			      multiset(string) filt) {
 			 module->recurse_find_properties(path,
 							 "DAV:prop",
-							 d, stat, id,
+							 d, id,
 							 filt);
 			 return 0;
 		       };
@@ -479,11 +475,10 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
       //   PROPFIND request body MUST be treated as a request for the
       //   names and values of all properties.
       recur_func = lambda(string path, string ignored, int d,
-			  RoxenModule module,
-			  MultiStatus.Prefixed stat, RequestID id) {
+			  RoxenModule module, RequestID id) {
 		     module->recurse_find_properties(path,
 						     "DAV:allprop",
-						     d, stat, id);
+						     d, id);
 		     return 0;
 		   };
     }
@@ -531,12 +526,11 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
       return Roxen.http_status(400, "Bad DAV request (23.3.2.2).");
     }
     recur_func = lambda(string path, string ignored, int d, RoxenModule module,
-			MultiStatus.Prefixed stat, RequestID id,
+			RequestID id,
 			array(PatchPropertyCommand) instructions) {
 		   // NOTE: RFC 2518 does not support depth header
 		   //       with PROPPATCH, thus no recursion wrapper.
-		   return module->patch_properties(path, instructions,
-						   stat, id);
+		   return module->patch_properties(path, instructions, id);
 		 };
     extras = ({ instructions });
     break;
@@ -548,7 +542,6 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
     return Roxen.http_status(400, "Bad DAV request (23.3.2.2).");
   }
   // FIXME: Security, DoS, etc...
-  MultiStatus.Prefixed result = id->get_multi_status()->prefix(id->url_base());
   int start_ms_size = id->multi_status_size();
   string href = id->not_query;
   string href_prefix = combine_path(href, "./");
@@ -587,10 +580,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
     RoxenModule c = function_object(fun);
     TRACE_ENTER("Performing the work...", c);
     ASSERT_IF_DEBUG (has_prefix (loc, "/"));
-    mapping(string:mixed) ret =
-      recur_func(path, loc, d, c,
-		 result->prefix(loc[1..]),
-		 id, @extras);
+    mapping(string:mixed) ret = recur_func(path, loc, d, c, id, @extras);
     if (ret) {
       TRACE_LEAVE("Short circuit return.");
       TRACE_LEAVE("Done.");
