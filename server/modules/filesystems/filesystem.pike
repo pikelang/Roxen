@@ -5,10 +5,9 @@
 // Also inherited by some of the other filesystems.
 
 inherit "module";
-inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.79 2000/04/06 01:49:40 wing Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.80 2000/05/01 05:42:09 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -218,7 +217,7 @@ string real_file( string f, RequestID id )
 int dir_filter_function(string f, RequestID id)
 {
   if(f[0]=='.' && !QUERY(.files))           return 0;
-  if(!QUERY(tilde) && backup_extension(f))  return 0;
+  if(!QUERY(tilde) && Roxen.backup_extension(f))  return 0;
   return 1;
 }
 
@@ -475,10 +474,10 @@ mixed find_file( string f, RequestID id )
 	 *	/grubba 1999-01-14
 	 */
 	string new_query =
-	  http_encode_string(id->not_query[..sizeof(id->not_query)-2]) +
+	  Roxen.http_encode_string(id->not_query[..sizeof(id->not_query)-2]) +
 	  (id->query?("?" + id->query):"");
 	TRACE_LEAVE("Redirecting to \"" + new_query + "\"");
-	return http_redirect(new_query, id);
+	return Roxen.http_redirect(new_query, id);
       }
 
       if(!id->misc->internal_get) {
@@ -543,7 +542,7 @@ mixed find_file( string f, RequestID id )
 
     if(QUERY(check_auth) && (!id->auth || !id->auth[0])) {
       TRACE_LEAVE("MKDIR: Permission denied");
-      return http_auth_required("foo",
+      return Roxen.http_auth_required("foo",
 				"<h1>Permission to 'MKDIR' denied</h1>");
     }
     mkdirs++;
@@ -572,7 +571,7 @@ mixed find_file( string f, RequestID id )
       chmod(f, 0777 & ~(id->misc->umask || 022));
       TRACE_LEAVE("MKDIR: Success");
       TRACE_LEAVE("Success");
-      return http_string_answer("Ok");
+      return Roxen.http_string_answer("Ok");
     } else {
       TRACE_LEAVE("MKDIR: Failed");
       TRACE_LEAVE("Failure");
@@ -597,7 +596,7 @@ mixed find_file( string f, RequestID id )
 
     if(QUERY(check_auth) && (!id->auth || !id->auth[0])) {
       TRACE_LEAVE("PUT: Permission denied");
-      return http_auth_required("foo",
+      return Roxen.http_auth_required("foo",
 				"<h1>Permission to 'PUT' files denied</h1>");
     }
 
@@ -685,7 +684,7 @@ mixed find_file( string f, RequestID id )
     if(!putting[id->my_fd]) {
       TRACE_LEAVE("PUT: Just a string");
       TRACE_LEAVE("Put: Success");
-      return http_string_answer("Ok");
+      return Roxen.http_string_answer("Ok");
     }
 
     if(id->clientprot == "HTTP/1.1") {
@@ -695,7 +694,7 @@ mixed find_file( string f, RequestID id )
     id->my_fd->set_nonblocking(got_put_data, 0, done_with_put);
     TRACE_LEAVE("PUT: Pipe in progress");
     TRACE_LEAVE("PUT: Success so far");
-    return http_pipe_in_progress();
+    return Roxen.http_pipe_in_progress();
     break;
 
    case "CHMOD":
@@ -717,7 +716,7 @@ mixed find_file( string f, RequestID id )
 
     if(QUERY(check_auth) && (!id->auth || !id->auth[0])) {
       TRACE_LEAVE("CHMOD: Permission denied");
-      return http_auth_required("foo",
+      return Roxen.http_auth_required("foo",
 				"<h1>Permission to 'CHMOD' files denied</h1>");
     }
 
@@ -755,7 +754,7 @@ mixed find_file( string f, RequestID id )
     }
     TRACE_LEAVE("CHMOD: Success");
     TRACE_LEAVE("Success");
-    return http_string_answer("Ok");
+    return Roxen.http_string_answer("Ok");
 
    case "MV":
     // This little kluge is used by ftp2 to move files.
@@ -784,7 +783,7 @@ mixed find_file( string f, RequestID id )
 
     if(QUERY(check_auth) && (!id->auth || !id->auth[0])) {
       TRACE_LEAVE("MV: Permission denied");
-      return http_auth_required("foo",
+      return Roxen.http_auth_required("foo",
 				"<h1>Permission to 'MV' files denied</h1>");
     }
     string movefrom;
@@ -841,7 +840,7 @@ mixed find_file( string f, RequestID id )
     }
     TRACE_LEAVE("MV: Success");
     TRACE_LEAVE("Success");
-    return http_string_answer("Ok");
+    return Roxen.http_string_answer("Ok");
 
   case "MOVE":
     // This little kluge is used by NETSCAPE 4.5
@@ -863,7 +862,7 @@ mixed find_file( string f, RequestID id )
 
     if(QUERY(check_auth) && (!id->auth || !id->auth[0])) {
       TRACE_LEAVE("MOVE: Permission denied");
-      return http_auth_required("foo",
+      return Roxen.http_auth_required("foo",
                                 "<h1>Permission to 'MOVE' files denied</h1>");
     }
 
@@ -943,7 +942,7 @@ mixed find_file( string f, RequestID id )
     }
     TRACE_LEAVE("MOVE: Success");
     TRACE_LEAVE("Success");
-    return http_string_answer("Ok");
+    return Roxen.http_string_answer("Ok");
 
 
   case "DELETE":
