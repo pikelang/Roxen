@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.22 1998/05/11 15:23:46 grubba Exp $
+ * $Id: ftp2.pike,v 1.23 1998/05/13 09:01:39 neotron Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -308,7 +308,7 @@ class PutFileWrapper
       session->file->len = recvd;
       session->conf->log(session->file, session);
       session->file = 0;
-      session->my_fd = 0;
+      session->my_fd = from_fd;
     }
     if (how) {
       return from_fd->close(how);
@@ -382,6 +382,11 @@ class PutFileWrapper
     return strlen(data);
   }
 
+  string query_address(int|void loc)
+  {
+    return from_fd->query_address(loc);
+  }
+  
   void create(object fd_, object session_, object ftpsession_)
   {
     from_fd = fd_;
@@ -2703,7 +2708,7 @@ class FTPSession
     master_session = RequestID();
     master_session->remoteaddr = (fd->query_address()/" ")[0];
     master_session->conf = c;
-
+    master_session->my_fd = fd;
     ::create(fd, got_command, 0, con_closed, ([]));
 
     array a = fd->query_address(1)/" ";
