@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.204 1998/05/21 13:19:03 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.205 1998/05/26 08:40:53 per Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -19,7 +19,7 @@ inherit "socket";
 inherit "disk_cache";
 inherit "language";
 
-#if constant(spider.shuffle) && defined(THREADS)
+#if constant(spider.shuffle) && (defined(THREADS) || defined(__NT__))
 constant pipe = (program)"smartpipe";
 #else
 constant pipe = Pipe.pipe;
