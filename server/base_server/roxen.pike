@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.270 1999/05/01 18:21:08 grubba Exp $
+ * $Id: roxen.pike,v 1.271 1999/05/01 18:23:18 grubba Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.270 1999/05/01 18:21:08 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.271 1999/05/01 18:23:18 grubba Exp $";
 
 object backend_thread;
 
@@ -2533,7 +2533,7 @@ void initiate_configuration_port( int|void first )
       report_warning(LOCALE->obsolete_ssl(port[1]));
       port[1] = "https";
     } else if ((< "ftp2" >)[port[1]]) {
-      // ftp2 has been replaced ftp entirely.
+      // ftp2.pike has replaced ftp.pike entirely.
       report_warning(LOCALE->obsolete_ftp(port[1]));
       port[1] = "ftp";
     }
