@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: read_config.pike,v 1.54 2001/01/19 12:41:35 per Exp $
+// $Id: read_config.pike,v 1.55 2001/02/02 13:04:02 per Exp $
 
 #include <module.h>
 
@@ -37,7 +37,8 @@ array(string) list_all_configurations()
   }
   return map(filter(fii, lambda(string s){
     if(s=="CVS" || s=="Global_Variables" || s=="Global Variables"
-       || s=="global_variables" || s=="global variables" || s[0] == '_')
+       || s=="global_variables" || s=="global variables" || s=="server_version"
+       || s[0] == '_')
       return 0;
     return (s[-1]!='~' && s[0]!='#' && s[0]!='.');
   }), lambda(string s) { return replace(s, "_", " "); });
