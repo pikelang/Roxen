@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.66 2001/09/12 23:37:42 nilsson Exp $
+// $Id: module.pmod,v 1.67 2001/09/21 09:53:01 per Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1217,6 +1217,48 @@ class DatabaseChoice
   static void create(string default_value, void|int flags,
 		     void|LocaleString std_name, void|LocaleString std_doc)
   {
+    ::create( default_value, ({}), flags, std_name, std_doc );
+  }
+}
+
+class AuthMethodChoice
+{
+  inherit StringChoice;
+  constant type = "AuthMethodChoice";
+
+  static Configuration config;
+  
+  array get_choice_list( )
+  {
+    return ({ " all" }) + sort( config->auth_modules()->name );
+  }
+
+  static void create( string default_value, int flags,
+		      string std_name, string std_doc,
+		      Configuration c )
+  {
+    config = c;
+    ::create( default_value, ({}), flags, std_name, std_doc );
+  }
+}
+
+class UserDBChoice
+{
+  inherit StringChoice;
+  constant type = "UserDBChoice";
+
+  static Configuration config;
+  
+  array get_choice_list( )
+  {
+    return ({ " all" }) + sort( config->user_databases()->name );
+  }
+
+  static void create( string default_value, int flags,
+		      string std_name, string std_doc,
+		      Configuration c )
+  {
+    config = c;
     ::create( default_value, ({}), flags, std_name, std_doc );
   }
 }
