@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.517 2000/08/11 19:30:27 lange Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.518 2000/08/12 06:13:56 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -663,17 +663,31 @@ class Protocol
       destruct( ); // Close the port.
   }
 
+  mapping mu;
+
   static void got_connection()
   {
     object q = accept( );
     if( q )
-      requesthandler( q, this_object() );
+    {
+      object c;
+      if( sizeof( urls ) == 1 )
+      {
+        if(!mu) 
+        {
+          mu = urls[sorted_urls[0]];
+          if(!mu->conf->inited )
+            mu->conf->enable_all_modules();
+        }
+        c = mu->conf;
+      }
+      requesthandler( q, this_object(), c );
+    }
   }
 
   local function sp_fcfu;
 
 
-  mapping mu;
 
   object find_configuration_for_url( string url, RequestID id, 
                                      int|void no_default )
@@ -685,13 +699,17 @@ class Protocol
     object c;
     if( sizeof( urls ) == 1 )
     {
-      if(!mu) mu = urls[sorted_urls[0]];
+      if(!mu) 
+      {
+        mu = urls[sorted_urls[0]];
+        if(!(c=mu->conf)->inited) 
+          c->enable_all_modules();
+      }
       if( mu->path )
       {
         id->not_query = id->not_query[strlen(mu->path)..];
         id->misc->site_prefix_path = mu->path;
       }
-      if(!(c=mu->conf)->inited) c->enable_all_modules();
       return c;
     }
 
