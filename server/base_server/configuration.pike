@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.172 1998/11/30 03:48:44 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.173 1998/12/14 11:29:38 peter Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -1769,14 +1769,13 @@ public array open_file(string fname, string mode, object id)
   string oq = id->not_query;
   function funp;
   mapping file;
-  // FIXME: Shouldn't id->not_query be set to fname here?
-  // grubba 1998-10-01
+
+  id->not_query = fname;
   foreach(oc->first_modules(), funp)
     if(file = funp( id )) 
       break;
     else if(id->conf != oc) 
     {
-      id->not_query = fname;
       return open_file(fname, mode,id);
     }
   fname = id->not_query;
@@ -3629,7 +3628,7 @@ epostadresser, samt för att generera skönskvärdet för serverurl variablen.");
 		"Tillåt FTPgästanvändare");
 
   defvar("ftp_user_session_limit", 0,
-	 "FTP user session limit", TYPE_INT|VAR_MORE,
+	 "FTP: User session limit", TYPE_INT|VAR_MORE,
 	 "Limit of concurrent sessions a FTP user may have. 0 = unlimited.\n");
 
   deflocaledoc( "svenska", "ftp_user_session_limit", 
