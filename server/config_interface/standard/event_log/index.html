@@ -1,14 +1,3 @@
-<left-menu title="<cf-locale get=eventlog>">
-   <item href=clear_log.pike
-         title="<cf-locale get=clear_log>"> </item>
-   <item 
-<if variable=reverse_report>selected</if>
-       href='?reverse_report=1' title="<cf-locale get=reverse>"></item>
-   <item 
-<if not variable=reverse_report>selected</if>
-  href='?normal' title="<cf-locale get=normal>"></item>
-</left-menu>
-
 <topmenu base="../" selected=event_log>
 
 <content>
