@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.136 2003/06/11 17:08:00 grubba Exp $
+// $Id: module.pike,v 1.137 2003/06/16 15:35:11 grubba Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -328,7 +328,7 @@ string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
   query_property(string path, string prop_name, RequestID id)
 {
   Stat st = stat_file(path, id);
-  if (!st) return 0;		// FIXME: No such file.
+  if (!st) return Roxen.http_low_answer(404, "No such file or directory.");
   switch(prop_name) {
   case "DAV:creationdate":	// 13.1
     return iso8601_date_time(st->ctime);
@@ -358,7 +358,12 @@ string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
   default:
     break;
   }
-  return 0;	// FIXME: No such property.
+  // RFC 2518 8.1:
+  //   A request to retrieve the value of a property which does not
+  //   exist is an error and MUST be noted, if the response uses a
+  //   multistatus XML element, with a response XML element which
+  //   contains a 404 (Not Found) status value.
+  return Roxen.http_low_answer(404, "No such property.");
 }
 
 //! Attempt to set property @[prop_name] for @[path] to @[value].
