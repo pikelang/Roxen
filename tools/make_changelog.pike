@@ -1,36 +1,59 @@
-mapping (string:string) users = ([ "law":"Mirar <mirar@idonex.se>" ]);
+mapping (string:string) users = ([ ]);
 
-int html;
+int rxml;
+string domain;
 
 void find_user(string u)
 {
-  users[u] = getpwnam(u)[4]+" <"+u+"@idonex.se>";
+  users[u] = getpwnam(u)[4]+" <"+u+"@"+domain+">";
 }
 
 string mymktime(string from)
 {
   mapping m = ([]);
-  array t = (array(int))(replace(from, ({"/",":"}),({" "," "}))/" ");
+  array t = (array(int))(replace(from, ({"/",":","0"}),({" "," ",""}))/" ");
   m->year = t[0]-1900;
   m->mon  = t[1]-1;
   m->mday = t[2];
   m->hour = t[3];
   m->min = t[4];
   m->sec = t[5];
-  return ctime(mktime(m))-"\n"+" ";
+//werror("%O\n", m);
+  if(rxml) return "<date unix_time="+mktime(m)+"> ";
+  return (ctime(mktime(m))-"\n"+" ");
 }
 
 void output_changelog_entry_header(array from)
 {
-  if(!users[from[1]]) find_user(from[1]);
-  write("\n"+mymktime(from[0])+" "+users[from[1]]+"\n");
+  if(!users[from[1]]) 
+    find_user(from[1]);
+  if(rxml)
+    write("</ul>\n<h3>"+mymktime(from[0])+" <user name="+
+	  (from[1] == "law"?"mirar":from[1])+"></h3>\n<ul>\n");
+  else
+    write("\n"+mymktime(from[0])+" "+users[from[1]]+"\n");
   ofiles = ({});
 }
 
+string qte(string what)
+{
+  what = replace(what, ({"\n","<",">","&" }),
+		 ({"<br>","&lt;","&gt;","&amp;" }));
+  string a, b, c;
+  while(sscanf(what, "%s*%s*%s", a, b, c)==3)
+    what = a+"<b><font color=darkred>"+b+"</font></b>"+c;
+  while(sscanf(what, "%s#%s#%s", a, b, c)==3)
+    what = a+"<b><font color=darkgreen>"+b+"</font></b>"+c;
+  return what;
+}
 
 array ofiles = ({});
 string translate(string c)
 {
+  if( domain != "idonex.se" ) return c;
+
+  // specials, for roxen log....
+  c = replace(c, " för ", " for ");
   c = replace(c, "A little faster", "Somewhat faster");
   c = replace(c, "Little bug", "Small bug");
   if(sscanf(c,"%*sversion... HATA%*s"))
@@ -63,7 +86,10 @@ void output_entry(array files, string message)
   sscanf(message, "%*[ \n\r]%s", message);
   message = reverse(message);
   if(equal(sort(files),sort(ofiles)))
-    write(trim(sprintf("              %-=65s\n", message)));
+  {
+    if(rxml) write("<blockquote>"+qte(message)+"</blockquote>\n\n");
+    else write(trim(sprintf("              %-=65s\n", message)));
+  }
   else
   {
 //     write("%O != %O", files, ofiles);
@@ -71,19 +97,54 @@ void output_entry(array files, string message)
     foreach(files, string f)
       fh += f+", ";
     fh = fh[..sizeof(fh)-3]+":";
-    if(strlen(message+fh)<70)
-      write("\t* "+fh+" "+message+"\n");
-    else
-      write(trim(replace(sprintf("\t* %-=69s\n", fh),"\n   ","\n\t  ")+
-		 sprintf("            %-=65s\n", message)));
+    if(rxml)
+    {
+      write("<li><b><font color=darkblue>"+qte(fh)+"</font></b>"
+	    "<blockquote>"+qte(message)+"</blockquote>\n\n");
+    } else {
+      if(strlen(message+fh)<70)
+	write("\t* "+fh+" "+message+"\n");
+      else
+	write(trim(replace(sprintf("\t* %-=69s\n", fh),"\n   ","\n\t  ")+
+		   sprintf("            %-=65s\n", message)));
+    }
     ofiles = files;
   }
 }
 
-void main()
+void twiddle()
 {
+   while(1) 
+   {
+     werror("\\"); sleep(0.1);
+     werror("|"); sleep(0.1);
+     werror("/"); sleep(0.1);
+     werror("-"); sleep(0.1);
+     if(!random(3)) werror(".");
+   }
+   
+}
+
+void main(int argc, array (string) argv)
+{
+#if efun(thread_create)
+  thread_create(twiddle);
+#endif
+  werror("Running CVS log ");
   string data = Process.popen("cvs log");
+  werror("Done ["+strlen(data)/1024+" Kb]\n");
   array entries = ({});
+  rxml = argv[-1]=="--rxml";
+  if(argc>1 && argv[1] != "--rxml")
+    domain = argv[1];
+  else
+  {
+    users->law = "Mirar <mirar@idonex.se>";
+    domain = "idonex.se";
+  }
+  werror("Parsing data ... ");
+  if(rxml)
+    write("<body bgcolor=white text=black link=darkred><ul>");
   foreach(data/"=============================================================================\n", string file)
   {
     array foo = file/"----------------------------\nrevision ";
@@ -93,27 +154,39 @@ void main()
     {
       string date, author, lines, comment, revision;
       sscanf(entry, 
-	     "%s\ndate: %[^;];%*sauthor: %[^;];%*slines: %[^\n]\n%s",
-	     revision,date,author,lines,comment);
+	     "%s\ndate: %[^;];%*sauthor: %[^;];%*s\n%s",
+	     revision,date,author,/*lines,*/comment);
       if(comment)
       {
 	sscanf(comment, "branches:%*s\n%s", comment);
 	comment = translate(comment);
+	if(sscanf(entry, "%*sstate: dead;%*s")==2)
+	  comment = "*Deleted*: "+comment;
+	else if(sscanf(entry, "%*slines:%*s")!=2)
+	  comment = "#Added#: "+comment;
 	entries += ({ ({date,author,revision,fname,lines,comment}) });
       }
     }
   }
-  array order = Array.map(entries, lambda(array e) { return e[0]+e[5]; });
+  array order = Array.map(entries, lambda(array e) { return ((e[0]/" ")[0])+e[5]; });
   sort(order,entries);
   entries = reverse(entries);
+  werror("Done. "+sizeof(entries)+" entries\n");
+  werror("Writing ChangeLog ... ");
+//   werror("%O", column(entries,0));
   string od, ou, oc, cc="";
   array collected_files = ({}), old_collected_files;
   foreach(entries, array e)
   {
     string date = (e[0]/" ")[0];
     string time = (e[0]/" ")[1];
+//   werror(">>> %O %O\n", date, "<"+time);
     if(date != od || e[1] != ou)
     {
+//       if(date != od)
+// 	werror(date+" != "+od+"\n");
+//       else
+// 	werror(e[1]+" != "+ou+"\n");
       if(oc && sizeof(collected_files))
 	output_entry( collected_files, oc );
       collected_files = ({});
@@ -130,8 +203,9 @@ void main()
       oc = e[5];
     } 
     if(!oc) oc = e[5];
-    collected_files += ({ e[3] });
+    collected_files |= ({ e[3] });
   }
   if(oc && sizeof(collected_files))
     output_entry( collected_files, oc);
+  werror("Done!\n");
 }
