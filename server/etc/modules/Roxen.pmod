@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.179 2004/06/08 12:50:07 noring Exp $
+// $Id: Roxen.pmod,v 1.180 2004/06/21 12:31:31 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -3049,8 +3049,10 @@ string|program safe_compile( string code )
   program ret;
   roxenloader.LowErrorContainer ec = roxenloader.LowErrorContainer();
   roxenloader.push_compile_error_handler( ec );
-  catch(ret = compile_string( code ));
+  mixed err = catch(ret = compile_string( code ));
   roxenloader.pop_compile_error_handler( );
+  if (!objectp (err) || (!err->is_cpp_error && !err->is_compilation_error))
+    throw (err);
   if( !ret ) return ec->get();
   return ret;
 }
