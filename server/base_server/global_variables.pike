@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: global_variables.pike,v 1.83 2001/09/03 14:10:59 nilsson Exp $
+// $Id: global_variables.pike,v 1.84 2001/09/11 14:30:47 hop Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -622,12 +622,12 @@ although the start script fixes this for the standard file locations."));
          "Agent listenning IP adress and port. Format: [[host]:port] "
          "If host isn't set then will be use IP address of config interface",
 	 0, snmp_disabled);
-/*
-  defvar("snmp_traphost","","SNMP traps destinations",
-         TYPE_STRING,
-         "...",
+
+  defvar("snmp_global_traphosts", ({}),"SNMP: Trap destinations",
+         TYPE_STRING_LIST,
+         "The SNMP traphost URL for sending common traps (like coldstart).",
 	 0, snmp_disabled);
-*/
+
   defvar("snmp_syscontact","","SNMP: System MIB - Contact",
          TYPE_STRING,
          "The textual identification of the contact person for this managed "

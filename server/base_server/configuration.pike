@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.486 2001/09/10 16:13:31 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.487 2001/09/11 14:30:46 hop Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3197,7 +3197,7 @@ void low_init(void|int modules_already_enabled)
 #ifdef SNMP_AGENT
   // Cold start trap after real virt.serv. loading
   if(objectp(roxen->snmpagent))
-        roxen->snmpagent->coldstart_trap(({ get_config_id() }));
+        roxen->snmpagent->vs_start_trap(get_config_id());
 #endif
 
 }

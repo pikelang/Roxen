@@ -1,5 +1,5 @@
 /*
- * $Id: snmpagent.pike,v 1.16 2001/09/04 13:26:48 hop Exp $
+ * $Id: snmpagent.pike,v 1.17 2001/09/11 14:30:47 hop Exp $
  *
  * The Roxen SNMP agent
  * Copyright © 2001, Roxen IS.
@@ -116,6 +116,8 @@ inherit Roxen;
 #define RISMIB_BASE_WEBSERVER_TRAP		RISMIB_BASE_WEBSERVER+".3"
 // enterprises.roxenis.app.webserver.trap.vsColdTrap
 #define RISMIB_BASE_WEBSERVER_TRAP_VSCOLD	RISMIB_BASE_WEBSERVER_TRAP+".1"
+// enterprises.roxenis.app.webserver.trap.vsSpecificTrap
+#define RISMIB_BASE_WEBSERVER_TRAP_VSSPEC	RISMIB_BASE_WEBSERVER_TRAP+".2"
 
 #define LOG_EVENT(txt, pkt) log_event(txt, pkt)
 
@@ -153,7 +155,8 @@ class SNMPagent {
   private mixed co;
   private object th;
   private static object mib;
-  private mapping vsdb;
+  private mapping vsdb;		// table of registered virtual servers
+  private array dtraps;		// delayed traps
 
   array get_snmpinpkts() { return OBJ_COUNT(snmpinpkts); };
   array get_snmpoutpkts() { return OBJ_COUNT(snmpoutpkts); };
@@ -167,6 +170,7 @@ class SNMPagent {
 
   void create() {
     vsdb = ([]);
+    dtraps = ({});
     //disable();
   }
 
@@ -328,6 +332,15 @@ class SNMPagent {
       RXML.run_error("SNMPagent: can't open UDP port " + hp[0]+":"+(string)(p||161)+"[" + err[0] + "].");
     SNMPAGENT_MSG(sprintf("SNMP UDP port %s:%d binded successfully.", hp[0], p||161));
 
+    // first we server dealyed traps
+    if(arrayp(dtraps) && sizeof(dtraps))
+      foreach(dtraps, array dtrap1) {
+	SNMPAGENT_MSG(sprintf("Delayed trap sent: %O", dtrap1));
+	//fd->trap( dtrap1[1], dtrap1[2], dtrap1[3]);
+	fd->trap( @dtrap1 );
+      }
+    dtraps = ({});
+
     enabled = 1;
 #if NO_THREADS
     // set callbacks
@@ -380,14 +393,38 @@ class SNMPagent {
   }
 
   //! Cold start notificator. Sends trap for all virtual servers in the vsarr.
-  void coldstart_trap(array(int) vsarr) {
+  void coldstart_trap() {
 
-	object uri;
+    object uri;
 
-    if(intp(vsarr))
-	  return;
-	foreach(vsarr, int vsid)
-	  if(vsdb[vsid] && vsdb[vsid]->variables["snmp_traphosts"] &&
+    foreach(query("snmp_global_traphosts"), string url) {
+      if(catch(uri = Standards.URI(url))) {
+	SNMPAGENT_MSG(sprintf("Traphost is invalid: %s !", url));
+	continue; // FIXME: what about possibility to add some warnings?
+      }
+      if(objectp(fd)) {
+	SNMPAGENT_MSG(sprintf("Trap sent: %s", url));
+	//foreach(indices(vsdb), int vsid)
+	fd->trap(
+			([]),
+			RISMIB_BASE_WEBSERVER, 0, 0,
+			1, //FIXME: uptime
+			0, uri->host, uri->port );
+      } else {
+	// mutex
+	SNMPAGENT_MSG(sprintf("Trap delayed: %s", url));
+	//foreach(indices(vsdb), mixed vsid)
+	dtraps += ({ ({ ([]),
+			RISMIB_BASE_WEBSERVER, 0, 0,
+			1, //FIXME: uptime
+			0, uri->host, uri->port }) });
+	// unmutex
+      }
+    }
+  }
+
+/*
+	  if(vsdb[vsid]->variables["snmp_traphosts"] &&
              sizeof(vsdb[vsid]->variables["snmp_traphosts"]->query())) {
 	     SNMPAGENT_MSG(sprintf("server %O(#%d): traphosts:%O",
 			vsdb[vsid]->name, vsid,
@@ -410,8 +447,7 @@ class SNMPagent {
 	    if(vsdb[vsid])
 	      SNMPAGENT_MSG(sprintf("server %O(#%d) hasn't any traphosts.",
 			    vsdb[vsid] && vsdb[vsid]->name, vsid));
-
-  }
+*/
 
   //! Warm start notificator
   void warmstart_trap() {
@@ -424,7 +460,38 @@ class SNMPagent {
   }
 
   //! Enterprise specific trap notificator
-  void enterprise_trap() {
+  void enterprise_trap(int vsid, array attrvals) {
+
+    object uri;
+
+      if(vsdb[vsid] && vsdb[vsid]->variables["snmp_traphosts"] &&
+             sizeof(vsdb[vsid]->variables["snmp_traphosts"]->query())) {
+	     SNMPAGENT_MSG(sprintf("server %O(#%d): traphosts:%O",
+			vsdb[vsid]->name, vsid,
+			vsdb[vsid]->variables["snmp_traphosts"]->query()));
+	    foreach(vsdb[vsid]->variables["snmp_traphosts"]->query(), mixed thost) {
+		  if(catch(uri = Standards.URI(thost))) {
+		    SNMPAGENT_MSG(sprintf("Traphost is invalid: %s !", thost));
+		    continue; // FIXME: what about possibility to add some warnings?
+		  }
+		  SNMPAGENT_MSG(sprintf("Enterprise trap sent: %s", thost));
+		  fd->trap(
+		    attrvals || ([RISMIB_BASE_WEBSERVER_TRAP_VSSPEC+".0": OBJ_STR(vsdb[vsid]->name)]),
+		    RISMIB_BASE_WEBSERVER_TRAP_VSSPEC, 6, 0,
+		    1, //FIXME: uptime
+		    0,
+		    uri->host, uri->port);
+		}
+	  } else
+	    if(vsdb[vsid])
+	      SNMPAGENT_MSG(sprintf("server %O(#%d) hasn't any traphosts.",
+			    vsdb[vsid] && vsdb[vsid]->name, vsid));
+  }
+
+  //! Authentication failure notificator
+  void vs_start_trap(int vsid) {
+
+    enterprise_trap(vsid, 0);
 
   }
 
@@ -645,7 +712,6 @@ class SubMIBManager {
     //idxnums = Array.sort(indices(subtreeman));
     idxnums = Array.sort_array(indices(subtreeman), OID_SORT_FUNC);
     idx = Array.search_array(idxnums, OID_SORT_FUNC, soid);
-SNMPAGENT_MSG(sprintf("DEB: idx:%O, idxnums: %O", idx, idxnums));
     if(idx >= 0) {
       manoid = idxnums[idx];
       SNMPAGENT_MSG(sprintf("found nearest manager: %s(%O)",
@@ -702,7 +768,7 @@ SNMPAGENT_MSG(sprintf("DEB: idx:%O, idxnums: %O", idx, idxnums));
 
 //! External function for MIB object 'system.sysDescr'
 array get_description() {
-  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.16 $"/" ")[1]+" (devel. rel.)");
+  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.17 $"/" ")[1]+" (devel. rel.)");
 }
 
 //! External function for MIB object 'system.sysOID'
@@ -772,7 +838,6 @@ class SubMIBSystem {
     array rv = ::getnext(oid, pkt);
     mapping sm = ::subtreeman;
 
-SNMPAGENT_MSG(sprintf("DEB: rv: %O", rv));
     if(intp(rv)) {
       ::subtreeman = subtreeman;
       rv = ::getnext(oid, pkt);
