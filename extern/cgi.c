@@ -2,6 +2,9 @@
 #include <sys/types.h>
 #include <stdio.h>
 #include <sys/signal.h>
+#ifdef HAVE_SYS_RESOURCE_H
+#include <sys/resource.h>
+#endif
 
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
@@ -31,6 +34,10 @@
 # define MAXPATHLEN  2048
 #endif
 
+#undef DEBUG
+
+#include <errno.h>
+
 /*  This is the PID of the child process (the CGI script) */
 int pid;
 
@@ -58,6 +65,101 @@ int script;
 int start_program(char **argv)
 {
   int fds[2];
+  char *nice_val = getenv("ROXEN_CGI_NICE_LEVEL");
+/* HAVE_SETRLIMIT */
+#ifdef HAVE_SETRLIMIT
+  char *more_options = getenv("ROXEN_CGI_LIMITS");
+  if(more_options)
+  {
+    int limit=1;
+    struct rlimit rl;
+    char *p = malloc(strlen(more_options));
+
+    while(limit!=-1)
+    {
+      int n;
+      limit=-1;
+      n = sscanf(more_options, "%[a-z_]=%d;%s", p, &limit, more_options);
+      if(n==2) more_options="";
+      rl.rlim_cur = limit;
+      rl.rlim_max = limit;
+      
+      if(strlen(p) && limit >= 0)
+      {
+	switch(p[0])
+	{
+#ifdef RLIMIT_CORE
+	 case 'c': // core=...
+#ifdef DEBUG
+	  fprintf(stderr, "core size limited to %d\n", rl.rlim_max);
+#endif
+	  setrlimit(RLIMIT_CORE, &rl);
+	  break;
+#endif
+#ifdef RLIMIT_CPU
+	 case 't': // time=...
+#ifdef DEBUG
+	  fprintf(stderr, "time limited to %d\n", rl.rlim_max);
+#endif
+	  setrlimit(RLIMIT_CPU, &rl);
+	  break;
+#endif
+#ifdef RLIMIT_DATA
+	 case 'd': // data_size=...
+#ifdef DEBUG
+	  fprintf(stderr, "data size limited to %d\n", rl.rlim_max);
+#endif
+	  setrlimit(RLIMIT_DATA, &rl);
+	  break;
+#endif
+#ifdef RLIMIT_FSIZE
+	 case 'f': // file_size=...
+#ifdef DEBUG
+	  fprintf(stderr, "file size limited to %d\n", rl.rlim_max);
+#endif
+	  setrlimit(RLIMIT_FSIZE, &rl);
+	  break;
+#endif
+#ifdef RLIMIT_NOFILE
+	 case 'o': // open_files=...
+	  if(rl.rlim_max < 64) rl.rlim_max=rl.rlim_cur = 64;
+#ifdef DEBUG
+	  fprintf(stderr, "open files limited to %d\n", rl.rlim_max);
+#endif
+	  setrlimit(RLIMIT_NOFILE, &rl);
+	  break;
+#endif
+#ifdef RLIMIT_STACK
+	 case 's': // stack=...
+#ifdef DEBUG
+	  fprintf(stderr, "stack limited to %d\n", rl.rlim_max);
+#endif
+	  setrlimit(RLIMIT_STACK, &rl);
+	  break;
+#endif
+#ifdef RLIMIT_VMEM
+	 case 'm': // mem_max=...
+#ifdef DEBUG
+	  fprintf(stderr, "mem_max limited to %d\n", rl.rlim_max);
+#endif
+	  setrlimit(RLIMIT_VMEM, &rl);
+	  break;
+#endif
+	}
+      }
+    }
+    free(p);
+  }
+#endif
+
+#ifdef HAVE_NICE
+  if(nice_val) {
+#ifdef DEBUG
+    fprintf(stderr, "nice level set to %s\n", nice_val);
+#endif
+    nice(atoi(nice_val));
+  }
+#endif
 
 #ifdef HAVE_PIPE
   pipe(fds);
@@ -74,12 +176,18 @@ int start_program(char **argv)
     close(fds[1]);
     return fds[0];
   }
+
   close(fds[0]);
   dup2(fds[1], 1);
   close(fds[1]);
   execv(argv[0], argv);
+
+  fprintf(stderr, "Exec of %s failed\n", argv[0]);
+  fprintf(stdout, "Exec of %s failed\n", argv[0]);
+
   exit(0);
-  return 0;
+
+  return 0; /*Keep all (at least most) compilers happy..*/
 }
 
 
@@ -133,10 +241,20 @@ int is_end_of_headers(char *s, int len)
   return (strstr(headers, "\n\n")||strstr(headers, "\r\n\r\n")||strstr(headers, "\n\r\n\r"));
 }
 
-void reaper(int i) { exit(0); }
+void reaper(int i)
+{
+#ifdef DEBUG
+  fprintf(stderr, "Child died\n");
+  fprintf(stdout, "Child died\n");
+#endif
+  exit(0);
+}
 
 void kill_kill_kill()
 {
+#ifdef DEBUG
+  fprintf(stderr, "kill kill kill\n");
+#endif
   if(fork()) 
     exit(0);
   close(0);
@@ -155,6 +273,9 @@ void send_data(char *bar, int re)
   do
   {
     written = write(1, bar, re);
+#ifdef DEBUG
+    fprintf(stderr, "wrote %d bytes to client\n", written);
+#endif
 
     if(written < 0)
       kill_kill_kill();
@@ -253,16 +374,21 @@ void main(int argc, char **argv)
   while(1)
   {
     int re;
-    char foo[2048], *bar;
+    char foo[2049], *bar;
     
     re = read(script, foo, 2048);
-
+#ifdef DEBUG
+    foo[re]=0;
+    fprintf(stderr, "read %s\n", foo);
+#endif
     if(re <= 0)
     {
+#ifdef DEBUG
+      perror("read failed");
+#endif
       if(!raw) parse_and_send_headers();
       kill(pid, 9);
-      close(0);
-      close(1);
+      close(0); close(1); close(2);
       exit(0);
     }
 
