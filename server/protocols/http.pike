@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-string cvs_version = "$Id: http.pike,v 1.32 1997/07/19 23:26:24 grubba Exp $";
+string cvs_version = "$Id: http.pike,v 1.33 1997/08/03 22:51:55 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -640,8 +640,9 @@ void disconnect()
     perror("REQUEST: Disconnecting...\n");
 #endif
     if(mappingp(file) && objectp(file->file)) {
-      if (file->file->context) {
-	// sslfile, object will be closed on return.
+      if (file->file->no_destruct) {
+	// sslfile, or similar.
+	// object will be closed on return.
 	file->file = 0;
       } else {
 	destruct(file->file);
@@ -683,7 +684,10 @@ void end(string|void s)
     if(objectp(my_fd))
     {
       if(s) my_fd->write(s);
-      destruct(my_fd);
+      if (!my_fd->no_destruct) {
+	destruct(my_fd);
+      }
+      my_fd = 0;
     }
   };
   if(err)
