@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.805 2002/10/01 14:37:17 anders Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.806 2002/10/01 15:50:11 mast Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -500,6 +500,17 @@ class Queue
 //! Thread.Queue lookalike, which uses some archaic and less
 //! known features of the preempting algorithm in pike to optimize the
 //! read function.
+//
+// If those archaic and less known features are to depend on the
+// interpreter lock in the while loop that waits on the condition
+// variable then it doesn't work since Pike always might yield before
+// a function call (specifically, the wait() call in the condition
+// variable). Thus a handler thread might wait even though there is a
+// request to process. However, the only effect is that that specific
+// request isn't serviced timely; when the next request comes in the
+// thread will be woken up and both requests will be handled.
+// Furthermore it's extremely rare in the first place since there
+// normally are several handler threads.
 {
   inherit Thread.Condition : r_cond;
   array buffer=allocate(8);
@@ -671,6 +682,12 @@ void start_handler_threads()
 
 static int num_hold_messages;
 static Thread.Condition hold_wakeup_cond = Thread.Condition();
+// Note: There are races in the use of this condition variable, but
+// the only effect of that is that some handler thread might be
+// considered hung when it's actually waiting on hold_wakeup_cond, and
+// the hold/release handler threads function deal with hung threads
+// anyway. The outcome would only be that release_handler_threads
+// starts some extra handler thread unnecessarily.
 
 void hold_handler_threads()
 //! Tries to put all handler threads on hold, but gives up if it takes
