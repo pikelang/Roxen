@@ -4,18 +4,24 @@
 inherit "module";
 
 constant thread_safe = 1;
-constant cvs_version = "$Id: wapadapter.pike,v 1.2 2000/02/19 06:11:29 nilsson Exp $";
+constant cvs_version = "$Id: wapadapter.pike,v 1.3 2000/05/06 13:57:02 nilsson Exp $";
 
 constant module_type = MODULE_FIRST|MODULE_FILTER;
 constant module_name = "WAP Adapter";
 constant module_doc  = "Improves supports flags and variables as well as "
   "doing a better job finding MIME types than the content type module for WAP clients.";
 
+void create() {
+  defvar("wap1", 0, "Support WAP 1.0", TYPE_FLAG,
+	 "Set correct MIME-types for WAP 1.0 clients. Not useful if you do not convert "
+	 "your pages to WML 1.0 when needed.");
+}
+
 RequestID first_try(RequestID id) {
   if(!id->request_headers->accept) id->request_headers->accept="";
 
-  if(has_value(id->request_headers->accept,"image/x-wap.wbmp") ||
-     has_value(id->request_headers->accept,"image/vnd.wap.wbmp")) id->supports->wbmp0=1;
+  if(has_value(id->request_headers->accept,"image/vnd.wap.wbmp") ||
+     has_value(id->request_headers->accept,"image/x-wap.wbmp")) id->supports->wbmp0=1;
 
   if(id->supports["wap1.1"] || id->supports["wap1.0"]) return id;
 
@@ -32,6 +38,7 @@ RequestID first_try(RequestID id) {
 }
 
 mixed filter(mixed result, RequestID id) {
+  if(!query("wap1")) return result;
   if(!mappingp(result)) return result;
   if(result->type=="text/vnd.wap.wml" &&
      !id->supports["wap1.1"] &&
