@@ -1,12 +1,12 @@
 /*
- * $Id: webadm.pike,v 1.30 1998/09/28 06:08:24 js Exp $
+ * $Id: webadm.pike,v 1.31 1998/09/29 16:20:56 wellhard Exp $
  *
  * AutoWeb administration interface
  *
  * Johan Schön, Marcus Wellhardh 1998-07-23
  */
 
-constant cvs_version = "$Id: webadm.pike,v 1.30 1998/09/28 06:08:24 js Exp $";
+constant cvs_version = "$Id: webadm.pike,v 1.31 1998/09/29 16:20:56 wellhard Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -19,11 +19,10 @@ string tabsdir, templatesdir;
 mapping tabs;
 array tablist;
 
-
 array register_module()
 {
    return ({ MODULE_LOCATION|MODULE_PARSER, "AutoWeb Administration Interface",
-	     "",0,0 });
+	     "",0,1 });
 }
 
 
@@ -68,15 +67,25 @@ string customer_name(string tag_name, mapping args, object id)
 
 string|int get_variable_value(object db, string scheme_id, string variable)
 {
+  // Function to get the value for a given scheme_id and a variable name.
+  // Supports default values.
   array query_result = 
-    db->query("SELECT * FROM customers_schemes_vars,template_vars "
-	      "  WHERE customers_schemes_vars.scheme_id='"+scheme_id+"' "
-	      "    AND customers_schemes_vars.variable_name=template_vars.name "
-	      "    AND template_vars.name='"+variable+"'");
-  //werror("%O\n", query_result);
+    db->query("SELECT cv.value AS value"
+              "  FROM customers_schemes_vars cv, template_vars tv "
+	      "  WHERE cv.scheme_id='"+scheme_id+"' "
+	      "    AND cv.variable_name = tv.name "
+	      "    AND tv.name = '"+variable+"'");
+  
+  if(sizeof(query_result)) 
+    return query_result[0]->value;
+  
+  query_result =
+    db->query("SELECT default_value AS value "
+	      "  FROM template_vars "
+	      "  WHERE name = '"+variable+"'");
+  
   if(!sizeof(query_result)) {
-    werror("No such scheme '%s' or variable '%s' is undefined.\n",
-	   scheme_id, variable);
+    werror("Variable '%s' is undefined.\n", variable);
     return 0;
   }
   return query_result[0]->value;
@@ -141,14 +150,13 @@ string update_template(string tag_name, mapping args, object id)
   
   // Fetch variables from database
   array variables =
-    db->query("SELECT * FROM customers_schemes_vars,template_vars "
-	      "  WHERE customers_schemes_vars.scheme_id='"+scheme_id+"' "
-	      "   AND customers_schemes_vars.variable_name=template_vars.name");
+    db->query("SELECT name "
+	      "  FROM template_vars");
   
   mapping vars=([]);
-  foreach(variables, mapping variable) {
-    vars[variable->name] = variable->value;
-  }
+  foreach(variables, mapping variable)
+    vars[variable->name] = get_variable_value(db, scheme_id, variable->name);
+
   if(vars["bg_image"]&&sizeof(vars["bg_image"])) {
     vars["bg_image_color_2"] = vars["bg_color"];
     vars["bg_color"] = mean_color(vars->bg_color,
@@ -189,6 +197,18 @@ string update_template(string tag_name, mapping args, object id)
   return "";
 }
 
+string tag_as_get_variable(string tag, mapping args, object id)
+{
+  // Tag to get the value for a given scheme_id and a variable name.
+  // Supports default values.
+  object db = id->conf->call_provider("sql","sql_object",id);
+  if(args->scheme_id && args->variable) {
+    string value;
+    value = get_variable_value(db, args->scheme_id, args->variable);
+    return value||"";
+  } 
+} 
+
 string tag_as_meta(string tag_name, mapping args, object id)
 {
   if(!args->var)
@@ -210,7 +230,8 @@ mapping query_tag_callers()
   return ([ "autosite-webadm-update" : tag_update,
             "autosite-webadm-customername" : customer_name,
 	    "autosite-webadm-update-template" : update_template,
-	    "as-meta" : tag_as_meta
+	    "as-meta" : tag_as_meta,
+	    "as-get-variable" : tag_as_get_variable
   ]);
 }
 
@@ -219,12 +240,10 @@ mapping query_tag_callers()
 string make_tablist(array(object) tabs, object current, object id)
 {
   string res_tabs = "";
-  foreach(tabs, object tab)
-  {
+  foreach(tabs, object tab) {
     mapping args = ([]);
     args->href = combine_path(query("location"), tab->tab)+"/";
-    if(current==tab)
-    {
+    if(current==tab) {
       args->selected = "selected";
       args->href += "?_reset=";
     }
@@ -300,8 +319,8 @@ mixed find_file(string f, object id)
     id->misc->state = state = reset_state( id );
   else			      
     id->misc->state = state = state_for( id );   
-                 // no #($/!)!"#"#&! copy_value here.
-                 // ->state _has_ to be writable! /Wellhardh
+  // no #($/!)!"#"#&! copy_value here.
+  // ->state _has_ to be writable! /Wellhardh
 
   // Template
   if(sscanf(f, "templates/%s", string template)>0) {

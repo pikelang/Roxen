@@ -66,12 +66,9 @@
 	  <cset preparse variable=options><sqloutput quote='£' query="
 	    SELECT * FROM template_schemes">£id£:£name£,</sqloutput></cset>
 	  <fix_options>
-	  <cset preparse variable=default><sqloutput quote='£' query="
-	    SELECT * FROM customers 
-	      WHERE id=¤customer_id¤">£template_scheme_id£</sqloutput></cset>
 	  <formoutput quote='$'>
 	    <var name="load_scheme" type="select"
-		 options="$options$" default="$default$">
+		 options="$options$">
 	  </formoutput>
 	  <p>
 	  Select the template you would like to load 
@@ -79,12 +76,11 @@
 	</page>
 	<noparse><noparse><done>
 	  <formoutput quote=$>
+	    <sqlquery query="DELETE FROM customers_schemes_vars
+	                       WHERE scheme_id='$current_scheme$'">
 	    <sqloutput quote='£'
 	       query="SELECT * FROM template_schemes_vars
 	                WHERE scheme_id=$load_scheme$">
-	      <sqlquery query="DELETE FROM customers_schemes_vars
-	                         WHERE scheme_id='$current_scheme$'
-			           AND variable_name='£variable_name£'">
               <sqlquery query="INSERT INTO customers_schemes_vars
 	                         (scheme_id,variable_name,value)
 			         VALUES ('$current_scheme$',
@@ -154,9 +150,9 @@
 				     '£value:quote=mysql£')">
                 </sqloutput>	    
       	      </formoutput>
+              <autosite-webadm-update-template>
 	    </if>
       	  </formoutput>
-          <autosite-webadm-update-template>
 	</done></noparse></noparse>
       </wizard>
     </if>
@@ -216,11 +212,9 @@
 			  AND g.id=o.option_group_id"
 	            >£value£:£name£,</sqloutput></cset>
                   <fix_options>
-		  <cset preparse variable=default><sqloutput quote='£' query="
-		      SELECT * FROM customers_schemes_vars
-		        WHERE scheme_id='¤current_scheme:quote=mysql¤'
-			  AND variable_name='#name:quote=mysql#'"
-		    >£value£</sqloutput></cset>
+		  <cset preparse variable=default><as-get-variable
+		    scheme_id='¤current_scheme:quote=mysql¤'
+		    variable='#name:quote=mysql#'></cset>
                   <if match='#type# is string'>
 		    <cset variable=size>size=40</cset></if>
 		  <else><cset variable=size></cset></else>
