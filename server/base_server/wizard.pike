@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2001, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.148 2004/03/08 09:18:05 jonasw Exp $
+// $Id: wizard.pike,v 1.149 2004/03/13 16:14:39 jonasw Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -332,10 +332,10 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
        "  var PREFIX_h = " + h + ";\n"
        "  var PREFIX_s = " + s + ";\n"
        "  var PREFIX_v = " + v + ";\n"
-       "  function PREFIX_colsel_click(event, in_bar)\n"
+       "  function PREFIX_colsel_click(event, in_bar, in_cross)\n"
        "  {\n"
        "    var hsv = colsel_click(event, \"PREFIX_\", PREFIX_h,\n"
-       "                           PREFIX_s, PREFIX_v, in_bar);\n"
+       "                           PREFIX_s, PREFIX_v, in_bar, in_cross);\n"
        "    PREFIX_h = hsv[0];\n"
        "    PREFIX_s = hsv[1];\n"
        "    PREFIX_v = hsv[2];\n"
@@ -349,6 +349,27 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
        "  }\n"
        "</script>"
        "<js-popup args-variable='__popup' event='onClick' props='color_props'>"
+       "  <img src='/internal-roxen-colsel-mark-x' id='PREFIX_mark_x'"
+       "       onClick='PREFIX_colsel_click(event, 0, \"x\"); return false;'"
+       "       style='position: absolute;"
+       "              cursor:   crosshair;"
+       "              left:     " + (5 + (int) (h / 2)) + ";"
+       "              top:      5;"
+       "              z-index:  2'>"
+       "  <img src='/internal-roxen-colsel-mark-y' id='PREFIX_mark_y'"
+       "       onClick='PREFIX_colsel_click(event, 0, \"y\"); return false;'"
+       "       style='position: absolute;"
+       "              cursor:   crosshair;"
+       "              left:     5;"
+       "              top:      " + (5 + (int) ((255 - v) / 2)) + ";"
+       "              z-index:  2'>"
+       "  <img src='/internal-roxen-colsel-mark-y-small'"
+       "       id='PREFIX_mark_y_small'"
+       "       style='position: absolute;"
+       "              cursor:   pointer;"
+       "              left:     143;"
+       "              top:      " + (5 + (int) ((255 - s) / 2)) + ";"
+       "              z-index:  2'>"
        "  <table border='0' cellspacing='0' cellpadding='4' bgcolor='#ffffff'"
        "         style='border-top:    1px solid #888888;"
        "                border-left:   1px solid #888888;"
@@ -361,7 +382,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
        "             onClick='PREFIX_colsel_click(event, 0); return false;'"
        "        /></td>"
        "      <td><img id='PREFIX_colorbar' width='16' height='128'"
-       " src='/internal-roxen-colorbar-small:" + h + "," + v + "," + s + "'"
+       " src='/internal-roxen-colorbar-small:" + h + "," + v + ",-1'"
        "               style='cursor: pointer'"
        "               onClick='PREFIX_colsel_click(event, 1); return false;'"
        "        /></td>"
