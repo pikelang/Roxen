@@ -3,7 +3,7 @@
 
 #include <config.h>
 #include <stat.h>
-constant cvs_version = "$Id: imagedir.pike,v 1.12 2001/09/25 22:54:43 nilsson Exp $";
+constant cvs_version = "$Id: imagedir.pike,v 1.13 2003/09/18 16:31:22 mast Exp $";
 
 constant name = "Image directory fonts";
 constant doc = ("Handles a directory with images (in almost any format), each "
@@ -182,7 +182,7 @@ void update_font_list()
   font_list = ([]);  
   foreach(roxen->query("font_dirs"), string dir)
     foreach( (get_dir( dir )||({})), string d )
-      if( file_stat( dir+d )[ ST_SIZE ] == -2 ) { // isdir
+      if( Stdio.is_dir( dir+d ) ) {
         if( file_stat( dir+d+"/fontinfo" ) )
           font_list[font_name(Stdio.read_bytes(dir+d+"/fontinfo"))]=dir+d+"/";
         else if( file_stat( dir+d+"/fontname" ) )
