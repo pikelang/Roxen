@@ -6,7 +6,7 @@
 <theme-set what=subtabs-seltextcolor to="#ff8c00" />
 
 <theme-set what=subtabs-bgcolor      to="white" />
-<theme-set what=subtabs-selcolor      to="white" />
+<theme-set what=subtabs-selcolor      to="#eef2fb" />
 <theme-set what=subtabs-dimcolor     to="white" />
 
 <theme-set what=toptabs-dimtextcolor to="#425a84" />
@@ -16,10 +16,10 @@
 <theme-set what=toptabs-dimcolor     to="white" />
 <theme-set what=toptabs-selcolor     to="white" />
 
-<!--<theme-set what=leftside-padwidth    to=200 />-->
+theme-set what=leftside-padwidth    to=160 />
 <theme-set what=toptabs-padwidth     to=190 />
 
-<theme-set what=fade1   to="white"/>
+<theme-set what=fade1   to="#eef2fb"/>
 
 <theme-set what=fade2     to="#dee2eb"/>
 
