@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.45 1998/09/26 14:45:00 grubba Exp $
+# $Id: Makefile,v 1.46 1998/10/19 02:37:15 peter Exp $
 #
 # Bootstrap Makefile
 #
@@ -182,7 +182,13 @@ censor_crypto :
 	done
 
 	@echo "Running autoconf..."; \
-	(cd pike; 0.6/src/run_autoconfig .)
+	if test -d pike/0.6/src/.; then \
+	  pike/0.6/src/run_autoconfig .; \
+	else \
+          if test -d pike/0.5/src/.; then \
+	    pike/0.5/src/run_autoconfig .; \
+	  else : ; fi; \
+        fi;
 
 	@echo "Censoring the Crypto implementation..."
 	@for d in pike/*/src/. pike/src/.; do \
