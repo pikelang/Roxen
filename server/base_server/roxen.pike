@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.216 1998/07/07 19:01:26 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.217 1998/07/07 19:04:19 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -1929,6 +1929,12 @@ void initiate_configuration_port( int|void first )
   // First find out if we have any new ports.
   mapping(string:array(string)) new_ports = ([]);
   foreach(QUERY(ConfigPorts), port) {
+    if ((< "ssl", "ssleay" >)[port[1]]) {
+      // Obsolete versions of the SSL protocol.
+      report_warning("Obsolete SSL protocol-module \""+port[1]+"\".\n"
+		     "Converted to SSL3.\n");
+      port[1] = "ssl3";
+    }
     string key = MKPORTKEY(port);
     if (!configuration_ports[key]) {
       report_notice(sprintf("New configuration port: %s\n", key));
@@ -1969,12 +1975,6 @@ void initiate_configuration_port( int|void first )
       array old = port;
       mixed erro;
       erro = catch {
-	if ((< "ssl", "ssleay" >)[port[1]]) {
-	  // Obsolete versions of the SSL protocol.
-	  report_warning("Obsolete SSL protocol-module \""+port[1]+"\".\n"
-			 "Converted to SSL3.\n");
-	  port[1] = "ssl3";
-	}
 	program requestprogram = (program)(getcwd()+"/protocols/"+port[1]);
 	function rp;
 	array tmp;
