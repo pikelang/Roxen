@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbstrm, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.576 2001/03/28 19:35:13 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.577 2001/04/17 07:21:41 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -1681,7 +1681,7 @@ int register_url( string url, object/*(Configuration)*/ conf )
   if( !strlen( path ) )
     path = 0;
 
-  if( urls[ url ] && urls[ url ]->conf )
+  if( urls[ url ] && urls[ url ]->conf && urls[ url ]->port )
   {
     if( urls[ url ]->conf != conf )
     {
@@ -1695,6 +1695,8 @@ int register_url( string url, object/*(Configuration)*/ conf )
   } 
   else if( urls[ url ] ) 
   {
+    if( !urls[ url ]->port )
+      m_delete( urls, url );
     urls[ url ]->port->unref( url );
   }
 
@@ -3693,6 +3695,7 @@ constant formats =
   ({ "bin-response","%2c",  "(int)(file->error || 200)",0 }),
   ({ "length",      "%d",   "(int)file->len",0 }),
   ({ "bin-length",  "%4c",  "(int)file->len",0 }),
+  ({ "vhost",       "%s",   "(request_id->misc->host||\"-\")", 0 }),
   ({ "referer",     "%s",    
      "sizeof(request_id->referer||({}))?request_id->referer[0]:\"-\"", 0 }),
   ({ "user_agent",  "%s",    

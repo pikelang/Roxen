@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.388 2001/04/08 22:01:55 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.389 2001/04/17 07:21:41 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -2998,6 +2998,7 @@ void create(string config)
 	 "$int(int)      -- Insert the (4 byte) word specified by the integer.\n"
 	 "$^             -- Supress newline at the end of the logentry\n"
 	 "$host          -- The remote host name, or ip number.\n"
+	 "$vhost         -- The Host request-header sent by the client, or - if none\n"
 	 "$ip_number     -- The remote ip number.\n"
 	 "$bin-ip_number -- The remote host id as a binary integer number.\n"
 	 "\n"
