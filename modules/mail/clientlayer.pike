@@ -1,5 +1,5 @@
 /*
- * $Id: clientlayer.pike,v 1.15 1998/09/15 05:14:17 per Exp $
+ * $Id: clientlayer.pike,v 1.16 1998/09/16 18:52:46 per Exp $
  *
  * A module for Roxen AutoMail, which provides functions for
  * clients.
@@ -10,7 +10,7 @@
 #include <module.h>
 inherit "module" : module;
 
-constant cvs_version="$Id: clientlayer.pike,v 1.15 1998/09/15 05:14:17 per Exp $";
+constant cvs_version="$Id: clientlayer.pike,v 1.16 1998/09/16 18:52:46 per Exp $";
 constant thread_safe=1;
 
 
@@ -65,6 +65,8 @@ string encode_binary( mixed what )
 
 mixed decode_binary( string what )
 {
+  if(!what) 
+    return "";
   return decode_value( MIME.decode_base64( what ) );
 }
 
@@ -176,30 +178,32 @@ object(Stdio.File) new_body( string body_id )
 
 /* Client Layer Abstraction ---------------------------------------- */
 
-object get_cache_obj( program type, string|int id )
+object get_cache_obj( mixed type, string|int id )
 {
+  type = (program)type;
   if(!object_cache[ type ])
     return 0;
   if(object_cache[ type ][ id ])
     return object_cache[ type ][ id ];
 }
 
-object get_any_obj(string|int id, program type, mixed ... moreargs)
+object get_any_obj(string|int id, mixed type, mixed ... moreargs)
 {
-  if(!object_cache[ type ])
-    object_cache[ type ] = ([]);
-  if(object_cache[ type ][ id ])
+  program ptype = (program)type;
+  if(!object_cache[ ptype ])
+    object_cache[ ptype ] = ([]);
+  if( object_cache[ ptype ][ id ] )
   {
-    object_cache[ type ][ id ]->create(id, @moreargs);
-    return object_cache[ type ][ id ];
+    object_cache[ ptype ][ id ]->create(id, @moreargs);
+    return object_cache[ ptype ][ id ];
   }
-  return object_cache[ type ][ id ] = type(id,@moreargs);
+  return object_cache[ ptype ][ id ] = type(id,@moreargs);
 }
 
 class Common
 {
   string|int id;
-  static int serial;
+  static int serial = time();
   final int get_serial()
   {
     return serial;
@@ -218,7 +222,7 @@ class Common
     a=squery("select qwerty from %s where id=%s and variable='%s'", 
 	     table, (string)id, var);
     if(sizeof(a))
-      return cached_misc[var]=decode_binary( a[0]->data );
+      return cached_misc[var]=decode_binary( a[0]->qwerty );
     return cached_misc[var]=0;
   }
 
@@ -246,6 +250,12 @@ class Mail
   static mapping _headers;
   static multiset _flags;
 
+  void modify()
+  {
+    if(mailbox)
+      mailbox->modify();
+    ::modify();
+  }
 
   mixed get(string var)
   {
@@ -323,9 +333,9 @@ class Mail
 
   void create(string i, string m, object mb)
   {
+    user = mb->user;
     id = (string)i;
     message_id = (string)m;
-    user = mb->user;
     mailbox = mb;
   }
 }
@@ -339,6 +349,15 @@ class Mailbox
   object user;
   string name;
   int _unread = -1;
+
+  void modify()
+  {
+    //  _unread = -1;
+    if(user)
+      user->modify();
+    ::modify();
+  }
+
   int num_unread()
   {
     if(_unread != -1)
@@ -346,35 +365,37 @@ class Mailbox
     return _unread = (sizeof(mail()->flags()->read-({1})));
   }
 
-  void remove_mail(Mail mail)
+  void remove_mail(Mail mm)
   {
-    if(search(mail()->message_id, mail->message_id) != -1)
+    if(search(mail()->message_id, mm->message_id) != -1)
     {
       _mail = 0; // No optimization, for safety...
-      destruct( mail );
+      _unread = -1;
       modify( );
-      remove_mailbox_from_mail( mail->message_id, id );
+      remove_mailbox_from_mail( mm->message_id, id );
+      destruct( mm );
     }
   }
 
-  Mail add_mail(Mail mail, int|void nocopy)
+  Mail add_mail(Mail mm, int|void nocopy)
   {
-    if(search(mail()->message_id, mail->message_id) == -1)
+    if(search(mail()->message_id, mm->message_id) == -1)
     {
       _mail = 0;
+      _unread = -1;
       modify();
-      add_mailbox_to_mail( mail->message_id, id );
+      add_mailbox_to_mail( mm->message_id, id );
       foreach(mail(), Mail m)
-	if(m->message_id == mail->message_id)
+	if(m->message_id == mm->message_id)
 	{
 	  if(!nocopy)
-	    foreach(indices(mail->flags), string f)
+	    foreach(indices(mm->flags()), string f)
 	      m->set_flag( f );
 	  return m;
 	}
       error("Added message could not be found in list of messages.\n");
     }
-    return mail;
+    return mm;
   }
 
   int rename(string to)
@@ -386,12 +407,9 @@ class Mailbox
   void delete()
   {
     foreach(mail, object m)
-    {
-      m->_mboxes -= ({ this_object() });
-      m->modify();
-      user->_mailboxes = 0;
-      user->modify();
-    }
+      remove_mail( m );
+    modify();
+    user->_mailboxes = 0;
     delete_mailbox( id );
     destruct(this_object());
   }
@@ -438,8 +456,7 @@ class Mailbox
     
     // 4> Zap the cache.
     //     _mail = 0;
-    if(_unread != -1)
-      _unread++;
+    _unread = -1;
     modify();
 
     if(!_mail) 
@@ -453,7 +470,11 @@ class Mailbox
     }
 
     Mail m;
-    _mail += ({ m =  Mail(lmid, mid, this_object()) });
+    _mail += ({ m = get_any_obj(lmid, Mail, mid, this_object()) });
+//     if(!object_cache[ (program)Mail ])
+//       object_cache[ (program)Mail ] = ([ lmid:m ]);
+//     else
+//       object_cache[ (program)Mail ][ lmid ] = m;
     return m;
   }
 
@@ -533,7 +554,6 @@ class User
   {
     if(!force && _mboxes)
       return _mboxes;
-    
     mapping m = list_mailboxes(id);
     array a = values(m), b = indices(m);
     for(int i=0; i<sizeof(a); i++)
@@ -766,7 +786,7 @@ int rename_mailbox(int mailbox_id, string newname)
 
 int remove_mailbox_from_mail(string message_id, int mailbox_id)
 {
-  squery("delete * from mail where mailbox_id='%d' and message_id='%s'",
+  squery("delete from mail where mailbox_id='%d' and message_id='%s'",
 	 mailbox_id, message_id);
   // we must also remove all flags.
   update_message_refcount( message_id, -1 );
