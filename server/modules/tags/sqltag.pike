@@ -1,5 +1,5 @@
 /*
- * $Id: sqltag.pike,v 1.10 1997/09/28 17:27:20 grubba Exp $
+ * $Id: sqltag.pike,v 1.11 1997/09/30 14:33:21 grubba Exp $
  *
  * A module for Roxen Challenger, which gives the tags
  * <SQLQUERY> and <SQLOUTPUT>.
@@ -7,7 +7,7 @@
  * Henrik Grubbström 1997-01-12
  */
 
-constant cvs_version="$Id: sqltag.pike,v 1.10 1997/09/28 17:27:20 grubba Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.11 1997/09/30 14:33:21 grubba Exp $";
 constant thread_safe=1;
 #include <module.h>
 
@@ -26,7 +26,7 @@ array register_module()
   return( ({ MODULE_PARSER,
 	       "SQL-module",
 	       "This module gives the three tags &lt;SQLQUERY&gt;, "
-	       "&lt;SQLOUTPUT&gt;, &lt;SQLELSE&gt; and &lt;SQLTABLE&gt;.<br>\n"
+	       "&lt;SQLOUTPUT&gt;, and &lt;SQLTABLE&gt;.<br>\n"
 	       "Usage:<ul>\n"
 	       "<table border=0>\n"
 	       "<tr><td valign=top><b>&lt;sqloutput&gt;</b></td>"
@@ -113,7 +113,7 @@ string sqloutput_tag(string tag_name, mapping args, string contents,
       contents = "<h1>Query \"" + args->query + "\" failed: " +
 	con->error() + "</h1>\n" +
 	((master()->describe_backtrace(error)/"\n")*"<br>\n");
-    } else if (result) {
+    } else if (result && sizeof(result)) {
       string nullvalue="";
       array(string) content_array = contents/"#";
       array(string) res_array=allocate(sizeof(content_array)*sizeof(result));
@@ -142,13 +142,12 @@ string sqloutput_tag(string tag_name, mapping args, string contents,
 	  }
 	}
       }
-      contents = res_array * "";
-      request_id->misc->sqlelse = 0;
+      contents = (res_array * "") + "<true>";
     } else {
-      request_id->misc->sqlelse = 1;
+      contents = "<false>";
     }
   } else {
-    contents = "<!-- No query! -->" + contents;
+    contents = "<!-- No query! --><false>";
   }
   return(contents);
 }
@@ -192,11 +191,10 @@ string sqlquery_tag(string tag_name, mapping args,
 	     con->error() + "</h1>\n" +
 	     ((master()->describe_backtrace(error)/"\n")*"<br>\n"));
     }
-    request_id->misc->sqlelse = !res;
+    return(res?"<true>":"<false>");
   } else {
-    return("<!-- No query! -->");
+    return("<!-- No query! --><false>");
   }
-  return("");
 }
 
 string sqltable_tag(string tag_name, mapping args,
@@ -275,27 +273,21 @@ string sqltable_tag(string tag_name, mapping args,
 	}
 	res += "</tr>\n";
       }
-      res += "</table>";
+      res += "</table><true>";
 
-      request_id->misc->sqlelse = 0;
       return(res);
     } else {
-      request_id->misc->sqlelse = 1;
-      return("<!-- No result from query -->");
+      return("<!-- No result from query --><false>");
     }
   } else {
-    return("<!-- No query! -->");
+    return("<!-- No query! --><false>");
   }
 }
 
 string sqlelse_tag(string tag_name, mapping args, string contents,
 		   object request_id, mapping defines)
 {
-  if (request_id->misc->sqlelse) {
-    request_id->misc->sqlelse = 0;
-    return(contents);
-  }
-  return("");
+  return(make_container("else", args, contents));
 }
 
 string dumpid_tag(string tag_name, mapping args,
