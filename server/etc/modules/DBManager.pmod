@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.28 2001/08/31 19:39:47 grubba Exp $
+// $Id: DBManager.pmod,v 1.29 2001/08/31 19:45:04 grubba Exp $
 
 //! Manages database aliases and permissions
 
@@ -40,11 +40,13 @@ private
 
   void clear_sql_caches()
   {
+#if DBMANAGER_DEBUG
     werror("DBManager:\n"
 	   "  sql_cache: %O\n"
 	   "  connection_cache: %O\n",
 	   sql_cache,
 	   connection_cache);
+#endif /* DMBMANAGER_DEBUG */
 #ifdef THREADS
     sql_cache_size = 0;
     foreach( values( sql_cache ), mapping q )
@@ -59,10 +61,11 @@ private
       }
     sql_cache = ([]);
 
-    // No need to forcefully close the connection cache entries,
-    // since they are the same as the sql_cache entries.
-    connection_cache = ([]);
     clear_connect_to_my_mysql_cache();
+
+    // No need to forcefully close the connection cache entries,
+    // since they are the same as the sql_cache and my_mysql_cache entries.
+    connection_cache = ([]);
     gc( );
   }
   
