@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.322 2002/05/06 15:14:18 mast Exp $
+// $Id: roxenloader.pike,v 1.323 2002/05/07 14:03:12 jonasw Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.322 2002/05/06 15:14:18 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.323 2002/05/07 14:03:12 jonasw Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -971,6 +971,7 @@ constant mf = Stdio.File;
 #include "../etc/include/version.h"
 
 static string release;
+static string dist_version;
 static int roxen_is_cms;
 static string roxen_product_name;
 
@@ -1170,6 +1171,12 @@ Roxen 2.4 should be run with Pike 7.2.
     // Only the first line is interresting.
     release = (replace(release, "\r", "\n")/"\n")[0];
   }
+
+  // Get product package version
+  if (dist_version = Stdio.read_bytes("VERSION.DIST"))
+    dist_version = (replace(dist_version, "\r", "\n") / "\n")[0];
+  else
+    dist_version = "unknown";
 
   roxen_is_cms = !!file_stat("modules/sitebuilder");
 
@@ -2038,6 +2045,7 @@ and rebuild Pike from scratch.
   add_constant("open",          open);
   add_constant("roxen_path",    roxen_path);
   add_constant("roxen_version", roxen_version);
+  add_constant("roxen_dist_version", dist_version);
   add_constant("roxen_release", release || roxen_release);
   add_constant("roxen_is_cms",  roxen_is_cms);
   add_constant("roxen_product_name", roxen_product_name);
