@@ -3,7 +3,7 @@ CLASSPATH = servlet.jar
 
 JAVAFLAGS = -deprecation -encoding iso-8859-1
 
-JAVAC = /usr/local/jdk1.2/bin/javac
+JAVAC = /i/jdk/default/bin/javac
 
 SRCDIR = ../src
 
