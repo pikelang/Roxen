@@ -22,7 +22,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.235 2001/01/27 02:47:43 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.236 2001/01/29 09:10:40 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1105,11 +1105,11 @@ void start_mysql()
   void assure_that_base_tables_exists( )
   {
     // 1: Create the 'ofiles' database.
-    if( catch( db->query( "USE ofiles" ) ) )
+    if( catch( db->query( "USE local" ) ) )
     {
-      db->query( "CREATE DATABASE ofiles" );
-      db->query( "USE ofiles" );
-      db->query( "CREATE TABLE files ("
+      db->query( "CREATE DATABASE local" );
+      db->query( "USE local" );
+      db->query( "CREATE TABLE precompiled_files ("
                  "id CHAR(30) NOT NULL PRIMARY KEY, "
                  "data MEDIUMBLOB NOT NULL, "
                  "mtime INT UNSIGNED NOT NULL)" );
@@ -1119,8 +1119,8 @@ void start_mysql()
       report_notice("Removing precompiled files\n");
       catch
       {
-	db->query( "USE ofiles" );
-	db->query( "DELETE FROM files" );
+	db->query( "USE local" );
+	db->query( "DELETE FROM precompiled_files" );
       };
     }
   };
