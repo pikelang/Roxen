@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.478 2000/04/11 04:54:21 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.479 2000/04/13 19:03:18 per Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -393,6 +393,8 @@ static class Privs
     seteuid(saved_uid);
 #endif /* HAVE_EFFECTIVE_USER */
   }
+#else /* efun(seteuid) */
+  void create(string reason, int|string|void uid, int|string|void gid){}
 #endif /* efun(seteuid) */
 }
 
@@ -1840,7 +1842,7 @@ public string full_status()
 			     foo[4], (float)tmp/(float)10, foo[3]));
 }
 
-
+#ifndef __NT__
 static int abs_started;
 
 void restart_if_stuck (int force)
@@ -1870,6 +1872,7 @@ void restart_if_stuck (int force)
 	 });
   alarm (60*QUERY(abs_timeout)+10);
 }
+#endif
 
 // Settings used by the various administration interface modules etc.
 class ConfigIFCache
@@ -2629,16 +2632,20 @@ void create()
   SET_LOCALE(default_locale);
 
   // Dump some programs (for speed)
+  master()->resolv ("RXML.refs");
+  master()->resolv ("RXML.PXml");
+  master()->resolv ("RXML.PEnt");
+
   dump( "etc/roxen_master.pike" );
   dump( "etc/modules/Dims.pmod" );
-  dump( "etc/modules/RXML.pmod/module.pmod" );
-  foreach( glob("*.p???",get_dir( "etc/modules/RXML.pmod/")), string q )
+//   dump( "etc/modules/RXML.pmod/module.pmod" );
+  foreach(({ "module.pmod","PEnt.pike", "PExpr.pike","PXml.pike",
+	       "refs.pmod","utils.pmod" }), string q )
     dump( "etc/modules/RXML.pmod/"+ q );
   dump( "etc/modules/Roxen.pmod" );
 
   // This is currently needed to resolve the circular references in
   // RXML.pmod correctly. :P
-  master()->resolv ("RXML.refs");
 
   dump( "base_server/disk_cache.pike" );
   foreach( glob("*.pmod",get_dir( "etc/modules/RoxenLocale.pmod/")), string q )
@@ -2657,7 +2664,6 @@ void create()
   dump( "base_server/supports.pike" );
   dump( "base_server/hosts.pike");
   dump( "base_server/language.pike");
-  dump( "base_server/configuration.pike" );
 
 #ifndef __NT__
   if(!getuid())
@@ -3129,8 +3135,19 @@ void dump( string file )
 {
   if( file[0] != '/' )
     file = getcwd() +"/"+ file;
-
+  file = normalize_path( file );
   program p = master()->programs[ replace(file, "//", "/" ) ];
+#ifdef __NT__
+  if( !p )
+  {
+    if( sscanf( file, "%*s:/%s", file ) )
+    {
+      file = "/"+file;
+      p = master()->programs[ replace(file, "//", "/" ) ];
+    }
+  }
+#endif
+    
   array q;
 
   if(!p)
@@ -3309,11 +3326,12 @@ int main(int argc, array tmp)
 #endif
   start_time=time();		// Used by the "uptime" info later on.
 
+
   if (QUERY(suicide_engage))
     call_out (restart,60*60*24*QUERY(suicide_timeout));
-
+#ifndef __NT__
   restart_if_stuck( 0 );
-
+#endif
   return -1;
 }
 
@@ -3322,12 +3340,14 @@ string check_variable(string name, mixed value)
 {
   switch(name)
   {
+#ifndef __NT__
    case "abs_engage":
     if (value)
       restart_if_stuck(1);
     else
       remove_call_out(restart_if_stuck);
     break;
+#endif
 
    case "suicide_engage":
     if (value)
