@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.198 1999/06/10 03:33:09 mast Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.199 1999/06/10 23:39:59 per Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -309,12 +309,6 @@ object hsent=Bignum();    // Sent headers
 object received=Bignum(); // Received data
 
 object this = this_object();
-
-
-// Used to store 'parser' modules before the main parser module
-// is added to the configuration.
-
-private object *_toparse_modules = ({});
 
 // Will write a line to the log-file. This will probably be replaced
 // entirely by log-modules in the future, since this would be much
@@ -2884,25 +2878,6 @@ object enable_module( string modname )
     types_fun = me->type_from_extension;
   }
   
-//   if((module->type & MODULE_MAIN_PARSER))
-//   {
-//     parse_module = me;
-//     if (_toparse_modules) {
-//       Array.map(_toparse_modules,
-// 		lambda(object o, object me, mapping module)
-// 		{
-// 		  array err;
-// 		  if (err = catch {
-// 		    me->add_parse_module(o);
-// 		  }) {
-// 		    report_error(LOCALE->
-// 				 error_initializing_module_copy(module->name,
-// 								describe_backtrace(err)));
-// 		  }
-// 		}, me, module);
-//     }
-//   }
-
   if(module->type & MODULE_PARSER)
   {
     if(parse_module) {
@@ -2914,7 +2889,6 @@ object enable_module( string modname )
 						    describe_backtrace(err)));
       }
     }
-//     _toparse_modules += ({ me });
   }
 
   if(module->type & MODULE_AUTH)
