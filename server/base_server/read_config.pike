@@ -4,7 +4,7 @@ import Array;
 
 #ifndef IN_INSTALL
 inherit "newdecode";
-string cvs_version = "$Id: read_config.pike,v 1.14 1997/09/12 06:14:26 per Exp $";
+string cvs_version = "$Id: read_config.pike,v 1.15 1997/10/15 20:18:42 grubba Exp $";
 
 #else
 import spider;
@@ -24,6 +24,10 @@ mapping copy_configuration(string from, string to)
 {
   if(!configs[from])
     return 0;
+#ifdef DEBUG
+  write(sprintf("Copying configuration \"%s\" to \"%s\"\n",
+		from, to));
+#endif /* DEBUG */
   configs[to] = copy_value(configs[from]);
   return configs[to];
 }
