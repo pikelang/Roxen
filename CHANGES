@@ -1,3 +1,54 @@
+Changes since Roxen Challenger 1.2 alpha 7
+-----------------------------------------------
+
+o The SSL3 module now returns a redirect if it is accessed with HTTP.
+
+o CGI security fix.
+
+o Got rid of "Calling function in a destructed object" when SSL3 connections
+  are broken.
+
+o SSL3 ports now work without restarting the server.
+
+o Copying configurations now works again.
+
+o privs.pike now clears supplementary group list in case initgroups fails.
+
+o Bugfix for the ftp-module if there aren't any MODULE_FIRST modules.
+
+o configvar can now be started again.
+
+o Single-letter options can now be passed to the start-script.
+
+o Backward-compatibility patch to color.pike.
+
+o Security-levels made a bit less paranoid.
+
+o Logformat fix.
+
+o "New module" button renamed to "Add module".
+
+o Protocol-modules now get the configuration-object as the second argument
+  to create().
+
+o Now works again with a threaded pike on Linux.
+
+o CGI problems with SCRIPT_NAME/PATH_INFO hopefully fixed.
+
+o stdin, stdout and stderr can now be specified to spawn_pike().
+
+o activex added to supports-file.
+
+o Added missing parts needed for the mirror-filesystem client/server.
+
+o The hostredirect-module now handles the case that the host-header isn't
+  specified correctly.
+
+o The flik-module now has alt-texts.
+
+o Added support for some more HTTP-proxy-headers.
+
+
 Changes since Roxen Challenger 1.2 alpha 6
 -----------------------------------------------
 
