@@ -4,7 +4,7 @@
  * generate any directory listings, instead only using index files.
  */
 
-constant cvs_version = "$Id: indexfiles.pike,v 1.10 2000/01/19 16:04:26 jonasw Exp $";
+constant cvs_version = "$Id: indexfiles.pike,v 1.11 2000/02/10 04:28:23 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -13,20 +13,14 @@ inherit "roxenlib";
 
 //************** Generic module stuff ***************
 
-array register_module()
-{
-  return ({ MODULE_DIRECTORIES, 
-	    "Index files only",
-	      "Index files only module, a directory module that will not try "
-	      "to generate any directory listings, instead only using the  "
-	      "specified index files.<p>"
-	      "You can use this directory module if you do not want "
-	      "any automatic directory listings at all, but still want \n"
-	      "to use index.html with friends",
-	    ({ }), 
-	    1
-         });
-}
+constant module_type = MODULE_DIRECTORIES;
+constant module_name = "Index files only";
+constant module_doc  = "Index files only module, a directory module that will not try "
+  "to generate any directory listings, instead only using the  "
+  "specified index files."
+  "<p>You can use this directory module if you do not want "
+  "any automatic directory listings at all, but still want \n"
+  "to use index.html with friends</p>";
 
 void create()
 {
