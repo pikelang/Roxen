@@ -5,8 +5,8 @@
 
 // Mk II changes by Henrik P Johnson <hpj@globecom.net>.
 
-constant cvs_version = "$Id: secure_fs.pike,v 1.21 2000/04/06 14:49:22 grubba Exp $";
-constant thread_safe=1;
+constant cvs_version = "$Id: secure_fs.pike,v 1.22 2000/05/01 05:41:31 nilsson Exp $";
+constant thread_safe = 1;
 
 #include <module.h>
 inherit "filesystem";
@@ -172,13 +172,13 @@ mixed not_allowed(string f, object id)
 	 if(!(id->auth && id->auth[0])) {
 	   if(query("page")) {
 	     return http_low_answer(200,
-				    replace(parse_rxml(query("authpage"), id),
+				    replace(Roxen.parse_rxml(query("authpage"), id),
 					    ({"$File", "$Me"}), 
 					    ({id->not_query,
 					      id->conf->query("MyWorldLocation")})));
 
 	   } else {
-	     return http_auth_required("user");
+	     return Roxen.http_auth_required("user");
 	   }
 	 }
 	 foreach(level[2]/",", uname) {
@@ -192,12 +192,12 @@ mixed not_allowed(string f, object id)
   if(need_auth) {
     if(query("page")) {
       return http_low_answer(200,
-			     replace(parse_rxml(query("authpage"), id),
+			     replace(Roxen.parse_rxml(query("authpage"), id),
 				     ({"$File", "$Me"}), 
 				     ({id->not_query,
 				       id->conf->query("MyWorldLocation")})));
     } else {
-      return http_auth_required("user");
+      return Roxen.http_auth_required("user");
     }
   }
   return  1;
@@ -238,7 +238,7 @@ mixed find_file(string f, object id)
     return ([ "file":tmp2,
 	      "extra_heads": ([
 		"Set-Cookie": "httpauth="+
-		http_encode_string(sprintf("%s:%s:%d",
+		Roxen.http_encode_string(sprintf("%s:%s:%d",
 					   user||"", pass||"", time(1)))+
 		"; path=/"
 	      ]) ]);
@@ -246,7 +246,7 @@ mixed find_file(string f, object id)
     return tmp2 +
       ([ "extra_heads": ([
 	"Set-Cookie": "httpauth="+
-	http_encode_string(sprintf("%s:%s:%d",
+	Roxen.http_encode_string(sprintf("%s:%s:%d",
 				   user||"", pass||"", time(1)))+
 	"; path=/"
       ]) ]);

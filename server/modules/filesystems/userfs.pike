@@ -20,7 +20,7 @@
 
 inherit "filesystem" : filesystem;
 
-constant cvs_version="$Id: userfs.pike,v 1.56 2000/04/12 23:05:49 neotron Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.57 2000/05/01 05:41:10 nilsson Exp $";
 constant module_type = MODULE_LOCATION;
 constant module_name = "User file system";
 constant module_doc  = 
@@ -209,7 +209,7 @@ int|mapping|Stdio.File find_file(string f, RequestID id)
     if((f == "") && (strlen(of) && of[-1] != '/'))
     {
       redirects++;
-      return http_redirect(id->not_query+"/",id);
+      return Roxen.http_redirect(id->not_query+"/",id);
     }
 
     string dir;
