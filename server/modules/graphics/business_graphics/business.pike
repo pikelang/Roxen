@@ -182,7 +182,7 @@ på alla saker du använder i mappingarna.
 
 */
 
-constant cvs_version = "$Id: business.pike,v 1.71 1998/02/23 17:11:03 peter Exp $";
+constant cvs_version = "$Id: business.pike,v 1.72 1998/02/23 20:46:13 hedda Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -275,10 +275,11 @@ mixed *register_module()
        "  <b>separator</b>      Use the specified string as separator instead"
        " of tab.\n"
        "  <b>lineseparator</b>  Use the specified string as lineseparator"
-       " instead of newline.\n"
+       "                 instead of newline.\n"
        "  <b>form</b>           Can be set to either row or column. Default"
-       " is row.\n"
-       "  <b>parse</b>          Run the content of the tag through the RXML"
+       "                 is row.\n"
+       "  <b>noparse</b>        Do not run the content of the tag through"
+       "                 the RXML"
        " parser\n"
        "                 before data extraction is done.\n"
        "\n&lt;<b>colors</b>&gt; (container)\n"
