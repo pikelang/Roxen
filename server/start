@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.191 2002/01/03 13:07:29 grubba Exp $
+# $Id: start,v 1.192 2002/04/02 14:35:05 grubba Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -105,6 +105,9 @@ setup_environment
 
 DEFINES="$DEFINES -DRAM_CACHE"
 
+# Thread enabling.
+# FIXME: Ought to use case...esac.
+
 # Enable threads (if available) on Solaris.
 # Most other OS's have thread bugs that cause them or Roxen to crash.
 if uname | grep 'SunOS' >/dev/null 2>&1; then
@@ -121,6 +124,10 @@ if uname | grep 'Darwin' >/dev/null 2>&1; then
   if uname -r | grep '^1\.[4-9]' >/dev/null 2>&1; then
     DEFINES="$DEFINES -DENABLE_THREADS"
   fi
+fi
+# Also enabled on Linux.
+if uname | grep 'Linux' >/dev/null 2>&1; then
+  DEFINES="$DEFINES -DENABLE_THREADS"
 fi
 
 gdb=no
