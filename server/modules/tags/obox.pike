@@ -5,7 +5,7 @@
 // Several modifications by Francesco Chemolli.
 
 
-constant cvs_version = "$Id: obox.pike,v 1.39 2002/06/14 10:34:58 nilsson Exp $";
+constant cvs_version = "$Id: obox.pike,v 1.40 2002/10/22 00:19:14 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -92,10 +92,10 @@ static string title(mapping args)
 		   empty,
 		   args->left ? " width=\""+args->left+"\"" : "",
 		   (args->fixedleft ?
-		    String.strmult ("&nbsp;", (int) args->fixedleft) : "&nbsp;"),
+		    "&nbsp;"*(int)args->fixedleft : "&nbsp;"),
 		   args->right ? " width=\""+args->right+"\"" : "",
 		   (args->fixedright ?
-		    String.strmult ("&nbsp;", (int) args->fixedright) : "&nbsp;"),
+		    "&nbsp;"*(int)args->fixedright : "&nbsp;"),
 		   args->outlinecolor,
 		   empty);
    case "caption":
@@ -128,10 +128,10 @@ static string title(mapping args)
 		   empty,
 		   args->left ? " width=\""+args->left+"\"" : "",
 		   (args->fixedleft ?
-		    String.strmult ("&nbsp;", (int) args->fixedleft) : "&nbsp;"),
+		    "&nbsp;"*(int)args->fixedleft : "&nbsp;"),
 		   args->right ? " width=\""+args->right+"\"" : "",
 		   (args->fixedright ?
-		    String.strmult ("&nbsp;", (int) args->fixedright) : "&nbsp;"),
+		    "&nbsp;"*(int)args->fixedright : "&nbsp;"),
 		   args->outlinecolor,
 		   empty);
   }
