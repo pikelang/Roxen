@@ -1,0 +1,12 @@
+#charset CHARSET
+// -*- pike -*-
+
+string module_doc( string module_name, string variable, int long )
+{
+  return module_doc_strings[module_name+"/"+variable+"/"+long];
+}
+
+mapping (string:string) module_doc_strings =
+([
+  STRINGS
+]);
