@@ -2,14 +2,16 @@
 
 string dir;
 string log_dir;
-
+string key;
 
 string get_regvalue(string value)
 {
   string ret;
   foreach( ({ HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, }), int w)
-    if(ret = RegGetValue(w, "SOFTWARE\\Idonex\\Roxen\\1.3", value))
-      return ret;
+    catch {
+      if(ret = RegGetValue(w, "SOFTWARE\\Idonex\\Roxen\\1.3", value))
+	return ret;
+    };
 }
 
 object _roxen;
@@ -22,7 +24,7 @@ object roxen()
 
 void write_status_file()
 {
-  call_out(write_status_file, 10);
+  call_out(write_status_file, 30);
 
   object fd = Stdio.File();
   if(fd->open(log_dir+"\\status", "wct"))
@@ -47,30 +49,20 @@ void my_werror(string fmt, mixed ... args)
 
 void read_from_stdin()
 {
-  while(1)
-    switch(Stdio.stdin.read(3))
-    {
-     case 0: case "": case "die":
-       roxen()->stop_all_modules();
-       _exit(0);
-       break;
-
-     case "rst":
-       roxen()->stop_all_modules();
-       _exit(0);
-       break;
-       
-     case "inf":
-       remove_call_out(write_status_file);
-       write_status_file();
-       break;
-    }
-  roxen()->kill_me();
+  while(!file_stat(log_dir + "\\" + key)) sleep(2);
+  rm(log_dir + "\\" + key);
+  exit(0);
 }
 
 int main(int argc, array (string) argv)
 {
   /* Syntax: ntroxenloader.pike <roxen-directory> <roxen loader options> */
+  if(argc > 1 && argv[1][0]=='+')
+  {
+    key = argv[1][1..];
+    argv = argv[1..];
+    argc--;
+  }
   dir = get_regvalue("installation_directory");
   if(!dir)
   {
@@ -120,7 +112,7 @@ int main(int argc, array (string) argv)
 
   werror("Compiling "+dir+"base_server\\roxenloader.pike\n");
   call_out(write_status_file, 1);
-  thread_create(read_from_stdin);
+  if(key) thread_create(read_from_stdin);
   return ((program)(dir+"base_server\\roxenloader.pike"))()
     ->main(argc,argv);
 }
