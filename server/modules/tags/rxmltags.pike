@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.413 2003/01/09 10:32:33 anders Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.414 2003/01/13 09:57:32 noring Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -4547,7 +4547,7 @@ class TagIfDate {
 
     date = replace(date, "-", "");
     if(sizeof(date)!=8 && sizeof(date)!=6)
-      RXML.run_error("If date attriibute doesn't conform to YYYYMMDD syntax.");
+      RXML.run_error("If date attribute doesn't conform to YYYYMMDD syntax.");
     if(sscanf(date, "%04d%02d%02d", t->year, t->mon, t->mday)==3)
       t->year-=1900;
     else if(sscanf(date, "%02d%02d%02d", t->year, t->mon, t->mday)!=3)
@@ -7979,7 +7979,7 @@ just got zapped?
  Is the date yyyymmdd?</short> The attributes before, after and
  inclusive modifies the behavior. This is a <i>Utils</i> plugin.
 </p></desc>
-<attr name='date' value='yyyymmdd' required='required'><p>
+<attr name='date' value='yyyymmdd | yyyy-mm-dd' required='required'><p>
  Choose what date to test.</p>
 </attr>
 
