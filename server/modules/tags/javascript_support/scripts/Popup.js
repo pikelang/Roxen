@@ -65,10 +65,16 @@ function showPopup(name, parent, ox, oy, od, e)
   if(od == 0)
     od = 10;
 
-  if(isNav5) {
-    ox += 8;
+  if(isNav5 || isMac) {
+    if (isMac)
+      ox += 10;
+    else
+      ox += 8;
+
     if (oy == -1)
-      oy += 9;
+      oy += 1;
+    if (isMac)
+      oy += 15;
     else
       oy += 8;
   }

@@ -1,5 +1,5 @@
 // Global variables
-var isNav4 = false, isIE4 = false, isNav5 = false;
+var isNav4 = false, isIE4 = false, isNav5 = false, isMac = false;
 var insideWindowWidth;
 var range = "";
 var styleObj = "";
@@ -9,6 +9,8 @@ if (navigator.appVersion.charAt(0) == "4") {
     isNav4 = true;
     insideWindowWidth = window.innerWidth;
   } else {
+    if (navigator.platform == "MacPPC")
+      isMac = true;
     isIE4 = true;
     range = "all.";
     styleObj = ".style";
