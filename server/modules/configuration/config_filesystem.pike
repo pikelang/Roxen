@@ -18,7 +18,7 @@ LocaleString module_doc =
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.79 2001/02/23 02:24:56 per Exp $";
+  "$Id: config_filesystem.pike,v 1.80 2001/03/04 12:57:53 per Exp $";
 
 constant path = "config_interface/";
 
@@ -477,9 +477,12 @@ void start(int n, Configuration cfg)
     RoxenModule m;
     if( m = cfg->find_module( "pikescript#0" ) )
     {
-      m->set( "autoreload", 0 );
 #ifndef DEBUG
+      m->set( "autoreload", 0 );
       m->set( "explicitreload", 0 );
+#else
+      m->set( "autoreload", 1 );
+      m->set( "explicitreload", 1 );
 #endif
 #if constant(__builtin.security)
       m->set( "trusted", 1 );
