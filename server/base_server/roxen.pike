@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.686 2001/07/21 08:27:31 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.687 2001/08/01 11:09:28 per Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -2563,6 +2563,9 @@ class ImageCache
   //! that time are flushed.
   {
     report_debug("Flushing "+name+" image cache.\n");
+    meta_cache = ([]);
+    uid_cache  = ([]);
+    rst_cache  = ([]);
     if( !age )
     {
       QUERY( "DELETE FROM "+name );
@@ -2570,13 +2573,13 @@ class ImageCache
       return;
     }
 
-    array(string) ids = QUERY( "SELECT id FROM "+name+" WHERE atime < "+age)->id;
+    array(string) ids =
+      QUERY( "SELECT id FROM "+name+" WHERE atime < "+age)->id;
 
     int q;
     while(q<sizeof(ids)) {
       string list = ids[q..q+100] * "','";
       q+=100;
-
       QUERY( "DELETE FROM "+name+     " WHERE id in ('"+list+"')" );
       QUERY( "DELETE FROM "+name+"_data WHERE id in ('"+list+"')" );
     }
@@ -2828,6 +2831,12 @@ class ImageCache
     setup_tables();
   }
 
+  void do_cleanup( )
+  {
+    call_out( do_cleanup, 3600*10+random(4711) );
+    flush(time()-7*3600*24);
+  }
+  
   void create( string id, function draw_func )
   //! Instantiate an image cache of your own, whose image files will
   //! be stored in a table `id' in the cache mysql database,
@@ -2843,6 +2852,9 @@ class ImageCache
     init_db();
     // Support that the 'shared' database moves.
     master()->resolv( "DBManager.add_dblist_changed_callback" )( init_db );
+
+    // Always remove entries that are older than one week.
+    do_cleanup();
   }
 }
 
