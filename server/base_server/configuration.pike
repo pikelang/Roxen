@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.355 2000/08/29 18:24:51 wellhard Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.356 2000/08/29 23:54:23 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -2747,7 +2747,7 @@ void low_init()
                       describe_backtrace( q ) );
 
   foreach( after_init_hooks, function q )
-    if( mixed w = catch( q ) )
+    if( mixed w = catch( q(this_object()) ) )
       report_error( "While calling after_init_hook %O:\n%s",
                     q,  describe_backtrace( w ) );
 
