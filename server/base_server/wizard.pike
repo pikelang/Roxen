@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.60 1998/05/14 18:30:36 grubba Exp $
+/* $Id: wizard.pike,v 1.61 1998/05/22 09:08:06 per Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -10,7 +10,10 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed b)
   if(n=="cvar") // Container. Default value in 'a', id in 'b'.
   {
     id = b;
-    m["default"] = a;
+    if(m->type == "select" || m->type == "select_multiple")
+      m->options = replace(a, "\n", ",");
+    else
+      m["default"] = a;
   } else // tag. No contents, id in 'b'.
     id = a;
 
