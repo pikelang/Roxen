@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.265 2000/12/11 03:24:35 nilsson Exp $
+// $Id: rxml.pike,v 1.266 2000/12/11 17:46:18 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -1438,6 +1438,8 @@ class TagEmit {
       inherit RXML.Frame;
 
       array do_return(RequestID id) {
+	// FIXME: Must use look-ahead instead/also,
+	// to support streaming.
 	if( RXML.get_var("counter") < id->misc->emit_rowinfo )
 	  result = content;
 	return 0;
@@ -1496,6 +1498,20 @@ class TagEmit {
       if(plugin->maxrows && args->maxrows)
 	m_delete(args, "maxrows");
 
+      if(functionp(res)) {
+	// FIXME: filters
+	// FIXME: API (function/object)
+	do_iterate=function_iterate;
+	if(args->skiprows) {
+	  args->skiprow = (int)args->skiprows;
+	  while(args->skiprows--)
+	    res(args, id);
+	}
+	LAST_IF_TRUE = 1;
+	upper_size = 0;
+	return 0;
+      }
+
       if(arrayp(res)) {
 	vars = (["counter":0]);
 	if(args->sort && !plugin->sort)
@@ -1507,7 +1523,7 @@ class TagEmit {
 				  {
 				    foreach (order, string field)
 				    {
-				      int tmp;
+				      int(-1..1) tmp;
 				      
 				      if (field[0] == '-')
 					tmp = compare( m2[field[1..]],
@@ -1539,7 +1555,8 @@ class TagEmit {
 	      filter[v] = g;
 	  }
 
-	  if(args->rowinfo) {
+	  if(args->rowinfo ||
+	     (args->skiprows && args->skiprows[-1]=='-')) {
 	    m_delete(args, "filter");
 	    for(int i; i<sizeof(res); i++)
 	      if(should_filter(res[i])) {
@@ -1584,14 +1601,6 @@ class TagEmit {
 	return 0;
       }
 
-      if(functionp(res)) {
-	// FIXME: Filters are not handled here.
-	do_iterate=function_iterate;
-	LAST_IF_TRUE = 1;
-	upper_size = 0;
-	return 0;
-      }
-
       parse_error("Wrong return type from emit source plugin.\n");
     }
 
@@ -1607,7 +1616,7 @@ class TagEmit {
 
     int(0..1) do_once_more() {
       if(vars->counter>0 || !args["do-once"]) return 0;
-      vars->counter = 1;
+      vars = (["counter":1]);
       return 1;
     }
 
@@ -1615,9 +1624,11 @@ class TagEmit {
 
     int(0..1) function_iterate(RequestID id) {
       int counter = vars->counter;
+      if(args->maxrows && (int)args->maxrows>=counter)
+	return counter ? 0 : do_once_more();
       vars=res(args, id);
       vars->counter = counter++;
-      return mappingp(vars);
+      return mappingp(vars) || do_once_more();
     }
 
     int(0..1) array_iterate(RequestID id) {
