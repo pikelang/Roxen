@@ -91,7 +91,7 @@ install: all
 	cp pike/src/pike $(prefix)/roxen/server/bin
 	-@rm -f $(prefix)/roxen/server/bin/roxen >/dev/null 2>&1
 	ln $(prefix)/roxen/server/bin/pike $(prefix)/roxen/server/bin/roxen
-	cp $(SRCDIR)/pike/bin/feature_list $(prefix)/roxen/server/bin
+	# cp $(SRCDIR)/pike/bin/feature_list $(prefix)/roxen/server/bin
 	test -d $(prefix)/roxen/local/. || mkdir $(prefix)/roxen/local
 	test -d $(prefix)/roxen/local/modules/. || mkdir $(prefix)/roxen/local/modules
 	test -d $(prefix)/roxen/local/nfonts/. || mkdir $(prefix)/roxen/local/nfonts
@@ -113,6 +113,12 @@ install: all
 	  echo Modifying permissions for directory $(prefix)/roxen/server/$$d... ; \
 	  find $(prefix)/roxen/server/$$d -type d -exec chmod a+x '{}' \; ; \
 	  chmod -R a+r $(prefix)/roxen/server/$$d ;\
+	done
+	-@for f in BUGS CHANGES CONTRIBUTORS COPYING GPL INSTALLING \
+		README README.ssl3 TODO; do \
+	  if test -f $(SRCDIR)/$f ; then \
+	    echo Copying $f...; cp $(SRCDIR)/$f $(prefix)/roxen/$f; \
+	  else :; fi; \
 	done
 	@echo Roxen installed.
 
