@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.75 1997/09/05 12:14:05 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.76 1997/09/09 06:37:21 neotron Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -1541,7 +1541,7 @@ object enable_module( string modname )
     array err;
 
 #ifdef MODULE_DEBUG
-    perror("Modules: Enabling "+module->name+" # "+id+" ... ");
+    perror(name+" (modules): Enabling "+module->name+" # "+id+" ... ");
 #endif
 
     if(module->copies)
@@ -2369,7 +2369,8 @@ void enable_all_modules()
 {
   array modules_to_process=sort(indices(retrieve("EnabledModules",this)));
   string tmp_string;
-
+  perror("\nEnabling all modules for "+query_name()+"... \n");
+  
   // Always enable the user database module first.
   if(search(modules_to_process, "userdb#0")>-1)
     modules_to_process = (({"userdb#0"})+(modules_to_process-({"userdb#0"})));
@@ -2391,7 +2392,7 @@ void create(string config)
   roxen->current_configuration = this;
   name=config;
 
-  perror("Enabling virtual server '"+config+"'\n");
+  perror("Creating virtual server '"+config+"'\n");
 
   defvar("ZNoSuchFile", "<title>Sorry. I cannot find this resource</title>"
 	 "\n<h2 align=center><configimage src=roxen.gif alt=\"File not found\">\n"
@@ -2531,7 +2532,6 @@ void create(string config)
   }
     
   set("_v", CONFIGURATION_FILE_LEVEL);
-  enable_all_modules();
 }
 
 

@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.128 1997/09/09 04:47:57 neotron Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.129 1997/09/09 06:37:20 neotron Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -1235,6 +1235,7 @@ object enable_configuration(string name)
   configurations += ({ cf });
   current_configuration = cf;
   report_notice("Enabled the virtual server \""+name+"\".");
+  
   return cf;
 }
 
@@ -1248,7 +1249,13 @@ void enable_configurations()
   foreach(list_all_configurations(), string config)
   {
     if(err=catch { enable_configuration(config)->start();  })
-      perror("Error while enabling configuration "+config+":\n"+
+      perror("Error while loading configuration "+config+":\n"+
+	     describe_backtrace(err)+"\n");
+  };
+  foreach(configurations, object config)
+  {
+    if(err=catch { config->enable_all_modules();  })
+      perror("Error while loading modules in configuration "+config->name+":\n"+
 	     describe_backtrace(err)+"\n");
   };
   enabling_configurations = 0;
