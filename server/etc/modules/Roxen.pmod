@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.128 2001/10/08 06:07:41 per Exp $
+// $Id: Roxen.pmod,v 1.129 2001/11/05 13:34:09 grubba Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -186,10 +186,13 @@ string decode_mode(int m)
 mapping add_http_header(mapping to, string name, string value)
 {
   if(to[name]) {
-    if(arrayp(to[name]))
-      to[name] += ({ value });
-    else
-      to[name] = ({ to[name], value });
+    if(arrayp(to[name])) {
+      if (search(to[name], value) == -1)
+	to[name] += ({ value });
+    } else {
+      if (to[name] != value)
+	to[name] = ({ to[name], value });
+    }
   }
   else
     to[name] = value;
@@ -2068,7 +2071,7 @@ function get_client_charset_decoder( string åäö, RequestID|void id )
   {
    case "edv":
      report_notice( "Warning: Non 8-bit safe client detected (%s)",
-                    (id?id->client*"":"unknown client"));
+                    (id?id->client*" ":"unknown client"));
      return 0;
 
    case "åäö":
@@ -2077,6 +2080,10 @@ function get_client_charset_decoder( string åäö, RequestID|void id )
    case "\33-Aåäö":
      id && id->set_output_charset && id->set_output_charset( "iso-2022" );
      return _charset_decoder(Locale.Charset.decoder("iso-2022-jp"))->decode;
+
+   case "+AOUA5AD2-":
+     id && id->set_output_charset && id->set_output_charset( "utf-7" );
+     return _charset_decoder(Locale.Charset.decoder("utf-7"))->decode;
 
    case "Ã¥Ã¤Ã¶":
    case "Ã¥Ã¤":
