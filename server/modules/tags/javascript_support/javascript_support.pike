@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.26 2001/03/02 14:17:46 jhs Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.27 2001/04/20 11:56:47 jonasw Exp $";
 //constant thread_safe=1;
 
 #include <module.h>
@@ -10,7 +10,7 @@ inherit "roxenlib";
 #define INT_TAG "_js_quote"
 
 constant module_type = MODULE_PARSER|MODULE_FILTER|MODULE_PROVIDER;
-constant module_name = "Javascript Support";
+constant module_name = "SiteBuilder: Javascript Support";
 constant module_doc  = ("This module provides some tags to support "
 			"javascript development (i.e. Javascript popup menus).");
 
