@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.14 2001/08/28 16:03:54 mast Exp $
+ * $Id: debug_info.pike,v 1.15 2001/08/28 17:00:29 mast Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -204,22 +204,22 @@ mixed page_0( object id )
 	foo->num_total += foo[f];
 
       string col
-           ="'&usr.warncolor;'";
+           ="&usr.warncolor;";
       if((foo[f]-last_usage[f]) < foo[f]/60)
-	col="'&usr.warncolor;'";
+	col="&usr.warncolor;";
       if((foo[f]-last_usage[f]) == 0)
-	col="'&usr.fgcolor;'  ";
+	col="&usr.fgcolor;";
       if((foo[f]-last_usage[f]) < 0)
-	col="'&usr.fade2;'    ";
+	col="&usr.fade2;";
 
       string bn = f[4..sizeof(f)-2]+"_bytes";
       foo->total_bytes += foo[ bn ];
       if( bn == "tota_bytes" )
         bn = "total_bytes";
       table += ({ ({
-        "<font color="+col+">"+f[4..], foo[f], foo[f]-last_usage[f],
+	col, f[4..], foo[f], foo[f]-last_usage[f],
         sprintf( "%.1f",foo[bn]/1024.0),
-        sprintf( "%.1f",(foo[bn]-last_usage[bn])/1024.0 )+"</font>",
+        sprintf( "%.1f",(foo[bn]-last_usage[bn])/1024.0 ),
       }) });
     }
   roxen->set_var("__memory_usage", foo);
@@ -227,20 +227,30 @@ mixed page_0( object id )
 
   mapping bar = roxen->query_var( "__num_clones" )||([]);
 
-  object t = ADT.Table->table(table,
-                              ({ "<font color='&usr.fgcolor;'  >"+
-				 (string)LOCALE(3,"Type"), 
-				 (string)LOCALE(4,"Number"),
-                                 (string)LOCALE(5,"Change"), 
-				 "Kb", (string)LOCALE(5,"Change") + "</font>"}),
-                              ({
-                                0,
-                                ([ "type":"num" ]),
-                                ([ "type":"num" ]),
-                                ([ "type":"num" ]),
-                                ([ "type":"num" ]),
-                              }));
-  res += "<pre>"+ADT.Table.ASCII.encode( t )+"</pre>";
+#define HCELL(thargs, color, text)					\
+  ("<th " + thargs + ">"						\
+   "\0240<font color='" + color + "'><b>" + text + "</b></font>\0240"	\
+   "</th>")
+#define TCELL(tdargs, color, text)					\
+  ("<td " + tdargs + ">"						\
+   "\0240<font color='" + color + "'>" + text + "</font>\0240"		\
+   "</td>")
+
+  res += "<p><table border='0' cellpadding='0'>\n<tr>\n" +
+    HCELL ("align='left' ", "&usr.fgcolor;", (string)LOCALE(3,"Type")) +
+    HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(4,"Number")) +
+    HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(5,"Change")) +
+    HCELL ("align='right'", "&usr.fgcolor;", "Kb") +
+    HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(5,"Change")) +
+    "</tr>\n";
+  foreach (table, array entry)
+    res += "<tr>" +
+      TCELL ("align='left' ", entry[0], entry[1]) +
+      TCELL ("align='right'", entry[0], entry[2]) +
+      TCELL ("align='right'", entry[0], entry[3]) +
+      TCELL ("align='right'", entry[0], entry[4]) +
+      TCELL ("align='right'", entry[0], entry[5]) + "</tr>\n";
+  res += "</table></p>\n";
 
   mapping(string:array(string)) allobj = ([]);
 
@@ -256,6 +266,10 @@ mixed page_0( object id )
   table = (array) allobj;
 
   string cwd = getcwd() + "/";
+  constant inc_color  = "&usr.warncolor;";
+  constant dec_color  = "&usr.fade2;";
+  constant same_color = "&usr.fgcolor;";
+
   for (int i = 0; i < sizeof (table); i++) {
     [string progstr, array(string) objs] = table[i];
 
@@ -274,38 +288,42 @@ mixed page_0( object id )
       }
       else objstr = "";
 
-      int change = sizeof (objs) - bar[progstr];
+      int|string change = sizeof (objs) - bar[progstr];
       bar[progstr] = sizeof (objs);
+      string color;
+      if (change > 0) color = inc_color, change = "+" + change;
+      else if (change < 0) color = dec_color;
+      else color = same_color;
 
-      table[i] = ({progstr, objstr, sizeof (objs), change});
+      table[i] = ({color, progstr, objstr, sizeof (objs), change});
     }
     else table[i] = 0;
   }
 
   table = Array.sort_array (table - ({0}),
 			    lambda (array a, array b) {
-			      return a[2] < b[2] || a[2] == b[2] && (
-				a[1] < b[1] || a[1] == b[1] && (
-				  a[0] < b[0]));
+			      return a[3] < b[3] || a[3] == b[3] && (
+				a[2] < b[2] || a[2] == b[2] && (
+				  a[1] < b[1]));
 			    });
 
-  constant inc_font  = "<font color='&usr.warncolor;'>";
-  constant dec_font  = "<font color='&usr.fade2;'    >";
-  constant same_font = "<font color='&usr.fgcolor;'  >";
-
-  foreach (table, array entry) {
-    string font;
-    if (entry[3] > 0) font = inc_font, entry[3] = "+" + entry[3];
-    else if (entry[3] < 0) font = dec_font;
-    else font = same_font;
-    entry[0] = font + entry[0];
-    entry[3] += "</font>";
-  }
-
   roxen->set_var("__num_clones", bar);
-  t = ADT.Table->table(table, ({ "<font color='&usr.fgcolor;'  >Source", "Program",  "Clones", "Change</font>"}),
-		       ({ 0, 0, ([ "type":"num" ]),([ "type":"num" ])}));
-  res += "<pre>"+ADT.Table.ASCII.encode( t ) + "</pre>";
+
+  res += "<p><table border='0' cellpadding='0'>\n<tr>\n" +
+    HCELL ("align='left' ", "&usr.fgcolor;", "Source") +
+    HCELL ("align='left' ", "&usr.fgcolor;", "Program") +
+    HCELL ("align='right'", "&usr.fgcolor;", "Clones") +
+    HCELL ("align='right'", "&usr.fgcolor;", "Change") +
+    "</tr>\n";
+  foreach (table, array entry)
+    res += "<tr>" +
+      TCELL ("align='left' ", entry[0],
+	     replace (Roxen.html_encode_string (entry[1]), " ", "\0240")) +
+      TCELL ("align='left' ", entry[0],
+	     replace (Roxen.html_encode_string (entry[2]), " ", "\0240")) +
+      TCELL ("align='right'", entry[0], entry[3]) +
+      TCELL ("align='right'", entry[0], entry[4]) + "</tr>\n";
+  res += "</table></p>\n";
 
 #if efun(_num_dest_objects)
   res += ("Number of destructed objects: " + _num_dest_objects() +"<br />\n");
