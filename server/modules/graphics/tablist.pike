@@ -1,6 +1,6 @@
 // The Tab lists tag module.
 // Developed by Fredrik Noring <noring@infovav.se>, ask him for more info
-string cvs_version = "$Id: tablist.pike,v 1.7 1997/09/18 21:35:46 grubba Exp $";
+string cvs_version = "$Id: tablist.pike,v 1.8 1997/09/18 21:57:28 grubba Exp $";
 #include <module.h>
 
 inherit "module";
@@ -193,7 +193,7 @@ array register_module()
       "&lt;tablist&gt;.<p>"
       "Arguments:\n<br>"
       "font=string: Select font<br>\n"
-      "1=,2=,3=,...: Set the destination for one of the tags<br>\n"
+      "1= 2= 3= ...: Set the destination for one of the tags<br>\n"
       "bg=#rrggbb: Set background color<br>\n"
       "tc=#rrggbb: Set tab color<br>\n"
       "fc=#rrggbb: Set font color<br>\n"
