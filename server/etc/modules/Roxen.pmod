@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.176 2004/05/12 20:59:02 mast Exp $
+// $Id: Roxen.pmod,v 1.177 2004/05/12 21:07:36 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -681,9 +681,9 @@ mapping http_auth_required(string realm, string|void message)
 //! For more info, see RFC 2617.
 {
   if(!message)
-    message = "<h1>Authentication failed.\n</h1>";
+    message = "<h1>Authentication failed.</h1>";
   HTTP_WERR("Auth required ("+realm+")");
-  return http_status(401, message)
+  return http_low_answer(401, message)
     + ([ "extra_heads":([ "WWW-Authenticate":"basic realm=\""+realm+"\"",]),]);
 }
 
@@ -702,8 +702,8 @@ mapping http_proxy_auth_required(string realm, void|string message)
 //! realm="`realm'"</tt>. For more info, see RFC 2617.
 {
   if(!message)
-    message = "<h1>Proxy authentication failed.\n</h1>";
-  return http_status(407, message)
+    message = "<h1>Proxy authentication failed.</h1>";
+  return http_low_answer(407, message)
     + ([ "extra_heads":([ "Proxy-Authenticate":"basic realm=\""+realm+"\"",]),]);
 }
 
