@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.105 1998/05/29 13:19:12 per Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.106 1998/06/27 21:09:53 grubba Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -1505,16 +1505,13 @@ int match_passwd(string try, string org)
 
 string simple_parse_users_file(string file, string u)
 {
- string line, user, pass;
- foreach(file/"\n", line)
+ foreach(file/"\n", string line)
  {
    array(string) arr = line/":";
    if (arr[0] == u) {
      if (sizeof(arr) > 1) {
        return(arr[1]);
      }
-     // Malformed!
-     return 0;
    }
  }
  return 0;
@@ -1537,6 +1534,40 @@ int match_user(array u, string user, string f, int wwwfile, object got)
   if(u[0] == 1 && pass)
     return 1;
   return match_passwd(u[2], pass);
+}
+
+multiset simple_parse_group_file(string file, string g)
+{
+ multiset res = (<>);
+
+ foreach(file/"\n", string line)
+ {
+   array(string) arr = line/":";
+   if (arr[0] == g) {
+     if (sizeof(arr) > 1) {
+       res += (< @arr[-1]/"," >);
+     }
+   }
+ }
+ return res;
+}
+
+int group_member(array auth, string group, string groupfile, object id)
+{
+  if(!auth)
+    return 0; // No auth sent
+
+  string s;
+  catch {
+    s = Stdio.read_bytes(groupfile);
+  };
+
+  if (!(s = s || id->conf->try_get_file(groupfile, id)))
+    return 0;
+
+  multiset(string) members = simple_parse_group_file(s, group);
+
+  return members && members[auth[0]];
 }
 
 string tag_prestate(string tag, mapping m, string q, object got);
@@ -1737,6 +1768,12 @@ string tag_allow(string a, mapping (string:string) m,
       } else
 	TEST(got->auth && got->auth[0] && search(m->user/",", got->auth[1])
 	     != -1);
+
+  if (m->groupfile && m->group) {
+    TEST(group_member(got->auth, m->group, m->groupfile, got));
+  } else if (m->group) {
+    return("<!-- groupfile not specified --><false>");
+  }
 
   return ok?(QUERY(compat_if)?"<true>"+s:s+"<true>"):"<false>";
 }
