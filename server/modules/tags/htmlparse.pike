@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.156 1998/11/30 04:05:43 peter Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.157 1998/12/06 05:16:20 peter Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -1658,9 +1658,17 @@ string tag_accessed(string tag,mapping m,object id,object file,
   
   if(m->reset)
   {
-    query_num(m->file, -counts);
-    database_set_created(m->file, time(1));
-    return "Number of counts for "+m->file+" is now 0.<br>";
+    if( !search( (dirname(m->file)+"/")-"//",
+		 (dirname(id->not_query)+"/")-"//" ) )
+    {
+      query_num(m->file, -counts);
+      database_set_created(m->file, time(1));
+      return "Number of counts for "+m->file+" is now 0.<br>";
+    } else {
+      // On a web hotell you don't want the guest to be able to reset
+      // eachothers counters.
+      return "You do not have access to reset this counter.";
+    }
   }
 
   if(m->silent)
@@ -2614,7 +2622,7 @@ string tag_language(string tag, mapping m, object id)
     return "None";
 
   if(m->full)
-    return id->misc["accept-language"]*"";
+    return id->misc["accept-language"]*",";
   else
     return (id->misc["accept-language"][0]/";")[0];
 }
