@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module_support.pike,v 1.113 2002/08/05 15:13:11 tomas Exp $
+// $Id: module_support.pike,v 1.114 2002/10/14 16:42:43 anders Exp $
 
 #define IN_ROXEN
 #include <roxen.h>
@@ -304,6 +304,8 @@ class ModuleInfo( string sname, string filename )
 	config_locked[conf] = 1;
 	throw( "" );
       }
+      else
+	m_delete(config_locked, conf);
       return load( filename, silent )( conf );
     };
     roxenloader.pop_compile_error_handler( );
