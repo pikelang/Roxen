@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.807 2003/03/05 16:31:17 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.808 2003/05/05 16:46:50 mast Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -538,6 +538,7 @@ class Queue
     return tmp;
   }
 
+  // Warning: This function isn't thread safe.
   void write(mixed v)
   {
     if(w_ptr >= sizeof(buffer))
@@ -892,7 +893,7 @@ function async_sig_start( function f, int really )
 }
 
 #ifdef THREADS
-static Queue bg_queue = Queue();
+static Thread.Queue bg_queue = Thread.Queue();
 static int bg_process_running;
 
 // Use a time buffer to strike a balance if the server is busy and
@@ -915,7 +916,10 @@ static void bg_process_queue()
     min (time() - bg_last_busy, bg_time_buffer_max) * (int) (1 / 0.04);
 
   if (mixed err = catch {
-    while (array task = bg_queue->tryread()) {
+    while (bg_queue->size()) {
+      // Not a race here since only one thread is reading the queue.
+      array task = bg_queue->read();
+
       // Wait a while if another thread is busy already.
       if (busy_threads > 1) {
 	for (maxbeats = max (maxbeats, (int) (bg_time_buffer_min / 0.04));
@@ -927,7 +931,7 @@ static void bg_process_queue()
       }
 
 #ifdef DEBUG_BACKGROUND_RUN
-      report_debug ("background run %s (%s)\n",
+      report_debug ("background_run run %s (%s)\n",
 		    functionp (task[0]) ?
 		    sprintf ("%s: %s", Function.defined (task[0]),
 			     master()->describe_function (task[0])) :
@@ -967,6 +971,19 @@ void background_run (int|float delay, function func, mixed... args)
 //! @[background_run] to queue it up again after some work has been
 //! done, or use @[BackgroundProcess].
 {
+#ifdef DEBUG_BACKGROUND_RUN
+  report_debug ("background_run enqueue %s (%s)\n",
+		functionp (func) ?
+		sprintf ("%s: %s", Function.defined (func),
+			 master()->describe_function (func)) :
+		programp (func) ?
+		sprintf ("%s: %s", Program.defined (func),
+			 master()->describe_program (func)) :
+		sprintf ("%O", func),
+		map (args, lambda (mixed arg)
+			     {return sprintf ("%O", arg);}) * ", ");
+#endif
+
 #ifdef THREADS
   if (!hold_wakeup_cond)
     // stop_handler_threads is running; ignore more work.
@@ -975,7 +992,7 @@ void background_run (int|float delay, function func, mixed... args)
   function enqueue = lambda()
   {
     bg_queue->write (({func, args}));
-    if (bg_queue->size() == 1)
+    if (!bg_process_running)
       handle (bg_process_queue);
   };
 
