@@ -1,5 +1,5 @@
 /*
- * $Id: Module.java,v 1.11 2000/10/10 21:46:21 marcus Exp $
+ * $Id: Module.java,v 1.12 2000/10/25 15:43:20 marcus Exp $
  *
  */
 
@@ -17,6 +17,7 @@ import java.util.Vector;
  * @see LocationModule
  * @see ParserModule
  * @see FileExtensionModule
+ * @see LastResortModule
  * @see ProviderModule
  * @see ExperimentalModule
  * @see SecurityModule
