@@ -1,0 +1,75 @@
+#!/bin/sh
+
+status_fail()
+{
+  echo
+  echo "*** $1 FAILED ***"
+  echo
+#  rm -f "$ROOT"/status/$1.WORK
+#  touch "$ROOT"/status/$1.FAIL
+  exit 1
+}
+
+fail()
+{
+    exit 1
+}
+
+version_fixup()
+{
+    #cd server/etc/include
+
+    echo "Bumping ntstart version..."
+
+    build=`sed <version.h -e'/NTSTART_BUILD_VERSION/s/[^0-9]*//gp' -ed | head -1`
+    newbuild=`echo $build 1+p | dc`
+    sed <version.h -e"/NTSTART_BUILD_VERSION/s/$build/$newbuild/" >version.h.new
+
+    checkbuild=`sed <version.h.new -e'/NTSTART_BUILD_VERSION/s/[^0-9]*//gp' -ed | \
+        head -1`
+
+    if [ "x$newbuild" = "x$checkbuild" ]
+    then
+        mv -f version.h.new version.h || status_fail ntstart
+        echo "Successfull bump to build $newbuild."
+    else
+        echo "Version bump failed: $newbuild != $checkbuild."
+        fail
+    fi
+
+    major=`sed <version.h -e'/NTSTART_MAJOR_VERSION/s/[^0-9]*//gp' -ed|head -1`
+    minor=`sed <version.h -e'/NTSTART_MINOR_VERSION/s/[^0-9]*//gp' -ed|head -1`
+    version=$major.$minor
+    #echo cvs ci -m "Version bumped to $version.$newbuild by buildsystem." version.h \
+    if [ "x$nocvs" = "x" ]
+    then
+        cvs ci -m "Version bumped to $version.$newbuild by buildsystem." version.h \
+  #      || fail
+    fi
+
+    echo "$version.$newbuild" >../../VERSION
+
+    VERSION="$version.$newbuild"
+    export VERSION
+
+    #cd ../../..
+    if [ "x$nocvs" = "x" ]
+    then
+        echo Tagging...
+        echo cvs tag `echo "ntstart_$VERSION" | tr . _` || fail
+        cvs tag `echo "ntstart_$VERSION" | tr . _` || fail
+    else
+        echo No tagging!
+    fi
+
+    #mv server server.tmp
+}
+
+# Main
+if [ "x$1" = "xdebug" ]
+then
+    nocvs="yes"
+else
+    nocvs=""
+fi
+version_fixup
