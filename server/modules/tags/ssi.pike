@@ -6,12 +6,12 @@ inherit "roxenlib";
 #include <module.h>
 
 constant thread_safe=1;
-constant cvs_version = "$Id: ssi.pike,v 1.14 1999/12/14 04:58:19 nilsson Exp $";
+constant cvs_version = "$Id: ssi.pike,v 1.15 1999/12/18 14:13:29 nilsson Exp $";
 
 array register_module()
 {
   return ({
-    MODULE_PARSER,
+    MODULE_PARSER | MODULE_PROVIDER,
     "SSI support module",
     "Adds support for SSI tags.",
     0,1
@@ -44,6 +44,10 @@ void create() {
 	 "commands with.");
 }
 
+string query_provides() {
+  return "ssi";
+}
+
 void start(int num, Configuration conf) {
   module_dependencies (conf, ({ "rxmltags" }));
 }
@@ -73,7 +77,7 @@ string modified(mapping m, RequestID id) {
   return _modified("modified", m, id);
 }
 
-string|array(string) tag_echo(string tag, mapping m, RequestID id)
+int|string|array(string) tag_echo(string tag, mapping m, RequestID id)
 {
   if(!m->var)
   {
@@ -162,8 +166,9 @@ string|array(string) tag_echo(string tag, mapping m, RequestID id)
       return myenv[m->var];
     }
 
-    return rxml_error(tag,"Unknown variable ("+m->var+").",id);
   }
+  if(tag=="") return 0;
+  return rxml_error(tag,"Unknown variable ("+m->var+").",id);
 }
 
 string tag_config(string tag, mapping m, RequestID id)
