@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997-2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.100 2002/11/24 21:12:07 stewa Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.101 2003/01/16 09:43:37 anders Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -114,6 +114,20 @@ inserting large datas. Oracle, for instance, limits the query to 4000 bytes.
 
 <attr name='query' value='SQL statement'><p>
  The actual SQL-statement.</p>
+</attr>
+
+<attr name='bindings' value='\"name=variable,name=variable,...\"'><p>
+Specifies binding variables to use with this query. This is comma separated
+list of binding variable names and RXML variables to assign to those
+binding variables.
+<i>Note:</i> For some databases it is necessary to use binding variables when
+inserting large datas. Oracle, for instance, limits the query to 4000 bytes.
+<ex-box>
+<set variable='var.foo' value='texttexttext' />
+<sqlquery query='insert into mytable VALUES (4,:foo,:bar)' 
+          bindings='foo=var.foo,bar=form.bar' />
+</ex-box>
+</p>
 </attr>"
 ]);
 #endif
