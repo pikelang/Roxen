@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.295 2001/04/22 07:20:03 per Exp $
+// $Id: rxml.pike,v 1.296 2001/04/22 07:22:07 per Exp $
 
 
 inherit "rxmlhelp";
@@ -2291,7 +2291,7 @@ class TagIfAccept {
   constant plugin_name = "accept";
   array source(RequestID id) {
     if( !id->request_headers->accept ) // .. there might be no header
-      return 0;
+      return ({});
     if( arrayp(id->request_headers->accept) ) // .. there might be multiple
       id->request_headers->accept = id->request_headers->accept*",";
     // .. or there might be one.
