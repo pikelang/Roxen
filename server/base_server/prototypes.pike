@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.132 2004/05/18 15:36:52 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.133 2004/05/18 15:43:52 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1494,7 +1494,7 @@ class RequestID
 #endif /* RAM_CACHE */
 
     if (misc->vary && sizeof(misc->vary)) {
-      heads->Vary = ((array)misc->vary)*", "
+      heads->Vary = ((array)misc->vary)*", ";
     }
 
     if(mappingp(file->extra_heads))
