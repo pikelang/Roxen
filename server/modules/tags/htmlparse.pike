@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.97 1998/05/12 19:50:34 grubba Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.98 1998/05/12 23:09:54 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -402,14 +402,62 @@ string call_container(string tag, mapping args, string contents, int line,
   return result;
 }
 
+
 string do_parse(string to_parse, object id, object file, mapping defines,
 		object my_fd)
-{  
-  for(int i = 0; i<sizeof(tag_callers); i++)
+{
+  id->misc->_tags = copy_value(tag_callers[0]);
+  id->misc->_containers = copy_value(container_callers[0]);
+
+  /* Heavy magic in progress. */
+  to_parse=parse_html_lines(to_parse, id->misc->_tags, id->misc->_containers, 
+
+			    0, id, file, defines, my_fd);
+  for(int i = 1; i<sizeof(tag_callers); i++)
     to_parse=parse_html_lines(to_parse, tag_callers[i], container_callers[i],
 			      i, id, file, defines, my_fd);
   return to_parse;
 }
+
+
+
+
+void call_user_tag(string tag, mapping args, int line, mixed foo, object id)
+{
+  id->misc->line = line;
+  if(!id->misc->up_args) id->misc->up_args = ([]);
+  array replace_from = ({"#args#"})+
+    Array.map(indices(args)+indices(id->misc->up_args),
+	      lambda(string q){return "&"+q+";";});
+  array replace_to = (({make_tag_attributes( args + id->misc->up_args ) })+
+		      values(args)+values(id->misc->up_args));
+  foreach(indices(args), string a)
+  {
+    id->misc->up_args["::"+a]=args[a];
+    id->misc->up_args[tag+"::"+a]=args[a];
+  }
+  return replace(id->misc->tags[ tag ], replace_from, replace_to);
+}
+
+void call_user_container(string tag, mapping args, string contents, int line,
+			 mixed foo, object id)
+{
+  id->misc->line = line;
+  if(!id->misc->up_args) id->misc->up_args = ([]);
+  array replace_from = ({"#args#", "<contents>"})+
+    Array.map(indices(args)+indices(id->misc->up_args),
+	      lambda(string q){return "&"+q+";";});
+  array replace_to = (({make_tag_attributes( args + id->misc->up_args ),
+			contents })+
+		      values(args)+values(id->misc->up_args));
+  foreach(indices(args), string a)
+  {
+    id->misc->up_args["::"+a]=args[a];
+    id->misc->up_args[tag+"::"+a]=args[a];
+  }
+  return replace(id->misc->containers[ tag ], replace_from, replace_to);
+}
+
 
 
 mapping handle_file_extension( object file, string e, object id)
@@ -769,10 +817,91 @@ string tag_append( string tag, mapping m, object id )
     return "";
 }
 
+/* Like insert, but you can only have define tags in the file.
+ * It is significantly faster.
+ */ 
+string tag_use(string tag, mapping m, object id)
+{
+  mapping res = ([]);
+  if(!m->file) return "Please specify a file to use";
+  if(id->pragma["no-cache"] || 
+     !(res = cache_lookup("macrofiles", m->file)))
+  {
+    object nid = id->clone_me();
+     nid->misc->tags = 0;
+     nid->misc->containers = 0;
+     nid->misc->defines = ([]);
+     nid->misc->_tags = 0;
+     nid->misc->_containers = 0;
+    // And now we do da magic trick.
+    string foo = nid->conf->try_get_file( m->file, nid );
+    if(!foo)
+      if(id->misc->debug)
+	return "Failed to fetch "+m->file;
+      else
+	return "";
+    parse_rxml( foo, nid );
+    res->tags  = nid->misc->tags||([]);
+    res->_tags = nid->misc->_tags||([]);
+    foreach(indices(res->_tags), string t)
+      if(!res->tags[t]) m_delete(res->_tags, t);
+    res->containers  = nid->misc->containers||([]);
+    res->_containers = nid->misc->_containers||([]);
+    foreach(indices(res->_containers), string t)
+      if(!res->containers[t]) m_delete(res->_containers, t);
+    res->defines = nid->misc->defines||([]);
+    m_delete(res->defines, "line");
+    cache_set("macrofiles", m->file, res);
+  }
+
+  if(!id->misc->tags)
+    id->misc->tags = res->tags;
+  else
+    id->misc->tags |= res->tags;
+  if(!id->misc->containers)
+    id->misc->containers = res->containers;
+  else
+    id->misc->containers |= res->containers;
+
+  id->misc->defines |= res->defines;
+
+  foreach(indices(res->_tags), string t)
+    id->misc->_tags[t] = res->_tags[t];
+
+  foreach(indices(res->_containers), string t)
+    id->misc->_containers[t] = res->_containers[t];
+
+  if(id->misc->debug)
+    return sprintf("<!-- Using the file %s, got %O -->", m->file, res);
+  else
+    return "";
+}
+
 string tag_define(string tag,mapping m, string str, object got,object file,
 		  mapping defines)
 { 
-  if (m->name) defines[m->name]=str;
+  if (m->name) 
+    defines[m->name]=str;
+  else if (m->tag) 
+  {
+    if(!got->misc->tags)
+    {
+      got->misc->tags = ([]);
+//       got->misc->_tags = ([]);
+    }
+    got->misc->tags[m->tag] = str;
+    got->misc->_tags[m->tag] = call_user_tag;
+  }
+  else if (m->container) 
+  {
+    if(!got->misc->containers)
+    {
+      got->misc->containers = ([]);
+//       got->misc->_containers = ([]);
+    }
+    got->misc->containers[m->container] = str;
+    got->misc->_containers[m->container] = call_user_container;
+  }
   else return "<!-- No name specified for the define! <define name=...> -->";
   return ""; 
 }
@@ -2074,6 +2203,7 @@ mapping query_tag_callers()
    return (["accessed":tag_accessed,
 	    "modified":tag_modified,
 	    "pr":tag_pr,
+	   "use":tag_use,
 	    "list-tags":tag_list_tags,
 	    "number":tag_number,
 	    "imgs":tag_ximage,
