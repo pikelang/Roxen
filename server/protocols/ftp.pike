@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.84 1998/03/21 00:54:22 grubba Exp $
+ * $Id: ftp.pike,v 1.85 1998/03/23 17:39:40 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -29,6 +29,7 @@
 /*
  * Relevant RFC's:
  *
+ * RFC 764	TELNET PROTOCOL SPECIFICATION
  * RFC 959	FILE TRANSFER PROTOCOL (FTP)
  * RFC 1123	Requirements for Internet Hosts -- Application and Support
  *
@@ -1273,15 +1274,91 @@ void handle_data(string s, mixed key)
 
   // However, a server-FTP MUST be capable of
   // accepting and refusing Telnet negotiations (i.e., sending
-  // DONT/WONT). RFC 1123 4.1.2.12
-
+  // DON'T/WON'T). RFC 1123 4.1.2.12
   // FIXME: Not supported yet.
+
+  array a = cmdlin/"\377";
+  if (sizeof(a) > 1) {
+    int i = 1;
+    string answer = "";
+    while (i < sizeof(a)) {
+      if (!sizeof(a[i])) {
+	a[i] = "\377";	// Not likely...
+	i++;
+      } else {
+	int j = i;
+	switch(a[i][0]) {
+	default:	// Unknown
+	  // FIXME: Should probably have a warning here.
+	  break;
+	case 240:	// SE
+	  break;
+	case 241:	// NOP
+	  break;
+	case 242:	// Data Mark
+	  break;
+	case 243:	// Break
+	  destruct();
+	  break;
+	case 244:	// Interrupt Process
+	  break;
+	case 245:	// Abort Output
+	  break;
+	case 246:	// Are You There
+	  answer += "\377\361";	// NOP
+	  break;
+	case 247:	// Erase character
+	  while (j--) {
+	    if (sizeof(a[j])) {
+	      a[j] = a[j][..sizeof(a[j])-2];
+	      break;
+	    }
+	  }
+	  break;
+	case 248:	// Erase line
+	  while (j--) {
+	    int off;
+	    if ((off = search(reverse(a[j]), "\n\r")) == -1) {
+	      a[j] = "";
+	    } else {
+	      a[j] = a[j][..sizeof(a[j])-(off+1)];
+	      break;
+	    }
+	  }
+	  break;
+	case 249:	// Go ahead
+	  break;
+	case 250:	// SB
+	  break;
+	case 251:	// WILL
+	  answer += "\377\376"+a[i][1..1];	// DON'T xxx
+	  a[i] = a[i][1..];	// Need to strip one extra char.
+	  break;
+	case 252:	// WON'T
+	  break;
+	case 253:	// DO
+	  answer += "\377\374"+a[i][1..1];	// WON'T xxx
+	  a[i] = a[i][1..];	// Need to strip one extra char.
+	  break;
+	case 254:	// DON'T
+	  break;
+	}
+	a[i] = a[i][1..];
+      }
+    }
+    
+    if (sizeof(answer)) {
+      reply(answer);
+    }
+    cmdlin = a*"";
+  }
 
   // A single read() can contain multiple or partial commands
   // RFC 1123 4.1.2.10
   while (sscanf(s,"%s\r\n%s",cmdlin,s)==2)
   {
     string cmd,arg;
+
 
     // Lets hope the ftp-module doesn't store things in misc between
     // requests    
@@ -1391,6 +1468,15 @@ void handle_data(string s, mixed key)
       if (objectp(key))
 	destruct(key);
       return;
+
+    case "abor":
+      if (curr_pipe) {
+	destruct(curr_pipe);
+	curr_pipe = 0;
+	reply("426 Data transmission terminated.\n");
+      }
+      reply("226 'ABOR' Completed.\n");
+      break;
 
     case "noop":
       reply("220 Nothing done ok\n");
