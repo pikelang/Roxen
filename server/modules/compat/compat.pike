@@ -276,14 +276,14 @@ string|array tag_insert(string tag,mapping m,RequestID id)
     if(m->nocache) {
       int nocache=id->pragma["no-cache"];
       id->pragma["no-cache"] = 1;
-      n=API_read_file(id,m->file);
+      n=read_file(id,m->file);
       if(!n) RXML.run_error("No such file ("+m->file+").");
       id->pragma["no-cache"] = nocache;
       m_delete(m, "nocache");
       m_delete(m, "file");
       return do_replace(n, m, id);
     }
-    string n=API_read_file(id,m->file);
+    string n=read_file(id,m->file);
     if(!n) RXML.run_error("No such file ("+m->file+").");
     return do_replace(n, m-(["file":""]), id);
   }
@@ -543,9 +543,9 @@ mapping gtext_compat(mapping m, RequestID id) {
     old_rxml_warning(id, "gtext attribute turbulence","bgturbulence");
   }
   if(m->font_size) {
-    m["font-size"]=m->font_size;
+    m["fontsize"]=m->font_size;
     m_delete(m, "font_size");
-    old_rxml_warning(id, "gtext attribute font_size","font-size");
+    old_rxml_warning(id, "gtext attribute font_size","fontsize");
   }
 
   return m;
