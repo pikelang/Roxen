@@ -1,5 +1,5 @@
 /*
- * $Id: snmpagent.pike,v 1.7 2001/08/14 01:47:17 hop Exp $
+ * $Id: snmpagent.pike,v 1.8 2001/08/14 23:24:35 hop Exp $
  *
  * The Roxen SNMP agent
  * Copyright © 2001, Roxen IS.
@@ -30,6 +30,7 @@ Developer notes:
 	- default value for snmpagent host/port variable in the config. int.
 	  hasn't set correctly hostname part // FIXME: how reach config.int.'s URL
 						       from define_global_variables ?
+	- cold_start trap code isn't completed
  Todos:
     v1.0 todo:
 	- cold/warm start trap generation
@@ -130,12 +131,13 @@ class SNMPagent {
 
     if(enabled)
       return(enabled);
-    mib = SubMIBsystem();		// system.* table
+    mib = SubMIBSystem();		// system.* table
     if(objectp(mib)) {
       // snmp.*
-      mib->register(MIBTREE_BASE+"."+"2.1.11", SubMIBsnmp(this_object()));
+      mib->register(MIBTREE_BASE+"."+"2.1.11", SubMIBSnmp(this_object()));
       // enterprises.roxenis.*
-      mib->register(MIBTREE_BASE+"."+"4.1.8614", SubMIBroxenis(this_object()));
+      mib->register(MIBTREE_BASE+"."+"4.1.8614", SubMIBRoxenIS(this_object()));
+      mib->register(MIBTREE_BASE+"."+"4.1.8614.1.1.999.2.1.1", SubMIBRoxenVs(this_object()));
     }
     if (!status())
       start();
@@ -217,20 +219,20 @@ class SNMPagent {
 
 	  case SNMP_OP_GETREQUEST:
 		val = mib->get(attrname, pdata[msgid]);
-	    if (arrayp(val) && val[0])
+	    if (arrayp(val) && sizeof(val) && val[0])
 	      rdata[attrname] += val;
 	    break;
 
 	  case SNMP_OP_GETNEXT:
 		val = mib->getnext(attrname, pdata[msgid]);
-	    if (arrayp(val) && val[0])
+	    if (arrayp(val) && sizeof(val) && val[0])
 	      //rdata[attrname] += val;
 	      rdata[val[0]] += val[1..2];
 	    break;
 
 	  case SNMP_OP_SETREQUEST:
 		val = mib->set(attrname, attrval, pdata[msgid]);
-		if(arrayp(val))
+		if(arrayp(val) && sizeof(val))
 		  setflg = val[0];
 		//rdata[attrname] += ({ "int", attrval });
 		rdata["1.3.6.1.2.1.1.3.0"] += ({"tick", get_uptime() });
@@ -339,13 +341,13 @@ class SNMPagent {
     if(intp(vsarr))
 	  return;
 	foreach(vsarr, int vsid)
-	  if(vsdb[vsid] && vsdb[vsid]->variables["snmp_traphosts"]) {
-	     SNMPAGENT_MSG(sprintf("virt.serv[%d/%s]'s traphosts:%O",
-			vsid, vsdb[vsid]->name,
+	  if(vsdb[vsid] && vsdb[vsid]->variables["snmp_traphosts"] && sizeof(vsdb[vsid]->variables["snmp_traphosts"]->query())) {
+	     SNMPAGENT_MSG(sprintf("server %O(#%d): traphosts:%O",
+			vsdb[vsid]->name, vsid,
 			vsdb[vsid]->variables["snmp_traphosts"]->query()));
 	    foreach(vsdb[vsid]->variables["snmp_traphosts"]->query(), mixed thost) {
 		  uri = Standards.URI(thost);
-		  SNMPAGENT_MSG(sprintf("Trap sent: %s.", thost));
+		  SNMPAGENT_MSG(sprintf("Trap sent: %s", thost));
 /*
 		  fd->trap(
 		    ([RISMIB_BASE_WEBSERVER+".999.1.1":
@@ -355,8 +357,8 @@ class SNMPagent {
 		}
 	  } else
 	    if(vsdb[vsid])
-	      SNMPAGENT_MSG(sprintf("virt.serv[%d/%O] hasn't any traphosts.",
-			    vsid, vsdb[vsid] && vsdb[vsid]->name));
+	      SNMPAGENT_MSG(sprintf("server %O(#%d) hasn't any traphosts.",
+			    vsdb[vsid] && vsdb[vsid]->name, vsid));
 
   }
 
@@ -379,8 +381,8 @@ class SNMPagent {
   int add_virtserv(int vsid) {
 
     if(zero_type(vsdb[vsid])) {
-      report_debug(sprintf("snmpagent: virt.serv.[%d/%s] added.\n",
-		           vsid,roxen->configurations[vsid]->name));
+      report_debug(sprintf("SNMPagent: added server %O(#%d)\n",
+		           roxen->configurations[vsid]->name, vsid));
 //report_debug(sprintf("snmpagent:DEB: %O\n",mkmapping(indices(roxen->configurations[vsid]), values(roxen->configurations[vsid]))));
 	  vsdb += ([vsid: roxen->configurations[vsid]]);
      }
@@ -399,7 +401,8 @@ class SNMPagent {
   int del_virtserv(int vsid) {
 
     if(!zero_type(vsdb[vsid])) {
-SNMPAGENT_MSG(sprintf("snmpagent:DEB: del: %O->%O\n",vsid,roxen->configurations[vsid]->name));
+      report_debug(sprintf("SNMPagent: deleted server %O(#%d)\n",
+		           roxen->configurations[vsid]->name, vsid));
 	  vsdb -= ([ vsid: 0 ]);
 	}
 
@@ -504,9 +507,7 @@ class SubMIBManager {
     SNMPAGENT_MSG(sprintf("GETNEXT(%s): %O", name, oid));
     if(!(soid = oid_strip(oid)))
       return 0;
-SNMPAGENT_MSG(sprintf("DEB: %O", soid));
     idx = search(idxnums, soid);
-SNMPAGENT_MSG(sprintf("arr: %d, %O", idx, idxnums));
     if(idx >= 0) {
       // good, we found equality
       SNMPAGENT_MSG(sprintf("%s: eq match: %O", tree, idx));
@@ -516,8 +517,6 @@ SNMPAGENT_MSG(sprintf("arr: %d, %O", idx, idxnums));
       else
 	return 0;
     } else {
-
-SNMPAGENT_MSG(sprintf("DEB: %O - %O", soid[..(sizeof(tree)-1)], tree));
       int tlen = sizeof(tree/".");
       array sarr = soid/".";
       //if(soid[..(sizeof(tree)-1)] == tree) { // only inside owned subtree
@@ -526,7 +525,7 @@ SNMPAGENT_MSG(sprintf("DEB: %O - %O", soid[..(sizeof(tree)-1)], tree));
         // hmm, now we have to find nearest subtree
         for(idx = 0; idx < sizeof(idxnums); idx++)
 	  if (soid < idxnums[idx]) {
-SNMPAGENT_MSG(sprintf("subtree match: %O", idxnums[idx]));
+            SNMPAGENT_MSG(sprintf("subtree match: %O", idxnums[idx]));
 	    return (({ MIBTREE_BASE+"."+(string)idxnums[idx],
 		     @submibtab[idxnums[idx]]() }));
 	  }
@@ -536,7 +535,6 @@ SNMPAGENT_MSG(sprintf("subtree match: %O", idxnums[idx]));
       s = soid/".";
       // hmm, now we have to try some of the registered managers
       for(int cnt = sizeof(s)-1; cnt>0; cnt--) {
-SNMPAGENT_MSG(sprintf("DEB: %d: %O", cnt, s[..cnt]*"."));
         if(subtreeman[s[..cnt]*"."]) {
 	  // good, subtree manager exists
 	  string manoid = s[..cnt]*".";
@@ -575,7 +573,7 @@ SNMPAGENT_MSG(sprintf("DEB: %d: %O", cnt, s[..cnt]*"."));
 
 //! External function for MIB object 'system.sysDescr'
 array get_description() {
-  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.7 $"/" ")[1]+" (devel. rel.)");
+  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.8 $"/" ")[1]+" (devel. rel.)");
 }
 
 //! External function for MIB object 'system.sysOID'
@@ -612,7 +610,7 @@ array get_sysservices() {
 
 //! system subtree manager
 //! Manages the basic system.sys* submib tree.
-class SubMIBsystem {
+class SubMIBSystem {
 
   inherit SubMIBManager;
 
@@ -645,7 +643,7 @@ class SubMIBsystem {
 
 //! snmp subtree manager
 //! Manages the basic snmp.snmp* submib tree.
-class SubMIBsnmp {
+class SubMIBSnmp {
 
   inherit SubMIBManager;
 
@@ -723,11 +721,11 @@ class SubMIBsnmp {
 
 //! roxenis enterprise subtree manager
 //! Manages the enterprise.roxenis.* submib tree.
-class SubMIBroxenis {
+class SubMIBRoxenIS {
 
   inherit SubMIBManager;
 
-  constant name = "roxenis";
+  constant name = "enterprises.roxenis";
   constant tree = "4.1.8614";
 
   void create(object agent) {
@@ -736,8 +734,6 @@ class SubMIBroxenis {
 	// enterprises
 	// hack2 :)
 	"4.1.8614.1.1.999.2.1.0": agent->get_virtserv,
-	"4.1.8614.1.1.999.2.1.1": agent->get_virtservname	// !! tabular op !!
-// !! nedoreseno! Melo by to vracet ..2.1.1.0 az ..2.1.1.n (tj. podle velikosti)
     ]);
   }
 }
@@ -773,6 +769,65 @@ class SubMIBroxenis {
 	          snmpbadcommuses++;
 	        break;
 */
+
+//! roxenis enterprise subtree manager
+//! Manages the enterprise.roxenis.* submib tree.
+class SubMIBRoxenVs {
+
+  inherit SubMIBManager;
+
+  constant name = "roxenis.app.roxen.test.vs";
+  constant tree = "4.1.8614.1.1.999.2.1.1";
+
+  object agent;
+  
+  void create(object agentp) {
+
+    submibtab = ([ ]);
+    agent = agentp;
+  }
+
+  array get(string oid, mapping|void pkt) {
+
+    function rval;
+    string soid, vname;
+
+    SNMPAGENT_MSG(sprintf("GET(%s): %O", name, oid));
+    soid = oid_strip(oid);
+
+    if(sizeof((soid = soid - (tree + "."))/".") > 1)
+      return ({}); // no more points, please
+
+    vname = agent->get_virtservname(((int)soid)+1);
+    if(!stringp(vname))
+      return ({}); // wrong index
+    return (OBJ_STR(vname));
+  }
+
+  array getnext(string oid, mapping|void pkt) {
+
+    function rval;
+    string soid, vname;
+    int idx;
+
+    SNMPAGENT_MSG(sprintf("GETNEXT(%s): %O", name, oid));
+    soid = oid_strip(oid);
+
+    if(oid == (MIBTREE_BASE+"."+tree)) {
+      soid = "-1"; 			// special case
+      oid += ".-1";			// trash only
+    } else if(sizeof((soid = soid - (tree + "."))/".") > 1)
+      return ({}); // no more points, please
+
+    idx = (int)soid+1;
+    vname = agent->get_virtservname(idx+1);
+    if(!stringp(vname))
+      return ({}); // wrong index
+    soid = (reverse(reverse(oid/".")[1..])*".")+"."+(string)idx;
+    return (({soid, @OBJ_STR(vname)}));
+  }
+
+}
 
 SNMPagent snmpagent;
 //! Global SNMPagent object
