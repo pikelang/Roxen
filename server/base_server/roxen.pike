@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.277 1999/05/14 02:50:09 neotron Exp $
+ * $Id: roxen.pike,v 1.278 1999/05/17 06:45:06 neotron Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.277 1999/05/14 02:50:09 neotron Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.278 1999/05/17 06:45:06 neotron Exp $";
 
 object backend_thread;
 object argcache;
@@ -2272,9 +2272,17 @@ mapping low_load_image(string f,object id)
   string data;
   object file, img;
   
-  if(!(data=id->conf->try_get_file(f, id)))
-    if(!(file=Stdio.File(f,"r")) || (!(data=file->read())))
-      return 0;
+  if(id->misc->_load_image_called < 5) {
+    // We were recursing very badly with the demo module here...
+    id->misc->_load_image_called++;
+    if(!(data=id->conf->try_get_file(f, id))) {
+      file=Stdio.File();
+      if(!file->open(f,"r") || !(data=file->read))
+	return 0;
+    }
+  }
+  id->misc->_load_image_called = 0;
+  if(!data)  return 0;
   return low_decode_image( data );
 }
 
