@@ -1,5 +1,5 @@
 // This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
-// $Id: flik.pike,v 1.12 1999/05/20 03:26:18 neotron Exp $
+// $Id: flik.pike,v 1.13 1999/07/25 00:32:55 nilsson Exp $
 
 // Adds the <fl>, <ft> and <fd> tags. This makes it easy to 
 // build a folder list or an outline. Example:
@@ -16,7 +16,7 @@
 
 // made by Pontus Hagland <law@idonex.se> december -96
 
-constant cvs_version = "$Id: flik.pike,v 1.12 1999/05/20 03:26:18 neotron Exp $";
+constant cvs_version = "$Id: flik.pike,v 1.13 1999/07/25 00:32:55 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -120,18 +120,18 @@ string tag_fl_postparse( string tag, mapping m, string cont, object id,
    if (flcache[id->not_query][id->variables->fl][m->id]==1)
    {
       return "<!--"+m->id+"-->"
-	     "<a name=fl_"+m->id+" target=_self href='"+
-	     encode_url(id,m->id,2)+"'>"
-	     "<img width=20 height=20 src=internal-roxen-unfold border=0 "
-	     "alt='--'></a>"+cont;
+	     "<a name=\"fl_"+m->id+"\" target=\"_self\" href=\""+
+	     encode_url(id,m->id,2)+"\">"
+	     "<img width=\"20\" height=\"20\" src=\"internal-roxen-unfold\" border=\"0\" "
+	     "alt=\"--\" /></a>"+cont;
    }
    else
    {
       return "<!--"+m->id+"-->"
-	     "<a name=fl_"+m->id+" target=_self href='"+
-	     encode_url(id,m->id,1)+"'>"
-	     "<img width=20 height=20 src=internal-roxen-fold border=0 "
-	     "alt='\/'></a>"+cont;
+	     "<a name=\"fl_"+m->id+"\" target=\"_self\" href=\""+
+	     encode_url(id,m->id,1)+"\">"
+	     "<img width=\"20\" height=\"20\" src=\"internal-roxen-fold\" border=\"0\" "
+	     "alt=\"\/\" /></a>"+cont;
    }
    else
    if (flcache[id->not_query][id->variables->fl][m->id]==1)
@@ -143,8 +143,6 @@ string tag_fl_postparse( string tag, mapping m, string cont, object id,
       return "<!--"+m->id+"-->"+cont;
    }
 }
-
-string recurse_parse_ftfd(string cont,mapping m,string id);
 
 string tag_fl( string tag, mapping arg, string cont, 
 	       mapping ma, string id, mapping defines)
