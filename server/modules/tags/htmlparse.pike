@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 
 
-string cvs_version = "$Id: htmlparse.pike,v 1.9 1996/12/02 15:17:57 peter Exp $";
+string cvs_version = "$Id: htmlparse.pike,v 1.10 1996/12/08 10:33:27 neotron Exp $";
 #pragma all_inline 
 
 #include <config.h>
@@ -573,6 +573,7 @@ string tag_compat_exec(string tag,mapping m,object got,object file,
   if(m->cgi)
   {
     m->file = m->cgi;
+    got->misc->ssi_env = build_ssi_env_vars(got);
     m_delete(m, "cgi");
     return tag_insert(tag, m, got, file, defines);
   }
@@ -593,6 +594,7 @@ string tag_compat_exec(string tag,mapping m,object got,object file,
       string addr=got->remoteaddr || "Internal";
       return popen(m->cmd,
 		   environment
+		   | build_ssi_env_vars(got)
 		   | build_roxen_env_vars(got)
 		   | build_env_vars(got->not_query, got, 0));
 
@@ -627,16 +629,19 @@ string tag_compat_include(string tag,mapping m,object got,object file,
   if(m->file)
   {
     mixed tmp;
+    string file;
     if(m->file[0] != '/')
     {
       if(got->not_query[-1] == '/')
-	m->file = got->not_query + m->file;
+	file = got->not_query + m->file;
       else
-	m->file = ((tmp = got->not_query / "/")[0..sizeof(tmp)-2] +
+	file = ((tmp = got->not_query / "/")[0..sizeof(tmp)-2] +
 		   ({ m->file }))*"/";
-      m->file = roxen->real_file(m->file, got);
+      file = roxen->real_file(file, got);
     }
-    return read_bytes(m->file) || "<!-- No such file: "+m->file+"-->";
+    if(!file)
+      return "<!-- No such file: "+m->file+" -->";
+    return read_bytes(file) || "<!-- No such file: "+m->file+" -->";
   }
   return "<!-- What? -->";
 }
@@ -657,7 +662,13 @@ string tag_compat_echo(string tag,mapping m,object got,object file,
      case "timefmt": case "errmsg":
       return "&lt;unimplemented&gt;";
       
-     case "DOCUMENT_NAME": case "PATH_TRANSLATED":
+     case "DOCUMENT_NAME": 
+      mixed tmp;
+      if(sizeof(tmp = got->not_query/"/" - ({""})))
+	return tmp[-1];
+      return "";
+
+     case "PATH_TRANSLATED":
       return roxen->real_file(got->not_query, got);
 
      case "DOCUMENT_URI":

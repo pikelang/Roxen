@@ -50,6 +50,16 @@
 #include <sys/lock.h>
 #endif
 
+#ifndef HAVE_MEMSET
+char *MEMSET(char *s,int c,int n)
+{
+  char *t;
+  for(t=s;n;n--) *(s++)=c;
+  return s;
+}
+#else
+#define MEMSET(s, c, n) memset(s, c, n)
+#endif
 
 struct sockaddr_in server;
 ssl_context *context;
@@ -274,15 +284,16 @@ int open_listen_socket(char *on, int port)
       if(!(on = find_hostname(on)) || (inet_addr(on)==-1))
 	return 0;
 
+  MEMSET((char *)&me, 0, sizeof(struct sockaddr_in));
   me.sin_family=AF_INET;
   me.sin_port=htons(port);
 
   fprintf(stderr, "SSL: Listening on %s, port %d\n", on, port);
-
+  
   if(!strcmp(on, "ANY"))
-    me.sin_addr.s_addr=INADDR_ANY;
+    me.sin_addr.s_addr=htonl(INADDR_ANY);
   else
-    me.sin_addr.s_addr = inet_addr(on);
+    me.sin_addr.s_addr=inet_addr(on);
     
   if((s=socket(AF_INET,SOCK_STREAM,0))==-1)
   {

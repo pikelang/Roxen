@@ -4,7 +4,7 @@
 // limit of proxy connections/second is somewhere around 70% of normal
 // requests, but there is no real reason for them to take longer.
 
-string cvs_version = "$Id: proxy.pike,v 1.10 1996/12/07 11:37:54 neotron Exp $";
+string cvs_version = "$Id: proxy.pike,v 1.11 1996/12/08 10:33:26 neotron Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -14,16 +14,17 @@ string cvs_version = "$Id: proxy.pike,v 1.10 1996/12/07 11:37:54 neotron Exp $";
 # endif
 #endif
 
-#define CONNECTION_REFUSED "\
-HTTP/1.0 500 Connection refused by remote host\r\n\
+#define CONNECTION_REFUSED(X) "\
+HTTP/1.0 500 "+X+"\r\n\
 Content-type: text/html\r\n\
 \r\n\
-<title>Roxen: Connection refused</title>\n\
-<h1>Proxy request failed</h1>\
+<title>Roxen: "+X+"</title>\n\
+<h1>Proxy Request Failed</h1>\
 <hr>\
-<font size=+2><i>Host unknown or connection refused</i></font>\
+<font size=+2><i>"+X+"</i></font>\
 <hr>\
 <font size=-2><a href=http://roxen.com/>Roxen Challenger</a></font>"
+
 
 inherit "module";
 inherit "socket";
@@ -412,7 +413,7 @@ void connected_to_server(object o, string file, object id, int is_remote,
     switch(o)
     {
      default:
-      id->end(CONNECTION_REFUSED);
+      id->end(CONNECTION_REFUSED("Unknown host "+(id->misc->proxyhost || "")));
     }
     return;
   }
@@ -450,7 +451,7 @@ void connected_to_server(object o, string file, object id, int is_remote,
 
 // What is the last test for???? /Per
   } else if(!objectp(o) || !o->stat() || (o->stat()[1] == -4)) { 
-    id->end(CONNECTION_REFUSED);
+    id->end(CONNECTION_REFUSED("Connection refused by remote host."));
     return;
   } else {
     if(id->since)
@@ -514,6 +515,7 @@ mapping find_file( string f, object id )
     }
     port=80; /* Default */
   }
+  id->misc->proxyhost = host; // Used if the host is unknown.
   if(tmp = proxy_auth_needed(id))
     return tmp;
 

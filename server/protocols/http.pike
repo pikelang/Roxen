@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-string cvs_version = "$Id: http.pike,v 1.6 1996/12/08 02:58:13 neotron Exp $";
+string cvs_version = "$Id: http.pike,v 1.7 1996/12/08 10:33:27 neotron Exp $";
 // HTTP protocol module.
 #include <config.h>
 inherit "roxenlib";
@@ -424,16 +424,16 @@ private int parse_got(string s)
   }
   supports = roxen->find_supports(lower_case(client*" "));
   
-  int tmp1,tmp2;
-
-  if(0 && (tmp1 = search(lower_case(raw), "proxy-authentification:")) != -1 &&
-     (tmp2 = search(lower_case(raw[tmp1..]), "\n") != -1))
-  {
-    perror(raw);
-    raw = raw[..tmp1-1] + raw[tmp2..];
-    perror(raw);
+  if(misc->proxyauth) {
+    // The Proxy-authorization header should be removed... So there.
+    mixed tmp1,tmp2;
+    
+    foreach(tmp2 = (raw / "\n"), tmp1) {
+      if(!search(lower_case(tmp1), "proxy-authorization:"))
+	tmp2 -= ({tmp1});
+    }
+    raw = tmp2 * "\n"; 
   }
-
   if(config_in_url)
     return really_set_config( mod_config );
 

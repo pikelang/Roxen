@@ -1,5 +1,32 @@
 Changes since Roxen 1.1 alpha 3
 -----------------------------------------------
+o Proxy authentification support once again added. Wonder where it
+  disappeared?
+
+o If you want to set up SSL, read README.ssl and follow the
+  instructions! 
+
+o Some fixes to ssl.c. 
+
+o proxy.lpc: Different error messages for connection refused and
+  unknown host. This has been a very long wanted feature.
+
+o Fixed bug when you tried to insert a file that didn't exist with
+  <!--#insert file="XXX">.
+
+o SSI exec (cgi and cmd) now sets these environment variables:
+  DOCUMENT_NAME, DOCUMENT_URI, QUERY_STRING_UNESCAPED (same as
+  QUERY_STRING) and LAST_MODIFIED.
+
+o Timezone fix in cern_http_date().
+
+o Userfs->real_file() now also returns directories. Don't as ask me
+  why it wasn't like that before. It is however needed for the cgi
+  module (to properly translate PATH_INFO containing a users
+  directory).
+
+o user CGI scripts now works with PATH_INFO. Again, thanks to Wilhelm
+  Koehler, our saviour!
 
 o Small bug fixed in protocols/http.lpc
 

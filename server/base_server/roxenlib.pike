@@ -1,6 +1,6 @@
 inherit "http";
 
-string _cvs_version = "$Id: roxenlib.pike,v 1.6 1996/12/07 11:37:44 neotron Exp $";
+string _cvs_version = "$Id: roxenlib.pike,v 1.7 1996/12/08 10:33:25 neotron Exp $";
 // This code has to work booth in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -64,19 +64,19 @@ mapping build_env_vars(string f, object id, string path_info)
     }
   } else
     new["SCRIPT_NAME"]=id->not_query;
+
     
   if(tmp = roxen->real_file(new["SCRIPT_NAME"], id))
     new["SCRIPT_FILENAME"] = tmp;
     
   if(tmp = roxen->real_file("/", id))
     new["DOCUMENT_ROOT"] = tmp;
-    
+
   if(!new["PATH_TRANSLATED"])
     m_delete(new, "PATH_TRANSLATED");
   else if(new["PATH_INFO"][-1] != '/' && new["PATH_TRANSLATED"][-1] == '/')
     new["PATH_TRANSLATED"] = 
       new["PATH_TRANSLATED"][0..strlen(new["PATH_TRANSLATED"])-2];
-    
     
   if(id->misc->host)
     new["HTTP_HOST"]=id->misc->host;
@@ -139,6 +139,23 @@ mapping build_env_vars(string f, object id, string path_info)
     
   return new;
 }
+
+mapping build_ssi_env_vars(object id)
+{
+  mapping new = ([]);
+  array tmp;
+  
+  if(sizeof(tmp = id->not_query/"/" - ({""})))
+    new->DOCUMENT_NAME=tmp[-1];
+  new->DOCUMENT_URI=id->not_query;
+  if(id->query)
+    new->QUERY_STRING_UNESCAPED=id->query;
+  if((tmp = file_stat(roxen->real_file(id->not_query||"", id))) && sizeof(tmp))
+    new->LAST_MODIFIED=http_date(tmp[3]);
+  
+  return new;
+}
+
 
 mapping build_roxen_env_vars(object id)
 {

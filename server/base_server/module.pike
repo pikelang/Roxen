@@ -3,7 +3,7 @@
 mapping (string:mixed *) variables=([]);
 
 object this = this_object();
-
+int module_type;
 string fix_cvs(string from)
 {
   from = replace(from, ({ "$", "Id: "," Exp $" }), ({"","",""}));
@@ -278,7 +278,10 @@ array query_seclevels()
 
       case "allowuser":
 	value = replace("("+(value/",")*")|("+")","(any)","(.*)");
-	patterns += ({ ({ MOD_USER, Regexp(value)->match, }) });
+	if(this->proxy_auth_needed)
+	  patterns += ({ ({ MOD_PROXY_USER, Regexp(value)->match, }) });
+	else
+	  patterns += ({ ({ MOD_USER, Regexp(value)->match, }) });
 	break;
       }
     }
@@ -290,4 +293,5 @@ array query_seclevels()
 mixed stat_file(string f, object id){}
 mixed find_dir(string f, object id){}
 mixed real_file(string f, object id){}
+
 

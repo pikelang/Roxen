@@ -8,7 +8,7 @@
 // / is quite useful for IPPs, enabling them to have URLs like
 // http://www.hostname.of.provider/customer/.
 
-string cvs_version = "$Id: userfs.pike,v 1.7 1996/12/07 11:37:52 neotron Exp $";
+string cvs_version = "$Id: userfs.pike,v 1.8 1996/12/08 10:33:26 neotron Exp $";
 #include <module.h>
 inherit "modules/filesystems/filesystem";
 
@@ -140,6 +140,7 @@ string real_file( mixed f, mixed id )
   if(u)
   {
     string *us;
+    int fs;
     us = roxen->userinfo( u, id );
     if(!us) return 0;
     if(QUERY(only_password) && strlen(us[ 1 ]) < 8)     return 0;
@@ -148,7 +149,8 @@ string real_file( mixed f, mixed id )
       path = us[ 5 ] + "/" + QUERY(pdir);
     else
       path = us[ 5 ] + QUERY(pdir);
-    if(file_size(path + f) >= 0)
+    fs = file_size(path + f);
+    if( fs >= 0 || fs == -2)
       return path+f;
   }
   return 0;

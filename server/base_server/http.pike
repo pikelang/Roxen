@@ -1,5 +1,5 @@
 /* Roxen WWW-server version 1.0.
-string cvs_version = "$Id: http.pike,v 1.3 1996/12/01 19:18:29 per Exp $";
+string cvs_version = "$Id: http.pike,v 1.4 1996/12/08 10:33:23 neotron Exp $";
  * http.pike: HTTP convenience functions.
  * inherited by roxenlib, and thus by all files inheriting roxenlib.
  */
@@ -68,7 +68,7 @@ string cern_http_date(int t)
   else
     c="+";
 
-  if((tzh = (timezone()/1800)) < 0)
+  if((tzh = (timezone()/3600)) < 0)
     tzh = -tzh;
 
   s = ctime(t);
@@ -160,11 +160,13 @@ function http_auth_failed = http_auth_required;
 #endif
 
 
-mapping http_proxy_auth_required(string realm, string message)
+mapping http_proxy_auth_required(string realm, void|string message)
 {
 #ifdef HTTP_DEBUG
   perror("HTTP: Proxy auth required ("+realm+")\n");
 #endif  
+  if(!message)
+    message = "<h1>Proxy authentication failed.\n</h1>";
   return http_low_answer(407, message)
     + ([ "extra_heads":([ "Proxy-Authenticate":"basic realm=\""+realm+"\"",]),]);
 }

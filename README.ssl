@@ -1,0 +1,23 @@
+			SSL with Roxen Challenger
+		     +++++++++++++++++++++++++++++++
+
+This is a short, step by step guide for setting up a SSL-server:
+ 
+o Get SSLeay 0.6.4 from ftp://roxen.com/roxen/SSLeay-0.6.4.tar.gz and
+  install it in /usr/local/ssl/ (this is the default)
+
+o cd to roxen/extern/, and type 'make ssl'
+
+o Copy the resulting 'ssl' binary to your 'roxen/server/bin/'
+  directory.
+
+o Get (or make) a certificate. A test-certificate can be found at
+  http://roxen.org/certificate.pem
+ 
+o Configure a new port on the server you want to enable SSL on:
+ 
+  1. Add a new port, and set the protocol to 'ssl'
+  2. Enter a line in the 'arguments' textfield for this port:
+     cert-file /full/path/to/the/certificate.pem
+  3. Press [Use these values] and then save.
+  4. Access your SSL-server.
