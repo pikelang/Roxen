@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.367 1999/12/08 12:24:08 per Exp $
+ * $Id: roxen.pike,v 1.368 1999/12/11 20:44:42 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.367 1999/12/08 12:24:08 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.368 1999/12/11 20:44:42 per Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -1199,17 +1199,23 @@ class FHTTP
     call_out(do_log, cdel);
   }
 
+  string status( )
+  {
+    mapping m = l->cache_status();
+    string res;
+    low_adjust_stats( m );
+#define PCT(X) ((int)(((X)/(float)(m->total+0.1))*100))
+    res = ("\nCache statistics\n<pre>");
+    m->total = m->hits + m->misses + m->stale;
+    res += (" %d elements in cache, size is %1.1fMb max is %1.1fMb\n"
+            " %d cache lookups, %d%% hits, %d%% misses and %d%% stale.\n",
+            m->entries, m->size/(1024.0*1024.0), m->max_size/(1024*1024.0),
+            m->total, PCT(m->hits), PCT(m->misses), PCT(m->stale));
+    return res+"</pre>";
+  }
+
   void low_adjust_stats(mapping m)
   {
-    
-#define PCT(X) ((int)(((X)/(float)(m->total+0.1))*100))
-    werror("\nCache statistics\n");
-    m->total = m->hits + m->misses + m->stale;
-    werror(" %d elements in cache, size is %1.1fKb max is %1.1fMb\n"
-	   " %d cache lookups, %d%% hits, %d%% misses and %d%% stale.\n",
-	   m->entries, m->size/1024.0, m->max_size/(1024*1024.0),
-	   m->total, PCT(m->hits), PCT(m->misses), PCT(m->stale));
-
     array q = values( urls )->conf;
     if( sizeof( q ) ) /* This is not exactly correct if sizeof(q)>1 */
     {
