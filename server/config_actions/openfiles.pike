@@ -1,5 +1,5 @@
 /*
- * $Id: openfiles.pike,v 1.4 1998/07/20 06:24:32 neotron Exp $
+ * $Id: openfiles.pike,v 1.5 1998/07/24 09:41:22 neotron Exp $
  */
 
 inherit "wizard";
@@ -60,7 +60,7 @@ string page_0()
 	      args[-2] = ( args[-2] / " " - ({""})) * " ";
 	      args[1] = (args[1] - "<tt>") - "</tt>";
 	      //	    werror("%O\n", args);
-	    return sprintf("%-5s  %-9s  %-10s   %-12s  %s\n",
+	      return sprintf("%-5s  %-9s  %-10s   %-12s  %s",
 			   (string)fd,
 			   @args,
 			   fdc);

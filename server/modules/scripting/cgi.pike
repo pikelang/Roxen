@@ -5,7 +5,7 @@
 // interface</a> (and more, the documented interface does _not_ cover
 // the current implementation in NCSA/Apache)
 
-string cvs_version = "$Id: cgi.pike,v 1.94 1998/07/15 13:29:59 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.95 1998/07/24 09:41:24 neotron Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -19,9 +19,69 @@ import Simulate;
 
 static mapping env=([]);
 static array runuser;
+static function log_function;
 
 import String;
 import Stdio;
+
+// Some logging stuff, should probably move to either the actual
+// configuration object, or into a module. That would be much more
+// beautiful, really. 
+void init_log_file()
+{
+  remove_call_out(init_log_file);
+
+  if(log_function)
+  {
+    destruct(function_object(log_function)); 
+    // Free the old one.
+  }
+  
+  if(QUERY(stderr) == "custom log file")
+    // Only try to open the log file if logging is enabled!!
+  {
+    mapping m = localtime(time());
+    string logfile = QUERY(cgilog);
+    m->year += 1900;	/* Adjust for years being counted since 1900 */
+    m->mon++;		/* Adjust for months being counted 0-11 */
+    if(m->mon < 10) m->mon = "0"+m->mon;
+    if(m->mday < 10) m->mday = "0"+m->mday;
+    if(m->hour < 10) m->hour = "0"+m->hour;
+    logfile = replace(logfile,({"%d","%m","%y","%h" }),
+		      ({ (string)m->mday, (string)(m->mon),
+			 (string)(m->year),(string)m->hour,}));
+    if(strlen(logfile))
+    {
+      do {
+#ifndef THREADS
+	object privs = Privs("Opening logfile \""+logfile+"\"");
+#endif
+	object lf=open( logfile, "wac");
+#if efun(chmod)
+#if efun(geteuid)
+	if(geteuid() != getuid()) catch {chmod(logfile,0666);};
+#endif
+#endif
+	if(!lf) {
+	  mkdirhier(logfile);
+	  if(!(lf=open( logfile, "wac"))) {
+	    report_error("Failed to open logfile. ("+logfile+")\n" +
+			 "No logging will take place!\n");
+	    log_function=0;
+	    break;
+	  }
+	}
+	log_function=lf->write;	
+	// Function pointer, speeds everything up (a little..).
+	lf=0;
+      } while(0);
+    } else
+      log_function=0;	
+    call_out(init_log_file, 60);
+  } else
+    log_function=0;	
+}
+
 
 mapping my_build_env_vars(string f, object id, string|void path_info)
 {
@@ -130,10 +190,31 @@ void create()
 	 "env\n"
 	 "</pre>)");
 
-  defvar("err", 0, "Send stderr to client", TYPE_FLAG|VAR_MORE,
-	 "It you set this, standard error from the scripts will be redirected"
-	 " to the client instead of the logs/debug/[name-of-configdir].1 "
-	 "log.\n");
+  defvar("stderr","main log file",	 
+	 "Log CGI errors to...", TYPE_STRING_LIST,
+	 "By changing this variable you can select where error messages "
+	 "(which means all text written to stderr) from "
+	 "CGI scripts should be sent. By default they will be written to the "
+	 "mail log file - logs/debug/[name-of-configdir].1. You can also "
+	 "choose to send the error messages to a special log file or to the "
+	 "browser.\n",
+	 ({ "main log file",
+	    "custom log file",
+	    "browser" }));
+  defvar("cgilog", GLOBVAR(logdirprefix)+
+	 short_name(roxen->current_configuration?
+		    roxen->current_configuration->name:".")+"/cgi.log", 
+	 "Log file", TYPE_STRING,
+	 "Where to log errors from CGI scripts. You can also choose to send "
+	 "the errors to the browser or to the main Roxen log file. "
+	 " Some substitutions of the file name will be done to allow "
+	 "automatic rotating:"
+	 "<pre>"
+	 "%y    Year  (i.e. '1997')\n"
+	 "%m    Month (i.e. '08')\n"
+	 "%d    Date  (i.e. '10' for the tenth)\n"
+	 "%h    Hour  (i.e. '00')\n</pre>", 0,
+	 lambda() { if(QUERY(stderr) != "custom log file") return 1; });
 
   defvar("rawauth", 0, "Raw user info", TYPE_FLAG|VAR_MORE,
 	 "If set, the raw, unparsed, user info will be sent to the script, "
@@ -259,10 +340,10 @@ void start(int n, object conf)
   if(!conf) conf=roxen->current_configuration;
   if(!conf) return;
 
+  call_out(init_log_file, 0.1);
+
   string tmp;
   array us;
-  if(!conf) // When reloading, no conf is sent.
-    return; 
   search_path = query("searchpath");
 #if efun(getpwnam)
   if(us = getpwnam(  QUERY(runuser) ))
@@ -275,7 +356,6 @@ void start(int n, object conf)
       else
 	runuser = ({ (int)QUERY(runuser), (int)QUERY(runuser) });
 
-  
   tmp=conf->query("MyWorldLocation");
   sscanf(tmp, "%*s//%s", tmp);
   sscanf(tmp, "%s:", tmp);
@@ -394,8 +474,9 @@ class spawn_cgi
   int|string uid;
   object pipe1, pipe2;	// Stdout/Stderr for the CGI
   object pipe3, pipe4;	// Stdin for the CGI
+  object pipe5, pipe6;  // CGI log file
   int kill_call_out;
-  int dup_err;
+  array(object)| int dup_err;
   int setgroups;
 
   void got_some_data(object to, string d)
@@ -459,8 +540,11 @@ class spawn_cgi
       options["uid"] = uid || 65534;
     }
 
-    if (dup_err) {
+    if (dup_err == 1) {
       options["stderr"] = pipe1;
+    } else if(dup_err) { 
+      dup_err[1]->set_close_on_exec(1);
+      options["stderr"] = dup_err[0];
     }
 
     if (!setgroups) {
@@ -480,9 +564,10 @@ class spawn_cgi
     };
 
     /* We don't want to keep these. */
-    pipe1->close();
-    pipe3->close();
-
+    destruct(pipe1);
+    destruct(pipe3);
+    if(arrayp(dup_err))
+      destruct(dup_err[0]);
     if (err) {
       int e = errno();
 #if constant(strerror)
@@ -516,6 +601,7 @@ class spawn_cgi
     }
 #else /* !constant(Process.create_process) */
     if (!(pid = fork())) {
+      werror("forked\n");
       mixed err = catch {
 	array us;
 	/* The COREDUMPSIZE should be set to zero here !!
@@ -525,9 +611,8 @@ class spawn_cgi
 	destruct(pipe2);
 	if (pipe4)
 	  destruct(pipe4);
-	
-	pipe3->dup2(Stdio.File("stdin"));
 	destruct(pipe3);
+	pipe3->dup2(Stdio.File("stdin"));
 
 	object privs;
 	if (!getuid()) {
@@ -549,10 +634,15 @@ class spawn_cgi
 
 	// Moved here to avoid output by Privs().
 	pipe1->dup2(Stdio.File("stdout"));
-	if(dup_err)
+	if (dup_err == 1) {
 	  pipe1->dup2(Stdio.File("stderr"));
+	} else if(dup_err) { 
+	  destruct(dup_err[1]);
+	  dup_err[0]->dup2(Stdio.File("stderr"));
+	}
 	destruct(pipe1);
-
+	destruct(dup_err[0]);
+	Stdio.File("stderr")->write("test...\n");
 #ifdef DEBUG
 	if (getuid() != uid) {
 	  roxen_perror("CGI: Failed to change uid! uid:%d target uid:%d\n",
@@ -617,11 +707,17 @@ class spawn_cgi
       destruct(pipe2);
       destruct(pipe3);
       destruct(pipe4);
+      arrayp(dup_err) && Array.map(dup_err, lambda(object o) {
+					      destruct(o);
+					    });
+      
       return;
     }
 
     destruct(pipe1);
     destruct(pipe3);
+    if(arrayp(dup_err))
+      destruct(dup_err[1]);
 
     if(kill_call_out && pid > 1) {
       call_out(lambda (int pid) {
@@ -643,7 +739,8 @@ class spawn_cgi
   
   void create(string wrapper_, string f_, array(string) args_, mapping env_,
 	      string wd_, int|string uid_, object pipe1_, object pipe2_,
-	      object pipe3_, object pipe4_, int dup_err_, int kill_call_out_,
+	      object pipe3_, object pipe4_, array(object)|int dup_err_,
+	      int kill_call_out_,
 	      int setgroups_)
   {
 #ifdef CGI_DEBUG
@@ -724,6 +821,7 @@ mixed low_find_file(string f, object id, string path)
   array tmp2;
   object pipe1, pipe2;
   object pipe3, pipe4;
+  object pipe5, pipe6; // This is for logging stderr to a separate file.
   string path_info, wd;
   int pid;
 
@@ -782,7 +880,37 @@ mixed low_find_file(string f, object id, string path)
   }
   pipe4->set_blocking(); pipe3->set_blocking();
   pipe4->set_id(pipe4);
+  if(log_function)
+  {
+    if ((!(pipe5=Stdio.File())) || (!(pipe6=pipe5->pipe()))) {
+      int e = errno();
+#if constant(strerror)
+      report_error(sprintf("cgi->find_file(\"%s\"): Can't open pipe "
+			   "-- Out of fd's?\n"
+			   "errno: %d: %s\n", f, e, strerror(e)));
+#else /* !constant(strerror) */
+      report_error(sprintf("cgi->find_file(\"%s\"): Can't open pipe "
+			   "-- Out of fd's?\n"
+			   "errno: %d\n", f, e));
+#endif /* constant(strerror) */
+      return(0);
+    }
+    pipe6->set_nonblocking();
+    pipe6->set_id(pipe6);
+    pipe6->set_read_callback(lambda(object this, string s) {
+			       if(stringp(s) && functionp(log_function))
+				 log_function(s);
+			     });
+    pipe6->set_close_callback(lambda(object this)
+			      {
+				if(this)
+				  destruct(this);
+			      });
+    pipe5->set_blocking();
+    //    pipe6->set_id(pipe6);
 
+  }
+  
   mixed uid;
   array us;
   if(query("noexec"))
@@ -837,19 +965,26 @@ mixed low_find_file(string f, object id, string path)
   if (arrayp(uid)) {
     uid = uid[0];
   }
-
+  mixed stderr;
+  if(QUERY(stderr) != "main log file") {
+    if(QUERY(stderr) == "custom log file")
+      stderr = ({ pipe5, pipe6 });
+    else
+      stderr = 1;
+  }
+  
   object cgi = spawn_cgi(QUERY(use_wrapper) && (QUERY(wrapper) || "/bin/cgi"),
 			 f, make_args(id->rest_query),
 			 my_build_env_vars(f, id, path_info),
-			 wd, uid, pipe1, pipe2, pipe3, pipe4, QUERY(err),
-			 QUERY(kill_call_out),
-#if constant(Process.create_process)
+			 wd, uid, pipe1, pipe2, pipe3, pipe4,
+			 stderr,QUERY(kill_call_out),
+#if 0 &&  constant(Process.create_process)
 			 QUERY(setgroups)
 #else /* !constant(Process.create_process) */
 			 /* Ignored anyway */
 			 0
 #endif /* constant(Process.create_process) */
-	  );
+			 );
   
   if(id->my_fd && id->data) {
     sender(pipe4, id->data);
