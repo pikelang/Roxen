@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.75 1998/02/05 00:59:26 js Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.76 1998/02/11 01:21:36 nisse Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -1925,7 +1925,8 @@ string tag_pr(string tagname, mapping m)
   }
   return ("<a href=http://www.roxen.com/><img border="+m->border+" "+
 	  get_pr_size(size,color)+" "+
-	  "src=/internal-roxen-power-"+size+"-"+color+"></a>");
+	  "src=/internal-roxen-power-"+size+"-"+color+
+	  " alt=\"\"></a>");
 }
 
 string tag_number(string t, mapping args)
@@ -2408,6 +2409,11 @@ string api_html_dequote(object id, string what)
   return replace(what, replace_from, replace_to);
 }
 
+string api_html_quote_attr(object id, string value)
+{
+  return sprintf("\"%s\"", replace(value, "\"", "&quot;"));
+}
+
 // compat code..  
 void add_api_function( string name, function f, void|array(string) types)
 {
@@ -2438,6 +2444,7 @@ void define_API_functions()
 
   add_api_function("html_quote", api_html_quote, ({"string"}));
   add_api_function("html_dequote", api_html_dequote, ({"string"}));
+  add_api_function("html_quote_attr", api_html_quote_attr, ({"string"}));
 
   add_api_function("prestate", api_prestate, ({"string"}));
   add_api_function("set_prestate", api_set_prestate, ({"string"}));
