@@ -633,9 +633,11 @@ mapping get_variable_map( string s, object mod, object id )
 
 int var_configurable( array var, object id )
 {
-  if( mixed cf = var[VAR_CONFIGURABLE] )
+  if( mixed cf = var[ VAR_CONFIGURABLE ] )
   {
-    if(functionp(cf) && cf( id ))
+    if(functionp(cf) && cf( id->misc->config_settings->query("more_mode"),
+                            id->misc->config_settings->query("expert_mode"),
+                            id->misc->config_settings->query("devel_mode") ))
       return 0;
     else if( intp( cf ) )
     {
@@ -902,7 +904,7 @@ string container_cf_perm( string t, mapping m, string c, RequestID id )
 {
   if( !id->misc->config_user )
     return "";
-  return CU_AUTH( m->perm ) ? c : "";
+  return CU_AUTH( m->perm )==!m->not ? c : "";
 }
 
 string container_cf_userwants( string t, mapping m, string c, RequestID id )
