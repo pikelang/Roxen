@@ -2,7 +2,7 @@
 //
 // Created 2002-02-18 by Marcus Wellhardh.
 //
-// $Id: License.pmod,v 1.13 2002/04/15 15:17:52 wellhard Exp $
+// $Id: License.pmod,v 1.14 2002/04/15 16:02:13 wellhard Exp $
 
 #if constant(roxen)
 #define INSIDE_ROXEN
@@ -286,7 +286,7 @@ class Key
 			       "%s.", String.
 			       implode_nicely((confs | ({ configuration }))->name)));
       }
-    } else if(verify_mode && sizeof(confs) )
+    } else if(verify_mode && sizeof(confs) && type() == "production")
       return sprintf("The license "+filename()+" is already used in "
 		     "configuration: %s.",
 		     String.implode_nicely(confs->name));
