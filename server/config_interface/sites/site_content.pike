@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.139 2004/02/03 12:04:32 anders Exp $
+// $Id: site_content.pike,v 1.140 2004/06/13 11:17:43 anders Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -465,14 +465,18 @@ string port_for( string url, int settings )
            <br clear='all' />
         </if>
         <unset variable='var.end'/>
-        <emit source='port-urls' port='&_.port;'>
-          <if not variable='_.url is &var.url;'>
-            <if not='' variable='var.end'>
-              <set variable='var.end' value='.'/>"
+        <emit source='port-urls' port='&_.port;' rowinfo='var.rowinfo'>"
+    // No whitespace in this emit
+          "<if not variable='_.url is &var.url;'>"
+            "<if not='' variable='var.end'>"
+              "<set variable='var.end' value='.'/>"
               +LOCALE(323,"Shared with ")+
-#"          </if>
-            <else>"
-              +LOCALE("cw","and")+" "
+            "</if>"
+            "<elseif variable='var.rowinfo = &_.counter;'>"
+              " "+LOCALE("cw","and")+" "
+            "</elseif>"
+            "<else>"
+              ", "
             "</else>"
             "<a href='../&_.conf;/'>&_.confname;</a>"
           "</if>"
@@ -573,16 +577,16 @@ string parse( RequestID id )
                      && roxen->urls[ match_url ]->port->bound);
 	 
          if( !open )
-           res += "<tr><td>" + url + "</td><td>"+port_for(url,0) + "</td></tr>\n";
+           res += "<tr><td valign='top'>" + url + "</td><td>"+port_for(url,0) + "</td></tr>\n";
          else if(search(url, "*")==-1)
-           res += ("<tr><td>" + "<a target='server_view' href='"+url+"'>"+
+           res += ("<tr><td valign='top'>" + "<a target='server_view' href='"+url+"'>"+
                    url+"</a></td><td>"+port_for(url,0)+"</td></tr>\n");
 	 else if( sizeof( url/"*" ) == 2 )
-	   res += ("<tr><td><a target='server_view' href='"+
+	   res += ("<tr><td valign='top'><a target='server_view' href='"+
                    replace(url, "*", gethostname() )+"'>"+
                    url+"</a></td><td>"+port_for(url,0)+"</td></tr>\n");
          else
-	   res += "<tr><td>" +url + "</td><td>"+port_for(url,0)+"</td></tr>\n";
+	   res += "<tr><td valign='top'>" +url + "</td><td>"+port_for(url,0)+"</td></tr>\n";
        }
        res += "</table>\n";
 
