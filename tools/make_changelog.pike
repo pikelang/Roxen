@@ -27,6 +27,7 @@ string mymktime(string from)
   return (ctime(mktime(m))-"\n"+" ");
 }
 
+array ofiles = ({});
 void output_changelog_entry_header(array from)
 {
   if(!users[from[1]]) 
@@ -51,7 +52,6 @@ string qte(string what)
   return what;
 }
 
-array ofiles = ({});
 string translate(string c)
 {
   if( domain != "idonex.se" ) return c;
