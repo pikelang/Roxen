@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.20 2001/04/02 15:32:17 nilsson Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.21 2001/04/07 23:46:14 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Roxen self test module";
@@ -358,6 +358,20 @@ class EntityInc {
   }
 }
 
+class EntityCVal(string val) {
+  inherit RXML.Value;
+  mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
+    return ENCODE_RXML_TEXT(val, type);
+  }
+}
+
+class EntityVVal(string val) {
+  inherit RXML.Value;
+  mixed rxml_var_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
+    return ENCODE_RXML_TEXT(val, type);
+  }
+}
+
 class TagEmitTESTER {
   inherit RXML.Tag;
   constant name = "emit";
@@ -365,6 +379,13 @@ class TagEmitTESTER {
 
   array(mapping(string:string)) get_dataset(mapping m, RequestID id) {
     switch(m->test) {
+    case "4":
+      return ({
+	([ "a":"1", "b":EntityCVal("aa"), "c":EntityVVal("ca") ]),
+	([ "a":"2", "b":EntityCVal("ba"), "c":EntityVVal("cb") ]),
+	([ "a":"3", "b":EntityCVal("ab"), "c":EntityVVal("ba") ]),
+      });
+
     case "3":
       return ({ (["data":"a"]), (["data":RXML.nil]), (["data":EntityInc()]) });
 
