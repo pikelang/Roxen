@@ -5,7 +5,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "modules/filesystems/filesystem.pike" : filesystem;
 
-constant cvs_version="$Id: autositefs.pike,v 1.23 1998/09/28 06:08:23 js Exp $";
+constant cvs_version="$Id: autositefs.pike,v 1.24 1998/09/29 21:00:38 js Exp $";
 
 mapping host_to_id;
 multiset(int) hidden_sites;
@@ -114,7 +114,6 @@ mixed find_file(string f, object id)
 {
   if(!host_to_id)   update_host_cache(id);
   if(!hidden_sites) update_hidden_sites(id);
-
   string file=file_from_host(id,f);
   //werror("customer_id: %O\n",id->misc->customer_id);
   id->misc->wa = this_object();
@@ -139,13 +138,15 @@ mixed find_file(string f, object id)
 	     
   mixed res = filesystem::find_file(file, id);
   if(objectp(res)) {
-    mapping md = .AutoWeb.MetaData(id, f)->get();
+    mapping md = .AutoWeb.MetaData(id, "/"+f)->get();
    // werror("File: %O, md: %O", f, md);
     if(md->content_type=="text/html") {
       string d = res->read( );
       if((md->template)&&(md->template!="No"))
 	d = "<template><content>"+d+"</content></template>";
+      int t=gethrtime();
       res = http_string_answer(parse_rxml(d, id), "text/html");
+      werror("parse_rxml: %f (f: %O)\n",(gethrtime()-t)/1000.0,f);
     }
   }
   return res;
@@ -215,12 +216,10 @@ string tag_init_home_dir(string tag_name, mapping args, object id)
 		   "<md variable=\"content_type\">text/html</md>\n"
 		   "<md variable=\"description\"></md>\n"
 		   "<md variable=\"keywords\"></md>\n"
-		   "<md variable=\"template\">No</md>"
+		   "<md variable=\"template\">Yes</md>"
 		   "<md variable=\"title\">Welcome</md>");
   
-  Stdio.write_file(dir+"/templates/default.tmpl",
-		   Stdio.read_bytes(combine_path(
-		     query("searchpath"),"default.tmpl")));
+  Stdio.write_file(dir+"/templates/default.tmpl","<tmplinsertall>");
 }
 
 mapping query_tag_callers()

@@ -258,8 +258,8 @@ class MetaData {
     string s = "";
     array fs=AutoFile(id, f+".md")->stat();
     array a;
-    if(fs && (a=cache_lookup("autoweb_md_stat",""+id->misc->customer_id+f))
-       && a[1]==fs[ST_MTIME])
+    if(fs && (a=cache_lookup("autoweb_md_stat",id->misc->customer_id+"\0"+f))
+       && a[1][ST_MTIME]==fs[ST_MTIME])
       return a[0];
     else if(!fs)
       return md_default;
@@ -269,7 +269,7 @@ class MetaData {
     if(!s)
       return md_default;
     parse_html(s, ([ ]), ([ "md":container_md ]), md);
-    return cache_set("autoweb_md_stat",""+id->misc->custiner_id+f,
+    return cache_set("autoweb_md_stat",id->misc->customer_id+"\0"+f,
 		     ({ ([ "content_type": md_default->content_type ]) + md,
 			fs }))[0];
   }
