@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.117 1999/03/18 19:01:24 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.118 1999/03/18 19:06:39 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -505,6 +505,7 @@ class imap_mail
       
       if (sizeof(attr->part))
       {
+	top_level = 0;
 	foreach(attr->part, int i)
 	{
 	  if (!i)
@@ -517,7 +518,6 @@ class imap_mail
 		 && (msg->subtype == "rfc822"))
 	    {
 	      msg = get_message(msg->getdata());
-	      top_level = 0;
 	    }
 	    else
 	      break;
@@ -535,12 +535,11 @@ class imap_mail
 	  if (i > sizeof(msg->body_parts))
 	    throw("No such part");
 	  msg = msg->body_parts[i-1];
-	  top_level = 0;
 	}
       }
 
       if (!sizeof(attr->section) || (attr->section[0] == ""))
-	return body_response(msg->getdata());
+	return body_response(top_level?raw_body:msg->getdata());
 	
       switch(attr->section[0])
       {
