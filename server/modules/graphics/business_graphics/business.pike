@@ -6,7 +6,7 @@
  * in October 1997
  */
 
-constant cvs_version = "$Id: business.pike,v 1.100 1998/04/17 01:58:41 grubba Exp $";
+constant cvs_version = "$Id: business.pike,v 1.101 1998/04/26 13:36:37 hedda Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -72,6 +72,10 @@ mixed *register_module()
        "  <b>height</b>         Height of diagram image in pixels.\n"
        "                 (will not have any effect below 100)\n"
        "  <b>fontsize</b>       Height of text in pixels.\n"
+       "  <b>font</b>           Name of the font used. This can be\n"
+       "                 overridden in the legend-, axis- and\n"
+       "                 names-tags.\n"
+       "  <b>namefont</b>       Name of the font for the diagram name.\n"
        "  <b>legendfontsize</b> Height of legend text in pixels.\n"
        "                 <b>fontsize</b> is used if this is undefined.\n"
        "  <b>name</b>           Writes a name at the top of the diagram.\n"
@@ -99,7 +103,7 @@ mixed *register_module()
        "                 instead of VOID (This option can also\n"
        "                 be given i <b>xnames</b> and so on)\n"
        "  <b>bgcolor</b>        Use this background color for antialias.\n"
-       "  <b>notrans</b>        If given, the bgcolor will not be opaque.\n"
+       "  <b>notrans</b>        If given, the bgcolor will be opaque.\n"
        
        // Not supported any more!     "  <b>colorbg</b>        Sets the color for the background\n"
        "  <b>textcolor</b>      Sets the color for all text\n"
@@ -200,15 +204,18 @@ string itag_xaxis(string tag, mapping m, mapping res)
 #ifdef BG_DEBUG
   bg_timers->xaxis = gauge {
 #endif
-  if(m->name) res->xname = m->name;  
+  int l=query("maxstringlength")-1;
+  if(m->font)
+    res->xaxisfont=m->font;
+  if(m->name) res->xname = m->name[..l];  
   if(m->start) 
     if (lower_case(m->start[0..2])=="min")
       res->xmin=1;
     else 
       res->xstart = (float)m->start;
   if(m->stop) res->xstop = (float)m->stop;
-  if(m->quantity) res->xstor = m->quantity;
-  if(m->unit) res->xunit = m->unit;
+  if(m->quantity) res->xstor = m->quantity[..l];
+  if(m->unit) res->xunit = m->unit[..l];
 #ifdef BG_DEBUG
   };
 #endif
@@ -222,6 +229,9 @@ string itag_yaxis(string tag, mapping m, mapping res)
   bg_timers->yaxis = gauge {
 #endif
   int l=query("maxstringlength")-1;
+  if(m->font)
+    res->yaxisfont=m->font;
+
   if(m->name) res->yname = m->name[..l];
   if(m->start) 
     if (lower_case(m->start[0..2])=="min")
@@ -262,6 +272,8 @@ string itag_names(string tag, mapping m, string contents,
   {
     if(tag=="xnames")
     {
+      if(m->font)
+	res->xnamesfont=m->font;
       foo=res->xnames = contents/sep;
       if(m->orient) 
 	if (m->orient[0..3] == "vert")
@@ -270,7 +282,11 @@ string itag_names(string tag, mapping m, string contents,
 	  res->orientation="hor";
     }
     else
-      foo=res->ynames = contents/sep;
+      {
+	foo=res->ynames = contents/sep;
+        if(m->font)
+	  res->ynamesfont=m->font;
+      }
   }
   else
      return "";
@@ -492,6 +508,9 @@ string itag_legendtext(mapping tag, mapping m, string contents,
   if(m->separator)
     sep=m->separator;
 
+  if(m->font)
+    res->legendfont=m->font;
+
   res->legend_texts = contents/sep;
 
   array foo=res->legend_texts;
@@ -533,6 +552,7 @@ constant _diagram_args =
    "orientation", "xstart", "xstop", "ystart", "ystop", "data", "colors",
    "xnames", "xvalues", "ynames", "yvalues", "axcolor", "gridcolor",
    "gridwidth", "vertgrid", "labels", "labelsize", "legendfontsize",
+   "legendfont",
    "legend_texts", "labelcolor", "axwidth", "linewidth", "center",
    "rotate", "image", "bw", "eng", "neng", "xmin", "ymin", "turn", "notrans" });
 constant diagram_args = mkmapping(_diagram_args,_diagram_args);
@@ -586,11 +606,17 @@ string tag_diagram(string tag, mapping m, string contents,
       if (m->namecolor)
 	res->namecolor=parse_color(m->namecolor);
     }
+
   if(m->voidseparator)
     res->voidsep=m->voidseparator;
   else
     if(m->voidsep)
       res->voidsep=m->voidsep;
+
+  if(m->font)
+    res->font=m->font;
+  if(m->namefont)
+    res->namefont=m->namefont;
 
   if (m->tunedbox)
     m->tonedbox=m->tunedbox;

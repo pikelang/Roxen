@@ -19,7 +19,7 @@ import Stdio;
 inherit "polyline.pike";
 inherit "create_graph.pike";
 
-constant cvs_version = "$Id: create_bars.pike,v 1.69 1998/03/13 01:09:38 peter Exp $";
+constant cvs_version = "$Id: create_bars.pike,v 1.70 1998/04/26 13:36:44 hedda Exp $";
 
 /*
  * name = "BG: Create bars";
@@ -30,6 +30,14 @@ constant cvs_version = "$Id: create_bars.pike,v 1.69 1998/03/13 01:09:38 peter E
 These functions were written by Henrik "Hedda" Wallin (hedda@idonex.se)
 Create_bars can draw normal bars, sumbars and normalized sumbars.
 */ 
+
+
+#define GETFONT(WHATFONT) \
+    object notext = get_font(diagram_data->WHATFONT||diagram_data->font \
+			     , 32, 0, 0,  \
+			     "left",0,0); \
+    if (!(notext)) \
+      throw(({"Missing font or similar error!\n", backtrace() }));
 
 
 mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
@@ -225,9 +233,9 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
     else
       label=diagram_data["labels"][0];
 
+    GETFONT(xaxisfont);
     if ((label!="")&&(label!=0))
-      labelimg=get_font("avant_garde", diagram_data["labelsize"], 0, 0, 
-			"left",0,0)
+      labelimg=notext
 	->write(label)->scale(0,diagram_data["labelsize"]);
     else
       labelimg=image(diagram_data["labelsize"],diagram_data["labelsize"]);
@@ -810,9 +818,9 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
       label=diagram_data["labels"][1]+" ["+diagram_data["labels"][3]+"]"; //Ystorhet
     else
       label=diagram_data["labels"][1];
+    GETFONT(yaxisfont);
     if ((label!="")&&(label!=0))
-      labelimg=get_font("avant_garde", diagram_data["labelsize"], 0, 0,
-			"left",0,0)
+      labelimg=notext
 	->write(label)->scale(0,diagram_data["labelsize"]);
     else
       labelimg=image(diagram_data["labelsize"],diagram_data["labelsize"]);

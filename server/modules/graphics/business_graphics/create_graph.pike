@@ -18,7 +18,7 @@ import Stdio;
 
 inherit "polyline.pike";
 
-constant cvs_version = "$Id: create_graph.pike,v 1.102 1998/03/13 01:09:39 peter Exp $";
+constant cvs_version = "$Id: create_graph.pike,v 1.103 1998/04/26 13:36:49 hedda Exp $";
 
 /*
  * name = "BG: Create graphs";
@@ -31,6 +31,12 @@ Create_graph draws a graph but there are also some other functions
 used by create_pie and create_bars.
 */ 
 
+#define GETFONT(WHATFONT) \
+    object notext = get_font(diagram_data->WHATFONT||diagram_data->font \
+			     , 32, 0, 0,  \
+			     "left",0,0); \
+    if (!(notext)) \
+      throw(({"Missing font or similar error!\n", backtrace() }));
 
 
 
@@ -99,7 +105,7 @@ string diagram_neng(float a)
   int i = (int) floor(p+0.000001);
   if ((a<1.0)&&(a>=0.0999999))
     i=0;
-  string s;
+  string s; 
   sscanf(sprintf("%g%s", a*exp(-i*log(1000.0)), pfix[6+i]), "%*[ ]%s", s);
   return foo+s;
 }
@@ -132,6 +138,9 @@ void draw(object(image) img, float h, array(float|string) coords,
 
 mapping(string:mixed) setinitcolors(mapping(string:mixed) diagram_data)
 {
+  if (!diagram_data->font)
+    diagram_data->font="avant_garde";
+
   //diagram_data["datasize"]=0;
   foreach(diagram_data["data"], mixed* fo)
     if (sizeof(fo)>diagram_data["datasize"])
@@ -249,7 +258,7 @@ mapping(string:mixed) setinitcolors(mapping(string:mixed) diagram_data)
 mapping(string:mixed) init(mapping(string:mixed) diagram_data)
 {
   float xminvalue=0.0, xmaxvalue=-STORT, yminvalue=0.0, ymaxvalue=-STORT;
-
+  
   if (diagram_data["xmin"])
     xminvalue=STORT;
   if (diagram_data["ymin"])
@@ -491,12 +500,7 @@ mapping(string:mixed) create_text(mapping(string:mixed) diagram_data)
       throw( ({"Very bad error while trying to resize the textfont!\n",
 	       backtrace()}));
       
-      
-    object notext = get_font("avant_garde", diagram_data["fontsize"], 0, 0,
-			     "left",0,0);
-      
-    if (!(notext))
-      throw(({"Missing font or similar error!\n", backtrace() }));
+    GETFONT(xnamesfont);
     int j;
     diagram_data["xnamesimg"]=allocate(j=sizeof(diagram_data["xnames"]));
     for(int i=0; i<j; i++)
@@ -516,6 +520,8 @@ mapping(string:mixed) create_text(mapping(string:mixed) diagram_data)
 					   diagram_data["fontsize"]);
     }
       
+    GETFONT(ynamesfont);
+
     diagram_data["ynamesimg"]=allocate(j=sizeof(diagram_data["ynames"]));
     if ((diagram_data["type"]=="bars")||
 	(diagram_data["type"]=="sumbars"))
@@ -759,10 +765,7 @@ mapping set_legend_size(mapping diagram_data)
 	texts=allocate(sizeof(diagram_data["legend_texts"]));
 	plupps=allocate(sizeof(diagram_data["legend_texts"]));
 	
-	notext=get_font("avant_garde",diagram_data["legendfontsize"], 0, 0, 
-			"left",0,0);
-	if (!(notext))
-	  throw(({"Missing font or similar error!\n", backtrace() }));
+	GETFONT(legendfont);
 	
 	j=sizeof(texts);
 	if (!diagram_data["legendcolor"])
@@ -939,11 +942,7 @@ int write_name(mapping diagram_data)
 {
   if (!diagram_data["name"])
     return 0;
-  object notext=get_font( "avant_garde", diagram_data["fontsize"], 0, 0,
-			  "left", 0, 0 );
-  
-  if (!(notext))
-    throw(({"Missing font or similar error!\n", backtrace() }));
+  GETFONT(namefont);
 
   object text;
   int y,x;
@@ -1150,11 +1149,8 @@ mapping(string:mixed) create_graph(mapping diagram_data)
   string label;
   int labelx=0;
   int labely=0;
-  object notext=get_font("avant_garde", diagram_data["labelsize"], 0, 0,
-			 "left",0,0);
 
-  if (!(notext))
-    throw(({"Missing font or similar error!\n", backtrace() }));
+  GETFONT(xaxisfont);
 
   if (diagram_data["labels"])
   {
@@ -1163,8 +1159,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
     else
       label=diagram_data["labels"][0];
     if ((label!="")&&(label!=0))
-      labelimg=get_font("avant_garde", diagram_data["labelsize"], 0, 0,
-			"left", 0, 0)
+      labelimg=notext
 	-> write(label)->scale(0,diagram_data["labelsize"]);
     else
       labelimg=image(diagram_data["labelsize"],diagram_data["labelsize"]);
@@ -1593,14 +1588,13 @@ mapping(string:mixed) create_graph(mapping diagram_data)
     string label;
     int x;
     int y;
-    
+    GETFONT(yaxisfont);
     if (diagram_data["labels"][3] && sizeof(diagram_data["labels"][3]))
       label=diagram_data["labels"][1]+" ["+diagram_data["labels"][3]+"]"; //Ystorhet
     else
       label=diagram_data["labels"][1];
     if ((label!="")&&(label!=0))
-      labelimg=get_font("avant_garde", diagram_data["labelsize"], 0, 0, 
-			"left",0,0)->write(label)
+      labelimg=notext->write(label)
 	-> scale(0,diagram_data["labelsize"]);
     else
       labelimg=image(diagram_data["labelsize"],diagram_data["labelsize"]);
