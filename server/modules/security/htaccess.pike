@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version="$Id: htaccess.pike,v 1.99 2002/12/09 12:55:09 grubba Exp $";
+constant cvs_version="$Id: htaccess.pike,v 1.100 2002/12/09 16:11:47 anders Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -463,7 +463,7 @@ mapping try_htaccess(RequestID id)
     TRACE_LEAVE("No htaccess-file.");
     return 0;
   }
-  id->misc->no_proto_cache = 1;
+  NO_PROTO_CACHE();
 
   // HT_WERR(sprintf("id->misc: %O", id->misc));
 
