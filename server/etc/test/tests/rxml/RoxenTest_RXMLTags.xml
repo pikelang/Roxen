@@ -624,6 +624,11 @@ c</result>
 </test>
 
 <test>
+<rxml><date unix-time='87654321' type='unix'/></rxml>
+<result>87654321</result>
+</test>
+
+<test>
 <rxml><date unix-time='87654321' lang='sv'/></rxml>
 <result>13:25, den 11:e oktober 1972</result>
 </test>
