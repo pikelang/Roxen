@@ -1,4 +1,4 @@
-// string cvs_version = "$Id: module_support.pike,v 1.40 1999/11/24 15:01:14 per Exp $";
+// string cvs_version = "$Id: module_support.pike,v 1.41 1999/11/24 17:32:40 per Exp $";
 #include <roxen.h>
 #include <module.h>
 #include <stat.h>
@@ -21,7 +21,7 @@ string get_doc_for( string region, string variable )
 int setvars( mapping (string:mixed) vars )
 {
   string v;
-//  perror("Setvars: %O\n", vars);
+
   foreach( indices( vars ), v )
     if(variables[v])
       variables[v][ VAR_VALUE ] = vars[ v ];
@@ -138,6 +138,8 @@ int remove_dumped_mark = lambda ()
 
 program my_compile_file(string file)
 {
+  if( file[0] != '/' )
+    file = replace(getcwd()+"/"+file, "//", "/");
   string ofile = master()->make_ofilename( file );
   if (file_stat (ofile) &&
       file_stat (ofile)[ST_MTIME] < remove_dumped_mark)
