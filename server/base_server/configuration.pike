@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.522 2002/09/02 14:41:53 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.523 2002/09/20 12:08:01 anders Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2285,6 +2285,7 @@ int|string try_get_file(string s, RequestID id,
 
   fake_id->misc->common = id->misc->common;
   fake_id->misc->internal_get = !not_internal;
+  fake_id->conf = this_object();
 
   if (fake_id->scan_for_query)
     // FIXME: If we're using e.g. ftp this doesn't exist. But the
