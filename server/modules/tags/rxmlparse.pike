@@ -15,7 +15,7 @@
 #define _rettext _context_misc[" _rettext"]
 #define _ok _context_misc[" _ok"]
 
-constant cvs_version = "$Id: rxmlparse.pike,v 1.63 2001/07/12 18:35:49 mast Exp $";
+constant cvs_version = "$Id: rxmlparse.pike,v 1.64 2001/07/20 06:40:32 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -150,12 +150,14 @@ mapping handle_file_extension(Stdio.File file, string e, RequestID id)
 	  cache_ent[0] == stat[ST_MTIME]) {
 	TRACE_ENTER (sprintf ("Evaluating RXML page %O from RAM cache",
 			      id->not_query), this_object());
-	rxml = Roxen.eval_p_code (cache_ent[1], id);
-	if (objectp (rxml)) {
+	if (cache_ent[1]->is_stale()) {
 	  cache_remove (ram_cache_name, id->not_query);
 	  TRACE_LEAVE ("RAM cache entry was stale");
 	}
-	else break eval_rxml;
+	else {
+	  rxml = Roxen.eval_p_code (cache_ent[1], id);
+	  break eval_rxml;
+	}
       }
       TRACE_ENTER (sprintf ("Evaluating and compiling RXML page %O",
 			    id->not_query), this_object());
