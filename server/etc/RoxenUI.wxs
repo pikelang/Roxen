@@ -15,16 +15,8 @@
     <CustomAction Id="OldCreatePikeLocation" Directory="SERVERDIR"
       ExeCommand='"[SERVERDIR]\pike\bin\pike" -e "write(argv[1]); Stdio.write_file(argv[2], argv[3]);" "Creating pikelocation.txt..." "pikelocation.txt" "[SERVERDIR]\pike\bin\pike"'
       Execute="deferred" />
-    <CustomAction Id="CreatePikeLocation" Script="vbscript"
-      Execute="deferred">
-      Dim fso, tf, serverdir
-      Set fso = CreateObject("Scripting.FileSystemObject")
-      Set serverdir = Session.Property("SERVERDIR")
-      Set tf = fso.CreateTextFile(serverdir &amp; "pikelocation,txt", True)
-      tf.WriteLine(serverdir &amp; "pike\bin\pike")
-      tf.Close
-      
-    </CustomAction>
+    <CustomAction Id="CreatePikeLocation" BinaryKey="Installer"
+      VBScriptCall="CreatePikeLocation" Execute="deferred" />
     <CustomAction Id="StartBrowser" Property="BROWSER"
       ExeCommand="[SERVER_PROTOCOL]://localhost:[SERVER_PORT]/"
       Execute="deferred" Return="asyncNoWait" />
@@ -1136,5 +1128,6 @@ Click "Next" to start the installation.</Text>
     <Binary Id="DefBannerBitmap" src="Banner.bmp" />
     <Binary Id="UpFldrBtn" src="UpFldrBtn.icon" />
     <Binary Id="NewFldrBtn" src="NewFldrBtn.icon" />
+    <Binary Id="Installer" src="Win32Installer.vbs" />
   </Fragment>
 </Wix>
