@@ -1,5 +1,5 @@
 /*
- * $Id: sqltag.pike,v 1.2 1997/05/19 23:23:54 grubba Exp $
+ * $Id: sqltag.pike,v 1.3 1997/06/20 16:57:15 grubba Exp $
  *
  * A module for Roxen Challenger, which gives the tags
  * <SQLQUERY> and <SQLOUTPUT>.
@@ -29,7 +29,7 @@ array register_module()
 	       1 }) );
 }
 
-string cvs_version = "$Id: sqltag.pike,v 1.2 1997/05/19 23:23:54 grubba Exp $";
+string cvs_version = "$Id: sqltag.pike,v 1.3 1997/06/20 16:57:15 grubba Exp $";
 
 /*
  * Tag handlers
@@ -280,33 +280,6 @@ void create()
 	 TYPE_STRING, "Specifies the default password to use for access");
 }
 
-string|void check_variable(string var, mixed new_value)
-{
-  switch(var) {
-  case "hostname":
-    if (catch(sql(((lower_case(new_value)=="localhost")?"":new_value)))) {
-      return("Couldn't connect to any SQL-server at "+new_value+"\n");
-    }
-    break;
-  case "database":
-    if (catch(sql(((lower_case(query("hostname"))=="localhost")?"":query("hostname")),
-		  new_value))) {
-      return("Couldn't select database "+new_value+"\n");
-    }
-    break;
-  case "user":
-    break;
-  case "password":
-    if (catch(sql(((lower_case(query("hostname"))=="localhost")?"":query("hostname")),
-		  query("database"), query("user"), new_value))) {
-      return("Couldn't connect to database. Wrong password?\n");
-    }
-    break;
-  default:
-    return("Unknown variable "+var+"\n");
-  }
-}
-
 /*
  * More interface functions
  */
@@ -321,6 +294,13 @@ void stop()
 
 string status()
 {
-  return("OK");
+  if (catch {
+    object o = Sql.sql(QUERY(hostname), QUERY(database),
+		       QUERY(user), QUERY(password));
+    return(sprintf("Connected to %s-server on %s<br>\n"
+		   o->server_info(), o->host_info()));
+  }) {
+    return("<font color=red>Not connected.</font><br>\n");
+  }
 }
 
