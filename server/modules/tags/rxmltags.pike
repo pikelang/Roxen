@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.438 2004/02/04 17:57:25 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.439 2004/03/02 15:12:59 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -4090,7 +4090,7 @@ class TagEmit {
 
       if(objectp(res))
 	if(args->sort ||
-	   (args->skiprows<0) ||
+	   (args->skiprows && args->skiprows<0) ||
 	   args->rowinfo ||
 	   args->remainderinfo )
 	  // Expand the object into an array of mappings if sort,
@@ -4216,7 +4216,7 @@ class TagEmit {
 	  // If rowinfo or negative skiprows are used we have
 	  // to do filtering in a loop of its own, instead of
 	  // doing it during the emit loop.
-	  if(args->rowinfo || args->skiprows<0) {
+	  if(args->rowinfo || (args->skiprows && args->skiprows<0)) {
 	    for(int i; i<sizeof(res); i++)
 	      if(should_filter(res[i], filter)) {
 		res = res[..i-1] + res[i+1..];
@@ -4305,7 +4305,7 @@ class TagEmit {
       if(args->maxrows && counter == args->maxrows)
 	return do_once_more();
 
-      if(args->skiprows>0)
+      if(args->skiprows && args->skiprows>0)
 	while(args->skiprows-->-1)
 	  while((vars=res->get_row()) &&
 		should_filter(vars, filter));
