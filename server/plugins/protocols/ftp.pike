@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.105 2004/07/08 23:32:55 _cvs_stephen Exp $
+ * $Id: ftp.pike,v 2.106 2004/07/09 00:47:05 _cvs_stephen Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -198,7 +198,7 @@ class RequestID2
 		"set_status_for_path", "set_status_for_url",
 		"charset_name", "charset_function", "join_charset",
 		"output_encode",
-		"destroy", "_num", "__num">)[var]) {
+		"destroy", "_sprintf", "_num", "__num">)[var]) {
 #ifdef FTP2_DEBUG
 	  if (catch {
 #endif /* FTP2_DEBUG */
@@ -2038,7 +2038,7 @@ class FTPSession
       int off;
       file->file->set_blocking();
       catch( off = file->tell() );
-      pipe->add_source( file->file, max(off,0),	(file->len||-1) );
+      pipe->add_source( file->file, max(off,0),	(file->len>0||-1) );
     }
     pipe->start();
     curr_pipe = pipe;
