@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.47 1997/09/29 22:07:54 grubba Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.48 1997/10/07 21:08:06 grubba Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -1952,33 +1952,29 @@ string tag_right(string t, mapping m, string s, object got)
 string tag_formoutput(string tag_name, mapping args, string contents,
 		      object request_id, mapping defines)
 {
-  string nullvalue="";
-  array(string) content_array = contents/"#";
+  string nullvalue = args->nullvalue || "";
+  string quote = args->quote || "#";
+  string multi_separator = args->multi_separator || ", ";
+  array(string) content_array = contents/quote;
   int i;
 
-  if (args->nullvalue) {
-    nullvalue = (string)args->nullvalue;
-  }
+  for (i=1; i < sizeof(content_array); i += 2) {
+    mixed var_value = request_id->variables[content_array[i]];
 
-  for (i=0; i < sizeof(content_array); i++) {
-    if (i & 1) {
-      mixed var_value = request_id->variables[content_array[i]];
-
-      if (content_array[i] == "") {
-	content_array[i] = "#";
-      } else if (var_value) {
-	if (arrayp(var_value)) {
-	  content_array[i] = var_value*", ";
-	} else {
-	  content_array[i] = var_value;
-	}
+    if (content_array[i] == "") {
+      content_array[i] = quote;
+    } else if (var_value) {
+      if (arrayp(var_value)) {
+	content_array[i] = var_value * multi_separator;
       } else {
-	content_array[i] = nullvalue;
+	content_array[i] = var_value;
       }
-      content_array[i] = replace(content_array[i],
-				 ({ "<", ">", "&", "\"", "\'" }),
-				 ({ "&lt;", "&gt;", "&amp;", "&#34;", "&#39;" }));
+    } else {
+      content_array[i] = nullvalue;
     }
+    content_array[i] = replace(content_array[i],
+			       ({ "<", ">", "&", "\"", "\'" }),
+			       ({ "&lt;", "&gt;", "&amp;", "&#34;", "&#39;" }));
   }
   return(content_array*"");
 }
