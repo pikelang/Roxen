@@ -109,11 +109,12 @@ void roxen_perror(string format,mixed ... args)
    int lwn;
    s=((args==({}))?format:sprintf(format,@args));
    if (s=="") return;
-   if ( (lwn = s[-1]=="\n") )
+   if ( (lwn = (s[-1]=="\n")) )
       s=s[0..strlen(s)-2];
-   werror((perror_last_was_newline?getpid()+": ":"")
-	  +replace(s,"\n","\n"+getpid()+": ")
-          +(lwn?"\n":""));
+   string ts = getpid()+": "+(ctime(time())/" ")[-2]+": ";
+   werror((perror_last_was_newline? ts: "")+
+	  replace(s, "\n", "\n"+ts)+
+	  (lwn?"\n":""));
    perror_last_was_newline=lwn;
 }
 
