@@ -13,10 +13,9 @@ constant operation_name = "coordinate-system";
 
 static
 {
-  mapping data = ([]);
-
-  void parse_data()
+  mapping parse_data(string d)
   {
+    mapping data = ([]);
     mapping current_data = ([]);
     Parser.HTML p = Parser.HTML();
     p->xml_tag_syntax( 2 );
@@ -56,12 +55,13 @@ static
 				  return c;
 				} );
 
-    p->feed( args->data )->finish();
+    p->feed( d )->finish();
+    return data;
   }
     
   LazyImage.Layers process( LazyImage.Layers layers )
   {
-    parse_data();
+    mapping data = args->parsed_data;
 
     Image.Layer lab_l = Image.Layer();
     int x_inner = translate_coordinate( args->xsize,0 ),
@@ -399,10 +399,8 @@ static
 
   LazyImage.Arguments check_args( LazyImage.Arguments a )
   {
-    // FIXME: Perhaps do the parsing here, and then
-    // a->data sprintf( "%O", data ) or something
-    // once the debugging is done, to avoid the fact that
-    // white-space changes give the image a new ID.
+    a->parsed_data = parse_data(a->data);
+    m_delete(a, "data");
     return a;
   }
 };
