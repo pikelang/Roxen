@@ -1,5 +1,5 @@
 /*
- * $Id: smartpipe.pike,v 1.19 1998/03/29 02:32:33 neotron Exp $
+ * $Id: smartpipe.pike,v 1.20 1998/03/29 02:33:37 neotron Exp $
  *
  * A somewhat more optimized Pipe.pipe...
  */
@@ -49,7 +49,7 @@ void finish()
   current_input = 0;
   write_out = done_callback = 0;
   to_send = 0;
-  remote_call_back(check_for_closing);
+  remove_call_back(check_for_closing);
   destruct(this_object());
 }
 
@@ -105,7 +105,7 @@ void shuffle()
 
 void next_input()
 {
-  remote_call_back(check_for_closing);
+  remove_call_back(check_for_closing);
   if(!sizeof(to_send))
   {
     finish();
