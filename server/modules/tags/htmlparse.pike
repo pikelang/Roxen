@@ -18,7 +18,7 @@
 #define _rettext defines[" _rettext"]
 #define _ok     defines[" _ok"]
 
-constant cvs_version="$Id: htmlparse.pike,v 1.175 1999/06/11 13:50:44 mast Exp $";
+constant cvs_version="$Id: htmlparse.pike,v 1.176 1999/06/22 20:27:29 grubba Exp $";
 constant thread_safe=1;
 
 function call_user_tag, call_user_container;
@@ -1229,22 +1229,16 @@ string tag_configurl(string f, mapping m)
 
 string tag_configimage(string f, mapping m)
 {
-  string args="";
-
-  while(sizeof(m))
-  {
-    string q;
-    switch(q=indices(m)[0])
-    {
-     case "src":
-      args += " src=\"/internal-roxen-"+ (m->src-".gif") + "\"";
-      break;
-     default:
-      args += " "+q+"=\""+m[q]+"\"";
+  if (m->src) {
+    if (m->src[sizeof(m->src)-4..] == ".gif") {
+      m->src = m->src[..sizeof(m->src)-5];
     }
-    m_delete(m, q);
+    m->src = "/internal-roxen-" + m->src;
   }
-  return ("<img border=0 "+args+">");
+
+  m->border = "0";
+
+  return make_tag("img", m);
 }
 
 string tag_aprestate(string tag, mapping m, string q, object id)
