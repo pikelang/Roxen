@@ -7,7 +7,7 @@
  * rules-based modules.
  */
 
-constant cvs_version="$Id: throttlelib.pike,v 1.12 2001/09/03 18:55:11 nilsson Exp $";
+constant cvs_version="$Id: throttlelib.pike,v 1.13 2001/11/12 17:52:13 mast Exp $";
 
 #include <module.h>
 inherit "module";
@@ -24,8 +24,6 @@ string rules_doc="FIXME: override rules_doc";
 #else
 #define THROTTLING_DEBUG(X)
 #endif
-
-#define THROW(X) throw( X+"\n" )
 
 
 mapping rules;

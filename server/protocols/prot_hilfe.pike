@@ -415,7 +415,7 @@ class Connection
     alarm( 1 );
 #endif
     if( time()-last_update > 5 )
-      throw( "Too long evaluation\n" );
+      error( "Too long evaluation\n" );
   }
 
   void begone()

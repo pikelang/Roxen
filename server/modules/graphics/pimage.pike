@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1997 - 2001, Roxen IS.
 
-string cvs_version="$Id: pimage.pike,v 1.28 2001/09/06 15:28:33 per Exp $";
+string cvs_version="$Id: pimage.pike,v 1.29 2001/11/12 17:51:56 mast Exp $";
 
 #include <module.h>
 inherit "module";
@@ -347,7 +347,7 @@ class Constructors
   {
     string q = Stdio.read_bytes(fname);
     if(!q) q = id->conf->try_get_file(dirname(id->not_query)+fname,id);
-    if(!q) throw("Unknown PPM image '"+fname+"'");
+    if(!q) error ("Unknown PPM image '"+fname+"'");
 #if constant(Gz)
     mixed g = Gz;
     if (g->inflate) {

@@ -4,7 +4,7 @@
 inherit "module";
 
 constant thread_safe=1;
-constant cvs_version="$Id: throttletags.pike,v 1.13 2001/09/21 15:58:18 jhs Exp $";
+constant cvs_version="$Id: throttletags.pike,v 1.14 2001/11/12 17:52:13 mast Exp $";
 
 #ifdef THROTTLING_DEBUG
 #undef THROTTLING_DEBUG
@@ -12,8 +12,6 @@ constant cvs_version="$Id: throttletags.pike,v 1.13 2001/09/21 15:58:18 jhs Exp 
 #else
 #define THROTTLING_DEBUG(X)
 #endif
-
-#define THROW(X) throw( X+"\n" )
 
 constant module_type = MODULE_TAG;
 constant module_name = "Throttling control tags";

@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.494 2001/11/09 15:55:43 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.495 2001/11/12 17:51:54 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -524,15 +524,9 @@ mixed call_provider(string provides, string fun, mixed ... args)
   {
     function f;
     if(objectp(mod) && functionp(f = mod[fun])) {
-      mixed error;
-      if (arrayp(error = catch {
-	mixed ret;
-	if (ret = f(@args)) {
-	  return ret;
-	}
-      })) {
-	error[0] = "Error in call_provider(): "+error[0];
-	throw(error);
+      mixed ret;
+      if (ret = f(@args)) {
+	return ret;
       }
     }
   }
@@ -1441,7 +1435,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
       }
       if(objectp( tmp ))
       {
-	array err;
+	mixed err;
 
 	nest ++;
 	err = catch {
@@ -1768,7 +1762,7 @@ array(string) find_dir(string file, RequestID id, void|int(0..1) verbose)
     }
     if(objectp( remap ))
     {
-      array err;
+      mixed err;
       nest ++;
 
       TRACE_LEAVE("Recursing");
@@ -1890,7 +1884,7 @@ array(int)|Stat stat_file(string file, RequestID id)
     {
       file = id->not_query;
 
-      array err;
+      mixed err;
       nest ++;
       TRACE_LEAVE("Recursing");
       err = catch {
@@ -2077,7 +2071,7 @@ mapping(string:array(mixed)) find_dir_stat(string file, RequestID id)
     }
     if(objectp( tmp ))
     {
-      array err;
+      mixed err;
       nest ++;
 
       file = id->not_query;
