@@ -256,9 +256,9 @@ void handle_request( object port_obj )
   string contents;
   if(contents = misc->authorization)
   {
-    string *y;
-    `->=("rawauth",y[1]);
+    array(string) y;
     y = contents / " ";
+    `->=("rawauth",y[1]);
     if(sizeof(y) >= 2)
     {
       y[1] = MIME.decode_base64(y[1]);
