@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.46 2000/04/06 07:34:41 wing Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.47 2000/05/24 12:03:06 jonasw Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -217,7 +217,7 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
     icon = roxen.low_decode_image(args->icd);
 
   int i_width = icon && icon->img->xsize();
-  int i_spc = i_width ? 5 : 0;
+  int i_spc = i_width && sizeof(text) && 5;
 
   //  Generate text
   if (sizeof(text))
@@ -231,7 +231,7 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
   int t_width = text_img && text_img->xsize();
 
   //  Compute text and icon placement
-  req_width = text_img->xsize() + left + right + i_width + i_spc;
+  req_width = (text_img && text_img->xsize()) + left + right + i_width + i_spc;
 
   if (args->wi && (req_width < args->wi))
     req_width = args->wi;
