@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.87 2000/03/02 03:23:33 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.88 2000/03/05 19:46:48 js Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -664,7 +664,8 @@ string tag_set_cookie(string tag, mapping m, RequestID id)
   else
     t=time_dequantifier(m);
 
-  cookies += "; expires="+http_date(t+time(1));
+  if(t)
+    cookies += "; expires="+http_date(t+time(1));
 
   //FIXME: Check the parameter's usability
   cookies += "; path=" +(m->path||"/");
