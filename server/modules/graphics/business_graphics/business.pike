@@ -10,7 +10,7 @@
  * reference cache shortly.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.50 1997/12/01 00:10:13 peter Exp $";
+constant cvs_version = "$Id: business.pike,v 1.51 1997/12/03 05:55:20 hedda Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -260,6 +260,7 @@ string itag_data(mapping tag, mapping m, string contents,
       res->data=bar;
   else
     res->data=bar;
+
 
   return 0;
 }
