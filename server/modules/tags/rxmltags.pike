@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.267 2001/07/25 23:20:13 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.268 2001/07/26 01:53:23 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1296,6 +1296,18 @@ class TagCache {
 	keymap->form = id->real_variables + ([]);
 	keymap["page.path"] = id->not_query;
       }
+
+      if (args->profile)
+	if (mapping avail_profiles = id->misc->rxml_cache_cur_profile)
+	  foreach (args->profile / ",", string profile) {
+	    profile = String.trim_all_whites (profile);
+	    mixed profile_val = avail_profiles[profile];
+	    if (zero_type (profile_val))
+	      parse_error ("Unknown cache profile %O.\n", profile);
+	    keymap[" " + profile] = profile_val;
+	  }
+	else
+      	  parse_error ("There are no cache profiles.\n");
 
       if (args->propagate) {
 	// Updated the key, so we're done. The surrounding cache tag
@@ -4739,10 +4751,10 @@ using the pre tag.
  that the cache won't be persistent (see below). Only shared caches
  have any effect if the RXML pages aren't compiled and cached.</p>
 
- <p>If the the page is compiled to p-code which is saved, and the
- cache is not shared, and there is no timeout on it, then the produced
- cache entries are also saved, and the cache is thus persistent. In
- this case it's thus especially important to limit the number of
+ <p>If the page is compiled to p-code which is saved, and the cache is
+ not shared, and there is no timeout on it, then the produced cache
+ entries are also saved, and the cache is thus persistent. In this
+ case it's thus especially important to limit the number of
  alternative cache entries.</p>
 </desc>
 
@@ -4760,6 +4772,13 @@ using the pre tag.
 <attr name=key value=string>
  <p>Use the value of this attribute directly in the key. The variable
  attribute is the preferred way to add depends to the cache.</p>
+</attr>
+
+<attr name=profile value=string>
+ <p>A comma-separated list to choose one or more profiles from a set
+ of preconfigured cache profiles. Which cache profiles are available
+ depends on the RXML parser module in use; the standard RXML parser
+ currently has none.</p>
 </attr>
 
 <attr name=shared value=string>
@@ -7275,7 +7294,7 @@ load.</p>
  The filter attribute is used to block certain 'rows' from the
  source from being emitted. The filter attribute should be set
  to a list with variable names in the emitted scope and glob patterns
- the the variable value must match in order to not get filtered.
+ the variable value must match in order to not get filtered.
  A list might look like <tt>name=a*,id=??3?45</tt>. Note that
  it is often better to perform the filtering in the plugin, by
  modifying its arguments, if possible. E.g. when querying an SQL
