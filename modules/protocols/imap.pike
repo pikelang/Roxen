@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.93 1999/03/02 20:59:12 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.94 1999/03/02 23:02:08 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -317,14 +317,20 @@ class imap_mail
     werror("make_envelope(%O)\n", h);
 #endif /* IMAP_DEBUG */
 
-    return imap_list( ({ string_to_imap(first_header(h->date)),
-			 string_to_imap(first_header(h->subject)),
-			 from, sender, reply_to,
-			 address_list_to_imap(first_header(h->to)),
-			 address_list_to_imap(first_header(h->cc)),
-			 address_list_to_imap(first_header(h->bcc)),
-			 string_to_imap(first_header(h["in-reply-to"])),
-			 string_to_imap(first_header(h["message-id"])) }) );
+    array a = ({
+      string_to_imap(first_header(h->date)),
+      string_to_imap(first_header(h->subject)),
+      from, sender, reply_to,
+      address_list_to_imap(first_header(h->to)),
+      address_list_to_imap(first_header(h->cc)),
+      address_list_to_imap(first_header(h->bcc)),
+      string_to_imap(first_header(h["in-reply-to"])),
+      string_to_imap(first_header(h["message-id"]))
+    });
+
+    werror(sprintf("make_envelope(): arr: %O\n", a));
+
+    return imap_list(a);
   }
   
   // array collect(mixed ...args) { return args; }
