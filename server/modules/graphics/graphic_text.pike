@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.21 1996/12/10 13:19:40 neotron Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.22 1997/01/13 06:54:50 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -16,9 +16,9 @@ array register_module()
 	      "<b>&lt;anfang&gt;:</b> Make the first character to a graphical one. Not all that usefull, really.<br>\n"
 	      "<br>\n"
 	      "<b>Common arguments:</b>\n <pre>"
-	      " bg=#rrggbb      Use this background, default taken from the\n"
+	      " bg=color        Use this background, default taken from the\n"
 	      "                 &lt;body&gt; tag, if any\n"
-	      " fg=#rrggbb      Use this foreground, default taken from the\n"
+	      " fg=color        Use this foreground, default taken from the\n"
 	      "                 &lt;body&gt; tag, if any\n"
 	      " font=fnt        Use this font. The fonts can be found in the\n"
 	      "                 directory specified in the configuration\n"
@@ -38,8 +38,9 @@ array register_module()
 	      " quant=cols      Use this number of colors\n"
 	      " magic[=message] Modifier to href, more flashy links\n"
 	      "                 Does <b>not</b> work with 'split'\n"
-	      " fs              Use floyd-steinberg dithering\n"
-	      " border=int,#col Draw an border (width is the first argument\n"
+	      " fuzz[=color]    Apply the 'glow' effect to the result\n"
+ 	      " fs              Use floyd-steinberg dithering\n"
+	      " border=int,col. Draw an border (width is the first argument\n"
 	      "                 in the specified color\n"
 	      " spacing=int     Add this amount of spacing around the text\n"
 	      " xspacing=int    like spacing, but only horizontal\n"
@@ -50,13 +51,12 @@ array register_module()
 	      " bevel=int       Draw a bevel box (width is the argument)\n"
 	      " pressed         Invert the \"direction\" of the bevel box\n"
 	      " talign=dir      Justify the text to the left, right, or center\n"
-	      " textbox=al,#col Use 'al' as opaque value to draw a box below\n"
+	      " textbox=al,col. Use 'al' as opaque value to draw a box below\n"
 	      "                 the text with the specified color.\n"
 	      " xpad=X%         Increase padding between characters with X%\n"
 	      " xpad=Y%         Increase padding between lines with Y%\n"
 	      " shadow=int,dist Draw a drop-shadow (variable distance/intensity)\n"
-	      " fuzz=#col       The 'shine' effect used in the 'magic'\n"
-	      "                 highlightning\n"
+	      " glow=color      Draw a 'glow' outline around the text.\n"
 	      " opaque=0-100%   Draw with more or less opaque text (100%\n"
 	      "                 is default)\n"
 	      " rotate=ang(deg.)Rotate the finished image\n"
@@ -65,6 +65,11 @@ array register_module()
 	      " turbulence=args args is: frequency,color;freq,col;freq,col\n"
 	      "                 Apply a turbulence filter, and use this as the\n"
 	      "                 background.\n"
+	      " maxlen=arg      The maximum length of the rendered text will be\n"
+	      "                 the specified argument. The default is 300, this\n"
+	      "                 is used to safeguard against mistakes like\n"	
+	      "&lt;gh1&gt;&lt;/gh&gt;, which would otherwise parse the whole\n"
+	      "document.\n"
 	      "\n"
 	      "<b>Arguments passed on the the &lt;a&gt; tag (if href is specified):</b>\n "
 	      " target=...\n"
@@ -90,6 +95,14 @@ array (string) list_fonts()
 
 void create()
 {
+
+  defvar("deflen", 300, "Default maximum text-length", TYPE_INT,
+	 "The module will, per default, not try to render texts "
+	 "longer than this. This is a safeguard for things like "
+	 "&lt;gh1&gt;&lt;/gh&gt;, which would otherwise parse the"
+	 " whole document. This can be overrided with maxlen=... in the "
+	 "tag.");
+
   defvar("location", "/gtext/", "Mountpoint", TYPE_LOCATION,
 	 "The URL-prefix for the anfang characters.");
 
@@ -178,9 +191,25 @@ object (Image) load_image(string f)
 
 object (Image) blur(object (Image) img, int amnt)
 {
+  img->setcolor(0,0,0);
+  img = img->autocrop(amnt, 0,0,0,0, 0,0,0);
+
   for(int i=0; i<amnt; i++) 
-    img = img->apply_matrix( make_matrix((int)sqrt(img->ysize()+10)));
+    img = img->apply_matrix( make_matrix((int)sqrt(img->ysize()+20)));
   return img;
+}
+
+object (Image) outline(object (Image) on, object (Image) with,
+		       array (int) color, int radie, int x, int y)
+{
+  object foo = Image(with->xsize(), with->ysize(), @color);
+  
+  int steps=10;
+  for(int j=0; j<=steps; j++)
+    on->paste_mask(foo, with,(int)(0.5+x-(sin((float)j/steps*PI*2)*radie)),
+		   (int)(0.5+y-(cos((float)j/steps*PI*2)*radie)));
+  foo=0;
+  return on;
 }
 
 constant white = ({ 255,255,255 });
@@ -238,6 +267,11 @@ object (Image) make_text_image(mapping args, object font, string text)
   object (Image) text_alpha=font->write(@(text/"\n"));
   int xoffset=0, yoffset=0;
 
+  if(!text_alpha->xsize() || !text_alpha->ysize())
+    text_alpha = Image(10,10, 0,0,0);
+  
+//  perror("Making image of '%s', args=%O\n", text, args);
+
   if(int op=((((int)args->opaque)*255)/100)) // Transparent text...
     text_alpha=text_alpha->color(op,op,op);
 
@@ -246,6 +280,8 @@ object (Image) make_text_image(mapping args, object font, string text)
 
   int xsize=txsize; // Image size, in pixels
   int ysize=tysize;
+
+//  perror("Xsize=%d; ysize=%d\n",xsize,ysize);
 
   if(args->bevel)
   {
@@ -316,6 +352,26 @@ object (Image) make_text_image(mapping args, object font, string text)
   } else
     background = Image(xsize, ysize, @bgcolor);
 
+  if(args->border)
+  {
+    int b = (int)args->border;
+    background->setcolor(@parse_color((args->border/",")[-1]));
+
+    for(--b;b>=0;b--)
+    {
+      // upper left -- upper right
+      background->line(b,b, xsize-b-1, b);
+
+      // lower left -- lower right
+      background->line(b,ysize-b-1, xsize-b-1, ysize-b-1);
+
+      // upper left -- lower left
+      background->line(b,b,   b, ysize-b-1);
+      // upper right -- lower right
+      background->line(xsize-b-1,b, xsize-b-1, ysize-b-1);
+    }
+  }
+  
   background->setcolor(@bgcolor);
 
   if(args->size || args->xsize || args->ysize)
@@ -355,6 +411,7 @@ object (Image) make_text_image(mapping args, object font, string text)
 			    255-(alpha*255/100),xoffset-border,yoffset-border);
   }
 
+  
   if(args->shadow)
   {
     int sd = ((int)args->shadow+10)*2;
@@ -364,6 +421,15 @@ object (Image) make_text_image(mapping args, object font, string text)
     background->paste_mask(Image(txsize,tysize),ta,xoffset+sdist, yoffset+sdist);
   }
 
+  if(args->glow)
+  {
+    int amnt = (int)(args->glow/",")[-1]+2;
+    array (int) blurc = parse_color((args->glow/",")[0]);
+    background->paste_mask(Image(txsize+amnt*2,tysize*2, @blurc),
+			   blur(text_alpha, amnt),
+			   xoffset-amnt, yoffset-amnt);
+  }
+  
   if(args->chisel)
     foreground=text_alpha->apply_matrix( ({ ({8,1,0}),
 					   ({1,0,-1}),
@@ -372,6 +438,17 @@ object (Image) make_text_image(mapping args, object font, string text)
   
 
   if(!foreground)  foreground=Image(txsize, tysize, @fgcolor);
+  if(args->textscale)
+  {
+    string c1="black",c2="black",c3="black",c4="black";
+    sscanf(args->textscale, "%s,%s,%s,%s", c1, c2, c3, c4);
+    foreground->tuned_box(0,0, txsize,tysize,
+			  ({parse_color(c1),parse_color(c2),parse_color(c3),
+			      parse_color(c4)}));
+  }
+  if(args->outline)
+    outline(background, text_alpha, parse_color((args->outline/",")[0]),
+	    ((int)(args->outline/",")[-1])+1, xoffset, yoffset);
 
   background->paste_mask(foreground, text_alpha, xoffset, yoffset);
 
@@ -385,7 +462,7 @@ object (Image) make_text_image(mapping args, object font, string text)
   if(args->rotate)
   {
     string c;
-    if(sscanf(args->rotate, "%*d,%s", c))
+    if(sscanf(args->rotate, "%*d,%s", c)==2)
        background->setcolor(@parse_color(c));
     else
        background->setcolor(@bgcolor);
@@ -437,8 +514,9 @@ array(int)|string write_text(int _args, string text, int size,
   if(!img) return 0;
   
   // place in cache.
-  int q = (int)args->quant || (args->background?256:16);
-  img = img->map_closest(img->select_colors(q-1)+({parse_color(args->bg)}));
+  int q = (int)args->quant || (args->background||args->texture?256:QUERY(cols));
+  if(!args->fs)
+    img = img->map_closest(img->select_colors(q-1)+({parse_color(args->bg)}));
   if(args->fs)
     data=({ img->togif_fs(@(args->notrans?({}):parse_color(args->bg))),
 	    ({img->xsize(),img->ysize()})});
@@ -562,8 +640,8 @@ string magic_image(string url, int xs, int ys, string sn,
       +"onMouseover=\"img_act('"+sn+"','"
       +(mess||url)+"');return true;\"\n"
       "\n"
-      "onMouseout=\"img_inact('"+sn+"')\"><img _parsed=1 \n"
-      " src="+image_1+" name="+sn+" border=0 alt=\""+alt+"\" ></a>\n"));
+      "onMouseout=\"img_inact('"+sn+"')\"><img _parsed=1 width="+xs+" "
+      "height="+ys+" src="+image_1+" name="+sn+" border=0\nalt=\""+alt+"\" ></a>\n"));
 }
 
 
@@ -575,7 +653,9 @@ string extra_args(mapping in)
     switch(i)
     {
      case "target":
-     case "onClick":
+     case "hspace":
+     case "vspace":
+     case "onclick":
       s+=i+"='"+in[i]+"' ";
       m_delete(in, i);
       break;
@@ -587,12 +667,11 @@ string extra_args(mapping in)
 string tag_graphicstext(string t, mapping arg, string contents,
 			object id, object foo, mapping defines)
 {
-  if(!strlen(contents)) return ""; // There is no need to make this image.
-
+  contents = parse_rxml(contents, id);// Allow <accessed> inside <gtext>.
+  
   string pre, post, defalign, gt, rest, magic;
   int i, split;
 
-  
  // No images here, let's generate an alternative..
   if(!id->supports->images || id->prestate->noimages)
   {
@@ -617,6 +696,9 @@ string tag_graphicstext(string t, mapping arg, string contents,
     }
   }
 
+  contents = contents[..((int)arg->maxlen||QUERY(deflen))];
+  m_delete(arg, "maxlen");
+
   if(arg->magic)
   {
     magic=arg->magic;
@@ -631,13 +713,14 @@ string tag_graphicstext(string t, mapping arg, string contents,
   }
   
   string lp, url, ea;
+
   ea = extra_args(arg);
+
   if(arg->href)
   {
     url = arg->href;
     lp = "<a href=\""+arg->href+"\" "+ea+">";
     if(!arg->fg) arg->fg=defines->link||"#0000ff";
-    m_delete(arg,"href");
   }
 
   // Modify the 'arg' mapping...
@@ -646,7 +729,6 @@ string tag_graphicstext(string t, mapping arg, string contents,
   if(defines->font && !arg->font) arg->font=defines->font||QUERY(default_font);
   if(!arg->font) arg->font = QUERY(default_font);
 
-  
   if(arg->split)
   {
     split=1;
@@ -666,19 +748,6 @@ string tag_graphicstext(string t, mapping arg, string contents,
     if(i > 1) arg->scale = 1.0 / ((float)i*0.6);
 
 
-  string moreargs="";
-  if(arg->hspace)
-  {
-    moreargs += "hspace="+arg->hspace+" ";
-    m_delete(arg,"hspace");
-  }
-
-  if(arg->vspace)
-  {
-    moreargs += "vspace="+arg->vspace+" ";
-    m_delete(arg,"vspace");
-  }
-  
   // Now the 'args' mapping is modified enough..
   int num = find_or_insert( arg );
 
@@ -700,7 +769,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
       array size = write_text(num,word,1,0);
       res += ({ "<img _parsed=1 border=0 alt=\""+replace(word,"\"","'")
 		  +"\" src=\'"+pre+quote(word)+"\' width="+
-		  size[0]+" height="+size[1]+" "+moreargs+">\n"
+		  size[0]+" height="+size[1]+" "+ea+">\n"
 		  });
     }
     if(lp) res+=({ "</a>" });
@@ -726,8 +795,15 @@ string tag_graphicstext(string t, mapping arg, string contents,
   if(magic)
   {
     string res = "";
+    if(!arg->fg) arg->fg=defines->link||"#0000ff";
     arg = mkmapping(indices(arg), values(arg));
-    arg->fuzz = arg->fg;
+    if(arg->fuzz)
+    {
+      if(arg->fuzz != "fuzz")
+	arg->glow = arg->fuzz;
+      else
+	arg->glow = arg->fg;
+    }
     arg->fg = defines->alink||"#ff0000";
     if(arg->bevel) arg->pressed=1;
     int num2 = find_or_insert(arg);
@@ -735,7 +811,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
     if(!defines->magic_java) res = magic_javascript_header(id);
     defines->magic_java="yes";
     return res + magic_image(url||"", size[0], size[1],
-			     "i"+(num+""+hash(gt,0x7fffffff))+"g",
+			     "i"+(num+""+hash(gt,0x7fffffff)+hash(url||"",0x7fffffff))+"g",
 			     query_location()+num+"/"+quote(gt),
 			     query_location()+num2+"/"+quote(gt),
 			     replace(gt, "\"","'"),(magic=="magic"?0:magic),
@@ -744,44 +820,74 @@ string tag_graphicstext(string t, mapping arg, string contents,
   if(input && id->supports->images)
     return (pre+"<input type=image name=\""+arg->name+"\" border=0 alt=\""+
 	    replace(gt,"\"","'")+"\" src="+query_location()+num+"/"+quote(gt)
-	    +" align="+(arg->align?arg->align:defalign)+
+	    +" align="+(arg->align?arg->align:defalign)+ea+
 	    " width="+size[0]+" height="+size[1]+">"+rest+post);
   return (pre+(lp?lp:"")+
 	  "<img _parsed=1 border=0  alt=\""+replace(gt,"\"","'")+"\" src="+
-	  query_location()+num+"/"+quote(gt)
+	  query_location()+num+"/"+quote(gt)+" "+ea
 	  +" align="+(arg->align?arg->align:defalign)+
 	  " width="+size[0]+" height="+size[1]+">"+rest+(lp?"</a>":"")+post);
+}
+
+inline string ns_color(array (int) col)
+{
+  if(!arrayp(col)||sizeof(col)!=3)
+    return "#000000";
+  return sprintf("#%02x%02x%02x", col[0],col[1],col[2]);
+}
+
+
+string make_args(mapping in)
+{
+  array a=indices(in), b=values(in);
+  for(int i=0; i<sizeof(a); i++)
+    if(lower_case(b[i])!=a[i])
+      if(search(b,"\"")==-1)
+	a[i]+="=\""+b[i]+"\"";
+      else
+	a[i]+="='"+b[i]+"'";
+  return a*" ";
 }
 
 string tag_body(string t, mapping args, object id, object file,
 		mapping defines)
 {
-  int bg, text, link, alink, vlink, background;
-//if(args->clink)     { defines->clink = args->clink;   
-  if(args->bgcolor)   { defines->bg    = args->bgcolor;  bg=1;   }
-  if(args->text)      { defines->fg    = args->text;     text=1; }
-  if(args->link)      { defines->link  = args->link;     link=1; }
-  if(args->background){ background=1; }
-  if(args->alink)     { defines->alink = args->alink;    alink=1;}
-  if(args->vlink)     { defines->vlink = args->vlink;    vlink=1;}
-  if(bg+text+link+alink+vlink+background+bg&&
-     (bg+text+link+alink+vlink+background+bg)<5)
-  {
-    if(!bg)   args->bgcolor=args->text  || "black";
-    if(!text) args->text=args->bgcolor  || "white";
-    if(!link) args->link=args->bgcolor  || "yellow";
-    if(!vlink)args->vlink=args->bgcolor || "pink";
-    if(!alink)args->alink=args->bgcolor || "red";
-    return ("<body "+(background?"background="+args->background+" ":"")+
-	    "bgcolor="+args->bgcolor+" text="+args->text+" link="+
-	    args->link+" vlink="+args->vlink+" alink="+args->alink+">");
-  }
+  int cols,changed;
+  if(args->bgcolor||args->text||args->link||args->alink
+     ||args->background||args->vlink)
+    cols=1;
+
+#define FIX(Y,Z,X) do{if(!args->Y){if(cols){defines->X=Z;args->Y=Z;changed=1;}}else{defines->X=args->Y;if(args->Y[0]!='#'){args->Y=ns_color(parse_color(args->Y));changed=1;}}}while(0)
+
+  FIX(bgcolor,"#c0c0c0",bg);
+  FIX(text,"#000000",fg);
+  FIX(link,"#0000ff",link);
+  FIX(alink,"#00ffff",alink);
+  FIX(vlink,"#2000ee",vlink);
+  if(changed)
+    return ("<body "+make_args(args)+">");
 }
 
-
-  mapping query_tag_callers()
+string tag_fix_color(string tagname, mapping args, object id, object file,
+		     mapping defines)
 {
-  return (["body":tag_body]);
+  int changed;
+#define FIX(X,Y) if(args->X){defines->Y=args->X;if(args->X[0]!='#'){args->X=ns_color(parse_color(args->X));changed = 1;}}
+
+  FIX(bgcolor,bg);
+  FIX(text,fg);
+  FIX(color,fg);
+  if(changed)return ("<"+tagname+" "+make_args(args)+">");
+  return 0;
+}
+
+mapping query_tag_callers()
+{
+  return ([
+    "body":tag_body, "font":tag_fix_color,
+    "table":tag_fix_color,
+    "tr":tag_fix_color, "td":tag_fix_color
+  ]);
 }
 
 
@@ -789,12 +895,12 @@ mapping query_container_callers()
 {
   return ([ "anfang":tag_graphicstext,
 	    "gh":tag_graphicstext,
-	    "gh1":tag_graphicstext,
-	    "gh2":tag_graphicstext,
-	    "gh3":tag_graphicstext,
-	    "gh4":tag_graphicstext,
-	    "gh5":tag_graphicstext,
-	    "gh6":tag_graphicstext,
+	    "gh1":tag_graphicstext, "gh2":tag_graphicstext,
+	    "gh3":tag_graphicstext, "gh4":tag_graphicstext,
+	    "gh5":tag_graphicstext, "gh6":tag_graphicstext,
+	    "gh7":tag_graphicstext, "gh8":tag_graphicstext,
+	    "gh9":tag_graphicstext, "gh10":tag_graphicstext,
+	    "gh11":tag_graphicstext,"gh12":tag_graphicstext,
 	    "gtext":tag_graphicstext, ]);
 }
 
