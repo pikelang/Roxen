@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.121 2004/05/13 12:35:39 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.122 2004/05/13 13:38:13 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1876,12 +1876,22 @@ enum Overwrite {
   //! the value "T" (RFC 2518 9.6).
 };
 
-//! State of the DAV:PropertyBehavior for this source.
-enum PropertyBehavior {
-  PROPERTY_OMIT = -1,	//! DAV:omit (Omit if it can't be copied).
-  PROPERTY_COPY = 0,	//! Copy if it can't be kept alive (default).
-  PROPERTY_ALIVE = 1,	//! DAV:keepalive (Live properties must be kept alive).
-}
+//! State of the DAV:propertybehavior.
+//!
+//! @mixed
+//!   @type int(0..0)
+//!     DAV:omit.
+//!     Failure to copy a property does not cause the entire copy
+//!     to fail.
+//!   @type int(1..1)
+//!     DAV:keepalive "*".
+//!     All live properties must be kept alive.
+//!   @type multiset(string)
+//!     Set of properties to keep alive.
+//!     Properties not in the set should be copied according
+//!     to best effort.
+//! @endmixed
+typedef int(0..1)|multiset(string) PropertyBehavior;
 
 class RoxenModule
 {
@@ -1962,8 +1972,9 @@ class RoxenModule
   mapping(string:mixed) copy_file(string source, string destination,
 				  PropertyBehavior behavior,
 				  Overwrite overwrite, RequestID id);
-  mapping(string:mixed) recurse_copy_files(string source, string destination, int depth,
-					   mapping(string:PropertyBehavior) behavior,
+  mapping(string:mixed) recurse_copy_files(string source, string destination,
+					   int depth,
+					   PropertyBehavior behavior,
 					   Overwrite overwrite, RequestID id);
 }
 

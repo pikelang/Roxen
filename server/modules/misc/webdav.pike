@@ -1,6 +1,6 @@
 // Protocol support for RFC 2518
 //
-// $Id: webdav.pike,v 1.28 2004/05/13 12:33:11 mast Exp $
+// $Id: webdav.pike,v 1.29 2004/05/13 13:39:39 grubba Exp $
 //
 // 2003-09-17 Henrik Grubbström
 
@@ -9,7 +9,7 @@ inherit "module";
 #include <module.h>
 #include <request_trace.h>
 
-constant cvs_version = "$Id: webdav.pike,v 1.28 2004/05/13 12:33:11 mast Exp $";
+constant cvs_version = "$Id: webdav.pike,v 1.29 2004/05/13 13:39:39 grubba Exp $";
 constant thread_safe = 1;
 constant module_name = "DAV: Protocol support";
 constant module_type = MODULE_FIRST;
@@ -299,7 +299,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
       TRACE_LEAVE("COPY: No destination header.");
       return Roxen.http_status(400, "COPY: Missing destination header.");
     }
-    mapping(string:int(-1..1)) propertybehavior = ([]);
+    PropertyBehavior propertybehavior = (<>);	// default
     if (xml_data) {
       // Mapping from href to behavior.
       // @int
@@ -325,25 +325,35 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
       foreach(prop_behav_node->get_children(), SimpleNode n) {
 	switch(n->get_full_name()) {
 	case "DAV:omit":
-	  if (propertybehavior[0] > 0) {
+	  if (!multisetp(propertybehavior) || sizeof(propertybehavior)) {
 	    return Roxen.http_status(400, "Conflicting DAV:propertybehavior.");
 	  }
-	  propertybehavior[0] = -1;
+	  propertybehavior = 0;
 	  break;
 	case "DAV:keepalive":
+	  if (!multisetp(propertybehavior) || sizeof(propertybehavior)) {
+	    return Roxen.http_status(400, "Conflicting DAV:propertybehavior.");
+	  }
 	  foreach(n->get_children(), SimpleNode href) {
 	    if (href->get_full_name == "DAV:href") {
+	      if (!multisetp(propertybehavior)) {
+		TRACE_LEAVE("COPY: Conflicting DAV:propertybehaviour.");
+		return Roxen.http_status(400,
+					 "Conflicting DAV:propertybehavior.");
+	      }
 	      propertybehavior[href->value_of_node()] = 1;
 	    } else if (href->mNodeType == Parser.XML.Tree.XML_TEXT) {
 	      if (href->get_text() != "*"){
 		TRACE_LEAVE("COPY: Syntax error in DAV:keepalive.");
-		return Roxen.http_status(400, "Syntax error in DAV:keepalive.");
+		return Roxen.http_status(400,
+					 "Syntax error in DAV:keepalive.");
 	      }
-	      if (propertybehavior[0] < 0) {
+	      if (!multisetp(propertybehavior) || sizeof(propertybehavior)) {
 		TRACE_LEAVE("COPY: Conflicting DAV:propertybehaviour.");
-		return Roxen.http_status(400, "Conflicting DAV:propertybehavior.");
+		return Roxen.http_status(400,
+					 "Conflicting DAV:propertybehavior.");
 	      }
-	      propertybehavior[0] = 1;
+	      propertybehavior = 1;
 	    }
 	  }
 	  break;
@@ -362,7 +372,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
     
     recur_func = lambda(string source, string loc, int d, RoxenModule module,
 			RequestID id, string destination,
-			mapping(string:int(-1..1)) behavior,
+			PropertyBehavior behavior,
 			Overwrite overwrite) {
 		   if (!has_prefix(destination, loc)) {
 		     // FIXME: Destination in other filesystem.
