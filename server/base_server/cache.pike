@@ -1,4 +1,4 @@
-//string cvs_version = "$Id: cache.pike,v 1.34 2000/02/02 04:15:03 per Exp $";
+//string cvs_version = "$Id: cache.pike,v 1.35 2000/02/08 01:24:07 nilsson Exp $";
 
 #define LOCALE	roxenp()->locale->get()->config_interface
 #include <roxen.h>
@@ -166,7 +166,7 @@ mixed cache_set(string in, string what, mixed to, int|void tm)
     cache[in]=([ ]);
   cache[in][what] = allocate(ENTRY_SIZE);
   cache[in][what][DATA] = to;
-  cache[in][what][TIMEOUT] = time(1) + tm;
+  if(tm) cache[in][what][TIMEOUT] = time(1) + tm;
   cache[in][what][TIMESTAMP] = time(1);
   return to;
 }
