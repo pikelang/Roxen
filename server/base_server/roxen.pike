@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.441 2000/02/25 16:14:38 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.442 2000/02/28 06:25:43 per Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -633,6 +633,7 @@ class Protocol
   {
     if(urls[name])
       return;
+
     refs++;
     urls[name] = data;
     sorted_urls = Array.sort_array(indices(urls), lambda(string a, string b) {
@@ -1505,6 +1506,12 @@ int register_url( string url, object conf )
   }
   sscanf(host, "%[^:]:%d", host, port);
 
+  if( !port )
+  {
+    port = protocols[ protocol ]->default_port;
+    url = protocol+"://"+host+":"+port+path;
+  }
+
   if( strlen( path ) && ( path[-1] == '/' ) )
     path = path[..strlen(path)-2];
   if( !strlen( path ) )
@@ -1554,10 +1561,12 @@ int register_url( string url, object conf )
 
   int failures;
 
-  foreach(required_hosts, string required_host) {
+  foreach(required_hosts, string required_host)
+  {
     if( m[ required_host ] && m[ required_host ][ port ] )
     {
       m[required_host][port]->ref(url, urls[url]);
+
       urls[url]->port = m[required_host][port];
       continue;    /* No need to open a new port */
     }
