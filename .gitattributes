@@ -117,6 +117,7 @@ urw_itc_avant_garde-demi-r binary
 /server/languages/finnish.pike foreign_ident
 /server/languages/french.pike foreign_ident
 /server/languages/german.pike foreign_ident
+/server/languages/hungarian.pike foreign_ident
 /server/languages/italian.pike foreign_ident
 /server/languages/japanese.pike foreign_ident
 /server/languages/maori.pike foreign_ident
