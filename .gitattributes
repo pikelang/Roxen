@@ -31,8 +31,8 @@
 *.txt eol=crlf
 /server/config_interface/sites/drop_site_warning.txt !eol
 /server/config_interface/welcome.txt !eol
-/server/nfonts/bastard.txt !eol
-/server/nfonts/puppyface.txt !eol
+/server/data/fonts/bastard.txt !eol
+/server/data/fonts/puppyface.txt !eol
 *.xcf binary
 /server/data/test/tests/rxml/RoxenTest_WashHtmlTag.xml -text -crlf
 nn binary
