@@ -4,7 +4,7 @@
 // another. This can be done using "internal" redirects (much like a
 // symbolic link in unix), or with normal HTTP redirects.
 
-constant cvs_version = "$Id: redirect.pike,v 1.37 2004/10/11 19:05:58 mast Exp $";
+constant cvs_version = "$Id: redirect.pike,v 1.38 2004/10/27 13:03:08 jonasw Exp $";
 constant thread_safe = 1;
 
 inherit "module";
@@ -163,6 +163,14 @@ mixed first_try(object id)
 	  report_error("REDIRECT: Compile error in regular expression. ("+f+")\n");
 	  continue;
 	}
+
+	//  We cannot call split on wide strings so we force UTF8 encoding
+	//  of the incoming URL in such cases. If that happens we also
+	//  convert the redirect pattern string so we don't get a mix of
+	//  different encodings in the destination URL.
+	int use_utf8 = String.width(m) > 8;
+	if (use_utf8)
+	  m = string_to_utf8(m);
 	
 	if((foo=split(m)))
 	{
@@ -172,7 +180,15 @@ mixed first_try(object id)
 	  foo +=({(({""}) + (id->not_query/"/" - ({""})))[-1],
 		  id->not_query[1..] });
 	  bar +=({ "%f", "%p" });
-	  to=replace(redirect_to[i], (array(string)) bar, (array(string)) foo);
+
+	  string redir_to = redirect_to[i];
+	  if (use_utf8)
+	    redir_to = string_to_utf8(redir_to);
+	  to = replace(redir_to, (array(string)) bar, (array(string)) foo);
+	  if (use_utf8) {
+	    //  Try reverting the temporary UTF8 encoding
+	    catch { to = utf8_to_string(to); };
+	  }
 	  break;
 	}
       }
