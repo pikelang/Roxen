@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.318 2003/12/15 09:51:53 grubba Exp $
+// $Id: module.pmod,v 1.319 2003/12/17 13:14:22 grubba Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -1003,7 +1003,7 @@ class TagSet
   {
     // Soft cast due to circular forward reference.
     // Will hopefully be resolved with the next generation compiler.
-    return [object(Parser)]
+    return [object(Parser)](mixed)
       new_context (id)->new_parser (top_level_type, make_p_code);
   }
 
