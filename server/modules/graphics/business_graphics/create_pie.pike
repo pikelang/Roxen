@@ -78,7 +78,7 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
   int yr;
 
   mixed sum;
-  int sum2;
+  mixed sum2;
 
   int* pnumbers=allocate(sizeof(numbers));
   int* order=indices(numbers);
