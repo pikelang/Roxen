@@ -1,6 +1,12 @@
+Changes since Roxen Challenger 1.2.21
+-----------------------------------------------
+
 o Several tags have updated documentation (using the "help" option).
 
 o New tag, <list-tags>.
+
+o CGI now works correctly with Pike 0.6. 
+
 
 Changes since Roxen Challenger 1.2 beta 1
 -----------------------------------------------
