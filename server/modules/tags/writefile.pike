@@ -1,0 +1,250 @@
+// This is a roxen module which provides file upload and write capabilities.
+// Copyright (c) 2001, Stephen R. van den Berg, The Netherlands.
+//                     <srb@cuci.nl>
+//
+// This module is open source software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License as published
+// by the Free Software Foundation; either version 2, or (at your option) any
+// later version.
+//
+
+#define _ok id->misc->defines[" _ok"]
+
+constant cvs_version = "$Id: writefile.pike,v 1.1 2001/05/08 22:19:29 srb%cuci.nl Exp $";
+constant thread_safe = 1;
+constant language = roxen->language;
+
+#include <module.h>
+#include <config.h>
+
+inherit "module";
+
+
+// ---------------- Module registration stuff ----------------
+
+constant module_type = MODULE_TAG;
+constant module_name = "Writefile";
+constant module_doc  = "This module provides the writefile RXML tags.<br>"
+ "<p>Copyright &copy; 2001, by "
+ "<a href='mailto:srb@cuci.nl'>Stephen R. van den Berg</a>, "
+ "The Netherlands.</p>"
+ "<p>This module is open source software; you can redistribute it and/or "
+ "modify it under the terms of the GNU General Public License as published "
+ "by the Free Software Foundation; either version 2, or (at your option) any "
+ "later version.</p>";
+
+void create() {
+  defvar ("onlysubdirs", 1,
+	  "Within tree only", TYPE_FLAG,
+          "Setting this will force all specified chroots and filenames to be "
+	  "relative to the directory this tag is located in.  "
+	  "It functions as an enforced dynamic chroot to constrain users in "
+	  "e.g. a user filesystem."
+          );
+}
+
+#define IS(arg)	((arg) && sizeof(arg))
+
+// ------------------- Containers ----------------
+
+class TagWritefile {
+  inherit RXML.Tag;
+  constant name = "writefile";
+  constant flags = RXML.FLAG_DONT_RECOVER;
+  mapping(string:RXML.Type) req_arg_types = ([
+   "filename" : RXML.t_text(RXML.PEnt)
+  ]);
+  mapping(string:RXML.Type) opt_arg_types = ([
+   "from" : RXML.t_text(RXML.PEnt),
+   "chroot" : RXML.t_text(RXML.PEnt),
+   "append" : RXML.t_text(RXML.PEnt),
+   "mkdirhier" : RXML.t_text(RXML.PEnt),
+   "remove" : RXML.t_text(RXML.PEnt),
+   "moveto" : RXML.t_text(RXML.PEnt),
+   "max-size" : RXML.t_text(RXML.PEnt),
+   "max-height" : RXML.t_text(RXML.PEnt),
+   "max-width" : RXML.t_text(RXML.PEnt),
+   "min-height" : RXML.t_text(RXML.PEnt),
+   "min-width" : RXML.t_text(RXML.PEnt),
+   "accept-type" : RXML.t_text(RXML.PEnt)
+  ]);
+
+  class Frame {
+    inherit RXML.Frame;
+
+    array do_return(RequestID id) {
+      CACHE(0);
+      _ok = 1;
+      if(!sizeof(args->filename)) {
+	_ok = 0;
+	return 0;
+      }
+      string filename,rootpath,path,schroot=args->chroot||"";
+      path=dirname(id->conf->real_file(id->not_query||"/", id))+"/";
+      rootpath=QUERY(onlysubdirs)?path:id->conf->real_file("/",id);
+      filename=((schroot+args->filename)[0]=='/'?rootpath:path)+
+       Stdio.append_path(schroot, args->filename);
+      if(args->remove) {
+        if(!rm(filename))
+	  _ok = 0;
+      }	else if(IS(args->moveto)) {
+	if(!mv(filename,((schroot+args->moveto)[0]=='/'?rootpath:path)+
+	   Stdio.append_path(schroot, args->moveto)))
+	  _ok = 0;
+      } else {
+	string towrite;
+	if(args->from) {
+	  towrite=RXML.user_get_var(args->from, "form");
+	  if(!towrite ||
+	   IS(args["max-size"]) && sizeof(towrite)>(int)args["max-size"]) {
+	    _ok = 0;
+	    return 0;
+	  }
+	} else
+	  towrite=content;
+	object privs;
+	;{ array(int) st;
+	   string diro,dirn;
+	   int domkdir=0;
+	   for(dirn=filename;
+	      diro=dirn, diro!=(dirn=dirname(dirn)) && !(st = file_stat(dirn));
+	      domkdir=1);
+	   if(st) {
+	     privs = Privs("Writefile", st[5], st[6]);
+	     if(domkdir && args->mkdirhier)
+	       Stdio.mkdirhier(dirname(filename));
+	   }
+	 }
+	_ok = 0;
+        object file=Stdio.File();
+	if(file->open(filename, args->append?"wrca":"wrct")) {
+	  _ok = 1;
+	  file->write(towrite);
+	  object dims;
+	  if (IS(args["min-height"])|| IS(args["max-height"])||
+	      IS(args["min-width"]) || IS(args["max-width"])) {
+	    file->seek(0);
+	    dims = Dims.dims();
+	    array xy = dims->get(file);
+	    if(xy && 
+	       (IS(args["min-height"])&& xy[1] < (int)args["min-height"]||
+	        IS(args["max-height"])&& xy[1] > (int)args["max-height"]||
+	        IS(args["min-width"]) && xy[0] < (int)args["min-width"]||
+	        IS(args["max-width"]) && xy[0] > (int)args["max-width"]))
+	      _ok = 0;
+	  }
+	  if (_ok && args["accept-type"]) {
+	    file->seek(0);
+	    array(string) types = args["accept-type"]/",";
+	    _ok = 0;
+	    catch {
+	      if (!dims) {
+		dims = Dims.dims();
+		dims->f = file;
+	      }
+	      if (0<=search(types, "jpeg") && dims->get_JPEG() ||
+	          0<=search(types, "png") && (file->seek(0),dims->get_PNG()) ||
+	          0<=search(types, "gif") && (file->seek(0),dims->get_GIF()))
+		_ok = 1;
+	    };
+	  }
+	  file->close();
+	}
+	privs = 0;
+      }
+      return 0;
+    }
+  }
+}
+
+// --------------------- Documentation -----------------------
+
+TAGDOCUMENTATION;
+#ifdef manual
+constant tagdoc=([
+"writefile":#"<desc cont='cont'><p><short>
+ Writes uploaded or direct content to a file.</short>
+ You can either use an upload form or write the container content
+ directly into a file.  The ownership of any newly created file is determined
+ by the directory it is placed into.</p>
+
+ <p>Additional functionality includes removal or renaming of already
+  existing files.  This container tag will set the truth value depending
+  on success or failure of the requested operation.</p>
+</desc>
+
+<attr name=filename value=string>
+ <p>Specifies the virtual filename to be created or operated on (relative
+  to the current directory, or to the root of the virtual filesystem).</p>
+</attr>
+
+<attr name=chroot value=string>
+ <p>Specifies the virtual root directory (sandbox) all file operations are
+  contained under.</p>
+</attr>
+
+<attr name=from value=string>
+ <p>Specifies the type=file form field variable which uploaded the file to be
+  written.  If this attribute is omitted, the container content is what
+  will be written instead.  Given the example below, the parameter
+  <var>from=wrapupafile</var> should be specified.</p>
+<ex><form method=post
+   enctype=\"multipart/form-data\">
+ <input type=file name=wrapupafile>
+ <input type=submit value=\"Upload file\">
+</form>
+File uploaded:
+  <insert scope=form
+    variable=\"wrapupafile.filename\"/>
+</ex>
+</attr>
+
+<attr name=append>
+ <p>Append to the file instead of replacing it.</p>
+</attr>
+
+<attr name=mkdirhier>
+ <p>Create the directory hierarchy needed to store the file if needed.</p>
+</attr>
+
+<attr name=remove>
+ <p>Causes the specified filename or directory to be removed.</p>
+</attr>
+
+<attr name=moveto value=string>
+ <p>Causes the specified filename to be moved to this new location.</p>
+</attr>
+
+<attr name=max-size value=integer>
+ <p>Specifies the maximum upload file size in bytes which is accepted.</p>
+</attr>
+
+<attr name=max-height value=integer>
+ <p>The maximum imageheight in pixels which is accepted.</p>
+</attr>
+
+<attr name=max-width value=integer>
+ <p>The maximum imagewidth in pixels which is accepted.</p>
+</attr>
+
+<attr name=min-height value=integer>
+ <p>The minimum imageheight in pixels which is accepted.</p>
+</attr>
+
+<attr name=min-width value=integer>
+ <p>The minimum imagewidth in pixels which is accepted.</p>
+</attr>
+
+<attr name=accept-type value=string>
+ <p>Comma separated list of file types which are accepted, currently
+  supported types
+  are jpeg, png and gif; the check is performed on the file content, not
+  on the file extension.</p>
+</attr>"
+
+  ,
+
+//----------------------------------------------------------------------
+
+    ]);
+#endif
