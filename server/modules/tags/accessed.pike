@@ -5,7 +5,7 @@
 // by this module.
 //
 
-constant cvs_version="$Id: accessed.pike,v 1.24 2000/02/29 20:53:53 nilsson Exp $";
+constant cvs_version="$Id: accessed.pike,v 1.25 2000/03/03 15:31:59 kuntri Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -56,8 +56,8 @@ constant tagdoc=([
   "&page.accessed;":#"<desc ent>Generates an access counter that shows how many
  times the page has been accessed.</desc>",
 
-  "accessed":#"<desc tag>Generates an access counter that shows how many
- times the page has been accessed. A file, AccessedDB, in the logs directory is used to
+  "accessed":#"<desc tag><short>Generates an access counter that shows how many
+ times the page has been accessed.</short> A file, AccessedDB, in the logs directory is used to
  store the number of accesses to each page. By default the access count is
  only kept for files that actually contain an accessed-tag,
  but can also be configured to count all files of a certain type.
