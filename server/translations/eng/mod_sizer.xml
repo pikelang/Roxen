@@ -4,12 +4,97 @@
 <language>eng</language>
 <file>../modules/tags/sizer.pike</file>
 
-<str id="1">
-<o>Tags: Page sizer</o>
+<str id="3">
+<o>Failed to read %O.</o>
 <t></t>
 </str>
 
-<str id="2">
-<o>This module provides the &lt;tt&gt;&amp;lt;page-size&amp;gt;&lt;/tt&gt; tag that calculates the size of a page, including inline images, and gives estimates of the time it will take to download the page.&lt;p&gt;You can also use the &lt;i&gt;size&lt;/i&gt; prestate to trigger the sizing process&lt;/p&gt;</o>
+<str id="4">
+<o>Cimg of %s</o>
+<t></t>
+</str>
+
+<str id="5">
+<o>Cimg from data</o>
+<t></t>
+</str>
+
+<str id="6">
+<o>File</o>
+<t></t>
+</str>
+
+<str id="7">
+<o>Size (kb)</o>
+<t></t>
+</str>
+
+<str id="8">
+<o>Headers (b)</o>
+<t></t>
+</str>
+
+<str id="9">
+<o>% of page</o>
+<t></t>
+</str>
+
+<str id="10">
+<o>Total size:</o>
+<t></t>
+</str>
+
+<str id="11">
+<o>Estimated download time:</o>
+<t></t>
+</str>
+
+<str id="12">
+<o>(bandwidth in kb/s)</o>
+<t></t>
+</str>
+
+<str id="13">
+<o>This page takes more than 20 seconds to download over a 56Kbit/sec modem.</o>
+<t></t>
+</str>
+
+<str id="14">
+<o>The image %s (%dx%d) is larger than most people can easily view on screen.</o>
+<t></t>
+</str>
+
+<str id="15">
+<o>The image %s is compressed with a very high JPEG-quality. Try lowering it.</o>
+<t></t>
+</str>
+
+<str id="16">
+<o>The image %s might be compressed better.</o>
+<t></t>
+</str>
+
+<str id="17">
+<o>Some suggestions:</o>
+<t></t>
+</str>
+
+<str id="18">
+<o>The image %s is huge. Try making it smaller</o>
+<t></t>
+</str>
+
+<str id="19">
+<o>The image %s is compressed with a very high number of colors.</o>
+<t></t>
+</str>
+
+<str id="20">
+<o>The image %s might be compressed better with fewer colors.</o>
+<t></t>
+</str>
+
+<str id="21">
+<o>Could not decode/encode GIF image. This server lacks LZW support.</o>
 <t></t>
 </str>

@@ -3,12 +3,6 @@
 <project>roxen_message</project>
 <language>eng</language>
 <file>../base_server/wizard.pike</file>
-<file>../protocols/prot_hilfe.pike</file>
-
-<str id="12">
-<o>Hilfe</o>
-<t></t>
-</str>
 
 <str id="16">
 <o>Remove</o>

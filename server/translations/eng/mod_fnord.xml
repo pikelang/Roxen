@@ -5,16 +5,6 @@
 <file>../modules/examples/fnord.pike</file>
 <file>../modules/examples/newstyle_fnord.pike</file>
 
-<str id="1">
-<o>Fnord!</o>
-<t></t>
-</str>
-
-<str id="2">
-<o>Adds an extra container tag, &amp;lt;fnord&amp;gt; that's supposed to make things invisible unless the "fnord" prestate is present.&lt;p&gt;This module is here as an example of how to write a very simple RXML-parsing module.&lt;/p&gt;</o>
-<t></t>
-</str>
-
 <str id="3">
 <o>Newstyle Fnord!</o>
 <t></t>
@@ -22,5 +12,10 @@
 
 <str id="4">
 <o>Adds an extra container tag, &amp;lt;fnord&amp;gt; that's supposed to make things invisible unless the "fnord" prestate is present.&lt;p&gt;This module is here as an example of how to write a very simple newstyle RXML-parsing module.&lt;/p&gt;</o>
+<t></t>
+</str>
+
+<str id="5">
+<o>FNORD</o>
 <t></t>
 </str>

@@ -6,5 +6,4 @@
 <xmlpath>../translations/%L/roxen_message.xml</xmlpath>
 
   <file>../base_server/wizard.pike</file>
-  <file>../protocols/prot_hilfe.pike</file>
 </project>
