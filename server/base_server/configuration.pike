@@ -1,6 +1,6 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.435 2001/06/13 13:45:23 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.436 2001/06/15 01:21:22 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3196,8 +3196,27 @@ static void create(string config)
   defvar("compat_level", Variable.StringChoice (
 	   "", roxen.compat_levels, 0,
 	   DLOCALE(246, "Compatibility level"),
-	   DLOCALE(0, "")));
+	   DLOCALE(0, "The compatibility level is used by different modules to select "
+		   "the right behavior to remain compatible with earlier Roxen "
+		   "versions. When a server configuration is created, this variable "
+		   "is set to the latest version. After that it's never changed "
+		   "automatically, thereby ensuring that server configurations "
+		   "migrated from earlier Roxen versions is kept at the right "
+		   "compatibility level.\n"
+		   "<p>\n"
+		   "This variable may be changed manually, but it's advisable to "
+		   "test the site carefully afterwards. A reload of the whole "
+		   "server configuration is required to propagate the change properly "
+		   "to all modules.")));
   set ("compat_level", roxen.__roxen_version__);
+  // Note to developers: This setting can be accessed through
+  // id->conf->query("compat_level") or similar, but observe that that
+  // call is not entirely cheap. It's therefore advisable to put it in
+  // a local variable if the compatibility level is to be tested
+  // frequently. It's perfectly all right to do that in e.g. the
+  // module start function, since the documentation explicitly states
+  // that a reload of all modules is necessary to propagate a change
+  // the setting.
 
   defvar("LogFormat",
 	 "404: $host $referer - [$cern_date] \"$method $resource $protocol\" 404 -\n"
