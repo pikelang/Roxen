@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.380 2000/10/29 03:40:56 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.381 2000/11/02 08:48:49 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -2527,6 +2527,76 @@ string check_variable(string name, mixed value)
   }
 }
 
+void module_changed( ModuleInfo moduleinfo,
+		     RoxenModule me  )
+{
+  clean_up_for_module( moduleinfo, me );
+  call_low_start_callbacks( me,
+			    moduleinfo,
+			    modules[ moduleinfo->sname ] );
+}
+
+void clean_up_for_module( ModuleInfo moduleinfo,
+			  RoxenModule me )
+{
+  int pr;
+  if(moduleinfo->type & MODULE_FILE_EXTENSION)
+  {
+    string foo;
+    for(pr=0; pr<10; pr++)
+      foreach( indices (pri[pr]->file_extension_modules), foo )
+	pri[pr]->file_extension_modules[foo]-=({me});
+  }
+
+  if(moduleinfo->type & MODULE_PROVIDER) {
+    for(pr=0; pr<10; pr++)
+      m_delete(pri[pr]->provider_modules, me);
+  }
+
+  if(moduleinfo->type & MODULE_TYPES)
+  {
+    types_module = 0;
+    types_fun = 0;
+  }
+
+  if(moduleinfo->type & MODULE_TAG)
+    remove_parse_module( me );
+
+  if( moduleinfo->type & MODULE_AUTH )
+  {
+    auth_module = 0;
+    auth_fun = 0;
+  }
+
+  if( moduleinfo->type & MODULE_DIRECTORIES )
+    dir_module = 0;
+
+  if( moduleinfo->type & MODULE_LOCATION )
+    for(pr=0; pr<10; pr++)
+     pri[pr]->location_modules -= ({ me });
+
+  if( moduleinfo->type & MODULE_URL )
+    for(pr=0; pr<10; pr++)
+      pri[pr]->url_modules -= ({ me });
+
+  if( moduleinfo->type & MODULE_LAST )
+    for(pr=0; pr<10; pr++)
+      pri[pr]->last_modules -= ({ me });
+
+  if( moduleinfo->type & MODULE_FILTER )
+    for(pr=0; pr<10; pr++)
+      pri[pr]->filter_modules -= ({ me });
+
+  if( moduleinfo->type & MODULE_FIRST ) {
+    for(pr=0; pr<10; pr++)
+      pri[pr]->first_modules -= ({ me });
+  }
+
+  if( moduleinfo->type & MODULE_LOGGER )
+    for(pr=0; pr<10; pr++)
+      pri[pr]->logger_modules -= ({ me });
+}
+
 int disable_module( string modname, int|void nodest )
 {
   MODULE_LOCK;
@@ -2576,63 +2646,7 @@ int disable_module( string modname, int|void nodest )
   report_debug("Disabling "+descr+"\n");
 #endif
 
-  if(moduleinfo->type & MODULE_FILE_EXTENSION)
-  {
-    string foo;
-    for(pr=0; pr<10; pr++)
-      foreach( indices (pri[pr]->file_extension_modules), foo )
-	pri[pr]->file_extension_modules[foo]-=({me});
-  }
-
-  if(moduleinfo->type & MODULE_PROVIDER) {
-    for(pr=0; pr<10; pr++)
-      m_delete(pri[pr]->provider_modules, me);
-  }
-
-  if(moduleinfo->type & MODULE_TYPES)
-  {
-    types_module = 0;
-    types_fun = 0;
-  }
-
-  if(moduleinfo->type & MODULE_TAG)
-    remove_parse_module( me );
-
-  if( moduleinfo->type & MODULE_AUTH )
-  {
-    auth_module = 0;
-    auth_fun = 0;
-  }
-
-  if( moduleinfo->type & MODULE_DIRECTORIES )
-    dir_module = 0;
-
-
-  if( moduleinfo->type & MODULE_LOCATION )
-    for(pr=0; pr<10; pr++)
-     pri[pr]->location_modules -= ({ me });
-
-  if( moduleinfo->type & MODULE_URL )
-    for(pr=0; pr<10; pr++)
-      pri[pr]->url_modules -= ({ me });
-
-  if( moduleinfo->type & MODULE_LAST )
-    for(pr=0; pr<10; pr++)
-      pri[pr]->last_modules -= ({ me });
-
-  if( moduleinfo->type & MODULE_FILTER )
-    for(pr=0; pr<10; pr++)
-      pri[pr]->filter_modules -= ({ me });
-
-  if( moduleinfo->type & MODULE_FIRST ) {
-    for(pr=0; pr<10; pr++)
-      pri[pr]->first_modules -= ({ me });
-  }
-
-  if( moduleinfo->type & MODULE_LOGGER )
-    for(pr=0; pr<10; pr++)
-      pri[pr]->logger_modules -= ({ me });
-
+  clean_up_for_module( moduleinfo, me );
 
   m_delete( enabled_modules, modname + "#" + id );
   forcibly_added[ modname + "#" + id ] = 0;
