@@ -272,6 +272,94 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 
   
 
+
+  //Räkna ut lite skit
+  float xstart=(float)diagram_data["xstart"];
+  float xmore=(-xstart+diagram_data["xstop"])/
+    (diagram_data["xmaxvalue"]-diagram_data["xminvalue"]);
+  float ystart=(float)diagram_data["ystart"];
+  float ymore=(-ystart+diagram_data["ystop"])/
+    (diagram_data["ymaxvalue"]-diagram_data["yminvalue"]);
+  
+  
+
+  //Rita ut bars datan
+  int farg=0;
+  write("xstart:"+diagram_data["xstart"]+"\nystart"+diagram_data["ystart"]+"\n");
+  write("xstop:"+diagram_data["xstop"]+"\nystop"+diagram_data["ystop"]+"\n");
+
+  if (diagram_data["subtype"]=="line")
+    if (diagram_data["drawtype"]=="linear")
+      foreach(diagram_data["data"], array(float) d)
+	{
+	  array(float) l=allocate(sizeof(d)*2);
+	  for(int i=0; i<sizeof(d); i++)
+	    {
+	      l[i*2]=xstart+(diagram_data["xspace"]/2.0+diagram_data["xspace"]*i)*
+		xmore;
+	      l[i*2+1]=-(d[i]-diagram_data["yminvalue"])*ymore+
+		diagram_data["ysize"]-ystart;	  
+	    }
+	  
+	  barsdiagram->setcolor(@(diagram_data["datacolors"][farg++]));
+	  draw(barsdiagram, diagram_data["linewidth"],l);
+	}
+    else
+      throw( ({"\""+diagram_data["drawtype"]+"\" is an unknown bars-diagram drawtype!\n",
+	       backtrace()}));
+  else
+    if (diagram_data["subtype"]=="box")
+      if (diagram_data["drawtype"]=="2D")
+	{
+	  int s=sizeof(diagram_data["data"]);
+	  float barw=diagram_data["xspace"]*xmore/1.5;
+	  float dnr=-barw/2.0+ barw/s/2.0;
+	  barw/=s;
+	  barw/=2.0;
+	  farg=-1;
+	  foreach(diagram_data["data"], array(float) d)
+	    {
+	      farg++;
+
+	      for(int i=0; i<sizeof(d); i++)
+		{
+		  float x,y;
+		  x=xstart+(diagram_data["xspace"]/2.0+diagram_data["xspace"]*i)*
+		    xmore;
+		  y=-(d[i]-diagram_data["yminvalue"])*ymore+
+		    diagram_data["ysize"]-ystart;	 
+		  
+		  // if (y>diagram_data["ysize"]-ypos_for_xaxis-diagram_data["linewidth"]) 
+		  // y=diagram_data["ysize"]-ypos_for_xaxis-diagram_data["linewidth"];
+
+		  barsdiagram->setcolor(@(diagram_data["datacolors"][farg]));
+  
+		  barsdiagram->polygone(
+					({x-barw+0.01+dnr, y //FIXME
+					  , x+barw+0.01+dnr, y, //FIXME
+					  x+barw+dnr, diagram_data["ysize"]-ypos_for_xaxis
+					  , x-barw+dnr,diagram_data["ysize"]- ypos_for_xaxis
+					})); 
+		  barsdiagram->setcolor(0,0,0);		  
+		  draw(barsdiagram, 0.5, 
+		       ({x-barw+0.01+dnr, y //FIXME
+			 , x+barw+0.01+dnr, y, //FIXME
+			 x+barw+dnr, diagram_data["ysize"]-ypos_for_xaxis
+			 , x-barw+dnr,diagram_data["ysize"]- ypos_for_xaxis,
+			 x-barw+0.01+dnr, y //FIXME
+		       })); 
+		}
+	      dnr+=barw*2.0;
+	    }   
+	}
+      else
+	throw( ({"\""+diagram_data["drawtype"]+"\" is an unknown bars-diagram drawtype!\n",
+		 backtrace()}));
+    else
+      throw( ({"\""+diagram_data["subtype"]+"\" is an unknown bars-diagram subtype!\n",
+	       backtrace()}));
+
+
   
   //Rita ut axlarna
   barsdiagram->setcolor(@(diagram_data["axcolor"]));
@@ -504,15 +592,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 				    1, 1)[0]);
   
 
-  //Räkna ut lite skit
-  float xstart=(float)diagram_data["xstart"];
-  float xmore=(-xstart+diagram_data["xstop"])/
-    (diagram_data["xmaxvalue"]-diagram_data["xminvalue"]);
-  float ystart=(float)diagram_data["ystart"];
-  float ymore=(-ystart+diagram_data["ystop"])/
-    (diagram_data["ymaxvalue"]-diagram_data["yminvalue"]);
-  
-  
+
 
   //Placera ut texten på X-axeln
   int s=sizeof(diagram_data["xnamesimg"]);
@@ -527,7 +607,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 					  diagram_data["xnamesimg"][i]->xsize()/2), 
 			       (int)floor(diagram_data["ysize"]-ypos_for_xaxis+
 					  si/2.0));
-      barsdiagram->
+      /*   barsdiagram->
 	polygone(make_polygon_from_line(diagram_data["linewidth"], 
 					({
 					  ((diagram_data["values_for_xnames"][i]-
@@ -541,7 +621,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 					  diagram_data["ysize"]-ypos_for_xaxis-
 					   si/4
 					}), 
-					1, 1)[0]);
+					1, 1)[0]);*/
     }
 
   //Placera ut texten på Y-axeln
@@ -618,73 +698,6 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 
     }
 
-  //Rita ut bars datan
-  int farg=0;
-  write("xstart:"+diagram_data["xstart"]+"\nystart"+diagram_data["ystart"]+"\n");
-  write("xstop:"+diagram_data["xstop"]+"\nystop"+diagram_data["ystop"]+"\n");
-
-  if (diagram_data["subtype"]=="line")
-    if (diagram_data["drawtype"]=="linear")
-      foreach(diagram_data["data"], array(float) d)
-	{
-	  array(float) l=allocate(sizeof(d)*2);
-	  for(int i=0; i<sizeof(d); i++)
-	    {
-	      l[i*2]=xstart+(diagram_data["xspace"]/2.0+diagram_data["xspace"]*i)*
-		xmore;
-	      l[i*2+1]=-(d[i]-diagram_data["yminvalue"])*ymore+
-		diagram_data["ysize"]-ystart;	  
-	    }
-	  
-	  barsdiagram->setcolor(@(diagram_data["datacolors"][farg++]));
-	  draw(barsdiagram, diagram_data["linewidth"],l);
-	}
-    else
-      throw( ({"\""+diagram_data["drawtype"]+"\" is an unknown bars-diagram drawtype!\n",
-	       backtrace()}));
-  else
-    if (diagram_data["subtype"]=="box")
-      if (diagram_data["drawtype"]=="2D")
-	{
-	  int s=sizeof(diagram_data["data"]);
-	  float barw=diagram_data["xspace"]*xmore/1.5;
-	  float dnr=-barw/2.0+ barw/s/2.0;
-	  barw/=s;
-	  barw/=2.0;
-
-	  foreach(diagram_data["data"], array(float) d)
-	    {
-	      barsdiagram->setcolor(@(diagram_data["datacolors"][farg++]));
-
-	      for(int i=0; i<sizeof(d); i++)
-		{
-		  float x,y;
-		  x=xstart+(diagram_data["xspace"]/2.0+diagram_data["xspace"]*i)*
-		    xmore;
-		  y=-(d[i]-diagram_data["yminvalue"])*ymore+
-		    diagram_data["ysize"]-ystart;	 
-		  
-		  if (y>diagram_data["ysize"]-ypos_for_xaxis-diagram_data["linewidth"]) 
-		    y=diagram_data["ysize"]-ypos_for_xaxis-diagram_data["linewidth"];
-		  
-		  barsdiagram->polygone(
-					({x-barw+0.01+dnr, y //FIXME
-					  , x+barw+0.01+dnr, y, //FIXME
-					  x+barw+dnr, diagram_data["ysize"]-ypos_for_xaxis
-					  , x-barw+dnr,diagram_data["ysize"]- ypos_for_xaxis
-					})); 
-		}
-	      dnr+=barw*2.0;
-	    }   
-	}
-      else
-	throw( ({"\""+diagram_data["drawtype"]+"\" is an unknown bars-diagram drawtype!\n",
-		 backtrace()}));
-    else
-      throw( ({"\""+diagram_data["subtype"]+"\" is an unknown bars-diagram subtype!\n",
-	       backtrace()}));
-
-
 
   diagram_data["ysize"]-=diagram_data["legend_size"];
   diagram_data["image"]=barsdiagram;
@@ -704,10 +717,10 @@ int main(int argc, string *argv)
 		 "subtype":"box",
 		 "orient":"vert",
 		 "data": 
-		 ({ ({91.2, 102.3, 94.01, 100.0, 94.3, 102.0 }),
-		    ({91.2, 101.3, 91.5, 101.7,  91.0, 101.5}),
-		    ({91.2, 103.3, 91.5, 100.1, 94.3, 95.2 }),
-		    ({93.2, 103.3, 93.5, 103.7, 94.3, 91.2 } )}),
+		 ({ ({91.2, 102.3, -94.01, 100.0, 94.3, 102.0 })/*,
+		     ({91.2, 101.3, 91.5, 101.7,  -91.0, 101.5}),
+		    ({91.2, 103.3, -91.5, 100.1, 94.3, 95.2 }),
+		    ({93.2, -103.3, 93.5, 103.7, 94.3, -91.2 }) */}),
 		 "fontsize":32,
 		 "axcolor":({0,0,0}),
 		 "bgcolor":({255,255,255}),
@@ -723,7 +736,7 @@ int main(int argc, string *argv)
 		 "legend_texts":({"streck 1", "streck 2", "foo", "bar gazonk foobar illalutta!" }),
 		 "labelsize":12,
 		 "xminvalue":0.1,
-		 "yminvalue":90
+		 "yminvalue":0
 
   ]);
   /*
