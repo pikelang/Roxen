@@ -353,6 +353,31 @@
   <result>xyzxzyx</result>
 </test>
 
+<test>
+  <rxml type="string">
+    <define container="foo" preparse="y">
+      <trimlines>
+	&_.contents; &_.argument;
+      </trimlines>
+    </define>
+    <foo argument="x">y</foo>
+  </rxml>
+  <result>yx</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <define container="foo" preparse="y" scope="s">
+      <trimlines>
+	&_.contents; &_.argument;
+	&s.contents; &s.argument;
+      </trimlines>
+    </define>
+    <foo argument="x">y</foo>
+  </rxml>
+  <result>yxyx</result>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Type tests</comment>
