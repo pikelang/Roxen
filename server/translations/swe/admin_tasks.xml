@@ -1159,3 +1159,9 @@ istället editera filen %O manuellt och sedan ta ner server, och köra
 <o>Reset</o>
 <t></t>
 </str>
+
+<str id="188">
+<new/>
+<o>Unable to parse URL.</o>
+<t></t>
+</str>

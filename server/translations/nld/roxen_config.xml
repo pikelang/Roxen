@@ -3286,12 +3286,6 @@ server must be a MySQL server, nothing else will work.
 <t></t>
 </str>
 
-<str id="512">
-<new/>
-<o>Content Editor (Instant Edition)</o>
-<t></t>
-</str>
-
 <str id="514">
 <new/>
 <o>Web Developer</o>
@@ -3313,12 +3307,6 @@ server must be a MySQL server, nothing else will work.
 <str id="517">
 <new/>
 <o>Forms And Response Module</o>
-<t></t>
-</str>
-
-<str id="518">
-<new/>
-<o>Categorization Module</o>
 <t></t>
 </str>
 
@@ -3367,12 +3355,6 @@ server must be a MySQL server, nothing else will work.
 <str id="356">
 <new/>
 <o>Configuration %O not found.</o>
-<t></t>
-</str>
-
-<str id="357">
-<new/>
-<o>Content Editor (Instant Edition for Mac)</o>
 <t></t>
 </str>
 

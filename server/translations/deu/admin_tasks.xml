@@ -1109,3 +1109,9 @@ ist, kann diese Auswahl die aktuell laufende Version wechseln.</t>
 <o>Reset</o>
 <t></t>
 </str>
+
+<str id="188">
+<new/>
+<o>Unable to parse URL.</o>
+<t></t>
+</str>

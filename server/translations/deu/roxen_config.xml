@@ -3031,11 +3031,6 @@ Roxen verwaltet.&lt;/p&gt;</t>
 <t> Das Modul ist gesperrt und nicht Bestandteil der Lizenz. Um dieses Modul zu aktivieren, muss eine gültige Lizenz ausgewählt und der Server neu gestartet werden.</t>
 </str>
 
-<str id="512">
-<o>Content Editor (Instant Edition)</o>
-<t>Content Editor (Instant Edition)</t>
-</str>
-
 <str id="514">
 <o>Web Developer</o>
 <t>Web Developer</t>
@@ -3055,11 +3050,6 @@ Roxen verwaltet.&lt;/p&gt;</t>
 <str id="517">
 <o>Forms And Response Module</o>
 <t>Forms And Response Module</t>
-</str>
-
-<str id="518">
-<o>Categorization Module</o>
-<t>Categorization Module</t>
 </str>
 
 <str id="519">
@@ -3100,12 +3090,6 @@ Roxen verwaltet.&lt;/p&gt;</t>
 <str id="356">
 <o>Configuration %O not found.</o>
 <t>Konfiguration %O nicht gefunden.</t>
-</str>
-
-<str id="357">
-<new/>
-<o>Content Editor (Instant Edition for Mac)</o>
-<t></t>
 </str>
 
 <str id="390">
