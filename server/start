@@ -1,8 +1,8 @@
 #!/bin/sh
 #
-# $Id: start,v 1.35 1998/05/11 19:40:14 grubba Exp $
+# $Id: start,v 1.36 1998/06/02 18:45:34 grubba Exp $
 
-VERSION=201; BETA=.a;
+VERSION=202; BETA=.b;
 
 # Can be set with '--config-dir=DIR'
 DIR=../configurations/
@@ -82,15 +82,25 @@ if [ -x bin/pike ] ; then pike=bin/pike; fi
 if [ -x bin/roxen ] ; then  pike=bin/roxen; fi
 if [ -x "$PIKE" ]; then pike="$PIKE"; fi
 
+gdb=no
+
 rotate () {
   b=5;
   for a in 4 3 2 1 ; do mv -f $1.$a $1.$b 2> /dev/null;  b=$a; done
 }
 
 start_roxen() {
- args="-DROXEN $DEBUG $DEFINES $pass $program --config-dir=$DIR"
- echo Executing $pike $args $@
- $pike $args $@
+  args="-DROXEN $DEBUG $DEFINES $pass $program --config-dir=$DIR"
+  if [ "x$gdb" = "xno" ]; then
+    echo Executing $pike $args $@
+    $pike $args $@
+  else
+    echo Executing gdb $pike $args $@
+    echo >.gdbinit handle SIGPIPE nostop noprint pass
+    echo >>.gdbinit run $args $@
+    gdb $pike
+    rm .gdbinit
+  fi
 }
 ####### END PREAMBLE
 
@@ -131,6 +141,10 @@ parse_args() {
   '--once')
     once=1
   ;;
+  '--gdb')
+    gdb=gdb
+    once=1
+  ;;
   '--program')
     program="$2"
     shift
@@ -142,7 +156,7 @@ parse_args() {
   '--help'|'-?')
   tput 'bold' 2>/dev/null
   cat << EOF
-Syntax: $0 [--version] [--config-dir=DIR] [--log-dir=DIR] [-DDEFINE] [--threads] [--no-threads] [--profile] [--keep-alive]
+Syntax: $0 [--version] [--config-dir=DIR] [--log-dir=DIR] [-DDEFINE] [--threads] [--no-threads] [--profile] [--keep-alive] [--once] [--gdb] [--program=PROGRAM] [--help]
 This command will start the Roxen server. 
 If the configuration dir is set, a different set of debuglogfiles
 will be used.
