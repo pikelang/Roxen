@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.106 1998/02/22 20:10:15 neotron Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.107 1998/02/27 05:19:21 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -1145,15 +1145,14 @@ int find_or_insert(mapping find)
 {
   mapping f2 = copy_value(find);
   foreach(glob("magic_*", indices(f2)), string q) m_delete(f2,q);
-  if(!args_restored) restore_cached_args();
+  if(!args_restored) 
   array a = indices(cached_args);
   array b = values(cached_args);
   int i;
 
-  for(i=0; i<sizeof(a); i++)
-    if(equal(f2, b[i]))
-      return a[i];
-
+  for(i=0; i<sizeof(a); i++) if(equal(f2, b[i])) return a[i];
+  restore_cached_args();
+  for(i=0; i<sizeof(a); i++) if(equal(f2, b[i])) return a[i];
   cached_args[number]=find;
   remove_call_out(save_cached_args);
   call_out(save_cached_args, 10);
@@ -1524,7 +1523,7 @@ array (string) tag_body(string t, mapping args, object id, object file,
     FIX(alink,  "#ff0000",alink);
     FIX(vlink,  "#551a8b",vlink);
   }
-  if(changed) return ({"<body "+make_args(args)+">"});
+  if(changed) return ({make_tag("body", args); })
 }
 
 
@@ -1551,17 +1550,18 @@ void pop_color(string tagname,mapping args,object id,object file,
 		 mapping defines)
 {
   array c = id->misc->colors;
-  sscanf(tagname, "/%s", tagname);
-  while(c && sizeof(c))
-  {
-    if(c[-1][2]==tagname)
+  int i;
+  tagname = tagname[1..];
+
+  for(i=0;i<sizeof(c);i++)
+    if(c[-i-1][2]==tagname)
     {
-      defines->fg = c[-1][0];
-      defines->bg = c[-1][1];
+      defines->fg = c[-i-1][0];
+      defines->bg = c[-i-1][1];
       break;
     }
-    c = c[..sizeof(c)-2];
-  }
+
+  c = c[..-i-2];
   id->misc->colors = c;
 }
 

@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.81 1998/02/20 11:16:40 per Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.82 1998/02/27 05:19:22 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -357,11 +357,13 @@ string call_tag(string tag, mapping args, int line, int i,
   if(stringp(rf)) return rf;
 
   TRACE_ENTER("tag (&lt;" + tag + "&gt; on line "+line+")", rf);
+#ifdef MODULE_LEVEL_SECURITY
   if(id->conf->check_security(rf, id, id->misc->seclevel))
   {
     TRACE_LEAVE("Access denied");
     return 0;
   }
+#endif
   mixed result=rf(tag,args,id,file,defines,client);
   TRACE_LEAVE("");
   return result;
@@ -376,11 +378,13 @@ string call_container(string tag, mapping args, string contents, int line,
   string|function rf = real_container_callers[tag][i];
   if(stringp(rf)) return rf;
   TRACE_ENTER("container (&lt;"+tag+"&gt on line "+line+")", rf);
+#ifdef MODULE_LEVEL_SECURITY
   if(id->conf->check_security(rf, id, id->misc->seclevel))
   {
     TRACE_LEAVE("Access denied");
     return 0;
   }
+#endif
   mixed result=rf(tag,args,contents,id,file,defines,client);
   TRACE_LEAVE("");
   return result;

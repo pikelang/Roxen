@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.6 1998/02/24 22:26:50 per Exp $
+ * $Id: resolv.pike,v 1.7 1998/02/27 05:19:19 per Exp $
  */
 
 inherit "wizard";
@@ -24,10 +24,11 @@ mapping et = ([]);
 void trace_enter_ol(string type, function|object module)
 {
   level++; 
-  et[level] = gethrtime();
+
   string efont="", font="";
   if(level>2) {efont="</font>";font="<font size=-1>";} 
   resolv += (font+"<b><li></b> "+type+" "+module_name(module)+"<ol>"+efont);
+  et[level] = gethrtime();
 }
 
 void trace_leave_ol(string desc)
@@ -44,13 +45,13 @@ void trace_leave_ol(string desc)
 void trace_enter_table(string type, function|object module)
 {
   level++;
-  et[level]= gethrtime();
   string efont="", font="";
   if(level>2) {efont="</font>";font="<font size=-1>";} 
   resolv += ("<tr>"
 	     +(level>1?"<td width=1 bgcolor=blue><img src=/image/unit.gif alt=|></td>":"")
 	     +"<td width=100%>"+font+type+" "+module_name(module)+
 	     "<table width=100% border=0 cellspacing=10 border=0 cellpadding=0>");
+  et[level]= gethrtime();
 }
 
 void trace_leave_table(string desc)
@@ -137,7 +138,8 @@ string page_0(object id)
     } while(again);
     if(!c->get_file(nid))
     {
-      foreach(c->last_modules(), funp) {
+      foreach(c->last_modules(), funp) 
+      {
 	nid->misc->trace_enter("Last try module", funp);
 	if(file = funp(nid)) {
 	  nid->misc->trace_leave("Returns data");
@@ -146,7 +148,7 @@ string page_0(object id)
 	  nid->misc->trace_leave("");
       }
     }
-    while(level) nid->misc->trace_leave("");
+    while(level>0) nid->misc->trace_leave("");
     if((int)id->variables->table)
       resolv += "</table>";
     else

@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.101 1998/02/24 22:27:24 per Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.102 1998/02/27 05:19:18 per Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -1177,8 +1177,8 @@ mapping|int low_get_file(object id, int|void no_magic)
     loc = tmp[0];
     if(!search(file, loc)) 
     {
-#ifdef MODULE_LEVEL_SECURITY
       TRACE_ENTER("Location Module ["+loc+"] ", tmp[1]);
+#ifdef MODULE_LEVEL_SECURITY
       if(tmp2 = check_security(tmp[1], id, slevel))
 	if(intp(tmp2))
 	{
@@ -1204,8 +1204,8 @@ mapping|int low_get_file(object id, int|void no_magic)
 	}
 	else
 	{
-	  int oslevel = slevel;
 #ifdef MODULE_LEVEL_SECURITY
+	  int oslevel = slevel;
 	  slevel = misc_cache[ tmp[1] ][1];// misc_cache from check_security
 #endif
 	  if(objectp(fid))
@@ -1565,7 +1565,6 @@ class StringFile
 // this is not as trivial as it sounds. Consider gtext. :-)
 public array open_file(string fname, string mode, object id)
 {
-  werror("open_file "+fname+" as "+mode+"\n");
   object oc = id->conf;
   string oq = id->not_query;
   function funp;

@@ -75,7 +75,9 @@
  * 1% speed loss, as an average. (That is, if your CPU is used to the max.
  * it probably isn't..)  
  */
-#define MODULE_LEVEL_SECURITY
+#ifndef NO_MODULE_LEVEL_SECURITY
+# define MODULE_LEVEL_SECURITY
+#endif
 
 /* Roxen neighbourhood
  *
