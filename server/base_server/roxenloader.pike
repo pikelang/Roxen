@@ -22,7 +22,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.225 2001/01/06 07:24:26 nilsson Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.226 2001/01/08 16:07:43 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -997,35 +997,34 @@ string query_configuration_dir()
 Sql.sql connect_to_my_mysql( string|int ro, void|string db )
 {
   Thread.Local tl;
+  if( !db ) db = "mysql";
+  
   if( !my_mysql_cache[ro] )
     my_mysql_cache[ro] = ([]);
   if( !( tl = my_mysql_cache[ro][db] ) )
     tl = my_mysql_cache[ro][db] = Thread.Local();
 
   if( tl->get() )
-    return tl->get();
-  
-  string mysql_socket = combine_path( getcwd(), query_configuration_dir()+
-                                      "_mysql/socket");
-  if( stringp( ro ) )
-    tl->set(Sql.sql("mysql://"+ro+"@localhost:"+mysql_socket+"/mysql"));
-  else if( ro )
-    tl->set(Sql.sql("mysql://ro@localhost:"+mysql_socket+"/mysql"));
-  else
-    tl->set(Sql.sql("mysql://rw@localhost:"+mysql_socket+"/mysql"));
-
-  if( db && catch( tl->get()->query( "USE "+db ) ) )
   {
-    if( ro )
-    {
-      connect_to_my_mysql( 0, db );
-      tl->get()->query( "use "+db );
-    }      
+    tl->get()->query("USE "+db);
+    return tl->get();
+  }
+
+  catch
+  {
+    string mysql_socket = combine_path( getcwd(), query_configuration_dir()+
+                                      "_mysql/socket");
+    if( stringp( ro ) )
+      tl->set(Sql.sql("mysql://"+ro+"@localhost:"+mysql_socket+"/"+db));
+    else if( ro )
+      tl->set(Sql.sql("mysql://ro@localhost:"+mysql_socket+"/"+db));
     else
-    {
-      tl->get()->query( "CREATE DATABASE "+db );
-      tl->get()->query( "USE "+db );
-    }
+      tl->set(Sql.sql("mysql://rw@localhost:"+mysql_socket+"/"+db));
+  };
+  if( catch( tl->get()->query( "USE "+db ) ) )
+  {
+    catch(connect_to_my_mysql( 0, "mysql" )->query( "CREATE DATABASE "+db ));
+    return connect_to_my_mysql( ro, db );
   }
   return tl->get();
 }
