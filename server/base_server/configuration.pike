@@ -3,7 +3,7 @@
 //
 // A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.458 2001/07/31 12:01:08 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.459 2001/08/01 19:33:46 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3467,8 +3467,7 @@ also set 'URLs'."));
   
   defvar("ZNoSuchFile", NoSuchFileOverride() );
 
-  defvar("404-message", #"
-<html><head>
+  defvar("404-message", #"<html><head>
 <title>404 - Page not found</title>
 </head>
 <body alink=\"#000000\" bgcolor=\"#ffffff\" bottommargin=\"0\" leftmargin=\"0\" link=\"#ce5c00\" marginheight=\"2\" marginwidth=\"0\" rightmargin=\"0\" text=\"#333333\" topmargin=\"2\" vlink=\"#ce5c00\">
