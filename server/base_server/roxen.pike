@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.195 1998/05/01 23:10:24 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.196 1998/05/04 15:39:39 marcus Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -1305,7 +1305,7 @@ static mapping __vars = ([ ]);
 // not really possible otherwise.
 mixed set_var(string var, mixed to)
 {
-  __vars[var] = to;
+  return __vars[var] = to;
 }
 
 mixed query_var(string var)
