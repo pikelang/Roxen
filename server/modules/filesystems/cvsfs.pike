@@ -5,7 +5,7 @@
  * Written by Niels Möller 1997
  */
 
-constant cvs_version = "$Id: cvsfs.pike,v 1.16 1997/10/10 17:47:05 grubba Exp $";
+constant cvs_version = "$Id: cvsfs.pike,v 1.17 1998/03/11 00:58:16 nisse Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -211,6 +211,13 @@ array register_module()
 	      "CVS File system",
 	      "Accessing files under CVS control.",
 	      0, 0 });
+}
+
+string query_name()
+{
+  return sprintf("<i>%s</i> mounted on <i>%s</i>",
+		 query("cvsmodule"),
+		 query("location"));
 }
 
 void create()
