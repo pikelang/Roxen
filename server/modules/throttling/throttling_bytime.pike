@@ -3,7 +3,7 @@
  * This is a Roxen module. Copyright © 2000, Roxen IS.
  */
 
-constant cvs_version="$Id: throttling_bytime.pike,v 1.3 2000/05/22 17:31:22 kinkie Exp $";
+constant cvs_version="$Id: throttling_bytime.pike,v 1.4 2000/05/22 19:08:09 kinkie Exp $";
 
 
 #include <module.h>
@@ -73,6 +73,7 @@ string|void update_rules(string new_rules) {
     rulenames=sort(rulenames); //we really want them sorted now
                                //we'll use this kind of a cache.
   remove_call_out(update_call_out);
+  update_call_out=0;
   update_current_rule();
 }
 
@@ -84,10 +85,15 @@ array find_rule (mapping res, object id,
 void start() {
   THROTTLING_DEBUG("starting");
   ::start();
+  if (update_call_out) {
+    remove_call_out(update_call_out);
+    update_call_out=0;
+  }
   update_current_rule();
 }
 
 void stop() {
   remove_call_out(update_call_out);
+  update_call_out=0;
   //::stop(); What happens if the function is not defined in the parent class?
 }
