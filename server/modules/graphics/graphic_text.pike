@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.228 2000/04/06 07:41:44 wing Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.229 2000/04/29 20:26:58 kuntri Exp $";
 
 #include <module.h>
 inherit "module";
@@ -20,7 +20,7 @@ constant thread_safe   = 1;
 void create()
 {
   defvar("colorparse", 1, "Parse tags for document colors", TYPE_FLAG,
-	 "If set, it will use the <i>HTML color wiretrap</i> module to parse "
+	 "If set, it will use the <i>HTML color wiretrap</i> module to "
 	 "figure out the document colors by parsing tags that set colors.");
 
   defvar("deflen", 300, "Default maximum length of text", TYPE_INT|VAR_MORE,
@@ -109,13 +109,13 @@ opaque=70</gtext>
 
 <attr name=encoding value=string>
  Choose with which charset the text is encoded with.
-</attr>
+</attr>"+
 
-<attr name=fadein value=blur,steps,delay,initialdelay>
- Generates an animated GIF file of a fade-in effect.
-</attr>
+//<attr name=fadein value=blur,steps,delay,initialdelay>
+// Generates an animated GIF file of a fade-in effect.
+//</attr>
 
-<attr name=fgcolor value=color>
+#"<attr name=fgcolor value=color>
  Sets the text color.
  <ex type=vert>
 <gtext fgcolor=\"#0080FF\">#0080FF</gtext>
@@ -273,13 +273,13 @@ opaque=70</gtext>
 
 <attr name=scolor value=color>
  Use this color for the shadow. Used with the shadow attribute.
-</attr>
+</attr>"+
 
-<attr name=scroll value=width,steps,delay>
- Generate an animated GIF image of the text scrolling.
-</attr>
+//<attr name=scroll value=width,steps,delay>
+// Generate an animated GIF image of the text scrolling.
+//</attr>
 
-<attr name=shadow value=intensity,distance>
+#"<attr name=shadow value=intensity,distance>
  Draw a blured black drop-shadow behind the text. Using 0 as distance
  does not currently place the shadow directly below the text. Using negative
  values for distance is possible,
@@ -425,14 +425,14 @@ and here it ends.</ex>
  will highlight the image when the mouse is moved over it. The message
  is shown in the browser's status bar.
  <ex type=vert>
-<gtext href=\"http://www.roxen.com\" magic=\"Roxen\">www.roxen.com</gtext>
+<gtext href=\"http://www.roxen.com\" magic=\"Roxen\" magic-fgcolor=\"red\">www.roxen.com</gtext>
  </ex>
 </attr>
 
 <attr name=magic-attribute value=value> Same as for any
  <tag>gtext</tag> attribute, except for the highlighted image.
  <ex type=vert>
-<gtext fgcolor=\"blue\" magic-glow=\"yellow\" magic=\"\">Magic_attribute</gtext>
+<gtext fgcolor=\"blue\" magic-glow=\"yellow\" magic-fgcolor=\"#ff8c00\" magic=\"\">Magic attribute</gtext>
  </ex>
 </attr>
 
