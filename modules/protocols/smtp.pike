@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.30 1998/09/12 21:03:34 grubba Exp $
+ * $Id: smtp.pike,v 1.31 1998/09/12 21:28:35 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.30 1998/09/12 21:03:34 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.31 1998/09/12 21:28:35 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -201,7 +201,7 @@ static class Smtp_Connection {
   {
     remotehost = h;
     if (callback) {
-	callback(@args);
+      callback(@args);
     }
   }
 
@@ -237,6 +237,11 @@ static class Smtp_Connection {
 #ifdef SMTP_DEBUG
     roxen_perror(sprintf("SMTP: Command: %s\n", cmd));
 #endif /* SMTP_DEBUG */
+
+    // FIXME: Command sequencing.
+    // Client should be required to say HELO/EHLO before
+    // sending other commands.
+
     function f;
     if (f = this_object()["smtp_"+cmd]) {
       f(cmd, arg);
@@ -925,6 +930,8 @@ static class Smtp_Connection {
     handle_data = handle_DATA;
   }
 
+  // Called when the connection has been idle for at
+  // least timeout seconds.
   static void do_timeout()
   {
     catch {
@@ -987,7 +994,6 @@ static class Smtp_Connection {
 
     Protocols.Ident->lookup_async(con_, got_remoteident,
 				  check_delayed_answer);
-
   }
 }
 
