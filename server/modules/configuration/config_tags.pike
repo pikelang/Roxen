@@ -3,13 +3,9 @@
 inherit "module";
 inherit "html";
 inherit "roxenlib";
-#include <roxen.h>
 #include <stat.h>
 #include <config_interface.h>
 #include <config.h>
-
-//<locale-token project="config_interface">LOCALE</locale-token>
-#define LOCALE(X,Y)	_STR_LOCALE("config_interface",X,Y)
 
 #define CU_AUTH id->misc->config_user->auth
 
@@ -31,17 +27,9 @@ class Scope_locale
   inherit RXML.Scope;
   mixed `[]  (string var, void|RXML.Context c, void|string scope)
   {
-    function(void:string)|string val;
-    // DEBUG
-    val = LOCALE(var,var);
-    //    if( !(val = LOCALE[ var ]) )
-    //      val = LOW_LOCALE[ var ];
-
-    if(!val)
-      return "Unknown locale field: "+var;
-    if( functionp( val ) )
-      return val( );
-    return val;
+    report_error("Warning: [%O] Use of the scope 'locale' is deprecated. \n", 
+		 var);
+    return var;
   }
 }
 
