@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.103 2000/03/24 00:05:44 grubba Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.104 2000/03/24 23:18:22 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -518,9 +518,9 @@ string|array(string) tag_debug( string tag_name, mapping m, RequestID id )
     }
     return ({ "<pre>"+Roxen.html_encode_string(sprintf("%O",obj))+"</pre>" });
   }
-  if (m->werror) {
-    report_debug(replace(m->werror,"\\n","\n"));
-  }
+  //  if (m->werror) {
+  //    report_debug(replace(m->werror,"\\n","\n"));
+  //  }
   if (m->off)
     id->misc->debug = 0;
   else if (m->toggle)
@@ -958,32 +958,6 @@ class TagFor {
   }
 }
 
-string simpletag_foreach(string t, mapping args, string c, RequestID id)
-{
-  string v = args->variable;
-  array what;
-  if(!args->in)
-    RXML.parse_error("No in attribute given.\n");
-  if(args->variables)
-    what = Array.map(args->in/"," - ({""}),
-		     lambda(string name, mapping v) {
-				     return v[name] || "";
-				   }, id->variables);
-  else
-    what = Array.map(args->in / "," - ({""}),
-		     lambda(string var) {
-		       sscanf(var, "%*[ \t\n\r]%s", var);
-		       var = reverse(var);
-		       sscanf(var, "%*[ \t\n\r]%s", var);
-		       return reverse(var);
-		     });
-
-  string res="";
-  foreach(what, string w)
-    res += "<set variable="+v+" value="+w+">"+c;
-  return res;
-}
-
 string simpletag_apre(string tag, mapping m, string q, RequestID id)
 {
   string href, s;
@@ -1092,10 +1066,10 @@ string simpletag_autoformat(string tag, mapping m, string s, RequestID id)
   string p=(m["class"]?"<p class=\""+m["class"]+"\">":"<p>");
 
   if(!m->nobr) {
-    s = replace(s, "\n", "<br>\n");
+    s = replace(s, "\n", "<br />\n");
     if(m->p) {
-      if(search(s, "<br>\n<br>\n")!=-1) s=p+s;
-      s = replace(s, "<br>\n<br>\n", "\n</p>"+p+"\n");
+      if(search(s, "<br />\n<br />\n")!=-1) s=p+s;
+      s = replace(s, "<br />\n<br />\n", "\n</p>"+p+"\n");
       if(sizeof(s)>3 && s[0..2]!="<p>" && s[0..2]!="<p ")
         s=p+s;
       if(s[..sizeof(s)-4]==p)
@@ -1401,44 +1375,6 @@ array(string)|string container_recursive_output (string tagname, mapping args,
   return ({res});
 }
 
-//I'll donate a Star Wars insiders guide to the
-//first one to figure out what this number means,
-//and how it was calculated. nilsson@roxen.com
-#define MAGIC_EXIT 4921325
-
-string tag_leave(string tag, mapping m, RequestID id)
-{
-  if(id->misc->leave_repeat)
-  {
-    id->misc->leave_repeat--;
-    throw(MAGIC_EXIT);
-  }
-  RXML.parse_error("Must be contained by <repeat>.\n");
-}
-
-string container_repeat(string tag, mapping m, string c, RequestID id)
-{
-  if(!id->misc->leave_repeat)
-    id->misc->leave_repeat=0;
-  int exit=id->misc->leave_repeat++,loop,maxloop=(int)m->maxloops||10000;
-  string ret="",iter;
-  while(loop<maxloop && id->misc->leave_repeat!=exit) {
-    loop++;
-    mixed error=catch {
-      iter=Roxen.parse_rxml(c,id);
-    };
-    if((intp(error) && error!=0 && error!=MAGIC_EXIT) || !intp(error))
-      throw(error);
-    if(id->misc->leave_repeat!=exit)
-      ret+=iter;
-  }
-
-  if(loop==maxloop)
-    RXML.run_error("Too many iterations ("+maxloop+").");
-
-  return ret;
-}
-
 string simpletag_replace( string tag, mapping m, string cont, RequestID id)
 {
   switch(m->type)
@@ -1467,10 +1403,10 @@ class TagCSet {
   class Frame {
     inherit RXML.Frame;
     array do_return(RequestID id) {
+      if( !args->variable ) parse_error("Variable not specified.\n");
       if(!content) content="";
       if( args->quote != "none" )
 	content = Roxen.html_decode_string( content );
-      if( !args->variable ) parse_error("Variable not specified.\n");
 
       RXML.user_set_var(args->variable, content, args->scope);
       return ({ "" });
@@ -1627,11 +1563,11 @@ documentation for that module.</desc>",
 </attr>",
 
 "autoformat":#"<desc cont><short>
- Replaces newlines with <tag>br</tag>:s.</short>
+ Replaces newlines with <tag>br /</tag>:s.</short>
 </desc>
 
 <attr name=nobr>
- Do not replace newlines with <tag>br</tag>:s.
+ Do not replace newlines with <tag>br /</tag>:s.
 </attr>
 
 <attr name=p>
@@ -1720,7 +1656,17 @@ documentation for that module.</desc>",
  Returns a URL to the configuration interface.</short>
 </desc>",
 
-"cset":#"<desc cont></desc>",
+"cset":#"<desc cont>Sets a variable with its content.</desc>
+
+<attr name=variable value=name>
+ The variable to be set.
+</attr>
+
+<attr name=quote value=html|none>
+ How the content should be quoted before assigned to the variable. Default is html.
+</attr>
+",
+
 
 "crypt":#"<desc cont><short>
  Encrypts the contents as a Unix style password.</short> Useful when
@@ -1729,6 +1675,15 @@ documentation for that module.</desc>",
  password from being stored anywhere. When a login attempt is made,
  the password supplied is also encrypted and then compared to the
  stored encrypted password.</p>
+
+<attr name=compare value=string>
+ Compares the encrypted string with the contents of the tag. The tag
+ will behaive very much  like an <tag>if</tag> tag.
+<ex><crypt compare=\"LAF2kkMr6BjXw\">Roxen</crypt>
+<then>Yepp!</then>
+<else>Nope!</else>
+</ex>
+</attr>
 </desc>",
 
 "date":#"<desc tag><short>
@@ -1839,6 +1794,10 @@ documentation for that module.</desc>",
 
 <attr name=variable value=string>
  The variable to be decremented.
+</attr>
+
+<attr name=value value=number>
+ The value to be subtracted, if not 1.
 </attr>",
 
 "default":#"<desc cont><short hide>
@@ -1949,22 +1908,6 @@ documentation for that module.</desc>",
  Name of the loop variable.
 </attr>",
 
-"foreach":#"<desc cont>
-
-</desc>
-
-<attr name=variable>
-
-</attr>
-
-<attr name=variables>
-
-</attr>
-
-<attr name=in>
-
-</attr>",
-
 "fsize":#"<desc tag><short>
  Prints the size of the specified file.</short>
 </desc>
@@ -2030,6 +1973,10 @@ documentation for that module.</desc>",
 
 <attr name=variable value=string>
  The variable to be incremented.
+</attr>
+
+<attr name=value value=number>
+ The value to be added, if not 1.
 </attr>",
 
 "insert":#"<desc tag><short>
@@ -2062,7 +2009,7 @@ documentation for that module.</desc>",
  href and file where it's \"none\".
 </attr>",
 
-"maketag":#"<desc cont><short hide>Makes it able to create tags.</short>
+"maketag":#"<desc cont><short hide>Makes it possible to create tags.</short>
  This tag creates tags. The contents of the container will be put into
  the contents of the produced container. Requires the name attribute.
 </desc>
@@ -2083,16 +2030,14 @@ documentation for that module.</desc>",
  attribute attrib, which is the name of the attribute. The contents of
  the attribute container will be the attribute value. E.g.
 
- <p>&lt;maketag name=replace type=container&gt;
- &lt;attrib name=from&gt;A&lt;/attrib&gt;
- &lt;attrib name=to&gt;U&lt;/attrib&gt;
+<ex><eval>
+<maketag name=\"replace\" type=\"container\">
+ <attrib name=\"from\">A</attrib>
+ <attrib name=\"to\">U</attrib>
  MAD
- &lt;/maketag&gt;
-
- will result in
-
- &lt;replace from=A to=U&gt;MAD&lt;/replace&gt;
- &lt;/pre&gt;</p>",
+</maketag>
+</eval>
+</ex>",
 
 "modified":#"<desc tag><short hide>
  Prints when or by whom a page was last modified.</short> Prints when
@@ -2200,15 +2145,6 @@ documentation for that module.</desc>",
 
 Note that removing a cookie won't take effect until the next page
 load.",
-
-"repeat":#"<desc cont><short>
- Repeats the contents until a <tag>leave</tag> tag has been
- found.</short> Requires no attributes.
-</desc>
-
-<attr name=maxloops>
- The maximum number of loops. Default is 10000.
-</attr>",
 
 "replace":#"<desc cont><short>
  Replaces strings in the contents with other strings.</short> Requires
@@ -2511,7 +2447,7 @@ Sets a variable.</short> The variable attribute is required.
 "if#expr":#"<desc plugin>
  Evaluates expressions. The following characters may be used: \"1, 2,
  3, 4, 5, 6, 7, 8, 9, x, a, b, c, d, e, f, i, n, t, \, X. A, B, C, D, E,
- F, l, o, &lt;, &gt;, =, 0, -, +, /, %, &, |, (, ), .\".
+ F, l, o, &lt;, &gt;, =, 0, -, +, /, %, &, |, (, ) and .\".
 </desc>",
 
     ]);
