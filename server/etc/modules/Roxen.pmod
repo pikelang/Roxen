@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.98 2001/06/28 19:14:18 mast Exp $
+// $Id: Roxen.pmod,v 1.99 2001/06/28 20:08:59 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -3017,14 +3017,14 @@ RXML.TagSet entities_tag_set = class
   }
 
 
-  void create (string name)
+  void create()
   {
-    ::create (name);
+    ::create (0);
     // Note: No string entities are replaced when the result type for
     // the parser is t_xml or t_html.
     add_string_entities (parser_charref_table);
   }
-} ("entities_tag_set");
+}();
 
 
 constant monthnum=(["Jan":0, "Feb":1, "Mar":2, "Apr":3, "May":4, "Jun":5,
