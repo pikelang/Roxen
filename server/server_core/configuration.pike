@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.557 2004/04/22 15:35:56 mani Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.558 2004/05/20 22:12:27 _cvs_stephen Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3416,9 +3416,7 @@ static void create()
 	 TYPE_FLAG, "Log requests");
 
   defvar("LogFormat",
-	 "404: $host $referer - [$cern_date] \"$method $resource $protocol\" 404 -\n"
-	 "500: $host $referer ERROR [$cern_date] \"$method $resource $protocol\" 500 -\n"
-	 "*: $host - - [$cern_date] \"$method $resource $protocol\" $response $length",
+	 "*: $ip_number $request-time/$cache-status $user [$cern_date] \"$method $full_resource $protocol\" $response $length \"$referer\" \"$user_agent_raw\"\n",
 	 "Logging: Format",
 	 TYPE_TEXT_FIELD|VAR_MORE,
 	 #"What format to use for logging. The syntax is:
