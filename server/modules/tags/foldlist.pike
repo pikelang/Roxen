@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1999, Idonex AB.
-// $Id: foldlist.pike,v 1.4 1999/08/11 00:53:46 nilsson Exp $
+// $Id: foldlist.pike,v 1.5 1999/08/13 16:49:06 nilsson Exp $
 
-constant cvs_version = "$Id: foldlist.pike,v 1.4 1999/08/11 00:53:46 nilsson Exp $";
+constant cvs_version = "$Id: foldlist.pike,v 1.5 1999/08/13 16:49:06 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -35,10 +35,10 @@ string encode_url(array states, string state_id, object id){
       ret+=(string)tmp;
     else
       return id->not_query+"?state="+
-        replace(preview_altered_state(id, state_id, ret),({"+","/","="}),({"-","!","*"}));
+        uri_encode(preview_altered_state(state_id, ret, id));
   }    
   return id->not_query+"?state="+
-    replace(preview_altered_state(id, state_id, ret),({"+","/","="}),({"-","!","*"}));
+    uri_encode(preview_altered_state(state_id, ret, id));
 }
 
 //It seams like the fold/unfold images are mixed up.
@@ -92,7 +92,7 @@ string tag_foldlist(string tag, mapping m, string c, object id) {
   string state_id = register_state_consumer(fl_name, id);
   string error="";
   if(id->variables->state)
-    if(!decode_state(replace(id->variables->state,({"-","!","*"}),({"+","/","="})), id))
+    if(!decode_state(uri_decode(id->variables->state), id))
       error=rxml_error(tag, "Error in state.", id);
 
   //Get our real state

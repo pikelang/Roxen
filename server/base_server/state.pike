@@ -1,8 +1,8 @@
 // This is Roxen state mechanism. Copyright © 1999, Idonex AB.
 //
-// $Id: state.pike,v 1.6 1999/08/12 00:47:47 nilsson Exp $
+// $Id: state.pike,v 1.7 1999/08/13 16:49:06 nilsson Exp $
 
-#define CHKSPACE "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+#define CHKSPACE "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz+/"
 
 string register_state_consumer(string name, object id) {
 
@@ -64,7 +64,7 @@ string encode_state(object id) {
   return encode_state4real(id->misc->state->values);
 }
 
-private string encode_state4real(mapping state) {
+static string encode_state4real(mapping state) {
   string from = encode_value(state);
   object gz = Gz;
   string to = MIME.encode_base64( gz->deflate()->deflate(from), 1);
@@ -80,7 +80,7 @@ mixed get_state(string key, object id) {
   return 0;
 }
 
-string alter_state(object id, string key, mixed value) {
+string alter_state(string key, mixed value, object id) {
   if(!id->misc->state)
     return "";
 
@@ -92,11 +92,19 @@ string alter_state(object id, string key, mixed value) {
   return encode_state4real(id->misc->state->values);
 }
 
-string preview_altered_state(object id, string key, mixed value) {
+string preview_altered_state(string key, mixed value, object id) {
   string ret="";
 
   if(!id->misc->state)
     return "";
 
   return encode_state4real(id->misc->state->values+([key:value]));
+}
+
+string uri_encode(string state) {
+  return replace(state,({"+","/","="}),({"-","!","*"}));
+}
+
+string uri_decode(string state) {
+  return replace(state,({"-","!","*"}),({"+","/","="}));
 }

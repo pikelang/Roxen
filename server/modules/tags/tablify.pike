@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
 
-constant cvs_version = "$Id: tablify.pike,v 1.35 1999/08/11 16:14:27 nilsson Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.36 1999/08/13 16:49:06 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -26,7 +26,7 @@ string encode_url(int col, int state, string state_id, object id){
     state=col;
 
   return id->not_query+"?state="+
-    replace(preview_altered_state(id, state_id, state),({"+","/","="}),({"-","!","*"}));
+    uri_encode(preview_altered_state(state_id, state, id));
 }
 
 string make_table(array subtitles, array table, mapping opt, object id)
@@ -219,7 +219,7 @@ string tag_tablify(string tag, mapping m, string q, object id)
     m->state_id=state_id;
     m->sortcol=(int)m->sortcol;
     if(id->variables->state){
-      decode_state(replace(id->variables->state,({"-","!","*"}),({"+","/","="})), id);
+      decode_state(uri_decode(id->variables->state), id);
       m->sortcol=get_state(state_id,id)?get_state(state_id,id):m->sortcol;
     }
   }
