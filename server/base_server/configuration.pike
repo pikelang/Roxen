@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.25 1997/04/29 10:26:33 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.26 1997/05/14 13:26:22 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -700,12 +700,11 @@ int|mapping check_security(function a, object id, void|int slevel)
       {
        case MOD_ALLOW: // allow ip=...
 	if(level[1](id->remoteaddr)) return 0; // Match. It's ok.
-	return http_low_answer(403, "<h2>Access forbidden</h2>");
 	continue;
 	
        case MOD_DENY: // deny ip=...
-	if(level[1](id->remoteaddr)) throw("");
-	return http_low_answer(403, "<h2>Access forbidden</h2>");
+	if(level[1](id->remoteaddr))
+	  return http_low_answer(403, "<h2>Access forbidden</h2>");
 	continue;
 
        case MOD_USER: // allow user=...
