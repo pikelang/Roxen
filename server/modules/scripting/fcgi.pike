@@ -3,7 +3,7 @@
 // Support for the FastCGI interface, using an external fast-cgi
 // wrapper. This should be handled internally.
 
-string cvs_version = "$Id: fcgi.pike,v 1.15 1998/04/21 19:09:52 grubba Exp $";
+string cvs_version = "$Id: fcgi.pike,v 1.16 1998/06/09 14:12:04 grubba Exp $";
 
 #include <module.h>
 inherit "modules/scripting/cgi";
@@ -30,7 +30,9 @@ void create()
 	 "CGI-script extensions variable).");
 
   set("ext", ({"fcgi"}));
-  mkdir("/tmp/.Roxen_fcgi_pipes");
+  if (mkdir("/tmp/.Roxen_fcgi_pipes")) {
+    chmod("/tmp/.Roxen_fcgi_pipes/.", 01777);
+  }
 }
 
 
