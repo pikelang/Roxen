@@ -6,7 +6,7 @@ inherit "roxenlib";
 #include <module.h>
 
 constant thread_safe=1;
-constant cvs_version = "$Id: ssi.pike,v 1.16 2000/01/03 06:01:25 nilsson Exp $";
+constant cvs_version = "$Id: ssi.pike,v 1.17 2000/01/03 07:29:57 nilsson Exp $";
 
 array register_module()
 {
@@ -89,12 +89,12 @@ array(string) tag_echo(string tag, mapping m, RequestID id)
 
 string get_var(string var, RequestID id)
 {
-
   if(id->misc->ssi_variables && id->misc->ssi_variables[var])
     // Variables set with !--#set.
     return id->misc->ssi_variables[var];
 
   var = lower_case(replace(var, " ", "_"));
+
   switch(var)
   {
    case "sizefmt":
@@ -178,10 +178,10 @@ string get_var(string var, RequestID id)
 
 string fix_var(string s, RequestID id) {
   s=replace(s||"",({"\000","\\$"}),({"","\000"}));
-  int size;
-  if(size=sizeof(s)>2 && s[size-2..]=="--") s=s[..size-3];
+  int size=sizeof(s);
+  if(size>2 && s[size-2..]=="--") s=s[..size-3];
   if(s[0]=='$' && s[1]!='{') return get_var(s[1..], id)||"";
-  return ""; //FIXME: No in-string-substitution yet.
+  return s; //FIXME: No in-string-substitution yet.
 }
 
 array(string) tag_config(string tag, mapping m, RequestID id)
@@ -206,21 +206,15 @@ array(string) tag_config(string tag, mapping m, RequestID id)
 
 string|array(string) tag_include(string tag, mapping m, RequestID id)
 {
-  if(m->virtual) {
-    m->virtual=fix_var(http_decode_string(m->virtual), id);
-    string ret=API_read_file(id, m->virtual);
-    if(!ret) return ({ id->misc->ssi_errmsg||"No such file ("+m->virtual+")." });
-    return ret;
-  }
+  if(!m->virtual && !m->file)
+    return ({ id->misc->ssi_errmsg||"Hm? #include what, my dear?" });
 
-  if(m->file) {
-    m->file=replace(fix_var(m->file, id), "../", "");
-    string ret=API_read_file(id, m->virtual);
-    if(!ret) return ({ id->misc->ssi_errmsg||"No such file ("+m->file+")." });
-    return ret;
-  }
+  if(!m->file) m->file=http_decode_string(m->virtual);
 
-  return ({ id->misc->ssi_errmsg||"Hm? #include what, my dear?" });
+  m->file=fix_var(m->file, id);
+  string ret=API_read_file(id, m->file);
+  if(!ret) return ({ id->misc->ssi_errmsg||"No such file ("+m->file+")." });
+  return ret;
 }
 
 string tag_set(string tag, mapping m, RequestID id)
@@ -238,18 +232,14 @@ string tag_set(string tag, mapping m, RequestID id)
 
 array(string) tag_fsize(string tag, mapping m, RequestID id)
 {
-  array s;
-  if(m->virtual) {
-    m->virtual=fix_var(http_decode_string(m->virtual), id);
-    s=id->conf->stat_file(m->virtual);
-  }
+  if(!m->virtual && !m->file)
+    return ({ id->misc->ssi_errmsg||"No file given." });
 
-  if(m->file) {
-    m->file=replace(fix_var(m->file, id), "../", "");
-    s=id->conf->stat_file(m->file);
-  }
+  if(!m->file) m->file=http_decode_string(m->virtual);
 
-  if(!s) return ({ id->misc->ssi_errmsg||"No such file." });
+  m->file=fix_var(m->file, id);
+  array s=id->conf->stat_file(m->file, id);
+  if(!s) return ({ id->misc->ssi_errmsg||"No such file ("+m->file+")." });
 
   CACHE(5);
 
