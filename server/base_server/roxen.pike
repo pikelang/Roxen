@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.633 2001/02/23 02:25:44 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.634 2001/02/23 04:04:09 mast Exp $";
 
 // Used when running threaded to find out which thread is the backend thread.
 Thread.Thread backend_thread;
@@ -355,6 +355,18 @@ program _configuration;	/*set in create*/
 
 array(Configuration) configurations = ({});
 
+private void stop_all_configurations()
+{
+  configurations->unregister_urls();
+#ifdef THREADS
+  // Spend some time waiting out the handler threads before starting
+  // to shut down the modules.
+  hold_handler_threads();
+  release_handler_threads(3);
+#endif
+  configurations->stop(1);
+}
+
 // When true, roxen will shut down as soon as possible.
 local static int die_die_die;
 
@@ -368,7 +380,6 @@ private static void really_low_shutdown(int exit_code)
   exit( exit_code );		// Now we die...
 }
 
-
 // Shutdown Roxen
 //  exit_code = 0	True shutdown
 //  exit_code = -1	Restart
@@ -376,7 +387,7 @@ private static void low_shutdown(int exit_code)
 {
   catch
   {
-    configurations->stop();
+    stop_all_configurations();
     int pid;
     if (exit_code) {
       report_debug("Restarting Roxen.\n");
@@ -414,7 +425,6 @@ Thread do_thread_create(string id, function f, mixed ... args)
 {
   Thread.Thread t = thread_create(f, @args);
   catch(t->set_name( id ));
-  THREAD_WERR(id+" started");
   return t;
 }
 
@@ -441,7 +451,15 @@ class Queue
     buffer[r_ptr++] = 0;	// Throw away any references.
     return tmp;
   }
-  
+
+  mixed tryread()
+  {
+    if (!(w_ptr - r_ptr)) return ([])[0];
+    mixed tmp = buffer[r_ptr];
+    buffer[r_ptr++] = 0;	// Throw away any references.
+    return tmp;
+  }
+
   void write(mixed v)
   {
     if(w_ptr >= sizeof(buffer))
@@ -466,7 +484,10 @@ local static Queue handle_queue = Queue();
 //! An entry consists of an array(function fp, array args)
 
 local static int thread_reap_cnt;
-//! Number of handler threads that are alive.
+//! Number of handler threads in the process of being stopped.
+
+static int threads_on_hold;
+//! Number of handler threads on hold.
 
 local static void handler_thread(int id)
 //! The actual handling function. This functions read function and
@@ -474,15 +495,16 @@ local static void handler_thread(int id)
 //! is a lot of error handling to ensure that nothing serious happens if
 //! the handler function throws an error.
 {
-  array (mixed) h, q;
-  while(!die_die_die)
+  THREAD_WERR("Handle thread ["+id+"] started");
+  mixed h, q;
+  while(1)
   {
     if(q=catch {
       do {
 	THREAD_WERR("Handle thread ["+id+"] waiting for next event");
-	if((h=handle_queue->read()) && h[0]) {
-	  THREAD_WERR(sprintf("Handle thread [%O] calling %O(@%O)...",
-				id, h[0], h[1..]));
+	if(arrayp(h=handle_queue->read()) && h[0]) {
+	  THREAD_WERR(sprintf("Handle thread [%O] calling %O(%{%O, %})",
+				id, h[0], h[1] / 1));
 	  set_locale();
 	  h[0](@h[1]);
 	  h=0;
@@ -494,6 +516,18 @@ local static void handler_thread(int id)
 	  if(!thread_reap_cnt) report_debug("+++ATH\n");
 #endif
 	  return;
+	}
+#ifdef DEBUG
+	else if (h != 1)
+	  error ("Unknown message in handle_queue: %O\n", h);
+#endif
+	else {
+	  num_hold_messages--;
+	  THREAD_WERR("Handle thread [" + id + "] put on hold");
+	  threads_on_hold++;
+	  if (Thread.Condition cond = hold_wakeup_cond) cond->wait();
+	  threads_on_hold--;
+	  THREAD_WERR("Handle thread [" + id + "] released");
 	}
       } while(1);
     }) {
@@ -544,6 +578,83 @@ void start_handler_threads()
   handler_threads += new_threads;
 }
 
+static int num_hold_messages;
+static Thread.Condition hold_wakeup_cond = Thread.Condition();
+
+void hold_handler_threads()
+//! Tries to put all handler threads on hold, but gives up if it takes
+//! too long.
+{
+  if (!hold_wakeup_cond) {
+    THREAD_WERR("Ignoring request to hold handler threads during stop");
+    return;
+  }
+
+  int timeout=10;
+#if constant(_reset_dmalloc)
+  // DMALLOC slows stuff down a bit...
+  timeout *= 10;
+#endif /* constant(_reset_dmalloc) */
+
+  THREAD_WERR("Putting " + (number_of_threads - threads_on_hold) +
+	      " handler threads on hold, " +
+	      threads_on_hold + " on hold already");
+
+  for (int i = number_of_threads - threads_on_hold - num_hold_messages; i-- > 0;) {
+    handle_queue->write (1);
+    num_hold_messages++;
+  }
+  while (threads_on_hold < number_of_threads && timeout--)
+    sleep (0.1);
+
+  THREAD_WERR(threads_on_hold + " handler threads on hold, " +
+	      (number_of_threads - threads_on_hold) + " not responding");
+}
+
+void release_handler_threads (int numthreads)
+//! Releases any handler threads put on hold. If necessary new threads
+//! are started to ensure that at least @[numthreads] threads are
+//! responding. Any thread that haven't arrived to the hold state
+//! since @[hold_handler_threads] is considered nonresponding.
+{
+  if (Thread.Condition cond = hold_wakeup_cond) {
+    // Flush out any remaining hold messages from the queue.
+    for (int i = handle_queue->size(); i && num_hold_messages; i--) {
+      mixed task = handle_queue->tryread();
+      if (task == 1) num_hold_messages--;
+      else handle_queue->write (task);
+    }
+#ifdef DEBUG
+    if (num_hold_messages)
+      error ("num_hold_messages is bogus (%d).\n", num_hold_messages);
+#endif
+    num_hold_messages = 0;
+
+    int blocked_threads = number_of_threads - threads_on_hold;
+    int threads_to_create = numthreads - threads_on_hold;
+
+    THREAD_WERR("Releasing " + was_on_hold + " threads on hold");
+    cond->broadcast();
+
+    if (threads_to_create > 0) {
+      array(object) new_threads = ({});
+      for (threads_to_create = 0;
+	   threads_on_hold < numthreads;
+	   number_of_threads++, threads_to_create++)
+	new_threads += ({ do_thread_create( "Handle thread [" +
+					    number_of_threads + "]",
+					    handler_thread, number_of_threads ) });
+      handler_threads += new_threads;
+      report_notice ("Created %d new handler threads to compensate "
+		     "for %d blocked ones.\n", threads_to_create, blocked_threads);
+    }
+  }
+  else {
+    THREAD_WERR("Ignoring request to release handler threads during stop");
+    return;
+  }
+}
+
 static Thread.MutexKey backend_block_lock;
 
 void stop_handler_threads()
@@ -556,6 +667,14 @@ void stop_handler_threads()
   timeout *= 10;
 #endif /* constant(_reset_dmalloc) */
   report_debug("Stopping all request handler threads.\n");
+
+  // Wake up any handler threads on hold, and ensure none gets on hold
+  // after this.
+  if (Thread.Condition cond = hold_wakeup_cond) {
+    hold_wakeup_cond = 0;
+    cond->broadcast();
+  }
+
   while(number_of_threads>0) {
     number_of_threads--;
     handle_queue->write(0);
@@ -563,7 +682,7 @@ void stop_handler_threads()
   }
   handler_threads = ({});
 
-  if (this_thread() != backend_thread) {
+  if (this_thread() != backend_thread && !backend_block_lock) {
     thread_reap_cnt++;
     Thread.Mutex mutex = Thread.Mutex();
     backend_block_lock = mutex->lock();
@@ -578,7 +697,11 @@ void stop_handler_threads()
   while(thread_reap_cnt) {
     sleep(0.1);
     if(--timeout<=0) {
-      report_debug("Giving up waiting on threads!\n");
+      report_debug("Giving up waiting on threads; "
+		   "%d threads blocked.\n", thread_reap_cnt);
+#ifdef DEBUG
+      describe_all_threads();
+#endif
       return;
     }
   }
@@ -3128,7 +3251,7 @@ void exit_when_done()
   if(++_recurse > 4)
   {
     report_debug("Exiting roxen (spurious signals received).\n");
-    configurations->stop();
+    stop_all_configurations();
 #ifdef THREADS
     stop_handler_threads();
 #endif /* THREADS */
@@ -3136,7 +3259,7 @@ void exit_when_done()
   }
 
   report_debug("Exiting roxen.\n");
-  configurations->stop();
+  stop_all_configurations();
 #ifdef THREADS
   stop_handler_threads();
 #endif /* THREADS */
