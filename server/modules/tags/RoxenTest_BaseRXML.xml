@@ -585,6 +585,11 @@ b</strlen></rxml>
 </test>
 
 <test>
+<rxml><emit source="values" values="a.b.c" split="." do-once="1">&_.value;:</emit></rxml>
+<result>a:b:c:</result>
+</test>
+
+<test>
 <rxml><emit source="values" values="abcdefgh" split="" maxrows="4">&_.value; </emit></rxml>
 <result>a b c d </result>
 </test>
@@ -592,6 +597,16 @@ b</strlen></rxml>
 <test>
 <rxml><emit source="values" values="a,b,c" split="," maxrows="100">&_.value; </emit></rxml>
 <result>a b c </result>
+</test>
+
+<test>
+<rxml><emit source="values" values="a,b,c" split="," skiprows="100">&_.value;:</emit></rxml>
+<result></result>
+</test>
+
+<test>
+<rxml><emit source="values" values="a,b,c" split="," skiprows="100" do-once="1">&_.value;:</emit></rxml>
+<result>:</result>
 </test>
 
 <test>
@@ -614,3 +629,87 @@ b</strlen></rxml>
 <result>1:2:3:4:5:</result>
 </test>
 
+<test>
+<rxml><emit source="TESTER" sort="d">&_.c;:</emit></rxml>
+<result>4:3:1:2:</result>
+</test>
+
+<test>
+<rxml><emit source="TESTER" sort="+d">&_.c;:</emit></rxml>
+<result>4:3:1:2:</result>
+</test>
+
+<test>
+<rxml><emit source="TESTER" sort="-d">&_.c;:</emit></rxml>
+<result>2:1:3:4:</result>
+</test>
+
+<test>
+<rxml><emit source="TESTER" sort="a,d">&_.c;:</emit></rxml>
+<result>1:2:4:3:</result>
+</test>
+
+<test>
+<rxml><emit source="TESTER" sort="a,-d">&_.c;:</emit></rxml>
+<result>2:1:4:3:</result>
+</test>
+
+<test>
+<rxml><emit source="TESTER" sort="b">&_.c;:</emit></rxml>
+<result>4:2:1:3:</result>
+</test>
+
+<test>
+<rxml><emit source="TESTER" sort="c" filter="a=??x">&_.c;:</emit></rxml>
+<result>1:2:4:</result>
+</test>
+
+<test>
+<rxml><emit source="TESTER" sort="c" filter="a=??x, b=**o">&_.c;:</emit></rxml>
+<result>1:2:</result>
+</test>
+
+<test>
+<rxml><emit source="TESTER" sort="c" filter="a=??x,b=*">&_.c;:</emit></rxml>
+<result>1:2:4:</result>
+</test>
+
+<test>
+<rxml><emit source="TESTER" sort="c" filter="a=??x" do-once="1">&_.c;:</emit></rxml>
+<result>1:2:4:</result>
+</test>
+
+<test>
+<rxml><emit source="TESTER" sort="c" filter="a=??y" do-once="1">&_.c;:</emit></rxml>
+<result>:</result>
+</test>
+
+<test>
+<rxml><emit source="TESTER" sort="-b" filter="a=??x" skiprows="1">&_.c;:</emit></rxml>
+<result>1:2:4:</result>
+</test>
+
+<test>
+<rxml><emit source="TESTER" sort="c" filter="a=??x" maxrows="2">&_.c;:</emit></rxml>
+<result>1:2:</result>
+</test>
+
+<test>
+<rxml><emit source="TESTER" sort="c" filter="a=??x" maxrows="2" remainderinfo="var.rem">&_.c;:</emit>&var.rem;</rxml>
+<result>1:2:1</result>
+</test>
+
+<test>
+<rxml><emit source="TESTER" sort="-b" filter="a=??x" skiprows="100">&_.c;:</emit></rxml>
+<result></result>
+</test>
+
+<test>
+<rxml><emit source="TESTER" sort="c" filter="a=??x" maxrows="100">&_.c;:</emit></rxml>
+<result>1:2:4:</result>
+</test>
+
+<test>
+<rxml><emit source="TESTER" sort="c" filter="a=??x" rowinfo="var.row">&_.c;:</emit>&var.row;</rxml>
+<result>1:2:4:3</result>
+</test>
