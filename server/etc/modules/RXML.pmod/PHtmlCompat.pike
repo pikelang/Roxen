@@ -6,7 +6,7 @@
 //!
 //! Created 2000-01-08 by Martin Stjernholm.
 //!
-//! $Id: PHtmlCompat.pike,v 1.8 2000/01/28 16:48:44 mast Exp $
+//! $Id: PHtmlCompat.pike,v 1.9 2000/02/08 06:24:15 mast Exp $
 
 #pragma strict_types
 
@@ -127,14 +127,20 @@ int parse_html_compat (void|int flag)
   int oldflag = flag_parse_html_compat;
   if (!zero_type (flag) && !oldflag != !flag) {
     if (flag) {
+      xml_tag_syntax (1);
       case_insensitive_tag (1);
       ignore_unknown (1);
+      ws_before_tag_name (1);
       add_quote_tag ("!--", 0);
+      add_quote_tag ("?", 0);
+      add_quote_tag ("[CDATA[", 0);
     }
     else {
+      xml_tag_syntax (2);
       case_insensitive_tag (0);
       ignore_unknown (0);
-      set_comment_tag_cb();
+      ws_before_tag_name (0);
+      set_quote_tag_cbs();
     }
     flag_parse_html_compat = flag;
   }
