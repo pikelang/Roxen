@@ -9,7 +9,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: cgi.pike,v 1.117 1999/04/30 07:39:21 neotron Exp $";
+constant cvs_version = "$Id: cgi.pike,v 1.118 1999/04/30 07:47:10 neotron Exp $";
 
 class Shuffle
 {
@@ -423,13 +423,10 @@ class CGIWrapper
   string parse_headers( )
   {
     int pos, skip=4;
-    werror("parse_headers: %O\n",  headers);
     if(((pos=search( headers, "\r\n\r\n" )) != -1) ||
        ((skip=2) && ((pos=search( headers, "\n\n" )) != -1)))
     {
-      werror("heads: %O\n", handle_headers( headers[..pos-1]));
       output( handle_headers( headers[..pos-1] ) );
-      werror("body (skip=%d): %O\n", skip, headers[pos+skip..] );
       output( headers[pos+skip..] );
       headers="";
       return "";
