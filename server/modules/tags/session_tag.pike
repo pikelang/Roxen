@@ -7,13 +7,13 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: session_tag.pike,v 1.18 2004/05/23 02:29:27 _cvs_stephen Exp $";
+constant cvs_version = "$Id: session_tag.pike,v 1.19 2004/05/23 02:30:08 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Session tag module";
 constant module_doc  = #"\
-+This module provides the session tag which provides a variable scope
-+where user session data can be stored.";
+This module provides the session tag which provides a variable scope
+where user session data can be stored.";
 
 
 // --- &client.session; ----------------------------------------
