@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.160 1998/10/11 11:37:27 peter Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.161 1998/10/21 00:13:14 peter Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -2442,6 +2442,10 @@ object enable_module( string modname )
 		   "This is the 'security level=value' list.<br>"
 		   "Each security level can be any or more from this list:"
 		   "<hr noshade>"
+		   "accept ip=<i>IP</i>/<i>bits</i><br>"
+		   "accept ip=<i>IP</i>:<i>mask</i><br>"
+		   "accept ip=<i>pattern</i><br>"
+		   "accept user=<i>username</i>,...<br>"
 		   "allow ip=<i>IP</i>/<i>bits</i><br>"
 		   "allow ip=<i>IP</i>:<i>mask</i><br>"
 		   "allow ip=<i>pattern</i><br>"
@@ -2453,8 +2457,9 @@ object enable_module( string modname )
 		   "In patterns: * matches one or more characters, "
 		   "and ? matches one character.<p>"
 		   "In username: 'any' stands for any valid account "
-		   "(from .htaccess"
-		   " or auth-module. The default (used when _no_ "
+		   "(from .htaccess or auth-module.) "
+		   "<p>allow and deny are short-circuit rules."
+		   "<p>The default (used when _no_ "
 		   "entries are present) is 'allow ip=*', allowing"
 		   " everyone to access the module");
 	  
