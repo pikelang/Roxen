@@ -4,7 +4,7 @@
 inherit "module";
 
 constant thread_safe = 1;
-constant cvs_version = "$Id: wapadapter.pike,v 1.1 2000/02/19 02:17:42 nilsson Exp $";
+constant cvs_version = "$Id: wapadapter.pike,v 1.2 2000/02/19 06:11:29 nilsson Exp $";
 
 constant module_type = MODULE_FIRST|MODULE_FILTER;
 constant module_name = "WAP Adapter";
@@ -31,7 +31,8 @@ RequestID first_try(RequestID id) {
   return id;
 }
 
-mapping filter(mapping result, RequestID id) {
+mixed filter(mixed result, RequestID id) {
+  if(!mappingp(result)) return result;
   if(result->type=="text/vnd.wap.wml" &&
      !id->supports["wap1.1"] &&
      id->supports["wap1.0"]) {
