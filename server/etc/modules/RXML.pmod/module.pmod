@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.162 2001/06/09 00:33:24 mast Exp $
+// $Id: module.pmod,v 1.163 2001/06/09 02:39:44 nilsson Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -271,16 +271,17 @@ class Tag
     return frame;
   }
 
-  int eval_args (mapping(string:mixed) args, void|int dont_throw, void|Context ctx)
+  int eval_args (mapping(string:mixed) args, void|int dont_throw,
+		 void|Context ctx, void|array(string) ignore_args)
   //! Parses and evaluates the tag arguments according to
   //! @[req_arg_types] and @[opt_arg_types]. The @[args] mapping
   //! contains the unparsed arguments on entry, and they get replaced
   //! by the parsed results. Arguments not mentioned in
-  //! @[req_arg_types] or @[opt_arg_types] are not touched. RXML
-  //! errors, such as missing argument, are thrown if @[dont_throw] is
-  //! zero or left out, otherwise zero is returned when any such error
-  //! occurs. @[ctx] specifies the context to use; it defaults to the
-  //! current context.
+  //! @[req_arg_types] or @[opt_arg_types] are evaluated with the default
+  //! argument type, unless listed in @[ignore_args]. RXML errors, such
+  //! as missing argument, are thrown if @[dont_throw] is zero or left
+  //! out, otherwise zero is returned when any such error occurs. @[ctx]
+  //! specifies the context to use; it defaults to the current context.
   {
     // Note: Code duplication in Frame._eval_args and Frame._prepare.
     mapping(string:Type) atypes = args & req_arg_types;
@@ -297,7 +298,7 @@ class Tag
 #ifdef MODULE_DEBUG
     if (mixed err = catch {
 #endif
-      foreach (indices (args), string arg)
+      foreach (indices (args) - ( ignore_args||({}) ), string arg)
 	args[arg] = (atypes[arg] || def_arg_type)->eval (
 	  args[arg], ctx);	// Should not unwind.
 #ifdef MODULE_DEBUG
