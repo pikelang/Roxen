@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.622 2001/01/31 09:39:13 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.623 2001/02/02 11:54:49 noring Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -392,11 +392,11 @@ private static void low_shutdown(int exit_code)
 // Perhaps somewhat misnamed, really...  This function will close all
 // listen ports and then quit.  The 'start' script should then start a
 // new copy of roxen automatically.
-void restart(float|void i)
+void restart(float|void i, void|int exit_code)
 //! Restart roxen, if the start script is running
 {
   werror(describe_backtrace(backtrace()));
-  call_out(low_shutdown, i, -1);
+  call_out(low_shutdown, i, exit_code || -1);
 }
 
 void shutdown(float|void i)
