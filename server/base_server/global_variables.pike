@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: global_variables.pike,v 1.72 2001/06/26 23:18:13 hop Exp $
+// $Id: global_variables.pike,v 1.73 2001/06/28 12:11:56 nilsson Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -278,7 +278,7 @@ void define_global_variables(  )
 	 TYPE_FONT,
 	 LOCALE(93, "The default font to use when modules request a font."));
 
-  defvar("font_dirs", ({"../local/nfonts/", "nfonts/" })+
+  defvar("font_dirs", ({"../local/fonts/", "nfonts/" })+
 #ifdef __NT__
          ({combine_path(replace(getenv("SystemRoot"),"\\","/"),"fonts/")})
 #else
