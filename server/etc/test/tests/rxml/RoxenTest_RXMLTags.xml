@@ -658,7 +658,7 @@ c</result>
 
 <test>
 <rxml><date unix-time='1022834838' date lang='sv'/></rxml>
-<result>den 31:a maj 2002</result>
+<result>den 31 maj 2002</result>
 </test>
 
 <test>
@@ -750,7 +750,7 @@ c</result>
 
 <test>
 <rxml><date unix-time='1022834847' lang='sv'/></rxml>
-<result>10:47, den 31:a maj 2002</result>
+<result>10:47, den 31 maj 2002</result>
 </test>
 
 <test>
