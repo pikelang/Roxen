@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.84 1997/10/25 05:28:39 per Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.85 1997/11/09 18:23:37 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -1311,6 +1311,10 @@ public mapping(string:array(mixed)) find_dir_stat(string file, object id)
     if(mappingp( tmp ))
     {
       id->not_query=of;
+#ifdef MODULE_DEBUG
+      roxen_perror(sprintf("conf->find_dir_stat(\"%s\"): url_module returned mapping:%O\n", 
+			   file, tmp));
+#endif /* MODULE_DEBUG */
       return 0;
     }
     if(objectp( tmp ))
@@ -1329,6 +1333,10 @@ public mapping(string:array(mixed)) find_dir_stat(string file, object id)
       nest = 0;
       if(err)
 	throw(err);
+#ifdef MODULE_DEBUG
+      roxen_perror(sprintf("conf->find_dir_stat(\"%s\"): url_module returned object:\n", 
+			   file));
+#endif /* MODULE_DEBUG */
       return tmp;
     }
     id->not_query=of;
@@ -1472,8 +1480,10 @@ public mixed try_get_file(string s, object id, int|void status, int|void nocache
   }
   fake_id->end();
   
-  if(status) return 1;
+  if (!(< 0, 200, 201, 202, 203 >)[m->error]) return 0;
   
+  if(status) return 1;
+
 #ifdef COMPAT
   if(m["string"])  res = m["string"];	// Compability..
 #endif
