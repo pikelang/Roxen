@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.157 2002/11/14 23:38:14 mani Exp $
+// $Id: Roxen.pmod,v 1.158 2002/11/14 23:58:58 mani Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2945,7 +2945,7 @@ class ScopeRoxen {
        CACHE(c->id,1);
        return ENCODE_RXML_INT(time(),  type);
      case "server":
-       NOCACE(c->id);
+       NOCACHE(c->id);
        return ENCODE_RXML_TEXT (c->id->url_base(), type);
      case "domain":
        NOCACHE(c->id);
