@@ -1,4 +1,4 @@
-string cvs_version = "$Id: cache.pike,v 1.6 1996/12/10 04:26:00 per Exp $";
+string cvs_version = "$Id: cache.pike,v 1.7 1996/12/10 04:40:32 per Exp $";
 #include <config.h>
 
 inherit "roxenlib";
@@ -8,7 +8,7 @@ inherit "roxenlib";
 
 #define ENTRY_SIZE 2
 
-#define CACHE_TIME_OUT 2000
+#define CACHE_TIME_OUT 300
 
 #if DEBUG_LEVEL > 8
 #ifndef CACHE_DEBUG
@@ -31,7 +31,7 @@ mixed cache_lookup(string in, string what)
     perror("Hit\n");
 #endif
     hits[in]++;
-    cache[in][what][TIMESTAMP]=time(0);
+    cache[in][what][TIMESTAMP]=time(1);
     return cache[in][what][DATA];
   }
 #ifdef CACHE_DEBUG
@@ -97,7 +97,7 @@ void cache_set(string in, string what, mixed to)
     cache[in]=([ ]);
   cache[in][what] = allocate(ENTRY_SIZE);
   cache[in][what][DATA] = to;
-  cache[in][what][TIMESTAMP] = time(0);
+  cache[in][what][TIMESTAMP] = time(1);
 }
 
 void cache_clean()
@@ -106,10 +106,6 @@ void cache_clean()
   int cache_time_out=CACHE_TIME_OUT;
 #ifdef CACHE_DEBUG
   perror("CACHE: cache_clean()\n");
-#endif
-#ifdef CACHE_DEBUG
-  perror("CACHE: Before cleaning\n");
-  perror("CACHE: "+status()/"\n"*"\nCACHE: "+"\n");
 #endif
   foreach(indices(cache), a)
   {
@@ -125,10 +121,13 @@ void cache_clean()
       perror("CACHE:      " + b + " ");
 #endif
 #endif
+#ifdef DEBUG
       if(!intp(cache[a][b][TIMESTAMP]))
 	error("Illegal timestamp in cache ("+a+":"+b+")\n");
 #endif
-      if(cache[a][b][TIMESTAMP] < (time(0) - cache_time_out))
+#endif
+      if(cache[a][b][TIMESTAMP] <
+	 (time(1) - (cache_time_out - get_size(cache[a][b][DATA])/100)))
       {
 #ifdef CACHE_DEBUG
 #if DEBUG_LEVEL > 40
@@ -154,11 +153,7 @@ void cache_clean()
       }
     }
   }
-#ifdef CACHE_DEBUG
-  perror("CACHE: After cleaning\n");
-  perror("CACHE: "+status()/"\n"*"\nCACHE: "+"\n");
-#endif
-  call_out(cache_clean, 1000);
+  call_out(cache_clean, cache_time_out/10);
 }
 
 void create()

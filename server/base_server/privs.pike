@@ -1,6 +1,6 @@
 #if efun(seteuid)
 #include <module.h>
-string cvs_version = "$Id: privs.pike,v 1.3 1996/12/08 10:55:42 neotron Exp $";
+string cvs_version = "$Id: privs.pike,v 1.4 1996/12/10 04:40:32 per Exp $";
 
 int saved_uid;
 int saved_gid;
@@ -9,10 +9,11 @@ int saved_gid;
 
 void create(string reason, int|void uid, int|void gid)
 {
+  if(LOGP)
+    perror("Change to ROOT privs wanted ("+reason+"), from\n"+describe_backtrace(backtrace()[1..2]));
+
   if(getuid()) return;
 
-  if(LOGP)
-    perror("Changed to ROOT privs ("+reason+"), from\n"+describe_backtrace(backtrace()));
   saved_uid = geteuid();
   saved_gid = getegid();
   seteuid(0);

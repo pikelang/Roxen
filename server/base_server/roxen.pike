@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.23 1996/12/10 03:04:40 neotron Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.24 1996/12/10 04:40:33 per Exp $";
 #define IN_ROXEN
 #include <module.h>
 #include <variables.h>
@@ -2214,9 +2214,7 @@ void enable_configuration(string config)
 #endif
 
 
-  defvar("audit", 0, "Logging: Audit", TYPE_FLAG,
-	 "If set, log all changes of uid in the debug log.");
-  
+
   defvar("ZNoSuchFile", "<title>Sorry. I cannot find this resource</title>"
 	 "\n<h2 align=center><configimage src=roxen.gif alt=\"File not found\">\n"
 	 "<p><hr noshade>"
@@ -2678,6 +2676,9 @@ private void define_global_variables( int argc, array (string) argv )
 	  "if-modified-since headers, as "
 	  "<a href=http://www.w3.org/pub/WWW/Protocols/HTTP/1.1/spec"
 	  "#If-Modified-Since>specified by the HTTP draft.</a>");
+  
+  globvar("audit", 0, "Audit trail", TYPE_FLAG,
+	 "If set, log all changes of uid in the debug log.");
   
 #if efun(syslog)
   globvar("LogA", "file", "Logging method", TYPE_STRING_LIST, 

@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.17 1996/12/10 04:21:11 per Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.18 1996/12/10 04:40:34 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -409,12 +409,11 @@ array(int)|string write_text(int _args, string text, int size,
   text = replace(text, ({ "&lt;", "&gt;", "&amp;" }), ({ "<", ">", "&" }));
 
   // Check the cache first..
-  if(!id /*|| (!id->pragma["no-cache"])*/)
-    if(mixed data = cache_lookup("gtext:"+(_args-_start), text))
-    {
-      if(size) return data[1];
-      return data[0];
-    }
+  if(mixed data = cache_lookup("gtext:"+(_args-_start), text))
+  {
+    if(size) return data[1];
+    return data[0];
+  }
   //  Nothing found in the cache. Generate a new image.
 
 
