@@ -1,7 +1,7 @@
 /*
  * Roxen master
  */
-string cvs_version = "$Id: roxen_master.pike,v 1.93 2000/05/13 16:48:37 mast Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.94 2000/05/24 17:29:31 mast Exp $";
 
 /*
  * name = "Roxen Master";
@@ -150,6 +150,12 @@ class MyCodec
 object mm=(object)"/master";
 inherit "/master";
 
+#ifdef __NT__
+string getcwd()
+{
+  return replace (::getcwd(), "\\", "/");
+}
+#endif
 
 mapping handled = ([]);
 
