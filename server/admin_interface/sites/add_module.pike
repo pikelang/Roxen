@@ -470,9 +470,9 @@ string describe_module_compact( object module, object block )
     //string modname = strip_leading (module->get_name());
     string modname = module->get_name();
     return "<option value='"+module->sname+"'>"+
-      Roxen.html_encode_string(
-	modname + "\0240" * max (0, (int) ((40 - sizeof (modname)) * 1.4)) +
-	" (" + module->sname + ")")+
+      Roxen.html_encode_string(modname) +
+	"&nbsp;" * max (0, (int) ((40 - sizeof (modname)) * 1.6)) +
+	" (" + Roxen.html_encode_string(module->sname) + ")" +
       "</option>\n";
   }
   return "";
