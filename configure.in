@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.61 1998/12/18 23:37:05 grubba Exp $
+# $Id: configure.in,v 1.62 1999/03/27 17:28:16 marcus Exp $
 #
 
 prefix=$PWD
@@ -63,7 +63,7 @@ esac
 AC_ARG_WITH(gmp,     [  --with(out)-gmp        Support bignums],[],[with_gmp=yes])
 AC_ARG_WITH(zlib,    [  --with(out)-zlib       Support gzip compression],[],[with_zlib=yes])
 AC_ARG_WITH(gdbm,    [  --with(out)-gdbm       GNU database manager support ],[],[with_gdbm=yes])
-AC_ARG_WITH(pike,    [  --with-pike            Specify version of Pike],[],[with_pike=0.5])
+AC_ARG_WITH(pike,    [  --with-pike            Specify version of Pike],[],[with_pike=0.6])
 
 #
 # Version of Pike
@@ -71,19 +71,19 @@ AC_ARG_WITH(pike,    [  --with-pike            Specify version of Pike],[],[with
 
 AC_MSG_CHECKING(version of Pike to use)
 case "$with_pike" in
-  0.5)
-    pike_version=0.5
-  ;;
   0.6)
     pike_version=0.6
+  ;;
+  0.7)
+    pike_version=0.7
   ;;
   dual|multi)
     with_pike=dual
     pike_version=0.6
   ;;
   *)
-    with_pike=0.5
-    pike_version=0.5
+    with_pike=0.6
+    pike_version=0.6
   ;;
 esac
 AC_MSG_RESULT($with_pike)

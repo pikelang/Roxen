@@ -391,7 +391,7 @@ copy_dist: $(SRCDIR)/ChangeLog.gz $(SRCDIR)/ChangeLog.rxml.gz
 	  `find $$version/. -type f -name '#*#' -print`; do \
 	  echo $$f; rm $$f || exit 1; \
 	done; \
-	for d in $$version/pike/0.5/tutorial $$version/pike/0.5/about_pike \
+	for d in \
 	  $$version/pike/0.6/about_pike $$version/pike/0.6/doc; do \
 	  if test -d $$d/. ; then \
 	    echo Removing $$d...; rm -rf $$d || exit 1; \
