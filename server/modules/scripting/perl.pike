@@ -6,7 +6,7 @@ inherit "roxenlib";
 // by Leif Stensson.
 
 string cvs_version =
-       "$Id: perl.pike,v 2.7 2000/09/10 16:47:49 nilsson Exp $";
+       "$Id: perl.pike,v 2.8 2000/09/18 19:32:37 kuntri Exp $";
 
 constant module_type = MODULE_EXPERIMENTAL |
             MODULE_FILE_EXTENSION | MODULE_TAG;
@@ -250,6 +250,23 @@ array(string) query_file_extensions()
   return QUERY(extensions);
 }
 
+TAGDOCUMENTATION;
+#ifdef manual
+constant tagdoc=([
+"<?perl":#"<desc pi><short hide>
+ <p>Perl processing instruction tag.</short>This processing intruction
+ tag allows for evaluating Pike code directly in the document.</p>
 
+ <p>Note: Read the installation and configuration documentation in the
+ Administration manual to set up the Perl support properly. If the
+ correct parameters are not set the Perl code might not work properly
+ or security issues might arise.</p>
 
+ <p>There is also a <ref
+ type=tag><tag>perl</tag></ref>...<tag>/perl</tag> container tag
+ available.</p>
+</desc>",
+
+  ]);
+#endif
 

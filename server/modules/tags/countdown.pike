@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: countdown.pike,v 1.38 2000/09/10 16:35:07 nilsson Exp $";
+constant cvs_version="$Id: countdown.pike,v 1.39 2000/09/18 19:32:37 kuntri Exp $";
 #include <module.h>
 inherit "module";
 
@@ -51,34 +51,34 @@ Sets the time of an evet to count down to.</attr>
 <p>Presentation:</p>
 
 <attr name=display value=when|years|months|weeks|days|hours|beats|minutes|seconds|combined|dogyears|boolean>
-<table>
-<tr><td><i>display=when</i></td><td>Shows when the time will occur.
+<xtable>
+<row><c><i>display=when</i></c><c>Shows when the time will occur.
                          All arguments that are valid in a
-                         &lt;date&gt; tag can be used to modify the display.</td></tr>
-<tr><td><i>display=years</i></td><td>How many years until the time.</td></tr>
-<tr><td><i>display=months</i></td><td>How many months until the time.</td></tr>
-<tr><td><i>display=weeks</i></td><td>How many weeks until the time.</td></tr>
-<tr><td><i>display=days</i></td><td>How many days until the time.</td></tr>
-<tr><td><i>display=hours</i></td><td>How many hours until the time. <ex><countdown day=\"friday\" display=\"hours\"/></ex></td></tr>
-<tr><td><i>display=beats</i></td><td>How many beats until the time.</td></tr>
-<tr><td><i>display=minutes</i></td><td>How many minutes until the time.</td></tr>
-<tr><td><i>display=seconds</i></td><td>How many seconds until the time.</td></tr>
-<tr><td><i>display=combined</i></td><td>Shows an english text describing the time period.
+                         &lt;date&gt; tag can be used to modify the display.</c></row>
+<row><c><i>display=years</i></c><c>How many years until the time.</c></row>
+<row><c><i>display=months</i></c><c>How many months until the time.</c></row>
+<row><c><i>display=weeks</i></c><c>How many weeks until the time.</c></row>
+<row><c><i>display=days</i></c><c>How many days until the time.</c></row>
+<row><c><i>display=hours</i></c><c>How many hours until the time. <ex><countdown day=\"friday\" display=\"hours\"/></ex></c></row>
+<row><c><i>display=beats</i></c><c>How many beats until the time.</c></row>
+<row><c><i>display=minutes</i></c><c>How many minutes until the time.</c></row>
+<row><c><i>display=seconds</i></c><c>How many seconds until the time.</c></row>
+<row><c><i>display=combined</i></c><c>Shows an english text describing the time period.
                          Example: 2 days, 1 hour and 5 seconds. You may use the 'prec'
                          attribute to limit how precise the description is. Also, you can
                          use the 'month' attribute if you want to see years/months/days
                          instead of years/weeks/days.
 
-<ex type='vert'>The world will go under in <countdown year='2038' display='combined' prec='day'/>.</ex></td></tr>
-<tr><td><i>display=dogyears</i></td><td>How many dog-years until the time. (With one decimal) <ex><countdown years=\"2\" display=\"dogyears\"/></ex></td></tr>
-<tr><td><i>display=boolean</i></td><td>Return true or false (1 or 0), depending on if the time is now or not. The
+<ex type='vert'>The world will go under in <countdown year='2038' display='combined' prec='day'/>.</ex></c></row>
+<row><c><i>display=dogyears</i></c><c>How many dog-years until the time. (With one decimal) <ex><countdown years=\"2\" display=\"dogyears\"/></ex></c></row>
+<row><c><i>display=boolean</i></c><c>Return true or false (1 or 0), depending on if the time is now or not. The
                          fuzziness of 'now' is decided by the 'prec' option.
 <ex type='vert'><p>Is this a Sunday?</p>
 <define variable='var.test' preparse=''><countdown day='sunday' display='boolean'/></define>
 <if variable='var.test = 1'>Yes, this is a Sunday.</if>
 <else>No, it isn´t.</else></ex>
-</td><tr>
-</table>
+</c><row>
+</xtable>
 
 </attr>
 <attr name=type value=type>As for 'date'. Useful values for type include string, number and ordered.</attr>
