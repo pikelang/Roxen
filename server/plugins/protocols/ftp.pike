@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.88 2004/04/04 00:01:59 mani Exp $
+ * $Id: ftp.pike,v 2.89 2004/04/04 14:24:52 mani Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -148,10 +148,9 @@ class RequestID2
     error("Async sending with send_result() not supported yet.\n");
   }
 
-  object(RequestID2) clone_me()
+  RequestID2 clone_me()
   {
-    object(RequestID2) o = this_object();
-    return(object_program(o)(o));
+    return this_program(this);
   }
 
   void end()
@@ -178,7 +177,7 @@ class RequestID2
 #endif
 
     if (m_rid) {
-      object o = this_object();
+      this_program o = this;
       foreach(indices(m_rid), string var) {
 	if (!(< "create", "connection", "configuration",
                 "__INIT", "clone_me", "end", "ready_to_receive",
@@ -1931,7 +1930,7 @@ class FTPSession
 	// The list_stream object doesn't support nonblocking I/O,
 	// but converts to ASCII anyway, so we don't have to do
 	// anything about it.
-	file->file = ToAsciiWrapper(file->file, 0, this_object());
+	file->file = ToAsciiWrapper(file->file, 0, this);
       }
       break;
     case "E":
@@ -1946,14 +1945,14 @@ class FTPSession
 	// but converts to ASCII anyway, so we don't have to do
 	// anything about it.
 	// But EBCDIC doen't work...
-	file->file = ToEBCDICWrapper(file->file, 0, this_object());
+	file->file = ToEBCDICWrapper(file->file, 0, this);
       }
       break;
     default:
       // "I" and "L"
       // Binary -- no conversion needed.
       if (objectp(file->file) && file->file->set_nonblocking) {
-	file->file = BinaryWrapper(file->file, 0, this_object());
+	file->file = BinaryWrapper(file->file, 0, this);
       }
       break;
     }
@@ -1962,7 +1961,7 @@ class FTPSession
     object pipe;
     pipe = core.get_shuffler( fd );
     if( conf )
-      conf->connection_add( this_object(), pipe );
+      conf->connection_add( this, pipe );
 
     if( throttler || conf->throttler )
       pipe->set_throttler( throttler || conf->throttler );
@@ -2003,20 +2002,20 @@ class FTPSession
 
     switch(mode) {
     case "A":
-      fd = FromAsciiWrapper(fd, data, this_object());
+      fd = FromAsciiWrapper(fd, data, this);
       break;
     case "E":
-      fd = FromEBCDICWrapper(fd, data, this_object());
+      fd = FromEBCDICWrapper(fd, data, this);
       return;
     default:	// "I" and "L"
       // Binary, no need to do anything.
-      fd = BinaryWrapper(fd, data, this_object());
+      fd = BinaryWrapper(fd, data, this);
       break;
     }
 
     object session = RequestID2(master_session);
     session->method = "PUT";
-    session->my_fd = PutFileWrapper(fd, session, this_object());
+    session->my_fd = PutFileWrapper(fd, session, this);
     session->misc->len = 0x7fffffff;
 
     if (open_file(args, session, "STOR")) {
@@ -2435,7 +2434,7 @@ class FTPSession
       }
 
       file->file = LSFile(cwd, argv[1..], flags, session,
-			  file->mode, this_object());
+			  file->mode, this);
     }
 
     if (!file->full_path) {
@@ -3352,7 +3351,7 @@ class FTPSession
   {
     array a = sort(Array.filter(indices(cmd_help),
 				lambda(string s) {
-				  return(this_object()["ftp_"+s]);
+				  return(this["ftp_"+s]);
 				}));
     a = Array.map(a,
 		  lambda(string s) {
@@ -3476,7 +3475,7 @@ class FTPSession
 	@(sprintf(" %#70s", sort(Array.map(indices(cmd_help),
 					   lambda(string s) {
 					     return(upper_case(s)+
-						    (this_object()["ftp_"+s]?
+						    (this["ftp_"+s]?
 						     "   ":"*  "));
 					   }))*"\n")/"\n"),
 	@(FTP2_XTRA_HELP),
@@ -3497,7 +3496,7 @@ class FTPSession
       if (cmd_help[args]) {
 	send(214, ({ sprintf("Syntax: %s %s%s", args,
 			     cmd_help[args],
-			     (this_object()["ftp_"+args]?
+			     (this["ftp_"+args]?
 			      "":"; unimplemented")) }));
       } else {
 	send(504, ({ sprintf("Unknown command %s.", args) }));
@@ -3525,8 +3524,8 @@ class FTPSession
     a[0] = upper_case(a[0]);
     if (!site_help[a[0]]) {
       send(502, ({ sprintf("Bad SITE command: '%s'", a[0]) }));
-    } else if (this_object()["ftp_SITE_"+a[0]]) {
-      this_object()["ftp_SITE_"+a[0]](a[1..]);
+    } else if (this["ftp_SITE_"+a[0]]) {
+      this["ftp_SITE_"+a[0]](a[1..]);
     } else {
       send(502, ({ sprintf("SITE command '%s' is not currently supported.",
 			   a[0]) }));
@@ -3699,12 +3698,12 @@ class FTPSession
 	  return;
 	}
       }
-      if (this_object()["ftp_"+cmd]) {
+      if (this["ftp_"+cmd]) {
 	conf->requests++;
 #if 1
 	mixed err;
 	if (err = catch {
-	  this_object()["ftp_"+cmd](args);
+	  this["ftp_"+cmd](args);
 	}) {
 	  report_error("Internal server error in FTP2\n"
 		       "Handling command %O\n%s\n",
@@ -3720,7 +3719,7 @@ class FTPSession
 				      "Handling command %O\n%s\n",
 				      line, describe_backtrace(err));
 		       }
-		     }, this_object()["ftp_"+cmd], args, line);
+		     }, this["ftp_"+cmd], args, line);
 #endif
       } else {
 	send(502, ({ sprintf("'%s' is not currently supported.", cmd) }));

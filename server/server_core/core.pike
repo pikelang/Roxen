@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: core.pike,v 1.856 2004/04/03 21:54:42 mani Exp $";
+constant cvs_version="$Id: core.pike,v 1.857 2004/04/04 14:26:42 mani Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -1158,7 +1158,7 @@ class InternalRequestID
       }
     }
     not_query = Roxen.simplify_path( scan_for_query( f ) );
-    return this_object();
+    return this;
   }
 
   this_program set_url( string url )
@@ -1173,7 +1173,7 @@ class InternalRequestID
     foreach( urls; string u; mapping q )
     {
       if( glob( u+"*", url ) )
-	if( (c = q->port->find_configuration_for_url(url, this_object(), 1 )) )
+	if( (c = q->port->find_configuration_for_url(url, this, 1 )) )
 	{
 	  conf = c;
 	  port_obj = q->port;
@@ -1199,7 +1199,7 @@ class InternalRequestID
       // pass 3: No such luck. Let's allow default fallbacks.
       foreach( urls; string u; mapping q )
       {
-	if( (c = q->port->find_configuration_for_url( url,this_object(), 1 )) )
+	if( (c = q->port->find_configuration_for_url( url,this, 1 )) )
 	{
 	  conf = c;
 	  port_obj = q->port;
@@ -1223,7 +1223,7 @@ class InternalRequestID
     method = "GET";
     real_variables = ([]);
     variables = FakedVariables( real_variables );
-    root_id = this_object();
+    root_id = this;
 
     misc = ([ "pref_languages":PrefLanguages() ]);
     cookies = ([]);
@@ -1363,7 +1363,7 @@ class Protocol
         } else
           c = mu->conf;
       }
-      requesthandler( q, this_object(), c );
+      requesthandler( q, this, c );
     }
   }
 
@@ -1399,10 +1399,10 @@ class Protocol
     {
       if(!mu) mu=urls[sorted_urls[0]];
       INIT( mu );
-      URL2CONF_MSG ("%O %O cached: %O\n", this_object(), url, c);
+      URL2CONF_MSG ("%O %O cached: %O\n", this, url, c);
       return c;
     } else if (!sizeof(sorted_urls)) {
-      URL2CONF_MSG("%O %O No active URLS!\n", this_object(), url);
+      URL2CONF_MSG("%O %O No active URLS!\n", this, url);
       return 0;
     }
 
@@ -1415,13 +1415,13 @@ class Protocol
       if( glob( in+"*", url ) )
       {
         INIT( urls[in] );
-	URL2CONF_MSG ("%O %O sorted_urls: %O\n", this_object(), url, c);
+	URL2CONF_MSG ("%O %O sorted_urls: %O\n", this, url, c);
 	return c;
       }
     }
     
     if( no_default ) {
-      URL2CONF_MSG ("%O %O no default\n", this_object(), url);
+      URL2CONF_MSG ("%O %O no default\n", this, url);
       return 0;
     }
     
@@ -1433,7 +1433,7 @@ class Protocol
     
     if( sp_fcfu && (sp_fcfu != find_configuration_for_url)
 	&& (i = sp_fcfu( url, id, 1 ))) {
-      URL2CONF_MSG ("%O %O sp_fcfu: %O\n", this_object(), url, i);
+      URL2CONF_MSG ("%O %O sp_fcfu: %O\n", this, url, i);
       return i;
     }
     
@@ -1451,7 +1451,7 @@ class Protocol
 	if( choices[ cc->conf ] )
 	{
           INIT( cc );
-	  URL2CONF_MSG ("%O %O conf in choices: %O\n", this_object(), url, c);
+	  URL2CONF_MSG ("%O %O conf in choices: %O\n", this, url, c);
 	  return c;
 	}
 
@@ -1461,7 +1461,7 @@ class Protocol
 
       c = ((array)choices)[0];
       if(!c->inited) c->enable_all_modules();
-      URL2CONF_MSG ("%O %O any in choices: %O\n", this_object(), url, c);
+      URL2CONF_MSG ("%O %O any in choices: %O\n", this, url, c);
       return c;
     }
 
@@ -1470,7 +1470,7 @@ class Protocol
     // so grab the first configuration that is available at all.
     INIT( urls[sorted_urls[0]] );
     id->misc->defaulted=1;
-    URL2CONF_MSG ("%O %O first in sorted_urls: %O\n", this_object(), url, c);
+    URL2CONF_MSG ("%O %O first in sorted_urls: %O\n", this, url, c);
     return c;
   }
 
@@ -1598,7 +1598,7 @@ class SSLProtocol
   void create(int pn, string i)
   {
     ctx = SSL.context();
-    set_up_ssl_variables( this_object() );
+    set_up_ssl_variables( this );
     port = pn;
     ip = i;
 
@@ -3403,7 +3403,7 @@ class ArgCache
       if( file_stat( d  ) )
 	foreach( glob("*.pike", get_dir( d )), string f )
 	{
-	  object plug = ((program)(d+"/"+f))(this_object());
+	  object plug = ((program)(d+"/"+f))(this);
 	  if( !plug->disabled )
 	    plugins += ({ plug  });
 	}
@@ -3662,8 +3662,8 @@ void create()
   //add_constant( "roxen.load_image", load_image );
 
   // simplify dumped strings.
-  add_constant( "roxen", this_object()); // NGSERVER Remove this
-  add_constant( "core", this_object());
+  add_constant( "roxen", this); // NGSERVER Remove this
+  add_constant( "core", this);
 
 //   add_constant( "DBManager", ((object)"server_core/dbs.pike") );
 
@@ -5078,7 +5078,7 @@ class LogFile(string fname)
   void do_open()
   {
     mixed parent;
-    if (catch { parent = function_object(object_program(this_object())); } ||
+    if (catch { parent = function_object(this_program); } ||
 	!parent) {
       // Our parent (aka the configuration) has been destructed.
       // Time to die.

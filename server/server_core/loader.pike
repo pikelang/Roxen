@@ -4,7 +4,7 @@
 // ChiliMoon bootstrap program. Sets up the environment,
 // replces the master, adds custom functions and starts core.pike.
 
-// $Id: loader.pike,v 1.375 2004/04/04 00:00:34 mani Exp $
+// $Id: loader.pike,v 1.376 2004/04/04 14:26:43 mani Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -27,7 +27,7 @@ static string    var_dir = "../var/";
 
 #define werror roxen_werror
 
-constant cvs_version="$Id: loader.pike,v 1.375 2004/04/04 00:00:34 mani Exp $";
+constant cvs_version="$Id: loader.pike,v 1.376 2004/04/04 14:26:43 mani Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1368,7 +1368,7 @@ class MySQLResKey(static object real, static MySQLKey key)
 #if 0
   static void destroy()
   {
-    werror("Destroying %O\n", this_object());
+    werror("Destroying %O\n", this);
   }
 #endif /* 0 */
 }
@@ -1388,7 +1388,7 @@ class MySQLKey
   object big_query( string f, mixed ... args )
   {
     object o = real->big_query( f, @args );
-    return o && MySQLResKey(o, this_object());
+    return o && MySQLResKey(o, this);
   }
   
 #ifdef DB_DEBUG
@@ -1411,7 +1411,7 @@ class MySQLKey
 	else if( ro->real->master_sql == real->master_sql )
 	  error("Fatal: Internal share error: master_sql equal!\n");
     }
-    all_sql_wrappers[this_object()] = 1;
+    all_sql_wrappers[this] = 1;
 
     bt=(my_mysql_last_user[num] = describe_backtrace(backtrace()));
 #endif /* DB_DEBUG */
@@ -1421,7 +1421,7 @@ class MySQLKey
   {
     // FIXME: Ought to be abstracted to an sq_cache_free().
 #ifdef DB_DEBUG
-    all_sql_wrappers[this_object()]=0;
+    all_sql_wrappers[this]=0;
 #endif
 
 #ifndef NO_DB_REUSE
@@ -2108,9 +2108,9 @@ void do_main( int argc, array(string) argv )
   add_constant("r_mv", mv);
   add_constant("r_get_dir", r_get_dir);
   add_constant("r_file_stat", file_stat);
-  add_constant("loader", this_object());
+  add_constant("loader", this);
   // NGSERVER: Remove compatibility constant roxenloader.
-  add_constant("roxenloader", this_object());
+  add_constant("roxenloader", this);
   add_constant("ErrorContainer", ErrorContainer);
 
   add_constant("_cur_rxml_context", Thread.Local());

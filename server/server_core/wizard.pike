@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2001, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.147 2003/01/21 23:46:26 mani Exp $
+// $Id: wizard.pike,v 1.148 2004/04/04 14:26:44 mani Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -452,8 +452,8 @@ string parse_wizard_help(string|Parser t, mapping m, string contents,
 
 string make_title()
 {
-  string s = (string)(this_object()->wizard_name || 
-		      this_object()->name || LOCALE(51, "No name")) -
+  string s = (string)(this->wizard_name ||
+		      this->name || LOCALE(51, "No name")) -
     "<p>";
   sscanf(s, "%*s//%s", s);
   sscanf(s, "%*d:%s", s);
@@ -464,7 +464,7 @@ int num_pages(string wiz_name)
 {
   int max_page;
   for(int i=0; i<100; i++)
-    if(!this_object()[wiz_name+i])
+    if(!this[wiz_name+i])
     {
       max_page=i-1;
       break;
@@ -472,11 +472,11 @@ int num_pages(string wiz_name)
   return max_page+1;
 }
 #define Q(X) replace(X,({"<",">","&","\""}),({"&lt;","&gt;","&amp;","&quote;"}))
-#define LABEL(X,Y) (this_object()->X?Q(this_object()->X):Y)
+#define LABEL(X,Y) (this->X?Q(this->X):Y)
 
 string parse_wizard_page(string form, RequestID id, string wiz_name, void|string page_name)
 {
-  mapping(string:array) automaton = this_object()->wizard_automaton;
+  mapping(string:array) automaton = this->wizard_automaton;
   int max_page = !automaton && num_pages(wiz_name)-1;
   string res;
   string page = id->variables->_page;
@@ -503,7 +503,7 @@ string parse_wizard_page(string form, RequestID id, string wiz_name, void|string
 
   //  Use custom method if caller doesn't like GET or perhaps wants other
   //  attributes included.
-  string method = this_object()->wizard_method || "method=\"get\"";
+  string method = this->wizard_method || "method=\"get\"";
 
 #ifdef USE_WIZARD_COOKIE
   string state_form = "";
@@ -608,7 +608,7 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
 
   int current_page = (int) v->_page;
 
-  mapping(string:array) automaton = this_object()->wizard_automaton;
+  mapping(string:array) automaton = this->wizard_automaton;
   function dispatcher;
   string oldpage, page_name;
   if (automaton && (!v->_page || v->next_page || v->prev_page || v->ok)) {
@@ -638,7 +638,7 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
 
   if(v->next_page)
   {
-    function c=this_object()["verify_"+v->_page];
+    function c=this["verify_"+v->_page];
     int fail = 0;
     if (functionp (c)) {
       fail = c (id, @args);
@@ -658,7 +658,7 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
   }
   else if(v->ok)
   {
-    function c=this_object()["verify_"+v->_page];
+    function c=this["verify_"+v->_page];
     int fail = 0;
     if (functionp (c)) {
       fail = c (id, @args);
@@ -670,7 +670,7 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
       else
       {
 	mixed res;
-	if(c=this_object()->wizard_done) {
+	if(c=this->wizard_done) {
 	  DEBUGMSG ("Wizard: \"Ok\" pressed; running wizard_done\n");
 	  res = c(id,@args);
 	}
@@ -749,7 +749,7 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
 	v->_page = redirect;
       }
       else if (v->_page == "done") {
-	function donefn = this_object()->wizard_done;
+	function donefn = this->wizard_done;
 	if (!functionp (donefn))
 	  return "Internal error in wizard code: No wizard_done function.";
 	DEBUGMSG ("Wizard: Running wizard_done\n");
@@ -760,7 +760,7 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
 	break;
       }
       else {
-	function pagefn = this_object()[wiz_name + v->_page];
+	function pagefn = this[wiz_name + v->_page];
 	if (!functionp (pagefn)) return "Internal error in wizard code: "
 				   "No page function for " + v->_page + ".";
 	DEBUGMSG (sprintf ("Wizard: Running page function %O\n", pagefn));
@@ -797,8 +797,8 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
   else {
     for(; !data; v->_page=PAGE(offset))
     {
-      function pg=this_object()[wiz_name+((int)v->_page)];
-      function c = !pg && this_object()["wizard_done"];
+      function pg=this[wiz_name+((int)v->_page)];
+      function c = !pg && this["wizard_done"];
       if(functionp(c)) {
 	DEBUGMSG ("Wizard: Running wizard_done\n");
 	mixed res = c(id,@args);
@@ -819,7 +819,7 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
       //  in wizard_done() when trying to step into hidden pages.
       if ((offset < 0) && ((int) v->_page <= 0)) {
 	v->_page = current_page;
-	pg = this_object()[wiz_name + ((int) v->_page)];
+	pg = this[wiz_name + ((int) v->_page)];
 	if (pg && (data = pg(id, @args)))
 	  break;
       }

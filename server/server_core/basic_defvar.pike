@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 2000 - 2001, Roxen IS.
-// $Id: basic_defvar.pike,v 1.35 2003/01/19 18:33:01 mani Exp $
+// $Id: basic_defvar.pike,v 1.36 2004/04/04 14:26:41 mani Exp $
 
 mapping(string:Variable.Variable)  variables=([]);
 //! Please do not modify this list directly, instead use 
@@ -25,7 +25,7 @@ int deflocaledoc( string locale, string variable,
 //! But it will be supported for the forseeable function.
 {
   report_error("Warning: [%O:%O:%O] deflocaledoc is deprecated. Ignored.\n",
-	       this_object(), locale, variable );
+	       this, locale, variable );
 }
 
 
@@ -233,7 +233,7 @@ mixed query(string|void var, int|void ok)
     if(variables[var])
       return variables[var]->query();
     else if(!ok && var[0] != '_')
-      error("Querying undefined variable %O in %O\n", var, this_object());
+      error("Querying undefined variable %O in %O\n", var, this);
     return UNDEFINED;
   }
   return variables;

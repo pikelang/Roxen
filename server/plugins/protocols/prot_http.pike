@@ -20,7 +20,7 @@ void fix_cvars( Variable.Variable a )
 
 void create( mixed ... args )
 {
-  core.set_up_http_variables( this_object() );
+  core.set_up_http_variables( this );
   variables[ "set_cookie" ]->set_changed_callback( fix_cvars );
   variables[ "set_cookie_only_once" ]->set_changed_callback( fix_cvars );
   variables[ "minimum_bitrate" ]->set_changed_callback( fix_cvars );

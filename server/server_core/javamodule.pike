@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1999 - 2001, Roxen IS.
-// $Id: javamodule.pike,v 1.7 2002/10/22 00:06:12 nilsson Exp $
+// $Id: javamodule.pike,v 1.8 2004/04/04 14:26:43 mani Exp $
 
 #include <module.h>
 inherit "module";
@@ -21,7 +21,7 @@ void create(Configuration conf, string filename)
 {
   load(my_filename = filename);
   if(!modobj)
-    destruct(this_object());
+    destruct(this);
   else {
     foreach(getdefvars(), array dv)
       defvar(@dv);

@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: roxenlib.pike,v 1.219 2003/01/26 02:10:47 mani Exp $
+// $Id: roxenlib.pike,v 1.220 2004/04/04 14:26:44 mani Exp $
 
 //#pragma strict_types
 
@@ -48,7 +48,7 @@ mapping proxy_auth_needed(RequestID id)
 //! instead if possible.
 string program_filename()
 {
-  return master()->program_name(this_object())||"";
+  return master()->program_name(this)||"";
 }
 
 //! Returns the directory part of @[program_filename].

@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.395 2004/04/04 00:37:11 mani Exp $";
+constant cvs_version = "$Id: http.pike,v 1.396 2004/04/04 14:24:53 mani Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -21,7 +21,7 @@ int req_time = HRTIME();
 #endif
 
 #ifdef ID_OBJ_DEBUG
-RoxenDebug.ObjectMarker __marker = RoxenDebug.ObjectMarker (this_object());
+RoxenDebug.ObjectMarker __marker = RoxenDebug.ObjectMarker(this);
 #endif
 
 #ifdef REQUEST_DEBUG
@@ -63,9 +63,9 @@ private static String.Buffer data_buffer;
 #include <request_trace.h>
 
 #define MY_TRACE_ENTER(A, B) \
-  do {RequestID id = this_object(); TRACE_ENTER (A, B);} while (0)
+  do {RequestID id = this; TRACE_ENTER (A, B);} while (0)
 #define MY_TRACE_LEAVE(A) \
-  do {RequestID id = this_object(); TRACE_LEAVE (A);} while (0)
+  do {RequestID id = this; TRACE_LEAVE (A);} while (0)
 
 mapping(string:array) real_variables = ([]);
 mapping(string:mixed)|FakedVariables variables = FakedVariables( real_variables );
@@ -104,15 +104,15 @@ class AuthEmulator
     switch( i )
     {
       case 0:
-	return conf->authenticate( this_object() );
+	return conf->authenticate( this );
       case 1:
-	if( u = conf->authenticate( this_object() ) )
+	if( u = conf->authenticate( this ) )
 	  return u->name();
 	if( realauth )
 	  return (realauth/":")[0];
 
       case 2:
-	if( u = conf->authenticate( this_object() ) )
+	if( u = conf->authenticate( this ) )
 	  return 0;
 	if( realauth )
 	  return ((realauth/":")[1..])*":";
@@ -308,7 +308,7 @@ private void setup_pipe()
   }
   pipe = core.get_shuffler( my_fd );
   if( conf )
-    conf->connection_add( this_object(), pipe );
+    conf->connection_add( this, pipe );
 }
 
 
@@ -591,7 +591,7 @@ int things_to_do_when_not_sending_from_cache( )
     }
 
   if( mixed q = real_variables->magic_roxen_automatic_charset_variable )
-    decode_charset_encoding(Roxen.get_client_charset_decoder(q[0],this_object()));
+    decode_charset_encoding(Roxen.get_client_charset_decoder(q[0], this));
 }
 
 static Roxen.HeaderParser hp = Roxen.HeaderParser();
@@ -860,7 +860,7 @@ int set_max_cache( int t )
 void disconnect()
 {
   file = 0;
-  conf && conf->connection_drop( this_object() );
+  conf && conf->connection_drop( this );
 #ifdef REQUEST_DEBUG
   if (my_fd) 
     MARK_FD("HTTP my_fd in HTTP disconnected?");
@@ -873,7 +873,7 @@ void disconnect()
 void end(int|void keepit)
 {
   if( conf )
-    conf->connection_drop( this_object() );
+    conf->connection_drop( this );
   if(keepit
      && !file->raw
      && (misc->connection == "keep-alive" ||
@@ -882,7 +882,7 @@ void end(int|void keepit)
      && !catch(my_fd->query_address()) )
   {
     // Now.. Transfer control to a new http-object. Reset all variables etc..
-    object o = object_program(this_object())(0, 0, 0);
+    this_program o = this_program(0, 0, 0);
     o->remoteaddr = remoteaddr;
     o->client = client;
     o->supports = supports;
@@ -1151,8 +1151,8 @@ void internal_error(array _err)
 }
 
 // This macro ensures that something gets reported even when the very
-// call to internal_error() fails. That happens eg when this_object()
-// has been destructed.
+// call to internal_error() fails. That happens eg when this has been
+// destructed.
 #define INTERNAL_ERROR(err) do {					\
   if (mixed __eRr = catch (internal_error (err)))			\
     report_error("Internal server error: " + describe_backtrace(err) +	\
@@ -1174,7 +1174,7 @@ void do_log( Shuffler.Shuffle r, int reason )
   {
     conf->sent+=fsent;
     file->len += misc->_log_cheat_addition;
-    conf->log(file, this_object());
+    conf->log(file, this);
   }
 
   if( !port_obj ) 
@@ -1182,7 +1182,7 @@ void do_log( Shuffler.Shuffle r, int reason )
     TIMER_END(do_log);
     MERGE_TIMERS(conf);
     if( conf )
-      conf->connection_drop( this_object() );
+      conf->connection_drop( this );
     mixed err = catch  // paranoia
     {
       my_fd->close();
@@ -1467,7 +1467,7 @@ void send_result(mapping|void result)
     if(misc->error_code)
       file = Roxen.http_low_answer(misc->error_code, errors[misc->error]);
     else if(err = catch {
-      file = conf->error_file( this_object() );
+      file = conf->error_file( this );
     })
       INTERNAL_ERROR(err);
   } 
@@ -1609,7 +1609,7 @@ void send_result(mapping|void result)
                 // Multiple ranges. Multipart reply and stuff needed.
                 // We do this by replacing the file object with a wrapper.
                 // Nice and handy.
-                file->file = MultiRangeWrapper(file, heads, ranges, this_object());
+                file->file = MultiRangeWrapper(file, heads, ranges, this);
               }
             } else {
               // Got the header, but the specified ranges was out of bounds.
@@ -1741,7 +1741,7 @@ void handle_request( )
       } else {
 	if(prestate->find_file)
         {
-	  if (!core.configuration_authenticate(this_object(), "View Settings"))
+	  if (!core.configuration_authenticate(this, "View Settings"))
 	    file = Roxen.http_auth_required("admin");
 	  else
 	    file = ([
@@ -1761,7 +1761,7 @@ void handle_request( )
 
   array e;
   mapping result;
-  if(e= catch(result = conf->handle_request( this_object() )))
+  if(e= catch(result = conf->handle_request( this )))
     INTERNAL_ERROR( e );
 
   else {
@@ -1877,7 +1877,7 @@ void got_data(mixed fooid, string s)
     if( !port_obj ) 
     {
       if( conf )
-	conf->connection_drop( this_object() );
+	conf->connection_drop( this );
       mixed err = catch  // paranoia
       {
 	my_fd->set_blocking();
@@ -1933,8 +1933,7 @@ void got_data(mixed fooid, string s)
       // them in requests to proxies. 
 #ifdef RFC2068
       if (has_prefix(raw_url, port_obj->name+"://") &&
-	  (conf = port_obj->find_configuration_for_url(raw_url,
-						       this_object(), 1))) {
+	  (conf = port_obj->find_configuration_for_url(raw_url, this, 1))) {
 	sscanf(raw_url[sizeof(port_obj->name+"://")..],
 	       "%[^/]%s", misc->host, raw_url);
       } 
@@ -1947,14 +1946,12 @@ void got_data(mixed fooid, string s)
 						 misc->host +
 						 (has_value(misc->host, ":")<0?
 						  "":(":"+port_obj->port)) +
-						 raw_url,
-						 this_object());
+						 raw_url, this);
 	} else {
 	  conf =
 	    port_obj->find_configuration_for_url(port_obj->name +
 						 "://*:" + port_obj->port +
-						 raw_url,
-						 this_object());
+						 raw_url, this);
 	}
       }
     }
@@ -1987,12 +1984,12 @@ void got_data(mixed fooid, string s)
 	//    misc->proxyauth[1] = MIME.decode_base64(misc->proxyauth[1]);
 	if (conf->auth_module)
 	  misc->proxyauth
-	    = conf->auth_module->auth(misc->proxyauth,this_object() );
+	    = conf->auth_module->auth(misc->proxyauth, this);
       }
     }
     if( conf )
     {
-      conf->connection_add( this_object(), ([]) );
+      conf->connection_add( this, ([]) );
       conf->received += strlen(raw);
       conf->requests++;
     }
@@ -2032,7 +2029,7 @@ void got_data(mixed fooid, string s)
 	    foreach( file->callbacks, function f ) {
 	      MY_TRACE_ENTER (sprintf ("Checking with %s",
 				       master()->describe_function (f)), 0);
-	      if( !f(this_object(), cv[1]->key ) )
+	      if( !f(this, cv[1]->key ) )
 	      {
 		MY_TRACE_LEAVE ("Entry invalid according to callback");
 		MY_TRACE_LEAVE ("");
@@ -2115,12 +2112,11 @@ void got_data(mixed fooid, string s)
 /* Get a somewhat identical copy of this object, used when doing
  * 'simulated' requests. */
 
-object clone_me()
+this_program clone_me()
 {
-  object c,t;
-  c=object_program(t=this_object())(0, port_obj, conf);
+  this_program c=this_program(0, port_obj, conf);
 #ifdef ID_OBJ_DEBUG
-  werror ("clone %O -> %O\n", t, c);
+  werror ("clone %O -> %O\n", this, c);
 #endif
 
   c->port_obj = port_obj;
@@ -2132,7 +2128,7 @@ object clone_me()
   c->real_variables = copy_value( real_variables );
   c->variables = FakedVariables( c->real_variables );
   c->misc = copy_value( misc );
-  c->misc->orig = t;
+  c->misc->orig = this;
 
   c->prestate = prestate;
   c->supports = supports;
@@ -2188,7 +2184,7 @@ static void create(object f, object c, object cc)
     time = predef::time(1);
     call_out(do_timeout, 90);
   }
-  root_id = this_object();
+  root_id = this;
 }
 
 void chain( object f, object c, string le )

@@ -5,7 +5,7 @@
 object mm=(object)"/master";
 inherit "/master": master;
 
-constant cvs_version = "$Id: master.pike,v 1.135 2004/04/03 21:53:18 mani Exp $";
+constant cvs_version = "$Id: master.pike,v 1.136 2004/04/04 14:26:43 mani Exp $";
 
 #define Stat _static_modules.___files.Stat
 
@@ -86,7 +86,7 @@ class UID
   {
     CHECK_SECURITY_BIT( SECURITY );
     io_bits = to;
-    return this_object();
+    return this;
   }
 
   string chroot( string dir )
@@ -212,26 +212,26 @@ class UID
   {
     Creds creds;
     if( !zero_type(bits) && (bits != get_data_bits()) )
-      creds = Creds( this_object(), get_allow_bits(), bits );
+      creds = Creds( this, get_allow_bits(), bits );
     else
-      creds = this_object();
+      creds = this;
     creds->apply( what );
     return creds;
   }
 
   mixed call( function what, mixed  ... args )
   {
-    return call_with_creds( this_object(), what, @args );
+    return call_with_creds( this, what, @args );
   }
 
   mixed call_with_bits( function what, int bits, mixed ... args )
   {
-    return call_with_creds( Creds( this_object(), bits, get_data_bits() ), what, @args );
+    return call_with_creds( Creds( this, bits, get_data_bits() ), what, @args );
   }
 
   Creds get_new_creds( int allow_bits, int data_bits )
   {
-    return Creds( this_object(), allow_bits, data_bits );
+    return Creds( this, allow_bits, data_bits );
   }
   
   void create( string name, string rname,
@@ -243,7 +243,7 @@ class UID
     _rname = rname;
     _uid = uid;
     _gid = gid;
-    ::create( this_object(), allow_bits, data_bits );
+    ::create( this, allow_bits, data_bits );
   }
 
   static string _sprintf(int t) {
@@ -255,7 +255,7 @@ void init_security()
 {
   werror("Initializing security system...");
   add_constant( "chroot", chroot );
-  root->own( this_object() );
+  root->own( this );
 //   root->call(   Stdio.File, "/tmp/foo", "wct");
   werror("Done\n");
 }
@@ -881,7 +881,7 @@ string describe_backtrace(mixed trace, void|int linewidth)
 
 void create()
 {
-  object o = this_object();
+  object o = this;
   /* Copy variables from the original master */
   foreach(indices(mm), string varname) {
     catch(o[varname] = mm[varname]);

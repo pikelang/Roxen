@@ -1,5 +1,5 @@
 /*
- * $Id: snmpagent.pike,v 1.27 2003/01/26 02:10:47 mani Exp $
+ * $Id: snmpagent.pike,v 1.28 2004/04/04 14:26:44 mani Exp $
  *
  * The ChiliMoon SNMP agent
  * Copyright © 2001, Honza Petrous, hop@unibase.cz
@@ -177,11 +177,11 @@ class SNMPagent {
     mib = SubMIBSystem();		// system.* table
     if(objectp(mib)) {
       // snmp.*
-      mib->register(SubMIBSnmp(this_object()));
+      mib->register(SubMIBSnmp(this));
       // enterprises.roxenis.*
-      mib->register(SubMIBRoxenVS(this_object()));
-      mib->register(SubMIBRoxenVSTable(this_object()));
-      mib->register(SubMIBRoxenBoot(this_object()));
+      mib->register(SubMIBRoxenVS(this));
+      mib->register(SubMIBRoxenVSTable(this));
+      mib->register(SubMIBRoxenBoot(this));
     }
     if (!status())
       start();
@@ -763,7 +763,7 @@ class SubMIBManager {
 
 //! External function for MIB object 'system.sysDescr'
 array get_description() {
-  return OBJ_STR("ChiliMoon SNMP agent v"+("$Revision: 1.27 $"/" ")[1]+" (devel. rel.)");
+  return OBJ_STR("ChiliMoon SNMP agent v"+("$Revision: 1.28 $"/" ")[1]+" (devel. rel.)");
 }
 
 //! External function for MIB object 'system.sysOID'

@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.551 2003/03/04 21:00:15 mani Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.552 2004/04/04 14:26:41 mani Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -382,7 +382,7 @@ private array (RoxenModule) auth_module_cache, userdb_module_cache;
 void unregister_urls()
 {
   foreach( registered_urls + failed_urls, string url )
-    core.unregister_url(url, this_object());
+    core.unregister_url(url, this);
   registered_urls = ({});
 }
 
@@ -1478,7 +1478,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 	nest ++;
 	err = catch {
 	  if( nest < 20 )
-	    tmp = (id->conf || this_object())->low_get_file( tmp, no_magic );
+	    tmp = (id->conf || this)->low_get_file( tmp, no_magic );
 	  else
 	  {
 	    TRACE_LEAVE("Too deep recursion");
@@ -1704,7 +1704,7 @@ mixed handle_request( RequestID id  )
   {
     if(file = funp( id ))
       break;
-    if(id->conf != this_object()) {
+    if(id->conf != this) {
       REQUEST_WERR("handle_request(): Redirected (2)");
       return id->conf->handle_request(id);
     }
@@ -1812,7 +1812,7 @@ array(string) find_dir(string file, RequestID id, void|int(0..1) verbose)
       file = id->not_query;
       err = catch {
 	if( nest < 20 )
-	  dir = (id->conf || this_object())->find_dir( file, id );
+	  dir = (id->conf || this)->find_dir( file, id );
 	else
 	  error("Too deep recursion in roxen::find_dir() while mapping "
 		+file+".\n");
@@ -1932,7 +1932,7 @@ array(int)|Stat stat_file(string file, RequestID id)
       TRACE_LEAVE("Recursing");
       err = catch {
 	if( nest < 20 )
-	  tmp = (id->conf || this_object())->stat_file( file, id );
+	  tmp = (id->conf || this)->stat_file( file, id );
 	else
 	  error("Too deep recursion in roxen::stat_file() while mapping "
 		+file+".\n");
@@ -1998,7 +1998,7 @@ mapping error_file( RequestID id )
 // this is not as trivial as it sounds. Consider gtext. :-)
 array open_file(string fname, string mode, RequestID id, void|int internal_get)
 {
-  if( id->conf && (id->conf != this_object()) )
+  if( id->conf && (id->conf != this) )
     return id->conf->open_file( fname, mode, id, internal_get );
 
   Configuration oc = id->conf;
@@ -2120,7 +2120,7 @@ mapping(string:array(mixed)) find_dir_stat(string file, RequestID id)
       file = id->not_query;
       err = catch {
 	if( nest < 20 )
-	  tmp = (id->conf || this_object())->find_dir_stat( file, id );
+	  tmp = (id->conf || this)->find_dir_stat( file, id );
 	else {
 	  TRACE_LEAVE("Too deep recursion");
 	  error("Too deep recursion in roxen::find_dir_stat() while mapping "
@@ -2269,7 +2269,7 @@ array(int)|Stat try_stat_file(string s, RequestID id, int|void not_internal)
 
   fake_id->misc->common = id->misc->common;
   fake_id->misc->internal_get = !not_internal;
-  fake_id->conf = this_object();
+  fake_id->conf = this;
 
   if (fake_id->scan_for_query)
     // FIXME: If we're using e.g. ftp this doesn't exist. But the
@@ -2325,7 +2325,7 @@ int|string try_get_file(string s, RequestID id,
 
   fake_id->misc->common = id->misc->common;
   fake_id->misc->internal_get = !not_internal;
-  fake_id->conf = this_object();
+  fake_id->conf = this;
 
   if (fake_id->scan_for_query)
     // FIXME: If we're using e.g. ftp this doesn't exist. But the
@@ -2445,14 +2445,14 @@ void start(int num)
   foreach( (registered_urls-query("URLs"))+failed_urls, string url )
   {
     registered_urls -= ({ url });
-    core.unregister_url(url, this_object());
+    core.unregister_url(url, this);
   }
 
   failed_urls = ({ });
 
   foreach( (query( "URLs" )-registered_urls), string url )
   {
-    if( core.register_url( url, this_object() ) )
+    if( core.register_url( url, this ) )
       registered_urls += ({ url });
     else
       failed_urls += ({ url });
@@ -2504,17 +2504,17 @@ void save(int|void all)
 {
   if(all)
   {
-    store("spider#0", variables, 0, this_object());
+    store("spider#0", variables, 0, this);
     start(2);
   }
 
-  store( "EnabledModules", enabled_modules, 1, this_object());
+  store( "EnabledModules", enabled_modules, 1, this);
   foreach(modules; string modname; ModuleCopies mc)
   {
     foreach(mc->copies; int i; mixed mod)
     {
-      store(modname+"#"+i, mod->query(), 0, this_object());
-      if (mixed err = catch(mod->start(2, this_object())))
+      store(modname+"#"+i, mod->query(), 0, this);
+      if (mixed err = catch(mod->start(2, this)))
 	report_error("Error calling start in module.\n%s",
 		     describe_backtrace (err));
     }
@@ -2528,7 +2528,7 @@ int save_one( RoxenModule o )
   mapping mod;
   if(!o)
   {
-    store("spider#0", variables, 0, this_object());
+    store("spider#0", variables, 0, this);
     start(2);
     return 1;
   }
@@ -2536,10 +2536,10 @@ int save_one( RoxenModule o )
   if( !q )
     error("Invalid module");
 
-  store(q, o->query(), 0, this_object());
+  store(q, o->query(), 0, this);
   invalidate_cache();
   mixed error;
-  if( error = catch( o->start(2, this_object()) ) )
+  if( error = catch( o->start(2, this) ) )
   {
     if( objectp(error ) )
       error = (array)error;
@@ -2565,7 +2565,7 @@ RoxenModule reload_module( string modname )
   RoxenModule old_module = find_module( modname );
   ModuleInfo mi = core.find_module( (modname/"#")[0] );
 
-  core->bootstrap_info->set (({this_object(), modname }));
+  core->bootstrap_info->set (({this, modname }));
 
   if( !old_module ) return 0;
 
@@ -2583,7 +2583,7 @@ RoxenModule reload_module( string modname )
   RoxenModule nm;
 
   // Load up a new instance.
-  nm = mi->instance( this_object() );
+  nm = mi->instance( this );
   // If this is a faked module, let's call it a failure.
   if( nm->not_a_module )
   {
@@ -2634,7 +2634,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
     while( modules[ modname ] && modules[ modname ][ id ] )
       id++;
 
-  core->bootstrap_info->set (({this_object(), modname + "#" + id}));
+  core->bootstrap_info->set (({this, modname + "#" + id}));
 
 #ifdef MODULE_DEBUG
   int start_time = gethrtime();
@@ -2671,7 +2671,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 
   if( !me )
   {
-    if(err = catch(me = moduleinfo->instance(this_object())))
+    if(err = catch(me = moduleinfo->instance(this)))
     {
 #ifdef MODULE_DEBUG
       if (enable_module_batch_msgs) report_debug("\bERROR\n");
@@ -2700,7 +2700,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
     }
   }
 
-  me->set_configuration( this_object() );
+  me->set_configuration( this );
 
   module_type = moduleinfo->type;
   if (module_type & (MODULE_LOCATION|MODULE_EXTENSION|
@@ -2832,7 +2832,7 @@ request should be handled by the module.
   else
     me->defvar("_priority", 0, "", TYPE_INT, "", 0, 1);
 
-  mapping(string:mixed) stored_vars = retrieve(modname + "#" + id, this_object());
+  mapping(string:mixed) stored_vars = retrieve(modname + "#" + id, this);
   int has_stored_vars = sizeof (stored_vars); // A little ugly, but it suffices.
   me->setvars(stored_vars);
 
@@ -2850,11 +2850,11 @@ request should be handled by the module.
   {
     enabled_modules[modname+"#"+id] = 1;
     if(!nosave)
-      store( "EnabledModules", enabled_modules, 1, this_object());
+      store( "EnabledModules", enabled_modules, 1, this);
   }
 
   if (!has_stored_vars && !nosave)
-    store (modname + "#" + id, me->query(), 0, this_object());
+    store (modname + "#" + id, me->query(), 0, this);
 
   if( me->no_delayed_load && got_no_delayed_load >= 0 )
     got_no_delayed_load = 1;
@@ -2874,7 +2874,7 @@ void call_start_callbacks( RoxenModule me,
   call_low_start_callbacks(  me, moduleinfo, module );
 
   mixed err;
-  if((me->start) && (err = catch( me->start(0, this_object()) ) ) )
+  if((me->start) && (err = catch( me->start(0, this) ) ) )
   {
 #ifdef MODULE_DEBUG
     if (enable_module_batch_msgs) 
@@ -2886,7 +2886,7 @@ void call_start_callbacks( RoxenModule me,
     got_no_delayed_load = -1;
   }
   if( inited && me->ready_to_receive_requests )
-    if( mixed q = catch( me->ready_to_receive_requests( this_object() ) ) ) 
+    if( mixed q = catch( me->ready_to_receive_requests( this ) ) )
     {
 #ifdef MODULE_DEBUG
       if (enable_module_batch_msgs) report_debug("\bERROR\n");
@@ -3156,7 +3156,7 @@ int disable_module( string modname, int|void nodest )
   {
     m_delete( enabled_modules, modname + "#" + id );
     m_delete( forcibly_added, modname + "#" + id );
-    store( "EnabledModules",enabled_modules, 1, this_object());
+    store( "EnabledModules",enabled_modules, 1, this);
     destruct(me);
   }
   return 1;
@@ -3246,7 +3246,7 @@ array after_init_hooks = ({});
 mixed add_init_hook( mixed what )
 {
   if( inited )
-    call_out( what, 0, this_object() );
+    call_out( what, 0, this );
   else
     after_init_hooks |= ({ what });
 }
@@ -3282,7 +3282,7 @@ void low_init(void|int modules_already_enabled)
 
   if (!modules_already_enabled)
   {
-    enabled_modules = retrieve("EnabledModules", this_object());
+    enabled_modules = retrieve("EnabledModules", this);
 //     loader.LowErrorContainer ec = loader.LowErrorContainer();
 //     loader.push_compile_error_handler( ec );
 
@@ -3307,9 +3307,9 @@ void low_init(void|int modules_already_enabled)
     forcibly_added = ([]);
   }
     
-  foreach( ({this_object()})+indices( otomod ), RoxenModule mod )
+  foreach( ({this})+indices( otomod ), RoxenModule mod )
     if( mod->ready_to_receive_requests )
-      if( mixed q = catch( mod->ready_to_receive_requests( this_object() ) ) ) {
+      if( mixed q = catch( mod->ready_to_receive_requests( this ) ) ) {
         report_error( "While calling ready_to_receive_requests in "+
                       otomod[mod]+":\n"+
                       describe_backtrace( q ) );
@@ -3317,7 +3317,7 @@ void low_init(void|int modules_already_enabled)
       }
 
   foreach( after_init_hooks, function q )
-    if( mixed w = catch( q(this_object()) ) ) {
+    if( mixed w = catch( q(this) ) ) {
       report_error( "While calling after_init_hook %O:\n%s",
                     q,  describe_backtrace( w ) );
       got_no_delayed_load = -1;
@@ -3695,7 +3695,7 @@ td {font: 12px Helvetica, Arial; font-weight: bold}
 //   report_debug("[defvar: %.1fms] ", (gethrtime()-st)/1000.0 );
 //   st = gethrtime();
 
-  mapping(string:mixed) retrieved_vars = retrieve("spider#0", this_object());
+  mapping(string:mixed) retrieved_vars = retrieve("spider#0", this);
   if (sizeof (retrieved_vars) && !retrieved_vars->compat_level)
     // Upgrading an older configuration; default to 2.1 compatibility level.
     set ("compat_level", "2.1");

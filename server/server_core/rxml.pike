@@ -3,7 +3,7 @@
 //
 // The ChiliMoon RXML Parser. See also the RXML Pike modules.
 //
-// $Id: rxml.pike,v 1.331 2004/04/03 16:11:13 mani Exp $
+// $Id: rxml.pike,v 1.332 2004/04/04 14:26:44 mani Exp $
 
 
 inherit "rxmlhelp";
@@ -164,7 +164,7 @@ RXML.TagSet rxml_tag_set = class
 
     PROF_LEAVE( "rxml", "overhead" );
   }
-} (this_object());
+} (this);
 
 RXML.Type default_content_type = RXML.t_html (RXML.PXml);
 RXML.Type default_arg_type = RXML.t_text (RXML.PEnt);
@@ -393,7 +393,7 @@ class GenericTag {
 	result_type = result_type (RXML.PXml);
       if (!(flags & RXML.FLAG_STREAM_CONTENT))
 	piece = content || "";
-      array|string res = _do_return(name, args, piece, id, this_object());
+      array|string res = _do_return(name, args, piece, id, this);
       return stringp (res) ? ({res}) : res;
     }
   }

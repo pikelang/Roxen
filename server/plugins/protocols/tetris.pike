@@ -1,5 +1,5 @@
 #! /usr/bin/env pike
-// $Id: tetris.pike,v 1.12 2003/01/22 00:36:47 mani Exp $ -- Be careful here!!
+// $Id: tetris.pike,v 1.13 2004/04/04 14:24:53 mani Exp $ -- Be careful here!!
 #if constant(core) // Well, obviously this is filler text, but what can we do?
 constant A=core.store;void B(string VAR){catch{Q=core.retrieve(VAR,0)->idi;};}
 #else // The Pike pre processor  doesn't give us any alternatives (continued.)
@@ -32,8 +32,8 @@ x){sscanf(x,"%[a-zA-Z0-9едц≈ƒ÷ь№]s\n",x);if(!strlen(x)){io->get_name(t2);}else
 .File;mixed д;void do_get_name(mixed _,string x){д(x);}string get_name(mixed w
 ){д=w;write("What is your name? ");set_read_callback(do_get_name);}void create
 (object f){assign(f);destruct(f);}void raw(){write("€э\"€ъ\"\1\0р€ы\1€э\3€ь\3"
-);}void normal(){write("€э\1€э\"");}void quit(){destruct(this_object());}}void
-create(object f){if(f)tetris(telnet(f));}class consl{inherit Stdio.File;string
+);}void normal(){write("€э\1€э\"");}void quit(){destruct(this);}} void create(
+object fil){if(fil) tetris(telnet(fil));}class consl{inherit Stdio.File;string
 get_name(function cb){cb(getenv("LOGNAME")||popen("id -un"));}void create(){::
 create("stdin");}void raw(){system("stty raw cbreak -echo stop u");}void|array
 normal(){system("stty sane");}void quit(){exit(0);}}int main(){tetris(consl())

@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module_support.pike,v 1.129 2004/01/25 18:29:59 norrby Exp $
+// $Id: module_support.pike,v 1.130 2004/04/04 14:26:44 mani Exp $
 
 #define IN_ROXEN
 #include <module_constants.h>
@@ -128,7 +128,7 @@ class BasicModule
 
   string info(Configuration conf)
   {
-    return (this_object()->register_module()[2]);
+    return (this->register_module()[2]);
   }
 
   void save_me() {}
@@ -270,7 +270,7 @@ class ModuleInfo( string sname, string filename )
   
   RoxenModule instance( Configuration conf, void|int silent )
   {
-    // werror("Instance %O <%O,%O,%O,%O,%O>\n", this_object(),
+    // werror("Instance %O <%O,%O,%O,%O,%O>\n", this,
     //        time()-last_checked,type,multiple_copies,name,description);
     ErrorContainer ec = ErrorContainer();
     loader.push_compile_error_handler( ec );

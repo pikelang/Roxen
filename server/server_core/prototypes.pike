@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 2001, Roxen IS.
-// $Id: prototypes.pike,v 1.66 2004/04/04 01:30:40 mani Exp $
+// $Id: prototypes.pike,v 1.67 2004/04/04 14:26:44 mani Exp $
 
 #include <stat.h>
 #include <config.h>
@@ -389,19 +389,19 @@ class FakedVariables( mapping real_variables )
   static this_program `|( mapping what )
   {
     foreach( what; string q; mixed v ) `[]=( q,v );
-    return this_object();
+    return this;
   }
 
   static this_program `+=( mapping what )
   {
     foreach( what; string q; mixed v ) `[]=( q,v );
-    return this_object();
+    return this;
   }
 
   static this_program `+( mapping what )
   {
     foreach( what; string q; mixed v ) `[]=( q,v );
-    return this_object();
+    return this;
   }
 
   static mapping cast(string to)
@@ -836,7 +836,7 @@ class RequestID
   RequestID clone_me()
   {
     object c,t;
-    c=object_program(t=this_object())(0, port_obj, conf);
+    c=object_program(t=this)(0, port_obj, conf);
 
     c->port_obj = port_obj;
     c->conf = conf;

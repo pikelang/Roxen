@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.137 2003/01/21 23:46:26 mani Exp $
+// $Id: module.pike,v 1.138 2004/04/04 14:26:43 mani Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -56,14 +56,14 @@ string module_identifier()
   return _module_identifier;
 #else
   if (!_module_identifier) {
-    string|mapping name = this_object()->register_module()[1];
+    string|mapping name = this->register_module()[1];
     if (mappingp (name)) name = name->standard;
     string cname = sprintf ("%O", my_configuration());
     if (sscanf (cname, "Configuration(%s", cname) == 1 &&
 	sizeof (cname) && cname[-1] == ')')
       cname = cname[..sizeof (cname) - 2];
     _module_identifier = sprintf ("%s,%s",
-				  name||this_object()->module_name, cname);
+				  name||this->module_name, cname);
   }
   return _module_identifier;
 #endif
@@ -80,7 +80,7 @@ string module_local_id()
 
 RoxenModule this_module()
 {
-  return this_object(); // To be used from subclasses.
+  return this; // To be used from subclasses.
 }
 
 string _sprintf(int t) {
@@ -93,9 +93,9 @@ string _sprintf(int t) {
 array register_module()
 {
   return ({
-    this_object()->module_type,
-    this_object()->module_name,
-    this_object()->module_doc,
+    this->module_type,
+    this->module_name,
+    this->module_doc,
     0,
     module_unique,
   });
@@ -135,10 +135,10 @@ int module_dependencies(Configuration configuration,
 
 string file_name_and_stuff()
 {
-  return ("<b>Loaded from:</b> "+(core.filename(this_object()))+"<br>"+
-	  (this_object()->cvs_version?
+  return ("<b>Loaded from:</b> "+(core.filename(this))+"<br>"+
+	  (this->cvs_version?
            "<b>CVS Version: </b>"+
-           fix_cvs(this_object()->cvs_version)+"\n":""));
+           fix_cvs(this->cvs_version)+"\n":""));
 }
 
 
@@ -183,12 +183,12 @@ string status() {}
 
 string info(Configuration conf)
 {
- return (this_object()->register_module()[2]);
+ return (this->register_module()[2]);
 }
 
 string sname( )
 {
-  return my_configuration()->otomod[ this_object() ];
+  return my_configuration()->otomod[ this ];
 }
 
 ModuleInfo my_moduleinfo( )
@@ -200,8 +200,8 @@ ModuleInfo my_moduleinfo( )
 
 void save_me()
 {
-  my_configuration()->save_one( this_object() );
-  my_configuration()->module_changed( my_moduleinfo(), this_object() );
+  my_configuration()->save_one( this );
+  my_configuration()->module_changed( my_moduleinfo(), this );
 }
 
 void save()      { save_me(); }
@@ -213,7 +213,7 @@ string query_internal_location()
 {
   if(!_my_configuration)
     error("Please do not call this function from create()!\n");
-  return _my_configuration->query_internal_location(this_object());
+  return _my_configuration->query_internal_location(this);
 }
 
 string query_absolute_internal_location(RequestID id)
@@ -261,7 +261,7 @@ function(RequestID:int|mapping) query_seclevels()
 {
   if(catch(query("_seclevels")) || (query("_seclevels") == 0))
     return 0;
-  return core.compile_security_pattern(query("_seclevels"),this_object());
+  return core.compile_security_pattern(query("_seclevels"),this);
 }
 
 Stat stat_file(string f, RequestID id){}
@@ -305,9 +305,9 @@ mapping(string:function) query_tag_callers()
 //! Compat
 {
   mapping(string:function) m = ([]);
-  foreach(glob("tag_*", indices( this_object())), string q)
-    if(functionp( this_object()[q] ))
-      m[replace(q[4..], "_", "-")] = this_object()[q];
+  foreach(glob("tag_*", indices( this )), string q)
+    if(functionp( this[q] ))
+      m[replace(q[4..], "_", "-")] = this[q];
   return m;
 }
 
@@ -315,9 +315,9 @@ mapping(string:function) query_container_callers()
 //! Compat
 {
   mapping(string:function) m = ([]);
-  foreach(glob("container_*", indices( this_object())), string q)
-    if(functionp( this_object()[q] ))
-      m[replace(q[10..], "_", "-")] = this_object()[q];
+  foreach(glob("container_*", indices( this )), string q)
+    if(functionp( this[q] ))
+      m[replace(q[10..], "_", "-")] = this[q];
   return m;
 }
 #endif
@@ -325,22 +325,22 @@ mapping(string:function) query_container_callers()
 mapping(string:array(int|function)) query_simpletag_callers()
 {
   mapping(string:array(int|function)) m = ([]);
-  foreach(glob("simpletag_*", indices(this_object())), string q)
-    if(functionp(this_object()[q]))
+  foreach(glob("simpletag_*", indices(this)), string q)
+    if(functionp(this[q]))
       m[replace(q[10..],"_","-")] =
-	({ intp (this_object()[q + "_flags"]) && this_object()[q + "_flags"],
-	   this_object()[q] });
+	({ intp (this[q + "_flags"]) && this[q + "_flags"],
+	   this[q] });
   return m;
 }
 
 mapping(string:array(int|function)) query_simple_pi_tag_callers()
 {
   mapping(string:array(int|function)) m = ([]);
-  foreach (glob ("simple_pi_tag_*", indices (this_object())), string q)
-    if (functionp (this_object()[q]))
+  foreach (glob ("simple_pi_tag_*", indices (this)), string q)
+    if (functionp (this[q]))
       m[replace (q[sizeof ("simple_pi_tag_")..], "_", "-")] =
-	({(intp (this_object()[q + "_flags"]) && this_object()[q + "_flags"]) |
-	  RXML.FLAG_PROC_INSTR, this_object()[q]});
+	({(intp (this[q + "_flags"]) && this[q + "_flags"]) |
+	  RXML.FLAG_PROC_INSTR, this[q]});
   return m;
 }
 
@@ -348,8 +348,7 @@ RXML.TagSet query_tag_set()
 {
   if (!module_tag_set) {
     array(function|program|object) tags =
-      filter (rows (this_object(),
-		    glob ("Tag*", indices (this_object()))),
+      filter (rows (this, glob ("Tag*", indices (this))),
 	      functionp);
     for (int i = 0; i < sizeof (tags); i++)
       if (programp (tags[i]))
@@ -362,7 +361,7 @@ RXML.TagSet query_tag_set()
       }
     tags -= ({0});
     module_tag_set =
-      (this_object()->ModuleTagSet || RXML.TagSet) (this_object(), "", tags);
+      (this->ModuleTagSet || RXML.TagSet) (this, "", tags);
   }
   return module_tag_set;
 }
@@ -438,7 +437,7 @@ static int create_sql_tables( mapping(string:array(string)) definitions,
 	sql->query("CREATE TABLE "+t+" ("+def*","+")" );
       } )
 	ddc++;
-      DBManager.is_module_table( this_object(), my_db, t, comment );
+      DBManager.is_module_table( this, my_db, t, comment );
     }
   }
   return ddc;
@@ -531,7 +530,7 @@ static string|int get_my_table( string|array(string) name,
       catch
       {
 	get_my_sql()->query( "CREATE TABLE "+res+" ("+defenition+")" );
-	DBManager.is_module_table( this_object(), my_db, res,
+	DBManager.is_module_table( this, my_db, res,
 				   oname+"\0"+comment );
       };
     if( error )

@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: fonts.pike,v 1.90 2003/01/21 23:46:26 mani Exp $
+// $Id: fonts.pike,v 1.91 2004/04/04 14:26:43 mani Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -382,7 +382,7 @@ static void create()
 {
   int h = gethrtime();
   // Must have this _before_ the add_contant()s
-  core.dump( "server_core/fonts.pike", object_program(this_object()) );
+  core.dump( "server_core/fonts.pike", this_program );
   add_constant( "FontHandler", FontHandler );
   add_constant( "Font", Font );
   add_constant("get_font", get_font);
@@ -390,7 +390,7 @@ static void create()
   add_constant("describe_font_type", describe_font_type);
   add_constant("resolve_font", resolve_font);
   add_constant("available_fonts", available_fonts);
-  add_constant("roxen.fonts", this_object());
+  add_constant("roxen.fonts", this);
   report_debug("Loading font handlers ...\n" );
   foreach( r_get_dir( "plugins/font_handlers" ), string fh )
   {

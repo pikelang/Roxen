@@ -17,6 +17,6 @@ mapping(string:int) ftp_sessions = ([]);
 
 void create( mixed ... args )
 {
-  core.set_up_ftp_variables( this_object() );
+  core.set_up_ftp_variables( this );
   ::create( @args );
 }

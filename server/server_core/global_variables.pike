@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: global_variables.pike,v 1.105 2004/04/03 16:04:17 mani Exp $
+// $Id: global_variables.pike,v 1.106 2004/04/04 14:26:43 mani Exp $
 
 // NGSERVER: Move protocol settings to their own files.
 
@@ -202,9 +202,9 @@ void zap_all_module_caches( Variable.Variable v )
   if( !equal( v->query(), old_module_dirs ) )
   {
     report_notice( "Module path changed - clearing all module caches\n" );
-    catch(this_object()->clear_all_modules_cache());
-    catch(map( this_object()->module_cache->list(),
-               this_object()->module_cache->delete ));
+    catch(this->clear_all_modules_cache());
+    catch(map( this->module_cache->list(),
+               this->module_cache->delete ));
     catch
     {
       string f = dirname( master()->make_ofilename( "tmp" ) );

@@ -117,7 +117,7 @@ class Connection
 	  misc->trace_leave = debug_trace_leave_2;
 	  break;
       }
-      return this_object();
+      return this;
     }
 
     this_program set_path( string f )
@@ -144,7 +144,7 @@ class Connection
 	}
       }
       not_query = Roxen.simplify_path( scan_for_query( f ) );
-      return this_object();
+      return this;
     }
 
     this_program set_url( string url )
@@ -153,7 +153,7 @@ class Connection
       foreach(core->urls; string u; mixed q )
       {
 	if( glob( u+"*", url ) )
-	  if( (c=q->port->find_configuration_for_url(url, this_object(), 1)) )
+	  if( (c=q->port->find_configuration_for_url(url, this, 1)) )
 	  {
 	    conf = c;
 	    break;
@@ -177,7 +177,7 @@ class Connection
 	// pass 3: No such luck. Let's allow default fallbacks.
 	foreach( core->urls; string u; mixed q )
 	{
-	  if( (c=q->port->find_configuration_for_url(url, this_object(), 1)) )
+	  if( (c=q->port->find_configuration_for_url(url, this, 1)) )
 	  {
 	    conf = c;
 	    break;
@@ -203,7 +203,7 @@ class Connection
 				     id->not_query, id->conf, id->remoteaddr),1);
       })
       {
-	id->conf->pri[4]->first_modules -= ({ this_object() });
+	id->conf->pri[4]->first_modules -= ({ this });
 	id->conf->invalidate_cache();
       }
     }
@@ -368,7 +368,7 @@ class Connection
     catch(fd->close());
     catch(destruct( fd ));
     catch(destruct( handler ));
-    catch(destruct( this_object() ));
+    catch(destruct( this ));
   }
 
   void write_more()
@@ -407,7 +407,7 @@ class Connection
 void create( mixed ... args )
 {
   core.add_permission( "Hilfe", "Hilfe" );
-  core.set_up_hilfe_variables( this_object() );
+  core.set_up_hilfe_variables( this );
   requesthandler = Connection;
   ::create( @args );
 }

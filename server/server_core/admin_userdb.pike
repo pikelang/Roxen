@@ -84,7 +84,7 @@ class AdminIFCache
       }
     }
     f->write("<?XML version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-             string_to_utf8(encode_mixed( to, this_object() ) ));
+             string_to_utf8(encode_mixed( to, this ) ));
     return to;
   }
 
@@ -604,7 +604,7 @@ class AdminUser
       +"</pre></td>"
       "<td><img src=\"/%01/unit\" height=\"5\" /><br />\n\n";
 
-    int is_me = this_object() == id->misc->config_user;
+    int is_me = this == id->misc->config_user;
 
     foreach( possible_permissions, string perm )
     {
@@ -665,7 +665,7 @@ class AdminUser
       "password":password,
       "permissions":indices(permissions),
     ]));
-    return this_object();
+    return this;
   }
 
   int auth( string operation )
@@ -818,7 +818,7 @@ class UserDBModule
   AIUser find_user( string uid )
   {
     AdminUser u = find_admin_user( uid );
-    if( u ) return AIUser( this_object(), u );
+    if( u ) return AIUser( this, u );
   }
 
   AIUser find_user_from_uid( int id )
