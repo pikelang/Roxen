@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.382 2002/06/24 13:53:28 anders Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.383 2002/06/25 11:19:16 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -4320,18 +4320,21 @@ class IfIs
   int(0..1) do_check( string var, array arr, RequestID id) {
     if(sizeof(arr)<2) return !!var;
 
-    // var is typically zero here for unset variables and those with
-    // the integer value zero (see note in TagIfVariable). By doing
-    // the below they're compared as the empty string which is
-    // arguably wrong. It's also a compatibility issue, e.g.
-    //
-    //     <if variable="var.x is ">
-    //
-    // is true in 2.2 if var.x is unset, while it's false in 2.1
-    // (which also is the correct thing imho). This is hard to fix at
-    // this point since the de-facto API for sources can return zero
-    // to get it to behave as the empty string.
-    if(!var) var = "";
+    if(!var)
+      if (compat_level == 2.2)
+	// This makes unset variables be compared as if they had the
+	// empty string as value. I can't understand the logic behind
+	// it, but it makes the test <if variable="form.foo is "> be
+	// true if form.foo is unset, a state very different from
+	// having the empty string as a value. To be on the safe side
+	// we're still bug compatible in 2.2 compatibility mode (but
+	// both earlier and later releases does the correct thing
+	// here). /mast
+	var = "";
+      else
+	// If var is zero then it had no value. Thus it's always
+	// different from any value it might be compared with.
+	return arr[1] == "!=";
 
     string is;
 
@@ -4823,12 +4826,19 @@ class TagIfVariable {
   constant plugin_name = "variable";
   constant cache = 1;
   string source(RequestID id, string s) {
-    mixed var=RXML.user_get_var(s);
-    // The check below makes it impossible to tell the value 0 from an
-    // unset variable. It should be zero_type(var), but there are
-    // compatibility problems if it's changed. It's not certain it's
-    // worth the hassle to get the correct behavior. /mast
-    if (!var) return 0;
+    mixed var;
+    if (compat_level == 2.2) {
+      // The check below makes it impossible to tell the value 0 from
+      // an unset variable. It's clearly a bug, but we still keep it
+      // in 2.2 compatibility mode since fixing it would introduce an
+      // incompatibility in (at least) this case:
+      //
+      //    <set variable="var.foo" expr="0"/>
+      //    <if variable="var.foo"> <!-- This is expected to be false. -->
+      if (!(var=RXML.user_get_var(s))) return 0;
+    }
+    else
+      if (zero_type (var=RXML.user_get_var(s))) return 0;
     if(arrayp(var)) return var;
     return RXML.t_text->encode (var);
   }
@@ -4845,8 +4855,13 @@ class TagIfSizeof {
   constant plugin_name = "sizeof";
   constant cache = -1;
   string source(RequestID id, string s) {
-    mixed var=RXML.user_get_var(s);
-    if(!var) return 0;
+    mixed var;
+    if (compat_level == 2.2) {
+      // See note in TagIfVariable.source.
+      if (!(var=RXML.user_get_var(s))) return 0;
+    }
+    else
+      if (zero_type (var=RXML.user_get_var(s))) return 0;
     if(stringp(var) || arrayp(var) ||
        multisetp(var) || mappingp(var)) return (string)sizeof(var);
     if(objectp(var) && var->_sizeof) return (string)sizeof(var);
