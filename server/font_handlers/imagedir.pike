@@ -1,6 +1,6 @@
 #include <config.h>
 #include <stat.h>
-constant cvs_version = "$Id: imagedir.pike,v 1.6 2000/09/16 21:07:38 per Exp $";
+constant cvs_version = "$Id: imagedir.pike,v 1.7 2000/12/31 23:54:53 nilsson Exp $";
 
 constant name = "Image directory fonts";
 constant doc = ("Handles a directory with images (in almost any format), each "
@@ -70,8 +70,14 @@ class myFont
   {
     array(mapping(string:Image.Image)) res = map( text/"", write_char );
     
-    Image.Image rr=Image.Image((int)abs(`+(0,@res->image->xsize())*x_spacing),
-                               max(0,@res->image->ysize()));
+    Image.Image rr;
+    if(floatp(x_spacing))
+      rr=Image.Image((int)abs(`+(0,@res->image->xsize())*x_spacing),
+		     max(0,@res->image->ysize()));
+    else
+      rr=Image.Image(abs(`+(0,@res->image->xsize())+(sizeof(res)*x_spacing)),
+		     max(0,@res->image->ysize()));
+
 
     float start;
     if( x_spacing < 0 )  start = (float)rr->xsize()-res[0]->image->xsize();
@@ -84,7 +90,10 @@ class myFont
                        (int)start,rr->ysize()-r->image->ysize() );
       else
         rr->paste(r->image,(int)start,rr->ysize()-r->image->ysize());
-      start += r->image->xsize()*x_spacing;
+      if(floatp(x_spacing))
+	start += r->image->xsize()*x_spacing;
+      else
+	start += r->image->xsize()+x_spacing;
     }
     return rr;
   }
@@ -97,8 +106,13 @@ class myFont
   Image.Image write( string ... what )
   {
     array(Image.Image) res = map( what, write_row );
-    Image.Image rr = Image.Image( max(0,@res->xsize()),
-                                  (int)abs(`+(0,@res->ysize())*y_spacing) );
+    Image.Image rr;
+    if(floatp(y_spacing))
+      rr = Image.Image( max(0,@res->xsize()),
+			(int)abs(`+(0,@res->ysize())*y_spacing) );
+    else
+      rr = Image.Image( max(0,@res->xsize()),
+    			abs(`+(0,@res->ysize())+(sizeof(res)+y_spacing)) );
 
     float start;
     if( y_spacing < 0 )  start = (float)rr->ysize()-res[0]->ysize();
@@ -108,7 +122,10 @@ class myFont
       if( j_right )       rr->paste(r,rr->xsize()-r->xsize(),(int)start);
       else if( j_center ) rr->paste(r,(rr->xsize()-r->xsize())/2,(int)start);
       else                rr->paste( r, 0, (int)start );
-      start += r->ysize()*y_spacing;
+      if(floatp(y_spacing))
+	start += r->ysize()*y_spacing;
+      else
+	start += r->ysize()+y_spacing;
     }
     return rr;
   }
