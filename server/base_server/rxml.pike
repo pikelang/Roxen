@@ -3,7 +3,7 @@
 //
 // The Roxen RXML Parser. See also the RXML Pike modules.
 //
-// $Id: rxml.pike,v 1.327 2002/10/23 16:49:14 mast Exp $
+// $Id: rxml.pike,v 1.328 2003/06/24 12:41:43 grubba Exp $
 
 
 inherit "rxmlhelp";
@@ -64,11 +64,12 @@ RXML.TagSet rxml_tag_set = class
   void create (object rxml_object)
   {
     ::create (rxml_object, "rxml_tag_set");
+    prepare_context = rxml_prepare_context;
     imported = ({Roxen.entities_tag_set});
     modules = ({rxml_object});
   }
 
-  void prepare_context (RXML.Context ctx)
+  void rxml_prepare_context (RXML.Context ctx)
   {
     RequestID id = ctx->id;
     mapping misc = ctx->misc;
