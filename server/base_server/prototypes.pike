@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 2001, Roxen IS.
-// $Id: prototypes.pike,v 1.52 2002/06/11 09:59:38 nilsson Exp $
+// $Id: prototypes.pike,v 1.53 2002/06/14 00:02:39 nilsson Exp $
 
 #include <stat.h>
 #include <config.h>
@@ -804,8 +804,10 @@ class RoxenModule
   constant is_module = 1;
   constant module_type = 0;
   constant module_unique = 1;
-  LocaleString module_name;
-  LocaleString module_doc;
+  // FIXME: Decomment when module_name and module_doc
+  // is not allowed to be LocaleString.
+  //  constant module_name = 0;
+  //  constant module_doc = 0;
 
   string module_identifier();
   string module_local_id();
