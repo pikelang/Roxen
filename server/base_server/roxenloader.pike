@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.337 2003/03/02 11:41:57 anders Exp $
+// $Id: roxenloader.pike,v 1.338 2003/03/03 13:26:01 anders Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.337 2003/03/02 11:41:57 anders Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.338 2003/03/03 13:26:01 anders Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1580,10 +1580,13 @@ static void do_tailf( int loop, string file )
   do
   {
     Stdio.Stat s = file_stat( file );
-    if(!s) continue;
+    if(!s) {
+      os = tailf_info[ file ] = 0;
+      continue;
+    }
     si = s[ ST_SIZE ];
-    if(!first++ && !os && loop)
-      os = si;
+    if( zero_type( tailf_info[ file ] ) )
+      os = tailf_info[ file ] = si;
     if( os != si )
     {
       Stdio.File f = Stdio.File( file, "r" );
@@ -1791,6 +1794,22 @@ void start_mysql()
     assure_that_base_tables_exists();
   };
 
+  void start_tailf()
+  {
+    if( do_tailf_threaded ) {
+      thread_create( do_tailf, 1, err_log );
+      sleep(0.1);
+    } else {
+      do_tailf(0, err_log );
+      void do_do_tailf( )
+	{
+	  call_out( do_do_tailf, 1 );
+	  do_tailf( 0, err_log  );
+	};
+      call_out( do_do_tailf, 0 );
+    }
+  };
+
   report_debug( "Starting mysql ... \b");
   
   if( mixed err = catch( db = connect_to_my_mysql( 0, "mysql" ) ) ) {
@@ -1799,6 +1818,7 @@ void start_mysql()
 #endif
   }
   else {
+    start_tailf();
     connected_ok(1);
     return;
   }
@@ -1815,17 +1835,7 @@ void start_mysql()
   rm( pid_file );
   rm( err_log );
 
-  if( do_tailf_threaded ) {
-    thread_create( do_tailf, 1, err_log );
-    sleep(0.1);
-  } else {
-    void do_do_tailf( )
-    {
-      call_out( do_do_tailf, 1 );
-      do_tailf( 0, err_log  );
-    };
-    call_out( do_do_tailf, 0 );
-  }
+  start_tailf();
 
   if( !file_stat( mysqldir+"/mysql/user.MYD" ) ||
       !file_stat( mysqldir+"/mysql/host.MYD" ) ||
