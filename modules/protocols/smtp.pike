@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.21 1998/09/11 17:23:32 grubba Exp $
+ * $Id: smtp.pike,v 1.22 1998/09/12 12:27:52 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.21 1998/09/11 17:23:32 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.22 1998/09/12 12:27:52 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -20,7 +20,6 @@ inherit "module";
  *
  * automail_clientlayer:
  *	int check_size(int sz);
- * 	string get_unique_body_id();
  *
  * smtp_rcpt:
  *	string|multiset(string) expn(string addr, object o);
@@ -40,7 +39,7 @@ inherit "module";
  * 	          string spooler_id, object o);
  */
 
-class Mail {
+static class Mail {
   string id;
   int timestamp;
   object connection;
@@ -81,7 +80,7 @@ class Mail {
   }
 };
 
-class Smtp_Connection {
+static class Smtp_Connection {
   inherit Protocols.Line.smtp_style;
 
   constant errorcodes = ([
@@ -135,12 +134,14 @@ class Smtp_Connection {
 
   string localhost = gethostname();
   int connection_class;
+  int counter;
   string remoteip;		// IP
   string remoteport;		// PORT
   string remotehost;		// Name from the IP.
   string remotename;		// Name given in HELO or EHLO.
   array(string) ident;
   object conf;
+  object parent;
   string prot = "SMTP";
   function delayed_answer;
 
@@ -169,6 +170,30 @@ class Smtp_Connection {
 		   weekdays[lt->wday], lt->mday, months[lt->mon],
 		   1900 + lt->year, lt->hour, lt->min, lt->sec,
 		   off/60, off%60, tz));
+  }
+
+  static string spoolid;
+
+  static object open_spoolfile()
+  {
+    string dir = parent->query_spooldir();
+    int i;
+    object o = Stdio.File();
+
+    for (i = 0; i < 10; i++) {
+      spoolid = sprintf("%08x%08x%08x%08x",
+			getpid(), time(), gethrtime(), ++counter);
+
+      string f = combine_path(dir, spoolid);
+
+      if (o->open(f, "cwax")) {
+#ifndef __NT__
+	rm(f);
+#endif /* !__NT__ */
+	return(o);
+      }
+    }
+    return(0);
   }
 
   static void got_remotehost(string h,
@@ -729,19 +754,11 @@ class Smtp_Connection {
 
     current_mail->set_contents(data);
 
-    array spooler;
+    object spool = open_spoolfile();
 
-    foreach(conf->get_providers("automail_clientlayer")||({}), object o) {
-      string id;
-      if ((id = o->get_unique_body_id())) {
-	spooler = ({ o, id });
-	break;
-      }
-    }
-
-    if (!spooler) {
+    if (!spool) {
       send(550, "No spooler available");
-      report_error("SMTP: No spooler found!\n");
+      report_error("SMTP: Failed to open spoolfile!\n");
       do_RSET();
       return;
     }
@@ -750,25 +767,22 @@ class Smtp_Connection {
 
     string received = sprintf("from %s (%s [%s]) by %s with %s id %s; %s",
 			      remotename, remotehost||"", remoteip,
-			      localhost, prot, spooler[1],
+			      localhost, prot, spoolid,
 			      mktimestamp(current_mail->timestamp));
 
     data = "Received: " + received + "\r\n" + data;
 
     roxen_perror(sprintf("Received: %O\n", received));
 
-    object f = spooler[0]->get_fileobject(spooler[1]);
-
-    if (f->write(data) != sizeof(data)) {
-      spooler[0]->delete_body(spooler[1]);
+    if (spool->write(data) != sizeof(data)) {
+      spool->close();
       send(452);
-      report_error("SMTP: Spooler failed.\n");
+      report_error("SMTP: Spooler failed. Disk full?\n");
       do_RSET();
       return;
     }
 
     // Now it's time to actually deliver the message.
-    // NOTE: After this point error-messages must be sent by mail.
 
     // Expand.
     multiset expanded = do_expn(current_mail->recipients);
@@ -794,21 +808,21 @@ class Smtp_Connection {
 	  // Primary delivery.
 	  foreach(conf->get_providers("smtp_rcpt")||({}), object o) {
 	    handled |= o->put(current_mail->from, user, domain,
-			      spooler[1], this_object());
+			      spool, this_object());
 	  }
 	}
 	if (!handled) {
 	  // Fallback delivery.
 	  foreach(conf->get_providers("smtp_rcpt")||({}), object o) {
 	    handled |= o->put(current_mail->from, user, 0,
-			      spooler[1], this_object());
+			      spool, this_object());
 	  }
 	}
       } else {
 	// Remote delivery.
 	foreach(conf->get_providers("smtp_relay")||({}), object o) {
 	  handled |= o->relay(current_mail->from, user, domain,
-			      spooler[1], this_object());
+			      spool, this_object());
 	}
       }
       if (handled) {
@@ -816,6 +830,8 @@ class Smtp_Connection {
       }
     }
 
+    // Message received successfully.
+    // NOTE: After this point error-messages must be sent by mail.
     send(250);
     report_notice("SMTP: Mail spooled OK.\n");
 
@@ -870,9 +886,10 @@ class Smtp_Connection {
 			 mktimestamp(time())) }));
   }
 
-  void create(object con_, object conf_)
+  void create(object con_, object parent_, object conf_)
   {
     conf = conf_;
+    parent = parent_;
 
     array(string) remote = con_->query_address()/" ";
 
@@ -896,7 +913,7 @@ static void got_connection()
 {
   object con = port->accept();
 
-  Smtp_Connection(con, conf);	// Start a new session.
+  Smtp_Connection(con, this_object(), conf);	// Start a new session.
 }
 
 static void init()
@@ -936,6 +953,15 @@ static void init()
   }
 
   port = newport;
+}
+
+/*
+ * Some glue code
+ */
+
+string query_spooldir()
+{
+  return(QUERY(spooldir));
 }
 
 /*
