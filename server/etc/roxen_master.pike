@@ -1,7 +1,7 @@
 /*
  * Roxen master
  */
-string cvs_version = "$Id: roxen_master.pike,v 1.86 2000/04/03 03:49:53 per Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.87 2000/04/04 14:33:31 grubba Exp $";
 
 /*
  * name = "Roxen Master";
@@ -166,7 +166,7 @@ int loaded_at( program p )
   return load_time[ program_name (p) ];
 }
 
-// Make low_find_prog() search in precompiled/ for precompiled files.
+// Make low_findprog() search in precompiled/ for precompiled files.
 array(string) query_precompiled_names(string fname)
 {
   return ({ make_ofilename(fname) }) + ::query_precompiled_names(fname);
@@ -180,11 +180,30 @@ array master_file_stat(string x)
 #define master_file_stat( x ) file_stat( x )
 
 
+#if constant(_static_modules.Builtin.mutex)
+#define THREADED
+// NOTE: compilation_mutex is inherited from the original master.
+#endif
+
 program low_findprog(string pname, string ext, object|void handler)
 {
   program ret;
   array s;
   string fname=pname+ext;
+
+#ifdef THREADED
+  object key;
+  // FIXME: The catch is needed, since we might be called in
+  // a context when threads are disabled.
+  // (compile() disables threads).
+  mixed err = catch {
+    key=compilation_mutex->lock(2);
+  };
+  if (err) {
+    werror(sprintf("low_findprog: Caught spurious error:\n"
+		   "%s\n", describe_backtrace(err)));
+  }
+#endif
 
   if( !handler ) handler = get_inhibit_compile_errors();
 
@@ -250,11 +269,13 @@ program low_findprog(string pname, string ext, object|void handler)
 
 void handle_error(array(mixed)|object trace)
 {
-  if (arrayp (trace) && sizeof (trace) == 2 &&
-      arrayp (trace[1]) && !sizeof (trace[1]))
-    // Don't report the special compilation errors thrown above. Pike
-    // calls this if resolv() or similar throws.
-    return;
+  catch {
+    if (arrayp (trace) && sizeof (trace) == 2 &&
+	arrayp (trace[1]) && !sizeof (trace[1]))
+      // Don't report the special compilation errors thrown above. Pike
+      // calls this if resolv() or similar throws.
+      return;
+  };
   ::handle_error (trace);
 }
 
