@@ -1,4 +1,4 @@
-// $Id: module.h,v 1.14 1998/03/23 08:20:56 neotron Exp $
+// $Id: module.h,v 1.15 1998/04/03 19:10:43 per Exp $
 #ifndef ROXEN_MODULE_H
 #define ROXEN_MODULE_H
 
@@ -100,8 +100,9 @@ defvar((X)+"_weight", "normal", (Z)+": weight", TYPE_STRING_LIST, "", ({"light",
 defvar((X)+"_slant", "plain", (Z)+": slant", TYPE_STRING_LIST, "", ({"italic","plain"}))
 
 
-
+#define CACHE(seconds) if(id->misc->cacheable) id->misc->cacheable=min(id->misc->cacheable,seconds);else id->misc->cacheable = seconds;
 #endif
+
 
 
 
