@@ -457,7 +457,7 @@ string type_warning( int type, mixed value )
      return verify_port( value, 0, 1 )[1];
 
    case TYPE_URL_LIST:
-     string warn="";
+     string warn ="";
      if( arrayp( value ) )
      {
        foreach( [array(string)]value, string value )
@@ -671,7 +671,7 @@ string get_var_form( string s, object mod, object id )
     return 0;
 
 
-  string warn =  type_warning( var[ VAR_TYPE ], var[ VAR_VALUE ] );
+  string warn =  type_warning( var[ VAR_TYPE ], var[ VAR_VALUE ] ) || "";
   if( strlen( warn ) )
     pre += "<font size='+1' color='&usr.warncolor;'>"+warn+"</font><br />";
 
