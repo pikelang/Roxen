@@ -21,14 +21,14 @@ modules:
 xmls:
 	@echo "2. Rebuilding .xml config files"
 	@for a in configs/*.xml ; do  \
-		pkg=`echo $$a | sed -e s',.xml,,' -e s',.*/,,'`; \
+		pkg=`echo $$a | sed -e s',\.xml,,' -e s',.*/,,'`; \
 		./scripts/make_config $$pkg configs/$$pkg.xml ; \
 	done
 
 translations:
 	@echo "3. Rebuilding translation files"
 	@for a in configs/*.xml ; do  \
-		pkg=`echo $$a | sed -e s',.xml,,' -e s',.*/,,'`; \
+		pkg=`echo $$a | sed -e s',\.xml,,' -e s',.*/,,'`; \
 		./scripts/build_from_config  configs/$$pkg.xml $(PIKE) $(EXTRACT); \
 	done
 
