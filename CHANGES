@@ -5,14 +5,22 @@ o The SSL3 module now returns a redirect if it is accessed with HTTP.
 
 o CGI security fix.
 
+o Tetris-protocol added.
+
 o Got rid of "Calling function in a destructed object" when SSL3 connections
   are broken.
+
+o Restricted filesystem added. This filesystem restrictes access to
+  directories prefixed by the users home-directory. This is usefull for eg
+  an FTP-server. Thanks to Zsolt Varga <redax@agria.hu> for the idea.
 
 o SSL3 ports now work without restarting the server.
 
 o Copying configurations now works again.
 
 o privs.pike now clears supplementary group list in case initgroups fails.
+
+o Added kludge for HPUX's broken grouphandling.
 
 o Bugfix for the ftp-module if there aren't any MODULE_FIRST modules.
 
@@ -40,6 +48,8 @@ o stdin, stdout and stderr can now be specified to spawn_pike().
 o activex added to supports-file.
 
 o Added missing parts needed for the mirror-filesystem client/server.
+  NOTE: Do NOT generate circular dependencies with mirror-filesystems, or
+  there is risk of deadlock.
 
 o The hostredirect-module now handles the case that the host-header isn't
   specified correctly.
