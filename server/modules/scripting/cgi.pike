@@ -9,8 +9,13 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: cgi.pike,v 2.11 1999/05/22 01:57:04 grubba Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.12 1999/05/23 20:09:59 grubba Exp $";
 
+#ifdef CGI_DEBUG
+#define DWERROR(X)	report_debug(X)
+#else /* !CGI_DEBUG */
+#define DWERROR(X)
+#endif /* CGI_DEBUG */
 
 array register_module()
 {
@@ -160,6 +165,8 @@ class Wrapper
   int close_when_done;
   void write_callback() 
   {
+    DWERROR("CGI:Wrapper::write_callback()\n");
+
     if(!strlen(buffer)) 
       return;
     int nelems = tofd->write( buffer ); 
@@ -177,16 +184,22 @@ class Wrapper
 
   void read_callback( mixed id, string what )
   {
+    DWERROR(sprintf("CGI:Wrapper::read_callback(%O, %O)\n", id, what));
+
     process( what );
   }
 
   void close_callback()
   {
+    DWERROR("CGI:Wrapper::close_callback()\n");
+
     done();
   }
 
   void output( string what )
   {
+    DWERROR(sprintf("CGI:Wrapper::output(%O)\n", what));
+
     if(buffer == "" )
     {
       buffer=what;
@@ -197,6 +210,8 @@ class Wrapper
 
   void destroy()
   {
+    DWERROR("CGI:Wrapper::destroy()\n");
+
     catch(done_cb(this_object()));
     catch(tofd->set_blocking());
     catch(fromfd->set_blocking());
@@ -207,6 +222,8 @@ class Wrapper
 
   object get_fd()
   {
+    DWERROR("CGI:Wrapper::get_fd()\n");
+
     return tofdremote;
     destruct(tofdremote);
     tofdremote=0;
@@ -215,6 +232,8 @@ class Wrapper
 
   void create( Stdio.File _f, RequestID _m, mixed _done_cb )
   {
+    DWERROR("CGI:Wrapper()\n");
+
     fromfd = _f;
     mid = _m;
     done_cb = _done_cb;
@@ -228,6 +247,8 @@ class Wrapper
   // override these to get somewhat more non-trivial behaviour
   void done()
   {
+    DWERROR("CGI:Wrapper::done()\n");
+
     if(strlen(buffer))
       close_when_done = 1;
     else
@@ -236,6 +257,8 @@ class Wrapper
 
   void process( string what )
   {
+    DWERROR(sprintf("CGI:Wrapper::process(%O)\n", what));
+
     output( what );
   }
 }
@@ -258,6 +281,8 @@ class RXMLWrapper
 
   void done()
   {
+    DWERROR("CGI:RXMLWrapper::done()\n");
+
     if(strlen(data))
     {
       output( parse_rxml( data, mid ) );
@@ -268,6 +293,8 @@ class RXMLWrapper
 
   void process( string what )
   {
+    DWERROR(sprintf("CGI:RXMLWrapper::process(%O)\n", what));
+
     data += what;
   }
 }
@@ -292,6 +319,8 @@ class CGIWrapper
 
   void done()
   {
+    DWERROR("CGI:CGIWrapper::done()\n");
+
     if(strlen(headers))
     {
       output( headers );
@@ -302,6 +331,8 @@ class CGIWrapper
 
   string handle_headers( string headers )
   {
+    DWERROR(sprintf("CGI:CGIWrapper::handle_headers(%O)\n", headers));
+
     string result = "", post="";
     string code = "200 OK";
     int ct_received = 0, sv_received = 0;
@@ -356,6 +387,8 @@ class CGIWrapper
 
   int parse_headers( )
   {
+    DWERROR("CGI:CGIWrapper::parse_headers()\n");
+
     int pos, skip = 4;
 
     pos = search(headers, "\r\n\r\n");
@@ -385,6 +418,8 @@ class CGIWrapper
   static int mode;
   void process( string what )
   {
+    DWERROR(sprintf("CGI:CGIWrapper::process(%O)\n", what));
+
     switch( mode )
     {
      case 0:
@@ -409,7 +444,7 @@ class CGIScript
   mapping (string:string) environment;
   int blocking;
 
-  string priority;   // gneric priority
+  string priority;   // generic priority
   object pid;       // the process id of the CGI script
   string tosend;   // data from the client to the script.
   Stdio.File ffd; // pipe from the client to the script
@@ -422,6 +457,8 @@ class CGIScript
 
   void check_pid()
   {
+    DWERROR("CGI:CGIScript::check_pid()\n");
+
     if(!pid || pid->status())
     {
       remove_call_out(kill_script);
@@ -432,6 +469,8 @@ class CGIScript
 
   Stdio.File get_fd()
   {
+    DWERROR("CGI:CGIScript::get_fd()\n");
+
     // Send input to script..
     if( tosend || ffd )
       Stdio.sendfile(({tosend||""}),ffd,0,0,0,stdin,
@@ -471,6 +510,8 @@ class CGIScript
 
   void kill_script()
   {
+    DWERROR("CGI:CGIScript::kill_script()\n");
+
     if(pid && !pid->status())
     {
       if(pid->kill)  // Pike 0.7, for roxen 1.4 and later 
@@ -482,6 +523,8 @@ class CGIScript
 
   CGIScript run()
   {
+    DWERROR("CGI:CGIScript::run()\n");
+
     Stdio.File t, stderr;
     stdin  = Stdio.File();
     stdout = Stdio.File();
@@ -536,6 +579,8 @@ class CGIScript
 
   void create( RequestID id )
   {
+    DWERROR("CGI:CGIScript()\n");
+
     mid = id;
 
 #ifndef THREADS
@@ -602,6 +647,8 @@ class CGIScript
 mapping(string:string) global_env = ([]);
 void start(int n, object conf)
 {
+  DWERROR("CGI:start()\n");
+
   module_dependencies(conf, ({ "pathinfo" }));
   if(conf)
   {
@@ -624,16 +671,22 @@ void start(int n, object conf)
 
 array stat_file( string f, RequestID id )
 {
+  DWERROR("CGI:stat_file()\n");
+
   return file_stat( real_file( f, id ) );
 }
 
 string real_file( string f, RequestID id )
 {
+  DWERROR("CGI:real_file()\n");
+
   return combine_path( QUERY(searchpath), f );
 }
 
 mapping handle_file_extension(object o, string e, object id)
 {
+  DWERROR("CGI:handle_file_extension()\n");
+
   if(!QUERY(ex))
     return 0;
 #if UNIX
@@ -652,12 +705,16 @@ mapping handle_file_extension(object o, string e, object id)
 
 array(string) find_dir( string f, RequestID id )
 {
+  DWERROR("CGI:find_dir()\n");
+
   if(QUERY(ls))
     return get_dir(real_file( f,id ));
 }
 
 int|object(Stdio.File)|mapping find_file( string f, RequestID id )
 {
+  DWERROR("CGI:find_file()\n");
+
   array stat=stat_file(f,id);
   if(!stat) return 0;
 #if UNIX
@@ -881,6 +938,8 @@ void create(object conf)
 
 int|string tag_cgi( string tag, mapping args, RequestID id )
 {
+  DWERROR("CGI:tag_cgi()\n");
+
   if(!query("cgi_tag")) 
     return 0;
 
