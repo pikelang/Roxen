@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.30 1998/05/14 23:30:00 grubba Exp $
+ * $Id: ftp2.pike,v 1.31 1998/05/14 23:58:02 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -1374,18 +1374,25 @@ class FTPSession
 			       args[0](0, @args[1]);
 			     });
 
+    if (dataport_addr) {
 #ifdef FD_DEBUG
-    mark_fd(f->query_fd(), sprintf("ftp communication: %s:%d -> %s:%d",
-				   local_addr, local_port - 1,
-				   dataport_addr, dataport_port));
+      mark_fd(f->query_fd(), sprintf("ftp communication: %s:%d -> %s:%d",
+				     local_addr, local_port - 1,
+				     dataport_addr, dataport_port));
 #endif
 
-    if(catch(f->connect(dataport_addr, dataport_port))) {
-      DWRITE("FTP: Illegal internet address in connect in async comm.\n");
+      if(catch(f->connect(dataport_addr, dataport_port))) {
+	DWRITE("FTP: Illegal internet address in connect in async comm.\n");
+	fun(0, @args);
+	destruct(f);
+	return;
+      }
+    } else {
+      DWRITE("FTP: No dataport specified.\n");
       fun(0, @args);
       destruct(f);
       return;
-    }  
+    }
   }
 
   /*
@@ -1971,7 +1978,7 @@ class FTPSession
 		   lt->hour, lt->min, lt->sec));
   }
 
-  string make_MLSD_fact(string f, mapping(string:array) dir)
+  string make_MLSD_fact(string f, mapping(string:array) dir, object session)
   {
     array st = dir[f];
 
@@ -2007,7 +2014,8 @@ class FTPSession
 
     array f = indices(dir);
 
-    session->file->data = (Array.map(f, make_MLSD_fact, dir) * "\r\n") + "\r\n";
+    session->file->data = (Array.map(f, make_MLSD_fact, dir, session) * "\r\n")
+      + "\r\n";
 
     string old_mode = mode;
     mode = "I";
@@ -2473,6 +2481,8 @@ class FTPSession
     
   void ftp_NLST(string args)
   {
+    // ftp_MLST(args); return;
+
     array(string) argv = glob_expand_command_line("/usr/bin/ls " + (args||""));
 
     string old_mode = mode;
@@ -2491,6 +2501,8 @@ class FTPSession
 
   void ftp_LIST(string args)
   {
+    // ftp_MLSD(args); return;
+
     ftp_NLST("-l " + (args||""));
   }
 
