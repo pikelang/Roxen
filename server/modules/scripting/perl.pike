@@ -6,7 +6,7 @@ inherit "roxenlib";
 // by Leif Stensson.
 
 string cvs_version =
-       "$Id: perl.pike,v 2.2 2000/08/08 19:54:50 leif Exp $";
+       "$Id: perl.pike,v 2.3 2000/08/17 10:17:14 leif Exp $";
 
 constant module_type = MODULE_EXPERIMENTAL |
             MODULE_FILE_EXTENSION | MODULE_PARSER;
@@ -93,7 +93,7 @@ void start()
 }
 
 mixed handle_file_extension(Stdio.File file, string ext, object id)
-{ object h = ExtScript.getscripthandler(QUERY(bindir)+"/perlhelper",
+{ object h = ExtScript.getscripthandler(QUERY(bindir)+"/perlrun",
                                         QUERY(parallel));
 
   if (id->realfile && stringp(id->realfile))
@@ -152,7 +152,7 @@ mixed simpletag_perl(string tag, mapping attr, string contents, object id,
   if (!QUERY(tagenable))
        RXML.run_error("<perl>...</perl> tag not enabled in this server.");
 
-  object h = ExtScript.getscripthandler(QUERY(bindir)+"/perlhelper",
+  object h = ExtScript.getscripthandler(QUERY(bindir)+"/perlrun",
                                         QUERY(parallel));
 
   if (!h)
