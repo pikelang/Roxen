@@ -3,7 +3,7 @@
  * made by Per Hedbor
  */
 
-constant cvs_version = "$Id: wizard_tag.pike,v 1.8 1998/07/02 15:01:13 js Exp $";
+constant cvs_version = "$Id: wizard_tag.pike,v 1.9 1998/07/03 13:46:14 marcus Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -32,18 +32,19 @@ string fix_relative(string file, object id)
 string old_pike = "";
 object old_wizard = 0;
 
-string tag_wizard(string t, mapping args, string contents, object id)
+string tag_wizard(string t, mapping args, string contents, object id,
+		  object file, mapping defines)
 {
-  if(!id->misc->defines->line)
-    id->misc->defines->line=-1;
+  if(!defines->line)
+    defines->line=-1;
   mapping f = ([ "pages":({}) ]);
   string pike = ("inherit \"wizard\";\n"
-		 "# "+id->misc->defines->line+" \""+id->not_query+"\"\n"
+		 "# "+defines->line+" \""+id->not_query+"\"\n"
 		 "string name=\""+(args->name||"unnamed")+"\";\n");
   int p;
   foreach(glob("*-label", indices(args)), string a)
   {
-    pike += ("# "+id->misc->defines->line+" \""+id->not_query+"\"\n");
+    pike += ("# "+defines->line+" \""+id->not_query+"\"\n");
     pike += "  string "+replace(replace(a,"-","_"),({"(",")","+",">"}),
 				({"","","",""}))+ 
       " = \""+replace(args[a], ({"\"","\n","\r", "\\"}), 
@@ -53,7 +54,7 @@ string tag_wizard(string t, mapping args, string contents, object id)
 
   if(args->ok)
   {
-    pike += ("# "+id->misc->defines->line+" \""+id->not_query+"\"\n");
+    pike += ("# "+defines->line+" \""+id->not_query+"\"\n");
     pike += ("mixed wizard_done(object id)\n"
 	     "{\n"
 	     "  id->not_query = \""+
@@ -63,7 +64,7 @@ string tag_wizard(string t, mapping args, string contents, object id)
 	     "}\n\n");
   }
   parse_html_lines(contents, ([]), (["page":internal_page]), 
-		   (int)id->misc->defines->line,f);
+		   (int)defines->line,f);
   foreach(f->pages, array q)
   {
     pike += ("# "+q[1]+" \""+id->not_query+"\"\n");
@@ -86,8 +87,8 @@ string tag_wizard(string t, mapping args, string contents, object id)
 
   if(mappingp(res))
   {
-    id->misc->defines[" _error"] = res->error;
-    id->misc->defines[" _extra_heads"] = res->extra_heads;
+    defines[" _error"] = res->error;
+    defines[" _extra_heads"] = res->extra_heads;
     return res->data||(res->file&&res->file->read())||"";
   }
   return res;
