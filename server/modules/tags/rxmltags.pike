@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.85 2000/03/01 15:36:07 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.86 2000/03/01 21:41:17 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -584,12 +584,16 @@ string|array(string) tag_insert( string tag, mapping m, RequestID id )
   if(n = m->variables || m->scope) {
     RXML.Context context=RXML.get_context();
     if(n!="variables")
-      return ({ html_encode_string(Array.map(context->list_var(m->scope),
+      return ({ html_encode_string(Array.map(sort(context->list_var(m->scope)),
 					     lambda(string s) {
 					       return sprintf("%s=%O", s, context->get_var(s, m->scope) );
 					     } ) * "\n")
 				   });
-    return ({ String.implode_nicely(context->list_var(m->scope)) });
+    return ({ String.implode_nicely(sort(context->list_var(m->scope))) });
+  }
+
+  if(m->scopes) {
+    return ({ String.implode_nicely(sort(RXML.get_context()->list_scopes())) });
   }
 
   if(m->file)
@@ -1480,7 +1484,7 @@ constant tagdoc=([
  The language must be given as metadata to be found.</desc>",
 "&page.scope;":"<desc ent></desc>",
 "&page.filesize;":"<desc ent>This file's size, in bytes.</desc>",
-"&page.self;":"<desc ent>The name of this file.</desc>"
+"&page.self;":"<desc ent>The name of this file.</desc>",
 
 "roxen_automatic_charset_variable":#"<desc tag>
  Internal Roxen tag. Not yet documented.
@@ -1986,6 +1990,10 @@ constant tagdoc=([
 
 <attr name=variables>
  Inserts a variable listing.
+</attr>
+
+<attr name=scopes>
+ Inserts a listing of all present scopes.
 </attr>
 
 <attr name=file value=string>
