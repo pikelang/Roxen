@@ -434,7 +434,10 @@ string set_variable( string v, object in, mixed to, object id )
                         return utf8_to_string(q);
                       return q;
                     } );
-  var[ VAR_VALUE ] = val;
+  if( in->set )
+    in->set( v, val );
+  else
+    var[ VAR_VALUE ] = val;
   return warning;
 }
 
@@ -630,10 +633,12 @@ mapping get_variable_map( string s, object mod, object id )
   return ([
     "sname":s,
     "rname": get_var_doc( s, mod, 0, id ),
-    "doc":  get_var_doc( s, mod, 1, id ),
+    "doc":  (id->misc->config_settings->query("docs")?
+             get_var_doc( s, mod, 1, id ):""),
     "name": get_var_doc( s, mod, 2, id ),
     "value":get_var_value( s, mod, id ),
-    "type_hint": get_var_type( s, mod, id ),
+    "type_hint":(id->misc->config_settings->query("docs")?
+                  get_var_type( s, mod, id ):""),
     "form": get_var_form( s, mod, id ),
   ]);
 }
@@ -647,9 +652,12 @@ mapping get_variable_section( string s, object mod, object id )
       return 0;
     else if( intp( cf ) )
     {
-      if((cf & VAR_EXPERT) && !id->misc->expert_mode)
+      if((cf & VAR_EXPERT) && !id->misc->config_settings->query("expert_mode"))
         return 0;
-      if((cf & VAR_MORE) && !id->misc->more_mode)
+      if((cf & VAR_MORE) && !id->misc->config_settings->query("more_mode"))
+        return 0;
+      if((cf & VAR_DEVELOPER) && 
+         !id->misc->config_settings->query("devel_mode"))
         return 0;
     }
   } else
@@ -705,6 +713,9 @@ string container_configif_output(string t, mapping m, string c, object id)
   array(mapping) variables;
   switch( m->source )
   {
+   case "config-settings":
+     variables = get_variable_maps( id->misc->config_settings, m, id );
+     break;
 
    case "locales":
      object rl = master()->resolv("Locale")["Roxen"];
