@@ -1,4 +1,4 @@
-/* $Id: fonts.pike,v 1.16 1998/01/24 21:38:19 js Exp $ */
+/* $Id: fonts.pike,v 1.17 1998/03/23 06:12:51 per Exp $ */
 
 #include <module.h>
 
@@ -14,15 +14,15 @@ array available_font_versions(string name, int size)
 {
   string base_dir, dir;
   array available;
-  foreach(roxen->QUERY(font_dirs), dir)
+  foreach(roxen->query("font_dirs"), dir)
   {
     base_dir = dir+size+"/"+fix_name(name);
     if((available = get_dir(base_dir)))
       break;
-    base_dir=dir+"/"+roxen->QUERY(default_font_size)+"/"+fix_name(name);
+    base_dir=dir+"/"+roxen->query("default_font_size")+"/"+fix_name(name);
     if((available = get_dir(base_dir)))
       break;
-    base_dir=dir+"/"+roxen->QUERY(default_font_size)+"/"+roxen->QUERY(default_font);
+    base_dir=dir+"/"+roxen->query("default_font_size")+"/"+roxen->query("default_font");
     if((available = get_dir(base_dir)))
       break;
   }
@@ -65,15 +65,15 @@ string make_font_name(string name, int size, int bold, int italic)
   string base_dir, dir;
   mixed available;
   if(file_stat(name)) return name;
-  foreach(roxen->QUERY(font_dirs), dir)
+  foreach(roxen->query("font_dirs"), dir)
   {
     base_dir = dir+size+"/"+fix_name(name);
     if((available = get_dir(base_dir)))
       break;
-    base_dir=dir+"/"+roxen->QUERY(default_font_size)+"/"+fix_name(name);
+    base_dir=dir+"/"+roxen->query("default_font_size")+"/"+fix_name(name);
     if((available = get_dir(base_dir)))
       break;
-    base_dir=dir+"/"+roxen->QUERY(default_font_size)+"/"+roxen->QUERY(default_font);
+    base_dir=dir+"/"+roxen->query("default_font_size")+"/"+roxen->query("default_font");
     if((available = get_dir(base_dir)))
       break;
   }
