@@ -16,7 +16,7 @@
 
 inherit "filesystem" : filesystem;
 
-constant cvs_version="$Id: userfs.pike,v 1.43 1998/10/21 21:17:58 peter Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.44 1999/02/15 01:33:33 peter Exp $";
 
 // import Array;
 // import Stdio;
@@ -71,10 +71,14 @@ void create()
 	 "If set, virtual user hosting is enabled. This means that "
 	 "the module will look at the \"host\" header to determine "
 	 "which users directory to access. If this is set, you access "
-	 "the users directory with http://user.domain.com/<mountpath> "
-	 "instead of http://user.domain.com/<mountpath>user. To set this up "
-	 "you need to add CNAME entries for all your users pointing to the "
-	 "IP(s) of this virtual server.");
+	 "the users directory with "
+	 "<tt><b>http://user.domain.com/&lt;mountpoint&gt;</b></tt> "
+	 "instead of "
+	 "<tt><b>http://user.domain.com/&lt;mountpoint&gt;user</b></tt>. "
+	 "Note that this means that you will usually want to set the "
+	 "mountpoint to \"/\". "
+	 "To set this up you need to add CNAME entries for all your "
+	 "users pointing to the IP(s) of this virtual server.");
 
   defvar("useuserid", 1, "Run user scripts as the owner of the script",
 	 TYPE_FLAG|VAR_MORE,
