@@ -180,10 +180,10 @@ void main(int argc, string *argv)
 
   add_constant("roxen", 0);
   add_constant("perror", roxen_perror);
-  add_constant("perror", roxen_perror);
+  add_constant("roxen_perror", roxen_perror);
   
 
-  if(find_arg(argv, "?", "help"))
+  if((argc <= 1) || find_arg(argv, "?", "help"))
   {
     write(sprintf("Syntax: roxenvar [flags] VAR[=VALUE] ...\n"
 	  "Args are:\n"
@@ -281,5 +281,6 @@ void main(int argc, string *argv)
 // The line below _must_ be there.. 
 ____________________
 
+echo Starting $pike $DEFINES /tmp/roxen$$.pike "$@"...
 $pike $DEFINES /tmp/roxen$$.pike "$@"
 /bin/rm /tmp/roxen$$.pike
