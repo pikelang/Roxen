@@ -1,6 +1,6 @@
 <!-- -*- html -*- -->
 
-<define tag=topmenu default_base="">
+<define tag=topmenu default_base="" default_selected=home>
   <top-menu>
     <item title="<cf-locale get=sites>" href="&base;sites/" 
       <if match="&selected; is sites"> selected</if> />
@@ -10,7 +10,8 @@
           <if match="&selected; is globals"> selected</if> />
     <item title="<cf-locale get=actions>" href="&base;actions/"
           <if match="&selected; is actions"> selected</if>  />
-    <item title="<cf-locale get=manual>" href="&base;manual/" />
+    <item title="<cf-locale get=home>" href="&base;" 
+          <if match="&selected; is home"> selected</if> />
   </top-menu>
 </define>
 
@@ -25,7 +26,6 @@
         topmargin=0 leftmargin=0 marginwidth=0 marginheight=0
         bottommargin=0 rightmargin=0 margin=0  
         bgcolor=white text=black>
-
 
     <form method=POST action='<file>'>
       <roxen-config preparse>

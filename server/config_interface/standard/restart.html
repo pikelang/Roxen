@@ -1,0 +1,25 @@
+<topmenu>
+
+<left-menu title="<cf-locale get=welcome>">
+   <item href="debug_info.html" title='<cf-locale get=debug_info>'></item>
+   <item href="restart.html" selected title='<cf-locale get=restart>'></item>
+   <item href="shutdown.html" title='<cf-locale get=shutdown>'></item>
+
+</left-menu>
+
+<content>
+<font color=darkred><h1><cf-locale get=restart></h1></font>
+<font color=darkblue>
+Roxen will restart automatically.
+
+<p><i>You might see the old process for a while in the process table
+when doing 'ps' or running 'top'. This is normal. Roxen waits for a
+while for all connections to finish, the process will go away after at
+most 15 minutes.</i> </font>
+
+<p>
+<pike>
+  roxen->restart(0.1);
+  return "";
+</pike>
+</content>

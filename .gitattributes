@@ -121,6 +121,7 @@ urw_itc_avant_garde-demi-r binary
 /server/config_actions/shutdown.pike foreign_ident
 /server/config_actions/threads.pike foreign_ident
 /server/config_actions/upgrade.pike foreign_ident
+/server/config_interface/standard/debug_info.pike foreign_ident
 /server/etc/extensions foreign_ident
 /server/etc/include/config.h foreign_ident
 /server/etc/include/confignode.h foreign_ident
