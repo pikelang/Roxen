@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.479 2000/04/13 19:03:18 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.480 2000/04/13 21:33:33 per Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -3135,7 +3135,9 @@ void dump( string file )
 {
   if( file[0] != '/' )
     file = getcwd() +"/"+ file;
+#ifdef __NT__
   file = normalize_path( file );
+#endif
   program p = master()->programs[ replace(file, "//", "/" ) ];
 #ifdef __NT__
   if( !p )
