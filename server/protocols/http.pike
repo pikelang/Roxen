@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.121 1999/01/17 15:43:40 peter Exp $";
+constant cvs_version = "$Id: http.pike,v 1.122 1999/04/30 11:30:20 js Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -799,6 +799,7 @@ string generate_bugreport(array from, string u, string rd)
 	  "\nRequested URL: "+u+"\n"
 	  "\nError: "+
 	  describe_backtrace(from)-(getcwd()+"/")+
+	  "\n\nDate: "+http_date(predef::time())+			     
 	  "\n\nRequest data:\n"+rd));
 }
 

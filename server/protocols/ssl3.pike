@@ -1,4 +1,4 @@
-/* $Id: ssl3.pike,v 1.47 1999/03/30 20:28:53 marcus Exp $
+/* $Id: ssl3.pike,v 1.48 1999/04/30 11:30:21 js Exp $
  *
  * Copyright © 1996-1998, Idonex AB
  */
@@ -513,6 +513,7 @@ class fallback_redirect_request {
   void read_callback(object id, string s)
   {
 #ifdef SSL3_DEBUG
+
     roxen_perror(sprintf("SSL3:fallback_redirect_request::read_callback(X, \"%s\")\n", s));
 #endif /* SSL3_DEBUG */
     in += s;

@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 1.98 1999/03/18 15:30:07 mast Exp $
+ * $Id: ftp.pike,v 1.99 1999/04/30 11:30:18 js Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -1391,7 +1391,7 @@ class FTPSession
 
 	if (file->open(Query("shells"), "r")) {
 	  allowed_shells =
-	    aggregate_multiset(@(Array.map(file->read(0x7fffffff)/"\n",
+	    aggregate_multiset(@(Array.map((file->read()-"\r")/"\n",
 					   lambda(string line) {
 					     return(((((line/"#")[0])/"") -
 						     ({" ", "\t"}))*"");
