@@ -15,13 +15,18 @@ LDFLAGS=@LDFLAGS@
 
 PIKEVERSION=@PIKEVERSION@
 
-all:	@MAKE_GMP@ @MAKE_GDBM@ @MAKE_ZLIB@ pike extern
+all:	@MAKE_GMP@ @MAKE_GDBM@ @MAKE_ZLIB@ pike extern sb_cvs
 
 pike: force
 	@(cd pike/$(PIKEVERSION)/src;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS) @LINKFORSHARED@")
 
 extern: force
 	@(cd extern;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" all)
+
+sb_cvs: force
+	if test -d $$version/commercial_modules/sitebuilder/. ; then \
+	  @(cd commercial_modules/sitebuilder;$(MAKE) "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" all) \
+	else :; fi; \
 
 gmp: force
 	-@(cd gmp;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" all)
@@ -395,6 +400,9 @@ dist: $(SRCDIR)/ChangeLog.gz $(SRCDIR)/ChangeLog.rxml.gz
 	    type="no_pike"; \
 	  fi ; \
 	fi; \
+	if test -d $$version/commercial_modules/. ; then \
+	  type="platform-$type"; \
+	else :; fi; \
 	echo Type $$type.; \
 	echo Building full NDA distribution...; \
 	tar cf - $$version | gzip -9 >$$version-$$type-nda-full.tar.gz; \
