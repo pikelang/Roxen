@@ -71,7 +71,7 @@ install_all: install_pike install
 
 install: all
 	$(SRCDIR)/mkdir -p $(prefix)/roxen/
-	-@if test -d $(prefix)/roxen/server.old/.; then \
+	@if test -d $(prefix)/roxen/server.old/.; then \
 	  if test -d $(prefix)/roxen/server.older/.; then \
 	    echo; \
 	    echo "Warning, deleting old server \"$(prefix)/roxen/server.older\""; \
@@ -80,7 +80,9 @@ install: all
 	  fi; \
 	  mv -f $(prefix)/roxen/server.old $(prefix)/roxen/server.older; \
 	fi
-	-@mv -f $(prefix)/roxen/server $(prefix)/roxen/server.old
+	@if test -d $(prefix)/roxen/server/.; then \
+	  mv -f $(prefix)/roxen/server $(prefix)/roxen/server.old ; \
+	fi
 	cp -r $(SRCDIR)/server $(prefix)/roxen/
 	@rm -rf	$(prefix)/roxen/server/CVS $(prefix)/roxen/server/*/CVS\
 		$(prefix)/roxen/server/*/*/CVS
@@ -116,7 +118,7 @@ install_pike: all
 
 localinstall: all
 	cp pike/src/pike $(SRCDIR)/server/bin/
-	-@rm -f $(SRCDIR)/server/bin/roxen
+	-@rm -f $(SRCDIR)/server/bin/roxen >/dev/null 2>&1
 	ln $(SRCDIR)/server/bin/pike $(SRCDIR)/server/bin/roxen
 	(cd extern; $(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" localinstall)
 
