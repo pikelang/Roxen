@@ -1,6 +1,6 @@
 // Protocol support for RFC 2518
 //
-// $Id: webdav.pike,v 1.31 2004/05/13 15:40:57 mast Exp $
+// $Id: webdav.pike,v 1.32 2004/05/13 16:01:43 grubba Exp $
 //
 // 2003-09-17 Henrik Grubbström
 
@@ -9,7 +9,7 @@ inherit "module";
 #include <module.h>
 #include <request_trace.h>
 
-constant cvs_version = "$Id: webdav.pike,v 1.31 2004/05/13 15:40:57 mast Exp $";
+constant cvs_version = "$Id: webdav.pike,v 1.32 2004/05/13 16:01:43 grubba Exp $";
 constant thread_safe = 1;
 constant module_name = "DAV: Protocol support";
 constant module_type = MODULE_FIRST;
@@ -22,6 +22,16 @@ constant module_doc  = "Adds support for various HTTP extensions defined "
 #else /* !DAV_DEBUG */
 #define DAV_WERROR(X...)
 #endif /* DAV_DEBUG */
+
+// Stuff from base_server/configuration.pike:
+#ifdef THREADS
+#define LOCK(X) key=id->conf->_lock(X)
+#define UNLOCK() do{key=0;}while(0)
+#else
+#define LOCK(X)
+#define UNLOCK()
+#endif
+
 
 Configuration conf;
 
@@ -152,6 +162,44 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
   } else if (id->request_headers->depth) {
     // Depth header not supported in this case.
   }
+
+#ifdef URL_MODULES
+  // Check URL modules (eg htaccess).
+  // Ripped from base_server/configuration.pike.
+  foreach(conf->url_modules(), function funp)
+  {
+    PROF_ENTER(Roxen.get_owning_module(funp)->module_name,"url module");
+#ifdef THREADS
+    Thread.MutexKey key;
+#endif
+    LOCK(funp);
+    TRACE_ENTER("URL module", funp);
+    mapping(string:mixed)|object tmp=funp( id, id->not_query );
+    UNLOCK();
+    PROF_LEAVE(Roxen.get_owning_module(funp)->module_name,"url module");
+
+    if(mappingp(tmp))
+    {
+      TRACE_LEAVE("");
+      TRACE_LEAVE("Returning data");
+      return tmp;
+    }
+    if(objectp( tmp ))
+    {
+      mixed err;
+
+      err = catch {
+	  tmp = id->conf->low_get_file( tmp, 1 );
+	};
+      if(err) throw(err);
+      TRACE_LEAVE("");
+      TRACE_LEAVE("Returning data");
+      return tmp;
+    }
+    TRACE_LEAVE("");
+  }
+#endif
+  
 
   // Function to call for matching location modules.
   //
