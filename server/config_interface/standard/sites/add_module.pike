@@ -165,9 +165,10 @@ string pafeaw( string errors, string warnings )
 
 #define RELOAD(X) sprintf("<gbutton "                                           \
                           "href='add_module.pike?config=&form.config:http;"     \
-                          "&random=%d&reload_module_list=yes#"                  \
+                          "&random=%d&only=%s&reload_module_list=yes#"          \
                           "errors_and_warnings'> %s </gbutton>",                \
                           random(4711111),                                      \
+                          (X),                                                  \
                           LOCALE(253, "Reload"))
 
       if( !header_added++ )
@@ -470,7 +471,16 @@ string page_really_compact( RequestID id )
   master()->set_inhibit_compile_errors( ec );
 
   if( id->variables->reload_module_list )
-    roxen->clear_all_modules_cache();
+  {
+    if( id->variables->only )
+    {
+      master()->clear_compilation_failures();
+      m_delete( roxen->modules, (((id->variables->only/"/")[-1])/".")[0] );
+      roxen->all_modules_cache = 0;
+    }
+    else
+      roxen->clear_all_modules_cache();
+  }
 
   array mods;
   roxenloader.push_compile_error_handler( ec );
