@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.87 2000/01/28 16:29:04 mast Exp $
+ * $Id: rxml.pike,v 1.88 2000/01/28 16:49:31 mast Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -241,7 +241,7 @@ RXML.TagSet rxml_tag_set = class
   }
 } ("rxml_tag_set", this_object());
 
-RXML.Type default_arg_type = RXML.t_text (RXML.PEnt);
+RXML.Type default_arg_type = RXML.t_text (RXML.PEntCompat);
 
 int parse_html_compat;
 
