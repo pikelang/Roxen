@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.277 2000/03/17 17:45:55 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.278 2000/03/18 03:02:15 mast Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -2086,8 +2086,12 @@ int|string try_get_file(string s, RequestID id,
   fake_id->raw_url=s;
   fake_id->not_query=s;
 
-  if(!(m = get_file(fake_id,0,!not_internal)))
+  if(!(m = get_file(fake_id,0,!not_internal))) {
+    destruct (fake_id);
     return 0;
+  }
+
+  destruct (fake_id);
 
   if (!mappingp(m) && !objectp(m)) {
     report_error("try_get_file(%O, %O, %O, %O): m = %O is not a mapping.\n",
