@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.410 2004/06/06 11:04:02 _cvs_stephen Exp $";
+constant cvs_version = "$Id: http.pike,v 1.411 2004/06/19 23:59:22 _cvs_stephen Exp $";
 //#define REQUEST_DEBUG
 //#define CONNECTION_DEBUG
 #define MAGIC_ERROR
@@ -256,7 +256,7 @@ void start_sender( )
 #endif
   if( throttler || conf->throttler )
     pipe->set_throttler( throttler || conf->throttler );
-  pipe->set_done_callback( do_log );
+  pipe->set_done_callback( shuff_do_log );
   pipe->start( );
   data_buffer = 0;
   pipe = 0;
@@ -1061,10 +1061,9 @@ int wants_more()
   return !!cache;
 }
 
-void do_log( Shuffler.Shuffle r, int reason )
+void do_log(int fsent)
 {
   MARK_FD("HTTP logging"); // fd can be closed here
-  int fsent = r->sent_data();
   
   TIMER_START(do_log);
   if(conf)
@@ -1086,6 +1085,10 @@ void do_log( Shuffler.Shuffle r, int reason )
   TIMER_END(do_log);
   end(1);
   return;
+}
+
+void shuff_do_log(Shuffler.Shuffle r, int reason) {
+  do_log(r->sent_data());
 }
 
 #ifdef FD_DEBUG
@@ -1630,7 +1633,7 @@ void send_result(mapping|void result)
 #endif
 	s = my_fd->write(data);
 	TIMER_END(blocking_write);
-        end(1);
+        do_log(s);
         return;
       }
       if(sizeof(head_string))                 send(head_string);
@@ -1650,6 +1653,7 @@ void send_result(mapping|void result)
 #else
 	REQUEST_WERR (sprintf ("HTTP: Send headers blocking %O", head_string));
 #endif
+        do_log(my_fd->write(head_string));
         return;
       }
       send(head_string);
@@ -2027,13 +2031,13 @@ void got_data(mixed fooid, string s)
 	    if( sizeof( d ) < (HTTP_BLOCKING_SIZE_THRESHOLD) )
 	    {
 	      TIMER_END(cache_lookup);
-	      my_fd->write(d);
+	      do_log(my_fd->write(d));
 	    } 
 	    else 
 	    {
 	      TIMER_END(cache_lookup);
 	      send(d);
-	      start_sender( );
+	      start_sender();
 	    }
 	    return;
 	  }
