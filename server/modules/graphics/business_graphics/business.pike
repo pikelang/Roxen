@@ -6,7 +6,7 @@
  * in October 1997
  */
 
-constant cvs_version = "$Id: business.pike,v 1.86 1998/03/07 11:13:15 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.87 1998/03/07 12:53:56 hedda Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -87,6 +87,10 @@ mixed *register_module()
        "                 colors assigned to each of the four corners.\n"
        "  <b>center</b>         (Only for <b>pie</b>) center=n centers the nth"
        " slice\n"
+       "  <b>rotate</b>         (Only for <b>pie</b>) rotate=X rotate the pie"
+       " X degrees.\n"
+       "  <b>turn</b>           If given, the diagram is turned 90 degrees.\n"
+       "                 (To make big diagrams printable)\n"
        "  <b>voidsep</b>        If this separator is given it will be used\n"
        "                 instead of VOID (This option can also\n"
        "                 be given i <b>xnames</b> and so on)\n"
@@ -454,7 +458,7 @@ constant _diagram_args =
    "xnames", "xvalues", "ynames", "yvalues", "axcolor", "gridcolor",
    "gridwidth", "vertgrid", "labels", "labelsize", "legendfontsize",
    "legend_texts", "labelcolor", "axwidth", "linewidth", "center",
-   "rotate", "image", "bw", "eng", "neng", "xmin", "ymin" });
+   "rotate", "image", "bw", "eng", "neng", "xmin", "ymin", "turn" });
 constant diagram_args = mkmapping(_diagram_args,_diagram_args);
 
 constant _shuffle_args = 
@@ -635,6 +639,8 @@ string tag_diagram(string tag, mapping m, string contents,
   if(m->xgridspace) res->xgridspace = (int)m->xgridspace;
   if(m->ygridspace) res->ygridspace = (int)m->ygridspace;
 
+  if (m->turn) res->turn=1;
+
   m -= diagram_args;
 
   // Start of res-cleaning
@@ -670,6 +676,14 @@ string tag_diagram(string tag, mapping m, string contents,
   res -= shuffle_args;
 
   m->src = query("location") + quote(res) + ".gif";
+
+  if (res->turn)
+    {
+      int t;
+      t=m->width;
+      m->width=m->height;
+      m->height=t;
+    }
 
   return make_tag("img", m);
 }
@@ -814,11 +828,23 @@ mapping find_file(string f, object id)
   }
 
   if (res->image)
-    return http_string_answer(Image.GIF.encode( img,
-	     Image.colortable( 6,6,6,
-			       ({0,0,0}),
-			       ({255,255,255}), 39)->floyd_steinberg(), 
-			       @back), "image/gif");  
+    {
+      if (res->turn)
+	img=img->rotate_ccw();
+	
+      if (back)
+	return http_string_answer(Image.GIF.encode( img,
+				     Image.colortable( 6,6,6,
+						       ({0,0,0}),
+						       ({255,255,255}), 39)->floyd_steinberg(), 
+						       @back), "image/gif");  
+      else
+	return http_string_answer(Image.GIF.encode( img,
+				     Image.colortable( 6,6,6,
+						       ({0,0,0}),
+						       ({255,255,255}), 39)->floyd_steinberg()
+						       ), "image/gif");  
+    }
   else
     return http_string_answer(Image.GIF.encode(img, @back), "image/gif");      
 }
