@@ -5,7 +5,7 @@ inherit "module";
 #include <module.h>
 
 constant thread_safe=1;
-constant cvs_version = "$Id: ssi.pike,v 1.34 2000/09/24 00:39:19 jonasw Exp $";
+constant cvs_version = "$Id: ssi.pike,v 1.35 2000/12/30 00:15:05 nilsson Exp $";
 
 
 constant module_type = MODULE_TAG;
@@ -526,13 +526,22 @@ mapping query_simpletag_callers()
   int flags = RXML.FLAG_EMPTY_ELEMENT|RXML.FLAG_COMPAT_PARSE;
   return ([
     "!--#echo": ({flags, simpletag_echo}),
+    "!--#ECHO": ({flags, simpletag_echo}),
     "!--#exec": ({flags, simpletag_exec}),
+    "!--#EXEC": ({flags, simpletag_exec}),
     "!--#flastmod": ({flags, simpletag_fsize}),
+    "!--#FLASTMOD": ({flags, simpletag_fsize}),
     "!--#fsize": ({flags, simpletag_fsize}),
+    "!--#FSIZE": ({flags, simpletag_fsize}),
     "!--#set": ({flags, simpletag_set}),
+    "!--#SET": ({flags, simpletag_set}),
     "!--#include": ({flags, simpletag_include}),
+    "!--#INCLUDE": ({flags, simpletag_include}),
     "!--#config": ({flags, simpletag_config}),
+    "!--#CONFIG": ({flags, simpletag_config}),
     "!--#printenv": ({flags, simpletag_printenv}),
-    "!--#printenv--": ({flags, simpletag_printenv})
+    "!--#PRINTENV": ({flags, simpletag_printenv}),
+    "!--#printenv--": ({flags, simpletag_printenv}),
+    "!--#PRINTENV--": ({flags, simpletag_printenv}),
   ]);
 }
