@@ -1,6 +1,6 @@
 // Protocol support for RFC 2518
 //
-// $Id: webdav.pike,v 1.16 2004/05/04 14:24:17 grubba Exp $
+// $Id: webdav.pike,v 1.17 2004/05/05 21:28:15 mast Exp $
 //
 // 2003-09-17 Henrik Grubbström
 
@@ -9,7 +9,7 @@ inherit "module";
 #include <module.h>
 #include <request_trace.h>
 
-constant cvs_version = "$Id: webdav.pike,v 1.16 2004/05/04 14:24:17 grubba Exp $";
+constant cvs_version = "$Id: webdav.pike,v 1.17 2004/05/05 21:28:15 mast Exp $";
 constant thread_safe = 1;
 constant module_name = "DAV: Protocol support";
 constant module_type = MODULE_FIRST;
@@ -160,7 +160,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
   //   RoxenModule module
   //   RequestID id
   //   mixed ... extras
-  function(string,string,int,RoxenModule,MultiStatus,RequestID,
+  function(string,string,int,RoxenModule,MultiStatus.Prefixed,RequestID,
 	   mixed ...:mapping(string:mixed)) recur_func;
   array(mixed) extras = ({});
 
@@ -370,7 +370,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
     }
     
     recur_func = lambda(string path, string dest, int d, RoxenModule module,
-			MultiStatus stat, RequestID id,
+			MultiStatus.Prefixed stat, RequestID id,
 			mapping(string:int(-1..1))|void behavior) {
 		   return module->recurse_copy_files(path, d, 0, "",
 						     behavior||([]),
@@ -379,7 +379,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
     break;
   case "DELETE":
     recur_func = lambda(string path, string dest, int d, RoxenModule module,
-			MultiStatus stat, RequestID id) {
+			MultiStatus.Prefixed stat, RequestID id) {
 		   module->recurse_delete_files(path, stat, id);
 		   return 0;
 		 };
@@ -409,7 +409,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
 	  }
 	  recur_func = lambda(string path, string ignored, int d,
 			      RoxenModule module,
-			      MultiStatus stat, RequestID id) {
+			      MultiStatus.Prefixed stat, RequestID id) {
 			 module->recurse_find_properties(path,
 							 "DAV:propname",
 							 d, stat, id);
@@ -423,7 +423,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
 	  }
 	  recur_func = lambda(string path, string ignored, int d,
 			      RoxenModule module,
-			      MultiStatus stat, RequestID id,
+			      MultiStatus.Prefixed stat, RequestID id,
 			      multiset(string)|void filt) {
 			 module->recurse_find_properties(path,
 							 "DAV:allprop",
@@ -439,7 +439,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
 	  }
 	  recur_func = lambda(string path, string ignored, int d,
 			      RoxenModule module,
-			      MultiStatus stat, RequestID id,
+			      MultiStatus.Prefixed stat, RequestID id,
 			      multiset(string) filt) {
 			 module->recurse_find_properties(path,
 							 "DAV:prop",
@@ -473,7 +473,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
       //   names and values of all properties.
       recur_func = lambda(string path, string ignored, int d,
 			  RoxenModule module,
-			  MultiStatus stat, RequestID id) {
+			  MultiStatus.Prefixed stat, RequestID id) {
 		     module->recurse_find_properties(path,
 						     "DAV:allprop",
 						     d, stat, id);
@@ -525,7 +525,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
       return Roxen.http_status(400, "Bad DAV request (23.3.2.2).");
     }
     recur_func = lambda(string path, string ignored, int d, RoxenModule module,
-			MultiStatus stat, RequestID id,
+			MultiStatus.Prefixed stat, RequestID id,
 			array(PatchPropertyCommand) instructions) {
 		   // NOTE: RFC 2518 does not support depth header
 		   //       with PROPPATCH, thus no recursion wrapper.
@@ -542,18 +542,13 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
     return Roxen.http_status(400, "Bad DAV request (23.3.2.2).");
   }
   // FIXME: Security, DoS, etc...
-  MultiStatus result = MultiStatus();
+  MultiStatus.Prefixed result;
   if (id->method != "COPY") {
-    result = result->prefix(sprintf("%s://%s%s%s",
-				    id->port_obj->prot_name,
-				    id->misc->host || id->port_obj->ip ||
-				    gethostname(),
-				    (id->port_obj->port == id->port_obj->port)?
-				    "":(":"+(string)id->port_obj->port),
-				    id->port_obj->path||""));
+    result = id->get_multi_status()->prefix(id->url_base());
   } else {
-    result = result->prefix(id->request_headers->destination);
+    result = id->get_multi_status()->prefix(id->request_headers->destination);
   }
+  int start_ms_size = id->multi_status_size();
   string href = id->not_query;
   string href_prefix = combine_path(href, "./");
   foreach(conf->location_modules(), [string loc, function fun]) {
@@ -584,6 +579,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
 	// FIXME: What if we've already added some stuff in result?
 	TRACE_LEAVE("Security check return.");
 	TRACE_LEAVE("Need authentication.");
+	recur_func = 0;		// Avoid garbage.
 	return security_ret;
       } else {
 	TRACE_LEAVE("Not allowed.");
@@ -593,23 +589,26 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
 #endif
     RoxenModule c = function_object(fun);
     TRACE_ENTER("Performing the work...", c);
+    ASSERT_IF_DEBUG (has_prefix (loc, "/"));
     mapping(string:mixed) ret =
       recur_func(path, dest, d, c,
-		 id->method=="COPY"?result->prefix(dest):result->prefix(loc),
+		 id->method=="COPY"?result->prefix(dest):result->prefix(loc[1..]),
 		 id, @extras);
     if (ret) {
       TRACE_LEAVE("Short circuit return.");
       TRACE_LEAVE("Done.");
       TRACE_LEAVE("DAV request done.");
+      recur_func = 0;		// Avoid garbage.
       return ret;
     }
     TRACE_LEAVE("Done.");
     TRACE_LEAVE("Done.");
   }
   TRACE_LEAVE("DAV request done.");
-  if (result->is_empty()) {
+  recur_func = 0;		// Avoid garbage.
+  if (id->multi_status_size() == start_ms_size) {
     return empty_result || Roxen.http_status(404);
   }
-  return result->http_answer();
+  return ([]);
 }
 
