@@ -12,9 +12,9 @@ string site_url( RequestID id, string site )
 
 string page_base( RequestID id, string content )
 {
-  return sprintf( "<use file=/standard/template>\n"
+  return sprintf( "<use file=/standard/template />\n"
                   "<tmpl title=''>"
-                  "<topmenu base='&cf.num-dotdots;' selected=sites>\n"
+                  "<topmenu base='&cf.num-dotdots;' selected=sites />\n"
                   "<content><cv-split>"
                   "<subtablist width=100%%>"
                   "<st-tabs></st-tabs>"
@@ -27,7 +27,7 @@ string page_base( RequestID id, string content )
 mapping|string parse( RequestID id )
 {
   if( !config_perm( "Add Module" ) )
-    return LOCALE("", "Permission denied");
+    return LOCALE(226, "Permission denied");
 
   object c = roxen.find_configuration( id->variables->config );
   if( id->variables->drop )
@@ -42,9 +42,9 @@ mapping|string parse( RequestID id )
   {
     object m = roxen.find_module( (q/"#")[0] );
     int c = (int)((q/"#")[-1]);
-    res += ("<gbutton preparse href='drop_module.pike?config=&form.config;&"
-            "drop="+replace(q,"#","!")+"'> "+LOCALE("", "Drop Module")+
-            " </gbutton>"+"&nbsp; <font size=+2>&nbsp;"+m->get_name()+"</font> "+(c?" #"+(c+1):"")+"<p>" );
+    res += ("<p><gbutton preparse href='drop_module.pike?config=&form.config;&"
+            "drop="+replace(q,"#","!")+"'> "+LOCALE(252, "Drop Module")+
+            " </gbutton>"+"&nbsp; <font size=+2>&nbsp;"+m->get_name()+"</font> "+(c?" #"+(c+1):"")+"</p>" );
   }
   return page_base( id, res );
 }
