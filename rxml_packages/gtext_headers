@@ -1,13 +1,30 @@
 -*- html -*-
 <info>
-version="$Id: gtext_headers,v 1.1 1998/06/03 17:16:03 per Exp $";
+version="$Id: gtext_headers,v 1.2 1999/04/22 09:42:31 per Exp $";
 name="gtext_headers";
 doc="Replace the normal header tags with graphical headers.";
+help=1;
 </info>
 
-<define container=h1><p><gh1 #args#><contents></gh1><p></define>
-<define container=h2><p><gh2 #args#><contents></gh2><p></define>
-<define container=h3><p><gh3 #args#><contents></gh3><p></define>
-<define container=h4><p><gh4 #args#><contents></gh4><p></define>
-<define container=h5><p><gh5 #args#><contents></gh5><p></define>
-<define container=h6><p><gh6 #args#><contents></gh6><p></define>
+<define tag=define-wrap>
+  <define !=# container=h&num;>
+    <if match="&help; is help">
+       This is a wrapper for &lt;gh&num;&gt;. It is more or less equivalent to &lt;h&num;&gt;, but the header will be rendered as an image<p>
+    </if>
+    <else>
+       <p><gtext &num; !args!><contents></gtext>
+       <br>
+    </else>
+  </define>
+</define>
+
+<define-wrap num=1>
+<define-wrap num=2>
+<define-wrap num=3>
+<define-wrap num=4>
+<define-wrap num=5>
+<define-wrap num=6>
+
+<define if=graphical-headers><true></define>
+
+<undefine tag=define-wrap>
