@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.131 1997/09/14 17:23:56 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.132 1997/09/14 19:04:00 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -22,7 +22,7 @@ inherit "language";
 
 // This is the real Roxen version. It should be changed before each
 // release
-constant real_version = "Roxen Challenger/1.2alpha12";
+constant real_version = "Roxen Challenger/1.2alpha13";
 
 #if _DEBUG_HTTP_OBJECTS
 mapping httpobjects = ([]);
