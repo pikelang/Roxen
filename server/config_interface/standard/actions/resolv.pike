@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.12 2000/08/14 18:55:18 mast Exp $
+ * $Id: resolv.pike,v 1.13 2000/08/16 11:20:58 jhs Exp $
  */
 
 inherit "wizard";
@@ -192,13 +192,17 @@ void resolv_handle_request(object c, object nid)
 
 string parse(object id)
 {
-  string res = "";//"<nobr>Allow Cache <input type=checkbox></nobr>\n";
-  res += "<input type=hidden name=action value=resolv.pike>";
-  res += "<br />URL: <input name=path value='&form.path;' size=60> \n";
-  res += "<table cellpadding=0 cellspacing=10 border=0>"
-         "<tr><td align=left>User: <input name=user  value='&form.user;' size=12></td>\n"
-         "<td align=left>&nbsp;&nbsp;&nbsp;Password: <input name=password value='&form.password;' type=password size=12>"
-	 "</td></tr></table><cf-ok> <cf-cancel href='?class=&form.class;'>\n";
+  //"<nobr>Allow Cache <input type=checkbox></nobr>\n";
+  string res = #"
+<input type=hidden name=action value=resolv.pike /><br />
+URL: <input name=path value='&form.path;' size=60 />
+<table cellpadding=0 cellspacing=10 border=0><tr><td align=left>
+User: <input name=user value='&form.user;' size=12/></td>
+<td align=left>&nbsp;&nbsp;&nbsp;
+Password: <input name=password value='&form.password;' type=password size=12/>
+</td></tr></table>
+<cf-ok/> <cf-cancel href='?class=&form.class;'/>
+";
 
   string p,a,b;
   object nid, c;
@@ -208,7 +212,7 @@ string parse(object id)
   {
     sscanf( id->variables->path, "%*s://%*[^/]/%s", file );
     file = "/"+file;
-    foreach( values(roxen->urls), object q )
+    foreach( values(roxen->urls), mapping q )
     {
       nid = id->clone_me();
       nid->raw_url = file;
