@@ -410,7 +410,10 @@ class Connection
   }
   void handle_alarm( )
   {
+#if constant (alarm)
+    // Pike@NT doesn't have this. This "fix" ought to be better..
     alarm( 1 );
+#endif
     if( time()-last_update > 5 )
       throw( "Too long evaluation\n" );
   }
