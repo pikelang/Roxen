@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.320 1999/09/02 18:39:02 per Exp $
+ * $Id: roxen.pike,v 1.321 1999/09/03 11:21:20 grubba Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.320 1999/09/02 18:39:02 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.321 1999/09/03 11:21:20 grubba Exp $";
 
 object backend_thread;
 object argcache;
@@ -1619,7 +1619,7 @@ class ArgCache
 
   static mapping (string:mixed) cache = ([ ]);
 
-  void setup_table()
+  static void setup_table()
   {
     if(catch(db->query("select id from "+name+" where id=-1")))
       if(catch(db->query("create table "+name+" ("
