@@ -1,7 +1,7 @@
 #include <roxen.h>
 inherit "http";
 
-// $Id: roxenlib.pike,v 1.100 1999/05/31 18:33:57 grubba Exp $
+// $Id: roxenlib.pike,v 1.101 1999/06/02 17:54:28 marcus Exp $
 // This code has to work both in the roxen object, and in modules.
 #if !efun(roxen)
 #define roxen roxenp()
@@ -497,13 +497,17 @@ static int is_safe_string(string in)
 static string make_tag_attributes(mapping in)
 {
   array a=indices(in), b=values(in);
+  int sl=-1;
   for(int i=0; i<sizeof(a); i++)
-    if(lower_case(b[i]) != a[i])
-      if(is_safe_string(b[i]))
-	a[i]+="="+b[i];
-      else
+    if(a[i]=="/" && b[i]=="/")
+      sl=i;
+    else
 	a[i]+="=\""+replace(b[i], ({ "\"", "<", ">", "&" }) ,
 			    ({ "&quot;", "&lt;", "&gt;", "&amp;" }))+"\"";
+  if(sl>=0 && sl<sizeof(a)-1) {
+    a[sl]=a[sizeof(a)-1];
+    a[sizeof(a)-1]="/";
+  }
   return a*" ";
 }
 
