@@ -2,11 +2,9 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.294 2001/01/03 09:48:28 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.295 2001/01/11 16:38:55 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
-
-#undef OLD_RXML_COMPAT
 
 #ifndef INITIAL_CACHEABLE
 # define INITIAL_CACHEABLE 300
@@ -403,74 +401,58 @@ string scan_for_query( string f )
   return f;
 }
 
-#ifdef OLD_RXML_COMPAT
-private int really_set_config(array mod_config)
+#define OLD_RXML_CONFIG
+
+#ifdef OLD_RXML_CONFIG
+private void really_set_config(array mod_config)
 {
-  string url, m;
-  string base;
-  if (conf)
-    base = conf->query("MyWorldLocation");
+  string url;
+
+  if(sscanf(replace(raw_url,({"%3c","%3e","%3C","%3E" }),
+                    ({"<",">","<",">"})),"/<%*s>/%s",url)!=2)
+    url = "/";
   else
-    base = "/";
+    url = "/"+url;
+
+  multiset do_mod_config( multiset config )
+  {
+    if(!mod_config) return config;
+    foreach(mod_config, string m)
+      if(m[0]=='-')
+        config[m[1..]]=0;
+      else
+        config[m]=1;
+    return config;
+  };
+
+  void do_send_reply( string what, string url ) {
+    if( misc->host )
+      url= port_obj->name+"://"+misc->host + url;
+    else if (conf)
+      url = conf->query("MyWorldLocation") + url[1..];
+    my_fd->write( prot + " 302 Roxen config coming up\r\n"+
+                  (what?what+"\r\n":"")+"Location: "+url+
+                  "Connection: close\r\nDate: "+
+                  Roxen.http_date(predef::time(1))+
+                  "\r\nContent-Type: text/html\r\n"
+                  "Content-Length: 0\r\n\r\n" );
+    my_fd->close();
+    my_fd = 0;
+    end();
+  };
 
   if(supports->cookies)
   {
-    REQUEST_WERR("Setting cookie..\n");
-    if(mod_config)
-      foreach(mod_config, m)
-	if(m[-1]=='-')
-	  config[m[1..]]=0;
-	else
-	  config[m]=1;
-
-    if(sscanf(replace(raw_url,({"%3c","%3e","%3C","%3E" }),
-		      ({"<",">","<",">"})),"/<%*s>/%s",url)!=2)
-      url = "/";
-
-    if ((base[-1] == '/') && (strlen(url) && url[0] == '/')) {
-      url = base + url[1..];
-    } else {
-      url = base + url;
-    }
-
-    my_fd->write(prot + " 302 Config in cookie!\r\n"
-		 "Set-Cookie: "
-		  + Roxen.http_roxen_config_cookie(indices(config) * ",") + "\r\n"
-		 "Location: " + url + "\r\n"
-		 "Content-Type: text/html\r\n"
-		 "Content-Length: 0\r\n\r\n");
-  } else {
-    REQUEST_WERR("Setting {config} for user without Cookie support..\n");
-    if(mod_config)
-      foreach(mod_config, m)
-	if(m[-1]=='-')
-	  prestate[m[1..]]=0;
-	else
-	  prestate[m]=1;
-
-    if (sscanf(replace(raw_url, ({ "%3c", "%3e", "%3C", "%3E" }),
-		       ({ "<", ">", "<", ">" })),   "/<%*s>/%s", url) == 2) {
-      url = "/" + url;
-    }
-    if (sscanf(replace(url, ({ "%28", "%29" }), ({ "(", ")" })),
-	       "/(%*s)/%s", url) == 2) {
-      url = "/" + url;
-    }
-
-    url = Roxen.add_pre_state(url, prestate);
-
-    if (base[-1] == '/') {
-      url = base + url[1..];
-    } else {
-      url = base + url;
-    }
-
-    my_fd->write(prot + " 302 Config In Prestate!\r\n"
-		 "\r\nLocation: " + url + "\r\n"
-		 "Content-Type: text/html\r\n"
-		 "Content-Length: 0\r\n\r\n");
+    do_send_reply("Set-Cookie: "+
+         Roxen.http_roxen_config_cookie(indices(do_mod_config(config))*","),
+                  url );
+    return;
   }
-  return 2;
+  if (sscanf(replace(url, ({ "%28", "%29" }), ({ "(", ")" })),
+             "/(%*s)/%s", url) == 2)
+    url = "/" + url;
+    
+  do_send_reply(0,Roxen.add_pre_state( url, do_mod_config( prestate ) ));
 }
 #endif
 
@@ -549,8 +531,6 @@ class PrefLanguages {
 
 class CacheKey {}
 
-#define OLD_RXML_CONFIG
-
 void things_to_do_when_not_sending_from_cache( )
 {
 #ifdef OLD_RXML_CONFIG
@@ -590,22 +570,8 @@ void things_to_do_when_not_sending_from_cache( )
           name=http_decode_string(name);
           cookies[ name ]=value;
 #ifdef OLD_RXML_CONFIG
-          if(name == "RoxenConfig" && strlen(value))
-          {
-            array tmpconfig = value/"," + ({ });
-            string m;
-
-            if(mod_config && sizeof(mod_config))
-              foreach(mod_config, m)
-                if(!strlen(m))
-                { continue; } /* Bug in parser force { and } */
-                else if(m[0]=='-')
-                  tmpconfig -= ({ m[1..] });
-                else
-                  tmpconfig |= ({ m });
-            mod_config = 0;
-            config = aggregate_multiset(@tmpconfig);
-          }
+          if( (name == "RoxenConfig") && strlen(value) )
+            config =  mkmultiset( value/"," );
 #endif
         }
       }
