@@ -1,7 +1,7 @@
 #include <stat.h>
 #include <config.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.13 2001/01/30 04:50:33 per Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.14 2001/02/05 11:49:53 per Exp $";
 
 class Variable
 {
@@ -325,7 +325,6 @@ class Protocol
   string ip;
   array(string) sorted_urls = ({});
   mapping(string:mapping) urls = ([]);
-
   
   void ref(string url, mapping data);
   void unref(string url);
@@ -336,6 +335,89 @@ class Protocol
   void restore();
 };
 
+
+class FakedVariables( mapping real_variables )
+{
+  static array _indices()
+  {
+    return indices( real_variables );
+  }
+
+  static array _values()
+  {
+    return map( _indices(), `[] );
+  }
+
+  static mixed fix_value( mixed what )
+  {
+    if( !what ) return what;
+    if( !arrayp(what) ) return what; // huh
+
+    if( sizeof( what ) == 1 )
+      return what[0];
+    return what*"\0";
+  }
+
+  static mixed `[]( string ind ) {
+    return fix_value( real_variables[ ind ] );
+  }
+
+  static mixed `->(string ind ) {
+    return `[]( ind );
+  }
+
+  static mixed `[]=( string ind, mixed what ) {
+    real_variables[ ind ] = ({ what });
+    return what;
+  }
+
+  static mixed `->=(string ind, mixed what ) {
+    return `[]=( ind,what );
+  }
+
+  static mixed _m_delete( mixed what ) {
+    return fix_value( m_delete( real_variables, what ) );
+  }
+
+  static int _equal( mixed what ) {
+    return `==(what);
+  }
+
+  static int `==( mixed what ) {
+    if( mappingp( what ) && (real_variables == what) )
+      return 1;
+  }
+
+  static string _sprintf( int f )
+  {
+    switch( f )
+    {
+      case 'O':
+	return sprintf( "FakedVariables(%O)", real_variables );
+      default:
+	return sprintf( sprintf("%%%c", f ), real_variables );
+    }
+  }
+
+
+  static this_program `|( mapping what )
+  {
+    foreach( indices(what), string q )`[]=( q,what[q] );
+    return this_object();
+  }
+
+  static this_program `+=( mapping what )
+  {
+    foreach( indices(what), string q )`[]=( q,what[q] );
+    return this_object();
+  }
+
+  static this_program `+( mapping what )
+  {
+    foreach( indices(what), string q )`[]=( q,what[q] );
+    return this_object();
+  }
+}
 
 class RequestID
 //! The request information object contains all request-local information and
@@ -366,9 +448,7 @@ class RequestID
   //! Typically 0, meaning the channel to the client will be disconnected upon
   //! finishing the request and the RequestID object destroyed with it.
 
-  mapping (string:mixed) real_variables;
-
-  mapping (string:string) variables;
+  mapping (string:array) real_variables;
   //! Form variables submitted by the client browser, as found in the
   //! <tt>form</tt> scope in RXML. Both query (as found in the query part of
   //! the URL) and POST (submitted in the request body) variables share this
@@ -379,7 +459,19 @@ class RequestID
   //! The indices and values of this mapping map to the names and values of
   //! the variable names. All data (names and values) are decoded from their
   //! possible transport encoding.
+  //!
+  //! The value is always an array
 
+  FakedVariables variables;
+  //! @decl mapping(string:mixed) variables;
+  //!
+  //! The variables mapping is more or less identical to the
+  //! real_variables maping, but each variable can only have one
+  //! value, if the form variable was sent multiple times from the
+  //! client (this happens, as an example, if you have checkbox
+  //! variables with the same name but different values), the values
+  //! will be separated with \0 (the null character) in this mapping.
+  
   mapping (string:mixed) misc;
   //! This mapping contains miscellaneous non-standardized information, and
   //! is the typical location to store away your own request-local data for
