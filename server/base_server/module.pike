@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.132 2003/01/15 15:19:55 grubba Exp $
+// $Id: module.pike,v 1.133 2003/04/23 12:32:00 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -418,7 +418,7 @@ object sql_big_query_ro( string query, mixed ... args )
   return get_my_sql(1)->big_query( replace( query, __my_tables ), @args );
 }
 
-static int create_sql_tables( mapping(string:array(string)) defenitions,
+static int create_sql_tables( mapping(string:array(string)) definitions,
 			      string|void comment,
 			      int|void no_unique_names )
 //! Create multiple tables in one go. See @[get_my_table]
@@ -426,15 +426,15 @@ static int create_sql_tables( mapping(string:array(string)) defenitions,
 {
   int ddc;
   if( !no_unique_names )
-    foreach( indices( defenitions ), string t )
-      ddc+=get_my_table( t, defenitions[t], comment, 1 );
+    foreach( indices( definitions ), string t )
+      ddc+=get_my_table( t, definitions[t], comment, 1 );
   else
   {
     Sql.Sql sql = get_my_sql();
-    foreach( indices( defenitions ), string t )
+    foreach( indices( definitions ), string t )
     {
       if( !catch {
-	sql->query("CREATE TABLE "+t+" ("+defenitions[t]*","+")" );
+	sql->query("CREATE TABLE "+t+" ("+definitions[t]*","+")" );
       } )
 	ddc++;
       DBManager.is_module_table( this_object(), my_db, t, comment );
@@ -475,7 +475,7 @@ static string|int get_my_table( string|array(string) name,
 //! If @[flag] is true, return 1 if a table was created, and 0 otherwise.
 //! 
 //! In the first form, @[name] is the (postfix of) the name of the
-//! table, and @[types] is an array of defenitions, as an example:
+//! table, and @[types] is an array of definitions, as an example:
 //!
 //! 
 //! @code{
