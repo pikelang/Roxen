@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.21 1999/08/15 23:24:42 neotron Exp $
+ * $Id: rxml.pike,v 1.22 1999/08/16 17:35:36 nilsson Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -890,12 +890,12 @@ string tag_if( string t, mapping m, string c, RequestID id )
 
   if(m->or)  { and = 0; m_delete( m, "or" ); }
   if(m->and) { and = 1; m_delete( m, "and" ); }
-  array possible = indices(m) & indices(real_if_callers);
+  array possible = indices(m) & indices(id->misc->_ifs);
 
   LAST_IF_TRUE=0;
   foreach(possible, string s)
   {
-    res = real_if_callers[ s ]( m[s], id, m, and, s );
+    res = id->misc->_ifs[ s ]( m[s], id, m, and, s );
     LAST_IF_TRUE=res;
     if(res)
     {
@@ -1009,22 +1009,23 @@ class UserIf
   
   int `()( string ind, RequestID id, mapping args, int and, string a )
   {
-    int oif, res;
-    array replace_from = Array.map(indices(args),
-                                   lambda(string q){return "&"+q+";";});
-    array replace_to = values(args);
+    int otruth, res;
+    string tmp;
 
-    oif = LAST_IF_TRUE;
     TRACE_ENTER("user defined if argument &lt;"+a+"&gt;", UserIf);
-    LAST_IF_TRUE = 0;
-    parse_rxml( replace(rxml_code, replace_from, replace_to ), id );
+    otruth = LAST_IF_TRUE;
+    LAST_IF_TRUE = -2;
+    tmp = parse_rxml(rxml_code, id );
     res = LAST_IF_TRUE;
+    LAST_IF_TRUE = otruth;
 
     TRACE_LEAVE("");
-    LAST_IF_TRUE = oif;
 
-    return res;
-  } 
+    if(ind==a && res!=-2)
+      return res;
+
+    return (ind==tmp);
+  }
 }
 
 class IfIs
@@ -1070,7 +1071,8 @@ class IfIs
     if(arr[1]=="!=") return (is!=var);
     if(arr[1]=="<") return ((int)var<(int)is);
     if(arr[1]==">") return ((int)var>(int)is);
-    return 0;
+    value = misc?id->misc[index][value]:id[index][value];
+    return !!value;
   }
 }
 
