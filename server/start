@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.56 1999/06/06 20:16:28 peter Exp $
+# $Id: start,v 1.57 1999/07/21 21:31:39 marcus Exp $
 
 VERSION=202; BETA=.b;
 
@@ -14,6 +14,10 @@ program=base_server/roxenloader.pike
 if test -f etc/environment; then
   . etc/environment
 fi
+
+# Make sure $CLASSPATH contains the servlet stuff
+CLASSPATH=etc/classes:etc/classes/roxen_servlet.jar:etc/classes/jsdk.jar${CLASSPATH:+:}$CLASSPATH
+export CLASSPATH
 
 # Enable threads (if available) on Solaris.
 # Most other OS's have thread bugs that cause them or Roxen to crash.
