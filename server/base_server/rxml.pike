@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.171 2000/03/15 23:27:43 nilsson Exp $
+// $Id: rxml.pike,v 1.172 2000/03/16 10:54:30 mast Exp $
 
 inherit "roxenlib";
 inherit "rxmlhelp";
@@ -122,7 +122,7 @@ RXML.TagSet rxml_tag_set = class
   {
     ::create ("rxml_tag_set");
 
-    // Fix better names later when we know the name of the
+    // Fix a better name later when we know the name of the
     // configuration.
     call_out (lambda () {
 		name = sprintf ("rxml_tag_set,%O", rxml_object);
@@ -143,14 +143,17 @@ int old_rxml_compat;
 class BacktraceFrame
 // Only used to get old style tags in the RXML backtraces.
 {
-  inherit RXML.Frame;
+  RXML.Frame up;
+  string tag_name;
+  mapping(string:string) args;
   void create (RXML.Frame _up, string name, mapping(string:string) _args)
   {
     up = _up;
-    tag = class {inherit RXML.Tag; string name;}();
-    tag->name = name;
+    tag_name = name;
     args = _args;
   }
+
+  string _sprintf() {return "BacktraceFrame(" + tag_name + ")";}
 }
 
 // A note on tag overriding: It's possible for old style tags to
@@ -858,14 +861,18 @@ class TagDefine {
 		m_delete( args, arg );
 	      }
 #endif
-	content=parse_html(content||"",([]),(["attrib":
-				  lambda(string tag, mapping m, string cont) {
-				    if(m->name) defaults[m->name]=parse_rxml(cont,id);
-				    return "";
-				  }
-	]));
+	content=parse_html(content||"",([]),
+			   (["attrib":
+			     lambda(string tag, mapping m, string cont) {
+			       if(m->name) defaults[m->name]=parse_rxml(cont,id);
+			       return "";
+			     }
+			   ]));
 
-	if(args->trimwhites) content=String.trim_all_whites(content);
+	if(args->trimwhites) {
+	  content=String.trim_all_whites(content);
+	  m_delete (args, "trimwhites");
+	}
 
 #ifdef OLD_RXML_COMPAT
 	if(old_rxml_compat) content = replace( content, indices(args), values(args) );
