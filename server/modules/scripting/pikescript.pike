@@ -9,7 +9,7 @@
 // This is an extension module.
 
 constant cvs_version=
-"$Id: pikescript.pike,v 1.46 1999/11/27 07:29:08 per Exp $";
+"$Id: pikescript.pike,v 1.47 1999/12/02 23:48:30 marcus Exp $";
 
 constant thread_safe=1;
 mapping scripts=([]);
@@ -103,12 +103,14 @@ array|mapping call_script(function fun, object got, object file)
   if(got->realauth && !QUERY(clearpass))
     got->realauth=0;
 
+#ifdef THREADS
   object key;
   if(!function_object(fun)->thread_safe)
   {
     if(!locks[fun]) locks[fun]=Thread.Mutex();
     key = locks[fun]->lock();
   }
+#endif
 
 #if constant(__builtin.security)
   // EXPERIMENTAL: Call with low credentials.
