@@ -7,16 +7,15 @@
 <set variable='var.js-code'></set>
 <content>
   <cv-leftside>
-    <img src="/*/unit" width='1' height="16" alt="" /><br />
     <eval><insert file="config_left_item.pike" nocache="1" /> </eval>
   </cv-leftside>
+  <eval>&var.js-code:none;</eval>
 
     <cv-split>
       <subtablist width="100%">
        <st-tabs> 
 <insert file="site_header.pike"/></st-tabs>
        <st-page>
-  <eval>&var.js-code:none;</eval>
          <eval><insert file="site_content.pike" nocache="1" /></eval>
        </st-page>
      </subtablist>

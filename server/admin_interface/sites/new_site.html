@@ -1,15 +1,14 @@
 <topmenu base="../" selected='sites'/>
 
 <content>
-<cv-leftside></cv-leftside>
 <cv-split>
 <subtablist><st-page>
-<br />
+  <h1>Create new site</h1>
 <blockquote>
 
 <define variable='var.common'>
-<font color='&usr.warncolor;'>&var.error;<br /></font>
-  <b>Site name:</b>
+  <font color='&usr.warncolor;'>&var.error;<br /></font>
+  <b>Site name:</b> 
    <input name="name" value="&form.name;" /><br />
   <blockquote>
 The name of the configuration must contain characters
@@ -23,14 +22,12 @@ the virtual server's configuration file name as well
 as the name of its log file directory.
 </blockquote>
 
-<set variable="var.create_txt">Create new site</set>
-<set variable="var.template_txt">with template</set>
-
 <submit-gbutton2 width='230' align_icon='right' icon_src='&usr.next;'
-name="new_with_template">&var.create_txt; &var.template_txt;</submit-gbutton2>
+name="new_with_template">Create new site with template</submit-gbutton2>
 <br />
 <submit-gbutton2 width='230' align_icon='right' icon_src='&usr.next;'
-name="new">&var.create_txt;</submit-gbutton2>
+name="new">Create new site</submit-gbutton2>
+<br />
 <br />
 <cf-cancel href="./"/>
 </define>
@@ -44,7 +41,7 @@ name="new">&var.create_txt;</submit-gbutton2>
      </if>
      <if variable='form.new..x'>
         <insert file='create_site.pike'/>
-        <redirect to='site.html/&form.name;/' />
+        <redirect to='site.html/&form.name:http;/' />
      </if>
      <else>
        <eval>&var.common:none;</eval>
@@ -52,7 +49,7 @@ name="new">&var.create_txt;</submit-gbutton2>
      <true/>
    </if>
 </if>
-<if variable='var.error is error'><define variable="var.error" preparse="1">Illegal site name</define><set variable="var.go" value='1' /></if>
+<if variable='var.error is error'><define variable="var.error" preparse="1">Invalid site name</define><set variable="var.go" value='1' /></if>
 <if not="1" variable='form.name'><set variable="var.go" value='1' /></if>
 <if variable='var.go'>
    <eval>&var.common:none;</eval>
