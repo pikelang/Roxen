@@ -9,7 +9,7 @@
  * performance. We'll see.
  */
 
-constant cvs_version="$Id: slowpipe.pike,v 1.4 1999/10/10 20:45:12 kinkie Exp $";
+constant cvs_version="$Id: slowpipe.pike,v 1.5 1999/11/29 22:07:20 per Exp $";
 
 #ifdef THROTTLING_DEBUG
 #undef THROTTLING_DEBUG
@@ -18,7 +18,7 @@ constant cvs_version="$Id: slowpipe.pike,v 1.4 1999/10/10 20:45:12 kinkie Exp $"
 #define THROTTLING_DEBUG(X)
 #endif
 
-private object(Stdio.File) outfd=0; //assigned by output
+private Stdio.File outfd=0; //assigned by output
 private string tosend="";
 private function done_callback;
 private array(mixed) done_callback_args;
@@ -45,7 +45,7 @@ int bytes_sent() {
 }
 
 //set the fileobject to write to. Also start the writing process up
-void output (object(Stdio.File) fd) {
+void output (Stdio.File fd) {
   THROTTLING_DEBUG("output to "+fd->query_address());
   outfd=fd;
   last_write=writing_starttime=time(1);
@@ -59,7 +59,7 @@ void output (object(Stdio.File) fd) {
 //different semantics from smartpipe: input is read immediately and not
 //when sending the results. Will use more memory (and save FDs), we can
 //change this at a later moment
-void input (object what, int len) {
+void input (Stdio.File what, int len) {
   THROTTLING_DEBUG("adding file input: len="+len);
   if (len<=0)
     len=0x7fffffff;

@@ -1,5 +1,5 @@
 /*
- * $Id: smartpipe.pike,v 1.29 1999/09/04 22:40:45 kinkie Exp $
+ * $Id: smartpipe.pike,v 1.30 1999/11/29 22:07:20 per Exp $
  *
  * A somewhat more optimized Pipe.pipe...
  */
@@ -11,7 +11,7 @@
 array to_send = ({});
 function done_callback;
 array(mixed) done_cb_args;
-object outfd;
+Stdio.File outfd;
 function write_out;
 int sent;
 int last_called;
@@ -172,12 +172,12 @@ void write(string what)
   to_send += ({({what,strlen(what)})});
 }
 
-void input(object what, int|void len)
+void input(Stdio.File what, int|void len)
 {
   to_send += ({({what,len})});
 }
 
-void output(object to)
+void output(Stdio.File to)
 {
   outfd = to;
   write_out = to->write;
