@@ -11,7 +11,7 @@
 //
 // Make sure links work _inside_ unfolded documents.
 
-constant cvs_version = "$Id: directories.pike,v 1.59 2000/05/05 23:31:21 nilsson Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.60 2000/05/14 15:56:12 per Exp $";
 constant thread_safe = 1;
 
 #ifdef DIRECTORIES_DEBUG
@@ -103,12 +103,14 @@ void create()
          "has expired.");
 }
 
-class TagDirectoryInsert {
+class TagDirectoryInsert 
+{
   inherit RXML.Tag;
   constant name="directory-insert";
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
 
-  class Frame {
+  class Frame 
+  {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
@@ -171,26 +173,33 @@ string spartan_directory(string d, array(string) dir, RequestID id)
   d="/"+((d/"/")-({".",""}))*"/"+"/";
   if(d="//") d="/";
 
+  /* FIXME: Perhaps make func. customizable? */
+  if (sizeof(dir)) 
+    dir = Array.sort_array((dir, Array.dwim_sort_func); 
+
   return sprintf("<html><head><title>Directory listing of %s</title></head>\n"
 		 "<body><h1>Directory listing of %s</h1>\n"
 		 "<pre>%s</pre></body></html>\n",
 		 d, d,
-		 Array.map(sort(dir),
-			   lambda(string f, string d)
-			   {
-			     array stats = id->conf->stat_file(d+f, id);
-			     if(stats && stats[1]<0)
-			       return "<a href=\""+f+"/.\">"+f+"/</a>";
-			     else
-			       return "<a href=\""+f+"\">"+f+"</a>";
-			   }, d)*"\n");
+		 map(dir,
+                     lambda(string f, string d)
+                     {
+                       array stats = id->conf->stat_file(d+f, id);
+                       if(stats && stats[1]<0)
+                         return "<a href=\""+f+"/.\">"+f+"/</a>";
+                       else
+                         return "<a href=\""+f+"\">"+f+"</a>";
+                     }, d)*"\n");
 }
 
 string describe_directory(string d, array(string) dir, RequestID id)
 {
   d="/"+((d/"/")-({".",""}))*"/"+"/";
   if(d=="//") d="/";
-  if (sizeof(dir)) dir = sort(dir);
+
+  /* FIXME: Perhaps make func. customizable? */
+  if (sizeof(dir)) 
+    dir = Array.sort_array((dir, Array.dwim_sort_func);
 
   string result="";
   int toplevel=!id->misc->dir_no_head++;
@@ -207,7 +216,7 @@ string describe_directory(string d, array(string) dir, RequestID id)
   if(id->misc->foldlist_exists) result += "<foldlist folded>\n";
 
   string out_form = output_format(dir);
-  foreach(sort(dir), string file) {
+  foreach(dir, string file) {
     string tmp=id->not_query;
     array stats = id->conf->stat_file(d + file, id);
     id->not_query=tmp;
