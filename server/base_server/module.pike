@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.199 2004/05/12 15:19:48 mast Exp $
+// $Id: module.pike,v 1.200 2004/05/12 16:12:24 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -1208,16 +1208,17 @@ mapping(string:mixed) recurse_delete_files(string path,
 	fname = path + fname;
 	if (Stat sub_stat = stat_file (fname, id)) {
 	  SIMPLE_TRACE_ENTER (this, "Deleting %O recursively", fname);
-	  mapping(string:mixed) sub_res = recurse(fname, sub_stat);
-	  // RFC 2518 8.6.2
-	  //   424 (Failed Dependancy) errors SHOULD NOT be in the
-	  //   207 (Multi-Status).
-	  //
-	  //   Additionally 204 (No Content) errors SHOULD NOT be returned
-	  //   in the 207 (Multi-Status). The reason for this prohibition
-	  //   is that 204 (No Content) is the default success code.
-	  if (sub_res && sub_res->error != 204 && sub_res->error != 424) {
-	    stat->add_status(fname, sub_res->error, sub_res->rettext);
+	  if (mapping(string:mixed) sub_res = recurse(fname, sub_stat)) {
+	    // RFC 2518 8.6.2
+	    //   424 (Failed Dependancy) errors SHOULD NOT be in the
+	    //   207 (Multi-Status).
+	    //
+	    //   Additionally 204 (No Content) errors SHOULD NOT be returned
+	    //   in the 207 (Multi-Status). The reason for this prohibition
+	    //   is that 204 (No Content) is the default success code.
+	    if (sub_res->error != 204 && sub_res->error != 424) {
+	      stat->add_status(fname, sub_res->error, sub_res->rettext);
+	    }
 	    if (sub_res->error >= 300) fail = 1;
 	  }
 	}
