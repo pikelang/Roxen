@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.376 2002/06/15 00:49:26 ian Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.377 2002/06/15 01:04:29 ian Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1079,7 +1079,7 @@ string tag_modified(string tag, mapping m, RequestID id, Stdio.File file)
 
   if(m->by && m->realfile)
   {
-    if(!id->conf->user_databases())
+    if(!sizeof(id->conf->user_databases()))
       RXML.run_error("Modified by requires a user database.\n");
 
     Stdio.File f;
