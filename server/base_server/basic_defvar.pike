@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 2000, Roxen IS.
-// $Id: basic_defvar.pike,v 1.8 2000/03/21 04:35:41 mast Exp $
+// $Id: basic_defvar.pike,v 1.9 2000/03/21 04:43:07 mast Exp $
 
 #pragma strict_types
 
@@ -18,8 +18,8 @@ void deflocaledoc( string locale, string variable,
   else
     locs[locale]( this_object(),
 		  variable,
-		  name || variables[variable][VAR_NAME],
-		  doc || variables[variable][VAR_DOC_STR],
+		  name || [string] variables[variable][VAR_NAME],
+		  doc || [string] variables[variable][VAR_DOC_STR],
 		  translate );
 }
 
