@@ -2,11 +2,12 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.239 2001/08/24 20:46:45 mast Exp $
+// $Id: module.pmod,v 1.240 2001/08/27 11:24:39 grubba Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
 static object Roxen;
+static object roxen;
 
 //! API stability notes:
 //!
@@ -7801,7 +7802,7 @@ static program PEnt;
 static program PExpr;
 static program Parser_HTML = master()->resolv ("Parser.HTML");
 static object utils;
-static object roxen;
+
 
 void create()
 {
