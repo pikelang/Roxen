@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.72 1997/09/03 05:16:31 per Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.73 1997/09/03 05:26:10 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -845,32 +845,30 @@ import Thread;
 object _lock(object|function f)
 {
   object key;
-  function|int q;				
-  if(q=locks[f])
-  {
-    if(q!=-1)
-    {
-      //perror("lock %O\n", f);
-      key=q();
+  function|int l;
+  if (functionp(f)) {
+    f = function_object(f);
+  }
+  if (l = locks[f]) {
+    if (l != -1) {
+      // Allow recursive locks.
+      catch {
+	//perror("lock %O\n", f);
+	key = l();
+      };
     }
+  } else if (f->thread_safe) {
+    locks[f]=-1;
   } else {
-    if(objectp(f))
-      if(f->thread_safe)
-	locks[f]=-1;
-      else
-	locks[f]=Mutex()->lock;
-    else if(function_object(f)->thread_safe)
-      locks[f]=-1;
-    else
-    {
-      //perror("new lock for %O\n", f);
-      locks[f]=Mutex()->lock;
+    if (!locks[f]) {
+      // Needed to avoid race-condition.
+      l = Mutex()->lock;
+      if (!locks[f]) {
+	locks[f]=l;
+      }
     }
-    if((q=locks[f]) && q!=-1)
-    {
-      //perror("lock %O\n", f);
-      key=q();
-    }
+    //perror("lock %O\n", f);
+    key = l();
   }
   return key;
 }
