@@ -6,7 +6,7 @@ inherit "roxenlib";
 // by Leif Stensson.
 
 string cvs_version =
-       "$Id: perl.pike,v 2.8 2000/09/18 19:32:37 kuntri Exp $";
+       "$Id: perl.pike,v 2.9 2000/09/19 23:03:16 kuntri Exp $";
 
 constant module_type = MODULE_EXPERIMENTAL |
             MODULE_FILE_EXTENSION | MODULE_TAG;
@@ -254,7 +254,7 @@ TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
 "<?perl":#"<desc pi><short hide>
- <p>Perl processing instruction tag.</short>This processing intruction
+ Perl processing instruction tag.</short>This processing intruction
  tag allows for evaluating Pike code directly in the document.</p>
 
  <p>Note: Read the installation and configuration documentation in the
