@@ -10,9 +10,12 @@
  * Thanks for suggestions and bugreports:
  * Barry Treahy <treahy@allianceelec.com>
  * Chris Burgess <chris@ibex.co.nz>
+ *
+ * BUGS:
+ * Removes document-internal links. (gazink.html#foo)
  */
 
-constant cvs_version = "$Id: killframe.pike,v 1.17 1998/04/03 19:20:53 peter Exp $";
+constant cvs_version = "$Id: killframe.pike,v 1.18 1998/04/15 12:00:45 peter Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -68,11 +71,16 @@ string tag_killframe( string tag, mapping m, object id )
     else
       my_url += id->not_query[1..];
 
-    int l=strlen(my_url)-1;
-
-    foreach( indexfiles, string index )
-      if( my_url[l-strlen(index)..] == "/" +index )
-	my_url = my_url[..l-strlen(index)];
+    if(id->query)
+      my_url += "?"+ id->query;
+    else
+    {
+      int l=strlen(my_url)-1;
+      
+      foreach( indexfiles, string index )
+	if( my_url[l-strlen(index)..] == "/" +index )
+	  my_url = my_url[..l-strlen(index)];
+    }
 
     javascript = ( "   if(top.location != \""+ my_url  +"\")\n"
 		   "     top.location = \""+ my_url  +"\";\n"   );
