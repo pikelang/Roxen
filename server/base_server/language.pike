@@ -4,7 +4,7 @@
  *
  * Copyright © 1996 - 2000, Roxen IS.
  *
- * $Id: language.pike,v 1.27 2000/03/13 06:12:56 per Exp $
+ * $Id: language.pike,v 1.28 2000/04/25 19:37:12 nilsson Exp $
  *
  * WARNING:
  * If the environment variable 'ROXEN_LANG' is set, it is used as the default
@@ -82,7 +82,7 @@ public function language(string what, string func, object|void id)
   return [function]l[func] || nil;
 }
 
-array list_languages() {
+array(string) list_languages() {
   return indices(languages);
 }
 
