@@ -1,4 +1,4 @@
-# $Id: db.spec,v 1.35 1998/09/27 16:25:41 wellhard Exp $
+# $Id: db.spec,v 1.36 1998/09/28 03:37:19 js Exp $
 
 drop table mail_misc;
 drop table user_misc;
@@ -122,6 +122,11 @@ create table admin_variables (
      );
              
 # AutoAdmin         
+
+create table forms (
+             customer_id	     int,
+	     form		     blob
+      );	     
 
 create table customers (
              id                      int auto_increment primary key,

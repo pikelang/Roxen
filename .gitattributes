@@ -21,15 +21,15 @@
 /modules/autoweb/autositefs.pike foreign_ident
 /modules/autoweb/webadm.pike foreign_ident
 /modules/dns/AutoDNS.pike foreign_ident
-/modules/mail/AutoMailAPI.pike foreign_ident
-/modules/mail/MailReader.pike foreign_ident
 /modules/mail/automailrcpt.pike foreign_ident
 /modules/mail/clientlayer.pike foreign_ident
+/modules/mail/faxrcpt.pike foreign_ident
 /modules/mail/filters/rbl.pike foreign_ident
 /modules/mail/filters/relayfilter.pike foreign_ident
 /modules/mail/filters/verify_addr.pike foreign_ident
 /modules/mail/mailadmin.pike foreign_ident
 /modules/mail/mailtags.pike foreign_ident
+/modules/mail/smsrcpt.pike foreign_ident
 /modules/mail/smtprelay.pike foreign_ident
 /modules/mail/testrcpt.pike foreign_ident
 /modules/protocols/imap.pike foreign_ident
