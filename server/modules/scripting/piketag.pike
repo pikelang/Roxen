@@ -7,7 +7,7 @@
 //  return "Hello world!\n";
 // </pike>
  
-constant cvs_version = "$Id: piketag.pike,v 2.5 2000/03/16 18:34:42 nilsson Exp $";
+constant cvs_version = "$Id: piketag.pike,v 2.6 2000/06/29 21:24:55 kuntri Exp $";
 constant thread_safe=1;
 
 inherit "roxenlib";
@@ -191,3 +191,29 @@ string container_pike(string tag, mapping m, string s, RequestID request_id,
 
   return res;
 }
+
+
+TAGDOCUMENTATION;
+#ifdef manual
+constant tagdoc=([
+
+"pike":#"<desc cont><short> This tag makes it possible to insert pike code
+directly in the document.</short>This tag is not always available,
+since it is a potential security hazard. Warning! Remember that this
+tag makes it possible for all users to run programs with the same
+right as the server! Example:
+
+<p>&lt;pike&gt; return 'Hello world!\n'; &lt;/pike&gt;</p>
+</desc>
+
+<h1>Information for Pike programmers</h1>
+Arguments: Any, all arguments are passed to the script in the mapping
+args. There are also a few helper functions available, output(string
+fmt, mixed ... args) is a fast way to add new data to a dynamic
+buffer, flush() returns the contents of the buffer as a string. A
+flush() is done automatically if the script does not return any data,
+thus, another way to write the hello world script is
+&lt;pike&gt;output('Hello %s ', 'World');&lt;/pike&gt; The request id
+is available as id.</p>",
+  ]);
+#endif
