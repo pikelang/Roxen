@@ -37,7 +37,7 @@
 // 1.6   nov 23 law
 //       new directory format (used by ftp.uwp.edu) 
 
-string cvs_version = "$Id: ftpgateway.pike,v 1.8 1996/12/10 00:15:43 per Exp $";
+string cvs_version = "$Id: ftpgateway.pike,v 1.9 1997/01/20 13:52:42 kg Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -305,7 +305,7 @@ class Request {
   
     if (sscanf(dir[0],"%*[drwxahsSl-]%*[ ]")<2) return 0; /* nope */
   
-    if(sscanf(dir[0], "l%*s "+file+" -> %s", f) == 2)
+    if((sscanf(dir[0], "l%*s "+file+" -> %s", f) == 2) && (f != "."))
     {
       if(search(f, "../") == 0)
 	f = "../" +f;
@@ -377,9 +377,10 @@ class Request {
     int i,maxlen,date_position;
 
     dir=((buffer/"\r")*"")/"\n";
-    if (sizeof(dir)<1)
-      return 0; /* nope */
-    while (dir[0]=="")
+    // This was commented out in a patch by Wilhelm Koehler.
+    // if (sizeof(dir)<1)
+    // 	 return 0; /* nope */
+    while (sizeof(dir) && (dir[0]==""))
       dir=dir[1..sizeof(dir)-1];
     if (sizeof(dir) && sscanf(dir[0],"total %*d")) 
       dir=dir[1..sizeof(dir)-1]; /* not first line */
