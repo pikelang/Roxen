@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.13 1998/05/05 15:12:10 marcus Exp $
+ * $Id: resolv.pike,v 1.14 1998/05/18 22:00:26 per Exp $
  */
 
 inherit "wizard";
@@ -93,8 +93,8 @@ void trace_leave_table(string desc)
 string page_0(object id)
 {
   string res = ("Virtual server <var type=select name=config options='"+
-		roxen->configurations->query_name()*","+"'>")+" Use tables <var type=toggle name=table>\n";
-  res += "<br>Path: <var name=path type=string>\n";
+		roxen->configurations->query_name()*","+"'>")+" Use tables <var type=toggle name=table> <nobr>Allow Cache <var type=toggle name=cache default=1></nobr>\n";
+  res += "<br>Path: <var name=path type=string> \n";
   res += "<table cellpadding=0 cellspacing=10 border=0>"
          "<tr><td align=left>User: <var name=user type=string size=12></td>\n"
          "<td align=left>&nbsp;&nbsp;&nbsp;Password: <var name=password type=password size=12>"
@@ -108,6 +108,11 @@ string page_0(object id)
 	break;
     
     object nid = id->clone_me();
+    if(!(int)id->variables->cache)
+      nid->pragma = (<"no-cache">);
+    else
+      nid->pragma = (<>);
+
     if((int)id->variables->table)
     {
       nid->misc->trace_enter = trace_enter_table;
