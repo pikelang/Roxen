@@ -798,3 +798,24 @@ yy</result>
 <rxml><cache nohash="1" key="a">hej</cache><cache nohash="1" key="a">hopp</cache></rxml>
 <result>hejhej</result>
 </test>
+
+<test>
+<rxml><random seed="foo">a
+b
+c</random></rxml>
+<result>b</result>
+</test>
+
+<test>
+<rxml><random seed="foo">a
+b
+c
+d
+e</random></rxml>
+<result>e</result>
+</test>
+
+<test>
+<rxml><random seed="foo" separator=",">a,b,c,d,e</random></rxml>
+<result>e</result>
+</test>
