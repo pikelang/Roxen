@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.37 1997/10/07 11:46:38 grubba Exp $
+# $Id: configure.in,v 1.38 1997/10/25 16:42:25 grubba Exp $
 #
 
 prefix=$PWD
@@ -400,15 +400,18 @@ if test -d zlib/.; then
 int foo = (int)(Z_NO_COMPRESSION | Z_VERSION_ERROR);
       ],[
         AC_MSG_RESULT(yes)
+	OLDLIBS="$LIBS"
 	if test x$pike_cv_sys_os = xIRIX ; then
 	  # The libz.so supplied with IRIX 6.3 needs this obscure symbol
           # C++?
           AC_CHECK_LIB(Csup, __vtbl__9type_info)
+          AC_CHECK_LIB(C, __vtbl__9type_info)
         fi
 	AC_CHECK_LIB(z, compress, [], [
           echo Using supplied zlib anyway.
           ac_cv_header_zlib_h=no
         ])
+	LIBS="$OLDLIBS"
       ],[
         AC_MSG_RESULT(no)
 	echo Using supplied zlib anyway.
