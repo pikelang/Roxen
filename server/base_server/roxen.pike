@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.637 2001/02/27 02:54:28 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.638 2001/02/27 03:13:37 mast Exp $";
 
 // Used when running threaded to find out which thread is the backend thread.
 Thread.Thread backend_thread;
@@ -810,19 +810,44 @@ function async_sig_start( function f, int really )
 static Queue bg_queue = Queue();
 static int bg_process_running;
 
+// Use a time buffer to strike a balance if the server is busy and
+// always have at least one busy thread: The maximum waiting time in
+// that case is somewhere between bg_time_buffer_min and
+// bg_time_buffer_max. If there are only short periods of time between
+// the queue runs, the max waiting time will shrink towards the
+// minimum.
+static constant bg_time_buffer_max = 30;
+static constant bg_time_buffer_min = 0.5;
+static int bg_last_busy = 0;
+
 static void bg_process_queue()
 {
   if (bg_process_running) return;
   // Relying on the interpreter lock here.
   bg_process_running = 1;
+
+  int maxbeats =
+    min (time() - bg_last_busy, bg_time_buffer_max) * (int) (1 / 0.04);
+
   if (mixed err = catch {
     while (array task = bg_queue->tryread()) {
-      // Don't run if something else is already running.
-      while (busy_threads > 1) sleep (0.02);
+      // Wait a while if another thread is busy already.
+      if (busy_threads > 1) {
+	for (maxbeats = max (maxbeats, (int) (bg_time_buffer_min / 0.04));
+	     busy_threads > 1 && maxbeats > 0;
+	     maxbeats--)
+	  // Pike implementation note: If 0.02 or smaller, we'll busy wait here.
+	  sleep (0.04);
+	bg_last_busy = time();
+      }
+
 #if 0
       werror ("background run %O (%{%O, %})\n", task[0], task[1] / 1);
 #endif
-      task[0] (@task[1]);
+      if (task[0])		// Ignore things that have become destructed.
+	task[0] (@task[1]);
+
+      if (busy_threads > 1) bg_last_busy = time();
     }
   }) {
     bg_process_running = 0;
@@ -837,7 +862,7 @@ void background_run (int|float delay, function func, mixed... args)
 //! Enqueue a task to run in the background in a way that makes as
 //! little impact as possible on the incoming requests. No matter how
 //! many tasks are queued to run in the background, only one is run at
-//! a time.
+//! a time. The tasks won't be starved, though.
 //!
 //! The function @[func] will be enqueued after approximately @[delay]
 //! seconds, to be called with the rest of the arguments as its
