@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.129 2001/02/11 12:49:43 mast Exp $
+//! $Id: module.pmod,v 1.130 2001/02/11 13:32:48 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -980,9 +980,7 @@ class Context
   //! it's used as the scope and the var string is only parsed for
   //! subindexes. If var cannot be split a default scope is chosen as
   //! appropriate. Returns an array where the first entry is the
-  //! scope, and the remaining entries are the list of indexes. Note
-  //! that the function must not be called with an empty string. The
-  //! function also assumes that var does not contain any newlines.
+  //! scope, and the remaining entries are the list of indexes.
   //!
   //! A ".." in the var string quotes a literal ".", e.g.
   //! "yow...cons..yet" is separated into "yow." and "cons.yet". Any
@@ -1006,11 +1004,16 @@ class Context
 #endif
 
     array(string|int) splitted;
-    if(has_value(var, ".."))
+    if(has_value(var, "..")) {
       // The \0 stuff is really here for a reason: The _only_ special
       // character is '.'.
-      splitted = map (replace (var, ({"..", "\0"}), ({"\0p", "\0\0"})) / ".",
-		      replace, ({"\0p", "\0\0"}), ({".", "\0"}));
+      string coded = replace (var, "\0", "\0\0");
+      if (coded != var)
+	splitted = map (replace (coded, "..", "\0p") / ".",
+			replace, ({"\0p", "\0\0"}), ({".", "\0"}));
+      else
+	splitted = map (replace (var, "..", "\0") / ".", replace, "\0", ".");
+    }
     else
       splitted = var / ".";
 
