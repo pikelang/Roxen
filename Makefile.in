@@ -48,13 +48,16 @@ verify: all verify_other
 verbose_verify: all verify_other
 	@(cd pike/$(PIKEVERSION)/src;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" verbose_verify)
 
-verify_other:
+verify_other: verify_extern
 	@if test "@MAKE_ZLIB@" = "zlib"; then \
 	  $(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" verify_zlib; \
 	fi
 	@if test "@MAKE_GMP@" = "gmp"; then \
 	  $(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" verify_gmp; \
 	fi
+
+verify_extern:
+	@(cd extern;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" verify)
 
 verify_zlib:
 	@(cd zlib;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" test)
@@ -116,7 +119,7 @@ install_only:
 	    if test -f $(prefix)/roxen/server/lib/pike/$$f; then \
 	      mv -f $(prefix)/roxen/server/lib/pike/$$f $(prefix)/roxen/server/lib/pike/$$f.old; \
 	    else :; fi; \
-	    if cp -f $(SRCDIR)/pike/$(PIKEVERSION)/lib/$$f $(prefix)/roxen/server/lib/pike/$$f; then :; else \
+	    if cp $(SRCDIR)/pike/$(PIKEVERSION)/lib/$$f $(prefix)/roxen/server/lib/pike/$$f; then :; else \
 	      echo "Failed to copy $$f"; \
 	      exit 1; \
 	    fi; \
@@ -127,7 +130,7 @@ install_only:
 	    if test -f $(prefix)/roxen/server/lib/pike/$$f; then \
 	      mv -f $(prefix)/roxen/server/lib/pike/$$f $(prefix)/roxen/server/lib/pike/$$f.old; \
 	    else :; fi; \
-	    if cp -f pike/$(PIKEVERSION)/src/lib/$$f $(prefix)/roxen/server/lib/pike/$$f; then :; else \
+	    if cp pike/$(PIKEVERSION)/src/lib/$$f $(prefix)/roxen/server/lib/pike/$$f; then :; else \
 	      echo "Failed to copy $$f"; \
 	      exit 1; \
 	    fi; \
