@@ -1,7 +1,7 @@
-<topmenu selected="home"/>
-
+<!-- $B$$$=(B2022 $B$K$[$s$4(B -->
+<topmenu selected="hype"/>
 <content>
-<cv-startpage>
+<charset in='iso-2022'>
 <br />
 <blockquote>
 <rul>
@@ -13,6 +13,82 @@
    </rli></eval>
 </define>
 
+<new-feature name="Built-in MySQL Database">
+<p>
+ Roxen WebServer now comes bundled with MySQL, and the internal
+ database is used for various things inside Roxen. Also, there is a
+ new <a href='dbs/'>database administration interface</a> available
+ inside the configuration interface.
+</p>
+<p>
+  Two new APIs are available to module programmers. For more
+  information, see the
+<a href='https://community.roxen.com/articles/014_db/'>Roxen Community article</a>
+</p>
+</new-feature>
+
+
+<new-feature name='New User-database and Authentication module API'>
+The user-database and authentication module API has been rewritten
+from scratch.
+
+<p>
+
+You can now have multiple user database and multiple authentication
+modules, and the modules only has to implement one of the two services.
+
+<p> Two example authentication modules are included, one that uses
+cookies and one that use the normal 'Basic' authentication system.
+
+<p> Two user database modules are currently available (unless you
+count the htaccess module), the system user database and the ldap user
+database. The system database uses getpwent on to access the normal system
+users.
+</new-feature>
+
+<new-feature name='Improved security patterns and htaccess support'>
+<p>
+The module level security patterns and the htaccess files now include
+many new options, and are compiled for quicker execution.
+</p>
+
+<i>Module level security</i>
+<p>
+New permission rules:
+<ul>
+<li>day=day1,[day2],...
+<li>time=time1-time2
+<li>dns=hostname
+<li>accept_language=language
+<li>luck=percent%
+</ul>
+<p>
+New commands:
+<ul>
+<li>userdb database-name
+<li>authmethod authmodule-name
+</ul>
+This relates to another newsitem: Totally rewritten authentication and
+user-database module interfaces.
+<p>
+<i>htaccess</i>
+<ul>
+
+<li>Accepts the same commands as the module level security, but with a
+slitghtly different pattern. If you would have typed 'allow
+accept_language=en' in the module level security patters, you would
+instead write 'require accept_language en' in a htaccess file. The
+reason is that the allow syntax is already used. For deny you simply
+skip the '=' character, i.e., 'deny luck 10%' instead of 'deny
+luck=10%'
+
+<li>The module now acts as a user-database, so you can use &lt;if
+user=username&gt; in your RXML pages (and, if you feel like it, your
+module level security patterns) with users and groups authenticated
+from the htaccess module.
+</ul>
+</new-feature>
+
 <new-feature name='Email module'>
  A module for creating and sending mails.<br />
 <ul>
@@ -23,9 +99,200 @@
 </ul>
 </new-feature>
 
-
 </rul>
 
+
+<pre>
+Quick (not yet finished) newsitems
+
+o  New option to the start script (unix only, always on on NT):
+   --strip-backslash, causes all \ in the URL to be transformed to
+   /. Useful for compatibility reasons on unix, quite nessesary for
+   security reasons on NT.
+
+o built-in testsuite (accessible via start --self-test)
+
+o A bit more internal-magic. /internal-roxen-pixel-foo generates a
+  pixel with the color foo.
+
+o Minimum bandwidth - new method to detect and dispose of hung clients.
+
+o Session support
+
+o Several caches less overambitious
+
+o Performance improvements in throttling support
+
+o -DAVERAGE_PROFILING, useful for profiling.
+  
+o API
+  o Roxen.http_try_again( delay )
+  o id->url_base()
+  o roxen.background_run / roxen.BackgroundProcess API
+  o id->real_variables vs. id->variables
+  o Currently totally unused plugin support for the arg-cache system.
+  o Roxen.compile_rxml Roxen.eval_p_code
+
+
+o Fonts
+  o CIF (Compact Image Font) programs in bin
+  o FreeType 2 support
+
+
+o Protocols 
+  o Hilfe protocol
+  o Removed gopher and fhttp
+  o HTTP protocol auto-encodes unicode to useable output charset. 
+    Includes recoding of unsupported characters to entities (as an
+    example, when a $B6b(B character is encoutered and the output charset
+    is iso-8859-1, or å and the output charset is iso-8859-9)
+  o Normal HTTP protocol module partly rewritten in C, fhttp dropped due
+    to lack of features.
+  o Protocol modules are found dynamically
+
+o New themes: 
+  o Square orange
+  o default (old default now known as '2.0 and 2.1 theme')
+
+o Modules
+  o robots.txt
+  o word_highlight
+  o writefile
+  o rövarspråkare
+  o whitespace_sucker
+  o session_tag
+  o sizer
+  o gxml
+  o tableborder
+  o implicit_use
+  o javascript_support
+  o Simple icecast server, with plugin-system for the datasources (playlists).
+
+o RXML
+  o Several optimizations
+
+  o RXML is compiled to PCode the first time it's run, then executed
+    from the PCode on subsequent accesses to the same file.
+
+  o The RXML parser can now handle any type of data in entities and as
+    return value/arguments to tags.
+
+  o Entities 
+    o &amp;roxen.path;
+    o &amp;roxen.unique-id;
+    o &amp;page.dir;
+    o &amp;scope.entity.index;
+
+  o Tags
+    o (quite a lot of) new features in emit
+    o &lt;emit values&gt;
+    o &lt;set ... &gt;value&gt;/set&gt; &lt;append ... &gt;value&gt;/append&gt;
+    o &lt;insert  &gt;
+    o vinput fixes
+    o &lt;debug werror&gt;
+    o expr evaluation more powerful
+
+o Config IF
+  o 'content boxes' in the config interface (first page)
+    See config_interface/boxes
+    New boxes cheerfully accepted.
+  o Added memory to the toplevel tabs in the configuration interface
+    (you return to the page you visited the last time, just like in
+     older Roxen versions, click again to go to toplevel)
+  o Config IF now works with Mozilla
+  o Ports tab merged into the site tabs, the old ports tab is available
+    under the globals tab.
+
+o FTP
+  o Implemented RFC 2428 (EPRT & EPSV).
+  o MLSD bugfix
+
+o Image modules
+  o Rather ungessable URLs to the images
+  o User ID is now saved for the images, no user can get an image
+    rendered for another user. This does cause some double-cacheing,
+    and will probably be reworked in the future so that double entries
+    are not saved.
+  o include-layers exclude-layers(sp?) in cimg
+  o Added span-width and span-height attributes to the image cache.
+  o New arguments for the image-cache: crop=guides-cross
+    guides-index=x,y: Crop _around_ the point specified by the
+    intersection of the two guides. Useful with max-width=.. and
+    max-height=..., primary for thumbnail generation.
+
+    crop=guides-region [guides-index=x1,y1[-x2,y2]]  Crop to the
+    specified region before doing any scales. Also useful with
+    max-width=... and max-height=... for thumbnail generation. If
+    guides-index is x1,y1, the guides x1,y1 and x1+1,y1+1 will be
+    used, counting from the left and the top, respectively.  If both
+    the ending and starting indexes (x2,y2) are specified, thoose
+    guides will be used.
+
+o Java
+  o Java patches by Tom Palmer applied.
+      Added cookies, prestates and time to the request object.
+      Added cache() method.
+      Allow module loading from paths beginning with ../
+      Provider module fix.
+
+o NT
+  o New service
+
+ 
+</pre>
+
+<pre>
+Pike Changes
+ o Improved optimizer
+ o Various changes in the garbage collector
+ o The Crypto module is always included (this includes SSL)
+ o SSL client support
+ o 
+ o constructor/destructor/operator overloading functions in classes can be
+   private or static.
+ o New refdoc system (inlined documentation in the source-files)
+   Also used in Roxen.
+ o No arbitrary limits on the number of open files (other than the
+   ones the operating system impose), in previous version 65k files
+   was the max if pike was not compiled with --max-fd=...
+ o 
+ o Added implicit create. If your create function only sets a number of global
+   variables to the value of it's arguments, you can use this
+   construct instead:
+
+   class Foo(string a,static int b,int|void c)
+   {
+     // ... other code ...
+   }
+
+ o Implicit lambda syntax:
+   function( arguments ) { block };
+
+   The function will be called with an extra argument (the block as a
+   lambda function) as it's argument.
+
+   As an example, you can write:
+
+   thread_create() {
+     while( 1 ) { write("I am a thread\n"); sleep( 1 ); }
+   };
+
+
+New modules:
+  o Cache
+  o Calendar (old Calendar now known as Calendar_I)
+  o Unicode
+    Supports normalization, character identification and wordsplitting.
+    Currently everything except the normalization is less-than-generic.
+
+New charsets:
+  o iso-8859-* updated
+  o 
+
+</pre>
+
 </blockquote><br />
-</cv-startpage>
+</charset>
 </content>
+
+
