@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.121 1998/07/19 18:02:26 per Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.122 1998/07/21 15:28:25 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -2719,6 +2719,22 @@ string tag_sort(string t, mapping m, string c, object id)
   return pre + sort(lines)*m->separator + post;
 }
 
+string tag_strlen(string t, mapping m, string c, object id)
+{
+  return (string)strlen(c);
+}
+
+string tag_case(string t, mapping m, string c, object id)
+{
+  if(m->lower)
+    c = lower_case(c);
+  if(m->upper)
+    c = upper_case(c);
+  if(m->capitalize)
+    c = capitalize(c);
+  return c;
+}
+
 mapping query_container_callers()
 {
   return (["comment":lambda(){ return ""; },
@@ -2726,6 +2742,7 @@ mapping query_container_callers()
 		  { return tag_set("set",m+([ "value":html_decode_string(c) ]),
 			    id); },
 	   "source":tag_source,
+	   "case":tag_case,
 	   "noparse":tag_noparse,
 	   "nooutput":tag_nooutput,
 	   "sort":tag_sort,
@@ -2740,6 +2757,7 @@ mapping query_container_callers()
 	   "elseif":tag_elseif,
 	   "else":tag_else,
 	   "gauge":tag_gauge,
+	   "strlen":tag_strlen,
 	   "allow":tag_if,
 	   "prestate":tag_prestate,
 	   "apre":tag_aprestate,
