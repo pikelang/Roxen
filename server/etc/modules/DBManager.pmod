@@ -1,10 +1,19 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.19 2001/08/09 14:08:48 per Exp $
+// $Id: DBManager.pmod,v 1.20 2001/08/09 15:02:47 per Exp $
 //! @module DBManager
 //! Manages database aliases and permissions
 #include <roxen.h>
 #include <config.h>
+
+
+
+// Not private since we use this variable for debugging purposes
+#ifdef THREADS
+mapping(object:mapping(string:Sql.Sql)) sql_cache = ([]);
+#else
+mapping(string:Sql.Sql) sql_cache = ([]);
+#endif
 
 constant NONE  = 0;
 //! No permissions. Used in @[set_permission] and @[get_permission_map]
@@ -18,25 +27,10 @@ constant WRITE = 2;
 
 private
 {
-  Sql.Sql db = connect_to_my_mysql( 0, "roxen" );
-#ifdef THREADS
-  Thread.Mutex lock = Thread.Mutex();
- 
-  mixed db_query( mixed ... args )
+  mixed query( mixed ... args )
   {
-    object key = lock->lock();
-    mixed res= db->query( @args );
-    key = 0;
-    return res;
+    return connect_to_my_mysql( 0, "roxen" )->query( @args );
   }
-
-#else
-  mixed db_query( mixed ... args )
-  {
-    return db->query( @args );
-  }
-#endif
-  function query = db_query;
 
   string short( string n )
   {
@@ -71,8 +65,6 @@ private
     connection_cache_size = 0;
 #endif
     clear_connect_to_my_mysql_cache();
-    gc( );
-    db = connect_to_my_mysql( 0, "roxen" );
     gc( );
   }
   
@@ -182,12 +174,15 @@ private
       return `[](i);
     }
   }
+
   Sql.Sql low_get( string user, string db )
   {
     array(mapping(string:mixed)) d =
                 query("SELECT path,local FROM dbs WHERE name=%s", db );
+
     if( !sizeof( d ) )
       return 0;
+
     if( (int)d[0]["local"] )
       return connect_to_my_mysql( user, db );
 
@@ -199,14 +194,10 @@ private
       // has, but they are hidden behind an overloaded index operator.
       // Thus, we have to fool the typechecker.
       return [object(Sql.Sql)](object)ROWrapper( sql_cache_get( d[0]->path ) );
+
     return sql_cache_get( d[0]->path );
   }
 
-#ifdef THREADS
-  mapping(Thread.Thread:mapping(string:Sql.Sql)) sql_cache = ([]);
-#else
-  mapping(string:Sql.Sql) sql_cache = ([]);
-#endif
 };
 
 
@@ -219,17 +210,18 @@ private
 // Bad luck. :-)
 #ifdef THREADS
 static int sql_cache_size = 0;
+
 Sql.Sql sql_cache_get(string what)
 {
   mapping m = sql_cache[ this_thread() ] || ([]);
-  if(m[ what ] )
+  if( m[ what ] )
     return m[ what ];
-  if( sql_cache_size > 80 )
+  sql_cache_size++;
+  if( sql_cache_size > 30 )
   {
     clear_sql_caches();
     sql_cache[ this_thread() ] = m = ([]);
   }
-  sql_cache_size++;
   m[ what ] =  Sql.Sql( what );
   sql_cache[ this_thread() ] = m;    
   return m[ what ]; 
@@ -425,15 +417,14 @@ Sql.Sql cached_get( string name, void|Configuration c, void|int ro )
 {
   string key = name+"|"+(c&&c->name)+"|"+ro;
 
-  if( connection_cache_size > 20 )
-    connection_cache = ([]);
-
   mapping cm = connection_cache[ this_thread() ] || ([]);
 
   Sql.Sql res;
 
   if( res = cm[key] )
+  {
     return res;
+  }
 
   res = get( name, c, ro );
 
@@ -450,9 +441,8 @@ static mapping connection_cache  = ([]);
 Sql.Sql cached_get( string name, void|Configuration c, void|int ro )
 {
   string key = name+"|"+(c&&c->name)+"|"+ro;
-  if( sizeof( connection_cache ) > 40 )
-    clear_sql_caches();
-  return connection_cache[key] || (connection_cache[key]=get( name, c, ro ));
+  mixed res = connection_cache[key]||(connection_cache[key]=get( name, c, ro ));
+  return res;
 }
 #endif
 

@@ -26,7 +26,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.270 2001/08/09 14:08:11 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.271 2001/08/09 15:02:46 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -56,6 +56,31 @@ mapping uname()
 }
 #endif
 #endif
+
+mapping(object:string) used = ([]);
+class MyMysql( Sql.Sql real, string name )
+{
+  mixed `[]( string what )
+  {
+    return `->(what);
+  }
+
+  mixed `->(string what )
+  {
+    if( used[real] != name )
+    {
+      real->query( "use "+name );
+      used[real] = name;
+    }
+    return real[what];
+  }
+
+  string _sprintf( mixed ... x )
+  {
+    return real->_sprintf( @x );
+  }
+}
+
 
 mapping(int:string) pwn=([]);
 string pw_name(int uid)
@@ -1139,7 +1164,7 @@ void clear_connect_to_my_mysql_cache( )
 }
 
 
-Sql.Sql connect_to_my_mysql( string|int ro, void|string db )
+mixed connect_to_my_mysql( string|int ro, void|string db )
 {
   object res;
   mapping m = my_mysql_cache;
@@ -1155,17 +1180,19 @@ Sql.Sql connect_to_my_mysql( string|int ro, void|string db )
       m = m[ t ];
   }
 #endif
-  string i = db +":"+ (intp(ro)?(ro&&"ro")||"rw":ro);
+  string i = "<all local>:"+ (intp(ro)?(ro&&"ro")||"rw":ro);
   if( res = m[ i ] )
     if( mixed err = catch
-    { // catch in case of lost connection.
+    { 
+      // catch in case of lost connection.
       res->query("USE "+ db );
-      return res;
+      used[res] = db;
+      return MyMysql( res, db );
     } )
 #ifdef MYSQL_CONNECT_DEBUG
       werror ("Couldn't connect to mysql as %s: %s", ro, describe_backtrace (err));
 #else
-      ;
+      my_mysql_num_connections--;
 #endif
   
   if( mixed err = catch
@@ -1178,7 +1205,7 @@ Sql.Sql connect_to_my_mysql( string|int ro, void|string db )
     if( my_mysql_num_connections++ > 40 )
       clear_connect_to_my_mysql_cache();
     res->query( "USE "+ db );
-    return m[ i ] = res;
+    return MyMysql( m[ i ] = res, db );
   } )
     if( db == "mysql" )
       throw( err );

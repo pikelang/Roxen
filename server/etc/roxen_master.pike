@@ -4,16 +4,14 @@ object sql;
 
 mixed sql_query( string q, mixed ... e )
 {
-  if(!sql )
-    sql = connect_to_my_mysql( 0, "local" );
-  return sql->query( q, @e );
+  return connect_to_my_mysql( 0, "local" )->query( q, @e );
 }
 
 /*
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.115 2001/08/09 14:07:59 per Exp $";
+constant cvs_version = "$Id: roxen_master.pike,v 1.116 2001/08/09 15:02:47 per Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
