@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.34 2004/05/25 17:49:47 mast Exp $
+ * $Id: debug_info.pike,v 1.35 2004/09/20 16:28:41 mast Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -79,7 +79,7 @@ mixed page_0( object id )
   int gc_freed = id->real_variables->do_gc && gc();
 
   mapping(string:int) mem_usage = _memory_usage();
-  int this_found = 0, walked_objects = 0;
+  int this_found = 0, walked_objects = 0, destructed_objs = 0;
   object obj = next_object();
   // next_object skips over destructed objects, so back up over them.
   while (zero_type (_prev (obj))) obj = _prev (obj);
@@ -90,9 +90,14 @@ mixed page_0( object id )
     if (catch (next_obj = _next (obj))) break;
     string|program p = object_program (obj);
     if (p == this_program && obj == this_object()) this_found = 1;
-    p = p ? functionp (p) && Function.defined (p) ||
-      programp (p) && Program.defined (p) || p : "    ";
-    if (++numobjs[p] <= 50) allobj[p] += ({obj});
+    if (p) {
+      p = functionp (p) && Function.defined (p) ||
+	programp (p) && Program.defined (p) ||
+	p;
+      if (++numobjs[p] <= 50) allobj[p] += ({obj});
+    }
+    else
+      destructed_objs++;
     walked_objects++;
     obj = next_obj;
   }
@@ -209,10 +214,16 @@ mixed page_0( object id )
   int no_save_numobjs = !save_numobjs;
   if (no_save_numobjs) save_numobjs = ([]);
 
-  foreach (values (allobj), array objs)
+  foreach (allobj; string|program prog; array objs)
     for (int i = 0; i < sizeof (objs); i++)
-      objs[i] = zero_type (objs[i]) ?
-	"<destructed object>" : sprintf ("%O", objs[i]);
+      // The object might have become destructed since the walk above.
+      // Just ignore it in that case.
+      objs[i] = !zero_type (objs[i]) && sprintf ("%O", objs[i]);
+
+  if (destructed_objs) {
+    allobj["    "] = ({"<destructed object>"});
+    numobjs["    "] = destructed_objs;
+  }
 
   table = (array) allobj;
 
@@ -223,6 +234,7 @@ mixed page_0( object id )
 
   for (int i = 0; i < sizeof (table); i++) {
     [string|program prog, array(string) objs] = table[i];
+    objs -= ({0});
 
     string objstr = String.common_prefix (objs)[..30];
     if (!(<"", "object">)[objstr]) {
@@ -246,7 +258,7 @@ mixed page_0( object id )
 	else
 	  progstr = prog;
       }
-      else progstr = "";
+      else progstr = "?";
 
       string color;
       if (no_save_numobjs) {
@@ -265,8 +277,8 @@ mixed page_0( object id )
   }
 
   // Add decrement entries for the objects that have disappeared completely.
-  foreach (indices (save_numobjs - allobj), string|program prog) {
-    if (save_numobjs[prog][0] > 2) {
+  foreach (save_numobjs - allobj; string|program prog; array entry) {
+    if (entry[0] > 2) {
       string progstr;
       if (stringp (prog)) {
 	if (has_prefix (prog, cwd))
@@ -275,10 +287,9 @@ mixed page_0( object id )
 	  progstr = prog;
       }
       else progstr = "";
-      table +=
-	({({dec_color, progstr, save_numobjs[prog][1], 0, -save_numobjs[prog][0]})});
+      table += ({({dec_color, progstr, entry[1], 0, -entry[0]})});
     }
-    save_numobjs[prog][0] = 0;
+    entry[0] = 0;
   }
 
   table = Array.sort_array (table - ({0}),
