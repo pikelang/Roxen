@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-string cvs_version = "$Id: http.pike,v 1.25 1997/04/26 03:38:42 per Exp $";
+string cvs_version = "$Id: http.pike,v 1.26 1997/05/15 23:30:45 neotron Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -15,7 +15,6 @@ constant _query=roxen->query;
 //constant This = object_program(this_object());
 import Simulate;
 
-#define SPEED_MAX
 
 function _time=time;
 private static array(string) cache;
@@ -30,6 +29,7 @@ int kept_alive;
 
 #include <roxen.h>
 #include <module.h>
+#undef SPEED_MAX
 
 #undef QUERY
 #define QUERY(X) _query("X")
@@ -73,6 +73,12 @@ array (int|string) auth;
 string rawauth, realauth;
 string since;
 
+
+#if _DEBUG_HTTP_OBJECTS
+int my_id;
+int my_state;
+#endif
+
 // Parse a HTTP/1.1 HTTP/1.0 or 0.9 request, including form data and
 // state variables.  Return 0 if more is expected, 1 if done, and -1
 // if fatal error.
@@ -81,6 +87,9 @@ void end(string|void);
 
 private void setup_pipe(int noend)
 {
+#if _DEBUG_HTTP_OBJECTS
+  my_state = 6;
+#endif
   if(!my_fd) return end();
   if(!pipe)  pipe=Pipe.pipe();
 //  if(!noend) pipe->set_done_callback(end);
@@ -92,6 +101,9 @@ private void setup_pipe(int noend)
 
 void send(string|object what, int|void noend)
 {
+#if _DEBUG_HTTP_OBJECTS
+  my_state = 7;
+#endif
   if(!what) return;
   if(!pipe) setup_pipe(noend);
 
@@ -104,6 +116,9 @@ void send(string|object what, int|void noend)
 
 string scan_for_query( string f )
 {
+#if _DEBUG_HTTP_OBJECTS
+  my_state = 8;
+#endif
   if(sscanf(f,"%s?%s", f, query) == 2)
   {
     string v, a, b;
@@ -134,7 +149,9 @@ private int really_set_config(array mod_config)
   string url, m;
   string base;
   base = conf->query("MyWorldLocation")||"/";
-
+#if _DEBUG_HTTP_OBJECTS
+  my_state = 8;
+#endif
   if(supports->cookies)
   {
 #ifdef REQUEST_DEBUG
@@ -185,12 +202,16 @@ private int really_set_config(array mod_config)
 
 private int parse_got(string s)
 {
+#if _DEBUG_HTTP_OBJECTS
+  my_state = 9;
+#endif
   multiset (string) sup;
   array mod_config;
   mixed f, line;
   string a, b, linename, contents, real_raw;
   int config_in_url;
   
+//  roxen->httpobjects[my_id] = "Parsed data...";
   real_raw = s;
   s -= "\r"; // I just hate all thoose CR LF.
   
@@ -280,12 +301,17 @@ private int parse_got(string s)
 	      int l = (int)(contents-" ")-1; /* Length - 1 */
 	      wanted_data=l;
 	      have_data=strlen(data);
-	      if(strlen(data) <= l) // \r are included.
+
+	      if(strlen(data) <= l) // \r are included. 
+	      {
+#if _DEBUG_HTTP_OBJECTS
+		roxen->httpobjects[my_id] = "Parsed data - short post...";
+#endif
 		return 0;
+	      }
 	      data = data[..l];
 	      switch(lower_case(((misc["content-type"]||"")/";")[0]-" "))
-	      {
-	       default: // Normal form data.
+	      {	       default: // Normal form data.
 		string v;
 		if(l < 200000)
 		{
@@ -504,9 +530,17 @@ private int parse_got(string s)
     }
     raw = tmp2 * "\n"; 
   }
-  if(config_in_url)
-    return really_set_config( mod_config );
 
+#if _DEBUG_HTTP_OBJECTS
+  my_state = 10;
+  roxen->httpobjects[my_id] = sprintf("%O  -  %O", raw_url, remoteaddr);
+#endif
+  if(config_in_url) {
+#if _DEBUG_HTTP_OBJECTS
+    roxen->httpobjects[my_id] = "Configuration request?...";
+#endif
+    return really_set_config( mod_config );
+  }
   if(!supports->cookies)
     config = prestate;
   else
@@ -532,19 +566,29 @@ private int parse_got(string s)
 
 void disconnect()
 {
-  if(do_not_disconnect)
-  {
-#ifdef REQUEST_DEBUG
-  perror("REQUEST: Not disconnecting...\n");
+#if _DEBUG_HTTP_OBJECTS
+  my_state = 2;
 #endif
-  return;
-  } 
+  array err = catch {
+    if(do_not_disconnect)
+    {
 #ifdef REQUEST_DEBUG
-  perror("REQUEST: Disconnecting...\n");
+      perror("REQUEST: Not disconnecting...\n");
 #endif
-  if(mappingp(file) && objectp(file->file))   
-    destruct(file->file);
-  my_fd = 0;
+      return;
+    } 
+#ifdef REQUEST_DEBUG
+    perror("REQUEST: Disconnecting...\n");
+#endif
+    if(mappingp(file) && objectp(file->file))   
+      destruct(file->file);
+#if _DEBUG_HTTP_OBJECTS
+    roxen->httpobjects[my_id] += " - disconnect";  
+#endif
+    my_fd = 0;
+  };
+  if(err)
+    roxen_perror("END: %O\n", describe_backtrace(err));
   destruct();
 }
 
@@ -557,23 +601,40 @@ void no_more_keep_connection_alive(mapping foo)
 
 void end(string|void s)
 {
+#if _DEBUG_HTTP_OBJECTS
+  my_state = 1;
+#endif
+  array err = catch {
 #ifdef REQUEST_DEBUG
-  perror("REQUEST: End...\n");
+    perror("REQUEST: End...\n");
 #endif
 #ifdef KEEP_CONNECTION_ALIVE
-  remove_call_out(no_more_keep_connection_alive);
+    remove_call_out(no_more_keep_connection_alive);
 #endif
-  if(objectp(my_fd))
-  {
-    if(s) my_fd->write(s);
-    destruct(my_fd);
-  }
-  disconnect();
+#if _DEBUG_HTTP_OBJECTS
+    roxen->httpobjects[my_id] += " - end";  
+#endif
+    if(objectp(my_fd))
+    {
+      if(s) my_fd->write(s);
+      destruct(my_fd);
+    }
+  };
+  if(err)
+    roxen_perror("END: %O\n", describe_backtrace(err));
+  disconnect();  
 }
 
-static void timeout(mapping foo)
+static void do_timeout(mapping foo)
 {
-  end(prot+" 408 Timeout\n");
+#if _DEBUG_HTTP_OBJECTS
+  my_state = 10;
+#endif
+  //  perror("Timeout. Closing down...\n");
+#if _DEBUG_HTTP_OBJECTS
+  roxen->httpobjects[my_id] += " - timed out";  
+#endif
+  end((prot||"HTTP/1.0")+" 408 Timeout\n");
 }
 
 
@@ -649,6 +710,9 @@ constant errors =
 
 void handle_request( )
 {
+#if _DEBUG_HTTP_OBJECTS
+  my_state = 15;
+#endif
   mixed *err;
   int tmp;
 #ifdef KEEP_CONNECTION_ALIVE
@@ -660,7 +724,12 @@ void handle_request( )
   object thiso=this_object();
 
 #ifndef SPEED_MAX
-  remove_call_out(timeout);
+//  perror("Removing timeout call_out...\n");
+#if _DEBUG_HTTP_OBJECTS
+  roxen->httpobjects[my_id] += " - handled";
+#endif
+  remove_call_out(do_timeout);
+  remove_call_out(do_timeout);
 #endif
 
   my_fd->set_read_callback(0);
@@ -881,9 +950,20 @@ void handle_request( )
 void got_data(mixed fooid, string s)
 {
   int tmp;
+#if _DEBUG_HTTP_OBJECTS
+  my_state = 3;
+#endif
 //  perror("Got data.\n");
 #ifndef SPEED_MAX
-  remove_call_out(timeout);
+//  perror("Removing timeout call_out...\n");
+#if _DEBUG_HTTP_OBJECTS
+  roxen->httpobjects[my_id] = ("Got data - "+remoteaddr +" - "+ctime(_time())) - "\n";
+#endif
+  remove_call_out(do_timeout);
+  remove_call_out(do_timeout);
+  call_out(do_timeout, 60); // Close down if we don't get more data 
+                         // within 30 seconds. Should be more than enough.
+  call_out(do_timeout, 70);// There seems to be a bug where call_outs go missing...
 #endif
   if(wanted_data)
   {
@@ -919,6 +999,9 @@ void got_data(mixed fooid, string s)
     end();
     return;
   }
+#if _DEBUG_HTTP_OBJECTS
+  roxen->httpobjects[my_id] += " - finished getting data.";
+#endif
   if(conf)
   {
     conf->received += strlen(s);
@@ -937,6 +1020,9 @@ void got_data(mixed fooid, string s)
 object clone_me()
 {
   object c,t;
+#if _DEBUG_HTTP_OBJECTS
+  my_state = 4;
+#endif
   c=object_program(t=this_object())();
 
   c->first = first;
@@ -980,28 +1066,62 @@ object clone_me()
   c->realauth = realauth;
   c->rawauth = rawauth;
   c->since = since;
-
+#if _DEBUG_HTTP_OBJECTS
+  if(!c->my_id)
+    c->my_id = roxen->new_id();  
+  roxen->httpobjects[c->my_id] = roxen->httpobjects[my_id] + " - clone";
+  roxen->httpobjects[my_id] += " - CLONED";
+#endif
   return c;
 }
 
 void clean()
 {
+#if _DEBUG_HTTP_OBJECTS
+  my_state = 4;
+#endif
   if(!(my_fd && objectp(my_fd))) end();
   else if((_time(1) - time) > 4800) end();
 }
 
+#if _DEBUG_HTTP_OBJECTS
+void destroy()
+{
+  roxen->httpobjects->num--;
+  m_delete(roxen->httpobjects, my_id);
+} 
+#endif
+
 void create(object f, object c)
 {
+  
+#if _DEBUG_HTTP_OBJECTS
+  my_state = 5;
+  roxen->httpobjects->num++;
+#endif
   if(f)
   {
+#if _DEBUG_HTTP_OBJECTS
+    if(!my_id)
+      my_id = roxen->new_id();  
+#endif
     my_fd = f;
     my_fd->set_read_callback(got_data);
     my_fd->set_close_callback(end);
+#if _DEBUG_HTTP_OBJECTS
+    catch(remoteaddr = ((my_fd->query_address()||"")/" ")[0]);
+    roxen->httpobjects[my_id] = ("Created - "+
+				 remoteaddr +" - "+ctime(_time())) - "\n" ;
+#endif
     conf = c;
     mark_fd(my_fd->query_fd(), "HTTP connection");
     
 #ifndef SPEED_MAX
-    call_out(timeout, 60);
+    // No need to wait more than 30 seconds to get more data.
+    call_out(do_timeout, 60);
+    call_out(do_timeout, 70);
+    // There seems to be a bug where call_outs go missing...
 #endif
   }
 }
+
