@@ -3,7 +3,7 @@
 //
 // The Roxen RXML Parser. See also the RXML Pike modules.
 //
-// $Id: rxml.pike,v 1.323 2002/01/29 21:43:39 mast Exp $
+// $Id: rxml.pike,v 1.324 2002/01/30 00:16:24 mast Exp $
 
 
 inherit "rxmlhelp";
@@ -101,7 +101,7 @@ RXML.TagSet rxml_tag_set = class
 
     misc[" _ok"] = misc[" _prev_ok"] = 1;
     misc[" _error"] = 200;
-    ctx->add_scope ("headers", misc[" _extra_heads"] = ([ ]));
+    ctx->add_scope ("header", misc[" _extra_heads"] = ([ ]));
     if(id->misc->stat) misc[" _stat"] = id->misc->stat;
   }
 
@@ -110,7 +110,7 @@ RXML.TagSet rxml_tag_set = class
     RequestID id = ctx->id;
     mapping misc = ctx->misc;
 
-    mapping extra_heads = ctx->get_scope ("headers");
+    mapping extra_heads = ctx->get_scope ("header");
 #ifdef DEBUG
     if (extra_heads != misc[" _extra_heads"])
       // Someone has probably replaced either of these mappings, which
@@ -119,9 +119,10 @@ RXML.TagSet rxml_tag_set = class
       // id->misc->defines[" _extra_heads"]. Therefore we
       // intentionally propagate the scope mapping here, so that the
       // error is more likely to be discovered.
-      report_warning ("Warning: The \"headers\" scope and "
-		      "RXML_CONTEXT->misc[\" _extra_heads\"] "
-		      "isn't the same mapping.\n");
+      report_warning ("Warning: The \"header\" scope %O and "
+		      "RXML_CONTEXT->misc[\" _extra_heads\"] %O "
+		      "isn't the same mapping.\n",
+		      extra_heads, misc[" _extra_heads"]);
 #endif
     if(sizeof(extra_heads))
       if (id->misc->moreheads)
@@ -198,7 +199,7 @@ string parse_rxml(string what, RequestID id,
     if (!defines[" _error"])
       defines[" _error"] = 200;
     if (!defines[" _extra_heads"])
-      ctx->add_scope ("headers", defines[" _extra_heads"] = ([ ]));
+      ctx->add_scope ("header", defines[" _extra_heads"] = ([ ]));
     if (!defines[" _stat"] && id->misc->stat)
       defines[" _stat"] = id->misc->stat;
   }
