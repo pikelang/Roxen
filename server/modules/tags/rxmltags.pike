@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.442 2004/01/30 17:40:25 anders Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.443 2004/02/03 15:53:41 anders Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -6975,6 +6975,8 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
 "modified":#"<desc type='tag'><p><short hide='hide'>
  Prints when or by whom a page was last modified.</short> Prints when
  or by whom a page was last modified, by default the current page.
+ In addition to the attributes below, it also handles the same
+ attributes as <xref href='date.tag'/> for formating date output.
 </p></desc>
 
 <attr name='by'>
