@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.247 1998/10/15 20:22:11 grubba Exp $
+ * $Id: roxen.pike,v 1.248 1998/10/15 21:36:23 grubba Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -8,7 +8,7 @@
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.247 1998/10/15 20:22:11 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.248 1998/10/15 21:36:23 grubba Exp $";
 
 
 // Some headerfiles
@@ -58,7 +58,7 @@ int new_id(){ return idcount++; }
 int startpid, roxenpid;
 
 // Locale support
-object(Locale.Roxen.standard) default_locale = Locale.Roxen.svenska; //standard;
+object(Locale.Roxen.standard) default_locale = Locale.Roxen.standard;
 #ifdef THREADS
 object locale = thread_local();
 #else
