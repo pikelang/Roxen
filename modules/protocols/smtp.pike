@@ -1,16 +1,15 @@
 /*
- * $Id: smtp.pike,v 1.59 1998/09/21 16:09:07 grubba Exp $
+ * $Id: smtp.pike,v 1.60 1998/09/21 21:36:03 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.59 1998/09/21 16:09:07 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.60 1998/09/21 21:36:03 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
-#include <syslog.h>
 
 inherit "module";
 
@@ -376,7 +375,18 @@ static class Smtp_Connection {
 
   void smtp_EXPN(string mail, string args)
   {
+    // Fake request id for logging purposes.
+    mapping id = ([
+      "method":"EXPN",
+      "prot":prot,
+      "remoteaddr":remoteip,
+      "time":time(),
+      "cookies":([]),
+      "not_query":args,
+    ]);
+
     if (!sizeof(args)) {
+      conf->log(([ "error":400 ]), id);
       send(501, "Expected argument");
       return;
     }
@@ -434,6 +444,8 @@ static class Smtp_Connection {
 	  }
 	}
 	if (!handled) {
+	  id->not_query = addr;
+	  conf->log(([ "error":404 ]), id);
 	  send(550, ({ sprintf("<%s>... Unhandled recipient.", addr) }));
 	  return;
 	}
@@ -448,6 +460,8 @@ static class Smtp_Connection {
 	}
       }
     }
+
+    conf->log(([ "error":200 ]), id);
 
     send(250, sort(result));
   }
@@ -485,9 +499,20 @@ static class Smtp_Connection {
     }
   }
 
-  void smtp_VRFY(string mail, string args)
+  void smtp_VRFY(string vrfy, string args)
   {
+    // Fake request id for logging purposes.
+    mapping id = ([
+      "method":"VRFY",
+      "prot":prot,
+      "remoteaddr":remoteip,
+      "time":time(),
+      "cookies":([]),
+      "not_query":args,
+    ]);
+
     if (!sizeof(args)) {
+      conf->log(([ "error":400 ]), id);
       send(501, "Expected argument");
       return;
     }
@@ -556,6 +581,8 @@ static class Smtp_Connection {
 	    }
 	  }
 	  if (!s) {
+	    id->not_query = a[i];
+	    conf->log(([ "error":404 ]), id);
 	    send(550, sprintf("%s... User unknown", a[i]));
 	    return;
 	  }
@@ -567,6 +594,8 @@ static class Smtp_Connection {
 	a[i] = "<" + a[i] + ">";
       }
     }
+
+    conf->log(([ "error":200 ]), id);
 
     send(250, sort(a));
   }
@@ -583,11 +612,34 @@ static class Smtp_Connection {
   void smtp_RSET(string rset, string args)
   {
     do_RSET();
+
+    // Fake request id for logging purposes.
+    mapping id = ([
+      "method":"RSET",
+      "prot":prot,
+      "remoteaddr":remoteip,
+      "time":time(),
+      "cookies":([]),
+      "not_query":args,
+    ]);
+
+    conf->log(([ "error":200 ]), id);
+
     send(250, "Reset ok.");
   }
 
   void smtp_MAIL(string mail, string args)
   {
+    // Fake request id for logging purposes.
+    mapping id = ([
+      "method":"MAIL",
+      "prot":prot,
+      "remoteaddr":remoteip,
+      "time":time(),
+      "cookies":([]),
+      "not_query":args,
+    ]);
+
     do_RSET();
     
     current_mail = Mail();
@@ -596,6 +648,7 @@ static class Smtp_Connection {
 
     int i = search(args, ":");
     if (i < 0) {
+      conf->log(([ "error":400 ]), id);
       send(501);
       do_RSET();
       return;
@@ -604,6 +657,7 @@ static class Smtp_Connection {
     string from_colon = args[..i];
     sscanf("%*[ ]%s", from_colon, from_colon);
     if (upper_case(from_colon) != "FROM:") {
+      conf->log(([ "error":400 ]), id);
       send(501);
       do_RSET();
       return;
@@ -616,6 +670,7 @@ static class Smtp_Connection {
       if (connection_class > 0) {
 	connection_class = 0;
       }
+      conf->log(([ "error":202 ]), id);
       send(250, ({ "Message accepted for local delivery." }));
       return;
     }
@@ -624,6 +679,7 @@ static class Smtp_Connection {
     // We will examine it later.
 
     current_mail->set_from(@do_parse_address(a[0]));
+    id->not_query = current_mail->from;
 	    
     // Check size limits.
 
@@ -633,12 +689,18 @@ static class Smtp_Connection {
     mapping fss = filesystem_stat(parent->query_spooldir());
 
     if (!fss) {
+      id->method = "SPOOL";
+      id->not_query = parent->query_spooldir();
+      conf->log(([ "error":500 ]), id);
       send(452, "Spooldirectory not available. Try later.");
       do_RSET();
       return;
     }
 
     if (!zero_type(fss->favail) && (fss->favail < 10)) {
+      id->method = "SPOOL";
+      id->not_query = parent->query_spooldir();
+      conf->log(([ "error":404 ]), id);
       send(452, "Out of inodes. Try later.");
       do_RSET();
       return;
@@ -713,6 +775,7 @@ static class Smtp_Connection {
 	    int sz = (int)extensions->SIZE;
 		  
 	    if (sz > limit) {
+	      conf->log(([ "error":403 ]), id);
 	      if (hard) {
 		send(552, sprintf("Size %d exceeds hard limit %d.\n",
 				  sz, limit));
@@ -751,6 +814,7 @@ static class Smtp_Connection {
 #ifdef SMTP_DEBUG
 	report_notice(sprintf("Sender %O refused.\n", current_mail->from));
 #endif /* SMTP_DEBUG */
+	conf->log(([ "error":401 ]), id);
 	do_RSET();
 	send(550);
 	return;
@@ -764,22 +828,35 @@ static class Smtp_Connection {
 			       return(o->async_verify_sender);
 			     }) - ({ 0 }),
 		   ({ current_mail->from }),
-		   lambda(array res) {
+		   lambda(array res, mapping id) {
 #ifdef SMTP_DEBUG
 		     roxen_perror("SMTP: async_verify_sender_cb()\n");
 #endif /* SMTP_DEBUG */
 		     if (sizeof(res)) {
+		       conf->log(([ "error":401 ]), id);
 		       do_RSET();
 		       send(550, res);
 		     } else {
+		       conf->log(([ "error":200 ]), id);
 		       send(250);
 		     }
-		   });
+		   }, id);
   }
 
   void smtp_RCPT(string rcpt, string args)
   {
+    // Fake request id for logging purposes.
+    mapping id = ([
+      "method":"RCPT",
+      "prot":prot,
+      "remoteaddr":remoteip,
+      "time":time(),
+      "cookies":([]),
+      "not_query":args,
+    ]);
+
     if (!current_mail) {
+      conf->log(([ "error":400 ]), id);
       send(503);
       return;
     }
@@ -796,6 +873,9 @@ static class Smtp_Connection {
 #endif /* SMTP_DEBUG */
 	if (sizeof(recipient)) {
 	  recipient = lower_case(do_parse_address(recipient)[0]);
+
+	  id->not_query = recipient;
+
 	  foreach(conf->get_providers("smtp_filter")||({}), object o) {
 	    // roxen_perror("Got SMTP filter\n");
 	    if (functionp(o->verify_recipient) &&
@@ -805,6 +885,7 @@ static class Smtp_Connection {
 #ifdef SMTP_DEBUG
 	      report_notice(sprintf("Recipient %O refused.\n", recipient));
 #endif /* SMTP_DEBUG */
+	      conf->log(([ "error":403 ]), id);
 	      send(550, sprintf("%s... Recipient refused", recipient));
 	      return;
 	    }
@@ -877,6 +958,7 @@ static class Smtp_Connection {
 	      report_notice(sprintf("SMTP: Relaying to address %s denied.\n",
 				    recipient));
 #endif /* SMTP_DEBUG */
+	      conf->log(([ "error":405 ]), id);
 	      send(550, ({ "Relaying denied." }));
 	      return;
 	    }
@@ -889,18 +971,21 @@ static class Smtp_Connection {
 	    report_notice(sprintf("SMTP: Unhandled recipient %O.\n",
 				  recipient));
 #endif /* SMTP_DEBUG */
+	    conf->log(([ "error":404 ]), id);
 	    send(550, sprintf("%s... Unhandled recipient.", recipient));
 	    return;
 	  }
 
 	  // Relaying is allowed, so add the recipient.
 
+	  conf->log(([ "error":200 ]), id);
 	  current_mail->add_recipients((< recipient >));
 	  send(250, sprintf("%s... Recipient ok.", recipient));
 	  return;
 	}
       }
     }
+    conf->log(([ "error":400 ]), id);
     send(501);
   }
 
@@ -1014,17 +1099,22 @@ static class Smtp_Connection {
 
     if (sizeof(reason)) {
       // Log that we've disconnected.
-      // Note that syslog will put a \n last if needed.
-      openlog("Roxen SMTP", 0, LOG_MAIL);
-      syslog(LOG_NOTICE, sprintf("Access denied\n"
-				 "%s",
-				 reason * "\n"));
+      conf->log(([ "error":401, ]),
+		([ "method":"CONNECT",
+		   "not_query":sprintf("Access denied\n"
+				       "%s",
+				       reason * "\n"),
+		   "prot":prot,
+		   "remoteaddr":remoteip,
+		   "time":time(),
+		   "cookies":([]),]));
+		   
       // Give a reason why we disconnect
       ::create(con, parent->query_timeout());
       send(421, ({
 	sprintf("%s ESMTP %s; %s",
 		gethostname(), roxen->version(),
-		mktimestamp(time())),
+		mktimestamp(time(1))),
       }) + reason);
       disconnect();
       // They have 30 seconds to read the message...
@@ -1283,31 +1373,35 @@ array(int|string) send_mail(string data, object|mapping mail, object|void smtp)
 {
   string csum = Crypto.sha()->update(data)->digest();
 
-  openlog("Roxen SMTP", 0, LOG_MAIL);
+  // Fake request id for logging purposes.
+  mapping id = ([
+    "prot":"INTERNAL",
+    "remoteaddr":"0.0.0.0",
+    "time":time(),
+    "cookies":([])
+  ]);
   if (smtp) {
-    syslog(LOG_NOTICE, sprintf("%O: from=%s, size=%d, nrcpts=%d, "
-			       "proto=%s, relay=%s [%s]",
-			       replace(MIME.encode_base64(csum), "/", "."),
-			       mail->from, sizeof(data),
-			       sizeof(mail->recipients),
-			       smtp->prot, smtp->remotehost, smtp->remoteip));
-  } else {
-    syslog(LOG_NOTICE, sprintf("%O: from=%s, size=%d, nrcpts=%d, "
-			       "proto=INTERNAL",
-			       replace(MIME.encode_base64(csum), "/", "."),
-			       mail->from, sizeof(data),
-			       sizeof(mail->recipients)));
+    id->prot = smtp->prot;
+    id->remoteaddr = smtp->remoteip;
   }
-
+  string fname = replace(MIME.encode_base64(csum), "/", ".");
+  id->not_query = sprintf("From:%s;nrcpts:%d;%s",
+			  mail->from, sizeof(mail->recipients),
+			  fname);
+  
   object spool = open_spoolfile();
 
+  id->method = "SPOOL";
+
   if (!spool) {
+    conf->log(([ "error":500, "len":sizeof(data) ]), id);
     report_error("SMTP: Failed to open spoolfile!\n");
     return(({ 550, "No spooler available" }));
   }
 
   if (spool->write(data) != sizeof(data)) {
     spool->close();
+    conf->log(([ "error":404, "len":sizeof(data) ]), id);
     report_error("SMTP: Spooler failed. Disk full?\n");
     return(({ 452 }));
   }
@@ -1323,6 +1417,7 @@ array(int|string) send_mail(string data, object|mapping mail, object|void smtp)
   int forced_update = 0;
 
   /* Do the delivery */
+  id->method = "DELIVER";
   foreach(indices(expanded), string addr) {
     array a = addr/"@";
     string domain;
@@ -1363,9 +1458,16 @@ array(int|string) send_mail(string data, object|mapping mail, object|void smtp)
 	handled |= o->relay(mail->from, user, domain, spool, csum, smtp);
       }
     }
+    id->not_query = sprintf("From:%s;To:%s;%s", mail->from, addr, fname);
     if (handled) {
       expanded[addr] = 0;
       any_handled = 1;
+
+      // Mail accepted for delivery.
+      conf->log(([ "error":200, "len":sizeof(data)]), id);
+    } else {
+      // Mail not accepted.
+      conf->log(([ "error":400, "len":sizeof(data)]), id);
     }
   }
 
