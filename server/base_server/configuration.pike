@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.269 2000/03/06 18:57:11 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.270 2000/03/07 17:52:16 mast Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -1989,10 +1989,18 @@ public string real_file(string file, RequestID id)
 
 // NOTE: A 'file' can be a cgi script, which will be executed, resulting in
 // a horrible delay.
+//
+// Unless the not_internal flag is set, this tries to get an external
+// or internal file. Here "internal" means a file that never should be
+// sent directly as a request response. E.g. an internal redirect to a
+// different file is still considered "external" since its contents is
+// sent directly to the client. Internal requests are recognized by
+// the id->misc->internal_get flag.
 int|string try_get_file(string s, RequestID id,
-                        int|void status, int|void nocache)
+                        int|void status, int|void nocache,
+			int|void not_internal)
 {
-  string res, q;
+  string res, q, cache_key;
   RequestID fake_id;
   mapping m;
 
@@ -2010,9 +2018,14 @@ int|string try_get_file(string s, RequestID id,
 
   fake_id->misc->common = id->misc->common;
 
-  if(!id->pragma["no-cache"] && !nocache && (!id->auth || !id->auth[0]))
-    if(res = cache_lookup("file:"+id->conf->name, s))
+  if(!id->pragma["no-cache"] && !nocache && (!id->auth || !id->auth[0])) {
+    cache_key =
+      s + "\0" +
+      id->request_headers->cookie + "\0" +
+      id->request_headers["user-agent"];
+    if(res = cache_lookup("file:"+id->conf->name, cache_key))
       return res;
+  }
 
   if(sscanf(s, "%s?%s", s, q))
   {
@@ -2026,7 +2039,8 @@ int|string try_get_file(string s, RequestID id,
 
   fake_id->raw_url=s;
   fake_id->not_query=s;
-  fake_id->misc->internal_get=1;
+  if (!not_internal)
+    fake_id->misc->internal_get=1;
 
   if(!(m = get_file(fake_id)))
     return 0;
@@ -2060,8 +2074,8 @@ int|string try_get_file(string s, RequestID id,
     if(!sscanf(res, "%*s\n\n%s", res))
       sscanf(res, "%*s\n%s", res);
   }
-  if (!id->auth || !id->auth[0])
-    cache_set("file:"+id->conf->name, s, res);
+  if (cache_key)
+    cache_set("file:"+id->conf->name, cache_key, res);
   return res;
 }
 
