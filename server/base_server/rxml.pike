@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.226 2000/08/17 01:16:31 per Exp $
+// $Id: rxml.pike,v 1.227 2000/08/20 16:40:39 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -699,7 +699,7 @@ class UserTag {
     name=_name;
     c=_c;
     defaults=_defaults;
-    flags|=RXML.FLAG_EMPTY_ELEMENT*tag;
+    if(tag) flags=RXML.FLAG_EMPTY_ELEMENT;
     scope=scope_name;
   }
 
