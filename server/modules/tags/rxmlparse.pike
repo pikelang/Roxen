@@ -12,7 +12,7 @@
 
 #define old_rxml_compat 1
 
-constant cvs_version="$Id: rxmlparse.pike,v 1.19 1999/09/14 20:30:02 jhs Exp $";
+constant cvs_version="$Id: rxmlparse.pike,v 1.20 1999/09/18 01:31:48 nilsson Exp $";
 constant thread_safe=1;
 
 constant language = roxen->language;
@@ -377,10 +377,10 @@ string api_tagtime(object id, int ti, string t, string l)
   return tagtime( ti, m, id );
 }
 
-string api_tagtime_map(object id, int ti, mapping m)
+string api_tagtime_map(object id, int ti, void|mapping m)
 {
   NOCACHE();
-  return tagtime( ti, m, id );
+  return tagtime( ti, m||([]) , id );
 }
 
 string api_relative(object id, string path)
@@ -477,19 +477,18 @@ int api_set_supports(object id, string p)
   return id->supports[p]=1;
 }
 
-int api_set_return_code(object id, int c, string p)
+int api_set_return_code(object id, int c, void|string p)
 {
   if(c) _error=c;
-  if(p) _rettext=p;
+  if(p) _rettext=p||"";
   return 1;
-  //  return ([])[0];
 }
 
 string api_get_referer(object id)
 {
   NOCACHE();
   if(id->referer && sizeof(id->referer)) return id->referer*"";
-  return ([])[0];
+  return "";
 }
 
 string api_html_quote(object id, string what)
@@ -546,6 +545,7 @@ int time_quantifier(object id, mapping m)
   return (int)round(t);
 }
 
+//Variables after 0 are optional.
 void define_API_functions()
 {
   add_api_function("parse_rxml", api_parse_rxml, ({ "string" }));
@@ -562,7 +562,7 @@ void define_API_functions()
   add_api_function("query_cookie", api_query_cookie, ({ "string", }));
   add_api_function("query_modified", api_query_modified, ({ "string", }));
 
-  add_api_function("read_file", api_read_file, ({ "string", 0,"int"}));
+  add_api_function("read_file", api_read_file, ({ "string"}));
   add_api_function("add_header", api_add_header, ({"string", "string"}));
   add_api_function("add_cookie", api_set_cookie, ({"string", "string"}));
   add_api_function("remove_cookie", api_remove_cookie, ({"string", "string"}));
@@ -578,7 +578,7 @@ void define_API_functions()
   add_api_function("set_supports", api_set_supports, ({"string"}));
 
   add_api_function("set_return_code", api_set_return_code, ({ "int", 0, "string" }));
-  add_api_function("query_referer", api_get_referer, ({ "int", 0, "string" }));
+  add_api_function("query_referer", api_get_referer, ({}));
 
   add_api_function("roxen_version", tag_version, ({}));
   add_api_function("config_url", api_configurl, ({}));
