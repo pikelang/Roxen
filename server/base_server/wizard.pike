@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2001, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.149 2004/03/13 16:14:39 jonasw Exp $
+// $Id: wizard.pike,v 1.150 2004/06/01 09:59:07 jonasw Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -326,7 +326,10 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
      [h, s, v] = rgb_to_hsv(@a);
      current = upper_case(sprintf("#%02x%02x%02x", a[0], a[1], a[2]));
      id->variables[m->name] = current;
-     
+
+     int mark_x_left = 5 + (int) (h / 2);
+     int mark_y_top = 5 + (int) ((255 - v) / 2);
+     int mark_y_small_top = 5 + (int) ((255 - s) / 2);
      string output =
        "<script language='javascript'>\n"
        "  var PREFIX_h = " + h + ";\n"
@@ -353,22 +356,16 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
        "       onClick='PREFIX_colsel_click(event, 0, \"x\"); return false;'"
        "       style='position: absolute;"
        "              cursor:   crosshair;"
-       "              left:     " + (5 + (int) (h / 2)) + ";"
-       "              top:      5;"
        "              z-index:  2'>"
        "  <img src='/internal-roxen-colsel-mark-y' id='PREFIX_mark_y'"
        "       onClick='PREFIX_colsel_click(event, 0, \"y\"); return false;'"
        "       style='position: absolute;"
        "              cursor:   crosshair;"
-       "              left:     5;"
-       "              top:      " + (5 + (int) ((255 - v) / 2)) + ";"
        "              z-index:  2'>"
        "  <img src='/internal-roxen-colsel-mark-y-small'"
        "       id='PREFIX_mark_y_small'"
        "       style='position: absolute;"
        "              cursor:   pointer;"
-       "              left:     143;"
-       "              top:      " + (5 + (int) ((255 - s) / 2)) + ";"
        "              z-index:  2'>"
        "  <table border='0' cellspacing='0' cellpadding='4' bgcolor='#ffffff'"
        "         style='border-top:    1px solid #888888;"
@@ -398,6 +395,19 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
        "    </tr>"
        "  </table>"
        "</js-popup>"
+
+       //  These initializations used to be in the style attributes above
+       //  but MSIE 6.0 failed to recognize them so we execute them explicitly
+       //  instead.
+       "<script language='javascript'>"
+       "getObject('PREFIX_mark_x').style.top = 5;"
+       "getObject('PREFIX_mark_x').style.left = " + mark_x_left + ";"
+       "getObject('PREFIX_mark_y').style.top = " + mark_y_top + ";"
+       "getObject('PREFIX_mark_y').style.left = 5;"
+       "getObject('PREFIX_mark_y_small').style.top = " + mark_y_small_top + ";"
+       "getObject('PREFIX_mark_y_small').style.left = 143;"
+       "</script>"
+
        "<table border='0' cellspacing='0' cellpadding='2'>"
        "<tr>"
        "  <td>"
