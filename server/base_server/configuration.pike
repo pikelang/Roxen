@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.127 1998/05/08 19:51:13 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.128 1998/05/09 15:33:27 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -278,7 +278,7 @@ private mapping (string:array (object)) provider_module_cache=([]);
 // Call stop in all modules.
 void stop()
 {
-  CATCH(parse_modeule->stop && parse_module->stop());
+  CATCH(parse_module->stop && parse_module->stop());
   CATCH(types_module->stop && types_module->stop());
   CATCH(auth_module->stop && auth_module->stop());
   CATCH(dir_module->stop && dir_module->stop());
