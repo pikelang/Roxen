@@ -5,7 +5,7 @@
 
 // import Stdio;
 
-constant cvs_version = "$Id: htaccess.pike,v 1.29 1998/02/10 18:36:15 per Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.30 1998/03/05 18:48:34 neotron Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -208,6 +208,7 @@ int allowed(multiset allow, string hname, string ip, int def)
   array tmp1, tmp2;
   if(!allow || !sizeof(allow))
     return 0;
+  
   foreach(indices(allow), s)
   {
     if(s == "all" || s == ip || s == hname)
@@ -500,7 +501,8 @@ mapping|string|int htaccess(mapping access, object id)
 	 hname != id->remoteaddr))
       hname = roxen->blocking_ip_to_host(id->remoteaddr);
   }
-
+  if(!hname)
+    hname = id->remoteaddr;
   aname      = access->authname || "authorization";
   userfile   = access->authuserfile;
   groupfile  = access->authgroupfile;
