@@ -1,4 +1,4 @@
-constant cvs_version="$Id: countdown.pike,v 1.25 2000/02/15 14:47:31 nilsson Exp $";
+constant cvs_version="$Id: countdown.pike,v 1.26 2000/02/16 11:07:24 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -105,12 +105,6 @@ void start( int num, Configuration conf )
   module_dependencies (conf, ({ "rxmltags" }));
 }
 
-// :-) This code is not exactly conforming to the Roxen API, since it
-// uses a rather private mapping the language object (which you are
-// not even supposed to know the existence of). But I wanted some nice
-// month->number code that did not depend on a static mapping.
-// Currently, this means that you can enter the name of the month or day in
-// your native language, if it is supported by roxen.
 array languages = roxen->list_languages();
 constant language_low = roxen->language_low;
 int find_a_month(string which)
@@ -138,7 +132,7 @@ int find_a_day(string which)
 constant language=roxen->language;
 string show_number(int n, mapping m, RequestID id)
 {
-  return number2string(n, m, language(m->lang||id->misc->defines->pref_language, m->ordered?"ordered":"number"));
+  return number2string(n, m, language(m->lang||id->misc->defines->pref_language, m->ordered?"ordered":"number", id));
 }
 
 // This function should be fixed to support different languages.
@@ -243,7 +237,7 @@ string tag_countdown(string t, mapping m, object id)
   int unix_now = time(1);
   if(m->now) {
     mapping newnow=([]);
-    if(sscanf(m->now, "%d-%d-%d", 
+    if(sscanf(m->now, "%d-%d-%d",
     	 newnow->year, newnow->mon, newnow->mday)==3 ||
        sscanf(m->now, "%4d%2d%2d",
 	 newnow->year, newnow->mon, newnow->mday)==3 ||
@@ -280,7 +274,7 @@ string tag_countdown(string t, mapping m, object id)
        time_args=clear_less_significant(time_args, "year");
   }
   if(m->iso) {
-       if(sscanf(m->iso, "%d-%d-%d", 
+       if(sscanf(m->iso, "%d-%d-%d",
 		 time_args->year, time_args->mon, time_args->mday)==3 ||
           sscanf(m->iso, "%4d%2d%2d",
 		 time_args->year, time_args->mon, time_args->mday)==3 ||

@@ -5,7 +5,7 @@
 // by this module.
 //
 
-constant cvs_version="$Id: accessed.pike,v 1.20 2000/02/05 04:16:20 nilsson Exp $";
+constant cvs_version="$Id: accessed.pike,v 1.21 2000/02/16 11:07:18 per Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -397,8 +397,8 @@ string tag_accessed(string tag, mapping m, RequestID id)
   if(m->since)
   {
     if(m->database)
-      return tagtime(database_created(0),m,id,roxen->language);
-    return tagtime(database_created(m->file),m,id,roxen->language);
+      return tagtime(database_created(0),m,id,language);
+    return tagtime(database_created(m->file),m,id,language);
   }
 
   real="<!-- ("+counts+") -->";
@@ -459,7 +459,7 @@ string tag_accessed(string tag, mapping m, RequestID id)
    case "mcdonalds":
     q=0;
     while(counts>10) { counts/=10; q++; }
-    res="More than "+roxen->language("eng", "number")(counts*ipow(10, q))
+    res="More than "+language("eng", "number", id)(counts*ipow(10, q))
         + " served.";
     break;
 
@@ -469,11 +469,11 @@ string tag_accessed(string tag, mapping m, RequestID id)
 
    case "ordered":
     m->type="string";
-    res=number2string(counts,m,language(m->lang||id->misc->defines->theme_language, "ordered"));
+    res=number2string(counts,m,language(m->lang||id->misc->defines->theme_language, "ordered",id));
     break;
 
    default:
-    res=number2string(counts,m,language(m->lang||id->misc->defines->theme_language, "number"));
+    res=number2string(counts,m,language(m->lang||id->misc->defines->theme_language, "number",id));
   }
   return res+(m->addreal?real:"");
 }
