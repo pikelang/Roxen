@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.88 1999/07/11 00:10:27 peter Exp $
+/* $Id: wizard.pike,v 1.89 1999/07/11 00:21:12 peter Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -163,8 +163,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed b)
     if (current && current != "0" &&
 	(current == "1"||mkmultiset(current/"\0")[m->value]))
       m->checked="checked";
-    res=make_tag("input",m);
-    return res;
+    return make_tag("input",m);
 
    case "int":
     m->type = "number";
