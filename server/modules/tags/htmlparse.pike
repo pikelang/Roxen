@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.88 1998/03/11 19:42:42 neotron Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.89 1998/03/20 03:37:58 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -666,19 +666,6 @@ string tagtime(int t,mapping m)
   if (m->lower) s=lower_case(s);
   if (m->cap||m->capitalize) s=capitalize(s);
   return s;
-}
-
-string fix_relative(string file, object got)
-{
-  string other;
-  if(file != "" && file[0] == '/')
-    return file;
-  other=got->not_query;
-  if(file != "" && file[0] == '#')
-    file = got->not_query + file;
-  else
-    file = dirname(got->not_query) + "/" +  file;
-  return simplify_path(file);
 }
 
 string tag_date(string q, mapping m)
