@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.110 1998/08/03 09:38:59 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.111 1998/08/10 21:46:09 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -524,7 +524,11 @@ private int parse_got(string s)
 	  case "host":
 	  case "proxy-connection":
 	  case "security-scheme":
-	    misc[linename] = contents;
+	  case "via":
+	  case "cache-control":
+	  case "negotiate":
+	  case "forwarded":
+	    misc[linename]=contents;
 	    break;	    
 
 	  case "proxy-by":
@@ -536,20 +540,6 @@ private int parse_got(string s)
 	   case "if-modified-since":
 	    since=contents;
 	    break;
-	    
-	  case "via":
-	  case "cache-control":
-	  case "negotiate":
-	  case "forwarded":
-	    misc[linename]=contents;
-	    break;
-
-#ifdef DEBUG
-	  default:
-	    /*   x-* headers are experimental.    */
-	    if(linename[0] != 'x')
-	      perror("Unknown header: `"+linename+"' -> `"+contents+"'\n");
-#endif
 	  }
 	}
       }
