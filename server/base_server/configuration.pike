@@ -3,7 +3,7 @@
  * (C) 1996 - 2000 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.253 2000/01/20 21:09:58 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.254 2000/01/27 01:16:04 jhs Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -1706,7 +1706,7 @@ public array(int) stat_file(string file, RequestID id)
       TRACE_ENTER(LOCALE->location_module(loc), tmp[1]);
       TRACE_LEAVE(LOCALE->exact_match());
       TRACE_LEAVE("");
-      return ({ 0775, -3, 0, 0, 0, 0, 0, 0, 0, 0, 0 });
+      return ({ 0775, -3, 0, 0, 0, 0, 0 });
     }
     if(!search(file, loc))
     {
