@@ -1,7 +1,7 @@
 // Wizard generator
 // This file generats all the nice wizards
 // Copyright © 1997 - 2000, Roxen IS.
-// $Id: wizard.pike,v 1.119 2000/08/04 20:08:07 noring Exp $
+// $Id: wizard.pike,v 1.120 2000/08/04 20:41:00 noring Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -407,6 +407,9 @@ mapping decompress_state(string from)
 
 string compress_state(mapping state)
 {
+  // NOTE: Variables which begin with "!_" will
+  //       not be compressed in the state.
+
   state = copy_value(state);
   m_delete(state,"_state");
   m_delete(state,"next_page");
