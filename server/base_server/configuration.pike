@@ -1,6 +1,6 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.416 2001/01/30 04:49:55 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.417 2001/02/23 03:58:24 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -202,30 +202,81 @@ private mapping (string:array (RoxenModule)) provider_module_cache=([]);
 private array (RoxenModule) auth_module_cache, userdb_module_cache;
 
 
-// Call stop in all modules.
-void stop()
+void unregister_urls()
 {
-  multiset allmods = mkmultiset (indices (otomod));
-  CATCH("stopping type modules",
-        types_module && types_module->stop && types_module->stop());
-  allmods[types_module] = 0;
-  CATCH("stopping directory module",
-        dir_module && dir_module->stop && dir_module->stop());
-  allmods[dir_module] = 0;
-  for(int i=0; i<10; i++)
-    CATCH("stopping priority group",
-          (pri[i] && pri[i]->stop && (allmods -= mkmultiset (pri[i]->stop()))));
-  CATCH("stopping the logger",
-	log_function && lambda(mixed m){
-			  destruct(m);
-			  allmods[m] = 0;
-			}(function_object(log_function)));
-  foreach (indices (allmods), RoxenModule m)
-    CATCH ("stopping unclassified module",
-	   m && m->stop && m->stop());
   foreach( registered_urls, string url )
     roxen.unregister_url(url);
   registered_urls = ({});
+}
+
+private int num_modules = 0;
+#ifdef THREADS
+private Thread.Condition modules_stopped = Thread.Condition();
+#endif
+private void safe_stop_module (RoxenModule mod, string desc)
+{
+  if (mixed err = catch (mod && mod->stop && mod->stop()))
+    report_error ("While stopping " + desc + ": " + describe_backtrace (err));
+  if (!--num_modules) modules_stopped->signal();
+}
+
+void stop (void|int asynch)
+//! Unregisters the urls and calls stop in all modules. Uses the
+//! handler threads to lessen the impact if a module hangs. Doesn't
+//! wait for all modules to finish if @[asynch] is nonzero.
+{
+  unregister_urls();
+
+  multiset allmods = mkmultiset (indices (otomod));
+  num_modules = 17;
+
+  if (types_module) {
+    num_modules++;
+    roxen.handle (safe_stop_module, types_module, "type module");
+    allmods[types_module] = 0;
+  }
+  if (dir_module) {
+    num_modules++;
+    roxen.handle (safe_stop_module, dir_module, "directory module");
+    allmods[dir_module] = 0;
+  }
+  for(int i=0; i<10; i++)
+    if (Priority p = pri[i]) {
+#define STOP_MODULES(MODS, DESC)					\
+      foreach(MODS, RoxenModule m)					\
+        if (allmods[m]) {						\
+	  num_modules++;						\
+	  roxen.handle (safe_stop_module, m, DESC);			\
+	  allmods[m] = 0;						\
+	}
+      STOP_MODULES (p->url_modules, "url module");
+      STOP_MODULES (p->logger_modules, "logging module");
+      STOP_MODULES (p->filter_modules, "filter module");
+      STOP_MODULES (p->location_modules, "location module");
+      STOP_MODULES (p->last_modules, "last module");
+      STOP_MODULES (p->first_modules, "first module");
+      STOP_MODULES (indices (p->provider_modules), "provider module");
+    }
+  if (mixed err = catch {
+    if (object m = log_function && function_object (log_function)) {
+      destruct (m);
+      allmods[m] = 0;
+    }
+  }) report_error ("While stopping the logger: " + describe_backtrace (err));
+  STOP_MODULES(indices (allmods), "unclassified module");
+#undef STOP_MODULES
+
+  if (!asynch) {
+    num_modules -= 17;
+    if (num_modules) {
+#ifdef THREADS
+      // Relying on the interpreter lock here.
+      modules_stopped->wait();
+#else
+      error ("num_modules shouldn't be nonzero here when running nonthreaded.\n");
+#endif
+    }
+  }
 }
 
 string type_from_filename( string file, int|void to, string|void myext )

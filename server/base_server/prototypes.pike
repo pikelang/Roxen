@@ -1,7 +1,7 @@
 #include <stat.h>
 #include <config.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.17 2001/02/18 13:50:35 mirar Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.18 2001/02/23 03:58:24 mast Exp $";
 
 class Variable
 {
@@ -168,27 +168,6 @@ class Configuration
     array (RoxenModule) first_modules = ({ });
     mapping (string:array(RoxenModule)) file_extension_modules = ([ ]);
     mapping (RoxenModule:multiset(string)) provider_modules = ([ ]);
-
-#define CATCH(P,X) do{mixed e;if(e=catch{X;})report_error("While "+P+"\n"+describe_backtrace(e));}while(0)
-    array(RoxenModule) stop()
-    {
-      foreach(url_modules, RoxenModule m)
-        CATCH("stopping url modules",m->stop && m->stop());
-      foreach(logger_modules, RoxenModule m)
-        CATCH("stopping logging modules",m->stop && m->stop());
-      foreach(filter_modules, RoxenModule m)
-        CATCH("stopping filter modules",m->stop && m->stop());
-      foreach(location_modules, RoxenModule m)
-        CATCH("stopping location modules",m->stop && m->stop());
-      foreach(last_modules, RoxenModule m)
-        CATCH("stopping last modules",m->stop && m->stop());
-      foreach(first_modules, RoxenModule m)
-        CATCH("stopping first modules",m->stop && m->stop());
-      foreach(indices(provider_modules), RoxenModule m)
-        CATCH("stopping provider modules",m->stop && m->stop());
-      return url_modules + logger_modules + filter_modules + location_modules +
-	last_modules + first_modules + indices (provider_modules);
-    }
   }
 
   class DataCache
@@ -223,7 +202,8 @@ class Configuration
   string query_internal_location(RoxenModule|void mod);
   string query_name();
   string comment();
-  void stop();
+  void unregister_urls();
+  void stop(void|int asynch);
   string type_from_filename( string file, int|void to, string|void myext );
 
   array (RoxenModule) get_providers(string provides);
