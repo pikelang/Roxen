@@ -1,6 +1,6 @@
 // startdll.cpp : Implementation of WinMain
 //
-// $Id: startdll.cpp,v 1.3 2001/06/18 16:35:16 tomas Exp $
+// $Id: startdll.cpp,v 1.4 2001/06/26 09:54:43 tomas Exp $
 //
 
 
@@ -253,14 +253,16 @@ inline BOOL CServiceModule::Uninstall()
 // Logging functions
 void CServiceModule::LogEvent(LPCTSTR pFormat, ...)
 {
-    TCHAR    chMsg[256];
+    TCHAR    chMsg[4098];
     HANDLE  hEventSource;
     LPTSTR  lpszStrings[1];
     va_list pArg;
 
     va_start(pArg, pFormat);
-    _vstprintf(chMsg, pFormat, pArg);
+    _vsntprintf(chMsg, sizeof(chMsg), pFormat, pArg);
     va_end(pArg);
+
+    chMsg[4097] = 0;
 
     lpszStrings[0] = chMsg;
 
