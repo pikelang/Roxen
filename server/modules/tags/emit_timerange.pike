@@ -9,7 +9,7 @@ inherit "module";
 #define LOCALE(X,Y)  _DEF_LOCALE("mod_emit_timerange",X,Y)
 // end locale stuff
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.8 2004/05/17 00:41:48 mani Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.9 2004/05/22 22:17:12 _cvs_dirix Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -353,12 +353,13 @@ class TimeRangeValue(Calendar.TimeRange time,	// the time object we represent
     string reached;
     foreach((scope/".")[1..] + (var ? ({ var }) : ({})), string index)
       if(!mappingp(result))
-	RXML.run_error("Can't sub-index %O with %O.\n", reached || "", index);
+	RXML.run_error(sprintf("Can't sub-index %O with %O.\n",
+			       reached || "", index));
       else if(!(result = result[ index ]))
       {
-	DEBUG("\b => UNDEFINED (no such scope:%O%s)\n",
+	DEBUG("\b => ([])[0] (no such scope:%O%s)\n",
 	      scope, (zero_type(var) ? "" : sprintf(", var:%O combo", var)));
-	return UNDEFINED;
+	return ([])[0];
       }
       else
 	reached = (reached ? reached + "." : "") + index;
@@ -388,7 +389,7 @@ class TimeRangeValue(Calendar.TimeRange time,	// the time object we represent
 
     string|mapping|function what;
     if(!(what = dig_out(scope, var)))
-      return UNDEFINED;
+      return ([])[0]; // conserve zero_type
     //report_debug("scope: %O, var: %O, what: %t\n", scope, var, what);
     if(functionp( what )) // it's a temporal method to render us a new TimeRange
     {
@@ -429,13 +430,13 @@ class TimeRangeValue(Calendar.TimeRange time,	// the time object we represent
     mixed what, result;
     if(!(what  = dig_out(scope, var)))
     {
-      DEBUG("\b => UNDEFINED (what conserved)\n");
-      return UNDEFINED;
+      DEBUG("\b => ([])[0] (what conserved)\n");
+      return ([])[0]; // conserve zero_type
     }
     if(mappingp( what ) && !(result = what[""])) // may use this scope as a leaf
     { // this probably only occurs if the layout mapping is incorrectly set up:
-      DEBUG("\b => UNDEFINED (what:%O)\n", what);
-      return UNDEFINED;
+      DEBUG("\b => ([])[0] (what:%O)\n", what);
+      return ([])[0];
     }
     return fetch_and_quote_value(result || what, want_type);
   }
@@ -473,7 +474,7 @@ Calendar get_calendar(string name)
   string wanted = calendars[search(map(calendars, upper_case),
 				   upper_case(name))];
   if(wanted == "unknown")
-    RXML.parse_error("Unknown calendar %O.\n", name
+    RXML.parse_error(sprintf("Unknown calendar %O.\n", name));
   return Calendar[wanted];
 }
 
@@ -531,7 +532,7 @@ class TagEmitTimeZones
     if(!(time = get_date("", args, cal)))
       time = cal->Second();
     if(!zones[region])
-      RXML.parse_error("Unknown timezone region %O.\n", region);
+      RXML.parse_error(sprintf("Unknown timezone region %O.\n", region));
     next_shift = zones[region] && zones[region]->next_shift;
     if(next_shift && time > next_shift)
       refresh_zones(time, region);
@@ -561,7 +562,7 @@ class TagEmitTimeRange
     {
       output_unit = output_units[search(output_units, what)];
       if(output_unit == "unknown")
-	RXML.parse_error("Unknown unit %O.\n", what);
+	RXML.parse_error(sprintf("Unknown unit %O.\n", what));
 
       unit_no = search(output_units, what);
       compare_num = ouput_unit_no[unit_no];
@@ -575,7 +576,7 @@ class TagEmitTimeRange
       {
         what = lower_case(what);
         if(search(gregorian_weekdays,lower_case(what)) == -1)
-          RXML.parse_error("Unknown day: %O\n",what);
+          RXML.parse_error(sprintf("Unknown day: %O\n",what));
         int weekday = from->week_day();
 
         if(from->calendar() != Calendar.ISO){
@@ -596,7 +597,7 @@ class TagEmitTimeRange
       if(what = m_delete(args, "to-week-day")){
 	what = lower_case(what);
 	if(search(gregorian_weekdays,what) == -1)
-	  RXML.parse_error("Unknown day: %O\n",what);
+	  RXML.parse_error(sprintf("Unknown day: %O\n",what));
 	change_to = 0;
 	weekday_needed = 0;
 	int weekday = to->week_day();
@@ -622,7 +623,7 @@ class TagEmitTimeRange
 			{
         what = lower_case(what);
         if(search(gregorian_weekdays,lower_case(what)) == -1)
-          RXML.parse_error("Unknown day: %O\n",what);
+          RXML.parse_error(sprintf("Unknown day: %O\n",what));
         int weekday_needed, change_to;
         int weekday = from->week_day();
 
@@ -642,7 +643,7 @@ class TagEmitTimeRange
       {
 	what = lower_case(what);
 	if(search(gregorian_weekdays,what) == -1)
-	  RXML.parse_error("Unknown day: %O\n",what);
+	  RXML.parse_error(sprintf("Unknown day: %O\n",what));
 	int change_to = 0, weekday_needed = 0;
 	int weekday = to->week_day();
 	if(calendar != "ISO")
@@ -702,7 +703,7 @@ class TagEmitTimeRange
                        "is needed together with the attribute query!\n");
 
       string host = m_delete(args,"host");
-      //werror("QUERY : %O HOST: %O\n",sqlquery,host);
+      //werror(sprintf("QUERY : %O HOST: %O\n",sqlquery,host));
 
       array(mapping) rs = db_query(sqlquery,host||query("db_name")||"none");
       if(sizeof(rs) > 0)
@@ -733,9 +734,9 @@ class TagEmitTimeRange
     RXML.Tag emit = id->conf->rxml_tag_set->get_tag("emit");
     args = args - emit->req_arg_types - emit->opt_arg_types;
     if(sizeof( args ))
-      RXML.parse_error("Unknown attribute%s %s.\n",
-		       (sizeof(args)==1 ? "" : "s"),
-		       String.implode_nicely(indices(args)));
+      RXML.parse_error(sprintf("Unknown attribute%s %s.\n",
+			       (sizeof(args)==1 ? "" : "s"),
+			       String.implode_nicely(indices(args))));
 #endif
 
   array(mapping) res;
@@ -746,9 +747,9 @@ class TagEmitTimeRange
       {
         if(arrayp(dset[i]))
           {
-            //werror("dset[%O][0]: %O\n",i,dset[i][0]);
+            //werror(sprintf("dset[%O][0]: %O\n",i,dset[i][0]));
             res += ({ scopify(dset[i][0], output_unit) + dset[i][1] });
-            //werror("dset[%O][1]: %O\n",i,dset[i..]);
+            //werror(sprintf("dset[%O][1]: %O\n",i,dset[i..]));
           }
         else
           res += ({ scopify(dset[i], output_unit) });
@@ -785,14 +786,14 @@ Calendar.TimeRange get_date(string name, mapping args, Calendar calendar)
   {
     if(catch(date = cal->dwim_time( what )))
       if(catch(date = cal->dwim_day( what )) || !date)
-	RXML.run_error("Illegal %stime %O.\n", name, what);
+	RXML.run_error(sprintf("Illegal %stime %O.\n", name, what));
       else
 	date = date->second();
   }
   else if(what = m_delete(args, name + "date"))
   {
     if(catch(date = cal->dwim_day( what )))
-      RXML.run_error("Illegal %sdate %O.\n", name, what);
+      RXML.run_error(sprintf("Illegal %sdate %O.\n", name, what));
   }
   else if(what = m_delete(args, name + "year"))
     date = cal->Year( (int)what );
@@ -817,7 +818,7 @@ Calendar.TimeRange get_date(string name, mapping args, Calendar calendar)
 array(mapping) db_query(string q,string db_name)
 {
   mixed error;
-  Sql.sql con;
+  Sql.Sql con;
   array(mapping(string:mixed))|object result;
   error = catch(con = DBManager.get(db_name,my_configuration(),0));
   if(!con)
