@@ -3,7 +3,8 @@ CLASSPATH = servlet.jar
 
 JAVAFLAGS = -deprecation -encoding iso-8859-1
 
-JAVAC = /i/jdk/default/bin/javac
+JAVAC = javac
+# /i/jdk/default/bin/javac
 
 SRCDIR = ../src
 
@@ -20,4 +21,3 @@ roxen_module.jar : module_classes
 
 module_classes : $(SRCDIR)/se/idonex/roxen/*.java
 	CLASSPATH=$(CLASSPATH) $(JAVAC) $(JAVAFLAGS) $^ -d .
-
