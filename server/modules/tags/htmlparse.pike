@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 
 
-string cvs_version = "$Id: htmlparse.pike,v 1.8 1996/12/02 04:32:48 per Exp $";
+string cvs_version = "$Id: htmlparse.pike,v 1.9 1996/12/02 15:17:57 peter Exp $";
 #pragma all_inline 
 
 #include <config.h>
@@ -111,7 +111,7 @@ inline void open_names_file()
 {
   if(objectp(names_file)) return;
   remove_call_out(names_file_callout_id);
-  names_file=open(QUERY(AccessLog)+".names", "wrca");
+  names_file=open(QUERY(Accesslog)+".names", "wrca");
   names_file_callout_id = call_out(destruct, 1, names_file);
 }
 
@@ -123,7 +123,7 @@ inline void open_db_file()
   if(!database || QUERY(close_db))
   {
     if(db_file_callout_id) remove_call_out(db_file_callout_id);
-    database=open(QUERY(AccessLog)+".db", "wrc");
+    database=open(QUERY(Accesslog)+".db", "wrc");
     db_file_callout_id = call_out(destruct, 9, database);
   }
 }
@@ -1289,10 +1289,10 @@ string tag_aconfig(string tag, mapping m, string q, object got)
     href=strip_config(got->raw_url);
   else 
   {
-    array foo;
     href=m->href;
-    if (search(foo, ":") == search(foo, "//")-1)
-      return sprintf("<a href=\"%s\">%s</a>", href, q);
+    if (search(href, ":") == search(href, "//")-1)
+      return sprintf("<!-- Cannot add configs to absolute URLs -->\n"
+		     "<a href=\"%s\">%s</a>", href, q);
     href=fix_relative(href, got);
     m_delete(m, "href");
   }
