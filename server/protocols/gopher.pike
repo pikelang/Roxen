@@ -1,5 +1,5 @@
-// This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
-constant cvs_version = "$Id: gopher.pike,v 1.13 1999/12/27 14:41:35 nilsson Exp $";
+// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
+constant cvs_version = "$Id: gopher.pike,v 1.14 2000/03/16 18:24:37 nilsson Exp $";
 // Gopher protocol module
 
 #ifdef GOPHER_DEBUG

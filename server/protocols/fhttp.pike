@@ -1,5 +1,5 @@
 // This is a roxen protocol module.
-// Copyright © 1996 - 1999, Idonex AB.
+// Copyright © 1999 - 2000, Roxen IS.
 #include <variables.h>
 
 #ifdef FWWW_DEBUG
