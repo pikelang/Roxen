@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2001, Roxen IS.
 
 constant cvs_version =
-  "$Id: userdb_system.pike,v 1.10 2002/10/23 20:12:50 nilsson Exp $";
+  "$Id: userdb_system.pike,v 1.11 2004/04/04 01:45:43 mani Exp $";
 #ifndef __NT__
 inherit UserDB;
 #endif
@@ -123,14 +123,7 @@ User find_user_from_uid( int id )
 
 array(string) list_users( )
 {
-  array res = ({});
-  array a;
-  mixed key = mt->lock();
-  setpwent();
-  while( a = getpwent() )
-    res += ({ a[0] });
-//   endpwent();
-  return res;
+  return get_all_users()[*][0];
 }
 
 static mapping(string|int:Group) group_cache = ([]);
@@ -169,16 +162,12 @@ array(string) list_groups( )
     return full_group_list->name();
 
   array res = ({});
-  array a;
-  mixed key = mt->lock();
-  endgrent();
-  while( a = getgrent() )
+  foreach( get_all_groups(), array a )
   {
-    res += ({ SysGroup( this_object(), a ) });
+    res += ({ SysGroup( this, a ) });
     group_cache[ res[-1]->name() ] = res[-1];
     group_cache[ res[-1]->gid() ] = res[-1];
   }
-  endgrent();
   full_group_list = res;
   call_out( lambda(){ full_group_list = 0; cached_groups=0; }, 60 );
   return res->name();
