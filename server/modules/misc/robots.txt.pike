@@ -2,7 +2,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: robots.txt.pike,v 1.4 2004/06/30 16:59:16 mast Exp $";
+constant cvs_version = "$Id: robots.txt.pike,v 1.5 2004/08/18 12:15:52 grubba Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST;
 constant module_name = "robots.txt generator";
@@ -16,7 +16,7 @@ constant module_doc  = "Generates a robots.txt on demand from various informatio
 //   the robots.txt file.
 // - Dependency on the real robots.txt file appears to be broken.
 
-void start() {
+void create() {
 
   defvar("disallow",
 	 Variable.StringList( ({"/cgi-bin/"}), 0,
