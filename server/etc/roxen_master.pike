@@ -2,7 +2,7 @@
  * Roxen master
  */
 
-string cvs_version = "$Id: roxen_master.pike,v 1.45 1998/04/29 02:53:34 grubba Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.46 1998/04/29 10:06:47 grubba Exp $";
 
 /*
  * name = "Roxen Master";
@@ -257,10 +257,10 @@ void create()
     catch(o[varname] = mm[varname]);
     /* Ignore errors when copying functions */
   }
-  programs["/master"] = object_program(o());
-  objects[object_program(o())] = o();
+  programs["/master"] = object_program(o);
+  objects[object_program(o)] = o;
   /* make ourselves known */
-  add_constant("_master",o());
+  add_constant("_master",o);
   add_constant("version",lambda() { return version() + " Roxen Challenger master"; } );
 
   /* Move the old efuns to the new object. */
