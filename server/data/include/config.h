@@ -1,5 +1,5 @@
 /* -*- Pike -*-
- * $Id: config.h,v 1.34 2004/05/24 13:40:49 _cvs_stephen Exp $
+ * $Id: config.h,v 1.35 2004/05/24 17:03:17 mani Exp $
  *
  * User configurable things not accessible from the normal
  * administration interface. Not much, but there are some things..  
@@ -77,10 +77,6 @@
  */
 #define RXML_NAMESPACE "rxml"
 
-/* Define this to keep support for old (pre-2.0) RXML.
- */
-#define OLD_RXML_COMPAT
-
 // Define to get verbose backtraces in the debug log for each RXML
 // error. As opposed to the normal reports of RXML errors, they will
 // include the Pike backtraces too.
@@ -88,13 +84,14 @@
 
 // Define back to which Roxen version you would like to keep 
 // compatibility.
-#define ROXEN_COMPAT 1.3
+#define ROXEN_COMPAT 2.0
 
 
 //  Cache timeout for RAM cache
 #ifndef INITIAL_CACHEABLE
 # define INITIAL_CACHEABLE 300
 #endif
+
 
 #ifndef HTTP_BLOCKING_SIZE_THRESHOLD
 // Size at below which blocking writes may be performed without penalty.
