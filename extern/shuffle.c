@@ -169,7 +169,7 @@ inline int my_read(int from, char *buf, int towrite)
 
 void *shuffle(void *fromto)
 {
-  int towrite, orig;
+  int towrite, orig;  /* orig is used to go around a bug in gcc's optimizer */
   char *buffer = NULL;
   struct workqueue *mq = NULL;
 
