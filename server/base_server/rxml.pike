@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.214 2000/08/05 21:59:45 mast Exp $
+// $Id: rxml.pike,v 1.215 2000/08/07 17:11:58 kuntri Exp $
 
 
 inherit "rxmlhelp";
@@ -1962,10 +1962,10 @@ constant tagdoc=([
 <ex type=vert>
 <set variable='var.foo' value='17'/>
 <cond>
-  <case true>&var.foo;<set variable='var.foo' expr='&var.foo;+1'/></case>
-  <default>&var.foo;<set variable='var.foo' expr='&var.foo;+2'/></default>
+  <case true><ent>var.foo</ent><set variable='var.foo' expr='<ent>var.foo</ent>+1'/></case>
+  <default><ent>var.foo</ent><set variable='var.foo' expr='<ent>var.foo</ent>+2'/></default>
 </cond>
-&var.foo;
+<ent>var.foo</ent>
 </ex>",
 
 	    "default":#"<desc cont>
@@ -1980,19 +1980,19 @@ constant tagdoc=([
 <ex type=vert>
 <set variable=\"var.foo\" value=\"17\"/>
 <cond>
-  <default>&var.foo;<set variable=\"var.foo\" expr=\"&var.foo;+2\"/></default>
-  <case true>&var.foo;<set variable=\"var.foo\" expr=\"&var.foo;+1\"/></case>
+  <default><ent>var.foo</ent><set variable=\"var.foo\" expr=\"<ent>var.foo</ent>+2\"/></default>
+  <case true><ent>var.foo</ent><set variable=\"var.foo\" expr=\"<ent>var.foo</ent>+1\"/></case>
 </cond>
-&var.foo;
+<ent>var.foo</ent>
 </ex>
 <br/>
 <ex type=vert>
 <set variable=\"var.foo\" value=\"17\"/>
 <cond>
-  <case false>&var.foo;<set variable=\"var.foo\" expr=\"&var.foo;+1\"/></case>
-  <default>&var.foo;<set variable=\"var.foo\" expr=\"&var.foo;+2\"/></default>
+  <case false><ent>var.foo</ent><set variable=\"var.foo\" expr=\"<ent>var.foo</ent>+1\"/></case>
+  <default><ent>var.foo</ent><set variable=\"var.foo\" expr=\"<ent>var.foo</ent>+2\"/></default>
 </cond>
-&var.foo;
+<ent>var.foo</ent>
 </ex>"
 	    ])
 	  }),
@@ -2053,7 +2053,7 @@ constant tagdoc=([
 The values of the attributes given to the defined tag are available in the
 scope created within the define tag.
 
-<ex><define tag=\"hi\">Hello &_.name;!</define>
+<ex><define tag=\"hi\">Hello <ent>_.name</ent>!</define>
 <hi name=\"Martin\"/></ex>",
 
 	    (["attrib":#"<desc cont>
@@ -2065,12 +2065,23 @@ scope created within the define tag.
   The name of the attribute which default value is to be set.
  </attr>",
 
-	      "&_.args;":#"<desc ent>The full list of the attributes, and their
- arguments, given to the tag.</desc>",
-	      "&_.rest-args;":#"<desc ent>A list of the attributes, and their
- arguments, given to the tag, excluding attributes with default values defined.</desc>",
-	      "&_.contents;":#"<desc ent>The containers contents.</desc>",
-	      "contents":"<desc tag>As the contents entity, but unquoted.</desc>"
+"&_.args;":#"<desc ent>
+ The full list of the attributes, and their arguments, given to the
+ tag.
+</desc>",
+
+"&_.rest-args;":#"<desc ent>
+ A list of the attributes, and their arguments, given to the tag,
+ excluding attributes with default values defined.
+</desc>",
+
+"&_.contents;":#"<desc ent>
+ The containers contents.
+</desc>",
+
+"contents":#"<desc tag>
+ As the contents entity, but unquoted.
+</desc>"
 	    ])
 
 }),
@@ -2135,17 +2146,17 @@ scope created within the define tag.
  or logical negation.</p>
 
  <ex type='box'>
-  <if variable='var.foo > 0' and match='var.bar is No'>
+  <if variable='var.foo > 0' and='' match='var.bar is No'>
     ...
   </if>
  </ex>
 
  <ex type='box'>
   <if variable='var.foo > 0' not=''>
-    &var.foo; is lesser than 0
+    <ent>var.foo</ent> is lesser than 0
   </if>
   <else>
-    &var.foo; is greater than 0
+    <ent>var.foo</ent> is greater than 0
   </else>
  </ex>
 
@@ -2171,7 +2182,7 @@ scope created within the define tag.
  plugin as a string or a list of strings.</p>
 
  <ex>
-  Your domain <if ip='130.236.*'> is  </if>
+  Your domain <if ip='130.236.*'> is </if>
   <else> isn't </else> liu.se.
  </ex>
 
@@ -2182,7 +2193,7 @@ scope created within the define tag.
  <ex>
    Your browser
   <if supports='javascript'>
-   supports Javascript version &client.javascript;
+   supports Javascript version <ent>client.javascript</ent>
   </if>
   <else>doesn't support Javascript</else>.
  </ex>
@@ -2496,7 +2507,7 @@ Available variables are:",
  The language to use.
  <lang/>
  <ex type='vert'>Mitt favoritnummer är <number num='11' language='sv'/>.</ex>
- <ex type='vert'>Il mio numero preferito &egrave;<number num='15' language='it'/>.</ex>
+ <ex type='vert'>Il mio numero preferito <ent>egrave</ent><number num='15' language='it'/>.</ex>
 </attr>
 
 <attr name=type value=number|ordered|roman|memory default=number>
@@ -2541,9 +2552,9 @@ Available variables are:",
 
  <ex>
   <define variable='var.hepp'>hopp</define>
-  &var.hepp;
+  <ent>var.hepp</ent>
   <undefine variable='var.hepp'/>
-  &var.hepp;
+  <ent>var.hepp</ent>
  </ex>
 </attr>
 
@@ -2596,8 +2607,9 @@ Available variables are:",
  its content parsed.
 </desc>",
 
-"emit#sources":({
-  "<desc plugin>Provides a list of all available emit sources.</desc>",
+"emit#sources":({ #"<desc plugin>
+ Provides a list of all available emit sources.
+</desc>",
   ([ "&_.source;":"<desc ent>The name of the source.</desc>" ]) }),
 
 "emit":({ #"<desc cont><short>Provides data, fetched from different sources, as
