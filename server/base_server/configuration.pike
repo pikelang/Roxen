@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.329 2000/07/31 00:55:31 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.330 2000/08/01 16:27:12 jhs Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -2770,6 +2770,7 @@ int disable_module( string modname, int|void nodest )
   if( enabled_modules[modname+"#"+id] )
   {
     m_delete( enabled_modules, modname + "#" + id );
+    forcibly_added[ modname + "#" + id ] = 0;
     store( "EnabledModules",enabled_modules, 1, this_object());
   }
   if(!nodest)
