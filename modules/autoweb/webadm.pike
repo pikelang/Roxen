@@ -1,12 +1,12 @@
 /*
- * $Id: webadm.pike,v 1.4 1998/07/26 21:37:45 wellhard Exp $
+ * $Id: webadm.pike,v 1.5 1998/07/27 17:13:30 wellhard Exp $
  *
  * AutoWeb administration interface
  *
  * Johan Schön, Marcus Wellhardh 1998-07-23
  */
 
-constant cvs_version = "$Id: webadm.pike,v 1.4 1998/07/26 21:37:45 wellhard Exp $";
+constant cvs_version = "$Id: webadm.pike,v 1.5 1998/07/27 17:13:30 wellhard Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -58,6 +58,54 @@ string customer_name(string tag_name, mapping args, object id)
 }
 
 
+string insert_navigation(string tag, mapping args, string navigation)
+{
+  return navigation;
+}
+
+
+string|int get_variable_value(object db, string customer_id, string variable)
+{
+  array query_result = 
+    db->query("select template_vars_opts.value from "
+	      "template_vars,customers_preferences,template_vars_opts where "
+	      "customers_preferences.customer_id='"+customer_id+"' and " 
+	      "template_vars.name='"+variable+"' and "
+	      "customers_preferences.variable_id=template_vars.id and "
+	      "customers_preferences.value=template_vars_opts.name");
+  werror("%O\n", query_result);
+  if(!sizeof(query_result)) {
+    werror("No such customer '%s' or variable '%s' is undefined.\n",
+	   customer_id, variable);
+    return 0;
+  }
+  return query_result[0]->value;
+}
+
+
+string insert_menuitems(string tag, mapping args, string customer_id, object db)
+{
+  string query =
+    "select * from customers_menu,customers_files where "
+    "customers_menu.customer_id='"+customer_id+"' and "
+    "customers_menu.file_id=customers_files.id "
+    "order by customers_menu.item_order";
+  array menu_items = db->query(query);
+  if(!sizeof(menu_items)) {
+    werror("Query [%s] returned zero rows\n", query);
+    return "";
+  }
+  array a = ({ });
+  foreach(menu_items, mapping menu_item)
+    a +=
+    ({ "  <tmpldefault tag=menuitem"+menu_item->item_order+">\n"
+       "    <mi href=\""+menu_item->filename+"\">"+menu_item->title+"</mi>\n"
+       "  </tmpldefault>\n"
+       "  <tmplinsert tag=menuitem"+menu_item->item_order+">" });
+  return "\n"+(a*"\n\n");
+}
+
+
 string update_template(string tag_name, mapping args, object id)
 {
   object db = id->conf->call_provider("sql","sql_object",id);
@@ -66,36 +114,57 @@ string update_template(string tag_name, mapping args, object id)
   string destfile = query("sites_location")+
 		    (string)id->variables->customer_id+
 		    "/templates/default.tmpl";
-  array template_info =
-    db->query("select * from "
-	      "template_vars,customers_preferences,template_vars_opts where "
-	      "customers_preferences.customer_id='"+
-	      id->variables->customer_id+"' and " 
-	      "template_vars.name='template_name' and "
-	      "customers_preferences.variable_id=template_vars.id and "
-	      "customers_preferences.value=template_vars_opts.name");
-  if(!sizeof(template_info))
-    return "<b>no such customer '"+id->variables->customer_id+"'</b>";
-      
-  string s = Stdio.read_bytes(templatesdir+template_info[0]->value);
-  if(!sizeof(s))
-    return "<b>Can not open file '"+
-      templatesdir+template_info[0]->value+"', or it is empty</b>";
+  // Template
+  string template_filename =
+    get_variable_value(db, id->variables->customer_id, "template_name");
+  if(!template_filename)
+    return "";
   
+  string template = Stdio.read_bytes(templatesdir+template_filename);
+  if(!stringp(template)) {
+    werror("Can not open file '%s', or it is empty\n",
+	   templatesdir+template_filename);
+    return "";
+  }
+  
+  // Navigation
+  string navigation_filename =
+    get_variable_value(db, id->variables->customer_id, "nav_name");
+  if(!navigation_filename)
+    return "";
+  
+  string navigation = Stdio.read_bytes(templatesdir+navigation_filename);
+  if(!stringp(navigation)) {
+    werror("Can not open file '%s', or it is empty\n",
+	   templatesdir+navigation_filename);
+    return "";
+  }
+  // Insert navigation template
+  template =
+    parse_html(template, ([ "insertnavigation": insert_navigation ]), ([ ]),
+	       navigation);
+  template =
+    parse_html(template, ([ "insertmenuitems" : insert_menuitems ]), ([ ]),
+	       id->variables->customer_id, db);
+  // Fetch variables from database
   array variables =
     db->query("select * from customers_preferences,template_vars where "
 	      "customers_preferences.customer_id='"+
 	      id->variables->customer_id+"' and "
 	      "customers_preferences.variable_id=template_vars.id");
   
+  // Replace placeholders with customer spesific preferences  
   foreach(variables, mapping variable) {
-    s = replace(s, "$$"+variable->name+"$$", variable->value);
+    template = replace(template, "$$"+variable->name+"$$", variable->value);
   }
   
+  // Save new template
   object template_file = Stdio.File();
-  if(!template_file->open(destfile, "wct"))
-    return "<b>Can not open file: '"+destfile+"'</b>";
-  template_file->write(s);
+  if(!template_file->open(destfile, "wct")) {
+    werror("<b>Can not open file: '%s'", destfile);
+    return "";
+  }
+  template_file->write(template);
   template_file->close();
   return "<b>Template updated</b>";
 }

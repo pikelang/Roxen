@@ -63,7 +63,7 @@ string|mapping navigate(object id, string f, string base_url)
 	 ({ "Upload File", ([ "path": f ]) }) });
 
     // Show the directory
-    return get_dir(wa->query("sites_location")+"/"+id->misc->customer_id)*"<br>";
+    return get_dir(fix_fn("",id))*"<br>";
     
     res+="bar";
   }

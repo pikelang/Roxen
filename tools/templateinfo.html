@@ -96,7 +96,7 @@
 	  _wizard_name="General" _wizard_category="nav">
 	  
   <insert name="nav_size" title="Navigation size"
-          type="int" help="Navigation size"
+          type="float" help="Navigation size"
 	  _wizard_name="General" _wizard_category="nav">
 	  
   <insert name="nav_font" title="Navigation font"
@@ -226,3 +226,24 @@
   <insert scheme_id=1 _variable_name="template_name" value="Template 1">
 
 </sql-insert>
+
+
+<!--  Remove remining rows, test only  -->
+<-sql-insert table="customers_files">
+  <delete all>
+  
+  <insert customer_id=1, filename="/index.html">
+  <insert customer_id=1, filename="/test1.html">
+  <insert customer_id=1, filename="/test2.html">
+  
+</-sql-insert>
+
+
+<-sql-insert table="customers_menu">
+  <delete all>
+
+  <insert customer_id=1 file_id=1 item_order=1 title="Huvudsida">
+  <insert customer_id=1 file_id=2 item_order=2 title="Sida 1">
+  <insert customer_id=1 file_id=3 item_order=3 title="Sida 2">
+
+</-sql-insert>
