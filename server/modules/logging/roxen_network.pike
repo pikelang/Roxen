@@ -8,7 +8,7 @@ inherit "module";
 
 // ---------------- Module registration stuff ----------------
 
-constant cvs_version = "$Id: roxen_network.pike,v 1.8 2001/11/30 14:41:46 grubba Exp $";
+constant cvs_version = "$Id: roxen_network.pike,v 1.9 2002/03/14 13:30:17 grubba Exp $";
 constant module_type = MODULE_ZERO;
 constant thread_safe = 1;
 constant module_name = "Roxen Network module";
@@ -147,9 +147,11 @@ string build_package() {
       "</active_modules>\n";
 
   array hosts=({ gethostname() }), dns;
+#ifndef NO_DNS
   catch(dns=Protocols.DNS.client()->gethostbyname(hosts[0]));
   if(dns && sizeof(dns))
     hosts+=dns[2];
+#endif /* !NO_DNS */
   hosts = Array.uniq(hosts);
 
   foreach(conf->registered_urls, string url) {
