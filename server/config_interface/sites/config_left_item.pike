@@ -133,11 +133,16 @@ string selected_item( string q, Configuration c, RequestID id,
 	  onlysel = 1;
       }
       if( onlysel )
-	pre += ("\n<tr><td valign='top'><img src=\"&usr."+sel+"-indicator;\" width='12' height='12' alt='' /></td>"
-		"<td><a "+hide_popup+
-		" href=\""+quoted_url+Roxen.http_encode_string(group_name)+
-		"!0/"+module+"/\">"+Roxen.html_encode_string(group_name)+
-		":</a>\n");
+      {
+	pre += ("\n<tr><td valign='top'><img src=\"&usr."+
+		sel+"-indicator;\" width='12' height='12' alt='' /></td>"
+		"<td>");
+	if( !do_js )
+	  pre += "<a "+hide_popup+
+	    " href=\""+quoted_url+Roxen.http_encode_string(group_name)+
+	    "!0/"+module+"/\">"+Roxen.html_encode_string(group_name)+
+	    ": ("+sizeof(gd[1])+" ) ...</a>\n";
+      }
       else
       {
 	pre += ("\n<tr><td valign='top'>"
@@ -170,10 +175,10 @@ string selected_item( string q, Configuration c, RequestID id,
       }
     else
     {
-      pre += "<font size=-1>";
       if( do_js )
       {
-	pre += "\n<js-popup label='("+sizeof(gd[1])+") ...'>"+
+	pre += "\n<js-popup label='"+
+	  Roxen.html_encode_string(group_name)+": ("+sizeof(gd[1])+") ...'>"+
 	  "\n"
 	  "<table border=0 bgcolor='&usr.fgcolor;' cellspacing='0' "
 	  " cellpadding='1'>\n"
