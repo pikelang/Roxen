@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.198 2000/07/13 15:09:07 kuntri Exp $
+// $Id: rxml.pike,v 1.199 2000/07/13 15:20:47 kuntri Exp $
 
 
 inherit "rxmlhelp";
@@ -2124,53 +2124,53 @@ scope created within the define tag.
  If all criterions are met the result is true. And is default.
 </attr>",
 
-"if#true":#"<desc plugin>
- This will always be true if the truth value is set to be true.
+"if#true":#"<desc plugin><short>
+ This will always be true if the truth value is set to be true.</short>
  Equivalent with <tag><ref type=cont>then</ref></tag>.
 </desc>
 <attr name='true' value='' required>
 </attr>",
 
-"if#false":#"<desc plugin>
- This will always be true if the truth value is set to be false.
+"if#false":#"<desc plugin><short>
+ This will always be true if the truth value is set to be false.</short>
  Equivalent with <tag><ref type='tag'>else</ref></tag>.
 </desc>
 <attr name='false' value='' required>
 </attr>",
 
-"if#accept":#"<desc plugin>
+"if#accept":#"<desc plugin><short>
  Returns true is the browser accept certain content types as specified
- by it's Accept-header, for example image/jpeg or text/html. If
+ by it's Accept-header, for example image/jpeg or text/html.</short> If
  browser states that it accepts */* that is not taken in to account as
  this is always untrue. Accept is an IfMatch if-plugin.
 </desc>
 <attr name='accept' value='type1[,type2,...]' required>
 </attr>",
 
-"if#config":#"<desc plugin>
+"if#config":#"<desc plugin><short>
  Has the config been set by use of the <tag><ref
- type='tag'>aconf</ref></tag> tag? (Config is an <i>IfIs</i> if-plugin,
+ type='tag'>aconf</ref></tag> tag?</short> (Config is an <i>IfIs</i> if-plugin,
  although that functionality does not apply here.).
 </desc>
 <attr name='config' value='name' required>
 </attr>",
 
-"if#cookie":#"<desc plugin>
+"if#cookie":#"<desc plugin><short>
  Does the cookie exist and if a value is given, does it contain that
- value? Cookie is an <i>IfIs</i> if-plugin.
+ value?</short> Cookie is an <i>IfIs</i> if-plugin.
 </desc>
 <attr name='cookie' value='name[ is value]' required>
 </attr>",
 
-"if#client":#"<desc plugin>
- Compares the user agent string with a pattern. Client and name is an
+"if#client":#"<desc plugin><short>
+ Compares the user agent string with a pattern.</short> Client and name is an
  <i>IfMatch</i> if-plugin.
 </desc>
 <attr name='client' value='' required>
 </attr>",
 
-"if#date":#"<desc plugin>
- Is the date yyyymmdd? The attributes before, after and inclusive
+"if#date":#"<desc plugin><short>
+ Is the date yyyymmdd?</short> The attributes before, after and inclusive
  modifies the behavior.
 </desc>
 <attr name='date' value='yyyymmdd' required>
@@ -2185,15 +2185,15 @@ scope created within the define tag.
 <attr name=inclusive>
 </attr>",
 
-"if#defined":#"<desc plugin>
- Tests if a certain define is defined? Defined is an <i>IfIs</i> if-plugin.
+"if#defined":#"<desc plugin><short>
+ Tests if a certain define is defined?</short> Defined is an <i>IfIs</i> if-plugin.
 </desc>
 <attr name='defined' value='define' required>
 </attr>
 ",
 
-"if#domain":#"<desc plugin>
- Does the user'\s computer'\s DNS name match any of the patterns? Note
+"if#domain":#"<desc plugin><short>
+ Does the user's computer's DNS name match any of the patterns?</short> Note
  that domain names are resolved asynchronously, and the the first time
  someone accesses a page, the domain name will probably not have been
  resolved. Domain is an <i>IfMatch</i> if-plugin.
@@ -2202,8 +2202,8 @@ scope created within the define tag.
 </attr>
 ",
 
-"if#exists":#"<desc plugin>
- Returns true if the file path exists. If path does not begin with /,
+"if#exists":#"<desc plugin><short>
+ Returns true if the file path exists.</short> If path does not begin with /,
  it is assumed to be a URL relative to the directory containing the page
  with the <tag><ref type='tag'>if</ref></tag>-statement.
 </desc>
@@ -2211,39 +2211,39 @@ scope created within the define tag.
 </attr>
 ",
 
-"if#group":#"<desc plugin>
+"if#group":#"<desc plugin><short>
  Checks if the current user is a member of the group according
- the groupfile. Syntax is groupfile=path.
+ the groupfile.</short> Syntax is groupfile=path.
 </desc>
 <attr name='group' value='' required>
 </attr>
 ",
 
-"if#ip":#"<desc plugin>
- Does the users computers IP address match any of the patterns? Host and
- ip are <i>IfMatch</i> if-plugins.
+"if#ip":#"<desc plugin><short>
+ Does the users computers IP address match any of the
+ patterns?</short> Host and ip are <i>IfMatch</i> if-plugins.
 </desc>
 <attr name='ip' value='pattern1[,pattern2,...]' required>
 </attr>
 ",
 
-"if#language":#"<desc plugin>
+"if#language":#"<desc plugin><short>
  Does the client prefer one of the languages listed, as specified by the
- Accept-Language header? Language is an <i>IfMatch</i> if-plugin.
+ Accept-Language header?</short> Language is an <i>IfMatch</i> if-plugin.
 </desc>
 <attr name='language' value='language1[,language2,...]' required>
 </attr>
 ",
 
-"if#match":#"<desc plugin>
- Does the string match one of the patterns? Match is an <i>IfMatch</i> if-plugin.
+"if#match":#"<desc plugin><short>
+ Does the string match one of the patterns?</short> Match is an <i>IfMatch</i> if-plugin.
 </desc>
 <attr name='match' value='pattern1[,pattern2,...]' required>
 </attr>
 ",
 
-"if#pragma":#"<desc plugin>
- Compares the http header pragma with a string. Pragma is an <i>IfIs</i> if-plugin.
+"if#pragma":#"<desc plugin><short>
+ Compares the HTTP header pragma with a string.</short> Pragma is an <i>IfIs</i> if-plugin.
 </desc>
 <attr name='pragma' value='string' required>
 <ex>
@@ -2253,16 +2253,16 @@ scope created within the define tag.
 </attr>
 ",
 
-"if#prestate":#"<desc plugin>
- Are all of the specified prestate options present in the URL? Prestate is
+"if#prestate":#"<desc plugin><short>
+ Are all of the specified prestate options present in the URL?</short> Prestate is
  an <i>IfIs</i> if-plugin.
 </desc>
 <attr name='prestate' value='option1[,option2,...]' required>
 </attr>
 ",
 
-"if#referrer":#"<desc plugin>
- Does the referrer header match any of the patterns? Referrer is an <i>IfMatch</i>
+"if#referrer":#"<desc plugin><short>
+ Does the referrer header match any of the patterns?</short> Referrer is an <i>IfMatch</i>
  if-plugin.
 </desc>
 <attr name='referrer' value='pattern1[,pattern2,...]' required>
@@ -2271,8 +2271,8 @@ scope created within the define tag.
 
 // The list of support flags is extracted from the supports database and
 // concatenated to this entry.
-"if#supports":#"<desc plugin>
- Does the browser support this feature? Supports is an <i>IfIs</i> if-plugin.
+"if#supports":#"<desc plugin><short>
+ Does the browser support this feature?</short> Supports is an <i>IfIs</i> if-plugin.
 </desc>
 
 <attr name=supports'' value='feature' required required>
@@ -2281,8 +2281,8 @@ scope created within the define tag.
 <p>The following features are supported:</p>
 ",
 
-"if#time":#"<desc plugin>
- Is the time hhmm? The attributes before, after and inclusive modifies
+"if#time":#"<desc plugin><short>
+ Is the time hhmm?</short> The attributes before, after and inclusive modifies
  the behavior.
 </desc>
 <attr name='time' value='hhmm' required>
@@ -2297,16 +2297,16 @@ scope created within the define tag.
 <attr name=inclusive>
 </attr>",
 
-"if#user":#"<desc plugin>
- Has the user been authenticated as one of these users? If any is given as
+"if#user":#"<desc plugin><short>
+ Has the user been authenticated as one of these users?</short> If any is given as
  argument, any authenticated user will do.
 </desc>
 <attr name='user' value='name1[,name2,...]|any' required>
 </attr>
 ",
 
-"if#variable":#"<desc plugin>
- Does the variable exist and, optionally, does it's content match the pattern?
+"if#variable":#"<desc plugin><short>
+ Does the variable exist and, optionally, does it's content match the pattern?</short>
  Variable is an <i>IfIs</i> plugin.
 </desc>
 <attr name='variable' value='name[ is pattern]' required>
@@ -2315,7 +2315,7 @@ scope created within the define tag.
 
 // The list of support flags is extracted from the supports database and
 // concatenated to this entry.
-"if#clientvar":#"<desc plugin>
+"if#clientvar":#"<desc plugin><short></short>
  </desc>
 <attr name='clientvar' value='' required>
 </attr>
