@@ -17,14 +17,17 @@ void run_tests( Configuration c )
     report_error( "Failed to find test configuration\n");
     return;
   }
-
+  test(DBManager.set_permission, "local", c, DBManager.WRITE);
+  test(c->set, "URLs", ({ "http://*:17372" }) );
+  test(c->start, 0);
+  
   // Add all modules except wrapper modules and other funny stuff.
   array modules = roxen->all_modules();
   sort(modules->sname, modules);
   foreach(modules, ModuleInfo m) {
     if( (< "roxen_test", "config_tags", "update",
 	   "compat", "configtablist", "flik", "lpctag",
-	   "xmig", "userdb", "htmlparse", "directories2",
+	   "ximg", "userdb", "htmlparse", "directories2",
 	   "fastdir" >)[m->sname] )
       continue;
     current_test++;
@@ -58,5 +61,6 @@ void run_tests( Configuration c )
   foreach(new, string m)
     test( c->disable_module, m );
 
+  test(c->stop);
   test( roxen.disable_configuration, "usertestconfig" );
 }
