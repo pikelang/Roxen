@@ -33,7 +33,7 @@
  * specific debug features.  
  * 
  * You can also start roxen with any debug enabled like this:
- * bin/ulpc -DMODULE_DEBUG -m etc/master.lpc roxen
+ * bin/pike -DMODULE_DEBUG -m etc/master.pike roxenloader
  * 
  * Some other debug thingies:
  *  HTACCESS_DEBUG
