@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.172 2004/05/04 13:26:55 grubba Exp $
+// $Id: module.pike,v 1.173 2004/05/04 14:38:57 grubba Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -609,6 +609,9 @@ multiset(DAVLock) find_locks(string path,
   // Common case.
   if (!sizeof(file_locks) && !sizeof(prefix_locks)) return 0;
 
+  TRACE_ENTER(sprintf("find_locks(%O, %O, %O, X)",
+		      path, recursive, exclude_shared), this);
+
   multiset(DAVLock) locks = (<>);
   function(mapping(string:DAVLock):void) add_locks;
 
@@ -617,7 +620,8 @@ multiset(DAVLock) find_locks(string path,
     string auth_user = uid && uid->name();
     add_locks = lambda (mapping(string:DAVLock) sub_locks) {
 		  foreach (sub_locks; string user; DAVLock lock)
-		    if (user == auth_user || lock->lockscope == "DAV:exclusive")
+		    if (user == auth_user ||
+			lock->lockscope == "DAV:exclusive")
 		      locks[lock] = 1;
 		};
   }
@@ -648,6 +652,8 @@ multiset(DAVLock) find_locks(string path,
   }
 
   add_locks = 0;
+
+  TRACE_LEAVE(sprintf("Done, found %d locks.", sizeof(locks)));
 
   return sizeof(locks) && locks;
 }
@@ -701,19 +707,26 @@ DAVLock|int(0..3) check_locks(string path,
   // Common case.
   if (!sizeof(file_locks) && !sizeof(prefix_locks)) return 0;
 
+  TRACE_ENTER(sprintf("check_locks(%O, %d, X)", path, recursive), this);
+
   User uid = id->conf->authenticate (id);
   string auth_user = uid && uid->name();
 
   if (DAVLock lock =
       file_locks[path] && file_locks[path][auth_user] ||
-      prefix_locks[path] && prefix_locks[path][auth_user])
+      prefix_locks[path] && prefix_locks[path][auth_user]) {
+    TRACE_LEAVE(sprintf("Found lock %O.", lock->locktoken));
     return lock;
-
+  }
   int(0..1) shared;
 
   if (mapping(string:DAVLock) locks = file_locks[path]) {
     foreach(locks;; DAVLock lock) {
-      if (lock->lockscope == "DAV:exclusive") return 3;
+      if (lock->lockscope == "DAV:exclusive") {
+	TRACE_LEAVE(sprintf("Found other user's exclusive lock %O.",
+			    lock->locktoken));
+	return 3;
+      }
       shared = 1;
       break;
     }
@@ -727,14 +740,21 @@ DAVLock|int(0..3) check_locks(string path,
 	// If we've found a shared lock then we won't find an
 	// exclusive one higher up.
 	foreach(locks;; DAVLock lock) {
-	  if (lock->lockscope == "DAV:exclusive") return 3;
+	  if (lock->lockscope == "DAV:exclusive") {
+	    TRACE_LEAVE(sprintf("Found other user's exclusive lock %O.",
+				lock->locktoken));
+	    return 3;
+	  }
 	  shared = 1;
 	  break;
 	}
     }
   }
 
-  if (!recursive) return shared;
+  if (!recursive) {
+    TRACE_LEAVE(sprintf("Returning %O.", shared));
+    return shared;
+  }
 
   int(0..1) locked_by_auth_user;
 
@@ -747,13 +767,18 @@ DAVLock|int(0..3) check_locks(string path,
 	locked_by_auth_user = 1;
       else
 	foreach(locks;; DAVLock lock) {
-	  if (lock->lockscope == "DAV:exclusive") return 3;
+	  if (lock->lockscope == "DAV:exclusive") {
+	    TRACE_LEAVE(sprintf("Found other user's exclusive lock %O.",
+				lock->locktoken));
+	    return 3;
+	  }
 	  shared = 1;
 	  break;
 	}
     }
   }
 
+  TRACE_LEAVE(sprintf("Returning %O.", locked_by_auth_user ? 2 : shared));
   return locked_by_auth_user ? 2 : shared;
 }
 
@@ -794,6 +819,8 @@ mapping(string:mixed) lock_file(string path,
 				RequestID id)
 {
   ASSERT_IF_DEBUG (lock->locktype == "DAV:write");
+  TRACE_ENTER(sprintf("lock_file(%O, lock(%O), X).", path, lock->locktoken),
+	      this);
   User uid = id->conf->authenticate (id);
   string user = uid && uid->name();
   if (lock->recursive) {
@@ -809,6 +836,7 @@ mapping(string:mixed) lock_file(string path,
       file_locks[path] = ([ user:lock ]);
     }
   }
+  TRACE_LEAVE("Ok.");
   return 0;
 }
 
@@ -827,6 +855,8 @@ mapping(string:mixed) unlock_file (string path,
 				   DAVLock lock,
 				   RequestID id)
 {
+  TRACE_ENTER(sprintf("unlock_file(%O, lock(%O), X).", path, lock->locktoken),
+	      this);
   User uid = id->conf->authenticate (id);
   string user = uid && uid->name();
   DAVLock removed_lock;
@@ -839,6 +869,7 @@ mapping(string:mixed) unlock_file (string path,
     if (!sizeof (file_locks[path])) m_delete (file_locks, path);
   }
   ASSERT_IF_DEBUG (lock /*%O*/ == removed_lock /*%O*/, lock, removed_lock);
+  TRACE_LEAVE("Ok.");
   return 0;
 }
 
