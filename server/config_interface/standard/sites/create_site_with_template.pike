@@ -64,12 +64,12 @@ mixed parse( RequestID id )
 	  foreach (id->misc->module_initial_vars || ({}), string var)
 	    q += "&init_var=" + http_encode_string (replace (var, "#", "!"));
 	}
-        call_out( c->save, 1, 1 );
+        c->save (1);
         return http_redirect( fix_relative(q, id), id );
       }
       else
       {
-        call_out( c->save, 1, 1 );
+        c->save (1);
         return http_redirect(fix_relative("site.html/"+
                          http_encode_string(id->variables->name)+"/", id), id);
       }
