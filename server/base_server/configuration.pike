@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.488 2001/09/13 13:15:18 hop Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.489 2001/09/13 21:27:38 nilsson Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2309,10 +2309,32 @@ int|string try_get_file(string s, RequestID id,
   return res;
 }
 
-int(0..1) is_file(string virt_path, RequestID id)
-//! Is `virt_path' a file in our virtual filesystem?
+int(0..1) is_file(string virt_path, RequestID id, int(0..1)|void internal)
+//! Is @[virt_path] a file in our virtual filesystem? If @[internal] is
+//! set, internal files is "visible" as well.
 {
-  return !!stat_file(virt_path, id);
+  if(internal) {
+    int(0..1) was_internal = id->misc->internal_get;
+    id->misc->internal_get = 1;
+    int(0..1) res = !!stat_file(virt_path, id);
+    if(!was_internal)
+      m_delete(id->misc, "internal_get");
+    return res;
+  }
+  if(stat_file(virt_path, id) ||
+     has_suffix(virt_path, "/internal-roxen-unit"))
+    return 1;
+  string f = (virt_path/"/")[-1];
+  if( sscanf(f, "internal-roxen-%s", f) ) {
+    if(internal_roxen_image(f, id) ||
+       has_prefix(f, "pixel-"))
+      return 1;
+    return 0;
+  }
+  if( sscanf(f, "internal-gopher-%s", f) &&
+      internal_gopher_image(f) )
+    return 1;
+  return 0;
 }
 
 array registered_urls = ({}), failed_urls = ({ });
