@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.357 1999/11/24 15:01:23 per Exp $
+ * $Id: roxen.pike,v 1.358 1999/11/24 19:11:19 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.357 1999/11/24 15:01:23 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.358 1999/11/24 19:11:19 per Exp $";
 
 object backend_thread;
 object argcache;
@@ -2775,13 +2775,16 @@ void dump( string file )
 #endif
 }
 
+program slowpipe, fastpipe;
+
 int main(int argc, array argv)
 {
   mkdir( "precompiled" );
+  slowpipe = ((program)"slowpipe");
+  fastpipe = ((program)"fastpipe");
+
   
   call_out( lambda() {
-              ((program)"fastpipe"),
-              ((program)"slowpipe"),
               dump( "protocols/http.pike");
               dump( "protocols/ftp.pike");
               dump( "protocols/https.pike");
