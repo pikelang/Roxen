@@ -1,5 +1,5 @@
 /* -*- Pike -*-
- * $Id: config.h,v 1.26 2001/01/14 10:24:37 nilsson Exp $
+ * $Id: config.h,v 1.27 2001/04/27 16:23:28 mast Exp $
  *
  * User configurable things not accessible from the normal
  * administration interface. Not much, but there are some things..  
@@ -69,6 +69,11 @@
 /* Define this to keep support for old (pre-2.0) RXML.
  */
 #define OLD_RXML_COMPAT
+
+// Define to get verbose backtraces in the debug log for each RXML
+// error. As opposed to the normal reports of RXML errors, they will
+// include the Pike backtraces too.
+//#define VERBOSE_RXML_ERRORS
 
 // Define back to which Roxen version you would like to keep 
 // compatibility.

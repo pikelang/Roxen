@@ -15,7 +15,7 @@
 #define _rettext _defines[" _rettext"]
 #define _ok _defines[" _ok"]
 
-constant cvs_version = "$Id: rxmlparse.pike,v 1.56 2001/04/24 00:48:49 nilsson Exp $";
+constant cvs_version = "$Id: rxmlparse.pike,v 1.57 2001/04/27 16:24:30 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -162,8 +162,12 @@ string rxml_run_error(RXML.Backtrace err, RXML.Type type)
 
   NOCACHE();
   if (type->subtype_of (RXML.t_html) || type->subtype_of (RXML.t_xml)) {
+#ifdef VERBOSE_RXML_ERRORS
+    report_notice ("Error in %s.\n%s", id->raw_url, describe_backtrace (err));
+#else
     if(query("logerrorsr"))
       report_notice ("Error in %s.\n%s", id->raw_url, describe_error (err));
+#endif
     _ok=0;
     if(query("quietr") && !_misc->debug && !([multiset(string)]id->prestate)->debug)
       return "";
@@ -191,8 +195,12 @@ string rxml_parse_error(RXML.Backtrace err, RXML.Type type)
 
   NOCACHE();
   if (type->subtype_of (RXML.t_html) || type->subtype_of (RXML.t_xml)) {
+#ifdef VERBOSE_RXML_ERRORS
+    report_notice ("Error in %s.\n%s", id->raw_url, describe_backtrace (err));
+#else
     if(query("logerrorsp"))
       report_notice ("Error in %s.\n%s", id->raw_url, describe_error (err));
+#endif
     if(query("quietp") && !_misc->debug && !([multiset(string)]id->prestate)->debug)
       return "";
     return "<br clear=\"all\" />\n<pre>" +
