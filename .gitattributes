@@ -1,6 +1,5 @@
 [attr]binary -text -crlf -diff -ident
 * text ident
-*.bat eol=crlf
 *.cpp -text -crlf
 *.dsp eol=crlf
 *.dsw eol=crlf
