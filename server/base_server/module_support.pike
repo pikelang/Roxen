@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module_support.pike,v 1.60 2000/03/11 13:27:25 grubba Exp $
+// $Id: module_support.pike,v 1.61 2000/03/13 06:13:50 per Exp $
 
 #include <roxen.h>
 #include <module_constants.h>
@@ -353,7 +353,7 @@ class ModuleInfo
 
   int rec_find_module( string what, string dir )
   {
-    array dirlist = (get_dir(dir) || ({})) - ({"CVS"});
+    array dirlist = (r_get_dir(dir) || ({})) - ({"CVS"});
 
     if( (search( dirlist, ".nomodules" ) != -1) ||
         (search( dirlist, ".no_modules" ) != -1) )
@@ -362,7 +362,7 @@ class ModuleInfo
     foreach( dirlist, string file )
       catch
       {
-        if( file_stat( dir+file )[ ST_SIZE ] == -2
+        if( r_file_stat( dir+file )[ ST_SIZE ] == -2
             && file != "." && file != ".." )
           if( rec_find_module( what, dir+file+"/" ) )
             return 1;
@@ -414,7 +414,7 @@ class ModuleInfo
       {
         filename = data->filename;
         array stat;
-        if(!(stat = file_stat( filename ) ))
+        if(!(stat = r_file_stat( filename ) ))
           filename=0;
         else
           if( data->last_checked >= stat[ ST_MTIME ] )
@@ -432,7 +432,7 @@ class ModuleInfo
       }
     }
     if( filename )
-      return init_module( filename );
+      return init_module( roxen_path( filename ) );
     else
       return find_module( sname );
   }
@@ -472,7 +472,7 @@ array rec_find_all_modules( string dir )
   array modules = ({});
   catch
   {
-    array dirlist = get_dir( dir ) - ({"CVS"});
+    array dirlist = r_get_dir( dir ) - ({"CVS"});
 
     if( search( dirlist, ".nomodules" )  != -1)
       return ({});
@@ -484,11 +484,11 @@ array rec_find_all_modules( string dir )
         if( file[-1] == '~' ) continue;
         if( (< "so", "pike", "class" >)[ extension( file ) ] )
         {
-          Stdio.File f = Stdio.File( dir+file, "r" );
+          Stdio.File f = open( dir+file, "r" );
           if( (f->read( 4 ) != "#!NO" ) )
             modules |= ({ strip_extention( file ) });
         }
-        else if( file_stat( dir+file )[ ST_SIZE ] == -2 )
+        else if( r_file_stat( dir+file )[ ST_SIZE ] == -2 )
           modules |= rec_find_all_modules( dir+file+"/" );
       };
   };
