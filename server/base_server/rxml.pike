@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.205 2000/07/05 14:45:37 wellhard Exp $
+// $Id: rxml.pike,v 1.206 2000/07/14 16:20:29 kuntri Exp $
 
 
 inherit "rxmlhelp";
@@ -2092,9 +2092,13 @@ constant tagdoc=([
  Alters the case of the contents.</short>
 </desc>
 
-<attr name=case value=upper|lower|capitalize required>
+<attr name='case' value='upper|lower|capitalize' required>
  Changes all characters to upper or lower case letters, or
  capitalizes the first letter in the content.
+
+<ex><case upper=''>upper</case></ex>
+<ex><case lower=''>lower</case></ex>
+<ex><case capitalize=''>captalize</case></ex>
 </attr>",
 
 "cond":({ #"<desc cont><short hide>This tag makes a boolean test on a specified list of cases.</short>
@@ -2111,10 +2115,10 @@ constant tagdoc=([
  tag is parsed.</desc>
 
 <ex type=vert>
-<set variable=\"var.foo\" value=\"17\"/>
+<set variable='var.foo' value='17'/>
 <cond>
-  <case true>&var.foo;<set variable=\"var.foo\" expr=\"&var.foo;+1\"/></case>
-  <default>&var.foo;<set variable=\"var.foo\" expr=\"&var.foo;+2\"/></default>
+  <case true>&var.foo;<set variable='var.foo' expr='&var.foo;+1'/></case>
+  <default>&var.foo;<set variable='var.foo' expr='&var.foo;+2'/></default>
 </cond>
 &var.foo;
 </ex>",
@@ -2151,7 +2155,7 @@ constant tagdoc=([
 "comment":#"<desc cont><short>
  The enclosed text will be removed from the document.</short> The difference
  from a normal SGML (HTML/XML) comment is that the text is removed
- from the document, and can not be seen even with view source. Another
+ from the document, and can not be seen even with <i>view source</i> in the browser. Another
  difference is that any RXML tags inside this container will not be
  parsed.
 </desc>",
@@ -2246,14 +2250,41 @@ scope created within the define tag.
 
 "if":#"<desc cont><short hide>
  <if> is used to conditionally show its contents.</short><tag><ref
- type='tag'>if</ref></tag> is used to conditionally show its contents.
+ type='tag'>If</ref></tag> is used to conditionally show its contents.
  <tag><ref type='tag'>else</ref></tag>, <tag><ref
  type='tag'>elif</ref></tag> or <tag><ref
  type='tag'>elseif</ref></tag> can be used to suggest alternative
- content. It is possible to use glob patterns in almost all
- attributes, where * means match zero or more characters while ?
- matches one character. * Thus t*f?? will match trainfoo as well as *
- tfoo but not trainfork or tfo. </desc>
+ content.
+
+ <p>It is possible to use glob patterns in almost all attributes,
+ where * means match zero or more characters while ? matches one
+ character. * Thus t*f?? will match trainfoo as well as * tfoo but not
+ trainfork or tfo. It is however not possible to use regexp's together
+ with any of the if-plugins.</p>
+
+  The <tag>if</tag> tag itself is useless without its plugins. Its
+ main functionality is to provide a framework for the plugins. The
+ <tag>if</tag> tag only provides the attributes <att>not</att>,
+ <att>or</att> and <att>and</att> which are used between two plugins.
+ An if-plugin is a used inside the <tag>if</tag> tag like an
+ attribute.</p>
+
+ <p>There are two main types of if-plugins defined, <i>IfIs</i> and
+ <i>IfMatch</i>. If the if-plugin is of an <i>IfMatch</i> type the if
+ statement will be matched as a glob, i.e. * is considered a
+ multicharacter wildcard:</p>
+
+ <ex type=vert>Your domain <if
+ ip='130.236.*'>is</if><else>isn't</else> liu.se.</ex>
+
+ <p> If the if-plugin is of an <i>IfIs</i> type the if statement will
+ be compared with one of the following operators 'is', '=', '==',
+ '!=', '&lt;' and '&gt'. The operators 'is', '=' and '==' are the
+ same.</p>
+
+ <ex><set variable='var.x' value='6'/>
+ <if variable='var.x > 5'>More than one hand</if></ex>
+</desc>
 
 <attr name=not>
  Inverts the result (true->false, false->true).
@@ -2264,62 +2295,59 @@ scope created within the define tag.
 
 <attr name=and>
  If all criterions are met the result is true. And is default.
-</attr>
+</attr>",
 
- <p>
- In the rxml.pike file the main if functionality is defined. There are
- two main types of if callers defined in rxml.pike,\"IfIs\" and \"IfMatch\".
- If the if caller is of an IfMatch type the if statement will be
- matched as a glob, i.e. * is considered a multicharacter wildcard.
- </p>
-
- <ex type=vert>Your domain <if ip=\"130.236.*\">is</if><else>isn't</else> liu.se.</ex>
-
- <p>
- If the if caller is of an IfIs type the if statement will be compared
- with one of the following operators is, =, ==, !=, &lt; and &gt. The
- operators is, = and == are the same.
- </p>
- <ex><set variable=x value=6>
-<if variable=\"x > 5\">More than one hand</if></ex>",
-
-"if#true":#"<desc plugin>
- This will always be true if the truth value is set to be true.
+"if#true":#"<desc plugin><short>
+ This will always be true if the truth value is set to be true.</short>
  Equivalent with <tag><ref type=cont>then</ref></tag>.
-</desc>",
+</desc>
+<attr name='true' value='' required>
+</attr>",
 
-"if#false":#"<desc plugin>
- This will always be true if the truth value is set to be false.
+"if#false":#"<desc plugin><short>
+ This will always be true if the truth value is set to be false.</short>
  Equivalent with <tag><ref type='tag'>else</ref></tag>.
-</desc>",
+</desc>
+<attr name='false' value='' required>
+</attr>",
 
-"if#accept":#"<desc plugin>
+"if#accept":#"<desc plugin><short>
  Returns true is the browser accept certain content types as specified
- by it's Accept-header, for example image/jpeg or text/html. If
+ by it's Accept-header, for example image/jpeg or text/html.</short> If
  browser states that it accepts */* that is not taken in to account as
- this is always untrue. Accept is an IfMatch if caller.
-</desc>",
+ this is always untrue. Accept is an IfMatch if-plugin.
+</desc>
+<attr name='accept' value='type1[,type2,...]' required>
+</attr>",
 
-"if#config":#"<desc plugin>
+"if#config":#"<desc plugin><short>
  Has the config been set by use of the <tag><ref
- type='tag'>aconf</ref></tag> tag? (Config is an IfIs if caller,
+ type='tag'>aconf</ref></tag> tag?</short> (Config is an <i>IfIs</i> if-plugin,
  although that functionality does not apply here.).
-</desc>",
+</desc>
+<attr name='config' value='name' required>
+</attr>",
 
-"if#cookie":#"<desc plugin>
+"if#cookie":#"<desc plugin><short>
  Does the cookie exist and if a value is given, does it contain that
- value? Cookie is av IfIs if caller.
-</desc>",
+ value?</short> Cookie is an <i>IfIs</i> if-plugin.
+</desc>
+<attr name='cookie' value='name[ is value]' required>
+</attr>",
 
-"if#client":#"<desc plugin>
- Compares the user agent string with a pattern. Client and name is an
- IfMatch if caller.
-</desc>",
+"if#client":#"<desc plugin><short>
+ Compares the user agent string with a pattern.</short> Client and name is an
+ <i>IfMatch</i> if-plugin.
+</desc>
+<attr name='client' value='' required>
+</attr>",
 
-"if#date":#"<desc plugin>
- Is the date yyyymmdd? The attributes before, after and inclusive
+"if#date":#"<desc plugin><short>
+ Is the date yyyymmdd?</short> The attributes before, after and inclusive
  modifies the behavior.
 </desc>
+<attr name='date' value='yyyymmdd' required>
+</attr>
 
 <attr name=after>
 </attr>
@@ -2330,69 +2358,108 @@ scope created within the define tag.
 <attr name=inclusive>
 </attr>",
 
-"if#defined":#"<desc plugin>
- Tests if a certain define is defined? Defined is an IfIs if caller.
-</desc>",
-
-"if#domain":#"<desc plugin>
- Does the user'\s computer'\s DNS name match any of the patterns? Note
- that domain names are resolved asynchronously, and the the first time
- someone accesses a page, the domain name will probably not have been
- resolved. Domain is an IfMatch if caller.
-</desc>",
-
-"if#exists":#"<desc plugin>
- Returns true if the file path exists. If path does not begin with /,
- it is assumed to be a URL relative to the directory containing the page
- with the <tag><ref type='tag'>if</ref></tag>-statement.
-</desc>",
-
-"if#group":#"<desc plugin>
- Checks if the current user is a member of the group according
- the groupfile. Syntax is groupfile=path.
-</desc>",
-
-"if#ip":#"<desc plugin>
- Does the users computers IP address match any of the patterns? Host and
- ip are IfMatch if callers.
-</desc>",
-
-"if#language":#"<desc plugin>
- Does the client prefer one of the languages listed, as specified by the
- Accept-Language header? Language is an IfMatch if caller.
-</desc>",
-
-"if#match":#"<desc plugin>
- Does the string match one of the patterns? Match is an IfMatch if caller.
-</desc>",
-
-"if#pragma":#"<desc plugin>
- Compares the pragma with a string. Pragma is an IfIs if caller.
-</desc>",
-
-"if#prestate":#"<desc plugin>
- Are all of the specified prestate options present in the URL? Prestate is
- an IfIs if caller.
-</desc>",
-
-"if#referrer":#"<desc plugin>
- Does the referrer header match any of the patterns? Referrer is an IfMatch
- if caller.
-</desc>",
-
-// The list of support flags is extracted from the supports database and
-// concatenated to this entry.
-"if#supports":#"<desc plugin>
- Does the browser support this feature? Supports is an IfIs if caller.
+"if#defined":#"<desc plugin><short>
+ Tests if a certain define is defined?</short> Defined is an <i>IfIs</i> if-plugin.
 </desc>
-
-The following features are supported:
+<attr name='defined' value='define' required>
+</attr>
 ",
 
-"if#time":#"<desc plugin>
- Is the date ttmm? The attributes before, after and inclusive modifies
+"if#domain":#"<desc plugin><short>
+ Does the user's computer's DNS name match any of the patterns?</short> Note
+ that domain names are resolved asynchronously, and the the first time
+ someone accesses a page, the domain name will probably not have been
+ resolved. Domain is an <i>IfMatch</i> if-plugin.
+</desc>
+<attr name='domain' value='pattern1[,pattern2,...]' required>
+</attr>
+",
+
+"if#exists":#"<desc plugin><short>
+ Returns true if the file path exists.</short> If path does not begin with /,
+ it is assumed to be a URL relative to the directory containing the page
+ with the <tag><ref type='tag'>if</ref></tag>-statement.
+</desc>
+<attr name='exists' value='path' required>
+</attr>
+",
+
+"if#group":#"<desc plugin><short>
+ Checks if the current user is a member of the group according
+ the groupfile.</short> Syntax is groupfile=path.
+</desc>
+<attr name='group' value='' required>
+</attr>
+",
+
+"if#ip":#"<desc plugin><short>
+ Does the users computers IP address match any of the
+ patterns?</short> Host and ip are <i>IfMatch</i> if-plugins.
+</desc>
+<attr name='ip' value='pattern1[,pattern2,...]' required>
+</attr>
+",
+
+"if#language":#"<desc plugin><short>
+ Does the client prefer one of the languages listed, as specified by the
+ Accept-Language header?</short> Language is an <i>IfMatch</i> if-plugin.
+</desc>
+<attr name='language' value='language1[,language2,...]' required>
+</attr>
+",
+
+"if#match":#"<desc plugin><short>
+ Does the string match one of the patterns?</short> Match is an <i>IfMatch</i> if-plugin.
+</desc>
+<attr name='match' value='pattern1[,pattern2,...]' required>
+</attr>
+",
+
+"if#pragma":#"<desc plugin><short>
+ Compares the HTTP header pragma with a string.</short> Pragma is an <i>IfIs</i> if-plugin.
+</desc>
+<attr name='pragma' value='string' required>
+<ex>
+<if pragma='no-cache'>The page has been reloaded!</if>
+<else>Reload this page!</else>
+</ex>
+</attr>
+",
+
+"if#prestate":#"<desc plugin><short>
+ Are all of the specified prestate options present in the URL?</short> Prestate is
+ an <i>IfIs</i> if-plugin.
+</desc>
+<attr name='prestate' value='option1[,option2,...]' required>
+</attr>
+",
+
+"if#referrer":#"<desc plugin><short>
+ Does the referrer header match any of the patterns?</short> Referrer is an <i>IfMatch</i>
+ if-plugin.
+</desc>
+<attr name='referrer' value='pattern1[,pattern2,...]' required>
+</attr>
+",
+
+// The list of support flags is extracted from the supports database and
+// concatenated to this entry.
+"if#supports":#"<desc plugin><short>
+ Does the browser support this feature?</short> Supports is an <i>IfIs</i> if-plugin.
+</desc>
+
+<attr name=supports'' value='feature' required required>
+</attr>
+
+<p>The following features are supported:</p>
+",
+
+"if#time":#"<desc plugin><short>
+ Is the time hhmm?</short> The attributes before, after and inclusive modifies
  the behavior.
 </desc>
+<attr name='time' value='hhmm' required>
+</attr>
 
 <attr name=after>
 </attr>
@@ -2403,22 +2470,31 @@ The following features are supported:
 <attr name=inclusive>
 </attr>",
 
-"if#user":#"<desc plugin>
- Has the user been authenticated as one of these users? If any is given as
+"if#user":#"<desc plugin><short>
+ Has the user been authenticated as one of these users?</short> If any is given as
  argument, any authenticated user will do.
-</desc>",
+</desc>
+<attr name='user' value='name1[,name2,...]|any' required>
+</attr>
+",
 
-"if#variable":#"<desc plugin>
- Does the variable exist and, optionally, does it's content match the pattern?
- Variable is an IfIs plugin.
-</desc>",
+"if#variable":#"<desc plugin><short>
+ Does the variable exist and, optionally, does it's content match the pattern?</short>
+ Variable is an <i>IfIs</i> plugin.
+</desc>
+<attr name='variable' value='name[ is pattern]' required>
+</attr>
+",
 
 // The list of support flags is extracted from the supports database and
 // concatenated to this entry.
-"if#clientvar":#"<desc plugin>
+"if#clientvar":#"<desc plugin><short></short>
  </desc>
+<attr name='clientvar' value='' required>
+</attr>
 
- Available variables are:
+
+<p>Available variables are:</p>
 ",
 
 "nooutput":#"<desc cont><short>
@@ -2442,14 +2518,16 @@ The following features are supported:
 <attr name=language value=langcodes>
  The language to use.
  <lang/>
-<ex type='vert'>Mitt favoritnummer är <number num='11' language='sv'/>.</ex>
-<ex type='vert'>My favorite number is <number num='21' language='en'/>.</ex>
-<ex type='vert'>Il mio numero preferito &egrave;<number num='15' language='it'/>.</ex>
+ <ex type='vert'>Mitt favoritnummer är <number num='11' language='sv'/>.</ex>
+ <ex type='vert'>My favorite number is <number num='21' language='en'/>.</ex>
+ <ex type='vert'>Il mio numero preferito &egrave;<number num='15'
+ language='it'/>.</ex>
 </attr>
 
 <attr name=type value=number|ordered default=number>
  Sets output format.
-<ex type='vert'>It was his <number num='15' type='ordered'/> birthday yesterday.</ex>
+ <ex type='vert'>It was his <number num='15' type='ordered'/> birthday
+ yesterday.</ex>
 </attr>",
 
 "strlen":#"<desc cont><short>
@@ -2458,6 +2536,9 @@ The following features are supported:
 
 "then":#"<desc cont><short>
  Shows its content if the truth-value is true.</short>
+
+ <ex>There is <strlen>foo bar gazonk</strlen> characters inside the
+ tag.</ex>
 </desc>",
 
 "trace":#"<desc cont><short>
@@ -2474,13 +2555,20 @@ The following features are supported:
  <tag><ref type='tag'>if</ref></tag> lookalike tag.
 </desc>",
 
-"undefine":#"<desc tag>
- Removes a definition made by the define container. One attribute is
- required.
+"undefine":#"<desc tag><short>
+ Removes a definition made by the define container.</short> One
+ attribute is required.
 </desc>
 
 <attr name=variable value=name>
  Undefines this variable.
+
+ <ex>
+  <define variable='var.hepp'>hopp</define>
+  &var.hepp;
+  <undefine variable='var.hepp'/>
+  &var.hepp;
+ </ex>
 </attr>
 
 <attr name=tag value=name>
@@ -2526,9 +2614,11 @@ The following features are supported:
  <tag><ref type='tag'>insert</ref></tag>, since the parsed definitions
  is cached.",
 
-"eval":#"<desc cont><short>Postparses its content.</short> Useful when an entity contains
- RXML-code. <tag>eval</tag> is then placed around the entity to get its
- content parsed.</desc>",
+"eval":#"<desc cont><short>
+ Postparses its content.</short> Useful when an entity contains
+ RXML-code. <tag>eval</tag> is then placed around the entity to get
+ its content parsed.
+</desc>",
 
 "emit#sources":({
   "<desc plugin>Provides a list of all available emit sources.</desc>",
