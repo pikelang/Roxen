@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.103 1999/11/29 22:11:42 per Exp $
+/* $Id: wizard.pike,v 1.104 1999/12/06 15:07:23 wellhard Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -791,7 +791,7 @@ mapping get_actions(RequestID id, string base,string dir, array args)
   {
     mixed err;
     object e;
-    master()->set_inhibit_compile_errors((e = ErrorContainer())->got_error);
+    master()->set_inhibit_compile_errors(e = ErrorContainer());
     err = catch
     {
       if(!(<'#', '_'>)[act[0]] && act[-1]=='e')
@@ -812,8 +812,9 @@ mapping get_actions(RequestID id, string base,string dir, array args)
 	      name+"</a></font><dd>"+(get_wizard(act,dir,@args)->doc||"")});
       }
     };
-    if(e->get() && strlen(e->get()))
+    if(strlen(e->get()))
       error("While compiling wizards:\n"+e->get());
+    
     if(err) report_error(describe_backtrace(err));
   }
   return acts;
