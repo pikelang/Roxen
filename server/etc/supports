@@ -1,4 +1,4 @@
-# $Id: supports,v 1.88 2001/03/31 20:52:03 nilsson Exp $
+# $Id: supports,v 1.89 2001/08/05 16:58:27 nilsson Exp $
 
 # --- Supports database ---
 # The database used to determine what different user-agents (browsers) support.
@@ -35,7 +35,7 @@
 # <flags>
 #! activex - The browser handles activeX contents.
 #! align - The browser supports the align attribute in its tags.
-#! autogunzip - The browser can decode a gunzipped file on the fly.
+#! autogunzip - The browser can decode a gzipped file on the fly.
 #! backgrounds - The browser supports backgrounds according to the HTML3 specifications.
 #! bigsmall - The browser supports the <big> and <small> tags.
 #! center - The browser supports the <center> tag.
