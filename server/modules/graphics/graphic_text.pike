@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Idonex AB.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.203 2000/02/10 05:29:05 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.204 2000/02/16 14:20:28 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -63,6 +63,7 @@ string status() {
 void start(int num, Configuration conf)
 {
   image_cache = roxen.ImageCache( "gtext", draw_callback );
+  roxen.dump( "etc/modules/GText.pmod" );
   if(query("colorparse")) module_dependencies(conf, ({ "wiretap" }) );
 }
 
