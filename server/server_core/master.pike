@@ -5,9 +5,9 @@
 object mm=(object)"/master";
 inherit "/master": master;
 
-constant cvs_version = "$Id: master.pike,v 1.136 2004/04/04 14:26:43 mani Exp $";
+constant cvs_version = "$Id: master.pike,v 1.137 2004/04/21 10:34:05 mani Exp $";
 
-#define Stat _static_modules.___files.Stat
+#define Stat _static_modules.files.Stat
 
 mixed sql_query( string q, mixed ... e )
 {
