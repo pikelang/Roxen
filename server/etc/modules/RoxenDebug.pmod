@@ -1,6 +1,6 @@
 // Some debug tools.
 //
-// $Id: RoxenDebug.pmod,v 1.5 2003/01/20 14:33:31 mast Exp $
+// $Id: RoxenDebug.pmod,v 1.6 2003/01/22 16:16:03 grubba Exp $
 
 
 //! Helper to locate leaking objects. Use a line like this to mark a
@@ -18,10 +18,12 @@ class ObjectMarker
 {
   int count = ++all_constants()->__object_marker_count;
   string id;
+  int flags;
 
   //!
-  void create (void|string|object obj)
+  void create (void|string|object obj, void|int flags)
   {
+    this_program::flags = flags;
     if (obj) {
       string new_id = stringp (obj) ? obj : sprintf ("%O", obj);
       string cnt = sprintf ("[%d]", count);
@@ -67,6 +69,10 @@ class ObjectMarker
 	if (object_markers[id] > 0) werror ("destroy %s\n", id);
 	else werror ("destroy ** %s\n", id);
       if (--object_markers[id] <= 0) m_delete (object_markers, id);
+    }
+    if (flags && log_create_destruct) {
+      werror("destructing...\n"
+	     "%s\n", describe_backtrace(backtrace()));
     }
   }
 
