@@ -44,7 +44,7 @@ string program_name_version( program what )
   if(!ofile)
     ofile = "No .o file";
   if( !(fs = file_stat( file )) )
-    warning="<blink>Source file gone!</blink>";
+    warning="<i>Source file gone!</i>";
   else if( (ofs = file_stat( ofile )) && ofs[ST_SIZE] )
   {
     if( ofs[ ST_MTIME ] < fs[ ST_MTIME ] )
