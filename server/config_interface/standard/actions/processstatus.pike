@@ -1,10 +1,15 @@
 /*
- * $Id: processstatus.pike,v 1.3 2000/03/24 13:17:05 grubba Exp $
+ * $Id: processstatus.pike,v 1.4 2000/09/08 22:29:16 lange Exp $
  */
 
+#include <roxen.h>
+//<locale-token project="admin_tasks">LOCALE</locale-token>
+#define LOCALE(X,Y)	_STR_LOCALE("admin_tasks",X,Y)
+
 constant action="status";
-constant name= "Process status";
-constant doc = ("Shows various information about the roxen process.");
+
+string name= LOCALE(85, "Process status");
+string doc = LOCALE(86, "Shows various information about the Roxen process.");
 
 string describe_global_status()
 {
@@ -14,7 +19,7 @@ string describe_global_status()
 
 #define MB (1024*1024)
 
-mixed parse(object id)
+mixed parse( RequestID id )
 {
   string res;
   array(int) ru;
@@ -46,5 +51,5 @@ mixed parse(object id)
 	  +(ru[11]?"Messages sent             : " + ru[11] + "\n":"")
 	  +(ru[12]?"Messages received         : " + ru[12] + "\n":"")
 	  +(ru[13]?"Number of signals received: " + ru[13] + "\n":"")
-	  +"</pre><p><cf-ok>");
+	  +"</pre><p><cf-ok/></p>");
 }
