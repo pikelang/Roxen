@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.371 2002/07/02 12:15:33 anders Exp $";
+constant cvs_version = "$Id: http.pike,v 1.372 2002/07/03 15:28:48 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1080,6 +1080,7 @@ string link_to(string file, int line, string fun, int eid, int qq)
 	  (fun ? "&fun="+Roxen.http_encode_url(fun) : "") +
 	  "&off="+qq+
 	  "&error="+eid+
+	  "&error_md5="+get_err_md5(get_err_info(eid))+
 	  (line ? "&line="+line+"#here" : "") +
 	  "\">");
 }
@@ -1098,11 +1099,39 @@ static string error_page_header (string title)
 ";
 }
 
-string format_backtrace(int eid)
+static string get_err_md5(array(string|array(string)|array(array)) err_info)
 {
-  [string msg, array(string) rxml_bt, array(array) bt,
-   string raw_bt_descr, string raw_url, string raw] =
+  if (err_info) {
+    return Crypto.string_to_hex(Crypto.md5()->update(err_info[3])->digest());
+  }
+  return "NONE";
+}
+
+static array(string|array(string)|array(array)) get_err_info(int eid,
+							     string|void md5)
+{
+  array(string|array(string)|array(array)) err_info = 
     roxen.query_var ("errors")[eid];
+  
+  if (!err_info ||
+      (md5 && (md5 != get_err_md5(err_info)))) {
+    // Extra safety...
+    return 0;
+  }
+  return err_info;
+}
+
+
+string format_backtrace(int eid, string|void md5)
+{
+  array(string|array(string)|array(array)) err_info = get_err_info(eid, md5);
+
+  if (!err_info) {
+    return error_page_header("Unregistred Error");
+  }
+
+  [string msg, array(string) rxml_bt, array(array) bt,
+   string raw_bt_descr, string raw_url, string raw] = err_info;
 
   string res = error_page_header ("Internal Server Error") +
     "<h1>" + replace (Roxen.html_encode_string (msg), "\n", "<br />\n") + "</h1>\n";
@@ -1134,7 +1163,10 @@ string format_backtrace(int eid)
     res += "</ul>\n\n";
   }
 
-  res += ("<p><b><a href=\"/(old_error,plain)/error/?error="+eid+"\">"
+  res += ("<p><b><a href=\"/(old_error,plain)/error/?"
+	  "error="+eid+
+	  "&error_md5="+get_err_md5(get_err_info(eid))+
+	  "\">"
 	  "Generate text only version of this error message, for bug reports"+
 	  "</a></b></p>\n\n");
   return res+"</body></html>";
@@ -1243,10 +1275,16 @@ int store_error(mixed _err)
   return id;
 }
 
-array get_error(string eid)
+array get_error(string eid, string md5)
 {
   mapping e = roxen.query_var("errors");
-  if(e) return e[(int)eid];
+  if(e) {
+    array r = e[(int)eid];
+    if (r && (md5 == Crypto.string_to_hex(Crypto.md5()->
+					  update(r[3])->digest()))) {
+      return r;
+    }
+  }
   return 0;
 }
 
@@ -1880,7 +1918,7 @@ void handle_request( )
 #ifdef MAGIC_ERROR
   if(prestate->old_error)
   {
-    array err = get_error(variables->error);
+    array err = get_error(variables->error, variables->error_md5 || "NONE");
     if(err && arrayp(err))
     {
       if(prestate->plain)
