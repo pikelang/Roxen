@@ -1,4 +1,4 @@
-// $Id: module.h,v 1.15 1998/04/03 19:10:43 per Exp $
+// $Id: module.h,v 1.16 1998/06/29 13:11:17 grubba Exp $
 #ifndef ROXEN_MODULE_H
 #define ROXEN_MODULE_H
 
@@ -89,10 +89,12 @@
 #define MODULE_PROVIDER		 (2<<15)
 
 
-#define MOD_ALLOW   1
-#define MOD_USER    2
-#define MOD_DENY    3
-#define MOD_PROXY_USER    4
+#define MOD_ALLOW	1
+#define MOD_USER	2
+#define MOD_DENY	3
+#define MOD_PROXY_USER	4
+#define MOD_ACCEPT	5
+#define MOD_ACCEPT_USER	6
 
 #define DEFFONT(X,Y,Z,Q) \
 defvar((X)+"_font", (Y), (Z)+": font", TYPE_FONT, (Q));\
