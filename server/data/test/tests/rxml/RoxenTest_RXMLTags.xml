@@ -610,138 +610,138 @@ c</result>
 <!-- ............................................................ -->
 <comment>Date and time test</comment>
 <test>
-<rxml><date unix-time='87654321' part='day'/></rxml>
-<result>4</result>
+<rxml><date unix-time='1022834838' part='day'/></rxml>
+<result>6</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' time/></rxml>
-<result>13:25</result>
+<rxml><date unix-time='1022834838' time/></rxml>
+<result>10:47</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' part='date' type='string' case='capitalize'/></rxml>
-<result>Eleven</result>
+<rxml><date unix-time='1022834838' part='date' type='string' case='capitalize'/></rxml>
+<result>Thirtyone</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' part='day' type='string' lang='sv'/></rxml>
-<result>onsdag</result>
+<rxml><date unix-time='1022834838' part='day' type='string' lang='sv'/></rxml>
+<result>fredag</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' date lang='sv'/></rxml>
-<result>den 11:e oktober 1972</result>
+<rxml><date unix-time='1022834838' date lang='sv'/></rxml>
+<result>den 31:a maj 2002</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' part='yday'/></rxml>
-<result>284</result>
+<rxml><date unix-time='1022834838' part='yday'/></rxml>
+<result>150</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' part='date' type='ordered'/></rxml>
-<result>11th</result>
+<rxml><date unix-time='1022834838' part='date' type='ordered'/></rxml>
+<result>31st</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' part='date' type='string' case='lower'/></rxml>
-<result>eleven</result>
+<rxml><date unix-time='1022834838' part='date' type='string' case='lower'/></rxml>
+<result>thirtyone</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' part='month'/></rxml>
-<result>10</result>
+<rxml><date unix-time='1022834838' part='month'/></rxml>
+<result>5</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' part='year'/></rxml>
-<result>1972</result>
+<rxml><date unix-time='1022834838' part='year'/></rxml>
+<result>2002</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' part='seconds' seconds='10' adjust='-1'/></rxml>
-<result>87654330</result>
+<rxml><date unix-time='1022834838' part='seconds' seconds='10' adjust='-1'/></rxml>
+<result>1022834847</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' part='wday'/></rxml>
-<result>4</result>
+<rxml><date unix-time='1022834847' part='wday'/></rxml>
+<result>6</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' part='day' type='string'/></rxml>
-<result>Wednesday</result>
+<rxml><date unix-time='1022834847' part='day' type='string'/></rxml>
+<result>Friday</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' part='second'/></rxml>
-<result>21</result>
+<rxml><date unix-time='1022834847' part='second'/></rxml>
+<result>27</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' part='date'/></rxml>
-<result>11</result>
+<rxml><date unix-time='1022834847' part='date'/></rxml>
+<result>31</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' part='month' type='string'/></rxml>
-<result>October</result>
+<rxml><date unix-time='1022834847' part='month' type='string'/></rxml>
+<result>May</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' type='discordian'/></rxml>
-<result>Prickle-Prickle, the 64th day of Bureaucracy</result>
+<rxml><date unix-time='1022834847' type='discordian'/></rxml>
+<result>Sweetmorn, the 4th day of Confusion</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' type='iso' time/></rxml>
-<result>13:25:21</result>
+<rxml><date unix-time='1022834847' type='iso' time/></rxml>
+<result>10:47:27</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' type='iso' date years='5' months='4' days='2'/></rxml>
-<result>1978-02-13</result>
+<rxml><date unix-time='1022834847' type='iso' date years='5' months='4' days='2'/></rxml>
+<result>2007-10-02</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' type='iso' date years='-1' months='-4' days='-2'/></rxml>
-<result>1971-06-09</result>
+<rxml><date unix-time='1022834847' type='iso' date years='-1' months='-4' days='-2'/></rxml>
+<result>2001-01-29</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' type='iso' date weeks='2'/></rxml>
-<result>1972-10-25</result>
+<rxml><date unix-time='1022834847' type='iso' date weeks='2'/></rxml>
+<result>2002-06-14</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' type='unix'/></rxml>
-<result>87654321</result>
+<rxml><date unix-time='1022834847' type='unix'/></rxml>
+<result>1022834847</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' lang='sv'/></rxml>
-<result>13:25, den 11:e oktober 1972</result>
+<rxml><date unix-time='1022834847' lang='sv'/></rxml>
+<result>10:47, den 31:a maj 2002</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' part='minute'/></rxml>
-<result>25</result>
+<rxml><date unix-time='1022834847' part='minute'/></rxml>
+<result>47</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' date/></rxml>
-<result>October the 11th in the year of 1972</result>
+<rxml><date unix-time='1022834847' date/></rxml>
+<result>May the 31st in the year of 2002</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' hours='3' minutes='-4'/></rxml>
-<result>16:21, October the 11th, 1972</result>
+<rxml><date unix-time='1022834847' hours='3' minutes='-4'/></rxml>
+<result>13:43, May the 31st, 2002</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' type='iso' date/></rxml>
-<result>1972-10-11</result>
+<rxml><date unix-time='1022834847' type='iso' date/></rxml>
+<result>2002-05-31</result>
 </test>
 
 <test>
@@ -750,43 +750,43 @@ c</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321'/></rxml>
-<result>13:25, October the 11th, 1972</result>
+<rxml><date unix-time='1022834847'/></rxml>
+<result>10:47, May the 31st, 2002</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' part='hour'/></rxml>
-<result>13</result>
+<rxml><date unix-time='1022834847' part='hour'/></rxml>
+<result>10</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' part='seconds'/></rxml>
-<result>87654321</result>
+<rxml><date unix-time='1022834847' part='seconds'/></rxml>
+<result>1022834847</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' type='stardate'/></rxml>
-<result>26581.6</result>
+<rxml><date unix-time='1022834847' type='stardate'/></rxml>
+<result>37405.1</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' part='mday'/></rxml>
-<result>11</result>
+<rxml><date unix-time='1022834847' part='mday'/></rxml>
+<result>31</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' part='date' type='string' case='upper'/></rxml>
-<result>ELEVEN</result>
+<rxml><date unix-time='1022834847' part='date' type='string' case='upper'/></rxml>
+<result>THIRTYONE</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' type='stardate' prec='2'/></rxml>
-<result>26581.57</result>
+<rxml><date unix-time='1022834847' type='stardate' prec='2'/></rxml>
+<result>37405.06</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' part='week'/></rxml>
-<result>41</result>
+<rxml><date unix-time='1022834847' part='week'/></rxml>
+<result>22</result>
 </test>
 
 <test>
@@ -795,8 +795,8 @@ c</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' type='iso'/></rxml>
-<result>1972-10-11T13:25:21</result>
+<rxml><date unix-time='1022834847' type='iso'/></rxml>
+<result>2002-05-31T10:47:27</result>
 </test>
 
 
@@ -1071,6 +1071,26 @@ hej</result>
   </rxml>
   <result pass="1">11</result>
   <result pass="2">22</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      &test.pass;
+      <cache propagate variable="var.foo"/>
+    </cache>
+  </rxml>
+  <result>1</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache shared>
+      &test.pass;
+      <cache propagate variable="var.foo"/>
+    </cache>
+  </rxml>
+  <result>1</result>
 </test>
 
 <test>

@@ -769,6 +769,40 @@ a&auml; &amp; b  &gt;
   <result>| A |</result>
 </test>
 
+<test>
+  <rxml type="text/html"><emit source="TESTER" test="5">&_.v;&_.v;</emit></rxml>
+  <result>&lt;&amp;&gt;&lt;&amp;&gt;</result>
+</test>
+
+<test>
+  <rxml type="text/html"><emit source="TESTER" test="5">&_.c;&_.c;</emit></rxml>
+  <result>&lt;&amp;&gt;&lt;&amp;&gt;</result>
+</test>
+
+<test>
+  <rxml type="text/plain"><emit source="TESTER" test="5">&_.v;&_.v;</emit></rxml>
+  <result><&><&></result>
+</test>
+
+<test>
+  <rxml type="text/plain"><emit source="TESTER" test="5">&_.c;&_.c;</emit></rxml>
+  <result><&><&></result>
+</test>
+
+<!-- client.tm is used below because it's a constant variable
+     that contains "<" and ">" in the output and that can't be
+     constant due to the nonstandard type conversion. -->
+
+<test>
+  <rxml type="text/html">&client.tm;&client.tm;</rxml>
+  <result>&lt;TM&gt;&lt;TM&gt;</result>
+</test>
+
+<test>
+  <rxml type="text/plain">&client.tm;&client.tm;</rxml>
+  <result><TM><TM></result>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>String number test</comment>
