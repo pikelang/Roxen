@@ -10,7 +10,7 @@
 //  o More stuff in the emit variables
 //
 
-constant cvs_version = "$Id: directories.pike,v 1.85 2000/10/12 12:43:08 wellhard Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.86 2000/11/03 01:23:34 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <stat.h>
@@ -90,7 +90,7 @@ void start(int n, Configuration c)
      <roxen align='right' size='small' />
     <font size='+3'>
    <emit source='path'>
-     <a href='&_.path;'> &_.name; <font color='black'>/</font></a>
+     <a href='&_.path:url;'> &_.name; <font color='black'>/</font></a>
    </emit> </font><br /><br />
     <table width='100%' cellspacing='0' cellpadding='2' border='0'>
       <tr>
@@ -140,8 +140,8 @@ void start(int n, Configuration c)
             sort-order='&form.sort;'
             ::='&var.doreverse;'>
         <tr bgcolor='#eeeeee'>
-          <td align='left'><a href='&_.path;'><img src='&_.type-img;' border='0' /></a></td>
-          <td align='left'><a href='&_.path;'>&_.name;</a> &nbsp;</td>
+          <td align='left'><a href='&_.path:url;'><img src='&_.type-img;' border='0' /></a></td>
+          <td align='left'><a href='&_.path:url;'>&_.name;</a> &nbsp;</td>
           <td align='right'>&_.size; &nbsp;</td>
           <td align='right'>&_.type; &nbsp;</td>
           <td align='right'>&_.mtime; &nbsp;</td>
