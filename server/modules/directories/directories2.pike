@@ -1,5 +1,4 @@
-/* This is a Roxen module. Copyright © 1996 - 1998, Idonex AB
- * $Id: directories2.pike,v 1.14 1999/06/11 13:50:42 mast Exp $
+/* This is a Roxen module. Copyright © 1996 - 1999, Idonex AB
  *
  * Directory listings mark 2
  *
@@ -12,7 +11,7 @@
  * Make sure links work _inside_ unfolded dokuments.
  */
 
-constant cvs_version = "$Id: directories2.pike,v 1.14 1999/06/11 13:50:42 mast Exp $";
+constant cvs_version = "$Id: directories2.pike,v 1.15 1999/12/09 11:01:34 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -23,7 +22,7 @@ import Array;
 
 void start( int num, object conf )
 {
-  module_dependencies (conf, ({ "flik", "htmlparse" }));
+  module_dependencies (conf, ({ "foldlist", "rxmlparse" }));
 }
 
 array register_module()
@@ -36,9 +35,16 @@ array register_module()
 	      "The difference is that this one uses the flik-module "
 	      "for the fold/unfolding, and uses relative URL's with "
 	      "the help of some new tags: "
-	      "&lt;REL&gt;, &lt;AREL&gt; and &lt;INSERT-QUOTED&gt;.",
+	      "&lt;rel&gt;, &lt;arel&gt; and &lt;insert-quoted&gt;.",
 	      ({ }), 1 });
 }
+
+TAGDOCUMENTATION
+#ifdef manual
+constant tagdoc=(["rel":"<desc cont></desc>",
+		  "arel":"<desc cont></desc>",
+		  "insert-quoted":"<desc tag></desc>"]);
+#endif
 
 int dirlisting_not_set()
 {
@@ -62,7 +68,7 @@ void create()
   defvar("readme", 1, "Include readme files", TYPE_FLAG,
 	 "If set, include readme files in directory listings",
 	 0, dirlisting_not_set);
-  
+
   defvar("override", 0, "Allow directory index file overrides", TYPE_FLAG,
 	 "If this variable is set, you can get a listing of all files "
 	 "in a directory by appending '.' or '/' to the directory name, like "
@@ -70,86 +76,67 @@ void create()
 	 ". It is _very_ useful for debugging, but some people regard it as a "
 	 "security hole.",
 	 0, dirlisting_not_set);
-  
+
   defvar("size", 1, "Include file size", TYPE_FLAG,
 	 "If set, include the size of the file in the listing.",
 	 0, dirlisting_not_set);
 }
 
-string quote_plain_text(string s)
+array(string) container_rel(string t, mapping args, string contents, RequestID id)
 {
-  return(replace(s, ({"<",">","&"}),({"&lt;","&gt;","&amp;"})));
-}
-
-array(string) tag_rel(string tag_name, mapping args, string contents,
-		      object request_id, mapping defines)
-{
-  string old_base;
+  string old_base="";
   string res;
 
-  if (request_id->misc->rel_base) {
-    old_base = request_id->misc->rel_base;
+  if (id->misc->rel_base) {
+    old_base = id->misc->rel_base;
   } else {
     old_base = "";
   }
-  request_id->misc->rel_base = old_base + args->base;
-  
-  res = parse_rxml(contents, request_id);
+  id->misc->rel_base = old_base + args->base;
 
-  request_id->misc->rel_base = old_base;
-  return({res});
+  res = parse_rxml(contents, id);
+
+  id->misc->rel_base = old_base;
+  return ({res});
 }
 
-string tag_arel(string tag_name, mapping args, string contents,
-		object request_id, mapping defines)
+string container_arel(string t, mapping args, string contents, RequestID id)
 {
-  if (request_id->misc->rel_base) {
-    args->href = request_id->misc->rel_base+args->href;
+  if (id->misc->rel_base) {
+    args->href = id->misc->rel_base+args->href;
   }
 
-  return(make_tag("a", args)+contents+"</a>");
+  return make_container("a", args, contents);
 }
 
-string tag_insert_quoted(string tag_name, mapping args, object request_id,
-			 mapping defines)
+string tag_insert_quoted(string t, mapping args, RequestID id)
 {
   if (args->file) {
-    string s = request_id->conf->try_get_file(args->file, request_id);
+    string s = id->conf->try_get_file(args->file, id);
 
-    if (s) {
-      return(quote_plain_text(s));
-    }
-    return("<!-- Couldn't open file \""+args->file+"\" -->");
+    if (s) return html_encode_string(s);
+
+    return rxml_error(t, "Couldn't open file \""+args->file+"\".", id);
   }
-  return("<!-- File not specified -->");
+  return rxml_error(t, "File not specified.", id);
 }
 
-mapping query_container_callers()
-{
-  return( ([ "rel":tag_rel, "arel":tag_arel ]) );
-}
-
-mapping query_tag_callers()
-{
-  return( ([ "insert-quoted":tag_insert_quoted ]) );
-}
-
-string find_readme(string d, object id)
+string find_readme(string d, RequestID id)
 {
   foreach(({ "README.html", "README"}), string f) {
     string readme = id->conf->try_get_file(d+f, id);
 
     if (readme) {
       if (f[strlen(f)-5..] != ".html") {
-	readme = "<pre>" + quote_plain_text(readme) +"</pre>";
+	readme = "<pre>" + html_encode_string(readme) +"</pre>";
       }
-      return("<hr noshade>"+readme);
+      return "<hr noshade>"+readme;
     }
   }
-  return("");
+  return "";
 }
 
-string describe_directory(string d, object id)
+string describe_directory(string d, RequestID id)
 {
   array(string) path = d/"/" - ({ "" });
   array(string) dir;
@@ -157,8 +144,6 @@ string describe_directory(string d, object id)
   string result = "";
   int toplevel;
 
-  // werror(sprintf("describe_directory(%s)\n", d));
-  
   path -= ({ "." });
   d = "/"+path*"/" + "/";
 
@@ -175,7 +160,7 @@ string describe_directory(string d, object id)
 		   "<body><h1>Directory listing of %s</h1>\n"
 		   "<pre>%s</pre></body</html>\n",
 		   d, d,
-		   map(sort(dir), lambda(string f, string d, object r, object id) {
+		   map(sort(dir), lambda(string f, string d, object r, RequestID id) {
 		     array stats = r->stat_file(d+f, id);
 		     if (stats && stats[1]<0) {
 		       return("<a href=\""+f+"/.\">"+f+"/</a>");
@@ -195,7 +180,7 @@ string describe_directory(string d, object id)
     }
     result += "<hr noshade><pre>\n";
   }
-  result += "<fl folded>\n";
+  result += "<foldlist folded>\n";
 
   foreach(sort(dir), string file) {
     array stats = id->conf->stat_file(d + file, id);
@@ -203,17 +188,15 @@ string describe_directory(string d, object id)
     string icon;
     int len = stats?stats[1]:0;
 
-    // werror(sprintf("stat_file(\"%s\")=>%O\n", d+file, stats));
-
     switch(-len) {
     case 3:
     case 2:
       type = "   "+({ 0,0,"Directory","Module location" })[-stats[1]];
-      
+
       /* Directory or module */
       file += "/";
       icon = "internal-gopher-menu";
-      
+
       break;
     default:
       array tmp = id->conf->type_from_filename(file,1);
@@ -224,16 +207,16 @@ string describe_directory(string d, object id)
       if (tmp && tmp[1]) {
 	type += " " + tmp[1];
       }
-      
+
       break;
     }
-    result += sprintf("<ft><img border=0 src=\"%s\" alt=\"\"> "
+    result += sprintf("<ft><img border=\"0\" src=\"%s\" alt=\"\"> "
 		      "<arel href=\"%s\">%-40s</arel> %8s %-20s\n",
 		      icon, file, file, sizetostring(len), type);
-    
+
     array(string) split_type = type/"/";
     string extras = "Not supported for this file type";
-    
+
     switch(split_type[0]) {
     case "text":
       if (sizeof(split_type) > 1) {
@@ -258,7 +241,7 @@ string describe_directory(string d, object id)
       }
       break;
     case "image":
-      extras = "<img src=\""+ replace( d, "//", "/" ) + file +"\" border=0>";
+      extras = "<img src=\""+ replace( d, "//", "/" ) + file +"\" border=\"0\">";
       break;
     case "   Directory":
     case "   Module location":
@@ -283,23 +266,19 @@ string describe_directory(string d, object id)
       }
       break;
     }
-    result += "<fd>"+extras+"\n";
+    result += "<fd>"+extras+"</fd></ft>\n";
   }
-  result += "</fl>\n";
+  result += "</foldlist>\n";
   if (toplevel) {
     result +="</pre></body></html>\n";
   }
 
-  // werror(sprintf("describe_directory()=>\"%s\"\n", result));
-
   return(result);
 }
 
-string|mapping parse_directory(object id)
+string|mapping parse_directory(RequestID id)
 {
   string f = id->not_query;
-
-  // werror(sprintf("parse_directory(%s)\n", id->raw_url));
 
   /* First fix the URL
    *
@@ -335,9 +314,6 @@ string|mapping parse_directory(object id)
     return 0;
   }
   if (f[-1] != '.') {
-#if 0
-    return(http_redirect(f+".",id));
-#endif /* 0 */
     f += ".";
   }
   return http_string_answer(parse_rxml(describe_directory(f, id), id));
