@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.35 1997/08/15 03:18:31 grubba Exp $
+ * $Id: ftp.pike,v 1.36 1997/08/17 03:42:30 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -44,6 +44,31 @@ string username="";
 #undef QUERY
 #define QUERY(X) roxen->variables->X[VAR_VALUE]
 #define Query(X) conf->variables[X][VAR_VALUE]  /* Per */
+
+/********************************/
+/* Flags for the simulated 'ls' */
+
+#define LS_FLAG_A	1
+#define LS_FLAG_a	3
+#define LS_FLAG_C	4
+#define LS_FLAG_d	8
+#define LS_FLAG_F	16
+#define LS_FLAG_l	32
+#define LS_FLAG_r	128
+#define LS_FLAG_t	256
+
+constant decode_flags =
+([
+  "A":LS_FLAG_A,
+  "a":LS_FLAG_a,
+  "C":LS_FLAG_C,
+  "d":LS_FLAG_d,
+  "F":LS_FLAG_F,
+  "l":LS_FLAG_l,
+  "r":LS_FLAG_r,
+  "t":LS_FLAG_t
+]);
+
 
 /********************************/
 /* private functions            */
@@ -452,95 +477,277 @@ void connect_and_receive(string arg)
     ftp_async_connect(connected_to_receive, arg);
 }
 
-varargs int|string list_file(string arg, int srt, int short, int column, 
-			     int F, int directory, int all_mode, int r_mode)
+// NOTE: base is modified destructably!
+array(string) my_combine_path_array(array(string) base, string part)
+{
+  if ((part == ".") || (part == "")) {
+    if ((part == "") && (!sizeof(base))) {
+      return(({""}));
+    } else {
+      return(base);
+    }
+  } else if ((part == "..") && sizeof(base) &&
+	     (base[-1] != "..") && (base[-1] != "")) {
+    base[-1] = part;
+    return(base);
+  } else {
+    return(base + ({ part }));
+  }
+}
+
+string my_combine_path(string base, string part)
+{
+  if ((sizeof(part) && (part[0] == '/')) ||
+      (sizeof(base) && (base[0] == '/'))) {
+    return(combine_path(base, part));
+  }
+  // Combine two relative paths.
+  int i;
+  array(string) arr = ((base/"/") + (part/"/")) - ({ ".", "" });
+  foreach(arr, string part) {
+    if ((part == "..") && i && (arr[i-1] != "..")) {
+      i--;
+    } else {
+      arr[i++] = part;
+    }
+  }
+  if (i) {
+    return(arr[..i-1]*"/");
+  } else {
+    return("");
+  }
+}
+
+string list_files(array(string) files, string dir,
+		  mapping(string:string) comb_path,
+		  mapping(string:array) stat_cache,
+		  int flags)
+{
+  array(int) times = allocate(sizeof(files));
+  int i;
+  for (i=0; i < sizeof(files); i++) {
+    string long;
+    if (!(long = comb_path[files[i]])) {
+      long = comb_path[files[i]] = combine_path(dir, files[i]);
+    }
+    array st;
+    if (!(st = stat_cache[long])) {
+      st = stat_cache[long] = roxen->stat_file(long, this_object());
+    }
+    if (st) {
+      times[i] = st[-4];
+    } else {
+      files[i] = 0;
+    }
+  }
+  if (flags & LS_FLAG_t) {
+    sort(times, files);
+    if (!(flags & LS_FLAG_r)) {
+      reverse(files);
+    }
+  } else {
+    files = sort(files);
+    if (flags & LS_FLAG_r) {
+      files = reverse(files);
+    }
+  }
+  files -= ({ 0 });
+  if (!sizeof(files)) {
+    return(0);
+  }
+  string res = "";
+  foreach(files, string short) {
+    string long = comb_path[short];
+    array st = stat_cache[long];
+    if (flags & LS_FLAG_F) {
+      if (st[1] < 0) {
+	// directory
+	short += "/";
+      } else if (st[0] & 0111) {
+	// executable
+	short += "*";
+      }
+    }
+    if (flags & LS_FLAG_l) {
+      res += file_ls(st, short);
+    } else {
+      res += short + "\n";
+    }
+  }
+  if (!(flags & LS_FLAG_l) && (flags & LS_FLAG_C)) {
+    res = sprintf("%-#79s\n", res);
+  }
+  return(res);
+}
+
+varargs int|string list_file(string arg, int flags)
 {
   string filename;
   array (int) st;
   
   method="LIST";
 
-  if(!strlen(arg))
-    arg = "/";
-  if(arg[0] == '/')
-    filename = arg; 
-  else
-    filename = combine_path(cwd, arg);
+  /*
+   * Glob-expand the filename.
+   *
+   * If there are no matches:
+   *   print("No such file or directory").
+   * else if there is only one match:
+   *   If it's a dir
+   *     If d is specified
+   *       file_ls(path, last_part).
+   *     else
+   *       file_ls(contents(file)).
+   *   else
+   *     file_ls(path, last_part).
+   * else
+   *   If it's a dir
+   *     If d is specified
+   *       file_ls(cwd, file).
+   *     else
+   *       print(file+":\n").
+   *       print("total "+num_blocks).
+   *       file_ls(contents(file)).
+   *   else
+   *     file_ls(cwd, file).
+   */
 
-  this_object()->not_query = filename;
-  st = roxen->stat_file(filename, this_object());
-  if(!st) {
+  // Glob-expand the filename
+
+  mapping(string:string) comb_path=([]);
+
+  if (replace(arg, ({"*", "?"}), ({ "", "" })) != arg) {
+    // Globs in the file-name.
+    array(array(string)) matches = ({ ({ }) });
+    multiset(string) paths; // Used to filter out duplicates.
+    int i;
+    foreach(my_combine_path("", arg)/"/", string part) {
+      paths = (<>);
+      if (replace(part, ({"*", "?"}), ({ "", "" })) != part) {
+	// Got a glob.
+	array(array(string)) new_matches = ({});
+	foreach(matches, array(string) path) {
+	  array(string) dir;
+	  dir = roxen->find_dir(combine_path(cwd, path*"/")+"/",
+				this_object());
+	  if (dir && sizeof(dir)) {
+	    dir = glob(part, dir);
+	    foreach(sort(dir), string f) {
+	      array(string) arr = my_combine_path_array(path, f);
+	      string p = arr*"/";
+	      if (!paths[p]) {
+		paths[p] = 1;
+		new_matches += ({ arr });
+	      }
+	    }
+	  }
+	}
+	matches = new_matches;
+      } else {
+	// No glob
+	// Just add the part. Modify matches in-place.
+	for(i=0; i<sizeof(matches); i++) {
+	  matches[i] = my_combine_path_array(matches[i], part);
+	  string path = matches[i]*"/";
+	  if (paths[path]) {
+	    matches[i] = 0;
+	  } else {
+	    paths[path] = 1;
+	  }
+	}
+	matches -= ({ 0 });
+      }
+      if (!sizeof(matches)) {
+	break;
+      }
+    }
+    // Array => string
+    for (i=0; i < sizeof(matches); i++) {
+      string f = matches[i] * "/";
+      comb_path[f] = combine_path(cwd, f);	// NOTE: Ordinary comb_path.
+    }
+  } else {
+    // No globs
+    string f = my_combine_path("", arg);
+    comb_path[f] = combine_path(cwd, f);	// NOTE: Ordinary comb_path.
+  }
+
+  mapping(string:array) stat_cache=([]);
+  mapping(string:int) dirs=([]);
+  mapping(string:int) files=([]);
+
+  // Filter out non-existing or forbiden files/directories
+
+  foreach(indices(comb_path), string short) {
+    this_object()->not_query = comb_path[short];
+    st = roxen->stat_file(comb_path[short], this_object());
+    if (st) {
+      stat_cache[comb_path[short]] = st;
+      if (st[1] > -2) {
+	files[short] = 1;
+      } else {
+	dirs[short] = 1;
+      }
+    } else {
+      m_delete(comb_path, short);
+    }
+  }
+
+  if (!sizeof(comb_path)) {
     roxen->log(([ "error": 404, "len": -1 ]), this_object());
     return 0;
   }
-  int sent;
-  string tmp;
-  if(directory || st[1] > -2) { 
-    if(st[1] == -2 && arg[-1] != '/')
-      arg += "/";
-    if(short)
-      tmp = arg+"\r\n";
-    else
-      tmp = file_ls(st, arg);
-  } else {
-    if(filename[-1] != '/')
-      filename += "/";
-    array (string) dir, parsed = ({});
-    string s;
-    array tsort = ({});
 
-    not_query = arg = filename;
-    dir = roxen->find_dir(filename, this_object()) || ({});
+  // Glob-expand done!
 
-    if(!srt)
-      sort(dir);
-    if(filename[-1] != '/')
-      filename += "/";
-    if(strlen(filename) != 1) {
-      dir = ({".."}) + dir;
-    }
-    foreach(dir, s) {
-      st = 0;
-      if (((!all_mode) && (s[0]=='.')) ||
-	  ((all_mode == 1) && (s - "." == ""))) {
-	continue;
-      }
-      if(F && (st = roxen->stat_file(filename+s, this_object())) 
-	 && st[1] < 0)
-	s += "/";
-      if(!short) {
-	if(st || (st = roxen->stat_file(filename+s, this_object()))) {
-	  parsed += ({ file_ls(st, s) });
-	  if(srt)
-	    tsort += ({ (time - st[-4]) });
-	}
-      } else {
-	if (st || (st = roxen->stat_file(filename+s, this_object()))) {
-	  parsed += ({ s });
-	  if (srt)
-	    tsort += ({ (time - st[-4]) });
-	}
-      }
-    }
-    if (srt) {
-      sort(tsort, parsed);
-    }
-    if (r_mode) {
-      parsed = reverse(parsed);
-      tsort = reverse(parsed);
-    }
-    if(!short) {
-      tmp=parsed*"";
+  if (flags & LS_FLAG_d) {
+    files += dirs;
+    dirs = ([]);
+  }
+
+  string|array(string) res = ({});
+  if (sizeof(files)) {
+    string s = list_files(indices(files), cwd, comb_path, stat_cache, flags);
+    if (s) {
+      res += ({ s });
     } else {
-      if(column) {
-	tmp=replace(sprintf("%-#79s\n", parsed*" \n"), "\n", "\r\n");
-      }
-      else
-	tmp=parsed*"\r\n"+"\r\n";
+      files = ([]);	// To get correct output.
     }
   }
-  roxen->log(([ "error": 200, "len": strlen(tmp) ]), this_object());
-  return tmp;
+  foreach(sort(indices(dirs)), string short) {
+    array(string) dir = roxen->find_dir(comb_path[short]+"/", this_object());
+    if ((flags & LS_FLAG_a & ~LS_FLAG_A) &&
+	(comb_path[short] != "") &&
+	(comb_path[short] != "/")) {
+      if (dir) {
+	dir = ({ ".." }) + dir;
+      } else {
+	dir = ({ ".." });
+      }
+    }
+    perror("dir:%O\n", dir);
+    string s = "";
+    if (dir && sizeof(dir)) {
+      if (!flags & LS_FLAG_A) {
+	dir = filter(dir, lambda(string f){return(f[0] != '.');});
+      } else if (!(flags & LS_FLAG_a & ~LS_FLAG_A)) {
+	dir = filter(dir, lambda(string f){return((f-".") != "");});
+      }
+      if (sizeof(dir)) {
+	s = list_files(dir, comb_path[short]+"/",
+		       comb_path, stat_cache, flags) || "";
+      }
+    }
+    if (sizeof(files) || (sizeof(dirs) > 1)) {
+      s = short + ":\n" + s;
+    }
+    res += ({ s });
+  }
+
+  res *= "\n";
+  res = replace(res, "\n", "\r\n");
+  roxen->log(([ "error": 200, "len": strlen(res) ]), this_object());
+  return(res);
 }
 
 int open_file(string arg, int|void noport)
@@ -843,9 +1050,9 @@ void got_data(mixed fooid, string s)
       }
       break;
       
-    case "nlst": 
-      int short=0, tsort=0, F=0, C=0, d=0, a=0, r=0;
-      short = 1;
+    case "nlst":
+      int flags=LS_FLAG_l;
+      flags = 0;
 
     case "list": 
       mapping f;
@@ -874,55 +1081,35 @@ void got_data(mixed fooid, string s)
 	}
       }
 
+      string file_arg;
       if(arg[0] == '~')
-	arg = combine_path("/", arg);
+	file_arg = combine_path("/", arg);
       else if(arg[0] == '/')
-	arg = simplify_path(arg);
+	file_arg = simplify_path(arg);
       else 
-	arg = combine_path(cwd, arg);
+	file_arg = combine_path(cwd, arg);
 
-      if(args)
-      {      
-	if(search(args, "l") != -1)
-	  short = 0;
-	
-	if(search(args, "t") != -1)
-	  tsort = 1;
-	
-	if(search(args, "F") != -1)
-	  F = 1;
-
-	if(search(args, "C") != -1)
-	  C = 1;
-
-	if(search(args, "d") != -1)
-	  d = 1;
-
-	if(search(args, "A") != -1)
-	  a = 1;
-
-	if(search(args, "a") != -1)
-	  a = 2;
-
-	if(search(args, "r") != -1)
-	  r = 1;
-      }
-
-      // This is needed to get .htaccess to be read from the correct directory
-      if (arg[-1] != '/') {
-	array st = roxen->stat_file(arg, this_object());
-	if (st && (st[1]<0)) {
-	  arg+="/";
+      if(args) {
+	foreach((args/""), string flg) {
+	  flags |= decode_flags[flg];
 	}
       }
 
-      not_query = arg;
+      // This is needed to get .htaccess to be read from the correct directory
+      if (file_arg[-1] != '/') {
+	array st = roxen->stat_file(file_arg, this_object());
+	if (st && (st[1]<0)) {
+	  file_arg+="/";
+	}
+      }
+
+      not_query = file_arg;
 
       foreach(conf->first_modules(), function funp)
 	if(f = funp( this_object())) break;
       if(!f)
       {
-	f = ([ "data":list_file(arg, tsort, short, C, F, d, a, r) ]);
+	f = ([ "data":list_file(arg, flags) ]);
 	if(f->data == 0)
 	  reply("550 "+arg+": No such file or directory.\n");
 	else if(f->data == -1)
