@@ -537,7 +537,7 @@ mapping gtext_compat(mapping m, RequestID id) {
     m_delete(m, q);
     old_rxml_warning(id, "gtext attribute "+q,"magic-"+q[6..]);
   }
-  for(int i=2; i<10; i++)
+  for(int i=2; i<7; i++)
     if(m[(string)i])
     {
       m->scale = (string)(1.0 / ((float)i*0.6));
