@@ -87,7 +87,7 @@ class servlet {
 
   void destroy()
   {
-    if(s) {
+    if(s && d) {
       d(s);
       s = 0;
     }
@@ -126,6 +126,7 @@ class servlet {
       cfgctx = config(cfgctx, params, nam||classname);
     servlet_init(s, cfgctx->cfg);
     check_exception();
+    d = servlet_destroy;
   }
 
   void create(string|object name, string|object|void dir)
@@ -151,7 +152,6 @@ class servlet {
 #endif
       singlethreaded = 1;
     }
-    d = servlet_destroy;
   }
 
 };
