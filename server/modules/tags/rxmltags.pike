@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.415 2004/05/23 02:23:44 _cvs_stephen Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.416 2004/05/23 11:31:32 mani Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1465,11 +1465,7 @@ class TagCache {
 
       key = encode_value_canonic (keymap);
       if (!args["disable-key-hash"])
-	// Initialize with a 32 char string to make sure MD5 goes
-	// through all the rounds even if the key is very short.
-	// Otherwise the risk for coincidental equal keys gets much
-	// bigger.
-	key = Crypto.SHA1.hash("................................"+key);
+	key = Crypto.SHA1.hash(key);
     }
 
     array do_enter (RequestID id)
