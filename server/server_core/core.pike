@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: core.pike,v 1.842 2002/11/17 05:51:27 mani Exp $";
+constant cvs_version="$Id: core.pike,v 1.843 2002/11/17 17:42:24 mani Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -3631,15 +3631,13 @@ class ArgCache
   string _sprintf() { return sprintf("ArgCache(%O)", name); }
 }
 
-mapping cached_decoders = ([]);
+// NGSERVER Remove this function
 string decode_charset( string charset, string data )
 {
-  // FIXME: This code is probably not thread-safe!
   if( charset == "iso-8859-1" ) return data;
-  if( !cached_decoders[ charset ] )
-    cached_decoders[ charset ] = Locale.Charset.decoder( charset );
-  data = cached_decoders[ charset ]->feed( data )->drain();
-  cached_decoders[ charset ]->clear();
+  catch {
+    return Locale.Charset.decoder( charset )->feed( data )->drain();
+  };
   return data;
 }
 
@@ -3659,9 +3657,9 @@ void create()
   //add_constant( "ArgCache", ArgCache );
   //add_constant( "roxen.load_image", load_image );
 
-  // simplify dumped strings.  
-  add_constant( "roxen", this_object());
-  //add_constant( "roxen.decode_charset", decode_charset);
+  // simplify dumped strings.
+  add_constant( "roxen", this_object()); // NGSERVER Remove this
+  add_constant( "core", this_object());
 
 //   add_constant( "DBManager", ((object)"server_core/dbs.pike") );
 
