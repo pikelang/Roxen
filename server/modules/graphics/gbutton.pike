@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.83 2001/04/03 07:29:40 per Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.84 2001/07/09 13:39:21 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -770,6 +770,7 @@ class ButtonFrame {
 	"icva": lower_case(args->valign_icon || "middle"),//  Vertical align
 	"font": (args->font||id->misc->defines->font||
 		 roxen->query("default_font")),
+	"fontkey": roxen->fonts->verify_font(args->font||id->misc->defines->font),
 	"border_image":fi,
 	"extra_layers":args["extra-layers"],
 	"extra_left_layers":args["extra-left-layers"],
