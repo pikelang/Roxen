@@ -86,7 +86,7 @@ class ConfigIFCache
 
 
 static mapping settings_cache = ([ ]);
-static object settings;
+object config_settings;
 
 class ConfigurationSettings
 {
@@ -135,21 +135,34 @@ class ConfigurationSettings
 
   mapping trim_variables( mapping m )
   {
-    mapping q = ([]);
+    mapping q = (config_settings->get( name ) || ([]));
     foreach( indices( m ), string v )  q[v] = m[v]->query( );
     return q;
   }
 
   void save()
   {
-    settings->set( name, trim_variables(variables) );
+    config_settings->set( name, trim_variables(variables) );
   }
 
-  void create( string _name )
+  static string _sprintf()
+  {
+    return sprintf("ConfigSettings( %O )", name );
+  }
+
+  void restore()
+  {
+    mapping vv = config_settings->get( name );
+    if( vv ) 
+      foreach( indices( vv ), string i )
+        if( variables[i] )
+          variables[i]->low_set( vv[i] );
+  }
+
+  static void create( string _name )
   {
     name = _name;
     variables = ([]);
-    mapping vv = settings->get( name );
 
     int theme_can_change_colors( RequestID i, Variable v )
     {
@@ -241,10 +254,6 @@ class ConfigurationSettings
 	       "faster":LOCALE(284, "faster"), "compact":LOCALE(286, "compact"),
 	       "really compact":LOCALE(288, "really compact")  ]));
 
-    if( vv )
-      foreach( indices( vv ), string i )
-        if( variables[i] )
-          variables[i]->low_set( vv[i] );
   }
 }
 
@@ -265,6 +274,7 @@ class AdminUser
   string real_name;
   string password;
   multiset permissions = (<>);
+  ConfigurationSettings settings;
 
   string form( RequestID id )
   {
@@ -375,15 +385,19 @@ class AdminUser
 
   void restore()
   {
-    mapping q = settings->get( name+"_uid" ) || ([]);
+    mapping q = config_settings->get( name+"_uid" ) || ([]);
     real_name = q->real_name||"";
     password = q->password||crypt("www");
     permissions = mkmultiset( q->permissions||({}) );
+    if( settings_cache[ name ] )
+      settings = settings_cache[ name ];
+    else
+      settings = settings_cache[ name ] = ConfigurationSettings( name );
   }
 
   AdminUser save()
   {
-    settings->set( name+"_uid", ([
+    config_settings->set( name+"_uid", ([
       "name":name,
       "real_name":real_name,
       "password":password,
@@ -407,10 +421,16 @@ class AdminUser
     if( crypt( auth[1], password ) )  return 1;
   }
 
-  void create( string n )
+  static void create( string n )
   {
     name = n;
     restore( );
+  }
+
+  static string _sprintf()
+  {
+    return sprintf("AdminUser( %O, %O, %{%s %} )", 
+                   name, real_name, (array)permissions);
   }
 }
 
@@ -433,7 +453,7 @@ void add_permission( string perm, string|mapping text )
 
 void init_configuserdb()
 {
-  settings = ConfigIFCache( "settings",1 );
+  config_settings = ConfigIFCache( "settings",1 );
   add_constant( "AdminUser", AdminUser );
   add_permission( "Everything", LOCALE(191, "All Permissions"));
 }
@@ -445,7 +465,7 @@ AdminUser find_admin_user( string s )
 {
   if( admin_users[ s ] )
     return admin_users[ s ];
-  if( settings->get( s+"_uid" ) )
+  if( config_settings->get( s+"_uid" ) )
     return admin_users[ s ] = AdminUser( s );
 }
 
@@ -457,13 +477,13 @@ AdminUser create_admin_user( string s )
 void delete_admin_user( string s )
 {
   m_delete( admin_users,  s );
-  settings->delete( s );
-  settings->delete( s+"_uid" );
+  config_settings->delete( s );
+  config_settings->delete( s+"_uid" );
 }
 
 array(string) list_admin_users()
 {
-  return map( glob( "*_uid", settings->list()||({}) ),
+  return map( glob( "*_uid", config_settings->list()||({}) ),
               lambda( string q ) {
                 sscanf( q, "%s_uid", q );
                 return q;
