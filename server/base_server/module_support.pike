@@ -1,4 +1,4 @@
-// string cvs_version = "$Id: module_support.pike,v 1.32 1999/11/05 07:17:05 per Exp $";
+// string cvs_version = "$Id: module_support.pike,v 1.33 1999/11/11 07:28:50 mast Exp $";
 #include <roxen.h>
 #include <module.h>
 #include <stat.h>
@@ -219,14 +219,19 @@ mixed set(string var, mixed val)
   error("set("+var+"). Unknown variable.\n");
 }
 
+int remove_dumped_mark = lambda ()
+{
+  array stat = file_stat (combine_path (
+    getcwd(), __FILE__ + "/../../.remove_dumped_mark"));
+  return stat && stat[ST_MTIME];
+}();
+
 program my_compile_file(string file)
 {
   string ofile = file + ".o";
-#if 0
   if (file_stat (ofile) &&
       file_stat (ofile)[ST_MTIME] < remove_dumped_mark)
     rm (ofile);
-#endif
   program p;
 
   object e = ErrorContainer();
