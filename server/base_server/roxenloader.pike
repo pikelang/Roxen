@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.92 1999/08/30 09:41:47 per Exp $
+ * $Id: roxenloader.pike,v 1.93 1999/09/02 18:33:17 per Exp $
  *
  * Roxen bootstrap program.
  *
@@ -20,7 +20,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.92 1999/08/30 09:41:47 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.93 1999/09/02 18:33:17 per Exp $";
 
 #define perror roxen_perror
 private static int perror_status_reported=0;
@@ -104,13 +104,12 @@ string short_time()
      default:
        return "         : ";
      case 1:
-      return sprintf( "%7.2fh : ",(time()-roxen_started)/3600.0 );
-     case 2:
-      return sprintf( "%7.2fm : ",(time()-roxen_started)/60.0 );
-     case 3:
-      return sprintf( "%7.1fs : ",((time()-roxen_started+time(time())) ));
+      return sprintf( "%2d:%02d:%02d : ",
+                      (time()-roxen_started)/216000,
+                      (((time()-roxen_started)/3600)%24),
+                      ((time()-roxen_started)/60)%60);
     }
-  last_was_change=3;
+  last_was_change=1;
   oct = ct;
   return ct;
 }
@@ -308,8 +307,9 @@ void init_logger()
 }
 
 // Print a debug message
-void report_debug(string message)
+void report_debug(string message, mixed ... foo)
 {
+  if( sizeof( foo ) ) message = sprintf(message, @foo );
   nwrite(message,0,2);
 #if efun(syslog)
   if(use_syslog && (loggingfield&LOG_DEBUG))
@@ -319,8 +319,9 @@ void report_debug(string message)
 }
 
 // Print a warning
-void report_warning(string message)
+void report_warning(string message, mixed ... foo)
 {
+  if( sizeof( foo ) ) message = sprintf(message, @foo );
   nwrite(message,0,2);
 #if efun(syslog)
   if(use_syslog && (loggingfield&LOG_WARNING))
@@ -330,8 +331,9 @@ void report_warning(string message)
 }
 
 // Print a notice
-void report_notice(string message)
+void report_notice(string message, mixed ... foo)
 {
+  if( sizeof( foo ) ) message = sprintf(message, @foo );
   nwrite(message,0,1);
 #if efun(syslog)
   if(use_syslog && (loggingfield&LOG_NOTICE))
@@ -341,8 +343,9 @@ void report_notice(string message)
 }
 
 // Print an error message
-void report_error(string message)
+void report_error(string message, mixed ... foo)
 {
+  if( sizeof( foo ) ) message = sprintf(message, @foo );
   nwrite(message,0,3);
 #if efun(syslog)
   if(use_syslog && (loggingfield&LOG_ERR))
@@ -352,8 +355,9 @@ void report_error(string message)
 }
 
 // Print a fatal error message
-void report_fatal(string message)
+void report_fatal(string message, mixed ... foo)
 {
+  if( sizeof( foo ) ) message = sprintf(message, @foo );
   nwrite(message,0,3);
 #if efun(syslog)
   if(use_syslog && (loggingfield&LOG_EMERG))
@@ -494,10 +498,10 @@ object really_load_roxen()
 {
   int start_time = gethrtime();
   roxen_perror("Loading roxen ... ");
-  object res;
-  program p = ((program)"roxen");
-  res = p();
-  roxen_perror("Loaded roxen in %4.3fs\n",
+  object res =((program)"roxen")();
+  res->start_time = start_time;
+  res->boot_time = start_time;
+  roxen_perror("done after %3.3fs\n",
                (gethrtime()-start_time)/1000000.0);
   return res;
 }
@@ -515,6 +519,7 @@ void trace_destruct(mixed x)
 // Set up efuns and load Roxen.
 void load_roxen()
 {
+  nwrite = roxen_perror;
   add_constant("cd", restricted_cd());
 #ifdef TRACE_DESTRUCT
   add_constant("destruct", trace_destruct);
@@ -786,8 +791,16 @@ class getpw_kluge
 
 void write_current_time()
 {
+  if( !roxen )
+  {
+    call_out( write_current_time, 10 );
+    return;
+  }
+  roxen_perror("\n");
+  roxen_perror("Current time is "+
+               roxen->strftime("%Y-%m-%d %H:%M", time() )+"\n");
+  roxen_perror("\n");
   call_out( write_current_time, 3600 );
-  roxen_perror("\n\nCurrent time is "+ctime(time())+"\n");
 }
 
 // Roxen bootstrap code.
@@ -796,9 +809,8 @@ int main(mixed ... args)
   int start_time = gethrtime();
   string path = make_path("base_server", "etc/include", ".");
   last_was_nl = 1;
-  roxen_perror("\n\n\n"+version()+"\n");
+  roxen_perror("\n"+version()+"\n");
   roxen_perror("Roxen loader version "+(cvs_version/" ")[2]+"\n");
-  roxen_perror("Roxen started on "+ctime(time()));	// ctime has an lf.
   master()->putenv("PIKE_INCLUDE_PATH", path);
   foreach(path/":", string p) {
     add_include_path(p);
@@ -850,7 +862,7 @@ int main(mixed ... args)
   load_roxen();
   int retval = roxen->main(@args);
   perror_status_reported = 0;
-  roxen_perror("\n-- Total boot time %4.1f seconds ---------------------------\n\n",
+  roxen_perror("\n-- Total boot time %2.1f seconds ---------------------------\n\n",
 	       (gethrtime()-start_time)/1000000.0);
   return(retval);
 }
