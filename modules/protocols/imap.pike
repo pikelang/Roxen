@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.143 1999/03/30 20:47:56 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.144 1999/08/30 22:16:31 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -417,7 +417,7 @@ class imap_mail
 
   object get_message(string|void s)
   {
-    return MIME.Message(s || mail->body(), 0, 0, 1);
+    return MIME.Message(s || mail->body(), 0, 0);
   }
 
   mapping(string:string|array(string)) get_headers(string|void s)
@@ -635,7 +635,7 @@ class imap_mail
       throw( ({ "Internal error", backtrace() }) );
     }
     case "bodystructure": 
-      return response(make_bodystructure(MIME.Message(mail->body(), 0, 0, 1),
+      return response(make_bodystructure(MIME.Message(mail->body(), 0, 0),
 					 !attr->no_extension_data));
 
     case "envelope": 
