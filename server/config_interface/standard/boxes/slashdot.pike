@@ -8,8 +8,8 @@
 constant box      = "large";
 constant box_initial = 0;
 
-String box_name = _(195,"Slashdot headlines");
-String box_doc  = _(231,"The headlines from Slashdot: News for nerds, stuff that matters");
+String box_name = _(361,"Slashdot headlines");
+String box_doc  = _(362,"The headlines from Slashdot: News for nerds, stuff that matters");
 
 string parse( RequestID id )
 {
