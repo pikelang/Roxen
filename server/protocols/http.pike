@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.221 2000/03/19 16:38:53 nilsson Exp $";
+constant cvs_version = "$Id: http.pike,v 1.222 2000/03/20 02:30:55 mast Exp $";
 
 #define MAGIC_ERROR
 
@@ -1915,7 +1915,7 @@ object clone_me()
   object c,t;
   c=object_program(t=this_object())(0, port_obj);
 #ifdef ID_OBJ_DEBUG
-  werror ("clone %O[%d] -> %O[%d]\n", t, t->__marker->count, c, c->__marker->count);
+  werror ("clone %O -> %O\n", t, c);
 #endif
 
 // c->first = first;
@@ -2020,7 +2020,11 @@ void chain(object f, object c, string le)
 
 string _sprintf( )
 {
+#ifdef ID_OBJ_DEBUG
+  return "RequestID()" + (__marker ? "[" + __marker->count + "]" : "");
+#else
   return "RequestID()";
+#endif
 }
 
 Stdio.File connection( )
