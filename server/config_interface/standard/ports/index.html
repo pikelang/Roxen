@@ -1,7 +1,8 @@
 <topmenu base="../" selected=ports>
 
 <content>
-<subtablist>
+<cv-split>
+<subtablist width=100%>
  <st-tabs>
  </st-tabs>
  <st-page>
@@ -12,7 +13,7 @@
       <table border=0 cellpadding=0 cellspacing=0>
       <tr width=100%>
        <td width=100%>
-    <if variable="port is #port#"><img src=/internal-roxen-next></if><else>&nbsp;</else>&nbsp;<a href='?port=#port:quote=dtag#'><b><font size=+2>#name#</font></a>
+    <if variable="port is #port#"><img src=&usr.selected-indicator;></if><else>&nbsp;</else>&nbsp;<a href='?port=#port:quote=dtag#'><b><font size=+2>#name#</font></a>
        </td>
         <td align=right>
     <if variable="port is #port#"><cf-save></if>
@@ -41,4 +42,5 @@
    </table>
  </st-page>
 </subtablist>
+</cv-split>
 </content>

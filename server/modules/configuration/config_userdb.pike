@@ -2,6 +2,7 @@
 inherit "module";
 inherit "roxenlib";
 #include <module.h>
+#include <config_interface.h>
 #include <roxen.h>
 #include <stat.h>
 
@@ -34,6 +35,9 @@ class ConfigurationSettings
   {
     name = _name;
     variables = settings->get( name ) || ([]);
+    defvar( "theme", "default", TYPE_THEME,
+            "Theme", "The theme to use" );
+
     defvar( "docs", 1, TYPE_FLAG,
             ([
               "english":"Show documentation",

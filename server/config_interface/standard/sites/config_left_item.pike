@@ -26,11 +26,11 @@ string selected_item( string q, roxen.Configuration c, RequestID id, string modu
   sscanf( id->misc->path_info, "/"+q+"/%[^/]", subsel );
 
   string pre = ("<gbutton href='/"+id->misc->cf_locale+"/sites' "
-                "width=150 bgcolor=&usr.fade1; icon_src=/internal-roxen-next "
+                "width=150 bgcolor=&usr.fade1; icon_src=&usr.selected-indicator; "
                 "align_icon=left preparse><cf-locale get=servers></gbutton><br>"
                 "<gbutton width=150 "+(subsel == ""?"bgcolor=&usr.fade3;":
 			      "bgcolor=&usr.fade1; href='"+id->not_query+"/"+replace(c->name, " ", "%20" )+"/' ")+
-                " icon_src=/internal-roxen-next align_icon=left>"+
+                " icon_src=&usr.selected-indicator; align_icon=left>"+
                 c->query_name()+"</gbutton><br><br>");
 
   array sub = ({ "settings", "modules" });
@@ -41,7 +41,7 @@ string selected_item( string q, roxen.Configuration c, RequestID id, string modu
   {
     if( subsel == q )
     {
-      pre += ("<gbutton icon_src=/internal-roxen-next align_icon=right "
+      pre += ("<gbutton icon_src=&usr.selected-indicator; align_icon=left "
               "width=150 preparse bgcolor=&usr.fade3; href='"+DOTDOT(3)+q+"/'>"
               "<cf-locale get="+q+"></gbutton><br>");
 
@@ -84,7 +84,7 @@ string selected_item( string q, roxen.Configuration c, RequestID id, string modu
 		     "<a href=\""+qurl+data->sname+
                      "/\">"+replace(data->name, " ", "&nbsp;")+"</a><br>\n");
            else
-             pre += ("\n<img src=\"/internal-roxen-next\" width=12 height=12>"
+             pre += ("\n<img src=\"&usr.selected-indicator;\" width=12 height=12>"
 		     "<b>" + replace(data->name, " ", "&nbsp;") + "</b><br>\n");
          }
          break;

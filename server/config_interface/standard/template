@@ -7,14 +7,23 @@
   <cset quote=none variable=__contents><contents></cset>
 </define>
 
+
 <define container=cv-leftside>
   <cset variable=leftside><contents></cset>
+</define>
+
+
+<define container=cv-split>
+<table><tr><td valign=top width=150><img src=/internal-roxen-unit width=150 height=1><br>
+&form.leftside:none;&form.leftimage:none;</td><td width='100%' valign=top>
+<contents>
+</td></tr></table>
 </define>
 
 <define container=cv-startpage>
 
 <table><tr><td valign=top width=150><img src=/internal-roxen-unit width=150 height=1><br>
-&form.leftside:none;</td><td width='100%' valign=top>
+&form.leftside:none;&form.leftimage:none;</td><td width='100%' valign=top>
 <subtablist width='100%'>
   <st-tabs><insert file=cv_startpage_tabs.pike nocache></st-tabs>
   <st-page><contents></st-page>
@@ -102,6 +111,12 @@
 <define tag=cf-next><submit-gbutton preparse href='&href;'> <cf-locale get=next> > </submit-gbutton></define>
 
 <define container=tmpl>
+<cset variable=leftimage>
+  <p><if not match="&usr.left-image; is "><img src=&usr.left-image;></if>
+</cset>
+   <if not match="&usr.theme; is ">
+     <insert file=/standard/themes/&usr.theme;/theme nocache>
+   </if>
   <title>&roxen.version; <cf-locale get=administration_interface> &title;</title>
   <expire-time now>
 

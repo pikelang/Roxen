@@ -33,27 +33,50 @@ class Scope_usr
   mixed `[]  (string var, void|RXML.Context c, void|string scope)
   {
     object id = c->id;
+
+    if( id->misc->cf_theme &&
+        id->misc->cf_theme[ var ] )
+      return id->misc->cf_theme[ var ];
+
+    object c1;
+
+    switch( var )
+    {
+     case "left-image":
+       return "/internal-roxen-unit";
+     case "selected-indicator":
+       return "/internal-roxen-next";
+     case "logo":
+       return "/internal-roxen-roxen";
+     case "err-1":
+       return "/internal-roxen-err_1";
+     case "err-2":
+       return "/internal-roxen-err_2";
+     case "err-3":
+       return "/internal-roxen-err_3";
+    }
+
+
+    if( var != "bgcolor" )
+    {
+      c1 = Image.Color( `[]( "bgcolor",c,scope ) );
+      if(!c1)
+        c1 = Image.Color.black;
+    }
+
     switch( var )
     {
      case "fade1":
-       object c1 = Image.Color( config_setting( "bgcolor" ) );
-       if(!c1)
-         c1 = Image.Color.black;
        if( `+(0,@(array)c1) < 200 )
          return (string)Image.Color(@map(map((array)c1, `+, 0x21 ),min,255));
        return (string)Image.Color(@map(map( (array)c1, `-, 0x11 ),max,0) );
 
      case "fade2":
-       object c1 = Image.Color( config_setting( "bgcolor" ) );
-       if(!c1)
-         c1 = Image.Color.black;
        if( `+(0,@(array)c1) < 200 )
          return (string)Image.Color( @map(map((array)c1, `+, 0x61 ),min,255));
        return (string)Image.Color( @map(map( (array)c1, `-, 0x51 ),max,0) );
 
      case "fade3":
-       object c1 = Image.Color( config_setting( "bgcolor" ) );
-       if(!c1) c1 = Image.Color.black;
        array sub = ({ 0x26, 0x21, 0x18 });
        array add = ({ 0x18, 0x21, 0x26 });
        array a =  (array)c1;
@@ -70,8 +93,6 @@ class Scope_usr
        return (string)Image.Color( @map(map(a,max,0),min,255) );
 
      case "fade4":
-       object c1 = Image.Color( config_setting( "bgcolor" ) );
-       if(!c1) c1 = Image.Color.black;
        array sub = ({ 0x87, 0x7b, 0x63 });
        array add = ({ 0x63, 0x7b, 0x87 });
        array a =  (array)c1;
@@ -119,7 +140,7 @@ string internal_c_topmenu(string t, mapping m, string d, mapping c, RequestID id
   items = items->them;
 
   c->top=( "<tablist bgcolor='"+config_setting2("fade3")+
-           "' font='"+config_setting( "font" ) +"'>" );
+           "' font='"+config_setting2( "font" ) +"'>" );
   foreach(items, mapping i)
   {
     mapping targs = ([]);
@@ -127,14 +148,14 @@ string internal_c_topmenu(string t, mapping m, string d, mapping c, RequestID id
     {
       targs->selected = "selected";
       targs->bgcolor =  config_setting2( "fade3" );
-      targs->selcolor = config_setting( "bgcolor" );
-      targs->textcolor = config_setting( "fgcolor" );
+      targs->selcolor = config_setting2( "bgcolor" );
+      targs->textcolor = config_setting2( "fgcolor" );
     }
     else
     {
       targs->bgcolor =  config_setting2( "fade3" );
       targs->dimcolor = config_setting2( "fade2" );
-      targs->textcolor = config_setting( "bgcolor" );
+      targs->textcolor = config_setting2( "bgcolor" );
     }
     if( i->first ) targs->first=i->first;
     if( i->last )  targs->last=i->last;
@@ -244,7 +265,7 @@ string container_roxen_config(string t, mapping m, string data, RequestID id)
   string page =  #"
   <table width=100% cellpadding=0 cellspacing=0 border=0 bgcolor='"+config_setting2("fade3")+#"'>
     <tr bgcolor='"+config_setting2("fade3")+#"'>
-       <td rowspan=2><a href=http://www.roxen.com/><img border=0 src=/internal-roxen-roxen.gif></a></td>
+       <td rowspan=2><a href=http://www.roxen.com/><img border=0 src=&usr.logo;></a></td>
        <td align=center>
          <font size=+1 color='"+config_setting2("fade4")+#"'><cf-locale get=administration_interface></font>
        </td>
@@ -270,6 +291,22 @@ string get_var_doc( string s, object mod, int n, object id )
   return s;
 }
 
+string theme_name( string theme )
+{
+  catch
+  {
+    return trim(Stdio.read_bytes("config_interface/standard/themes/"+
+                                 theme+"/name"));
+  };
+  return "Unknown theme";
+}
+
+array(string) all_themes( )
+{
+  return (get_dir( "config_interface/standard/themes/" )-
+         ({"CVS","README"}));
+}
+
 string get_var_value( string s, object mod, object id )
 {
   array var = mod->variables[ s ];
@@ -292,6 +329,9 @@ string get_var_value( string s, object mod, object id )
 
    case TYPE_FLOAT:
      return sprintf("%.4f", var[VAR_VALUE]);
+
+   case TYPE_THEME: /* config-if local type... */
+     return theme_name( var[VAR_VALUE] );
 
    case TYPE_DIR_LIST:
    case TYPE_STRING_LIST:
@@ -369,6 +409,7 @@ string set_variable( string v, object in, mixed to, object id )
      break;
 
    case TYPE_CUSTOM:
+   case TYPE_THEME:
      break;
 
    case TYPE_DIR_LIST:
@@ -413,17 +454,10 @@ string set_variable( string v, object in, mixed to, object id )
      werror("Unknown variable type ["+var[ VAR_TYPE ]+"]\n");
      return "";
   }
+
   if( equal( var[ VAR_VALUE ], val ) )
     return "";
-// Already done...
-//   if( stringp(val) )
-//     val = utf8_to_string(val);
-//   if( arrayp( val ) )
-//     val = map( val, lambda( mixed q ) {
-//                       if(stringp(q))
-//                         return utf8_to_string(q);
-//                       return q;
-//                     } );
+
   if( in->set )
     in->set( v, val );
   else
@@ -539,6 +573,20 @@ string get_var_form( string s, object mod, object id )
      if( view_mode )
        return "<b>"+var[VAR_VALUE]+"</b>";
      return input(path, var[VAR_VALUE], 10);
+
+   case TYPE_THEME: /* config-if local type... */
+     array a = all_themes( );
+     sort( map(a,theme_name), a );
+     string tmp="<select name=\""+path+"\">  ";
+     foreach( a, string q )
+     {
+       werror("theme "+q+" <-> "+var[VAR_VALUE]+"\n");
+       if( q == var[VAR_VALUE] )
+         tmp += "<option selected value='"+q+"'>"+theme_name(q);
+       else
+         tmp += "<option value='"+q+"'>"+theme_name(q);
+     }
+     return tmp+"</select>";
 
    case TYPE_DIR_LIST:
    case TYPE_STRING_LIST:
@@ -968,6 +1016,24 @@ string container_configif_output(string t, mapping m, string c, object id)
 
   return do_output_tag( m, variables, c, id );
 }
+
+string container_theme_path( string t, mapping m, string c, object id )
+{
+  while( id->misc->orig ) id = id->misc->orig;
+  if( glob( "*"+m->match, id->not_query ) )
+    return c;
+  return "";
+}
+
+string tag_theme_set( string t, mapping m, object id )
+{
+  if( !id->misc->cf_theme )
+    id->misc->cf_theme = ([]);
+  if( m->themefile )
+    m->to = "/standard/themes/"+config_setting2( "theme" )+"/"+m->to;
+  id->misc->cf_theme[ m->what ] = m->to;
+}
+
 
 string tag_cf_num_dotdots( string t, mapping m, object id )
 {
