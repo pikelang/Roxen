@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.398 2002/09/03 16:05:44 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.399 2002/09/12 22:32:05 jonasw Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -813,7 +813,7 @@ class TagDate {
       if(args["iso-time"])
       {
 	int year, month, day, hour, minute, second;
-	if(sscanf(args["iso-time"], "%d-%d-%d%*c%d:%%d:%d", year, month, day, hour, second) < 3)
+	if(sscanf(args["iso-time"], "%d-%d-%d%*c%d:%d:%d", year, month, day, hour, minute, second) < 3)
 	  // Format yyyy-mm-dd{|{T| }hh:mm|{T| }hh:mm:ss}
 	  RXML.parse_error("Attribute iso-time needs at least yyyy-mm-dd specified.\n");
 	t = mktime(([
