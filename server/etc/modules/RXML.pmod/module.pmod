@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.54 2000/02/13 18:25:56 mast Exp $
+//! $Id: module.pmod,v 1.55 2000/02/15 01:17:52 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -832,10 +832,9 @@ class Context
 
   void add_runtime_tag (Tag tag)
   //! Adds a tag that will exist from this point forward in the
-  //! current context only. It will have effect in the current parser
-  //! and parent parsers up to the point where tag_set changes.
+  //! current context only.
   {
-    if (!new_runtime_tags) new_runtime_tags = RuntimeTags();
+    if (!new_runtime_tags) new_runtime_tags = NewRuntimeTags();
     new_runtime_tags->add_tags[tag] = 1;
     // By doing the following, we can let remove_tags take precedence.
     new_runtime_tags->remove_tags[tag] = 0;
@@ -843,12 +842,21 @@ class Context
   }
 
   void remove_runtime_tag (string|Tag tag)
-  //! Removes a tag added by add_runtime_tag(). It will have effect in
-  //! the current parser and parent parsers up to the point where
-  //! tag_set changes.
+  //! Removes a tag added by add_runtime_tag().
   {
-    if (!new_runtime_tags) new_runtime_tags = RuntimeTags();
+    if (!new_runtime_tags) new_runtime_tags = NewRuntimeTags();
     new_runtime_tags->remove_tags[tag] = 1;
+  }
+
+  array(Tag) get_runtime_tags()
+  //! Returns all currently active runtime tags.
+  {
+    array(Tag) tags = runtime_tags;
+    if (new_runtime_tags) {
+      tags |= indices (new_runtime_tags->add_tags);
+      tags -= indices (new_runtime_tags->remove_tags);
+    }
+    return tags;
   }
 
   void handle_exception (mixed err, PCode|Parser evaluator)
@@ -955,12 +963,14 @@ class Context
     }
   }
 
-  class RuntimeTags
+  array(Tag) runtime_tags = ({});
+
+  class NewRuntimeTags
   {
     multiset(Tag) add_tags = (<>);
     multiset(Tag|string) remove_tags = (<>);
   }
-  RuntimeTags new_runtime_tags;
+  NewRuntimeTags new_runtime_tags;
   // Used to record the result of any add_runtime_tag() and
   // remove_runtime_tag() calls since the last time the parsers ran.
 
@@ -1003,7 +1013,7 @@ class Backtrace
   constant is_generic_error = 1;
   constant is_RXML_Backtrace = 1;
 
-  string type;			// Currently "run", "parse" or "fatal".
+  string type;			// Currently "run" or "parse".
   string msg;
   Context context;
   Frame frame;
@@ -1445,8 +1455,7 @@ class Frame
 	    if (result_type->_parser_prog == PNone)
 	      piece = elem;
 	    else {
-	      subparser = result_type->get_parser (ctx);
-	      subparser->_parent = parser;
+	      subparser = result_type->get_parser (ctx, 0, parser);
 	      subparser->finish ([string] elem); // Might unwind.
 	      piece = subparser->eval(); // Might unwind.
 	      subparser = 0;
@@ -1513,12 +1522,11 @@ class Frame
     throw_fatal (err);
   }
 
-  private void _handle_runtime_tags (TagSetParser parser,
-				     Context.RuntimeTags runtime_tags)
+  private void _handle_runtime_tags (Context ctx, TagSetParser parser)
   {
     // FIXME: PCode handling.
-    multiset(string|Tag) rem_tags = runtime_tags->remove_tags;
-    multiset(Tag) add_tags = runtime_tags->add_tags - rem_tags;
+    multiset(string|Tag) rem_tags = ctx->new_runtime_tags->remove_tags;
+    multiset(Tag) add_tags = ctx->new_runtime_tags->add_tags - rem_tags;
     if (sizeof (rem_tags))
       foreach (indices (add_tags), Tag tag)
 	if (rem_tags[tag->name]) add_tags[tag] = 0;
@@ -1531,6 +1539,9 @@ class Frame
 	foreach (arr_rem_tags, string|object(Tag) tag)
 	  ([object(TagSetParser)] p)->remove_runtime_tag (tag);
       }
+    ctx->runtime_tags |= add_tags;
+    ctx->runtime_tags -= rem_tags;
+    ctx->new_runtime_tags = 0;
   }
 
   void _eval (TagSetParser parser,
@@ -1688,7 +1699,11 @@ class Frame
 	case EVSTAT_BEGIN:
 	  if (array|function(RequestID,void|mixed:array) do_enter =
 	      [array|function(RequestID,void|mixed:array)] this->do_enter) {
-	    if (!exec) exec = do_enter (ctx->id); // Might unwind.
+	    if (!exec) {
+	      exec = do_enter (ctx->id); // Might unwind.
+	      if (ctx->new_runtime_tags)
+		_handle_runtime_tags (ctx, parser);
+	    }
 	    if (exec) {
 	      mixed res = _exec_array (parser, exec); // Might unwind.
 	      if (flags & FLAG_STREAM_RESULT) {
@@ -1719,26 +1734,22 @@ class Frame
 		iter = [int] do_iterate || 1;
 		eval_state = EVSTAT_LAST_ITER;
 	      }
-	      else
-		if (!(iter = (/*[function(RequestID:int)]HMM*/ do_iterate
-			     ) (ctx->id))) // Might unwind.
-		  eval_state = EVSTAT_LAST_ITER;
+	      else {
+		iter = (/*[function(RequestID:int)]HMM*/ do_iterate) (
+		  ctx->id); // Might unwind.
+		if (ctx->new_runtime_tags)
+		  _handle_runtime_tags (ctx, parser);
+		if (!iter) eval_state = EVSTAT_LAST_ITER;
+	      }
 	    }
 	    ENTER_SCOPE (ctx, this);
 	    for (; iter > 0; iter--) {
 
 	      if (raw_content) { // Got nested parsing to do.
-		if (ctx->new_runtime_tags) {
-		  // Empty this first in case do_enter() set it.
-		  _handle_runtime_tags (parser, ctx->new_runtime_tags);
-		  ctx->new_runtime_tags = 0;
-		}
-
 		int finished = 0;
 		if (!subparser) { // The nested content is not yet parsed.
 		  subparser = content_type->get_parser (
-		    ctx, [object(TagSet)] this->local_tags);
-		  subparser->_parent = parser;
+		    ctx, [object(TagSet)] this->local_tags, parser);
 		  subparser->finish (raw_content); // Might unwind.
 		  finished = 1;
 		}
@@ -1756,7 +1767,11 @@ class Frame
 			   [array|function(RequestID,void|mixed:array)]
 			   this->do_return) &&
 			  functionp (do_return)) {
-			if (!exec) exec = do_return (ctx->id, piece); // Might unwind.
+			if (!exec) {
+			  exec = do_return (ctx->id, piece); // Might unwind.
+			  if (ctx->new_runtime_tags)
+			    _handle_runtime_tags (ctx, parser);
+			}
 			if (exec) {
 			  mixed res = _exec_array (parser, exec); // Might unwind.
 			  if (flags & FLAG_STREAM_RESULT) {
@@ -1802,11 +1817,14 @@ class Frame
 
 	      if (array|function(RequestID,void|mixed:array) do_return =
 		  [array|function(RequestID,void|mixed:array)] this->do_return) {
-		if (!exec)
+		if (!exec) {
 		  exec = functionp (do_return) ?
 		    ([function(RequestID,void|mixed:array)] do_return) (
 		      ctx->id) : // Might unwind.
 		    [array] do_return;
+		  if (ctx->new_runtime_tags)
+		    _handle_runtime_tags (ctx, parser);
+		}
 		if (exec) {
 		  mixed res = _exec_array (parser, exec); // Might unwind.
 		  if (flags & FLAG_STREAM_RESULT) {
@@ -1846,10 +1864,8 @@ class Frame
 	      }
       }
 
-      if (ctx->new_runtime_tags) {
-	_handle_runtime_tags (parser, ctx->new_runtime_tags);
-	ctx->new_runtime_tags = 0;
-      }
+      if (ctx->new_runtime_tags)
+	_handle_runtime_tags (ctx, parser);
     };
 
     if (err) {
@@ -2216,8 +2232,8 @@ class Parser
   optional Parser clone (Context ctx, Type type, mixed... args);
   //! Define to create new parser objects by cloning instead of
   //! creating from scratch. It returns a new instance of this parser
-  //! with the same static configuration, i.e. the type. The instance
-  //! this function is called in is never actually used for parsing.
+  //! with the same static configuration, i.e. the type and tag set
+  //! (when used in TagSetParser).
 
   static void create (Context ctx, Type _type, mixed... args)
   {
@@ -2461,14 +2477,25 @@ class Type
     return newtype;
   }
 
-  inline Parser get_parser (Context ctx, void|TagSet tag_set)
+  inline Parser get_parser (Context ctx, void|TagSet tag_set, void|Parser|PCode parent)
   //! Returns a parser instance initialized with the given context.
   {
     Parser p;
     if (_p_cache) {		// It's a tag set parser.
-      TagSet tset;
+      TagSet tset = tag_set || ctx->tag_set;
+
+      if (parent && parent->is_RXML_Parser &&
+	  tset == ctx->tag_set && sizeof (ctx->runtime_tags) &&
+	  parent->clone && parent->type == this_object()) {
+	// There are runtime tags. Try to clone the parent parser if
+	// all conditions are met.
+	p = parent->clone (ctx, this_object(), tset, @_parser_args);
+	p->_parent = parent;
+	return p;
+      }
+
       // vvv Using interpreter lock from here.
-      PCacheObj pco = _p_cache[tset = tag_set || ctx->tag_set];
+      PCacheObj pco = _p_cache[tset];
       if (pco && pco->tag_set_gen == tset->generation) {
 	if ((p = pco->free_parser)) {
 	  pco->free_parser = p->_next_free;
@@ -2476,6 +2503,7 @@ class Type
 	  p->data_callback = p->compile = 0;
 	  p->reset (ctx, this_object(), tset, @_parser_args);
 	}
+
 	else
 	  // ^^^ Using interpreter lock to here.
 	  if (pco->clone_parser)
@@ -2485,6 +2513,7 @@ class Type
 	    // to race, but that doesn't matter.
 	    p = (pco->clone_parser = p)->clone (ctx, this_object(), tset, @_parser_args);
       }
+
       else {
 	// ^^^ Using interpreter lock to here.
 	pco = PCacheObj();
@@ -2495,7 +2524,12 @@ class Type
 	  // to race, but that doesn't matter.
 	  p = (pco->clone_parser = p)->clone (ctx, this_object(), tset, @_parser_args);
       }
+
+      if (ctx->tag_set == tset)
+	foreach (ctx->runtime_tags, Tag tag)
+	  p->add_runtime_tag (tag);
     }
+
     else {
       if ((p = free_parser)) {
 	// Relying on interpreter lock here.
@@ -2503,14 +2537,18 @@ class Type
 	p->data_callback = p->compile = 0;
 	p->reset (ctx, this_object(), @_parser_args);
       }
+
       else if (clone_parser)
 	// Relying on interpreter lock here.
 	p = clone_parser->clone (ctx, this_object(), @_parser_args);
+
       else if ((p = _parser_prog (0, this_object(), @_parser_args))->clone)
 	// clone_parser might already be initialized here due to race,
 	// but that doesn't matter.
 	p = (clone_parser = p)->clone (ctx, this_object(), @_parser_args);
     }
+
+    p->_parent = parent;
     return p;
   }
 
@@ -2525,7 +2563,7 @@ class Type
     if (!ctx) ctx = get_context();
     if (_parser_prog == PNone) res = in;
     else {
-      Parser p = get_parser (ctx, tag_set);
+      Parser p = get_parser (ctx, tag_set, parent);
       p->_parent = parent;
       if (dont_switch_ctx) p->finish (in); // Optimize the job in p->write_end().
       else p->write_end (in);
