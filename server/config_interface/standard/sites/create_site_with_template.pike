@@ -1,4 +1,3 @@
-inherit "roxenlib";
 #include <config_interface.h>
 
 constant base = #"
@@ -6,8 +5,8 @@ constant base = #"
 <tmpl>
 <topmenu base='../' selected=sites>
 <content><cv-split><subtablist><st-page>
- <input type=hidden name=name value='&form.name;'>
- <input type=hidden name=site_template value='&form.site_template;'>
+ <input type='hidden' name='name' value='&form.name;'>
+ <input type='hidden' name='site_template' value='&form.site_template;'>
  %s
 </st-page></subtablist></cv-split></content></tmpl>
 ";
@@ -27,7 +26,7 @@ string encode_site_name( string what )
               } ) * "";
 }
 
-mixed parse( RequestID id )
+string|mapping parse( RequestID id )
 {
   if( !config_perm( "Create Site" ) )
     error("No permission, dude!\n"); // This should not happen, really.
@@ -58,20 +57,20 @@ mixed parse( RequestID id )
         q = ("add_module.pike?encoded=1&config="+
              encode_site_name(id->variables->name));
         foreach( id->misc->modules_to_add, string mod )
-          q += "&module_to_add="+http_encode_string(mod);
+          q += "&module_to_add="+Roxen.http_encode_string(mod);
 	if (id->misc->module_initial_vars) {
 	  q += "&mod_init_vars=1";
 	  foreach (id->misc->module_initial_vars || ({}), string var)
-	    q += "&init_var=" + http_encode_string (replace (var, "#", "!"));
+	    q += "&init_var=" + Roxen.http_encode_string (replace (var, "#", "!"));
 	}
         c->save (1);
-        return http_redirect( fix_relative(q, id), id );
+        return Roxen.http_redirect( Roxen.fix_relative(q, id), id );
       }
       else
       {
         c->save (1);
-        return http_redirect(fix_relative("site.html/"+
-                         http_encode_string(id->variables->name)+"/", id), id);
+        return Roxen.http_redirect(Roxen.fix_relative("site.html/"+
+                         Roxen.http_encode_string(id->variables->name)+"/", id), id);
       }
     }
     return sprintf(base,q);
@@ -105,9 +104,9 @@ mixed parse( RequestID id )
                     "<gbutton-url width=400 "
                     "             icon_src=/internal-roxen-next "
                     "             align_icon=right>"
-                    + html_encode_string(name) +
+                    + Roxen.html_encode_string(name) +
                     "</gbutton-url></cset>"
-                    "<input border=0 type=image src='&var.url;' name='"+st+"'>\n"
+                    "<input border='0' type='image' src='&var.url;' name='"+st+"'>\n"
                     "<blockquote>"+doc+"</blockquote>" })});
       }
     };
@@ -118,7 +117,7 @@ mixed parse( RequestID id )
 
   if( strlen( e->get() ) )
     res += ("Compile errors:<pre>"+
-            html_encode_string(e->get())+
+            Roxen.html_encode_string(e->get())+
             "</pre>");
   master()->set_inhibit_compile_errors( 0 );
   return sprintf(base,res);
