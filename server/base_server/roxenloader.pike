@@ -4,7 +4,7 @@ import spider;
 #define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
 
 // Set up the roxen enviornment. Including custom functions like spawne().
-string cvs_version="$Id: roxenloader.pike,v 1.7 1997/02/13 13:01:01 per Exp $";
+string cvs_version="$Id: roxenloader.pike,v 1.8 1997/02/18 01:43:06 per Exp $";
 
 void perror(string format,mixed ... args);
 
@@ -250,7 +250,7 @@ void report_fatal(string message)
 static private void initiate_cache()
 {
   object cache;
-  cache=((program)"base_server/cache")();
+  cache=((program)"../base_server/cache")();
   add_constant("cache_set", cache->cache_set);
   add_constant("cache_lookup", cache->cache_lookup);
   add_constant("cache_remove", cache->cache_remove);
@@ -294,14 +294,22 @@ void mkdirhier(string from)
   }
 }
 
+void make_path(string ... from)
+{
+  return Array.map(from, lambda(string a, string b){
+    return combine_path(b,a);
+  }, getcwd())*":";
+}
+
 void main(mixed ... args)
 {
   object mm;
   perror("Roxen loader version "+cvs_version+"\n");
-  replace_master(mm=(object)"etc/master");
+  replace_master(mm=(object)"../etc/master");
 
   mm->pike_library_path = master()->pike_library_path;
-  mm->putenv("PIKE_INCLUDE_PATH", "base_server/:etc/include/:.");
+  mm->putenv("PIKE_INCLUDE_PATH",
+	     make_path("base_server/","etc/include/", ""));
 
 
   add_constant("error", lambda(string s){error(s);});

@@ -52,7 +52,7 @@ array|string nameof(mixed foo)
 
 program programof(string foo)
 {
-  return saved_names[foo] || programs[foo] || cast_to_program(foo);
+  return saved_names[foo] || programs[foo] || cast_to_program(foo,0);
 }
 
 object objectof(array foo)

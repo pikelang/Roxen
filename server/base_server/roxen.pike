@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.36 1997/02/13 13:01:00 per Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.37 1997/02/18 01:43:05 per Exp $";
 #define IN_ROXEN
 
 #include <fifo.h>
@@ -966,8 +966,8 @@ object load_from_dirs(array dirs, string f)
 void create()
 {
   add_constant("roxen", this_object());
-  (object)"base_server/color";
-  (object)"base_server/fonts";
+  (object)"color";
+  (object)"fonts";
   Configuration = (program)"configuration";
 }
 

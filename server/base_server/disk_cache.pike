@@ -1,5 +1,4 @@
-
-string cvs_version = "$Id: disk_cache.pike,v 1.13 1997/02/13 13:00:54 per Exp $";
+string cvs_version = "$Id: disk_cache.pike,v 1.14 1997/02/18 01:43:04 per Exp $";
 #include <stdio.h>
 #include <module.h>
 #include <simulate.h>
@@ -24,10 +23,10 @@ string file_name(string what)
 }
 
 
-/* ------------------------
- | The cache stream class. Each cache stream is an instance
- | of this class.
- */
+/*+----------------------------------------------------------+
+  | The cache stream class. Each cache stream is an instance |
+  | of this class.                                           |
+  +----------------------------------------------------------+*/
 
 class CacheStream 
 {
