@@ -1,5 +1,5 @@
 #define error(X) throw( ({ (X), backtrace() }) )
-constant cvs_version = "$Id: lisp.pike,v 1.10 1998/08/10 21:39:38 per Exp $";
+constant cvs_version = "$Id: lisp.pike,v 1.11 1998/09/11 22:20:19 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -175,10 +175,10 @@ object boot_code;
 
 void start()
 {
-  werror("Lisp: starting...\n");
+//   werror("Lisp: starting...\n");
   boot_code = Parser( query("bootcode") )->read();
-  werror(sprintf("Read boot_code: %s\n",
-		 boot_code ? boot_code->print(1) : "<error>"));
+//   werror(sprintf("Read boot_code: %s\n",
+// 		 boot_code ? boot_code->print(1) : "<error>"));
   environments = ([]);
   lisp_code = ([]);
 }
@@ -302,10 +302,10 @@ object f_display(object arglist, object env, object globals)
 object f_get(object arglist, object env, object globals)
 {
   object id = globals->roxen_id;
-  werror(sprintf("lisp.pike->f_get %s\n", arglist->print(1)));
+//   werror(sprintf("lisp.pike->f_get %s\n", arglist->print(1)));
   if (!id)
     return 0;
-  werror("lisp.pike->f_get: id ok\n");
+//   werror("lisp.pike->f_get: id ok\n");
 
   if (!arglist->car->to_string)
     return 0;
@@ -315,19 +315,19 @@ object f_get(object arglist, object env, object globals)
   if (!name)
     return 0;
 
-  werror(sprintf("lisp.pike->f_get: name '%s'\n", name));
+//   werror(sprintf("lisp.pike->f_get: name '%s'\n", name));
 
   string res = id->variables[name];
   if (res)
   {
-    werror(sprintf("lisp.pike->f_get: variable = '%s'\n", res));
+//     werror(sprintf("lisp.pike->f_get: variable = '%s'\n", res));
     return String(res);
   }
 
   res = id->misc->defines[name];
   if (res)
   {
-    werror(sprintf("lisp.pike->f_get: define = '%s'\n", res));
+//     werror(sprintf("lisp.pike->f_get: define = '%s'\n", res));
     return String(res);
   }
 
