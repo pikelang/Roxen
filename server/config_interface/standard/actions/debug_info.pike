@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.2 2000/02/07 20:27:52 grubba Exp $
+ * $Id: debug_info.pike,v 1.3 2000/03/16 04:00:48 mast Exp $
  */
 inherit "roxenlib";
 #include <stat.h>
@@ -346,7 +346,7 @@ mixed page_0( object id )
   res += ("Number of destructed objects: " + _num_dest_objects() +"<br>\n");
 #endif
 
-  return res +"</ul>";
+  return res;
 }
 
 mixed parse(object id)
@@ -355,5 +355,5 @@ mixed parse(object id)
 #if constant( get_profiling_info )
          + page_1( id )
 #endif
-         ;
+    + "<p><cf-ok>";
 }
