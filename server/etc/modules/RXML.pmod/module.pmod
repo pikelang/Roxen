@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.333 2004/06/28 16:01:50 mast Exp $
+// $Id: module.pmod,v 1.334 2004/08/11 15:31:40 grubba Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -8104,8 +8104,20 @@ class PCode
 		break;
 	    end++;
 	  }
-
+#if 1
+	  // Group in blocks of 10 to avoid wasting losts of stack
+	  // (lfun::`+() is often defined in terms of predef::`+())...
+	  //	/grubba 2004-08-11
+	  --end;
+	  item = exec[pos];
+	  int p;
+	  for (p=pos+10; p < end; p+=10) {
+	    item += `+(@exec[p-9..p]);
+	  }
+	  item += `+(@exec[p-9..end]);
+#else
 	  item = `+(@exec[pos..--end]);
+#endif
 	  PCODE_COMPACT_MSG ("  Compact: Loop done - concatenating %d..%d to %O\n",
 			     pos, end, item);
 	  pos = end;
