@@ -4,7 +4,7 @@
 <cv-leftside>
   <img src="internal-roxen-unit" height="26" />
   <br />
-  <upgrade-sidemenu/>
+  <update-sidemenu/>
 </cv-leftside>
 
 <cv-startpage><br />
@@ -13,16 +13,16 @@
 <define tag="package-box">
   <cv-obox title="&_.title;">
   <rul>
-  <upgrade-package-output type="&_.name;">
-    <rli>#title# <a href="upgrade.html?details=#id#">[Details...]</a></rli>
+  <update-package-output type="&_.name;">
+    <rli>#title# <a href="update.html?details=#id#">[Details...]</a></rli>
     <cset variable="_&_.name;">foo</cset>
-  </upgrade-package-output>
+  </update-package-output>
   </rul>
   <if not variable="_&_.name;">
      <p>Currently no packages in this category</p>
   </if>
   <div align="right">
-    <a href="upgrade.html?category=&_.name;">[More..]</a>
+    <a href="update.html?category=&_.name;">[More..]</a>
   </div>
   </cv-obox>
 </define>
@@ -40,16 +40,16 @@
   <br />
   <headline>&title;</headline>
   <rul>
-  <upgrade-package-output type="&name;" limit="5">
-    <rli>#title# <a href="upgrade.html?details=#id#">[Details...]</a></rli>
+  <update-package-output type="&name;" limit="5">
+    <rli>#title# <a href="update.html?details=#id#">[Details...]</a></rli>
     <cset variable="_&name;">foo</cset>
-  </upgrade-package-output>
+  </update-package-output>
   </rul>
   <if not variable="_&name;">
      Currently no packages in this category.<br>
   </if>
   <else>
-    <a href="upgrade.html?category=&name;">[More..]</a><br>
+    <a href="update.html?category=&name;">[More..]</a><br>
   </else>
   &nbsp;
 </define>
@@ -75,14 +75,14 @@
 
 <if variable=details>
   <if variable="download">
-    <upgrade-start-download package="&form.details;" />
-    <redirect to="/standard/upgrade.html?bar" />
+    <update-start-download package="&form.details;" />
+    <redirect to="/standard/update.html?bar" />
   </if>
 
-<upgrade-package-output package="&form.details;">
+<update-package-output package="&form.details;">
 <headline>#title#</headline>
-</upgrade-package-output>
-<upgrade-package-output preparse package="&form.details;">
+</update-package-output>
+<update-package-output preparse package="&form.details;">
 <table>
   <item title="Description" name="description">
   <item title="Size" name="size">
@@ -91,9 +91,9 @@
   <item title="License" name="license">
   <item title="Date" name="date">
 </table>
-</upgrade-package-output>
+</update-package-output>
 
-<upgrade-package-is-downloaded package="&form.details;" variable=downloaded>
+<update-package-is-downloaded package="&form.details;" variable=downloaded>
 <if not variable="downloaded">
   <input type="hidden" name="details" value="&form.details;" />
   <input type="submit" name="download" value="Download this package" />
@@ -108,9 +108,9 @@
 
 <if variable="category is ">
 
-<h1>Roxen Upgrade System</h1>
+<h1>Roxen Update System</h1>
 
-This information was last synchronized with the main server &upgrade.last_updated; ago.
+This information was last synchronized with the main server &update.last_updated; ago.
 
 <cat-list name="idonex" title="Products" />
 <cat-list name="security" title="Security fixes" />
@@ -130,14 +130,14 @@ This information was last synchronized with the main server &upgrade.last_update
 	<td nowrap="nowrap"><b>Size</b></td>
 	<td nowrap="nowrap"><b>Downloaded</b></td>
      </tr>
-     <upgrade-download-progress-output>
+     <update-download-progress-output>
      <tr>
        <td nowrap="nowrap">#title#
-         <a href="upgrade.html?details=#id#">[Details...]</a></td>
+         <a href="update.html?details=#id#">[Details...]</a></td>
        <td nowrap="nowrap">#size# kB</td>
        <td nowrap="nowrap">#progress#%</td>
      </tr>
-     </upgrade-download-progress-output>
+     </update-download-progress-output>
     </table>
   </cv-obox>
 </td>
@@ -149,16 +149,16 @@ This information was last synchronized with the main server &upgrade.last_update
 	<td nowrap="nowrap"><b>Size</b></td>
 	<td nowrap="nowrap"></td>
       </tr>
-      <upgrade-downloaded-packages-output>
+      <update-downloaded-packages-output>
       <tr>
         <td nowrap="nowrap">#title#
-          <a href="upgrade.html?details=#id#">[Details...]</a></td>
+          <a href="update.html?details=#id#">[Details...]</a></td>
         <td nowrap="nowrap">#size# kB</td>
         <td nowrap="nowrap">
-          <a href="upgrade.html?install=#id#">[Install...]</a>
+          <a href="update.html?install=#id#">[Install...]</a>
         </td>
       </tr>
-      </upgrade-downloaded-packages-output>
+      </update-downloaded-packages-output>
     </table>
   </cv-obox>
 </td></tr></table>  
@@ -171,18 +171,18 @@ This information was last synchronized with the main server &upgrade.last_update
 
 <if variable="no">
 foobar
-  <redirect to="/standard/upgrade.html?foo" />
+  <redirect to="/standard/update.html?foo" />
 </if>
 <if variable="yes">
 
-<upgrade-install-package package="&form.install;">
+<update-install-package package="&form.install;">
 
 </if>
 <else>
 
 <h1>Install package</h1>
 
-<upgrade-package-output preparse package="&form.install;">
+<update-package-output preparse package="&form.install;">
 <table>
   <item title="Description" name="description">
   <item title="Organization" name="organization">
@@ -190,12 +190,12 @@ foobar
   <item title="License" name="license">
   <item title="Date" name="date">
 </table>
-</upgrade-package-output>
+</update-package-output>
 <br/>
 The following files will be installed:<br>
 
 <comment><textarea name=foo rows=12 cols=70></textarea></comment>
-<pre><upgrade-package-contents package="&form.install;" /></pre>
+<pre><update-package-contents package="&form.install;" /></pre>
 <br>
 <b>Do you really want to install this package?</b>
 <br />

@@ -1,11 +1,11 @@
 /*
- * $Id: upgrade.pike,v 1.21 2000/03/13 06:22:38 per Exp $
+ * $Id: update.pike,v 1.1 2000/03/14 15:36:11 js Exp $
  *
- * The Roxen Upgrade Client
+ * The Roxen Update Client
  * Copyright © 2000, Roxen IS.
  *
- * Johan Schön, Peter Bortas
- * January-February 2000
+ * Author: Johan Schön
+ * January-March 2000
  */
 
 inherit "module";
@@ -17,14 +17,18 @@ inherit "roxenlib";
 #include <config_interface.h>
 
 constant module_type = MODULE_PARSER|MODULE_CONFIG;
-constant module_name = "Upgrade client";
+constant module_name = "Update client";
+constant module_doc = "This is the update client. "
+                      "If you have a Roxen user identity at the Roxen Community "
+                      "website, feel free to enter your username and password in "
+                      "the settings tab.";
 
 object db;
 
 object updater;
 Yabu.Table pkginfo, misc, installed;
 
-constant pkgdir = "../local/packages";  /* FIXME: Make user configurable */
+constant pkgdir = "../local/packages/";  /* FIXME: Make user configurable */
 
 mapping(int:GetPackage) package_downloads = ([ ]);
 
@@ -61,9 +65,9 @@ void stop()
 void create()
 {
   query_tag_set()->prepare_context=set_entities;
-  defvar("yabudir", "$VVARDIR/upgrade_data/", "Database directory",
+  defvar("yabudir", "$VVARDIR/update_data/", "Database directory",
 	 TYPE_DIR, ""); 
-  /* Keep this in server and regenerate on upgrade */
+  /* Keep this in server and regenerate on update */
 
   /*  defvar("pkgdir", "$LOCALDIR/packages/", "Database directory",
       TYPE_DIR, "");*/
@@ -71,7 +75,10 @@ void create()
 	 TYPE_STRING, "");
   defvar("port", 80, "Server port",
 	 TYPE_INT, "");
-  defvar("userpassword", "foo:bar", "Username and password", TYPE_STRING, "username:password");
+  defvar("userpassword", "", "Username and password",
+	 TYPE_STRING,
+	 "Format: username@host:password. "
+	 "Will not use auth if left empty.");
 }
 
 static string describe_time_period( int amnt )
@@ -89,7 +96,7 @@ static string describe_time_period( int amnt )
   return amnt+" years";
 }
 
-class Scope_upgrade
+class Scope_update
 {
   inherit RXML.Scope;
 
@@ -104,14 +111,14 @@ class Scope_upgrade
     }
   }
 
-  string _sprintf() { return "RXML.Scope(upgrade)"; }
+  string _sprintf() { return "RXML.Scope(update)"; }
 }
 
-RXML.Scope upgrade_scope=Scope_upgrade();
+RXML.Scope update_scope=Scope_update();
 
 void set_entities(RXML.Context c)
 {
-  c->extend_scope("upgrade", upgrade_scope);
+  c->extend_scope("update", update_scope);
 }
 
 array(array) menu = ({
@@ -122,7 +129,7 @@ array(array) menu = ({
   ({ "Third party","3rdpart" }),
 });
 
-string tag_upgrade_sidemenu(string t, mapping m, RequestID id)
+string tag_update_sidemenu(string t, mapping m, RequestID id)
 {
   string ret =
     "<gbutton width=150 bgcolor=&usr.fade1;>Update List</gbutton><br><br>";
@@ -137,14 +144,14 @@ string tag_upgrade_sidemenu(string t, mapping m, RequestID id)
     }
     else
       ret += "bgcolor=&usr.fade1; ";
-    ret += "icon_align=left preparse href=\"upgrade.html?category="+
+    ret += "icon_align=left preparse href=\"update.html?category="+
       entry[1]+"\">"+entry[0]+"</gbutton><br>";
   }
 
   return ret;
 }
 
-string container_upgrade_package_output(string t, mapping m, string c, RequestID id)
+string container_update_package_output(string t, mapping m, string c, RequestID id)
 {
   array res=({ });
   int i=0;
@@ -179,16 +186,16 @@ string container_upgrade_package_output(string t, mapping m, string c, RequestID
   return do_output_tag(m, res, c, id);
 }
 
-string tag_upgrade_start_download(string t, mapping m, RequestID id)
+string tag_update_start_download(string t, mapping m, RequestID id)
 {
-  werror("upgrade_start_download\n");
+  werror("update_start_download\n");
   mixed err=catch(start_package_download((int)m->package));
   if(err) report_error("Upgrade: %s",err);
   return "";
 }
 
 
-string tag_upgrade_package_is_downloaded(string t, mapping m, RequestID id)
+string tag_update_package_is_downloaded(string t, mapping m, RequestID id)
 {
   if(!m->package)
     return "No package argument.";
@@ -198,7 +205,7 @@ string tag_upgrade_package_is_downloaded(string t, mapping m, RequestID id)
   return "";
 }
 
-string container_upgrade_download_progress_output(string t, mapping m,
+string container_update_download_progress_output(string t, mapping m,
 					  string c, RequestID id)
 {
   array(int) packages=sort(indices(package_downloads));
@@ -215,7 +222,7 @@ string container_upgrade_download_progress_output(string t, mapping m,
   return do_output_tag(m, res, c, id);
 }
 
-string container_upgrade_downloaded_packages_output(string t, mapping m,
+string container_update_downloaded_packages_output(string t, mapping m,
 					    string c, RequestID id)
 {
   array(int) packages=sort((array(int))glob("*.tar",r_get_dir(pkgdir)));
@@ -314,7 +321,7 @@ string unpack_tarfile(string tarfile)
   return res*"<br>";
 }
 
-string tag_upgrade_install_package(string t, mapping m, RequestID id)
+string tag_update_install_package(string t, mapping m, RequestID id)
 {
   if(!m->package)
     return "No package argument";
@@ -355,7 +362,7 @@ array(string) tarfile_contents(string|object tarfile, void|string dir)
   return res;
 }
 
-string tag_upgrade_package_contents(string t, mapping m, RequestID id)
+string tag_update_package_contents(string t, mapping m, RequestID id)
 {
   if(!m->package)
     return "No package argument.";
@@ -413,10 +420,12 @@ array(int) decode_ranges(string s)
 
 mapping get_headers()
 {
-  return ([ "host":QUERY(server)+":"+QUERY(port),
-	    "user-agent": roxen->real_version, 
-	    "authorization": "Basic "+MIME.encode_base64(QUERY(userpassword)),
-  ]);
+  mapping m = ([ "host":QUERY(server)+":"+QUERY(port),
+		 "user-agent": roxen->real_version ]);
+
+  if(sizeof(QUERY(userpassword)))
+    m->authorization="Basic "+MIME.encode_base64(QUERY(userpassword));
+  return m;
 }
 
 
@@ -464,14 +473,14 @@ class GetPackage
 
     if(catch(f=Stdio.File(pkgdir+num+".tar","wc")))
     {
-      report_error("Upgrade: Failed to open file for writing: "+
+      report_error("Update: Failed to open file for writing: "+
 		   pkgdir+num+".tar\n");
       catch(m_delete(package_downloads, num));
       return;
     }
     if(catch(f->write(httpquery->data())))
     {
-      report_error("Upgrade: Failed to write package to file: "+
+      report_error("Update: Failed to write package to file: "+
 		   pkgdir+num+".tar\n");
       catch(r_rm(pkgdir+num+".tar"));
       catch(m_delete(package_downloads, num));
@@ -483,7 +492,7 @@ class GetPackage
 
   void request_fail(object httpquery, int num)
   {
-    report_error("Upgrade: Failed to connect to upgrade server to fetch "
+    report_error("Update: Failed to connect to update server to fetch "
 		 "package number "+num+".\n");
     catch(m_delete(package_downloads, num));
   }
@@ -492,7 +501,7 @@ class GetPackage
   {
     set_callbacks(request_ok, request_fail, pkgnum);
     async_request(QUERY(server),QUERY(port),
-		  "GET /upgradeserver/packages/"+pkgnum+".tar HTTP/1.0",
+		  "GET /updateserver/packages/"+pkgnum+".tar HTTP/1.0",
 		  get_headers());
   }
 }
@@ -515,7 +524,10 @@ class GetInfoFile
 
     if(httpquery->status!=200)
     {
-      report_error("Upgrade: Wrong answer from server for package %d.\n",num);
+      report_error("Update: Wrong answer from server for package %d. "
+		   "Error code: %d\n",num,httpquery->status);
+      werror("Answer: %O %O\n",httpquery->status, httpquery->data());
+
       return;
     }
 
@@ -538,13 +550,13 @@ class GetInfoFile
     werror("%O\n",res);
     pkginfo[(string)num]=res;
     pkginfo->sync();
-    report_notice("Upgrade: Added information about package number "
+    report_notice("Update: Added information about package number "
 		  +num+".\n");
   }
 
   void request_fail(object httpquery, int num)
   {
-    report_error("Upgrade: Failed to connect to upgrade server to fetch "
+    report_error("Update: Failed to connect to update server to fetch "
 		 "information about package number "+num+".\n");
   }
 
@@ -552,7 +564,7 @@ class GetInfoFile
   {
     set_callbacks(request_ok, request_fail, pkgnum);
     async_request(QUERY(server),QUERY(port),
-		  "GET /upgradeserver/packages/"+pkgnum+".info HTTP/1.0",
+		  "GET /updateserver/packages/"+pkgnum+".info HTTP/1.0",
 		  get_headers());
   }
 }
@@ -567,9 +579,19 @@ class UpdateInfoFiles
     string s=httpquery->data();
 
     array lines=s/"\n";
-    if(httpquery->status!=200 || lines[0]!="upgrade" || sizeof(lines)<3)
+
+    if(httpquery->status==401)
     {
-      report_error("Upgrade: Wrong answer from server.\n");
+      report_error("Update: Authorization failed. Will not receive any "
+		   "new update packages.\n");
+      return;
+    }
+    
+    if(httpquery->status!=200 || lines[0]!="update" || sizeof(lines)<3)
+    {
+      report_error("Update: Wrong answer from server. "
+		   "Error code: %d\n",httpquery->status);
+      werror("Answer: %O %O\n",httpquery->status, httpquery->data());
       return;
     }
 
@@ -577,17 +599,17 @@ class UpdateInfoFiles
     array(int) delete_packages=decode_ranges(lines[2]);
 
     if(sizeof(new_packages))
-      report_notice("Upgrade: Found new packages: "+
+      report_notice("Update: Found new packages: "+
 		    ((array(string))new_packages)*", "+"\n");
     else
-      report_notice("Upgrade: No new packages found.\n");
+      report_notice("Update: No new packages found.\n");
 
     if(sizeof(delete_packages))
-      report_notice("Upgrade: Deleting packages: "+
+      report_notice("Update: Deleting packages: "+
 		    ((array(string))delete_packages)*", "+
 		    "\n");
     else
-      report_notice("Upgrade: No packages to delete found.\n");
+      report_notice("Update: No packages to delete found.\n");
 
     foreach(new_packages, int i)
       GetInfoFile(i);
@@ -600,7 +622,7 @@ class UpdateInfoFiles
 
   void request_fail(object httpquery)
   {
-    report_error("Upgrade: Failed to connect to upgrade server to fetch "
+    report_error("Update: Failed to connect to update server to fetch "
 		 "information about new packages.\n");
   }
 
@@ -608,7 +630,7 @@ class UpdateInfoFiles
   {
 //     werror("foo: %O\n",encode_ranges((array(int))indices(pkginfo)));
     async_request(QUERY(server),QUERY(port),
-		  "POST /upgradeserver/get_packages HTTP/1.0",
+		  "POST /updateserver/get_packages HTTP/1.0",
 		  get_headers() |
 		  (["content-type":"application/x-www-form-urlencoded"]),
 		  "roxen_version=2.0001&"+
