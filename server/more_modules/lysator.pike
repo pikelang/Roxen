@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Lysator ACS, 1996.
 
-string cvs_version = "$Id: lysator.pike,v 1.3 1996/12/01 19:18:49 per Exp $";
+string cvs_version = "$Id: lysator.pike,v 1.4 1997/05/27 00:11:12 grubba Exp $";
 // Lysator specific parsing, used at www.lysator.liu.se
 
 #include <config.h>
@@ -210,9 +210,9 @@ inline array maintainer(string file)
        && (res=regexp_match(match, file)))
       /* Generate an array like ({ "$1", "$2", ... }) */
       return sizeof(res)?
-      replace(who, map_array(res, lambda(string s, mapping m) { 
+      replace(who, Array.map(res, lambda(string s, mapping m) { 
 	return "$"+(++m->num);
-      }, ([])), map_array(res, lambda(mixed s){return(string)s;})) / "\t" :
+      }, ([])), Array.map(res, lambda(mixed s){return(string)s;})) / "\t" :
     who/"\t";
 }
 
