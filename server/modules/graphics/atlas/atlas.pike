@@ -5,7 +5,7 @@
  */
 
 constant thread_safe = 1;
-constant cvs_version = "$Id: atlas.pike,v 1.9 2000/12/05 00:26:29 nilsson Exp $";
+constant cvs_version = "$Id: atlas.pike,v 1.10 2001/08/29 17:29:48 nilsson Exp $";
 
 #include <module.h>
 
@@ -82,7 +82,7 @@ string cont_atlas_country(string t, mapping arg, mapping state)
   return "";
 }
 
-constant imgargs = ({ "width", "height", "alt", "src", "class", "border", "name" });
+constant imgargs = (< "width", "height", "alt", "src", "class", "border", "name" >);
 
 string container_atlas(string t, mapping args, string contents, RequestID id)
 {
