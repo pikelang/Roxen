@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.63 1998/03/18 16:56:34 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.64 1998/03/25 00:09:13 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -562,15 +562,17 @@ private int parse_got(string s)
 
 void disconnect()
 {
-  if(do_not_disconnect)  return;
-  catch(file && file->close());
   file = 0;
-  my_fd = 0;
+  werror("DND\n");
+  if(do_not_disconnect) {
+    return;
+  }
   destruct();
 }
 
 void end(string|void s, int|void keepit)
 {
+  pipe = 0;
 #ifdef PROFILE
   if(conf)
   {
@@ -598,6 +600,7 @@ void end(string|void s, int|void keepit)
     o->client = client;
     object fd = my_fd;
     my_fd=0;
+    if(s) leftovers += s;
     o->chain(fd,conf,leftovers);
     disconnect();
     return;
@@ -706,7 +709,7 @@ void do_log()
       conf->log(file, this_object());
     }
   }
-  end("",1);
+  end(0,1);
   return;
 }
 
@@ -762,8 +765,12 @@ void handle_request( )
   } else {
     if((file->file == -1) || file->leave_me) 
     {
-      if(do_not_disconnect) return;
-      my_fd = 0; objectp(file) && file->close(); file = 0;
+      if(do_not_disconnect) {
+	file = 0;
+	pipe = 0;
+	return;
+      }
+      my_fd = 0; file = 0;
       return;
     }
 
@@ -852,7 +859,9 @@ void handle_request( )
   }
 
 
+#ifdef KEEP_ALIVE
   if(!leftovers) leftovers = data||"";
+#endif
 
   if(file->len > 0 && file->len < 2000)
   {
@@ -862,8 +871,6 @@ void handle_request( )
   }
 
   if(head_string) send(head_string);
-
-  
 
   if(method != "HEAD")
   {
@@ -1026,9 +1033,13 @@ void chain(object f, object c, string le)
       do_not_disconnect=0;
       disconnect();
     }
-  } else if(!processed) {
-    f->set_close_callback(end);
-    f->set_read_callback(got_data);
+  } else {
+    if(do_not_disconnect == -1) 
+      do_not_disconnect = 0;
+    if(!processed) {
+      f->set_close_callback(end);
+      f->set_read_callback(got_data);
+    }
   }
 }
 
