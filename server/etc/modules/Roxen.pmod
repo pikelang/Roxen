@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.64 2001/01/06 08:51:10 nilsson Exp $
+// $Id: Roxen.pmod,v 1.65 2001/01/13 23:52:44 per Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2582,8 +2582,12 @@ class ScopeRoxen {
        CACHE(c->id,1);
        return time(1);
      case "server":
+       if( c->id->misc->host )
+         return c->id->port_obj->name+"://"+c->id->misc->host+"/";
        return c->id->conf->query("MyWorldLocation");
      case "domain":
+       if( c->id->misc->host )
+         return (c->id->misc->host/":")[0];
        string tmp=c->id->conf->query("MyWorldLocation");
        sscanf(tmp, "%*s//%s", tmp);
        sscanf(tmp, "%s:", tmp);
