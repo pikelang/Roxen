@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.214 2000/03/16 01:35:36 mast Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.215 2000/03/16 03:01:23 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -50,7 +50,10 @@ constant gtextargs=#"
 </attr>
 
 <attr name=bevel value=width>
- Draws a bevel box.
+ Draws a bevel-box around the text. 
+ <ex type=vert>
+<gtext bevel=\"2\">Ok</gtext>
+ </ex>
 </attr>
 
 <attr name=bgcolor value=color>
@@ -67,7 +70,7 @@ constant gtextargs=#"
 </attr>
 
 <attr name=bgturbulence value=frequency,color;frequency,color...>
- Apply a turbulence effect.
+ Apply a turbulence effect on the background.
 </attr>
 
 <attr name=black>
@@ -84,15 +87,15 @@ constant gtextargs=#"
  negative values for distance is possible, but you might have to add
  'spacing'.
  <ex type=vert>
-<gtext scale=\"0.8\" fgcolor=\"#FF6600\" quant=\"200\" bshadow=\"1\">&lt;gtext bshadow=1&gt;</gtext><br />
-<gtext scale=\"0.8\" fgcolor=\"#FF6600\" quant=\"200\" bshadow=\"2\">&lt;gtext bshadow=2&gt;</gtext>
+<gtext scale=\"0.8\" fgcolor=\"#FF6600\" bshadow=\"1\">&lt;gtext bshadow=1&gt;</gtext><br />
+<gtext scale=\"0.8\" fgcolor=\"#FF6600\" bshadow=\"2\">&lt;gtext bshadow=2&gt;</gtext>
  </ex>
 </attr>
 
 <attr name=chisel>
  Make the text look like it has been cut into the background.
  <ex type=vert>
-<gtext bold=\"\" quant=\"200\" ypad=\"-40%\" xpad=\"-20%\" chisel=\"\" talign=\"center\"
+<gtext bold=\"\" ypad=\"-40%\" xpad=\"-20%\" chisel=\"\" talign=\"center\"
 opaque=\"70\" fgcolor=\"gold\" bevel=\"2\" background=\"tiles.jpg\"> Chisel
 opaque=70</gtext>
  </ex>
@@ -102,8 +105,8 @@ opaque=70</gtext>
  Remove all white-space around the image
 </attr>
 
-<attr name=encoding>
-
+<attr name=encoding value=string>
+ Choose with which charset the text is encoded with.
 </attr>
 
 <attr name=fadein value=blur,steps,delay,initialdelay>
@@ -112,22 +115,21 @@ opaque=70</gtext>
 
 <attr name=fgcolor value=color>
  Sets the text color.
-
  <ex type=vert>
 <gtext fgcolor=\"#0080FF\">#0080FF</gtext>
  </ex>
 </attr>
 
-<attr name=font>
+<attr name=font value=string>
 
 </attr>
 
-<attr name=font_size>
+<attr name=font_size value=int>
 
 </attr>
 
-<attr name=format>
-
+<attr name=format value=string>
+ Set the image format, e.g. \"png\".
 </attr>
 
 <attr name=fs>
@@ -141,8 +143,8 @@ opaque=70</gtext>
  Apply a ghost effect. Cannot be used together with shadow or magic
  coloring.
  <ex type=vert>
-<gtext spacing=\"2\" crop=\"\" quant=\"200\" ghost=\"1,1,red\">ghost=1,1,red</gtext>
-<gtext spacing=\"2\" crop=\"\" quant=\"200\" ghost=\"1,3,blue\">ghost=1,3,blue</gtext>
+<gtext spacing=\"2\" crop=\"\" ghost=\"1,1,red\">ghost=1,1,red</gtext>
+<gtext spacing=\"2\" crop=\"\" ghost=\"1,3,blue\">ghost=1,3,blue</gtext>
 <gtext spacing=\"2\" crop=\"\" bshadow=\"1\" opaque=\"90\" ghost=\"-1,1,yellow\">ghost=-1,1,yellow opaque=90 bshadow=1</gtext>
  </ex>
 </attr>
@@ -152,7 +154,7 @@ opaque=70</gtext>
  better on a dark background, where a real 'glow' effect can be
  achieved.
  <ex type=vert>
-<gtext quant=\"200\" glow=\"red\">&lt;gtext glow=red&gt;</gtext>
+<gtext glow=\"red\">&lt;gtext glow=red&gt;</gtext>
  </ex>
 </attr>
 
@@ -180,7 +182,7 @@ opaque=70</gtext>
 </attr>
 
 <attr name=narrow>
-
+ Use a narroe version of the font, if available.
 </attr>
 
 <attr name=nfont value=fontname>
@@ -213,29 +215,42 @@ opaque=70</gtext>
 </attr>
 
 <attr name=nowhitespace>
-
+ Removes all whitespaces before and after the real text.
 </attr>
 
 <attr name=opaque value=percentage>
- Generate text with this amount of opaqueness. 100% is default.
- <ex>
-<gtext fgcolor=\"blue\" opaque=\"50\">Opaque</gtext>
+ Sets the 'opaque' value of the color used to draw the text. Default is 100%.
+ In the example below, notice how the text color mixes with the two background colors
+ <ex type=vert>
+<gtext scale=\"0.6\" textbox=\"100,pink,-11\" bgcolor=\"lightblue\"
+ notrans=\"\" opaque=\"40\" fgcolor=\"black\">&lt;Demonstration of opaque text&gt;</gtext>
  </ex>
 </attr>
 
-<attr name=outline>
-
+<attr name=outline value=color,extra-radius>
+ Draw an outline around the text. Quite useful when combined with textscale.
+ <ex type=vert>
+<gtext xspacing=\"4\" textscale=\"red,red,yellow,yellow\" outline=\"black,1\">black, 2 pixels</gtext>
+ </ex>
 </attr>
 
 <attr name=pressed>
  Inverts the direction of the bevel box, to make it look like a button
- that is pressed down.
+ that is pressed down. The magic modifier will do this automatically.
 </attr>
 
 <attr name=quant value=number>
- Use this number of colors in the generated image. For GIF images,
- fewer colors implies smaller images but also aliasing effects. It is
- advisable to use powers of 2 to optimize the palette allocation.
+ Quantifies the image with this number of colors. Using a lower number will decrease
+ the image (file)size, but make the text look more 'edgy', and if you use complex
+ backgrounds or image textures, more colors will be neded. At most 255 colors can
+ be used, and less than 2 is quite useless. It is advisable to use powers of 2 to
+ optimize the palette allocation.
+ <ex type=vert>
+<gtext quant=\"2\">A</gtext>
+<gtext quant=\"6\">A</gtext>
+<gtext quant=\"20\">A</gtext>
+<gtext quant=\"200\">A</gtext>
+ </ex>
 </attr>
 
 <attr name=rescale>
@@ -263,8 +278,13 @@ opaque=70</gtext>
 </attr>
 
 <attr name=shadow value=intensity,distance>
- Draw a drop-shadow with the specified intensity and distance. The
- intensity is specified as a percentage.
+ Draw a blured black drop-shadow behind the text. Using 0 as distance
+ does not currently place the shadow directly below the text. Using negative
+ values for distance is possible,
+ <ex type=vert>
+<gtext scale=\"0.8\" fgcolor=\"blue\" shadow=\"40,0\">&lt;gtext shadow=40,0&gt;</gtext><br />
+<gtext scale=\"0.8\" fgcolor=\"blue\" shadow=\"40,2\">&lt;gtext shadow=40,2&gt;</gtext><br />
+ </ex>
 </attr>
 
 <attr name=size value=width,height>
@@ -282,10 +302,23 @@ opaque=70</gtext>
 <attr name=textbelow value=color>
  Place the text centered in a box of the given color below the image
  area. Useful together with background to make captions for images.
+ <ex type=vert>
+<gtext scale=\"0.5\" background=\"internal-roxen-roxen\" textbelow=\"#c0c0c0\">Roxen</gtext>
+ </ex>
 </attr>
 
 <attr name=textbox value=opaque,color>
  Draw a box with an opaque value below the text of the specified color.
+</attr>
+
+<attr name=textscale value=color,color,color,color>
+ Apply a color filter to the text. The colors are,
+ respectively, upper left, lower left, upper right and lower right.
+ It is probably a good idea to increase the 'quant' value when
+ using this argument.
+ <ex type=vert>
+<gtext textscale=\"blue,red,black,darkgreen\">Blue, red, black, darkgreen</gtext>
+ </ex>
 </attr>
 
 <attr name=texture value=path>
@@ -302,7 +335,14 @@ opaque=70</gtext>
 </attr>
 
 <attr name=xpad value=percentage>
- Increases padding between characters.
+ Sets the padding between characters.
+ <ex type=vert>
+<gtext xpad=\"-30%\" scale=\"0.6\">&lt;gtext xpad=-30%&gt;</gtext><br />
+<gtext xpad=\"-10%\" scale=\"0.6\">&lt;gtext xpad=-10%&gt;</gtext><br />
+<gtext scale=\"0.6\">&lt;gtext&gt;</gtext><br />
+<gtext xpad=\"10%\" scale=\"0.6\">&lt;gtext xpad=10%&gt;</gtext><br />
+<gtext xpad=\"30%\" scale=\"0.6\">&lt;gtext xpad=30%&gt;</gtext><br />
+ </ex>
 </attr>
 
 <attr name=xsize value=number>
@@ -313,8 +353,8 @@ opaque=70</gtext>
  Sets the horizontal spacing.
 </attr>
 
-<attr name=ypad>
-
+<attr name=ypad value=percentage>
+ Sets the padding beteen lines.
 </attr>
 
 <attr name=ysize value=number>
@@ -379,12 +419,12 @@ constant tagdoc=([
 <attr name=magic-attribute value=value> Same as for any
  <tag>gtext</tag> attribute, except for the highlighted image.
  <ex type=vert>
-<gtext fgcolor=\"blue\" magic-fgcolor=\"darkgreen\" magic=\"\">Magic_attribute</gtext>
+<gtext fgcolor=\"blue\" magic-glow=\"yellow\" magic=\"\">Magic_attribute</gtext>
  </ex>
 </attr>
 
 <attr name=noxml>
-
+ Do not terminate the image tag with \"/\".
 </attr>
 
 <attr name=split>
@@ -509,7 +549,7 @@ mixed draw_callback(mapping args, string text, RequestID id)
   }
 
   if( args->afont )
-    font = resolve_font((args->afont||args->font)+" "+(args->font_size||32));
+    font = resolve_font((args->afont||args->font)+" "+(args["font-size"]||32));
   else
   {
     int bold=0, italic=0;
@@ -519,7 +559,7 @@ mixed draw_callback(mapping args, string text, RequestID id)
     if(args->black) bold=2;
     if(args->italic) italic=1;
     font = get_font(args->font||"default",
-                    (int)(args->font_size||args["font-size"])||32,
+                    (int)args["font-size"]||32,
                     bold,
                     italic,
                     lower_case(args->talign||"left"),
@@ -631,7 +671,7 @@ constant textarg=({"afont",
 		   "fgcolor",
 		   "fs",
 		   "font",
-		   "font_size",
+		   "font-size",
                    "format",
 		   "ghost",
 		   "glow",
