@@ -212,7 +212,7 @@ void create( Configuration c )
 string status()
 {
   string res = "Relays per regexp:<p>\n"
-         "<table width=70% cellpadding=0 border=0>";
+         "<table cellpadding=0 border=0>";
   foreach( sort(indices(stats)), string s )
     res += sprintf("<tr><td>%s</td><td align=right>%d</td></tr>\n",
                    s, stats[s]);
