@@ -5,7 +5,7 @@
 object mm=(object)"/master";
 inherit "/master": master;
 
-constant cvs_version = "$Id: master.pike,v 1.138 2004/05/16 02:49:24 mani Exp $";
+constant cvs_version = "$Id: master.pike,v 1.139 2004/05/29 23:56:37 _cvs_stephen Exp $";
 
 #define Stat _static_modules.files.Stat
 
@@ -446,8 +446,10 @@ class MyCodec
 
       if ( programp (x) )
       {
-	if(mixed tmp=nameof_program(x))
-	  DUMP_DEBUG_RETURN (tmp);
+	mixed tmp;
+	if (tmp = nameof_program(x)) {
+	  DUMP_DEBUG_RETURN(tmp);
+	}
 
 	if( (program)x != x )
 	  DUMP_DEBUG_RETURN (nameof( (program)x ));
@@ -654,6 +656,7 @@ void dump_program( string pname, program what )
     werror("Error: %s", describe_backtrace(err));
     werror("\n");
   }
+  dump_debug_indent = save_dump_debug_indent;
 #endif
 }
 
@@ -816,16 +819,6 @@ program handle_inherit (string pname, string current_file, object|void handler)
 {
   if (has_prefix (pname, "chili-module:")) {
     pname = pname[sizeof ("chili-module:")..];
-    if (object modinfo = get_core()->find_module (pname))
-      if (program ret = cast_to_program (modinfo->filename, current_file,
-					 handler))
-	return ret;
-    return 0;
-  }
-
-  // NGSERVER: Remove this
-  if (has_prefix (pname, "roxen-module://")) {
-    pname = pname[sizeof ("roxen-module://")..];
     if (object modinfo = get_core()->find_module (pname))
       if (program ret = cast_to_program (modinfo->filename, current_file,
 					 handler))
