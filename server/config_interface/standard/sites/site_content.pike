@@ -59,9 +59,42 @@ string simplified_make_container( string tagname, mapping args, string c )
 
 string describe_tags( object m, int q )
 {
-  return html_encode_string(String.implode_nicely(map(sort(indices(m->query_tag_callers())),
-						      make_tag, ([])) +
-						  map(sort(indices(m->query_container_callers())),
+  multiset tags=(multiset)indices(m->query_tag_callers());
+  multiset conts=(multiset)indices(m->query_container_callers());
+
+  mapping simple=m->query_simpletag_callers();
+  foreach(indices(simple), string name) {
+    if(tags[name] || conts[name])
+      continue;
+    if(simple[name][0] & 1)
+      tags+=(< name >);
+    else
+      conts+=(< name >);
+  }
+
+  RXML.TagSet new=m->query_tag_set();
+  foreach(indices(new->get_tag_names()), string name) {
+    if(tags[name] || conts[name])
+      continue;
+    if(new->get_tag(name)->flags & 1)
+      tags+=(< name >);
+    else
+      conts+=(< name >);
+  }
+
+  foreach(indices(tags), string tag)
+    if(has_value(tag, "#"))
+      tags-=(< tag >);
+
+  foreach(indices(conts), string tag)
+    if(has_value(tag, "#"))
+      conts-=(< tag >);
+
+  return html_encode_string(String.implode_nicely(map(sort(indices(tags)-({"\x266a"})),
+						      lambda(string tag) {
+							return make_tag(tag+"/", ([]) );
+							  } ) +
+						  map(sort(indices(conts)),
 						      simplified_make_container, ([]), "")));
 }
 
