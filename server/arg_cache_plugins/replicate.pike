@@ -69,17 +69,20 @@ static void init_replicate_db()
   };
 
   // Populate with entries created when the shared table was down.
+
+  Thread.MutexKey key = cache->mutex->lock();
   array have = (array(int))
-    cache->get_db()->query( "SELECT id from "+cache->name )->id;
+    cache->db->query( "SELECT id from "+cache->name )->id;
 
   array shave = (array(int))
     sQUERY( "SELECT id FROM "+cache->name+
 	    " WHERE server=%s", cache->secret )->id;
-
   werror("Synchronizing remote arg-cache with local cache... ");
   foreach( have-shave, int id )
     create_key( id, cache->read_args( id ) );
   werror("Done\n");
+  key = 0;
+
   DBManager.is_module_table( 0, "replicate", ""+cache->name, 
 			     "A shared arg-cache database used for "
 			     "replication purposes.");
