@@ -428,7 +428,7 @@ int main(int argc, char **argv)
   if(!getuid()) {
     int euid = geteuid();
     int egid = getegid();
-#ifdef HAVE_SETRESUID
+#if defined(HAVE_SETRESUID) && !defined(HAVE_SETEUID)
     setresgid(egid, egid, -1);
     setresuid(euid, euid, -1);
 #else
