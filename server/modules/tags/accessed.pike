@@ -5,7 +5,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: accessed.pike,v 1.52 2003/05/13 15:41:11 jonasw Exp $";
+constant cvs_version = "$Id: accessed.pike,v 1.53 2003/05/14 09:17:42 jonasw Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_LOGGER;
 constant module_name = "Tags: Accessed counter";
@@ -218,8 +218,11 @@ class Entity_page_accessed {
   }
 }
 
-void set_entities(RXML.Context c) {
-  c->set_var("accessed", Entity_page_accessed(), "page");
+void set_entities(RXML.Context c)
+{
+  //  Kludge to avoid scope errors when running self-tests
+  if (c->exist_scope("page"))
+    c->set_var("accessed", Entity_page_accessed(), "page");
 }
 
 
