@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.289 2001/02/24 18:53:46 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.290 2001/02/24 21:27:43 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -570,24 +570,25 @@ void things_to_do_when_not_sending_from_cache( )
 
   misc->cachekey = CacheKey();
   misc->_cachecallbacks = ({});
-  if( contents = request_headers[ "accept-language"] )
+  if( contents = request_headers[ "accept-language" ] )
   {
-    array alang=(contents-" ") / ",";
-    if(misc["accept-language"])
-      misc["accept-language"] += alang;
+    if( !arrayp( contents ) )
+      contents = (contents-" ")/",";
     else
-      misc["accept-language"] = alang;
-    misc->pref_languages->languages=misc["accept-language"];
+      contents =
+	Array.flatten( map( map( contents, `-, " " ), `/, "," ))-({""});
+    misc->pref_languages->languages=contents;
+    misc["accept-language"] = contents;
   }
   if( contents = request_headers[ "cookie" ] )
   {
-    misc->cookies = 0;
+//     misc->cookies = 0;
     foreach( arrayp( request_headers[ "cookie" ] )? 
              request_headers[ "cookie" ] :
              ({ request_headers[ "cookie" ] }), string contents )
     {
       string c;
-      misc->cookies += contents;
+//       misc->cookies += contents;
       foreach(((contents/";") - ({""})), c)
       {
         string name, value;
