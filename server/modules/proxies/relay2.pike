@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
 
 #include <module.h>
-constant cvs_version = "$Id: relay2.pike,v 1.30 2003/03/18 12:40:58 anders Exp $";
+constant cvs_version = "$Id: relay2.pike,v 1.31 2003/04/22 16:50:15 anders Exp $";
 
 inherit "module";
 constant module_type = MODULE_FIRST|MODULE_LAST;
@@ -308,14 +308,16 @@ class Relay
     werror("RELAY: Connecting to "+host+":"+port+"\n");
 #endif
 
-#if 1
+    // Kludge for bug 3127.
+    if (linux) {
+      if( fd->connect( host, port ) )
+	connected( 1 );
+      else
+	connected( 0 );
+      return;
+    }
+
     fd->async_connect( host, port, connected );
-#else
-    if( fd->connect( host, port ) )
-      connected( 1 );
-    else
-      connected( 0 );
-#endif
   }
 }
 
@@ -426,8 +428,12 @@ string status()
   return res + "</table>\n";
 }
 
+int linux;
+
 void start( int i, Configuration c )
 {
+  if (uname()->sysname == "Linux")
+    linux = 1;
   if( c )
   {
     relays = ({});
