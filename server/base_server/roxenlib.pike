@@ -1,6 +1,6 @@
 inherit "http";
 
-static string _cvs_version = "$Id: roxenlib.pike,v 1.30 1997/07/19 23:11:15 grubba Exp $";
+static string _cvs_version = "$Id: roxenlib.pike,v 1.31 1997/08/04 12:58:24 grubba Exp $";
 // This code has to work booth in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -42,7 +42,14 @@ static mapping build_env_vars(string f, object id, string path_info)
     
     t = t2 = "";
     
-    new["SCRIPT_NAME"]=id->not_query[0..strlen(id->not_query)-strlen(path_info)-1];
+    // Kludge
+    if (id->misc->path_info == path_info) {
+      // Already extracted
+      new["SCRIPT_NAME"]=id->not_query;
+    } else {
+      new["SCRIPT_NAME"]=
+	id->not_query[0..strlen(id->not_query)-strlen(path_info)-1];
+    }
     new["PATH_INFO"]=path_info;
 
 
