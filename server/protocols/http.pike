@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.400 2003/04/22 13:48:53 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.401 2003/06/16 12:39:28 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1819,21 +1819,35 @@ void handle_request( )
 
   MARK_FD("HTTP handling request");
 
-  array e;
-  if(e= catch(file = conf->handle_request( this_object() )))
-    INTERNAL_ERROR( e );
+  if (method == "OPTIONS") {
+    file = ([ "type":"text/html",
+	      "data":"",
+	      "extra_heads":([
+		"Allow":"CHMOD,DELETE,GET,HEAD,MKCOL,MKDIR,MOVE,"
+		"MV,PING,POST,PROPFIND,PROPPATCH,PUT,OPTIONS",
+		"Public":"CHMOD,DELETE,GET,HEAD,MKCOL,MKDIR,MOVE,"
+		"MV,PING,POST,PROPFIND,PROPPATCH,PUT,OPTIONS",
+		"Accept-Ranges":"bytes",
+		"DAV":"1",
+	      ]),
+    ]);
+  } else {
+    array e;
+    if(e= catch(file = conf->handle_request( this_object() )))
+      INTERNAL_ERROR( e );
   
-  if( file )
-    if( file->try_again_later )
-    {
-      if( objectp( file->try_again_later ) )
-	;
-      else
-	call_out( roxen.handle, file->try_again_later, handle_request );
-      return;
-    }
-    else if( file->pipe )
-      return;
+    if( file )
+      if( file->try_again_later )
+      {
+	if( objectp( file->try_again_later ) )
+	  ;
+	else
+	  call_out( roxen.handle, file->try_again_later, handle_request );
+	return;
+      }
+      else if( file->pipe )
+	return;
+  }
   TIMER_END(handle_request);
   send_result();
 }
