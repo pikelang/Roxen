@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.48 1998/09/12 12:10:23 grubba Exp $
+# $Id: start,v 1.49 1998/09/18 14:02:53 per Exp $
 
 VERSION=202; BETA=.b;
 
@@ -219,6 +219,8 @@ the default arguments.
        .B-M <path>:B.                  Add the path to the pike module path
 
        .B-I <path>:B.                  Add the path to the pike include path
+
+       .B-dt:B.                        Turn of tail recursion optimization
 
        .B-t:B.                         Turn on pike level tracing
 
