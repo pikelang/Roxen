@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: repositoryfs.pike,v 1.5 2004/07/17 23:01:37 _cvs_stephen Exp $";
+constant cvs_version = "$Id: repositoryfs.pike,v 1.6 2005/02/09 14:54:54 _cvs_dirix Exp $";
 constant thread_safe = 1;
 
 constant module_type = MODULE_LOCATION;
@@ -81,9 +81,10 @@ int|Stdio.FakeFile find_file( string f, RequestID id )
   Stdio.FakeFile res = cache_lookup( "repositoryfs", f );
   if(res) return res;
   Parser.RCS p = Parser.RCS(f);
-  string content = p->revisions[p->head]->get_contents();
+//  string content = p->revisions[p->head]->get_contents_for_revision();
+  string content = p->get_contents_for_revision(p->revisions[p->head]);
   s->size = sizeof(content);
-  res = Stdio.FakeFile(content, s);
+  res = Stdio.FakeFile(content);
   cache_set( "repositoryfs", f, res );
   return res;
 }
