@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.186 2000/01/16 23:20:34 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.187 2000/01/20 21:02:25 nilsson Exp $";
 
 #define MAGIC_ERROR
 
@@ -34,11 +34,12 @@ int footime, bartime;
 #define MARK_FD(X) REQUEST_WERR(X)
 #endif
 
-constant decode        = MIME.decode_base64;
-constant find_supports = roxen.find_supports;
-constant version       = roxen.version;
-constant _query        = roxen.query;
-constant _time         = predef::time;
+constant decode          = MIME.decode_base64;
+constant find_supports   = roxen.find_supports;
+constant find_client_var = roxen.find_client_var;
+constant version         = roxen.version;
+constant _query          = roxen.query;
+constant _time           = predef::time;
 
 private static array(string) cache;
 private static int wanted_data, have_data;
@@ -74,6 +75,7 @@ mapping (string:mixed)  misc            =
 ]);
 mapping (string:string) cookies         = ([ ]);
 mapping (string:string) request_headers = ([ ]);
+mapping (string:string) client_var      = ([ ]);
 
 multiset (string) prestate  = (< >);
 multiset (string) config    = (< >);
@@ -633,6 +635,7 @@ private int parse_got()
 	    if(!client)
 	    {
 	      sscanf(contents, "%s via", contents);
+	      client_var->Fullname=contents;
 	      client = contents/" " - ({ "" });
 	    }
 	    break;
@@ -759,9 +762,14 @@ private int parse_got()
 #ifndef DISABLE_SUPPORTS
   if(!client) {
     client = ({ "unknown" });
+    client_var = find_client_var("");
     supports = find_supports("", supports); // This makes it somewhat faster.
-  } else
-    supports = find_supports(lower_case(client*" "), supports);
+  }
+  else {
+    client_var->fullname=lower_case(client_var->Fullname);
+    client_var = find_client_var(client_var->fullname, client_var);
+    supports = find_supports(client_var->fullname, supports);
+  }
 
   // MSIE 5.0 sends all requests UTF8-encoded.
   if (supports->requests_are_utf8_encoded) {
