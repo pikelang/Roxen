@@ -64,12 +64,13 @@ verify: verbose_verify
 # NOTE: No /. in the directory test below!
 verbose_verify: cgi
 	@test -d cgi.testsuite || mkdir cgi.testsuite
-	@if test "x$UID" = "x0"; then \
+	if test "x`id -u 2>/dev/null`" = "x0"; then \
 	  echo Running as root. Will attempt to run as nobody instead; \
 	  echo Chowning directory cgi.testsuite to nobody...; \
-	  chown nobody cgi.testsuite; \
+	  chown -R nobody cgi.testsuite; \
 	  echo Attempting to run as nobody...; \
-	  su nobody $(MAKE) verbose_verify || exit 1; \
+	  KLUGE_MAKE="$(MAKE)"; export KLUGE_MAKE; \
+	  su nobody -c $(SRCDIR)/run_verify || exit 1; \
 	else \
 	  for t in `cd $(SRCDIR)/cgi.testsuite; find . -name '*.in' -print`; \
 	  do \
