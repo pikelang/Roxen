@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.522 2002/06/13 13:34:00 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.523 2002/06/13 19:26:55 nilsson Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -13,12 +13,6 @@ constant cvs_version = "$Id: configuration.pike,v 1.522 2002/06/13 13:34:00 nils
 #include <timers.h>
 
 #define CATCH(P,X) do{mixed e;if(e=catch{X;})report_error("While "+P+"\n"+describe_backtrace(e));}while(0)
-
-// --- Locale defines ---
-//<locale-token project="roxen_config">  LOC_C  </locale-token>
-//<locale-token project="roxen_config"> DLOCALE </locale-token>
-#define LOC_C(X,Y)  _STR_LOCALE("roxen_config",X,Y)
-#define DLOCALE(X,Y) _DEF_LOCALE("roxen_config",X,Y)
 
 #ifdef THROTTLING_DEBUG
 #undef THROTTLING_DEBUG
@@ -2536,7 +2530,7 @@ RoxenModule reload_module( string modname )
   // If this is a faked module, let's call it a failure.
   if( nm->not_a_module )
   {
-    old_module->report_error(LOC_C(385,"Reload failed")+"\n");
+    old_module->report_error("Reload failed\n");
     return old_module;
   }
 
@@ -2549,7 +2543,7 @@ RoxenModule reload_module( string modname )
   foreach (old_error_log, [string msg, array(int) times])
     nm->error_log[msg] += times;
 
-  nm->report_notice(LOC_C(11, "Reloaded %s.")+"\n", mi->get_name());
+  nm->report_notice("Reloaded " + mi->get_name() + ".\n");
   return nm;
 }
 
@@ -2660,10 +2654,10 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
     if(module_type != MODULE_CONFIG)
     {
       if (err = catch {
-	me->defvar("_priority", 5, DLOCALE(12, "Priority"), TYPE_INT_LIST,
-		   DLOCALE(13, "The priority of the module. 9 is highest and 0 is lowest."
-		   " Modules with the same priority can be assumed to be "
-		   "called in random order"),
+	me->defvar("_priority", 5, "Priority", TYPE_INT_LIST,
+		   ("The priority of the module. 9 is highest and 0 is lowest."
+		    " Modules with the same priority can be assumed to be "
+		    "called in random order"),
 		   ({0, 1, 2, 3, 4, 5, 6, 7, 8, 9}));
       }) {
 	roxen->bootstrap_info->set (0);
@@ -2674,107 +2668,112 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 #ifdef MODULE_LEVEL_SECURITY
     if( (module_type & ~(MODULE_LOGGER|MODULE_PROVIDER|MODULE_USERDB)) != 0 )
     {
-//       me->defvar("_sec_group", "user", DLOCALE(14, "Security: Realm"), 
+//       me->defvar("_sec_group", "user", "Security: Realm",
 // 		 TYPE_STRING,
-// 		 DLOCALE(15, "The realm to use when requesting password from the "
-// 			 "client. Usually used as an informative message to the "
-// 			 "user."));
+// 		 ("The realm to use when requesting password from the "
+//		  "client. Usually used as an informative message to the "
+// 		  "user."));
       
-      me->defvar("_seclevels", "", DLOCALE(16, "Security: Patterns"), 
+      me->defvar("_seclevels", "", "Security: Patterns",
 		 TYPE_TEXT_FIELD,
-		 DLOCALE(245,
-			 "The syntax is:\n"
-			 " \n<dl>"
-			 "  <dt><b>userdb</b> <i>userdatabase module</i></dt>\n"
-			 "  <dd> Select a non-default userdatabase module. The default is to "
-			 " search all modules. The userdatabase module config_userdb is always "
-			 " present, and contains the configuration users</dd>\n"
-			 "<dt><b>authmethod</b> <i>authentication module</i></dt>\n"
-			 "<dd>Select a non-default authentication method.</dd>"
-			 "<dt><b>realm</b> <i>realm name</i></dt>\n"
-			 "<dd>The realm is used when user authentication info is requested</dd>"
-			 "</dl>\n"
-			 "  Below, CMD is one of 'allow' and 'deny'\n"
-			 " <dl>\n"
-			 "  <dt>CMD <b>ip</b>=<i>ip/bits</i>  [return]<br />\n"
-			 "  CMD <b>ip</b>=<i>ip:mask</i>  [return] <br />\n"
-			 "  CMD <b>ip</b>=<i>pattern[,pattern,...]</i>  [return] <br /></dt>\n"
-			 "  <dd>Match the remote IP-address.</dd>\n"
-			 " \n"
-			 "  <dt>CMD <b>user</b>=<i>name[,name,...]</i>  [return]</dt>\n"
-			 "  <dd>Requires a authenticated user. If the user name 'any' is used, any "
-			 "valid user will be OK. Otherwise, one of the listed users are required.</dd>"
-			 "  <dt>CMD <b>group</b>=<i>name[,name,...]</i> [return]</dt>\n"
-			 "<dd>Requires a authenticated user with a group. If the group name "
-			 " 'any' is used, any valid group will be OK. Otherwise, one of the "
-			 "listed groups are required.</dd>\n"
-			 " \n"
-			 "<dt>CMD <b>dns</b>=<i>pattern[,pattern,...]</i>           [return]</dt>\n"
-			 "<dd>Require one of the specified DNS domain-names</dd>"
-			 " \n"
-			 "<dt>CMD <b>time</b>=<i>HH:mm-HH:mm</i>   [return]</dt>\n"
-			 "<dd>Only allow access to the module from the first time to the "
-			 " second each day. Both times should be specified in 24-hour "
-			 " HH:mm format.</dd>\n"
-			 "<dt>CMD <b>day</b>=<i>day[,day,...]</i> [return]</dt>\n"
-			 "<dd>Only allow access during certain days. Day is either a numerical "
-			 "    value (monday=1, sunday=7) or a string (monday, thuesday etc)</dd>"
-			 "</dl><p>\n"
-			 "  pattern is always a glob pattern (* = any characters, ? = any character).\n"
-			 "</p><p>\n"
-			 "  return means that reaching this command results in immediate\n"
-			 "  return, only useful for 'allow'.</p>\n"
-			 " \n"
-			 " <p>'deny' always implies a return, no futher testing is done if a\n"
-			 " 'deny' match.</p>\n"));
+		 #"The syntax is:
+<dl>
+  <dt><b>userdb</b> <i>userdatabase module</i></dt>
+  <dd> Select a non-default userdatabase module. The default is to
+       search all modules. The userdatabase module config_userdb is always
+       present, and contains the configuration users</dd>
+  <dt><b>authmethod</b> <i>authentication module</i></dt>
+  <dd>Select a non-default authentication method.</dd>
+  <dt><b>realm</b> <i>realm name</i></dt>
+  <dd>The realm is used when user authentication info is requested</dd>
+</dl>
+
+Below, CMD is one of 'allow' and 'deny'
+<dl>
+  <dt>CMD <b>ip</b>=<i>ip/bits</i>  [return]<br />
+      CMD <b>ip</b>=<i>ip:mask</i>  [return] <br />
+      CMD <b>ip</b>=<i>pattern[,pattern,...]</i>  [return] <br /></dt>
+  <dd>Match the remote IP-address.</dd>
+
+  <dt>CMD <b>user</b>=<i>name[,name,...]</i>  [return]</dt>
+  <dd>Requires a authenticated user. If the user name 'any' is used, any
+      valid user will be OK. Otherwise, one of the listed users are required.
+      </dd>
+  <dt>CMD <b>group</b>=<i>name[,name,...]</i> [return]</dt>
+  <dd>Requires a authenticated user with a group. If the group name
+      'any' is used, any valid group will be OK. Otherwise, one of the
+      listed groups are required.</dd>
+
+  <dt>CMD <b>dns</b>=<i>pattern[,pattern,...]</i>           [return]</dt>
+  <dd>Require one of the specified DNS domain-names</dd>
+
+  <dt>CMD <b>time</b>=<i>HH:mm-HH:mm</i>   [return]</dt>
+  <dd>Only allow access to the module from the first time to the
+      second each day. Both times should be specified in 24-hour
+      HH:mm format.</dd>
+  <dt>CMD <b>day</b>=<i>day[,day,...]</i> [return]</dt>
+  <dd>Only allow access during certain days. Day is either a numerical
+      value (monday=1, sunday=7) or a string (monday, thuesday etc)</dd>
+</dl>
+<p>pattern is always a glob pattern (* = any characters, ? = any character).</p>
+<p>return means that reaching this command results in immediate
+   return, only useful for 'allow'.</p>
+
+<p>'deny' always implies a return, no futher testing is done if a
+   'deny' match.</p>
+");
 
       if(!(module_type & MODULE_PROXY))
       {
-	me->defvar("_seclvl",  0, DLOCALE(18, "Security: Security level"), 
+	me->defvar("_seclvl", 0, "Security: Security level",
 		   TYPE_INT,
-		   DLOCALE(305, "The modules security level is used to determine if a "
-		   " request should be handled by the module."
-		   "\n<p><h2>Security level vs Trust level</h2>"
-		   " Each module has a configurable <i>security level</i>."
-		   " Each request has an assigned trust level. Higher"
-		   " <i>trust levels</i> grants access to modules with higher"
-		   " <i>security levels</i>."
-		   "\n<p><h2>Definitions</h2><ul>"
-		   " <li>A requests initial Trust level is infinitely high.</li>"
-		   " <li> A request will only be handled by a module if its"
-		   "     <i>trust level</i> is higher or equal to the"
-		   "     <i>security level</i> of the module.</li>"
-		   " <li> Each time the request is handled by a module the"
-		   "     <i>trust level</i> of the module will be set to the"
-		   "      lower of its <i>trust level</i> and the modules"
-	           "     <i>security level</i>, <i>unless</i> the security "
-	           "        level of the module is 0, which is a special "
-	           "        case and means that no change should be made.</li>"
-		   " </ul></p>"
-		   "\n<p><h2>Example</h2>"
-		   " Modules:<ul>"
-		   " <li>  User filesystem, <i>security level</i> 1</li>"
-		   " <li>  Filesystem module, <i>security level</i> 3</li>"
-		   " <li>  CGI module, <i>security level</i> 2</li>"
-		   " </ul></p>"
-		   "\n<p>A request handled by \"User filesystem\" is assigned"
-		   " a <i>trust level</i> of one after the <i>security"
-		   " level</i> of that module. That request can then not be"
-		   " handled by the \"CGI module\" since that module has a"
-		   " higher <i>security level</i> than the requests trust"
-		   " level.</p>"
-		   "\n<p>On the other hand, a request handled by the the"
-		   " \"Filsystem module\" could later be handled by the"
-		   " \"CGI module\".</p>"));
+		   #"The modules security level is used to determine if a
+request should be handled by the module.
+<p><h2>Security level vs Trust level</h2>
+ Each module has a configurable <i>security level</i>.
+ Each request has an assigned trust level. Higher
+ <i>trust levels</i> grants access to modules with higher
+ <i>security levels</i>.</p>
 
-      } else {
-	me->definvisvar("_seclvl", -10, TYPE_INT); /* A very low one */
+<p><h2>Definitions</h2><ul>
+ <li>A requests initial Trust level is infinitely high.</li>
+ <li> A request will only be handled by a module if its
+     <i>trust level</i> is higher or equal to the
+     <i>security level</i> of the module.</li>
+ <li> Each time the request is handled by a module the
+     <i>trust level</i> of the module will be set to the
+        lower of its <i>trust level</i> and the modules
+     <i>security level</i>, <i>unless</i> the security
+        level of the module is 0, which is a special
+        case and means that no change should be made.</li>
+</ul></p>
+
+<p><h2>Example</h2>
+ Modules:<ul>
+ <li>  User filesystem, <i>security level</i> 1</li>
+ <li>  Filesystem module, <i>security level</i> 3</li>
+ <li>  CGI module, <i>security level</i> 2</li>
+</ul></p>
+
+<p>A request handled by \"User filesystem\" is assigned
+   a <i>trust level</i> of one after the <i>security
+   level</i> of that module. That request can then not be
+   handled by the \"CGI module\" since that module has a
+   higher <i>security level</i> than the requests trust
+   level.</p>
+
+<p>On the other hand, a request handled by the the
+   \"Filsystem module\" could later be handled by the
+   \"CGI module\".</p>");
+
       }
+      else
+	me->definvisvar("_seclvl", -10, TYPE_INT); // A very low one
     }
 #endif
-  } else {
-    me->defvar("_priority", 0, "", TYPE_INT, "", 0, 1);
   }
+  else
+    me->defvar("_priority", 0, "", TYPE_INT, "", 0, 1);
 
   mapping(string:mixed) stored_vars = retrieve(modname + "#" + id, this_object());
   int has_stored_vars = sizeof (stored_vars); // A little ugly, but it suffices.
@@ -3293,53 +3292,51 @@ static void create()
 {
   if (!name) error ("Configuration name not set through bootstrap_info.\n");
 //   int st = gethrtime();
-  roxen.add_permission( "Site:"+name, LOC_C(306,"Site")+": "+name );
+  roxen.add_permission( "Site:"+name, "Site: "+name );
 
   // for now only these two. In the future there might be more variables.
-  defvar( "data_cache_size", 16384, DLOCALE(274, "Cache:Cache size"),
+  defvar( "data_cache_size", 16384, "Cache:Cache size",
           TYPE_INT| VAR_PUBLIC,
-          DLOCALE(275, "The size of the data cache used to speed up requests "
-                  "for commonly requested files, in KBytes"));
+          ("The size of the data cache used to speed up requests "
+	   "for commonly requested files, in KBytes"));
 
-  defvar( "data_cache_file_max_size", 100, DLOCALE(276, "Cache:Max file size"),
+  defvar( "data_cache_file_max_size", 100, "Cache:Max file size",
           TYPE_INT | VAR_PUBLIC,
-          DLOCALE(277, "The maximum size of a file that is to be considered for "
-                  "the cache"));
+          "The maximum size of a file that is to be considered for the cache");
 
-
-  defvar("default_server", 0, DLOCALE(20, "Default site"),
+  defvar("default_server", 0, "Default site",
 	 TYPE_FLAG| VAR_PUBLIC,
-	 DLOCALE(21, "If true, this site will be selected in preference of "
-	 "other sites when virtual hosting is used and no host "
-	 "header is supplied, or the supplied host header does not "
-	 "match the address of any of the other servers.") );
+	 ("If true, this site will be selected in preference of "
+	  "other sites when virtual hosting is used and no host "
+	  "header is supplied, or the supplied host header does not "
+	  "match the address of any of the other servers.") );
 
-  defvar("comment", "", DLOCALE(22, "Site comment"),
+  defvar("comment", "", "Site comment",
 	 TYPE_TEXT_FIELD|VAR_MORE,
-	 DLOCALE(23, "This text will be visible in the administration "
-		 "interface, it can be quite useful to use as a memory helper."));
+	 ("This text will be visible in the administration "
+	  "interface, it can be quite useful to use as a memory helper."));
 
-  defvar("name", "", DLOCALE(24, "Site name"),
+  defvar("name", "", "Site name",
 	 TYPE_STRING|VAR_MORE| VAR_PUBLIC|VAR_NO_DEFAULT,
-	 DLOCALE(25, "This is the name that will be used in the administration "
-	 "interface. If this is left empty, the actual name of the "
-	 "site will be used."));
+	 ("This is the name that will be used in the administration "
+	  "interface. If this is left empty, the actual name of the "
+	  "site will be used."));
 
   defvar("compat_level", Variable.StringChoice (
 	   "", roxen.compat_levels, VAR_NO_DEFAULT,
-	   DLOCALE(246, "Compatibility level"),
-	   DLOCALE(386, "The compatibility level is used by different modules to select "
-		   "the right behavior to remain compatible with earlier Roxen "
-		   "versions. When a server configuration is created, this variable "
-		   "is set to the latest version. After that it's never changed "
-		   "automatically, thereby ensuring that server configurations "
-		   "migrated from earlier Roxen versions is kept at the right "
-		   "compatibility level.\n"
-		   "<p>\n"
-		   "This variable may be changed manually, but it's advisable to "
-		   "test the site carefully afterwards. A reload of the whole "
-		   "server configuration is required to propagate the change properly "
-		   "to all modules.")));
+	   "Compatibility level",
+	   ("<p>The compatibility level is used by different modules to select "
+	    "the right behavior to remain compatible with earlier Roxen "
+	    "versions. When a server configuration is created, this variable "
+	    "is set to the latest version. After that it's never changed "
+	    "automatically, thereby ensuring that server configurations "
+	    "migrated from earlier Roxen versions is kept at the right "
+	    "compatibility level.\n"
+	    "</p><p>\n"
+	    "This variable may be changed manually, but it's advisable to "
+	    "test the site carefully afterwards. A reload of the whole "
+	    "server configuration is required to propagate the change properly "
+	    "to all modules.</p>")));
   set ("compat_level", roxen.__roxen_version__);
   // Note to developers: This setting can be accessed through
   // id->conf->query("compat_level") or similar, but observe that that
@@ -3350,16 +3347,16 @@ static void create()
   // that a reload of all modules is necessary to propagate a change
   // the setting.
 
-  defvar("Log", 1, DLOCALE(28, "Logging: Enabled"), 
-	 TYPE_FLAG, DLOCALE(29, "Log requests"));
+  defvar("Log", 1, "Logging: Enabled",
+	 TYPE_FLAG, "Log requests");
 
   defvar("LogFormat",
 	 "404: $host $referer - [$cern_date] \"$method $resource $protocol\" 404 -\n"
 	 "500: $host $referer ERROR [$cern_date] \"$method $resource $protocol\" 500 -\n"
 	 "*: $host - - [$cern_date] \"$method $resource $protocol\" $response $length",
-	 DLOCALE(26, "Logging: Format"),
+	 "Logging: Format",
 	 TYPE_TEXT_FIELD|VAR_MORE,
-	 DLOCALE(27, #"What format to use for logging. The syntax is:
+	 #"What format to use for logging. The syntax is:
 <pre>response-code or *: Log format for that response code
 
 Log format is normal characters, or one or more of the variables below:
@@ -3400,12 +3397,12 @@ $cache-status   -- A comma separated list of words (containing no
                    pcodedisk -- RXML parse tree persistent cache.
                    cachetag  -- No RXML &lt;cache&gt; tag misses.
                    nocache   -- No hit in any known cache.
-</pre>"), 0, lambda(){ return !query("Log");});
+</pre>", 0, lambda(){ return !query("Log");});
 
   // FIXME: Mention it is relative to getcwd(). Can not be localized in pike 7.0.
   defvar("LogFile", "$LOGDIR/"+Roxen.short_name(name)+"/Log",
-	 DLOCALE(30, "Logging: Log file"), TYPE_FILE,
-	 DLOCALE(31, "The log file. "
+	 "Logging: Log file", TYPE_FILE,
+	 "The log file. "
 	 ""
 	 "A file name. Some substitutions will be done:"
 	 "<pre>"
@@ -3414,49 +3411,49 @@ $cache-status   -- A comma separated list of words (containing no
 	 "%d    Date  (e.g. '10' for the tenth)\n"
 	 "%h    Hour  (e.g. '00')\n"
 	 "%H    Hostname\n"
-	 "</pre>")
+	 "</pre>"
 	 ,0, lambda(){ return !query("Log");});
 
   defvar("NoLog", ({ }),
-	 DLOCALE(32, "Logging: No Logging for"), TYPE_STRING_LIST|VAR_MORE,
-         DLOCALE(33, "Don't log requests from hosts with an IP number which "
-		 "matches any of the patterns in this list. This also affects "
-		 "the access counter log."), 
+	 "Logging: No Logging for", TYPE_STRING_LIST|VAR_MORE,
+	 ("Don't log requests from hosts with an IP number which "
+	  "matches any of the patterns in this list. This also affects "
+	  "the access counter log."),
 	 0, lambda(){ return !query("Log");});
 
-  defvar("Domain", roxen.get_domain(), DLOCALE(34, "Domain"),
+  defvar("Domain", roxen.get_domain(), "Domain",
 	 TYPE_STRING|VAR_PUBLIC|VAR_NO_DEFAULT,
-	 DLOCALE(35, "The domain name of the server. The domain name is used "
-	 "to generate default URLs, and to generate email addresses."));
+	 ("The domain name of the server. The domain name is used "
+	  "to generate default URLs, and to generate email addresses."));
 
   defvar("MyWorldLocation", "",
-         DLOCALE(36, "Ports: Primary Server URL"), TYPE_URL|VAR_PUBLIC,
-	 DLOCALE(37, #"\
-This is the main server URL, where your start page is located. This
+         "Ports: Primary Server URL", TYPE_URL|VAR_PUBLIC,
+	 #"\
+<p>This is the main server URL, where your start page is located. This
 setting is for instance used as fallback to generate absolute URLs to
 the server, but in most circumstances the URLs sent by the clients are
 used. A URL is deduced from the first entry in 'URLs' if this is left
-blank.
+blank.</p>
 
 <p>Note that setting this doesn't make the server accessible; you must
-also set 'URLs'."));
-  
+also set 'URLs'.</p>");
+
   defvar("URLs", 
          Variable.PortList( ({"http://*/"}), VAR_INITIAL|VAR_NO_DEFAULT,
-           DLOCALE(38, "Ports: URLs"),
-	   DLOCALE(373, "Bind to these URLs. You can use '*' and '?' to perform"
-		   " globbing (using any of these will default to binding to "
-		   "all IP-numbers on your machine).  If you specify a IP# in "
-		   "the field it will take precedence over the hostname.")));
+           "Ports: URLs",
+	   ("Bind to these URLs. You can use '*' and '?' to perform "
+	    "globbing (using any of these will default to binding to "
+	    "all IP-numbers on your machine).  If you specify a IP# in "
+	    "the field it will take precedence over the hostname.")));
 
   defvar("InternalLoc", "/_internal/",
-	 DLOCALE(40, "Internal module resource mountpoint"),
+	 "Internal module resource mountpoint",
          TYPE_LOCATION|VAR_MORE|VAR_DEVELOPER,
-         DLOCALE(41, "Some modules may want to create links to internal "
-		 "resources. This setting configures an internally handled "
-		 "location that can be used for such purposes.  Simply select "
-		 "a location that you are not likely to use for regular "
-		 "resources."));
+         ("Some modules may want to create links to internal "
+	  "resources. This setting configures an internally handled "
+	  "location that can be used for such purposes.  Simply select "
+	  "a location that you are not likely to use for regular "
+	  "resources."));
   
   defvar("SubRequestLimit", 30,
 	 "Subrequest depth limit",
@@ -3468,89 +3465,84 @@ also set 'URLs'."));
   // Throttling-related variables
 
   defvar("throttle", 0,
-         DLOCALE(42, "Throttling: Server; Enabled"),TYPE_FLAG,
-	 DLOCALE(43, "If set, per-server bandwidth throttling will be enabled. "
-		 "It will allow you to limit the total available bandwidth for "
-		"this site.<br />Bandwidth is assigned using a Token Bucket. "
-		"The principle under which it works is: for each byte we send we use a token. "
-		"Tokens are added to a repository at a constant rate. When there's not enough, "
-		"we can't transmit. When there's too many, they \"spill\" and are lost."));
+         "Throttling: Server; Enabled", TYPE_FLAG,
+	 ("If set, per-server bandwidth throttling will be enabled. "
+	  "It will allow you to limit the total available bandwidth for "
+	  "this site.<br />Bandwidth is assigned using a Token Bucket. "
+	  "The principle under which it works is: for each byte we send we use a token. "
+	  "Tokens are added to a repository at a constant rate. When there's not enough, "
+	  "we can't transmit. When there's too many, they \"spill\" and are lost."));
   //TODO: move this explanation somewhere on the website and just put a link.
 
   defvar("throttle_fill_rate", 102400,
-         DLOCALE(44, "Throttling: Server; Average available bandwidth"),
+         "Throttling: Server; Average available bandwidth",
          TYPE_INT,
-	 DLOCALE(45, "This is the average bandwidth available to this site in "
-		"bytes/sec (the bucket \"fill rate\")."),
+	 ("This is the average bandwidth available to this site in "
+	  "bytes/sec (the bucket \"fill rate\")."),
          0, arent_we_throttling_server);
 
   defvar("throttle_bucket_depth", 1024000,
-         DLOCALE(46, "Throttling: Server; Bucket Depth"), TYPE_INT,
-	 DLOCALE(47, "This is the maximum depth of the bucket. After a long enough period "
-		"of inactivity, a request will get this many unthrottled bytes of data, before "
-		"throttling kicks back in.<br>Set equal to the Fill Rate in order not to allow "
-		"any data bursts. This value determines the length of the time over which the "
-		"bandwidth is averaged."), 0, arent_we_throttling_server);
+         "Throttling: Server; Bucket Depth", TYPE_INT,
+	 ("This is the maximum depth of the bucket. After a long enough period "
+	  "of inactivity, a request will get this many unthrottled bytes of data, before "
+	  "throttling kicks back in.<br>Set equal to the Fill Rate in order not to allow "
+	  "any data bursts. This value determines the length of the time over which the "
+	  "bandwidth is averaged."), 0, arent_we_throttling_server);
 
   defvar("throttle_min_grant", 1300,
-         DLOCALE(48, "Throttling: Server; Minimum Grant"), TYPE_INT,
-	 DLOCALE(49, "When the bandwidth availability is below this value, connections will "
-		"be delayed rather than granted minimal amounts of bandwidth. The purpose "
-		"is to avoid sending too small packets (which would increase the IP overhead)."),
+         "Throttling: Server; Minimum Grant", TYPE_INT,
+	 ("When the bandwidth availability is below this value, connections will "
+	  "be delayed rather than granted minimal amounts of bandwidth. The purpose "
+	  "is to avoid sending too small packets (which would increase the IP overhead)."),
          0, arent_we_throttling_server);
 
   defvar("throttle_max_grant", 14900,
-         DLOCALE(50, "Throttling: Server; Maximum Grant"), TYPE_INT,
-	 DLOCALE(51, "This is the maximum number of bytes assigned in a single request "
-		"to a connection. Keeping this number low will share bandwidth more evenly "
-		"among the pending connections, but keeping it too low will increase IP "
-		"overhead and (marginally) CPU usage. You'll want to set it just a tiny "
-		"bit lower than any integer multiple of your network's MTU (typically 1500 "
-		"for ethernet)."), 0, arent_we_throttling_server);
+         "Throttling: Server; Maximum Grant", TYPE_INT,
+	 ("This is the maximum number of bytes assigned in a single request "
+	  "to a connection. Keeping this number low will share bandwidth more evenly "
+	  "among the pending connections, but keeping it too low will increase IP "
+	  "overhead and (marginally) CPU usage. You'll want to set it just a tiny "
+	  "bit lower than any integer multiple of your network's MTU (typically 1500 "
+	  "for ethernet)."), 0, arent_we_throttling_server);
 
   defvar("req_throttle", 0,
-         DLOCALE(52, "Throttling: Request; Enabled"), TYPE_FLAG,
-	 DLOCALE(53, "If set, per-request bandwidth throttling will be enabled.")
-         );
+         "Throttling: Request; Enabled", TYPE_FLAG,
+	 "If set, per-request bandwidth throttling will be enabled.");
 
   defvar("req_throttle_min", 1024,
-         DLOCALE(54, "Throttling: Request; Minimum guarranteed bandwidth"),
+         "Throttling: Request; Minimum guarranteed bandwidth",
          TYPE_INT,
-	 DLOCALE(55, "The maximum bandwidth each connection (in bytes/sec) can use is determined "
-		"combining a number of modules. But doing so can lead to too small "
-		"or even negative bandwidths for particularly unlucky requests. This variable "
-		"guarantees a minimum bandwidth for each request."),
+	 ("The maximum bandwidth each connection (in bytes/sec) can use is determined "
+	  "combining a number of modules. But doing so can lead to too small "
+	  "or even negative bandwidths for particularly unlucky requests. This variable "
+	  "guarantees a minimum bandwidth for each request."),
          0, arent_we_throttling_request);
 
   defvar("req_throttle_depth_mult", 60.0,
-         DLOCALE(56, "Throttling: Request; Bucket Depth Multiplier"),
+         "Throttling: Request; Bucket Depth Multiplier",
          TYPE_FLOAT,
-	 DLOCALE(57, "The average bandwidth available for each request will be determined by "
-		"the modules combination. The bucket depth will be determined multiplying "
-		"the rate by this factor."),
+	 ("The average bandwidth available for each request will be determined by "
+	  "the modules combination. The bucket depth will be determined multiplying "
+	  "the rate by this factor."),
          0, arent_we_throttling_request);
 
 
   defvar("404-files", ({ "404.inc" }),
-	 DLOCALE(307, "No such file message override files"),
+	 "No such file message override files",
 	 TYPE_STRING_LIST|VAR_PUBLIC,
-	 DLOCALE(308,
-		 "If no file match a given resource all directories above the"
-		 " wanted file is searched for one of the files in this list."
-		 "<p>\n"
-		 "As an example, if the file /foo/bar/not_there.html is "
-		 "wanted, and this list contains the default value of 404.inc,"
-		 " these files will be searched for, in this order:</p><br /> "
-		 " /foo/bar/404.inc, /foo/404.inc and /404.inc." ) );
+	 ("<p>If no file match a given resource all directories above the "
+	  "wanted file is searched for one of the files in this list.</p>"
+	  "\n"
+	  "<p>As an example, if the file /foo/bar/not_there.html is "
+	  "wanted, and this list contains the default value of 404.inc, "
+	  "these files will be searched for, in this order:</p><br /> "
+	  "/foo/bar/404.inc, /foo/404.inc and /404.inc." ) );
 
   defvar("license",
 	 License.
-	 LicenseVariable("../license/", VAR_NO_DEFAULT,
-			 DLOCALE(0, "License file"),
-			 DLOCALE(0, "The license file for this configuration."),
+	 LicenseVariable("../license/", VAR_NO_DEFAULT, "License file",
+			 "The license file for this configuration.",
 			 this_object()));
-  
-  
 
   class NoSuchFileOverride
   {
@@ -3634,10 +3626,10 @@ page.
 </body>
 </html>
 ",
-	 DLOCALE(58, "No such file message"),
+	 "No such file message",
 	 TYPE_TEXT_FIELD|VAR_PUBLIC,
-	 DLOCALE(59, "What to return when there is no resource or file "
-		 "available at a certain location."));
+	 ("What to return when there is no resource or file "
+	  "available at a certain location."));
 
 #ifdef SNMP_AGENT
   // SNMP stuffs
