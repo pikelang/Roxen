@@ -1,6 +1,6 @@
 // static private inherit "db";
 
-/* $Id: persistent.pike,v 1.19 1997/04/11 14:17:58 peter Exp $ */
+/* $Id: persistent.pike,v 1.20 1997/04/11 14:24:01 per Exp $ */
 
 /*************************************************************,
 * PERSIST. An implementation of persistant objects for Pike.  *
@@ -79,7 +79,8 @@ static void compat_persist()
   if(var) foreach(var, var) catch {
     this_object()[var[0]] = var[1];
   };
-  really_save();
+  remove_call_out(really_save);
+  call_out(really_save,0);
   rm(COMPAT_DIR+_id);
 }
 
@@ -93,15 +94,13 @@ nomask public void persist(mixed id)
 //  perror("restore ("+ id*";  " +")\n");
 // Restore
   array var;
-  if(!catch {
+  catch {
     var=decode_value(open_db(id[..0])->get(id[1..]));
 //    perror("decode_value ok\n");
-  })
-    if(var && sizeof(var)) foreach(var, var) catch {
-      this_object()[var[0]] = var[1];
-    };
-    else
-      compat_persist();
+  };
+  if(var && sizeof(var)) foreach(var, var) catch {
+    this_object()[var[0]] = var[1];
+  };
   else
     compat_persist();
   if(functionp(this_object()->persisted))

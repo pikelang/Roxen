@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.14 1997/04/05 01:26:25 per Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.15 1997/04/11 14:24:03 per Exp $";
 
 #include <module.h>
 
@@ -345,12 +345,12 @@ mixed find_file(string f, object id)
 #ifdef CGI_DEBUG
   perror("CGI: Starting '"+f+"'...\n");
 #endif
-  
+
   wd = dirname(f);
   pipe1=files.file();
   pipe2=pipe1->pipe();
     
-  array (int) uid;
+  mixed uid;
   array us;
   if(query("noexec"))
   {
@@ -367,31 +367,35 @@ mixed find_file(string f, object id)
       uid = runuser;
   }
   if(!uid)
-    uid = ({ 65534, 65534 });
-    
-  if(QUERY(use_wrapper))
+    uid = "nobody";
+
+  if(!fork())
   {
-    spawne(combine_path(getcwd()+"/",QUERY(wrapper)),
-	   ({ f }) +  make_args(id->rest_query), 
-           build_env_vars(f, id, path_info), 
-           pipe1, pipe1, QUERY(err)?pipe1:Stdio.stderr, wd, uid);
-  } else {
-    spawne(f, make_args(id->rest_query), 
-           build_env_vars(f, id, path_info), 
-	   pipe1, pipe1, QUERY(err)?pipe1:stderr, wd, uid);
+    catch {
+      cd(wd);
+      pipe1->dup2(file("stdin"));
+      pipe1->dup2(file("stdout"));
+      if(QUERY(err))
+	pipe1->dup2(file("stderr"));
+      catch(((program)"privs")("CGI script", uid));
+      if(QUERY(use_wrapper))
+	exece(combine_path(getcwd()+"/", QUERY(wrapper)),
+	      ({f})+make_args(id->rest_query), 
+	      build_env_vars(f, id, path_info));
+      exece(f, make_args(id->rest_query), build_env_vars(f, id, path_info));
+    };
+    roxen_perror("CGI: Exec failed!\n");
+    exit(0);
   }
-
   destruct(pipe1);
-
+    
   if(id->data || id->misc->len)
   {
     pipe2->write(id->data);
-    id->my_fd->set_nonblocking(got_some_data, 0, 0);
-    id->my_fd->set_id( pipe2 );
+    id->my_fd->set_nonblocking(got_some_data, 0, 0); // for put..
+    id->my_fd->set_id( pipe2 );                     // lets try, atleast..
   }
-
   pipe2->set_id(pipe2);
-  
   return http_stream(pipe2);
 }
 

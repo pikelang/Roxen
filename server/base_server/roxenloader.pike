@@ -4,7 +4,7 @@ import spider;
 #define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
 
 // Set up the roxen enviornment. Including custom functions like spawne().
-string cvs_version="$Id: roxenloader.pike,v 1.14 1997/04/11 14:18:05 peter Exp $";
+string cvs_version="$Id: roxenloader.pike,v 1.15 1997/04/11 14:24:02 per Exp $";
 
 mapping dbs = ([ ]);
 array adbs = ({});
@@ -45,6 +45,8 @@ class db {
   void delete(array index)
   {
     mydb->delete(index*",");
+    remove_call_out(mydb->sync);
+    call_out(mydb->sync, 10);
   }
 
   void get(array index)
@@ -55,6 +57,7 @@ class db {
   void set(array index, string to)
   {
     mydb->store(index*",", to);
+    remove_call_out(mydb->sync);
     call_out(mydb->sync, 10);
   }
   
@@ -76,9 +79,9 @@ class db {
 
 object open_db(array id)
 {
-  if(!master()->resolv("Gdbm"))
+  if(!sizeof(dbs) && !master()->resolv("Gdbm"))
     error("No gdbm module installed.\n");
-  string fname = "dbs/"+id*"/"+".gdbm";
+  string fname = "dbs/"+(id*"/")+".gdbm";
   if(dbs[fname]) return db(dbs[fname]);
   object d = db(fname);
   dbs[fname]=d->mydb;
