@@ -10,7 +10,7 @@
 
 inherit "filesystem";
 
-constant cvs_version = "$Id: restrictedfs.pike,v 1.16 2000/12/29 16:03:30 grubba Exp $";
+constant cvs_version = "$Id: restrictedfs.pike,v 1.17 2001/08/30 11:43:01 grubba Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -93,6 +93,15 @@ array find_dir(string f, object id)
   }
 }
 
+// Duplicate of ::real_file(), that uses ::stat_file() instead of
+// stat_file(). This fixes [bug 618].
+static string low_real_file( string f, RequestID id )
+{
+  if(::stat_file(f, id)) {
+    return path + f;
+  }
+}
+
 string real_file(string f, object id)
 {
   string home = id->misc->home;
@@ -101,13 +110,13 @@ string real_file(string f, object id)
     return(0);
   }
   if (QUERY(remap_home)) {
-    return(::real_file(fix_slashes (home) + f, id));
+    return(low_real_file(fix_slashes (home) + f, id));
   } else {
     if (search("/" + f, home)) {
       // Not a prefix, or short.
       return(0);
     }
-    return(::real_file(f, id));
+    return(low_real_file(f, id));
   }
 }
 
