@@ -426,7 +426,7 @@ array(Image.Image) make_text_image(
     int sd = ((int)args->shadow+10)*2;
     int sdist = ((int)(args->shadow/",")[-1])+2;
     Image.Image ta = text_alpha->copy();
-    ta = ta->color(256-sd,256-sd,256-sd);
+    ta = ta->color(255-sd,255-sd,255-sd);
     array sc = parse_color(args->scolor||"black");
     background->paste_alpha_color(ta,sc[0],sc[1],sc[2],
 				  xoffset+sdist,yoffset+sdist);
@@ -443,7 +443,7 @@ array(Image.Image) make_text_image(
     array sc = parse_color(args->scolor||"black");
 
     ta->paste_alpha_color(text_alpha,255,255,255,sdist,sdist);
-    ta = blur(ta, min((sdist/2),1))->color(256,256,256);
+    ta = ta->blur( min(sdist,1) );
 
     background->paste_alpha_color(ta,sc[0],sc[1],sc[2],
 				  xoffset+sdist,yoffset+sdist);
