@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.394 2002/11/07 15:11:43 mani Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.395 2002/11/07 15:59:56 mani Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -5412,8 +5412,8 @@ constant tagdoc=([
  usually \"\".
 </p></desc>",
 
-//  &page.virtfile; is same as &page.path; but deprecated since we want to
-//  harmonize with SiteBuilder entities.
+//  &page.virtfile; is same as &page.path; but deprecated.
+
 "&page.path;":#"<desc type='entity'><p>
  Absolute path to this file in the virtual filesystem. E.g. with the
  URL \"http://www.roxen.com/partners/../products/index.xml\", as well
@@ -7686,8 +7686,8 @@ just got zapped?
  <p>Operators valid in attribute expressions are: '=', '==', 'is', '!=',
  '&lt;' and '&gt;'.</p>
 
- <p>The If plugins are sorted according to their function into five
- categories: Eval, Match, State, Utils and SiteBuilder.</p>
+ <p>The If plugins are sorted according to their function into the
+ categories Eval, Match, State and  Utils.</p>
 
  <p>The Eval category is the one corresponding to the regular tests made
  in programming languages, and perhaps the most used. They evaluate
@@ -7731,10 +7731,6 @@ just got zapped?
    Somewhere between 9 to 5.
   </else>
  </ex-box>
-
- <p>SiteBuilder plugins requires a Roxen Platform SiteBuilder
- installed to work. They are adding test capabilities to web pages
- contained in a SiteBuilder administrated site.</p>
 
  <note><p>This tag is cache static (see the <tag>cache</tag> tag)
  if the compatibility level is set to 2.5 or higher.</p></note>

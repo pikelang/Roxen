@@ -1,5 +1,5 @@
-//  Button module. Generates graphical buttons for use in Roxen config
-//  interface, Roxen SiteBuilder and other places.
+//  Button module. Generates graphical buttons for use in the
+//  ChiliMoon administration interface and other places.
 //
 //  Copyright © 1999-2001 Roxen IS. Author: Jonas Walldén, <jonasw@roxen.com>
 
@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.96 2002/10/23 23:36:30 nilsson Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.97 2002/11/07 15:57:53 mani Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -709,9 +709,7 @@ int get_file_stat( string f, RequestID id  )
 {
   int res;
 
-  //  -1 is used to cache negative results. When SiteBuilder crawler runs
-  //  we must let the stat_file() run unconditionally to register
-  //  dependencies properly.
+  //  -1 is used to cache negative results.
   if (!id->misc->persistent_cache_crawler)
     if (res = __stat_cache[f])
       return (res > 0) && res;
