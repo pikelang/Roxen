@@ -6,7 +6,7 @@
  * in October 1997
  */
 
-constant cvs_version = "$Id: business.pike,v 1.92 1998/03/08 16:23:47 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.93 1998/03/08 18:56:33 hedda Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -125,7 +125,9 @@ mixed *register_module()
        "  <b>form</b>           Can be set to either row or column. Default\n"
        "                 is row.\n"
        "  <b>xnames</b>         If given, the first line or column is used as\n"
-       "                 xnames.\n"
+       "                 xnames. If set to a number N, N lines or columns\n"
+       "                 are used.\n"
+       "  <b>xnamesvert</b>     If given, the xnames are written vertically.\n" 
        "  <b>noparse</b>        Do not run the content of the tag through\n"
        "                 the RXML parser before data extraction is done.\n"
        "\n&lt;<b>colors</b>&gt; (container)\n"
@@ -141,7 +143,7 @@ mixed *register_module()
        "  <b>separator</b>      Use the specified string as separator instead"
        " of tab.\n"
        "  <b>orient</b>         If set to vert the xnames will be written"
-       " vertical.\n"
+       " vertically.\n"
        "\n&lt;<b>ynames</b>&gt; (container)\n"
        "Tab separated list of datanames for the diagram. Options:\n"
        "  <b>separator</b>      Use the specified string as separator instead"
@@ -257,6 +259,7 @@ string itag_names(string tag, mapping m, string contents,
   VOIDCODE
 
   array foo;
+
   if( contents-" " != "" )
   {
     if(tag=="xnames")
@@ -271,6 +274,8 @@ string itag_names(string tag, mapping m, string contents,
     else
       foo=res->ynames = contents/sep;
   }
+  else
+     return "";
   
   for(int i=0; i<sizeof(foo); i++)
     if (voidsep==foo[i])
@@ -425,12 +430,26 @@ string itag_data(mapping tag, mapping m, string contents,
   };
 #endif
 
-  if ((m->xnames)&&(sizeof(res->data)>0))
+  if (m->xnames)
+    if (!(int)(m->xnames))
+      m->xnames=1;
+    else
+      m->xnames=(int)(m->xnames);
+  
+  if ((m->xnames)&&(sizeof(res->data)>m->xnames))
   {
-    res->xnames=res->data[0];
-    res->data=res->data[1..];
+    res->xnames=res->data[..m->xnames-1];
+    int j=sizeof(res->xnames[0]);
+    mixed foo=allocate(j);
+    for(int i=0; i<j; i++)
+      foo[i]=(column(res->xnames, i)-({VOIDSYMBOL}))*" ";
+    res->xnames=foo;
+    res->data=res->data[m->xnames..];
   }
-
+  
+  if (m->xnamesvert)
+    res->orientation = "vert"; 
+  
 #ifdef BG_DEBUG
   bg_timers->data_gaz = gauge {
 #endif
@@ -656,7 +675,7 @@ string tag_diagram(string tag, mapping m, string contents,
 		"legend":itag_legendtext ]),
 	     res, id );
 
-  if( sizeof(res->data) == 0 )
+  if ((res->data==0)||( sizeof(res->data) == 0 ))
     return syntax("No data for the diagram");
 
   res->bg = parse_color(m->bgcolor || defines->bg || "#e0e0e0");
