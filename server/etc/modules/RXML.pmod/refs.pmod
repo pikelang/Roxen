@@ -7,6 +7,7 @@ void create()
   ._fix_module_ref ("PExpr", RXML.PExpr);
   ._fix_module_ref ("utils", RXML.utils);
   ._fix_module_ref ("Roxen", Roxen);
+  ._fix_module_ref ("roxen", roxen);
   ._fix_module_ref (
     "empty_tag_set",
     class {
@@ -27,5 +28,5 @@ void create()
 	{RXML.fatal_error ("Trying to change the empty tag set.\n");}
       string _sprintf()
 	{return "RXML.empty_tag_set";}
-    } ("empty_tag_set"));
+    } (0, "empty_tag_set"));
 }
