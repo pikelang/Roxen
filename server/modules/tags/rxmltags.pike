@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.178 2000/09/19 15:54:29 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.179 2000/10/12 13:15:37 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1024,7 +1024,7 @@ string tag_modified(string tag, mapping m, RequestID id, Stdio.File file)
   else if (_stat)
     s = _stat;
   else
-    s = file_stat(id->realfile);
+    s = id->conf->stat_file(id->not_query, id);
 
   if(s) {
     CACHE(10);
