@@ -275,6 +275,13 @@ array auth( array auth, RequestID id )
   if( sizeof(arr) < 2 )
     return ({ 0, auth[1], -1 });
 
+  string host;
+
+  if( array h = gethostbyaddr( id->remoteaddr ) )
+    host = h[0];
+  else
+    host = id->remoteaddr;
+
   string u = arr[0];
   string p = arr[1..]*":";
 
@@ -290,10 +297,9 @@ array auth( array auth, RequestID id )
 
   if( admin_users[ u ] = find_admin_user( u ) )
   {
-    werror("Admin user found.\n");
     if( !crypt( p, admin_users[ u ]->password ) )
     {
-      werror("Wrong password.\n");
+      report_notice( "Failed login attempt %s from %s\n", u, host);
       return ({ 0, u, p });
     }
     id->misc->create_new_config_user = create_admin_user;
@@ -301,8 +307,8 @@ array auth( array auth, RequestID id )
     id->misc->get_config_user = find_admin_user;
     id->misc->config_user = admin_users[ u ];
     return ({ 1, u, 0 });
-  } else
-    werror("No such user: "+u+"\n");
+  }
+  report_notice( "Failed login attempt %s from %s\n", u, host);
   return ({ 0, u, p });
 }
 
@@ -321,10 +327,10 @@ void first_try( RequestID id )
   else
     host = id->remoteaddr;
   
-  if( (time() - logged_in[ u ]) > 1800 )
+  if( (time() - logged_in[ u+host ]) > 1800 )
     report_notice(LOW_LOCALE->config_interface->
                   admin_logged_on( u, host+" ("+id->remoteaddr+")" ));
 
-  logged_in[ u ] = time();
+  logged_in[ u+host ] = time();
   get_context( u, host, id );
 }
