@@ -1,5 +1,85 @@
 This file lists the known compatibility issues between ChiliMoon 2004
-and Roxen 4.0.
+and Roxen WebServer 4.0.
+
+ - The font folder has moved from server/nfonts to data/fonts. The font
+   directory setting must be updated in all configurations. This can
+   also be solved by adding a symlink.
+     ln -s server/data/fonts server/nfonts
+
+ - The example file folder example_pages has moved from
+   server/example_pages to server/data/example_pages. All example
+   servers must have their filesystem module search path updated. This
+   can also be solved by adding a symlink.
+     ln -s server/data/example_pages server/example_pages
+
+ - The start script no longer adds local/etc/modules to module path,
+   local/etc/include to include path and local/etc to program path.
+   Use local/pike_modules and local/include instead. Program directory
+   is entierly deprecated. A subset of the active include paths are no
+   longer added to the internal environment variable representation
+   mapping, where it was previously available as PIKE_INCLUDE_PATH.
+   This can also be solved by adding symlinks or by adding the
+   following arguments to the start script.
+     -M../local/etc/modules
+     -I../local/etc/include
+     -P../local/etc
+
+ - The etc directory is renamed to data. This affects the settings for
+   the content type module and the supports system, both using files
+   in that directory. Either all server configurations and the global
+   settings has to be updated or a symlink must be added.
+     ln -s server/data server/etc
+
+ - The argument cache plugins are now loaded from the directories
+   plugins/arg_cache and ../local/plugins/arg_cache. This affects
+   users using local argument cache plugins. This can be solved by
+   moving or symlinking the old local plugins directory to the new
+   location.
+     ln -s local/arg_cache_plugins local/plugins/arg_cache
+
+ - The protocol plugins are now loaded from the directories
+   plugins/protocols and ../local/plugins/protocols. This affects
+   users using local protocol plugins. This can be solved by moving or
+   symlinking the old local plugins directory to the new location.
+     ln -s local/protocols local/plugins/protocols
+
+ - The Administration interface themes are now loaded from the
+   directories server/admin_interface/themes and
+   local/admin_interface/themes. This affects users usig local themes.
+   This can be solved by moving or symlinking the old local themes to
+   the new location.
+     ln -s local/config_interface/themes local/admin_interface/themes
+
+ - Several /internal-roxen images has been removed. They can be copied
+   from a Roxen WebServer installation (server/roxen-images/) to the
+   ChiliMoon image directory (server/data/images/) if they are needed.
+   The images are:
+     power
+     power-large-black
+     power-large-white
+     power-medium-black
+     power-medium-white
+     power-small-black
+     power-small-white
+     roxen
+     roxen-small
+     webserver
+
+ - Less support for running the server without GIF support in Pike.
+   There's no technical solution but running Pike with GIF support.
+
+ - The Roxen Built in Unicode font is not included. It was never
+   really free, ie. Roxen Internet Software pays money to Bitstream
+   Inc. for every downloaded Roxen WebServer. If you need a good font,
+   buy one.
+
+ - Special code for Roxen SiteBuilder/Platform/CMS has been removed.
+   If you want to run Roxen SiteBuilder/Platform/CMS you'll have to
+   stick to Roxen WebServer.
+
+ - Default image format for gtext images is now PNGs with alpha
+   channels. Alter you gtext tags to use format="gif" for the old
+   behaviour.
 
  - You need Pike 7.7, from the CVS, or from the supplied snapshot.
 
