@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: global_variables.pike,v 1.65 2001/03/05 18:18:41 per Exp $
+// $Id: global_variables.pike,v 1.66 2001/03/16 00:07:04 per Exp $
 
 /*
 #pragma strict_types
@@ -562,8 +562,12 @@ void define_global_variables(  )
 
   secret = Crypto.md5()->update(""+time(1)+random(100000)+"x"+gethrtime())
     ->digest();
-  definvisvar("argcache_secret",secret,TYPE_STRING);
 
+  definvisvar("argcache_secret","",TYPE_STRING);
+  set( "argcache_secret", secret );
+  // force save.
+
+  
   defvar("suicide_engage", 0,
 	 LOCALE(160, "Auto Restart: Enable Automatic Restart"),
 	 TYPE_FLAG|VAR_MORE,
@@ -605,7 +609,9 @@ void define_global_variables(  )
 
 void restore_global_variables()
 {
+  mapping m = retrieve("Variables", 0);
   setvars(retrieve("Variables", 0));
+  if( !m->argcache_secret ) save();
   old_module_dirs = query( "ModuleDirs" );
   getvar( "ModuleDirs" )->add_changed_callback( zap_all_module_caches );
 }
