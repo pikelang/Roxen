@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.810 2002/06/18 16:16:22 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.811 2002/06/19 22:59:36 nilsson Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -30,7 +30,7 @@ inherit "disk_cache";
 // inherit "language";
 inherit "supports";
 inherit "module_support";
-inherit "config_userdb";
+inherit "admin_userdb";
 
 #ifdef THREADS
 // Used when running threaded to find out which thread is the backend thread.
@@ -3543,8 +3543,6 @@ void create()
 
   // for module encoding stuff
 
-  add_constant( "CFUserDBModule",config_userdb_module );
-  
   //add_constant( "ArgCache", ArgCache );
   //add_constant( "roxen.load_image", load_image );
 
@@ -3568,7 +3566,7 @@ void create()
   // Already loaded. No delayed dump possible.
   dump( "data/roxen_master.pike" );
   dump( "pike_modules/Roxen.pmod" );
-  dump( "base_server/config_userdb.pike" );
+  dump( "base_server/admin_userdb.pike" );
   dump( "base_server/disk_cache.pike" );
   dump( "base_server/roxen.pike" );
   dump( "base_server/basic_defvar.pike" );
@@ -4868,8 +4866,8 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
     else if( sscanf( line, "userdb %s", line ) )
     {
       line = String.trim_all_whites( line );
-      if( line == "config_userdb" )
-	code += "  userdb_module = roxen.config_userdb_module;\n";
+      if( line == "config_userdb" || line == "admin_userdb" ) // NGSERVER: No config_userdb
+	code += "  userdb_module = roxen.admin_userdb_module;\n";
       else if( line == "all" )
 	code += "  userdb_module = 0;\n";
       else if( !m->my_configuration()->find_user_database( line ) )

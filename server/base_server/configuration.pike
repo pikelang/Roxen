@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.527 2002/06/18 16:45:41 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.528 2002/06/19 22:59:36 nilsson Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -690,7 +690,7 @@ array(UserDB) user_databases()
 	tmp += ({ ({ mo->query( "_priority" ), mo }) });
 
   sort( tmp );
-//   tmp += ({ ({ 0, roxen->config_userdb_module }) });
+//   tmp += ({ ({ 0, roxen->admin_userdb_module }) });
   return userdb_module_cache = reverse(column(tmp,1));
 }
 
@@ -2683,8 +2683,8 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 <dl>
   <dt><b>userdb</b> <i>userdatabase module</i></dt>
   <dd> Select a non-default userdatabase module. The default is to
-       search all modules. The userdatabase module config_userdb is always
-       present, and contains the configuration users</dd>
+       search all modules. The userdatabase module admin_userdb is always
+       present, and contains the administration interface users</dd>
   <dt><b>authmethod</b> <i>authentication module</i></dt>
   <dd>Select a non-default authentication method.</dd>
   <dt><b>realm</b> <i>realm name</i></dt>

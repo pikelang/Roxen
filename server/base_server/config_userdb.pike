@@ -821,4 +821,5 @@ class UserDBModule
   }
 }
 
-UserDBModule config_userdb_module = UserDBModule();
+UserDBModule admin_userdb_module = UserDBModule();
+UserDBModule config_userdb_module = admin_userdb_module; // NGSERVER: Compatibility only. Remove.

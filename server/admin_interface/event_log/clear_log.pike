@@ -1,7 +1,7 @@
 
 mapping parse( RequestID id )
 {
-  User u = id->conf->authenticate( id, roxen.config_userdb_module );
+  User u = id->conf->authenticate( id, roxen.admin_userdb_module );
   roxen->error_log = ([]);
   report_notice(sprintf("Event log cleared by %s from %s\n",
 			u?u->name():"a user",
