@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.51 2001/06/13 19:36:51 nilsson Exp $
+// $Id: module.pmod,v 1.52 2001/06/13 22:03:26 nilsson Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -600,12 +600,15 @@ class Password
   constant width = 20;
   constant type = "Password";
 
-  void set_from_form( RequestID id )
+  int(0..1) set_from_form( RequestID id )
   {
     mapping val;
     if( sizeof( val = get_form_vars(id)) && 
-        val[""] && strlen(val[""]) )
+        val[""] && strlen(val[""]) ) {
       set( crypt( val[""] ) );
+      return 1;
+    }
+    return 0;
   }
 
   string render_view( RequestID id )
@@ -927,14 +930,14 @@ class List
   }
 
   static int _current_count = time()*100+(gethrtime()/10000);
-  void set_from_form(RequestID id)
+  int(0..1) set_from_form(RequestID id)
   {
     int rn, do_goto;
     array l = query();
     mapping vl = get_form_vars(id);
     // first do the assign...
     if( (int)vl[".count"] != _current_count )
-      return;
+      return 0;
     _current_count++;
 
     foreach( indices( vl ), string vv )
@@ -985,13 +988,17 @@ class List
       else
 	set_warning( "Internal error: Illegal sized array "
 		     "from verify_set_from_form\n" );
-      return;
+      return 0;
     }
+
+    int ret;
     if( b ) 
     {
       set_warning( b[0] );
       set( b[1] );
+      ret = 1;
     }
+
     if( do_goto && !id->misc->do_not_goto )
     {
       RequestID nid = id;
@@ -1016,6 +1023,8 @@ class List
       else if( id->misc->defines )
 	id->misc->defines[ " _error" ] = 302;
     }
+
+    return ret;
   }
 
 
