@@ -12,7 +12,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.125 2000/11/16 11:39:59 per Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.126 2000/11/18 17:31:26 per Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Administration interface RXML tags";
 
@@ -389,6 +389,10 @@ mapping get_variable_map( string s, object mod, object id, int noset )
   ([
     "sname":s,
     "rname": (string)var->name(),
+    "id":var->_id,
+    "changed":!var->is_defaulted(),
+    "cid":var->_id + var->is_defaulted()*10000000000,
+    "cname":var->is_defaulted()+((var->name()/":")[-1]),
     "doc":  (config_setting2( "docs" )?(string)var->doc():""),
     "name": (var->name()/":")[-1],
     "value":var->query(),
@@ -477,7 +481,14 @@ array get_variable_maps( object mod,
                          return !search( q->rname, (m->section+":") );
                        } );
   }
-  sort( variables->name, variables );
+
+  switch( id->variables->sortorder || config_setting("sortorder") )
+  {
+    default:                    sort( variables->name, variables );  break;
+    case "as defined":          sort( variables->id,   variables );  break;
+    case "changed/as defined":  sort( variables->cid,  variables );  break;
+    case "changed/alphabetical":sort( variables->cname,variables );  break;
+  }
 
   if( !fnset )
     if( id->variables["save.x"] )

@@ -200,6 +200,16 @@ class ConfigurationSettings
 //            "iso646-se",
             }));
 
+    defvar( "sortorder", "alphabetical",
+	    LOCALE(0, "Default variable sort order"), TYPE_STRING_LIST,
+	    LOCALE(0, "The default order variables are sorted in" ),
+	    ([
+	      "alphabetical" : LOCALE(0,"alphabetical"),
+	      "as defined"   : LOCALE(0,"as defined"),
+	      "changed/alphabetical" : LOCALE(0,"alphabetical, changed first"),
+	      "changed/as defined"   : LOCALE(0,"as defined, changed first"),
+	    ]) );
+
     defvar( "docs", 1, LOCALE(174, "Show documentation"),
             TYPE_FLAG, LOCALE(175, "Show the variable documentation."));
 

@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.30 2000/11/10 23:11:59 per Exp $
+// $Id: module.pmod,v 1.31 2000/11/18 17:31:26 per Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -32,7 +32,7 @@ class Variable
   constant type = "Basic";
   //! Mostly used for debug (sprintf( "%O", variable_obj ) uses it)
 
-  static int _id = unique_vid++;
+  int _id = unique_vid++;
   // used for indexing the mappings.
 
   static mixed _initial; // default value
