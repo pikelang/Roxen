@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.162 2000/03/09 03:08:56 mast Exp $
+// $Id: rxml.pike,v 1.163 2000/03/10 02:57:16 nilsson Exp $
 
 inherit "roxenlib";
 inherit "rxmlhelp";
@@ -685,7 +685,7 @@ class TagUse {
 
       array res;
       if(!id->misc->_ifs) id->misc->_ifs=([]);
-      string name=args->file||("pkg<"+args->package);
+      string name=args->file?(id->conf->get_conf_id()+"|"+args->file):("|"+args->package);
       RXML.Context ctx=RXML.get_context();
 
       if(args->info || id->pragma["no-cache"] ||
