@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 
 
-string cvs_version = "$Id: htmlparse.pike,v 1.16 1997/01/15 18:30:17 grubba Exp $";
+string cvs_version = "$Id: htmlparse.pike,v 1.17 1997/01/15 18:38:30 grubba Exp $";
 #pragma all_inline 
 
 #include <config.h>
@@ -895,7 +895,7 @@ string tag_accessed(string tag,mapping m,object got,object file,
   return res+(m->addreal?real:"");
 }                  
 
-string tag_user(string a, mapping b, object foo);
+string tag_user(string a, mapping b, object foo, object file);
 
 string tag_modified(string tag, mapping m, object got, object file)
 {
@@ -907,7 +907,7 @@ string tag_modified(string tag, mapping m, object got, object file)
     if(!got->conf->auth_module)
       return "<!-- modified by requires an user database! -->\n";
     m->name = roxen->last_modified_by(file);
-    return tag_user(tag, m, got);
+    return tag_user(tag, m, got, file);
   }
 
   if(m->file)
@@ -926,7 +926,7 @@ string tag_modified(string tag, mapping m, object got, object file)
       m->name = roxen->last_modified_by(f, got);
       f->close();
       destruct(f);
-      return tag_user(tag, m, got);
+      return tag_user(tag, m, got, file);
     }
     return "A. Nonymous.";
   }
@@ -961,12 +961,12 @@ string tag_clientname(string tag, mapping m, object got)
     return got->client[0];
 }
 
-string tag_signature(string tag, mapping m, object got)
+string tag_signature(string tag, mapping m, object got, object file)
 {
   string w;
   if(!(w=m->user || m->name))
     return "";
-  return "<right><address>"+tag_user(tag, m, got)+"</address></right>";
+  return "<right><address>"+tag_user(tag, m, got, file)+"</address></right>";
 }
 
 string tag_user(string tag, mapping m, object got, object file)
