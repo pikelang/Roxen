@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbstrm, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.581 2001/11/05 10:59:04 stewa Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.582 2001/11/23 14:23:45 grubba Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -3649,7 +3649,7 @@ string check_variable(string name, mixed value)
 #ifndef __NT__
    case "abs_engage":
     if (value)
-      restart_if_stuck(1);
+      call_out(restart_if_stuck, 0, 1);
     else
       remove_call_out(restart_if_stuck);
     break;
