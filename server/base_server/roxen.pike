@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.837 2003/09/15 15:14:26 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.838 2003/10/22 13:27:43 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -1113,6 +1113,12 @@ void set_port_options( string key, mapping value )
   save( );
 }
 
+#ifdef DEBUG_URL2CONF
+#define URL2CONF_MSG(X...) report_debug (X)
+#else
+#define URL2CONF_MSG(X...)
+#endif
+
 Configuration find_configuration_for_url(object url, void|string url_base)
 //! Tries to to determine if a request for the given url would end up
 //! in this server, and if so returns the corresponding configuration.
@@ -1121,13 +1127,23 @@ Configuration find_configuration_for_url(object url, void|string url_base)
   string url_with_port = sprintf("%s://%s:%d%s", url->scheme, url->host,
 				 url->port,
 				 (sizeof(url->path)?url->path:"/"));
+
+  URL2CONF_MSG("URL with port: %s\n", url_with_port);
+
   foreach( indices(urls), string u )
   {
     mixed q = urls[u];
+    URL2CONF_MSG("Trying %O:%O\n", u, q);
     if( glob( u+"*", url_with_port ) )
     {
-      if( (c = q->port->find_configuration_for_url((string)url_with_port, 0, 1 )) )
+      URL2CONF_MSG("glob match\n");
+      if( q->port &&
+	  (c = q->port->find_configuration_for_url(url_with_port, 0, 1 )) )
       {
+	URL2CONF_MSG("Found config: %O\n", c);
+#if 0
+	// FIXME: The following code looks suspect; what's its intention?
+	// /grubba 2003-10-22
 	if (search(u, "*") != -1 ||
 	    search(u, "?") != -1)
 	{
@@ -1143,21 +1159,31 @@ Configuration find_configuration_for_url(object url, void|string url_base)
 	      break;
 	  }
 
-	  // Confguration location
+	  // Configuration location
 	  Standards.URI config = Standards.URI(c->get_url());
 	  if (url->host == config->host &&
 	      url->port == config->port &&
 	      url->scheme == config->scheme)
   	    break;
 
+	  URL2CONF_MSG("No match:\n"
+		       "  host:   %O : %O\n"
+		       "  port:   %O : %O\n"
+		       "  scheme: %O : %O\n",
+		       url->host, config->host,
+		       url->port, config->port,
+		       url->scheme, config->scheme);
+
 	  // Do not match
 	  c = 0;
 	}
 	else
+#endif /* 0 */
 	  break;
       }
     }
   }
+  URL2CONF_MSG("Result: %O\n", c);
   return c;
 }
 
@@ -1196,53 +1222,14 @@ class InternalRequestID
 
   this_program set_url( string url )
   {
-    sscanf( url, "%s://%s/%s", prot, misc->host, string path );
-    prot = upper_case( prot );
+    object uri = Standards.URI(url);
+    prot = upper_case(uri->scheme);
+    misc->host = uri->host;
+    string path = uri->path;
+    raw_url = path;
     method = "GET";
-    raw = "GET /" + url + " HTTP/1.1\r\n\r\n";
-    raw_url = "/" + path;
-
-    Configuration c;
-    foreach( indices(urls), string u )
-    {
-      mixed q = urls[u];
-      if( glob( u+"*", url ) )
-	if( (c = q->port->find_configuration_for_url(url, this_object(), 1 )) )
-	{
-	  conf = c;
-	  port_obj = q->port;
-	  break;
-	}
-    }
-
-    if(!c)
-    {
-      // pass 2: Find a configuration with the 'default' flag set.
-      foreach( configurations, c )
-	if( c->query( "default_server" ) )
-	{
-	  conf = c;
-	  break;
-	}
-	else
-	  c = 0;
-    }
-
-    if(!c)
-    {
-      // pass 3: No such luck. Let's allow default fallbacks.
-      foreach( indices(urls), string u )
-      {
-	mixed q = urls[u];
-	if( (c = q->port->find_configuration_for_url( url,this_object(), 1 )) )
-	{
-	  conf = c;
-	  port_obj = q->port;
-	  break;
-	}
-      }
-    }
-
+    raw = "GET " + raw_url + " HTTP/1.1\r\n\r\n";
+    conf = find_configuration_for_url(uri);
     return set_path( raw_url );
   }
 
@@ -1418,12 +1405,6 @@ class Protocol
       c->enable_all_modules();		\
   } while(0)
 
-#ifdef DEBUG_URL2CONF
-#define URL2CONF_MSG(X...) report_debug (X)
-#else
-#define URL2CONF_MSG(X...)
-#endif
-
   Configuration find_configuration_for_url( string url, RequestID id, 
                                             int|void no_default )
   //! Given a url and requestid, try to locate a suitable configuration
@@ -1444,6 +1425,8 @@ class Protocol
     }
 
     url = lower_case( url );
+    URL2CONF_MSG("sorted_urls: %O\n"
+		 "url: %O\n", sorted_urls, url);
     // The URLs are sorted from longest to shortest, so that short
     // urls (such as http://*/) will not match before more complete
     // ones (such as http://*.roxen.com/)
@@ -1859,24 +1842,28 @@ mapping(string:Protocol) build_protocols_mapping()
 
 mapping protocols;
 
-mapping(string:mapping) open_ports = ([ ]);
+// prot:ip:port ==> Protocol.
+mapping(string:mapping(string:mapping(int:Protocol))) open_ports = ([ ]);
+
+// url:"port" ==> Protocol.
 mapping(string:mapping(string:Configuration)) urls = ([]);
 array sorted_urls = ({});
 
 array(string) find_ips_for( string what )
 {
   if( what == "*" || lower_case(what) == "any" )
-    return 0;
+    return ({ 0 });	// ANY
 
   if( is_ip( what ) )
     return ({ what });
 
   array res = gethostbyname( what );
-  if( !res || !sizeof( res[1] ) )
-    report_error(LOC_M(46, "Cannot possibly bind to %O, that host is "
-		       "unknown. Substituting with ANY")+"\n", what);
-  else
+  if( res && sizeof( res[1] ) )
     return Array.uniq(res[1]);
+
+  report_error(LOC_M(46, "Cannot possibly bind to %O, that host is "
+		     "unknown. Substituting with ANY")+"\n", what);
+  return 0;		// FAIL
 }
 
 string normalize_url(string url)
@@ -2035,7 +2022,11 @@ int register_url( string url, Configuration conf )
   if( !port )
     port = prot->default_port;
 
-  array(string) required_hosts;
+  urls[ url ] = ([ "conf":conf, "path":path, "hostname": host ]);
+  urls[ ourl ] = urls[url] + ([]);
+  sorted_urls += ({ url });
+
+  array(string)|int(-1..0) required_hosts;
 
   if (is_ip(host))
     required_hosts = ({ host });
@@ -2044,8 +2035,12 @@ int register_url( string url, Configuration conf )
   else
     required_hosts = find_ips_for( host );
 
-  if (!required_hosts)
-    required_hosts = ({ 0 });	// ANY
+  if (!required_hosts) {
+    // FIXME: Used to fallback to ANY.
+    //        Will this work with glob URLs?
+    report_error(LOC_M(23, "Cannot register URL %s!")+"\n", url);
+    return 0;
+  }
 
   mapping m;
   if( !( m = open_ports[ protocol ] ) )
@@ -2065,10 +2060,6 @@ int register_url( string url, Configuration conf )
     // on Solaris, but fails on linux)
     required_hosts = ({ 0 });
 
-  urls[ url ] = ([ "conf":conf, "path":path, "hostname": host ]);
-  urls[ ourl ] = urls[url] + ([]);
-  sorted_urls += ({ url });
-
   int failures;
 
   foreach(required_hosts, string required_host)
@@ -2087,8 +2078,8 @@ int register_url( string url, Configuration conf )
 
     mixed err;
     if (err = catch {
-      m[ required_host ][ port ] = prot( port, required_host );
-    }) {
+	m[ required_host ][ port ] = prot( port, required_host );
+      }) {
       failures++;
       report_error(sprintf("Initializing the port handler for URL " +
 			   url + " failed!\n"
@@ -2103,7 +2094,7 @@ int register_url( string url, Configuration conf )
       failures++;
       if (required_host) {
 	report_warning(LOC_M(22, "Binding the port on IP %s failed\n"
-			         "   for URL %s!\n"),
+			     "   for URL %s!\n"),
 		       required_host, url);
       }
       continue;
@@ -2125,7 +2116,6 @@ int register_url( string url, Configuration conf )
   sort_urls();
   report_notice(" "+LOC_S(3, "Registered %s for %s")+"\n",
 		url, conf->query_name() );
-
   return 1;
 }
 
