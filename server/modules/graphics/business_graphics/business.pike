@@ -9,7 +9,10 @@
 #include <module.h>
 #include <roxen.h>
 
-constant cvs_version = "$Id: business.pike,v 1.121 2000/02/12 15:53:46 nilsson Exp $";
+inherit "module";
+inherit "roxenlib";
+
+constant cvs_version = "$Id: business.pike,v 1.122 2000/02/20 16:18:27 noring Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_PARSER|MODULE_LOCATION;
 constant module_name = "Business Graphics";
@@ -20,9 +23,6 @@ constant module_doc  = "The Business Graphics tag. This module draws\n"
 
 #define VOIDSYMBOL "\n"
 #define SEP "\t"
-
-inherit "module";
-inherit "roxenlib";
 
 function create_pie, create_bars, create_graph;
 
