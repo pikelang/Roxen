@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.187 2000/08/03 19:34:03 mast Exp $
+// $Id: roxenlib.pike,v 1.188 2000/08/04 15:54:32 mast Exp $
 
 //#pragma strict_types
 
@@ -938,7 +938,8 @@ string html_decode_string(string str)
 string html_encode_tag_value(string str)
   //! Encodes str for use as a value in an html tag.
 {
-  return "\"" + replace(str, ({"&", "\""}), ({"&amp;", "&quot;"})) + "\"";
+  // '<' is not allowed in attribute values in XML 1.0.
+  return "\"" + replace(str, ({"&", "\"", "<"}), ({"&amp;", "&quot;", "&lt;"})) + "\"";
 }
 
 string strftime(string fmt, int t)
