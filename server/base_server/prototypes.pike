@@ -4,7 +4,7 @@
 #include <stat.h>
 #include <config.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.44 2001/10/09 15:07:12 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.45 2001/11/27 17:56:24 mast Exp $";
 
 class Variable
 {
@@ -477,11 +477,16 @@ class RequestID
   //! variables with the same name but different values), the values
   //! will be separated with \0 (the null character) in this mapping.
   
-  mapping (string:mixed) misc;
+  mapping (string:mixed) misc = (["common": ([])]);
   //! This mapping contains miscellaneous non-standardized information, and
   //! is the typical location to store away your own request-local data for
   //! passing between modules et cetera. Be sure to use a key unique to your
   //! own application.
+  //!
+  //! The submapping common is similar, but it's kept instead of
+  //! copied when a subrequest (e.g. through
+  //! @[Configuration.try_get_file]) is made from this one. Thus
+  //! changes in it will propagate outside the subrequest.
 
   mapping (string:string) cookies;
   //! The indices and values map to the names and values of the cookies sent
@@ -685,7 +690,12 @@ class RequestID
 
     c->real_variables = copy_value( real_variables );
     c->variables = FakedVariables( c->real_variables );
+
+    mapping common = misc->common;
+    misc->common = 0;		// Possible concurrency problem.
     c->misc = copy_value( misc );
+    misc->common = c->misc->common = common;
+
     c->misc->orig = t;
 
     c->prestate = prestate;

@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.495 2001/11/12 17:51:54 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.496 2001/11/27 17:56:24 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2230,16 +2230,8 @@ int|string try_get_file(string s, RequestID id,
   if(!objectp(id))
     error("No ID passed to 'try_get_file'\n");
 
-  // id->misc->common makes it possible to pass information to
-  // the originating request.
-  if ( !id->misc )
-    id->misc = ([]);
-  if ( !id->misc->common )
-    id->misc->common = ([]);
-
   fake_id = id->clone_me();
 
-  fake_id->misc->common = id->misc->common;
   fake_id->misc->internal_get = !not_internal;
 
   if (fake_id->scan_for_query)
