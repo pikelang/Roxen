@@ -1,0 +1,87 @@
+<include file=gtext_headers.inc bg_color=$$bg_color$$>
+<include file=shadow.inc>
+<include file=bg_image.inc>
+
+<formoutput quote=£>
+
+<html>
+<head><title><as-meta var=title></title></head>
+<body bgcolor=$$bg_color$$ text=$$text_color$$ link=$$link_color$$
+      vlink=$$vlink_color$$ alink=$$alink_color$$ £bg_image£>
+<table border=0>
+  <tr>
+    <td>
+      <include file='$$nav_name$$'>
+    </td>
+  <td>
+
+<table border=0 cellpadding=0 cellspacing=0>
+ <tr>
+  <td rowspan=2 width=1>
+    <img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+  <td colspan=3 height=1>
+    <img src=/internal-roxen-unit border=0 width=1 height=1 alt=""></td>
+  <td height=1 width=1 bgcolor=black rowspan=2>
+    <img src=/internal-roxen-unit width=1 height=1 alt="" border=0></td>
+  <td colspan=3 height=1 bgcolor=black>
+    <img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+  <td rowspan=2 width=1 bgcolor=black>
+    <img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+ </tr>
+
+ <tr>
+  <td><img src=/internal-roxen-unit width=15 height=15 alt=""></td>
+  <td width=80%>foo</td>
+  <td><img src=/internal-roxen-unit width=15 height=15 alt=""></td>
+  <td bgcolor=white>
+    <img src=/internal-roxen-unit width=15 height=15 alt=""></td>
+  <td width=30% bgcolor=white>bar</td>
+  <td bgcolor=white>
+    <img src=/internal-roxen-unit width=15 height=15 alt=""></td>
+ </tr>
+
+ <tr>
+  <td width=1 height=1 bgcolor=black>
+    <img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+  <td colspan=7 height=1 bgcolor=black>
+    <img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+  <td width=1 height=1>
+    <img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+ </tr>
+
+ <tr>
+  <td rowspan=4 width=1 bgcolor=black>
+    <img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+  <td rowspan=3 bgcolor=white>
+    <img src=/internal-roxen-unit width=15 height=15 alt=""></td>
+  <td colspan=5 bgcolor=white>
+    <img src=/internal-roxen-unit width=15 height=15 alt=""></td>
+  <td rowspan=3 bgcolor=white>
+    <img src=/internal-roxen-unit width=15 height=15 alt=""></td>
+  <td rowspan=4 width=1 bgcolor=black>
+    <img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+ </tr>
+
+ <tr>
+  <td colspan=5 bgcolor=white><tmplinsert tag=content></td>
+ </tr>
+ 
+ <tr>
+  <td colspan=5 bgcolor=white>
+    <img src=/internal-roxen-unit width=15 height=15 alt=""></td>
+ </tr>
+
+ <tr>
+  <td colspan=7 height=1 bgcolor=black>
+    <img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+ </tr>
+</table>
+
+</td>
+</tr>
+</table>
+
+
+</body>
+</html>
+</formoutput>
