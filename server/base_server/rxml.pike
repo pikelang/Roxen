@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.121 2000/02/12 21:31:57 mast Exp $
+ * $Id: rxml.pike,v 1.122 2000/02/13 10:32:22 mast Exp $
  *
  * The Roxen RXML Parser.
  *
@@ -171,7 +171,8 @@ RXML.TagSet entities_tag_set = class
     c->add_scope("var", ([]) );
   }
 
-  // These are only used in new style tags.
+  // These are not used when the result type for the parser is t_xml
+  // or t_html.
   constant low_entities = ([
     "quot": "\"",
     "amp": "&",
@@ -550,8 +551,8 @@ void add_parse_module (RoxenModule mod)
 				lambda(string tag){ return GenericTag(tag, @defs[tag]); }));
 
   if (search (rxml_tag_set->imported, tag_set) < 0) {
-    rxml_tag_set->modules = rxml_tag_set->modules + ({mod});
-    rxml_tag_set->imported = rxml_tag_set->imported + ({tag_set});
+    rxml_tag_set->modules += ({mod});
+    rxml_tag_set->imported += ({tag_set});
     remove_call_out (rxml_tag_set->sort_on_priority);
     call_out (rxml_tag_set->sort_on_priority, 0);
   }
@@ -1134,60 +1135,61 @@ string tag_case(string t, mapping m, string c, RequestID id)
 
 #define LAST_IF_TRUE id->misc->defines[" _ok"]
 
+class FrameIf {
+  inherit RXML.Frame;
+  int do_iterate = -1;
+
+  array do_enter(RequestID id) {
+    int and = 1;
+
+    if(args->not) {
+      m_delete(args, "not");
+      do_enter(id);
+      do_iterate=do_iterate==1?-1:1;
+      return 0;
+    }
+
+    if(args->or)  { and = 0; m_delete( args, "or" ); }
+    if(args->and) { and = 1; m_delete( args, "and" ); }
+    mapping plugins=get_plugins();
+    if(id->misc->_ifs) plugins+=id->misc->_ifs;
+    array possible = indices(args) & indices(plugins);
+
+    int ifval=0;
+    foreach(possible, string s) {
+      ifval = plugins[ s ]( args[s], id, args, and, s );
+      if(ifval) {
+	if(!and) {
+	  do_iterate = 1;
+	  return 0;
+	}
+      }
+      else
+	if(and) {
+	  LAST_IF_TRUE = 0;
+	  return 0;
+	}
+    }
+    if(ifval) {
+      do_iterate = 1;
+      return 0;
+    }
+    LAST_IF_TRUE = 0;
+    return 0;
+  }
+
+  array do_return(RequestID id) {
+    LAST_IF_TRUE = 1;
+    result = content;
+    return 0;
+  }
+}
+
 class TagIf {
   inherit RXML.Tag;
   constant name = "if";
   constant flags = RXML.FLAG_CONTAINER | RXML.FLAG_SOCKET_TAG;
-
-  class Frame {
-    inherit RXML.Frame;
-    int do_iterate = -1;
-
-    array do_enter(RequestID id) {
-      int and = 1;
-
-      if(args->not) {
-	m_delete(args, "not");
-	do_enter(id);
-	do_iterate=do_iterate==1?-1:1;
-	return 0;
-      }
-
-      if(args->or)  { and = 0; m_delete( args, "or" ); }
-      if(args->and) { and = 1; m_delete( args, "and" ); }
-      mapping plugins=get_plugins();
-      if(id->misc->_ifs) plugins+=id->misc->_ifs;
-      array possible = indices(args) & indices(plugins);
-
-      int ifval=0;
-      foreach(possible, string s) {
-	ifval = plugins[ s ]( args[s], id, args, and, s );
-	if(ifval) {
-	  if(!and) {
-	    do_iterate = 1;
-	    return 0;
-	  }
-	}
-	else
-	  if(and) {
-	    LAST_IF_TRUE = 0;
-	    return 0;
-	  }
-      }
-      if(ifval) {
-	do_iterate = 1;
-	return 0;
-      }
-      LAST_IF_TRUE = 0;
-      return 0;
-    }
-
-    array do_return(RequestID id) {
-      LAST_IF_TRUE = 1;
-      result = content;
-      return 0;
-    }
-  }
+  constant Frame = FrameIf;
 }
 
 string tag_else( string t, mapping m, string c, RequestID id )
@@ -1220,23 +1222,94 @@ string tag_false( string t, mapping m, RequestID id )
   return "";
 }
 
-private void internal_tag_case( string t, mapping m, string c, int l, RequestID id,
-				mapping res )
+class TagCond
 {
-  if(res->res) return;
-  LAST_IF_TRUE = 0;
-  //  tag_if( t, m, c, id );
-  if(LAST_IF_TRUE) res->res = c+"<true>";
-  return;
-}
+  inherit RXML.Tag;
+  constant name = "cond";
+  constant flags = RXML.FLAG_CONTAINER;
+  RXML.Type content_type = RXML.t_none (RXML.PHtml);
+  array(RXML.Type) result_types = ({RXML.t_any});
 
-string tag_cond( string t, mapping m, string c, RequestID id )
-{
-  mapping result = ([]);
-  parse_html_lines(c,([]),(["case":internal_tag_case,
-                            "default":lambda(mixed ... a){
-    result->def = a[2]+"<false>"; }]),id,result);
-  return result->res||result->def;
+  class TagCase
+  {
+    inherit RXML.Tag;
+    constant name = "case";
+    constant flags = RXML.FLAG_CONTAINER;
+    array(RXML.Type) result_types = ({RXML.t_none});
+
+    class Frame
+    {
+      inherit FrameIf;
+
+      array do_enter (RequestID id)
+      {
+	if (up->result != RXML.Void) return 0;
+	content_type = up->result_type (RXML.PHtml);
+	return ::do_enter (id);
+      }
+
+      array do_return (RequestID id)
+      {
+	::do_return (id);
+	up->result = result;
+	result = RXML.Void;
+	return 0;
+      }
+
+      // Must override this since it's used by FrameIf.
+      mapping(string:RXML.Tag) get_plugins()
+	{return RXML.get_context()->tag_set->get_plugins ("if");}
+    }
+  }
+
+  class TagDefault
+  {
+    inherit RXML.Tag;
+    constant name = "default";
+    constant flags = RXML.FLAG_CONTAINER;
+    array(RXML.Type) result_types = ({RXML.t_none});
+
+    class Frame
+    {
+      inherit RXML.Frame;
+      int do_iterate = 1;
+
+      array do_enter()
+      {
+	if (up->result != RXML.Void) {
+	  do_iterate = -1;
+	  return 0;
+	}
+	content_type = up->result_type (RXML.PNone);
+	return 0;
+      }
+
+      array do_return()
+      {
+	up->default_data = content;
+	return 0;
+      }
+    }
+  }
+
+  RXML.TagSet cond_tags =
+    RXML.TagSet ("TagCond.cond_tags", ({TagCase(), TagDefault()}));
+
+  class Frame
+  {
+    inherit RXML.Frame;
+    RXML.TagSet local_tags = cond_tags;
+    string default_data;
+
+    array do_return (RequestID id)
+    {
+      if (result == RXML.Void && default_data) {
+	LAST_IF_TRUE = 0;
+	return ({RXML.parse_frame (result_type (RXML.PHtml), default_data)});
+      }
+      return 0;
+    }
+  }
 }
 
 class TagEmit {
@@ -1302,7 +1375,6 @@ mapping query_container_callers()
     "noparse":tag_noparse,
     "nooutput":tag_nooutput,
     "case":tag_case,
-    "cond":tag_cond,
     "strlen":tag_strlen,
     "define":tag_define,
     "trace":tag_trace,
