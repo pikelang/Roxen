@@ -1,5 +1,4 @@
 /* This is a roxen module. (c) Idonex AB 1997.
- * Resdistribution of this file is not permitted.
  * 
  * Draws diagrams pleasing to the eye.
  * 
@@ -7,13 +6,14 @@
  * in October 1997
  *
  * BUGS:
- * The use of background images is not reliable in this version.
- * Providing a center-value higher than available pices will render a
- *  broken image.
- * 
+ * Colors might look strange. This is to to a bug in the Image-module.
+ * This will be fixed in later versions of Pike.
+ *
+ * Sends the data through the URL. This will be changed to a internal
+ * reference cache shortly.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.33 1997/10/20 02:50:48 peter Exp $";
+constant cvs_version = "$Id: business.pike,v 1.34 1997/10/24 01:49:31 peter Exp $";
 constant thread_safe=0;
 
 #include <module.h>
@@ -30,7 +30,7 @@ mixed *register_module()
   return ({ 
     MODULE_PARSER|MODULE_LOCATION,
     "Business Graphics",
-      ("Draws graphs that are pleasing to the eye.\n"
+      ("Draws graphs.\n"
        "<p>This module defines a tag,\n"
        "<pre>"
        "\n&lt;diagram&gt; (container): <br>\n"
@@ -38,7 +38,7 @@ mixed *register_module()
        "Defines the following attributes: <br>\n"
        " help            Displays this text.<br>\n"
        " type=           { sumbars | normsumbars | linechart | barchart | piechart | graph }\n"
-       "                 Mandatory!"
+       "                 This is the type of graph. Mandatory!<br>\n"
        " background=     Takes the filename of a ppm image as input.\n"
        " width=          width of diagram-image in pixels. (Will not have any effect below 100.)\n"
        " height=         height of diagram-image in pixels. (Will not have any effect below 100.)\n"
@@ -184,7 +184,7 @@ string itag_data(mapping tag, mapping m, string contents,
     foo = ({});
   }
   
-  if (m->form == "column")
+  if (m->form[0..2] == "col")
   {
     for(int i=0; i<sizeof(bar); i++)
       if (sizeof(bar[i])<maxsize)
@@ -230,18 +230,18 @@ string syntax( string error )
     + "<hr noshade>";
 }
 
-mapping url_cache = ([]);
 string quote(string in)
 {
-  string option;
-  if(option = url_cache[in]) return option;
+  string pack;
   object g;
-  if (sizeof(indices(g=Gz))) {
-    option=MIME.encode_base64(g->deflate()->deflate(in), 1);
+  /*
+  if( sizeof(indices(g=Gz)) ) {
+    pack = MIME.encode_base64(g->deflate()->deflate(in), 1);
   } else {
-    option=MIME.encode_base64(in, 1);
-  }
-  if(search(in,"/")!=-1) return url_cache[in]=option;
+  */
+    pack = MIME.encode_base64(in, 1);
+    //  }
+  //  if(search(in,"/")!=-1) return pack;
   string res="$";	// Illegal in BASE64
   for(int i=0; i<strlen(in); i++)
     switch(in[i])
@@ -255,8 +255,8 @@ string quote(string in)
      default:
       res += sprintf("%%%02x", in[i]);
     }
-  if(strlen(res) < strlen(option)) return url_cache[in]=res;
-  return url_cache[in]=option;
+  if( strlen(res) < strlen(pack) ) return res;
+  return pack;
 }
 
 string tag_diagram(string tag, mapping m, string contents,
@@ -307,8 +307,10 @@ string tag_diagram(string tag, mapping m, string contents,
      return syntax("\""+res->type+"\" is an unknown type of diagram\n");
   }
 
+  /*
   if(m->subtype)
     res->subtype = (string)m->subtype;
+  */
 
   if(res->type == "pie")
     res->subtype="pie";
@@ -374,7 +376,7 @@ string tag_diagram(string tag, mapping m, string contents,
   if(m->labelcolor) res->labelcolor = parse_color(m->labelcolor);
   else res->labelcolor=({0,0,0});
   
-  if(m->linecolor) res->axcolor=parse_color(m->axcolor);
+  if(m->linecolor) res->axcolor=parse_color(m->linecolor);
   else res->axcolor=({0,0,0});
   
   if(m->linewidth) res->linewidth=m->linewidth;
@@ -442,7 +444,8 @@ mapping query_container_callers()
   return ([ "diagram" : tag_diagram ]);
 }
 
-object PPM(string fname, object id)
+/* Needs some more work */
+int|object PPM(string fname, object id)
 {
   string q;
   q = roxen->try_get_file( fname, id);
@@ -456,7 +459,10 @@ object PPM(string fname, object id)
       q = g->inflate()->inflate(q);
     };
   }
-  return image()->fromppm(q);
+  if(q)
+    return image()->fromppm(q);
+  else
+    return 1;
 }
 
 
@@ -478,17 +484,6 @@ array strange( array in )
   return tmp2;
 }
 
-  // encode_value does not support negative floats.
-/*
-  array tmp2 = ({});
-  foreach(res->data, array tmp)
-  {
-    tmp = Array.map( tmp, floatify );
-    tmp2 += ({ tmp });
-  }
-  res->data = tmp2;
-*/
-
 mapping find_file(string f, object id)
 {
   program Bars  = (program)"create_bars";
@@ -507,10 +502,10 @@ mapping find_file(string f, object id)
     object g;
     if (f[0] == '$') {	// Illegal in BASE64
       f = f[1..];
-    } else if (sizeof(indices(g=Gz))) {
+//    } else if( sizeof(indices(g=Gz)) ) {
       /* Catch here later */
-      f = g->inflate()->inflate(MIME.decode_base64(f));
-    } else if (sizeof(f)) {
+//      f = g->inflate()->inflate(MIME.decode_base64(f));
+    } else if( sizeof(f) ) {
       /* Catch here later */
       f = MIME.decode_base64(f);
     }
@@ -520,7 +515,7 @@ mapping find_file(string f, object id)
 
   res->labels = ({ res->xstor, res->ystor, res->xunit, res->yunit });
 
-  /* Kludge */
+  /* Kludge to work with pre-alpha14 encode_value */
   res->data = strange( res->data );
   if(res->xvalues)
     res->xvalues = Array.map( res->xvalues, floatify );
@@ -536,6 +531,8 @@ mapping find_file(string f, object id)
     res->image = PPM(res->image, id);
   }
 
+  /* Image was not found or broken */
+  if(res->image == 1) m_delete( res, "image" );
   if(res->xstart > res->xstop) m_delete( res, "xstart" );
   if(res->ystart > res->ystop) m_delete( res, "ystart" );
 
@@ -592,6 +589,8 @@ mapping find_file(string f, object id)
   if(!res->bg)      m_delete( diagram_data, "bgcolor" );
   if(!res->rotate)  m_delete( diagram_data, "rotate" );
 
+  perror("f-data: %O\n", res->data);
+  
   object(Image.image) img;
 
   /* Check this */
