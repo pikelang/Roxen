@@ -8,7 +8,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.70 2000/03/07 22:42:17 mast Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.71 2000/03/07 23:58:06 mast Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -139,22 +139,13 @@ void create()
   defvar("charset", "iso-8859-1", "File charset", TYPE_STRING,
 	 "The charset the files on disk have.");
 
-  defvar("internal_files", "", "Internal files", TYPE_STRING,
+  defvar("internal_files", ({}), "Internal files", TYPE_STRING_LIST,
 	 "A comma separated list of glob patterns that matches files "
 	 "which should be considered internal. Internal files can't be "
 	 "requested directly from a client, won't show up in directory "
 	 "listings and can never be uploaded, moved or deleted from a "
 	 "client. They can only be accessed internally, e.g. with the "
 	 "RXML <tt>&lt;insert&gt;</tt> and <tt>&lt;use&gt;</tt> tags.");
-}
-
-array(string) internal_files = ({});
-
-string check_variable (string var, mixed val)
-{
-  if (var == "internal_files")
-    internal_files = map (val / ",", String.trim_whites);
-  return 0;
 }
 
 
@@ -165,7 +156,6 @@ void start()
 {
   path = QUERY(searchpath);
   stat_cache = QUERY(stat_cache);
-  internal_files = map (QUERY (internal_files) / ",", String.trim_whites);
   FILESYSTEM_WERR("Online at "+QUERY(mountpoint)+" (path="+path+")");
   cache_expire("stat_cache");
 }
@@ -177,7 +167,7 @@ string query_location()
 
 
 #define FILTER_INTERNAL_FILE(f, id) \
-  (!id->misc->internal_get && sizeof (filter (internal_files, glob, (f/"/")[-1])))
+  (!id->misc->internal_get && sizeof (filter (QUERY (internal_files), glob, (f/"/")[-1])))
 
 mixed stat_file( string f, RequestID id )
 {
@@ -262,7 +252,7 @@ array find_dir( string f, RequestID id )
 
   // Pass _all_ files, hide none.
   if(QUERY(tilde) && QUERY(.files) &&
-     (!sizeof (internal_files) || id->misc->internal_get))
+     (!sizeof (QUERY (internal_files)) || id->misc->internal_get))
     /* This is quite a lot faster */
     return dir;
 
