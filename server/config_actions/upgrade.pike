@@ -1,5 +1,5 @@
 /*
- * $Id: upgrade.pike,v 1.13 1997/08/25 20:39:24 peter Exp $
+ * $Id: upgrade.pike,v 1.14 1997/08/26 02:58:27 peter Exp $
  */
 constant name= "Maintenance//Upgrade components from roxen.com...";
 constant doc = "Selectively upgrade Roxen components from roxen.com.";
@@ -102,7 +102,9 @@ mapping extract_module_info(array from)
       if(mod)
       {
 	sscanf(mod, "%*s$Id: %*s.pike,v %s ", version);
+#ifdef DEBUG
 	werror("Version: " + version + "\n");
+#endif
       }
     }
   }
@@ -265,7 +267,6 @@ string page_3(object id)
 string page_2(object id)
 {
   object rpc;
-  perror("*\n%O\n%O\n%O\n*\n", id->variables["how"], id->variables["how2"], id->variables["how3"]);
   if(id->variables["how2"]=="0") return 0;
   catch {
     rpc=RoxenRPC.Client("skuld.infovav.se",23,"upgrade");
