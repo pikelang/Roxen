@@ -5,7 +5,7 @@
 // interface</a> (and more, the documented interface does _not_ cover
 // the current implementation in NCSA/Apache)
 
-string cvs_version = "$Id: cgi.pike,v 1.84 1998/05/08 17:35:39 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.85 1998/05/09 17:32:31 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -13,7 +13,7 @@ int thread_safe=1;
 inherit "module";
 inherit "roxenlib";
 
-#define CGI_DEBUG
+// #define CGI_DEBUG
 
 import Simulate;
 
