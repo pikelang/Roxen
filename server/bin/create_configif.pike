@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.25 2000/08/29 13:33:46 noring Exp $
+ * $Id: create_configif.pike,v 1.26 2000/08/30 14:21:57 noring Exp $
  *
  * Create an initial administration interface server.
  */
@@ -70,7 +70,7 @@ class Readline
 string read_string(Readline rl, string prompt, string|void def,
 		   string|void batch)
 {
-  string res = batch || rl->edit(def || "", prompt+": ", ({ "bold" }));
+  string res = batch || rl->edit(def || "", prompt+" ", ({ "bold" }));
   if( def && !strlen(res-" ") )
     res = def;
   return res;
@@ -126,7 +126,7 @@ int main(int argc, array argv)
     if(!admin) 
     {
       write("\n");
-      name = read_string(rl, "Server name", "Administration Interface",
+      name = read_string(rl, "Server name:", "Administration Interface",
 			 batch->server_name);
 
       int port_ok;
@@ -134,7 +134,7 @@ int main(int argc, array argv)
       {
         string protocol, host, path;
 
-        port = read_string(rl, "Port URL", def_port, batch->server_url);
+        port = read_string(rl, "Port URL:", def_port, batch->server_url);
 	m_delete(batch, "server_url");
         if( port == def_port )
           ;
@@ -143,7 +143,7 @@ int main(int argc, array argv)
           int ok;
           while( !ok )
           {
-            switch( protocol = lower_case(read_string(rl, "Protocol", "http")))
+            switch( protocol = lower_case(read_string(rl, "Protocol:", "http")))
             {
              case "":
                protocol = "http";
@@ -183,7 +183,7 @@ int main(int argc, array argv)
 
     do
     {
-      user = read_string(rl, "Administrator user name", "administrator",
+      user = read_string(rl, "Administrator user name:", "administrator",
 			 batch->user);
       m_delete(batch, "user");
     } while(((search(user, "/") != -1) || (search(user, "\\") != -1)) &&
@@ -192,8 +192,8 @@ int main(int argc, array argv)
     do
     {
       rl->get_input_controller()->dumb=1;
-      password = read_string(rl, "Administrator password", 0, batch->password);
-      passwd2 = read_string(rl, "Administrator password (again)", 0, batch->password);
+      password = read_string(rl, "Administrator password:", 0, batch->password);
+      passwd2 = read_string(rl, "Administrator password (again):", 0, batch->password);
       rl->get_input_controller()->dumb=0;
       if(batch->password)
 	m_delete(batch, "password");
@@ -201,7 +201,7 @@ int main(int argc, array argv)
 	write("\n");
     } while(!strlen(password) || (password != passwd2));
     write("\n");
-  } while( strlen( passwd2 = read_string(rl, "Ok? (y/n)", "y", batch->ok ) ) && passwd2[0]=='n' );
+  } while( strlen( passwd2 = read_string(rl, "Are the settings above correct [Y/n]?", "", batch->ok ) ) && passwd2[0]=='n' );
 
   if( !admin )
   {
@@ -212,9 +212,8 @@ int main(int argc, array argv)
     if(!batch->update) {
       write("\n   Roxen has a built-in update system. If enabled it will periodically\n");
       write("   contact update servers at Roxen Internet Software over the Internet.\n\n");
-      write("   Do you want to enable this?\n\n");
     }
-    if(!(strlen( passwd2 = read_string(rl, "Ok? (y/n)", "y", batch->update ) ) && passwd2[0]=='n' ))
+    if(!(strlen( passwd2 = read_string(rl, "Do you want to enable this [Y/n]?", "", batch->update ) ) && passwd2[0]=='n' ))
     {
       use_update_system=1;
       if(!batch->community_user) {
@@ -223,16 +222,16 @@ int main(int argc, array argv)
 	write("   material through the update system.\n\n");
 	write("   Press enter to skip this.\n\n");
       }
-      community_user=read_string(rl, "Roxen Community identity (your e-mail)",
+      community_user=read_string(rl, "Roxen Community identity (your e-mail):",
 				 0, batch->community_user);
       if(sizeof(community_user))
       {
         do
         {
           rl->get_input_controller()->dumb=1;
-          community_password = read_string(rl, "Roxen Community password", 0,
+          community_password = read_string(rl, "Roxen Community password:", 0,
 					   batch->community_password);
-          passwd2 = read_string(rl, "Roxen Community password (again)", 0,
+          passwd2 = read_string(rl, "Roxen Community password (again):", 0,
 				batch->community_password);
           rl->get_input_controller()->dumb=0;
 	  if(batch->community_password)
@@ -244,13 +243,13 @@ int main(int argc, array argv)
       }
       
       if((strlen( passwd2 = read_string(rl, "Do you want to access the update "
-					"server through an HTTP proxy?",
-					"n", batch->community_proxy))
-	  && passwd2[0]!='n' ))
+					"server through an HTTP proxy [y/N]?",
+					"", batch->community_proxy))
+	  && lower_case(passwd2[0..0])!="n" ))
       {
-	proxy_host=read_string(rl, "Proxy host", 0, batch->proxy_host);
+	proxy_host=read_string(rl, "Proxy host:", 0, batch->proxy_host);
 	if(sizeof(proxy_host))
-	  proxy_port=read_string(rl, "Proxy port", "80", batch->proxy_port);
+	  proxy_port=read_string(rl, "Proxy port:", "80", batch->proxy_port);
 	if(!sizeof(proxy_port))
 	  proxy_port="80";
       }
