@@ -73,7 +73,9 @@ clean:
 
 install_all: install_pike install
 
-install: all
+install: all install_only
+
+install_only: 
 	$(SRCDIR)/mkdir -p $(prefix)/roxen/
 	@if test -d $(prefix)/roxen/server.old/.; then \
 	  if test -d $(prefix)/roxen/server.older/.; then \
