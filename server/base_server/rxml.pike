@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.169 2000/03/14 05:10:37 nilsson Exp $
+// $Id: rxml.pike,v 1.170 2000/03/14 07:50:44 nilsson Exp $
 
 inherit "roxenlib";
 inherit "rxmlhelp";
@@ -1366,6 +1366,8 @@ class TagEmit {
       res=plugin->get_dataset(args, id);
       if(arrayp(res)) {
 	if(args["do-once"] && sizeof(res)==0) res=({ ([]) });
+	if(!plugin->skiprows && args->skiprows) res=res[(int)args->skiprows..];
+	if(!plugin->maxrows && args->maxrows) res=res[..(int)args->maxrows-1];
 
 	do_iterate=array_iterate;
 	LAST_IF_TRUE = 1;
