@@ -1,6 +1,6 @@
 inherit "http";
 
-// static string _cvs_version = "$Id: roxenlib.pike,v 1.86 1998/10/27 00:30:36 grubba Exp $";
+// static string _cvs_version = "$Id: roxenlib.pike,v 1.87 1998/10/27 01:39:56 grubba Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -186,7 +186,8 @@ static mapping build_ssi_env_vars(object id)
   new->DOCUMENT_URI=id->not_query;
   if(id->query)
     new->QUERY_STRING_UNESCAPED=id->query;
-  if((tmp = file_stat(roxen->real_file(id->not_query||"", id))) && sizeof(tmp))
+  if((tmp = file_stat(id->conf->real_file(id->not_query||"", id))) &&
+     sizeof(tmp))
     new->LAST_MODIFIED=http_date(tmp[3]);
   
   return new;
