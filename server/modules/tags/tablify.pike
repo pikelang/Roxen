@@ -5,7 +5,7 @@
  * made by Per Hedbor
  */
 
-constant cvs_version = "$Id: tablify.pike,v 1.21 1999/05/17 19:58:33 grubba Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.22 1999/05/20 03:21:26 neotron Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -212,5 +212,10 @@ string tag_tablify( string tag, mapping m, string q, object request_id,
 mapping query_container_callers()
 {
   return ([ "tablify" : tag_tablify, "htable" : tag_tablify ]);
+}
+
+mapping query_tag_callers()
+{
+  return ([]);
 }
 

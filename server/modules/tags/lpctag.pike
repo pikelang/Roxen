@@ -7,7 +7,7 @@
 //  return "Hello world!\n";
 // </pike>
  
-constant cvs_version = "$Id: lpctag.pike,v 1.20 1999/04/07 18:51:54 peter Exp $";
+constant cvs_version = "$Id: lpctag.pike,v 1.21 1999/05/20 03:26:21 neotron Exp $";
 constant thread_safe=1;
 
 inherit "roxenlib";
@@ -169,6 +169,8 @@ string tag_pike(string tag, mapping m, string s, object request_id,
 
   return res;
 }
+
+mapping query_tag_callers() { return ([]); }
 
 mapping query_container_callers()
 {

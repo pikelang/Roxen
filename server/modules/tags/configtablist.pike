@@ -1,12 +1,12 @@
 /*
- * $Id: configtablist.pike,v 1.12 1999/02/27 00:42:13 marcus Exp $
+ * $Id: configtablist.pike,v 1.13 1999/05/20 03:26:17 neotron Exp $
  *
  * Makes a tab-list like the one in the config-interface.
  *
- * $Author: marcus $
+ * $Author: neotron $
  */
 
-constant cvs_version="$Id: configtablist.pike,v 1.12 1999/02/27 00:42:13 marcus Exp $";
+constant cvs_version="$Id: configtablist.pike,v 1.13 1999/05/20 03:26:17 neotron Exp $";
 constant thread_safe=1;
 
 #define use_contents_cache 0
@@ -124,7 +124,11 @@ string tag_config_tablist(string t, mapping a, string contents)
   return res;
 }
 
-mapping query_container_callers()
+mapping query_tag_callers()
+{
+  return ([]);
+}
+  mapping query_container_callers()
 {
   return ([ "config_tablist":tag_config_tablist ]);
 }

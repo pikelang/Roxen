@@ -1,5 +1,5 @@
 // This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
-// $Id: flik.pike,v 1.11 1999/04/18 12:51:13 marcus Exp $
+// $Id: flik.pike,v 1.12 1999/05/20 03:26:18 neotron Exp $
 
 // Adds the <fl>, <ft> and <fd> tags. This makes it easy to 
 // build a folder list or an outline. Example:
@@ -16,7 +16,7 @@
 
 // made by Pontus Hagland <law@idonex.se> december -96
 
-constant cvs_version = "$Id: flik.pike,v 1.11 1999/04/18 12:51:13 marcus Exp $";
+constant cvs_version = "$Id: flik.pike,v 1.12 1999/05/20 03:26:18 neotron Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -210,7 +210,8 @@ string recurse_parse_ftfd(string cont,mapping m,string id)
 		  "fl":tag_fl]),m,id);
 }
 			 
-
+mapping query_tag_callers() { return ([]); }
+  
 mapping query_container_callers()
 {
   return ([ "fl" : tag_fl,

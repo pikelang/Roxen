@@ -3,7 +3,7 @@
  * made by Per Hedbor
  */
 
-constant cvs_version = "$Id: wizard_tag.pike,v 1.18 1998/11/18 04:54:31 per Exp $";
+constant cvs_version = "$Id: wizard_tag.pike,v 1.19 1999/05/20 03:26:23 neotron Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -110,6 +110,8 @@ string tag_wizard(string t, mapping args, string contents, object id,
   return res;
 }
 
+
+mapping query_tag_callers() { return ([]); }
 
 mapping query_container_callers()
 {

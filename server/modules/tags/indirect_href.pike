@@ -6,7 +6,7 @@
  * made by Mattias Wingstedt <peter@idonex.se> -96
  */
 
-constant cvs_version = "$Id: indirect_href.pike,v 1.8 1998/11/04 20:28:09 peter Exp $";
+constant cvs_version = "$Id: indirect_href.pike,v 1.9 1999/05/20 03:26:19 neotron Exp $";
 constant thread_safe=1;
 #include <module.h>
 
@@ -74,6 +74,8 @@ string tag_newa( string tag, mapping m, string q, mapping got )
   else
     return q;
 }
+
+mapping query_tag_callers() { return ([]); }
 
 mapping query_container_callers()
 {

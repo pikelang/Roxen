@@ -1,6 +1,6 @@
 #if constant(Languages)
 #define error(X) throw( ({ (X), backtrace() }) )
-constant cvs_version = "$Id: lisp.pike,v 1.12 1998/09/29 22:46:46 peter Exp $";
+constant cvs_version = "$Id: lisp.pike,v 1.13 1999/05/20 03:26:20 neotron Exp $";
 
 #include <module.h>
 inherit "module";
@@ -247,6 +247,8 @@ string tag_lisp(string t, mapping m, string c,
     e->once_done = 1;
   return globals->lisp_result;
 }
+
+mapping query_tag_callers() { return ([]); }
 
 mapping query_container_callers()
 {
