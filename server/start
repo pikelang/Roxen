@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.75 1999/09/05 02:19:34 per Exp $
+# $Id: start,v 1.76 1999/09/06 12:40:36 per Exp $
 
 pre="`echo \" $$             \" | sed -e 's/\(.........\)\(.*\)/\1/g'` : "
 
@@ -61,12 +61,21 @@ fi
 
 gdb=no
 
+remove_old_dot_o_files () {
+  echo "$pre Removing old .o files ($1)"
+  find . -name '*.o' | xargs rm -f
+}
+
+
 ## Parse all arguments.
 ## GNU-style, long options only, except for -D, simply passed on.
 parse_args() {
  while [ ! c"$1" = "c" ] ; do
   case $1 in
   -D*)
+   DEFINES="$DEFINES $1"
+  ;;
+  -l*)
    DEFINES="$DEFINES $1"
   ;;
 # Used by the 'install' script
@@ -387,12 +396,6 @@ fi
 #
 # Some useful functions
 #
-
-remove_old_dot_o_files () {
-  echo "$pre Removing old .o files ($1)"
-  find . -name '*.o' | xargs rm -f
-}
-
 
 rotate () {
   b=5;
