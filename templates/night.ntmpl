@@ -1,0 +1,17 @@
+<navigation maxwidth=130 imgbase=/img/ bg=$$bg_color$$>  
+
+  <textstyle $$nav_align$$ scale=$$nav_size$$ font='$$nav_font$$' xspacing=5 yspacing=5>
+
+  <boxstyle middle text bg=$$nav_bg_color$$ fg=$$nav_text_color$$
+    alpha="night/galler_fade.ppm" alphainvert>
+  <boxstyle middle text selected bg=$$nav_bg_color_sel$$
+    fg=$$nav_text_color_sel$$ alpha="night/galler_fade.ppm"
+    alphainvert rot=180>
+  <boxstyle middle text mouseover bg=$$nav_bg_color_mouse$$
+    fg=$$nav_text_color_mouse$$ alpha="night/galler_fade.ppm"
+    alphainvert rot=180>
+  <menumaker menu=top>
+
+  <boxstyle middle delimit height=4 bg=$$bg_color$$ alpha=255>
+
+</navigation>

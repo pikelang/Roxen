@@ -1,0 +1,15 @@
+<navigation maxwidth=160 preload imgbase=/img/ horiz>
+
+  <textstyle right scale=$$nav_size$$ xspacing=5 yspacing=3
+             font='$$nav_font$$' xspacing=10>
+
+  <boxstyle middle text bg=$$nav_bg_color$$
+    fg=$$nav_text_color$$ alpha=255>
+  <boxstyle middle text selected bg=$$nav_bg_color_sel$$
+    fg=$$nav_text_color_sel$$ alpha=255>
+  <boxstyle middle text mouseover bg=$$nav_bg_color_mouse$$
+    fg=$$nav_text_color_mouse$$ alpha=255>
+
+  <menumaker menu=top>
+
+</navigation>

@@ -1,0 +1,18 @@
+<navigation maxwidth=150 preload imgbase=/img/
+  transparent=$$bg_color$$>
+
+  <textstyle center scale=$$nav_size$$ xspacing=5 yspacing=5
+             font='$$nav_font$$'>
+
+  <boxstyle middle text bg=$$bg_color$$ fg=white
+    alpha=255 shadow=60,1>
+  <boxstyle middle text selected bg=$$bg_color$$ fg=darkgrey
+    alpha=255 shadow=40,1>
+  <boxstyle middle text mouseover bg=$$bg_color$$ fg=yellow
+    alpha=255 shadow=80,2>
+
+  <boxstyle middle delimit bg=$$bg_color$$ height=0 alpha=210>
+
+  <menumaker menu=top>
+
+</navigation>

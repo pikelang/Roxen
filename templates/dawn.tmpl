@@ -1,0 +1,34 @@
+<include file='gtext_headers.inc'>
+
+<html>
+<head><title><as-meta var=title></title></head>
+<body bgcolor='$$bg_color$$' text='$$text_color$$' link='$$link_color$$'
+      vlink='$$vlink_color$$' alink='$$alink_color$$'>
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr><if supports=tableimages>
+        <td height=50 align=center bgcolor=black
+            background="/img/dawn/blue_clouds.jpg">&nbsp;</td>
+      </if><else><td align=center bgcolor=black>
+          <img src="/img/dawn/blue_clouds_fix.jpg"></td>
+      </else>
+    </tr>
+    <tr>
+      <td><img height=2 width=100% src=/internal-roxen-unit></td>
+    </tr>
+    <tr>
+      <td align=center bgcolor=$$nav_bg_color$$>
+        <!--  Navigation  -->
+        <include file='$$nav_name$$'>
+        <!--  End Navigation  -->
+      </td>
+    </tr>
+    <tr>
+      <td><table><tr>
+        <td width=10%></td>
+        <td width=80% valign=top><tmplinsert tag=content></td>
+        <td width=10%></td>
+      </tr></table></td>
+    </tr>
+  </table>
+</body>
+</html>

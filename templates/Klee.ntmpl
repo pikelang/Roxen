@@ -1,30 +1,36 @@
-<navigation maxwidth=160 preload imgbase=/img/ transparent=$$bg_color$$>
+<navigation maxwidth=160 preload imgbase=/img/ transparent=$$bg_color$$ bg=$$bg_color$$>
+  <as-color var="bg_notrans" diffrent>$$bg_color$$</as-color>
+  <cset variable=shadow></cset>
+  <if match='$$nav_shadow$$ is 1'><cset variable=shadow>shadow='60,1'</cset></if>
+  <formoutput quote=¤>
+    <textstyle $$nav_align$$ scale=$$nav_size$$ xspacing=5 yspacing=5
+               font='$$nav_font$$' xspacing=10>
 
-  <textstyle right scale=$$nav_size$$ xspacing=5 yspacing=5
-             font='$$nav_font$$ bold' xspacing=10>
+    <boxstyle left text center bg=$$nav_bg_color$$
+      alpha="Klee/Left-end_Alpha.pnm" width=8>
+    <boxstyle left text selected bg=$$nav_bg_color_sel$$
+      alpha="Klee/Left-end_Alpha_sel.pnm">
+    <boxstyle left text mouseover bg=$$nav_bg_color_mouse$$
+      alpha="Klee/Left-end_Alpha_sel.pnm">
 
-  <boxstyle left text center bg=$$bg_color$$
-    alpha="Klee/Left-end_Alpha.pnm" width=8>
-  <boxstyle left text selected bg=#fefefe alpha="Klee/Left-end_Alpha.pnm">
-  <boxstyle left text mouseover bg=#fefefe alpha="Klee/Left-end_Alpha.pnm">
+    <boxstyle middle text bg=$$nav_bg_color$$ fg=$$nav_text_color$$
+      alpha="Klee/Horiz_Alpha.pnm" ¤shadow¤>
+    <boxstyle middle text selected bg=$$nav_bg_color_sel$$ fg=$$nav_text_color_sel$$
+      alpha="Klee/Horiz_Alpha_sel.pnm" ¤shadow¤>
+    <boxstyle middle text mouseover bg=$$nav_bg_color_mouse$$ fg=$$nav_text_color_mouse$$
+      alpha="Klee/Horiz_Alpha_sel.pnm" ¤shadow¤>
 
-  <boxstyle middle text bg=$$bg_color$$ fg=blue alpha="Klee/Horiz_Alpha.pnm">
-  <boxstyle middle text selected bg=#fefefe fg=blue
-    alpha="Klee/Horiz_Alpha.pnm">
-  <boxstyle middle text mouseover bg=#fefefe fg=blue
-    alpha="Klee/Horiz_Alpha.pnm">
+    <boxstyle right text center bg=$$nav_bg_color$$
+      alpha="Klee/Left-end_Alpha_sel.pnm" rot=180 width=8>
+    <boxstyle right text selected bg=$$nav_bg_color_sel$$
+      alpha="Klee/Left-end_Alpha_sel.pnm" rot=180>
+    <boxstyle right text mouseover bg=$$nav_bg_color_mouse$$
+      alpha="Klee/Left-end_Alpha_sel.pnm" rot=180>
 
-  <boxstyle right text center bg=$$bg_color$$
-    alpha="Klee/Left-end_Alpha.pnm" rot=180 width=8>
-  <boxstyle right text selected bg=#fefefe
-    alpha="Klee/Left-end_Alpha.pnm" rot=180>
-  <boxstyle right text mouseover bg=#fefefe
-    alpha="Klee/Left-end_Alpha.pnm" rot=180>
-
-  <boxstyle left delimit bg=$$bg_color$$ alpha=255>
-  <boxstyle middle delimit height=4 bg=$$bg_color$$ alpha=255>
-  <boxstyle right delimit bg=$$bg_color$$ alpha=255>
-
+    <boxstyle left delimit bg=$$bg_color$$ alpha=255>
+    <boxstyle middle delimit height=4 bg=$$bg_color$$ alpha=255>
+    <boxstyle right delimit bg=$$bg_color$$ alpha=255>
+  </formoutput>
   <menumaker menu=top>
 
 </navigation>

@@ -1,0 +1,43 @@
+<include file='gtext_headers.inc'>
+
+<cset variable=page_head_text_shadow></cset>
+<if match='$$page_head_text_shadow$$ is 1'><cset variable=page_head_text_shadow>shadow=60,0</cset></if>
+
+<formoutput quote='£'>
+
+<html>
+<head><title><as-meta var=title></title></head>
+<body bgcolor='$$bg_color$$' text='$$text_color$$' link='$$link_color$$'
+      vlink='$$vlink_color$$' alink='$$alink_color$$'>
+  <table cellpadding=0 cellspacing=0 border=0><!--  4 columns  -->
+    <tr><!--  slogan  -->
+      <td colspan=4 align=$$page_head_text_align$$>
+        <gtext bg=$$bg_color$$ fg=$$page_head_text_color$$ scale=$$page_head_text_size$$
+	       £page_head_text_shadow£
+               afont=$$page_head_text_font$$>$$page_head_text$$</gtext></td>
+    </tr>
+    <tr><!--  bar  -->
+      <td colspan=4 bgcolor=$$page_head_bar_color$$><img src="/internal-roxen-unit" width=100% height=8></td>
+    </tr>
+    <tr><!--  image  -->
+      <td></td>
+      <td></td>
+      <td colspan=2 align=$$page_head_image_align$$>
+        <if not match='$$page_head_image$$ is none'>
+	  <img src='$$page_head_image$$'></if></td>
+    </tr>
+    <tr>
+      <td height=10></td>
+    </tr>
+    <tr><!--  Navigation/Content -->
+      <td valign=top><img src="/internal-roxen-unit" height=80 width=1>
+        <include file='$$nav_name$$'></td>
+      <td width=10%></td>
+      <td><tmplinsert tag=content></td>
+      <td width=10% valign=top></td>
+    </tr>
+  </table>
+</body>
+</html>
+
+</formoutput>
