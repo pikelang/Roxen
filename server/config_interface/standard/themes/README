@@ -1,23 +1,48 @@
-Stand alone settings (nothing else is based on these):
+-*- html -*- works rather nicely for this buffer.
+
+The theme tags:
+
+<theme-set what=setting-name to=value [int] [themefile] />
+
+  Set the setting 'what' to the specified value.
+  If themefile is specified, the path to the theme is prepended
+  to the value, if 'int' is specified, the value is considered to
+   be an integer.
+
+<theme-path match='glob'>
+</theme-path>
+
+   Only parse the contents if the current configuration interface path
+   matches the specified glob pattern.
+
+
+Stand alone settings (no other settings are based on these):
 
   ---------------------------------------------------------
   setting                       default
   ---------------------------------------------------------
   background		        none
-  background-content	        none
-  background-leftside	        none
-  background-top		none
-  background-toptabs	        none
+  content-background	        none
   err-1                		/internal-roxen-err_1
   err-2                		/internal-roxen-err_2
   err-3                		/internal-roxen-err_3
+  left-background	        none
   left-image           		/internal-roxen-unit
   logo                 		/internal-roxen-roxen
   obox-titlefont		helvetica,arial
+  obox-bordercolor		black
   selected-indicator   		/internal-roxen-next
+  subtabs-align			left
+  subtabs-background	        none
+  subtabs-extraargs		none
+  top-background		none
+  toptabs-align			left
+  toptabs-background	        none
+  toptabs-extraargs		none
   ---------------------------------------------------------
 
 Base settings:
+
   ---------------------------------------------------------
   setting              default
   ---------------------------------------------------------
@@ -75,3 +100,43 @@ Third level settings, by default derived from second level settings:
   toptabs-dimcolor    	fade2
   toptabs-font    	tabs-font
   ---------------------------------------
+
+
+
+
+Composite settings, composed from several other settings.
+Overriding these is not really recommended, but possible.
+
+
+setting		   default value
+--------------------------------------------------------------------------
+toptabs-args       frame-image=&usr.toptabs-frame; &usr.toptab-extraargs;
+
+subtabs-args       frame-image=&usr.subtabs-frame; &usr.subtabs-extraargs;
+                   bgcolor=&usr.subtabs-bgcolor; font=&usr.subtabs-font;
+                   textcolor=&usr.subtabs-dimtextcolor;
+                   dimcolor=&usr.subtabs-dimcolor;
+                   seltextcolor=&usr.subtabs-selcolor;
+                   selcolor=&usr.subtabs-selcolor;
+
+body-args	   link=&usr.linkcolor; vlink=&usr.linkcolor;
+                   alink=&usr.fade2; bgcolor=&usr.bgcolor;
+                   text=&usr.text; [background=&usr.background;]
+
+top-tableargs      bgcolor=&usr.top-bgcolor;
+                   [background=&usr.top-background;]
+
+left-tableargs     valign=top width=150
+                   [background=&usr.left-background;]
+
+content-tableargs  valign=top width='100%'
+                   [background=&usr.content-background;]
+
+toptabs-tableargs  bgcolor=&usr.toptabs-bgcolor;
+                   [background=&usr.toptabs-background;]
+                   [align=&usr.toptabs-align;]
+
+subtabs-tableargs  bgcolor=&usr.subtabs-bgcolor;
+                   [background=&usr.subtabs-background;]
+                   [align=&usr.subtabs-align;]
+--------------------------------------------------------------------

@@ -1,14 +1,9 @@
-<theme-set what=left-image to=blossom.gif themefile />
-
-<theme-set what=gbutton-frame-image to=gbutton_frame.xcf themefile />
-
-<theme-set what=bgcolor to=pink />
-<theme-set what=fgcolor to=black />
+<theme-set what=logo        to=logo-buttercups.gif themefile />
+<theme-set what=left-image  to=blossom.gif themefile />
+<theme-set what=bgcolor     to=pink />
+<theme-set what=fgcolor     to=black />
 <theme-set what=linkcolor   to=darkred />
-
 <theme-set what=selected-indicator to=selected-star.gif themefile />
-
-<theme-set what=logo to=logo-buttercups.gif themefile />
 
 <theme-path match='/sites/*'>
   <theme-set what=logo to=logo-blossom.gif themefile />
