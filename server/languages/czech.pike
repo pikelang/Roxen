@@ -18,9 +18,34 @@ constant required_charset = "iso-8859-2";
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: czech.pike,v 1.12 2000/02/14 09:22:07 per Exp $";
+constant cvs_version = "$Id: czech.pike,v 1.13 2000/07/11 08:15:29 hop Exp $";
 constant _id = ({ "cs", "czech", "" });
-constant _aliases = ({ "cs", "cz", "cze", "czech" });
+constant _aliases = ({ "cs", "cz", "cze", "ces", "czech" });
+
+constant languages=ISO639 + ([
+  "ca":"katalánsky",
+  "cs":"èesky",
+  "du":"holandsky",
+  "fi":"finsky",
+  "fr":"francouzsky",
+  "de":"nìmecky",
+  "en":"anglicky",
+  "es":"¹panìlsky",
+  "hr":"chorvatsky",
+  "hu":"maïarsky",
+  "it":"italsky",
+  "jp":"japonsky",
+  "mi":"maorsky",
+  "no":"norsky",
+  "pl":"polsky",
+  "pt":"portugalsky",
+  "ru":"rusky",
+  "si":"slovinsky",
+  "sk":"slovensky",
+  "sr":"srbsky",
+  "sv":"¹védsky"
+]);
+
 
 constant months = ({
   "ledna", "února", "bøezna", "dubna", "kvìtna",
