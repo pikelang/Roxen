@@ -95,7 +95,7 @@ string describe_tags( RoxenModule m, int q )
 
   return html_encode_string(String.implode_nicely(map(sort(indices(tags)-({"\x266a"})),
 						      lambda(string tag) {
-							return make_tag(tag+"/", ([]) );
+							return make_tag(tag+(tag[0]=='/'?"":"/"), ([]));
 							  } ) +
 						  map(sort(indices(conts)),
 						      simplified_make_container, ([]), "")));
