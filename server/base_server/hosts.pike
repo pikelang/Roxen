@@ -1,4 +1,4 @@
-string cvs_version = "$Id: hosts.pike,v 1.10 1997/04/05 01:25:31 per Exp $";
+string cvs_version = "$Id: hosts.pike,v 1.11 1997/05/13 15:52:35 grubba Exp $";
 #include <roxen.h>
 #include <module.h> // For VAR_VALUE define.
 #if DEBUG_LEVEL > 7
@@ -38,10 +38,10 @@ int lookup(int mode, string name)
 #endif
   if(!sizeof(out))
   {
-    /*
+#ifdef HOST_NAME_DEBUG
     report_error("Hostnames: Fatal host name lookup failure: "+
 		 "No processes left (killed of?).\n");
-    */
+#endif
     return 0;
   }
 
@@ -51,7 +51,9 @@ int lookup(int mode, string name)
     curr=(curr)%sizeof(out);
     if((tmp=out[curr]->write(to_send[sent..strlen(to_send)-1])) < 0)
     {
-//      report_error("Hostnames: Write failed.\n");
+#ifdef HOST_NAME_DEBUG
+      report_error("Hostnames: Write failed.\n");
+#endif
       if(sizeof(out)-1 >= curr)
       {
 	died(out[curr]);
