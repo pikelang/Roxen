@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.60 2001/08/03 14:32:35 wing Exp $
+ * $Id: ftp.pike,v 2.61 2001/08/04 23:46:42 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -3666,6 +3666,10 @@ class FTPSession
 
     if (fd) {
       fd->close();
+    }
+    if (pasv_port) {
+      destruct(pasv_port);
+      pasv_port = 0;
     }
     // Make sure we disappear...
     destruct();
