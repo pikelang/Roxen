@@ -5,7 +5,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: PXml.pike,v 1.24 2000/02/08 06:28:14 mast Exp $
+//! $Id: PXml.pike,v 1.25 2000/02/08 07:51:58 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
@@ -104,12 +104,7 @@ static void create (
 	if (!(tag->plugin_name || tag->flag & RXML.FLAG_NO_PREFIX))
 	  new_tagdefs[prefix + ":" + [string] tag->name] =
 	    tag->flags & RXML.FLAG_CONTAINER ?
-	    ({0,
-	      [function(Parser.HTML,mapping(string:string),string:array)]
-	      tag->_handle_tag}) :
-	    ({[function(Parser.HTML,mapping(string:string):array)]
-	      tag->_handle_tag,
-	      0});
+	    ({0, tag->_handle_tag}) : ({tag->_handle_tag, 0});
     }
 
     if (!tset->prefix_req) {
@@ -122,12 +117,7 @@ static void create (
       if (!tag->plugin_name && (!tset->prefix_req || tag->flag & RXML.FLAG_NO_PREFIX))
 	new_tagdefs[[string] tag->name] =
 	  tag->flags & RXML.FLAG_CONTAINER ?
-	  ({0,
-	    [function(Parser.HTML,mapping(string:string),string:array)]
-	    tag->_handle_tag}) :
-	  ({[function(Parser.HTML,mapping(string:string):array)]
-	    tag->_handle_tag,
-	    0});
+	  ({0, tag->_handle_tag}) : ({tag->_handle_tag, 0});
 
     foreach (indices (new_tagdefs), string name) {
       if (array(TAG_TYPE|CONTAINER_TYPE) tagdef = tagdefs[name])
@@ -193,15 +183,11 @@ local static void rt_replace_tag (string name, RXML.Tag tag)
   if (tag)
     if (tag->flags & RXML.FLAG_CONTAINER) {
       add_tag (name, 0);
-      add_container (name,
-		     [function(Parser.HTML,mapping(string:string),string:array)]
-		     tag->_handle_tag);
+      add_container (name, tag->_handle_tag);
     }
     else {
       add_container (name, 0);
-      add_tag (name,
-	       [function(Parser.HTML,mapping(string:string):array)]
-	       tag->_handle_tag);
+      add_tag (name, tag->_handle_tag);
     }
   else {
     add_tag (name, 0);
