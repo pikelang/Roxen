@@ -65,8 +65,7 @@ class ConfigIFCache
   {
     if( db )
     {
-      query("DELETE FROM "+dir+" where id=%s", name);
-      query("INSERT INTO "+dir+" VALUES (%s,%s)", name, encode_value(to));
+      query("REPLACE INTO "+dir+" VALUES (%s,%s)", name, encode_value(to));
       return to;
     }
 
