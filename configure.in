@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.24 1997/09/17 05:16:10 grubba Exp $
+# $Id: configure.in,v 1.25 1997/09/17 21:09:14 grubba Exp $
 #
 
 prefix=$PWD
@@ -248,6 +248,7 @@ if test $cflags_is_set = no; then
   # IRIX
   # sopt disabled since it takes too much time on interpret.c (>45min on an O²)
   # AC_SYS_OS_COMPILER_FLAG(IRIX,-sopt,sopt)
+  AC_SYS_OS_COMPILER_FLAG(IRIX,-n32,n32)
   AC_SYS_OS_COMPILER_FLAG(IRIX,-g3,g3)
   AC_SYS_OS_COMPILER_FLAG(IRIX,-fullwarn,fullwarn)
   if test x$with_debug = xyes ; then
