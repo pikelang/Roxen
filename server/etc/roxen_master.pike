@@ -10,7 +10,7 @@ mixed sql_query( string q, mixed ... e )
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.120 2001/09/03 20:43:53 marcus Exp $";
+constant cvs_version = "$Id: roxen_master.pike,v 1.121 2001/12/04 18:44:45 mast Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -780,7 +780,7 @@ int long_file_names;
 
 string describe_backtrace(mixed trace, void|int linewidth)
 {
-  return ::describe_backtrace(trace, 999999);
+  return predef::describe_backtrace(trace, 999999);
 }
 
 
