@@ -234,7 +234,7 @@ worldmap binary
 /server/modules/tags/accessed.pike foreign_ident
 /server/modules/tags/additional_rxml.pike foreign_ident
 /server/modules/tags/awizard.pike foreign_ident
-/server/modules/tags/cache.pike foreign_ident
+/server/modules/tags/cachetag.pike foreign_ident
 /server/modules/tags/check_spelling.pike foreign_ident
 /server/modules/tags/countdown.pike foreign_ident
 /server/modules/tags/development.pike foreign_ident
