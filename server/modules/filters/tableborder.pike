@@ -1,61 +1,84 @@
-// This is a roxen module. Copyright © 2000, Roxen IS.
+// Copyright (C) 2001 Roxen IS
+// Module author: Johan Sundström
 
 inherit "module";
+#include <request_trace.h>
 
-constant cvs_version = "$Id: tableborder.pike,v 1.9 2001/03/02 18:04:28 jhs Exp $";
+#define JS_PRESTATE(P) \
+"javascript:"           \
+"function R(a)"          \
+"{"                       \
+  "var p=a[2].split(',')," \
+      "i,r=[],t='" P "';"   \
+  "for(i in p)"              \
+  "{"                         \
+     "i=p[i];"                 \
+     "if(i==t)"                 \
+       "t=0;"                    \
+     "else if(i)"                 \
+       "r.push(i)"                 \
+  "}"                               \
+  "if(t)"                            \
+    "r.push(t);"                      \
+  "r=r.join();"                        \
+  "return (r?'/('+r+')':r)+a[3]"        \
+"}"                                      \
+"with(location)"                          \
+  "pathname=R(/^(\\/\\(([^)]*)\\))?(.*)/(pathname))"
+
+constant cvs_version = "$Id: tableborder.pike,v 1.10 2001/03/02 20:15:42 jhs Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FILTER;
-constant module_name = "Table Unveiler";
+constant module_name = "Table/Image Border Unveiler";
 constant module_doc  =
             "<p>"
-	      "This module modifies &lt;table&gt; tags when a prestate "
-	      "\"tables\" is added, forcing the border attribute to 1. "
-	      "Debugging nested tables has never been easier."
+	      "This module modifies all <tt>&lt;table&gt;</tt> and/or "
+	      "<tt>&lt;img&gt;</tt> tags when a prestate \"tables\" or "
+	      "\"images\" is added, forcing the border attribute to 1. "
+	      "Debugging nested tables or images has never been easier."
 	    "</p><p>"
-	      "This convenient javascript function <a href=\"javascript:"
-	        "function R(a)"
-	        "{"
-	          "var p=a[2].split(','),i,r=[],t='tables';"
-	          "for(i in p)"
-	          "{"
-	             "i=p[i];"
-	             "if(i==t)"
-	               "t=0;"
-	             "else if(i)"
-	               "r.push(i)"
-	          "}"
-	          "if(t)"
-	            "r.push(t);"
-	          "r=r.join();"
-	          "return (r?'/('+r+')':r)+a[3]"
-	        "}"
-	        "with(location)"
-	          "pathname=R(/^(\\/\\(([^)]*)\\))?(.*)/(pathname))"
-	      "\">toggles the prestate</a>."
+	      "These convenient javascript functions <a href=\"" +
+	      JS_PRESTATE("tables") + "\">toggle the prestate \"tables\"</a> "
+	      "and <a href=\"" + JS_PRESTATE("images") + "\">\"images\"</a> "
+	      "respectively."
 	    "</p>";
 
-array(string) alter_table(string name, mapping arg, string contents)
+static array(string) add_border(Parser.HTML me, mapping arg,
+				string contents, RequestID id,
+				Parser.HTML parser)
 {
   arg->border = "1";
-  return ({ Roxen.make_container(name, arg, recursive_parse(contents)) });
-}
-
-string recursive_parse(string contents)
-{
-  return parse_html(contents, ([ ]), ([ "table" : alter_table ]));
+  id->misc->borders_unveiled++;
+  parser->set_extra( id, parser->clone() );
+  return ({ Roxen.make_container(me->tag_name(), arg,
+				 parser->finish( contents )->read()) });
 }
 
 mapping filter(mapping result, RequestID id)
 {
-  if(!result			// If nobody had anything to say, neither do we.
-  || !stringp(result->data)	// Got a file object. Hardly ever happens anyway.
-  || !id->prestate->tables	// No prestate, no action.
-  || !glob(result->type,	// Only parse html.
-	   "text/html*")
-  || id->misc->tables_unveiled++// Already unveiled all tables!
+  if(!result				// nobody had anything to say
+  || !stringp(result->data)		// got a file object
+  || !(id->prestate->tables ||
+       id->prestate->images)		// only bother when we're being hailed
+  || !glob("text/html*", result->type)
+  || id->misc->borders_unveiled++	// borders already unveiled?
     )
-    return 0; // Signal that we didn't rewrite the result for good measure.
+    return 0; // signal that we didn't rewrite the result for good measure
 
-  result->data = recursive_parse(result->data);
+  TRACE_ENTER("Turning on borders for all " +
+	      (id->prestate->tables ? "tables" : "") +
+	      (id->prestate->tables &&
+	       id->prestate->images ? " and "  : "") +
+	      (id->prestate->images ? "images" : "") + ".", 0);
+
+  Parser.HTML parser = Parser.HTML();
+  if(id->prestate->tables) parser->add_container("table", add_border);
+  if(id->prestate->images) parser->add_container("img", add_border);
+  parser->set_extra(id, parser->clone() );
+  result->data = parser->finish( result->data )->read();
+
+  TRACE_LEAVE(id->misc->borders_unveiled - 1 + " border" +
+	      (1==id->misc->borders_unveiled ? "" : "s" ) + " unveiled.");
+
   return result;
 }
