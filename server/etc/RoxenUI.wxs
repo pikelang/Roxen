@@ -834,10 +834,26 @@ To install in this folder, click "Next". To install to a different folder, enter
         <Control Id="BannerText" Type="Text" X="9" Y="9" Width="306" Height="33" Transparent="yes">
           <Text>{\VSI_MS_Sans_Serif16.0_1_0}Confirm Installation</Text>
         </Control>
-        <Control Id="BodyText1" Type="Text" X="9" Y="63" Width="354" Height="180">
+        <Control Id="BodyText1" Type="Text" X="9" Y="63" Width="354" Height="60">
           <Text>{\VSI_MS_Sans_Serif13.0_0_0}The installer is ready to install [ProductName] on your computer.
 
 Click "Next" to start the installation.</Text>
+        </Control>
+        <Control Id="StartServerText" Type="Text" X="9" Y="123" Width="354" Height="14">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Start server after installation</Text>
+        </Control>
+	<Control Id="StartServerGroup" Type="RadioButtonGroup" X="18" Y="137" Width="348" Height="48" Property="START_SERVER">
+          <Text>{\VSI_MS_Shell_Dlg13.0_0_0}MsiRadioButtonGroup</Text>
+        </Control>
+        <Control Id="InstallServiceText" Type="Text" X="9" Y="185" Width="354" Height="14">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Install as service</Text>
+	  <Condition Action="disable">(NOT VersionNT) OR (INSTALLATION_TYPE="2")</Condition>
+	  <Condition Action="enable">VersionNT AND (INSTALLATION_TYPE&lt;&gt;"2")</Condition>
+        </Control>
+	<Control Id="InstallServiceGroup" Type="RadioButtonGroup" X="18" Y="199" Width="348" Height="48" Property="INSTALL_SERVICE">
+          <Text>{\VSI_MS_Shell_Dlg13.0_0_0}MsiRadioButtonGroup</Text>
+	  <Condition Action="disable">(NOT VersionNT) OR (INSTALLATION_TYPE="2")</Condition>
+	  <Condition Action="enable">VersionNT AND (INSTALLATION_TYPE&lt;&gt;"2")</Condition>
         </Control>
       </Dialog>
       <Dialog Id="CustomTextA" Width="373" Height="287" Title="[ProductName]">
@@ -983,22 +999,6 @@ Click "Next" to start the installation.</Text>
         </Control>
         <Control Id="RadioButtonGroup" Type="RadioButtonGroup" X="18" Y="84" Width="348" Height="48" Property="INSTALLATION_TYPE">
           <Text>{\VSI_MS_Shell_Dlg13.0_0_0}MsiRadioButtonGroup</Text>
-        </Control>
-        <Control Id="StartServerText" Type="Text" X="9" Y="132" Width="354" Height="21">
-          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Start server after installation</Text>
-        </Control>
-	<Control Id="StartServerGroup" Type="RadioButtonGroup" X="18" Y="153" Width="348" Height="48" Property="START_SERVER">
-          <Text>{\VSI_MS_Shell_Dlg13.0_0_0}MsiRadioButtonGroup</Text>
-        </Control>
-        <Control Id="InstallServiceText" Type="Text" X="9" Y="201" Width="354" Height="21">
-          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Install as service</Text>
-	  <Condition Action="disable">NOT VersionNT</Condition>
-	  <Condition Action="enable">VersionNT</Condition>
-        </Control>
-	<Control Id="InstallServiceGroup" Type="RadioButtonGroup" X="18" Y="222" Width="348" Height="48" Property="INSTALL_SERVICE">
-          <Text>{\VSI_MS_Shell_Dlg13.0_0_0}MsiRadioButtonGroup</Text>
-	  <Condition Action="disable">NOT VersionNT</Condition>
-	  <Condition Action="enable">VersionNT</Condition>
         </Control>
       </Dialog>
       <RadioGroup Property="AdminMaintenanceForm_Action">
