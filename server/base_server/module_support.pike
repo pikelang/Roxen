@@ -1,4 +1,4 @@
-// string cvs_version = "$Id: module_support.pike,v 1.34 1999/11/11 09:26:06 mast Exp $";
+// string cvs_version = "$Id: module_support.pike,v 1.35 1999/11/17 15:15:19 per Exp $";
 #include <roxen.h>
 #include <module.h>
 #include <stat.h>
@@ -118,28 +118,28 @@ int setvars( mapping (string:mixed) vars )
   return 1;
 }
 
-static class ConfigurableWrapper
+class ConfigurableWrapper
 {
   int mode;
   function f;
-  object roxen;
 
-  int check(object id )
+  int check(  int|void more, int|void expert, int|void devel )
   {
-    if((mode & VAR_EXPERT) && !id->misc->expert_mode )
+    if ((mode & VAR_MORE) && !more)
       return 1;
-    if((mode & VAR_MORE) && !id->misc->more_mode )
+    if ((mode & VAR_DEVELOPER) && !devel)
+      return 1;
+    if ((mode & VAR_EXPERT) && !expert)
       return 1;
     return f();
   }
 
-  void create(object roxen_, int mode_, function f_)
+  void create(int mode_, function f_)
   {
-    roxen = roxen_;
     mode = mode_;
     f = f_;
   }
-};
+}
 
 function reg_s_loc;
 int globvar(string var, mixed value, string name, int type,
@@ -158,7 +158,7 @@ int globvar(string var, mixed value, string name, int type,
   if (functionp(not_in_config)) {
     if (type) {
       variables[var][ VAR_CONFIGURABLE ] =
-	ConfigurableWrapper(this_object(), type, not_in_config)->check;
+	ConfigurableWrapper( type, not_in_config)->check;
     } else {
       variables[var][ VAR_CONFIGURABLE ] = not_in_config;
     }
