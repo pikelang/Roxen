@@ -5,7 +5,7 @@
 // interface</a> (and more, the documented interface does _not_ cover
 // the current implementation in NCSA/Apache)
 
-string cvs_version = "$Id: cgi.pike,v 1.81 1998/04/17 01:58:43 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.82 1998/04/21 17:35:18 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -158,6 +158,14 @@ void create()
   defvar("user", 1, "Run user scripts as owner", TYPE_FLAG,
 	 "If set, scripts in the home-dirs of users will be run as the "
 	 "user. This overrides the Run scripts as variable.", 0, uid_was_zero);
+
+#if constant(Process.create_process)
+  defvar("setgroups", 1, "Set the supplementary group access list", TYPE_FLAG,
+	 "If set, the supplementary group access list will be set for "
+	 "the CGI scripts. This can slow down CGI-scripts significantly "
+	 "if you are using eg NIS+. If not set, the supplementary group "
+	 "access list will be cleared.");
+#endif /* constant(Process.create_process) */
 
   defvar("allow_symlinks", 1, "Allow symlinks", TYPE_FLAG,
 	 "If set, allows symbolic links to binaries owned by the directory "
@@ -373,6 +381,7 @@ class spawn_cgi
   object pipe3, pipe4;	// Stdin for the CGI
   int kill_call_out;
   int dup_err;
+  int setgroups;
 
   void got_some_data(object to, string d)
   {
@@ -426,8 +435,16 @@ class spawn_cgi
 			 "env":env,
 			 "uid":uid || 65534,
     ]);
+
     if (dup_err) {
       options["stderr"] = pipe1;
+    }
+
+    if (!setgroups) {
+      options["noinitgroups"] = 1;
+#if constant(cleargroups)
+      options["setgroups"] = ({});
+#endif /* constant(cleargroups) */
     }
 
     object proc;
@@ -572,7 +589,8 @@ class spawn_cgi
   
   void create(string wrapper_, string f_, array(string) args_, mapping env_,
 	      string wd_, int|string uid_, object pipe1_, object pipe2_,
-	      object pipe3_, object pipe4_, int dup_err_, int kill_call_out_)
+	      object pipe3_, object pipe4_, int dup_err_, int kill_call_out_,
+	      int setgroups_)
   {
     wrapper = wrapper_;
     f = f_;
@@ -586,6 +604,7 @@ class spawn_cgi
     pipe4 = pipe4_;
     dup_err = dup_err_;
     kill_call_out = kill_call_out_;
+    setgroups = setgroups_;
 #ifdef THREADS
     call_out(do_cgi, 0);
 #else /* THREADS */
@@ -746,7 +765,7 @@ mixed low_find_file(string f, object id, string path)
 			 f, make_args(id->rest_query),
 			 my_build_env_vars(f, id, path_info),
 			 wd, uid, pipe1, pipe2, pipe3, pipe4, QUERY(err),
-			 QUERY(kill_call_out));
+			 QUERY(kill_call_out), QUERY(setgroups));
   
   if(id->my_fd && id->data) {
     sender(pipe4, id->data);
