@@ -1,3 +1,4 @@
+# -*- sh -*-
 # Support functions for the startscript and some other scripts.
 
 rotate () {
@@ -18,7 +19,7 @@ setup_environment() {
   fi
 
   # Make sure $CLASSPATH contains the servlet stuff
-  CLASSPATH=java/classes${CLASSPATH:+:}$CLASSPATH
+  CLASSPATH="java/classes${CLASSPATH:+:}$CLASSPATH"
   for jar in java/classes/*.jar; do
     CLASSPATH="$jar:$CLASSPATH"
   done
@@ -38,7 +39,7 @@ dp() {
 roxen_version() {
    VERSION="`sed <etc/include/version.h -e '/__roxen_version__/s/[^0-9]*\([0-9][0-9]*\.[0-9][0-9]*\)[^0-9]*/\1/p' -n | head -1`"
    BUILD="`sed <etc/include/version.h -e '/__roxen_build__/s/[^0-9]*\([0-9][0-9]*\)[^0-9]*/\1/p' -n | head -1`"
-   echo $VERSION.$BUILD
+   echo "$VERSION.$BUILD"
 }
 
 fullpath() {
@@ -50,7 +51,7 @@ fullpath() {
 	break
       fi
     done
-    ( test "x$full" != "x" && echo $full ) || echo $1
+    ( test "x$full" != "x" && echo "$full" ) || echo "$1"
   )
 }
 
@@ -59,7 +60,7 @@ change_owner( ) {
  gid="$1";  shift
 
  for a in "$@" ; do 
-    ok=`ls -lgd $a 2>/dev/null | grep $uid | grep $gid | wc -l`
+    ok=`ls -lgd $a 2>/dev/null | grep "$uid" | grep "$gid" | wc -l`
     ok=`echo $ok`
     if [ x$ok = x1 ] ; then 
       dp "$a already has the correct ownership"
@@ -83,16 +84,16 @@ change_owner( ) {
 
 
 find_pike() {
- pike=`fullpath pike`
- if [ -x bin/pike ] ; then pike=$roxendir/bin/pike; fi
- if [ -x bin/roxen ] ; then  pike=$roxendir/bin/roxen; fi
- if [ -x $LOCALDIR/bin/pike ] ; then pike=$LOCALDIR/bin/pike; fi
- if [ -x $LOCALDIR/bin/roxen ] ; then pike=$LOCALDIR/bin/roxen; fi
+ pike="`fullpath pike`"
+ if [ -x bin/pike ] ; then pike="$roxendir/bin/pike"; fi
+ if [ -x bin/roxen ] ; then  pike="$roxendir/bin/roxen"; fi
+ if [ -x "$LOCALDIR/bin/pike" ] ; then pike="$LOCALDIR/bin/pike"; fi
+ if [ -x "$LOCALDIR/bin/roxen" ] ; then pike="$LOCALDIR/bin/roxen"; fi
  if [ "x$PIKE" = "x" ]; then :; else
    if [ -x "$PIKE" ]; then 
      pike="$PIKE"
    else
-     pikepath=`fullpath "$PIKE"`
+     pikepath="`fullpath \"$PIKE\"`"
      if [ -x "$pikepath" ]; then 
        pike="$pikepath"
      else 
@@ -111,7 +112,7 @@ find_pike() {
    exit 1
  fi
 
- PIKE=$pike
+ PIKE="$pike"
  export PIKE
 }
 
