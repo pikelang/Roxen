@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.301 2001/09/13 14:27:24 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.302 2001/09/13 21:49:46 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -4034,6 +4034,17 @@ class TagIfExists {
   }
 }
 
+class TagIfInternalExists {
+  inherit RXML.Tag;
+  constant name = "if";
+  constant plugin_name = "internal-exists";
+
+  int eval(string u, RequestID id) {
+    CACHE(5);
+    return id->conf->is_file(Roxen.fix_relative(u, id), id, 1);
+  }
+}
+
 class TagIfNserious {
   inherit RXML.Tag;
   constant name = "if";
@@ -6931,14 +6942,28 @@ just got zapped?
  <tag>define variable</tag> and an apropriate <tag>if</tag> plugin.
 </p></desc>",
 
-"if#exists":#"<desc plugin><short>
- Returns true if the file path exists.</short> If path does not begin
- with /, it is assumed to be a URL relative to the directory
- containing the page with the <tag>if</tag>-statement. Exists is a <i>Utils</i>
- plugin.
+"if#exists":#"<desc plugin='1'><p><short>
+ Returns true if the named page is viewable.</short> A non viewable page
+ is e.g. a file that matches the internal files patterns in the filesystem module.
+ If the path does not begin with /, it is assumed to be a URL relative to the directory
+ containing the page with the <tag>if</tag>-statement. 'Magic' files like /internal-roxen-unit
+ will evaluate as true.</p>
 </desc>
-<attr name='exists' value='path' required>
- Choose what path to test.
+
+<attr name='exists' value='path' required='1'>
+ <p>Choose what path in the virtual filesystem to test.</p>
+</attr>
+",
+
+"if#internal-exists":#"<desc plugin='1'><p><short>
+ Returns true if the named page exists.</short> If the page at the given path
+ is non-viewable, e.g. matchas the internal files patterns in the filesystem module,
+ it will still be detected by this if plugin. If the path does not begin with /, it
+ is assumed to be a URL relative to the directory containing the page with the if-statement.
+ 'Magic' files like /internal-roxen-unit will evaluate as true.</p>
+
+<attr name='internal-exists' value='path' required='1'>
+ <p>Choose what path in the virtual filesystem to test.</p>
 </attr>",
 
 //----------------------------------------------------------------------
