@@ -200,6 +200,7 @@ nn binary
 /server/modules/misc/randomtext.pike foreign_ident
 /server/modules/misc/sqldb.pike foreign_ident
 /server/modules/misc/userdb.pike foreign_ident
+/server/modules/misc/wapadapter.pike foreign_ident
 /server/modules/misc/ypuserdb.pike foreign_ident
 /server/modules/proxies/connect.pike foreign_ident
 /server/modules/proxies/ftpgateway.pike foreign_ident
