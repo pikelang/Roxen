@@ -1,7 +1,7 @@
 /*
  * Roxen master
  */
-string cvs_version = "$Id: roxen_master.pike,v 1.98 2000/08/29 21:57:04 mast Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.99 2000/09/01 21:38:49 mast Exp $";
 
 /*
  * name = "Roxen Master";
@@ -148,7 +148,7 @@ class MyCodec
 
 
 object mm=(object)"/master";
-inherit "/master";
+inherit "/master": master;
 
 #ifdef __NT__
 string getcwd()
@@ -394,11 +394,9 @@ void name_program( program p, string name )
 
 #if __VERSION__ > 7.0
 
-static constant MasterDescriber = ::Describer;
-
 class Describer
 {
-  inherit MasterDescriber;
+  inherit master::Describer;
 
   string describe_string (string m, int maxlen)
   {
