@@ -3,7 +3,7 @@
  * (C) 1996 - 2000 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.255 2000/01/31 03:46:26 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.256 2000/02/04 01:35:40 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -1823,9 +1823,7 @@ public array open_file(string fname, string mode, RequestID id)
       else if(id->method!="GET"&&id->method != "HEAD"&&id->method!="POST")
 	file = http_low_answer(501, "Not implemented.");
       else
-	file=http_low_answer(404,replace(parse_rxml(query("ZNoSuchFile"),id),
-					 ({"$File", "$Me"}),
-					 ({fname,query("MyWorldLocation")})));
+	file=http_low_answer(404,parse_rxml(query("ZNoSuchFile"),id));
 
       id->not_query = oq;
 
@@ -2920,36 +2918,6 @@ void create(string config)
   add_parse_module( (object)this_object() );
   name=config;
 
-  defvar("ZNoSuchFile", "<title>Sorry. I cannot find this resource</title>\n"
-	 "<body bgcolor='#ffffff' text='#000000' alink='#ff0000' "
-	 "vlink='#00007f' link='#0000ff'>\n"
-	 "<h2 align=center><configimage src=roxen.gif alt=\"File not found\">\n"
-	 "<p><hr noshade>"
-	 "\n<i>Sorry</i></h2>\n"
-	 "<br clear>\n<font size=\"+2\">The resource requested "
-	 "<i>$File</i>\ncannot be found.<p>\n\nIf you feel that this is a "
-	 "configuration error, please contact "
-	 "the administrators or the author of the\n"
-	 "<if referrer>"
-	 "<a href=\"<referrer>\">referring</a>"
-	 "</if>\n"
-	 "<else>referring</else>\n"
-	 "page."
-	 "<p>\n</font>\n"
-	 "<hr noshade>"
-	 "<version>, at <a href=\"$Me\">$Me</a>.\n"
-	 "</body>\n",
-
-	 "Messages: No such file", TYPE_TEXT_FIELD,
-	 "What to return when there is no resource or file available "
-	 "at a certain location. $File will be replaced with the name "
-	 "of the resource requested, and $Me with the URL of this server ");
-  deflocaledoc("svenska", "ZNoSuchFile",
-	       "Meddelanden: Filen finns inte",
-#"Det här meddelandet returneras om en användare frågar efter en
-  resurs som inte finns. '$File' byts ut mot den efterfrågade
-  resursen, och '$Me' med serverns URL");
-
   defvar("comment", "", "Virtual server comment",
 	 TYPE_TEXT_FIELD|VAR_MORE,
 	 "This text will be visible in the configuration interface, it "
@@ -3266,6 +3234,37 @@ the rate by this factor.",
 #"Den genomsnittliga bandvidden som varje förbindelse bestäms av
 de adderade bandvidsbegränsningsmodulerna. Hinkstorleken bestäms genom att
 multiplicera detta värde med den här faktorn.");
+
+
+  defvar("ZNoSuchFile", "<title>Sorry. I cannot find this resource</title>\n"
+	 "<body bgcolor='#ffffff' text='#000000' alink='#ff0000' "
+	 "vlink='#00007f' link='#0000ff'>\n"
+	 "<h2 align=center><configimage src=roxen.gif alt=\"File not found\">\n"
+	 "<p><hr noshade>"
+	 "\n<i>Sorry</i></h2>\n"
+	 "<br clear>\n<font size=\"+2\">The resource requested "
+	 "<i>&request.file;</i>\n"
+         "cannot be found.<p>\n\nIf you feel that this is a "
+	 "configuration error, please contact "
+	 "the administrators or the author of the\n"
+	 "<if referrer>"
+	 "<a href=\"<referrer>\">referring</a>"
+	 "</if>\n"
+	 "<else>referring</else>\n"
+	 "page."
+	 "<p>\n</font>\n"
+	 "<hr noshade>"
+	 "</body>\n",
+	 "Messages: No such file",TYPE_TEXT_FIELD,
+	 "What to return when there is no resource or file available "
+	 "at a certain location.");
+
+  deflocaledoc("svenska", "ZNoSuchFile",
+	       "Meddelanden: Filen finns inte",
+#"Det här meddelandet returneras om en användare frågar efter en
+  resurs som inte finns. '$File' byts ut mot den efterfrågade
+  resursen, och '$Me' med serverns URL");
+
 
 
   setvars(retrieve("spider#0", this_object()));

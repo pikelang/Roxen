@@ -92,11 +92,7 @@ void send_result(mapping|void result)
       file = http_low_answer(501, "Not implemented.");
     else if(err = catch {
       file=http_low_answer(404,
-                           replace(parse_rxml(conf->query("ZNoSuchFile"),
-                                              thiso),
-                                   ({"$File", "$Me"}),
-                                   ({this_object()->not_query,
-                                     conf->query("MyWorldLocation")})));
+                           parse_rxml(conf->query("ZNoSuchFile"),thiso));
     }) {
       internal_error(err);
     }
