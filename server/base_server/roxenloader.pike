@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.146 2000/02/24 17:13:26 per Exp $
+ * $Id: roxenloader.pike,v 1.147 2000/03/06 14:03:01 mast Exp $
  *
  * Roxen bootstrap program.
  *
@@ -18,7 +18,7 @@ private static object new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.146 2000/02/24 17:13:26 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.147 2000/03/06 14:03:01 mast Exp $";
 
 int pid = getpid();
 object stderr = Stdio.File("stderr");
@@ -605,6 +605,10 @@ object really_load_roxen()
   string q = e->get();
   if (err) {
     report_debug("ERROR\n" + (q||""));
+#ifdef DEBUG
+    // No idea what eats up the printout from the error thrown below.. /mast
+    werror (describe_backtrace (err));
+#endif
     throw(err);
   }
   report_debug("Done [%.1fms]\n",
