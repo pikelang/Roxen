@@ -22,7 +22,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.239 2001/01/31 09:34:38 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.240 2001/02/01 09:40:24 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1043,9 +1043,11 @@ Sql.Sql connect_to_my_mysql( string|int ro, void|string db )
   {
     if( intp( ro ) )
       ro = ro?"ro":"rw";
-    return tl->set( Sql.Sql(replace( my_mysql_path,
-				     ({"%user%", "%db%" }),
-				     ({ ro, db }))) );
+    tl->set( Sql.Sql(replace( my_mysql_path,
+			      ({"%user%", "%db%" }),
+			      ({ ro, db }))) );
+    tl->get()->query("USE "+db);
+    return tl->get( );
   } )
     if( db == "mysql" )
       throw( err );
