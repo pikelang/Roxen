@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.173 2000/08/03 19:33:51 mast Exp $
+// $Id: roxenlib.pike,v 1.174 2001/01/01 09:08:13 nilsson Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -980,7 +980,7 @@ string strftime(string fmt, int t)
       res += sprintf("%02d:%02d", lt->hour, lt->min);
       break;
     case 'S':	// Seconds [00,61]
-      res += sprintf("%02", lt->sec);
+      res += sprintf("%02d", lt->sec);
       break;
     case 't':	// Tab
       res += "\t";
