@@ -15,7 +15,8 @@ string|mapping parse( object id )
                 base_server->
                 disabling_configuration(cf->name));
 
-  rm( roxen.configuration_dir + "/" + cf->name );
+  string cfname = roxen.configuration_dir + "/" + cf->name;
+  mv (cfname, cfname + "~");
   roxen->configurations -= ({ cf });
   roxen->remove_configuration( cf->name );
   cf->stop();
