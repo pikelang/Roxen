@@ -16,7 +16,10 @@
 /server/nfonts/bastard.txt !eol
 /server/nfonts/puppyface.txt !eol
 *.xcf binary
+bi binary
+bn binary
 map binary
+ni binary
 nn binary
 
 # Handling of foreign (ie CVS) identifiers.
