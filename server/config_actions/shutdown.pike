@@ -1,7 +1,7 @@
 inherit "roxenlib";
 constant name= "Shut down Roxen...";
 
-constant doc = ("Restart or Shut Down roxen.");
+constant doc = ("Restart or shut down Roxen.");
 
 mixed handle(object id, object mc)
 {
@@ -20,7 +20,7 @@ mixed handle(object id, object mc)
 	    "<input type=hidden name=action value="+id->variables->action+">"
 	    "<input type=radio name=how value=not> Not at all<br>"
 	    "<input type=radio name=how checked value=reset> Restart Roxen<br>"
-	    "<input type=radio name=how value=shutdown> Shut down roxen (no automatic restart)<br>"
+	    "<input type=radio name=how value=shutdown> Shut down Roxen (no automatic restart)<br>"
 	    "</tr><tr><td>"
 	    "<input type=submit name=ok value=\" Ok \"></form>"
 	    "</td><td align=right>"
