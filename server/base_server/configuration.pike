@@ -3,7 +3,7 @@
  * (C) 1996 - 2000 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.254 2000/01/27 01:16:04 jhs Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.255 2000/01/31 03:46:26 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -180,17 +180,17 @@ class Priority
 
   void stop()
   {
-    foreach(url_modules, RoxenModule m)      	
+    foreach(url_modules, RoxenModule m)
       CATCH("stopping url modules",m->stop && m->stop());
-    foreach(logger_modules, RoxenModule m)   	
+    foreach(logger_modules, RoxenModule m)
       CATCH("stopping logging modules",m->stop && m->stop());
-    foreach(filter_modules, RoxenModule m)  		
+    foreach(filter_modules, RoxenModule m)
       CATCH("stopping filter modules",m->stop && m->stop());
-    foreach(location_modules, RoxenModule m)		
+    foreach(location_modules, RoxenModule m)
       CATCH("stopping location modules",m->stop && m->stop());
-    foreach(last_modules, RoxenModule m)    		
+    foreach(last_modules, RoxenModule m)
       CATCH("stopping last modules",m->stop && m->stop());
-    foreach(first_modules, RoxenModule m)    	
+    foreach(first_modules, RoxenModule m)
       CATCH("stopping first modules",m->stop && m->stop());
     foreach(indices(provider_modules), RoxenModule m)
       CATCH("stopping provider modules",m->stop && m->stop());
@@ -577,15 +577,15 @@ void init_log_file()
 	    break;
 	  }
 	}
-	log_function=lf->write;	
+	log_function=lf->write;
 	// Function pointer, speeds everything up (a little..).
 	lf=0;
       } while(0);
     } else
-      log_function=0;	
+      log_function=0;
     call_out(init_log_file, 60);
   } else
-    log_function=0;	
+    log_function=0;
 }
 
 // Parse the logging format strings.
@@ -866,7 +866,7 @@ int|mapping check_security(function a, RequestID id, void|int slevel)
 	  ip_ok |= 1;	// IP may be bad.
 	}
 	break;
-	
+
       case MOD_DENY: // deny ip=...
 
 	// FIXME: LOCALE?
@@ -881,7 +881,7 @@ int|mapping check_security(function a, RequestID id, void|int slevel)
 	  auth_ok |= 1;	// Auth may be bad.
 	}
 	break;
-	
+
       case MOD_PROXY_USER: // allow user=...
 	if (ip_ok != 1) {
 	  // IP is OK as of yet.
@@ -1106,7 +1106,7 @@ string examine_return_mapping(mapping m)
       case 200:
 	 res = LOCALE->returned_ok();
 	 break;
-	
+
       default:
 	 res = LOCALE->returned_error(m->error);
    }
@@ -1287,7 +1287,7 @@ mapping|int low_get_file(RequestID id, int|void no_magic)
       if(objectp( tmp ))
       {
 	array err;
-	
+
 	nest ++;
 	err = catch {
 	  if( nest < 20 )
@@ -1335,7 +1335,7 @@ mapping|int low_get_file(RequestID id, int|void no_magic)
 	if(fid)
 	{
 	  id->virtfile = loc;
-	
+
 	  if(mappingp(fid))
 	  {
 	    TRACE_LEAVE("");
@@ -1357,7 +1357,7 @@ mapping|int low_get_file(RequestID id, int|void no_magic)
 			  +(slevel != oslevel?
 			    LOCALE->seclevel_is_now(slevel):"")
 #endif
-			
+
 			  +".");
 	    else
 	      TRACE_LEAVE(LOCALE->returned_directory_indicator()
@@ -1375,14 +1375,14 @@ mapping|int low_get_file(RequestID id, int|void no_magic)
 	// the mountpoint is /local/. It will slow things down, but...
 	TRACE_ENTER(LOCALE->automatic_redirect_to_location(), tmp[1]);
 	TRACE_LEAVE(LOCALE->returning_data());
-	
+
 	// Keep query (if any).
 	/* FIXME: Should probably keep prestate etc.
 	 *	/grubba 1999-01-14
 	 */
 	string new_query = http_encode_string(id->not_query) + "/" +
 	  (id->query?("?"+id->query):"");
-	
+
 	return http_redirect(new_query, id);
       }
     }
@@ -2433,7 +2433,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
 			 " kunna få använda modulen.");
       } else {
 	me->definvisvar("_seclvl", -10, TYPE_INT); /* A very low one */
-	
+
 	me->defvar("_sec_group", "user", "Proxy Security: Realm", TYPE_STRING,
 		   "The realm to use when requesting password from the "
 		   "client. Usually used as an informative message to the "
@@ -2978,7 +2978,7 @@ void create(string config)
 
 	 "Logging: Format",
 	 TYPE_TEXT_FIELD|VAR_MORE,
-	
+
 	 "What format to use for logging. The syntax is:\n"
 	 "<pre>"
 	 "response-code or *: Log format for that response acode\n\n"
@@ -3056,7 +3056,7 @@ $user_id       -- Ett unikt användarid. Tas från kakan RoxenUserID, du
                   globala inställningarna. '0' används för de
                   förfrågningar som inte har kakan.
 </pre>");
-	
+
 
   defvar("Log", 1, "Logging: Enabled", TYPE_FLAG, "Log requests");
   deflocaledoc("svenska", "Log", "Loggning: På",
@@ -3109,7 +3109,7 @@ $user_id       -- Ett unikt användarid. Tas från kakan RoxenUserID, du
 		"DNS Domän",
 #"Serverns domännamn. Det av en del RXML styrkoder för att generara
 epostadresser, samt för att generera skönskvärdet för serverurl variablen.");
-		
+
 
   defvar("MyWorldLocation", "", "Server URL", TYPE_STRING,
 	 "This is the main server URL, where your start page is located.");
