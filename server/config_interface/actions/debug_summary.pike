@@ -1,5 +1,5 @@
 /*
- * $Id: debug_summary.pike,v 1.3 2002/04/17 13:25:13 anders Exp $
+ * $Id: debug_summary.pike,v 1.4 2002/04/22 11:32:39 anders Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -144,13 +144,15 @@ string make_summary()
     res+=indent(make_configuration_summary(configuration),1);
   }
   return res;
-}  
+}
 
 mixed parse( RequestID id )
 {
   string res;
+  string debuglog = roxen_path("$LOGDIR/debug/default.1");
 
-  if (id->real_variables->download) {
+  if (id->variables->download &&
+      id->variables->download == "summary") {
     res = make_headline("Debug summary")+"\n";
     res += make_summary();
     mapping ret = Roxen.http_string_answer(res, "application/octet-stream");
@@ -159,9 +161,25 @@ mixed parse( RequestID id )
 			  "attachment; filename=debug-summary.txt");
     return ret;
   }
+  else if (id->variables->download &&
+	   id->variables->download == "debuglog") {
+    string res = "---";
+    object st = file_stat(debuglog);
+    if (st && st->isreg)
+      res = Stdio.read_file(debuglog);
+    mapping ret = Roxen.http_string_answer(res, "application/octet-stream");
+    ret["extra_heads"] = ([]);
+    Roxen.add_http_header(ret["extra_heads"], "Content-Disposition",
+			  "attachment; filename="+((debuglog/"/")[-1]));
+    return ret;
+  }
   
   res = "<h1>Debug summary</h1>\n";
-  res += "<link-gbutton href='debug_summary.pike?download=yes'>Download"
+  res += "<link-gbutton href='debug_summary.pike?download=summary'>Download"
+    "</link-gbutton>";
+  if (file_stat(debuglog))
+    res += "<link-gbutton href='debug_summary.pike?download=debuglog'>"
+      "Download debug log"
     "</link-gbutton>";
 
   res += "<pre>"+Roxen.html_encode_string(make_summary())+"</pre>";
