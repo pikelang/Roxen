@@ -1,20 +1,12 @@
 string help_cont(string t, mapping m, string c, string rt)
 {
+  string dt=rt;
   switch(t){
   case "desc":
     m->type=m->type||"";
-    switch(m->type) {
-    case "tag":
-      rt=sprintf("&lt;%s&gt;", rt);
-      break;
-    case "container":
-    case "cont":
-      rt=sprintf("&lt;%s&gt;&lt;/%s&gt;", rt, rt);
-      break;
-    default:
-      if(m->type!="") rt=rt+", "+m->type;
-    }
-    return sprintf("<h2>%s</h2><p>%s</p>",rt,c);
+    if(m->tag) dt=sprintf("&lt;%s/&gt;", rt);
+    if(m->cont) dt=(m->tag?dt+" and ":"")+sprintf("&lt;%s&gt;&lt;/%s&gt;", rt, rt);
+    return sprintf("<h2>%s</h2><p>%s</p>",dt,c);
   case "attr":
     string p="";
     if(!m->name) m->name="(Not entered)";
