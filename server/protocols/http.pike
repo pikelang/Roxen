@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.395 2003/11/03 13:49:20 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.396 2004/01/19 15:54:43 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1896,10 +1896,13 @@ void handle_request( )
   if(e= catch(result = conf->handle_request( this_object() )))
     INTERNAL_ERROR( e );
 
-  if (result && result->pipe)
-    // Could be destructed here already since handle_request might
-    // have handed over us to another thread that finished quickly.
-    return;
+  else {
+    if (result && result->pipe)
+      // Could be destructed here already since handle_request might
+      // have handed over us to another thread that finished quickly.
+      return;
+    file = result;
+  }
   
   if( file )
     if( file->try_again_later )
