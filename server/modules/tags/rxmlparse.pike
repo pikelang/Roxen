@@ -12,7 +12,7 @@
 
 #define old_rxml_compat 1
 
-constant cvs_version="$Id: rxmlparse.pike,v 1.24 1999/10/03 00:09:44 jhs Exp $";
+constant cvs_version="$Id: rxmlparse.pike,v 1.25 1999/10/08 12:43:23 nilsson Exp $";
 constant thread_safe=1;
 
 constant language = roxen->language;
@@ -216,36 +216,6 @@ string tagtime(int t,mapping m,object id)
   }
   return s;
 #endif
-}
-
-string api_read_file(object id, string file)
-{
-  string s, f = fix_relative(file, id);
-  id = id->clone_me();
-
-  if(id->scan_for_query)
-    f = id->scan_for_query( f );
-  s = id->conf->try_get_file(f, id);
-
-  if (!s) {
-
-    // Might be a PATH_INFO type URL.
-    array a = id->conf->open_file( f, "r", id );
-    if(a && a[0])
-    {
-      s = a[0]->read();
-      if(a[1]->raw)
-      {
-        s -= "\r";
-        if(!sscanf(s, "%*s\n\n%s", s))
-          sscanf(s, "%*s\n%s", s);
-      }
-    }
-    if(!s)
-      return rxml_error("insert", "No such file ("+f+").", id);
-  }
-
-  return s;
 }
 
 string tag_modified(string tag, mapping m, object id, object file)
@@ -519,6 +489,10 @@ void add_api_function( string name, function f, void|array(string) types)
 {
   if(this_object()["_api_functions"])
     this_object()["_api_functions"][name] = ({ f, types });
+}
+
+string api_read_file(object id, string file) {
+  return API_read_file(id,file)||rxml_error("insert", "No such file ("+file+").", id);
 }
 
 string tag_modified_wrapper(object id, string tag, mapping m, object file)

@@ -10,7 +10,7 @@
 #define old_rxml_compat 1
 #define old_rxml_warning id->conf->api_functions()->old_rxml_warning[0]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.17 1999/10/06 15:25:10 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.18 1999/10/08 12:43:23 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -588,7 +588,7 @@ string|array(string) tag_insert(string tag,mapping m,object id)
     if(m->nocache) {
       int nocache=id->pragma["no-cache"];
       id->pragma["no-cache"] = 1;
-      n=id->conf->api_functions()->read_file[0](id, m->file);
+      n=API_read_file(id,m->file)||rxml_error("insert", "No such file ("+m->file+").", id);
       id->pragma["no-cache"] = nocache;
 #if old_rxml_compat
       m_delete(m, "nocache");
@@ -599,11 +599,10 @@ string|array(string) tag_insert(string tag,mapping m,object id)
 #endif
     }
 #if old_rxml_compat
-    n=m->file;
-    m_delete(m, "file");
-    return do_replace(id->conf->api_functions()->read_file[0](id, n), m, id);
+    string|int n=API_read_file(id,m->file);
+    return n?do_replace(n, m-(["file":""]), id):rxml_error("insert", "No such file ("+m->file+").", id);
 #else
-    return id->conf->api_functions()->read_file[0](id, m->file);
+    return API_read_file(id,m->file)||rxml_error("insert", "No such file ("+m->file+").", id);
 #endif
   }
 
@@ -680,6 +679,56 @@ array(string) tag_modified(string tag, mapping m, object id, object file)
 
 
 // ------------------- Containers ----------------
+
+string tag_for(string t, mapping args, string c, RequestID id)
+{
+  string v = args->variable;
+  int from = (int)args->from;
+  int to = (int)args->to;
+  int step = (int)args->step!=0?(int)args->step:(to<from?-1:1);
+
+  if((to<from && step>0)||(to>from && step<0)) to=from+step;
+
+  string res="";
+  if(to<from) {
+    for(int i=from; i>=to; i+=step)
+      res += "<set variable="+v+" value="+i+">"+c;
+    return res;
+  }
+  else if(to>from) {
+    for(int i=from; i<=to; i+=step)
+      res += "<set variable="+v+" value="+i+">"+c;
+    return res;
+  }
+
+  return "<set variable="+v+" value="+to+">"+c;
+}
+
+string tag_foreach(string t, mapping args, string c, RequestID id)
+{
+  string v = args->variable;
+  array what;
+  if(!args->in)
+    return rxml_error(t, "No in attribute given.", id);
+  if(args->variables)
+    what = Array.map(args->in/"," - ({""}),
+		     lambda(string name, mapping v) {
+				     return v[name] || "";
+				   }, id->variables);
+  else
+    what = Array.map(args->in / "," - ({""}),
+		     lambda(string var) {
+		       sscanf(var, "%*[ \t\n\r]%s", var);
+		       var = reverse(var);
+		       sscanf(var, "%*[ \t\n\r]%s", var);
+		       return reverse(var);
+		     });
+  
+  string res="";
+  foreach(what, string w) 
+    res += "<set variable="+v+" value="+w+">"+c;
+  return res;
+}
 
 string tag_aprestate(string tag, mapping m, string q, object id)
 {
@@ -1337,6 +1386,8 @@ mapping query_container_callers()
 		   },
 	   "doc":tag_doc,
 	   "default":tag_default,
+           "for":tag_for,
+           "foreach":tag_foreach,
 	   "formoutput":tag_formoutput,
 	   "gauge":tag_gauge,
            "maketag":tag_maketag,
