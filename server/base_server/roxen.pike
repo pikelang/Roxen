@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.670 2001/06/06 02:39:51 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.671 2001/06/13 13:17:44 per Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -1950,6 +1950,18 @@ class ImageCache
 //! being a cache, however, it serves a wide variety of other
 //! interesting image conversion/manipulation functions as well.
 {
+#ifndef THREADS
+#define QUERY(X,Y...) db->query(X,Y)
+#else
+  Thread.Mutex mutex = Thread.Mutex();
+  array(mapping) do_query( string X, mixed ... Y )
+  {
+    object key = mutex->lock();
+    return db->query(X,@Y);
+  }
+#define QUERY(X,Y...) do_query(X,Y)
+#endif
+
   Sql.Sql db;
   string name;
   string dir;
@@ -2474,9 +2486,9 @@ class ImageCache
     if(!stringp(data)) return;
     meta_cache_insert( id, meta );
     string meta_data = encode_value( meta );
-    db->query( "INSERT INTO "+name+"_data VALUES (%s,%s,%s)",
+    QUERY( "INSERT INTO "+name+"_data VALUES (%s,%s,%s)",
                id,meta_data,data);
-    db->query( "INSERT INTO "+name+" VALUES ('"+id+"', "+strlen(data)+
+    QUERY( "INSERT INTO "+name+" VALUES ('"+id+"', "+strlen(data)+
 	       ", UNIX_TIMESTAMP(), UNIX_TIMESTAMP())" );
   }
 
@@ -2485,21 +2497,21 @@ class ImageCache
     if( meta_cache[ id ] )
       return meta_cache[ id ];
 
-    array(mapping(string:string)) q = db->query("SELECT meta FROM "+
+    array(mapping(string:string)) q = QUERY("SELECT meta FROM "+
                                                 name+"_data WHERE id='"+
                                                 id+"'");
     if(!sizeof(q))
       return 0;
 
-    db->query("UPDATE "+name+" SET atime=UNIX_TIMESTAMP() WHERE id='"+id+"'" );
+    QUERY("UPDATE "+name+" SET atime=UNIX_TIMESTAMP() WHERE id='"+id+"'" );
 
     string s = q[0]->meta;
     mapping m;
     if (catch (m = decode_value (s)))
     {
       report_error( "Corrupt data in cache-entry "+id+".\n" );
-      db->query( "DELETE FROM "+name+" WHERE id='"+id+"'" );
-      db->query( "DELETE FROM "+name+"_data WHERE id='"+id+"'" );
+      QUERY( "DELETE FROM "+name+" WHERE id='"+id+"'" );
+      QUERY( "DELETE FROM "+name+"_data WHERE id='"+id+"'" );
       return 0;
     }
     return meta_cache_insert( id, m );
@@ -2513,20 +2525,20 @@ class ImageCache
     report_debug("Flushing "+name+" image cache.\n");
     if( !age )
     {
-      db->query( "DELETE FROM "+name );
-      db->query( "DELETE FROM "+name+"_data" );
+      QUERY( "DELETE FROM "+name );
+      QUERY( "DELETE FROM "+name+"_data" );
       return;
     }
 
-    array(string) ids = db->query( "SELECT id FROM "+name+" WHERE atime < "+age)->id;
+    array(string) ids = QUERY( "SELECT id FROM "+name+" WHERE atime < "+age)->id;
 
     int q;
     while(q<sizeof(ids)) {
       string list = ids[q..q+100] * "','";
       q+=100;
 
-      db->query( "DELETE FROM "+name+     " WHERE id in ('"+list+"')" );
-      db->query( "DELETE FROM "+name+"_data WHERE id in ('"+list+"')" );
+      QUERY( "DELETE FROM "+name+     " WHERE id in ('"+list+"')" );
+      QUERY( "DELETE FROM "+name+"_data WHERE id in ('"+list+"')" );
     }
 
     catch
@@ -2534,8 +2546,8 @@ class ImageCache
       // Old versions of Mysql lacks OPTIMIZE. Not that we support
       // them, really, but it might be nice not to throw an error, at
       // least.
-      db->query( "OPTIMIZE TABLE "+name+"_data" );
-      db->query( "OPTIMIZE TABLE "+name );
+      QUERY( "OPTIMIZE TABLE "+name+"_data" );
+      QUERY( "OPTIMIZE TABLE "+name );
     };
 
     meta_cache = ([]);
@@ -2551,7 +2563,7 @@ class ImageCache
     int imgs=0, size=0, aged=0;
     array(mapping(string:string)) q;
 
-    q=db->query("SHOW TABLE STATUS");
+    q=QUERY("SHOW TABLE STATUS");
     foreach(q, mapping qq)
       if(has_prefix(qq->Name, name)) {
 	imgs = (int)qq->Rows;
@@ -2559,7 +2571,7 @@ class ImageCache
       }
 
     if(age) {
-      q=db->query("select SUM(1) as num from "+name+" where atime < "+age);
+      q=QUERY("select SUM(1) as num from "+name+" where atime < "+age);
       aged = (int)q[0]->num;
     }
     return ({ imgs, size, aged });
@@ -2571,7 +2583,7 @@ class ImageCache
     if( rst_cache[ id ] )
       return rst_cache[ id ] + ([]);
 
-    array q = db->query( "SELECT data FROM "+name+"_data WHERE id=%s",id);
+    array q = QUERY( "SELECT data FROM "+name+"_data WHERE id=%s",id);
     if( sizeof(q) )
     {
       string f = q[0]->data;
@@ -2701,15 +2713,15 @@ class ImageCache
 
   static void setup_tables()
   {
-    if(catch(db->query("select id from "+name+" where id=''")))
+    if(catch(QUERY("select id from "+name+" where id=''")))
     {
-      db->query("CREATE TABLE "+name+" ("
+      QUERY("CREATE TABLE "+name+" ("
                 "id CHAR(64) NOT NULL PRIMARY KEY, "
                 "size INT UNSIGNED NOT NULL DEFAULT 0, "
                 "ctime INT UNSIGNED NOT NULL DEFAULT 0, "
                 "atime INT UNSIGNED NOT NULL DEFAULT 0)");
 
-      db->query("CREATE TABLE "+name+"_data ("
+      QUERY("CREATE TABLE "+name+"_data ("
                 "id CHAR(64) NOT NULL PRIMARY KEY, "
 		"meta MEDIUMBLOB NOT NULL DEFAULT '',"
                 "data MEDIUMBLOB NOT NULL DEFAULT '')");
@@ -2759,11 +2771,21 @@ class ArgCache
 #define CLEAN_SIZE  100
 
   static string lq, ulq;
+#ifdef THREADS
+  Thread.Mutex mutex = Thread.Mutex();
+#endif
+  
 #ifdef DB_SHARING
   class DBLock
   {
+#ifdef THREADS
+    object key;
+#endif
     static void create()
     {
+#ifdef THREADS
+      key = mutex->lock();
+#endif
       if(!lq)
       {
 	lq = "select GET_LOCK('"+name+"', 4)";
@@ -2773,7 +2795,10 @@ class ArgCache
     }
     static void destroy()
     {
+#ifdef THREADS
       db->query( ulq );
+#endif
+      key = 0;
     }
   }
 # define LOCK() DBLock __ = DBLock()
