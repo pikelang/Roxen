@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
 
 constant thread_safe=1;
-constant cvs_version = "$Id: sizer.pike,v 1.21 2001/09/10 15:29:52 nilsson Exp $";
+constant cvs_version = "$Id: sizer.pike,v 1.22 2001/09/19 13:52:05 jhs Exp $";
 #include <request_trace.h>
 #include <module.h>
 inherit "module";
@@ -522,7 +522,7 @@ constant tagdoc=([
  Calculates the size of a page and estimates the
  downloadtime.</short><tag>page-size</tag> calculates the size of a
  page, including inline images, and gives estimates of the time it
- will take to download the page. All information is shown in a box.
+ will take to download the page. All information is shown in a box.</p>
 
 <ex-html>
 <table width='400' cellpadding='0' cellspacing='0' border='0' bgcolor='black'><tr><td>
@@ -548,9 +548,6 @@ constant tagdoc=([
 </table>
 </td></tr></table>
 </ex-html>
-
-</p>
-
 </desc>
 
 <attr name=page value=path>
