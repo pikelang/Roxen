@@ -1,5 +1,5 @@
 /*
- * $Id: upgrade.pike,v 1.19 2000/02/24 23:53:04 js Exp $
+ * $Id: upgrade.pike,v 1.20 2000/02/25 00:00:14 js Exp $
  *
  * The Roxen Upgrade Client
  * Copyright © 2000, Roxen IS.
@@ -24,6 +24,8 @@ object db;
 object updater;
 Yabu.Table pkginfo, misc, installed;
 
+constant pkgdir = "../packages";  /* FIXME: Make user configurable */
+
 mapping(int:GetPackage) package_downloads = ([ ]);
 
 int inited;
@@ -33,6 +35,7 @@ void post_start()
   pkginfo=db["pkginfo"];
   misc=db["misc"];
   installed=db["installed"];
+  mkdir(pkgdir);
   updater=UpdateInfoFiles();
 }
 
@@ -60,8 +63,8 @@ void create()
   query_tag_set()->prepare_context=set_entities;
   defvar("yabudir", "../upgrade_data/", "Database directory",
 	 TYPE_DIR, ""); /* Keep this in server and regenerate on upgrade */
-  defvar("pkgdir", "../packages/", "Database directory",
-	 TYPE_DIR, "");
+  /*  defvar("pkgdir", "../packages/", "Database directory",
+      TYPE_DIR, "");*/
   defvar("server", "community.roxen.com", "Server host",
 	 TYPE_STRING, "");
   defvar("port", 80, "Server port",
@@ -213,7 +216,7 @@ string container_upgrade_download_progress_output(string t, mapping m,
 string container_upgrade_downloaded_packages_output(string t, mapping m,
 					    string c, RequestID id)
 {
-  array(int) packages=sort((array(int))glob("*.tar",get_dir(QUERY(pkgdir))));
+  array(int) packages=sort((array(int))glob("*.tar",get_dir(pkgdir)));
   array res=({ });
 
   foreach(packages, int package)
@@ -320,7 +323,7 @@ string tag_upgrade_install_package(string t, mapping m, RequestID id)
 
   mixed err;
   string res;
-  if(err=catch(res=unpack_tarfile(QUERY(pkgdir)+(int)m->package+".tar")))
+  if(err=catch(res=unpack_tarfile(pkgdir+(int)m->package+".tar")))
     return err+"<br><br><b>Could not install package. Fix the problems above and try again.</b>";
 
   id->variables[m->variable]="1";
@@ -355,7 +358,7 @@ string tag_upgrade_package_contents(string t, mapping m, RequestID id)
   if(!m->package)
     return "No package argument.";
 
-  return tarfile_contents(QUERY(pkgdir)+m->package+".tar")*"\n";
+  return tarfile_contents(pkgdir+m->package+".tar")*"\n";
 }
 
 string encode_ranges(array(int) a)
@@ -417,7 +420,7 @@ mapping get_headers()
 
 int completely_downloaded(int num)
 {
-  array stat=file_stat(QUERY(pkgdir)+num+".tar");
+  array stat=file_stat(pkgdir+num+".tar");
 
   return (stat && stat[1]==pkginfo[(string)num]->size);
 }
@@ -457,18 +460,18 @@ class GetPackage
     Stdio.File f;
     num=_num;
 
-    if(catch(f=Stdio.File(QUERY(pkgdir)+num+".tar","wc")))
+    if(catch(f=Stdio.File(pkgdir+num+".tar","wc")))
     {
       report_error("Upgrade: Failed to open file for writing: "+
-		   QUERY(pkgdir)+num+".tar\n");
+		   pkgdir+num+".tar\n");
       catch(m_delete(package_downloads, num));
       return;
     }
     if(catch(f->write(httpquery->data())))
     {
       report_error("Upgrade: Failed to write package to file: "+
-		   QUERY(pkgdir)+num+".tar\n");
-      catch(rm(QUERY(pkgdir)+num+".tar"));
+		   pkgdir+num+".tar\n");
+      catch(rm(pkgdir+num+".tar"));
       catch(m_delete(package_downloads, num));
       return;
     }
