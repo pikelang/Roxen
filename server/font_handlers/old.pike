@@ -2,7 +2,7 @@
 // Copyright © 1996 - 2000, Roxen IS.
 
 #include <config.h>
-constant cvs_version = "$Id: old.pike,v 1.8 2001/02/02 06:59:04 nilsson Exp $";
+constant cvs_version = "$Id: old.pike,v 1.9 2001/03/23 03:13:19 per Exp $";
 
 constant name = "Compatibility bitmap fonts";
 constant doc = 
@@ -85,6 +85,8 @@ array has_font( string name, int size )
 {
   string base_dir;
   array available;
+  if( String.width( name ) > 8 )
+    return 0;
   foreach(roxen->query("font_dirs"), string dir)
   {
     base_dir = dir+size+"/"+fix_name(name);
@@ -116,6 +118,8 @@ class MyFont {
 
 Font open( string name, int size, int bold, int italic )
 {
+  if( String.width( name ) > 8 )
+    return 0;
   string f = make_font_name( name, size, bold, italic );
   Image.Font fn = MyFont();
   foreach( roxen->query( "font_dirs"), string dir )
