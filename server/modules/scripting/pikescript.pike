@@ -8,7 +8,7 @@
 
 // This is an extension module.
 
-constant cvs_version = "$Id: pikescript.pike,v 1.29 1998/08/10 21:38:07 per Exp $";
+constant cvs_version = "$Id: pikescript.pike,v 1.30 1999/02/01 00:36:37 peter Exp $";
 constant thread_safe=1;
 
 mapping scripts=([]);
@@ -28,8 +28,10 @@ mixed *register_module()
     "Pike script support", 
     "Support for user Pike-scripts, like CGI, but handled internally in the"
     " server, and thus much faster, but blocking, and less secure.\n"
+    "<br><img src=/image/err_2.gif align=left alt=\"\">"
     "NOTE: This module should not be enabled if you allow anonymous PUT!<br>\n"
-    "NOTE: Enabling this module is the same thing as letting your users run programs with the same right as the server!"
+    "NOTE: Enabling this module is the same thing as letting your users run"
+    " programs with the same right as the server!"
     });
 }
 

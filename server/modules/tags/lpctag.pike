@@ -7,7 +7,7 @@
 //  return "Hello world!\n";
 // </pike>
  
-constant cvs_version = "$Id: lpctag.pike,v 1.18 1998/09/17 12:36:59 mast Exp $";
+constant cvs_version = "$Id: lpctag.pike,v 1.19 1999/02/01 00:36:47 peter Exp $";
 constant thread_safe=1;
 
 inherit "roxenlib";
@@ -18,23 +18,28 @@ array register_module()
 {
   return ({ MODULE_PARSER,
 	    "Pike tag", 
-	    "This module adds a new tag, &lt;pike&gt;&lt;/pike&gt;. It makes it possible"
-	    " to insert some pike code directly in the document."
-	      " Example:<p><pre>"
-	      " &lt;pike&gt; "
-	      "   return \"Hello world!\\n\";"
-	      " &lt;/pike&gt;\n</pre>"
-	      "<p>Arguments: Any, all arguments are passed to the script "
-	      " in the mapping args. There are also a few helper functions "
-	      "available, "
-	      " output(string fmt, mixed ... args) is a fast way to add new"
-	      " data to a dynamic buffer, flush() returns the contents of the"
-	      " buffer as a string.  A flush() is done automatically if the"
-	      " \"script\" does not return any data, thus, another way to write the"
-	      " hello world script is <tt>&lt;pike&gt;output(\"Hello %s\n\", \"World\");&lt/pike&gt</tt><p>"
-	      "The request id is available as id, all defines are available "
-	      "in the mapping 'defines'. ",
-	      ({}), 1 });
+	    "This module adds a new tag, &lt;pike&gt;&lt;/pike&gt;. It makes"
+	    " it possible to insert some pike code directly in the document."
+	    "<br><img src=/image/err_2.gif align=left alt=\"\">"
+	    "NOTE: This module should not be enabled if you allow anonymous"
+	    " PUT!<br>\n"
+	    "NOTE: Enabling this module is the same thing as letting your"
+	    " users run programs with the same right as the server!"
+	    "<p>Example:<p><pre>"
+	    " &lt;pike&gt; "
+	    "   return \"Hello world!\\n\";"
+	    " &lt;/pike&gt;\n</pre>"
+	    "<p>Arguments: Any, all arguments are passed to the script "
+	    " in the mapping args. There are also a few helper functions "
+	    "available, "
+	    " output(string fmt, mixed ... args) is a fast way to add new"
+	    " data to a dynamic buffer, flush() returns the contents of the"
+	    " buffer as a string.  A flush() is done automatically if the"
+	    " \"script\" does not return any data, thus, another way to write the"
+	    " hello world script is <tt>&lt;pike&gt;output(\"Hello %s\n\", \"World\");&lt/pike&gt</tt><p>"
+	    "The request id is available as id, all defines are available "
+	    "in the mapping 'defines'. ",
+	    ({}), 1 });
 }
 
 void create()
