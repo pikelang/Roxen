@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.137 2000/11/20 08:34:41 per Exp $
+# $Id: start,v 1.138 2000/11/20 08:37:04 per Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -644,9 +644,13 @@ start_roxen() {
       ulimit -n $nfds 2>/dev/null
     done
   fi
-  dp "Maximum number of open FDs: `ulimit -n`"
-  if [ "`ulimit -n`" -lt 1024 ] 2>/dev/null; then
-    dp "Warning: This is dangerously low"
+  if [ x`ulimit -n` = xunlimited ] ; then
+    dp "Maximum number of open FDs: unlimited (2147483648)"
+  else
+    dp "Maximum number of open FDs: `ulimit -n`"
+    if [ "`ulimit -n`" -lt 1024 ] 2>/dev/null; then
+      dp "Warning: This is dangerously low"
+    fi
   fi
 
   if [ x$remove_dumped = x1 ] ; then
