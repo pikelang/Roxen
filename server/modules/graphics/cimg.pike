@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.50 2002/06/18 16:17:13 nilsson Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.51 2002/07/03 13:02:13 nilsson Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -158,8 +158,12 @@ array(Image.Layer)|mapping generate_image( mapping args, RequestID id )
   else
   {
     mixed tmp = roxen.load_layers( args->src, id, opts );
-    if (mappingp(tmp) && tmp->error == 401)
-      return tmp;
+    if (mappingp(tmp)) {
+      if (tmp->error == 401)
+	return tmp;
+      else
+	layers = 0;
+    }
     else layers = tmp;
   }
 
@@ -170,7 +174,10 @@ array(Image.Layer)|mapping generate_image( mapping args, RequestID id )
     else
       error("Failed to load specified image [%O]\n", args->src);
   }
-  
+
+  if (!sizeof(layers->image() - ({0})))
+    error("Failed to decode layers in specified image [%O]\n", args->src);
+
   layers->set_misc_value( "visible",1 );
   foreach( layers, Image.Layer lay )
     if( !lay->get_misc_value( "name" ) )
