@@ -307,6 +307,22 @@ class ConfigurationSettings
 		   "configuration interface"),
 	    ({ -2, -1, 0, 1, 2, }) );
 
+    defvar( "modulelistmode", "uf",
+	    LOCALE(0,"Module list mode"),
+	    TYPE_STRING_LIST,
+	    LOCALE(0,"The module list mode. One of "
+		   "<dl>"
+		   "<dt>Folded</dt><dd>Modules in the same group are folded</dd>"
+		   "<dt>UnFolded</dt><dd>Like the 'old' Roxen 2.1 list</dd>"
+		   "<dt>JavaScript Popup</dt><dd>Like Folded, but when you "
+		   "move the mouse over a folded group, a menu with the folded "
+		   "modules will popup</dd></dl>"),
+	    ([
+	      "js": LOCALE(0,"Folded with javascript popup"),
+	      "fl": LOCALE(0,"Folded"),
+	      "uf": LOCALE(0,"Unfolded (old stype)"),
+	    ]) );
+
     defvar( "configlistmode", 0,
             LOCALE(278, "Compact site list" ),
             TYPE_FLAG,
