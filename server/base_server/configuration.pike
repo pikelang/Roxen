@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.186 1999/05/01 18:22:49 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.187 1999/05/12 08:00:35 per Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -678,15 +678,7 @@ void init_log_file()
     if(strlen(logfile))
     {
       do {
-// #ifndef THREADS
-// 	object privs = Privs(LOCALE->opening_logfile(logfile));
-// #endif
 	object lf=open( logfile, "wac");
-// #if efun(chmod)
-// #if efun(geteuid)
-// 	if(geteuid() != getuid()) catch {chmod(logfile,0666);};
-// #endif
-// #endif
 	if(!lf) {
 	  mkdirhier(logfile);
 	  if(!(lf=open( logfile, "wac"))) {
@@ -3500,9 +3492,6 @@ mapping sql_cache = ([]);
 object sql_cache_get(string what)
 {
 #ifdef THREADS
-#if !constant(this_thread)
-  return Sql.sql( what );
-#else
   if(sql_cache[what] && sql_cache[what][this_thread()])
     return sql_cache[what][this_thread()];
   if(!sql_cache[what])
@@ -3510,7 +3499,6 @@ object sql_cache_get(string what)
   else
     sql_cache[what][ this_thread() ] = Sql.sql( what );
   return sql_cache[what][ this_thread() ];
-#endif   /* !this_thread */
 #else /* !THREADS */
   if(!sql_cache[what])
     sql_cache[what] =  Sql.sql( what );
@@ -3529,6 +3517,190 @@ object sql_connect(string db)
 
 // END SQL
 
+// #if 0
+// Start Argument Cache (for tag modules, mainly, id<->argument mapping)
+class ArgCache
+{
+  static string name;
+  static string path;
+  static int is_db;
+  static object db;
+
+#define CACHE_VALUE 0
+#define CACHE_SKEY  1
+#define CACHE_SIZE  600
+#define CLEAN_SIZE  100
+
+#ifdef THREADS
+  static Thread.Mutex mutex = Thread.Mutex();
+# define LOCK() object __key = mutex->lock()
+#else
+# define LOCK() 
+#endif
+
+  static mapping (string:mixed) cache = ([ ]);
+
+  void setup_table()
+  {
+    if(catch(db->query("select id from "+name+" where id=-1")))
+      if(catch(db->query("create table "+name+" ("
+                         "id int auto_increment primary key, "
+                         "lkey varchar(80) not null default '', "
+                         "contents blob not null default '', "
+                         "atime bigint not null default 0)")))
+        throw("Failed to create table in database\n");
+  }
+
+  void create( string _name, 
+               string _path, 
+               int _is_db )
+  {
+    name = _name;
+    path = _path;
+    is_db = _is_db;
+
+    if(is_db)
+    {
+      db = sql_connect( path );
+      if(!db)
+        error("Failed to connect to database for argument cache\n");
+      setup_table( );
+    } else {
+      if(path[-1] != '/' && path[-1] != '\\')
+        path += "/";
+      path += replace(name, "/", "_")+"/";
+      mkdirhier( path + "/tmp" );
+    }
+  }
+
+  static string read_args( string id )
+  {
+    if( is_db )
+    {
+      mapping res = db->query("select from "+name+" where id='"+id+"'");
+      if( sizeof(res) )
+      {
+        db->query("update "+name+" set atime='"+time()+"' where id='"+id+"'");
+        return res->contents;
+      }
+      return 0;
+    } else {
+      if( file_stat( path+id ) )
+        return Stdio.read_bytes(path+"/"+id);
+    }
+    return 0;
+  }
+
+  static string create_key( string long_key )
+  {
+    if( is_db )
+    {
+      mapping data = db->query(sprintf("select id,contents from %s where lkey='%s'",
+                                       name,long_key[..79]));
+      foreach( data, mapping m )
+        if( m->contents == long_key )
+        {
+          werror("Found data as "+m->id+"\n");
+          return m->id;
+        }
+
+      db->query( sprintf("insert into %s (contents,lkey,atime) values "
+                         "('%s','%s','%d')", 
+                         name, long_key, long_key[..79], time() ));
+      werror("Creating new data...  ");
+      return create_key( long_key );
+    } else {
+      string _key=MIME.encode_base64(Crypto.md5()->update(long_key)->digest(),1);
+      _key = replace(_key-"=","/","=");
+      string short_key = _key[0..1];
+
+      while( file_stat( path+short_key ) )
+      {
+        if( Stdio.read_bytes( path+short_key ) == long_key )
+        {
+          werror("Found old data as "+short_key+"\n");
+          return short_key;
+        }
+        short_key = _key[..strlen(short_key)];
+        if( strlen(short_key) >= strlen(_key) )
+          short_key += "."; // Not very likely...
+      }
+      object f = Stdio.File( path + short_key, "wct" );
+      f->write( long_key );
+      werror("Creating new data as "+short_key+"\n");
+      return short_key;
+    }
+  }
+
+
+  int key_exists( string key )
+  {
+    LOCK();
+    if( !is_db ) 
+      return !!file_stat( path+key );
+    return !!read_args( key );
+  }
+
+  string store( mapping args )
+  {
+    LOCK();
+    int e = gethrtime();
+    array b = values(args), a = sort(indices(args),b);
+    string data = MIME.encode_base64(encode_value(a),1);
+    werror("%.9f\n", (gethrtime()-e)/1000000.0 );
+    if( cache[ data ] ) 
+      return cache[ data ][ CACHE_SKEY ];
+
+    string id = create_key( data );
+
+    cache[ data ] = ({ 0, 0 });
+    cache[ data ][ CACHE_VALUE ] = args;
+    cache[ data ][ CACHE_SKEY ] = id;
+    cache[ id ] = data;
+
+    if( sizeof( cache ) > CACHE_SIZE )
+    {
+      array i = indices(cache);
+      while( sizeof(cache) > CACHE_SIZE-CLEAN_SIZE )
+        m_delete( cache, i[random(sizeof(i))] );
+    }
+    return id;
+  }
+
+  mapping lookup( string id )
+  {
+//  werror("lookup [%O]\n", id);
+    if(cache[id])
+      return cache[cache[id]][CACHE_VALUE];
+
+    string q = read_args( id );
+    if(!q) error("Key does not exist!\n");
+    mixed data = decode_value(MIME.decode_base64( q ));
+    data = mkmapping( data[0],data[1] );
+
+    cache[ q ] = ({0,0});
+    cache[ q ][ CACHE_VALUE ] = data;
+    cache[ q ][ CACHE_SKEY ] = id;
+    cache[ id ] = q;
+    return data;
+  }
+
+  void delete( string id )
+  {
+    LOCK();
+    if(cache[id])
+    {
+      m_delete( cache, cache[id] );
+      m_delete( cache, id );
+    }
+    if( is_db )
+      db->query( "delete from "+name+" where id='"+id+"'" );
+    else
+      rm( path+id );
+  }
+
+}
+// #endif
 // This is the most likely URL for a virtual server.
 
 private string get_my_url()
