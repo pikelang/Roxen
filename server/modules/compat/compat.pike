@@ -540,7 +540,12 @@ mapping gtext_compat(mapping m, RequestID id) {
   if(m->turbulence) {
     m->bgturbulence=m->turbulence;
     m_delete(m, "turbulence");
-    old_rxml_warning(id ,"gtext attribute turbulence","bgturbulence");
+    old_rxml_warning(id, "gtext attribute turbulence","bgturbulence");
+  }
+  if(m->font_size) {
+    m["font-size"]=m->font_size;
+    m_delete(m, "font_size");
+    old_rxml_warning(id, "gtext attribute font_size","font-size");
   }
 
   return m;
