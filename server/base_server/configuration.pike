@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.156 1998/09/30 01:27:37 per Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.157 1998/10/01 00:04:37 peter Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -2397,15 +2397,39 @@ object enable_module( string modname )
 		   "The realm to use when requesting password from the "
 		   "client. Usually used as an informative message to the "
 		   "user.");
-	me->defvar("_seclvl",  0, "Security: Trust level", TYPE_INT, 
-		   "When a location module find a file, that file will get "
-		   "a 'Trust level' that equals the level of the module."
-		   " This file will then only be sent to modules with a higher "
-		   " or equal 'Trust level'. <p>As an example: If the trust "
-		   " level of a User filesystem is one, and the CGI module"
-		   " have trust level two, the file will never get passed to"
-		   " the CGI module. A trust level of zero is the same thing as"
-		   " free access.\n");
+	me->defvar("_seclvl",  0, "Security: Security level", TYPE_INT, 
+		   "The modules security level is used to determine if a "
+		   " request should be handled by the module."
+		   "\n<p><h2>Security level vs Trust level</h2>"
+		   " Each module has a configurable <i>security level</i>."
+		   " Each request has an assigned trust level. Higher"
+		   " <i>trust levels</i> grants access to modules with higher"
+		   " <i>security levels</i>."
+		   "\n<p><h2>Definitions</h2><ul>"
+		   " <li>A requests initial Trust level is infinitely high."
+		   " <li> A request will only be handled by a module if its"
+		   "     <i>trust level</i> is higher or equal to the"
+		   "     <i>security level</i> of the module."
+		   " <li> Each time the request is handled by a module the"
+		   "     <i>trust level</i> of the module will be set to the"
+		   "      lower of its <i>trust level</i> and the modules"
+		   "     <i>security level</i>."
+		   " </ul>"
+		   "\n<p><h2>Example</h2>"
+		   " Modules:<ul>"
+		   " <li>  User filesystem, <i>security level</i> 1"
+		   " <li>  Filesystem module, <i>security level</i> 3"
+		   " <li>  CGI module, <i>security level</i> 2"
+		   " </ul>"
+		   "\n<p>A request handled by \"User filesystem\" is assigned"
+		   " a <i>trust level</i> of one after the <i>security"
+		   " level</i> of that module. That request can then not be"
+		   " handled by the \"CGI module\" since that module has a"
+		   " higher <i>security level</i> than the requests trust"
+		   " level."
+		   "\n<p>On the other hand, a request handled by the the"
+		   " \"Filsystem module\" could later be handled by the"
+		   " \"CGI module\".");
 
 	me->defvar("_seclevels", "", "Security: Patterns", TYPE_TEXT_FIELD,
 		   "This is the 'security level=value' list.<br>"
