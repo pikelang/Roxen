@@ -1,5 +1,5 @@
 /*
- * $Id: make_csr.pike,v 1.9 1999/01/31 23:26:59 peter Exp $
+ * $Id: make_csr.pike,v 1.10 1999/04/24 17:56:08 mast Exp $
  */
 
 inherit "wizard";
@@ -45,7 +45,7 @@ mixed page_0(object id, object mc)
   return (msg || "" )
     + ("<font size=+1>Which key do you want to certify?</font><p>"
        "<var name=key_file type=string><br>\n"
-       "Where the private key is stored.<br> "
+       "Where the private key is stored, relative to " + getcwd() + ".<br> "
        "<help><blockquote>"
        "A filename in the real filesystem, where the private key is stored. "
        "(The private key is needed to sign the CSR. It is <em>not</em> "
@@ -255,13 +255,15 @@ mixed page_4(object id, object mc)
   werror("csr: %s\n", Crypto.string_to_hex(csr->get_der()));
 #endif
 
+  string res = "The certificate request:<br>\n";
+
 #if constant(Tools)
-  return "<textarea cols=80 rows=12>"
+  return res + "<textarea cols=80 rows=12>"
     + Tools.PEM.simple_build_pem("CERTIFICATE REQUEST", csr->get_der())
     +"</textarea>";
 #else /* !constant(Tools) */
   /* Backward compatibility */
-  return "<textarea cols=80 rows=12>"
+  return res + "<textarea cols=80 rows=12>"
     + SSL.pem.build_pem("CERTIFICATE REQUEST", csr->get_der())
     +"</textarea>";
 #endif /* constant(Tools) */
