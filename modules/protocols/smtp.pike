@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.5 1998/07/16 18:46:59 grubba Exp $
+ * $Id: smtp.pike,v 1.6 1998/07/16 19:41:39 js Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.5 1998/07/16 18:46:59 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.6 1998/07/16 19:41:39 js Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -350,7 +350,7 @@ class Server {
       if (!spooler) {
 	send(550);
 	report_error("SMTP: No spooler found!\n");
-	break;
+	return;
       }
 
       string received = sprintf("from %s (%s [%s]) by %s with %s id %s; %s",
