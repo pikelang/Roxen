@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.172 2001/07/09 21:06:43 nilsson Exp $
+# $Id: start,v 1.173 2001/08/06 16:44:37 mast Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -90,6 +90,9 @@ verbose=1
 # Do not default to using a relative path.
 roxendir="`pwd`"
 
+# No debug by default.
+debug=-1
+
 # Locate Pike binary.
 find_pike
 
@@ -178,6 +181,9 @@ parse_args() {
   '--without-debug')
     debug=-1
   ;;
+  '--module-debug'|'--with-module-debug'|'--enable-module-debug')
+    debug=0
+  ;;
   '--fd-debug'|'--with-fd-debug'|'--enable-fd-debug')
     DEFINES="-DFD_DEBUG $DEFINES"
   ;;
@@ -218,11 +224,13 @@ parse_args() {
 
   '--once')
     once=1
+    debug=0
   ;;
 # Misspelling --once might give undesirable results, so let's accept
 # some "creative" spellings...  :-)
   '--onve'|'--onec'|'--onev'|'--ocne')
     once=1
+    debug=0
   ;;
   '--keep-mysql')
     keep_mysql=1
@@ -230,6 +238,7 @@ parse_args() {
   '--gdb')
     gdb=gdb
     once=1
+    debug=0
   ;;
   '--program')
     program="$2"
@@ -347,7 +356,8 @@ the default arguments.
       .B--self-test-quietB.:          Runs a testsuite, only report errors.
 
       .B--onceB.:                     Run the server only once, in the foreground.
-			   	  This is very useful when debugging.
+			   	  This is very useful when debugging. Implies
+				  --module-debug.
 
       .B--keep-mysqlB.:               Don't shut down MySQL process when exiting
 				  the start script. Useful during development
@@ -364,11 +374,14 @@ the default arguments.
 
       .B--with-debugB.:               Enable debug
 
-      .B--without-debugB.:            Disable all debug
+      .B--without-debugB.:            Disable all debug. This is the default.
 
-      .B--with-fd-debugB.:            Enable FD debug.
+      .B--module-debugB.:             Enable more internal debug checks to
+                                  simplify debugging of Roxen modules.
 
-      .B--with-dump-debugB.:          Enable dump debug.
+      .B--fd-debugB.:                 Enable FD debug.
+
+      .B--dump-debugB.:               Enable dump debug.
 
       .B--trussB.:                    (Solaris only). Run the server under
 				  truss, shows .BallB. system calls. This is
@@ -556,7 +569,7 @@ fi
 
 
 case "x$debug" in
-  "x")
+  "x"|"x0")
     DEBUG="-DMODULE_DEBUG "
     ARGS="$ARGS -w"
     ;;
