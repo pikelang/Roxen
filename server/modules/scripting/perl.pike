@@ -1,4 +1,4 @@
-// Experimental Perl script and tag handler module.
+// Perl script and tag handler module.
 // by Leif Stensson.
 
 #include <roxen.h>
@@ -13,7 +13,7 @@ inherit "module";
 inherit "roxenlib";
 
 string cvs_version =
-       "$Id: perl.pike,v 2.14 2001/01/13 18:18:17 nilsson Exp $";
+       "$Id: perl.pike,v 2.15 2001/01/30 13:48:48 leif Exp $";
 
 constant module_type = MODULE_FILE_EXTENSION | MODULE_TAG;
 
@@ -21,7 +21,8 @@ constant module_name = "Perl support";
 constant module_doc =
    "This module provides a faster way of running Perl scripts with Roxen. "
    "The module also optionally provides a &lt;perl&gt;..&lt;/perl&gt; "
-   "container to run Perl code from inside RXML pages."; 
+   "container (and a corresponding processing instruction &lt;?perl ... "
+   "?&gt;) to run Perl code from inside RXML pages."; 
 
 static string recent_error = 0;
 static int parsed_tags = 0, script_calls = 0, script_errors = 0;
@@ -216,10 +217,10 @@ mixed handle_file_extension(Stdio.File file, string ext, object id)
     NOCACHE();
 
     if (!h)
-      return
-        Roxen.http_string_answer("<h1>Script support failed.</h1>");
+      return Roxen.http_string_answer("<h1>Script support failed.</h1>");
 
     mixed bt;
+
     if (script_output_mode == "HTTP")
        bt = catch (result = h->run(id->realfile, id, do_response_callback));
     else
@@ -228,7 +229,8 @@ mixed handle_file_extension(Stdio.File file, string ext, object id)
     ++script_calls;
 
     if (bt)
-    { ++script_errors;
+    {
+      ++script_errors;
       report_error("Perl script `" + id->realfile + "' failed.\n");
       if (query("showbacktrace"))
         return Roxen.http_string_answer("<h1>Script Error!</h1>\n<pre>" +
@@ -238,18 +240,23 @@ mixed handle_file_extension(Stdio.File file, string ext, object id)
     }
     else if (arrayp(result))
     { string r = sizeof(result) > 1 ? result[1] : "";
+
 //      werror("Result: " + sprintf("%O", r) + "\n");
       if (r == "") r = " "; // Some browsers don't like null answers.
       if (!stringp(r)) r = "(not a string)";
+
       switch (script_output_mode)
-      { case "RXML":
+      {
+        case "RXML":
           if (sizeof(result) > 2 && stringp(result[2]))
                add_headers(result[2], id);
           return Roxen.http_rxml_answer(r, id);
+
         case "HTML":
           if (sizeof(result) > 2 && stringp(result[2]))
                add_headers(result[2], id);
           return Roxen.http_string_answer(r);
+
         case "HTTP":
           if (sizeof(result) > 0)
           {
@@ -261,14 +268,14 @@ mixed handle_file_extension(Stdio.File file, string ext, object id)
 //          else werror("id/perl: nonblocking.\n");
 
           return Roxen.http_pipe_in_progress();
+
         default:
           return Roxen.http_string_answer("SCRIPT ERROR: "
-                                    "bad output mode configured.\n");
+                                          "bad output mode configured.\n");
       }
     }
     else
-    { return Roxen.http_string_answer(sprintf("RESULT: %O", result));
-    }
+      return Roxen.http_string_answer(sprintf("RESULT: %O", result));
   }
 
   return 0;
