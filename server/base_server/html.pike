@@ -1,19 +1,33 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: html.pike,v 1.11 2000/04/06 05:01:13 per Exp $
+// $Id: html.pike,v 1.12 2000/08/30 17:36:38 nilsson Exp $
 
 #pragma strict_types
 
-string input(string name, string|void val, int|void t)
+string input(string name, string value, void|int size,
+	     void|mapping(string:string) args, void|int xml)
 {
-//name = replace (name, ({"&", "\""}), ({"&amp;", "&quot;"}));
-  if(!stringp(val))
-    val = sprintf ("%O", val);
-  val = replace (val, ({"&", "\"", "<", ">"}), 
-                 ({"&amp;", "&quot;", "&lt;", "&gt;"}));
-  if(!t)
-    return "<input type=\"hidden\" name=\"" + name + "\" value=\"" + val + "\">";
-  return "<input size=\"" + t + "\" name=\"" + name + "\" value=\"" + val + "\">";
+  if(!args)
+    args=([]);
+  else
+    args+=([]);
+
+  args->name=name;
+  args->value=value;
+  if(size)
+    args->size=(string)size; 
+
+  string render="<input";
+
+  foreach(indices(args), string attr) {
+    render+=" "+attr+"=";
+    if(!has_value(args[attr], "\"")) render+="\""+args[attr]+"\"";
+    else if(!has_value(args[attr], "'")) render+="'"+args[attr]+"'";
+    else render+="\""+replace(args[attr], "'", "&#39;")+"\"";
+  }
+
+  if(xml) return render+" />";
+  return render+">";
 }
 
 string pre(string f)
@@ -90,16 +104,3 @@ string h3(string h)
 {
   return "<h3>"+h+"</h3>\n\n";
 }
-
-#if 0
-inline string button(string text, string url)
-{
-  return sprintf("<form method=\"get\" action=\"%s\"><input type=\"submit\" value"+
-		 "=\"%s\"></form>", replace(url, " ", "%20"), text);
-}
-
-inline string link(string text, string url)
-{
-  return sprintf("<a href=\"%s\">%s</a>", replace(url, " ", "%20"), text);
-}
-#endif
