@@ -26,9 +26,9 @@ constant modules = ({
 
 void init_modules( Configuration c, RequestID id )
 {
-  c->enable_module( "filesystem#1" );
-  c->find_module( "filesystem#1" )->set( "searchpath", "example_pages" );
-  c->find_module( "filesystem#1" )->set( "_priority", 1 );
+  c->enable_module( "filesystem#0" );
+  c->find_module( "filesystem#0" )->set( "searchpath", "example_pages" );
+  c->find_module( "filesystem#0" )->set( "_priority", 1 );
 }
 
 
