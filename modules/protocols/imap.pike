@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.18 1999/02/03 20:03:06 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.19 1999/02/03 20:09:45 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -703,6 +703,10 @@ class imap_mailbox
 					  i);
 		       },
 		       attrs));
+
+#ifdef IMAP_DEBUG
+    werror("=> res: %O\n", res);
+#endif /* IMAP_DEBUG */
       
     /* Fetch was successful. Consider setting the \Read flag. */
     if (sizeof(attrs->mark_as_read - ({ 0 }) ))
