@@ -1,9 +1,9 @@
 /*
  * A vitual server's main configuration
- * (C) 1996, 1999 Idonex AB.
+ * (C) 1996 - 2000 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.250 2000/01/05 17:26:53 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.251 2000/01/10 09:05:55 nilsson Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -2501,7 +2501,6 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
 		   "i konfigurationsinterfacet.");
 
   me->setvars(retrieve(modname + "#" + id, this_object()));
-
 
   module[ id ] = me;
   otomod[ me ] = modname+"#"+id;
