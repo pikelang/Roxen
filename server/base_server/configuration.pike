@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.298 2000/04/05 21:07:21 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.299 2000/04/05 22:17:50 mast Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -2237,8 +2237,12 @@ RoxenModule reload_module( string modname )
   
   if( catch( nm = enable_module( modname, 0, 0, 1 ) ) || (nm == 0) )
     enable_module( modname, (nm=old_module), mi, 1 );
-  else
+  else {
+    foreach ((array) old_module->error_log, [string msg, array(int) times])
+      nm->error_log[msg] += times;
+    nm->report_notice ("Reloaded %s.\n", mi->get_name());
     destruct( old_module );
+  }
 
   call_start_callbacks( nm, mi, modules[ (modname/"#")[0] ] );
 
@@ -2702,8 +2706,10 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
   if (enable_module_batch_msgs)
     report_debug("\bOK %6.1fms\n", (gethrtime()-start_time)/1000.0);
 #endif
-  if( me->no_delayed_load )
+  if( me->no_delayed_load ) {
     set( "no_delayed_load", 1 );
+    save_me();
+  }
 
   if(!enabled_modules[ modname+"#"+id ])
   {
