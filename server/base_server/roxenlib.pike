@@ -1,6 +1,6 @@
 inherit "http";
 
-// static string _cvs_version = "$Id: roxenlib.pike,v 1.81 1998/08/02 22:10:42 mast Exp $";
+// static string _cvs_version = "$Id: roxenlib.pike,v 1.82 1998/08/04 04:05:55 mast Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -971,11 +971,25 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
   foreach (var_arr, mapping vars)
   {
     if (args->set)
-      id->variables += vars;
+      foreach (indices (vars), string var) {
+	mixed val = vars[var];
+	if (!val) val = args->zero || "";
+	else {
+	  if (arrayp( val ))
+	    val = Array.map (val, lambda (mixed v) {return (string) v;}) *
+	      multi_separator;
+	  else
+	    val = replace ((string) val, "\000", multi_separator);
+	  if (!sizeof (val)) val = args->empty || "";
+	}
+	id->variables[var] = val;
+      }
+
     if (my_id->misc->variables)
       my_id->misc->variables += vars;
     else
       my_id->misc->variables = vars;
+
     if (!args->replace || lower_case( args->replace ) != "no")
     {
       array exploded = contents / quote;
