@@ -12,7 +12,7 @@ void fix_cvars( Variable.Variable a )
 {
   set_cookie = query( "set_cookie" );
   set_cookie_only_once = query( "set_cookie_only_once" );
-  minimum_byterate = query( "minimum_bitrate" ) * (1024 / 8);
+  minimum_byterate = query( "minimum_bitrate" ) / 8;
 }
 
 void create( mixed ... args )
