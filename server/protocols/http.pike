@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.127 1999/07/02 20:32:35 neotron Exp $";
+constant cvs_version = "$Id: http.pike,v 1.128 1999/07/04 18:28:01 neotron Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -1006,6 +1006,7 @@ class MultiRangeWrapper
   string stored_data = "";
   void create(mapping _file, mapping heads, array _ranges)
   {
+    //    werror("MultiRangeWrapper\n");
     file = _file->file;
     len = _file->len;
     ranges = _ranges;
@@ -1034,11 +1035,13 @@ class MultiRangeWrapper
       clen += strlen(BOUND) + 8; // End boundary length.
     }
     _file->len = clen;
+    //    werror("Create finished.\n");
   }
 
   string read(mixed ... args)
   {
     string out = stored_data;
+    stored_data = "";
     int rlen, num_bytes, total;
     if(sizeof(args))
       num_bytes = args[0];
@@ -1052,7 +1055,7 @@ class MultiRangeWrapper
       rlen = range_info[0][0] - current_pos;
       if(separator != 1) {
 	// New range, write new separator.
-	write("Initiating new range %d -> %d.\n", @range);
+	//	werror(sprintf("Initiating new range %d -> %d.\n", @range));
 	if(!is_single_range) {
 	  out += range_info[0][1];
 	  num_bytes -= strlen(range_info[0][1]);
@@ -1069,6 +1072,7 @@ class MultiRangeWrapper
 	  current_pos = separator = 0;
 	  ranges = ranges[1..]; // One range done.
 	  range_info = range_info[1..];
+	  //	  werror("Entire range added.\n");
 	} else {
 	  out += file->read(num_bytes);
 	  current_pos += num_bytes;
@@ -1080,35 +1084,38 @@ class MultiRangeWrapper
 	// Oops. too much data. Send amount asked for and save
 	// the rest.
 	stored_data = out[total..];
-	//	werror(sprintf("Returning %d bytes in loop.\n", strlen(out[..total-1])));
+	//	werror(sprintf("Returning partial from loop %d of %d.\n",
+	//strlen(out[..total-1]), strlen(out)));
 	return out[..total-1];
-      }
+      } 
     }
-    if(!is_single_range && separator != 2) {
+    if(!sizeof(ranges) && !is_single_range && separator != 2) {
       // End boundary. Only write once.
       separator = 2;
       out += "\r\n--" BOUND "--\r\n";
+      //      werror("Adding end of multipart\n");
     }  
     if(strlen(out) > total)
     {
       // Oops. too much data again. Write and store. Write and store.
       stored_data = out[total..];
-      //      werror(sprintf("Returning %d bytes outside loop.\n", strlen(out[..total-1])));
+      //      werror(sprintf("Returning partial %d of %d.\n",
+      //		     strlen(out[..total-1]), strlen(out)));
       return out[..total-1];
     }
-    stored_data = ""; // Very important. Ia.
     //    werror(sprintf("Returning last %d bytes.\n", strlen(out[..total-1])));
     return out ; // We are finally done.
   }
   
   mixed `->(string what) {
+    //    werror("Call for %s\n", what);
     switch(what) {
      case "read":
       return read;
-
      case "set_nonblocking":
       return 0;
-
+     case "query_fd":
+      return lambda() { return 0; };
      default:
       return file[what];
     }
