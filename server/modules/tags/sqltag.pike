@@ -1,5 +1,5 @@
 /*
- * $Id: sqltag.pike,v 1.7 1997/09/07 16:42:59 grubba Exp $
+ * $Id: sqltag.pike,v 1.8 1997/09/23 11:05:05 grubba Exp $
  *
  * A module for Roxen Challenger, which gives the tags
  * <SQLQUERY> and <SQLOUTPUT>.
@@ -7,7 +7,7 @@
  * Henrik Grubbström 1997-01-12
  */
 
-constant cvs_version="$Id: sqltag.pike,v 1.7 1997/09/07 16:42:59 grubba Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.8 1997/09/23 11:05:05 grubba Exp $";
 constant thread_safe=1;
 #include <module.h>
 
@@ -316,7 +316,7 @@ void create()
 	 "use by specifying an \"SQL-URL\":<ul>\n"
 	 "<pre>[<i>sqlserver</i>://][[<i>user</i>][:<i>password</i>]@]"
 	 "[<i>host</i>[:<i>port</i>]]/<i>database</i></pre></ul><br>\n"
-	 "</ul>Valid values for \"sqlserver\" depend on which "
+	 "Valid values for \"sqlserver\" depend on which "
 	 "sql-servers your pike has support for, but the following "
 	 "might exist: msql, mysql, odbc, oracle, postgres.\n");
   defvar("database", "", "Default SQL-database",
