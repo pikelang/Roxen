@@ -4,7 +4,7 @@
 // limit of proxy connections/second is somewhere around 70% of normal
 // requests, but there is no real reason for them to take longer.
 
-string cvs_version = "$Id: proxy.pike,v 1.21 1997/05/25 10:51:36 grubba Exp $";
+string cvs_version = "$Id: proxy.pike,v 1.22 1997/06/04 20:24:51 grubba Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -365,8 +365,9 @@ program Connection = class {
 	 * where the order in which they are given to the fallback
 	 * pipe->output in the global shuffle function is relevant.
 	 */
-	return roxen->shuffle(s, cache->file, i->my_fd,
-			      lambda(){my_pipe_done(cache);});
+	roxen->shuffle(s, cache->file, i->my_fd,
+		       lambda(){my_pipe_done(cache);});
+	return;
       }
     }
     /* If the fallback is used in the global shuffle function with cached
@@ -376,7 +377,7 @@ program Connection = class {
     if(!new){
       stat = s->stat();
     }
-    return roxen->shuffle(s, i->my_fd, 0, lambda(){my_pipe_done(0);});
+    roxen->shuffle(s, i->my_fd, 0, lambda(){my_pipe_done(0);});
   }
     
   int send_to(object o, object b)
