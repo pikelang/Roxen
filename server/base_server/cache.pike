@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: cache.pike,v 1.78 2002/02/12 17:24:12 jonasw Exp $
+// $Id: cache.pike,v 1.79 2002/06/05 20:14:59 nilsson Exp $
 
 // #pragma strict_types
 
@@ -100,10 +100,12 @@ mapping(string:array(int)) status()
     //  We only show names up to the first ":" if present. This lets us
     //  group entries together in the status table.
     string show_name = (name / ":")[0];
+    int size = -1;
+    catch( size = sizeof(encode_value(cache[name])) );
     array(int) entry = ({ sizeof(cache[name]),
 			  hits[name],
 			  all[name],
-			  sizeof(encode_value(cache[name])) });
+			  size });
     if (!zero_type(ret[show_name]))
       for (int idx = 0; idx < 3; idx++)
 	ret[show_name][idx] += entry[idx];
