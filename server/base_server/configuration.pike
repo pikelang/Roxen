@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.338 2000/08/15 12:45:38 jhs Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.339 2000/08/15 13:05:28 nilsson Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -157,23 +157,26 @@ array (Priority) allocate_pris()
   return allocate(10, Priority)();
 }
 
-/* For debug and statistics info only */
 int requests;
+//! The number of requests, for debug and statistics info only.
+
 // Protocol specific statistics.
 mapping(string:mixed) extra_statistics = ([]);
 mapping(string:mixed) misc = ([]);	// Even more statistics.
 
-int sent;     // Sent data
-int hsent;    // Sent headers
-int received; // Received data
+int sent;
+//! Bytes data sent
+int hsent;
+//! Bytes headers sent
+int received;
+//! Bytes data received
 
 // Will write a line to the log-file. This will probably be replaced
 // entirely by log-modules in the future, since this would be much
 // cleaner.
-
 function(string:int) log_function;
 
-// The logging format used. This will probably move the the above
+// The logging format used. This will probably move to the above
 // mentioned module in the future.
 private mapping (string:string) log_format = ([]);
 
@@ -248,12 +251,10 @@ public string type_from_filename( string file, int|void to, string|void myext )
   return to?tmp:tmp[0];
 }
 
-// Return an array with all provider modules that provides "provides".
 array (RoxenModule) get_providers(string provides)
+//! Returns an array with all provider modules that provides "provides".
 {
-  // FIXME: Is there any way to clear this cache?
-  // /grubba 1998-05-28
-  // - Yes, it is zapped together with the rest in invalidate_cache().
+  // This cache is cleared in the invalidate_cache() call.
   if(!provider_module_cache[provides])
   {
     int i;
@@ -268,8 +269,8 @@ array (RoxenModule) get_providers(string provides)
   return provider_module_cache[provides];
 }
 
-// Return the first provider module that provides "provides".
 RoxenModule get_provider(string provides)
+//! Returns the first provider module that provides "provides".
 {
   array (RoxenModule) prov = get_providers(provides);
   if(sizeof(prov))
@@ -277,8 +278,8 @@ RoxenModule get_provider(string provides)
   return 0;
 }
 
-// map the function "fun" over all matching provider modules.
 array(mixed) map_providers(string provides, string fun, mixed ... args)
+//! Maps the function "fun" over all matching provider modules.
 {
   array (RoxenModule) prov = get_providers(provides);
   array error;
@@ -301,9 +302,9 @@ array(mixed) map_providers(string provides, string fun, mixed ... args)
   return a;
 }
 
-// map the function "fun" over all matching provider modules and
-// return the first positive response.
 mixed call_provider(string provides, string fun, mixed ... args)
+//! Maps the function "fun" over all matching provider modules and
+//! returns the first positive response.
 {
   foreach(get_providers(provides), RoxenModule mod)
   {
@@ -509,9 +510,8 @@ class LogFile
     mixed parent;
     if (catch { parent = function_object(object_program(this_object())); } ||
 	!parent) {
-      /* Our parent (aka the configuration) has been destructed.
-       * Time to die.
-       */
+      // Our parent (aka the configuration) has been destructed.
+      // Time to die.
       remove_call_out(do_open);
       remove_call_out(do_close);
       destruct();
@@ -519,8 +519,8 @@ class LogFile
     }
     string ff = fname;
     mapping m = localtime(time(1));
-    m->year += 1900;	/* Adjust for years being counted since 1900 */
-    m->mon++;		/* Adjust for months being counted 0-11 */
+    m->year += 1900;	// Adjust for years being counted since 1900
+    m->mon++;		// Adjust for months being counted 0-11
     if(m->mon < 10) m->mon = "0"+m->mon;
     if(m->mday < 10) m->mday = "0"+m->mday;
     if(m->hour < 10) m->hour = "0"+m->hour;
