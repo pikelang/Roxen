@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000, Idonex AB.
 //
 
-constant cvs_version="$Id: wiretap.pike,v 1.5 2000/01/31 03:48:21 per Exp $";
+constant cvs_version="$Id: wiretap.pike,v 1.6 2000/02/09 18:08:04 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -69,19 +69,18 @@ int|array tag_body(string t, mapping args, RequestID id)
   } \
 }while(0)
 
-  if(!search((id->client||({}))*"","Mosaic")) //FIXME: These values are not up to date
+  //FIXME: These values are not up to date
+
+  FIX(text,   "#000000","fgcolor");
+  FIX(link,   "#0000ee","link");
+  FIX(alink,  "#ff0000","alink");
+  FIX(vlink,  "#551a8b","vlink");
+
+  if(search(id->client_var->fullname,"windows")!=-1)
   {
-    FIX(bgcolor,"#bfbfbf","bgcolor");
-    FIX(text,   "#000000","fgcolor");
-    //    FIX(link,   "#0000b0","link");
-    FIX(alink,  "#3f0f7b","alink");
-    //    FIX(vlink,  "#ff0000","vlink");
-  } else {
     FIX(bgcolor,"#c0c0c0","bgcolor");
-    FIX(text,   "#000000","fgcolor");
-    //    FIX(link,   "#0000ee","link");
-    FIX(alink,  "#ff0000","alink");
-    //    FIX(vlink,  "#551a8b","vlink");
+  } else {
+    FIX(bgcolor,"#ffffff","bgcolor");
   }
 
   if(changed && QUERY(colormode))
