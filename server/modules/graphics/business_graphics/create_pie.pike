@@ -383,8 +383,8 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
 	if (FI)
 	  {
 	    place=place+FI*400.0/(2.0*PI);
-	    while (place>400)
-	      place-=400;
+	    if (place>400)
+	      place=place%400;
 	  }
 	piediagram=piediagram->setcolor(255,0, 0);
 

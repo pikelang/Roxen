@@ -414,25 +414,25 @@ mapping(string:mixed) create_text(mapping(string:mixed) diagram_data)
 
   if (ymaxxnames+xmaxynames>diagram_data["ysize"]/2)
     {
-      tobig++;
+      tobig+=2;
       diagram_data["fontsize"]=diagram_data["fontsize"]*diagram_data["ysize"]/2/(ymaxxnames+xmaxynames);
     }
   
   if (ymaxynames>diagram_data["ysize"]/3)
     {
-      tobig++;
+      tobig+=2;
       diagram_data["fontsize"]=diagram_data["fontsize"]*diagram_data["ysize"]/3/ymaxynames;
     }
 
   if (xmaxynames>diagram_data["xsize"]/2)
     {
-      tobig++;
+      tobig+=2;
       diagram_data["fontsize"]=diagram_data["fontsize"]*diagram_data["xsize"]/2/xmaxynames;
     }
 
   if (xmaxxnames>diagram_data["xsize"]/3)
     {
-      tobig++;
+      tobig+=2;
       diagram_data["fontsize"]=diagram_data["fontsize"]*diagram_data["xsize"]/3/xmaxxnames;
     }
   

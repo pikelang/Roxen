@@ -756,7 +756,7 @@ int main(int argc, string *argv)
 		 "xnames":({"jan", "feb", "mar", "apr", "maj", "jun"
 }),
 		 "fontsize":42,
-		 "labels":({"xstor", "ystor", "xenhet", "yenhet super maga ultra futur mega plus"}),
+		 "labels":({"xstor", "ystor", "xenhet", "yenhet"}),
 		 "legendfontsize":25, 
 		 "legend_texts":({"Roxen", "Netscape", "Apache", "Microsoft" }),
 		 "labelsize":42,
