@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<locale version="1.0"/>
+<project>mod_userdb_ldap</project>
+<language>eng</language>
+<file>../modules/ldap/userdb_ldap.pike</file>
+
+<str id="1">
+<o>Authentication: LDAP directory database</o>
+<t></t>
+</str>
+
+<str id="2">
+<o>LDAP directory user database &lt;br /&gt;
+Note: in &lt;i&gt;guest&lt;/i&gt; mode are supported passwords hashed by {CRYPT}, {SHA}, {SSHA}, {MD5} and {SMD5} schemas.</o>
+<t></t>
+</str>
