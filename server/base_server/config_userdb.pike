@@ -677,3 +677,47 @@ array(string|object) list_config_users(string uname, string|void required_auth)
         res += ({ u });
   return res;
 }
+
+
+class UserDBModule
+{
+  inherit UserDB;
+
+  static class CFUser
+  {
+    inherit User;
+    AdminUser ruser;
+
+    // Wrappers 
+    string name()              { return ruser->name;      }
+    string real_name()         { return ruser->real_name; }
+    int uid()                  { return -1;               }
+    int gid()                  { return -1;               }
+    string shell()             { return "";               }
+    string homedir()   	       { return "/";              }
+    string crypted_password()  {  return ruser->password; }
+
+
+    static void create( UserDB p, AdminUser u )
+    {
+      ::create( p );
+      ruser = u;
+    }	
+  }
+
+
+  array(string) list_users()  { return list_admin_users();  }
+
+  CFUser find_user( string uid )
+  {
+    AdminUser u = find_admin_user( uid );
+    if( u ) return CFUser( this_object(), u );
+  }
+
+  CFUser find_user_from_uid( int id )
+  {
+    return 0; // optimize
+  }
+}
+
+UserDBModule config_userdb_module = UserDBModule();
