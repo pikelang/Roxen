@@ -10,7 +10,7 @@
  * reference cache shortly.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.52 1997/12/03 11:00:28 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.53 1997/12/03 11:33:32 hedda Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -57,6 +57,8 @@ mixed *register_module()
        /* " tone         Do nasty stuff to the background.\n"
 	  " Requires dark background to be visable.\n" */
        "  <b>eng</b>            If present, numbers are shown like 1.2M.\n"
+       "  <b>tonedbox</b>       Creates a background shading between the\n"
+       "                        colors assigned to each of the four corners.\n"
        "\n  You can also use the regular &lt;<b>img</b>&gt; arguments. They will be passed\n  on to the resulting &lt;<b>img</b>&gt; tag.\n\n"
        "The following internal tags are available:\n"
        "\n&lt;<b>data</b>&gt; (container) Mandatory.\n"
@@ -350,11 +352,14 @@ string tag_diagram(string tag, mapping m, string contents,
 
   if(m->background)
     res->image = combine_path( dirname(id->not_query), (string)m->background);
-  if(m->tunedbox) {
-    array a = m->tunedbox/",";
+  
+  if (m->tunedbox)
+    m->tonedbox=m->tunedbox;
+  if(m->tonedbox) {
+    array a = m->tonedbox/",";
     if(sizeof(a) != 4)
-      return syntax("tunedbox must have a comma separated list of 4 colors.");
-    res->tunedbox = map(a, parse_color);
+      return syntax("tonedbox must have a comma separated list of 4 colors.");
+    res->tonedbox = map(a, parse_color);
   }
 
   /* Piechart */
@@ -604,10 +609,10 @@ mapping find_file(string f, object id)
 	  write("The file was","not found ",
 		"or was not a","ppm-picture.  ");
       }
-  } else if(res->tunedbox) {
+  } else if(res->tonedbox) {
     m_delete( res, "bg" );
     res->image = image(res->xsize, res->ysize)->
-      tuned_box(0, 0, res->xsize, res->ysize, res->tunedbox);
+      tuned_box(0, 0, res->xsize, res->ysize, res->tonedbox);
   }
 
 
@@ -688,7 +693,9 @@ mapping find_file(string f, object id)
 
   if (res->image)
     return http_string_answer(Image.GIF.encode(img,
-					       Image.colortable(6,7,6)->
+					       Image.colortable(6,6,6, 
+								({0,0,0}),
+								({255,255,255}), 39)->
 					       floyd_steinberg(), 
 					       @back), "image/gif");  
   else
