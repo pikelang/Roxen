@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.78 2000/01/25 04:05:30 per Exp $
+ * $Id: rxml.pike,v 1.79 2000/01/25 15:03:48 nilsson Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -78,7 +78,7 @@ class Scope_roxen {
      case "uptime-minutes":
        return (time(1)-roxen->start_time)/60 % 60;
      case "hits-per-minute":
-       return c->id->conf->requests / (time(1)-roxen->start_time);
+       return c->id->conf->requests / (time(1)-roxen->start_time || 1);
      case "hits":
        return c->id->conf->requests;
      case "sent-mb":
@@ -86,10 +86,10 @@ class Scope_roxen {
      case "sent":
        return c->id->conf->sent;
      case "sent-per-minute":
-       return c->id->conf->sent / ((time(1)-roxen->start_time)/60);
+       return c->id->conf->sent / ((time(1)-roxen->start_time)/60 || 1);
      case "sent-kbit-per-second":
        return sprintf("%1.2f",((c->id->conf->sent*8)/1024.0/
-                               (time(1)-roxen->start_time)));
+                               (time(1)-roxen->start_time || 1)));
      case "pike-version":
        return predef::version();
      case "version":
@@ -103,10 +103,10 @@ class Scope_roxen {
   }
 
   array(string) _indices() {
-    return ({"uptime", "hits_per_minite", "hits",
-             "sent_mb", "sent", "pike_version",
-             "sent_per_minute", "sent_kbit_per_minute",
-             "version", "time", "server"});
+    return ({"uptime", "uptime-days", "uptime-hours", "uptime-minutes",
+	     "hits-per-minite", "hits", "sent-mb", "sent",
+             "sent-per-minute", "sent-kbit-per-second",
+              "pike-version", "version", "time", "server"});
   }
 
   string _sprintf() { return "RXML.Scope(roxen)"; }
@@ -114,35 +114,38 @@ class Scope_roxen {
 
 class Scope_page {
   inherit RXML.Scope;
-  constant in_defines=({"fgcolor","bgcolor","theme_bgcolor","theme_fgcolor",
-			"theme_language"});
+  constant in_defines=(<"fgcolor","bgcolor","theme_bgcolor","theme_fgcolor",
+			"theme_language">);
+  constant converter=(["fgcolor":"fgcolor", "bgcolor":"bgcolor",
+		       "theme_bgcolor":"theme-bgcolor", "theme_fgcolor":"theme-fgcolor",
+		       "theme_language":"theme-language"]);
 
   mixed `[] (string var, void|RXML.Context c, void|string scope) {
-    if(has_value(in_defines, var))
-      return c->id->misc->defines[var];
+    if(in_defines[var])
+      return c->id->misc->defines[converter[var]];
     if(objectp(c->id->misc->page[var])) return c->id->misc->page[var]->rxml_var_eval(c);
     return c->id->misc->page[var];
   }
 
   mixed `[]= (string var, mixed val, void|RXML.Context c, void|string scope_name) {
-    if(has_value(in_defines, var))
-      return c->id->misc->defines[var]=val;
+    if(in_defines[var])
+      return c->id->misc->defines[converter[var]]=val;
     return c->id->misc->page[var]=val;
   }
 
   array(string) _indices(void|RXML.Context c) {
     if(!c) return ({});
     array ind=indices(c->id->misc->page);
-    foreach(in_defines, string def)
-      if(c->id->misc->defines[def]) ind+=({def});
+    foreach(indices(in_defines), string def)
+      if(c->id->misc->defines[converter[def]]) ind+=({def});
     return ind;
   }
 
   void m_delete (string var, void|RXML.Context c, void|string scope_name) {
     if(!c) return;
-    if(has_value(in_defines, var)) {
+    if(in_defines[var]) {
       if(var[0..4]=="theme")
-	predef::m_delete(c->id->misc->defines, var);
+	predef::m_delete(c->id->misc->defines, converter[var]);
       else
 	::m_delete(var, c, scope_name);
     }
