@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.13 2001/01/18 10:43:48 jhs Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.14 2001/01/22 10:27:51 jhs Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Additional RXML tags";
@@ -256,16 +256,18 @@ constant tagdoc=([
 
 <attr name='variables' value='list' required='required'><p>
  A comma separated list with the name of the variables that should be set.</p>
-<ex type=vert>
-<sscanf variables='form.year,var.month,var.day' format='%4d%2d%2d'>19771003</sscanf>
+<ex type='vert'>
+<sscanf variables='form.year,var.month,var.day'
+format='%4d%2d%2d'>19771003</sscanf>
 &form.year;-&var.month;-&var.day;
 </ex>
 </attr>
 
 <attr name='scope' value='name' required='required'><p>
  The name of the fallback scope to be used when no scope is given.</p>
-<ex type=vert>
-<sscanf variables='form.year,month,day' scope='var' format='%4d%2d%2d'>19801228</sscanf>
+<ex type='vert'>
+<sscanf variables='form.year,month,day' scope='var'
+ format='%4d%2d%2d'>19801228</sscanf>
 &form.year;-&var.month;-&var.day;
 </ex>
 </attr>
@@ -295,7 +297,7 @@ constant tagdoc=([
  numbers, weekdays et c (for example for the number and date tags).
 </short></p></desc>
 
- <ex type='box'><emit source='known-langs' sort='englishname'>
+ <ex type='vert'><emit source='known-langs' sort='englishname'>
   4711 in &_.englishname;: <number lang='&_.id;' num='4711'/><br />
 </emit></ex>",
 			([
@@ -307,7 +309,7 @@ constant tagdoc=([
  <p>The name of the language in the language itself, for example
  \"français\" for french.</p>
 </desc>",
-			  "&_.englishname;":#"<desc ent='ent'><p>
+			  "&_.englishname;":#"<desc ent='ent'>
  <p>The name of the language in English.</p>
 </desc>",
 			]) }),
