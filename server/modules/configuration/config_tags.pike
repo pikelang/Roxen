@@ -6,10 +6,13 @@ inherit "roxenlib";
 #include <stat.h>
 #include <config_interface.h>
 #include <config.h>
+#include <roxen.h>
+//<locale-token project="roxen_config">LOCALE</locale-token>
+#define LOCALE(X,Y)	_STR_LOCALE("roxen_config",X,Y)
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.103 2000/08/19 09:26:36 per Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.104 2000/08/22 10:15:09 lange Exp $";
 constant module_type = MODULE_PARSER|MODULE_CONFIG;
 constant module_name = "Administration interface RXML tags";
 
@@ -387,17 +390,21 @@ mapping get_variable_section( string s, object mod, object id )
 
   s = (string)var->name();
   if( !s ) return 0;
-
-  if( sscanf( s, "%s:%*s", s ) )
+  if( sscanf( s, "%s:%*s", s ) ) 
+    {
     return ([
       "section":s,
+      "sectionname":s,
       "selected":(id->variables->section==s?"selected":"")
     ]);
+}
   else
     return ([
       "section":"Settings",
+      "sectionname":LOCALE(256,"Settings"),
       "selected":
-      ((id->variables->section=="Settings"||!id->variables->section)?
+      ((id->variables->section=="Settings" ||
+	!id->variables->section)?
        "selected":""),
     ]);
   return 0;
@@ -422,7 +429,7 @@ array get_variable_maps( object mod,
                       } );
   map( variables, lambda( mapping q ) {
                     if( search( q->form, "<" ) != -1 )
-                      q->form=("<font size=-1>"+q->form+"</font>");
+                      q->form=("<font size='-1'>"+q->form+"</font>");
                   } );
 
   if( m->section && (m->section != "_all"))
@@ -684,8 +691,9 @@ class TagModuleVariablesSectionsplugin
        RXML.run_error("Unknown module: "+m->module+"\n");
      variables =get_variable_sections( mod, m, id )|  ({ ([
        "section":"Information",
+       "sectionname":LOCALE(299,"Information"),
        "selected":
-       (((id->variables->section=="Information")||
+       ((id->variables->section=="Information" ||
          !id->variables->section)?
         "selected":""),
      ]) });
@@ -811,8 +819,8 @@ string simpletag_theme_set( string tag, mapping m, string s, RequestID id  )
 string simpletag_rli( string t, mapping m, string c, object id )
 {
   return "<tr>"
-         "<td valign=top><img src='&usr.count-"+(++id->misc->_rul_cnt&3)+
-         ";'></td><td valign='top'>"+c+"</td></tr>\n";
+         "<td valign='top'><img src='&usr.count-"+(++id->misc->_rul_cnt&3)+
+         ";' /></td><td valign='top'>"+c+"</td></tr>\n";
 }
 
 string simpletag_rul( string t, mapping m, string c, object id )

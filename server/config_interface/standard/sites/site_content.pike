@@ -175,8 +175,9 @@ string buttons( Configuration c, string mn, RequestID id )
 		 name = id->misc->config_user->name,
 		 host = id->misc->config_settings->host,
 	     mod_name = Roxen.get_modname(mod),
-	      log_msg = sprintf("2,%s,Module event log for '%s' "
-				"cleared by %s (%s) from %s",
+	      log_msg = sprintf("2,%s," +
+				LOCALE(290,"Module event log for '%s' "
+				"cleared by %s (%s) from %s"),
 				mod_name, Roxen.get_modfullname(mod),
 				realname, name, host);
       foreach(indices(mod->error_log), string error)
@@ -218,7 +219,7 @@ string buttons( Configuration c, string mn, RequestID id )
                     current_compile_errors[ mn ]+
 		    "</pre></font>" : "" )
     + "<input type=hidden name=section value='" +
-    (id->variables->section||"Information") + "'>" +
+    (id->variables->section||LOCALE(299,"Information")) + "'>" +
     "<submit-gbutton preparse>"+LOCALE(253, "Reload")+"</submit-gbutton>"+
     (sizeof( mod->error_log ) ?
      "<submit-gbutton preparse>"+LOCALE(247, "Clear Log")+"</submit-gbutton>":"");
@@ -334,7 +335,9 @@ string find_module_doc( string cn, string mn, RequestID id )
 		    "<br clear='all' />\n"
 		    "<h2>Developer information</h2>" +
                     "<b>Identifier:</b> " + mi->sname + "<br />\n"
-		    "<b>Thread safe:</b> " + (m->thread_safe ? "Yes" : "No") +
+		    "<b>Thread safe:</b> " + 
+		    (m->thread_safe ? 
+		     LOCALE("yes", "Yes") : LOCALE("no", "No")) +
 #ifdef THREADS
 		    " <small>(<a href='../../../../../actions/?action"
 		    "=locks.pike&class=status'>more info</a>)</small><br />\n"
@@ -346,7 +349,7 @@ string find_module_doc( string cn, string mn, RequestID id )
                     "</td></tr></table><br />\n" +
                     EC(TRANSLATE(m->file_name_and_stuff())) +
 		    homepage + creators + 
-		    "<h1>"+LOCALE(261,"Inherit tree")+"</h1>"+
+		    "<h2>"+LOCALE(261,"Inherit tree")+"</h2>"+
                     program_info( m ) +
                     "<dl>" + 
                     inherit_tree( m ) + 
@@ -424,8 +427,9 @@ string port_for( string url )
   object p = roxen->urls[url]->port;
   if(!p)
     return "";
-  return "<font size=-1>(handled by <a href='../../../ports/?port="+p->get_key()+"'>"+
-         p->name+"://"+(p->ip||"*")+":"+p->port+"/" + "</a>)</font>";
+  return "<font size='-1'>(" + LOCALE(291,"handled by") +
+    " <a href='../../../ports/?port="+p->get_key()+"'>"+
+    p->name+"://"+(p->ip||"*")+":"+p->port+"/" + "</a>)</font>";
 }
 
 
@@ -473,7 +477,7 @@ string parse( RequestID id )
        res +="<h1>"+LOCALE(260, "Request status")+"</h1>";
        res += conf->status();
 
-       res += "<h1>"+LOCALE("", "Cache status")+"</h1><table cellpading='0' cellspacing='0' width='50'%>\n";
+       res += "<h1>"+LOCALE(292, "Cache status")+"</h1><table cellpading='0' cellspacing='0' width='50'%>\n";
        
        int total = conf->datacache->hits+conf->datacache->misses;
 
@@ -481,16 +485,19 @@ string parse( RequestID id )
          total = 1;
 
        res += 
-           sprintf("<tr><td><b>Hits: </b></td><td align='right'>%d</td><td align='right'>%d%%</td></tr>\n",
+           sprintf("<tr><td><b>" + LOCALE(293, "Hits") + ": </b></td>"
+		   "<td align='right'>%d</td><td align='right'>%d%%</td></tr>\n",
                    conf->datacache->hits,
                    conf->datacache->hits*100 / total );
        res += 
-           sprintf("<tr><td><b>Misses: </b></td><td align='right'>%d</td><td align='right'>%d%%</td></tr>\n",
+           sprintf("<tr><td><b>" + LOCALE(294, "Misses") + ": </b></td>"
+		   "<td align='right'>%d</td><td align='right'>%d%%</td></tr>\n",
                    conf->datacache->misses,
                    conf->datacache->misses*100 / total );
 
        res += 
-           sprintf("<tr><td><b>Entries: </b></td><td align='right'>%d</td><td align='right'>%dKb</td></tr>\n",
+           sprintf("<tr><td><b>" + LOCALE(295, "Entries") + ": </b></td>"
+		   "<td align='right'>%d</td><td align='right'>%dKb</td></tr>\n",
                    sizeof( conf->datacache->cache ),
                    (conf->datacache->current_size / 1024 ) );
        
