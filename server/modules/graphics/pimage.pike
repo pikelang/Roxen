@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1997 - 2000, Roxen IS.
 
-string cvs_version="$Id: pimage.pike,v 1.23 2000/09/10 16:37:50 nilsson Exp $";
+string cvs_version="$Id: pimage.pike,v 1.24 2001/01/22 17:20:31 anders Exp $";
 
 #include <module.h>
 inherit "module";
@@ -79,6 +79,7 @@ class Constructors
     float anim_delay;
     function animator;
     object image;
+    object alpha;
     mixed state;
     mapping ci;
     array(int) bg;
@@ -99,7 +100,7 @@ class Constructors
       if(d)
       {
 	if(objectp(d))
-	  last_add = d->gif_add();
+	  last_add = Image.GIF.render_block(d, Image.Colortable(d),0,0,0,25);
 	else
 	  last_add = d;
 	last_drawn = time();
@@ -112,7 +113,9 @@ class Constructors
     string do_gif_begin()
     {
       if(m_gif_begin) return m_gif_begin;
-      return m_gif_begin=draw(1)->gif_begin();
+      object i = draw(1);
+      return m_gif_begin = Image.GIF.header_block(i->xsize(),i->ysize(),
+						  Image.Colortable(i));
     }
 
     string first_frame()
@@ -120,7 +123,7 @@ class Constructors
       mixed ff = draw(2);
       if(stringp(ff)) return ff;
       if(!ff) return "";
-      return ff->gif_add();
+      return Image.GIF.render_block(ff,Image.Colortable(ff),0,0,0,25);
     }
 
     string tag(mapping m)
@@ -141,9 +144,17 @@ class Constructors
 	return http_pipe_in_progress();
       }
       if(ci) { image=0; return ci; }
-      if(bg)
-	return (ci=http_string_answer(image->togif(@bg), "image/gif"));
-      return (ci=http_string_answer(image->togif(), "image/gif"));
+#if constant(Image.GIF) && constant(Image.GIF.encode)
+      if (alpha)
+	return (ci=http_string_answer(Image.GIF.encode_trans(image,alpha),
+				      "image/gif"));
+      else if (bg)
+	return (ci=http_string_answer(Image.GIF.encode_trans(image,@bg),
+				      "image/gif"));
+      return (ci=http_string_answer(Image.GIF.encode(image), "image/gif"));
+#else
+      return (ci=http_string_answer(Image.PNG.encode(image), "image/png"));
+#endif
     }
 
     class FunctionCall
@@ -169,11 +180,16 @@ class Constructors
       return predef::`[](this_object(),q);
     }
 
-    void create(array (int) b, object i, float|void delay,
+    void create(mapping(string:object)|array (int) b, void|object i, float|void delay,
 		function|void anim,mixed|void st)
     {
-      bg = b;
-      image = i;
+      if (mappingp(b)) {
+	image = b->image;
+	alpha = b->alpha;
+      } else {
+	bg = b;
+	image = i;
+      }
       if (delay)
 	anim_delay = delay;
       if (anim)
@@ -321,6 +337,11 @@ class Constructors
     return myimage( bg(), roxen.load_image( fname, id) );
   }
 
+  object load_alpha( string fname )
+  {
+    return myimage( roxen.low_load_image( fname, id) );
+  }
+
   object PPM(string fname)
   {
     string q = Stdio.read_bytes(fname);
@@ -369,6 +390,8 @@ Animated clock gif.
 Animated progress bar.
 <br><tt>load( \"file_name\" )</tt>
 Loads an image file.
+<br><tt>load_alpha( \"file_name\" )</tt>
+Loads an image and keeps alpha channel information.
 <br><tt>PPM( \"file_name\" )</tt>
 Loads an image file (compability method).
 <br><tt>PImage(xs, ys, bg_color )</tt>
