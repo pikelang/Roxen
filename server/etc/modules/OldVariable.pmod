@@ -4,20 +4,18 @@
 
 static inherit "html";
 
-#define RequestID object
-
-
+// Increased for each variable, used to index the mappings below.
 static int unique_vid;
 
 // The theory is that most variables (or at least a sizable percentage
-// of all variables) does not have these members. This this saves
+// of all variables) does not have these members. Thus this saves
 // quite a respectable amount of memory, the cost is speed. But not
 // all that great a percentage of speed.
-static mapping changed_values = ([]);
-static mapping all_flags = ([]);
-static mapping all_warnings = ([]);
-
-static mapping invisibility_callbacks = set_weak_flag( ([]), 1 );
+static mapping(int:mixed)  changed_values = ([]);
+static mapping(int:int)    all_flags      = ([]);
+static mapping(int:string) all_warnings   = ([]);
+static mapping(int:function(RequestID,object:int))
+                           invisibility_callbacks = set_weak_flag( ([]), 1 );
 
 class Variable
 //. The basic variable type in Roxen. All other variable types should
@@ -28,7 +26,7 @@ class Variable
 
   constant is_variable = 1;
 
-  static string _id = (unique_vid++)->digits(256); 
+  static int _id = unique_vid++;
   // used for indexing the mappings.
 
   static mixed _initial; // default value
@@ -50,21 +48,50 @@ class Variable
     return all_warnings[ _id ];
   }
 
+  int get_flags() 
+    //. Returns the 'flags' field for this variable.
+    //. Flags is a bitwise or of one or more of 
+    //. 
+    //. VAR_EXPERT         Only for experts 
+    //. VAR_MORE           Only visible when more-mode is on (default on)
+    //. VAR_DEVELOPER      Only visible when devel-mode is on (default on)
+    //. VAR_INITIAL        Should be configured initially.
+  {
+    return all_flags[_id];
+  }
+
+  void set_flags( int flags )
+    //. Set the flags for this variable.
+    //. Flags is a bitwise or of one or more of 
+    //. 
+    //. VAR_EXPERT         Only for experts 
+    //. VAR_MORE           Only visible when more-mode is on (default on)
+    //. VAR_DEVELOPER      Only visible when devel-mode is on (default on)
+    //. VAR_INITIAL        Should be configured initially.
+  {
+    if(!flags )
+      m_delete( all_flags, _id );
+    else
+      all_flags[_id] = flags;
+  }
+
   int check_visibility( RequestID id,
                         int more_mode,
                         int expert_mode,
                         int devel_mode,
                         int initial )
-    //. Return 1 if this variable should be visible in the configuration
-    //. interface.
+    //. Return 1 if this variable should be visible in the
+    //. configuration interface. The default implementation check the
+    //. 'flags' field, and the invisibility callback, if any. See
+    //. get_flags, set_flags and set_invisibibility_check_callback
   {
-    int flags = all_flags[_id];
+    int flags = get_flags();
     function cb;
     if( initial && !(flags & VAR_INITIAL) )      return 0;
     if( (flags & VAR_EXPERT) && !expert_mode )   return 0;
     if( (flags & VAR_MORE) && !more_mode )       return 0;
     if( (flags & VAR_DEVELOPER) && !devel_mode ) return 0;
-    if( (cb = invisibility_callbacks[_id]) && 
+    if( (cb = get_invisibility_check_callback() ) && 
         cb( id, this_object() ) )
       return 0;
     return 1;
@@ -82,15 +109,19 @@ class Variable
       m_delete( invisibility_callbacks, _id );
   }
 
+  function(RequestID,Variable:int) get_invisibility_check_callback() 
+    //. Return the current invisibility check callback
+  {
+    return invisibility_callbacks[_id];
+  }
+
   string doc(  )
     //. Return the documentation for this variable (locale dependant).
     //. 
     //. The default implementation queries the locale object in roxen
     //. to get the documentation.
   {
-    return LC->module_doc_string( _id, 1 ) ||
-           RoxenLocale.standard.module_doc_string( _id, 1 ) ||
-           "No way!";
+    return LOW_LOCALE->module_doc_string( _id, 1 );
   }
   
   string name(  )
@@ -99,15 +130,13 @@ class Variable
     //. The default implementation queries the locale object in roxen
     //. to get the documentation.
   {
-    return LC->module_doc_string( _id, 0 ) ||
-           RoxenLocale.standard.module_doc_string( _id, 0 ) ||
-           "No way!";
+    return LOW_LOCALE->module_doc_string( _id, 0 );
   } 
 
   string type_hint(  )
     //. Return the type hint for this variable.
     //. Type hints are generic documentation for this variable type, 
-    //. and is the same for all instances of the variable.
+    //. and is the same for all instances of the type.
   {
   }
 
@@ -117,10 +146,18 @@ class Variable
     return _initial;
   }
 
-  string set( mixed to )
-    //. Set the variable to a new value. If this function returns a
-    //. string, it is a warning (or error) to the user who changed the
-    //. value.
+  int set( mixed to )
+    //. Set the variable to a new value. 
+    //. If this function returns true, the set was successful. 
+    //. Otherwise 0 is returned. 0 is also returned if the variable was
+    //. not changed by the set. 1 is returned if the variable was
+    //. changed, and -1 is returned if the variable was changed back to
+    //. it's default value.
+    //.
+    //. If verify_set() threw a string, ([])[0] is returned, that is,
+    //. 0 with zero_type set.
+    //.
+    //. If verify_set() threw an exception, the exception is thrown.
   {
     string err, e2;
     void set_warning( string to )
@@ -132,24 +169,39 @@ class Variable
     };
     if( e2 = catch( [err,to] = verify_set( to )) )
     {
-      set_warning( e2 );
-      return e2;
+      if( stringp( e2 ) )
+      {
+        set_warning( e2 );
+        return ([])[0];
+      }
+      throw( e2 );
     }
     set_warning( err );
-    low_set( to );
-    return err;
+    return low_set( to );
   }
 
-  void low_set( mixed to )
+  int low_set( mixed to )
     //. Forced set. No checking is done whatsoever.
+    //. 1 is returned if the variable was changed, -1 is returned if
+    //. the variable was changed back to it's default value and 0
+    //. otherwise.
   {
+    if( equal( to, query() ) )
+      return 0;
+
     if( !equal(to, default_value() ) )
+    {
       changed_values[ _id ] = to;
+      return 1;
+    }
     else
+    {
       m_delete( changed_values, _id );
+      return -1;
+    }
   }
-  
-  mixed query( )
+
+  mixed query()
     //. Returns the current value for this variable.
   {
     mixed v;
@@ -157,9 +209,9 @@ class Variable
       return v;
     return default_value();
   }
-
+  
   int is_defaulted()
-    //. Return true if this variable is set to the default value.
+    //. Return true if this variable is set to it's default value.
   {
     return zero_type( changed_values[ _id ] ) || 
            equal(changed_values[ _id ], default_value());
@@ -212,7 +264,13 @@ class Variable
   
   string path()
     //. A unique identifier for this variable. 
-    //. Should be used to prefix form variables.
+    //. Should be used to prefix form variable names.
+    //. 
+    //. Unless this variable was created by defvar(), the path is set
+    //. by the configuration interface the first time the variable is
+    //. to be shown in a form. This function can thus return 0. If it
+    //. does, and you still have to show the form, call set_path( )
+    //. with a unique string.
   {
     return _path;
   }
@@ -221,14 +279,15 @@ class Variable
     //. Set the path. Not normally called from user-level code.
     //. 
     //. This function must be called at least once before render_form
-    //. can be called. This is normally done by the configuration
-    //. interface.
+    //. can be called (at least if more than one variable is to be 
+    //. shown on the same page). This is normally done by the 
+    //. configuration interface.
   {
     _path = to;
   }
 
   string render_form( RequestID id );
-    //. Return a form to change this variable. The name of all <input>
+    //. Return a (HTML) form to change this variable. The name of all <input>
     //. or similar variables should be prefixed with the value returned
     //. from the path() function.
 
@@ -256,7 +315,6 @@ class Variable
     //. 
     //. The choices mapping is a mapping from value to the displayed
     //. option title. You can pass 0 to avoid translation.
-
   {
     catch {
       RoxenLocale[locale]->
@@ -283,10 +341,8 @@ class Variable
     //. Use deflocaledoc to define translations.
   {
     _initial = default_value;
-    if( flags ) 
-      all_flags[ _id ] = flags;
-    if( std_name )
-      RoxenLocale.standard.register_module_doc(_id,std_name,std_doc);
+    set_flags( flags );
+    deflocaledoc( "standard", std_name, std_doc, 0 );
   }
 }
 
@@ -575,7 +631,7 @@ class MultipleChoice
     //. Get the title used as description (shown to the user) for an
     //. element gotten from the get_choice_list() function.
   {
-    mapping tr = LC->module_doc_string( _id, 2 );
+    mapping tr = LOW_LOCALE->module_doc_string( _id, 2 );
     if( tr )
       return tr[ what ] || (string)what;
     return (string)what;
@@ -732,7 +788,7 @@ class List
     int rn;
     array l = query();
     mapping vl = get_form_vars(id);
-// first do the assign...
+    // first do the assign...
 
     if( (int)vl[".count"] != _current_count )
       return;
@@ -929,7 +985,7 @@ class PortList
 
 
 class FileList
-//. A list of URLs
+//. A list of filenames.
 {
   inherit List;
   constant type="FileList";
@@ -968,10 +1024,10 @@ class Flag
 
 
 // =================================================================
-// Utility functions
+// Utility functions used in multiple variable classes above
 // =================================================================
 
-array(string) verify_port( string port, int nofhttp )
+static array(string) verify_port( string port, int nofhttp )
 {
   string warning="";
   if( (int)port )
