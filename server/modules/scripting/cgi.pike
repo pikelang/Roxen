@@ -37,7 +37,7 @@ the headers and the body). Please notify the author of the script of this\n\
 problem.\n"
 
 
-constant cvs_version = "$Id: cgi.pike,v 2.22 1999/07/07 20:24:25 grubba Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.23 1999/07/21 20:00:44 nilsson Exp $";
 
 #ifdef CGI_DEBUG
 #define DWERROR(X)	report_debug(X)
@@ -1030,6 +1030,24 @@ void create(object conf)
 #endif
 }
 
+int|string tag_runcgi( string tag, mapping args, string cont, RequestID id )
+{
+  if(!query("cgi_tag")) 
+    return 0;
+
+  cont=parse_html(cont, ([]), (["attrib":
+    lambda(string tag, mapping m, string cont, mapping c, object id) {
+       id->variables[m->attrib]=cont;
+       return "";
+    }]),([]),id);
+
+  return parse_html(cont, (["cgi":
+    lambda(string tag, mapping m, mapping c, object id) {
+      return tag_cgi(tag, m, id);
+    }
+  ]),([]),([]),id);
+}
+
 int|string tag_cgi( string tag, mapping args, RequestID id )
 {
   DWERROR("CGI:tag_cgi()\n");
@@ -1043,21 +1061,19 @@ int|string tag_cgi( string tag, mapping args, RequestID id )
 
   if(!args->cache) 
     NOCACHE();
-  else
+  else {
     CACHE( (int)args->cache || 60 );
-
+    m_delete(args, "cache");
+  }
 
   RequestID fid = id->clone_me();
   string file = args->script;
+  m_delete(args, "script");
   if(!file)
     return "No 'script' argument to the CGI tag";
   fid->not_query = fix_relative( file, id );
   foreach(indices(args), string arg )
   {
-    if(arg == "script")
-      continue;
-    if(arg == "cache")
-      continue;
     if(arg[..7] == "default-")
     {
       if(!id->variables[arg[8..]])
@@ -1075,7 +1091,7 @@ int|string tag_cgi( string tag, mapping args, RequestID id )
       sscanf(data, "%*s\n\n%s", data);
     return data;
   };
-  return ("Failed to run CGI script: <font color=red><pre>"+
+  return ("Failed to run CGI script: <font color=\"red\"><pre>"+
           (html_encode_string(describe_backtrace(e))/"\n")[0]+
           "</pre></font>");
 }
@@ -1084,6 +1100,13 @@ int|string tag_cgi( string tag, mapping args, RequestID id )
 mapping query_tag_callers()
 {
   return ([
-    "cgi":tag_cgi,
+    "cgi":tag_cgi
+  ]);
+}
+
+mapping query_container_callers()
+{
+  return ([
+    "runcgi":tag_runcgi
   ]);
 }
