@@ -241,7 +241,8 @@ string describe_global_debug(object node)
   res+=("<table cellpadding=0 cellspacing=0 border=0>"
 	"<tr valign=top><td valign=top>");
   res+=("<table border=0 cellspacing=0 cellpadding=2>"
-	"<tr bgcolor=000060><td colspan=3><b>Memory Usage</b></td></tr>"
+	"<tr bgcolor=000060><td>&nbsp;</td>"
+	"<th colspan=2><b>number of</b></th></tr>"
 	"<tr bgcolor=darkblue><th align=left>Entry</th><th align"
 	"=right>Current</th><th align=right>Change</th></tr>");
   foreach(ind, f)
@@ -267,7 +268,7 @@ string describe_global_debug(object node)
   res+="</table></td><td>";
 
   res+=("<table border=0 cellspacing=0 cellpadding=2>"
-	"<tr bgcolor=000060><td colspan=3>&nbsp;<br></td></tr>"
+	"<tr bgcolor=000060><th colspan=2><b>memory usage</b></th></tr>"
 	"<tr bgcolor=darkblue><th align=right>Current (KB)</th><th align=right>"
 	"Change (KB)</th></tr>");
 
