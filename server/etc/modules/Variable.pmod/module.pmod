@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.73 2001/11/21 15:47:57 grubba Exp $
+// $Id: module.pmod,v 1.74 2002/01/29 15:30:43 mast Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -430,14 +430,14 @@ class Variable
     {
       changed_values[ _id ] = to;
       if( get_changed_callback() )
-        catch( get_changed_callback()( this_object() ) );
+	get_changed_callback()( this_object() );
       return 1;
     }
     else
     {
       m_delete( changed_values, _id );
       if( get_changed_callback() )
-        catch( get_changed_callback()( this_object() ) );
+	get_changed_callback()( this_object() );
       return -1;
     }
   }
