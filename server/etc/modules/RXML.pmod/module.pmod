@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.131 2001/02/11 15:07:44 mast Exp $
+//! $Id: module.pmod,v 1.132 2001/02/11 15:28:07 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -3325,19 +3325,19 @@ class Parser
   // appropriate error handling.
   {
     // We're always evaluating here, so context is always set.
-    if(varref[0]==':') return type->format_entity (varref[1..]);
-    if (has_value (varref, ".")) {
-      // It's intentional that we split on the first ':' for now, to
-      // allow for future enhancements of this syntax. Scope and
-      // variable names containing ':' are thus not accessible this way.
-      sscanf (varref, "%[^:]:%s", varref, string encoding);
-      array(string|int) splitted = context->parse_user_var (varref, 1);
-      if (splitted[0] == 1)
-	parse_error ("No scope in %O. (Put a ':' first to quote "
-		     "a character reference containing dots.)\n",
-		     encoding ? varref + ":" + encoding : varref);
+    if(varref[0]==':') return ({type->format_entity (varref[1..])});
+    if (has_value (varref, "."))
       if (mixed err = catch {
+	// It's intentional that we split on the first ':' for now, to
+	// allow for future enhancements of this syntax. Scope and
+	// variable names containing ':' are thus not accessible this way.
+	sscanf (varref, "%[^:]:%s", varref, string encoding);
 	context->current_var = varref;
+	array(string|int) splitted = context->parse_user_var (varref, 1);
+	if (splitted[0] == 1)
+	  parse_error (
+	    "No scope in variable reference.\n"
+	    "(Use ':' in front to quote a character reference containing dots.)\n");
 	mixed val;
 	if (zero_type (val = context->get_var ( // May throw.
 			 splitted[1..], splitted[0],
@@ -3352,7 +3352,6 @@ class Parser
 	context->handle_exception (err, this_object()); // May throw.
 	return ({});
       }
-    }
     if (!surrounding_type->free_text)
       parse_error ("Unknown variable reference &%s; not allowed in this "
 		   "context.\n", varref);
