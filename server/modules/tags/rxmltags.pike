@@ -10,7 +10,7 @@
 #define old_rxml_compat 1
 #define old_rxml_warning id->conf->api_functions()->old_rxml_warning[0]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.16 1999/10/05 21:16:56 grubba Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.17 1999/10/06 15:25:10 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -104,13 +104,14 @@ string tag_auth_required (string tagname, mapping args, object id)
 string|array(string) tag_clientname(string tag, mapping m, object id)
 {
   NOCACHE();
+  string client="";
   if (sizeof(id->client))
-    if(m->full) 
-      return ({ id->client * " " });
-    else 
-      return ({ id->client[0] });
+    if(m->full)
+      client=id->client * " ";
+    else
+      client=id->client[0];
 
-  return ""; 
+  return m->quote=="none"?client:({ html_encode_string(client) });
 }
 
 string tag_expire_time(string tag, mapping m, object id)
@@ -132,10 +133,12 @@ string tag_expire_time(string tag, mapping m, object id)
 
 array(string) tag_file(string tag, mapping m, object id)
 {
+  string file;
   if(m->raw)
-    return ({ id->raw_url });
+    file=id->raw_url;
   else
-    return ({ id->not_query });
+    file=id->not_query;
+  return m->quote=="none"?file:({ html_encode_string(file) });
 }
 
 string tag_header(string tag, mapping m, object id)
@@ -219,8 +222,8 @@ string|array(string) tag_referrer(string tag, mapping m, object id)
   if(tag=="refferrer") old_rxml_warning(id, "refferrer tag","referrer tag");
 #endif
 
-  if(m->help) 
-    return ("Shows from which page the client linked to this one.");
+  if(m->help)
+    return ({ "Shows from which page the client linked to this one." });
 
   return({ sizeof(id->referer) ?
 	   html_encode_string(id->referer*"") :
@@ -294,17 +297,17 @@ string|array(string) tag_vfs(string tag, mapping m, object id)
   return rxml_error(tag, "Virtual file unknown.", id);
 }
 
-string tag_language(string tag, mapping m, object id)
+array(string) tag_language(string tag, mapping m, object id)
 {
   NOCACHE();
 
   if(!id->misc["accept-language"])
-    return "None";
+    return ({ "None" });
 
   if(m->full)
-    return id->misc["accept-language"]*",";
+    return ({ html_encode_string(id->misc["accept-language"]*",") });
   else
-    return (id->misc["accept-language"][0]/";")[0];
+    return ({ html_encode_string((id->misc["accept-language"][0]/";")[0]) });
 }
 
 string tag_quote(string tagname, mapping m)
@@ -500,7 +503,7 @@ inline string do_replace(string s, mapping m, object id)
 string|array(string) tag_insert(string tag,mapping m,object id)
 {
   if(m->help)
-    return "Inserts a file, variable or other object into a webpage";
+    return ({ "Inserts a file, variable or other object into a webpage" });
 
   string n;
 
@@ -522,53 +525,45 @@ string|array(string) tag_insert(string tag,mapping m,object id)
       return rxml_error(tag, "No such variable ("+n+").", id);
 #if old_rxml_compat
     m_delete(m, "variable");
-    if(m->parse)
-    {
-      m_delete(m, "parse");
-      return do_replace(id->variables[n], m, id);
-    }
-    return ({ do_replace(id->variables[n], m, id) });
+    return m->quote=="none"?do_replace(id->variables[n], m-(["quote":""]), id):
+      ({ html_encode_string(do_replace(id->variables[n], m-(["quote":""]), id)) });
 #else
-    if(m->parse)
-      return id->variables[n];
-    return ({ id->variables[n] });
+    return m->quote=="none"?id->variables[n]:({ html_encode_string(id->variables[n]) });
 #endif
   }
-
-#if old_rxml_compat
-  if(m->variables && m->variables!="variables")
-  {
-    old_rxml_warning(id, "insert attribute variables set to an value",
-		     "&lt;debug showid=\"id->variables\"&gt;" );
-    return ({ Array.map(indices(id->variables),
-			lambda(string s, mapping m)
-			{ return sprintf("%s=%O\n", s, m[s]); },
-			id->variables) * "\n"
-	    });
-  }
-#endif
 
   if(n = m->variables)
+#if old_rxml_compat
+    if(m->variables!="variables")
+    {
+      old_rxml_warning(id, "insert attribute variables set to an value",
+		     "&lt;debug showid=\"id->variables\"&gt;" );
+      return ({ html_encode_string(Array.map(indices(id->variables),
+			lambda(string s, mapping m)
+			{ return sprintf("%s=%O\n", s, m[s]); },
+					   id->variables) * "\n")
+	    });
+    }
+#endif
     return ({ String.implode_nicely(indices(id->variables)) });
 
   if(n = m->other)
     if(stringp(id->misc[n]) || intp(id->misc[n])) {
-      if(m->parse)
-        return (string)id->misc[n];
-      return ({ (string)id->misc[n] });
+      return m->quote=="none"?(string)id->misc[n]:({ html_encode_string((string)id->misc[n]) });
     }
-    else
-      return rxml_error(tag, "No such other variable ("+n+").", id);
+    return rxml_error(tag, "No such other variable ("+n+").", id);
 
   if(n = m->cookies)
   {
     NOCACHE();
+#if old_rxml_compat
     if(n!="cookies")
-      return ({ Array.map(indices(id->cookies),
+      return ({ html_encode_string(Array.map(indices(id->cookies),
 			  lambda(string s, mapping m)
 			  { return sprintf("%s=%O\n", s, m[s]); },
-			  id->cookies) * "\n"
+					     id->cookies) * "\n")
 	      });
+#endif
     return ({ String.implode_nicely(indices(id->cookies)) });
   }
 
@@ -577,11 +572,13 @@ string|array(string) tag_insert(string tag,mapping m,object id)
     NOCACHE();
 #if old_rxml_compat
     m_delete(m, "cookie");
-    if(id->cookies[n])
-      return ({ do_replace(id->cookies[n], m, id) });
+    if(id->cookies[n]) {
+      string cookie=do_replace(id->cookies[n], m, id);
+      return m->quote=="none"?cookie:({ html_encode_string(cookie) });
+    }
 #else
     if(id->cookies[n])
-      return ({ id->cookies[n] });
+      return m->quote=="none"?id->cookies[n]:({ html_encode_string(id->cookies[n]) });
 #endif
     return rxml_error(tag, "No such cookie ("+n+").", id);
   }
@@ -684,7 +681,7 @@ array(string) tag_modified(string tag, mapping m, object id, object file)
 
 // ------------------- Containers ----------------
 
-array(string) tag_aprestate(string tag, mapping m, string q, object id)
+string tag_aprestate(string tag, mapping m, string q, object id)
 {
   string href, s, *foo;
 
@@ -693,7 +690,7 @@ array(string) tag_aprestate(string tag, mapping m, string q, object id)
   else
   {
     if ((sizeof(foo = href / ":") > 1) && (sizeof(foo[0] / "/") == 1))
-      return ({ make_container("a", m, q) });
+      return make_container("a", m, q);
     href=strip_prestate(fix_relative(href, id));
     m_delete(m, "href");
   }
@@ -732,7 +729,7 @@ array(string) tag_aprestate(string tag, mapping m, string q, object id)
     m_delete(m,"drop");
   }
   m->href = add_pre_state(href, prestate);
-  return ({ make_container("a", m, q) });
+  return make_container("a", m, q);
 }
 
 string|array(string) tag_aconf(string tag, mapping m, string q, object id)
@@ -740,7 +737,7 @@ string|array(string) tag_aconf(string tag, mapping m, string q, object id)
   string href,s;
   mapping cookies = ([]);
   
-  if(m->help) return "Adds or removes config options.";
+  if(m->help) return ({ "Adds or removes config options." });
 
   if(!m->href)
     href=strip_prestate(strip_config(id->raw_url));
@@ -788,7 +785,7 @@ string|array(string) tag_aconf(string tag, mapping m, string q, object id)
   }
 
   m->href = add_config(href, indices(cookies), id->prestate);
-  return ({ make_container("a", m, q) });
+  return make_container("a", m, q);
 }
 
 string tag_maketag(string tag, mapping m, string cont, object id) {
@@ -984,7 +981,7 @@ string tag_random(string tag, mapping m, string s)
 
 array(string) tag_formoutput(string tag_name, mapping args, string contents, object id)
 {
-  return ({do_output_tag( args, ({ id->variables }), contents, id )});
+  return ({ do_output_tag( args, ({ id->variables }), contents, id ) });
 }
 
 mixed tag_gauge(string t, mapping args, string contents, object id)
@@ -1008,9 +1005,9 @@ mixed tag_gauge(string t, mapping args, string contents, object id)
   if(args->silent) return "";
   if(args->timeonly) return sprintf("%3.6f", t/1000000.0);
   if(args->resultonly) return ({contents});
-  return ({"<br><font size=\"-1\"><b>Time: "+
+  return ({ "<br><font size=\"-1\"><b>Time: "+
 	   sprintf("%3.6f", t/1000000.0)+
-	   " seconds</b></font><br>"+contents});
+	   " seconds</b></font><br>"+contents });
 } 
 
 // Removes empty lines
@@ -1076,7 +1073,7 @@ private mixed tag_option( string tag_name, mapping args, string contents,
 	args->selected = "selected";
     else
       return 0;
-  return ({make_container( tag_name, args, contents )});
+  return ({ make_container( tag_name, args, contents ) });
 }
 
 // Internal method for the default tag
@@ -1121,7 +1118,7 @@ array(string) tag_default( string tag_name, mapping args, string contents, objec
 			 mkmultiset( id->variables[ args->variable ]
 				     / separator ) )});
   else    
-    return ({contents});
+    return ({ contents });
 }
 
 string tag_sort(string t, mapping m, string c, object id)
