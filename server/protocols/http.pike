@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.242 2000/08/14 02:01:46 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.243 2000/08/14 19:50:00 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 #define RAM_CACHE
@@ -2187,8 +2187,8 @@ static void create(object f, object c, object cc)
     if( cc ) conf = cc;
     time = _time(1);
     call_out(do_timeout, 30);
-    string q = f->read( 8192, 1 );
-    if( q ) got_data( 0, q );
+//     string q = f->read( 8192, 1 );
+//     if( q ) got_data( 0, q );
   }
 }
 
