@@ -20,7 +20,7 @@
 
 inherit "filesystem" : filesystem;
 
-constant cvs_version="$Id: userfs.pike,v 1.53 2000/03/21 17:27:22 nilsson Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.54 2000/03/22 19:21:50 grubba Exp $";
 constant module_type = MODULE_LOCATION;
 constant module_name = "User Filesystem";
 constant module_doc  = "User filesystem. Uses the userdatabase (and thus the system passwd "
@@ -368,6 +368,10 @@ array(int) stat_file(string f, RequestID id)
 	return 0;
       // FIXME: Use the banish multiset.
       if(search(QUERY(banish_list), u) != -1) return 0;
+      if(us[5] == "") {
+	// No home directory.
+	return 0;
+      }
       if(us[5][-1] != '/')
 	f = us[ 5 ] + "/" + QUERY(pdir) + f;
       else

@@ -3,7 +3,7 @@
 // User database. Reads the system password database and use it to
 // authentificate users.
 
-constant cvs_version = "$Id: userdb.pike,v 1.40 2000/03/16 18:57:14 nilsson Exp $";
+constant cvs_version = "$Id: userdb.pike,v 1.41 2000/03/22 19:26:37 grubba Exp $";
 
 #include <module.h>
 inherit "module";
@@ -304,21 +304,28 @@ void read_data()
 		 ({"å","ä","ö", "Ö","Å","Ä"}));
 
 /* Two loops for speed.. */
-  if(QUERY(Strip))
+  if(QUERY(Strip)) {
     foreach(data/"\n", data)
     {
       if(sizeof(entry=data/":") > 6)
       {
-	if (sizeof(entry[4])) {
-	  entry[4]=(entry[4]/",")[0];
+	if (!users[entry[0]]) {
+	  if (sizeof(entry[4])) {
+	    entry[4]=(entry[4]/",")[0];
+	  }
+	  uid2user[(int)((users[entry[0]] = entry)[2])]=entry;
 	}
-	uid2user[(int)((users[entry[0]] = entry)[2])]=entry;
       }
     }
-  else
-    foreach(data/"\n", data)
-      if(sizeof(entry=data/":") > 6)
-	uid2user[(int)((users[entry[0]] = entry)[2])]=entry;
+  } else {
+    foreach(data/"\n", data) {
+      if(sizeof(entry=data/":") > 6) {
+	if (!users[entry[0]]) {
+	  uid2user[(int)((users[entry[0]] = entry)[2])]=entry;
+	}
+      }
+    }
+  }
 #if efun(getpwent)
   if(QUERY(method) == "getpwent" && (original_data))
     slow_update();
