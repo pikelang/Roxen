@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.700 2001/08/20 05:58:38 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.701 2001/08/20 15:11:36 per Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -2081,7 +2081,7 @@ class ImageCache
 {
 #define QUERY(X,Y...) get_db()->query(X,Y)
 
-  static function(void:Sql.Sql) get_db;
+  function(void:Sql.Sql) get_db;
   string name;
   string dir;
   function draw_function;
@@ -2973,8 +2973,8 @@ class ArgCache
 //! refetched later by a short string key. This being a cache, your
 //! data may be thrown away at random when the cache is full.
 {
-  static function(void:Sql.Sql) get_db;
-  static string name;
+  function(void:Sql.Sql) get_db;
+  string name;
 
 #define CACHE_VALUE 0
 #define CACHE_SKEY  1
@@ -3058,9 +3058,10 @@ class ArgCache
     // Support that the 'local' database moves (not really nessesary,
     // but it won't hurt either)
     master()->resolv( "DBManager.add_dblist_changed_callback" )( init_db );
+    call_out(get_plugins,0);
   }
 
-  static string read_args( int id )
+  string read_args( int id )
   {
     array res = QUERY("SELECT contents FROM "+name+" WHERE id="+id);
     if( sizeof(res) )
@@ -3071,30 +3072,28 @@ class ArgCache
     return 0;
   }
 
-  static int create_key( string long_key )
+  int create_key( string long_key )
   {
-    string hl = Crypto.md5()->update( long_key )->digest();
     array data = QUERY("SELECT id,contents FROM "+name+" WHERE hash=%d",
-			   hash(long_key));
+		       hash(long_key));
     foreach( data, mapping m )
       if( m->contents == long_key )
-        return m->id;
-
-    QUERY( "INSERT INTO "+name+" (contents,hash,atime) VALUES "
-	       "(%s,%d,UNIX_TIMESTAMP())",
-	       long_key, hash(long_key) );
+	return m->id;
+    
     int id = (int)get_db()->master_sql->insert_id();
-    if( !plugins ) get_plugins();
-    (plugins->create_key-({0}))( id, hl, long_key );
+    QUERY( "INSERT INTO "+name+" (contents,hash,atime) VALUES "
+	   "(%s,%d,UNIX_TIMESTAMP())",
+	   long_key, hash(long_key) );
+    (plugins->create_key-({0}))( id, long_key );
     return id;
   }
-
+  
   static int low_key_exists( string key )
   {
     return sizeof( QUERY( "SELECT id FROM "+name+" WHERE id="+(int)key));
   }
 
-  static string secret;
+  string secret;
 
   static void ensure_secret()
   {
@@ -3113,16 +3112,20 @@ class ArgCache
   static array plugins;
   static void get_plugins()
   {
+    ensure_secret();
     plugins = ({});
     foreach( ({ "../local/arg_cache_plugins", "arg_cache_plugins" }), string d)
       if( file_stat( d  ) )
 	foreach( get_dir( d ), string f )
-	  plugins += ({ (object)(d+"/"+f)  });
+	{
+	  object plug = ((program)(d+"/"+f))(this_object());
+	  if( !plug->disabled )
+	    plugins += ({ plug  });
+	}
   }
 
   static array plugin_decode_id( string id )
   {
-    if( !plugins ) get_plugins();
     mixed r;
     foreach( (plugins->decode_id-({0})), function(string:array(int)) f )
       if( r = f( id ) )
@@ -3132,6 +3135,7 @@ class ArgCache
 
   static array decode_id( string a )
   {
+    string oa = a;
     ensure_secret();
     object crypto = Crypto.arcfour();
     crypto->set_encrypt_key( secret );
@@ -3139,7 +3143,7 @@ class ArgCache
     a = crypto->crypt( a );
     int i, j;
     if( sscanf( a, "%d×%d", i, j ) != 2 )
-      return plugin_decode_id( a );
+      return plugin_decode_id( oa );
     return ({ i, j });
   }
   
@@ -3165,7 +3169,7 @@ class ArgCache
     return id;
   }
 
-  static int low_store( array a )
+  int low_store( array a )
   {
     string data = encode_value_canonic( a );
     string hv = Crypto.md5()->update( data )->digest();
@@ -3188,7 +3192,6 @@ class ArgCache
     }
 
     int id = create_key( data );
-    if( !plugins ) get_plugins();
     cache[ hv ] = id;
     cache[ id ] = a;
     return id;
@@ -3203,9 +3206,9 @@ class ArgCache
     if( !i )
     {
       mixed res;
-      if( !plugins ) get_plugins();
       foreach( (plugins->lookup-({0})), function f )
 	if( res = f( id ) )
+
 	  return res;
       return 0;
     }
@@ -3215,7 +3218,7 @@ class ArgCache
       return (cache[id] = mkmapping( a, b ))+([]);
   }
 
-  static array low_lookup( int id )
+  array low_lookup( int id )
   {
     mixed v;
     if( v = cache[id] )
@@ -3224,7 +3227,6 @@ class ArgCache
     if( !q )
     {
       mixed res;
-      if( !plugins ) get_plugins();
       foreach( (plugins->low_lookup-({0})), function f )
 	if( res = f( id ) )
 	  return res;
@@ -3240,7 +3242,6 @@ class ArgCache
   void delete( string id )
   //! Remove the data element stored under the key 'id'.
   {
-    if(!plugins) get_plugins();
     (plugins->delete-({0}))( id );
     m_delete( cache, id );
     
