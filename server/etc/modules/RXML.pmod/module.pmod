@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.214 2001/07/25 21:02:21 mast Exp $
+// $Id: module.pmod,v 1.215 2001/07/26 01:51:45 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -3435,7 +3435,7 @@ class Frame
 	    if (id->conf->check_security (tag, id, id->misc->seclevel)) {
 	      THIS_TAG_TOP_DEBUG ("Access denied - exiting\n");
 	      TRACE_LEAVE("access denied");
-	      break process_tag;
+	      return result = nil;
 	    }
 #endif
 	  }
@@ -3520,7 +3520,7 @@ class Frame
 	  THIS_TAG_TOP_DEBUG ("Reporting help - frame done\n");
 	  ctx->handle_exception ( // Will throw if necessary.
 	    Backtrace ("help", help, ctx), evaler);
-	  break process_tag;
+	  return result = nil;
 	}
 #endif
 
