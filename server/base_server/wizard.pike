@@ -1,7 +1,7 @@
 /* Copyright © 1997, 1998, Idonex AB.
  * Some modifications by Francesco Chemolli
  *
- * $Id: wizard.pike,v 1.83 1999/05/12 01:31:15 js Exp $
+ * $Id: wizard.pike,v 1.84 1999/05/19 23:02:08 mast Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  * 
@@ -116,7 +116,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed b)
     m_delete(m,"default");
     foreach((current||"")/"\0"-({""}), string v)
     {
-      res+="<tr><td>"+v+"</td><td><font size=-2>";
+      res+="<tr><td>"+html_encode_string(v)+"</td><td><font size=-2>";
       m->name="_delete_"+n+":"+v;
       m->value = " Remove ";
       m->type = "submit";
@@ -458,8 +458,7 @@ int num_pages(string wiz_name)
 #define PREVIOUS Q((this_object()->previous_label?this_object()->previous_label:"<- Previous"))
 #define COMPLETED Q((this_object()->completed_label?this_object()->completed_label:"Completed"))
 
-string parse_wizard_page(string form, object id, string wiz_name,
-			 void|string page_name, void|string base)
+string parse_wizard_page(string form, object id, string wiz_name, void|string page_name)
 {
   mapping(string:array) automaton = this_object()->wizard_automaton;
   int max_page = !automaton && num_pages(wiz_name)-1;
@@ -475,9 +474,8 @@ string parse_wizard_page(string form, object id, string wiz_name,
 		       "help":parse_wizard_help]), id, foo );
   
   res = ("<!--Wizard-->\n"
-         "<form method=get "+
-	 (base?("action='"+base+"'"):"")+
-	 "> <input type=hidden name=action value=\""+id->variables->action+"\">\n"
+         "<form method=get>\n"
+	 " <input type=hidden name=action value=\""+id->variables->action+"\">\n"
 	 " <input type=hidden name=_page value=\""+page+"\">\n"
 	 " <input type=hidden name=_state value=\""+compress_state(id->variables)+"\">\n"
 	 "<table bgcolor=black cellpadding=1 border=0 cellspacing=0 width=80%>\n"
@@ -760,7 +758,7 @@ mapping|string wizard_for(object id,string cancel,mixed ... args)
   if (mappingp(data))
     return data;
 
-  return parse_wizard_page(data,id,wiz_name,page_name,cancel);
+  return parse_wizard_page(data,id,wiz_name,page_name);
 }
 
 mapping wizards = ([]);
@@ -828,9 +826,6 @@ mixed wizard_menu(object id, string dir, string base, mixed ... args)
     id->variables->sm = focused_wizard_menu;
   else
     focused_wizard_menu = id->variables->sm=="0"?0:id->variables->sm;
-
-  if(id->misc->action && !id->variables->action)
-    id->variables->action=id->misc->action;
   
   if(!id->variables->action)
   {
