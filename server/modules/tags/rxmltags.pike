@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.446 2004/02/09 15:56:57 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.447 2004/02/17 15:09:56 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1421,10 +1421,11 @@ class TagCache {
 
     static void make_key_from_keymap(RequestID id)
     {
-      // Cacheing is not allowed if there are keys except '1' and
-      // none of them are page.path.
-      array(string|int) keys = indices(keymap) - ({1});
-      if (sizeof(keys) && !has_value(keys, "page.path")) {
+      // Caching is not allowed if there are keys except '1' and
+      // page.path, i.e. when different cache entries might be chosen
+      // for the same page.
+      array(string|int) keys = indices(keymap) - ({1}) - ({"page.path"});
+      if (sizeof(keys)) {
 	if (!args["enable-client-cache"])
 	  NOCACHE();
 	else if(!args["enable-protocol-cache"])
@@ -6122,7 +6123,6 @@ using the pre tag.
 
 <attr name='enable-protocol-cache'>
 </attr>
-
 
 <attr name='years' value='number'>
  <p>Add this number of years to the time this entry is valid.</p>
