@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.2 2002/05/02 11:13:04 jhs Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.3 2002/05/02 11:37:18 jhs Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -31,6 +31,7 @@ static constant units = ({ "Year", "Month", "Week", "Day",
 	 output_units = ({ "years", "months", "weeks", "days",
 			   "hours", "minutes", "seconds", "unknown" }),
        scope_layout = ([ // Date related data:
+			 "date"			: "format_ymd",
 			 "year"			: "year_no",
 			 "year.day"		: "year_day",
 			 "year.name"		: "year_name",
@@ -46,10 +47,13 @@ static constant units = ({ "Year", "Month", "Week", "Day",
 			 "week.name"		: "week_name",
 			 "day"			: "month_day",
 			 // Time zone dependent data:
+			 "time"			: "format_tod",
+			 "timestamp"		: "format_time",
 			 "hour"			: "hour_no",
 			 "minute"		: "minute_no",
 			 "second"		: "second_no",
 			 "timezone"		: "tzname_iso",
+
 			 "timezone.name"	: "tzname",
 			 "timezone.iso-name"	: "tzname_iso",
 			 "timezone.seconds-to-utc" : "utc_offset",
@@ -60,7 +64,6 @@ static constant units = ({ "Year", "Month", "Week", "Day",
 /* Possible future convenience expansion:
          format_...
 	   iso_ymd_full   "2000-06-02 (Jun) -W22-5 (Fri)" [2]
-           ymd            "2000-06-02"
            ymd_short      "20000602"
            ymd_xshort     "000602" [1]
            iso_week       "2000-W22"
@@ -72,12 +75,10 @@ static constant units = ({ "Year", "Month", "Week", "Day",
            iso_time_full  "2000-06-02 (Jun) -W22-5 (Fri) 20:53:14 UTC+1" [2]
            ctime          "Fri Jun  2 20:53:14 2000\n" [2] [3]
            http           "Fri, 02 Jun 2000 20:53:14 GMT" [4]
-           time           "2000-06-02 20:53:14"
            time_short     "20000602 20:53:14"
            time_xshort    "000602 20:53:14"
            mtime          "2000-06-02 20:53"
            xtime          "2000-06-02 20:53:14.123456"
-           tod            "20:53:14"
            tod_short      "205314"
            todz           "20:53:14 CET"
            todz_iso       "20:53:14 UTC+1"
