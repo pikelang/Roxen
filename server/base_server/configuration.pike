@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.558 2004/04/20 14:07:49 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.559 2004/04/20 15:29:42 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1832,7 +1832,7 @@ mapping|int get_file(RequestID id, int|void no_magic, int|void internal_get)
     PROF_ENTER(Roxen.get_owning_module(tmp)->module_name,"filter");
     if(res2=tmp(res,id))
     {
-      if(mappinp(res) && res->file && (res2->file != res->file))
+      if(mappingp(res) && res->file && (res2->file != res->file))
 	destruct(res->file);
       TRACE_LEAVE("Rewrote result.");
       res=res2;
