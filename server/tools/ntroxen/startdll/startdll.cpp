@@ -1,6 +1,6 @@
 // startdll.cpp : Implementation of WinMain
 //
-// $Id: startdll.cpp,v 1.7 2001/08/09 16:23:47 tomas Exp $
+// $Id: startdll.cpp,v 1.8 2001/09/28 12:02:50 tomas Exp $
 //
 
 
@@ -406,13 +406,13 @@ BOOL CServiceModule::ControlHandler( DWORD dwCtrlType )
 {
     switch( dwCtrlType )
     {
-	case CTRL_BREAK_EVENT:  // use Ctrl+C or Ctrl+Break to simulate
-	case CTRL_C_EVENT:      // SERVICE_CONTROL_STOP in debug mode
-	    //ThreadServiceStop(0);
+	case CTRL_BREAK_EVENT:  // Ignore Ctrl+Break (may be used by pike)
+        return TRUE;
+
+	case CTRL_C_EVENT:      // use Ctrl+C or Ctrl+Break to simulate
+                            // SERVICE_CONTROL_STOP in debug mode
         Stop(TRUE);
 	    return TRUE;
-	    break;
-
     }
     return FALSE;
 }

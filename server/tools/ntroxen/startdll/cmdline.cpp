@@ -1,6 +1,6 @@
 // cmdline.cpp: implementation of the CCmdLine class.
 //
-// $Id: cmdline.cpp,v 1.8 2001/08/23 13:31:33 tomas Exp $
+// $Id: cmdline.cpp,v 1.9 2001/09/28 12:02:49 tomas Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -221,6 +221,7 @@ CCmdLine::CCmdLine()
   m_bPassHelp   = FALSE;
   m_bKeepMysql  = FALSE;
   m_bMsdev      = FALSE;
+  m_bCheckVersion = TRUE;
 
   m_iVerbose    = 1;
   m_iDebug      = -1;
@@ -467,6 +468,8 @@ void CCmdLine::PrintHelp()
     "                                  but debug. Slows the server down.",
     "",
 */
+    "      .B--with-snmp-agentB.:          Enable internal SNMP agent code.",
+    "",
     "  .BArguments passed to pike:B.",
     "",
     "       .B-DDEFINEB.:                  Define the symbol .BDEFINEB..",
@@ -813,6 +816,7 @@ int CCmdLine::ParseArg(char *argv[], CCmdLine::tArgType & type)
       Match(*argv, "--install", NULL, NULL) )
   {
     m_bInstall = TRUE;
+    m_bCheckVersion = FALSE;
     type = eArgStart;
     return 1;
   }
@@ -823,6 +827,7 @@ int CCmdLine::ParseArg(char *argv[], CCmdLine::tArgType & type)
       Match(*argv, "--register", NULL, NULL) )
   {
     m_bRegister = TRUE;
+    m_bCheckVersion = FALSE;
     type = eArgStart;
     return 1;
   }
@@ -833,6 +838,7 @@ int CCmdLine::ParseArg(char *argv[], CCmdLine::tArgType & type)
       Match(*argv, "--remove", NULL, NULL) )
   {
     m_bRemove = TRUE;
+    m_bCheckVersion = FALSE;
     type = eArgStart;
     return 1;
   }
@@ -897,6 +903,15 @@ int CCmdLine::ParseArg(char *argv[], CCmdLine::tArgType & type)
     return 1;
   }
 
+  //'--with-snmp-agent'|'--enable-snmp-agent')
+  //  DEFINES="$DEFINES -DSNMP_AGENT"
+  if (Match(*argv, "--with-snmp-agent", NULL, NULL) ||
+      Match(*argv, "--enable-snmp-agent", NULL, NULL) )
+  {
+    m_saPikeDefines.Add("-DSNMP_AGENT");
+    type = eArgPike;
+    return 1;
+  }
 
   //'--debug'|'--with-debug'|'--enable-debug')
   //  debug=1
@@ -1102,6 +1117,7 @@ int CCmdLine::ParseArg(char *argv[], CCmdLine::tArgType & type)
     m_bOnce = TRUE;
     m_bPassHelp = TRUE;
     m_bKeepMysql = TRUE;
+    m_bCheckVersion = FALSE;
     type = eArgNtLoader;
     return 2;
   }
@@ -1173,6 +1189,7 @@ int CCmdLine::ParseArg(char *argv[], CCmdLine::tArgType & type)
     }
     else
     {
+      m_bCheckVersion = FALSE;
       m_bVersion = TRUE;
       type = eArgVersion;
     }
@@ -1237,6 +1254,7 @@ int CCmdLine::ParseArg(char *argv[], CCmdLine::tArgType & type)
     }
     else
     {
+      m_bCheckVersion = FALSE;
       m_bHelp = TRUE;
       type = eArgHelp;
     }
@@ -1372,6 +1390,7 @@ BOOL CCmdLine::Parse(int argc, char *argv[])
         m_saPikeArgs.Add(("-DSELF_TEST_DIR=\\\"" + selfTestDirUnx + "\\\"").c_str());
 
         m_bOnce = TRUE;
+        m_iDebug = max(m_iDebug, 0);
         m_saRoxenArgs.Add("--config-dir=../var/test_config");
         m_saRoxenArgs.Add("--remove-dumped");
         
@@ -1443,6 +1462,17 @@ BOOL CCmdLine::Parse(int argc, char *argv[])
     m_saPikeDefines.AddIfNew("-DDEBUG");
     m_saPikeDefines.AddIfNew("-DMODULE_DEBUG");
     m_saPikeArgs.AddIfNew("-w");
+  }
+
+  if (m_bCheckVersion)
+  {
+    if (CRoxen::CheckVersionChange())
+    {
+      m_saRoxenArgs.AddIfNew("--remove-dumped");
+      HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+      if (m_iVerbose >= 1)
+        OutputLine(hOut, "          : Removing old precompiled files (defines or pike version changed)");
+    }
   }
 
   return ret;

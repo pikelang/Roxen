@@ -1,6 +1,6 @@
 // roxen.h: interface for the CRoxen class.
 //
-// $Id: roxen.h,v 1.2 2001/08/14 10:00:01 tomas Exp $
+// $Id: roxen.h,v 1.3 2001/09/28 12:02:50 tomas Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -29,6 +29,7 @@ public:
   static void PrintVersion();
 
   static BOOL RunPike(const char *cmdline, BOOL wait=TRUE);
+  static BOOL CheckVersionChange();
 
   //impl
 private:

@@ -1,6 +1,6 @@
 // roxen.cpp: implementation of the CRoxen class.
 //
-// $Id: roxen.cpp,v 1.6 2001/08/23 13:31:33 tomas Exp $
+// $Id: roxen.cpp,v 1.7 2001/09/28 12:02:49 tomas Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -8,6 +8,8 @@
 
 #include <direct.h>
 #include <time.h>
+
+#include <fstream>
 
 #include "roxen.h"
 
@@ -464,5 +466,94 @@ BOOL CRoxen::RunPike(const char *cmdline, BOOL wait /*=TRUE*/)
   CloseHandle(proc.hThread);
   CloseHandle(proc.hProcess);
   
+  return TRUE;
+}
+
+std::string ListFiles(std::string dir, std::string wildcard = "")
+{
+  std::string ret;
+  HANDLE hFind;
+  WIN32_FIND_DATA ffd;
+  char buf[2048];
+
+  if (wildcard.length() > 0)
+    hFind = FindFirstFile((dir + "\\" + wildcard).c_str(), &ffd);
+  else
+    hFind = FindFirstFile(dir.c_str(), &ffd);
+
+  if (hFind != INVALID_HANDLE_VALUE)
+  {
+    do
+    {
+      if (strcmp(ffd.cFileName, ".") == 0 || strcmp(ffd.cFileName, "..") == 0)
+        continue;
+      
+      if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+      {
+        if (wildcard.length() > 0)
+          ret += ListFiles(dir + "\\" + ffd.cFileName, "*");
+        else
+          ret += ListFiles(dir, "*");
+      }
+      else
+      {
+        // attrib size last-write-time filename
+        sprintf(buf, "%08x %08x%08x %08x%08x %s\\%s\n",
+          ffd.dwFileAttributes,
+          ffd.nFileSizeHigh, ffd.nFileSizeLow,
+          ffd.ftLastWriteTime.dwHighDateTime, ffd.ftLastWriteTime.dwLowDateTime, 
+          dir.c_str(), ffd.cFileName);
+
+        ret += buf;
+        
+      }
+      
+    } while (FindNextFile(hFind, &ffd));
+    
+    FindClose(hFind);
+  }
+
+  return ret;
+}
+
+
+BOOL CRoxen::CheckVersionChange()
+{
+  std::string ls;
+  std::ifstream is;
+  std::string old_ls;
+  char buf[4096];
+  int count;
+
+  // Insert pike defines
+  CCmdLine & cmdline = _Module.GetCmdLine();
+  stracat(buf, cmdline.GetPikeDefines().GetList());
+  ls += buf;
+  ls += "\n\n";
+
+  // Insert file listings
+  ls += ListFiles(FindPike());
+  ls += ListFiles("etc\\modules");
+  ls += ListFiles("base_server");
+
+  is.open("..\\var\\old_roxen_defines");
+  while (is.good())
+  {
+    is.read(buf, sizeof(buf));
+    count = is.gcount();
+    old_ls.append(buf, count);
+  }
+
+  is.close();
+
+  if (old_ls == ls)
+    return FALSE;
+
+  CreateDirectory("..\\var", NULL);
+  std::ofstream os;
+  os.open("..\\var\\old_roxen_defines");
+  os.write(ls.c_str(), ls.length());
+  os.close();
+
   return TRUE;
 }
