@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.29 1997/08/22 19:32:47 per Exp $
+/* $Id: wizard.pike,v 1.30 1997/08/23 01:32:00 marcus Exp $
  *  name="Wizard generator";
  *  doc="This plugin generats all the nice wizards";
  */
@@ -158,9 +158,9 @@ string make_title()
   sscanf(s, "%*d:%s", s);
   return s;
 }
-  
-string parse_wizard_page(string form, object id, string wiz_name)
-{
+
+int num_pages(string wiz_name)
+{  
   int max_page;
   for(int i=0; i<100; i++)
     if(!this_object()[wiz_name+i])
@@ -168,7 +168,12 @@ string parse_wizard_page(string form, object id, string wiz_name)
       max_page=i-1;
       break;
     }
+  return max_page+1;
+}
 
+string parse_wizard_page(string form, object id, string wiz_name)
+{
+  int max_page = num_pages(wiz_name)-1;
   string res;
   int page = ((int)id->variables->_page);
   mapping foo = ([]);
