@@ -18,7 +18,7 @@
 #define _rettext defines[" _rettext"]
 #define _ok     defines[" _ok"]
 
-constant cvs_version="$Id: htmlparse.pike,v 1.155 1998/11/22 17:31:12 per Exp $";
+constant cvs_version="$Id: htmlparse.pike,v 1.156 1998/12/14 11:32:52 peter Exp $";
 constant thread_safe=1;
 
 function call_user_tag, call_user_container;
@@ -777,18 +777,35 @@ string tag_insert(string tag,mapping m,object id,object file,mapping defines)
     string s;
     string f;
     f = fix_relative(m->file, id);
+    id = id->clone_me();
 
     if(m->nocache) id->pragma["no-cache"] = 1;
-
+    if(id->scan_for_query)
+      f = id->scan_for_query( f );
     s = id->conf->try_get_file(f, id);
+
 
     if(!s) {
       if ((sizeof(f)>2) && (f[sizeof(f)-2..] == "--")) {
-	// Might be a compat insert.
+	// Might be a compat insert. <!--#inclide file=foo.html-->
 	s = id->conf->try_get_file(f[..sizeof(f)-3], id);
       }
       if (!s) {
-	return id->misc->debug?"No such file: "+f+"!":"";
+
+	// Might be a PATH_INFO type URL.
+	array a = id->conf->open_file( f, "r", id );
+	if(a && a[0])
+	{
+	  s = a[0]->read();
+	  if(a[1]->raw)
+	  {
+	    s -= "\r";
+	    if(!sscanf(s, "%*s\n\n%s", s))
+	      sscanf(s, "%*s\n%s", s);
+	  }
+	}
+	if(!s)
+	  return id->misc->debug?"No such file: "+f+"!":"";
       }
     }
 
@@ -996,11 +1013,22 @@ string tag_accessed(string tag,mapping m,object id,object file,
     m->file=id->not_query;
   }
   
+  int bar;
+
   if(m->reset)
   {
-    query_num(m->file, -counts);
-    database_set_created(m->file, time(1));
-    return "Number of counts for "+m->file+" is now 0.<br>";
+    // FIXME: There is a few cases where users can avoid this.
+    if( !search( (dirname(m->file)+"/")-"//",
+		 (dirname(id->not_query)+"/")-"//" ) )
+    {
+      query_num(m->file, -counts);
+      database_set_created(m->file, time(1));
+      return "Number of counts for "+m->file+" is now 0.<br>";
+    } else {
+      // On a web hotell you don't want the guest to be able to reset
+      // eachothers counters.
+      return "You do not have access to reset this counter.";
+    }
   }
 
   if(m->silent)
@@ -1949,7 +1977,7 @@ string tag_language(string tag, mapping m, object id)
     return "None";
 
   if(m->full)
-    return id->misc["accept-language"]*"";
+    return id->misc["accept-language"]*",";
   else
     return (id->misc["accept-language"][0]/";")[0];
 }
