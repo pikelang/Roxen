@@ -1,4 +1,4 @@
-string cvs_version="$Id: pimage.pike,v 1.2 1997/09/18 02:29:08 per Exp $";
+string cvs_version="$Id: pimage.pike,v 1.3 1997/10/05 01:23:26 grubba Exp $";
 
 #include <module.h>
 inherit "module";
@@ -294,7 +294,12 @@ class Constructors
     string q = Stdio.read_bytes(fname);
     if(!q) q = roxen->try_get_file(dirname(id->not_query)+fname,id);
     if(!q) throw("Unknown PPM image '"+fname+"'");
-    catch { q = Gz.inflate()->inflate(q); };
+    mixed g = Gz;
+    if (g->inflate) {
+      catch {
+	q = g.inflate()->inflate(q);
+      };
+    }
     return myimage(bg(),image()->fromppm(q));
   }
 
