@@ -261,7 +261,7 @@ mapping(string:mixed) init(mapping(string:mixed) diagram_data)
 
 };
 
-# ifndef ROXEN
+#ifndef ROXEN
 object get_font(string j, int p, int t, int h, string fdg, int s, int hd)
 {
   return Image.font()->load("avant_garde");
