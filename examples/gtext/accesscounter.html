@@ -58,7 +58,7 @@ mapping v=id->variables;
 return "<gtext nocache nfont="+v->font+
 (v->shadow=="yes"?" bshadow=1":"")+
 " spacing=4"+
-(v->c1==v->c2?" fg="+v->c1:sprintf(" quant=200 textscale=%s,%s,%s,%s",v->c1,v->c1,v->c2,v->c2))+
+(v->c1==v->c2?" fgcolor="+v->c1:sprintf(" quant=200 textscale=%s,%s,%s,%s",v->c1,v->c1,v->c2,v->c2))+
 (v->outline=="yes"?" outline="+v->oc+",1":"")+">"
 "<accessed lang="+v->language+" type="+v->type+">"
 "</gtext>"
