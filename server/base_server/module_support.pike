@@ -1,180 +1,18 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module_support.pike,v 1.70 2000/05/23 17:06:32 mast Exp $
+// $Id: module_support.pike,v 1.71 2000/07/04 03:45:42 per Exp $
 
 #include <roxen.h>
 #include <module_constants.h>
 #include <stat.h>
 
-/* Set later on to something better in roxen.pike::main() */
-mapping (string:array) variables=([]);
-
-string get_doc_for( string region, string variable )
-{
-  if(variables[ variable ])
-    return variables[variable][VAR_NAME]+
-      "\n"+variables[ variable ][ VAR_DOC_STR ];
-}
-
-/* Variable support for the main Roxen "module". Normally this is
- * inherited from module.pike, but this is not possible, or wanted, in
- * this case.  Instead we define a few support functions.
- */
-
-int setvars( mapping (string:mixed) vars )
-{
-  string v;
-
-  foreach( indices( vars ), v )
-    if(variables[v])
-      variables[v][ VAR_VALUE ] = vars[ v ];
-  return 1;
-}
-
-class ConfigurableWrapper
-{
-  constant is_ConfigurableWrapper = 1;
-
-  int mode;
-  function f;
-
-  int check(  int|void more, int|void expert, int|void devel,
-              int|void initial )
-  {
-    if ((mode & VAR_MORE) && !more)
-      return 1;
-    if ((mode & VAR_DEVELOPER) && !devel)
-      return 1;
-    if ((mode & VAR_EXPERT) && !expert)
-      return 1;
-    if (initial && !(mode & VAR_INITIAL))
-      return 1;
-    return f();
-  }
-
-  void create(int mode_, function f_)
-  {
-    mode = mode_;
-    f = f_;
-  }
-}
-
-int query_configurable (array vardef, int mode)
-// A helper function to query the VAR_CONFIGURABLE field since that's
-// a bit messy.
-{
-  int|function it = vardef[VAR_CONFIGURABLE];
-  if (functionp (it))
-    return !it (mode & VAR_MORE,
-		mode & VAR_EXPERT,
-		mode & VAR_DEVELOPER,
-		mode & VAR_INITIAL);
-  else if (intp (it)) {
-    if ((it & VAR_MORE) && !(mode & VAR_MORE)) return 0;
-    if ((it & VAR_DEVELOPER) && !(mode & VAR_DEVELOPER)) return 0;
-    if ((it & VAR_EXPERT) && !(mode & VAR_EXPERT)) return 0;
-    if ((mode & VAR_INITIAL) && !(it & VAR_INITIAL)) return 0;
-    return 1;
-  }
-  return 0;
-}
-
-void change_configurable (array vardef, int mask, int val)
-// A helper function to change the VAR_CONFIGURABLE field since that's
-// a bit messy.
-{
-  if (functionp (vardef[VAR_CONFIGURABLE])) {
-    object obj = function_object (vardef[VAR_CONFIGURABLE]);
-    if (obj->is_ConfigurableWrapper)
-      obj->mode = obj->mode & ~mask | val & mask;
-    else
-      vardef[VAR_CONFIGURABLE] =
-	ConfigurableWrapper (val & mask, vardef[VAR_CONFIGURABLE])->check;
-  }
-  else
-    vardef[VAR_CONFIGURABLE] =
-      vardef[VAR_CONFIGURABLE] & ~mask | val & mask;
-}
-
-function reg_s_loc;
-int globvar(string var, mixed value, string name, int type,
-	    string|void doc_str, mixed|void misc,
-	    int|function|void not_in_config)
-{
-  variables[var]                     = allocate( VAR_SIZE );
-  variables[var][ VAR_VALUE ]        = value;
-  variables[var][ VAR_TYPE ]         = type & VAR_TYPE_MASK;
-  variables[var][ VAR_DOC_STR ]      = doc_str;
-  variables[var][ VAR_NAME ]         = name;
-  variables[var][ VAR_MISC ]         = misc;
-
-  type &= ~VAR_TYPE_MASK;		// Probably not needed, but...
-  type &= (VAR_EXPERT | VAR_MORE);
-  if (functionp(not_in_config)) {
-    if (type) {
-      variables[var][ VAR_CONFIGURABLE ] =
-	ConfigurableWrapper( type, not_in_config)->check;
-    } else {
-      variables[var][ VAR_CONFIGURABLE ] = not_in_config;
-    }
-  } else if (type) {
-    variables[var][ VAR_CONFIGURABLE ] = type;
-  } else if(intp(not_in_config)) {
-    variables[var][ VAR_CONFIGURABLE ] = !not_in_config;
-  }
-
-  if(!reg_s_loc)
-    reg_s_loc = RoxenLocale["standard"]->register_module_doc;
-  reg_s_loc( this_object(), var, name, doc_str );
-  variables[var][ VAR_SHORTNAME ] = var;
-}
-
-mapping locs = ([]);
-void deflocaledoc( string locale, string variable,
-		   string name, string doc, mapping|void translate)
-{
-  if(!locs[locale] )
-    locs[locale] = RoxenLocale[locale]->register_module_doc;
-  if(!locs[locale])
-    report_debug("Invalid locale: "+locale+". Ignoring.\n");
-  else
-    locs[locale]( this_object(),
-		  variable,
-		  name || variables[variable][VAR_NAME],
-		  doc || variables[variable][VAR_DOC_STR],
-		  translate );
-}
-
-
-public mixed query(void|string var)
-{
-  if(var && variables[var])
-    return variables[var][ VAR_VALUE ];
-  if(this_object()->current_configuration)
-    return this_object()->current_configuration->query(var);
-  error("query("+var+"). Unknown variable.\n");
-  return 0;
-}
+inherit "basic_defvar";
 
 mixed save()
 {
   roxenp()->store( "Variables", variables, 0, 0 );
 }
 
-mixed set(string var, mixed val)
-{
-#if DEBUG_LEVEL > 30
-  werror(sprintf("MAIN: set(\"%s\", %O)\n", var, val));
-#endif
-  if(variables[var])
-  {
-#if DEBUG_LEVEL > 28
-    werror("MAIN:    Setting global variable.\n");
-#endif
-    return variables[var][VAR_VALUE] = val;
-  }
-  error("set("+var+"). Unknown variable.\n");
-}
 
 program my_compile_file(string file, void|int silent)
 {

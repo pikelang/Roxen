@@ -1,13 +1,12 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module.pike,v 1.91 2000/06/23 16:07:20 mast Exp $
+// $Id: module.pike,v 1.92 2000/07/04 03:45:20 per Exp $
 
 #include <module_constants.h>
 #include <module.h>
 #include <request_trace.h>
 
-mapping (string:array) variables=([]);
-RoxenModule this = this_object();
+inherit "basic_defvar";
 mapping(string:array(int)) error_log=([]);
 
 constant is_module = 1;
@@ -15,6 +14,15 @@ constant module_type   = MODULE_ZERO;
 constant module_name   = "Unnamed module";
 constant module_doc    = "Undocumented";
 constant module_unique = 1;
+
+
+private string _module_identifier;
+private Configuration _my_configuration;
+static mapping _api_functions = ([]);
+
+string|array(string) module_creator;
+string module_url;
+RXML.TagSet module_tag_set;
 
 /* These functions exists in here because otherwise the messages in
  * the event log does not always end up in the correct
@@ -29,7 +37,6 @@ void report_notice( mixed ... args ) { predef::report_notice( @args ); }
 void report_debug( mixed ... args )  { predef::report_debug( @args );  }
 
 
-private string _module_identifier;
 string module_identifier()
 {
   if (!_module_identifier) {
@@ -71,24 +78,19 @@ int module_dependencies(Configuration configuration,
                         array (string) modules,
                         int|void now)
 {
-  if(configuration) configuration->add_modules( modules, now );
-// Shouldn't do call outs here, since things assume call outs aren't
-// done until all modules are loaded. /mast
-//   mixed err;
-//   if (err = catch (_do_call_outs()))
-//     report_error ("Error doing call outs:\n" + describe_backtrace (err));
+  if(configuration || my_configuration() ) 
+    (configuration||my_configuration())->add_modules( modules, now );
   return 1;
 }
 
 string file_name_and_stuff()
 {
-  return ("<b>Loaded from:</b> "+(roxen->filename(this))+"<br>"+
-	  (this->cvs_version?
+  return ("<b>Loaded from:</b> "+(roxen->filename(this_object()))+"<br>"+
+	  (this_object()->cvs_version?
            "<b>CVS Version: </b>"+
-           fix_cvs(this->cvs_version)+"\n":""));
+           fix_cvs(this_object()->cvs_version)+"\n":""));
 }
 
-static private Configuration _my_configuration;
 
 Configuration my_configuration()
 {
@@ -96,7 +98,7 @@ Configuration my_configuration()
     return _my_configuration;
   Configuration conf;
   foreach(roxen->configurations, conf)
-    if(conf->otomod[this])
+    if(conf->otomod[this_object()])
       return _my_configuration = conf;
   return 0;
 }
@@ -108,9 +110,6 @@ nomask void set_configuration(Configuration c)
   _my_configuration = c;
 }
 
-string|array(string) module_creator;
-string module_url;
-
 void set_module_creator(string|array(string) c)
 {
   module_creator = c;
@@ -121,203 +120,15 @@ void set_module_url(string to)
   module_url = to;
 }
 
-int killvar(string var)
-{
-  if(!variables[var]) error("Killing undefined variable.\n");
-  m_delete(variables, var);
-  return 1;
-}
-
 void free_some_sockets_please(){}
 
 void start(void|int num, void|Configuration conf) {}
-string status() {}
 
+string status() {}
 
 string info(Configuration conf)
 {
-  return (this->register_module()[2]);
-}
-
-constant ConfigurableWrapper = roxen.ConfigurableWrapper;
-constant reg_s_loc = RoxenLocale.standard.register_module_doc;
-
-// Define a variable, with more than a little error checking...
-void defvar(string var, mixed value, string name,
-	    int type, string|void doc_str, mixed|void misc,
-	    int|function|void not_in_config)
-{
-#ifdef MODULE_DEBUG
-  if(!strlen(var))
-    report_debug("No name for variable!\n");
-//  if(var[0]=='_' && previous_object() != roxen)
-//    report_debug("Variable names beginning with '_' are reserved for"
-//	    " internal usage.\n");
-  if (!stringp(name))
-    report_error("The variable "+var+"has no name.\n");
-
-  if((search(name, "\"") != -1))
-    report_error("Please do not use \" in variable names");
-
-  if (!stringp(doc_str))
-    doc_str = "No documentation";
-
-  switch (type & VAR_TYPE_MASK)
-  {
-  case TYPE_CUSTOM:
-    if(!misc
-       && arrayp(misc)
-       && (sizeof(misc)>=3)
-       && functionp(misc[0])
-       && functionp(misc[1])
-       && functionp(misc[2]))
-       report_error("When defining a TYPE_CUSTOM variable, the MISC "
-		    "field must be an array of functionpointers: \n"
-		    "({describe,describe_form,set_from_form})\n");
-    break;
-
-  case TYPE_TEXT_FIELD:
-  case TYPE_FILE:
-  case TYPE_STRING:
-  case TYPE_LOCATION:
-  case TYPE_PASSWORD:
-    if(value && !stringp(value)) {
-      report_error("%s:\nPassing illegal value (%t:%O) "
-		   "to string type variable.\n",
-		   roxen->filename(this), value, value);
-    }
-    break;
-
-  case TYPE_FLOAT:
-    if(!floatp(value))
-      report_error("%s:\nPassing illegal value (%t:%O) "
-		   "(not float) to floating point "
-		   "decimal number variable.\n",
-		   roxen->filename(this), value, value);
-    break;
-  case TYPE_INT:
-    if(!intp(value))
-      report_error("%s:\nPassing illegal value (%t:%O) "
-		   "(not int) to integer number variable.\n",
-		   roxen->filename(this), value, value);
-    break;
-
-  case TYPE_MODULE:
-    /* No default possible */
-    value = 0;
-    break;
-
-  case TYPE_DIR_LIST:
-    int i;
-    if(!arrayp(value)) {
-      report_error("%s:\nIllegal type %t to TYPE_DIR_LIST, "
-		   "must be array.\n",
-		   roxen->filename(this), value);
-      value = ({ "./" });
-    } else {
-      for(i=0; i<sizeof(value); i++) {
-	if(strlen(value[i])) {
-	  if(value[i][-1] != '/')
-	    value[i] += "/";
-	 } else {
-	   value[i]="./";
-	 }
-      }
-    }
-    break;
-
-  case TYPE_DIR:
-    if(value && !stringp(value))
-      report_error("%s:\nPassing illegal value (%t:%O) (not string) "
-		   "to directory variable.\n",
-		   roxen->filename(this), value, value);
-
-    if(value && strlen(value) && ((string)value)[-1] != '/')
-      value+="/";
-    break;
-
-  case TYPE_INT_LIST:
-  case TYPE_STRING_LIST:
-    if(!misc && value && !arrayp(value)) {
-      report_error("%s:\nPassing illegal misc (%t:%O) (not array) "
-		   "to multiple choice variable.\n",
-		   roxen->filename(this), value, value);
-    } else {
-      if(misc && !arrayp(misc)) {
-	report_error("%s:\nPassing illegal misc (%t:%O) (not array) "
-		     "to multiple choice variable.\n",
-		     roxen->filename(this), misc, misc);
-      }
-      if(misc && value && search(misc, value)==-1) {
-	report_error("%s:\nPassing value (%t:%O) not present "
-		    "in the misc array.\n",
-		    roxen->filename(this), value, value);
-      }
-    }
-    break;
-
-  case TYPE_FLAG:
-    value=!!value;
-    break;
-
-//   case TYPE_COLOR:
-//     if (!intp(value))
-//       report_error("%s:\nPassing illegal value (%t:%O) (not int) "
-// 		   "to color variable.\n",
-// 		   roxen->filename(this), value, value);
-//     break;
-
-  case TYPE_FILE_LIST:
-  case TYPE_FONT:
-    // FIXME: Add checks for these.
-    break;
-
-  default:
-    report_error("%s:\nIllegal type (%s) in defvar.\n",
-		 roxen->filename(this), type);
-    break;
-  }
-#endif
-  // Locale stuff.
-  reg_s_loc( this_object(), var, name, doc_str );
-
-  variables[var]=allocate( VAR_SIZE );
-  variables[var][ VAR_VALUE ]=value;
-  variables[var][ VAR_TYPE ]=type&VAR_TYPE_MASK;
-  variables[var][ VAR_DOC_STR ]=doc_str;
-  variables[var][ VAR_NAME ]=name;
-
-  type &= ~VAR_TYPE_MASK;		// Probably not needed, but...
-  if (functionp(not_in_config)) {
-    if (type) {
-      variables[var][ VAR_CONFIGURABLE ] = ConfigurableWrapper(type, not_in_config)->check;
-    } else {
-      variables[var][ VAR_CONFIGURABLE ] = not_in_config;
-    }
-  } else if (type) {
-    variables[var][ VAR_CONFIGURABLE ] = type;
-  } else if(intp(not_in_config)) {
-    variables[var][ VAR_CONFIGURABLE ] = !not_in_config;
-  }
-
-  variables[var][ VAR_MISC ]=misc;
-  variables[var][ VAR_SHORTNAME ]= var;
-}
-
-static mapping locs = ([]);
-void deflocaledoc( string locale, string variable,
-		   string name, string doc, mapping|void translate )
-{
-  if(!locs[locale] )
-    locs[locale] = RoxenLocale[locale]->register_module_doc;
-  if(!locs[locale])
-    report_debug("Invalid locale: "+locale+". Ignoring.\n");
-  else
-    locs[locale]( this_object(),
-		  variable,
-		  name || variables[variable][VAR_NAME],
-		  doc || variables[variable][VAR_DOC_STR],
-		  translate );
+  return (this_object()->register_module()[2]);
 }
 
 void save_me()
@@ -329,52 +140,6 @@ void save()
 {
   save_me();
 }
-
-// Convenience function, define an invisible variable, this variable
-// will be saved, but it won't be visible in the administration interface.
-void definvisvar(string name, int value, int type, array|void misc)
-{
-  defvar(name, value, "", type, "", misc, 1);
-}
-
-string check_variable( string s, mixed value )
-{
-  // Check if `value' is O.K. to store in the variable `s'.  If so,
-  // return 0, otherwise return a string, describing the error.
-
-  return 0;
-}
-
-mixed query(string|void var, int|void ok)
-{
-  if(var) {
-    if(variables[var])
-      return variables[var][VAR_VALUE];
-    else if(!ok && var[0] != '_')
-      error("Querying undefined variable.\n");
-    return 0;
-  }
-
-  return variables;
-}
-
-void set(string var, mixed value)
-{
-  if(!variables[var])
-    error( "Setting undefined variable.\n" );
-  variables[var][VAR_VALUE]=value;
-}
-
-int setvars( mapping (string:mixed) vars )
-{
-  string v;
-  int err;
-  foreach( indices( vars ), v )
-    if(variables[v])
-      set( v, vars[v] );
-  return !err;
-}
-
 
 string comment()
 {
@@ -424,7 +189,8 @@ string query_provides() { return 0; }
  *
  */
 
-class IP_with_mask {
+class IP_with_mask 
+{
   int net;
   int mask;
   static private int ip_to_int(string ip)
@@ -464,9 +230,8 @@ array query_seclevels()
 {
   array patterns=({ });
 
-  if(catch(query("_seclevels"))) {
+  if(catch(query("_seclevels")) || (query("_seclevels") == 0))
     return patterns;
-  }
 
   foreach(replace(query("_seclevels"),
 		  ({" ","\t","\\\n"}),
@@ -538,7 +303,7 @@ array query_seclevels()
 
 	for(i=0; i < sizeof(users); i++) {
 	  if (lower_case(users[i]) == "any") {
-	    if(this->register_module()[0] & MODULE_PROXY)
+	    if(this_object()->register_module()[0] & MODULE_PROXY)
 	      patterns += ({ ({ MOD_PROXY_USER, lambda(){ return 1; } }) });
 	    else
 	      patterns += ({ ({ MOD_USER, lambda(){ return 1; } }) });
@@ -548,7 +313,7 @@ array query_seclevels()
 	  }
 	  if ((i & 0x0f) == 0x0f) {
 	    value = users[0..0x0f]*"|";
-	    if(this->register_module()[0] & MODULE_PROXY) {
+	    if(this_object()->register_module()[0] & MODULE_PROXY) {
 	      patterns += ({ ({ MOD_PROXY_USER, Regexp(value)->match, }) });
 	    } else {
 	      patterns += ({ ({ MOD_USER, Regexp(value)->match, }) });
@@ -557,7 +322,7 @@ array query_seclevels()
 	}
 	if (i & 0x0f) {
 	  value = users[0..(i-1)&0x0f]*"|";
-	  if(this->register_module()[0] & MODULE_PROXY) {
+	  if(this_object()->register_module()[0] & MODULE_PROXY) {
 	    patterns += ({ ({ MOD_PROXY_USER, Regexp(value)->match, }) });
 	  } else {
 	    patterns += ({ ({ MOD_USER, Regexp(value)->match, }) });
@@ -574,7 +339,7 @@ array query_seclevels()
 
 	for(i=0; i < sizeof(users); i++) {
 	  if (lower_case(users[i]) == "any") {
-	    if(this->register_module()[0] & MODULE_PROXY)
+	    if(this_object()->register_module()[0] & MODULE_PROXY)
 	      patterns += ({ ({ MOD_PROXY_USER, lambda(){ return 1; } }) });
 	    else
 	      patterns += ({ ({ MOD_ACCEPT_USER, lambda(){ return 1; } }) });
@@ -584,7 +349,7 @@ array query_seclevels()
 	  }
 	  if ((i & 0x0f) == 0x0f) {
 	    value = users[0..0x0f]*"|";
-	    if(this->register_module()[0] & MODULE_PROXY) {
+	    if(this_object()->register_module()[0] & MODULE_PROXY) {
 	      patterns += ({ ({ MOD_PROXY_USER, Regexp(value)->match, }) });
 	    } else {
 	      patterns += ({ ({ MOD_ACCEPT_USER, Regexp(value)->match, }) });
@@ -593,7 +358,7 @@ array query_seclevels()
 	}
 	if (i & 0x0f) {
 	  value = users[0..(i-1)&0x0f]*"|";
-	  if(this->register_module()[0] & MODULE_PROXY) {
+	  if(this_object()->register_module()[0] & MODULE_PROXY) {
 	    patterns += ({ ({ MOD_PROXY_USER, Regexp(value)->match, }) });
 	  } else {
 	    patterns += ({ ({ MOD_ACCEPT_USER, Regexp(value)->match, }) });
@@ -637,9 +402,9 @@ mapping(string:array(mixed)) find_dir_stat(string f, RequestID id)
   TRACE_LEAVE("");
   return(res);
 }
+
 mixed real_file(string f, RequestID id){}
 
-mapping _api_functions = ([]);
 void add_api_function( string name, function f, void|array(string) types)
 {
   _api_functions[name] = ({ f, types });
@@ -678,8 +443,6 @@ mapping query_simpletag_callers()
 	   this_object()[q] });
   return m;
 }
-
-RXML.TagSet module_tag_set;
 
 RXML.TagSet query_tag_set()
 {

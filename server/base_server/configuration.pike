@@ -3,9 +3,10 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.313 2000/06/29 21:57:11 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.314 2000/07/04 03:45:20 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
+#include <module_constants.h>
 #include <roxen.h>
 #include <request_trace.h>
 
@@ -64,6 +65,7 @@ int get_config_id() {
     if(roxen->configurations[--i]->name==name) return config_id=i;
 }
 
+#if 0
 string get_doc_for( string region, string variable )
 {
   RoxenModule module;
@@ -81,30 +83,7 @@ string get_doc_for( string region, string variable )
     return variables[variable][VAR_NAME]+
       "\n"+variables[ variable ][ VAR_DOC_STR ];
 }
-
-int defvar(string var, mixed value, string name, int type,
-	   string|void doc_str, mixed|void misc,
-	   int|function|void not_in_config)
-{
-  ::defvar( var, value, name, type, doc_str, misc );
-
-  type &= (VAR_EXPERT | VAR_MORE | VAR_INITIAL | VAR_DEVELOPER);
-  if (functionp(not_in_config))
-    if (type)
-      variables[ var ][ VAR_CONFIGURABLE ] =
-                 roxen->ConfigurableWrapper(type, not_in_config)->check;
-    else
-      variables[var][ VAR_CONFIGURABLE ] = not_in_config;
-  else if (type)
-    variables[var][ VAR_CONFIGURABLE ] = type;
-  else if(intp(not_in_config))
-    variables[var][ VAR_CONFIGURABLE ] = !not_in_config;
-}
-
-int definvisvar(string var, mixed value, int type)
-{
-  return defvar(var, value, "", type, "", 0, 1);
-}
+#endif
 
 string query_internal_location(RoxenModule|void mod)
 {
@@ -3657,7 +3636,7 @@ aufgerufen wird. '$File' wird ersetzt durch den Dateinamen,
 
   definvisvar( "no_delayed_load", 0, TYPE_FLAG );
 
-  setvars(retrieve("spider#0", this_object()));
+  setvars( retrieve("spider#0", this_object()) );
 
   if (query("throttle"))
   {

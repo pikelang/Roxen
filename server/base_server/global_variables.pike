@@ -1,8 +1,10 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: global_variables.pike,v 1.29 2000/04/13 19:01:55 per Exp $
+// $Id: global_variables.pike,v 1.30 2000/07/04 03:45:26 per Exp $
 
+/*
 #pragma strict_types
+*/
 #define DEFVAR string,int|string,string|mapping,int,string|mapping(string:string),void|array(string),void|function:void
 #define BDEFVAR string,int|string,string|mapping,int,string|mapping(string:string),void|array(string),void|mapping(string:mapping(string:string)):void
 
@@ -285,20 +287,27 @@ string get_domain(int|void l)
 }
 
 
+class PortOptions
+{
+  inherit Variable.Variable;
+  constant type = "PortOptions";
+
+  int check_visibility(object id, int a, int b, int c, int d) { return 0;  }
+  void set_from_form(object id ) { return; }
+  void create()
+  {
+    ::create( ([]), 0, 0, 0 );
+  }
+};
+
 void define_global_variables( int argc, array (string) argv )
 {
   int p;
 
-  globvar("port_options", ([]), "Ports: Options", VAR_EXPERT|TYPE_CUSTOM,
-	  "Mapping with options and defaults for all ports.\n",
-	  ({
-	    lambda(mixed value, int action) {
-	      return "Edit the cofig-file by hand for now.";
-	    },
-            lambda(){},
-	  }));
 
-  globvar("RestoreConnLogFull", 0,
+  defvar("port_options", PortOptions());
+
+  defvar("RestoreConnLogFull", 0,
 	  "Logging: Log entire file length in restored connections",
 	  TYPE_TOGGLE,
 	  "If this toggle is enabled log entries for restored connections "
@@ -332,7 +341,7 @@ void define_global_variables( int argc, array (string) argv )
                "verzeichnet.<p>Dies ist nützlich, um erfolgreiche Downloads "
                "zu erkennen.");
 
-  globvar("default_font", "franklin_gothic_demi", "Default font", TYPE_FONT,
+  defvar("default_font", "franklin_gothic_demi", "Default font", TYPE_FONT,
 	  "The default font to use when modules request a font.");
 
   deflocaledoc( "svenska", "default_font", "Normaltypsnitt",
@@ -342,7 +351,7 @@ grafisk text utan att ange ett typsnitt, så används det här typsnittet.");
                 "#Die Schriftart, die von Modulen benutzt werden soll.");
 
 
-  globvar("font_dirs", ({"../local/nfonts/", "nfonts/" }),
+  defvar("font_dirs", ({"../local/nfonts/", "nfonts/" }),
 	  "Font directories", TYPE_DIR_LIST,
 	  "This is where the fonts are located.");
 
@@ -351,7 +360,7 @@ grafisk text utan att ange ett typsnitt, så används det här typsnittet.");
   deflocaledoc( "deutsch", "font_dirs", "Schriftarten-Verzeichnisse",
                 "In diesen Verzeichnissen befinden sich Schriftarten.");
 
-  globvar("logdirprefix", "../logs/", "Logging: Log directory prefix",
+  defvar("logdirprefix", "../logs/", "Logging: Log directory prefix",
 	  TYPE_STRING|VAR_MORE,
 	  #"This is the default file path that will be prepended to the log
  file path in all the default modules and the virtual server.");
@@ -362,14 +371,14 @@ grafisk text utan att ange ett typsnitt, så används det här typsnittet.");
 		#"Alle Logdateien werden unterhalb dieses Verzeichnisses
                  abgelegt.");
 
-  globvar("cache", 0, "Cache: Proxy Disk Cache Enabled", TYPE_FLAG,
+  defvar("cache", 0, "Cache: Proxy Disk Cache Enabled", TYPE_FLAG,
 	  "If set to Yes, caching will be enabled.");
   deflocaledoc( "svenska", "cache", "Cache: Proxydiskcachen är på",
 		"Om ja, använd cache i alla proxymoduler som hanterar det.");
   deflocaledoc( "deutsch", "cache", "Cache: Proxy-Cache aktivieren",
 		"Der Proxy-Festplatten-Cache wird benutzt.");
 
-  globvar("garb_min_garb", 1, "Cache: Proxy Disk Cache Clean size", TYPE_INT,
+  defvar("garb_min_garb", 1, "Cache: Proxy Disk Cache Clean size", TYPE_INT,
   "Minimum number of Megabytes removed when a garbage collect is done.",
 	  0, cache_disabled_p);
   deflocaledoc( "svenska", "garb_min_garb",
@@ -381,7 +390,7 @@ grafisk text utan att ange ett typsnitt, så används det här typsnittet.");
                  entfernt.");
 
 
-  globvar("cache_minimum_left", 5, "Cache: Proxy Disk Cache Minimum "
+  defvar("cache_minimum_left", 5, "Cache: Proxy Disk Cache Minimum "
 	  "available free space and inodes (in %)", TYPE_INT,
 #"If less than this amount of disk space or inodes (in %) is left,
  the cache will remove a few files. This check may work
@@ -393,17 +402,17 @@ grafisk text utan att ange ett typsnitt, så används det här typsnittet.");
 	  1
 #endif /* filesystem_stat */
 	  );
-  deflocaledoc( "svenska", "cache_minimum_free",
+  deflocaledoc( "svenska", "cache_minimum_left",
 		"Cache: Proxydiskcache minimal fri disk",
 	"Om det är mindre plats (i %) ledigt på disken än vad som "
 	"anges i den här variabeln så kommer en cacherensning ske.");
-  deflocaledoc( "deutsch", "cache_minimum_free",
+  deflocaledoc( "deutsch", "cache_minimum_left",
 		"Cache: Minimale Größe des Proxy-Caches",
 	"Bei Unterschreiten dieses Wertes (in %) werden einige Dateien "
 	"aus dem Cache entfernt.");
 
 
-  globvar("cache_size", 25, "Cache: Proxy Disk Cache Size", TYPE_INT,
+  defvar("cache_size", 25, "Cache: Proxy Disk Cache Size", TYPE_INT,
 	  "How many MB may the cache grow to before a garbage collect is done?",
 	  0, cache_disabled_p);
   deflocaledoc( "svenska", "cache_size", "Cache: Proxydiskcachens storlek",
@@ -411,7 +420,7 @@ grafisk text utan att ange ett typsnitt, så används det här typsnittet.");
   deflocaledoc( "deutsch", "cache_size", "Cache: Größe des Proxy-Caches",
 		"Maximale Größe des Proxy-Caches auf der Festplatte, in MB.");
 
-  globvar("cache_max_num_files", 0, "Cache: Proxy Disk Cache Maximum number "
+  defvar("cache_max_num_files", 0, "Cache: Proxy Disk Cache Maximum number "
 	  "of files", TYPE_INT, "How many cache files (inodes) may "
 	  "be on disk before a garbage collect is done ? May be left "
 	  "zero to disable this check.",
@@ -427,7 +436,7 @@ grafisk text utan att ange ett typsnitt, så används det här typsnittet.");
 		"Reinigung (Garbage Collection) stattfindet. Durch "
 		"Setzen auf Null wird diese Abfrage ignoriert.");
 
-  globvar("bytes_per_second", 50, "Cache: Proxy Disk Cache bytes per second",
+  defvar("bytes_per_second", 50, "Cache: Proxy Disk Cache bytes per second",
 	  TYPE_INT,
 	  "How file size should be treated during garbage collect. "
 	  " Each X bytes counts as a second, so that larger files will"
@@ -446,7 +455,7 @@ grafisk text utan att ange ett typsnitt, så används det här typsnittet.");
                 "Größere Dateien werden also eher entfernt.");
 
 
-  globvar("cachedir", "/tmp/roxen_cache/",
+  defvar("cachedir", "/tmp/roxen_cache/",
 	  "Cache: Proxy Disk Cache Base Cache Dir",
 	  TYPE_DIR,
 	  "This is the base directory where cached files will reside. "
@@ -462,7 +471,7 @@ grafisk text utan att ange ett typsnitt, så används det här typsnittet.");
                "Um Pannen zu vermeiden, wird 'roxen_cache' an diesen "
                "Wert angehängt.");
 
-  globvar("hash_num_dirs", 500,
+  defvar("hash_num_dirs", 500,
 	  "Cache: Proxy Disk Cache Number of hash directories",
 	  TYPE_INT|VAR_MORE,
 	  "This is the number of directories to hash the contents of the disk "
@@ -482,7 +491,7 @@ grafisk text utan att ange ett typsnitt, så används det här typsnittet.");
                "Cache-Dateien verteilt werden.  Das Ändern dieses Wertes "
                "macht den bisherigen Proxy-Cache ungültig.");
 
-  globvar("cache_keep_without_content_length", 1, "Cache: "
+  defvar("cache_keep_without_content_length", 1, "Cache: "
 	  "Proxy Disk Cache Keep without Content-Length",
           TYPE_FLAG, "Keep files "
 	  "without Content-Length header information in the cache?",
@@ -496,7 +505,7 @@ grafisk text utan att ange ett typsnitt, så används det här typsnittet.");
                "Cache: Dateien ohne Content-Length behalten",
                "Sollen Dateien ohne Content-Length im Cache behalten werden?");
 
-  globvar("cache_check_last_modified", 0, "Cache: "
+  defvar("cache_check_last_modified", 0, "Cache: "
 	  "Proxy Disk Cache Refreshes on Last-Modified", TYPE_FLAG,
 	  "If set, refreshes files without Expire header information "
 	  "when they have reached double the age they had when they got "
@@ -516,7 +525,7 @@ källservern om de har en last-modified header som anger när de senast
 entfernen, sofern kein Expire-Header vorhanden ist.  Die Dateien verbleiben
 im Cache, bis sie ihr Alter verdoppelt haben.");
 
-  globvar("cache_last_resort", 0, "Cache: "
+  defvar("cache_last_resort", 0, "Cache: "
 	  "Proxy Disk Cache Last resort (in days)", TYPE_INT,
 	  "How many days shall files without Expires and without "
 	  "Last-Modified header information be kept?",
@@ -531,7 +540,7 @@ im Cache, bis sie ihr Alter verdoppelt haben.");
                "Wieviel Tage sollen Dateien ohne Expire- und "
                "Last-Modifier-Informationen im Cache verbleiben?");
 
-  globvar("cache_gc_logfile",  "",
+  defvar("cache_gc_logfile",  "",
 	  "Cache: "
 	  "Proxy Disk Cache Garbage collector logfile", TYPE_FILE,
 	  "Information about garbage collector runs, removed and refreshed "
@@ -550,7 +559,7 @@ im Cache, bis sie ihr Alter verdoppelt haben.");
 
   /// End of cache variables..
 
-  globvar("pidfile", "/tmp/roxen_pid_$uid", "PID file",
+  defvar("pidfile", "/tmp/roxen_pid_$uid", "PID file",
 	  TYPE_FILE|VAR_MORE,
 	  "In this file, the server will write out it's PID, and the PID "
 	  "of the start script. $pid will be replaced with the pid, and "
@@ -565,7 +574,7 @@ im Cache, bis sie ihr Alter verdoppelt haben.");
                "des start-Scripts ablegen. $pid wird mit der PID ersetzt "
                "und $uid mit der UID des ausführenden Benutzers.");
 
-  globvar("default_ident", 1, "Identify, Use default identification string",
+  defvar("default_ident", 1, "Identify, Use default identification string",
 	  TYPE_FLAG|VAR_MORE,
 	  "Setting this variable to No will display the \"Identify as\" node "
 	  "where you can state what Roxen should call itself when talking "
@@ -588,7 +597,7 @@ im Cache, bis sie ihr Alter verdoppelt haben.");
                "Bei Nein, kann eine andere Identität als der "
                "Standardwert ("+real_version+") eingetragen werden.");
 
-  globvar("ident", replace(real_version," ","·"), "Identify, Identify as",
+  defvar("ident", replace(real_version," ","·"), "Identify, Identify as",
 	  TYPE_STRING /* |VAR_MORE */,
 	  "Enter the name that Roxen should use when talking to clients. ",
 	  0, ident_disabled_p);
@@ -600,7 +609,7 @@ im Cache, bis sie ihr Alter verdoppelt haben.");
                "sich zu erkennen gibt, wenn ein Client Anfragen stellt.");
 
 
-//   globvar("NumAccept", 1, "Number of accepts to attempt",
+//   defvar("NumAccept", 1, "Number of accepts to attempt",
 // 	  TYPE_INT_LIST|VAR_MORE,
 // 	  "You can here state the maximum number of accepts to attempt for "
 // 	  "each read callback from the main socket. <p> Increasing this value "
@@ -626,7 +635,7 @@ im Cache, bis sie ihr Alter verdoppelt haben.");
 // 	       "den andra server.");
 
 
-  globvar("User", "", "Change uid and gid to", TYPE_STRING,
+  defvar("User", "", "Change uid and gid to", TYPE_STRING,
 	  "When roxen is run as root, to be able to open port 80 "
 	  "for listening, change to this user-id and group-id when the port "
 	  " has been opened. If you specify a symbolic username, the "
@@ -650,7 +659,7 @@ gesetzt, nachdem der Port geöffnet wurde. Wenn ein Benutzername (z.B. 'www')
 verwendet wird, wird die Standardgruppe dieses Benutzers verwendet.
 Die Syntax ist user[:group].");
 
-  globvar("permanent_uid", 0, "Change uid and gid permanently",
+  defvar("permanent_uid", 0, "Change uid and gid permanently",
 	  TYPE_FLAG,
 	  "If this variable is set, roxen will set it's uid and gid "
 	  "permanently. This disables the 'exec script as user' fetures "
@@ -670,7 +679,7 @@ auf die eingestellten Werte wechseln.  Dadurch können CGI-Scripte nicht
 mehr unter der Kennung anderer Benutzer ausgeführt werden. Allerdings
 erhöht sich so die Sicherheit des Servers.");
 
-  globvar("ModuleDirs", ({ "../local/modules/", "modules/" }),
+  defvar("ModuleDirs", ({ "../local/modules/", "modules/" }),
 	  "Module directories", TYPE_DIR_LIST,
 	  "This is a list of directories where Roxen should look for "
 	  "modules. Can be relative paths, from the "
@@ -686,7 +695,7 @@ suchen wird. Dies können relative Pfade zu "+getcwd()+#" sein.
 Die Verzeichnisse werden in der eingegeben Reihenfolge nach Modulen
 durchsucht.");
 
-  globvar("Supports", "#include <etc/supports>\n",
+  defvar("Supports", "#include <etc/supports>\n",
 	  "Client supports regexps", TYPE_TEXT_FIELD|VAR_MORE,
 	  "What do the different clients support?\n<br />"
 	  "The default information is normally fetched from the file "+
@@ -718,7 +727,7 @@ Regulärer Ausdruck    Funktion, Funktion
 </pre>Wenn '-' der Funktion vorangestellt wird, wird es von der Liste
 entfernt.");
 
-  globvar("audit", 0, "Logging: Audit trail", TYPE_FLAG,
+  defvar("audit", 0, "Logging: Audit trail", TYPE_FLAG,
 	  "If Audit trail is set to Yes, all changes of uid will be "
 	  "logged in the Event log.");
   deflocaledoc("svenska", "audit", "Loggning: Logga alla användaridväxlingar",
@@ -730,7 +739,7 @@ anlending.");
 im Ereignis-Log verzeichnet.");
 
 #if efun(syslog)
-  globvar("LogA", "file", "Logging: Logging method", TYPE_STRING_LIST|VAR_MORE,
+  defvar("LogA", "file", "Logging: Logging method", TYPE_STRING_LIST|VAR_MORE,
 	  "What method to use for logging, default is file, but "
 	  "syslog is also available. When using file, the output is really"
 	  " sent to stdout and stderr, but this is handled by the "
@@ -748,7 +757,7 @@ aber Syslog ist ebenfalls möglich.",
                  ([ "file":"Datei",
                     "syslog":"Syslog"]));
 
-  globvar("LogSP", 1, "Logging: Log PID", TYPE_FLAG,
+  defvar("LogSP", 1, "Logging: Log PID", TYPE_FLAG,
 	  "If set, the PID will be included in the syslog.", 0,
 	  syslog_disabled);
   deflocaledoc("svenska", "LogSP", "Loggning: Logga roxens processid",
@@ -756,7 +765,7 @@ aber Syslog ist ebenfalls möglich.",
   deflocaledoc("deutsch", "LogSP", "Logging: PID festhalten",
                  "Soll Roxen die eigene PID ins Syslog schreiben?");
 
-  globvar("LogCO", 0, "Logging: Log to system console", TYPE_FLAG,
+  defvar("LogCO", 0, "Logging: Log to system console", TYPE_FLAG,
 	  "If set and syslog is used, the error/debug message will be printed"
 	  " to the system console as well as to the system log.",
 	  0, syslog_disabled);
@@ -769,7 +778,7 @@ aber Syslog ist ebenfalls möglich.",
                "Debug-Meldungen werden sowohl auf die Konsole als auch "
                "in das Syslog geschrieben.");
 
-  globvar("LogST", "Daemon", "Logging: Syslog type", TYPE_STRING_LIST,
+  defvar("LogST", "Daemon", "Logging: Syslog type", TYPE_STRING_LIST,
 	  "When using SYSLOG, which log type should be used.",
 	  ({ "Daemon", "Local 0", "Local 1", "Local 2", "Local 3",
 	     "Local 4", "Local 5", "Local 6", "Local 7", "User" }),
@@ -780,7 +789,7 @@ aber Syslog ist ebenfalls möglich.",
   deflocaledoc( "deutsch", "LogST", "Logging: Syslog-Typ",
                 "Wenn Syslog verwendet wird, welcher Typ soll benutzt werden?");
 
-  globvar("LogWH", "Errors", "Logging: Log what to syslog", TYPE_STRING_LIST,
+  defvar("LogWH", "Errors", "Logging: Log what to syslog", TYPE_STRING_LIST,
 	  "When syslog is used, how much should be sent to it?<br /><hr />"
 	  "Fatal:    Only messages about fatal errors<br />"+
 	  "Errors:   Only error or fatal messages<br />"+
@@ -815,7 +824,7 @@ aber Syslog ist ebenfalls möglich.",
                   "Debug":"Debug",
                   "All":"All" ]));
 
-  globvar("LogNA", "Roxen", "Logging: Log as", TYPE_STRING,
+  defvar("LogNA", "Roxen", "Logging: Log as", TYPE_STRING,
 	  "When syslog is used, this will be the identification of the "
 	  "Roxen daemon. The entered value will be appended to all logs.",
 	  0, syslog_disabled);
@@ -831,7 +840,7 @@ Logs angehängt.");
 #endif
 
 #ifdef THREADS
-  globvar("numthreads", 5, "Number of threads to run", TYPE_INT,
+  defvar("numthreads", 5, "Number of threads to run", TYPE_INT,
 	  "The number of simultaneous threads roxen will use.\n"
 	  "<p>Please note that even if this is one, Roxen will still "
 	  "be able to serve multiple requests, using a select loop based "
@@ -855,7 +864,7 @@ Zugriffe gleichzeitig bearbeitet werden.\n
 <i>Dies ist nützlich für Mehrprozessor-Systeme.</i>");
 #endif
 
-  globvar("AutoUpdate", 1, "Update the supports database automatically",
+  defvar("AutoUpdate", 1, "Update the supports database automatically",
 	  TYPE_FLAG,
 	  "If set to Yes, the etc/supports file will be updated automatically "
 	  "from www.roxen.com now and then. This is recomended, since "
@@ -873,10 +882,10 @@ Zugriffe gleichzeitig bearbeitet werden.\n
 #"Die Datei /etc/supports wird automatisch von www.roxen.com aktualisiert.
 Dadurch erhält man immer die aktuelle Liste aller bekannten Features.");
 
-  globvar("next_supports_update", time()+3600, "", TYPE_INT,"",0,1);
+  defvar("next_supports_update", time()+3600, "", TYPE_INT,"",0,1);
 
 #ifndef __NT__
-  globvar("abs_engage", 0, "ABS: Enable Anti-Block-System", TYPE_FLAG|VAR_MORE,
+  defvar("abs_engage", 0, "ABS: Enable Anti-Block-System", TYPE_FLAG|VAR_MORE,
 #"If set, the anti-block-system will be enabled.
   This will restart the server after a configurable number of minutes if it
   locks up. If you are running in a single threaded environment heavy
@@ -899,7 +908,7 @@ mehr als einem Thread wird der gesamte Server nicht komplett angehalten,
 sondern nur der blockierte Thread.  Im allgemeinen hat diese Option keine
 Nachteile.");
 
-  globvar("abs_timeout", 5, "ABS: Timeout",
+  defvar("abs_timeout", 5, "ABS: Timeout",
 	  TYPE_INT_LIST|VAR_MORE,
 #"If the server is unable to accept connection for this many
   minutes, it will be restarted. You need to find a balance:
@@ -924,7 +933,7 @@ bei komplexen Berechnungen es durchaus normal ist, wenn eine
 Anfrage eine Weile benötigt.");
 #endif
 
-  globvar("locale", "standard", "Language", TYPE_STRING_LIST,
+  defvar("locale", "standard", "Language", TYPE_STRING_LIST,
 	  "Locale, used to localise all messages in roxen.\n"
 #"Standard means using the default locale, which varies according to the
 value of the 'LANG' environment variable.",
@@ -937,7 +946,7 @@ value of the 'LANG' environment variable.",
                "Die Sprache, in der alle Roxen-Meldungen ausgeben werden.\n "
                "'standard' ist abhängig von der LANG Umgebungsvariable.");
 
-  globvar("suicide_engage",
+  defvar("suicide_engage",
 	  0,
 	  "Auto Restart: Enable Automatic Restart",
 	  TYPE_FLAG|VAR_MORE,
@@ -961,7 +970,7 @@ slår på den här funktionen. Notera att det tar ett litet tag att starta om
 Tagen neugestartet. Hin und wieder wächst der Roxen-Prozess im Laufe der
 Zeit an. Diese Option ist in diesem Falle dann sinnvoll.");
 
-globvar("suicide_timeout",
+defvar("suicide_timeout",
 	  7,
 	  "Auto Restart: Timeout",
 	  TYPE_INT_LIST|VAR_MORE,
@@ -976,7 +985,7 @@ så här ofta. Tiden är angiven i dagar");
                "Automatischer Neustart: Zeitbegrenzung (in Tagen)",
 #"Roxen wird nach soviel Tagen automatisch neugestartet.");
 
-  globvar("argument_cache_in_db", 0,
+  defvar("argument_cache_in_db", 0,
          "Cache: Store the argument cache in a mysql database",
          TYPE_FLAG|VAR_MORE,
          "If set, store the argument cache in a mysql "
@@ -996,7 +1005,7 @@ så här ofta. Tiden är angiven i dagar");
                "Roxen-Servern, da die Datenbank die Synchronisation "
                "übernimmt.");
 
-  globvar("argument_cache_db_path", "mysql://localhost/roxen",
+  defvar("argument_cache_db_path", "mysql://localhost/roxen",
           "Cache: Argument Cache Database URL to use",
           TYPE_STRING|VAR_MORE,
           "The database to use to store the argument cache",
@@ -1010,7 +1019,7 @@ så här ofta. Tiden är angiven i dagar");
                "Welche Datenbank soll für den Argumenten-Cache "
                "benutzt werden?");
 
-  globvar("argument_cache_dir", "$VARDIR/cache/",
+  defvar("argument_cache_dir", "$VARDIR/cache/",
           "Cache: Argument Cache Directory",
           TYPE_DIR|VAR_MORE,
           "The cache directory to use to store the argument cache."
@@ -1030,7 +1039,7 @@ så här ofta. Tiden är angiven i dagar");
                "Argumenten-Caches benutzt.  Für Load-Balancing sollte "
                "jedoch eine SQL-Datenbank verwendet werden.");
 
-  globvar("mem_cache_gc", 300,
+  defvar("mem_cache_gc", 300,
 	  "Cache: Memory Cache Garbage Collect Interval",
 	  TYPE_INT,
 	  "The number of seconds between every garbage collect "
@@ -1050,7 +1059,7 @@ så här ofta. Tiden är angiven i dagar");
                "einer Garbage Collection im Speicher-Cache liegen? "
                "Der Speicher-Cache enthält u.a. die Supports-Daten.");
 
-  globvar("config_file_comments", 0,
+  defvar("config_file_comments", 0,
 	  "Commented config files",
 	  TYPE_FLAG, #"\
 Save the variable documentation strings as comments in the
@@ -1058,37 +1067,6 @@ configuration files. Only useful if you read or edit the config files
 directly.");
 
   setvars(retrieve("Variables", 0));
-
-  for(p = 1; p < argc; p++)
-  {
-    string c, v;
-    if(sscanf(argv[p],"%s=%s", c, v) == 2)
-    {
-      sscanf(c, "%*[-]%s", c);
-      if(variables[c])
-      {
-        if(catch{
-          mixed res = ([function(void:mixed)]compile_string( "mixed f(){ return "+v+";}")()->f)();
-          if(sprintf("%t", res) != sprintf("%t", variables[c][VAR_VALUE]) &&
-             res != 0 && variables[c][VAR_VALUE] != 0)
-            report_debug("Warning: Setting variable "+c+"\n"
-                   "to a value of a different type than the default value.\n"
-                   "Default was "+sprintf("%t", variables[c][VAR_VALUE])+
-                   " new is "+sprintf("%t", res)+"\n");
-          variables[c][VAR_VALUE]=res;
-        })
-        {
-          report_debug("Warning: Asuming '"+v+"' should be taken "
-                 "as a string value.\n");
-          if(!stringp(variables[c][VAR_VALUE]))
-            report_debug("Warning: Old value was not a string.\n");
-          variables[c][VAR_VALUE]=v;
-        }
-      }
-      else
-	report_debug("Unknown variable: "+c+"\n");
-    }
-  }
 }
 
 
