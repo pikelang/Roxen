@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.483 2005/03/18 17:08:04 anders Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.484 2005/04/06 19:16:23 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -130,7 +130,6 @@ private void old_rxml_warning(RequestID id, string no, string yes) {
   rxml_warning_cache->old_rxml_warning(id, no, yes);
 }
 #endif
-
 
 // ----------------- Entities ----------------------
 
@@ -308,7 +307,7 @@ class TagAppend {
   mapping(string:RXML.Type) opt_arg_types = ([ "type": RXML.t_text(RXML.PEnt) ]);
   RXML.Type content_type = RXML.t_any (RXML.PXml);
   array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
-  int flags;
+  int flags = RXML.FLAG_DONT_RECOVER;
 
   class Frame {
     inherit RXML.Frame;
@@ -561,7 +560,9 @@ class TagSet {
 
       // Set an entity variable to a value.
       if(args->split && content)
-	RXML.user_set_var(args->variable, (string)content/args->split, args->scope);
+	RXML.user_set_var(args->variable,
+			  RXML.t_string->encode (content) / args->split,
+			  args->scope);
       else if (content == RXML.nil) {
 	if (compat_level >= 4.0) {
 	  if (content_type->sequential)
@@ -1013,7 +1014,7 @@ class TagInsertVariable {
       if(data[args->index]) return data[args->index];
       RXML.run_error("Could not index variable data\n");
     }
-    return (string)RXML.user_get_var(var, args->scope);
+    return RXML.t_string->encode (RXML.user_get_var(var, args->scope));
   }
 }
 
@@ -1353,7 +1354,7 @@ class TagCharset
     array do_return( RequestID id )
     {
       if( args->in && catch {
-	content=Locale.Charset.decoder( args->in )->feed( content )->drain();
+	content=Locale.Charset.decoder( args->in )->feed( content || "" )->drain();
       })
 	RXML.run_error("Illegal charset, or unable to decode data: %s\n",
 		       args->in );
@@ -3751,6 +3752,7 @@ class TagCase {
     int cap;
     array do_enter() {cap = 0; return 0;}
     array do_process(RequestID id) {
+      if (!content) content = "";
       if(args->case) {
 	string op;
 	switch(lower_case(args->case)) {
@@ -4138,7 +4140,7 @@ class TagEmit {
 	a0->rxml_var_eval(ctx, v, "", RXML.t_text);
     }
     else
-      a0 = (string)a0;
+      a0 = RXML.t_string->encode (a0);
 
     if(objectp(b0) && b0->rxml_var_eval) {
       if(!ctx) ctx = RXML_CONTEXT;
@@ -4146,7 +4148,7 @@ class TagEmit {
 	b0->rxml_var_eval(ctx, v, "", RXML.t_text);
     }
     else
-      b0 = (string)b0;
+      b0 = RXML.t_string->encode (b0);
 
     return dwim_compare_iter(a0, b0);
   }
@@ -5315,7 +5317,7 @@ class TagIfSizeof {
     if(stringp(var) || arrayp(var) ||
        multisetp(var) || mappingp(var)) return (string)sizeof(var);
     if(objectp(var) && var->_sizeof) return (string)sizeof(var);
-    return (string)sizeof((string)var);
+    return (string)sizeof(RXML.t_string->encode (var));
   }
   int(0..1) do_check(string var, array arr, RequestID id) {
     if(sizeof(arr)>2 && !var) var = "0";
@@ -5426,7 +5428,7 @@ class TagEmitValues {
     if( m->variable )
       m->values = RXML_CONTEXT->user_get_var( m->variable );
 
-    if(!m->values)
+    if(zero_type (m->values))
       return ({});
 
     if(stringp(m->values)) {
@@ -5462,30 +5464,37 @@ class TagEmitValues {
     if(mappingp(m->values))
       return map( indices(m->values),
 		  lambda(mixed ind) {
-		    mixed val = (string)m->values[ind];
-		    if(m->trimwhites) val=String.trim_all_whites(val);
-		    if(m->case=="upper") val=upper_case(val);
-		    else if(m->case=="lower") val=lower_case(val);
+		    mixed val = m->values[ind];
+		    if(m->trimwhites)
+		      val=String.trim_all_whites(RXML.t_string->encode (val));
+		    if(m->case=="upper")
+		      val=upper_case(RXML.t_string->encode (val));
+		    else if(m->case=="lower")
+		      val=lower_case(RXML.t_string->encode (val));
 		    return (["index":ind,"value":val]);
 		  });
 
     if(arrayp(m->values))
       return map( m->values,
 		  lambda(mixed val) {
-		    val = (string)val;
-		    if(m->trimwhites) val=String.trim_all_whites(val);
-		    if(m->case=="upper") val=upper_case(val);
-		    else if(m->case=="lower") val=lower_case(val);
+		    if(m->trimwhites)
+		      val=String.trim_all_whites(RXML.t_string->encode (val));
+		    if(m->case=="upper")
+		      val=upper_case(RXML.t_string->encode (val));
+		    else if(m->case=="lower")
+		      val=lower_case(RXML.t_string->encode (val));
 		    return (["value":val]);
 		  } );
 
     if(multisetp(m->values))
       return map( m->values,
 		  lambda(mixed val) {
-		    val = (string)val;
-		    if(m->trimwhites) val=String.trim_all_whites(val);
-		    if(m->case=="upper") val=upper_case(val);
-		    else if(m->case=="lower") val=lower_case(val);
+		    if(m->trimwhites)
+		      val=String.trim_all_whites(RXML.t_string->encode (val));
+		    if(m->case=="upper")
+		      val=upper_case(RXML.t_string->encode (val));
+		    else if(m->case=="lower")
+		      val=lower_case(RXML.t_string->encode (val));
 		    return (["index":val]);
 		  } );
 
@@ -9055,7 +9064,8 @@ the respective attributes below for further information.</p></desc>
 
 <attr name='values' value='string, mapping or array'><p>
  An array, mapping or a string to be splitted into an array. This
- attribute is required unless the variable attribute is used.</p>
+ attribute is required unless the \"variable\" or \"from-scope\"
+ attribute is used.</p>
 </attr>
 
 <attr name='variable' value='name'><p>Name of a variable from which the
