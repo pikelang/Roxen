@@ -5,7 +5,7 @@
  * made by Per Hedbor
  */
 
-constant cvs_version = "$Id: tablify.pike,v 1.17 1998/07/01 11:29:38 grubba Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.18 1998/07/01 17:44:58 grubba Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -73,7 +73,7 @@ string tag_tablify( string tag, mapping m, string q, object request_id,
   
   if(m->help) return register_module()[2];
 
-  if (m->parse) {
+  if (m->preprocess || m->parse) {
     q = parse_rxml(q, request_id, file, defines);
   }
 
