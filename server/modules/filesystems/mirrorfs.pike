@@ -28,8 +28,15 @@ object _rpc;
 object rpc(int|void force)
 {
   array s = query("mserver")/":";
-  if(force|| !_rpc || catch{_rpc->open();})
-    _rpc = Client(s[0],(int)s[1],"mirror");
+  if(force|| !_rpc || catch{_rpc->open();}) {
+    if (catch {
+      _rpc = Client(s[0],(int)s[1],"mirror");
+    }) {
+      _rpc = 0;
+      perror("mirrorfs:Failed to connect to server %s:%s\n",
+	     s[0], s[1]);
+    }
+  }
   return _rpc;
 }
 
@@ -44,7 +51,7 @@ void get_remote_dir(string dir)
 {
   string l = combine_path(path,combine_path("/",dir+"/")[1..]);
   array d ;
-  if(d=rpc()->get_dir(dir))
+  if(rpc() && (d=rpc()->get_dir(dir)))
   {
     mkdirhier(l+".dirents");
     rm(l+".dirents");
@@ -84,7 +91,7 @@ array stat_file(string s, object id)
   array res;
   if(res=::stat_file(s,id)) return res;
   perror("Remote Stat file "+s+"\n");
-  return rpc()->stat_file(s);
+  return rpc() && rpc()->stat_file(s);
 }
 
 
@@ -98,4 +105,12 @@ mixed find_file(string s, object id)
   if(res=::find_file(s,id)) return res;
   perror("Get remote dir "+s+"?\n");
   if(stat_file(s,id)) return -1;
+}
+
+string status()
+{
+  if (rpc()) {
+    return ("Connected OK<br>\n");
+  }
+  return("<font color=red>Failed to connect to server</font><br>\n");
 }
