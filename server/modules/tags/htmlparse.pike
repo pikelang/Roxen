@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.110 1998/07/04 12:34:28 grubba Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.111 1998/07/04 21:59:58 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -1720,7 +1720,7 @@ string tag_allow(string a, mapping (string:string) m,
     
     b=(int)sprintf("%02d%02d%02d", c->year, c->mon + 1, c->mday);
     a=(int)m->date;
-    
+    if(a > 999999) a -= 19000000;
     if(m->inclusive || !(m->before || m->after) && a==b)
       tok=1;
 
@@ -2536,23 +2536,19 @@ string tag_preparse( string tag_name, mapping args, string contents,
 }
 
 // Removes empty lines
-string tag_trimlines( string tag_name, mapping args, string contents,
+mixed tag_trimlines( string tag_name, mapping args, string contents,
 		      object id )
 {
-  contents = parse_rxml( contents, id );
-  contents = contents / "\r\n" * "\n";
-  contents = contents / "\r" * "\n";
-  contents = (contents / "\n" - ({ "" })) * "\n";
-  return contents;
+  contents = replace(parse_rxml( contents, id ),
+		     ({ "\r\n","\r" }), ({"\n", "\n"}));
+  return ({ (contents / "\n" - ({ "" })) * "\n" });
 }
 
 // Internal method for the default tag
-private string tag_input( string tag_name, mapping args, string name,
+private mixed tag_input( string tag_name, mapping args, string name,
 			  multiset (string) value )
 {
-  werror( sprintf( "%O %O %O\n", args, name, value ) );
-  if (name && args->name != name
-      || args->_parsed)
+  if (name && args->name != name)
     return 0;
   if (args->type == "checkbox" || args->type == "radio")
     if (args->value)
@@ -2579,8 +2575,7 @@ private string tag_input( string tag_name, mapping args, string name,
 	  return 0;
   else
     return 0;
-  args->_parsed = "_parsed";
-  return make_tag( tag_name, args );
+  return ({ make_tag( tag_name, args ) });
 }
 
 private string remove_leading_trailing_ws( string str )
@@ -2591,8 +2586,8 @@ private string remove_leading_trailing_ws( string str )
 }
 
 // Internal method for the default tag
-private string tag_option( string tag_name, mapping args, string contents,
-			   multiset (string) value )
+private mixed tag_option( string tag_name, mapping args, string contents,
+				  multiset (string) value )
 {
   if (args->value)
     if (value[ args->value ])
@@ -2610,27 +2605,26 @@ private string tag_option( string tag_name, mapping args, string contents,
 	args->selected = "selected";
     else
       return 0;
-  return make_container( tag_name, args, contents );
+  return ({make_container( tag_name, args, contents )});
 }
 
 // Internal method for the default tag
-private string tag_select( string tag_name, mapping args, string contents,
+private mixed tag_select( string tag_name, mapping args, string contents,
 			   string name, multiset (string) value )
 {
   array (string) tmp;
   int c;
   
-  if (name && args->name != name
-      || args->_parsed)
+  if (name && args->name != name)
     return 0;
   tmp = contents / "<option";
   for (c=1; c < sizeof( tmp ); c++)
     if (sizeof( tmp[c] / "</option>" ) == 1)
       tmp[c] += "</option>";
   contents = tmp * "<option";
-  contents = parse_html( contents, ([ ]), ([ "option" : tag_option ]), value );
-  args->_parsed = "_parsed";
-  return make_container( tag_name, args, contents );
+  mapping m = ([ "option" : tag_option ]);
+  contents = parse_html( contents, ([ ]), m, value );
+  return ({ make_container( tag_name, args, contents ) });
 }
 
 // The default tag is used to give default values to forms elements,
