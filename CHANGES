@@ -1,3 +1,33 @@
+Changes since Roxen Challenger 1.2.27 Yellow
+-----------------------------------------------
+
+o Improved debug in the CGI wrapper.
+
+o LARGEFILE_SOURCE support in Pike 0.5.
+
+o Fixes to the Odbc module.
+
+o Improved NT support.
+
+o Pike 0.6 now supports threads on FreeBSD 3.0.
+
+o Improved checks for floatingpoint behaviour in Pike 0.6.
+
+o The start script now supports the option --gdb, which runs Roxen in a gdb.
+
+o Several modules have been updated to Pike 0.6.
+
+o Fixed a few cosmetic bugs.
+
+o ftp2 now supports SITE UMASK.
+
+o Improved HTTP timeout handling.
+
+o Fixed date bug in the ChangeLog creation.
+
+o Fixed several minor bugs.
+
+
 Changes since Roxen Challenger 1.2.26 Yellow
 -----------------------------------------------
 
