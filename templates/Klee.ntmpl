@@ -1,0 +1,30 @@
+<navigation maxwidth=160 preload imgbase=/img/ transparent=$$bg_color$$>
+
+  <textstyle right scale=$$nav_size$$ xspacing=5 yspacing=5
+             font='$$nav_font$$ bold' xspacing=10>
+
+  <boxstyle left text center bg=$$bg_color$$
+    alpha="Klee/Left-end_Alpha.pnm" width=8>
+  <boxstyle left text selected bg=#fefefe alpha="Klee/Left-end_Alpha.pnm">
+  <boxstyle left text mouseover bg=#fefefe alpha="Klee/Left-end_Alpha.pnm">
+
+  <boxstyle middle text bg=$$bg_color$$ fg=blue alpha="Klee/Horiz_Alpha.pnm">
+  <boxstyle middle text selected bg=#fefefe fg=blue
+    alpha="Klee/Horiz_Alpha.pnm">
+  <boxstyle middle text mouseover bg=#fefefe fg=blue
+    alpha="Klee/Horiz_Alpha.pnm">
+
+  <boxstyle right text center bg=$$bg_color$$
+    alpha="Klee/Left-end_Alpha.pnm" rot=180 width=8>
+  <boxstyle right text selected bg=#fefefe
+    alpha="Klee/Left-end_Alpha.pnm" rot=180>
+  <boxstyle right text mouseover bg=#fefefe
+    alpha="Klee/Left-end_Alpha.pnm" rot=180>
+
+  <boxstyle left delimit bg=$$bg_color$$ alpha=255>
+  <boxstyle middle delimit height=4 bg=$$bg_color$$ alpha=255>
+  <boxstyle right delimit bg=$$bg_color$$ alpha=255>
+
+  <menumaker menu=top>
+
+</navigation>

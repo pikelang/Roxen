@@ -13,7 +13,7 @@
 
   <boxstyle left text center bg=darkred alpha=150>
   <boxstyle left text selected bg=green alpha=90>
-  <boxstyle left text mouseover bg=yellow src=nav1/plupp.pnm alpha=0>
+  <boxstyle left text mouseover bg=yellow alpha=0>
 
   <boxstyle left delimit bg=$$bg_color$$ alpha=30>
   <boxstyle middle delimit height=2 bg=yellow alpha=30>
