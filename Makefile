@@ -8,6 +8,7 @@ VPATH=.
 PROGNAME=chilimoon
 MAKE=make
 PREFIX=/usr
+PROG_DIR=${PREFIX}/${PROGNAME}
 CONFIG=/etc
 CONFIGDIR=${CONFIG}/chilimoon
 STARTSCRIPTS=${CONFIG}/init.d
@@ -58,17 +59,17 @@ pike_version_test:
 	fi
 
 install_dirs:
-	${INSTALL_DIR} -dD ${PREFIX}/${PROGNAME};
-	${INSTALL_DIR} -dD ${PREFIX}/${PROGNAME}/server;
-	${INSTALL_DIR} -dD ${PREFIX}/${PROGNAME}/local;
+	${INSTALL_DIR} -dD ${PROG_DIR};
+	${INSTALL_DIR} -dD ${PROG_DIR}/server;
+	${INSTALL_DIR} -dD ${PROG_DIR}/local;
 
 install_data:
-	${INSTALL_DATA_R} server 	${PREFIX}/${PROGNAME}/;
-	${INSTALL_DATA_R} local 	${PREFIX}/${PROGNAME}/;
-	#${INSTALL_DATA}   GPL   	${PREFIX}/${PROGNAME}/;
-	#${INSTALL_DATA}   COPYING   	${PREFIX}/${PROGNAME}/;
-	${INSTALL_DATA}   start  	${PREFIX}/${PROGNAME}/;
-	${INSTALL_DATA}   server/tools/init.d_chilimoon ${STARTSCRIPTS}/chilimoon
+	${INSTALL_DATA_R} server 	${PROG_DIR}/;
+	${INSTALL_DATA_R} local 	${PROG_DIR}/;
+	#${INSTALL_DATA}   GPL   	${PROG_DIR}/;
+	#${INSTALL_DATA}   COPYING   	${PROG_DIR}/;
+	${INSTALL_DATA}   start  	${PROG_DIR}/;
+	${INSTALL_DATA}   server/tools/init.d_chilimoon ${STARTSCRIPTS}/chilimoon;
 
 config_test: 
 	@if [ -f /etc/chilimoon/_admininterface/settings/admin_uid ] ; then\
@@ -78,7 +79,7 @@ config_test:
 	fi
 	
 config:
-	@cd ${PREFIX}/${PROGNAME}/server/mysql;\
+	@cd ${PROG_DIR}/server/mysql;\
 	./lnmysql.sh >/dev/null 2>/dev/null;
 	@pike ${PREFIX}/${PROGNAME}/server/bin/create_configif.pike -d ${CONFIGDIR} 
 
@@ -91,5 +92,20 @@ build_pike:
 	echo BUILDING Failed, Try building Pike Manually.;\
 	exit 1;\
 	fi	
+
+selftest:
+	@if [ -d ${PROG_DIR} ] ; then\
+	cd ${PROG_DIR};\
+	./start --self-test-verbose;\
+	else\
+	echo "################################################";\
+	echo "###                                          ###";\
+	echo "### Failed, no ChiliMoon installation found. ###";\
+	echo "### Type make install to install ChiliMoon.  ###";\
+	echo "### After installing start SelfTest again.   ###";\
+	echo "###                                          ###";\
+	echo "################################################";\
+	fi
+		
 
 .phony: install
