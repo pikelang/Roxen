@@ -5,12 +5,17 @@ string describe_arglist( array args )
 {
   array res = ({});
   foreach( args, mixed arg )
-  {
     if( mappingp(arg) || arrayp(arg) )
       res+=({sprintf("%t<%d>",arg,sizeof(arg))});
+    else if( objectp( arg ) )
+      if( arg->is_module )
+	res += ({ sprintf("%s",arg->my_configuration()->otomod[arg])});
+      else if( arg->is_configuration )
+	res += ({ "Config" });
+      else
+	res += ({ sprintf("%O", arg ) });
     else
       res+=({sprintf("%O",arg)});
-  }
   return res * ", ";
 }
 
@@ -105,4 +110,53 @@ void check_is_not_zero( mixed res, mixed err, function cb, array args, int st )
       report_test_failure( "expected non-zero", cb, args, st);
     else
       report_test_ok( err, cb, args, st );
+}
+
+
+function check_is( mixed m )
+{
+  return
+    lambda( mixed res, mixed err, function cb, array args, int st )
+    {
+      if( err )
+	report_test_failure( err, cb, args, st );
+      else
+	if( res != m )
+	  report_test_failure(sprintf("Got %O, expected %O", res,m),
+			      cb,args,st);
+	else
+	  report_test_ok( err, cb, args, st );
+    };
+}
+
+function check_equal( mixed m )
+{
+  return
+    lambda( mixed res, mixed err, function cb, array args, int st )
+    {
+      if( err )
+	report_test_failure( err, cb, args, st );
+      else
+	if( !equal( res, m ))
+	  report_test_failure(sprintf("Got %O, expected %O", res,m),
+			      cb,args,st);
+	else
+	  report_test_ok( err, cb, args, st );
+    };
+}
+
+function check_not_equal( mixed m )
+{
+  return
+    lambda( mixed res, mixed err, function cb, array args, int st )
+    {
+      if( err )
+	report_test_failure( err, cb, args, st );
+      else
+	if( equal( res, m ))
+	  report_test_failure(sprintf("Got %O, expected %O", res,m),
+			      cb,args,st);
+	else
+	  report_test_ok( err, cb, args, st );
+    };
 }

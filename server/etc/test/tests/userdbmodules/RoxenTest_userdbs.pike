@@ -51,6 +51,73 @@ void do_thread_tests( RoxenModule m )
   do_test( 0, lookup_threaded, m->list_users(), m );
 }
 
+
+void verify_compat_userinfo( Configuration c, array list )
+{
+  foreach( list, string s )
+  {
+    array ui = c->userinfo( s );
+    if( !arrayp(ui) )
+      throw( sprintf( "Expected array of size 7, got %t\n", ui) );
+
+    if( sizeof( ui ) != 7 )
+      throw( sprintf( "Expected array of size 7, got array of size %d\n",
+		      sizeof(ui ) ) );
+
+    if( ui[0] != s )
+      throw(sprintf("Got different user (0) from userinfo than given (%O!=%O)",
+		    ui[0],s ));
+
+
+    if( !stringp( ui[1] ) )
+      throw( sprintf( "Expected string for password (1), got %O\n", ui[1] ) );
+    if( !intp( ui[2] ) )
+      throw( sprintf( "Expected int for uid (2), got %O\n", ui[2] ) );
+    if( !intp( ui[3] ) )
+      throw( sprintf( "Expected int for gid (3), got %O\n", ui[3] ) );
+    if( !stringp( ui[4] ) )
+      throw( sprintf( "Expected string for gecos (4), got %O\n", ui[4] ) );
+    if( !stringp( ui[5] ) )
+      throw( sprintf( "Expected string for homedir (5), got %O\n", ui[5] ) );
+    if( !stringp( ui[6] ) )
+      throw( sprintf( "Expected string for shell (6), got %O\n", ui[6] ) );
+  }
+}
+
+void verify_compat_user_from_uid( Configuration c, array list )
+{
+  foreach( list, string s )
+  {
+    User u = c->find_user( s );
+    array ui = c->user_from_uid( u->uid()  );
+
+    if( !arrayp(ui) )
+      throw( sprintf( "Expected array of size 7, got %t\n", ui) );
+
+    if( sizeof( ui ) != 7 )
+      throw( sprintf( "Expected array of size 7, got array of size %d\n",
+		      sizeof(ui ) ) );
+
+    if( ui[2] != u->uid() )
+      throw(sprintf("Got different user (0) from userinfo than given (%O!=%O)",
+		    ui[0],u->uid() ));
+
+
+    if( !stringp( ui[1] ) )
+      throw( sprintf( "Expected string for password (1), got %O\n", ui[1] ) );
+    if( !intp( ui[2] ) )
+      throw( sprintf( "Expected int for uid (2), got %O\n", ui[2] ) );
+    if( !intp( ui[3] ) )
+      throw( sprintf( "Expected int for gid (3), got %O\n", ui[3] ) );
+    if( !stringp( ui[4] ) )
+      throw( sprintf( "Expected string for gecos (4), got %O\n", ui[4] ) );
+    if( !stringp( ui[5] ) )
+      throw( sprintf( "Expected string for homedir (5), got %O\n", ui[5] ) );
+    if( !stringp( ui[6] ) )
+      throw( sprintf( "Expected string for shell (6), got %O\n", ui[6] ) );
+  }
+}
+
 array(int) run_tests( Configuration c )
 {
   RoxenModule m;
@@ -81,13 +148,63 @@ array(int) run_tests( Configuration c )
   array user_list = do_test( 0, m->list_users );
   array group_list = do_test( 0, m->list_groups );
 
-  do_test( 0, verify_user_list, user_list, m );
-  
-#if constant(thread_create)
-  do_thread_tests( m );
-#else
-  report_notice("Threads not available, skipping thread related UserDB tests\n");
+
+  // 2: Test the interfaces in the config and module objects.
+#if !constant(thread_create)
+  report_notice("Threads not available, "
+		"skipping thread related UserDB tests\n");
 #endif
+  
+  foreach( ({ m, c }), object o )
+  {
+    do_test( 0, verify_user_list, user_list, o );
+#if constant(thread_create)
+    do_thread_tests( o );
+#endif
+  }
+
+  // 3: Test functions in config object
+  do_test( check_is( m ), c->find_user_database, "system" );
+
+
+
+  // 4: Test get/set interface in user objects
+
+  User u =
+    do_test( 0, c->find_user, user_list[ random( sizeof( user_list ) )] );
+  
+
+  foreach( ({ "A Random String", 10, "\4711\4712\4713" }),
+	   mixed value )
+  {
+    do_test( check_equal( value ), u->set_var, 0, "v", value );
+
+    // 0,v exists
+    do_test( check_equal( value ), u->get_var, 0, "v" );
+    do_test( check_equal( 0 ),     u->get_var, m, "v", value );
+
+
+    do_test( check_equal( value ), u->set_var, m, "v", value );
+
+    // m,v 0,v exists
+    do_test( check_equal( value ), u->get_var, m, "v" );
+    do_test( check_equal( value ), u->get_var, 0, "v" );
+
+    do_test( 0, u->delete_var, 0, "v" );
+
+    // m,v exists
+    do_test( check_equal( 0 ),     u->get_var, 0, "v" );
+    do_test( check_equal( value ), u->get_var, m, "v" );
+
+    do_test( 0, u->delete_var, m, "v" );
+    // no variables exists
+  }
+
+
+  // 5: Test (deprecated) compat interfaces
+  array list = do_test( 0, c->userlist );
+  do_test( 0, verify_compat_userinfo, c, list );
+  do_test( 0, verify_compat_user_from_uid, c, list );
   
   return ({ current_test, tests_failed });
 }
