@@ -1,15 +1,3 @@
-#define translate( X ) _translate( (X), id )
-
-string _translate( mixed what, RequestID id )
-{
-  if( mappingp( what ) )
-    if( what[ id->misc->cf_locale ] )
-      return what[ id->misc->cf_locale ];
-    else
-      return what->standard;
-  return what;
-}
-
 string find_module_doc( string cn, string mn, RequestID id )
 {
   Configuration c = roxen.find_configuration( cn );
@@ -22,13 +10,11 @@ string find_module_doc( string cn, string mn, RequestID id )
   if(!m)
     return "";
 
-  // NGSERVER: Remove this replace.
-  return replace( "<b>"
-                  + translate(m->register_module()[1]) + "</b><br /><p>"
-                  + translate(m->info()||"") + "</p><p>"
-                  + translate(m->status()||"") +"</p><p>"
-                  + translate(m->file_name_and_stuff())+"</p>",
-                  ({ "/image/", }), ({ "/*/" }));
+  return "<b>"
+         + m->register_module()[1] + "</b><br /><p>"
+         + (m->info()||"") + "</p><p>"
+         + (m->status()||"") +"</p><p>"
+         + m->file_name_and_stuff() +"</p>");
 }
 
 string parse( RequstID id )

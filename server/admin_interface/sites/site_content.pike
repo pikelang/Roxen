@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.143 2004/05/27 23:08:05 _cvs_stephen Exp $
+// $Id: site_content.pike,v 1.144 2004/05/27 23:18:50 _cvs_stephen Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -327,14 +327,12 @@ string find_module_doc( string cn, string mn, RequestID id )
       .State->current_compile_errors[ cn+"!"+mn ]+
       "</pre></font>";
 
-  // NGSERVER: Remove this replace
   string fnas = EC(TRANSLATE(m->file_name_and_stuff()));
   fnas = replace(fnas, "<br>", "</td></tr>\n<tr><td>");
   fnas = "<tr><td nowrap=''>"+
     ((fnas/":</b>")*":</b></td><td><img src='/*/unit' width=10 height=1 /></td><td>") +
     "</td></tr>\n";
-  return
-    replace( "<b><h2>" +
+  return     "<b><h2>" +
 	     Roxen.html_encode_string(EC(TRANSLATE(m->register_module()[1])))
 	     + "</h2></b>"
                   + EC(TRANSLATE(m->info(id)||"")) + "</p><p>"
@@ -372,8 +370,7 @@ string find_module_doc( string cn, string mn, RequestID id )
                     (m->faked?"(Not on disk, faked module)":inherit_tree( m ))
 		    + 
                     "</dl>" 
-                    : homepage + creators),
-                  ({ "/image/", }), ({ "/*/" }));
+                    : homepage + creators);
 }
 
 string find_module_documentation( string conf, string mn, RequestID id )

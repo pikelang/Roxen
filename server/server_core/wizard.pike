@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2001, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.156 2004/05/27 21:24:41 _cvs_stephen Exp $
+// $Id: wizard.pike,v 1.157 2004/05/27 23:18:50 _cvs_stephen Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -666,14 +666,12 @@ string parse_wizard_page(string form, RequestID id, string wiz_name,
 	 "</td>\n"
 	  " \n<td align='right'>"+
 	 (foo->help && !id->variables->help?
-	  "<font size=-1><input type=image name=help src="+
-	  (id->conf?"/*/help":"/image/help.gif")+
+	  "<font size=-1><input type=image name=help src='/*/help'"
 	  " border='0' value='Help'></font>":"")
 	 +"</td>\n"
 	 " </tr><tr><td colspan='3'><table cellpadding='0' cellspacing='0' "
 	   "border='0' width='100%'>"
-           "<tr bgcolor='#000000'><td><img src='"+
-	 (id->conf?"/*/unit":"/image/unit.gif")+
+           "<tr bgcolor='#000000'><td><img src='/*/unit"
 	 "' width='1' height='1' alt='' /></td></tr></table></td></tr>\n"
 	 "  </table><table cellpadding='6'><tr><td>\n"
 	 "<!-- The output from the page function -->\n"
@@ -1237,25 +1235,22 @@ string html_table(array(string) subtitles, array(array(string)) table,
 
 string html_notice(string notice, RequestID id)
 {
-  return ("<table><tr><td valign='top'><img \nalt='Notice:' src='"+
-	  (id->conf?"/*/":"/image/")
-	  +"err_1.gif' />&nbsp;&nbsp;</td><td valign='top'>"+notice+
+  return ("<table><tr><td valign='top'><img \nalt='Notice:' src='/*/"
+	  "err_1' />&nbsp;&nbsp;</td><td valign='top'>"+notice+
 	  "</td></tr></table>");
 }
 
 string html_warning(string notice, RequestID id)
 {
-  return ("<table><tr><td valign='top'><img \nalt='Warning:' src='"+
-	  (id->conf?"/*/":"/image/")
-	  +"err_2.gif' />&nbsp;&nbsp;</td><td valign='top'>"+notice+
+  return ("<table><tr><td valign='top'><img \nalt='Warning:' src='/*/"
+	  "err_2' />&nbsp;&nbsp;</td><td valign='top'>"+notice+
 	  "</td></tr></table>");
 }
 
 string html_error(string notice, RequestID id)
 {
-  return ("<table><tr><td valign='top'><img \nalt='Error:' src='"+
-	  (id->conf?"/*/":"/image/")
-	  +"err_3.gif' />&nbsp;&nbsp;</td><td valign='top'>"+notice+
+  return ("<table><tr><td valign='top'><img \nalt='Error:' src='/*/"
+	  "err_3' />&nbsp;&nbsp;</td><td valign='top'>"+notice+
 	  "</td></tr></table>");
 }
 
