@@ -2,7 +2,7 @@ inherit "module";
 #include <module.h>
 #include <config.h>
 
-constant cvs_version="$Id: awizard.pike,v 1.6 1999/11/17 09:53:36 per Exp $";
+constant cvs_version="$Id: awizard.pike,v 1.7 1999/11/17 15:17:22 per Exp $";
 constant thread_safe=1;
 
 array register_module()
@@ -264,9 +264,8 @@ class Page
 
     mixed call(object parser, mapping args, string c, mixed... extra)
     {
-      if(!fun) 
-        return "";
-      return fun(parser->tag_name(), args, c, 0,0, @extra);
+      if(!fun) return "";
+      return fun(parser->tag_name(), args, c, 0, @extra);
     }
                    
     void create( function f )
@@ -295,7 +294,7 @@ class Page
     {
 #ifndef OLD_PARSE_HTML
       for (object p = id->misc->_parser_obj; p; p = p->up)
-        p->add_tag( s, ContainerCaller( my_containers[s] )->call );
+        p->add_container( s, ContainerCaller( my_containers[s] )->call );
 #else
        id->misc->_containers[ s ] = my_containers[ s ];
 #endif
