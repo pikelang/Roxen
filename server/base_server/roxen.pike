@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.259 1999/03/02 20:15:26 grubba Exp $
+ * $Id: roxen.pike,v 1.260 1999/03/05 01:53:28 grubba Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.259 1999/03/02 20:15:26 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.260 1999/03/05 01:53:28 grubba Exp $";
 
 // Some headerfiles
 #define IN_ROXEN
@@ -2422,8 +2422,8 @@ void create_pid_file(string where)
 }
 
 
-void shuffle(object from, object to,
-	      object|void to2, function(:void)|void callback)
+object shuffle(object from, object to,
+	       object|void to2, function(:void)|void callback)
 {
 #if efun(spider.shuffle)
   if(!to2)
@@ -2432,6 +2432,7 @@ void shuffle(object from, object to,
     p->input(from);
     p->set_done_callback(callback);
     p->output(to);
+    return p;
   } else {
 #endif
     // 'smartpipe' does not support multiple outputs.
@@ -2440,6 +2441,7 @@ void shuffle(object from, object to,
     p->output(to);
     if(to2) p->output(to2);
     p->input(from);
+    return p;
 #if efun(spider.shuffle)
   }
 #endif
