@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.264 2000/08/31 03:16:37 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.265 2000/08/31 20:52:21 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -541,6 +541,8 @@ class PrefLanguages {
   }
 }
 
+class CacheKey {}
+
 void things_to_do_when_not_sending_from_cache( )
 {
 #ifdef OLD_RXML_CONFIG
@@ -550,6 +552,8 @@ void things_to_do_when_not_sending_from_cache( )
   string contents;
   misc->pref_languages=PrefLanguages();
 
+  misc->cachekey = CacheKey();
+  misc->_cachecallbacks = ({});
   if( contents = request_headers[ "accept-language"] )
   {
     array alang=(contents-" ") / ",";
@@ -1811,7 +1815,9 @@ void send_result(mapping|void result)
 #ifdef RAM_CACHE
       if( (misc->cacheable > 0) && (file->data || file->file) )
       {
-        if( (file->len + strlen( head_string )) < conf->datacache->max_file_size )
+        if( ((file->len + strlen( head_string )) < 
+             conf->datacache->max_file_size) 
+            && misc->cachekey )
         {
           string data = head_string;
           if( file->file )   data += file->file->read();
@@ -1819,6 +1825,8 @@ void send_result(mapping|void result)
           conf->datacache->set( raw_url, data, 
                                 ([
                                   "hs":strlen(head_string),
+                                  "key":misc->cachekey,
+                                  "callbacks":misc->_cachecallbacks,
                                   "len":file->len,
                                   // fix non-keep-alive when sending from cache
                                   "raw":(file->raw||misc->connection=="close"),
@@ -1999,6 +2007,7 @@ void got_data(mixed fooid, string s)
   if( !conf || !(path = port_obj->path ) 
       || (sizeof( path ) 
           && not_query[..sizeof(path) - 1] != path) )
+
   {
     // FIXME: port_obj->name & port_obj->default_port are constant
     // consider caching them?
@@ -2056,32 +2065,60 @@ void got_data(mixed fooid, string s)
   array cv;
   if( misc->cacheable && (cv = conf->datacache->get( raw_url )) )
   {
-    if(!leftovers) 
-      leftovers = data||"";
-    
-    string d = cv[ 0 ];
-    file = cv[1];
-#ifndef RAM_CACHE_ASUME_STATIC_CONTENT
-    Stat st;
-    if( !file->rf || !file->mtime || 
-        ((st = file_stat( file->rf )) &&
-         st[ST_MTIME] == file->mtime ) )
-#endif
+    if( !cv[1]->key )
+      conf->datacache->expire_entry( raw_url );
+    else 
     {
-      conf->hsent += file->hs;
-      if( strlen( d ) < 4000 )
+      int can_cache = 1;
+      if(!leftovers) 
+        leftovers = data||"";
+    
+      string d = cv[ 0 ];
+      file = cv[1];
+
+      if( sizeof(file->callbacks) )
       {
-        my_fd->write( d );
-        do_log();
-      } 
-      else 
-      {
-        send( d );
-        start_sender( );
+        if( mixed e = catch 
+        {
+          foreach( file->callbacks, function f )
+            if( !f() )
+            {
+              can_cache = 0;
+              break;
+            }
+        } )
+        {
+          can_cache = 0;
+          INTERNAL_ERROR( e );
+          send_result();
+          return;
+        }
       }
-      return;
+      if( can_cache )
+      {
+#ifndef RAM_CACHE_ASUME_STATIC_CONTENT
+        Stat st;
+        if( !file->rf || !file->mtime || 
+            ((st = file_stat( file->rf )) &&
+             st[ST_MTIME] == file->mtime ) )
+#endif
+        {
+          conf->hsent += file->hs;
+          if( strlen( d ) < 4000 )
+          {
+            my_fd->write( d );
+            do_log();
+          } 
+          else 
+          {
+            send( d );
+            start_sender( );
+          }
+          return;
+        }
+      }
+      file = 0;
     }
-    file = 0;
   }
 #endif
 
@@ -2120,7 +2157,7 @@ object clone_me()
   c->time = time;
   c->raw_url = raw_url;
   c->variables = copy_value(variables);
-  c->misc = copy_value(misc);
+  c->misc = copy_value( misc );
   c->misc->orig = t;
 
   c->prestate = prestate;
