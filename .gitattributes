@@ -188,6 +188,8 @@ urw_itc_avant_garde-demi-r binary
 /server/modules/graphics/graphic_text.pike foreign_ident
 /server/modules/graphics/pimage.pike foreign_ident
 /server/modules/graphics/tablist.pike foreign_ident
+/server/modules/ldap/ldaptag.pike foreign_ident
+/server/modules/ldap/ldapuserauth.pike foreign_ident
 /server/modules/logging/client_logger.pike foreign_ident
 /server/modules/logging/home_logger.pike foreign_ident
 /server/modules/logging/nologging.pike foreign_ident
