@@ -12,6 +12,11 @@ inherit "roxenlib";
 constant module_type = MODULE_PARSER|MODULE_CONFIG;
 constant module_name = "Configuration interface RXML tags";
 
+constant thread_safe = 1; /* Not nessesarily true, the config
+                             filesystem forbids parallell accesses anyway
+                             so there is no need for an extra lock here..
+                          */
+
 void start(int num, Configuration conf)
 {
   conf->parse_html_compat=1;
