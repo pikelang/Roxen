@@ -1,5 +1,5 @@
 /*
- * $Id: clientlayer.pike,v 1.29 1999/01/27 01:41:58 js Exp $
+ * $Id: clientlayer.pike,v 1.30 1999/01/28 19:59:44 grubba Exp $
  *
  * A module for Roxen AutoMail, which provides functions for
  * clients.
@@ -10,7 +10,7 @@
 #include <module.h>
 inherit "module" : module;
 
-constant cvs_version="$Id: clientlayer.pike,v 1.29 1999/01/27 01:41:58 js Exp $";
+constant cvs_version="$Id: clientlayer.pike,v 1.30 1999/01/28 19:59:44 grubba Exp $";
 constant thread_safe=1;
 
 
@@ -231,8 +231,12 @@ class Common
   final static mixed misc_set(string table, string name, mixed to)
   {
     modify();
-    name = sql_quote( name );
+
+    // Note: name is truncated to 16 chars.
+    name = sql_quote( name[..15] );
     string enc = encode_binary( to );
+
+    // FIXME: Should probably use UPDATE instead.
     squery("delete from %s where id=%s and variable='%s'", table, 
 	   (string)id, name);
     squery("insert into %s values (%s,'%s','%s')", table, 
