@@ -784,6 +784,30 @@ string tag_for(string t, mapping args, string c, RequestID id)
   return res;
 }
 
+string tag_foreach(string t, mapping args, string c, RequestID id)
+{
+  string v = args->variable;
+  array what;
+  if(args->variables)
+    what = Array.map(args->in/"," - ({""}),
+		     lambda(string name, mapping v) {
+				     return v[name] || "";
+				   }, id->variables);
+  else
+    what = Array.map(args->in / "," - ({""}),
+		     lambda(string var) {
+		       sscanf(var, "%*[ \t\n\r]%s", var);
+		       var = reverse(var);
+		       sscanf(var, "%*[ \t\n\r]%s", var);
+		       return reverse(var);
+		     });
+  
+  string res="";
+  foreach(what, string w) 
+    res += "<set variable="+v+" value="+w+">"+c;
+  return res;
+}
+
 
 
 array(string) tag_noparse(string t, mapping m, string c)
@@ -906,8 +930,6 @@ mapping query_container_callers()
     "else":tag_else,
     "elseif":tag_elseif,
     "elif":tag_elseif,
-    "true":tag_true,
-    "false":tag_false,
     "noparse":tag_noparse,
     "nooutput":tag_nooutput,
     "case":tag_case,
@@ -915,6 +937,7 @@ mapping query_container_callers()
     "strlen":tag_nooutput,
     "define":tag_define,
     "for":tag_for,
+    "foreach":tag_foreach,
     "trace":tag_trace,
     "use":tag_use,
   ]);
@@ -924,6 +947,8 @@ mapping query_container_callers()
 mapping query_tag_callers()
 {
   return ([
+    "true":tag_true,
+    "false":tag_false,
     "list-tags":tag_list_tags,
     "number":tag_number,
     "undefine":tag_undefine,
