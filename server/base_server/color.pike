@@ -1,6 +1,6 @@
 // Color support for roxen. 
 
-string cvs_version = "$Id: color.pike,v 1.8 1997/06/12 02:41:37 per Exp $";
+string cvs_version = "$Id: color.pike,v 1.9 1997/07/10 16:28:27 per Exp $";
 
 mapping (string:array(int)) colors = ([]);
 mapping (string:string) html_32_colors =
@@ -22,6 +22,8 @@ array rgb_to_hsv(array|int ri, int|void gi, int|void bi)
   float h, s, v;
 
   if(arrayp(ri)) return rgb_to_hsv(@ri);
+  if((ri==gi) && (gi==bi)) return ({ 0, 0, ri }); // greyscale..
+  
   r = (float)ri/255.0; g = (float)gi/255.0; b = (float)bi/255.0;
   max = MAX3(r,g,b);
   min = -(MAX3(-r,-g,-b));

@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.80 1997/07/06 16:01:17 grubba Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.81 1997/07/10 16:28:30 per Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -1676,6 +1676,31 @@ void do_dest(object|void o)
   };
 }
 
+// return all available fonts. Taken from thef ont_dirs list.
+array font_cache;
+array available_fonts(int cache)
+{
+  array res = ({});
+  if(cache && font_cache) return font_cache;
+  foreach(QUERY(font_dirs), string dir)
+  {
+    dir+="32/";
+    array d;
+    if(array d = get_dir(dir))
+    {
+      foreach(d,string f)
+      {
+	if(f=="CVS") continue;
+	array a;
+	if((a=file_stat(dir+f)) && (a[1]==-2))
+	  res |= ({ replace(f,"_"," ") });
+      }
+    }
+  }
+  sort(res);
+  return font_cache = res;
+}
+
 
 // Somewhat misnamed, since there can be more then one
 // configuration-interface port nowdays. But, anyway, this function
@@ -2079,9 +2104,9 @@ void exit_when_done()
   {
     werror("Exiting roxen (spurious signals received).\n");
     stop_all_modules();
+    exit(0);
     kill(getpid(), 9);
     kill(0, -9);
-    exit(0);
   }
 
   // First kill off all listening sockets.. 
@@ -2096,28 +2121,28 @@ void exit_when_done()
     {
       werror("Exiting roxen (all connections closed).\n");
       stop_all_modules();
+      exit(0);
       kill(getpid(), 9);
       kill(0, -9);
       perror("Odd. I am not dead yet.\n");
-      exit(0);
     }
   }, 0.1);
 #endif
   call_out(lambda(){
     werror("Exiting roxen (timeout).\n");
     stop_all_modules();
+    exit(0);
     kill(getpid(), 9);
     kill(0, -9);
-    exit(0);
   }, 600, 0); // Slow buggers..
 }
 
 void exit_it()
 {
   perror("Recursive signals.\n");
+  exit(0);
   kill(getpid(), 9);
   kill(0, -9);
-  exit(0);
 }
 
 // REMOVE ME

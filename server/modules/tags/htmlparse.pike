@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-string cvs_version = "$Id: htmlparse.pike,v 1.34 1997/05/28 01:45:13 per Exp $";
+string cvs_version = "$Id: htmlparse.pike,v 1.35 1997/07/10 16:28:38 per Exp $";
 #pragma all_inline 
 
 #include <config.h>
@@ -371,22 +371,24 @@ mapping handle_file_extension( object file, string e, object id)
       return 0;
   }
   
+
+  if(!defines->sizefmt)
+  {
+    // Already partially parsed.
 #if efun(set_start_quote)
-  set_start_quote(set_end_quote(0));
+    set_start_quote(set_end_quote(0));
 #endif
+    defines->sizefmt = "abbrev"; 
 
-  defines->sizefmt = "abbrev"; 
-
-  _error=200;
-  _extra_heads=([ ]);
-  if(id->misc->stat)
-    _stat=id->misc->stat;
-  else
-    _stat=file->stat();
-
-  if(_stat[1] > (QUERY(max_parse)*1024))
-    return 0; // To large for me..
-
+    _error=200;
+    _extra_heads=([ ]);
+    if(id->misc->stat)
+      _stat=id->misc->stat;
+    else
+      _stat=file->stat();
+    if(_stat[1] > (QUERY(max_parse)*1024))
+      return 0; // To large for me..
+  }
   if(QUERY(parse_exec) &&   !(_stat[0] & 07111)) return 0;
   if(QUERY(no_parse_exec) && (_stat[0] & 07111)) return 0;
 

@@ -1,6 +1,6 @@
 inherit "http";
 
-static string _cvs_version = "$Id: roxenlib.pike,v 1.28 1997/05/29 19:15:39 marcus Exp $";
+static string _cvs_version = "$Id: roxenlib.pike,v 1.29 1997/07/10 16:28:31 per Exp $";
 // This code has to work booth in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -341,10 +341,13 @@ string strip_prestate(string from)
 static string parse_rxml(string what, object id,
 			 void|object file, void|mapping defines)
 {
-  if(!defines) defines = id->misc->defines||([]);
-  
-  _error=200;
-  _extra_heads=([ ]);
+  if(!defines) {
+    defines = id->misc->defines||([]);
+    if(!_error)
+      _error=200;
+    if(!_extra_heads)
+      _extra_heads=([ ]);
+  }
 
   if(!id) error("No id passed to parse_rxml\n");
 

@@ -1,7 +1,7 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
 // A quite complex directory module. Generates macintosh like listings.
-string cvs_version = "$Id: directories.pike,v 1.11 1997/05/22 17:32:54 grubba Exp $";
+string cvs_version = "$Id: directories.pike,v 1.12 1997/07/10 16:28:34 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -11,8 +11,8 @@ int idi;
 
 
 
-program dirnode_program = class {
-
+class Dirnode
+{
   string prefix;
   int finished, idi=time();
   array stat;
@@ -196,8 +196,13 @@ void start()
 /*  Module specific stuff */
 
 object _root;
-object root(object id)
+object root(object id, int nocache)
 {
+  if(nocache) {
+    catch{_root->dest();};
+    _root = 0;
+  }
+
   if (!_root)
   {
     string r;
@@ -215,7 +220,7 @@ object root(object id)
     else
       r = "";
     
-    _root=dirnode_program(r);
+    _root=Dirnode(r);
   }
   return _root;
 }
@@ -244,7 +249,8 @@ string head_dir_mac(object node, object id)
   
   if(QUERY(readme)) rm=find_readme(node,id);
   
-  return ("<h1>Directory listing of "+node->path()+"</h1>\n<p>"+rm
+  return ("<title>"+node->path()+"</title>"
+	  "<h1>Directory listing of "+node->path()+"</h1>\n<p>"+rm
 	  +"<pre>\n<dl><hr noshade>");
 }
 
@@ -304,7 +310,7 @@ array|string describe_dir_node_mac(object node)
   
 }
 
-object create_node(string f, object id)
+object create_node(string f, object id, int nocache)
 {
   object my_node, node;
   array (string) path = f/"/" - ({ "" }), dir;
@@ -313,7 +319,7 @@ object create_node(string f, object id)
   path -= ({ "." });
   f=replace(f, ({ "./", "/.",  }), ({ "", "" }));
   
-  my_node = root(id);
+  my_node = root(id,nocache);
   
   foreach(path, tmp) 
     my_node = my_node->descend(tmp);
@@ -352,7 +358,7 @@ object find_finished_node(string f, object id)
   f=replace(f, ({ "./", "/.",  }), ({ "", "" }));
 
   path = f/"/"-({"", "."});
-  my_node = root(id);
+  my_node = root(id,0);
 
   
   foreach(path, tmp) 
@@ -370,7 +376,7 @@ mapping standard_redirect(object o, object id)
 {
   string loc, l2;
   
-  if(!o) o=root(id);
+  if(!o) o=root(id,0);
   
   if(sizeof(id->referer))
     loc=((((((id->referer*" ")/"#")[0])/"?")[0])+"#"+o->path(1));
@@ -423,7 +429,7 @@ mapping parse_directory(object id)
   }
 
   if(id->pragma["no-cache"] || !(node = find_finished_node(f,id)))
-    node = create_node(f, id);
+    node = create_node(f, id, id->pragma["no-cache"]);
   
   if(id->prestate->fold)
   {

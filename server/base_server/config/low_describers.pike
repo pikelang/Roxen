@@ -1,4 +1,4 @@
-/* $Id: low_describers.pike,v 1.8 1997/05/31 22:01:20 grubba Exp $ */
+/* $Id: low_describers.pike,v 1.9 1997/07/10 16:28:33 per Exp $ */
 // These do _not_ use any nodes, instead, they are called from the node
 // describers (which are called from the nodes)
 object this = this_object();
@@ -421,7 +421,7 @@ string describe_variable_low(mixed *var, mixed path, int|void really_short)
    case TYPE_FONT:
     array select_from;
     catch {
-      select_from=get_dir(roxen->QUERY(font_dir)+"32");
+      select_from=roxen->available_fonts(0);
     };
     if(!select_from) 
       break;
@@ -431,11 +431,8 @@ string describe_variable_low(mixed *var, mixed path, int|void really_short)
     array a;
     foreach(select_from, string f)
     {
-      if((a=file_stat(roxen->QUERY(font_dir)+"32/"+f)) && (a[1]==-2))
-      {
-	f = replace(f, "_", " ");
-	res += "<option"+(f == var[VAR_VALUE]?" selected>":">")+f+"\n";
-      }
+      f = replace(f, "_", " ");
+      res += "<option"+(f == var[VAR_VALUE]?" selected>":">")+f+"\n";
     }
     res += "</select><input type=submit value=Ok>";
     break;

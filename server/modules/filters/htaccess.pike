@@ -5,7 +5,7 @@
 
 import Stdio;
 
-string cvs_version = "$Id: htaccess.pike,v 1.13 1997/07/06 18:48:35 grubba Exp $";
+string cvs_version = "$Id: htaccess.pike,v 1.14 1997/07/10 16:28:35 per Exp $";
 #include <module.h>
 #include <roxen.h>
 inherit "module";
@@ -224,8 +224,8 @@ int allowed(multiset allow, string hname, string ip, int def)
     }
     if(!ok)
     {
-      tmp1 = s / "." - ({""});
-      tmp2 = hname / "." - ({""});
+      tmp1 = lower_case(s) / "." - ({""});
+      tmp2 = lower_case(hname) / "." - ({""});
       a = sizeof(tmp2)  - sizeof(tmp1);
       if(a > -1)
       {

@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.47 1997/07/06 18:40:33 grubba Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.48 1997/07/10 16:28:37 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -69,6 +69,7 @@ array register_module()
 	      " xpad=Y%         Increase padding between lines with Y%\n"
 	      " shadow=int,dist Draw a drop-shadow (variable distance/intensity)\n"
 	      " bshadow=dist    Draw a blured drop-shadow (variable distance)\n"
+	      " scolor=color    Use this color as the shadow color.\n"
 	      " ghost=dist,blur,col\n"
 	      "                 Do a 'ghost text'. Do NOT use together with\n"
 	      "                 'shadow'. Magic coloring won't work with it.\n"
@@ -489,7 +490,9 @@ object (Image) make_text_image(mapping args, object font, string text,object id)
     int sdist = ((int)(args->shadow/",")[-1])+2;
     object ta = text_alpha->copy();
     ta = ta->color(256-sd,256-sd,256-sd);
-    background->paste_alpha_color(ta,0,0,0,xoffset+sdist, yoffset+sdist);
+    array sc = parse_color(args->scolor||"black");
+    background->paste_alpha_color(ta,sc[0],sc[1],sc[2],
+				  xoffset+sdist,yoffset+sdist);
   }
 
 #define MIN(x,y) ((x)<(y)?(x):(y))
@@ -500,10 +503,14 @@ object (Image) make_text_image(mapping args, object font, string text,object id)
     int xs,ys;
     xs = text_alpha->xsize()+sdist*2+4;
     ys = text_alpha->ysize()+sdist*2+4;
-    object ta = Image(xs,ys);
-    ta->paste(text_alpha,sdist,sdist);
+    object ta = Image(xs+sdist*2,ys+sdist*2);
+    array sc = parse_color(args->scolor||"black");
+
+    ta->paste_alpha_color(text_alpha,255,255,255,sdist,sdist);
     ta = blur(ta, MIN((sdist/2),1))->color(256,256,256);
-    background->paste_alpha_color(ta,0,0,0,xoffset,yoffset);
+
+    background->paste_alpha_color(ta,sc[0],sc[1],sc[2],
+				  xoffset+sdist,yoffset+sdist);
   }
 
   if(args->glow)

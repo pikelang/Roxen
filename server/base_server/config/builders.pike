@@ -1,4 +1,4 @@
-/* $Id: builders.pike,v 1.8 1997/05/31 23:36:48 grubba Exp $ */
+/* $Id: builders.pike,v 1.9 1997/07/10 16:28:32 per Exp $ */
 
 #include <module.h>
 #include <confignode.h>
@@ -21,10 +21,7 @@ void low_build_variables(object node, mapping from)
   perror("low_build_variables()\n");
 #endif
 
-  m=sort_array(values(from), lambda(array a, array b){
-    if(stringp(a[VAR_NAME]) && stringp(b[VAR_NAME]))
-      return a[VAR_NAME] > b[VAR_NAME];
-  });
+  m=sort(values(from));
 
   for(i=0; i<sizeof(m); i++)
   {

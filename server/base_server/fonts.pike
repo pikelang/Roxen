@@ -1,4 +1,4 @@
-/* $Id: fonts.pike,v 1.9 1997/06/23 03:28:14 per Exp $ */
+/* $Id: fonts.pike,v 1.10 1997/07/10 16:28:28 per Exp $ */
 
 #include <module.h>
 
@@ -33,6 +33,8 @@ string make_font_name(string name, int size, int bold, int italic)
   
   available = mkmultiset(available);
   if(available[bc+ic]) return base_dir+"/"+bc+ic;
+  if(bc=="l") bc="n";
+  if(available[bc+ic]) return base_dir+"/"+bc+ic;
   if(bc=="B") bc="b";
   if(available[bc+ic]) return base_dir+"/"+bc+ic;
   if(bc=="B") bc="n";
@@ -40,9 +42,10 @@ string make_font_name(string name, int size, int bold, int italic)
   if(ic=="i") ic="n";
   if(available[bc+ic]) return base_dir+"/"+bc+ic;
 
-  foreach(({ "B", "b", "n", "l" }), bc)
+  foreach(({ "l","n","b", "B", }), bc)
     foreach(({ "i", "n" }), ic)
-      if(available[bc+ic]) return base_dir+"/"+bc+ic;
+      if(available[bc+ic])
+	return base_dir+"/"+bc+ic;
   return 0;
 }
 
