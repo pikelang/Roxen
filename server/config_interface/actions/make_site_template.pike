@@ -1,5 +1,5 @@
 /*
- * $Id: make_site_template.pike,v 1.3 2001/11/26 16:39:42 anders Exp $
+ * $Id: make_site_template.pike,v 1.4 2002/01/17 15:52:34 grubba Exp $
  *
  * Make a site-template from a virtual server configuration.
  *
@@ -161,7 +161,7 @@ string parse(RequestID id)
 			       foreach(indices(settings), int num) {
 				 if (settings[num]) {
 				   foreach(settings[num], array pair) {
-				     res += sprintf("c->find_modules(%O\"#%d\")->\n"
+				     res += sprintf("c->find_module(%O\"#%d\")->\n"
 						    "  set(%O, %O);\n",
 						    mod_name, num,
 						    pair[0],
