@@ -74,6 +74,7 @@ worldmap binary
 /server/bin/lsquota.pike foreign_ident
 /server/bin/mkdir foreign_ident
 /server/bin/mysql_client foreign_ident
+/server/bin/setup_nsr.pike foreign_ident
 /server/bin/sqladduser.pike foreign_ident
 /server/create_admininterface foreign_ident
 /server/data/extensions foreign_ident
