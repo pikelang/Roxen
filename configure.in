@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.11 1997/08/30 22:03:24 grubba Exp $
+# $Id: configure.in,v 1.12 1997/08/30 23:00:56 grubba Exp $
 #
 
 prefix=$PWD
@@ -121,19 +121,19 @@ esac
 
 # Set some of the compiler flags.
 
-if test "x${CFLAGS-}" = x ; then
+if test "x${CFLAGS-}" = "x" ; then
   cflags_is_set=no
 else
   cflags_is_set=yes
 fi
 
-if test "x${CPPFLAGS-}" = x ; then
+if test "x${CPPFLAGS-}" = "x" ; then
   cppflags_is_set=no
 else
   cppflags_is_set=yes
 fi
 
-if test "x${LDFLAGS-}" = x ; then
+if test "x${LDFLAGS-}" = "x" ; then
   ldflags_is_set=no
 else
   ldflags_is_set=yes
