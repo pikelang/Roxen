@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.123 1997/09/05 16:55:33 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.124 1997/09/05 22:35:37 per Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -305,29 +305,18 @@ object create_listen_socket(mixed port_no, object conf,
       ether=0;
     if(ether)
       sscanf(ether, "addr:%s", ether);
-#ifdef 0&&(defined(THREADS)
+#ifdef 0&&defined(THREADS)
     if(!port->bind(port_no, 0, ether))
 #else
     if(!port->bind(port_no, accept_callback, ether))
 #endif
     {
-#ifdef 0&&defined(THREADS)    
-      if(ether==0 || !port->bind(port_no,accept_callback))
-#else
-      if(ether==0 || !port->bind(port_no,))
-#endif
-      {
 #ifdef SOCKET_DEBUG
-	perror("SOCKETS:    -> Failed.\n");
+      perror("SOCKETS:    -> Failed.\n");
 #endif
-	report_error("Failed to open socket on "+ether+":"+port_no+
-		     " (already bound?)\nErrno is: "+ port->errno()+"\n");
-	return 0;
-      } else if(ether) {
-	report_error("Failed to bind to specific IP address " + ether +
-		     "(using ANY instead).\n");
-	ether=0;
-      }
+      report_error("Failed to open socket on "+ether+":"+port_no+
+		   " (already bound?)\nErrno is: "+ port->errno()+"\n");
+      return 0;
     }
   }
   portno[port]=({ port_no, conf, ether||"Any", 0, requestprogram });
