@@ -247,7 +247,10 @@ void got_connection(int s, int server_fd)
 	{
 	 case EAGAIN:
 	 case EINTR:
-	  continue;
+	   /* Suggested by Mat <winged@usa.net> */
+	   if (SSL_pending(con))
+	     continue;
+	   /* Fall through */
 	 default:
 	  SSL_free(con);
 	  return;
