@@ -1,5 +1,5 @@
 /*
- * $Id: upgrade.pike,v 1.23 1997/09/06 16:09:28 grubba Exp $
+ * $Id: upgrade.pike,v 1.24 1997/09/08 18:24:57 grubba Exp $
  */
 constant name= "Maintenance//Upgrade components from roxen.com...";
 constant doc = "Selectively upgrade Roxen components from roxen.com.";
@@ -217,7 +217,9 @@ string upgrade_module(string m, object rpc)
     res+="Fetched modules/"+rm[0]+", "+strlen(rm[1])+" bytes.<br>";
     report_notice("Upgraded "+rm[0]+".");
   }
-  m_delete(roxen->allmodules, m);
+  if (roxen->allmodules) {
+    m_delete(roxen->allmodules, m);
+  }
   cache_remove("modules", m);
 
   foreach(roxen->configurations, object c)
