@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.70 1998/02/04 16:10:48 per Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.71 1998/02/05 02:02:24 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -691,13 +691,17 @@ mixed low_find_file(string f, object id, string path)
       string fname = "";
       array a,b;
       foreach(id->misc->is_user/"/", string part) {
-	fname += part + "/";
-	if ((!(a = file_stat(fname, 1))) ||
-	    ((< -3, -4 >)[a[1]])) {
+	fname += part;
+	if ((fname != "") &&
+	    ((!(a = file_stat(fname, 1))) ||
+	     ((< -3, -4 >)[a[1]]))) {
 	  // Symlink or device encountered.
 	  // Don't allow symlinks from directories not owned by the
 	  // same user as the file itself.
-	  if (!a || (a[1] == -4) || !b || (b[5] != us[5]) || !QUERY(allow_symlinks)) {
+	  // Assume that symlinks from directories owned by users 1-9 are safe.
+	  if (!a || (a[1] == -4) ||
+	      !b || ((b[5] != us[5]) && (b[5] >= 10)) ||
+	      !QUERY(allow_symlinks)) {
 	    report_notice(sprintf("CGI: Bad symlink or device encountered: \"%s\"\n", fname));
 	    fname = 0;
 	    break;
@@ -705,6 +709,7 @@ mixed low_find_file(string f, object id, string path)
 	  a = file_stat(fname);		// Get the permissions from the directory.
 	}
 	b = a;
+	fname += "/";
       }
       if (fname) {
 	uid = us[5..6];
