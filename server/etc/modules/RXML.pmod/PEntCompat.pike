@@ -5,7 +5,7 @@
 //!
 //! Created 2000-01-28 by Martin Stjernholm.
 //!
-//! $Id: PEntCompat.pike,v 1.1 2000/01/28 16:45:48 mast Exp $
+//! $Id: PEntCompat.pike,v 1.2 2000/01/28 16:48:44 mast Exp $
 
 #pragma strict_types
 
@@ -19,7 +19,7 @@ constant add_containers = 0;
 
 this_program clone (RXML.Context ctx, RXML.Type type, RXML.TagSet tag_set)
 {
-  return _low_clone (ctx, type, tag_set);
+  return [object(this_program)] _low_clone (ctx, type, tag_set);
 }
 
 static void create (

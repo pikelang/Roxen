@@ -5,7 +5,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: PXml.pike,v 1.19 2000/01/28 16:26:17 mast Exp $
+//! $Id: PXml.pike,v 1.20 2000/01/28 16:48:44 mast Exp $
 
 #pragma strict_types
 
@@ -58,19 +58,9 @@ static void set_comment_tag_cb()
     "--");
 }
 
-/*static*/ void set_cbs()
-{
-  _set_entity_callback (.utils.p_html_entity_cb);
-  if (!type->free_text) _set_data_callback (.utils.return_empty_array);
-  set_comment_tag_cb();
-}
-
 this_program clone (RXML.Context ctx, RXML.Type type, RXML.TagSet tag_set)
 {
-  this_program clone =
-    [object(this_program)] low_parser::clone (ctx, type, tag_set, overridden);
-  clone->set_cbs();
-  return clone;
+  return [object(this_program)] low_parser::clone (ctx, type, tag_set, overridden);
 }
 
 static void create (
@@ -153,7 +143,9 @@ static void create (
   mixed_mode (!type->free_text);
   lazy_entity_end (1);
   match_tag (0);
-  set_cbs();
+  _set_entity_callback (.utils.p_html_entity_cb);
+  if (!type->free_text) _set_data_callback (.utils.return_empty_array);
+  set_comment_tag_cb();
 }
 
 mixed read()

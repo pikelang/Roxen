@@ -4,7 +4,7 @@
 //!
 //! Created 2000-01-28 by Martin Stjernholm.
 //!
-//! $Id: PEnt.pike,v 1.1 2000/01/28 16:23:33 mast Exp $
+//! $Id: PEnt.pike,v 1.2 2000/01/28 16:48:44 mast Exp $
 
 #pragma strict_types
 
@@ -18,10 +18,7 @@ constant add_containers = 0;
 
 this_program clone (RXML.Context ctx, RXML.Type type, RXML.TagSet tag_set)
 {
-  this_program clone =
-    [object(this_program)] _low_clone (ctx, type, tag_set);
-  clone->set_cbs();
-  return clone;
+  return [object(this_program)] _low_clone (ctx, type, tag_set);
 }
 
 static void create (
@@ -29,11 +26,11 @@ static void create (
 {
   _tag_set_parser_create (ctx, type, tag_set);
 
-  // The flags are the same as in PHtml.
   mixed_mode (!type->free_text);
   lazy_entity_end (1);
   match_tag (0);
-  set_cbs();
+  _set_entity_callback (.utils.p_html_entity_cb);
+  if (!type->free_text) _set_data_callback (.utils.return_empty_array);
 }
 
 // These have no effect since we don't parse tags.

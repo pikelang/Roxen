@@ -6,7 +6,7 @@
 //!
 //! Created 2000-01-08 by Martin Stjernholm.
 //!
-//! $Id: PHtmlCompat.pike,v 1.7 2000/01/28 16:33:38 mast Exp $
+//! $Id: PHtmlCompat.pike,v 1.8 2000/01/28 16:48:44 mast Exp $
 
 #pragma strict_types
 
@@ -84,21 +84,11 @@ mapping(string:TAG_TYPE) tags() {return tagmap_tags;}
 
 mapping(string:CONTAINER_TYPE) containers() {return tagmap_containers;}
 
-/*static*/ void set_cbs()
-{
-  ::set_cbs();
-  _set_entity_callback (.utils.p_html_compat_entity_cb);
-  _set_tag_callback (.utils.p_html_compat_tagmap_tag_cb);
-}
-
 this_program clone (RXML.Context ctx, RXML.Type type, RXML.TagSet tag_set)
 {
-  this_program clone =
-    [object(this_program)] _low_clone (ctx, type, tag_set, overridden,
-				       tagmap_tags, tagmap_containers,
-				       flag_parse_html_compat);
-  clone->set_cbs();
-  return clone;
+  return [object(this_program)] _low_clone (ctx, type, tag_set, overridden,
+					    tagmap_tags, tagmap_containers,
+					    flag_parse_html_compat);
 }
 
 static void create (
@@ -119,6 +109,9 @@ static void create (
   }
 
   ::create (ctx, type, tag_set, orig_overridden);
+
+  _set_entity_callback (.utils.p_html_compat_entity_cb);
+  _set_tag_callback (.utils.p_html_compat_tagmap_tag_cb);
 
   if (flag_parse_html_compat)
     parse_html_compat (1);
