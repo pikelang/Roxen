@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.376 1999/12/27 18:58:13 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.377 1999/12/27 22:44:42 mast Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -1597,7 +1597,7 @@ mapping(string:array(int)) error_log=([]);
 
 // Write a string to the configuration interface error log and to stderr.
 void nwrite(string s, int|void perr, int|void type,
-            int|void mod, int|void conf)
+            object|void mod, object|void conf)
 {
   if (!error_log[type+","+s])
     error_log[type+","+s] = ({ time() });
