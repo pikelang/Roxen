@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.200 2000/09/24 16:28:35 nilsson Exp $
+// $Id: roxenlib.pike,v 1.201 2000/09/24 20:04:19 grubba Exp $
 
 //#pragma strict_types
 
@@ -1684,20 +1684,11 @@ int time_dequantifier(mapping m)
   return (int)t;
 }
 
-class _charset_decoder
+class _charset_decoder(_Charset.ascii cs)
 {
-#if constant(_Charset.ascii)
-  _Charset.ascii cs;
-#else /* !constant(_Charset.ascii) */
-  object cs;
-#endif /* constant(_Charset.ascii) */
-  void create( object c )
+  string decode(string what)
   {
-    cs = c;
-  }
-  string decode( string what )
-  {
-    return cs->clear()->feed( what )->drain();
+    return cs->clear()->feed(what)->drain();
   }
 }
 
