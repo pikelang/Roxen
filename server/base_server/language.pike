@@ -1,6 +1,6 @@
 // Roxen Locale Support
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: language.pike,v 1.39 2001/06/30 13:43:04 mast Exp $
+// $Id: language.pike,v 1.40 2002/09/26 22:11:23 nilsson Exp $
 
 #pragma strict_types
 
@@ -163,6 +163,6 @@ array(string) list_languages() {
 }
 
 object language_low(string lang) {
-  return [object]Locale.get_object( PROJECT, 
-				    verify_locale(lang) )->functions;
+  object locale_obj = Locale.get_object(PROJECT, verify_locale(lang));
+  return locale_obj && [object] locale_obj->functions;
 }
