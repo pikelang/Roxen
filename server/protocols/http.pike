@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.445 2004/05/13 17:49:06 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.446 2004/05/18 09:12:14 anders Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1630,23 +1630,28 @@ void send_result(mapping|void result)
       mapping(string:string) heads = make_response_headers (file);
 
       if (file->error == 200) {
-	if (none_match && misc->etag &&
-	    (none_match[misc->etag] || none_match["*"])) {
-	  // We have a if-none-match header that matches our etag.
-	  if ((<"HEAD", "GET">)[method]) {
-	    // RFC 2616 14.26:
-	    //   Instead, if the request method was GET or HEAD, the server
-	    //   SHOULD respond with a 304 (Not Modified) response, including
-	    //   the cache- related header fields (particularly ETag) of one
-	    //   of the entities that matched. For all other request methods,
-	    //   the server MUST respond with a status of 412 (Precondition
-	    //   Failed). 
-	    file->error = 304;
+	int conditional;
+	if (none_match) {
+	  // NOTE: misc->etag may be zero below, but that's ok.
+	  if (none_match[misc->etag] || (misc->etag && none_match["*"])) {
+	    // We have a if-none-match header that matches our etag.
+	    if ((<"HEAD", "GET">)[method]) {
+	      // RFC 2616 14.26:
+	      //   Instead, if the request method was GET or HEAD, the server
+	      //   SHOULD respond with a 304 (Not Modified) response, including
+	      //   the cache- related header fields (particularly ETag) of one
+	      //   of the entities that matched. For all other request methods,
+	      //   the server MUST respond with a status of 412 (Precondition
+	      //   Failed). 
+	      conditional = 304;
+	    } else {
+	      conditional = 412;
+	    }
 	  } else {
-	    file->error = 412;
+	    conditional = -1;
 	  }
-	  file->file = file->data = file->len = 0;
-	} else if(since && misc->last_modified)
+	}
+	if(since && misc->last_modified && (conditional >= 0))
 	{
 	  /* ({ time, len }) */
 	  array(int) since_info = Roxen.parse_since( since );
@@ -1667,13 +1672,17 @@ void send_result(mapping|void result)
 //		   // cacheable, and not enough time has passed.
 	       )
 	  {
-	    file->error = 304;
-	    file->file = file->data = file->len = 0;
+	    conditional = conditional || 304;
+	  } else {
+	    conditional = -1;
 	  }
 	}
-
-	else if(misc->range && file->len && objectp(file->file) && !file->data &&
-		(method == "GET" || method == "HEAD"))
+	if (conditional > 0) {
+	  // All conditionals apply.
+	  file->error = conditional;
+	  file->file = file->data = file->len = 0;
+	} else if(misc->range && file->len && objectp(file->file) &&
+		  !file->data && (method == "GET" || method == "HEAD"))
           // Plain and simple file and a Range header. Let's play.
           // Also we only bother with 200-requests. Anything else should be
           // nicely and completely ignored. Also this is only used for GET and
