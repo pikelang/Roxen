@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.352 2000/08/28 06:23:39 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.353 2000/08/28 06:52:09 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -358,7 +358,7 @@ array (function) url_modules(RequestID id)
 mapping api_module_cache = ([]);
 mapping api_functions(void|RequestID id)
 {
-  return copy_value(api_module_cache);
+  return api_module_cache+([]);
 }
 
 array (function) logger_modules(RequestID id)
