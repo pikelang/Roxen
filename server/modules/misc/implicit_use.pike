@@ -4,7 +4,7 @@
 #include <config.h>
 inherit "module";
 
-constant cvs_version = "$Id: implicit_use.pike,v 1.8 2004/05/30 23:15:56 _cvs_stephen Exp $";
+constant cvs_version = "$Id: implicit_use.pike,v 1.9 2004/05/30 23:26:12 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST;
 constant module_name = "Implicit <use> Module";
@@ -59,7 +59,7 @@ mapping first_try(RequestID id) {
       uses += map(matches[match],
 		  lambda(string in) { return "<use "+in+"/>"; })*"";
 
-  id->misc->rxmlprefix = (id->misc->rxmlprefix||"") + use;
+  id->misc->rxmlprefix = (id->misc->rxmlprefix||"") + uses;
   id->misc->_implicituse = 1;
 
   return 0;
