@@ -1,4 +1,4 @@
-## $Id: supports,v 1.63 1999/10/27 17:28:57 nilsson Exp $
+## $Id: supports,v 1.64 1999/10/29 23:07:50 nilsson Exp $
 # name="Supports database";
 # doc="The database used to determine what different user-agents (browsers) support.";
 #
@@ -21,6 +21,8 @@
 #! regular_expression  value,value,value...
 #! -value can be used to remove a value
 #! \ can be used to escape newlines.
+#! Values in the *key=value form will have its value
+#! copied to the variable named key in the client namespace.
 #!
 #! If a line starts with '#', it is skipped, unless it is
 #!
@@ -67,9 +69,7 @@
 #! mailto - The browser supports mailto URLs.
 #! math - The <math> tag is correctly displayed by the browser.
 #! msie - This is a Microsoft Internet Explorer browser.
-#! netscape_javascript - The browser needs netscape styled javascript
-#! openstep - ??
-#! pemauth - ??
+#! netscape_javascript - The browser needs netscape styled javascript.
 #! perl - The browser supports Perl applets.
 #! phone - The client is a phone.
 #! pjpeginline - The browser can handle progressive JPEG images, .pjpeg, inline.
@@ -88,9 +88,14 @@
 #! unknown - The browser is not known, hence the supports classes can not be trusted.
 #! vrml - The browser supports VRML.
 #! wbmp0 - The browser supports Wireless Bitmap Picture Format, type 0.
-#! wml1.0 - The browser supports Wireless Markup Language 1.0
-#! wml1.1 - The browser supports Wireless Markup Language 1.1
-
+#! wml1.0 - The browser supports Wireless Markup Language 1.0.
+#! wml1.1 - The browser supports Wireless Markup Language 1.1.
+#!
+#! Supports variables
+#!
+#! robot - The name of the search engine.
+#! width - The presentation area width in pixels.
+#! height - The presentation area height in pixels.
 
 #define basic		images, forms, gifinline, mailto, html
 #define some_html3	divisions, div, supsub, bigsmall, align
@@ -158,7 +163,7 @@ mozilla/[5-9].*		pnginline
 .*			basic, jpeginline, center
 netsurfer.1\.[1-9].*	backgrounds, fontcolor, pnginline, videoinline
 netsurfer.2\.[0-9].*	align, pjpeginline, tables, frames, java, font,\
-			bigsmall, supsub, perl, tcl, openstep, python
+			bigsmall, supsub, perl, tcl, python
 # }
 
 #section omniweb {
@@ -184,7 +189,7 @@ omniweb.2\.[0-9].*	backgrounds, font, frames, tables, align, bigsmall,\
 # Old Mosaic is not all that interresting..  Even though NCSA claims
 # to have table support, it does in fact not work at all, so, I do not
 # add that here.
-ncsa.mosaic.*[2-9].[5-9]*.*	supsub, pemauth
+ncsa.mosaic.*[2-9].[5-9]*.*	supsub
 ncsa.mosaic.*[2-9].[6-9]*.*	jpeginline
 ncsa.mosaic.*[2-9].[7-9]*.*	pnginline
 
@@ -269,7 +274,7 @@ cern.*linemode.*	html
 # }
 
 #section microsoft {
-.*url.*control		robot, ms-url-control
+.*url.*control		robot, *robot=ms-url-control
 # }
 
 #section chimera {
@@ -293,7 +298,7 @@ nokia.7110.*	wml1.1, wbmp0
 
 #section up.broswer {
 .*		wml1.1, wbmp0
-.*si25.*	phone, wml1.0, wbmp0, -wml1.1
+.*si25.*	phone, wml1.0, wbmp0, -wml1.1, *width=90, *height=33
 # }
 
 #section mc218 {
@@ -311,90 +316,96 @@ nokia.7110.*	wml1.1, wbmp0
 # How nice it would have been if all robots had 'robot' in their name..
 
 #section architext {
-.*		html, robot, architex
-# }
-
-#section yahoo {
-.*		html, robot, yahoo
-# }
-
-#section infoseek {
-.*		html, robot, infoseek
-# }
-
-#section url {
-.*minder.*	html, robot, url-minder
-# }
-
-#section scoutget {
-.*		html, robot, scout
-# }
-
-#section momspider {
-.*		html, robot, webinfo
-# }
-
-#section lycos {
-.*		html, robot, lycos
-# }
-
-#section scooter {
-.*		html, robot, altavista
+.*		html, robot, *robot=architex
 # }
 
 #section backrub {
-.*		html, robot, backrub
-# }
-
-#section freecrawl {
-.*		html, robot, freecrawl
-# }
-
-#section slurp {
-.*		html, robot, hotbot
-# }
-
-#section freeseek {
-.*		html, robot, passagen
-# }
-
-#section webcrawler {
-.*		html, robot, webcrawler
-# }
-
-#section intraseek {
-.*		html, robot, intraseek, idonex, infovav
-# }
-
-#section harvest {
-.*		html, robot, harvest
+.*		html, robot, *robot=backrub
 # }
 
 #section checkbot {
-.*		html, robot, checkbot
-# }
-
-#section gcreep {
-.*		html, robot, gcreep
-# }
-
-#section wget {
-.*		html, robot, wget, mirror_script
-# }
-
-#section ia_archiver {
-.*		html, robot, alexa
+.*		html, robot, *robot=checkbot
 # }
 
 #section fast-webcrawler {
-.*		html, robot, fast
+.*		html, robot, *robot=fast
+# }
+
+#section freecrawl {
+.*		html, robot, *robot=freecrawl
+# }
+
+#section freeseek {
+.*		html, robot, *robot=passagen
+# }
+
+#section gcreep {
+.*		html, robot, *robot=gcreep
+# }
+
+#section googlebot {
+.*		html, robot, *robot=googlebot
+# }
+
+#section harvest {
+.*		html, robot, *robot=harvest
+# }
+
+#section ia_archiver {
+.*		html, robot, *robot=alexa
+# }
+
+#section infoseek {
+.*		html, robot, *robot=infoseek
+# }
+
+#section intraseek {
+.*		html, robot, *robot=intraseek
+# }
+
+#section lycos {
+.*		html, robot, *robot=lycos
+# }
+
+#section momspider {
+.*		html, robot, *robot=webinfo
 # }
 
 #section roxen {
-.*		html, roxen, rxml
+.*		html, *robot=roxen
 # }
 
-.*robot.*	html, robot
+#section scooter {
+.*		html, robot, *robot=altavista
+# }
+
+#section scoutget {
+.*		html, robot, *robot=scout
+# }
+
+#section slurp {
+.*		html, robot, *robot=hotbot
+# }
+
+#section url {
+.*minder.*	html, robot, *robot=url-minder
+# }
+
+
+#section webcrawler {
+.*		html, robot, *robot=webcrawler
+# }
+
+#section wget {
+.*		html, robot, *robot=wget
+# }
+
+#section yahoo {
+.*		html, robot, *robot=yahoo
+# }
+
+
+.*robot.*	html, robot, unknown
 
 # Somewhat dubious, but one does probably not write a client in perl,
 # unless you have more than 200Mb of memory, so something announcing
