@@ -1,4 +1,4 @@
-/* $Id: fonts.pike,v 1.28 1999/06/10 23:39:35 per Exp $ */
+/* $Id: fonts.pike,v 1.29 1999/06/25 17:58:12 per Exp $ */
 
 #include <module.h>
 
@@ -210,13 +210,9 @@ class TTFWrapper
     real->set_height( size );
   }
 
-  object write( string|array what )
+  object write( string ... what )
   {
-    if( arrayp( what ) )
-      what = Array.map( (array(string))what, replace, " ", "" );
-    else
-      what = replace( what, " ", "" );
-    return real->write( what );
+    return real->write(@Array.map( (array(string))what,replace," ",""));
   }
 }
 
