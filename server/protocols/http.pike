@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.335 2001/08/31 17:07:48 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.336 2001/09/05 17:54:30 marcus Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1109,6 +1109,10 @@ string format_backtrace(int eid)
     res += "<h3>Pike backtrace</h3>\n<ul>\n";
     int q = sizeof (bt);
     foreach(bt, [string file, int line, string func, string descr])
+    {
+#if constant(PIKE_MODULE_RELOC)
+      file = file && master()->relocate_module(file);
+#endif
       res += "<li value="+(q--)+">" +
 	link_to (file, line, func, eid, q) +
 	(file ? Roxen.html_encode_string (file) : "<i>Unknown program</i>") +
@@ -1117,6 +1121,7 @@ string format_backtrace(int eid)
 	replace (Roxen.html_encode_string (descr),
 		 ({"(", ")", " "}), ({"<b>(</b>", "<b>)</b>", "&nbsp;"})) +
 	"</li>\n";
+    }
     res += "</ul>\n\n";
   }
 
