@@ -7,6 +7,14 @@ constant module_name = "Tags: Dir emit source";
 constant module_doc = "This module provies the 'dir' emit source. It "
   "or anoter compatible module is required by the Directory Listings module";
 
+void start(int n, Configuration c)
+{
+  if( c )
+  {
+    module_dependencies(c, ({ "usertags" }) );
+  }
+}
+
 class Imagesize(mapping m, RequestID id) {
   inherit RXML.Value;
   int x,y;
