@@ -69,7 +69,7 @@ object get_object(string project, string lang) {
   if(!projects[project])
     return 0;
 
-  // Valid language?
+  // Any language?
   if(!lang)
     return 0;
 
@@ -94,29 +94,27 @@ object get_object(string project, string lang) {
 
   mapping(string:string) bindings=([]);
   mapping(string:function) functions=([]);
-  function(string:string) decode;
+  function(string:string) decode=0;
   function t_tag = lambda(string t, mapping m, string c) {
 		     if(m->id && m->id!="" && c!="") {
-		       if(decode) {
-			 mixed err = catch{ c = decode(c); };
-			 if(err) {
-			   // FIXME logging of decoding error?
-			   return 0;
-			 }
-		       }
+		       // Replace encoded entities
+		       c = replace(c, ({"&lt;","&gt;","&amp;"}),
+		                      ({ "<",   ">",    "&"  }));
+		       if(decode && catch( c = decode(c) ))
+			 // FIXME logging of decoding error?
+			 return 0;
 		       bindings[m->id]=c;
 		     }
 		     return 0;
 		   };
   function pike_tag = lambda(string t, mapping m, string c) {
+			// Replace encoded entities
+			c = replace(c, ({"&lt;","&gt;","&amp;"}),
+				       ({ "<",   ">",    "&"  }));
+			if(decode && catch( c = decode(c) ))
+			  // FIXME logging of decoding error?
+			  return 0;
 			mixed err;
-			if(decode) {
-			  err = catch{ c = decode(c); };
-			  if(err) {
-			    // FIXME logging of decoding error?
-			    return 0;
-			  }
-			}
 			object gazonk;
 			err = catch{ gazonk=compile_string("class gazonk {"+
 							   c+"}")->gazonk(); };
@@ -158,13 +156,24 @@ object get_object(string project, string lang) {
 			    break;
 
 			  default:
+			    object dec;
+			    if(catch(dec = Locale.Charset.decoder(encoding))) {
+			      // FIXME logging of encoding error?
+			      break;
+			    }
+			    decode =
+			      lambda(string s) {
+				return dec->clear()->feed(s)->drain();
+			      };
+			    break;
+
 			  case "iso-8859-1":
-			  // Default, no decode needed
+			  // No decode needed
 			  }
 		      }
 		      return 0;
 		    },"?");
-    xml_parser->feed(data)->finish();
+  xml_parser->feed(data)->finish();
 
   locale_object=LocaleObject(bindings, functions);
   locales[lang][project]=locale_object;
