@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.437 2004/05/05 16:56:56 wellhard Exp $";
+constant cvs_version = "$Id: http.pike,v 1.438 2004/05/05 21:26:14 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1600,6 +1600,9 @@ void send_result(mapping|void result)
 
   if(!file->raw && (prot != "HTTP/0.9"))
   {
+      if (!sizeof (file) && multi_status)
+	file = multi_status->http_answer();
+
       if (file->error == Protocols.HTTP.HTTP_NO_CONTENT) {
 	// We actually give some content cf comment below.
 	file->len = 2;
