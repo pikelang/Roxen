@@ -414,6 +414,7 @@ int is_int( mixed what )
   return stringp(what) && equal(({what}),array_sscanf(what, "%[0-9]"));
 }
 
+// NOTE: Returns true for integers too.
 int is_float( mixed what )
 {
   return stringp(what) && equal(what/".",array_sscanf(what, "%[0-9].%[0-9]"));
@@ -551,10 +552,10 @@ mapping|string parse( RequestID id )
 	      if( !q[i] )
 		qres +=
 		  "<td align=right><i><font size=-2>NULL</font></i></td>";
-	      else if( floatp( q[i] ) || is_float(q[i]) )
-		qres += "<td align=right>"+format_float((float)q[i])+"</td>";
 	      else if( intp( q[i] ) || is_int(q[i]) )
 		qres += "<td align=right>"+format_int((int)q[i])+"</td>";
+	      else if( floatp( q[i] ) || is_float(q[i]) )
+		qres += "<td align=right>"+format_float((float)q[i])+"</td>";
 	      else if( is_image( q[i] ) )
 		qres +=
 		  "<td><img src='browser.pike?image="+store_image( q[i] )+
