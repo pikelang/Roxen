@@ -14,7 +14,7 @@
 
 inherit "filesystem";
 
-constant cvs_version="$Id: userfs.pike,v 1.22 1998/03/06 14:26:17 grubba Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.23 1998/03/11 19:14:05 grubba Exp $";
 
 // import Array;
 // import Stdio;
@@ -84,7 +84,7 @@ void create()
 	 "with the same name as the user.");
 }
 
-multiset bl;
+multiset banish_list;
 mapping dude_ok;
 void start()
 {
@@ -92,7 +92,7 @@ void start()
   // We fix all file names to be absolute before passing them to
   // filesystem.pike
   path="";
-  bl = mkmultiset(QUERY(banish_list));
+  banish_list = mkmultiset(QUERY(banish_list));
   dude_ok = ([]);
   // This is needed to override the inherited filesystem module start().
 }
@@ -116,7 +116,7 @@ mixed find_file(string f, object got)
   string u, of;
   of=f;
 
-  if(f=="/" || !strlen(f)) return -1;
+  if((<"","/">)[f]) return -1;
   
   if(sscanf(f, "%s/%s", u, f) != 2)
   {
@@ -127,7 +127,7 @@ mixed find_file(string f, object got)
   {
     string *us;
     array st;
-    if(!strlen(f) && of[-1] != '/')
+    if((f == "") && (of[-1] != '/'))
     {
       redirects++;
       return http_redirect(got->not_query+"/",got);
@@ -136,25 +136,31 @@ mixed find_file(string f, object got)
     {
       us = got->conf->userinfo( u, got );
       // No user, or access denied.
-      if(!us
-	 || (QUERY(only_password) && (<"","*">)[us[ 1 ]]) || bl[u])
+      if(!us ||
+	 (QUERY(only_password) && (<"","*">)[us[ 1 ]]) ||
+	 banish_list[u])
       {
-	roxen_perror(sprintf("user %s banished (%O)...\n", u, us));
+	roxen_perror(sprintf("User %s banished (%O)...\n", u, us));
 	return 0;
       }
 
-      //  if public dir is not a directory 
-      if(!strlen(f)) {
-	st = stat_file(f,got);
-	if(!st || st[1] != -2)
-	  return 0;
-      }
+      string dir;
 
       if (QUERY(homedir))
-	dude_ok[ u ] =  replace(us[ 5 ] + "/" + QUERY(pdir), "//", "/");
+	dir =  replace(us[ 5 ] + "/" + QUERY(pdir) + "/", "//", "/");
       else
-	dude_ok[ u ] = QUERY(searchpath) + u + "/";
+	dir = QUERY(searchpath) + "/" + u + "/";
+
+      dir = replace(dir, "//", "/");
+
+      // If public dir does not exist, or is not a directory 
+      st = stat_file(dude_ok[u], got);
+      if(!st || st[1] != -2) {
+	return 0;	// File not found.
+      }
+      dude_ok[u] = dir;	// Always '/' terminated.
     }
+    f = dude_ok[u] + f;
     if(QUERY(own))
     {
       if (!us) {
@@ -163,10 +169,9 @@ mixed find_file(string f, object got)
 
       st = stat_file(f,got);
 
-      if(!st || (st[-2] != (int)(us[2])))
+      if(!st || (st[5] != (int)(us[2])))
         return 0;
     }
-    f = dude_ok[u]+f;
     if(QUERY(useuserid))
       got->misc->is_user = f;
     return ::find_file( f, got );
@@ -193,9 +198,11 @@ string real_file( mixed f, mixed id )
     {
       string *us;
       us = id->conf->userinfo( u, id );
-      if(!us) return 0;
-      if(QUERY(only_password) && (<"","*">)[us[ 1 ]])     return 0;
-      if(search(QUERY(banish_list), u) != -1)             return 0;
+      if ((!us) ||
+	  (QUERY(only_password) && (<"","*">)[us[ 1 ]]) ||
+	  (banish_list[u])) {
+	return 0;
+      }
       if(us[5][-1] != '/')
 	f = us[ 5 ] + "/" + QUERY(pdir) + f;
       else
