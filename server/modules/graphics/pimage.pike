@@ -1,4 +1,4 @@
-string cvs_version="$Id: pimage.pike,v 1.12 1998/11/18 04:54:16 per Exp $";
+string cvs_version="$Id: pimage.pike,v 1.13 1999/02/27 00:01:55 marcus Exp $";
 
 #include <module.h>
 inherit "module";
@@ -350,7 +350,7 @@ mapping compiled = ([]);
 
 array register_module()
 {
-  return ({ MODULE_LOCATION | MODULE_PARSER,
+  return ({ MODULE_PARSER,
 	      "Pike Image Module",
 	      "This module adds two new tags, &lt;gclock&gt; and "
    	      "&lt;pimage&gt;&lt;/pimage&gt;. GClock draws clocks, and "
@@ -367,8 +367,6 @@ array register_module()
 
 void create()
 {
-  defvar("location", "/pimages/", "Mountpoint", TYPE_LOCATION|VAR_MORE,
-	 "The URL-prefix for the pike image module.");
   defvar("pimage", 1, "The PIMAGE tag is enabled", TYPE_FLAG,
 	 "If set, the &lt;pimage&gt; tag will be available for use. This "
 	 "tag has the same security considerations as the &lt;pike&gt; tag. "
@@ -376,14 +374,14 @@ void create()
 }
 
 
-mixed find_file(string f, object id)
+mixed find_internal(string f, object id)
 {
   return compiled[(int)f]->handle(id);
 }
 
 string do_replace(string in, int id)
 {
-  return replace(in, "$BASE", query("location")+id);
+  return replace(in, "$BASE", query_internal_location()+id);
 }
 
 object compile(string c, object id)
@@ -441,8 +439,6 @@ string tag_glock(string t, mapping m, object rid)
 				    DANGEROUS_FROM,DANGEROUS_TO),
 			    (int)m->handoffset+50), rid);
 }
-
-string query_location() { return query("location"); }
 
 mapping query_container_callers()
 {

@@ -1,4 +1,4 @@
-// $Id: counter.pike,v 1.25 1999/01/15 12:35:01 neotron Exp $
+// $Id: counter.pike,v 1.26 1999/02/27 00:13:21 marcus Exp $
 // 
 // Roxen Graphic Counter Module	by Jordi Murgo <jordi@lleida.net>
 // Modifications  1 OCT 1997 by Bill Welliver <hww3@riverweb.com>
@@ -23,6 +23,11 @@
 // -----------------------------------------------------------------------
 //
 // $Log: counter.pike,v $
+// Revision 1.25  1999/01/15 12:35:01  neotron
+// Changed (int)"0x..." to sscanf(..., "%x", ...) since the first
+// construction doesn't work in Pike 0.7. Might have missed some
+// places. Also fixed the "width=1" default on oboxes.
+//
 // Revision 1.24  1999/01/07 08:09:20  neotron
 // Removed duplicate return.
 //
@@ -130,7 +135,7 @@
 // Initial revision
 //
 
-string cvs_version = "$Id: counter.pike,v 1.25 1999/01/15 12:35:01 neotron Exp $";
+string cvs_version = "$Id: counter.pike,v 1.26 1999/02/27 00:13:21 marcus Exp $";
 
 string copyright = ("<BR>Copyright 1997 "
 		    "<a href=http://savage.apostols.org/>Jordi Murgo</A> and "
@@ -155,9 +160,6 @@ constant thread_safe = 1;
 //
 void create()
 {
-  defvar("mountpoint", "/counter/", "Mount point", TYPE_LOCATION, 
-	 "Counter location in virtual filesystem.");
-
   defvar("ppmpath", "etc/digits/", "PPM GIF Digits Path", TYPE_DIR,
 	 "Were are located PPM/GIF digits (Ex: 'digits/')");
 
@@ -174,7 +176,7 @@ void create()
 array register_module()
 {
   return ({ 
-    MODULE_LOCATION | MODULE_PARSER | MODULE_PROVIDER,
+    MODULE_PARSER | MODULE_PROVIDER,
     "Graphical Counter", 
     "This is the Graphic &lt;Counter&gt; Module.<br><p>"
 	"\n<p><pre>"
@@ -217,11 +219,6 @@ array register_module()
 }
 
 //
-// Where is located our Virtual Filesystem
-// 
-string query_location() { return query("mountpoint"); }
-
-//
 // This module provides "counter", and can easily be found with the
 // provider functions in configuration.pike.
 //
@@ -246,7 +243,7 @@ mapping fontlist(string bg, string fg, int scale)
   if( fnts ) {
     out += "<B>Available Fonts:</B><MENU>";
     for( i=0; i<sizeof(fnts); i++ ) {
-      out += "<A HREF='" + query("mountpoint");
+      out += "<A HREF='" + query_internal_location();
       out += "0/" + bg + "/" ;
       out += fg +"/0/1/" + (string)scale + "/0/";
       out += http_encode_string(fnts[i]) + "/1234567890.gif'>";
@@ -287,7 +284,7 @@ mapping ppmlist(string font, string user, string dir)
 	out += "<DT><FONT SIZE=+1><B> ["+ initial +"]</B></FONT>\n<DD>";
       }
       out +=
-	"<A HREF='" +query("mountpoint")+ user + "/n/n/0/0/5/0/"+ http_encode_string(fnts[i]) +
+	"<A HREF='" +query_internal_location()+ user + "/n/n/0/0/5/0/"+ http_encode_string(fnts[i]) +
 	"/1234567890.gif'>" + fnts[i] + "</A> \n";
       totfonts++;
     }
@@ -481,7 +478,7 @@ result = image(digits[0]->xsize()*2 * numdigits,
 #endif
 }
 
-mapping find_file( string f, object id )
+mapping find_internal( string f, object id )
 {
   if(f[0..1] == "0/")
     return find_file_font( f, id );	// Umm, standard Font
@@ -500,7 +497,7 @@ string tag_counter( string tagname, mapping args, object id )
   if( args->version )
     return cvs_version;
   if( args->revision )
-    return "$Revision: 1.25 $" - "$" - " " - "Revision:";
+    return "$Revision: 1.26 $" - "$" - " " - "Revision:";
 
   //
   // bypass compatible accessed attributes
@@ -517,7 +514,7 @@ string tag_counter( string tagname, mapping args, object id )
     + ">";
 
   pre = "<IMG SRC=\"";
-  url = query("mountpoint");
+  url = query_internal_location();
   int len;
   if(!args->len)
     len = 6;
