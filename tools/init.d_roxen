@@ -9,7 +9,14 @@ killallwww=no
 pidfile=/tmp/roxen_pid:0
 
 # If you want to start with another configuration directory:
-#configdir=dirname
+#
+# configdir=dirname
+
+# Here you can add extra flags to the start script, like enabling or
+# disabling threads.
+# 
+# flags="--with-threads"
+# flags="--without-threads"
 
 ### You should not _have_ to change anything below here...
 
@@ -27,9 +34,9 @@ case $1 in
 	  if [ -x $roxenhome/start ]; then
  	    cd $roxenhome
 	    if [ \! "$configdir" = "" ]; then
-	      ./start --config-dir=$configdir 2>/dev/null
+	      ./start $flags --config-dir=$configdir 2>/dev/null
 	    else
-	      ./start 2>/dev/null
+	      ./start $flags 2>/dev/null
 	    fi
           else
             echo I cannot find the Roxen dir '('$roxenhome')'
@@ -58,9 +65,9 @@ case $1 in
 	  if [ -x $roxenhome/start ]; then
  	    cd $roxenhome
 	    if [ \! "$configdir" = "" ]; then
-	      ./start --config-dir=$configdir 2>/dev/null
+	      ./start $flags --config-dir=$configdir 2>/dev/null
 	    else
-	      ./start 2>/dev/null
+	      ./start $flags 2>/dev/null
 	    fi
           else
             echo I cannot find the Roxen dir '('$roxenhome')'
