@@ -131,8 +131,7 @@ class RoxenServletContext implements ServletContext
 
   public ServletContext getContext(String uripath)
   {
-    // FIXME
-    return null;
+    return this;
   }
 
   public RequestDispatcher getRequestDispatcher(String path)

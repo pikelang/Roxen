@@ -142,8 +142,7 @@ class ServletResponse implements javax.servlet.http.HttpServletResponse
     if(encoding == null) {
       if(contentType == null)
 	contentType = "text/plain";
-      // FIXME  Use Locale?
-      encoding = "iso-8859-1";
+      encoding = System.getProperty("file.encoding", "iso-8859-1");
       contentType += "; charset="+encodeValue(encoding);
     }
     return encoding;
@@ -250,7 +249,7 @@ class ServletResponse implements javax.servlet.http.HttpServletResponse
 
   public void setHeader(String name, String value)
   {
-    setHeader(name.toLowerCase(), name+": "+value);
+    setHeader(name.toLowerCase(), (Object)(name+": "+value));
   }
 
   public void setIntHeader(String name, int value)
@@ -352,6 +351,7 @@ class ServletResponse implements javax.servlet.http.HttpServletResponse
   public void setLocale(Locale loc)
   {
     locale = loc;
+    setHeader("Content-Language", locale.getLanguage());
   }
 
   public Locale getLocale()
@@ -371,7 +371,7 @@ class ServletResponse implements javax.servlet.http.HttpServletResponse
       v = vv;
     } else
       ((List)v).add(name+": "+value);
-    headers.put(name.toLowerCase(), v);
+    setHeader(name.toLowerCase(), v);
   }
 
   public void addDateHeader(String name, long date)
