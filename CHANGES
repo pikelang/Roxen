@@ -36,11 +36,12 @@ o Roxen now actually turns off logging, when "Logging: Enabled" is set
   to "No". Before it just removed some variables in the config
   interface. =)
 
-o The FTP gateway now handles (atleast some) requests to a directory
-  that really is a link to another directory. Before you got a listing
-  with the directory you just opened, as an incorrect link. It also
-  handles the response code 212 from the 'stat' command (normally it's
-  211). It also handles user and password specifications in the URL.
+o The FTP gateway now handles (at least some) requests to a directory
+  that really is a link to another directory. Previously it gave a
+  listing with the directory you just opened, as an incorrect link. It
+  also handles the response code 212 from the 'stat' command (normally
+  it's 211). It also handles user and password specifications in the
+  URL.
   
 o Applied the patch to ssl.c by Shez (shez@nsl.co.uk). 
 
