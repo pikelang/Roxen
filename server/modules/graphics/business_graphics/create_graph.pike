@@ -504,7 +504,7 @@ mapping draw_grind(mapping diagram_data, int|float xpos_for_yaxis,
   //Placera ut vert grinden
   int s=sizeof(diagram_data["xnamesimg"]);
   object graph=diagram_data["image"];
-  float gw=diagram_data["grindwidth"];
+  float gw=diagram_data["gridwidth"];
   if ((diagram_data["vertgrid"])&&
       (gw>LITET))
     for(int i=0; i<s; i++)
@@ -1438,7 +1438,7 @@ int main(int argc, string *argv)
 		 "xminvalue":0.0,
 		 "yminvalue":0,
 		 "vertgrid": 1,
-		 "grindwidth": 0.5
+		 "gridwidth": 0.5
 
   ]);
 
