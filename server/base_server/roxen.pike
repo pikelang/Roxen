@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.477 2000/04/06 18:09:44 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.478 2000/04/11 04:54:21 per Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -2012,9 +2012,6 @@ class ImageCache
         reply = reply->img;
       }
 
-      if( args->gamma )
-        reply = reply->gamma( (float)args->gamma );
-
       if( args["true-alpha"] )
         true_alpha = 1;
 
@@ -2023,7 +2020,7 @@ class ImageCache
 
       if( args["opaque-value"] )
       {
-        true_alpha = 1;
+        if( !bgcolor ) true_alpha = 1;
         int ov = (int)(((float)args["opaque-value"])*2.55);
         if( ov < 0 )
           ov = 0;
@@ -2031,7 +2028,8 @@ class ImageCache
           ov = 255;
         if( alpha )
         {
-          Image.Image i = Image.Image( reply->xsize(), reply->ysize(), ov,ov,ov );
+          Image.Image i = Image.Image( reply->xsize(), reply->ysize(), 
+                                       ov,ov,ov );
           i = i->paste_alpha( alpha, ov );
           alpha = i;
         }
@@ -2039,6 +2037,18 @@ class ImageCache
         {
           alpha = Image.Image( reply->xsize(), reply->ysize(), ov,ov,ov );
         }
+      }
+
+      if( args->gamma )
+        reply = reply->gamma( (float)args->gamma );
+
+
+      if( bgcolor && alpha && !true_alpha )
+      {
+        reply = Image.Image( reply->xsize(),
+                             reply->ysize(), bgcolor )
+              ->paste_mask( reply, alpha );
+        alpha = alpha->threshold( 4 );
       }
 
       int x0, y0, x1, y1;
@@ -2062,9 +2072,9 @@ class ImageCache
       {
         if( !x1 ) x1 = reply->xsize()-x0;
         if( !y1 ) y1 = reply->ysize()-y0;
-        reply = reply->copy( x0,y0,x1-1,y1-1 );
+        reply = reply->copy( x0,y0,x0+x1-1,y0+y1-1 );
         if( alpha )
-          alpha = alpha->copy( x0,y0,x1-1,y1-1 );
+          alpha = alpha->copy( x0,y0,x0+x1-1,y0+y1-1 );
       }
 
       if( args->scale )
@@ -2123,8 +2133,10 @@ class ImageCache
         {
           reply = reply->rotate_expand( degree );
           alpha = alpha->rotate( degree, 0,0,0 );
-        } else
-          reply = reply->rotate( degree )->autocrop();
+        } else {
+          alpha = reply->copy()->clear(255,255,255)->rotate(degree,0,0,0);
+          reply = reply->rotate_expand( degree );
+        }
       }
 
 
@@ -2142,17 +2154,20 @@ class ImageCache
         reply = reply->mirrory();
       }
 
-      if( args["cs-rgb-hsv"] )reply = reply->rgb_to_hsv();
-      if( args["cs-grey"] )   reply = reply->grey();
-      if( args["cs-invert"] ) reply = reply->invert();
-      if( args["cs-hsv-rgb"] )reply = reply->hsv_to_rgb();
-
-      if( bgcolor && alpha )
+      if( bgcolor && alpha && !true_alpha )
       {
         reply = Image.Image( reply->xsize(),
                              reply->ysize(), bgcolor )
               ->paste_mask( reply, alpha );
       }
+
+      if( args["cs-rgb-hsv"] )reply = reply->rgb_to_hsv();
+      if( args["cs-grey"] )   reply = reply->grey();
+      if( args["cs-invert"] ) reply = reply->invert();
+      if( args["cs-hsv-rgb"] )reply = reply->hsv_to_rgb();
+
+      if( !true_alpha && alpha )
+        alpha = alpha->threshold( 4 );
 
       if( quant || (format=="gif") )
       {
@@ -2186,7 +2201,8 @@ class ImageCache
        case "gif":
          if( alpha && true_alpha )
          {
-           Image.Colortable bw=Image.Colortable( ({ ({ 0,0,0 }), ({ 255,255,255 }) }) );
+           Image.Colortable bw=Image.Colortable( ({ ({ 0,0,0 }), 
+                                                    ({ 255,255,255 }) }) );
            bw->floyd_steinberg();
            alpha = bw->map( alpha );
          }
@@ -2899,7 +2915,16 @@ void enable_configurations_modules()
 
 mapping low_decode_image(string data, void|mixed tocolor)
 {
-  return Image._decode( data, tocolor );
+  mapping w = Image._decode( data, tocolor );
+  if( w->image ) return w;
+//   object ob;
+//   mixed e = 
+//   catch 
+//   {
+//     if( ob = Image.ANY.decode( data ) )
+//       return ([ "img":ob, "image":ob ]);
+//   };
+  return 0;
 }
 
 array(Image.Layer) decode_layers(string data, void|mixed tocolor)
@@ -2921,7 +2946,16 @@ mapping low_load_image(string f, RequestID id)
       if(!file->open(f,"r") || !(data=file->read()))
         catch
         {
-          data = Protocols.HTTP.get_url_nice( f )[1];
+          string host = "";
+          sscanf( f, "http://%[^/]", host );
+          if( sscanf( host, "%*s:%*d" ) != 2)
+            host += ":80";
+          mapping hd = 
+                  ([
+                    "User-Agent":version(),
+                    "Host":host,
+                  ]);
+          data = Protocols.HTTP.get_url_data( f, 0, hd );
         };
       if( !data )
 	return 0;
