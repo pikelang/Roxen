@@ -1,18 +1,10 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module_support.pike,v 1.71 2000/07/04 03:45:42 per Exp $
+// $Id: module_support.pike,v 1.72 2000/07/09 14:12:24 per Exp $
 
 #include <roxen.h>
 #include <module_constants.h>
 #include <stat.h>
-
-inherit "basic_defvar";
-
-mixed save()
-{
-  roxenp()->store( "Variables", variables, 0, 0 );
-}
-
 
 program my_compile_file(string file, void|int silent)
 {
