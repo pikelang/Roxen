@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.491 2001/10/05 15:10:08 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.492 2001/11/01 14:19:49 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -39,6 +39,11 @@ constant cvs_version = "$Id: configuration.pike,v 1.491 2001/10/05 15:10:08 per 
 
 
 #ifdef AVERAGE_PROFILING
+
+#if !constant(gethrvtime)
+#define gethrvtime()	gethrtime()
+#endif /* !constant(gethrvtime) */
+
 class ProfStack
 {
   array current_stack = ({});
