@@ -1,5 +1,5 @@
 /*
- * $Id: debuginformation.pike,v 1.1 1997/08/24 02:20:37 peter Exp $
+ * $Id: debuginformation.pike,v 1.2 1997/08/26 16:07:39 peter Exp $
  */
 
 inherit "wizard";
@@ -16,6 +16,7 @@ mapping last_usage = ([]);
 mixed page_0(object id, object mc)
 {
   string res="";
+  string first="";
   mixed foo;
   /*
   if(!this_object()->more_mode) return 0;
@@ -86,9 +87,11 @@ mixed page_0(object id, object mc)
     }
   last_usage=foo;
   res+="</table></td></tr></table>";
+  first = html_border( res, 0, 5 );
+  res = "";
 #endif
 #if efun(_dump_obj_table)
-  res+="<p><br><p>";
+  first += "<p><br><p>";
   res += ("<table  border=0 cellspacing=0 cellpadding=2 width=50%>"
 	  "<tr align=left bgcolor=lightblue><th  colspan=2>List of all "
 	  "programs with more than two clones:</th></tr>"
@@ -118,12 +121,14 @@ mixed page_0(object id, object mc)
     }
   }
   res += "</table>";
+  first += html_border( res, 0, 5 );
+  res = "";
 #endif
 #if efun(_num_objects)
-  res += ("Number of destructed objects: " + _num_dest_objects() +"<br>\n");
+  first += ("Number of destructed objects: " + _num_dest_objects() +"<br>\n");
 #endif  
 #if efun(get_profiling_info)
-  res += "<p><br><p> Only functions that have been called more than "
+  first += "<p><br><p> Only functions that have been called more than "
     "ten times are listed.<p>";
   res += "<table border=0 cellspacing=0 cellpadding=2 width=50%>\n"
     "<tr bgcolor=#ddddff><th align=left colspan=2>Program</th>"
@@ -164,8 +169,10 @@ mixed page_0(object id, object mc)
 		   html_encode_string(prog), arr[0]) + tf;
   }
   res += "</table>\n";
+  first += html_border( res, 0, 5 );
+
 #endif /* get_profiling_info */
-  return res +"</ul>";
+  return first +"</ul>";
 }
 
 mixed handle(object id) { return wizard_for(id,0); }
