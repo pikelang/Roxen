@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.153 2000/08/12 19:22:57 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.154 2000/08/14 13:05:52 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -485,7 +485,8 @@ private string inc(mapping m, RequestID id)
   RXML.Context context=RXML.get_context();
   array entity=context->parse_user_var(m->variable, m->scope);
   if(!context->exist_scope(entity[0])) RXML.run_error("Scope "+entity[0]+" does not exist.\n");
-  int val=(int)m->value||1;
+  int val=(int)m->value;
+  if(!val && !m->value) val=1;
   context->user_set_var(m->variable, (int)context->user_get_var(m->variable, m->scope)+val, m->scope);
   return 0;
 }
