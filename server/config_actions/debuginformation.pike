@@ -1,5 +1,5 @@
 /*
- * $Id: debuginformation.pike,v 1.11 1998/03/25 00:07:58 per Exp $
+ * $Id: debuginformation.pike,v 1.12 1998/04/24 08:42:19 per Exp $
  */
 
 inherit "wizard";
@@ -10,9 +10,7 @@ constant doc = ("Show some internals of Roxen, useful for debugging "
 
 constant more=1;
 
-#if efun(_memory_usage)
-mapping last_usage = ([]);
-#endif
+mapping last_usage;
 
 constant colors = ({ "#f0f0ff", "white" });
 
@@ -27,10 +25,11 @@ array (program) all_modules()
   return values(master()->programs) | indices(roxen->my_loaded);
 }
 
-string program_name(program what)
+string program_name(program|object what)
 {
-  if(roxen->my_loaded[what]) return remove_cwd(roxen->my_loaded[what]);
-  return remove_cwd(search(master()->programs,what));
+  string p;
+  if(p = search(master()->programs,what)) return remove_cwd(p);
+  if(roxen->filename(what)) return remove_cwd(roxen->filename(what));
 }
 
 mapping get_prof(string|void foo)
@@ -100,17 +99,12 @@ int wizard_done()
 
 mixed page_0(object id, object mc)
 {
+
+  if(!last_usage) last_usage = roxen->query_var("__memory_usage");
+  if(!last_usage) last_usage = ([]); 
+
   string res="";
   string first="";
-  mixed foo;
-  /*
-  if(!this_object()->more_mode) return 0;
-  if(node->folded)
-    return link("<font size=\"+1\">Debug information for developers</font>");
-  else
-    res = link("<font size=\"+1\">Debug information for developers</font><ul>");
-    */
-#if efun(_memory_usage)
   mixed foo = _memory_usage();
   foo->total_usage = 0;
   foo->num_total = 0;
@@ -171,10 +165,11 @@ mixed page_0(object id, object mc)
 		     (foo[f]/1024.0),((foo[f]-last_usage[f])/1024.0));
     }
   last_usage=foo;
+  roxen->set_var("__memory_usage", last_usage);
   res+="</table></td></tr></table>";
   first = html_border( res, 0, 5 );
   res = "";
-#endif
+
 #if efun(_dump_obj_table)
   first += "<p><br><p>";
   res += ("<table  border=0 cellspacing=0 ceellpadding=2 width=50%>"
