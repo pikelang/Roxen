@@ -34,11 +34,15 @@ void broadcast()
 			"host":gethostname(),
 			"sequence":seq++,
 		     	"uid":getuid(),
+		     	"version":roxen->real_version,
 			"last_reboot":lr,
 			"comment":roxen->query("neigh_com"),
 			"server_urls":Array.map(roxen->configurations,
 				   lambda(object c)  {
-			  return c->query("MyWorldLocation");
+			  return ({
+			    strlen(c->query("name"))?c->query("name"):c->name,
+			      c->query("MyWorldLocation"),
+			  });
 			})
 		      ])));
   call_out(broadcast,30);
