@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.92 1999/09/28 01:28:07 grubba Exp $
+ * $Id: smtp.pike,v 1.93 2000/10/04 12:09:12 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.92 1999/09/28 01:28:07 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.93 2000/10/04 12:09:12 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -888,6 +888,8 @@ static class Smtp_Connection {
     }
 
     // Now it's time to examine the return address.
+
+    // FIXME: What about source-routed addresses?
 
     foreach(conf->get_providers("smtp_filter")||({}), object o) {
       // roxen_perror("Got SMTP filter\n");
@@ -1839,19 +1841,37 @@ array(int|string) send_mail(string data, object|mapping mail, object|void smtp)
       if (domain) {
 	// Primary delivery.
 	foreach(conf->get_providers("smtp_rcpt")||({}), object o) {
-	  handled |= o->put(mail->from, user, domain, spool, csum, smtp);
+	  mixed err = catch {
+	    handled |= o->put(mail->from, user, domain, spool, csum, smtp);
+	  };
+	  if (err) {
+	    roxen_perror(sprintf("SMTP: Put failure: %s\n",
+				 describe_backtrace(err)));
+	  }
 	}
       }
       if (!handled) {
 	// Fallback delivery.
 	foreach(conf->get_providers("smtp_rcpt")||({}), object o) {
-	  handled |= o->put(mail->from, user, 0, spool, csum, smtp);
+	  mixed err = catch {
+	    handled |= o->put(mail->from, user, 0, spool, csum, smtp);
+	  };
+	  if (err) {
+	    roxen_perror(sprintf("SMTP: Put failure: %s\n",
+				 describe_backtrace(err)));
+	  }
 	}
       }
     } else {
       // Remote delivery.
       foreach(conf->get_providers("smtp_relay")||({}), object o) {
-	handled |= o->relay(mail->from, user, domain, spool, csum, smtp);
+	mixed err = catch {
+	  handled |= o->relay(mail->from, user, domain, spool, csum, smtp);
+	};
+	if (err) {
+	  roxen_perror(sprintf("SMTP: Relay failure: %s\n",
+			       describe_backtrace(err)));
+	}
       }
     }
     id->not_query = sprintf("From:%s;To:%s;%s", mail->from, addr, fname);
