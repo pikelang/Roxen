@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.66 1998/01/23 20:49:07 peter Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.67 1998/01/24 01:35:58 peter Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -643,6 +643,8 @@ mixed low_find_file(string f, object id, string path)
   string path_info, wd;
   int pid;
 
+  if(!path) path = QUERY(searchpath);
+ 
 #ifdef CGI_DEBUG
   roxen_perror("CGI: find_file(\"" + f + "\")...\n");
 #endif /* CGI_DEBUG */
