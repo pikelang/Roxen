@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.554 2004/04/06 21:07:04 mani Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.555 2004/04/22 15:23:38 mani Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1409,7 +1409,6 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 	  {
 	    if(mappingp(fid))
 	    {
-	      TRACE_LEAVE("");
 	      TRACE_LEAVE(examine_return_mapping(fid));
 	      TIMER_END(internal_magic);
 	      return fid;
@@ -2867,37 +2866,11 @@ void call_start_callbacks( RoxenModule me,
                            ModuleInfo moduleinfo, 
                            ModuleCopies module )
 {
-  if(!me) return;
-  if(!moduleinfo) return;
-  if(!module) return;
-
-  call_low_start_callbacks(  me, moduleinfo, module );
-
-  mixed err;
-  if((me->start) && (err = catch( me->start(0, this) ) ) )
-  {
-#ifdef MODULE_DEBUG
-    if (enable_module_batch_msgs) 
-      report_debug("\bERROR\n");
-#endif
-    string bt=describe_backtrace(err);
-    report_error("Error while initiating module copy of %s%s",
-		 moduleinfo->get_name(), (bt ? ":\n"+bt : "\n"));
-    got_no_delayed_load = -1;
-  }
-  if( inited && me->ready_to_receive_requests )
-    if( mixed q = catch( me->ready_to_receive_requests( this ) ) )
-    {
-#ifdef MODULE_DEBUG
-      if (enable_module_batch_msgs) report_debug("\bERROR\n");
-#endif
-      report_error( "While calling ready_to_receive_requests:\n"+
-		    describe_backtrace( q ) );
-      got_no_delayed_load = -1;
-    }
+  call_low_start_callbacks( me, moduleinfo, module );
+  call_high_start_callbacks( me, moduleinfo );
 }
 
-void call_low_start_callbacks( RoxenModule me, 
+void call_low_start_callbacks( RoxenModule me,
 			       ModuleInfo moduleinfo, 
 			       ModuleCopies module )
 {
@@ -3006,6 +2979,36 @@ void call_low_start_callbacks( RoxenModule me,
     pri[pr]->first_modules += ({ me });
 
   invalidate_cache();
+}
+
+void call_high_start_callbacks( RoxenModule me, ModuleInfo moduleinfo) {
+
+  // This is icky, but perhaps not safe to remove.
+  if(!me) return;
+  if(!moduleinfo) return;
+
+  mixed err;
+  if((me->start) && (err = catch( me->start(0, this) ) ) )
+  {
+#ifdef MODULE_DEBUG
+    if (enable_module_batch_msgs) 
+      report_debug("\bERROR\n");
+#endif
+    string bt=describe_backtrace(err);
+    report_error("Error while initiating module copy of %s%s",
+		 moduleinfo->get_name(), (bt ? ":\n"+bt : "\n"));
+    got_no_delayed_load = -1;
+  }
+  if( inited && me->ready_to_receive_requests )
+    if( mixed q = catch( me->ready_to_receive_requests( this ) ) )
+    {
+#ifdef MODULE_DEBUG
+      if (enable_module_batch_msgs) report_debug("\bERROR\n");
+#endif
+      report_error( "While calling ready_to_receive_requests:\n"+
+		    describe_backtrace( q ) );
+      got_no_delayed_load = -1;
+    }
 }
 
 // Called from the administration interface.
