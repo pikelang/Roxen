@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.73 1998/08/31 13:29:20 grubba Exp $
+/* $Id: wizard.pike,v 1.74 1998/09/16 21:23:58 wellhard Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -135,16 +135,16 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed b)
      ("<table><tr>\n"
       "<td width=258 rowspan=2>\n"
       "  <table bgcolor=black cellpadding=1 border=0 cellspacing=0 width=258><tr><td>\n"
-      "  <input type=image name='"+m->name+".foo' src=/internal-roxen-colsel width=256 height=256 border=0></a>\n"
-      "  </td></table>\n"
+      "  <input type=image name='"+m->name+".foo' src=/internal-roxen-colsel width=256 height=256 border=0></td>"
+      "</table>\n"
       "</td>\n"
       "<td width=30 rowspan=2></td>\n"
       "<td width=32 rowspan=2>\n"
       "  <table bgcolor=black cellpadding=1 border=0 cellspacing=0 width=32><tr><td>\n"
       "<input type=image src=\"/internal-roxen-colorbar:"+
       (string)h+","+(string)v+","+(string)s+"\" "
-      "name='"+m->name+".bar' width=30 height=256 border=0></a>"
-      "</td></table>\n"
+      "name='"+m->name+".bar' width=30 height=256 border=0></td>"
+      "</table>\n"
       "</td>\n"
       "<td width=32 rowspan=2></td>\n"
       "<td width=120>\n"
@@ -166,15 +166,79 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed b)
       m->name+".entered size=8 value='"+
       color_name(a)+"'> <input type=submit value=Ok></font></td></table>\n");
 
+   case "color-small":
+     int h, s, v;
+     if(id->variables[m->name+".hsv"]) 
+       sscanf(id->variables[m->name+".hsv"], "%d,%d,%d", h, s, v);
+     else
+     {
+       array tmp = rgb_to_hsv(@parse_color(current||"black"));
+       h = tmp[0]; s = tmp[1];  v = tmp[2];
+     } 
+     if(id->variables[m->name+".foo.x"]) {
+       h = ((int)id->variables[m->name+".foo.x"])*2;
+       v = 255-((int)id->variables[m->name+".foo.y"])*2;
+     } else if(id->variables[m->name+".bar.y"])
+       s = 255-((int)id->variables[m->name+".bar.y"])*2;
+     else if(id->variables[m->name+".entered"] &&
+	     strlen(current=id->variables[m->name+".entered"]))
+     {
+       array tmp = rgb_to_hsv(@parse_color(current||"black"));
+       h = tmp[0]; s = tmp[1];  v = tmp[2];
+     }
+
+     m_delete(id->variables, m->name+".foo.x");
+     m_delete(id->variables, m->name+".foo.y");
+     m_delete(id->variables, m->name+".bar.x");
+     m_delete(id->variables, m->name+".bar.y");
+     id->variables[m->name+".hsv"] = h+","+s+","+v;
+
+     array a=hsv_to_rgb(h,s,v);
+     string bgcol=sprintf("#%02x%02x%02x",a[0],a[1],a[2]); 
+     id->variables[m->name] = bgcol;
+     return 
+     ("<table border=0 cellpadding=0 cellspacing=0><tr>\n"
+      "<td rowspan=2>\n"
+      "  <table bgcolor=black cellpadding=1 border=0 cellspacing=0><tr><td>\n"
+      "    <input type=image name='"+m->name+".foo' "
+      "      src=/internal-roxen-colsel-small "
+      "      width=128 height=128 border=0></td>"
+      "  </table>\n"
+      "</td>\n"
+      "<td width=8 rowspan=2><img src=/internal-roxen-unit width=8></td>\n"
+      "<td width=18 rowspan=2>\n"
+      "  <table bgcolor=black cellpadding=1 border=0 cellspacing=0><tr><td>\n"
+      "    <input type=image src=\"/internal-roxen-colorbar:"+
+             (string)h+","+(string)v+","+(string)s+"\" "
+      "      name='"+m->name+".bar' width=16 height=128 border=0></td>"
+      "  </table>\n"
+      "</td>\n"
+      "<td width=8 rowspan=2><img src=/internal-roxen-unit width=8></td>\n"
+      "<td>\n"
+      "  <table bgcolor=black width=64 border=3 "
+      "         cellpadding=1 cellspacing=0><tr>\n"
+      "    <td height=64 width=64 bgcolor="+bgcol+">&nbsp;"+
+             (m->tt?"<font color='"+m->tc+"'>"+m->tt+"</font>":"")+"\n"
+      "    </td></tr>\n"
+      "  </table>\n"
+      "</td>\n"
+      "<tr><td width=110>\n"
+      "<font size=-1><input type=string name="+
+      m->name+".entered size=8 value='"+
+      color_name(a)+"'> <input type=submit value=Ok></font>"
+      "</td></tr>\n"
+      "</table>\n");
+
    case "font":
      string res="";
      m->type = "select";
      m->choices = roxen->available_fonts(1)*",";
-     if(id->conf && id->conf->modules["graphic_text"])
+     if(id->conf && id->conf->modules["graphic_text"] && !m->noexample)
        res = ("<input type=submit value='Example'><br>"+
 	      ((current&&strlen(current))?
 	       "<gtext nfont='"+current+"'>Example Text</gtext><br>"
 	       :""));
+     m_delete(m, "noexample");
      return make_tag("var", m)+res;
 
    case "toggle":
