@@ -1,7 +1,6 @@
 inherit "roxenlib";
 inherit "wizard";
 import AutoWeb;
-object wa;
 
 array wanted_buttons = ({ });
 
@@ -12,7 +11,6 @@ array get_buttons(object id)
 
 void create (object webadm)
 {
-  wa = webadm;
 }
 
 mapping dl(object id, string filename)
@@ -64,14 +62,16 @@ mapping decode_url(string s)
 string|mapping navigate(object id, string f, string base_url)
 {
 
-  // werror("File: %O\n", f);
-  // werror("Real file: %O\n", wa->real_path(id, f));
   object contenttypes = ContentTypes();
   string res="";
 
   if(AutoFile(id, f)->type()=="")
-    return "Location "+html_encode_string(f)+
-      " not found or permission denied.\n";
+    if(f!="/")
+      return http_redirect(encode_url(base_url, "go",
+				      combine_path(f, "../")), id);
+    else
+      return "Location "+html_encode_string(f)+
+	" not found or permission denied.\n";
   
   if(f[-1]!='/') // it's a file
   {
@@ -97,23 +97,8 @@ string|mapping navigate(object id, string f, string base_url)
     res += "<img src='"+contenttypes->img_from_type(md->content_type)+
 	   "'>&nbsp;&nbsp;";
     res += "<b>"+html_encode_string(f)+"</b><br>\n";
-
-    mapping md = MetaData(id, f)->get();
-    array md_order = ({ "title", "content_type", "template",
-			"keywords", "description" });
-    mapping md_variables = ([ "title":"Title", "content_type":"Type",
-			      "template":"Template", "keywords":"Keywords",
-			      "description":"Description" ]);
-    array rows = ({ });
-    foreach(md_order, string variable) {
-      if(md_variables[variable]&&md[variable])
-	rows += ({ ({ "<b>"+md_variables[variable]+"</b>",
-		      (variable=="content_type"?
-		       contenttypes->name_from_type(md[variable]):
-		       html_encode_string(md[variable])
-			) }) });
-    }
-    res += html_table( ({ "Metadata", "Value" }), rows);
+    
+    res += MetaData(id, f)->display();
   }
   else  // it's a directory
   {
@@ -138,7 +123,7 @@ string|mapping navigate(object id, string f, string base_url)
 	else 
 	  files += ({ file });
     
-    res += "<browser><table>";
+    res += "<filelistning><table>";
     // Display directories.
     foreach(sort(dirs), string item) {
       string href = "<a href='"+encode_url(base_url, "go", f+item+"/")+"'>";
@@ -163,9 +148,9 @@ string|mapping navigate(object id, string f, string base_url)
       
     }
     if(!sizeof(dirs+files))
-      res += "Empty!";
+      res += "Directory is Empty!";
       
-    res += "</table></browser>";
+    res += "</table></filelistning>";
   }
   if(sizeof(f)>1) {
     string href = "<a href='"+encode_url(base_url,
@@ -174,7 +159,7 @@ string|mapping navigate(object id, string f, string base_url)
 	   "&nbsp;&nbsp;"+href+
 	   "Up to parent directory</a><br>\n<br>\n"+res);
   }
-  return res;
+  return "<browser>"+res+"</browser>";
 }
 
 string|mapping handle(string sub, object id)

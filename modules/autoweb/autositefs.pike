@@ -5,7 +5,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "modules/filesystems/filesystem.pike" : filesystem;
 
-constant cvs_version="$Id: autositefs.pike,v 1.15 1998/08/04 19:14:43 wellhard Exp $";
+constant cvs_version="$Id: autositefs.pike,v 1.16 1998/08/06 19:03:57 wellhard Exp $";
 
 mapping host_to_id;
 
@@ -94,7 +94,7 @@ mixed find_file(string f, object id)
     mapping md = .AutoWeb.MetaData(id, f)->get();
     if(md->content_type=="text/html") {
       string d = res->read( );
-      if(md->template!="No template")
+      if((md->template)&&(md->template!="No template"))
 	d = "<template><content>"+d+"</content></template>";
       res = http_string_answer(parse_rxml(d, id), "text/html");
     }

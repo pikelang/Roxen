@@ -1,3 +1,5 @@
+#include <stat.h>
+
 class AutoFile {
 
   object id;
@@ -54,7 +56,7 @@ class AutoFile {
   
   int visiblep()
   {
-    array filters = ({ "CVS", "templates", "*.md", "*.menu" });
+    array filters = ({ "CVS", "templates", "*.md", "*.menu", "*~" });
     foreach(filters, string filter)
       if(glob(filter, filename))
 	return 0;
@@ -137,6 +139,17 @@ class ContentTypes {
       }
     return "application/octet-stream";
   }
+
+  string tag(string type, string f)
+  {
+    switch(type) {
+    case "autosite/unknown":
+    case "text/html":
+    case "text/plain": return "<a href="+f+">Link text</a>";
+    case "image/jpeg":
+    case "image/gif": return "<img src="+f+" width=? height=?>";
+    }
+  }
   
   void create()
   {
@@ -205,6 +218,7 @@ class ContentTypes {
 
 
 class MetaData {
+  inherit "roxenlib";
 
   object id;
   string f;
@@ -225,12 +239,22 @@ class MetaData {
 			     "description":""]);
     
     string s = "";
+    array fs=AutoFile(id, f+".md")->stat();
+    array a;
+    if(fs && (a=cache_lookup("autoweb_md_stat",""+id->misc->customer_id+f))
+       && a[1]==fs[ST_MTIME])
+      return a[0];
+    else if(!fs)
+      return md_default;
+    mapping md = ([]);
+    
     string s = AutoFile(id, f+".md")->read();
     if(!s)
       return md_default;
-    mapping md = ([]);
     parse_html(s, ([ ]), ([ "md":container_md ]), md);
-    return ([ "content_type": md_default->content_type ]) + md;
+    return cache_set("autoweb_md_stat",""+id->misc->custiner_id+f,
+		     ({ ([ "content_type": md_default->content_type ]) + md,
+			fs }))[0];
   }
   
   int set(mapping md)
@@ -257,6 +281,36 @@ class MetaData {
     if((md->content_type == "text/html")&&(sizeof(html))) 
       parse_html(html, ([ ]), ([ "title":container_title ]), md);
     return md;
+  }
+
+  string display()
+  {
+    mapping md = ([ "template":"No template" ])+get();
+    array md_order = ({ "title", "content_type", "template",
+			"keywords", "description" });
+    mapping md_variables = ([ "title":"Title", "content_type":"Type",
+			      "template":"Template", "keywords":"Keywords",
+			      "description":"Description" ]);
+    array rows = ({ "Metadata|||Value" });
+    foreach(md_order, string variable) {
+      if(md_variables[variable]&&md[variable])
+	rows += ({ "<b>"+md_variables[variable]+"</b>"+"|||"+
+		   (variable=="content_type"?
+		    ContentTypes()->name_from_type(md[variable]):
+		    html_encode_string(md[variable])) });
+    }
+    if(md->content_type=="image/gif"||md->content_type=="image/jpeg") {
+      array dims=Dims.dims()->get(AutoFile(id, f)->real_path(f));
+      if(dims) {
+	rows += ({ "<b>Dimension</b>|||"+dims[0]+"*"+dims[1]+" pixels" });
+	rows += ({ "<b>HTML Tag</b>|||"+
+		   html_encode_string("<img src="+f+
+				      " width="+dims[0]+
+				      " height="+dims[1]+
+				      " alt=\"\">") });
+      }
+    }
+    return "<webadmtablify>"+(rows*"///")+"</webadmtablify>";
   }
   
   void create(object _id, string _f)
@@ -326,7 +380,7 @@ class EditMetaData {
   mixed done( object id, string f)
   {
     mapping md = ([ ]);
-    werror("EditMetaData()->done() f: %O\n", f);
+    //werror("EditMetaData()->done() f: %O\n", f);
     foreach (glob( "meta_*", indices( id->variables )), string s)
       md[ s-"meta_" ] = id->variables[ s ];
     md[ "content_type" ] = ContentTypes()->type_from_name(md[ "content_type" ]);

@@ -1,12 +1,12 @@
 /*
- * $Id: webadm.pike,v 1.15 1998/08/05 19:06:51 wellhard Exp $
+ * $Id: webadm.pike,v 1.16 1998/08/06 19:03:58 wellhard Exp $
  *
  * AutoWeb administration interface
  *
  * Johan Schön, Marcus Wellhardh 1998-07-23
  */
 
-constant cvs_version = "$Id: webadm.pike,v 1.15 1998/08/05 19:06:51 wellhard Exp $";
+constant cvs_version = "$Id: webadm.pike,v 1.16 1998/08/06 19:03:58 wellhard Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -53,9 +53,17 @@ string tag_update(string tag_name, mapping args, object id)
 
 string customer_name(string tag_name, mapping args, object id)
 {
-  return "<sqloutput query="
-    "\"select name from customers where id='"+id->misc->customer_id+"'\">"+
-    "#name#<sqloutput>";
+  object db = id->conf->call_provider("sql","sql_object",id);
+  string query = ("select name from customers "
+		  "where id='"+id->misc->customer_id+"'");
+  array result = db->query(query);
+  string customer_name = "Unknown";
+  if(result&&result[0])
+    customer_name = result[0]->name;
+  return
+    cache_lookup("autoweb_customer_name",id->misc->customer_id)||
+    cache_set("autoweb_customer_name",id->misc->customer_id,
+	      customer_name);
 }
 
 
@@ -244,7 +252,7 @@ mixed find_file(string f, object id)
   id->misc->wa=this_object();
 
   // User validation
-#if 1
+#if 0
   if(!validate_admin(id)&&!validate_customer(id))
     return (["type":"text/html",
 	     "error":401,
@@ -274,10 +282,9 @@ mixed find_file(string f, object id)
   }
 
   sscanf(f, "%s/%s", tab, sub);
-  string res = "<template base=/"+(query("location")-"/")+">\n"+
-	       "<tmpl_body>";
+  string res = "<template base=/"+(query("location")-"/")+">\n";
 
-  res += make_tablist(tablist, tabs[tab], id);
+  res += "<tablist>"+make_tablist(tablist, tabs[tab], id)+"</tablist>";
   if (!tabs[tab])
     content= "You've reached a non-existing tab '"
 	     "<tt>"+tab+"</tt> somehow. Select another tab.\n";
@@ -286,7 +293,7 @@ mixed find_file(string f, object id)
   
   if(mappingp(content))
     return content;
-  res += "<br>"+content+"</tmpl_body>\n</template>";
+  res += content+"\n</template>";
   
   return http_string_answer(parse_rxml(res, id)) |
     ([ "extra_heads":
@@ -330,185 +337,6 @@ void create()
 	 "AutoWeb.");
   add_module_path(combine_path(__FILE__,"../"));
 }
-
-#if 0
-// Wizard functions
-
-string real_path(object id, string filename)
-{
-  filename = replace(filename, "../", "");
-  return query("searchpath")+id->misc->customer_id+
-    (sizeof(filename)?(filename[0]=='/'?filename:"/"+filename):"/");
-}
-
-string read_file(object id, string f)
-{
-  return Stdio.read_bytes(real_path(id, f));
-}
-
-int save_file(object id, string f, string s)
-{
-  werror("Saving file '%s' in %s\n", f, real_path(id, f));
-  object file = Stdio.File(real_path(id, f), "cwt");
-  if(!objectp(file)) {
-    werror("Can not save file %s", f);
-    return 0;
-  }
-  file->write(s);
-  file->close;
-  return 1;
-}
-
-
-// Metadata functions
-
-string container_md(string tag, mapping args, string contents, mapping md)
-{
-  if(args->variable)
-    md[args->variable] = contents;
-}
-
-int save_md_file(object id, string f, mapping md)
-{
-  object file = Stdio.File(real_path(id, f+".md"), "cwt");
-  if(!file)
-    return 0;
-  
-  string s = "";
-  foreach(sort(indices(md)), string variable)
-    s += "<md variable=\""+variable+"\">"+md[variable]+"</md>\n";
-  file->write(s);
-  return 1;
-}
-
-mapping get_md(object id, string f)
-{
-  mapping md_default =  ([ "content_type":"autosite/unknown",
-			   "title":"Unknown",
-			   "template":"default.tmpl",
-			   "keywords":"",
-			   "description":""]);
-
-  string file_name = real_path(id, f+".md");
-  string s = Stdio.read_bytes(file_name);
-  if(!s) {
-    werror("File %s does not exist.\n", file_name);
-    return md_default;
-  }
-  mapping md = ([]);
-  parse_html(s, ([ ]), ([ "md":container_md ]), md);
-  return ([ "content_type": md_default->content_type ]) + md;
-}
-
-// Content type functions
-
-mapping content_types;
-mapping name_to_type;
-
-void init_content_types()
-{
-  mapping default_content_types =
-  ([ "text/html" :
-     ([ "name" : "HTML",
-	"handler" : "html",
-	"downloadp" : 1,
-	"parsep" : 1,
-	"extensions" : (< "html", "htm" >),
-	"img" : "internal-gopher-text" ]),
-     
-     "text/plain" :
-     ([ "name" : "Raw text",
-	"handler" : "text",
-	"downloadp" : 1,
-	"extensions" : (< "txt" >),
-	"img" : "internal-gopher-text" ]),
-     
-     "image/gif" :
-     ([ "name" : "GIF Image",
-	"handler" : "image",
-	"downloadp" : 1,
-	"extensions" : (< "gif" >),
-	"img" : "internal-gopher-image" ]),
-     
-     "image/jpeg" :
-     ([ "name" : "JPEG Image",
-	"handler" : "image",
-	"downloadp" : 1,
-	"extensions" : (< "jpg", "jpeg" >),
-	"img" : "internal-gopher-image" ]),
-     
-     "autosite/unknown" :
-     ([ "name" : "Unknown",
-	"handler" : "default",
-	"downloadp" : 1,
-	"extensions" : (< >),
-	"img" : "internal-gopher-unknown" ]),
-     
-     "autosite/menu" :
-     ([ "name" : "Menu",
-	"handler" : "menu",
-	"downloadp" : 0,
-	"extensions" : (< "menu" >),
-	"internalp" : 1,
-	"img" : "internal-gopher-unknown" ]),
-     
-     "autosite/template" :
-     ([ "name" : "Template",
-	"handler" : "template",
-	"downloadp" : 1,
-	"extensions" : (< "tmpl" >),
-	"internalp" : 1,
-	"img" : "internal-gopher-unknown" ]),
-     
-  ]);
-  
-  content_types = default_content_types;
-  name_to_type = ([ ]);
-  foreach (indices( content_types ), string ct)
-    name_to_type[ content_types[ ct ]->name ] = ct;
-}
-
-string get_content_type_from_extension( string filename )
-{
-  string extension = (filename / ".")[-1];
-
-  foreach (indices( content_types ), string i)
-    if (content_types[i]->extensions[ extension ])
-      return i;
-  if (sizeof( filename / "." ) >= 2)
-  {
-    extension = (filename / ".")[-2];
-      
-    foreach (indices( content_types ), string i)
-      if (content_types[i]->extensions[ extension ])
-	return i;
-  }
-  return "application/octet-stream";
-}
-
-string container_title(string tag, mapping args, string contents, mapping md)
-{
-  if(tag="title")
-    md["title"] = contents;
-}
-
-mapping get_md_from_html(string f, string html)
-{
-  mapping md = ([]);
-  md->content_type = get_content_type_from_extension(f);
-  if(md->content_type == "text/html")
-    parse_html(html, ([ ]), ([ "title":container_title ]), md);
-  return md;
-}
-
-// Misc
-
-string html_safe_encode(string s)
-{
-  return replace(s, ({ "<", ">" }), ({ "&lt;", "&gt;" }));
-}
-
-#endif
 
 // State
 

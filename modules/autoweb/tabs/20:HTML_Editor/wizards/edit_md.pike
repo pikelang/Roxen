@@ -5,7 +5,6 @@ constant name = "Edit Metadata";
 
 string page_0( object id )
 {
-  werror("Sallad %O\n", id->variables->path);
   return EditMetaData()->page(id, id->variables->path);
 }
 

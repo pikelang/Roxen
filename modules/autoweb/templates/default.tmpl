@@ -4,9 +4,26 @@
     <td><font color=darkred>$error$</font></td>
   </tr></table>
 </tmplblock>
-	
+
 <tmplblock tag=browser>
-  <obox bgcolor=lightgrey>$browser$</obox>
+  <comment><font size=+1><b>File Browser</b></font><br></comment>
+  $browser$
+</tmplblock>
+
+<tmplblock tag=filelistning>
+  $filelistning$
+</tmplblock>
+
+<tmplblock tag=toolbargtext params=magic,href,target>
+  <gtext xspacing=12 yspacing=3 notrans nfont=helvetica scale=0.35 bold
+       xsize=400 bevel=5 talign=center
+       fg=#ffffff bg=#113377 magic_fg=#000000 magic_bg=#88ccaa
+       magic='$magic$' href='$href$' target=$target$>$toolbargtext$</gtext></tmplblock>
+
+<tmplblock tag=webadmtablify>
+  <tablify nice cellseparator="|||" rowseparator="///">
+    $webadmtablify$
+  </tablify>
 </tmplblock>
 	
 <html>
@@ -31,12 +48,7 @@
         <td width=100% align=right valigh=center height=28>
 
           <b><font size=+1>
-            <formoutput quote='$'>
-              <sqloutput query="select name from
-                         customers where id='$customer_id$'">
-                #name#
-              </sqloutput>
-            </formoutput>
+	    <autosite-webadm-customername>
           </font></b>
 
         </td>
@@ -54,6 +66,8 @@
 </tr></table>
 
 <br>
+<tmplinsert tag=tablist>
+<br><br>
+<tmplinsert tag=content>
 
-<tmplinsert tag=tmpl_body>
 </body></html>

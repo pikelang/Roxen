@@ -13,27 +13,33 @@ class tab
 
   
   
-  string buttonrow_gtext(array brow)
+  string buttonrow_gtext(array brow, object id)
   {
-    string s="<p>";
+    string s="<table cellspacing=0 cellpadding=0 border=0>";
     foreach(brow, array a)
     {
-      s += " <gtext alink=yellow xspacing=4 notrans magic='"+a[0]+
-	"' spacing=3 fg=#ffffff bg=#5a3270 nfont=lucida scale=0.5 href='"+
-	a[1];
-
-      if(a[2])
-      {
-	s+="?";
-	foreach(indices(a[2]), string input_hidden)
-	  s+=input_hidden+"="+a[2][input_hidden]+"&";
-	s=s[..sizeof(s)-2];
-      }
-      s+="'>"+a[0]+"</gtext>";
+      if(sizeof(a))
+	if(stringp(a[1])) {
+	  s += ("<tr><td><toolbargtext magic='"+a[0]+
+		"' href="+(sizeof(a)>2?"'"+a[1]:a[1]));
+	
+	if(sizeof(a)>2) {
+	  a[2]=(["cancel_url":id->not_query])+a[2]||([]);
+	  s+="?";
+	  foreach(indices(a[2]), string input_hidden)
+	    s+=input_hidden+"="+a[2][input_hidden]+"&";
+	  s=s[..sizeof(s)-2]+"'";
+	}
+      s+=">"+a[0]+"</toolbargtext></td></tr>";
+      }	else
+	  s+="<td>internal server error<br>"+
+	    "<tt>"+sprintf("%O",a)+"</tt><br>"
+	    __FILE__":"+__LINE__+"</td>";
     }
+    s += "</table>";
     return s;
   }
-
+  
   string buttonrow_submitbuttons(array brow, object id)
   {
     string s="";
@@ -66,7 +72,39 @@ class tab
     return s;
   }
 
-  function buttonrow=buttonrow_submitbuttons;
+  string buttonrow_toolbar(array brow, object id)
+  {
+    string s="";
+    s+="<table>\n";
+    foreach(brow, array a)
+      if(sizeof(a))
+	if (stringp(a[1]))
+	{
+	  s+="<tr><td><form method=get action="
+	     +(sizeof(a)>2?"'"+a[1]+"'":a[1])+
+             "><input type=submit name=\""+a[0]+"\" value=\""+a[0]+"\">";
+	  if(sizeof(a)>2)
+	  {
+	    a[2]=(["cancel_url":id->not_query])+a[2]||([]);
+	    foreach(indices(a[2]), string input_hidden)
+	      s+="<input type=hidden name=\""+input_hidden+
+                 "\" value=\""+a[2][input_hidden]+"\">";
+	  }
+	  s+="</form></td></tr>\n";
+	}
+	else
+	{
+	  s+="<tr><td>internal server error<br>"+
+	    "<tt>"+sprintf("%O",a)+"</tt><br>"
+	    __FILE__":"+__LINE__+"</td></tr>";
+	}
+      else
+	s+="<tr><td>&nbsp;</td></tr>";
+    s+="</table>";
+    return s;
+  }
+  
+  function buttonrow=buttonrow_gtext;
   // function buttonrow=buttonrow_gtext;
   
   array fixbuttons(mapping wiz, array wanted)
@@ -145,7 +183,7 @@ class tab
     string page=tmp;
     // Ugly hack to make <wizard> work on one page..
     if(f[0..1]=="10")
-      return res+page;
+      return "<content>"+res+page+"</content>";
 
     tmp=0;
     if(file_stat(dir+"/wizards/"))
@@ -159,13 +197,22 @@ class tab
 			   dir+"/wizards/",
 			   parent->query_location()+tab+"/wizard/");
 	//werror("%O",tmp);
+	string bg="#eeeeee";
 	if(arrayp(tmp))
-	  return res+page+buttonrow(fixbuttons(tmp[0],wanted_buttons),id);
+	  return "<content><table cellspacing=1><tr><td bgcolor=black>"
+	    "<table border=0 cellspacing=1 cellpadding=3>"
+	    "<tr><td bgcolor="+bg+"><font size=+1><b>Toolbar</b></font></td>"
+	    "<td bgcolor="+bg+">"
+	    "<font size=+1><b>File Browser</b></font></td></tr>"
+	    "<tr><td valign=top bgcolor="+bg+">"+
+	    buttonrow(fixbuttons(tmp[0],wanted_buttons),id)+"</td>"
+	    "<td valign=top bgcolor="+bg+">"+res+page+"</td>"+
+	    "</tr></table></td></tr></table></content>";
       };
       if(err)
       {
 	werror("wizard compilation failure...\n"
-	       + _master->errors + "\n" );
+	       + _master->errors + "\n");
 	tmp="<font color=red><pre>"+_master->errors+
 	  "\n"+master()->describe_backtrace(err)
 	  +"</pre></font>";
@@ -174,9 +221,9 @@ class tab
       if(arrayp(tmp)) return res;
       if(mappingp(tmp)) return tmp;
       if(tmp)
-	return res+tmp;
+	return "<content>"+res+tmp+"</content>";
     }
-    return res+page;
+    return "<content>"+res+page+"</content>";
   }
 
   int visible(object id)
