@@ -1,5 +1,5 @@
 inherit "module";
-constant cvs_version="$Id: icecast.pike,v 1.4 2001/04/10 05:26:29 per Exp $";
+constant cvs_version="$Id: icecast.pike,v 1.5 2001/04/11 08:45:49 per Exp $";
 constant thread_safe=1;
 
 #define BSIZE 8192
@@ -60,12 +60,11 @@ class MPEGStream( Playlist playlist )
 
   void call_callbacks( mixed ... args )
   {
-    
     foreach( callbacks, function f )
       if( mixed e = catch( f(@args) ) )
       {
 	werror(describe_backtrace( e ) );
-	callbacks -= ({f});
+	remove_callback( f );
       }
   }
 
@@ -82,7 +81,8 @@ class MPEGStream( Playlist playlist )
   
   void feeder_thread( )
   {
-    while( realtime() > stream_position )
+    while( sizeof(callbacks) &&
+	   realtime() > stream_position )
     {
       string frame = get_frame();
       while( !frame )
@@ -94,9 +94,16 @@ class MPEGStream( Playlist playlist )
 	bpos = 0;
 	frame = get_frame();
       }
+      // Actually, this is supposed to be quite constant.
       stream_position += strlen(frame)*8000 / bitrate;
+      werror( "%d\n", strlen(frame)*8000 / bitrate );
       call_callbacks( frame );
-    };
+    }
+    if(!sizeof(callbacks))
+    {
+      stream_position = 0;
+      stream_start = (time()*1000+(int)(time(time())*1000));
+    }
     call_out( feeder_thread, 0.02 );
   }
 
@@ -113,6 +120,9 @@ class MPEGStream( Playlist playlist )
   {
     if( !fd )
       fd = playlist->next_file();
+    if( !fd )
+      return s?0:-1;
+    
     if( !buffer || !strlen(buffer) )
     {
       bpos = 0;
@@ -270,7 +280,9 @@ class Location( string location,
       return Roxen.http_string_answer( "Too many listeners\n" );
     }
 
-
+    if( !stream->fd )
+      stream->fd = stream->playlist->next_file();
+    
     mapping meta = stream->playlist->metadata();
     if( !meta )
     {
@@ -410,7 +422,7 @@ class Connection
 		    "%d sent, %d skipped<br />",id,protocol,
 		    time()-connected,
 		    (fd->query_address()/" ")[0],
-		    sent-skipped, skipped );
+		    sent, skipped );
   }
 
   string gen_metadata( )
@@ -433,7 +445,7 @@ class Connection
       skipped++;
       buffer = buffer[1..];
     }
-    if( !sizeof( buffer ) )
+    if( sizeof( buffer ) == 1 )
       send_more();
   }
 
@@ -458,16 +470,18 @@ class Connection
 	  current_block += gen_metadata();
 	}
       }
-      
       buffer = buffer[1..];
       sent++;
     }
     int n = fd->write( current_block );
-    if( !n || n < 0 )
-      closed();
-    if( headers_done )
-      sent_bytes += n;
-    current_block = current_block[n..];
+//     if( n < 0 && fd->errno() )
+//       closed();
+    if( n > 0 )
+    {
+      if( headers_done )
+	sent_bytes += n;
+      current_block = current_block[n..];
+    }
   }
 
   static void md_callback( mapping metadata )
@@ -477,11 +491,13 @@ class Connection
   
   static void closed( )
   {
+    fd->set_blocking( );
     fd = 0;
     stream->remove_callback( callback );
     stream->playlist->remove_md_callback( md_callback );
     _ccb( this_object() );
-    destruct( this_object() );
+    werror("Closed from client side\n");
+//     destruct( this_object() );
   }
   
   static void create( Stdio.File _fd, string buffer, 
@@ -494,7 +510,7 @@ class Connection
     stream = _stream;
     _ccb = _closed;
     current_block = buffer;
-    fd->set_nonblocking( lambda(){}, send_more, closed );
+    fd->set_nonblocking( 0, send_more, closed );
     if( stream ) 
       stream->add_callback( callback );
     if( stream->playlist )
