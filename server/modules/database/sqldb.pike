@@ -11,7 +11,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: sqldb.pike,v 1.11 2000/11/24 16:50:36 per Exp $";
+constant cvs_version = "$Id: sqldb.pike,v 1.12 2000/11/26 15:58:57 nilsson Exp $";
 constant module_type = MODULE_ZERO;
 LocaleString module_name_locale = LOCALE(1,"SQL databases");
 LocaleString module_doc_locale  = 
@@ -89,7 +89,7 @@ string status()
       }
       else
 	res += sprintf("<tr><td><font color='&usr.warncolor;'>"+
-		       LOCALE(7,"Connection failed")+"</font>: "
+		       LOCALE(7,"Connection failed")+"</font>: "+
 		       LOCALE(8,"Unknown reason")+"</td>"
 		       "<td><tt>%s</tt></td><td>&nbsp;</td></tr>\n",
 		       Roxen.html_encode_string (s));
