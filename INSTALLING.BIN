@@ -9,10 +9,6 @@
                If you have GNU tar; "tar xzf Roxen-archive-name"
                If you don't have GNU tar: 
                "gunzip < Roxen-archive-name| tar xf -" 
-          .tar.Z
-               If you have GNU tar; "tar xzf Roxen-archive-name"
-               If you don't have GNU tar: 
-               "uncompress < Roxen-archive-name| tar xf -"
           .tar
                "tar xf Roxen-archive-name"
 
