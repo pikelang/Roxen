@@ -18,7 +18,7 @@
 #define _rettext defines[" _rettext"]
 #define _ok     defines[" _ok"]
 
-constant cvs_version="$Id: htmlparse.pike,v 1.158 1999/01/29 23:56:41 noring Exp $";
+constant cvs_version="$Id: htmlparse.pike,v 1.159 1999/02/15 23:26:12 per Exp $";
 constant thread_safe=1;
 
 function call_user_tag, call_user_container;
@@ -152,15 +152,15 @@ inline void open_names_file()
 {
   if(objectp(names_file)) return;
   remove_call_out(names_file_callout_id);
-#ifndef THREADS
-  object privs = Privs("Opening Access-log names file");
-#endif
+// #ifndef THREADS
+//   object privs = Privs("Opening Access-log names file");
+// #endif
   names_file=open(QUERY(Accesslog)+".names", "wrca");
-#if efun(chmod)
-  mixed x;
-  if(x = catch { chmod( QUERY(Accesslog)+".names", 0666 ); })
-    report_warning(master()->describe_backtrace(x)+"\n");
-#endif
+// #if efun(chmod)
+//   mixed x;
+//   if(x = catch { chmod( QUERY(Accesslog)+".names", 0666 ); })
+//     report_warning(master()->describe_backtrace(x)+"\n");
+// #endif
   names_file_callout_id = call_out(destruct, 1, names_file);
 }
 
@@ -189,19 +189,19 @@ inline mixed open_db_file()
   if(!database)
   {
     if(db_file_callout_id) remove_call_out(db_file_callout_id);
-#ifndef THREADS
-    object privs = Privs("Opening Access-log database file");
-#endif
+// #ifndef THREADS
+//     object privs = Privs("Opening Access-log database file");
+// #endif
     database=open(QUERY(Accesslog)+".db", "wrc");
     if (!database) {
       throw(({ sprintf("Failed to open \"%s.db\". Out of fd's?\n",
 		       QUERY(Accesslog)), backtrace() }));
     }
-#if efun(chmod)
-    mixed x;
-    if(x = catch { chmod( QUERY(Accesslog)+".db", 0666 ); })
-      report_warning(master()->describe_backtrace(x)+"\n");
-#endif
+// #if efun(chmod)
+//     mixed x;
+//     if(x = catch { chmod( QUERY(Accesslog)+".db", 0666 ); })
+//       report_warning(master()->describe_backtrace(x)+"\n");
+// #endif
     if (QUERY(close_db)) {
       db_file_callout_id = call_out(close_db_file, 9, database);
     }
@@ -227,18 +227,18 @@ void start(int q, object c)
   if(olf != QUERY(Accesslog))
   {
     olf = QUERY(Accesslog);
-#ifndef THREADS
-    object privs = Privs("Opening Access-log names file");
-#endif
+// #ifndef THREADS
+//     object privs = Privs("Opening Access-log names file");
+// #endif
     mkdirhier(query("Accesslog"));
     if(names_file=open(olf+".names", "wrca"))
     {
       cnum=0;
-#if efun(chmod)
-      mixed x;
-      if(x = catch { chmod( QUERY(Accesslog)+".names", 0666 ); })
-	report_warning(master()->describe_backtrace(x)+"\n");
-#endif
+// #if efun(chmod)
+//       mixed x;
+//       if(x = catch { chmod( QUERY(Accesslog)+".names", 0666 ); })
+// 	report_warning(master()->describe_backtrace(x)+"\n");
+// #endif
       tmp=parse_accessed_database(names_file->read(0x7ffffff));
       fton=tmp[0];
       cnum=tmp[1];
@@ -1452,6 +1452,7 @@ string tag_allow(string a, mapping (string:string) m,
     b=(int)sprintf("%02d%02d%02d", c->year, c->mon + 1, c->mday);
     a=(int)m->date;
     if(a > 999999) a -= 19000000;
+    else if(a < 901201) a += 10000000;
     if(m->inclusive || !(m->before || m->after) && a==b)
       tok=1;
 
