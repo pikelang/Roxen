@@ -3,7 +3,7 @@
 constant base = #"
 <use file='/standard/template'/>
 <tmpl>
-<topmenu base='../' selected=sites/>
+<topmenu base='../' selected='sites'/>
 <content><cv-split><subtablist><st-page>
  <input type='hidden' name='name' value='&form.name;'>
  <input type='hidden' name='site_template' value='&form.site_template;'>
@@ -54,7 +54,8 @@ string|mapping parse( RequestID id )
 
     if( lower_case(q-" ") == "<done/>" )
       return Roxen.http_redirect(Roxen.fix_relative("site.html/"+
-               Roxen.http_encode_string(id->variables->name)+"/", id), id);
+                                                    id->variables->name+"/", 
+                                                    id), id);
 
     return sprintf(base,q);
   }
