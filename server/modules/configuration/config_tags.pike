@@ -421,7 +421,7 @@ string set_variable( string v, object in, mixed to, object id )
        val = 0;
      break;
    default:
-     werror("Unknown variable type\n");
+     werror("Unknown variable type ["+var[ VAR_TYPE ]+"]\n");
      return "";
   }
   if( equal( var[ VAR_VALUE ], val ) )
@@ -478,18 +478,7 @@ string get_var_form( string s, object mod, object id )
     pre = set_variable( s, mod, id->variables[ path ], id );
 
   array var = mod->variables[ s ];
-  if( mixed cf = var[VAR_CONFIGURABLE] )
-  {
-    if(functionp(cf) && cf( id ))
-      return 0;
-    else if( intp( cf ) )
-    {
-      if((cf & VAR_EXPERT) && !id->misc->expert_mode)
-        return 0;
-      if((cf & VAR_MORE) && !id->misc->more_mode)
-        return 0;
-    }
-  } else
+  if( !var_configurable( var,id ) )
     return 0;
 
   switch(var[VAR_TYPE])
@@ -661,9 +650,8 @@ mapping get_variable_map( string s, object mod, object id )
   ]);
 }
 
-mapping get_variable_section( string s, object mod, object id )
+int var_configurable( array var, object id )
 {
-  array var = mod->variables[ s ];
   if( mixed cf = var[VAR_CONFIGURABLE] )
   {
     if(functionp(cf) && cf( id ))
@@ -678,7 +666,17 @@ mapping get_variable_section( string s, object mod, object id )
          !id->misc->config_settings->query("devel_mode"))
         return 0;
     }
-  } else
+    return 1;
+  } 
+  return 0;
+}
+
+mapping get_variable_section( string s, object mod, object id )
+{
+  if( s[0] == '_' )
+    return 0;
+  array var = mod->variables[ s ];
+  if( !var_configurable( var,id ) )
     return 0;
 
   s = LOW_LOCALE->module_doc_string( mod, s, 0 );
@@ -693,7 +691,9 @@ array get_variable_maps( object mod, mapping m, object id )
   array variables = map( indices(mod->variables),get_variable_map,mod,id);
   variables = Array.filter( variables, 
                             lambda( mapping q ) {
-                              return q->form;
+                              return q->form && 
+                                     strlen(q->sname) &&
+                                     (q->sname[0] != '_');
                             } );
   if( m->section )
   {
@@ -828,7 +828,6 @@ string container_configif_output(string t, mapping m, string c, object id)
      object mod = conf->find_module( replace( m->module, "!", "#" ) );
      if( !mod )
        error("Unknown module "+ m->module +"\n");
-     werror("sections in "+m->module+" in "+conf->name+"\n");
      variables = get_variable_sections( mod, m, id );
      break;
 

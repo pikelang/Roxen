@@ -13,9 +13,9 @@ string module_global_page( RequestID id, Configuration conf )
 
 string module_page( RequestID id, string conf, string module )
 {
-  if( id->variables->section )
-  {
-    werror("hmm\n");
+//   if( id->variables->section )
+//   {
+//     werror("hmm\n");
 return #"<formoutput quote=\"¤\">
 <input type=hidden name=section value=\"¤section¤\">
 <table>
@@ -28,9 +28,9 @@ return #"<formoutput quote=\"¤\">
   <input type=submit value=\" Apply \" name=action>
 </formoutput>";
     
-  } else {
+//   } else {
     
-  }
+//   }
 }
 
 

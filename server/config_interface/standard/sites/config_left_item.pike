@@ -40,11 +40,6 @@ string selected_item( string q, roxen.Configuration c, RequestID id )
       {
        case "settings":
          pre += #"
-  <item href=\""+url+#"?section=section\" title=\"Misc\"
-    <if not variable=section> selected </if>
-    <if variable=\"section is section\"> selected </if>
-  ></item>
-
   <configif-output source=config-variables-sections configuration=\""+
 cfg+#"\"><item href=\""+url+#"?section=#section#\"
          title=\"#section:quote=dtag#\"
@@ -55,17 +50,21 @@ cfg+#"\"><item href=\""+url+#"?section=#section#\"
        case "modules":
          string qurl = url, sel_module="";
          array variables = ({});
-         foreach( values(roxen->find_configuration(cfg)->otomod), string q )
+         object c = roxen->find_configuration(cfg);
+         foreach( indices(c->modules), string q )
          {
-           object mi = roxen->find_module((q/"#")[0]);
-           variables += 
-           ({
-             ([
-               "sname":replace(q, "#", "!"),
-               "name":mi->get_name()+((int)reverse(q)?" # "+ (q/"#")[1]:""),
-               "doc":mi->get_description(),
-             ]),
-           });
+           object mi = roxen->find_module( q );
+           foreach( sort(indices(c->modules[q]->copies)), int i )
+           {
+             variables += 
+             ({
+               ([
+                 "sname":q+"!"+i,
+                 "name":mi->get_name()+(i?" # "+i:""),
+                 "doc":mi->get_description(),
+               ]),
+             });
+           }
          }
          sort( variables->name, variables );
          if( sscanf( id->misc->path_info, 
