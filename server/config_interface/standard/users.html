@@ -23,16 +23,18 @@ string parse( RequestID id )
 
 <page name=top>
 
-  <button gbutton_title=" <cf-locale get=create_user> " 
+
+  <table border=0 cellpadding=5 cellspacing=0><tr><td>
+  <button gbutton_title=" <cf-locale get=create_user> "
           gbutton-icon_src=/internal-roxen-next  gbutton-preparse
           gbutton-width=200
           gbutton-align_icon=right page=create_user>
-<br>
-  <button gbutton_title=" <cf-locale get=delete_user> " 
+  <br>
+  <button gbutton_title=" <cf-locale get=delete_user> "
           gbutton-width=200
           gbutton-icon_src=/internal-roxen-next gbutton-preparse
           gbutton-align_icon=right page=delete_user>
-<br>
+  </td></tr></table>
 
 <!-- */ -->
 <pike>

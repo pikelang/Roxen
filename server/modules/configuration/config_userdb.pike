@@ -249,17 +249,16 @@ class User
       }
       m_delete( id->variables, rp );
     }
-    string set_src =  parse_rxml( "<gbutton-url> Set </gbutton-url>", id );
+    string set_src =  parse_rxml( "<gbutton-url width=180 bgcolor=ddeedd> Set </gbutton-url>", id );
     string form = error+
 #"
 <table>
-<tr>
-<tr><td><pre>
+<tr valign=top><td><pre>
    Real name:   <input name=PPPreal_name value='"+real_name+#"'>
     Password:   <input type=password name=PPPpassword value=''>
        Again:   <input type=password name=PPPpassword2 value=''>
-     Crypted:   <input name=PPPc_password value='"+password+"'> "
-           "<input type=image border=0 alt=' Set ' value=' Set ' src='"+set_src+"'></pre></td><td>\n\n";
+     Crypted:   <input name=PPPc_password value='"+password+"'>  </pre></td>"
+      "<td><img src=\"/internal-roxen-unit\" height=5><br>\n\n";
 
     foreach( possible_permissions, string perm )
     {
@@ -286,7 +285,9 @@ class User
                          " src='%s'>\n", perm, s );
       }
     }
-    return replace(form,"PPP",varpath)+"</tr></tr></table>";
+    return replace(form,"PPP",varpath)+
+      "<br><input type=image border=0 alt=' Set ' value=' Set ' src='"+set_src+"'>"
+      "</td></tr></table>";
   }
 
   void restore()
