@@ -1,5 +1,5 @@
 #! /usr/bin/env pike
-// $Id: tetris.pike,v 1.10 2003/01/22 00:19:34 mani Exp $ Be careful here!!
+// $Id: tetris.pike,v 1.11 2003/01/22 00:23:33 mani Exp $ -- Be careful here!!
 #if constant(core)
 constant A=core.store;void B(string VAR){catch{Q=core.retrieve(VAR,0)->idi;};}
 #else
