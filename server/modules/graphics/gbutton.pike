@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.37 2000/03/02 04:18:37 nilsson Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.38 2000/03/14 05:52:28 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -85,18 +85,6 @@ constant tagdoc=(["gbutton":"","gbutton-url":""]);
 void start()
 {
   button_cache = roxen.ImageCache("gbutton", draw_button);
-}
-
-
-mapping query_tag_callers()
-{
-  return ([ ]);
-}
-
-
-mapping query_container_callers()
-{
-  return ([ "gbutton" : tag_button, "gbutton-url" : tag_button ]);
 }
 
 Image.Layer layer_slice( Image.Layer l, int from, int to )
@@ -484,73 +472,104 @@ mapping find_internal(string f, RequestID id)
 }
 
 
-string tag_button(string tag, mapping args, string contents, RequestID id)
-{
-  string fi = (args["frame-image"]||id->misc->defines["gbutton-frame-image"]);
-  if( fi )
-    fi = fix_relative( fi, id );
-  mapping new_args = ([
-    "pagebg" :parse_color(args->pagebgcolor ||
-                          id->misc->defines->theme_bgcolor ||
-                          id->misc->defines->bgcolor ||
-                          args->bgcolor ||
-                          "#eeeeee"), // _page_ background color
-    "bg"  : parse_color(args->bgcolor ||
-                        id->misc->defines->theme_bgcolor ||
-			id->misc->defines->bgcolor ||
-                        "#eeeeee"),     //  Background color
-    "txt" : parse_color(args->textcolor || id->misc->defines->theme_bgcolor ||
-			id->misc->defines->fgcolor || "#000000"),   //  Text color
-    "cnd" : args->condensed ||                           //  Condensed text
-            (lower_case(args->textstyle || "") == "condensed"),
-    "wi"  : (int) args->width,                           //  Min button width
-    "al"  : args->align || "left",                       //  Text alignment
-    "dim" : args->dim ||                                 //  Button dimming
-            (< "dim", "disabled" >)[lower_case(args->state || "")],
-    "icn" : args->icon_src && fix_relative(args->icon_src, id),  // Icon URL
-    "icd" : args->icon_data,                             //  Inline icon data
-    "ica" : args->align_icon || "left",                  //  Icon alignment
-    "font": (args->font||id->misc->defines->font||
-             roxen->query("default_font")),
-    "border_image":fi,
-    "extra_layers":args["extra-layers"],
-    "extra_left_layers":args["extra-left-layers"],
-    "extra_right_layers":args["extra-right-layers"],
-    "extra_background_layers":args["extra-background-layers"],
-    "extra_mask_layers":args["extra-mask-layers"],
-    "extra_frame_layers":args["extra-frame-layers"],
-  ]);
+class ButtonFrame {
+  inherit RXML.Frame;
 
-  new_args->quant = args->quant || 128;
-  foreach(glob("*-*", indices(args)), string n)
-    new_args[n] = args[n];
+  array mk_url(RequestID id) {
+    string fi = (args["frame-image"]||id->misc->defines["gbutton-frame-image"]);
+    if( fi )
+      fi = fix_relative( fi, id );
+    mapping new_args = ([
+      "pagebg" :parse_color(args->pagebgcolor ||
+			    id->misc->defines->theme_bgcolor ||
+			    id->misc->defines->bgcolor ||
+			    args->bgcolor ||
+			    "#eeeeee"), // _page_ background color
+      "bg"  : parse_color(args->bgcolor ||
+			  id->misc->defines->theme_bgcolor ||
+			  id->misc->defines->bgcolor ||
+			  "#eeeeee"),     //  Background color
+      "txt" : parse_color(args->textcolor || id->misc->defines->theme_bgcolor ||
+			  id->misc->defines->fgcolor || "#000000"),   //  Text color
+      "cnd" : (args->condensed ||                           //  Condensed text
+	       (lower_case(args->textstyle || "") == "condensed")),
+      "wi"  : (int) args->width,                           //  Min button width
+      "al"  : args->align || "left",                       //  Text alignment
+      "dim" : (args->dim ||                                 //  Button dimming
+	       (< "dim", "disabled" >)[lower_case(args->state || "")]),
+      "icn" : args->icon_src && fix_relative(args->icon_src, id),  // Icon URL
+      "icd" : args->icon_data,                             //  Inline icon data
+      "ica" : args->align_icon || "left",                  //  Icon alignment
+      "font": (args->font||id->misc->defines->font||
+	       roxen->query("default_font")),
+      "border_image":fi,
+      "extra_layers":args["extra-layers"],
+      "extra_left_layers":args["extra-left-layers"],
+      "extra_right_layers":args["extra-right-layers"],
+      "extra_background_layers":args["extra-background-layers"],
+      "extra_mask_layers":args["extra-mask-layers"],
+      "extra_frame_layers":args["extra-frame-layers"],
+    ]);
 
-  string img_src =
-    query_internal_location() +
-    button_cache->store( ({ new_args, contents }), id);
+    new_args->quant = args->quant || 128;
+    foreach(glob("*-*", indices(args)), string n)
+      new_args[n] = args[n];
 
-  if( tag == "gbutton-url" )
-    return img_src;
+    string img_src =
+      query_internal_location() +
+      button_cache->store( ({ new_args, content }), id);
 
-  mapping img_attrs = ([ "src"    : img_src,
-			 "alt"    : args->alt || contents,
-			 "border" : args->border,
-			 "hspace" : args->hspace,
-			 "vspace" : args->vspace ]);
-
-  if (mapping size = button_cache->metadata(new_args, id, 1)) {
-    //  Image in cache (1 above prevents generation on-the-fly, i.e.
-    //  first image will lack sizes).
-    img_attrs->width = size->xsize;
-    img_attrs->height = size->ysize;
+    return ({ img_src, new_args });
   }
+}
 
-  //  Make button clickable if not dimmed
-  if (args->href && !new_args->dim) {
-    mapping a_attrs = ([ "href" : args->href ]);
-    if (args->target)
-      a_attrs->target = args->target;
-    return make_container("a", a_attrs, make_tag("img", img_attrs));
-  } else
-    return make_tag("img", img_attrs);
+class TagGButtonURL {
+  inherit RXML.Tag;
+  constant name = "gbutton-url";
+  RXML.Type content_type = RXML.t_text(RXML.PXml);
+
+  class Frame {
+    inherit ButtonFrame;
+    array do_return(RequestID id) {
+      result=mk_url(id)[0];
+      return 0;
+    }
+  }
+}
+
+class TagGButtom {
+  inherit RXML.Tag;
+  constant name = "gbutton";
+  RXML.Type content_type = RXML.t_text(RXML.PXml);
+
+  class Frame {
+    inherit ButtonFrame;
+    array do_return(RequestID id) {
+      [string img_src, mapping new_args]=mk_url(id);
+
+      mapping img_attrs = ([ "src"    : img_src,
+			     "alt"    : args->alt || content,
+			     "border" : args->border,
+			     "hspace" : args->hspace,
+			     "vspace" : args->vspace ]);
+
+      if (mapping size = button_cache->metadata(new_args, id, 1)) {
+	//  Image in cache (1 above prevents generation on-the-fly, i.e.
+	//  first image will lack sizes).
+	img_attrs->width = size->xsize;
+	img_attrs->height = size->ysize;
+      }
+
+      //  Make button clickable if not dimmed
+      if (args->href && !new_args->dim) {
+	mapping a_attrs = ([ "href" : args->href ]);
+	if (args->target)
+	  a_attrs->target = args->target;
+	result=make_container("a", a_attrs, make_tag("img", img_attrs));
+      } else
+	result=make_tag("img", img_attrs);
+
+      return 0;
+    }
+  }
 }
