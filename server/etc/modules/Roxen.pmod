@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.186 2004/08/06 12:46:42 noring Exp $
+// $Id: Roxen.pmod,v 1.187 2004/10/11 17:37:21 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -532,45 +532,161 @@ string http_encode_string(string f)
 //! Encode dangerous characters in a string so that it can be used as
 //! a URL. Specifically, nul, space, tab, newline, linefeed, %, ' and
 //! " are quoted.
+//!
+//! @note
+//! This function is STRONGLY deprecated since using it almost
+//! invariably leads to incorrect encoding: It doesn't encode URI
+//! special chars like "/", ":", "?" etc, presumably with the
+//! intention to be used on an entire URI string. Still, since it
+//! encodes "%", that URI string can't contain any prior encoded chars
+//! from the URI component strings. Thus, the result is that "%"
+//! easily gets incorrectly double-encoded with this function.
+//!
+//! Either use @[http_encode_url] to encode the URI component strings
+//! before they are pasted together to the complete URI, or use
+//! @[http_encode_invalids] on the complete URI to only encode any
+//! chars that can't occur raw in the HTTP protocol.
 {
   return replace(f, ({ "\000", " ", "\t", "\n", "\r", "%", "'", "\"" }),
 		 ({"%00", "%20", "%09", "%0a", "%0d", "%25", "%27", "%22"}));
+}
+
+string http_encode_invalids (string f)
+//! Encode dangerous chars to be included in an HTTP message or header
+//! field. This includes control chars, space and the quote chars '
+//! and ". Note that chars allowed in a quoted string (RFC 2616
+//! section 2.2) are not encoded. This function may be used on a
+//! complete URI since it doesn't encode any URI special chars,
+//! including the escape char %.
+//!
+//! @seealso
+//! @[http_encode_url], @[correctly_http_encode_url]
+{
+  return replace (
+    f, ({
+      // Control chars (RFC 2396 2.4.3).
+      "\000", "\001", "\002", "\003", "\004", "\005", "\006", "\007",
+      "\010", "\011", "\012", "\013", "\014", "\015", "\016", "\017",
+      "\020", "\021", "\022", "\023", "\024", "\025", "\026", "\027",
+      "\030", "\031", "\032", "\033", "\034", "\035", "\036", "\037",
+      "\377",
+      // Space (RFC 2396 2.4.3).
+      " ",
+      // Escaped by legacy (presumably since they're used to delimit
+      // attributes in xml). The double quote is invalid in URI's (RFC
+      // 2396 2.4.3) and in http messages and headers (RFC 2616 2.2).
+      // The single quote is valid but may be escaped without changing
+      // its meaning in URI's (RFC 2396 2.3).
+      "\"", "'",
+    }),
+    ({
+      "%00", "%01", "%02", "%03", "%04", "%05", "%06", "%07",
+      "%08", "%09", "%0a", "%0b", "%0c", "%0d", "%0e", "%0f",
+      "%10", "%11", "%12", "%13", "%14", "%15", "%16", "%17",
+      "%18", "%19", "%1a", "%1b", "%1c", "%1d", "%1e", "%1f",
+      "%ff",
+      "%20",
+      "%22", "%27"
+    }));
 }
 
 string http_encode_cookie(string f)
 //! Encode dangerous characters in a string so that it can be used as
 //! the value string or name string in a cookie.
 {
-  return replace(f, ({ "=", ",", ";", "%" }), ({ "%3d", "%2c", "%3b", "%25"}));
+  return replace(
+    f, ({
+      "\000", "\001", "\002", "\003", "\004", "\005", "\006", "\007",
+      "\010", "\011", "\012", "\013", "\014", "\015", "\016", "\017",
+      "\020", "\021", "\022", "\023", "\024", "\025", "\026", "\027",
+      "\030", "\031", "\032", "\033", "\034", "\035", "\036", "\037",
+      "\377",
+      "=", ",", ";", "%"
+    }), ({
+      "%00", "%01", "%02", "%03", "%04", "%05", "%06", "%07",
+      "%08", "%09", "%0a", "%0b", "%0c", "%0d", "%0e", "%0f",
+      "%10", "%11", "%12", "%13", "%14", "%15", "%16", "%17",
+      "%18", "%19", "%1a", "%1b", "%1c", "%1d", "%1e", "%1f",
+      "%ff",
+      "%3d", "%2c", "%3b", "%25"
+    }));
 }
 
 string http_encode_url (string f)
-//! Encodes any string to be used as a literal in a URL. This means
-//! that in addition to the characters encoded by
-//! @[http_encode_string], it encodes all URL special characters, i.e.
-//! /, #, ?, & etc.
+//! Encode any string to be used as a component part in a URI. This
+//! means that all URI reserved and excluded characters are escaped,
+//! e.g. /, #, ?, &, \n, etc (see RFC 2396).
+//!
+//! Note that eight bit chars and wider are left unescaped, even
+//! though they aren't allowed in a URI according to RFC 2396. This is
+//! normally not a problem provided the URI is included in a page
+//! whose charset include those characters.
+//! @[correctly_http_encode_url] encodes such chars too.
 {
-  return replace (f, ({"\000", " ", "\t", "\n", "\r", "%", "'", "\"", "#",
-		       "&", "?", "=", "/", ":", "+"}),
-		  ({"%00", "%20", "%09", "%0a", "%0d", "%25", "%27", "%22", "%23",
-		    "%26", "%3f", "%3d", "%2f", "%3a", "%2b"}));
-
+  return replace (
+    f, ({
+      // Reserved URI chars according to RFC 2396 section 2.2.
+      ";", "/", "?", ":", "@", "&", "=", "+", "$", ",",
+      // Control chars (RFC 2396 2.4.3).
+      "\000", "\001", "\002", "\003", "\004", "\005", "\006", "\007",
+      "\010", "\011", "\012", "\013", "\014", "\015", "\016", "\017",
+      "\020", "\021", "\022", "\023", "\024", "\025", "\026", "\027",
+      "\030", "\031", "\032", "\033", "\034", "\035", "\036", "\037",
+      "\377",
+      // Space (RFC 2396 2.4.3).
+      " ",
+      // Delimiters (RFC 2396 2.4.3).
+      "<", ">", "#", "%", "\"",
+      // Unwise chars (RFC 2396 2.4.3).
+      "{", "}", "|", "\\", "^", "[", "]", "`",
+      // Encoded by http_encode_url legacy (imho this is also an
+      // unwise char since it's used to delimit attributes in xml).
+      // Encoding it does not change its meaning in a URI (RFC 2396
+      // 2.3).
+      "'",
+    }),
+    ({
+      "%3b", "%2f", "%3f", "%3a", "%40", "%26", "%3d", "%2b", "%24", "%2c",
+      "%00", "%01", "%02", "%03", "%04", "%05", "%06", "%07",
+      "%08", "%09", "%0a", "%0b", "%0c", "%0d", "%0e", "%0f",
+      "%10", "%11", "%12", "%13", "%14", "%15", "%16", "%17",
+      "%18", "%19", "%1a", "%1b", "%1c", "%1d", "%1e", "%1f",
+      "%ff",
+      "%20",
+      "%3c", "%3e", "%23", "%25", "%22",
+      "%7b", "%7d", "%7c", "%5c", "%5e", "%5b", "%5d", "%60",
+      "%27"
+    }));
 }
 
-//! Encodes any string to be used as a literal in a URL. This function
-//! quotes all reserved and forbidden characters, including eight bit
-//! characters. If the string is a wide string a UTF-8 conversion is
-//! made.
+//! Encodes any string to be used as a literal in a URL. In addition
+//! to @[http_encode_url], this function encodes eight bit characters.
+//! If the string is wide then it's UTF-8 encoded first.
+//!
+//! @note
+//! Avoid this function, at least if the input string might be wide.
+//! Despite its name it's not very correct since the UTF-8 conversion
+//! isn't applied consistently - there is no one-to-one mapping
+//! between unencoded and encoded strings.
 string correctly_http_encode_url(string f) {
   if(String.width(f)>8)
     f = string_to_utf8(f);
+  // This ain't fast. Nosiree.. :P
   return map(f/1, lambda(string in) {
     int c = in[0];
     // if(c>255) return sprintf("%%u%04x", c);
     if( c<33 || c>126 ||
-	(< '"', '#', '%', '&', '\'', '+',
-	   '<', '>', '?', '/', ':', ';',
-	   '@', ',', '$', '=' >)[c] )
+	(<
+	  // Reserved URI chars according to RFC 2396 section 2.2.
+	  ';', '/', '?', ':', '@', '&', '=', '+', '$', ',',
+	  // Delimiters (RFC 2396 2.4.3).
+	  '<', '>', '#', '%', '"',
+	  // Unwise chars (RFC 2396 2.4.3).
+	  '{', '}', '|', '\\', '^', '[', ']', '`',
+	  // Encoded by legacy (imho this is also an unwise char since
+	  // it's used to delimit attributes in xml).
+	  '\'',
+	>)[c] )
       return sprintf("%%%02x", c);
     return in;
   } ) * "";
@@ -637,7 +753,7 @@ mapping http_redirect( string url, RequestID|void id, multiset|void prestates,
     url += "?magic_roxen_automatic_charset_variable="+
       magic_charset_variable_value;
 
-  url = http_encode_string (url);
+  url = http_encode_invalids (url);
   if (variables) {
     string concat_char = has_value (url, "?") ? "&" : "?";
     foreach (indices (variables), string var) {
