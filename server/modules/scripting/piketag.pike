@@ -7,7 +7,7 @@
 //  return "Hello world!\n";
 // </pike>
  
-constant cvs_version = "$Id: piketag.pike,v 2.10 2000/08/09 05:15:43 per Exp $";
+constant cvs_version = "$Id: piketag.pike,v 2.11 2000/08/09 07:25:05 per Exp $";
 constant thread_safe=1;
 
 inherit "module";
@@ -29,6 +29,7 @@ contents of the buffer as a string.  A flush() is done automatically
 if the script does not return any data, thus, another way to write the
 hello world script is <tt>&lt;pike&gt;output(\"Hello %s\n\",
 \"World\");&lt/pike&gt</tt><p> The request id is available as id.";
+
 
 void create()
 {
@@ -68,16 +69,10 @@ string reporterr (string header, string dump)
 // Helper functions, to be used in the pike script.
 class Helpers
 {
-  inherit "roxenlib";
   string data = "";
   void output(mixed ... args) 
   {
-    if(!sizeof(args)) 
-      return;
-    if(sizeof(args) > 1) 
-      data += sprintf(@args);
-    else 
-      data += args[0];
+    write( @args );
   }
 
   void write(mixed ... args) 
@@ -97,11 +92,25 @@ class Helpers
     return r;
   }
 
-  string rxml( string what, object id )
+  string rxml( string what )
   {
-    return parse_rxml( what, id );
+    return Roxen.parse_rxml( what, RXML.get_context()->id );
   }
+  constant seteuid=0;
+  constant setegid=0;
+  constant setuid=0;
+  constant setgid=0;
+  constant call_out=0;
+  constant all_constants=0;
+  constant Privs=0;
+}
 
+class HProtos
+{
+  void output(mixed ... args);
+  void write(mixed ... args);
+  string flush();
+  string rxml( string what, object id );
 
   constant seteuid=0;
   constant setegid=0;
@@ -112,30 +121,16 @@ class Helpers
   constant Privs=0;
 }
 
-string functions(string page, int line)
+string helpers()
 {
   add_constant( "__ps_magic_helpers", Helpers );
-  return  "inherit __ps_magic_helpers;\n" +
-         "#"+line+" \""+replace(page,"\"","\\\"")+"\"\n";
+  add_constant( "__ps_magic_protos", HProtos );
+  return "inherit __ps_magic_helpers;\nimport Roxen;\n";
 }
 
-// Preamble
-string pre(array fl, object id)
+string helper_prototypes( )
 {
-  foreach( fl, object token )
-    if( token == "parse" )
-      return functions(id->not_query, id->misc->line);
-  return functions(id->not_query, id->misc->line) +
-         "string|int parse(RequestID id) { ";
-}
-
-// Will be added at the end...
-string post(array fl) 
-{
-  foreach( fl, object token )
-    if( token == "parse" )
-      return "";
-  return "}";
+  return "inherit __ps_magic_protos;\nimport Roxen;\n";
 }
 
 private static mapping(string:program) program_cache = ([]);
@@ -145,29 +140,20 @@ string simple_pi_tag_pike( string tag, mapping m, string s,RequestID id  )
   return simpletag_pike( tag, ([]), s, id );
 }
 
-// Compile and run the contents of the tag (in s) as a pike
-// program. 
-string simpletag_pike(string tag, mapping m, string s,RequestID request_id )
+string read_roxen_file( string what, object id )
 {
-  program p;
-  object o;
-  string res;
-  mixed err;
+  // let there be magic
+  return id->conf->open_file(Roxen.fix_relative(what,id),"rR",id,1)
+         ->read()[0]; 
+}
 
-  request_id->misc->cacheable=0;
 
-  array flat=Parser.C.hide_whitespaces(Parser.C.tokenize(Parser.C.split(s)));
-
-  object e = ErrorContainer();
-  master()->set_inhibit_compile_errors(e);
-  if(err=catch 
-  {
-    object cip, cipup;
-
+#define PS(X) (compile_string( "mixed foo(){ return "+(X)+";}")()->foo())
+#define SPLIT(X) Parser.C.hide_whitespaces(Parser.C.tokenize(Parser.C.split(X)))
 #define OCIP( )                                                 \
       if( cip )                                                 \
       {                                                         \
-        cip->text=sprintf("write(rxml(%O,id));",cip->text);     \
+        cip->text=sprintf("write(rxml(%O));",cip->text);     \
         cip = 0;                                                \
       }
 
@@ -189,61 +175,162 @@ string simpletag_pike(string tag, mapping m, string s,RequestID request_id )
           flat[i]->text = flat[i]->text[3..]+"\n";              \
         }
 
+#define R(X) Parser.C.simple_reconstitute(X)
 
-    for( int i = 0; i<sizeof( flat ); i++ )
+program my_compile_string(string s, object id, int dom, string fn)
+{
+  if( program_cache[ s ] )
+    return program_cache[ s ];
+
+  object key = Roxen.add_scope_constants();
+  [array ip, array data] = parse_magic(s,id,dom);
+
+  if( !fn )fn = "pike-tag("+id->not_query+")";
+  int cnt;
+
+  string pre;
+  if( !id->misc->__added_helpers_in_tree && !sizeof(ip))
+  {
+    id->misc->__added_helpers_in_tree=1;
+    pre = helpers();
+  } 
+  else
+    pre = helper_prototypes();
+
+  foreach( ip, program ipc )
+  {
+    add_constant( "____ih_"+cnt, ipc );
+    pre += "inherit ____ih_"+cnt++ + ";\n";
+  }
+
+  program p = compile_string(pre+R(data), fn);
+  program_cache[ s ] = p;
+
+  cnt=0;
+  foreach( ip, program ipc ) add_constant( "____ih_"+cnt++, 0 );
+  destruct( key );
+  return p;
+}
+
+program handle_inherit( string what, RequestID id )
+{
+  array err;
+  // ouch ouch ouch.
+  return my_compile_string( read_roxen_file( what, id ),id,0,0);
+}
+
+array parse_magic( string data, RequestID id, int add_md )
+{
+  array flat=SPLIT(data);
+  object cip, cipup;
+  array inherits = ({});
+  for( int i = 0; i<sizeof( flat ); i++ )
+  {
+    switch( strlen(flat[i]->text) && flat[i]->text[0] )
     {
-      if( flat[i] == "." && flat[++i] != "." ) // Parser.C in 7.0 does not
-        flat[i-1]->text = "->";   // recognize .. as a single token.
-      else if( flat[i]->text[..2] == "//#" )
-      {
-        OCIPUP();
-        CIP( cip );
-      }
-      else if( flat[i]->text[..2] == "//@" )
-      {
-        OCIP();
-        CIP( cipup );
-      }
-      else
-      {
-        OCIP();
-        OCIPUP();
-      }
+     case 'i':
+       OCIP(); OCIPUP();
+       if( flat[i] == "inherit" )
+       {
+         flat[i]->text="";
+         int start = ++i;
+         while( flat[++i] != ";" ) ;
+         inherits += ({ handle_inherit( PS(R(flat[start..i])), id ) });
+         flat = flat[..start-1] + flat[i+1..];
+         i = start;
+       }
+       break;
+
+     case 'p':
+       OCIP(); OCIPUP();
+       if( flat[i] == "parse" && flat[i+1] == "(")
+         add_md = 0;
+       break;
+
+     case '.':
+       OCIP(); OCIPUP();
+       if( flat[i] == "." && flat[++i] != "." ) // Parser.C in 7.0 does not
+         flat[i-1]->text = "->";   // recognize .. as a single token.
+       break;
+
+     case '/':
+        if( flat[i]->text[..2] == "//#" )
+        {
+          OCIPUP();
+          CIP( cip );
+        }
+        else if( flat[i]->text[..2] == "//@" )
+        {
+          OCIP();
+          CIP( cipup );
+        } 
+        else 
+        {
+          OCIPUP();
+          OCIP();
+        }
+        break;
+
+     case '#':  
+       OCIP(); OCIPUP();
+       if( sscanf( flat[i]->text, "#include%s", string fn) )
+       {
+         sscanf( fn, "%*s<%s>", fn );
+         sscanf( fn, "%*s\"%s\"", fn );
+         [array ih,flat[i]] = parse_magic(read_roxen_file(fn,id), id, 0);
+         inherits += ih;
+       }
+       break;
+       
+     default:
+       OCIP();
+       OCIPUP();
     }
-    OCIP();
-    OCIPUP();
+  }
+  OCIP();
+  OCIPUP();
+  if( add_md )
+  {
+    flat =SPLIT( "string|int parse(RequestID id)\n{\n"  )
+         + flat
+         + SPLIT( "}\n" );
+  }
+  return ({ inherits, flat });
+}
 
-    s = pre(flat,request_id)+"\n"+
-      Parser.C.simple_reconstitute( flat )+
-      post(flat);
-    p = program_cache[s];
+// Compile and run the contents of the tag (in s) as a pike
+// program. 
+string simpletag_pike(string tag, mapping m, string s,RequestID request_id )
+{
+  program p;
+  object o;
+  string res;
+  mixed err;
 
-    if (!p) 
+  request_id->misc->__added_helpers_in_tree=0;
+  request_id->misc->cacheable=0;
+
+  object e = ErrorContainer();
+  master()->set_inhibit_compile_errors(e);
+  if(err=catch 
+  {
+    p = my_compile_string( s,request_id,1,0 );
+    if (sizeof(program_cache) > query("program_cache_limit")) 
     {
-      // Not in the program cache.
-      object key = Roxen.add_scope_constants();
+      array a = indices(program_cache);
+      int i;
 
-      p = compile_string(s, "Pike-tag("+request_id->not_query+":"+
-                         request_id->misc->line+")");
-      destruct( key );
-
-      if (sizeof(program_cache) > query("program_cache_limit")) 
-      {
-	array a = indices(program_cache);
-	int i;
-
-	// Zap somewhere between 25 & 50% of the cache.
-	for(i = query("program_cache_limit")/2; i > 0; i--)
-	  m_delete(program_cache, a[random(sizeof(a))]);
-      }
-      program_cache[s] = p;
+      // Zap somewhere between 25 & 50% of the cache.
+      for(i = query("program_cache_limit")/2; i > 0; i--)
+        m_delete(program_cache, a[random(sizeof(a))]);
     }
   })
   {
     master()->set_inhibit_compile_errors(0);
-    return reporterr(sprintf("Error compiling <pike> tag in %s:\n"
-			     "%s\n\n", request_id->not_query, 
-                             s),
+    return reporterr(sprintf("Error handling <pike> tag in %s:\n%s\n"
+			     "%s\n\n",
+                             request_id->not_query, 
+                             s, describe_backtrace(err[..1])),
                      e->get());
   }
   master()->set_inhibit_compile_errors(0);
