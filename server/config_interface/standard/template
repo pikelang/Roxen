@@ -53,7 +53,7 @@
     <item perm="View Settings"
           title="<cf-locale get=globals>" href="&base;global_settings/"
           <if match="&selected; is globals"> selected</if> />
-    <item perm="Actions" title="<cf-locale get=actions>" href="&base;actions/"
+    <item perm="Tasks" title="<cf-locale get=actions>" href="&base;actions/"
           <if match="&selected; is actions"> selected</if>  />
     <item last=20 title="<cf-locale get=home>" href="&base;"
           <if match="&selected; is home"> selected</if> />
@@ -64,6 +64,9 @@
 <input align=&align; type=image name='<contents>' value='<contents>'
        src='<gbutton-url font='&usr.font;' preparse><contents></gbutton-url>' border=0>
 </define>
+
+<define tag=cf-ok><submit-gbutton> <cf-locale get=ok> </define>
+<define tag=cf-cancel><submit-gbutton> <cf-locale get=cancel> </define>
 
 <define container=tmpl>
   <title>&roxen.version; <cf-locale get=administration_interface> &title;</title>
@@ -95,7 +98,7 @@
           </tr>
          </cf-userwants>
          <tr><td align=right><font color=&usr.fgcolor;>
-         <gbutton font="&usr.font;" href='/standard/change_user.html?uid=&form.config_user_uid;'
+         <gbutton font="&usr.font;" href='/standard/change_user.pike?uid=&form.config_user_uid;'
                   align=right textcolor=&usr.fgcolor; bgcolor='&usr.fade3;' width=70>User:</gbutton>
           </td><td>
             <font color=&usr.fade4;>
