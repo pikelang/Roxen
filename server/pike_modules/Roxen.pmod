@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.142 2002/05/07 14:03:09 jonasw Exp $
+// $Id: Roxen.pmod,v 1.143 2002/06/10 14:35:42 nilsson Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -1442,26 +1442,7 @@ string short_date(int timestamp)
   return ctime(timestamp)[4..9] +" "+ ctime(timestamp)[11..15];
 }
 
-string int2roman(int m)
-  //! Converts the provided integer to a roman integer (i.e. a string).
-{
-  string res="";
-  if (m>10000000||m<0) return "que";
-  while (m>999) { res+="M"; m-=1000; }
-  if (m>899) { res+="CM"; m-=900; }
-  else if (m>499) { res+="D"; m-=500; }
-  else if (m>399) { res+="CD"; m-=400; }
-  while (m>99) { res+="C"; m-=100; }
-  if (m>89) { res+="XC"; m-=90; }
-  else if (m>49) { res+="L"; m-=50; }
-  else if (m>39) { res+="XL"; m-=40; }
-  while (m>9) { res+="X"; m-=10; }
-  if (m>8) return res+"IX";
-  else if (m>4) { res+="V"; m-=5; }
-  else if (m>3) return res+"IV";
-  while (m) { res+="I"; m--; }
-  return res;
-}
+constant int2roman = String.int2roman;
 
 string number2string(int n, mapping m, array|function names)
 {
@@ -1523,27 +1504,7 @@ string image_from_type( string t )
   return "internal-gopher-unknown";
 }
 
-#define  PREFIX ({ "bytes", "kb", "Mb", "Gb", "Tb", "Pb", "Eb", "Zb", "Yb" })
-string sizetostring( int size )
-  //! Returns the size as a memory size string with suffix,
-  //! e.g. 43210 is converted into "42.2 kb". To be correct
-  //! to the latest standards it should really read "42.2 KiB",
-  //! but we have chosen to keep the old notation for a while.
-  //! The function knows about the quantifiers kilo, mega, giga,
-  //! tera, peta, exa, zetta and yotta.
-{
-  if(size<0) return "--------";
-  float s = (float)size;
-  size=0;
-
-  if(s<1024.0) return (int)s+" bytes";
-  while( s > 1024.0 )
-  {
-    s /= 1024.0;
-    size ++;
-  }
-  return sprintf("%.1f %s", s, PREFIX[ size ]);
-}
+constant sizetostring = String.int2size;
 
 string html_decode_string(LocaleString str)
 //! Decodes `str', opposite to @[html_encode_string()].
@@ -1555,7 +1516,8 @@ string html_encode_tag_value(LocaleString str)
 //! Encodes `str' for use as a value in an html tag.
 {
   // '<' is not allowed in attribute values in XML 1.0.
-  return "\"" + replace((string)str, ({"&", "\"", "<"}), ({"&amp;", "&quot;", "&lt;"})) + "\"";
+  return "\"" + replace((string)str, ({"&", "\"", "<"}),
+			({"&amp;", "&quot;", "&lt;"})) + "\"";
 }
 
 string strftime(string fmt, int t)
