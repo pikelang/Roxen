@@ -3,7 +3,7 @@
 //
 // The Roxen RXML Parser. See also the RXML Pike modules.
 //
-// $Id: rxml.pike,v 1.309 2001/07/16 03:10:40 mast Exp $
+// $Id: rxml.pike,v 1.310 2001/08/09 18:40:22 mast Exp $
 
 
 inherit "rxmlhelp";
@@ -73,7 +73,11 @@ RXML.TagSet rxml_tag_set = class
 
     PROF_ENTER( "rxml", "overhead" );
 
-    id->misc->defines = ctx->misc; // Mostly for compatibility.
+    // Mostly for compatibility.
+    if (id->misc->defines && id->misc->defines != ctx->misc)
+      ctx->misc->old_defines = id->misc->defines;
+    id->misc->defines = ctx->misc;
+
 #if ROXEN_COMPAT <= 1.3
     if (old_rxml_compat) ctx->compatible_scope = 1;
 #endif
@@ -88,11 +92,14 @@ RXML.TagSet rxml_tag_set = class
   {
     RequestID id = ctx->id;
 
-    if(sizeof(ctx->misc[" _extra_heads"]) && !id->misc->moreheads)
-    {
-      id->misc->moreheads= ([]);
-      id->misc->moreheads |= ctx->misc[" _extra_heads"];
-    }
+    if(sizeof(ctx->misc[" _extra_heads"]))
+      if (id->misc->moreheads)
+	id->misc->moreheads |= ctx->misc[" _extra_heads"];
+      else
+	id->misc->moreheads = ctx->misc[" _extra_heads"];
+
+    if (mapping olddefs = ctx->misc->old_defines)
+      id->misc->defines = olddefs;
 
     PROF_LEAVE( "rxml", "overhead" );
   }
