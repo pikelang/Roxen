@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.28 2001/06/11 23:06:19 nilsson Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.29 2001/06/18 15:49:46 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Roxen self test module";
@@ -27,7 +27,7 @@ RequestID get_id()
 {
   object id = RequestID(index_file, port, conf);
   id->conf = conf;
-  id->misc = ([ "defines":([ " _ok":1 ]) ]);
+  id->misc = ([]);
   id->cookies=([]);
   id->config=(<>);
   id->real_variables=([]);
@@ -47,36 +47,21 @@ RequestID get_id()
   id->remoteaddr="127.0.0.1";
   NOCACHE();
 
-  id->misc->defines[" _stat"] = conf->stat_file("/index.html", id);
+  id->misc->stat = conf->stat_file("/index.html", id);
   return id;
 }
 
 string canon_html(string in) {
-  array tags=in/"<";
-  string ut=tags[0];
-  tags=tags[1..];
-
-  foreach(tags, string tag) {
-    string post="";
-    int xml;
-    if(sscanf(tag, "%s>%s", tag, post)!=2 &&
-       sscanf(tag, "%s>", tag)!=1 )
-      continue;
-
-    array args=tag/" ";
-    string name=args[0];
-    args=args[1..];
-    if(sizeof(args) && args[-1]=="/") {
-      xml=1;
-      args=args[..sizeof(args)-2];
-    }
-    sort(map(args,lower_case),args);
-    ut+="<"+name;
-    if(sizeof(args)) ut+=" "+(args*" ");
-    if(xml) ut+=" /";
-    ut+=">"+post;
-  }
-  return ut;
+  return Roxen.get_xml_parser()->_set_tag_callback (
+    lambda (Parser.HTML p, string tag) {
+      int xml = tag[-2] == '/';
+      string ut = p->tag_name();
+      mapping args = p->tag_args();
+      foreach (sort (map (indices (args), lower_case)), string arg)
+	ut += " " + arg + "='" + args[arg] + "'";
+      if(xml) ut+="/";
+      return ({"<", ut, ">"});
+    })->finish (in)->read();
 }
 
 
@@ -92,14 +77,22 @@ void xml_drop_module(string t, mapping m, string c) {
   return;
 }
 
+void xml_use_module(string t, mapping m, string c,
+		    mapping ignored, multiset(string) used_modules) {
+  conf->enable_module(c);
+  used_modules[c] = 1;
+  return;
+}
+
 int tests, ltests;
 int fails, lfails;
-void xml_test(string t, mapping args, string c) {
+void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_cache) {
 
   ltests++;
   tests++;
 
   string rxml="", res;
+  RXML.PCode p_code = p_code_cache[ltests];
 
   string indent( int l, string what )
   {
@@ -112,6 +105,7 @@ void xml_test(string t, mapping args, string c) {
   {
     if( sizeof( args ) )
       message = sprintf( message, @args );
+    message = (p_code ? "[Eval from p-code] " : "[Eval from source] ") + message;
     if( verbose )
       if( strlen( rxml ) )
 	report_debug("FAIL\n" );
@@ -133,22 +127,33 @@ void xml_test(string t, mapping args, string c) {
     rxml = test;
     if( verbose )
     {
-      report_debug( "%4d %-69s  ",
+      report_debug( "%4d %-69s %s  ",
 		    ltests, replace(test[..68],
 				    ({"\t","\n", "\r"}),
-				    ({"\\t","\\n", "\\r"}) ));
+				    ({"\\t","\\n", "\\r"}) ),
+		    p_code ? "(p-code)" : "(source)");
     }
   };
-  
+
   RequestID id = get_id();
   int no_canon;
   Parser.HTML parser =
-    Parser.HTML()->
+    Roxen.get_xml_parser()->
     add_containers( ([ "rxml" :
 		       lambda(object t, mapping m, string c) {
 			 test_test( c );
-			 mixed err =
-			   catch( res = Roxen.parse_rxml( rxml, id ));
+			 mixed err = catch {
+			   if (!p_code) {
+			     RXML.Parser parser = Roxen.get_rxml_parser (
+			       id, m->type && RXML.t_type->encode (m->type) (RXML.PXml),
+			       1);
+			     parser->write_end (rxml);
+			     res = parser->eval();
+			     p_code_cache[ltests] = parser->p_code;
+			   }
+			   else
+			     res = RXML.eval_p_code (p_code, id);
+			 };
 			 if(err)
 			 {
 			   test_error("Failed (backtrace)\n");
@@ -235,9 +240,9 @@ void xml_test(string t, mapping args, string c) {
 			       case "misc":
 				 id->misc[m->name] = m->value || "1";
 				 break;
-			       case "define":
-				 id->misc->defines[m->name] = m->value || 1;
-				 break;
+//  			       case "define":
+//  				 id->misc->defines[m->name] = m->value || 1;
+//  				 break;
 			       case "not_query":
 				 id->not_query = m->value;
 				 break;
@@ -266,18 +271,42 @@ void xml_comment(object t, mapping m, string c) {
 }
 
 void run_xml_tests(string data) {
+  mapping(int:RXML.PCode) p_code_cache = ([]);
+  multiset(string) used_modules = (<>);
 
   ltests=0;
   lfails=0;
-  Parser.HTML()->add_containers( ([ "add-module" : xml_add_module,
-				    "drop-module" : xml_drop_module,
-				    "test" : xml_test,
-				    "comment": xml_comment,
-  ]) )->add_quote_tag("!--","","--")->finish(data);
-  data = Parser.HTML()->add_quote_tag("!--","","--")->finish(data)->read();
+  Roxen.get_xml_parser()->add_containers( ([
+    "add-module" : xml_add_module,
+    "drop-module" : xml_drop_module,
+    "use-module": xml_use_module,
+    "test" : xml_test,
+    "comment": xml_comment,
+  ]) )->
+    add_quote_tag("!--","","--")->
+    set_extra (p_code_cache, used_modules)->
+    finish(data);
+
+  data = Roxen.get_xml_parser()->add_quote_tag("!--","","--")->finish(data)->read();
   if(ltests<sizeof(data/"</test>")-1)
     report_warning("Possibly XML error in testsuite.\n");
-  report_debug("Did %d tests, failed on %d.\n", ltests, lfails);
+
+  // Go through them again, evaluation from the p-code this time.
+  ltests=0;
+  Roxen.get_xml_parser()->add_containers( ([
+    "add-module" : xml_add_module,
+    "drop-module" : xml_drop_module,
+    "test" : xml_test,
+    "comment": xml_comment,
+  ]) )->
+    add_quote_tag("!--","","--")->
+    set_extra (p_code_cache, used_modules)->
+    finish(data);
+
+  foreach (indices (used_modules), string modname)
+    conf->disable_module (modname);
+
+  report_debug("Did %d tests, failed on %d.\n", ltests * 2, lfails);
   continue_find_tests();
 }
 
@@ -367,8 +396,8 @@ void do_tests()
     return;
   }
 
-  tests_to_run = Getopt.find_option(roxen.argv, "d",({"tests"}),0,"" )/",";
-  verbose = (int)Getopt.find_option(roxen.argv, "d",({"tests-verbose"}),0, 0 );
+  tests_to_run = Getopt.find_option(roxen.argv, 0,({"tests"}),0,"" )/",";
+  verbose = !!Getopt.find_option(roxen.argv, 0,({"tests-verbose"}),0, 0 );
   file_stack->push( 0 );
   file_stack->push( "etc/test/tests" );
   call_out( continue_find_tests, 0 );
