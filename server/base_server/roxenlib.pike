@@ -1,7 +1,7 @@
 #include <roxen.h>
 inherit "http";
 
-// $Id: roxenlib.pike,v 1.121 1999/10/21 17:09:59 mast Exp $
+// $Id: roxenlib.pike,v 1.122 1999/10/24 18:50:41 nilsson Exp $
 // This code has to work both in the roxen object, and in modules.
 #if !efun(roxen)
 #define roxen roxenp()
@@ -1441,8 +1441,6 @@ string|int tagtime(int t, mapping m, object id, object language)
 
   if (m->adjust) t+=(int)m->adjust;
 
-  if (m["int"]) return (string)t;
-
   if (m->part)
   {
     string sp;
@@ -1496,6 +1494,9 @@ string|int tagtime(int t, mapping m, object id, object language)
      case "sec":  // Not part of RXML 1.4
      case "second":
       return number2string(localtime(t)->sec,m,
+			   language(m->lang, sp||"number"));
+     case "seconds":
+      return number2string(t,m,
 			   language(m->lang, sp||"number"));
      case "yday":
       return number2string(localtime(t)->yday,m,
