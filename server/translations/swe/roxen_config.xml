@@ -12,9 +12,11 @@
 <file>../config_interface/standard/boxes/crunch.pike</file>
 <file>../config_interface/standard/boxes/doclinks.pike</file>
 <file>../config_interface/standard/boxes/ris_news.pike</file>
+<file>../config_interface/standard/boxes/server_status.pike</file>
 <file>../config_interface/standard/boxes/slashdot.pike</file>
 <file>../config_interface/standard/boxes/welcome.pike</file>
 <file>../config_interface/standard/cv_startpage_tabs.pike</file>
+<file>../config_interface/standard/dbs/subtabs.pike</file>
 <file>../config_interface/standard/event_log/clear_log.pike</file>
 <file>../config_interface/standard/event_log/index.html</file>
 <file>../config_interface/standard/event_log/log.pike</file>
@@ -48,8 +50,8 @@
 <file>../modules/configuration/config_userdb.pike</file>
 
 <str id="2">
-<o>Sent data:</o>
-<t>Skickad data:</t>
+<o>Sent data</o>
+<t>Skickad data</t>
 </str>
 
 <str id="3">
@@ -58,8 +60,8 @@
 </str>
 
 <str id="4">
-<o>Sent headers:</o>
-<t>Skickade headrar:</t>
+<o>Sent headers</o>
+<t>Skickade headrar</t>
 </str>
 
 <str id="6">
@@ -68,18 +70,8 @@
 </str>
 
 <str id="7">
-<o>Received data:</o>
-<t>Mottagen data:</t>
-</str>
-
-<str id="8">
-<o>FTP users (total):</o>
-<t>FTP-användare (totalt):</t>
-</str>
-
-<str id="9">
-<o>FTP users (now):</o>
-<t>FTP-användare (nu):</t>
+<o>Received data</o>
+<t>Mottagen data</t>
 </str>
 
 <str id="10">
@@ -1072,43 +1064,6 @@ servern.</t>
 så här ofta. Tiden anges i dagar.</t>
 </str>
 
-<str id="164">
-<o>Cache: Store the argument cache in a mysql database</o>
-<t>Cache: Spara argumentcachen i en databas</t>
-</str>
-
-<str id="165">
-<o>If set, store the argument cache in a mysql database. This is very useful for load balancing using multiple Roxen servers, since the mysql database will handle synchronization.</o>
-<t>Om den här variabeln är satt så sparas argumentcachen i en
-databas istället för filer. Det gör det möjligt att använda
-multipla frontends, dvs, flera separata roxenservrar som
-levererar samma site.</t>
-</str>
-
-<str id="166">
-<o>Cache: Argument Cache Database URL to use</o>
-<t>Cache: ArgumentcachedatabasURL</t>
-</str>
-
-<str id="167">
-<o>The database to use to store the argument cache.</o>
-<t>Databasen i vilken argumentcachen kommer att sparas.</t>
-</str>
-
-<str id="168">
-<o>Cache: Argument Cache Directory</o>
-<t>Cache: Argumentcachens bibliotek</t>
-</str>
-
-<str id="169">
-<o>The cache directory to use to store the argument cache. Please note that load balancing is not available for most modules  (such as gtext, diagram etc) unless you use a mysql database to store the argument cache meta data.</o>
-<t>Det bibliotek i vilket cachen kommer att sparas.
-Notera att lastbalansering inte fungerar om du inte sparar
-cachen i en databas, och även om du sparar cachen i en
-databas så kommer det fortfarande skrivas saker i det
-här biblioteket.</t>
-</str>
-
 <str id="170">
 <o>Cache: Memory Cache Garbage Collect Interval</o>
 <t>Cache: Minnescachens rensningsintervall</t>
@@ -1351,8 +1306,6 @@ ihåg vilka supportsflaggor som hör till vilken klient.</t>
 <o>Docs</o>
 <t>Manual</t>
 </str>
-
-
 
 <str id="219">
 <o>Update</o>
@@ -1635,8 +1588,8 @@ ihåg vilka supportsflaggor som hör till vilken klient.</t>
 </str>
 
 <str id="234">
-<o>Requests:</o>
-<t>Anrop:</t>
+<o>Requests</o>
+<t>Anrop</t>
 </str>
 
 <str id="235">
@@ -2180,4 +2133,44 @@ utifrån detta namn.</t>
 <str id="366">
 <o>Roxen welcome message and news</o>
 <t>Roxen välkomstmeddelande och nyheter</t>
+</str>
+
+<str id="218">
+<o>DBs</o>
+<t>DB:er</t>
+</str>
+
+<str id="367">
+<o>Server status</o>
+<t>Serverstatus</t>
+</str>
+
+<str id="368">
+<o>Various global server statistics</o>
+<t>Diverse global serverstatistik</t>
+</str>
+
+<str id="369">
+<o>Server started</o>
+<t>Servern startades</t>
+</str>
+
+<str id="370">
+<o>Server uptime</o>
+<t>Serverns uptime</t>
+</str>
+
+<str id="371">
+<o>CPU-time used</o>
+<t>Använd CPU-tid</t>
+</str>
+
+<str id="372">
+<o>MySQL status</o>
+<t>MySQL-status</t>
+</str>
+
+<str id="373">
+<o>Other DBs</o>
+<t>Andra DB:er</t>
 </str>

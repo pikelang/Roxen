@@ -12,9 +12,11 @@
 <file>../config_interface/standard/boxes/crunch.pike</file>
 <file>../config_interface/standard/boxes/doclinks.pike</file>
 <file>../config_interface/standard/boxes/ris_news.pike</file>
+<file>../config_interface/standard/boxes/server_status.pike</file>
 <file>../config_interface/standard/boxes/slashdot.pike</file>
 <file>../config_interface/standard/boxes/welcome.pike</file>
 <file>../config_interface/standard/cv_startpage_tabs.pike</file>
+<file>../config_interface/standard/dbs/subtabs.pike</file>
 <file>../config_interface/standard/event_log/clear_log.pike</file>
 <file>../config_interface/standard/event_log/index.html</file>
 <file>../config_interface/standard/event_log/log.pike</file>
@@ -48,7 +50,7 @@
 <file>../modules/configuration/config_userdb.pike</file>
 
 <str id="2">
-<o>Sent data:</o>
+<o>Sent data</o>
 <t></t>
 </str>
 
@@ -58,7 +60,7 @@
 </str>
 
 <str id="4">
-<o>Sent headers:</o>
+<o>Sent headers</o>
 <t></t>
 </str>
 
@@ -68,17 +70,7 @@
 </str>
 
 <str id="7">
-<o>Received data:</o>
-<t></t>
-</str>
-
-<str id="8">
-<o>FTP users (total):</o>
-<t></t>
-</str>
-
-<str id="9">
-<o>FTP users (now):</o>
+<o>Received data</o>
 <t></t>
 </str>
 
@@ -878,36 +870,6 @@ $user_id       -- A unique user ID, if cookies are supported,
 <t></t>
 </str>
 
-<str id="164">
-<o>Cache: Store the argument cache in a mysql database</o>
-<t></t>
-</str>
-
-<str id="165">
-<o>If set, store the argument cache in a mysql database. This is very useful for load balancing using multiple Roxen servers, since the mysql database will handle synchronization.</o>
-<t></t>
-</str>
-
-<str id="166">
-<o>Cache: Argument Cache Database URL to use</o>
-<t></t>
-</str>
-
-<str id="167">
-<o>The database to use to store the argument cache.</o>
-<t></t>
-</str>
-
-<str id="168">
-<o>Cache: Argument Cache Directory</o>
-<t></t>
-</str>
-
-<str id="169">
-<o>The cache directory to use to store the argument cache. Please note that load balancing is not available for most modules  (such as gtext, diagram etc) unless you use a mysql database to store the argument cache meta data.</o>
-<t></t>
-</str>
-
 <str id="170">
 <o>Cache: Memory Cache Garbage Collect Interval</o>
 <t></t>
@@ -1147,8 +1109,6 @@ $user_id       -- A unique user ID, if cookies are supported,
 <o>Docs</o>
 <t></t>
 </str>
-
-
 
 <str id="219">
 <o>Update</o>
@@ -1431,7 +1391,7 @@ $user_id       -- A unique user ID, if cookies are supported,
 </str>
 
 <str id="234">
-<o>Requests:</o>
+<o>Requests</o>
 <t></t>
 </str>
 
@@ -1959,5 +1919,45 @@ as the name of its log file directory.
 
 <str id="366">
 <o>Roxen welcome message and news</o>
+<t></t>
+</str>
+
+<str id="218">
+<o>DBs</o>
+<t></t>
+</str>
+
+<str id="367">
+<o>Server status</o>
+<t></t>
+</str>
+
+<str id="368">
+<o>Various global server statistics</o>
+<t></t>
+</str>
+
+<str id="369">
+<o>Server started</o>
+<t></t>
+</str>
+
+<str id="370">
+<o>Server uptime</o>
+<t></t>
+</str>
+
+<str id="371">
+<o>CPU-time used</o>
+<t></t>
+</str>
+
+<str id="372">
+<o>MySQL status</o>
+<t></t>
+</str>
+
+<str id="373">
+<o>Other DBs</o>
 <t></t>
 </str>

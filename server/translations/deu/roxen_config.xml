@@ -12,9 +12,11 @@
 <file>../config_interface/standard/boxes/crunch.pike</file>
 <file>../config_interface/standard/boxes/doclinks.pike</file>
 <file>../config_interface/standard/boxes/ris_news.pike</file>
+<file>../config_interface/standard/boxes/server_status.pike</file>
 <file>../config_interface/standard/boxes/slashdot.pike</file>
 <file>../config_interface/standard/boxes/welcome.pike</file>
 <file>../config_interface/standard/cv_startpage_tabs.pike</file>
+<file>../config_interface/standard/dbs/subtabs.pike</file>
 <file>../config_interface/standard/event_log/clear_log.pike</file>
 <file>../config_interface/standard/event_log/index.html</file>
 <file>../config_interface/standard/event_log/log.pike</file>
@@ -48,8 +50,8 @@
 <file>../modules/configuration/config_userdb.pike</file>
 
 <str id="2">
-<o>Sent data:</o>
-<t>Transfervolumen Sendedaten:</t>
+<o>Sent data</o>
+<t>Transfervolumen Sendedaten</t>
 </str>
 
 <str id="3">
@@ -58,8 +60,8 @@
 </str>
 
 <str id="4">
-<o>Sent headers:</o>
-<t>Transfervolumen Kopfzeilen:</t>
+<o>Sent headers</o>
+<t>Transfervolumen Kopfzeilen</t>
 </str>
 
 <str id="6">
@@ -69,18 +71,8 @@
 </str>
 
 <str id="7">
-<o>Received data:</o>
-<t>Transfervolumen Empfangsdaten:</t>
-</str>
-
-<str id="8">
-<o>FTP users (total):</o>
-<t>FTP-Benutzer (gesamt)</t>
-</str>
-
-<str id="9">
-<o>FTP users (now):</o>
-<t>FTP-Benutzer (aktuell)</t>
+<o>Received data</o>
+<t>Transfervolumen Empfangsdaten</t>
 </str>
 
 <str id="10">
@@ -1046,39 +1038,6 @@ Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 <t>Roxen wird nach soviel Tagen automatisch neugestartet.</t>
 </str>
 
-<str id="164">
-<new/>
-<o>Cache: Store the argument cache in a mysql database</o>
-<t></t>
-</str>
-
-<str id="165">
-<o>If set, store the argument cache in a mysql database. This is very useful for load balancing using multiple Roxen servers, since the mysql database will handle synchronization.</o>
-<t>Wenn gesetzt, wird der Argumenten-Cache in eine SQL-Datenbank gespeichert. Dies ist sinnvoll bei mehreren Roxen-Servern, da die Datenbank die Synchronisation übernimmt.</t>
-</str>
-
-<str id="166">
-<new/>
-<o>Cache: Argument Cache Database URL to use</o>
-<t></t>
-</str>
-
-<str id="167">
-<o>The database to use to store the argument cache.</o>
-<t>Welche Datenbank soll für den Argumenten-Cache benutzt werden?</t>
-</str>
-
-<str id="168">
-<new/>
-<o>Cache: Argument Cache Directory</o>
-<t></t>
-</str>
-
-<str id="169">
-<o>The cache directory to use to store the argument cache. Please note that load balancing is not available for most modules  (such as gtext, diagram etc) unless you use a mysql database to store the argument cache meta data.</o>
-<t>Dieses Verzeichnis wird für die Speicherung des Argumenten-Caches benutzt.  Für Load-Balancing sollte jedoch eine SQL-Datenbank verwendet werden.</t>
-</str>
-
 <str id="170">
 <new/>
 <o>Cache: Memory Cache Garbage Collect Interval</o>
@@ -1346,8 +1305,6 @@ Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 <o>Docs</o>
 <t></t>
 </str>
-
-
 
 <str id="219">
 <new/>
@@ -1676,7 +1633,7 @@ Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 
 <str id="234">
 <new/>
-<o>Requests:</o>
+<o>Requests</o>
 <t></t>
 </str>
 
@@ -2312,5 +2269,53 @@ as the name of its log file directory.
 <str id="366">
 <new/>
 <o>Roxen welcome message and news</o>
+<t></t>
+</str>
+
+<str id="218">
+<new/>
+<o>DBs</o>
+<t></t>
+</str>
+
+<str id="367">
+<new/>
+<o>Server status</o>
+<t></t>
+</str>
+
+<str id="368">
+<new/>
+<o>Various global server statistics</o>
+<t></t>
+</str>
+
+<str id="369">
+<new/>
+<o>Server started</o>
+<t></t>
+</str>
+
+<str id="370">
+<new/>
+<o>Server uptime</o>
+<t></t>
+</str>
+
+<str id="371">
+<new/>
+<o>CPU-time used</o>
+<t></t>
+</str>
+
+<str id="372">
+<new/>
+<o>MySQL status</o>
+<t></t>
+</str>
+
+<str id="373">
+<new/>
+<o>Other DBs</o>
 <t></t>
 </str>
