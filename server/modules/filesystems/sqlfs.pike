@@ -2,7 +2,7 @@
 
 inherit "module";
 
-constant cvs_version= "$Id: sqlfs.pike,v 1.5 2003/06/26 15:59:22 anders Exp $";
+constant cvs_version= "$Id: sqlfs.pike,v 1.6 2004/02/16 19:38:27 mast Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -22,7 +22,7 @@ LocaleString module_name = _(57,"File systems: SQL File system");
 LocaleString module_doc = _(58,"Access files stored in a SQL database");
 
 string table, charset, path_encoding;
-
+int disabled;
 
 void create()
 {
@@ -68,6 +68,23 @@ void start( )
   table = query("table");
   charset = query("charset");
   path_encoding = query("path_encoding");
+  Sql.Sql sql = get_my_sql();
+  if (!sql) {
+    report_error ("Database %O does not exist - module disabled.\n", query ("db"));
+    disabled = 1;
+  }
+  else if (!sql_table_exists (table)) {
+    report_error ("Table %O does not exist in database %O - module disabled.\n",
+		  table, query ("db"));
+    disabled = 1;
+  }
+  else if (catch (sql_query ("SELECT name FROM " + table + " LIMIT 1"))) {
+    report_error ("The table %O in database %O got no \"name\" column "
+		  "- module disabled.\n", table, query ("db"));
+    disabled = 1;
+  }
+  else
+    disabled = 0;
 }
   
 
@@ -90,6 +107,9 @@ static string decode_path( string p )
 
 static array low_stat_file( string f, RequestID id )
 {
+  if (disabled)
+    return 0;
+
   if( f == "/" )
     return dir_stat;
   if( has_value( f, "%" ) )
@@ -99,6 +119,8 @@ static array low_stat_file( string f, RequestID id )
 #endif
   if( !last_file || last_file->name != f )
   {
+    // FIXME: It's not very efficient to suck in the whole content
+    // here if we only want a stat. :P /mast
     array r = sql_query( "SELECT * FROM "+table+" WHERE name=%s", f );
     if( sizeof( r ) )
     {
@@ -140,11 +162,15 @@ constant dir_stat = ({	0777|S_IFDIR, -1, 10, 10, 10, 0, 0 });
 
 Stat stat_file( string f, RequestID id )
 {
-  return low_stat_file( decode_path( "/"+f ), id )[0];
+  array s = low_stat_file( decode_path( "/"+f ), id );
+  return s && s[0];
 }
 
 int|object find_file(  string f, RequestID id )
 {
+  if (disabled)
+    return 0;
+
   if( !strlen( f ) )
     return -1;
   f = decode_path( "/"+f );
@@ -157,6 +183,9 @@ int|object find_file(  string f, RequestID id )
 
 array(string) find_dir( string f, RequestID id )
 {
+  if (disabled)
+    return 0;
+
   f = decode_path( "/"+f );
 
   if(  f[-1] != '/' )
