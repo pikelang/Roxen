@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.3 1999/11/15 16:30:33 jonasw Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.4 1999/11/15 16:42:40 per Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -102,7 +102,7 @@ mapping query_tag_callers()
 
 mapping query_container_callers()
 {
-  return ([ "gbutton" : tag_button ]);
+  return ([ "gbutton" : tag_button, "gbutton-url" : tag_button ]);
 }
 
 
@@ -277,6 +277,9 @@ string tag_button(string tag, mapping args, string contents, RequestID id)
   string img_src =
     query_internal_location() +
     button_cache->store( ({ new_args, contents }), id);
+
+  if( tag == "gbutton-url" )
+    return img_src;
 
   mapping img_attrs = ([ "src"    : img_src,
 			 "alt"    : args->alt || contents,
