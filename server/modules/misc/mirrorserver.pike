@@ -7,6 +7,8 @@ object rpc;
 constant Privs=((program)"privs");
 #endif /* !constant(Privs) */
 
+// #define MIRRORSERVER_DEBUG
+
 class MirrorServer {
   import Stdio;
   string base;
@@ -125,7 +127,9 @@ void start(int arg, object conf)
       privs = 0;
       server->provide("mirror", MirrorServer(FakeID(conf),query("base")));
     }) {
+#ifdef MIRRORSERVER_DEBUG
       report_error(describe_backtrace(err));
+#endif /* MIRRORSERVER_DEBUG */
     }
   }
 }
