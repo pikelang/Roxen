@@ -4,7 +4,7 @@
  * doc = "Handles the conversion of numbers and dates to Russian. You have to restart the server for updates to take effect.";
  */
 
-string cvs_version = "$Id: russian.pike,v 1.1 1997/08/22 04:15:34 nisse Exp $";
+string cvs_version = "$Id: russian.pike,v 1.2 1997/08/23 01:50:26 nisse Exp $";
 
 #define error(x) throw( ({ x, backtrace() }) )
 
@@ -23,9 +23,7 @@ string day(int num)
 
 string ordered(int i)
 {
-  if(((10<i) && (i<20)) || ((i%10)>2))
-    return i + ":e";
-  return i+":a"; 
+  return (string) i + "-Å";
 }
 
 string date(int timestamp, mapping m)
