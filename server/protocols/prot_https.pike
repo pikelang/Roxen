@@ -1,3 +1,13 @@
+// $Id: prot_https.pike,v 2.2 2000/12/28 19:02:38 mast Exp $
+
+// --- Debug defines ---
+
+#ifdef SSL3_DEBUG
+# define SSL3_WERR(X) werror("SSL3: "+X+"\n")
+#else
+# define SSL3_WERR(X)
+#endif
+
 inherit SSLProtocol;
 
 constant supports_ipless = 0;

@@ -13,6 +13,6 @@ mapping(string:int) ftp_sessions = ([]);
 
 void create( mixed ... args )
 {
-  set_up_ftp_variables( this_object() );
+  roxen.set_up_ftp_variables( this_object() );
   ::create( @args );
 }

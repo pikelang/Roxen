@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.43 2000/12/05 22:23:47 grubba Exp $
+ * $Id: ftp.pike,v 2.44 2000/12/28 19:02:37 mast Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -802,7 +802,11 @@ class LSFile
     return(res);
   }
 
+#if constant (ADT.Stack)
+  static ADT.Stack dir_stack = ADT.Stack();
+#else
   static object(Stack.stack) dir_stack = Stack.stack();
+#endif
   static int name_directories;
 
   static string fix_path(string s)
