@@ -18,7 +18,7 @@ LocaleString module_doc =
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.96 2001/09/03 18:15:05 per Exp $";
+  "$Id: config_filesystem.pike,v 1.97 2001/09/03 18:36:31 per Exp $";
 
 constant path = "config_interface/";
 
@@ -220,7 +220,11 @@ mixed find_file( string f, RequestID id )
       type = "text/html";
     else
       type = id->conf->type_from_filename( id->not_query );
+
+    if( locale != "standard" ) 
+      roxen.set_locale( locale );
   }
+
 
   if( docs && (sscanf( f, "docs/%s", f ) ))
   {
@@ -298,8 +302,6 @@ mixed find_file( string f, RequestID id )
       id->misc->defines = ([]);
     id->misc->defines[" _stat"] = id->misc->stat;
      
-    if( locale != "standard" ) 
-      roxen.set_locale( locale );
     mixed error;
     error = catch( retval = Roxen.http_rxml_answer( data, id ) );
     if( locale != "standard" )
