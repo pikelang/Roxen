@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.325 2002/05/23 10:04:04 jonasw Exp $
+// $Id: roxenloader.pike,v 1.326 2002/06/03 20:36:11 per Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.325 2002/05/23 10:04:04 jonasw Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.326 2002/06/03 20:36:11 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -305,7 +305,6 @@ Roxen roxen;
 
 // The function used to report notices/debug/errors etc.
 function(string, int|void, int|void, void|mixed ...:void) nwrite;
-
 
 /*
  * Code to get global configuration variable values from Roxen.
@@ -1212,7 +1211,7 @@ Roxen 2.4 should be run with Pike 7.2.
     mysql_path_is_remote = 1;
   }
 
-  nwrite = lambda(mixed ... ){};
+  nwrite = lambda(mixed ...x){werror(@x);};
   call_out( do_main_wrapper, 0, argc, argv );
   // Get rid of the _main and main() backtrace elements..
   return -1;
@@ -2031,7 +2030,7 @@ and rebuild Pike from scratch.
     add_include_path(p);
     add_program_path(p);
   }
-  add_module_path( "etc/modules" );
+  add_module_path( "pike_modules" );
   add_module_path( "../local/pike_modules" );
 
   add_constant ("get_cvs_id", get_cvs_id);

@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.795 2002/05/08 13:08:34 jonasw Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.796 2002/06/03 20:36:10 per Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -3562,13 +3562,13 @@ void create()
   master()->resolv ("RXML.PEnt");
   foreach(({ "module.pmod","PEnt.pike", "PExpr.pike","PXml.pike",
 	     "refs.pmod","utils.pmod" }), string q )
-    dump( "etc/modules/RXML.pmod/"+ q );
-  dump( "etc/modules/RXML.pmod/module.pmod" );
+    dump( "pike_modules/RXML.pmod/"+ q );
+  dump( "pike_modules/RXML.pmod/module.pmod" );
   master()->add_dump_constant ("RXML.empty_tag_set",
 			       master()->resolv ("RXML.empty_tag_set"));
   // Already loaded. No delayed dump possible.
   dump( "etc/roxen_master.pike" );
-  dump( "etc/modules/Roxen.pmod" );
+  dump( "pike_modules/Roxen.pmod" );
   dump( "base_server/config_userdb.pike" );
   dump( "base_server/disk_cache.pike" );
   dump( "base_server/roxen.pike" );
@@ -3594,7 +3594,7 @@ void create()
 
 
   DDUMP( "base_server/roxenlib.pike");
-  DDUMP( "etc/modules/Dims.pmod");
+  DDUMP( "pike_modules/Dims.pmod");
   DDUMP( "config_interface/boxes/Box.pmod" );
   dump( "base_server/html.pike");
 
@@ -4200,8 +4200,8 @@ int main(int argc, array tmp)
   
   slowpipe = ((program)"base_server/slowpipe");
   fastpipe = ((program)"base_server/fastpipe");
-  dump( "etc/modules/DBManager.pmod" );
-  dump( "etc/modules/VFS.pmod" );
+  dump( "pike_modules/DBManager.pmod" );
+  dump( "pike_modules/VFS.pmod" );
   dump( "base_server/slowpipe.pike" );
   dump( "base_server/fastpipe.pike" );
   dump( "base_server/throttler.pike" );
@@ -4219,13 +4219,13 @@ int main(int argc, array tmp)
   add_constant( "SSLProtocol", SSLProtocol );
 #endif
 
-  dump( "etc/modules/Variable.pmod/module.pmod" );
-  dump( "etc/modules/Variable.pmod/Language.pike" );
-  dump( "etc/modules/Variable.pmod/Schedule.pike" );
+  dump( "pike_modules/Variable.pmod/module.pmod" );
+  dump( "pike_modules/Variable.pmod/Language.pike" );
+  dump( "pike_modules/Variable.pmod/Schedule.pike" );
 
-  foreach( glob("*.pike", get_dir( "etc/modules/Variable.pmod/"))
+  foreach( glob("*.pike", get_dir( "pike_modules/Variable.pmod/"))
 	   -({"Language.pike", "Schedule.pike"}), string f )
-    DDUMP( "etc/modules/Variable.pmod/"+f );
+    DDUMP( "pike_modules/Variable.pmod/"+f );
   
   DDUMP(  "base_server/state.pike" );
   DDUMP(  "base_server/highlight_pike.pike" );
@@ -4633,14 +4633,14 @@ function compile_log_format( string fmt )
 ";
 
   program res = compile_string(code);
-  string enc = encode_value(res, master()->MyCodec(res));
-  object con = dbm_cached_get("local");
+  catch {
+    string enc = encode_value(res, master()->MyCodec(res));
+    object con = dbm_cached_get("local");
   
-  con->query("DELETE FROM compiled_formats WHERE md5=%s", kmd5);
-  con->query("INSERT INTO compiled_formats (md5,full,enc) VALUES (%s,%s,%s)",
-	     kmd5, fmt, enc);
-  con = 0;
-  
+    con->query("DELETE FROM compiled_formats WHERE md5=%s", kmd5);
+    con->query("INSERT INTO compiled_formats (md5,full,enc) VALUES (%s,%s,%s)",
+	       kmd5, fmt, enc);
+  };
   return compiled_formats[ fmt ] = res()->log;
 }
 

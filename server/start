@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.194 2002/05/18 18:15:49 jonasw Exp $
+# $Id: start,v 1.195 2002/06/03 20:36:10 per Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -76,13 +76,13 @@ else :; fi
 
 if test -d $VARDIR/.; then :; else
   dp "Creating directory $VARDIR"
-  ./mkdir -p $VARDIR/ || exit 1
+  ./bin/mkdir -p $VARDIR/ || exit 1
 fi
 
 
 pcdir="$VARDIR/`roxen_version`/precompiled/`uname -m | tr ' ' '_' `.`uname -r`"
 old_roxen_defines="$pcdir/old_roxen_defines"
-./mkdir -p "$pcdir" || exit 1
+./bin/mkdir -p "$pcdir" || exit 1
 chmod 1777 "$pcdir"
 
 # Default verbosity level.
@@ -812,7 +812,7 @@ if [ -z "$once" ] ; then
   # This duplicate of the logdir creation code is needed, check the 
   # redirect below
   if [ ! -d "$DEBUGDIR" ] ; then
-    if ./mkdir -p "$DEBUGDIR" 2>/dev/null; then :; else
+    if ./bin/mkdir -p "$DEBUGDIR" 2>/dev/null; then :; else
       dp "Failed to create log directory $DEBUGDIR."
       exit 1
     fi
@@ -835,7 +835,7 @@ if [ -z "$once" ] ; then
 	if test -d "$DEBUGDIR/."; then :; else
 	  # Avoid infinite loop if the debug directory is deleted.
 	  # Thanks to Emils Klotins <emils@dot.lv> for reporting it.
-	  if ./mkdir -p "$DEBUGDIR" 2>/dev/null; then :; else
+	  if ./bin/mkdir -p "$DEBUGDIR" 2>/dev/null; then :; else
 	    dp "Failed to create log directory $DEBUGDIR."
 	    exit 1
 	  fi

@@ -78,6 +78,7 @@ worldmap binary
 /server/bin/fixquota.pike foreign_ident
 /server/bin/garbagecollector.pike foreign_ident
 /server/bin/lsquota.pike foreign_ident
+/server/bin/mkdir foreign_ident
 /server/bin/mysql_client foreign_ident
 /server/bin/pdbi.pike foreign_ident
 /server/bin/sqladduser.pike foreign_ident
@@ -191,7 +192,6 @@ worldmap binary
 /server/languages/slovenian.pike foreign_ident
 /server/languages/spanish.pike foreign_ident
 /server/languages/swedish.pike foreign_ident
-/server/mkdir foreign_ident
 /server/modules/compat/configtablist.pike foreign_ident
 /server/modules/compat/flik.pike foreign_ident
 /server/modules/compat/language.pike foreign_ident

@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.39 2002/06/03 18:44:54 nilsson Exp $
+ * $Id: create_configif.pike,v 1.40 2002/06/03 20:36:11 per Exp $
  *
  * Create an initial administration interface server.
  */
@@ -307,7 +307,7 @@ ent text/html
   </var>
 </region>",
  ([ "$NAME$" : name,
-    "$URL$"  : port }) ));
+    "$URL$"  : port ]) ));
     write("\n   Administration interface created.\n");
   }
 

@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.516 2002/05/29 15:35:20 jonasw Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.517 2002/06/03 20:36:10 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1021,7 +1021,7 @@ private mapping internal_gopher_image(string from)
   // Disallow "internal-gopher-..", it won't really do much harm, but a list of
   // all files in '..' might be retrieved (that is, the actual directory
   // file was sent to the browser)
-  Stdio.File f = lopen("roxen-images/dir/"+from+".gif","r");
+  Stdio.File f = lopen("etc/images/dir/"+from+".gif","r");
   if (f) 
     return (["file":f, "type":"image/gif", "stat":f->stat(),]);
   else
@@ -1153,19 +1153,19 @@ private mapping internal_roxen_image( string from, RequestID id )
   Stdio.File f;
 
   if( !id->misc->internal_get )
-    if(f = lopen("roxen-images/"+from+".gif", "r"))
+    if(f = lopen("etc/images/"+from+".gif", "r"))
       return (["file":f, "type":"image/gif", "stat":f->stat()]);
 
-  if(f = lopen("roxen-images/"+from+".png", "r"))
+  if(f = lopen("etc/images/"+from+".png", "r"))
     return (["file":f, "type":"image/png", "stat":f->stat()]);
 
-  if(f = lopen("roxen-images/"+from+".jpg", "r"))
+  if(f = lopen("etc/images/"+from+".jpg", "r"))
     return (["file":f, "type":"image/jpeg", "stat":f->stat()]);
 
-  if(f = lopen("roxen-images/"+from+".xcf", "r"))
+  if(f = lopen("etc/images/"+from+".xcf", "r"))
     return (["file":f, "type":"image/x-gimp-image", "stat":f->stat()]);
 
-  if(f = lopen("roxen-images/"+from+".gif", "r"))
+  if(f = lopen("etc/images/"+from+".gif", "r"))
     return (["file":f, "type":"image/gif", "stat":f->stat()]);
   // File not found.
   return 0;
