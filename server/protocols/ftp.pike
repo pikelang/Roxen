@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.96 2004/05/17 14:36:25 mast Exp $
+ * $Id: ftp.pike,v 2.97 2004/05/26 13:46:51 mast Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -187,7 +187,7 @@ class RequestID2
       object o = this_object();
       foreach(indices(m_rid), string var) {
 	if (!(< "create", "connection", "configuration",
-                "__INIT", "clone_me", "end", "ready_to_receive",
+		"clone_me", "end", "ready_to_receive",
 		"send", "scan_for_query", "make_response_headers",
 		"send_result", "misc", "get_if_data",
 		"url_base", "set_response_header", "get_xml_data",
@@ -196,18 +196,18 @@ class RequestID2
 		"output_encode", "adjust_for_config_path",
 		"get_multi_status", "multi_status_size",
 		"set_status_for_path", "set_status_for_url",
-		"destroy", "_num", "__num">)[var]) {
-#ifdef FTP2_DEBUG
+		"destroy", "_sprintf">)[var]) {
+#ifdef DEBUG
 	  if (catch {
-#endif /* FTP2_DEBUG */
+#endif /* DEBUG */
 	    o[var] = m_rid[var];
-#ifdef FTP2_DEBUG
+#ifdef DEBUG
 	  }) {
 	    report_error("FTP2: "
 			 "Failed to copy variable %s (value:%O)\n",
 			 var, m_rid[var]);
 	  }
-#endif /* FTP2_DEBUG */
+#endif /* DEBUG */
 	}
       }
       o["misc"] = m_rid["misc"] + ([ ]);
