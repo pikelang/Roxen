@@ -1,4 +1,4 @@
-// $Id: module.h,v 1.17 1998/06/29 13:20:19 grubba Exp $
+// $Id: module.h,v 1.18 1998/08/10 21:36:18 per Exp $
 #ifndef ROXEN_MODULE_H
 #define ROXEN_MODULE_H
 
@@ -83,11 +83,16 @@
 #define MODULE_LOGGER            (2<<12)
 #define MODULE_FILTER            (2<<13)
 
-#define MODULE_SECURITY          (2<<14)
 
 // A module which can be called from other modules, protocols, scripts etc.
 #define MODULE_PROVIDER		 (2<<15)
+// The module implements a protocol.
+#define MODULE_PROTOCOL          (2<<16)
 
+
+// Flags.
+#define MODULE_SECURITY          (2<<30)
+#define MODULE_EXPERIMENTAL      (2<<31)
 
 #define MOD_ALLOW	1
 #define MOD_USER	2
@@ -103,7 +108,8 @@ defvar((X)+"_weight", "normal", (Z)+": weight", TYPE_STRING_LIST, "", ({"light",
 defvar((X)+"_slant", "plain", (Z)+": slant", TYPE_STRING_LIST, "", ({"italic","plain"}))
 
 
-#define CACHE(seconds) if(id->misc->cacheable) id->misc->cacheable=min(id->misc->cacheable,seconds);else id->misc->cacheable = seconds;
+#define CACHE(seconds) id->misc->cacheable=min(id->misc->cacheable,seconds)
+#define NOCACHE() id->misc->cacheable=0
 #endif
 
 
