@@ -6,7 +6,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: atlas.pike,v 1.12 2001/10/08 12:32:52 anders Exp $";
+constant cvs_version = "$Id: atlas.pike,v 1.13 2002/11/15 10:17:47 jonasw Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_EXPERIMENTAL;
 constant module_name = "Graphics: Atlas";
@@ -15,9 +15,22 @@ constant module_doc  =
 possible to highlight countries on the generated world map.";
 
 roxen.ImageCache the_cache;
+int do_ext;
 
 void start() {
   the_cache = roxen.ImageCache( "atlas", generate_image );
+  do_ext = query("ext");
+}
+
+void create()
+{
+  defvar("ext", Variable.Flag(0, VAR_MORE,
+			      "Append format to generated images",
+			      "Append the image format (.gif, .png, "
+			      ".jpg, etc) to the generated images. "
+			      "This is not necessary, but might seem "
+			      "nicer, especially to people who try "
+			      "to mirror your site."));
 }
 
 string status() {
@@ -166,6 +179,9 @@ class TagAtlas {
 
       args->src = query_absolute_internal_location(id) +
 	the_cache->store(state, id);
+      if(do_ext)
+	args->src += ".gif";
+
       if(!args->alt)
 	args->alt = state->region || "The World";
 
