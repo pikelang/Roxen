@@ -9,6 +9,10 @@
     <CustomAction Id="CustomTextA_SetProperty_EDIT1" Property="SERVER_NAME" Value="Administration Interface" Execute="firstSequence" />
     <CustomAction Id="CustomTextA_SetProperty_EDIT4" Property="ADM_USER" Value="administrator" Execute="firstSequence" />
     <CustomAction Id="VSDCA_FolderForm_AllUsers" Property="FolderForm_AllUsers" Value="ALL" />
+    <CustomAction Id="SetRemoveOldService" Property="RemoveOldService"
+      Value="[SERVERDIR]" Execute="immediate" />
+    <CustomAction Id="RemoveOldService" BinaryKey="RoxenInstaller"
+      VBScriptCall="RemoveOldService" Execute="deferred" />
     <CustomAction Id="SetCreateConfigInterface"
       Property="CreateConfigInterface"
       Value="[SERVERDIR];[SERVER_NAME];[SERVER_PROTOCOL];[SERVER_PORT];[ADM_USER];[ADM_PASS1]"
@@ -1129,6 +1133,8 @@ Click "Next" to start the installation.</Text>
       <Custom Action="CustomTextA_SetProperty_EDIT4" After="CustomTextA_SetProperty_EDIT3" />
       <Custom Action="DIRCA_TARGETDIR" After="CustomTextA_SetProperty_EDIT4"><![CDATA[TARGETDIR=""]]></Custom>
       <RemoveExistingProducts After="InstallInitialize" />
+      <Custom Action="SetRemoveOldService" After="InstallFiles">REMOVE=""</Custom>
+      <Custom Action="RemoveOldService" After="SetRemoveOldService">REMOVE=""</Custom>
       <Custom Action="SetCreateConfigInterface" Sequence="5100">REMOVE=""</Custom>
       <Custom Action="CreateConfigInterface" After="SetCreateConfigInterface">REMOVE=""</Custom>
       <Custom Action="SetCreatePikeLocation" After="CreateConfigInterface">REMOVE=""</Custom>
