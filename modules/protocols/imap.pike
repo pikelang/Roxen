@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.86 1999/02/23 18:29:15 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.87 1999/02/26 19:11:54 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -1152,8 +1152,21 @@ class backend
   array(array(object|string)) list(object|mapping(string:mixed) session,
 				   string reference, string glob)
   {
-    if ( (reference != "") )
+    if (reference != "") {
       return ({ });
+    }
+    if (glob == "") {
+      /* RFC 2060, Section 6.3.8:
+       *
+       * An empty ("" string) mailbox name argument is a special request to
+       * return the hierarchy delimiter and the root name of the name given
+       * in the reference. The value returned as the root MAY be null if the
+       * reference is non-rooted, or is null. In all cases, the hierarchy
+       * delimiter is returned. This permits a client to get the hierarchy
+       * delimiter even when no mailboxes by that name currently exist.
+       */
+      return ({ ({ imap_list( ({ "\Noselect" })), "nil", "" }) });
+    }
     
     return Array.map(imap_glob(glob,
 			       Array.map(session->user->mailboxes()->
