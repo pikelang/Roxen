@@ -5,7 +5,7 @@
 // interface</a> (and more, the documented interface does _not_ cover
 // the current implementation in NCSA/Apache)
 
-string cvs_version = "$Id: cgi.pike,v 1.97 1998/07/24 10:51:53 neotron Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.98 1998/07/27 06:50:45 peter Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -611,8 +611,8 @@ class spawn_cgi
 	destruct(pipe2);
 	if (pipe4)
 	  destruct(pipe4);
-	destruct(pipe3);
 	pipe3->dup2(Stdio.File("stdin"));
+	destruct(pipe3);
 
 	object privs;
 	if (!getuid()) {
@@ -639,9 +639,9 @@ class spawn_cgi
 	} else if(dup_err) { 
 	  destruct(dup_err[1]);
 	  dup_err[0]->dup2(Stdio.File("stderr"));
+	  destruct(dup_err[0]);
 	}
 	destruct(pipe1);
-	destruct(dup_err[0]);
 #ifdef DEBUG
 	if (getuid() != uid) {
 	  roxen_perror("CGI: Failed to change uid! uid:%d target uid:%d\n",
