@@ -9,7 +9,7 @@
 //  o Add readme support
 //
 
-constant cvs_version = "$Id: directories.pike,v 1.98 2002/10/30 18:20:57 nilsson Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.99 2002/11/07 15:54:39 mani Exp $";
 constant thread_safe = 1;
 
 constant default_template= #"
@@ -161,10 +161,7 @@ void start(int n, Configuration c)
     else
       template = query("template");
 
-    if( !(c->enabled_modules["sbtags_2.0#0"] ||
-          c->enabled_modules["sitebuilder#0"] ||
-          c->enabled_modules["diremit#0"] ) )
-        c->add_modules( ({ "diremit#0" }), 1 );
+    module_dependencies(c, ({ "diremit" }) );
   }
 }
 
