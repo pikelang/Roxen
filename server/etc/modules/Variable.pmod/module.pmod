@@ -589,6 +589,14 @@ class File
   {
     return file_stat( query() );
   }
+
+#ifdef __NT__
+  array verify_set( string value )
+  {
+    return ::verify_set( replace( value, "\\", "/" ) );
+  }
+#endif
+
 }
 
 class Location
@@ -621,12 +629,15 @@ class Directory
 
   array verify_set( string value )
   {
+#ifdef __NT__
+    value = replace( value, "\\", "/" );
+#endif
+    if( strlen(value) && value[-1] != '/' )
+      value += "/";
     if( !strlen( value ) )
       return ::verify_set( value );
     if( !(r_file_stat( value ) && (r_file_stat( value )[ ST_SIZE ] == -2 )))
        return ({value+" is not a directory", value });
-    if( strlen(value) && value[-1] != '/' )
-      value += "/";
     return ::verify_set( value );
   }
 
@@ -966,6 +977,9 @@ class DirectoryList
         warn += vi+" is not a directory\n";
       if( strlen(vi) && vi[-1] != '/' )
         value = replace( value, vi, vi+"/" );
+#ifdef __NT__
+      value = replace( value, vl, replace( vl, "\\", "/" ) );
+#endif
     }
     if( strlen( warn ) )
       return ({ warn, value });
@@ -1070,6 +1084,13 @@ class FileList
 {
   inherit List;
   constant type="FileList";
+
+#ifdef __NT__
+  array verify_set( array(string) value )
+  {
+    return ::verify_set( map( value, replace, "\\", "/" ) );
+  }
+#endif
 }
 
 
