@@ -25,6 +25,7 @@
 /modules/mail/automailrcpt.pike foreign_ident
 /modules/mail/clientlayer.pike foreign_ident
 /modules/mail/filters/rbl.pike foreign_ident
+/modules/mail/filters/verify_addr.pike foreign_ident
 /modules/mail/mailadmin.pike foreign_ident
 /modules/mail/mailtags.pike foreign_ident
 /modules/mail/smtprelay.pike foreign_ident
