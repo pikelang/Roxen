@@ -1761,6 +1761,16 @@ cd</rxml>
 </test>
 
 <test>
+<rxml>&page.counter; &page.counter;</rxml>
+<result>1 2</result>
+</test>
+
+<test>
+<rxml>&page.counter; &page.counter;</rxml>
+<result>1 2</result>
+</test>
+
+<test>
 <rxml><set variable="var.foo" value="borkason"/>&var.foo;</rxml>
 <result>borkason</result>
 </test>
