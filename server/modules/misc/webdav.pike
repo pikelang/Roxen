@@ -1,6 +1,6 @@
 // Protocol support for RFC 2518
 //
-// $Id: webdav.pike,v 1.14 2004/05/03 16:05:00 grubba Exp $
+// $Id: webdav.pike,v 1.15 2004/05/04 13:55:10 grubba Exp $
 //
 // 2003-09-17 Henrik Grubbström
 
@@ -9,7 +9,7 @@ inherit "module";
 #include <module.h>
 #include <request_trace.h>
 
-constant cvs_version = "$Id: webdav.pike,v 1.14 2004/05/03 16:05:00 grubba Exp $";
+constant cvs_version = "$Id: webdav.pike,v 1.15 2004/05/04 13:55:10 grubba Exp $";
 constant thread_safe = 1;
 constant module_name = "DAV: Protocol support";
 constant module_type = MODULE_FIRST;
@@ -46,9 +46,7 @@ mapping(string:mixed)|int(-1..0) first_try(RequestID id)
 	      ]),
     ]);
   case "LOCK":
-#if 0
   case "UNLOCK":
-#endif /* 0 */
   case "COPY":
   case "DELETE":
   case "PROPFIND":
@@ -255,7 +253,17 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
       "type":"text/xml; charset=\"utf-8\"",
     ]);
   case "UNLOCK":
-    break;
+    string locktoken;
+    if (!(locktoken = id->request_headers["lock-token"])) {
+      return Roxen.http_status(400, "UNLOCK: Missing lock-token header.");
+    }
+    // The lock-token header is a Coded-URL.
+    sscanf(locktoken, "<%s>", locktoken);
+    if (!objectp(lock = id->conf->check_locks(id->not_query, 0, id))) {
+      return Roxen.http_status(403, "UNLOCK: Lock not found.");
+    }
+    return id->conf->unlock_file(id->not_query, lock, id) ||
+      Roxen.http_status(204, "Ok.");
   case "COPY":
     if (!id->request_headers->destination) {
       return Roxen.http_status(400, "COPY: Missing destination header.");
