@@ -7,7 +7,7 @@
 //  return "Hello world!\n";
 // </pike>
  
-constant cvs_version = "$Id: piketag.pike,v 2.28 2000/10/18 01:50:38 mast Exp $";
+constant cvs_version = "$Id: piketag.pike,v 2.29 2001/01/26 18:53:23 mast Exp $";
 constant thread_safe=1;
 
 inherit "module";
@@ -293,7 +293,8 @@ program my_compile_string(string s, object id, int dom, string fn)
   else
     pre += data;
   program p = compile_string(R(pre), fn);
-  program_cache[ s ] = p;
+  if (query ("program_cache_limit") > 0)
+    program_cache[ s ] = p;
 
   cnt=0;
   foreach( ip, program ipc ) add_constant( "____ih_"+cnt++, 0 );
@@ -475,7 +476,8 @@ string container_pike(string tag, mapping m, string s, RequestID request_id,
 	for(i = query("program_cache_limit")/2; i > 0; i--)
 	  m_delete(program_cache, a[random(sizeof(a))]);
       }
-      program_cache[s] = p;
+      if (query ("program_cache_limit") > 0)
+	program_cache[s] = p;
     }
   })
   {
