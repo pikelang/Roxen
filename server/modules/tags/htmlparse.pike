@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.83 1998/03/03 13:07:30 grubba Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.84 1998/03/03 13:09:35 grubba Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -410,6 +410,7 @@ mapping handle_file_extension( object file, string e, object id)
   if(search(QUERY(noparse),e)!=-1)
   {
     query_num(id->not_query, 1);
+    defines->counted = "1";
     if(search(QUERY(toparse),e)==-1)  /* Parse anyway */
       return 0;
   }
