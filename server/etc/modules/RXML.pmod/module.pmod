@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.224 2001/08/20 11:55:57 nilsson Exp $
+// $Id: module.pmod,v 1.225 2001/08/20 19:30:37 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -62,7 +62,7 @@ class RequestID { };
 // #define TYPE_OBJ_DEBUG
 // #define PARSER_OBJ_DEBUG
 // #define FRAME_DEPTH_DEBUG
-// #define RXML_RESCACHE_DEBUG
+// #define RXML_PCODE_DEBUG
 
 
 #ifdef RXML_OBJ_DEBUG
@@ -4318,6 +4318,7 @@ class Parser
     //werror ("%O write %s\n", this_object(), format_short (in));
     int res;
     ENTER_CONTEXT (context);
+  eval:
     if (mixed err = catch {
       if (context && context->unwind_state && context->unwind_state->top) {
 #ifdef MODULE_DEBUG
@@ -4331,21 +4332,22 @@ class Parser
       }
       if (feed (in)) res = 1; // Might unwind.
       if (res && data_callback) data_callback (this_object());
-    })
+    }) {
       if (objectp (err) && ([object] err)->thrown_at_unwind) {
 #ifdef DEBUG
-	if (err != this_object()) {
-	  LEAVE_CONTEXT();
-	  fatal_error ("Unexpected unwind object catched.\n");
-	}
+	if (err != this_object())
+	  err = catch (fatal_error ("Unexpected unwind object catched.\n"));
 #endif
 	if (!context->unwind_state) context->unwind_state = ([]);
 	context->unwind_state->top = err;
+	break eval;
       }
-      else {
-	LEAVE_CONTEXT();
-	throw_fatal (err);
-      }
+      if (context->p_code_comp)
+	// Fix all delayed resolves in any ongoing p-code compilation.
+	context->p_code_comp->compile();
+      LEAVE_CONTEXT();
+      throw_fatal (err);
+    }
     LEAVE_CONTEXT();
     return res;
   }
@@ -4357,6 +4359,7 @@ class Parser
     //werror ("%O write_end %s\n", this_object(), format_short (in));
     int res;
     ENTER_CONTEXT (context);
+  eval:
     if (mixed err = catch {
       if (context && context->unwind_state && context->unwind_state->top) {
 #ifdef MODULE_DEBUG
@@ -4370,21 +4373,22 @@ class Parser
       }
       finish (in); // Might unwind.
       if (data_callback) data_callback (this_object());
-    })
+    }) {
       if (objectp (err) && ([object] err)->thrown_at_unwind) {
 #ifdef DEBUG
-	if (err != this_object()) {
-	  LEAVE_CONTEXT();
-	  fatal_error ("Unexpected unwind object catched.\n");
-	}
+	if (err != this_object())
+	  err = catch (fatal_error ("Unexpected unwind object catched.\n"));
 #endif
 	if (!context->unwind_state) context->unwind_state = ([]);
 	context->unwind_state->top = err;
+	break eval;
       }
-      else {
-	LEAVE_CONTEXT();
-	throw_fatal (err);
-      }
+      if (context->p_code_comp)
+	// Fix all delayed resolves in any ongoing p-code compilation.
+	context->p_code_comp->compile();
+      LEAVE_CONTEXT();
+      throw_fatal (err);
+    }
     LEAVE_CONTEXT();
   }
 
@@ -6363,17 +6367,17 @@ static class PikeCompile
   string _sprintf() {return "RXML.PikeCompile" + OBJ_COUNT;}
 }
 
-#ifdef RXML_RESCACHE_DEBUG
-#  define RESCACHE_MSG(X...) do {					\
+#ifdef RXML_PCODE_DEBUG
+#  define PCODE_MSG(X...) do {						\
   Context _ctx_ = RXML_CONTEXT;						\
   Frame _frame_ = _ctx_ && _ctx_->frame;				\
   if (TAG_DEBUG_TEST (!_frame_ || _frame_->flags & FLAG_DEBUG)) {	\
-    if (_frame_) report_debug ("%O: ", _frame_);			\
-    report_debug (X);							\
+    if (_frame_) report_debug ("%O:   ", _frame_);			\
+    report_debug ("PCode" + OBJ_COUNT + ": " + X);			\
   }									\
 } while (0)
 #else
-#  define RESCACHE_MSG(X...) do {} while (0)
+#  define PCODE_MSG(X...) do {} while (0)
 #endif
 
 class PCode
@@ -6470,6 +6474,9 @@ class PCode
 	  context->unwind_state->top = this_object();
 	  break eval;
 	}
+	if (context->p_code_comp)
+	  // Fix all delayed resolves in any ongoing p-code compilation.
+	  context->p_code_comp->compile();
 	LEAVE_CONTEXT();
 	throw_fatal (err);
       }
@@ -6488,14 +6495,16 @@ class PCode
       if ((tag_set = _tag_set)) generation = _tag_set->generation;
       exec = allocate (16);
       flags = UPDATED;
-    }
-    if (collect_results) {
-      // Yes, the internal interaction between create, reset, the
-      // context and CTX_ALREADY_GOT_VC is ugly.
-      flags |= COLLECT_RESULTS;
-      if (collect_results->misc->variable_changes) flags |= CTX_ALREADY_GOT_VC;
-      collect_results->misc->variable_changes = ([]);
-      RESCACHE_MSG ("begin result cache\n");
+      if (collect_results) {
+	// Yes, the internal interaction between create, reset, the
+	// context and CTX_ALREADY_GOT_VC is ugly.
+	flags |= COLLECT_RESULTS;
+	if (collect_results->misc->variable_changes) flags |= CTX_ALREADY_GOT_VC;
+	collect_results->misc->variable_changes = ([]);
+	PCODE_MSG ("begin result collection\n");
+      }
+      else
+	PCODE_MSG ("begin generation\n");
     }
   }
 
@@ -6533,19 +6542,19 @@ class PCode
     if (length + 1 > sizeof (exec)) exec += allocate (sizeof (exec));
 
     if (flags & COLLECT_RESULTS) {
-      RESCACHE_MSG ("caching result value %s\n",
-		    utils->format_short (evaled_value));
+      PCODE_MSG ("adding result value %s\n", utils->format_short (evaled_value));
       exec[length++] = evaled_value;
       mapping(string:mixed) var_chg = ctx->misc->variable_changes;
       if (sizeof (var_chg)) {
-	RESCACHE_MSG ("caching variable changes %s\n",
-		      utils->format_short (var_chg));
+	PCODE_MSG ("adding variable changes %s\n", utils->format_short (var_chg));
 	exec[length++] = VariableChange (var_chg);
 	ctx->misc->variable_changes = ([]);
       }
     }
-    else
+    else {
+      PCODE_MSG ("adding entry %s\n", utils->format_short (entry));
       exec[length++] = entry;
+    }
 
     if (p_code) p_code->add (ctx, entry, evaled_value);
   }
@@ -6563,7 +6572,7 @@ class PCode
     add_evaled_value:
       if (flags & COLLECT_RESULTS)
 	if (frame->flags & FLAG_DONT_CACHE_RESULT)
-	  RESCACHE_MSG ("frame %O not cached\n", frame);
+	  PCODE_MSG ("frame %O not result cached\n", frame);
 	else {
 	  if (evaled_value == PCode) {
 	    // The PCode value is only used as an ugly magic cookie to
@@ -6574,11 +6583,11 @@ class PCode
 	    do
 	      f->flags |= FLAG_DONT_CACHE_RESULT;
 	    while ((f = f->up) && !(f->flags & FLAG_DONT_CACHE_RESULT));
-	    RESCACHE_MSG ("frame %O not cached due to exception\n", frame);
+	    PCODE_MSG ("frame %O not result cached due to exception\n", frame);
 	    break add_evaled_value;
 	  }
-	  RESCACHE_MSG ("caching result of frame %O: %s\n",
-			frame, utils->format_short (evaled_value));
+	  PCODE_MSG ("adding result of frame %O: %s\n",
+		     frame, utils->format_short (evaled_value));
 	  if (length + 1 >= sizeof (exec)) exec += allocate (sizeof (exec));
 	  exec[length++] = evaled_value;
 	  mapping(string:mixed) var_chg = ctx->misc->variable_changes;
@@ -6589,6 +6598,7 @@ class PCode
 	  break add_frame;
 	}
 
+      PCODE_MSG ("adding frame %O\n", frame);
       if (length + 3 > sizeof (exec)) exec += allocate (sizeof (exec));
       exec[length] = frame->tag || frame; // To make new frames from.
 #ifdef DEBUG
@@ -6613,7 +6623,7 @@ class PCode
     if (flags & COLLECT_RESULTS) {
       if (!(flags & CTX_ALREADY_GOT_VC))
 	m_delete (RXML_CONTEXT->misc, "variable_changes");
-      RESCACHE_MSG ("end result cache\n");
+      PCODE_MSG ("end result collection\n");
 
       // Collapse sequences of constants. Could be done when not
       // collecting results too, but it's probably not worth the
@@ -6645,6 +6655,8 @@ class PCode
 	exec[length++] = exec[pos];
       }
     }
+    else
+      PCODE_MSG ("end collection\n");
 
     if (length != sizeof (exec)) exec = exec[..length - 1];
     if (p_code) p_code->finish(), p_code = 0;
