@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.207 2001/07/19 00:42:20 mast Exp $
+// $Id: module.pmod,v 1.208 2001/07/20 00:36:18 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -29,11 +29,12 @@ class RequestID { };
 //!   you'll always get fresh Frame instances every time a tag is
 //!   evaluated.
 //!  @item
-//!   The parser currently doesn't stream data according to the
-//!   interface for streaming tags (but the implementation still
-//!   follows the documented API for it). Therefore there's a risk
-//!   that incompatible changes must be made in it due to design bugs
-//!   when it's tested out. That is considered very unlikely, though.
+//!   The RXML parser module currently doesn't stream data according
+//!   to the interface for streaming tags (but the implementation
+//!   still follows the documented API for it). Therefore there's a
+//!   risk that incompatible changes must be made in it due to design
+//!   bugs when it's tested out. That is considered very unlikely,
+//!   though.
 //!  @item
 //!   The type system will be developed further, and the API in the
 //!   Type class might change as advanced types gets implemented.
@@ -5593,7 +5594,7 @@ static class TXml
 	case TText.name:
       }
 
-    // Automatically handles the casting (if nessesary)
+    // Automatically handles the casting (if necessary)
     if (mixed err = catch { // The catch comes from the cast, if any
       // Cannot use Roxen.* here.
       return _Roxen.html_encode_string( val );
