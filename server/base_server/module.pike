@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module.pike,v 1.89 2000/03/28 20:58:42 jhs Exp $
+// $Id: module.pike,v 1.90 2000/03/30 13:37:33 nilsson Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -59,8 +59,6 @@ array register_module()
     module_unique,
   });
 }
-
-mapping tagdocumentation() { return ([]); }
 
 string fix_cvs(string from)
 {
