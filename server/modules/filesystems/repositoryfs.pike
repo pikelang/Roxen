@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: repositoryfs.pike,v 1.2 2002/06/11 14:47:30 nilsson Exp $";
+constant cvs_version = "$Id: repositoryfs.pike,v 1.3 2002/06/11 14:51:55 nilsson Exp $";
 constant thread_safe = 1;
 
 constant module_type = MODULE_LOCATION;
@@ -68,7 +68,7 @@ int|StringFile find_file( string f, RequestID id )
   Stdio.Stat s = file_stat(f);
   if(!s) {
     f += ",v";
-    s = file_stat(f+",v");
+    s = file_stat(f);
   }
   else {
     if( s->isdir )
