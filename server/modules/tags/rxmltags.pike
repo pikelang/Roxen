@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.46 2000/01/23 16:13:37 kuntri Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.47 2000/01/24 19:21:31 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -42,26 +42,6 @@ string query_provides() {
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=(["roxen-automatic-charset-variable":"<desc tag></desc>",
-"accept-language":#"<desc tag>
- Returns the language code of the language the user prefers, as
- specified by the first language in the accept-language header.
-
- <p>If no accept-language is sent by the users browser None will be
- returned.</p>
-</desc>
-
-<attr name=end value=character>
-
-</attr>
-
-<attr name=full>
- Returns all languages the user has specified, as a comma separated list.
-</attr>
-
-<attr name=start value=character>
-
-</attr>",
-
 "aconf":#"<desc cont>
  Creates a link that can modify the persistent states in the cookie
  RoxenConfig.
@@ -164,23 +144,11 @@ All other attributes will be inherited by the generated a tag",
 
 </desc>
 
-attr name=key value=string>
+<attr name=key value=string>
 
 </attr>",
 
 "catch":#"<desc cont></desc>",
-
-"clientname":#"<desc tag>
- Returns the name of the client. No required attributes.
-</desc>
-
-<attr name=full>
- View the full User Agent string.
-</attr>
-
-<attr name=quote value=html,none>
- Quotes the clientname. Default is 'html'.
-</attr>",
 
 "configimage":#"<desc tag>
  Returns one of the configuration images. The src attribute is required.
@@ -405,19 +373,6 @@ attr name=key value=string>
 
 </attr>",
 
-"file":#"<desc tag>
- Prints the path part of the URL used to get this page.
-</desc>
-
-<attr name=quote value=html,none>
- How the filename is quoted. Default is 'html'.
-</attr>
-
-<attr name=raw>
- Prints the full path part, including the query part with form
- variables.
-</attr>",
-
 "for":#"<desc cont>
  Makes it possible to create loops in RXML.
 </desc>
@@ -612,13 +567,6 @@ attr name=key value=string>
  The separator used to separate the messages, by default newline.
 </attr>",
 
-"realfile":#"<desc tag>
-
- Prints the path to the file containing the page in the computers file
- system, rather than Roxen Webserver's virtual file system, or unknown if
- it is impossible to determine.
-</desc>",
-
 "recursive-output":#"<desc cont>
 
 </desc>
@@ -661,22 +609,6 @@ attr name=key value=string>
 Tja, steker greker kanske?
 </attr>",
 
-"referer":#"<desc tag>
- See documentation for the <tag>Referrer</tag> tag.
-</desc>",
-
-"referrer":#"<desc tag>
- Inserts the URL the visitor came from.
-</desc>
-
-<attr name=alt>
- Text to write if no referrer is given.
-</attr>
-
-<attr name=quote value=html,none>
- How the referrer should be quoted. Default is 'html'.
-</attr>",
-
 "remove-cookie":#"<desc tag>
  Removes a cookie.
 </desc>
@@ -685,8 +617,10 @@ Tja, steker greker kanske?
  Name of the cookie to remove.
 </attr>
 
-<attr name=value>
-FOOO????
+<attr name=value value=text>
+ Even though the cookie has been marked as expired some browsers
+ will not remove the cookie until it is shut down. The text provided
+ with this attribute will be the cookies intemediate value.
 </attr>
 
 Note that removing a cookie won't take effect until the next page
@@ -952,13 +886,6 @@ Sets a variable. The variable attribute is required.
 <attr name=realname>
  Only print the full name of the user, with no link.
 </attr>",
-
-"vfs":#"<desc tag>
- Prints the mountpoint of the filesystem module that handles the page,
- or unknown if it could not be determined. This is useful for creating
- pages or applications that are to be placed anywhere on a site, but
- for some reason have to use absolute paths.
-</desc>",
     ]);
 #endif
 
