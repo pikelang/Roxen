@@ -3,7 +3,5 @@
 #define config_perm(X)    (id->misc->config_user && id->misc->config_user->auth(X))
 #define config_host       id->misc->remote_config_host
 
-#define TYPE_THEME 254
-
 #define SITE_TEMPLATES "config_interface/standard/sites/site_templates/"
 #define ACTIONS        "config_interface/standard/actions/"
