@@ -36,14 +36,11 @@ string parse( RequestID id )
     add_doc_link(rpath + "content_editor_manual/index.xml",
 		 _(0, "Content Editor"));
 
-    add_doc_link(rpath + "content_editor_manual_(instant)/index.xml",
+    add_doc_link(rpath + "content_editor_manual_(i)/index.xml",
 		 _(512, "Content Editor (Instant Edition)"));
 
-    add_doc_link(rpath + "content_editor_manual_(instant_mac)/index.xml",
+    add_doc_link(rpath + "content_editor_manual_(i_m)/index.xml",
 		 _(357, "Content Editor (Instant Edition for Mac)"));
-
-    add_doc_link(rpath + "content_editor_manual_(advanced)/index.xml",
-		 _(513, "Content Editor (Advanced Edition)"));
 
     add_doc_link(rpath + "web_developer_manual/index.xml",
 		 _(514, "Web Developer"));
