@@ -1,13 +1,12 @@
-string cvs_version="$Id: pimage.pike,v 1.7 1997/12/15 01:51:45 per Exp $";
+string cvs_version="$Id: pimage.pike,v 1.8 1998/01/29 08:36:36 per Exp $";
 
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
 
-
-
 class Constructors
 {
+  inherit Image;
   class Animation
   {
     object img, my_fd;
@@ -73,7 +72,6 @@ class Constructors
     }
   }
 
-  inherit Image;
   inherit "roxenlib";
 
   object id;
@@ -169,8 +167,9 @@ class Constructors
     mixed `->(string q)
     {
       function f;
+//       trace(1);
       if(image && (f = image[q])) return FunctionCall(f, this_object());
-      return this_object()[q];
+      return predef::`[](this_object(),q);
     }
     
     void create(array (int) b, object i, float|void delay,
@@ -337,7 +336,7 @@ class Constructors
     return PPM( "roxen-images/urtavla.ppm" );
   }
   
-  object Image(int xs, int ys, mixed bgc)
+  object PImage(int xs, int ys, mixed bgc)
   {
     return myimage(bg(),image(xs,ys,@to_color(bgc)));
   }
@@ -358,7 +357,7 @@ array register_module()
 	      "Clock( delay, time_offset, background_image ); Animated clock-gif.<br>"
 	      "Progress( callback_function ); Animated progress bar.<br>"
 	      "PPM( \"file_name\" ); Loads a PPM file.<br>"
-	      "Image(xs,ys, bg_color ); Simple (cleared) image<br>"
+	      "PImage(xs,ys, bg_color ); Simple (cleared) image<br>"
 	      "Text( \"font\", \"string\", fg_color, bg_color ); <br>"
 	      "Draws some text..<br>", 0, 1 });
 }
