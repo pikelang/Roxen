@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.25 1997/10/20 15:16:59 grubba Exp $ */
+/* $Id: module.pike,v 1.26 1997/10/22 19:47:40 grubba Exp $ */
 
 #include <module.h>
 
@@ -478,10 +478,10 @@ mapping(string:array(mixed)) find_dir_stat(string f, object id)
   array(string) files = find_dir(f, id);
   mapping(string:array(mixed)) res = ([]);
 
-  foreach(files || ({}), string f) {
-    array(mixed) st = stat_file(f, id);
+  foreach(files || ({}), string fname) {
+    array(mixed) st = stat_file(f + "/" + fname, id);
     if (st) {
-      res[f] = st;
+      res[fname] = st;
     }
   }
   return(res);
