@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.210 2004/05/14 21:18:04 mast Exp $
+// $Id: module.pike,v 1.211 2004/05/14 21:42:47 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -708,7 +708,7 @@ multiset(DAVLock) find_locks(string path,
   TRACE_ENTER(sprintf("find_locks(%O, %O, %O, X)",
 		      path, recursive, exclude_shared), this);
 
-  path = resource_id (path, id);
+  string rsc = resource_id (path, id);
 
   multiset(DAVLock) locks = (<>);
   function(mapping(mixed:DAVLock):void) add_locks;
@@ -727,13 +727,13 @@ multiset(DAVLock) find_locks(string path,
 		  locks |= mkmultiset (values (sub_locks));
 		};
 
-  if (file_locks[path]) {
-    add_locks (file_locks[path]);
+  if (file_locks[rsc]) {
+    add_locks (file_locks[rsc]);
   }
 
   foreach(prefix_locks;
 	  string prefix; mapping(mixed:DAVLock) sub_locks) {
-    if (has_prefix(path, prefix)) {
+    if (has_prefix(rsc, prefix)) {
       add_locks (sub_locks);
       break;
     }
@@ -741,7 +741,7 @@ multiset(DAVLock) find_locks(string path,
 
   if (recursive) {
     LOOP_OVER_BOTH (string prefix, mapping(mixed:DAVLock) sub_locks, {
-	if (has_prefix(prefix, path)) {
+	if (has_prefix(prefix, rsc)) {
 	  add_locks (sub_locks);
 	}
       });
@@ -820,9 +820,8 @@ DAVLock|LockFlag check_locks(string path,
     return 0;
   }
 
-  path = resource_id (path, id);
-
   mixed auth_user = authenticated_user_id (path, id);
+  path = resource_id (path, id);
 
   if (DAVLock lock =
       file_locks[path] && file_locks[path][auth_user] ||
@@ -920,8 +919,8 @@ static void register_lock(string path, DAVLock lock, RequestID id)
   TRACE_ENTER(sprintf("register_lock(%O, lock(%O), X).", path, lock->locktoken),
 	      this);
   ASSERT_IF_DEBUG (lock->locktype == "DAV:write");
-  path = resource_id (path, id);
   mixed auth_user = authenticated_user_id (path, id);
+  path = resource_id (path, id);
   if (lock->recursive) {
     if (prefix_locks[path]) {
       prefix_locks[path][auth_user] = lock;
