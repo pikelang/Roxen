@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.253 2000/09/21 11:31:00 kuntri Exp $
+// $Id: rxml.pike,v 1.254 2000/09/26 15:50:50 kuntri Exp $
 
 
 inherit "rxmlhelp";
@@ -2165,7 +2165,7 @@ constant tagdoc=([
 
 "&var;":#"<desc scope><short>
  This scope is empty when the page parsing begins.</short> There are
- no predefined entities for this scope.
+ no predefined entities for this
 </desc>",
 
 
@@ -2334,9 +2334,10 @@ scope created within the define tag.
  Show the contents if the previous <if> tag didn't, or if there was a
  <false> tag above.</short>Show the contents if the previous <tag><ref
  type='tag'>if</ref></tag> tag didn't, or if there was a <tag><ref
- type='tag'>false</ref></tag> tag above. The result is undefined if there
- has been no <tag><ref type='tag'>if</ref></tag>, <true> or <tag><ref
- type='tag'>false</ref></tag> tag above. </desc>",
+ type='tag'>false</ref></tag> tag above. The result is undefined if
+ there has been no <tag><ref type='tag'>if</ref></tag>, <tag><ref
+ type='tag'>true</ref></tag> or <tag><ref type='tag'>false</ref></tag>
+ tag above.</desc>",
 
 "elseif":#"<desc cont><short hide>
  Same as the <if> tag, but it will only evaluate if the previous <if>
