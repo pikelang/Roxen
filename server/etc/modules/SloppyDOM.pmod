@@ -1,4 +1,4 @@
-// $Id: SloppyDOM.pmod,v 1.4 2002/03/06 16:38:47 mast Exp $
+// $Id: SloppyDOM.pmod,v 1.5 2002/03/27 21:39:44 mast Exp $
 
 //! A somewhat DOM-like library that implements lazy generation of the
 //! node tree, i.e. it's generated from the data upon lookup. There's
@@ -93,6 +93,8 @@ class Node
   }
 
   string xml_format()
+  //! Returns the formatted XML that corresponds to the node tree.
+  //!
   //! @note
   //! Not DOM compliant.
   {
