@@ -4,7 +4,7 @@
 // ChiliMoon bootstrap program. Sets up the environment,
 // replces the master, adds custom functions and starts core.pike.
 
-// $Id: loader.pike,v 1.358 2002/10/30 19:10:49 nilsson Exp $
+// $Id: loader.pike,v 1.359 2002/11/02 17:47:11 mani Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ static string    configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: loader.pike,v 1.358 2002/10/30 19:10:49 nilsson Exp $";
+constant cvs_version="$Id: loader.pike,v 1.359 2002/11/02 17:47:11 mani Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -270,7 +270,7 @@ void roxen_perror(string format, mixed ... args)
 }
 
 //! @appears mkdirhier
-//! Make a directory hierachy
+//! Make a directory hierachy. Path variables will be expanded.
 int mkdirhier(string from, int|void mode)
 {
   int r = 1;
@@ -1001,13 +1001,19 @@ string roxen_version()
 //! Expands the following tokens in the provided @[filename].
 //!
 //! @string
+//!   @value "$CONFIGDIR"
+//!     The configuration directory of ChiliMoon. Normally
+//!     "../configuration", but it can be changed by setting the
+//!     environment variable ROXEN_CONFIGDIR or CONFIGURATIONS.
+//!     It can also be changed with the start arguments --config-dir
+//!     and --configuration-directory.
 //!   @value "$LOCALDIR"
-//!     The local directory of the webserver, Normally "../local",
-//!     but it can be changed in by setting the environment
-//!     variable LOCALDIR.
+//!     The local directory of ChiliMoon. Normally "../local", but
+//!     it can be changed in by setting the environment variable
+//!     LOCALDIR.
 //!   @value "$LOGDIR"
-//!     The log directory of the webserver. Normally "../logs",
-//!     but it can be changed in the administration interface under
+//!     The log directory of ChiliMoon. Normally "../logs", but it
+//!     can be changed in the administration interface under
 //!     global settings.
 //!   @value "$VARDIR"
 //!     The webservers var directory. Normally "../var", but it can
@@ -1018,9 +1024,12 @@ string roxen_version()
 //! @endstring
 string roxen_path( string filename )
 {
-  filename = replace( filename, ({"$VVARDIR","$LOCALDIR"}),
-                      ({"$VARDIR/"+roxen_version(),
-                        getenv ("LOCALDIR") || "../local"}) );
+  string vardir = getenv("VARDIR") || "../var";
+  filename = replace( filename,
+		      ([ "$VVARDIR" : vardir+"/"+roxen_version(),
+			 "$VARDIR"  : vardir,
+			 "$CONFIGDIR" : configuration_dir[..sizeof(configuration_dir)-2],
+			 "$LOCALDIR": getenv ("LOCALDIR") || "../local" ]) );
   if( core )
     filename = replace( filename, 
                         "$LOGDIR", 
@@ -1028,11 +1037,12 @@ string roxen_path( string filename )
   else
     if( has_value( filename, "$LOGDIR" ) )
       roxen_perror("Warning: mkdirhier with $LOGDIR before variable is available\n");
-  filename = replace( filename, "$VARDIR", getenv ("VARDIR") || "../var" );
+
 #ifdef __NT__
   while( strlen(filename) && filename[-1] == '/' )
     filename = filename[..strlen(filename)-2];
 #endif
+
   return filename;
 }
 
@@ -1151,9 +1161,9 @@ void write_current_time()
 }
 
 //! @appears throw
-//! Overloads Pikes throw function.
-//! @fixme
-//!    What is the purpose of this?
+//! Overloads Pikes throw function if the define INTERNAL_ERROR_DEBUG
+//! is set. If thrown errors are not normal backtraces a debug output
+//! with the output will be made.
 void paranoia_throw(mixed err)
 {
   if ((arrayp(err) && ((sizeof([array]err) < 2) || !stringp(([array]err)[0]) ||
@@ -1183,6 +1193,8 @@ int main(int argc, array(string) argv)
 			    ({ "config-dir", "configuration-directory" }),
 			    ({ "ROXEN_CONFIGDIR", "CONFIGURATIONS" }),
 			    "../configurations");
+  if(configuration_dir[-1] != '/')
+    configuration_dir += "/";
 
   remove_dumped =
     [int(0..1)]Getopt.find_option(av, "remove-dumped",
