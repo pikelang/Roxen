@@ -82,6 +82,7 @@ string initial_form( Configuration conf, RequestID id, int setonly )
  <tr>
 <td width='30'><img src='/internal-roxen-unit' width=50 height=1 alt='' /></td>
   <td colspan=2>&_.doc:none;</td></tr>
+ <tr><td colspan='3'><img src='/internal-roxen-unit' height='18' /></td></tr>
 </emit>";
         break;
       }
@@ -132,6 +133,7 @@ mixed parse( RequestID id, mapping|void opt )
     "  <tr><td colspan=2 valign=top width=20%><b>&_.name;</b></td>"
     "      <td valign=top><eval>&_.form:none;</eval></td></tr>"
     "  <tr><td></td><td colspan=2>&_.doc:none;<p>&_.type_hint;</td></tr>"
+    "  <tr><td colspan='3'><img src='/internal-roxen-unit' height='18' /></td></tr>"
     "</emit>";
   
   // set initial variables from form variables...

@@ -633,6 +633,7 @@ array initial_form( RequestID id, Configuration conf, array modules )
  <tr>
 <td width='30'><img src='/internal-roxen-unit' width=50 height=1 alt='' /></td>
   <td colspan=2>&_.doc:none;</td></tr>
+ <tr><td colspan='3'><img src='/internal-roxen-unit' height='18' /></td></tr>b
 </emit>";
         break;
       }
