@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.60 2000/02/15 07:53:45 mast Exp $
+//! $Id: module.pmod,v 1.61 2000/02/15 14:59:27 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -1542,7 +1542,7 @@ class Frame
     array(string|Tag) arr_rem_tags = (array) rem_tags;
     array(Tag) arr_add_tags = (array) add_tags;
     for (Parser p = parser; p; p = p->_parent)
-      if (p->tag_set_eval && p->add_runtime_tag) {
+      if (p->tag_set_eval && !p->_local_tag_set && p->add_runtime_tag) {
 	foreach (arr_add_tags, Tag tag)
 	  ([object(TagSetParser)] p)->add_runtime_tag (tag);
 	foreach (arr_rem_tags, string|object(Tag) tag)
@@ -1760,8 +1760,13 @@ class Frame
 	      if (raw_content && raw_content != "") { // Got nested parsing to do.
 		int finished = 0;
 		if (!subparser) { // The nested content is not yet parsed.
-		  subparser = content_type->get_parser (
-		    ctx, [object(TagSet)] this->local_tags, parser);
+		  if (this->local_tags) {
+		    subparser = content_type->get_parser (
+		      ctx, [object(TagSet)] this->local_tags, parser);
+		    subparser->_local_tag_set = 1;
+		  }
+		  else
+		    subparser = content_type->get_parser (ctx, 0, parser);
 		  subparser->finish (raw_content); // Might unwind.
 		  finished = 1;
 		}
@@ -2319,6 +2324,10 @@ class TagSetParser
   optional void remove_runtime_tag (string|Tag tag);
   //! Removes a tag added by add_runtime_tag(). This may only be left
   //! undefined if the parser doesn't parse tags at all.
+
+  // Internals.
+
+  int _local_tag_set;
 
   string _sprintf() {return "RXML.TagSetParser" + PAREN_CNT (__count);}
 }
