@@ -9,7 +9,7 @@
 // This is an extension module.
 
 constant cvs_version=
-"$Id: pikescript.pike,v 1.51 1999/12/18 14:25:45 nilsson Exp $";
+"$Id: pikescript.pike,v 1.52 1999/12/22 01:34:26 per Exp $";
 
 constant thread_safe=1;
 mapping scripts=([]);
@@ -70,7 +70,7 @@ void create()
           "inherits, if any.  Please note that pike modules are currently not "
           "automatically reloaded from disk" );
 
-  defvar( "explicitreload", 0, 
+  defvar( "explicitreload", 1, 
           "Reload scripts when the user sends a no-cache header",
           TYPE_FLAG,
           "If this option is true, scripts will be reloaded if the user sends "
