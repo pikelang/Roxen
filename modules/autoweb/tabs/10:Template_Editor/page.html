@@ -1,0 +1,98 @@
+<br>
+
+<if variable=types>
+<sqloutput query="select * from template_vars">
+  #name# #type# <br>
+</sqloutput>
+<br>
+</if>
+
+<if variable=help>
+<wizard help>
+<sqlquery help>
+</if>
+
+<pike>
+  id->variables->show_wizard=!(id->variables->ok||id->variables->cancel);
+  id->variables->show_menu=
+    !id->variables->edit||id->variables->ok||id->variables->cancel;
+  return "";
+</pike>
+
+<if variable=edit>
+  <wizard preparse name="Edit template preferences">
+  <formoutput quote='¤'>
+    <sqloutput query="select * from template_vars where
+                      group_name='¤edit¤' and category='¤category¤'">
+      <page>
+       <input type=hidden name=edit value='¤edit:quote=mysql¤'>
+       <input type=hidden name=category value='¤category:quote=mysql¤'>
+        <h3>#title#</h3>
+	<cset preparse variable=options><sqloutput quote='£' query="select * from templates where category='¤category¤'">£name£,</sqloutput></cset>
+	<cset preparse variable=default><sqloutput quote='£' query="select * from customers_preferences where customer_id='¤customer_id¤' and variable_id='#id#'">£value£</sqloutput></cset>
+	<formoutput quote='$'>
+	  <var preparse name=variable_#id# type=#type#
+	        options=$options$ default=$default$>
+	</formoutput>
+	<br>
+        #help#<br>
+	<comment>
+	  name=variable_#id# type=#type# <br>
+          <tablify preparse nice cellseparator='='>Variable=Value
+            <insert variables=full></tablify>
+	</comment>
+      </page>
+    </sqloutput>
+    <noparse><noparse>
+    <done>
+      <pike>
+        werror("%O\n\n",id->variables);
+        string r = "";
+	
+	foreach(indices(id->variables), string variable) {
+          if(sscanf(variable, "variable_%d%*s", int variable_id)>0) {
+            r += "<sqlquery query=\""
+	         "delete from customers_preferences "
+		 "where customer_id='¤customer_id¤' and "
+		 "variable_id='"+variable_id+"'"
+		 "\">\n";
+	    r += "<sqlquery query=\""
+	         "insert into customers_preferences "
+	         "(customer_id,variable_id,value) "
+	         " values ('¤customer_id¤','"+variable_id+"','"+
+		 id->variables[variable]+"')"+
+		 "\">\n";
+	  }
+	}
+        return r;
+      </pike>
+    </done></noparse></noparse>
+  </formoutput>
+  </wizard>
+</if>
+<if variable=show_menu>
+  <h3>Template variables</h3>
+  <ul>
+    <sqloutput query="select * from template_vars
+    where category='tmpl' group by group_name order by id">
+      <li><a href="./?edit=#group_name#&category=tmpl">
+        #group_name#
+      </a>
+    </sqloutput>
+  </ul>
+
+  <h3>Navigation variables</h3>
+  <ul>
+    <sqloutput query="select * from template_vars
+    where category='nav' group by group_name order by id">
+      <li><a href="./?edit=#group_name#&category=nav">
+        #group_name#
+      </a>
+    </sqloutput>
+  </ul>
+</if>
+
+<comment>
+<tablify preparse nice cellseparator='='>Variable=Value
+  <insert variables=full></tablify>
+</comment>
