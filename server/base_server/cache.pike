@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: cache.pike,v 1.63 2001/02/08 19:38:07 nilsson Exp $
+// $Id: cache.pike,v 1.64 2001/03/11 18:48:39 nilsson Exp $
 
 #pragma strict_types
 
@@ -21,14 +21,14 @@
 
 #undef CACHE_WERR
 #ifdef CACHE_DEBUG
-# define CACHE_WERR(X) werror("CACHE: "+X+"\n");
+# define CACHE_WERR(X) report_debug("CACHE: "+X+"\n");
 #else
 # define CACHE_WERR(X)
 #endif
 
 #undef MORE_CACHE_WERR
 #ifdef MORE_CACHE_DEBUG
-# define MORE_CACHE_WERR(X) werror("CACHE: "+X+"\n");
+# define MORE_CACHE_WERR(X) report_debug("CACHE: "+X+"\n");
 #else
 # define MORE_CACHE_WERR(X)
 #endif
@@ -226,35 +226,79 @@ void cache_clean()
 # define SESSION_BUCKETS 4
 #endif
 #ifndef SESSION_SHIFT_TIME
-# define SESSION_SHIFT_TIME 15*60
+# define SESSION_SHIFT_TIME 30
 #endif
 
+// The minimum time until which the session should be stored.
 private mapping(string:int) session_persistence;
+// The sessions, divided into several buckets.
 private array(mapping(string:mixed)) session_buckets;
+// The database for storage of the sessions.
+private Sql.Sql db;
+// The biggest value in session_persistence
+private int max_persistence;
 
+// The low level call for storing a session in the database
+private void store_session(string id, mixed data, int t) {
+  data = encode_value(data);
+  if(catch(db->query("INSERT INTO session_cache VALUES (%s," +
+		     t + ",%s)", id, data)))
+    db->query("UPDATE session_cache SET data=%s, persistence=" +
+	      t + " WHERE id=%s", data, id);
+}
+
+// GC that, depending on the sessions session_persistence either
+// throw the session away or store it in a database.
 private void session_cache_handler() {
   remove_call_out(session_cache_handler);
   int t=time(1);
- clean:
-  foreach(indices(session_buckets[-1]), string id) {
-    if(session_persistence[id]<t) {
+  if(max_persistence>t) {
+
+  clean:
+    foreach(indices(session_buckets[-1]), string id) {
+      if(session_persistence[id]<t) {
+	m_delete(session_buckets[-1], id);
+	m_delete(session_persistence, id);
+	continue;
+      }
+      for(int i; i<SESSION_BUCKETS-2; i++)
+	if(session_buckets[i][id]) {
+	  continue clean;
+	}
+      if(objectp(session_buckets[-1][id])) {
+	m_delete(session_buckets[-1], id);
+	m_delete(session_persistence, id);
+	continue;
+      }
+      store_session(id, session_buckets[-1][id], session_persistence[id]);
       m_delete(session_buckets[-1], id);
       m_delete(session_persistence, id);
-      continue;
     }
-    for(int i; i<SESSION_BUCKETS-2; i++)
-      if(session_buckets[i][id]) continue clean;
-    if(objectp(session_buckets[-1][id])) {
-      m_delete(session_buckets[-1], id);
-      m_delete(session_persistence, id);
-      continue;
-    }
-    // Store in db
   }
+
   session_buckets = ({ ([]) }) + session_buckets[..SESSION_BUCKETS-2];
   call_out(session_cache_handler, SESSION_SHIFT_TIME);
 }
 
+// Stores all sessions that should be persistent in the database.
+// This function is called upon exit.
+private void session_cache_destruct() {
+  remove_call_out(session_cache_handler);
+  int t=time(1);
+  if(max_persistence>t) {
+    report_notice("Synchronizing session cache");
+    foreach(session_buckets, mapping(string:mixed) session_bucket)
+      foreach(indices(session_bucket), string id)
+	if(session_persistence[id]>t) {
+	  store_session(id, session_bucket[id], session_persistence[id]);
+	  m_delete(session_persistence, id);
+	}
+  }
+  report_notice("Session cache synchronized\n");
+}
+
+//! Returns the data associated with the session @[id].
+//! Returns a zero type upon failure.
 mixed get_session_data(string id) {
   mixed data;
   foreach(session_buckets, mapping bucket)
@@ -262,15 +306,47 @@ mixed get_session_data(string id) {
       session_buckets[0][id] = data;
       return data;
     }
-  // Retrieve from db
+  data = db->query("SELECT data FROM session_cache WHERE id=%s", id);
+  if(sizeof([array]data) &&
+     !catch(data=decode_value( ([array(mapping(string:string))]data)[0]->data )))
+    return data;
   return ([])[0];
 }
 
-string set_session_data(mixed data, void|string id, void|int persistence) {
+//! Assiciates the session @[id] to the @[data]. If no @[id] is provided
+//! a unique id will be generated. The session id is returned from the
+//! function. The minimum guaranteed storage time may be set with the
+//! @[persistence] argument. Note that this is not a time out.
+//! If @[store] is set, the @[data] will be stored in a database directly,
+//! and not when the garbage collect tries to delete the data. This
+//! will ensure that the data is kept safe in case the server crashes
+//! before the next GC.
+string set_session_data(mixed data, void|string id, void|int persistence,
+			void|int(0..1) store) {
   if(!id) id = ([function(void:string)]roxenp()->create_unique_id)();
   session_persistence[id] = persistence;
   session_buckets[0][id] = data;
+  max_persistence = max(max_persistence, persistence);
+  if(store && persistence) store_session(id, data, persistence);
   return id;
+}
+
+// Sets up the session database tables.
+private void setup_tables() {
+    if(catch(db->query("select id from session_cache where id=''"))) {
+      db->query("CREATE TABLE session_cache ("
+                "id CHAR(32) NOT NULL PRIMARY KEY, "
+		"persistence INT UNSIGNED NOT NULL DEFAULT 0, "
+                "data BLOB NOT NULL)");
+    }
+}
+
+//! Initializes the session handler.
+void init_session_cache() {
+  db = ([function(string:object(Sql.Sql))]master()->resolv("DBManager.get"))("local");
+  if( !db )
+    report_fatal("No 'shared' database!\n");
+  setup_tables();
 }
 
 void create()
@@ -284,4 +360,9 @@ void create()
   call_out(session_cache_handler, SESSION_SHIFT_TIME);
 
   CACHE_WERR("Now online.");
+}
+
+void destroy() {
+  session_cache_destruct();
+  return;
 }
