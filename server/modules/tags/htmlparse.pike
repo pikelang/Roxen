@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.175 1999/05/09 07:16:41 neotron Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.176 1999/05/19 09:20:51 peter Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -633,16 +633,11 @@ string call_user_container(string tag, mapping args, string contents, int line,
   }
   TRACE_ENTER("user defined container &lt;"+tag+"&gt", call_user_container);
   array replace_from = ({"#args#", "<contents>"})+
-    Array.map(indices(args)+indices(id->misc->up_args),
+    Array.map(indices(args),
 	      lambda(string q){return "&"+q+";";});
-  array replace_to = (({make_tag_attributes( args + id->misc->up_args ),
+  array replace_to = (({make_tag_attributes( args  ),
 			contents })+
-		      values(args)+values(id->misc->up_args));
-  foreach(indices(args), string a)
-  {
-    id->misc->up_args["::"+a]=args[a];
-    id->misc->up_args[tag+"::"+a]=args[a];
-  }
+		      values(args));
   string r = replace(id->misc->containers[ tag ], replace_from, replace_to);
   TRACE_LEAVE("");
   return r;
