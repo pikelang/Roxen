@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.66 1999/06/11 04:51:19 mast Exp $
+# $Id: configure.in,v 1.67 1999/06/17 01:09:54 marcus Exp $
 #
 
 prefix=$PWD
@@ -437,6 +437,7 @@ fi
 # CCSHARED are the C *flags* used to create objects to go into a shared
 # library -- this is only needed for a few systems
 AC_MSG_CHECKING(CCSHARED)
+AC_CACHE_VAL(roxen_cv_sys_ccshared,[
 if test -z "$CCSHARED" ; then
   if test "$GCC" = yes ; then
     case $roxen_cv_sys_os in
@@ -453,6 +454,13 @@ if test -z "$CCSHARED" ; then
     esac
   fi
 fi
+  OLD_CFLAGS="$CFLAGS"
+  CFLAGS="$CFLAGS $CCSHARED"
+  AC_TRY_COMPILE([], [int main() { exit(0); }],
+    roxen_cv_sys_ccshared="$CCSHARED", roxen_cv_sys_ccshared='')
+  CFLAGS="$OLD_CFLAGS"
+])
+CCSHARED="$roxen_cv_sys_ccshared"
 AC_MSG_RESULT($CCSHARED)
 
 AC_MSG_CHECKING(LINKFORSHARED)
