@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.133 2003/04/23 12:32:00 mast Exp $
+// $Id: module.pike,v 1.134 2003/06/02 12:06:31 grubba Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -285,6 +285,318 @@ mapping(string:Stat) find_dir_stat(string f, RequestID id)
 
   TRACE_LEAVE("");
   return(res);
+}
+
+// ISO 8601 Date and Time
+// RFC 2518 23.2
+// No fraction, UTC only.
+static string iso8601_date_time(int ts)
+{
+  mapping(string:int) gmt = gmtime(ts);
+  return sprintf("%04d-%02d-%02dT%02d:%02d:%02dZ",
+		 1900 + gmt->year, gmt->mon, gmt->mday,
+		 gmt->hour, gmt->min, gmt->sec);
+}
+
+//! Returns a multiset with the names off all supported properties.
+multiset(string) query_all_properties(string path, RequestID id)
+{
+  Stat st = stat_file(path, id);
+  if (!st) return (<>);
+  multiset(string) res = (<
+    "DAV:creationdate",		// 13.1
+    "DAV:displayname",		// 13.2
+    "DAV:getlastmodified",	// 13.7
+  >);
+  if (st->isreg) {
+    res += (<
+      "DAV:getcontentlength",	// 13.4
+      "DAV:getcontenttype",	// 13.5
+    >);
+  }
+  return res;
+}
+
+//! Returns the value of the specified property, or an error code
+//! mapping.
+//!
+//! @note
+//!   Returning a string is shorthand for returning an array
+//!   with a single text node.
+string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
+  query_property(string path, string prop_name, RequestID id)
+{
+  Stat st = stat_file(path, id);
+  if (!st) return 0;		// FIXME: No such file.
+  switch(prop_name) {
+  case "DAV:creationdate":	// 13.1
+    return iso8601_date_time(st->ctime);
+  case "DAV:displayname":	// 13.2
+    return combine_path(query_location(), path);
+  case "DAV:getcontentlength":	// 13.4
+    if (st->isreg) {
+      return (string)st->size;
+    }
+    break;
+  case "DAV:getcontenttype":	// 13.5
+    if (st->isreg) {
+      return id->conf->
+	type_from_filename(path, 0,
+			   lower_case(Roxen.extension(path, id)));
+    }
+    break;
+  case "DAV:getlastmodified":	// 13.7
+    return iso8601_date_time(st->mtime);
+  default:
+    break;
+  }
+  return 0;	// FIXME: No such property.
+}
+
+//! Attempt to set property @[prop_name] for @[path] to @[value].
+//!
+//! @param value
+//!   Value to set the node to.
+//!   The case of an array of a single text node is special cased,
+//!   and is sent as a @expr{string@}.
+//!
+//! @returns
+//!   Returns a result mapping. May return @expr{0@} (zero) on success.
+//!
+//! @note
+//!   Actual changing of the property should be done first
+//!   when @[patch_property_commit()] is called, or unrolled
+//!   when @[patch_property_unroll()] is called.
+//!
+//! @note
+//!   Overloaded variants should only set live properties;
+//!   setting of dead properties should be done throuh
+//!   overloading of @[set_dead_property()].
+mapping(string:mixed) set_property(string path, string prop_name,
+				   string|array(Parser.XML.Tree.Node) value,
+				   RequestID id)
+{
+  switch(prop_name) {
+  case "DAV:creationdate":	// 13.1
+  case "DAV:displayname":	// 13.2
+  case "DAV:getcontentlength":	// 13.4
+  case "DAV:getcontenttype":	// 13.5
+  case "DAV:getlastmodified":	// 13.7
+    return Roxen.http_low_answer(409,
+				 "Attempt to set read-only property.");
+  }
+  return set_dead_property(path, prop_name, value, id);
+}
+
+//! Attempt to set dead property @[prop_name] for @[path] to @[value].
+//!
+//! @returns
+//!   Returns a result mapping. May return @expr{0@} (zero) on success.
+//!
+//! @note
+//!   Actual changing of the property should be done first
+//!   when @[patch_property_commit()] is called, or unrolled
+//!   when @[patch_property_unroll()] is called.
+//!
+//! @note
+//!   This function is called as a fallback by @[set_property()]
+//!   if all else fails.
+//!
+//! @note
+//!   The default implementation currently does not support setting
+//!   of dead properties, and will return an error code.
+mapping(string:mixed) set_dead_property(string path, string prop_name,
+					array(Parser.XML.Tree.Node) value,
+					RequestID id)
+{
+  return Roxen.http_low_answer(405,
+			       "Setting of dead properties is not supported.");
+}
+
+//! Attempt to remove the property @[prop_name] for @[path].
+//!
+//! @note
+//!   Actual removal of the property should be done first
+//!   when @[patch_property_commit()] is called, or unrolled
+//!   when @[patch_property_unroll()] is called.
+//!
+//! @returns
+//!   Returns a result mapping. May return @expr{0@} (zero) on success.
+//!
+//! @note
+//!   The default implementation does not support deletion.
+mapping(string:mixed) remove_property(string path, string prop_name,
+				      RequestID id)
+{
+  switch(prop_name) {
+  case "DAV:creationdate":	// 13.1
+  case "DAV:displayname":	// 13.2
+  case "DAV:getcontentlength":	// 13.4
+  case "DAV:getcontenttype":	// 13.5
+  case "DAV:getlastmodified":	// 13.7
+    return Roxen.http_low_answer(409,
+				 "Attempt to remove a read-only property.");
+  }
+  return Roxen.http_low_answer(404,
+			       "Attempt to remove an unknown property.");
+}
+
+//! Default implementation of some RFC 2518 properties.
+//!
+//! @param path
+//!   @[query_location()]-relative path.
+//! @param mode
+//!   Query-mode. Currently one of
+//!   @string mode
+//!     @value "DAV:propname"
+//!       Query after names of supported properties.
+//!     @value "DAV:allprop"
+//!       Query after all properties and their values.
+//!     @value "DAV:prop"
+//!       Query after properties specified by @[filt] and
+//!       their values.
+//!   @endstring
+//! @param result
+//!   Result object.
+//! @param id
+//!   Id of the current request.
+//! @param filt
+//!   Optional multiset of requested properties. If this parameter
+//!   is @expr{0@} (zero) then all available properties are requested.
+//!
+//! @note
+//!   id->not_query() does not necessarily contain the same value as @[path].
+void find_properties(string path, string mode, MultiStatus result,
+		     RequestID id, multiset(string)|void filt)
+{
+  Stat st = stat_file(path, id);
+  if (!st) return;
+
+  switch(mode) {
+  case "DAV:propname":
+    foreach(indices(query_all_properties(path, id)), string prop_name) {
+      result->add_property(path, prop_name, "");
+    }
+    return;
+  case "DAV:allprop":
+    filt = query_all_properties(path, id);
+    // FALL_THROUGH
+  case "DAV:prop":
+    foreach(indices(filt), string prop_name) {
+      result->add_property(path, prop_name,
+			   query_property(path, prop_name, id));
+    }
+    return;
+  }
+  // FIXME: Unsupported DAV operation.
+  return;
+}
+
+void recurse_find_properties(string path, string mode, int depth,
+			     MultiStatus result,
+			     RequestID id, multiset(string)|void filt)
+{
+  Stat st = stat_file(path, id);
+  if (!st) return;
+
+  find_properties(path, mode, result, id, filt);
+  if ((depth <= 0) || !st->isdir) return;
+  depth--;
+  foreach(find_dir(path, id), string filename) {
+    recurse_find_properties(combine_path(path, filename), mode, depth,
+			    result, id, filt);
+  }
+}
+
+// RFC 2518 8.2
+//   Instructions MUST either all be executed or none executed.
+//   Thus if any error occurs during procesing all executed
+//   instructions MUST be undone and a proper error result
+//   returned.
+
+//! Signal start of patching of properties for @[path].
+void patch_property_start(string path, RequestID id)
+{
+}
+
+//! Patching of the properties for @[path] failed.
+//! Restore the state to what it was when @[patch_property_start()]
+//! was called.
+void patch_property_unroll(string path, RequestID id)
+{
+}
+
+//! Patching of the properties for @[path] succeeded.
+void patch_property_commit(string path, RequestID id)
+{
+}
+
+void patch_properties(string path, array(PatchPropertyCommand) instructions,
+		      MultiStatus result, RequestID id)
+{
+  patch_property_start(path, id);
+
+  array(mapping(string:mixed)) results;
+
+  mixed err = catch {
+    results = instructions->execute(path, this_object(), id);
+  };
+  if (err) {
+    report_debug("patch_properties() failed:\n"
+		 "%s\n",
+		 describe_backtrace(err));
+    mapping(string:mixed) answer =
+      Roxen.http_low_answer(500, "Internal Server Error.");
+    foreach(instructions, PatchPropertyCommand instr) {
+      result->add_property(path, instr->property_name, answer);
+    }
+    patch_property_unroll(path, id);
+  } else {
+    int any_failed;
+    foreach(results, mapping(string:mixed) answer) {
+      if (any_failed = (answer && (answer->error >= 300))) {
+	break;
+      }
+    }
+    if (any_failed) {
+      // Unroll and fail any succeeded items.
+      int i;
+      mapping(string:mixed) answer =
+	Roxen.http_low_answer(424, "Failed dependency.");
+      for(i = 0; i < sizeof(results); i++) {
+	if (!results[i] || results[i]->error < 300) {
+	  result->add_property(path, instructions[i]->property_name,
+			       answer);
+	} else {
+	  result->add_property(path, instructions[i]->property_name,
+			       results[i]);
+	}
+      }
+      patch_property_unroll(path, id);
+    } else {
+      int i;
+      for(i = 0; i < sizeof(results); i++) {
+	result->add_property(path, instructions[i]->property_name,
+			     results[i]);
+      }
+      patch_property_commit(path, id);
+    }
+  }
+}
+
+void recurse_patch_properties(string path, int depth,
+			      array(PatchPropertyCommand) instructions,
+			      MultiStatus result, RequestID id)
+{
+  Stat st = stat_file(path, id);
+
+  patch_properties(path, instructions, result, id);
+  if (!st || (depth <= 0) || !st->isdir) return;
+  depth--;
+  foreach(find_dir(path, id), string filename) {
+    recurse_patch_properties(combine_path(path, filename), depth,
+			     instructions, result, id);
+  }
 }
 
 string real_file(string f, RequestID id){}
