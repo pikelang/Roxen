@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.3 2000/08/12 19:23:26 nilsson Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.4 2000/08/28 19:50:08 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_PARSER;
 constant module_name = "Additional RXML tags";
@@ -176,6 +176,7 @@ class TagDice {
     inherit RXML.Frame;
 
     string do_return(RequestID id) {
+      NOCACHE();
       if(!args->type) args->type="T6";
       args->type = replace( args->type, "D", "T" );
       int value;
