@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.157 2000/03/04 22:18:06 mast Exp $
+// $Id: rxml.pike,v 1.158 2000/03/04 22:28:15 mast Exp $
 
 inherit "roxenlib";
 inherit "rxmlhelp";
@@ -291,7 +291,7 @@ RXML.TagSet rxml_tag_set = class
 RXML.Type default_content_type = RXML.t_html (RXML.PXml);
 RXML.Type default_arg_type = RXML.t_text (RXML.PEnt);
 
-int parse_html_compat;
+int old_rxml_compat;
 
 class BacktraceFrame
 // Only used to get old style tags in the RXML backtraces.
@@ -330,7 +330,7 @@ array|string call_overridden (array call_to, RXML.PXml parser,
 {
   mixed tdef, cdef;
 #ifdef OLD_RXML_COMPAT
-  if (parse_html_compat) name = lower_case (name);
+  if (old_rxml_compat) name = lower_case (name);
 #endif
 
   if (sizeof (call_to) > 1 && call_to[1] && call_to[1] != name) // Another tag.
@@ -380,12 +380,11 @@ array|string call_tag(RXML.PXml parser, mapping args, string|function rf)
   RXML.Context ctx = parser->context;
   RequestID id = ctx->id;
   string tag = parser->tag_name();
-  werror ("call_tag %s\n", tag);
   id->misc->line = (string)parser->at_line();
 
   if(args->help)
   {
-    TRACE_ENTER("tag &lt;"+tag+" help&gt", rf);
+    TRACE_ENTER("tag &lt;"+tag+" help&gt;", rf);
     string h = find_tag_doc(tag, id);
     TRACE_LEAVE("");
     return h;
@@ -443,7 +442,6 @@ array(string)|string call_container(RXML.PXml parser, mapping args,
   RXML.Context ctx = parser->context;
   RequestID id = ctx->id;
   string tag = parser->tag_name();
-  werror ("call_container %s\n", tag);
   id->misc->line = (string)parser->at_line();
 
   if(args->help)
@@ -519,7 +517,7 @@ string do_parse(string to_parse, RequestID id,
     // Got to temporarily set the default context to get the compat
     // setting into the master parser object used for cloning.
     // RXML.TagSet.`() is essentially duplicated here. Ghurckkl!
-    if(parse_html_compat) {
+    if(old_rxml_compat) {
       rxml_tag_set->call_prepare_funs (ctx = RXML.Context (rxml_tag_set, id));
       RXML.Context orig_ctx = RXML.get_context();
       RXML.set_context (ctx);
@@ -933,7 +931,7 @@ class UserTag {
 	content=String.trim_all_whites(content);
 
 #ifdef OLD_RXML_COMPAT
-      if(parse_html_compat) {
+      if(old_rxml_compat) {
 	array replace_from, replace_to;
 	if (flags & RXML.FLAG_EMPTY_ELEMENT) {
 	  replace_from = map(indices(nargs),make_entity)+({"#args#"});
@@ -997,7 +995,7 @@ class TagDefine {
 
 #ifdef OLD_RXML_COMPAT
 	// This is not part of RXML 2.0
-	if(parse_html_compat)
+	if(old_rxml_compat)
 	  foreach( indices(args), string arg )
 	    if( arg[..7] == "default_" )
 	      {
@@ -1016,7 +1014,7 @@ class TagDefine {
 	if(args->trimwhites) content=String.trim_all_whites(content);
 
 #ifdef OLD_RXML_COMPAT
-	if(parse_html_compat) content = replace( content, indices(args), values(args) );
+	if(old_rxml_compat) content = replace( content, indices(args), values(args) );
 #endif
 
 	RXML.get_context()->add_runtime_tag(UserTag(n, content, defaults,
