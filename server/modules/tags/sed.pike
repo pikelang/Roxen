@@ -1,5 +1,4 @@
 // This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
-// $Id: sed.pike,v 1.3 1999/05/20 03:26:22 neotron Exp $
 // by Mirar <mirar@idonex.se>
 
 // Adds the <sed> tag, to emulate a subset of sed operations in rxml
@@ -37,7 +36,7 @@
 // 
 // where line is numeral, first line==1
 
-constant cvs_version = "$Id: sed.pike,v 1.3 1999/05/20 03:26:22 neotron Exp $";
+constant cvs_version = "$Id: sed.pike,v 1.4 1999/12/08 19:27:22 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>

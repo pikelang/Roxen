@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1999, Idonex AB.
-// $Id: foldlist.pike,v 1.9 1999/12/07 12:11:55 nilsson Exp $
+//
 
-constant cvs_version = "$Id: foldlist.pike,v 1.9 1999/12/07 12:11:55 nilsson Exp $";
+constant cvs_version = "$Id: foldlist.pike,v 1.10 1999/12/08 19:27:09 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -10,7 +10,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "state";
 
-array (mixed) register_module()
+array(string|int) register_module()
 {
   return ({ MODULE_PARSER, "Folding list tag",
 	    "Adds the &lt;foldlist&gt; tag. This makes it easy to build a folder list or an outline.",
