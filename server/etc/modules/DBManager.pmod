@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.18 2001/08/09 13:30:36 per Exp $
+// $Id: DBManager.pmod,v 1.19 2001/08/09 14:08:48 per Exp $
 //! @module DBManager
 //! Manages database aliases and permissions
 #include <roxen.h>
@@ -324,14 +324,21 @@ mapping db_stats( string name )
 //! of tables and their total size). If the database is not an
 //! internal database, or the database does not exist, 0 is returned
 {
-//   array(mapping(string:mixed)) d =
-//            query("SELECT path,local FROM dbs WHERE name=%s", db );
-//   if( !(sizeof( d ) && (int)d[0]["local"] ) )
-//     return 0;
-  array d;
-  Sql.Sql db = get( name );
+  array(mapping(string:mixed)) d = query("SELECT local FROM dbs WHERE name=%s", name );
+  Sql.Sql db;
+  int rst;
+  if( (sizeof( d ) && (int)d[0]["local"] ) )
+  {
+    db = connect_to_my_mysql( 0, "roxen" );
+    db->query( "USE "+name );
+    rst = 1;
+  }
+  else
+    db = cached_get( name );
   if( catch( d = db->query( "SHOW TABLE STATUS" ) ) )
     return 0;
+  if( rst )
+    db->query( "USE roxen" );
   mapping res = ([]);
   foreach( d, mapping r )
   {
@@ -360,7 +367,10 @@ string db_url( string name,
 {
   array(mapping(string:mixed)) d =
            query("SELECT path,local FROM dbs WHERE name=%s", name );
-  if( !sizeof( d ) ) return 0;
+
+  if( !sizeof( d ) )
+    return 0;
+
   if( (int)d[0]["local"] )
   {
     if( force )
