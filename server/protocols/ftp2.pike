@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.38 1998/05/16 21:26:20 grubba Exp $
+ * $Id: ftp2.pike,v 1.39 1998/05/18 13:16:45 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -98,9 +98,9 @@
 #endif /* FTP2_DEBUG */
 
 #if constant(thread_create)
-#define BACKEND_CLOSE(FD)	do { FD->set_blocking(); call_out(FD->close, 0); FD = 0; } while(0)
+#define BACKEND_CLOSE(FD)	do { DWRITE("close\n"); FD->set_blocking(); call_out(FD->close, 0); FD = 0; } while(0)
 #else /* !constant(thread_create) */
-#define BACKEND_CLOSE(FD)	do { FD->set_blocking(); FD->close(); FD = 0; } while(0)
+#define BACKEND_CLOSE(FD)	do { DWRITE("close\n"); FD->set_blocking(); FD->close(); FD = 0; } while(0)
 #endif /* constant(thread_create) */
 
 class RequestID
@@ -1088,6 +1088,26 @@ class FTPSession
   inherit "roxenlib";
 
   static private constant cmd_help = ([
+    // FTP commands in reverse RFC order.
+
+    // The following is a command suggested by the author of ncftp.
+    "CLNT":"<sp> <client-name> <sp> <client-version> "
+    "[<sp> <optional platform info>] (Set client name)",
+
+    // The following are in
+    // "Extended Directory Listing, TVFS, and Restart Mechanism for FTP"
+    // IETF draft 4.
+    "FEAT":"(Feature list)",
+    "MDTM":"<sp> path-name (Modification time)",
+    "SIZE":"<sp> path-name (Size)",
+    "MLST":"<sp> path-name (Machine Processing List File)",
+    "MLSD":"<sp> path-name (Machine Processing List Directory)",
+    "OPTS":"<sp> command <sp> options (Set Command-specific Options)",
+
+    // These are in RFC 1639
+    "LPRT":"<SP> <long-host-port> (Long port)",
+    "LPSV":"(Long passive)",
+
     // Commands in the order from RFC 959
 
     // Login
@@ -1126,18 +1146,11 @@ class FTPSession
     // Informational commands
     "SYST":"(Get type of operating system)",
     "STAT":"<sp> path-name (Status for file)",
-    "CLNT":"<sp> <client-name> <sp> <client-version> [<sp> <optional platform info>]",
     "HELP":"[ <sp> <string> ] (Give help)",
-
     // Miscellaneous commands
     "SITE":"<sp> <string> (Site parameters)",	// Has separate help
     "NOOP":"(No operation)",
     
-    // These are in RFC 542
-    "BYE":"(Logout)",
-    "BYTE":"<sp> <bits> (Byte size)",
-    "SOCK":"<sp> host-socket (Data socket)",
-
     // Old "Experimental commands"
     // These are in RFC 775
     // Required by RFC 1123 4.1.3.1
@@ -1147,16 +1160,6 @@ class FTPSession
     "XCWD":"[ <sp> directory-name ] (Change working directory)",
     "XCUP":"(Change to parent directory)",
 
-    // The following are in
-    // "Extended Directory Listing, TVFS, and Restart Mechanism for FTP"
-    // draft 4.
-    "FEAT":"(Feature list)",
-    "MDTM":"<sp> path-name (Modification time)",
-    "SIZE":"<sp> path-name (Size)",
-    "MLST":"<sp> path-name (Machine Processing List File)",
-    "MLSD":"<sp> path-name (Machine Processing List Directory)",
-    "OPTS":"<sp> command <sp> options (Set Command-specific Options)",
-
     // These are in RFC 765 but not in RFC 959
     "MAIL":"[<sp> <recipient name>] (Mail to user)",
     "MSND":"[<sp> <recipient name>] (Mail send to terminal)",
@@ -1165,51 +1168,65 @@ class FTPSession
     "MRSQ":"[<sp> <scheme>] (Mail recipient scheme question)",
     "MRCP":"<sp> <recipient name> (Mail recipient)",
 
-    // This one is referenced in a lot of old RFCs
-    "MLFL":"(Mail file)",
+    // These are in RFC 743
+    "XRSQ":"[<sp> <scheme>] (Scheme selection)",
+    "XRCP":"<sp> <recipient name> (Recipient specification)",
 
     // These are in RFC 737
     "XSEN":"[<sp> <recipient name>] (Send to terminal)",
     "XSEM":"[<sp> <recipient name>] (Send, mail if can\'t)",
     "XMAS":"[<sp> <recipient name>] (Mail and send)",
 
-    // These are in RFC 743
-    "XRSQ":"[<sp> <scheme>] (Scheme selection)",
-    "XRCP":"<sp> <recipient name> (Recipient specification)",
+    // These are in RFC 542
+    "BYE":"(Logout)",
+    "BYTE":"<sp> <bits> (Byte size)",
+    "SOCK":"<sp> host-socket (Data socket)",
 
-    // These are in RFC 1639
-    "LPRT":"<SP> <long-host-port> (Long port)",
-    "LPSV":"(Long passive)",
+    // This one is referenced in a lot of old RFCs
+    "MLFL":"(Mail file)",
   ]);
 
   static private constant site_help = ([
-    "PRESTATE":"<sp> prestate",
     "CHMOD":"<sp> mode <sp> file",
+    "PRESTATE":"<sp> prestate",
   ]);
   
   static private constant modes = ([
-    "I":"BINARY",
     "A":"ASCII",
-    "L":"LOCAL",
     "E":"EBCDIC",
+    "I":"BINARY",
+    "L":"LOCAL",
   ]);
-  static private string to_send = "";
+
+  static private object(ADT.queue) to_send = ADT.queue();
+
   static private int end_marker = 0;
 
   static private string write_cb()
   {
-    string s = to_send;
-    to_send = "";
+    if (to_send->is_empty()) {
 
-    DWRITE(sprintf("FTP2: write_cb(): Sending \"%s\"\n", s));
+      DWRITE(sprintf("FTP2: write_cb(): Empty send queue.\n"));
 
-    if (!end_marker) {
       ::set_write_callback(0);
-    } else if (s == "") {
-      ::set_write_callback(0);
-      return(0);	// Mark EOF
+      if (end_marker) {
+	DWRITE(sprintf("FTP2: write_cb(): Sending EOF.\n"));
+	return(0);	// Mark EOF
+      }
+      DWRITE(sprintf("FTP2: write_cb(): Sending \"\"\n"));
+      return("");	// Shouldn't happen, but...
+    } else {
+      string s = to_send->get();
+
+      DWRITE(sprintf("FTP2: write_cb(): Sending \"%s\"\n", s));
+
+      if (to_send->is_empty()) {
+	if (!end_marker) {
+	  ::set_write_callback(0);
+	}
+      }
+      return(s);
     }
-    return(s);
   }
 
   void send(int code, array(string) data)
@@ -1233,11 +1250,15 @@ class FTPSession
     data[sizeof(data)-1] = sprintf("%03d %s\r\n", code, data[sizeof(data)-1]);
     s = data * "";
 
-    if (sizeof(s) && !sizeof(to_send)) {
-      to_send = s;
-      ::set_write_callback(write_cb);
+    if (sizeof(s)) {
+      if (to_send->is_empty()) {
+	to_send->put(s);
+	::set_write_callback(write_cb);
+      } else {
+	to_send->put(s);
+      }
     } else {
-      to_send += s;
+      DWRITE(sprintf("FTP2: send(): Nothing to send!\n"));
     }
   }
 
