@@ -1,4 +1,4 @@
-// string cvs_version = "$Id: module_support.pike,v 1.29 1999/10/18 20:29:58 marcus Exp $";
+// string cvs_version = "$Id: module_support.pike,v 1.30 1999/11/02 01:37:22 per Exp $";
 #include <roxen.h>
 #include <module.h>
 #include <stat.h>
@@ -224,7 +224,23 @@ program my_compile_file(string file)
       file_stat (ofile)[ST_MTIME] < remove_dumped_mark)
     rm (ofile);
 #endif
-  program p  = (program)( file );
+  program p;
+
+  object e = ErrorContainer();
+  master()->set_inhibit_compile_errors(e->got_error);
+  catch {
+    p  = (program)( file );
+  };
+  master()->set_inhibit_compile_errors(0);
+  if( !p )
+  {
+    if( string q = e->get() )
+    {
+      report_error( "Failed to compile module:\n"+q );
+      throw("");
+    }
+    throw( "Compilation failed\n"); 
+  }
   if( !file_stat( ofile ) ||
       file_stat(ofile)[ST_MTIME] <
       file_stat(file)[ST_MTIME] )
@@ -290,6 +306,11 @@ class Module
   int type, multiple_copies;
   mapping|string name;
   mapping|string description;
+
+  string _sprintf()
+  {
+    return "ModuleInfo("+sname+")";
+  }
 
   string get_name()
   {
@@ -455,8 +476,9 @@ array rec_find_all_modules( string dir )
 {
   array dirlist = get_dir( dir ) - ({"CVS"});
   array modules = ({});
-  if( search( dirlist, ".nomodules" ) )
-    return 0;
+
+  if( search( dirlist, ".nomodules" )  != -1)
+    return ({});
 
   foreach( dirlist, string file )
     catch 
@@ -482,7 +504,9 @@ array(Module) all_modules()
     possible |= rec_find_all_modules( dir );
   foreach( possible, string p )
     modules[ p ] = Module( p );
-  return values( modules ) - ({ 0 });
+  array(Module) tmp = values( modules ) - ({ 0 });
+  sort( tmp->get_name(), tmp );
+  return tmp;
 }
   
 Module find_module( string name )

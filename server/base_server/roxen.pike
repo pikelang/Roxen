@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.341 1999/10/23 20:43:44 marcus Exp $
+ * $Id: roxen.pike,v 1.342 1999/11/02 01:37:22 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.341 1999/10/23 20:43:44 marcus Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.342 1999/11/02 01:37:22 per Exp $";
 
 object backend_thread;
 object argcache;
@@ -782,11 +782,17 @@ class Protocol
     ip = i;
 
     ::create();
-
-    if(!bind( port, got_connection, ip )) {
-      report_error(sprintf("Failed to bind %s://%s:%d/\n", name, ip, port));
+    if(!bind( port, got_connection, ip )) 
+    {
+      report_error("Failed to bind %s://%s:%d/ (%s)\n", (string)name, 
+                   (ip||"*"), (int)port, strerror( errno() ));
       destruct();
     }
+  }
+  
+  string _sprintf( )
+  {
+    return "Protocol("+name+"://"+ip+":"+port+")";
   }
 }
 
@@ -986,6 +992,11 @@ class SSLProtocol
     destruct();
   }
 #endif /* constant(SSL.sslfile) */
+
+  string _sprintf( )
+  {
+    return "SSLProtocol("+name+"://"+ip+":"+port+")";
+  }
 }
 
 class HTTP
@@ -1212,12 +1223,12 @@ int register_url( string url, object conf )
 
   array(string) required_hosts;
 
-  /*  if( !prot->supports_ipless ) */
+  /*  if( !prot->supports_ipless )*/
     required_hosts = find_ips_for( host );
 
-  if (!required_hosts) {
+  if (!required_hosts) 
     required_hosts = ({ 0 });	// ANY
-  }
+
 
   mapping m;
   if( !( m = open_ports[ protocol ] ) )
@@ -1246,7 +1257,7 @@ int register_url( string url, object conf )
       failures++;
       if (required_host) {
 	report_warning("Binding the port on IP " + required_host +
-		       " failed for URL " + url + "!\n");
+		       " failed\n   for URL " + url + "!\n");
       }
       continue;
     }
@@ -1255,7 +1266,7 @@ int register_url( string url, object conf )
   }
   if (failures == sizeof(required_hosts)) {
     m_delete( urls, url );
-    report_error( "Cannot register URL "+url+", cannot bind the port!\n" );
+    report_error( "Cannot register URL "+url+"!\n" );
     sort_urls();
     return 0;
   }
@@ -2090,8 +2101,6 @@ void create()
 
   call_out(post_create,1); //we just want to delay some things a little
 }
-
-
 
 // Set the uid and gid to the ones requested by the user. If the sete*
 // functions are available, and the define SET_EFFECTIVE is enabled,

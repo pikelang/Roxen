@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.49 1999/10/18 21:13:20 per Exp $ */
+/* $Id: module.pike,v 1.50 1999/11/02 01:37:22 per Exp $ */
 #include <module.h>
 #include <request_trace.h>
 
@@ -9,6 +9,11 @@ constant module_type   = MODULE_PARSER;
 constant module_name   = "Unnamed module";
 constant module_doc    = "Undocumented";
 constant module_unique = 1;
+
+string _sprintf()
+{
+  return sprintf("Module("+register_module()[1]+",%s)", my_configuration());
+}
 
 array register_module()
 {

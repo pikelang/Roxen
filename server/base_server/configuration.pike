@@ -3,7 +3,7 @@
  * (C) 1996, 1999 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.215 1999/10/19 02:35:24 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.216 1999/11/02 01:37:21 per Exp $";
 #include <module.h>
 #include <roxen.h>
 #include <request_trace.h>
@@ -3211,4 +3211,9 @@ int arent_we_throttling_server () {
 }
 int arent_we_throttling_request() {
   return !query("req_throttle");
+}
+
+string _sprintf( )
+{
+  return "Configuration("+name+")";
 }
