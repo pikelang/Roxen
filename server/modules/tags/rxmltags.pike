@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.324 2001/10/05 12:40:59 sara Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.325 2001/10/05 13:48:08 sara Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -5022,8 +5022,10 @@ using the pre tag.
  they are also recognized so that the surrounding tag doesn't cache
  their contents too. It's thus possible to change the cache parameters
  or completely disable caching of a certain part of the content inside
- a <tag>cache</tag> tag. Note that this implies that any RXML tags
- that surrounds the inner <tag>cache</tag> tag(s) won't be cached.</p>
+ a <tag>cache</tag> tag.</p>
+ 
+ <note><p>This implies that any RXML tags that surrounds the inner 
+ <tag>cache</tag> tag(s) won't be cached.</p></note>
 
  <p>Besides the value produced by the content, all assignments to RXML
  variables in any scope are cached. I.e. an RXML code block which
@@ -5036,12 +5038,12 @@ using the pre tag.
  The arguments \"variable\", \"key\" and \"profile\" lets you specify
  the cache dependencies.</p>
 
- <p>Note that it's easy to create huge amounts of cached values if the
+ <note><p>It is easy to create huge amounts of cached values if the
  cache parameters are chosen badly. E.g. to depend on the contents of
  the form scope is typically only acceptable when combined with a
  fairly short cache time, since it's otherwise easy to fill up the
  memory on the server simply by making many requests with random
- variables.</p>
+ variables.</p></note>
 
  <p>The cache can be shared between all <tag>cache</tag> tags with
  identical content, which is typically useful in <tag>cache</tag> tags
