@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.896 2005/03/02 14:02:51 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.897 2005/03/02 17:49:51 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -1742,7 +1742,6 @@ class Protocol
   }
 }
 
-// FIXME: Remove when retargetting for different version of Pike!
 #if constant(SSL.sslfile)
 class SSLProtocol
 //! Base protocol for SSL ports. Exactly like Port, but uses SSL.
@@ -1993,7 +1992,6 @@ class SSLProtocol
   }
 }
 #endif
-// FIXME: Remove when retargetting for different version of Pike!
 
 mapping(string:Protocol) build_protocols_mapping()
 {
