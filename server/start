@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.136 2000/11/20 08:12:16 per Exp $
+# $Id: start,v 1.137 2000/11/20 08:34:41 per Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -635,16 +635,19 @@ signal_exit() {
 start_roxen() {
   check_owner
 
-  nfds=2147483647
-  while [ $nfds -gt "`ulimit -n`" ] ; do 
-    nfds=`expr $nfds / 2`
-    if ulimit -n $nfds 2>/dev/null; then 
-      dp "Maximum number of open FDs: `ulimit -n`"
-      if [ "`ulimit -n`" -lt 1024 ] ; then
-        dp "Warning: This is dangerously low"
-      fi
-     fi
-  done
+  if ulimit -n unlimited 2>/dev/null ; then 
+   :
+  else
+    nfds=1073741824
+    while [ $nfds -gt "`ulimit -n`" ] ; do 
+      nfds=`expr $nfds / 2`
+      ulimit -n $nfds 2>/dev/null
+    done
+  fi
+  dp "Maximum number of open FDs: `ulimit -n`"
+  if [ "`ulimit -n`" -lt 1024 ] 2>/dev/null; then
+    dp "Warning: This is dangerously low"
+  fi
 
   if [ x$remove_dumped = x1 ] ; then
     remove_old_dot_o_files "user request"
