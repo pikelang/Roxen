@@ -15,7 +15,7 @@
 #define _rettext _context_misc[" _rettext"]
 #define _ok _context_misc[" _ok"]
 
-constant cvs_version = "$Id: rxmlparse.pike,v 1.65 2001/08/09 23:02:53 mast Exp $";
+constant cvs_version = "$Id: rxmlparse.pike,v 1.66 2001/08/22 20:05:06 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -62,8 +62,9 @@ void create()
 
   defvar ("ram_cache_pages", 1, "RAM cache RXML pages",
 	  TYPE_FLAG, #"\
-The RXML parser will cache the parse trees for the RXML pages in RAM
-when this is enabled, which speeds up the evaluation of them.");
+The RXML parser will cache the parse trees (known as \"p-code\") for
+the RXML pages in RAM when this is enabled, which speeds up the
+evaluation of them.");
 
   defvar("logerrorsp", 0, "RXML Errors:Log RXML parse errors", TYPE_FLAG,
 	 "If set, all RXML parse errors will be logged in the debug log.");
@@ -158,6 +159,7 @@ mapping handle_file_extension(Stdio.File file, string e, RequestID id)
 	else {
 	  context = cache_ent[1]->new_context (id);
 	  rxml = cache_ent[1]->eval (context);
+	  id->cache_status["pcoderam"] = 1;
 	  break eval_rxml;
 	}
       }
