@@ -1,0 +1,7 @@
+                Installing Roxen Business Graphics 1.0
+                ++++++++++++++++++++++++++++++++++++++
+
+ 1. Unpack the module somewhere in the module path, like
+    roxen/server/modules/.
+
+ 2. Add the "Business Graphics"-model to your virtual server.
