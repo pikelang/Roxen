@@ -1,8 +1,12 @@
 // This is a roxen module. Copyright © 2000, Idonex AB.
 //
-inherit "module";
 
-constant cvs_version = "$Id: preferred_language.pike,v 1.6 2000/02/16 07:15:51 per Exp $";
+#include <module.h>
+
+inherit "module";
+inherit "roxenlib";
+
+constant cvs_version = "$Id: preferred_language.pike,v 1.7 2000/03/10 18:29:26 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST | MODULE_PARSER;
 constant module_name = "Preferred Language Analyzer";
@@ -13,7 +17,7 @@ void create() {
 	  "Should the most preferred language be propagated into the page.theme_language variable, "
 	  "which in turn will control the default language of all multilingual RXML tags." );
   defvar( "defaults", ({}), "Present Languages", TYPE_STRING_LIST,
-	  "A list of all languages present on the server." );
+	  "A list of all languages present on the server. An empty list means no restrictions." );
 }
 
 constant language_low=roxen->language_low;
@@ -55,21 +59,33 @@ class TagEmitLanguages {
     array langs;
     if(m->langs)
       langs=(m->langs/",")&languages;
+    else if(id->misc->defines->present_languages)
+      langs=indices(id->misc->defines->present_languages);
     else
       langs=defaults;
 
-    string drop=(indices(id->config)&languages)*",";
     function localized=language_low(id->misc->pref_languages->get_language())->language;
+    string url=strip_prestate(strip_config(id->raw_url));
+    array conf_langs=Array.map(indices(id->config) & languages,
+			       lambda(string lang) { return "-"+lang; } );
 
     array res=({});
     foreach(langs, string lang) {
-      array id=roxen->language_low(lang)->id();
-      res+=({ (["code":id[0],
-		"en":id[1],
-		"local":id[2],
-		"drop":drop,
+      array lid=roxen->language_low(lang)->id();
+      res+=({ (["code":lid[0],
+		"en":lid[1],
+		"local":lid[2],
+		"preurl":add_pre_state(url, id->prestate-aggregate_multiset(@languages)+(<lang>)),
+		"confurl":add_config(url, conf_langs+({lang}), id->prestate),
 		"localized":localized(lang) ]) });
     }
     return res;
   }
 }
+
+TAGDOCUMENTATION;
+#ifdef manual
+constant tagdoc=([
+  "emit#languages":"<desc plugin>Outputs language descriptions</desc>"
+]);
+#endif
