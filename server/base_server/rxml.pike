@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.263 2000/12/05 23:23:15 nilsson Exp $
+// $Id: rxml.pike,v 1.264 2000/12/10 02:21:04 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -1479,14 +1479,17 @@ class TagEmit {
     int upper_size;
     object plugin;
     array(mapping(string:mixed))|function res;
+    mapping filter;
 
     array do_enter(RequestID id) {
       if(!(plugin=get_plugins()[args->source]))
 	parse_error("The emit source %O doesn't exist.\n", args->source);
       scope_name=args->scope||args->source;
+
       TRACE_ENTER("Fetch emit dataset for source "+args->source, 0);
       res=plugin->get_dataset(args, id);
       TRACE_LEAVE("");
+
       if(arrayp(res)) {
 	vars = (["counter":0]);
 	if(args->sort && !plugin->sort)
@@ -1518,24 +1521,54 @@ class TagEmit {
 				  } );
 	}
 	
-	if(!plugin->skiprows && args->skiprows) {
-	  if(args->skiprows[0]=='-') args->skiprows=sizeof(res)-(int)args->skiprows-1;
-	  res=res[(int)args->skiprows..];
+	if(args->filter) {
+	  array pairs = args->filter / ",";
+	  filter = ([]);
+	  foreach( args->filter / ",", string pair) {
+	    string v,g;
+	    if( sscanf(pair, "%s=%s", v,g) != 2)
+	      continue;
+	    v = String.trim_whites(v);
+	    if(g != "*"*sizeof(g))
+	      filter[v] = g;
+	  }
+
+	  if(args->rowinfo || args["do-once"]) {
+	    m_delete(args, "filter");
+	    for(int i; i<sizeof(res); i++)
+	      if(should_filter(res[i])) {
+		res = res[..i-1] + res[i+1..];
+		i--;
+	      }
+	  }
+	  else {
+	    args->skiprows = (int)args->skiprows;
+	    vars->real_counter = 0;
+	    do_iterate = array_filter_iterate;
+	  }
 	}
-	
-	if(args->remainderinfo)
-	  RXML.user_set_var(args->remainderinfo, (int)args->maxrows?
-			    max(sizeof(res)-(int)args->maxrows, 0): 0);
-	
-	if(!plugin->maxrows && args->maxrows) res=res[..(int)args->maxrows-1];
-	if(args->rowinfo) RXML.user_set_var(args->rowinfo, sizeof(res));
-	if(args["do-once"] && sizeof(res)==0) res=({ ([]) });
 
-	if(id->misc->emit_rowinfo)
-	  upper_size = id->misc->emit_rowinfo;
-	id->misc->emit_rowinfo = sizeof(res);
+	if(!args->filter) {
+	  if(!plugin->skiprows && args->skiprows) {
+	    if(args->skiprows[0]=='-') args->skiprows=sizeof(res)-(int)args->skiprows-1;
+	    res=res[(int)args->skiprows..];
+	  }
 
-	do_iterate=array_iterate;
+	  if(args->remainderinfo)
+	    RXML.user_set_var(args->remainderinfo, (int)args->maxrows?
+			      max(sizeof(res)-(int)args->maxrows, 0): 0);
+
+	  if(!plugin->maxrows && args->maxrows) res=res[..(int)args->maxrows-1];
+
+	  if(args->rowinfo) RXML.user_set_var(args->rowinfo, sizeof(res));
+	  if(args["do-once"] && sizeof(res)==0) res=({ ([]) });
+
+	  if(id->misc->emit_rowinfo)
+	    upper_size = id->misc->emit_rowinfo;
+	  id->misc->emit_rowinfo = sizeof(res);
+
+	  do_iterate = array_iterate;
+	}
 
 	if(sizeof(res))
 	  LAST_IF_TRUE = 1;
@@ -1544,23 +1577,36 @@ class TagEmit {
 
 	return 0;
       }
+
       if(functionp(res)) {
+	// FIXME: Filters are not handled here.
 	do_iterate=function_iterate;
 	LAST_IF_TRUE = 1;
 	upper_size = 0;
 	return 0;
       }
+
       parse_error("Wrong return type from emit source plugin.\n");
+    }
+
+    int(0..1) should_filter(mapping vs) {
+      foreach(indices(filter), string v) {
+	if(!vs[v])
+	  return 1;
+	if(!glob(filter[v], vs[v]))
+	  return 1;
+      }
+      return 0;
     }
 
     function do_iterate;
 
-    int function_iterate(RequestID id) {
+    int(0..1) function_iterate(RequestID id) {
       vars=res(args, id);
       return mappingp(vars);
     }
 
-    int array_iterate(RequestID id) {
+    int(0..1) array_iterate(RequestID id) {
       int counter=vars->counter;
       if(counter>=sizeof(res)) return 0;
       vars=res[counter++];
@@ -1568,10 +1614,39 @@ class TagEmit {
       return 1;
     }
 
+    int(0..1) array_filter_iterate(RequestID id) {
+      int real_counter = vars->real_counter;
+      int counter = vars->counter;
+
+      if(real_counter>=sizeof(res)) return 0;
+      if(args->maxrows && counter == (int)args->maxrows) return 0;
+      if(args->skiprows>0) {
+	if(args->skiprows > sizeof(res)) return 0;
+	while(--args->skiprows)
+	  while(should_filter(res[real_counter++]))
+	    if(real_counter>=sizeof(res)) return 0;
+      }
+      while(should_filter(res[real_counter++]))
+	if(real_counter>=sizeof(res)) return 0;
+      vars=res[real_counter-1];
+
+      vars->real_counter = real_counter;
+      vars->counter = counter+1;
+      return 1;
+    }
+
     array do_return(RequestID id) {
       result = content;
       if(upper_size)
 	id->misc->emit_rowinfo = upper_size;
+      if(args->filter && args->remainderinfo) {
+	int rem;
+	if(vars->real_counter < sizeof(res))
+	  for(int i=vars->real_counter; i<sizeof(res); i++)
+	    if(!should_filter(res[i]))
+	      rem++;
+	RXML.user_set_var(args->remainderinfo, rem);
+      }
       return 0;
     }
 
