@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.389 2002/08/13 15:05:29 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.390 2002/08/13 15:22:49 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2201,24 +2201,29 @@ class TagHelp {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
-      array tags=map(indices(RXML_CONTEXT->tag_set->get_tag_names()),
-		     lambda(string tag) {
-		       if(tag[..3]=="!--#" || !has_value(tag, "#"))
-			 return tag;
-		       return "";
-		     } ) - ({ "" });
-      tags += map(indices(RXML_CONTEXT->tag_set->get_proc_instr_names()),
-		  lambda(string tag) { return "&lt;?"+tag+"?&gt;"; } );
-      tags = Array.sort_array(tags,
-			      lambda(string a, string b) {
-				if(a[..4]=="&lt;?") a=a[5..];
-				if(b[..4]=="&lt;?") b=b[5..];
-				if(lower_case(a)==lower_case(b)) return a>b;
-				return lower_case(a)>lower_case(b); })-({"\x266a"});
       string help_for = args->for || id->variables->_r_t_h;
       string ret="<h2>Roxen Interactive RXML Help</h2>";
 
       if(!help_for) {
+	array tags=map(indices(RXML_CONTEXT->tag_set->get_tag_names()),
+		       lambda(string tag) {
+			 if (!has_prefix (tag, "_"))
+			   if(tag[..3]=="!--#" || !has_value(tag, "#"))
+			     return tag;
+			 return "";
+		       } ) - ({ "" });
+	tags += map(indices(RXML_CONTEXT->tag_set->get_proc_instr_names()),
+		    lambda(string tag) { return "&lt;?"+tag+"?&gt;"; } );
+	tags = Array.sort_array(tags,
+				lambda(string a, string b) {
+				  if(a[..4]=="&lt;?") a=a[5..];
+				  if(b[..4]=="&lt;?") b=b[5..];
+				  if(lower_case(a)==lower_case(b))
+				    return a < b ? -1 : a > b;
+				  return
+				    lower_case (a) < lower_case (b) ? -1 : 1;
+				})-({"\x266a"});
+
 	string char;
 	ret += "<b>Here is a list of all defined tags. Click on the name to "
 	  "receive more detailed information. All these tags are also availabe "
