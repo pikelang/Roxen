@@ -4,7 +4,7 @@
 #if !constant(Image.FreeType.Face)
 #if constant(has_Image_TTF)
 #include <config.h>
-constant cvs_version = "$Id: ttf.pike,v 1.14 2002/08/16 13:55:50 mattias Exp $";
+constant cvs_version = "$Id: ttf.pike,v 1.15 2003/05/05 14:31:07 jonasw Exp $";
 
 constant name = "TTF fonts";
 constant doc = "True Type font loader. Uses freetype to render text.";
@@ -22,21 +22,24 @@ static string trimttfname( string n )
 
 static string translate_ttf_style( string style )
 {
-  switch( lower_case( (style-"-")-" " ) )
-  {
-   case "normal": case "regular":        return "nn";
-   case "italic":                        return "ni";
-   case "oblique":                       return "ni";
-   case "bold":                          return "bn";
-   case "bolditalic":case "italicbold":  return "bi";
-   case "black":                         return "Bn";
-   case "blackitalic":case "italicblack":return "Bi";
-   case "light":                         return "ln";
-   case "lightitalic":case "italiclight":return "li";
-  }
-  if(search(lower_case(style), "oblique"))
-    return "ni"; // for now.
-  return "nn";
+  //  Check for weight. Default is "n" for normal/regular/roman.
+  style = lower_case((style - "-") - " ");
+  string weight = "n"; 
+  if (has_value(style, "bold"))
+    weight = "b";
+  else if (has_value(style, "black"))
+    weight = "B";
+  else if (has_value(style, "light"))
+    weight = "l";
+  
+  //  Check for slant. Default is "n" for regular.
+  string slant = "n";
+  if (has_value(style, "italic") ||
+      has_value(style, "oblique"))
+    slant = "i";
+
+  //  Combine to full style
+  return weight + slant;
 }
 
 static void build_font_names_cache( )
