@@ -5,7 +5,7 @@
 // interface</a> (and more, the documented interface does _not_ cover
 // the current implementation in NCSA/Apache)
 
-string cvs_version = "$Id: cgi.pike,v 1.88 1998/06/27 15:46:35 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.89 1998/07/06 08:02:00 neotron Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -13,7 +13,7 @@ int thread_safe=1;
 inherit "module";
 inherit "roxenlib";
 
-// #define CGI_DEBUG
+#define CGI_DEBUG
 
 import Simulate;
 
@@ -189,7 +189,7 @@ void create()
 	 ({ -2, 10, 30, 60, 120, 240 }));
 
   defvar("kill_call_out", 0, "Limits: Time before killing scripts",
-	 TYPE_INT_LIST|VAR_EXPERT,
+	 TYPE_INT_LIST|VAR_MORE,
 	 "The maximum real time the script might run in minutes before it's "
 	 "killed. 0 means unlimited.", ({ 0, 1, 2, 3, 4, 5, 7, 10, 15 }));
 
@@ -486,7 +486,7 @@ class spawn_cgi
 #endif /* constant(strerror) */
     }
 
-    if(proc && kill_call_out) {
+    if(kill_call_out && proc && proc->pid() > 1) {
       call_out(lambda (object proc) {
 	object privs;
 	catch(privs = Privs("Killing CGI script."));
@@ -610,7 +610,7 @@ class spawn_cgi
     destruct(pipe1);
     destruct(pipe3);
 
-    if(kill_call_out) {
+    if(kill_call_out && pid > 1) {
       call_out(lambda (int pid) {
 	object privs;
 	catch(privs = Privs("Killing CGI script."));
