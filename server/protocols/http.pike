@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.429 2004/04/14 14:24:49 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.430 2004/04/14 20:03:48 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -860,12 +860,14 @@ void disconnect()
   if (my_fd) {
     MARK_FD("HTTP closed");
     CHECK_FD_SAFE_USE;
-    my_fd->close();
 #if constant (SSL.sslfile.PACKET_MAX_SIZE)
-    // Necessary since the old SSL.sslfile implementation contains
-    // cyclic refs.
+    // Destruct necessary since the old SSL.sslfile implementation
+    // contains cyclic refs.
+    my_fd->set_blocking();
+    my_fd->close();
     destruct (my_fd);
 #else
+    my_fd->close();
     my_fd = 0;
 #endif
   }
