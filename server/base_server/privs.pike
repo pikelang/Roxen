@@ -1,6 +1,6 @@
 #if efun(seteuid)
 #include <module.h>
-string cvs_version = "$Id: privs.pike,v 1.28 1997/11/06 20:15:40 grubba Exp $";
+string cvs_version = "$Id: privs.pike,v 1.29 1997/11/11 00:59:52 grubba Exp $";
 
 int saved_uid;
 int saved_gid;
@@ -39,6 +39,8 @@ static private string dbt(array t)
 mixed mutex_key;	// Only one thread may modify the euid/egid at a time.
 #endif /* THREADS */
 
+int p_level;
+
 void create(string reason, int|string|void uid, int|string|void gid)
 {
 #ifdef HAVE_EFFECTIVE_USER
@@ -49,6 +51,8 @@ void create(string reason, int|string|void uid, int|string|void gid)
     catch { mutex_key = roxen->euid_egid_lock->lock(); };
   }
 #endif /* THREADS */
+
+  p_level = roxen->privs_level++;
 
   if(getuid()) return;
 
@@ -146,6 +150,26 @@ void create(string reason, int|string|void uid, int|string|void gid)
 void destroy()
 {
 #ifdef HAVE_EFFECTIVE_USER
+  /* Check that we don't increase the privs level */
+  if (p_level >= roxen->privs_level) {
+    report_error(sprintf("Change back to uid#%d gid#%d from uid#%d gid#%d\n"
+			 "in wrong order! Saved level:%d Current level:%d\n"
+			 "Occurs in:\n%s\n",
+			 saved_uid, saved_gid, new_uid, new_gid,
+			 p_level, roxen->privs_level,
+			 describe_error(backtrace())));
+    return(0);
+  }
+  if (p_level != roxen->privs_level-1) {
+    report_notice(sprintf("Change back to uid#%d gid#%d from uid#%d gid#%d\n"
+			  "Skips privs level. Saved level:%d Current level:%d\n"
+			  "Occurs in:\n%s\n",
+			  saved_uid, saved_gid, new_uid, new_gid,
+			  p_level, roxen->privs_level,
+			  describe_error(backtrace())));
+  }
+  roxen->privs_level = p_level;
+
   if(LOGP) {
     catch {
       array bt = backtrace();
