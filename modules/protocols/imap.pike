@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.13 1999/01/27 02:18:13 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.14 1999/02/01 20:31:48 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -496,8 +496,11 @@ class imap_mailbox
 
   int uid_validity;
   int next_uid;
-  
+
+  /* Array of imap_mail objects */
   array contents;
+
+  mapping(int:int) uid_lookup = ([]);
 
   /* Flags (except system flags) defined for this mailbox */
   multiset flags;
@@ -526,48 +529,54 @@ class imap_mailbox
 	next_uid = mailbox->get(NEXT_UID);
 	contents = get_contents(0);
       }
+
+      /* Initialize the UID to mail id lookup table */
+      array(int) uids = contents->get(UID);
+      uid_lookup = mkmapping(uids, indices(uids));
+
       flags = mailbox->get("DEFINED_FLAGS") || (< >);
     }
 
   array get_contents(int make_new_uids)
+  {
+    array a = mailbox->mail();
+    int n = sizeof(a);
+
+    sort(a->get(UID), a);
+
+    /* Is there any mail without uid? */
+    int i;
+      
+    for (i=0; i<sizeof(a); i++)
+      if (a[i]->get(UID))
+	break;
+
+    /* NOTE: The new mail come before the old mail. */
+    /* Extract the new mail */
+    array new = a[..i-1];
+    array old = a[i..];
+      
+    if (make_new_uids)
     {
-      array a = mailbox->mail();
-      int n = sizeof(a);
-
-      sort(a->get(UID), a);
-
-      /* Are there any mails with out uids? */
-      int i;
-      
-      for (i=0; i<sizeof(a); i++)
-	if (a[i]->get(UID))
-	  break;
-
-      /* Extract the new mails */
-      array new = a[..i-1];
-      array old = a[i..];
-      
-      if (make_new_uids)
-      {
-	/* Assign new uids to all mails */
-	foreach(old, object mail)
-	  mail->set(UID, alloc_uid());
-      } 
-      /* Assign uids to new mails */
-      foreach(new, object mail)
+      /* Assign new uids to all mail */
+      foreach(old, object mail)
 	mail->set(UID, alloc_uid());
+    } 
+    /* Assign uids to new mail */
+    foreach(new, object mail)
+      mail->set(UID, alloc_uid());
+    
+    /* Create imap_mail objects */
+    int index = 1;
 
-      /* Create imap_mail objects */
-      int index = 1;
+    for(i = 0; i<sizeof(old); i++)
+      old[i] = imap_mail(old[i], 0, index++);
 
-      for(i = 0; i<sizeof(old); i++)
-	old[i] = imap_mail(old[i], 0, index++);
+    for(i = 0; i<sizeof(new); i++)
+      new[i] = imap_mail(new[i], 0, index++);
 
-      for(i = 0; i<sizeof(new); i++)
-	new[i] = imap_mail(new[i], 0, index++);
-
-      return old + new;
-    }
+    return old + new;
+  }
   
   array update()
     {
@@ -602,6 +611,10 @@ class imap_mailbox
 	}
 
 	contents = new_contents;
+
+	/* Update the UID to mail id lookup table */
+	array(int) uids = contents->get(UID);
+	uid_lookup = mkmapping(uids, indices(uids));
 
 	res += ({ get_exists() });
 
@@ -801,10 +814,10 @@ class backend
 
   array fetch(mapping|object session, object message_set,
 	      array(mapping) fetch_attrs)
-    {
-      return session->mailbox->fetch(message_set, fetch_attrs)
-	+ session->mailbox->update();
-    }
+  {
+    return session->mailbox->fetch(message_set, fetch_attrs)
+      + session->mailbox->update();
+  }
 }
 
 array register_module()
