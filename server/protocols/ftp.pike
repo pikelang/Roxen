@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.17 1999/10/29 20:35:02 grubba Exp $
+ * $Id: ftp.pike,v 2.18 1999/10/29 20:36:53 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -296,7 +296,7 @@ class FileWrapper
   void create(object f_, string data_, object ftpsession_)
   {
     f = f_;
-    if (_data && sizeof(_data)) {
+    if (data_ && sizeof(data_)) {
       data = data_;
     } else {
       data = 0;
