@@ -6,6 +6,7 @@
 // to the base document body tag and onLoad="var fl = top.FileLoader.elements[0];
 // fl.loaded = true; fl.document = document; fl.onload(fl);" to the popup document
 // body tag.
+// In Mozilla 0.9.1 the popup document body patch is not neaded.
 
 // FileLoader: Constructor for the FileLoader class.
 // Creates a FileLoader object who calls the <onload> function when the
