@@ -1,4 +1,4 @@
-/* $Id: ssl3.pike,v 1.3 1997/04/07 23:23:44 per Exp $
+/* $Id: ssl3.pike,v 1.4 1997/04/16 21:27:50 grubba Exp $
  *
  * © 1997 Informationsvävarna AB
  *
@@ -10,6 +10,7 @@
 // #define SSL3_DEBUG
 
 inherit "protocols/http" : http;
+inherit "roxenlib";
 
 mapping to_send;
 
@@ -118,7 +119,7 @@ array|void real_port(array port)
 #endif
   mapping(string:string) parts = parse_pem(read_file(options["cert-file"]));
 
-  if (!parts || !(cert = parts["CERTIFICATE"]))
+  if (!parts || !(cert = parts["CERTIFICATE"]||parts["X509 CERTIFICATE"]))
     report_error("No certificate found.\n");
 
   if (options["key-file"])
