@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.150 1998/10/21 00:28:09 peter Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.151 1998/10/21 19:57:37 peter Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -536,9 +536,8 @@ string handle_help(string file, string tag, mapping args)
 			   "<date-attributes>",date_doc),tag);
 }
 
-string call_tag(string tag, mapping args, int line, int i,
-		object id, object file, mapping defines,
-		object client)
+string call_tag(string tag, mapping args, int line, int i, object id,
+		object file, mapping defines, object client)
 {
   string|function rf = real_tag_callers[tag][i];
   id->misc->line = (string)line;
@@ -561,7 +560,6 @@ string call_tag(string tag, mapping args, int line, int i,
 #endif
   mixed result=rf(tag,args,id,file,defines,client);
   TRACE_LEAVE("");
-  if(args->noparse && stringp(result)) return ({ result }); 
   return result;
 }
 
@@ -596,7 +594,6 @@ call_container(string tag, mapping args, string contents, int line,
 #endif
   mixed result=rf(tag,args,contents,id,file,defines,client);
   TRACE_LEAVE("");
-  if(args->noparse && stringp(result)) return ({ result });
   return result;
 }
 
