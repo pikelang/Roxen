@@ -6,7 +6,7 @@
  * in October 1997
  */
 
-constant cvs_version = "$Id: business.pike,v 1.105 1998/06/24 12:21:53 grubba Exp $";
+constant cvs_version = "$Id: business.pike,v 1.106 1998/09/28 06:12:11 js Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -965,8 +965,6 @@ mapping find_file(string f, object id)
   if(res->colortable_cache)
   {
     ct = palette_cache[res->colortable_cache];
-    if(ct)
-      werror("Palette found in in cache...\n");
     if(!ct)
       ct = palette_cache[res->colortable_cache] =
 	   Image.colortable(img)->nodither();
