@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.134 2003/06/02 12:06:31 grubba Exp $
+// $Id: module.pike,v 1.135 2003/06/11 15:48:25 grubba Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -307,6 +307,7 @@ multiset(string) query_all_properties(string path, RequestID id)
     "DAV:creationdate",		// 13.1
     "DAV:displayname",		// 13.2
     "DAV:getlastmodified",	// 13.7
+    "DAV:resourcetype",		// 13.9
   >);
   if (st->isreg) {
     res += (<
@@ -347,6 +348,18 @@ string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
     break;
   case "DAV:getlastmodified":	// 13.7
     return iso8601_date_time(st->mtime);
+  case "DAV:resourcetype":	// 13.9
+    if (st->isdir) {
+      return ({ Parser.XML.Tree.Node(Parser.XML.Tree.XML_ELEMENT,
+				     "DAV:collection", ([]), 0,
+				     "DAV:collection") });	// 12.2
+    }
+    return "";
+  case "DAV:collection":	// MacOS X mount_webdav uses this.
+    if (st->isdir) {
+      return "";
+    }
+    break;
   default:
     break;
   }
