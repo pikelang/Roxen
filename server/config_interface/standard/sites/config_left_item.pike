@@ -1,5 +1,6 @@
-inherit "roxenlib";
 #include <config_interface.h>
+#include <roxen.h>
+#define LOCALE(X,Y)	_STR_LOCALE(config_interface,X,Y)
 
 string dotdot( RequestID id, int n )
 {
@@ -28,7 +29,7 @@ string selected_item( string q, roxen.Configuration c, RequestID id, string modu
 
   string pre = ("<gbutton frame-image='&usr.left-buttonframe;' href='/"+id->misc->cf_locale+"/sites' "
                 "width='150' bgcolor='&usr.left-buttonbg;' icon_src='&usr.selected-indicator;' "
-                "align_icon='left' preparse=''>&locale.sites;</gbutton><br />"
+                "align_icon='left' preparse=''>"+LOCALE("", "Sites")+"</gbutton><br />"
                 "<gbutton frame-image='&usr.left-buttonframe;' width='150' "+
 		(subsel == "" ?
 		 "bgcolor='&usr.left-selbuttonbg;'" : "bgcolor='&usr.left-buttonbg;'") +
@@ -36,24 +37,26 @@ string selected_item( string q, roxen.Configuration c, RequestID id, string modu
                 " icon_src='&usr.selected-indicator;' align_icon='left'>"+
                 c->query_name()+"</gbutton><br><br>");
 
-  array sub = ({ "settings", "modules" });
+  array sub = ({ ({ "settings", LOCALE("", "Settings") }),
+		 ({ "modules",  LOCALE("", "Modules") }),
+              });
 //   if( subsel == "modules" )
 //     sub = reverse(sub);
 
-  foreach( sub, string q )
+  foreach( sub, array q )
   {
-    if( subsel == q )
+    if( subsel == q[0] )
     {
       pre += ("<gbutton frame-image='&usr.left-buttonframe;' icon_src='&usr.selected-indicator;' align_icon='left' "
               "width='150' preparse='' bgcolor='&usr.left-selbuttonbg;'"
-              " href='"+DOTDOT(3)+q+"/'>"
-              "&locale."+q+";</gbutton><br />\n");
+              " href='"+DOTDOT(3)+q[0]+"/'>"
+              +q[1]+"</gbutton><br />\n");
 
       string url = id->not_query + id->misc->path_info;
       id->variables->_config = cfg;
       id->variables->_url = url;
 
-      switch( q )
+      switch( q[0] )
       {
        case "settings":
          break;
@@ -92,10 +95,10 @@ string selected_item( string q, roxen.Configuration c, RequestID id, string modu
            if( data->sname != module )
              pre += ("\n<tr><td valign=top><img src=\"&usr.item-indicator;\" width=12 height=12></td>"
 		     "<td><a href=\""+qurl+data->sname+
-                     "/\">"+html_encode_string(data->name)+"</a></td></tr>\n");
+                     "/\">"+Roxen.html_encode_string(data->name)+"</a></td></tr>\n");
            else
              pre += ("\n<tr><td valign=top><img src=\"&usr.selected-indicator;\" width=12 height=12></td>"
-		     "<td><b>" + html_encode_string(data->name) + "</b></td></tr>\n");
+		     "<td><b>" + Roxen.html_encode_string(data->name) + "</b></td></tr>\n");
          }
 
 	 pre += "</table>\n";
@@ -104,12 +107,12 @@ string selected_item( string q, roxen.Configuration c, RequestID id, string modu
          {
            pre+=sprintf("<br />\n<gbutton frame-image='&usr.left-buttonframe;' width='150' bgcolor='&usr.left-buttonbg;' preparse='' href='"+tmp+
                         "add_module.pike?config=%s'> "
-                        "&locale.add_module; </gbutton>",
-                        http_encode_string( c->name ) )+
+                        +LOCALE("", "Add module")+" </gbutton>",
+                        Roxen.http_encode_string( c->name ) )+
                              sprintf("<br />\n<gbutton frame-image='&usr.left-buttonframe;' width='150' bgcolor='&usr.left-buttonbg;' preparse='' href='"+tmp+
                                               "drop_module.pike?config=%s'> "
-                                              "&locale.drop_module; </gbutton><br />\n",
-                                              http_encode_string( c->name ));
+                                              +LOCALE("", "Drop module")+" </gbutton><br />\n",
+                                              Roxen.http_encode_string( c->name ));
          }
 
          break;
@@ -118,8 +121,8 @@ string selected_item( string q, roxen.Configuration c, RequestID id, string modu
     } else
       pre += ("<gbutton frame-image='&usr.left-buttonframe;' preparse='' "
               "bgcolor='&usr.left-buttonbg;' width='150' "
-              "href='"+DOTDOT(3)+q+"/'>"
-              "&locale."+q+";</gbutton><br />");
+              "href='"+DOTDOT(3)+q[0]+"/'>"
+              +q[1]+"</gbutton><br />");
   }
   pre += "</item>";
   return pre;
