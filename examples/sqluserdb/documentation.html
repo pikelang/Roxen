@@ -1,26 +1,17 @@
 <HTML>
-<HEAD><TITLE>SQL User Authentication Module for Roxen/1.2</TITLE>
+<HEAD><TITLE>SQL User Authentication Module for Roxen</TITLE>
 <BODY bgcolor="#ffdead" text="#000000" alink="#ff0000" vlink="#ff0000">
 
-<H1 align=center>SQL User Authentication Module for Roxen/1.2</H1>
+<H1 align=center>SQL User Authentication Module for Roxen</H1>
 
 <H2 align=center>Preamble</H2>
 This module fills a hole in Roxen capabilities, and completes the options
 an user has in adiministering its site. 
-In particular, it handles authentication data stored in a SQL database.<BR>
-
-<H2 align=center>Location and documentation</H2>
-The latest version of this module can be found at:<BR>
-<A href="http://kame.usr.dsi.unimi.it:1111/sw/roxen/sqluserauth/">
-http://kame.usr.dsi.unimi.it/sw/roxen/sqluserauth/</A> (my home site),<BR>
-<A href="ftp://ftp.roxen.com/pub/roxen/contrib/">
-ftp://ftp.roxen.com/pub/roxen/contrib/</A> or<BR>
-<A href="http://www.riverweb.com/source/">the Roxen Module Source</A>
+Its purpose is handling authentication data stored in a SQL database.<BR>
 
 <H2 align=center>Copyright and Disclaimer of Warranty</H2>
-This software and the accompanying documentation are &copy; 1997
-Francesco Chemolli 
-&lt;<A href="mailto:kinkie@kame.usr.dsi.unimi.it">kinkie@kame.usr.dsi.unimi.it</A>&gt;.
+This software and the accompanying documentation are &copy; 1997-2000
+Francesco Chemolli and Roxen IS
 Use, reproduction and distribution are allowed
 under the terms of the GNU General Public License version 2 or, at
 your option, any later version. Use of the software implies you know
@@ -35,29 +26,23 @@ This module exploits Pike's unique ability to use an uniform interface
 to all supported databases. These currently options include
 <A href="http://www.hughes.com.au/">MiniSQL</A>,
 <A href="http://www.tcx.se/">MySql</A>,
-<A href="http://www.postgresql.org/">PostgreSql</A>. Commercial
-extensions should cover Ingres and Oracle.<P>
-While the interface is consistent, unluckily not all those databases
-follow ANSI SQL specifications except for very simple queries. This means that
-I couldn't automate the database creation process, short of following every
+<A href="http://www.postgresql.org/">PostgreSql</A>,
+ODBC, <a href="http://www.oracle.com/>Oracle</a> and
+<a href="http://www.sybase.com>Sybase</a>.<br>
+While the interface is consistent, unluckily not all those databases follow
+ANSI SQL specifications except for very simple queries. This means that the
+database creation process couldn't be automated, short of following every
 SQL dialect of the supported servers.<BR>
 This module can do pretty everything, from simple authentication to driving
-an user filesystem or a named FTP server. The last is however deprecated,
-since too many security issues are at stake with this approach.
+an user filesystem or a named FTP server. You need to be very careful
+though, since misconfigurations can open dangerous security holes.
 
 <H2 align=center>Setup</H2>
 In this description, I assume you know the basics of Roxen confguration and
 how to use interactively your SQL server.<P>
 First off, make sure the Pike interpreter your Roxen server uses supports
-the database of your choice. Mysql driver is distributed along with the Pike
-interpreter, Msql and Postgres are not. You can fetch them at
-<A href="ftp://ftp.infovav.se/pub/pike/contrib/">the Roxen FTP site</A>.
-Follow the instruction therein contained to build and install your new
-interpreter should it be needed.<BR>
-Copy the <TT>SQLuserdb.pike</TT> file in a directory where Roxen can
-find it (see the Roxen Administration Interface), and then add it to
-the virtual server of your choice. Remember there can be only one
-user authentication module per virtual server.<BR>
+the database of your choice. You might need to recompile your Roxen server
+<b>after</b> you have installed your sql server.
 Connect to your SQL server, and create a new database. Make sure to grant
 the user running the WWW server enough privileges to read the database.<BR>
 Notice that the database server doesn't necesarily have to be on the
@@ -74,12 +59,12 @@ have to adapt them to your SQL server's syntax:
 <LI><TT>passwd</TT>
 <DD>A string long exactly 13 characters, must be <B>not null</B>
 <LI><TT>uid</TT>
-<DD>integer
+<DD>integer, it needn't be unique but it's recommended to make it such
 <LI><TT>gid</TT>
 <DD>integer
 <LI><TT>homedir</TT>
 <DD>A string. I suggest a varchar, long at least 20-30 characters. If it 
- can grow, better.
+ can grow, all the better.
 <LI><TT>shell</TT>
 <DD>A string. I suggest a varchar, like for homedir
 </UL>
@@ -105,8 +90,9 @@ CREATE UNIQUE INDEX pass_index ON passwd (
 </DIV>
 Notice that you may want to have more tables or more columns for administrative
 tasks. It is of course possible.<BR>
-We're almost done. Now you only need to check the default values in the
-administration interface.
+We're almost done. Add the module to your virtual server's
+configuration. Remember, there can be only one authentication module for
+each virtual server.
 
 <H2 align=center>Configuration</H2>
 It is pretty straightforward.
@@ -151,10 +137,12 @@ fill in the entries, and test it.<BR>
 You will probably want to write your customized application/CGI script/pike
 script/whatever to correctly fill in the entries. Especially since you'll
 probably have extra administrative information to manage.<BR>
-The program <TT>adduser</TT> can be used if such is not the case, or
-as an example. It simply interactively adds (or changes) user entries
-on the table <TT>passwd</TT> in database <TT>passwd</TT> on whatever
-server runs on localhost<P>
+The program <TT>adduser</TT> in the server/bin directory can be used if
+such is not the case, or as an example. It simply interactively adds (or
+changes) user entries on the table <TT>passwd</TT> in database
+<TT>passwd</TT> on whatever server runs on localhost. To change these
+settings you'll have to edit the script (I told you it was only a sample
+program)<P>
 The fields <TT>uid</TT> and <TT>gid</TT> are <B>deprecated</B>. It's in
 my opinion simply too dangerous to use them. The only use I can
 think of for them is to drive a named ftp upload. This is DANGEROUS!
@@ -176,22 +164,7 @@ If you're VERY SURE everything is fine, try to uncomment the
 <CODE>#define SQLAUTHDEBUG</CODE> line at the beginning of the module and
 reload the module.
 This will produce a lot of debugging output in the default.1 file.<BR>
-Should everything else fail, <A href="mailto:kinkie@kame.usr.dsi.unimi.it">send me</A>
-a mail trying to describe exactly what the problem is and I'll see what
-I can do.
-
-<H2 align=center>Final notes</H2>
-This module, accompanying documentation and tools are <B>free software</B>.
-That means, you can use, copy, distribute them freely. Money donations to
-the author are of course welcome, but not required. My oversized ego
-however forces me to ask you to 
-<A href="mailto:kinkie@kame.usr.dsi.unimi.it">write me</A> if you find this program
-useful. This will not make me richer, but will for sure encourage me to
-write more, better software, and won't cost you one bit ^_^<BR>
-I hope my work will be useful, and to hear from you soon.<P>
-<DIV align=right>
-Sincerely,<BR>
-<ADDRESS><A href="mailto:kinkie@kame.usr.dsi.unimi.it">Francesco Chemolli</A></ADDRESS>
-</DIV>
+Should everything else fail, ask the
+<a href="mailto:roxen@roxen.com">Roxen mailing list</a>.
 
 </BODY></HTML>
