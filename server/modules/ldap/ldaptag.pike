@@ -2,7 +2,7 @@
 //
 // Module code updated to new 2.0 API
 
-constant cvs_version="$Id: ldaptag.pike,v 2.2 2000/09/10 16:55:16 nilsson Exp $";
+constant cvs_version="$Id: ldaptag.pike,v 2.3 2000/10/11 11:55:37 hop Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -82,6 +82,11 @@ constant tagdoc=([
  default will be used.
 </attr>
 
+<attr name='split' value='separator character'>
+ Separator character used for distinguish multiple values inside attribute.
+ If ommited the default null separator will be used
+</attr>
+
 "
 ]);
 #endif
@@ -153,8 +158,6 @@ array|object|int do_ldap_op(string op, mapping args, RequestID id)
 
   switch (op) {
     case "search":
-	if (!args->filter)
-	  RXML.parse_error("No filter.");
 	break;
 
     case "add": 
@@ -197,16 +200,9 @@ array|object|int do_ldap_op(string op, mapping args, RequestID id)
       RXML.run_error("Couldn't parse attribute values.");
   }
 
-/*
-  // binding ?
-  if(args->user)
-    con->bind(args->user,pass);
-*/
-
   switch (op) {
     case "search":
-	// todo: add attributes listing if any
-	error = catch(result = (con->search(args->filter)));
+	error = catch(result = (con->search()));
 	break;
 
     case "add":
