@@ -100,6 +100,9 @@ int main(int argc, array (string) argv)
 
   add_include_path( dir );
   add_program_path( dir );
+  putenv("CLASSPATH",(getenv("CLASSPATH")? getenv("CLASSPATH")+";":"")+
+	 dir+"etc\\classes\\jsdk.jar;"+dir+"etc\\classes\\roxen_servlet.jar;"+
+	 dir+"etc\\classes");
 
   
   object fd = Stdio.File();
