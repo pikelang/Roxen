@@ -41,7 +41,7 @@ string parse( RequestID id )
         if( id->misc->last_tag_args->base )
           a->href = id->misc->last_tag_args->base + t[2];
         else
-          a->href = "/standard/"+t[2];
+          a->href = "/"+t[2];
       };
       if( last_seen_on[ t[1] ] )
         a->href = last_seen_on[ t[1] ];
