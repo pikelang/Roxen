@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: read_config.pike,v 1.72 2003/01/26 02:10:47 mani Exp $
+// $Id: read_config.pike,v 1.73 2004/05/17 00:41:01 mani Exp $
 
 #include <module.h>
 #include <module_constants.h>
@@ -29,7 +29,7 @@ array(string) list_all_configurations()
   {
     report_fatal("I cannot read from the configurations directory ("+
 		 combine_path(getcwd(), roxen_path("$CONFIGDIR"))+")\n");
-    exit(-1); // Restart.
+    loader.trace_exit(-1); // Restart.
   }
 
   // Remove files that are not configurations
