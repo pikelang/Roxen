@@ -13,13 +13,50 @@ vlink='#000070' alink='#ff000'>
 <table cellpadding=0 cellspacing=0 width='100%' border=0>
 <tr width='100%'><td width=100% align=right valigh=center height=28>
 	    
-<b><font size=+1>AutoWeb Administration</font></b>
+<b><font size=+1>
+  <formoutput quote='$'>
+    <sqloutput query="select name from customers where id='$customer_id$'">
+      #name#
+    </sqloutput>
+  </formoutput>
+</font></b>
 
 </td></tr><tr width='100%'>
 <td bgcolor='#003366' align=right height=12 width='100%'>
-<font color=white size=-2>&nbsp;&nbsp;</font></td>
+<font color=white size=-2>&nbsp;&nbsp;AutoWeb administration</font></td>
+
 </tr></table></td>
        
 </tr></table><br>
 
-<tmplinsertall>
+<config_tablist>
+
+  <tmplinsert tag=tmpl_vars>
+
+  <if variable="tab is template_editor">
+    <tab href=template_editor.html selected>Template Editor</tab>
+  </if><else>
+    <tab href=template_editor.html>Template Editor</tab>
+  </else>
+
+  <if variable="tab is html_editor">
+    <tab href=html_editor.html selected>HTML Editor</tab>
+  </if><else>	
+    <tab href=html_editor.html>HTML Editor</tab>
+  </else>
+
+  <if variable="tab is statistics">
+    <tab href=statistics.html selected>Statistics</tab>
+  </if><else>	
+    <tab href=statistics.html>Statistics</tab>
+  </else>
+
+</config_tablist>
+<p>
+
+<tmplinsert tag=tmpl_body>
+
+<br>
+
+</body>
+</html>
