@@ -1,4 +1,4 @@
-AC_REVISION("$Id: configure.in,v 1.18 1998/02/28 16:42:57 grubba Exp $")
+AC_REVISION("$Id: configure.in,v 1.19 1998/03/02 15:40:38 grubba Exp $")
 AC_INIT(cgi.c)
 AC_CONFIG_HEADER(config.h)
 
@@ -19,7 +19,7 @@ AC_HEADER_STDC
 
 AC_CHECK_HEADERS(unistd.h stdlib.h stropts.h poll.h malloc.h arpa/inet.h \
 		 linux/mman.h sys/mman.h sys/lock.h sys/resource.h \
-		 sys/wait.h sys/param.h)
+		 sys/wait.h sys/param.h signal.h)
 
 AC_MSG_CHECKING(existance of h_errno)
 AC_CACHE_VAL(pike_cv_h_errno, [
