@@ -50,6 +50,7 @@
   <file>../etc/modules/Variable.pmod/Upload.pike</file>
   <file>../etc/modules/Variable.pmod/VerifiedString.pike</file>
   <file>../etc/modules/Variable.pmod/module.pmod</file>
+  <file>../etc/modules/Variable.pmod/Mapping.pike</file>
   <file>../modules/configuration/config_tags.pike</file>
   <file>../modules/configuration/config_filesystem.pike</file>
   <file>../site_templates/common.pike</file>
