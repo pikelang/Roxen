@@ -1,4 +1,4 @@
-/* $Id: listfonts.pike,v 1.3 2000/02/04 06:07:19 per Exp $ */
+/* $Id: listfonts.pike,v 1.4 2000/02/04 14:38:50 jhs Exp $ */
 #if constant(available_font_versions)
 constant action = "maintenance";
 constant name= "List Available Fonts";
@@ -29,8 +29,10 @@ string page_0(object id)
   foreach(roxen->fonts->available_fonts(1), string font)
   res+=list_font(font);
   res += ("<p>Example text: <font size=-1><input name=text size=46 value='"
-          "The quick brown fox jumps over the lazy dog'><p>"
-          "<table width='70%'><tr><td align=left><cf-cancel href='?class=maintenance'></td><td align=right><cf-next></td></tr></table>");
+          "<cf-locale get=font_test_string>'><p>"
+	  "<table width='70%'><tr><td align=left>"
+          "<cf-cancel href='?class=maintenance'></td><td align=right>"
+	  "<cf-next></td></tr></table>");
   return res;
 }
 
