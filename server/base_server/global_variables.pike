@@ -151,20 +151,20 @@ grafisk text utan att ange ett typsnitt, så används det här typsnittet.");
   deflocaledoc( "svenska", "logdirprefix", "Loggning: Loggningsmappprefix",
 		"Alla nya loggar som skapas får det här prefixet.");
   
-  globvar("cache", 0, "Proxy disk cache: Enabled", TYPE_FLAG,
+  globvar("cache", 0, "Cache: Proxy Disk Cache Enabled", TYPE_FLAG,
 	  "If set to Yes, caching will be enabled.");
-  deflocaledoc( "svenska", "cache", "Proxydiskcache: På", 
+  deflocaledoc( "svenska", "cache", "Cache: Proxydiskcachen är på", 
 		"Om ja, använd cache i alla proxymoduler som hanterar det.");
   
-  globvar("garb_min_garb", 1, "Proxy disk cache: Clean size", TYPE_INT,
+  globvar("garb_min_garb", 1, "Cache: Proxy Disk Cache Clean size", TYPE_INT,
   "Minimum number of Megabytes removed when a garbage collect is done.",
 	  0, cache_disabled_p);
   deflocaledoc( "svenska", "garb_min_garb",
-		"Proxydiskcache: Minimal rensningsmängd", 
+		"Cache: Proxydiskcache Minimal rensningsmängd", 
 		"Det minsta antalet Mb som tas bort vid en cacherensning.");
   
 
-  globvar("cache_minimum_left", 5, "Proxy disk cache: Minimum "
+  globvar("cache_minimum_left", 5, "Cache: Proxy Disk Cache Minimum "
 	  "available free space and inodes (in %)", TYPE_INT,
 #"If less than this amount of disk space or inodes (in %) is left, 
  the cache will remove a few files. This check may work 
@@ -177,112 +177,114 @@ grafisk text utan att ange ett typsnitt, så används det här typsnittet.");
 #endif /* filesystem_stat */
 	  );
   deflocaledoc( "svenska", "cache_minimum_free", 
-		"Proxydiskcache: Minimal fri disk", 
+		"Cache: Proxydiskcache minimal fri disk", 
 	"Om det är mindre plats (i %) ledigt på disken än vad som "
 	"anges i den här variabeln så kommer en cacherensning ske.");
   
   
-  globvar("cache_size", 25, "Proxy disk cache: Size", TYPE_INT,
+  globvar("cache_size", 25, "Cache: Proxy Disk Cache Size", TYPE_INT,
 	  "How many MB may the cache grow to before a garbage collect is done?",
 	  0, cache_disabled_p);
-  deflocaledoc( "svenska", "cache_size", "Proxydiskcache: Storlek", 
+  deflocaledoc( "svenska", "cache_size", "Cache: Proxydiskcachens storlek", 
 		"Cachens maximala storlek, i Mb.");
 
-  globvar("cache_max_num_files", 0, "Proxy disk cache: Maximum number "
+  globvar("cache_max_num_files", 0, "Cache: Proxy Disk Cache Maximum number "
 	  "of files", TYPE_INT, "How many cache files (inodes) may "
 	  "be on disk before a garbage collect is done ? May be left "
 	  "zero to disable this check.",
 	  0, cache_disabled_p);
   deflocaledoc( "svenska", "cache_max_num_files", 
-		"Proxydiskcache: Maximalt antal filer", 
+		"Cache: Proxydiskcache maximalt antal filer", 
 		"Om det finns fler än så här många filer i cachen "
 		"kommer en cacherensning ske. Sätt den här variabeln till "
 		"noll för att hoppa över det här testet.");
   
-  globvar("bytes_per_second", 50, "Proxy disk cache: Bytes per second", 
+  globvar("bytes_per_second", 50, "Cache: Proxy Disk Cache bytes per second", 
 	  TYPE_INT,
 	  "How file size should be treated during garbage collect. "
 	  " Each X bytes counts as a second, so that larger files will"
 	  " be removed first.",
 	  0, cache_disabled_p);
   deflocaledoc( "svenska", "bytes_per_second", 
-		"Proxydiskcache: Bytes per sekund", 
+		"Cache: Proxydiskcache bytes per sekund", 
 		"Normalt sätt så tas de äldsta filerna bort, men filens "
 		"storlek modifierar dess 'ålder' i cacherensarens ögon. "
 		"Den här variabeln anger hur många bytes som ska motsvara "
 		"en sekund.");
 
   globvar("cachedir", "/tmp/roxen_cache/",
-	  "Proxy disk cache: Base Cache Dir",
+	  "Cache: Proxy Disk Cache Base Cache Dir",
 	  TYPE_DIR,
 	  "This is the base directory where cached files will reside. "
 	  "To avoid mishaps, 'roxen_cache/' is always prepended to this "
 	  "variable.",
 	  0, cache_disabled_p);
-  deflocaledoc("svenska", "cachedir", "Proxydiskcache: Cachedirectory",
+  deflocaledoc("svenska", "cachedir", "Cache: Proxydiskcachedirectory",
 	       "Den här variabeln anger vad cachen ska sparas. "
 	       "För att undvika fatala misstag så adderas alltid "
 	       "'roxen_cache/' till den här variabeln när den sätts om.");
 
   globvar("hash_num_dirs", 500,
-	  "Proxy disk cache: Number of hash directories",
-	  TYPE_INT,
+	  "Cache: Proxy Disk Cache Number of hash directories",
+	  TYPE_INT|VAR_MORE,
 	  "This is the number of directories to hash the contents of the disk "
 	  "cache into.  Changing this value currently invalidates the whole "
 	  "cache, since the cache cannot find the old files.  In the future, "
 	  " the cache will be recalculated when this value is changed.",
 	  0, cache_disabled_p); 
   deflocaledoc("svenska", "hash_num_dirs", 
-	       "Proxydiskcache: Antalet cachesubdirectoryn",
+	       "Cache: Proxydiskcache antalet cachesubdirectoryn",
 	       "Disk cachen lagrar datan i flera directoryn, den här "
 	       "variabeln anger i hur många olika directoryn som datan ska "
 	       "lagras. Om du ändrar på den här variabeln så blir hela den "
 	       "gamla cachen invaliderad.");
   
-  globvar("cache_keep_without_content_length", 1, "Proxy disk cache: "
-	  "Keep without Content-Length", TYPE_FLAG, "Keep files "
+  globvar("cache_keep_without_content_length", 1, "Cache: "
+	  "Proxy Disk Cache Keep without Content-Length", 
+          TYPE_FLAG, "Keep files "
 	  "without Content-Length header information in the cache?",
 	  0, cache_disabled_p);
   deflocaledoc("svenska", "cache_keep_without_content_length", 
-	       "Proxydiskcache: Behåll filer utan angiven fillängd",
+	       "Cache: Proxydiskcachen behåller filer utan angiven fillängd",
 	       "Spara filer även om de inte har någon fillängd. "
 	       "Cachen kan innehålla trasiga filer om den här "
 	       "variabeln är satt, men fler filer kan sparas");
 
-  globvar("cache_check_last_modified", 0, "Proxy disk cache: "
-	  "Refresh on Last-Modified", TYPE_FLAG,
+  globvar("cache_check_last_modified", 0, "Cache: "
+	  "Proxy Disk Cache Refreshes on Last-Modified", TYPE_FLAG,
 	  "If set, refreshes files without Expire header information "
 	  "when they have reached double the age they had when they got "
 	  "cached. This may be useful for some regularly updated docs as "
 	  "online newspapers.",
 	  0, cache_disabled_p);
   deflocaledoc("svenska", "cache_check_last_modified", 
-	       "Proxydiskcache: Kontrollera värdet at Last-Modifed headern",
+	       "Cache: Proxydiskcachen kontrollerar värdet "
+               "av Last-Modifed headern",
 #"Om den här variabeln är satt så kommer även filer utan Expire header att tas
 bort ur cachen när de blir dubbelt så gamla som de var när de hämtades från
 källservern om de har en last-modified header som anger när de senast 
 ändrades");
 
-  globvar("cache_last_resort", 0, "Proxy disk cache: "
-	  "Last resort (in days)", TYPE_INT,
+  globvar("cache_last_resort", 0, "Cache: "
+	  "Proxy Disk Cache Last resort (in days)", TYPE_INT,
 	  "How many days shall files without Expires and without "
 	  "Last-Modified header information be kept?",
 	  0, cache_disabled_p);
   deflocaledoc("svenska", "cache_last_resort", 
-	       "Proxydiskcache: Spara filer utan datum",
+	       "Cache: Proxydiskcachen sparar filer utan datum",
 	       "Hur många dagar ska en fil utan både Expire och "
 	       "Last-Modified behållas i cachen? Om du sätter den "
 	       "här variabeln till noll kommer de inte att sparas alls.");
 
   globvar("cache_gc_logfile",  "",
-	  "Proxy disk cache: "
-	  "Garbage collector logfile", TYPE_FILE,
+	  "Cache: "
+	  "Proxy Disk Cache Garbage collector logfile", TYPE_FILE,
 	  "Information about garbage collector runs, removed and refreshed "
 	  "files, cache and disk status goes here.",
 	  0, cache_disabled_p);
 
   deflocaledoc("svenska", "cache_gc_logfile", 
-	       "Proxydiskcache: Loggfil",
+	       "Cache: Proxydiskcacheloggfil",
 	       "Information om cacherensningskörningar sparas i den här filen"
 	       ".");
   /// End of cache variables..
@@ -298,7 +300,7 @@ källservern om de har en last-modified header som anger när de senast
 	       "for roxens start-skript. $uid byts ut mot användaridt för "
 	       "den användare som kör roxen");
 
-  globvar("default_ident", 1, "Identify: Use default identification string",
+  globvar("default_ident", 1, "Identify, Use default identification string",
 	  TYPE_FLAG|VAR_MORE,
 	  "Setting this variable to No will display the \"Identify as\" node "
 	  "where you can state what Roxen should call itself when talking "
@@ -318,7 +320,7 @@ källservern om de har en last-modified header som anger när de senast
 	       "Om du sätter den här variabeln till 'nej' så kommer du att "
 	       "få välja vad roxen ska kalla sig.");
 
-  globvar("ident", replace(real_version," ","·"), "Identify: Identify as",
+  globvar("ident", replace(real_version," ","·"), "Identify, Identify as",
 	  TYPE_STRING /* |VAR_MORE */,
 	  "Enter the name that Roxen should use when talking to clients. ",
 	  0, ident_disabled_p);
@@ -530,7 +532,7 @@ anlending.");
 
   globvar("next_supports_update", time()+3600, "", TYPE_INT,"",0,1);
 
-  globvar("abs_engage", 0, "Anti-Block-System: Enable", TYPE_FLAG|VAR_MORE,
+  globvar("abs_engage", 0, "ABS: Enable Anti-Block-System", TYPE_FLAG|VAR_MORE,
 #"If set, the anti-block-system will be enabled.
   This will restart the server after a configurable number of minutes if it 
   locks up. If you are running in a single threaded environment heavy 
@@ -539,15 +541,15 @@ anlending.");
   blocked. In general there is no harm in having this option enabled. ");
 
   deflocaledoc("svenska", "abs_engage",
-	       "AntiBlockSystem: Slå på AntiBlockSystemet",
+	       "ABS: Slå på AntiBlockSystemet",
 #"Ska antilåssystemet vara igång? Om det är det så kommer roxen automatiskt
   att starta om om den har hängt sig mer än några minuter. Oftast så beror
   hängningar på buggar i antingen operativsystemet eller i en modul. Den 
   senare typen av hängningar påverkar inte en trådad roxen, medans den första
   typen gör det.");
 
-  globvar("abs_timeout", 5, "Anti-Block-System: Timeout", 
-	  TYPE_INT_LIST|VAR_MORE,
+  globvar("abs_timeout", 5, "ABS: Timeout", 
+	  TYPE_INT_LIST,
 #"If the server is unable to accept connection for this many 
   minutes, it will be restarted. You need to find a balance: 
   if set too low, the server will be restarted even if it's doing 
@@ -557,7 +559,7 @@ anlending.");
   lambda() {return !QUERY(abs_engage);});
 
   deflocaledoc("svenska", "abs_timeout",
-	       "AntiBlockSystem: Tidsbegränsning",
+	       "ABS: Tidsbegränsning",
 #"Om servern inte svarar på några frågor under så här många 
  minuter så kommer roxen startas om automatiskt.  Om du 
  har en väldigt långsam dator kan en minut vara för 
@@ -578,7 +580,7 @@ value of the 'LANG' environment variable.",
 
   globvar("suicide_engage",
 	  0,
-	  "Automatic Restart: Enable",
+	  "Auto Restart: Enable Automatic Restart",
 	  TYPE_FLAG|VAR_MORE,
 #"If set, Roxen will automatically restart after a configurable number of
 days. Since Roxen uses a monolith, non-forking server model the process tends
@@ -586,7 +588,7 @@ to grow in size over time. This is mainly due to heap fragmentation but also
 because of memory leaks."
 	  );
   deflocaledoc("svenska", "suicide_engage",
-	       "Automatisk omstart: Starta om automatiskt",
+	       "Auto omstart: Starta om automatiskt",
 #"Roxen har stöd för att starta automatiskt då ock då. Eftersom roxen är en
 monolitisk icke-forkande server (en enda långlivad process) så tenderar
 processen att växa med tiden.  Det beror mest på minnesfragmentation, men även
@@ -597,50 +599,50 @@ slår på den här funktionen. Notera att det tar ett litet tag att starta om
 
 globvar("suicide_timeout",
 	  7,
-	  "Automatic Restart: Timeout",
+	  "Auto Restart: Timeout",
 	  TYPE_INT_LIST|VAR_MORE,
 	  "Automatically restart the server after this many days.",
 	  ({1,2,3,4,5,6,7,14,30}),
 	  lambda(){return !QUERY(suicide_engage);});
   deflocaledoc("svenska", "suicide_timeout",
-	       "Automatisk omstart: Tidsbegränsning (i dagar)",
+	       "Auto omstart: Tidsbegränsning (i dagar)",
 #"Om roxen är inställd till att starta om automatiskt, starta om
 så här ofta. Tiden är angiven i dagar");
 
 
   globvar("argument_cache_in_db", 0, 
-         "Argument Cache: Store the argument cache in a mysql database",
+         "Cache: Store the argument cache in a mysql database",
          TYPE_FLAG|VAR_MORE,
          "If set, store the argument cache in a mysql "
          "database. This is very useful for load balancing using multiple "
          "roxen servers, since the mysql database will handle "
           " synchronization"); 
   deflocaledoc("svenska", "argument_cache_in_db",
-               "Argumentcache: Spara cachen i en databas",
+               "Cache: Spara argumentcachen i en databas",
                "Om den här variabeln är satt så sparas argumentcachen i en "
                "databas istället för filer. Det gör det möjligt att använda "
                "multipla frontendor, dvs, flera separata roxenservrar som "
                "serverar samma site" );
 
   globvar( "argument_cache_db_path", "mysql://localhost/roxen", 
-          "Argument Cache: Database URL to use",
+          "Cache: Argument Cache Database URL to use",
           TYPE_STRING|VAR_MORE,
           "The database to use to store the argument cache",
           0,
           lambda(){ return !QUERY(argument_cache_in_db); });
   deflocaledoc("svenska", "argument_cache_db_path",
-               "Argumentcache: Databas URL",
+               "Cache: ArgumentcachedatabasURL",
                "Databasen i vilken argumentcachen kommer att sparas" );
 
   globvar( "argument_cache_dir", "../argument_cache/", 
-          "Argument Cache: Cache directory",
+          "Cache: Argument Cache Directory",
           TYPE_DIR|VAR_MORE,
           "The cache directory to use to store the argument cache."
           " Please note that load balancing is not available for most modules "
           " (such as gtext, diagram etc) unless you use a mysql database to "
           "store the argument caches");
   deflocaledoc("svenska", "argument_cache_dir",
-               "Argumentcache: Cachedirectory",
+               "Cache: Argumentcachedirectory",
                "Det directory i vilket cachen kommer att sparas. "
                " Notera att lastbalansering inte fungerar om du inte sparar "
                "cachen i en databas, och även om du sparar cachen i en "
