@@ -6,7 +6,7 @@ inherit "chili-module:filesystem";
 
 import Parser.XML.Tree;
 
-constant cvs_version = "$Id: webapp.pike,v 2.23 2004/01/25 18:27:59 norrby Exp $";
+constant cvs_version = "$Id: webapp.pike,v 2.24 2004/05/22 23:43:50 _cvs_dirix Exp $";
 
 constant thread_safe=1;
 constant module_unique = 0;
@@ -36,7 +36,7 @@ constant module_name = "Java: Java Web Application bridge";
 constant  module_doc = "An interface to Java <a href=\"http://java.sun.com/"
   "products/servlet/index.html""\">Servlets</a>.";
 
-#if constant(Servlet.servlet)
+#if constant(servlet.servlet)
 //#if 1
 
 // map from servlet name to various info about the servlet
@@ -161,7 +161,7 @@ int parse_param(Node c, mapping(string:string) data)
         return 0;
 }
 
-void do_parse_servlet(Node c, mapping(string:string) data)
+void do_parse_servlet(Node c, mapping(string:string|int|mapping(string:string)) data)
 {
   mapping(string:string) param = ([ ]);
   int prio;
@@ -955,7 +955,7 @@ Thread.Mutex load_mutex = Thread.Mutex();
 #endif
 
 
-int load_servlet(mapping(string:string|mapping|Servlet.servlet) servlet)
+int load_servlet(mapping(string:string|mapping|Servlet.servlet|int) servlet)
 {
 #if constant(thread_create)
   //  Serialize initializations so concurrent threads won't init the same
@@ -1014,9 +1014,9 @@ int load_servlet(mapping(string:string|mapping|Servlet.servlet) servlet)
     }
 }
 
-mapping(string:string|mapping|Servlet.servlet) match_anyservlet(string f, RequestID id)
+mapping(string:string|mapping|Servlet.servlet|array) match_anyservlet(string f, RequestID id)
 {
-  mapping(string:string|mapping|Servlet.servlet) ret;
+  mapping(string:string|mapping|Servlet.servlet|array) ret;
   if (query("anyservlet") && has_prefix(f, "/servlet/"))
     {
       //WEBAPP_WERR(sprintf("match_anyservlet(%s)", f));
