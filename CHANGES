@@ -1,4 +1,11 @@
 
-Major changes from Roxen 4.0:
+Major changes from Roxen 3.3:
 
  New modules:
+   expandvariables
+   deflate
+   ext_userdb_sql1
+   ext_userdb_sql2
+   html2x
+   snmp
+   webdav
