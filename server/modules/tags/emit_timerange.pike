@@ -4,7 +4,7 @@
 inherit "module";
 
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.19 2004/05/27 17:56:00 _cvs_stephen Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.20 2004/06/19 23:13:43 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -1078,7 +1078,7 @@ constant tagdoc = ([
                    AND start_date &lt; \"2003-04-01 00:00:00:\"
                  ORDER BY start_date'
           compare-date='comp_date'
-          host='mydb'>
+          db='mydb'>
 
           <if variable='_.ymd_short is &var.ymd_short_old;' not=''>
             <![CDATA[</td>]]>

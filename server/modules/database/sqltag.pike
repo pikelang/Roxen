@@ -1,7 +1,7 @@
 // This is a ChiliMoon module. Copyright © 1997-2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.111 2004/06/19 22:17:20 _cvs_stephen Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.112 2004/06/19 23:13:42 _cvs_stephen Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -33,7 +33,7 @@ constant tagdoc=([
  href='../text/tablify.tag' />.</p>
 </attr>
 
-<attr name='host' value='database'><p>
+<attr name='db' value='database'><p>
  Which database to connect to, usually a symbolic name set in the <xref
  href='../../administrator_manual/installing/databases.xml'><module>SQL
  Databases</module></xref> module. If omitted the default database will
@@ -60,7 +60,7 @@ constant tagdoc=([
  contents of the database, for example INSERT or UPDATE.</p>
 </desc>
 
-<attr name='host' value='database'><p>
+<attr name='db' value='database'><p>
  Which database to connect to, usually a symbolic name set in the <xref
  href='../../administrator_manual/installing/databases.xml'><module>SQL
  Databases</module></xref> module. If omitted the default
@@ -101,7 +101,7 @@ inserting large datas. Oracle, for instance, limits the query to 4000 bytes.
  as the SQL columns.</p>
 </desc>
 
-<attr name='host' value='database'><p>
+<attr name='db' value='database'><p>
  Which database to connect to, usually a symbolic name set in the <xref
  href='../../administrator_manual/installing/databases.xml'><module>SQL
  Databases</module></xref> module. If omitted the default
@@ -148,7 +148,9 @@ array|object do_sql_query(mapping args, RequestID id,
 			  void|int(0..1) ret_con)
 {
   string host;
-  if(args->host)
+  if(args->db)
+    host=args->db, args->db="SECRET";
+  else if(args->host)			     // Deprecated
     host=args->host, args->host="SECRET";
   else
     host=default_db;
@@ -275,7 +277,7 @@ class TagSqlplugin {
   constant plugin_name = "sql";
   mapping(string:RXML.Type) req_arg_types = ([ "query":RXML.t_text(RXML.PEnt) ]);
   mapping(string:RXML.Type) opt_arg_types = ([
-    "host":RXML.t_text(RXML.PEnt),
+    "db":RXML.t_text(RXML.PEnt),
     "module":RXML.t_text(RXML.PEnt),
     "prefetch":RXML.t_text(RXML.PEnt),
   ]);
@@ -294,7 +296,7 @@ class TagSQLQuery {
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
   mapping(string:RXML.Type) req_arg_types = ([ "query":RXML.t_text(RXML.PEnt) ]);
   mapping(string:RXML.Type) opt_arg_types = ([
-    "host":RXML.t_text(RXML.PEnt),
+    "db":RXML.t_text(RXML.PEnt),
     "module":RXML.t_text(RXML.PEnt),
     "mysql-insert-id":RXML.t_text(RXML.PEnt), // t_var
   ]);
@@ -331,7 +333,7 @@ class TagSQLTable {
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
   mapping(string:RXML.Type) req_arg_types = ([ "query":RXML.t_text(RXML.PEnt) ]);
   mapping(string:RXML.Type) opt_arg_types = ([
-    "host":RXML.t_text(RXML.PEnt),
+    "db":RXML.t_text(RXML.PEnt),
     "module":RXML.t_text(RXML.PEnt),
     "ascii":RXML.t_text(RXML.PEnt), // t_bool
     "nullvalue":RXML.t_text(RXML.PEnt),
@@ -375,7 +377,7 @@ class TagSQLTable {
 
 	if (!ascii)
 	  ret=Roxen.make_container("table",
-				   args-(<"host","query","module",
+				   args-(<"db","query","module",
 					  "ascii","nullvalue">), ret);
 
 	id->misc->defines[" _ok"] = 1;
