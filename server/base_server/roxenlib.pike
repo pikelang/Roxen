@@ -1,4 +1,4 @@
-// $Id: roxenlib.pike,v 1.142 2000/01/16 03:17:10 nilsson Exp $
+// $Id: roxenlib.pike,v 1.143 2000/01/17 16:52:14 nilsson Exp $
 
 #include <roxen.h>
 inherit "http";
@@ -760,20 +760,7 @@ static string short_date(int timestamp)
 
 int httpdate_to_time(string date)
 {
-   // Tue, 28 Apr 1998 13:31:29 GMT
-   // 0    1  2    3    4  5  6
-   int mday,hour,min,sec,year;
-   string month;
-   if(sscanf(date,"%*s, %d %s %d %d:%d:%d GMT",mday,month,year,hour,min,sec)==6)
-     return mktime((["year":year-1900,
-		     "mon":roxen->months[lower_case(month)],
-		     "mday":mday,
-		     "hour":hour,
-		     "min":min,
-		     "sec":sec,
-		     "timezone":0]));
-
-   return -1;
+  return roxen->parse_since(date)[0]||-1;
 }
 
 static string int2roman(int m)
