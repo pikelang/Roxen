@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.248 2000/09/21 23:03:45 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.249 2000/09/28 02:18:15 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -35,7 +35,7 @@ void create()
 
   defvar("ext", 0, "Append format to generated images",
 	 TYPE_FLAG|VAR_MORE|VAR_NOT_CFIF,
-	  "Append the image format (.gif, .png, .gif, etc) to the generated "
+	  "Append the image format (.gif, .png, .jpg, etc) to the generated "
 	  "images. This is not necessary, but might seem nicer.");
 }
 
