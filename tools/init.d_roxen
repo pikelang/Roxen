@@ -4,7 +4,7 @@
 #############
 roxenhome=/usr/local/roxen/server/
 wwwuser=www
-killallwww=yes
+killallwww=no
 # ':0' should be the uid.
 pidfile=/tmp/roxen_pid:0
 
@@ -37,10 +37,19 @@ case $1 in
           echo Done.
 	;;
 
+	'reload')
+	  echo "Reloading configurations..."
+	  if [ -f $pidfile ] ; then
+	    read pid < $pidfile
+	    kill -HUP $pid || kill 1 $pid
+	    exit 0
+	  fi
+	  echo "Roxen doesn't seem to be running..."
+	  ;;
 	'restart')
 	  echo Restarting Roxen...
 	  if [ -f $pidfile ] ; then
-	    kill -HUP `cat $pidfile` || kill 1 `cat $pidfile`
+	    kill -INT `cat $pidfile` || kill 2 `cat $pidfile`
 	    rm $pidfile
 	    echo Done.
 	    exit 0
@@ -72,6 +81,10 @@ case $1 in
            fi
            echo Roxen stopped.
 	;;
+
+	*)
+          echo "Syntax: $0 [start|stop|restart|reload]"
+          ;;
 esac
 
 exit 0
