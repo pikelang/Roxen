@@ -2174,12 +2174,12 @@ cd</rxml>
 
 <test>
 <rxml>&client.language;</rxml>
-<result></result>
+<result>sv</result>
 </test>
 
 <test>
 <rxml>&client.languages;</rxml>
-<result></result>
+<result>sv, en, bräk</result>
 </test>
 
 <test>
