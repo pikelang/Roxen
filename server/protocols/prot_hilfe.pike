@@ -238,6 +238,44 @@ class Connection
   }
 
 
+#if __VERSION__ > 7.2
+  class Handler {
+    inherit Tools.Hilfe.Evaluator;
+
+    void got_data( string d )
+    {
+      if( String.trim_all_whites(d) == "quit" )
+      {
+	begone( );
+	return;
+      }
+      add_input_line( d );
+      write( state->finishedp() ? "> " : ">> " );
+      user->settings->set("hilfe_history",
+			  rl->readline->get_history()->encode());
+      user->settings->save();
+    }
+
+    void create()
+    {
+      ::create();
+      write = lambda(string ... in) { rl->readline->write(sprintf(@in)); };
+      constants["RequestID"] = myRequestID;
+      constants["conf"] = my_conf;
+      constants["port"] = my_port_obj;
+      constants["user"] = user;
+      constants["debug"] = hilfe_debug;
+      user->settings->defvar( "hilfe_history", Variable.String("", 65535,0,0 ) );
+      user->settings->restore( );
+      string hi;
+      if( (hi = user->settings->query("hilfe_history")) != "" )
+	rl->readline->get_history()->create( 512, hi/"\n" );
+      rl->readline->get_history()->finishline("");
+      print_version();
+      got_data("");
+    }
+  }
+#else
   class Handler
   {
     inherit Tools.Hilfe.Evaluator;
@@ -338,6 +376,7 @@ class Connection
       got_data("");
     }
   }
+#endif // > Pike 7.2
 
 #define USER 0
 #define PASSWORD 1
@@ -420,7 +459,7 @@ class Connection
 
   void begone()
   {
-    catch(fd->write("Bye\n"));
+    catch(fd->write("\nBye\n"));
     catch(fd->close());
     catch(destruct( fd ));
     catch(destruct( handler ));
@@ -436,7 +475,7 @@ class Connection
   {
     if( rl->readline )
     {
-      rl->readline->write("Welcome to Roxen Hilfe 1.0\n", 1);
+      rl->readline->write("Welcome to Roxen Hilfe 1.1\n", 1);
       rl->readline->write("Username: ");
       return;
     }
