@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.21 2002/02/14 14:39:47 mast Exp $
+ * $Id: debug_info.pike,v 1.22 2002/05/21 14:47:29 mast Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -255,6 +255,7 @@ mixed page_0( object id )
   mapping(string|program:array(string)) allobj = ([]);
   mapping(string|program:int) numobjs = ([]);
 
+  object threads_disabled = _disable_threads();
   object start = this_object();
   for (object o = start; o; o = _prev (o))
     if (string|program p = object_program (o)) {
@@ -267,6 +268,7 @@ mixed page_0( object id )
       p = Program.defined (p) || p;
       if (++numobjs[p] <= 50) allobj[p] += ({sprintf ("%O", o)});
     }
+  threads_disabled = 0;
 
   table = (array) allobj;
 
