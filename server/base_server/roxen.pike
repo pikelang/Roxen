@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.490 2000/06/04 19:24:39 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.491 2000/06/12 16:50:27 mast Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -2409,7 +2409,15 @@ class ImageCache
       return meta_cache[ id ];
     if( !(f=open(dir+id+".i", "r" ) ) )
       return 0;
-    return meta_cache_insert( id, decode_value( f->read() ) );
+    string s = f->read();
+    mapping m;
+    if (catch (m = decode_value (s))) {
+      rm (dir + id + ".i");
+      report_error( "Corrupt data in persistent cache file "+
+                    dir+id+".i; removed it.\n" );
+      return 0;
+    }
+    return meta_cache_insert( id, m );
   }
 
   void flush(int|void age) 
