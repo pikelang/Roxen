@@ -1,3 +1,19 @@
+Changes since Roxen Challenger 1.2.61 Yellow
+-----------------------------------------------
+
+o Added the manual and manual-server to the distribution.
+
+o Fixed certificate generation to work with Pike 0.6.
+
+o Fixed bug related to insert and multiple layers of query variables. (SSI)
+
+o Added support for SSI #set.
+
+o Fixed the "striped polygons"-bug in Pike 0.5's Image package.
+
+o Improved documentation for proxy security patterns.
+
+
 Changes since Roxen Challenger 1.2.48 Yellow
 -----------------------------------------------
 
