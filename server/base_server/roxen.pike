@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.495 2000/07/09 16:09:21 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.496 2000/07/09 16:50:10 grubba Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -339,11 +339,72 @@ object fonts;
 // ----------- Locale support ------------
 //<locale-token project="base_server">LOCALE</locale-token>
 
+// This class behaves like a string that changes contents when
+// the locale is changed.
+static class Deferred_Locale
+{
+  static string key;
+  static string fallback;
+  static void create(string key_, string fallback_)
+  {
+    key = key;
+    fallback = fallback_;
+  }
+  static inline string lookup()
+  {
+    // FIXME: Caching?
 #if constant(Locale.translate)
-#define LOCALE(X,Y)   Locale.translate(locale->get()->base_server, X, Y)
+    return Locale.translate(locale->get()->base_server, key, fallback);
 #else
-#define LOCALE(X,Y)   RoxenLocale.translate(locale->get()->base_server, X, Y)
+    return RoxenLocale.translate(locale->get()->base_server, key, fallback);
 #endif
+  }
+  static string _sprintf(int c)
+  {
+    switch(c) {
+    case 's':
+      return lookup();
+    case 'O':
+      return
+	sprintf("%O", lookup());
+    default:
+      error(sprintf("Illegal formatting char '%c'\n", c));
+    }
+  }
+  static string `+(mixed x)
+  {
+    return lookup()+x;
+  }
+  static string ``+(mixed x)
+  {
+    return x+lookup();
+  }
+  static int _sizeof()
+  {
+    return sizeof(lookup());
+  }
+  static int|string `[](int a,int|void b)
+  {
+    if (query_num_arg() < 2) {
+      return lookup()[a];
+    }
+    return lookup()[a..b];
+  }
+  static array(string) `/(string s)
+  {
+    return lookup()/s;
+  }
+  static array(int) _indices()
+  {
+    return indices(lookup());
+  }
+  static array(int) _values()
+  {
+    return values(lookup());
+  }
+};
+
+#define LOCALE(X,Y)	([string](mixed)Deferred_Locale(X,Y))
 
 string default_locale;
 
