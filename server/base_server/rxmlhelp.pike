@@ -3,8 +3,6 @@
 // Martin Nilsson
 //
 
-//#define RXMLHELP_DEBUG
-
 #ifdef RXMLHELP_DEBUG
 # define RXMLHELP_WERR(X) werror("RXML help: %s\n", X);
 #else
@@ -130,6 +128,8 @@ static string format_doc(string|mapping doc, string name, void|object id) {
       doc=doc->standard;
   }
 
+  name=replace(name, ({ "<", ">" }), ({ "&lt;", "&gt;" }) );
+
   return Parser.HTML()->
     add_tag( "lang",
 	     lambda() { return available_languages(id); }
@@ -141,7 +141,7 @@ static string format_doc(string|mapping doc, string name, void|object id) {
       "noex":noex_cont,
       "tag":lambda(string tag, mapping m, string c) { return "&lt;"+c+"&gt;"; },
       "ref":lambda(string tag, mapping m, string c) { return c; },
-      "short":lambda(string tag, mapping m, string c) { m->hide?"":c; }
+      "short":lambda(string tag, mapping m, string c) { return m->hide?"":c; },
     ]) )->
     set_extra(name, id)->feed(doc)->read();
 }
