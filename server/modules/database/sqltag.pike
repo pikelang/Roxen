@@ -1,14 +1,9 @@
-// This is a roxen module. Copyright © 1997-2000, Roxen IS.
+// This is a roxen module. Copyright © 1997-2001, Roxen IS.
 //
-// A module for Roxen, which gives the tags
-// <sqltable>, <sqlquery> and <sqloutput>.
-//
-// Henrik Grubbström 1997-01-12
 
-constant cvs_version="$Id: sqltag.pike,v 1.77 2001/04/17 11:11:23 per Exp $";
-constant thread_safe=1;
+constant cvs_version = "$Id: sqltag.pike,v 1.78 2001/06/11 21:02:53 nilsson Exp $";
+constant thread_safe = 1;
 #include <module.h>
-#include <config.h>
 
 inherit "module";
 
@@ -80,7 +75,8 @@ constant tagdoc=([
 
 <attr name='parse'><p>
  If specified, the query will be parsed by the RXML parser. Useful if
- you wish to dynamically build the query.</p>
+ you wish to dynamically build the query. This attribute is deprecated
+ and will have no effect if the servers compatibility level is above 2.1.</p>
 </attr>
 
 <attr name='mysql-insert-id' value='form-variable'><p>
@@ -108,35 +104,42 @@ constant tagdoc=([
 ]);
 #endif
 
+
+// --------------------------- Database query code --------------------------------
+
 #if ROXEN_COMPAT <= 1.3
 string compat_default_host;
 #endif
 string default_db;
 
-array|object do_sql_query(mapping args, RequestID id, void|int big_query)
+array|object do_sql_query(mapping args, RequestID id,
+			  void|int(0..1) big_query)
 {
-  string host = compat_default_host;
+  string host;
   if (args->host)
   {
     host=args->host;
     args->host="SECRET";
   }
+  if(args->db) {
+    host = args->db;
+    args->db = "SECRET";
+  }
 
-  if (!args->query)
-    RXML.parse_error("No query.\n");
-
-  if (args->parse)
+#if ROXEN_COMPAT <= 2.1
+  if (args->parse && id->conf->query("compat_level") < "2.2")
     args->query = Roxen.parse_rxml(args->query, id);
+#endif
 
   Sql.Sql con;
   array(mapping(string:mixed))|object result;
   mixed error;
   
 #if ROXEN_COMPAT <= 1.3
-  if( args->host || (!args->db && (query("db") == " none")) )
+  if( !args->db && (host || query("db")==" none") )
   {
     function sql_connect = id->conf->sql_connect;
-    error = catch(con = sql_connect(host));
+    error = catch(con = sql_connect(host || compat_default_host));
 
     if (error)
       RXML.run_error(LOCALE(3,"Couldn't connect to SQL server")+
@@ -146,14 +149,17 @@ array|object do_sql_query(mapping args, RequestID id, void|int big_query)
     // syntax errors and should be reported with parse_error.
   }
   else
-#endif
   {
-    error = catch(con = DBManager.get( args->db || args->host || default_db ||
-				       compat_default_host, my_configuration() ));
+#endif
+    error = catch(con = DBManager.get( host || default_db || compat_default_host,
+				       my_configuration() ));
     if (error)
       RXML.run_error(LOCALE(3,"Couldn't connect to SQL server")+
                      ": "+error[0]+"\n");
+#if ROXEN_COMPAT <= 1.3
   }
+#endif
+
   if (error = catch(result = (big_query?con->big_query(args->query):
                               con->query(args->query))))
   {
@@ -163,7 +169,8 @@ array|object do_sql_query(mapping args, RequestID id, void|int big_query)
     RXML.parse_error(error);
   }
 
-  args["dbobj"]=con;
+  args->dbobj=con;
+
   if(result && args->rowinfo) {
     int rows;
     if(arrayp(result)) rows=sizeof(result);
@@ -181,6 +188,8 @@ array|object do_sql_query(mapping args, RequestID id, void|int big_query)
 class TagSQLOutput {
   inherit RXML.Tag;
   constant name = "sqloutput";
+
+  mapping(string:RXML.Type) req_arg_types = ([ "query":RXML.t_text(RXML.PEnt) ]);
   RXML.Type content_type = RXML.t_same;
   array(RXML.Type) result_types = ({ RXML.t_any(RXML.PXml) });
 
@@ -213,38 +222,57 @@ class TagSQLOutput {
 }
 #endif
 
-#ifdef SQL_EMIT_FOR_DATABASES_WITHOUT_NULL_ENTRIES
 class TagSqlplugin {
   inherit RXML.Tag;
+  inherit "emit_object";
   constant name = "emit";
   constant plugin_name = "sql";
+  mapping(string:RXML.Type) req_arg_types = ([ "query":RXML.t_text(RXML.PEnt) ]);
+  mapping(string:RXML.Type) opt_arg_types = ([
+    "host":RXML.t_text(RXML.PEnt),
+    "db":RXML.t_text(RXML.PEnt),
+  ]);
 
-  array get_dataset(mapping m, RequestID id) {
-    return do_sql_query(m, id);
+  class Response {
+    inherit EmitObject;
+    private object sqlres;
+    private array(string) cols;
+    private int fetched;
+
+    private mapping(string:mixed) really_get_row() {
+      array val = sqlres->fetch_row();
+      if(val)
+	fetched++;
+      else
+	return 0;
+      return mkmapping(cols, val);
+    }
+
+    int num_rows_left() {
+      return sqlres->num_rows() - fetched + !!next_row;
+    }
+
+    void create(object _sqlres) {
+      sqlres = _sqlres;
+      cols = sqlres->fetch_fields()->name;
+    }
+  }
+
+  object get_dataset(mapping m, RequestID id) {
+    return Response(do_sql_query(m-(["rowinfo":""]), id, 1));
   }
 }
-#else
-class TagSqlplugin {
-  inherit RXML.Tag;
-  constant name = "emit";
-  constant plugin_name = "sql";
-
-  array get_dataset(mapping m, RequestID id) {
-    array(mapping(string:string|int)) res=do_sql_query(m, id);
-
-    foreach(res, mapping(string:string|int) row)
-      foreach(indices(row), string col)
-	if(!row[col]) row[col]=RXML.Void;
-
-    return res;
-  }
-}
-#endif
 
 class TagSQLQuery {
   inherit RXML.Tag;
   constant name = "sqlquery";
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  mapping(string:RXML.Type) req_arg_types = ([ "query":RXML.t_text(RXML.PEnt) ]);
+  mapping(string:RXML.Type) opt_arg_types = ([
+    "host":RXML.t_text(RXML.PEnt),
+    "db":RXML.t_text(RXML.PEnt),
+    "mysql-insert-id":RXML.t_text(RXML.PEnt), // t_var
+  ]);
 
   class Frame {
     inherit RXML.Frame;
@@ -270,6 +298,13 @@ class TagSQLTable {
   inherit RXML.Tag;
   constant name = "sqltable";
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  mapping(string:RXML.Type) req_arg_types = ([ "query":RXML.t_text(RXML.PEnt) ]);
+  mapping(string:RXML.Type) opt_arg_types = ([
+    "host":RXML.t_text(RXML.PEnt),
+    "db":RXML.t_text(RXML.PEnt),
+    "ascii":RXML.t_text(RXML.PEnt), // t_bool
+    "nullvalue":RXML.t_text(RXML.PEnt),
+  ]);
 
   class Frame {
     inherit RXML.Frame;
@@ -287,21 +322,22 @@ class TagSQLTable {
 
 	if (!ascii) {
 	  ret="<tr>";
-	  foreach(map(res->fetch_fields(), lambda (mapping m) {
-					     return m->name;
-					   } ), string name)
-	    ret += "<th>"+name+"</th>";
+	  foreach(res->fetch_fields(), mapping m)
+	    ret += "<th>"+m->name+"</th>";
 	  ret += "</tr>\n";
 	}
 
 	array row;
-	while(arrayp(row=res->fetch_row())) {
+	while(row=res->fetch_row()) {
 	  if (ascii)
-	    ret += ((array(string))row) * "\t" + "\n";
+	    ret += map(row, lambda(mixed in) {
+			      if(!in) return nullvalue;
+			      return (string)in;
+			    }) * "\t" + "\n";
 	  else {
 	    ret += "<tr>";
 	    foreach(row, mixed value)
-	      ret += "<td>"+(value==""?nullvalue:value)+"</td>";
+	      ret += "<td>" + (!value?nullvalue:(string)value) + "</td>";
 	    ret += "</tr>\n";
 	  }
 	}
@@ -309,8 +345,8 @@ class TagSQLTable {
 	if (!ascii)
 	  ret=Roxen.make_container("table",
 				   args-(["host":"","database":"","user":"",
-					  "password":"","query":"",
-					  "nullvalue":"", "dbobj":""]), ret);
+					  "password":"","query":"","db":"",
+					  "nullvalue":"","dbobj":""]), ret);
 
 	id->misc->defines[" _ok"] = 1;
 	result=ret;
@@ -367,7 +403,7 @@ void create()
 
 // --------------------- More interface functions --------------------------
 
-void start(int level, Configuration _conf)
+void start()
 {
 #if ROXEN_COMPAT <= 1.3
   compat_default_host = query("hostname");
