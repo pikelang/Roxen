@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.420 2003/03/20 14:00:52 wellhard Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.421 2003/03/20 16:38:20 anders Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1082,7 +1082,11 @@ class TagRemoveCookie {
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
 
   mapping(string:RXML.Type) req_arg_types = ([ "name" : RXML.t_text(RXML.PEnt) ]);
-  mapping(string:RXML.Type) opt_arg_types = ([ "value" : RXML.t_text(RXML.PEnt) ]);
+  mapping(string:RXML.Type) opt_arg_types = ([
+    "value" : RXML.t_text(RXML.PEnt),
+    "domain" : RXML.t_text(RXML.PEnt),
+    "path" : RXML.t_text(RXML.PEnt),
+  ]);
 
   class Frame {
     inherit RXML.Frame;
@@ -7014,7 +7018,7 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
  remove the cookie.
 </p></desc>
 
-<attr name='name'>
+<attr name='name' required='required'>
  <p>Name of the cookie the browser should remove.</p>
 </attr>
 
@@ -7024,8 +7028,15 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
  with this attribute will be the cookies intermediate value.</p>
 
  <p>Note that removing a cookie won't take effect until the next page
-load.</p>
+ load.</p>
+</attr>
 
+<attr name='domain'>
+ <p>Domain of the cookie the browser should remove.</p>
+</attr>
+
+<attr name='path' value='string' default=\"\">
+  <p>Path of the cookie the browser should remove</p>
 </attr>",
 
 //----------------------------------------------------------------------
@@ -7185,7 +7196,7 @@ load.</p>
 <p>Note that the change of a cookie will not take effect until the
  next page load.</p></desc>
 
-<attr name='name' value='string'>
+<attr name='name' value='string' required='required'>
  <p>The name of the cookie.</p>
 </attr>
 
