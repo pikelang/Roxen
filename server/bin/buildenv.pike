@@ -8,7 +8,7 @@
  *    various other external stuff happy.
  */
  
-string cvs_version = "$Id: buildenv.pike,v 1.3 2000/04/01 13:47:32 stewa Exp $";
+string cvs_version = "$Id: buildenv.pike,v 1.4 2000/08/30 22:26:16 noring Exp $";
 
 class Environment
 {
@@ -152,7 +152,7 @@ void config_env(object(Environment) env)
   string dir = "etc/env.d"; program p; object eo;
 
   foreach(glob("*.pike", get_dir(dir)||({})), string e)
-  { write(" " + (e/".")[0] + ": ");
+  { write("   %10s: ", (e/".")[0]);
     if (!catch (p = compile_file(dir+"/"+e)))
     { if (eo = p())
         eo->run(env);
@@ -166,20 +166,20 @@ void config_env(object(Environment) env)
 
 void main(int argc, array argv)
 {
-  write("\nSetting up environment.\n");
+  write("   Setting up environment.\n");
 
   if (Stdio.file_size("../local") != -2)
   { if (Stdio.file_size("bin") != -2 || Stdio.file_size("modules") != -2)
     { write(argv[0] + ": should be run in the Roxen 'server' directory.\n");
       exit(1);
     }
-    write("\n Creating directory ../local\n");
+    write("   Creating directory \"../local\"... ");
     if (!mkdir("../local", 0775))
     {
-      write("  Failed!\n");
+      write("failed!\n");
       exit(1);
     }
-    write("  Done.\n");
+    write("done\n");
   }
 
   object envobj = Environment("../local/environment");
@@ -187,11 +187,11 @@ void main(int argc, array argv)
   config_env(envobj);
   if (envobj->finalize())
   {
-    write("Environment updated.\n\n");
+    write("   Environment updated.\n\n");
   }
   else
   {
-    write("Environment didn't need updating.\n\n");
+    write("   Environment didn't need updating.\n\n");
   }
 }
 

@@ -2,7 +2,7 @@
 void run(object env)
 {
   string infdir;
-  write("  Checking for Informix...");
+  write("Checking for Informix...");
   if(!(infdir=getenv("INFORMIXDIR")))
     foreach(({"/opt/informix","/usr/opt/informix","/usr/informix",
 	      "/usr/local/informix","/mp/informix"}), string dir)
@@ -16,7 +16,7 @@ void run(object env)
     write(" not found\n");
     return;
   }
-  write("\n  => INFORMIXDIR="+infdir+"\n");
+  write(" INFORMIXDIR="+infdir+"\n");
   env->set("INFORMIXDIR", infdir);
   env->append("LD_LIBRARY_PATH", infdir+"/cli/dlls:"+infdir+"/lib/esql:"+
 	      infdir+"/lib");

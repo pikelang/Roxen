@@ -4,7 +4,7 @@ void run(object env)
   object f = Stdio.File();
   array(string) oracles = ({});
   string sid, home, bootstart;
-  write("  Checking for Oracle...");
+  write("Checking for Oracle...");
   if((sid = getenv("ORACLE_SID")) && (home = getenv("ORACLE_HOME")))
     oracles += ({ ({ sid, home }) });
   foreach(({"/var/opt/oracle/oratab", "/etc/oratab"}), string oratab)
@@ -24,13 +24,12 @@ void run(object env)
     write(" not found\n");
     return;
   }
-  write("\n");
   while(sizeof(oracles)>1) {
-    write("  Multiple Oracle instances found.  Please select the "
-	  "  preferred one:\n");
+    write("\n   Multiple Oracle instances found.  Please select the "
+	  "preferred one:\n");
     foreach(indices(oracles), int i)
       write(sprintf("     %2d) %s (in %s)\n", i+1, @oracles[i]));
-    write("  Enter preference (or 0 to skip this step) > ");
+    write("   Enter preference (or 0 to skip this step) > ");
     string in = Stdio.stdin.gets();
     int x;
     if(1==sscanf(in, "%d", x) && x>=0 && x<=sizeof(oracles))
@@ -41,7 +40,7 @@ void run(object env)
     else
       write("  Please enter a number in range 0--" + sizeof(oracles) + ".\n");
   }
-  write(sprintf("  => ORACLE_SID=%s, ORACLE_HOME=%s\n", @oracles[0]));
+  write(sprintf(" ORACLE_SID=%s, ORACLE_HOME=%s\n", @oracles[0]));
   env->set("ORACLE_SID", oracles[0][0]);
   env->set("ORACLE_HOME", oracles[0][1]);
   env->append("LD_LIBRARY_PATH", oracles[0][1]+"/lib");

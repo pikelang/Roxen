@@ -38,7 +38,7 @@ static string findjre()
 void run(object env)
 {
   string jrehome, arch, threads_type="native_threads";
-  write("  Checking for Java 2 (TM)...");
+  write("Checking for Java 2 (TM)...");
   if(!(jrehome=getenv("JREHOME")))
     jrehome=findjre();
   if(!jrehome)
@@ -47,7 +47,7 @@ void run(object env)
     write(" not found\n");
     return;
   }
-  write("\n  => JREHOME="+jrehome+"\n");
+  write(" JREHOME="+jrehome+"\n");
   env->set("JREHOME", jrehome);
   arch = (Process.popen("(/usr/bin/uname -p||uname -p) 2>/dev/null")||"")-"\n";
   if(arch=="unknown")
