@@ -2,6 +2,8 @@
 // By Martin Nilsson
 
 #define CLEAN_CYCLE 60*60
+//#define LOCALE_DEBUG
+//#define LOCALE_DEBUG_ALL
 
 // project_name:project_path
 private mapping(string:string) projects;
@@ -73,22 +75,25 @@ array(string) list_languages(string project) {
 class LocaleObject {
 
   // key:string
-  private mapping(string:string) bindings;
+  private mapping(string|int:string) bindings;
   // key:function
   private mapping(string:function) functions;
   int timestamp;
 
-  void create(mapping(string:string) _bindings,
+  void create(mapping(string|int:string) _bindings,
 	      void|mapping(string:function) _functions) {
-    bindings=_bindings;
+    bindings = _bindings;
     if(_functions)
-      functions=_functions;
+      functions = _functions;
     else
-      functions=([]);
-    timestamp=time(1);
+      functions = ([]);
+    timestamp = time(1);
   }
 
-  string translate(string key) {
+  string translate(string|int key) {
+#ifdef LOCALE_DEBUG_ALL
+    werror("L: %O -> %O\n",key,bindings[key]);
+#endif    
     return bindings[key];
   }
 
@@ -118,21 +123,26 @@ object get_object(string project, string lang) {
   // Is there already a locale object?
   LocaleObject locale_object;
   if(!locales[lang]) {
-    locales[lang]=([]);
+    locales[lang] = ([]);
   }
   else if(locale_object=locales[lang][project]) {
-    locale_object->timestamp=time(1);
+    locale_object->timestamp = time(1);
     return locale_object;
   }
 
+  mapping(string|int:string) bindings = ([]);
+  mapping(string:function) functions = ([]);
+#ifdef LOCALE_DEBUG
+  float sec = gauge{  
+#endif
   string filename=replace(projects[project],
 			  ({ "%L", "%%" }),
 			  ({ lang, "%" }) );
   Stdio.File file=Stdio.FILE();
   if(!(file->open(filename, "r")))
     return 0;
-  string line=file->gets();  // First line should be <?xml ?>
-  string data=file->read();
+  string line = file->gets();  // First line should be <?xml ?>
+  string data = file->read();
   file->close();
   if(!line || !data)
     return 0;
@@ -183,10 +193,9 @@ object get_object(string project, string lang) {
   else
     data = line+data;
 
-  mapping(string:string) bindings=([]);
-  mapping(string:function) functions=([]);
   function t_tag = lambda(string t, mapping m, string c) {
 		     if(m->id && m->id!="" && c!="") {
+		       if((int)m->id) m->id = (int)m->id;
 		       // Replace encoded entities
 		       c = replace(c, ({"&lt;","&gt;","&amp;"}),
 		                      ({ "<",   ">",    "&"  }));
@@ -219,15 +228,18 @@ object get_object(string project, string lang) {
   xml_parser->feed(data)->finish();
 
 #ifdef LOCALE_DEBUG
-  werror("\nGot LocaleObject %O in %O (bindings: %d, functions: %d)\n",
-	 project, lang, sizeof(bindings), sizeof(functions));
+  };   
+  werror("\nLocale: Read %O in %O (bindings: %d, functions: %d) in %.3fs\n", 
+	 project, lang, sizeof(bindings), sizeof(functions), sec);
 #endif
-  locale_object=LocaleObject(bindings, functions);
-  locales[lang][project]=locale_object;
+  locale_object = LocaleObject(bindings, functions);
+  locales[lang][project] = locale_object;
   return locale_object;
 }
 
 mapping(string:object) get_objects(string lang) {
+  //! Reads in and returns a mapping with all the registred projects'  
+  //! LocaleObjects in the language 'lang'
   if(!lang)
     return 0;
   foreach(indices(projects), string project)
@@ -235,14 +247,14 @@ mapping(string:object) get_objects(string lang) {
   return locales[lang];
 }
 
-string translate(string project, string lang, string id, string fallback)
+string translate(string project, string lang, string|int id, string fallback)
   //! Returns a translation for the given id, or the fallback string
 {
   LocaleObject locale_object = get_object(project, lang);
   if(locale_object) {
     string t_str = locale_object->translate(id);
 #ifdef LOCALE_DEBUG
-    if(t_str) t_str="("+id+":)"+t_str;
+    if(t_str) t_str+="("+id+")";
 #endif
     if(t_str) return t_str;
   }
@@ -250,7 +262,7 @@ string translate(string project, string lang, string id, string fallback)
   else
     werror("\nLocale.translate(): no object for id %O in %s/%s",
 	   id, project||"(no project)", lang||"(no language)");
-  fallback = "("+id+")"+fallback;
+  fallback += "("+id+")";
 #endif
   return fallback;
 }
@@ -274,7 +286,7 @@ function call(string project, string lang, string name,
 
 static void clean_cache() {
   remove_call_out(clean_cache);
-  int t=time(1)-CLEAN_CYCLE;
+  int t = time(1)-CLEAN_CYCLE;
   foreach(indices(locales), string lang) {
     foreach(indices(locales[lang]), string proj) {
       if(objectp(locales[lang][proj]) &&
@@ -292,11 +304,11 @@ static void clean_cache() {
 class DeferredLocale
 {
   static string project;
-  static string key;
+  static string|int key;
   static string fallback;
   function(void:string) get_lang;
   void create(string project_, function(void:string) get_lang_,
-	      string key_, string fallback_)
+	      string|int key_, string fallback_)
   {
     project = project_;
     get_lang = get_lang_;
