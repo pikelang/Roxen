@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.542 2000/09/07 18:26:23 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.543 2000/09/09 03:26:12 lange Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -32,15 +32,11 @@ inherit "module_support";
 // --- Locale defines ---
 
 //<locale-token project="roxen_start">   LOC_S </locale-token>
-//<locale-token project="roxen_config">  LOC_C </locale-token>
 //<locale-token project="roxen_message"> LOC_M </locale-token>
 
 #define LOC_S(X,Y)	_STR_LOCALE("roxen_start",X,Y)
-#define LOC_C(X,Y)	_STR_LOCALE("roxen_config",X,Y)
 #define LOC_M(X,Y)	_STR_LOCALE("roxen_message",X,Y)
-#define CALL_C(X,Y)	_LOCALE_FUN("roxen_config",X,Y)
 #define CALL_M(X,Y)	_LOCALE_FUN("roxen_message",X,Y)
-
 
 // --- Debug defines ---
 
@@ -275,11 +271,11 @@ static class Privs
       catch {
 	array bt = backtrace();
 	if (sizeof(bt) >= 2) {
-	  report_notice(LOC_M(3,"Change back to uid#%d gid#%d, from %s\n"),
+	  report_notice(LOC_M(3,"Change back to uid#%d gid#%d, from %s")+"\n",
 			saved_uid, saved_gid, dbt(bt[-2]));
 	} else {
 	  report_notice(LOC_M(4,"Change back to uid#%d gid#%d, "
-			      "from backend\n"), saved_uid, saved_gid);
+			      "from backend")+"\n", saved_uid, saved_gid);
 	}
       };
     }
@@ -495,8 +491,8 @@ local static void handler_thread(int id)
 		       "Client will not get any response from Roxen.\n"),*/
 		     describe_backtrace(q));
 	if (q = catch {h = 0;}) {
-	  report_error(LOC_M(5, "Uncaught error in handler thread: %s"
-			     "Client will not get any response from Roxen.\n"),
+	  report_error(LOC_M(5, "Uncaught error in handler thread: %s Client"
+			     "will not get any response from Roxen.")+"\n",
 		       describe_backtrace(q));
 	}
       }) {
@@ -524,9 +520,9 @@ void start_handler_threads()
 {
   if (QUERY(numthreads) <= 1) {
     set( "numthreads", 1 );
-    report_notice (LOC_S(1, "Starting one thread to handle requests.\n"));
+    report_notice (LOC_S(1, "Starting one thread to handle requests.")+"\n");
   } else { 
-    report_notice (LOC_S(2, "Starting %d threads to handle requests.\n"),
+    report_notice (LOC_S(2, "Starting %d threads to handle requests.")+"\n",
 		   QUERY(numthreads) );
   }
   array(object) new_threads = ({});
@@ -812,7 +808,7 @@ class Protocol
     ::create();
     if(!bind( port, got_connection, ip ))
     {
-      report_error(LOC_M(6, "Failed to bind %s://%s:%d/ (%s)\n"), 
+      report_error(LOC_M(6, "Failed to bind %s://%s:%d/ (%s)")+"\n", 
 		   (string)name, (ip||"*"), (int)port, strerror( errno() ));
       bound = 0;
     } else
@@ -821,7 +817,7 @@ class Protocol
 
   static string _sprintf( )
   {
-   return LOC_M(7,"Protocol")+"("+name+"://"+ip+":"+port+")";
+   return "Protocol("+name+"://"+ip+":"+port+")";
   }
 }
 
@@ -893,7 +889,7 @@ class SSLProtocol
 
     if( catch{ f = lopen(query_option("ssl_cert_file"), "r")->read(); } )
     {
-      report_error(LOC_M(8,"SSL3: Reading cert-file failed!\n"));
+      report_error(LOC_M(8,"SSL3: Reading cert-file failed!")+"\n");
       destruct();
       return;
     }
@@ -901,7 +897,7 @@ class SSLProtocol
     if( strlen(query_option("ssl_key_file")) &&
         catch{ f2 = lopen(query_option("ssl_key_file"),"r")->read(); } )
     {
-      report_error(LOC_M(9, "SSL3: Reading key-file failed!\n"));
+      report_error(LOC_M(9, "SSL3: Reading key-file failed!")+"\n");
       destruct();
       return;
     }
@@ -915,7 +911,7 @@ class SSLProtocol
 
     if (!part || !(cert = part->decoded_body())) 
     {
-      report_error(LOC_M(10, "SSL3: No certificate found.\n"));
+      report_error(LOC_M(10, "SSL3: No certificate found.")+"\n");
       destruct();
       return;
     }
@@ -933,7 +929,7 @@ class SSLProtocol
 
       if (!(key = part->decoded_body())) 
       {
-	report_error(LOC_M(11,"SSL3: Private rsa key not valid (PEM).\n"));
+	report_error(LOC_M(11,"SSL3: Private rsa key not valid")+" (PEM).\n");
 	destruct();
 	return;
       }
@@ -941,7 +937,7 @@ class SSLProtocol
       object rsa = Standards.PKCS.RSA.parse_private_key(key);
       if (!rsa) 
       {
-	report_error(LOC_M(12, "SSL3: Private rsa key not valid (DER).\n"));
+	report_error(LOC_M(11, "SSL3: Private rsa key not valid")+" (DER).\n");
 	destruct();
 	return;
       }
@@ -962,13 +958,14 @@ class SSLProtocol
       object tbs = Tools.X509.decode_certificate (cert);
       if (!tbs) 
       {
-	report_error(LOC_M(13,"SSL3: Certificate not valid (DER).\n"));
+	report_error(LOC_M(13,"SSL3: Certificate not valid (DER).")+"\n");
 	destruct();
 	return;
       }
       if (!tbs->public_key->rsa->public_key_equal (rsa)) 
       {
-	report_error(LOC_M(14, "SSL3: Certificate and private key do not match.\n"));
+	report_error(LOC_M(14, "SSL3: Certificate and private key do not "
+			   "match.")+"\n");
 	destruct();
 	return;
       }
@@ -979,7 +976,7 @@ class SSLProtocol
 
       if (!(key = part->decoded_body())) 
       {
-	report_error(LOC_M(15,"SSL3: Private dsa key not valid (PEM).\n"));
+	report_error(LOC_M(15,"SSL3: Private dsa key not valid")+" (PEM).\n");
 	destruct();
 	return;
       }
@@ -987,7 +984,7 @@ class SSLProtocol
       object dsa = Standards.PKCS.DSA.parse_private_key(key);
       if (!dsa) 
       {
-	report_error(LOC_M(16,"SSL3: Private dsa key not valid (DER).\n"));
+	report_error(LOC_M(15,"SSL3: Private dsa key not valid")+" (DER).\n");
 	destruct();
 	return;
       }
@@ -1005,7 +1002,7 @@ class SSLProtocol
     }
     else 
     {
-      report_error(LOC_M(17,"SSL3: No private key found.\n"));
+      report_error(LOC_M(17,"SSL3: No private key found.")+"\n");
       destruct();
       return;
     }
@@ -1021,7 +1018,7 @@ class SSLProtocol
 #else /* !constant(SSL.sslfile) */
   void create(int pn, string i) 
   {
-    report_error(LOC_M(18,"No SSL support available\n"));
+    report_error(LOC_M(18,"No SSL support available.")+"\n");
     destruct();
   }
 #endif /* constant(SSL.sslfile) */
@@ -1225,7 +1222,7 @@ class FHTTP
     portobj = Stdio.Port(); /* No way to use ::create easily */
     if( !portobj->bind( port, 0, ip ) )
     {
-      report_error(LOC_M(6,"Failed to bind %s://%s:%d/ (%s)\n"),
+      report_error(LOC_M(6,"Failed to bind %s://%s:%d/ (%s)")+"\n",
                    name,ip||"*",(int)port, strerror(errno()));
       destruct(portobj);
       return;
@@ -1571,9 +1568,8 @@ array(string) find_ips_for( string what )
 
   array res = gethostbyname( what );
   if( !res || !sizeof( res[1] ) )
-    report_error( "I cannot possibly bind to "+what+
-                  ", that host is unknown. "
-                  "Substituting with ANY\n");
+    report_error(LOC_M(0, "Cannot possibly bind to %O, that host is "
+		       "unknown. Substituting with ANY")+"\n", what);
   else
     return Array.uniq(res[1]);
 }
@@ -1646,7 +1642,7 @@ int register_url( string url, object/*(Configuration)*/ conf )
   sscanf( url, "%[^:]://%[^/]%s", protocol, host, path );
   if (!host || !stringp(host))
   {
-    report_error(LOC_M(19,"Bad URL '%s' for server `%s'\n"),
+    report_error(LOC_M(19,"Bad URL '%s' for server `%s'")+"\n",
 		 url, conf->query_name());
     return 0;
   }
@@ -1668,7 +1664,7 @@ int register_url( string url, object/*(Configuration)*/ conf )
     if( urls[ url ]->conf != conf )
     {
       report_error(LOC_M(20, "Cannot register URL %s, "
-			    "already registered by %s!\n"),
+			    "already registered by %s!")+"\n",
 		   url, urls[ url ]->conf->name);
       return 0;
     }
@@ -1685,7 +1681,7 @@ int register_url( string url, object/*(Configuration)*/ conf )
   if( !( prot = protocols[ protocol ] ) )
   {
     report_error(LOC_M(21, "Cannot register URL %s, "
-			  "cannot find the protocol %s!\n"),
+			  "cannot find the protocol %s!")+"\n",
 		 url, protocol);
     return 0;
   }
@@ -1775,11 +1771,11 @@ int register_url( string url, object/*(Configuration)*/ conf )
   }
   if (failures == sizeof(required_hosts)) 
   {
-    report_error(LOC_M(23, "Cannot register URL %s!\n"), url);
+    report_error(LOC_M(23, "Cannot register URL %s!")+"\n", url);
     return 0;
   }
   sort_urls();
-  report_notice(LOC_S(3, "Registered %s for %s\n"),
+  report_notice(LOC_S(3, "Registered %s for %s")+"\n",
 		url, conf->query_name() );
 
   return 1;
@@ -1920,6 +1916,7 @@ int increase_id()
   current_user_id_file_last_mod = current_user_id_file->stat()[2];
   return current_user_id_number;
 }
+
 
 #ifndef __NT__
 static int abs_started;
@@ -2805,6 +2802,7 @@ void create()
   __REG_PROJ("roxen_start",   "translations/%L/roxen_start.xml");
   __REG_PROJ("roxen_config",  "translations/%L/roxen_config.xml");
   __REG_PROJ("roxen_message", "translations/%L/roxen_message.xml");
+  __REG_PROJ("admin_tasks", "translations/%L/admin_tasks.xml");
 #undef __REG_PROJ
 
   define_global_variables();
@@ -2894,7 +2892,7 @@ int set_u_and_gid()
     if(getuid())
     {
       report_error(LOC_M(24, "It is only possible to change uid and gid "
-			 "if the server is running as root.\n"));
+			 "if the server is running as root.")+"\n");
     } else {
       if (g) {
 #if constant(getgrnam)
@@ -2945,23 +2943,25 @@ int set_u_and_gid()
 #  if constant(setgid)
 	  setgid(gid);
 	  if (getgid() != gid) {
-	    report_error(LOC_M(25, "Failed to set gid.\n"));
+	    report_error(LOC_M(25, "Failed to set gid.")+"\n");
 	    g = 0;
 	  }
 #  else
-	  report_warning(LOC_M(26, "Setting gid not supported on this system.\n"));
+	  report_warning(LOC_M(26, "Setting gid not supported on this system.")
+			 +"\n");
 	  g = 0;
 #  endif
 	}
 	setuid(uid);
 	if (getuid() != uid) { 
-	  report_error(LOC_M(27, "Failed to set uid.\n")); 
+	  report_error(LOC_M(27, "Failed to set uid.")+"\n"); 
 	  u = 0;
 	}
 	if (u) report_notice(CALL_M("setting_uid_gid_permanently",  "eng")
 			     (uid, gid, u, g));
 #else
-	report_warning(LOC_M(28, "Setting uid not supported on this system.\n"));
+	report_warning(LOC_M(28, "Setting uid not supported on this system.")
+		       +"\n");
 	u = g = 0;
 #endif
       }
@@ -2971,23 +2971,24 @@ int set_u_and_gid()
 #  if constant(setegid)
 	  setegid(gid);
 	  if (getegid() != gid) {
-	    report_error(LOC_M(29, "Failed to set effective gid.\n"));
+	    report_error(LOC_M(29, "Failed to set effective gid.")+"\n");
 	    g = 0;
 	  }
 #  else
-	  report_warning(LOC_M(30, "Setting effective gid not supported on this system.\n"));
+	  report_warning(LOC_M(30, "Setting effective gid not supported on "
+			       "this system.")+"\n");
 	  g = 0;
 #  endif
 	}
 	seteuid(uid);
 	if (geteuid() != uid) {
-	  report_error(LOC_M(31, "Failed to set effective uid.\n"));
+	  report_error(LOC_M(31, "Failed to set effective uid.")+"\n");
 	  u = 0;
 	}
 	if (u) report_notice(CALL_M("setting_uid_gid", "eng")(uid, gid, u, g));
 #else
 	report_warning(LOC_M(32, "Setting effective uid not supported on "
-			     "this system.\n"));
+			     "this system.")+"\n");
 	u = g = 0;
 #endif
       }
@@ -3054,7 +3055,7 @@ void reload_all_configurations()
   foreach(configurations - new_confs, conf)
   {
     modified = 1;
-    report_notice(LOC_M(34, "Disabling old configuration %s\n"), conf->name);
+    report_notice(LOC_M(34,"Disabling old configuration %s")+"\n", conf->name);
     //    Array.map(values(conf->server_ports), lambda(object o) { destruct(o); });
     conf->stop();
     destruct(conf);
@@ -3127,8 +3128,8 @@ void enable_configurations()
     int t = gethrtime();
     report_debug("\nEnabling the configuration %s ...\n", config);
     if(err=catch( enable_configuration(config)->start() ))
-      report_error(LOC_M(35, "\nError while loading configuration %s:\n%s\n"),
-                   config, describe_backtrace(err));
+      report_error("\n"+LOC_M(35, "Error while loading configuration %s%s"),
+                   config+":\n", describe_backtrace(err)+"\n");
     report_debug("Enabled %s in %.1fms\n", config, (gethrtime()-t)/1000.0 );
   }
   foreach( configurations, object c )
@@ -3147,8 +3148,8 @@ void enable_configurations_modules()
   foreach(configurations, object config)
     if(mixed err=catch( config->enable_all_modules() ))
       report_error(LOC_M(36, "Error while loading modules in "
-			 "configuration %s:\n%s\n"),
-                   config->name, describe_backtrace(err));
+			 "configuration %s%s"),
+                   config->name+":\n", describe_backtrace(err)+"\n");
 }
 
 mapping low_decode_image(string data, void|mixed tocolor)
