@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.68 1998/01/24 12:41:42 js Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.69 1998/01/24 13:27:33 js Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -2082,7 +2082,7 @@ string tag_gauge(string t, mapping args, string contents,
 
 mapping query_container_callers()
 {
-  return (["comment":lambda(){},
+  return (["comment":lambda(){ return ""; },
 	   "source":tag_source,
 	   "doc":tag_source2,
 	   "autoformat":tag_autoformat,
