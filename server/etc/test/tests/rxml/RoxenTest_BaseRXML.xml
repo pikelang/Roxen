@@ -775,6 +775,23 @@ b</strlen></rxml>
 <result></result>
 </test>
 
+<test>
+<add what="request_header" name="accept" value="image/gif,  image/jpeg"/>
+<rxml><if accept="image/jpeg">1</if></rxml>
+<result>1</result>
+</test>
+
+<test>
+<add what="request_header" name="accept" value="audio/mpeg, image/jpeg"/>
+<rxml><if accept="image/*">1</if></rxml>
+<result>1</result>
+</test>
+
+<test>
+<add what="request_header" name="accept" value="audio/mpeg, image/jpeg"/>
+<rxml><if accept="text/plain">1</if></rxml>
+<result></result>
+</test>
 
 <comment>Missing test: if date</comment>
 <comment>Missing test: if time</comment>
@@ -794,7 +811,29 @@ b</strlen></rxml>
 <comment>Missing test: if supports</comment>
 <comment>Missing test: if clientvar</comment>
 <comment>Missing test: <cond></comment>
-<comment>Missing test: path emit plugin</comment>
+
+
+<!-- ............................................................ -->
+<comment>Path emit plugin</comment>
+<test>
+<rxml><emit source="path" path="/a/b/c">&_.name; &_.path;|</emit></rxml>
+<result> /|a /a|b /a/b|c /a/b/c|</result>
+</test>
+
+<test>
+<rxml><emit source="path" path="/a/b/c" trim="/c">&_.name; &_.path;|</emit></rxml>
+<result> /|a /a|b /a/b|</result>
+</test>
+
+<test>
+<rxml><emit source="path" path="/a/b/c" skip="1">&_.name; &_.path;|</emit></rxml>
+<result>a /a|b /a/b|c /a/b/c|</result>
+</test>
+
+<test>
+<rxml><emit source="path" path="/a/b/c" skip-end="1">&_.name; &_.path;|</emit></rxml>
+<result> /|a /a|b /a/b|</result>
+</test>
 
 
 <!-- ............................................................ -->
@@ -1337,7 +1376,12 @@ b</strlen></rxml>
 
 <comment>Missing test: load package from file</comment>
 
-<comment>Missing test: <help> tag</comment>
+<!-- ............................................................ -->
+<comment>RXML help</comment>
+<test>
+<rxml><help/></rxml>
+<glob>*</glob>
+</test>
 
 
 <!-- ............................................................ -->
@@ -1703,6 +1747,11 @@ cd</rxml>
 </test>
 
 <test>
+<rxml><set variable="client.foo" value="x"/>&client.foo;</rxml>
+<result>x</result>
+</test>
+
+<test>
 <rxml><insert variables="full" scope="client"/> Checking for backtrace</rxml>
 <glob>*</glob>
 </test>
@@ -1791,6 +1840,11 @@ cd</rxml>
 </test>
 
 <test>
+<rxml><set variable="cookie.foo" value="x"/>&cookie.foo;</rxml>
+<result>x</result>
+</test>
+
+<test>
 <rxml><insert variables="full" scope="cookie"/> Checking for backtrace</rxml>
 <glob>*</glob>
 </test>
@@ -1802,6 +1856,13 @@ cd</rxml>
 <rxml>&roxen.no-such-variable;</rxml>
 <result></result>
 </test>
+
+<!-- Should fail
+<test>
+<rxml><set variable="roxen.foo" value="x"/>&roxen.foo;</rxml>
+<result></result>
+</test>
+-->
 
 <test>
 <rxml><insert variables="full" scope="roxen"/> Checking for backtrace</rxml>
@@ -1896,4 +1957,9 @@ cd</rxml>
 <test>
 <rxml>&roxen.version;</rxml>
 <regexp>Roxen/2\.2\.[0-9]+</regexp>
+</test>
+
+<test>
+<rxml>&roxen.unique-id;</rxml>
+<regexp>[0-9A-F]+</regexp>
 </test>
