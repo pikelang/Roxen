@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.72 2000/12/16 02:16:12 per Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.73 2000/12/21 05:32:35 per Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -277,7 +277,7 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
   Image.Layer mask;
 
   int left, right, top, middle, bottom; /* offsets */
-  int req_width;
+  int req_width, noframe;
 
   mapping ll = ([]);
 
@@ -301,8 +301,9 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
   if( args->border_image )
     set_image( roxen.load_layers(args->border_image, id) );
 
+
   //  otherwise load default images
-  if ( !frame )
+  if ( !frame && !background && !mask )
   {
     string data = Stdio.read_file("roxen-images/gbutton.xcf");
     if (!data)
@@ -322,11 +323,14 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
 	      "(roxen-images/gbutton.xcf).\n");
   }
 
-
+  if( !frame )
+  {
+    noframe = 1;
+    frame = background || mask; // for sizes offsets et.al.
+  }
+  
   // Translate frame image to 0,0 (left layers are most likely to the
   // left of the frame image)
-    
-
   int x0 = frame->xoffset();
   int y0 = frame->yoffset();
   if( x0 || y0 )
@@ -342,12 +346,12 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
 
   array x = ({});
   array y = ({});
+
   foreach( frame->get_misc_value( "image_guides" ), object g )
-    if( g->pos < 4096 )
-      if( g->vertical )
-	x += ({ g->pos-x0 });
-      else
-	y += ({ g->pos-y0 });
+    if( g->vertical )
+      x += ({ g->pos - x0 });
+    else
+      y += ({ g->pos - y0 });
 
   sort( y );
   sort( x );
@@ -533,7 +537,7 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
       l += ({ ll[q] });
     l-=({ 0 });
     if( sizeof( l ) )
-      frame = Image.lay( l+({frame}) );
+      frame = Image.lay( l+(noframe?({}):({frame})) );
   }
 
   if( args->extra_mask_layers )
@@ -566,7 +570,8 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
     mask->set_image( i, m );
     mask = stretch_layer( mask, left, right, req_width );
   }
-  frame = stretch_layer( frame, left, right, req_width );
+  if( frame != background )
+    frame = stretch_layer( frame, left, right, req_width );
   array(Image.Layer) button_layers = ({
      Image.Layer( Image.Image(req_width, frame->ysize(), args->bg),
                   mask->alpha()->copy(0,0,req_width-1,frame->ysize()-1)),
@@ -587,9 +592,11 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
     }
   }
 
-
-  button_layers += ({ frame });
-  frame->set_mode( "value" );
+  if( !noframe )
+  {
+    button_layers += ({ frame });
+    frame->set_mode( "value" );
+  }
 
   if( args->dim )
   {
@@ -623,15 +630,19 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
 
   //  Draw text
   if(text_img)
-    button_layers += ({
-    Image.Layer(([
-      "alpha_value":(args->dim ? 0.5 : 1.0),
-      "image":text_img->color(0,0,0)->invert()->color(@args->txt),
-      "alpha":text_img,
-      "xoffset":txt_x,
-      "yoffset":txt_y,
-    ]))
-  });
+  {
+    float ta = args->txtalpha?args->txtalpha:1.0;
+    button_layers +=
+      ({
+        Image.Layer(([
+          "mode":args->txtmode,
+          "image":text_img->color(0,0,0)->invert()->color(@args->txt),
+          "alpha":(text_img*(args->dim?0.5*ta:ta)),
+          "xoffset":txt_x,
+          "yoffset":txt_y,
+        ]))
+    });
+  }
 
   // 'plain' extra layers are added on top of everything else
   if( args->extra_layers )
@@ -747,6 +758,8 @@ class ButtonFrame {
 			  id->misc->defines->theme_bgcolor ||
 			  id->misc->defines->fgcolor ||
 			  "#000000"),                   //  Text color
+      "txtalpha": (args->textalpha?(float)args->textalpha:1.0),
+      "txtmode": (args->textmode||"normal"),
       "cnd" : (args->condensed ||                       //  Condensed text
 	       (lower_case(args->textstyle || "") == "condensed")),
       "wi"  : (int) args->width,                        //  Min button width
