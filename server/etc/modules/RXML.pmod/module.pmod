@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.58 2000/02/15 02:57:37 mast Exp $
+//! $Id: module.pmod,v 1.59 2000/02/15 06:06:09 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -923,15 +923,16 @@ class Context
 #ifdef DEBUG
     if (!frame->vars) fatal_error ("Internal error: Frame has no variables.\n");
 #endif
-    if (!hidden[frame])
-      if (string scope_name = [string] frame->scope_name) {
+    if (string scope_name = [string] frame->scope_name) {
+      if (!hidden[frame])
 	hidden[frame] = ({scopes["_"], scopes[scope_name]});
-	scopes["_"] = scopes[scope_name] = [SCOPE_TYPE] frame->vars;
-      }
-      else {
+      scopes["_"] = scopes[scope_name] = [SCOPE_TYPE] frame->vars;
+    }
+    else {
+      if (!hidden[frame])
 	hidden[frame] = ({scopes["_"], 0});
-	scopes["_"] = [SCOPE_TYPE] frame->vars;
-      }
+      scopes["_"] = [SCOPE_TYPE] frame->vars;
+    }
   }
 
   void leave_scope (Frame frame)
@@ -1535,7 +1536,7 @@ class Frame
     array(string|Tag) arr_rem_tags = (array) rem_tags;
     array(Tag) arr_add_tags = (array) add_tags;
     for (Parser p = parser; p; p = p->_parent)
-      if (p->tag_set_eval) {
+      if (p->tag_set_eval && p->add_runtime_tag) {
 	foreach (arr_add_tags, Tag tag)
 	  ([object(TagSetParser)] p)->add_runtime_tag (tag);
 	foreach (arr_rem_tags, string|object(Tag) tag)
@@ -2234,15 +2235,15 @@ class Parser
   optional void reset (Context ctx, Type type, mixed... args);
   //! Define to support reuse of a parser object. It'll be called
   //! instead of making a new object for a new stream. It keeps the
-  //! static configuration, i.e. the type. Note that this function
-  //! needs to deal with leftovers from add_runtime_tag() for
-  //! TagSetParser objects.
+  //! static configuration, i.e. the type (and tag set when used in
+  //! TagSetParser). Note that this function needs to deal with
+  //! leftovers from add_runtime_tag() for TagSetParser objects.
 
   optional Parser clone (Context ctx, Type type, mixed... args);
   //! Define to create new parser objects by cloning instead of
   //! creating from scratch. It returns a new instance of this parser
-  //! with the same static configuration, i.e. the type and tag set
-  //! (when used in TagSetParser).
+  //! with the same static configuration, i.e. the type (and tag set
+  //! when used in TagSetParser).
 
   static void create (Context ctx, Type _type, mixed... args)
   {
@@ -2304,12 +2305,14 @@ class TagSetParser
   //! in Tag._handle_tag() or similar, this always does the same as
   //! eval().
 
-  void add_runtime_tag (Tag tag);
+  optional void add_runtime_tag (Tag tag);
   //! Adds a tag that will exist from this point forward in the
-  //! current parser instance only.
+  //! current parser instance only. This may only be left undefined if
+  //! the parser doesn't parse tags at all.
 
-  void remove_runtime_tag (string|Tag tag);
-  //! Removes a tag added by add_runtime_tag().
+  optional void remove_runtime_tag (string|Tag tag);
+  //! Removes a tag added by add_runtime_tag(). This may only be left
+  //! undefined if the parser doesn't parse tags at all.
 
   string _sprintf() {return "RXML.TagSetParser" + PAREN_CNT (__count);}
 }
@@ -2534,7 +2537,7 @@ class Type
 	  p = (pco->clone_parser = p)->clone (ctx, this_object(), tset, @_parser_args);
       }
 
-      if (ctx->tag_set == tset)
+      if (ctx->tag_set == tset && p->add_runtime_tag && sizeof (ctx->runtime_tags))
 	foreach (indices (ctx->runtime_tags), Tag tag)
 	  p->add_runtime_tag (tag);
     }
