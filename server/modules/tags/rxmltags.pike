@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.43 2000/01/21 16:08:52 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.44 2000/01/23 03:01:41 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -31,7 +31,7 @@ void create()
 
 void start()
 {
-  add_api_function("query_modified", api_query_modified, ({ "string", }));
+  add_api_function("query_modified", api_query_modified, ({ "string" }));
   query_tag_set()->prepare_context=set_entities;
 }
 
@@ -44,18 +44,11 @@ TAGDOCUMENTATION;
 constant tagdoc=(["roxen-automatic-charset-variable":"<desc tag></desc>",
 "append":"<desc tag></desc>",
 "auth-required":"<desc tag></desc>",
-"clientname":"<desc tag></desc>",
 "expire-time":"<desc tag></desc>",
-"file":"<desc tag></desc>",
 "header":"<desc tag></desc>",
-"realfile":"<desc tag></desc>",
 "redirect":"<desc tag></desc>",
-"referer":"<desc tag></desc>",
-"referrer":"<desc tag></desc>",
 "unset":"<desc tag></desc>",
 "set":"<desc tag></desc>",
-"vfs":"<desc tag></desc>",
-"accept-language":"<desc tag></desc>",
 "quote":"<desc tag></desc>",
 "inc":"<desc tag></desc>",
 "dec":"<desc tag></desc>",
@@ -116,8 +109,12 @@ class Entity_page_realfile {
   string rxml_var_eval(RXML.Context c) { return c->id->realfile||""; }
 }
 
-class Entity_page_vfs {
+class Entity_page_virtroot {
   string rxml_var_eval(RXML.Context c) { return c->id->virtfile||""; }
+}
+
+class Entity_page_virtfile {
+  string rxml_var_eval(RXML.Context c) { return c->id->not_query; }
 }
 
 class Entity_page_url {
@@ -132,28 +129,60 @@ class Entity_page_language {
   string rxml_var_eval(RXML.Context c) { return c->id->misc->defines->language || ""; }
 }
 
+class Entity_page_scope {
+  string rxml_var_eval(RXML.Context c) { return c->current_scope()||""; }
+}
+
 mapping page_scope=(["realfile":Entity_page_realfile(),
-		     "vfs":Entity_page_vfs(),
+		     "virtroot":Entity_page_virtroot(),
+		     "virtfile":Entity_page_virtfile(),
 		     "url":Entity_page_url(),
 		     "last_true":Entity_page_last_true(),
-		     "language":Entity_page_language() ]);
+		     "language":Entity_page_language(),
+		     "scope":Entity_page_scope() ]);
 
-class Entity_client_referer {
-  string rxml_var_eval(RXML.Context c) { return c->id->referer?c->id->referer[0]:""; }
+class Entity_client_referrer {
+  string rxml_var_eval(RXML.Context c) {
+    c->id->misc->cacheable=0;
+    return c->id->referer?c->id->referer[0]:"";
+  }
 }
 
 class Entity_client_name {
-  string rxml_var_eval(RXML.Context c) { return c->id->client?c->id->client[0]:""; }
+  string rxml_var_eval(RXML.Context c) {
+    c->id->misc->cacheable=0;
+    return c->id->client?c->id->client[0]:"";
+  }
 }
 
 class Entity_client_ip {
-  string rxml_var_eval(RXML.Context c) { return c->id->remoteaddr; }
+  string rxml_var_eval(RXML.Context c) {
+    c->id->misc->cacheable=0;
+    return c->id->remoteaddr;
+  }
+}
+
+class Entity_client_accept_language {
+  string rxml_var_eval(RXML.Context c) {
+    c->id->misc->cacheable=0;
+    if(!c->id->misc["accept-language"]) return "";
+    return c->id->misc["accept-language"][0];
+  }
+}
+
+class Entity_client_accept_languages {
+  string rxml_var_eval(RXML.Context c) {
+    c->id->misc->cacheable=0;
+    if(!c->id->misc["accept-language"]) return "";
+    return c->id->misc["accept-language"]*",";
+  }
 }
 
 mapping client_scope=([ "ip":Entity_client_ip(),
 			"name":Entity_client_name(),
-			"referer":Entity_client_referer(),
-			"referrer":Entity_client_referer()]);
+			"referrer":Entity_client_referrer(),
+			"accept_language":Entity_client_accept_language(),
+			"accept_languages":Entity_client_accept_languages()]);
 
 void set_entities(RXML.Context c) {
   c->extend_scope("page", page_scope);
@@ -178,31 +207,43 @@ string tag_append( string tag, mapping m, RequestID id )
 {
   if (m->variable)
   {
-    if (m->value)
-      // Set variable to value.
-      if (id->variables[ m->variable ])
-	id->variables[ m->variable ] += m->value;
+    RXML.Context context=RXML.get_context();
+    mixed value=context->user_get_var(m->variable, m->scope);
+    if (m->value) {
+      // Append a value to an entity variable.
+      if (value)
+	value+=m->value;
       else
-	id->variables[ m->variable ] = m->value;
-    else if (m->from)
-      // Set variable to the value of another variable
-      if (id->variables[ m->from ])
-	if (id->variables[ m->variable ])
-	  id->variables[ m->variable ] += id->variables[ m->from ];
-	else
-	  id->variables[ m->variable ] = id->variables[ m->from ];
+	value=m->value;
+      context->user_set_var(m->variable, value, m->scope);
+      return "";
+    }
+    if (m->from) {
+      // Append the value of another entity variable.
+      mixed from=context->user_get_var(m->from, m->scope);
+      if(!from) return rxml_error(tag, "From variable doesn't exist.", id);
+      if (value)
+	value+=from;
       else
-        return rxml_error(tag, "From variable doesn't exist.", id);
+	value=from;
+      context->user_set_var(m->variable, value, m->scope);
+      return "";
+    }
 
-    else if (m->other)
-      // Set variable to the value of a misc variable
-      if (id->misc->variables[ m->other ])
-	if (id->variables[ m->variable ])
-	  id->variables[ m->variable ] += id->misc->variables[ m->other ];
-	else
-	  id->variables[ m->variable ] = id->misc->variables[ m->other ];
-      else
+    // FIXME: Kill this?
+    if (m->other) {
+      // Append the value of a misc variable to an enityt variable.
+      if (!id->misc->variables || !id->misc->variables[ m->other ])
         return rxml_error(tag, "Other variable doesn't exist.", id);
+      if (value)
+	value+=id->misc->variables[ m->other ];
+      else
+	value=id->misc->variables[ m->other ];
+      context->user_set_var(m->variable, value, m->scope);
+      return "";
+    }
+
+    return rxml_error(tag, "No value specified.", id);
   }
 
   return rxml_error(tag, "Nothing to append from.", id);
@@ -215,24 +256,10 @@ string tag_auth_required (string tagname, mapping args, RequestID id)
   if (hdrs->extra_heads)
      _extra_heads += hdrs->extra_heads;
     // We do not need this as long as hdrs only contains strings and numbers
-    //    foreach(indices(hdrs->extra_heads), string tmp)
+    //   foreach(indices(hdrs->extra_heads), string tmp)
     //      add_http_header(_extra_heads, tmp, hdrs->extra_heads[tmp]);
   if (hdrs->text) _rettext = hdrs->text;
   return "";
-}
-
-string|array(string) tag_clientname(string tag, mapping m, RequestID id)
-{
-  NOCACHE();
-  string client="";
-  if (sizeof(id->client)) {
-    if(m->full)
-      client=id->client * " ";
-    else
-      client=id->client[0];
-  }
-
-  return m->quote=="none"?client:({ html_encode_string(client) });
 }
 
 string tag_expire_time(string tag, mapping m, RequestID id)
@@ -250,16 +277,6 @@ string tag_expire_time(string tag, mapping m, RequestID id)
 
   add_http_header(_extra_heads, "Expires", http_date(t));
   return "";
-}
-
-array(string) tag_file(string tag, mapping m, RequestID id)
-{
-  string file;
-  if(m->raw)
-    file=id->raw_url;
-  else
-    file=id->not_query;
-  return m->quote=="none"?file:({ html_encode_string(file) });
 }
 
 string tag_header(string tag, mapping m, RequestID id)
@@ -282,13 +299,6 @@ string tag_header(string tag, mapping m, RequestID id)
 
   add_http_header(_extra_heads, m->name, m->value);
   return "";
-}
-
-string|array(string) tag_realfile(string tag, mapping m, RequestID id)
-{
-  if(id->realfile)
-    return ({ id->realfile });
-  return rxml_error(tag, "Real file unknown", id);
 }
 
 string tag_redirect(string tag, mapping m, RequestID id)
@@ -327,22 +337,14 @@ string tag_redirect(string tag, mapping m, RequestID id)
   return "";
 }
 
-array(string) tag_referer(string t, mapping m, RequestID id) {
-  return tag_referrer(t,m,id);
-}
-
-array(string) tag_referrer(string tag, mapping m, RequestID id)
-{
-  NOCACHE();
-
-  return({ sizeof(id->referer) ?
-    (m->quote=="none"?id->referer:(html_encode_string(id->referer*""))) :
-    (m->alt || "") });
-}
-
 string tag_unset(string tag, mapping m, RequestID id) {
-  if(!m->variable)  return rxml_error(tag, "Variable not specified.", id);
-  m_delete( id->variables, m->variable );
+  if(!m->variable && !m->scope)
+    return rxml_error(tag, "Variable not specified.", id);
+  if(!m->variable && m->scope!="roxen") {
+    RXML.get_context()->add_scope(m->scope, ([]) );
+    return "";
+  }
+  RXML.get_context()->user_delete_var(m->variable, m->scope);
   return "";
 }
 
@@ -350,51 +352,44 @@ string tag_set( string tag, mapping m, RequestID id )
 {
   if (m->variable)
   {
-    if (m->value)
-      // Set variable to value.
-      id->variables[ m->variable ] = m->value;
-    else if (m->expr)
-      id->variables[ m->variable ] = sexpr_eval( m->expr );
-    else if (m->from)
-      // Set variable to the value of another variable
-      if (id->variables[ m->from ])
-	id->variables[ m->variable ] = id->variables[ m->from ];
-      else
-	return rxml_error(tag, "From variable doesn't exist.", id);
+    RXML.Context context=RXML.get_context();
+    if (m->value) {
+      // Set an entity variable to a value.
+      context->user_set_var(m->variable, m->value, m->scope);
+      return "";
+    }
+    if (m->expr) {
+      // Set an entity variable to an evaluated expression.
+      context->user_set_var(m->variable, sexpr_eval(m->expr), m->scope);
+      return "";
+    }
+    if (m->from) {
+      // Copy a value from another entity variable.
+      mixed from=context->user_get_var(m->from, m->scope);
+      if(!from) return rxml_error(tag, "From variable doesn't exist.", id);
+      context->user_set_var(m->variable, from, m->scope);
+      return "";
+    }
+	
+    // FIXME: Kill these?
+    if (m->other) {
+      if (id->misc->variables && id->misc->variables[ m->other ]) {
+	// Set an entity variable to the value of a misc variable
+	context->user_set_var(m->variable, (string)id->misc->variables[m->other], m->scope);
+	return "";
+      }
+      return rxml_error(tag, "Other variable doesn't exist.", id);
+    }
+    if (m->eval) {
+      // Set an entity variable to the result of some evaluated RXML
+      context->user_set_var(m->variable, parse_rxml(m->eval, id), m->scope);
+      return "";
+    }
 
-    else if (m->other)
-      // Set variable to the value of a misc variable
-      if (id->misc->variables && id->misc->variables[ m->other ])
-	id->variables[ m->variable ] = (string)id->misc->variables[ m->other ];
-      else
-	return rxml_error(tag, "Other variable doesn't exist.", id);
-    else if (m->eval)
-      // Set variable to the result of some evaluated RXML
-      id->variables[ m->variable ] = parse_rxml(m->eval, id);
-    return "";
+    return rxml_error(tag, "No value specified.", id);
   }
 
   return rxml_error(tag, "Variable not specified.", id);
-}
-
-string|array(string) tag_vfs(string tag, mapping m, RequestID id)
-{
-  if(id->virtfile)
-    return ({ id->virtfile });
-  return rxml_error(tag, "Virtual file unknown.", id);
-}
-
-array(string) tag_accept_language(string tag, mapping m, RequestID id)
-{
-  NOCACHE();
-
-  if(!id->misc["accept-language"])
-    return ({ "None" });
-
-  if(m->full)
-    return ({ html_encode_string(id->misc["accept-language"]*",") });
-  else
-    return ({ html_encode_string((id->misc["accept-language"][0]/";")[0]) });
 }
 
 string tag_quote(string tagname, mapping m)
@@ -410,20 +405,19 @@ string tag_quote(string tagname, mapping m)
 
 string tag_inc(string tag, mapping m, RequestID id)
 {
-  if(m->variable && id->variables[m->variable]) {
-    id->variables[m->variable]=(string)((int)id->variables[m->variable]+1);
-    return "";
-  }
-  return rxml_error(tag, "No variable to increment.", id);
+  if(!m->variable) return rxml_error(tag, "No variable to increment.", id);
+  RXML.Context context=RXML.get_context();
+  array entity=context->parse_user_var(m->variable, m->scope);
+  if(!context->exist_scope(entity[0])) return rxml_error(tag, "Scope "+entity[0]+" does not exist.", id);
+  int val=(int)m->value||1;
+  context->user_set_var(m->variable, (int)context->user_get_var(m->variable, m->scope)+val, m->scope);
+  return "";
 }
 
 string tag_dec(string tag, mapping m, RequestID id)
 {
-  if(m->variable && id->variables[m->variable]) {
-    id->variables[m->variable]=(string)((int)id->variables[m->variable]-1);
-    return "";
-  }
-  return rxml_error(tag, "No variable to decrement.", id);
+  m->value=-(int)m->value||-1;
+  return tag_inc(tag, m, id);
 }
 
 string|array(string) tag_imgs(string tag, mapping m, RequestID id)
@@ -542,7 +536,7 @@ string|array(string) tag_insert( string tag, mapping m, RequestID id )
   {
     if(!id->variables[n])
       return rxml_error(tag, "No such variable ("+n+").", id);
-    return m->quote=="none"?id->variables[n]:({ html_encode_string(id->variables[n]) });
+    return m->quote=="none"?(string)id->variables[n]:({ html_encode_string((string)id->variables[n]) });
   }
 
   if(n = m->variables) {
@@ -617,6 +611,7 @@ string|array(string) tag_insert( string tag, mapping m, RequestID id )
   return rxml_error(tag, ret, id);
 }
 
+//FIXME: Broken.
 string|array(string) tag_configurl(string tag, mapping m, RequestID id)
 {
   return ({ roxen->config_url() });
@@ -775,18 +770,21 @@ array(string) tag_set_max_cache( string tag, mapping m, RequestID id )
 
 // ------------------- Containers ----------------
 
-array(string) container_scope(string tag, mapping m,
+array|string container_scope(string tag, mapping m,
                               string contents, RequestID id)
 {
-  mapping old_variables = copy_value(id->variables);
-  int truth=_ok;
-  if (!m->extend)
-    id->variables = ([]);
-  contents = parse_rxml(contents, id);
-  id->variables = old_variables;
-  if (m->truth)
-    _ok=truth;
-  return ({ contents });
+  if(!m->scope) {
+    mapping old_variables = copy_value(id->variables);
+    int truth=_ok;
+    if (!m->extend)
+      id->variables = ([]);
+    contents = parse_rxml(contents, id);
+    id->variables = old_variables;
+    if (m->truth)
+      _ok=truth;
+    return ({ contents });
+  }
+  return contents;
 }
 
 array(string) container_catch( string tag, mapping m, string c, RequestID id )
@@ -958,14 +956,13 @@ string|array(string) container_aconf(string tag, mapping m,
 
 string container_maketag(string tag, mapping m, string cont, RequestID id)
 {
-  NOCACHE();
   mapping args=(!m->noxml&&m->type=="tag"?(["/":"/"]):([]));
   cont=parse_html(parse_rxml(cont,id), ([]), (["attrib":
-    lambda(string tag, mapping m, string cont, mapping c, RequestID id, mapping args) {
-      args[m->name]=parse_rxml(cont, id);
+    lambda(string tag, mapping m, string cont, mapping args) {
+      args[m->name]=cont;
       return "";
     }
-  ]), ([]), id, args);
+  ]), args);
   if(m->type=="container")
     return make_container(m->name, args, cont);
   return make_tag(m->name, args);
