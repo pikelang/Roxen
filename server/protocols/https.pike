@@ -1,9 +1,7 @@
-/* $Id: https.pike,v 1.4 1999/03/09 15:21:16 nisse Exp $
+/* $Id: https.pike,v 1.5 1999/06/07 03:42:08 mast Exp $
  *
  * Copyright © 1996-1998, Idonex AB
  */
-
-// #define SSL3_DEBUG
 
 inherit "protocols/http" : http;
 inherit "roxenlib";
@@ -15,12 +13,6 @@ mapping to_send;
 #include <module.h>
 
 // #define SSL3_DEBUG
-
-#ifdef SSL3_DEBUG
-#ifndef SSL3_CLOSE_DEBUG
-#define SSL3_CLOSE_DEBUG
-#endif /* !SSL3_CLOSE_DEBUG */
-#endif /* SSL3_DEBUG */
 
 mapping parse_args(string options)
 {
@@ -98,12 +90,15 @@ array|void real_port(array port, object cfg)
 
   if (!options["cert-file"])
   {
-    ({ report_error, throw }) ("ssl3: No 'cert-file' argument!\n");
+    throw ("ssl3: No 'cert-file' argument!\n");
   }
 
+  object privs = Privs ("Reading cert file");
   string f = read_file(options["cert-file"]);
+  string f2 = options["key-file"] && read_file(options["key-file"]);
+  destruct (privs);
   if (!f)
-    ({ report_error, throw }) ("ssl3: Reading cert-file failed!\n");
+    throw ("ssl3: Reading cert-file failed!\n");
   
   object msg = Tools.PEM.pem_msg()->init(f);
 
@@ -111,12 +106,13 @@ array|void real_port(array port, object cfg)
     ||msg->parts["X509 CERTIFICATE"];
   
   if (!part || !(cert = part->decoded_body()))
-    ({ report_error, throw }) ("ssl3: No certificate found.\n");
+    throw ("ssl3: No certificate found.\n");
   
   if (options["key-file"])
   {
-    f = read_file(options["key-file"]);
-    msg = Tools.PEM.pem_msg()->init(f);
+    if (!f2)
+      throw ("ssl3: Reading key-file failed!\n");
+    msg = Tools.PEM.pem_msg()->init(f2);
   }
 
   function r = Crypto.randomness.reasonably_random()->read;
@@ -128,13 +124,11 @@ array|void real_port(array port, object cfg)
   if (part = msg->parts["RSA PRIVATE KEY"])
   {
     if (!(key = part->decoded_body()))
-      ({ report_error, throw })
-	("https: Private rsa key not valid (PEM).\n");
+      throw ("https: Private rsa key not valid (PEM).\n");
       
     object rsa = Standards.PKCS.RSA.parse_private_key(key);
     if (!rsa)
-      ({ report_error, throw })
-	("https: Private rsa key not valid (DER).\n");
+      throw ("https: Private rsa key not valid (DER).\n");
       
     ctx->rsa = rsa;
     
@@ -154,13 +148,11 @@ array|void real_port(array port, object cfg)
   else if (part = msg->parts["DSA PRIVATE KEY"])
   {
     if (!(key = part->decoded_body()))
-      ({ report_error, throw })
-	("https: Private dsa key not valid (PEM).\n");
+      throw ("https: Private dsa key not valid (PEM).\n");
       
     object dsa = Standards.PKCS.DSA.parse_private_key(key);
     if (!dsa)
-      ({ report_error, throw })
-	("https: Private dsa key not valid (DER).\n");
+      throw ("https: Private dsa key not valid (DER).\n");
 
 #ifdef SSL3_DEBUG
     werror(sprintf("https: Using DSA key.\n"));
@@ -174,8 +166,7 @@ array|void real_port(array port, object cfg)
     ctx->dhe_dss_mode();
   }
   else
-    ({ report_error, throw })
-      ("https: No private key found.\n");
+    throw ("https: No private key found.\n");
     
   ctx->certificates = ({ cert });
   ctx->random = r;
@@ -188,6 +179,7 @@ array|void real_port(array port, object cfg)
 #define CHUNK 16384
 
 string to_send_buffer;
+int done;
 
 static void write_more();
 
@@ -253,6 +245,13 @@ string get_data()
   return s;
 }
 
+static void die()
+{
+  my_fd->set_blocking();
+  my_fd->close();
+  if (done++) destroy();
+}
+
 string cache;
 static void write_more()
 {
@@ -262,10 +261,7 @@ static void write_more()
   string s;
   if (!(s = (cache || get_data()))) {
 //    perror("SSL3:: Done.\n");
-    my_fd->set_blocking();
-    my_fd->close();
-    my_fd = 0;
-    destruct();
+    die();
     return;
   }
 
@@ -279,10 +275,7 @@ static void write_more()
 #ifdef DEBUG
       perror("SSL3:: Broken pipe.\n");
 #endif
-      my_fd->set_blocking();
-      my_fd->close();
-      my_fd = 0;
-      destruct();
+      die();
       return;
     }  
     if(pos < strlen(s))
@@ -336,10 +329,7 @@ static void write_more_file()
 
   if(!(s = (cache || get_data_file()))) {
 //    perror("SSL3:: Done.\n");
-    my_fd->set_blocking();
-    my_fd->close();
-    my_fd = 0;
-    destruct();
+    die();
     return;
   }    
 
@@ -353,10 +343,7 @@ static void write_more_file()
 #ifdef DEBUG
       perror("SSL3:: Broken pipe.\n");
 #endif
-      my_fd->set_blocking();
-      my_fd->close();
-      my_fd = 0;
-      destruct();
+      die();
       return;
     }  
     if(pos < strlen(s))
@@ -368,10 +355,6 @@ static void write_more_file()
   }
 }
 
-void _force_destruct()
-{
-}
-
 // Send the result.
 void send_result(mapping|void result)
 {
@@ -379,7 +362,6 @@ void send_result(mapping|void result)
   int tmp;
   mapping heads;
   string head_string;
-  object thiso = this_object();
 
   if (result) {
     file = result;
@@ -392,7 +374,7 @@ void send_result(mapping|void result)
     else
       file=http_low_answer(404,
 			   replace(parse_rxml(conf->query("ZNoSuchFile"),
-					      thiso),
+					      this_object()),
 				   ({"$File", "$Me"}), 
 				   ({not_query,
 				       conf->query("MyWorldLocation")})));
@@ -404,6 +386,7 @@ void send_result(mapping|void result)
 	pipe = 0;
 	return;
       }
+      destroy();		// To mark we're not interested in my_fd anymore.
       my_fd = 0;
       file = 0;
       return;
@@ -490,8 +473,10 @@ void send_result(mapping|void result)
   }
 
   
-  if(conf)
+  if(conf) {
     conf->sent+=(file->len>0 ? file->len : 1000);
+    conf->log(file, this_object());
+  }
 
   file->head = head_string;
   to_send = copy_value(file);	// Why make a copy?
@@ -505,23 +490,9 @@ void send_result(mapping|void result)
       my_fd->set_nonblocking(0, write_more, end);
       to_send->file->set_nonblocking(got_data_to_send, 0, no_data_to_send);
     }
-  } else {
-    if (my_fd->is_closed_) {
-#ifdef SSL3_CLOSE_DEBUG
-      report_error(sprintf("SSL3: my_fd was closed from\n"
-			   "%s\n",
-			   describe_backtrace(my_fd->is_closed_)));
-#else
-      report_error("SSL3: my_fd has been closed early.\n");
-#endif /* SSL3_CLOSE_DEBUG */
-    } else {
-      my_fd->set_nonblocking(0, write_more, end);
-    }
-  }
-
-  // FIXME: Delayed destruct of thiso?
-  _force_destruct();
-  if(thiso && conf) conf->log(file, thiso);
+  } else
+    my_fd->set_nonblocking(0, write_more, end);
+  if (done++) destroy();
 }
 
 class fallback_redirect_request {
@@ -677,35 +648,17 @@ class roxen_sslfile {
   object raw_file;
   object config;
 
-  constant no_destruct=1; /* Kludge to avoid http.pike destructing us */
-
-  mixed is_closed_;  /* Used for checking if the conection has been closed. */
-
-#if 0
-  int leave_me_alone; /* If this is set, don't let
-		       * the ssl-code shut down the connection. */
+  int destructme; // 0: alive, 1: parent wants destruct, 2: self wants destruct.
 
   void die(int status)
   {
 #ifdef SSL3_DEBUG
     roxen_perror(sprintf("SSL3:roxen_sslfile::die(%d)\n", status));
 #endif /* SSL3_DEBUG */
-//    werror("ssl3.pike, roxen_ssl_file: die called\n");
-    if (!leave_me_alone)
-      ssl::die(status);
+    ssl::die(status);
+    if ((destructme |= 2) == 3) destruct();
   }
-#endif
 
-  void close()
-  {
-    ssl::close();
-#ifdef SSL3_CLOSE_DEBUG
-    is_closed_ = backtrace();
-#else
-    is_closed_ = 1;
-#endif /* SS3_CLOSE_DEBUG */
-  }
-  
   void create(object f, object ctx, object id)
   {
 #ifdef SSL3_DEBUG
@@ -715,6 +668,28 @@ class roxen_sslfile {
     config = id;
     ssl::create(f, ctx);
   }
+
+#ifdef SSL3_DEBUG
+  void destroy()
+  {
+    roxen_perror(sprintf("SSL3:roxen_sslfile::destroy()\n"));
+  }
+#endif /* SSL3_DEBUG */
+}
+
+private object my_fd_for_destruct; // Used to keep my_fd around for destroy().
+
+void destroy()
+{
+#ifdef SSL3_DEBUG
+  roxen_perror(sprintf("SSL3:destroy()\n"));
+#endif /* SSL3_DEBUG */
+  catch {
+    // When the request disappear there's noone else interested in
+    // my_fd, so it should destruct itself asap.
+    if ((my_fd_for_destruct->destructme |= 1) == 3)
+      destruct (my_fd_for_destruct);
+  };
 }
 
 void create(object f, object c)
@@ -741,7 +716,7 @@ void create(object f, object c)
       roxen_perror("ssl3.pike: No SSL context!\n");
       throw( ({ "ssl3.pike: No SSL context!\n", backtrace() }) );
     }
-    my_fd = roxen_sslfile(f, ctx, c);
+    my_fd_for_destruct = my_fd = roxen_sslfile(f, ctx, c);
     if(my_fd->set_alert_callback)
       my_fd->set_alert_callback(http_fallback);
     my_fd->set_accept_callback(ssl_accept_callback);
