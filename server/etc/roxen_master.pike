@@ -11,7 +11,7 @@
 
 string describe_backtrace(mixed *trace);
 
-string cvs_version = "$Id: roxen_master.pike,v 1.16.2.1 1997/02/05 14:11:39 grubba Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.16.2.2 1997/02/06 00:06:57 grubba Exp $";
 string pike_library_path;
 object stdout, stdin;
 mapping names=([]);
@@ -238,6 +238,14 @@ void _main(string *argv, string *env)
 
 //  clone(compile_file(pike_library_path+"/simulate.pike"));
 
+#if efun(version) || efun(__version)
+  /* In Pike 0.4pl2 and later the full command-line is passed 
+   * to the master.
+   *
+   * The above test should work for everybody except those who
+   * have Pike 0.2 without __version.
+   */
+
   tmp=new(pike_library_path+"/include/getopt.pre.pike");
 
   foreach(tmp->find_all_options(argv,({
@@ -261,6 +269,8 @@ void _main(string *argv, string *env)
 
   argv=tmp->get_args(argv,1)[1..];
   destruct(tmp);
+
+#endif /* version of __version */
 
    if(!sizeof(argv))
   {
