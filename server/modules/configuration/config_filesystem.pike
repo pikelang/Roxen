@@ -16,7 +16,7 @@ constant module_type = MODULE_LOCATION;
 constant module_name = "Configuration Filesystem";
 constant module_doc = "This filesystem serves the administration interface";
 constant module_unique = 1;
-constant cvs_version = "$Id: config_filesystem.pike,v 1.64 2000/11/20 13:36:36 per Exp $";
+constant cvs_version = "$Id: config_filesystem.pike,v 1.65 2000/11/26 15:44:40 nilsson Exp $";
 
 constant path = "config_interface/";
 
@@ -139,7 +139,8 @@ mixed find_file( string f, object id )
     if( !id->misc->config_user )
       return http_auth_required( "Roxen configuration" );
     if( (f == "") && !id->misc->pathinfo )
-      return http_redirect(fix_relative( "/standard/", id ), id );
+      return http_redirect(fix_relative( "/"+config_setting("locale")+"/",
+					 id ), id );
     if( search(f, "/" ) == -1 )
       return http_redirect(fix_relative( "/"+f+"/", id ), id );
 
@@ -193,6 +194,10 @@ mixed find_file( string f, object id )
   if( !id->misc->internal_get )
   {
     id->misc->cf_locale = locale;
+    if(!id->misc->defines)
+      id->misc->defines = ([]);
+    id->misc->defines->theme_language = locale;
+    id->misc->defines->language = locale;
     // add template to all rxml/html pages...
     type = id->conf->type_from_filename( id->not_query );
   }
