@@ -1,4 +1,4 @@
-## $Id: supports,v 1.81 2000/03/28 21:09:38 jhs Exp $
+## $Id: supports,v 1.82 2000/03/31 12:46:24 nilsson Exp $
 # name="Supports database";
 # doc="The database used to determine what different user-agents (browsers) support.";
 #
@@ -87,6 +87,7 @@
 #! unknown - The browser is not known, hence the supports classes can not be trusted.
 #! vrml - The browser supports VRML.
 #! wbmp0 - The browser supports Wireless Bitmap Picture Format, type 0.
+# wml1.0 and wml1.1 are so different that you cannot use a support variable.
 #! wml1.0 - The browser supports Wireless Markup Language 1.0.
 #! wml1.1 - The browser supports Wireless Markup Language 1.1.
 # </flags>
@@ -97,7 +98,6 @@
 #! height - The presentation area height in pixels.
 #! javascript - The highest version of javascript supported.
 #! robot - The name of the web robot.
-#! charset - The charset encoding used by the client (for input+output)
 #! width - The presentation area width in pixels.
 # </vars>
 
@@ -163,7 +163,7 @@ mozilla/[5-9].*		pnginline, *javascript=1.3
 # MSIE3 stylesheets are broken
 .*compatible.*msie.[4-9]	stylesheets, *javascript=1.2
 .*compatible.*msie.[5-9]	js_inner_html
-.*compatible.*msie.5\.0		*charset=UTF-8, *javascript=1.3
+.*compatible.*msie.5\.0		*javascript=1.3
 # }
 
 
