@@ -193,11 +193,13 @@ string buttons( Configuration c, string mn, RequestID id )
       conf->error_log[log_msg] +=({flush_time});  // Kilroy was in the global log
       roxen->error_log[log_msg]+=({flush_time}); // and in the virtual server log
     }
-    else if(mod->query_action_buttons) {
+    else if(mod->query_action_buttons)
+    {
       mapping buttons=mod->query_action_buttons("standard");
       foreach(indices(buttons), string title)
-	if( a==title && buttons[a] ) {
-	  buttons[a](id);
+	if( (string)a==(string)title )
+	{
+	  buttons[title](id);
 	  break;
 	}
     }
