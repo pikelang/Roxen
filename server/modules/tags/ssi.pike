@@ -5,7 +5,7 @@ inherit "module";
 #include <module.h>
 
 constant thread_safe=1;
-constant cvs_version = "$Id: ssi.pike,v 1.45 2004/06/30 16:59:27 mast Exp $";
+constant cvs_version = "$Id: ssi.pike,v 1.46 2005/02/11 20:49:54 grubba Exp $";
 
 
 constant module_type = MODULE_TAG;
@@ -426,7 +426,7 @@ string fix_var(string s, RequestID id) {
 
   string a,var,b;
   while( sscanf(s, "%s${%s}%s", a, var, b)==3 )
-    s = a + ((get_var(var, id)-"\0")||"") + b;
+    s = a + ((get_var(var, id)||"")-"\0") + b;
   replace(s, "\0", "$");
 
   return s;
