@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.365 2002/04/15 15:04:09 wellhard Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.366 2002/04/17 13:41:43 jhs Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -4785,7 +4785,7 @@ class TagPathplugin
     string p = m->path || id->not_query;
     if( m->trim )
       sscanf( p, "%s"+m->trim, p );
-    if( p[-1] == '/' )
+    if( has_suffix(p, "/") )
       p = p[..strlen(p)-2];
     array q = p / "/";
     if( m->skip )
