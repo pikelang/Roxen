@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.113 1999/11/23 09:43:58 per Exp $
+ * $Id: roxenloader.pike,v 1.114 1999/11/23 11:02:36 per Exp $
  *
  * Roxen bootstrap program.
  *
@@ -20,7 +20,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.113 1999/11/23 09:43:58 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.114 1999/11/23 11:02:36 per Exp $";
 
 #define perror roxen_perror
 
@@ -321,24 +321,25 @@ array find_module_and_conf_for_log( array q )
   object conf, mod;
   for( int i = 0; i<sizeof( q ); i++ )
   {
-    if( function_object( q[i][2] )->is_configuration )
-      conf = function_object( q[i][2] );
-    else if( function_object( q[i][2] )->is_module )
-      mod = function_object( q[i][2] );
+    object o = function_object( q[i][2] );
+//     werror(" We are in %O:%O <%d,%d>\n", 
+//            o, q[i][2], o->is_configuration, o->is_module);
+    if( o->is_configuration )
+      conf = o;
+    else if( o->is_module )
+      mod = o;
   }
   return ({ mod,conf });
 }
 
 
-#define FIND_LOG_MODULE_CONF [object module, object configuration]=find_module_and_conf_for_log(backtrace())
+#define MC @find_module_and_conf_for_log(backtrace())
 
 // Print a warning
 void report_warning(string message, mixed ... foo)
 {
-  FIND_LOG_MODULE_CONF();
-
   if( sizeof( foo ) ) message = sprintf(message, @foo );
-  nwrite(message,0,2,module,configuration);
+  nwrite(message,0,2,MC);
 #if efun(syslog)
   if(use_syslog && (loggingfield&LOG_WARNING))
     foreach(message/"\n", message)
@@ -349,10 +350,8 @@ void report_warning(string message, mixed ... foo)
 // Print a notice
 void report_notice(string message, mixed ... foo)
 {
-  FIND_LOG_MODULE_CONF();
-  
   if( sizeof( foo ) ) message = sprintf(message, @foo );
-  nwrite(message,0,1,module,configuration);
+  nwrite(message,0,1,MC);
 #if efun(syslog)
   if(use_syslog && (loggingfield&LOG_NOTICE))
     foreach(message/"\n", message)
@@ -363,10 +362,8 @@ void report_notice(string message, mixed ... foo)
 // Print an error message
 void report_error(string message, mixed ... foo)
 {
-  FIND_LOG_MODULE_CONF();
-
   if( sizeof( foo ) ) message = sprintf(message, @foo );
-  nwrite(message,0,3, module,configuration);
+  nwrite(message,0,3,MC);
 #if efun(syslog)
   if(use_syslog && (loggingfield&LOG_ERR))
     foreach(message/"\n", message)
@@ -377,10 +374,8 @@ void report_error(string message, mixed ... foo)
 // Print a fatal error message
 void report_fatal(string message, mixed ... foo)
 {
-  FIND_LOG_MODULE_CONF();
-
   if( sizeof( foo ) ) message = sprintf(message, @foo );
-  nwrite(message,0,3,module,configuration);
+  nwrite(message,0,3,MC);
 #if efun(syslog)
   if(use_syslog && (loggingfield&LOG_EMERG))
     foreach(message/"\n", message)
@@ -574,6 +569,7 @@ object really_load_roxen()
   }
   res->start_time = start_time;
   res->boot_time = start_time;
+  nwrite = res->nwrite;
   return res;
 }
 
@@ -620,7 +616,6 @@ void load_roxen()
 	 "Running on NT\n"
 #endif
     );
-  nwrite = roxen->nwrite;
 }
 
 
