@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.43 2001/09/03 17:57:01 nilsson Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.44 2001/09/04 19:21:39 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Roxen self test module";
@@ -167,6 +167,7 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
     string i = (" "*l+"|  ");
     return i+q*("\n"+i)+"\n";
   };
+
   string test_error( string message, mixed ... args )
   {
     if( sizeof( args ) )
@@ -180,12 +181,14 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
     rxml="";
     report_debug( indent(2, message ) );
   };
+
   string test_ok(  )
   {
     rxml = "";
     if( verbose )
       report_debug( "PASS\n" );
   };
+
   string test_test( string test )
   {
     if( verbose && strlen( rxml ) )
@@ -380,12 +383,12 @@ class PrefLang {
   {
     return ({});
   }
-    
+
   string get_language()
   {
     return 0;
   }
-  
+
   void set_sorted(array(string) lang) {}
 }
 
@@ -393,7 +396,7 @@ void xml_tag_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_co
 
   ltests++;
   tests++;
-  
+
   string indent( int l, string what )
   {
     array q = what/"\n";
@@ -401,7 +404,7 @@ void xml_tag_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_co
     string i = (" "*l+"|  ");
     return i+q*("\n"+i)+"\n";
   };
-  
+
   string test_error( string message, mixed ... args )
   {
     if( sizeof( args ) )
@@ -410,19 +413,32 @@ void xml_tag_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_co
       report_debug("FAIL\n" );
     report_debug( indent(2, message ) );
   };
-  
+
   string test_ok(  )
   {
     if( verbose )
       report_debug( "PASS\n" );
   };
+
+  string test_test( string test )
+  {
+    if( verbose )
+    {
+      report_debug( "%4d %-69s  ",
+		    ltests, replace(sprintf("%O", test)[..68],
+				    ({"\t","\n", "\r"}),
+				    ({"\\t","\\n", "\\r"}) ),
+		    );
+    }
+  };
+
   string res;
   Parser.HTML parser =
     Roxen.get_xml_parser()->
     add_containers( ([ "rxml":
 		       lambda(object t, mapping m, string c) {
 			 tag_test_data = c;
-			 
+
 			 mapping request_headers = ([]);
 			 if(args->admin && args->password)
 			   request_headers->authorization =
@@ -433,7 +449,7 @@ void xml_tag_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_co
 			 id->realauth = args->user+":"+args->password;
 			 id->request_headers = request_headers;
 			 id->prot = "HTTP";
-			 
+
 			 int logerrorsr =
 			   conf->find_module("rxmlparse")->query("logerrorsr");
 			 if(m["ignore-rxml-run-error"])
@@ -450,6 +466,7 @@ void xml_tag_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_co
 			 res = canon_html( res );
 			 c = canon_html( c );
 
+			 test_test(c);
 			 if(res != c) {
 			   if(m->not) return;
 			   test_error("Failed (result \"%s\" != \"%s\")\n", res, c);
@@ -458,7 +475,7 @@ void xml_tag_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_co
 			 test_ok( );
 		       },
     ]));
-  
+
   if( mixed error = catch(parser->finish(c)) ) {
     //werror("Error: %s\n", describe_backtrace(error));
     fails++;
