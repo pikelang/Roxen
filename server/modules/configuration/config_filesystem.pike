@@ -18,7 +18,7 @@ LocaleString module_doc =
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.113 2004/09/27 09:56:00 grubba Exp $";
+  "$Id: config_filesystem.pike,v 1.114 2005/02/25 16:17:15 grubba Exp $";
 
 constant path = "config_interface/";
 
@@ -428,10 +428,10 @@ void start(int n, Configuration cfg)
     if( cfg->find_module( "avg_profiling#0" ) )
       cfg->disable_module( "avg_profiling#0" );
 #endif
-    cfg->add_modules(({
-      "config_tags", "contenttypes",    "indexfiles",
-      "gbutton",     "graphic_text",    "pathinfo",        "javascript_support",
-      "pikescript",  "translation_mod", "rxmlparse",       "rxmltags",
+    module_dependencies(cfg, ({
+      "config_tags", "contenttypes",    "indexfiles", "atlas",
+      "gbutton",     "graphic_text",    "pathinfo",   "javascript_support",
+      "pikescript",  "translation_mod", "rxmlparse",  "rxmltags",
       "tablist",     "cimg",
 #ifdef AVERAGE_PROFILING
       "avg_profiling",
