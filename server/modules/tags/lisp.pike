@@ -1,5 +1,5 @@
 #define error(X) throw( ({ (X), backtrace() }) )
-constant cvs_version = "$Id: lisp.pike,v 1.3 1998/01/29 15:02:16 per Exp $";
+constant cvs_version = "$Id: lisp.pike,v 1.4 1998/01/29 16:16:49 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -378,7 +378,7 @@ class lisp_types
     {
       env = new_env(env, arglist); 
       if (env)
-	return list->map("eval", env, globals);
+	return arglist->map("eval", env, globals);
       error("Nothing to apply with.");
     }
   }
@@ -628,6 +628,20 @@ object s_or(object arglist, object env, object globals)
   return arglist->car->eval(env, globals);
 }
 
+
+object s_and(object arglist, object env, object globals)
+{
+  object res;
+  while(!arglist->cdr->is_nil)
+  {
+    res = arglist->car->eval(env, globals);
+    if (!res || res->is_nil)
+      return res;
+    arglist = arglist->cdr;
+  }
+  return arglist->car->eval(env, globals);
+}
+
 object s_progn(object arglist, object env, object globals)
 {
   return arglist->map("eval", env, globals);
@@ -648,16 +662,37 @@ object s_catch(object arglist, object env, object globals)
   return s_progn(arglist, env, globals) || Nil;
 }
 
+
+
+object s_while(object arglist, object env, object globals)
+{
+  object expr = arglist->car;
+  object to_eval = arglist->cdr;
+  
+  while(!expr->eval(env,globals)->is_nil)
+  {
+    object f = to_eval;
+    while( f->car && !f->car->is_nil )
+    {
+      if(!f->car->eval(env,globals)) return 0;
+      f = f->cdr;
+    }
+  }
+}
+
 void init_specials(object environment)
 {
   environment->extend(make_symbol("quote"), Special(s_quote));
   environment->extend(make_symbol("set!"), Special(s_setq));
   environment->extend(make_symbol("setq"), Special(s_setq));
   environment->extend(make_symbol("define"), Special(s_define));
+  environment->extend(make_symbol("while"), Special(s_while));
   environment->extend(make_symbol("defmacro"), Special(s_defmacro));
   environment->extend(make_symbol("lambda"), Special(s_lambda));
   environment->extend(make_symbol("if"), Special(s_if));
   environment->extend(make_symbol("or"), Special(s_or));
+  environment->extend(make_symbol("while"), Special(s_while));
+  environment->extend(make_symbol("and"), Special(s_and));
   environment->extend(make_symbol("progn"), Special(s_progn));
   environment->extend(make_symbol("catch"), Special(s_catch));
 }
@@ -774,6 +809,11 @@ object f_lt(object arglist, object env, object globals)
   return (arglist->car->value < arglist->cdr->car->value) ? True : Nil;
 }
 
+object f_gt(object arglist, object env, object globals)
+{
+  return (arglist->car->value > arglist->cdr->car->value) ? True : Nil;
+}
+
 
 object f_get(object arglist, object env, object globals)
 {
@@ -861,7 +901,19 @@ object f_format(object arglist, object env, object globals)
   }
   return String( sprintf(f, @args) );
 }
-  
+
+object f_line_break(object arglist, object env, object globals)
+{
+  string f = arglist->car->print();
+  int n = (arglist->cdr && (int)arglist->cdr->car->value) || 75;
+  string res = "";
+  while(strlen(f))
+  {
+    res += f[..n-1]+"\n";
+    f = f[n..];
+  }
+  return String( res );
+}
 
 object boot_code;
 
@@ -872,6 +924,7 @@ void init_functions(object environment)
   environment->extend(make_symbol("-"), Builtin(f_subtract));
   environment->extend(make_symbol("="), Builtin(f_equal));
   environment->extend(make_symbol("<"), Builtin(f_lt));
+  environment->extend(make_symbol(">"), Builtin(f_gt));
 
   environment->extend(make_symbol("concat"), Builtin(f_concat));
   environment->extend(make_symbol("format"), Builtin(f_format));
@@ -895,6 +948,8 @@ void init_functions(object environment)
   environment->extend(make_symbol("setcdr!"), Builtin(f_setcdr));
   environment->extend(make_symbol("cons"), Builtin(f_cons));
   environment->extend(make_symbol("list"), Builtin(f_list));
+
+  environment->extend(make_symbol("line-break"), Builtin(f_line_break));
 }
 
 
