@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
+// This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
 //
 // The main RXML parser. If this module is not added to a configuration,
 // no RXML parsing will be done at all.  This module also maintains an
@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.160 1999/01/31 22:45:07 neotron Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.161 1999/02/01 00:46:22 peter Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -1413,15 +1413,18 @@ string tag_insert(string tag,mapping m,object id,object file,mapping defines)
       if (!s) {
 
 	// Might be a PATH_INFO type URL.
-	array a = id->conf->open_file( f, "r", id );
-	if(a && a[0])
+	if(id->misc->avoid_path_info_recursion++ < 5)
 	{
-	  s = a[0]->read();
-	  if(a[1]->raw)
+	  array a = id->conf->open_file( f, "r", id );
+	  if(a && a[0])
 	  {
-	    s -= "\r";
-	    if(!sscanf(s, "%*s\n\n%s", s))
-	      sscanf(s, "%*s\n%s", s);
+	    s = a[0]->read();
+	    if(a[1]->raw)
+	    {
+	      s -= "\r";
+	      if(!sscanf(s, "%*s\n\n%s", s))
+		sscanf(s, "%*s\n%s", s);
+	    }
 	  }
 	}
 	if(!s)
