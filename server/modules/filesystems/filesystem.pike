@@ -8,7 +8,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.76 2000/03/26 03:43:24 mast Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.77 2000/03/26 03:58:22 mast Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -37,9 +37,9 @@ constant thread_safe=1;
 constant module_type = MODULE_LOCATION;
 constant module_name = "Filesystem";
 constant module_doc =
-("This is a virtual filesystem, use it to make files available to "+
+("This is a virtual filesystem. Use it to make files available to "
  "the users of your WWW-server. If you want to serve any 'normal' "
- "files from your server, you will have to have atleast one filesystem.") ;
+ "files from your server, you will have to have at least one filesystem.") ;
 constant module_unique = 0;
 
 int redirects, accesses, errors, dirlists;
@@ -83,7 +83,7 @@ void create()
 
   defvar("searchpath", "NONE", "Search path", TYPE_DIR|VAR_INITIAL,
 	 "This is where the module will find the files in the real "+
-	 "file system");
+	 "file system.");
 
   defvar(".files", 0, "Show hidden files", TYPE_FLAG|VAR_MORE,
 	 "If set, hidden files will be shown in dirlistings and you "
