@@ -1,4 +1,4 @@
-// $Id: demo.pike,v 1.8 1999/07/27 19:41:39 js Exp $
+// $Id: demo.pike,v 1.9 1999/07/27 19:43:24 js Exp $
 //
 // (c) 1998 Idonex AB
 #include <module.h>
@@ -8,7 +8,7 @@ inherit "roxenlib";
 
 // import Array;
 
-constant cvs_version = "$Id: demo.pike,v 1.8 1999/07/27 19:41:39 js Exp $";
+constant cvs_version = "$Id: demo.pike,v 1.9 1999/07/27 19:43:24 js Exp $";
 
 void create()
 {
@@ -93,12 +93,12 @@ No more bottles of beer on the wall";
   else if(id->variables->_submit == "Pop")
   {
     data=stack[0];
+    mdb[ (int)f ] = data;
     stack=stack[1..];
   }
   else if (id->variables->_data)
   {
     data = id->variables->_data;
-
     data = data / "\r\n" * "\n";
     data = data / "\r" * "\n";
     mdb[ (int)f ] = data;
