@@ -6,7 +6,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.32 2005/01/18 09:44:02 noring Exp $";
+constant cvs_version = "$Id: email.pike,v 1.33 2005/01/18 11:57:39 noring Exp $";
 
 constant thread_safe=1;
 
@@ -20,39 +20,39 @@ void create(Configuration conf)
   set_module_creator("Honza Petrous <hop@roxen.com>");
 
   // Default
-  defvar("CI_server", "localhost", "Default: Mail server",
+  defvar("CI_server", "localhost", "Defaults: Mail server",
          TYPE_STRING | VAR_INITIAL,
          "The default mail server will be used if no '<i>server</i>' "
          "attribute is given to the tag.");
-  defvar("CI_from", "", "Default: Sender name",
+  defvar("CI_from", "", "Defaults: Sender name",
          TYPE_STRING,
          "The default sender name will be used if no '<i>from</i>' "
          "attribute is given to the tag.");
-  defvar("CI_to", "", "Default: Recipient names",
+  defvar("CI_to", "", "Defaults: Recipient names",
          TYPE_TEXT_FIELD,
          "The default recipient names (one name per line) will be "
          "used if no '<i>to</i>' "
          "attribute is given to the tag.");
-  defvar("CI_split", ",", "Default: Recipient name list character separator",
+  defvar("CI_split", ",", "Defaults: Recipient name list character separator",
          TYPE_STRING,
          "The default recipient name list character separator "
          "will be used if no '<i>separator</i>' "
          "attribute is given to the tag.");
-  defvar("CI_charset", "iso-8859-1", "Default: Charset",
+  defvar("CI_charset", "iso-8859-1", "Defaults: Charset",
          TYPE_STRING|VAR_MORE,
          "The default charset will be used if no '<i>charset</i>' "
          "attribute is given to the tag.<br>"
          "Note: Used only if charset is unknown (defined in filesystem module, mostly.");
-  defvar("CI_mimeencoding", "base64", "Default: MIME encoding",
+  defvar("CI_mimeencoding", "base64", "Defaults: MIME encoding",
          TYPE_STRING|VAR_MORE,
          "The default MIME encoding for attachment will be used if no '<i>mimeencoding</i>' "
          "attribute is given to the subtag &lt;attachment /&gt;.<br>"
          "Note: Used only if Content type module isn't loaded.");
-  defvar("CI_nosubject", "[ * No Subject * ]", "Default: Subject line",
+  defvar("CI_nosubject", "[ * No Subject * ]", "Defaults: Subject line",
          TYPE_STRING,
          "The default subject line will be used if no '<i>subject</i>' "
          "attribute is given to the tag.");
-  defvar("CI_headers", "", "Default: Additional headers",
+  defvar("CI_headers", "", "Defaults: Additional headers",
          TYPE_TEXT_FIELD,
          "Additional headers (one header '<i>name=value</i>' pair per line) "
 	 "will be added. "
@@ -98,7 +98,7 @@ void create(Configuration conf)
 
 array mails = ({}), errs = ({});
 string msglast = "";
-string revision = ("$Revision: 1.32 $"/" ")[1];
+string revision = ("$Revision: 1.33 $"/" ")[1];
 
 class TagEmail {
   inherit RXML.Tag;
@@ -336,16 +336,18 @@ class TagEmail {
 	string body = replace(message, "\r\nFrom ", "\r\n>From ");
 	string error_msg;
 	if(error)
-	  if(catch { error_msg = (string)error; })
-	    error_msg = sprintf("%O", error);
-	if(error_msg)
+	  catch { error_msg = (string)error; };
+	if(error && !error_msg)
+	  error_msg = sprintf("%O", error);
+	if(stringp(error_msg))
 	  body = "X-Roxen-Email-Error: " +
-		 replace(sprintf("%O", error_msg),
-			 ({ "\r", "\n" }), ({ " ", " " })) + "\r\n" +
-		 body;
+		 (replace(error_msg, "\r", "")/"\n" - ({ "" }))*"\n  " +
+		 "\n" + body;
 	Stdio.append_file(roxen_path(mbox_file),
-			  sprintf("From %s %s\r\nDate: %s\r\n%s\r\n\r\n",
-				  from, date, date, body));
+			  sprintf("From %s %s\nDate: %s\n%s\n\n",
+				  from, date, date,
+				  replace(body, ({ "\r", "\n" }),
+					  ({ "", "\n" }))));
       }
     }
 
