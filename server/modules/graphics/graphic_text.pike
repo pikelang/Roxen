@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.174 1999/05/19 03:47:06 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.175 1999/05/19 07:07:09 peter Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -693,7 +693,7 @@ mixed draw_callback(mapping args, object id)
 
 mapping find_internal(string f, object rid)
 {
-  if( query("gif") && f[-4]=='.') // Remove .ext
+  if( strlen(f)>4 && query("gif") && f[-4]=='.') // Remove .ext
     f = f[..strlen(f)-5];
   return image_cache->http_file_answer( f, rid );
 }
@@ -789,9 +789,10 @@ string tag_gtext_id(string t, mapping arg, string ctn,
   arg->text = ctn;
 
   if(!short)
-    return query_internal_location()+image_cache->store( arg, id );
+    return query_internal_location()+image_cache->store( arg, id )+
+      (query("gif")?".foo":"");
   else
-    return image_cache->store( arg, id );
+    return image_cache->store( arg, id )+(query("gif")?".foo":"");
 }
 
 string tag_graphicstext(string t, mapping arg, string contents,
@@ -823,7 +824,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
   
 
   string gif="";
-  if(query("gif")) gif=".gif";
+  if(query("gif")) gif="."+(arg->format?arg->format[..2]:"gif");
   
 #if efun(_static_modules)
   contents = parse_rxml(contents, id, foo, defines);
@@ -885,14 +886,14 @@ string tag_graphicstext(string t, mapping arg, string contents,
   for(i=2; i<10; i++) 
     if(arg[(string)i])
     {
-      arg->scale = 1.0 / ((float)i*0.6);
+      arg->scale = (string)(1.0 / ((float)i*0.6));
       m_delete(arg, (string)i);
       break;
     }
 
   // Support for <gh1> like things.
   if(sscanf(t, "%s%d", t, i)==2)
-    if(i > 1) arg->scale = 1.0 / ((float)i*0.6);
+    if(i > 1) arg->scale = (string)(1.0 / ((float)i*0.6));
 
   string na = arg->name, al=arg->align;
   m_delete(arg, "name"); m_delete(arg, "align");
@@ -978,8 +979,8 @@ string tag_graphicstext(string t, mapping arg, string contents,
     if(!size) size = ([ ]);
     return replace(res +
 		   magic_image(url||"", size->xsize, size->ysize, "i"+(defines->mi++),
-			       query_internal_location()+num+"/"+gif,
-			       query_internal_location()+num2+"/"+gif,
+			       query_internal_location()+num+gif,
+			       query_internal_location()+num2+gif,
 			       (arg->alt?arg->alt:replace(gt, "\"","'")),
 			       (magic=="magic"?0:magic),
 			       id,input?na||"submit":0,ea,lp),
