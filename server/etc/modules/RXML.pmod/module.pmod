@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.250 2001/10/03 05:38:26 mast Exp $
+// $Id: module.pmod,v 1.251 2001/10/03 05:39:14 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -3478,17 +3478,6 @@ class Frame
 	      else
 		foreach (indices (raw_args), string arg) {
 		  Type t = atypes[arg] || default_type;
-
-		  // Temporary debug check.
-		  if (!stringp (raw_args[arg]))
-		    error ("%O: raw_args[%O] not a string:\n"
-			   "raw_args: %O\n"
-			   "args: %O\n"
-			   "raw_args == args: %O\n"
-			   "flags: %x\n",
-			   this_object(), arg, raw_args, args,
-			   raw_args == args, flags);
-
 		  if (t->parser_prog != PNone) {
 		    Parser parser = t->get_parser (ctx, ctx_tag_set, 0, 0);
 		    THIS_TAG_DEBUG ("Evaluating argument value %s with %O\n",
