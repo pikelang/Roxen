@@ -1,4 +1,4 @@
-# $Id: supports,v 1.91 2001/09/19 14:44:50 nilsson Exp $
+# $Id: supports,v 1.92 2002/07/08 23:31:15 nilsson Exp $
 
 # --- Supports database ---
 # The database used to determine what different user-agents (browsers) support.
@@ -139,7 +139,8 @@
 				-supsub
 .*compatible.*opera.2.*		align, fontcolor, tablecolor
 .*compatible.*opera.[3-9].*	-java, javascript, fontcolor, tablecolor, *javascript=1.1
-.*compatible.*opera.[4-9].*	trade
+.*compatible.*opera.3.[5-9]	stylesheets
+.*compatible.*opera.[4-9].*	trade, stylesheets
 .*compatible.*opera.[5-9].*	*javascript=1.3
 
 # BLAM BLAM BLAM BLAM
