@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.274 2001/01/15 10:09:11 nilsson Exp $
+// $Id: rxml.pike,v 1.275 2001/01/29 05:45:32 per Exp $
 
 
 inherit "rxmlhelp";
@@ -28,7 +28,7 @@ string handle_run_error (RXML.Backtrace err, RXML.Type type)
 {
   RequestID id=RXML.get_context()->id;
 #ifdef MODULE_DEBUG
-  report_notice ("Error in %s.\n%s", id->raw_url, describe_error (err));
+  report_notice ("Error in %s.\n%s", id->not_query, describe_error (err));
 #endif
   if(id->conf->get_provider("RXMLRunError")) {
     if(!_run_error)
@@ -53,7 +53,7 @@ string handle_parse_error (RXML.Backtrace err, RXML.Type type)
 {
   RequestID id=RXML.get_context()->id;
 #ifdef MODULE_DEBUG
-  report_notice ("Error in %s.\n%s", id->raw_url, describe_error (err));
+  report_notice ("Error in %s.\n%s", id->not_query, describe_error (err));
 #endif
   if(id->conf->get_provider("RXMLParseError")) {
     if(!_parse_error)
