@@ -1,0 +1,59 @@
+<comment>Empty tests</comment>
+<test>
+<rxml>ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890&amp;&lt;&gt;&#40;≈‰÷</rxml>
+<result>ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890&amp;&lt;&gt;&#40;≈‰÷</result>
+</test>
+
+<test>
+<rxml><br><b><i><p>x<x></p></b></i><br><br/><br /><BR></rxml>
+<result><br><b><i><p>x<x></p></b></i><br><br/><br /><BR></result>
+</test>
+
+<test>
+<rxml></rxml>
+<result></result>
+</test>
+
+<test>
+<rxml>
+    x
+  		x
+  	 	 	     	x
+</rxml>
+<result>
+    x
+  		x
+  	 	 	     	x
+</result>
+</test>
+
+<comment>True/False/Else/Then</comment>
+<test>
+<rxml><true/><then>1</then><else>0</else></rxml>
+<result>1</result>
+</test>
+
+<test>
+<rxml><false/><then>1</then><else>0</else></rxml>
+<result>0</result>
+</test>
+
+<test>
+<rxml><true/><then>a</then>b<then>c</then><else>d</else></rxml>
+<result>abc</result>
+</test>
+
+<test>
+<rxml><false/><else>a</else>b<else>c</else><then>d</then></rxml>
+<result>abc</result>
+</test>
+
+<test>
+<rxml><set variable='var.x' value='2'/><true/><else>x<set variable='var.x' value='3'/></else>&var.x;</rxml>
+<result>2</result>
+</test>
+
+<test>
+<rxml><set variable='var.x' value='2'/><false/><then>x<set variable='var.x' value='3'/></then>&var.x;</rxml>
+<result>2</result>
+</test>
