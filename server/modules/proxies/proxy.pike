@@ -4,7 +4,7 @@
 // limit of proxy connections/second is somewhere around 70% of normal
 // requests, but there is no real reason for them to take longer.
 
-constant cvs_version = "$Id: proxy.pike,v 1.38 1999/04/17 21:43:34 grubba Exp $";
+constant cvs_version = "$Id: proxy.pike,v 1.39 1999/09/05 01:44:30 per Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -16,8 +16,6 @@ constant thread_safe = 1;
 #  define PROXY_DEBUG
 # endif
 #endif
-
-import Array;
 
 inherit "module";
 inherit "roxenlib";
@@ -575,7 +573,8 @@ mapping find_file( string f, object id )
 #define SERVER_DEBUG(X)
 #endif
 
-class Server {
+class Server 
+{
   object conf, proxy, client, to_disk, to_disk_pipe, from_server;
 
   string name = "", _remoteaddr = "", _data = "", proxyhost;
@@ -1265,7 +1264,8 @@ class Server {
 #define REQUEST_DEBUG(X)
 #endif
 
-class Request {
+class Request 
+{
   object proxy, id, server, from_disk;
 
   string name = "", _remoteaddr = "", cache_file_info, _mode = "Proxy";
