@@ -1,5 +1,5 @@
 /*
- * $Id: proxystatus.pike,v 1.3 1999/04/02 16:55:58 grubba Exp $
+ * $Id: proxystatus.pike,v 1.4 1999/04/17 21:01:02 grubba Exp $
  *
  * proxystatus was contributed by Wilhelm Köhler (wk@cs.tu-berlin.de)
  *
@@ -10,9 +10,9 @@
 #include <stat.h>
 
 inherit "wizard";
-constant name= "Status//Proxy connections";
+constant name= "Status//Proxy requests";
 
-constant doc = ("Shows current proxy connections.");
+constant doc = ("Shows current http proxy requests.");
 
 constant more=0;
 
@@ -108,14 +108,25 @@ string status(object mc, int cf_detail, int bc_detail, int sc_detail,
     title += ({ "connection" });
   title += ({ "Requested" });
 
-  foreach(indices(mc->requests), object request){
+  multiset(object) requests = (< >);
+  object o = next_object();
+  for(;;)
+  {
+    if(o && object_program(o) == mc->Request)
+      requests[o]=1;
+    if(catch(o = next_object(o)) || !o)
+      break;
+  }
+
+  foreach(indices(requests), object request){
     if(!request){
       report_debug("PROXY_STATUS: no request\n");
       continue;
     }
+ 
     string res = "";
     string since = "", bytes = "", idle = "", mode = "", http = "", cache = "";
-    string browser = "", server = "", requested = "";
+    string browser = "", server = "", requested;
     int idle_time;
 
     if(catch(http = request->http_code()||""))
@@ -123,30 +134,29 @@ string status(object mc, int cf_detail, int bc_detail, int sc_detail,
 
     if(cf_detail)
     {
+      object cs;
+      int size;
+      object stat;
       if(request->from_disk)
       {
         if(catch(cache = "\t" + request->cache_file_info + "\t"))
           cache = "\t\t\t";
-      } else if(!request->to_disk)
-        cache = "\t\t\t";
+      }
+      else if(catch(cs = request->server->to_disk) ||
+              catch(cache = "\t" + cs->file->query_fd() + ":" +
+                            ((cs->rfile/"roxen_cache/http/")[1]) + "\t") ||
+	      catch(stat = cs->file->stat()))
+        cache += "\t\t\t";
       else
       {
-        if(catch(cache = "\t" + request->to_disk->file->query_fd() + ":" +
-                   ((request->to_disk->rfile/"roxen_cache/http/")[1]) + "\t"))
-          cache = "\t\t";
-        object stat;
-        if(catch(stat = request->to_disk->file->stat()))
-          cache += "\t";
-        else {
-          int size = stat[ST_SIZE];
-          catch{size -= request->to_disk->headers->head_size;};
-          cache += (size<=0?0:size) + "\t";
+        size = stat[ST_SIZE];
+        catch{size -= cs->headers->head_size;};
+        cache += (size<=0?0:size) + "\t";
 #define MY_TIME(X) sprintf("%s%d:%d", (X)>(60*60)?(X)/(60*60)+":":"",\
-                             (X)%(60*60)/60, (X)%60)
-          idle_time = time()-stat[ST_MTIME];
-          if(idle_time)
-            cache += MY_TIME(idle_time);
-        }
+                           (X)%(60*60)/60, (X)%60)
+        idle_time = time()-stat[ST_MTIME];
+        if(idle_time)
+          cache += MY_TIME(idle_time);
       }
     }
     object r_s;
@@ -154,8 +164,6 @@ string status(object mc, int cf_detail, int bc_detail, int sc_detail,
 	     (server = roxen->quick_ip_to_host((r_s->query_address()/" ")[0]))))
       server = "-" + (sc_detail?"\t":"");
     else if(sc_detail){
-    //if(request->server)request->server->_got(0,"");
-    request->write("");
       string r;
       if(!catch(r=r_s->query_fd())&&r)
         server += "\t"+r+":";
@@ -166,18 +174,16 @@ string status(object mc, int cf_detail, int bc_detail, int sc_detail,
         server += r;
     }
 
-    if(catch(requested = request->name) || !sizeof(requested))
+    if(catch(requested = request->name) || !requested)
       requested = "-";
     else {
       requested = "\<a href=\"http://"+requested+"\">"+
         (rq_detail||sizeof(requested)<40?requested:requested[..37]+"...");
     }
-      
-    object id;
+ 
     int id_time;
-    if(catch((id = request->id) && (id_time = id->time)))
+    if(catch(id_time = request->_start))
       id_time = time();
-
     since = MY_TIME(idle_time = time()-id_time);
 
     if(catch(bytes = request->bytes_sent()||""))
@@ -189,7 +195,9 @@ string status(object mc, int cf_detail, int bc_detail, int sc_detail,
     if(catch(mode = request->mode()))
       mode = "-";
 
-    if(catch((browser=id->my_fd->query_address()||("["+roxen->quick_ip_to_host(request->_remoteaddr)+"]")) &&
+    object id;
+    if(catch((id = request->id) && 
+	     (browser=id->my_fd->query_address()||("["+roxen->quick_ip_to_host(request->_remoteaddr)+"]")) &&
              (browser = roxen->quick_ip_to_host(request->_remoteaddr)||request->_remoteaddr)) &&
        catch(browser="["+(roxen->quick_ip_to_host(request->_remoteaddr)||request->_remoteaddr)+"]"))
       browser = "-" + (bc_detail?"\t":"");
@@ -210,11 +218,11 @@ string status(object mc, int cf_detail, int bc_detail, int sc_detail,
     rows += ({ res/"\t" });
   }
 
-  if(sizeof(mc->requests)&&sizeof(rows)){
+  if(sizeof(rows)){
     sort(times, rows);
     return res_stats + html_table(title, rows);
   } else
-    return res_stats + "<b>No current proxy connections.</b>";
+    return res_stats + "<b>No current proxy requests.</b>";
 }
 
 mixed page_0(object id, object mc)
@@ -261,7 +269,7 @@ mixed page_0(object id, object mc)
     "<td></td><td></td>"
     "<td><var type=checkbox name=clear_stats></td><td>Clear Online Statistics\n</td>"
     "</tr><tr>"
-    "<td><var type=checkbox name=cc_stats default=on></td><td>Current connections\n</td>"
+    "<td><var type=checkbox name=cc_stats default=on></td><td>Current requests\n</td>"
     "<td><var type=checkbox name=http_stats></td><td>Http code stats\n</td>"
     "<td><var type=checkbox name=length_stats></td><td>Length stats\n</td>"
     "</tr></table>";
