@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.80 2000/05/01 05:42:09 nilsson Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.81 2000/05/05 23:30:26 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -94,6 +94,12 @@ void create()
 	 "in it. Similarly it is possible to let a directory be browsable, "
 	 "even if the file system is not, by putting a "
 	 "<tt>.www_browsable</tt> file in it.\n");
+
+  defvar("nobrowse", ({ ".www_not_browsable", ".nodiraccess" }),
+	 "List prevention files", TYPE_STRING_LIST|VAR_MORE,
+	 "All directories containing any of these files will not be "
+	 "browsable.");
+
 
   defvar("tilde", 0, "Show backup files", TYPE_FLAG|VAR_MORE,
 	 "If set, files ending with '~', '#' or '.bak' will "+
@@ -221,9 +227,12 @@ int dir_filter_function(string f, RequestID id)
   return 1;
 }
 
+array(string) list_lock_files() {
+  return QUERY(nobrowse);
+}
+
 array find_dir( string f, RequestID id )
 {
-  mixed ret;
   array dir;
 
   FILESYSTEM_WERR("find_dir for \""+f+"\"");
@@ -244,14 +253,14 @@ array find_dir( string f, RequestID id )
 
   if(!QUERY(dir))
     // Access to this dir is allowed.
-    if(search(dir, ".www_browsable") == -1)
+    if(! has_value(dir, ".www_browsable"))
     {
       errors++;
       return 0;
     }
 
   // Access to this dir is not allowed.
-  if(sizeof(dir & ({".nodiraccess",".www_not_browsable",".nodir_access"})))
+  if( sizeof(dir & QUERY(nobrowse)) )
   {
     errors++;
     return 0;
@@ -262,7 +271,6 @@ array find_dir( string f, RequestID id )
   // Pass _all_ files, hide none.
   if(QUERY(tilde) && QUERY(.files) &&
      (!sizeof (QUERY (internal_files)) || id->misc->internal_get))
-    /* This is quite a lot faster */
     return dir;
 
   dir = Array.filter(dir, dir_filter_function, id);
