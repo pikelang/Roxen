@@ -1,3 +1,3 @@
-<theme-set what=logo to=logo.gif themefile />
+<theme-set what=logo to=internal-roxen-roxen-small themefile />
 
-<theme-set what=logo-html to='<img hspace=5 border=0 src=&usr.logo;>' />
+<theme-set what=logo-html to='<img hspace=15 border=0 src=&usr.logo;>' />
