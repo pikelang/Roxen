@@ -7,7 +7,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: language2.pike,v 1.10 2000/09/10 16:50:30 nilsson Exp $";
+constant cvs_version = "$Id: language2.pike,v 1.11 2000/09/14 19:33:05 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_URL | MODULE_TAG;
 constant module_name = "Language module II";
@@ -36,6 +36,12 @@ array(string) rxml;
 string cache_id;
 
 void start(int n, Configuration c) {
+  if(c->enabled_modules["content_editor#0"]) {
+    call_out( c->disable_module, 0.5,  "language2#0" );
+    report_error("Language II is not compatible with SiteBuilder content editor.\n");
+    return;
+  }
+
   default_language=[string]query("default_language");
   languages=[array(string)]query("languages");
   rxml=[array(string)]query("rxml");
