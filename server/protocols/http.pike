@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.412 2004/06/02 12:56:03 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.413 2004/06/02 12:57:25 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -896,8 +896,9 @@ void end(int|void keepit)
     {
       // Don't set to blocking mode if SSL.
       // The problem is that this causes connections to be closed
-      // prematurely, at least on NT. However, if a client misbehaves,
-      // this can hang the backend thread which is Bad(tm).
+      // prematurely, at least on NT. However, if a client misbehaves
+      // then setting the SSL connection to blocking mode can hang the
+      // backend thread which is Bad(tm).
       if (!my_fd->CipherSpec)
 	my_fd->set_blocking();
       my_fd->close();
