@@ -132,7 +132,7 @@ function showPopup(e, name, parent, properties)
 
   var popup = getObject(name);
 
-  if (!popup) { alert("Unknown object: " + name); return; }
+  if (!popup) { alert("Unknown object: " + name); return 0; }
   var parentCoord = (parent != "none"? new PopupCoord(parent): 0);
   var pos = new properties.LayerPosition(new TriggerCoord(e, parentCoord, name),
 					 parentCoord, properties);
