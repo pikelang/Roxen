@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.30 1998/03/26 07:35:00 per Exp $
+# $Id: start,v 1.31 1998/04/19 01:21:02 grubba Exp $
 
 VERSION=201; BETA=.a;
 
@@ -26,17 +26,21 @@ umask 022
 # Pike default Master-program
 if [ "x$PIKE_MASTER" = "x" ]; then
   if [ -f lib/master.pike ]; then
-    DEFINES="$DEFINES -mlib/master.pike"
+    DEFINES="$DEFINES -mlib/master.pike -Mlib/modules -Ilib/include"
   elif [ -f lib/pike/master.pike ]; then
-    DEFINES="$DEFINES -mlib/pike/master.pike"
+    DEFINES="$DEFINES -mlib/pike/master.pike -Mlib/pike/modules -Ilib/pike/include"
   else
     # This is used with localinstall
     if [ -f ../pike/src/lib/master.pike ]; then
-      DEFINES="$DEFINES -m../pike/src/lib/master.pike"
+      DEFINES="$DEFINES -m../pike/src/lib/master.pike -M../pike/src/lib/modules -I../pike/src/lib/include"
     fi
   fi
 else
   # This is usefull when using several different Pikes.
+  # Specify include and module paths with
+  # PIKE_INCLUDE_PATH and PIKE_MODULE_PATH
+  # they are handled automatically by the master,
+  # so no need to do it here.
   DEFINES="$DEFINES -m$PIKE_MASTER"
 fi
 
