@@ -8,7 +8,7 @@
  *    various other external stuff happy.
  */
  
-string cvs_version = "$Id: buildenv.pike,v 1.6 2001/01/19 12:41:36 per Exp $";
+string cvs_version = "$Id: buildenv.pike,v 1.7 2002/02/14 15:20:30 wellhard Exp $";
 
 class Environment
 {
@@ -123,6 +123,11 @@ class Environment
     if (!v)
       v = env[var] = ({ 0, 0, 0 });
     v[1] = val;
+  }
+
+  void remove(string var)
+  {
+    m_delete(env, var);
   }
 
   string get(string var)
