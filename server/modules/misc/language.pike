@@ -1,7 +1,7 @@
 #include <module.h>
 inherit "modules/directories/directories";
 
-constant cvs_version = "$Id: language.pike,v 1.10 1997/08/19 06:58:28 peter Exp $";
+string cvs_version = "$Id: language.pike,v 1.11 1997/08/19 07:05:14 peter Exp $";
 
 array register_module()
 {
