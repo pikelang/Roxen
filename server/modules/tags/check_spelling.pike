@@ -6,7 +6,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: check_spelling.pike,v 1.11 2000/04/30 02:58:02 nilsson Exp $";
+constant cvs_version = "$Id: check_spelling.pike,v 1.12 2000/09/04 14:08:29 jhs Exp $";
 
 constant module_type = MODULE_PARSER;
 constant module_name = "Spell checker";
@@ -30,10 +30,10 @@ void create() {
 	 "Spell checker", TYPE_STRING,
          "Spell checker program to use.");
 
-  defvar("dictionary", "american", "Defualt dictionary",TYPE_STRING,
+  defvar("dictionary", "american", "Default dictionary", TYPE_STRING,
          "The default dictionary used, when not specified in the tag.");
 
-  defvar("report", "popup", "Defualt report type",TYPE_STRING_LIST,
+  defvar("report", "popup", "Default report type", TYPE_STRING_LIST,
          "The default report type used, when not specified in the tag.",
          ({ "popup","table" }) );
 
