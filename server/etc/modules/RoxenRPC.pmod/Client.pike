@@ -25,7 +25,7 @@ class RemoteFunctionCall
     /* The server returned a pointer to an object. */
     /* Build a new RPC object and return it... */
     if(data[0]==2)
-      return object_program(master)( server, 0, data[1], !master->nolock);
+      return object_program(master)( server, 0, data[1], !master->nolock, 1);
     /* The server returned a pointer to a program or function. */
     /* Build a new RPC function call object and return it... */
     else if(data[0]==3)
@@ -48,14 +48,11 @@ class RemoteFunctionCall
   {
     me = m; cl = c; server = s; lock = l;
     master = mast;
-//  pc = encode_value( ({ cl, me, ({}) }) );
-//  pc = sprintf("%4c%s", strlen(pc), pc);
     string v = encode_value(([ "add_refs":cl ]));
     server->write(sprintf("%4c%s", strlen(v), v));
     if(server->read(1) != "!")
       error("server->subtract_refs("+cl+") failed\n");
   }
-  
 }
 
 
@@ -71,9 +68,10 @@ mixed `->(string id)
 }
 
 void create(string|object ip, int port, string cl,
-	    int|string|void lck, void|string key)
+	    int|string|void lck, void|string key, int|void not_again)
 {
-  if(stringp(lck)) {
+  if(stringp(lck))
+  {
     key = lck;
     lck = 0;
   }
@@ -84,7 +82,22 @@ void create(string|object ip, int port, string cl,
     server = ip;
   } else {
     if(!server->connect(ip, port)) error("Failed to connect to RPC server\n");
-    if(server->read(1) != "!") error("Server there, but refused connection.\n");
+  }
+
+  while(not_again)
+  {
+    switch(server->read(1))
+    {
+     case "=":
+      not_again=0;
+     case "!":
+      break;
+     case "?":
+      server->write("%4c%s", strlen(key||""), key||"");
+      continue;
+     default:
+      error("Server there, but refused connection.\n");
+    }
   }
 
   myclass = cl;
@@ -94,8 +107,6 @@ void create(string|object ip, int port, string cl,
   string v = encode_value(([ "add_refs":myclass ]));
 
   server->write(sprintf("%4c%s", strlen(v), v));
-
-  if(key) server->write(key);
 
   if(server->read(1) != "!")
     error("server->add_refs("+myclass+") failed\n");

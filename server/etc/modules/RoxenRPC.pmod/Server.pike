@@ -1,3 +1,5 @@
+#define error(X) throw(({X, backtrace()}));
+
 class Connection
 {
 #define WAITING 0
@@ -37,8 +39,6 @@ class Connection
 
   void handle_cmd(mapping cmd)
   {
-//    werror(sprintf("Handle cmd %s(%s)\n", indices(cmd)[0],
-//		   (string)values(cmd)[0]));
     if(cmd->add_refs) refs[cmd->add_refs]++;
     if(cmd->subtract_refs)
     {
@@ -47,7 +47,7 @@ class Connection
       {
 	object q;
 	string r = cmd->subtract_refs;
-//	werror("refs==0 for "+r+"\n");
+
 	q = (classes[r] || search(my_identifiers, r));
 	m_delete(classes, r);
 	m_delete(refs, r);
@@ -120,12 +120,72 @@ class Connection
     }
   }
 
+  void handler_thread()
+  {
+    string data="";
+    int len;
+    array err;
+    array res;
+    while(1)
+    {
+      while(strlen(data) < 8)
+      {
+	data += client->read(4000,1);
+	if(!strlen(data))
+	{
+	  destruct();
+	  return;
+	}
+      }
+      sscanf(data, "%4c%s", len,data);
+      if(strlen(data) < len)
+	data += client->read(len-strlen(data));
+      if(err = catch {
+	mixed val = decode_value(data);
+	if(arrayp(val))
+	  res = ({ 1, master->do_call(this_object(),@val) });
+	else
+	{
+	  handle_cmd( val );
+	  sending+="!";
+	  write_data();
+	  continue;
+	}
+      })
+	res = ({ 0, describe_backtrace(err) });
+      return_res(res);
+    }
+  }
+
+  
+  object thread;
+  void set_threaded(int to)
+  {
+    if(!to && thread)
+      error("Cannot change from threaded operation to non-threaded.\n");
+    if(to)
+#if !efun(thread_create)
+      error("Cannot use threades, there is none in pike\n");
+#else
+    {
+      client->set_nonblocking();
+      client->set_read_callback(0);
+      client->set_write_callback(write_data);
+      client->set_close_callback(0);
+      thread=thread_create(handler_thread);
+    }
+#endif
+    else
+      client->set_nonblocking(got_data, write_data, done_data);
+
+  }
+
+  
   void create(object c, object m)
   {
     master = m;
     refs = master->refs;
     client = c;
-    c->set_nonblocking(got_data, write_data, done_data);
   }
 };
 
@@ -181,8 +241,6 @@ int provide(string what, object caller)
   identifiers[ what ] = caller;
 }
 
-#define error(X) throw(({X, backtrace()}));
-
 mixed do_call(object con, string in, string fun, mixed args)
 {
   mixed me;
@@ -208,10 +266,11 @@ void set_ip_security(function f) { ip_security = f; }
 void set_security(function f)    {  security = f;   }
 
 string pass_key;
-
+int threaded=0;
 int low_got_connection(object c)
 {
   object con;
+  string tmp;
   if(c
      && (!ip_security || ip_security(c->query_address()))
      && (!security || security(c)))
@@ -219,8 +278,13 @@ int low_got_connection(object c)
   else {
     catch(destruct(c));
   }
-  if(pass_key && (c->read(strlen(pass_key)) != pass_key))
+  if(pass_key)
   {
+    int len;
+    c->write("?");
+    sscanf(c->read(4), "%4c", len);
+    
+    werror("Expected "+pass_key+" got "+tmp+"\n");
     connections -= ({ con });
     catch {
       destruct(con);
@@ -228,7 +292,18 @@ int low_got_connection(object c)
     };
     return 0;
   }
+  con->set_threaded(threaded);
   return 1;
+}
+
+void set_threaded(int i)
+{
+  if(threaded != i)
+  {
+    foreach(connections, object c)
+      c->set_threaded(i);
+    threaded=i;
+  }
 }
 
 int num_connections()
@@ -242,8 +317,9 @@ void got_connection(object on)
   object c = on->accept();
   string addr = c->query_address();
   if(low_got_connection(c))
-    c->write("!");
-  else {
+    c->write("=");
+  else
+  {
     werror("Got refused connection from "+addr+"\n");
   }
 }
@@ -253,12 +329,19 @@ string query_address()
   return port->query_address();
 }
 
-void create(string|object host, int|void p, string|void key)
+void create(string|object host, int|string|void p, string|void key)
 {
+  if(stringp(p)) {
+    key = p;
+    p=0;
+  }
   pass_key = key;
   if(objectp(host))
   {
-    low_got_connection(host);
+    if(!low_got_connection(host))
+      werror("Remote host failed authentification test.\n");
+    else
+      host->write("=");
   } else if(host) {
     if(!port->bind(p, got_connection, host))
       error("Failed to bind to port\n");
