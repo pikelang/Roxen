@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.233 2000/06/26 21:04:12 neotron Exp $";
+constant cvs_version = "$Id: http.pike,v 1.234 2000/06/29 19:57:01 neotron Exp $";
 
 #define MAGIC_ERROR
 
@@ -629,7 +629,7 @@ private int parse_got()
       end += last;
       last = 0;
       data = raw[end+4..];
-      s = s[sizeof(line)+2..end-1];
+      s = raw[sizeof(line)+2..end-1];
       // s now contains the unparsed headers.
       break;
 
@@ -664,13 +664,15 @@ private int parse_got()
     }
     end += last;
     data = raw[end+4..];
-    s = s[sizeof(line)+2..end-1];
+    s = raw[sizeof(line)+2..end-1];
   }
   if(method == "PING") {
     my_fd->write("PONG\r\n");
     return 2;
   }
-
+  REQUEST_WERR(sprintf("***** req line: %O", line));
+  REQUEST_WERR(sprintf("***** headers:  %O", data));
+  REQUEST_WERR(sprintf("***** data:     %O", data));
   raw_url    = f;
   time       = _time(1);
   // if(!data) data = "";
