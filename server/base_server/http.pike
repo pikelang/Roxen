@@ -1,5 +1,5 @@
 /* Roxen WWW-server version 1.0.
-string cvs_version = "$Id: http.pike,v 1.16 1998/07/19 17:56:25 mast Exp $";
+string cvs_version = "$Id: http.pike,v 1.17 1998/07/23 22:01:28 js Exp $";
  * http.pike: HTTP convenience functions.
  * inherited by roxenlib, and thus by all files inheriting roxenlib.
  */
@@ -231,7 +231,10 @@ mapping http_redirect( string url, object|void id )
     if(id)
     {
       url = add_pre_state(url, id->prestate);
-      url = id->conf->query("MyWorldLocation") + url[1..1000000];
+      if(id->misc->host)
+	url="http://"+id->misc->host+url;
+      else
+	url = id->conf->query("MyWorldLocation") + url[1..];
     }
   }
 #ifdef HTTP_DEBUG
