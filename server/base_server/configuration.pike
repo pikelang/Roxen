@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.163 1998/10/15 21:27:08 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.164 1998/11/04 05:08:39 mast Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -301,7 +301,7 @@ private mapping (string:string) log_format = ([]);
 private array (object) pri = allocate_pris();
 
 // All enabled modules in this virtual server.
-// The format is "module#copy":([ module_info ])
+// The format is "module":([ module_info ])
 public mapping (string:mapping(string:mixed)) modules = ([]);
 
 // A mapping from objects to module names
@@ -2337,7 +2337,7 @@ object enable_module( string modname )
 
   if(module->copies)
   {
-    if (err = catch(me = module["program"]())) {
+    if (err = catch(me = module["program"](this_object()))) {
       report_error(LOCALE->could_not_clone_module(module->name,
 						  describe_backtrace(err)));
       if (module->copies[id]) {
@@ -2363,7 +2363,7 @@ object enable_module( string modname )
     if(objectp(module->master)) {
       me = module->master;
     } else {
-      if (err = catch(me = module["program"]())) {
+      if (err = catch(me = module["program"](this_object()))) {
 	report_error(LOCALE->could_not_clone_module(module->name,
 						    describe_backtrace(err)));
 	return(0);
