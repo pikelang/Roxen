@@ -13,7 +13,7 @@
  * 
  */
 
-constant cvs_version = "$Id: business.pike,v 1.26 1997/10/15 22:34:01 peter Exp $";
+constant cvs_version = "$Id: business.pike,v 1.27 1997/10/17 18:38:35 hedda Exp $";
 constant thread_safe=0;
 
 #include <module.h>
@@ -36,16 +36,16 @@ mixed *register_module()
        "\n&lt;diagram&gt; (container): \n"
        "Draws different kinds of diagrams. \n"
        "Defines the following attributes: \n"
-       " help         Displays this text.\n"
-       " type=        { sumbars | normsumbars | linechart | barchart | piechart | graph }\n"
-       "              Mandatory!"
-       " background=  Takes the filename of a ppm image is input.\n"
-       " width=       width of diagram-image in pixels. (Will not have any effect below 100.)\n"
-       " height=       height of diagram-image in pixels. (Will not have any effect below 100.)\n"
-       " fontsize=    height if text in pixels.\n"
-       " legendfontsize= height if legend text in pixels. Uses fontsize if not defined\n"
-       " 3D=          Render piecharts on top of a cylinder, \n"
-       "              takes the size in pixels of the cylinder as argument.\n"
+       " help            Displays this text.\n"
+       " type=           { sumbars | normsumbars | linechart | barchart | piechart | graph }\n"
+       "                 Mandatory!"
+       " background=     Takes the filename of a ppm image as input.\n"
+       " width=          width of diagram-image in pixels. (Will not have any effect below 100.)\n"
+       " height=         height of diagram-image in pixels. (Will not have any effect below 100.)\n"
+       " fontsize=       height of text in pixels.\n"
+       " legendfontsize= height of legend text in pixels. Uses fontsize if not defined\n"
+       " 3D=             Render piecharts on top of a cylinder, \n"
+       "                 takes the height in pixels of the cylinder as argument.\n"
        /* " tone         Do nasty stuff to the background.\n"
 	  " Requires dark background to be visable.\n" */
        " You can also use regular &lt;img&gt; arguments. They will be passed\n"
