@@ -12,7 +12,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.127 2000/11/24 16:50:36 per Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.128 2000/12/12 13:52:04 per Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Administration interface RXML tags";
 
@@ -303,7 +303,7 @@ void set_entities(RXML.Context c)
 int upath;
 
 string get_var_form( string s, object var, object mod, object id,
-                     int noset )
+                     int set )
 {
   int view_mode;
 
@@ -323,25 +323,11 @@ string get_var_form( string s, object var, object mod, object id,
       view_mode = 1;
   }
 
-  if( !var->path() )
+  if( !view_mode && set )
   {
-    var->set_path( sprintf( "v%x", upath++ ) );
-    // This is not really nessesary, right? 
-    // So, lets make the form pages shorter....
-    //     string path = "";
-    //     if( mod->my_configuration )
-    //       path = (mod->my_configuration()->name + "/"+
-    //             replace(mod->my_configuration()->otomod[ mod ], "#", "!")+
-    //             "/"+s);
-    //     else if( mod->name )
-    //       path = (mod->name+"/"+s);
-    //     else
-    //       path = s;
-    //     var->set_path( sprintf("%x", Gmp.mpz(path, 256 ) ) );
-  }
-  if( !view_mode && !noset )
     var->set_from_form( id );
-
+    return 0;
+  }
   string pre = var->get_warnings();
 
   if( pre )
@@ -357,7 +343,7 @@ string get_var_form( string s, object var, object mod, object id,
   // changed the value of another variable in such a way that this variable
   // is no longer visible.
   //
-  // Thus, we have to do the work above even if the variable will not
+  // Thus, we have to do all that  work above even if the variable will not
   // be visible
   if( !var->check_visibility( id,
                               config_setting2("more_mode"),
@@ -385,21 +371,33 @@ mapping get_variable_map( string s, object mod, object id, int noset )
   if( !mod ) return ([]);
   object var = mod->getvar( s );
 
-  return 
-  ([
-    "sname":s,
-    "rname": (string)var->name(),
-    "id":var->_id,
-    "changed":!var->is_defaulted(),
-    "cid":var->_id + var->is_defaulted()*10000000000,
-    "cname":var->is_defaulted()+((var->name()/":")[-1]),
-    "doc":  (config_setting2( "docs" )?(string)var->doc():""),
-    "name": (var->name()/":")[-1],
-    "value":var->query(),
-    "type": var->type,
-    "type_hint":(config_setting2( "docs" )?(var->type_hint( )||""):""),
-    "form": get_var_form( s, var, mod, id, noset ),
-  ]);
+  if( !noset )
+  {
+    get_var_form( s, var, mod, id, 1 );
+    return ([]);
+  }
+
+  mapping res = ([ "sname":s]);
+
+  
+  if( res->form = get_var_form( s, var, mod, id, 0 ) )
+  {
+    // FIXME: Do lazy evaluation of all this. It's rather likely that
+    // the variable will be filtered away in the calling function.
+    //
+    // Perhaps add caching as well (section -> visible variables)
+    // That would invite problems, though.
+    res->rname = (string)var->name();
+    res->id = var->_id;
+    res->changed = !var->is_defaulted();
+    res->cid = res->changed*10000000+res->id;
+    res->name = (res->rname/":")[-1];
+    res->cname = (!res->changed)+res->name;
+    res->doc = config_setting2("docs")?(string)var->doc():"";
+    res->value = var->query();
+    res->type = var->type;
+  }
+  return res;
 }
 
 object get_conf( object mod )

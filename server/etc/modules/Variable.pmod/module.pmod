@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.42 2000/12/08 08:13:02 nilsson Exp $
+// $Id: module.pmod,v 1.43 2000/12/12 13:50:40 per Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -36,7 +36,7 @@ class Variable
   // used for indexing the mappings.
 
   static mixed _initial; // default value
-  static string _path;   // used for forms
+  static string _path = sprintf("v%x",_id);   // used for forms
   static LocaleString  __name, __doc;
 
   void destroy()

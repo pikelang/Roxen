@@ -177,6 +177,7 @@
 <html><head>
 <title>&roxen.version; <translate id="204">Administration Interface</translate><eval>&_.title:none;</eval></title>
 </head>
+<gauge variable='var.time-spent' resultonly='yes'>
 <nooutput>
   <eval><insert file="/standard/themes/&usr.theme;/theme" nocache="1" /></eval>
   <define preparse="1" variable="var.leftimage"><img src="&usr.left-image;" /></define>
@@ -185,7 +186,9 @@
   <define preparse="1" name="gbutton-frame-image">&usr.gbutton-frame-image;</define>
   <define name="font" preparse="1">&usr.font;</define>
   <expire-time now="1"/>
+<gauge variable='var.time-parse-spent' resultonly='yes'>
   <contents/>
+</gauge>
 </nooutput>
   <body ::="&usr.body-args:none;">
       <table width="100%" cellpadding="0" cellspacing="0" border="0"
@@ -237,9 +240,17 @@
      <roxen-automatic-charset-variable/>
      &var.content:none;
    </form>
+</gauge>
     <div align="right">
-    <b><font size="-1">&roxen.version; / &roxen.pike-version;</font></b>
-    </div>
+     <font size="-1"><b>&roxen.version; / &roxen.pike-version;</b><br />
+<set variable=var.time-ms expr='&var.time-spent; * 1000'/>
+Total render time: <sprintf format='%d'>&var.time-ms;</sprintf>ms <br />
+<set variable=var.time-ms expr='&var.time-parse-spent; * 1000'/>
+Content file: <sprintf format='%d'>&var.time-ms;</sprintf>ms <br />
+
+
+</font>    
+     </div>
   </body>
 </html>
 </define>
