@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.161 2004/03/23 14:40:18 mast Exp $
+// $Id: module.pike,v 1.162 2004/03/23 16:46:50 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -267,13 +267,13 @@ Stat stat_file(string f, RequestID id){}
 array(string) find_dir(string f, RequestID id){}
 mapping(string:Stat) find_dir_stat(string f, RequestID id)
 {
-  TRACE_ENTER("find_dir_stat(): \""+f+"\"", 0);
+  SIMPLE_TRACE_ENTER(this, "find_dir_stat(): %O", f);
 
   array(string) files = find_dir(f, id);
   mapping(string:Stat) res = ([]);
 
   foreach(files || ({}), string fname) {
-    TRACE_ENTER("stat()'ing "+ f + "/" + fname, 0);
+    SIMPLE_TRACE_ENTER(this, "stat()'ing %O", f + "/" + fname);
     Stat st = stat_file(replace(f + "/" + fname, "//", "/"), id);
     if (st) {
       res[fname] = st;
@@ -298,10 +298,17 @@ mapping(string:Stat) find_dir_stat(string f, RequestID id)
 //!   Otherwise returns a @[PropertySet] object.
 PropertySet|mapping(string:mixed) query_properties(string path, RequestID id)
 {
+  SIMPLE_TRACE_ENTER (this, "Querying properties on %O", path);
   Stat st = stat_file(path, id);
 
-  if (!st) return 0;
-  return PropertySet(path, id, st);
+  if (!st) {
+    SIMPLE_TRACE_LEAVE ("No such file or dir");
+    return 0;
+  }
+
+  PropertySet res = PropertySet(path, st, id);
+  SIMPLE_TRACE_LEAVE ("");
+  return res;
 }
 
 //! Returns the value of the specified property, or an error code
@@ -334,32 +341,51 @@ string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
 void recurse_find_properties(string path, string mode,
 			     int depth, MultiStatus result,
 			     RequestID id,
-			     multiset(string)|void filt,
-			     void|Stat st)
+			     multiset(string)|void filt)
 {
+  SIMPLE_TRACE_ENTER (this, "%s for %O, depth %d",
+		      mode == "DAV:propname" ? "Listing property names" :
+		      mode == "DAV:allprop" ? "Retrieving all properties" :
+		      mode == "DAV:prop" ? "Retrieving specific properties" :
+		      "Finding properties with mode " + mode,
+		      path, depth);
   mapping(string:mixed)|PropertySet properties = query_properties(path, id);
 
-  if (!properties) return;	// Path not found.
-
-  mapping(string:mixed) ret = mappingp (properties) ?
-    properties : properties->find_properties(mode, result, filt);
-
-  if (ret) {
-    result->add_response(path, XMLStatusNode(ret->error, ret->rettext));
-    if (ret->rettext) {
-      Parser.XML.Tree.ElementNode descr =
-	Parser.XML.Tree.ElementNode ("DAV:responsedescription", ([]));
-      descr->add_child (Parser.XML.Tree.TextNode (ret->rettext));
-      result->add_response (path, descr);
-    }
+  if (!properties) {
+    SIMPLE_TRACE_LEAVE ("No such file or dir");
     return;
   }
-  if ((depth <= 0) || !st->isdir) return;
-  depth--;
-  foreach(find_dir(path, id) || ({}), string filename) {
-    recurse_find_properties(combine_path(path, filename), mode, depth,
-			    result, id, filt);
+
+  {
+    mapping(string:mixed) ret = mappingp (properties) ?
+      properties : properties->find_properties(mode, result, filt);
+
+    if (ret) {
+      result->add_response(path, XMLStatusNode(ret->error, ret->rettext));
+      if (ret->rettext) {
+	Parser.XML.Tree.ElementNode descr =
+	  Parser.XML.Tree.ElementNode ("DAV:responsedescription", ([]));
+	descr->add_child (Parser.XML.Tree.TextNode (ret->rettext));
+	result->add_response (path, descr);
+      }
+      SIMPLE_TRACE_LEAVE ("Got status %d: %O", ret->error, ret->rettext);
+      return;
+    }
   }
+
+  if (properties->st->isdir) {
+    if (depth <= 0) {
+      SIMPLE_TRACE_LEAVE ("Not recursing due to depth limit");
+      return;
+    }
+    depth--;
+    foreach(find_dir(path, id) || ({}), string filename) {
+      recurse_find_properties(combine_path(path, filename), mode, depth,
+			      result, id, filt);
+    }
+  }
+
+  SIMPLE_TRACE_LEAVE ("");
   return;
 }
 
@@ -367,14 +393,26 @@ mapping(string:mixed) patch_properties(string path,
 				       array(PatchPropertyCommand) instructions,
 				       MultiStatus result, RequestID id)
 {
+  SIMPLE_TRACE_ENTER (this, "Patching properties for %O", path);
   mapping(string:mixed)|PropertySet properties = query_properties(path, id);
 
-  if (!properties) return 0;	// Path not found.
-  if (mappingp (properties)) return properties;
+  if (!properties) {
+    SIMPLE_TRACE_LEAVE ("No such file or dir");
+    return 0;
+  }
+  if (mappingp (properties)) {
+    SIMPLE_TRACE_LEAVE ("Got error %d from query_properties: %O",
+			properties->error, properties->rettext);
+    return properties;
+  }
 
   mapping(string:mixed) errcode = properties->start();
 
-  if (errcode) return errcode;
+  if (errcode) {
+    SIMPLE_TRACE_LEAVE ("Got error %d from PropertySet.start: %O",
+			errcode->error, errcode->rettext);
+    return errcode;
+  }
 
   array(mapping(string:mixed)) results;
 
@@ -416,6 +454,7 @@ mapping(string:mixed) patch_properties(string path,
     }
   }
 
+  SIMPLE_TRACE_LEAVE ("");
   return 0;
 }
 
