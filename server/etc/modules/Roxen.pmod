@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.104 2001/07/21 07:13:42 mast Exp $
+// $Id: Roxen.pmod,v 1.105 2001/07/21 09:28:40 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -322,9 +322,14 @@ string add_pre_state( string url, multiset state )
     error("URL needed for add_pre_state()\n");
   if(!state || !sizeof(state))
     return url;
+  string base;
+  if (sscanf (url, "%s://%[^/]%s", base, string host, url) == 3)
+    base += "://" + host;
+  else
+    base = "";
   if(strlen(url)>5 && (url[1] == '(' || url[1] == '<'))
-    return url;
-  return "/(" + sort(indices(state)) * "," + ")" + url ;
+    return base + url;
+  return base + "/(" + sort(indices(state)) * "," + ")" + url ;
 }
 
 mapping http_redirect( string url, RequestID|void id, multiset|void prestates )
@@ -343,26 +348,11 @@ mapping http_redirect( string url, RequestID|void id, multiset|void prestates )
   if(!has_value(url, "://") && url[0]!='/')
     url = fix_relative(url, id);
 
-  // Add protocol and domain to local absolute URLs.
+  // Add protocol and host to local absolute URLs.
   if(url[0]=='/') {
     if(id) {
-      if( id->misc->site_prefix_path )
-	url = replace( [string]id->misc->site_prefix_path + url, "//", "/" );
-      url = add_pre_state(url, prestates || id->prestate);
-      if(id->misc->host) {
-	array(string) h;
-	HTTP_WERR(sprintf("(REDIR) id->port_obj:%O", id->port_obj));
-	string prot = id->port_obj->name + "://";
-	string p = ":" + id->port_obj->default_port;
-
-	h = [string]id->misc->host / p  - ({""});
-	if(sizeof(h) == 1)
-	  // Remove redundant port number.
-	  url=prot+h[0]+url;
-	else
-	  url=prot+[string]id->misc->host+url;
-      } else
-	url = [string]id->conf->query("MyWorldLocation") + url[1..];
+      url = id->url_base();
+      if (!prestates) prestates = id->prestate;
     }
     else {
       // Ok, no domain present in the URL and no ID object given.
@@ -370,12 +360,9 @@ mapping http_redirect( string url, RequestID|void id, multiset|void prestates )
       // UA can handle the redirect it is nicer no to.
     }
   }
-  // Add prestates to absolute URLs, if provided.
-  else if(prestates && sizeof(prestates)) {
-    string prot, host, path;
-    if(sscanf(url, "%s://%s/%s", prot, host, path)==3)
-      url = prot + "://" + host + add_pre_state("/"+path, prestates);
-  }
+
+  if(prestates && sizeof(prestates))
+    url = add_pre_state (url, prestates);
 
   HTTP_WERR("Redirect -> "+http_encode_string(url));
   return http_low_answer( 302, "")
@@ -2693,16 +2680,9 @@ class ScopeRoxen {
        CACHE(c->id,1);
        return ENCODE_RXML_INT(time(1),  type);
      case "server":
-       if( c->id->misc->host )
-         return ENCODE_RXML_TEXT(c->id->port_obj->name+"://"+c->id->misc->host+"/", type);
-       return ENCODE_RXML_TEXT(c->id->conf->query("MyWorldLocation"), type);
+       return ENCODE_RXML_TEXT (c->id->url_base(), type);
      case "domain":
-       if( c->id->misc->host )
-         return ENCODE_RXML_TEXT((c->id->misc->host/":")[0], type);
-       string tmp=c->id->conf->query("MyWorldLocation");
-       sscanf(tmp, "%*s//%s", tmp);
-       sscanf(tmp, "%s:", tmp);
-       sscanf(tmp, "%s/", tmp);
+       sscanf(c->id->url_base(), "%*s://%[^:/]", string tmp);
        return ENCODE_RXML_TEXT(tmp, type);
      case "locale":
        NOCACHE(c->id);
@@ -3170,7 +3150,14 @@ void add_cache_callback( RequestID id,function(RequestID,object:int) callback )
   id->misc->_cachecallbacks |= ({ callback });
 }
 
-string get_server_url(Configuration c) 
+string get_server_url(Configuration c)
+//! Returns an URL that the given configuration answers on.
+//!
+//! @note
+//! If there is a @[RequestID] object available, you probably want to
+//! call @[RequestID.url_base] in it instead, since that function also
+//! takes into account information sent by the client and the port the
+//! request came from. (It's often faster too.)
 {
   string url=c->query("MyWorldLocation");
   if(stringp(url) && sizeof(url)) return url;
