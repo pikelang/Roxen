@@ -1,4 +1,4 @@
-/* $Id: ssl3.pike,v 1.36 1998/06/22 23:36:11 grubba Exp $
+/* $Id: ssl3.pike,v 1.37 1998/07/22 19:07:16 grubba Exp $
  *
  * Copyright © 1996-1998, Idonex AB
  */
@@ -464,7 +464,17 @@ void handle_request( )
       to_send->file->set_nonblocking(got_data_to_send, 0, no_data_to_send);
     }
   } else {
-    my_fd->set_nonblocking(0, write_more, end);
+    if (my_fd->is_closed) {
+#ifdef SSL3_CLOSE_DEBUG
+      report_error(sprintf("SSL3: my_fd was closed from\n"
+			   "%s\n",
+			   describe_backtrace(my_fd->is_closed)));
+#else
+      report_error("SSL3: my_fd has been closed early.\n");
+#endif /* SSL3_CLOSE_DEBUG */
+    } else {
+      my_fd->set_nonblocking(0, write_more, end);
+    }
   }
 
   if(thiso && conf) conf->log(file, thiso);
@@ -625,6 +635,8 @@ class roxen_sslfile {
 
   constant no_destruct=1; /* Kludge to avoid http.pike destructing us */
 
+  mixed is_closed;  /* Used for checking if the conection has been closed. */
+
 #if 0
   int leave_me_alone; /* If this is set, don't let
 		       * the ssl-code shut down the connection. */
@@ -639,6 +651,19 @@ class roxen_sslfile {
       ssl::die(status);
   }
 #endif
+
+  int close(string|void how)
+  {
+    if (how)
+      ssl::close(how);
+    else
+      ssl:close();
+#ifdef SSL3_CLOSE_DEBUG
+    is_closed = backtrace();
+#else
+    is_closed = 1;
+#endif /* SS3_CLOSE_DEBUG */
+  }
   
   void create(object f, object ctx, object id)
   {
