@@ -1,4 +1,4 @@
-# $Id: extensions,v 1.30 1998/03/05 19:00:23 grubba Exp $
+# $Id: extensions,v 1.31 1998/06/24 19:07:59 grubba Exp $
 # name="Extension database";
 # doc="The database used to map from extension to mime-type (example: *.gif to image/gif)";
 #
@@ -23,6 +23,9 @@ ram	audio/x-pn-realaudio
 rpm 	audio/x-pn-realaudio-plugin
 sid	audio/x-psid
 snd	audio/basic
+vqf     audio/x-twinvq
+vqe     audio/x-twinvq-plugin
+vql     audio/x-twinvq
 vox     audio/voxware 
 wav	audio/x-wav
 
