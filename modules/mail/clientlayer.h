@@ -19,6 +19,7 @@ class Mail
   void clear_flag(string name);
   mixed set(string name, mixed to);
   mixed get(string name);
+  void change( MIME.Message to );
 }
 
 class Mailbox
@@ -48,6 +49,7 @@ class User
   mixed set( string name, mixed to );
   mixed get( string name );
   Mailbox get_or_create_mailbox( string name );
+  Mailbox get_mailbox( string name );
   Mailbox get_incoming();
   Mailbox get_drafts();
 }

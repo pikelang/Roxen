@@ -1,5 +1,5 @@
 /*
- * $Id: clientlayer.pike,v 1.17 1998/09/18 14:08:10 per Exp $
+ * $Id: clientlayer.pike,v 1.18 1998/09/20 00:50:06 per Exp $
  *
  * A module for Roxen AutoMail, which provides functions for
  * clients.
@@ -10,7 +10,7 @@
 #include <module.h>
 inherit "module" : module;
 
-constant cvs_version="$Id: clientlayer.pike,v 1.17 1998/09/18 14:08:10 per Exp $";
+constant cvs_version="$Id: clientlayer.pike,v 1.18 1998/09/20 00:50:06 per Exp $";
 constant thread_safe=1;
 
 
@@ -163,7 +163,7 @@ void delete_body(string body_id)
   rm(query("maildir")+"/"+hash_body_id(body_id)+"/"+body_id);
 }
 
-object(Stdio.File) new_body( string body_id )
+Stdio.File new_body( string body_id )
 {
   string f = query("maildir")+"/"+hash_body_id(body_id)+"/"+body_id;
   mkdirhier(f);
@@ -245,7 +245,7 @@ class Mail
   object user;
   object mailbox;
 
-  static mapping _headers;
+  mapping _headers;
   static multiset _flags;
 
   void modify()
@@ -253,6 +253,28 @@ class Mail
     if(mailbox)
       mailbox->modify();
     ::modify();
+  }
+
+  mixed change( MIME.Message to )
+  {
+    new_body( headers()->body_id )->write( (string)to );
+    squery("update messages set sender='%s', "
+	   "subject='%s', headers='%s' WHERE id=%s",
+	   sql_quote(to->headers->from||""),
+	   sql_quote(to->headers->subject||""),
+	   sql_quote(encode_headers(filter_headers(to->headers))),
+	   message_id);
+    
+    foreach(user->mailboxes(), object m )
+    {
+      foreach(m->mail(), object q)
+	if(q->message_id == message_id)
+	{
+	  q->_headers = 0;
+	  q->_dh = 0;
+	  q->modify();
+	}
+    }
   }
 
   mixed get(string var)
@@ -570,11 +592,17 @@ class User
     return get_or_create_mailbox( "drafts" );
   }
 
-  Mailbox get_or_create_mailbox( string name )
+  Mailbox get_mailbox( string name )
   {
     foreach(mailboxes(), Mailbox m )
       if( lower_case(m->query_name()) == lower_case(name) ) 
 	return m;
+  }
+
+  Mailbox get_or_create_mailbox( string name )
+  {
+    if(Mailbox m = get_mailbox(name))
+      return m;
     return create_mailbox( name );
   }
 
