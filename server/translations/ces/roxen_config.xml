@@ -54,9 +54,8 @@
 </str>
 
 <str id="3">
-<new/>
 <o>sec</o>
-<t></t>
+<t>sekund</t>
 </str>
 
 <str id="4">
@@ -65,9 +64,8 @@
 </str>
 
 <str id="6">
-<new/>
 <o>min</o>
-<t></t>
+<t>minut</t>
 </str>
 
 <str id="7">
@@ -81,9 +79,8 @@
 </str>
 
 <str id="11">
-<new/>
 <o>Reloaded %s.</o>
-<t></t>
+<t>Restartován %s.</t>
 </str>
 
 <str id="12">
@@ -238,9 +235,8 @@ $user_id       -- A unique user ID, if cookies are supported,
 </str>
 
 <str id="38">
-<new/>
 <o>URLs</o>
-<t></t>
+<t>URL</t>
 </str>
 
 <str id="39">
@@ -250,15 +246,13 @@ $user_id       -- A unique user ID, if cookies are supported,
 </str>
 
 <str id="40">
-<new/>
 <o>Internal module resource mountpoint</o>
-<t></t>
+<t>Interní pøípojný bod pro zdroje modulu</t>
 </str>
 
 <str id="41">
-<new/>
 <o>Some modules may want to create links to internal resources. This setting configures an internally handled location that can be used for such purposes.  Simply select a location that you are not likely to use for regular resources.</o>
-<t></t>
+<t>Nìkteré moduly mù¾ou potøebovat vytvoøit linky k interním zdrojùm. Toto nastavení definuje internì øízenou oblast, která mù¾e být pou¾ita pro tyto úèely. Zvolte oblast, kterou nejpravdìpodobnìji nepou¾ijete jinde.</t>
 </str>
 
 <str id="42">
@@ -369,21 +363,18 @@ $user_id       -- A unique user ID, if cookies are supported,
 </str>
 
 <str id="60">
-<new/>
 <o>Welcome text</o>
-<t></t>
+<t>Uvítací zpráva.</t>
 </str>
 
 <str id="61">
-<new/>
 <o>The text shown to the user on connect</o>
-<t></t>
+<t>Tato zpráva bude u¾ivateli zobrazena pøi pøipojení</t>
 </str>
 
 <str id="62">
-<new/>
 <o>User session limit</o>
-<t></t>
+<t>Omezení u¾ivatelských sezení</t>
 </str>
 
 <str id="63">
@@ -397,9 +388,8 @@ $user_id       -- A unique user ID, if cookies are supported,
 </str>
 
 <str id="65">
-<new/>
 <o>If yes, non-anonymous users can connect</o>
-<t></t>
+<t>Pøi povolení je povoleno pøipojení neanonymních u¾ivatelù</t>
 </str>
 
 <str id="66">
@@ -419,9 +409,8 @@ $user_id       -- A unique user ID, if cookies are supported,
 </str>
 
 <str id="69">
-<new/>
 <o>If yes, anonymous users is allowed to connect.</o>
-<t></t>
+<t>Pøi povolení je umo¾nìn anonymní pøístup.</t>
 </str>
 
 <str id="70">
@@ -438,7 +427,7 @@ $user_id       -- A unique user ID, if cookies are supported,
 
 <str id="72">
 <o>Show internal errors</o>
-<t>Ukozovat interní chyby</t>
+<t>Ukazovat interní chyby</t>
 </str>
 
 <str id="73">
@@ -515,33 +504,28 @@ $user_id       -- A unique user ID, if cookies are supported,
 </str>
 
 <str id="86">
-<new/>
 <o>SSL certificate file</o>
-<t></t>
+<t>Soubor certifikátu SSL</t>
 </str>
 
 <str id="87">
-<new/>
 <o>The SSL certificate file to use. The path is relative to %s</o>
-<t></t>
+<t>Jméno souboru SSL certifikátu. Cesta je relativní k %s</t>
 </str>
 
 <str id="88">
-<new/>
 <o>SSL key file</o>
-<t></t>
+<t>Soubor klíèe SSL</t>
 </str>
 
 <str id="89">
-<new/>
 <o>The SSL key file to use. The path is relative to %s, you do not have to specify a key file, leave this field empty to use the certificate file only</o>
-<t></t>
+<t>Jméno souboru SSL klíèe. Cesta je relativní k %s. Tato volba je nepovinná.</t>
 </str>
 
 <str id="90">
-<new/>
 <o>Logging: Log entire file length in restored connections</o>
-<t></t>
+<t>®urnálování: Ulo¾ celou délku souboru pro znova navázaná spojení</t>
 </str>
 
 <str id="91">
@@ -725,9 +709,8 @@ $user_id       -- A unique user ID, if cookies are supported,
 </str>
 
 <str id="124">
-<new/>
 <o>Identify, Use default identification string</o>
-<t></t>
+<t>Identifikace. Pou¾ij implicitní identifikaèní øetìzec.</t>
 </str>
 
 <str id="125">

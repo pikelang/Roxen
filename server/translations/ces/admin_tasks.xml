@@ -30,9 +30,8 @@
 </str>
 
 <str id="2">
-<new/>
 <o>Show some information about how pike is using the memory it has allocated. Mostly useful for developers.</o>
-<t></t>
+<t>Uka¾ informaci o tom, jak Pike vyu¾ívá pamì». U¾iteèné pro vývojáøe.</t>
 </str>
 
 <str id="3">
@@ -56,9 +55,8 @@
 </str>
 
 <str id="7">
-<new/>
 <o>Show information about which features and modules are available in the Pike this Roxen is using.</o>
-<t></t>
+<t>Uka¾ informaci o vlastnostech a modulech, které jsou dostupné v Pike.</t>
 </str>
 
 <str id="238">
@@ -232,15 +230,13 @@
 </str>
 
 <str id="27">
-<new/>
 <o>Resolve path...</o>
-<t></t>
+<t>Dekóduj cestu ...</t>
 </str>
 
 <str id="28">
-<new/>
 <o>Check which modules handles the path you enter in the form</o>
-<t></t>
+<t>Otestuj, které moduly budou provádìny pro dané URL</t>
 </str>
 
 <str id="29">
@@ -358,9 +354,8 @@
 </str>
 
 <str id="230">
-<new/>
 <o>SSL</o>
-<t></t>
+<t>SSL</t>
 </str>
 
 <str id="231">
@@ -369,15 +364,13 @@
 </str>
 
 <str id="49">
-<new/>
 <o>Current FTP sessions</o>
-<t></t>
+<t>Aktuální FTP relace</t>
 </str>
 
 <str id="50">
-<new/>
 <o>List all active FTP sessions and what files they are currently transferring.</o>
-<t></t>
+<t>Seznam v¹ech aktivních FTP relací a pøená¹ených souborù.</t>
 </str>
 
 <str id="51">
@@ -413,9 +406,8 @@
 </str>
 
 <str id="57">
-<new/>
 <o>There are currently no active FTP sessions.</o>
-<t></t>
+<t>®ádná FTP relace není aktivní.</t>
 </str>
 
 <str id="58">
@@ -885,63 +877,53 @@ Although most browsers will accept 8 bit ISO 8859-1 characters in these fields, 
 </str>
 
 <str id="42">
-<new/>
 <o>Indeed</o>
-<t></t>
+<t>Souhlasím</t>
 </str>
 
 <str id="43">
-<new/>
 <o>1 month</o>
-<t></t>
+<t>1 mìsíc</t>
 </str>
 
 <str id="44">
-<new/>
 <o>%d months</o>
-<t></t>
+<t>%d mìsícù</t>
 </str>
 
 <str id="45">
-<new/>
 <o>%d days</o>
-<t></t>
+<t>%d dní</t>
 </str>
 
 <str id="46">
-<new/>
 <o>Change Roxen version</o>
-<t></t>
+<t>Zmìnit verzi</t>
 </str>
 
 <str id="47">
-<new/>
 <o>Changing roxen version</o>
-<t></t>
+<t>Mìním verzi</t>
 </str>
 
 <str id="48">
-<new/>
 <o>Version</o>
-<t></t>
+<t>Verze</t>
 </str>
 
 <str id="85">
-<new/>
 <o>Release date</o>
-<t></t>
+<t>Datum vydání</t>
 </str>
 
 <str id="86">
-<new/>
 <o>Age</o>
-<t></t>
+<t>Vìk</t>
 </str>
 
 <str id="136">
-<new/>
 <o>Directory</o>
-<t></t>
+<t>Adresáø</t>
 </str>
 
 <str id="137">
@@ -951,7 +933,6 @@ Although most browsers will accept 8 bit ISO 8859-1 characters in these fields, 
 </str>
 
 <str id="138">
-<new/>
 <o>Change version</o>
-<t></t>
+<t>Zmìò verzi</t>
 </str>
