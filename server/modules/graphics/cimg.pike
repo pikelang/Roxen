@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.30 2000/09/19 14:47:05 per Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.31 2000/09/19 21:47:20 kuntri Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -69,36 +69,35 @@ tag is to insert image-URI's into various places, e.g. a submit-box.
 </ex>
 </attr>",
 
-"emit#cimg":({ #"<desc plugin><short>
-
- </short>
-
+"emit#cimg":({ #"<desc plugin><short hide>
+ Entitybased version of &lt;cimg&gt;</short>Entitybased version of
+ <tag>cimg</tag>. Takes the same attributes as <tag>cimg</tag>.
 </desc>",
 
 ([
-
 "&_type;":#"<desc ent>
-
+ Returns the image's content-type.
 </desc>",
 
 "&_src;":#"<desc ent>
-
+ Returns the path to the indata file.
 </desc>",
 
 "&_file-size;":#"<desc ent>
-
+ Returns the image's file size.
 </desc>",
 
 "&_xsize;":#"<desc ent>
-
+ Returns the width of the image.
 </desc>",
 
 "&_ysize;":#"<desc ent>
-
+ Returns the height of the image.
 </desc>",
 
 "&_data;":#"<desc ent>
-
+ Returns the imagedata given through other sources, like databases
+ through entities.
 </desc>"
 ])
 
