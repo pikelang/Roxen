@@ -169,7 +169,7 @@ int start_program(char **argv)
 #ifdef DEBUG
     fprintf(stderr, "nice level set to %s\n", nice_val);
 #endif
-    nice(atoi(nice_val));
+    nice(atoi(nice_val) - nice(0));
   }
 #endif
 
