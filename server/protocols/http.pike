@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.118 1998/10/18 21:25:32 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.119 1998/10/26 21:24:44 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -975,6 +975,13 @@ string handle_error_file_request(array err, int eid)
   return format_backtrace(bt,eid)+"<hr noshade><pre>"+data+"</pre>";
 }
 
+// Tell the client that it can start sending some more data
+void ready_to_receive()
+{
+  if (clientprot == "HTTP/1.1") {
+    my_fd->write("HTTP/1.1 100 Continue\r\n");
+  }
+}
 
 // Send the result.
 void send_result(mapping|void result)
