@@ -5,7 +5,7 @@
 //
 // Henrik Grubbström 1997-01-12
 
-constant cvs_version="$Id: sqltag.pike,v 1.64 2000/11/13 16:41:43 kuntri Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.65 2000/11/21 12:44:14 mast Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -132,11 +132,14 @@ array|object do_sql_query(mapping args, RequestID id, void|int big_query)
   if (error)
     RXML.run_error("Couldn't connect to SQL server: "+error[0]+"\n");
 
+  // Got a connection now. Any errors below this point ought to be
+  // syntax errors and should be reported with parse_error.
+
   if (error = catch(result = (big_query?con->big_query(args->query):con->query(args->query)))) {
     error = con->error();
     if (error) error = ": " + error;
     error = sprintf("Query failed%s\n", error||".");
-    RXML.run_error(error);
+    RXML.parse_error(error);
   }
 
   args["dbobj"]=con;
