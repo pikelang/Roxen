@@ -1,4 +1,4 @@
-// string cvs_version = "$Id: module_support.pike,v 1.51 2000/01/31 02:11:27 per Exp $";
+// string cvs_version = "$Id: module_support.pike,v 1.52 2000/01/31 03:46:12 per Exp $";
 #include <roxen.h>
 #include <module.h>
 #include <stat.h>
@@ -33,13 +33,16 @@ class ConfigurableWrapper
   int mode;
   function f;
 
-  int check(  int|void more, int|void expert, int|void devel )
+  int check(  int|void more, int|void expert, int|void devel,
+              int|void initial )
   {
     if ((mode & VAR_MORE) && !more)
       return 1;
     if ((mode & VAR_DEVELOPER) && !devel)
       return 1;
     if ((mode & VAR_EXPERT) && !expert)
+      return 1;
+    if (initial && !(mode & VAR_INITIAL))
       return 1;
     return f();
   }
