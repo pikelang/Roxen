@@ -1,4 +1,4 @@
-// $Id: module.h,v 1.25 1999/11/05 07:17:05 per Exp $
+// $Id: module.h,v 1.26 1999/11/06 08:20:07 per Exp $
 #ifndef ROXEN_MODULE_H
 #define ROXEN_MODULE_H
 
@@ -82,9 +82,9 @@
 #define MODULE_LOGGER            (1<<12)
 #define MODULE_FILTER            (1<<13)
 
-
 // A module which can be called from other modules, protocols, scripts etc.
 #define MODULE_PROVIDER		 (1<<15)
+
 // The module implements a protocol.
 #define MODULE_PROTOCOL          (1<<16)
 
@@ -94,21 +94,20 @@
 
 // Flags.
 #define MODULE_SECURITY          (1<<29)
+
 #define MODULE_EXPERIMENTAL      (1<<30)
 
-#define MOD_ALLOW	1
-#define MOD_USER	2
-#define MOD_DENY	3
-#define MOD_PROXY_USER	4
-#define MOD_ACCEPT	5
-#define MOD_ACCEPT_USER	6
+
+// Module level security.
+#define MOD_ALLOW	        1
+#define MOD_USER	        2
+#define MOD_DENY	        3
+#define MOD_PROXY_USER	        4
+#define MOD_ACCEPT	        5
+#define MOD_ACCEPT_USER	        6
 #define MOD_ACCEPT_PROXY_USER	7
 
-#define DEFFONT(X,Y,Z,Q) \
-defvar((X)+"_font", (Y), (Z)+": font", TYPE_FONT, (Q));\
-defvar((X)+"_weight", "normal", (Z)+": weight", TYPE_STRING_LIST, "", ({"light","normal","bold","black"}));\
-defvar((X)+"_slant", "plain", (Z)+": slant", TYPE_STRING_LIST, "", ({"italic","plain"}))
-
+#define DEFFONT(X,Y,Z,Q) 
 
 #define CACHE(seconds) id->misc->cacheable=min(id->misc->cacheable,seconds)
 #define NOCACHE() id->misc->cacheable=0

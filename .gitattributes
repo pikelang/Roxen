@@ -115,7 +115,6 @@ urw_itc_avant_garde-demi-r binary
 /server/config_interface/standard/debug_info.pike foreign_ident
 /server/etc/extensions foreign_ident
 /server/etc/include/config.h foreign_ident
-/server/etc/include/confignode.h foreign_ident
 /server/etc/include/module.h foreign_ident
 /server/etc/include/roxen.h foreign_ident
 /server/etc/include/stat.h foreign_ident

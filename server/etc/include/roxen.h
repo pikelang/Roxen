@@ -1,5 +1,6 @@
-// $Id: roxen.h,v 1.8 1998/11/18 04:54:07 per Exp $
+// $Id: roxen.h,v 1.9 1999/11/06 08:20:07 per Exp $
 #ifndef _ROXEN_H_
+
 #define _ROXEN_H_
 #include <config.h>
 #define HOST_TO_IP 'H'
@@ -19,12 +20,4 @@
 #endif /* IN_ROXEN */
 #endif /* !LOW_LOCALE */
 
-#define CONFIGURATION_FILE_LEVEL 6
-
-#ifdef DEBUG_LEVEL
-#if DEBUG_LEVEL > 7
-#ifndef HOST_NAME_DEBUG
-# define HOST_NAME_DEBUG
-#endif
-#endif
-#endif /* DEBUG_LEVEL is not defined from install */
+#endif  /* _ROXEN_H_ */
