@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.76 2004/03/16 10:53:30 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.77 2004/03/16 12:44:59 grubba Exp $";
 
 class Variable
 {
@@ -1326,18 +1326,13 @@ class RoxenModule
   int(0..1) recurse_delete_files(string path, MultiStatus result, RequestID id);
 }
 
-#if constant(Parser.XML.Tree.XMLNSParser)
-
-// Definition order is irrelevant. Yeah, right.. /mast
-
 class PatchPropertyCommand
 {
   constant command = "";
   string property_name;
-  mapping(string:mixed) execute(RoxenModule.PatchPropertyContext context);
+  mapping(string:mixed) execute(string path, RoxenModule module,
+				RequestID id, PropertySet context);
 }
-
-#endif
 
 class _roxen
 {
