@@ -53,6 +53,7 @@ Stand alone settings (no other settings are based on these):
   left-image           		/internal-roxen-unit
   logo                 		/internal-roxen-roxen
   database-small                /internal-roxen-database_small
+  table-small                   /internal-roxen-table_small
   item-indicator                /internal-roxen-dot
   ---------------------------------------------------------
 
