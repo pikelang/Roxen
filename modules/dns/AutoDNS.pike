@@ -100,7 +100,7 @@ void do_update()
     return;
   }
   string fname = query("DNS File");
-  object data  = AutoSiteDB->big_query("SELECT domain_address FROM domains");
+  object data  = AutoSiteDB->big_query("SELECT rr_owner,rr_type,rr_value FROM domains");
   object file  = Stdio.FILE("/tmp/new_dns_zone", "wt");
   object row;
 
@@ -129,12 +129,18 @@ void do_update()
          " " + ttl + "\n");
 
   while (row = data->fetch_row())
-  { int i;
+  { int i; string dummy;
     file->write("\n;;; Data for subdomain " + row[0] + "\n");
-
-    file->write(row[0] + ".  " + ttl + " IN  A     " + host_ip_no + "\n");
-    for(i = -3; i < strlen(row[0]); ++i) file->write(" ");
-    file->write(ttl + " IN  MX    10 " + row[0] + "\n");
+    if (row[1] == "A")
+    { if (row[2] == "" || row[2] == 0) row[2] = host_ip_no;
+    }
+    else if (row[1] == "MX")
+    { if (row[2] == "" || row[2] == 0) row[2] = "10 " + row[0];
+      else if (sizeof(sscanf("%d %s", row[2], &dummy, &dummy)) < 2)
+      { row[2] = "10 " + row[2];
+      } 
+    }
+    file->write(row[0] + ". " + ttl + " IN " + row[1] + " " + row[2] + "\n");
   }
   file->close();
   dns_update_status = "completed " + ctime(time())[4..];
