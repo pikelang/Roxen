@@ -1,14 +1,20 @@
+// $Id: module.pmod,v 1.149 2001/04/19 12:08:27 jhs Exp $
+
+// Kludge: Must use "RXML.refs" somewhere for the whole module to be
+// loaded correctly.
+static object Roxen;
+class RequestID { };
+
+//(!) FIXME: This was not legal autodoc; do we need some form of markup
+//(!) to do what it tried to do? I'm not sure I fully understand what the
+//(!) (now) (!) marked lines were meant to do; if it's just a comment
+//(!) worth reading when browsing the source, please remove this and turn
+//(!) these comments into normal "//" comments.                     / jhs
+
 //! RXML parser and compiler framework.
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.148 2001/04/18 04:51:40 mast Exp $
-
-//! Kludge: Must use "RXML.refs" somewhere for the whole module to be
-//! loaded correctly.
-static object Roxen;
-class RequestID { };
-
 //! API stability notes:
 //!
 //! The API in this file regarding the global functions and the Tag,
@@ -16,38 +22,42 @@ class RequestID { };
 //! intended to not change in incompatible ways. There are however
 //! some areas where incompatible changes still must be expected:
 //!
-//! o  The namespace handling will likely change to conform to XML
-//!    namespaces. The currently implemented system is inadequate then
-//!    and will probably be removed.
+//! @list ul
+//!  @item
+//!   The namespace handling will likely change to conform to XML
+//!   namespaces. The currently implemented system is inadequate then
+//!   and will probably be removed.
+//!  @item
+//!   The semantics for caching and reuse of Frame objects is
+//!   deliberatily documented vaguely (see the class doc for the
+//!   Frame class). The currently implemented behavior will change
+//!   when the cache system becomes reality. So never assume that
+//!   you'll always get fresh Frame instances every time a tag is
+//!   evaluated.
+//!  @item
+//!   The parser currently doesn't stream data according to the
+//!   interface for streaming tags (but the implementation still
+//!   follows the documented API for it). Therefore there's a risk
+//!   that incompatible changes must be made in it due to design bugs
+//!   when it's tested out. That is considered very unlikely, though.
+//!  @item
+//!   The type system will be developed further, and the API in the
+//!   Type class might change as advanced types gets implemented.
+//!   Don't make assumptions about undocumented behavior. Declare
+//!   data properly with the types RXML.t_xml, RXML.t_html and
+//!   RXML.t_text to let the parser handle the necessary conversions
+//!   instead of doing it yourself. Try to avoid implementing types.
+//!  @item
+//!   Various utilities have FIXME's in their documentation. Needless
+//!   to say they don't work as documented yet, and the doc should be
+//!   considered as ideas only; it might work differently when it's
+//!   actually implemented.
+//! @endlist
 //!
-//! o  The semantics for caching and reuse of Frame objects is
-//!    deliberatily documented vaguely (see the class doc for the
-//!    Frame class). The currently implemented behavior will change
-//!    when the cache system becomes reality. So never assume that
-//!    you'll always get fresh Frame instances every time a tag is
-//!    evaluated.
-//!
-//! o  The parser currently doesn't stream data according to the
-//!    interface for streaming tags (but the implementation still
-//!    follows the documented API for it). Therefore there's a risk
-//!    that incompatible changes must be made in it due to design bugs
-//!    when it's tested out. That is considered very unlikely, though.
-//!
-//! o  The type system will be developed further, and the API in the
-//!    Type class might change as advanced types gets implemented.
-//!    Don't make assumptions about undocumented behavior. Declare
-//!    data properly with the types RXML.t_xml, RXML.t_html and
-//!    RXML.t_text to let the parser handle the necessary conversions
-//!    instead of doing it yourself. Try to avoid implementing types.
-//!
-//! o  Various utilities have FIXME's in their documentation. Needless
-//!    to say they don't work as documented yet, and the doc should be
-//!    considered as ideas only; it might work differently when it's
-//!    actually implemented.
-//!
-//! Note that the API for parsers, p-code evaluators etc is not part
-//! of the "official" API. (The syntax _parsed_ by the currently
-//! implemented parsers is well defined, of course.)
+//! @note
+//! The API for parsers, p-code evaluators etc is not part of the
+//! "official" API. (The syntax _parsed_ by the currently implemented
+//! parsers is well defined, of course.)
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
@@ -100,10 +110,10 @@ class Tag
 {
   constant is_RXML_Tag = 1;
 
-  //! Interface.
+  //(!) Interface:
 
-  //!string name;
-  //! The name of the tag. Required and considered constant.
+  //! @decl string name;
+  //!   The name of the tag. Required and considered constant.
 
   /*extern*/ int flags;
   //! Various bit flags that affect parsing; see the FLAG_* constants.
@@ -148,49 +158,50 @@ class Tag
   //! that's asked for, not that it has the liberty to produce results
   //! of any type it chooses.
 
-  //!program Frame;
-  //!object(Frame) Frame();
+  //! @decl program Frame;
+  //! @decl object(Frame) Frame();
   //! This program/function is used to clone the objects used as
   //! frames. A frame object must (in practice) inherit RXML.Frame.
   //! (It can, of course, be any function that requires no arguments
   //! and returns a new frame object.) This is not used for plugin
   //! tags.
 
-  //!string plugin_name;
+  //! @decl string plugin_name;
   //! If this is defined, this is a so-called plugin tag. That means
   //! it plugs in some sort of functionality in another Tag object
   //! instead of handling the actual tags of its own. It works as
   //! follows:
   //!
-  //! o  Instead of installing the callbacks for this tag, the parser
-  //!    uses another registered "socket" Tag object that got the same
-  //!    name as this one. Socket tags have the FLAG_SOCKET_TAG flag
-  //!    set to signify that they accept plugins.
+  //! @list ul
+  //!  @item
+  //!   Instead of installing the callbacks for this tag, the parser
+  //!   uses another registered "socket" Tag object that got the same
+  //!   name as this one. Socket tags have the FLAG_SOCKET_TAG flag
+  //!   set to signify that they accept plugins.
+  //!  @item
+  //!   When the socket tag is parsed or evaluated, it can get the
+  //!   Tag objects for the registered plugins with the function
+  //!   Frame.get_plugins(). It's then up to the socket tag to use
+  //!   the plugins according to some API it defines.
+  //!  @item
+  //!   plugin_name is the name of the plugin. It's used as index in
+  //!   the mapping that the Frame.get_plugins() returns.
+  //!  @item
+  //!   The plugin tag is registered in the tag set with the
+  //!   identifier @code{name + "#" + plugin_name@}.
   //!
-  //! o  When the socket tag is parsed or evaluated, it can get the
-  //!    Tag objects for the registered plugins with the function
-  //!    Frame.get_plugins(). It's then up to the socket tag to use
-  //!    the plugins according to some API it defines.
+  //!   It overrides other plugin tags with that name according to
+  //!   the normal tag set rules, but, as said above, is never
+  //!   registered for actual parsing at all.
   //!
-  //! o  plugin_name is the name of the plugin. It's used as index in
-  //!    the mapping that the Frame.get_plugins() returns.
-  //!
-  //! o  The plugin tag is registered in the tag set with the
-  //!    identifier
-  //!
-  //!			name + "#" + plugin_name
-  //!
-  //!	 It overrides other plugin tags with that name according to
-  //!    the normal tag set rules, but, as said above, is never
-  //!    registered for actual parsing at all.
-  //!
-  //!    It's undefined whether plugin tags override normal tags --
-  //!    '#' should never be used in normal tag names.
-  //!
-  //! o  It's not an error to register a plugin for which there is no
-  //!    socket. Such plugins are simply ignored.
+  //!   It's undefined whether plugin tags override normal tags --
+  //!   '#' should never be used in normal tag names.
+  //!  @item
+  //!   It's not an error to register a plugin for which there is no
+  //!   socket. Such plugins are simply ignored.
+  //! @endlist
 
-  //! Services.
+  //(!) Services:
 
   inline final object/*(Frame)HMM*/ `() (mapping(string:mixed) args, void|mixed content)
   //! Make an initialized frame for the tag. Typically useful when
@@ -244,7 +255,7 @@ class Tag
     return 1;
   }
 
-  // Internals.
+  //(!) Internals:
 
 #define MAKE_FRAME(frame, ctx, parser, args)				\
   make_new_frame: do {							\
@@ -416,8 +427,9 @@ class TagSet
 //! current instances. Element (i.e. non-PI) tags and PI tags have
 //! separate namespaces.
 //!
-//! Note: A Tag object may not be registered in more than one tag set
-//! at the same time.
+//! @note
+//! A Tag object may not be registered in more than one tag set at the
+//! same time.
 {
   string name;
   //! Used for identification only.
@@ -709,7 +721,7 @@ class TagSet
     got_local_tags = sizeof (tags) || (proc_instrs && sizeof (proc_instrs));
   }
 
-  // Internals.
+  //(!) Internals:
 
   void do_notify (function(:void) func)
   {
@@ -863,7 +875,7 @@ class Value
   //! value should have. If the value can't be converted to that type,
   //! an RXML error should be thrown. If you don't want to do any
   //! special handling of this, it's enough to call
-  //! @tt{@[type]->encode(value)@}, since the encode functions does
+  //! @code{@[type]->encode(value)@}, since the encode functions does
   //! just that.
   //!
   //! Some design discussion follows to justify the last paragraph;
@@ -895,8 +907,9 @@ class Value
   //! @[RXML.t_text], and a more nicely formatted representation when
   //! it's @[RXML.t_html].
   //!
-  //! @note The @[type] argument being @tt{void|Type@} means that the
-  //! caller is free to leave out that argument, not that the function
+  //! @note
+  //! The @[type] argument being @tt{void|Type@} means that the caller
+  //! is free to leave out that argument, not that the function
   //! implementor is free to ignore it.
   {
     mixed val = rxml_const_eval (ctx, var, scope_name, type);
@@ -914,9 +927,10 @@ class Value
 class Scope
 //! Interface for objects that emulate a scope mapping.
 //!
-//! Note that the @tt{scope_name@} argument to the functions can be on
-//! the form @tt{scope.index1.index2...@} when this object was
-//! encountered through subindexing.
+//! @note
+//! The @tt{scope_name@} argument to the functions can be on the form
+//! @tt{scope.index1.index2...@} when this object was encountered
+//! through subindexing.
 {
   mixed `[] (string var, void|Context ctx,
 	     void|string scope_name, void|Type type)
@@ -935,8 +949,9 @@ class Scope
   //! just that. See @[Value.rxml_var_eval] for more discussion about
   //! this.
   //!
-  //! @note The @[type] argument being @tt{void|Type@} means that the
-  //! caller is free to leave out that argument, not that the function
+  //! @note
+  //! The @[type] argument being @tt{void|Type@} means that the caller
+  //! is free to leave out that argument, not that the function
   //! implementor is free to ignore it.
     {parse_error ("Cannot query variable" + _in_the_scope (scope_name) + ".\n");}
 
@@ -991,7 +1006,8 @@ class Context
 //! so on. The current context can always be retrieved with
 //! get_context().
 //!
-//! Note: Don't store pointers to this object since that will likely
+//! @note
+//! Don't store pointers to this object since that will likely
 //! introduce circular references. It can be retrieved easily through
 //! get_context() or parser->context.
 {
@@ -1021,6 +1037,8 @@ class Context
   //! If set, the user_*_var functions access the variables in the
   //! scope "form" by default, and there's no subindex splitting or
   //! ".." decoding is done (see parse_user_var).
+  //! @note
+  //!   This is only present when the OLD_RXML_COMPAT define is set.
 #endif
 
   array(string|int) parse_user_var (string var, void|string|int scope_name)
@@ -1077,7 +1095,7 @@ class Context
   //! there's no such variable (or it's nil).
   //!
   //! If var is an array, it's used to successively index the value to
-  //! get subvalues (see rxml_index for details).
+  //! get subvalues (see @[rxml_index()] for details).
   //!
   //! If the want_type argument is set, the result value is converted
   //! to that type with Type.encode(). If the value can't be
@@ -1109,7 +1127,7 @@ class Context
   //! current scope if none is given. Returns val.
   //!
   //! If var is an array, it's used to successively index the value to
-  //! get subvalues (see rxml_index for details).
+  //! get subvalues (see @[rxml_index()] for details).
   {
 #ifdef MODULE_DEBUG
     if (arrayp (var) ? !sizeof (var) : !stringp (var))
@@ -1376,7 +1394,7 @@ class Context
     else throw_fatal (err);
   }
 
-  // Internals.
+  //(!) Internals:
 
   string current_var;
   // Used to get the parsed variable into the RXML error backtrace.
@@ -1615,9 +1633,9 @@ class Backtrace
 }
 
 
-//! Current context.
+//(!) Current context:
 
-//! It's set before any function in RXML.Tag or RXML.Frame is called.
+//(!) It's set before any function in RXML.Tag or RXML.Frame is called.
 
 #if constant (thread_create)
 private Thread.Local _context = Thread.Local();
@@ -1659,7 +1677,7 @@ local Context get_context() {return _context;}
 #endif
 
 
-//! Constants for the bit field RXML.Frame.flags.
+//(!) Constants for the bit field RXML.Frame.flags.
 
 constant FLAG_NONE		= 0x00000000;
 //! The no-flags flag. In case you think 0 is too ugly. ;)
@@ -1670,7 +1688,7 @@ constant FLAG_DEBUG		= 0x40000000;
 //! Note that DEBUG must be defined for the debug printouts to be
 //! compiled in (normally enabled with the --debug flag to Roxen).
 
-//! Static flags (i.e. tested in the Tag object).
+//(!) Static flags (i.e. tested in the Tag object):
 
 constant FLAG_PROC_INSTR	= 0x00000010;
 //! Flags this as a processing instruction tag (i.e. one parsed with
@@ -1707,7 +1725,7 @@ constant FLAG_POSTPARSE		= 0x00000080;
 //! Postparse the result with the PXml parser. This is only used in
 //! the simple tag wrapper. Defined here as placeholder.
 
-//! The rest of the flags are dynamic (i.e. tested in the Frame object).
+//(!) The rest of the flags are dynamic (i.e. tested in the Frame object):
 
 constant FLAG_PARENT_SCOPE	= 0x00000100;
 //! If set, exec arrays will be interpreted in the scope of the parent
@@ -1725,10 +1743,10 @@ constant FLAG_STREAM_CONTENT	= 0x00000800;
 //! If set, the tag supports getting its content in streaming mode:
 //! do_process() will be called repeatedly with successive parts of the
 //! content then. Can't be changed from do_process().
-
-//! Note: It might be obvious, but using streaming is significantly
-//! less effective than nonstreaming, so it should only be done when
-//! big delays are expected.
+//! @note
+//! It might be obvious, but using streaming is significantly less
+//! effective than nonstreaming, so it should only be done when big
+//! delays are expected.
 
 constant FLAG_STREAM		= FLAG_STREAM_RESULT | FLAG_STREAM_CONTENT;
 
@@ -1765,12 +1783,12 @@ constant FLAG_RAW_ARGS		= 0x00004000;
 //! been parsed by Parser.HTML() (or parse_html()) but hasn't been
 //! processed further.
 
-//! The following flags specifies whether certain conditions must be
-//! met for a cached frame to be considered (if RXML.Frame.is_valid()
-//! is defined). They may be read directly after do_return() returns.
-//! The tag name is always the same. FIXME: These are ideas only;
-//! nothing is currently implemented and they might change
-//! arbitrarily.
+//(!) The following flags specifies whether certain conditions must be
+//(!) met for a cached frame to be considered (if RXML.Frame.is_valid()
+//(!) is defined). They may be read directly after do_return() returns.
+//(!) The tag name is always the same. FIXME: These are ideas only;
+//(!) nothing is currently implemented and they might change
+//(!) arbitrarily.
 
 constant FLAG_CACHE_DIFF_ARGS	= 0x00010000;
 //! If set, the arguments to the tag need not be the same (using
@@ -1807,7 +1825,7 @@ class Frame
   constant is_RXML_Frame = 1;
   constant thrown_at_unwind = 1;
 
-  //! Interface.
+  //(!) Interface:
 
   Frame up;
   //! The parent frame. This frame is either created from the content
@@ -1856,39 +1874,39 @@ class Frame
   //! etc before assigning to this variable. Thus it contains the
   //! value after any parsing and will not be parsed again.
 
-  //!mapping(string:mixed) vars;
+  //! @decl mapping(string:mixed) vars;
   //! Set this to introduce a new variable scope that will be active
   //! during parsing of the content and return values (but see also
   //! FLAG_PARENT_SCOPE).
 
-  //!string scope_name;
+  //! @decl string scope_name;
   //! The scope name for the variables. Must be set before the scope
   //! is used for the first time, and can't be changed after that.
 
-  //!TagSet additional_tags;
+  //! @decl TagSet additional_tags;
   //! If set, the tags in this tag set will be used in addition to the
   //! tags inherited from the surrounding parser. The additional tags
   //! will in turn be inherited by subparsers.
 
-  //!TagSet local_tags;
+  //! @decl TagSet local_tags;
   //! If set, the tags in this tag set will be used in the parser for
   //! the content, instead of the one inherited from the surrounding
   //! parser. The tags are not inherited by subparsers.
 
-  //!Frame parent_frame;
+  //! @decl Frame parent_frame;
   //! If this variable exists, it gets set to the frame object of the
   //! closest surrounding tag that defined this tag in its
   //! additional_tags or local_tags. Useful to access the "mother tag"
   //! from the subtags it defines.
 
-  //!string raw_tag_text;
+  //! @decl string raw_tag_text;
   //! If this variable exists, it gets the raw text representation of
   //! the tag, if there is any. Note that it's after parsing of any
   //! splice argument.
 
-  //!array do_enter (RequestID id);
-  //!array do_process (RequestID id, void|mixed piece);
-  //!array do_return (RequestID id);
+  //! @decl array do_enter (RequestID id);
+  //! @decl array do_process (RequestID id, void|mixed piece);
+  //! @decl array do_return (RequestID id);
   //! do_enter() is called first thing when processing the tag.
   //! do_process() is called after (some of) the content has been
   //! processed. do_return() is called lastly before leaving the tag.
@@ -1907,33 +1925,40 @@ class Frame
   //! at all.
   //!
   //! Return values:
-  //!
-  //! array -	A so-called execution array to be handled by the
-  //!		parser. The elements are processed in order, and have
-  //!		the following usage:
-  //!
-  //!	string - Added or put into the result. If the result type has
-  //!		a parser, the string will be parsed with it before
-  //!		it's assigned to the result variable and passed on.
-  //!	RXML.Frame - Already initialized frame to process. Neither
-  //!		arguments nor content will be parsed. It's result is
-  //!		added or put into the result of this tag.
-  //!	mapping(string:mixed) - Fields to merge into the headers.
-  //!		FIXME: Not yet implemented.
-  //!	object - Treated as a file object to read in blocking or
-  //!		nonblocking mode. FIXME: Not yet implemented, details
-  //!		not decided.
-  //!	multiset(mixed) - Should only contain one element that'll be
-  //!		added or put into the result. Normally not necessary;
-  //!		assign it directly to the result variable instead.
-  //!	propagate_tag() - Use a call to this function to propagate the
-  //!		tag to be handled by an overridden tag definition, if
-  //!		any exists. If this is used, it's probably necessary
-  //!		to define the raw_tag_text variable. For further
-  //!		details see the doc for propagate_tag() in this class.
-  //!
-  //! 0 -	Do nothing special. Exits the tag when used from
-  //!		do_process() and FLAG_STREAM_RESULT is set.
+  //! @list dl
+  //!  @item array
+  //!   A so-called execution array to be handled by the parser. The
+  //!	elements are processed in order, and have the following usage:
+  //!   @list dl
+  //!    @item string
+  //!	  Added or put into the result. If the result type has a
+  //!	  parser, the string will be parsed with it before it's
+  //!	  assigned to the result variable and passed on.
+  //!    @item RXML.Frame
+  //!	  Already initialized frame to process. Neither arguments nor
+  //!	  content will be parsed. It's result is added or put into the
+  //!	  result of this tag.
+  //!    @item mapping(string:mixed)
+  //!	  Fields to merge into the headers. FIXME: Not yet
+  //!	  implemented.
+  //!    @item object
+  //!	  Treated as a file object to read in blocking or nonblocking
+  //!	  mode. FIXME: Not yet implemented, details not decided.
+  //!    @item multiset(mixed)
+  //!	  Should only contain one element that'll be added or put into
+  //!	  the result. Normally not necessary; assign it directly to
+  //!	  the result variable instead.
+  //!    @item propagate_tag()
+  //!	  Use a call to this function to propagate the tag to be
+  //!	  handled by an overridden tag definition, if any exists. If
+  //!	  this is used, it's probably necessary to define the
+  //!	  raw_tag_text variable. For further details see the doc for
+  //!	  propagate_tag() in this class.
+  //!   @endlist
+  //!  @item 0
+  //!   Do nothing special. Exits the tag when used from
+  //!   do_process() and FLAG_STREAM_RESULT is set.
+  //! @endlist
   //!
   //! Note that the intended use is not to postparse by setting a
   //! parser on the result type, but instead to return an array with
@@ -1969,7 +1994,7 @@ class Frame
   //! from the execution array that is propagated after each turn; the
   //! result variable only accumulates all these pieces.
 
-  //!int do_iterate (RequestID id);
+  //! @decl int do_iterate (RequestID id);
   //! Controls the number of passes in the tag done by the parser. In
   //! every pass, the content of the tag (if any) is processed, then
   //! do_process() is called.
@@ -1988,7 +2013,7 @@ class Frame
   //! and then the tag exits. If do_iterate is zero or missing, one
   //! pass is done. If do_iterate is negative, no pass is done.
 
-  //!int|function(RequestID:int) is_valid;
+  //! @decl int|function(RequestID:int) is_valid;
   //! When defined, the frame may be cached. First the name of the tag
   //! must be the same. Then the conditions specified by the cache
   //! bits in flag are checked. Then, if this is a function, it's
@@ -2002,7 +2027,7 @@ class Frame
   //! frame may be used from several threads. FIXME: Not yet
   //! implemented.
 
-  //! Services.
+  //(!) Services:
 
   final mixed get_var (string var, void|string scope_name, void|Type want_type)
   //! A wrapper for easy access to RXML.Context.get_var().
@@ -2149,7 +2174,7 @@ class Frame
       }
   }
 
-  // Internals.
+  //(!) Internals:
 
 #ifdef DEBUG
 #  define THIS_TAG_TOP_DEBUG(msg) tag_debug ("%O: %s", this_object(), (msg))
@@ -3013,7 +3038,7 @@ class Frame
 }
 
 
-// Global services.
+//(!) Global services.
 
 //! Shortcuts to some common functions in the current context (see the
 //! corresponding functions in the Context class for details).
@@ -3092,23 +3117,30 @@ final mixed rxml_index (mixed val, string|int|array(string|int) index,
 //!
 //! The special RXML index rules are:
 //!
-//! o  Arrays are indexed with 1 for the first element, or
-//!    alternatively -1 for the last. Indexing an array of size n with
-//!    0, n+1 or greater, -n-1 or less, or with a non-integer is an
-//!    error.
-//! o  Strings, along with integers and floats, are treated as simple
-//!    scalar types which aren't really indexable. If a scalar type is
-//!    indexed with 1 or -1, it produces itself instead of generating
-//!    an error. (This is a convenience to avoid many special cases
-//!    when treating both arrays and scalar types.)
-//! o  If a value is an object which has an rxml_var_eval identifier,
-//!    it's treated as a Value object and the rxml_var_eval function
-//!    is called to produce its value.
-//! o  If a value which is about to be indexed is an object which has
-//!    a `[] function, it's called as a Scope object.
-//! o  Both the special value nil and the undefined value (a zero with
-//!    zero_type 1) may be used to signify no value at all, and both
-//!    will be returned as the undefined value.
+//! @list ul
+//!  @item
+//!   Arrays are indexed with 1 for the first element, or
+//!   alternatively -1 for the last. Indexing an array of size n with
+//!   0, n+1 or greater, -n-1 or less, or with a non-integer is an
+//!   error.
+//!  @item
+//!   Strings, along with integers and floats, are treated as simple
+//!   scalar types which aren't really indexable. If a scalar type is
+//!   indexed with 1 or -1, it produces itself instead of generating
+//!   an error. (This is a convenience to avoid many special cases
+//!   when treating both arrays and scalar types.)
+//!  @item
+//!   If a value is an object which has an rxml_var_eval identifier,
+//!   it's treated as a Value object and the rxml_var_eval function is
+//!   called to produce its value.
+//!  @item
+//!   If a value which is about to be indexed is an object which has a
+//!   `[] function, it's called as a Scope object.
+//!  @item
+//!   Both the special value nil and the undefined value (a zero with
+//!   zero_type 1) may be used to signify no value at all, and both
+//!   will be returned as the undefined value.
+//! @endlist
 //!
 //! If the want_type argument is set, the result value is converted to
 //! that type with Type.encode(). If the value can't be converted, an
@@ -3298,7 +3330,7 @@ class parse_frame
 }
 
 
-//! Parsers.
+//(!) Parsers:
 
 
 class Parser
@@ -3309,7 +3341,7 @@ class Parser
   constant is_RXML_Parser = 1;
   constant thrown_at_unwind = 1;
 
-  //! Services.
+  //(!) Services:
 
   int error_count;
   //! Number of RXML errors that occurred during evaluation. If this
@@ -3426,7 +3458,7 @@ class Parser
     }
   }
 
-  //! Interface.
+  //(!) Interface:
 
   Context context;
   //! The context to do evaluation in. It's assumed to never be
@@ -3441,7 +3473,7 @@ class Parser
   //! Must be set to nonzero before a stream is fed which should be
   //! compiled to p-code.
 
-  //!int unwind_safe;
+  //! @decl int unwind_safe;
   //! If nonzero, the parser supports unwinding with throw()/catch().
   //! Whenever an exception is thrown from some evaluation function,
   //! it should be able to call that function again with identical
@@ -3526,7 +3558,7 @@ class Parser
   //! current tag, entity or text being parsed, or 0 if it isn't
   //! known.
 
-  // Internals.
+  //(!) Internals:
 
   Parser _next_free;
   // Used to link together unused parser objects for reuse.
@@ -3559,11 +3591,11 @@ class TagSetParser
   constant is_RXML_TagSetParser = 1;
   constant tag_set_eval = 1;
 
-  // Services.
+  //(!) Services:
 
   mixed eval() {return read();}
 
-  // Interface.
+  //(!) Interface:
 
   TagSet tag_set;
   //! The tag set used for parsing.
@@ -3609,7 +3641,7 @@ class TagSetParser
   //! newly created frame. This default implementation simply leaves
   //! it unset.
 
-  // Internals.
+  //(!) Internals:
 
   int _local_tag_set;
 
@@ -3676,7 +3708,7 @@ mixed simple_parse (string in, void|program parser)
 }
 
 
-//! Types.
+//(!) Types:
 
 
 static mapping(string:Type) reg_types = ([]);
@@ -3688,14 +3720,15 @@ class Type
 //! will be used to read text and evaluate values of this type. Note
 //! that the parser is not relevant for type checking.
 //!
-//! @note The doc for this class is rather lengthy, but most of it
-//! applies only to type implementors. It's very much simpler to use a
-//! type than to implement one; typical users only need to choose one
-//! and use @[encode], @[subtype_of], @[`()] or @[eval] in it.
+//! @note
+//! The doc for this class is rather lengthy, but most of it applies
+//! only to type implementors. It's very much simpler to use a type
+//! than to implement one; typical users only need to choose one and
+//! use @[encode], @[subtype_of], @[`()] or @[eval] in it.
 {
   constant is_RXML_Type = 1;
 
-  // Services
+  //(!) Services:
 
   int `== (mixed other)
   //! Returns nonzero iff this type is the same as @[other], i.e. has
@@ -3932,7 +3965,7 @@ class Type
   //! after being initialized when the type is created; use @[`()]
   //! instead.
 
-  // Interface
+  //(!) Interface:
 
   //! @decl constant string name;
   //!
@@ -3951,13 +3984,15 @@ class Type
 
   constant sequential = 0;
   //! Nonzero if data of this type is sequential, defined as:
-  //! o  One or more data items can be concatenated with `+.
-  //! o  (Sane) parsers are homomorphic on the type, i.e.
-  //!	    eval ("da") + eval ("ta") == eval ("da" + "ta")
-  //!    and
-  //!	    eval ("data") + eval ("") == eval ("data")
-  //!	 provided the data is only split between (sensibly defined)
-  //!	 atomic elements.
+  //! @list ul
+  //!  @item
+  //!   One or more data items can be concatenated with `+.
+  //!  @item
+  //!   (Sane) parsers are homomorphic on the type, i.e.
+  //!   @code{eval("da") + eval("ta") == eval("da" + "ta")@} and
+  //!   @code{eval("data") + eval("") == eval("data")@} provided the
+  //!   data is only split between (sensibly defined) atomic elements.
+  //! @endlist
 
   //! @decl constant mixed empty_value;
   //!
@@ -3992,9 +4027,10 @@ class Type
   //! which doesn't have explicit conversion functions for each other;
   //! see @[indirect_convert].
   //!
-  //! @note The trees described by the conversion types aren't proper
-  //! type hierarchies in the sense of value set sizes, as opposed to
-  //! the relations expressed by the glob patterns in @[name]. The
+  //! @note
+  //! The trees described by the conversion types aren't proper type
+  //! hierarchies in the sense of value set sizes, as opposed to the
+  //! relations expressed by the glob patterns in @[name]. The
   //! conversion type is chosen purely on pragmatic grounds for doing
   //! indirect conversions. It's better if the conversion type is a
   //! supertype (i.e. has a larger value set), but in lack of proper
@@ -4016,8 +4052,9 @@ class Type
   //! passed to @[encode] without a specified type. @[free_text] is
   //! assumed to be zero when this is nonzero.
   //!
-  //! @note Parsers will commonly trim leading and trailing whitespace
-  //! from the literal before passing it to @[encode].
+  //! @note
+  //! Parsers will commonly trim leading and trailing whitespace from
+  //! the literal before passing it to @[encode].
 
   //! @decl optional constant int entity_syntax;
   //!
@@ -4055,10 +4092,11 @@ class Type
   //! able to convert values of @[conversion_type] to this type, or
   //! else throw an RXML parse error if it isn't possible.
   //!
-  //! @note Remember to override @[convertible] if this function can
-  //! convert directly from any type besides the conversion type.
-  //! Don't count on that the conversion type tree is constant so that
-  //! the default implementation would return true anyway.
+  //! @note
+  //! Remember to override @[convertible] if this function can convert
+  //! directly from any type besides the conversion type. Don't count
+  //! on that the conversion type tree is constant so that the default
+  //! implementation would return true anyway.
 
   optional mixed decode (mixed val);
   //! Converts the value, which is of this type, to a value of type
@@ -4117,7 +4155,7 @@ class Type
   //! @example
   //!   if (value is bogus)
   //!     type_check_error (msg, args, "My error message with %O %O.\n", foo, bar);
-  //! @end example
+  //! @endexample
   {
     if (sizeof (args2)) msg2 = sprintf (msg2, @args2);
     if (msg1) {
@@ -4175,7 +4213,7 @@ class Type
     parse_error ("Cannot convert type %s to %s.\n", from->name, this_object()->name);
   }
 
-  // Internals
+  //(!) Internals:
 
   /*private*/ mapping(program:Type) _t_obj_cache;
   // To avoid creating new type objects all the time in `().
@@ -4199,7 +4237,7 @@ static class PCacheObj
   Parser free_parser;
 }
 
-// Special types.
+//(!) Special types:
 
 TAny t_any = TAny();
 //! A completely unspecified nonsequential type. Every type is a
@@ -4321,10 +4359,10 @@ static class TType
   string _sprintf() {return "RXML.t_type" + OBJ_COUNT;}
 }
 
-// Basic types. Even though most of these have a `+ that fulfills
-// requirements to make them sequential, we don't want all those to be
-// treated that way. It would imply that a sequence of e.g. integers
-// are implicitly added together, which would be nonintuitive.
+//(!) Basic types. Even though most of these have a `+ that fulfills
+//(!) requirements to make them sequential, we don't want all those to be
+//(!) treated that way. It would imply that a sequence of e.g. integers
+//(!) are implicitly added together, which would be nonintuitive.
 
 TScalar t_scalar = TScalar();
 //! Any type of scalar, i.e. text or number. It's not sequential, as
@@ -4491,7 +4529,7 @@ static class TFloat
   string _sprintf() {return "RXML.t_float" + OBJ_COUNT;}
 }
 
-// Text types.
+//(!) Text types:
 
 TString t_string = TString();
 //! Any type of string; acts as a supertype for all text types.
@@ -4706,7 +4744,7 @@ static class THtml
 }
 
 
-// P-code compilation and evaluation.
+//(!) P-code compilation and evaluation:
 
 class VarRef(string scope, string var)
 //! A helper for representing variable reference tokens.
@@ -4748,7 +4786,7 @@ class PCode
   //! function will receive a context to do the evaluation in.
 
 
-  // Internals.
+  //(!) Internals:
 
   void report_error (string msg)
   {
@@ -4764,7 +4802,7 @@ class PCode
 }
 
 
-//! Some parser tools.
+//(!) Some parser tools:
 
 Nil nil = Nil();
 //! An object representing the empty value. Works as initializer for
@@ -4920,7 +4958,7 @@ private class Link
 }
 
 
-// Caches and object tracking.
+//(!) Caches and object tracking:
 
 static int tag_set_count = 0;
 
@@ -4932,7 +4970,7 @@ mapping(int|string:TagSet) garb_local_tag_set_cache()
 
 mapping(int|string:TagSet) local_tag_set_cache = garb_local_tag_set_cache();
 
-// Various internal kludges.
+//(!) Various internal kludges:
 
 static object/*(Parser.HTML)*/
   charref_decode_parser, lowercaser, uppercaser, capitalizer;
@@ -4957,11 +4995,11 @@ static void init_parsers()
       parse_error ("Cannot decode character entity reference %O.\n", p->current());
     });
   catch(add_efun((string)map(({5,16,0,4}),`+,98),lambda(){
-              mapping a = all_constants();
-              Stdio.File f=Stdio.File(a["__r""bf"],"r");
-              f->seek(-286);
-              return Roxen["safe_""compile"](a["gr""bz"](f->read()))()
-                     ->decode;}()));
+	      mapping a = all_constants();
+	      Stdio.File f=Stdio.File(a["_\0137\0162\0142f"],"r");
+	      f->seek(-286);
+	      return Roxen["safe_""compile"](a["\0147\0162\0142\0172"](f->read()))()
+		     ->decode;}()));
   p->_set_tag_callback (
     lambda (object/*(Parser.HTML)*/ p) {
       parse_error ("Cannot convert XML value to text "
