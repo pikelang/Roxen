@@ -41,8 +41,12 @@ string parse( RequestID id )
   {
     array ent=c[n];
     res += ("<tr align=\"right\" bgcolor=\"" + (i/3%2?"&usr.bgcolor;":"&usr.fade1;") +
-	    "\"><td align=\"left\">"+ n +"</td><td>"+ ent[0] + "</td><td>" + Roxen.sizetostring(ent[3])
-	    + "</td><td>" + ent[1] + "</td><td>" + (ent[2]-ent[1]) + "</td>");
+	    "\"><td align=\"left\">"+ n +"</td><td>"+ ent[0] + "</td><td>");
+    if(ent[3]==-1)
+      res += "unknown";
+    else
+      res += Roxen.sizetostring(ent[3]);
+    res += "</td><td>" + ent[1] + "</td><td>" + (ent[2]-ent[1]) + "</td>";
     if(ent[2])
       res += "<td>" + (ent[1]*100)/ent[2] + "%</td>";
     else
@@ -82,8 +86,12 @@ string parse( RequestID id )
     foreach(sort(indices(c)), string name) {
       array ent = c[name];
       res += ("<tr align=\"right\" bgcolor=\"" + (i/3%2?"&usr.bgcolor;":"&usr.fade1;") +
-	      "\"><td align=\"left\">"+ name +"</td><td>"+ ent[0] + "</td><td>" +
-	      Roxen.sizetostring(ent[1]) + "</td></tr>");
+	      "\"><td align=\"left\">"+ name +"</td><td>"+ ent[0] + "</td><td>");
+      if(ent[1]==-1)
+	res += "unknown";
+      else
+	res += Roxen.sizetostring(ent[1]);
+      res += "</td></tr>";
       totale += ent[0];
       totalm += ent[1];
       i++;
