@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.329 1999/10/06 23:07:36 grubba Exp $
+ * $Id: roxen.pike,v 1.330 1999/10/08 13:49:44 grubba Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.329 1999/10/06 23:07:36 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.330 1999/10/08 13:49:44 grubba Exp $";
 
 object backend_thread;
 object argcache;
@@ -601,6 +601,116 @@ object find_handler(string prot, string ip, int port)
 
 /* Pers */
 
+class fallback_redirect_request {
+  string in = "";
+  string out;
+  string default_prefix;
+  int port;
+  object f;
+
+  void die()
+  {
+#ifdef SSL3_DEBUG
+    roxen_perror(sprintf("SSL3:fallback_redirect_request::die()\n"));
+#endif /* SSL3_DEBUG */
+#if 0
+    /* Close the file, DAMMIT */
+    object dummy = Stdio.File();
+    if (dummy->open("/dev/null", "rw"))
+      dummy->dup2(f);
+#endif    
+    f->close();
+    destruct(f);
+    destruct(this_object());
+  }
+  
+  void write_callback(object id)
+  {
+#ifdef SSL3_DEBUG
+    roxen_perror(sprintf("SSL3:fallback_redirect_request::write_callback()\n"));
+#endif /* SSL3_DEBUG */
+    int written = id->write(out);
+    if (written <= 0)
+      die();
+    out = out[written..];
+    if (!strlen(out))
+      die();
+  }
+
+  void read_callback(object id, string s)
+  {
+#ifdef SSL3_DEBUG
+    roxen_perror(sprintf("SSL3:fallback_redirect_request::read_callback(X, \"%s\")\n", s));
+#endif /* SSL3_DEBUG */
+    in += s;
+    string name;
+    string prefix;
+
+    if (search(in, "\r\n\r\n") >= 0)
+    {
+//      werror(sprintf("request = '%s'\n", in));
+      array(string) lines = in / "\r\n";
+      array(string) req = replace(lines[0], "\t", " ") / " ";
+      if (sizeof(req) < 2)
+      {
+	out = "HTTP/1.0 400 Bad Request\r\n\r\n";
+      }
+      else
+      {
+	if (sizeof(req) == 2)
+	{
+	  name = req[1];
+	}
+	else
+	{
+	  name = req[1..sizeof(req)-2] * " ";
+	  foreach(Array.map(lines[1..], `/, ":"), array header)
+	  {
+	    if ( (sizeof(header) >= 2) &&
+		 (lower_case(header[0]) == "host") )
+	      prefix = "https://" + (header[1]/":")[0] - " ";
+	  }
+	}
+	if (prefix) {
+	  if (prefix[-1] == '/')
+	    prefix = prefix[..strlen(prefix)-2];
+	  prefix = prefix + ":" + port;
+	} else {
+	  /* default_prefix (aka MyWorldLocation) already contains the
+	   * portnumber.
+	   */
+	  if (!(prefix = default_prefix)) {
+	    /* This case is most unlikely to occur,
+	     * but better safe than sorry...
+	     */
+	    prefix = "https://localhost:" + port;
+	  } else if (prefix[..4] == "http:") {
+	    /* Broken MyWorldLocation -- fix. */
+	    prefix = "https:" + prefix[5..];
+	  }
+	}
+	out = sprintf("HTTP/1.0 301 Redirect to secure server\r\n"
+		      "Location: %s%s\r\n\r\n", prefix, name);
+      }
+      f->set_read_callback(0);
+      f->set_write_callback(write_callback);
+    }
+  }
+  
+  void create(object socket, string s, string l, int p)
+  {
+#ifdef SSL3_DEBUG
+    roxen_perror(sprintf("SSL3:fallback_redirect_request(X, \"%s\", \"%s\", %d)\n", s, l||"CONFIG PORT", p));
+#endif /* SSL3_DEBUG */
+    f = socket;
+    default_prefix = l;
+    port = p;
+    f->set_nonblocking(read_callback, 0, die);
+    f->set_id(f);
+    read_callback(f, s);
+  }
+}
+
 class Protocol
 {
   inherit Stdio.Port;
@@ -643,8 +753,11 @@ class Protocol
     object q = accept( );
     if( !q )
       ;// .. errno stuff here ..
-    else
+    else {
+      // FIXME: Add support for ANY => specific IP here.
+
       requesthandler( q, this_object() );
+    }
   }
 
   object find_configuration_for_url( string url, RequestID id )
@@ -663,17 +776,237 @@ class Protocol
     return values( urls )[0]->conf;
   }
 
+  mixed query_option(string option)
+  {
+    // FIXME: Cache?
+
+    mapping(string:mapping(string:mixed)) all_options = QUERY(port_options);
+
+    mixed res;
+
+    mapping val;
+
+    // Any protocol specific settiongs?
+    if (val = all_options[name]) {
+      mapping val2;
+      // Any ip specific settings?
+      if (val2 = val[ip]) {
+	mapping val3;
+	// Any port specific settings?
+	if (val3 = val2[port]) {
+	  if (!zero_type(res = val3[option])) {
+	    return res;
+	  }
+	}
+	if (!zero_type(res = val2[""][option])) {
+	  return res;
+	}
+      }
+      if (!zero_type(res = val[""][option])) {
+	return res;
+      }
+    }
+      
+    return all_options[""][option];
+  }
+
   void create( int pn, string i )
   {
     if( !requesthandler )
       requesthandler = (program)requesthandlerfile;
     port = pn;
     ip = i;
+
     ::create();
-    if(!bind( port, got_connection, ip ))
-      destruct( );
+
+    if(!bind( port, got_connection, ip )) {
+      werror(sprintf("Failed to bind %s://%s:%d/\n", name, ip, port));
+      destruct();
+    }
   }
 }
+
+#if constant(SSL.sslfile)
+
+class SSLProtocol
+{
+  inherit Protocol;
+
+  // SSL context
+  object ctx;
+
+  class destruct_protected_sslfile
+  {
+    object sslfile;
+
+    mixed `[](string s)
+    {
+      return sslfile[s];
+    }
+
+    mixed `->(string s)
+    {
+      return sslfile[s];
+    }
+
+    void destroy()
+    {
+      sslfile->close();
+    }
+
+    void create(object q, object ctx)
+    {
+      sslfile = SSL.sslfile(q, ctx);
+    }
+  }
+
+  object accept()
+  {
+    object q = ::accept();
+    if (q) {
+      return destruct_protected_sslfile(q, ctx);
+    }
+    return 0;
+  }
+
+  void create(int pn, string i)
+  {
+    ctx = SSL.context();
+
+    object privs = Privs("Reading cert file");
+    string f = Stdio.read_file(query_option("ssl_cert_file") ||
+			       "demo_certificate.pem");
+    string f2 = query_option("ssl_key_file") &&
+      Stdio.read_file(query_option("ssl_key_file"));
+    if (privs)
+      destruct(privs);
+
+    if (!f) {
+      werror("ssl3: Reading cert-file failed!\n");
+      destruct();
+      return;
+    }
+    object msg = Tools.PEM.pem_msg()->init(f);
+
+    object part = msg->parts["CERTIFICATE"]
+      ||msg->parts["X509 CERTIFICATE"];
+
+    string cert;
+  
+    if (!part || !(cert = part->decoded_body())) {
+      werror("ssl3: No certificate found.\n");
+      destruct();
+      return;
+    }
+  
+    if (query_option("ssl_key_file"))
+    {
+      if (!f2) {
+	werror("ssl3: Reading key-file failed!\n");
+	destruct();
+	return;
+      }
+      msg = Tools.PEM.pem_msg()->init(f2);
+    }
+
+    function r = Crypto.randomness.reasonably_random()->read;
+
+#ifdef SSL3_DEBUG
+    werror(sprintf("ssl3: key file contains: %O\n", indices(msg->parts)));
+#endif
+
+    if (part = msg->parts["RSA PRIVATE KEY"])
+    {
+      string key;
+
+      if (!(key = part->decoded_body())) {
+	werror("ssl3: Private rsa key not valid (PEM).\n");
+	destruct();
+	return;
+      }
+      
+      object rsa = Standards.PKCS.RSA.parse_private_key(key);
+      if (!rsa) {
+	werror("ssl3: Private rsa key not valid (DER).\n");
+	destruct();
+	return;
+      }
+
+      ctx->rsa = rsa;
+    
+#ifdef SSL3_DEBUG
+      werror(sprintf("ssl3: RSA key size: %d bits\n", rsa->rsa_size()));
+#endif
+    
+      if (rsa->rsa_size() > 512)
+      {
+	/* Too large for export */
+	ctx->short_rsa = Crypto.rsa()->generate_key(512, r);
+      
+	// ctx->long_rsa = Crypto.rsa()->generate_key(rsa->rsa_size(), r);
+      }
+      ctx->rsa_mode();
+
+      object tbs = Tools.X509.decode_certificate (cert);
+      if (!tbs) {
+	werror("ssl3: Certificate not valid (DER).\n");
+	destruct();
+	return;
+      }
+      if (!tbs->public_key->rsa->public_key_equal (rsa)) {
+	werror("ssl3: Certificate and private key do not match.\n");
+	destruct();
+	return;
+      }
+    }
+    else if (part = msg->parts["DSA PRIVATE KEY"])
+    {
+      string key;
+
+      if (!(key = part->decoded_body())) {
+	werror("ssl3: Private dsa key not valid (PEM).\n");
+	destruct();
+	return;
+      }
+      
+      object dsa = Standards.PKCS.DSA.parse_private_key(key);
+      if (!dsa) {
+	werror("ssl3: Private dsa key not valid (DER).\n");
+	destruct();
+	return;
+      }
+
+#ifdef SSL3_DEBUG
+      werror(sprintf("ssl3: Using DSA key.\n"));
+#endif
+	
+      dsa->use_random(r);
+      ctx->dsa = dsa;
+      /* Use default DH parameters */
+      ctx->dh_params = SSL.cipher.dh_parameters();
+
+      ctx->dhe_dss_mode();
+
+      // FIXME: Add cert <-> private key check.
+    }
+    else {
+      werror("ssl3: No private key found.\n");
+      destruct();
+      return;
+    }
+
+    ctx->certificates = ({ cert });
+    ctx->random = r;
+
+#if EXPORT
+    ctx->export_mode();
+#endif
+
+    ::create(pn, i);
+  }
+}
+
+#endif /* constant(SSL.sslfile) */
 
 class HTTP
 {
@@ -684,14 +1017,85 @@ class HTTP
   constant default_port = 80;
 }
 
+#if constant(SSL.sslfile)
+
 class HTTPS
 {
-  inherit Protocol;
+  inherit SSLProtocol;
+
   constant supports_ipless = 0;
   constant name = "https";
-  constant requesthandlerfile = "protocols/https.pike";
+  constant requesthandlerfile = "protocols/http.pike";
   constant default_port = 443;
+
+  class http_fallback {
+    object my_fd;
+
+    void ssl_alert_callback(object alert, object|int n, string data)
+    {
+#ifdef SSL3_DEBUG
+      roxen_perror(sprintf("SSL3:http_fallback(X, %O, \"%s\")\n", n, data));
+#endif /* SSL3_DEBUG */
+      //  trace(1);
+#if 0
+      werror(sprintf("ssl3->http_fallback: alert(%d, %d)\n"
+		     "seq_num = %s\n"
+		     "data = '%s'", alert->level, alert->description,
+		     (string) n, data));
+#endif
+      if ( (my_fd->current_write_state->seq_num == 0)
+	   && search(lower_case(data), "http"))
+      {
+#if 0
+	object raw_fd = Stdio.File();
+	raw_fd->assign(my_fd);
+#else /* !0 */
+	object raw_fd = my_fd->socket;
+#endif /* 0 */
+
+	/* Redirect to a https-url */
+	//    my_fd->set_close_callback(0);
+	//    my_fd->leave_me_alone = 1;
+	fallback_redirect_request(raw_fd, data,
+				  my_fd->config && 
+				  my_fd->config->query("MyWorldLocation"),
+				  port);
+	destruct(my_fd);
+	destruct(this_object());
+	//    my_fd = 0; /* Forget ssl-object */
+      }
+    }
+
+    void ssl_accept_callback(object id)
+    {
+#ifdef SSL3_DEBUG
+      roxen_perror(sprintf("SSL3:ssl_accept_callback(X)\n"));
+#endif /* SSL3_DEBUG */
+      id->set_alert_callback(0); /* Forget about http_fallback */
+      my_fd = 0;          /* Not needed any more */
+    }
+
+    void create(object fd)
+    {
+      my_fd = fd;
+
+      fd->set_alert_callback(ssl_alert_callback);
+      fd->set_accept_callback(ssl_accept_callback);
+    }
+  }
+    
+  object accept()
+  {
+    object q = ::accept();
+
+    if (q) {
+      http_fallback(q);
+    }
+    return q;
+  }
 }
+
+#endif /* constant(SSL.sslfile) */
 
 class FTP
 {
@@ -700,7 +1104,30 @@ class FTP
   constant name = "ftp";
   constant requesthandlerfile = "protocols/ftp.pike";
   constant default_port = 21;
+
+  // Some statistics
+  int sessions;
+  int ftp_users;
+  int ftp_users_now;
 }
+
+#if constant(SSL.sslfile)
+
+class FTPS
+{
+  inherit SSLProtocol;
+  constant supports_ipless = 0;
+  constant name = "ftps";
+  constant requesthandlerfile = "protocols/ftp.pike";
+  constant default_port = 21;	/*** ???? ***/
+
+  // Some statistics
+  int sessions;
+  int ftp_users;
+  int ftp_users_now;
+}
+
+#endif /* constant(SSL.sslfile) */
 
 class GOPHER
 {
@@ -722,8 +1149,13 @@ class TETRIS
 
 mapping protocols = ([
   "http":HTTP,
-  "https":HTTPS,
   "ftp":FTP,
+
+#if constant(SSL.sslfile)
+  "https":HTTPS,
+  "ftps":FTPS,
+#endif /* constant(SSL.sslfile) */
+
   "gopher":GOPHER,
   "tetris":TETRIS,
 ]);
