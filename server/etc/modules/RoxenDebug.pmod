@@ -1,6 +1,6 @@
 // Some debug tools.
 //
-// $Id: RoxenDebug.pmod,v 1.7 2003/02/11 19:22:56 mast Exp $
+// $Id: RoxenDebug.pmod,v 1.8 2004/02/17 20:13:21 mast Exp $
 
 
 //! Helper to locate leaking objects. Use a line like this to mark a
@@ -10,6 +10,7 @@
 //! RoxenDebug.ObjectMarker __marker = RoxenDebug.ObjectMarker (this_object());
 
 mapping(string:int) object_markers = ([]);
+mapping(string:string) object_create_places = ([]);
 
 int log_create_destruct = 1;
 
@@ -67,7 +68,10 @@ class ObjectMarker
 	    debug_msg (backtrace(), 1, "rename  %s -> %s\n", id, new_id);
 	  else
 	    debug_msg (backtrace(), 1, "rename  ** %s -> %s\n", id, new_id);
-	if (--object_markers[id] <= 0) m_delete (object_markers, id);
+	if (--object_markers[id] <= 0) {
+	  m_delete (object_markers, id);
+	  m_delete (object_create_places, id);
+	}
       }
       else
 	if (log_create_destruct)
@@ -75,20 +79,23 @@ class ObjectMarker
 
       id = new_id;
       object_markers[id]++;
+      object_create_places[id] = describe_backtrace (backtrace());
     }
   }
 
   void destroy()
   {
-    if (id) {
-      if (log_create_destruct)
-	if (object_markers[id] > 0) debug_msg (backtrace(), 1, "destroy %s\n", id);
-	else debug_msg (backtrace(), 1, "destroy ** %s\n", id);
-      if (--object_markers[id] <= 0) m_delete (object_markers, id);
-    }
-    if (flags && log_create_destruct) {
-      werror("destructing...\n"
-	     "%s\n", describe_backtrace(backtrace()));
+    if (global::this) {
+      if (id) {
+	if (log_create_destruct)
+	  if (object_markers[id] > 0) debug_msg (backtrace(), 1, "destroy %s\n", id);
+	  else debug_msg (backtrace(), 1, "destroy ** %s\n", id);
+	if (--object_markers[id] <= 0) m_delete (object_markers, id);
+      }
+      if (flags && log_create_destruct) {
+	werror("destructing...\n"
+	       "%s\n", describe_backtrace(backtrace()));
+      }
     }
   }
 
@@ -99,9 +106,18 @@ class ObjectMarker
 }
 
 //!
-string report_leaks()
+string report_leaks (void|int clear)
 {
-  string res = "leaks: " + sort (indices (object_markers)) * ",\n       " + "\n";
-  object_markers = ([]);
+  string res = "leaks: " +
+    sort (map (indices (object_markers),
+	       lambda (string id) {
+		 if (string bt = object_create_places[id])
+		   return id + ":\n         " +
+		     replace (bt[..sizeof (bt) - 2], "\n", "\n         ");
+		 else
+		   return id;
+	       })) * "\n       " +
+    "\n";
+  if (clear) object_markers = ([]);
   return res;
 }
