@@ -1,4 +1,4 @@
-// $Id: module.h,v 1.36 2000/04/14 23:36:31 nilsson Exp $
+// $Id: module.h,v 1.37 2000/04/16 22:21:17 nilsson Exp $
 #ifndef ROXEN_MODULE_H
 
 #define ROXEN_MODULE_H
@@ -17,7 +17,7 @@
 
 #define CACHE(seconds) ([mapping(string:mixed)]id->misc)->cacheable=min(([mapping(string:mixed)]id->misc)->cacheable,seconds)
 #define NOCACHE() ([mapping(string:mixed)]id->misc)->cacheable=0
-#define TAGDOCUMENTATION mapping tagdocumentation(){return get_value_from_file(__FILE__,"tagdoc","#define manual\n");}
+#define TAGDOCUMENTATION mapping tagdocumentation(){return [mapping]get_value_from_file(__FILE__,"tagdoc","#define manual\n");}
 
 #define ROXEN_MAJOR_VERSION 2
 #define ROXEN_MINOR_VERSION 1
