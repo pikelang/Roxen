@@ -78,8 +78,6 @@ worldmap binary
 /server/bin/mysql_client foreign_ident
 /server/bin/sqladduser.pike foreign_ident
 /server/create_admininterface foreign_ident
-/server/data/Makefile foreign_ident
-/server/data/Makefile.in foreign_ident
 /server/data/extensions foreign_ident
 /server/data/include/config.h foreign_ident
 /server/data/include/module.h foreign_ident
@@ -90,7 +88,6 @@ worldmap binary
 /server/data/include/variables.h foreign_ident
 /server/data/include/version.h foreign_ident
 /server/data/master.pike foreign_ident
-/server/data/modref.xml foreign_ident
 /server/data/more_extensions/apache foreign_ident
 /server/data/more_extensions/chemical foreign_ident
 /server/data/more_extensions/inlinetypes foreign_ident
@@ -103,6 +100,8 @@ worldmap binary
 /server/data/test/tests/ftp/ftp_test.pike foreign_ident
 /server/debugstart foreign_ident
 /server/etc/include/proxyauth.pike foreign_ident
+/server/etc/refdoc/Makefile foreign_ident
+/server/etc/refdoc/modref.xml foreign_ident
 /server/java/src/com/roxen/roxen/AbstractLocationModule.java foreign_ident
 /server/java/src/com/roxen/roxen/Defvar.java foreign_ident
 /server/java/src/com/roxen/roxen/ExperimentalModule.java foreign_ident

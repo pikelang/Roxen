@@ -2,7 +2,7 @@
 <!-- put everything together, as well as information about how to -->
 <!-- split it up into smaller files. -->
 
-<!-- $Id: modref.xml,v 1.1 2001/11/16 16:04:00 nilsson Exp $ -->
+<!-- $Id: modref.xml,v 1.1 2002/10/29 20:46:51 nilsson Exp $ -->
 
 <manual>
   <dir name="ignored">
@@ -12,7 +12,4 @@
     </chapter>
   </file>
   </dir>
-
-  <void>
-  </void>
 </manual>
