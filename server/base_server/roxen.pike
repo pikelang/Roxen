@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.792 2002/04/24 15:31:24 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.793 2002/04/25 14:36:08 anders Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -4359,10 +4359,12 @@ int main(int argc, array tmp)
 void check_commit_suicide()
 {
 #ifdef SUICIDE_DEBUG
-  werror("check_commit_suicide(): Engage:%d, schedule: %d, time: %d\n",
+  werror("check_commit_suicide(): Engage:%d, schedule: %d, time: %d\n"
+	 "                        Schedule: %s",
 	 query("suicide_engage"),
 	 getvar("suicide_schedule")->get_next( query("last_suicide")),
-	 time());
+	 time(),
+	 ctime(getvar("suicide_schedule")->get_next( query("last_suicide"))));
 #endif /* SUICIDE_DEBUG */
   if (query("suicide_engage")) {
     int next = getvar("suicide_schedule")
@@ -4381,16 +4383,21 @@ void check_commit_suicide()
 void check_suicide( )
 {
 #ifdef SUICIDE_DEBUG
-  werror("check_suicide(): Engage:%d, schedule: %d, time: %d\n",
+  werror("check_suicide(): Engage:%d, schedule: %d, time: %d\n"
+	 "                 Schedule: %s",
 	 query("suicide_engage"),
 	 getvar("suicide_schedule")->get_next( query("last_suicide")),
-	 time());
+	 time(),
+	 ctime(getvar("suicide_schedule")->get_next( query("last_suicide"))));
 #endif /* SUICIDE_DEBUG */
   if (query("suicide_engage")) {
     int next = getvar("suicide_schedule")
       ->get_next( query("last_suicide") );
     if( !query("last_suicide") || (next >= 0 && next <= time()) )
     {
+#ifdef SUICIDE_DEBUG
+      werror("Next suicide is in the past or last time not set. Reseting.\n");
+#endif
       set( "last_suicide", time() );
       save( );
     }
