@@ -1,4 +1,4 @@
-string cvs_version="$Id: pimage.pike,v 1.9 1998/03/08 13:48:49 per Exp $";
+string cvs_version="$Id: pimage.pike,v 1.10 1998/05/14 18:35:00 grubba Exp $";
 
 #include <module.h>
 inherit "module";
@@ -175,7 +175,14 @@ class Constructors
     void create(array (int) b, object i, float|void delay,
 		function|void anim,mixed|void st)
     {
-      bg = b; animator = anim; state = st; image = i; anim_delay = delay;
+      bg = b;
+      image = i;
+      if (delay)
+	anim_delay = delay;
+      if (anim)
+	animator = anim;
+      if (st)
+	state = st;
     }
   }
 
