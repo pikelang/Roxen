@@ -1,5 +1,4 @@
 inherit Variable.Variable;
-inherit "html";
 
 //! This class implements a scheduler widget with three main states,
 //! never index, index every n:th hour or index every n:th x-day at y
@@ -170,14 +169,14 @@ string render_form( RequestID id, void|mapping additional_args )
     "<tr valign='top'><td><input name='" + path() + "' value='0' type='radio' " +
     checked(0,0) + " /></td><td>" + LOCALE(482, "Never") + "</td></tr>\n";
 
-  inp1 = select(path()+"1", "123456789"/1 + "1011121314151617181920212223"/2, (string)query()[1]);
+  inp1 = HTML.select(path()+"1", "123456789"/1 + "1011121314151617181920212223"/2, (string)query()[1]);
 
   res += "<tr valign='top'><td><input name='" + path() + "' value='1' type='radio' " +
     checked(0,1) + " /></td><td>" + sprintf( LOCALE(483, "Every %s hour(s)."), inp1) +
     "</td></tr>\n";
 
-  inp1 = select(path()+"2", "123456789"/1, (string)query()[2]);
-  inp2 = select(path()+"3", ({
+  inp1 = HTML.select(path()+"2", "123456789"/1, (string)query()[2]);
+  inp2 = HTML.select(path()+"3", ({
     ({ "0", LOCALE(484, "Day") }),
     ({ "1", LOCALE(485, "Sunday") }),
     ({ "2", LOCALE(486, "Monday") }),
@@ -186,7 +185,7 @@ string render_form( RequestID id, void|mapping additional_args )
     ({ "5", LOCALE(489, "Thursday") }),
     ({ "6", LOCALE(490, "Friday") }),
     ({ "7", LOCALE(491, "Saturday") }) }), (string)query()[3]);
-  inp3 = select(path()+"4", "000102030405060708091011121314151617181920212223"/2,
+  inp3 = HTML.select(path()+"4", "000102030405060708091011121314151617181920212223"/2,
 		sprintf("%02d", query()[4]));
 
   res += "<tr valign='top'><td><input name='" + path() + "' value='2' type='radio' " +
