@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.124 1997/09/05 22:35:37 per Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.125 1997/09/06 03:53:49 per Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -1645,6 +1645,13 @@ private void define_global_variables( int argc, array (string) argv )
 	  ,TYPE_FLAG|VAR_MORE,
 	  "If this option is set, Roxen will automatically broadcast it's "
 	  "existence to other Roxen servers on the local network");
+
+  globvar("neigh_tcp_ips",  ({}), "Neighborhood: TCP hosts",
+  TYPE_STRING_LIST|VAR_MORE,
+  "This is the list of direct host<-->host links to establish. "
+  "The local host is always present (if the neighbourhood functionality "
+    "is at all enabled)");
+
 
   globvar("neigh_ips",  ({lambda(){
     string n = reverse(gethostbyname(gethostname())[1][0]);

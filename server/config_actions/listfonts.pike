@@ -1,5 +1,5 @@
-/* $Id: listfonts.pike,v 1.1 1997/09/05 22:31:08 per Exp $ */
-
+/* $Id: listfonts.pike,v 1.2 1997/09/06 03:53:50 per Exp $ */
+#if constant(available_font_versions)
 inherit "wizard";
 
 constant name= "Status//List Available Fonts...";
@@ -65,3 +65,6 @@ mixed handle(object id)
 			      "left", 0.0,0.0),
 		     id->variables->text);
 }
+#else
+#error Only available under roxen 1.2a11 or newer
+#endif
