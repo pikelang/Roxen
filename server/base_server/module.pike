@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.143 2003/08/07 12:52:04 jonasw Exp $
+// $Id: module.pike,v 1.144 2003/08/13 15:24:09 grubba Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -449,6 +449,7 @@ mapping(string:mixed) remove_property(string path, string prop_name,
 				      RequestID id)
 {
   switch(prop_name) {
+  case "http://apache.org/dav/props/executable":
   case "DAV:displayname":	// 13.2
   case "DAV:getcontentlength":	// 13.4
   case "DAV:getcontenttype":	// 13.5
@@ -456,8 +457,10 @@ mapping(string:mixed) remove_property(string path, string prop_name,
     return Roxen.http_low_answer(409,
 				 "Attempt to remove a read-only property.");
   }
-  return Roxen.http_low_answer(404,
-			       "Attempt to remove an unknown property.");
+  // RFC 2518 12.13.1:
+  //   Specifying the removal of a property that does not exist
+  //   is not an error.
+  return 0;
 }
 
 //! Default implementation of some RFC 2518 properties.
