@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1999-2000, Roxen IS.
 //
 
-constant cvs_version = "$Id: foldlist.pike,v 1.23 2000/09/10 16:35:07 nilsson Exp $";
+constant cvs_version = "$Id: foldlist.pike,v 1.24 2000/10/31 11:46:05 jhs Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -34,7 +34,7 @@ Will make all the elements in the list unfolded by default.
 (["ft":({#"<desc cont>
 This tag is used within the foldlist tag. The contents of this
 container, that is not within an fd, tag will be visible both when the
-element is folded and unfolded.
+element is folded and unfolded.</desc>
 
 <attr name=folded>
 Will make this element folded by default. Overrides an unfolded
