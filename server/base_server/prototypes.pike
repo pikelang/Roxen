@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.86 2004/04/25 15:46:28 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.87 2004/04/28 16:23:46 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -157,6 +157,13 @@ class ModuleCopies
     return values(copies);
   }
   string _sprintf( ) { return "ModuleCopies("+sizeof(copies)+")"; }
+}
+
+class DAVLock(string locktoken,
+	      string path,
+	      string lockscope,
+	      int(0..1) recursive)
+{
 }
 
 class Configuration
@@ -1468,6 +1475,26 @@ class RoxenModule
   mapping(string:mixed) patch_properties(string path,
 					 array(PatchPropertyCommand) instructions,
 					 MultiStatus result, RequestID id);
+  mapping(string:mixed) set_property (string path, string prop_name,
+				      string|array(Parser.XML.Tree.Node) value,
+				      RequestID id);
+  mapping(string:mixed) remove_property (string path, string prop_name,
+					 RequestID id);
+  multiset(DAVLock) find_all_locks(string path,
+				   int(0..1) recursive,
+				   RequestID id);
+  DAVLock|int(-1..1) find_user_lock(string path, string user, RequestID id);
+  multiset(DAVLock)|int(-1..1) recur_find_user_locks(string path,
+						     string user,
+						     RequestID id);
+  void register_lock(string path, DAVLock lock, string user);
+  DAVLock|mapping(string:mixed) lock_file(string path,
+					  string locktype,
+					  string lockscope,
+					  string locktoken,
+					  int(0..1) recursive,
+					  string user,
+					  RequestID id);
   mapping(string:mixed)|int(-1..0)|Stdio.File find_file(string path,
 							RequestID id);
   mapping(string:mixed) delete_file(string path, RequestID id);
