@@ -1,0 +1,33 @@
+#!/bin/sh
+#
+# $Id: pike-roxen.in,v 1.1 1998/07/01 19:12:35 grubba Exp $
+#
+# Start the Roxen Pike stand-alone.
+#
+# Henrik Grubbström 1998-07-01
+# 
+
+# Roxen's install prefix
+prefix="@prefix@/roxen/server/"
+
+binprefix="$prefix/bin/"
+libprefix="$prefix/lib/pike/"
+
+PIKE="$binprefix/pike"
+if test "x$PIKE_MASTER" = "x" ; then
+  PIKE_MASTER="$libprefix/master.pike"
+else :; fi
+if test "x$PIKE_INCLUDE_PATH" = "x" ; then
+  PIKE_INCLUDE_PATH="$libprefix/include/"
+else
+  PIKE_INCLUDE_PATH="$libprefix/include/:$PIKE_INCLUDE_PATH"
+fi
+if test "x$PIKE_MODULE_PATH" = "x" ; then
+  PIKE_MODULE_PATH="$libprefix/modules/"
+else
+  PIKE_MODULE_PATH="$libprefix/modules/:$PIKE_MODULE_PATH"
+fi
+
+export PIKE PIKE_MASTER PIKE_INCLUDE_PATH PIKE_MODULE_PATH
+
+exec $PIKE "$@"
