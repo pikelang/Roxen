@@ -1,5 +1,5 @@
 /*
- * $Id: listfonts.pike,v 1.19 2001/08/27 15:33:54 per Exp $
+ * $Id: listfonts.pike,v 1.20 2001/11/14 13:38:06 grubba Exp $
  */
 
 #include <roxen.h>
@@ -72,7 +72,7 @@ string page_0(RequestID id)
 	      LOCALE(58,"Available font loaders") + "</b></font><p>"+
               font_loaders()+"<font size='+1'><b>" +
 	      LOCALE("dI","All available fonts") + "</b></font><p>");
-  foreach(sort(roxen.fonts.available_fonts()), string font)
+  foreach(sort(roxen.fonts.available_fonts(1)), string font)
     res+=list_font(font);
   res += ("</p><p>" + LOCALE(236,"Example text") +
 	  "<font size=-1><input name=text size=46 value='" +
