@@ -18,7 +18,7 @@
 #define _rettext defines[" _rettext"]
 #define _ok     defines[" _ok"]
 
-constant cvs_version="$Id: htmlparse.pike,v 1.185 1999/09/10 22:29:36 mast Exp $";
+constant cvs_version="$Id: htmlparse.pike,v 1.186 1999/09/14 20:30:01 jhs Exp $";
 constant thread_safe=1;
 
 function call_user_tag, call_user_container;
@@ -1386,7 +1386,7 @@ string tag_remove_cookie(string tag, mapping m, object id, object file,
   string cookies;
   if(m->name)
     cookies = m->name+"="+http_encode_cookie(m->value||"")+
-      "; expires="+http_date(0)+"; path=/";
+      "; expires=Thu, 01-Jan-70 00:00:01 GMT; path=/";
   else
     return id->misc->debug?"remove-cookie requires a `name'":"";
 

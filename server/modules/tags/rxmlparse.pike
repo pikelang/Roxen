@@ -12,7 +12,7 @@
 
 #define old_rxml_compat 1
 
-constant cvs_version="$Id: rxmlparse.pike,v 1.18 1999/08/20 15:50:15 nilsson Exp $";
+constant cvs_version="$Id: rxmlparse.pike,v 1.19 1999/09/14 20:30:02 jhs Exp $";
 constant thread_safe=1;
 
 constant language = roxen->language;
@@ -449,7 +449,7 @@ int api_remove_cookie(object id, string c, string v)
     return 0;
 
   add_header(_extra_heads, "Set-Cookie",
-    c+"="+http_encode_cookie(v||"")+"; expires="+http_date(0)+"; path=/"
+    c+"="+http_encode_cookie(v||"")+"; expires=Thu, 01-Jan-70 00:00:01 GMT; path=/"
   );
 
   return 1;
@@ -534,7 +534,7 @@ string tag_user_wrapper(object id, string tag, mapping m, object file)
 
 int time_quantifier(object id, mapping m)
 {
-  float t=0;
+  float t = 0.0;
   if (m->seconds) t+=((float)(m->seconds));
   if (m->minutes) t+=((float)(m->minutes))*60;
   if (m->beats)   t+=((float)(m->beats))*86.4;

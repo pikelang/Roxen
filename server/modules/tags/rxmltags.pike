@@ -10,7 +10,7 @@
 #define old_rxml_compat 1
 #define old_rxml_warning id->conf->api_functions()->old_rxml_warning[0]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.5 1999/09/10 22:29:54 mast Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.6 1999/09/14 20:30:03 jhs Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -629,7 +629,7 @@ string tag_remove_cookie(string tag, mapping m, object id)
   string cookies;
   if(m->name)
     cookies = m->name+"="+http_encode_cookie(m->value||"")+
-      "; expires="+http_date(0)+"; path=/";
+      "; expires=Thu, 01-Jan-70 00:00:01 GMT; path=/";
   else
     return rxml_error(tag, "Requires a name attribute.", id);
 
