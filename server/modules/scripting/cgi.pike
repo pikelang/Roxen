@@ -9,7 +9,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: cgi.pike,v 2.10 1999/05/21 04:55:17 neotron Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.11 1999/05/22 01:57:04 grubba Exp $";
 
 
 array register_module()
@@ -356,23 +356,26 @@ class CGIWrapper
 
   int parse_headers( )
   {
-    int pos1, pos2, pos, skip = 2; 
+    int pos, skip = 4;
 
-    pos1 = search( headers, "\r\n\r\n" );
-    pos2 = search( headers, "\n\n" );
-    
-    if(pos1 == -1) {
-      if(pos2 == -1)
-	// Didn't find anything here.
+    pos = search(headers, "\r\n\r\n");
+    if(pos == -1) {
+      // Check if there's a \n\n instead.
+      pos = search(headers, "\n\n");
+      if(pos == -1) {
+	// Still haven't found the end of the headers.
 	return 0;
-    } else if(pos1 < pos2)
-      // \r\n\r\n search smaller than \n\n which means \r\n\r\n is the end of
-      // the headers.
-      skip = 4;
-    if(skip == 2) // Headers end with \n\n
-      pos = pos2;
-    else	  // Headers end with \r\n\r\n
-      pos = pos1;
+      }
+      skip = 2;
+    } else {
+      // Check if there's a \n\n before the \r\n\r\n.
+      int pos2 = search(headers[..pos], "\n\n");
+      if(pos2 != -1) {
+	pos = pos2;
+	skip = 2;
+      }
+    }
+
     output( handle_headers( headers[..pos-1] ) );
     output( headers[pos+skip..] );
     headers="";
