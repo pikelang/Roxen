@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.95 1998/04/24 08:43:49 per Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.96 1998/05/11 21:59:54 grubba Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -1232,7 +1232,7 @@ string tag_modified(string tag, mapping m, object got, object file,
   {
     if(!got->conf->auth_module)
       return "<!-- modified by requires an user database! -->\n";
-    m->name = got->conf->last_modified_by(file, got);
+    m->name = roxen->last_modified_by(file, got);
     return tag_user(tag, m, got, file, defines);
   }
 
