@@ -6,6 +6,7 @@ inherit "module";
 inherit "roxenlib";
 #include <config_interface.h>
 #include <roxen.h>
+#include <module.h>
 
 #define LOCALE	LOW_LOCALE->config_interface
 
@@ -20,6 +21,48 @@ mapping settings_cache = ([ ]);
 
 object settings = roxen.ConfigIFCache( "settings",1 );
 
+class ThemeVariable
+{
+  inherit Variable.StringChoice;
+
+  string theme_name( string theme )
+  {
+    catch {
+      return String.trim_all_whites(lopen("config_interface/standard/themes/"+
+                                          theme+"/name","r")->read());
+    };
+    return "Unknown theme ("+theme+")";
+  }
+
+  static array(string) all_themes( )
+  {
+    return (get_dir( "config_interface/standard/themes/" ) + 
+            (get_dir( "../local/config_interface/standard/themes/" )||({}))-
+            ({"CVS","README"}));
+  }
+
+  void set_choice_list()
+  {
+  }
+
+  array get_choice_list()
+  {
+    return all_themes();
+  }
+
+  static string _title( string what )
+  {
+    return theme_name( what );
+  }
+
+  static void create(mixed default_value,int flags,
+                     string std_name,string std_doc)
+  {
+    ::create( default_value,0, flags,std_name, std_doc );
+  }
+}
+
+
 class ConfigurationSettings
 {
   inherit "basic_defvar";
@@ -28,7 +71,7 @@ class ConfigurationSettings
   mapping trim_variables( mapping m )
   {
     mapping q = ([]);
-    foreach( indices( m ), string v )  q[v] = m[v][VAR_VALUE];
+    foreach( indices( m ), string v )  q[v] = m[v]->query( );
     return q;
   }
 
@@ -43,8 +86,9 @@ class ConfigurationSettings
     name = _name;
     variables = ([]);
     mapping vv = settings->get( name );
-    defvar( "theme", "default",
-            "Theme",  TYPE_THEME, "The theme to use" );
+    defvar( "theme", ThemeVariable( "default", 0,
+                                    "Theme",
+                                    "The theme to use" ) );
 
     defvar( "docs", 1,
             ([
@@ -156,6 +200,7 @@ moduler på samma gång.</dd>
 </dl>
 " ]),
 ({ "normal","fast","faster","compact","really compact"}),
+ 0, 
 (["svenska":([ "normal":"normal","fast":"snabb","faster":"snabbare","compact":"kompakt","really compact":"kompaktare"]),
  ])
             );
@@ -163,7 +208,7 @@ moduler på samma gång.</dd>
     if( vv )
       foreach( indices( vv ), string i )
         if( variables[i] )
-          variables[i][VAR_VALUE] = vv[i];
+          variables[i]->low_set( vv[i] );
   }
 }
 

@@ -1,6 +1,5 @@
 // This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
 //
-
 inherit "module";
 inherit "html";
 inherit "roxenlib";
@@ -306,620 +305,98 @@ void set_entities(RXML.Context c)
   c->extend_scope("cf", cf_scope);
 }
 
-string get_var_doc( string s, object mod, int n, object id )
+string get_var_form( string s, object var, object mod, object id,
+                     int noset )
 {
-  s = LOW_LOCALE->module_doc_string( mod, s, (n==1) );
-  if( !s ) return "";
-  if( n==2 ) sscanf( s, "%*s:%s", s );
-  return s;
-}
-
-string theme_name( string theme )
-{
-  catch {
-    return String.trim_all_whites(lopen("config_interface/standard/themes/"+
-                                        theme+"/name","r")->read());
-  };
-  return "Unknown theme";
-}
-
-array(string) all_themes( )
-{
-  return (get_dir( "config_interface/standard/themes/" ) + 
-          (get_dir( "../local/config_interface/standard/themes/" )||({}))-
-           ({"CVS","README"}));
-}
-
-string get_var_value( string s, object mod, object id )
-{
-  array var = mod->variables[ s ];
-  if( !var )
-    return "Impossible!";
-
-  switch(var[VAR_TYPE])
-  {
-    object m;
-    string name;
-    array tmp;
-   case TYPE_CUSTOM:
-     return var[VAR_MISC][0]( var[VAR_SHORTNAME], var[VAR_VALUE], id );
-
-   case TYPE_PASSWORD:
-     return "****";
-
-   default:
-     return (string)var[ VAR_VALUE ];
-
-   case TYPE_FLOAT:
-     return sprintf("%.4f", var[VAR_VALUE]);
-
-   case TYPE_THEME: /* config-if local type... */
-     return theme_name( var[VAR_VALUE] );
-
-   case TYPE_DIR_LIST:
-   case TYPE_STRING_LIST:
-   case TYPE_URL_LIST:
-   case TYPE_INT_LIST:
-     if(var[VAR_MISC])
-     {
-       mapping q;
-       if(q = LOW_LOCALE->module_doc_string(mod, var[VAR_SHORTNAME], 2))
-         return q[ var[VAR_VALUE] ];
-       return (string)var[VAR_VALUE];
-     }
-     if(arrayp(var[VAR_VALUE]))
-       return ((array(string))var[VAR_VALUE]) * ", ";
-     else
-       return "";
-
-   case TYPE_FLAG:
-     if(var[VAR_VALUE])
-       return LOW_LOCALE->yes;
-     return LOW_LOCALE->no;
-  }
-}
-
-array(string) verify_port( string port, int nofhttp, int|void nomod )
-{
-  string warning="";
-  if( (int)port )
-  {
-    if( !nomod )
-      warning += "<font color='&usr.warncolor;'>Asuming http://*:"+
-              port+"/ for "+port+"</font><br />";
-    port = "http://*:"+port+"/";
-  }
-  string protocol, host, path;
-  if(!strlen( port ) )
-    return ({ port, "<font color='&usr.warncolor;'>Empty URL field</font>" });
-
-  if(sscanf( port, "%[^:]://%[^/]%s", protocol, host, path ) != 3)
-    return ({port,"<font color='&usr.warncolor;'>"+port
-             +" does not conform to URL syntax</font><br />" });
-  
-  if( path == "" )
-  {
-    if( nomod )
-      warning += "<font color='&usr.warncolor;'>There should be a / at the "
-              "end of "+port+"</font><br />";
-    else
-      warning += "<font color='&usr.warncolor;'>Added / to the end of "+port+
-              "</font><br />";
-    host += "/";
-  }
-  int pno;
-  if( sscanf( host, "%s:%d", host, pno ) == 2)
-  {
-    if( roxen->protocols[ lower_case( protocol ) ] 
-        && (pno == roxen->protocols[ lower_case( protocol ) ]->default_port ))
-    {
-      if( nomod )
-        warning += "<font color='&usr.warncolor;'>It is not nessesary, "
-                "and seldom desireable, to specify the default port "
-                "number explicitly.</font>";
-      else
-        warning += "<font color='&usr.warncolor;'>Removed the "
-                "default port number ("+pno+") from "+port+"</font>";
-    }
-    else
-      host = host+":"+pno;
-  }
-  if( nofhttp && protocol == "fhttp" )
-  {
-    if( nomod )
-      warning+="<font color='&usr.warncolor;'>fhttp is not valid here</font>";
-    else
-      warning += "<font color='&usr.warncolor;'>Changed "+
-              protocol+" to http</font><br />";
-    protocol = "http";
-  }
-  if( protocol != lower_case( protocol ) )
-  {
-    if( nomod )
-      warning += "<font color='&usr.warncolor;'>"+protocol+" should be "+
-              lower_case( protocol )+"</font><br />";  
-    else
-      warning += "<font color='&usr.warncolor;'>Changed "+protocol+" to "+
-              lower_case( protocol )+"</font><br />";  
-  }
-  port = lower_case( protocol )+"://"+host+path;
-  if( !roxen->protocols[ lower_case( protocol ) ] )
-    warning += "<font color='&usr.warncolor;'>Warning: The protocol "+
-            lower_case(protocol)+" is unknown</font><br />";
-  return ({port,warning});
-}
-
-string type_warning( int type, mixed value )
-{
-  switch( type )
-  {
-   case TYPE_URL:
-     return verify_port( value, 0, 1 )[1];
-
-   case TYPE_URL_LIST:
-     string warn ="";
-     if( arrayp( value ) )
-     {
-       foreach( [array(string)]value, string value )
-         warn += verify_port( value, 0, 1 )[1];
-     } else
-       return verify_port( value, 0, 1 )[1];
-     return warn;
-
-   case TYPE_DIR:
-     if( !(r_file_stat( value ) && (r_file_stat( value )[ ST_SIZE ] == -2 )))
-       return value+" is not a directory";
-     return "";
-   case TYPE_DIR_LIST:
-     string warn="";
-     foreach( [array(string)]value, string value )
-       if( !(r_file_stat( value ) && (r_file_stat( value )[ ST_SIZE ] == -2 )))
-         warn += value+" is not a directory<br />";
-     return warn;
-  }
-  return "";
-}
-                 
-string set_variable( string v, object in, mixed to, object id )
-{
-  array var = in->variables[ v ];
-  string warning = "";
-  mixed val = to;
-
-  if( in == roxen )
-  {
-    if( !CU_AUTH( "Edit Global Variables" ) )
-      return "";
-  } else if( in->register_module ) {
-    if( !CU_AUTH( "Edit Module Variables" ) )
-      return "";
-  } else if( in->find_module && in->Priority ) {
-    if( !CU_AUTH( "Edit Site Variables" ) )
-      return "";
-  }
-
-  switch(var[VAR_TYPE])
-  {
-   case TYPE_FLOAT:
-     val = (float)val;
-     break;
-
-   case TYPE_INT:
-     val = (int)val;
-     break;
-
-   case TYPE_DIR:
-     if(!strlen(val)) 
-       val = "./";
-     else if( val[-1] != '/' )
-       val += "/";
-     break;
-
-   case TYPE_PASSWORD:
-     if( val == "" )
-       return "";
-     val = crypt( val );
-     break;
-   case TYPE_TEXT_FIELD:
-     val = replace( val, "\r\n", "\n" );
-     val = replace( val, "\r", "\n" );
-   case TYPE_STRING:
-   case TYPE_FILE:
-   case TYPE_LOCATION:
-   case TYPE_URL:
-     break;
-
-   case TYPE_FONT:
-     val = replace( val, " ", "_" );
-     break;
-
-   case TYPE_CUSTOM:
-   case TYPE_THEME:
-     break;
-
-   case TYPE_URL_LIST:
-   case TYPE_DIR_LIST:
-   case TYPE_STRING_LIST:
-   case TYPE_INT_LIST:
-     if( !var[ VAR_MISC ] )
-     {
-       if (sscanf (val, "%*[ \t\n\r]%*c") < 2) {
-	 val = ({});
-	 break;
-       }
-       val /= ",";
-       int i;
-       for( i = 0; i<sizeof( val ); i++ )
-         val[i] = String.trim_whites( val[i] );
-       if( var[ VAR_TYPE ] == TYPE_INT_LIST )
-         val = (array(int))val;
-       else if( var[ VAR_TYPE ] == TYPE_URL_LIST )
-         foreach( val, string port )
-         {
-           string op = port, q;
-           [port,q] = verify_port( port, 0, 0 );
-           warning+=q;
-           val = replace( val, op, port );
-         }
-       else if( var[ VAR_TYPE ] == TYPE_DIR_LIST )
-         foreach( val, string d )
-           if( d[-1] != '/' )
-             val = replace( val, d, d+"/" );
-     } else {
-       if( var[VAR_TYPE]  == TYPE_INT_LIST )
-         val = (int)val;
-     }
-     break;
-
-   case TYPE_FLAG:
-     if( val == "Yes" || val == LOW_LOCALE->yes )
-       val = 1;
-     else
-       val = 0;
-     break;
-   default:
-     report_debug("Unknown variable type ["+var[ VAR_TYPE ]+"]\n");
-     return "";
-  }
-
-  mixed old=var[ VAR_VALUE ];
-  if (in->check_variable) 
-  {
-    string err = in->check_variable(v, val);
-    if (err) 
-      warning += "<font color='&usr.warncolor;'>"+err+"</font><br />";
-  }
-
-  if( equal( var[ VAR_VALUE ], val ) )
-    return warning;
-
-  if( v=="MyWorldLocation" && in->is_configuration )
-  {
-    if( val == "" )
-      return "";
-    [val,warning] = verify_port( val, 1 );
-  }
-  
-  if( v=="URLs" && in->is_configuration ) 
-  {
-    string world = in->query("MyWorldLocation");
-    if( !world || !sizeof(world) )
-      in->set( "MyWorldLocation", 
-               verify_port((Roxen.get_world(val)||""),1)[0]);
-  }
-
-#ifdef VARIABLE_WARNING_IS_ERROR
-  if (!sizeof(warning) && equal(old,var[ VAR_VALUE ])) {
-#else
-    if (equal(old,var[ VAR_VALUE ])) { //var hasn't been changed while checked
-#endif
-    if( in->set )
-      in->set( v, val );
-    else
-      var[ VAR_VALUE ] = val;
-  }
-
-  if( in->save_me )
-  {
-    remove_call_out( in->save_me );
-    call_out( in->save_me, 1 );
-  }
-  else if( in->save )
-  {
-    remove_call_out( in->save );
-    call_out( in->save, 1 );
-  } else {
-    if( in->my_configuration )
-    {
-      in = in->my_configuration();
-      remove_call_out( in->save );
-      call_out( in->save, 1 );
-    }
-  }
-  return warning;
-}
-
-string get_var_form( string s, object mod, object id )
-{
-  string path = "";
   int view_mode;
 
   if( mod == roxen )
   {
     if( !CU_AUTH( "Edit Global Variables" ) )
       view_mode = 1;
-  } else if( mod->register_module ) {
+  } 
+  else if( mod->register_module ) 
+  {
     if( !CU_AUTH( "Edit Module Variables" ) )
       view_mode = 1;
-  } else if( mod->find_module && mod->Priority ) {
+  } 
+  else if( mod->find_module && mod->Priority ) 
+  {
     if( !CU_AUTH( "Edit Site Variables" ) )
       view_mode = 1;
   }
 
-  if( mod->my_configuration )
-    path = (mod->my_configuration()->name + "/"+
+  if( !var->path() )
+  {
+    string path = "";
+    if( mod->my_configuration )
+      path = (mod->my_configuration()->name + "/"+
             replace(mod->my_configuration()->otomod[ mod ], "#", "!")+
             "/"+s);
-  else if( mod->name )
-    path = (mod->name+"/"+s);
+    else if( mod->name )
+      path = (mod->name+"/"+s);
+    else
+      path = s;
+    var->set_path( sprintf("%x", Gmp.mpz(path, 256 ) ) );
+  }
+
+  string pre = var->get_warnings();
+
+  if( pre )
+    pre = "<font size='+1' color='&usr.warncolor;'><pre>"+
+        html_encode_string( pre )+
+        "</pre></font>";
   else
-    path = s;
-
-  string pre = "";
-  path = html_encode_string( replace( path, " " , "_" ) )-"\"";
-
-  if( id->variables[ path ] )
-    pre = set_variable( s, mod, id->variables[ path ], id );
+    pre = "";
   
-  
-  array var = mod->variables[ s ];
-
-  if( !var_configurable( var,id ) )
+  if( !var->check_visibility( id,
+                              !!config_setting2("more_mode"),
+                              !!config_setting2("expert_mode"),
+                              !config_setting2("devel_mode"),
+                              !!(int)id->variables->initial ) )
     return 0;
 
-
-  string warn =  type_warning( var[ VAR_TYPE ], var[ VAR_VALUE ] ) || "";
-  if( strlen( warn ) )
-    pre += "<font size='+1' color='&usr.warncolor;'>"+warn+"</font><br />";
-
-  switch(var[VAR_TYPE])
-  {
-   case TYPE_CUSTOM:
-     return pre + var[VAR_MISC][1]( var[ VAR_SHORTNAME ], var[VAR_VALUE], 
-                                    path, id );
-     break;
-   case TYPE_TEXT_FIELD:
-     if( view_mode )
-       return "<b><tt>"+replace(html_encode_string(var[VAR_VALUE]||""),
-                            "\n", "<br")+"</tt></b>";
-     return pre + "<textarea name=\""+path+"\" cols=50 rows=10>"
-            + html_encode_string(var[VAR_VALUE]||"")
-            + "</textarea>";
-     break;
-   case TYPE_PASSWORD:
-     if( view_mode )
-       return "<b>Password</b>";
-     return pre + "<input name=\""+path+"\" type=password size=30>";
-    break;
-
-   case TYPE_FONT:
-     if( view_mode )
-       return "<b>"+html_encode_string(var[VAR_VALUE])+"</b>";
-     array select_from;
-     select_from=sort( available_fonts() );
-     string res= pre + "<select name="+path+">";
-     foreach(map( select_from, replace, "_", " " ), string f)
-     {
-       if( search( f, "\0" ) != -1 )
-         continue; /* f -= "\0"; // Presumably a bug in Image.TTF. */
-       if( strlen( f ) )
-       {
-         res += "<option"+((f == replace(var[VAR_VALUE],"_"," "))?
-                           " selected":"")+">"+f+"</option>\n";
-       }
-     }
-     return res+ "</select>";
-
-   case TYPE_STRING:
-   case TYPE_URL:
-   case TYPE_FILE:
-   case TYPE_DIR:
-   case TYPE_LOCATION:
-     if( view_mode )
-       return "<b>"+html_encode_string(var[VAR_VALUE])+"</b>";
-     return pre+input(path, var[VAR_VALUE], 30);
-
-   case TYPE_FLOAT:
-     if( view_mode )
-       return "<b>"+var[VAR_VALUE]+"</b>";
-     return pre+input(path, sprintf( "%.3f", var[VAR_VALUE]), 10);
-
-   case TYPE_INT:
-     if( view_mode )
-       return "<b>"+var[VAR_VALUE]+"</b>";
-     return pre+input(path, var[VAR_VALUE], 10);
-
-   case TYPE_THEME: /* config-if local type... */
-     array a = all_themes( );
-     sort( map(a,theme_name), a );
-     string tmp="<select name=\""+path+"\">  ";
-     foreach( a, string q )
-     {
-       if( q == var[VAR_VALUE] )
-         tmp += "<option selected value='"+q+"'>"+theme_name(q)+"</option>\n";
-       else
-         tmp += "<option value='"+q+"'>"+theme_name(q)+"</option>\n";
-     }
-     return pre+tmp+"</select>";
-
-   case TYPE_DIR_LIST:
-   case TYPE_STRING_LIST:
-   case TYPE_URL_LIST:
-   case TYPE_INT_LIST:
-    if(var[VAR_MISC])
-    {
-      string tmp, res="";
-      array misc;
-      mapping translate;
-      int i;
-
-      tmp="<select name=\""+path+"\">  ";
-      misc=var[ VAR_MISC ];
-      translate = LOW_LOCALE->module_doc_string(mod, s, 2);
-      if(!translate) translate = ([]);
-
-      int found = 0;
-      for(i=0; i<sizeof(misc); i++)
-      {
-	if(misc[i]==var[VAR_VALUE])
-        {
-	  found = 1;
-          if( view_mode )
-            return "<b>"+html_encode_string((string)(translate[misc[i]]||misc[i]))+"</b>";
-	  tmp+=("  <option value=\""+
-		replace((string)misc[i],"\"","&quote;")
-		+ "\" selected> "+
-		(translate[misc[i]] || misc[i])+" ")+"</option>\n";
-        }
- 	else
-	  tmp+=("  <option value=\""+
-		replace((string)misc[i],"\"","&quote;")+ "\"> "+
-		(translate[misc[i]] || misc[i])+" ")+"</option>\n";
-      }
-      if (!found) {		// To avoid user confusion.
-	if( view_mode )
-	  return "<b>"+html_encode_string(
-	    (string)(translate[var[VAR_VALUE]]||var[VAR_VALUE]))+"</b>";
-	tmp+=("  <option value=\""+
-	      replace((string)var[VAR_VALUE],"\"","&quote;")
-	      + "\" selected> "+
-	      (translate[var[VAR_VALUE]] || var[VAR_VALUE])+" ")+"</option>\n";
-      }
-      return pre+tmp+"</select>";
-    }
-    if( view_mode )
-      return "<b><tt>"+html_encode_string((((array(string))var[VAR_VALUE])*","))+"</tt></b>";
-    return pre+input( path, ((array(string))var[VAR_VALUE])*", ", 40 );
-
-
-   case TYPE_FLAG:
-    if( view_mode )
-      return "<b>"+(var[VAR_VALUE]?LOW_LOCALE->yes:LOW_LOCALE->no)+"</b>";
-     string res = "<select name="+path+"> ";
-     if(var[VAR_VALUE])
-       res +=  ("<option value=Yes selected>"+LOW_LOCALE->yes+"</option>\n"
-                "<option value=No>"+LOW_LOCALE->no)+"</option>\n";
-     else
-       res +=  ("<option value=Yes>"+LOW_LOCALE->yes+"</option>\n"
-                "<option value=No selected>"+LOW_LOCALE->no)+"</option>\n";
-     return pre+res + "</select>";
-    break;
-  }
+  if( !view_mode )
+    return pre + var->render_form( id );
+  return pre + var->render_view( id );
 }
 
-string get_var_type( string s, object mod, object id )
+mapping get_variable_map( string s, object mod, object id, int noset )
 {
-  int flag = !!mod->variables[ s ][ VAR_MISC ];
-  switch( mod->variables[ s ][ VAR_TYPE ] )
-  {
-   case TYPE_CUSTOM:
-   case TYPE_TEXT_FIELD:
-   case TYPE_STRING:
-   case TYPE_URL:
-   case TYPE_FLAG:
-   case TYPE_FONT:
-     break;
+  object var = mod->variables[ s ];
 
-   case TYPE_MODULE:
-    return LOCALE->module_hint();
-
-   case TYPE_LOCATION:
-    return LOCALE->location_hint();
-
-   case TYPE_FILE:
-    return LOCALE->file_hint();
-
-   case TYPE_DIR:
-    return LOCALE->dir_hint();
-
-   case TYPE_FLOAT:
-    return LOCALE->float_hint();
-
-   case TYPE_INT:
-    return LOCALE->int_hint();
-
-   case TYPE_URL_LIST:
-   case TYPE_STRING_LIST:
-    if(!flag)
-      return LOCALE->stringlist_hint();
-    break;
-
-   case TYPE_DIR_LIST:
-    if(!flag)
-      return LOCALE->dirlist_hint();
-    break;
-
-   case TYPE_PASSWORD:
-     return LOCALE->password_hint();
-
-   case TYPE_INT_LIST:
-    if(!flag)
-      return LOCALE->intlist_hint();
-    break;
-  }
-  return "";
-}
-
-mapping get_variable_map( string s, object mod, object id )
-{
-  return ([
+  return 
+  ([
     "sname":s,
-    "rname": get_var_doc( s, mod, 0, id ),
-    "doc":  (config_setting2( "docs" )?
-             get_var_doc( s, mod, 1, id ):""),
-    "name": get_var_doc( s, mod, 2, id ),
-    "value":get_var_value( s, mod, id ),
-    "type":mod->type,
-    "type_hint":(id->misc->config_settings->query("docs")?
-                  get_var_type( s, mod, id ):""),
-    "form": get_var_form( s, mod, id ),
+    "rname": var->name(),
+    "doc":  (config_setting2( "docs" )?var->doc():""),
+    "name": (var->name()/":")[-1],
+    "value":var->query(),
+    "type": var->type,
+    "type_hint":(config_setting2( "docs" )?var->type_hint( ):""),
+    "form": get_var_form( s, var, mod, id, noset ),
   ]);
 }
 
-int var_configurable( array var, object id )
+int var_configurable( Variable.Variable var, object id )
 {
-  if( mixed cf = var[ VAR_CONFIGURABLE ] )
-  {
-    if(functionp(cf) &&
-       cf( config_setting2("more_mode"),
-           config_setting2("expert_mode"),
-           config_setting2("devel_mode"),
-           (int)id->variables->initial))
-    {
-      return 0;
-    }
-    else if( intp( cf ) )
-    {
-      if((int)id->variables->initial && !(cf&VAR_INITIAL))      return 0;
-      if((cf & VAR_EXPERT) && !config_setting2("expert_mode"))   return 0;
-      if((cf & VAR_MORE) && !config_setting2("more_mode"))       return 0;
-      if((cf & VAR_DEVELOPER) && !config_setting2("devel_mode")) return 0;
-    }
-    return 1;
-  }
-  return 0;
+  return var->check_visibility( id,
+                                config_setting2("more_mode"),
+                                config_setting2("expert_mode"),
+                                config_setting2("devel_mode"),
+                                (int)id->variables->initial);
 }
 
 mapping get_variable_section( string s, object mod, object id )
 {
-//   if( s[0] == '_' )
-//     return 0;
-  array var = mod->variables[ s ];
+  Variable.Variable var = mod->variables[ s ];
+
   if( !var_configurable( var,id ) )
     return 0;
 
-  s = LOW_LOCALE->module_doc_string( mod, s, 0 );
+  s = var->name();
   if( !s ) return 0;
+
   if( sscanf( s, "%s:%*s", s ) )
     return ([
       "section":s,
@@ -935,16 +412,15 @@ mapping get_variable_section( string s, object mod, object id )
   return 0;
 }
 
-array get_variable_maps( object mod, mapping m, object id )
+array get_variable_maps( object mod, mapping m, object id, int fnset )
 {
-  array variables = map( indices(mod->variables),get_variable_map,mod,id);
-
+  while( id->misc->orig )
+    id = id->misc->orig;
+  array variables = map( indices(mod->variables),get_variable_map,mod,id,
+                         fnset || id->misc->set_from_vmap_done++);
   variables = filter( variables,
                       lambda( mapping q ) {
-                        return q->form &&
-                               strlen(q->sname);
-//                         &&
-//                                (q->sname[0] != '_');
+                        return q->form && strlen(q->sname);
                       } );
   map( variables, lambda( mapping q ) {
                     if( search( q->form, "<" ) != -1 )
@@ -967,6 +443,14 @@ array get_variable_maps( object mod, mapping m, object id )
                        } );
   }
   sort( variables->name, variables );
+
+  if( !fnset )
+    if( id->variables["save.x"] )
+    {
+      werror("will save\n");
+      remove_call_out( mod->save );
+      call_out( mod->save, 5 );
+    }
   return variables;
 }
 
@@ -1013,7 +497,8 @@ string container_configif_output(string t, mapping m, string c, object id)
   switch( m->source )
   {
    case "config-settings":
-     variables = get_variable_maps( id->misc->config_settings, m, id );
+     variables = get_variable_maps( id->misc->config_settings, m, id,
+                                    !!m->noset);
      break;
 
    case "locales":
@@ -1072,7 +557,7 @@ string container_configif_output(string t, mapping m, string c, object id)
    case "config-variables":
      object conf = find_config_or_error( m->configuration );
 
-     variables = get_variable_maps( conf, m, id );
+     variables = get_variable_maps( conf, m, id, !!m->noset);
      break;
 
    case "ports":
@@ -1090,7 +575,8 @@ string container_configif_output(string t, mapping m, string c, object id)
 
    case "port-variables":
      catch {
-       variables = get_variable_maps( roxen->find_port( m->port ), ([]), id );
+       variables = get_variable_maps( roxen->find_port( m->port ), ([]), id,
+                                      !!m->noset);
      };
      break;
 
@@ -1114,7 +600,7 @@ string container_configif_output(string t, mapping m, string c, object id)
      object mod = conf->find_module( replace( m->module, "!", "#" ) );
      if( !mod )
        error("Unknown module "+ m->module +"\n");
-     variables = get_variable_maps( mod, m, id );
+     variables = get_variable_maps( mod, m, id, !!m->noset);
      break;
 
    case "module-variables-sections":
@@ -1169,7 +655,7 @@ string container_configif_output(string t, mapping m, string c, object id)
      break;
 
    case "global-variables":
-     variables = get_variable_maps( roxen, m, id );
+     variables = get_variable_maps( roxen, m, id, !!m->noset);
      break;
 
 
