@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: cache.pike,v 1.55 2000/08/14 13:28:35 jonasw Exp $
+// $Id: cache.pike,v 1.56 2000/09/04 12:11:09 jonasw Exp $
 
 #pragma strict_types
 
@@ -110,6 +110,15 @@ mixed cache_lookup(string in, string what)
     }
   else CACHE_WERR("Miss");
   return ([])[0];
+}
+
+// Return all indices used by a given cache or indices of available caches
+array(string) cache_indices(string|void in)
+{
+  if (in)
+    return (cache[in] && indices(cache[in])) || ({ });
+  else
+    return indices(cache);
 }
 
 // Return some fancy cache statistics.

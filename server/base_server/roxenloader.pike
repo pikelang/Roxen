@@ -16,7 +16,7 @@ private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.193 2000/08/28 05:31:51 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.194 2000/09/04 12:16:45 jonasw Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -731,6 +731,7 @@ static private void initiate_cache()
   add_constant("cache_remove", cache->cache_remove);
   add_constant("cache_expire", cache->cache_expire);
   add_constant("cache_clear", cache->cache_expire);
+  add_constant("cache_indices", cache->cache_indices);
 }
 
 class _error_handler {
