@@ -11,7 +11,7 @@ import Parser.XML.Tree;
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_webapp",X,Y)
 // end of the locale related stuff
 
-constant cvs_version = "$Id: webapp.pike,v 2.25 2002/07/10 15:11:03 wellhard Exp $";
+constant cvs_version = "$Id: webapp.pike,v 2.26 2002/07/15 15:38:27 wellhard Exp $";
 
 constant thread_safe=1;
 constant module_unique = 0;
@@ -1540,6 +1540,11 @@ class TagServlet
   mapping(string:RXML.Type) req_arg_types = ([
     "webapp": RXML.t_text(RXML.PEnt)
   ]);
+  mapping(string:RXML.Type) opt_arg_types = ([
+    "name": RXML.t_text(RXML.PEnt),
+    "uri": RXML.t_text(RXML.PEnt),
+    "no-headers": RXML.t_text(RXML.PEnt)
+  ]);
   //array(RXML.Type) result_types = ({RXML.t_any});
 
   class Frame {
@@ -1612,7 +1617,7 @@ class TagServlet
 	    if (hdrs->rettext)
 	      RXML_CONTEXT->set_misc (" _rettext", hdrs->rettext);
 	  }
-          if (hdrs->extra_heads)
+          if (hdrs->extra_heads && !args["no-headers"])
             RXML_CONTEXT->extend_scope ("header", hdrs->extra_heads);
 //               foreach(rxml_wrapper->headermap, string h)
 //               {
@@ -1995,6 +2000,11 @@ constant tagdoc=([
  <p>The uri of the servlet. This is matched against the &lt;url-pattern&gt;
  entry in the web.xml file if the name attribute is not given, otherwise
  it is just passed on to the servlet as the servlet path.</p>
+</attr>
+
+<attr name='no-headers'>
+ <p>If set no headers from the result will be set in the page,
+ except return code and return text.</p>
 </attr>"
 ,
 
