@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.182 2004/05/23 02:35:26 _cvs_stephen Exp $
+// $Id: Roxen.pmod,v 1.183 2004/05/23 14:23:04 _cvs_stephen Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -700,7 +700,7 @@ mapping http_proxy_auth_required(string realm, void|string message)
 //! realm="`realm'"</tt>. For more info, see RFC 2617.
 {
   if(!message)
-    message = "<h1>Proxy authentication failed.\n</h1>";
+    message = "<h1>Proxy authentication failed.</h1>";
   return http_low_answer(407, message)
     + ([ "extra_heads":([ "Proxy-Authenticate":"basic realm=\""+realm+"\"",]),]);
 }
@@ -1114,13 +1114,27 @@ RXML.Parser get_rxml_parser (RequestID id, void|RXML.Type type, void|int make_p_
   return parser;
 }
 
+static int(0..0) return_zero() {return 0;}
+
+static Parser.HTML xml_parser =
+  lambda() {
+    Parser.HTML p = Parser.HTML();
+    p->lazy_entity_end (1);
+    p->match_tag (0);
+    p->xml_tag_syntax (3);
+    p->add_quote_tag ("!--", return_zero, "--");
+    p->add_quote_tag ("![CDATA[", return_zero, "]]");
+    p->add_quote_tag ("?", return_zero, "?");
+    return p;
+  }();
+
 Parser.HTML get_xml_parser()
 //! Returns a @[Parser.HTML] initialized for parsing XML. It has all
 //! the flags set properly for XML syntax and have callbacks to ignore
 //! comments, CDATA blocks and unknown PI tags, but it has no
 //! registered tags and doesn't decode any entities.
 {
-  return Parser.get_xml_parser();
+  return xml_parser->clone();
 }
 
 constant iso88591
@@ -1994,12 +2008,15 @@ Stdio.File open_log_file( string logfile )
 }
 
 string tagtime(int t, mapping(string:string) m, RequestID id,
-	       function(string, string:function(int, string|void:string)) language)
+	       function(string, string,
+			object:function(int, mapping(string:string):string)) language)
   //! A rather complex function used as presentation function by
   //! several RXML tags. It takes a unix-time integer and a mapping
   //! with formating instructions and returns a string representation
   //! of that time. See the documentation of the date tag.
 {
+  string res;
+
   if (m->adjust) t+=(int)m->adjust;
 
   string lang;
@@ -2022,13 +2039,13 @@ string tagtime(int t, mapping(string:string) m, RequestID id,
     {
      case "year":
       return number2string(localtime(t)->year+1900,m,
-			   language(lang, sp||"number"));
+			   language(lang, sp||"number",id));
      case "month":
       return number2string(localtime(t)->mon+1,m,
-			   language(lang, sp||"month"));
+			   language(lang, sp||"month",id));
      case "week":
       return number2string(Calendar.ISO.Second(t)->week_no(),
-			   m, language(lang, sp||"number"));
+			   m, language(lang, sp||"number",id));
      case "beat":
        //FIXME This should be done inside Calendar.
        mapping lt=gmtime(t);
@@ -2040,34 +2057,34 @@ string tagtime(int t, mapping(string:string) m, RequestID id,
        float beats=secs/86.4;
        if(!sp) return sprintf("@%03d",(int)beats);
        return number2string((int)beats,m,
-                            language(lang, sp||"number"));
+                            language(lang, sp||"number",id));
 
      case "day":
      case "wday":
       return number2string(localtime(t)->wday+1,m,
-			   language(lang, sp||"day"));
+			   language(lang, sp||"day",id));
      case "date":
      case "mday":
       return number2string(localtime(t)->mday,m,
-			   language(lang, sp||"number"));
+			   language(lang, sp||"number",id));
      case "hour":
       return number2string(localtime(t)->hour,m,
-			   language(lang, sp||"number"));
+			   language(lang, sp||"number",id));
 
      case "min":  // Not part of RXML 2.0
      case "minute":
       return number2string(localtime(t)->min,m,
-			   language(lang, sp||"number"));
+			   language(lang, sp||"number",id));
      case "sec":  // Not part of RXML 2.0
      case "second":
       return number2string(localtime(t)->sec,m,
-			   language(lang, sp||"number"));
+			   language(lang, sp||"number",id));
      case "seconds":
       return number2string(t,m,
-			   language(lang, sp||"number"));
+			   language(lang, sp||"number",id));
      case "yday":
       return number2string(localtime(t)->yday,m,
-			   language(lang, sp||"number"));
+			   language(lang, sp||"number",id));
      default: return "";
     }
   }
@@ -2097,14 +2114,10 @@ string tagtime(int t, mapping(string:string) m, RequestID id,
     }
   }
 
-  string type;
-  if(m->full) type="full";
-  else if(m->date) type="date";
-  else if(m->time) type="time";
-  string res = language(lang, "date")(t,type);
+  res=language(lang, "date", id)(t,m);
 
-  if(m->case)
-    switch(lower_case(m->case))
+  if(m["case"])
+    switch(lower_case(m["case"]))
     {
      case "upper":      return upper_case(res);
      case "lower":      return lower_case(res);
@@ -2762,11 +2775,12 @@ class QuotaDB
     if (res = active_objects[key]) {
       QD_WRITE(sprintf("QuotaDB::lookup(%O, %O): User in active objects.\n",
 		       key, quota));
+
       return res;
     }
-
     if (res = low_lookup(key, quota)) {
       active_objects[key] = res;
+
       return res;
     }
 
@@ -3478,7 +3492,7 @@ RXML.TagSet entities_tag_set = class
 {
   inherit RXML.TagSet;
 
-  static void _prepare_context (RXML.Context c) {
+  static void entities_prepare_context (RXML.Context c) {
     c->misc->scope_roxen=([]);
     c->add_scope("roxen",scope_roxen);
     c->misc->scope_page=([]);
@@ -3493,8 +3507,8 @@ RXML.TagSet entities_tag_set = class
 
   void create()
   {
-    prepare_context = _prepare_context;
     ::create (0, "entities_tag_set");
+    prepare_context = entities_prepare_context;
     // Note: No string entities are replaced when the result type for
     // the parser is t_xml or t_html.
     add_string_entities (parser_charref_table);
@@ -3751,7 +3765,7 @@ Configuration get_owning_config (object|function thing)
 }
 
 #ifdef REQUEST_TRACE
-static string trace_msg (RequestID id, string msg, string name)
+static string trace_msg (mapping id_misc, string msg, string name)
 {
   msg = html_decode_string (
     Parser.HTML()->_set_tag_callback (lambda (object p, string s) {return "";})->
@@ -3764,61 +3778,75 @@ static string trace_msg (RequestID id, string msg, string name)
     report_debug ("%s%s%-40s  %s\n",
 		  map (lines[..sizeof (lines) - 2],
 		       lambda (string s) {
-			 return sprintf ("%s%*s%s\n", id->misc->trace_id_prefix,
-					 id->misc->trace_level + 1, "", s);
+			 return sprintf ("%s%*s%s\n", id_misc->trace_id_prefix,
+					 id_misc->trace_level + 1, "", s);
 		       }) * "",
-		  id->misc->trace_id_prefix,
-		  sprintf ("%*s%s", id->misc->trace_level + 1, "", lines[-1]),
+		  id_misc->trace_id_prefix,
+		  sprintf ("%*s%s", id_misc->trace_level + 1, "", lines[-1]),
 		  name);
 }
 
 void trace_enter (RequestID id, string msg, object|function thing)
 {
-  if (!id->misc->trace_level) {
-    id->misc->trace_id_prefix = ({"%%", "##", "§§", "**", "@@", "$$", "¤¤"})[
-      all_constants()->id_trace_level_rotate_counter++ % 7];
+  if (id) {
+    // Relying on the interpreter lock here. Necessary since requests
+    // can finish and be destructed asynchronously which typically
+    // leads to races in the TRACE_LEAVE calls in low_get_file.
+    mapping id_misc = id->misc;
+
+    if (!id_misc->trace_level) {
+      id_misc->trace_id_prefix = ({"%%", "##", "§§", "**", "@@", "$$", "¤¤"})[
+	all_constants()->id_trace_level_rotate_counter++ % 7];
 #ifdef ID_OBJ_DEBUG
-    report_debug ("%s%s %O: Request handled by: %O\n",
-		  id->misc->trace_id_prefix, id->misc->trace_id_prefix[..0],
-		  id, id->conf);
+      report_debug ("%s%s %O: Request handled by: %O\n",
+		    id_misc->trace_id_prefix, id_misc->trace_id_prefix[..0],
+		    id, id && id->conf);
 #else
-    report_debug ("%s%s Request handled by: %O\n",
-		  id->misc->trace_id_prefix, id->misc->trace_id_prefix[..0],
-		  id->conf);
+      report_debug ("%s%s Request handled by: %O\n",
+		    id_misc->trace_id_prefix, id_misc->trace_id_prefix[..0],
+		    id->conf);
 #endif
+    }
+
+    string name;
+    if (thing) {
+      name = get_modfullname (get_owning_module (thing));
+      if (name)
+	name = "mod: " + html_decode_string (
+	  Parser.HTML()->_set_tag_callback (lambda (object p, string s) {return "";})->
+	  finish (name)->read());
+      else if (Configuration conf = get_owning_config (thing))
+	name = "conf: " + conf->query_name();
+      else
+	name = sprintf ("obj: %O", thing);
+    }
+    else name = "";
+
+    trace_msg (id_misc, msg, name);
+    id_misc->trace_level++;
+
+    if(function(string,mixed ...:void) _trace_enter =
+       [function(string,mixed ...:void)]id_misc->trace_enter)
+      _trace_enter (msg, thing);
   }
-
-  string name;
-  if (thing) {
-    name = get_modfullname (get_owning_module (thing));
-    if (name)
-      name = "mod: " + html_decode_string (
-	Parser.HTML()->_set_tag_callback (lambda (object p, string s) {return "";})->
-	finish (name)->read());
-    else if (Configuration conf = get_owning_config (thing))
-      name = "conf: " + conf->query_name();
-    else
-      name = sprintf ("obj: %O", thing);
-  }
-  else name = "";
-
-  trace_msg (id, msg, name);
-  id->misc->trace_level++;
-
-  if(function(string,mixed ...:void) _trace_enter =
-     [function(string,mixed ...:void)]([mapping(string:mixed)]id->misc)->trace_enter)
-    _trace_enter (msg, thing);
 }
 
 void trace_leave (RequestID id, string desc)
 {
-  if (id->misc->trace_level) id->misc->trace_level--;
+  if (id) {
+    // Relying on the interpreter lock here. Necessary since requests
+    // can finish and be destructed asynchronously which typically
+    // leads to races in the TRACE_LEAVE calls in low_get_file.
+    mapping id_misc = id->misc;
 
-  if (sizeof (desc)) trace_msg (id, desc, "");
+    if (id_misc->trace_level) id_misc->trace_level--;
 
-  if(function(string:void) _trace_leave =
-     [function(string:void)]([mapping(string:mixed)]id->misc)->trace_leave)
-    _trace_leave (desc);
+    if (sizeof (desc)) trace_msg (id_misc, desc, "");
+
+    if(function(string:void) _trace_leave =
+       [function(string:void)]id_misc->trace_leave)
+      _trace_leave (desc);
+  }
 }
 #endif
 
