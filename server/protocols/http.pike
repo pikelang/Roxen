@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.405 2003/11/03 13:23:27 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.406 2003/11/03 13:41:54 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1788,7 +1788,7 @@ void send_result(mapping|void result)
     }
     else 
     {
-      if( strlen( head_string ) < 4000)
+      if( strlen( head_string ) < (HTTP_BLOCKING_SIZE_THRESHOLD))
       {
 	REQUEST_WERR (sprintf ("HTTP: Send %O", head_string));
 	do_log( my_fd->write( head_string ) );
@@ -2152,7 +2152,7 @@ void got_data(mixed fooid, string s)
 	    MY_TRACE_LEAVE ("Using entry from ram cache");
 	    conf->hsent += strlen(file->hs);
 	    cache_status["protcache"] = 1;
-	    if( strlen( d ) < 4000 )
+	    if( strlen( d ) < (HTTP_BLOCKING_SIZE_THRESHOLD) )
 	    {
 	      TIMER_END(cache_lookup);
 	      do_log( my_fd->write( fix_date(file->hs)+d ) );
