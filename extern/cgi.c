@@ -2,6 +2,8 @@
 #include <sys/types.h>
 #include <stdio.h>
 #include <sys/signal.h>
+#include <sys/time.h>
+
 #ifdef HAVE_SYS_RESOURCE_H
 #include <sys/resource.h>
 #endif
@@ -20,8 +22,6 @@
 #endif
 #include <poll.h>
 #endif
-
-#include <sys/time.h>
 
 #ifndef HAVE_PIPE
 #include <sys/socket.h>
