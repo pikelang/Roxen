@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
  
-constant cvs_version = "$Id: ip-less_hosts.pike,v 1.18 1998/04/20 20:34:46 grubba Exp $";
+constant cvs_version = "$Id: ip-less_hosts.pike,v 1.19 1998/05/28 01:03:31 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -27,6 +27,13 @@ array register_module()
 
 mapping config_cache = ([ ]);
 
+int is_ip(string s)
+{
+  return(replace(s,
+		 ({ "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "." }),
+		 ({ "","","","","","","","","","","" })) == "");
+}
+
 object find_server_for(object id, string host)
 {
   object old_conf = id->conf;
@@ -35,6 +42,12 @@ object find_server_for(object id, string host)
   if(config_cache[host]) {
     id->conf=config_cache[host];
   } else {
+
+    if (is_ip(host)) {
+      // Not likely to be anything else than the current virtual server.
+      config_cache[host] = id->conf;
+      return(id->conf);
+    }
 
 #if constant(Array.diff_longest_sequence)
 
