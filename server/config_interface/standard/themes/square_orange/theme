@@ -1,3 +1,5 @@
+<theme-set what='background' to='bg.gif' themefile />
+
 <theme-set what='content-bg' to='#ffbc28'/>
 <theme-set what='top-bgcolor' to='none'/>
 <theme-set what='toptabs-bgcolor' to='none'/>
