@@ -1,9 +1,12 @@
 #
-# $Id: configure.in,v 1.73 1999/08/27 12:07:44 grubba Exp $
+# $Id: configure.in,v 1.74 1999/11/20 01:11:55 peter Exp $
 #
 
 prefix=$PWD
 AC_INIT(Makefile.in)
+
+#Avoid Pikes new makefile behavior.
+popdef([AC_OUTPUT])
 
 # Check the arguments
 
