@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.180 1999/06/06 20:49:49 peter Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.181 1999/06/10 03:34:20 mast Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -2812,24 +2812,20 @@ int disable_module( string modname )
   perror("Disabling "+module->name+" # "+id+"\n");
 #endif
 
-  if(module["type"] & MODULE_EXTENSION 
-     && arrayp( me -> query_extensions()))
+  if(module["type"] & MODULE_EXTENSION)
   {
     string foo;
-    foreach( me -> query_extensions(), foo )
-      for(pr=0; pr<10; pr++)
-	if( pri[pr]->extension_modules[ foo ] ) 
-	  pri[pr]->extension_modules[ foo ]-= ({ me });
+    for(pr=0; pr<10; pr++)
+      foreach( indices (pri[pr]->extension_modules), foo )
+	pri[pr]->extension_modules[ foo ]-= ({ me });
   }
 
-  if(module["type"] & MODULE_FILE_EXTENSION 
-     && arrayp( me -> query_file_extensions()))
+  if(module["type"] & MODULE_FILE_EXTENSION)
   {
     string foo;
-    foreach( me -> query_file_extensions(), foo )
-      for(pr=0; pr<10; pr++)
-	if(pri[pr]->file_extension_modules[ foo ] ) 
-	  pri[pr]->file_extension_modules[foo]-=({me});
+    for(pr=0; pr<10; pr++)
+      foreach( indices (pri[pr]->file_extension_modules), foo )
+	pri[pr]->file_extension_modules[foo]-=({me});
   }
 
   if(module->type & MODULE_PROVIDER) {
