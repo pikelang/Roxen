@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.69 2000/12/11 05:14:56 nilsson Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.70 2000/12/11 10:44:43 per Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -389,10 +389,39 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
   //  Generate text
   if (sizeof(text))
   {
-    Font button_font = resolve_font( args->font+" "+text_height );
-    text_img = button_font->write(text);
-    if( abs(text_img->ysize() -text_height) > 2 )
+    int os, dir;
+    Font button_font;
+    int th = text_height;
+    do
+    {
+      button_font = resolve_font( args->font+" "+th );
+      text_img = button_font->write(text);
+      os = text_img->ysize();
+      if( !dir )
+      {
+        if( os < text_height ) { dir = 1; th++; }
+        if( os > text_height ) { dir =-1; th--; }
+      } else {
+        if( dir > 0 && os > text_height )
+          break;
+        if( dir < 0 && os < text_height )
+          break;
+        if( os == text_height )
+          break;
+        th += dir;
+      }
+    } while( (text_img->ysize() - text_height)>1
+             && (th>0 && th<text_height*2));
+
+    // fonts that can not be scaled.
+    if( abs(text_img->ysize() - text_height)>1 )
       text_img = text_img->scale(0, text_height );
+    else
+    {
+      int o = text_img->ysize() - text_height; 
+      top -= o;
+      middle -= o/2;
+    }
     if (args->cnd)
       text_img = text_img->scale((int) round(text_img->xsize() * 0.8),
 				 text_img->ysize());
