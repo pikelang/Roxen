@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.204 1999/07/15 16:59:27 neotron Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.205 1999/08/30 09:29:03 per Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -2455,19 +2455,14 @@ void hooks_for( string modname, object mod )
   }
 }
 
-
-int unload_module( string modname );
-int load_module( string modname );
-
 object enable_module( string modname )
 {
   string id;
   mapping module;
   mapping enabled_modules;
-  modname = replace(modname, ".lpc#","#");
+//   modname = replace(modname, ".lpc#","#");
   
   sscanf(modname, "%s#%s", modname, id );
-
   module = modules[ modname ];
   if(!module)
   {
@@ -3131,7 +3126,7 @@ int load_module(string module_file)
     master()->set_inhibit_compile_errors((e = ErrorContainer())->got_error);
     err = catch {
       obj = roxen->load_from_dirs(roxen->QUERY(ModuleDirs), module_file,
-				  this_object());
+                                  this_object());
     };
     master()->set_inhibit_compile_errors(0);
     
@@ -3229,7 +3224,7 @@ int load_module(string module_file)
   
   if(mappingp(module_data[2]))
   {
-    tmpp->doc=module_data[2]->standard;
+    tmpp->doc=module_data[2]->standard||module_data[2]->english;
     tmpp->docs=module_data[2];
   } else {
     tmpp->doc = module_data[2];
