@@ -49,7 +49,7 @@ If we put <kbd>{insert file="aaa/bbb"}</kbd> in the file
     <kbd>toword</kbd> in the macro or file. Note that only lowercase
     character sequences can be replaced.<p>
     <p>
-<dt><kbd><b><a name=macroname>define=macroname</a></b></kbd>
+<dt><kbd><b><a name=macroname>name=macroname</a></b></kbd>
 <dd>Inserts this macro, which should have 
     been defined by <kbd>{define}</kbd> before it is used. If it
     resides in another file, you have to <kbd>{insert
