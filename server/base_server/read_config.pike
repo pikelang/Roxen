@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: read_config.pike,v 1.39 2000/07/28 19:05:27 lange Exp $
+// $Id: read_config.pike,v 1.40 2000/08/07 15:47:09 mast Exp $
 
 #include <module.h>
 
@@ -206,13 +206,12 @@ void store( string reg, mapping vars, int q, object current_configuration )
   {
     mixed var;
     m = ([ ]);
-    vars = copy_value( vars );
     foreach(indices(vars), var)
 //       if( vars[var]->is_defaulted() )
 //         m_delete( vars, var );
 //       else
-        vars[ var ] = vars[ var ]->query();
-    if(!sizeof( vars ))
+        m[ var ] = vars[ var ]->query();
+    if(!sizeof( m ))
       m_delete( data, reg );
     else 
       data[reg] = m;
