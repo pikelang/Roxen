@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version = "$Id: cgi.pike,v 2.49 2000/11/13 07:32:09 per Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.50 2000/11/23 05:04:35 per Exp $";
 
 #if !defined(__NT__) && !defined(__AmigaOS__)
 # define UNIX 1
@@ -830,7 +830,7 @@ class CGIScript
       m_delete(environment, "HTTP_AUTHORIZATION");
     if(query("clearpass") && id->auth && id->realauth ) {
       environment["REMOTE_USER"] = (id->realauth/":")[0];
-      environment["REMOTE_PASSWORD"] = (id->realauth/":")[1];
+      environment["REMOTE_PASSWORD"] = (id->realauth/":")[1..]*":";
     } else {
       m_delete(environment, "REMOTE_PASSWORD");
     }

@@ -15,7 +15,7 @@ inherit "module";
 
 #include <roxen.h>
 
-constant cvs_version = "$Id: php4.pike,v 2.11 2000/11/09 21:37:59 nilsson Exp $";
+constant cvs_version = "$Id: php4.pike,v 2.12 2000/11/23 05:04:36 per Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FILE_EXTENSION;
 
@@ -210,7 +210,7 @@ class PHPScript
       m_delete(environment, "HTTP_AUTHORIZATION");
     if(query("clearpass") && id->auth && id->realauth ) {
       environment["REMOTE_USER"] = (id->realauth/":")[0];
-      environment["REMOTE_PASSWORD"] = (id->realauth/":")[1];
+      environment["REMOTE_PASSWORD"] = (id->realauth/":")[1..]*":";
     } else
       m_delete(environment, "REMOTE_PASSWORD");
     if (id->rawauth)

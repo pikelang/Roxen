@@ -93,7 +93,7 @@ mapping my_build_env_vars(string f, object id, string|void path_info)
   }
   if(QUERY(clearpass) && id->auth && id->realauth ) {
     new["REMOTE_USER"] = (id->realauth/":")[0];
-    new["REMOTE_PASSWORD"] = (id->realauth/":")[1];
+    new["REMOTE_PASSWORD"] = (id->realauth/":")[1..]*":";
   } else {
     m_delete(new, "REMOTE_PASSWORD");
   }

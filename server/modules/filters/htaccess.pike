@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version = "$Id: htaccess.pike,v 1.65 2000/09/16 17:25:55 per Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.66 2000/11/23 05:04:34 per Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -612,6 +612,8 @@ mapping|string|int htaccess(mapping access, RequestID id)
       array(string) auth;
 
       auth = id->realauth/":";
+      if( sizeof( auth ) > 2 )
+	auth[1] = auth[1..]*":";
 
       if((access[method]->user &&
 	  validate_user(access[method]->user, auth, userfile, id)) ||
