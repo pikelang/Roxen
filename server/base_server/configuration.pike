@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.578 2004/05/21 13:12:11 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.579 2004/05/28 17:05:47 jonasw Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3847,6 +3847,8 @@ modules.</p>
   <td>Corresponds to Roxen 3.3.</td></tr>
 <tr valign='top'><td>3.4&nbsp;&nbsp;</td>
   <td>Corresponds to Roxen 3.4.</td></tr>
+<tr valign='top'><td>4.0&nbsp;&nbsp;</td>
+  <td>Corresponds to Roxen 4.0.</td></tr>
 </table></p>")));
 
   set ("compat_level", roxen.__roxen_version__);
@@ -4120,7 +4122,12 @@ also set 'URLs'."));
       leftmargin='0' rightmargin='0' topmargin='0' bottommargin='0'
       style='margin: 0; padding: 0'>
 
-<table border='0' cellspacing='0' cellpadding='0'>
+<table border='0' cellspacing='0' cellpadding='0' height='100%'>
+  <colgroup>
+    <col span='3' />
+    <col width='356' />
+    <col width='0*' />
+  </colgroup>
   <tr>
     <td><img src='/internal-roxen-unit' height='30' /></td>
   </tr><tr>
@@ -4128,16 +4135,21 @@ also set 'URLs'."));
     <td><img src='/internal-roxen-404' /></td>
     <td><img src='/internal-roxen-unit' width='30' /></td>
     <td valign='bottom'><img src='/internal-roxen-page-not-found-2' /></td>
+    <td></td>
   </tr><tr>
     <td><img src='/internal-roxen-unit' height='30' /></td>
   </tr><tr>
     <td colspan='3'></td>
-    <td>
+    <td colspan='2'>
       <div class='msg'>Unable to retrieve</div>
       <div class='url'>&page.virtfile;</div>
+    </td>
+  </tr><tr>
+    <td colspan='3'></td>
+    <td width='356'>
       <div class='msg'>
-        If you feel this is a configuration error, please contact<br />
-        the administrators of this server or the author of the<br />
+        If you feel this is a configuration error, please contact
+        the administrators of this server or the author of the
         <if referrer=''>
           <a href='&client.referrer;'>referring page</a>.
         </if><else>
@@ -4145,17 +4157,23 @@ also set 'URLs'."));
         </else>
       </div>
     </td>
-  </tr>
-</table>
-
-<table border='0' cellspacing='0' cellpadding='0'
-       style='position: absolute; left: 202px; bottom: 35px'>
-  <tr>
-    <td><img src='/internal-roxen-roxen-mini.gif' /></td>
-    <td class='info'>
-      &nbsp;&nbsp;<b>&roxen.product-name;</b> <font color='#ffbe00'>|</font>
-      version &roxen.dist-version;
+    <td>&nbsp;</td>
+  </tr><tr valign='bottom' height='100%'>
+    <td colspan='3'></td>
+    <td>
+      <img src='/internal-roxen-unit' height='20' />
+      <table border='0' cellspacing='0' cellpadding='0'>
+        <tr>
+          <td><img src='/internal-roxen-roxen-mini.gif' /></td>
+          <td class='info'>
+            &nbsp;&nbsp;<b>Roxen CMS</b> <font color='#ffbe00'>|</font>
+            version &roxen.dist-version;
+          </td>
+        </tr>
+      </table>
+      <img src='/internal-roxen-unit' height='20' />
     </td>
+    <td></td>
   </tr>
 </table>
 
