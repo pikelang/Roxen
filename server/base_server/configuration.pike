@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.535 2003/06/16 13:32:28 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.536 2003/06/16 15:17:12 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1830,7 +1830,9 @@ mapping|int(-1..0) handle_webdav(RequestID id)
 			 module->recurse_find_properties(path, "DAV:prop", d,
 							 stat, id, filt);
 		       };
-	  extras = ({ (multiset)(prop->get_children()->get_full_name()) });
+	  extras = ({
+	    (multiset)(prop->get_children()->get_full_name() - ({ "" }))
+	  });
 	  break;
 	default:
 	  break;
