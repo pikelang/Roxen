@@ -1,13 +1,13 @@
 #
 # Main makefile for extracting autodoc.
 #
-# $Id: Makefile,v 1.3 2001/11/16 16:06:14 nilsson Exp $
+# $Id: Makefile,v 1.4 2004/05/18 16:37:57 grubba Exp $
 #
 
 PIKE=pike
 REFDOC=/home/nilsson/Pike/7.3/refdoc
 
-# FIXME: The REFDC variable should be generated.
+# FIXME: The REFDOC variable should be generated.
 
 all: modref
 
