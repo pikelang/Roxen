@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.254 1998/11/22 17:07:43 per Exp $
+ * $Id: roxen.pike,v 1.255 1998/11/22 17:31:09 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -8,7 +8,7 @@
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.254 1998/11/22 17:07:43 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.255 1998/11/22 17:31:09 per Exp $";
 
 
 // Some headerfiles
@@ -63,11 +63,13 @@ class RequestID
   string rawauth;
   string realauth;
   string since;
-  
+  string remoteaddr;
+  string host;
+
+  void create(object|void master_request_id);
   void send(string|object what, int|void len);
   string scan_for_query( string in );
   void end(string|void s, int|void keepit);
-
   void ready_to_receive();
   void send_result(mapping|void result);
   RequestID clone_me();

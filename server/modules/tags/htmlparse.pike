@@ -12,7 +12,13 @@
 // 
 // the only thing that should be in this file is the main parser.  
 
-constant cvs_version="$Id: htmlparse.pike,v 1.154 1998/11/22 15:26:49 grubba Exp $";
+#define _stat defines[" _stat"]
+#define _error defines[" _error"]
+#define _extra_heads defines[" _extra_heads"]
+#define _rettext defines[" _rettext"]
+#define _ok     defines[" _ok"]
+
+constant cvs_version="$Id: htmlparse.pike,v 1.155 1998/11/22 17:31:12 per Exp $";
 constant thread_safe=1;
 
 function call_user_tag, call_user_container;
@@ -352,17 +358,11 @@ string *query_file_extensions()
   return query("toparse") + query("noparse"); 
 }
 
-
-#define _stat defines[" _stat"]
-#define _error defines[" _error"]
-#define _extra_heads defines[" _extra_heads"]
-#define _rettext defines[" _rettext"]
-#define _ok     defines[" _ok"]
-
 mapping handle_file_extension( object file, string e, object id)
 {
   string to_parse;
   mapping defines = id->misc->defines || ([]);
+  array stat = defines[" _stat"] || id->misc->stat || file->stat();
   id->misc->defines = defines;
   if(search(QUERY(noparse),e)!=-1)
   {
@@ -371,21 +371,12 @@ mapping handle_file_extension( object file, string e, object id)
     if(search(QUERY(toparse),e)==-1)  /* Parse anyway */
       return 0;
   }
-  if(QUERY(parse_exec) &&   !(_stat[0] & 07111)) return 0;
-  if(QUERY(no_parse_exec) && (_stat[0] & 07111)) return 0;
+  if(QUERY(parse_exec) &&   !(stat[0] & 07111)) return 0;
+  if(QUERY(no_parse_exec) && (stat[0] & 07111)) return 0;
 
-  to_parse = file->read();
-  destruct(file);
-  bytes += strlen(to_parse);
-  to_parse = parse_rxml(to_parse,id,file);
-
-  return (["data":to_parse,
-	   "type":"text/html",
-	   "stat":_stat,
-	   "error":_error,
-	   "rettext":_rettext,
-	   "extra_heads":_extra_heads,
-	   ]);
+  id->misc->defines[" _stat"] = stat;
+  bytes += strlen(to_parse = file->read());
+  return http_rxml_answer( to_parse, id, file, "text/html" );
 }
 
 /* standard roxen tags */
