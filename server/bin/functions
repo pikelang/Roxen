@@ -21,6 +21,11 @@ setup_environment() {
     . "$LOCALDIR"/environment
   fi
 
+  # Also source environment2, which will not be modified by updates
+  if test -f "$LOCALDIR"/environment2; then
+    . "$LOCALDIR"/environment2
+  fi
+
   # Make sure $CLASSPATH contains the servlet stuff
   CLASSPATH="java/classes${CLASSPATH:+:}$CLASSPATH"
   for jar in java/classes/*.jar; do
