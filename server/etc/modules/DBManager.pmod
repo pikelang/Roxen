@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.31 2001/09/03 10:54:54 grubba Exp $
+// $Id: DBManager.pmod,v 1.32 2001/09/03 11:57:49 grubba Exp $
 
 //! Manages database aliases and permissions
 
@@ -55,8 +55,8 @@ private
      *
      * Perform the rotation first, to avoid thread-races.
      */
-    sql_cache_size = 0;
 #ifdef THREADS
+    sql_cache_size = 0;
     mapping(object:mapping(string:Sql.Sql)) really_dead_sql_cache =
       dead_sql_cache;
 #else /* !THREADS */
