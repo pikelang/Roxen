@@ -1,11 +1,12 @@
 #
-# $Id: Makefile,v 1.3 1997/08/18 01:34:53 grubba Exp $
+# $Id: Makefile,v 1.4 1997/08/18 14:11:47 grubba Exp $
 #
 # Bootstrap Makefile
 #
 
 VPATH=.
 MAKE=make
+prefix=/usr/local
 
 easy : blurb all
 
@@ -17,8 +18,8 @@ hard : configure
 	@exit 1
 
 blurb :
-	@echo '	 Roxen 1.2 -- Easy Configuration '
-	@echo '	---------------------------------'
+	@echo '	 Roxen 1.2 -- Easy Build '
+	@echo '	-------------------------'
 	@echo
 	@echo 'This will attempt to build Roxen 1.2 in a directory'
 	@echo 'specific for this architecture. This allows for building'
@@ -39,7 +40,7 @@ all : configure
 	echo; \
 	./mkdir -p build/$$os; \
 	cd build/$$os && \
-	(test -f Makefile || CONFIG_SITE=x $$srcdir/configure) && \
+	(test -f stamp-h || CONFIG_SITE=x $$srcdir/configure --prefix=$(prefix)) && \
 	$(MAKE);
 
 configure : configure.in
