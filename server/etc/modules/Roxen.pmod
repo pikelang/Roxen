@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.125 2001/09/18 19:06:39 mast Exp $
+// $Id: Roxen.pmod,v 1.126 2001/09/25 14:25:59 nilsson Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -3344,25 +3344,34 @@ void set_cookie( RequestID id,
                  string value, 
                  int|void expire_time_delta, 
                  string|void domain, 
-                 string|void path )
-//! Set the cookie specified by 'name' to 'value'.
-//! Sends a Set-Cookie header.
-//! 
-//! The expire_time_delta, domain and path arguments are optional.
+                 int(1..1)|string|void path )
+//! Set the cookie specified by @[name] to @[value].
+//! Adds a Set-Cookie header to the id->misc->moreheads mapping.
 //!
+//! @param expire_time_delta
 //! If the expire_time_delta variable is -1, the cookie is set to
-//! expire five years in the future. If it is 0 or ommited, no expire
-//! information is sent to the client. This usualy results in the cookie
-//! being kept until the browser is exited. 
+//! expire five years in the future. -2 will set the expiration time to
+//! posix time 1 and add the argument Max-Age, set to 0. If expire_time_delta
+//! is 0 or ommited, no expire information is sent to the client. This
+//! usualy results in the cookie being kept until the browser is exited.
+//!
+//! @param path
+//! A path argument will always be added to the Set-Cookie header unless
+//! @[path] is 1. It will otherwise be set to the provided string, or ""
+//! if no string is provided.
 {
   if( expire_time_delta == -1 )
     expire_time_delta = (3600*(24*365*5));
   string cookie = (http_encode_cookie( name )+"="+
                    http_encode_cookie( value ));
+
+  if( expire_time_delta == -2 )
+    cookie += "; expires="+http_date(1)+"; Max-Age=0";
   if( expire_time_delta )
     cookie += "; expires="+http_date( expire_time_delta+time(1) );
+
   if( domain ) cookie += "; domain="+http_encode_cookie( domain );
-  if( path!="" ) cookie += "; path="+http_encode_cookie( path||"/" );
+  if( path!=1 ) cookie += "; path="+http_encode_cookie( path||"" );
   if(!id->misc->moreheads)
     id->misc->moreheads = ([]);
   add_http_header( id->misc->moreheads, "Set-Cookie",cookie );
@@ -3377,7 +3386,7 @@ void remove_cookie( RequestID id,
 //! Sends a Set-Cookie header with an expire time of 00:00 1/1 1970.
 //! The domain and path arguments are optional.
 {
-  set_cookie( id, name, value, -time(1)+1, domain, path );
+  set_cookie( id, name, value, -2, domain, path );
 }
 
 void add_cache_stat_callback( RequestID id, string file, int mtime )
