@@ -1,12 +1,12 @@
 /*
- * $Id: resolv.pike,v 1.26 2002/06/13 18:56:11 nilsson Exp $
+ * $Id: resolv.pike,v 1.27 2002/10/23 22:29:53 nilsson Exp $
  */
 inherit "wizard";
 inherit "../logutil";
 
 constant task = "debug_info";
 constant name = "Resolve path...";
-constant doc  = "Check which modules handles the path you enter in the form";
+constant  doc = "Check which modules handles the path you enter in the form";
 
 string link(string to, string name)
 {
@@ -50,7 +50,7 @@ string module_name(function|RoxenModule|RXML.Tag m)
     }
   }
 
-  return "<font color='darkgreen'>"+name+"</font>";
+  return "<font color='&usr.fade3;'>"+name+"</font>";
 }
 
 string resolv;
@@ -71,23 +71,42 @@ string anchor(string title)
 
 
 mapping et = ([]);
-#if efun(gethrvtime)
 mapping et2 = ([]);
-#endif
 
 void trace_enter_ol(string type, function|object module)
 {
   level++;
 
-  string efont="", font="";
-  if(level>2) {efont="</font>";font="<font size=-1>";}
-  resolv += (font+anchor("<b><li></b> ")+type+" "+module_name(module)+"<ol>"+efont);
+  string font="";
+  if(level>2) font="<font size=-1>";
+  resolv += ((prev_level >= level ? "<br />\n" : "") +
+	     anchor("")+"<li>"+
+	     type + " " + module_name(module) + "<br />\n" +
+	     font + "<ol>");
 #if efun(gethrvtime)
   et2[level] = gethrvtime();
 #endif
 #if efun(gethrtime)
   et[level] = gethrtime();
 #endif
+}
+
+string format_time (int hrstart, int hrvstart)
+{
+  return
+#if efun(gethrtime) || efun(gethrvtime)
+    "<i>" +
+#if efun(gethrtime)
+    sprintf ("Real time: %.5f", (gethrtime() - hrstart)/1000000.0) +
+#endif
+#if efun(gethrvtime)
+    sprintf (" CPU time: %.2f", (gethrvtime() - hrvstart)/1000000.0) +
+#endif /* efun(gethrvtime) */
+    "</i><br />\n"
+#else
+    ""
+#endif
+    ;
 }
 
 void trace_leave_ol(string desc)
@@ -98,18 +117,12 @@ void trace_leave_ol(string desc)
 #if efun(gethrvtime)
   int delay2 = gethrvtime()-et2[level];
 #endif
+  string efont="";
+  if(level>2) efont="</font>";
+  resolv += ("</ol>" + efont + "\n" +
+	     (sizeof (desc) ? Roxen.html_encode_string(desc) + "<br />\n" : "") +
+	     format_time (et[level], et2[level]));
   level--;
-  string efont="", font="";
-  if(level>1) {efont="</font>";font="<font size='-1'>";}
-  resolv += (font+"</ol>"+
-#if efun(gethrtime)
-	     "Time: "+sprintf("%.5f",delay/1000000.0)+
-#endif
-#if efun(gethrvtime)
-	     " (CPU = "+sprintf("%.2f)", delay2/1000000.0)+
-#endif /* efun(gethrvtime) */
-	     "<br />"+Roxen.html_encode_string(desc)+efont)+"<p>";
-
 }
 
 void trace_enter_table(string type, function|object module)
@@ -121,7 +134,7 @@ void trace_enter_table(string type, function|object module)
 	     +(level>1?("<td width='1' bgcolor='blue'>"
 			"<img src=\"/image/unit.gif\" alt=\"|\"/></td>") :"")
 	     +"<td width='100%'>"+font+type+" "+module_name(module)+
-	     "<table width='100%' border='0' cellspacing='10' border='0' "
+	     "<table width='100%' border='0' cellspacing='10' "
 	     "cellpadding='0'>");
 
 #if efun(gethrtime)
@@ -196,7 +209,7 @@ string parse( RequestID id )
 {
 
   string res = "";  //"<nobr>Allow Cache <input type=checkbox></nobr>\n";
-  res += "<input type='hidden' name='task' value='resolv.pike' />\n"
+  res += "<input type='hidden' name='action' value='resolv.pike' />\n"
     "<font size='+2'>"+ name + "</font><br />\n"
     "<table cellpadding='0' cellspacing='10' border='0'>\n"
     "<tr><td align='left'>URL: </td><td align='left'>"
@@ -208,156 +221,55 @@ string parse( RequestID id )
     "size='12' /></td></tr></table>\n"
     "<cf-ok/><cf-cancel href='?class=&form.class;'/>\n";
 
-  string p,a,b;
-  object nid, c;
-  string file, op = id->variables->path;
+  roxen.InternalRequestID nid = roxen.InternalRequestID();
 
   if( id->variables->path )
   {
-    sscanf( id->variables->path, "%*s://%*[^/]/%s", file );
+    nid->set_url (id->variables->path);
+    id->variables->path = nid->url_base() + nid->raw_url[1..];
 
-    file = "/"+file;
-    // pass 1: Do real glob matching.
-    foreach( indices(roxen->urls), string u )
-    {
-      mixed q = roxen->urls[u];
-      if( glob( u+"*", id->variables->path ) )
-      {
-        // werror(id->variables->path +" matches "+u+"\n");
-        nid = id->clone_me();
-	nid->misc -= ([ "authenticated_user" : 1 ]);
-        nid->raw_url = file;
-        nid->not_query = (http_decode_string((file/"?")[0]));
-	string host;
-	sscanf(id->variables->path, "%*s://%[^/]", host);
-	if (host) {
-	  nid->misc->host = host;
-	}
-        if( (c = q->port->find_configuration_for_url( op, nid, 1 )) )
-        {
-          nid->conf = c;
-          break;
-        }
-      } 
-    }
-
-    if(!c)
-    {
-      // pass 2: Find a configuration with the 'default' flag set.
-      foreach( roxen->configurations, c )
-        if( c->query( "default_server" ) )
-        {
-          nid = id->clone_me();
-	  nid->misc -= ([ "authenticated_user" : 1 ]);
-          nid->raw_url = file;
-          nid->not_query = (http_decode_string((file/"?")[0]));
-          nid->conf = c;
-          break;
-        }
-        else
-          c = 0;
-    }
-    if(!c)
-    {
-      // pass 3: No such luck. Let's allow default fallbacks.
-      foreach( indices(roxen->urls), string u )
-      {
-        mixed q = roxen->urls[u];
-        nid = id->clone_me();
-	nid->misc -= ([ "authenticated_user" : 1 ]);
-        nid->raw_url = file;
-        nid->not_query = (http_decode_string((file/"?")[0]));
-        if( (c = q->port->find_configuration_for_url( op, nid, 1 )) )
-        {
-          nid->conf = c;
-          break;
-        }
-      }
-    }
-    
-    if(!c) {
-      res += "<p><font color='red'>There is no configuration available that matches "
-	"this URL.</font></p>";
+    if(!nid->conf) {
+      res += "<p><font color='red'>There is no configuration "
+	"available that matches this URL.</font></p>";
       return res;
     }
-
-    id->variables->path = nid->not_query;
-
-    foreach( indices( nid->real_variables ), string x )
-      m_delete( nid->real_variables, x );
 
     if(!(int)id->variables->cache)
       nid->pragma = (<"no-cache">);
     else
       nid->pragma = (<>);
 
-    resolv = "Resolving " +
-      link(op, id->variables->path) + " in " +
-      link_configuration(c, id->misc->cf_locale) +  
-      "<br /><hr noshade size='1' width='100%'/>";
+    resolv =
+      "<hr noshade size='1' width='100%'/>\nResolving " +
+      link(id->variables->path, Roxen.html_encode_string (nid->not_query)) +
+      " in " +
+      link_configuration(nid->conf, id->misc->cf_locale) + "<br />\n"
+      "<ol>";
 
     nid->misc->trace_enter = trace_enter_ol;
     nid->misc->trace_leave = trace_leave_ol;
-    resolv += "<p><ol>";
-    nid->raw_url = id->variables->path;
-    string f = nid->scan_for_query(nid->raw_url);
-    string a;
 
-//     nid->misc->trace_enter("Checking for cookie.\n", 0);
-    if (sscanf(f, "/<%s>/%s", a, f)==2)
-    {
-      nid->config_in_url = 1;
-      nid->mod_config = (a/",");
-      f = "/"+f;
-//       nid->misc->trace_leave(sprintf("Got cookie %O.\n", a));
-    } else {
-//       nid->misc->trace_leave("No cookie.\n");
-    }
-
-//     nid->misc->trace_enter("Checking for prestate.\n", 0);
-    if ((sscanf(f, "/(%s)/%s", a, f)==2) && strlen(a))
-    {
-      nid->prestate = aggregate_multiset(@(a/","-({""})));
-      f = "/"+f;
-//       nid->misc->trace_leave(sprintf("Got prestate %O\n", a));
-    } else {
-//       nid->misc->trace_leave("No prestate.\n");
-    }
-
-    nid->misc->trace_enter(sprintf("Simplifying path %O\n", f), 0);
-    nid->not_query = simplify_path(f);
-    nid->misc->trace_leave(sprintf("Got path %O\n", f));
-    nid->conf = c;
-    nid->method = "GET";
     if (id->variables->user && id->variables->user!="")
     {
-      array(string) y;
-      nid->misc->trace_enter(sprintf("Checking auth %O\n", 
-                                     id->variables->user), 0);
       nid->rawauth
         = "Basic "+MIME.encode_base64(id->variables->user+":"+
                                       id->variables->password);
-
       nid->realauth=id->variables->user+":"+id->variables->password;
-      nid->misc->user = id->variables->user;
-      nid->misc->password = id->variables->password;
-      if(c && c->auth_module)
-        nid->auth = c->auth_module->auth( nid->auth, nid );
-      nid->misc->trace_leave(sprintf("Got auth %O\n", nid->auth));
-    }
-    else 
-    {
-      nid->rawauth = 0;
-      nid->realauth = 0;
-      nid->auth = 0;
     }
 
-    resolv_handle_request(c, nid);
+    int hrstart, hrvstart;
+#if efun(gethrtime)
+    hrstart = gethrtime();
+#endif
+#if efun(gethrvtime)
+    hrvstart = gethrvtime();
+#endif
+    resolv_handle_request(nid->conf, nid);
     while(level>0)
       nid->misc->trace_leave("");
-    resolv += "</ol></p>";
-    res += "<p><blockquote>"+resolv+"</blockquote></p>";
+    res += resolv + "</ol>\n" + format_time (hrstart, hrvstart);
   }
-  id->variables->path = op || "";
+  else
+    id->variables->path || "";
   return res;
 }
