@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.5 2000/01/26 15:23:09 wellhard Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.6 2000/01/31 11:11:33 wellhard Exp $";
 //constant thread_safe=1;
 
 #include <module.h>
@@ -12,13 +12,17 @@ inherit "roxenlib";
 array register_module()
 {
   return ({ 
-    MODULE_PARSER|MODULE_FILTER,
-    "Javascript Menus", 
-    "This module provides some tags to enable Javascript popup menus.",
+    MODULE_PARSER|MODULE_FILTER|MODULE_PROVIDER,
+    "Javascript Support", 
+    "This module provides some tags to support javascript development "
+    "(i.e. Javascript popup menus).",
     0, 1, });
 }
 
-//return query_internal_location();
+string|array(string) query_provides()
+{
+  return "javascript_support";
+}
 
 mapping find_internal(string f, object id)
 {
@@ -27,6 +31,7 @@ mapping find_internal(string f, object id)
 	    "type":"application/x-javascript" ]);
 }
 
+static private
 string internal_container_js_quote(string name, mapping args, string contents)
 {
   string r = "var r = \"\";\n";
@@ -36,6 +41,7 @@ string internal_container_js_quote(string name, mapping args, string contents)
   return r;
 }
 
+static private
 string internal_container_script(string name, mapping args, string contents,
 				 mapping xargs)
 {
@@ -45,6 +51,7 @@ string internal_container_script(string name, mapping args, string contents,
     return make_container(name, args, contents);
 }
 
+static private
 string container_js_write(string name, mapping args, string contents,
 			  object id)
 {
@@ -61,6 +68,7 @@ string container_js_write(string name, mapping args, string contents,
 	  "//--></script>"+(name!="js-post-write"?"</noparse>":""));
 }
 
+static private
 string make_container_unquoted(string name, mapping args, string contents)
 {
   array ind = indices(args);
@@ -71,34 +79,28 @@ string make_container_unquoted(string name, mapping args, string contents)
   return "<"+name+" " + (a*" ") + ">" + contents + "</"+name+">";
 }
 
-string get_unique_id(string name, object id)
+int jssp(object id)
 {
-  string key = "_js_"+name;
-  id->misc[key]++;
-  return name+sprintf("%02x", id->misc[key]);
+  return !!id->misc->javascript_support;
 }
 
-void add_to_insert(string name, string content, object id)
+JSSupport  get_jss(object id)
 {
-  if(!id->misc->javascript)
-    id->misc->javascript = ([]);
-  
-  if(!id->misc->javascript[name])
-    id->misc->javascript[name] = "";
-  
-  id->misc->javascript[name] += content;
+  if(!id->misc->javascript_support)
+    id->misc->javascript_support = JSSupport();
+  return id->misc->javascript_support;
 }
 
-string container_js_link(string name, mapping args,
-			 string contents, object id)
+static private string container_js_link(string name, mapping args,
+					string contents, object id)
 {
   if(id->misc->_popupparent)
     args->onMouseOver = "clearToPopup('"+id->misc->_popupparent+"')";
   return make_container_unquoted("a", args, contents);
 }
 
-string container_js_popup(string name, mapping args,
-			  string contents, object id)
+static private string container_js_popup(string name, mapping args,
+					 string contents, object id)
 {
   //werror("Enter");
   mapping largs = copy_value(args);
@@ -108,22 +110,7 @@ string container_js_popup(string name, mapping args,
   if(!largs->href) largs->href = "javascript:void";
   if(largs->event) m_delete(largs, "event");
 
-  //if(args["empty-variable"]) {
-  //  werror("%O\n", id->variables[args["empty-variable"]]);
-  //  werror("[%O]\n", ((contents - " ") - "\n"));
-  //  if(id->variables[args["empty-variable"]] == ((contents - " ") - "\n")) {
-  //	m_delete(largs, "empty-variable");
-  //	werror(" leaving (leaf).\n");
-  //	return make_container("a", largs, args->label) + "\n";
-  //  }
-  //  m_delete(largs, "empty-variable");
-  //}
-  //
-  //if(largs["add-popup-title"]) {
-  //  largs->title += largs["add-popup-title"];
-  //  m_delete(largs, "add-popup-title");
-  //}
-  string popupname = get_unique_id("popup", id);
+  string popupname = get_jss(id)->get_unique_id("popup");
   string popupparent =
     (id->misc->_popupparent?id->misc->_popupparent:"none");
   if(zero_type(id->misc->_popuplevel) && args["z-index"])
@@ -138,24 +125,31 @@ string container_js_popup(string name, mapping args,
   largs[event] = "if(isNav4) { "+showpopup+", event); } "
 		 "else { "+showpopup+"); }";
   
-  add_to_insert("javascript1.2", 
-		"if(isNav4) document."+popupname+
-		".onMouseOut = hidePopup;\n", id);
-  add_to_insert("style", "#"+popupname+" {position:absolute; "
-		"left:0; top:0; visibility:hidden; width:1; z-index:"+
-		(id->misc->_popuplevel+1)+"}\n", id);
+  get_jss(id)->get_insert("javascript1.2")->
+    add("if(isNav4) document."+popupname+
+	".onMouseOut = hidePopup;\n");
+  
+  get_jss(id)->get_insert("style")->
+    add("#"+popupname+" {position:absolute; "
+	"left:0; top:0; visibility:hidden; width:1; z-index:"+
+	(id->misc->_popuplevel+1)+"}\n");
+  
   string old_pparent = id->misc->_popupparent;
   id->misc->_popupparent = popupname;
   id->misc->_popuplevel++;
-  add_to_insert("div", "<div id='"+popupname+"' "
-		"onMouseOut='hidePopup(\""+popupname+"\");'>\n"+
-		parse_rxml(contents, id)+"</div>\n", id);
+  
+  get_jss(id)->get_insert("div")->
+    add("<div id='"+popupname+"' "
+	"onMouseOut='hidePopup(\""+popupname+"\");'>\n"+
+	parse_rxml(contents, id)+"</div>\n");
+  
   id->misc->_popupparent = old_pparent;
   id->misc->_popuplevel--;
   //werror(" leaving.\n");
   return make_container_unquoted("a", largs, args->label) + "\n";
 }
 
+static private
 string internal_container_js_dragdrop_icon(string name, mapping args,
 					   string contents, object id,
 					   mapping xargs)
@@ -166,6 +160,7 @@ string internal_container_js_dragdrop_icon(string name, mapping args,
     "<div id='icon"+xargs->name+args->name+"'>"+contents+"</div></js-write>";
 }
 
+static private
 string internal_container_js_dragdrop_drag(string name, mapping args,
 					   string contents, object id,
 					   mapping xargs)
@@ -185,6 +180,7 @@ string internal_container_js_dragdrop_drag(string name, mapping args,
   return make_container_unquoted("a", args, contents);
 }
 
+static private
 string container_js_dragdrop(string name, mapping args, string contents,
 			     object id)
 {
@@ -194,14 +190,16 @@ string container_js_dragdrop(string name, mapping args, string contents,
 		    ]), id, args);
 }
 
+static private
 string tag_js_include(string name, mapping args, object id)
 {
-  if(!id->supports["javascript1.2"])
+  if((float)(id->client_var->javascript) < 1.2)
     return "<!-- Client do not support Javascript 1.2 -->";;
   return ("<script language=\"javascript\" src=\""+
 	  query_internal_location()+args->file+"\"></script>");
 }
 
+static private
 string tag_js_dragdrop_body(string name, mapping args, object id)
 {
   args->onMouseMove="dragMove();";
@@ -209,57 +207,45 @@ string tag_js_dragdrop_body(string name, mapping args, object id)
   return make_tag("body", args);
 }
 
-//string container_js_stay_on_top(string name, mapping args, string contents,
-//				  object id)
-//{
-//  add_to_insert("style", "#stay_on_top"+id->misc->_stay_on_top+
-//		  " {position:absolute; "
-//		  "left:0; top:0; visibility:hidden; width:1; z-index:0}\n",
-//		  id);
-//  id->misc->_stay_on_top++;
-//  return "";
-//}
-
-//mixed int_container_head(string name, mapping args, string contents,
-//			    object id)
-//{
-//  return ({ make_container(name, args, contents+
-//			     "\n<script language='javascript1.2'><!--\n"+
-//			     id->misc->javascript+"//--></script>") });
-//}
-
-mixed int_tag_js_insert(string name, mapping args, object id, mapping m)
+static private
+string tag_js_insert(string name, mapping args, object id)
 {
-  m->done = 1;
-  if(!id->misc->javascript || !id->misc->javascript[args->name])
+  get_jss(id); // Fire of some side effects.
+  return make_tag("js-filter-insert", args);
+}
+
+static private
+mixed int_tag_js_filter_insert(string name, mapping args, object id)
+{
+  JSInsert js_insert = get_jss(id)->get_insert(args->name);
+  
+  if(!js_insert)
     return "";
+  
   if(args->name == "javascript1.2")
     return ({ "<script language='javascript1.2'><!--\n"+
-	      id->misc->javascript[args->name]+"//--></script>" });
+	      js_insert->get()+"//--></script>" });
+  
   if(args->jswrite)
-    return container_js_write("js-post-write", ([]),
-			      id->misc->javascript[args->name], id);
-  return id->misc->javascript[args->name];
+    return container_js_write("js-post-write", ([]), js_insert->get(), id);
+  
+  return js_insert->get();
 }
 
 mixed filter( mapping response, object id)
 {
-  if(!response || !response->type) return response;
+  if(!response || !response->type || !jssp(id)) return response;
   
   string type = ((response->type - " ")/";")[0];
-  if(id->misc->javascript && type == "text/html"){
-    mapping m = ([]);
-    response->data = parse_html(response->data,
-				([ "js-insert":int_tag_js_insert ]),
-				([]), id, m);
-    //if(!m->done)
-    //  response->data = parse_html(response->data, ([]),
-    //				  ([ "head": int_container_head ]), id);
-    
-    response->data = parse_html(response->data, ([]),
-				([ "js-post-write":container_js_write ]), id);
+  if(type != "text/html")
     return response;
-  }
+  
+  response->data =
+    parse_html(response->data,
+	       ([ "js-filter-insert":int_tag_js_filter_insert ]), ([]), id);
+  response->data = parse_html(response->data, ([]),
+			      ([ "js-post-write":container_js_write ]), id);
+  return response;
 }
 
 mapping query_container_callers()
@@ -268,13 +254,78 @@ mapping query_container_callers()
 	    "js-popup"       : container_js_popup,
 	    "js-dragdrop"    : container_js_dragdrop,
 	    "js-link"        : container_js_link,
-            // "js-stay-on-top" : container_js_stay_on_top
   ]);
 }
 
 mapping query_tag_callers()
 {
   return ([ "js-include"       : tag_js_include,
+	    "js-insert"        : tag_js_insert,
             "js-dragdrop-body" : tag_js_dragdrop_body ]);
 }
 
+
+class JSInsert
+{
+  static private string name;
+  static private mapping(string:string) args;
+  static private string content;
+
+  void add(string s)
+  {
+    content += s;
+  }
+
+  string get()
+  {
+    return content;
+  }
+  
+  string _sprintf(int i, mapping(string:int)|void m)
+  {
+    return sprintf("JSInsert: %s, %O", name, args);
+  }
+
+  void create(string _name, mapping(string:string) _args)
+  {
+    name = _name;
+    args = _args;
+    content = "";
+  }
+}
+
+class JSSupport
+{
+  static private mapping(string:JSInsert) inserts;
+  static private mapping(string:int) keys;
+
+  string get_unique_id(string name)
+  {
+    return name+sprintf("%02x", keys[name]++); 
+  }
+  
+  void create_insert(string name, string tag_name,
+		     mapping(string:string) args)
+  {
+    inserts[name] = JSInsert(tag_name, args);
+  }
+
+  JSInsert get_insert(string name)
+  {
+    if(!inserts[name])
+      create_insert(name, 0, 0);
+    
+    return inserts[name];
+  }
+  
+  string _sprintf(int i, mapping(string:int)|void m)
+  {
+    return sprintf("JSSupport: %d, %O", filter, inserts);
+  }
+
+  void create()
+  {
+    inserts = ([ ]);
+    keys = ([ ]);
+  }
+}
