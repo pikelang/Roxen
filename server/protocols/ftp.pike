@@ -1,5 +1,5 @@
 /* Roxen FTP protocol. Written by Pontus Hagland
-string cvs_version = "$Id: ftp.pike,v 1.13 1997/04/28 22:05:30 grubba Exp $";
+string cvs_version = "$Id: ftp.pike,v 1.14 1997/04/29 00:03:55 grubba Exp $";
    (law@lysator.liu.se) and David Hedbor (neotron@infovav.se).
 
    Some of the features: 
@@ -820,6 +820,15 @@ void got_data(mixed fooid, string s)
 	if(search(args, "a") != -1)
 	  a = 2;
       }
+
+      // This is needed to get .htaccess to be read from the correct directory
+      if (arg[-1] != '/') {
+	array st = roxen->stat_file(arg, this_object());
+	if (st && (st[1]<0)) {
+	  arg+="/";
+	}
+      }
+
       not_query = arg;
 
       foreach(conf->first_modules(), function funp)
