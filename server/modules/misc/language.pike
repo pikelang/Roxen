@@ -1,7 +1,11 @@
-#include <module.h>
-inherit "modules/directories/directories";
+// This is a roxen module. Copyright © 1996 - 2000, Idonex AB.
+//
 
-string cvs_version = "$Id: language.pike,v 1.24 1999/12/29 23:51:03 nilsson Exp $";
+#include <module.h>
+inherit "module";
+inherit "roxenlib";
+
+constant cvs_version = "$Id: language.pike,v 1.25 2000/01/12 08:56:39 nilsson Exp $";
 constant thread_safe=1;
 
 #if DEBUG_LEVEL > 20
@@ -16,17 +20,10 @@ constant thread_safe=1;
 # define LANGUAGE_WERR(X)
 #endif
 
-array register_module()
-{
-  return ({ MODULE_DIRECTORIES | MODULE_URL | MODULE_PARSER,
-	      "Language module",
-	      "Handles documents in different languages. "
-	      "<p>Is also a directory module that generates no directory "
-	      "listings. It must be a directory module to work, though it "
-	      "could of course be fixed to make directory listings."
-	      "The module works by using appropriate magic to find out what "
-	      "language the user wants and then finding a file in that "
-	      "language. What language a file is in is specified with an "
+constant module_type = MODULE_URL | MODULE_PARSER;
+constant module_name = "Language module";
+constant module_doc  = "Handles documents in different languages. "
+	      "What language a file is in is specified with an "
 	      "extra extension. index.html.sv would be a file in swedish "
 	      "while index.html.en would be one in english. "
 	      "<p>The module also defines three new tags. "
@@ -37,10 +34,8 @@ array register_module()
 	      "<br><b>&lt;unavailable-language&gt;</b> shows the language "
 	      "the user wanted, if the page was not available in that "
 	      "language. "
-	      "<p>All tags take the argument type={txt,img}. ",
-	    0, 1
-         });
-}
+              "<p>All tags take the argument type={txt,img}.</p>";
+constant module_unique = 1;
 
 void create()
 {
@@ -86,26 +81,10 @@ void create()
 	  "<dt>language-code.unavailable.gif"
 	  "<dd>Shown to indicate that the user has selected an language that "
 	  "this page hasn't been translated to."
-/*	 "<dt>language-code.dir.selected.gif"
-	 "<dd>Shown to indicate that the dir-entry will be shown in that "
-	 "language."
-	 "<dt>language-code.dir.available.gif"
-	 "<dd>Shown as a link to the dir-entry translated to that language."
-	 */
 	  "</dl>"
 	  "<p>It is of course not necessary to have all this pictures if "
-	  "their use is not enabled in this module nor the header module." );
+	  "their use is not enabled in this module nor the header module.</p>" );
 
-/*
-  defvar( "flags_or_text", 1, "Flags in directory lists", TYPE_FLAG,
-	  "If set, the directory lists will include cute flags to indicate "
-	  "which language the entries exists in. Otherwise it will be shown "
-	  "with not-so-cure text. " );
-  defvar( "directories", 1, "Directory parsing", TYPE_FLAG,
-	  "If you set this flag to on, a directories will be "+
-	  "parsed to a file-list, if no index file is present. "+
-	  "If not, a 'No such file or directory' response will be generated.");
-*/
   defvar( "configp", 1, "Use config (uses prestate otherwise).",
           TYPE_FLAG,
           "If set the users chooen language will be stored using Roxens "
@@ -118,8 +97,6 @@ void create()
 
   defvar( "textonly", 0, "Text only", TYPE_FLAG,
 	  "If set the tags type argument will default to txt instead of img" );
-
-  ::create();
 }
 
 
@@ -154,9 +131,8 @@ void start()
     language_data[ tmp ][ LANGUAGE_DATA_NEXT_LANGUAGE ] &= indices( language_list );
   default_language = query( "default_language" );
   textonly = query( "textonly" );
-
-  ::start();
 }
+
 
 multiset (string) find_files( string url, RequestID id )
 {
@@ -283,8 +259,6 @@ mixed remap_url( RequestID id, string url )
   id->misc[ "flag_dir" ] = flag_dir;
   id->misc[ "language_data" ] = copy_value( language_data );
   id->misc[ "language_list" ] = copy_value( language_list );
-//  id->prestate -= language_list;
-//  id->prestate[ found_language ] = 1; // Is this smart?
 
   if (found_languages_orig[ found_language ])
     id->extra_extension += "." + found_language;
@@ -300,15 +274,17 @@ string tag_unavailable_language( string tag, mapping m, RequestID id )
   if (!id->misc[ "chosen_language" ] || !id->misc[ "language" ]
       || !id->misc[ "language_data" ])
     return "";
+
   if (id->misc[ "chosen_language" ] == id->misc[ "language" ])
     return "";
+
   if (m[ "type" ] == "txt" || textonly && m[ "type" ] != "img")
     return id->misc[ "language_data" ][ id->misc[ "chosen_language" ] ];
-  else
-    return "<img src=" + query( "flag_dir" ) + id->misc[ "chosen_language" ]
-            + ".unavailable.gif alt=\""
-            + id->misc[ "language_data" ][ id->misc[ "chosen_language" ] ][0]
-            + "\">";
+
+  return "<img src=" + query( "flag_dir" ) + id->misc[ "chosen_language" ]
+    + ".unavailable.gif alt=\""
+    + id->misc[ "language_data" ][ id->misc[ "chosen_language" ] ][0]
+    + "\">";
 }
 
 string tag_language( string tag, mapping m, RequestID id )
@@ -316,27 +292,26 @@ string tag_language( string tag, mapping m, RequestID id )
   if (!id->misc[ "language" ] || !id->misc[ "language_data" ]
       || !id->misc[ "language_list" ])
     return "";
+
   if (m[ "type" ] == "txt" || textonly && m[ "type" ] != "img")
     return id->misc[ "language_data" ][ id->misc[ "language" ] ][0];
-  else
-    return "<img src=" + query( "flag_dir" ) + id->misc[ "language" ]
-            + ".selected.gif alt=\""
-            + id->misc[ "language_data" ][ id->misc[ "language" ] ][0]
-            + "\">";
+
+  return "<img src=" + query( "flag_dir" ) + id->misc[ "language" ]
+    + ".selected.gif alt=\""
+    + id->misc[ "language_data" ][ id->misc[ "language" ] ][0]
+    + "\">";
 }
 
 string tag_available_languages( string tag, mapping m, RequestID id )
 {
-  string result, lang;
-  int c;
-  array available_languages;
-
   if (!id->misc[ "available_languages" ] || !id->misc[ "language_data" ]
       || !id->misc[ "language_list" ])
     return "";
-  result = "";
-  available_languages = indices( id->misc["available_languages"] );
-  for (c=0; c < sizeof( available_languages ); c++)
+
+  string result="", lang;
+  array available_languages = indices( id->misc["available_languages"] );
+
+  for (int c=0; c < sizeof( available_languages ); c++)
   {
     if (query( "configp" ))
       result += "<aconf ";
@@ -364,5 +339,15 @@ string tag_available_languages( string tag, mapping m, RequestID id )
     else
       result += "</apre>\n";
     }
+
   return result;
 }
+
+mapping query_tag_callers() {
+  return (["available_language":tag_available_languages,
+	   "available_languages":tag_available_languages,
+	   "unavailable_languages":tag_unavailable_language,
+	   "language":tag_language
+  ]);
+}
+
