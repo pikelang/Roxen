@@ -1,7 +1,7 @@
 /*
  * Roxen master
  */
-string cvs_version = "$Id: roxen_master.pike,v 1.76 2000/03/13 06:19:33 per Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.77 2000/03/19 19:52:16 mast Exp $";
 
 /*
  * name = "Roxen Master";
@@ -312,7 +312,7 @@ string stupid_describe(mixed m, int maxlen)
       if(sizeof(m) < 40)
         return  sprintf("%O", m);;
       clipped++;
-      return sprintf("%O+[%d]",m[..34],sizeof(m)-(35));
+      return sprintf("%O+[%d]+%O",m[..15],sizeof(m)-(32),m[sizeof(m)-16..]);
 
     case "array":
       if(!sizeof(m)) return "({})";
