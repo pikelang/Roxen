@@ -63,7 +63,7 @@ void create()
 		"option overrides the 'Enable all tag compatibility' "
 		"setting."));
 
-  compat_level = my_configuration()->query("compat_level");
+  compat_level = my_configuration() && my_configuration()->query("compat_level");
 }
 
 constant relevant=(<"rxmltags","graphic_text","tablify","countdown","counter","ssi","obox">);
