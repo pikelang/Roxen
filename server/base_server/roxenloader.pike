@@ -26,7 +26,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.309 2002/03/15 16:49:45 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.310 2002/08/20 16:28:37 anders Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1741,6 +1741,7 @@ void start_mysql()
 
   string mysqldir = combine_path(getcwd(),query_configuration_dir()+"_mysql");
   rm( mysqldir+"/mysql_pid" );
+  rm( mysqldir+"/error_log"  );
 #ifdef THREADS
   thread_create( do_tailf, 1, mysqldir+"/error_log" );
   sleep(0.1);
@@ -1775,8 +1776,6 @@ void start_mysql()
 #endif
     }
   }
-
-  rm( mysqldir+"/error_log"  );
 
   low_start_mysql( mysqldir,query_mysql_dir(),
 #if constant(getpwuid)
