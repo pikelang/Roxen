@@ -468,8 +468,11 @@ array get_variable_maps( object mod,
   if( !fnset )
     if( id->variables["save.x"] )
     {
-      remove_call_out( mod->save );
-      call_out( mod->save, 5 );
+      // Can't delay this. I'd need to set it blocking on a
+      // configuration variable basis in that case. /mast
+      //remove_call_out( mod->save );
+      //call_out( mod->save, 5 );
+      mod->save();
     }
   return variables;
 }
