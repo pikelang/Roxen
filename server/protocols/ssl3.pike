@@ -1,4 +1,4 @@
-/* $Id: ssl3.pike,v 1.15 1997/08/19 02:32:09 per Exp $
+/* $Id: ssl3.pike,v 1.16 1997/08/25 17:23:38 grubba Exp $
  *
  * © 1997 Informationsvävarna AB
  *
@@ -125,19 +125,22 @@ array|void real_port(array port, object cfg)
   werror(sprintf("options = %O\n", options));
 #endif
 
-  if (!options["cert-file"])
-    ({ report_error, error }) ("ssl3: No argument 'cert-file'!\n");
+  if (!options["cert-file"]) {
+    ({ report_error, throw }) ("ssl3: No 'cert-file' argument!\n");
+  }
 
   mapping(string:string) parts = parse_pem(read_file(options["cert-file"]));
 
-  if (!parts || !(cert = parts["CERTIFICATE"]||parts["X509 CERTIFICATE"]))
-    report_error("No certificate found.\n");
+  if (!parts || !(cert = parts["CERTIFICATE"]||parts["X509 CERTIFICATE"])) {
+    ({ report_error, throw }) ("ssl3: No certificate found.\n");
+  }
 
   if (options["key-file"])
     parts = parse_pem(read_file(options["key-file"]));
   
-  if (!parts || !(key = parts["RSA PRIVATE KEY"]))
-    report_error("Private key not found.\n");
+  if (!parts || !(key = parts["RSA PRIVATE KEY"])) {
+    ({ report_error, throw }) ("ssl3: Private key not found.\n");
+  }
   array rsa_parms = SSL.asn1.ber_decode(key)->get_asn1()[1];
   
   ctx->certificates = ({ cert });
