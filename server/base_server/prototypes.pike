@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.63 2003/06/18 11:51:30 tomas Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.64 2003/07/07 19:06:20 mast Exp $";
 
 class Variable
 {
@@ -1046,12 +1046,12 @@ static constant ElementNode = Parser.XML.Tree.ElementNode;
 class XMLStatusNode
 {
   inherit ElementNode;
-  static void create(int|string code)
+  static void create(int|string code, void|string message)
   {
     ::create("DAV:status", ([]));
     if (intp(code)) {
       code = sprintf("HTTP/1.1 %d %s", code,
-		     errors[code]||"Unknown status");
+		     message||errors[code]||"Unknown status");
     }
     add_child(TextNode(code));
   }
@@ -1102,13 +1102,13 @@ class XMLPropStatNode
 
   int http_code;
 
-  static void create(int|void code)
+  static void create(int|void code, string|void message)
   {
     http_code = code || 200;
 
     ::create("DAV:propstat", ([]));
     add_child(prop_node = ElementNode("DAV:prop", ([])));
-    add_child(XMLStatusNode(http_code));
+    add_child(XMLStatusNode(code, message));
   }
 }
 
@@ -1144,11 +1144,17 @@ class MultiStatus
   {
     array(XMLStatusNode) stat_nodes;
     XMLStatusNode stat_node;
-    int code = mappingp(prop_value)?prop_value->error:200;
+    int code = 200;
+    string message;
+
+    if (mappingp(prop_value)) {
+      code = prop_value->error;
+      message = prop_value->data;
+    }
 
     werror("Adding property %O code:%O val:%O\n", prop_name, code, prop_value);
     if (!(stat_nodes = status_set[href])) {
-      status_set[href] = ({ stat_node = XMLPropStatNode(code) });
+      status_set[href] = ({ stat_node = XMLPropStatNode(code, message) });
     } else {
       foreach(stat_nodes, Node n) {
 	if (n->http_code == code) {
@@ -1157,12 +1163,12 @@ class MultiStatus
 	}
       }
       if (!stat_node) {
-	status_set[href] += ({ stat_node = XMLPropStatNode(code) });
+	status_set[href] += ({ stat_node = XMLPropStatNode(code, message) });
       }
     }
-    if (mappingp(prop_value)) {
+    if (message) {
       // FIXME: Add a global error description?
-      stat_node->add_description(prop_value->data);
+      stat_node->add_description(message);
       prop_value = 0;
     }
     stat_node->add_property(prop_name, prop_value);
