@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.401 2004/04/03 16:18:12 mani Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.402 2004/04/04 01:31:35 mani Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1375,13 +1375,7 @@ class TagCache {
     {
       key = encode_value_canonic (keymap);
       if (!args["disable-key-hash"])
-	// Initialize with a 32 char string to make sure MD5 goes
-	// through all the rounds even if the key is very short.
-	// Otherwise the risk for coincidental equal keys gets much
-	// bigger.
-	key = Crypto.md5()->update ("................................")
-			  ->update (key)
-			  ->digest();
+	key = Crypto.SHA1.hash(key);
     }
 
     array do_enter (RequestID id)
@@ -1490,8 +1484,7 @@ class TagCache {
 	    // p-code which has static type inference.
 	    if (!content) content = "";
 	    if (String.width (content) != 8) content = encode_value_canonic (content);
-	    content_hash = Crypto.md5()->update ("................................")
-				       ->update (content)
+	    content_hash = Crypto.SHA1()->update (content)
 				       ->update (content_type->name)
 				       ->digest();
 	  }
@@ -2012,8 +2005,7 @@ string simpletag_random(string tag, mapping m, string s, RequestID id)
   array q = s/(m->separator || m->sep || "\n");
   int index;
   if(m->seed)
-    index = array_sscanf(Crypto.md5()->update(m->seed)->digest(),
-			 "%4c")[0]%sizeof(q);
+    index = array_sscanf(Crypto.SHA1.hash(m->seed), "%4c")[0]%sizeof(q);
   else
     index = random(sizeof(q));
 
