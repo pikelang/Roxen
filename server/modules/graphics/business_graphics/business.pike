@@ -13,7 +13,7 @@
  * reference cache shortly.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.43 1997/11/25 02:14:23 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.44 1997/11/29 22:00:15 hedda Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -25,6 +25,8 @@ import Array;
 import Image;
 
 #define SEP "\t"
+
+//mixed __foo = trace(0);
 
 mixed *register_module()
 {
@@ -167,18 +169,33 @@ string itag_data(mapping tag, mapping m, string contents,
   if(m->separator)
     sep=m->separator;
 
+  if (sep=="")
+    sep=SEP;
+
   string linesep="\n";
   if(m->lineseparator)
     linesep=m->lineseparator;
 
+  if (linesep=="")
+    linesep="\n";
+  
   if(!m->noparse)
     contents = parse_rxml( contents, id );
 
-  contents = contents - " ";
+  if (sep!=" ")
+    contents = contents - " ";
+
   array lines = filter( contents/linesep, sizeof );
   array foo = ({});
   array bar = ({});
   int maxsize=0;
+
+  if (sizeof(lines)==0)
+    {
+      res->data=({});
+      return 0;
+    }
+ 
   
   foreach( lines, string entries )
   {
@@ -193,20 +210,30 @@ string itag_data(mapping tag, mapping m, string contents,
     foo = ({});
   }
   
-  if (m->form[0..2] == "col")
-  {
-    for(int i=0; i<sizeof(bar); i++)
-      if (sizeof(bar[i])<maxsize)
-	bar[i]+=allocate(maxsize-sizeof(bar[i]));
-    
-    array bar2=allocate(maxsize);
-    for(int i=0; i<maxsize; i++)
-      bar2[i]=column(bar, i);
-    res->data=bar2;
-  } else
+  if (sizeof(bar[0])==0)
+    {
+      res->data=({});
+      return 0;
+    }
+
+  if (m->form)
+    if (m->form[0..2] == "col")
+      {
+	for(int i=0; i<sizeof(bar); i++)
+	  if (sizeof(bar[i])<maxsize)
+	    bar[i]+=allocate(maxsize-sizeof(bar[i]));
+	
+	array bar2=allocate(maxsize);
+	for(int i=0; i<maxsize; i++)
+	  bar2[i]=column(bar, i);
+	res->data=bar2;
+      } 
+    else
+      res->data=bar;
+  else
     res->data=bar;
 
-  return "";
+  return 0;
 }
 
 string itag_colors(mapping tag, mapping m, string contents,
@@ -368,11 +395,11 @@ string tag_diagram(string tag, mapping m, string contents,
 
   parse_html(contents,
 	     ([ "xaxis":itag_xaxis,
-		"yaxis":itag_yaxis ]),
+		"yaxis":itag_yaxis ]), 
 	     ([ ]), 
 	     res );
 
-  if( res->data == ({ }) )
+  if( sizeof(res->data) == 0 )
     return "<hr noshade><h3>No data for the diagram</h3><hr noshade>";
 
   res->bg = parse_color(defines->bg || "#e0e0e0");
@@ -469,7 +496,11 @@ string tag_diagram(string tag, mapping m, string contents,
 
   m->src = query("location") + quote(encode_value(res)) + ".gif";
 
-  return(make_tag("img", m));
+  werror(sprintf("%O\n",make_tag("img",m)));
+  
+  //  trace(2);
+
+  return make_tag("img", m);
 }
 
 mapping query_container_callers()
@@ -510,10 +541,10 @@ array strange( array in )
   // encode_value does not support negative floats.
   array tmp2 = ({});
   foreach(in, array tmp)
-  {
-    tmp = Array.map( tmp, floatify );
-    tmp2 += ({ tmp });
-  }
+    {
+      tmp = Array.map( tmp, floatify );
+      tmp2 += ({ tmp });
+    }
   return tmp2;
 }
 

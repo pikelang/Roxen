@@ -13,7 +13,9 @@ constant LITET = 1.0e-40;
 constant STORT = 1.0e40;
 
 inherit "create_graph.pike";
-constant cvs_version = "$Id: create_pie.pike,v 1.26 1997/11/23 17:05:55 hedda Exp $";
+inherit "create_bars.pike";
+
+constant cvs_version = "$Id: create_pie.pike,v 1.27 1997/11/29 22:00:33 hedda Exp $";
 
 /*
 These functions is written by Henrik "Hedda" Wallin (hedda@idonex.se)
@@ -353,6 +355,12 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
       */
       imxsize=(int)(ceil(most_right+4)+floor(-most_left));
       imysize=(int)(diagram_data["3Ddepth"]+yr+4);
+      if (imxsize<2)
+	imxsize=2;
+      if (imysize<2)
+	imysize=2;
+
+
       below=image(imxsize, imysize, 0, 0, 0)->
 	setcolor(255,255,255)->
 	polygone(arr6);

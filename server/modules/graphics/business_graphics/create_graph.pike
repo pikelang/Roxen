@@ -12,7 +12,7 @@ inherit "polyline.pike";
 constant LITET = 1.0e-40;
 constant STORT = 1.0e40;
 
-constant cvs_version = "$Id: create_graph.pike,v 1.78 1997/11/23 17:05:49 hedda Exp $";
+constant cvs_version = "$Id: create_graph.pike,v 1.79 1997/11/29 22:00:29 hedda Exp $";
 
 /*
 These functions is written by Henrik "Hedda" Wallin (hedda@idonex.se)
@@ -47,12 +47,20 @@ object tileimage(object img, int xs, int ys)
 
 void draw(object(image) img, float h, array(float) coords)
 {
-  for(int i=0; i<sizeof(coords)-3; i+=2)
+  if ((sizeof(coords)==2)||
+      (sizeof(coords)==3))
     {
       img->
-	polygone(make_polygon_from_line(h, coords[i..i+3],
+	polygone(make_polygon_from_line(h, coords[0..1],
 					1, 1)[0]);
     }
+  else
+    for(int i=0; i<sizeof(coords)-3; i+=2)
+      {
+	img->
+	  polygone(make_polygon_from_line(h, coords[i..i+3],
+					  1, 1)[0]);
+      }
 }
 
 mapping(string:mixed) setinitcolors(mapping(string:mixed) diagram_data)

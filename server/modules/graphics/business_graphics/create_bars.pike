@@ -14,7 +14,7 @@ constant STORT = 1.0e40;
 
 inherit "create_graph.pike";
 
-constant cvs_version = "$Id: create_bars.pike,v 1.50 1997/11/23 17:05:42 hedda Exp $";
+constant cvs_version = "$Id: create_bars.pike,v 1.51 1997/11/29 22:00:26 hedda Exp $";
 
 /*
 These functions is written by Henrik "Hedda" Wallin (hedda@idonex.se)
@@ -380,7 +380,8 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	  array(float) l=allocate(sizeof(d)*2);
 	  for(int i=0; i<sizeof(d); i++)
 	    {
-	      l[i*2]=xstart+(diagram_data["xspace"]/2.0+diagram_data["xspace"]*i)*
+	      l[i*2]=xstart+(diagram_data["xspace"]/2.0+
+			     diagram_data["xspace"]*i)*
 		xmore;
 	      l[i*2+1]=-(d[i]-diagram_data["yminvalue"])*ymore+
 		diagram_data["ysize"]-ystart;	  
