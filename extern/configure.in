@@ -4,6 +4,7 @@ AC_SET_MAKE
 
 AC_C_INLINE
 
+AC_CHECK_LIB(bind, __inet_ntoa)
 AC_CHECK_LIB(socket, socket)
 AC_CHECK_LIB(nsl, main)
 AC_CHECK_LIB(resolv, gethostbyname)
