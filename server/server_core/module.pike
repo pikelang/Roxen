@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.146 2004/06/15 22:11:03 _cvs_stephen Exp $
+// $Id: module.pike,v 1.147 2004/07/12 02:13:10 _cvs_stephen Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -1816,6 +1816,28 @@ void add_api_function( string name, function f, void|array(string) types)
 mapping api_functions()
 {
   return _api_functions;
+}
+
+//NGSERVER: get rid of query_tag_callers and query_container_callers
+
+mapping(string:function) query_tag_callers()
+//! Compat
+{
+  mapping(string:function) m = ([]);
+  foreach(glob("tag_*", indices( this_object())), string q)
+    if(functionp( this_object()[q] ))
+      m[replace(q[4..], "_", "-")] = this_object()[q];
+  return m;
+}
+
+mapping(string:function) query_container_callers()
+//! Compat
+{
+  mapping(string:function) m = ([]);
+  foreach(glob("container_*", indices( this_object())), string q)
+    if(functionp( this_object()[q] ))
+      m[replace(q[10..], "_", "-")] = this_object()[q];
+  return m;
 }
 
 mapping(string:array(int|function)) query_simpletag_callers()
