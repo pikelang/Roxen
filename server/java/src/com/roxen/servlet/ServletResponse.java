@@ -197,7 +197,8 @@ class ServletResponse implements javax.servlet.http.HttpServletResponse
   protected static final boolean badAtomChar(char c)
   {
     return c<=32 || c>=127 || c=='(' || c==')' || c=='[' || c==']' ||
-      c=='"' || c==',' || c=='\\' || c=='/' || (c>=':' && c<='@');
+      c=='"' || c==',' || c=='\\' || c=='/' || c=='{' || c=='}' ||
+      (c>=':' && c<='@');
   }
 
   protected static final String encodeValue(String val)

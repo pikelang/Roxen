@@ -43,11 +43,18 @@ class HeaderTokenizer
     pos++;
   }
   
+  protected static final boolean badTokenChar(char c)
+  {
+    return c<=32 || c==127 || c=='(' || c==')' || c=='[' || c==']' ||
+      c=='"' || c==',' || c=='\\' || c=='/' || c=='{' || c=='}' ||
+      (c>=':' && c<='@');
+  }
+
   public String getToken()
   {
     skipWS();
     int p0=pos;
-    while(pos<len && Character.isJavaIdentifierPart(header.charAt(pos)))
+    while(pos<len && !badTokenChar(header.charAt(pos)))
       pos++;
     if(pos==p0)
       throw new IllegalArgumentException ("header: "+header);
