@@ -19,7 +19,7 @@ class AutoFile {
   
   int save(string s)
   {
-    werror("Saving file '%s' in %s\n", filename, real_path(filename));
+    //werror("Saving file '%s' in %s\n", filename, real_path(filename));
     object file = Stdio.File(real_path(filename), "cwt");
     if(!objectp(file)) {
       werror("Can not save file %s", filename);
@@ -449,6 +449,25 @@ class Misc {
 // 		     content);
     return ("<wizardinput title=\""+title+"\" help=\""+help+
 	    "\" error=\""+Error(id)->get()+"\">"+content+"</wizardinput>");
+  }
+}
+
+class AutoFilter {
+  static private string tag_body(string tag, mapping args, string contents, mapping res)
+  {
+    res->res = contents;
+    return "";
+  }
+  
+  string filter_body(string contents, mapping md)
+  {
+    if(md->content_type=="text/html") {
+      mapping res = ([ "res":"" ]);
+      parse_html(contents, ([ ]), ([ "body":tag_body ]), res);
+      if(sizeof(res->res))
+	return res->res;
+    }
+    return contents;
   }
 }
 

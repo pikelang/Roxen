@@ -96,10 +96,10 @@ string page_2(object id)
 
 mixed wizard_done(object id)
 {
-  EditMetaData()->done(id, combine_path( id->variables->path,
-					 id->variables->filename));
-  AutoFile(id, combine_path( id->variables->path, id->variables->filename))->
-    save(id->misc->state->upload);
+  string filename = combine_path( id->variables->path, id->variables->filename);
+  EditMetaData()->done(id, filename);
+  AutoFile(id, filename)->
+    save(AutoFilter()->filter_body(id->misc->state->upload, MetaData(id, filename)->get()));
   if(id->misc->state->upload_co)
     remove_call_out(id->misc->state->upload_co);
   m_delete( id->misc->state, "upload" );
