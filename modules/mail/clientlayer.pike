@@ -1,5 +1,5 @@
 /*
- * $Id: clientlayer.pike,v 1.24 1998/09/29 03:04:55 per Exp $
+ * $Id: clientlayer.pike,v 1.25 1998/10/01 04:11:00 per Exp $
  *
  * A module for Roxen AutoMail, which provides functions for
  * clients.
@@ -10,7 +10,7 @@
 #include <module.h>
 inherit "module" : module;
 
-constant cvs_version="$Id: clientlayer.pike,v 1.24 1998/09/29 03:04:55 per Exp $";
+constant cvs_version="$Id: clientlayer.pike,v 1.25 1998/10/01 04:11:00 per Exp $";
 constant thread_safe=1;
 
 
@@ -77,6 +77,9 @@ mapping filter_headers( mapping from )
   if(from->from) res->from = from->from;
   if(from->to) res->to = from->to;
   if(from->date) res->date = from->date;
+  if(from->cc) res->cc = from->cc;
+  if(from->sender) res->sender = from->sender;
+//   if(from->cc) res->cc = from->cc;
   return res;
 }
 
@@ -319,8 +322,13 @@ class Mail
       foreach(fusk0[1..], string fusk)
       {
 	string fusk2;
-	if(sscanf(fusk, "%s?=%s", fusk2, fusk) == 2)
-	  heads[w] += MIME.decode_word( "=?"+fusk2+"?=" )[0];
+	string p1,p2,p3;
+	if(sscanf(fusk, "%[^?]?%1s?%[^?]%s", p1,p2,p3, fusk) == 4)
+	{
+	  werror("dw: =?"+p1+"?"+p2+"?"+p3+"?=\n");
+	  heads[w] += MIME.decode_word("=?"+p1+"?"+p2+"?"+p3+"?=")[0];
+	}
+	sscanf(fusk, "?=%s", fusk);
 	heads[w] += fusk;
       }
     }
@@ -421,7 +429,8 @@ class Mailbox
 
   void force_remove_mail(Mail mm)
   {
-    _mail = 0; // No optimization, for safety...
+    _mail -= ({ mm }); // optimization, for speed...
+//     _mail = 0; // No optimization, for safety...
     _unread = -1;
     modify( );
     remove_mailbox_from_mail( mm->id, mm->message_id );
