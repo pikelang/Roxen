@@ -70,14 +70,15 @@ string page_base( RequestID id, string content )
                   "<subtablist width='100%%'>"
                   "<st-tabs></st-tabs>"
                   "<st-page>"
-                  "<gbutton preparse='' "
-                  "href='add_module.pike?config=&form.config:http;"
-                  "&reload_module_list=yes' > %s </gbutton><p>"
-                  "\n%s\n</p>\n"
+                  "<gbutton href='add_module.pike?config=&form.config:http;"
+                  "&reload_module_list=yes' > %s </gbutton> "
+                  "<gbutton href='site.html/&form.config;'> %s </gbutton>"
+                  "<p>\n%s\n</p>\n"
                   "</st-page></subtablist></td></tr></table>"
                   "</cv-split></content></tmpl>", 
 		  LOCALE(258,"Add module"), 
-		  LOCALE(272,"Reload module list"), content );
+		  LOCALE(272,"Reload module list"), 
+		  LOCALE(202,"Cancel"), content );
 }
 
 
