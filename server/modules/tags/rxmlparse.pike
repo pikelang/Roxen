@@ -15,7 +15,7 @@
 #define _rettext _context_misc[" _rettext"]
 #define _ok _context_misc[" _ok"]
 
-constant cvs_version = "$Id: rxmlparse.pike,v 1.60 2001/06/26 15:04:27 jhs Exp $";
+constant cvs_version = "$Id: rxmlparse.pike,v 1.61 2001/06/26 16:09:54 jhs Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -139,7 +139,11 @@ mapping handle_file_extension(Stdio.File file, string e, RequestID id)
   }
 
   string rxml;
-
+#ifdef MAY_OVERRIDE_RXML_PARSING
+  if(id->prestate->norxml)
+    rxml = data;
+  else
+#endif
   if (ram_cache_pages) {
     array cache_ent;
     if ((cache_ent = p_code_cache[id->not_query]) &&
@@ -254,10 +258,6 @@ string rxml_parse_error(RXML.Backtrace err, RXML.Type type)
 
 string api_parse_rxml(RequestID id, string r)
 {
-#ifdef MAY_OVERRIDE_RXML_PARSING
-  if(id->prestate->norxml)
-    return r;
-#endif
   return Roxen.parse_rxml( r, id );
 }
 
