@@ -6,7 +6,7 @@
 
 // This is an extension module.
 
-constant cvs_version="$Id: pikescript.pike,v 1.58 2000/03/16 18:34:42 nilsson Exp $";
+constant cvs_version="$Id: pikescript.pike,v 1.59 2000/03/27 01:17:02 per Exp $";
 
 constant thread_safe=1;
 mapping scripts=([]);
@@ -182,11 +182,13 @@ mapping handle_file_extension(object f, string e, object got)
       reload = (master()->refresh_inherit( p )>0);
     if( query( "explicitreload" ) )
       reload += got->pragma["no-cache"];
+
     if( reload )
     {
       // Reload the script from disk, if the script allows it.
       if(!(o->no_reload && o->no_reload(got)))
       {
+        master()->refresh( p, 1 );
         destruct(o);
         m_delete( scripts, got->not_query);
       }

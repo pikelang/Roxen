@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module_support.pike,v 1.63 2000/03/25 03:58:29 mast Exp $
+// $Id: module_support.pike,v 1.64 2000/03/27 01:17:01 per Exp $
 
 #include <roxen.h>
 #include <module_constants.h>
@@ -185,7 +185,8 @@ program my_compile_file(string file, void|int silent)
 
   ErrorContainer e = ErrorContainer();
   master()->set_inhibit_compile_errors(e);
-  catch {
+  catch 
+  {
     p  = (program)( file );
   };
   master()->set_inhibit_compile_errors(0);

@@ -10,8 +10,8 @@
 // the correct background and font colors.
 //
 // Make sure links work _inside_ unfolded documents.
+constant cvs_version = "$Id: directories.pike,v 1.57 2000/03/27 01:17:01 per Exp $";
 
-constant cvs_version = "$Id: directories.pike,v 1.56 2000/03/10 03:11:17 nilsson Exp $";
 constant thread_safe=1;
 
 //#define DIRECTORIES_DEBUG
@@ -23,7 +23,6 @@ constant thread_safe=1;
 
 inherit "module";
 inherit "roxenlib";
-
 array readme, indexfiles, nobrowse;
 int filename_width, cache, config_id;
 

@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.290 2000/03/25 23:49:26 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.291 2000/03/27 01:17:00 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -2205,21 +2205,25 @@ int save_one( RoxenModule o )
   return 1;
 }
 
-void reload_module( string modname )
+RoxenModule reload_module( string modname )
 {
   RoxenModule old_module = find_module( modname );
+  ModuleInfo mi = roxen->find_module( (modname/"#")[0] );
+  if( !old_module ) return 0;
 
-  if( !old_module )
-    return;
-
-  save_one (old_module);
+  save_one( old_module );
 
   master()->refresh_inherit( object_program( old_module ) );
+  master()->refresh( object_program( old_module ), 1 );
 
-  disable_module( modname );
+  catch( disable_module( modname, 1 ) );
 
-  if( enable_module( modname ) == 0 )
-    enable_module( modname, old_module );
+  RoxenModule nm;
+  
+  if( catch( nm = enable_module( modname ) ) || (nm == 0) )
+    enable_module( modname, (nm=old_module), mi );
+
+  return nm;
 }
 
 class ModuleCopies
@@ -2254,29 +2258,33 @@ Thread.Mutex enable_modules_mutex = Thread.Mutex();
 
 static int enable_module_batch_msgs;
 
-RoxenModule enable_module( string modname, RoxenModule|void me )
+RoxenModule enable_module( string modname, RoxenModule|void me, 
+                           ModuleInfo|void moduleinfo )
 {
   MODULE_LOCK;
   int id;
-  ModuleInfo moduleinfo;
   ModuleCopies module;
   int pr;
   mixed err;
   int module_type;
 
   if( sscanf(modname, "%s#%d", modname, id ) != 2 )
-    while( modules[modname] && modules[modname][id] )
+    while( modules[ modname ] && modules[ modname ][ id ] )
       id++;
 
   int start_time = gethrtime();
+  mixed err;
 
-  moduleinfo = roxen->find_module( modname );
-
-  if (!moduleinfo)
+  if( !moduleinfo )
   {
-    report_warning("Failed to load %s. The module probably "
-		   "doesn't exist in the module path.\n", modname);
-    return 0;
+    moduleinfo = roxen->find_module( modname );
+
+    if (!moduleinfo)
+    {
+      report_warning("Failed to load %s. The module probably "
+                     "doesn't exist in the module path.\n", modname);
+      return 0;
+    }
   }
 
   string descr = moduleinfo->get_name() + (id ? " copy " + (id + 1) : "");
@@ -2843,7 +2851,7 @@ string check_variable(string name, mixed value)
   }
 }
 
-int disable_module( string modname )
+int disable_module( string modname, int|void nodest )
 {
   MODULE_LOCK;
   RoxenModule me;
@@ -2945,7 +2953,8 @@ int disable_module( string modname )
     m_delete( enabled_modules, modname + "#" + id );
     store( "EnabledModules",enabled_modules, 1, this_object());
   }
-  destruct(me);
+  if(!nodest)
+    destruct(me);
   return 1;
 }
 

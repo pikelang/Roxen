@@ -15,7 +15,7 @@ private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.161 2000/03/24 20:54:50 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.162 2000/03/27 01:17:01 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -522,10 +522,6 @@ class LowErrorContainer
   {
     got_error(file, line, "Warning: " + err);
   }
-  void `() (string file, int line, string err)
-  {
-    got_error (file, line, err);
-  }
   void create()
   {
     d = getcwd();
@@ -551,13 +547,6 @@ class ErrorContainer
       compile_error_handlers->compile_warning( file,line, err );
     else
       ::compile_warning(file,line,err);
-  }
-  void `() (string file, int line, string err)
-  {
-    if( sizeof(compile_error_handlers) )
-      compile_error_handlers->compile_error( file,line,err );
-    else
-      ::compile_error(file,line,err);
   }
 }
 

@@ -157,17 +157,24 @@ string devel_buttons( Configuration c, string mn, RequestID id )
     string a = glob( "*.x", indices( id->variables ) )[0]-".x";
     if( a == parse_rxml( "&locale.reload;",id ) )
     {
-      object ec = roxenloader.LowErrorContainer();
+      object ec = roxenloader.LowErrorContainer(), nm;
+
       roxenloader.push_compile_error_handler( ec );
-      c->reload_module( replace(mn,"!","#" ) );
+
+      nm = c->reload_module( replace(mn,"!","#" ) );
+
       roxenloader.pop_compile_error_handler();
+
       if( strlen( ec->get() ) )
+      {
         current_compile_errors[ mn ] = html_encode_string(ec->get());
-      else
+        report_error("While reloading:\n"+ec->get()+"\n");
+      }
+      else if( mod != nm )
+      {
+        mod = nm;
         m_delete(current_compile_errors, mn );
-      mod = c->find_module( replace( mn,"!","#" ) );
-      if( !mod )
-        return "<h1>FAILED TO RELOAD MODULE! FATAL! AJEN!</h1>";
+      }
     }
     else if( a == parse_rxml( "&locale.clear_log;",id ) )
     {
