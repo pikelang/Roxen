@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.99 1998/03/23 08:20:55 neotron Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.100 1998/04/07 01:10:33 peter Exp $";
 //inherit "roxenlib";
 
 inherit "config/draw_things";
@@ -599,7 +599,6 @@ string configuration_docs()
   string res="";
   foreach(get_dir("server_templates"), string c)
   {
-    perror("c[-1]: %O\n", c[-1]);
     if( c[-1]=='e' )
       res += ("<dt><b>"+get_template(c)->name+"</b>\n"+
 	      "<dd>"+get_template(c)->desc+"<br>\n"+
