@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.260 2001/03/08 14:35:43 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.261 2001/03/13 10:19:15 kuntri Exp $";
 
 #include <module.h>
 inherit "module";
@@ -508,6 +508,13 @@ constant tagdoc=([
 
 "gtext-id":#"<desc tag='tag'><p><short>
 
+ Returns an internal URL to an image
+
+get dig en URL som som get dig en bild med de argument du
+specificerat om du också lägger på en sträng med den text du vill ha
+efter den URLen. Den här tagen är ett DOS-hål och bör avrådas ifrån om 
+man inte använder den under okntrollerade former som tex ett intranät.
+
  </short></p>
 
 </desc>
@@ -523,9 +530,9 @@ constant tagdoc=([
 </attr>"+gtextargs,
 
 "gtext-url":#"<desc cont='cont'><p><short>
-
- </short></p>
-
+ Returns an internal URL to an image with the specified attributes
+ applied.</short> <tag>gtext-url</tag> takes the same attributes as
+ <xref href='gtext.tag' />.</p>
 </desc>
 
 <attr name='href' value='URL'><p>
@@ -539,6 +546,14 @@ constant tagdoc=([
 </attr>
 <noex>"+gtextargs+"</noex>",]);
 #endif
+
+<gtext-id/> get dig en URL som som get dig en bild med de argument du
+specificerat om du också lägger på en sträng med den text du vill ha
+efter den URLen. Den här tagen är ett DOS-hål och bör avrådas ifrån om 
+man inte använder den under okntrollerade former som tex ett intranät.
+
+Eg borde <gtext-id/> gå att stänga av i admininterfacet. *ticketar mig
+själv*
 
 
 // -------------------- Image cache functions --------------------

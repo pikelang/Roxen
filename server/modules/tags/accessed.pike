@@ -5,7 +5,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: accessed.pike,v 1.41 2001/03/08 14:35:45 per Exp $";
+constant cvs_version = "$Id: accessed.pike,v 1.42 2001/03/13 10:19:16 kuntri Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_LOGGER;
 constant module_name = "Tags: Accessed counter";
@@ -76,8 +76,8 @@ constant tagdoc=([
  used to store the number of accesses to each page. By default the
  access count is only kept for files that actually contain an
  accessed-tag, but can also be configured to count all files of a
- certain type. <ex><accessed/></ex>
-</p></desc>
+ certain type.</p> <ex><accessed/></ex>
+</desc>
 
 <attr name='add' value='number'><p>
  Increments the number of accesses with this number instead of one,

@@ -6,7 +6,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: atlas.pike,v 1.4 2001/03/08 14:35:43 per Exp $";
+constant cvs_version = "$Id: atlas.pike,v 1.5 2001/03/13 10:19:15 kuntri Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_EXPERIMENTAL;
 constant module_name = "Graphics: Atlas";
@@ -205,7 +205,14 @@ constant tagdoc=([
 </desc>
 
 <attr name='list' value='regions|countries'><p>
- Select what to list</p>
+ Select what to list.</p>
+
+<ex type='vert'>
+<emit source='atlas' list='regions'>
+<ent>_.name</ent><br />
+</emit>
+</ex>
+<p>Available regions</p>
 </attr>",
 
 ([
@@ -216,10 +223,13 @@ constant tagdoc=([
 
   }),
 "atlas":({ #"<desc cont='cont'><p><short>
- Draws a map</short></p>
+
+ Draws a map.</short> The map shows either the world, regions (Africa, Europe,
+ etc) or countries. </p>
+
 </desc>
 
-<attr name='region' value='name'><p>
+<attr name='region' value='name' default='The World'><p>
  Which map to show. The value may be any of the listed region values
  that <xref href='../output/emit.tag'><tag>emit source='atlas'
  list='regions'</tag><ent>_.name</ent><tag>/emit</tag></xref>
