@@ -1,4 +1,4 @@
-# $Id: extensions,v 1.50 2002/06/13 00:23:56 nilsson Exp $
+# $Id: extensions,v 1.51 2003/01/23 17:23:18 mani Exp $
 #
 # ---- Extension database ----
 # The database used by the content typ module to map from extension to mime-type
@@ -118,10 +118,6 @@ wbmp    image/vnd.wap.wbmp
 xif	image/vnd.xiff
 
 
-# Pending registration
-
-svg	image/svg
-
 # Other
 
 bmp	image/x-MS-bmp
@@ -162,6 +158,8 @@ rgb	image/x-rgb
 rip	image/rip
 rp	image/vnd.rn-realpix
 rs	image/x-sun-raster
+svg	image/svg+xml
+svgz	image/svg+xml
 svh	image/svh
 tga	image/x-targa
 wi	image/wavelet
