@@ -1,5 +1,5 @@
 '
-' $Id: Win32Installer.vbs,v 1.8 2004/12/07 15:11:40 grubba Exp $
+' $Id: Win32Installer.vbs,v 1.9 2004/12/07 16:51:45 grubba Exp $
 '
 ' Companion file to RoxenUI.wxs with custom actions.
 '
@@ -10,12 +10,14 @@
 '
 ' Remove any previously installed service.
 Function RemoveOldService()
-  Dim WshShell
+  Dim WshShell, serverdir
+
+  serverdir = Session.Property("CustomActionData")
 
   Set WshShell = CreateObject("WScript.Shell")
-  WshShell.CurrentDirectory = Session.Property("CustomActionData")
+  WshShell.CurrentDirectory = serverdir
 
-  WshShell.Run "ntstart --remove", 0, True
+  WshShell.Run """" & serverdir & "ntstart"" --remove", 0, True
 
   RemoveOldService = 1
 End Function
