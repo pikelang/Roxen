@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.154 2000/08/14 13:05:52 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.155 2000/08/14 14:29:30 mast Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -864,20 +864,21 @@ class TagInsertFile {
       }
     }
 
+    string result;
     if(args->nocache) {
       int nocache=id->pragma["no-cache"];
       id->pragma["no-cache"] = 1;
-      string result=id->conf->try_get_file(var, id);
-      if(!result) RXML.run_error("No such file ("+var+").\n");
+      result=id->conf->try_get_file(var, id);
       id->pragma["no-cache"] = nocache;
-      return result;
     }
-	
+    else result = id->conf->try_get_file(var, id);
+    if(!result) RXML.run_error("No such file ("+var+").\n");
+
 #ifdef OLD_RXML_COMPAT
     if(id->conf->old_rxml_compat)
-      return Roxen.parse_rxml(id->conf->try_get_file(var, id), id);
+      return Roxen.parse_rxml(result, id);
 #endif
-    return id->conf->try_get_file(args->file, id);
+    return result;
   }
 }
 
