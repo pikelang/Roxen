@@ -5,7 +5,7 @@
  * doc = "Main part of the installscript that is run upon installation of roxen";
  */
 
-string cvs_version = "$Id: install.pike,v 1.32 1998/09/18 18:20:18 grubba Exp $";
+string cvs_version = "$Id: install.pike,v 1.33 1999/02/14 01:31:10 peter Exp $";
 
 #include <simulate.h>
 #include <roxen.h>
@@ -422,6 +422,20 @@ void main(int argc, string *argv)
       write("[1mNo Gmp-module -- using http for the configuration-interface[0m.\n");
     } else {
       write("[1mExport version -- using http for the configuration-interface[0m.\n");
+    }
+  }
+
+  if( file_stat("manual") && file_stat("manual")[1] == -2 )
+  {
+    if( file_stat("manual/parsed.tar") ) {
+      write("\nInstalling parsed manual...\n");
+      Process.popen("/bin/sh -c 'cd manual && tar xf parsed.tar"
+		    " && rm parsed.tar'");
+    }
+    if( file_stat("manual/unparsed.tar") ) {
+      write("\nInstalling unparsed manual...\n");
+      Process.popen("/bin/sh -c 'cd manual && tar xf unparsed.tar"
+		    " && rm unparsed.tar'");
     }
   }
 
