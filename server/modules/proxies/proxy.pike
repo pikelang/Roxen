@@ -4,7 +4,7 @@
 // limit of proxy connections/second is somewhere around 70% of normal
 // requests, but there is no real reason for them to take longer.
 
-string cvs_version = "$Id: proxy.pike,v 1.32 1998/06/07 21:12:45 grubba Exp $";
+string cvs_version = "$Id: proxy.pike,v 1.33 1998/06/09 14:27:17 grubba Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -252,27 +252,25 @@ string process_request(object id, int is_remote)
   string url;
   if(!id) return 0;
 
-  /* FIXME:
-   *
-   * The \r\n handling needs to be fixed!
-   */
-  string new_raw;
+  string new_raw = replace(id->raw, "\r\n", "\n");
   int delimiter;
-  if((delimiter = search(id->raw, "\n\n"))>=0)
-    new_raw = id->raw[..delimiter-1];
-  else
-    new_raw = id->raw;
+  if((delimiter = search(new_raw, "\n\n"))>=0)
+    new_raw = new_raw[..delimiter-1];
 
-  new_raw = replace(new_raw, "\n", "\r\n")+"\r\n\r\n"+id->data;
+  new_raw = replace(new_raw, "\n", "\r\n")+"\r\n\r\n"+(id->data||"");
 
   if(is_remote) return new_raw;
   
+  // Strip command.
+  if((delimiter = search(new_raw, "\n")) >= 0)
+    new_raw = new_raw[delimiter+1..];
+
   url=id->raw_url[strlen(QUERY(mountpoint))..];
-  while(url[0]=='/')              url=url[1..];
+  sscanf(url, "%*[/]%s", url);	// Strip initial '/''s.
   if(!sscanf(url, "%*s/%s", url)) url="";
 
   return sprintf("%s /%s HTTP/1.0\r\n%s", id->method || "GET", 
-		 url, new_raw[search(new_raw, "\n")+1..]);
+		 url, new_raw);
 }
 
 class Connection {
