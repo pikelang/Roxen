@@ -2764,8 +2764,6 @@ server must be a MySQL server, nothing else will work.
 <t></t>
 </str>
 
-
-
 <str id="459">
 <new/>
 <o>Date</o>

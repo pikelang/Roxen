@@ -2618,8 +2618,6 @@ Dies muss ein MySQL-Server sein, keine anderen Datenbank wird funktionieren.
 <t>Eine Datenbank-Gruppe mit Namen %s existiert bereits</t>
 </str>
 
-
-
 <str id="459">
 <o>Date</o>
 <t>Datum</t>
