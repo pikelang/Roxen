@@ -769,7 +769,7 @@ int main(int argc, string *argv)
 		 }),
 		 "fontsize":22,
 		 "labels":({"xstor", "ystor", "xenhet", "yenhet"}),
-		 "legendfontsize":65, 
+		 "legendfontsize":3, 
 		 "legend_texts": ({"Roxen"//, "Netscape", "Apache", "Microsoft", "" 
 }),
 		 "labelsize":42,
@@ -788,7 +788,7 @@ int main(int argc, string *argv)
 
   object o=Stdio.File();
   o->open("test.ppm", "wtc");
-  o->write(create_pie(diagram_data)["image"]->toppm());
+  o->write(create_bars(diagram_data)["image"]->toppm());
   o->close();
  
 };
