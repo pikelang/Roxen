@@ -447,7 +447,7 @@ string tagtime(int t,mapping m)
 			   language(m->lang, "month"));
      case "day":
      case "wday":
-      return number2string((int)(localtime(t)->wday),m,
+      return number2string((int)(localtime(t)->wday+1),m,
 			   language(m->lang, "day"));
      case "date":
      case "mday":
