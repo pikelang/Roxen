@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.296 2001/09/03 23:49:03 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.297 2001/09/04 13:48:14 jhs Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -7377,7 +7377,8 @@ just got zapped?
 </attr>
 
 <attr name='split' value='string' default='NULL'><p>
- The string the values string is splitted with.</p>
+ The string the values string is splitted with. Supplying an empty string
+ results in the string being split between every single character.</p>
 </attr>
 
 <attr name='advanced' value='lines|words|chars'><p>
