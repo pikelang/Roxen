@@ -1,6 +1,6 @@
 // Protocol support for RFC 2518
 //
-// $Id: webdav.pike,v 1.32 2004/05/13 16:01:43 grubba Exp $
+// $Id: webdav.pike,v 1.33 2004/05/13 21:04:52 mast Exp $
 //
 // 2003-09-17 Henrik Grubbström
 
@@ -9,7 +9,7 @@ inherit "module";
 #include <module.h>
 #include <request_trace.h>
 
-constant cvs_version = "$Id: webdav.pike,v 1.32 2004/05/13 16:01:43 grubba Exp $";
+constant cvs_version = "$Id: webdav.pike,v 1.33 2004/05/13 21:04:52 mast Exp $";
 constant thread_safe = 1;
 constant module_name = "DAV: Protocol support";
 constant module_type = MODULE_FIRST;
@@ -447,6 +447,9 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
 		   if (res && ((res->error == 201) || (res->error == 204))) {
 		     empty_result = res;
 		     return 0;
+		   }
+		   else if (!res && id->misc->error_code) {
+		     empty_result = Roxen.http_status(id->misc->error_code);
 		   }
 		   return res;
 		 };
