@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.133 1997/09/14 22:58:42 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.134 1997/09/14 23:00:58 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -863,8 +863,8 @@ string check_variable(string name, string value)
       node = (configuration_interface()->root->descend("Globals", 1)->
 	      descend("Proxy disk cache: Base Cache Dir", 1));
       if(node && !node->changed) node->change(1);
-      call_out(set, 0, "cachedir", value+"roxen_cache/");
       mkdirhier(value+"roxen_cache/foo");
+      call_out(set, 0, "cachedir", value+"roxen_cache/");
     }
     break;
 
