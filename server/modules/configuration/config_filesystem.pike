@@ -18,7 +18,7 @@ LocaleString module_doc =
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.101 2001/10/04 15:04:58 per Exp $";
+  "$Id: config_filesystem.pike,v 1.102 2001/10/05 15:17:20 per Exp $";
 
 constant path = "config_interface/";
 
@@ -226,8 +226,10 @@ mixed find_file( string f, RequestID id )
   }
 
 
-  if( docs && (sscanf( f, "docs/%s", f ) ))
+  if( docs && (sscanf( f, "docs/%s", f ) ) || (f=="docs"))
   {
+    if( f == "docs" )
+      return Roxen.http_redirect( id->not_query+"/", id );
     if( mapping m = get_docfile( f ) )
     {
       is_docs = 1;
