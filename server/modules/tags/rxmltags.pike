@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.205 2001/03/02 12:54:51 hop Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.206 2001/03/05 23:36:33 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2912,8 +2912,10 @@ Sets a variable.</short>
  The value the cookie will be set to.
 </attr>
 
-<attr name=path value=string>
- The path in which the cookie should be available.
+<attr name=path value=string default=\"/\">
+ The path in which the cookie should be available. Use path=\"\" to remove
+ the path argument from the sent cookie, thus making the cookie valid only
+ for the present directory and below.
 </attr>
 
  If persistent is specified, the cookie will be persistent until year
