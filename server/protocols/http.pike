@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.300 2001/02/01 08:36:04 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.301 2001/02/01 12:21:15 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -754,11 +754,12 @@ private int parse_got( string new_data )
   }
   string trailer, trailer_trailer;
 
-  array sl = line / " ";
+  array(string) sl = line / " ";
   switch( sizeof( sl ) )
   {
     default:
-      sl = ({ sl[0], sl[1..sizeof(sl)-2], sl[-1] });
+      sl = ({ sl[0], sl[1..sizeof(sl)-2]*" ", sl[-1] });
+      /* FALL_THROUGH */
 
     case 3: /* HTTP/1.0 */
       method = sl[0];
@@ -791,6 +792,10 @@ private int parse_got( string new_data )
       s = data = ""; // no headers or extra data...
       sscanf( f, "%s%*[\r\n]", f );
       misc->cacheable = 0;
+      break;
+
+    case 0:
+      /* Not reached */
       break;
   }
   REQUEST_WERR(sprintf("***** req line: %O", line));
