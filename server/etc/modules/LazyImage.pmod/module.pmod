@@ -1300,7 +1300,6 @@ class Blur
   };
 }
 
-
 #define BASIC_I_OR_A_OPERATION(X,Y,Z,A)					\
 class X									\
 {									\
@@ -1353,6 +1352,7 @@ class X									\
   };									\
 }
 
+//! @ignore
 BASIC_I_OR_A_OPERATION( Gamma, "gamma", gamma,
 			translate_coordinate_f(args->gamma,0) );
 BASIC_I_OR_A_OPERATION( Invert, "invert", invert, );
@@ -1368,6 +1368,7 @@ BASIC_I_OR_A_OPERATION( Distance,"color-distance",distancesq,
 BASIC_I_OR_A_OPERATION( SelectFrom,"select-from",select_from,
 			@({translate_coordinate( args->x,0 ),
 			   translate_coordinate( args->y,0 )}));
+//! @endignore
 
 class Expand
 //! Expand all the layers to the size of the whole image
