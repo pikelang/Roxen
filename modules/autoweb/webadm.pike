@@ -1,12 +1,12 @@
 /*
- * $Id: webadm.pike,v 1.33 1998/09/30 15:45:06 wellhard Exp $
+ * $Id: webadm.pike,v 1.34 1998/09/30 17:04:34 wellhard Exp $
  *
  * AutoWeb administration interface
  *
  * Johan Schön, Marcus Wellhardh 1998-07-23
  */
 
-constant cvs_version = "$Id: webadm.pike,v 1.33 1998/09/30 15:45:06 wellhard Exp $";
+constant cvs_version = "$Id: webadm.pike,v 1.34 1998/09/30 17:04:34 wellhard Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -154,16 +154,16 @@ string update_template(string tag_name, mapping args, object id)
 				      "  FROM template_vars");
   mapping default_vars = ([ ]);
   foreach(default_variables, mapping variable)
-    default_vars[variable->name] = variable->default_value;
+    default_vars += ([ variable->name:variable->default_value ]);
   
   array variables = db->query("SELECT * "
 			      "  FROM customers_schemes_vars "
 			      "  WHERE scheme_id='"+scheme_id+"'");
   mapping vars = ([ ]);
   foreach(variables, mapping variable)
-    vars[variable->name] = variable->default_value;
+    vars += ([ variable->variable_name:variable->value ]);
   vars = default_vars + vars;
-  
+
   // Template
   string template_filename = vars->template_name;
   if(!template_filename)
