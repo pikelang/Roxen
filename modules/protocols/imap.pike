@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.73 1999/02/18 21:54:32 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.74 1999/02/19 16:42:33 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -143,6 +143,57 @@ class imap_mail
     return 0;
   }
 
+  array(string|object) expunge()
+  {
+    if (flags["\\Deleted"]) {
+      mail->delete();
+      return ({ imap_number(index), "EXPUNGE" });
+    }
+    return 0;
+  }
+
+  array(string|object) store(multiset(string) new_flags, int mode,
+			     int silent, int uid_mode)
+  {
+    if (mode) {
+      // We care about what the flags were before.
+      multiset old_flags = flags;
+      flags = get_flags();
+
+      silent &= equal(flags, old_flags);
+    }
+    switch(mode) {
+    case -1:
+      clear_flags(new_flags);
+      break;
+    case 0:
+      clear_flags(flags);
+      set_flags(new_flags);
+      break;
+    case 1:
+      set_flags(new_flags);
+      break;
+    }
+
+    if (!silent) {
+      if (uid_mode) {
+	return({
+	  "FETCH", imap_number(index), imap_list(({
+	    "FLAGS", imap_list(indices(flags)),
+	    "UID", imap_number(uid),
+	  }))
+	});
+      } else {
+	return({
+	  "FETCH", imap_number(index), imap_list(({
+	    "FLAGS", imap_list(indices(flags)),
+	  }))
+	});
+      }
+    }
+    return 0;
+  }
+  
   object mapping_to_list(mapping m)
   {
     return imap_list( ((array) m) * ({ }));
@@ -277,47 +328,6 @@ class imap_mail
   
   // array collect(mixed ...args) { return args; }
 
-  array(string|object) store(multiset(string) new_flags, int mode, int silent, int uid_mode)
-  {
-    if (mode) {
-      // We care about what the flags were before.
-      multiset old_flags = flags;
-      flags = get_flags();
-
-      silent &= equal(flags, old_flags);
-    }
-    switch(mode) {
-    case -1:
-      clear_flags(new_flags);
-      break;
-    case 0:
-      clear_flags(flags);
-      set_flags(new_flags);
-      break;
-    case 1:
-      set_flags(new_flags);
-      break;
-    }
-
-    if (!silent) {
-      if (uid_mode) {
-	return({
-	  "FETCH", imap_number(index), imap_list(({
-	    "FLAGS", imap_list(indices(flags)),
-	    "UID", imap_number(uid),
-	  }))
-	});
-      } else {
-	return({
-	  "FETCH", imap_number(index), imap_list(({
-	    "FLAGS", imap_list(indices(flags)),
-	  }))
-	});
-      }
-    }
-    return 0;
-  }
-  
   array fetch(array(mapping(string:mixed)) attrs)
   {
     array data = Array.map(attrs, fetch_attr) * ({});
@@ -818,8 +828,13 @@ class imap_mailbox
     });
   }
 
-  array(array(string|object)) store(object message_set,
-				    array(string) flags, int mode, int silent, int uid_mode)
+  array(array(string|object)) expunge()
+  {
+    return(contents->expunge() - ({ 0 }));
+  }
+
+  array(array(string|object)) store(object message_set, array(string) flags,
+				    int mode, int silent, int uid_mode)
   {
     array(int) message_numbers = message_set->expand(sizeof(contents));
 
@@ -1155,6 +1170,20 @@ class backend
 	      m->get_flags(),
 	      m->get_permanent_flags() });
       
+  }
+
+  array(array(string|object)) expunge(object|mapping(string:mixed) session)
+  {
+    return session->mailbox->expunge();
+  }
+
+  int close(object|mapping(string:mixed) session)
+  {
+    int res = !!expunge(session);
+
+    session->mailbox = 0;
+
+    return res;
   }
 
   array(array(string|object)) store(object|mapping(string:mixed) session, object message_set,
