@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.166 2004/04/22 16:27:48 mani Exp $
+// $Id: Roxen.pmod,v 1.167 2004/05/16 21:14:20 mani Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -661,6 +661,22 @@ string extract_query(string from)
   return "";
 }
 
+static string mk_env_var_name(string name)
+{
+  name = replace(name, " ", "_");
+  string res = "";
+  do {
+    string ok_part="";
+    sscanf(name, "%[A-Za-z0-9_]%s", ok_part, name);
+    res += ok_part;
+    if (sizeof(name)) {
+      res += "_";
+      name = name[1..];
+    }
+  } while (sizeof(name));
+  return res;
+}
+
 mapping build_env_vars(string f, RequestID id, string path_info)
 //! Generate a mapping with environment variables suitable for use
 //! with CGI-scripts or SSI scripts etc.
@@ -791,7 +807,7 @@ mapping build_env_vars(string f, RequestID id, string path_info)
 				    ({ " ", "-", "\0", "=" }),
 				    ({ "_", "_", "", "_" }));
 
-      new[hh] = replace(hdrs[h], ({ "\0" }), ({ "" }));
+      new[mk_env_var_name(hh)] = replace(hdrs[h], ({ "\0" }), ({ "" }));
     }
     if (!new["HTTP_HOST"]) {
       if(objectp(id->my_fd) && id->my_fd->query_address(1))
@@ -906,22 +922,24 @@ mapping build_roxen_env_vars(RequestID id)
   new["COOKIES"] = "";
   foreach(indices(id->cookies), tmp)
     {
-      new["COOKIE_"+tmp] = id->cookies[tmp];
-      new["COOKIES"]+= tmp+" ";
+      new["COOKIE_"+mk_env_var_name(tmp)] = id->cookies[tmp];
+      new["COOKIES"]+= mk_env_var_name(tmp)+" ";
     }
 
   foreach(indices(id->config), tmp)
     {
-      new["CONFIG_"+replace(tmp, " ", "_")]="true";
+      tmp = mk_env_var_name(tmp);
+      new["CONFIG_"+tmp]="true";
       if(new["CONFIGS"])
-	new["CONFIGS"] += " " + replace(tmp, " ", "_");
+	new["CONFIGS"] += " " + tmp;
       else
-	new["CONFIGS"] = replace(tmp, " ", "_");
+	new["CONFIGS"] = tmp;
     }
 
   foreach(indices(id->variables), tmp)
   {
-    string name = replace(tmp," ","_");
+    string name = mk_env_var_name(tmp);
+    while(
     if (mixed value = id->variables[tmp])
       if (!catch (value = (string) value) && (sizeof(value) < 8192)) {
 	// Some shells/OS's don't like LARGE environment variables
@@ -937,20 +955,22 @@ mapping build_roxen_env_vars(RequestID id)
 
   foreach(indices(id->prestate), tmp)
   {
-    new["PRESTATE_"+replace(tmp, " ", "_")]="true";
+    tmp = mk_env_var_name(tmp);
+    new["PRESTATE_"+tmp]="true";
     if(new["PRESTATES"])
-      new["PRESTATES"] += " " + replace(tmp, " ", "_");
+      new["PRESTATES"] += " " + tmp;
     else
-      new["PRESTATES"] = replace(tmp, " ", "_");
+      new["PRESTATES"] = tmp;
   }
 
   foreach(indices(id->supports), tmp)
   {
-    new["SUPPORTS_"+replace(tmp-",", " ", "_")]="true";
+    tmp = mk_env_var_name(tmp-",");
+    new["SUPPORTS_"+tmp]="true";
     if (new["SUPPORTS"])
-      new["SUPPORTS"] += " " + replace(tmp, " ", "_");
+      new["SUPPORTS"] += " " + tmp;
     else
-      new["SUPPORTS"] = replace(tmp, " ", "_");
+      new["SUPPORTS"] = tmp;
   }
   return new;
 }
