@@ -1,6 +1,6 @@
 // cmdline.cpp: implementation of the CCmdLine class.
 //
-// $Id: cmdline.cpp,v 1.15 2001/11/13 10:45:49 tomas Exp $
+// $Id: cmdline.cpp,v 1.16 2001/11/14 16:29:49 tomas Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -209,7 +209,8 @@ BOOL CArgList::Remove(const char *item)
 //////////////////////////////////////////////////////////////////////
 
 CCmdLine::CCmdLine()
-: m_SelfTestDir("etc\\test"), m_LogDir("..\\logs")
+: m_SelfTestDir("etc\\test"), m_LogDir("..\\logs"),
+  m_ConfigDir("..\\configurations")
 {
   m_bPreloaded  = FALSE;
 
@@ -799,7 +800,7 @@ void CCmdLine::SplitCmdline(
 // Parse current argument (always argv[0]) and
 // return the number of parameters used
 //
-int CCmdLine::ParseArg(char *argv[], CCmdLine::tArgType & type)
+int CCmdLine::ParseArg(int argc, char *argv[], CCmdLine::tArgType & type)
 {
   char *value;
   
@@ -1127,14 +1128,22 @@ int CCmdLine::ParseArg(char *argv[], CCmdLine::tArgType & type)
   //  passhelp=1
   if (Match(*argv, "--program", NULL, NULL) )
   {
-    m_saRoxenArgs.Add(*argv);
-    m_saRoxenArgs.Add(argv[1]);
-    m_bOnce = TRUE;
-    m_bPassHelp = TRUE;
-    m_bKeepMysql = TRUE;
-    m_bCheckVersion = FALSE;
-    type = eArgNtLoader;
-    return 2;
+    if (argc > 1)
+    {
+      m_saRoxenArgs.Add(*argv);
+      m_saRoxenArgs.Add(argv[1]);
+      m_bOnce = TRUE;
+      m_bPassHelp = TRUE;
+      m_bKeepMysql = TRUE;
+      m_bCheckVersion = FALSE;
+      type = eArgNtLoader;
+      return 2;
+    }
+    else
+    {
+      type = eArgMoreData;
+      return 1;
+    }
   }
 
   //'--cd')
@@ -1145,11 +1154,19 @@ int CCmdLine::ParseArg(char *argv[], CCmdLine::tArgType & type)
   //  shift
   if (Match(*argv, "--cd", NULL, NULL) )
   {
-    m_saRoxenArgs.Add(*argv);
-    m_saRoxenArgs.Add(argv[1]);
-    m_bOnce = TRUE;
-    type = eArgNtLoader;
-    return 2;
+    if (argc > 1)
+    {
+      m_saRoxenArgs.Add(*argv);
+      m_saRoxenArgs.Add(argv[1]);
+      m_bOnce = TRUE;
+      type = eArgNtLoader;
+      return 2;
+    }
+    else
+    {
+      type = eArgMoreData;
+      return 1;
+    }
   }
 
   //--debug-without=*|-r*|-d*|-t*|-l*|-w*|-a*|-p*|--*-debug*)
@@ -1338,9 +1355,9 @@ BOOL CCmdLine::Parse(int argc, char *argv[])
 
   // Walk through the argument list
   i = 1; // skip argv[0]
-  while (i < argc)
+  while (i < argc && ret)
   {
-    int numParsed = ParseArg(&argv[i], type);
+    int numParsed = ParseArg(argc-i, &argv[i], type);
 
     switch (type)
     {
@@ -1381,9 +1398,6 @@ BOOL CCmdLine::Parse(int argc, char *argv[])
 
     case eArgSelfTest:
       {
-        // Make sure that mysql is not running
-        KillMySql();
-
         // Make sure the var directory exists
         CreateDirectory("..\\var", NULL);
 
@@ -1409,9 +1423,13 @@ BOOL CCmdLine::Parse(int argc, char *argv[])
 
         m_bOnce = TRUE;
         m_iDebug = max(m_iDebug, 1);
-        m_saRoxenArgs.Add("--config-dir=../var/test_config");
+        m_ConfigDir = "../var/test_config";
+        m_saRoxenArgs.Add(("--config-dir=" + m_ConfigDir).c_str());
         m_saRoxenArgs.Add("--remove-dumped");
         
+        // Make sure that mysql is not running
+        KillMySql(m_ConfigDir.c_str());
+
         SetEnvironmentVariable("COPYCMD", "/Y");
         system("rmdir /Q /S ..\\var\\test_config >NUL:");
 
@@ -1432,6 +1450,12 @@ BOOL CCmdLine::Parse(int argc, char *argv[])
       //OutputLineFmt(hOut, ".BHelp argument: %sB.", argv[i]);
       break;
 
+
+    case eArgMoreData:
+      ret = FALSE;
+      OutputLineFmt(hOut, ".BArgument requires more data: %sB.", argv[i]);
+      break;
+      
 
     case eArgUnsupported:
       OutputLineFmt(hOut, ".BArgument not supported: %sB.", argv[i]);

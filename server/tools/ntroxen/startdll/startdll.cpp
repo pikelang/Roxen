@@ -1,6 +1,6 @@
 // startdll.cpp : Implementation of WinMain
 //
-// $Id: startdll.cpp,v 1.9 2001/10/19 09:43:49 tomas Exp $
+// $Id: startdll.cpp,v 1.10 2001/11/14 16:29:50 tomas Exp $
 //
 
 
@@ -863,7 +863,7 @@ extern "C" int __cdecl _tmain(int argc, _TCHAR **argv, _TCHAR **envp)
 
     // Kill the internal roxen MySql server
     if (!cmdline.IsKeepMysql())
-      KillMySql();
+      KillMySql(cmdline.GetConfigDir().c_str());
 
     // When we get here, the service has been stopped
     return _Module.m_status.dwWin32ExitCode;

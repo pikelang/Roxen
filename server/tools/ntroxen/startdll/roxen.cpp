@@ -1,6 +1,6 @@
 // roxen.cpp: implementation of the CRoxen class.
 //
-// $Id: roxen.cpp,v 1.9 2001/11/13 10:45:49 tomas Exp $
+// $Id: roxen.cpp,v 1.10 2001/11/14 16:29:50 tomas Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -497,7 +497,7 @@ BOOL CRoxen::RunPike(const char *cmdline, BOOL wait /*=TRUE*/)
   char *p = cmd;
   int ret;
 
-  std::string pikeloc = FindPike();
+  std::string pikeloc = FindPike(TRUE);
 
   // Copy path to pike
   if (pikeloc[0] == '"')

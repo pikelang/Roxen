@@ -26,7 +26,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.303 2001/11/08 10:05:11 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.304 2001/11/14 16:29:37 tomas Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1591,18 +1591,17 @@ void low_start_mysql( string datadir,
 
   array(string) args = ({
 		  "--defaults-file="+datadir+"/my.cfg",
-#ifdef __NT__
                   "--skip-networking",
+#ifdef __NT__
                   // Use pipes with default name "MySQL" unless --socket is set
 		  //"--socket=roxen_mysql",
 #else
 		  "--socket="+datadir+"/socket",
-		  "--skip-networking",
+		  "--pid-file="+pid_file,
 #endif
 		  "--skip-locking",
 		  "--basedir="+basedir,
 		  "--datadir="+datadir,
-		  "--pid-file="+pid_file,
   });
 
 #ifndef __NT__
@@ -1632,13 +1631,17 @@ void low_start_mysql( string datadir,
     ;
   Stdio.File errlog = Stdio.File( err_log, "wct" );
 
-  Process.create_process( args,
+  Process.create_process p = Process.create_process( args,
 			  ([
 			    "environment":env,
 			    "stdin":devnull,
 			    "stdout":errlog,
 			    "stderr":errlog
 			  ]) );
+#ifdef __NT__
+  if (p)
+    Stdio.write_file(pid_file, (string)p->pid());
+#endif
 }
 
 

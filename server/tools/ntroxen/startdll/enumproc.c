@@ -331,9 +331,25 @@ BOOL CALLBACK Proc( DWORD dw, WORD w16, /*LPCSTR*/ LPSTR lpstr, LPARAM lParam )
 	return TRUE;
 }
 
-
-BOOL KillMySql()
+void Kill(DWORD id)
 {
+  HANDLE hProc;
+
+  hProc = OpenProcess(SYNCHRONIZE|PROCESS_TERMINATE, FALSE, id);
+  if(hProc != NULL)
+				TerminateProcess(hProc, 0);
+  CloseHandle(hProc);
+}
+
+
+BOOL KillMySql(const char *confdir)
+{
+  char pidfile[MAX_PATH];
+  char spid[20];
+  int pid = 0;
+  HANDLE hPid;
+  DWORD cpid;
+
 /*
   // Try to shutdown nicely
   system("mysql\\bin\\mysqladmin --user=rw --pipe shutdown >NUL: 2>&1");
@@ -361,12 +377,38 @@ BOOL KillMySql()
   
   Sleep(1000);
 
+  strcpy(pidfile, confdir);
+  strcat(pidfile, "\\_mysql\\mysql_pid");
+  hPid = CreateFile(pidfile,
+    GENERIC_READ,
+    FILE_SHARE_READ|FILE_SHARE_WRITE,
+    NULL,
+    OPEN_EXISTING,
+    FILE_ATTRIBUTE_NORMAL,
+    NULL);
+  if (hPid == INVALID_HANDLE_VALUE)
+    return TRUE;
+
+  if (ReadFile(hPid, spid, sizeof(spid)-1, &cpid, NULL) == 0)
+  {
+    CloseHandle(hPid);
+    return TRUE;
+  }
+  CloseHandle(hPid);
+  spid[cpid] = 0;
+  pid = atoi(spid);
+  if (pid > 0)
+    Kill(pid);
+
+  DeleteFile(pidfile);
+
+/*
   // Is any roxen_mysql.exe around? If Yes KILL!
   FoundProc = 0;
   EnumProcs(&Proc, RoxenMysql | KillProc);
   if(FoundProc)
     return FALSE;
-  
+*/  
 
   return TRUE;
 }

@@ -1,6 +1,6 @@
 // cmdline.h: interface for the CCmdLine class.
 //
-// $Id: cmdline.h,v 1.9 2001/11/13 10:45:49 tomas Exp $
+// $Id: cmdline.h,v 1.10 2001/11/14 16:29:49 tomas Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -49,13 +49,6 @@ private:
 class CCmdLine  
 {
   enum tArgType {
-/*
-    eArgStartInstall,
-    eArgStartRemove,
-    eArgStartOnce,
-    eArgPike2,
-    eArgRoxen2,
-*/
     eArgStart,
     eArgNtLoader,
     eArgPike,
@@ -65,6 +58,7 @@ class CCmdLine
     eArgVersion,
     eArgSelfTest,
     eArgHelp,
+    eArgMoreData,
 
     eArgUnsupported
   };
@@ -92,7 +86,8 @@ public:
   int GetVerbose()    { return m_iVerbose; }
   int GetDebug()      { return m_iDebug; }
 
-  std::string GetLogDir() { return m_LogDir; }
+  std::string GetLogDir()     { return m_LogDir; }
+  std::string GetConfigDir()  { return m_ConfigDir; }
 
   CArgList & GetNtstartArgs() { return m_saNtstartArgs; }
   CArgList & GetPikeArgs()    { return m_saPikeArgs; }
@@ -106,7 +101,7 @@ protected:
 
 private:
   void SplitCmdline(_TSCHAR *cmdstart, _TSCHAR **argv, _TSCHAR *args, int *numargs, int *numchars);
-  int ParseArg(char *argv[], CCmdLine::tArgType & type);
+  int ParseArg(int argc, char *argv[], CCmdLine::tArgType & type);
   //tArgType GetArgType(char *argv[]);
   BOOL Match(char *s, char *pattern, char *delim, char **value);
 
@@ -134,6 +129,7 @@ private:
 
   std::string m_SelfTestDir;
   std::string m_LogDir;
+  std::string m_ConfigDir;
 };
 
 #endif // !defined(AFX_CMDLINE_H__F6894D74_C532_40F7_8873_2A23BACE2581__INCLUDED_)
