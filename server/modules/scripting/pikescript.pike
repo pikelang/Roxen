@@ -6,7 +6,7 @@
 
 // This is an extension module.
 
-constant cvs_version="$Id: pikescript.pike,v 1.53 1999/12/28 07:58:19 nilsson Exp $";
+constant cvs_version="$Id: pikescript.pike,v 1.54 1999/12/29 23:56:47 nilsson Exp $";
 
 constant thread_safe=1;
 mapping scripts=([]);
@@ -39,7 +39,7 @@ object luser_creds = security.Creds(luser, 0, 0);
 
 void create()
 {
-  defvar("exts", ({ "lpc", "ulpc", "µlpc","pike" }), "Extensions", 
+  defvar("exts", ({ "pike" }), "Extensions", 
          TYPE_STRING_LIST,
 	 "The extensions to parse");
 
