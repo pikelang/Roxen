@@ -1,10 +1,10 @@
 function renderLink(text, action, base, target)
 {
-  return "&nbsp;&nbsp;<a href='"+base+"?action="+action+"' "+
+  return "<br>&nbsp;&nbsp;&nbsp;<a href='"+base+"?action="+action+"' "+
     (target != ""?" target='"+target+"' ":"")+
     "onMouseOver=\"setStatus('"+text+"');\" "+
     "onMouseOut=\"setStatus('');\""+
-    ">"+text+"</a><br>\n";
+    ">"+text+"</a>&nbsp;&nbsp;\n";
 }
 
 function renderStyle(id)
