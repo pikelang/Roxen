@@ -523,11 +523,11 @@ int main(int nargs, char *args[])
 
       if(!fork()) /* I do not like this either. */
       {
-	  write(sfd, addr, strlen(addr)+1); /* The \0 _should_ be sent. */
-	  /* The peer info should be sent in the 'got_connection' function.. */
-	  /* Not currently done. */
-	  got_connection(nfd, sfd);
-	  return 0;
+	write(sfd, addr, strlen(addr)+1); /* The \0 _should_ be sent. */
+	/* The peer info should be sent in the 'got_connection' function.. */
+	/* Not currently done. */
+	got_connection(nfd, sfd);
+	return 0;
       } else {
 	close(nfd);
 	close(sfd);
