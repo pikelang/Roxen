@@ -13,8 +13,8 @@
 //     href            -- button URL
 //     alt             -- alternative button alt text
 //     border          -- image border
-//     dim             -- when set button is disabled
-//     condensed       -- when set button text is condensed to 80%
+//     state           -- enabled|disabled button state
+//     textstyle       -- normal|consensed text
 //     icon_src        -- icon reference
 //     icon_data       -- inline icon data
 //     align           -- left|center|right text alignment
@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.4 1999/11/15 16:42:40 per Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.5 1999/11/16 11:01:13 jonasw Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -64,10 +64,11 @@ array register_module()
 
 	     "<tr><td><b>border</b></td><td>Image border</td></tr>"
 
-	     "<tr><td><b>dim</b></td><td>Set to dim button</td></tr>"
+	     "<tr><td><b>state</b></td><td>Set to <tt>enabled</tt> or "
+	     "<tt>disabled</tt> to select button state</td></tr>"
 
-	     "<tr><td><b>condensed</b></td><td>Set to condense text to "
-	     "80%</td></tr>"
+	     "<tr><td><b>textstyle</b></td><td>Set to <tt>normal</tt> or "
+	     "<tt>condensed</tt> to alter text style.</td></tr>"
 
 	     "<tr><td><b>icon_src</b></td><td>Icon reference</td></tr>"
 
@@ -261,10 +262,12 @@ string tag_button(string tag, mapping args, string contents, RequestID id)
     "bo"  : parse_color(args->bordercolor || "#333333"), //  Border color
     "bg"  : parse_color(args->bgcolor || "#eeeeee"),     //  Background color
     "txt" : parse_color(args->textcolor || "#000000"),   //  Text color
-    "cnd" : args->condensed,                             //  Condensed text
+    "cnd" : args->condensed ||                           //  Condensed text
+            (lower_case(args->textstyle || "") == "condensed"),
     "wi"  : (int) args->width,                           //  Min button width
     "al"  : args->align || "left",                       //  Text alignment
-    "dim" : args->dim,                                   //  Button dimming
+    "dim" : args->dim ||                                 //  Button dimming
+            (< "dim", "disabled" >)[lower_case(args->state || "")],
     "icn" : args->icon_src && fix_relative(args->icon_src, id),  // Icon URL
     "icd" : args->icon_data,                             //  Inline icon data
     "ica" : args->align_icon || "left"                   //  Icon alignment
@@ -295,7 +298,7 @@ string tag_button(string tag, mapping args, string contents, RequestID id)
   }
   
   //  Make button clickable if not dimmed
-  if (args->href && !args->dim)
+  if (args->href && !new_args->dim)
     return make_container("a", ([ "href" : args->href ]),
 			  make_tag("img", img_attrs));
   else
