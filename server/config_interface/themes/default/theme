@@ -181,7 +181,7 @@
 </theme-path>
 
 <theme-path match='/global_settings/*'>
-  <theme-set what=left-image to="left-images/earth2.gif" themefile />
+  <theme-set what=left-image to="left-images/earth.gif" themefile />
 </theme-path>
 
 <theme-path match='/actions/*'>
