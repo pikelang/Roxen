@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.74 1999/03/09 00:46:16 grubba Exp $
+ * $Id: ftp2.pike,v 1.75 1999/04/24 19:24:57 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -1803,6 +1803,9 @@ class FTPSession
 	switch(session->file->error) {
 	case 401:
 	  send(530, ({ sprintf("%s: Need account for storing files.", args)}));
+	  break;
+	case 413:
+	  send(550, ({ sprintf("%s: Quota exceeded.", args) }));
 	  break;
 	case 501:
 	  send(502, ({ sprintf("%s: Command not implemented.", args) }));
