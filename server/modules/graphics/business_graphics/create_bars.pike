@@ -14,7 +14,7 @@ constant STORT = 1.0e40;
 
 inherit "create_graph.pike";
 
-constant cvs_version = "$Id: create_bars.pike,v 1.45 1997/10/24 19:15:50 peter Exp $";
+constant cvs_version = "$Id: create_bars.pike,v 1.46 1997/10/24 20:55:00 hedda Exp $";
 
 /*
 These functions is written by Henrik "Hedda" Wallin (hedda@idonex.se)
@@ -664,7 +664,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
       barsdiagram->paste_alpha_color(diagram_data["ynamesimg"][i], 
 			       @(diagram_data["textcolor"]), 
 			       (int)floor(xpos_for_yaxis-
-					  si/4.0-
+					  si/4.0-diagram_data["linewidth"]-
 					  diagram_data["ynamesimg"][i]->xsize()),
 			       (int)floor(-(diagram_data["values_for_ynames"][i]-
 					    diagram_data["yminvalue"])

@@ -12,7 +12,7 @@ inherit "polyline.pike";
 constant LITET = 1.0e-40;
 constant STORT = 1.0e40;
 
-constant cvs_version = "$Id: create_graph.pike,v 1.71 1997/10/24 19:16:00 peter Exp $";
+constant cvs_version = "$Id: create_graph.pike,v 1.72 1997/10/24 20:55:05 hedda Exp $";
 
 /*
 These functions is written by Henrik "Hedda" Wallin (hedda@idonex.se)
@@ -277,7 +277,7 @@ mapping(string:mixed) init(mapping(string:mixed) diagram_data)
 	int j=sizeof(d);
 	
 	if (diagram_data["type"]=="graph")
-	  for(int i; i<j; i++)
+	  for(int i=0; i<j; i++)
 	    {
 	      float k;
 	      if (xminvalue>(k=d[i]))
@@ -1018,7 +1018,8 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 	(diagram_data["xmaxvalue"]-diagram_data["xminvalue"])+diagram_data["xstart"];
       
       int minpos;
-      minpos=diagram_data["xmaxynames"]+si/2;
+      minpos=diagram_data["xmaxynames"]+si/2+
+	  diagram_data["linewidth"];
       if (minpos>xpos_for_yaxis)
 	{
 	  xpos_for_yaxis=minpos;
@@ -1048,7 +1049,8 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 	
 	diagram_data["xstop"]=diagram_data["xsize"]-
 	  (int)ceil(diagram_data["linewidth"])-max(si,labelx+si/2)-diagram_data["xmaxxnames"]/2;
-	xpos_for_yaxis=diagram_data["xmaxynames"]+si/2;
+	xpos_for_yaxis=diagram_data["xmaxynames"]+si/2+
+	  diagram_data["linewidth"];
 	diagram_data["xstart"]=xpos_for_yaxis;
       }
     else
@@ -1058,7 +1060,8 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 
 	diagram_data["xstop"]=diagram_data["xsize"]-
 	  (int)ceil(diagram_data["linewidth"])-max(si,labelx+si/2)-diagram_data["xmaxxnames"]/2;
-	xpos_for_yaxis=diagram_data["xmaxynames"]+si/2;
+	xpos_for_yaxis=diagram_data["xmaxynames"]+si/2+
+	  diagram_data["linewidth"];
 	diagram_data["xstart"]=xpos_for_yaxis+si*2;
       }
   
@@ -1330,7 +1333,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
       graph->paste_alpha_color(diagram_data["ynamesimg"][i], 
 			       @(diagram_data["textcolor"]), 
 			       (int)floor(xpos_for_yaxis-
-					  si/2.0-
+					  si/4.0-diagram_data["linewidth"]-
 					  diagram_data["ynamesimg"][i]->xsize()),
 			       (int)floor(-(diagram_data["values_for_ynames"][i]-
 					    diagram_data["yminvalue"])
