@@ -1,5 +1,5 @@
 #define LOCALE	roxenp()->locale->get()->config_interface
-//string cvs_version = "$Id: cache.pike,v 1.26 1999/09/06 13:39:24 per Exp $";
+//string cvs_version = "$Id: cache.pike,v 1.27 1999/11/29 18:49:48 per Exp $";
 #include <roxen.h>
 #include <config.h>
 
@@ -81,7 +81,15 @@ mixed cache_lookup(string in, string what)
 string status()
 {
   string res, a;
-  res = LOCALE->cache_status_header();
+  res = "<table cellpadding=3 cellspacing=0 border=0>"
+      #"<tr bgcolor=#f0f0ff>
+<td><cf-locale get=class_></td>
+<td align=right><cf-locale get=entries></td>
+<td align=right><cf-locale get=size></td>
+<td align=right><cf-locale get=hits></td>
+<td align=right><cf-locale get=misses></td>
+<td align=right><cf-locale get=hitpct></td>
+";
   array c, b;
   mapping ca = ([]), cb=([]), ch=([]), ct=([]);
   b=indices(cache);
