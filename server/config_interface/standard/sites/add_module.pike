@@ -52,7 +52,7 @@ object module_nomore(string name, object modinfo, object conf)
   if(((modinfo->type & MODULE_DIRECTORIES) && (o=conf->dir_module))
      || ((modinfo->type & MODULE_AUTH)  && (o=conf->auth_module))
      || ((modinfo->type & MODULE_TYPES) && (o=conf->types_module)))
-    return roxen->find_module( conf->otomod[o] );
+    return roxen.find_module( conf->otomod[o] );
 }
 
 // To redirect to when done with module addition
@@ -529,10 +529,13 @@ mixed do_it( RequestID id )
     conf->enable_all_modules();
 
   //werror("%O\n", id->variables->mod_init_vars);
-  foreach( id->variables->module_to_add/"\0", string mod ) 
+  array do_start = ({});
+  array(string) mtoadd = id->variables->module_to_add/"\0";
+  foreach( mtoadd, string mod ) 
   {
-    if (RoxenModule m = conf->enable_module( mod )) 
+    if (RoxenModule m = conf->enable_module( mod,0,0,1 )) 
     {
+      do_start += ({ m });
       mod = conf->otomod[m];
       last_module = replace(mod, "#", "!" );
       foreach (indices (m->variables), string var)
@@ -543,10 +546,24 @@ mixed do_it( RequestID id )
 	}
     }
     else 
+    {
+      do_start += ({ 0 });
       last_module = "";
+    }
   }
 
-  conf->save_me();
+  for( int i = 0; i<sizeof( mtoadd ); i++ )
+  {
+    if( RoxenModule mo = do_start[ i ] )
+    {
+      string s = (mtoadd[i]/"#")[0];
+      ModuleInfo mi = roxen.find_module( s );
+      object mc = conf->modules[ s ];
+      conf->call_start_callbacks( mo, mi, mc );
+      mo->save_me();
+    }
+  }
+  conf->save();
 
   if( strlen( last_module ) )
     if (got_initial)
