@@ -23,10 +23,10 @@ string find_module_doc( string cn, string mn, object id )
     return "";
 
   return replace( "<b>"
-                  + translate(m->register_module()[1]) + "</b><br>"
-                  + translate(m->info()) + "<p>"
-                  + translate(m->status()||"") +"<p>"
-                  + translate(m->file_name_and_stuff()),
+                  + translate(m->register_module()[1]) + "</b><br><p>"
+                  + translate(m->info()) + "</p><p>"
+                  + translate(m->status()||"") +"</p><p>"
+                  + translate(m->file_name_and_stuff())+"</p>",
                   ({ "/image/", }), ({ "/internal-roxen-" }));
 }
 
