@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.369 2002/05/03 19:58:58 per-bash Exp $";
+constant cvs_version = "$Id: http.pike,v 1.370 2002/06/03 21:43:10 nilsson Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -70,7 +70,7 @@ private static int wanted_data, have_data;
 #define MY_TRACE_LEAVE(A) \
   do {RequestID id = this_object(); TRACE_LEAVE (A);} while (0)
 
-mapping(string:mixed) real_variables = ([]);
+mapping(string:array) real_variables = ([]);
 mapping(string:mixed)|FakedVariables variables = FakedVariables( real_variables );
 
 mapping (string:mixed)  misc            =
@@ -336,7 +336,7 @@ object pipe;
 //used values: throttle->doit=0|1 to enable it
 //             throttle->rate the rate
 //             throttle->fixed if it's not to be touched again
-mapping throttle=([]);
+mapping(string:mixed) throttle = ([]);
 
 object throttler;//the inter-request throttling object.
 

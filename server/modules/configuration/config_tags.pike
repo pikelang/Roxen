@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.175 2002/04/22 16:46:12 wellhard Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.176 2002/06/03 21:40:41 nilsson Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -1176,8 +1176,10 @@ class TagGetPostFilename
 {
   inherit RXML.Tag;
   constant name = "get-post-filename";
-  mapping req_arg_types = ([ "filename":RXML.t_text(RXML.PXml),
-			     "js-filename":RXML.t_text(RXML.PXml) ]);
+  mapping(string:RXML.Type) req_arg_types = ([
+    "filename":RXML.t_text(RXML.PXml),
+    "js-filename":RXML.t_text(RXML.PXml) ]);
+
   class Frame
   {
     inherit RXML.Frame;
@@ -1195,8 +1197,10 @@ class TagUploadLicense
 {
   inherit RXML.Tag;
   constant name = "upload-license";
-  mapping req_arg_types = ([ "filename":RXML.t_text(RXML.PXml),
-			     "from":RXML.t_text(RXML.PXml) ]);
+  mapping(string:RXML.Type) req_arg_types = ([
+    "filename":RXML.t_text(RXML.PXml),
+    "from":RXML.t_text(RXML.PXml) ]);
+
   class Frame
   {
     inherit RXML.Frame;
