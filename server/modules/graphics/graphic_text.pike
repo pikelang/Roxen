@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.132 1998/07/04 21:57:38 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.133 1998/07/06 09:21:59 peter Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -1200,6 +1200,8 @@ string tag_gtext_id(string t, mapping arg,
 string tag_graphicstext(string t, mapping arg, string contents,
 			object id, object foo, mapping defines)
 {
+  if((contents-" ")=="") 
+    return "";
 //Allow <accessed> and others inside <gtext>.
   
   if(t=="gtext" && arg->help)
