@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.79 1997/10/03 17:16:47 grubba Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.80 1997/10/12 21:09:39 grubba Exp $";
 //inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -1197,10 +1197,11 @@ mapping logged = ([ ]);
 
 void check_login(object id)
 {
-  if(logged[id->remoteaddr]+1000<time())
-    report_notice("Administrator logged on from "+
-		  roxen->blocking_ip_to_host(id->remoteaddr)+".");
-  logged[id->remoteaddr]=time(1);
+  if(logged[id->remoteaddr] + 1000 < time()) {
+    report_notice("Administrator logged on from " +
+		  roxen->blocking_ip_to_host(id->remoteaddr) + ".");
+  }
+  logged[id->remoteaddr] = time(1);
 }
 
 mapping configuration_parse(object id)

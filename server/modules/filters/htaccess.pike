@@ -5,7 +5,7 @@
 
 import Stdio;
 
-constant cvs_version = "$Id: htaccess.pike,v 1.19 1997/08/31 04:12:41 peter Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.20 1997/10/12 21:12:28 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -13,6 +13,7 @@ constant thread_safe=1;
 inherit "module";
 inherit "roxenlib";
 
+#define SERIOUS
 //#define HTACCESS_DEBUG
 
 
@@ -31,7 +32,7 @@ void create()
 	 "If set, cache failures to find a .htaccess file as well as found "
 	 "ones. This will limit the number of stat(2) calls quite dramatically."
 	 " This should be set if you have a busy site! It does have at least "
-	 " one disadvantage: The user have to press reload to get the new "
+	 " one disadvantage: The user has to press reload to get the new "
 	 ".htaccess file parsed."
 #ifndef SERIOUS
 	 " Since the poor user is quite used to reloading,"

@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.45 1997/10/08 19:40:37 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.46 1997/10/12 21:13:25 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -395,13 +395,13 @@ class spawn_cgi
 	object privs;
 	if (!getuid()) {
 	  // We are running as root -- change!
-	  privs = Privs("CGI script", uid);
+	  privs = Privs("CGI script", uid || 65534);
 	} else {
 	  // Try to change user anyway, but don't throw an error if we fail.
-	  catch(privs = Privs("CGI script", uid));
+	  catch(privs = Privs("CGI script", uid || 65534));
 	}
-	setgid(getegid()||65534);
-	setuid(geteuid()||65534);
+	setgid(getegid() || 65534);
+	setuid(geteuid() || 65534);
 	
 	/* Now that the correct privileges are set, the current working
 	 * directory can be changed. This implies a check for user permissions
