@@ -5,12 +5,14 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: PXml.pike,v 1.12 2000/01/08 12:13:02 mast Exp $
+//! $Id: PXml.pike,v 1.13 2000/01/10 21:56:00 mast Exp $
 
 #pragma strict_types
 
 inherit RXML.TagSetParser : TagSetParser;
 inherit Parser.HTML : low_parser;
+
+constant unwind_safe = 1;
 
 #define TAG_FUNC_TYPE							\
   function(:int(1..1)|string|array)|					\
@@ -36,7 +38,7 @@ static mapping(string:array(array(TAG_TYPE|CONTAINER_TYPE))) overridden;
 // container_definition}) tuples, with the closest to top last. Shared
 // between clones.
 
-static array entity_cb (Parser.HTML ignored, string str)
+static array entity_cb (Parser.HTML this, string str)
 {
   string entity = tag_name();
   if (sizeof (entity)) {
@@ -71,8 +73,18 @@ static this_program _low_clone (mixed... args)
 /*static*/ void set_cbs()
 {
   _set_entity_callback (entity_cb);
-  if (!type->free_text)
-    _set_data_callback (lambda (object this, string str) {return ({});});
+  if (!type->free_text) {
+    _set_data_callback (lambda (Parser.HTML this, string str) {return ({});});
+    add_quote_tag (
+      "!--",
+      lambda (Parser.HTML this, string str) {return ({});},
+      "--");
+  }
+  else
+    add_quote_tag (
+      "!--",
+      lambda (Parser.HTML this, string str) {return ({this->current()});},
+      "--");
 }
 
 this_program clone (RXML.Context ctx, RXML.Type type, RXML.TagSet tag_set)
@@ -100,11 +112,6 @@ static void create (
   match_tag (0);
 
   set_cbs();
-
-  // parse_html() compatibility. FIXME: Some sort of old_rxml_compat
-  // check here.
-  case_insensitive_tag (1);
-  ignore_unknown (1);
 
   array(RXML.TagSet) list = ({tag_set});
   array(string) plist = ({tag_set->prefix});
@@ -279,25 +286,30 @@ local void remove_runtime_tag (string|RXML.Tag tag)
 // Traversing overridden tag definitions.
 
 array(TAG_TYPE|CONTAINER_TYPE) get_overridden_low_tag (
-  string name, TAG_TYPE|CONTAINER_TYPE overrider)
+  string name, void|TAG_TYPE|CONTAINER_TYPE overrider)
 //! Returns the tag definition that is overridden by the given
-//! overrider tag definition on the given tag name. The returned
-//! values is ({tag_definition, container_definition}), and one of
-//! them is always zero.
+//! overrider tag definition on the given tag name, or the currently
+//! active definition if overrider is zero. The returned values are on
+//! the form ({tag_definition, container_definition}), where one
+//! element always is zero.
 {
-  if (array(array(TAG_TYPE|CONTAINER_TYPE)) tagdefs = overridden[name]) {
-    if (array(TAG_TYPE|CONTAINER_TYPE) rt_tagdef =
-	rt_replacements && rt_replacements[name])
-      tagdefs += ({rt_tagdef});
-    TAG_TYPE tdef = tags()[name];
-    CONTAINER_TYPE cdef = containers()[name];
-    for (int i = sizeof (tagdefs) - 1; i >= 0; i--) {
-      if (overrider == tdef || overrider == cdef)
-	return tagdefs[i];
-      [tdef, cdef] = tagdefs[i];
+  if (overrider) {
+    if (array(array(TAG_TYPE|CONTAINER_TYPE)) tagdefs = overridden[name]) {
+      if (array(TAG_TYPE|CONTAINER_TYPE) rt_tagdef =
+	  rt_replacements && rt_replacements[name])
+	tagdefs += ({rt_tagdef});
+      TAG_TYPE tdef = tags()[name];
+      CONTAINER_TYPE cdef = containers()[name];
+      for (int i = sizeof (tagdefs) - 1; i >= 0; i--) {
+	if (overrider == tdef || overrider == cdef)
+	  return tagdefs[i];
+	[tdef, cdef] = tagdefs[i];
+      }
     }
+    return 0;
   }
-  return 0;
+  else
+    return ({tags()[name], containers()[name]});
 }
 
 string _sprintf() {return "RXML.PHtml";}
