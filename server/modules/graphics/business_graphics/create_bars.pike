@@ -14,7 +14,6 @@ constant LITET = 1.0e-40;
 constant STORT = 1.0e40;
 
 inherit "create_graph.pike";
-inherit "create_pie.pike";
 
 /*
 These functions is written by Henrik "Hedda" Wallin (hedda@idonex.se)
@@ -748,7 +747,7 @@ int main(int argc, string *argv)
   //write("\nRitar axlarna. Filen sparad som test.ppm\n");
 
   mapping(string:mixed) diagram_data;
-  diagram_data=(["type":"pie",
+  diagram_data=(["type":"bars",
 		 "textcolor":({0,20,0}),
 		 "subtype":"box",
 		 "orient":"vert",
