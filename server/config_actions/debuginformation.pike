@@ -1,5 +1,5 @@
 /*
- * $Id: debuginformation.pike,v 1.5 1997/10/09 15:02:36 grubba Exp $
+ * $Id: debuginformation.pike,v 1.6 1998/03/02 04:30:36 neotron Exp $
  */
 
 inherit "wizard";
@@ -29,7 +29,7 @@ mixed page_0(object id, object mc)
     res = link("<font size=\"+1\">Debug information for developers</font><ul>");
     */
 #if efun(_memory_usage)
-  mixed foo = _memory_usage();
+  mapping (string:int) foo = _memory_usage();
   foo->total_usage = 0;
   foo->num_total = 0;
   array (string) ind = sort(indices(foo));

@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.107 1998/03/01 02:42:39 per Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.108 1998/03/02 04:30:36 neotron Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -369,7 +369,7 @@ array (function) url_modules(object id)
 }
 
 mapping api_module_cache = ([]);
-array (function) api_functions(object id)
+mapping api_functions(object id)
 {
   return copy_value(api_module_cache);
 }
