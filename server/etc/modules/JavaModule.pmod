@@ -61,8 +61,7 @@ static object location_ifc = FINDCLASS("se/idonex/roxen/LocationModule");
 static object parser_ifc = FINDCLASS("se/idonex/roxen/ParserModule");
 static object fileext_ifc = FINDCLASS("se/idonex/roxen/FileExtensionModule");
 static object provider_ifc = FINDCLASS("se/idonex/roxen/ProviderModule");
-static object tagcaller_ifc = FINDCLASS("se/idonex/roxen/TagCaller");
-static object containercaller_ifc = FINDCLASS("se/idonex/roxen/ContainerCaller");
+static object simpletagcaller_ifc = FINDCLASS("se/idonex/roxen/SimpleTagCaller");
 static object response_class = FINDCLASS("se/idonex/roxen/RoxenResponse");
 static object response2_class = FINDCLASS("se/idonex/roxen/RoxenStringResponse");
 static object response3_class = FINDCLASS("se/idonex/roxen/RoxenFileResponse");
@@ -88,12 +87,10 @@ static object _real_file = location_ifc->get_method("realFile", "(Ljava/lang/Str
 static object _stat_file = location_ifc->get_method("statFile", "(Ljava/lang/String;Lse/idonex/roxen/RoxenRequest;)[I");
 static object _query_file_extensions = fileext_ifc->get_method("queryFileExtensions", "()[Ljava/lang/String;");
 static object _handle_file_extension = fileext_ifc->get_method("handleFileExtension", "(Ljava/io/File;Ljava/lang/String;Lse/idonex/roxen/RoxenRequest;)Lse/idonex/roxen/RoxenResponse;");
-static object _query_tag_callers = parser_ifc->get_method("queryTagCallers", "()[Lse/idonex/roxen/TagCaller;");
-static object _query_container_callers = parser_ifc->get_method("queryContainerCallers", "()[Lse/idonex/roxen/ContainerCaller;");
-static object tagcaller_query_name = tagcaller_ifc->get_method("queryTagName", "()Ljava/lang/String;");
-static object _tag_called = tagcaller_ifc->get_method("tagCalled", "(Ljava/lang/String;Ljava/util/Map;Lse/idonex/roxen/RoxenRequest;)Ljava/lang/String;");
-static object containercaller_query_name = containercaller_ifc->get_method("queryContainerName", "()Ljava/lang/String;");
-static object _container_called = containercaller_ifc->get_method("containerCalled", "(Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Lse/idonex/roxen/RoxenRequest;)Ljava/lang/String;");
+static object _query_tag_callers = parser_ifc->get_method("querySimpleTagCallers", "()[Lse/idonex/roxen/SimpleTagCaller;");
+static object simpletagcaller_query_name = simpletagcaller_ifc->get_method("queryTagName", "()Ljava/lang/String;");
+static object simpletagcaller_query_flags = simpletagcaller_ifc->get_method("queryTagFlags", "()I");
+static object _tag_called = simpletagcaller_ifc->get_method("tagCalled", "(Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Lse/idonex/roxen/RoxenRequest;)Ljava/lang/String;");
 static object dv_var = defvar_class->get_field("var", "Ljava/lang/String;");
 static object dv_name = defvar_class->get_field("name", "Ljava/lang/String;");
 static object dv_doc = defvar_class->get_field("doc", "Ljava/lang/String;");
@@ -251,31 +248,14 @@ class ReaderFile
 
 class ModuleWrapper
 {
-  class JavaTag
-  {
-    static object caller;
-
-    string call(string tag, mapping args, RequestID id)
-    {
-      object res = _tag_called(caller, tag, objify(args), make_reqid(id));
-      check_exception();
-      return res && (string)res;
-    }
-    
-    void create(object o)
-    {
-      caller = o;
-    }
-  }
-
-  class JavaContainer
+  class JavaSimpleTag
   {
     static object caller;
 
     string call(string tag, mapping args, string contents, RequestID id)
     {
-      object res = _container_called(caller, tag, objify(args),
-				     contents, make_reqid(id));
+      object res = _tag_called(caller, tag, objify(args),
+			       stringp(contents)&&contents, make_reqid(id));
       check_exception();
       return res && (string)res;
     }
@@ -425,7 +405,7 @@ class ModuleWrapper
     return l && valify(l);
   }
 
-  mapping query_tag_callers()
+  mapping query_simple_tag_callers()
   {
     mapping res = ([ ]);
     object callers = _query_tag_callers(modobj);
@@ -433,24 +413,10 @@ class ModuleWrapper
     if(callers)
       foreach(values(callers), object c)
 	if(c) {
-	  object name = tagcaller_query_name(c);
+	  object name = simpletagcaller_query_name(c);
+	  int flags = simpletagcaller_query_flags(c);
 	  check_exception();
-	  res[(string)name] = JavaTag(c)->call;
-	}
-    return res;
-  }
-
-  mapping query_container_callers()
-  {
-    mapping res = ([ ]);
-    object callers = _query_container_callers(modobj);
-    check_exception();
-    if(callers)
-      foreach(values(callers), object c)
-	if(c) {
-	  object name = containercaller_query_name(c);
-	  check_exception();
-	  res[(string)name] = JavaContainer(c)->call;
+	  res[(string)name] = ({ flags, JavaSimpleTag(c)->call });
 	}
     return res;
   }

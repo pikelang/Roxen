@@ -99,7 +99,6 @@ map binary
 /server/etc/supports foreign_ident
 /server/etc/upgrade_servers foreign_ident
 /server/java/src/se/idonex/roxen/AbstractLocationModule.java foreign_ident
-/server/java/src/se/idonex/roxen/ContainerCaller.java foreign_ident
 /server/java/src/se/idonex/roxen/Defvar.java foreign_ident
 /server/java/src/se/idonex/roxen/ExperimentalModule.java foreign_ident
 /server/java/src/se/idonex/roxen/FileExtensionModule.java foreign_ident
@@ -116,7 +115,7 @@ map binary
 /server/java/src/se/idonex/roxen/RoxenResponse.java foreign_ident
 /server/java/src/se/idonex/roxen/RoxenStringResponse.java foreign_ident
 /server/java/src/se/idonex/roxen/SecurityModule.java foreign_ident
-/server/java/src/se/idonex/roxen/TagCaller.java foreign_ident
+/server/java/src/se/idonex/roxen/SimpleTagCaller.java foreign_ident
 /server/java/src/se/idonex/roxen/UniqueModule.java foreign_ident
 /server/languages/catala.pike foreign_ident
 /server/languages/croatian.pike foreign_ident
