@@ -8,7 +8,7 @@
 
 // This is an extension module.
 
-constant cvs_version = "$Id: pikescript.pike,v 1.32 1999/07/06 20:05:10 grubba Exp $";
+constant cvs_version = "$Id: pikescript.pike,v 1.33 1999/07/06 22:54:29 grubba Exp $";
 constant thread_safe=1;
 
 mapping scripts=([]);
@@ -41,8 +41,8 @@ int fork_exec_p() { return !QUERY(fork_exec); }
 // EXPERIMENTAL: Try using the credential system.
 constant security = __builtin.security;
 object luser = class {}();
-object luser_creds = security.Creds(looser, security.BIT_NOT_SETUID, 0);
-#endif /* constant(__builtin.security)
+object luser_creds = security.Creds(luser, 0, 0);
+#endif /* constant(__builtin.security) */
 
 void create()
 {
@@ -351,6 +351,11 @@ mapping handle_file_extension(object f, string e, object got)
       destruct(f);
       return http_string_answer("<h1>While compiling pike script</h1>\n"+s);
     }
+
+#if constant(__builtin.security)
+    luser_creds->apply(p);
+#endif /* constant(__builtin_security) */
+
     o=p();
     if (!functionp(fun = scripts[got->not_query]=o->parse)) {
       /* Should not happen */
