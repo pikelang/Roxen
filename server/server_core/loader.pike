@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: loader.pike,v 1.351 2002/10/24 19:24:15 nilsson Exp $
+// $Id: loader.pike,v 1.352 2002/10/25 20:08:11 nilsson Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: loader.pike,v 1.351 2002/10/24 19:24:15 nilsson Exp $";
+constant cvs_version="$Id: loader.pike,v 1.352 2002/10/25 20:08:11 nilsson Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -139,6 +139,10 @@ void add_cvs_ids(mixed to)
       objectp (to) && to->is_generic_error)
     to = to[1];
   else if (!arrayp (to)) return;
+  // backtrace_frame is both objectp and arrayp but
+  // does not work with foreach. FIXME: Remove this
+  // kludge when backtrace_frames is foreach-compatible.
+  if(objectp(to)) return;
   foreach(to, mixed q)
     if(arrayp (q) && sizeof(q) && stringp(q[0])) {
       string id = get_cvs_id(q[0]);
@@ -677,6 +681,7 @@ class LowErrorContainer
     if (sizeof(d) && (d[-1] != '/') && (d[-1] != '\\'))
       d += "/";
   }
+  string _sprintf() { return sprintf("LowErrorContainer(%O,%O)", errors, warnings); }
 }
 
 //! @appears ErrorContainer
@@ -696,6 +701,7 @@ class ErrorContainer
       (compile_error_handlers-({0}))->compile_warning( file,line, err );
     ::compile_warning(file,line,err);
   }
+  string _sprintf() { return sprintf("ErrorContainer(%O,%O)", errors, warnings); }
 }
 
 //! @decl int cd(string path)
@@ -713,6 +719,7 @@ class restricted_cd
     }
     return cd(path);
   }
+  string _sprintf() { return sprintf("restricted_cd(%O)", locked_pid); }
 }
 
 // Fallback efuns.
@@ -853,6 +860,7 @@ class ParseHtmlCompat
     match_tag (0);
     ignore_unknown (1);
   }
+  string _sprintf() { return "ParseHtmlCompat()"; }
 }
 
 string parse_html (string data, mapping(string:function|string) tags,
@@ -909,6 +917,7 @@ class ParseHtmlLinesCompat
     match_tag (0);
     ignore_unknown (1);
   }
+  string _sprintf() { return "ParseHtmlLinesCompat()"; }
 }
 
 string parse_html_lines (string data, mapping tags, mapping containers,
@@ -972,7 +981,6 @@ constant mf = Stdio.File;
 
 static string release;
 static string dist_version;
-static int roxen_is_cms;
 static string roxen_product_name;
 
 string roxen_version()
@@ -1212,7 +1220,7 @@ void do_main_wrapper(int argc, array(string) argv)
   };
   catch {
     if (err) {
-      werror("Roxen loader failed:\n%s\n", describe_backtrace(err));
+      werror("ChiliMoon loader failed:\n%s\n", describe_backtrace(err));
     }
   };
   exit(1);
@@ -1268,6 +1276,7 @@ class MySQLTimeout(static Sql.Sql real)
     real = 0;
     return res;
   }
+  string _sprintf() { return sprintf("MySQLTimeout(%O)", timeout); }
 }
 
 class MySQLResKey(static object real, static MySQLKey key)
@@ -1730,7 +1739,7 @@ void start_mysql()
 		    ( 0, "local", "precompiled_files",
 			 "Contains binary object code for .pike files. "
 			 "This information is used to shorten the "
-			 "boot time of Roxen by keeping the compiled "
+			 "boot time of ChiliMoon by keeping the compiled "
 			 "data instead of recompiling it every time.");
 		}, 1 );
 
@@ -1952,39 +1961,37 @@ void do_main( int argc, array(string) argv )
 #ifdef SECURITY
 #if !constant(__builtin.security.Creds)
   feature_warn("FATAL", ({
-    "SECURITY defined (the internal security system in roxen), but the pike "
+    "SECURITY defined (the internal security system in ChiliMoon), but the Pike "
     "binary has not been compiled --with-security. This makes it impossible "
-    "for roxen to have any internal security at all." }) );
+    "for ChiliMoon to have any internal security at all." }) );
   exit(-1);
 #endif // !constant(__builtin.security.Creds)
 #endif // SECURITY
 
   if( (-1&0xffffffff) < 0 )
     feature_warn("WARNING", ({
-      "Roxen 2.5 requires bignum support in pike. "
-      "Please recompile pike with gmp / bignum support to run Roxen.",
-      "It might still be possible to start roxen, but the "
-      "functionality will be affected, and stange errors might occur." }) );
+      "ChiliMoon requires bignum support in Pike. "
+      "Please recompile Pike with GMP / bignum support to run ChiliMoon." }));
 
 #ifdef NOT_INSTALLED
   feature_warn("WARNING", ({
-    "You are running with an un-installed pike binary.",
+    "You are running with an un-installed Pike binary.",
     "Please note that this is unsupported, and might stop working at "
     "any time, since some things are done differently in uninstalled "
-    "pikes, as an example the module search paths are different, and "
+    "Pikes, as an example the module search paths are different, and "
     "some environment variables are ignored." }) );
 #endif // NOT_INSTALLED
 
 #if __VERSION__ < 7.3
   feature_warn("FATAL", ({
-    "Roxen 2.5 requires pike 7.3. "
+    "ChiliMoon requires pike 7.3. "
     "Please install a newer version of Pike." }) );
   _exit(0); // 0 means stop start script looping
 #endif // __VERSION__ < 7.3
 
 #if !constant (Mysql.mysql)
   feature_warn("FATAL", ({
-    "Roxen 2.5 requires MySQL support in Pike. "
+    "ChiliMoon requires MySQL support in Pike. "
     "Your Pike has been compiled without support for MySQL. "
     "Please install MySQL client libraries and reconfigure "
     "and rebuild Pike from scratch." }) );
@@ -1995,10 +2002,10 @@ void do_main( int argc, array(string) argv )
   feature_warn("FATAL", ({
     "The Gz (zlib) module is not available. "
     "Various parts of ChiliMoon will not function correctly "
-    "without Gz support, e.g. the state handler and the built in font.",
+    "without Gz support, e.g. the state handler.",
     "To get zlib support, install zlib from "
     "ftp://ftp.freesoftware.com/pub/infozip/zlib/zlib.html "
-    "and recompile pike, after removing the file 'config.cache'." }) );
+    "and recompile Pike, after removing the file 'config.cache'." }) );
 #endif
 
 
@@ -2029,7 +2036,6 @@ void do_main( int argc, array(string) argv )
   add_constant("roxen_version", roxen_version);
   add_constant("roxen_dist_version", dist_version);
   add_constant("roxen_release", release || roxen_release);
-  add_constant("roxen_is_cms",  roxen_is_cms);
   add_constant("roxen_product_name", roxen_product_name);
   add_constant("lopen",         lopen);
   add_constant("report_notice", report_notice);
