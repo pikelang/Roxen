@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.14 1997/08/30 23:42:20 grubba Exp $
+# $Id: configure.in,v 1.15 1997/08/31 00:02:45 grubba Exp $
 #
 
 prefix=$PWD
@@ -361,7 +361,7 @@ if test -d gdbm/.; then
   fi
 fi
 
-CFLAGS="$WARN $OPTIMIZE $CFLAGS"
+CFLAGS="$CFLAGS $WARN $OPTIMIZE"
 
 export CPPFLAGS CFLAGS LDFLAGS
 
