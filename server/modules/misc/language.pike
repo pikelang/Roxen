@@ -3,7 +3,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: language.pike,v 1.26 2000/02/16 07:15:51 per Exp $";
+constant cvs_version = "$Id: language.pike,v 1.27 2000/03/08 15:08:47 nilsson Exp $";
 constant thread_safe=1;
 
 #if DEBUG_LEVEL > 20
@@ -279,10 +279,10 @@ string tag_unavailable_language( string tag, mapping m, RequestID id )
   if (m[ "type" ] == "txt" || textonly && m[ "type" ] != "img")
     return id->misc[ "language_data" ][ id->misc[ "chosen_language" ] ];
 
-  return "<img src=" + query( "flag_dir" ) + id->misc[ "chosen_language" ]
-    + ".unavailable.gif alt=\""
+  return "<img src=\"" + query( "flag_dir" ) + id->misc[ "chosen_language" ]
+    + ".unavailable.gif\" alt=\""
     + id->misc[ "language_data" ][ id->misc[ "chosen_language" ] ][0]
-    + "\">";
+    + "\" />";
 }
 
 string tag_language( string tag, mapping m, RequestID id )
@@ -294,10 +294,10 @@ string tag_language( string tag, mapping m, RequestID id )
   if (m[ "type" ] == "txt" || textonly && m[ "type" ] != "img")
     return id->misc[ "language_data" ][ id->misc[ "language" ] ][0];
 
-  return "<img src=" + query( "flag_dir" ) + id->misc[ "language" ]
-    + ".selected.gif alt=\""
+  return "<img src=\"" + query( "flag_dir" ) + id->misc[ "language" ]
+    + ".selected.gif\" alt=\""
     + id->misc[ "language_data" ][ id->misc[ "language" ] ][0]
-    + "\">";
+    + "\" />";
 }
 
 string tag_available_languages( string tag, mapping m, RequestID id )
@@ -327,10 +327,10 @@ string tag_available_languages( string tag, mapping m, RequestID id )
     if (m[ "type" ] == "txt" || textonly && m[ "type" ] != "img")
       result += ""+id->misc[ "language_data" ][ available_languages[c] ][0];
     else
-      result += "<img src=" + query( "flag_dir" ) + available_languages[c] +
-	".available.gif alt=\"" +
+      result += "<img src=\"" + query( "flag_dir" ) + available_languages[c] +
+	".available.gif\" alt=\"" +
 	id->misc[ "language_data" ][ available_languages[c] ][0] +
-	"\" " + "border=0" + ">";
+	"\" border=\"0\" />";
 
     if (query( "configp" ))
       result += "</aconf>\n";
