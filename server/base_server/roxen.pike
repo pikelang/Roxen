@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.139 1997/10/05 03:35:58 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.140 1997/10/08 14:01:15 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -22,7 +22,7 @@ inherit "language";
 
 // This is the real Roxen version. It should be changed before each
 // release
-constant real_version = "Roxen Challenger/1.2alpha13";
+constant real_version = "Roxen Challenger/1.2alpha14";
 
 #if _DEBUG_HTTP_OBJECTS
 mapping httpobjects = ([]);
@@ -1646,6 +1646,7 @@ private void define_global_variables( int argc, array (string) argv )
 
   globvar("next_supports_update", time()+3600, "", TYPE_INT,"",0,1);
   
+#ifdef ENABLE_NEIGHBOURHOOD
   globvar("neighborhood", 0,
 	  "Neighborhood: Register with other Roxen servers on the local network"
 	  ,TYPE_FLAG|VAR_MORE,
@@ -1674,7 +1675,8 @@ private void define_global_variables( int argc, array (string) argv )
 
   globvar("neigh_com", "", "Neighborhood: Server informational comment",
 	  TYPE_TEXT|VAR_MORE, "A short string describing this server");
-  
+#endif /* ENABLE_NEIGHBOURHOOD */  
+
   setvars(retrieve("Variables", 0));
 
   if(QUERY(_v) < CONFIGURATION_FILE_LEVEL)
@@ -2223,9 +2225,13 @@ void exit_it()
 // REMOVE ME
 array fork_it(){}
 
+#ifdef ENABLE_NEIGHBOURHOOD
+object neighborhood;
+#endif /* ENABLE_NEIGHBOURHOOD */
+
+
 // And then we have the main function, this is the oldest function in
 // Roxen :) It has not changed all that much since Spider 2.0.
-object neighborhood;
 varargs int main(int argc, array (string) argv)
 {
   mixed tmp;
@@ -2262,7 +2268,9 @@ varargs int main(int argc, array (string) argv)
   perror("Restart initiated at "+ctime(time())); 
 
   define_global_variables(argc, argv);
+#ifdef ENABLE_NEIGHBOURHOOD
   neighborhood = (object)"neighborhood";
+#endif /* ENABLE_NEIGHBOURHOOD */
   
   create_pid_file(QUERY(pidfile));
 
