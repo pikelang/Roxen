@@ -1,5 +1,5 @@
 /*
- * $Id: standard.pmod,v 1.12 2000/04/25 23:01:42 jhs Exp $
+ * $Id: standard.pmod,v 1.13 2000/05/22 00:28:26 nilsson Exp $
  *
  * Roxen locale support -- Default language (English)
  *
@@ -450,6 +450,7 @@ class _config_interface
   constant docs = "Docs";
   constant manual = "Manual";
   constant clear_log = "Clear Log";
+  constant initial_variables = "Initial Variables";
 
 
   constant debug_info = "Debug information";
