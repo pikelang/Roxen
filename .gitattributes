@@ -104,6 +104,7 @@ worldmap binary
 /server/config_interface/tasks/upload_license.pike foreign_ident
 /server/config_interface/template foreign_ident
 /server/config_interface/user_form.pike foreign_ident
+/server/create_configinterface foreign_ident
 /server/data/Makefile foreign_ident
 /server/data/Makefile.in foreign_ident
 /server/data/extensions foreign_ident
@@ -127,6 +128,7 @@ worldmap binary
 /server/data/test/filesystem/test_rxml_package foreign_ident
 /server/data/test/tests/ftp/RoxenTest_ftp.pike foreign_ident
 /server/data/test/tests/ftp/ftp_test.pike foreign_ident
+/server/debugstart foreign_ident
 /server/etc/include/proxyauth.pike foreign_ident
 /server/java/src/com/roxen/roxen/AbstractLocationModule.java foreign_ident
 /server/java/src/com/roxen/roxen/Defvar.java foreign_ident
