@@ -11,7 +11,7 @@ CC=@CC@
 CPPFLAGS=@CPPFLAGS@
 CFLAGS=@REALCFLAGS@
 JOINEDCFLAGS=@CFLAGS@
-LDFLAGS=$(CFLAGS) @LDFLAGS@
+LDFLAGS=@LDFLAGS@
 
 PIKEVERSION=@PIKEVERSION@
 
@@ -316,7 +316,7 @@ force_update: force
 pre_dist: bump_version
 	-@$(MAKE) depend
 	-@$(MAKE) run_autoconfig
-	@(cd pike; $(MAKE) pre_dist)
+#	@(cd pike; $(MAKE) pre_dist)
 
 dist: $(SRCDIR)/ChangeLog.gz $(SRCDIR)/ChangeLog.rxml.gz
 	@if test -f $(SRCDIR)/VERSION; then :; else \
