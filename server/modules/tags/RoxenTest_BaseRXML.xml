@@ -560,3 +560,57 @@ b</strlen></rxml>
 <rxml><define if=p><true/></define><define if=q><false/></define><true/><if false>a</if><else>b</else></rxml>
 <result>b</result>
 </test>
+
+<comment>Emit tests</comment>
+<test>
+<rxml><emit source="values" values="1,2,3" split=",">&_.value;:</emit></rxml>
+<result>1:2:3:</result>
+</test>
+
+<test>
+<rxml><emit source="values" values="a&#0;b">&_.value;:</emit></rxml>
+<result>a:b:</result>
+</test>
+
+<test>
+<rxml><emit split="," source="values" values="a,b,c">&_.value;<emit
+ split="," source="values" values="1,2,3">&_.value;<delimiter>:</delimiter
+ ></emit><delimiter>-</delimiter></emit></rxml>
+<result>a1:2:3-b1:2:3-c1:2:3</result>
+</test>
+
+<test>
+<rxml><emit source="values" values="a.b.c" split=".">&_.value;&_.counter;</emit></rxml>
+<result>a1b2c3</result>
+</test>
+
+<test>
+<rxml><emit source="values" values="abcdefgh" split="" maxrows="4">&_.value; </emit></rxml>
+<result>a b c d </result>
+</test>
+
+<test>
+<rxml><emit source="values" values="a,b,c" split="," maxrows="100">&_.value; </emit></rxml>
+<result>a b c </result>
+</test>
+
+<test>
+<rxml><emit source="values" values="a,b,c,d,e" split="," skiprows="2">&_.value; </emit></rxml>
+<result>c d e </result>
+</test>
+
+<test>
+<rxml><emit source="values" values="a.b.c.d.e.f.g" split="." skiprows="2"
+ maxrows="2" remainderinfo="var.rem">&_.value; </emit>&var.rem;</rxml>
+<result>c d 3</result>
+</test>
+
+<test>
+<rxml><set variable="var.txt">1
+2
+3
+4
+5</set><emit source="values" values="&var.txt;" advanced="lines">&_.value;:</emit></rxml>
+<result>1:2:3:4:5:</result>
+</test>
+
