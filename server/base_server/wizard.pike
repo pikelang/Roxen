@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2001, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.139 2001/09/10 09:39:58 noring Exp $
+// $Id: wizard.pike,v 1.140 2002/05/15 17:53:31 wellhard Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -504,14 +504,23 @@ string parse_wizard_page(string form, RequestID id, string wiz_name, void|string
   //  attributes included.
   string method = this_object()->wizard_method || "method=\"get\"";
 
+#ifdef USE_WIZARD_COOKIE
+  string state_form = "";
+  id->add_response_header("Set-Cookie",
+			  sprintf("WizardState=%s; path=/",
+				  compress_state(id->real_variables) - "\r\n"));
+#else
+  string state_form = "<input type=\"hidden\" name=\"_state\" value=\""+
+		      compress_state(id->real_variables)+"\" />\n";
+#endif
+  
   res = ("\n<!--Wizard-->\n"
          "<form " + method + ">\n" +
 	 (stringp (id->variables->action) ?
 	  "<input type=\"hidden\" name=\"action\" value=\""+id->variables->action+"\" />\n" :
 	  "") +
 	 "<input type=\"hidden\" name=\"_page\" value=\""+page+"\" />\n"
-	 "<input type=\"hidden\" name=\"_state\" value=\""+
-	 compress_state(id->real_variables)+"\" />\n"
+	 +state_form+
 	 "<table bgcolor=\"#000000\" cellpadding=\"1\" border=\"0\" cellspacing=\"0\" width=\"80%\">\n"
 	 "  <tr><td><table bgcolor=\"#eeeeee\" cellpadding=\"0\" "
 	   "cellspacing=\"0\" border=\"0\" width=\"100%\">\n"
@@ -577,8 +586,13 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
   int offset = 1;
   string wiz_name = "page_";
 
+#ifdef USE_WIZARD_COOKIE
+  mapping s = decompress_state(id->real_variables->_page
+			       && id->cookies->WizardState);
+#else
   mapping s = decompress_state(id->real_variables->_state
 			       && id->real_variables->_state[0]);
+#endif
 
   if(id->real_variables->cancel)
      return http_redirect((s->cancel_url&&s->cancel_url[0])
