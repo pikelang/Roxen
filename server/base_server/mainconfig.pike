@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.37 1997/04/05 01:25:33 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.38 1997/05/26 00:28:16 grubba Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -536,18 +536,18 @@ string new_module_form(object id, object node)
       if(b->sname != q)
 	res += ({("<p>"+
 		  (roxen->QUERY(BS)?"<h2>"+a[q][0]+"</h2>":
-		  "<img alt=\""+a[q][0]+"\" src=/auto/module/"+
-		   q+" width=500>")+ "<br><blockquote>"+a[q][1] + "<p>"
-		  "<i>A module of the same type is already enabled ("+ b->name
-		  + "). <a href=\"/(delete)" + node->descend(b->name, 1)->path(1)
-		  + "?"+(bar++)+
+		  "<img alt=\""+a[q][0]+"\" src=/auto/module/" +
+		   q+" height=24 width=500>")+ "<br><blockquote>" + a[q][1] +
+		  "<p><i>A module of the same type is already enabled (" +
+		  b->name + "). <a href=\"/(delete)" +
+		  node->descend(b->name, 1)->path(1) + "?" + (bar++) +
 		  "\">Disable that module</a> if you want this one insted</i>"
 		  "\n<p><br><p></blockquote>")});
     } else {
       res += ({"<p><a href=/(newmodule)"+node->path(1)+"?"+q+"=1>"+
 		 (roxen->QUERY(BS)?"<h2>"+a[q][0]+"</h2>":
 		  "<img border=0 alt=\""+a[q][0]+"\" src=/auto/module/"+
-					q+" width=500>")+
+		  q+" height=24 width=500>")+
 		 "</a><blockquote><br>"+a[q][1]+"<p><br><p></blockquote>"});
     }
   }
@@ -781,7 +781,7 @@ mapping initial_configuration(object id)
 	  " User name <input name=user type=string>\n"
 	  "  Password <input name=pass type=password>\n"
 	  "     Again <input name=pass2 type=password>\n"
-//   Avoid this trap for people that likes to shoot themselevs in the foot.
+//   Avoid this trap for people who like to shoot themselves in the foot.
 //   /Peter
 //	  "IP-pattern <input name=pattern type=string>\n"
 	  "           <input type=submit value=\"Use these values\">\n"
@@ -1092,7 +1092,7 @@ mapping configuration_parse(object id)
       
       o->save();
       cache_remove("modules", modname);
-//      _master->set_inhibit_compile_errors("");
+      _master->set_inhibit_compile_errors("");
       
       if(!o->config()->load_module(modname))
       {
@@ -1100,7 +1100,7 @@ mapping configuration_parse(object id)
 	rep = http_string_answer("The reload of this module failed.\n"
 				 "This is (probably) the reason:\n<pre>"
 				 + _master->errors + "</pre>" );
-//	_master->set_inhibit_compile_errors(0);
+	_master->set_inhibit_compile_errors(0);
 	return rep;
       }
       object mod;
