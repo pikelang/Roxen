@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.31 2000/09/19 21:47:20 kuntri Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.32 2000/11/21 13:14:49 per Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -126,12 +126,42 @@ string status() {
 		 s[0]/2, Roxen.sizetostring(s[1]));
 }
 
-mapping generate_image( mapping args, RequestID id )
+array(Image.Layer) generate_image( mapping args, RequestID id )
 {
+  array layers;
+  mapping opts = ([]);
+  if( args["process-all-layers"] )
+    opts->draw_all_layers = 1;
+
   if( args->data )
-    return roxen.low_decode_image( args->data );
+    layers = roxen.decode_layers( args->data, opts );
   else
-    return roxen.low_load_image( args->src, id );
+    layers = roxen.load_layers( args->src, id, opts );
+
+
+  if( args["exclude-layers"] )
+  {
+    foreach( args["exclude-layers"] / ",", string match )
+      foreach( layers, Image.Layer lay )
+	if( glob( match, lay->get_misc_value( "name" ) ) )
+	  lay->set_misc_value( "visible", 0 );
+  }
+
+  if( args["include-layers"] )
+  {
+    foreach( args["include-layers"] / ",", string match )
+      foreach( layers, Image.Layer lay )
+	if( glob( match, lay->get_misc_value( "name" ) ) )
+	  lay->set_misc_value( "visible", 1 );
+  }
+
+  array res = ({});
+  foreach( layers, Image.Layer l )
+  {
+    if( l->get_misc_value( "visible" ) )
+      res += ({ l });
+  }
+  return res;
 }
 
 mapping find_internal( string f, RequestID id )
@@ -159,8 +189,11 @@ mapping get_my_args( mapping args, RequestID id )
     {
       a->src = Roxen.fix_relative( args->src, id );
       Stat st = id->conf->stat_file(a->src, id) || file_stat(a->src);
-      if (st) {
-	a->mtime = (string) (a->stat = st[ST_MTIME]);
+      if (st)
+      {
+	string fn = id->conf->real_file( a->src, id );
+	if( fn ) Roxen.add_cache_stat_callback( id, fn, st[ST_MTIME] );
+      	a->mtime = (string) (a->stat = st[ST_MTIME]);
 	a->filesize = (string) st[ST_SIZE];
       }
     };
