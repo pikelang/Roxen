@@ -1,3 +1,11 @@
+Changes since Roxen Challenger 1.2.93 Yellow
+-----------------------------------------------
+
+o Fixed bug in shutdown code.
+
+o Added better error messages when failing to write the configuration.
+
+
 Changes since Roxen Challenger 1.2.87 Yellow
 -----------------------------------------------
 
