@@ -1,4 +1,4 @@
-// $Id: demo.pike,v 1.6 1998/06/02 10:40:38 grubba Exp $
+// $Id: demo.pike,v 1.7 1998/06/04 12:47:38 grubba Exp $
 //
 // (c) 1998 Idonex AB
 #include <module.h>
@@ -8,7 +8,7 @@ inherit "roxenlib";
 
 // import Array;
 
-constant cvs_version = "$Id: demo.pike,v 1.6 1998/06/02 10:40:38 grubba Exp $";
+constant cvs_version = "$Id: demo.pike,v 1.7 1998/06/04 12:47:38 grubba Exp $";
 
 void create()
 {
@@ -41,10 +41,12 @@ mixed *register_module()
 "</form>\n" \
 "</body>"
 
+object mdb;
+
 mixed find_file( string f, object id )
 {
   if (!mdb) {
-    object mdb = PDB.db("hilfisar", "wcCr")["demo"];
+    mdb = PDB.db("hilfisar", "wcCr")["demo"];
   }
   string data = mdb[ id->not_query ];
 
