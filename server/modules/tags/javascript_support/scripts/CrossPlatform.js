@@ -409,7 +409,7 @@ function selectFirstInputField()
     var inputs = document.getElementsByTagName("input");
     var first_input = null;
     for (var i = 0; i < inputs.length; i++) {
-      if (inputs[i].type == "text") {
+      if (inputs[i].type == "text" && !inputs[i].disabled) {
 	first_input = inputs[i];
 	break;
       }
@@ -417,8 +417,14 @@ function selectFirstInputField()
 
     //  Locate all <textarea> elements and pick the first one
     var textareas = document.getElementsByTagName("textarea");
-    var first_textarea = textareas.length > 0 ? textareas[0] : null;
-
+    var first_textarea = null;
+    for (var i = 0; i < textareas.length; i++) {
+      if (!textareas[i].disabled) {
+	first_textarea = textareas[i];
+	break;
+      }
+    }
+    
     //  Given both <input> and <textarea> elements, select the one which
     //  comes first in the document
     var first = getFirstNode(first_input, first_textarea);
