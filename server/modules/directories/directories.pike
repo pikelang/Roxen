@@ -11,7 +11,7 @@
 //
 // Make sure links work _inside_ unfolded documents.
 
-constant cvs_version = "$Id: directories.pike,v 1.52 2000/03/01 18:07:11 nilsson Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.53 2000/03/01 19:12:28 leif Exp $";
 constant thread_safe=1;
 
 //#define DIRECTORIES_DEBUG
@@ -80,7 +80,7 @@ void create()
 	 ". It is _very_ useful for debugging, but some people regard it as a "
 	 "security hole.");
 
-  defvar("spartan", 0, "Spartan listings.", TYPE_FLAG|VAR_INITIAL,
+  defvar("spartan", 0, "Spartan listings", TYPE_FLAG|VAR_INITIAL,
 	 "Show minimalistic file listings by default.");
 
   defvar("size", 1, "Include file size", TYPE_FLAG,
@@ -88,10 +88,12 @@ void create()
 
   defvar("date", "Don't show dates", "Dates", TYPE_MULTIPLE_STRING,
 	 "Select whether to include the last modification date in directory "
-	 "listings, and if so, on what format. `ISO dates' gives dates "
-         "like 1999-11-26, while `Text dates' gives dates like `Fri Nov 26, "
-         "1999'.",
-         ({ "Don't show dates", "Show ISO dates", "Show CTIME dates" }));
+	 "listings, and if so, on what format. `ISO date' gives dates "
+         "like 1999-11-26, while `CTIME date' gives dates like `Fri Nov "
+         "26, 1999'. The `datetime' alternatives work similarly, but "
+         "also add time of day information.",
+         ({ "Don't show dates", "Show ISO date", "Show ISO datetime",
+            "Show CTIME date", "Show CTIME datetime" }));
 
   defvar("fieldwidth", 40, "Filename field width", TYPE_INT,
 	 "This sets the filename field width (in characters). The value 0 will "
@@ -99,13 +101,14 @@ void create()
 
   defvar("truncate", 0, "Filename truncation", TYPE_FLAG,
 	 "If filenames are longer than the filename field width, enabling this "
-	 "option truncate the name rather than making extra room on the "
+	 "option truncates the name rather than making extra room on the "
 	 "particular row.", 0,
 	 lambda() { return !query("fieldwidth"); });
 
   defvar("cache", 0, "Cache result", TYPE_FLAG,
 	 "If selected, the result pages will be cached in the memory cache. "
-	 "Directory changes will not be visible until the cached enty has expired.");
+	 "Directory changes will not be visible until the cached entry "
+         "has expired.");
 }
 
 string tag_directory_insert(string t, mapping m, RequestID id)
@@ -208,16 +211,26 @@ string describe_directory(string d, RequestID id)
     if(stats) {
       len=stats[1];
       switch(query("date")) {
-      case "Show CTIME dates":
+      case "Show CTIME date":
+        mtime=ctime(stats[3]);
+        mtime=mtime[0..9] + ", " +
+              mtime[sizeof(mtime)-5..sizeof(mtime)-2];
+	break;
+      case "Show CTIME datetime":
         mtime=ctime(stats[3]);
         mtime=mtime[0..sizeof(mtime)-2];
 	break;
-      case "Show ISO dates":
+      case "Show ISO date":
 	mapping t=localtime(stats[3]);
-	mtime=sprintf("%4d-%02d-%02d %02d:%02d.%02d", t->year+1900, t->mon+1,
-		      t->mday, t->hour, t->min, t->sec);
+	mtime=sprintf("%4d-%02d-%02d", t->year+1900, t->mon+1, t->mday);
+	break;
+      case "Show ISO datetime":
+	mapping t=localtime(stats[3]);
+	mtime=sprintf("%4d-%02d-%02d %02d:%02d", t->year+1900, t->mon+1,
+		      t->mday, t->hour, t->min);
       }
     }
+    else mtime = "(no-stats)";
 
     switch(-len) {
     case 3:
