@@ -1,5 +1,5 @@
 /*
- * $Id: listfonts.pike,v 1.11 2000/08/16 14:48:27 lange Exp $
+ * $Id: listfonts.pike,v 1.12 2000/09/04 07:29:23 per Exp $
  */
 
 #include <roxen.h>
@@ -25,20 +25,38 @@ string versions(string font)
 	      Roxen.html_encode_string(m[t]) });
   return String.implode_nicely(res);
 }
-
+mapping info;
 string list_font(string font)
 {
-  return (Roxen.html_encode_string(map(replace(font,"_"," ")/" ",capitalize)*" ")+
-          " <font size='-1'>"+versions(font)+"</font><br />");
+  string fn = replace(lower_case( font ), " ", "_" );
+  
+  if( mapping m = info[ fn ] )
+  {
+    string res = "<p><font size=+1><b>"+
+           (Roxen.html_encode_string(map(replace(font,"_"," ")/" ",
+                                         capitalize)*" ")+
+                  "</b></font> <font size='-1'>"+versions(font)+"</font><br />"
+                  "<table cellspacing=0 cellpadding=0");
+    foreach( sort( indices( m ) - ({"name","versions"}) ), string i )
+      res += "<tr><td>&nbsp;&nbsp;&nbsp;<font size=-1>"+i+":&nbsp;</font></td><td><font size=-1>"+
+          Roxen.html_encode_string(m[i])+"</font></td></tr>\n";
+    res += "</table>";
+    return res;
+  }
+  return "<p><font size=+1><b>"+
+         (Roxen.html_encode_string(map(replace(font,"_"," ")/" ",capitalize)*" ")+
+          "</b></font> <font size='-1'>"+versions(font)+"</font><br />");
 }
 
 string page_0(RequestID id)
 {
+  array q = roxen.fonts->get_font_information();
+  info = mkmapping( q->name, q );
   string res=("<input type='hidden' name='action' value='listfonts.pike'/>"
               "<input type='hidden' name='doit' value='indeed'/>\n"
 	      "<font size='+1'>" +
 	      LOCALE("dI","All available fonts") + "</font><p>");
-  foreach(roxen->fonts->available_fonts(1), string font)
+  foreach(sort(roxen->fonts->available_fonts(1)), string font)
     res+=list_font(font);
   res += ("</p><p>" + LOCALE(236,"Example text") +
 	  "<font size=-1><input name=text size=46 value='" +
