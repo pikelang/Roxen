@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.396 2002/08/23 12:55:56 noring Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.397 2002/09/03 14:38:51 noring Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -809,6 +809,23 @@ class TagDate {
 
     array do_return(RequestID id) {
       int t=(int)args["unix-time"] || time(1);
+
+      if(args["iso-time"])
+      {
+	int year, month, day, hour, minute, second;
+	if(sscanf(args["iso-time"], "%d-%d-%d%*c%d:%%d:%d", year, month, day, hour, second) < 3)
+	  // Format yyyy-mm-dd{|{T| }hh:mm|{T| }hh:mm:ss}
+	  RXML.parse_error("Attribute iso-time needs at least yyyy-mm-dd specified.\n");
+	t = mktime(([
+	  "sec":second,
+	  "min":minute,
+	  "hour":hour,
+	  "mday":day,
+	  "mon":month-1,
+	  "year":year-1900
+	]));
+      }
+      
       if(args->timezone=="GMT") t += localtime(t)->timezone;
       t = Roxen.time_dequantifier(args, t);
 
@@ -6112,6 +6129,14 @@ using the pre tag.
  Pike-script or Roxen module.</p>
 
 <ex><date unix-time='120'/></ex>
+</attr>
+
+<attr name='iso-time' value='{yyyy-mm-dd, yyyy-mm-dd hh:mm, yyyy-mm-dd hh:mm:ss}'>
+ <p>Display this time instead of the current. This attribute uses the specified
+ISO 8601 time as the starting time, instead of the current time. The character
+between the date and the time can be either \" \" (space) or \"T\" (the letter T).</p>
+
+<ex><date iso-time='2002-09-03 16:06'/></ex>
 </attr>
 
 <attr name='timezone' value='local|GMT' default='local'>
