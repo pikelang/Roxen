@@ -1,5 +1,5 @@
 /*
- * $Id: ContainerCaller.java,v 1.2 1999/12/20 18:51:33 marcus Exp $
+ * $Id: ContainerCaller.java,v 1.3 2000/01/12 04:47:40 marcus Exp $
  *
  */
 
@@ -9,7 +9,7 @@ import java.util.Map;
 
 public interface ContainerCaller {
 
-  public String queryName();
+  public String queryContainerName();
   public String containerCalled(String tag, Map args, String contents,
 				RoxenRequest id);
 
