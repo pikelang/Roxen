@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.44 2000/02/06 23:35:32 mast Exp $
+//! $Id: module.pmod,v 1.45 2000/02/07 00:12:42 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -609,10 +609,14 @@ class Context
     if (SCOPE_TYPE vars = scopes[scope_name || "_"]) {
       mixed val;
       if (objectp (vars)) {
-	val = ([object(Scope)] vars)->`[] (var, this_object(), scope_name || "_");
-	if (val == Void) return ([])[0];
+	if (zero_type (val = ([object(Scope)] vars)->`[] (
+			 var, this_object(), scope_name || "_")) ||
+	    val == Void)
+	  return ([])[0];
       }
-      else if (zero_type (val = vars[var])) return ([])[0];
+      else
+	if (zero_type (val = vars[var]))
+	  return ([])[0];
       if (objectp (val) && ([object] val)->rxml_var_eval)
 	return
 	  zero_type (val = ([object(Value)] val)->rxml_var_eval (
