@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.345 2003/06/02 12:07:33 grubba Exp $
+// $Id: roxenloader.pike,v 1.346 2003/09/15 14:47:48 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.345 2003/06/02 12:07:33 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.346 2003/09/15 14:47:48 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -587,10 +587,11 @@ Process.Process spawn_pike(array(string) args, void|string wd,
 {
   //! @ignore
   return Process.create_process(
+    ({
 #ifndef __NT__
-    ({getcwd()+"/start",
+      getcwd()+"/start",
 #else /* __NT__ */
-    ({getcwd()+"/../ntstart.exe",
+      getcwd()+"/../ntstart.exe",
 #endif /* __NT__ */
       "--cd",wd,
       "--quiet","--program"})+args,
