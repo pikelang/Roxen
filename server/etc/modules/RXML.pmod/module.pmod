@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.164 2001/06/11 19:12:19 mast Exp $
+// $Id: module.pmod,v 1.165 2001/06/11 23:14:28 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -2344,7 +2344,7 @@ class Frame
 #endif
 	if (!args) args = parsed_args;
 	if (!content) content = parsed_content;
-	return result_type->format_tag (tag, args, content);
+	return result_type->format_tag (name, args, content, tag->flags);
       }
 #undef CHECK_RAW_TEXT
     }
@@ -5101,26 +5101,35 @@ static class TXml
       return "<?" + tagname + content + "?>";
     }
 
-    string res = "<" + tagname;
+    String.Buffer res = String.Buffer();
+    res->add ("<");
+    res->add (tagname);
 
     if (args)
       if (flags & FLAG_RAW_ARGS)
-	foreach (indices (args), string arg)
-	  res += " " + arg + "=\"" + replace (args[arg], "\"", "\"'\"'\"") + "\"";
+	foreach (indices (args), string arg) {
+	  res->add (" "), res->add (arg), res->add ("=\"");
+	  res->add (replace (args[arg], "\"", "\"'\"'\""));
+	  res->add ("\"");
+	}
       else
-	foreach (indices (args), string arg)
-	  res += " " + arg + "=" + Roxen->html_encode_tag_value (args[arg]);
+	foreach (indices (args), string arg) {
+	  res->add (" "), res->add (arg), res->add ("=");
+	  res->add (Roxen->html_encode_tag_value (args[arg]));
+	}
 
-    if (content)
-      res += ">" + content + "</" + tagname + ">";
+    if (content && sizeof (content)) {
+      res->add (">"), res->add (content);
+      res->add ("</"), res->add (tagname), res->add (">");
+    }
     else
       if (flags & FLAG_COMPAT_PARSE)
-	if (flags & FLAG_EMPTY_ELEMENT) res += ">";
-	else res += "></" + tagname + ">";
+	if (flags & FLAG_EMPTY_ELEMENT) res->add (">");
+	else res->add ("></"), res->add (tagname), res->add (">");
       else
-	res += " />";
+	res->add (" />");
 
-    return res;
+    return res->get();
   }
 
   string format_entity (string entity)
