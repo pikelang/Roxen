@@ -26,7 +26,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.299 2001/10/05 14:16:22 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.300 2001/10/15 09:27:08 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1267,6 +1267,13 @@ class MySQLResKey(static object real, static MySQLKey key)
   {
     return sprintf( "MySQLRes( X, %O )", key );
   }
+
+#if 0
+  static void destroy()
+  {
+    werror("Destroying %O\n", this_object());
+  }
+#endif /* 0 */
 }
 
 class MySQLKey
@@ -1288,6 +1295,7 @@ class MySQLKey
   
 #ifdef DB_DEBUG
   static int num = sql_keynum++;
+  static string bt;
 #endif
   static void create( object _real, string _name )
   {
@@ -2052,16 +2060,16 @@ library should be enough.
   DC("Sql");  DC("Sql.mysql");
 
 
-#if constant(Sql.oracle)
+#if constant(Oracle.oracle)
   DC("Sql.oracle");
 #endif
-#if constant(Sql.odbc)
+#if constant(Odbc.odbc)
   DC("Sql.odbc");
 #endif
-#if constant(Sql.postgres)
+#if constant(Postgres.postgres)
   DC("Sql.postgres");
 #endif
-#if constant(Sql.msql)
+#if constant(Msql.msql)
   DC("Sql.msql");
 #endif
   
