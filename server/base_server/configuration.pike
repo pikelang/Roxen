@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.279 2000/03/19 16:56:10 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.280 2000/03/19 23:33:18 mast Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -2074,16 +2074,12 @@ int|string try_get_file(string s, RequestID id,
       return res;
   }
 
-  if(sscanf(s, "%s?%s", s, q))
-  {
-    string v, name, value;
-    foreach(q/"&", v)
-      if(sscanf(v, "%s=%s", name, value))
-	fake_id->variables[http_decode_string(name)]=
-          http_decode_string(value);
-    fake_id->query=q;
-  }
-
+  if (fake_id->scan_for_query)
+    // FIXME: If we're using e.g. ftp this doesn't exist. But the
+    // right solution might be that clone_me() in an ftp id object
+    // returns a vanilla (i.e. http) id instead when this function is
+    // used.
+    s = fake_id->scan_for_query (s);
   fake_id->raw_url=s;
   fake_id->not_query=s;
 
