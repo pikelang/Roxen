@@ -1,6 +1,6 @@
 #include <config.h>
 #include <stat.h>
-constant cvs_version = "$Id: imagedir.pike,v 1.4 2000/09/04 07:40:50 per Exp $";
+constant cvs_version = "$Id: imagedir.pike,v 1.5 2000/09/16 20:43:31 nilsson Exp $";
 
 constant name = "Image directory fonts";
 constant doc = ("Handles a directory with images (in almost any format), each "
@@ -125,9 +125,21 @@ class myFont
 }
 
 mapping font_list;
+mapping meta_data;
 static string font_name( string what )
 {
-  return (lower_case( replace(what," ","_") )/"\n")[0]-"\r";
+  if(!meta_data) meta_data=([]);
+  mapping _meta_data=([]);
+  Parser.HTML()->
+    add_containers( ([ "name":lambda(string t, mapping m, string c) {
+				what=c; return ""; },
+		       "meta":lambda(string t, mapping m, string c) {
+				_meta_data[m->name]=c; },
+    ]) )->finish(what);
+
+  what=(lower_case( replace(what," ","_") )/"\n")[0]-"\r";
+  if(sizeof(_meta_data)) meta_data[what]=_meta_data;
+  return what;
 }
 
 void update_font_list()
@@ -157,7 +169,7 @@ array(mapping) font_information( string fnt )
 #endif
   if( !font_list ) update_font_list();
   if( font_list[ fnt ] )
-    return ({ ([
+    return ({ (meta_data[fnt] || ([])) | ([
       "name":fnt,
       "family":fnt,
       "path":font_list[fnt],
