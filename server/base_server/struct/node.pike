@@ -100,6 +100,8 @@ void dest()
 
   node=down;
 
+  below=([]);
+
   while(node)
   {
     tmp=node->next; 
@@ -109,12 +111,14 @@ void dest()
 
   if(prev)  prev->next = next;
   if(next)  next->prev = prev;
+  next=prev=0;
 
   if(up)
   {
     if(up->down == this_object())     up->down = prev||next;
     if(up->current == this_object())  up->current = prev||next;
   }
+  up=down=0;
   destruct();
 }
 
