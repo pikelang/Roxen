@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.66 1997/09/04 12:40:02 grubba Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.67 1997/09/05 11:42:54 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -708,11 +708,16 @@ array(int)|string write_text(int _args, string text, int size,
       if(args->light) bold=-1;
       if(args->italic) italic=1;
       if(args->black) bold=2;
-      data = get_font("default",32,bold,italic,
+      data = get_font(roxen->QUERY(default_font),32,bold,italic,
 		      lower_case(args->talign||"left"),
 		      (float)(int)args->xpad, (float)(int)args->ypad);
     }
 #endif
+
+    if (!data) {
+      roxen_perror("gtext: No font!\n");
+      return(0);
+    }
 
     // Fonts and such are now initialized.
     img = make_text_image(args,data,text,id);
