@@ -1,6 +1,6 @@
 #!/usr/local/bin/pike
 /*
- * $Id: pdbi.pike,v 1.2 1997/09/17 02:07:41 grubba Exp $
+ * $Id: pdbi.pike,v 1.3 1999/06/21 03:06:07 peter Exp $
  *
  * name = "PDB Inspector";
  * doc = "This is a tool to inspect PDB databases.";
@@ -78,6 +78,8 @@ void main(int argc, array argv)
 	else
 	  write(sprintf("%O: %O: No such table\n", argv[0], arg));
       }
+    case "help":
+      write("Available commands are: du, ls, cat, pwd, cd, exit.\n");
     case "":
     case "exit":
       break;
