@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.347 2002/02/14 16:04:31 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.348 2002/02/15 13:09:42 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2421,14 +2421,10 @@ class UserTagContents
 	select_path = "v" + expr;
 	string|RXML.PCode value = subs[select_path];
 	if (!value || objectp (value) && value->is_stale()) {
-	  string|SloppyDOM.Document doc = upframe->content_text;
-	  if (stringp (doc))
-	    doc = upframe->content_text = SloppyDOM.parse (doc, 1);
-	  mixed res = 0;
 
 	  if (sscanf (expr, "%*[ \t\n\r]@%*[ \t\n\r]%s", expr) == 3) {
 	    // Special treatment to select attributes at the top level.
-	    sscanf (expr, "%[^ \t\n\r@/[]%*[ \t\n\r]%s", expr, string rest);
+	    sscanf (expr, "%[^][ \t\n\r/@(){}:.,]%*[ \t\n\r]%s", expr, string rest);
 	    if (!sizeof (expr))
 	      parse_error ("Error in %s attribute: No attribute name after @.\n",
 			   insert_type);
@@ -2437,55 +2433,47 @@ class UserTagContents
 			   "Unexpected subpath %O after attribute %s.\n",
 			   insert_type, rest, expr);
 	    if (expr == "*") {
-	      res = upframe->vars - (["args": 1, "rest-args": 1, "contents": 1]);
-	      foreach (indices (res), string var)
-		if (has_prefix (var, "__contents__"))
-		  m_delete (res, var);
+	      if (insert_type == "copy-of")
+		value = upframe->vars->args;
+	      else
+		foreach (indices (upframe->vars), string var)
+		  if (!(<"args", "rest-args", "contents">)[var] &&
+		      !has_prefix (var, "__contents__")) {
+		    value = upframe->vars[var];
+		    break;
+		  }
 	    }
 	    else if (!(<"args", "rest-args", "contents">)[expr] &&
 		     !has_prefix (expr, "__contents__"))
 	      if (string val = upframe->vars[expr])
-		res = ([expr: val]);
+		if (insert_type == "copy-of")
+		  value = Roxen.make_tag_attributes (([expr: val]))[1..];
+		else
+		  value = val;
 	  }
 
-	  else
-	    if (mixed err = catch (res = doc->simple_path (expr)))
+	  else {
+	    string|SloppyDOM.Document doc = upframe->content_text;
+	    if (stringp (doc))
+	      doc = upframe->content_text = SloppyDOM.parse (doc, 1);
+	    mixed res = 0;
+	    if (mixed err = catch (
+		  res = doc->simple_path (expr, insert_type == "copy-of")))
 	      // Assume that the error is some parse error regarding the expression.
 	      parse_error ("Error in %s attribute: %s", insert_type,
 			   describe_error (err));
 
-	  if (insert_type == "copy-of") {
-	    if (!res) res = ({});
-	    else if (!arrayp (res)) res = ({res});
-	    value = "";
-	    foreach (res, mapping(string:string)|SloppyDOM.Node node)
-	      if (objectp (node))
-		value += node->xml_format();
-	      else {
-		array(string) attrs = indices (node);
-		for (int i = sizeof (attrs) - 1; i >= 0; i--) {
-		  string attr = attrs[i], attr_val = node[attr];
-		  // This encoding is ugly but complete; the attribute
-		  // values has been kept undecoded so they can't
-		  // contain both " and '. The reason for that is mainly
-		  // to not touch rxml entities etc.
-		  if (has_value (attr_val, "\""))
-		    attrs[i] = attr + "='" + attr_val + "'";
-		  else
-		    attrs[i] = attr + "=\"" + attr_val + "\"";
-		}
-		value += attrs * " ";
-	      }
-	  }
-
-	  else {
-	    if (arrayp (res)) res = sizeof (res) && res[0];
-	    if (objectp (res))
-	      value = res->get_text_content();
-	    else if (mappingp (res) && sizeof (res))
-	      value = values (res)[0];
-	    else
-	      value = "";
+	    if (insert_type == "copy-of")
+	      value = res;
+	    else {
+	      if (arrayp (res)) res = sizeof (res) && res[0];
+	      if (objectp (res))
+		value = res->get_text_content();
+	      else if (mappingp (res) && sizeof (res))
+		value = values (res)[0];
+	      else
+		value = "";
+	    }
 	  }
 
 	  subs[select_path] = value;
@@ -6975,36 +6963,64 @@ just got zapped?
 </p></desc>",
 
 "contents":#"<desc type='tag'><p>
- Selects the whole or some part of the contents of the container,
- evaluates it, and inserts the result.
+ Selects the whole or some part of the content of the container,
+ evaluates it, and inserts the result.</p>
+
+ <p>Note that when the preparse attribute is used, this tag is
+ converted to a special variable reference on the form
+ \'<code>&_.__contents__<i>n</i>;</code>\', which is then substituted
+ with the real value when the tag is used. It\'s that way to make the
+ expansion work when the preparsed code puts it in an attribute value.
+ (This is mostly an internal implementation detail, but it can be good
+ to know since the variable name can show up in e.g. RXML backtraces.)
 </p></desc>
 
 <attr name='scope' value='scope'><p>
  Associate this <tag>contents</tag> tag with the innermost
  <tag>define</tag> container with the given scope. The default is to
  associate it with the innermost <tag>define</tag>.</p>
+</attr>
 
 <attr name='copy-of' value='expression'><p>
  Selects a part of the content node tree to copy. As opposed to the
  value-of attribute, all the selected nodes are copied, with all
  markup.</p>
 
- <p>The expression is a simplified variant of XPath: It is a path
- consisting of one or more steps delimited by \'<code>/</code>\'. Each
- step selects an element (i.e. tag or container) in the content of the
- current element or an attribute of it, starting at the defined tag or
- container itself. A step on the form \'<code>@<i>name</i></code>\'
- selects the attribute with the given name. A step on the form
- \'<code><i>name</i></code>\' selects all elements with the given name
- in the content. A name may be \'<code>*</code>\' to select all
- attributes or child elements. A step on the form
- \'<code><i>name</i>[<i>n</i>]</code>\' selects the nth child element
- with the given name, according to the order in which they occur in
- the content. The index n may be negative to select an element in
- reverse order, i.e. -1 selects the last element, -2 the
- second-to-last, etc. Note that since attributes have no child
- elements, a step on the \'<code>@<i>name</i></code>\' form cannot be
- followed by another one.</p>
+ <p>The expression is a simplified variant of an XPath location path:
+ It consists of one or more steps delimited by \'<code>/</code>\'.
+ Each step selects some part(s) of the current node. The first step
+ operates on the defined tag or container itself, and each following
+ one operates on the part(s) selected by the previous step.</p>
+
+ <p>A step may be any of the following:</p>
+
+ <ul>
+   <li>\'<code><i>name</i></code>\' selects all elements (i.e. tags or
+   containers) with the given name in the content. The name can be
+   \'<code>*</code>\' to select all.</li>
+
+   <li>\'<code>@<i>name</i></code>\' selects the element attribute
+   with the given name. The name can be \'<code>*</code>\' to select
+   all.</li>
+
+   <li>\'<code>comment()</code>\' selects all comments in the
+   content.</li>
+
+   <li>\'<code>text()</code>\' selects all text pieces in the
+   content.</li>
+
+   <li>\'<code>processing-instruction(<i>name</i>)</code>\' selects
+   all processing instructions with the given name in the content. The
+   name may be left out to select all.</li>
+
+   <li>\'<code>node()</code>\' selects all the different sorts of
+   nodes in the content, i.e. the whole content.</li>
+ </ul>
+
+ <p>A step may be followed by \'<code>[<i>n</i>]</code>\' to choose
+ the nth item in the selected set. The index n may be negative to
+ select an element in reverse order, i.e. -1 selects the last element,
+ -2 the second-to-last, etc.</p>
 
  <p>An example: The expression \'<code>p/*[2]/@href</code>\' first
  selects all <tag>p</tag> elements in the content. In the content of
