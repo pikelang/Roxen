@@ -4,7 +4,9 @@
 // defaults and a new variable, to make it possible to use Frontpage
 // with Roxen when using virtual hosting.
 
-string cvs_version = "$Id: fpscript.pike,v 1.1 1998/07/15 10:05:28 neotron Exp $";
+string cvs_version = "$Id: fpscript.pike,v 1.2 1998/07/15 13:34:25 grubba Exp $";
+
+// #define FPSCRIPT_DEBUG
 
 #include <module.h>
 inherit "modules/scripting/cgi.pike";
@@ -12,7 +14,9 @@ inherit "modules/scripting/cgi.pike";
 mapping my_build_env_vars(string f, object id, string|void path_info)
 {
   mapping new = ::my_build_env_vars(f, id, path_info);
+#ifdef FPSCRIPT_DEBUG
   werror(sprintf("%O\n", new));
+#endif /* FPSCRIPT_DEBUG */
   
   if (QUERY(FrontPagePort))
     new->SERVER_PORT = (string)QUERY(FrontPagePort);
@@ -24,6 +28,7 @@ mapping my_build_env_vars(string f, object id, string|void path_info)
 void create()
 {
   ::create();
+
   defvar("FrontPagePort", 0, "Frontpage Server Port", TYPE_INT,
 	 "If this variable is set (ie not zero) ");
   killvar("mountpoint");
@@ -61,7 +66,7 @@ mixed *register_module()
     "figures out which configuration to use. Without it you wouldn't be able "
     "to use Frontpage and Roxen to do virtual hosting (where many servers "
     "will have the same port number).",  ({}), 1
-    });
+  });
 }
 
 string query_name() 
