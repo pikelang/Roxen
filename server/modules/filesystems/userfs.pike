@@ -14,7 +14,7 @@
 
 inherit "filesystem";
 
-constant cvs_version="$Id: userfs.pike,v 1.31 1998/07/02 07:55:05 neotron Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.32 1998/07/05 13:18:55 grubba Exp $";
 
 // import Array;
 // import Stdio;
@@ -139,8 +139,10 @@ mixed find_file(string f, object got)
     }
   } else {
     if((<"","/">)[f]) return -1;
-    if(sscanf(f, "%s/%s", u, f) != 2)
-      u=f; f="";
+    if(sscanf(f, "%s/%s", u, f) != 2) {
+      u=f;
+      f="";
+    }
   }
   if(u)
   {
