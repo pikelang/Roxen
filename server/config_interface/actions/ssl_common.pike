@@ -1,5 +1,5 @@
 /*
- * $Id: ssl_common.pike,v 1.4 2001/03/05 18:15:47 nilsson Exp $
+ * $Id: ssl_common.pike,v 1.5 2001/12/14 15:37:54 grubba Exp $
  */
 
 #if constant(_Crypto) 
@@ -61,13 +61,13 @@ mixed verify_0(object id, object mc)
     return 1;
   }
 
-  object file = Stdio.File();
+  Stdio.File file;
   object privs = Privs("Storing private key.");
-  if (!file->open(id->variables->key_file, "wxc", 0600))
+  if (!(file = lopen(id->variables->key_file, "wxc", 0600)))
   {
     id->variables->_error =
       "Could not open file: "
-      + (strerror(file->errno()) || (string) file->errno())
+      + (strerror(errno()) || (string) errno())
       + ".";
     privs = 0;
     return 1;
