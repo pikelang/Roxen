@@ -13,8 +13,8 @@
  * reference cache shortly.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.35 1997/10/24 02:28:41 peter Exp $";
-constant thread_safe=0;
+constant cvs_version = "$Id: business.pike,v 1.36 1997/10/28 09:10:01 peter Exp $";
+constant thread_safe=1;
 
 #include <module.h>
 #include <roxen.h>
@@ -73,7 +73,7 @@ mixed *register_module()
        "\n&lt;data&gt; (container)  Mandatory!\n"
        "Tab- and newline- separated list of data-value for the diagram.\n"
        " separator=     Use the specified string as separator instead of tab.\n"
-       " lineseparator= Use the specified string as lineseparator instead of tab.\n"
+       " lineseparator= Use the specified string as lineseparator instead of newline.\n"
        " form=          Can be set to either row or column. Default is row.\n"
        " parse          Run the content of the tag through the RXML-parser before data extraction is done.\n"
        "</pre>"
@@ -118,6 +118,9 @@ string itag_names(string tag, mapping m, string contents,
 		      mapping res)
 {
   string sep=SEP;
+  if(!m->noparse)
+    contents = parse_rxml( contents, id );
+
   if(m->separator)
     sep=m->separator;
   
@@ -137,6 +140,9 @@ string itag_values(string tag, mapping m, string contents,
 		   mapping res)
 {
   string sep=SEP;
+  if(!m->noparse)
+    contents = parse_rxml( contents, id );
+
   if(m->separator)
     sep=m->separator;
   
@@ -162,7 +168,7 @@ string itag_data(mapping tag, mapping m, string contents,
   if(m->lineseparator)
     linesep=m->lineseparator;
 
-  if(m->parse)
+  if(!m->noparse)
     contents = parse_rxml( contents, id );
 
   contents = contents - " ";
@@ -204,6 +210,9 @@ string itag_colors(mapping tag, mapping m, string contents,
 		   mapping res)
 {
   string sep=SEP;
+  if(!m->noparse)
+    contents = parse_rxml( contents, id );
+
   if(m->separator) sep=m->separator;
   
   res->colors = map(contents/sep, parse_color); 
@@ -215,9 +224,12 @@ string itag_legendtext(mapping tag, mapping m, string contents,
 		       mapping res)
 {
   string sep=SEP;
+  if(!m->noparse)
+    contents = parse_rxml( contents, id );
+
   if(m->separator)
     sep=m->separator;
-  
+
   res->legend_texts = contents/sep;
 
   return "";
