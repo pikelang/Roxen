@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 1998, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.179 1999/12/27 14:41:36 nilsson Exp $";
+constant cvs_version = "$Id: http.pike,v 1.180 1999/12/29 21:57:55 mast Exp $";
 
 #define MAGIC_ERROR
 
@@ -1045,6 +1045,14 @@ void internal_error(array err)
 	       describe_backtrace(err) + "\n");
 }
 
+// This macro ensures that something gets reported even when the very
+// call to internal_error() fails. That happens eg when this_object()
+// has been destructed.
+#define INTERNAL_ERROR(err)							\
+  if (mixed __eRr = catch (internal_error (err)))				\
+    report_error("Internal server error: " + describe_backtrace(err) +		\
+		 "internal_error() also failed: " + describe_backtrace(__eRr))
+
 int wants_more()
 {
   return !!cache;
@@ -1342,7 +1350,7 @@ void send_result(mapping|void result)
 				   ({not_query,
 				     conf->query("MyWorldLocation")})));
     }) {
-      internal_error(err);
+      INTERNAL_ERROR(err);
     }
   } else {
     if((file->file == -1) || file->leave_me)
@@ -1587,7 +1595,7 @@ void handle_request( )
 
   array e;
   if(e= catch(file = conf->handle_request( this_object() )))
-    internal_error( e );
+    INTERNAL_ERROR( e );
   send_result();
 }
 
