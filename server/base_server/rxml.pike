@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.56 2000/01/08 12:10:21 mast Exp $
+ * $Id: rxml.pike,v 1.57 2000/01/10 10:10:10 nilsson Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -302,11 +302,10 @@ string call_user_tag(RXML.PHtml parser, mapping args, RequestID id)
   id->misc->line = (string)parser->at_line();
   args = id->misc->defaults[tag]|args;
   TRACE_ENTER("user defined tag &lt;"+tag+"&gt;", call_user_tag);
-  array replace_from = ({"#args#"})+
-    Array.map(indices(args),
-	      lambda(string q){return "&"+q+";";});
-  array replace_to = (({make_tag_attributes( args  ) })+
-		      values(args));
+  array replace_from = Array.map(indices(args),
+				 lambda(string q){return "&"+q+";";})+({"#args#"});
+  array replace_to = values(args)+({make_tag_attributes( args  ) });
+
   string r = replace(id->misc->tags[ tag ], replace_from, replace_to);
   TRACE_LEAVE("");
   return r;
@@ -524,7 +523,7 @@ class TagLine
     inherit RXML.Frame;
     array do_return (RequestID id)
     {
-      return ({id->misc->line}); // FIXME: This is entirely bogus.
+      return ({(string)id->misc->line}); // FIXME: This is entirely bogus.
     }
   }
 }
