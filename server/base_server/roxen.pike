@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.328 1999/05/23 00:04:04 mast Exp $
+ * $Id: roxen.pike,v 1.329 1999/05/23 04:37:57 peter Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -8,7 +8,7 @@
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version = "$Id: roxen.pike,v 1.328 1999/05/23 00:04:04 mast Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.329 1999/05/23 04:37:57 peter Exp $";
 
 object backend_thread;
 object argcache;
@@ -1946,7 +1946,7 @@ class ArgCache
       if( sizeof(res) )
       {
         db->query("update "+name+" set atime='"+time()+"' where id='"+id+"'");
-        return res->contents;
+        return res[0]->contents;
       }
       return 0;
     } else {
