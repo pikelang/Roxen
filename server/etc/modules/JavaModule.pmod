@@ -446,9 +446,9 @@ class ModuleWrapper
 
   string check_variable(string s, mixed value)
   {
-    object s = _check_variable(modobj, s, objify(value));
+    object r = _check_variable(modobj, s, objify(value));
     check_exception();
-    return s && (string)s;
+    return r && (string)r;
   }
 
   string query_location()
