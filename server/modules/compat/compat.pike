@@ -56,6 +56,21 @@ string status() {
   return ret;
 }
 
+TAGDOCUMENTATION;
+#ifdef manual
+constant rxmltags_doc=(["clientname":"<desc tag></desc>",
+"file":"<desc tag></desc>",
+"realfile":"<desc tag></desc>",
+"referer":"<desc tag></desc>",
+"referrer":"<desc tag></desc>",
+"refferrer":"<desc tag></desc>",
+"vfs":"<desc tag></desc>",
+"accept-language":"<desc tag></desc>"
+]);
+mapping tagdoc=(["preparse":"<desc cont></desc>"])+
+  enabled->rxmltags?rxmltags_doc:([]);
+#endif
+
 // Changes the parsing order by first parsing it's contents and then
 // morphing itself into another tag that gets parsed.
 string container_preparse( string tag_name, mapping args, string contents,
@@ -113,10 +128,13 @@ string|array tag_redirect(string tag, mapping m, RequestID id)
   return ({""});
 }
 
-array tag_refferrer(string tag, mapping m, RequestID id)
+array(string) tag_referrer(string tag, mapping m, RequestID id)
 {
-  old_rxml_warning(id, "refferrer tag","referrer tag");
-  return ({1, "referrer", 0});
+  NOCACHE();
+  old_rxml_warning(id, tag+" tag", "&amp;client.referrer; entity");
+  return({ sizeof(id->referer) ?
+    (m->quote=="none"?id->referer:(html_encode_string(id->referer*""))) :
+    (m->alt || "") });
 }
 
 array tag_set(string tag, mapping m, RequestID id)
@@ -182,8 +200,8 @@ string|array tag_insert(string tag,mapping m,RequestID id)
     if(!id->variables[n])
       return rxml_error(tag, "No such variable ("+n+").", id);
     m_delete(m, "variable");
-    return m->quote=="none"?do_replace(id->variables[n], m-(["quote":""]), id):
-      ({ html_encode_string(do_replace(id->variables[n], m-(["quote":""]), id)) });
+    return m->quote=="none"?do_replace((string)id->variables[n], m-(["quote":""]), id):
+      ({ html_encode_string(do_replace((string)id->variables[n], m-(["quote":""]), id)) });
   }
 
   if(n = m->other) {
@@ -495,6 +513,57 @@ array tag_list_tags(string t, mapping m, RequestID id) {
   return ({1, "help", m});
 }
 
+string|array(string) tag_clientname(string tag, mapping m, RequestID id)
+{
+  NOCACHE();
+  string client="";
+  if (sizeof(id->client)) {
+    if(m->full)
+      client=id->client * " ";
+    else
+      client=id->client[0];
+  }
+
+  return m->quote=="none"?client:({ html_encode_string(client) });
+}
+
+array(string) tag_file(string tag, mapping m, RequestID id)
+{
+  string file;
+  if(m->raw)
+    file=id->raw_url;
+  else
+    file=id->not_query;
+  return m->quote=="none"?file:({ html_encode_string(file) });
+}
+
+string|array(string) tag_realfile(string tag, mapping m, RequestID id)
+{
+  if(id->realfile)
+    return ({ id->realfile });
+  return rxml_error(tag, "Real file unknown", id);
+}
+
+string|array(string) tag_vfs(string tag, mapping m, RequestID id)
+{
+  if(id->virtfile)
+    return ({ id->virtfile });
+  return rxml_error(tag, "Virtual file unknown.", id);
+}
+
+array(string) tag_accept_language(string tag, mapping m, RequestID id)
+{
+  NOCACHE();
+
+  if(!id->misc["accept-language"])
+    return ({ "None" });
+
+  if(m->full)
+    return ({ html_encode_string(id->misc["accept-language"]*",") });
+  else
+    return ({ html_encode_string((id->misc["accept-language"][0]/";")[0]) });
+}
+
 mapping query_tag_callers() {
   mapping active=(["list-tags":tag_list_tags]);
   if(enabled->countdown) active->countdown=tag_countdown;
@@ -505,10 +574,17 @@ mapping query_tag_callers() {
     "insert":tag_insert,
     "date":tag_date,
     "pr":tag_pr,
-    "refferrer":tag_refferrer,
+    "refferrer":tag_referrer,
+    "referrer":tag_referrer,
+    "referer":tag_referrer,
     "set":tag_set,
     "redirect":tag_redirect,
     "append":tag_append,
+    "clientname":tag_clientname,
+    "file":tag_file,
+    "realfile":tag_realfile,
+    "vfs":tag_vfs,
+    "accept-language":tag_accept_language
   ]);
   return active;
 }
