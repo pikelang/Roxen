@@ -1,4 +1,4 @@
-/* $Id: ssl3.pike,v 1.32 1998/04/21 20:18:33 grubba Exp $
+/* $Id: ssl3.pike,v 1.33 1998/04/29 22:51:37 grubba Exp $
  *
  * Copyright © 1996-1998, Idonex AB
  */
@@ -543,8 +543,8 @@ class fallback_redirect_request {
 	  name = req[1..sizeof(req)-2] * " ";
 	  foreach(Array.map(lines[1..], `/, ":"), array header)
 	  {
-	    if ( (lower_case(header[0]) == "host")
-		 &&  (sizeof(header) >= 2))
+	    if ( (sizeof(header) >= 2) &&
+		 (lower_case(header[0]) == "host") )
 	      prefix = "https://" + (header[1]/":")[0] - " ";
 	  }
 	}
