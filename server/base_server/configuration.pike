@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.306 2000/05/08 05:52:54 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.307 2000/08/28 12:49:17 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -2116,6 +2116,8 @@ int|string try_get_file(string s, RequestID id,
   }
 
   destruct (fake_id);
+  NOCACHE( ); // Quick'n'dirty method. We should really update
+             // mtime instead, like 2.1, but that's sort of complex.
 
   if (!mappingp(m) && !objectp(m)) {
     report_error("try_get_file(%O, %O, %O, %O): m = %O is not a mapping.\n",
